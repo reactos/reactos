@@ -2,7 +2,7 @@
  * jcmarker.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modified 2003-2019 by Guido Vollbeding.
+ * Modified 2003-2025 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -296,7 +296,7 @@ emit_lse_ict (j_compress_ptr cinfo)
   emit_2bytes(cinfo, 24);	/* fixed length */
 
   emit_byte(cinfo, 0x0D);	/* ID inverse transform specification */
-  emit_2bytes(cinfo, MAXJSAMPLE);	/* MAXTRANS */
+  emit_2bytes(cinfo, (int) cinfo->LSE_maxtrans); /* MAXTRANS */
   emit_byte(cinfo, 3);		/* Nt=3 */
   emit_byte(cinfo, cinfo->comp_info[1].component_id);
   emit_byte(cinfo, cinfo->comp_info[0].component_id);

@@ -2,14 +2,14 @@
  * jdct.h
  *
  * Copyright (C) 1994-1996, Thomas G. Lane.
- * Modified 2002-2019 by Guido Vollbeding.
+ * Modified 2002-2025 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
  * This include file contains common declarations for the forward and
  * inverse DCT modules.  These declarations are private to the DCT managers
  * (jcdctmgr.c, jddctmgr.c) and the individual DCT algorithms.
- * The individual DCT algorithms are kept in separate files to ease
+ * The individual DCT algorithms are kept in separate files to ease 
  * machine-dependent tuning (e.g., assembly coding).
  */
 
@@ -17,9 +17,9 @@
 /*
  * A forward DCT routine is given a pointer to an input sample array and
  * a pointer to a work area of type DCTELEM[]; the DCT is to be performed
- * in-place in that buffer.  Type DCTELEM is int for 8-bit samples, INT32
- * for 12-bit samples.  (NOTE: Floating-point DCT implementations use an
- * array of type FAST_FLOAT, instead.)
+ * in-place in that buffer.  Type DCTELEM is int or INT32, depending on
+ * bit depth parameters.  (NOTE: Floating-point DCT implementations use
+ * an array of type FAST_FLOAT, instead.)
  * The input data is to be fetched from the sample array starting at a
  * specified column.  (Any row offset needed will be applied to the array
  * pointer before it is passed to the FDCT code.)
@@ -32,7 +32,20 @@
  * Quantization of the output coefficients is done by jcdctmgr.c.
  */
 
-#if BITS_IN_JSAMPLE == 8
+/* Condition for FDCT:
+ *   BITS_IN_JSAMPLE <= 10 && JPEG_DATA_PRECISION <= 10
+ * Condition for int IDCT where DCTELEM is used (2x2, 1x1, 2x1, 1x2):
+ *   JPEG_DATA_PRECISION + RANGE_BITS <= 12
+ *     [BITS_IN_JSAMPLE - 1 + RANGE_BITS +
+ *       3 - (BITS_IN_JSAMPLE - JPEG_DATA_PRECISION) <= 14]
+ *     {3 - (BITS_IN_JSAMPLE - JPEG_DATA_PRECISION) = PASS2_BITS - PASS1_BITS}
+ * Condition for fast IDCT where DCTELEM is used:
+ *   JPEG_DATA_PRECISION <= 10 && BITS_IN_JSAMPLE <= 13 && RANGE_BITS <= 2
+ *     [BITS_IN_JSAMPLE - 1 + RANGE_BITS + PASS2BITS <= 14]
+ * Combined for all:
+ */
+
+#if BITS_IN_JSAMPLE <= 10 && JPEG_DATA_PRECISION <= 10 && RANGE_BITS <= 2
 typedef int DCTELEM;		/* 16 or 32 bits is fine */
 #else
 typedef INT32 DCTELEM;		/* must have 32 bits */
@@ -64,9 +77,10 @@ typedef JMETHOD(void, float_DCT_method_ptr, (FAST_FLOAT * data,
  */
 
 typedef MULTIPLIER ISLOW_MULT_TYPE; /* short or int, whichever is faster */
-#if BITS_IN_JSAMPLE == 8
+#if JPEG_DATA_PRECISION <= 10 && BITS_IN_JSAMPLE <= 13
 typedef MULTIPLIER IFAST_MULT_TYPE; /* 16 bits is OK, use short if faster */
-#define IFAST_SCALE_BITS  2	/* fractional bits in scale factors */
+#define IFAST_SCALE_BITS  (10 - JPEG_DATA_PRECISION)
+				/* fractional bits in scale factors */
 #else
 typedef INT32 IFAST_MULT_TYPE;	/* need 32 bits for scaled quantizers */
 #define IFAST_SCALE_BITS  13	/* fractional bits in scale factors */
@@ -158,7 +172,7 @@ typedef FAST_FLOAT FLOAT_MULT_TYPE; /* preferred floating type */
 #define jpeg_idct_6x12		jRD6x12
 #define jpeg_idct_5x10		jRD5x10
 #define jpeg_idct_4x8		jRD4x8
-#define jpeg_idct_3x6		jRD3x8
+#define jpeg_idct_3x6		jRD3x6
 #define jpeg_idct_2x4		jRD2x4
 #define jpeg_idct_1x2		jRD1x2
 #endif /* NEED_SHORT_EXTERNAL_NAMES */
@@ -394,7 +408,7 @@ EXTERN(void) jpeg_idct_1x2
 
 #ifdef RIGHT_SHIFT_IS_UNSIGNED
 #define ISHIFT_TEMPS	DCTELEM ishift_temp;
-#if BITS_IN_JSAMPLE == 8
+#if BITS_IN_JSAMPLE <= 10 && JPEG_DATA_PRECISION <= 10 && RANGE_BITS <= 2
 #define DCTELEMBITS  16		/* DCTELEM may be 16 or 32 bits */
 #else
 #define DCTELEMBITS  32		/* DCTELEM must be 32 bits */

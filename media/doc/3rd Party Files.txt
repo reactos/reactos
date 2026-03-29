@@ -28,7 +28,7 @@ URL: http://www.geocities.com/dborca/opengl/tc.html
 
 Title: libjpeg
 Path: dll/3rdparty/libjpeg
-Used Version: 9d
+Used Version: 10
 License: custom, BSD-like
 URL: http://www.ijg.org/
 Modifications: added .spec file

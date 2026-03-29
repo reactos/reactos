@@ -2,7 +2,7 @@
  * jfdctint.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
- * Modification developed 2003-2018 by Guido Vollbeding.
+ * Modification developed 2003-2026 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -26,7 +26,7 @@
  * We also provide FDCT routines with various input sample block sizes for
  * direct resolution reduction or enlargement and for direct resolving the
  * common 2x1 and 1x2 subsampling cases without additional resampling: NxN
- * (N=1...16), 2NxN, and Nx2N (N=1...8) pixels for one 8x8 output DCT block.
+ * (N=1...16), 2NxN, and Nx2N (N=1...8) samples for one 8x8 output DCT block.
  *
  * For N<8 we fill the remaining block coefficients with zero.
  * For N>8 we apply a partial N-point FDCT on the input samples, computing
@@ -75,33 +75,37 @@
  * a problem to do in integer arithmetic.  We multiply all the constants
  * by CONST_SCALE and convert them to integer constants (thus retaining
  * CONST_BITS bits of precision in the constants).  After doing a
- * multiplication we have to divide the product by CONST_SCALE, with proper
- * rounding, to produce the correct output.  This division can be done
- * cheaply as a right shift of CONST_BITS bits.  We postpone shifting
- * as long as possible so that partial sums can be added together with
- * full fractional precision.
+ * multiplication we have to divide the product by CONST_SCALE, with
+ * proper rounding, to produce the correct output.  This division can
+ * be done cheaply as a right shift of CONST_BITS bits.  We postpone
+ * shifting as long as possible so that partial sums can be added
+ * together with full fractional precision.
  *
  * The outputs of the first pass are scaled up by PASS1_BITS bits so that
  * they are represented to better-than-integral precision.  These outputs
- * require BITS_IN_JSAMPLE + PASS1_BITS + 3 bits; this fits in a 16-bit word
- * with the recommended scaling.  (For 12-bit sample data, the intermediate
- * array is INT32 anyway.)
+ * require BITS_IN_JSAMPLE + PASS1_BITS + 3 bits; this fits in a 16-bit
+ * word with the recommended scaling.  (For higher bit depths, the
+ * intermediate array is INT32 anyway.)
  *
- * To avoid overflow of the 32-bit intermediate results in pass 2, we must
- * have BITS_IN_JSAMPLE + CONST_BITS + PASS1_BITS <= 26.  Error analysis
- * shows that the values given below are the most effective.
+ * To avoid overflow of the 32-bit intermediate results in pass 2, we
+ * must have BITS_IN_JSAMPLE + CONST_BITS + PASS1_BITS <= 26.  Error
+ * analysis shows that the values given below are the most effective.
  */
 
-#if BITS_IN_JSAMPLE == 8
+#if BITS_IN_JSAMPLE <= 10 && JPEG_DATA_PRECISION <= 10
 #define CONST_BITS  13
-#define PASS1_BITS  2
+#define PASS1_BITS  (10 - BITS_IN_JSAMPLE)
+#define PASS2_BITS  (10 - JPEG_DATA_PRECISION)
 #else
+#if BITS_IN_JSAMPLE <= 13 && JPEG_DATA_PRECISION <= 13
 #define CONST_BITS  13
-#define PASS1_BITS  1		/* lose a little precision to avoid overflow */
+#define PASS1_BITS  (13 - BITS_IN_JSAMPLE)
+#define PASS2_BITS  (13 - JPEG_DATA_PRECISION)
+#endif
 #endif
 
-/* Some C compilers fail to reduce "FIX(constant)" at compile time, thus
- * causing a lot of useless floating-point operations at run time.
+/* Some C compilers fail to reduce "FIX(constant)" at compile time,
+ * thus causing a lot of useless floating-point operations at run time.
  * To get around this we use the following pre-calculated constants.
  * If you change CONST_BITS you may want to add appropriate values.
  * (With a reasonable C compiler, you can just rely on the FIX() macro...)
@@ -137,16 +141,34 @@
 
 
 /* Multiply an INT32 variable by an INT32 constant to yield an INT32 result.
- * For 8-bit samples with the recommended scaling, all the variable
+ * For up to 10-bit data with the recommended scaling, all the variable
  * and constant values involved are no more than 16 bits wide, so a
  * 16x16->32 bit multiply can be used instead of a full 32x32 multiply.
- * For 12-bit samples, a full 32-bit multiplication will be needed.
+ * For higher bit depths, a full 32-bit multiplication will be needed.
  */
 
-#if BITS_IN_JSAMPLE == 8
+#if BITS_IN_JSAMPLE <= 10 && JPEG_DATA_PRECISION <= 10
 #define MULTIPLY(var,const)  MULTIPLY16C16(var,const)
 #else
 #define MULTIPLY(var,const)  ((var) * (const))
+#endif
+
+
+/* Pass 1 output: smart scale up. */
+
+#if PASS1_BITS > 0
+#define PASS1_OUTPUT(x)  (DCTELEM) ((x) << PASS1_BITS)
+#else
+#define PASS1_OUTPUT(x)  (DCTELEM) (x)
+#endif
+
+
+/* Pass 2 output: smart scale down. */
+
+#if PASS2_BITS > 0
+#define PASS2_OUTPUT(x)  (DCTELEM) RIGHT_SHIFT(x, PASS2_BITS)
+#else
+#define PASS2_OUTPUT(x)  (DCTELEM) (x)
 #endif
 
 
@@ -195,8 +217,8 @@ jpeg_fdct_islow (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp3 = GETJSAMPLE(elemptr[3]) - GETJSAMPLE(elemptr[4]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM) ((tmp10 + tmp11 - 8 * CENTERJSAMPLE) << PASS1_BITS);
-    dataptr[4] = (DCTELEM) ((tmp10 - tmp11) << PASS1_BITS);
+    dataptr[0] = PASS1_OUTPUT(tmp10 + tmp11 - 8 * CENTERJSAMPLE);
+    dataptr[4] = PASS1_OUTPUT(tmp10 - tmp11);
 
     z1 = MULTIPLY(tmp12 + tmp13, FIX_0_541196100);       /* c6 */
     /* Add fudge factor here for final descale. */
@@ -246,8 +268,8 @@ jpeg_fdct_islow (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * cK represents sqrt(2) * cos(K*pi/16).
    */
 
@@ -263,7 +285,15 @@ jpeg_fdct_islow (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp3 = dataptr[DCTSIZE*3] + dataptr[DCTSIZE*4];
 
     /* Add fudge factor here for final descale. */
-    tmp10 = tmp0 + tmp3 + (ONE << (PASS1_BITS-1));
+#if PASS2_BITS > 1
+    tmp10 = tmp0 + tmp3 + (ONE << (PASS2_BITS-1));
+#else
+#if PASS2_BITS > 0
+    tmp10 = tmp0 + tmp3 + ONE;
+#else
+    tmp10 = tmp0 + tmp3;
+#endif
+#endif
     tmp12 = tmp0 - tmp3;
     tmp11 = tmp1 + tmp2;
     tmp13 = tmp1 - tmp2;
@@ -273,19 +303,19 @@ jpeg_fdct_islow (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp2 = dataptr[DCTSIZE*2] - dataptr[DCTSIZE*5];
     tmp3 = dataptr[DCTSIZE*3] - dataptr[DCTSIZE*4];
 
-    dataptr[DCTSIZE*0] = (DCTELEM) RIGHT_SHIFT(tmp10 + tmp11, PASS1_BITS);
-    dataptr[DCTSIZE*4] = (DCTELEM) RIGHT_SHIFT(tmp10 - tmp11, PASS1_BITS);
+    dataptr[DCTSIZE*0] = PASS2_OUTPUT(tmp10 + tmp11);
+    dataptr[DCTSIZE*4] = PASS2_OUTPUT(tmp10 - tmp11);
 
     z1 = MULTIPLY(tmp12 + tmp13, FIX_0_541196100);       /* c6 */
     /* Add fudge factor here for final descale. */
-    z1 += ONE << (CONST_BITS+PASS1_BITS-1);
+    z1 += ONE << (CONST_BITS+PASS2_BITS-1);
 
     dataptr[DCTSIZE*2] = (DCTELEM)
       RIGHT_SHIFT(z1 + MULTIPLY(tmp12, FIX_0_765366865), /* c2-c6 */
-		  CONST_BITS+PASS1_BITS);
+		  CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*6] = (DCTELEM)
       RIGHT_SHIFT(z1 - MULTIPLY(tmp13, FIX_1_847759065), /* c2+c6 */
-		  CONST_BITS+PASS1_BITS);
+		  CONST_BITS+PASS2_BITS);
 
     /* Odd part per figure 8 --- note paper omits factor of sqrt(2).
      * i0..i3 in the paper are tmp0..tmp3 here.
@@ -296,7 +326,7 @@ jpeg_fdct_islow (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     z1 = MULTIPLY(tmp12 + tmp13, FIX_1_175875602);       /*  c3 */
     /* Add fudge factor here for final descale. */
-    z1 += ONE << (CONST_BITS+PASS1_BITS-1);
+    z1 += ONE << (CONST_BITS+PASS2_BITS-1);
 
     tmp12 = MULTIPLY(tmp12, - FIX_0_390180644);          /* -c3+c5 */
     tmp13 = MULTIPLY(tmp13, - FIX_1_961570560);          /* -c3-c5 */
@@ -315,10 +345,10 @@ jpeg_fdct_islow (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp1 += z1 + tmp13;
     tmp2 += z1 + tmp12;
 
-    dataptr[DCTSIZE*1] = (DCTELEM) RIGHT_SHIFT(tmp0, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*3] = (DCTELEM) RIGHT_SHIFT(tmp1, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*5] = (DCTELEM) RIGHT_SHIFT(tmp2, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*7] = (DCTELEM) RIGHT_SHIFT(tmp3, CONST_BITS+PASS1_BITS);
+    dataptr[DCTSIZE*1] = (DCTELEM) RIGHT_SHIFT(tmp0, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*3] = (DCTELEM) RIGHT_SHIFT(tmp1, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*5] = (DCTELEM) RIGHT_SHIFT(tmp2, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*7] = (DCTELEM) RIGHT_SHIFT(tmp3, CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -368,8 +398,7 @@ jpeg_fdct_7x7 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     z1 = tmp0 + tmp2;
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((z1 + tmp1 + tmp3 - 7 * CENTERJSAMPLE) << PASS1_BITS);
+    dataptr[0] = PASS1_OUTPUT(z1 + tmp1 + tmp3 - 7 * CENTERJSAMPLE);
     tmp3 += tmp3;
     z1 -= tmp3;
     z1 -= tmp3;
@@ -404,10 +433,10 @@ jpeg_fdct_7x7 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
-   * We must also scale the output by (8/7)**2 = 64/49, which we fold
-   * into the constant multipliers:
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
+   * We must also scale the output by (8/7)**2 = 64/49,
+   * which we fold into the constant multipliers:
    * cK now represents sqrt(2) * cos(K*pi/14) * 64/49.
    */
 
@@ -427,20 +456,20 @@ jpeg_fdct_7x7 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     z1 = tmp0 + tmp2;
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(z1 + tmp1 + tmp3, FIX(1.306122449)), /* 64/49 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     tmp3 += tmp3;
     z1 -= tmp3;
     z1 -= tmp3;
     z1 = MULTIPLY(z1, FIX(0.461784020));                /* (c2+c6-c4)/2 */
     z2 = MULTIPLY(tmp0 - tmp2, FIX(1.202428084));       /* (c2+c4-c6)/2 */
     z3 = MULTIPLY(tmp1 - tmp2, FIX(0.411026446));       /* c6 */
-    dataptr[DCTSIZE*2] = (DCTELEM) DESCALE(z1 + z2 + z3, CONST_BITS+PASS1_BITS);
+    dataptr[DCTSIZE*2] = (DCTELEM) DESCALE(z1 + z2 + z3, CONST_BITS+PASS2_BITS);
     z1 -= z2;
     z2 = MULTIPLY(tmp0 - tmp1, FIX(1.151670509));       /* c4 */
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(z2 + z3 - MULTIPLY(tmp1 - tmp3, FIX(0.923568041)), /* c2+c6-c4 */
-	      CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*6] = (DCTELEM) DESCALE(z1 + z2, CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*6] = (DCTELEM) DESCALE(z1 + z2, CONST_BITS+PASS2_BITS);
 
     /* Odd part */
 
@@ -454,9 +483,9 @@ jpeg_fdct_7x7 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp0 += tmp3;
     tmp2 += tmp3 + MULTIPLY(tmp12, FIX(2.443531355));   /* c3+c1-c5 */
 
-    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp0, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp1, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp2, CONST_BITS+PASS1_BITS);
+    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp0, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp1, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp2, CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -504,8 +533,7 @@ jpeg_fdct_6x6 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp2 = GETJSAMPLE(elemptr[2]) - GETJSAMPLE(elemptr[3]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((tmp10 + tmp11 - 6 * CENTERJSAMPLE) << PASS1_BITS);
+    dataptr[0] = PASS1_OUTPUT(tmp10 + tmp11 - 6 * CENTERJSAMPLE);
     dataptr[2] = (DCTELEM)
       DESCALE(MULTIPLY(tmp12, FIX(1.224744871)),                 /* c2 */
 	      CONST_BITS-PASS1_BITS);
@@ -518,18 +546,24 @@ jpeg_fdct_6x6 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp10 = DESCALE(MULTIPLY(tmp0 + tmp2, FIX(0.366025404)),     /* c5 */
 		    CONST_BITS-PASS1_BITS);
 
+#if PASS1_BITS > 0
     dataptr[1] = (DCTELEM) (tmp10 + ((tmp0 + tmp1) << PASS1_BITS));
     dataptr[3] = (DCTELEM) ((tmp0 - tmp1 - tmp2) << PASS1_BITS);
     dataptr[5] = (DCTELEM) (tmp10 + ((tmp2 - tmp1) << PASS1_BITS));
+#else
+    dataptr[1] = (DCTELEM) (tmp10 + tmp0 + tmp1);
+    dataptr[3] = (DCTELEM) (tmp0 - tmp1 - tmp2);
+    dataptr[5] = (DCTELEM) (tmp10 + tmp2 - tmp1);
+#endif
 
     dataptr += DCTSIZE;		/* advance pointer to next row */
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
-   * We must also scale the output by (8/6)**2 = 16/9, which we fold
-   * into the constant multipliers:
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
+   * We must also scale the output by (8/6)**2 = 16/9,
+   * which we fold into the constant multipliers:
    * cK now represents sqrt(2) * cos(K*pi/12) * 16/9.
    */
 
@@ -550,13 +584,13 @@ jpeg_fdct_6x6 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 + tmp11, FIX(1.777777778)),         /* 16/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(MULTIPLY(tmp12, FIX(2.177324216)),                 /* c2 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp11 - tmp11, FIX(1.257078722)), /* c4 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     /* Odd part */
 
@@ -564,13 +598,13 @@ jpeg_fdct_6x6 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*1] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp0 + tmp1, FIX(1.777777778)),   /* 16/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*3] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0 - tmp1 - tmp2, FIX(1.777777778)),    /* 16/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*5] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp2 - tmp1, FIX(1.777777778)),   /* 16/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -642,8 +676,8 @@ jpeg_fdct_5x5 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * We must also scale the output by (8/5)**2 = 64/25, which we partially
    * fold into the constant multipliers (other part was done in pass 1):
    * cK now represents sqrt(2) * cos(K*pi/10) * 32/25.
@@ -665,12 +699,12 @@ jpeg_fdct_5x5 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 + tmp2, FIX(1.28)),        /* 32/25 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     tmp11 = MULTIPLY(tmp11, FIX(1.011928851));          /* (c2+c4)/2 */
     tmp10 -= tmp2 << 2;
     tmp10 = MULTIPLY(tmp10, FIX(0.452548340));          /* (c2-c4)/2 */
-    dataptr[DCTSIZE*2] = (DCTELEM) DESCALE(tmp11 + tmp10, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*4] = (DCTELEM) DESCALE(tmp11 - tmp10, CONST_BITS+PASS1_BITS);
+    dataptr[DCTSIZE*2] = (DCTELEM) DESCALE(tmp11 + tmp10, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*4] = (DCTELEM) DESCALE(tmp11 - tmp10, CONST_BITS+PASS2_BITS);
 
     /* Odd part */
 
@@ -678,10 +712,10 @@ jpeg_fdct_5x5 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*1] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp0, FIX(0.657591230)), /* c1-c3 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*3] = (DCTELEM)
       DESCALE(tmp10 - MULTIPLY(tmp1, FIX(2.785601151)), /* c1+c3 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -746,8 +780,8 @@ jpeg_fdct_4x4 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * cK represents sqrt(2) * cos(K*pi/16) [refers to 8-point FDCT].
    */
 
@@ -756,27 +790,35 @@ jpeg_fdct_4x4 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     /* Even part */
 
     /* Add fudge factor here for final descale. */
-    tmp0 = dataptr[DCTSIZE*0] + dataptr[DCTSIZE*3] + (ONE << (PASS1_BITS-1));
+#if PASS2_BITS > 1
+    tmp0 = dataptr[DCTSIZE*0] + dataptr[DCTSIZE*3] + (ONE << (PASS2_BITS-1));
+#else
+#if PASS2_BITS > 0
+    tmp0 = dataptr[DCTSIZE*0] + dataptr[DCTSIZE*3] + ONE;
+#else
+    tmp0 = dataptr[DCTSIZE*0] + dataptr[DCTSIZE*3];
+#endif
+#endif
     tmp1 = dataptr[DCTSIZE*1] + dataptr[DCTSIZE*2];
 
     tmp10 = dataptr[DCTSIZE*0] - dataptr[DCTSIZE*3];
     tmp11 = dataptr[DCTSIZE*1] - dataptr[DCTSIZE*2];
 
-    dataptr[DCTSIZE*0] = (DCTELEM) RIGHT_SHIFT(tmp0 + tmp1, PASS1_BITS);
-    dataptr[DCTSIZE*2] = (DCTELEM) RIGHT_SHIFT(tmp0 - tmp1, PASS1_BITS);
+    dataptr[DCTSIZE*0] = PASS2_OUTPUT(tmp0 + tmp1);
+    dataptr[DCTSIZE*2] = PASS2_OUTPUT(tmp0 - tmp1);
 
     /* Odd part */
 
     tmp0 = MULTIPLY(tmp10 + tmp11, FIX_0_541196100);       /* c6 */
     /* Add fudge factor here for final descale. */
-    tmp0 += ONE << (CONST_BITS+PASS1_BITS-1);
+    tmp0 += ONE << (CONST_BITS+PASS2_BITS-1);
 
     dataptr[DCTSIZE*1] = (DCTELEM)
       RIGHT_SHIFT(tmp0 + MULTIPLY(tmp10, FIX_0_765366865), /* c2-c6 */
-		  CONST_BITS+PASS1_BITS);
+		  CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*3] = (DCTELEM)
       RIGHT_SHIFT(tmp0 - MULTIPLY(tmp11, FIX_1_847759065), /* c2+c6 */
-		  CONST_BITS+PASS1_BITS);
+		  CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -835,8 +877,8 @@ jpeg_fdct_3x3 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * We must also scale the output by (8/3)**2 = 64/9, which we partially
    * fold into the constant multipliers (other part was done in pass 1):
    * cK now represents sqrt(2) * cos(K*pi/6) * 16/9.
@@ -853,16 +895,16 @@ jpeg_fdct_3x3 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0 + tmp1, FIX(1.777777778)),        /* 16/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0 - tmp1 - tmp1, FIX(1.257078722)), /* c2 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     /* Odd part */
 
     dataptr[DCTSIZE*1] = (DCTELEM)
       DESCALE(MULTIPLY(tmp2, FIX(2.177324216)),               /* c1 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -905,12 +947,23 @@ jpeg_fdct_2x2 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
   /* Column 0 */
   /* Apply unsigned->signed conversion. */
-  data[DCTSIZE*0] = (tmp0 + tmp2 - 4 * CENTERJSAMPLE) << 4;
-  data[DCTSIZE*1] = (tmp0 - tmp2) << 4;
+
+#if PASS2_BITS < PASS1_BITS + 4
+  data[DCTSIZE*0] =
+    (tmp0 + tmp2 - 4 * CENTERJSAMPLE) << (4+PASS1_BITS-PASS2_BITS);
+  data[DCTSIZE*1] = (tmp0 - tmp2) << (4+PASS1_BITS-PASS2_BITS);
 
   /* Column 1 */
-  data[DCTSIZE*0+1] = (tmp1 + tmp3) << 4;
-  data[DCTSIZE*1+1] = (tmp1 - tmp3) << 4;
+  data[DCTSIZE*0+1] = (tmp1 + tmp3) << (4+PASS1_BITS-PASS2_BITS);
+  data[DCTSIZE*1+1] = (tmp1 - tmp3) << (4+PASS1_BITS-PASS2_BITS);
+#else
+  data[DCTSIZE*0] = tmp0 + tmp2 - 4 * CENTERJSAMPLE;
+  data[DCTSIZE*1] = tmp0 - tmp2;
+
+  /* Column 1 */
+  data[DCTSIZE*0+1] = tmp1 + tmp3;
+  data[DCTSIZE*1+1] = tmp1 - tmp3;
+#endif
 }
 
 
@@ -931,8 +984,23 @@ jpeg_fdct_1x1 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   /* We leave the result scaled up by an overall factor of 8. */
   /* We must also scale the output by (8/1)**2 = 2**6. */
   /* Apply unsigned->signed conversion. */
-  data[0] = (dcval - CENTERJSAMPLE) << 6;
+  data[0] = (dcval - CENTERJSAMPLE) << (6+PASS1_BITS-PASS2_BITS);
 }
+
+
+/* Pass 1 bits decrement scaling for block sizes 9, 10, 11. */
+
+#if PASS1_BITS > 0
+#define PASS1_DECR  (PASS1_BITS - 1)
+#else
+#define PASS1_DECR  0
+#endif
+
+#if PASS1_DECR > 0
+#define PASS1_OUTDEC(x)  (DCTELEM) ((x) << PASS1_DECR)
+#else
+#define PASS1_OUTDEC(x)  (DCTELEM) (x)
+#endif
 
 
 /*
@@ -954,8 +1022,7 @@ jpeg_fdct_9x9 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
   /* Pass 1: process rows.
    * Note results are scaled up by sqrt(8) compared to a true DCT;
-   * we scale the results further by 2 as part of output adaption
-   * scaling for different DCT size.
+   * furthermore, we scale the results by 2**PASS1_DECR.
    * cK represents sqrt(2) * cos(K*pi/18).
    */
 
@@ -980,35 +1047,38 @@ jpeg_fdct_9x9 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     z1 = tmp0 + tmp2 + tmp3;
     z2 = tmp1 + tmp4;
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM) ((z1 + z2 - 9 * CENTERJSAMPLE) << 1);
+    dataptr[0] = PASS1_OUTDEC(z1 + z2 - 9 * CENTERJSAMPLE);
     dataptr[6] = (DCTELEM)
       DESCALE(MULTIPLY(z1 - z2 - z2, FIX(0.707106781)),  /* c6 */
-	      CONST_BITS-1);
+	      CONST_BITS-PASS1_DECR);
     z1 = MULTIPLY(tmp0 - tmp2, FIX(1.328926049));        /* c2 */
     z2 = MULTIPLY(tmp1 - tmp4 - tmp4, FIX(0.707106781)); /* c6 */
     dataptr[2] = (DCTELEM)
       DESCALE(MULTIPLY(tmp2 - tmp3, FIX(1.083350441))    /* c4 */
-	      + z1 + z2, CONST_BITS-1);
+	      + z1 + z2, CONST_BITS-PASS1_DECR);
     dataptr[4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp3 - tmp0, FIX(0.245575608))    /* c8 */
-	      + z1 - z2, CONST_BITS-1);
+	      + z1 - z2, CONST_BITS-PASS1_DECR);
 
     /* Odd part */
 
     dataptr[3] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp12 - tmp13, FIX(1.224744871)), /* c3 */
-	      CONST_BITS-1);
+	      CONST_BITS-PASS1_DECR);
 
     tmp11 = MULTIPLY(tmp11, FIX(1.224744871));        /* c3 */
     tmp0 = MULTIPLY(tmp10 + tmp12, FIX(0.909038955)); /* c5 */
     tmp1 = MULTIPLY(tmp10 + tmp13, FIX(0.483689525)); /* c7 */
 
-    dataptr[1] = (DCTELEM) DESCALE(tmp11 + tmp0 + tmp1, CONST_BITS-1);
+    dataptr[1] = (DCTELEM)
+      DESCALE(tmp11 + tmp0 + tmp1, CONST_BITS-PASS1_DECR);
 
     tmp2 = MULTIPLY(tmp12 - tmp13, FIX(1.392728481)); /* c1 */
 
-    dataptr[5] = (DCTELEM) DESCALE(tmp0 - tmp11 - tmp2, CONST_BITS-1);
-    dataptr[7] = (DCTELEM) DESCALE(tmp1 - tmp11 + tmp2, CONST_BITS-1);
+    dataptr[5] = (DCTELEM)
+      DESCALE(tmp0 - tmp11 - tmp2, CONST_BITS-PASS1_DECR);
+    dataptr[7] = (DCTELEM)
+      DESCALE(tmp1 - tmp11 + tmp2, CONST_BITS-PASS1_DECR);
 
     ctr++;
 
@@ -1021,9 +1091,10 @@ jpeg_fdct_9x9 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We leave the results scaled up by an overall factor of 8.
+   * We remove the PASS1_DECR scaling, but leave the results scaled up
+   * by an overall factor of 8.
    * We must also scale the output by (8/9)**2 = 64/81, which we partially
-   * fold into the constant multipliers and final/initial shifting:
+   * fold into the constant multipliers and final shifting:
    * cK now represents sqrt(2) * cos(K*pi/18) * 128/81.
    */
 
@@ -1047,38 +1118,38 @@ jpeg_fdct_9x9 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     z2 = tmp1 + tmp4;
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(z1 + z2, FIX(1.580246914)),       /* 128/81 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
     dataptr[DCTSIZE*6] = (DCTELEM)
       DESCALE(MULTIPLY(z1 - z2 - z2, FIX(1.117403309)),  /* c6 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
     z1 = MULTIPLY(tmp0 - tmp2, FIX(2.100031287));        /* c2 */
     z2 = MULTIPLY(tmp1 - tmp4 - tmp4, FIX(1.117403309)); /* c6 */
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(MULTIPLY(tmp2 - tmp3, FIX(1.711961190))    /* c4 */
-	      + z1 + z2, CONST_BITS+2);
+	      + z1 + z2, CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp3 - tmp0, FIX(0.388070096))    /* c8 */
-	      + z1 - z2, CONST_BITS+2);
+	      + z1 - z2, CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
 
     /* Odd part */
 
     dataptr[DCTSIZE*3] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp12 - tmp13, FIX(1.935399303)), /* c3 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
 
     tmp11 = MULTIPLY(tmp11, FIX(1.935399303));        /* c3 */
     tmp0 = MULTIPLY(tmp10 + tmp12, FIX(1.436506004)); /* c5 */
     tmp1 = MULTIPLY(tmp10 + tmp13, FIX(0.764348879)); /* c7 */
 
-    dataptr[DCTSIZE*1] = (DCTELEM)
-      DESCALE(tmp11 + tmp0 + tmp1, CONST_BITS+2);
+    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp11 + tmp0 + tmp1,
+      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
 
     tmp2 = MULTIPLY(tmp12 - tmp13, FIX(2.200854883)); /* c1 */
 
-    dataptr[DCTSIZE*5] = (DCTELEM)
-      DESCALE(tmp0 - tmp11 - tmp2, CONST_BITS+2);
-    dataptr[DCTSIZE*7] = (DCTELEM)
-      DESCALE(tmp1 - tmp11 + tmp2, CONST_BITS+2);
+    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp0 - tmp11 - tmp2,
+      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp1 - tmp11 + tmp2,
+      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -1104,8 +1175,7 @@ jpeg_fdct_10x10 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
   /* Pass 1: process rows.
    * Note results are scaled up by sqrt(8) compared to a true DCT;
-   * we scale the results further by 2 as part of output adaption
-   * scaling for different DCT size.
+   * furthermore, we scale the results by 2**PASS1_DECR.
    * cK represents sqrt(2) * cos(K*pi/20).
    */
 
@@ -1134,39 +1204,39 @@ jpeg_fdct_10x10 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp4 = GETJSAMPLE(elemptr[4]) - GETJSAMPLE(elemptr[5]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((tmp10 + tmp11 + tmp12 - 10 * CENTERJSAMPLE) << 1);
+    dataptr[0] =
+      PASS1_OUTDEC(tmp10 + tmp11 + tmp12 - 10 * CENTERJSAMPLE);
     tmp12 += tmp12;
     dataptr[4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp12, FIX(1.144122806)) - /* c4 */
 	      MULTIPLY(tmp11 - tmp12, FIX(0.437016024)),  /* c8 */
-	      CONST_BITS-1);
+	      CONST_BITS-PASS1_DECR);
     tmp10 = MULTIPLY(tmp13 + tmp14, FIX(0.831253876));    /* c6 */
     dataptr[2] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp13, FIX(0.513743148)),  /* c2-c6 */
-	      CONST_BITS-1);
+	      CONST_BITS-PASS1_DECR);
     dataptr[6] = (DCTELEM)
       DESCALE(tmp10 - MULTIPLY(tmp14, FIX(2.176250899)),  /* c2+c6 */
-	      CONST_BITS-1);
+	      CONST_BITS-PASS1_DECR);
 
     /* Odd part */
 
     tmp10 = tmp0 + tmp4;
     tmp11 = tmp1 - tmp3;
-    dataptr[5] = (DCTELEM) ((tmp10 - tmp11 - tmp2) << 1);
+    dataptr[5] = PASS1_OUTDEC(tmp10 - tmp11 - tmp2);
     tmp2 <<= CONST_BITS;
     dataptr[1] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0, FIX(1.396802247)) +          /* c1 */
 	      MULTIPLY(tmp1, FIX(1.260073511)) + tmp2 +   /* c3 */
 	      MULTIPLY(tmp3, FIX(0.642039522)) +          /* c7 */
 	      MULTIPLY(tmp4, FIX(0.221231742)),           /* c9 */
-	      CONST_BITS-1);
+	      CONST_BITS-PASS1_DECR);
     tmp12 = MULTIPLY(tmp0 - tmp4, FIX(0.951056516)) -     /* (c3+c7)/2 */
 	    MULTIPLY(tmp1 + tmp3, FIX(0.587785252));      /* (c1-c9)/2 */
     tmp13 = MULTIPLY(tmp10 + tmp11, FIX(0.309016994)) +   /* (c3-c7)/2 */
 	    (tmp11 << (CONST_BITS - 1)) - tmp2;
-    dataptr[3] = (DCTELEM) DESCALE(tmp12 + tmp13, CONST_BITS-1);
-    dataptr[7] = (DCTELEM) DESCALE(tmp12 - tmp13, CONST_BITS-1);
+    dataptr[3] = (DCTELEM) DESCALE(tmp12 + tmp13, CONST_BITS-PASS1_DECR);
+    dataptr[7] = (DCTELEM) DESCALE(tmp12 - tmp13, CONST_BITS-PASS1_DECR);
 
     ctr++;
 
@@ -1179,9 +1249,10 @@ jpeg_fdct_10x10 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We leave the results scaled up by an overall factor of 8.
+   * We remove the PASS1_DECR scaling, but leave the results scaled up
+   * by an overall factor of 8.
    * We must also scale the output by (8/10)**2 = 16/25, which we partially
-   * fold into the constant multipliers and final/initial shifting:
+   * fold into the constant multipliers and final shifting:
    * cK now represents sqrt(2) * cos(K*pi/20) * 32/25.
    */
 
@@ -1209,19 +1280,19 @@ jpeg_fdct_10x10 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 + tmp11 + tmp12, FIX(1.28)), /* 32/25 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
     tmp12 += tmp12;
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp12, FIX(1.464477191)) - /* c4 */
 	      MULTIPLY(tmp11 - tmp12, FIX(0.559380511)),  /* c8 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
     tmp10 = MULTIPLY(tmp13 + tmp14, FIX(1.064004961));    /* c6 */
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp13, FIX(0.657591230)),  /* c2-c6 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
     dataptr[DCTSIZE*6] = (DCTELEM)
       DESCALE(tmp10 - MULTIPLY(tmp14, FIX(2.785601151)),  /* c2+c6 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
 
     /* Odd part */
 
@@ -1229,20 +1300,22 @@ jpeg_fdct_10x10 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp11 = tmp1 - tmp3;
     dataptr[DCTSIZE*5] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp11 - tmp2, FIX(1.28)),  /* 32/25 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
     tmp2 = MULTIPLY(tmp2, FIX(1.28));                     /* 32/25 */
     dataptr[DCTSIZE*1] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0, FIX(1.787906876)) +          /* c1 */
 	      MULTIPLY(tmp1, FIX(1.612894094)) + tmp2 +   /* c3 */
 	      MULTIPLY(tmp3, FIX(0.821810588)) +          /* c7 */
 	      MULTIPLY(tmp4, FIX(0.283176630)),           /* c9 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
     tmp12 = MULTIPLY(tmp0 - tmp4, FIX(1.217352341)) -     /* (c3+c7)/2 */
 	    MULTIPLY(tmp1 + tmp3, FIX(0.752365123));      /* (c1-c9)/2 */
     tmp13 = MULTIPLY(tmp10 + tmp11, FIX(0.395541753)) +   /* (c3-c7)/2 */
 	    MULTIPLY(tmp11, FIX(0.64)) - tmp2;            /* 16/25 */
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp12 + tmp13, CONST_BITS+2);
-    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp12 - tmp13, CONST_BITS+2);
+    dataptr[DCTSIZE*3] = (DCTELEM)
+      DESCALE(tmp12 + tmp13, CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*7] = (DCTELEM)
+      DESCALE(tmp12 - tmp13, CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -1269,8 +1342,7 @@ jpeg_fdct_11x11 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
   /* Pass 1: process rows.
    * Note results are scaled up by sqrt(8) compared to a true DCT;
-   * we scale the results further by 2 as part of output adaption
-   * scaling for different DCT size.
+   * furthermore, we scale the results by 2**PASS1_DECR.
    * cK represents sqrt(2) * cos(K*pi/22).
    */
 
@@ -1295,8 +1367,8 @@ jpeg_fdct_11x11 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp14 = GETJSAMPLE(elemptr[4]) - GETJSAMPLE(elemptr[6]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((tmp0 + tmp1 + tmp2 + tmp3 + tmp4 + tmp5 - 11 * CENTERJSAMPLE) << 1);
+    dataptr[0] =
+      PASS1_OUTDEC(tmp0 + tmp1 + tmp2 + tmp3 + tmp4 + tmp5 - 11 * CENTERJSAMPLE);
     tmp5 += tmp5;
     tmp0 -= tmp5;
     tmp1 -= tmp5;
@@ -1310,16 +1382,16 @@ jpeg_fdct_11x11 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[2] = (DCTELEM)
       DESCALE(z1 + z2 - MULTIPLY(tmp3, FIX(1.018300590)) /* c2+c8-c6 */
 	      - MULTIPLY(tmp4, FIX(1.390975730)),        /* c4+c10 */
-	      CONST_BITS-1);
+	      CONST_BITS-PASS1_DECR);
     dataptr[4] = (DCTELEM)
       DESCALE(z2 + z3 + MULTIPLY(tmp1, FIX(0.062335650)) /* c4-c6-c10 */
 	      - MULTIPLY(tmp2, FIX(1.356927976))         /* c2 */
 	      + MULTIPLY(tmp4, FIX(0.587485545)),        /* c8 */
-	      CONST_BITS-1);
+	      CONST_BITS-PASS1_DECR);
     dataptr[6] = (DCTELEM)
       DESCALE(z1 + z3 - MULTIPLY(tmp0, FIX(1.620527200)) /* c2+c4-c6 */
 	      - MULTIPLY(tmp2, FIX(0.788749120)),        /* c8+c10 */
-	      CONST_BITS-1);
+	      CONST_BITS-PASS1_DECR);
 
     /* Odd part */
 
@@ -1338,10 +1410,10 @@ jpeg_fdct_11x11 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp3 += tmp5 + tmp10 + MULTIPLY(tmp13, FIX(1.305598626)) /* c1+c5-c9-c7 */
 	    - MULTIPLY(tmp14, FIX(1.286413905));         /* c3 */
 
-    dataptr[1] = (DCTELEM) DESCALE(tmp0, CONST_BITS-1);
-    dataptr[3] = (DCTELEM) DESCALE(tmp1, CONST_BITS-1);
-    dataptr[5] = (DCTELEM) DESCALE(tmp2, CONST_BITS-1);
-    dataptr[7] = (DCTELEM) DESCALE(tmp3, CONST_BITS-1);
+    dataptr[1] = (DCTELEM) DESCALE(tmp0, CONST_BITS-PASS1_DECR);
+    dataptr[3] = (DCTELEM) DESCALE(tmp1, CONST_BITS-PASS1_DECR);
+    dataptr[5] = (DCTELEM) DESCALE(tmp2, CONST_BITS-PASS1_DECR);
+    dataptr[7] = (DCTELEM) DESCALE(tmp3, CONST_BITS-PASS1_DECR);
 
     ctr++;
 
@@ -1354,9 +1426,10 @@ jpeg_fdct_11x11 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We leave the results scaled up by an overall factor of 8.
+   * We remove the PASS1_DECR scaling, but leave the results scaled up
+   * by an overall factor of 8.
    * We must also scale the output by (8/11)**2 = 64/121, which we partially
-   * fold into the constant multipliers and final/initial shifting:
+   * fold into the constant multipliers and final shifting:
    * cK now represents sqrt(2) * cos(K*pi/22) * 128/121.
    */
 
@@ -1381,7 +1454,7 @@ jpeg_fdct_11x11 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0 + tmp1 + tmp2 + tmp3 + tmp4 + tmp5,
 		       FIX(1.057851240)),                /* 128/121 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
     tmp5 += tmp5;
     tmp0 -= tmp5;
     tmp1 -= tmp5;
@@ -1395,16 +1468,16 @@ jpeg_fdct_11x11 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(z1 + z2 - MULTIPLY(tmp3, FIX(1.077210542)) /* c2+c8-c6 */
 	      - MULTIPLY(tmp4, FIX(1.471445400)),        /* c4+c10 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(z2 + z3 + MULTIPLY(tmp1, FIX(0.065941844)) /* c4-c6-c10 */
 	      - MULTIPLY(tmp2, FIX(1.435427942))         /* c2 */
 	      + MULTIPLY(tmp4, FIX(0.621472312)),        /* c8 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
     dataptr[DCTSIZE*6] = (DCTELEM)
       DESCALE(z1 + z3 - MULTIPLY(tmp0, FIX(1.714276708)) /* c2+c4-c6 */
 	      - MULTIPLY(tmp2, FIX(0.834379234)),        /* c8+c10 */
-	      CONST_BITS+2);
+	      CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
 
     /* Odd part */
 
@@ -1423,10 +1496,14 @@ jpeg_fdct_11x11 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp3 += tmp5 + tmp10 + MULTIPLY(tmp13, FIX(1.381129125)) /* c1+c5-c9-c7 */
 	    - MULTIPLY(tmp14, FIX(1.360834544));         /* c3 */
 
-    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp0, CONST_BITS+2);
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp1, CONST_BITS+2);
-    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp2, CONST_BITS+2);
-    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp3, CONST_BITS+2);
+    dataptr[DCTSIZE*1] = (DCTELEM)
+      DESCALE(tmp0, CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*3] = (DCTELEM)
+      DESCALE(tmp1, CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*5] = (DCTELEM)
+      DESCALE(tmp2, CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*7] = (DCTELEM)
+      DESCALE(tmp3, CONST_BITS+PASS1_DECR+1+PASS2_BITS-PASS1_BITS);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -1560,17 +1637,17 @@ jpeg_fdct_12x12 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 + tmp11 + tmp12, FIX(0.888888889)), /* 8/9 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
     dataptr[DCTSIZE*6] = (DCTELEM)
       DESCALE(MULTIPLY(tmp13 - tmp14 - tmp15, FIX(0.888888889)), /* 8/9 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp12, FIX(1.088662108)),         /* c4 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(MULTIPLY(tmp14 - tmp15, FIX(0.888888889)) +        /* 8/9 */
 	      MULTIPLY(tmp13 + tmp15, FIX(1.214244803)),         /* c2 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
 
     /* Odd part */
 
@@ -1589,10 +1666,14 @@ jpeg_fdct_12x12 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp11 = tmp15 + MULTIPLY(tmp0 - tmp3, FIX(1.161389302)) /* c3 */
 	    - MULTIPLY(tmp2 + tmp5, FIX(0.481063200)); /* c9 */
 
-    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp10, CONST_BITS+1);
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp11, CONST_BITS+1);
-    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp12, CONST_BITS+1);
-    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp13, CONST_BITS+1);
+    dataptr[DCTSIZE*1] = (DCTELEM)
+      DESCALE(tmp10, CONST_BITS+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*3] = (DCTELEM)
+      DESCALE(tmp11, CONST_BITS+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*5] = (DCTELEM)
+      DESCALE(tmp12, CONST_BITS+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*7] = (DCTELEM)
+      DESCALE(tmp13, CONST_BITS+1+PASS2_BITS-PASS1_BITS);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -1740,7 +1821,7 @@ jpeg_fdct_13x13 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0 + tmp1 + tmp2 + tmp3 + tmp4 + tmp5 + tmp6,
 		       FIX(0.757396450)),          /* 128/169 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
     tmp6 += tmp6;
     tmp0 -= tmp6;
     tmp1 -= tmp6;
@@ -1755,7 +1836,7 @@ jpeg_fdct_13x13 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 	      MULTIPLY(tmp3, FIX(0.129109289)) -   /* c12 */
 	      MULTIPLY(tmp4, FIX(0.608465700)) -   /* c8 */
 	      MULTIPLY(tmp5, FIX(0.948429952)),    /* c4 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
     z1 = MULTIPLY(tmp0 - tmp2, FIX(0.875087516)) - /* (c4+c6)/2 */
 	 MULTIPLY(tmp3 - tmp4, FIX(0.330085509)) - /* (c2-c10)/2 */
 	 MULTIPLY(tmp1 - tmp5, FIX(0.239678205));  /* (c8-c12)/2 */
@@ -1763,8 +1844,10 @@ jpeg_fdct_13x13 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 	 MULTIPLY(tmp3 + tmp4, FIX(0.709910013)) + /* (c2+c10)/2 */
 	 MULTIPLY(tmp1 + tmp5, FIX(0.368787494));  /* (c8+c12)/2 */
 
-    dataptr[DCTSIZE*4] = (DCTELEM) DESCALE(z1 + z2, CONST_BITS+1);
-    dataptr[DCTSIZE*6] = (DCTELEM) DESCALE(z1 - z2, CONST_BITS+1);
+    dataptr[DCTSIZE*4] = (DCTELEM)
+      DESCALE(z1 + z2, CONST_BITS+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*6] = (DCTELEM)
+      DESCALE(z1 - z2, CONST_BITS+1+PASS2_BITS-PASS1_BITS);
 
     /* Odd part */
 
@@ -1789,10 +1872,14 @@ jpeg_fdct_13x13 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 	    MULTIPLY(tmp13, FIX(1.670519935)) -         /* c3+c5+c9-c7 */
 	    MULTIPLY(tmp15, FIX(1.319646532));          /* c1+c11 */
 
-    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp0, CONST_BITS+1);
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp1, CONST_BITS+1);
-    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp2, CONST_BITS+1);
-    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp3, CONST_BITS+1);
+    dataptr[DCTSIZE*1] = (DCTELEM)
+      DESCALE(tmp0, CONST_BITS+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*3] = (DCTELEM)
+      DESCALE(tmp1, CONST_BITS+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*5] = (DCTELEM)
+      DESCALE(tmp2, CONST_BITS+1+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*7] = (DCTELEM)
+      DESCALE(tmp3, CONST_BITS+1+PASS2_BITS-PASS1_BITS);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -1946,24 +2033,24 @@ jpeg_fdct_14x14 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 + tmp11 + tmp12 + tmp13,
 		       FIX(0.653061224)),                 /* 32/49 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
     tmp13 += tmp13;
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp13, FIX(0.832106052)) + /* c4 */
 	      MULTIPLY(tmp11 - tmp13, FIX(0.205513223)) - /* c12 */
 	      MULTIPLY(tmp12 - tmp13, FIX(0.575835255)),  /* c8 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
 
     tmp10 = MULTIPLY(tmp14 + tmp15, FIX(0.722074570));    /* c6 */
 
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp14, FIX(0.178337691))   /* c2-c6 */
 	      + MULTIPLY(tmp16, FIX(0.400721155)),        /* c10 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
     dataptr[DCTSIZE*6] = (DCTELEM)
       DESCALE(tmp10 - MULTIPLY(tmp15, FIX(1.122795725))   /* c6+c10 */
 	      - MULTIPLY(tmp16, FIX(0.900412262)),        /* c2 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
 
     /* Odd part */
 
@@ -1972,7 +2059,7 @@ jpeg_fdct_14x14 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[DCTSIZE*7] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0 - tmp10 + tmp3 - tmp11 - tmp6,
 		       FIX(0.653061224)),                 /* 32/49 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
     tmp3  = MULTIPLY(tmp3 , FIX(0.653061224));            /* 32/49 */
     tmp10 = MULTIPLY(tmp10, - FIX(0.103406812));          /* -c13 */
     tmp11 = MULTIPLY(tmp11, FIX(0.917760839));            /* c1 */
@@ -1982,18 +2069,18 @@ jpeg_fdct_14x14 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[DCTSIZE*5] = (DCTELEM)
       DESCALE(tmp10 + tmp11 - MULTIPLY(tmp2, FIX(1.550341076)) /* c3+c5-c13 */
 	      + MULTIPLY(tmp4, FIX(0.731428202)),         /* c1+c11-c9 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
     tmp12 = MULTIPLY(tmp0 + tmp1, FIX(0.871740478)) +     /* c3 */
 	    MULTIPLY(tmp5 - tmp6, FIX(0.305035186));      /* c11 */
     dataptr[DCTSIZE*3] = (DCTELEM)
       DESCALE(tmp10 + tmp12 - MULTIPLY(tmp1, FIX(0.276965844)) /* c3-c9-c13 */
 	      - MULTIPLY(tmp5, FIX(2.004803435)),         /* c1+c5+c11 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
     dataptr[DCTSIZE*1] = (DCTELEM)
       DESCALE(tmp11 + tmp12 + tmp3
 	      - MULTIPLY(tmp0, FIX(0.735987049))          /* c3+c5-c1 */
 	      - MULTIPLY(tmp6, FIX(0.082925825)),         /* c9-c11-c13 */
-	      CONST_BITS+1);
+	      CONST_BITS+1+PASS2_BITS-PASS1_BITS);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -2135,12 +2222,12 @@ jpeg_fdct_15x15 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     z3 = tmp2 + tmp7;
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(z1 + z2 + z3, FIX(1.137777778)), /* 256/225 */
-	      CONST_BITS+2);
+	      CONST_BITS+2+PASS2_BITS-PASS1_BITS);
     z3 += z3;
     dataptr[DCTSIZE*6] = (DCTELEM)
       DESCALE(MULTIPLY(z1 - z3, FIX(1.301757503)) - /* c6 */
 	      MULTIPLY(z2 - z3, FIX(0.497227121)),  /* c12 */
-	      CONST_BITS+2);
+	      CONST_BITS+2+PASS2_BITS-PASS1_BITS);
     tmp2 += ((tmp1 + tmp4) >> 1) - tmp7 - tmp7;
     z1 = MULTIPLY(tmp3 - tmp2, FIX(1.742091575)) -  /* c2+c14 */
          MULTIPLY(tmp6 - tmp2, FIX(2.546621957));   /* c4+c8 */
@@ -2150,8 +2237,10 @@ jpeg_fdct_15x15 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 	 MULTIPLY(tmp6 - tmp5, FIX(1.076671805)) +  /* c8 */
 	 MULTIPLY(tmp1 - tmp4, FIX(0.899492312));   /* (c6+c12)/2 */
 
-    dataptr[DCTSIZE*2] = (DCTELEM) DESCALE(z1 + z3, CONST_BITS+2);
-    dataptr[DCTSIZE*4] = (DCTELEM) DESCALE(z2 + z3, CONST_BITS+2);
+    dataptr[DCTSIZE*2] = (DCTELEM)
+      DESCALE(z1 + z3, CONST_BITS+2+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*4] = (DCTELEM)
+      DESCALE(z2 + z3, CONST_BITS+2+PASS2_BITS-PASS1_BITS);
 
     /* Odd part */
 
@@ -2170,10 +2259,14 @@ jpeg_fdct_15x15 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 	   MULTIPLY(tmp11, FIX(2.476089912)) -                 /* c3+c9 */
 	   MULTIPLY(tmp15, FIX(0.989006518)) + tmp4 - tmp12;   /* c11+c13 */
 
-    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp0, CONST_BITS+2);
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp1, CONST_BITS+2);
-    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp2, CONST_BITS+2);
-    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp3, CONST_BITS+2);
+    dataptr[DCTSIZE*1] = (DCTELEM)
+      DESCALE(tmp0, CONST_BITS+2+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*3] = (DCTELEM)
+      DESCALE(tmp1, CONST_BITS+2+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*5] = (DCTELEM)
+      DESCALE(tmp2, CONST_BITS+2+PASS2_BITS-PASS1_BITS);
+    dataptr[DCTSIZE*7] = (DCTELEM)
+      DESCALE(tmp3, CONST_BITS+2+PASS2_BITS-PASS1_BITS);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -2238,8 +2331,8 @@ jpeg_fdct_16x16 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp7 = GETJSAMPLE(elemptr[7]) - GETJSAMPLE(elemptr[8]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((tmp10 + tmp11 + tmp12 + tmp13 - 16 * CENTERJSAMPLE) << PASS1_BITS);
+    dataptr[0] =
+      PASS1_OUTPUT(tmp10 + tmp11 + tmp12 + tmp13 - 16 * CENTERJSAMPLE);
     dataptr[4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp13, FIX(1.306562965)) + /* c4[16] = c2[8] */
 	      MULTIPLY(tmp11 - tmp12, FIX_0_541196100),   /* c12[16] = c6[8] */
@@ -2297,8 +2390,8 @@ jpeg_fdct_16x16 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * We must also scale the output by (8/16)**2 = 1/2**2.
    * cK represents sqrt(2) * cos(K*pi/32).
    */
@@ -2336,11 +2429,11 @@ jpeg_fdct_16x16 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp7 = dataptr[DCTSIZE*7] - wsptr[DCTSIZE*0];
 
     dataptr[DCTSIZE*0] = (DCTELEM)
-      DESCALE(tmp10 + tmp11 + tmp12 + tmp13, PASS1_BITS+2);
+      DESCALE(tmp10 + tmp11 + tmp12 + tmp13, PASS2_BITS+2);
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp13, FIX(1.306562965)) + /* c4[16] = c2[8] */
 	      MULTIPLY(tmp11 - tmp12, FIX_0_541196100),   /* c12[16] = c6[8] */
-	      CONST_BITS+PASS1_BITS+2);
+	      CONST_BITS+PASS2_BITS+2);
 
     tmp10 = MULTIPLY(tmp17 - tmp15, FIX(0.275899379)) +   /* c14[16] = c7[8] */
 	    MULTIPLY(tmp14 - tmp16, FIX(1.387039845));    /* c2[16] = c1[8] */
@@ -2348,11 +2441,11 @@ jpeg_fdct_16x16 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp15, FIX(1.451774982))   /* c6+c14 */
 	      + MULTIPLY(tmp16, FIX(2.172734804)),        /* c2+10 */
-	      CONST_BITS+PASS1_BITS+2);
+	      CONST_BITS+PASS2_BITS+2);
     dataptr[DCTSIZE*6] = (DCTELEM)
       DESCALE(tmp10 - MULTIPLY(tmp14, FIX(0.211164243))   /* c2-c6 */
 	      - MULTIPLY(tmp17, FIX(1.061594338)),        /* c10+c14 */
-	      CONST_BITS+PASS1_BITS+2);
+	      CONST_BITS+PASS2_BITS+2);
 
     /* Odd part */
 
@@ -2378,10 +2471,10 @@ jpeg_fdct_16x16 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp13 += tmp15 + tmp16 + MULTIPLY(tmp3, FIX(1.065388962)) /* c15+c3+c11-c7 */
 	     + MULTIPLY(tmp4, FIX(2.167985692));              /* c1+c13+c5-c9 */
 
-    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp10, CONST_BITS+PASS1_BITS+2);
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp11, CONST_BITS+PASS1_BITS+2);
-    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp12, CONST_BITS+PASS1_BITS+2);
-    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp13, CONST_BITS+PASS1_BITS+2);
+    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp10, CONST_BITS+PASS2_BITS+2);
+    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp11, CONST_BITS+PASS2_BITS+2);
+    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp12, CONST_BITS+PASS2_BITS+2);
+    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp13, CONST_BITS+PASS2_BITS+2);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -2447,8 +2540,8 @@ jpeg_fdct_16x8 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp7 = GETJSAMPLE(elemptr[7]) - GETJSAMPLE(elemptr[8]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((tmp10 + tmp11 + tmp12 + tmp13 - 16 * CENTERJSAMPLE) << PASS1_BITS);
+    dataptr[0] =
+      PASS1_OUTPUT(tmp10 + tmp11 + tmp12 + tmp13 - 16 * CENTERJSAMPLE);
     dataptr[4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp13, FIX(1.306562965)) + /* c4[16] = c2[8] */
 	      MULTIPLY(tmp11 - tmp12, FIX_0_541196100),   /* c12[16] = c6[8] */
@@ -2499,8 +2592,8 @@ jpeg_fdct_16x8 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * We must also scale the output by 8/16 = 1/2.
    * 8-point FDCT kernel, cK represents sqrt(2) * cos(K*pi/16).
    */
@@ -2516,7 +2609,12 @@ jpeg_fdct_16x8 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp2 = dataptr[DCTSIZE*2] + dataptr[DCTSIZE*5];
     tmp3 = dataptr[DCTSIZE*3] + dataptr[DCTSIZE*4];
 
-    tmp10 = tmp0 + tmp3;
+    /* Add fudge factor here for final descale. */
+#if PASS2_BITS > 0
+    tmp10 = tmp0 + tmp3 + (ONE << PASS2_BITS);
+#else
+    tmp10 = tmp0 + tmp3 + ONE;
+#endif
     tmp12 = tmp0 - tmp3;
     tmp11 = tmp1 + tmp2;
     tmp13 = tmp1 - tmp2;
@@ -2526,16 +2624,19 @@ jpeg_fdct_16x8 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp2 = dataptr[DCTSIZE*2] - dataptr[DCTSIZE*5];
     tmp3 = dataptr[DCTSIZE*3] - dataptr[DCTSIZE*4];
 
-    dataptr[DCTSIZE*0] = (DCTELEM) DESCALE(tmp10 + tmp11, PASS1_BITS+1);
-    dataptr[DCTSIZE*4] = (DCTELEM) DESCALE(tmp10 - tmp11, PASS1_BITS+1);
+    dataptr[DCTSIZE*0] = (DCTELEM) RIGHT_SHIFT(tmp10 + tmp11, PASS2_BITS+1);
+    dataptr[DCTSIZE*4] = (DCTELEM) RIGHT_SHIFT(tmp10 - tmp11, PASS2_BITS+1);
 
-    z1 = MULTIPLY(tmp12 + tmp13, FIX_0_541196100);   /* c6 */
+    z1 = MULTIPLY(tmp12 + tmp13, FIX_0_541196100);       /* c6 */
+    /* Add fudge factor here for final descale. */
+    z1 += ONE << (CONST_BITS+PASS2_BITS);
+
     dataptr[DCTSIZE*2] = (DCTELEM)
-      DESCALE(z1 + MULTIPLY(tmp12, FIX_0_765366865), /* c2-c6 */
-	      CONST_BITS+PASS1_BITS+1);
+      RIGHT_SHIFT(z1 + MULTIPLY(tmp12, FIX_0_765366865), /* c2-c6 */
+		  CONST_BITS+PASS2_BITS+1);
     dataptr[DCTSIZE*6] = (DCTELEM)
-      DESCALE(z1 - MULTIPLY(tmp13, FIX_1_847759065), /* c2+c6 */
-	      CONST_BITS+PASS1_BITS+1);
+      RIGHT_SHIFT(z1 - MULTIPLY(tmp13, FIX_1_847759065), /* c2+c6 */
+		  CONST_BITS+PASS2_BITS+1);
 
     /* Odd part per figure 8 --- note paper omits factor of sqrt(2).
      * i0..i3 in the paper are tmp0..tmp3 here.
@@ -2544,28 +2645,31 @@ jpeg_fdct_16x8 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp12 = tmp0 + tmp2;
     tmp13 = tmp1 + tmp3;
 
-    z1 = MULTIPLY(tmp12 + tmp13, FIX_1_175875602);   /*  c3 */
-    tmp12 = MULTIPLY(tmp12, - FIX_0_390180644);      /* -c3+c5 */
-    tmp13 = MULTIPLY(tmp13, - FIX_1_961570560);      /* -c3-c5 */
+    z1 = MULTIPLY(tmp12 + tmp13, FIX_1_175875602);       /*  c3 */
+    /* Add fudge factor here for final descale. */
+    z1 += ONE << (CONST_BITS+PASS2_BITS);
+
+    tmp12 = MULTIPLY(tmp12, - FIX_0_390180644);          /* -c3+c5 */
+    tmp13 = MULTIPLY(tmp13, - FIX_1_961570560);          /* -c3-c5 */
     tmp12 += z1;
     tmp13 += z1;
 
-    z1 = MULTIPLY(tmp0 + tmp3, - FIX_0_899976223);   /* -c3+c7 */
-    tmp0 = MULTIPLY(tmp0, FIX_1_501321110);          /*  c1+c3-c5-c7 */
-    tmp3 = MULTIPLY(tmp3, FIX_0_298631336);          /* -c1+c3+c5-c7 */
+    z1 = MULTIPLY(tmp0 + tmp3, - FIX_0_899976223);       /* -c3+c7 */
+    tmp0 = MULTIPLY(tmp0, FIX_1_501321110);              /*  c1+c3-c5-c7 */
+    tmp3 = MULTIPLY(tmp3, FIX_0_298631336);              /* -c1+c3+c5-c7 */
     tmp0 += z1 + tmp12;
     tmp3 += z1 + tmp13;
 
-    z1 = MULTIPLY(tmp1 + tmp2, - FIX_2_562915447);   /* -c1-c3 */
-    tmp1 = MULTIPLY(tmp1, FIX_3_072711026);          /*  c1+c3+c5-c7 */
-    tmp2 = MULTIPLY(tmp2, FIX_2_053119869);          /*  c1+c3-c5+c7 */
+    z1 = MULTIPLY(tmp1 + tmp2, - FIX_2_562915447);       /* -c1-c3 */
+    tmp1 = MULTIPLY(tmp1, FIX_3_072711026);              /*  c1+c3+c5-c7 */
+    tmp2 = MULTIPLY(tmp2, FIX_2_053119869);              /*  c1+c3-c5+c7 */
     tmp1 += z1 + tmp13;
     tmp2 += z1 + tmp12;
 
-    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp0, CONST_BITS+PASS1_BITS+1);
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp1, CONST_BITS+PASS1_BITS+1);
-    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp2, CONST_BITS+PASS1_BITS+1);
-    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp3, CONST_BITS+PASS1_BITS+1);
+    dataptr[DCTSIZE*1] = (DCTELEM) RIGHT_SHIFT(tmp0, CONST_BITS+PASS2_BITS+1);
+    dataptr[DCTSIZE*3] = (DCTELEM) RIGHT_SHIFT(tmp1, CONST_BITS+PASS2_BITS+1);
+    dataptr[DCTSIZE*5] = (DCTELEM) RIGHT_SHIFT(tmp2, CONST_BITS+PASS2_BITS+1);
+    dataptr[DCTSIZE*7] = (DCTELEM) RIGHT_SHIFT(tmp3, CONST_BITS+PASS2_BITS+1);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -2628,8 +2732,8 @@ jpeg_fdct_14x7 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp6 = GETJSAMPLE(elemptr[6]) - GETJSAMPLE(elemptr[7]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((tmp10 + tmp11 + tmp12 + tmp13 - 14 * CENTERJSAMPLE) << PASS1_BITS);
+    dataptr[0] =
+      PASS1_OUTPUT(tmp10 + tmp11 + tmp12 + tmp13 - 14 * CENTERJSAMPLE);
     tmp13 += tmp13;
     dataptr[4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp13, FIX(1.274162392)) + /* c4 */
@@ -2652,7 +2756,7 @@ jpeg_fdct_14x7 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     tmp10 = tmp1 + tmp2;
     tmp11 = tmp5 - tmp4;
-    dataptr[7] = (DCTELEM) ((tmp0 - tmp10 + tmp3 - tmp11 - tmp6) << PASS1_BITS);
+    dataptr[7] = PASS1_OUTPUT(tmp0 - tmp10 + tmp3 - tmp11 - tmp6);
     tmp3 <<= CONST_BITS;
     tmp10 = MULTIPLY(tmp10, - FIX(0.158341681));          /* -c13 */
     tmp11 = MULTIPLY(tmp11, FIX(1.405321284));            /* c1 */
@@ -2678,8 +2782,8 @@ jpeg_fdct_14x7 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * We must also scale the output by (8/14)*(8/7) = 32/49, which we
    * partially fold into the constant multipliers and final shifting:
    * 7-point FDCT kernel, cK represents sqrt(2) * cos(K*pi/14) * 64/49.
@@ -2701,20 +2805,20 @@ jpeg_fdct_14x7 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     z1 = tmp0 + tmp2;
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(z1 + tmp1 + tmp3, FIX(1.306122449)), /* 64/49 */
-	      CONST_BITS+PASS1_BITS+1);
+	      CONST_BITS+PASS2_BITS+1);
     tmp3 += tmp3;
     z1 -= tmp3;
     z1 -= tmp3;
     z1 = MULTIPLY(z1, FIX(0.461784020));                /* (c2+c6-c4)/2 */
     z2 = MULTIPLY(tmp0 - tmp2, FIX(1.202428084));       /* (c2+c4-c6)/2 */
     z3 = MULTIPLY(tmp1 - tmp2, FIX(0.411026446));       /* c6 */
-    dataptr[DCTSIZE*2] = (DCTELEM) DESCALE(z1 + z2 + z3, CONST_BITS+PASS1_BITS+1);
+    dataptr[DCTSIZE*2] = (DCTELEM) DESCALE(z1 + z2 + z3, CONST_BITS+PASS2_BITS+1);
     z1 -= z2;
     z2 = MULTIPLY(tmp0 - tmp1, FIX(1.151670509));       /* c4 */
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(z2 + z3 - MULTIPLY(tmp1 - tmp3, FIX(0.923568041)), /* c2+c6-c4 */
-	      CONST_BITS+PASS1_BITS+1);
-    dataptr[DCTSIZE*6] = (DCTELEM) DESCALE(z1 + z2, CONST_BITS+PASS1_BITS+1);
+	      CONST_BITS+PASS2_BITS+1);
+    dataptr[DCTSIZE*6] = (DCTELEM) DESCALE(z1 + z2, CONST_BITS+PASS2_BITS+1);
 
     /* Odd part */
 
@@ -2728,9 +2832,9 @@ jpeg_fdct_14x7 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp0 += tmp3;
     tmp2 += tmp3 + MULTIPLY(tmp12, FIX(2.443531355));   /* c3+c1-c5 */
 
-    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp0, CONST_BITS+PASS1_BITS+1);
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp1, CONST_BITS+PASS1_BITS+1);
-    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp2, CONST_BITS+PASS1_BITS+1);
+    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp0, CONST_BITS+PASS2_BITS+1);
+    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp1, CONST_BITS+PASS2_BITS+1);
+    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp2, CONST_BITS+PASS2_BITS+1);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -2790,9 +2894,9 @@ jpeg_fdct_12x6 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp5 = GETJSAMPLE(elemptr[5]) - GETJSAMPLE(elemptr[6]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((tmp10 + tmp11 + tmp12 - 12 * CENTERJSAMPLE) << PASS1_BITS);
-    dataptr[6] = (DCTELEM) ((tmp13 - tmp14 - tmp15) << PASS1_BITS);
+    dataptr[0] =
+      PASS1_OUTPUT(tmp10 + tmp11 + tmp12 - 12 * CENTERJSAMPLE);
+    dataptr[6] = PASS1_OUTPUT(tmp13 - tmp14 - tmp15);
     dataptr[4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp12, FIX(1.224744871)), /* c4 */
 	      CONST_BITS-PASS1_BITS);
@@ -2826,8 +2930,8 @@ jpeg_fdct_12x6 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * We must also scale the output by (8/12)*(8/6) = 8/9, which we
    * partially fold into the constant multipliers and final shifting:
    * 6-point FDCT kernel, cK represents sqrt(2) * cos(K*pi/12) * 16/9.
@@ -2850,13 +2954,13 @@ jpeg_fdct_12x6 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 + tmp11, FIX(1.777777778)),         /* 16/9 */
-	      CONST_BITS+PASS1_BITS+1);
+	      CONST_BITS+PASS2_BITS+1);
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(MULTIPLY(tmp12, FIX(2.177324216)),                 /* c2 */
-	      CONST_BITS+PASS1_BITS+1);
+	      CONST_BITS+PASS2_BITS+1);
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp11 - tmp11, FIX(1.257078722)), /* c4 */
-	      CONST_BITS+PASS1_BITS+1);
+	      CONST_BITS+PASS2_BITS+1);
 
     /* Odd part */
 
@@ -2864,13 +2968,13 @@ jpeg_fdct_12x6 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*1] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp0 + tmp1, FIX(1.777777778)),   /* 16/9 */
-	      CONST_BITS+PASS1_BITS+1);
+	      CONST_BITS+PASS2_BITS+1);
     dataptr[DCTSIZE*3] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0 - tmp1 - tmp2, FIX(1.777777778)),    /* 16/9 */
-	      CONST_BITS+PASS1_BITS+1);
+	      CONST_BITS+PASS2_BITS+1);
     dataptr[DCTSIZE*5] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp2 - tmp1, FIX(1.777777778)),   /* 16/9 */
-	      CONST_BITS+PASS1_BITS+1);
+	      CONST_BITS+PASS2_BITS+1);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -2926,8 +3030,8 @@ jpeg_fdct_10x5 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp4 = GETJSAMPLE(elemptr[4]) - GETJSAMPLE(elemptr[5]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((tmp10 + tmp11 + tmp12 - 10 * CENTERJSAMPLE) << PASS1_BITS);
+    dataptr[0] =
+      PASS1_OUTPUT(tmp10 + tmp11 + tmp12 - 10 * CENTERJSAMPLE);
     tmp12 += tmp12;
     dataptr[4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp12, FIX(1.144122806)) - /* c4 */
@@ -2945,7 +3049,7 @@ jpeg_fdct_10x5 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     tmp10 = tmp0 + tmp4;
     tmp11 = tmp1 - tmp3;
-    dataptr[5] = (DCTELEM) ((tmp10 - tmp11 - tmp2) << PASS1_BITS);
+    dataptr[5] = PASS1_OUTPUT(tmp10 - tmp11 - tmp2);
     tmp2 <<= CONST_BITS;
     dataptr[1] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0, FIX(1.396802247)) +          /* c1 */
@@ -2964,10 +3068,10 @@ jpeg_fdct_10x5 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
-   * We must also scale the output by (8/10)*(8/5) = 32/25, which we
-   * fold into the constant multipliers:
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
+   * We must also scale the output by (8/10)*(8/5) = 32/25,
+   * which we fold into the constant multipliers:
    * 5-point FDCT kernel, cK represents sqrt(2) * cos(K*pi/10) * 32/25.
    */
 
@@ -2987,12 +3091,12 @@ jpeg_fdct_10x5 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 + tmp2, FIX(1.28)),        /* 32/25 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     tmp11 = MULTIPLY(tmp11, FIX(1.011928851));          /* (c2+c4)/2 */
     tmp10 -= tmp2 << 2;
     tmp10 = MULTIPLY(tmp10, FIX(0.452548340));          /* (c2-c4)/2 */
-    dataptr[DCTSIZE*2] = (DCTELEM) DESCALE(tmp11 + tmp10, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*4] = (DCTELEM) DESCALE(tmp11 - tmp10, CONST_BITS+PASS1_BITS);
+    dataptr[DCTSIZE*2] = (DCTELEM) DESCALE(tmp11 + tmp10, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*4] = (DCTELEM) DESCALE(tmp11 - tmp10, CONST_BITS+PASS2_BITS);
 
     /* Odd part */
 
@@ -3000,10 +3104,10 @@ jpeg_fdct_10x5 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*1] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp0, FIX(0.657591230)), /* c1-c3 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*3] = (DCTELEM)
       DESCALE(tmp10 - MULTIPLY(tmp1, FIX(2.785601151)), /* c1+c3 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -3113,8 +3217,8 @@ jpeg_fdct_8x4 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * 4-point FDCT kernel,
    * cK represents sqrt(2) * cos(K*pi/16) [refers to 8-point FDCT].
    */
@@ -3124,27 +3228,35 @@ jpeg_fdct_8x4 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     /* Even part */
 
     /* Add fudge factor here for final descale. */
-    tmp0 = dataptr[DCTSIZE*0] + dataptr[DCTSIZE*3] + (ONE << (PASS1_BITS-1));
+#if PASS2_BITS > 1
+    tmp0 = dataptr[DCTSIZE*0] + dataptr[DCTSIZE*3] + (ONE << (PASS2_BITS-1));
+#else
+#if PASS2_BITS > 0
+    tmp0 = dataptr[DCTSIZE*0] + dataptr[DCTSIZE*3] + ONE;
+#else
+    tmp0 = dataptr[DCTSIZE*0] + dataptr[DCTSIZE*3];
+#endif
+#endif
     tmp1 = dataptr[DCTSIZE*1] + dataptr[DCTSIZE*2];
 
     tmp10 = dataptr[DCTSIZE*0] - dataptr[DCTSIZE*3];
     tmp11 = dataptr[DCTSIZE*1] - dataptr[DCTSIZE*2];
 
-    dataptr[DCTSIZE*0] = (DCTELEM) RIGHT_SHIFT(tmp0 + tmp1, PASS1_BITS);
-    dataptr[DCTSIZE*2] = (DCTELEM) RIGHT_SHIFT(tmp0 - tmp1, PASS1_BITS);
+    dataptr[DCTSIZE*0] = PASS2_OUTPUT(tmp0 + tmp1);
+    dataptr[DCTSIZE*2] = PASS2_OUTPUT(tmp0 - tmp1);
 
     /* Odd part */
 
     tmp0 = MULTIPLY(tmp10 + tmp11, FIX_0_541196100);       /* c6 */
     /* Add fudge factor here for final descale. */
-    tmp0 += ONE << (CONST_BITS+PASS1_BITS-1);
+    tmp0 += ONE << (CONST_BITS+PASS2_BITS-1);
 
     dataptr[DCTSIZE*1] = (DCTELEM)
       RIGHT_SHIFT(tmp0 + MULTIPLY(tmp10, FIX_0_765366865), /* c2-c6 */
-		  CONST_BITS+PASS1_BITS);
+		  CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*3] = (DCTELEM)
       RIGHT_SHIFT(tmp0 - MULTIPLY(tmp11, FIX_1_847759065), /* c2+c6 */
-		  CONST_BITS+PASS1_BITS);
+		  CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -3218,8 +3330,8 @@ jpeg_fdct_6x3 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * We must also scale the output by (8/6)*(8/3) = 32/9, which we partially
    * fold into the constant multipliers (other part was done in pass 1):
    * 3-point FDCT kernel, cK represents sqrt(2) * cos(K*pi/6) * 16/9.
@@ -3236,16 +3348,16 @@ jpeg_fdct_6x3 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0 + tmp1, FIX(1.777777778)),        /* 16/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0 - tmp1 - tmp1, FIX(1.257078722)), /* c2 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     /* Odd part */
 
     dataptr[DCTSIZE*1] = (DCTELEM)
       DESCALE(MULTIPLY(tmp2, FIX(2.177324216)),               /* c1 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -3266,6 +3378,9 @@ jpeg_fdct_4x2 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   INT32 z1, z2, z3;
   JSAMPROW elemptr;
   SHIFT_TEMPS
+#if PASS2_BITS > PASS1_BITS + 3
+  ISHIFT_TEMPS
+#endif
 
   /* Pre-zero output coefficient block. */
   MEMZERO(data, SIZEOF(DCTELEM) * DCTSIZE2);
@@ -3284,6 +3399,15 @@ jpeg_fdct_4x2 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   tmp4 = GETJSAMPLE(elemptr[0]) + GETJSAMPLE(elemptr[3]);
   tmp5 = GETJSAMPLE(elemptr[1]) + GETJSAMPLE(elemptr[2]);
 
+#if PASS2_BITS > PASS1_BITS + 3
+  /* Add fudge factor here for final downscale. */
+#if PASS2_BITS > PASS1_BITS + 4
+  tmp4 += 1 << (PASS2_BITS-PASS1_BITS-3-1);
+#else
+  tmp4 += 1;
+#endif
+#endif
+
   tmp0 = tmp4 + tmp5;
   tmp2 = tmp4 - tmp5;
 
@@ -3294,7 +3418,7 @@ jpeg_fdct_4x2 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
   z1 = MULTIPLY(z2 + z3, FIX_0_541196100);    /* c6 */
   /* Add fudge factor here for final descale. */
-  z1 += ONE << (CONST_BITS-3-1);
+  z1 += ONE << (CONST_BITS+PASS2_BITS-PASS1_BITS-3-1);
   tmp1 = z1 + MULTIPLY(z2, FIX_0_765366865); /* c2-c6 */
   tmp3 = z1 - MULTIPLY(z3, FIX_1_847759065); /* c2+c6 */
 
@@ -3325,20 +3449,49 @@ jpeg_fdct_4x2 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
   /* Column 0 */
   /* Apply unsigned->signed conversion. */
-  data[DCTSIZE*0] = (tmp0 + tmp10 - 8 * CENTERJSAMPLE) << 3;
-  data[DCTSIZE*1] = (tmp0 - tmp10) << 3;
 
-  /* Column 1 */
-  data[DCTSIZE*0+1] = (DCTELEM) RIGHT_SHIFT(tmp1 + tmp11, CONST_BITS-3);
-  data[DCTSIZE*1+1] = (DCTELEM) RIGHT_SHIFT(tmp1 - tmp11, CONST_BITS-3);
+#if PASS2_BITS < PASS1_BITS + 3
+  data[DCTSIZE*0] =
+    (tmp0 + tmp10 - 8 * CENTERJSAMPLE) << (3+PASS1_BITS-PASS2_BITS);
+  data[DCTSIZE*1] = (tmp0 - tmp10) << (3+PASS1_BITS-PASS2_BITS);
 
   /* Column 2 */
-  data[DCTSIZE*0+2] = (tmp2 + tmp12) << 3;
-  data[DCTSIZE*1+2] = (tmp2 - tmp12) << 3;
+  data[DCTSIZE*0+2] = (tmp2 + tmp12) << (3+PASS1_BITS-PASS2_BITS);
+  data[DCTSIZE*1+2] = (tmp2 - tmp12) << (3+PASS1_BITS-PASS2_BITS);
+#else
+#if PASS2_BITS == PASS1_BITS + 3
+  data[DCTSIZE*0] = tmp0 + tmp10 - 8 * CENTERJSAMPLE;
+  data[DCTSIZE*1] = tmp0 - tmp10;
+
+  /* Column 2 */
+  data[DCTSIZE*0+2] = tmp2 + tmp12;
+  data[DCTSIZE*1+2] = tmp2 - tmp12;
+#else
+  data[DCTSIZE*0] =
+    IRIGHT_SHIFT(tmp0 + tmp10 - 8 * CENTERJSAMPLE,
+		 PASS2_BITS-PASS1_BITS-3);
+  data[DCTSIZE*1] =
+    IRIGHT_SHIFT(tmp0 - tmp10, PASS2_BITS-PASS1_BITS-3);
+
+  /* Column 2 */
+  data[DCTSIZE*0+2] =
+    IRIGHT_SHIFT(tmp2 + tmp12, PASS2_BITS-PASS1_BITS-3);
+  data[DCTSIZE*1+2] =
+    IRIGHT_SHIFT(tmp2 - tmp12, PASS2_BITS-PASS1_BITS-3);
+#endif
+#endif
+
+  /* Column 1 */
+  data[DCTSIZE*0+1] = (DCTELEM)
+    RIGHT_SHIFT(tmp1 + tmp11, CONST_BITS+PASS2_BITS-PASS1_BITS-3);
+  data[DCTSIZE*1+1] = (DCTELEM)
+    RIGHT_SHIFT(tmp1 - tmp11, CONST_BITS+PASS2_BITS-PASS1_BITS-3);
 
   /* Column 3 */
-  data[DCTSIZE*0+3] = (DCTELEM) RIGHT_SHIFT(tmp3 + tmp13, CONST_BITS-3);
-  data[DCTSIZE*1+3] = (DCTELEM) RIGHT_SHIFT(tmp3 - tmp13, CONST_BITS-3);
+  data[DCTSIZE*0+3] = (DCTELEM)
+    RIGHT_SHIFT(tmp3 + tmp13, CONST_BITS+PASS2_BITS-PASS1_BITS-3);
+  data[DCTSIZE*1+3] = (DCTELEM)
+    RIGHT_SHIFT(tmp3 - tmp13, CONST_BITS+PASS2_BITS-PASS1_BITS-3);
 }
 
 
@@ -3369,11 +3522,12 @@ jpeg_fdct_2x1 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   /* Even part */
 
   /* Apply unsigned->signed conversion. */
-  data[0] = (tmp0 + tmp1 - 2 * CENTERJSAMPLE) << 5;
+  data[0] =
+    (tmp0 + tmp1 - 2 * CENTERJSAMPLE) << (5+PASS1_BITS-PASS2_BITS);
 
   /* Odd part */
 
-  data[1] = (tmp0 - tmp1) << 5;
+  data[1] = (tmp0 - tmp1) << (5+PASS1_BITS-PASS2_BITS);
 }
 
 
@@ -3427,16 +3581,19 @@ jpeg_fdct_8x16 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp3 = GETJSAMPLE(elemptr[3]) - GETJSAMPLE(elemptr[4]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM) ((tmp10 + tmp11 - 8 * CENTERJSAMPLE) << PASS1_BITS);
-    dataptr[4] = (DCTELEM) ((tmp10 - tmp11) << PASS1_BITS);
+    dataptr[0] = PASS1_OUTPUT(tmp10 + tmp11 - 8 * CENTERJSAMPLE);
+    dataptr[4] = PASS1_OUTPUT(tmp10 - tmp11);
 
-    z1 = MULTIPLY(tmp12 + tmp13, FIX_0_541196100);   /* c6 */
+    z1 = MULTIPLY(tmp12 + tmp13, FIX_0_541196100);       /* c6 */
+    /* Add fudge factor here for final descale. */
+    z1 += ONE << (CONST_BITS-PASS1_BITS-1);
+
     dataptr[2] = (DCTELEM)
-      DESCALE(z1 + MULTIPLY(tmp12, FIX_0_765366865), /* c2-c6 */
-	      CONST_BITS-PASS1_BITS);
+      RIGHT_SHIFT(z1 + MULTIPLY(tmp12, FIX_0_765366865), /* c2-c6 */
+		  CONST_BITS-PASS1_BITS);
     dataptr[6] = (DCTELEM)
-      DESCALE(z1 - MULTIPLY(tmp13, FIX_1_847759065), /* c2+c6 */
-	      CONST_BITS-PASS1_BITS);
+      RIGHT_SHIFT(z1 - MULTIPLY(tmp13, FIX_1_847759065), /* c2+c6 */
+		  CONST_BITS-PASS1_BITS);
 
     /* Odd part per figure 8 --- note paper omits factor of sqrt(2).
      * i0..i3 in the paper are tmp0..tmp3 here.
@@ -3445,28 +3602,31 @@ jpeg_fdct_8x16 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp12 = tmp0 + tmp2;
     tmp13 = tmp1 + tmp3;
 
-    z1 = MULTIPLY(tmp12 + tmp13, FIX_1_175875602);   /*  c3 */
-    tmp12 = MULTIPLY(tmp12, - FIX_0_390180644);      /* -c3+c5 */
-    tmp13 = MULTIPLY(tmp13, - FIX_1_961570560);      /* -c3-c5 */
+    z1 = MULTIPLY(tmp12 + tmp13, FIX_1_175875602);       /*  c3 */
+    /* Add fudge factor here for final descale. */
+    z1 += ONE << (CONST_BITS-PASS1_BITS-1);
+
+    tmp12 = MULTIPLY(tmp12, - FIX_0_390180644);          /* -c3+c5 */
+    tmp13 = MULTIPLY(tmp13, - FIX_1_961570560);          /* -c3-c5 */
     tmp12 += z1;
     tmp13 += z1;
 
-    z1 = MULTIPLY(tmp0 + tmp3, - FIX_0_899976223);   /* -c3+c7 */
-    tmp0 = MULTIPLY(tmp0, FIX_1_501321110);          /*  c1+c3-c5-c7 */
-    tmp3 = MULTIPLY(tmp3, FIX_0_298631336);          /* -c1+c3+c5-c7 */
+    z1 = MULTIPLY(tmp0 + tmp3, - FIX_0_899976223);       /* -c3+c7 */
+    tmp0 = MULTIPLY(tmp0, FIX_1_501321110);              /*  c1+c3-c5-c7 */
+    tmp3 = MULTIPLY(tmp3, FIX_0_298631336);              /* -c1+c3+c5-c7 */
     tmp0 += z1 + tmp12;
     tmp3 += z1 + tmp13;
 
-    z1 = MULTIPLY(tmp1 + tmp2, - FIX_2_562915447);   /* -c1-c3 */
-    tmp1 = MULTIPLY(tmp1, FIX_3_072711026);          /*  c1+c3+c5-c7 */
-    tmp2 = MULTIPLY(tmp2, FIX_2_053119869);          /*  c1+c3-c5+c7 */
+    z1 = MULTIPLY(tmp1 + tmp2, - FIX_2_562915447);       /* -c1-c3 */
+    tmp1 = MULTIPLY(tmp1, FIX_3_072711026);              /*  c1+c3+c5-c7 */
+    tmp2 = MULTIPLY(tmp2, FIX_2_053119869);              /*  c1+c3-c5+c7 */
     tmp1 += z1 + tmp13;
     tmp2 += z1 + tmp12;
 
-    dataptr[1] = (DCTELEM) DESCALE(tmp0, CONST_BITS-PASS1_BITS);
-    dataptr[3] = (DCTELEM) DESCALE(tmp1, CONST_BITS-PASS1_BITS);
-    dataptr[5] = (DCTELEM) DESCALE(tmp2, CONST_BITS-PASS1_BITS);
-    dataptr[7] = (DCTELEM) DESCALE(tmp3, CONST_BITS-PASS1_BITS);
+    dataptr[1] = (DCTELEM) RIGHT_SHIFT(tmp0, CONST_BITS-PASS1_BITS);
+    dataptr[3] = (DCTELEM) RIGHT_SHIFT(tmp1, CONST_BITS-PASS1_BITS);
+    dataptr[5] = (DCTELEM) RIGHT_SHIFT(tmp2, CONST_BITS-PASS1_BITS);
+    dataptr[7] = (DCTELEM) RIGHT_SHIFT(tmp3, CONST_BITS-PASS1_BITS);
 
     ctr++;
 
@@ -3479,8 +3639,8 @@ jpeg_fdct_8x16 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * We must also scale the output by 8/16 = 1/2.
    * 16-point FDCT kernel, cK represents sqrt(2) * cos(K*pi/32).
    */
@@ -3518,11 +3678,16 @@ jpeg_fdct_8x16 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp7 = dataptr[DCTSIZE*7] - wsptr[DCTSIZE*0];
 
     dataptr[DCTSIZE*0] = (DCTELEM)
-      DESCALE(tmp10 + tmp11 + tmp12 + tmp13, PASS1_BITS+1);
+#if PASS2_BITS > 0
+      RIGHT_SHIFT(tmp10 + tmp11 + tmp12 + tmp13 + (ONE << PASS2_BITS),
+		  PASS2_BITS+1);
+#else
+      RIGHT_SHIFT(tmp10 + tmp11 + tmp12 + tmp13 + ONE, 1);
+#endif
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp13, FIX(1.306562965)) + /* c4[16] = c2[8] */
 	      MULTIPLY(tmp11 - tmp12, FIX_0_541196100),   /* c12[16] = c6[8] */
-	      CONST_BITS+PASS1_BITS+1);
+	      CONST_BITS+PASS2_BITS+1);
 
     tmp10 = MULTIPLY(tmp17 - tmp15, FIX(0.275899379)) +   /* c14[16] = c7[8] */
 	    MULTIPLY(tmp14 - tmp16, FIX(1.387039845));    /* c2[16] = c1[8] */
@@ -3530,11 +3695,11 @@ jpeg_fdct_8x16 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp15, FIX(1.451774982))   /* c6+c14 */
 	      + MULTIPLY(tmp16, FIX(2.172734804)),        /* c2+c10 */
-	      CONST_BITS+PASS1_BITS+1);
+	      CONST_BITS+PASS2_BITS+1);
     dataptr[DCTSIZE*6] = (DCTELEM)
       DESCALE(tmp10 - MULTIPLY(tmp14, FIX(0.211164243))   /* c2-c6 */
 	      - MULTIPLY(tmp17, FIX(1.061594338)),        /* c10+c14 */
-	      CONST_BITS+PASS1_BITS+1);
+	      CONST_BITS+PASS2_BITS+1);
 
     /* Odd part */
 
@@ -3560,10 +3725,10 @@ jpeg_fdct_8x16 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp13 += tmp15 + tmp16 + MULTIPLY(tmp3, FIX(1.065388962)) /* c15+c3+c11-c7 */
 	     + MULTIPLY(tmp4, FIX(2.167985692));              /* c1+c13+c5-c9 */
 
-    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp10, CONST_BITS+PASS1_BITS+1);
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp11, CONST_BITS+PASS1_BITS+1);
-    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp12, CONST_BITS+PASS1_BITS+1);
-    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp13, CONST_BITS+PASS1_BITS+1);
+    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp10, CONST_BITS+PASS2_BITS+1);
+    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp11, CONST_BITS+PASS2_BITS+1);
+    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp12, CONST_BITS+PASS2_BITS+1);
+    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp13, CONST_BITS+PASS2_BITS+1);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -3617,8 +3782,7 @@ jpeg_fdct_7x14 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     z1 = tmp0 + tmp2;
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((z1 + tmp1 + tmp3 - 7 * CENTERJSAMPLE) << PASS1_BITS);
+    dataptr[0] = PASS1_OUTPUT(z1 + tmp1 + tmp3 - 7 * CENTERJSAMPLE);
     tmp3 += tmp3;
     z1 -= tmp3;
     z1 -= tmp3;
@@ -3660,10 +3824,10 @@ jpeg_fdct_7x14 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
-   * We must also scale the output by (8/7)*(8/14) = 32/49, which we
-   * fold into the constant multipliers:
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
+   * We must also scale the output by (8/7)*(8/14) = 32/49,
+   * which we fold into the constant multipliers:
    * 14-point FDCT kernel, cK represents sqrt(2) * cos(K*pi/28) * 32/49.
    */
 
@@ -3698,24 +3862,24 @@ jpeg_fdct_7x14 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 + tmp11 + tmp12 + tmp13,
 		       FIX(0.653061224)),                 /* 32/49 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     tmp13 += tmp13;
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp13, FIX(0.832106052)) + /* c4 */
 	      MULTIPLY(tmp11 - tmp13, FIX(0.205513223)) - /* c12 */
 	      MULTIPLY(tmp12 - tmp13, FIX(0.575835255)),  /* c8 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     tmp10 = MULTIPLY(tmp14 + tmp15, FIX(0.722074570));    /* c6 */
 
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp14, FIX(0.178337691))   /* c2-c6 */
 	      + MULTIPLY(tmp16, FIX(0.400721155)),        /* c10 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*6] = (DCTELEM)
       DESCALE(tmp10 - MULTIPLY(tmp15, FIX(1.122795725))   /* c6+c10 */
 	      - MULTIPLY(tmp16, FIX(0.900412262)),        /* c2 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     /* Odd part */
 
@@ -3724,7 +3888,7 @@ jpeg_fdct_7x14 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[DCTSIZE*7] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0 - tmp10 + tmp3 - tmp11 - tmp6,
 		       FIX(0.653061224)),                 /* 32/49 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     tmp3  = MULTIPLY(tmp3 , FIX(0.653061224));            /* 32/49 */
     tmp10 = MULTIPLY(tmp10, - FIX(0.103406812));          /* -c13 */
     tmp11 = MULTIPLY(tmp11, FIX(0.917760839));            /* c1 */
@@ -3734,18 +3898,18 @@ jpeg_fdct_7x14 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     dataptr[DCTSIZE*5] = (DCTELEM)
       DESCALE(tmp10 + tmp11 - MULTIPLY(tmp2, FIX(1.550341076)) /* c3+c5-c13 */
 	      + MULTIPLY(tmp4, FIX(0.731428202)),         /* c1+c11-c9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     tmp12 = MULTIPLY(tmp0 + tmp1, FIX(0.871740478)) +     /* c3 */
 	    MULTIPLY(tmp5 - tmp6, FIX(0.305035186));      /* c11 */
     dataptr[DCTSIZE*3] = (DCTELEM)
       DESCALE(tmp10 + tmp12 - MULTIPLY(tmp1, FIX(0.276965844)) /* c3-c9-c13 */
 	      - MULTIPLY(tmp5, FIX(2.004803435)),         /* c1+c5+c11 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*1] = (DCTELEM)
       DESCALE(tmp11 + tmp12 + tmp3
 	      - MULTIPLY(tmp0, FIX(0.735987049))          /* c3+c5-c1 */
 	      - MULTIPLY(tmp6, FIX(0.082925825)),         /* c9-c11-c13 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -3799,8 +3963,7 @@ jpeg_fdct_6x12 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp2 = GETJSAMPLE(elemptr[2]) - GETJSAMPLE(elemptr[3]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((tmp10 + tmp11 - 6 * CENTERJSAMPLE) << PASS1_BITS);
+    dataptr[0] = PASS1_OUTPUT(tmp10 + tmp11 - 6 * CENTERJSAMPLE);
     dataptr[2] = (DCTELEM)
       DESCALE(MULTIPLY(tmp12, FIX(1.224744871)),                 /* c2 */
 	      CONST_BITS-PASS1_BITS);
@@ -3813,9 +3976,15 @@ jpeg_fdct_6x12 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp10 = DESCALE(MULTIPLY(tmp0 + tmp2, FIX(0.366025404)),     /* c5 */
 		    CONST_BITS-PASS1_BITS);
 
+#if PASS1_BITS > 0
     dataptr[1] = (DCTELEM) (tmp10 + ((tmp0 + tmp1) << PASS1_BITS));
     dataptr[3] = (DCTELEM) ((tmp0 - tmp1 - tmp2) << PASS1_BITS);
     dataptr[5] = (DCTELEM) (tmp10 + ((tmp2 - tmp1) << PASS1_BITS));
+#else
+    dataptr[1] = (DCTELEM) (tmp10 + tmp0 + tmp1);
+    dataptr[3] = (DCTELEM) (tmp0 - tmp1 - tmp2);
+    dataptr[5] = (DCTELEM) (tmp10 + tmp2 - tmp1);
+#endif
 
     ctr++;
 
@@ -3828,10 +3997,10 @@ jpeg_fdct_6x12 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
-   * We must also scale the output by (8/6)*(8/12) = 8/9, which we
-   * fold into the constant multipliers:
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
+   * We must also scale the output by (8/6)*(8/12) = 8/9,
+   * which we fold into the constant multipliers:
    * 12-point FDCT kernel, cK represents sqrt(2) * cos(K*pi/24) * 8/9.
    */
 
@@ -3863,17 +4032,17 @@ jpeg_fdct_6x12 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 + tmp11 + tmp12, FIX(0.888888889)), /* 8/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*6] = (DCTELEM)
       DESCALE(MULTIPLY(tmp13 - tmp14 - tmp15, FIX(0.888888889)), /* 8/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp12, FIX(1.088662108)),         /* c4 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(MULTIPLY(tmp14 - tmp15, FIX(0.888888889)) +        /* 8/9 */
 	      MULTIPLY(tmp13 + tmp15, FIX(1.214244803)),         /* c2 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     /* Odd part */
 
@@ -3892,10 +4061,10 @@ jpeg_fdct_6x12 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp11 = tmp15 + MULTIPLY(tmp0 - tmp3, FIX(1.161389302)) /* c3 */
 	    - MULTIPLY(tmp2 + tmp5, FIX(0.481063200)); /* c9 */
 
-    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp10, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp11, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp12, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp13, CONST_BITS+PASS1_BITS);
+    dataptr[DCTSIZE*1] = (DCTELEM) DESCALE(tmp10, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp11, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*5] = (DCTELEM) DESCALE(tmp12, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp13, CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -3948,8 +4117,7 @@ jpeg_fdct_5x10 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp1 = GETJSAMPLE(elemptr[1]) - GETJSAMPLE(elemptr[3]);
 
     /* Apply unsigned->signed conversion. */
-    dataptr[0] = (DCTELEM)
-      ((tmp10 + tmp2 - 5 * CENTERJSAMPLE) << PASS1_BITS);
+    dataptr[0] = PASS1_OUTPUT(tmp10 + tmp2 - 5 * CENTERJSAMPLE);
     tmp11 = MULTIPLY(tmp11, FIX(0.790569415));          /* (c2+c4)/2 */
     tmp10 -= tmp2 << 2;
     tmp10 = MULTIPLY(tmp10, FIX(0.353553391));          /* (c2-c4)/2 */
@@ -3978,10 +4146,10 @@ jpeg_fdct_5x10 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
-   * We must also scale the output by (8/5)*(8/10) = 32/25, which we
-   * fold into the constant multipliers:
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
+   * We must also scale the output by (8/5)*(8/10) = 32/25,
+   * which we fold into the constant multipliers:
    * 10-point FDCT kernel, cK represents sqrt(2) * cos(K*pi/20) * 32/25.
    */
 
@@ -4009,19 +4177,19 @@ jpeg_fdct_5x10 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 + tmp11 + tmp12, FIX(1.28)), /* 32/25 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     tmp12 += tmp12;
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp12, FIX(1.464477191)) - /* c4 */
 	      MULTIPLY(tmp11 - tmp12, FIX(0.559380511)),  /* c8 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     tmp10 = MULTIPLY(tmp13 + tmp14, FIX(1.064004961));    /* c6 */
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp13, FIX(0.657591230)),  /* c2-c6 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*6] = (DCTELEM)
       DESCALE(tmp10 - MULTIPLY(tmp14, FIX(2.785601151)),  /* c2+c6 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     /* Odd part */
 
@@ -4029,20 +4197,20 @@ jpeg_fdct_5x10 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp11 = tmp1 - tmp3;
     dataptr[DCTSIZE*5] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp11 - tmp2, FIX(1.28)),  /* 32/25 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     tmp2 = MULTIPLY(tmp2, FIX(1.28));                     /* 32/25 */
     dataptr[DCTSIZE*1] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0, FIX(1.787906876)) +          /* c1 */
 	      MULTIPLY(tmp1, FIX(1.612894094)) + tmp2 +   /* c3 */
 	      MULTIPLY(tmp3, FIX(0.821810588)) +          /* c7 */
 	      MULTIPLY(tmp4, FIX(0.283176630)),           /* c9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     tmp12 = MULTIPLY(tmp0 - tmp4, FIX(1.217352341)) -     /* (c3+c7)/2 */
 	    MULTIPLY(tmp1 + tmp3, FIX(0.752365123));      /* (c1-c9)/2 */
     tmp13 = MULTIPLY(tmp10 + tmp11, FIX(0.395541753)) +   /* (c3-c7)/2 */
 	    MULTIPLY(tmp11, FIX(0.64)) - tmp2;            /* 16/25 */
-    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp12 + tmp13, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp12 - tmp13, CONST_BITS+PASS1_BITS);
+    dataptr[DCTSIZE*3] = (DCTELEM) DESCALE(tmp12 + tmp13, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*7] = (DCTELEM) DESCALE(tmp12 - tmp13, CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
     wsptr++;			/* advance pointer to next column */
@@ -4112,8 +4280,8 @@ jpeg_fdct_4x8 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * 8-point FDCT kernel, cK represents sqrt(2) * cos(K*pi/16).
    */
 
@@ -4129,7 +4297,15 @@ jpeg_fdct_4x8 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp3 = dataptr[DCTSIZE*3] + dataptr[DCTSIZE*4];
 
     /* Add fudge factor here for final descale. */
-    tmp10 = tmp0 + tmp3 + (ONE << (PASS1_BITS-1));
+#if PASS2_BITS > 1
+    tmp10 = tmp0 + tmp3 + (ONE << (PASS2_BITS-1));
+#else
+#if PASS2_BITS > 0
+    tmp10 = tmp0 + tmp3 + ONE;
+#else
+    tmp10 = tmp0 + tmp3;
+#endif
+#endif
     tmp12 = tmp0 - tmp3;
     tmp11 = tmp1 + tmp2;
     tmp13 = tmp1 - tmp2;
@@ -4139,19 +4315,19 @@ jpeg_fdct_4x8 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp2 = dataptr[DCTSIZE*2] - dataptr[DCTSIZE*5];
     tmp3 = dataptr[DCTSIZE*3] - dataptr[DCTSIZE*4];
 
-    dataptr[DCTSIZE*0] = (DCTELEM) RIGHT_SHIFT(tmp10 + tmp11, PASS1_BITS);
-    dataptr[DCTSIZE*4] = (DCTELEM) RIGHT_SHIFT(tmp10 - tmp11, PASS1_BITS);
+    dataptr[DCTSIZE*0] = PASS2_OUTPUT(tmp10 + tmp11);
+    dataptr[DCTSIZE*4] = PASS2_OUTPUT(tmp10 - tmp11);
 
     z1 = MULTIPLY(tmp12 + tmp13, FIX_0_541196100);       /* c6 */
     /* Add fudge factor here for final descale. */
-    z1 += ONE << (CONST_BITS+PASS1_BITS-1);
+    z1 += ONE << (CONST_BITS+PASS2_BITS-1);
 
     dataptr[DCTSIZE*2] = (DCTELEM)
       RIGHT_SHIFT(z1 + MULTIPLY(tmp12, FIX_0_765366865), /* c2-c6 */
-		  CONST_BITS+PASS1_BITS);
+		  CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*6] = (DCTELEM)
       RIGHT_SHIFT(z1 - MULTIPLY(tmp13, FIX_1_847759065), /* c2+c6 */
-		  CONST_BITS+PASS1_BITS);
+		  CONST_BITS+PASS2_BITS);
 
     /* Odd part per figure 8 --- note paper omits factor of sqrt(2).
      * i0..i3 in the paper are tmp0..tmp3 here.
@@ -4162,7 +4338,7 @@ jpeg_fdct_4x8 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     z1 = MULTIPLY(tmp12 + tmp13, FIX_1_175875602);       /*  c3 */
     /* Add fudge factor here for final descale. */
-    z1 += ONE << (CONST_BITS+PASS1_BITS-1);
+    z1 += ONE << (CONST_BITS+PASS2_BITS-1);
 
     tmp12 = MULTIPLY(tmp12, - FIX_0_390180644);          /* -c3+c5 */
     tmp13 = MULTIPLY(tmp13, - FIX_1_961570560);          /* -c3-c5 */
@@ -4181,10 +4357,10 @@ jpeg_fdct_4x8 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp1 += z1 + tmp13;
     tmp2 += z1 + tmp12;
 
-    dataptr[DCTSIZE*1] = (DCTELEM) RIGHT_SHIFT(tmp0, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*3] = (DCTELEM) RIGHT_SHIFT(tmp1, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*5] = (DCTELEM) RIGHT_SHIFT(tmp2, CONST_BITS+PASS1_BITS);
-    dataptr[DCTSIZE*7] = (DCTELEM) RIGHT_SHIFT(tmp3, CONST_BITS+PASS1_BITS);
+    dataptr[DCTSIZE*1] = (DCTELEM) RIGHT_SHIFT(tmp0, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*3] = (DCTELEM) RIGHT_SHIFT(tmp1, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*5] = (DCTELEM) RIGHT_SHIFT(tmp2, CONST_BITS+PASS2_BITS);
+    dataptr[DCTSIZE*7] = (DCTELEM) RIGHT_SHIFT(tmp3, CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -4246,8 +4422,8 @@ jpeg_fdct_3x6 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   }
 
   /* Pass 2: process columns.
-   * We remove the PASS1_BITS scaling, but leave the results scaled up
-   * by an overall factor of 8.
+   * We apply the PASS2_BITS scaling, but leave the
+   * results scaled up by an overall factor of 8.
    * We must also scale the output by (8/6)*(8/3) = 32/9, which we partially
    * fold into the constant multipliers (other part was done in pass 1):
    * 6-point FDCT kernel, cK represents sqrt(2) * cos(K*pi/12) * 16/9.
@@ -4270,13 +4446,13 @@ jpeg_fdct_3x6 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*0] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 + tmp11, FIX(1.777777778)),         /* 16/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*2] = (DCTELEM)
       DESCALE(MULTIPLY(tmp12, FIX(2.177324216)),                 /* c2 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*4] = (DCTELEM)
       DESCALE(MULTIPLY(tmp10 - tmp11 - tmp11, FIX(1.257078722)), /* c4 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     /* Odd part */
 
@@ -4284,13 +4460,13 @@ jpeg_fdct_3x6 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
 
     dataptr[DCTSIZE*1] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp0 + tmp1, FIX(1.777777778)),   /* 16/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*3] = (DCTELEM)
       DESCALE(MULTIPLY(tmp0 - tmp1 - tmp2, FIX(1.777777778)),    /* 16/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
     dataptr[DCTSIZE*5] = (DCTELEM)
       DESCALE(tmp10 + MULTIPLY(tmp2 - tmp1, FIX(1.777777778)),   /* 16/9 */
-	      CONST_BITS+PASS1_BITS);
+	      CONST_BITS+PASS2_BITS);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -4356,21 +4532,38 @@ jpeg_fdct_2x4 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
     tmp10 = dataptr[DCTSIZE*0] - dataptr[DCTSIZE*3];
     tmp11 = dataptr[DCTSIZE*1] - dataptr[DCTSIZE*2];
 
-    dataptr[DCTSIZE*0] = (DCTELEM) ((tmp0 + tmp1) << 3);
-    dataptr[DCTSIZE*2] = (DCTELEM) ((tmp0 - tmp1) << 3);
+#if PASS2_BITS < PASS1_BITS + 3
+    dataptr[DCTSIZE*0] = (DCTELEM)
+      ((tmp0 + tmp1) << (3+PASS1_BITS-PASS2_BITS));
+    dataptr[DCTSIZE*2] = (DCTELEM)
+      ((tmp0 - tmp1) << (3+PASS1_BITS-PASS2_BITS));
+#else
+#if PASS2_BITS == PASS1_BITS + 3
+    dataptr[DCTSIZE*0] = (DCTELEM) (tmp0 + tmp1);
+    dataptr[DCTSIZE*2] = (DCTELEM) (tmp0 - tmp1);
+#else
+    /* Add fudge factor for descale. */
+    tmp0 += ONE << (PASS2_BITS-PASS1_BITS-3-1);
+
+    dataptr[DCTSIZE*0] = (DCTELEM)
+      RIGHT_SHIFT(tmp0 + tmp1, PASS2_BITS-PASS1_BITS-3);
+    dataptr[DCTSIZE*2] = (DCTELEM)
+      RIGHT_SHIFT(tmp0 - tmp1, PASS2_BITS-PASS1_BITS-3);
+#endif
+#endif
 
     /* Odd part */
 
     tmp0 = MULTIPLY(tmp10 + tmp11, FIX_0_541196100);       /* c6 */
-    /* Add fudge factor here for final descale. */
-    tmp0 += ONE << (CONST_BITS-3-1);
+    /* Add fudge factor for descale. */
+    tmp0 += ONE << (CONST_BITS+PASS2_BITS-PASS1_BITS-3-1);
 
     dataptr[DCTSIZE*1] = (DCTELEM)
       RIGHT_SHIFT(tmp0 + MULTIPLY(tmp10, FIX_0_765366865), /* c2-c6 */
-		  CONST_BITS-3);
+		  CONST_BITS+PASS2_BITS-PASS1_BITS-3);
     dataptr[DCTSIZE*3] = (DCTELEM)
       RIGHT_SHIFT(tmp0 - MULTIPLY(tmp11, FIX_1_847759065), /* c2+c6 */
-		  CONST_BITS-3);
+		  CONST_BITS+PASS2_BITS-PASS1_BITS-3);
 
     dataptr++;			/* advance pointer to next column */
   }
@@ -4404,11 +4597,12 @@ jpeg_fdct_1x2 (DCTELEM * data, JSAMPARRAY sample_data, JDIMENSION start_col)
   tmp1 = GETJSAMPLE(sample_data[1][start_col]);
 
   /* Apply unsigned->signed conversion. */
-  data[DCTSIZE*0] = (tmp0 + tmp1 - 2 * CENTERJSAMPLE) << 5;
+  data[DCTSIZE*0] =
+    (tmp0 + tmp1 - 2 * CENTERJSAMPLE) << (5+PASS1_BITS-PASS2_BITS);
 
   /* Odd part */
 
-  data[DCTSIZE*1] = (tmp0 - tmp1) << 5;
+  data[DCTSIZE*1] = (tmp0 - tmp1) << (5+PASS1_BITS-PASS2_BITS);
 }
 
 #endif /* DCT_SCALING_SUPPORTED */
