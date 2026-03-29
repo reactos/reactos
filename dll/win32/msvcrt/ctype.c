@@ -584,7 +584,7 @@ int CDECL _tolower(int c)
     return c + 0x20;  /* sic */
 }
 
-#if _MSVCR_VER>=120
+#if _MSVCR_VER>=120 || defined(__REACTOS__)
 /*********************************************************************
  *              wctype (MSVCR120.@)
  */

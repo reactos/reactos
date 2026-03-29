@@ -1322,6 +1322,7 @@
 @ cdecl fseek(ptr long long)
 @ cdecl fsetpos(ptr ptr)
 @ cdecl ftell(ptr)
+@ cdecl -ret64 -version=0x600+ _ftelli64(ptr)
 @ varargs fwprintf(ptr wstr)
 @ varargs -version=0x600+ fwprintf_s(ptr wstr)
 @ cdecl fwrite(ptr long long ptr)
