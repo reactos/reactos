@@ -139,6 +139,13 @@ static int write_le32_at(FILE* file, long offset, unsigned int value)
     return fwrite(data, sizeof(data), 1, file) == 1 ? 0 : -1;
 }
 
+static int write_data_at(FILE* file, long offset, const void* data, size_t size)
+{
+    if (fseek(file, offset, SEEK_SET) != 0)
+        return -1;
+    return fwrite(data, 1, size, file) == size ? 0 : -1;
+}
+
 int main(int argc, char* argv[])
 {
     const char* output_path = NULL;
@@ -346,6 +353,12 @@ int main(int argc, char* argv[])
     /* Patch MediaDescriptor to 0xF8 (fixed disk) -- FatFs may set 0xF0 (removable) */
     {
         unsigned char media_byte = MEDIA_DESCRIPTOR_FIXED;
+        static const unsigned char fat32_reserved_entries[12] =
+        {
+            0xF8, 0xFF, 0xFF, 0x0F,
+            0xFF, 0xFF, 0xFF, 0x0F,
+            0xF8, 0xFF, 0xFF, 0x0F
+        };
         long fat_offset;
         long fat_size;
         unsigned int fat_index;
@@ -380,6 +393,13 @@ int main(int argc, char* argv[])
                 write_byte_at(f_output, current_fat_offset, media_byte) != 0)
             {
                 fprintf(stderr, "Error: Cannot patch FAT%u media descriptor.\n", fat_index + 1);
+                goto cleanup;
+            }
+
+            if (fat_size >= (long)sizeof(fat32_reserved_entries) &&
+                write_data_at(f_output, current_fat_offset, fat32_reserved_entries, sizeof(fat32_reserved_entries)) != 0)
+            {
+                fprintf(stderr, "Error: Cannot patch FAT%u reserved entries.\n", fat_index + 1);
                 goto cleanup;
             }
         }

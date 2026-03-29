@@ -14,8 +14,10 @@
 #include <limits.h>
 #include <sys/stat.h>
 #if _WIN32
+#include <sys/timeb.h>
 #include <io.h>
 #else
+#include <sys/time.h>
 #define DIR HOST_DIR
 #include <dirent.h>
 #undef DIR
@@ -34,7 +36,16 @@ static unsigned char buff[32768];
 #define FAT12_16_BPB_LENGTH 59
 #define FAT32_BPB_LENGTH    87
 #define FAT32_EXTRA_SECTOR  14
+#define FAT_OEM_NAME_OFFSET 3
+#define FAT_OEM_NAME_LENGTH 8
+#define FAT12_16_VOL_ID_OFFSET 39
+#define FAT32_BACKUP_BOOT_SECTOR_OFFSET 50
+#define FAT32_VOL_ID_OFFSET 67
+#define FAT12_16_VOL_LABEL_OFFSET 43
+#define FAT32_VOL_LABEL_OFFSET 71
 #define LIST_LINE_SIZE      16384
+
+static const BYTE g_MkfsFatOemName[FAT_OEM_NAME_LENGTH] = { 'm', 'k', 'f', 's', '.', 'f', 'a', 't' };
 
 // tool needed by fatfs
 DWORD get_fattime(void)
@@ -42,12 +53,43 @@ DWORD get_fattime(void)
     /* 31-25: Year(0-127 org.1980), 24-21: Month(1-12), 20-16: Day(1-31) */
     /* 15-11: Hour(0-23), 10-5: Minute(0-59), 4-0: Second(0-29 *2) */
 
+    const char* source_date_epoch;
     time_t rawtime;
     struct tm * timeinfo;
+    struct tm tm_value;
+
+    source_date_epoch = getenv("SOURCE_DATE_EPOCH");
+    if (source_date_epoch && *source_date_epoch)
+    {
+        char* end;
+        unsigned long long seconds;
+
+        errno = 0;
+        seconds = strtoull(source_date_epoch, &end, 10);
+        if (errno == 0 && end != source_date_epoch && *end == '\0')
+        {
+            rawtime = (time_t)seconds;
+#if _WIN32
+            timeinfo = localtime(&rawtime);
+            if (timeinfo)
+                tm_value = *timeinfo;
+#else
+            if (localtime_r(&rawtime, &tm_value))
+                timeinfo = &tm_value;
+            else
+                timeinfo = NULL;
+#endif
+            if (timeinfo)
+                goto pack_time;
+        }
+    }
 
     time(&rawtime);
     timeinfo = localtime(&rawtime);
+    if (!timeinfo)
+        return 0;
 
+pack_time:
     {
     union FatTime {
         struct {
@@ -171,6 +213,89 @@ static char* duplicate_string(const char* src)
     return copy;
 }
 
+static WORD read_le16(const BYTE* data, size_t offset)
+{
+    return (WORD)(data[offset] | ((WORD)data[offset + 1] << 8));
+}
+
+static void write_le32(BYTE* data, size_t offset, DWORD value)
+{
+    data[offset + 0] = (BYTE)(value & 0xFF);
+    data[offset + 1] = (BYTE)((value >> 8) & 0xFF);
+    data[offset + 2] = (BYTE)((value >> 16) & 0xFF);
+    data[offset + 3] = (BYTE)((value >> 24) & 0xFF);
+}
+
+static DWORD generate_volume_id(void)
+{
+    const char* source_date_epoch;
+
+    source_date_epoch = getenv("SOURCE_DATE_EPOCH");
+    if (source_date_epoch && *source_date_epoch)
+    {
+        char* end;
+        unsigned long long seconds;
+
+        errno = 0;
+        seconds = strtoull(source_date_epoch, &end, 10);
+        if (errno == 0 && end != source_date_epoch && *end == '\0')
+            return (DWORD)seconds;
+    }
+
+#if _WIN32
+    struct _timeb now;
+    _ftime(&now);
+    return ((DWORD)now.time << 20) | (DWORD)(now.millitm * 1000);
+#else
+    struct timeval now;
+
+    if (gettimeofday(&now, NULL) == 0 && now.tv_sec >= 0)
+        return ((DWORD)now.tv_sec << 20) | (DWORD)now.tv_usec;
+
+    return (DWORD)time(NULL) << 20;
+#endif
+}
+
+static int sync_fat32_backup_boot_sector(const BYTE* vbr, const BYTE* extra_sector)
+{
+    WORD backup_sector;
+
+    backup_sector = read_le16(vbr, FAT32_BACKUP_BOOT_SECTOR_OFFSET);
+    if (backup_sector == 0 || backup_sector == 0xFFFF)
+        return 0;
+
+    if (disk_write(0, (BYTE*)vbr, backup_sector, 1))
+        return 1;
+
+    if (extra_sector && disk_write(0, (BYTE*)extra_sector, backup_sector + FAT32_EXTRA_SECTOR, 1))
+        return 1;
+
+    return 0;
+}
+
+static int patch_volume_metadata(void)
+{
+    DWORD volume_id;
+    size_t volume_id_offset;
+
+    if (disk_read(0, buff, 0, 1))
+        return 1;
+
+    memcpy(buff + FAT_OEM_NAME_OFFSET, g_MkfsFatOemName, FAT_OEM_NAME_LENGTH);
+
+    volume_id = generate_volume_id();
+    volume_id_offset = (g_Filesystem.fs_type == FS_FAT32) ? FAT32_VOL_ID_OFFSET : FAT12_16_VOL_ID_OFFSET;
+    write_le32(buff, volume_id_offset, volume_id);
+
+    if (disk_write(0, buff, 0, 1))
+        return 1;
+
+    if (g_Filesystem.fs_type == FS_FAT32 && sync_fat32_backup_boot_sector(buff, NULL))
+        return 1;
+
+    return 0;
+}
+
 static void normalize_separators(char* path)
 {
     while (*path)
@@ -282,6 +407,163 @@ static FRESULT ensure_image_parent_dirs(const char* path)
 
     free(mutable_path);
     return result;
+}
+
+typedef struct _LIST_FILE_ENTRY
+{
+    char* image_path;
+    char* host_path;
+} LIST_FILE_ENTRY;
+
+typedef struct _STRING_LIST
+{
+    char** items;
+    size_t count;
+    size_t capacity;
+} STRING_LIST;
+
+typedef struct _FILE_LIST
+{
+    LIST_FILE_ENTRY* items;
+    size_t count;
+    size_t capacity;
+} FILE_LIST;
+
+static void free_string_list(STRING_LIST* list)
+{
+    size_t index;
+
+    for (index = 0; index < list->count; index++)
+        free(list->items[index]);
+    free(list->items);
+    list->items = NULL;
+    list->count = 0;
+    list->capacity = 0;
+}
+
+static void free_file_list(FILE_LIST* list)
+{
+    size_t index;
+
+    for (index = 0; index < list->count; index++)
+    {
+        free(list->items[index].image_path);
+        free(list->items[index].host_path);
+    }
+    free(list->items);
+    list->items = NULL;
+    list->count = 0;
+    list->capacity = 0;
+}
+
+static int append_string(STRING_LIST* list, const char* text)
+{
+    char** resized;
+    char* copy;
+
+    copy = duplicate_string(text);
+    if (!copy)
+        return 1;
+
+    normalize_separators(copy);
+
+    if (list->count == list->capacity)
+    {
+        size_t new_capacity = list->capacity ? (list->capacity * 2) : 16;
+        resized = realloc(list->items, new_capacity * sizeof(list->items[0]));
+        if (!resized)
+        {
+            free(copy);
+            return 1;
+        }
+
+        list->items = resized;
+        list->capacity = new_capacity;
+    }
+
+    list->items[list->count++] = copy;
+    return 0;
+}
+
+static int append_file_entry(FILE_LIST* list, const char* image_path, const char* host_path)
+{
+    LIST_FILE_ENTRY* resized;
+    char* image_copy;
+    char* host_copy;
+
+    image_copy = duplicate_string(image_path);
+    host_copy = duplicate_string(host_path);
+    if (!image_copy || !host_copy)
+    {
+        free(image_copy);
+        free(host_copy);
+        return 1;
+    }
+
+    normalize_separators(image_copy);
+
+    if (list->count == list->capacity)
+    {
+        size_t new_capacity = list->capacity ? (list->capacity * 2) : 16;
+        resized = realloc(list->items, new_capacity * sizeof(list->items[0]));
+        if (!resized)
+        {
+            free(image_copy);
+            free(host_copy);
+            return 1;
+        }
+
+        list->items = resized;
+        list->capacity = new_capacity;
+    }
+
+    list->items[list->count].image_path = image_copy;
+    list->items[list->count].host_path = host_copy;
+    list->count++;
+    return 0;
+}
+
+static int append_parent_directories(STRING_LIST* list, const char* path)
+{
+    char* mutable_path;
+    char* cursor;
+    int ret = 0;
+
+    mutable_path = duplicate_string(path);
+    if (!mutable_path)
+        return 1;
+
+    normalize_separators(mutable_path);
+
+    cursor = mutable_path;
+    if (*cursor == '/')
+        cursor++;
+
+    while ((cursor = strchr(cursor, '/')) != NULL)
+    {
+        *cursor = '\0';
+        ret = append_string(list, mutable_path);
+        *cursor++ = '/';
+        if (ret)
+            break;
+    }
+
+    free(mutable_path);
+    return ret;
+}
+
+static int compare_string_ptrs(const void* left, const void* right)
+{
+    const char* const* lhs = left;
+    const char* const* rhs = right;
+    return strcmp(*lhs, *rhs);
+}
+
+static int compare_file_entries(const void* left, const void* right)
+{
+    const LIST_FILE_ENTRY* lhs = left;
+    const LIST_FILE_ENTRY* rhs = right;
+    return strcmp(lhs->image_path, rhs->image_path);
 }
 
 static int copy_host_file_to_image(const char* host_path, const char* image_path)
@@ -496,6 +778,10 @@ static int add_files_from_list(const char* list_path)
     FILE* list_file;
     char line[LIST_LINE_SIZE];
     unsigned int line_number = 0;
+    STRING_LIST directories = { 0 };
+    FILE_LIST files = { 0 };
+    size_t index;
+    int ret = 1;
 
     list_file = fopen(list_path, "rb");
     if (!list_file)
@@ -537,31 +823,62 @@ static int add_files_from_list(const char* list_path)
             if ((*image_path == '\0') || (*host_path == '\0'))
             {
                 fprintf(stderr, "Error: Invalid list entry %u in '%s'.\n", line_number, list_path);
-                fclose(list_file);
-                return 1;
+                goto cleanup;
             }
 
-            if (add_host_path_to_image(host_path, image_path))
+            if (append_file_entry(&files, image_path, host_path) ||
+                append_parent_directories(&directories, image_path) ||
+                (host_path_is_directory(host_path) && append_string(&directories, image_path)))
             {
-                fprintf(stderr, "Error: Failed to import list entry %u from '%s'.\n", line_number, list_path);
-                fclose(list_file);
-                return 1;
+                fprintf(stderr, "Error: Out of memory while processing list entry %u in '%s'.\n", line_number, list_path);
+                goto cleanup;
             }
         }
         else
         {
-            FRESULT result = ensure_image_dir(entry);
-            if (result != FR_OK)
+            if (append_string(&directories, entry))
             {
-                fprintf(stderr, "Error: Unable to create directory '%s' from list entry %u (%d).\n", entry, line_number, result);
-                fclose(list_file);
-                return 1;
+                fprintf(stderr, "Error: Out of memory while processing list entry %u in '%s'.\n", line_number, list_path);
+                goto cleanup;
             }
         }
     }
 
+    qsort(directories.items, directories.count, sizeof(directories.items[0]), compare_string_ptrs);
+    for (index = 0; index < directories.count; index++)
+    {
+        FRESULT result;
+
+        if (index > 0 && strcmp(directories.items[index - 1], directories.items[index]) == 0)
+            continue;
+
+        result = ensure_image_dir(directories.items[index]);
+        if (result != FR_OK)
+        {
+            fprintf(stderr, "Error: Unable to create directory '%s' from list '%s' (%d).\n",
+                    directories.items[index], list_path, result);
+            goto cleanup;
+        }
+    }
+
+    qsort(files.items, files.count, sizeof(files.items[0]), compare_file_entries);
+    for (index = 0; index < files.count; index++)
+    {
+        if (add_host_path_to_image(files.items[index].host_path, files.items[index].image_path))
+        {
+            fprintf(stderr, "Error: Failed to import '%s' into '%s' from list '%s'.\n",
+                    files.items[index].host_path, files.items[index].image_path, list_path);
+            goto cleanup;
+        }
+    }
+
+    ret = 0;
+
+cleanup:
     fclose(list_file);
-    return 0;
+    free_string_list(&directories);
+    free_file_list(&files);
+    return ret;
 }
 
 #define NEED_MOUNT() \
@@ -661,6 +978,13 @@ int main(int oargc, char* oargv[])
                 goto exit;
             }
 
+            if (patch_volume_metadata())
+            {
+                fprintf(stderr, "Error: Unable to patch FAT volume metadata.\n");
+                ret = 1;
+                goto exit;
+            }
+
             // Arg 2: custom header label (optional)
             if (nargs > 1)
             {
@@ -722,12 +1046,19 @@ int main(int oargc, char* oargv[])
                 }
                 else
                 {
-                    memcpy(buff + 43, label, FAT_VOL_LABEL_LEN);
+                    memcpy(buff + FAT12_16_VOL_LABEL_OFFSET, label, FAT_VOL_LABEL_LEN);
                 }
 
                 if (disk_write(0, buff, 0, 1))
                 {
                     fprintf(stderr, "Error: Unable to write new boot sector to image.");
+                    ret = 1;
+                    goto exit;
+                }
+
+                if (g_Filesystem.fs_type == FS_FAT32 && sync_fat32_backup_boot_sector(buff, NULL))
+                {
+                    fprintf(stderr, "Error: Unable to update FAT32 backup boot sector label.");
                     ret = 1;
                     goto exit;
                 }
@@ -809,6 +1140,13 @@ int main(int oargc, char* oargv[])
                 if (disk_write(0, buff + 512, FAT32_EXTRA_SECTOR, 1))
                 {
                     fprintf(stderr, "Error: Unable to write FAT32 extra boot sector to image.");
+                    ret = 1;
+                    goto exit;
+                }
+
+                if (sync_fat32_backup_boot_sector(buff, buff + 512))
+                {
+                    fprintf(stderr, "Error: Unable to update FAT32 backup boot sectors.");
                     ret = 1;
                     goto exit;
                 }
