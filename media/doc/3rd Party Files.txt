@@ -42,7 +42,7 @@ Modifications: added .spec file
 
 Title: libtiff
 Path: dll/3rdparty/libtiff
-Used Version: 4.1.0
+Used Version: 4.7.1
 License: libtiff (https://spdx.org/licenses/libtiff.html)
 URL: http://www.simplesystems.org/libtiff/
 Modifications: added .spec file
