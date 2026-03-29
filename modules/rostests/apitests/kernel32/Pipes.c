@@ -8,12 +8,12 @@
 
 #include "precomp.h"
 
-static const char* g_PipeName = "\\\\.\\pipe\\rostest_pipe";
+static PCWSTR g_PipeName = L"\\\\.\\pipe\\rostest_pipe";
 
 #define MINBUFFERSIZE 1
 #define MAXBUFFERSIZE 255
 #define TEST_MESSAGE "Test"
-#define TEST_MESSAGE_SIZE 4
+#define TEST_MESSAGE_SIZE (sizeof(TEST_MESSAGE) - sizeof(ANSI_NULL))
 
 static DWORD g_dwReadBufferSize;
 
@@ -38,7 +38,7 @@ DWORD WINAPI PipeReader(_In_ PVOID Param)
     BOOL Success = ReadFile(hPipe, outMsg, g_dwReadBufferSize, &cbRead, NULL);
     
     if (g_dwReadBufferSize == MINBUFFERSIZE)
-        ok(!Success, "ReadFile() unexpectedly succeeded\n");
+        ok(!Success, "ReadFile() succeeded unexpectedly\n");
     else
         ok(Success, "ReadFile() failed, last error = 0x%lx\n", GetLastError());
 
@@ -53,11 +53,11 @@ DWORD WINAPI PipeReader(_In_ PVOID Param)
 VOID StartTestCORE17376(_In_ DWORD adReadBufferSize)
 {
     HANDLE hPipeReader, hPipeWriter, hThreadReader, hThreadWriter;
-    trace("adReadBufferSize = %ld - START\n", adReadBufferSize);
+    trace("adReadBufferSize = %lu - START\n", adReadBufferSize);
 
     g_dwReadBufferSize = adReadBufferSize;
 
-    hPipeReader = CreateNamedPipeA(
+    hPipeReader = CreateNamedPipeW(
         g_PipeName,
         PIPE_ACCESS_DUPLEX,
         PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE,
@@ -66,7 +66,7 @@ VOID StartTestCORE17376(_In_ DWORD adReadBufferSize)
         MAXBUFFERSIZE,
         0,
         NULL);
-    ok(hPipeReader != INVALID_HANDLE_VALUE, "CreateNamedPipeA failed\n");
+    ok(hPipeReader != INVALID_HANDLE_VALUE, "CreateNamedPipeW failed\n");
 
     if (hPipeReader == INVALID_HANDLE_VALUE)
         return;
@@ -74,7 +74,7 @@ VOID StartTestCORE17376(_In_ DWORD adReadBufferSize)
     hThreadReader = CreateThread(NULL, 0, PipeReader, hPipeReader, 0, NULL);
     ok(hThreadReader != INVALID_HANDLE_VALUE, "CreateThread failed\n");
 
-    hPipeWriter = CreateFile(
+    hPipeWriter = CreateFileW(
         g_PipeName,
         GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -82,7 +82,7 @@ VOID StartTestCORE17376(_In_ DWORD adReadBufferSize)
         OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL,
         NULL);
-    ok(hPipeWriter != INVALID_HANDLE_VALUE, "CreateFile failed\n");
+    ok(hPipeWriter != INVALID_HANDLE_VALUE, "CreateFileW failed\n");
 
     if (hPipeWriter != INVALID_HANDLE_VALUE)
     {
@@ -104,7 +104,7 @@ VOID StartTestCORE17376(_In_ DWORD adReadBufferSize)
     }
     CloseHandle(hPipeReader);
 
-    trace("adReadBufferSize = %ld - COMPLETED\n", adReadBufferSize);
+    trace("adReadBufferSize = %lu - COMPLETED\n", adReadBufferSize);
 }
 
 START_TEST(Pipes)
