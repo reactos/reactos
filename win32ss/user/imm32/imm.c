@@ -690,9 +690,9 @@ Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         goto Finish;
     }
 
-    if ((pClientImc->dwFlags & CLIENTIMC_UNKNOWN2) && !bKeep)
+    if ((pClientImc->dwFlags & CLIENTIMC_LOCKED) && !bKeep)
     {
-        ERR("Can't destroy for CLIENTIMC_UNKNOWN2\n");
+        ERR("Can't destroy for CLIENTIMC_LOCKED\n");
         return FALSE;
     }
 
@@ -988,7 +988,7 @@ ImmLockClientImc(_In_ HIMC hImc)
         return NULL;
     }
 
-    pClientImc->dwFlags |= CLIENTIMC_UNKNOWN2;
+    pClientImc->dwFlags |= CLIENTIMC_LOCKED;
 
 Finish:
     InterlockedIncrement(&pClientImc->cLockObj);
