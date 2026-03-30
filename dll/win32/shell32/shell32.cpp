@@ -66,8 +66,12 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
 
     swprintf(szValue, L"%lu", lValue);
 
-    if (GetNumberFormatW(LOCALE_USER_DEFAULT, 0, szValue,
-                         &numFormat, lpNumber, MAX_PATH) != 0)
+    if (GetNumberFormatW(LOCALE_USER_DEFAULT,
+                         0, 
+                         szValue,
+                         &numFormat, 
+                         lpNumber, 
+                         MAX_PATH) != 0)
     {
         return lpNumber;
     }
