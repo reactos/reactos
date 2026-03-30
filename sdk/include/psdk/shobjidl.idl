@@ -369,8 +369,22 @@ interface IShellFolder2 : IShellFolder
 ]
 interface IParentAndItem : IUnknown
 {
-    HRESULT SetParentAndItem([in] PCIDLIST_ABSOLUTE pidlParent, [in] IShellFolder*psf, [in] PCUITEMID_CHILD pidlChild);
-    HRESULT GetParentAndItem([out, optional] PIDLIST_ABSOLUTE *ppidlParent, [out, optional] IShellFolder **ppsf, [out, optional] PITEMID_CHILD *ppidlChild);
+    HRESULT SetParentAndItem(
+        [in, unique] PCIDLIST_ABSOLUTE parent,
+        [in, unique] IShellFolder *folder,
+        [in] PCUITEMID_CHILD child);
+
+    [local]
+    HRESULT GetParentAndItem(
+        [out] PIDLIST_ABSOLUTE *parent,
+        [out] IShellFolder **folder,
+        [out] PITEMID_CHILD *child);
+
+    [call_as(GetParentAndItem)]
+    HRESULT RemoteGetParentAndItem(
+        [out] PIDLIST_ABSOLUTE *parent,
+        [out] IShellFolder **folder,
+        [out] PITEMID_CHILD *child);
 }
 
 /*****************************************************************************
