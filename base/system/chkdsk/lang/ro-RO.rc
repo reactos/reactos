@@ -20,7 +20,7 @@ Uz: %s [disc:] [-F] [-V] [-R] [-C]\n\n\
 \n"
 
     IDS_PERCENT_COMPL "%d completat.\r"
-    IDS_FILE_SYSTEM "Tipul sistemului de fișier este %s.\n"
+    IDS_FILE_SYSTEM "Tipul sistemului de fișier este %s for volume %s.\n"
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 de către Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\

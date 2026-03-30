@@ -432,6 +432,7 @@ VfatChkdsk(
     ULONG free_clusters;
     DOS_FS fs;
     NTSTATUS Status;
+    WCHAR DriveLetter[2] = L"0";
 
     UNREFERENCED_PARAMETER(pUnknown1);
     UNREFERENCED_PARAMETER(pUnknown2);
@@ -544,9 +545,23 @@ VfatChkdsk(
         }
     }
 
+#ifdef __REACTOS__
+    if (DriveRoot->Buffer[0] == '\\' && DriveRoot->Buffer[1] == '?' &&
+        DriveRoot->Buffer[2] == '?' && DriveRoot->Buffer[3] == '\\')
+    {
+        DriveLetter[0] = DriveRoot->Buffer[4] & 0x5F;
+        VfatPrint("Chkdsk complete for Volume %S.\n", DriveLetter);
+        VfatPrint("%ld files on disk.\n", FsCheckTotalFiles);
+        VfatPrint("%ld clusters on the disk.\n", fs.data_clusters);
+        VfatPrint("%ld clusters available on the disk.\n", free_clusters);
+    }
+    else
+        VfatPrint("%wZ: %u files, %lu/%lu clusters\n", DriveRoot,
+            FsCheckTotalFiles, fs.data_clusters - free_clusters, fs.data_clusters);
+#else
     VfatPrint("%wZ: %u files, %lu/%lu clusters\n", DriveRoot,
         FsCheckTotalFiles, fs.data_clusters - free_clusters, fs.data_clusters);
-
+#endif
     if (FsCheckFlags & FSCHECK_READ_WRITE)
     {
         /* Dismount the volume */

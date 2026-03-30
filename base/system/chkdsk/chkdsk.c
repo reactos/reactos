@@ -456,7 +456,7 @@ wmain(int argc, WCHAR *argv[])
     //
     // Just do it
     //
-    ConResPrintf(StdOut, IDS_FILE_SYSTEM, fileSystem);
+    ConResPrintf(StdOut, IDS_FILE_SYSTEM, fileSystem, Drive);
     Chkdsk(Drive,
            fileSystem,
            FixErrors,
