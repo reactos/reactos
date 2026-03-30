@@ -35,8 +35,10 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
     WCHAR szValue[MAX_PATH], szSeparator[8 + 1], szGrouping[8 + 1];
     NUMBERFMTW numFormat;
 
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND,
-                   szSeparator, _countof(szSeparator));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT,
+                   LOCALE_STHOUSAND,
+                   szSeparator,
+                   _countof(szSeparator));
 
     /* LOCALE_SGROUPING is semicolon-separated right-to-left group sizes,
      * trailing 0 means repeat (e.g. "3;0" = uniform 3, "3;2;0" = Indian).
