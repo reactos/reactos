@@ -169,15 +169,53 @@ function(add_iid_library TARGET)
     set_target_properties(${TARGET} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()
 
-function(add_idl_reg_script IDL_FILE)
+# Generates Wine .rgs registry files for DllRegisterServer. Automatically adds dependency and generated res files to target.
+function(add_idl_reg_scripts TARGET TYPE)
     get_includes(INCLUDES)
     get_defines(DEFINES)
-    get_filename_component(NAME ${IDL_FILE} NAME_WE)
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res
-        COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -Oicf -r -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res ${IDL_FILE}
-        DEPENDS ${IDL_FILE} native-widl
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res PROPERTIES
-        GENERATED TRUE EXTERNAL_OBJECT TRUE)
+    get_includes(LIBS)
+    string(REPLACE "-I" "-L" LIBS "${LIBS}")
+
+    if(TYPE STREQUAL "winrt")
+        set(IDL_REGFLAGS -r -winrt)
+        set(__suffix _w)
+    elseif(TYPE STREQUAL "registry")
+        set(IDL_REGFLAGS -r)
+        set(__suffix _r)
+    elseif(TYPE STREQUAL "regtypelib")
+        set(IDL_REGFLAGS -t)
+        set(__suffix _t)
+    else()
+        message(FATAL_ERROR "Please pass either winrt, registry or regtypelib as argument to add_idl_reg_scripts")
+    endif()
+    set(IDL_REGTARGETNAME ${TARGET}${__suffix})
+    foreach(IDL_FILE ${ARGN})
+        get_filename_component(NAME ${IDL_FILE} NAME_WE)
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}${__suffix}.res
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${LIBS} ${IDL_FLAGS} -Oicf ${IDL_REGFLAGS} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}${__suffix}.res ${IDL_FILE}
+            DEPENDS ${IDL_FILE} native-widl
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}${__suffix}.res PROPERTIES
+            GENERATED TRUE EXTERNAL_OBJECT TRUE)
+
+        if(MSVC)
+            list(APPEND RCFILES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}${__suffix}.res)
+        else()
+            # convert the .res file into a .o file for GCC/Clang using windres
+            add_custom_command(
+                OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}${__suffix}.o
+                COMMAND ${CMAKE_RC_COMPILER} -O coff -i ${CMAKE_CURRENT_BINARY_DIR}/${NAME}${__suffix}.res -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}${__suffix}.o
+                DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${NAME}${__suffix}.res
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+            set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}${__suffix}.o PROPERTIES
+                GENERATED TRUE EXTERNAL_OBJECT TRUE)
+            list(APPEND RCFILES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}${__suffix}.o)
+        endif()
+    endforeach()
+        
+    add_custom_target(${IDL_REGTARGETNAME} DEPENDS ${RCFILES})
+    add_dependencies(${IDL_REGTARGETNAME} stdole2)
+    add_dependencies(${TARGET} ${IDL_REGTARGETNAME})
+    target_sources(${TARGET} PRIVATE ${RCFILES})
 endfunction()
