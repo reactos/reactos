@@ -32,7 +32,7 @@ EXTERN_C LPWSTR
 WINAPI
 AddCommasW(DWORD lValue, LPWSTR lpNumber)
 {
-    WCHAR szValue[MAX_PATH], szSeparator[8 + 1], szGrouping[8 + 1];
+    WCHAR szValue[MAX_PATH], szSeparator[8 + 1], szGrouping[10 + 1];
     NUMBERFMTW numFormat;
 
     GetLocaleInfoW(LOCALE_USER_DEFAULT,
