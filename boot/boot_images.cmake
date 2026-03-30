@@ -226,15 +226,14 @@ add_allusers_profile_dirs(${CMAKE_CURRENT_BINARY_DIR}/preinstall.cmake.lst "Prof
 add_user_profile_dirs(${CMAKE_CURRENT_BINARY_DIR}/preinstall.cmake.lst "Profiles" "Default User")
 
 # Disk image size configuration (in MB)
-set(PREINSTALL_IMAGE_SIZE_MB 512 CACHE STRING "Pre-installed disk image size in MB")
+set(PREINSTALL_IMAGE_SIZE_MB 1024 CACHE STRING "Pre-installed disk image size in MB")
 # Partition starts at sector 2048 (1MB alignment), rest is partition
 math(EXPR _preinstall_partition_sectors "(${PREINSTALL_IMAGE_SIZE_MB} - 1) * 2048")
 
 set(_dosmbr_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/dosmbr.bin)
 set(_fat32_file  ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat32.bin)
 
-add_custom_command(
-    OUTPUT ${_preinstall_partition_file}
+add_custom_target(preinstall_partition
     COMMAND native-fatten ${_preinstall_partition_file}
         -format ${_preinstall_partition_sectors}
         -boot ${_fat32_file}
@@ -242,19 +241,18 @@ add_custom_command(
     DEPENDS native-fatten fat32 freeldr
     VERBATIM)
 
-add_custom_command(
-    OUTPUT ${_preinstall_image_file}
+add_custom_target(reactosimg
     COMMAND native-mkdiskimg
         -o ${_preinstall_image_file}
         -mbr ${_dosmbr_file}
         -partition ${_preinstall_partition_file}
         -start 2048
         -type ${_preinstall_partition_type}
-    DEPENDS ${_preinstall_partition_file} native-mkdiskimg dosmbr
+    DEPENDS native-mkdiskimg dosmbr
     VERBATIM)
+add_dependencies(reactosimg preinstall_partition)
 
-add_custom_command(
-    OUTPUT ${_preinstall_vhd_file}
+add_custom_target(reactosvhd
     COMMAND native-mkdiskimg
         -o ${_preinstall_vhd_file}
         -mbr ${_dosmbr_file}
@@ -262,16 +260,9 @@ add_custom_command(
         -start 2048
         -type ${_preinstall_partition_type}
         -vhd
-    DEPENDS ${_preinstall_partition_file} native-mkdiskimg dosmbr
+    DEPENDS native-mkdiskimg dosmbr
     VERBATIM)
-
-add_custom_target(reactosimg
-    DEPENDS ${_preinstall_image_file} ${_preinstall_vhd_file}
-    VERBATIM)
-
-add_custom_target(reactosvhd
-    DEPENDS ${_preinstall_vhd_file}
-    VERBATIM)
+add_dependencies(reactosvhd preinstall_partition)
 
 
 if(DEFINED EFI_PLATFORM_ID)
