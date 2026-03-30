@@ -446,7 +446,6 @@ UefiGetBootPartitionEntry(
 
     if (IsGpt)
     {
-        /* no more redundant second UefiReadGptHeader() call = no shadowed locals */
         GPT_PARTITION_ENTRY  GptEntry;
         EFI_BLOCK_IO*        RootBlockIo;
         ULONG                BlockSize;
