@@ -22,7 +22,8 @@ HKCU,"Keyboard Layout\Toggle","Layout Hotkey",0x00000000,"2"
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Start",0x00010001,0x00000000
 
 ; NOTE: Unlike livecd.inf, we do NOT clear BootExecute (allow autochk on real disk)
-; NOTE: Unlike livecd.inf, we do NOT override CmdLine (inherit "setup -newsetup" from hivesys.inf)
+; Use mini setup to go straight to desktop without reboot (like livecd)
+HKLM,"SYSTEM\Setup","CmdLine",0x00020000,"setup -mini"
 ; NOTE: Unlike livecd.inf, we do NOT clear PagingFiles (allow paging on disk)
 ; NOTE: Unlike livecd.inf, we do NOT disable lock/logoff policies
 
