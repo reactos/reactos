@@ -392,9 +392,9 @@ UefiGetGptPartitionEntry(
 static
 BOOLEAN
 UefiGetBootPartitionEntry(
-    IN  UCHAR                   DriveNumber,
-    OUT PPARTITION_TABLE_ENTRY  PartitionTableEntry,
-    OUT PULONG                  BootPartition)
+    IN  UCHAR DriveNumber,
+    OUT PPARTITION_TABLE_ENTRY PartitionTableEntry,
+    OUT PULONG BootPartition)
 {
     ULONG PartitionNum;
     ULONG ArcDriveIndex;
