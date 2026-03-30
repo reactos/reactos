@@ -32,29 +32,42 @@ EXTERN_C LPWSTR
 WINAPI
 AddCommasW(DWORD lValue, LPWSTR lpNumber)
 {
-    WCHAR szValue[MAX_PATH], szSeparator[8 + 1];
+    WCHAR szValue[MAX_PATH], szSeparator[8 + 1], szGrouping[8 + 1];
     NUMBERFMTW numFormat;
 
-    GetLocaleInfoW(LOCALE_USER_DEFAULT,
-                   LOCALE_STHOUSAND,
-                   szSeparator,
-                   _countof(szSeparator));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND,
+                   szSeparator, _countof(szSeparator));
+
+    /* LOCALE_SGROUPING is semicolon-separated right-to-left group sizes,
+     * trailing 0 means repeat (e.g. "3;0" = uniform 3, "3;2;0" = Indian).
+     * NUMBERFMTW::Grouping encodes this as primary + secondary*10. */
+    DWORD dwGrouping = 3;
+    if (GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SGROUPING,
+                       szGrouping, _countof(szGrouping)))
+    {
+        PWSTR p = szGrouping;
+        DWORD dwPrimary = 0, dwSecondary = 0;
+
+        if (*p >= L'0' && *p <= L'9')
+            dwPrimary = *p++ - L'0';
+        if (*p == L';') p++;
+        if (*p >= L'1' && *p <= L'9')
+            dwSecondary = *p - L'0';
+
+        dwGrouping = dwPrimary + dwSecondary * 10;
+    }
 
     numFormat.NumDigits     = 0;
     numFormat.LeadingZero   = 0;
-    numFormat.Grouping      = 3; // FIXME! Use GetLocaleInfoW with LOCALE_SGROUPING and interpret the result.
+    numFormat.Grouping      = dwGrouping;
     numFormat.lpDecimalSep  = szSeparator;
     numFormat.lpThousandSep = szSeparator;
     numFormat.NegativeOrder = 0;
 
     swprintf(szValue, L"%lu", lValue);
 
-    if (GetNumberFormatW(LOCALE_USER_DEFAULT,
-                         0,
-                         szValue,
-                         &numFormat,
-                         lpNumber,
-                         MAX_PATH) != 0)
+    if (GetNumberFormatW(LOCALE_USER_DEFAULT, 0, szValue,
+                         &numFormat, lpNumber, MAX_PATH) != 0)
     {
         return lpNumber;
     }
