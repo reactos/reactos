@@ -151,7 +151,8 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
             }
             FreeEnvironmentStringsW(pCurEnv);
         }
-
+        /* We free the environment block now that we have applied it to the process
+         * the caller gets NULL back in *lpEnvironment in this case. */
         DestroyEnvironmentBlock(pEnv);
         *lpEnvironment = NULL;
     }
