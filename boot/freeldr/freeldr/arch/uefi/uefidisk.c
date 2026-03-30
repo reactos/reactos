@@ -439,15 +439,14 @@ UefiGetBootPartitionEntry(
         return TRUE;
     }
 
-    /* Boot handle is a logical partition - find matching partition entry */
+    /* the boot handle is a logical partition so let's find a matching partition entry */
     /* Try to detect GPT first by reading GPT header */
     GPT_TABLE_HEADER GptHeader;
     BOOLEAN IsGpt = UefiReadGptHeader(DriveNumber, &GptHeader);
 
     if (IsGpt)
     {
-        /* FIX: No redundant second UefiReadGptHeader() call, no shadowed locals.
-         * GptHeader and ArcDriveIndex from the outer scope are reused directly. */
+        /* no more redundant second UefiReadGptHeader() call = no shadowed locals */
         GPT_PARTITION_ENTRY  GptEntry;
         EFI_BLOCK_IO*        RootBlockIo;
         ULONG                BlockSize;
