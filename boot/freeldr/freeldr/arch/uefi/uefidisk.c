@@ -396,12 +396,12 @@ UefiGetBootPartitionEntry(
     OUT PPARTITION_TABLE_ENTRY  PartitionTableEntry,
     OUT PULONG                  BootPartition)
 {
-    ULONG                   PartitionNum;
-    ULONG                   ArcDriveIndex;
-    EFI_BLOCK_IO*           BootBlockIo;
-    EFI_STATUS              Status;
-    ULONGLONG               BootPartitionSize;
-    PARTITION_TABLE_ENTRY   TempPartitionEntry;
+    ULONG PartitionNum;
+    ULONG ArcDriveIndex;
+    EFI_BLOCK_IO* BootBlockIo;
+    EFI_STATUS Status;
+    ULONGLONG BootPartitionSize;
+    PARTITION_TABLE_ENTRY TempPartitionEntry;
 
     TRACE("UefiGetBootPartitionEntry: DriveNumber: %d\n", DriveNumber - FIRST_BIOS_DISK);
 
@@ -424,6 +424,8 @@ UefiGetBootPartitionEntry(
         return FALSE;
     }
 
+    /* For logical partitions, UEFI Block I/O protocol starts at block 0 */
+    /* We need to find which partition it corresponds to by comparing sizes */
     BootPartitionSize = BootBlockIo->Media->LastBlock + 1;
 
     TRACE("Boot partition: Size=%llu blocks, BlockSize=%lu\n",
@@ -446,13 +448,13 @@ UefiGetBootPartitionEntry(
 
     if (IsGpt)
     {
-        GPT_PARTITION_ENTRY  GptEntry;
-        EFI_BLOCK_IO*        RootBlockIo;
-        ULONG                BlockSize;
-        ULONGLONG            EntryLba;
-        ULONG                EntryOffset, EntriesPerBlock;
-        EFI_STATUS           GptStatus;
-        EFI_GUID             UnusedGuid = EFI_PART_TYPE_UNUSED_GUID;
+        GPT_PARTITION_ENTRY GptEntry;
+        EFI_BLOCK_IO* RootBlockIo;
+        ULONG BlockSize;
+        ULONGLONG EntryLba;
+        ULONG EntryOffset, EntriesPerBlock;
+        EFI_STATUS Status;
+        EFI_GUID UnusedGuid = EFI_PART_TYPE_UNUSED_GUID;
 
         Status = GlobalSystemTable->BootServices->HandleProtocol(
             InternalUefiDisk[ArcDriveIndex].Handle,
@@ -480,10 +482,10 @@ UefiGetBootPartitionEntry(
             EntryLba    = GptHeader.PartitionEntryLba + (i / EntriesPerBlock);
             EntryOffset = (i % EntriesPerBlock) * GptHeader.SizeOfPartitionEntry;
 
-            GptStatus = RootBlockIo->ReadBlocks(
+            Status = RootBlockIo->ReadBlocks(
                 RootBlockIo, RootBlockIo->Media->MediaId,
                 EntryLba, BlockSize, DiskReadBuffer);
-            if (EFI_ERROR(GptStatus))
+            if (EFI_ERROR(Status))
                 continue;
 
             RtlCopyMemory(&GptEntry, (PUCHAR)DiskReadBuffer + EntryOffset,
@@ -501,10 +503,10 @@ UefiGetBootPartitionEntry(
             if (HaveBootSector0)
             {
                 UCHAR PartSector0[512];
-                GptStatus = RootBlockIo->ReadBlocks(
+                Status = RootBlockIo->ReadBlocks(
                     RootBlockIo, RootBlockIo->Media->MediaId,
                     GptEntry.StartingLba, BlockSize, PartSector0);
-                if (!EFI_ERROR(GptStatus) &&
+                if (!EFI_ERROR(Status) &&
                     memcmp(BootSector0, PartSector0, BootBlockIo->Media->BlockSize) == 0)
                 {
                     LbaMatch = TRUE;
