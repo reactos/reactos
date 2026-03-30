@@ -112,7 +112,8 @@ DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2
    (s)->Buffer[47] == L'}')
 
 /* DOS vs NT volume name helpers */
-#define MOUNTMGR_IS_DOS_VOLUME_NAME(s) ((s) && MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Buffer[1] == L'\\')
+#define MOUNTMGR_IS_DOS_VOLUME_NAME(s) \
+    ((NULL != (s)) && MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Buffer[1] == L'\\')
 #define MOUNTMGR_IS_NT_VOLUME_NAME(s) \
   (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Buffer[1] == L'?')
 
