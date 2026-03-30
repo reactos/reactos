@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for pipe (CORE-17376)
- * PROGRAMMER:      Simone Mario Lombardo <me@simonelombardo.com>
- *                  Julen Urizar Compains <julenuri@hotmail.com>
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Test for pipe (CORE-17376)
+ * COPYRIGHT:   Copyright 2024 Simone Mario Lombardo <me@simonelombardo.com>
+ *              Copyright 2024 Julen Urizar Compains <julenuri@hotmail.com>
  */
 
 #include "precomp.h"
