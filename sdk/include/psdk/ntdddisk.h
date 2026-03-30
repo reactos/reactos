@@ -278,7 +278,7 @@ extern "C" {
 #define PARTITION_XINT13_EXTENDED       0x0F
 #define PARTITION_MSFT_RECOVERY         0x27
 #define PARTITION_MAIN_OS               0x28
-#define PARTIITON_OS_DATA               0x29
+#define PARTITION_OS_DATA               0x29
 #define PARTITION_PRE_INSTALLED         0x2a
 #define PARTITION_BSP                   0x2b
 #define PARTITION_DPP                   0x2c
