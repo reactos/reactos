@@ -54,8 +54,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     GROUPBOX "Přihlašovací údaje", IDC_STATIC, 7, 50, 261, 52
-    LTEXT "<Zpráva>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
-    LTEXT "<Datum přihlášení>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
+    LTEXT "<Message>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
+    LTEXT "<Logon date>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
     CTEXT "Co chcete udělat?", IDC_STATIC, 10, 108, 255, 8
     DEFPUSHBUTTON "&Uzamknout počítač", IDC_SECURITY_LOCK, 7, 124, 80, 14
     PUSHBUTTON "&Odhlásit...", IDC_SECURITY_LOGOFF, 98, 124, 80, 14
@@ -73,7 +73,7 @@ BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
     LTEXT "Tento počítač je momentálně používán a je uzamčen.", IDC_STATIC, 37, 61, 231, 8
-    LTEXT "<Zpráva>", IDC_LOCKED_MESSAGE, 37, 75, 231, 26
+    LTEXT "<Message>", IDC_LOCKED_MESSAGE, 37, 75, 231, 26
     LTEXT "Stisknutím kláves Ctrl+Alt+Del odemknete počítač.", IDC_STATIC, 37, 106, 231, 8
 END
 
@@ -85,7 +85,7 @@ BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
     LTEXT "Tento počítač je momentálně používán a je uzamčen.", IDC_STATIC, 36, 61, 232, 8
-    LTEXT "<Zpráva>", IDC_UNLOCK_MESSAGE, 36, 75, 232, 26
+    LTEXT "<Message>", IDC_UNLOCK_MESSAGE, 36, 75, 232, 26
     LTEXT "Uživatelské jméno:", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_UNLOCK_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
     LTEXT "Heslo:", IDC_STATIC, 36, 125, 42, 8
