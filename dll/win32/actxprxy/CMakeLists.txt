@@ -36,10 +36,22 @@ list(APPEND SOURCE
 
 add_library(actxprxy MODULE
     ${SOURCE}
-    actxprxy.rc
     ${CMAKE_CURRENT_BINARY_DIR}/actxprxy.def)
 
 set_module_type(actxprxy win32dll)
+add_idl_reg_scripts(actxprxy registry
+    actxprxy_activscp.idl
+    actxprxy_comcat.idl
+    actxprxy_docobj.idl
+    actxprxy_hlink.idl
+    actxprxy_htiface.idl
+    actxprxy_htiframe.idl
+    actxprxy_objsafe.idl
+    actxprxy_ocmm.idl
+    actxprxy_servprov.idl
+    actxprxy_shldisp.idl
+    actxprxy_shobjidl.idl
+    actxprxy_urlhist.idl)
 target_link_libraries(actxprxy uuid wine ${PSEH_LIB})
 add_importlibs(actxprxy rpcrt4 ole32 oleaut32 msvcrt kernel32 ntdll)
 add_pch(actxprxy precomp.h SOURCE)
