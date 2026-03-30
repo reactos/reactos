@@ -2827,7 +2827,7 @@ StartScan:
                 RtlFreeHeap(RtlGetProcessHeap(), 0, PathExtBuffer);
                 PathExtBuffer = NULL;
             }
-            Length = 25;
+            Length = BasePathExtDefaultValue.Length + 2;
             PathExtBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                             0,
                                             (Length * sizeof(WCHAR)));
@@ -2844,11 +2844,11 @@ StartScan:
 
         if (Proc_ListConvertInPlace(&PathExtBufferString))
         {
-            if(Proc_FindProgramWithPathext(lpApplicationName,
-                                           SearchPath,
-                                           PathExtBuffer,
-                                           NameBuffer,
-                                           MAX_PATH))
+            if (Proc_FindProgramWithPathext(lpApplicationName,
+                                            SearchPath,
+                                            PathExtBuffer,
+                                            NameBuffer,
+                                            MAX_PATH))
             {
                 Length = wcslen(NameBuffer);
             }
