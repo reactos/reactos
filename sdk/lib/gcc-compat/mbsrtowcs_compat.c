@@ -32,7 +32,8 @@ size_t __cdecl mbsrtowcs(wchar_t *dst, const char **src, size_t len, void *ps)
     if (ret == (size_t)-1)
         return (size_t)-1;
 
-    if (dst) {
+    if (dst)
+    {
         if (ret < len)
             *src = NULL; /* null terminator was converted */
         else
