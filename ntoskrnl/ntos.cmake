@@ -1,12 +1,10 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/arbiter
-    ${REACTOS_SOURCE_DIR}/sdk/lib/cmlib
     include
     ${CMAKE_CURRENT_BINARY_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}/include/internal
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers
+    ${REACTOS_SOURCE_DIR}/sdk/lib/rtl)
 
 add_definitions(
     -D_NTOSKRNL_
