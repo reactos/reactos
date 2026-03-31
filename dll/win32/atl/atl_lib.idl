@@ -17,7 +17,6 @@
  */
 
 #pragma makedep regtypelib
-#pragma makedep register
 
 import "atliface.idl";
 
