@@ -10,6 +10,6 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "\nVypíše súčasný názov hostiteľa.\n\nhostname\n"
-    IDS_NOSET "sethostname: Open the ""Computer Name"" tab in the ""System"" Control Panel applet\nto change the host name.\nhostname -s nie je podporovaný.\n"
+    IDS_NOSET "sethostname: Pre zmenu názvu počítača otvorte kartu ""Názov počítača""\nv nastaveniach ""Systém"" v Ovládacom paneli.\nhostname -s nie je podporovaný.\n"
     IDS_ERROR "Chyba: "
 END
