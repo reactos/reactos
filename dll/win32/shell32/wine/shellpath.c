@@ -3451,7 +3451,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
 
     if (mapped_csidl == -1)
     {
-        ERR("Unknown known folder GUID requested\n");
+        ERR("Unknown known folder GUID requested: %s\n", debugstr_guid(&rfid));
         return E_INVALIDARG;
     }
 
@@ -3493,7 +3493,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
              hr = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
              break;
         case CSIDL_Type_WindowsPath:
-            if (!GetWindowsDirectoryW(szPath, MAX_PATH))
+            if (!GetWindowsDirectoryW(szPath, _countof(szPath)))
             {
                 hr = HRESULT_FROM_WIN32(GetLastError());
             } 
@@ -3507,7 +3507,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
             }
             break;
         case CSIDL_Type_SystemPath:
-            if (!GetSystemDirectoryW(szPath, MAX_PATH))
+            if (!GetSystemDirectoryW(szPath, _countof(szPath)))
             {
                 hr = HRESULT_FROM_WIN32(GetLastError());
             } 
