@@ -1398,7 +1398,7 @@ LdrpAllocateTls(_In_ PTEB Teb)
     if (!LdrpNumberOfTlsEntries)
         return STATUS_SUCCESS;
     /* Check if there are new entries to add to the vector */
-    if (LdrpNumberOfTlsEntries == Teb->UserReserved[0])
+    if (LdrpNumberOfTlsEntries == Teb->UserReserved.ThreadNumberOfTlsEntries)
         return STATUS_SUCCESS;
 
     /* Allocate the vector array */
@@ -1422,7 +1422,7 @@ LdrpAllocateTls(_In_ PTEB Teb)
         TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData -
                       TlsData->TlsDirectory.StartAddressOfRawData;
 
-        if (!OldTlsVector || ((TlsData->TlsDirectory.Characteristics + 1) > (ULONG)Teb->UserReserved[0]))
+        if (!OldTlsVector || ((TlsData->TlsDirectory.Characteristics + 1) > Teb->UserReserved.ThreadNumberOfTlsEntries))
         {
             TlsVector[TlsData->TlsDirectory.Characteristics] = RtlAllocateHeap(RtlGetProcessHeap(),
                                                                                0,
@@ -1476,20 +1476,19 @@ LdrpAllocateTls(_In_ PTEB Teb)
             return STATUS_NO_MEMORY;
         }
         OldTlsVectorEntry->OldTlsVector = OldTlsVector;
-        if (Teb->SystemReserved1[0])
+        if (Teb->SystemReserved1.OldTlsVectorList)
         {
-            InsertTailList(Teb->SystemReserved1[0], &OldTlsVectorEntry->TlsVectorLinks);
+            InsertTailList((PLIST_ENTRY)Teb->SystemReserved1.OldTlsVectorList,
+                           &OldTlsVectorEntry->TlsVectorLinks);
         }
         else
         {
             InitializeListHead(&OldTlsVectorEntry->TlsVectorLinks);
-            Teb->SystemReserved1[0] = OldTlsVectorEntry;
+            Teb->SystemReserved1.OldTlsVectorList = OldTlsVectorEntry;
         }
     }
-    // Teb->UserReserved[0] -> rename to ThreadNumberOfTlsEntries?
-    // SystemReserved1[0] -> rename to OldTlsVectorList?
     Teb->ThreadLocalStoragePointer = TlsVector;
-    Teb->UserReserved[0] = LdrpNumberOfTlsEntries;
+    Teb->UserReserved.ThreadNumberOfTlsEntries = LdrpNumberOfTlsEntries;
     /* Done */
     return STATUS_SUCCESS;
 }
@@ -1530,10 +1529,10 @@ LdrpFreeTls(VOID)
                 0,
                 TlsVector);
 
-    if (Teb->SystemReserved1[0])
+    if (Teb->SystemReserved1.OldTlsVectorList)
     {
         /* Loop through it */
-        ListHead = Teb->SystemReserved1[0];
+        ListHead = (PLIST_ENTRY)Teb->SystemReserved1.OldTlsVectorList;
         NextEntry = ListHead->Flink;
         while (NextEntry != ListHead)
         {
@@ -1543,12 +1542,8 @@ LdrpFreeTls(VOID)
             NextEntry = NextEntry->Flink;
 
             /* Free each old TLS vector and the entry itself */
-            RtlFreeHeap(RtlGetProcessHeap(),
-                        0,
-                        OldTlsVectorDataEntry->OldTlsVector);
-            RtlFreeHeap(RtlGetProcessHeap(),
-                        0,
-                        OldTlsVectorDataEntry);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, OldTlsVectorDataEntry->OldTlsVector);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, OldTlsVectorDataEntry);
         }
     }
 }

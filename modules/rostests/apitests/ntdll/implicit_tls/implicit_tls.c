@@ -20,7 +20,10 @@
 #error Your compiler is not supported.
 #endif
 
-
+/* 
+ * Putting this note here as this is more directly related to TLS:
+ * https://web.archive.org/web/20250204223245/http://www.nynaeve.net/?tag=tls
+ */
 /* Tls magic stolen from sdk/lib/crt/startup/tlssup.c */
 /* ROS is built with the flag /Zc:threadSafeInit- which prevents the compilation
  * of proper TLS code. Instead, hack up a TLS directory to increment the TLS index
