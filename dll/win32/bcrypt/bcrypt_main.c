@@ -17,7 +17,31 @@
  *
  */
 
+#ifndef __REACTOS__
+#include <wine/config.h>
+#include <wine/port.h>
+
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
+#include <ntsecapi.h>
+#include <bcrypt.h>
+
+#include <wine/debug.h>
+#include <wine/unicode.h>
+#include <wine/library.h>
+
+#ifdef SONAME_LIBMBEDTLS
+#include <mbedtls/md.h>
+#include <mbedtls/md5.h>
+#include <mbedtls/sha1.h>
+#include <mbedtls/sha256.h>
+#include <mbedtls/sha512.h>
+#endif
+#else
 #include "precomp.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(bcrypt);
 
@@ -1009,7 +1033,7 @@ NTSTATUS WINAPI BCryptHashData( BCRYPT_HASH_HANDLE handle, UCHAR *input, ULONG s
 
 static void hash_finalize( struct hash *hash, UCHAR *output, ULONG size )
 {
-#ifndef SONAME_LIBMBEDTLS
+#ifndef __REACTOS__
     UCHAR buffer[MAX_HASH_OUTPUT_BYTES];
     ULONG hash_size;
 
@@ -1018,7 +1042,7 @@ static void hash_finalize( struct hash *hash, UCHAR *output, ULONG size )
 #endif
         hash_finish( hash, output );
         if (hash->flags & HASH_FLAG_REUSABLE) hash_prepare( hash );
-#ifndef SONAME_LIBMBEDTLS
+#ifndef __REACTOS__
         return;
     }
 
@@ -1219,7 +1243,7 @@ static NTSTATUS key_symmetric_decrypt( struct key *key, UCHAR *input, ULONG inpu
     if (key->u.s.mode == CHAIN_MODE_GCM)
     {
         BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *auth_info = padding;
-#ifndef SONAME_LIBMBEDTLS
+#ifndef __REACTOS__
         UCHAR tag[16];
 #endif
 
@@ -1239,7 +1263,7 @@ static NTSTATUS key_symmetric_decrypt( struct key *key, UCHAR *input, ULONG inpu
         auth_params.key = key;
         auth_params.auth_data = auth_info->pbAuthData;
         auth_params.len = auth_info->cbAuthData;
-#ifdef SONAME_LIBMBEDTLS
+#ifdef __REACTOS__
         auth_params.encrypt = FALSE;
 #endif
         if ((status = key_symmetric_set_auth_data( &auth_params ))) return status;
@@ -1251,7 +1275,7 @@ static NTSTATUS key_symmetric_decrypt( struct key *key, UCHAR *input, ULONG inpu
         decrypt_params.output_len = output_len;
         if ((status = key_symmetric_decrypt_internal( &decrypt_params ))) return status;
 
-#ifndef SONAME_LIBMBEDTLS
+#ifndef __REACTOS__
         tag_params.key = key;
         tag_params.tag = tag;
         tag_params.len = sizeof(tag);
@@ -1454,7 +1478,7 @@ static NTSTATUS key_symmetric_encrypt( struct key *key,  UCHAR *input, ULONG inp
         auth_params.key = key;
         auth_params.auth_data = auth_info->pbAuthData;
         auth_params.len = auth_info->cbAuthData;
-#ifdef SONAME_LIBMBEDTLS
+#ifdef __REACTOS__
         auth_params.encrypt = TRUE;
 #endif
         if ((status = key_symmetric_set_auth_data( &auth_params ))) return status;
