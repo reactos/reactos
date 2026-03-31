@@ -50,13 +50,13 @@ DllMain(IN HINSTANCE hDllHandle,
 {
     PTEB Teb = NtCurrentTeb();
     PVOID* TlsVector = Teb->ThreadLocalStoragePointer;
-    PULONG ModuleHandle = TlsVector[_tls_index];
+    PULONG_PTR ModuleHandle = (PULONG_PTR)TlsVector[_tls_index];
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         #if defined(_MSC_VER)
         #pragma warning( disable : 4311)
         #endif
-        *ModuleHandle = (int)GetModuleHandleA(NULL) + 1;
+        *ModuleHandle = (ULONG_PTR)GetModuleHandleA(NULL) + 1;
 	}
     return TRUE;
 }

@@ -184,12 +184,7 @@ target_link_libraries(ntdll_apitest ntdll_crt_test_lib rtl_test_lib wine uuid ${
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)
 add_pch(ntdll_apitest precomp.h "${PCH_SKIP_SOURCE}")
-<<<<<<< HEAD
-add_dependencies(ntdll_apitest load_notifications empty_dll)
-=======
-add_dependencies(ntdll_apitest implicit_tls)
-add_dependencies(ntdll_apitest load_notifications)
->>>>>>> ce520fc1574 ([TLS] Added test for implicit TLS.)
+add_dependencies(ntdll_apitest implicit_tls load_notifications empty_dll)
 
 if(NOT MSVC)
     set_source_files_properties(

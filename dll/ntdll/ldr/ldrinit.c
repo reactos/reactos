@@ -1303,7 +1303,7 @@ LdrpInitializeTls(VOID)
 
     /* Initialize the TLS List */
     if (!LdrpImageHasTls)
-      InitializeListHead(&LdrpTlsList);
+        InitializeListHead(&LdrpTlsList);
 
     /* Loop all the modules */
     ListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;

@@ -79,7 +79,7 @@ START_TEST(implicit_tls)
     ok(AuxThread0 != NULL, "CreateThread failed with %lu\n", GetLastError());
 
     TlsVector = Teb->ThreadLocalStoragePointer;
-    PULONG ModuleHandle = TlsVector[0];
+    PULONG_PTR ModuleHandle = TlsVector[0];
     #if defined(_MSC_VER)
     #pragma warning( disable : 4311)
     #endif
