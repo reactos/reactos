@@ -146,23 +146,23 @@ typedef struct
  * Prototypes for the methods of the IShellBrowserImpl class
  */
 /* Constructor */
-IShellBrowser * IShellBrowserImpl_Construct(HWND hwndOwner) DECLSPEC_HIDDEN;
+IShellBrowser * IShellBrowserImpl_Construct(HWND hwndOwner);
 
 
-LPITEMIDLIST GetPidlFromDataObject ( IDataObject *doSelected, UINT nPidlIndex) DECLSPEC_HIDDEN;
+LPITEMIDLIST GetPidlFromDataObject ( IDataObject *doSelected, UINT nPidlIndex);
 
 /* Functions used by the EDIT box */
-void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd) DECLSPEC_HIDDEN;
+void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd);
 
 /**************************************************************************
 *   External Prototypes
 */
-extern FileOpenDlgInfos *get_filedlg_infoptr(HWND hwnd) DECLSPEC_HIDDEN;
+extern FileOpenDlgInfos *get_filedlg_infoptr(HWND hwnd);
 
-extern IShellFolder*    GetShellFolderFromPidl(LPITEMIDLIST pidlAbs) DECLSPEC_HIDDEN;
-extern LPITEMIDLIST     GetParentPidl(LPITEMIDLIST pidl) DECLSPEC_HIDDEN;
+extern IShellFolder*    GetShellFolderFromPidl(LPITEMIDLIST pidlAbs);
+extern LPITEMIDLIST     GetParentPidl(LPITEMIDLIST pidl);
 
-extern int     FILEDLG95_LOOKIN_SelectItem(HWND hwnd,LPITEMIDLIST pidl) DECLSPEC_HIDDEN;
-extern LRESULT SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode) DECLSPEC_HIDDEN;
+extern int     FILEDLG95_LOOKIN_SelectItem(HWND hwnd,LPITEMIDLIST pidl);
+extern LRESULT SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode);
 
 #endif /*SHBROWSER_H*/
