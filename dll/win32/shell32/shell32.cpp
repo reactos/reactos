@@ -32,7 +32,7 @@ EXTERN_C LPWSTR
 WINAPI
 AddCommasW(DWORD lValue, LPWSTR lpNumber)
 {
-    WCHAR szValue[MAX_PATH], szSeparator[8 + 1], szGrouping[8 + 1];
+    WCHAR szValue[MAX_PATH], szSeparator[8 + 1], szGrouping[10 + 1];
     NUMBERFMTW numFormat;
 
     GetLocaleInfoW(LOCALE_USER_DEFAULT,
@@ -40,29 +40,30 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
                    szSeparator,
                    _countof(szSeparator));
 
-    /* LOCALE_SGROUPING is semicolon-separated right-to-left group sizes,
-     * trailing 0 means repeat (e.g. "3;0" = uniform 3, "3;2;0" = Indian).
-     * NUMBERFMTW::Grouping encodes this as primary + secondary*10. */
+    /* Parse LOCALE_SGROUPING into NUMBERFMTW::Grouping.
+     * Accumulate the digit groups left-to-right. If there's no trailing ;0
+     * the last group repeats, so multiply by 10. */
     DWORD dwGrouping = 3;
-    if (GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SGROUPING,
-                       szGrouping, _countof(szGrouping)))
+    if (GetLocaleInfoW(LOCALE_USER_DEFAULT,
+                       LOCALE_SGROUPING,
+                       szGrouping,
+                       _countof(szGrouping)))
     {
         PWSTR p = szGrouping;
-        DWORD dwPrimary = 0, dwSecondary = 0;
-
-        if (*p >= L'0' && *p <= L'9')
-            dwPrimary = *p++ - L'0';
-        if (*p == L';') p++;
-        if (*p >= L'1' && *p <= L'9')
-            dwSecondary = *p - L'0';
-
-        dwGrouping = dwPrimary + dwSecondary * 10;
+        dwGrouping = 0;
+        while (*p)
+        {
+            if (*p >= L'1' && *p <= L'9')
+                dwGrouping = dwGrouping * 10 + (*p - L'0');
+            p++;
+        }
+        if (p > szGrouping && *(p - 1) != L'0')
+            dwGrouping *= 10;
     }
-
-    numFormat.NumDigits     = 0;
-    numFormat.LeadingZero   = 0;
-    numFormat.Grouping      = dwGrouping;
-    numFormat.lpDecimalSep  = szSeparator;
+    numFormat.NumDigits = 0;
+    numFormat.LeadingZero = 0;
+    numFormat.Grouping = dwGrouping;
+    numFormat.lpDecimalSep = szSeparator;
     numFormat.lpThousandSep = szSeparator;
     numFormat.NegativeOrder = 0;
 
@@ -71,8 +72,8 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
     if (GetNumberFormatW(LOCALE_USER_DEFAULT,
                          0,
                          szValue,
-                         &numFormat,
-                         lpNumber,
+                         &numFormat, 
+                         lpNumber, 
                          MAX_PATH) != 0)
     {
         return lpNumber;
