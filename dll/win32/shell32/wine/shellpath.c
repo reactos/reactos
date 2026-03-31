@@ -3576,7 +3576,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
     }
 
     BOOL bVerify = !(dwFlags & KF_FLAG_DONT_VERIFY);
-    BOOL bCreate = (dwFlags & (KF_FLAG_CREATE | KF_FLAG_INIT));
+    BOOL bCreate = !!(dwFlags & KF_FLAG_CREATE);
 
     if (bVerify)
     {
