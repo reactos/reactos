@@ -22,6 +22,7 @@
 #include <winuser.h>
 
 #include "cdlg.h"
+#include "colordlg.h"
 #include "filedlgbrowser.h"
 
 /*

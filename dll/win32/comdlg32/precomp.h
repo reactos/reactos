@@ -9,7 +9,6 @@
 #define COM_NO_WINDOWS_H
 
 #define COBJMACROS
-#define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
 #include <windef.h>
