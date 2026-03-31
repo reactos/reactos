@@ -12,7 +12,7 @@
     <assemblyIdentity
         type="win32"
         name="microsoft.vc80.atl"
-        version="8.0.50727.4053"
+        version="8.0.50727.42"
         processorArchitecture="*"
         publicKeyToken="1fc8b3b9a1e18e3b"
         language="*"

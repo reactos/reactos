@@ -25,14 +25,12 @@
 
 #include "objidl.h"
 #include "rpcproxy.h"
-#include "wine/atlbase.h"
-#include "wine/atlwin.h"
+#include "atlbase.h"
+#include "atlwin.h"
 
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(atl);
-
-extern HINSTANCE atl_instance;
 
 #define ATLVer1Size FIELD_OFFSET(_ATL_MODULEW, dwAtlBuildVer)
 
@@ -123,7 +121,7 @@ HRESULT WINAPI AtlModuleTerm(_ATL_MODULE *pM)
             iter->pFunc(iter->dw);
             tmp = iter;
             iter = iter->pNext;
-            HeapFree(GetProcessHeap(), 0, tmp);
+            free(tmp);
         }
     }
 
@@ -136,7 +134,7 @@ HRESULT WINAPI AtlModuleRegisterClassObjects(_ATL_MODULEW *pM, DWORD dwClsContex
     _ATL_OBJMAP_ENTRYW_V1 *obj;
     int i=0;
 
-    TRACE("(%p %i %i)\n",pM, dwClsContext, dwFlags);
+    TRACE("(%p %li %li)\n",pM, dwClsContext, dwFlags);
 
     if (pM == NULL)
         return E_INVALIDARG;
@@ -157,7 +155,7 @@ HRESULT WINAPI AtlModuleRegisterClassObjects(_ATL_MODULEW *pM, DWORD dwClsContex
                                            dwFlags, &obj->dwRegister);
 
                 if (FAILED (rc) )
-                    WARN("Failed to register object %i: 0x%08x\n", i, rc);
+                    WARN("Failed to register object %i: 0x%08lx\n", i, rc);
 
                 if (pUnknown)
                     IUnknown_Release(pUnknown);
@@ -249,7 +247,7 @@ HRESULT WINAPI AtlModuleGetClassObject(_ATL_MODULEW *pm, REFCLSID rclsid,
                                                   (void **)&obj->pCF);
                 if (obj->pCF)
                     hres = IUnknown_QueryInterface(obj->pCF, riid, ppv);
-                break;
+                return hres;
             }
         }
     }
@@ -260,7 +258,7 @@ HRESULT WINAPI AtlModuleGetClassObject(_ATL_MODULEW *pm, REFCLSID rclsid,
 }
 
 /***********************************************************************
- *           AtlModuleGetClassObject              [ATL.@]
+ *           AtlModuleRegisterTypeLib             [ATL.@]
  */
 HRESULT WINAPI AtlModuleRegisterTypeLib(_ATL_MODULEW *pm, LPCOLESTR lpszIndex)
 {
@@ -372,11 +370,7 @@ ATOM WINAPI AtlModuleRegisterWndClassInfoW(_ATL_MODULEW *pm, _ATL_WNDCLASSINFOW 
 
         if (!wci->m_wc.lpszClassName)
         {
-#ifndef __REACTOS__
             swprintf(wci->m_szAutoName, ARRAY_SIZE(wci->m_szAutoName), L"ATL:%p", wci);
-#else
-            swprintf(wci->m_szAutoName, L"ATL:%p", wci);
-#endif
             TRACE("auto-generated class name %s\n", debugstr_w(wci->m_szAutoName));
             wci->m_wc.lpszClassName = wci->m_szAutoName;
         }
@@ -519,55 +513,6 @@ static const IClassFactoryVtbl IRegistrarCFVtbl = {
 
 static IClassFactory RegistrarCF = { &IRegistrarCFVtbl };
 
-#ifdef __REACTOS__
-static HRESULT do_register_dll_server(IRegistrar *pRegistrar, LPCOLESTR wszDll,
-                                      LPCOLESTR wszId, BOOL do_register,
-                                      const struct _ATL_REGMAP_ENTRY* pMapEntries)
-{
-    IRegistrar *registrar;
-    HRESULT hres;
-    const struct _ATL_REGMAP_ENTRY *pMapEntry;
-
-    static const WCHAR wszModule[] = {'M','O','D','U','L','E',0};
-    static const WCHAR wszRegistry[] = {'R','E','G','I','S','T','R','Y',0};
-
-    if(pRegistrar) {
-        registrar = pRegistrar;
-    }else {
-        hres = AtlCreateRegistrar(&registrar);
-        if(FAILED(hres))
-            return hres;
-    }
-
-    IRegistrar_AddReplacement(registrar, wszModule, wszDll);
-
-    for (pMapEntry = pMapEntries; pMapEntry && pMapEntry->szKey; pMapEntry++)
-        IRegistrar_AddReplacement(registrar, pMapEntry->szKey, pMapEntry->szData);
-
-    if(do_register)
-        hres = IRegistrar_ResourceRegisterSz(registrar, wszDll, wszId, wszRegistry);
-    else
-        hres = IRegistrar_ResourceUnregisterSz(registrar, wszDll, wszId, wszRegistry);
-
-    if(registrar != pRegistrar)
-        IRegistrar_Release(registrar);
-    return hres;
-}
-
-static HRESULT do_register_server(BOOL do_register)
-{
-    static const WCHAR CLSID_RegistrarW[] =
-            {'C','L','S','I','D','_','R','e','g','i','s','t','r','a','r',0};
-    static const WCHAR atl_dllW[] = {'a','t','l','.','d','l','l',0};
-
-    WCHAR clsid_str[40];
-    const struct _ATL_REGMAP_ENTRY reg_map[] = {{CLSID_RegistrarW, clsid_str}, {NULL,NULL}};
-
-    StringFromGUID2(&CLSID_Registrar, clsid_str, sizeof(clsid_str)/sizeof(WCHAR));
-    return do_register_dll_server(NULL, atl_dllW, MAKEINTRESOURCEW(101), do_register, reg_map);
-}
-#endif
-
 /**************************************************************
  * DllGetClassObject (ATL.2)
  */
@@ -580,37 +525,4 @@ HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID riid, LPVOID *ppvObject)
 
     FIXME("Not supported class %s\n", debugstr_guid(clsid));
     return CLASS_E_CLASSNOTAVAILABLE;
-}
-
-/***********************************************************************
- *              DllRegisterServer (ATL.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-#ifdef __REACTOS__
-    /* Note: we can't use __wine_register_server here because it uses CLSID_Registrar which isn't registred yet */
-    return do_register_server(TRUE);
-#else
-    return __wine_register_resources( atl_instance );
-#endif
-}
-
-/***********************************************************************
- *              DllUnRegisterServer (ATL.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-#ifdef __REACTOS__
-    return do_register_server(FALSE);
-#else
-    return __wine_unregister_resources( atl_instance );
-#endif
-}
-
-/***********************************************************************
- *              DllCanUnloadNow (ATL.@)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return S_FALSE;
 }
