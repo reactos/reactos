@@ -287,7 +287,7 @@ static void read_fsinfo(DOS_FS * fs, struct boot_sector *b, unsigned int lss)
 
 static char print_fat_dirty_state(void)
 {
-    printf("Dirty bit is set.\n  Fs was not properly unmounted and"
+    printf("Dirty bit is set. Fs was not properly unmounted and"
 	   " some data may be corrupt.\n");
 
     if (interactive) {
