@@ -319,7 +319,8 @@ UefiInitializeBgrtLogo(VOID)
         return;
     }
 
-    if ((InfoHeader->Width <= 0) || (InfoHeader->Height == 0))
+    SignedHeight = (LONGLONG)InfoHeader->Height;
+    if ((InfoHeader->Width <= 0) || (SignedHeight == 0))
     {
         WARN("Unsupported BMP dimensions %ld x %ld\n",
              InfoHeader->Width, InfoHeader->Height);
@@ -345,8 +346,7 @@ UefiInitializeBgrtLogo(VOID)
     }
 
     Width = (ULONG)InfoHeader->Width;
-    SignedHeight = (LONGLONG)InfoHeader->Height;
-    Height = (ULONG)(SignedHeight < 0 ? -SignedHeight : SignedHeight);
+    Height = (ULONG)ABS(SignedHeight);
 
     if (!UefiCalculateBmpRowStride(Width, InfoHeader->BitCount, &RowStride))
     {
