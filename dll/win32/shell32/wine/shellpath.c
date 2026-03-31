@@ -3503,7 +3503,12 @@ HRESULT WINAPI SHGetKnownFolderPath(
             }
             if (SUCCEEDED(hr) && szDefaultPath && !IS_INTRESOURCE(szDefaultPath) && *szDefaultPath)
             {
-                PathAppendW(szPath, szDefaultPath);
+                hr = PathCchAppend(szPath, _countof(szPath), szDefaultPath);
+                if (FAILED(hr))
+                {
+                    ERR("PathCchAppend failed: 0x%08x\n", hr);
+                    return hr;
+                }
             }
             break;
         case CSIDL_Type_SystemPath:
@@ -3517,7 +3522,12 @@ HRESULT WINAPI SHGetKnownFolderPath(
             }
             if (SUCCEEDED(hr) && szDefaultPath && !IS_INTRESOURCE(szDefaultPath) && *szDefaultPath)
             {
-                PathAppendW(szPath, szDefaultPath);
+                hr = PathCchAppend(szPath, _countof(szPath), szDefaultPath);
+                if (FAILED(hr))
+                {
+                    ERR("PathCchAppend failed: 0x%08x\n", hr);
+                    return hr;
+                }
             }
             break;
         case CSIDL_Type_SystemX86Path:
@@ -3538,7 +3548,12 @@ HRESULT WINAPI SHGetKnownFolderPath(
             }
             if (SUCCEEDED(hr) && szDefaultPath && !IS_INTRESOURCE(szDefaultPath) && *szDefaultPath)
             {
-                PathAppendW(szPath, szDefaultPath);
+                hr = PathCchAppend(szPath, _countof(szPath), szDefaultPath);
+                if (FAILED(hr))
+                {
+                    ERR("PathCchAppend failed: 0x%08x\n", hr);
+                    return hr;
+                }
             }
             break;
         case CSIDL_Type_CurrVer:
@@ -3552,14 +3567,14 @@ HRESULT WINAPI SHGetKnownFolderPath(
             hr = _SHGetAllUsersProfilePath(internalFlags, (BYTE)mapped_csidl, szPath);
             break;
         default:
-            TRACE("SHGetKnownFolderPath: Unhandled CSIDL_Type %d\n", type);
+            ERR("SHGetKnownFolderPath: Unhandled CSIDL_Type %d\n", type);
             hr = E_NOTIMPL;
             break;
     }
 
     if (FAILED(hr))
     {
-        TRACE("Failed to get path, HRESULT=0x%08x\n", hr);
+        ERR("Failed to get path, HRESULT=0x%08x\n", hr);
         return hr;
     }
 
@@ -3569,7 +3584,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
         hr = _SHExpandEnvironmentStrings(hToken, szPath, szExpandedPath, _countof(szExpandedPath));
         if (FAILED(hr))
         {
-             TRACE("Failed to expand environment strings, HRESULT=0x%08x\n", hr);
+             ERR("Failed to expand environment strings, HRESULT=0x%08x\n", hr);
              return hr;
         }
         StringCchCopyW(szPath, _countof(szPath), szExpandedPath);
@@ -3588,14 +3603,14 @@ HRESULT WINAPI SHGetKnownFolderPath(
                 if (ret != ERROR_SUCCESS && ret != ERROR_ALREADY_EXISTS)
                 {
                     hr = HRESULT_FROM_WIN32(ret);
-                    TRACE("Failed to create directory, HRESULT=0x%08x\n", hr);
+                    ERR("Failed to create directory, HRESULT=0x%08x\n", hr);
                     return hr;
                 }
             }
             else
             {
                  hr = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
-                 TRACE("Path not found and creation not requested\n");
+                 ERR("Path not found and creation not requested\n");
                  return hr;
             }
         }
@@ -3614,11 +3629,23 @@ HRESULT WINAPI SHGetKnownFolderPath(
             }
 
             StringCchCopyW(szDesktopIniPath, _countof(szDesktopIniPath), szPath);
-            PathAppendW(szDesktopIniPath, L"desktop.ini");
+            hr = PathCchAppend(szDesktopIniPath, _countof(szDesktopIniPath), L"desktop.ini");
 
-            StringCchPrintfW(szIconLocation, _countof(szIconLocation),
-                             L"%%SystemRoot%%\\system32\\shell32.dll,%d",
-                             nShell32IconIndex);
+            if (FAILED(hr))
+            {
+                ERR("PathCchAppend failed for desktop.ini: 0x%08x\n", hr);
+                return hr;
+            }
+
+            hr = StringCchPrintfW(szIconLocation, _countof(szIconLocation),
+                      L"%%SystemRoot%%\\system32\\shell32.dll,%d",
+                      nShell32IconIndex);
+
+            if (FAILED(hr))
+            {
+                ERR("StringCchPrintfW failed: 0x%08x\n", hr);
+                return hr;
+            }
 
             WritePrivateProfileStringW(L".ShellClassInfo", L"IconResource", szIconLocation, szDesktopIniPath);
 
@@ -3638,7 +3665,7 @@ HRESULT WINAPI SHGetKnownFolderPath(
     *ppszPath = (PWSTR)SHAlloc((pathLen + 1) * sizeof(WCHAR));
     if (!*ppszPath)
     {
-        TRACE("Failed to allocate memory for path\n");
+        ERR("Failed to allocate memory for path\n");
         hr = E_OUTOFMEMORY;
         return hr;
     }
