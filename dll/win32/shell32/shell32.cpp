@@ -72,8 +72,8 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
     if (GetNumberFormatW(LOCALE_USER_DEFAULT,
                          0,
                          szValue,
-                         &numFormat, 
-                         lpNumber, 
+                         &numFormat,
+                         lpNumber,
                          MAX_PATH) != 0)
     {
         return lpNumber;
