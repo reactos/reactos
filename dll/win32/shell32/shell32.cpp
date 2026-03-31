@@ -95,7 +95,7 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
 
     if (bUpdateSelf)
     {
-        CAtlMap<CStringW, bool, CStringElementTraitsI<CStringW>> newVarNames;
+        CAtlMap<CStringW, bool, CStringElementTraitsIW> newVarNames;
 
         LPWSTR pszz = (LPWSTR)pEnv;
         while (pszz && *pszz)
@@ -136,11 +136,12 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
             FreeEnvironmentStringsW(pCurEnv);
         }
 
-        /* We free the environment block now that we have applied it to the process.
+        /* We free the environment block now that we have applied it to the process;
          * the caller gets NULL back in *lpEnvironment in this case. */
         DestroyEnvironmentBlock(pEnv);
         *lpEnvironment = NULL;
     }
+
     CloseHandle(hUserToken);
     return bResult;
 }
