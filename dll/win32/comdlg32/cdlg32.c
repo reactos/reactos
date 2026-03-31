@@ -39,17 +39,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 #include "cdlg.h"
 
 
-DECLSPEC_HIDDEN HINSTANCE	COMDLG32_hInstance = 0;
+HINSTANCE COMDLG32_hInstance = 0;
 #ifdef __REACTOS__
-CRITICAL_SECTION COMDLG32_OpenFileLock DECLSPEC_HIDDEN;
+CRITICAL_SECTION COMDLG32_OpenFileLock;
 #endif
+HANDLE	COMDLG32_hActCtx = INVALID_HANDLE_VALUE;
 
 static DWORD COMDLG32_TlsIndex = TLS_OUT_OF_INDEXES;
-
-static HINSTANCE	SHELL32_hInstance;
-
-/* SHELL */
-LPITEMIDLIST (WINAPI *COMDLG32_SHSimpleIDListFromPathAW)(LPCVOID) DECLSPEC_HIDDEN;
 
 /***********************************************************************
  *	DllMain  (COMDLG32.init)
@@ -60,39 +56,39 @@ LPITEMIDLIST (WINAPI *COMDLG32_SHSimpleIDListFromPathAW)(LPCVOID) DECLSPEC_HIDDE
  *	FALSE if sibling could not be loaded or instantiated twice, TRUE
  *	otherwise.
  */
-static const char GPA_string[] = "Failed to get entry point %s for hinst = %p\n";
-#define GPA(dest, hinst, name) \
-	if(!(dest = (void*)GetProcAddress(hinst,name)))\
-	{ \
-	  ERR(GPA_string, debugstr_a(name), hinst); \
-	  return FALSE; \
-	}
-
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 {
-	TRACE("(%p, %d, %p)\n", hInstance, Reason, Reserved);
+	TRACE("(%p, %ld, %p)\n", hInstance, Reason, Reserved);
 
 	switch(Reason)
 	{
 	case DLL_PROCESS_ATTACH:
+	{
+		ACTCTXW actctx = {0};
+
 		COMDLG32_hInstance = hInstance;
 		DisableThreadLibraryCalls(hInstance);
 
-		SHELL32_hInstance = GetModuleHandleA("SHELL32.DLL");
 #ifdef __REACTOS__
 		InitializeCriticalSection(&COMDLG32_OpenFileLock);
 #endif
+		actctx.cbSize = sizeof(actctx);
+		actctx.hModule = COMDLG32_hInstance;
+		actctx.lpResourceName = MAKEINTRESOURCEW(123);
+		actctx.dwFlags = ACTCTX_FLAG_HMODULE_VALID | ACTCTX_FLAG_RESOURCE_NAME_VALID;
+		COMDLG32_hActCtx = CreateActCtxW(&actctx);
+		if (COMDLG32_hActCtx == INVALID_HANDLE_VALUE)
+			ERR("failed to create activation context, last error %lu\n", GetLastError());
 
-		/* SHELL */
-		GPA(COMDLG32_SHSimpleIDListFromPathAW, SHELL32_hInstance, (LPCSTR)162);
 		break;
-
+	}
 	case DLL_PROCESS_DETACH:
             if (Reserved) break;
             if (COMDLG32_TlsIndex != TLS_OUT_OF_INDEXES) TlsFree(COMDLG32_TlsIndex);
 #ifdef __REACTOS__
             DeleteCriticalSection(&COMDLG32_OpenFileLock);
 #endif
+            if (COMDLG32_hActCtx != INVALID_HANDLE_VALUE) ReleaseActCtx(COMDLG32_hActCtx);
             break;
 	}
 	return TRUE;
@@ -127,7 +123,7 @@ void *COMDLG32_AllocMem(int size)
  */
 void COMDLG32_SetCommDlgExtendedError(DWORD err)
 {
-	TRACE("(%08x)\n", err);
+	TRACE("(%08lx)\n", err);
         if (COMDLG32_TlsIndex == TLS_OUT_OF_INDEXES)
 	  COMDLG32_TlsIndex = TlsAlloc();
 	if (COMDLG32_TlsIndex != TLS_OUT_OF_INDEXES)
@@ -152,8 +148,6 @@ DWORD WINAPI CommDlgExtendedError(void)
 	else
 	  return 0; /* we never set an error, so there isn't one */
 }
-
-#ifndef __REACTOS__ /* Win 7 */
 
 /*************************************************************************
  * Implement the CommDlg32 class factory
@@ -245,6 +239,7 @@ static const IClassFactoryVtbl CDLGCF_Vtbl =
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
 {
+#ifndef __REACTOS__ /* TODO: SHCreateItemFromIDList */
     static IClassFactoryImpl FileOpenDlgClassFactory = {{&CDLGCF_Vtbl}, FileOpenDialog_Constructor};
     static IClassFactoryImpl FileSaveDlgClassFactory = {{&CDLGCF_Vtbl}, FileSaveDialog_Constructor};
 
@@ -255,32 +250,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
 
     if(IsEqualGUID(&CLSID_FileSaveDialog, rclsid))
         return IClassFactory_QueryInterface(&FileSaveDlgClassFactory.IClassFactory_iface, riid, ppv);
+#endif
 
     return CLASS_E_CLASSNOTAVAILABLE;
 }
-
-/***********************************************************************
- *          DllRegisterServer (COMMDLG32.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-#ifdef __REACTOS__
-    return E_FAIL; // FIXME: __wine_register_resources(COMDLG32_hInstance);
-#else
-    return __wine_register_resources(COMDLG32_hInstance);
-#endif
-}
-
-/***********************************************************************
- *          DllUnregisterServer (COMMDLG32.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-#ifdef __REACTOS__
-    return E_FAIL; // FIXME: __wine_unregister_resources(COMDLG32_hInstance);
-#else
-    return __wine_unregister_resources(COMDLG32_hInstance);
-#endif
-}
-
-#endif /* Win 7 */
