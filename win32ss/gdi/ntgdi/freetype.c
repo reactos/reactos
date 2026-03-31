@@ -287,18 +287,6 @@ FontLink_CleanupCache(VOID)
     g_nFontLinkCacheCount = 0;
 }
 
-typedef struct _FONT_LOOKUP_CACHE
-{
-    LIST_ENTRY ListEntry;
-    LOGFONTW LogFont;
-    PSHARED_FACE SharedFace;
-    FONTOBJ *pFontObj;
-} FONT_LOOKUP_CACHE, *PFONT_LOOKUP_CACHE;
-
-static RTL_STATIC_LIST_HEAD(s_FontLookupCacheList); // The list of FONT_LOOKUP_CACHE
-#define MAX_FONT_LOOKUP_CACHE 64
-static ULONG s_FontLookupCacheCount = 0;
-
 /* TPMF_FIXED_PITCH is confusing; brain-dead api */
 #ifndef _TMPF_VARIABLE_PITCH
     #define _TMPF_VARIABLE_PITCH    TMPF_FIXED_PITCH
@@ -454,27 +442,57 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
                      const LOGFONTW *LogFont,
                      const PLIST_ENTRY Head);
 
-PSHARED_FACE IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj);
+static BOOL
+MatchFontName(PSHARED_FACE SharedFace, PUNICODE_STRING Name1, FT_UShort NameID, FT_UShort LangID);
 
 static BOOL
 FontLink_PrepareFontInfo(
     _Inout_ PFONTLINK pFontLink)
 {
+    FONTOBJ *pFontObj;
+    ULONG MatchPenalty;
+    UNICODE_STRING FaceName;
+    PPROCESSINFO Win32Process;
+    PFONTGDI pFontGDI;
+
     ASSERT_FREETYPE_LOCK_HELD();
 
     if (pFontLink->bIgnore)
         return FALSE;
+
     if (pFontLink->SharedFace)
         return TRUE;
 
-    PSHARED_FACE SharedFace = IntRealizeFont(&pFontLink->LogFont, NULL);
-    if (!SharedFace) // Not found?
+    MatchPenalty = MAXULONG;
+    pFontObj = NULL;
+
+    // Search private fonts
+    Win32Process = PsGetCurrentProcessWin32Process();
+    FindBestFontFromList(&pFontObj, &MatchPenalty, &pFontLink->LogFont,
+                         &Win32Process->PrivateFontListHead);
+
+    // Search system fonts
+    FindBestFontFromList(&pFontObj, &MatchPenalty, &pFontLink->LogFont,
+                         &g_FontListHead);
+
+    if (!pFontObj) // Not found?
     {
         pFontLink->bIgnore = TRUE;
         return FALSE;
     }
 
-    pFontLink->SharedFace = SharedFace;
+    pFontGDI = ObjToGDI(pFontObj, FONT);
+    pFontLink->SharedFace = pFontGDI->SharedFace;
+
+    // FontLink uses family name
+    RtlInitUnicodeString(&FaceName, pFontLink->LogFont.lfFaceName);
+    if (!MatchFontName(pFontLink->SharedFace, &FaceName, TT_NAME_ID_FONT_FAMILY, LANG_ENGLISH) &&
+        !MatchFontName(pFontLink->SharedFace, &FaceName, TT_NAME_ID_FONT_FAMILY, gusLanguageID))
+    {
+        pFontLink->bIgnore = TRUE;
+        return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -946,53 +964,6 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
     return NT_SUCCESS(Status);
 }
 
-static void
-FontLookUp_Destroy(PFONT_LOOKUP_CACHE pCache)
-{
-    ASSERT_FREETYPE_LOCK_HELD();
-    SharedFace_Release(pCache->SharedFace, FALSE);
-    ExFreePoolWithTag(pCache, TAG_FONT);
-}
-
-static void
-FontLookUp_Cleanup(
-    _In_ BOOL bDoLock,
-    _Inout_opt_ PSHARED_FACE SharedFace)
-{
-    if (bDoLock)
-        IntLockFreeType();
-
-    PLIST_ENTRY pHead = &s_FontLookupCacheList, pEntry;
-    PFONT_LOOKUP_CACHE pCache;
-
-    if (SharedFace)
-    {
-        for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pEntry->Flink)
-        {
-            pCache = CONTAINING_RECORD(pEntry, FONT_LOOKUP_CACHE, ListEntry);
-            if (pCache->SharedFace == SharedFace)
-            {
-                RemoveEntryList(&pCache->ListEntry);
-                FontLookUp_Destroy(pCache);
-                --s_FontLookupCacheCount;
-            }
-        }
-    }
-    else
-    {
-        while (!IsListEmpty(pHead))
-        {
-            pEntry = RemoveHeadList(pHead);
-            pCache = CONTAINING_RECORD(pEntry, FONT_LOOKUP_CACHE, ListEntry);
-            FontLookUp_Destroy(pCache);
-        }
-        s_FontLookupCacheCount = 0;
-    }
-
-    if (bDoLock)
-        IntUnLockFreeType();
-}
-
 BOOL FASTCALL
 InitFontSupport(VOID)
 {
@@ -1045,9 +1016,6 @@ FreeFontSupport(VOID)
 
     // Cleanup the FontLink cache
     FontLink_CleanupCache();
-
-    // Cleanup FONT_LOOKUP_CACHE
-    FontLookUp_Cleanup(FALSE, NULL);
 
     // Free font cache list
     pHead = &g_FontCacheListHead;
@@ -2225,9 +2193,6 @@ IntGdiAddFontResourceEx(
         pchFile += cchFile + 1;
     }
 
-    /* Prepare for better LOGFONT-to-face matching */
-    FontLookUp_Cleanup(TRUE, NULL);
-
     return ret;
 }
 
@@ -2322,7 +2287,6 @@ IntGdiRemoveFontResourceSingle(
         ASSERT(FontGDI);
         if (FontGDI->Filename && _wcsicmp(FontGDI->Filename, pszFileTitle) == 0)
         {
-            FontLookUp_Cleanup(TRUE, FontGDI->SharedFace);
             RemoveEntryList(&FontEntry->ListEntry);
             CleanupFontEntry(FontEntry);
             if (dwFlags & AFRX_WRITE_REGISTRY)
@@ -5897,203 +5861,6 @@ MatchFontNames(PSHARED_FACE SharedFace, LPCWSTR lfFaceName)
     return FALSE;
 }
 
-static void
-IntPopulateTextObj(
-    PTEXTOBJ TextObj,
-    PFONTGDI FontGdi,
-    FONTOBJ *pFontObj,
-    const LOGFONTW *pLogFont,
-    PLOGFONTW SubstitutedLogFont)
-{
-    ASSERT_FREETYPE_LOCK_HELD();
-
-    TextObj->Font = pFontObj;
-    TextObj->TextFace[0] = UNICODE_NULL;
-
-    PSHARED_FACE SharedFace = FontGdi->SharedFace;
-    if (MatchFontNames(SharedFace, SubstitutedLogFont->lfFaceName))
-    {
-        RtlStringCchCopyW(TextObj->TextFace, _countof(TextObj->TextFace), pLogFont->lfFaceName);
-    }
-    else
-    {
-        UNICODE_STRING Name;
-        RtlInitUnicodeString(&Name, NULL);
-        NTSTATUS Status = IntGetFontLocalizedName(&Name, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
-        if (NT_SUCCESS(Status))
-        {
-            /* truncated copy */
-            IntUnicodeStringToBuffer(TextObj->TextFace, sizeof(TextObj->TextFace), &Name);
-            RtlFreeUnicodeString(&Name);
-        }
-    }
-
-    // Need hdev, when freetype is loaded need to create DEVOBJ for
-    // Consumer and Producer.
-    TextObj->Font->iUniq = 1; // Now it can be cached.
-    TextObj->fl |= TEXTOBJECT_INIT;
-}
-
-static void
-IntPopulateFontGdi(PFONTGDI FontGdi, const FONTOBJ *pFontObj, const LOGFONTW *pLogFont)
-{
-    ASSERT_FREETYPE_LOCK_HELD();
-
-    IntFontType(FontGdi);
-    FontGdi->flType = pFontObj->flFontType;
-    FontGdi->RequestUnderline = pLogFont->lfUnderline ? 0xFF : 0;
-    FontGdi->RequestStrikeOut = pLogFont->lfStrikeOut ? 0xFF : 0;
-    FontGdi->RequestItalic = pLogFont->lfItalic ? 0xFF : 0;
-    if (pLogFont->lfWeight != FW_DONTCARE)
-        FontGdi->RequestWeight = pLogFont->lfWeight;
-    else
-        FontGdi->RequestWeight = FW_NORMAL;
-}
-
-static PFONT_LOOKUP_CACHE
-FontLookUp_LookUp(const LOGFONTW *pLogFont)
-{
-    ASSERT_FREETYPE_LOCK_HELD();
-
-    PLIST_ENTRY Entry, pHead = &s_FontLookupCacheList;
-    for (Entry = pHead->Flink; Entry != pHead; Entry = Entry->Flink)
-    {
-        PFONT_LOOKUP_CACHE pEntry = CONTAINING_RECORD(Entry, FONT_LOOKUP_CACHE, ListEntry);
-        if (RtlEqualMemory(&pEntry->LogFont, pLogFont, sizeof(*pLogFont)))
-        {
-            // Move to head
-            RemoveEntryList(&pEntry->ListEntry);
-            InsertHeadList(&s_FontLookupCacheList, &pEntry->ListEntry);
-            return pEntry;
-        }
-    }
-    return NULL;
-}
-
-static void
-FontLookUp_Add(const LOGFONTW *LogFont, PSHARED_FACE SharedFace, FONTOBJ *pFontObj)
-{
-    ASSERT_FREETYPE_LOCK_HELD();
-
-    if (s_FontLookupCacheCount >= MAX_FONT_LOOKUP_CACHE) // Too many cached entries?
-    {
-        // Remove tail one
-        PLIST_ENTRY OldestEntry = RemoveTailList(&s_FontLookupCacheList);
-        PFONT_LOOKUP_CACHE pOldCache = CONTAINING_RECORD(OldestEntry, FONT_LOOKUP_CACHE, ListEntry);
-        FontLookUp_Destroy(pOldCache);
-        s_FontLookupCacheCount--;
-    }
-
-    // Add new cache entry
-    PFONT_LOOKUP_CACHE pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(*pEntry), TAG_FONT);
-    if (pEntry)
-    {
-        // Populate
-        RtlCopyMemory(&pEntry->LogFont, LogFont, sizeof(*LogFont));
-        pEntry->SharedFace = SharedFace;
-        SharedFace_AddRef(SharedFace);
-        pEntry->pFontObj = pFontObj;
-        // Add to head
-        InsertHeadList(&s_FontLookupCacheList, &pEntry->ListEntry);
-        s_FontLookupCacheCount++;
-    }
-}
-
-PSHARED_FACE
-IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj)
-{
-    ASSERT_FREETYPE_LOCK_HELD();
-
-    LOGFONTW LogFont = *pLogFont;
-    RtlZeroMemory(&LogFont.lfFaceName, sizeof(LogFont.lfFaceName));
-    RtlStringCchCopyW(LogFont.lfFaceName, _countof(LogFont.lfFaceName), pLogFont->lfFaceName);
-    pLogFont = &LogFont;
-
-    /* Substitute */
-    LOGFONTW SubstitutedLogFont = *pLogFont;
-    SubstituteFontRecurse(&SubstitutedLogFont);
-    DPRINT("Font '%S,%u' is substituted by '%S,%u'.\n",
-           pLogFont->lfFaceName, pLogFont->lfCharSet,
-           SubstitutedLogFont.lfFaceName, SubstitutedLogFont.lfCharSet);
-
-    FONTOBJ *pFontObj;
-    PFONT_LOOKUP_CACHE pLookUp = FontLookUp_LookUp(pLogFont);
-    if (pLookUp)
-    {
-        pFontObj = pLookUp->pFontObj;
-    }
-    else
-    {
-        ULONG MatchPenalty = 0xFFFFFFFF;
-        PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
-
-        /* Search private fonts */
-        IntLockProcessPrivateFonts(Win32Process);
-        FindBestFontFromList(&pFontObj, &MatchPenalty, &SubstitutedLogFont,
-                             &Win32Process->PrivateFontListHead);
-        IntUnLockProcessPrivateFonts(Win32Process);
-
-        /* Search system fonts */
-        FindBestFontFromList(&pFontObj, &MatchPenalty, &SubstitutedLogFont, &g_FontListHead);
-    }
-
-    if (!pFontObj)
-    {
-        DPRINT1("Request font %S not found, no fonts loaded at all\n", pLogFont->lfFaceName);
-        return NULL;
-    }
-
-    PFONTGDI pFontGDI = ObjToGDI(pFontObj, FONT);
-
-    if (TextObj)
-        IntPopulateTextObj(TextObj, pFontGDI, pFontObj, pLogFont, &SubstitutedLogFont);
-
-    IntPopulateFontGdi(pFontGDI, pFontObj, pLogFont);
-
-    if (!pLookUp)
-        FontLookUp_Add(pLogFont, pFontGDI->SharedFace, pFontObj);
-
-    return pFontGDI->SharedFace;
-}
-
-NTSTATUS
-FASTCALL
-TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
-{
-    PTEXTOBJ TextObj;
-    PSHARED_FACE SharedFace;
-
-    if (!pTextObj)
-    {
-        TextObj = TEXTOBJ_LockText(FontHandle);
-        if (NULL == TextObj)
-        {
-            return STATUS_INVALID_HANDLE;
-        }
-
-        if (TextObj->fl & TEXTOBJECT_INIT)
-        {
-            TEXTOBJ_UnlockText(TextObj);
-            return STATUS_SUCCESS;
-        }
-    }
-    else
-    {
-        TextObj = pTextObj;
-    }
-
-    IntLockFreeType();
-    SharedFace = IntRealizeFont(&TextObj->logfont.elfEnumLogfontEx.elfLogFont, TextObj);
-    IntUnLockFreeType();
-
-    if (!pTextObj)
-        TEXTOBJ_UnlockText(TextObj);
-
-    ASSERT((!!SharedFace ^ (NULL == TextObj->Font)) != 0);
-
-    return SharedFace ? STATUS_SUCCESS : STATUS_NOT_FOUND;
-}
-
 static
 BOOL
 FASTCALL
@@ -6170,6 +5937,118 @@ IntAddNameFromFamInfo(LPWSTR psz, FONTFAMILYINFO *FamInfo)
         wcscat(psz, L" ");
         wcscat(psz, FamInfo->EnumLogFontEx.elfStyle);
     }
+}
+
+NTSTATUS
+FASTCALL
+TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PTEXTOBJ TextObj;
+    PPROCESSINFO Win32Process;
+    ULONG MatchPenalty;
+    LOGFONTW *pLogFont;
+    LOGFONTW SubstitutedLogFont;
+
+    if (!pTextObj)
+    {
+        TextObj = TEXTOBJ_LockText(FontHandle);
+        if (NULL == TextObj)
+        {
+            return STATUS_INVALID_HANDLE;
+        }
+
+        if (TextObj->fl & TEXTOBJECT_INIT)
+        {
+            TEXTOBJ_UnlockText(TextObj);
+            return STATUS_SUCCESS;
+        }
+    }
+    else
+    {
+        TextObj = pTextObj;
+    }
+
+    pLogFont = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
+
+    /* substitute */
+    SubstitutedLogFont = *pLogFont;
+    SubstituteFontRecurse(&SubstitutedLogFont);
+    DPRINT("Font '%S,%u' is substituted by '%S,%u'.\n",
+           pLogFont->lfFaceName, pLogFont->lfCharSet,
+           SubstitutedLogFont.lfFaceName, SubstitutedLogFont.lfCharSet);
+
+    MatchPenalty = 0xFFFFFFFF;
+    TextObj->Font = NULL;
+
+    Win32Process = PsGetCurrentProcessWin32Process();
+
+    /* Search private fonts */
+    IntLockFreeType();
+    IntLockProcessPrivateFonts(Win32Process);
+    FindBestFontFromList(&TextObj->Font, &MatchPenalty, &SubstitutedLogFont,
+                         &Win32Process->PrivateFontListHead);
+    IntUnLockProcessPrivateFonts(Win32Process);
+
+    /* Search system fonts */
+    FindBestFontFromList(&TextObj->Font, &MatchPenalty, &SubstitutedLogFont,
+                         &g_FontListHead);
+    IntUnLockFreeType();
+
+    if (NULL == TextObj->Font)
+    {
+        DPRINT1("Request font %S not found, no fonts loaded at all\n",
+                pLogFont->lfFaceName);
+        Status = STATUS_NOT_FOUND;
+    }
+    else
+    {
+        UNICODE_STRING Name;
+        PFONTGDI FontGdi = ObjToGDI(TextObj->Font, FONT);
+        PSHARED_FACE SharedFace = FontGdi->SharedFace;
+
+        TextObj->TextFace[0] = UNICODE_NULL;
+        IntLockFreeType();
+        if (MatchFontNames(SharedFace, SubstitutedLogFont.lfFaceName))
+        {
+            IntUnLockFreeType();
+            RtlStringCchCopyW(TextObj->TextFace, _countof(TextObj->TextFace), pLogFont->lfFaceName);
+        }
+        else
+        {
+            RtlInitUnicodeString(&Name, NULL);
+            Status = IntGetFontLocalizedName(&Name, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+            IntUnLockFreeType();
+            if (NT_SUCCESS(Status))
+            {
+                /* truncated copy */
+                IntUnicodeStringToBuffer(TextObj->TextFace, sizeof(TextObj->TextFace), &Name);
+                RtlFreeUnicodeString(&Name);
+            }
+        }
+
+        // Need hdev, when freetype is loaded need to create DEVOBJ for
+        // Consumer and Producer.
+        TextObj->Font->iUniq = 1; // Now it can be cached.
+        IntFontType(FontGdi);
+        FontGdi->flType = TextObj->Font->flFontType;
+        FontGdi->RequestUnderline = pLogFont->lfUnderline ? 0xFF : 0;
+        FontGdi->RequestStrikeOut = pLogFont->lfStrikeOut ? 0xFF : 0;
+        FontGdi->RequestItalic = pLogFont->lfItalic ? 0xFF : 0;
+        if (pLogFont->lfWeight != FW_DONTCARE)
+            FontGdi->RequestWeight = pLogFont->lfWeight;
+        else
+            FontGdi->RequestWeight = FW_NORMAL;
+
+        TextObj->fl |= TEXTOBJECT_INIT;
+        Status = STATUS_SUCCESS;
+    }
+
+    if (!pTextObj) TEXTOBJ_UnlockText(TextObj);
+
+    ASSERT((NT_SUCCESS(Status) ^ (NULL == TextObj->Font)) != 0);
+
+    return Status;
 }
 
 BOOL
