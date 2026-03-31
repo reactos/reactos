@@ -41,7 +41,7 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
                    _countof(szSeparator));
 
     /* Parse LOCALE_SGROUPING into NUMBERFMTW::Grouping.
-     * Accumulate the digit groups left-to-right. If there's no trailing ;0
+     * Accumulate the digit groups left-to-right. If there's no trailing ';0'
      * the last group repeats, so multiply by 10. */
     DWORD dwGrouping = 3;
     if (GetLocaleInfoW(LOCALE_USER_DEFAULT,
