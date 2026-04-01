@@ -83,6 +83,7 @@ HalInitializeBios(
     }
     else
     {
+
         /* Allocate an MDL for 1MB */
         Mdl = IoAllocateMdl(NULL, 0x100000, FALSE, FALSE, NULL);
         if (!Mdl)
