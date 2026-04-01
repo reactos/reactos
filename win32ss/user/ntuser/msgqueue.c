@@ -2024,8 +2024,6 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
          {
              if (CurrentMessage->pti != NULL && (MessageQueue->idSysPeek == (ULONG_PTR)CurrentMessage))
              {
-               if (msg.message == WM_INPUT)
-                  MessageQueue->CurrentRawInput = (HRAWINPUT)msg.lParam;
                 MsqDestroyMessage(CurrentMessage);
              }
              ClearMsgBitsMask(pti, QS_Flags);

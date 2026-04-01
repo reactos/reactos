@@ -59,7 +59,6 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY HardwareMessagesListHead;
   /* Outstanding raw input packets for the queue. */
   LIST_ENTRY RawInputListHead;
-  HRAWINPUT CurrentRawInput;
   /* Last click message for translating double clicks */
   MSG msgDblClk;
   /* Current capture window for this queue. */

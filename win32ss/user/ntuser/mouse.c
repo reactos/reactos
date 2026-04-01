@@ -37,73 +37,66 @@ UserGetMouseButtonsState(VOID)
 VOID NTAPI
 UserRawInputMouseProcess(PMOUSE_INPUT_DATA mid)
 {
-    PUSER_MESSAGE_QUEUE pFocusQueue;
     PTHREADINFO pti;
     POINT ptCursor;
+    WPARAM wParam;
 
     RAWMOUSE rm = {0};
 
-    /* Find the target thread whose locale is in effect */
-    pFocusQueue = IntGetFocusMessageQueue();
-    if ( pFocusQueue)
+    if (!UserGetRawInputTarget(RIM_TYPEMOUSE, &pti, &wParam))
+        return;
+
+    ptCursor = gpsi->ptCursor;
+    MSG Msg;
+    if (mid->LastX != 0 || mid->LastY != 0)
     {
-        ptCursor = gpsi->ptCursor;
-        MSG Msg;
-        PWND pWnd = pFocusQueue->spwndFocus;
-        if (pWnd)
-        {
-            pti = pWnd->head.pti;
-            if (mid->LastX != 0 || mid->LastY != 0)
-            {
-                rm.usFlags |= MOUSE_MOVE_RELATIVE;
-            }
-
-            /* Flags for absolute move */
-            if (mid->Flags & MOUSE_MOVE_ABSOLUTE)
-                rm.usFlags |= MOUSE_MOVE_ABSOLUTE;
-            if (mid->Flags & MOUSE_VIRTUAL_DESKTOP)
-                rm.usFlags |= MOUSE_VIRTUAL_DESKTOP;
-
-            /* Left button */
-            if (mid->ButtonFlags & MOUSE_LEFT_BUTTON_DOWN)
-                rm.usButtonFlags |= RI_MOUSE_LEFT_BUTTON_DOWN;
-            if (mid->ButtonFlags & MOUSE_LEFT_BUTTON_UP)
-                rm.usButtonFlags |= RI_MOUSE_LEFT_BUTTON_UP;
-
-            /* Middle button */
-            if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN)
-                rm.usButtonFlags |= MOUSEEVENTF_MIDDLEDOWN;
-            if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_UP)
-                rm.usButtonFlags |= MOUSEEVENTF_MIDDLEUP;
-
-            /* Right button */
-            if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN)
-                rm.usButtonFlags |= RI_MOUSE_RIGHT_BUTTON_DOWN;
-            if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_UP)
-                rm.usButtonFlags |= RI_MOUSE_RIGHT_BUTTON_UP;
-            rm.lLastX   = mid->LastX;
-            rm.lLastY   = mid->LastY;
-
-            HRAWINPUT hRawInput = UserCreateRawInput(pti,
-                                                     RIM_TYPEMOUSE,
-                                                     ghMouseDevice,
-                                                     RIM_INPUT,
-                                                     &rm,
-                                                     sizeof(rm));
-            if (!hRawInput)
-                return;
-
-            Msg.wParam = RIM_INPUT;
-            Msg.lParam = (LPARAM)hRawInput;
-            Msg.pt = ptCursor;
-            //Msg.time = mid->time;
-            Msg.message = WM_INPUT;
-            //MessageQueue = pti->MessageQueue;
-
-            if (!MsqPostMessage(pti, &Msg, TRUE, QS_RAWINPUT, 0, 0))
-                UserFreeRawInput(pti->MessageQueue, hRawInput);
-        }
+        rm.usFlags |= MOUSE_MOVE_RELATIVE;
     }
+
+    /* Flags for absolute move */
+    if (mid->Flags & MOUSE_MOVE_ABSOLUTE)
+        rm.usFlags |= MOUSE_MOVE_ABSOLUTE;
+    if (mid->Flags & MOUSE_VIRTUAL_DESKTOP)
+        rm.usFlags |= MOUSE_VIRTUAL_DESKTOP;
+
+    /* Left button */
+    if (mid->ButtonFlags & MOUSE_LEFT_BUTTON_DOWN)
+        rm.usButtonFlags |= RI_MOUSE_LEFT_BUTTON_DOWN;
+    if (mid->ButtonFlags & MOUSE_LEFT_BUTTON_UP)
+        rm.usButtonFlags |= RI_MOUSE_LEFT_BUTTON_UP;
+
+    /* Middle button */
+    if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN)
+        rm.usButtonFlags |= MOUSEEVENTF_MIDDLEDOWN;
+    if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_UP)
+        rm.usButtonFlags |= MOUSEEVENTF_MIDDLEUP;
+
+    /* Right button */
+    if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN)
+        rm.usButtonFlags |= RI_MOUSE_RIGHT_BUTTON_DOWN;
+    if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_UP)
+        rm.usButtonFlags |= RI_MOUSE_RIGHT_BUTTON_UP;
+    rm.lLastX   = mid->LastX;
+    rm.lLastY   = mid->LastY;
+
+    HRAWINPUT hRawInput = UserCreateRawInput(pti,
+                                             RIM_TYPEMOUSE,
+                                             ghMouseDevice,
+                                             wParam,
+                                             &rm,
+                                             sizeof(rm));
+    if (!hRawInput)
+        return;
+
+    Msg.wParam = wParam;
+    Msg.lParam = (LPARAM)hRawInput;
+    Msg.pt = ptCursor;
+    //Msg.time = mid->time;
+    Msg.message = WM_INPUT;
+    //MessageQueue = pti->MessageQueue;
+
+    if (!MsqPostMessage(pti, &Msg, TRUE, QS_RAWINPUT, 0, 0))
+        UserFreeRawInput(pti->MessageQueue, hRawInput);
 
 }
 /*
