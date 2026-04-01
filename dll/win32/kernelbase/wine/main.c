@@ -56,6 +56,30 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
 
 
 /***********************************************************************
+ *           GetOsSafeBootMode   (kernelbase.@)
+ */
+BOOL WINAPI GetOsSafeBootMode( DWORD *flags )
+{
+    NTSTATUS status;
+
+    if (!flags)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+
+    status = NtLockProductActivationKeys( NULL, flags );
+    if (!NT_SUCCESS(status))
+    {
+        SetLastError( RtlNtStatusToDosError( status ) );
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/***********************************************************************
  *           MulDiv   (kernelbase.@)
  */
 INT WINAPI MulDiv( INT a, INT b, INT c )

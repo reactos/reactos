@@ -763,6 +763,28 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     // TODO: "USERVA=" for XP/2k3
 #endif
 
+    if ((OperatingSystemVersion > _WIN32_WINNT_NT4) &&
+        (NtLdrGetOption(BootOptions, "SAFEBOOT") ||
+         NtLdrGetOption(BootOptions, "SAFEBOOT:")))
+    {
+        /* Parse the SAFEBOOT mode for PAE/DEP decisions.
+         * Boot driver filtering is done by the kernel, not the bootloader. */
+        PCSTR Value = NtLdrGetOptionEx(BootOptions, "SAFEBOOT:", NULL);
+        if (Value)
+        {
+            Value += 9;
+            if (_strnicmp(Value, "MINIMAL", 7) == 0)
+                InitSafeBootMode = 1;
+            else if (_strnicmp(Value, "NETWORK", 7) == 0)
+                InitSafeBootMode = 2;
+            else if (_strnicmp(Value, "DSREPAIR", 8) == 0)
+                InitSafeBootMode = 3;
+        }
+        else
+        {
+            InitSafeBootMode = 1;
+        }
+    }
 
     if ((OperatingSystemVersion > _WIN32_WINNT_WIN2K) &&
         NtLdrGetOption(BootOptions, "BOOTLOGO"))
@@ -1301,23 +1323,6 @@ LoadAndBootWindows(
         OperatingSystemVersion = WinLdrDetectVersion();
     LoaderBlock->Extension->MajorVersion = (OperatingSystemVersion & 0xFF00) >> 8;
     LoaderBlock->Extension->MinorVersion = (OperatingSystemVersion & 0xFF);
-
-    /* Parse SafeBoot mode before scanning the registry, so that
-     * CmpFindDrivers() can filter boot drivers via CmpIsSafe(). */
-    {
-        ULONG OptLen;
-        PCSTR SafeBootValue = NtLdrGetOptionEx(BootOptions, "SAFEBOOT:", &OptLen);
-        if (SafeBootValue)
-        {
-            SafeBootValue += 9; /* skip past "SAFEBOOT:" */
-            if (_strnicmp(SafeBootValue, "MINIMAL", 7) == 0)
-                InitSafeBootMode = 1;
-            else if (_strnicmp(SafeBootValue, "NETWORK", 7) == 0)
-                InitSafeBootMode = 2;
-            else if (_strnicmp(SafeBootValue, "DSREPAIR", 8) == 0)
-                InitSafeBootMode = 3;
-        }
-    }
 
     /* Load NLS data, OEM font, and prepare boot drivers list */
     Success = WinLdrScanSystemHive(LoaderBlock, BootPath);

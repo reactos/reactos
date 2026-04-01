@@ -1117,6 +1117,15 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
         return FALSE;
     }
 
+    /* In Safe Mode, check if this boot driver is allowed */
+    Status = IopCheckSafeBootDriver(serviceHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Boot driver '%wZ' not loaded (blocked by SafeBoot)\n", ModuleName);
+        ZwClose(serviceHandle);
+        return FALSE;
+    }
+
     /* Lookup the new Ldr entry in PsLoadedModuleList */
     for (NextEntry = PsLoadedModuleList.Flink;
          NextEntry != &PsLoadedModuleList;

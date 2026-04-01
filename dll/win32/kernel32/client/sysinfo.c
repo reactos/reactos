@@ -230,31 +230,6 @@ GetNativeSystemInfo(IN LPSYSTEM_INFO lpSystemInfo)
  */
 BOOL
 WINAPI
-GetOsSafeBootMode(_Out_ PDWORD Flags)
-{
-    NTSTATUS Status;
-
-    if (Flags == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    Status = NtLockProductActivationKeys(NULL, Flags);
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
 GetLogicalProcessorInformation(OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer,
                                IN OUT PDWORD ReturnLength)
 {

@@ -546,7 +546,6 @@
 @ stdcall GetNumberOfConsoleInputEvents(long ptr)
 @ stdcall GetNumberOfConsoleMouseButtons(ptr)
 @ stdcall GetOEMCP()
-@ stdcall -version=0x601+ GetOsSafeBootMode(ptr)
 @ stdcall GetOverlappedResult(long ptr ptr long)
 @ stdcall -stub -version=0x600+ GetPhysicallyInstalledSystemMemory(ptr)
 @ stdcall GetPriorityClass(long)

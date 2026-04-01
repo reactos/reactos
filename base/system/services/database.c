@@ -49,13 +49,11 @@ ScmIsSecurityService(
 
 static
 DWORD
-ScmGetSafeBootMode(
-    _Out_ PDWORD pSafeBootEnabled)
+ScmGetSafeBootMode(VOID)
 {
     DWORD dwError, dwType, dwSize;
+    DWORD SafeBootMode = 0;
     HKEY hKey;
-
-    *pSafeBootEnabled = 0;
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot\\Option",
@@ -63,25 +61,25 @@ ScmGetSafeBootMode(
                             KEY_READ,
                             &hKey);
     if (dwError != ERROR_SUCCESS)
-        return ERROR_SUCCESS;
+        return 0;
 
-    dwSize = sizeof(*pSafeBootEnabled);
+    dwSize = sizeof(SafeBootMode);
     dwError = RegQueryValueExW(hKey,
                                L"OptionValue",
                                NULL,
                                &dwType,
-                               (LPBYTE)pSafeBootEnabled,
+                               (LPBYTE)&SafeBootMode,
                                &dwSize);
     RegCloseKey(hKey);
 
     if ((dwError != ERROR_SUCCESS) ||
         (dwType != REG_DWORD) ||
-        (dwSize != sizeof(*pSafeBootEnabled)))
+        (dwSize != sizeof(SafeBootMode)))
     {
-        *pSafeBootEnabled = 0;
+        return 0;
     }
 
-    return ERROR_SUCCESS;
+    return SafeBootMode;
 }
 
 static
@@ -120,7 +118,7 @@ ScmHasSafeBootEntry(
     _In_ HKEY hSafeBootKey,
     _In_opt_ PCWSTR pszEntryName)
 {
-    HKEY hEntryKey;
+    HKEY hKey;
 
     if ((pszEntryName == NULL) || (*pszEntryName == UNICODE_NULL))
         return FALSE;
@@ -129,12 +127,12 @@ ScmHasSafeBootEntry(
                       pszEntryName,
                       0,
                       KEY_READ,
-                      &hEntryKey) != ERROR_SUCCESS)
+                      &hKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
 
-    RegCloseKey(hEntryKey);
+    RegCloseKey(hKey);
     return TRUE;
 }
 
@@ -157,33 +155,24 @@ ScmIsSafeBootServiceAllowed(
 }
 
 static
-DWORD
-ScmCheckSafeBootStart(
+BOOL
+ScmIsSafeBootStartAllowed(
     _In_ PSERVICE Service)
 {
-    DWORD dwError, SafeBootEnabled;
+    DWORD SafeBootEnabled;
     HKEY hSafeBootKey;
+    BOOL bAllowed;
 
-    dwError = ScmGetSafeBootMode(&SafeBootEnabled);
-    if (dwError != ERROR_SUCCESS || SafeBootEnabled == 0)
-        return ERROR_SUCCESS;
+    SafeBootEnabled = ScmGetSafeBootMode();
+    if (SafeBootEnabled == 0)
+        return TRUE;
 
-    dwError = ScmOpenSafeBootKey(SafeBootEnabled, &hSafeBootKey);
-    if (dwError != ERROR_SUCCESS)
-    {
-        return (Service->Status.dwServiceType & SERVICE_DRIVER) ?
-               ERROR_NOT_SAFE_MODE_DRIVER :
-               ERROR_NOT_SAFEBOOT_SERVICE;
-    }
+    if (ScmOpenSafeBootKey(SafeBootEnabled, &hSafeBootKey) != ERROR_SUCCESS)
+        return FALSE;
 
-    dwError = ScmIsSafeBootServiceAllowed(Service, hSafeBootKey) ?
-              ERROR_SUCCESS :
-              ((Service->Status.dwServiceType & SERVICE_DRIVER) ?
-               ERROR_NOT_SAFE_MODE_DRIVER :
-               ERROR_NOT_SAFEBOOT_SERVICE);
-
+    bAllowed = ScmIsSafeBootServiceAllowed(Service, hSafeBootKey);
     RegCloseKey(hSafeBootKey);
-    return dwError;
+    return bAllowed;
 }
 
 
@@ -2121,9 +2110,12 @@ ScmLoadService(PSERVICE Service,
         return ERROR_SERVICE_ALREADY_RUNNING;
     }
 
-    dwError = ScmCheckSafeBootStart(Service);
-    if (dwError != ERROR_SUCCESS)
-        return dwError;
+    if (!ScmIsSafeBootStartAllowed(Service))
+    {
+        return (Service->Status.dwServiceType & SERVICE_DRIVER) ?
+               ERROR_NOT_SAFE_MODE_DRIVER :
+               ERROR_NOT_SAFEBOOT_SERVICE;
+    }
 
     DPRINT("Service->Type: %lu\n", Service->Status.dwServiceType);
 
@@ -2278,9 +2270,7 @@ ScmAutoStartServices(VOID)
      */
     ASSERT(ScmInitialize);
 
-    dwError = ScmGetSafeBootMode(&SafeBootEnabled);
-    if (dwError != ERROR_SUCCESS)
-        SafeBootEnabled = 0;
+    SafeBootEnabled = ScmGetSafeBootMode();
 
     if (SafeBootEnabled != 0)
     {
@@ -2304,6 +2294,10 @@ ScmAutoStartServices(VOID)
 
         ServiceEntry = ServiceEntry->Flink;
     }
+
+    /* Close the SafeBoot key now, it's no longer needed */
+    if (hSafeBootKey != NULL)
+        RegCloseKey(hSafeBootKey);
 
     /* Start all services which are members of an existing group */
     GroupEntry = GroupListHead.Flink;
@@ -2396,9 +2390,6 @@ ScmAutoStartServices(VOID)
         CurrentService->ServiceVisited = FALSE;
         ServiceEntry = ServiceEntry->Flink;
     }
-
-    if (hSafeBootKey != NULL)
-        RegCloseKey(hSafeBootKey);
 
     /* Release the critical section */
     LeaveCriticalSection(&ControlServiceCriticalSection);
