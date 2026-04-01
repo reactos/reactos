@@ -240,43 +240,16 @@ typedef struct STRUCT(_TEB)
     PTR(PVOID)             CsrClientThread;
     PTR(PVOID)             Win32ThreadInfo;
     ULONG                  User32Reserved[26];
-    union
-    {
-        ULONG                  UserReserved[5];
-        struct
-        {
-            /* ReactOS specific */
-            ULONG                  ThreadNumberOfTlsEntries;
-            ULONG                  Spare[4];
-        };
-    } UserReserved;
+    ULONG                  UserReserved[5];
     PTR(PVOID)             WOW32Reserved;
     LCID                   CurrentLocale;
     ULONG                  FpSoftwareStatusRegister;
 
 #if (NTDDI_VERSION >= NTDDI_WIN10) // since 10.0.10240.16384
     PTR(PVOID)             ReservedForDebuggerInstrumentation[16];
-    union
-    {
-        PTR(PVOID)             SystemReserved1[38];
-        struct
-        {
-            /* ReactOS specific */
-            PTR(PVOID)             OldTlsVectorList;
-            PTR(PVOID)             Spare[37];
-        };
-    } SystemReserved1;
+    PTR(PVOID)             SystemReserved1[38];
 #else
-    union
-    {
-        PTR(PVOID)             SystemReserved1[54];
-        struct
-        {
-             /* ReactOS specific */
-            PTR(PVOID)             OldTlsVectorList;
-            PTR(PVOID)             Spare[53];
-        };
-    } SystemReserved1;
+    PTR(PVOID)             SystemReserved1[54];
 #endif
     LONG                   ExceptionCode;
 #ifdef _STRUCT64
