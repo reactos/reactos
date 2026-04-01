@@ -95,7 +95,7 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
 
     if (bUpdateSelf)
     {
-        std::set<std::wstring> newVarNames;
+        CSimpleMap<CStringW, bool> newVarNames;
 
         LPWSTR pszz = (LPWSTR)pEnv;
         while (pszz && *pszz)
@@ -106,7 +106,7 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
                 if (pchEqual)
                 {
                     *pchEqual = L'\0';
-                    newVarNames.insert(pszz);
+                    newVarNames.Add(pszz, true);
                     SetEnvironmentVariableW(pszz, pchEqual + 1);
                     *pchEqual = L'=';
                 }
@@ -126,7 +126,7 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
                     if (pchEqual)
                     {
                         *pchEqual = L'\0';
-                        if (newVarNames.find(pCur) == newVarNames.end())
+                        if (newVarNames.FindKey(pCur) < 0)
                             SetEnvironmentVariableW(pCur, NULL);
                         *pchEqual = L'=';
                     }
