@@ -127,13 +127,13 @@ CcGetFlushedValidData(
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     PROS_VACB Vacb;
     LARGE_INTEGER Result;
-    LONGLONG LowestDirty = MAXLONGLONG;
+    LONGLONG LowestDirty;
     KIRQL OldIrql;
 
-    //
-    // SectionObjectPointer is NOT optional by annotation.
-    // Only check SharedCacheMap.
-    //
+    UNREFERENCED_PARAMETER(BcbListHeld);
+    // TODO If BcbListHeld is FALSE, acquire the BCB list lock before
+    // scanning, for now we only rely on CacheMapLock / MasterLock.
+
     if (SectionObjectPointer->SharedCacheMap == NULL)
     {
         Result.QuadPart = MAXLONGLONG;
@@ -142,22 +142,19 @@ CcGetFlushedValidData(
 
     SharedCacheMap = (PROS_SHARED_CACHE_MAP)SectionObjectPointer->SharedCacheMap;
 
-    //
-    // Correct double-locking required to use CacheMapLock.
-    // First MasterLock, then CacheMapLock at DPC level.
-    //
     OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
     KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
 
     if (SharedCacheMap->DirtyPages == 0)
     {
+        // Read ValidDataLength while lock is still held
         Result = SharedCacheMap->ValidDataLength;
-
         KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
         KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
-
         return Result;
     }
+
+    LowestDirty = MAXLONGLONG;
 
     for (PLIST_ENTRY Entry = SharedCacheMap->CacheMapVacbListHead.Flink;
          Entry != &SharedCacheMap->CacheMapVacbListHead;
@@ -165,22 +162,20 @@ CcGetFlushedValidData(
     {
         Vacb = CONTAINING_RECORD(Entry, ROS_VACB, CacheMapVacbListEntry);
 
-        if (Vacb->BaseAddress == NULL || Vacb->PageOut)
+        if (!Vacb->Dirty)
             continue;
 
-        if (Vacb->Dirty &&
-            Vacb->FileOffset.QuadPart < LowestDirty)
-        {
+        if (Vacb->FileOffset.QuadPart < LowestDirty)
             LowestDirty = Vacb->FileOffset.QuadPart;
-        }
     }
+
+    // Read ValidDataLength inside the lock to not cause a race
+    Result = SharedCacheMap->ValidDataLength;
 
     KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
     KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
-    if (LowestDirty == MAXLONGLONG)
-        Result = SharedCacheMap->ValidDataLength;
-    else
+    if (LowestDirty != MAXLONGLONG)
         Result.QuadPart = LowestDirty;
 
     return Result;
