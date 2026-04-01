@@ -229,7 +229,7 @@ typedef struct _MOUNTMGR_SET_AUTO_MOUNT {
 #define IOCTL_MOUNTMGR_TRACELOG_CACHE \
   CTL_CODE(MOUNTMGRCONTROLTYPE, 18, METHOD_BUFFERED, FILE_READ_ACCESS)
 
-#endif /* NTDDI_WIN7 */
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #ifdef __cplusplus
 } /* extern "C" */
