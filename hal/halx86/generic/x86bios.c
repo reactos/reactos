@@ -56,6 +56,9 @@ HalInitializeBios(
     PMDL Mdl;
     ULONG64 PhysicalAddress;
 
+    if (HalBootViaEfi)
+        return;
+
     if (Phase == 0)
     {
         /* Allocate one page for a fallback mapping */

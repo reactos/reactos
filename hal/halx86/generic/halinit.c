@@ -18,6 +18,7 @@
 BOOLEAN HalpOnlyBootProcessor;
 //#endif
 BOOLEAN HalpPciLockSettings;
+BOOLEAN HalBootViaEfi;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -86,21 +87,6 @@ HalInitSystem(
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     NTSTATUS Status;
-    BOOLEAN BootViaEfi = FALSE;
-
-    if (BootPhase <= 1)
-    {
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-        BootViaEfi = LoaderBlock->FirmwareInformation.FirmwareTypeEfi;
-#else
-        ASSERT(LoaderBlock->Extension != NULL);
-
-        if (LoaderBlock->Extension->Size >= FIELD_OFFSET(LOADER_PARAMETER_EXTENSION, LoaderPerformanceData))
-        {
-            BootViaEfi = LoaderBlock->Extension->BootViaEFI;
-        }
-#endif
-    }
 
     /* Check the boot phase */
     if (BootPhase == 0)
@@ -110,6 +96,16 @@ HalInitSystem(
 
         /* Get command-line parameters */
         HalpGetParameters(LoaderBlock);
+
+        HalBootViaEfi = FALSE;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+        HalBootViaEfi = LoaderBlock->FirmwareInformation.FirmwareTypeEfi;
+#else
+        ASSERT(LoaderBlock->Extension != NULL);
+
+        if (LoaderBlock->Extension->Size >= FIELD_OFFSET(LOADER_PARAMETER_EXTENSION, LoaderPerformanceData))
+            HalBootViaEfi = LoaderBlock->Extension->BootViaEFI;
+#endif
 
         /* Check for PRCB version mismatch */
         if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)
@@ -171,10 +167,7 @@ HalInitSystem(
         HalpInitPhase0(LoaderBlock);
 
         /* Initialize Phase 0 of the x86 emulator */
-        if (!BootViaEfi)
-        {
-            HalInitializeBios(0, LoaderBlock);
-        }
+        HalInitializeBios(0, LoaderBlock);
     }
     else if (BootPhase == 1)
     {
@@ -185,10 +178,7 @@ HalInitSystem(
         HalpInitPhase1();
 
         /* Initialize Phase 1 of the x86 emulator */
-        if (!BootViaEfi)
-        {
-            HalInitializeBios(1, LoaderBlock);
-        }
+        HalInitializeBios(1, LoaderBlock);
     }
 
     /* All done, return */
