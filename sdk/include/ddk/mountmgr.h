@@ -75,7 +75,7 @@ DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2
 
 /* Check for \DosDevices\X: prefix (drive letter) */
 #define MOUNTMGR_IS_DRIVE_LETTER(s) \
-  ((s) && (s)->Length >= 14 * sizeof(WCHAR) && \
+  ((s)->Length >= 14 * sizeof(WCHAR) && \
    (s)->Buffer[0] == L'\\' && \
    (s)->Buffer[1] == L'D' && \
    (s)->Buffer[2] == L'o' && \
@@ -111,19 +111,6 @@ DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2
    (s)->Buffer[34] == L'-' && \
    (s)->Buffer[47] == L'}')
 
-/* DOS vs NT volume name helpers */
-#define MOUNTMGR_IS_DOS_VOLUME_NAME(s) \
-  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Buffer[1] == L'\\')
-#define MOUNTMGR_IS_NT_VOLUME_NAME(s) \
-  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Buffer[1] == L'?')
-
-/* WB volume name helpers */
-#define MOUNTMGR_IS_DOS_VOLUME_NAME_WB(s) \
-  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == L'\\')
-
-#define MOUNTMGR_IS_NT_VOLUME_NAME_WB(s) \
-  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == L'?')
-
 /* ----- structures ----- */
 
 typedef struct _MOUNTMGR_CREATE_POINT_INPUT {
@@ -133,17 +120,16 @@ typedef struct _MOUNTMGR_CREATE_POINT_INPUT {
   USHORT DeviceNameLength;
 } MOUNTMGR_CREATE_POINT_INPUT, *PMOUNTMGR_CREATE_POINT_INPUT;
 
-#pragma pack(push, 1)
 typedef struct _MOUNTMGR_MOUNT_POINT {
   ULONG SymbolicLinkNameOffset;
   USHORT SymbolicLinkNameLength;
-  USHORT Reserved0;
+  USHORT Reserved1;
   ULONG UniqueIdOffset;
   USHORT UniqueIdLength;
-  USHORT Reserved1;
+  USHORT Reserved2;
   ULONG DeviceNameOffset;
   USHORT DeviceNameLength;
-  USHORT Reserved2;
+  USHORT Reserved3;
 } MOUNTMGR_MOUNT_POINT, *PMOUNTMGR_MOUNT_POINT;
 
 typedef struct _MOUNTMGR_MOUNT_POINTS {
@@ -151,7 +137,6 @@ typedef struct _MOUNTMGR_MOUNT_POINTS {
   ULONG NumberOfMountPoints;
   MOUNTMGR_MOUNT_POINT MountPoints[1]; /* flexible array */
 } MOUNTMGR_MOUNT_POINTS, *PMOUNTMGR_MOUNT_POINTS;
-#pragma pack(pop)
 
 typedef struct _MOUNTMGR_DRIVE_LETTER_TARGET {
   USHORT DeviceNameLength;
@@ -187,6 +172,19 @@ typedef struct _MOUNTDEV_NAME {
 #endif /* NTDDI_WIN2K */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
+/* DOS vs NT volume name helpers */
+#define MOUNTMGR_IS_DOS_VOLUME_NAME(s) \
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Buffer[1] == L'\\')
+#define MOUNTMGR_IS_NT_VOLUME_NAME(s) \
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Buffer[1] == L'?')
+
+/* WB volume name helpers */
+#define MOUNTMGR_IS_DOS_VOLUME_NAME_WB(s) \
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == L'\\')
+
+#define MOUNTMGR_IS_NT_VOLUME_NAME_WB(s) \
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == L'?')
 
 #define IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATH \
   CTL_CODE(MOUNTMGRCONTROLTYPE, 12, METHOD_BUFFERED, FILE_ANY_ACCESS)
