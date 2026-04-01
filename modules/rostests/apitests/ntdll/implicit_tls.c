@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS API Tests
- * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Tests for Implicit Thread Local Storage (TLS) support
  * COPYRIGHT:   Copyright 2025 Shane Fournier <shanefournier@yandex.com>
  */
