@@ -284,7 +284,7 @@ UefiInitializeBgrtLogo(VOID)
         return;
     }
 
-    if (BgrtTable->ImageType != BGRT_IMAGE_TYPE_BITMAP)
+    if (BgrtTable->ImageType != BgrtImageTypeBitmap)
     {
         WARN("Unsupported BGRT image type %u\n", BgrtTable->ImageType);
         return;

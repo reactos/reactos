@@ -6,7 +6,7 @@
  */
 
 #include <machine.h>
-#include <uefiacpi.h>
+#include <drivers/acpi/acpi.h>
 
 VOID
 UefiConsPutChar(int Ch);
