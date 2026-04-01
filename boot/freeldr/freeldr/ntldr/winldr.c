@@ -105,6 +105,13 @@ AllocateAndInitLPB(
     Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
     Extension->MinorVersion = (VersionToBoot & 0xFF);
 
+#ifdef UEFIBOOT
+    Extension->BootViaEFI = 1;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    LoaderBlock->FirmwareInformation.FirmwareTypeEfi = 1;
+#endif
+#endif
+
     /* Init three critical lists, used right away */
     InitializeListHead(&LoaderBlock->LoadOrderListHead);
     InitializeListHead(&LoaderBlock->MemoryDescriptorListHead);

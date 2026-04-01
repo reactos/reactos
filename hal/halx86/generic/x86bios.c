@@ -83,7 +83,6 @@ HalInitializeBios(
     }
     else
     {
-
         /* Allocate an MDL for 1MB */
         Mdl = IoAllocateMdl(NULL, 0x100000, FALSE, FALSE, NULL);
         if (!Mdl)
@@ -415,6 +414,9 @@ x86BiosCall(
     FAST486_STATE EmulatorContext;
     ULONG FlatIp;
     PUCHAR InstructionPointer;
+
+    if (!x86BiosIsInitialized || (x86BiosMemoryMapping == NULL))
+        return FALSE;
 
     /* Initialize the emulator context */
     Fast486Initialize(&EmulatorContext,
