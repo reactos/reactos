@@ -60,7 +60,7 @@ AcpiGetLoaderAcpiBiosNode(VOID)
     ComponentEntry = KeFindConfigurationNextEntry(KeLoaderBlock->ConfigurationRoot,
                                                   AdapterClass,
                                                   MultiFunctionAdapter,
-                                                  0,
+                                                  NULL,
                                                   &Next);
     while (ComponentEntry)
     {
@@ -104,11 +104,6 @@ AcpiBuildLoaderRootPointer(VOID)
     ACPI_TABLE_HEADER *RootTable;
     PHYSICAL_ADDRESS PhysicalAddress;
 
-    /*
-     * ACPICA may call us more than once during driver startup.
-     * Keep the synthetic RSDP alive and return the same physical
-     * address every time instead of rebuilding it.
-     */
     if (AcpiLoaderRsdp != NULL)
     {
         PhysicalAddress = MmGetPhysicalAddress(AcpiLoaderRsdp);
@@ -193,6 +188,8 @@ AcpiOsInitialize (void)
 {
     DPRINT("AcpiOsInitialize called\n");
 
+    AcpiBuildLoaderRootPointer();
+
 #ifndef NDEBUG
     /* Verboseness level of the acpica core */
     AcpiDbgLevel = 0x00FFFFFF;
@@ -215,8 +212,15 @@ AcpiOsGetRootPointer (
     void)
 {
     ACPI_PHYSICAL_ADDRESS pa = 0;
+    PHYSICAL_ADDRESS PhysicalAddress;
 
     DPRINT("AcpiOsGetRootPointer\n");
+
+    if (AcpiLoaderRsdp != NULL)
+    {
+        PhysicalAddress = MmGetPhysicalAddress(AcpiLoaderRsdp);
+        return (ACPI_PHYSICAL_ADDRESS)PhysicalAddress.QuadPart;
+    }
 
     pa = AcpiBuildLoaderRootPointer();
     if (pa != 0)
