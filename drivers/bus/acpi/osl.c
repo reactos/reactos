@@ -30,7 +30,6 @@ KeFindConfigurationNextEntry(
     _Inout_ PCONFIGURATION_COMPONENT_DATA *NextLink);
 
 static ACPI_TABLE_RSDP *AcpiLoaderRsdp = NULL;
-static ACPI_PHYSICAL_ADDRESS AcpiLoaderRsdpAddress = 0;
 
 static
 UCHAR
@@ -105,8 +104,16 @@ AcpiBuildLoaderRootPointer(VOID)
     ACPI_TABLE_HEADER *RootTable;
     PHYSICAL_ADDRESS PhysicalAddress;
 
-    if (AcpiLoaderRsdpAddress != 0)
-        return AcpiLoaderRsdpAddress;
+    /*
+     * ACPICA may call us more than once during driver startup.
+     * Keep the synthetic RSDP alive and return the same physical
+     * address every time instead of rebuilding it.
+     */
+    if (AcpiLoaderRsdp != NULL)
+    {
+        PhysicalAddress = MmGetPhysicalAddress(AcpiLoaderRsdp);
+        return (ACPI_PHYSICAL_ADDRESS)PhysicalAddress.QuadPart;
+    }
 
     NodeData = AcpiGetLoaderAcpiBiosNode();
     if (!NodeData || (NodeData->RsdtAddress.QuadPart == 0))
@@ -176,11 +183,9 @@ AcpiBuildLoaderRootPointer(VOID)
                                sizeof(*AcpiLoaderRsdp));
     }
 
-    PhysicalAddress = MmGetPhysicalAddress(AcpiLoaderRsdp);
-    AcpiLoaderRsdpAddress = (ACPI_PHYSICAL_ADDRESS)PhysicalAddress.QuadPart;
-
     MmUnmapIoSpace(RootTable, sizeof(*RootTable));
-    return AcpiLoaderRsdpAddress;
+    PhysicalAddress = MmGetPhysicalAddress(AcpiLoaderRsdp);
+    return (ACPI_PHYSICAL_ADDRESS)PhysicalAddress.QuadPart;
 }
 
 ACPI_STATUS
