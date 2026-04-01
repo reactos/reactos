@@ -1226,7 +1226,7 @@ static const DWORD table_c0000202[396] =
    ERROR_NO_USER_SESSION_KEY,              /* c000035c (STATUS_NETWORK_SESSION_EXPIRED) */
    0,                                      /* c000035d (STATUS_APPHELP_BLOCK) */
    0,                                      /* c000035e (STATUS_ALL_SIDS_FILTERED) */
-   0,                                      /* c000035f (STATUS_NOT_SAFE_MODE_DRIVER) */
+   ERROR_NOT_SAFE_MODE_DRIVER,             /* c000035f (STATUS_NOT_SAFE_MODE_DRIVER) */
    0,                                      /* c0000360 */
    ERROR_ACCESS_DISABLED_BY_POLICY,        /* c0000361 (STATUS_ACCESS_DISABLED_BY_POLICY_DEFAULT) */
    ERROR_ACCESS_DISABLED_BY_POLICY,        /* c0000362 (STATUS_ACCESS_DISABLED_BY_POLICY_PATH) */

@@ -36,6 +36,11 @@ extern BOOLEAN PnpSystemInit;
 extern PDEVICE_NODE IopRootDeviceNode;
 extern BOOLEAN PnPBootDriversLoaded;
 extern BOOLEAN PnPBootDriversInitialized;
+extern ULONG InitSafeBootMode;
+
+NTSTATUS
+IopCheckSafeBootDriver(
+    _In_ HANDLE ServiceHandle);
 
 #define MAX_DEVICE_ID_LEN          200
 #define MAX_SEPARATORS_INSTANCEID  0
@@ -82,6 +87,7 @@ typedef struct _ATTACH_FILTER_DRIVERS_CONTEXT
     ADD_DEV_DRIVER_TYPE DriverType;
     PDEVICE_NODE DeviceNode;
     PLIST_ENTRY DriversListHead;
+    BOOLEAN SafeBootClassAllowed;
 } ATTACH_FILTER_DRIVERS_CONTEXT, *PATTACH_FILTER_DRIVERS_CONTEXT;
 
 /* FUNCTIONS *****************************************************************/
@@ -445,6 +451,19 @@ PiAttachFilterDriversCallback(
         goto Cleanup;
     }
 
+    // In Safe Mode, block drivers not allowed by the SafeBoot whitelist.
+    // If the device class is whitelisted, all its drivers are allowed.
+    if (InitSafeBootMode != 0 && !context->SafeBootClassAllowed)
+    {
+        Status = IopCheckSafeBootDriver(serviceHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Service \"%wZ\" blocked by SafeBoot policy\n", &serviceName);
+            Status = STATUS_NOT_SAFE_MODE_DRIVER;
+            goto Cleanup;
+        }
+    }
+
     // check if the driver is already loaded
     UNICODE_STRING driverName;
     Status = IopGetDriverNames(serviceHandle, &driverName, NULL);
@@ -535,7 +554,8 @@ PiAttachFilterDrivers(
     HANDLE EnumSubKey,
     HANDLE ClassKey,
     BOOLEAN Lower,
-    BOOLEAN LoadDrivers)
+    BOOLEAN LoadDrivers,
+    BOOLEAN SafeBootClassAllowed)
 {
     RTL_QUERY_REGISTRY_TABLE QueryTable[2] = { { NULL, 0, NULL, NULL, 0, NULL, 0 }, };
     ATTACH_FILTER_DRIVERS_CONTEXT routineContext;
@@ -545,6 +565,7 @@ PiAttachFilterDrivers(
 
     routineContext.DriversListHead = DriversListHead;
     routineContext.DeviceNode = DeviceNode;
+    routineContext.SafeBootClassAllowed = SafeBootClassAllowed;
 
     // First add device filters
     routineContext.DriverType = Lower ? LowerFilter : UpperFilter;
@@ -603,6 +624,7 @@ PiCallDriverAddDevice(
     static UNICODE_STRING ccsControlClass =
     RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class");
     PKEY_VALUE_FULL_INFORMATION kvInfo = NULL;
+    BOOLEAN safeBootClassAllowed = FALSE;
 
     PAGED_CODE();
 
@@ -677,6 +699,17 @@ PiCallDriverAddDevice(
                     ZwClose(propertiesHandle);
                 }
             }
+
+            // Check if this device class is in the SafeBoot whitelist
+            if (InitSafeBootMode != 0)
+            {
+                HANDLE hSafeBoot;
+                if (NT_SUCCESS(IopOpenSafeBootKey(&hSafeBoot)))
+                {
+                    safeBootClassAllowed = IopHasSafeBootEntry(hSafeBoot, &classGUID);
+                    ZwClose(hSafeBoot);
+                }
+            }
         }
 
         ExFreePool(kvInfo);
@@ -693,7 +726,7 @@ PiCallDriverAddDevice(
     InitializeListHead(&drvListHead);
 
     // lower (class) filters
-    Status = PiAttachFilterDrivers(&drvListHead, DeviceNode, SubKey, ClassKey, TRUE, LoadDrivers);
+    Status = PiAttachFilterDrivers(&drvListHead, DeviceNode, SubKey, ClassKey, TRUE, LoadDrivers, safeBootClassAllowed);
     if (!NT_SUCCESS(Status))
     {
         goto Cleanup;
@@ -702,7 +735,8 @@ PiCallDriverAddDevice(
     ATTACH_FILTER_DRIVERS_CONTEXT routineContext = {
         .DriversListHead = &drvListHead,
         .DriverType = DeviceDriver,
-        .DeviceNode = DeviceNode
+        .DeviceNode = DeviceNode,
+        .SafeBootClassAllowed = safeBootClassAllowed
     };
 
     RTL_QUERY_REGISTRY_TABLE queryTable[2] = {{
@@ -747,7 +781,7 @@ PiCallDriverAddDevice(
     }
 
     // upper (class) filters
-    Status = PiAttachFilterDrivers(&drvListHead, DeviceNode, SubKey, ClassKey, FALSE, LoadDrivers);
+    Status = PiAttachFilterDrivers(&drvListHead, DeviceNode, SubKey, ClassKey, FALSE, LoadDrivers, safeBootClassAllowed);
     if (!NT_SUCCESS(Status))
     {
         goto Cleanup;

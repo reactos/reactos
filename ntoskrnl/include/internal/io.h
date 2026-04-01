@@ -1108,6 +1108,15 @@ IopLoadDriver(
     _Out_ PDRIVER_OBJECT *DriverObject);
 
 NTSTATUS
+IopOpenSafeBootKey(
+    _Out_ PHANDLE SafeBootHandle);
+
+BOOLEAN
+IopHasSafeBootEntry(
+    _In_ HANDLE SafeBootHandle,
+    _In_ PUNICODE_STRING Name);
+
+NTSTATUS
 IopGetDriverNames(
     _In_ HANDLE ServiceHandle,
     _Out_ PUNICODE_STRING DriverName,

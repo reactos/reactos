@@ -95,6 +95,41 @@ BOOLEAN ExpRealTimeIsUniversal;
 
 /* FUNCTIONS ****************************************************************/
 
+static
+PCHAR
+ExpFindBootOption(
+    _In_opt_ PCHAR CommandLine,
+    _In_z_ PCSTR OptionName)
+{
+    SIZE_T NameLength, OptionLength;
+    PCHAR Current;
+
+    if ((CommandLine == NULL) || (OptionName == NULL) || (*OptionName == ANSI_NULL))
+        return NULL;
+
+    NameLength = strlen(OptionName);
+    Current = CommandLine;
+
+    while (*Current)
+    {
+        Current += strspn(Current, " \t/");
+
+        OptionLength = strcspn(Current, " \t/");
+        if ((OptionLength >= NameLength) &&
+            (_strnicmp(Current, OptionName, NameLength) == 0) &&
+            ((OptionLength == NameLength) ||
+             (OptionName[NameLength - 1] == '=') ||
+             (OptionName[NameLength - 1] == ':')))
+        {
+            return Current;
+        }
+
+        Current += OptionLength;
+    }
+
+    return NULL;
+}
+
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
@@ -1751,26 +1786,26 @@ Phase1InitializationDiscard(IN PVOID Context)
     if (CommandLine)
     {
         /* Check if this is a safe mode boot */
-        SafeBoot = strstr(CommandLine, "SAFEBOOT:");
+        SafeBoot = ExpFindBootOption(CommandLine, "SAFEBOOT:");
         if (SafeBoot)
         {
             /* Check what kind of boot this is */
             SafeBoot += 9;
-            if (!strncmp(SafeBoot, "MINIMAL", 7))
+            if (!_strnicmp(SafeBoot, "MINIMAL", 7))
             {
                 /* Minimal mode */
                 InitSafeBootMode = 1;
                 SafeBoot += 7;
                 MessageCode = BOOTING_IN_SAFEMODE_MINIMAL;
             }
-            else if (!strncmp(SafeBoot, "NETWORK", 7))
+            else if (!_strnicmp(SafeBoot, "NETWORK", 7))
             {
                 /* With Networking */
                 InitSafeBootMode = 2;
                 SafeBoot += 7;
                 MessageCode = BOOTING_IN_SAFEMODE_NETWORK;
             }
-            else if (!strncmp(SafeBoot, "DSREPAIR", 8))
+            else if (!_strnicmp(SafeBoot, "DSREPAIR", 8))
             {
                 /* Domain Server Repair */
                 InitSafeBootMode = 3;
@@ -1788,7 +1823,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             if (*SafeBoot)
             {
                 /* Check if an alternate shell was requested */
-                if (!strncmp(SafeBoot, "(ALTERNATESHELL)", 16))
+                if (!_strnicmp(SafeBoot, "(ALTERNATESHELL)", 16))
                 {
                     /* Remember this for later */
                     AlternateShell = TRUE;
@@ -1808,6 +1843,8 @@ Phase1InitializationDiscard(IN PVOID Context)
             }
         }
     }
+
+    SharedUserData->SafeBootMode = (InitSafeBootMode != 0);
 
     /* Make sure we have a command line */
     if (CommandLine)

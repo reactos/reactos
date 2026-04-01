@@ -80,7 +80,7 @@
 @ stub LsaIQueryUpnSuffixes
 @ stub LsaIRegisterNotification
 @ stub LsaIRegisterPolicyChangeNotificationCallback
-@ stub LsaISafeMode
+@ stdcall LsaISafeMode()
 @ stub LsaISamIndicatedDsStarted
 @ stub LsaISetBootOption
 @ stub LsaISetClientDnsHostName

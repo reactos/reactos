@@ -36,6 +36,7 @@ POBJECT_TYPE IoDriverObjectType = NULL;
 extern BOOLEAN PnpSystemInit;
 extern BOOLEAN PnPBootDriversLoaded;
 extern KEVENT PiEnumerationFinished;
+extern ULONG InitSafeBootMode;
 
 USHORT IopGroupIndex;
 PLIST_ENTRY IopGroupTable;
@@ -59,6 +60,231 @@ IopDoLoadUnloadDriver(
     _Inout_ PDRIVER_OBJECT *DriverObject);
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+static
+VOID
+IopInitRegistryString(
+    _Out_ PUNICODE_STRING String,
+    _In_ PKEY_VALUE_FULL_INFORMATION KeyValue)
+{
+    String->Buffer = (PWCHAR)((ULONG_PTR)KeyValue + KeyValue->DataOffset);
+    String->Length = (USHORT)KeyValue->DataLength;
+    if ((String->Length >= sizeof(UNICODE_NULL)) &&
+        (String->Buffer[(String->Length / sizeof(WCHAR)) - 1] == UNICODE_NULL))
+    {
+        String->Length -= sizeof(UNICODE_NULL);
+    }
+
+    String->MaximumLength = String->Length;
+}
+
+static
+NTSTATUS
+IopGetServiceKeyName(
+    _In_ HANDLE ServiceHandle,
+    _Out_ PUNICODE_STRING ServiceName)
+{
+    NTSTATUS Status;
+    ULONG InfoLength;
+    PKEY_BASIC_INFORMATION BasicInfo;
+
+    PAGED_CODE();
+
+    Status = ZwQueryKey(ServiceHandle, KeyBasicInformation, NULL, 0, &InfoLength);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        return NT_SUCCESS(Status) ? STATUS_UNSUCCESSFUL : Status;
+    }
+
+    BasicInfo = ExAllocatePoolWithTag(PagedPool, InfoLength, TAG_IO);
+    if (!BasicInfo)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = ZwQueryKey(ServiceHandle,
+                        KeyBasicInformation,
+                        BasicInfo,
+                        InfoLength,
+                        &InfoLength);
+    if (NT_SUCCESS(Status))
+    {
+        ServiceName->Buffer = ExAllocatePoolWithTag(PagedPool, BasicInfo->NameLength, TAG_IO);
+        if (!ServiceName->Buffer)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+        else
+        {
+            ServiceName->Length = (USHORT)BasicInfo->NameLength;
+            ServiceName->MaximumLength = ServiceName->Length;
+            RtlMoveMemory(ServiceName->Buffer,
+                          BasicInfo->Name,
+                          ServiceName->Length);
+        }
+    }
+
+    ExFreePoolWithTag(BasicInfo, TAG_IO);
+    return Status;
+}
+
+BOOLEAN
+IopHasSafeBootEntry(
+    _In_ HANDLE SafeBootHandle,
+    _In_ PUNICODE_STRING Name)
+{
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+
+    if ((Name->Buffer == NULL) || (Name->Length == 0))
+        return FALSE;
+
+    Status = IopOpenRegistryKeyEx(&KeyHandle,
+                                  SafeBootHandle,
+                                  Name,
+                                  KEY_READ);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    ZwClose(KeyHandle);
+    return TRUE;
+}
+
+NTSTATUS
+IopOpenSafeBootKey(
+    _Out_ PHANDLE SafeBootHandle)
+{
+    static UNICODE_STRING SafeBootRoot =
+        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\SafeBoot");
+    HANDLE RootHandle;
+    UNICODE_STRING KeyName;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    Status = IopOpenRegistryKeyEx(&RootHandle,
+                                  NULL,
+                                  &SafeBootRoot,
+                                  KEY_READ);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    switch (InitSafeBootMode)
+    {
+        case 1:
+        case 3:
+            RtlInitUnicodeString(&KeyName, L"Minimal");
+            break;
+
+        case 2:
+            RtlInitUnicodeString(&KeyName, L"Network");
+            break;
+
+        default:
+            ZwClose(RootHandle);
+            return STATUS_NOT_SAFE_MODE_DRIVER;
+    }
+
+    Status = IopOpenRegistryKeyEx(SafeBootHandle,
+                                  RootHandle,
+                                  &KeyName,
+                                  KEY_READ);
+    ZwClose(RootHandle);
+    return Status;
+}
+
+NTSTATUS
+IopCheckSafeBootDriver(
+    _In_ HANDLE ServiceHandle)
+{
+    HANDLE SafeBootHandle;
+    NTSTATUS Status;
+    PKEY_VALUE_FULL_INFORMATION KeyValue;
+    UNICODE_STRING CandidateName;
+
+    PAGED_CODE();
+
+    if (InitSafeBootMode == 0)
+        return STATUS_SUCCESS;
+
+    Status = IopOpenSafeBootKey(&SafeBootHandle);
+    if (!NT_SUCCESS(Status))
+        return STATUS_NOT_SAFE_MODE_DRIVER;
+
+    Status = IopGetRegistryValue(ServiceHandle, L"Group", &KeyValue);
+    if (NT_SUCCESS(Status))
+    {
+        if ((KeyValue->Type == REG_SZ) &&
+            (KeyValue->DataLength >= sizeof(WCHAR)) &&
+            (KeyValue->DataLength <= UNICODE_STRING_MAX_BYTES) &&
+            ((KeyValue->DataLength % sizeof(WCHAR)) == 0))
+        {
+            IopInitRegistryString(&CandidateName, KeyValue);
+            if (IopHasSafeBootEntry(SafeBootHandle, &CandidateName))
+            {
+                ExFreePool(KeyValue);
+                ZwClose(SafeBootHandle);
+                return STATUS_SUCCESS;
+            }
+        }
+
+        ExFreePool(KeyValue);
+    }
+
+    CandidateName.Buffer = NULL;
+    CandidateName.Length = 0;
+    CandidateName.MaximumLength = 0;
+    Status = IopGetServiceKeyName(ServiceHandle, &CandidateName);
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose(SafeBootHandle);
+        return Status;
+    }
+
+    if (IopHasSafeBootEntry(SafeBootHandle, &CandidateName))
+    {
+        ExFreePoolWithTag(CandidateName.Buffer, TAG_IO);
+        ZwClose(SafeBootHandle);
+        return STATUS_SUCCESS;
+    }
+
+    ExFreePoolWithTag(CandidateName.Buffer, TAG_IO);
+
+    Status = IopGetRegistryValue(ServiceHandle, L"ImagePath", &KeyValue);
+    if (NT_SUCCESS(Status))
+    {
+        if (((KeyValue->Type == REG_SZ) || (KeyValue->Type == REG_EXPAND_SZ)) &&
+            (KeyValue->DataLength >= sizeof(WCHAR)) &&
+            (KeyValue->DataLength <= UNICODE_STRING_MAX_BYTES) &&
+            ((KeyValue->DataLength % sizeof(WCHAR)) == 0))
+        {
+            USHORT Index;
+
+            IopInitRegistryString(&CandidateName, KeyValue);
+            for (Index = CandidateName.Length / sizeof(WCHAR); Index > 0; --Index)
+            {
+                if ((CandidateName.Buffer[Index - 1] == OBJ_NAME_PATH_SEPARATOR) ||
+                    (CandidateName.Buffer[Index - 1] == L'/'))
+                {
+                    CandidateName.Buffer = &CandidateName.Buffer[Index];
+                    CandidateName.Length -= Index * sizeof(WCHAR);
+                    CandidateName.MaximumLength = CandidateName.Length;
+                    break;
+                }
+            }
+
+            if (IopHasSafeBootEntry(SafeBootHandle, &CandidateName))
+            {
+                ExFreePool(KeyValue);
+                ZwClose(SafeBootHandle);
+                return STATUS_SUCCESS;
+            }
+        }
+
+        ExFreePool(KeyValue);
+    }
+
+    ZwClose(SafeBootHandle);
+    return STATUS_NOT_SAFE_MODE_DRIVER;
+}
 
 NTSTATUS
 NTAPI
@@ -1955,6 +2181,13 @@ IopLoadDriver(
     NTSTATUS Status;
     PLDR_DATA_TABLE_ENTRY ModuleObject;
     PVOID BaseAddress;
+
+    Status = IopCheckSafeBootDriver(ServiceHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Driver blocked by SafeBoot policy (Status %lx)\n", Status);
+        return Status;
+    }
 
     PKEY_VALUE_FULL_INFORMATION kvInfo;
     Status = IopGetRegistryValue(ServiceHandle, L"ImagePath", &kvInfo);

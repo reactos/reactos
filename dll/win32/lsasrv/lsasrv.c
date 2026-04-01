@@ -14,6 +14,13 @@ NT_PRODUCT_TYPE LsapProductType = NtProductWinNt;
 
 /* FUNCTIONS ***************************************************************/
 
+BOOLEAN
+WINAPI
+LsaISafeMode(VOID)
+{
+    return SharedUserData->SafeBootMode;
+}
+
 VOID
 NTAPI
 LsaIFree_LSAPR_ACCOUNT_ENUM_BUFFER(
