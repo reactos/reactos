@@ -33,11 +33,12 @@
 
 #include "vfatlib.h"
 
-#define NDEBUG
-#include <debug.h>
+//#define NDEBUG
+//#include <debug.h>
 
-
-#define FSCTL_IS_VOLUME_DIRTY   CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 30, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define DPRINT1(msg, ...) \
+    VfatPrint("** (%s:%d) " msg "\n", __RELFILE__, __LINE__, ##__VA_ARGS__)
+#define DPRINT DPRINT1
 
 typedef struct _change {
     void *data;
@@ -54,13 +55,20 @@ static int did_change = 0;
 static HANDLE fd;
 static LARGE_INTEGER CurrentOffset;
 
+
+// Enable this to use aligned IO
+// #define PREFORM_ALIGNED_IO
+
+#ifdef PREFORM_ALIGNED_IO
 #define ROUND_DOWN(n, align) ((n) & ~((align) - 1))
-#define ROUND_UP(n, align) ROUND_DOWN((n) + (align) - 1, (align))
-
+#define ROUND_UP(n, align)   ROUND_DOWN((n) + (align) - 1, (align))
 #define IS_ALIGNED(n, align) (((n) & ((align) - 1)) == 0)
-
+#endif
 
 /**** Win32 / NT support ******************************************************/
+
+#define FSCTL_IS_VOLUME_DIRTY           CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 30, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_ALLOW_EXTENDED_DASD_IO    CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 32, METHOD_NEITHER,  FILE_ANY_ACCESS)
 
 static int WIN32close(HANDLE FileHandle)
 {
@@ -161,7 +169,7 @@ static off_t WIN32lseek(HANDLE fd, off_t offset, int whence)
 #define lseek	WIN32lseek
 
 /******************************************************************************/
-#endif
+#endif // __REACTOS__
 
 
 #ifndef __REACTOS__
@@ -177,7 +185,7 @@ void fs_open(char *path, int rw)
 #else
 NTSTATUS fs_open(PUNICODE_STRING DriveRoot, int read_write)
 {
-    NTSTATUS Status;
+    NTSTATUS Status, Status2;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK Iosb;
 
@@ -191,12 +199,20 @@ NTSTATUS fs_open(PUNICODE_STRING DriveRoot, int read_write)
                         FILE_GENERIC_READ | (read_write ? FILE_GENERIC_WRITE : 0),
                         &ObjectAttributes,
                         &Iosb,
-                        read_write ? FILE_SHARE_READ : (FILE_SHARE_READ | FILE_SHARE_WRITE),
+                        FILE_SHARE_READ | (read_write ? 0 : FILE_SHARE_WRITE),
                         FILE_SYNCHRONOUS_IO_ALERT);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenFile() failed with status 0x%.08x\n", Status);
         return Status;
+    }
+
+    Status2 = NtFsControlFile(fd, NULL, NULL, NULL,
+                              &IoStatusBlock, FSCTL_ALLOW_EXTENDED_DASD_IO,
+                              NULL, 0, NULL, 0);
+    if (!NT_SUCCESS(Status2))
+    {
+        DPRINT1("Warning: NtFsControlFile(FSCTL_ALLOW_EXTENDED_DASD_IO) failed with status 0x%.08x\n", Status2);
     }
 
     // If read_write is specified, then the volume should be exclusively locked
@@ -290,13 +306,13 @@ void fs_read(off_t pos, int size, void *data)
     int got;
 
 #ifdef __REACTOS__
+#ifdef PREFORM_ALIGNED_IO
     void *data_aligned = NULL;
     off_t seekpos_aligned = pos;
     size_t size_aligned = (size_t)size;
 
     /* If the output buffer & lengths are not aligned, align those */
-    if (// !IS_ALIGNED(data, 512) ||
-        !IS_ALIGNED(size, (size_t)512) || !IS_ALIGNED(pos, (off_t)512))
+    if (!IS_ALIGNED(pos, (off_t)512) || !IS_ALIGNED(size, (size_t)512))
     {
         /*
          * Align the offset and the buffer length to sector boundaries,
@@ -344,6 +360,16 @@ void fs_read(off_t pos, int size, void *data)
 
         free(data_aligned);
     }
+#else // !PREFORM_ALIGNED_IO
+    /* Read it */
+    if (lseek(fd, pos, 0) != pos)
+        pdie("Seek to %lld", (long long)pos);
+    got = read(fd, data, (size_t)size);
+    if (got < 0)
+        pdie("Read %d bytes at %lld", size, (long long)pos);
+    assert(got >= size);
+    got = size;
+#endif // PREFORM_ALIGNED_IO
 
 #else
     if (lseek(fd, pos, 0) != pos)
@@ -370,7 +396,7 @@ int fs_test(off_t pos, int size)
     void *scratch;
     int okay;
 
-#ifdef __REACTOS__
+#if defined(__REACTOS__) && defined(PREFORM_ALIGNED_IO)
     /*
      * Align the offset and the buffer length to sector boundaries,
      * taking into account for cross-sector regions.
@@ -392,8 +418,8 @@ int fs_test(off_t pos, int size)
 #else
     if (lseek(fd, pos, 0) != pos)
 	pdie("Seek to %lld", (long long)pos);
-    scratch = alloc(size);
-    okay = read(fd, scratch, size) == size;
+    scratch = alloc((size_t)size);
+    okay = read(fd, scratch, (size_t)size) == size;
     free(scratch);
 #endif
     return okay;
@@ -409,13 +435,13 @@ void fs_write(off_t pos, int size, void *data)
 
     if (FsCheckFlags & FSCHECK_IMMEDIATE_WRITE)
     {
+#ifdef PREFORM_ALIGNED_IO
         void *data_aligned = NULL;
         off_t seekpos_aligned = pos;
         size_t size_aligned = (size_t)size;
 
         /* If the input buffer & lengths are not aligned, align those */
-        if (// !IS_ALIGNED(data, 512) ||
-            !IS_ALIGNED(size, (size_t)512) || !IS_ALIGNED(pos, (off_t)512))
+        if (!IS_ALIGNED(pos, (off_t)512) || !IS_ALIGNED(size, (size_t)512))
         {
             /*
              * Align the offset and the buffer length to sector boundaries,
@@ -454,6 +480,16 @@ void fs_write(off_t pos, int size, void *data)
         if (did == (int)size_aligned)
             return;
 
+#else // !PREFORM_ALIGNED_IO
+        /* Write it back */
+        did_change = 1;
+        if (lseek(fd, pos, 0) != pos)
+            pdie("Seek to %lld", (long long)pos);
+        did = write(fd, data, (size_t)size);
+        if (did == (int)size)
+            return;
+#endif // PREFORM_ALIGNED_IO
+
         if (did < 0) pdie("Write %d bytes at %lld", size, (long long)pos);
         die("Wrote %d bytes instead of %d at %lld", did, size, (long long)pos);
     }
@@ -483,7 +519,6 @@ void fs_write(off_t pos, int size, void *data)
 static void fs_flush(void)
 {
 #ifdef __REACTOS__
-
     CHANGE *this;
     int old_write_immed = (FsCheckFlags & FSCHECK_IMMEDIATE_WRITE);
 
