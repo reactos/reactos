@@ -23,6 +23,9 @@
 
 #include "shell32_version.h"
 
+#include <set>
+#include <string>
+
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /*
