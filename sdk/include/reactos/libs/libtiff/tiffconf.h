@@ -28,6 +28,13 @@
 
 /* Signed 64-bit type */
 /* #undef TIFF_INT64_T */
+#ifdef __REACTOS__
+#ifdef __GNUC__
+#define TIFF_INT64_T signed long long
+#else
+#define TIFF_INT64_T signed __int64
+#endif
+#endif
 
 /* Signed 8-bit type */
 /* #undef TIFF_INT8_T */
@@ -45,7 +52,11 @@
 /* #undef TIFF_UINT8_T */
 
 /* Signed size type */
+#if defined(__REACTOS__) && defined(_WIN64)
+#define TIFF_SSIZE_T TIFF_INT64_T
+#else
 #define TIFF_SSIZE_T signed int
+#endif
 
 /* Compatibility stuff. */
 
