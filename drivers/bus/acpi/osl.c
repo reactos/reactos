@@ -51,7 +51,8 @@ static
 PACPI_BIOS_MULTI_NODE
 AcpiGetLoaderAcpiBiosNode(VOID)
 {
-    PCONFIGURATION_COMPONENT_DATA ComponentEntry, Next;
+    PCONFIGURATION_COMPONENT_DATA ComponentEntry = NULL;
+    PCONFIGURATION_COMPONENT_DATA Next = NULL;
     PCM_PARTIAL_RESOURCE_LIST ResourceList;
 
     if (!KeLoaderBlock || !KeLoaderBlock->ConfigurationRoot)
@@ -187,8 +188,6 @@ ACPI_STATUS
 AcpiOsInitialize (void)
 {
     DPRINT("AcpiOsInitialize called\n");
-
-    AcpiBuildLoaderRootPointer();
 
 #ifndef NDEBUG
     /* Verboseness level of the acpica core */
