@@ -352,7 +352,6 @@ typedef enum _FILEOPCALLBACKEVENT {
     FOCE_PRENEWITEM,
     FOCE_POSTNEWITEM
 } FILEOPCALLBACKEVENT;
-
 typedef HRESULT (CALLBACK *FILEOPCALLBACK)(FILEOPCALLBACKEVENT Event, LPCWSTR Source, LPCWSTR Destination,
                                            UINT Attributes, HRESULT hr, void *CallerData);
 int SHELL32_FileOperation(LPSHFILEOPSTRUCTW lpFileOp, FILEOPCALLBACK Callback, void *CallerData);
