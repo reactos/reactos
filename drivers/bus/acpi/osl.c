@@ -18,6 +18,9 @@ static BOOLEAN AcpiInterruptHandlerRegistered = FALSE;
 static ACPI_OSD_HANDLER AcpiIrqHandler = NULL;
 static PVOID AcpiIrqContext = NULL;
 static ULONG AcpiIrqNumber = 0;
+/* TODO: Replace these local declarations with <ndk/kefuncs.h> once the
+ * acpi.sys build context can consume the required NDK dependencies cleanly.
+ */
 extern NTSYSAPI PLOADER_PARAMETER_BLOCK KeLoaderBlock;
 extern NTSYSAPI
 PCONFIGURATION_COMPONENT_DATA
