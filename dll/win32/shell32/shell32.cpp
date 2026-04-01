@@ -95,7 +95,7 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
 
     if (bUpdateSelf)
     {
-        CAtlMap<CStringW, bool, CStringElementTraitsIW> newVarNames;
+        std::set<std::wstring> newVarNames;
 
         LPWSTR pszz = (LPWSTR)pEnv;
         while (pszz && *pszz)
@@ -106,9 +106,9 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
                 if (pchEqual)
                 {
                     *pchEqual = L'\0';
-                    newVarNames.SetAt(pszz, true);          /* record name */
+                    newVarNames.insert(pszz);
                     SetEnvironmentVariableW(pszz, pchEqual + 1);
-                    *pchEqual = L'=';                       /* restore */
+                    *pchEqual = L'=';
                 }
             }
             pszz += wcslen(pszz) + 1;
@@ -126,9 +126,9 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
                     if (pchEqual)
                     {
                         *pchEqual = L'\0';
-                        if (!newVarNames.Lookup(pCur))
-                            SetEnvironmentVariableW(pCur, NULL); /* delete */
-                        *pchEqual = L'=';                        /* restore */
+                        if (newVarNames.find(pCur) == newVarNames.end())
+                            SetEnvironmentVariableW(pCur, NULL);
+                        *pchEqual = L'=';
                     }
                 }
                 pCur += wcslen(pCur) + 1;

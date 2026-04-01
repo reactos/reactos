@@ -38,6 +38,8 @@
 #include <winnetwk.h>
 #include <objsafe.h>
 #include <regstr.h>
+#include <set>
+#include <string>
 
 #include <comctl32_undoc.h>
 #include <shlguid_undoc.h>
@@ -352,31 +354,6 @@ typedef enum _FILEOPCALLBACKEVENT {
     FOCE_PRENEWITEM,
     FOCE_POSTNEWITEM
 } FILEOPCALLBACKEVENT;
-
-struct CStringElementTraitsIW : public CElementTraitsBase<CStringW>
-{
-    static ULONG Hash(INARGTYPE str)
-    {
-        ULONG nHash = 0;
-        LPCWSTR pch = str;
-        while (*pch)
-        {
-            nHash = (nHash << 5) + nHash + towupper(*pch);
-            pch++;
-        }
-        return nHash;
-    }
-
-    static bool CompareElements(INARGTYPE str1, INARGTYPE str2)
-    {
-        return _wcsicmp(str1, str2) == 0;
-    }
-
-    static int CompareElementsOrdered(INARGTYPE str1, INARGTYPE str2)
-    {
-        return _wcsicmp(str1, str2);
-    }
-};
 
 typedef HRESULT (CALLBACK *FILEOPCALLBACK)(FILEOPCALLBACKEVENT Event, LPCWSTR Source, LPCWSTR Destination,
                                            UINT Attributes, HRESULT hr, void *CallerData);
