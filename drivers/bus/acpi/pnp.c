@@ -19,6 +19,7 @@ Bus_PlugInDevice (
 #pragma alloc_text (PAGE, Bus_SendIrpSynchronously)
 #endif
 
+
 NTSTATUS
 NTAPI
 Bus_PnP (
