@@ -38,8 +38,6 @@
 #include <winnetwk.h>
 #include <objsafe.h>
 #include <regstr.h>
-#include <set>
-#include <string>
 
 #include <comctl32_undoc.h>
 #include <shlguid_undoc.h>

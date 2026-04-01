@@ -23,9 +23,6 @@
 
 #include "shell32_version.h"
 
-#include <set>
-#include <string>
-
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /*
@@ -109,7 +106,9 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
                 if (pchEqual)
                 {
                     *pchEqual = L'\0';
-                    newVarNames.Add(pszz, true);
+                    CStringW key(pszz);
+                    key.MakeUpper();
+                    newVarNames.Add(key, true);
                     SetEnvironmentVariableW(pszz, pchEqual + 1);
                     *pchEqual = L'=';
                 }
@@ -129,7 +128,9 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
                     if (pchEqual)
                     {
                         *pchEqual = L'\0';
-                        if (newVarNames.FindKey(pCur) < 0)
+                        CStringW key(pCur);
+                        key.MakeUpper();
+                        if (newVarNames.FindKey(key) < 0)
                             SetEnvironmentVariableW(pCur, NULL);
                         *pchEqual = L'=';
                     }
