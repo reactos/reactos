@@ -5797,7 +5797,7 @@ IntFontType(PFONTGDI Font)
     FT_ULong tmp_size = 0;
     FT_Face Face = Font->SharedFace->Face;
 
-    ASSERT_FREETYPE_LOCK_HELD();
+    ASSERT_FREETYPE_LOCK_NOT_HELD();
 
     if (FT_HAS_MULTIPLE_MASTERS(Face))
         Font->FontObj.flFontType |= FO_MULTIPLEMASTER;
@@ -5959,6 +5959,8 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     ULONG MatchPenalty;
     LOGFONTW *pLogFont;
     LOGFONTW SubstitutedLogFont;
+
+    ASSERT_FREETYPE_LOCK_NOT_HELD();
 
     if (!pTextObj)
     {
