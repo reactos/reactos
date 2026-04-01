@@ -624,6 +624,8 @@ SharedFace_Release(PSHARED_FACE Ptr, BOOL bDoLock)
 {
     if (bDoLock)
         IntLockFreeType();
+    else
+        ASSERT_FREETYPE_LOCK_HELD();
 
     ASSERT(Ptr->RefCount > 0);
 
@@ -785,6 +787,10 @@ VOID DumpPrivateFontList(BOOL bDoLock)
         IntLockFreeType();
         IntLockProcessPrivateFonts(Win32Process);
     }
+    else
+    {
+        ASSERT_FREETYPE_LOCK_HELD();
+    }
 
     DumpFontList(&Win32Process->PrivateFontListHead);
 
@@ -799,6 +805,8 @@ VOID DumpGlobalFontList(BOOL bDoLock)
 {
     if (bDoLock)
         IntLockFreeType();
+    else
+        ASSERT_FREETYPE_LOCK_HELD();
 
     DumpFontList(&g_FontListHead);
 
@@ -4192,6 +4200,8 @@ TextIntUpdateSize(PDC dc,
 
     if (bDoLock)
         IntLockFreeType();
+    else
+        ASSERT_FREETYPE_LOCK_HELD();
 
     face = FontGDI->SharedFace->Face;
     if (face->charmap == NULL)
