@@ -97,14 +97,16 @@ HalInitSystem(
         /* Get command-line parameters */
         HalpGetParameters(LoaderBlock);
 
-        HalBootViaEfi = FALSE;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
         HalBootViaEfi = LoaderBlock->FirmwareInformation.FirmwareTypeEfi;
 #else
+        HalBootViaEfi = FALSE;
         ASSERT(LoaderBlock->Extension != NULL);
 
+#ifdef __REACTOS__
         if (LoaderBlock->Extension->Size >= FIELD_OFFSET(LOADER_PARAMETER_EXTENSION, LoaderPerformanceData))
             HalBootViaEfi = LoaderBlock->Extension->BootViaEFI;
+#endif
 #endif
 
         /* Check for PRCB version mismatch */

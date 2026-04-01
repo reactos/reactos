@@ -593,8 +593,6 @@ HalInitializeBios(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-extern BOOLEAN HalBootViaEfi;
-
 #ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
 #define KiEnterInterruptTrap(TrapFrame) /* We do all neccessary in asm code */
@@ -634,4 +632,5 @@ extern KAFFINITY HalpDefaultInterruptAffinity;
 
 extern IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR+1];
 
+extern BOOLEAN HalBootViaEfi;
 extern const USHORT HalpBuildType;
