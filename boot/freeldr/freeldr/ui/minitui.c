@@ -9,13 +9,23 @@
 
 #include <freeldr.h>
 
-#define MINITUI_PROGRESS_TEXT_ATTR      ATTR(COLOR_GRAY, COLOR_BLACK)
-#define MINITUI_PROGRESS_FILL_ATTR      ATTR(COLOR_WHITE, COLOR_WHITE)
-#define MINITUI_PROGRESS_REMAINING_ATTR ATTR(COLOR_GRAY, COLOR_GRAY)
-
 /* NTLDR or Vista+ BOOTMGR progress-bar style */
 // #define NTLDR_PROGRESSBAR
 // #define BTMGR_PROGRESSBAR /* Default style */
+
+#ifdef NTLDR_PROGRESSBAR
+#define MINITUI_PROGRESS_TEXT_ATTR      ATTR(UiTextColor, UiMenuBgColor)
+#define MINITUI_PROGRESS_FILL_CHAR      '\xDB'
+#define MINITUI_PROGRESS_FILL_ATTR      ATTR(UiTextColor, UiMenuBgColor)
+#define MINITUI_PROGRESS_REMAINING_CHAR ' '
+#define MINITUI_PROGRESS_REMAINING_ATTR ATTR(UiTextColor, UiMenuBgColor)
+#else // BTMGR_PROGRESSBAR
+#define MINITUI_PROGRESS_TEXT_ATTR      ATTR(COLOR_GRAY, COLOR_BLACK)
+#define MINITUI_PROGRESS_FILL_CHAR      ' '
+#define MINITUI_PROGRESS_FILL_ATTR      ATTR(COLOR_WHITE, COLOR_WHITE)
+#define MINITUI_PROGRESS_REMAINING_CHAR ' '
+#define MINITUI_PROGRESS_REMAINING_ATTR ATTR(COLOR_GRAY, COLOR_GRAY)
+#endif
 
 BOOLEAN MiniTuiInitialize(VOID)
 {
@@ -25,7 +35,11 @@ BOOLEAN MiniTuiInitialize(VOID)
 
     /* Override default settings with "Mini" TUI Theme */
 
+#ifdef NTLDR_PROGRESSBAR
+    UiTextColor = TuiTextToColor("Default");
+#else // BTMGR_PROGRESSBAR
     UiTextColor = COLOR_GRAY;
+#endif
 
     UiStatusBarFgColor    = UiTextColor;
     UiStatusBarBgColor    = COLOR_BLACK;
@@ -142,12 +156,11 @@ MiniTuiTickProgressBar(
     {
         TuiFillArea(UiProgressBar.Left, UiProgressBar.Bottom,
                     UiProgressBar.Left + FillCount - 1, UiProgressBar.Bottom,
-                    ' ', MINITUI_PROGRESS_FILL_ATTR);
+                    MINITUI_PROGRESS_FILL_CHAR, MINITUI_PROGRESS_FILL_ATTR);
     }
-    /* Draw the remaining track as a lighter solid bar instead of DOS glyphs. */
     TuiFillArea(UiProgressBar.Left + FillCount, UiProgressBar.Bottom,
                 UiProgressBar.Right, UiProgressBar.Bottom,
-                ' ', MINITUI_PROGRESS_REMAINING_ATTR);
+                MINITUI_PROGRESS_REMAINING_CHAR, MINITUI_PROGRESS_REMAINING_ATTR);
 
     TuiUpdateDateTime();
     VideoCopyOffScreenBufferToVRAM();
