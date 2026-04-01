@@ -1333,7 +1333,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
    return WaitStatus;
 }
 
-VOID FASTCALL
+BOOL FASTCALL
 MsqPostMessage(PTHREADINFO pti,
                MSG* Msg,
                BOOLEAN HardwareMessage,
@@ -1349,12 +1349,12 @@ MsqPostMessage(PTHREADINFO pti,
    if ((pti->TIF_flags & TIF_INCLEANUP) || (MessageQueue->QF_flags & QF_INDESTROY))
    {
       ERR("Post Msg; Thread or Q is Dead!\n");
-      return;
+      return FALSE;
    }
 
    Message = MsqCreateMessage(Msg);
    if (!Message)
-      return;
+      return FALSE;
 
    if (Msg->message == WM_HOTKEY)
       MessageBits |= QS_HOTKEY;
@@ -1375,6 +1375,7 @@ MsqPostMessage(PTHREADINFO pti,
 
    MsqWakeQueue(pti, MessageBits, TRUE);
    TRACE("Post Message %d\n", PostMsgCount);
+   return TRUE;
 }
 
 VOID FASTCALL
@@ -2023,6 +2024,8 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
          {
              if (CurrentMessage->pti != NULL && (MessageQueue->idSysPeek == (ULONG_PTR)CurrentMessage))
              {
+               if (msg.message == WM_INPUT)
+                  MessageQueue->CurrentRawInput = (HRAWINPUT)msg.lParam;
                 MsqDestroyMessage(CurrentMessage);
              }
              ClearMsgBitsMask(pti, QS_Flags);
@@ -2201,6 +2204,7 @@ BOOLEAN FASTCALL
 MsqInitializeMessageQueue(PTHREADINFO pti, PUSER_MESSAGE_QUEUE MessageQueue)
 {
    InitializeListHead(&MessageQueue->HardwareMessagesListHead); // Keep here!
+   InitializeListHead(&MessageQueue->RawInputListHead);
    MessageQueue->spwndFocus = NULL;
    MessageQueue->iCursorLevel = 0;
    MessageQueue->CursorObject = SYSTEMCUR(WAIT); // See test_initial_cursor.
@@ -2354,6 +2358,8 @@ MsqCleanupMessageQueue(PTHREADINFO pti)
          ERR("MQ Cleanup Post Messages %p\n",CurrentMessage);
          MsqDestroyMessage(CurrentMessage);
       }
+
+      UserCleanupRawInput(MessageQueue);
    } ////
 
    if (MessageQueue->CursorObject)

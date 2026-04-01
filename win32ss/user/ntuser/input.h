@@ -57,6 +57,7 @@ extern PATTACHINFO gpai;
 
 /* General */
 CODE_SEG("INIT") NTSTATUS NTAPI InitInputImpl(VOID);
+CODE_SEG("INIT") NTSTATUS NTAPI InitRawInputImpl(VOID);
 VOID NTAPI RawInputThreadMain(VOID);
 BOOL FASTCALL IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt);
 NTSTATUS FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
@@ -80,6 +81,14 @@ extern BOOL gbEnableHexNumpad;
 WORD FASTCALL UserGetMouseButtonsState(VOID);
 VOID NTAPI UserProcessMouseInput(PMOUSE_INPUT_DATA pMouseInputData);
 BOOL NTAPI UserSendMouseInput(MOUSEINPUT *pMouseInput, BOOL bInjected);
+HRAWINPUT FASTCALL UserCreateRawInput(PTHREADINFO pti,
+                                      DWORD dwType,
+                                      HANDLE hDevice,
+                                      WPARAM wParam,
+                                      CONST VOID *pData,
+                                      UINT cbData);
+BOOL FASTCALL UserFreeRawInput(PUSER_MESSAGE_QUEUE MessageQueue, HRAWINPUT hRawInput);
+VOID FASTCALL UserCleanupRawInput(PUSER_MESSAGE_QUEUE MessageQueue);
 
 /* IMM */
 UINT FASTCALL IntImmProcessKey(

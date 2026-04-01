@@ -84,20 +84,24 @@ UserRawInputMouseProcess(PMOUSE_INPUT_DATA mid)
             rm.lLastX   = mid->LastX;
             rm.lLastY   = mid->LastY;
 
-            PRAWINPUT rmInput =   EngAllocMem(0, sizeof(RAWINPUT), 'iwar');
-            rmInput->header.dwType = RIM_TYPEMOUSE;
-            rmInput->header.hDevice = (HANDLE)UlongToHandle((ULONG)ghMouseDevice); // Device handle, not used here
-            rmInput->header.wParam = mid->ExtraInformation;
-            rmInput->header.dwSize = sizeof(RAWINPUTHEADER) + sizeof(RAWMOUSE);
-            rmInput->data.mouse = rm;
+            HRAWINPUT hRawInput = UserCreateRawInput(pti,
+                                                     RIM_TYPEMOUSE,
+                                                     ghMouseDevice,
+                                                     RIM_INPUT,
+                                                     &rm,
+                                                     sizeof(rm));
+            if (!hRawInput)
+                return;
+
             Msg.wParam = RIM_INPUT;
-            Msg.lParam = (LPARAM)(rmInput);
+            Msg.lParam = (LPARAM)hRawInput;
             Msg.pt = ptCursor;
             //Msg.time = mid->time;
             Msg.message = WM_INPUT;
             //MessageQueue = pti->MessageQueue;
 
-            MsqPostMessage(pti, &Msg, TRUE, QS_RAWINPUT , 0, 0);
+            if (!MsqPostMessage(pti, &Msg, TRUE, QS_RAWINPUT, 0, 0))
+                UserFreeRawInput(pti->MessageQueue, hRawInput);
         }
     }
 

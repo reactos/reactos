@@ -19,8 +19,126 @@ RIDDevice RIDDevices[2] = {
     { NULL, {0}, 0 }  // Keyboard
 };
 
+typedef struct _USER_RAWINPUT
+{
+    LIST_ENTRY ListEntry;
+    RAWINPUT RawInput;
+} USER_RAWINPUT, *PUSER_RAWINPUT;
+
+static PAGED_LOOKASIDE_LIST gRawInputLookasideList;
 PRAWINPUTDEVICE global_pRawInputDevices = NULL;
 BOOLEAN RawInputEnabled = FALSE;
+
+static
+PUSER_RAWINPUT
+RawInputEntryFromHandle(
+    PUSER_MESSAGE_QUEUE MessageQueue,
+    HRAWINPUT hRawInput)
+{
+    PLIST_ENTRY Entry;
+
+    if (!MessageQueue || !hRawInput)
+        return NULL;
+
+    for (Entry = MessageQueue->RawInputListHead.Flink;
+         Entry != &MessageQueue->RawInputListHead;
+         Entry = Entry->Flink)
+    {
+        PUSER_RAWINPUT RawEntry = CONTAINING_RECORD(Entry, USER_RAWINPUT, ListEntry);
+        if ((HRAWINPUT)&RawEntry->RawInput == hRawInput)
+            return RawEntry;
+    }
+
+    return NULL;
+}
+
+static
+VOID
+RawInputFreeEntry(
+    PUSER_RAWINPUT RawEntry)
+{
+    RemoveEntryList(&RawEntry->ListEntry);
+    ExFreeToPagedLookasideList(&gRawInputLookasideList, RawEntry);
+}
+
+CODE_SEG("INIT")
+NTSTATUS
+NTAPI
+InitRawInputImpl(VOID)
+{
+    ExInitializePagedLookasideList(&gRawInputLookasideList,
+                                   NULL,
+                                   NULL,
+                                   0,
+                                   sizeof(USER_RAWINPUT),
+                                   'iwar',
+                                   256);
+    return STATUS_SUCCESS;
+}
+
+HRAWINPUT
+FASTCALL
+UserCreateRawInput(
+    PTHREADINFO pti,
+    DWORD dwType,
+    HANDLE hDevice,
+    WPARAM wParam,
+    CONST VOID *pData,
+    UINT cbData)
+{
+    PUSER_RAWINPUT RawEntry;
+
+    if (!pti || !pti->MessageQueue || !pData)
+        return NULL;
+
+    RawEntry = ExAllocateFromPagedLookasideList(&gRawInputLookasideList);
+    if (!RawEntry)
+        return NULL;
+
+    RtlZeroMemory(RawEntry, sizeof(*RawEntry));
+    RawEntry->RawInput.header.dwType = dwType;
+    RawEntry->RawInput.header.dwSize = sizeof(RAWINPUTHEADER) + cbData;
+    RawEntry->RawInput.header.hDevice = hDevice;
+    RawEntry->RawInput.header.wParam = wParam;
+    RtlCopyMemory(&RawEntry->RawInput.data, pData, cbData);
+
+    InsertTailList(&pti->MessageQueue->RawInputListHead, &RawEntry->ListEntry);
+    return (HRAWINPUT)&RawEntry->RawInput;
+}
+
+BOOL
+FASTCALL
+UserFreeRawInput(
+    PUSER_MESSAGE_QUEUE MessageQueue,
+    HRAWINPUT hRawInput)
+{
+    PUSER_RAWINPUT RawEntry = RawInputEntryFromHandle(MessageQueue, hRawInput);
+
+    if (!RawEntry)
+        return FALSE;
+
+    if (MessageQueue->CurrentRawInput == hRawInput)
+        MessageQueue->CurrentRawInput = NULL;
+
+    RawInputFreeEntry(RawEntry);
+    return TRUE;
+}
+
+VOID
+FASTCALL
+UserCleanupRawInput(
+    PUSER_MESSAGE_QUEUE MessageQueue)
+{
+    MessageQueue->CurrentRawInput = NULL;
+    while (!IsListEmpty(&MessageQueue->RawInputListHead))
+    {
+        PUSER_RAWINPUT RawEntry;
+        RawEntry = CONTAINING_RECORD(MessageQueue->RawInputListHead.Flink,
+                                     USER_RAWINPUT,
+                                     ListEntry);
+        RawInputFreeEntry(RawEntry);
+    }
+}
 
 VOID
 APIENTRY
@@ -56,6 +174,60 @@ HandleDeviceEnumeration(DWORD type)
     }
 }
 
+static
+DWORD
+RawInputCopyData(
+    PRAWINPUT RawInput,
+    UINT uiCommand,
+    LPVOID pData,
+    PUINT pcbSize,
+    UINT cbSizeHeader)
+{
+    UINT OutputDataSize;
+
+    if (cbSizeHeader != sizeof(RAWINPUTHEADER) || !pcbSize)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return ~0u;
+    }
+
+    switch (uiCommand)
+    {
+        case RID_INPUT:
+            OutputDataSize = RawInput->header.dwSize;
+            break;
+
+        case RID_HEADER:
+            OutputDataSize = sizeof(RAWINPUTHEADER);
+            break;
+
+        default:
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            return ~0u;
+    }
+
+    if (!pData)
+    {
+        *pcbSize = OutputDataSize;
+        EngSetLastError(ERROR_SUCCESS);
+        return 0;
+    }
+
+    if (*pcbSize < OutputDataSize)
+    {
+        *pcbSize = OutputDataSize;
+        EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return ~0u;
+    }
+
+    if (uiCommand == RID_HEADER)
+        RtlCopyMemory(pData, &RawInput->header, OutputDataSize);
+    else
+        RtlCopyMemory(pData, RawInput, OutputDataSize);
+
+    return OutputDataSize;
+}
+
 /* This file is pretty deeply inspired by how wine seems to do it, but wine can't be DIRECTLY used. */
 DWORD
 APIENTRY
@@ -64,13 +236,113 @@ NtUserGetRawInputBuffer(
     PUINT pcbSize,
     UINT cbSizeHeader)
 {
-    if (cbSizeHeader < sizeof(RAWINPUTHEADER) || !pData || !pcbSize)
+    PTHREADINFO pti;
+    PUSER_MESSAGE_QUEUE MessageQueue;
+    PUSER_RAWINPUT RawEntry;
+    PLIST_ENTRY Entry, NextEntry;
+    UINT BufferSize, UsedSize = 0, Count = 0;
+
+    if (cbSizeHeader != sizeof(RAWINPUTHEADER) || !pcbSize)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        return -1;
+        return ~0u;
     }
 
-    return 0;
+    pti = PsGetCurrentThreadWin32Thread();
+    MessageQueue = pti ? pti->MessageQueue : NULL;
+    if (!MessageQueue)
+    {
+        *pcbSize = 0;
+        return 0;
+    }
+
+    if (!pData)
+    {
+        RawEntry = RawInputEntryFromHandle(MessageQueue, MessageQueue->CurrentRawInput);
+        if (RawEntry)
+        {
+            *pcbSize = RawEntry->RawInput.header.dwSize;
+            EngSetLastError(ERROR_SUCCESS);
+            return 0;
+        }
+
+        Entry = MessageQueue->HardwareMessagesListHead.Flink;
+        while (Entry != &MessageQueue->HardwareMessagesListHead)
+        {
+            PUSER_MESSAGE Message = CONTAINING_RECORD(Entry, USER_MESSAGE, ListEntry);
+            if (Message->Msg.message == WM_INPUT)
+            {
+                RawEntry = RawInputEntryFromHandle(MessageQueue, (HRAWINPUT)Message->Msg.lParam);
+                *pcbSize = RawEntry ? RawEntry->RawInput.header.dwSize : 0;
+                EngSetLastError(ERROR_SUCCESS);
+                return 0;
+            }
+            Entry = Entry->Flink;
+        }
+
+        *pcbSize = 0;
+        return 0;
+    }
+
+    BufferSize = *pcbSize;
+    RawEntry = RawInputEntryFromHandle(MessageQueue, MessageQueue->CurrentRawInput);
+    if (RawEntry)
+    {
+        UINT RawSize = RawEntry->RawInput.header.dwSize;
+
+        if (UsedSize + RawSize > BufferSize)
+        {
+            *pcbSize = RawSize;
+            EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return ~0u;
+        }
+
+        RtlCopyMemory((PBYTE)pData + UsedSize, &RawEntry->RawInput, RawSize);
+        UsedSize += RawSize;
+        Count++;
+        MessageQueue->CurrentRawInput = NULL;
+        RawInputFreeEntry(RawEntry);
+    }
+
+    Entry = MessageQueue->HardwareMessagesListHead.Flink;
+    while (Entry != &MessageQueue->HardwareMessagesListHead)
+    {
+        PUSER_MESSAGE Message;
+        UINT RawSize;
+
+        NextEntry = Entry->Flink;
+        Message = CONTAINING_RECORD(Entry, USER_MESSAGE, ListEntry);
+        Entry = NextEntry;
+
+        if (Message->Msg.message != WM_INPUT)
+            continue;
+
+        RawEntry = RawInputEntryFromHandle(MessageQueue, (HRAWINPUT)Message->Msg.lParam);
+        if (!RawEntry)
+            continue;
+
+        RawSize = RawEntry->RawInput.header.dwSize;
+        if (UsedSize + RawSize > BufferSize)
+        {
+            if (Count == 0)
+            {
+                *pcbSize = RawSize;
+                EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return ~0u;
+            }
+            break;
+        }
+
+        RtlCopyMemory((PBYTE)pData + UsedSize, &RawEntry->RawInput, RawSize);
+        UsedSize += RawSize;
+        Count++;
+
+        ClearMsgBitsMask(pti, Message->QS_Flags);
+        MsqDestroyMessage(Message);
+        RawInputFreeEntry(RawEntry);
+    }
+
+    return Count;
 }
 
 DWORD
@@ -82,44 +354,32 @@ NtUserGetRawInputData(
     PUINT pcbSize,
     UINT cbSizeHeader)
 {
-    PRAWINPUT RawInput = (PRAWINPUT)hRawInput;
-    ULONG OutputDataSize;
-    if (RawInput->header.dwType  == RIM_TYPEMOUSE)
+    PTHREADINFO pti;
+    PUSER_MESSAGE_QUEUE MessageQueue;
+    PUSER_RAWINPUT RawEntry;
+
+    if (cbSizeHeader != sizeof(RAWINPUTHEADER) || !pcbSize)
     {
-        OutputDataSize = sizeof(RAWINPUTHEADER) + sizeof(RAWMOUSE) - sizeof(*pcbSize);
-        RawInput->header.dwType = RIM_TYPEMOUSE; // Assume mouse for now.
-        RawInput->header.hDevice = (HANDLE)UlongToHandle((ULONG)0xFFFF); // Device handle, not used here
-        RawInput->header.wParam = RIM_INPUT ; // No wParam, not used here.
-        RawInput->header.dwSize = OutputDataSize; // Size of the output data.
-    
-    }
-    else if (RawInput->header.dwType == RIM_TYPEKEYBOARD)
-    {
-        OutputDataSize = sizeof(RAWINPUTHEADER) + sizeof(RAWKEYBOARD) - sizeof(*pcbSize);
-        RawInput->header.dwType = RIM_TYPEKEYBOARD; // Assume keyboard for now.
-        RawInput->header.hDevice = (HANDLE)UlongToHandle((ULONG)0xFFFC); // Device handle, not used here
-        RawInput->header.wParam = RIM_INPUT ; // No wParam, not used here.
-        RawInput->header.dwSize = OutputDataSize; // Size of the output data.
-        DPRINT("RawINput Keyboard Info: keyboard.MakeCode: %d, keyboard.Flags: %d, keyboard.VKey: %d\n",
-                RawInput->data.keyboard.MakeCode,
-                RawInput->data.keyboard.Flags,
-                RawInput->data.keyboard.VKey);
-    }
-    else
-    {
-        DPRINT1("Unknown raw input type %d\n", RawInput->header.dwType);
         EngSetLastError(ERROR_INVALID_PARAMETER);
+        return ~0u;
     }
 
-    if (!pData)
+    if (!hRawInput)
     {
-        *pcbSize = OutputDataSize;
-        EngSetLastError(ERROR_SUCCESS);
-        return S_OK; // Return the size needed.
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return ~0u;
     }
-    RtlCopyMemory(pData, RawInput, OutputDataSize);
-    EngFreeMem(RawInput); // Free the memory allocated in keyboard.c or mouse.c
-    return OutputDataSize;
+
+    pti = PsGetCurrentThreadWin32Thread();
+    MessageQueue = pti ? pti->MessageQueue : NULL;
+    RawEntry = RawInputEntryFromHandle(MessageQueue, hRawInput);
+    if (!RawEntry)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return ~0u;
+    }
+
+    return RawInputCopyData(&RawEntry->RawInput, uiCommand, pData, pcbSize, cbSizeHeader);
 }
 
 RIDDevice

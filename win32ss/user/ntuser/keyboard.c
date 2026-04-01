@@ -1454,20 +1454,24 @@ UserRawInputProcessKeyboardInput(
             }
 
             kb.ExtraInformation = pKbdInputData->ExtraInformation;
-            PRAWINPUT rmInput = EngAllocMem(0, sizeof(RAWINPUT), 'iwar');
-            rmInput->header.dwType = RIM_TYPEKEYBOARD;
-            rmInput->header.hDevice = (HANDLE)UlongToHandle((ULONG)ghKeyboardDevice);
-            rmInput->header.wParam = pKbdInputData->ExtraInformation;
-            rmInput->header.dwSize = sizeof(RAWINPUTHEADER) + sizeof(RAWKEYBOARD);
-            rmInput->data.keyboard  = kb;
+            HRAWINPUT hRawInput = UserCreateRawInput(pti,
+                                                     RIM_TYPEKEYBOARD,
+                                                     ghKeyboardDevice,
+                                                     RIM_INPUT,
+                                                     &kb,
+                                                     sizeof(kb));
+            if (!hRawInput)
+                return;
+
             Msg.wParam = RIM_INPUT;
-            Msg.lParam = (LPARAM)(rmInput);
+            Msg.lParam = (LPARAM)hRawInput;
             Msg.pt = ptCursor;
             //Msg.time = mid->time;
             Msg.message = WM_INPUT;
 
             //MessageQueue = pti->MessageQueue;
-            MsqPostMessage(pti, &Msg, TRUE, QS_RAWINPUT , 0, 0);
+            if (!MsqPostMessage(pti, &Msg, TRUE, QS_RAWINPUT, 0, 0))
+                UserFreeRawInput(pti->MessageQueue, hRawInput);
         }
     }
 }
