@@ -101,9 +101,8 @@ HalInitSystem(
         HalBootViaEfi = LoaderBlock->FirmwareInformation.FirmwareTypeEfi;
 #else
         HalBootViaEfi = FALSE;
-        ASSERT(LoaderBlock->Extension != NULL);
-
 #ifdef __REACTOS__
+        ASSERT(LoaderBlock->Extension != NULL);
         if (LoaderBlock->Extension->Size >= FIELD_OFFSET(LOADER_PARAMETER_EXTENSION, LoaderPerformanceData))
             HalBootViaEfi = LoaderBlock->Extension->BootViaEFI;
 #endif
