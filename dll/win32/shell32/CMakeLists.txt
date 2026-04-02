@@ -4,8 +4,11 @@ add_subdirectory(shelldesktop)
 add_subdirectory(shellmenu)
 add_subdirectory(shellrecyclebin)
 
-spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
-
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    spec2def(shell32.dll shell32_vista.spec ADD_IMPORTLIB)
+else()
+    spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
+endif()
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
