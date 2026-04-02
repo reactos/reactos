@@ -1201,6 +1201,7 @@ typedef enum _CSIDL_Type {
     CSIDL_Type_WindowsPath,
     CSIDL_Type_SystemPath,
     CSIDL_Type_SystemX86Path,
+    CSIDL_Type_ProgramData
 } CSIDL_Type;
 
 /* Cannot use #if _WIN32_WINNT >= 0x0600 because _WIN32_WINNT == 0x0600 here. */

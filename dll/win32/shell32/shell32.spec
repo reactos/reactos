@@ -271,6 +271,7 @@
 660 stdcall -noname FileIconInit(long)
 680 stdcall IsUserAnAdmin()
 681 stdcall -noname SHGetAppCompatFlags(long) shlwapi.SHGetAppCompatFlags
+682 stdcall -stub -version=0x601+ StgMakeUniqueName(ptr wstr long ptr ptr)
 683 stub -noname SHStgOpenStorageW
 684 stub -noname SHStgOpenStorageA
 685 stdcall SHPropStgCreate(ptr ptr ptr long long long ptr ptr)
