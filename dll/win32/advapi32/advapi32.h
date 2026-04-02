@@ -44,8 +44,11 @@
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#include <wine/exception.h>
 
 #include "wine/crypt.h"
+
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 #ifndef HAS_FN_PROGRESSW
 #define FN_PROGRESSW FN_PROGRESS
