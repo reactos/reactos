@@ -1,6 +1,0 @@
-LIBRARY notifyhook.dll
-EXPORTS
-DeinstallNotifyHook
-GetWindowModulePath
-GetWindowModulePathCopyData
-InstallNotifyHook
