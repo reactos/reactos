@@ -197,7 +197,9 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
             /* Release the thread lock */
             KiReleaseThreadLock(WaitThread);
 
-            /* FIXME: Boosting */
+            /* Request priority boosting from the signaling thread */
+            WaitThread->AdjustIncrement = KeGetCurrentThread()->Priority;
+            WaitThread->AdjustReason = AdjustBoost;
 
             /* Check if we have a queue */
             if (WaitThread->Queue)
