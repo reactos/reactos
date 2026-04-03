@@ -142,7 +142,7 @@ void read_fat(DOS_FS * fs)
 		if (get_key("12", "?") == '1') {
 #ifdef __REACTOS__
             if (rw)
-                fs_write(fs->fat_start + fs->fat_size, eff_size, first)
+                fs_write(fs->fat_start + fs->fat_size, eff_size, first);
 #else
 		    fs_write(fs->fat_start + fs->fat_size, eff_size, first);
 #endif
