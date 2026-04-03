@@ -120,8 +120,10 @@ void read_fat(DOS_FS * fs)
 	    printf("FATs differ - using first FAT.\n");
 #ifdef __REACTOS__
         if (rw)
-#endif
+            fs_write(fs->fat_start + fs->fat_size, eff_size, first);
+#else
 	    fs_write(fs->fat_start + fs->fat_size, eff_size, first);
+#endif
 	}
 	if (!first_ok && second_ok) {
 	    printf("FATs differ - using second FAT.\n");
@@ -140,13 +142,17 @@ void read_fat(DOS_FS * fs)
 		if (get_key("12", "?") == '1') {
 #ifdef __REACTOS__
             if (rw)
-#endif
+                fs_write(fs->fat_start + fs->fat_size, eff_size, first)
+#else
 		    fs_write(fs->fat_start + fs->fat_size, eff_size, first);
+#endif
 		} else {
 #ifdef __REACTOS__
             if (rw)
-#endif
+                fs_write(fs->fat_start, eff_size, second);
+#else
 		    fs_write(fs->fat_start, eff_size, second);
+#endif
 		    memcpy(first, second, eff_size);
 		}
 	    } else {
@@ -154,8 +160,10 @@ void read_fat(DOS_FS * fs)
 		       "FAT.\n");
 #ifdef __REACTOS__
         if (rw)
-#endif
+            fs_write(fs->fat_start + fs->fat_size, eff_size, first);
+#else
 		fs_write(fs->fat_start + fs->fat_size, eff_size, first);
+#endif
 	    }
 	}
 	if (!first_ok && !second_ok) {
@@ -540,8 +548,10 @@ void reclaim_file(DOS_FS * fs)
 	    }
 #ifdef __REACTOS__
         if (rw)
-#endif
+            fs_write(offset, sizeof(DIR_ENT), &de);
+#else
 	    fs_write(offset, sizeof(DIR_ENT), &de);
+#endif
 	}
     if (reclaimed)
 	printf("Reclaimed %d unused cluster%s (%llu bytes) in %d chain%s.\n",
@@ -583,8 +593,10 @@ uint32_t update_free(DOS_FS * fs)
 	    else
 #ifdef __REACTOS__
 	    if (rw)
-#endif
+            printf("  Auto-correcting.\n");
+#else
 		printf("  Auto-correcting.\n");
+#endif
 #ifndef __REACTOS__
 	    if (!interactive || get_key("12", "?") == '1')
 #else
@@ -609,6 +621,11 @@ uint32_t update_free(DOS_FS * fs)
 	fs->free_clusters = free;
 #ifdef __REACTOS__
     if (rw)
+        fs_write(fs->fsinfo_start + offsetof(struct info_sector, free_clusters),
+            sizeof(le_free), &le_free);
+#else
+	fs_write(fs->fsinfo_start + offsetof(struct info_sector, free_clusters),
+		 sizeof(le_free), &le_free);
 #endif
 	fs_write(fs->fsinfo_start + offsetof(struct info_sector, free_clusters),
 		 sizeof(le_free), &le_free);
