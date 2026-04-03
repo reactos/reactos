@@ -551,9 +551,10 @@ VfatChkdsk(
     {
         DriveLetter[0] = DriveRoot->Buffer[4] & 0x5F; // 0x5f for Uppercase letter
         VfatPrint("Chkdsk complete for Volume %S.\n", DriveLetter);
-        VfatPrint("%u files on disk.\n", FsCheckTotalFiles);
-        VfatPrint("%lu total clusters on the disk.\n", fs.data_clusters);
-        VfatPrint("%lu clusters available on the disk.\n", free_clusters);
+        VfatPrint("%10u files on disk.\n\n", FsCheckTotalFiles);
+        VfatPrint("%10u bytes per cluster\n", fs.cluster_size);
+        VfatPrint("%10lu total clusters on the disk.\n", fs.data_clusters);
+        VfatPrint("%10lu clusters available on the disk.\n", free_clusters);
     }
     else
         VfatPrint("%wZ: %u files, %lu/%lu clusters\n", DriveRoot,
