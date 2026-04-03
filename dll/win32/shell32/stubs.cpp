@@ -35,14 +35,47 @@ SHReValidateDarwinCache(VOID)
 }
 
 /*
- * Unimplemented
+ * @implemented
  */
 EXTERN_C FILEDESCRIPTOR*
 WINAPI
 GetFileDescriptor(FILEGROUPDESCRIPTOR *pFileGroupDesc, BOOL bUnicode, INT iIndex, LPWSTR lpName)
 {
-    FIXME("GetFileDescriptor() stub\n");
-    return NULL;
+    TRACE("GetFileDescriptor(%p, %d, %d, %p)\n", pFileGroupDesc, bUnicode, iIndex, lpName);
+
+    if (!pFileGroupDesc)
+    {
+        ERR("pFileGroupDesc is NULL\n");
+        return NULL;
+    }
+
+    /* cItems is at offset 0 and it's safe to read before branching */
+    if (iIndex < 0 ||(UINT)iIndex >= pFileGroupDesc->cItems)
+    {
+        ERR("iIndex %d out of bounds (cItems=%u)\n", iIndex, pFileGroupDesc->cItems);
+        return NULL;
+    }
+
+    if (bUnicode)
+    {
+        FILEGROUPDESCRIPTORW *pGroupW = (FILEGROUPDESCRIPTOR *)pFileGroupDesc;
+        FILEDESCRIPTORW *pDescW = &pGroupW->fgd[iIndex];
+
+        if (lpName)
+            lstrcpyW(lpName, pDescW->cFileName);
+
+        return (FILEDESCRIPTOR *)pDescW;
+    }
+    else
+    {
+        FILEGROUPDESCRIPTORA *pGroupA = (FILEGROUPDESCRIPTORA *)pFileGroupDesc;
+        FILEDESCRIPTORA *pDescA = &pGroupA->fgd[iIndex];
+
+        if (lpName)
+            MultiByteToWideChar(CP_ACP, 0, pDescA->cFileName, -1, lpName, MAX_PATH);
+
+        return (FILEDESCRIPTOR *)pDescA;
+    }
 }
 
 /*
