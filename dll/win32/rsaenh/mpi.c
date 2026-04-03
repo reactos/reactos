@@ -29,9 +29,10 @@
  */
 
 #include <stdarg.h>
+#include <stdlib.h>
 
-#include <windef.h>
-#include <winbase.h>
+#include "windef.h"
+#include "winbase.h"
 #include "tomcrypt.h"
 
 /* Known optimal configurations
@@ -119,7 +120,7 @@ static int mp_grow (mp_int * a, int size)
      * in case the operation failed we don't want
      * to overwrite the dp member of a.
      */
-    tmp = HeapReAlloc(GetProcessHeap(), 0, a->dp, sizeof (mp_digit) * size);
+    tmp = realloc(a->dp, sizeof (mp_digit) * size);
     if (tmp == NULL) {
       /* reallocation failed but "a" is still valid [can be freed] */
       return MP_MEM;
@@ -204,7 +205,7 @@ static int mp_init (mp_int * a)
   int i;
 
   /* allocate memory required and clear it */
-  a->dp = HeapAlloc(GetProcessHeap(), 0, sizeof (mp_digit) * MP_PREC);
+  a->dp = malloc(sizeof (mp_digit) * MP_PREC);
   if (a->dp == NULL) {
     return MP_MEM;
   }
@@ -232,7 +233,7 @@ static int mp_init_size (mp_int * a, int size)
   size += (MP_PREC * 2) - (size % MP_PREC);
 
   /* alloc mem */
-  a->dp = HeapAlloc(GetProcessHeap(), 0, sizeof (mp_digit) * size);
+  a->dp = malloc(sizeof (mp_digit) * size);
   if (a->dp == NULL) {
     return MP_MEM;
   }
@@ -264,7 +265,7 @@ mp_clear (mp_int * a)
     }
 
     /* free ram */
-    HeapFree(GetProcessHeap(), 0, a->dp);
+    free(a->dp);
 
     /* reset members to make debugging easier */
     a->dp    = NULL;
@@ -1009,7 +1010,7 @@ mp_add_d (mp_int * a, mp_digit b, mp_int * c)
 /* trim unused digits 
  *
  * This is used to ensure that leading zero digits are
- * trimed and the leading "used" digit will be non-zero
+ * trimmed and the leading "used" digit will be non-zero
  * Typically very fast.  Also fixes the sign if there
  * are no more leading digits
  */
@@ -1029,7 +1030,7 @@ mp_clamp (mp_int * a)
   }
 }
 
-void mp_clear_multi(mp_int *mp, ...) 
+void mp_clear_multi(mp_int *mp, ...)
 {
     mp_int* next_mp = mp;
     va_list args;
@@ -2351,7 +2352,7 @@ int mp_init_copy (mp_int * a, const mp_int * b)
   return mp_copy (b, a);
 }
 
-int mp_init_multi(mp_int *mp, ...) 
+int mp_init_multi(mp_int *mp, ...)
 {
     mp_err res = MP_OKAY;      /* Assume ok until proven otherwise */
     int n = 0;                 /* Number of ok inits */
@@ -2365,11 +2366,8 @@ int mp_init_multi(mp_int *mp, ...)
                succeeded in init-ing, then return error.
             */
             va_list clean_args;
-            
-            /* end the current list */
-            va_end(args);
-            
-            /* now start cleaning up */            
+
+            /* now start cleaning up */
             cur_arg = mp;
             va_start(clean_args, mp);
             while (n--) {
@@ -3381,9 +3379,9 @@ static const struct {
 /* returns # of RM trials required for a given bit size */
 int mp_prime_rabin_miller_trials(int size)
 {
-   int x;
+   unsigned int x;
 
-   for (x = 0; x < (int)(sizeof(sizes)/(sizeof(sizes[0]))); x++) {
+   for (x = 0; x < ARRAY_SIZE(sizes); x++) {
        if (sizes[x].k == size) {
           return sizes[x].t;
        } else if (sizes[x].k > size) {
@@ -3428,7 +3426,7 @@ int mp_prime_random_ex(mp_int *a, int t, int size, int flags, ltm_prime_callback
    bsize = (size>>3)+((size&7)?1:0);
 
    /* we need a buffer of bsize bytes */
-   tmp = HeapAlloc(GetProcessHeap(), 0, bsize);
+   tmp = malloc(bsize);
    if (tmp == NULL) {
       return MP_MEM;
    }
@@ -3493,7 +3491,7 @@ int mp_prime_random_ex(mp_int *a, int t, int size, int flags, ltm_prime_callback
 
    err = MP_OKAY;
 error:
-   HeapFree(GetProcessHeap(), 0, tmp);
+   free(tmp);
    return err;
 }
 
@@ -3715,7 +3713,7 @@ int mp_shrink (mp_int * a)
 {
   mp_digit *tmp;
   if (a->alloc != a->used && a->used > 0) {
-    if ((tmp = HeapReAlloc(GetProcessHeap(), 0, a->dp, sizeof (mp_digit) * a->used)) == NULL) {
+    if ((tmp = realloc(a->dp, sizeof (mp_digit) * a->used)) == NULL) {
       return MP_MEM;
     }
     a->dp    = tmp;

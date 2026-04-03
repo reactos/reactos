@@ -24,44 +24,10 @@
 #ifndef __WINE_IMPLGLUE_H
 #define __WINE_IMPLGLUE_H
 
+#include "bcrypt.h"
 #include "tomcrypt.h"
-#include "sha2.h"
 
-/* Next typedef copied from dlls/advapi32/crypt_md4.c */
-typedef struct tagMD4_CTX {
-    unsigned int buf[4];
-    unsigned int i[2];
-    unsigned char in[64];
-    unsigned char digest[16];
-} MD4_CTX;
-
-/* Next typedef copied from dlls/advapi32/crypt_md5.c */
-typedef struct tagMD5_CTX
-{
-    unsigned int i[2];
-    unsigned int buf[4];
-    unsigned char in[64];
-    unsigned char digest[16];
-} MD5_CTX;
-
-/* Next typedef copied form dlls/advapi32/crypt_sha.c */
-typedef struct tagSHA_CTX
-{
-    ULONG Unknown[6];
-    ULONG State[5];
-    ULONG Count[2];
-    UCHAR Buffer[64];
-} SHA_CTX, *PSHA_CTX;
-
-typedef union tagHASH_CONTEXT {
-    md2_state md2;
-    MD4_CTX md4;
-    MD5_CTX md5;
-    SHA_CTX sha;
-    SHA256_CTX sha256;
-    SHA384_CTX sha384;
-    SHA512_CTX sha512;
-} HASH_CONTEXT;
+#define RSAENH_MAX_HASH_SIZE        104
 
 typedef union tagKEY_CONTEXT {
     rc2_key rc2;
@@ -72,34 +38,32 @@ typedef union tagKEY_CONTEXT {
     rsa_key rsa;
 } KEY_CONTEXT;
 
-BOOL init_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext) DECLSPEC_HIDDEN;
-BOOL update_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, const BYTE *pbData,
-                      DWORD dwDataLen) DECLSPEC_HIDDEN;
-BOOL finalize_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, BYTE *pbHashValue) DECLSPEC_HIDDEN;
-BOOL duplicate_hash_impl(ALG_ID aiAlgid, const HASH_CONTEXT *pSrcHashContext,
-                         HASH_CONTEXT *pDestHashContext) DECLSPEC_HIDDEN;
+BOOL init_hash_impl(ALG_ID aiAlgid, BCRYPT_HASH_HANDLE *hash_handle);
+BOOL update_hash_impl(BCRYPT_HASH_HANDLE hash_handle, const BYTE *pbData, DWORD dwDataLen);
+BOOL finalize_hash_impl(BCRYPT_HASH_HANDLE hash_handle, BYTE *hash_value, DWORD hash_size);
+BOOL duplicate_hash_impl(BCRYPT_HASH_HANDLE src_hash_handle, BCRYPT_HASH_HANDLE *dest_hash_handle);
 
-BOOL new_key_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen) DECLSPEC_HIDDEN;
-BOOL free_key_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext) DECLSPEC_HIDDEN;
+BOOL new_key_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen);
+BOOL free_key_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext);
 BOOL setup_key_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
-                    DWORD dwEffectiveKeyLen, DWORD dwSaltLen, BYTE *abKeyValue) DECLSPEC_HIDDEN;
+                    DWORD dwEffectiveKeyLen, DWORD dwSaltLen, BYTE *abKeyValue);
 BOOL duplicate_key_impl(ALG_ID aiAlgid, const KEY_CONTEXT *pSrcKeyContext,
-                        KEY_CONTEXT *pDestKeyContext) DECLSPEC_HIDDEN;
+                        KEY_CONTEXT *pDestKeyContext);
 
 /* dwKeySpec is optional for symmetric key algorithms */
 BOOL encrypt_block_impl(ALG_ID aiAlgid, DWORD dwKeySpec, KEY_CONTEXT *pKeyContext, const BYTE *pbIn,
-                        BYTE *pbOut, DWORD enc) DECLSPEC_HIDDEN;
-BOOL encrypt_stream_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext, BYTE *pbInOut, DWORD dwLen) DECLSPEC_HIDDEN;
+                        BYTE *pbOut, DWORD enc);
+BOOL encrypt_stream_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext, BYTE *pbInOut, DWORD dwLen);
 
 BOOL export_public_key_impl(BYTE *pbDest, const KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
-                            DWORD *pdwPubExp) DECLSPEC_HIDDEN;
+                            DWORD *pdwPubExp);
 BOOL import_public_key_impl(const BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
-                            DWORD dwPubExp) DECLSPEC_HIDDEN;
+                            DWORD dwPubExp);
 BOOL export_private_key_impl(BYTE *pbDest, const KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
-                             DWORD *pdwPubExp) DECLSPEC_HIDDEN;
+                             DWORD *pdwPubExp);
 BOOL import_private_key_impl(const BYTE* pbSrc, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
-                             DWORD dwDataLen, DWORD dwPubExp) DECLSPEC_HIDDEN;
+                             DWORD dwDataLen, DWORD dwPubExp);
 
-BOOL gen_rand_impl(BYTE *pbBuffer, DWORD dwLen) DECLSPEC_HIDDEN;
+BOOL gen_rand_impl(BYTE *pbBuffer, DWORD dwLen);
 
 #endif /* __WINE_IMPLGLUE_H */

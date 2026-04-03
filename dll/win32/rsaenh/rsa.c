@@ -29,6 +29,7 @@
  */
 
 #include "tomcrypt.h"
+#include "windef.h"
 
 static const struct {
     int mpi_code, ltc_code;
@@ -41,9 +42,9 @@ static const struct {
 /* convert a MPI error to a LTC error (Possibly the most powerful function ever!  Oh wait... no) */
 static int mpi_to_ltc_error(int err)
 {
-   int x;
+   unsigned int x;
 
-   for (x = 0; x < (int)(sizeof(mpi_to_ltc_codes)/sizeof(mpi_to_ltc_codes[0])); x++) {
+   for (x = 0; x < ARRAY_SIZE(mpi_to_ltc_codes); x++) {
        if (err == mpi_to_ltc_codes[x].mpi_code) { 
           return mpi_to_ltc_codes[x].ltc_code;
        }

@@ -21,161 +21,65 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
 
-#include <config.h>
-
-//#include "wine/port.h"
-#include <wine/library.h>
-
-//#include "windef.h"
-#include <wincrypt.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wincrypt.h"
 
 #include "implglue.h"
 
-//#include <stdio.h>
-
-/* Function prototypes copied from dlls/advapi32/crypt_md4.c */
-VOID WINAPI MD4Init( MD4_CTX *ctx );
-VOID WINAPI MD4Update( MD4_CTX *ctx, const unsigned char *buf, unsigned int len );
-VOID WINAPI MD4Final( MD4_CTX *ctx );
-/* Function prototypes copied from dlls/advapi32/crypt_md5.c */
-VOID WINAPI MD5Init( MD5_CTX *ctx );
-VOID WINAPI MD5Update( MD5_CTX *ctx, const unsigned char *buf, unsigned int len );
-VOID WINAPI MD5Final( MD5_CTX *ctx );
-/* Function prototypes copied from dlls/advapi32/crypt_sha.c */
-VOID WINAPI A_SHAInit(PSHA_CTX Context);
-VOID WINAPI A_SHAUpdate(PSHA_CTX Context, const unsigned char *Buffer, UINT BufferSize);
-VOID WINAPI A_SHAFinal(PSHA_CTX Context, PULONG Result);
 /* Function prototype copied from dlls/advapi32/crypt.c */
 BOOL WINAPI SystemFunction036(PVOID pbBuffer, ULONG dwLen);
-        
-BOOL init_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext) 
-{
-    switch (aiAlgid) 
-    {
-        case CALG_MD2:
-            md2_init(&pHashContext->md2);
-            break;
-        
-        case CALG_MD4:
-            MD4Init(&pHashContext->md4);
-            break;
-        
-        case CALG_MD5:
-            MD5Init(&pHashContext->md5);
-            break;
-        
-        case CALG_SHA:
-            A_SHAInit(&pHashContext->sha);
-            break;
 
-        case CALG_SHA_256:
-            SHA256_Init(&pHashContext->sha256);
-            break;
-
-        case CALG_SHA_384:
-            SHA384_Init(&pHashContext->sha384);
-            break;
-
-        case CALG_SHA_512:
-            SHA512_Init(&pHashContext->sha512);
-            break;
-    }
-
-    return TRUE;
-}
-
-BOOL update_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, const BYTE *pbData,
-                      DWORD dwDataLen) 
+BOOL init_hash_impl(ALG_ID aiAlgid, BCRYPT_HASH_HANDLE *hash_handle)
 {
     switch (aiAlgid)
     {
-        case CALG_MD2:
-            md2_process(&pHashContext->md2, pbData, dwDataLen);
-            break;
-        
-        case CALG_MD4:
-            MD4Update(&pHashContext->md4, pbData, dwDataLen);
-            break;
-    
-        case CALG_MD5:
-            MD5Update(&pHashContext->md5, pbData, dwDataLen);
-            break;
-        
-        case CALG_SHA:
-            A_SHAUpdate(&pHashContext->sha, pbData, dwDataLen);
-            break;
-        
-        case CALG_SHA_256:
-            SHA256_Update(&pHashContext->sha256, pbData, dwDataLen);
-            break;
+    case CALG_MD2:
+        return !BCryptCreateHash(BCRYPT_MD2_ALG_HANDLE, hash_handle, NULL, 0, NULL, 0, 0);
 
-        case CALG_SHA_384:
-            SHA384_Update(&pHashContext->sha384, pbData, dwDataLen);
-            break;
+    case CALG_MD4:
+        return !BCryptCreateHash(BCRYPT_MD4_ALG_HANDLE, hash_handle, NULL, 0, NULL, 0, 0);
 
-        case CALG_SHA_512:
-            SHA512_Update(&pHashContext->sha512, pbData, dwDataLen);
-            break;
+    case CALG_MD5:
+        return !BCryptCreateHash(BCRYPT_MD5_ALG_HANDLE, hash_handle, NULL, 0, NULL, 0, 0);
 
-        default:
-            SetLastError(NTE_BAD_ALGID);
-            return FALSE;
+    case CALG_SHA:
+        return !BCryptCreateHash(BCRYPT_SHA1_ALG_HANDLE, hash_handle, NULL, 0, NULL, 0, 0);
+
+    case CALG_SHA_256:
+        return !BCryptCreateHash(BCRYPT_SHA256_ALG_HANDLE, hash_handle, NULL, 0, NULL, 0, 0);
+
+    case CALG_SHA_384:
+        return !BCryptCreateHash(BCRYPT_SHA384_ALG_HANDLE, hash_handle, NULL, 0, NULL, 0, 0);
+
+    case CALG_SHA_512:
+        return !BCryptCreateHash(BCRYPT_SHA512_ALG_HANDLE, hash_handle, NULL, 0, NULL, 0, 0);
+
+    default:
+        return TRUE;
     }
+}
 
+BOOL update_hash_impl(BCRYPT_HASH_HANDLE hash_handle, const BYTE *pbData, DWORD dwDataLen)
+{
+    BCryptHashData(hash_handle, (UCHAR*)pbData, dwDataLen, 0);
     return TRUE;
 }
 
-BOOL finalize_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, BYTE *pbHashValue) 
+BOOL finalize_hash_impl(BCRYPT_HASH_HANDLE hash_handle, BYTE *hash_value, DWORD hash_size)
 {
-    switch (aiAlgid)
-    {
-        case CALG_MD2:
-            md2_done(&pHashContext->md2, pbHashValue);
-            break;
-        
-        case CALG_MD4:
-            MD4Final(&pHashContext->md4);
-            memcpy(pbHashValue, pHashContext->md4.digest, 16);
-            break;
-        
-        case CALG_MD5:
-            MD5Final(&pHashContext->md5);
-            memcpy(pbHashValue, pHashContext->md5.digest, 16);
-            break;
-        
-        case CALG_SHA:
-            A_SHAFinal(&pHashContext->sha, (PULONG)pbHashValue);
-            break;
-        
-        case CALG_SHA_256:
-            SHA256_Final(pbHashValue, &pHashContext->sha256);
-            break;
-
-        case CALG_SHA_384:
-            SHA384_Final(pbHashValue, &pHashContext->sha384);
-            break;
-
-        case CALG_SHA_512:
-            SHA512_Final(pbHashValue, &pHashContext->sha512);
-            break;
-
-        default:
-            SetLastError(NTE_BAD_ALGID);
-            return FALSE;
-    }
-
+    BCryptFinishHash(hash_handle, hash_value, hash_size, 0);
+    BCryptDestroyHash(hash_handle);
     return TRUE;
 }
 
-BOOL duplicate_hash_impl(ALG_ID aiAlgid, const HASH_CONTEXT *pSrcHashContext,
-                         HASH_CONTEXT *pDestHashContext) 
+BOOL duplicate_hash_impl(BCRYPT_HASH_HANDLE src_hash_handle, BCRYPT_HASH_HANDLE *dest_hash_handle)
 {
-    *pDestHashContext = *pSrcHashContext;
-
-    return TRUE;
+    return !BCryptDuplicateHash(src_hash_handle, dest_hash_handle, NULL, 0, 0);
 }
 
 BOOL new_key_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen) 
@@ -354,7 +258,7 @@ BOOL encrypt_block_impl(ALG_ID aiAlgid, DWORD dwKeySpec, KEY_CONTEXT *pKeyContex
                 }
                 reverse_bytes(out, outlen);
             } else {
-                in_reversed = HeapAlloc(GetProcessHeap(), 0, inlen);
+                in_reversed = malloc(inlen);
                 if (!in_reversed) {
                     SetLastError(NTE_NO_MEMORY);
                     return FALSE;
@@ -362,11 +266,11 @@ BOOL encrypt_block_impl(ALG_ID aiAlgid, DWORD dwKeySpec, KEY_CONTEXT *pKeyContex
                 memcpy(in_reversed, in, inlen);
                 reverse_bytes(in_reversed, inlen);
                 if (rsa_exptmod(in_reversed, inlen, out, &outlen, dwKeySpec, &pKeyContext->rsa) != CRYPT_OK) {
-                    HeapFree(GetProcessHeap(), 0, in_reversed);
+                    free(in_reversed);
                     SetLastError(NTE_FAIL);
                     return FALSE;
                 }
-                HeapFree(GetProcessHeap(), 0, in_reversed);
+                free(in_reversed);
             }
             break;
 
@@ -422,14 +326,14 @@ BOOL import_public_key_impl(const BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD d
         return FALSE;
     }
 
-    pbTemp = HeapAlloc(GetProcessHeap(), 0, dwKeyLen);
+    pbTemp = malloc(dwKeyLen);
     if (!pbTemp) return FALSE;
     memcpy(pbTemp, pbSrc, dwKeyLen);
     
     pKeyContext->rsa.type = PK_PUBLIC;
     reverse_bytes(pbTemp, dwKeyLen);
     mp_read_unsigned_bin(&pKeyContext->rsa.N, pbTemp, dwKeyLen);
-    HeapFree(GetProcessHeap(), 0, pbTemp);
+    free(pbTemp);
     mp_set_int(&pKeyContext->rsa.e, dwPubExp);
 
     return TRUE;    
@@ -497,7 +401,7 @@ BOOL import_private_key_impl(const BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD 
         return FALSE;
     }
 
-    pbTemp = HeapAlloc(GetProcessHeap(), 0, 2*dwKeyLen+5*((dwKeyLen+1)>>1));
+    pbTemp = malloc(2*dwKeyLen+5*((dwKeyLen+1)>>1));
     if (!pbTemp) return FALSE;
     memcpy(pbTemp, pbSrc, min(dwDataLen, 2*dwKeyLen+5*((dwKeyLen+1)>>1)));
     pbBigNum = pbTemp;
@@ -529,6 +433,6 @@ BOOL import_private_key_impl(const BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD 
     mp_read_unsigned_bin(&pKeyContext->rsa.d, pbBigNum, dwKeyLen);
     mp_set_int(&pKeyContext->rsa.e, dwPubExp);
     
-    HeapFree(GetProcessHeap(), 0, pbTemp);
+    free(pbTemp);
     return TRUE;
 }

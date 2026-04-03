@@ -35,8 +35,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-//#include <limits.h>
-#include <basetsd.h>
+#include <limits.h>
+#include "basetsd.h"
 
 /* error codes [will be expanded in future releases] */
 enum {
@@ -149,15 +149,6 @@ void des3_ecb_decrypt(const unsigned char *ct, unsigned char *pt, const des3_key
 int aes_setup(const unsigned char *key, int keylen, int rounds, aes_key *skey);
 void aes_ecb_encrypt(const unsigned char *pt, unsigned char *ct, aes_key *skey);
 void aes_ecb_decrypt(const unsigned char *ct, unsigned char *pt, aes_key *skey);
-
-typedef struct tag_md2_state {
-    unsigned char chksum[16], X[48], buf[16];
-    unsigned long curlen;
-} md2_state;
-
-int md2_init(md2_state * md);
-int md2_process(md2_state * md, const unsigned char *buf, unsigned long len);
-int md2_done(md2_state * md, unsigned char *hash);
 
 struct rc4_prng {
     int x, y;
