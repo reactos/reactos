@@ -127,8 +127,10 @@ void read_fat(DOS_FS * fs)
 	    printf("FATs differ - using second FAT.\n");
 #ifdef __REACTOS__
         if (rw)
-#endif
+	        fs_write(fs->fat_start, eff_size, second);
+#else
 	    fs_write(fs->fat_start, eff_size, second);
+#endif
 	    memcpy(first, second, eff_size);
 	}
 	if (first_ok && second_ok) {
