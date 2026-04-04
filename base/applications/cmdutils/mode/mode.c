@@ -32,8 +32,8 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
 #include <wincon.h>
+#include <winuser.h>
 
 #include <conutils.h>
 

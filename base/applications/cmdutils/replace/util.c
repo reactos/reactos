@@ -56,10 +56,11 @@ VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
     TCHAR TempPath[MAX_PATH];
     WIN32_FIND_DATA FindFileData;
     HANDLE hFind;
+
     _tcscpy(TempPath, _T(""));
     _tcscpy(OutPath, _T(""));
 
-    for(i = 0; i < _tcslen(Path); i++)
+    for (i = 0; i < _tcslen(Path); i++)
     {
         if (Path[i] != _T('\\'))
         {
@@ -107,9 +108,9 @@ BOOL IsExistingDirectory(IN LPCTSTR pszPath)
     return ((attr != INVALID_FILE_ATTRIBUTES) && (attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-INT FilePromptYNA (UINT resID)
+INT FilePromptYNA(UINT resID)
 {
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    TCHAR szMsg[4];
 //  TCHAR cKey = 0;
 //  LPTSTR szKeys = _T("yna");
 
@@ -117,16 +118,16 @@ INT FilePromptYNA (UINT resID)
     LPTSTR p;
 
     if (resID != 0)
-        ConOutResPrintf (resID);
+        ConOutResPrintf(resID);
 
     /* preliminary fix */
     ConInString(szIn, 10);
 
-    _tcsupr (szIn);
-    for (p = szIn; _istspace (*p); p++)
+    _tcsupr(szIn);
+    for (p = szIn; _istspace(*p); p++)
         ;
 
-    LoadString(NULL, STRING_COPY_OPTION, szMsg, ARRAYSIZE(szMsg));
+    LoadStringW(NULL, STRING_COPY_OPTION, szMsg, ARRAYSIZE(szMsg));
 
     if (_tcsncmp(p, &szMsg[0], 1) == 0)
         return PROMPT_YES;
@@ -148,9 +149,9 @@ INT FilePromptYNA (UINT resID)
 
     do
     {
-        ConInKey (&ir);
-        cKey = _totlower (ir.Event.KeyEvent.uChar.AsciiChar);
-        if (_tcschr (szKeys, cKey[0]) == NULL)
+        ConInKey(&ir);
+        cKey = _totlower(ir.Event.KeyEvent.uChar.AsciiChar);
+        if (_tcschr(szKeys, cKey[0]) == NULL)
             cKey = 0;
     }
     while ((ir.Event.KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
@@ -239,15 +240,15 @@ VOID ConOutChar(TCHAR c)
  * get a character out-of-band and honor Ctrl-Break characters
  */
 TCHAR
-cgetchar (VOID)
+cgetchar(VOID)
 {
-    HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
     INPUT_RECORD irBuffer;
-    DWORD  dwRead;
+    DWORD dwRead;
 
     do
     {
-        ReadConsoleInput (hInput, &irBuffer, 1, &dwRead);
+        ReadConsoleInput(hInput, &irBuffer, 1, &dwRead);
         if ((irBuffer.EventType == KEY_EVENT) &&
             (irBuffer.Event.KeyEvent.bKeyDown != FALSE))
         {

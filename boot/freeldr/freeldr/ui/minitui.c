@@ -13,6 +13,20 @@
 // #define NTLDR_PROGRESSBAR
 // #define BTMGR_PROGRESSBAR /* Default style */
 
+#ifdef NTLDR_PROGRESSBAR
+#define MINITUI_PROGRESS_TEXT_ATTR      ATTR(UiTextColor, UiMenuBgColor)
+#define MINITUI_PROGRESS_FILL_CHAR      '\xDB'
+#define MINITUI_PROGRESS_FILL_ATTR      ATTR(UiTextColor, UiMenuBgColor)
+#define MINITUI_PROGRESS_REMAINING_CHAR ' '
+#define MINITUI_PROGRESS_REMAINING_ATTR ATTR(UiTextColor, UiMenuBgColor)
+#else // BTMGR_PROGRESSBAR
+#define MINITUI_PROGRESS_TEXT_ATTR      ATTR(COLOR_GRAY, COLOR_BLACK)
+#define MINITUI_PROGRESS_FILL_CHAR      ' '
+#define MINITUI_PROGRESS_FILL_ATTR      ATTR(COLOR_WHITE, COLOR_WHITE)
+#define MINITUI_PROGRESS_REMAINING_CHAR ' '
+#define MINITUI_PROGRESS_REMAINING_ATTR ATTR(COLOR_GRAY, COLOR_GRAY)
+#endif
+
 BOOLEAN MiniTuiInitialize(VOID)
 {
     /* Initialize main TUI */
@@ -21,7 +35,11 @@ BOOLEAN MiniTuiInitialize(VOID)
 
     /* Override default settings with "Mini" TUI Theme */
 
+#ifdef NTLDR_PROGRESSBAR
     UiTextColor = TuiTextToColor("Default");
+#else // BTMGR_PROGRESSBAR
+    UiTextColor = COLOR_GRAY;
+#endif
 
     UiStatusBarFgColor    = UiTextColor;
     UiStatusBarBgColor    = COLOR_BLACK;
@@ -100,7 +118,7 @@ MiniTuiSetProgressBarText(
 #else // BTMGR_PROGRESSBAR
                 UiProgressBar.Bottom - 2, // One empty line between text and bar.
 #endif
-                ' ', ATTR(UiTextColor, UiMenuBgColor));
+                ' ', MINITUI_PROGRESS_TEXT_ATTR);
 
     /* Draw the "Loading..." text */
     TuiDrawCenteredText(UiProgressBar.Left, UiProgressBar.Top,
@@ -110,7 +128,7 @@ MiniTuiSetProgressBarText(
 #else // BTMGR_PROGRESSBAR
                         UiProgressBar.Bottom - 2, // One empty line between text and bar.
 #endif
-                        ProgressString, ATTR(UiTextColor, UiMenuBgColor));
+                        ProgressString, MINITUI_PROGRESS_TEXT_ATTR);
 }
 
 /*static*/ VOID
@@ -138,12 +156,11 @@ MiniTuiTickProgressBar(
     {
         TuiFillArea(UiProgressBar.Left, UiProgressBar.Bottom,
                     UiProgressBar.Left + FillCount - 1, UiProgressBar.Bottom,
-                    '\xDB', ATTR(UiTextColor, UiMenuBgColor));
+                    MINITUI_PROGRESS_FILL_CHAR, MINITUI_PROGRESS_FILL_ATTR);
     }
-    /* Fill the remaining with blanks */
     TuiFillArea(UiProgressBar.Left + FillCount, UiProgressBar.Bottom,
                 UiProgressBar.Right, UiProgressBar.Bottom,
-                ' ', ATTR(UiTextColor, UiMenuBgColor));
+                MINITUI_PROGRESS_REMAINING_CHAR, MINITUI_PROGRESS_REMAINING_ATTR);
 
     TuiUpdateDateTime();
     VideoCopyOffScreenBufferToVRAM();
@@ -261,4 +278,3 @@ const UIVTBL MiniTuiVtbl =
     TuiDisplayMenu,
     MiniTuiDrawMenu,
 };
-

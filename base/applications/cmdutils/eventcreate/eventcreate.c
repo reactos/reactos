@@ -176,15 +176,15 @@ Quit:
 
 static LONG
 InstallEventSource(
-    IN HKEY    hEventLogKey,
-    IN LPCWSTR EventLogSource)
+    IN HKEY   hEventLogKey,
+    IN PCWSTR EventLogSource)
 {
     LONG lRet;
     HKEY hSourceKey = NULL;
     DWORD dwDisposition = 0;
     DWORD dwData;
 
-    LPCWSTR EventMessageFile;
+    PCWSTR EventMessageFile;
     DWORD PathSize;
     WCHAR ExePath[MAX_PATH];
 
@@ -235,17 +235,17 @@ InstallEventSource(
 
     dwData = 1;
     RegSetValueExW(hSourceKey, L"CustomSource", 0, REG_DWORD,
-                   (LPBYTE)&dwData, sizeof(dwData));
+                   (PBYTE)&dwData, sizeof(dwData));
 
     // FIXME: Set those flags according to caller's rights?
     // Or, if we are using the Security log?
     dwData = EVENTLOG_SUCCESS | EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE
-            /* | EVENTLOG_AUDIT_SUCCESS | EVENTLOG_AUDIT_FAILURE */ ;
+            /* | EVENTLOG_AUDIT_SUCCESS | EVENTLOG_AUDIT_FAILURE */;
     RegSetValueExW(hSourceKey, L"TypesSupported", 0, REG_DWORD,
-                   (LPBYTE)&dwData, sizeof(dwData));
+                   (PBYTE)&dwData, sizeof(dwData));
 
     RegSetValueExW(hSourceKey, L"EventMessageFile", 0, REG_EXPAND_SZ,
-                   (LPBYTE)EventMessageFile, (wcslen(EventMessageFile) + 1) * sizeof(WCHAR));
+                   (PBYTE)EventMessageFile, (DWORD)((wcslen(EventMessageFile) + 1) * sizeof(WCHAR)));
 
     RegFlushKey(hSourceKey);
 
@@ -258,10 +258,10 @@ Quit:
 
 static BOOL
 CheckLogOrSourceExistence(
-    IN LPCWSTR UNCServerName OPTIONAL,
-    IN LPCWSTR EventLogName,
-    IN LPCWSTR EventLogSource,
-    IN BOOL    AllowAppSources OPTIONAL)
+    IN PCWSTR UNCServerName OPTIONAL,
+    IN PCWSTR EventLogName,
+    IN PCWSTR EventLogSource,
+    IN BOOL   AllowAppSources OPTIONAL)
 {
     /*
      * The 'AllowAppSources' parameter allows the usage of
@@ -1242,7 +1242,7 @@ int wmain(int argc, WCHAR* argv[])
                                pUserToken->User.Sid,
                                1,   // One string
                                0,   // No raw data
-                               (LPCWSTR*)&szDescription,
+                               (PCWSTR*)&szDescription,
                                NULL // No raw data
                                );
         if (!Success)

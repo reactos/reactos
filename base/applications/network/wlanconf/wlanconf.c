@@ -7,7 +7,6 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <tchar.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -21,13 +20,11 @@
 #include "resource.h"
 
 BOOL bScan = FALSE;
-
-BOOL bConnect = FALSE;
-WCHAR *sSsid = NULL;
-WCHAR *sWepKey = NULL;
-BOOL bAdhoc = FALSE;
-
 BOOL bDisconnect = FALSE;
+BOOL bConnect = FALSE;
+BOOL bAdhoc = FALSE;
+PCWSTR sSsid = NULL;
+PCWSTR sWepKey = NULL;
 
 VOID DoFormatMessage(DWORD ErrorCode)
 {
@@ -335,19 +332,19 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
         ConResPuts(StdOut, IDS_MSG_CURRENT_WIRELESS);
     }
 
-    printf("SSID: %s\n", SsidBuffer);
+    ConPrintf(StdOut, L"SSID: %S\n", SsidBuffer);
 
-    printf("BSSID: ");
+    ConPuts(StdOut, L"BSSID: ");
     for (i = 0; i < sizeof(NDIS_802_11_MAC_ADDRESS); i++)
     {
         UINT BssidData = QueryOid->Data[i];
 
-        printf("%.2x", BssidData);
+        ConPrintf(StdOut, L"%.2x", BssidData);
 
         if (i != sizeof(NDIS_802_11_MAC_ADDRESS) - 1)
-            printf(":");
+            ConPuts(StdOut, L":");
     }
-    printf("\n");
+    ConPuts(StdOut, L"\n");
 
     HeapFree(GetProcessHeap(), 0, QueryOid);
     QueryOidSize = sizeof(NDISUIO_QUERY_OID);
@@ -371,10 +368,10 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
         return FALSE;
     }
 
-    K32LoadStringW(GetModuleHandle(NULL),
-                   *(PUINT)QueryOid->Data == Ndis802_11IBSS ? IDS_ADHOC : IDS_INFRASTRUCTURE,
-                   szMsgBuf,
-                   ARRAYSIZE(szMsgBuf));
+    LoadStringW(NULL,
+                *(PUINT)QueryOid->Data == Ndis802_11IBSS ? IDS_ADHOC : IDS_INFRASTRUCTURE,
+                szMsgBuf,
+                ARRAYSIZE(szMsgBuf));
     ConResPrintf(StdOut, IDS_MSG_NETWORK_MODE, szMsgBuf);
 
     QueryOid->Oid = OID_802_11_WEP_STATUS;
@@ -393,13 +390,13 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
         return FALSE;
     }
 
-    K32LoadStringW(GetModuleHandle(NULL),
-                   *(PUINT)QueryOid->Data == Ndis802_11WEPEnabled ? IDS_YES : IDS_NO,
-                   szMsgBuf,
-                   ARRAYSIZE(szMsgBuf));
+    LoadStringW(NULL,
+                *(PUINT)QueryOid->Data == Ndis802_11WEPEnabled ? IDS_YES : IDS_NO,
+                szMsgBuf,
+                ARRAYSIZE(szMsgBuf));
     ConResPrintf(StdOut, IDS_MSG_WEP_ENABLED, szMsgBuf);
 
-    printf("\n");
+    ConPuts(StdOut, L"\n");
     QueryOid->Oid = OID_802_11_RSSI;
 
     bSuccess = DeviceIoControl(hAdapter,
@@ -413,7 +410,7 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
     if (bSuccess)
     {
         /* This OID is optional */
-        printf("RSSI: %i dBm\n", *(PINT)QueryOid->Data);
+        ConPrintf(StdOut, L"RSSI: %i dBm\n", *(PINT)QueryOid->Data);
     }
 
     QueryOid->Oid = OID_802_11_TX_POWER_LEVEL;
@@ -432,7 +429,7 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
         ConResPrintf(StdOut, IDS_MSG_TRANSMISSION_POWER, *(PUINT)QueryOid->Data);
     }
 
-    printf("\n");
+    ConPuts(StdOut, L"\n");
 
     QueryOid->Oid = OID_802_11_NUMBER_OF_ANTENNAS;
 
@@ -490,7 +487,7 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
             ConResPuts(StdOut, IDS_MSG_RECEIVE_ANTENNA_ANY);
     }
 
-    printf("\n");
+    ConPuts(StdOut, L"\n");
 
     QueryOid->Oid = OID_802_11_FRAGMENTATION_THRESHOLD;
 
@@ -526,19 +523,19 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
 
     HeapFree(GetProcessHeap(), 0, QueryOid);
 
-    printf("\n");
+    ConPuts(StdOut, L"\n");
     return TRUE;
 }
 
 BOOL
 WlanConnect(HANDLE hAdapter)
 {
-    CHAR SsidBuffer[NDIS_802_11_LENGTH_SSID + 1];
     BOOL bSuccess;
     DWORD dwBytesReturned, SetOidSize;
     PNDISUIO_SET_OID SetOid;
     PNDIS_802_11_SSID Ssid;
-    DWORD i;
+    DWORD StrLength, i;
+    CHAR SsidBuffer[NDIS_802_11_LENGTH_SSID + 1];
 
     SetOidSize = sizeof(NDISUIO_SET_OID);
     SetOid = HeapAlloc(GetProcessHeap(), 0, SetOidSize);
@@ -587,9 +584,10 @@ WlanConnect(HANDLE hAdapter)
 
         HeapFree(GetProcessHeap(), 0, SetOid);
 
+        StrLength = (DWORD)wcslen(sWepKey) >> 1; // 2 string characters represent 1 hex byte.
         SetOidSize = FIELD_OFFSET(NDISUIO_SET_OID, Data) +
                      FIELD_OFFSET(NDIS_802_11_WEP, KeyMaterial) +
-                     (wcslen(sWepKey) >> 1);
+                     StrLength;
         SetOid = HeapAlloc(GetProcessHeap(), 0, SetOidSize);
         if (!SetOid)
             return FALSE;
@@ -599,8 +597,8 @@ WlanConnect(HANDLE hAdapter)
         WepData = (PNDIS_802_11_WEP)SetOid->Data;
 
         WepData->KeyIndex = 0x80000000;
-        WepData->KeyLength = wcslen(sWepKey) >> 1;
-        WepData->Length = FIELD_OFFSET(NDIS_802_11_WEP, KeyMaterial) + WepData->KeyLength;
+        WepData->KeyLength = StrLength;
+        WepData->Length = FIELD_OFFSET(NDIS_802_11_WEP, KeyMaterial) + StrLength;
 
         /* Assemble the hex key */
         i = 0;
@@ -679,8 +677,8 @@ WlanConnect(HANDLE hAdapter)
     Ssid = (PNDIS_802_11_SSID)SetOid->Data;
 
     snprintf(SsidBuffer, sizeof(SsidBuffer), "%S", sSsid);
-    RtlCopyMemory(Ssid->Ssid, SsidBuffer, strlen(SsidBuffer));
-    Ssid->SsidLength = strlen(SsidBuffer);
+    Ssid->SsidLength = StrLength = (DWORD)strlen(SsidBuffer);
+    RtlCopyMemory(Ssid->Ssid, SsidBuffer, StrLength);
 
     bSuccess = DeviceIoControl(hAdapter,
                                IOCTL_NDISUIO_SET_OID_VALUE,
@@ -783,36 +781,32 @@ WlanScan(HANDLE hAdapter)
             PNDIS_802_11_SSID Ssid = &BssidInfo->Ssid;
             NDIS_802_11_RSSI Rssi = BssidInfo->Rssi;
             NDIS_802_11_NETWORK_INFRASTRUCTURE NetworkType = BssidInfo->InfrastructureMode;
-            CHAR SsidBuffer[NDIS_802_11_LENGTH_SSID + 1];
             UINT Rate;
 
-            /* SSID member is a non-null terminated ASCII string */
-            RtlCopyMemory(SsidBuffer, Ssid->Ssid, Ssid->SsidLength);
-            SsidBuffer[Ssid->SsidLength] = 0;
+            /* The SSID member is a non-NUL terminated ASCII string */
+            ConPrintf(StdOut, L"\nSSID: %.*S\n", Ssid->SsidLength, Ssid->Ssid);
 
-            printf("\nSSID: %s\n", SsidBuffer);
-
-            printf("BSSID: ");
+            ConPuts(StdOut, L"BSSID: ");
             for (j = 0; j < sizeof(NDIS_802_11_MAC_ADDRESS); j++)
             {
                 UINT BssidData = BssidInfo->MacAddress[j];
 
-                printf("%.2x", BssidData);
+                ConPrintf(StdOut, L"%.2x", BssidData);
 
                 if (j != sizeof(NDIS_802_11_MAC_ADDRESS) - 1)
-                    printf(":");
+                    ConPuts(StdOut, L":");
             }
-            printf("\n");
+            ConPuts(StdOut, L"\n");
 
-            K32LoadStringW(GetModuleHandle(NULL),
-                           BssidInfo->Privacy == 0 ? IDS_NO : IDS_YES,
-                           szMsgBuf,
-                           ARRAYSIZE(szMsgBuf));
+            LoadStringW(NULL,
+                        BssidInfo->Privacy == 0 ? IDS_NO : IDS_YES,
+                        szMsgBuf,
+                        ARRAYSIZE(szMsgBuf));
             ConResPrintf(StdOut, IDS_MSG_ENCRYPTED, szMsgBuf);
-            K32LoadStringW(GetModuleHandle(NULL),
-                           NetworkType == Ndis802_11IBSS ? IDS_ADHOC : IDS_INFRASTRUCTURE,
-                           szMsgBuf,
-                           ARRAYSIZE(szMsgBuf));
+            LoadStringW(NULL,
+                        NetworkType == Ndis802_11IBSS ? IDS_ADHOC : IDS_INFRASTRUCTURE,
+                        szMsgBuf,
+                        ARRAYSIZE(szMsgBuf));
             ConResPrintf(StdOut, IDS_MSG_NETWORK_TYPE, szMsgBuf);
             ConResPrintf(StdOut, IDS_MSG_RSSI, (int)Rssi);
             ConResPuts(StdOut, IDS_MSG_SUPPORT_RATE);
@@ -829,16 +823,16 @@ WlanScan(HANDLE hAdapter)
                     if (Rate & 0x01)
                     {
                         /* Bit 0 is set so we need to add 0.5 */
-                        printf("%u.5 ", (Rate >> 1));
+                        ConPrintf(StdOut, L"%u.5 ", (Rate >> 1));
                     }
                     else
                     {
                         /* Bit 0 is clear so just print the conversion */
-                        printf("%u ", (Rate >> 1));
+                        ConPrintf(StdOut, L"%u ", (Rate >> 1));
                     }
                 }
             }
-            printf("\n");
+            ConPuts(StdOut, L"\n");
 
             /* Move to the next entry */
             BssidInfo = (PNDIS_WLAN_BSSID)((PUCHAR)BssidInfo + BssidInfo->Length);

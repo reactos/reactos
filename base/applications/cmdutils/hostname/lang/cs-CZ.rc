@@ -1,13 +1,16 @@
-/* FILE:       base/applications/cmdutils/hostname/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2013-05-01
+/*
+ * PROJECT:     ReactOS Hostname Command
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2013 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2026 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Vypíše současný název hostitele.\n\nhostname"
-    IDS_NOSET "hostname -s není podporováno."
-    IDS_ERROR "Win32 chyba"
+    IDS_USAGE "\nVypíše současný název hostitele.\n\nhostname\n"
+    IDS_NOSET "sethostname: Pro změnu názvu počítače otevřete záložku ""Název počítače""\nv nastaveních ""Systém"" v Ovládacích panelech.\nhostname -s není podporováno.\n"
+    IDS_ERROR "Chyba: "
 END

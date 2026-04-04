@@ -131,63 +131,42 @@ static PC_DISK_DRIVE PcDiskDrive;
 
 /* DISK IO ERROR SUPPORT *****************************************************/
 
-static LONG lReportError = 0; // >= 0: display errors; < 0: hide errors.
-
-LONG DiskReportError(BOOLEAN bShowError)
-{
-    /* Set the reference count */
-    if (bShowError) ++lReportError;
-    else            --lReportError;
-    return lReportError;
-}
-
-static PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
+/* For disk.c!DiskError() */
+PCSTR
+DiskGetErrorCodeString(
+    _In_ ULONG ErrorCode)
 {
     switch (ErrorCode)
     {
-    case 0x00:  return "no error";
-    case 0x01:  return "bad command passed to driver";
-    case 0x02:  return "address mark not found or bad sector";
-    case 0x03:  return "diskette write protect error";
-    case 0x04:  return "sector not found";
-    case 0x05:  return "fixed disk reset failed";
-    case 0x06:  return "diskette changed or removed";
-    case 0x07:  return "bad fixed disk parameter table";
+    case 0x00:  return "No error";
+    case 0x01:  return "Bad command passed to driver";
+    case 0x02:  return "Address mark not found or bad sector";
+    case 0x03:  return "Diskette write protect error";
+    case 0x04:  return "Sector not found";
+    case 0x05:  return "Fixed disk reset failed";
+    case 0x06:  return "Diskette changed or removed";
+    case 0x07:  return "Bad fixed disk parameter table";
     case 0x08:  return "DMA overrun";
     case 0x09:  return "DMA access across 64k boundary";
-    case 0x0A:  return "bad fixed disk sector flag";
-    case 0x0B:  return "bad fixed disk cylinder";
-    case 0x0C:  return "unsupported track/invalid media";
-    case 0x0D:  return "invalid number of sectors on fixed disk format";
-    case 0x0E:  return "fixed disk controlled data address mark detected";
-    case 0x0F:  return "fixed disk DMA arbitration level out of range";
+    case 0x0A:  return "Bad fixed disk sector flag";
+    case 0x0B:  return "Bad fixed disk cylinder";
+    case 0x0C:  return "Unsupported track/invalid media";
+    case 0x0D:  return "Invalid number of sectors on fixed disk format";
+    case 0x0E:  return "Fixed disk controlled data address mark detected";
+    case 0x0F:  return "Fixed disk DMA arbitration level out of range";
     case 0x10:  return "ECC/CRC error on disk read";
-    case 0x11:  return "recoverable fixed disk data error, data fixed by ECC";
-    case 0x20:  return "controller error (NEC for floppies)";
-    case 0x40:  return "seek failure";
-    case 0x80:  return "time out, drive not ready";
-    case 0xAA:  return "fixed disk drive not ready";
-    case 0xBB:  return "fixed disk undefined error";
-    case 0xCC:  return "fixed disk write fault on selected drive";
-    case 0xE0:  return "fixed disk status error/Error reg = 0";
-    case 0xFF:  return "sense operation failed";
+    case 0x11:  return "Recoverable fixed disk data error, data fixed by ECC";
+    case 0x20:  return "Controller error (NEC for floppies)";
+    case 0x40:  return "Seek failure";
+    case 0x80:  return "Time out, drive not ready";
+    case 0xAA:  return "Fixed disk drive not ready";
+    case 0xBB:  return "Fixed disk undefined error";
+    case 0xCC:  return "Fixed disk write fault on selected drive";
+    case 0xE0:  return "Fixed disk status error/Error reg = 0";
+    case 0xFF:  return "Sense operation failed";
 
-    default:    return "unknown error code";
+    default:    return "Unknown error code";
     }
-}
-
-static VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
-{
-    CHAR ErrorCodeString[200];
-
-    if (lReportError < 0)
-        return;
-
-    sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s",
-            ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
-
-    ERR("%s\n", ErrorCodeString);
-    UiMessageBox(ErrorCodeString);
 }
 
 /* FUNCTIONS *****************************************************************/

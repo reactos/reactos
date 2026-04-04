@@ -68,14 +68,6 @@ list(APPEND FREELDR_BOOTMGR_SOURCE
     ui/ui.c
     ui/video.c)
 
-list(APPEND FREELDR_NTLDR_SOURCE
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c
-    ntldr/conversion.c
-    ntldr/registry.c
-    ntldr/winldr.c
-    ntldr/wlmemory.c
-    ntldr/wlregistry.c)
-
 if(ARCH STREQUAL "i386")
 
     list(APPEND FREELDR_COMMON_ASM_SOURCE
@@ -84,10 +76,6 @@ if(ARCH STREQUAL "i386")
 
     list(APPEND FREELDR_ARC_SOURCE
         arch/i386/i386bug.c)
-
-    list(APPEND FREELDR_NTLDR_SOURCE
-        ntldr/arch/i386/winldr.c
-        ntldr/headless.c)
 
 elseif(ARCH STREQUAL "amd64")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
@@ -98,13 +86,8 @@ elseif(ARCH STREQUAL "amd64")
         arch/i386/i386bug.c
         arch/i386/ntoskrnl.c)
 
-    list(APPEND FREELDR_NTLDR_SOURCE
-        ntldr/arch/amd64/winldr.c)
-
 elseif(ARCH STREQUAL "arm")
-    list(APPEND FREELDR_NTLDR_SOURCE
-        ntldr/arch/arm/winldr.c)
-
+    #TBD
 else()
     #TBD
 endif()

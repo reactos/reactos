@@ -8,4 +8,4 @@
 #include <windef.h>
 #include <delayimp.h>
 
-PfnDliHook __pfnDliFailureHook2;
+PfnDliHook __pfnDliFailureHook2 = NULL;

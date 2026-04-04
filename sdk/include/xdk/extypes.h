@@ -185,11 +185,20 @@ typedef struct _EX_RUNDOWN_REF {
 
 typedef struct _EX_RUNDOWN_REF_CACHE_AWARE *PEX_RUNDOWN_REF_CACHE_AWARE;
 
-typedef enum _WORK_QUEUE_TYPE {
+typedef _Enum_is_bitflag_ enum _WORK_QUEUE_TYPE {
   CriticalWorkQueue,
   DelayedWorkQueue,
   HyperCriticalWorkQueue,
-  MaximumWorkQueue
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  NormalWorkQueue,
+  BackgroundWorkQueue,
+  RealTimeWorkQueue,
+  SuperCriticalWorkQueue,
+#endif
+  MaximumWorkQueue,
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  CustomPriorityWorkQueue = 32
+#endif
 } WORK_QUEUE_TYPE;
 
 _IRQL_requires_same_

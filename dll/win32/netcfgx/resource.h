@@ -31,6 +31,14 @@
 #define IDC_DNS2       1008
 #define IDC_ADVANCED   1009
 
+#define IDC_ALTAPIPA      1050
+#define IDC_ALTSTATIC     1051
+#define IDC_ALTIPADDR     1052
+#define IDC_ALTSUBNETMASK 1053
+#define IDC_ALTDEFGATEWAY 1054
+#define IDC_ALTDNS1       1057
+#define IDC_ALTDNS2       1058
+
 #define IDC_IPLIST     2000
 #define IDC_IPADD      2001
 #define IDC_IPMOD      2002

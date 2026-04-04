@@ -870,9 +870,9 @@ VPAPI
 VOID
 __cdecl
 VideoPortDebugPrint(
-  IN VIDEO_DEBUG_LEVEL DebugPrintLevel,
-  IN PSTR DebugMessage,
-  IN ...);
+    _In_ VIDEO_DEBUG_LEVEL DebugPrintLevel,
+    _In_ PSTR DebugMessage,
+    _In_ ...);
 
 VPAPI
 VP_STATUS

@@ -6,6 +6,7 @@
  */
 
 #include <machine.h>
+#include <drivers/acpi/acpi.h>
 
 VOID
 UefiConsPutChar(int Ch);
@@ -58,6 +59,10 @@ UefiVideoSetPaletteColor(UCHAR Color, UCHAR Red,
 VOID
 UefiVideoGetPaletteColor(UCHAR Color, UCHAR* Red,
                          UCHAR* Green, UCHAR* Blue);
+
+PDESCRIPTION_HEADER
+UefiFindAcpiTable(
+    _In_ ULONG Signature);
 
 VOID
 UefiVideoSync(VOID);

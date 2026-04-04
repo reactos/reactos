@@ -13,7 +13,7 @@ BEGIN
 \n"
 
     IDS_PERCENT_COMPL "%d процентов завершено.\r"
-    IDS_FILE_SYSTEM "Тип файловой системы %s.\n"
+    IDS_FILE_SYSTEM "Тип файловой системы %s for volume %s.\n"
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 от Марка Руссиновича\n\
 Systems Internals - http://www.sysinternals.com\n\

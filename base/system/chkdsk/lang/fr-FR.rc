@@ -1,4 +1,4 @@
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+﻿LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
@@ -12,7 +12,7 @@ Utilisation : %s [lecteur:] [-F] [-V] [-R] [-C]\n\n\
 \n"
 
     IDS_PERCENT_COMPL "%d pourcent(s) complété(s).\r"
-    IDS_FILE_SYSTEM "Le type du système de fichier est %s.\n"
+    IDS_FILE_SYSTEM "Le type du système de fichier est %s pour le volume %s.\n"
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 par Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\

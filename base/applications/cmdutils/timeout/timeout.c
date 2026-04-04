@@ -13,7 +13,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wincon.h>
-#include <winuser.h>
+#include <winuser.rh>
 
 #include <conutils.h>
 

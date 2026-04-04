@@ -85,8 +85,8 @@ DisplayLocalGroup(LPWSTR lpGroupName)
     DWORD dwTotal = 0;
     DWORD_PTR ResumeHandle = 0;
     DWORD i;
-    DWORD len;
-    INT nPaddedLength = 18;
+    size_t len;
+    const DWORD nPaddedLength = 18;
     NET_API_STATUS Status;
 
     Status = NetLocalGroupGetInfo(NULL,

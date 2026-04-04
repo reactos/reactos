@@ -186,7 +186,7 @@ NTSTATUS fs_open(PUNICODE_STRING DriveRoot, int read_write)
                         FILE_GENERIC_READ | (read_write ? FILE_GENERIC_WRITE : 0),
                         &ObjectAttributes,
                         &Iosb,
-                        read_write ? 0 : FILE_SHARE_READ,
+                        read_write ? FILE_SHARE_READ : (FILE_SHARE_READ | FILE_SHARE_WRITE),
                         FILE_SYNCHRONOUS_IO_ALERT);
     if (!NT_SUCCESS(Status))
     {

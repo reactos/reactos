@@ -768,7 +768,7 @@ WSPCloseSocket(IN SOCKET Handle,
     {
         if (LingerWait <= 0)
         {
-            DisconnectInfo.Timeout = RtlConvertLongToLargeInteger(0);
+            DisconnectInfo.Timeout.QuadPart = 0LL;
             DisconnectInfo.DisconnectType = LingerWait < 0 ? AFD_DISCONNECT_SEND : AFD_DISCONNECT_ABORT;
 
             if (((DisconnectInfo.DisconnectType & AFD_DISCONNECT_SEND) && (!Socket->SharedData->SendShutdown)) ||
@@ -2326,7 +2326,7 @@ WSPShutdown(SOCKET Handle,
             break;
     }
 
-    DisconnectInfo.Timeout = RtlConvertLongToLargeInteger(-1000000);
+    DisconnectInfo.Timeout.QuadPart = -1000000LL;
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,

@@ -11,19 +11,19 @@
  * Flexible, simple
  */
 
-#define WIN32_NO_STATUS
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <malloc.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
-#include <stdio.h>
-#include <malloc.h>
-#define _INC_WINDOWS
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <ws2tcpip.h>
 #include <ip2string.h>
+
 #include <conutils.h>
 
 #include "resource.h"
@@ -299,6 +299,9 @@ FormatIPv4Address(
         if (Ptr->Address.lpSockaddr->sa_family == AF_INET)
         {
             struct sockaddr_in *si = (struct sockaddr_in *)(Ptr->Address.lpSockaddr);
+            // DWORD dwStrLen = IPV4_ADDR_STRING_MAX_LEN;
+            // WSAAddressToStringW(Ptr->Address.lpSockaddr, (DWORD)Ptr->Address.iSockaddrLength, NULL, pBuffer, &dwStrLen);
+            // (void)InetNtopW(AF_INET, &(si->sin_addr), pBuffer, IPV4_ADDR_STRING_MAX_LEN);
             RtlIpv4AddressToStringW(&(si->sin_addr), pBuffer);
             return;
         }

@@ -10,6 +10,13 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserInput);
 
+/* LastRITEventTickCount update cycle has been adjusted from 60s to 1s since NT6 */
+#if (NTDDI_VERSION < NTDDI_VISTA)
+#define LAST_RIT_EVENT_UPDATE_INTERVAL 60000UL
+#else
+#define LAST_RIT_EVENT_UPDATE_INTERVAL 1000UL
+#endif
+
 /* GLOBALS *******************************************************************/
 
 PTHREADINFO ptiRawInput;
@@ -34,7 +41,16 @@ IntLastInputTick(BOOL bUpdate)
     if (bUpdate)
     {
         LastInputTick = EngGetTickCount32();
-        if (gpsi) gpsi->dwLastRITEventTickCount = LastInputTick;
+        if (gpsi)
+        {
+            gpsi->dwLastRITEventTickCount = LastInputTick;
+            if (gpsi->dwLastRITEventTickCount - gpsi->dwLastSystemRITEventTickCountUpdate >
+                LAST_RIT_EVENT_UPDATE_INTERVAL)
+            {
+                SharedUserData->LastSystemRITEventTickCount = LastInputTick;
+                gpsi->dwLastSystemRITEventTickCountUpdate = LastInputTick;
+            }
+        }
     }
     return LastInputTick;
 }

@@ -64,15 +64,14 @@ VOID
 PrintCurrentContextHeader(
     _In_ PCONTEXT_ENTRY pContext)
 {
-    WCHAR szBuffer[SMALL_HELP_BUFFER_SIZE];
-
     if (pContext == pCurrentContext)
     {
         ConResPrintf(StdOut, IDS_THIS_COMMANDS);
     }
     else
     {
-        GetContextFullName(pContext, szBuffer, SMALL_HELP_BUFFER_SIZE);
+        WCHAR szBuffer[SMALL_HELP_BUFFER_SIZE];
+        GetContextFullName(pContext, szBuffer, _countof(szBuffer));
         ConResPrintf(StdOut, IDS_CONTEXT_COMMANDS, szBuffer);
     }
 }
@@ -92,7 +91,7 @@ PrintShortGroupCommands(
     while (pCommand != NULL)
     {
         swprintf(szBuffer1, L"%s %s", pGroup->pwszCmdGroupToken, pCommand->pwszCmdToken);
-        LoadStringW(pContext->hModule, pCommand->dwShortCmdHelpToken, szBuffer2, SMALL_HELP_BUFFER_SIZE);
+        LoadStringW(pContext->hModule, pCommand->dwShortCmdHelpToken, szBuffer2, _countof(szBuffer2));
 
         ConPrintf(StdOut, L"%-15s - %s", szBuffer1, szBuffer2);
         pCommand = pCommand->pNext;
@@ -202,13 +201,13 @@ PrintContext(
         {
             case Command:
             case Group:
-                if (LoadStringW(pContext->hModule, pHelpArray[dwIndex].dwHelpId, szBuffer, SMALL_HELP_BUFFER_SIZE) == 0)
+                if (LoadStringW(pContext->hModule, pHelpArray[dwIndex].dwHelpId, szBuffer, _countof(szBuffer)) == 0)
                     szBuffer[0] = UNICODE_NULL;
                 ConPrintf(StdOut, L"%-15s - %s", pHelpArray[dwIndex].pszCommand, szBuffer);
                 break;
 
             case SubContext:
-                GetContextFullName(pHelpArray[dwIndex].Pointer.pSubContext, szBuffer, SMALL_HELP_BUFFER_SIZE);
+                GetContextFullName(pHelpArray[dwIndex].Pointer.pSubContext, szBuffer, _countof(szBuffer));
                 ConPrintf(StdOut, L"%-15s - Changes to the \"%s\" context.\n", pHelpArray[dwIndex].pszCommand, szBuffer);
                 break;
         }
@@ -280,22 +279,14 @@ PrintCommandHelp(
     _In_ PCOMMAND_GROUP pGroup,
     _In_ PCOMMAND_ENTRY pCommand)
 {
-    LPWSTR pszInBuffer = NULL, pszOutBuffer = NULL, pszCommandBuffer = NULL;
+    LPWSTR pszCommandBuffer;
     DWORD_PTR Args[2];
 
     DPRINT("PrintCommandHelp(%p %p %p)\n", pContext, pGroup, pCommand);
 
-    pszInBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_HELP_BUFFER_SIZE * sizeof(WCHAR));
-    if (pszInBuffer == NULL)
-        goto done;
-
-    pszOutBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_HELP_BUFFER_SIZE * sizeof(WCHAR));
-    if (pszOutBuffer == NULL)
-        goto done;
-
     pszCommandBuffer = HeapAlloc(GetProcessHeap(), 0, TINY_HELP_BUFFER_SIZE * sizeof(WCHAR));
     if (pszCommandBuffer == NULL)
-        goto done;
+        return;
 
     wcscpy(pszCommandBuffer, pCommand->pwszCmdToken);
     if (pGroup)
@@ -304,31 +295,18 @@ PrintCommandHelp(
         wcscat(pszCommandBuffer, pGroup->pwszCmdGroupToken);
     }
 
-    LoadStringW(pContext->hModule, pCommand->dwCmdHlpToken, pszInBuffer, HUGE_HELP_BUFFER_SIZE);
-
     Args[0] = (DWORD_PTR)pszCommandBuffer;
     Args[1] = (DWORD_PTR)NULL;
 
-    FormatMessageW(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                   pszInBuffer,
-                   0,
-                   0,
-                   pszOutBuffer,
-                   HUGE_HELP_BUFFER_SIZE,
-                   (va_list *)&Args);
-
-    ConPuts(StdOut, pszOutBuffer);
+    ConResMsgPrintfExV(StdOut,
+                       pContext->hModule,
+                       FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                       pCommand->dwCmdHlpToken,
+                       LANG_USER_DEFAULT,
+                       (va_list *)&Args);
     ConPuts(StdOut, L"\n");
 
-done:
-    if (pszCommandBuffer)
-        HeapFree(GetProcessHeap(), 0, pszCommandBuffer);
-
-    if (pszOutBuffer)
-        HeapFree(GetProcessHeap(), 0, pszOutBuffer);
-
-    if (pszInBuffer)
-        HeapFree(GetProcessHeap(), 0, pszInBuffer);
+    HeapFree(GetProcessHeap(), 0, pszCommandBuffer);
 }
 
 

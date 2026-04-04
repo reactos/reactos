@@ -109,42 +109,36 @@ InbvUpdateProgressBar(
 VOID
 NTAPI
 InbvPortEnableFifo(
-    IN ULONG PortId,
-    IN BOOLEAN Enable
-);
+    _In_ ULONG PortId,
+    _In_ BOOLEAN Enable);
 
 BOOLEAN
 NTAPI
 InbvPortPollOnly(
-    IN ULONG PortId
-);
+    _In_ ULONG PortId);
 
 BOOLEAN
 NTAPI
 InbvPortGetByte(
-    IN ULONG PortId,
-    OUT PUCHAR Byte
-);
+    _In_ ULONG PortId,
+    _Out_ PUCHAR Byte);
 
 VOID
 NTAPI
 InbvPortPutByte(
-    IN ULONG PortId,
-    IN UCHAR Byte
-);
-
-VOID
-NTAPI
-InbvPortTerminate(
-    IN ULONG PortId
-);
+    _In_ ULONG PortId,
+    _In_ UCHAR Byte);
 
 BOOLEAN
 NTAPI
 InbvPortInitialize(
-    IN ULONG BaudRate,
-    IN ULONG PortNumber,
-    IN PUCHAR PortAddress,
-    OUT PULONG PortId,
-    IN BOOLEAN IsMMIODevice
-);
+    _In_ ULONG BaudRate,
+    _In_ ULONG PortNumber,
+    _In_ PUCHAR PortAddress,
+    _Out_ PULONG PortId,
+    _In_ BOOLEAN IsMMIODevice);
+
+VOID
+NTAPI
+InbvPortTerminate(
+    _In_ ULONG PortId);

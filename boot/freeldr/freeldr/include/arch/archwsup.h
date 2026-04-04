@@ -24,7 +24,7 @@
 
 VOID
 AddReactOSArcDiskInfo(
-    IN PSTR ArcName,
+    IN PCSTR ArcName,
     IN ULONG Signature,
     IN ULONG Checksum,
     IN BOOLEAN ValidPartitionTable);

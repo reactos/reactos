@@ -1,5 +1,4 @@
-#ifndef RESOURCE_H
-#define RESOURCE_H
+#pragma once
 
 #define IDS_USAGE   0
 
@@ -48,5 +47,3 @@
 #define IDS_ERROR_NO_MEMORY             36
 #define IDS_ERROR_SCREEN_LINES_COL      37
 #define IDS_ERROR_INVALID_CODEPAGE      38
-
-#endif /* RESOURCE_H */

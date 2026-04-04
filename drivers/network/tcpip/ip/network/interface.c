@@ -218,6 +218,18 @@ PIP_INTERFACE GetDefaultInterface(VOID)
    return Loopback;
 }
 
+BOOLEAN
+HasLoopbackPrefix(
+    PIP_ADDRESS Address,
+    PIP_ADDRESS Prefix)
+{
+    if (((Address->Address.IPv4Address & LOOPBACK_ADDRMASK_IPv4) == (LOOPBACK_ADDRESS_IPv4 & LOOPBACK_ADDRMASK_IPv4)) && 
+        (Prefix->Address.IPv4Address == LOOPBACK_ADDRESS_IPv4))
+        return TRUE;
+
+    return FALSE;
+}
+
 PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address)
 /*
  * FUNCTION: Checks all on-link prefixes to find out if an address is on-link
@@ -239,11 +251,12 @@ PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address)
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
     ForEachInterface(CurrentIF) {
-        if (HasPrefix(Address, &CurrentIF->Unicast,
-		      AddrCountPrefixBits(&CurrentIF->Netmask))) {
-	    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+        if (HasLoopbackPrefix(Address, &CurrentIF->Unicast) ||
+            HasPrefix(Address, &CurrentIF->Unicast, AddrCountPrefixBits(&CurrentIF->Netmask)))
+        {
+            TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
             return CurrentIF;
-	}
+        }
     } EndFor(CurrentIF);
 
     TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);

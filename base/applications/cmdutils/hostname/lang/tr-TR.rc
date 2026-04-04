@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Şimdiki anabilgisayarın adını yazdırır.\n\nhostname"
-    IDS_NOSET "hostname -s desteklenmiyor."
-    IDS_ERROR "Win32 hatası"
+    IDS_USAGE "\nŞimdiki anabilgisayarın adını yazdırır.\n\nhostname\n"
+    IDS_NOSET "sethostname: Open the ""Computer Name"" tab in the ""System"" Control Panel applet\nto change the host name.\nhostname -s desteklenmiyor.\n"
+    IDS_ERROR "Hatası: "
 END

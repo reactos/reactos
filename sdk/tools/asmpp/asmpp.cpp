@@ -1027,6 +1027,8 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
     return index;
 }
 
+static bool g_intel_syntax_emitted = false;
+
 size_t
 translate_construct(TokenList& tokens, size_t index, const vector<string> &macro_params)
 {
@@ -1051,14 +1053,21 @@ translate_construct(TokenList& tokens, size_t index, const vector<string> &macro
             break;
 
         case TOKEN_TYPE::KW_code:
+        {
+            printf(".text\n");
 #ifdef TARGET_amd64
-            printf(".code64");
+            printf(".code64\n");
 #else
-            printf(".code");
+            printf(".code32\n");
 #endif
-            printf(" .intel_syntax noprefix");
+            if (!g_intel_syntax_emitted)
+            {
+                printf(".intel_syntax noprefix\n");
+                g_intel_syntax_emitted = true;
+            }
             index++;
             break;
+        }
 
         case TOKEN_TYPE::KW_const:
             printf(".section .rdata");

@@ -503,12 +503,20 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     ),
 
     /* ThreadHideFromDebugger */
-    IQS_SAME
-    (
-        CHAR,
-        ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
-    ),
+    {
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        sizeof(BOOLEAN), /* Query support only on Vista and above */
+#else
+        0,
+#endif
+        sizeof(ULONG), // UCHAR
+        0, /* No size for Set */
+        sizeof(ULONG),
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        ICIF_QUERY |
+#endif
+        ICIF_SET
+    },
 
     /* ThreadBreakOnTermination */
     IQS_SAME
@@ -555,7 +563,9 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     /* ThreadCSwitchMon */
     IQS_NONE,
 
-#if 0 // Hermes will surely fix this properly
+// TODO: Specify the probing info when implementing these classes (see commit 60aad33ed0 PR #8487)
+// and adjust rostests/apitests/ntdll/probelib.c!QuerySetThreadValidator() as necessary.
+#if 1
     // Windows 7
     /* ThreadCSwitchPmu */
     IQS_NONE,
@@ -583,8 +593,15 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     IQS_NONE,
     /* ThreadContainerId */
     IQS_NONE,
+
     /* ThreadNameInformation */
-    IQS_NONE,
+    IQS_SAME
+    (
+        UNICODE_STRING,
+        ULONG_PTR,
+        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+    ),
+
     /* ThreadSelectedCpuSets */
     IQS_NONE,
     /* ThreadSystemThreadInformation */

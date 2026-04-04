@@ -1,8 +1,7 @@
 project(rapps)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/cryptlib)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/conutils)
 include_directories(
+    ${REACTOS_SOURCE_DIR}/sdk/lib/cryptlib
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
     ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/zlib/contrib)
 include_directories(include)
@@ -48,10 +47,10 @@ add_definitions(
 file(GLOB_RECURSE rapps_rc_deps res/*.*)
 add_rc_deps(rapps.rc ${rapps_rc_deps})
 add_executable(rapps ${SOURCE} rapps.rc)
-set_module_type(rapps win32gui UNICODE)
-target_link_libraries(rapps conutils ${PSEH_LIB} uuid cpprt atl_classes minizip zlib)
-add_importlibs(rapps advapi32 comctl32 gdi32 wininet user32 shell32 shlwapi ole32 setupapi gdiplus msvcrt kernel32 ntdll)
 add_pch(rapps include/rapps.h SOURCE)
+set_module_type(rapps win32gui UNICODE)
+target_link_libraries(rapps conutils uuid cpprt atl_classes minizip zlib)
+add_importlibs(rapps advapi32 comctl32 gdi32 wininet user32 shell32 shlwapi ole32 setupapi gdiplus msvcrt kernel32 ntdll)
 add_dependencies(rapps rappsmsg)
 add_message_headers(ANSI rappsmsg.mc)
 add_cd_file(TARGET rapps DESTINATION reactos/system32 FOR all)

@@ -4,7 +4,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "打印当前主机名。\n\nhostname"
-    IDS_NOSET "hostname -s 不受支持。"
-    IDS_ERROR "Win32 错误"
+    IDS_USAGE "\n打印当前主机名。\n\nhostname\n"
+    IDS_NOSET "sethostname: Open the ""Computer Name"" tab in the ""System"" Control Panel applet\nto change the host name.\nhostname -s 不受支持。\n"
+    IDS_ERROR "错误： "
 END

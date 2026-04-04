@@ -632,4 +632,5 @@ extern KAFFINITY HalpDefaultInterruptAffinity;
 
 extern IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR+1];
 
+extern BOOLEAN HalBootViaEfi;
 extern const USHORT HalpBuildType;

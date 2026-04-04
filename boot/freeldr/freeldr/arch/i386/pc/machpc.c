@@ -1694,10 +1694,9 @@ PcHwDetect(
     FldrCreateSystemKey(&SystemKey, "AT/AT COMPATIBLE");
 
     GetHarddiskConfigurationData = PcGetHarddiskConfigurationData;
-    FindPciBios = PcFindPciBios;
 
     /* Detect buses */
-    DetectPciBios(SystemKey, &BusNumber);
+    DetectPciBios(SystemKey, &BusNumber, PcFindPciBios);
     DetectApmBios(SystemKey, &BusNumber);
     DetectPnpBios(SystemKey, &BusNumber);
     DetectIsaBios(Options, SystemKey, &BusNumber); // TODO: Detect first EISA or MCA, before ISA

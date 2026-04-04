@@ -1283,6 +1283,7 @@ public:
     CLBarInatItem(DWORD dwThreadId);
 
     STDMETHOD(InitMenu)(ITfMenu *pMenu) override;
+    using CLBarItemButtonBase::OnMenuSelect;
     STDMETHOD(OnMenuSelect)(INT nCommandId);
     STDMETHOD(GetIcon)(HICON *phIcon) override;
     STDMETHOD(GetText)(BSTR *pbstr) override;

@@ -816,8 +816,7 @@ function(create_registry_hives)
     add_cd_file(TARGET registry_inf
                 FILE ${_registry_inf}
                 DESTINATION reactos
-                NO_CAB
-                FOR bootcd regtest)
+                NO_CAB FOR bootcd regtest)
 
     # BootCD setup system hive
     add_custom_command(
@@ -832,8 +831,7 @@ function(create_registry_hives)
         FILE ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
         TARGET bootcd_hives
         DESTINATION reactos
-        NO_CAB
-        FOR bootcd regtest)
+        NO_CAB FOR bootcd regtest)
 
     # LiveCD hives
     list(APPEND _livecd_inf_files
@@ -877,21 +875,22 @@ function(create_registry_hives)
         DESTINATION reactos/system32/config
         FOR livecd)
 
-    # BCD Hive
-    add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
-        COMMAND native-mkhive -h:BCD -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf
-        DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf)
+    # BCD hive (for EFI-compatible platforms)
+    if(NOT ARCH STREQUAL "i386" OR NOT (SARCH STREQUAL "pc98" OR SARCH STREQUAL "xbox"))
+        add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
+            COMMAND native-mkhive -h:BCD -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf
+            DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf)
 
-    add_custom_target(bcd_hive
-        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/BCD)
+        add_custom_target(bcd_hive
+            DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/BCD)
 
-    add_cd_file(
-        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
-        TARGET bcd_hive
-        DESTINATION efi/boot
-        NO_CAB
-        FOR bootcd regtest livecd)
+        add_cd_file(
+            FILE ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
+            TARGET bcd_hive
+            DESTINATION efi/boot
+            NO_CAB FOR bootcd regtest livecd)
+    endif()
 
 endfunction()
 

@@ -56,6 +56,9 @@ HalInitializeBios(
     PMDL Mdl;
     ULONG64 PhysicalAddress;
 
+    if (HalBootViaEfi)
+        return;
+
     if (Phase == 0)
     {
         /* Allocate one page for a fallback mapping */
@@ -415,6 +418,9 @@ x86BiosCall(
     FAST486_STATE EmulatorContext;
     ULONG FlatIp;
     PUCHAR InstructionPointer;
+
+    if (!x86BiosIsInitialized || (x86BiosMemoryMapping == NULL))
+        return FALSE;
 
     /* Initialize the emulator context */
     Fast486Initialize(&EmulatorContext,

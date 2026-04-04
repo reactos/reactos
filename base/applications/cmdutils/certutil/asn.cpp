@@ -221,7 +221,7 @@ void PrintTag(PBYTE pRoot, PBYTE pHeader, DWORD dwTag, DWORD dwTagLength, PBYTE 
     DWORD dwRemainder = HexDump(pRoot, pHeader, pData - pHeader, wszPrefix);
 
     LPCWSTR wszTag = TagToName(dwTag);
-    DWORD dwPadding = dwRemainder + wcslen(wszPrefix);
+    size_t dwPadding = dwRemainder + wcslen(wszPrefix);
     while (dwPadding > 50)
         dwPadding -= 50;
     ConPrintf(StdOut, L"%*s; %s (%x Bytes)\n", 50 - dwPadding, L"", wszTag, dwTagLength);
@@ -505,4 +505,3 @@ BOOL asn_dump(LPCWSTR Filename)
     LocalFree(pData);
     return fSucceeded;
 }
-

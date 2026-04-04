@@ -9,17 +9,15 @@
  * implement registerdns, showclassid, setclassid
  */
 
-#define WIN32_NO_STATUS
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
+
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
-#include <winuser.h>
 #include <winreg.h>
-#include <winnls.h>
-#include <stdio.h>
-#include <time.h>
 #include <iphlpapi.h>
 #include <ndk/rtlfuncs.h>
 #include <inaddr.h>
@@ -32,13 +30,10 @@
 
 #include "resource.h"
 
-#define NDEBUG
-#include <debug.h>
-
 typedef struct _RECORDTYPE
 {
     WORD wRecordType;
-    LPWSTR pszRecordName;
+    PCWSTR pszRecordName;
 } RECORDTYPE, *PRECORDTYPE;
 
 #define GUID_LEN 40
@@ -105,7 +100,7 @@ RECORDTYPE TypeArray[] =
     {0, NULL}
 };
 
-LPWSTR
+PCWSTR
 GetRecordTypeName(WORD wType)
 {
     static WCHAR szType[8];
@@ -126,7 +121,7 @@ GetRecordTypeName(WORD wType)
 }
 
 /* print MAC address */
-PCHAR PrintMacAddr(PBYTE Mac)
+PCSTR PrintMacAddr(PBYTE Mac)
 {
     static CHAR MacAddr[20];
 
@@ -135,7 +130,6 @@ PCHAR PrintMacAddr(PBYTE Mac)
 
     return MacAddr;
 }
-
 
 /* convert time_t to localized string */
 _Ret_opt_z_ PWSTR timeToStr(_In_ time_t TimeStamp)
@@ -200,38 +194,26 @@ _Ret_opt_z_ PWSTR timeToStr(_In_ time_t TimeStamp)
     return NULL;
 }
 
-
 VOID
 DoFormatMessage(
     _In_ LONG ErrorCode)
 {
-    LPVOID lpMsgBuf;
-    //DWORD ErrorCode;
-
     if (ErrorCode == 0)
         ErrorCode = GetLastError();
 
-    if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                        FORMAT_MESSAGE_FROM_SYSTEM |
-                        FORMAT_MESSAGE_IGNORE_INSERTS,
-                       NULL,
-                       ErrorCode,
-                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
-                       (LPWSTR)&lpMsgBuf,
-                       0,
-                       NULL))
-    {
-        ConPuts(StdOut, (LPWSTR)lpMsgBuf);
-        LocalFree(lpMsgBuf);
-    }
+    ConMsgPuts(StdOut,
+               FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL,
+               ErrorCode,
+               LANG_USER_DEFAULT);
 }
 
-LPWSTR
+PWSTR
 GetUnicodeAdapterName(
-    _In_ LPSTR pszAnsiName)
+    _In_ PSTR pszAnsiName)
 {
-    LPWSTR pszUnicodeName;
-    int i, len;
+    PWSTR pszUnicodeName;
+    size_t i, len;
 
     len = strlen(pszAnsiName);
     pszUnicodeName = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
@@ -247,21 +229,21 @@ GetUnicodeAdapterName(
 
 VOID
 GetAdapterFriendlyName(
-    _In_ LPSTR lpClass,
+    _In_ PSTR lpClass,
     _In_ DWORD cchFriendlyNameLength,
-    _Out_ LPWSTR pszFriendlyName)
+    _Out_ PWSTR pszFriendlyName)
 {
     HKEY hKey = NULL;
     CHAR Path[256];
-    LPSTR PrePath  = "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
-    LPSTR PostPath = "\\Connection";
-    DWORD PathSize;
+    PCSTR PrePath = "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
+    PCSTR PostPath = "\\Connection";
+    size_t PathSize;
     DWORD dwType;
     DWORD dwDataSize;
 
     /* don't overflow the buffer */
     PathSize = strlen(PrePath) + strlen(lpClass) + strlen(PostPath) + 1;
-    if (PathSize >= 255)
+    if (PathSize > _countof(Path))
         return;
 
     sprintf(Path, "%s%s%s", PrePath, lpClass, PostPath);
@@ -287,24 +269,24 @@ GetAdapterFriendlyName(
 
 VOID
 GetInterfaceFriendlyName(
-    _In_ LPWSTR lpDeviceName,
+    _In_ PCWSTR lpDeviceName,
     _In_ DWORD cchFriendlyNameLength,
-    _Out_ LPWSTR pszFriendlyName)
+    _Out_ PWSTR pszFriendlyName)
 {
     HKEY hKey = NULL;
     WCHAR Path[256];
-    LPWSTR PrePath  = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
-    LPWSTR PostPath = L"\\Connection";
-    LPWSTR DevicePrefix = L"\\DEVICE\\TCPIP_";
-    DWORD PathSize;
+    PCWSTR PrePath = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
+    PCWSTR PostPath = L"\\Connection";
+    PCWSTR DevicePrefix = L"\\DEVICE\\TCPIP_";
+    size_t PathSize;
     DWORD dwType;
     DWORD dwDataSize;
 
-    DWORD dwPrefixLength = wcslen(DevicePrefix);
+    size_t dwPrefixLength = wcslen(DevicePrefix);
 
     /* don't overflow the buffer */
     PathSize = wcslen(PrePath) + wcslen(lpDeviceName) - dwPrefixLength + wcslen(PostPath) + 1;
-    if (PathSize >= 255)
+    if (PathSize > _countof(Path))
         return;
 
     swprintf(Path, L"%s%s%s", PrePath, &lpDeviceName[dwPrefixLength], PostPath);
@@ -330,13 +312,13 @@ GetInterfaceFriendlyName(
 
 static
 VOID
-PrintAdapterDescription(LPSTR lpClass)
+PrintAdapterDescription(PSTR lpClass)
 {
     HKEY hBaseKey = NULL;
     HKEY hClassKey = NULL;
-    LPSTR lpKeyClass = NULL;
-    LPSTR lpConDesc = NULL;
-    LPWSTR lpPath = NULL;
+    PSTR lpKeyClass = NULL;
+    PSTR lpConDesc = NULL;
+    PWSTR lpPath = NULL;
     WCHAR szPrePath[] = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002bE10318}\\";
     DWORD dwType;
     DWORD dwDataSize;
@@ -353,7 +335,7 @@ PrintAdapterDescription(LPSTR lpClass)
 
     for (i = 0; ; i++)
     {
-        DWORD PathSize;
+        size_t PathSize;
         LONG Status;
         WCHAR szName[10];
         DWORD NameLen = 9;
@@ -378,13 +360,13 @@ PrintAdapterDescription(LPSTR lpClass)
         }
 
         PathSize = wcslen(szPrePath) + wcslen(szName) + 1;
-        lpPath = (LPWSTR)HeapAlloc(ProcessHeap,
-                                   0,
-                                   PathSize * sizeof(WCHAR));
+        lpPath = (PWSTR)HeapAlloc(ProcessHeap,
+                                  0,
+                                  PathSize * sizeof(WCHAR));
         if (lpPath == NULL)
             goto CLEANUP;
 
-        wsprintf(lpPath, L"%s%s", szPrePath, szName);
+        swprintf(lpPath, L"%s%s", szPrePath, szName);
 
         //MessageBox(NULL, lpPath, NULL, 0);
 
@@ -407,9 +389,9 @@ PrintAdapterDescription(LPSTR lpClass)
                              NULL,
                              &dwDataSize) == ERROR_SUCCESS)
         {
-            lpKeyClass = (LPSTR)HeapAlloc(ProcessHeap,
-                                          0,
-                                          dwDataSize);
+            lpKeyClass = (PSTR)HeapAlloc(ProcessHeap,
+                                         0,
+                                         dwDataSize);
             if (lpKeyClass == NULL)
                 goto CLEANUP;
 
@@ -440,9 +422,9 @@ PrintAdapterDescription(LPSTR lpClass)
                                  NULL,
                                  &dwDataSize) == ERROR_SUCCESS)
             {
-                lpConDesc = (LPSTR)HeapAlloc(ProcessHeap,
-                                             0,
-                                             dwDataSize);
+                lpConDesc = (PSTR)HeapAlloc(ProcessHeap,
+                                            0,
+                                            dwDataSize);
                 if (lpConDesc != NULL)
                 {
                     if (RegQueryValueExA(hClassKey,
@@ -836,7 +818,7 @@ MatchWildcard(
 
 VOID
 Release(
-    LPWSTR pszAdapterName)
+    PWSTR pszAdapterName)
 {
     PIP_ADAPTER_INFO pAdapterInfo = NULL;
     PIP_ADAPTER_INFO pAdapter = NULL;
@@ -895,7 +877,6 @@ Release(
                     if (strcmp(pAdapter->IpAddressList.IpAddress.String, "0.0.0.0"))
                     {
                         mbstowcs(szUnicodeAdapterName, pAdapter->AdapterName, strlen(pAdapter->AdapterName) + 1);
-                        DPRINT1("AdapterName: %S\n", szUnicodeAdapterName);
 
                         /* Call DhcpReleaseParameters to release the IP address on the specified adapter. */
                         ret = DhcpReleaseParameters(szUnicodeAdapterName);
@@ -942,7 +923,7 @@ done:
 
 VOID
 Renew(
-    LPWSTR pszAdapterName)
+    PWSTR pszAdapterName)
 {
     PIP_ADAPTER_INFO pAdapterInfo = NULL;
     PIP_ADAPTER_INFO pAdapter = NULL;
@@ -999,7 +980,6 @@ Renew(
                 if (pAdapter->DhcpEnabled)
                 {
                     mbstowcs(szUnicodeAdapterName, pAdapter->AdapterName, strlen(pAdapter->AdapterName) + 1);
-                    DPRINT1("AdapterName: %S\n", szUnicodeAdapterName);
 
                     /* Call DhcpAcquireParameters to renew the IP address on the specified adapter. */
                     ret = DhcpAcquireParameters(szUnicodeAdapterName);
@@ -1166,7 +1146,7 @@ DisplayDnsRecord(
                 break;
 
             case DNS_TYPE_AAAA:
-                RtlCopyMemory(&Addr6, &pThisRecord->Data.AAAA.Ip6Address, sizeof(IN6_ADDR));
+                RtlCopyMemory(&Addr6, &pThisRecord->Data.AAAA.Ip6Address, sizeof(Addr6));
                 RtlIpv6AddressToStringW(&Addr6, szBuffer);
                 ConResPrintf(StdOut, IDS_DNSTYPEAAAA, szBuffer);
                 break;
@@ -1228,15 +1208,15 @@ DisplayDns(VOID)
 
 VOID
 ShowClassId(
-    LPWSTR pszAdapterName)
+    PWSTR pszAdapterName)
 {
     printf("\nSorry /showclassid adapter is not implemented yet\n");
 }
 
 VOID
 SetClassId(
-    LPWSTR pszAdapterName,
-    LPWSTR pszClassId)
+    PWSTR pszAdapterName,
+    PWSTR pszClassId)
 {
     PIP_ADAPTER_INFO pAdapterInfo = NULL;
     PIP_ADAPTER_INFO pAdapter = NULL, pFoundAdapter = NULL;
@@ -1244,8 +1224,10 @@ SetClassId(
     ULONG ret = 0;
     WCHAR szFriendlyName[MAX_PATH];
     WCHAR szKeyName[256];
+    WCHAR szUnicodeAdapterName[MAX_ADAPTER_NAME_LENGTH + 4];
     MIB_IFROW mibEntry;
     HKEY hKey;
+    DHCP_PNP_EVENT PnpEvent;
 
     ConResPrintf(StdOut, IDS_HEADER);
 
@@ -1313,8 +1295,35 @@ SetClassId(
         if (pszClassId == NULL)
             pszClassId = L"";
 
-        RegSetValueExW(hKey, L"DhcpClassId", 0, REG_SZ, (LPBYTE)pszClassId, (wcslen(pszClassId) + 1) * sizeof(WCHAR));
+        ret = RegSetValueExW(hKey,
+                             L"DhcpClassId",
+                             0, REG_SZ,
+                             (PBYTE)pszClassId,
+                             (DWORD)((wcslen(pszClassId) + 1) * sizeof(WCHAR)));
         RegCloseKey(hKey);
+        if (ret != ERROR_SUCCESS)
+        {
+            ConResPrintf(StdOut, IDS_DHCPSETIDERROR, szFriendlyName);
+            DoFormatMessage(ret);
+            goto done;
+        }
+
+        mbstowcs(szUnicodeAdapterName, pFoundAdapter->AdapterName, strlen(pFoundAdapter->AdapterName) + 1);
+
+        ZeroMemory(&PnpEvent, sizeof(PnpEvent));
+        PnpEvent.Unknown5 = 1;
+
+        ret = DhcpHandlePnPEvent(0,
+                                 1,
+                                 szUnicodeAdapterName,
+                                 &PnpEvent,
+                                 0);
+        if (ret != ERROR_SUCCESS)
+        {
+            ConResPrintf(StdOut, IDS_DHCPSETIDERROR, szFriendlyName);
+            DoFormatMessage(ret);
+            goto done;
+        }
 
         ConResPrintf(StdOut, IDS_DHCPSETIDSUCCESS, szFriendlyName);
     }

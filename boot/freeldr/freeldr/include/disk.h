@@ -93,11 +93,11 @@ typedef struct _MASTER_BOOT_RECORD
 #define PARTITION_LINUX                 0x83
 #endif
 
-///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
 // PC x86/64 BIOS Disk Functions (pcdisk.c)
 //
-///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 #if defined(__i386__) || defined(_M_AMD64)
 VOID __cdecl DiskStopFloppyMotor(VOID);
 #endif // defined __i386__ || defined(_M_AMD64)
@@ -111,11 +111,46 @@ extern SIZE_T DiskReadBufferSize;
 extern CCHAR FrLdrBootPath[MAX_PATH];
 
 
-///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
-// Fixed Disk Partition Management Functions
+// Disk Management Functions
 //
-///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Disk devices helpers (disk.c)
+ */
+
+LONG
+DiskReportError(
+    _In_ BOOLEAN bShowError);
+
+VOID
+DiskError(
+    _In_ PCSTR ErrorString,
+    _In_ ULONG ErrorCode);
+
+extern PCSTR
+DiskGetErrorCodeString(
+    _In_ ULONG ErrorCode);
+
+/* See fs.h */
+struct tagDEVVTBL;
+
+ARC_STATUS
+DiskInitialize(
+    _In_ UCHAR DriveNumber, // FIXME: Arch-specific
+    _In_ PCSTR DeviceName,
+    _In_ CONFIGURATION_TYPE DeviceType,
+    _In_ const struct tagDEVVTBL* FuncTable,
+    _Out_opt_ PULONG pChecksum,
+    _Out_opt_ PULONG pSignature,
+    _Out_opt_ PBOOLEAN pValidPartitionTable);
+
+
+/*
+ * Fixed Disk Partition Management Functions (partition.c)
+ */
 
 VOID
 DiskDetectPartitionType(
@@ -132,6 +167,7 @@ DiskGetPartitionEntry(
     IN UCHAR DriveNumber,
     IN ULONG PartitionNumber,
     OUT PPARTITION_TABLE_ENTRY PartitionTableEntry);
+
 
 /*
  * SCSI support (disk/scsiport.c)

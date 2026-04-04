@@ -103,6 +103,28 @@ wWinMain(HINSTANCE   hInstance,
          LPWSTR      lpCmdLine,
          INT         nCmdShow)
 {
+    LPCWSTR pszText;
+
+    if (lpCmdLine && *lpCmdLine)
+    {
+        /* Check if argument is --list, rosautotest is trying to see if this is a test. */
+        if (wcscmp(L"--list", lpCmdLine) == 0)
+        {
+            /* This is a funny hack, but it works and doesn't require special handling. */
+            printf("Valid test names:\n");
+            return 0;
+        }
+
+        /* Set window title to the command line argument. */
+        pszText = lpCmdLine;
+    }
+
+    else
+    {
+        /* No command line arguments, set window title to 'user32_apitest_menuui'. */
+        pszText = L"user32_apitest_menuui";
+    }
+
     WNDCLASSW wc = { CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, WindowProc };
     wc.hInstance = hInstance;
     wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
@@ -111,8 +133,6 @@ wWinMain(HINSTANCE   hInstance,
     wc.lpszClassName = CLASSNAME;
     if (!RegisterClassW(&wc))
         return 1;
-
-    LPCWSTR pszText = (lpCmdLine && lpCmdLine[0]) ? lpCmdLine : L"user32_apitest_menuui";
 
     HMENU hMenu = CreateMyMenuBarMenu();
     HWND hwnd = CreateWindowW(CLASSNAME, pszText, WS_OVERLAPPEDWINDOW,

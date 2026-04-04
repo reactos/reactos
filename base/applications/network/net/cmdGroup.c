@@ -81,7 +81,7 @@ DisplayGroup(LPWSTR lpGroupName)
     DWORD dwTotal = 0;
     DWORD_PTR ResumeHandle = 0;
     DWORD i;
-    INT nPaddedLength = 15;
+    const DWORD nPaddedLength = 15;
     NET_API_STATUS Status;
 
     Status = NetGroupGetInfo(NULL,

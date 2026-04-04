@@ -84,4 +84,3 @@ BOOL hash_file(LPCWSTR Filename)
     CloseHandle(hFile);
     return bSuccess;
 }
-

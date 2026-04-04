@@ -11,7 +11,6 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
 #include <wincon.h>
 #include <winnls.h>
 #include <lm.h>
@@ -28,7 +27,7 @@ static
 VOID
 FreeDaysOfWeekArray(VOID)
 {
-    INT i;
+    WORD i;
 
     for (i = 0; i < 7; i++)
     {
@@ -42,10 +41,11 @@ static
 BOOL
 InitDaysOfWeekArray(VOID)
 {
-    INT i, nLength;
+    WORD i;
 
     for (i = 0; i < 7; i++)
     {
+        INT nLength;
         nLength = GetLocaleInfo(LOCALE_USER_DEFAULT,
                                 LOCALE_SABBREVDAYNAME1 + i,
                                 NULL,
@@ -80,7 +80,7 @@ ParseTime(
     WCHAR szHour[3], szMinute[3], szAmPm[5];
     PWSTR startPtr, endPtr;
     ULONG ulHour = 0, ulMinute = 0;
-    INT nLength;
+    UINT nLength;
 
     if (pszTime == NULL)
         return FALSE;
@@ -155,7 +155,9 @@ ParseTime(
         _wcsicmp(szAmPm, L"am") != 0 &&
         _wcsicmp(szAmPm, L"p") != 0 &&
         _wcsicmp(szAmPm, L"pm") != 0)
+    {
         return FALSE;
+    }
 
     /* Check for the valid minute range [0-59] */
     if (ulMinute > 59)
@@ -165,7 +167,7 @@ ParseTime(
     {
         /* 12 hour time format */
 
-         /* Check for the valid hour range [1-12] */
+        /* Check for the valid hour range [1-12] */
         if (ulHour == 0 || ulHour > 12)
             return FALSE;
 
@@ -267,7 +269,8 @@ ParseDaysOfWeek(
     PUCHAR pucDaysOfWeek)
 {
     PWSTR startPtr, endPtr;
-    INT nLength, i;
+    size_t nLength;
+    WORD i;
 
     if (wcslen(pszBuffer) == 0)
         return FALSE;
@@ -280,7 +283,7 @@ ParseDaysOfWeek(
         if (endPtr == NULL)
             nLength = wcslen(startPtr);
         else
-            nLength = (INT)((ULONG_PTR)endPtr - (ULONG_PTR)startPtr) / sizeof(WCHAR);
+            nLength = ((ULONG_PTR)endPtr - (ULONG_PTR)startPtr) / sizeof(WCHAR);
 
         for (i = 0; i < 7; i++)
         {
@@ -308,18 +311,7 @@ VOID
 PrintErrorMessage(
     DWORD dwError)
 {
-    PWSTR pszBuffer = NULL;
-
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                   NULL,
-                   dwError,
-                   0,
-                   (PWSTR)&pszBuffer,
-                   0,
-                   NULL);
-
-    ConPrintf(StdErr, L"%s\n", pszBuffer);
-    LocalFree(pszBuffer);
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwError, 0);
 }
 
 
@@ -328,7 +320,7 @@ VOID
 PrintHorizontalLine(VOID)
 {
     WCHAR szBuffer[80];
-    INT i;
+    WORD i;
 
     for (i = 0; i < 79; i++)
         szBuffer[i] = L'-';
@@ -342,7 +334,6 @@ static
 BOOL
 Confirm(VOID)
 {
-    HINSTANCE hInstance;
     WCHAR szYesBuffer[8];
     WCHAR szNoBuffer[8];
     WCHAR szInput[80];
@@ -351,9 +342,8 @@ Confirm(VOID)
     BOOL ret = FALSE;
     HANDLE hFile;
 
-    hInstance = GetModuleHandleW(NULL);
-    LoadStringW(hInstance, IDS_CONFIRM_YES, szYesBuffer, _countof(szYesBuffer));
-    LoadStringW(hInstance, IDS_CONFIRM_NO, szNoBuffer, _countof(szNoBuffer));
+    LoadStringW(NULL, IDS_CONFIRM_YES, szYesBuffer, _countof(szYesBuffer));
+    LoadStringW(NULL, IDS_CONFIRM_NO, szNoBuffer, _countof(szNoBuffer));
 
     ZeroMemory(szInput, sizeof(szInput));
 
@@ -452,32 +442,30 @@ PrintJobDetails(
     WCHAR szTimeBuffer[16];
     WCHAR szInteractiveBuffer[16];
     WCHAR szDateBuffer[8];
-    INT i, nDateLength, nScheduleLength;
-    HINSTANCE hInstance;
+    size_t nDateLength, nScheduleLength;
+    WORD i;
     NET_API_STATUS Status;
 
     Status = NetScheduleJobGetInfo(pszComputerName,
                                    ulJobId,
-                                   (PBYTE *)&pBuffer);
+                                   (PBYTE*)&pBuffer);
     if (Status != NERR_Success)
     {
         PrintErrorMessage(Status);
         return 1;
     }
 
-    hInstance = GetModuleHandle(NULL);
-
     if (pBuffer->Flags & JOB_EXEC_ERROR)
-        LoadStringW(hInstance, IDS_ERROR, szStatusBuffer, _countof(szStatusBuffer));
+        LoadStringW(NULL, IDS_ERROR, szStatusBuffer, _countof(szStatusBuffer));
     else
-        LoadStringW(hInstance, IDS_OK, szStatusBuffer, _countof(szStatusBuffer));
+        LoadStringW(NULL, IDS_OK, szStatusBuffer, _countof(szStatusBuffer));
 
     if (pBuffer->DaysOfMonth != 0)
     {
         if (pBuffer->Flags & JOB_RUN_PERIODICALLY)
-            LoadStringW(hInstance, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
+            LoadStringW(NULL, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
         else
-            LoadStringW(hInstance, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
+            LoadStringW(NULL, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
 
         nScheduleLength = wcslen(szScheduleBuffer);
         for (i = 0; i < 31; i++)
@@ -502,9 +490,9 @@ PrintJobDetails(
     else if (pBuffer->DaysOfWeek != 0)
     {
         if (pBuffer->Flags & JOB_RUN_PERIODICALLY)
-            LoadStringW(hInstance, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
+            LoadStringW(NULL, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
         else
-            LoadStringW(hInstance, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
+            LoadStringW(NULL, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
 
         nScheduleLength = wcslen(szScheduleBuffer);
         for (i = 0; i < 7; i++)
@@ -530,9 +518,9 @@ PrintJobDetails(
     {
         CurrentTime = GetTimeAsJobTime();
         if (CurrentTime > pBuffer->JobTime)
-            LoadStringW(hInstance, IDS_TOMORROW, szScheduleBuffer, _countof(szScheduleBuffer));
+            LoadStringW(NULL, IDS_TOMORROW, szScheduleBuffer, _countof(szScheduleBuffer));
         else
-            LoadStringW(hInstance, IDS_TODAY, szScheduleBuffer, _countof(szScheduleBuffer));
+            LoadStringW(NULL, IDS_TODAY, szScheduleBuffer, _countof(szScheduleBuffer));
     }
 
     JobTimeToTimeString(szTimeBuffer,
@@ -541,9 +529,9 @@ PrintJobDetails(
                         (WORD)((pBuffer->JobTime % 3600000) / 60000));
 
     if (pBuffer->Flags & JOB_NONINTERACTIVE)
-        LoadStringW(hInstance, IDS_NO, szInteractiveBuffer, _countof(szInteractiveBuffer));
+        LoadStringW(NULL, IDS_NO, szInteractiveBuffer, _countof(szInteractiveBuffer));
     else
-        LoadStringW(hInstance, IDS_YES, szInteractiveBuffer, _countof(szInteractiveBuffer));
+        LoadStringW(NULL, IDS_YES, szInteractiveBuffer, _countof(szInteractiveBuffer));
 
     ConResPrintf(StdOut, IDS_TASKID, ulJobId);
     ConResPrintf(StdOut, IDS_STATUS, szStatusBuffer);
@@ -568,15 +556,14 @@ PrintAllJobs(
     DWORD dwResume = 0, i;
     DWORD_PTR CurrentTime;
     NET_API_STATUS Status;
-
     WCHAR szScheduleBuffer[32];
     WCHAR szTimeBuffer[16];
     WCHAR szDateBuffer[8];
-    HINSTANCE hInstance;
-    INT j, nDateLength, nScheduleLength;
+    size_t nDateLength, nScheduleLength;
+    WORD j;
 
     Status = NetScheduleJobEnum(pszComputerName,
-                                (PBYTE *)&pBuffer,
+                                (PBYTE*)&pBuffer,
                                 MAX_PREFERRED_LENGTH,
                                 &dwRead,
                                 &dwTotal,
@@ -596,16 +583,14 @@ PrintAllJobs(
     ConResPrintf(StdOut, IDS_JOBS_LIST);
     PrintHorizontalLine();
 
-    hInstance = GetModuleHandle(NULL);
-
     for (i = 0; i < dwRead; i++)
     {
         if (pBuffer[i].DaysOfMonth != 0)
         {
             if (pBuffer[i].Flags & JOB_RUN_PERIODICALLY)
-                LoadStringW(hInstance, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
+                LoadStringW(NULL, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
             else
-                LoadStringW(hInstance, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
+                LoadStringW(NULL, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
 
             nScheduleLength = wcslen(szScheduleBuffer);
             for (j = 0; j < 31; j++)
@@ -630,9 +615,9 @@ PrintAllJobs(
         else if (pBuffer[i].DaysOfWeek != 0)
         {
             if (pBuffer[i].Flags & JOB_RUN_PERIODICALLY)
-                LoadStringW(hInstance, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
+                LoadStringW(NULL, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
             else
-                LoadStringW(hInstance, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
+                LoadStringW(NULL, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
 
             nScheduleLength = wcslen(szScheduleBuffer);
             for (j = 0; j < 7; j++)
@@ -658,9 +643,9 @@ PrintAllJobs(
         {
             CurrentTime = GetTimeAsJobTime();
             if (CurrentTime > pBuffer[i].JobTime)
-                LoadStringW(hInstance, IDS_TOMORROW, szScheduleBuffer, _countof(szScheduleBuffer));
+                LoadStringW(NULL, IDS_TOMORROW, szScheduleBuffer, _countof(szScheduleBuffer));
             else
-                LoadStringW(hInstance, IDS_TODAY, szScheduleBuffer, _countof(szScheduleBuffer));
+                LoadStringW(NULL, IDS_TODAY, szScheduleBuffer, _countof(szScheduleBuffer));
         }
 
         JobTimeToTimeString(szTimeBuffer,

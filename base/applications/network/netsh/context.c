@@ -811,7 +811,7 @@ CreateRootContext(VOID)
     if (pRootContext == NULL)
         return FALSE;
 
-    pRootContext->hModule = hModule;
+    pRootContext->hModule = g_hModule;
 
     AddContextCommand(pRootContext, L"..",      UpCommand,      IDS_HLP_UP,      IDS_HLP_UP_EX, 0);
     AddContextCommand(pRootContext, L"?",       NULL,           IDS_HLP_HELP,    IDS_HLP_HELP_EX, 0);

@@ -22,14 +22,13 @@
 #include <freeldr.h>
 
 #include <debug.h>
-DBG_DEFAULT_CHANNEL(HWDETECT);
+DBG_DEFAULT_CHANNEL(DISK);
 
 /*
  * This is the common code for harddisk for both the PC and the XBOX.
  */
 
 #define FIRST_BIOS_DISK 0x80
-#define FIRST_PARTITION 1
 
 typedef struct tagDISKCONTEXT
 {
@@ -40,8 +39,6 @@ typedef struct tagDISKCONTEXT
     ULONGLONG SectorCount;
     ULONGLONG SectorNumber;
 } DISKCONTEXT;
-
-static const CHAR Hex[] = "0123456789abcdef";
 
 /* Data cache for BIOS disks pre-enumeration */
 UCHAR PcBiosDiskCount = 0;
@@ -257,67 +254,32 @@ GetHarddiskIdentifier(UCHAR DriveNumber)
 }
 
 static VOID
-GetHarddiskInformation(UCHAR DriveNumber)
+GetHarddiskInformation(
+    _In_ UCHAR DriveNumber)
 {
-    PMASTER_BOOT_RECORD Mbr;
-    PULONG Buffer;
-    ULONG i;
-    ULONG Checksum;
-    ULONG Signature;
-    BOOLEAN ValidPartitionTable;
-    CHAR ArcName[MAX_PATH];
-    PARTITION_TABLE_ENTRY PartitionTableEntry;
+    static const CHAR Hex[] = "0123456789abcdef";
+
     PCHAR Identifier = PcDiskIdentifier[DriveNumber - FIRST_BIOS_DISK];
+    ARC_STATUS Status;
+    ULONG Checksum, Signature;
+    BOOLEAN ValidPartitionTable;
+    CHAR DiskName[64];
 
-    /* Detect disk partition type */
-    DiskDetectPartitionType(DriveNumber);
+    RtlStringCbPrintfA(DiskName, sizeof(DiskName),
+                       "multi(0)disk(0)rdisk(%u)",
+                       DriveNumber - FIRST_BIOS_DISK);
 
-    /* Read the MBR */
-    if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, DiskReadBuffer))
+    DiskReportError(FALSE);
+    Status = DiskInitialize(DriveNumber, DiskName, DiskPeripheral, &DiskVtbl,
+                            &Checksum, &Signature, &ValidPartitionTable);
+    DiskReportError(TRUE);
+
+    if (Status != ESUCCESS)
     {
-        ERR("Reading MBR failed\n");
-        /* We failed, use a default identifier */
-        sprintf(Identifier, "BIOSDISK%d", DriveNumber - FIRST_BIOS_DISK + 1);
+        /* The disk failed to be initialized, use a default identifier */
+        RtlStringCbPrintfA(Identifier, 20, "BIOSDISK%u", DriveNumber - FIRST_BIOS_DISK + 1);
         return;
     }
-
-    Buffer = (ULONG*)DiskReadBuffer;
-    Mbr = (PMASTER_BOOT_RECORD)DiskReadBuffer;
-
-    Signature = Mbr->Signature;
-    TRACE("Signature: %x\n", Signature);
-
-    /* Calculate the MBR checksum */
-    Checksum = 0;
-    for (i = 0; i < 512 / sizeof(ULONG); i++)
-    {
-        Checksum += Buffer[i];
-    }
-    Checksum = ~Checksum + 1;
-    TRACE("Checksum: %x\n", Checksum);
-
-    ValidPartitionTable = (Mbr->MasterBootRecordMagic == 0xAA55);
-
-    /* Fill out the ARC disk block */
-    sprintf(ArcName, "multi(0)disk(0)rdisk(%u)", DriveNumber - FIRST_BIOS_DISK);
-    AddReactOSArcDiskInfo(ArcName, Signature, Checksum, ValidPartitionTable);
-
-    sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(0)", DriveNumber - FIRST_BIOS_DISK);
-    FsRegisterDevice(ArcName, &DiskVtbl);
-
-    /* Add partitions */
-    i = FIRST_PARTITION;
-    DiskReportError(FALSE);
-    while (DiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
-    {
-        if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
-        {
-            sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(%lu)", DriveNumber - FIRST_BIOS_DISK, i);
-            FsRegisterDevice(ArcName, &DiskVtbl);
-        }
-        i++;
-    }
-    DiskReportError(TRUE);
 
     /* Convert checksum and signature to identifier string */
     Identifier[0] = Hex[(Checksum >> 28) & 0x0F];
@@ -339,7 +301,7 @@ GetHarddiskInformation(UCHAR DriveNumber)
     Identifier[16] = Hex[Signature & 0x0F];
     Identifier[17] = '-';
     Identifier[18] = (ValidPartitionTable ? 'A' : 'X');
-    Identifier[19] = 0;
+    Identifier[19] = ANSI_NULL;
     TRACE("Identifier: %s\n", Identifier);
 }
 
@@ -381,7 +343,7 @@ EnumerateHarddisks(OUT PBOOLEAN BootDriveReported)
             break;
         }
 
-        /* Cache the BIOS hard disk information for later use */
+        /* Register and cache the BIOS hard disk information for later use */
         GetHarddiskInformation(DriveNumber);
 
         /* Check if we have seen the boot drive */
@@ -402,15 +364,21 @@ EnumerateHarddisks(OUT PBOOLEAN BootDriveReported)
 }
 
 static BOOLEAN
-DiskGetBootPath(BOOLEAN IsPxe)
+DiskGetBootPath(
+    _In_ BOOLEAN IsPxe,
+    _Out_ PCONFIGURATION_TYPE DeviceType)
 {
+    // *DeviceType = DiskGetConfigType(FrldrBootDrive);
     if (*FrLdrBootPath)
         return TRUE;
 
-    // FIXME! FIXME! Do this in some drive recognition procedure!!!!
+    *DeviceType = 0;
+
+    // FIXME: Do this in some drive recognition procedure!
     if (IsPxe)
     {
         RtlStringCbCopyA(FrLdrBootPath, sizeof(FrLdrBootPath), "net(0)");
+        *DeviceType = NetworkPeripheral;
     }
     else
     /* 0x49 is our magic ramdisk drive, so try to detect it first */
@@ -419,36 +387,40 @@ DiskGetBootPath(BOOLEAN IsPxe)
         /* This is the ramdisk. See ArmInitializeBootDevices() too... */
         // RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath), "ramdisk(%u)", 0);
         RtlStringCbCopyA(FrLdrBootPath, sizeof(FrLdrBootPath), "ramdisk(0)");
+        *DeviceType = DiskPeripheral;
     }
-    else if (FrldrBootDrive < FIRST_BIOS_DISK)
+    else if (FrldrBootDrive < FIRST_BIOS_DISK) // (DiskGetConfigType(FrldrBootDrive) == FloppyDiskPeripheral)
     {
         /* This is a floppy */
         RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath),
                            "multi(0)disk(0)fdisk(%u)", FrldrBootDrive);
+        *DeviceType = FloppyDiskPeripheral;
     }
     else if (FrldrBootPartition == 0xFF)
     {
         /* Boot Partition 0xFF is the magic value that indicates booting from CD-ROM (see isoboot.S) */
+        // TODO: Check if it's really a CD-ROM drive
         RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath),
                            "multi(0)disk(0)cdrom(%u)", FrldrBootDrive - FIRST_BIOS_DISK);
+        *DeviceType = CdromController;
     }
     else
     {
         ULONG BootPartition;
         PARTITION_TABLE_ENTRY PartitionEntry;
 
-        /* This is a hard disk */
+        /* This is a hard disk, find the boot partition */
         if (!DiskGetBootPartitionEntry(FrldrBootDrive, &PartitionEntry, &BootPartition))
         {
             ERR("Failed to get boot partition entry\n");
             return FALSE;
         }
-
         FrldrBootPartition = BootPartition;
 
         RtlStringCbPrintfA(FrLdrBootPath, sizeof(FrLdrBootPath),
                            "multi(0)disk(0)rdisk(%u)partition(%lu)",
                            FrldrBootDrive - FIRST_BIOS_DISK, FrldrBootPartition);
+        *DeviceType = DiskPeripheral;
     }
 
     return TRUE;
@@ -463,49 +435,29 @@ PcInitializeBootDevices(VOID)
 
     DiskCount = EnumerateHarddisks(&BootDriveReported);
 
-    /* Initialize FrLdrBootPath, the boot path we're booting from (the "SystemPartition") */
-    DiskGetBootPath(PxeInit());
+    /* Initialize FrLdrBootPath, the path FreeLoader starts from */
+    DiskGetBootPath(PxeInit(), &DriveType);
 
     /* Add it, if it's a floppy or CD-ROM */
-    DriveType = DiskGetConfigType(FrldrBootDrive);
     if ((FrldrBootDrive >= FIRST_BIOS_DISK && !BootDriveReported) ||
         (DriveType == FloppyDiskPeripheral || DriveType == CdromController))
     {
-        /* TODO: Check if it's really a CD-ROM drive */
+        ARC_STATUS Status;
 
-        PMASTER_BOOT_RECORD Mbr;
-        PULONG Buffer;
-        ULONG Checksum = 0;
-        ULONG Signature;
-        ULONG i;
+        DiskReportError(FALSE);
+        Status = DiskInitialize(FrldrBootDrive, FrLdrBootPath, DriveType,
+                                &DiskVtbl, NULL, NULL, NULL);
+        DiskReportError(TRUE);
 
-        /* Read the MBR */
-        if (!MachDiskReadLogicalSectors(FrldrBootDrive, 16ULL, 1, DiskReadBuffer))
+        if (Status == ESUCCESS)
         {
-            ERR("Reading MBR failed\n");
-            return FALSE;
+            DiskCount++; // This is not accounted for in the number of pre-enumerated BIOS drives!
+            TRACE("Additional boot drive detected: 0x%02X\n", FrldrBootDrive);
         }
-
-        Buffer = (ULONG*)DiskReadBuffer;
-        Mbr = (PMASTER_BOOT_RECORD)DiskReadBuffer;
-
-        Signature = Mbr->Signature;
-        TRACE("Signature: %x\n", Signature);
-
-        /* Calculate the MBR checksum */
-        for (i = 0; i < 2048 / sizeof(ULONG); i++)
+        else
         {
-            Checksum += Buffer[i];
+            ERR("Additional boot drive 0x%02X failed\n", FrldrBootDrive);
         }
-        Checksum = ~Checksum + 1;
-        TRACE("Checksum: %x\n", Checksum);
-
-        /* Fill out the ARC disk block */
-        AddReactOSArcDiskInfo(FrLdrBootPath, Signature, Checksum, TRUE);
-
-        FsRegisterDevice(FrLdrBootPath, &DiskVtbl);
-        DiskCount++; // This is not accounted for in the number of pre-enumerated BIOS drives!
-        TRACE("Additional boot drive detected: 0x%02X\n", (int)FrldrBootDrive);
     }
 
     return (DiskCount != 0);

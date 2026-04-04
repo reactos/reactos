@@ -427,11 +427,19 @@ PspDeleteThread(IN PVOID ObjectBody)
         }
     }
 
-    /* Cleanup impersionation information */
+    /* Cleanup impersonation information */
     PspDeleteThreadSecurity(Thread);
 
+    /* Free the thread name if set */
+    if (Thread->ThreadName)
+    {
+        ExFreePoolWithTag(Thread->ThreadName, TAG_THREAD_NAME);
+        Thread->ThreadName = NULL;
+    }
+
     /* Make sure the thread was inserted, before continuing */
-    if (!Process) return;
+    if (!Process)
+        return;
 
     /* Check if the thread list is valid */
     if (Thread->ThreadListEntry.Flink)

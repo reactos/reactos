@@ -59,10 +59,10 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(nfsd PRIVATE -Wno-incompatible-function-pointer-types)
 endif()
 
-target_link_libraries(nfsd oldnames)
+target_link_libraries(nfsd ansi_sync_hacks oldnames)
 
 set_module_type(nfsd win32cui)
-add_importlibs(nfsd advapi32 iphlpapi kernel32_vista libtirpc msvcrt shell32 ws2_32 wldap32 kernel32 ntdll)
+add_importlibs(nfsd advapi32 iphlpapi libtirpc msvcrt shell32 ws2_32 wldap32 kernel32 ntdll_vista ntdll)
 add_pch(nfsd precomp.h SOURCE)
 
 add_cd_file(TARGET nfsd DESTINATION reactos/system32 FOR all)

@@ -17,7 +17,6 @@ static unsigned CurrentCursorY = 0;
 static UCHAR CurrentAttr = ATTR(COLOR_GRAY, COLOR_BLACK);
 
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
-static EFI_INPUT_KEY Key;
 static BOOLEAN ExtendedKey = FALSE;
 static char ExtendedScanCode = 0;
 
@@ -121,12 +120,15 @@ ConvertToBiosExtValue(UCHAR KeyIn)
 BOOLEAN
 UefiConsKbHit(VOID)
 {
-    return (GlobalSystemTable->ConIn->ReadKeyStroke(GlobalSystemTable->ConIn, &Key) != EFI_NOT_READY);
+    return (GlobalSystemTable->BootServices->CheckEvent(
+                GlobalSystemTable->ConIn->WaitForKey) == EFI_SUCCESS);
 }
 
 int
 UefiConsGetCh(VOID)
 {
+    EFI_INPUT_KEY Key;
+    EFI_STATUS Status;
     UCHAR KeyOutput = 0;
 
     /* If an extended key press was detected the last time we were called
@@ -136,6 +138,10 @@ UefiConsGetCh(VOID)
         ExtendedKey = FALSE;
         return ExtendedScanCode;
     }
+
+    Status = GlobalSystemTable->ConIn->ReadKeyStroke(GlobalSystemTable->ConIn, &Key);
+    if (EFI_ERROR(Status))
+        return 0;
 
     if (Key.UnicodeChar != 0)
     {
@@ -147,9 +153,5 @@ UefiConsGetCh(VOID)
         ExtendedScanCode = ConvertToBiosExtValue(Key.ScanCode);
         KeyOutput = KEY_EXTENDED;
     }
-
-    /* UEFI will stack input requests, we have to clear it */
-    Key.UnicodeChar = 0;
-    Key.ScanCode = 0;
     return KeyOutput;
 }

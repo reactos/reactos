@@ -173,5 +173,23 @@ GreGetCharWidthW(
     _In_ UINT FirstChar,
     _In_ UINT Count,
     _In_reads_opt_(Count) PCWCH Safepwc,
-    _In_ ULONG fl,
+    _In_ FLONG fl,
     _Out_writes_bytes_(Count * sizeof(INT)) PVOID pTmpBuffer);
+
+BOOL APIENTRY
+GreGetCharABCWidthsW(
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ UINT Count,
+    _In_reads_opt_(Count) PCWCH Safepwch,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(ABC)) PVOID SafeBuffer);
+
+DWORD APIENTRY
+GreGetGlyphIndicesW(
+    _In_ HDC hdc,
+    _In_reads_opt_(cwc) PCWCH pwc,
+    _In_ INT cwc,
+    _Out_writes_opt_(cwc) PWORD pgi,
+    _In_ DWORD iMode,
+    _In_ BOOL bSubset);

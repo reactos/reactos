@@ -34,7 +34,7 @@ typedef BOOL
 (__stdcall *CON_PAGER_LINE_FN)(
     IN OUT struct _CON_PAGER *Pager,
     IN PCTCH line,
-    IN DWORD cch);
+    IN SIZE_T cch);
 
 /* Flags for CON_PAGER */
 #define CON_PAGER_EXPAND_TABS   (1 << 0)
@@ -91,7 +91,7 @@ ConWritePaging(
     IN PAGE_PROMPT PagePrompt,
     IN BOOL StartPaging,
     IN PCTCH szStr,
-    IN DWORD len);
+    IN SIZE_T len);
 
 BOOL
 ConPutsPaging(

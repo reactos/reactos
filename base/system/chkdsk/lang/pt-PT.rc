@@ -13,7 +13,7 @@ Uso: %s [unidade:] [-F] [-V] [-R] [-C]\n\n\
 \n"
 
     IDS_PERCENT_COMPL "%d percento completo.\r"
-    IDS_FILE_SYSTEM "O sistema de ficheiros é %s.\n"
+    IDS_FILE_SYSTEM "O sistema de ficheiros é %s for volume %s.\n"
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 by Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\

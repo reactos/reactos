@@ -1,3 +1,5 @@
+#pragma once
+
 #define STRING_CONSOLE_ERROR  316
 
 #define STRING_REPLACE_ERROR1 351

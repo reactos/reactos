@@ -2,7 +2,7 @@
  * jmorecfg.h
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 1997-2013 by Guido Vollbeding.
+ * Modified 1997-2025 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -12,25 +12,61 @@
  */
 
 
+#define JPEG_DATA_PRECISION  8				/* see table below */
+#define BITS_IN_JSAMPLE      JPEG_DATA_PRECISION	/* see table below */
 /*
- * Define BITS_IN_JSAMPLE as either
- *   8   for 8-bit sample values (the usual setting)
- *   9   for 9-bit sample values
- *   10  for 10-bit sample values
- *   11  for 11-bit sample values
- *   12  for 12-bit sample values
- * Only 8, 9, 10, 11, and 12 bits sample data precision are supported for
- * full-feature DCT processing.  Further depths up to 16-bit may be added
- * later for the lossless modes of operation.
- * Run-time selection and conversion of data precision will be added later
- * and are currently not supported, sorry.
+ * Most useful alternative for "HDR" (High Dynamic Range) application
+ * with backward compatibility for file interchange (see table below;
+ * move comment marks for selection):
+#define BITS_IN_JSAMPLE      10
+ */
+/* For still higher demands (see table below):
+#define BITS_IN_JSAMPLE      11
+ */
+/* or
+#define BITS_IN_JSAMPLE      12
+ */
+
+/*                      |                     BITS_IN_JSAMPLE
+ *  JPEG_DATA_PRECISION |   read / write with full DCT up to lossless operation
+ *                      |                  exceptions see below
+ * -------------------------------------------------------------------------------
+ *     {[_8_]}    |    _8_   <9>   <10>   <11>*  <12>~
+ *      [_9_]     |    <8>   _9_   <10>   <11>   <12>*
+ *     [_10_]     |    <8>   <9>   _10_   <11>   <12>    13 *
+ *      _11_      |    <8>   <9>   <10>   _11_   <12>    13     14 *
+ *      _12_      |    <8>   <9>   <10>   <11>   _12_    13     14     15 *
+ *       13       |     8     9     10     11     12     13     14     15     16 *
+ *
+ * _x_ currently and previously implemented - default configuration
+ * <x> newly implemented
+ * {x} current standard for file interchange - backward compatible
+ * [x] next standard for file interchange - common DCT implementation category
+ *  *  does not support GCC lossless (GCbCr lossless - requires 1 extra bit)
+ *  ~  1 bit precision loss - effective 11 bits precision (lossy)
+ *
+ * Since the DCT coefficients are 3 bits larger than sample values with normal DCT
+ * processing, it is possible to support sample values with up to 3 more bits than
+ * the nominal JPEG data precision parameter by adapted DCT processing with up to
+ * lossless operation.  The generated JPEG files are fully interchangeable for the
+ * same JPEG data precision parameter.  Another BITS_IN_JSAMPLE setting will just
+ * reconstruct an image with corresponding precision.
+ *
+ * A special case for JPEG data precision 8 with 12-bit sample size (4 more bits)
+ * is provided so that all previously available sample formats are now supported
+ * for file interchange with backward compatibility.
+ * If full-feature DCT up to lossless operation with up to 12-bit sample size is
+ * required, it is recommended to select JPEG data precision 10, because it falls
+ * in the same DCT implementation category with 8 and 9 which may be commonly
+ * supported at run-time as the next standard for file interchange.
+ *
+ * Remaining bit depths and variability at run-time may be added later and
+ * are currently not supported, sorry.
  * Exception:  The transcoding part (jpegtran) supports all settings in a
  * single instance, since it operates on the level of DCT coefficients and
  * not sample values.  The DCT coefficients are of the same type (16 bits)
  * in all cases (see below).
  */
-
-#define BITS_IN_JSAMPLE  8	/* use 8, 9, 10, 11, or 12 */
 
 
 /*
@@ -399,8 +435,8 @@ typedef enum { FALSE = 0, TRUE = 1 } boolean;
 
 #define C_ARITH_CODING_SUPPORTED    /* Arithmetic coding back end? */
 #define C_MULTISCAN_FILES_SUPPORTED /* Multiple-scan JPEG files? */
-#define C_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN)*/
-#define DCT_SCALING_SUPPORTED	    /* Input rescaling via DCT? (Requires DCT_ISLOW)*/
+#define C_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN) */
+#define DCT_SCALING_SUPPORTED	/* Input rescaling via DCT? (Requires DCT_ISLOW) */
 #define ENTROPY_OPT_SUPPORTED	    /* Optimization of entropy coding parms? */
 /* Note: if you selected more than 8-bit data precision, it is dangerous to
  * turn off ENTROPY_OPT_SUPPORTED.  The standard Huffman tables are only
@@ -417,8 +453,8 @@ typedef enum { FALSE = 0, TRUE = 1 } boolean;
 
 #define D_ARITH_CODING_SUPPORTED    /* Arithmetic coding back end? */
 #define D_MULTISCAN_FILES_SUPPORTED /* Multiple-scan JPEG files? */
-#define D_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN)*/
-#define IDCT_SCALING_SUPPORTED	    /* Output rescaling via IDCT? (Requires DCT_ISLOW)*/
+#define D_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN) */
+#define IDCT_SCALING_SUPPORTED	/* Output rescaling via IDCT? (Requires DCT_ISLOW) */
 #define SAVE_MARKERS_SUPPORTED	    /* jpeg_save_markers() needed? */
 #define BLOCK_SMOOTHING_SUPPORTED   /* Block smoothing? (Progressive only) */
 #undef  UPSAMPLE_SCALING_SUPPORTED  /* Output rescaling at upsample stage? */
@@ -432,20 +468,31 @@ typedef enum { FALSE = 0, TRUE = 1 } boolean;
 /*
  * Ordering of RGB data in scanlines passed to or from the application.
  * If your application wants to deal with data in the order B,G,R, just
- * change these macros.  You can also deal with formats such as R,G,B,X
- * (one extra byte per pixel) by changing RGB_PIXELSIZE.  Note that changing
- * the offsets will also change the order in which colormap data is organized.
+ * #define JPEG_USE_RGB_CUSTOM in jconfig.h, or define your own custom
+ * order in jconfig.h and #define JPEG_HAVE_RGB_CUSTOM.
+ * You can also deal with formats such as R,G,B,X (one extra byte per pixel)
+ * by changing RGB_PIXELSIZE.
+ * Note that changing the offsets will also change
+ * the order in which colormap data is organized.
  * RESTRICTIONS:
  * 1. The sample applications cjpeg,djpeg do NOT support modified RGB formats.
  * 2. The color quantizer modules will not behave desirably if RGB_PIXELSIZE
- *    is not 3 (they don't understand about dummy color components!).  So you
- *    can't use color quantization if you change that value.
+ *    is not 3 (they don't understand about dummy color components!).
+ *    So you can't use color quantization if you change that value.
  */
 
+#ifndef JPEG_HAVE_RGB_CUSTOM
+#ifdef JPEG_USE_RGB_CUSTOM
+#define RGB_RED		2	/* Offset of Red in an RGB scanline element */
+#define RGB_GREEN	1	/* Offset of Green */
+#define RGB_BLUE	0	/* Offset of Blue */
+#else
 #define RGB_RED		0	/* Offset of Red in an RGB scanline element */
 #define RGB_GREEN	1	/* Offset of Green */
 #define RGB_BLUE	2	/* Offset of Blue */
+#endif
 #define RGB_PIXELSIZE	3	/* JSAMPLEs per RGB scanline element */
+#endif
 
 
 /* Definitions for speed-related optimizations. */

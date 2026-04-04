@@ -6,7 +6,7 @@ LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Print emrin e strehuesit aktual.\n\nhostname"
-    IDS_NOSET "Strehuesi nuk është i mbështetur."
-    IDS_ERROR "Win32 error"
+    IDS_USAGE "\nPrint emrin e strehuesit aktual.\n\nhostname\n"
+    IDS_NOSET "sethostname: Open the ""Computer Name"" tab in the ""System"" Control Panel applet\nto change the host name.\nStrehuesi nuk është i mbështetur.\n"
+    IDS_ERROR "Error: "
 END

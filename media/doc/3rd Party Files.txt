@@ -28,21 +28,21 @@ URL: http://www.geocities.com/dborca/opengl/tc.html
 
 Title: libjpeg
 Path: dll/3rdparty/libjpeg
-Used Version: 9d
+Used Version: 10
 License: custom, BSD-like
 URL: http://www.ijg.org/
 Modifications: added .spec file
 
 Title: libpng
 Path: dll/3rdparty/libpng
-Used Version: 1.6.39
+Used Version: 1.6.51
 License: PNG Reference Library version 2
 URL: http://libpng.sourceforge.net/
 Modifications: added .spec file
 
 Title: libtiff
 Path: dll/3rdparty/libtiff
-Used Version: 4.1.0
+Used Version: 4.7.1
 License: libtiff (https://spdx.org/licenses/libtiff.html)
 URL: http://www.simplesystems.org/libtiff/
 Modifications: added .spec file
@@ -175,7 +175,7 @@ License: BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
 URL: https://code.google.com/archive/p/cmediadrivers/
 
 Title: HD Audio Driver for Windows 10 / 11 with Skylake -> Raptor Lake DSP support
-Path: drivers/wdm/audio/hdaudbus_new
+Path: drivers/wdm/audio/hdaudbus
 Used Version: git commit ad50bcc
 License: BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
 URL: https://github.com/coolstar/sklhdaudbus/tree/master

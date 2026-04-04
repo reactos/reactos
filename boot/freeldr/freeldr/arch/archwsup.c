@@ -75,7 +75,7 @@ ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[32];
 
 VOID
 AddReactOSArcDiskInfo(
-    IN PSTR ArcName,
+    IN PCSTR ArcName,
     IN ULONG Signature,
     IN ULONG Checksum,
     IN BOOLEAN ValidPartitionTable)

@@ -297,6 +297,8 @@ void WINAPI CoUninitialize(void);
 DWORD WINAPI CoGetCurrentProcess(void);
 HRESULT WINAPI CoGetCurrentLogicalThreadId(_Out_ GUID *id);
 HRESULT WINAPI CoGetApartmentType(_Out_ APTTYPE *type, _Out_ APTTYPEQUALIFIER *qualifier);
+HRESULT WINAPI CoIncrementMTAUsage(_Out_ CO_MTA_USAGE_COOKIE *cookie);
+HRESULT WINAPI CoDecrementMTAUsage(_In_ CO_MTA_USAGE_COOKIE cookie);
 
 HINSTANCE WINAPI CoLoadLibrary(_In_ LPOLESTR lpszLibName, _In_ BOOL bAutoFree);
 void WINAPI CoFreeAllLibraries(void);

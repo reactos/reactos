@@ -35,18 +35,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Pokud je tento počítač používán ve více než jedné síti, lze zadat alternativní nastavení níže", -1, 9, 9, 220, 20
     GROUPBOX "", -1, 9, 57, 228, 125, BS_GROUPBOX
-    CONTROL "Au&tomatická privátní IP adresa", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    CONTROL "&Uživatelské nastavení", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 70, 12
+    CONTROL "Au&tomatická privátní IP adresa", IDC_ALTAPIPA, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    CONTROL "&Uživatelské nastavení", IDC_ALTSTATIC, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 70, 12
     LTEXT "&IP adresa:", -1, 14, 75, 135, 8
-    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
+    CONTROL "", IDC_ALTIPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
     LTEXT "&Maska podsítě:", -1, 14, 95, 135, 8
-    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 95, 85, 12
+    CONTROL "", IDC_ALTSUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 95, 85, 12
     LTEXT "&Výchozí brána:", -1, 14, 115, 135, 8
-    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 115, 85, 12
+    CONTROL "", IDC_ALTDEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 115, 85, 12
     LTEXT "&Preferovaný DNS server:", -1, 14, 150, 135, 8
-    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 150, 85, 12
+    CONTROL "", IDC_ALTDNS1, "SysIPAddress32", WS_TABSTOP, 144, 150, 85, 12
     LTEXT "&Alternativní DNS server:", -1, 14, 165, 180, 8
-    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 165, 85, 12
+    CONTROL "", IDC_ALTDNS2, "SysIPAddress32", WS_TABSTOP, 144, 165, 85, 12
 END
 
 IDD_TCPIP_ADVIP_DLG DIALOGEX 0, 0, 247, 220

@@ -51,12 +51,17 @@ Chkdsk(
             goto Quit;
     }
 
+#ifdef __REACTOS__
+    /* We really just want to use the disk drive letter */
+    wcscpy(VolumeName, DriveName);
+#else
     if (!GetVolumeNameForVolumeMountPointW(DriveName, VolumeName, ARRAYSIZE(VolumeName)))
     {
         /* Couldn't get a volume GUID path, try checking using a parameter provided path */
         DPRINT1("Couldn't get a volume GUID path for drive %S\n", DriveName);
         wcscpy(VolumeName, DriveName);
     }
+#endif
 
     if (!RtlDosPathNameToNtPathName_U(VolumeName, &usDriveRoot, NULL, NULL))
         goto Quit;

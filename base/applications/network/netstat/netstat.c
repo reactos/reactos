@@ -14,10 +14,8 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
-#define _INC_WINDOWS
 #include <winsock2.h>
 #include <iphlpapi.h>
 

@@ -91,7 +91,7 @@ MiInitSystemMemoryAreas(VOID)
     MiCreateArm3StaticMemoryArea(MmNonPagedPoolStart, MmSizeOfNonPagedPoolInBytes, FALSE);
 
     // System PTE space
-    MiCreateArm3StaticMemoryArea(MmNonPagedSystemStart, (MmNumberOfSystemPtes + 1) * PAGE_SIZE, FALSE);
+    MiCreateArm3StaticMemoryArea(MmSystemPteSpaceStart, (MmNumberOfSystemPtes + 1) * PAGE_SIZE, FALSE);
 
     // Nonpaged pool expansion space
     MiCreateArm3StaticMemoryArea(MmNonPagedPoolExpansionStart, (ULONG_PTR)MmNonPagedPoolEnd - (ULONG_PTR)MmNonPagedPoolExpansionStart, FALSE);
@@ -136,6 +136,13 @@ MiDbgDumpAddressSpace(VOID)
             KSEG0_BASE,
             (ULONG_PTR)KSEG0_BASE + MmBootImageSize,
             "Boot Loaded Image");
+#ifdef _M_IX86
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmSystemPteSpaceStart,
+            (PVOID)((ULONG_PTR)MmSystemPteSpaceStart +
+                    (MmNumberOfSystemPtes + 1) * PAGE_SIZE),
+            "System PTE Space");
+#endif
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPfnDatabase,
             (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
@@ -168,9 +175,13 @@ MiDbgDumpAddressSpace(VOID)
             MmPagedPoolStart,
             (ULONG_PTR)MmPagedPoolStart + MmSizeOfPagedPoolInBytes,
             "ARM3 Paged Pool");
+#ifndef _M_IX86
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmNonPagedSystemStart, MmNonPagedPoolExpansionStart,
+            MmSystemPteSpaceStart,
+            (PVOID)((ULONG_PTR)MmSystemPteSpaceStart +
+                    ((MmNumberOfSystemPtes + 1) * PAGE_SIZE)),
             "System PTE Space");
+#endif
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmNonPagedPoolExpansionStart, MmNonPagedPoolEnd,
             "Non Paged Pool Expansion PTE Space");

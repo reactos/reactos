@@ -49,22 +49,22 @@ HMODULE hModuleNetMsg = NULL;
 VOID
 PrintPaddedResourceString(
     UINT uID,
-    INT nPaddedLength)
+    DWORD nPaddedLength)
 {
-    INT nLength;
+    DWORD dwLength;
 
-    nLength = ConResPuts(StdOut, uID);
-    if (nLength < nPaddedLength)
-        PrintPadding(L' ', nPaddedLength - nLength);
+    dwLength = (DWORD)ConResPuts(StdOut, uID);
+    if (dwLength < nPaddedLength)
+        PrintPadding(L' ', nPaddedLength - dwLength);
 }
 
 
 VOID
 PrintPadding(
     WCHAR chr,
-    INT nPaddedLength)
+    DWORD nPaddedLength)
 {
-    INT i;
+    DWORD i;
     WCHAR szMsgBuffer[MAX_BUFFER_SIZE];
 
     for (i = 0; i < nPaddedLength; i++)
@@ -94,76 +94,45 @@ PrintMessageStringV(
     DWORD dwMessage,
     ...)
 {
-    PWSTR pBuffer;
-    va_list args = NULL;
+    va_list args;
 
     va_start(args, dwMessage);
-
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE,
-                   hModuleNetMsg,
-                   dwMessage,
-                   LANG_USER_DEFAULT,
-                   (LPWSTR)&pBuffer,
-                   0,
-                   &args);
+    ConMsgPrintfV(StdOut,
+                  FORMAT_MESSAGE_FROM_HMODULE,
+                  hModuleNetMsg,
+                  dwMessage,
+                  LANG_USER_DEFAULT,
+                  &args);
     va_end(args);
-
-    if (pBuffer)
-    {
-        ConPuts(StdOut, pBuffer);
-        LocalFree(pBuffer);
-        pBuffer = NULL;
-    }
 }
 
 VOID
 PrintMessageString(
     DWORD dwMessage)
 {
-    PWSTR pBuffer;
-
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
-                   FORMAT_MESSAGE_IGNORE_INSERTS,
-                   hModuleNetMsg,
-                   dwMessage,
-                   LANG_USER_DEFAULT,
-                   (LPWSTR)&pBuffer,
-                   0,
-                   NULL);
-    if (pBuffer)
-    {
-        ConPuts(StdOut, pBuffer);
-        LocalFree(pBuffer);
-        pBuffer = NULL;
-    }
+    ConMsgPuts(StdOut,
+               FORMAT_MESSAGE_FROM_HMODULE,
+               hModuleNetMsg,
+               dwMessage,
+               LANG_USER_DEFAULT);
 }
 
 
 VOID
 PrintPaddedMessageString(
     DWORD dwMessage,
-    INT nPaddedLength)
+    DWORD nPaddedLength)
 {
-    PWSTR pBuffer;
     DWORD dwLength;
 
-    dwLength = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
-                              FORMAT_MESSAGE_IGNORE_INSERTS,
-                              hModuleNetMsg,
-                              dwMessage,
-                              LANG_USER_DEFAULT,
-                              (LPWSTR)&pBuffer,
-                              0,
-                              NULL);
-    if (pBuffer)
-    {
-        ConPuts(StdOut, pBuffer);
-        LocalFree(pBuffer);
-        pBuffer = NULL;
-    }
+    dwLength = (DWORD)ConMsgPuts(StdOut,
+                                 FORMAT_MESSAGE_FROM_HMODULE,
+                                 hModuleNetMsg,
+                                 dwMessage,
+                                 LANG_USER_DEFAULT);
 
-    if (dwLength < (DWORD)nPaddedLength)
-        PrintPadding(L' ', (DWORD)nPaddedLength - dwLength);
+    if (dwLength < nPaddedLength)
+        PrintPadding(L' ', nPaddedLength - dwLength);
 }
 
 

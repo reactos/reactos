@@ -2,23 +2,23 @@
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
  *
- * Permission to use, copy, modify, distribute, and sell this software and 
+ * Permission to use, copy, modify, distribute, and sell this software and
  * its documentation for any purpose is hereby granted without fee, provided
  * that (i) the above copyright notices and this permission notice appear in
  * all copies of the software and related documentation, and (ii) the names of
  * Sam Leffler and Silicon Graphics may not be used in any advertising or
  * publicity relating to the software without the specific, prior written
  * permission of Sam Leffler and Silicon Graphics.
- * 
- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
- * 
+ *
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+ *
  * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
  * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
  * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
  * OF THIS SOFTWARE.
  */
 
@@ -27,146 +27,135 @@
  * Scott Wagner (wagner@itek.com), Itek Graphix, Rochester, NY USA
  */
 
-/*
-  CreateFileA/CreateFileW return type 'HANDLE'.
+#ifdef TIFF_DO_NOT_USE_NON_EXT_ALLOC_FUNCTIONS
+#undef TIFF_DO_NOT_USE_NON_EXT_ALLOC_FUNCTIONS
+#endif
 
-  thandle_t is declared like
-
-    DECLARE_HANDLE(thandle_t);
-
-  in tiffio.h.
-
-  Windows (from winnt.h) DECLARE_HANDLE logic looks like
-
-  #ifdef STRICT
-    typedef void *HANDLE;
-  #define DECLARE_HANDLE(name) struct name##__ { int unused; }; typedef struct name##__ *name
-  #else
-    typedef PVOID HANDLE;
-  #define DECLARE_HANDLE(name) typedef HANDLE name
-  #endif
-
-  See http://bugzilla.maptools.org/show_bug.cgi?id=1941 for problems in WIN64
-  builds resulting from this.  Unfortunately, the proposed patch was lost.
-
-*/
-  
-#include <precomp.h>
-
+#include "tiffiop.h"
 #include <stdlib.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <winnls.h>
 
-static tmsize_t
-_tiffReadProc(thandle_t fd, void* buf, tmsize_t size)
+#include <windows.h>
+
+/*
+  CreateFileA/CreateFileW return type 'HANDLE' while TIFFFdOpen() takes 'int',
+  which is formally incompatible and can even seemingly be of different size:
+  HANDLE is 64 bit under Win64, while int is still 32 bits there.
+
+  However, only the lower 32 bits of a HANDLE are significant under Win64 as,
+  for interoperability reasons, they must have the same values in 32- and
+  64-bit programs running on the same system, see
+
+  https://docs.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication
+
+  Because of this, it is safe to define the following trivial functions for
+  casting between ints and HANDLEs, which are only really needed to avoid
+  compiler warnings (and, perhaps, to make the code slightly more clear).
+  Note that using the intermediate cast to "intptr_t" is crucial for warning
+  avoidance, as this integer type has the same size as HANDLE in all builds.
+*/
+
+static inline thandle_t thandle_from_int(int ifd)
 {
-	/* tmsize_t is 64bit on 64bit systems, but the WinAPI ReadFile takes
-	 * 32bit sizes, so we loop through the data in suitable 32bit sized
-	 * chunks */
-	uint8* ma;
-	uint64 mb;
-	DWORD n;
-	DWORD o;
-	tmsize_t p;
-	ma=(uint8*)buf;
-	mb=size;
-	p=0;
-	while (mb>0)
-	{
-		n=0x80000000UL;
-		if ((uint64)n>mb)
-			n=(DWORD)mb;
-		if (!ReadFile(fd,(LPVOID)ma,n,&o,NULL))
-			return(0);
-		ma+=o;
-		mb-=o;
-		p+=o;
-		if (o!=n)
-			break;
-	}
-	return(p);
+    return (thandle_t)(intptr_t)ifd;
 }
 
-static tmsize_t
-_tiffWriteProc(thandle_t fd, void* buf, tmsize_t size)
+static inline int thandle_to_int(thandle_t fd) { return (int)(intptr_t)fd; }
+
+static tmsize_t _tiffReadProc(thandle_t fd, void *buf, tmsize_t size)
 {
-	/* tmsize_t is 64bit on 64bit systems, but the WinAPI WriteFile takes
-	 * 32bit sizes, so we loop through the data in suitable 32bit sized
-	 * chunks */
-	uint8* ma;
-	uint64 mb;
-	DWORD n;
-	DWORD o;
-	tmsize_t p;
-	ma=(uint8*)buf;
-	mb=size;
-	p=0;
-	while (mb>0)
-	{
-		n=0x80000000UL;
-		if ((uint64)n>mb)
-			n=(DWORD)mb;
-		if (!WriteFile(fd,(LPVOID)ma,n,&o,NULL))
-			return(0);
-		ma+=o;
-		mb-=o;
-		p+=o;
-		if (o!=n)
-			break;
-	}
-	return(p);
+    /* tmsize_t is 64bit on 64bit systems, but the WinAPI ReadFile takes
+     * 32bit sizes, so we loop through the data in suitable 32bit sized
+     * chunks */
+    uint8_t *ma;
+    uint64_t mb;
+    DWORD n;
+    DWORD o;
+    tmsize_t p;
+    ma = (uint8_t *)buf;
+    mb = size;
+    p = 0;
+    while (mb > 0)
+    {
+        n = 0x80000000UL;
+        if ((uint64_t)n > mb)
+            n = (DWORD)mb;
+        if (!ReadFile(fd, (LPVOID)ma, n, &o, NULL))
+            return (0);
+        ma += o;
+        mb -= o;
+        p += o;
+        if (o != n)
+            break;
+    }
+    return (p);
 }
 
-static uint64
-_tiffSeekProc(thandle_t fd, uint64 off, int whence)
+static tmsize_t _tiffWriteProc(thandle_t fd, void *buf, tmsize_t size)
 {
-	LARGE_INTEGER offli;
-	DWORD dwMoveMethod;
-	offli.QuadPart = off;
-	switch(whence)
-	{
-		case SEEK_SET:
-			dwMoveMethod = FILE_BEGIN;
-			break;
-		case SEEK_CUR:
-			dwMoveMethod = FILE_CURRENT;
-			break;
-		case SEEK_END:
-			dwMoveMethod = FILE_END;
-			break;
-		default:
-			dwMoveMethod = FILE_BEGIN;
-			break;
-	}
-	offli.LowPart=SetFilePointer(fd,offli.LowPart,&offli.HighPart,dwMoveMethod);
-	if ((offli.LowPart==INVALID_SET_FILE_POINTER)&&(GetLastError()!=NO_ERROR))
-		offli.QuadPart=0;
-	return(offli.QuadPart);
+    /* tmsize_t is 64bit on 64bit systems, but the WinAPI WriteFile takes
+     * 32bit sizes, so we loop through the data in suitable 32bit sized
+     * chunks */
+    uint8_t *ma;
+    uint64_t mb;
+    DWORD n;
+    DWORD o;
+    tmsize_t p;
+    ma = (uint8_t *)buf;
+    mb = size;
+    p = 0;
+    while (mb > 0)
+    {
+        n = 0x80000000UL;
+        if ((uint64_t)n > mb)
+            n = (DWORD)mb;
+        if (!WriteFile(fd, (LPVOID)ma, n, &o, NULL))
+            return (0);
+        ma += o;
+        mb -= o;
+        p += o;
+        if (o != n)
+            break;
+    }
+    return (p);
 }
 
-static int
-_tiffCloseProc(thandle_t fd)
+static uint64_t _tiffSeekProc(thandle_t fd, uint64_t off, int whence)
 {
-	return (CloseHandle(fd) ? 0 : -1);
+    LARGE_INTEGER offli;
+    DWORD dwMoveMethod;
+    offli.QuadPart = off;
+    switch (whence)
+    {
+        case SEEK_SET:
+            dwMoveMethod = FILE_BEGIN;
+            break;
+        case SEEK_CUR:
+            dwMoveMethod = FILE_CURRENT;
+            break;
+        case SEEK_END:
+            dwMoveMethod = FILE_END;
+            break;
+        default:
+            dwMoveMethod = FILE_BEGIN;
+            break;
+    }
+    offli.LowPart =
+        SetFilePointer(fd, offli.LowPart, &offli.HighPart, dwMoveMethod);
+    if ((offli.LowPart == INVALID_SET_FILE_POINTER) &&
+        (GetLastError() != NO_ERROR))
+        offli.QuadPart = 0;
+    return (offli.QuadPart);
 }
 
-static uint64
-_tiffSizeProc(thandle_t fd)
-{
-	ULARGE_INTEGER m;
-	m.LowPart=GetFileSize(fd,&m.HighPart);
-	return(m.QuadPart);
-}
+static int _tiffCloseProc(thandle_t fd) { return (CloseHandle(fd) ? 0 : -1); }
 
-static int
-_tiffDummyMapProc(thandle_t fd, void** pbase, toff_t* psize)
+static uint64_t _tiffSizeProc(thandle_t fd)
 {
-	(void) fd;
-	(void) pbase;
-	(void) psize;
-	return (0);
+    LARGE_INTEGER m;
+    if (GetFileSizeEx(fd, &m))
+        return (m.QuadPart);
+    else
+        return (0);
 }
 
 /*
@@ -180,45 +169,35 @@ _tiffDummyMapProc(thandle_t fd, void** pbase, toff_t* psize)
  * This removes a nasty OS dependency and cures a problem
  * with Visual C++ 5.0
  */
-static int
-_tiffMapProc(thandle_t fd, void** pbase, toff_t* psize)
+static int _tiffMapProc(thandle_t fd, void **pbase, toff_t *psize)
 {
-	uint64 size;
-	tmsize_t sizem;
-	HANDLE hMapFile;
+    uint64_t size;
+    tmsize_t sizem;
+    HANDLE hMapFile;
 
-	size = _tiffSizeProc(fd);
-	sizem = (tmsize_t)size;
-	if ((uint64)sizem!=size)
-		return (0);
+    size = _tiffSizeProc(fd);
+    sizem = (tmsize_t)size;
+    if (!size || (uint64_t)sizem != size)
+        return (0);
 
-	/* By passing in 0 for the maximum file size, it specifies that we
-	   create a file mapping object for the full file size. */
-	hMapFile = CreateFileMapping(fd, NULL, PAGE_READONLY, 0, 0, NULL);
-	if (hMapFile == NULL)
-		return (0);
-	*pbase = MapViewOfFile(hMapFile, FILE_MAP_READ, 0, 0, 0);
-	CloseHandle(hMapFile);
-	if (*pbase == NULL)
-		return (0);
-	*psize = size;
-	return(1);
+    /* By passing in 0 for the maximum file size, it specifies that we
+       create a file mapping object for the full file size. */
+    hMapFile = CreateFileMapping(fd, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (hMapFile == NULL)
+        return (0);
+    *pbase = MapViewOfFile(hMapFile, FILE_MAP_READ, 0, 0, 0);
+    CloseHandle(hMapFile);
+    if (*pbase == NULL)
+        return (0);
+    *psize = size;
+    return (1);
 }
 
-static void
-_tiffDummyUnmapProc(thandle_t fd, void* base, toff_t size)
+static void _tiffUnmapProc(thandle_t fd, void *base, toff_t size)
 {
-	(void) fd;
-	(void) base;
-	(void) size;
-}
-
-static void
-_tiffUnmapProc(thandle_t fd, void* base, toff_t size)
-{
-	(void) fd;
-	(void) size;
-	UnmapViewOfFile(base);
+    (void)fd;
+    (void)size;
+    UnmapViewOfFile(base);
 }
 
 /*
@@ -226,29 +205,36 @@ _tiffUnmapProc(thandle_t fd, void* base, toff_t size)
  * Note that TIFFFdOpen and TIFFOpen recognise the character 'u' in the mode
  * string, which forces the file to be opened unmapped.
  */
-TIFF*
-TIFFFdOpen(int ifd, const char* name, const char* mode)
+TIFF *TIFFFdOpen(int ifd, const char *name, const char *mode)
 {
-	TIFF* tif;
-	int fSuppressMap;
-	int m;
-	fSuppressMap=0;
-	for (m=0; mode[m]!=0; m++)
-	{
-		if (mode[m]=='u')
-		{
-			fSuppressMap=1;
-			break;
-		}
-	}
-	tif = TIFFClientOpen(name, mode, (thandle_t)ifd, /* FIXME: WIN64 cast to pointer warning */
-			_tiffReadProc, _tiffWriteProc,
-			_tiffSeekProc, _tiffCloseProc, _tiffSizeProc,
-			fSuppressMap ? _tiffDummyMapProc : _tiffMapProc,
-			fSuppressMap ? _tiffDummyUnmapProc : _tiffUnmapProc);
-	if (tif)
-		tif->tif_fd = ifd;
-	return (tif);
+    return TIFFFdOpenExt(ifd, name, mode, NULL);
+}
+
+TIFF *TIFFFdOpenExt(int ifd, const char *name, const char *mode,
+                    TIFFOpenOptions *opts)
+{
+    TIFF *tif;
+    int fSuppressMap;
+    int m;
+
+    fSuppressMap = 0;
+    for (m = 0; mode[m] != 0; m++)
+    {
+        if (mode[m] == 'u')
+        {
+            fSuppressMap = 1;
+            break;
+        }
+    }
+
+    tif = TIFFClientOpenExt(
+        name, mode, thandle_from_int(ifd), _tiffReadProc, _tiffWriteProc,
+        _tiffSeekProc, _tiffCloseProc, _tiffSizeProc,
+        fSuppressMap ? _tiffDummyMapProc : _tiffMapProc,
+        fSuppressMap ? _tiffDummyUnmapProc : _tiffUnmapProc, opts);
+    if (tif)
+        tif->tif_fd = ifd;
+    return (tif);
 }
 
 #ifndef _WIN32_WCE
@@ -256,184 +242,190 @@ TIFFFdOpen(int ifd, const char* name, const char* mode)
 /*
  * Open a TIFF file for read/writing.
  */
-TIFF*
-TIFFOpen(const char* name, const char* mode)
+TIFF *TIFFOpen(const char *name, const char *mode)
 {
-	static const char module[] = "TIFFOpen";
-	thandle_t fd;
-	int m;
-	DWORD dwMode;
-	TIFF* tif;
+    return TIFFOpenExt(name, mode, NULL);
+}
 
-	m = _TIFFgetMode(mode, module);
+TIFF *TIFFOpenExt(const char *name, const char *mode, TIFFOpenOptions *opts)
+{
+    static const char module[] = "TIFFOpen";
+    thandle_t fd;
+    int m;
+    DWORD dwMode;
+    TIFF *tif;
 
-	switch(m) {
-		case O_RDONLY:			dwMode = OPEN_EXISTING; break;
-		case O_RDWR:			dwMode = OPEN_ALWAYS;   break;
-		case O_RDWR|O_CREAT:		dwMode = OPEN_ALWAYS;   break;
-		case O_RDWR|O_TRUNC:		dwMode = CREATE_ALWAYS; break;
-		case O_RDWR|O_CREAT|O_TRUNC:	dwMode = CREATE_ALWAYS; break;
-		default:			return ((TIFF*)0);
-	}
-        
-	fd = (thandle_t)CreateFileA(name,
-		(m == O_RDONLY)?GENERIC_READ:(GENERIC_READ | GENERIC_WRITE),
-		FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, dwMode,
-		(m == O_RDONLY)?FILE_ATTRIBUTE_READONLY:FILE_ATTRIBUTE_NORMAL,
-		NULL);
-	if (fd == INVALID_HANDLE_VALUE) {
-		TIFFErrorExt(0, module, "%s: Cannot open", name);
-		return ((TIFF *)0);
-	}
+    m = _TIFFgetMode(opts, NULL, mode, module);
 
-	tif = TIFFFdOpen((int)fd, name, mode);   /* FIXME: WIN64 cast from pointer to int warning */
-	if(!tif)
-		CloseHandle(fd);
-	return tif;
+    switch (m)
+    {
+        case O_RDONLY:
+            dwMode = OPEN_EXISTING;
+            break;
+        case O_RDWR:
+            dwMode = OPEN_EXISTING;
+            break;
+        case O_RDWR | O_CREAT:
+            dwMode = OPEN_ALWAYS;
+            break;
+        case O_RDWR | O_TRUNC:
+            dwMode = CREATE_ALWAYS;
+            break;
+        case O_RDWR | O_CREAT | O_TRUNC:
+            dwMode = CREATE_ALWAYS;
+            break;
+        default:
+            return ((TIFF *)0);
+    }
+
+    fd = (thandle_t)CreateFileA(
+        name, (m == O_RDONLY) ? GENERIC_READ : (GENERIC_READ | GENERIC_WRITE),
+        FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, dwMode,
+        (m == O_RDONLY) ? FILE_ATTRIBUTE_READONLY : FILE_ATTRIBUTE_NORMAL,
+        NULL);
+    if (fd == INVALID_HANDLE_VALUE)
+    {
+        _TIFFErrorEarly(opts, NULL, module, "%s: Cannot open", name);
+        return ((TIFF *)0);
+    }
+
+    tif = TIFFFdOpenExt(thandle_to_int(fd), name, mode, opts);
+    if (!tif)
+        CloseHandle(fd);
+    return tif;
 }
 
 /*
  * Open a TIFF file with a Unicode filename, for read/writing.
  */
-TIFF*
-TIFFOpenW(const wchar_t* name, const char* mode)
+TIFF *TIFFOpenW(const wchar_t *name, const char *mode)
 {
-	static const char module[] = "TIFFOpenW";
-	thandle_t fd;
-	int m;
-	DWORD dwMode;
-	int mbsize;
-	char *mbname;
-	TIFF *tif;
+    return TIFFOpenWExt(name, mode, NULL);
+}
 
-	m = _TIFFgetMode(mode, module);
+TIFF *TIFFOpenWExt(const wchar_t *name, const char *mode, TIFFOpenOptions *opts)
+{
+    static const char module[] = "TIFFOpenW";
+    thandle_t fd;
+    int m;
+    DWORD dwMode;
+    int mbsize;
+    char *mbname;
+    TIFF *tif;
 
-	switch(m) {
-		case O_RDONLY:			dwMode = OPEN_EXISTING; break;
-		case O_RDWR:			dwMode = OPEN_ALWAYS;   break;
-		case O_RDWR|O_CREAT:		dwMode = OPEN_ALWAYS;   break;
-		case O_RDWR|O_TRUNC:		dwMode = CREATE_ALWAYS; break;
-		case O_RDWR|O_CREAT|O_TRUNC:	dwMode = CREATE_ALWAYS; break;
-		default:			return ((TIFF*)0);
-	}
+    m = _TIFFgetMode(opts, NULL, mode, module);
 
-	fd = (thandle_t)CreateFileW(name,
-		(m == O_RDONLY)?GENERIC_READ:(GENERIC_READ|GENERIC_WRITE),
-		FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, dwMode,
-		(m == O_RDONLY)?FILE_ATTRIBUTE_READONLY:FILE_ATTRIBUTE_NORMAL,
-		NULL);
-	if (fd == INVALID_HANDLE_VALUE) {
-		TIFFErrorExt(0, module, "%S: Cannot open", name);
-		return ((TIFF *)0);
-	}
+    switch (m)
+    {
+        case O_RDONLY:
+            dwMode = OPEN_EXISTING;
+            break;
+        case O_RDWR:
+            dwMode = OPEN_EXISTING;
+            break;
+        case O_RDWR | O_CREAT:
+            dwMode = OPEN_ALWAYS;
+            break;
+        case O_RDWR | O_TRUNC:
+            dwMode = CREATE_ALWAYS;
+            break;
+        case O_RDWR | O_CREAT | O_TRUNC:
+            dwMode = CREATE_ALWAYS;
+            break;
+        default:
+            return ((TIFF *)0);
+    }
 
-	mbname = NULL;
-	mbsize = WideCharToMultiByte(CP_ACP, 0, name, -1, NULL, 0, NULL, NULL);
-	if (mbsize > 0) {
-		mbname = (char *)_TIFFmalloc(mbsize);
-		if (!mbname) {
-			TIFFErrorExt(0, module,
-			"Can't allocate space for filename conversion buffer");
-			return ((TIFF*)0);
-		}
+    fd = (thandle_t)CreateFileW(
+        name, (m == O_RDONLY) ? GENERIC_READ : (GENERIC_READ | GENERIC_WRITE),
+        FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, dwMode,
+        (m == O_RDONLY) ? FILE_ATTRIBUTE_READONLY : FILE_ATTRIBUTE_NORMAL,
+        NULL);
+    if (fd == INVALID_HANDLE_VALUE)
+    {
+        _TIFFErrorEarly(opts, NULL, module, "%S: Cannot open", name);
+        return ((TIFF *)0);
+    }
 
-		WideCharToMultiByte(CP_ACP, 0, name, -1, mbname, mbsize,
-				    NULL, NULL);
-	}
+    mbname = NULL;
+    mbsize = WideCharToMultiByte(CP_ACP, 0, name, -1, NULL, 0, NULL, NULL);
+    if (mbsize > 0)
+    {
+        mbname = (char *)_TIFFmalloc(mbsize);
+        if (!mbname)
+        {
+            _TIFFErrorEarly(
+                opts, NULL, module,
+                "Can't allocate space for filename conversion buffer");
+            return ((TIFF *)0);
+        }
 
-	tif = TIFFFdOpen((int)fd,    /* FIXME: WIN64 cast from pointer to int warning */
-			 (mbname != NULL) ? mbname : "<unknown>", mode);
-	if(!tif)
-		CloseHandle(fd);
+        WideCharToMultiByte(CP_ACP, 0, name, -1, mbname, mbsize, NULL, NULL);
+    }
 
-	_TIFFfree(mbname);
+    tif = TIFFFdOpenExt(thandle_to_int(fd),
+                        (mbname != NULL) ? mbname : "<unknown>", mode, opts);
+    if (!tif)
+        CloseHandle(fd);
 
-	return tif;
+    _TIFFfree(mbname);
+
+    return tif;
 }
 
 #endif /* ndef _WIN32_WCE */
 
-void*
-_TIFFmalloc(tmsize_t s)
+void *_TIFFmalloc(tmsize_t s)
 {
-        if (s == 0)
-                return ((void *) NULL);
+    if (s == 0)
+        return ((void *)NULL);
 
-	return (malloc((size_t) s));
+    return (malloc((size_t)s));
 }
 
-void* _TIFFcalloc(tmsize_t nmemb, tmsize_t siz)
+void *_TIFFcalloc(tmsize_t nmemb, tmsize_t siz)
 {
-    if( nmemb == 0 || siz == 0 )
-        return ((void *) NULL);
+    if (nmemb == 0 || siz == 0)
+        return ((void *)NULL);
 
-    return calloc((size_t) nmemb, (size_t)siz);
+    return calloc((size_t)nmemb, (size_t)siz);
 }
 
-void
-_TIFFfree(void* p)
+void _TIFFfree(void *p) { free(p); }
+
+void *_TIFFrealloc(void *p, tmsize_t s) { return (realloc(p, (size_t)s)); }
+
+void _TIFFmemset(void *p, int v, tmsize_t c) { memset(p, v, (size_t)c); }
+
+void _TIFFmemcpy(void *d, const void *s, tmsize_t c)
 {
-	free(p);
+    memcpy(d, s, (size_t)c);
 }
 
-void*
-_TIFFrealloc(void* p, tmsize_t s)
+int _TIFFmemcmp(const void *p1, const void *p2, tmsize_t c)
 {
-	return (realloc(p, (size_t) s));
-}
-
-void
-_TIFFmemset(void* p, int v, tmsize_t c)
-{
-	memset(p, v, (size_t) c);
-}
-
-void
-_TIFFmemcpy(void* d, const void* s, tmsize_t c)
-{
-	memcpy(d, s, (size_t) c);
-}
-
-int
-_TIFFmemcmp(const void* p1, const void* p2, tmsize_t c)
-{
-	return (memcmp(p1, p2, (size_t) c));
+    return (memcmp(p1, p2, (size_t)c));
 }
 
 #ifndef _WIN32_WCE
 
-#if (_MSC_VER < 1500)
-#  define vsnprintf _vsnprintf
-#endif
-
-static void
-Win32WarningHandler(const char* module, const char* fmt, va_list ap)
+static void Win32WarningHandler(const char *module, const char *fmt, va_list ap)
 {
-	if (module != NULL)
-		fprintf(stderr, "%s: ", module);
-	fprintf(stderr, "Warning, ");
-	vfprintf(stderr, fmt, ap);
-	fprintf(stderr, ".\n");
+    if (module != NULL)
+        fprintf(stderr, "%s: ", module);
+    fprintf(stderr, "Warning, ");
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, ".\n");
 }
 TIFFErrorHandler _TIFFwarningHandler = Win32WarningHandler;
 
-static void
-Win32ErrorHandler(const char* module, const char* fmt, va_list ap)
+static void Win32ErrorHandler(const char *module, const char *fmt, va_list ap)
 {
-	if (module != NULL)
-		fprintf(stderr, "%s: ", module);
-	vfprintf(stderr, fmt, ap);
-	fprintf(stderr, ".\n");
+    if (module != NULL)
+        fprintf(stderr, "%s: ", module);
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, ".\n");
 }
 TIFFErrorHandler _TIFFerrorHandler = Win32ErrorHandler;
 
 #endif /* ndef _WIN32_WCE */
-
-/* vim: set ts=8 sts=8 sw=8 noet: */
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 8
- * fill-column: 78
- * End:
- */
