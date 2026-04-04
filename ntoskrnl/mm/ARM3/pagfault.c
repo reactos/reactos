@@ -107,7 +107,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
             /* Update WOW64 32-bit TEB stack limit */
             if (CurrentThread->ThreadsProcess->Wow64Process != NULL)
             {
-                ((PTEB32)(ROUND_TO_PAGES(Teb + 1)))->NtTib.StackLimit = PtrToUlong(Teb->NtTib.StackLimit);
+                PS_GET_TEB32_FROM_TEB(Teb)->NtTib.StackLimit = PtrToUlong(Teb->NtTib.StackLimit);
             }
 #endif
         }
@@ -129,7 +129,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     /* Update WOW64 32-bit TEB stack limit */
     if (CurrentThread->ThreadsProcess->Wow64Process != NULL)
     {
-        ((PTEB32)(ROUND_TO_PAGES(Teb + 1)))->NtTib.StackLimit = PtrToUlong(Teb->NtTib.StackLimit);
+        PS_GET_TEB32_FROM_TEB(Teb)->NtTib.StackLimit = PtrToUlong(Teb->NtTib.StackLimit);
     }
 #endif
 

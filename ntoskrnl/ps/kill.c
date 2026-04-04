@@ -380,10 +380,10 @@ PspDeleteProcess(IN PVOID ObjectBody)
     
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     /* Check if this is a WOW64 process  */
-    if (Process->Wow64Process && Process->Wow64Process != (PVOID)TRUE)
+    if (Process->Wow64Process && !IS_WOW64_PROCESS_INITIALIZING(Process))
     {
         /* Free WOW64_PROCESS structure */
-        ExFreePoolWithTag(Process->Wow64Process, 'oWsP');
+        ExFreePoolWithTag(Process->Wow64Process, TAG_PS_WOW64);
 
         PsReturnProcessNonPagedPoolQuota(Process, sizeof(WOW64_PROCESS));
     }

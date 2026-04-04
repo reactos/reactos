@@ -1276,10 +1276,10 @@ NtQueryInformationProcess(
             {
                 /* FIXME: A two-part hack: delay setting Process->Wow64Process,
                    so 64-bit NTDLL can use IO to init stuff. */
-                if (Process->Wow64Process == (PVOID)TRUE)
+                if (IS_WOW64_PROCESS_INITIALIZING(Process))
                 {
                     PsChargeProcessNonPagedPoolQuota(Process, sizeof(WOW64_PROCESS));
-                    Process->Wow64Process = ExAllocatePoolWithTag(NonPagedPool, sizeof(WOW64_PROCESS), 'oWsP');
+                    Process->Wow64Process = ExAllocatePoolWithTag(NonPagedPool, sizeof(WOW64_PROCESS), TAG_PS_WOW64);
                     if (!Process->Wow64Process)
                     {
                         PsReturnProcessNonPagedPoolQuota(Process, sizeof(WOW64_PROCESS));
@@ -1299,7 +1299,7 @@ NtQueryInformationProcess(
                     Wow64 = 0;
                 }
                 /* FIXME */
-                else if (Process->Wow64Process == (PVOID)TRUE)
+                else if (IS_WOW64_PROCESS_INITIALIZING(Process))
                 {
                     Wow64 = TRUE;
                 }

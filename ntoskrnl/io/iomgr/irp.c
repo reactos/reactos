@@ -237,10 +237,6 @@ static
 VOID
 IopWriteAsyncUserIosb(PIRP Irp)
 {
-#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
-    PIO_STATUS_BLOCK32 Iosb32 = NULL;
-#endif
-
     /* Check for UserIos */
     if (Irp->UserIosb != NULL)
     {
@@ -248,7 +244,7 @@ IopWriteAsyncUserIosb(PIRP Irp)
         _SEH2_TRY
         {
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
-            Iosb32 = (PIO_STATUS_BLOCK32)Irp->UserIosb->Pointer;
+            PIO_STATUS_BLOCK32 Iosb32 = (PIO_STATUS_BLOCK32)Irp->UserIosb->Pointer;
 
             /*
              * If this is a 32-bit process, and UserIosb falls within the
@@ -2048,14 +2044,12 @@ NTAPI
 IoIs32bitProcess(
     IN PIRP Irp OPTIONAL)
 {
-    PETHREAD pThread, pCurrentThread;
+    PETHREAD pThread;
     PEPROCESS pProcess;
-
-    pCurrentThread = CONTAINING_RECORD(KeGetCurrentThread(), ETHREAD, Tcb);
 
     if (Irp == NULL)
     {
-        pThread = pCurrentThread;
+        pThread = PsGetCurrentThread();
     }
     else
     {
