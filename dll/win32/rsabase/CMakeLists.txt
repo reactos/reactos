@@ -7,7 +7,7 @@ list(APPEND SOURCE
 
 add_library(rsabase MODULE ${SOURCE})
 set_module_type(rsabase win32dll ENTRYPOINT 0 )
-target_link_libraries(rsabase wine)
+target_link_libraries(rsabase wine_dll_register wine)
 add_importlibs(rsabase rsaenh ntdll)
 add_cd_file(TARGET rsabase DESTINATION reactos/system32 FOR all)
 set_wine_module(rsabase)
