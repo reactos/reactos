@@ -84,6 +84,14 @@
 // Unable to create system root path when creating the RAM disk
 //
 #define RD_SYSROOT_INIT_FAILED 6
+//
+// Invalid RDIMAGEOFFSET command-line parameter supplied
+//
+#define RD_INVALID_OFFSET 7
+//
+// Invalid RDIMAGELENGTH command-line parameter supplied
+//
+#define RD_INVALID_LENGTH 8
 
 //
 // Max traversal of reparse points for a single open in IoParseDevice

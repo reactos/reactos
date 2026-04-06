@@ -26,6 +26,7 @@ HKR, , Icon,           0, "-5"
 [RamdiskDevice]
 %RamdiskBus.Desc% = RamdiskBus_Inst, Ramdisk, DetectedInternal\Ramdisk, Detected\Ramdisk
 %RamdiskVolume.Desc% = RamdiskVolume_Inst, Ramdisk\RamVolume
+%RamdiskRoot.Desc% = RamdiskRoot_Inst, Root\RamDisk
 
 ;----------------------------- RAMDISK BUS -----------------------------
 
@@ -52,6 +53,14 @@ ramdisk.sys
 [RamdiskVolume_Inst.NT.Services]
 AddService = , 2
 
+;----------------------------- ROOT ENUMERATED RAMDISK -----------------------------
+
+[RamdiskRoot_Inst.NT]
+CopyFiles = RamdiskBus_CopyFiles.NT
+
+[RamdiskRoot_Inst.NT.Services]
+AddService = ramdisk, 2, RamdiskBus_Service_Inst
+
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
@@ -62,22 +71,26 @@ ReactOS = "ReactOS Project"
 RamdiskClassName = "Ramdisk"
 RamdiskBus.Desc = "RAM disk controller"
 RamdiskVolume.Desc = "RAM disk device (volume)"
+RamdiskRoot.Desc = "RAM disk boot device"
 Ramdisk.ServiceDesc = "ReactOS RAM Disk Driver"
 
 [Strings.040C]
 RamdiskClassName = "Ramdisk"
 RamdiskBus.Desc = "Controleur de disque virtuel"
 RamdiskVolume.Desc = "Disque virtuel (volume)"
+RamdiskRoot.Desc = "Disque virtuel d'amorçage"
 Ramdisk.ServiceDesc = "Pilote de disque virtuel ReactOS"
 
 [Strings.0415]
 RamdiskClassName = "Ramdisk"
 RamdiskBus.Desc = "Kontroler dysku RAM"
 RamdiskVolume.Desc = "Urządzenie dysku RAM (wolumin)"
+RamdiskRoot.Desc = "Rozruchowe urządzenie dysku RAM"
 Ramdisk.ServiceDesc = "Sterownik dysku RAM systemu ReactOS"
 
 [Strings.0419]
 RamdiskClassName = "RAM-диски"
 RamdiskBus.Desc = "Контроллер RAM-диска"
 RamdiskVolume.Desc = "Устройство RAM-диска (том)"
+RamdiskRoot.Desc = "Загрузочное устройство RAM-диска"
 Ramdisk.ServiceDesc = "Драйвер RAM-диска ReactOS"

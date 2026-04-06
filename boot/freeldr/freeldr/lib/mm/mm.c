@@ -74,9 +74,12 @@ PVOID MmAllocateMemoryWithType(SIZE_T MemorySize, TYPE_OF_MEMORY MemoryType)
           MemorySize, PagesNeeded, MemoryType, FirstFreePageFromEnd);
     TRACE("Memory allocation pointer: 0x%x\n", MemPointer);
 
-    // Update LoaderPagesSpanned count
-    if ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned)
+    /* LoaderXIPRom identifies the retained boot ramdisk and must not define the boot image mapping span. */
+    if ((MemoryType != LoaderXIPRom) &&
+        ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned))
+    {
         LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT);
+    }
 
     // Now return the pointer
     return MemPointer;
@@ -133,9 +136,12 @@ PVOID MmAllocateMemoryAtAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF
     TRACE("Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, StartPageNumber);
     TRACE("Memory allocation pointer: 0x%x\n", MemPointer);
 
-    // Update LoaderPagesSpanned count
-    if ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned)
+    /* LoaderXIPRom identifies the retained boot ramdisk and must not define the boot image mapping span. */
+    if ((MemoryType != LoaderXIPRom) &&
+        ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned))
+    {
         LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT);
+    }
 
     // Now return the pointer
     return MemPointer;
@@ -204,9 +210,12 @@ PVOID MmAllocateHighestMemoryBelowAddress(SIZE_T MemorySize, PVOID DesiredAddres
     TRACE("Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, FirstFreePageFromEnd);
     TRACE("Memory allocation pointer: 0x%x\n", MemPointer);
 
-    // Update LoaderPagesSpanned count
-    if ((((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT) > LoaderPagesSpanned)
+    /* LoaderXIPRom identifies the retained boot ramdisk and must not define the boot image mapping span. */
+    if ((MemoryType != LoaderXIPRom) &&
+        ((((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT) > LoaderPagesSpanned))
+    {
         LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT);
+    }
 
     // Now return the pointer
     return MemPointer;

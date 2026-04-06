@@ -28,7 +28,7 @@ extern BOOLEAN WinLdrTerminalConnected;
 extern VOID WinLdrSetupEms(_In_ PCSTR BootOptions);
 
 PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
-/**/PCWSTR BootFileSystem = NULL;/**/
+PCWSTR BootFileSystem = NULL;
 
 BOOLEAN VirtualBias = FALSE;
 BOOLEAN SosEnabled = FALSE;
@@ -59,7 +59,6 @@ NtLdrOutputLoadMsg(
     if (SosEnabled)
     {
         printf("  %s\n", FileName);
-        TRACE("Loading: %s\n", FileName);
     }
     else
     {
@@ -1272,17 +1271,28 @@ LoadAndBootWindows(
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
-    /* Check if a RAM disk file was given */
+    /* Check if a RAM disk is needed: either an explicit RDPATH= file,
+     * a writable ramdisk size request (RDRAMSIZE=), or the boot path
+     * itself targets the ramdisk device. */
     FileName = NtLdrGetOptionEx(BootOptions, "RDPATH=", &FileNameLength);
-    if (FileName && (FileNameLength >= 7))
+    if ((FileName && (FileNameLength >= 7)) ||
+        NtLdrGetOption(BootOptions, "RDRAMSIZE=") ||
+        _strnicmp(BootPath, "ramdisk(", 8) == 0)
     {
         /* Load the RAM disk */
         Status = RamDiskInitialize(FALSE, BootOptions, SystemPartition);
         if (Status != ESUCCESS)
         {
-            FileName += 7; FileNameLength -= 7;
-            UiMessageBox("Failed to load RAM disk file '%.*s'",
-                         FileNameLength, FileName);
+            if (FileName && (FileNameLength >= 7))
+            {
+                FileName += 7; FileNameLength -= 7;
+                UiMessageBox("Failed to load RAM disk file '%.*s'",
+                             FileNameLength, FileName);
+            }
+            else
+            {
+                UiMessageBox("Failed to initialize RAM disk");
+            }
             return Status;
         }
     }
