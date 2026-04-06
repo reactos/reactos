@@ -274,10 +274,7 @@ EnqueueWaveHeader(
         }
         else if (DeviceType == WAVE_IN_DEVICE_TYPE)
         {
-            if (SoundDeviceInstance->RTStreamingStarted)
-            {
-                DoWaveStreaming(SoundDeviceInstance);
-            }
+            DoWaveStreaming(SoundDeviceInstance);
         }
     }
     else
@@ -299,7 +296,10 @@ EnqueueWaveHeader(
                 SoundDeviceInstance->bPaused == FALSE &&
                 SoundDeviceInstance->bClosed == FALSE)
             {
-                DoWaveStreaming(SoundDeviceInstance);
+                if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+                {
+                    DoWaveStreaming(SoundDeviceInstance);
+                }
             }
         }
     }
