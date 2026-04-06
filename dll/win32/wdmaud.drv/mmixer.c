@@ -205,10 +205,7 @@ Control(
     }
 
     /* Wait for the I/O to complete */
-    IoResult = GetOverlappedResult(hMixer,
-                                   &Overlapped,
-                                   &Transferred,
-                                   TRUE);
+    WaitForSingleObjectEx(Overlapped.hEvent, INFINITE, TRUE);
 
     /* Don't need this any more */
     CloseHandle(Overlapped.hEvent);
@@ -794,7 +791,7 @@ WdmAudSetWaveStateByMMixer(
     PSOUND_DEVICE SoundDevice;
     MMRESULT Result;
 
-    DPRINT("SetWaveState %u\n", bStart);
+    DPRINT1("WdmAuSetWaveState bStart %x\n", bStart);
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
@@ -809,7 +806,7 @@ WdmAudSetWaveStateByMMixer(
             MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
             MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
             MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_RUN);
-            if (SoundDeviceInstance->LegacyStreaming == FALSE)
+            if (SoundDeviceInstance->RTStreamingEnabled)
             {
                 SoundDeviceInstance->hRTStreamingThread = CreateThread(NULL, 0, RTStreamingThreadProc, (LPVOID)SoundDeviceInstance, 0, NULL);
                 SoundDeviceInstance->hRTStreamingCompletionThread = CreateThread(NULL, 0, RTStreamingCompletionThreadProc, (LPVOID)SoundDeviceInstance, 0, NULL);
@@ -817,7 +814,7 @@ WdmAudSetWaveStateByMMixer(
         }
         else
         {
-            if (SoundDeviceInstance->LegacyStreaming == FALSE &&
+            if (SoundDeviceInstance->RTStreamingEnabled &&
                 (SoundDeviceInstance->RTStreamingStarted ||
                 SoundDeviceInstance->RTStreamingCompletionStarted))
             {
@@ -856,8 +853,7 @@ WdmAudResetStreamByMMixer(
 {
     MIXER_STATUS Status;
 
-    DPRINT("ResetStream %u\n", bStartReset);
-
+    DPRINT1("WdmaudResetStream bStartReset %x\n", bStartReset);
     if (SoundDeviceInstance->RTStreamingEnabled)
     {
         SoundDeviceInstance->ResetInProgress = bStartReset;
@@ -872,6 +868,7 @@ WdmAudResetStreamByMMixer(
     if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
         Status = MMixerSetWaveResetState(&MixerContext, SoundDeviceInstance->Handle, bStartReset);
+        DPRINT1("WdmaudResetStream Result %x\n", Status);
         if (Status == MM_STATUS_SUCCESS)
         {
             /* Completed successfully */
@@ -1057,9 +1054,7 @@ CommitWaveBufferApc(PVOID ApcContext,
     lpHeader = Overlap->CompletionContext;
 
     /* Call mmebuddy overlap routine */
-    Overlap->OriginalCompletionRoutine(dwErrorCode,
-        lpHeader->DataUsed, &Overlap->Standard);
-
+    CompleteIO(0, lpHeader->DataUsed, Overlap);
     HeapFree(GetProcessHeap(), 0, lpHeader);
 }
 
@@ -1166,10 +1161,24 @@ RTStreamingThreadProc(
 typedef struct
 {
     PSOUND_OVERLAPPED Overlap;
-    LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine;
+    LPSOUND_OVERLAPPED_COMPLETION_ROUTINE CompletionRoutine;
     DWORD Status;
     DWORD BytesTransferred;
 } COMPLETION_CONTEXT, *PCOMPLETION_CONTEXT;
+
+DWORD
+WINAPI
+CommitLegacyRoutine(
+    IN LPVOID Parameter)
+{
+    PSOUND_OVERLAPPED Overlap = (PSOUND_OVERLAPPED)Parameter;
+    DPRINT1("CommitLegacyRoutine Before wait\n");
+    /* Wait for the I/O to complete */
+    WaitForSingleObjectEx(Overlap->Standard.hEvent, INFINITE, TRUE);
+    DPRINT1("CommitLegacyRoutine after wait\n");
+    CommitWaveBufferApc(NULL, (PIO_STATUS_BLOCK)Overlap, 0);
+    ExitThread(0);
+}
 
 DWORD
 WINAPI
@@ -1202,7 +1211,7 @@ RTStreamingCompletionThreadProc(
             ASSERT(Context);
             SoundDeviceInstance->RTStreamingCompletionContext = NULL;
             SetEvent(SoundDeviceInstance->hNotifyRTStreamingCompletionReadyEvent);
-            Context->CompletionRoutine(Context->Status, Context->BytesTransferred, &Context->Overlap->Standard);
+            Context->CompletionRoutine(Context->Status, Context->BytesTransferred, Context->Overlap);
             SetEvent(SoundDeviceInstance->hNotifyRTStreamingCompletionFinishEvent);
             FreeMemory(Context);
         }
@@ -1218,7 +1227,7 @@ WdmAudCommitWaveBufferByMMixer(
     IN  PVOID OffsetPtr,
     IN  DWORD Length,
     IN  PSOUND_OVERLAPPED Overlap,
-    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
+    IN  LPSOUND_OVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
 {
     PSOUND_DEVICE SoundDevice;
     MMDEVICE_TYPE DeviceType;
@@ -1328,16 +1337,26 @@ WdmAudCommitWaveBufferByMMixer(
         {
             lpHeader->DataUsed = Length;
         }
+        Overlap->Standard.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
         Status = NtDeviceIoControlFile(
-            SoundDeviceInstance->Handle, NULL, CommitWaveBufferApc, NULL, (PIO_STATUS_BLOCK)Overlap,
-            IoCtl, NULL, 0, lpHeader, sizeof(KSSTREAM_HEADER));
-        if (!NT_SUCCESS(Status))
+            SoundDeviceInstance->Handle, Overlap->Standard.hEvent, NULL, NULL, (PIO_STATUS_BLOCK)Overlap, IoCtl, NULL, 0,
+            lpHeader, sizeof(KSSTREAM_HEADER));
+
+        if (!NT_SUCCESS(Status) && GetLastError() != ERROR_IO_PENDING )
         {
-            DPRINT1("NtDeviceIoControlFile() failed with status %08lx\n", Status);
+            DPRINT("Failed %x\n", GetLastError());
+            CloseHandle(Overlap->Standard.hEvent);
             return MMSYSERR_ERROR;
         }
 
+        HANDLE hThread = CreateThread(NULL, 0, CommitLegacyRoutine, (LPVOID)Overlap, 0, NULL);
+        CloseHandle(hThread);
         return MMSYSERR_NOERROR;
+    }
+    else
+    {
+        ASSERT(FALSE);
     }
     return MMSYSERR_NOTSUPPORTED;
 }
