@@ -1299,15 +1299,9 @@ FsVolCallback(
 
     switch (FormatStatus)
     {
-    // FIXME: Deprecate!
     case ChangeSystemPartition:
     {
-        // PPARTENTRY SystemPartition = (PPARTENTRY)Param1;
-
-        // FsVolContext->NextPageOnAbort = SELECT_PARTITION_PAGE;
-        // if (ChangeSystemPartitionPage(Ir, SystemPartition))
-        //     return FSVOL_DOIT;
-        return FSVOL_ABORT;
+        return FSVOL_DOIT;
     }
 
     case FSVOLNOTIFY_PARTITIONERROR:

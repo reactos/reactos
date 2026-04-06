@@ -816,7 +816,7 @@ function(create_registry_hives)
     add_cd_file(TARGET registry_inf
                 FILE ${_registry_inf}
                 DESTINATION reactos
-                NO_CAB FOR bootcd regtest)
+                NO_CAB FOR bootcd livecd regtest)
 
     # BootCD setup system hive
     add_custom_command(

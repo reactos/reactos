@@ -695,7 +695,7 @@ InitSystemPartition(
     if (InstallPartition->DiskEntry->MediaType == FixedMedia)
     {
         SystemPartition = FindSupportedSystemPartition(PartitionList,
-                                                       FALSE,
+                                                       TRUE,
                                                        InstallPartition->DiskEntry,
                                                        InstallPartition);
         /* Use the original system partition as the old active partition hint */
@@ -905,19 +905,50 @@ InitDestinationPaths(
     {
         if (DiskEntry->BiosFound)
         {
-#if 1
+            ULONG RdiskNumber = DiskEntry->HwFixedDiskNumber;
+            {
+                PPARTLIST PartList = DiskEntry->PartList;
+                PLIST_ENTRY Entry;
+                for (Entry = PartList->DiskListHead.Flink;
+                     Entry != &PartList->DiskListHead;
+                     Entry = Entry->Flink)
+                {
+                    PDISKENTRY OtherDisk = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+                    if (OtherDisk == DiskEntry)
+                        continue;
+
+                    /*
+                     * HwFixedDiskNumber already excludes removable media.
+                     * Adjust only for earlier fixed disks that expose CDFS,
+                     * such as LiveCD install media backed by a fixed disk.
+                     */
+                    if (OtherDisk->MediaType == FixedMedia &&
+                        OtherDisk->BiosFound &&
+                        OtherDisk->HwFixedDiskNumber < DiskEntry->HwFixedDiskNumber)
+                    {
+                        PVOLENTRY Volume2;
+                        PLIST_ENTRY VolEntry;
+                        for (VolEntry = PartList->VolumesList.Flink;
+                             VolEntry != &PartList->VolumesList;
+                             VolEntry = VolEntry->Flink)
+                        {
+                            Volume2 = CONTAINING_RECORD(VolEntry, VOLENTRY, ListEntry);
+                            if (Volume2->PartEntry &&
+                                Volume2->PartEntry->DiskEntry == OtherDisk &&
+                                _wcsicmp(Volume2->Info.FileSystem, L"CDFS") == 0)
+                            {
+                                if (RdiskNumber > 0)
+                                    RdiskNumber--;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
             Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                              L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
-                             DiskEntry->HwFixedDiskNumber,
+                             RdiskNumber,
                              PartEntry->OnDiskPartitionNumber);
-#else
-            Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-                             L"multi(%lu)disk(%lu)rdisk(%lu)partition(%lu)\\",
-                             DiskEntry->HwAdapterNumber,
-                             DiskEntry->HwControllerNumber,
-                             DiskEntry->HwFixedDiskNumber,
-                             PartEntry->OnDiskPartitionNumber);
-#endif
             DPRINT1("Fixed disk found by BIOS, using MULTI ARC path '%S'\n", PathBuffer);
         }
         else
