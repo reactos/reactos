@@ -183,11 +183,11 @@ DoWaveStreaming(
         Commit buffers using the WriteFileEx API.
 */
 
-VOID CALLBACK
+VOID WINAPI
 CompleteIO(
     IN  DWORD dwErrorCode,
     IN  DWORD dwNumberOfBytesTransferred,
-    IN  LPOVERLAPPED lpOverlapped)
+    IN  PSOUND_OVERLAPPED lpOverlapped)
 {
     MMDEVICE_TYPE DeviceType;
     PSOUND_DEVICE SoundDevice;
@@ -418,10 +418,11 @@ WINAPI
 WaveActivateSoundStreaming(
     IN PVOID lpParameter)
 {
-    CallSoundThread((PSOUND_DEVICE_INSTANCE)lpParameter,
-                    PerformWaveStreaming,
-                    NULL);
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE)lpParameter;
 
+    PerformWaveStreaming(SoundDeviceInstance, NULL);
+    CloseHandle(SoundDeviceInstance->hSoundThread);
+    SoundDeviceInstance->hSoundThread = NULL;
     ExitThread(0);
 }
 
@@ -429,10 +430,5 @@ VOID
 InitiateSoundStreaming(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    HANDLE hThread;
-
-    hThread = CreateThread(NULL, 0, WaveActivateSoundStreaming, (PVOID)SoundDeviceInstance, 0, NULL);
-
-    if (hThread != NULL)
-        CloseHandle(hThread);
+    SoundDeviceInstance->hSoundThread = CreateThread(NULL, 0, WaveActivateSoundStreaming, (PVOID)SoundDeviceInstance, 0, NULL);
 }

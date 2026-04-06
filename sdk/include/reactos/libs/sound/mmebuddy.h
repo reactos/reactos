@@ -117,21 +117,33 @@ struct _SOUND_DEVICE_INSTANCE;
 
 typedef struct _SOUND_OVERLAPPED
 {
+    LONG Status;
+    ULONG_PTR Information;
     OVERLAPPED Standard;
     struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
     PWAVEHDR Header;
 
-    LPOVERLAPPED_COMPLETION_ROUTINE OriginalCompletionRoutine;
+    PVOID OriginalCompletionRoutine;
     PVOID CompletionContext;
 
 } SOUND_OVERLAPPED, *PSOUND_OVERLAPPED;
+
+
+typedef
+VOID
+(WINAPI *LPSOUND_OVERLAPPED_COMPLETION_ROUTINE)(
+    _In_    DWORD dwErrorCode,
+    _In_    DWORD dwNumberOfBytesTransfered,
+    _Inout_ PSOUND_OVERLAPPED lpOverlapped
+    );
+
 
 typedef MMRESULT (*WAVE_COMMIT_FUNC)(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  PVOID OffsetPtr,
     IN  DWORD Bytes,
     IN  PSOUND_OVERLAPPED Overlap,
-    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
+    IN  LPSOUND_OVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
 
 typedef MMRESULT (*MMMIXERQUERY_FUNC) (
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
@@ -341,6 +353,9 @@ typedef struct _SOUND_DEVICE_INSTANCE
 
     BOOL ResetInProgress;
     BOOL bPaused;
+
+    HANDLE hSoundThread;
+
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 /* This lives in WAVEHDR.reserved */
@@ -670,7 +685,7 @@ VOID CALLBACK
 CompleteIO(
     IN  DWORD dwErrorCode,
     IN  DWORD dwNumberOfBytesTransferred,
-    IN  LPOVERLAPPED lpOverlapped);
+    IN  PSOUND_OVERLAPPED lpOverlapped);
 
 MMRESULT
 CommitWaveHeaderToKernelDevice(
