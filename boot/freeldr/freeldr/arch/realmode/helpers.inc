@@ -121,7 +121,7 @@ Reboot:
     mov ax, HEX(0003)
     int HEX(10)
 
-    /* Set the BIOS Data Area function 0000h:0472h to 0 (cold reboot) */
+    /* Set the BIOS Data Area variable at 40h:72h to 0 (cold reboot) */
     mov word ptr ds:[HEX(0472)], HEX(0)
 
     /* and jump to the Reset Vector F000h:FFF0h in the ROM */
