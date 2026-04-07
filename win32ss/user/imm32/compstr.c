@@ -226,7 +226,7 @@ static DWORD CS_DoPrivate(HIMC hIMC, const COMPOSITIONSTRING *pCS, PVOID pBuffer
         return dwPrivateLen;
 
     DWORD ret = min(dwBufLen, dwPrivateLen);
-    CopyMemory(pBuffer, pPrivate + dwOffset, ret);
+    CopyMemory(pBuffer, (PBYTE)pPrivate + dwOffset, ret);
     return ret;
 }
 
