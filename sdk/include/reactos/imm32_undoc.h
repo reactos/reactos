@@ -31,6 +31,18 @@ extern "C" {
 
 #define WM_IME_SYSTEM 0x00000287
 
+/* The additional flags for ImmGetCompositionStringA/W */
+#define GCS_PRIVATE 0x8000
+
+/* Used in ImmGetCompositionStringA/W */
+typedef struct tagCOMPSTR_PRIVATE
+{
+    DWORD dwUnknown0;
+    DWORD dwUnknown1;
+    DWORD dwLen;
+    DWORD dwOffset;
+} COMPSTR_PRIVATE, *PCOMPSTR_PRIVATE, *LPCOMPSTR_PRIVATE;
+
 /* wParam for WM_IME_SYSTEM */
 #define IMS_NOTIFYIMESHOW       0x05
 #define IMS_UPDATEIMEUI         0x06
@@ -330,6 +342,7 @@ HRESULT WINAPI CtfImmLastEnabledWndDestroy(_In_ BOOL bCreate);
 HRESULT WINAPI CtfImmTIMActivate(_In_ HKL hKL);
 BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID);
 BOOL WINAPI CtfImmIsCiceroEnabled(VOID);
+BOOL WINAPI CtfImmIsGuidMapEnable(_In_ HIMC hIMC);
 
 LRESULT WINAPI
 CtfImmDispatchDefImeMessage(
