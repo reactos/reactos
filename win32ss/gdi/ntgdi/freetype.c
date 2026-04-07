@@ -39,23 +39,23 @@ typedef struct _FONTLINK
     PSHARED_FACE SharedFace;
 } FONTLINK, *PFONTLINK;
 
-typedef struct _FONTLINK_CHAIN
-{
-    LIST_ENTRY FontLinkList; //< List of FONTLINK's
-    LOGFONTW LogFont;
-    PZZWSTR pszzFontLink;
-    PTEXTOBJ pBaseTextObj;
-    FT_Face pDefFace;
-} FONTLINK_CHAIN, *PFONTLINK_CHAIN;
-
-#define FONTLINK_DEFAULT_CHAR 0x30FB // U+30FB (KATAKANA MIDDLE DOT)
-
 typedef struct _FONTLINK_ENTRY
 {
     LIST_ENTRY ListEntry;
     WCHAR lfFaceName[LF_FACESIZE];
     PZZWSTR pszzFontLink;
 } FONTLINK_ENTRY, *PFONTLINK_ENTRY;
+
+typedef struct _FONTLINK_CHAIN
+{
+    LIST_ENTRY FontLinkList; //< List of FONTLINK's
+    LOGFONTW LogFont;
+    PCZZWSTR pszzFontLink;
+    PTEXTOBJ pBaseTextObj;
+    FT_Face pDefFace;
+} FONTLINK_CHAIN, *PFONTLINK_CHAIN;
+
+#define FONTLINK_DEFAULT_CHAR 0x30FB // U+30FB (KATAKANA MIDDLE DOT)
 
 static RTL_STATIC_LIST_HEAD(g_FontLinkEntries); // The list of FONTLINK_ENTRY
 static DWORD s_chFontLinkDefaultChar = FONTLINK_DEFAULT_CHAR;
@@ -1185,7 +1185,7 @@ FontLink_Chain_Init(
 }
 
 // The default FontLink data
-static WCHAR s_szzDefFontLink[] =
+static const WCHAR s_szzDefFontLink[] =
     L"tahoma.ttf,Tahoma\0"
     L"msgothic.ttc,MS UI Gothic\0"
     L"mingliu.ttc,PMingLiU\0"
@@ -1193,7 +1193,7 @@ static WCHAR s_szzDefFontLink[] =
     L"gulim.ttc,Gulim\0"
     L"\0";
 // The default fixed-pitch FontLink data
-static WCHAR s_szzDefFixedFontLink[] =
+static const WCHAR s_szzDefFixedFontLink[] =
     L"cour.ttf,Courier New\0"
     L"msgothic.ttc,MS Gothic\0"
     L"mingliu.ttc,MingLiU\0"
@@ -1307,7 +1307,7 @@ FontLink_Chain_Populate(
     LOGFONTW lfBase;
     PTEXTOBJ pTextObj = pChain->pBaseTextObj;
     PFONTGDI pFontGDI;
-    PWSTR pszLink;
+    PCWSTR pszLink;
     WCHAR szEntry[MAX_PATH];
     BOOL bFixCharSet;
 
