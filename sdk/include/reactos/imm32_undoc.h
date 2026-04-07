@@ -31,14 +31,14 @@ extern "C" {
 
 #define WM_IME_SYSTEM 0x00000287
 
-/* The additional flags for ImmGetCompositionStringA/W */
+/* The additional dwIndex value for ImmGetCompositionStringA/W */
 #define GCS_PRIVATE 0x8000
 
 /* Used in ImmGetCompositionStringA/W */
 typedef struct tagCOMPSTR_PRIVATE
 {
-    DWORD dwUnknown0;
-    DWORD dwUnknown1;
+    DWORD dwUnknown0; /* FIXME: Rename */
+    DWORD dwUnknown1; /* FIXME: Rename */
     DWORD dwLen;
     DWORD dwOffset;
 } COMPSTR_PRIVATE, *PCOMPSTR_PRIVATE, *LPCOMPSTR_PRIVATE;
