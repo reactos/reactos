@@ -1,9 +1,17 @@
+/*
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Real mode helper code for Original Xbox
+ * COPYRIGHT:   Copyright 2011 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright 2012-2019 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2026 Daniel Victor <ilauncherdeveloper@gmail.com>
+ */
 
 Empty8042:
-    .word HEX(00eb), HEX(00eb)      // jmp $+2, jmp $+2
+    .word HEX(00eb), HEX(00eb)      /* jmp $+2, jmp $+2 */
     in al, HEX(64)
-    cmp al, HEX(0ff)                // legacy-free machine without keyboard
-    jz Empty8042_ret                // controllers on Intel Macs read back 0xFF
+    cmp al, HEX(0ff)                /* legacy-free machine without keyboard */
+    jz Empty8042_ret                /* controllers on Intel Macs read back 0xFF */
     test al, 2
     jnz Empty8042
 Empty8042_ret:
@@ -12,13 +20,13 @@ Empty8042_ret:
 EnableA20:
     pusha
     call Empty8042
-    mov al, HEX(0D1)                // command write
+    mov al, HEX(0D1)                /* command write */
     out HEX(064), al
     call Empty8042
-    mov al, HEX(0DF)                // A20 on
+    mov al, HEX(0DF)                /* A20 on */
     out HEX(060), al
     call Empty8042
-    mov al, HEX(0FF)                // pulse output port
+    mov al, HEX(0FF)                /* pulse output port */
     out HEX(064), al
     call Empty8042
     popa
@@ -27,13 +35,13 @@ EnableA20:
 DisableA20:
     pusha
     call Empty8042
-    mov al, HEX(0D1)                // command write
+    mov al, HEX(0D1)                /* command write */
     out HEX(064), al
     call Empty8042
-    mov al, HEX(0DD)                // A20 off
+    mov al, HEX(0DD)                /* A20 off */
     out HEX(060), al
     call Empty8042
-    mov al, HEX(0FF)                // pulse output port
+    mov al, HEX(0FF)                /* pulse output port */
     out HEX(064), al
     call Empty8042
     popa
@@ -62,11 +70,12 @@ writestr_end:
  * al = character to output
  */
 writechr:
+    /* no-op on Xbox, as it doesn't have INT10 / VGA BIOS */
     ret
 
-//
-// writehex[248]: Write a hex number in (AL, AX, EAX) to the console
-//
+/*
+ * writehex[248]: Write a hex number in (AL, AX, EAX) to the console
+ */
 writehex2:
     pushfd
     pushad
@@ -110,10 +119,7 @@ Reboot:
     /* Disable A20 address line */
     call DisableA20
 
-    /* Set the word at location 40h:72h to 0 (cold reboot) */
-    mov word ptr ds:[HEX(0472)], HEX(0)
-
-    /* and jump to location F000h:FFF0h in ROM */
+    /* and jump to the Reset Vector in the ROM */
     ljmp16 HEX(0F000), HEX(0FFF0)
 
 
@@ -166,11 +172,11 @@ Relocator16Boot:
     mov edx, dword ptr cs:[BSS_RegisterSet + REGS_EDX]
     mov esi, dword ptr cs:[BSS_RegisterSet + REGS_ESI]
     mov edi, dword ptr cs:[BSS_RegisterSet + REGS_EDI]
-    // Don't setup ebp, we only use it as output! <-- FIXME!
+    /* FIXME: Don't setup ebp, we only use it as output! */
 
     /* Jump to the new CS:IP (e.g. jump to bootsector code...) */
-    .byte HEX(0EA) // ljmp16 segment:offset
+    .byte HEX(0EA)   /* ljmp16 segment:offset */
 Relocator16Address:
-    .word HEX(7C00) // Default offset
-    .word HEX(0000) // Default segment
+    .word HEX(7C00)  /* Default offset */
+    .word HEX(0000)  /* Default segment */
     nop
