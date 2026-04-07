@@ -70,7 +70,8 @@ writestr_end:
  * al = character to output
  */
 writechr:
-    /* no-op on Xbox, as it doesn't have INT10 / VGA BIOS */
+    /* no-op on Xbox, as it doesn't have INT 10h / VGA BIOS
+     * FIXME: This could be made to output to the serial port */
     ret
 
 /*
@@ -114,6 +115,7 @@ writehex_common:
 
 
 Reboot:
+    /* FIXME: perform reboot via SMC on I2C bus */
     cli
 
     /* Disable A20 address line */
