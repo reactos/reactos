@@ -27,10 +27,28 @@ long long __cdecl _ftelli64(FILE *stream)
     return (long long)ftell(stream);
 }
 
+/*
+ * fseeko64/ftello64 — POSIX names that GCC 15 libstdc++ ext11-inst.o
+ * (stdio_sync_filebuf) expects. Map to our _fseeki64/_ftelli64 above.
+ */
+int __cdecl fseeko64(FILE *stream, long long offset, int origin)
+{
+    return _fseeki64(stream, offset, origin);
+}
+
+long long __cdecl ftello64(FILE *stream)
+{
+    return _ftelli64(stream);
+}
+
 #ifdef _M_IX86
 void *_imp___fseeki64 = _fseeki64;
 void *_imp___ftelli64 = _ftelli64;
+void *_imp__fseeko64 = fseeko64;
+void *_imp__ftello64 = ftello64;
 #else
 void *__imp__fseeki64 = _fseeki64;
 void *__imp__ftelli64 = _ftelli64;
+void *__imp_fseeko64 = fseeko64;
+void *__imp_ftello64 = ftello64;
 #endif

@@ -689,6 +689,23 @@ set_target_properties(libmingwex PROPERTIES IMPORTED_LOCATION ${LIBMINGWEX_LOCAT
 # libmingwex requires a CRT and imports from kernel32
 target_link_libraries(libmingwex INTERFACE libmsvcrt libkernel32)
 
+# MSYS2/ucrt64's libsupc++ and libwinpthread are compiled with stack protector
+# and __mingw_snprintf, pulling in symbols not available in ReactOS's msvcrt.
+# Detect this and link a small compat shim instead of the full libmingwex
+# (which itself depends on ucrt-specific symbols).
+find_program(_nm_executable NAMES nm)
+if(_nm_executable)
+    execute_process(
+        COMMAND ${_nm_executable} ${LIBSUPCXX_LOCATION}
+        OUTPUT_VARIABLE _supcxx_syms
+        ERROR_QUIET)
+    if(_supcxx_syms MATCHES "__stack_chk_fail")
+        message(STATUS "libsupc++ needs stack protector shim (MSYS2/ucrt64 toolchain)")
+        target_link_libraries(libsupc++ INTERFACE gcc_ssp_compat)
+        target_link_libraries(libwinpthread INTERFACE gcc_ssp_compat)
+    endif()
+endif()
+
 add_library(libstdc++ STATIC IMPORTED GLOBAL)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libstdc++.a OUTPUT_VARIABLE LIBSTDCCXX_LOCATION)
 string(STRIP ${LIBSTDCCXX_LOCATION} LIBSTDCCXX_LOCATION)

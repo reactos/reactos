@@ -25,7 +25,7 @@
 #define HAVE_STRING_H 1
 #define STDC_HEADERS 1
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(__MINGW32__)
     #define HAVE_UNISTD_H 1
 #endif
 
@@ -42,7 +42,7 @@
 
 #define HAVE_STDINT_H 1
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(__MINGW32__)
     #define HAVE_DIRENT_H 1
     #define HAVE_SYS_TIME_H 1
     #define TIME_WITH_SYS_TIME 1
@@ -76,7 +76,7 @@
 #define HAVE_MEMMOVE 1
 #define HAVE_MEMSET 1
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(__MINGW32__)
     #define HAVE_GETTIMEOFDAY 1
 #endif
 
@@ -117,7 +117,7 @@
 #define HAVE_STRCASECMP 1
 #define HAVE_STRNCASECMP 1
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(__MINGW32__)
     #define HAVE_USLEEP 1
 #endif
 
@@ -141,7 +141,7 @@
 #define HAVE_WCSRCHR 1
 #define HAVE_WCSSTR 1
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(__MINGW32__)
     #define HAVE_WCWIDTH 1
 #endif
 
@@ -160,14 +160,14 @@
 /*
  * Misc OS stuff
  */
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(__MINGW32__)
     #define HAVE__DEV_NULL 1
 #endif
 
 /*
  * Structures
  */
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(__MINGW32__)
     #define HAVE_STRUCT_TIMEVAL 1
 #endif
 
@@ -179,7 +179,7 @@
  */
 #define HAVE_LONGLONG 1
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(__MINGW32__)
 #if !defined(__arm__) && !defined(__aarch64__)
     #define VA_LIST_IS_ARRAY 1
 #endif

@@ -36,11 +36,13 @@ void isohybrid_warning(const char* fmt, ...);
 #ifdef _WIN32
 int fsync(int fd);
 int getppid(void);
+#ifndef __MINGW32__
+#define ftruncate _chsize
+#endif
 #endif
 
 #ifdef _MSC_VER
 #define fseeko _fseeki64
-#define ftruncate _chsize
 #endif
 
 #endif

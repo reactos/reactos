@@ -1,63 +1,24 @@
 /*
  * PROJECT:     GCC C++ support library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     wctype/wctob/btowc shims for GCC 15 libstdc++
+ * PURPOSE:     wctob/btowc/wcrtomb/mbrtowc shims for GCC 15 libstdc++
  * COPYRIGHT:   Copyright 2026 ReactOS Team
  *
- * GCC 15's libstdc++ ctype_members.o references wctype, wctob, and btowc.
- * wctype is only in MSVCR120 (not msvcrt at all); wctob and btowc are
- * version-gated to DLL_EXPORT_VERSION >= 0x600.
+ * GCC 15's libstdc++ references wctob, btowc (version-gated to >= 0x600),
+ * wcrtomb, mbrtowc (version-gated to >= 0x600), lseek64, fstat64 (POSIX
+ * names not in msvcrt), and __msvcrt_assert (UCRT64 libmingwex convention).
+ *
+ * Note: wctype is now exported by msvcrt.spec unconditionally, so we no
+ * longer provide it here.
  */
 
 #include <stdlib.h>
 #include <string.h>
 
-#undef wctype
 #undef wctob
 #undef btowc
-
-/*
- * MSVC CRT character classification bitmasks (used by iswctype).
- */
-#define CRT_UPPER   0x0001
-#define CRT_LOWER   0x0002
-#define CRT_DIGIT   0x0004
-#define CRT_SPACE   0x0008
-#define CRT_PUNCT   0x0010
-#define CRT_CONTROL 0x0020
-#define CRT_BLANK   0x0040
-#define CRT_HEX     0x0080
-#define CRT_ALPHA   0x0103
-
-typedef unsigned short wctype_t;
-
-wctype_t __cdecl wctype(const char *property)
-{
-    static const struct {
-        const char *name;
-        wctype_t mask;
-    } props[] = {
-        { "alnum",  CRT_DIGIT | CRT_ALPHA },
-        { "alpha",  CRT_ALPHA },
-        { "cntrl",  CRT_CONTROL },
-        { "digit",  CRT_DIGIT },
-        { "graph",  CRT_DIGIT | CRT_PUNCT | CRT_ALPHA },
-        { "lower",  CRT_LOWER },
-        { "print",  CRT_DIGIT | CRT_PUNCT | CRT_BLANK | CRT_ALPHA },
-        { "punct",  CRT_PUNCT },
-        { "space",  CRT_SPACE },
-        { "upper",  CRT_UPPER },
-        { "xdigit", CRT_HEX },
-    };
-    unsigned int i;
-
-    for (i = 0; i < sizeof(props) / sizeof(props[0]); i++)
-    {
-        if (strcmp(property, props[i].name) == 0)
-            return props[i].mask;
-    }
-    return 0;
-}
+#undef wcrtomb
+#undef mbrtowc
 
 int __cdecl wctob(unsigned int c)
 {
@@ -81,12 +42,78 @@ unsigned int __cdecl btowc(int c)
     return (unsigned int)-1; /* WEOF */
 }
 
+/*
+ * wcrtomb — convert wide char to multibyte (restartable).
+ * ReactOS CRT only supports single-byte locales, so mbstate_t is unused.
+ */
+size_t __cdecl wcrtomb(char *s, wchar_t wc, void *ps)
+{
+    (void)ps;
+
+    if (!s)
+        return 1; /* stateless encoding: reset is a no-op, returns 1 */
+
+    return (size_t)wctomb(s, wc);
+}
+
+/*
+ * mbrtowc — convert multibyte to wide char (restartable).
+ */
+size_t __cdecl mbrtowc(wchar_t *pwc, const char *s, size_t n, void *ps)
+{
+    int ret;
+    (void)ps;
+
+    if (!s)
+        return 0; /* stateless encoding */
+
+    if (n == 0)
+        return (size_t)-2;
+
+    ret = mbtowc(pwc, s, n);
+    if (ret < 0)
+        return (size_t)-1;
+    return (size_t)ret;
+}
+
+/*
+ * lseek64 / fstat64 — POSIX names that GCC 15 libstdc++ basic_file.o expects.
+ * Map to the MSVC CRT underscore-prefixed versions.
+ */
+long long __cdecl _lseeki64(long fd, long long offset, long origin);
+long long __cdecl lseek64(long fd, long long offset, long origin)
+{
+    return _lseeki64(fd, offset, origin);
+}
+
+/* _fstat64 takes (int fd, struct _stat64 *buf). We just forward as raw bytes. */
+int __cdecl _fstat64(long fd, void *buf);
+int __cdecl fstat64(long fd, void *buf)
+{
+    return _fstat64(fd, buf);
+}
+
+/*
+ * UCRT64's libmingwex _assert.o references __imp___msvcrt_assert.
+ * ReactOS msvcrt exports _assert; provide the __msvcrt_ alias.
+ */
+void __cdecl _assert(const char *expr, const char *file, unsigned int line);
+
+void __cdecl __msvcrt_assert(const char *expr, const char *file, unsigned int line)
+{
+    _assert(expr, file, line);
+}
+
 #ifdef _M_IX86
-void *_imp__wctype = wctype;
 void *_imp__wctob = wctob;
 void *_imp__btowc = btowc;
+void *_imp__wcrtomb = wcrtomb;
+void *_imp__mbrtowc = mbrtowc;
+void *_imp____msvcrt_assert = __msvcrt_assert;
 #else
-void *__imp_wctype = wctype;
 void *__imp_wctob = wctob;
 void *__imp_btowc = btowc;
+void *__imp_wcrtomb = wcrtomb;
+void *__imp_mbrtowc = mbrtowc;
+void *__imp___msvcrt_assert = __msvcrt_assert;
 #endif

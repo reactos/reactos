@@ -22,7 +22,7 @@
  * FILE:            tools/mkhive/mkhive.h
  * PURPOSE:         Hive maker
  * PROGRAMMERS:     Eric Kohl
- *                  Hervé Poussineau
+ *                  Hervï¿½ Poussineau
  */
 
 #pragma once
@@ -55,8 +55,23 @@ unsigned char BitScanReverse(ULONG * const Index, unsigned long Mask);
 #define RtlFillMemoryUlong(dst, len, val) memset(dst, val, len)
 
 #ifdef _M_AMD64
+#if defined(__GNUC__) || defined(__clang__)
+static __inline__ unsigned char BitScanForward64(ULONG *Index, unsigned long long Mask)
+{
+    if (Mask == 0) return 0;
+    *Index = __builtin_ctzll(Mask);
+    return 1;
+}
+static __inline__ unsigned char BitScanReverse64(ULONG *Index, unsigned long long Mask)
+{
+    if (Mask == 0) return 0;
+    *Index = 63 - __builtin_clzll(Mask);
+    return 1;
+}
+#else
 #define BitScanForward64 _BitScanForward64
 #define BitScanReverse64 _BitScanReverse64
+#endif
 #endif
 
 typedef DWORD REGSAM;
