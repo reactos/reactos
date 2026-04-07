@@ -23,6 +23,48 @@ static void *libmbedtls_handle;
 static mbedtls_entropy_context entropy;
 static mbedtls_ctr_drbg_context ctr_drbg;
 
+#ifdef __REACTOS__
+static volatile LONG ctr_drbg_seed_state; /* 0=not seeded, 1=seeding, 2=seeded, -1=failed */
+
+static int ensure_ctr_drbg_seeded(void)
+{
+    LONG state = InterlockedCompareExchange(&ctr_drbg_seed_state, 1, 0);
+    int ret;
+
+    if (state == 2) return 0;
+    if (state == -1) return -1;
+    if (state == 1)
+    {
+        while ((state = InterlockedCompareExchange(&ctr_drbg_seed_state, 0, 0)) == 1)
+            SwitchToThread();
+        return state == 2 ? 0 : -1;
+    }
+
+    ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0);
+    if (ret)
+    {
+        ERR("mbedtls_ctr_drbg_seed failed: %d\n", ret);
+        InterlockedExchange(&ctr_drbg_seed_state, -1);
+        return -1;
+    }
+
+    InterlockedExchange(&ctr_drbg_seed_state, 2);
+    return 0;
+}
+
+static int bcrypt_mbedtls_rng(void *rng_ctx, unsigned char *output, size_t len)
+{
+    if (ensure_ctr_drbg_seeded())
+        return MBEDTLS_ERR_CTR_DRBG_ENTROPY_SOURCE_FAILED;
+    return mbedtls_ctr_drbg_random(rng_ctx, output, len);
+}
+#else
+static int bcrypt_mbedtls_rng(void *rng_ctx, unsigned char *output, size_t len)
+{
+    return mbedtls_ctr_drbg_random(rng_ctx, output, len);
+}
+#endif
+
 union key_data
 {
     union
@@ -272,7 +314,12 @@ NTSTATUS process_attach(void *args)
 #endif
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_entropy_init(&entropy);
+
+#ifdef __REACTOS__
+    InterlockedExchange(&ctr_drbg_seed_state, 0);
+#else
     mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0);
+#endif
 
     return STATUS_SUCCESS;
 #ifndef __REACTOS__
@@ -389,6 +436,9 @@ NTSTATUS process_detach(void *args)
 #endif
         mbedtls_entropy_free(&entropy);
         mbedtls_ctr_drbg_free(&ctr_drbg);
+    #ifdef __REACTOS__
+        InterlockedExchange(&ctr_drbg_seed_state, 0);
+    #endif
 #ifndef __REACTOS__
         wine_dlclose(libmbedtls_handle, NULL, 0);
         libmbedtls_handle = NULL;
