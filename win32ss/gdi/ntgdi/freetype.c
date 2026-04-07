@@ -4357,6 +4357,25 @@ FontLink_Chain_Dump(
 #endif
 }
 
+static BOOL
+IntNeedRequestFontSize(PFONTLINK_CHAIN pChain, FT_Face face, PLIST_ENTRY TargetEntry)
+{
+    PLIST_ENTRY Entry, Head = &pChain->FontLinkList;
+    PFONTLINK pFontLink;
+
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
+    {
+        pFontLink = CONTAINING_RECORD(Entry, FONTLINK, ListEntry);
+        if (!FontLink_PrepareFontInfo(pFontLink))
+            continue; // This link is not useful, check the next one
+
+        if (pFontLink->SharedFace->Face == face || Entry == TargetEntry)
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
 /// Search the target glyph and update the current font info.
 /// @return The glyph index
 static UINT
@@ -4403,7 +4422,8 @@ FontLink_Chain_FindGlyph(
         // The target glyph is found in the chain
         DPRINT("code: 0x%08X, index: 0x%08X\n", code, index);
         pCache->Hashed.Face = *pFace = face;
-        IntRequestFontSizeEx(face, &pChain->LogFont);
+        if (IntNeedRequestFontSize(pChain, face, Entry))
+            IntRequestFontSizeEx(face, &pChain->LogFont);
         FT_Set_Transform(face, &pCache->Hashed.matTransform, NULL);
         return index;
     }
