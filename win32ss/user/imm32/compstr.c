@@ -224,7 +224,8 @@ static DWORD CS_DoPrivate(HIMC hIMC, const COMPOSITIONSTRING *pCS, PVOID pBuffer
     if (dwPrivateOffset >= pCS->dwSize || dwPrivateOffset + pCS->dwPrivateSize > pCS->dwSize)
         return IMM_ERROR_GENERAL;
 
-    PCOMPSTR_PRIVATE pPrivate = (PCOMPSTR_PRIVATE)((PBYTE)pCS + pCS->dwPrivateOffset);
+    const BYTE *pbCS = (const BYTE *)pCS;
+    const COMPSTR_PRIVATE *pPrivate = (const COMPSTR_PRIVATE *)(pbCS + dwPrivateOffset);
     DWORD dwLen = pPrivate->dwLen, dwOffset = pPrivate->dwOffset;
 
     /* Check boundary #2 (ReactOS only) */
@@ -238,7 +239,7 @@ static DWORD CS_DoPrivate(HIMC hIMC, const COMPOSITIONSTRING *pCS, PVOID pBuffer
         return dwLen;
 
     DWORD ret = min(dwBufLen, dwLen);
-    CopyMemory(pBuffer, (PBYTE)pPrivate + dwOffset, ret);
+    CopyMemory(pBuffer, (const BYTE *)pPrivate + dwOffset, ret);
     return ret;
 }
 
