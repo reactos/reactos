@@ -238,6 +238,7 @@ CmpApcRoutineRundown(_In_ PKAPC Apc)
     ExFreePoolWithTag(PostBlock, TAG_CM);
 }
 
+
 /* FUNCTIONS *****************************************************************/
 
 /**
@@ -439,7 +440,7 @@ CmpInsertNotifyBlock(_In_ PCM_KEY_BODY KeyBody,
         *Result = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    RtlZeroMemory(NotifyBlock, sizeof(CM_NOTIFY_BLOCK));Expand commentComment on lines R436 to R443Resolved
+    RtlZeroMemory(NotifyBlock, sizeof(CM_NOTIFY_BLOCK));
 
     /* Initialize list heads */
     InitializeListHead(&NotifyBlock->HiveList);
