@@ -1682,7 +1682,7 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
             }
 
             /* Check if this is a duplicate object */
-            if (LocalSubObjectsKeyBody[i]->KeyControlBlock == KeyObject->KeyControlBlock)Expand commentComment on line R1685Resolved
+            if (LocalSubObjectsKeyBody[i]->KeyControlBlock == KeyObject->KeyControlBlock)
             {
                 DPRINT1("NtNotifyChangeMultipleKeys: Duplicate subordinate object found.\n");
                 Status = STATUS_INVALID_PARAMETER;
