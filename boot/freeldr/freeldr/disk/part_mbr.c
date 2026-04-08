@@ -74,108 +74,42 @@ DiskMbrPartitionTableEntryToInformation(
 }
 
 BOOLEAN
-DiskGetActivePartitionEntry(
-    _In_ UCHAR DriveNumber,
-    _In_ ULONG SectorSize,
-    _Out_opt_ PPARTITION_INFORMATION PartitionEntry,
-    _Out_ PULONG ActivePartition)
-{
-    MASTER_BOOT_RECORD MasterBootRecord;
-    ULONG BootablePartitionCount = 0;
-    ULONG CurrentPartitionNumber;
-    ULONG Index;
-
-    ASSERT(SectorSize >= 512);
-
-    *ActivePartition = 0;
-
-    /* Read master boot record */
-    if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
-        return FALSE;
-
-    CurrentPartitionNumber = 0;
-    for (Index = 0; Index < 4; Index++)
-    {
-        PPARTITION_TABLE_ENTRY PartitionTableEntry = &MasterBootRecord.PartitionTable[Index];
-
-        if (PartitionTableEntry->SystemIndicator != PARTITION_ENTRY_UNUSED &&
-            PartitionTableEntry->SystemIndicator != PARTITION_EXTENDED &&
-            PartitionTableEntry->SystemIndicator != PARTITION_XINT13_EXTENDED)
-        {
-            CurrentPartitionNumber++;
-
-            /* Test if this is the bootable partition */
-            if (PartitionTableEntry->BootIndicator == 0x80)
-            {
-                BootablePartitionCount++;
-                *ActivePartition = CurrentPartitionNumber;
-
-                /* Copy the partition table entry */
-                if (PartitionEntry)
-                {
-                    DiskMbrPartitionTableEntryToInformation(PartitionEntry, PartitionTableEntry,
-                                                            *ActivePartition, SectorSize);
-                }
-            }
-        }
-    }
-
-    /* Make sure there was only one bootable partition */
-    if (BootablePartitionCount == 0)
-    {
-        ERR("No bootable (active) partitions found.\n");
-        return FALSE;
-    }
-    else if (BootablePartitionCount != 1)
-    {
-        ERR("Too many bootable (active) partitions found.\n");
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-BOOLEAN
 DiskGetMbrPartitionEntry(
     _In_ UCHAR DriveNumber,
     _In_ ULONG SectorSize,
     _In_ ULONG PartitionNumber,
-    _Out_ PPARTITION_INFORMATION PartitionEntry)
+    _Out_ PPARTITION_INFORMATION PartitionEntry,
+    _In_ BOOLEAN IgnoreUnusedFlag)
 {
+    BOOLEAN Result = TRUE;
     MASTER_BOOT_RECORD MasterBootRecord;
     PPARTITION_TABLE_ENTRY PartitionTableEntry;
     ULONG ExtendedPartitionNumber;
     ULONG ExtendedPartitionOffset;
     ULONG Index;
-    ULONG CurrentPartitionNumber;
-
-    ASSERT(SectorSize >= 512);
-
-    /* Validate partition number */
-    if (PartitionNumber < 1) //if (PartitionNumber == 0)
-        return FALSE;
+    PPARTITION_TABLE_ENTRY ThisPartitionTableEntry;
+    PARTITION_TABLE_ENTRY PartitionTableEntry = {0};
 
     /* Read master boot record */
     if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
         return FALSE;
 
-    CurrentPartitionNumber = 0;
     for (Index = 0; Index < 4; Index++)
     {
-        PartitionTableEntry = &MasterBootRecord.PartitionTable[Index];
+        ThisPartitionTableEntry = &MasterBootRecord.PartitionTable[Index];
 
-        if (PartitionTableEntry->SystemIndicator != PARTITION_ENTRY_UNUSED &&
-            PartitionTableEntry->SystemIndicator != PARTITION_EXTENDED &&
-            PartitionTableEntry->SystemIndicator != PARTITION_XINT13_EXTENDED)
+        if (PartitionNumber > 4 &&
+            (ThisPartitionTableEntry->SystemIndicator == PARTITION_EXTENDED ||
+             ThisPartitionTableEntry->SystemIndicator == PARTITION_XINT13_EXTENDED))
         {
-            CurrentPartitionNumber++;
+            Result = DiskGetExtendedMbrPartitionEntry(DriveNumber, PartitionNumber, ThisPartitionTableEntry, PartitionEntry);
+            break;
         }
 
-        if (PartitionNumber == CurrentPartitionNumber)
+        if (PartitionNumber == Index + 1)
         {
-            DiskMbrPartitionTableEntryToInformation(PartitionEntry, PartitionTableEntry,
-                                                    PartitionNumber, SectorSize);
-            return TRUE;
+            DiskMbrPartitionTableEntryToInformation(PartitionEntry, ThisPartitionTableEntry, PartitionNumber, SectorSize);
+            break;
         }
     }
 
@@ -184,7 +118,7 @@ DiskGetMbrPartitionEntry(
      * to loop through all the extended partitions on the disk
      * and return the one they want.
      */
-    ExtendedPartitionNumber = PartitionNumber - CurrentPartitionNumber - 1;
+    ExtendedPartitionNumber = PartitionNumber - 4;
 
     /*
      * Set the initial relative starting sector to 0.
@@ -223,11 +157,13 @@ DiskGetMbrPartitionEntry(
         PartitionTableEntry->SectorCountBeforePartition += SectorCountBeforePartition;
     }
 
-    /* When we get here we should have the correct entry already
-     * stored in PartitionTableEntry, so just return TRUE. */
-    DiskMbrPartitionTableEntryToInformation(PartitionEntry, PartitionTableEntry,
-                                            PartitionNumber, SectorSize);
-    return TRUE;
+    /* Check if partition is usable when the flag is not ignored */
+    if (!IgnoreUnusedFlag)
+        Result &= PartitionEntry->PartitionType != PARTITION_ENTRY_UNUSED &&
+                  PartitionEntry->PartitionType != PARTITION_EXTENDED &&
+                  PartitionEntry->PartitionType != PARTITION_XINT13_EXTENDED;
+
+    return Result;
 }
 
 #endif

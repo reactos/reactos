@@ -48,7 +48,8 @@ DiskGetBrfrPartitionEntry(
     _In_ UCHAR DriveNumber,
     _In_ ULONG SectorSize,
     _In_ ULONG PartitionNumber,
-    _Out_ PPARTITION_INFORMATION PartitionEntry)
+    _Out_ PPARTITION_INFORMATION PartitionEntry,
+    _In_ BOOLEAN IgnoreUnusedFlag)
 {
     ASSERT(SectorSize >= 512);
 
