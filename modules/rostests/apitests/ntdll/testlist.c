@@ -271,6 +271,7 @@ const struct test winetest_testlist[] =
 #ifdef _M_AMD64
     { "RtlCaptureContext",              func_RtlCaptureContext },
 #endif
+
     { "NtNotifyChangeMultipleKeys", func_NtNotifyChangeMultipleKeys },
     { 0, 0 }
 };
