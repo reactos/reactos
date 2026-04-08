@@ -228,7 +228,7 @@ static DWORD CS_DoPrivate(HIMC hIMC, const COMPOSITIONSTRING *pCS, PVOID pBuffer
     DWORD dwLen = pPrivate->dwLen, dwOffset = pPrivate->dwOffset;
 
     /* Check boundary #2 (ReactOS only) */
-    if (dwPrivateOffset + dwOffset > pCS->dwPrivateSize || 
+    if (dwPrivateOffset + dwOffset > pCS->dwPrivateSize ||
         dwPrivateOffset + dwOffset + dwLen > pCS->dwPrivateSize)
     {
         return IMM_ERROR_GENERAL;
