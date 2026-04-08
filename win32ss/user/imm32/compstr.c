@@ -219,13 +219,25 @@ static DWORD CS_DoPrivate(HIMC hIMC, const COMPOSITIONSTRING *pCS, PVOID pBuffer
     if (!CtfImmIsGuidMapEnable(hIMC) || pCS->dwPrivateSize < sizeof(COMPSTR_PRIVATE))
         return IMM_ERROR_GENERAL;
 
-    PCOMPSTR_PRIVATE pPrivate = (PCOMPSTR_PRIVATE)((PBYTE)pCS + pCS->dwPrivateOffset);
-    DWORD dwPrivateLen = pPrivate->dwLen;
-    DWORD dwOffset = pPrivate->dwOffset;
-    if (!dwBufLen)
-        return dwPrivateLen;
+    /* Check boundary #1 (ReactOS only) */
+    DWORD dwPrivateOffset = pCS->dwPrivateOffset;
+    if (dwPrivateOffset >= pCS->dwSize || dwPrivateOffset + pCS->dwPrivateSize > pCS->dwSize)
+        return IMM_ERROR_GENERAL;
 
-    DWORD ret = min(dwBufLen, dwPrivateLen);
+    PCOMPSTR_PRIVATE pPrivate = (PCOMPSTR_PRIVATE)((PBYTE)pCS + pCS->dwPrivateOffset);
+    DWORD dwLen = pPrivate->dwLen, dwOffset = pPrivate->dwOffset;
+
+    /* Check boundary #2 (ReactOS only) */
+    if (dwPrivateOffset + dwOffset > pCS->dwPrivateSize || 
+        dwPrivateOffset + dwOffset + dwLen > pCS->dwPrivateSize)
+    {
+        return IMM_ERROR_GENERAL;
+    }
+
+    if (!dwBufLen)
+        return dwLen;
+
+    DWORD ret = min(dwBufLen, dwLen);
     CopyMemory(pBuffer, (PBYTE)pPrivate + dwOffset, ret);
     return ret;
 }
