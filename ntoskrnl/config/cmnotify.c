@@ -238,6 +238,7 @@ CmpApcRoutineRundown(_In_ PKAPC Apc)
     ExFreePoolWithTag(PostBlock, TAG_CM);
 }
 
+
 /* FUNCTIONS *****************************************************************/
 
 /**
