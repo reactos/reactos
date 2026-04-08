@@ -285,6 +285,16 @@ BOOL WINAPI ImmIMPQueryIMEW(_Inout_ LPIMEPROW pImePro);
 BOOL WINAPI ImmIMPSetIMEA(_In_opt_ HWND hWnd, _Inout_ LPIMEPROA pImePro);
 BOOL WINAPI ImmIMPSetIMEW(_In_opt_ HWND hWnd, _Inout_ LPIMEPROW pImePro);
 
+LRESULT WINAPI
+ImmSendIMEMessageExA(
+    _In_ HWND hWnd,
+    _In_ LPARAM lParam);
+
+LRESULT WINAPI
+ImmSendIMEMessageExW(
+    _In_ HWND hWnd,
+    _In_ LPARAM lParam);
+
 HRESULT WINAPI CtfAImmActivate(_Out_opt_ HINSTANCE *phinstCtfIme);
 HRESULT WINAPI CtfAImmDeactivate(_In_ BOOL bDestroy);
 BOOL WINAPI CtfAImmIsIME(_In_ HKL hKL);
