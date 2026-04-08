@@ -354,8 +354,20 @@ UefiGetGptPartitionEntry(
     ULONGLONG StartSector = (StartLba * BlockSize) / 512;
     ULONGLONG SectorCount512 = (SectorCount * BlockSize) / 512;
 
+    /* saturate to ULONG MAX before casting because partitions >2TB silently get truncated if not */
+    if (StartSector > (ULONGLONG)MAXULONG)
+    {
+        WARN("GPT StartSector %llu exceeds ULONG, clamping\n", StartSector);
+        StartSector = (ULONGLONG)MAXULONG;
+    }
+
+    if (SectorCount512 > (ULONGLONG)MAXULONG)
+    {
+        WARN("GPT SectorCount512 %llu exceeds ULONG, clamping\n", SectorCount512);
+        SectorCount512 = (ULONGLONG)MAXULONG;
+    }
     PartitionTableEntry->SectorCountBeforePartition = (ULONG)StartSector;
-    PartitionTableEntry->PartitionSectorCount = (ULONG)SectorCount512;
+    PartitionTableEntry->PartitionSectorCount       = (ULONG)SectorCount512;
     PartitionTableEntry->SystemIndicator = PARTITION_GPT; /* Mark as GPT partition */
 
     return TRUE;
@@ -364,7 +376,7 @@ UefiGetGptPartitionEntry(
 static
 BOOLEAN
 UefiGetBootPartitionEntry(
-    IN UCHAR DriveNumber,
+    IN  UCHAR DriveNumber,
     OUT PPARTITION_TABLE_ENTRY PartitionTableEntry,
     OUT PULONG BootPartition)
 {
@@ -409,36 +421,24 @@ UefiGetBootPartitionEntry(
         TRACE("Boot handle is root device, using partition 0\n");
         *BootPartition = 0;
         if (PartitionTableEntry != NULL)
-        {
             RtlZeroMemory(PartitionTableEntry, sizeof(*PartitionTableEntry));
-        }
         return TRUE;
     }
 
-    /* Boot handle is a logical partition - find matching partition entry */
+    /* the boot handle is a logical partition so let's find a matching partition entry */
     /* Try to detect GPT first by reading GPT header */
     GPT_TABLE_HEADER GptHeader;
     BOOLEAN IsGpt = UefiReadGptHeader(DriveNumber, &GptHeader);
 
     if (IsGpt)
     {
-        /* For GPT, iterate through GPT partition entries */
-        GPT_TABLE_HEADER GptHeader;
         GPT_PARTITION_ENTRY GptEntry;
-        ULONG ArcDriveIndex = DriveNumber - FIRST_BIOS_DISK;
         EFI_BLOCK_IO* RootBlockIo;
         ULONG BlockSize;
         ULONGLONG EntryLba;
-        ULONG EntryOffset;
-        ULONG EntriesPerBlock;
+        ULONG EntryOffset, EntriesPerBlock;
         EFI_STATUS Status;
         EFI_GUID UnusedGuid = EFI_PART_TYPE_UNUSED_GUID;
-
-        if (!UefiReadGptHeader(DriveNumber, &GptHeader))
-        {
-            ERR("Failed to read GPT header\n");
-            return FALSE;
-        }
 
         Status = GlobalSystemTable->BootServices->HandleProtocol(
             InternalUefiDisk[ArcDriveIndex].Handle,
@@ -448,48 +448,66 @@ UefiGetBootPartitionEntry(
         if (EFI_ERROR(Status) || RootBlockIo == NULL)
             return FALSE;
 
-        BlockSize = RootBlockIo->Media->BlockSize;
+        BlockSize       = RootBlockIo->Media->BlockSize;
         EntriesPerBlock = BlockSize / GptHeader.SizeOfPartitionEntry;
 
-        /* Iterate through GPT partition entries */
+        UCHAR   BootSector0[512];
+        BOOLEAN HaveBootSector0 = FALSE;
+        if (BootBlockIo->Media->BlockSize <= sizeof(BootSector0))
+        {
+            EFI_STATUS Bs = BootBlockIo->ReadBlocks(
+                BootBlockIo, BootBlockIo->Media->MediaId,
+                0, BootBlockIo->Media->BlockSize, BootSector0);
+            HaveBootSector0 = !EFI_ERROR(Bs);
+        }
+
         for (ULONG i = 0; i < GptHeader.NumberOfPartitionEntries; i++)
         {
-            EntryLba = GptHeader.PartitionEntryLba + (i / EntriesPerBlock);
+            EntryLba    = GptHeader.PartitionEntryLba + (i / EntriesPerBlock);
             EntryOffset = (i % EntriesPerBlock) * GptHeader.SizeOfPartitionEntry;
 
-            /* Read the block containing the partition entry */
             Status = RootBlockIo->ReadBlocks(
-                RootBlockIo,
-                RootBlockIo->Media->MediaId,
-                EntryLba,
-                BlockSize,
-                DiskReadBuffer);
-
+                RootBlockIo, RootBlockIo->Media->MediaId,
+                EntryLba, BlockSize, DiskReadBuffer);
             if (EFI_ERROR(Status))
                 continue;
 
-            /* Extract partition entry */
-            RtlCopyMemory(&GptEntry, (PUCHAR)DiskReadBuffer + EntryOffset, sizeof(GPT_PARTITION_ENTRY));
+            RtlCopyMemory(&GptEntry, (PUCHAR)DiskReadBuffer + EntryOffset,
+                          sizeof(GPT_PARTITION_ENTRY));
 
-            /* Skip unused partitions */
             if (memcmp(&GptEntry.PartitionTypeGuid, &UnusedGuid, sizeof(EFI_GUID)) == 0)
                 continue;
 
-            /* Calculate partition size in blocks */
             ULONGLONG PartitionSizeBlocks = GptEntry.EndingLba - GptEntry.StartingLba + 1;
 
             TRACE("GPT Partition %lu: StartLba=%llu, EndLba=%llu, SizeBlocks=%llu\n",
                 i + 1, GptEntry.StartingLba, GptEntry.EndingLba, PartitionSizeBlocks);
 
-            /* Match partition by size (within 1 block tolerance for rounding) */
-            if (PartitionSizeBlocks == BootPartitionSize ||
-                (PartitionSizeBlocks > 0 && 
-                 (PartitionSizeBlocks - 1 <= BootPartitionSize && 
-                  BootPartitionSize <= PartitionSizeBlocks + 1)))
+            BOOLEAN LbaMatch = FALSE;
+            if (HaveBootSector0)
             {
-                TRACE("Found matching GPT partition %lu: Size matches (%llu blocks)\n",
-                    i + 1, BootPartitionSize);
+                UCHAR PartSector0[512];
+                Status = RootBlockIo->ReadBlocks(
+                    RootBlockIo, RootBlockIo->Media->MediaId,
+                    GptEntry.StartingLba, BlockSize, PartSector0);
+                if (!EFI_ERROR(Status) &&
+                    memcmp(BootSector0, PartSector0, BootBlockIo->Media->BlockSize) == 0)
+                {
+                    LbaMatch = TRUE;
+                    TRACE("GPT partition %lu matched by first-sector compare\n", i + 1);
+                }
+            }
 
+            BOOLEAN SizeMatch =
+                !HaveBootSector0 &&
+                (PartitionSizeBlocks == BootPartitionSize ||
+                 (PartitionSizeBlocks > 0 &&
+                  PartitionSizeBlocks - 1 <= BootPartitionSize &&
+                  BootPartitionSize       <= PartitionSizeBlocks + 1));
+
+            if (LbaMatch || SizeMatch)
+            {
+                TRACE("Found matching GPT partition %lu\n", i + 1);
                 *BootPartition = i + 1; /* GPT partitions are 1-indexed */
 
                 /* Convert GPT entry to MBR-style entry for compatibility */
@@ -497,9 +515,9 @@ UefiGetBootPartitionEntry(
                 {
                     RtlZeroMemory(PartitionTableEntry, sizeof(*PartitionTableEntry));
                     ULONGLONG StartSector = (GptEntry.StartingLba * BlockSize) / 512;
-                    ULONGLONG SectorCount = (PartitionSizeBlocks * BlockSize) / 512;
+                    ULONGLONG SectorCount  = (PartitionSizeBlocks * BlockSize) / 512;
                     PartitionTableEntry->SectorCountBeforePartition = (ULONG)StartSector;
-                    PartitionTableEntry->PartitionSectorCount = (ULONG)SectorCount;
+                    PartitionTableEntry->PartitionSectorCount       = (ULONG)SectorCount;
                     PartitionTableEntry->SystemIndicator = PARTITION_GPT;
                 }
                 return TRUE;
@@ -508,40 +526,28 @@ UefiGetBootPartitionEntry(
     }
     else
     {
-        /* MBR partition matching */
         PartitionNum = FIRST_PARTITION;
         while (DiskGetPartitionEntry(DriveNumber, PartitionNum, &TempPartitionEntry))
         {
             ULONGLONG PartitionSizeSectors = TempPartitionEntry.PartitionSectorCount;
-            ULONGLONG PartitionSizeBlocks;
-
-            /* Convert partition size from MBR sectors (always 512 bytes) to UEFI blocks */
-            /* MBR partition table always uses 512-byte sectors per specification */
-            /* UEFI Block I/O protocol reports sizes in device's BlockSize bytes */
-            /* Compare in bytes to avoid rounding issues, then convert to boot partition's block size */
-            ULONGLONG PartitionSizeBytes = PartitionSizeSectors * 512ULL;
-            PartitionSizeBlocks = PartitionSizeBytes / BootBlockIo->Media->BlockSize;
+            ULONGLONG PartitionSizeBytes   = PartitionSizeSectors * 512ULL;
+            ULONGLONG PartitionSizeBlocks  = PartitionSizeBytes / BootBlockIo->Media->BlockSize;
 
             TRACE("Partition %lu: SizeSectors=%llu, SizeBlocks=%llu\n",
                 PartitionNum, PartitionSizeSectors, PartitionSizeBlocks);
 
-            /* Match partition by size (within 1 block tolerance for rounding) */
             if (PartitionSizeBlocks == BootPartitionSize ||
-                (PartitionSizeBlocks > 0 && 
-                 (PartitionSizeBlocks - 1 <= BootPartitionSize && 
-                  BootPartitionSize <= PartitionSizeBlocks + 1)))
+                (PartitionSizeBlocks > 0 &&
+                 (PartitionSizeBlocks - 1 <= BootPartitionSize &&
+                  BootPartitionSize       <= PartitionSizeBlocks + 1)))
             {
                 TRACE("Found matching partition %lu: Size matches (%llu blocks)\n",
                     PartitionNum, BootPartitionSize);
-
                 *BootPartition = PartitionNum;
                 if (PartitionTableEntry != NULL)
-                {
                     RtlCopyMemory(PartitionTableEntry, &TempPartitionEntry, sizeof(*PartitionTableEntry));
-                }
                 return TRUE;
             }
-
             PartitionNum++;
         }
     }
@@ -552,9 +558,7 @@ UefiGetBootPartitionEntry(
         TRACE("Boot device is CD-ROM, using partition 0xFF\n");
         *BootPartition = 0xFF;
         if (PartitionTableEntry != NULL)
-        {
             RtlZeroMemory(PartitionTableEntry, sizeof(*PartitionTableEntry));
-        }
         return TRUE;
     }
 
@@ -565,9 +569,7 @@ UefiGetBootPartitionEntry(
     {
         *BootPartition = PartitionNum;
         if (PartitionTableEntry != NULL)
-        {
             RtlCopyMemory(PartitionTableEntry, &TempPartitionEntry, sizeof(*PartitionTableEntry));
-        }
         return TRUE;
     }
 
