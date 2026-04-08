@@ -8,7 +8,7 @@
  */
 
 #include <win32k.h>
-#include <jpnvkeys.h>
+#include <wine/ime.h>
 #include <cjkcode.h>
 
 DBG_DEFAULT_CHANNEL(UserMisc);
@@ -690,7 +690,7 @@ IntImmProcessKey(
         switch (uVirtualKey)
         {
             case VK_DBE_CODEINPUT:
-            case VK_DBE_ENTERCONFIGMODE:
+            case VK_DBE_ENTERIMECONFIGMODE:
             case VK_DBE_ENTERWORDREGISTERMODE:
             case VK_DBE_HIRAGANA:
             case VK_DBE_KATAKANA:

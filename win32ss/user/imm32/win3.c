@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include <wine/ime.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -211,7 +212,7 @@ WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi
 /***********************************************************************
  *		ImmSendIMEMessageExA(IMM32.@)
  */
-WORD WINAPI
+LRESULT WINAPI
 ImmSendIMEMessageExA(
     _In_ HWND hWnd,
     _In_ LPARAM lParam)
@@ -223,7 +224,7 @@ ImmSendIMEMessageExA(
 /***********************************************************************
  *		ImmSendIMEMessageExW(IMM32.@)
  */
-WORD WINAPI
+LRESULT WINAPI
 ImmSendIMEMessageExW(
     _In_ HWND hWnd,
     _In_ LPARAM lParam)

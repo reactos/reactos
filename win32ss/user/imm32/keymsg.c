@@ -10,7 +10,7 @@
  */
 
 #include "precomp.h"
-#include <jpnvkeys.h>
+#include <wine/ime.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -1245,7 +1245,7 @@ ImmCallImeConsoleIME(
         case VK_DBE_CODEINPUT:
         case VK_DBE_NOCODEINPUT:
         case VK_DBE_ENTERWORDREGISTERMODE:
-        case VK_DBE_ENTERCONFIGMODE:
+        case VK_DBE_ENTERIMECONFIGMODE:
             break;
 
         default:
