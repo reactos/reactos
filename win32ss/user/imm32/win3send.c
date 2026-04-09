@@ -36,7 +36,7 @@ static LRESULT Imm32SendIMEMessageExAW(HWND hWnd, HGLOBAL hIME, BOOL bAnsi)
         }
         else
         {
-            ret = (pIme->fnc != IME_GETVERSION) ? IME_RS_ERROR : IME_RS_INVALID;
+            ret = (pIme->fnc == IME_GETVERSION) ? IME_RS_INVALID : IME_RS_ERROR;
         }
     }
     else
