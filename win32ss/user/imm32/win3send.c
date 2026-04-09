@@ -20,7 +20,7 @@ static DWORD Imm32TranslateIMESubFunctions(HWND hWnd, PIMESTRUCT pIme, BOOL bAns
 
 static LRESULT Imm32SendIMEMessageExAW(HWND hWnd, HGLOBAL hIME, BOOL bAnsi)
 {
-    FIXME("(%p, %p, %d)\n", hWnd, lParam, bAnsi);
+    FIXME("(%p, %p, %d)\n", hWnd, hIME, bAnsi);
 
     PIMESTRUCT pIme = GlobalLock(hIME);
     if (!pIme)
