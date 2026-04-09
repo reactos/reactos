@@ -118,7 +118,6 @@ void read_fat(DOS_FS * fs)
 	second_ok = (second_media.value & FAT_EXTD(fs)) == FAT_EXTD(fs);
 	if (first_ok && !second_ok) {
 	    printf("FATs differ - using first FAT.\n");
-
 	    fs_write(fs->fat_start + fs->fat_size, eff_size, first);
 	}
 	if (!first_ok && second_ok) {
