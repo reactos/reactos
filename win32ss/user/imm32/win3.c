@@ -186,7 +186,7 @@ DWORD
 WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang)
 {
 #ifdef IMM_WIN3_SUPPORT
-    BOOL ret = FALSE;
+    DWORD ret = 0;
     LPINPUTCONTEXTDX pIC;
     LPCOMPOSITIONSTRING pCS;
 
