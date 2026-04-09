@@ -20,6 +20,7 @@ list(APPEND SOURCE
     softkbd.c
     utils.c
     win3.c
+    win3send.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/imm32.def)
 
