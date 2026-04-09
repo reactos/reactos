@@ -14,19 +14,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 static DWORD Imm32TranslateIMESubFunctions(HWND hWnd, PIMESTRUCT pIme, BOOL bAnsi)
 {
-    // FIXME
+    FIXME("(%p, %p, %d)\n", hWnd, pIme, bAnsi);
     return 0;
 }
 
 static LRESULT Imm32SendIMEMessageExAW(HWND hWnd, HGLOBAL hIME, BOOL bAnsi)
 {
-    FIXME("(%p, %p, %d)\n", hWnd, hIME, bAnsi);
-
     PIMESTRUCT pIme = GlobalLock(hIME);
     if (!pIme)
         return 0;
 
-    LRESULT ret = 0;
+    LRESULT ret;
     HKL hKL = GetKeyboardLayout(0);
     if (Imm32IsSystemJapaneseOrKorean() && ImmIsIME(hKL))
     {
@@ -44,6 +42,7 @@ static LRESULT Imm32SendIMEMessageExAW(HWND hWnd, HGLOBAL hIME, BOOL bAnsi)
     else
     {
         pIme->wParam = IME_RS_INVALID;
+        ret = 0;
     }
 
     GlobalUnlock(hIME);
