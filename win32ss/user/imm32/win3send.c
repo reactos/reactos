@@ -18,11 +18,11 @@ static DWORD Imm32TranslateIMESubFunctions(HWND hWnd, PIMESTRUCT pIme, BOOL bAns
     return 0;
 }
 
-static LRESULT Imm32SendIMEMessageExAW(HWND hWnd, HGLOBAL hMem, BOOL bAnsi)
+static LRESULT Imm32SendIMEMessageExAW(HWND hWnd, HGLOBAL hIME, BOOL bAnsi)
 {
     FIXME("(%p, %p, %d)\n", hWnd, lParam, bAnsi);
 
-    PIMESTRUCT pIme = GlobalLock(hMem);
+    PIMESTRUCT pIme = GlobalLock(hIME);
     if (!pIme)
         return 0;
 
@@ -46,7 +46,7 @@ static LRESULT Imm32SendIMEMessageExAW(HWND hWnd, HGLOBAL hMem, BOOL bAnsi)
         pIme->wParam = IME_RS_INVALID;
     }
 
-    GlobalUnlock(hMem);
+    GlobalUnlock(hIME);
     return ret;
 }
 
