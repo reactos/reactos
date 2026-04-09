@@ -179,7 +179,7 @@ WINNLSTranslateMessageK(DWORD dwCount, LPTRANSMSG pEntries, LPINPUTCONTEXTDX pIC
     return dwCount;
 }
 
-#endif /* IMM_WIN3_SUPPORT */
+#endif /* def IMM_WIN3_SUPPORT */
 
 /* This function is used in ImmGenerateMessage and ImmTranslateMessage */
 DWORD
