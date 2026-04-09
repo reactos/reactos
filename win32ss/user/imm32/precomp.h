@@ -47,8 +47,6 @@
 
 #include <wine/debug.h>
 
-#define IMM_WIN3_SUPPORT /* 3.x support */
-
 #define ERR_PRINTF(fmt, ...) (__WINE_IS_DEBUG_ON(_ERR, __wine_dbch___default) ? \
     (wine_dbg_printf("err:(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__), TRUE) : TRUE)
 
