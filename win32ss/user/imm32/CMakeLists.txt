@@ -27,13 +27,13 @@ list(APPEND SOURCE
 file(GLOB imm32_rc_deps ${CMAKE_CURRENT_SOURCE_DIR}/res/*.*)
 add_rc_deps(imm32.rc ${imm32_rc_deps})
 
-option(IMM_WIN3_SUPPORT "IMM Win 3.x support" ON)
-
 add_library(imm32 MODULE ${SOURCE} imm32.rc)
 set_module_type(imm32 win32dll UNICODE ENTRYPOINT ImmDllInitialize 12)
 target_link_libraries(imm32 wine win32ksys uuid)
 add_importlibs(imm32 advapi32 user32 gdi32 kernel32 ntdll)
 add_cd_file(TARGET imm32 DESTINATION reactos/system32 FOR all)
+
+option(IMM_WIN3_SUPPORT "IMM Win 3.x support" ON)
 if(IMM_WIN3_SUPPORT)
     target_compile_definitions(imm32 PRIVATE IMM_WIN3_SUPPORT)
 endif()

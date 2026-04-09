@@ -210,7 +210,12 @@ WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi
     ImmUnlockIMC(hIMC);
     return ret;
 #else
-    FIXME("\n");
+    static BOOL s_logged_unsupported = FALSE;
+    if (!s_logged_unsupported)
+    {
+        FIXME("WINNLSTranslateMessage not available without IMM_WIN3_SUPPORT\n");
+        s_logged_unsupported = TRUE;
+    }
     return 0;
 #endif
 }
