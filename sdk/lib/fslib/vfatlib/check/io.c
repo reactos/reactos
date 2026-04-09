@@ -347,7 +347,6 @@ void fs_write(off_t pos, int size, void *data)
     int did;
 
 #ifdef __REACTOS__
-    assert(interactive || rw);
 
     if (FsCheckFlags & FSCHECK_IMMEDIATE_WRITE) {
         void *scratch;
@@ -355,6 +354,8 @@ void fs_write(off_t pos, int size, void *data)
         const off_t seekpos_aligned = pos - (pos % 512);
         const size_t seek_delta = (size_t)(pos - seekpos_aligned);
         BOOLEAN use_read = (seek_delta != 0) || ((readsize_aligned-size) != 0);
+
+        assert(interactive || rw);
 
         /* Aloc temp buffer if write is not aligned */
         if (use_read)
