@@ -268,12 +268,23 @@ static LRESULT Imm32TransHanjaMode(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
     if (!pImeDpi)
         return 0;
 
-    if (pImeDpi->ImeInfo.fdwProperty & IME_PROP_UNICODE)
+    if (ImeDpi_IsUnicode(pImeDpi))
     {
         BYTE offset = HIBYTE(HIWORD(pIme->wParam));
-        PCHAR pMbcsCh = (PCHAR)pIme + offset;
+        SIZE_T cbIme = sizeof(*pIme) + (SIZE_T)pIme->wCount;
+        PCHAR pMbcsCh;
+        WORD MbcsCh;
 
-        pIme->wParam = MAKELONG(*(PWORD)pMbcsCh, HIWORD(pIme->wParam));
+        /* SECURITY: Check boundary */
+        if ((SIZE_T)offset > cbIme || cbIme - (SIZE_T)offset < sizeof(MbcsCh))
+        {
+            ImmUnlockImeDpi(pImeDpi);
+            return 0;
+        }
+
+        pMbcsCh = (PCHAR)pIme + offset;
+        RtlCopyMemory(&MbcsCh, pMbcsCh, sizeof(MbcsCh));
+        pIme->wParam = MAKELONG(MbcsCh, HIWORD(pIme->wParam));
 
         WCHAR wch = UNICODE_NULL;
         if (!MultiByteToWideChar(CP_ACP, 0, pMbcsCh, 2, &wch, 1))
@@ -282,7 +293,7 @@ static LRESULT Imm32TransHanjaMode(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
             return 0;
         }
 
-        *(PWCHAR)pMbcsCh = wch;
+        RtlCopyMemory(pMbcsCh, &wch, sizeof(wch));
     }
 
     ImmUnlockImeDpi(pImeDpi);
