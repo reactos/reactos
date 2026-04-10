@@ -221,18 +221,24 @@ static BOOL Imm32TransSetOpenJ(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
 
 static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
 {
-    const CHAR *pszSource = (const CHAR *)pIme + pIme->dchSource;
-    PCHAR pszDest = (PCHAR)pIme + pIme->dchDest;
-    HKL hKL = GetKeyboardLayout(0);
+    /* SECURITY: Check memory block size */
+    const SIZE_T cbIme = GlobalSize(GlobalHandle(pIme));
+    if (pIme->dchDest >= cbIme)
+        return 0;
 
-    DWORD dwBufLen = ImmGetConversionListA(hKL, hIMC, pszSource, NULL, 0, GCL_CONVERSION);
+    /* Get conversion list size */
+    HKL hKL = GetKeyboardLayout(0);
+    const CHAR *pszSource = (const CHAR *)pIme + pIme->dchSource;
+    const DWORD dwBufLen = ImmGetConversionListA(hKL, hIMC, pszSource, NULL, 0, GCL_CONVERSION);
     if (!dwBufLen)
         return 0;
 
+    /* Allocate */
     HGLOBAL hCandList = GlobalAlloc(GHND, dwBufLen);
     if (!hCandList)
         return 0;
 
+    /* Lock */
     PCANDIDATELIST pCL = (PCANDIDATELIST)GlobalLock(hCandList);
     if (!pCL)
     {
@@ -240,22 +246,31 @@ static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
         return 0;
     }
 
+    /* Get the conversion list */
     LRESULT ret = ImmGetConversionListA(hKL, hIMC, pszSource, pCL, dwBufLen, GCL_CONVERSION);
 
-    for (DWORD i = 0; i < pCL->dwCount; i++)
+    /* Store the comversion list into pIme */
+    UINT wCount = 0;
+    PCHAR pszDest = (PCHAR)pIme + pIme->dchDest;
+    SIZE_T cbDestRemaining = cbIme - pIme->dchDest;
+    for (DWORD i = 0; i < pCL->dwCount && (cbDestRemaining > 2); ++i)
     {
         const CHAR *pCandidate = (const CHAR *)pCL + pCL->dwOffset[i];
         *pszDest++ = pCandidate[0];
         *pszDest++ = pCandidate[1];
+
+        cbDestRemaining -= 2;
+        wCount += 2;
     }
+    pIme->wCount = wCount;
 
-    *pszDest = ANSI_NULL;
+    /* Add terminator safely */
+    if (cbDestRemaining > 0)
+        *pszDest = ANSI_NULL;
 
-    pIme->wCount = (WORD)(pCL->dwCount * 2);
-
+    /* Clean up */
     GlobalUnlock(hCandList);
     GlobalFree(hCandList);
-
     return ret;
 }
 
@@ -752,7 +767,7 @@ static DWORD Imm32TransSetConversionMode(HIMC hIMC, PIMESTRUCT pIme)
     if (!ImmGetConversionStatus(hIMC, &fdwOldConversion, &fdwSentence))
         return 0;
 
-    DWORD mode31 = Get31ModeFrom40ModeJ(fdwOldConversion);
+    DWORD mode31 = Imm32Get31ModeFrom40ModeJ(fdwOldConversion);
     const WPARAM wParam = pIme->wParam;
     DWORD dwNewValues = 0, dwMask = 0;
 
