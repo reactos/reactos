@@ -1128,6 +1128,8 @@ Quit:
  *    2  | Partial IME support. Supports a subset of IME behavior including the position of
  *       | the composition or candidate windows and the input mode or status.
  *    3  | Full IME support.
+ *    4  | (Unknown)
+ *    5  | (Unknown)
  */
 BOOL
 NTAPI
