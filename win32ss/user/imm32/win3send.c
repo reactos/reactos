@@ -78,11 +78,11 @@ static DWORD Imm32Get31ModeFrom40ModeK(DWORD fdwConversion)
 {
     DWORD flags = 0;
     if (!(fdwConversion & IME_CMODE_NATIVE))
-        flags |= 0x01;
+        flags |= 0x1;
     if (!(fdwConversion & IME_CMODE_FULLSHAPE))
-        flags |= 0x02;
+        flags |= 0x2;
     if (fdwConversion & IME_CMODE_HANJACONVERT)
-        flags |= 0x04;
+        flags |= 0x4;
     return flags;
 }
 
@@ -122,10 +122,10 @@ static LRESULT Imm32TransSetMode(HIMC hIMC, PIMESTRUCT pIme)
 
     WPARAM wParam = pIme->wParam;
 
-    if (!(wParam & 0x02))
+    if (!(wParam & 0x2))
         fdwConversion |= IME_CMODE_FULLSHAPE;
 
-    BOOL bImeOn = (wParam & 0x01) != 0;
+    BOOL bImeOn = (wParam & 0x1) != 0;
     const DWORD targetBits = (IME_CMODE_HANJACONVERT | IME_CMODE_FULLSHAPE | IME_CMODE_KATAKANA |
                               IME_CMODE_NATIVE);
     DWORD currentBits = (fdwConversion & targetBits);
@@ -736,15 +736,15 @@ static LRESULT Imm32TransSetConversionMode(HIMC hIMC, PIMESTRUCT pIme)
     WPARAM wParam = pIme->wParam;
 
     DWORD fdwNew = 0;
-    switch (wParam & 0x07)
+    switch (wParam & 0x7)
     {
-        case 0x01:
+        case 0x1:
             fdwNew = IME_CMODE_ALPHANUMERIC;
             break;
-        case 0x02:
+        case 0x2:
             fdwNew = IME_CMODE_NATIVE;
             break;
-        case 0x04:
+        case 0x4:
             fdwNew = IME_CMODE_NATIVE | IME_CMODE_KATAKANA;
             break;
         default:
@@ -760,7 +760,7 @@ static LRESULT Imm32TransSetConversionMode(HIMC hIMC, PIMESTRUCT pIme)
         fdwNew |= IME_CMODE_CHARCODE;
 
     DWORD fdwMask = 0;
-    if (wParam & 0x07)
+    if (wParam & 0x7)
         fdwMask |= IME_CMODE_NATIVE | IME_CMODE_KATAKANA;
     if (wParam & 0x18)
         fdwMask |= IME_CMODE_FULLSHAPE;
@@ -870,7 +870,7 @@ static LRESULT Imm32TranslateIMESubFunctions(HWND hWnd, PIMESTRUCT pIme, BOOL bA
         case 6:
             return 0;
         case 7:
-            return 0x0A03;
+            return 0xA03;
         case 8:
             if (wLang == LANG_KOREAN)
                 return Imm32TransMoveImeWindow(hWnd, hImc, pIme);
