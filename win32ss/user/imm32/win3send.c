@@ -130,20 +130,22 @@ static LRESULT Imm32TransSetMode(HIMC hIMC, PIMESTRUCT pIme)
     DWORD fdwConversion = 0, fdwSentence;
     ImmGetConversionStatus(hIMC, &fdwConversion, &fdwSentence);
 
+    DWORD dw31Mode = Imm32Get31ModeFrom40ModeK(fdwConversion);
     WPARAM wParam = pIme->wParam;
-
     if (!(wParam & _IME_MODE_KOR_SBCSCHAR))
         fdwConversion |= IME_CMODE_FULLSHAPE;
 
-    BOOL bImeOn = !!(wParam & IME_MODE_ALPHANUMERIC);
-    const DWORD targetBits = (IME_CMODE_HANJACONVERT | IME_CMODE_FULLSHAPE | IME_CMODE_KATAKANA |
-                              IME_CMODE_NATIVE);
-    DWORD currentBits = (fdwConversion & targetBits);
-    DWORD desiredBits = bImeOn ? currentBits : 0;
-    fdwConversion = (fdwConversion & ~targetBits) | desiredBits;
+    DWORD dwNewFlags = fdwConversion;
+    const DWORD targetMask = IME_CMODE_NATIVE | IME_CMODE_KATAKANA | IME_CMODE_FULLSHAPE |
+                             IME_CMODE_HANJACONVERT;
+    if (wParam & IME_MODE_ALPHANUMERIC)
+        dwNewFlags &= ~targetMask;
+    else
+        dwNewFlags |= targetMask;
 
-    BOOL result = ImmSetConversionStatus(hIMC, fdwConversion, fdwSentence);
-    return result ? Imm32Get31ModeFrom40ModeK(fdwConversion) : 0;
+    if (!ImmSetConversionStatus(hIMC, dwNewFlags, fdwSentence))
+        return 0;
+    return dw31Mode;
 }
 
 static BOOL Imm32TransCodeConvert(HIMC hIMC, PIMESTRUCT pIme)
