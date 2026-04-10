@@ -125,7 +125,7 @@ static LRESULT Imm32TransGetMode(HIMC hIMC)
     return Imm32Get31ModeFrom40ModeK(fdwConversion) | _IME_CMODE_EXTENDED;
 }
 
-static LRESULT Imm32TransSetMode(HIMC hIMC, PIMESTRUCT pIme)
+static DWORD Imm32TransSetMode(HIMC hIMC, PIMESTRUCT pIme)
 {
     DWORD fdwConversion = 0, fdwSentence;
     ImmGetConversionStatus(hIMC, &fdwConversion, &fdwSentence);
@@ -221,7 +221,7 @@ static BOOL Imm32TransSetOpenJ(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
     return fOldOpen;
 }
 
-static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
+static UINT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
 {
     /* SECURITY: Check memory block size */
     const SIZE_T cbIme = GlobalSize(GlobalHandle(pIme));
@@ -231,12 +231,12 @@ static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
     /* Get conversion list size */
     HKL hKL = GetKeyboardLayout(0);
     const CHAR *pszSource = (const CHAR *)pIme + pIme->dchSource;
-    const DWORD dwBufLen = ImmGetConversionListA(hKL, hIMC, pszSource, NULL, 0, GCL_CONVERSION);
-    if (!dwBufLen)
+    const UINT uBufLen = ImmGetConversionListA(hKL, hIMC, pszSource, NULL, 0, GCL_CONVERSION);
+    if (!uBufLen)
         return 0;
 
     /* Allocate */
-    HGLOBAL hCandList = GlobalAlloc(GHND, dwBufLen);
+    HGLOBAL hCandList = GlobalAlloc(GHND, uBufLen);
     if (!hCandList)
         return 0;
 
@@ -249,7 +249,7 @@ static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
     }
 
     /* Get the conversion list */
-    LRESULT ret = ImmGetConversionListA(hKL, hIMC, pszSource, pCL, dwBufLen, GCL_CONVERSION);
+    UINT ret = ImmGetConversionListA(hKL, hIMC, pszSource, pCL, uBufLen, GCL_CONVERSION);
 
     /* Store the conversion list into pIme */
     UINT wCount = 0;
@@ -325,9 +325,9 @@ static LRESULT Imm32TransHanjaMode(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
     return ret;
 }
 
-static LRESULT Imm32TransGetLevel(HWND hWnd)
+static DWORD Imm32TransGetLevel(HWND hWnd)
 {
-    LRESULT result = NtUserGetAppImeLevel(hWnd);
+    DWORD result = NtUserGetAppImeLevel(hWnd);
     return result ? result : IME_RS_ERROR;
 }
 
@@ -656,7 +656,7 @@ static BOOL Imm32TransSetConversionWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
     return TRUE;
 }
 
-static LRESULT Imm32TransGetConversionMode(HIMC hIMC)
+static DWORD Imm32TransGetConversionMode(HIMC hIMC)
 {
     DWORD fdwConversion = 0, fdwSentence;
     ImmGetConversionStatus(hIMC, &fdwConversion, &fdwSentence);
