@@ -249,7 +249,7 @@ static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
     /* Get the conversion list */
     LRESULT ret = ImmGetConversionListA(hKL, hIMC, pszSource, pCL, dwBufLen, GCL_CONVERSION);
 
-    /* Store the comversion list into pIme */
+    /* Store the conversion list into pIme */
     UINT wCount = 0;
     PCHAR pszDest = (PCHAR)pIme + pIme->dchDest;
     SIZE_T cbDestRemaining = cbIme - pIme->dchDest;
