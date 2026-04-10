@@ -55,7 +55,7 @@ WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
         return 0;
     RtlCopyMemory(pTempList, pTrans, dwCount * sizeof(TRANSMSG));
 
-    if (pIC->dwUIFlags & 0x2)
+    if (pIC->dwUIFlags & _IME_UI_HIDDEN)
     {
         // find WM_IME_ENDCOMPOSITION
         pEntry = pTempList;
@@ -82,7 +82,7 @@ WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
         switch (pEntry->message)
         {
             case WM_IME_STARTCOMPOSITION:
-                if (!(pIC->dwUIFlags & 0x2))
+                if (!(pIC->dwUIFlags & _IME_UI_HIDDEN))
                 {
                     // send IR_OPENCONVERT
                     if (pIC->cfCompForm.dwStyle != CFS_DEFAULT)
@@ -93,7 +93,7 @@ WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
                 break;
 
             case WM_IME_ENDCOMPOSITION:
-                if (pIC->dwUIFlags & 0x2)
+                if (pIC->dwUIFlags & _IME_UI_HIDDEN)
                 {
                     // send IR_UNDETERMINE
                     hGlobal = GlobalAlloc(GHND | GMEM_SHARE, sizeof(UNDETERMINESTRUCT));
@@ -123,7 +123,7 @@ WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
                 pTrans += dwNumber;
 
                 // send IR_CHANGECONVERT
-                if (!(pIC->dwUIFlags & 0x2))
+                if (!(pIC->dwUIFlags & _IME_UI_HIDDEN))
                 {
                     if (pIC->cfCompForm.dwStyle != CFS_DEFAULT)
                         pSendMessage(hWnd, WM_IME_REPORT, IR_CHANGECONVERT, 0);
@@ -133,7 +133,7 @@ WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
             case WM_IME_NOTIFY:
                 if (pEntry->wParam == IMN_OPENCANDIDATE)
                 {
-                    if (IsWindow(hWnd) && (pIC->dwUIFlags & 0x2))
+                    if (IsWindow(hWnd) && (pIC->dwUIFlags & _IME_UI_HIDDEN))
                     {
                         // send IMC_SETCANDIDATEPOS
                         for (iCandForm = 0; iCandForm < MAX_CANDIDATEFORM; ++iCandForm)
@@ -151,7 +151,7 @@ WINNLSTranslateMessageJ(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
                     }
                 }
 
-                if (!(pIC->dwUIFlags & 0x2))
+                if (!(pIC->dwUIFlags & _IME_UI_HIDDEN))
                     goto DoDefault;
 
                 // send a WM_IME_NOTIFY notification to the default ime window

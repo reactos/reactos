@@ -1206,7 +1206,7 @@ ImmSetActiveContext(
         pIC->hWnd = hWnd;
         pClientImc->dwFlags |= CLIENTIMC_ACTIVE;
 
-        if (pIC->dwUIFlags & 2)
+        if (pIC->dwUIFlags & _IME_UI_HIDDEN)
             dwShowFlags = (ISC_SHOWUIGUIDELINE | ISC_SHOWUIALLCANDIDATEWINDOW);
 
         fOpen = pIC->fOpen;

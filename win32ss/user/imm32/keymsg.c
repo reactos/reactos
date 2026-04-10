@@ -721,18 +721,15 @@ ImmGetVirtualKey(_In_ HWND hWnd)
 DWORD WINAPI
 ImmGetAppCompatFlags(_In_ HIMC hIMC)
 {
-    PCLIENTIMC pClientIMC;
-    DWORD dwFlags;
-
     TRACE("(%p)\n", hIMC);
 
-    pClientIMC = ImmLockClientImc(hIMC);
+    PCLIENTIMC pClientIMC = ImmLockClientImc(hIMC);
     if (IS_NULL_UNEXPECTEDLY(pClientIMC))
         return 0;
 
-    dwFlags = pClientIMC->dwCompatFlags;
+    DWORD dwCompatFlags = pClientIMC->dwCompatFlags;
     ImmUnlockClientImc(pClientIMC);
-    return (dwFlags | g_aimm_compat_flags);
+    return (dwCompatFlags | g_aimm_compat_flags);
 }
 
 /***********************************************************************
@@ -817,7 +814,7 @@ ImmProcessKey(
     if (bHotKeyDone && ((vKey != VK_KANJI) || (dwHotKeyID != IME_JHOTKEY_CLOSE_OPEN)))
         ret |= IPHK_HOTKEY;
 
-    if ((ret & IPHK_PROCESSBYIME) && (ImmGetAppCompatFlags(hIMC) & 0x10000))
+    if ((ret & IPHK_PROCESSBYIME) && (ImmGetAppCompatFlags(hIMC) & _IME_APP_COMPAT_PROCESS_BY_IME))
     {
         /* The key has been processed by IME's ImeProcessKey */
         LANGID wLangID = LANGIDFROMLCID(GetSystemDefaultLCID());

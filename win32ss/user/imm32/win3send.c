@@ -12,6 +12,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #ifdef IMM_WIN3_SUPPORT /* 3.x support */
 
+typedef enum IME_31MODE
+{
+    IME_31MODE_NO_NATIVE = 0x1,
+    IME_31MODE_KATAKANA = 0x2,
+    IME_31MODE_HIRAGANA = 0x4,
+    IME_31MODE_JPN_HALFSHAPE = 0x8,
+    IME_31MODE_JPN_FULLSHAPE = 0x10,
+    IME_31MODE_JPN_ROMAN = 0x20,
+    IME_31MODE_JPN_NO_ROMAN = 0x40,
+    IME_31MODE_JPN_CHARCODE = 0x80,
+    IME_31MODE_JPN_NO_CHARCODE = 0x100,
+    IME_31MODE_KOR_FULLSHAPE = 0x2,
+    IME_31MODE_KOR_HANJACONVERT = 0x4,
+} IME_31MODE;
+
 static BOOL Imm32IsForegroundThread(HWND hWnd)
 {
     HWND hwndFore = GetForegroundWindow();
@@ -35,7 +50,8 @@ static BOOL Imm32SetCandidateWindow(HWND hWnd, HIMC hIMC, PCANDIDATEFORM lpCandi
         return FALSE;
 
     BOOL ret;
-    if (ImmGetAppCompatFlags(hIMC) & 0x1)
+    DWORD dwCompatFlags = ImmGetAppCompatFlags(hIMC);
+    if (dwCompatFlags & _IME_APP_COMPAT_DIRECT_IME_SYSTEM)
     {
         CopyMemory(&pIC->cfCandForm[lpCandidate->dwIndex], lpCandidate, sizeof(CANDIDATEFORM));
         ret = Imm32PostImsMessage(hWnd, IMS_SETCANDFORM, lpCandidate->dwIndex);
@@ -56,18 +72,18 @@ static BOOL Imm32SetCompWindow(HWND hWnd, HIMC hIMC, PCOMPOSITIONFORM lpCompForm
         return FALSE;
 
     BOOL ret;
-    DWORD dwFlags = ImmGetAppCompatFlags(hIMC);
-    if (dwFlags & 0x1)
+    DWORD dwCompatFlags = ImmGetAppCompatFlags(hIMC);
+    if (dwCompatFlags & _IME_APP_COMPAT_DIRECT_IME_SYSTEM)
     {
         CopyMemory(&pIC->cfCompForm, lpCompForm, sizeof(COMPOSITIONFORM));
-        if ( dwFlags & 0x80000000)
+        if (dwCompatFlags & _IME_APP_COMPAT_SPECIAL_IME)
             ret = PostMessageW(hWnd, WM_IME_SYSTEM, IMS_SETCOMPFORM, 0);
         else
             ret = Imm32PostImsMessage(hWnd, IMS_SETCOMPFORM, 0);
     }
     else
     {
-        pIC->dwUIFlags |= 0x8;
+        pIC->dwUIFlags |= _IME_UI_NO_COMPFORM;
         ret = ImmSetCompositionWindow(hIMC, lpCompForm);
     }
 
@@ -79,11 +95,11 @@ static DWORD Imm32Get31ModeFrom40ModeK(DWORD fdwConversion)
 {
     DWORD flags = 0;
     if (!(fdwConversion & IME_CMODE_NATIVE))
-        flags |= 0x1;
+        flags |= IME_31MODE_NO_NATIVE;
     if (!(fdwConversion & IME_CMODE_FULLSHAPE))
-        flags |= 0x2;
+        flags |= IME_31MODE_KOR_FULLSHAPE;
     if (fdwConversion & IME_CMODE_HANJACONVERT)
-        flags |= 0x4;
+        flags |= IME_31MODE_KOR_HANJACONVERT;
     return flags;
 }
 
@@ -91,21 +107,28 @@ static DWORD Imm32Get31ModeFrom40ModeJ(DWORD fdwConversion)
 {
     DWORD flags = 0;
     if (fdwConversion & IME_CMODE_NATIVE)
-        flags |= (fdwConversion & IME_CMODE_KATAKANA) ? 0x2 : 0x4;
+    {
+        if ((fdwConversion & IME_CMODE_KATAKANA))
+            flags |= IME_31MODE_KATAKANA;
+        else
+            flags |= IME_31MODE_HIRAGANA;
+    }
     else
-        flags |= 0x1;
+    {
+        flags |= IME_31MODE_NO_NATIVE;
+    }
     if (fdwConversion & IME_CMODE_FULLSHAPE)
-        flags |= 0x10;
+        flags |= IME_31MODE_JPN_FULLSHAPE;
     else
-        flags |= 0x8;
+        flags |= IME_31MODE_JPN_HALFSHAPE;
     if (fdwConversion & IME_CMODE_ROMAN)
-        flags |= 0x20;
+        flags |= IME_31MODE_JPN_ROMAN;
     else
-        flags |= 0x40;
+        flags |= IME_31MODE_JPN_NO_ROMAN;
     if (fdwConversion & IME_CMODE_CHARCODE)
-        flags |= 0x80;
+        flags |= IME_31MODE_JPN_CHARCODE;
     else
-        flags |= 0x100;
+        flags |= IME_31MODE_JPN_NO_CHARCODE;
     return flags;
 }
 
@@ -113,7 +136,7 @@ static LRESULT Imm32TransGetMode(HIMC hIMC)
 {
     DWORD fdwConversion = 0, fdwSentence;
     ImmGetConversionStatus(hIMC, &fdwConversion, &fdwSentence);
-    return Imm32Get31ModeFrom40ModeK(fdwConversion) | 0x80000000;
+    return Imm32Get31ModeFrom40ModeK(fdwConversion) | _IME_CMODE_EXTENDED;
 }
 
 static LRESULT Imm32TransSetMode(HIMC hIMC, PIMESTRUCT pIme)
@@ -123,10 +146,10 @@ static LRESULT Imm32TransSetMode(HIMC hIMC, PIMESTRUCT pIme)
 
     WPARAM wParam = pIme->wParam;
 
-    if (!(wParam & 0x2))
+    if (!(wParam & IME_31MODE_KOR_FULLSHAPE))
         fdwConversion |= IME_CMODE_FULLSHAPE;
 
-    BOOL bImeOn = !!(wParam & 0x1);
+    BOOL bImeOn = !!(wParam & IME_31MODE_NO_NATIVE);
     const DWORD targetBits = (IME_CMODE_HANJACONVERT | IME_CMODE_FULLSHAPE | IME_CMODE_KATAKANA |
                               IME_CMODE_NATIVE);
     DWORD currentBits = (fdwConversion & targetBits);
@@ -143,7 +166,10 @@ static BOOL Imm32TransCodeConvert(HIMC hIMC, PIMESTRUCT pIme)
     UINT uSubFunc = HIWORD(pIme->wParam);
     switch (uSubFunc)
     {
-        case IME_BANJAtoJUNJA: case IME_JUNJAtoBANJA: case IME_JOHABtoKS: case IME_KStoJOHAB:
+        case IME_BANJAtoJUNJA:
+        case IME_JUNJAtoBANJA:
+        case IME_JOHABtoKS:
+        case IME_KStoJOHAB:
             return (BOOL)ImmEscapeW(hKL, hIMC, uSubFunc, pIme);
         default:
             return FALSE;
@@ -157,7 +183,7 @@ static LRESULT Imm32TransGetOpenK(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme, BOOL bA
     LPARAM lParam2 = pIme->lParam2;
     pIme->lParam2 = MAKELONG(rc.top, rc.left);
     HKL hKL = GetKeyboardLayout(0);
-    LRESULT result = ImmEscapeW(hKL, hIMC, 5, pIme);
+    LRESULT result = ImmEscapeW(hKL, hIMC, IME_GETOPEN, pIme);
     pIme->lParam2 = lParam2;
     return result;
 }
@@ -179,7 +205,7 @@ static BOOL Imm32TransGetOpenJ(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme, BOOL bAnsi
 static LRESULT Imm32TransSetOpenK(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
 {
     HKL hKL = GetKeyboardLayout(0);
-    return ImmEscapeW(hKL, hIMC, 4, pIme);
+    return ImmEscapeW(hKL, hIMC, IME_SETOPEN, pIme);
 }
 
 static BOOL Imm32TransSetOpenJ(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
@@ -362,7 +388,7 @@ static LRESULT Imm32TransMoveImeWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
         pIme->lParam1 = MAKELONG(pt.x, pt.y);
     }
     HKL hKL = GetKeyboardLayout(0);
-    return ImmEscapeW(hKL, hIMC, 8, pIme);
+    return ImmEscapeW(hKL, hIMC, IME_SETCONVERSIONWINDOW, pIme);
 }
 
 static BOOL Imm32SetCompFont(HWND hWnd, HIMC hIMC, PLOGFONTW plfW)
@@ -398,11 +424,11 @@ static BOOL Imm32SetCompFont(HWND hWnd, HIMC hIMC, PLOGFONTW plfW)
     if (memcmp(pCurrentFontW, plfW, offsetof(LOGFONTW, lfFaceName)) != 0 ||
         lstrcmpW(pCurrentFontW->lfFaceName, plfW->lfFaceName) != 0)
     {
-        if (dwCompatFlags & 0x1)
+        if (dwCompatFlags & _IME_APP_COMPAT_DIRECT_IME_SYSTEM)
         {
             pIMC->lfFont.W = *plfW;
 
-            if (dwCompatFlags & 0x80)
+            if (dwCompatFlags & _IME_APP_COMPAT_DIRECT_IME_FONT)
                 ret = Imm32PostImsMessage(hWnd, IMC_SETCOMPOSITIONFONT, 0);
             else
                 ret = PostMessageW(hWnd, WM_IME_SYSTEM, IMC_SETCOMPOSITIONFONT, 0);
@@ -492,7 +518,6 @@ Imm32SetFontForVertical(HWND hWnd, HIMC hIMC, LPINPUTCONTEXTDX pIC, BOOL bVertic
 static BOOL Imm32TransSetConversionWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
 {
     COMPOSITIONFORM cfComp;
-    DWORD dwUIFlags;
 
     if (!Imm32IsForegroundThread(NULL) && !GetFocus())
         return TRUE;
@@ -514,13 +539,13 @@ static BOOL Imm32TransSetConversionWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
 
     if (wParam & MCW_HIDDEN)
     {
-        pIC->dwUIFlags |= 0x2;
+        pIC->dwUIFlags |= _IME_UI_HIDDEN;
         ScreenToClient(hwndIC, &pt);
         MapWindowPoints(NULL, hwndIC, (PPOINT)&rcArea, 2);
     }
     else
     {
-        pIC->dwUIFlags &= ~0x2;
+        pIC->dwUIFlags &= ~_IME_UI_HIDDEN;
     }
 
     if (wParam & MCW_WINDOW)
@@ -570,20 +595,19 @@ static BOOL Imm32TransSetConversionWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
         }
     }
 
-    dwUIFlags = pIC->dwUIFlags;
     if (wParam & MCW_VERTICAL)
     {
-        if (!(dwUIFlags & 0x4))
+        if (!(pIC->dwUIFlags & _IME_UI_VERTICAL))
         {
-            pIC->dwUIFlags = dwUIFlags | 0x4;
+            pIC->dwUIFlags |= _IME_UI_VERTICAL;
             Imm32SetFontForVertical(hWnd, hIMC, pIC, TRUE);
         }
     }
     else
     {
-        if (dwUIFlags & 0x4)
+        if (pIC->dwUIFlags & _IME_UI_VERTICAL)
         {
-            pIC->dwUIFlags = dwUIFlags & ~0x4;
+            pIC->dwUIFlags &= ~_IME_UI_VERTICAL;
             Imm32SetFontForVertical(hWnd, hIMC, pIC, FALSE);
         }
     }
@@ -591,7 +615,7 @@ static BOOL Imm32TransSetConversionWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
     cfComp.ptCurrentPos = pt;
     cfComp.rcArea = rcArea;
 
-    if (pIC->dwUIFlags & 0x2)
+    if (pIC->dwUIFlags & _IME_UI_HIDDEN)
     {
         pIC->cfCompForm.ptCurrentPos = pt;
         pIC->cfCompForm.rcArea = rcArea;
@@ -735,15 +759,15 @@ static LRESULT Imm32TransSetConversionMode(HIMC hIMC, PIMESTRUCT pIme)
     WPARAM wParam = pIme->wParam;
 
     DWORD fdwNew = 0;
-    switch (wParam & 0x7)
+    switch (wParam & (IME_31MODE_NO_NATIVE | IME_31MODE_KOR_FULLSHAPE | IME_31MODE_KOR_HANJACONVERT))
     {
-        case 0x1:
+        case IME_31MODE_NO_NATIVE:
             fdwNew = IME_CMODE_ALPHANUMERIC;
             break;
-        case 0x2:
+        case IME_31MODE_KOR_FULLSHAPE:
             fdwNew = IME_CMODE_NATIVE;
             break;
-        case 0x4:
+        case IME_31MODE_KOR_HANJACONVERT:
             fdwNew = IME_CMODE_NATIVE | IME_CMODE_KATAKANA;
             break;
         default:
@@ -751,21 +775,21 @@ static LRESULT Imm32TransSetConversionMode(HIMC hIMC, PIMESTRUCT pIme)
             break;
     }
 
-    if (!(wParam & 0x8))
+    if (!(wParam & IME_31MODE_JPN_HALFSHAPE))
         fdwNew |= IME_CMODE_FULLSHAPE;
-    if (wParam & 0x20)
+    if (wParam & IME_31MODE_JPN_ROMAN)
         fdwNew |= IME_CMODE_ROMAN;
-    if (wParam & 0x80)
+    if (wParam & IME_31MODE_JPN_CHARCODE)
         fdwNew |= IME_CMODE_CHARCODE;
 
     DWORD fdwMask = 0;
-    if (wParam & 0x7)
+    if (wParam & (IME_31MODE_NO_NATIVE | IME_31MODE_KATAKANA | IME_31MODE_HIRAGANA))
         fdwMask |= IME_CMODE_NATIVE | IME_CMODE_KATAKANA;
-    if (wParam & 0x18)
+    if (wParam & (IME_31MODE_JPN_FULLSHAPE | IME_31MODE_JPN_HALFSHAPE))
         fdwMask |= IME_CMODE_FULLSHAPE;
-    if (wParam & 0x60)
+    if (wParam & (IME_31MODE_JPN_NO_ROMAN | IME_31MODE_JPN_ROMAN))
         fdwMask |= IME_CMODE_ROMAN;
-    if (wParam & 0x180)
+    if (wParam & (IME_31MODE_JPN_NO_CHARCODE | IME_31MODE_JPN_CHARCODE))
         fdwMask |= IME_CMODE_CHARCODE;
 
     DWORD fdwResult = (fdwNew & fdwMask) | (fdwConversion & ~fdwMask);
@@ -829,7 +853,7 @@ static BOOL Imm32TransSetConversionFontEx(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme,
 
     GlobalUnlock((HGLOBAL)pIme->lParam1);
 
-    BOOL bFixed = Imm32FixLogFont(&lfW, (pIC->dwUIFlags & 4) != 0);
+    BOOL bFixed = Imm32FixLogFont(&lfW, !!(pIC->dwUIFlags & _IME_UI_VERTICAL));
     ImmUnlockIMC(hIMC);
 
     if (!bFixed)
