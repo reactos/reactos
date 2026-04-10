@@ -486,25 +486,23 @@ static BOOL Imm32FixLogFont(PLOGFONTW plfW, BOOL bVertical)
 }
 
 static BOOL
-Imm32SetFontForVertical(HWND hWnd, HIMC hIMC, LPINPUTCONTEXTDX pIC, BOOL bVertical)
+Imm32SetFontForVertical(HWND hWnd, HIMC hIMC, PINPUTCONTEXTDX pIC, BOOL bVertical)
 {
-    CHAR lfFaceName[LF_FACESIZE];
     LOGFONTW lfW;
     PCLIENTIMC pClientImc;
 
     if (pIC->fdwInit & INIT_LOGFONT)
     {
-        lfW = pIC->lfFont.W;
         pClientImc = ImmLockClientImc(hIMC);
         if (!pClientImc)
             return FALSE;
         BOOL bAnsi = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
         ImmUnlockClientImc(pClientImc);
+
         if (bAnsi)
-        {
-            CopyMemory(lfFaceName, lfW.lfFaceName, sizeof(lfFaceName));
-            MultiByteToWideChar(CP_ACP, 0, lfFaceName, LF_FACESIZE, lfW.lfFaceName, LF_FACESIZE);
-        }
+            LogFontAnsiToWide(&pIC->lfFont.A, &lfW);
+        else
+            lfW = pIC->lfFont.W;
     }
     else
     {
