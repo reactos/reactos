@@ -1120,7 +1120,7 @@ Quit:
 /*
  * https://learn.microsoft.com/en-us/windows/win32/api/ime/ns-ime-imestruct IME_SETLEVEL
  *
- * (Korean-IME-specific)
+ * "Application IME Level" is a Korean-IME-specific concept, defined as below:
  *
  * Level | Meaning
  * ------+---------------------------------------------------------------------------------
