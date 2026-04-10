@@ -494,13 +494,13 @@ Imm32SetFontForVertical(HWND hWnd, HIMC hIMC, PINPUTCONTEXTDX pIC, BOOL bVertica
         PCLIENTIMC pClientImc = ImmLockClientImc(hIMC);
         if (!pClientImc)
             return FALSE;
-        BOOL bAnsi = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
+        BOOL bWide = !!(pClientImc->dwFlags & CLIENTIMC_WIDE);
         ImmUnlockClientImc(pClientImc);
 
-        if (bAnsi)
-            LogFontAnsiToWide(&pIC->lfFont.A, &lfW);
-        else
+        if (bWide)
             lfW = pIC->lfFont.W;
+        else
+            LogFontAnsiToWide(&pIC->lfFont.A, &lfW);
     }
     else
     {
