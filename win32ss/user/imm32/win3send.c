@@ -228,9 +228,15 @@ static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
         return 0;
 
     HGLOBAL hCandList = GlobalAlloc(GHND, dwBufLen);
+    if (!hCandList)
+        return 0;
+
     PCANDIDATELIST pCL = (PCANDIDATELIST)GlobalLock(hCandList);
     if (!pCL)
+    {
+        GlobalFree(hCandList);
         return 0;
+    }
 
     hKL = GetKeyboardLayout(0);
     LRESULT result = ImmGetConversionListA(hKL, hIMC, pszSource, pCL, dwBufLen, GCL_CONVERSION);
