@@ -8,7 +8,7 @@
  */
 
 #include <win32k.h>
-#include <wine/ime.h>
+#include <ime.h>
 #include <cjkcode.h>
 
 DBG_DEFAULT_CHANNEL(UserMisc);

@@ -224,6 +224,10 @@ typedef struct INPUTCONTEXTDX
 /* Extra conversion mode */
 #define _IME_CMODE_EXTENDED 0x80000000
 
+/* Extra IME mode */
+#define _IME_MODE_KOR_SBCSCHAR 0x0002 /* For Korean */
+#define _IME_MODE_JPN_SBCSCHAR 0x0008 /* For Japanese */
+
 typedef struct IME_SUBSTATE
 {
     struct IME_SUBSTATE *pNext;

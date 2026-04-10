@@ -10,7 +10,7 @@
  */
 
 #include "precomp.h"
-#include <wine/ime.h>
+#include <ime.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
