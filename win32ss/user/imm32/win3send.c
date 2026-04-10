@@ -125,7 +125,7 @@ static LRESULT Imm32TransSetMode(HIMC hIMC, PIMESTRUCT pIme)
     if (!(wParam & 0x2))
         fdwConversion |= IME_CMODE_FULLSHAPE;
 
-    BOOL bImeOn = (wParam & 0x1) != 0;
+    BOOL bImeOn = !!(wParam & 0x1);
     const DWORD targetBits = (IME_CMODE_HANJACONVERT | IME_CMODE_FULLSHAPE | IME_CMODE_KATAKANA |
                               IME_CMODE_NATIVE);
     DWORD currentBits = (fdwConversion & targetBits);
@@ -144,7 +144,6 @@ static BOOL Imm32TransCodeConvert(HIMC hIMC, PIMESTRUCT pIme)
     {
         case IME_BANJAtoJUNJA: case IME_JUNJAtoBANJA: case IME_JOHABtoKS: case IME_KStoJOHAB:
             return (BOOL)ImmEscapeW(hKL, hIMC, (UINT)uSubFunc, pIme);
-
         default:
             return FALSE;
     }
@@ -294,6 +293,7 @@ static BOOL Imm32TransSetLevel(HWND hWnd, PIMESTRUCT pIme)
 
 static BOOL Imm32TransGetMNTable(HIMC hIMC, PIMESTRUCT pIme)
 {
+#define INPUT_METHOD_BASE 100
     static const WORD g_MNTable[3][96] =
     {
         /* InputMethod = 100 (Wansung standard) */
@@ -343,14 +343,13 @@ static BOOL Imm32TransGetMNTable(HIMC hIMC, PIMESTRUCT pIme)
         }
     };
 
-    UINT nInputMethod = GetProfileIntW(L"WANSUNG", L"InputMethod", 100);
-
-    UINT idx = nInputMethod - 100;
-    if (idx >= _countof(g_MNTable))
-        idx = 0;
+    UINT nInputMethod = GetProfileIntW(L"WANSUNG", L"InputMethod", INPUT_METHOD_BASE);
+    UINT index = nInputMethod - INPUT_METHOD_BASE;
+    if (index >= _countof(g_MNTable))
+        index = 0;
 
     PWORD pDst = (PWORD)pIme->lParam1;
-    RtlCopyMemory(pDst, g_MNTable[idx], sizeof(g_MNTable[0]));
+    RtlCopyMemory(pDst, g_MNTable[index], sizeof(g_MNTable[0]));
     return TRUE;
 }
 
@@ -358,9 +357,7 @@ static LRESULT Imm32TransMoveImeWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
 {
     if (pIme->wParam == 2)
     {
-        POINT pt;
-        pt.x = (SHORT)LOWORD(pIme->lParam1);
-        pt.y = (SHORT)HIWORD(pIme->lParam1);
+        POINT pt = { (SHORT)LOWORD(pIme->lParam1), (SHORT)HIWORD(pIme->lParam1) };
         ClientToScreen(hWnd, &pt);
         pIme->lParam1 = MAKELONG(pt.x, pt.y);
     }
@@ -374,7 +371,7 @@ static BOOL Imm32SetCompFont(HWND hWnd, HIMC hIMC, PLOGFONTW plfW)
     if (!pIMC)
         return FALSE;
 
-    DWORD appCompatFlags = ImmGetAppCompatFlags(hIMC);
+    DWORD dwCompatFlags = ImmGetAppCompatFlags(hIMC);
     PCLIENTIMC pClientImc = ImmLockClientImc(hIMC);
     if (!pClientImc)
     {
@@ -397,15 +394,15 @@ static BOOL Imm32SetCompFont(HWND hWnd, HIMC hIMC, PLOGFONTW plfW)
         pCurrentFontW = &currentLF;
     }
 
-    BOOL ret = FALSE;
+    BOOL ret;
     if (memcmp(pCurrentFontW, plfW, offsetof(LOGFONTW, lfFaceName)) != 0 ||
         lstrcmpW(pCurrentFontW->lfFaceName, plfW->lfFaceName) != 0)
     {
-        if (appCompatFlags & 0x1)
+        if (dwCompatFlags & 0x1)
         {
             pIMC->lfFont.W = *plfW;
 
-            if (appCompatFlags & 0x80)
+            if (dwCompatFlags & 0x80)
                 ret = Imm32PostImsMessage(hWnd, IMC_SETCOMPOSITIONFONT, 0);
             else
                 ret = PostMessageW(hWnd, WM_IME_SYSTEM, IMC_SETCOMPOSITIONFONT, 0);
@@ -428,6 +425,9 @@ static BOOL Imm32FixLogFont(PLOGFONTW plfW, BOOL bVertical)
 {
     if (!plfW)
         return FALSE;
+
+    /* SECURITY: Avoid buffer overrun */
+    plfW->lfFaceName[_countof(plfW->lfFaceName) - 1] = UNICODE_NULL;
 
     if (bVertical)
     {
@@ -458,7 +458,7 @@ static BOOL Imm32FixLogFont(PLOGFONTW plfW, BOOL bVertical)
 }
 
 static BOOL
-Imm32SetFontForVertical(HWND a1, HIMC hIMC, LPINPUTCONTEXTDX pIC, BOOL bVertical)
+Imm32SetFontForVertical(HWND hWnd, HIMC hIMC, LPINPUTCONTEXTDX pIC, BOOL bVertical)
 {
     CHAR lfFaceName[LF_FACESIZE];
     LOGFONTW lfW;
@@ -486,7 +486,7 @@ Imm32SetFontForVertical(HWND a1, HIMC hIMC, LPINPUTCONTEXTDX pIC, BOOL bVertical
     if (!Imm32FixLogFont(&lfW, bVertical))
         return FALSE;
 
-    return Imm32SetCompFont(a1, hIMC, &lfW);
+    return Imm32SetCompFont(hWnd, hIMC, &lfW);
 }
 
 static BOOL Imm32TransSetConversionWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
@@ -686,7 +686,7 @@ static BOOL Imm32TransSendVKey(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme, BOOL bAnsi
         if (wParam != VK_DBE_ENTERDLGCONVERSIONMODE && (wParam == 0xFFFF || (LONG)wParam == -1))
         {
             UINT wCount = pIme->wCount;
-            if (wCount == 28 || (wCount > 0xEF && wCount <= 0xFD))
+            if (wCount == 28 || (wCount >= 240 && wCount <= 253))
                 return TRUE;
         }
         return FALSE;
@@ -711,7 +711,7 @@ static BOOL Imm32TransSendVKey(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme, BOOL bAnsi
         hKL = GetKeyboardLayout(0);
         nImeConfig = IME_CONFIG_REGISTERWORD;
     }
-    else if (wParam == 248) 
+    else if (wParam == VK_DBE_ENTERIMECONFIGMODE)
     {
         hKL = GetKeyboardLayout(0);
         nImeConfig = IME_CONFIG_GENERAL;
@@ -723,8 +723,7 @@ static BOOL Imm32TransSendVKey(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme, BOOL bAnsi
 
     if (bAnsi)
         return ImmConfigureIMEA(hKL, hWnd, nImeConfig, NULL);
-    else
-        return ImmConfigureIMEW(hKL, hWnd, nImeConfig, NULL);
+    return ImmConfigureIMEW(hKL, hWnd, nImeConfig, NULL);
 }
 
 static LRESULT Imm32TransSetConversionMode(HIMC hIMC, PIMESTRUCT pIme)
@@ -781,22 +780,11 @@ static BOOL Imm32TransEnterWordRegisterMode(HWND hWnd, PIMESTRUCT pIme, BOOL bAn
         return FALSE;
 
     HGLOBAL hReading = (HGLOBAL)pIme->lParam1, hWord = (HGLOBAL)pIme->lParam2;
-    REGISTERWORDW rwInfo  = { NULL };
-    PVOID pLocked = NULL;
-
+    REGISTERWORDW rwInfo = { NULL };
     if (hReading)
-    {
-        pLocked = GlobalLock(hReading);
-        if (pLocked)
-            rwInfo.lpReading = (LPWSTR)pLocked;
-    }
-
+        rwInfo.lpReading = GlobalLock(hReading);
     if (hWord)
-    {
-        PVOID pWord = GlobalLock(hWord);
-        if (pWord)
-            rwInfo.lpWord = (LPWSTR)pWord;
-    }
+        rwInfo.lpWord = GlobalLock(hWord);
 
     BOOL ret;
     if (bAnsi)
@@ -804,7 +792,7 @@ static BOOL Imm32TransEnterWordRegisterMode(HWND hWnd, PIMESTRUCT pIme, BOOL bAn
     else
         ret = ImmConfigureIMEW(hKL, hWnd, IME_CONFIG_REGISTERWORD, &rwInfo);
 
-    if (hReading && pLocked)
+    if (hReading && rwInfo.lpReading)
         GlobalUnlock(hReading);
     if (hWord && rwInfo.lpWord)
         GlobalUnlock(hWord);
@@ -830,6 +818,8 @@ static BOOL Imm32TransSetConversionFontEx(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme,
     {
         CopyMemory(&lfW, plf, sizeof(LOGFONTA));
         MultiByteToWideChar(CP_ACP, 0, plf->lfFaceName, LF_FACESIZE, lfW.lfFaceName, LF_FACESIZE);
+
+        /* SECURITY: Avoid buffer overrun */
         lfW.lfFaceName[_countof(lfW.lfFaceName) - 1] = UNICODE_NULL;
     }
     else
