@@ -76,6 +76,7 @@ static BOOL Imm32SetCompWindow(HWND hWnd, HIMC hIMC, PCOMPOSITIONFORM lpCompForm
     return ret;
 }
 
+/* NOTE: K stands for Korean. J stands for Japanese. */
 static DWORD Imm32Get31ModeFrom40ModeK(DWORD fdwConversion)
 {
     DWORD flags = 0;
@@ -165,11 +166,11 @@ static LRESULT Imm32TransGetOpenK(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme, BOOL bA
 {
     RECT rc;
     GetWindowRect(hWnd, &rc);
-    LPARAM lParam2 = pIme->lParam2;
+    LPARAM OldlParam2 = pIme->lParam2;
     pIme->lParam2 = MAKELONG(rc.top, rc.left); /* Correct! */
     HKL hKL = GetKeyboardLayout(0);
     LRESULT result = ImmEscapeW(hKL, hIMC, IME_GETOPEN, pIme);
-    pIme->lParam2 = lParam2;
+    pIme->lParam2 = OldlParam2;
     return result;
 }
 
@@ -221,8 +222,9 @@ static BOOL Imm32TransSetOpenJ(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
 static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
 {
     const CHAR *pszSource = (const CHAR *)pIme + pIme->dchSource;
-    CHAR *pszDest = (CHAR *)pIme + pIme->dchDest;
+    PCHAR pszDest = (PCHAR)pIme + pIme->dchDest;
     HKL hKL = GetKeyboardLayout(0);
+
     DWORD dwBufLen = ImmGetConversionListA(hKL, hIMC, pszSource, NULL, 0, GCL_CONVERSION);
     if (!dwBufLen)
         return 0;
@@ -238,8 +240,7 @@ static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
         return 0;
     }
 
-    hKL = GetKeyboardLayout(0);
-    LRESULT result = ImmGetConversionListA(hKL, hIMC, pszSource, pCL, dwBufLen, GCL_CONVERSION);
+    LRESULT ret = ImmGetConversionListA(hKL, hIMC, pszSource, pCL, dwBufLen, GCL_CONVERSION);
 
     for (DWORD i = 0; i < pCL->dwCount; i++)
     {
@@ -247,6 +248,7 @@ static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
         *pszDest++ = pCandidate[0];
         *pszDest++ = pCandidate[1];
     }
+
     *pszDest = ANSI_NULL;
 
     pIme->wCount = (WORD)(pCL->dwCount * 2);
@@ -254,7 +256,7 @@ static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
     GlobalUnlock(hCandList);
     GlobalFree(hCandList);
 
-    return result;
+    return ret;
 }
 
 static LRESULT Imm32TransHanjaMode(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
@@ -299,12 +301,11 @@ static LRESULT Imm32TransHanjaMode(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
     ImmUnlockImeDpi(pImeDpi);
 
     hKL = GetKeyboardLayout(0);
-    LRESULT result = ImmEscapeW(hKL, hIMC, IME_ESC_HANJA_MODE, pIme);
-
-    if (result)
+    LRESULT ret = ImmEscapeW(hKL, hIMC, IME_ESC_HANJA_MODE, pIme);
+    if (ret)
         SendMessageW(hWnd, WM_IME_NOTIFY, IMN_OPENCANDIDATE, 1);
 
-    return result;
+    return ret;
 }
 
 static LRESULT Imm32TransGetLevel(HWND hWnd)
@@ -515,8 +516,6 @@ Imm32SetFontForVertical(HWND hWnd, HIMC hIMC, PINPUTCONTEXTDX pIC, BOOL bVertica
 
 static BOOL Imm32TransSetConversionWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
 {
-    COMPOSITIONFORM cfComp;
-
     if (!Imm32IsForegroundThread(NULL) && !GetFocus())
         return TRUE;
 
@@ -524,13 +523,12 @@ static BOOL Imm32TransSetConversionWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
     if (!pIC)
         return FALSE;
 
+    COMPOSITIONFORM cfComp;
     cfComp.dwStyle = 0;
 
     POINT pt = { (SHORT)LOWORD(pIme->lParam1), (SHORT)HIWORD(pIme->lParam1) };
-
-    RECT rcArea;
-    SetRect(&rcArea, (SHORT)LOWORD(pIme->lParam2), (SHORT)HIWORD(pIme->lParam2),
-                     (SHORT)LOWORD(pIme->lParam3), (SHORT)HIWORD(pIme->lParam3));
+    RECT rcArea = { (SHORT)LOWORD(pIme->lParam2), (SHORT)HIWORD(pIme->lParam2),
+                    (SHORT)LOWORD(pIme->lParam3), (SHORT)HIWORD(pIme->lParam3) };
 
     WPARAM wParam = pIme->wParam;
     HWND hwndIC = pIC->hWnd;
