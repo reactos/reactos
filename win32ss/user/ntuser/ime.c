@@ -1117,6 +1117,18 @@ Quit:
     return ret;
 }
 
+/*
+ * https://learn.microsoft.com/en-us/windows/win32/api/ime/ns-ime-imestruct IME_SETLEVEL
+ *
+ * (Korean-IME-specific)
+ *
+ * Level | Meaning
+ * ------+---------------------------------------------------------------------------------
+ *    1  | No IME support. All IME-specific messages are ignored.
+ *    2  | Partial IME support. Supports a subset of IME behavior including the position of
+ *       | the composition or candidate windows and the input mode or status.
+ *    3  | Full IME support.
+ */
 BOOL
 NTAPI
 NtUserSetAppImeLevel(
