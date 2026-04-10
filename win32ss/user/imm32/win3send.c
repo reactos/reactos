@@ -316,7 +316,7 @@ static LRESULT Imm32TransGetLevel(HWND hWnd)
 static BOOL Imm32TransSetLevel(HWND hWnd, PIMESTRUCT pIme)
 {
     WPARAM wParam = pIme->wParam;
-    return wParam && wParam <= 5 && NtUserSetAppImeLevel(hWnd, (DWORD)pIme->wParam);
+    return wParam && wParam <= 5 && NtUserSetAppImeLevel(hWnd, (DWORD)wParam);
 }
 
 static BOOL Imm32TransGetMNTable(HIMC hIMC, PIMESTRUCT pIme)
