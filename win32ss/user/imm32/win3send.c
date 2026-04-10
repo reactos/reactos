@@ -830,7 +830,7 @@ static BOOL Imm32TransEnterWordRegisterMode(HWND hWnd, PIMESTRUCT pIme, BOOL bAn
 
     BOOL ret;
     if (bAnsi)
-        ret = ImmConfigureIMEA(hKL, hWnd, IME_CONFIG_REGISTERWORD, (REGISTERWORDA *)&rwInfo);
+        ret = ImmConfigureIMEA(hKL, hWnd, IME_CONFIG_REGISTERWORD, (PREGISTERWORDA)&rwInfo);
     else
         ret = ImmConfigureIMEW(hKL, hWnd, IME_CONFIG_REGISTERWORD, &rwInfo);
 
