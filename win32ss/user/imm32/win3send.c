@@ -534,7 +534,7 @@ Imm32SetFontForVertical(HWND hWnd, HIMC hIMC, PINPUTCONTEXTDX pIC, BOOL bVertica
 static BOOL Imm32TransSetConversionWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
 {
     if (!Imm32IsForegroundThread(NULL) && !GetFocus())
-        return TRUE;
+        return TRUE; /* Ignore as success */
 
     PINPUTCONTEXTDX pIC = (PINPUTCONTEXTDX)ImmLockIMC(hIMC);
     if (!pIC)
@@ -715,17 +715,18 @@ static BOOL Imm32TransSendVKey(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme, BOOL bAnsi
         if (wParam == VK_DBE_DETERMINESTRING)
         {
             HIMC hContext = ImmGetContext(hWnd);
-            LRESULT ret = ImmNotifyIME(hContext, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+            BOOL ret = (BOOL)ImmNotifyIME(hContext, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
             ImmReleaseContext(hWnd, hContext);
             return ret;
         }
 
-        if (wParam != VK_DBE_ENTERDLGCONVERSIONMODE && (wParam == 0xFFFF || (LONG)wParam == -1))
+        if (wParam > VK_DBE_ENTERDLGCONVERSIONMODE && (wParam == 0xFFFF || (LONG)wParam == -1))
         {
             UINT wCount = pIme->wCount;
-            if (wCount == 28 || (wCount >= 240 && wCount <= 253))
+            if (wCount == 28 || (240 <= wCount && wCount <= 253))
                 return TRUE;
         }
+
         return FALSE;
     }
 
