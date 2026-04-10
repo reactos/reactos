@@ -489,11 +489,9 @@ static BOOL
 Imm32SetFontForVertical(HWND hWnd, HIMC hIMC, PINPUTCONTEXTDX pIC, BOOL bVertical)
 {
     LOGFONTW lfW;
-    PCLIENTIMC pClientImc;
-
     if (pIC->fdwInit & INIT_LOGFONT)
     {
-        pClientImc = ImmLockClientImc(hIMC);
+        PCLIENTIMC pClientImc = ImmLockClientImc(hIMC);
         if (!pClientImc)
             return FALSE;
         BOOL bAnsi = !(pClientImc->dwFlags & CLIENTIMC_WIDE);
