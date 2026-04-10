@@ -190,3 +190,8 @@ CtfImmSetLangBand(
 
 DWORD
 WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang);
+
+HIMC
+ImmGetSaveContext(
+    _In_opt_ HWND hWnd,
+    _In_ DWORD dwContextFlags);

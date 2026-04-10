@@ -1018,7 +1018,7 @@ ImmUnlockClientImc(_Inout_ PCLIENTIMC pClientImc)
     ImmLocalFree(pClientImc);
 }
 
-static HIMC
+HIMC
 ImmGetSaveContext(
     _In_opt_ HWND hWnd,
     _In_ DWORD dwContextFlags)
