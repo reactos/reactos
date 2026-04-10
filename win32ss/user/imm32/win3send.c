@@ -552,8 +552,8 @@ static BOOL Imm32TransSetConversionWindow(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
 
         if (LOWORD(hWnd) == LOWORD(hwndIC))
         {
-            void *pWndEntry = (hWnd && gpsi) ? ValidateHwnd(hWnd) : NULL;
-            void *pWndICEntry = (hwndIC && gpsi) ? ValidateHwnd(hwndIC) : NULL;
+            PVOID pWndEntry = (hWnd && gpsi) ? ValidateHwnd(hWnd) : NULL;
+            PVOID pWndICEntry = (hwndIC && gpsi) ? ValidateHwnd(hwndIC) : NULL;
 
             if (pWndEntry == pWndICEntry)
                 bUseCrossWindowLogic = FALSE;
