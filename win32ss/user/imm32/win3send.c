@@ -818,9 +818,9 @@ static BOOL Imm32TransEnterWordRegisterMode(HWND hWnd, PIMESTRUCT pIme, BOOL bAn
     else
         ret = ImmConfigureIMEW(hKL, hWnd, IME_CONFIG_REGISTERWORD, &rwInfo);
 
-    if (hReading && rwInfo.lpReading)
+    if (rwInfo.lpReading)
         GlobalUnlock(hReading);
-    if (hWord && rwInfo.lpWord)
+    if (rwInfo.lpWord)
         GlobalUnlock(hWord);
 
     return ret;
