@@ -144,7 +144,7 @@ static BOOL Imm32TransCodeConvert(HIMC hIMC, PIMESTRUCT pIme)
     switch (uSubFunc)
     {
         case IME_BANJAtoJUNJA: case IME_JUNJAtoBANJA: case IME_JOHABtoKS: case IME_KStoJOHAB:
-            return (BOOL)ImmEscapeW(hKL, hIMC, (UINT)uSubFunc, pIme);
+            return (BOOL)ImmEscapeW(hKL, hIMC, uSubFunc, pIme);
         default:
             return FALSE;
     }
@@ -196,8 +196,7 @@ static BOOL Imm32TransSetOpenJ(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme)
     if (!pIC)
         return fOldOpen;
 
-    BOOL bRequestOpen = (pIme->wParam != 0);
-
+    BOOL bRequestOpen = !!pIme->wParam;
     if (pIC->fOpen != bRequestOpen)
     {
         pIC->fOpen = bRequestOpen;
@@ -217,8 +216,8 @@ static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
     if (!dwBufLen)
         return 0;
 
-    HGLOBAL hMem = GlobalAlloc(GHND, dwBufLen);
-    PCANDIDATELIST pCL = (PCANDIDATELIST)GlobalLock(hMem);
+    HGLOBAL hCandList = GlobalAlloc(GHND, dwBufLen);
+    PCANDIDATELIST pCL = (PCANDIDATELIST)GlobalLock(hCandList);
     if (!pCL)
         return 0;
 
@@ -235,8 +234,8 @@ static LRESULT Imm32TransConvertList(HIMC hIMC, PIMESTRUCT pIme)
 
     pIme->wCount = (WORD)(pCL->dwCount * 2);
 
-    GlobalUnlock(hMem);
-    GlobalFree(hMem);
+    GlobalUnlock(hCandList);
+    GlobalFree(hCandList);
 
     return result;
 }
@@ -833,7 +832,9 @@ static BOOL Imm32TransSetConversionFontEx(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme,
     BOOL bFixed = Imm32FixLogFont(&lfW, (pIC->dwUIFlags & 4) != 0);
     ImmUnlockIMC(hIMC);
 
-    return (bFixed ? Imm32SetCompFont(hWnd, hIMC, &lfW) : FALSE);
+    if (!bFixed)
+        return FALSE;
+    return Imm32SetCompFont(hWnd, hIMC, &lfW);
 }
 
 static LRESULT Imm32TranslateIMESubFunctions(HWND hWnd, PIMESTRUCT pIme, BOOL bAnsi)
@@ -842,18 +843,19 @@ static LRESULT Imm32TranslateIMESubFunctions(HWND hWnd, PIMESTRUCT pIme, BOOL bA
     if (!hImc)
         return 0;
 
-    WORD wLang = PRIMARYLANGID(LANGIDFROMLCID(GetSystemDefaultLCID()));
-    UINT fnc = pIme->fnc;
+    const WORD wLang = PRIMARYLANGID(LANGIDFROMLCID(GetSystemDefaultLCID()));
+    const BOOL bKorean = (wLang == LANG_KOREAN), bJapanese = (wLang == LANG_JAPANESE);
+    const UINT fnc = pIme->fnc;
     switch (fnc)
     {
         case 3:
             return 1;
         case 4:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return Imm32TransSetOpenK(hWnd, hImc, pIme);
             return Imm32TransSetOpenJ(hWnd, hImc, pIme);
         case 5:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return Imm32TransGetOpenK(hWnd, hImc, pIme, bAnsi);
             return Imm32TransGetOpenJ(hWnd, hImc, pIme, bAnsi);
         case 6:
@@ -861,61 +863,61 @@ static LRESULT Imm32TranslateIMESubFunctions(HWND hWnd, PIMESTRUCT pIme, BOOL bA
         case 7:
             return 0xA03;
         case 8:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return Imm32TransMoveImeWindow(hWnd, hImc, pIme);
             return Imm32TransSetConversionWindow(hWnd, hImc, pIme);
         case 16:
-            if (wLang == LANG_JAPANESE)
+            if (bJapanese)
                 return Imm32TransSetConversionMode(hImc, pIme);
             break;
         case 17:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return Imm32TransGetMode(hImc);
-            if (wLang == LANG_JAPANESE)
+            if (bJapanese)
                 return Imm32TransGetConversionMode(hImc);
             break;
         case 18:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return Imm32TransSetMode(hImc, pIme);
             break;
         case 19:
-            if (wLang == LANG_JAPANESE)
+            if (bJapanese)
                 return Imm32TransSendVKey(hWnd, hImc, pIme, bAnsi);
             break;
         case 24:
-            if (wLang == LANG_JAPANESE)
+            if (bJapanese)
                 return Imm32TransEnterWordRegisterMode(hWnd, pIme, bAnsi);
             break;
         case 25:
-            if (wLang == LANG_JAPANESE)
+            if (bJapanese)
                 return Imm32TransSetConversionFontEx(hWnd, hImc, pIme, bAnsi);
             break;
         case 32:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return Imm32TransCodeConvert(hImc, pIme) ? pIme->wParam : 0;
             break;
         case 34:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return Imm32TransConvertList(hImc, pIme);
             break;
         case 48:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return ImmEscapeW(GetKeyboardLayout(0), hImc, 0x30, pIme);
             break;
         case 49:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return Imm32TransHanjaMode(hWnd, hImc, pIme);
             break;
         case 64:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return Imm32TransGetLevel(hWnd);
             break;
         case 65:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return Imm32TransSetLevel(hWnd, pIme);
             break;
         case 66:
-            if (wLang == LANG_KOREAN)
+            if (bKorean)
                 return Imm32TransGetMNTable(hImc, pIme);
             break;
         default:
