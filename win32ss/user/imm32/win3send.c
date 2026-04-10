@@ -848,8 +848,8 @@ static BOOL Imm32TransSetConversionFontEx(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme,
     if (!pIC)
         return FALSE;
 
-    PLOGFONTA plf = GlobalLock((HGLOBAL)pIme->lParam1);
-    if (!plf)
+    PVOID pLogFont = GlobalLock((HGLOBAL)pIme->lParam1);
+    if (!pLogFont)
     {
         ImmUnlockIMC(hIMC);
         return FALSE;
@@ -857,9 +857,9 @@ static BOOL Imm32TransSetConversionFontEx(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme,
 
     LOGFONTW lfW;
     if (bAnsi)
-        LogFontAnsiToWide(plf, &lfW);
+        LogFontAnsiToWide(pLogFont, &lfW);
     else
-        RtlCopyMemory(&lfW, plf, sizeof(LOGFONTW));
+        RtlCopyMemory(&lfW, pLogFont, sizeof(LOGFONTW));
 
     GlobalUnlock((HGLOBAL)pIme->lParam1);
 
