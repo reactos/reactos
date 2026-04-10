@@ -767,7 +767,7 @@ static DWORD Imm32TransSetConversionMode(HIMC hIMC, PIMESTRUCT pIme)
     if (!ImmGetConversionStatus(hIMC, &fdwOldConversion, &fdwSentence))
         return 0;
 
-    DWORD mode31 = Imm32Get31ModeFrom40ModeJ(fdwOldConversion);
+    const DWORD mode31 = Imm32Get31ModeFrom40ModeJ(fdwOldConversion);
     const WPARAM wParam = pIme->wParam;
     DWORD dwNewValues = 0, dwMask = 0;
 
