@@ -746,51 +746,55 @@ static BOOL Imm32TransSendVKey(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme, BOOL bAnsi
     return ImmConfigureIMEW(hKL, hWnd, nImeConfig, NULL);
 }
 
-static LRESULT Imm32TransSetConversionMode(HIMC hIMC, PIMESTRUCT pIme)
+static DWORD Imm32TransSetConversionMode(HIMC hIMC, PIMESTRUCT pIme)
 {
-    DWORD fdwConversion = 0, fdwSentence = 0;
-    ImmGetConversionStatus(hIMC, &fdwConversion, &fdwSentence);
-    DWORD dw31Mode = Imm32Get31ModeFrom40ModeJ(fdwConversion);
+    DWORD fdwOldConversion = 0, fdwSentence;
+    if (!ImmGetConversionStatus(hIMC, &fdwOldConversion, &fdwSentence))
+        return 0;
 
-    WPARAM wParam = pIme->wParam;
+    DWORD mode31 = Get31ModeFrom40ModeJ(fdwOldConversion);
+    const WPARAM wParam = pIme->wParam;
+    DWORD dwNewValues = 0, dwMask = 0;
 
-    DWORD fdwNew = 0;
-    switch (wParam & (IME_MODE_ALPHANUMERIC | _IME_MODE_KOR_SBCSCHAR | IME_MODE_HANJACONVERT))
+    const DWORD langFlags = (IME_MODE_ALPHANUMERIC | IME_MODE_KATAKANA | IME_MODE_HIRAGANA);
+    if (wParam & langFlags)
     {
-        case IME_MODE_ALPHANUMERIC:
-            fdwNew = IME_CMODE_ALPHANUMERIC;
-            break;
-        case _IME_MODE_KOR_SBCSCHAR:
-            fdwNew = IME_CMODE_NATIVE;
-            break;
-        case IME_MODE_HANJACONVERT:
-            fdwNew = IME_CMODE_NATIVE | IME_CMODE_KATAKANA;
-            break;
-        default:
-            fdwNew = IME_CMODE_ALPHANUMERIC;
-            break;
+        dwMask |= IME_CMODE_LANGUAGE;
+        if (wParam & IME_MODE_KATAKANA)
+            dwNewValues |= IME_CMODE_LANGUAGE;
+        else if (wParam & IME_MODE_HIRAGANA)
+            dwNewValues |= IME_CMODE_NATIVE;
+        else
+            dwNewValues |= IME_CMODE_ALPHANUMERIC;
     }
 
-    if (!(wParam & _IME_MODE_JPN_SBCSCHAR))
-        fdwNew |= IME_CMODE_FULLSHAPE;
-    if (wParam & IME_MODE_ROMAN)
-        fdwNew |= IME_CMODE_ROMAN;
-    if (wParam & IME_MODE_CODEINPUT)
-        fdwNew |= IME_CMODE_CHARCODE;
-
-    DWORD fdwMask = 0;
-    if (wParam & (IME_MODE_ALPHANUMERIC | IME_MODE_KATAKANA | IME_MODE_HIRAGANA))
-        fdwMask |= IME_CMODE_NATIVE | IME_CMODE_KATAKANA;
     if (wParam & (IME_MODE_DBCSCHAR | _IME_MODE_JPN_SBCSCHAR))
-        fdwMask |= IME_CMODE_FULLSHAPE;
-    if (wParam & (IME_MODE_NOROMAN | IME_MODE_ROMAN))
-        fdwMask |= IME_CMODE_ROMAN;
-    if (wParam & (IME_MODE_NOCODEINPUT | IME_MODE_CODEINPUT))
-        fdwMask |= IME_CMODE_CHARCODE;
+    {
+        dwMask |= IME_CMODE_FULLSHAPE;
+        if (!(wParam & _IME_MODE_JPN_SBCSCHAR))
+            dwNewValues |= IME_CMODE_FULLSHAPE;
+    }
 
-    DWORD fdwResult = (fdwNew & fdwMask) | (fdwConversion & ~fdwMask);
-    BOOL result = ImmSetConversionStatus(hIMC, fdwResult, fdwSentence);
-    return result ? dw31Mode : 0;
+    if (wParam & (IME_MODE_ROMAN | IME_MODE_NOROMAN))
+    {
+        dwMask |= IME_CMODE_ROMAN;
+        if (wParam & IME_MODE_ROMAN)
+            dwNewValues |= IME_CMODE_ROMAN;
+    }
+
+    if (wParam & (IME_MODE_CODEINPUT | IME_MODE_NOCODEINPUT))
+    {
+        dwMask |= IME_CMODE_CHARCODE;
+        if (wParam & IME_MODE_CODEINPUT)
+            dwNewValues |= IME_CMODE_CHARCODE;
+    }
+
+    DWORD fdwNewConversion = (fdwOldConversion & ~dwMask) | (dwNewValues & dwMask);
+
+    if (!ImmSetConversionStatus(hIMC, fdwNewConversion, fdwSentence))
+        return 0;
+
+    return mode31;
 }
 
 static BOOL Imm32TransEnterWordRegisterMode(HWND hWnd, PIMESTRUCT pIme, BOOL bAnsi)
