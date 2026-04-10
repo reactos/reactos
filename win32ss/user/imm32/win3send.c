@@ -464,7 +464,7 @@ static BOOL Imm32FixLogFont(PLOGFONTW plfW, BOOL bVertical)
         if (plfW->lfCharSet == SHIFTJIS_CHARSET && plfW->lfFaceName[0] != L'@')
         {
             size_t len = wcslen(plfW->lfFaceName);
-            if (len >= (LF_FACESIZE - 1))
+            if (len >= (_countof(plfW->lfFaceName) - 1))
                 return FALSE;
 
             MoveMemory(&plfW->lfFaceName[1], &plfW->lfFaceName[0], (len + 1) * sizeof(WCHAR));
@@ -837,17 +837,9 @@ static BOOL Imm32TransSetConversionFontEx(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme,
 
     LOGFONTW lfW;
     if (bAnsi)
-    {
-        CopyMemory(&lfW, plf, sizeof(LOGFONTA));
-        MultiByteToWideChar(CP_ACP, 0, plf->lfFaceName, LF_FACESIZE, lfW.lfFaceName, LF_FACESIZE);
-
-        /* SECURITY: Avoid buffer overrun */
-        lfW.lfFaceName[_countof(lfW.lfFaceName) - 1] = UNICODE_NULL;
-    }
+        LogFontAnsiToWide(plf, &lfW);
     else
-    {
         CopyMemory(&lfW, plf, sizeof(LOGFONTW));
-    }
 
     GlobalUnlock((HGLOBAL)pIme->lParam1);
 
