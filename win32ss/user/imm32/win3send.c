@@ -166,7 +166,7 @@ static LRESULT Imm32TransGetOpenK(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme, BOOL bA
     RECT rc;
     GetWindowRect(hWnd, &rc);
     LPARAM lParam2 = pIme->lParam2;
-    pIme->lParam2 = MAKELONG(rc.top, rc.left);
+    pIme->lParam2 = MAKELONG(rc.top, rc.left); /* Correct! */
     HKL hKL = GetKeyboardLayout(0);
     LRESULT result = ImmEscapeW(hKL, hIMC, IME_GETOPEN, pIme);
     pIme->lParam2 = lParam2;
