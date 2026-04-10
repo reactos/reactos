@@ -860,13 +860,11 @@ static LRESULT Imm32TranslateIMESubFunctions(HWND hWnd, PIMESTRUCT pIme, BOOL bA
         case 4:
             if (wLang == LANG_KOREAN)
                 return Imm32TransSetOpenK(hWnd, hImc, pIme);
-            else
-                return Imm32TransSetOpenJ(hWnd, hImc, pIme);
+            return Imm32TransSetOpenJ(hWnd, hImc, pIme);
         case 5:
             if (wLang == LANG_KOREAN)
                 return Imm32TransGetOpenK(hWnd, hImc, pIme, bAnsi);
-            else
-                return Imm32TransGetOpenJ(hWnd, hImc, pIme, bAnsi);
+            return Imm32TransGetOpenJ(hWnd, hImc, pIme, bAnsi);
         case 6:
             return 0;
         case 7:
@@ -874,8 +872,7 @@ static LRESULT Imm32TranslateIMESubFunctions(HWND hWnd, PIMESTRUCT pIme, BOOL bA
         case 8:
             if (wLang == LANG_KOREAN)
                 return Imm32TransMoveImeWindow(hWnd, hImc, pIme);
-            else
-                return Imm32TransSetConversionWindow(hWnd, hImc, pIme);
+            return Imm32TransSetConversionWindow(hWnd, hImc, pIme);
         case 16:
             if (wLang == LANG_JAPANESE)
                 return Imm32TransSetConversionMode(hImc, pIme);
