@@ -14,9 +14,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 static BOOL Imm32IsForegroundThread(HWND hWnd)
 {
-    HWND hwndForeground = GetForegroundWindow();
-    DWORD dwPID = IsWindow(hWnd) ? GetWindowThreadProcessId(hWnd, NULL) : GetCurrentThreadId();
-    return dwPID == GetWindowThreadProcessId(hwndForeground, 0);
+    HWND hwndFore = GetForegroundWindow();
+    DWORD dwTID1 = IsWindow(hWnd) ? GetWindowThreadProcessId(hWnd, NULL) : GetCurrentThreadId();
+    DWORD dwTID2 = GetWindowThreadProcessId(hwndFore, NULL);
+    return dwTID1 == dwTID2;
 }
 
 static BOOL Imm32PostImsMessage(HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -34,7 +35,7 @@ static BOOL Imm32SetCandidateWindow(HWND hWnd, HIMC hIMC, PCANDIDATEFORM lpCandi
         return FALSE;
 
     BOOL ret;
-    if ( (ImmGetAppCompatFlags(hIMC) & 1) != 0 )
+    if (ImmGetAppCompatFlags(hIMC) & 0x1)
     {
         CopyMemory(&pIC->cfCandForm[lpCandidate->dwIndex], lpCandidate, sizeof(CANDIDATEFORM));
         ret = Imm32PostImsMessage(hWnd, IMS_SETCANDFORM, lpCandidate->dwIndex);
@@ -151,10 +152,10 @@ static BOOL Imm32TransCodeConvert(HIMC hIMC, PIMESTRUCT pIme)
 
 static LRESULT Imm32TransGetOpenK(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme, BOOL bAnsi)
 {
+    RECT rc;
+    GetWindowRect(hWnd, &rc);
     LPARAM lParam2 = pIme->lParam2;
-    RECT Rect;
-    GetWindowRect(hWnd, &Rect);
-    pIme->lParam2 = MAKELONG(Rect.top, Rect.left);
+    pIme->lParam2 = MAKELONG(rc.top, rc.left);
     HKL hKL = GetKeyboardLayout(0);
     LRESULT result = ImmEscapeW(hKL, hIMC, 5, pIme);
     pIme->lParam2 = lParam2;
