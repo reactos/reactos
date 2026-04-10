@@ -38,7 +38,7 @@ static BOOL Imm32SetCandidateWindow(HWND hWnd, HIMC hIMC, PCANDIDATEFORM lpCandi
     DWORD dwCompatFlags = ImmGetAppCompatFlags(hIMC);
     if (dwCompatFlags & _IME_APP_COMPAT_DIRECT_IME_SYSTEM)
     {
-        CopyMemory(&pIC->cfCandForm[lpCandidate->dwIndex], lpCandidate, sizeof(CANDIDATEFORM));
+        RtlCopyMemory(&pIC->cfCandForm[lpCandidate->dwIndex], lpCandidate, sizeof(CANDIDATEFORM));
         ret = Imm32PostImsMessage(hWnd, IMS_SETCANDFORM, lpCandidate->dwIndex);
     }
     else
@@ -60,7 +60,7 @@ static BOOL Imm32SetCompWindow(HWND hWnd, HIMC hIMC, PCOMPOSITIONFORM lpCompForm
     DWORD dwCompatFlags = ImmGetAppCompatFlags(hIMC);
     if (dwCompatFlags & _IME_APP_COMPAT_DIRECT_IME_SYSTEM)
     {
-        CopyMemory(&pIC->cfCompForm, lpCompForm, sizeof(COMPOSITIONFORM));
+        RtlCopyMemory(&pIC->cfCompForm, lpCompForm, sizeof(COMPOSITIONFORM));
         if (dwCompatFlags & _IME_APP_COMPAT_SPECIAL_IME)
             ret = PostMessageW(hWnd, WM_IME_SYSTEM, IMS_SETCOMPFORM, 0);
         else
@@ -467,7 +467,7 @@ static BOOL Imm32FixLogFont(PLOGFONTW plfW, BOOL bVertical)
             if (len >= (_countof(plfW->lfFaceName) - 1))
                 return FALSE;
 
-            MoveMemory(&plfW->lfFaceName[1], &plfW->lfFaceName[0], (len + 1) * sizeof(WCHAR));
+            RtlMoveMemory(&plfW->lfFaceName[1], &plfW->lfFaceName[0], (len + 1) * sizeof(WCHAR));
             plfW->lfFaceName[0] = L'@';
         }
     }
@@ -478,7 +478,7 @@ static BOOL Imm32FixLogFont(PLOGFONTW plfW, BOOL bVertical)
         if (plfW->lfCharSet == SHIFTJIS_CHARSET && plfW->lfFaceName[0] == L'@')
         {
             size_t len = wcslen(plfW->lfFaceName);
-            MoveMemory(&plfW->lfFaceName[0], &plfW->lfFaceName[1], len * sizeof(WCHAR));
+            RtlMoveMemory(&plfW->lfFaceName[0], &plfW->lfFaceName[1], len * sizeof(WCHAR));
         }
     }
 
@@ -839,7 +839,7 @@ static BOOL Imm32TransSetConversionFontEx(HWND hWnd, HIMC hIMC, PIMESTRUCT pIme,
     if (bAnsi)
         LogFontAnsiToWide(plf, &lfW);
     else
-        CopyMemory(&lfW, plf, sizeof(LOGFONTW));
+        RtlCopyMemory(&lfW, plf, sizeof(LOGFONTW));
 
     GlobalUnlock((HGLOBAL)pIme->lParam1);
 
