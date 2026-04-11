@@ -12,4 +12,5 @@ modules/[Aa][Hh][Kk]_[Tt]ests
 .project
 .settings
 .vscode
+.idea
 sdk/tools/winesync/winesync.cfg
