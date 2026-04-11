@@ -40,8 +40,8 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
 #endif
     BOOLEAN IsPeb;
 
-    ASSERT(sizeof(TEB) != sizeof(PEB));
-    IsPeb = (sizeof(PEB) == Size);
+    C_ASSERT(sizeof(TEB) != sizeof(PEB));
+    IsPeb = (Size == sizeof(PEB));
 
     Status = PsChargeProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
     if (!NT_SUCCESS(Status))
@@ -91,7 +91,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     if (IsWow64)
     {
         /* Make sure the structure resides in the 32-bit address space */
-        HighestAddress &= ROUND_DOWN(0xFFFFFFFFULL, PAGE_SIZE);
+        HighestAddress = MM_HIGHEST_USER_ADDRESS_WOW64;
     }
 #endif
 
@@ -102,7 +102,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
         /* If this is a WOW64 process, allocate enough space for the 32 bit PEB */
         if (IsWow64)
         {
-            Size += ROUND_TO_PAGES(sizeof(PEB32));
+            Size = ROUND_TO_PAGES(Size) + ROUND_TO_PAGES(sizeof(PEB32));
         }
 #endif
 
@@ -130,7 +130,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
         /* If this is a WOW64 process, allocate enough space for the 32 bit TEB */
         if (IsWow64)
         {
-            Size += ROUND_TO_PAGES(sizeof(TEB32));
+            Size = ROUND_TO_PAGES(Size) + ROUND_TO_PAGES(sizeof(TEB32));
         }
 #endif
     }
