@@ -9,6 +9,7 @@ list(APPEND SOURCE
 
 if(DLL_EXPORT_VERSION LESS 0x600)
     list(APPEND SOURCE
+        condvar_compat.c
         rand_s.c)
 endif()
 
