@@ -14,7 +14,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #define ALIGN_DWORD(len) (((len) + 3) & ~3)
 
-WORD g_dchKorean = 0; /* One or two Korean character(s) */
+static WORD g_dchKorean = 0; /* One or two Korean character(s) */
 
 static DWORD
 Imm32CompStrWToUndetW(
