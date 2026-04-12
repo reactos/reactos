@@ -3637,7 +3637,11 @@ static void test_keyboard_layout_name(void)
 
         for (j = 0; layouts_preload[j]; ++j)
         {
+#ifdef __REACTOS__
+            swprintf( tmpklid, KL_NAMELENGTH, L"%08X", HandleToUlong(layouts_preload[j]) );
+#else
             swprintf( tmpklid, KL_NAMELENGTH, L"%08X", layouts_preload[j] );
+#endif
             if (!wcscmp( tmpklid, klid )) break;
         }
         ok(j < len, "Could not find keyboard layout %s in preload list\n", wine_dbgstr_w(klid));
