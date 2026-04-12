@@ -7,7 +7,6 @@
 
 #include "../win32nt.h"
 
-
 HGLOBAL createGlobalMemory(const CHAR* pString, DWORD stringLength)
 {
     HGLOBAL hGlobalBuffer = NULL;
@@ -24,9 +23,9 @@ HGLOBAL createGlobalMemory(const CHAR* pString, DWORD stringLength)
     {
         memcpy(pLockedBuffer, pString, stringLength);
     }
-    
+
     GlobalUnlock(hGlobalBuffer);
-    
+
     return hGlobalBuffer;
 }
 
@@ -37,7 +36,7 @@ HANDLE setClipboardData(UINT uFormat, HANDLE hGlobalMem)
     HANDLE hRet = NULL;
     HANDLE hMem = NULL;
     SETCLIPBDATA scd = {FALSE, FALSE};
-   
+
     // Get global memory
     pMem = GlobalLock(hGlobalMem);
     dwSize = GlobalSize(hGlobalMem);
@@ -87,8 +86,8 @@ START_TEST(NtUserConvertMemHandle)
     HANDLE hMem;
     CONST CHAR testString[] = "Test string";
     HGLOBAL  hGlobal = NULL;
-    
-    hMem = NtUserConvertMemHandle((PVOID)(UINT_PTR)0xDEADBEEF, 0xFFFF);
+
+    hMem = NtUserConvertMemHandle(UlongToPtr(0xDEADBEEF), 0xFFFF);
     ok_hdl(hMem, NULL);
 
     // Alloc global memory
