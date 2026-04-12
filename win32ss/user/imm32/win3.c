@@ -14,6 +14,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #define ALIGN_DWORD(len) (((len) + 3) & ~3)
 
+WORD g_dchKorean = 0; /* One or two Korean character(s) */
+
 static DWORD
 Imm32CompStrWToUndetW(
     DWORD dwGCS,
@@ -187,10 +189,8 @@ Imm32CompStrWToUndetA(
         }
         else
         {
-            pDeter->uCursorPos = IchAnsiFromWide(
-                (LONG)pCS->dwCursorPos,
-                (PCWSTR)(pSrcBase + pCS->dwCompStrOffset),
-                CP_ACP);
+            pDeter->uCursorPos = IchAnsiFromWide(pCS->dwCursorPos,
+                (PCWSTR)(pSrcBase + pCS->dwCompStrOffset), CP_ACP);
         }
     }
 
@@ -202,10 +202,8 @@ Imm32CompStrWToUndetA(
         }
         else
         {
-            pDeter->uDeltaStart = IchAnsiFromWide(
-                (LONG)pCS->dwDeltaStart,
-                (PCWSTR)(pSrcBase + pCS->dwCompStrOffset),
-                CP_ACP);
+            pDeter->uDeltaStart = IchAnsiFromWide(pCS->dwDeltaStart,
+                (PCWSTR)(pSrcBase + pCS->dwCompStrOffset), CP_ACP);
         }
     }
 
@@ -235,9 +233,8 @@ Imm32CompStrWToUndetA(
         const WCHAR *pResultW = (const WCHAR *)(pSrcBase + pCS->dwResultStrOffset);
 
         for (DWORD i = 0; i < nClauses; i++)
-        {
             pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pResultW, CP_ACP);
-        }
+
         dwCurrentOffset += ALIGN_DWORD(pCS->dwResultClauseLen);
     }
 
@@ -267,9 +264,8 @@ Imm32CompStrWToUndetA(
         const WCHAR *pReadW = (const WCHAR *)(pSrcBase + pCS->dwResultReadStrOffset);
 
         for (DWORD i = 0; i < nClauses; i++)
-        {
             pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pReadW, CP_ACP);
-        }
+
         dwCurrentOffset += ALIGN_DWORD(pCS->dwResultReadClauseLen);
     }
 
@@ -400,9 +396,8 @@ Imm32CompStrWToStringExA(
         const WCHAR *pResultW = (const WCHAR *)(pSrcBase + pCS->dwResultStrOffset);
 
         for (DWORD i = 0; i < nClauses; i++)
-        {
             pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pResultW, CP_ACP);
-        }
+
         dwCurrentOffset += ALIGN_DWORD(pCS->dwResultClauseLen);
     }
 
@@ -429,9 +424,8 @@ Imm32CompStrWToStringExA(
         const WCHAR *pReadW = (const WCHAR *)(pSrcBase + pCS->dwResultReadStrOffset);
 
         for (DWORD i = 0; i < nClauses; i++)
-        {
             pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pReadW, CP_ACP);
-        }
+
         dwCurrentOffset += ALIGN_DWORD(pCS->dwResultReadClauseLen);
     }
 
@@ -713,10 +707,10 @@ Imm32CompStrAToUndetW(
 
         for (DWORD i = 0; i < nClauses; i++)
         {
-            pDestClause[i] = IchWideFromAnsi(
-                pSrcClause[i], (PCSTR)(pSrcBase + pCS->dwResultReadStrOffset), 0);
-            dwCurrentOffset += ALIGN_DWORD(pCS->dwResultReadClauseLen);
+            pDestClause[i] = IchWideFromAnsi(pSrcClause[i],
+                (PCSTR)(pSrcBase + pCS->dwResultReadStrOffset), CP_ACP);
         }
+        dwCurrentOffset += ALIGN_DWORD(pCS->dwResultReadClauseLen);
     }
 
     return dwSize;
@@ -1517,137 +1511,230 @@ WINNLSTranslateMessageJ(DWORD dwCount, PTRANSMSG pEntries, PINPUTCONTEXTDX pIC,
     return dwResult;
 }
 
+typedef LRESULT (WINAPI *FN_SendMessage)(HWND, UINT, WPARAM, LPARAM);
+typedef BOOL (WINAPI *FN_PostMessage)(HWND, UINT, WPARAM, LPARAM);
+
 /* Korean */
 static DWORD
-WINNLSTranslateMessageK(DWORD dwCount, PTRANSMSG pEntries, PINPUTCONTEXTDX pIC,
-                        PCOMPOSITIONSTRING pCS, BOOL bAnsi)
+WINNLSTranslateMessageK(
+    DWORD dwCount,
+    PTRANSMSG pEntries,
+    PINPUTCONTEXTDX pIC,
+    PCOMPOSITIONSTRING pCS,
+    BOOL bSrcIsAnsi)
 {
     HWND hWnd = pIC->hWnd;
     HWND hwndIme = ImmGetDefaultIMEWnd(hWnd);
+    BOOL bDestIsUnicode = IsWindowUnicode(hWnd);
+    BOOL bDestIsAnsi = !bDestIsUnicode;
+    FN_PostMessage pfnPostMessage = bDestIsUnicode ? PostMessageW : PostMessageA;
+    FN_SendMessage pfnSendMessage = bDestIsUnicode ? SendMessageW : SendMessageA;
 
-    SIZE_T dwBufSize = (dwCount + 1) * sizeof(TRANSMSG);
-    PTRANSMSG pBuf = ImmLocalAlloc(HEAP_ZERO_MEMORY, dwBufSize);
-    if (!pBuf)
+    if ((LONG)dwCount <= 0)
         return 0;
-    RtlCopyMemory(pBuf, pEntries, dwCount * sizeof(TRANSMSG));
 
-    DWORD dwResult = 0;
-
-    if (pIC->dwUIFlags & _IME_UI_HIDDEN)
+    for (DWORD i = 0; i < dwCount; ++i)
     {
-        PTRANSMSG pEnd = NULL;
-        for (DWORD i = 0; i < dwCount; i++)
+        UINT   uMsg   = pEntries[i].message;
+        WPARAM wParam = pEntries[i].wParam;
+        LPARAM lParam = pEntries[i].lParam;
+
+        if (uMsg < WM_IME_STARTCOMPOSITION || uMsg > WM_IME_ENDCOMPOSITION)
         {
-            if (pBuf[i].message == WM_IME_ENDCOMPOSITION)
+            switch (uMsg)
             {
-                pEnd = &pBuf[i];
-                break;
-            }
-        }
-        if (pEnd)
-        {
-            PTRANSMSG pSrc = pEnd + 1, pDst = pEnd;
-            while (pSrc->message)
-                *pDst++ = *pSrc++;
-            pDst->message = WM_IME_ENDCOMPOSITION;
-            pDst->wParam  = 0;
-            pDst->lParam  = 0;
-        }
-    }
-
-#define EMIT_ENTRY_K() do { \
-    *pEntries++ = *pCurrent; \
-    dwResult++; \
-} while (0)
-
-    PTRANSMSG pCurrent = pBuf;
-    while (pCurrent->message)
-    {
-        switch (pCurrent->message)
-        {
-            case WM_IME_STARTCOMPOSITION:
-                if (!(pIC->dwUIFlags & _IME_UI_HIDDEN))
-                {
-                    if (pIC->cfCompForm.dwStyle)
-                        SendMessageW(hWnd, WM_IME_REPORT, IR_OPENCONVERT, 0);
-                    EMIT_ENTRY_K();
-                }
-                break;
-
-            case WM_IME_ENDCOMPOSITION:
-                if (!(pIC->dwUIFlags & _IME_UI_HIDDEN))
-                {
-                    if (pIC->cfCompForm.dwStyle)
-                        SendMessageW(hWnd, WM_IME_REPORT, IR_CLOSECONVERT, 0);
-                    EMIT_ENTRY_K();
-                }
-                else
-                {
-                    HGLOBAL hMem = GlobalAlloc(GHND | GMEM_SHARE, sizeof(UNDETERMINESTRUCT));
-                    if (hMem)
-                    {
-                        if (IsWindowUnicode(hWnd))
-                            SendMessageW(hWnd, WM_IME_REPORT, IR_UNDETERMINE, (LPARAM)hMem);
-                        else
-                            SendMessageA(hWnd, WM_IME_REPORT, IR_UNDETERMINE, (LPARAM)hMem);
-                        GlobalFree(hMem);
-                    }
-                }
-                break;
-
             case WM_IME_COMPOSITION:
-            {
-                DWORD dwWritten;
-                if (bAnsi)
-                    dwWritten = Imm32JTransCompositionA(pIC, pCS, pCurrent, pEntries);
-                else
-                    dwWritten = Imm32JTransCompositionW(pIC, pCS, pCurrent, pEntries);
-
-                dwResult  += dwWritten;
-                pEntries  += dwWritten;
-
-                if (!(pIC->dwUIFlags & _IME_UI_HIDDEN) && pIC->cfCompForm.dwStyle)
-                    SendMessageW(hWnd, WM_IME_REPORT, IR_CHANGECONVERT, 0);
-                break;
-            }
-
-            case WM_IME_NOTIFY:
-                if (pCurrent->wParam == IMN_OPENCANDIDATE)
+                if (wParam & 0x8000000)
                 {
-                    if (IsWindow(hWnd) && (pIC->dwUIFlags & _IME_UI_HIDDEN))
+                    pfnPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
+
+                    if ((LONG)pCS->dwResultStrLen > 0)
                     {
-                        CANDIDATEFORM CandForm;
-                        LPARAM lParam = pCurrent->lParam;
-                        for (DWORD iCandForm = 0; iCandForm < MAX_CANDIDATEFORM; ++iCandForm)
+                        DWORD dwProcessedLen = 0;
+                        while (dwProcessedLen < pCS->dwResultStrLen)
                         {
-                            if (!(lParam & (1 << iCandForm)))
-                                continue;
-                            CandForm.dwIndex     = iCandForm;
-                            CandForm.dwStyle     = CFS_EXCLUDE;
-                            CandForm.ptCurrentPos = pIC->cfCompForm.ptCurrentPos;
-                            CandForm.rcArea      = pIC->cfCompForm.rcArea;
-                            SendMessageW(hwndIme, WM_IME_CONTROL, IMC_SETCANDIDATEPOS,
-                                         (LPARAM)&CandForm);
+                            LPARAM charLParam = 1;
+                            WCHAR wCharStr[2] = {0};
+                            CHAR  szMBStr[4]  = {0};
+
+                            if (bSrcIsAnsi)
+                            {
+                                PSTR pResStr = (LPSTR)((BYTE*)pCS + pCS->dwResultStrOffset);
+                                BYTE bChar = (BYTE)pResStr[dwProcessedLen];
+
+                                if (bDestIsAnsi)
+                                {
+                                    if (IsDBCSLeadByte(bChar))
+                                    {
+                                        if (bChar < 0xB0 || bChar > 0xC8)
+                                            charLParam = 0xFFF10001; 
+                                        else
+                                            charLParam = 0xFFF20001;
+
+                                        PostMessageA(hWnd, WM_CHAR, bChar, charLParam);
+                                        dwProcessedLen++;
+                                        bChar = (BYTE)pResStr[dwProcessedLen];
+                                    }
+                                    PostMessageA(hWnd, WM_CHAR, bChar, charLParam);
+                                }
+                                else
+                                {
+                                    szMBStr[0] = bChar;
+                                    szMBStr[1] = pResStr[++dwProcessedLen];
+                                    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szMBStr, 2,
+                                                        wCharStr, 1);
+                                    PostMessageW(hWnd, WM_CHAR, wCharStr[0], 1);
+                                }
+                            }
+                            else
+                            {
+                                PWSTR pResStrW = (PWSTR)((PBYTE)pCS + pCS->dwResultStrOffset);
+                                wCharStr[0] = pResStrW[dwProcessedLen];
+
+                                if (!bDestIsAnsi)
+                                {
+                                    PostMessageW(hWnd, WM_CHAR, wCharStr[0], 1);
+                                }
+                                else
+                                {
+                                    WideCharToMultiByte(CP_ACP, 0, wCharStr, 1, szMBStr, 2,
+                                                        NULL, NULL);
+                                    BYTE bLead = (BYTE)szMBStr[0], bChar;
+                                    if (IsDBCSLeadByte(bLead))
+                                    {
+                                        charLParam = (bLead < 0xB0 || bLead > 0xC8)
+                                            ? 0xFFF10001
+                                            : 0xFFF20001;
+                                        PostMessageA(hWnd, WM_CHAR, bLead, charLParam);
+                                        bChar = (BYTE)szMBStr[1];
+                                    }
+                                    else
+                                    {
+                                        bChar = (BYTE)szMBStr[0];
+                                    }
+                                    PostMessageA(hWnd, WM_CHAR, bChar, charLParam);
+                                }
+                            }
+                            dwProcessedLen++;
+                        }
+                    }
+                    pfnPostMessage(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                }
+                
+
+                if (wParam != 0)
+                {
+                    pfnPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
+
+                    BYTE bLow = HIBYTE(wParam), bHigh = LOBYTE(wParam);
+                    g_dchKorean = MAKEWORD(bLow, bHigh);
+
+                    if (bSrcIsAnsi)
+                    {
+                        if (bDestIsAnsi)
+                        {
+                            PostMessageA(hWnd, WM_INTERIM, bLow, 0xF00001);
+                            PostMessageA(hWnd, WM_INTERIM, bHigh, 0xF00001);
+                        }
+                        else
+                        {
+                            CHAR szTmp[2] = { (CHAR)bLow, (CHAR)bHigh };
+                            WCHAR wTmp[2];
+                            if (MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTmp, 2, wTmp, 1))
+                                PostMessageW(hWnd, WM_INTERIM, wTmp[0], 0xF00001);
+                        }
+                    }
+                    else
+                    {
+                        if (!bDestIsAnsi)
+                        {
+                            PostMessageW(hWnd, WM_INTERIM, wParam, 0xF00001);
+                        }
+                        else
+                        {
+                            WCHAR wTmp[2] = { (WCHAR)wParam, 0 };
+                            CHAR  szTmp[2];
+                            WideCharToMultiByte(CP_ACP, 0, wTmp, 1, szTmp, 2, NULL, NULL);
+                            PostMessageA(hWnd, WM_INTERIM, (BYTE)szTmp[0], 0xF00001);
+                            PostMessageA(hWnd, WM_INTERIM, (BYTE)szTmp[1], 0xF00001);
+                        }
+                    }
+
+                    if (bDestIsUnicode)
+                        PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                    else
+                        PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+
+                    pfnSendMessage(hwndIme, WM_IME_ENDCOMPOSITION, 0, 0);
+                }
+                else
+                {
+                    pfnPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
+                    if (bSrcIsAnsi)
+                    {
+                        if (bDestIsAnsi)
+                        {
+                            PostMessageA(hWnd, WM_CHAR, (BYTE)g_dchKorean, 0xFFF10001);
+                            PostMessageA(hWnd, WM_CHAR, HIBYTE(g_dchKorean), 0xFFF10001);
+                            PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                            PostMessageA(hWnd, WM_KEYDOWN, VK_BACK, 917505);
+                        }
+                        else
+                        {
+                            CHAR szTmp[2];
+                            szTmp[0] = (CHAR)LOBYTE(g_dchKorean);
+                            szTmp[1] = (CHAR)HIBYTE(g_dchKorean);
+                            WCHAR wTmp[2];
+                            if (MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTmp, 2, wTmp, 1))
+                            {
+                                PostMessageW(hWnd, WM_CHAR, wTmp[0], 0xFFF10001);
+                            }
+                            PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                            PostMessageW(hWnd, WM_KEYDOWN, VK_BACK, 917505);
+                        }
+                    }
+                    else
+                    {
+                        if (bDestIsAnsi)
+                        {
+                            WCHAR wTmp[2] = { (WCHAR)g_dchKorean, 0 };
+                            CHAR  szTmp[2];
+                            WideCharToMultiByte(CP_ACP, 0, wTmp, 1, szTmp, 2, NULL, NULL);
+                            PostMessageA(hWnd, WM_CHAR, (BYTE)szTmp[0], 0xFFF10001);
+                            PostMessageA(hWnd, WM_CHAR, (BYTE)szTmp[1], 0xFFF10001);
+                            PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                            PostMessageA(hWnd, WM_KEYDOWN, VK_BACK, 917505);
+                        }
+                        else
+                        {
+                            PostMessageW(hWnd, WM_CHAR, (WCHAR)g_dchKorean, 0xFFF10001);
+                            PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                            PostMessageW(hWnd, WM_KEYDOWN, VK_BACK, 917505);
                         }
                     }
                 }
-                if (!(pIC->dwUIFlags & _IME_UI_HIDDEN))
-                    EMIT_ENTRY_K();
-                else
-                    SendMessageW(hwndIme, pCurrent->message, pCurrent->wParam, pCurrent->lParam);
+                break;
+
+            case WM_IMEKEYDOWN:
+                pfnPostMessage(hWnd, WM_KEYDOWN, (WPARAM)(LOWORD(wParam)), lParam);
+                break;
+
+            case WM_IMEKEYUP:
+                pfnPostMessage(hWnd, WM_KEYUP, (WPARAM)(LOWORD(wParam)), lParam);
                 break;
 
             default:
-                EMIT_ENTRY_K();
+                pfnSendMessage(hwndIme, uMsg, wParam, lParam);
                 break;
+            }
         }
-
-        pCurrent++;
+        else
+        {
+            pfnSendMessage(hwndIme, uMsg, wParam, lParam);
+        }
     }
 
-#undef EMIT_ENTRY_K
-    ImmLocalFree(pBuf);
-    return dwResult;
+    return 0;
 }
 
 #endif /* def IMM_WIN3_SUPPORT */
