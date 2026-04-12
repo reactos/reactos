@@ -189,7 +189,7 @@ CtfImmSetLangBand(
     _In_ BOOL fSet);
 
 DWORD
-WINNLSTranslateMessage(DWORD dwCount, LPTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang);
+WINNLSTranslateMessage(DWORD dwCount, PTRANSMSG pEntries, HIMC hIMC, BOOL bAnsi, WORD wLang);
 
 HIMC
 ImmGetSaveContext(
