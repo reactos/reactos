@@ -877,7 +877,10 @@ static VOID Imm32CompStrAToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
     PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
 
     if (*pch == ANSI_NULL)
+    {
+        PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
         return;
+    }
 
     PCSTR pNext;
     for (; *pch; pch = pNext)
