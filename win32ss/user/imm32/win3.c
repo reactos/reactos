@@ -1043,7 +1043,7 @@ Imm32JTransCompositionA(
     BOOL bUndeterminedProcessed = FALSE;
     BOOL bResultProcessed = FALSE;
     HGLOBAL hGlobal = NULL;
-    SIZE_T dataSize = 0;
+    DWORD dataSize = 0;
 
     if (pIC->dwUIFlags & _IME_UI_HIDDEN)
     {
@@ -1056,11 +1056,18 @@ Imm32JTransCompositionA(
                 if (hGlobal)
                 {
                     PUNDETERMINESTRUCT pUndet = GlobalLock(hGlobal);
-                    if (Imm32CompStrAToUndetA(dwGCS, pCS, pUndet, (DWORD)dataSize))
+                    if (pUndet)
                     {
+                        dataSize = Imm32CompStrAToUndetA(dwGCS, pCS, pUndet, dataSize);
                         GlobalUnlock(hGlobal);
-                        if (SendMessageA(hWnd, WM_IME_REPORT, IR_UNDETERMINE, (LPARAM)hGlobal) == 0)
-                            bUndeterminedProcessed = TRUE;
+                        if (dataSize)
+                        {
+                            if (SendMessageA(hWnd, WM_IME_REPORT, IR_UNDETERMINE,
+                                             (LPARAM)hGlobal) == 0)
+                            {
+                                bUndeterminedProcessed = TRUE;
+                            }
+                        }
                     }
                 }
             }
@@ -1074,26 +1081,27 @@ Imm32JTransCompositionA(
                 if (hGlobal)
                 {
                     PUNDETERMINESTRUCT pUndet = GlobalLock(hGlobal);
-                    if (Imm32CompStrAToUndetW(dwGCS, pCS, pUndet, (DWORD)dataSize))
+                    if (pUndet)
                     {
+                        dataSize = Imm32CompStrAToUndetW(dwGCS, pCS, pUndet, dataSize);
                         GlobalUnlock(hGlobal);
-                        if (SendMessageW(hWnd, WM_IME_REPORT, IR_UNDETERMINE, (LPARAM)hGlobal) == 0)
-                            bUndeterminedProcessed = TRUE;
+                        if (dataSize)
+                        {
+                            if (SendMessageW(hWnd, WM_IME_REPORT, IR_UNDETERMINE,
+                                             (LPARAM)hGlobal) == 0)
+                            {
+                                bUndeterminedProcessed = TRUE;
+                            }
+                        }
                     }
                 }
             }
         }
 
-        if (hGlobal && !bUndeterminedProcessed)
-        {
-            GlobalUnlock(hGlobal);
+        if (hGlobal)
             GlobalFree(hGlobal);
-        }
-        else if (hGlobal && bUndeterminedProcessed)
-        {
-            GlobalFree(hGlobal);
+        if (bUndeterminedProcessed)
             return 0;
-        }
     }
 
     SIZE_T exSize;
