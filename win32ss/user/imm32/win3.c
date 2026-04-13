@@ -16,7 +16,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 static DWORD Imm32CompStrWToStringA(const COMPOSITIONSTRING *pCS, PCHAR pch)
 {
-    const WCHAR *pwch = (const WCHAR *)((PBYTE)pCS + pCS->dwResultStrOffset);
+    PCWSTR pwch = (PCWSTR)((const BYTE*)pCS + pCS->dwResultStrOffset);
     BOOL bUsedDef;
     INT cchNeed = WideCharToMultiByte(CP_ACP, 0, pwch, pCS->dwResultStrLen,
                                       pch, 0, NULL, &bUsedDef) + 1;
@@ -184,7 +184,7 @@ Imm32CompStrWToUndetA(
         pDet->uUndetAttrPos = dwCurrentOffset;
         const BYTE *pSrcAttr = pSrcBase + pCS->dwCompAttrOffset;
         PBYTE pDestAttr = pBase + dwCurrentOffset;
-        const WCHAR *pWStr = (const WCHAR *)(pSrcBase + pCS->dwCompStrOffset);
+        PCWSTR pWStr = (PCWSTR)(pSrcBase + pCS->dwCompStrOffset);
         UINT ibIndex = 0;
 
         for (UINT i = 0; i < pCS->dwCompAttrLen; ++i)
@@ -255,7 +255,7 @@ Imm32CompStrWToUndetA(
         const DWORD *pSrcClause = (const DWORD *)(pSrcBase + pCS->dwResultClauseOffset);
         PDWORD pDestClause = (PDWORD)(pBase + dwCurrentOffset);
         DWORD nClauses = pCS->dwResultClauseLen / sizeof(DWORD);
-        const WCHAR *pResultW = (const WCHAR *)(pSrcBase + pCS->dwResultStrOffset);
+        PCWSTR pResultW = (PCWSTR)(pSrcBase + pCS->dwResultStrOffset);
 
         for (DWORD i = 0; i < nClauses; ++i)
             pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pResultW, CP_ACP);
@@ -286,7 +286,7 @@ Imm32CompStrWToUndetA(
         const DWORD *pSrcClause = (const DWORD *)(pSrcBase + pCS->dwResultReadClauseOffset);
         PDWORD pDestClause = (PDWORD)(pBase + dwCurrentOffset);
         DWORD nClauses = pCS->dwResultReadClauseLen / sizeof(DWORD);
-        const WCHAR *pReadW = (const WCHAR *)(pSrcBase + pCS->dwResultReadStrOffset);
+        PCWSTR pReadW = (PCWSTR)(pSrcBase + pCS->dwResultReadStrOffset);
 
         for (DWORD i = 0; i < nClauses; i++)
             pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pReadW, CP_ACP);
@@ -409,7 +409,7 @@ Imm32CompStrWToStringExA(
         const DWORD *pSrcClause = (const DWORD *)(pSrcBase + pCS->dwResultClauseOffset);
         PDWORD pDestClause = (PDWORD)(pBase + dwCurrentOffset);
         DWORD nClauses = pCS->dwResultClauseLen / sizeof(DWORD);
-        const WCHAR *pResultW = (const WCHAR *)(pSrcBase + pCS->dwResultStrOffset);
+        PCWSTR pResultW = (PCWSTR)(pSrcBase + pCS->dwResultStrOffset);
 
         for (DWORD i = 0; i < nClauses; i++)
             pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pResultW, CP_ACP);
@@ -436,7 +436,7 @@ Imm32CompStrWToStringExA(
         const DWORD *pSrcClause = (const DWORD *)(pSrcBase + pCS->dwResultReadClauseOffset);
         PDWORD pDestClause = (PDWORD)(pBase + dwCurrentOffset);
         DWORD nClauses = pCS->dwResultReadClauseLen / sizeof(DWORD);
-        const WCHAR *pReadW = (const WCHAR *)(pSrcBase + pCS->dwResultReadStrOffset);
+        PCWSTR pReadW = (PCWSTR)(pSrcBase + pCS->dwResultReadStrOffset);
 
         for (DWORD i = 0; i < nClauses; i++)
             pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pReadW, CP_ACP);
@@ -843,14 +843,14 @@ static DWORD Imm32CompStrAToStringA(const COMPOSITIONSTRING *pCS, PSTR pszString
         return dwResultStrLen + 1;
     if (dwSize < dwResultStrLen + 1)
         return 0;
-    RtlCopyMemory(pszString, (PBYTE)pCS + pCS->dwResultStrOffset, dwResultStrLen);
+    RtlCopyMemory(pszString, (const BYTE*)pCS + pCS->dwResultStrOffset, dwResultStrLen);
     pszString[dwResultStrLen] = ANSI_NULL;
     return dwResultStrLen + 1;
 }
 
 static DWORD Imm32CompStrAToStringW(const COMPOSITIONSTRING *pCS, PWSTR pszString, DWORD dwSize)
 {
-    const CHAR *pch = (const CHAR *)pCS + pCS->dwResultStrOffset;
+    PCSTR pch = (PCSTR)pCS + pCS->dwResultStrOffset;
     INT cchWide = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pch, pCS->dwResultStrLen,
                                       pszString, 0);
     DWORD dwResultStrLen = (cchWide + 1) * sizeof(WCHAR);
@@ -868,7 +868,7 @@ static DWORD Imm32CompStrAToStringW(const COMPOSITIONSTRING *pCS, PWSTR pszStrin
 
 static VOID Imm32CompStrAToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
 {
-    const CHAR *pch = (const CHAR *)((PBYTE)pCS + pCS->dwResultStrOffset);
+    PCSTR pch = (PCSTR)((const BYTE*)pCS + pCS->dwResultStrOffset);
 
     BOOL bImeSupportDBCS = FALSE;
     if (GetWin32ClientInfo()->dwExpWinVer >= 0x30A)
@@ -879,7 +879,7 @@ static VOID Imm32CompStrAToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
     if (*pch == ANSI_NULL)
         return;
 
-    const CHAR *pNext;
+    PCSTR pNext;
     for (; *pch; pch = pNext)
     {
         BYTE bFirst = (BYTE)(*pch);
@@ -910,7 +910,7 @@ static VOID Imm32CompStrAToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
 
 static VOID Imm32CompStrAToCharW(HWND hWnd, const COMPOSITIONSTRING *pCS)
 {
-    const CHAR *pCurrent = (const CHAR *)((PBYTE)pCS + pCS->dwResultStrOffset);
+    PCSTR pCurrent = (PCSTR)((const BYTE*)pCS + pCS->dwResultStrOffset);
 
     PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
 
@@ -938,7 +938,7 @@ static VOID Imm32CompStrAToCharW(HWND hWnd, const COMPOSITIONSTRING *pCS)
 
 static VOID Imm32CompStrWToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
 {
-    const WCHAR *pCurrent = (const WCHAR *)((const BYTE *)pCS + pCS->dwResultStrOffset);
+    PCWSTR pCurrent = (PCWSTR)((const BYTE *)pCS + pCS->dwResultStrOffset);
 
     BOOL bSupportDBCSReport = FALSE;
     if (GetWin32ClientInfo()->dwExpWinVer >= 0x30A)
@@ -946,14 +946,14 @@ static VOID Imm32CompStrWToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
 
     PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
 
-    const WCHAR *pNext;
+    PCWSTR pNext;
     for (; *pCurrent != UNICODE_NULL; pCurrent = pNext)
     {
         pNext = CharNextW(pCurrent);
         if (!*pNext)
             PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
 
-        char szAnsi[3] = {0};
+        CHAR szAnsi[3] = {0};
         BOOL bUsedDef = FALSE;
         if (!WideCharToMultiByte(CP_ACP, 0, pCurrent, 1, szAnsi, sizeof(szAnsi), NULL, &bUsedDef))
             continue;
@@ -979,11 +979,11 @@ static VOID Imm32CompStrWToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
 
 static VOID Imm32CompStrWToCharW(HWND hWnd, const COMPOSITIONSTRING *pCS)
 {
-    const WCHAR *pCurrent = (const WCHAR *)((const BYTE *)pCS + pCS->dwResultStrOffset);
+    PCWSTR pCurrent = (PCWSTR )((const BYTE *)pCS + pCS->dwResultStrOffset);
 
     PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
 
-    const WCHAR *pNext;
+    PCWSTR pNext;
     for (; *pCurrent; pCurrent = pNext)
     {
         pNext = CharNextW(pCurrent);
