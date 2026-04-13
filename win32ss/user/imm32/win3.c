@@ -14,8 +14,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 #define ALIGN_DWORD(len) (((len) + 3) & ~3)
 
-static WORD g_chKorean = 0; /* One or two Korean character(s) */
-
 static DWORD Imm32CompStrWToStringA(const COMPOSITIONSTRING *pCS, PCHAR pch)
 {
     const WCHAR *pwch = (const WCHAR *)((PBYTE)pCS + pCS->dwResultStrOffset);
@@ -26,7 +24,7 @@ static DWORD Imm32CompStrWToStringA(const COMPOSITIONSTRING *pCS, PCHAR pch)
         return cchNeed;
     INT cch = WideCharToMultiByte(CP_ACP, 0, pwch, pCS->dwResultStrLen,
                                   pch, cchNeed, NULL, &bUsedDef);
-    pch[cch] = 0;
+    pch[cch] = ANSI_NULL;
     return cch + 1;
 }
 
@@ -1537,6 +1535,7 @@ WINNLSTranslateMessageK(
     BOOL bDestIsAnsi = !bDestIsUnicode;
     FN_PostMessage pPostMessage = bDestIsUnicode ? PostMessageW : PostMessageA;
     FN_SendMessage pSendMessage = bDestIsUnicode ? SendMessageW : SendMessageA;
+    static WORD s_chKorean = 0; /* One or two Korean character(s) */
 
     if ((LONG)dwCount <= 0)
         return 0;
@@ -1641,7 +1640,7 @@ WINNLSTranslateMessageK(
                     pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
 
                     BYTE bLow = HIBYTE(wParam), bHigh = LOBYTE(wParam);
-                    g_chKorean = MAKEWORD(bLow, bHigh);
+                    s_chKorean = MAKEWORD(bLow, bHigh);
 
                     if (bSrcIsAnsi)
                     {
@@ -1688,16 +1687,16 @@ WINNLSTranslateMessageK(
                     {
                         if (bDestIsAnsi)
                         {
-                            PostMessageA(hWnd, WM_CHAR, LOBYTE(g_chKorean), 0xFFF10001);
-                            PostMessageA(hWnd, WM_CHAR, HIBYTE(g_chKorean), 0xFFF10001);
+                            PostMessageA(hWnd, WM_CHAR, LOBYTE(s_chKorean), 0xFFF10001);
+                            PostMessageA(hWnd, WM_CHAR, HIBYTE(s_chKorean), 0xFFF10001);
                             PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
                             PostMessageA(hWnd, WM_KEYDOWN, VK_BACK, 917505);
                         }
                         else
                         {
                             CHAR szTmp[2];
-                            szTmp[0] = LOBYTE(g_chKorean);
-                            szTmp[1] = HIBYTE(g_chKorean);
+                            szTmp[0] = LOBYTE(s_chKorean);
+                            szTmp[1] = HIBYTE(s_chKorean);
                             WCHAR wTmp[2];
                             if (MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTmp, 2, wTmp, 1))
                             {
@@ -1711,7 +1710,7 @@ WINNLSTranslateMessageK(
                     {
                         if (bDestIsAnsi)
                         {
-                            WCHAR wTmp[2] = { (WCHAR)g_chKorean, 0 };
+                            WCHAR wTmp[2] = { (WCHAR)s_chKorean, 0 };
                             CHAR  szTmp[2];
                             WideCharToMultiByte(CP_ACP, 0, wTmp, 1, szTmp, 2, NULL, NULL);
                             PostMessageA(hWnd, WM_CHAR, (BYTE)szTmp[0], 0xFFF10001);
@@ -1721,7 +1720,7 @@ WINNLSTranslateMessageK(
                         }
                         else
                         {
-                            PostMessageW(hWnd, WM_CHAR, (WCHAR)g_chKorean, 0xFFF10001);
+                            PostMessageW(hWnd, WM_CHAR, (WCHAR)s_chKorean, 0xFFF10001);
                             PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
                             PostMessageW(hWnd, WM_KEYDOWN, VK_BACK, 917505);
                         }
