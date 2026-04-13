@@ -1593,9 +1593,17 @@ WINNLSTranslateMessageK(
                                 }
                                 else
                                 {
+                                    INT cbMB = 1;
+
                                     szMBStr[0] = bChar;
-                                    szMBStr[1] = pResStr[++dwProcessedLen];
-                                    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szMBStr, 2,
+                                    if (IsDBCSLeadByte(bChar) &&
+                                        (dwProcessedLen + 1) < pCS->dwResultStrLen)
+                                    {
+                                        szMBStr[1] = pResStr[dwProcessedLen + 1];
+                                        cbMB = 2;
+                                        ++dwProcessedLen;
+                                    }
+                                    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szMBStr, cbMB,
                                                         wCharStr, 1);
                                     PostMessageW(hWnd, WM_CHAR, wCharStr[0], 1);
                                 }
