@@ -1574,8 +1574,12 @@ WINNLSTranslateMessageK(
                                 {
                                     if (IsDBCSLeadByte(bChar))
                                     {
-                                        if (0xB0 <= bChar && bChar <= 0xC8)
-                                            lKeyData = 0xFFF20001;
+#define KOR_LEAD_BYTE_FIRST ((BYTE)0xB0)
+#define KOR_LEAD_BYTE_LAST  ((BYTE)0xC8)
+#define KOR_IS_LEAD_BYTE(ch) \
+    (KOR_LEAD_BYTE_FIRST <= (BYTE)(ch) && (BYTE)(ch) <= KOR_LEAD_BYTE_LAST)
+                                        if (KOR_IS_LEAD_BYTE(bChar))
+                                            lKeyData = 0xFFF20001; /* Scan code differs */
                                         else
                                             lKeyData = 0xFFF10001;
 
@@ -1610,8 +1614,8 @@ WINNLSTranslateMessageK(
                                     BYTE bLead = (BYTE)szMBStr[0], bChar;
                                     if (IsDBCSLeadByte(bLead))
                                     {
-                                        if (0xB0 <= bLead && bLead <= 0xC8)
-                                            lKeyData = 0xFFF20001;
+                                        if (KOR_IS_LEAD_BYTE(bLead))
+                                            lKeyData = 0xFFF20001; /* Scan code differs */
                                         else
                                             lKeyData = 0xFFF10001;
 
