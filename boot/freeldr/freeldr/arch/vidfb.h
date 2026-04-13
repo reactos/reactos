@@ -141,6 +141,19 @@ FbConsPutChar(
     _In_ ULONG Column,
     _In_ ULONG Row);
 
+/*
+ * Draws a progress bar using text-grid coordinates while rendering directly
+ * to the framebuffer.
+ */
+VOID
+FbConsDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Right,
+    _In_ ULONG Row,
+    _In_ UCHAR FillAttr,
+    _In_ UCHAR EmptyAttr,
+    _In_ ULONG SubPercentTimes100);
+
 VOID
 FbConsGetDisplaySize(
     _Out_ PULONG Width,

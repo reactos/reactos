@@ -9,10 +9,28 @@ include_directories(BEFORE
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/edk2
     ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr
     ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr/include
-    ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr/include/arch/uefi)
+    ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr/include/arch/uefi
+    ${CMAKE_CURRENT_BINARY_DIR})
+
+set(UEFILDR_FONT_C ${CMAKE_CURRENT_BINARY_DIR}/uefi_fb_font.c)
+set(UEFILDR_FONT_H ${CMAKE_CURRENT_BINARY_DIR}/uefi_fb_font.h)
+
+add_custom_command(
+    OUTPUT ${UEFILDR_FONT_C} ${UEFILDR_FONT_H}
+    COMMAND native-bin2c
+            ${REACTOS_SOURCE_DIR}/media/fonts/lucon.ttf
+            ${UEFILDR_FONT_C}
+            ${UEFILDR_FONT_H}
+            BIN
+            uefi_fb_font_data
+    DEPENDS
+            native-bin2c
+            ${REACTOS_SOURCE_DIR}/media/fonts/lucon.ttf)
 
 list(APPEND UEFILDR_ARC_SOURCE
     ${FREELDR_ARC_SOURCE}
+    ${UEFILDR_FONT_C}
+    arch/uefi/ftglue.c
     arch/uefi/stubs.c
     arch/uefi/ueficon.c
     arch/uefi/uefidisk.c
@@ -29,10 +47,15 @@ if(ARCH STREQUAL "i386")
         arch/i386/i386idt.c)
     list(APPEND UEFILDR_COMMON_ASM_SOURCE
         arch/uefi/i386/uefiasm.S
-        arch/i386/i386trap.S)
+        arch/i386/i386trap.S
+        ${REACTOS_SOURCE_DIR}/sdk/lib/vcruntime/i386/__longjmp_nounwind.s
+        ${REACTOS_SOURCE_DIR}/sdk/lib/vcruntime/i386/_setjmp.s
+        ${REACTOS_SOURCE_DIR}/sdk/lib/vcruntime/i386/_setjmp3.s)
 elseif(ARCH STREQUAL "amd64")
     list(APPEND UEFILDR_COMMON_ASM_SOURCE
-        arch/uefi/amd64/uefiasm.S)
+        arch/uefi/amd64/uefiasm.S
+        ${REACTOS_SOURCE_DIR}/sdk/lib/vcruntime/amd64/__longjmp_noframe.s
+        ${REACTOS_SOURCE_DIR}/sdk/lib/vcruntime/amd64/_setjmp.s)
 elseif(ARCH STREQUAL "arm")
     list(APPEND UEFILDR_ARC_SOURCE
         arch/arm/macharm.c
@@ -49,6 +72,7 @@ list(APPEND UEFILDR_BOOTMGR_SOURCE
     custom.c
     options.c
     oslist.c
+    ui/guifb.c
 )
 
 add_asm_files(uefifreeldr_common_asm ${FREELDR_COMMON_ASM_SOURCE} ${UEFILDR_COMMON_ASM_SOURCE})
@@ -85,6 +109,8 @@ add_library(uefifreeldr_common
     ${FREELDR_BOOTLIB_SOURCE}
     ${UEFILDR_BOOTMGR_SOURCE}
     ${FREELDR_NTLDR_SOURCE})
+
+target_link_libraries(uefifreeldr_common freetype)
 
 target_compile_definitions(uefifreeldr_common PRIVATE _FRLDRLIB_ UEFIBOOT)
 
@@ -136,6 +162,9 @@ if(MSVC)
 if(NOT ARCH STREQUAL "arm")
     target_link_options(uefildr PRIVATE /DYNAMICBASE:NO)
 endif()
+    if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
+        target_link_options(uefildr PRIVATE /FILEALIGN:512 /ALIGN:512)
+    endif()
     target_link_options(uefildr PRIVATE /NXCOMPAT:NO /ignore:4078 /ignore:4254 /DRIVER)
     # We don't need hotpatching
     remove_target_compile_option(uefildr "/hotpatch")

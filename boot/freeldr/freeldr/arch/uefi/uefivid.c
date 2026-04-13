@@ -659,8 +659,9 @@ UefiVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
 VIDEODISPLAYMODE
 UefiVideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init)
 {
-    /* We only have one mode, semi-text */
-    return VideoTextMode;
+    UNREFERENCED_PARAMETER(DisplayMode);
+    UNREFERENCED_PARAMETER(Init);
+    return VideoGraphicsMode;
 }
 
 ULONG

@@ -19,7 +19,7 @@ endif()
 ## efisys.bin
 if(DEFINED EFI_PLATFORM_ID)
     add_custom_target(efisys
-        COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 EFIBOOT
+        COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 5760 EFIBOOT
             -boot ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat.bin
             -mkdir EFI -mkdir EFI/BOOT -add $<TARGET_FILE:uefildr> EFI/BOOT/boot${EFI_PLATFORM_ID}.efi
         DEPENDS native-fatten fat uefildr

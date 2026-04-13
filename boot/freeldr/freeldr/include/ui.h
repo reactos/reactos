@@ -356,8 +356,8 @@ extern UIVTBL UiVtbl;
 
 
 /* THEME HEADERS *************************************************************/
-
 // #include <ui/gui.h>
+#include <ui/guifb.h>
 #include <ui/minitui.h>
 #include <ui/noui.h>
 #include <ui/tui.h>

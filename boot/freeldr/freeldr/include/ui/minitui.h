@@ -10,7 +10,10 @@
 
 /* Textual User Interface Functions ******************************************/
 
+BOOLEAN MiniTuiInitialize(VOID);
+
 VOID MiniTuiDrawBackdrop(ULONG DrawHeight);
+VOID MiniTuiFadeInBackdrop(VOID);
 VOID MiniTuiDrawStatusText(PCSTR StatusText);
 
 VOID
