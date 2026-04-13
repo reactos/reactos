@@ -372,10 +372,10 @@ void fs_write(off_t pos, int size, void *data)
 
             /* Patch data in memory */
             memcpy((char *)scratch + seek_delta, data, size);
-        }
 
-        /* Seek back to the beginning of our read/write */ 
-        if (lseek(fd, seekpos_aligned, 0) != seekpos_aligned) pdie("Seek to %lld",seekpos_aligned);
+            /* Seek back to the beginning of our read */ 
+            if (lseek(fd, seekpos_aligned, 0) != seekpos_aligned) pdie("Seek to %lld",seekpos_aligned);
+        }
 
         /* Write it back */
         if ((did = write(fd, scratch, readsize_aligned)) == (int)readsize_aligned)
