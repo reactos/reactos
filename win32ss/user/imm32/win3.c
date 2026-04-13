@@ -456,13 +456,13 @@ Imm32CompStrAToUndetA(
     PUNDETERMINESTRUCT pDet,
     DWORD dwSize)
 {
-    DWORD dwRequiredSize =
+    const DWORD dwRequiredSize =
         sizeof(UNDETERMINESTRUCT) +
-        ALIGN_DWORD(pCS->dwCompStrLen) +
+        ALIGN_DWORD(pCS->dwCompStrLen + sizeof(ANSI_NULL)) +
         ALIGN_DWORD(pCS->dwCompAttrLen) +
-        ALIGN_DWORD(pCS->dwResultStrLen) +
+        ALIGN_DWORD(pCS->dwResultStrLen + sizeof(ANSI_NULL)) +
         ALIGN_DWORD(pCS->dwResultClauseLen) +
-        ALIGN_DWORD(pCS->dwResultReadStrLen) +
+        ALIGN_DWORD(pCS->dwResultReadStrLen + sizeof(ANSI_NULL)) +
         ALIGN_DWORD(pCS->dwResultReadClauseLen);
 
     if (!pDet)
@@ -549,7 +549,7 @@ Imm32CompStrAToUndetW(
     const DWORD dwRequiredSize =
         sizeof(UNDETERMINESTRUCT) +
         ALIGN_DWORD(pCS->dwResultClauseLen) +
-        ALIGN_DWORD(pCS->dwCompAttrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
+        ALIGN_DWORD(pCS->dwCompAttrLen) +
         ALIGN_DWORD(pCS->dwResultStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
         ALIGN_DWORD(pCS->dwCompStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
         ALIGN_DWORD(pCS->dwResultReadStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
@@ -791,7 +791,7 @@ Imm32CompStrAToStringExW(
         if (nWideResultLen <= 0)
             return 0;
         ((PWSTR)(pBase + dwCurrentOffset))[nWideResultLen] = UNICODE_NULL;
-        dwCurrentOffset += ALIGN_DWORD(nWideResultLen * sizeof(WCHAR) + sizeof(WCHAR));
+        dwCurrentOffset += ALIGN_DWORD((nWideResultLen + 1) * sizeof(WCHAR));
     }
 
     if ((dwGCS & GCS_RESULTCLAUSE) && pCS->dwResultClauseLen > 0 && nWideResultLen > 0)
@@ -819,7 +819,7 @@ Imm32CompStrAToStringExW(
             return 0;
 
         ((PWSTR)(pBase + dwCurrentOffset))[nWideReadLen] = UNICODE_NULL;
-        dwCurrentOffset += ALIGN_DWORD(nWideReadLen * sizeof(WCHAR) + sizeof(WCHAR));
+        dwCurrentOffset += ALIGN_DWORD((nWideReadLen + 1) * sizeof(WCHAR));
     }
 
     if ((dwGCS & GCS_RESULTREADCLAUSE) && pCS->dwResultReadClauseLen > 0 && nWideReadLen > 0)
