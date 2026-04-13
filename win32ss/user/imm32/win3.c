@@ -20,7 +20,8 @@ static DWORD
 Imm32CompStrWToUndetW(
     DWORD dwGCS,
     const COMPOSITIONSTRING *pCS,
-    PUNDETERMINESTRUCT pDet)
+    PUNDETERMINESTRUCT pDet,
+    DWORD dwSize)
 {
     DWORD dwRequiredSize =
         sizeof(UNDETERMINESTRUCT) +
@@ -34,7 +35,7 @@ Imm32CompStrWToUndetW(
     if (!pDet)
         return dwRequiredSize;
 
-    if (dwRequiredSize == 0)
+    if (dwSize < dwRequiredSize)
         return 0;
 
     RtlZeroMemory(pDet, sizeof(UNDETERMINESTRUCT));
@@ -115,7 +116,8 @@ static DWORD
 Imm32CompStrWToUndetA(
     DWORD dwGCS,
     const COMPOSITIONSTRING *pCS,
-    PUNDETERMINESTRUCT pDet)
+    PUNDETERMINESTRUCT pDet,
+    DWORD dwSize)
 {
     DWORD dwRequiredSize =
         sizeof(UNDETERMINESTRUCT) +
@@ -129,7 +131,7 @@ Imm32CompStrWToUndetA(
     if (!pDet)
         return dwRequiredSize;
 
-    if (dwRequiredSize == 0)
+    if (dwSize < dwRequiredSize)
         return 0;
 
     RtlZeroMemory(pDet, sizeof(UNDETERMINESTRUCT));
@@ -142,8 +144,7 @@ Imm32CompStrWToUndetA(
 
     if ((dwGCS & GCS_COMPSTR) && (pCS->dwCompStrLen > 0))
     {
-        INT nAnsiLen = WideCharToMultiByte(
-            CP_ACP, 0,
+        INT nAnsiLen = WideCharToMultiByte(CP_ACP, 0,
             (PCWSTR)(pSrcBase + pCS->dwCompStrOffset), pCS->dwCompStrLen,
             (PSTR)(pBase + dwCurrentOffset), dwRequiredSize - dwCurrentOffset,
             NULL, &bUsedDef);
@@ -793,8 +794,8 @@ Imm32CompStrAToStringExW(
         pCS->dwResultClauseLen ? ALIGN_DWORD(pCS->dwResultClauseLen + 4) : 0;
     DWORD dwResultReadStrSize =
         pCS->dwResultReadStrLen ? ALIGN_DWORD(2 * pCS->dwResultReadStrLen + 5) : 0;
-    DWORD dwReadClauseSize
-        = pCS->dwResultReadClauseLen ? ALIGN_DWORD(pCS->dwResultReadClauseLen + 4) : 0;
+    DWORD dwReadClauseSize =
+        pCS->dwResultReadClauseLen ? ALIGN_DWORD(pCS->dwResultReadClauseLen + 4) : 0;
     DWORD dwRequiredSize = sizeof(STRINGEXSTRUCT) + dwResultStrSize + dwResultClauseSize +
                            dwResultReadStrSize + dwReadClauseSize;
 
@@ -875,7 +876,7 @@ Imm32CompStrAToStringA(const COMPOSITIONSTRING *pCS, PSTR pszString, DWORD dwSiz
     DWORD dwResultStrLen = pCS->dwResultStrLen;
     if (!pszString)
         return dwResultStrLen + 1;
-    if (dwResultStrLen > dwSize)
+    if (dwSize < dwResultStrLen)
         return 0;
     RtlCopyMemory(pszString, (PBYTE)pCS + pCS->dwResultStrOffset, dwResultStrLen);
     pszString[dwResultStrLen] = ANSI_NULL;
@@ -891,7 +892,7 @@ Imm32CompStrAToStringW(const COMPOSITIONSTRING *pCS, PWSTR pszString, DWORD dwSi
     DWORD dwResultStrLen = (cchWide + 1) * sizeof(WCHAR);
     if (!pszString)
         return dwResultStrLen;
-    if (dwResultStrLen > dwSize)
+    if (dwSize < dwResultStrLen)
         return 0;
     INT cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pch, pCS->dwResultStrLen,
                                   pszString, cchWide);
@@ -1217,14 +1218,14 @@ Imm32JTransCompositionW(
 
         if (!bIsUnicodeWnd)
         {
-            dataSize = Imm32CompStrWToUndetA(dwGCS, pCS, NULL);
+            dataSize = Imm32CompStrWToUndetA(dwGCS, pCS, NULL, 0);
             if (dataSize)
             {
                 hGlobal = GlobalAlloc(GHND, dataSize);
                 if (hGlobal)
                 {
                     PUNDETERMINESTRUCT pUndet = (PUNDETERMINESTRUCT)GlobalLock(hGlobal);
-                    if (Imm32CompStrWToUndetA(dwGCS, pCS, pUndet))
+                    if (Imm32CompStrWToUndetA(dwGCS, pCS, pUndet, (DWORD)dataSize))
                     {
                         GlobalUnlock(hGlobal);
                         if (SendMessageA(hWnd, WM_IME_REPORT, IR_UNDETERMINE, (LPARAM)hGlobal) == 0)
@@ -1235,14 +1236,14 @@ Imm32JTransCompositionW(
         }
         else
         {
-            dataSize = Imm32CompStrWToUndetW(dwGCS, pCS, NULL);
+            dataSize = Imm32CompStrWToUndetW(dwGCS, pCS, NULL, 0);
             if (dataSize)
             {
                 hGlobal = GlobalAlloc(GHND, dataSize);
                 if (hGlobal)
                 {
                     PUNDETERMINESTRUCT pUndet = (PUNDETERMINESTRUCT)GlobalLock(hGlobal);
-                    if (Imm32CompStrWToUndetW(dwGCS, pCS, pUndet))
+                    if (Imm32CompStrWToUndetW(dwGCS, pCS, pUndet, (DWORD)dataSize))
                     {
                         GlobalUnlock(hGlobal);
                         if (SendMessageW(hWnd, WM_IME_REPORT, IR_UNDETERMINE, (LPARAM)hGlobal) == 0)
