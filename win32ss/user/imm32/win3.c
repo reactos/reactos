@@ -877,7 +877,7 @@ Imm32CompStrAToStringA(const COMPOSITIONSTRING *pCS, PSTR pszString, DWORD dwSiz
     DWORD dwResultStrLen = pCS->dwResultStrLen;
     if (!pszString)
         return dwResultStrLen + 1;
-    if (dwSize < dwResultStrLen)
+    if (dwSize < dwResultStrLen + 1)
         return 0;
     RtlCopyMemory(pszString, (PBYTE)pCS + pCS->dwResultStrOffset, dwResultStrLen);
     pszString[dwResultStrLen] = ANSI_NULL;
