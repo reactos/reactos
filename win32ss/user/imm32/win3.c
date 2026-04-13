@@ -1116,7 +1116,7 @@ Imm32JTransCompositionA(
         }
 
         strSize = bIsUnicodeWnd ? Imm32CompStrAToStringW(pCS, NULL, 0) : (pCS->dwResultStrLen + 1);
-        if (strSize && strSize != (SIZE_T)-1)
+        if (strSize && strSize != (DWORD)-1)
         {
             hStr = GlobalAlloc(GHND, strSize);
             if (hStr)
@@ -1303,7 +1303,7 @@ Imm32JTransCompositionW(
         strSize = bIsUnicodeWnd
             ? Imm32CompStrWToStringW(pCS, NULL)
             : Imm32CompStrWToStringA(pCS, NULL);
-        if (strSize && strSize != (SIZE_T)-1)
+        if (strSize && strSize != (DWORD)-1)
         {
             hStr = GlobalAlloc(GHND, strSize);
             if (hStr)
@@ -1374,7 +1374,7 @@ WINNLSTranslateMessageJ(
     BOOL bAnsi)
 {
     // Clone the message list with growing
-    SIZE_T dwBufSize = (dwCount + 1) * sizeof(TRANSMSG);
+    DWORD dwBufSize = (DWORD)((dwCount + 1) * sizeof(TRANSMSG));
     PTRANSMSG pBuf = ImmLocalAlloc(HEAP_ZERO_MEMORY, dwBufSize);
     if (!pBuf)
         return 0;
