@@ -20,7 +20,7 @@ static DWORD
 Imm32CompStrWToUndetW(
     DWORD dwGCS,
     const COMPOSITIONSTRING *pCS,
-    PUNDETERMINESTRUCT pDeter)
+    PUNDETERMINESTRUCT pDet)
 {
     DWORD dwRequiredSize =
         sizeof(UNDETERMINESTRUCT) +
@@ -31,47 +31,47 @@ Imm32CompStrWToUndetW(
         ALIGN_DWORD((pCS->dwResultReadStrLen + 1) * sizeof(WCHAR)) +
         ALIGN_DWORD(pCS->dwResultReadClauseLen);
 
-    if (!pDeter)
+    if (!pDet)
         return dwRequiredSize;
 
     if (dwRequiredSize == 0)
         return 0;
 
-    RtlZeroMemory(pDeter, sizeof(UNDETERMINESTRUCT));
-    pDeter->dwSize = dwRequiredSize;
+    RtlZeroMemory(pDet, sizeof(UNDETERMINESTRUCT));
+    pDet->dwSize = dwRequiredSize;
 
     DWORD dwCurrentOffset = sizeof(UNDETERMINESTRUCT);
-    PBYTE pBase = (PBYTE)pDeter;
+    PBYTE pBase = (PBYTE)pDet;
     const BYTE *pSrcBase = (const BYTE *)pCS;
 
     if ((dwGCS & GCS_COMPSTR) && (pCS->dwCompStrLen > 0))
     {
-        pDeter->uUndetTextPos = dwCurrentOffset;
-        pDeter->uUndetTextLen = pCS->dwCompStrLen;
+        pDet->uUndetTextPos = dwCurrentOffset;
+        pDet->uUndetTextLen = pCS->dwCompStrLen;
         DWORD cb = pCS->dwCompStrLen * sizeof(WCHAR);
         RtlCopyMemory(pBase + dwCurrentOffset, pSrcBase + pCS->dwCompStrOffset, cb);
         ((PWCHAR)(pBase + dwCurrentOffset))[pCS->dwCompStrLen] = UNICODE_NULL;
         dwCurrentOffset += ALIGN_DWORD((pCS->dwCompStrLen + 1) * sizeof(WCHAR));
     }
 
-    if ((dwGCS & GCS_COMPATTR) && (pCS->dwCompAttrLen > 0) && (pDeter->uUndetTextLen > 0))
+    if ((dwGCS & GCS_COMPATTR) && (pCS->dwCompAttrLen > 0) && (pDet->uUndetTextLen > 0))
     {
-        pDeter->uUndetAttrPos = dwCurrentOffset;
+        pDet->uUndetAttrPos = dwCurrentOffset;
         RtlCopyMemory(pBase + dwCurrentOffset, pSrcBase + pCS->dwCompAttrOffset,
                       pCS->dwCompAttrLen);
         dwCurrentOffset += ALIGN_DWORD(pCS->dwCompAttrLen);
     }
 
     if (dwGCS & GCS_CURSORPOS)
-        pDeter->uCursorPos = pCS->dwCursorPos;
+        pDet->uCursorPos = pCS->dwCursorPos;
 
     if (dwGCS & GCS_DELTASTART)
-        pDeter->uDeltaStart = pCS->dwDeltaStart;
+        pDet->uDeltaStart = pCS->dwDeltaStart;
 
     if ((dwGCS & GCS_RESULTSTR) && (pCS->dwResultStrLen > 0))
     {
-        pDeter->uDetermineTextPos = dwCurrentOffset;
-        pDeter->uDetermineTextLen = pCS->dwResultStrLen;
+        pDet->uDetermineTextPos = dwCurrentOffset;
+        pDet->uDetermineTextLen = pCS->dwResultStrLen;
         DWORD cb = pCS->dwResultStrLen * sizeof(WCHAR);
         RtlCopyMemory(pBase + dwCurrentOffset, pSrcBase + pCS->dwResultStrOffset, cb);
         ((PWCHAR)(pBase + dwCurrentOffset))[pCS->dwResultStrLen] = UNICODE_NULL;
@@ -79,9 +79,9 @@ Imm32CompStrWToUndetW(
     }
 
     if ((dwGCS & GCS_RESULTCLAUSE) && (pCS->dwResultClauseLen > 0) &&
-        (pDeter->uDetermineTextLen > 0))
+        (pDet->uDetermineTextLen > 0))
     {
-        pDeter->uDetermineDelimPos = dwCurrentOffset;
+        pDet->uDetermineDelimPos = dwCurrentOffset;
         RtlCopyMemory(pBase + dwCurrentOffset,
                       pSrcBase + pCS->dwResultClauseOffset,
                       pCS->dwResultClauseLen);
@@ -90,8 +90,8 @@ Imm32CompStrWToUndetW(
 
     if ((dwGCS & GCS_RESULTREADSTR) && (pCS->dwResultReadStrLen > 0))
     {
-        pDeter->uYomiTextPos = dwCurrentOffset;
-        pDeter->uYomiTextLen = pCS->dwResultReadStrLen;
+        pDet->uYomiTextPos = dwCurrentOffset;
+        pDet->uYomiTextLen = pCS->dwResultReadStrLen;
         DWORD cb = pCS->dwResultReadStrLen * sizeof(WCHAR);
         RtlCopyMemory(pBase + dwCurrentOffset, pSrcBase + pCS->dwResultReadStrOffset, cb);
         ((PWCHAR)(pBase + dwCurrentOffset))[pCS->dwResultReadStrLen] = UNICODE_NULL;
@@ -99,9 +99,9 @@ Imm32CompStrWToUndetW(
     }
 
     if ((dwGCS & GCS_RESULTREADCLAUSE) && (pCS->dwResultReadClauseLen > 0) &&
-        (pDeter->uYomiTextLen > 0))
+        (pDet->uYomiTextLen > 0))
     {
-        pDeter->uYomiDelimPos = dwCurrentOffset;
+        pDet->uYomiDelimPos = dwCurrentOffset;
         RtlCopyMemory(pBase + dwCurrentOffset,
                       pSrcBase + pCS->dwResultReadClauseOffset,
                       pCS->dwResultReadClauseLen);
@@ -115,7 +115,7 @@ static DWORD
 Imm32CompStrWToUndetA(
     DWORD dwGCS,
     const COMPOSITIONSTRING *pCS,
-    PUNDETERMINESTRUCT pDeter)
+    PUNDETERMINESTRUCT pDet)
 {
     DWORD dwRequiredSize =
         sizeof(UNDETERMINESTRUCT) +
@@ -126,17 +126,17 @@ Imm32CompStrWToUndetA(
         ALIGN_DWORD(2 * pCS->dwResultReadStrLen + 3) +
         ALIGN_DWORD(pCS->dwResultReadClauseLen) + 60;
 
-    if (!pDeter)
+    if (!pDet)
         return dwRequiredSize;
 
     if (dwRequiredSize == 0)
         return 0;
 
-    RtlZeroMemory(pDeter, sizeof(UNDETERMINESTRUCT));
-    pDeter->dwSize = dwRequiredSize;
+    RtlZeroMemory(pDet, sizeof(UNDETERMINESTRUCT));
+    pDet->dwSize = dwRequiredSize;
 
     DWORD dwCurrentOffset = sizeof(UNDETERMINESTRUCT);
-    PBYTE pBase = (PBYTE)pDeter;
+    PBYTE pBase = (PBYTE)pDet;
     const BYTE *pSrcBase = (const BYTE *)pCS;
     BOOL bUsedDef;
 
@@ -149,15 +149,15 @@ Imm32CompStrWToUndetA(
             NULL, &bUsedDef);
         if (nAnsiLen <= 0)
             return 0;
-        pDeter->uUndetTextPos = dwCurrentOffset;
-        pDeter->uUndetTextLen = nAnsiLen;
+        pDet->uUndetTextPos = dwCurrentOffset;
+        pDet->uUndetTextLen = nAnsiLen;
         (pBase + dwCurrentOffset)[nAnsiLen] = ANSI_NULL;
         dwCurrentOffset += ALIGN_DWORD(nAnsiLen + 1);
     }
 
-    if ((dwGCS & GCS_COMPATTR) && (pCS->dwCompAttrLen > 0) && (pDeter->uUndetTextLen > 0))
+    if ((dwGCS & GCS_COMPATTR) && (pCS->dwCompAttrLen > 0) && (pDet->uUndetTextLen > 0))
     {
-        pDeter->uUndetAttrPos = dwCurrentOffset;
+        pDet->uUndetAttrPos = dwCurrentOffset;
         const BYTE *pSrcAttr = pSrcBase + pCS->dwCompAttrOffset;
         PBYTE pDestAttr = pBase + dwCurrentOffset;
         const WCHAR *pWStr = (const WCHAR *)(pSrcBase + pCS->dwCompStrOffset);
@@ -185,11 +185,11 @@ Imm32CompStrWToUndetA(
     {
         if (pCS->dwCursorPos == (DWORD)-1)
         {
-            pDeter->uCursorPos = (UINT)-1;
+            pDet->uCursorPos = (UINT)-1;
         }
         else
         {
-            pDeter->uCursorPos = IchAnsiFromWide(pCS->dwCursorPos,
+            pDet->uCursorPos = IchAnsiFromWide(pCS->dwCursorPos,
                 (PCWSTR)(pSrcBase + pCS->dwCompStrOffset), CP_ACP);
         }
     }
@@ -198,11 +198,11 @@ Imm32CompStrWToUndetA(
     {
         if (pCS->dwDeltaStart == (DWORD)-1)
         {
-            pDeter->uDeltaStart = (UINT)-1;
+            pDet->uDeltaStart = (UINT)-1;
         }
         else
         {
-            pDeter->uDeltaStart = IchAnsiFromWide(pCS->dwDeltaStart,
+            pDet->uDeltaStart = IchAnsiFromWide(pCS->dwDeltaStart,
                 (PCWSTR)(pSrcBase + pCS->dwCompStrOffset), CP_ACP);
         }
     }
@@ -216,17 +216,17 @@ Imm32CompStrWToUndetA(
             NULL, &bUsedDef);
         if (nAnsiLen > 0)
         {
-            pDeter->uDetermineTextPos = dwCurrentOffset;
-            pDeter->uDetermineTextLen = nAnsiLen;
+            pDet->uDetermineTextPos = dwCurrentOffset;
+            pDet->uDetermineTextLen = nAnsiLen;
             (pBase + dwCurrentOffset)[nAnsiLen] = ANSI_NULL;
             dwCurrentOffset += ALIGN_DWORD(nAnsiLen + 1);
         }
     }
 
     if ((dwGCS & GCS_RESULTCLAUSE) && (pCS->dwResultClauseLen > 0) &&
-        (pDeter->uDetermineTextLen > 0))
+        (pDet->uDetermineTextLen > 0))
     {
-        pDeter->uDetermineDelimPos = dwCurrentOffset;
+        pDet->uDetermineDelimPos = dwCurrentOffset;
         const DWORD *pSrcClause = (const DWORD *)(pSrcBase + pCS->dwResultClauseOffset);
         PDWORD pDestClause = (PDWORD)(pBase + dwCurrentOffset);
         DWORD nClauses = pCS->dwResultClauseLen / sizeof(DWORD);
@@ -247,17 +247,17 @@ Imm32CompStrWToUndetA(
             NULL, &bUsedDef);
         if (nAnsiLen > 0)
         {
-            pDeter->uYomiTextPos = dwCurrentOffset;
-            pDeter->uYomiTextLen = nAnsiLen;
+            pDet->uYomiTextPos = dwCurrentOffset;
+            pDet->uYomiTextLen = nAnsiLen;
             (pBase + dwCurrentOffset)[nAnsiLen] = ANSI_NULL;
             dwCurrentOffset += ALIGN_DWORD(nAnsiLen + 1);
         }
     }
 
     if ((dwGCS & GCS_RESULTREADCLAUSE) && (pCS->dwResultReadClauseLen > 0) &&
-        (pDeter->uYomiTextLen > 0))
+        (pDet->uYomiTextLen > 0))
     {
-        pDeter->uYomiDelimPos = dwCurrentOffset;
+        pDet->uYomiDelimPos = dwCurrentOffset;
         const DWORD *pSrcClause = (const DWORD *)(pSrcBase + pCS->dwResultReadClauseOffset);
         PDWORD pDestClause = (PDWORD)(pBase + dwCurrentOffset);
         DWORD nClauses = pCS->dwResultReadClauseLen / sizeof(DWORD);
@@ -481,7 +481,7 @@ static DWORD
 Imm32CompStrAToUndetA(
     DWORD dwGCS,
     const COMPOSITIONSTRING *pCS,
-    PUNDETERMINESTRUCT pDeter,
+    PUNDETERMINESTRUCT pDet,
     DWORD dwSize)
 {
     DWORD dwRequiredSize =
@@ -493,22 +493,22 @@ Imm32CompStrAToUndetA(
         ALIGN_DWORD(pCS->dwResultReadStrLen) +
         ALIGN_DWORD(pCS->dwResultReadClauseLen);
 
-    if (!pDeter)
+    if (!pDet)
         return dwRequiredSize;
 
     if (dwSize < dwRequiredSize)
         return 0;
 
-    RtlZeroMemory(pDeter, sizeof(UNDETERMINESTRUCT));
-    pDeter->dwSize = dwSize;
+    RtlZeroMemory(pDet, sizeof(UNDETERMINESTRUCT));
+    pDet->dwSize = dwSize;
 
     DWORD dwCurrentOffset = sizeof(UNDETERMINESTRUCT);
-    PBYTE pBase = (PBYTE)pDeter, pSrcBase = (PBYTE)pCS;
+    PBYTE pBase = (PBYTE)pDet, pSrcBase = (PBYTE)pCS;
 
     if ((dwGCS & GCS_COMPSTR) && (pCS->dwCompStrLen > 0))
     {
-        pDeter->uUndetTextPos = dwCurrentOffset;
-        pDeter->uUndetTextLen = pCS->dwCompStrLen;
+        pDet->uUndetTextPos = dwCurrentOffset;
+        pDet->uUndetTextLen = pCS->dwCompStrLen;
         RtlCopyMemory(pBase + dwCurrentOffset, pSrcBase + pCS->dwCompStrOffset, pCS->dwCompStrLen);
         pBase[dwCurrentOffset + pCS->dwCompStrLen] = ANSI_NULL;
         dwCurrentOffset += ALIGN_DWORD(pCS->dwCompStrLen + 1);
@@ -516,22 +516,22 @@ Imm32CompStrAToUndetA(
 
     if ((dwGCS & GCS_COMPATTR) && (pCS->dwCompAttrLen > 0))
     {
-        pDeter->uUndetAttrPos = dwCurrentOffset;
+        pDet->uUndetAttrPos = dwCurrentOffset;
         RtlCopyMemory(pBase + dwCurrentOffset, pSrcBase + pCS->dwCompAttrOffset,
                       pCS->dwCompAttrLen);
         dwCurrentOffset += ALIGN_DWORD(pCS->dwCompAttrLen);
     }
 
     if (dwGCS & GCS_CURSORPOS)
-        pDeter->uCursorPos = pCS->dwCursorPos;
+        pDet->uCursorPos = pCS->dwCursorPos;
 
     if (dwGCS & GCS_DELTASTART)
-        pDeter->uDeltaStart = pCS->dwDeltaStart;
+        pDet->uDeltaStart = pCS->dwDeltaStart;
 
     if ((dwGCS & GCS_RESULTSTR) && (pCS->dwResultStrLen > 0))
     {
-        pDeter->uDetermineTextPos = dwCurrentOffset;
-        pDeter->uDetermineTextLen = pCS->dwResultStrLen;
+        pDet->uDetermineTextPos = dwCurrentOffset;
+        pDet->uDetermineTextLen = pCS->dwResultStrLen;
         RtlCopyMemory(pBase + dwCurrentOffset, pSrcBase + pCS->dwResultStrOffset,
                       pCS->dwResultStrLen);
         pBase[dwCurrentOffset + pCS->dwResultStrLen] = ANSI_NULL;
@@ -540,7 +540,7 @@ Imm32CompStrAToUndetA(
 
     if ((dwGCS & GCS_RESULTCLAUSE) && (pCS->dwResultClauseLen > 0))
     {
-        pDeter->uDetermineDelimPos = dwCurrentOffset;
+        pDet->uDetermineDelimPos = dwCurrentOffset;
         RtlCopyMemory(pBase + dwCurrentOffset, pSrcBase + pCS->dwResultClauseOffset,
                       pCS->dwResultClauseLen);
         dwCurrentOffset += ALIGN_DWORD(pCS->dwResultClauseLen);
@@ -548,8 +548,8 @@ Imm32CompStrAToUndetA(
 
     if ((dwGCS & GCS_RESULTREADSTR) && (pCS->dwResultReadStrLen > 0))
     {
-        pDeter->uYomiTextPos = dwCurrentOffset;
-        pDeter->uYomiTextLen = pCS->dwResultReadStrLen;
+        pDet->uYomiTextPos = dwCurrentOffset;
+        pDet->uYomiTextLen = pCS->dwResultReadStrLen;
         RtlCopyMemory(pBase + dwCurrentOffset, pSrcBase + pCS->dwResultReadStrOffset,
                       pCS->dwResultReadStrLen);
         pBase[dwCurrentOffset + pCS->dwResultReadStrLen] = ANSI_NULL;
@@ -558,7 +558,7 @@ Imm32CompStrAToUndetA(
 
     if ((dwGCS & GCS_RESULTREADCLAUSE) && (pCS->dwResultReadClauseLen > 0))
     {
-        pDeter->uYomiDelimPos = dwCurrentOffset;
+        pDet->uYomiDelimPos = dwCurrentOffset;
         RtlCopyMemory(pBase + dwCurrentOffset, pSrcBase + pCS->dwResultReadClauseOffset,
                       pCS->dwResultReadClauseLen);
         dwCurrentOffset += ALIGN_DWORD(pCS->dwResultReadClauseLen);
@@ -1026,9 +1026,9 @@ static CHAR Imm32CompStrAToCharW(HWND hWnd, const COMPOSITIONSTRING *pCS)
 
 static DWORD
 Imm32JTransCompositionA(
-    PINPUTCONTEXTDX pIC,
-    PCOMPOSITIONSTRING pCS,
-    PTRANSMSG pCurrent,
+    const INPUTCONTEXTDX *pIC,
+    const COMPOSITIONSTRING *pCS,
+    const TRANSMSG *pCurrent,
     PTRANSMSG pEntries)
 {
     HWND hWnd = pIC->hWnd;
@@ -1193,11 +1193,11 @@ FINALIZE:
     return msgCount;
 }
 
-DWORD
+static DWORD
 Imm32JTransCompositionW(
-    PINPUTCONTEXTDX pIC,
-    PCOMPOSITIONSTRING pCS,
-    PTRANSMSG pCurrent,
+    const INPUTCONTEXTDX *pIC,
+    const COMPOSITIONSTRING *pCS,
+    const TRANSMSG *pCurrent,
     PTRANSMSG pEntries)
 {
     HWND hWnd = pIC->hWnd;
@@ -1368,8 +1368,12 @@ FINALIZE:
 
 /* Japanese */
 static DWORD
-WINNLSTranslateMessageJ(DWORD dwCount, PTRANSMSG pEntries, PINPUTCONTEXTDX pIC,
-                        PCOMPOSITIONSTRING pCS, BOOL bAnsi)
+WINNLSTranslateMessageJ(
+    DWORD dwCount,
+    PTRANSMSG pEntries,
+    const INPUTCONTEXTDX *pIC,
+    const COMPOSITIONSTRING *pCS,
+    BOOL bAnsi)
 {
     // Clone the message list with growing
     SIZE_T dwBufSize = (dwCount + 1) * sizeof(TRANSMSG);
@@ -1519,8 +1523,8 @@ static DWORD
 WINNLSTranslateMessageK(
     DWORD dwCount,
     PTRANSMSG pEntries,
-    PINPUTCONTEXTDX pIC,
-    PCOMPOSITIONSTRING pCS,
+    const INPUTCONTEXTDX *pIC,
+    const COMPOSITIONSTRING *pCS,
     BOOL bSrcIsAnsi)
 {
     HWND hWnd = pIC->hWnd;
