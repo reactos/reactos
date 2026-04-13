@@ -16,6 +16,31 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 static WORD g_dchKorean = 0; /* One or two Korean character(s) */
 
+static DWORD Imm32CompStrWToStringA(const COMPOSITIONSTRING *pCS, PCHAR pch)
+{
+    const WCHAR *pwch = (const WCHAR *)((PBYTE)pCS + pCS->dwResultStrOffset);
+    BOOL bUsedDef;
+    INT cchNeed = WideCharToMultiByte(CP_ACP, 0, pwch, pCS->dwResultStrLen,
+                                      pch, 0, NULL, &bUsedDef) + 1;
+    if (!pch)
+        return cchNeed;
+    INT cch = WideCharToMultiByte(CP_ACP, 0, pwch, pCS->dwResultStrLen,
+                                  pch, cchNeed, NULL, &bUsedDef);
+    pch[cch] = 0;
+    return cch + 1;
+}
+
+static DWORD Imm32CompStrWToStringW(const COMPOSITIONSTRING *pCS, PWCHAR pch)
+{
+    DWORD dwResultStrLen = pCS->dwResultStrLen;
+    if (!pch)
+        return (dwResultStrLen + 1) * sizeof(WCHAR);
+    DWORD cb = dwResultStrLen * sizeof(WCHAR);
+    RtlCopyMemory(pch, (const BYTE*)pCS + pCS->dwResultStrOffset, cb);
+    pch[cb / sizeof(WCHAR)] = UNICODE_NULL;
+    return cb + sizeof(UNICODE_NULL);
+}
+
 static DWORD
 Imm32CompStrWToUndetW(
     DWORD dwGCS,
@@ -23,13 +48,13 @@ Imm32CompStrWToUndetW(
     PUNDETERMINESTRUCT pDet,
     DWORD dwSize)
 {
-    DWORD dwRequiredSize =
+    const DWORD dwRequiredSize =
         sizeof(UNDETERMINESTRUCT) +
-        ALIGN_DWORD((pCS->dwCompStrLen + 1) * sizeof(WCHAR)) +
+        ALIGN_DWORD(pCS->dwCompStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
         ALIGN_DWORD(pCS->dwCompAttrLen) +
-        ALIGN_DWORD((pCS->dwResultStrLen + 1) * sizeof(WCHAR)) +
+        ALIGN_DWORD(pCS->dwResultStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
         ALIGN_DWORD(pCS->dwResultClauseLen) +
-        ALIGN_DWORD((pCS->dwResultReadStrLen + 1) * sizeof(WCHAR)) +
+        ALIGN_DWORD(pCS->dwResultReadStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
         ALIGN_DWORD(pCS->dwResultReadClauseLen);
 
     if (!pDet)
@@ -119,14 +144,14 @@ Imm32CompStrWToUndetA(
     PUNDETERMINESTRUCT pDet,
     DWORD dwSize)
 {
-    DWORD dwRequiredSize =
+    const DWORD dwRequiredSize =
         sizeof(UNDETERMINESTRUCT) +
-        ALIGN_DWORD(2 * pCS->dwCompStrLen + 3) +
-        ALIGN_DWORD(pCS->dwCompAttrLen) +
-        ALIGN_DWORD(2 * pCS->dwResultStrLen + 3) +
+        ALIGN_DWORD(2 * pCS->dwCompStrLen + sizeof(ANSI_NULL)) +
+        ALIGN_DWORD(2 * pCS->dwCompAttrLen + 1) +
+        ALIGN_DWORD(2 * pCS->dwResultStrLen + sizeof(ANSI_NULL)) +
         ALIGN_DWORD(pCS->dwResultClauseLen) +
-        ALIGN_DWORD(2 * pCS->dwResultReadStrLen + 3) +
-        ALIGN_DWORD(pCS->dwResultReadClauseLen) + 60;
+        ALIGN_DWORD(2 * pCS->dwResultReadStrLen + sizeof(ANSI_NULL)) +
+        ALIGN_DWORD(pCS->dwResultReadClauseLen);
 
     if (!pDet)
         return dwRequiredSize;
@@ -146,10 +171,10 @@ Imm32CompStrWToUndetA(
     {
         INT nAnsiLen = WideCharToMultiByte(CP_ACP, 0,
             (PCWSTR)(pSrcBase + pCS->dwCompStrOffset), pCS->dwCompStrLen,
-            (PSTR)(pBase + dwCurrentOffset), dwRequiredSize - dwCurrentOffset,
-            NULL, &bUsedDef);
+            (PSTR)(pBase + dwCurrentOffset), dwRequiredSize - dwCurrentOffset, NULL, &bUsedDef);
         if (nAnsiLen <= 0)
             return 0;
+
         pDet->uUndetTextPos = dwCurrentOffset;
         pDet->uUndetTextLen = nAnsiLen;
         (pBase + dwCurrentOffset)[nAnsiLen] = ANSI_NULL;
@@ -162,24 +187,25 @@ Imm32CompStrWToUndetA(
         const BYTE *pSrcAttr = pSrcBase + pCS->dwCompAttrOffset;
         PBYTE pDestAttr = pBase + dwCurrentOffset;
         const WCHAR *pWStr = (const WCHAR *)(pSrcBase + pCS->dwCompStrOffset);
-        UINT nDestIdx = 0;
+        UINT ibIndex = 0;
 
-        for (UINT i = 0; i < pCS->dwCompAttrLen; i++)
+        for (UINT i = 0; i < pCS->dwCompAttrLen; ++i)
         {
             ULONG cbMultiByte = 0;
             USHORT wChar = pWStr[i];
             RtlUnicodeToMultiByteSize(&cbMultiByte, &wChar, sizeof(WCHAR));
             if (cbMultiByte == 2)
             {
-                pDestAttr[nDestIdx++] = pSrcAttr[i];
-                pDestAttr[nDestIdx++] = pSrcAttr[i];
+                pDestAttr[ibIndex++] = pSrcAttr[i];
+                pDestAttr[ibIndex++] = pSrcAttr[i];
             }
             else
             {
-                pDestAttr[nDestIdx++] = pSrcAttr[i];
+                pDestAttr[ibIndex++] = pSrcAttr[i];
             }
         }
-        dwCurrentOffset += ALIGN_DWORD(nDestIdx);
+
+        dwCurrentOffset += ALIGN_DWORD(ibIndex);
     }
 
     if (dwGCS & GCS_CURSORPOS)
@@ -233,7 +259,7 @@ Imm32CompStrWToUndetA(
         DWORD nClauses = pCS->dwResultClauseLen / sizeof(DWORD);
         const WCHAR *pResultW = (const WCHAR *)(pSrcBase + pCS->dwResultStrOffset);
 
-        for (DWORD i = 0; i < nClauses; i++)
+        for (DWORD i = 0; i < nClauses; ++i)
             pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pResultW, CP_ACP);
 
         dwCurrentOffset += ALIGN_DWORD(pCS->dwResultClauseLen);
@@ -280,16 +306,12 @@ Imm32CompStrWToStringExW(
     LPSTRINGEXSTRUCT pSX,
     DWORD dwSize)
 {
-    DWORD dwResultStrSize    = pCS->dwResultStrLen
-        ? ALIGN_DWORD((pCS->dwResultStrLen + 1) * sizeof(WCHAR)) : 0;
-    DWORD dwResultClauseSize = pCS->dwResultClauseLen
-        ? ALIGN_DWORD(pCS->dwResultClauseLen) : 0;
-    DWORD dwResultReadStrSize = pCS->dwResultReadStrLen
-        ? ALIGN_DWORD((pCS->dwResultReadStrLen + 1) * sizeof(WCHAR)) : 0;
-    DWORD dwReadClauseSize   = pCS->dwResultReadClauseLen
-        ? ALIGN_DWORD(pCS->dwResultReadClauseLen) : 0;
-    DWORD dwRequiredSize = sizeof(STRINGEXSTRUCT) + dwResultStrSize + dwResultClauseSize +
-                           dwResultReadStrSize + dwReadClauseSize;
+    const DWORD dwRequiredSize =
+        sizeof(STRINGEXSTRUCT) +
+        ALIGN_DWORD(pCS->dwResultStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
+        ALIGN_DWORD(pCS->dwResultClauseLen) +
+        ALIGN_DWORD(pCS->dwResultReadStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
+        ALIGN_DWORD(pCS->dwResultReadClauseLen);
 
     if (!pSX)
         return dwRequiredSize;
@@ -348,16 +370,12 @@ Imm32CompStrWToStringExA(
     LPSTRINGEXSTRUCT pSX,
     DWORD dwSize)
 {
-    DWORD dwResultStrSize = pCS->dwResultStrLen
-        ? ALIGN_DWORD(2 * pCS->dwResultStrLen + 5) : 0;
-    DWORD dwResultClauseSize = pCS->dwResultClauseLen
-        ? ALIGN_DWORD(pCS->dwResultClauseLen + 4) : 0;
-    DWORD dwResultReadStrSize = pCS->dwResultReadStrLen
-        ? ALIGN_DWORD(2 * pCS->dwResultReadStrLen + 5) : 0;
-    DWORD dwReadClauseSize = pCS->dwResultReadClauseLen
-        ? ALIGN_DWORD(pCS->dwResultReadClauseLen + 4) : 0;
-    DWORD dwRequiredSize = sizeof(STRINGEXSTRUCT) + dwResultStrSize + dwResultClauseSize +
-                           dwResultReadStrSize + dwReadClauseSize;
+    const DWORD dwRequiredSize =
+        sizeof(STRINGEXSTRUCT) +
+        ALIGN_DWORD(2 * pCS->dwResultStrLen + sizeof(ANSI_NULL)) +
+        ALIGN_DWORD(pCS->dwResultClauseLen) +
+        ALIGN_DWORD(2 * pCS->dwResultReadStrLen + sizeof(ANSI_NULL)) +
+        ALIGN_DWORD(pCS->dwResultReadClauseLen);
 
     if (!pSX)
         return dwRequiredSize;
@@ -380,8 +398,7 @@ Imm32CompStrWToStringExA(
         nAnsiResultLen = WideCharToMultiByte(
             CP_ACP, 0,
             (PCWSTR)(pSrcBase + pCS->dwResultStrOffset), pCS->dwResultStrLen,
-            (PSTR)(pBase + dwCurrentOffset), dwSize - dwCurrentOffset,
-            NULL, &bUsedDef);
+            (PSTR)(pBase + dwCurrentOffset), dwSize - dwCurrentOffset, NULL, &bUsedDef);
         if (nAnsiResultLen <= 0)
             return 0;
         (pBase + dwCurrentOffset)[nAnsiResultLen] = ANSI_NULL;
@@ -408,8 +425,7 @@ Imm32CompStrWToStringExA(
         nAnsiReadLen = WideCharToMultiByte(
             CP_ACP, 0,
             (PCWSTR)(pSrcBase + pCS->dwResultReadStrOffset), pCS->dwResultReadStrLen,
-            (PSTR)(pBase + dwCurrentOffset), dwSize - dwCurrentOffset,
-            NULL, &bUsedDef);
+            (PSTR)(pBase + dwCurrentOffset), dwSize - dwCurrentOffset, NULL, &bUsedDef);
         if (nAnsiReadLen <= 0)
             return 0;
         (pBase + dwCurrentOffset)[nAnsiReadLen] = ANSI_NULL;
@@ -431,51 +447,6 @@ Imm32CompStrWToStringExA(
     }
 
     return dwSize;
-}
-
-static DWORD Imm32CompStrWToStringW(const COMPOSITIONSTRING *pCS, PWCHAR pch)
-{
-    DWORD dwResultStrLen = pCS->dwResultStrLen;
-    if (!pch)
-        return (dwResultStrLen + 1) * sizeof(WCHAR);
-    DWORD cb = dwResultStrLen * sizeof(WCHAR);
-    RtlCopyMemory(pch, (const BYTE*)pCS + pCS->dwResultStrOffset, cb);
-    pch[cb / sizeof(WCHAR)] = UNICODE_NULL;
-    return cb + sizeof(UNICODE_NULL);
-}
-
-static DWORD Imm32CompStrWToStringA(const COMPOSITIONSTRING *pCS, PCHAR pch)
-{
-    const WCHAR *pwch = (const WCHAR *)((PBYTE)pCS + pCS->dwResultStrOffset);
-    BOOL bUsedDef;
-    INT cchNeed = WideCharToMultiByte(CP_ACP, 0, pwch, pCS->dwResultStrLen,
-                                      pch, 0, NULL, &bUsedDef) + 1;
-    if (!pch)
-        return cchNeed;
-    INT cch = WideCharToMultiByte(CP_ACP, 0, pwch, pCS->dwResultStrLen,
-                                  pch, cchNeed, NULL, &bUsedDef);
-    pch[cch] = 0;
-    return cch + 1;
-}
-
-const WCHAR *Imm32CompStrWToCharW(HWND hWnd, const COMPOSITIONSTRING *pCS)
-{
-    const WCHAR *pCurrent = (const WCHAR *)((const BYTE *)pCS + pCS->dwResultStrOffset);
-
-    PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
-
-    const WCHAR *pNext;
-    for (; *pCurrent; pCurrent = pNext)
-    {
-        pNext = CharNextW(pCurrent);
-
-        if (!*pNext)
-            PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
-
-        PostMessageW(hWnd, WM_CHAR, *pCurrent, 1);
-    }
-
-    return pCurrent;
 }
 
 static DWORD
@@ -572,29 +543,29 @@ static DWORD
 Imm32CompStrAToUndetW(
     DWORD dwGCS,
     const COMPOSITIONSTRING *pCS,
-    PUNDETERMINESTRUCT pUndeter,
+    PUNDETERMINESTRUCT pUndet,
     DWORD dwSize)
 {
-    DWORD dwRequiredSize =
+    const DWORD dwRequiredSize =
         sizeof(UNDETERMINESTRUCT) +
         ALIGN_DWORD(pCS->dwResultClauseLen) +
-        ALIGN_DWORD(2 * pCS->dwCompAttrLen + 3) +
-        ALIGN_DWORD(2 * pCS->dwResultStrLen + 5) +
-        ALIGN_DWORD(2 * pCS->dwCompStrLen + 5) +
-        ALIGN_DWORD(2 * pCS->dwResultReadStrLen + 5) +
-        ALIGN_DWORD(pCS->dwResultReadClauseLen) + 60;
+        ALIGN_DWORD(pCS->dwCompAttrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
+        ALIGN_DWORD(pCS->dwResultStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
+        ALIGN_DWORD(pCS->dwCompStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
+        ALIGN_DWORD(pCS->dwResultReadStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
+        ALIGN_DWORD(pCS->dwResultReadClauseLen);
 
-    if (!pUndeter)
+    if (!pUndet)
         return dwRequiredSize;
 
     if (dwSize < dwRequiredSize)
         return 0;
 
-    RtlZeroMemory(pUndeter, sizeof(UNDETERMINESTRUCT));
-    pUndeter->dwSize = dwSize;
+    RtlZeroMemory(pUndet, sizeof(UNDETERMINESTRUCT));
+    pUndet->dwSize = dwSize;
 
     DWORD dwCurrentOffset = sizeof(UNDETERMINESTRUCT);
-    PBYTE pBase = (PBYTE)pUndeter;
+    PBYTE pBase = (PBYTE)pUndet;
     const BYTE* pSrcBase = (const BYTE*)pCS;
 
     if ((dwGCS & GCS_COMPSTR) && (pCS->dwCompStrLen > 0))
@@ -604,20 +575,20 @@ Imm32CompStrAToUndetW(
             (PWSTR)(pBase + dwCurrentOffset), (dwSize - dwCurrentOffset) / sizeof(WCHAR));
         if (nWideLen <= 0)
             return 0;
-        pUndeter->uUndetTextPos = dwCurrentOffset;
-        pUndeter->uUndetTextLen = nWideLen;
+        pUndet->uUndetTextPos = dwCurrentOffset;
+        pUndet->uUndetTextLen = nWideLen;
         ((PWCHAR)(pBase + dwCurrentOffset))[nWideLen] = UNICODE_NULL;
         dwCurrentOffset += ALIGN_DWORD((nWideLen + 1) * sizeof(WCHAR));
     }
 
-    if ((dwGCS & GCS_COMPATTR) && pCS->dwCompAttrLen > 0 && (pUndeter->uUndetTextLen > 0))
+    if ((dwGCS & GCS_COMPATTR) && pCS->dwCompAttrLen > 0 && (pUndet->uUndetTextLen > 0))
     {
-        pUndeter->uUndetAttrPos = dwCurrentOffset;
+        pUndet->uUndetAttrPos = dwCurrentOffset;
         const BYTE* pSrcAttr = pSrcBase + pCS->dwCompAttrOffset;
         PBYTE pDestAttr = pBase + dwCurrentOffset;
-        PCWSTR pWStr = (PCWSTR)(pBase + pUndeter->uUndetTextPos);
+        PCWSTR pWStr = (PCWSTR)(pBase + pUndet->uUndetTextPos);
 
-        for (UINT i = 0; i < pUndeter->uUndetTextLen; i++)
+        for (UINT i = 0; i < pUndet->uUndetTextLen; i++)
         {
             pDestAttr[i] = *pSrcAttr;
             USHORT wChar = pWStr[i];
@@ -625,18 +596,19 @@ Imm32CompStrAToUndetW(
             RtlUnicodeToMultiByteSize(&cbMultiByte, &wChar, sizeof(WCHAR));
             pSrcAttr += (cbMultiByte == 2) ? 2 : 1;
         }
-        dwCurrentOffset += ALIGN_DWORD(pUndeter->uUndetTextLen);
+
+        dwCurrentOffset += ALIGN_DWORD(pUndet->uUndetTextLen);
     }
 
     if (dwGCS & GCS_CURSORPOS)
     {
         if (pCS->dwCursorPos == (DWORD)-1)
         {
-            pUndeter->uCursorPos = (UINT)-1;
+            pUndet->uCursorPos = (UINT)-1;
         }
         else
         {
-            pUndeter->uCursorPos = IchWideFromAnsi(
+            pUndet->uCursorPos = IchWideFromAnsi(
                 pCS->dwCursorPos, (PCSTR)(pSrcBase + pCS->dwCompStrOffset), CP_ACP);
         }
     }
@@ -645,11 +617,11 @@ Imm32CompStrAToUndetW(
     {
         if (pCS->dwDeltaStart == (DWORD)-1)
         {
-            pUndeter->uDeltaStart = (UINT)-1;
+            pUndet->uDeltaStart = (UINT)-1;
         }
         else
         {
-            pUndeter->uDeltaStart = IchWideFromAnsi(
+            pUndet->uDeltaStart = IchWideFromAnsi(
                 pCS->dwDeltaStart, (PCSTR)(pSrcBase + pCS->dwCompStrOffset), CP_ACP);
         }
     }
@@ -661,17 +633,17 @@ Imm32CompStrAToUndetW(
             (PWSTR)(pBase + dwCurrentOffset), (dwSize - dwCurrentOffset) / sizeof(WCHAR));
         if (nWideLen > 0)
         {
-            pUndeter->uDetermineTextPos = dwCurrentOffset;
-            pUndeter->uDetermineTextLen = nWideLen;
+            pUndet->uDetermineTextPos = dwCurrentOffset;
+            pUndet->uDetermineTextLen = nWideLen;
             ((PWSTR)(pBase + dwCurrentOffset))[nWideLen] = UNICODE_NULL;
             dwCurrentOffset += ALIGN_DWORD((nWideLen + 1) * sizeof(WCHAR));
         }
     }
 
     if ((dwGCS & GCS_RESULTCLAUSE) && (pCS->dwResultClauseLen > 0) &&
-        (pUndeter->uDetermineTextLen > 0))
+        (pUndet->uDetermineTextLen > 0))
     {
-        pUndeter->uDetermineDelimPos = dwCurrentOffset;
+        pUndet->uDetermineDelimPos = dwCurrentOffset;
         PDWORD pSrcClause = (PDWORD)(pSrcBase + pCS->dwResultClauseOffset);
         PDWORD pDestClause = (PDWORD)(pBase + dwCurrentOffset);
         DWORD nClauses = pCS->dwResultClauseLen / sizeof(DWORD);
@@ -691,17 +663,17 @@ Imm32CompStrAToUndetW(
             (PWSTR)(pBase + dwCurrentOffset), (dwSize - dwCurrentOffset) / sizeof(WCHAR));
         if (nWideLen > 0)
         {
-            pUndeter->uYomiTextPos = dwCurrentOffset;
-            pUndeter->uYomiTextLen = nWideLen;
+            pUndet->uYomiTextPos = dwCurrentOffset;
+            pUndet->uYomiTextLen = nWideLen;
             ((PWSTR)(pBase + dwCurrentOffset))[nWideLen] = UNICODE_NULL;
             dwCurrentOffset += ALIGN_DWORD((nWideLen + 1) * sizeof(WCHAR));
         }
     }
 
     if ((dwGCS & GCS_RESULTREADCLAUSE) && (pCS->dwResultReadClauseLen > 0) &&
-        (pUndeter->uYomiTextLen > 0))
+        (pUndet->uYomiTextLen > 0))
     {
-        pUndeter->uYomiDelimPos = dwCurrentOffset;
+        pUndet->uYomiDelimPos = dwCurrentOffset;
         PDWORD pSrcClause = (PDWORD)(pSrcBase + pCS->dwResultReadClauseOffset);
         PDWORD pDestClause = (PDWORD)(pBase + dwCurrentOffset);
         DWORD nClauses = pCS->dwResultReadClauseLen / sizeof(DWORD);
@@ -788,16 +760,12 @@ Imm32CompStrAToStringExW(
     LPSTRINGEXSTRUCT pSX,
     DWORD dwSize)
 {
-    DWORD dwResultStrSize =
-        pCS->dwResultStrLen ? ALIGN_DWORD(2 * pCS->dwResultStrLen + 5) : 0;
-    DWORD dwResultClauseSize =
-        pCS->dwResultClauseLen ? ALIGN_DWORD(pCS->dwResultClauseLen + 4) : 0;
-    DWORD dwResultReadStrSize =
-        pCS->dwResultReadStrLen ? ALIGN_DWORD(2 * pCS->dwResultReadStrLen + 5) : 0;
-    DWORD dwReadClauseSize =
-        pCS->dwResultReadClauseLen ? ALIGN_DWORD(pCS->dwResultReadClauseLen + 4) : 0;
-    DWORD dwRequiredSize = sizeof(STRINGEXSTRUCT) + dwResultStrSize + dwResultClauseSize +
-                           dwResultReadStrSize + dwReadClauseSize;
+    const DWORD dwRequiredSize =
+        sizeof(STRINGEXSTRUCT) +
+        ALIGN_DWORD(pCS->dwResultStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
+        ALIGN_DWORD(pCS->dwResultClauseLen) +
+        ALIGN_DWORD(pCS->dwResultReadStrLen * sizeof(WCHAR) + sizeof(UNICODE_NULL)) +
+        ALIGN_DWORD(pCS->dwResultReadClauseLen);
 
     if (pSX == NULL)
         return dwRequiredSize;
@@ -817,8 +785,7 @@ Imm32CompStrAToStringExW(
     if (pCS->dwResultStrLen > 0)
     {
         pSX->uDeterminePos = dwCurrentOffset;
-        nWideResultLen = MultiByteToWideChar(
-            CP_ACP, 0,
+        nWideResultLen = MultiByteToWideChar(CP_ACP, 0,
             (PCSTR)(pSrcBase + pCS->dwResultStrOffset), pCS->dwResultStrLen,
             (PWSTR)(pBase + dwCurrentOffset), (dwSize - dwCurrentOffset) / sizeof(WCHAR));
         if (nWideResultLen <= 0)
@@ -871,8 +838,7 @@ Imm32CompStrAToStringExW(
     return dwSize;
 }
 
-static DWORD
-Imm32CompStrAToStringA(const COMPOSITIONSTRING *pCS, PSTR pszString, DWORD dwSize)
+static DWORD Imm32CompStrAToStringA(const COMPOSITIONSTRING *pCS, PSTR pszString, DWORD dwSize)
 {
     DWORD dwResultStrLen = pCS->dwResultStrLen;
     if (!pszString)
@@ -884,8 +850,7 @@ Imm32CompStrAToStringA(const COMPOSITIONSTRING *pCS, PSTR pszString, DWORD dwSiz
     return dwResultStrLen + 1;
 }
 
-static DWORD
-Imm32CompStrAToStringW(const COMPOSITIONSTRING *pCS, PWSTR pszString, DWORD dwSize)
+static DWORD Imm32CompStrAToStringW(const COMPOSITIONSTRING *pCS, PWSTR pszString, DWORD dwSize)
 {
     const CHAR *pch = (const CHAR *)pCS + pCS->dwResultStrOffset;
     INT cchWide = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pch, pCS->dwResultStrLen,
@@ -903,7 +868,77 @@ Imm32CompStrAToStringW(const COMPOSITIONSTRING *pCS, PWSTR pszString, DWORD dwSi
     return (cch + 1) * sizeof(WCHAR);
 }
 
-const WCHAR* Imm32CompStrWToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
+static VOID Imm32CompStrAToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
+{
+    const CHAR *pch = (const CHAR *)((PBYTE)pCS + pCS->dwResultStrOffset);
+
+    BOOL bImeSupportDBCS = FALSE;
+    if (GetWin32ClientInfo()->dwExpWinVer >= 0x30A)
+        bImeSupportDBCS = (BOOL)SendMessageA(hWnd, WM_IME_REPORT, IR_DBCSCHAR, 0);
+
+    PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
+
+    if (*pch == ANSI_NULL)
+        return;
+
+    const CHAR *pNext;
+    for (; *pch; pch = pNext)
+    {
+        BYTE bFirst = (BYTE)(*pch);
+        pNext = CharNextA(pch);
+
+        if (*pNext == ANSI_NULL)
+            PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+
+        if (!IsDBCSLeadByte(bFirst))
+        {
+            PostMessageA(hWnd, WM_CHAR, bFirst, 1);
+            continue;
+        }
+
+        BYTE bSecond = pch[1];
+        if (bImeSupportDBCS)
+        {
+            WPARAM wParamDBCS = 0x80000000 | MAKEWORD(bSecond, bFirst);
+            PostMessageA(hWnd, WM_CHAR, wParamDBCS, 1);
+        }
+        else
+        {
+            PostMessageA(hWnd, WM_CHAR, bFirst, 1);
+            PostMessageA(hWnd, WM_CHAR, bSecond, 1);
+        }
+    }
+}
+
+static VOID Imm32CompStrAToCharW(HWND hWnd, const COMPOSITIONSTRING *pCS)
+{
+    const CHAR *pCurrent = (const CHAR *)((PBYTE)pCS + pCS->dwResultStrOffset);
+
+    PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
+
+    while (*pCurrent)
+    {
+        BYTE bTestChar = *pCurrent;
+        PCHAR pNext = CharNextA(pCurrent);
+
+        if (*pNext == ANSI_NULL)
+            PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+
+        WCHAR wCharBuffer = UNICODE_NULL;
+        INT nConverted = 0;
+        if (IsDBCSLeadByte(bTestChar))
+            nConverted = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pCurrent, 2, &wCharBuffer, 1);
+        else
+            nConverted = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pCurrent, 1, &wCharBuffer, 1);
+
+        if (nConverted > 0)
+            PostMessageW(hWnd, WM_CHAR, wCharBuffer, 1);
+
+        pCurrent = pNext;
+    }
+}
+
+static VOID Imm32CompStrWToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
 {
     const WCHAR *pCurrent = (const WCHAR *)((const BYTE *)pCS + pCS->dwResultStrOffset);
 
@@ -925,7 +960,7 @@ const WCHAR* Imm32CompStrWToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
         if (!WideCharToMultiByte(CP_ACP, 0, pCurrent, 1, szAnsi, sizeof(szAnsi), NULL, &bUsedDef))
             continue;
 
-        if (!IsDBCSLeadByte((BYTE)szAnsi[0]))
+        if (!IsDBCSLeadByte(szAnsi[0]))
         {
             PostMessageA(hWnd, WM_CHAR, (BYTE)szAnsi[0], 1);
             continue;
@@ -942,88 +977,24 @@ const WCHAR* Imm32CompStrWToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
             PostMessageA(hWnd, WM_CHAR, (BYTE)szAnsi[1], 1);
         }
     }
-
-    return pCurrent;
 }
 
-static CHAR Imm32CompStrAToCharA(HWND hWnd, const COMPOSITIONSTRING *pCS)
+static VOID Imm32CompStrWToCharW(HWND hWnd, const COMPOSITIONSTRING *pCS)
 {
-    const CHAR *pch = (const CHAR *)((PBYTE)pCS + pCS->dwResultStrOffset);
-
-    BOOL bImeSupportDBCS = FALSE;
-    if (GetWin32ClientInfo()->dwExpWinVer >= 0x30A)
-        bImeSupportDBCS = (BOOL)SendMessageA(hWnd, WM_IME_REPORT, IR_DBCSCHAR, 0);
-
-    PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
-
-    CHAR ch = *pch;
-    if (*pch == ANSI_NULL)
-        return ch;
-
-    while (*pch)
-    {
-        BYTE bFirst = (BYTE)(*pch);
-        const CHAR *pNext = CharNextA(pch);
-
-        if (*pNext == ANSI_NULL)
-            PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
-
-        if (IsDBCSLeadByte(bFirst))
-        {
-            BYTE bSecond = pch[1];
-            if (bImeSupportDBCS)
-            {
-                WPARAM wParamDBCS = 0x80000000 | MAKEWORD(bSecond, bFirst);
-                PostMessageA(hWnd, WM_CHAR, wParamDBCS, 1);
-            }
-            else
-            {
-                PostMessageA(hWnd, WM_CHAR, bFirst, 1);
-                PostMessageA(hWnd, WM_CHAR, bSecond, 1);
-            }
-        }
-        else
-        {
-            PostMessageA(hWnd, WM_CHAR, bFirst, 1);
-        }
-
-        pch = pNext;
-        ch = *pch;
-    }
-
-    return ch;
-}
-
-static CHAR Imm32CompStrAToCharW(HWND hWnd, const COMPOSITIONSTRING *pCS)
-{
-    const CHAR *pCurrent = (const CHAR *)((PBYTE)pCS + pCS->dwResultStrOffset);
-    CHAR ch = *pCurrent;
+    const WCHAR *pCurrent = (const WCHAR *)((const BYTE *)pCS + pCS->dwResultStrOffset);
 
     PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
 
-    while (*pCurrent)
+    const WCHAR *pNext;
+    for (; *pCurrent; pCurrent = pNext)
     {
-        ch = *pCurrent;
-        BYTE bTestChar = *pCurrent;
-        PCHAR pNext = CharNextA(pCurrent);
+        pNext = CharNextW(pCurrent);
 
-        if (*pNext == ANSI_NULL)
+        if (!*pNext)
             PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
 
-        WCHAR wCharBuffer = UNICODE_NULL;
-        INT nConverted = 0;
-        if (IsDBCSLeadByte(bTestChar))
-            nConverted = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pCurrent, 2, &wCharBuffer, 1);
-        else
-            nConverted = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pCurrent, 1, &wCharBuffer, 1);
-
-        if (nConverted > 0)
-            PostMessageW(hWnd, WM_CHAR, wCharBuffer, 1);
-
-        pCurrent = pNext;
+        PostMessageW(hWnd, WM_CHAR, *pCurrent, 1);
     }
-
-    return ch;
 }
 
 static DWORD
@@ -1443,11 +1414,6 @@ WINNLSTranslateMessageJ(
         pCurrent = pBuf;
     }
 
-#define EMIT_ENTRY_J() do { \
-    *pEntries++ = *pCurrent; \
-    dwResult++; \
-} while (0)
-
     while (pCurrent->message)
     {
         switch (pCurrent->message)
@@ -1458,7 +1424,9 @@ WINNLSTranslateMessageJ(
                     // Send IR_OPENCONVERT
                     if (pIC->cfCompForm.dwStyle)
                         SendMessageW(hWnd, WM_IME_REPORT, IR_OPENCONVERT, 0);
-                    EMIT_ENTRY_J();
+
+                    *pEntries++ = *pCurrent;
+                    ++dwResult;
                 }
                 break;
 
@@ -1468,7 +1436,9 @@ WINNLSTranslateMessageJ(
                     // Send IR_CLOSECONVERT
                     if (pIC->cfCompForm.dwStyle)
                         SendMessageW(hWnd, WM_IME_REPORT, IR_CLOSECONVERT, 0);
-                    EMIT_ENTRY_J();
+
+                    *pEntries++ = *pCurrent;
+                    ++dwResult;
                 }
                 else
                 {
@@ -1526,20 +1496,25 @@ WINNLSTranslateMessageJ(
                 }
 
                 if (!(pIC->dwUIFlags & _IME_UI_HIDDEN))
-                    EMIT_ENTRY_J();
+                {
+                    *pEntries++ = *pCurrent;
+                    ++dwResult;
+                }
                 else
+                {
                     SendMessageW(hwndIme, pCurrent->message, pCurrent->wParam, pCurrent->lParam);
+                }
                 break;
 
             default:
-                EMIT_ENTRY_J();
+                *pEntries++ = *pCurrent;
+                ++dwResult;
                 break;
         }
 
         pCurrent++;
     }
 
-#undef EMIT_ENTRY_J
     ImmLocalFree(pBuf);
     return dwResult;
 }
@@ -1560,8 +1535,8 @@ WINNLSTranslateMessageK(
     HWND hwndIme = ImmGetDefaultIMEWnd(hWnd);
     BOOL bDestIsUnicode = IsWindowUnicode(hWnd);
     BOOL bDestIsAnsi = !bDestIsUnicode;
-    FN_PostMessage pfnPostMessage = bDestIsUnicode ? PostMessageW : PostMessageA;
-    FN_SendMessage pfnSendMessage = bDestIsUnicode ? SendMessageW : SendMessageA;
+    FN_PostMessage pPostMessage = bDestIsUnicode ? PostMessageW : PostMessageA;
+    FN_SendMessage pSendMessage = bDestIsUnicode ? SendMessageW : SendMessageA;
 
     if ((LONG)dwCount <= 0)
         return 0;
@@ -1577,16 +1552,16 @@ WINNLSTranslateMessageK(
             switch (uMsg)
             {
             case WM_IME_COMPOSITION:
-                if (wParam & 0x8000000)
+                if (lParam & GCS_RESULTSTR)
                 {
-                    pfnPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
+                    pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
 
                     if ((LONG)pCS->dwResultStrLen > 0)
                     {
                         DWORD dwProcessedLen = 0;
                         while (dwProcessedLen < pCS->dwResultStrLen)
                         {
-                            LPARAM charLParam = 1;
+                            LPARAM lKeyData = 1; /* WM_CHAR lParam */
                             WCHAR wCharStr[2] = {0};
                             CHAR  szMBStr[4]  = {0};
 
@@ -1599,16 +1574,16 @@ WINNLSTranslateMessageK(
                                 {
                                     if (IsDBCSLeadByte(bChar))
                                     {
-                                        if (bChar < 0xB0 || bChar > 0xC8)
-                                            charLParam = 0xFFF10001; 
+                                        if (0xB0 <= bChar && bChar <= 0xC8)
+                                            lKeyData = 0xFFF20001;
                                         else
-                                            charLParam = 0xFFF20001;
+                                            lKeyData = 0xFFF10001;
 
-                                        PostMessageA(hWnd, WM_CHAR, bChar, charLParam);
+                                        PostMessageA(hWnd, WM_CHAR, bChar, lKeyData);
                                         dwProcessedLen++;
                                         bChar = (BYTE)pResStr[dwProcessedLen];
                                     }
-                                    PostMessageA(hWnd, WM_CHAR, bChar, charLParam);
+                                    PostMessageA(hWnd, WM_CHAR, bChar, lKeyData);
                                 }
                                 else
                                 {
@@ -1635,29 +1610,31 @@ WINNLSTranslateMessageK(
                                     BYTE bLead = (BYTE)szMBStr[0], bChar;
                                     if (IsDBCSLeadByte(bLead))
                                     {
-                                        charLParam = (bLead < 0xB0 || bLead > 0xC8)
-                                            ? 0xFFF10001
-                                            : 0xFFF20001;
-                                        PostMessageA(hWnd, WM_CHAR, bLead, charLParam);
+                                        if (0xB0 <= bLead && bLead <= 0xC8)
+                                            lKeyData = 0xFFF20001;
+                                        else
+                                            lKeyData = 0xFFF10001;
+
+                                        PostMessageA(hWnd, WM_CHAR, bLead, lKeyData);
                                         bChar = (BYTE)szMBStr[1];
                                     }
                                     else
                                     {
                                         bChar = (BYTE)szMBStr[0];
                                     }
-                                    PostMessageA(hWnd, WM_CHAR, bChar, charLParam);
+
+                                    PostMessageA(hWnd, WM_CHAR, bChar, lKeyData);
                                 }
                             }
                             dwProcessedLen++;
                         }
                     }
-                    pfnPostMessage(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                    pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
                 }
-                
 
                 if (wParam != 0)
                 {
-                    pfnPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
+                    pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
 
                     BYTE bLow = HIBYTE(wParam), bHigh = LOBYTE(wParam);
                     g_dchKorean = MAKEWORD(bLow, bHigh);
@@ -1698,11 +1675,11 @@ WINNLSTranslateMessageK(
                     else
                         PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
 
-                    pfnSendMessage(hwndIme, WM_IME_ENDCOMPOSITION, 0, 0);
+                    pSendMessage(hwndIme, WM_IME_ENDCOMPOSITION, 0, 0);
                 }
                 else
                 {
-                    pfnPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
+                    pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
                     if (bSrcIsAnsi)
                     {
                         if (bDestIsAnsi)
@@ -1749,21 +1726,21 @@ WINNLSTranslateMessageK(
                 break;
 
             case WM_IMEKEYDOWN:
-                pfnPostMessage(hWnd, WM_KEYDOWN, (WPARAM)(LOWORD(wParam)), lParam);
+                pPostMessage(hWnd, WM_KEYDOWN, (WPARAM)(LOWORD(wParam)), lParam);
                 break;
 
             case WM_IMEKEYUP:
-                pfnPostMessage(hWnd, WM_KEYUP, (WPARAM)(LOWORD(wParam)), lParam);
+                pPostMessage(hWnd, WM_KEYUP, (WPARAM)(LOWORD(wParam)), lParam);
                 break;
 
             default:
-                pfnSendMessage(hwndIme, uMsg, wParam, lParam);
+                pSendMessage(hwndIme, uMsg, wParam, lParam);
                 break;
             }
         }
         else
         {
-            pfnSendMessage(hwndIme, uMsg, wParam, lParam);
+            pSendMessage(hwndIme, uMsg, wParam, lParam);
         }
     }
 
