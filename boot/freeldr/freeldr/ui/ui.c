@@ -19,6 +19,8 @@
 
 #include <freeldr.h>
 
+extern const UIVTBL FbGuiVtbl;
+
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(UI);
 
