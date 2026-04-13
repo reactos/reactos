@@ -1104,12 +1104,11 @@ Imm32JTransCompositionA(
             return 0;
     }
 
-    SIZE_T exSize;
     HGLOBAL hEx, hStr;
-    PVOID pEx, pStr;
-    BOOL bExSuccess, bStrSuccess;
+    PVOID pEx = NULL, pStr = NULL;
+    BOOL bExSuccess = FALSE, bStrSuccess = FALSE;
     LRESULT res;
-    SIZE_T strSize;
+    DWORD exSize, strSize;
 
     if (dwGCS & GCS_RESULTSTR)
     {
@@ -1123,23 +1122,26 @@ Imm32JTransCompositionA(
                 if (hEx)
                 {
                     pEx = GlobalLock(hEx);
-                    bExSuccess = bIsUnicodeWnd
-                        ? Imm32CompStrAToStringExW(dwGCS, pCS, pEx, (DWORD)exSize)
-                        : Imm32CompStrAToStringExA(dwGCS, pCS, pEx, (DWORD)exSize);
-                    GlobalUnlock(hEx);
-                    if (bExSuccess)
+                    if (pEx)
                     {
-                        res = bIsUnicodeWnd
-                            ? SendMessageW(hWnd, WM_IME_REPORT, IR_STRINGEX, (LPARAM)hEx)
-                            : SendMessageA(hWnd, WM_IME_REPORT, IR_STRINGEX, (LPARAM)hEx);
-                        if (res)
+                        bExSuccess = bIsUnicodeWnd
+                            ? Imm32CompStrAToStringExW(dwGCS, pCS, pEx, exSize)
+                            : Imm32CompStrAToStringExA(dwGCS, pCS, pEx, exSize);
+                        GlobalUnlock(hEx);
+                        if (bExSuccess)
                         {
-                            GlobalFree(hEx);
-                            bResultProcessed = TRUE;
-                            goto FINALIZE;
+                            res = bIsUnicodeWnd
+                                ? SendMessageW(hWnd, WM_IME_REPORT, IR_STRINGEX, (LPARAM)hEx)
+                                : SendMessageA(hWnd, WM_IME_REPORT, IR_STRINGEX, (LPARAM)hEx);
+                            if (res)
+                            {
+                                GlobalFree(hEx);
+                                bResultProcessed = TRUE;
+                                goto FINALIZE;
+                            }
                         }
+                        GlobalFree(hEx);
                     }
-                    GlobalFree(hEx);
                 }
             }
         }
@@ -1151,20 +1153,23 @@ Imm32JTransCompositionA(
             if (hStr)
             {
                 pStr = GlobalLock(hStr);
-                bStrSuccess = bIsUnicodeWnd
-                    ? Imm32CompStrAToStringW(pCS, pStr, (DWORD)strSize)
-                    : Imm32CompStrAToStringA(pCS, pStr, (DWORD)strSize);
-                GlobalUnlock(hStr);
-                if (bStrSuccess)
+                if (pStr)
                 {
-                    res = bIsUnicodeWnd
-                        ? SendMessageW(hWnd, WM_IME_REPORT, IR_STRING, (LPARAM)hStr)
-                        : SendMessageA(hWnd, WM_IME_REPORT, IR_STRING, (LPARAM)hStr);
-                    if (res)
+                    bStrSuccess = bIsUnicodeWnd
+                        ? Imm32CompStrAToStringW(pCS, pStr, strSize)
+                        : Imm32CompStrAToStringA(pCS, pStr, strSize);
+                    GlobalUnlock(hStr);
+                    if (bStrSuccess)
                     {
-                        GlobalFree(hStr);
-                        bResultProcessed = TRUE;
-                        goto FINALIZE;
+                        res = bIsUnicodeWnd
+                            ? SendMessageW(hWnd, WM_IME_REPORT, IR_STRING, (LPARAM)hStr)
+                            : SendMessageA(hWnd, WM_IME_REPORT, IR_STRING, (LPARAM)hStr);
+                        if (res)
+                        {
+                            GlobalFree(hStr);
+                            bResultProcessed = TRUE;
+                            goto FINALIZE;
+                        }
                     }
                 }
                 GlobalFree(hStr);
