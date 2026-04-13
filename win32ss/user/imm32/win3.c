@@ -814,7 +814,8 @@ Imm32CompStrAToStringExW(
 
     INT nWideResultLen = 0, nWideReadLen = 0;
 
-    if (pCS->dwResultStrLen > 0) {
+    if (pCS->dwResultStrLen > 0)
+    {
         pSX->uDeterminePos = dwCurrentOffset;
         nWideResultLen = MultiByteToWideChar(
             CP_ACP, 0,
@@ -1052,8 +1053,9 @@ Imm32JTransCompositionA(
             if (dataSize)
             {
                 hGlobal = GlobalAlloc(GHND, dataSize);
-                if (hGlobal) {
-                    PUNDETERMINESTRUCT pUndet = (PUNDETERMINESTRUCT)GlobalLock(hGlobal);
+                if (hGlobal)
+                {
+                    PUNDETERMINESTRUCT pUndet = GlobalLock(hGlobal);
                     if (Imm32CompStrAToUndetA(dwGCS, pCS, pUndet, (DWORD)dataSize))
                     {
                         GlobalUnlock(hGlobal);
@@ -1071,7 +1073,7 @@ Imm32JTransCompositionA(
                 hGlobal = GlobalAlloc(GHND, dataSize);
                 if (hGlobal)
                 {
-                    PUNDETERMINESTRUCT pUndet = (PUNDETERMINESTRUCT)GlobalLock(hGlobal);
+                    PUNDETERMINESTRUCT pUndet = GlobalLock(hGlobal);
                     if (Imm32CompStrAToUndetW(dwGCS, pCS, pUndet, (DWORD)dataSize))
                     {
                         GlobalUnlock(hGlobal);
@@ -1224,7 +1226,7 @@ Imm32JTransCompositionW(
                 hGlobal = GlobalAlloc(GHND, dataSize);
                 if (hGlobal)
                 {
-                    PUNDETERMINESTRUCT pUndet = (PUNDETERMINESTRUCT)GlobalLock(hGlobal);
+                    PUNDETERMINESTRUCT pUndet = GlobalLock(hGlobal);
                     if (Imm32CompStrWToUndetA(dwGCS, pCS, pUndet, (DWORD)dataSize))
                     {
                         GlobalUnlock(hGlobal);
@@ -1242,7 +1244,7 @@ Imm32JTransCompositionW(
                 hGlobal = GlobalAlloc(GHND, dataSize);
                 if (hGlobal)
                 {
-                    PUNDETERMINESTRUCT pUndet = (PUNDETERMINESTRUCT)GlobalLock(hGlobal);
+                    PUNDETERMINESTRUCT pUndet = GlobalLock(hGlobal);
                     if (Imm32CompStrWToUndetW(dwGCS, pCS, pUndet, (DWORD)dataSize))
                     {
                         GlobalUnlock(hGlobal);
