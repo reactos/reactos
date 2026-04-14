@@ -199,16 +199,13 @@ Imm32CompStrWToUndetA(
 
     if (dwGCS & GCS_COMPSTR)
     {
-        INT cchAnsi = Imm32WideToAnsi(pCompStrW, pCS->dwCompStrLen,
-                                      (PSTR)(pbDet + ib), cbRequired - ib);
+        PSTR pchA = (PSTR)(pbDet + ib);
+        INT cchAnsi = Imm32WideToAnsi(pCompStrW, pCS->dwCompStrLen, pchA, cbRequired - ib);
         pDet->uUndetTextPos = ib;
         pDet->uUndetTextLen = cchAnsi;
         (pbDet + ib)[cchAnsi] = ANSI_NULL;
 
         ib += ALIGN_DWORD(cchAnsi + 1);
-
-        if (pCS->dwCompAttrLen)
-            dwGCS |= GCS_COMPATTR;
 
         if ((dwGCS & GCS_COMPATTR) || pCS->dwCompAttrLen)
         {
@@ -220,7 +217,7 @@ Imm32CompStrWToUndetA(
             UINT ibIndex = 0;
             for (UINT i = 0; i < pCS->dwCompAttrLen; ++i)
             {
-                if (IsDBCSLeadByte(pbDet[pDet->uUndetTextPos + i]))
+                if (IsDBCSLeadByte(pchA[ibIndex]))
                 {
                     pDestAttr[ibIndex++] = pSrcAttr[i];
                     pDestAttr[ibIndex++] = pSrcAttr[i];
