@@ -1388,7 +1388,7 @@ WINNLSTranslateMessageJ(
     }
 
     DWORD dwResult;
-    for (dwResult = 0; pCurrent->message; ++pCurrent)
+    for (dwResult = 0; pCurrent->message != WM_NULL; ++pCurrent)
     {
         switch (pCurrent->message)
         {
