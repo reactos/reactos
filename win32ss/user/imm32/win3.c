@@ -1088,8 +1088,8 @@ Imm32JTransCompositionA(
                                 goto FINALIZE;
                             }
                         }
-                        GlobalFree(hEx);
                     }
+                    GlobalFree(hEx);
                 }
             }
         }
