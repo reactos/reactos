@@ -287,7 +287,7 @@ Imm32CompStrWToUndetA(
             DWORD nClauses = pCS->dwResultReadClauseLen / sizeof(DWORD);
             PCWSTR pReadW = (PCWSTR)(pbCS + pCS->dwResultReadStrOffset);
 
-            for (DWORD i = 0; i < nClauses; i++)
+            for (DWORD i = 0; i < nClauses; ++i)
                 pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pReadW, CP_ACP);
 
             //ib += ALIGN_DWORD(pCS->dwResultReadClauseLen); // The last one (ineffective)
@@ -407,7 +407,7 @@ Imm32CompStrWToStringExA(
             DWORD nClauses = pCS->dwResultClauseLen / sizeof(DWORD);
             PCWSTR pResultW = (PCWSTR)(pbCS + pCS->dwResultStrOffset);
 
-            for (DWORD i = 0; i < nClauses; i++)
+            for (DWORD i = 0; i < nClauses; ++i)
                 pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pResultW, CP_ACP);
 
             ib += ALIGN_DWORD(pCS->dwResultClauseLen);
@@ -432,7 +432,7 @@ Imm32CompStrWToStringExA(
             DWORD nClauses = pCS->dwResultReadClauseLen / sizeof(DWORD);
             PCWSTR pReadW = (PCWSTR)(pbCS + pCS->dwResultReadStrOffset);
 
-            for (DWORD i = 0; i < nClauses; i++)
+            for (DWORD i = 0; i < nClauses; ++i)
                 pDestClause[i] = IchAnsiFromWide(pSrcClause[i], pReadW, CP_ACP);
 
             //ib += ALIGN_DWORD(pCS->dwResultReadClauseLen); // The last one (ineffective)
@@ -633,7 +633,7 @@ Imm32CompStrAToUndetW(
                 PDWORD pDestClause = (PDWORD)(pbUndet + ib);
                 DWORD nClauses = pCS->dwResultClauseLen / sizeof(DWORD);
 
-                for (DWORD i = 0; i < nClauses; i++)
+                for (DWORD i = 0; i < nClauses; ++i)
                     pDestClause[i] = IchWideFromAnsi(pSrcClause[i], pResultStr, CP_ACP);
 
                 ib += ALIGN_DWORD(pCS->dwResultClauseLen);
@@ -659,7 +659,7 @@ Imm32CompStrAToUndetW(
                 PDWORD pDestClause = (PDWORD)(pbUndet + ib);
                 DWORD nClauses = pCS->dwResultReadClauseLen / sizeof(DWORD);
 
-                for (DWORD i = 0; i < nClauses; i++)
+                for (DWORD i = 0; i < nClauses; ++i)
                     pDestClause[i] = IchWideFromAnsi(pSrcClause[i], pResultReadStr, CP_ACP);
 
                 //ib += ALIGN_DWORD(pCS->dwResultReadClauseLen); // The last one (ineffective)
@@ -776,7 +776,7 @@ Imm32CompStrAToStringExW(
             PDWORD pDestClause = (PDWORD)(pbSX + ib);
             DWORD nClauses = pCS->dwResultClauseLen / sizeof(DWORD);
 
-            for (DWORD i = 0; i < nClauses; i++)
+            for (DWORD i = 0; i < nClauses; ++i)
             {
                 pDestClause[i] = IchWideFromAnsi(pSrcClause[i],
                     (PCSTR)(pbCS + pCS->dwResultStrOffset), CP_ACP);
@@ -802,7 +802,7 @@ Imm32CompStrAToStringExW(
             const DWORD* pSrcClause = (const DWORD*)(pbCS + pCS->dwResultReadClauseOffset);
             PDWORD pDestClause = (PDWORD)(pbSX + ib);
             DWORD nClauses = pCS->dwResultReadClauseLen / sizeof(DWORD);
-            for (DWORD i = 0; i < nClauses; i++)
+            for (DWORD i = 0; i < nClauses; ++i)
                 pDestClause[i] = IchWideFromAnsi(pSrcClause[i], pResultReadStr, CP_ACP);
 
             //ib += ALIGN_DWORD(pCS->dwResultReadClauseLen); // The last one (ineffective)
@@ -1364,7 +1364,7 @@ WINNLSTranslateMessageJ(
     {
         // Find WM_IME_ENDCOMPOSITION
         PTRANSMSG pEndComp = NULL;
-        for (INT i = 0; i < cEntries; i++)
+        for (INT i = 0; i < cEntries; ++i)
         {
             if (pBuf[i].message == WM_IME_ENDCOMPOSITION)
             {
@@ -1519,206 +1519,197 @@ WINNLSTranslateMessageK(
         WPARAM wParam = pEntries[i].wParam;
         LPARAM lParam = pEntries[i].lParam;
 
-        if (uMsg < WM_IME_STARTCOMPOSITION || uMsg > WM_IME_ENDCOMPOSITION)
+        switch (uMsg)
         {
-            switch (uMsg)
-            {
-                case WM_IME_COMPOSITION:
-                    if (lParam & GCS_RESULTSTR)
+            case WM_IME_COMPOSITION:
+                if (lParam & GCS_RESULTSTR)
+                {
+                    pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
+
+                    if (pCS->dwResultStrLen)
                     {
-                        pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
-
-                        if (pCS->dwResultStrLen)
+                        DWORD dwProcessedLen = 0;
+                        while (dwProcessedLen < pCS->dwResultStrLen)
                         {
-                            DWORD dwProcessedLen = 0;
-                            while (dwProcessedLen < pCS->dwResultStrLen)
+                            LPARAM lKeyData = 1; /* WM_CHAR lParam */
+                            WCHAR szWide[2] = {0};
+                            CHAR  szMBStr[4]  = {0};
+
+                            if (bSrcIsAnsi)
                             {
-                                LPARAM lKeyData = 1; /* WM_CHAR lParam */
-                                WCHAR szWide[2] = {0};
-                                CHAR  szMBStr[4]  = {0};
+                                PSTR pResStr = (LPSTR)((BYTE*)pCS + pCS->dwResultStrOffset);
+                                BYTE bChar = pResStr[dwProcessedLen];
 
-                                if (bSrcIsAnsi)
+                                if (bDestIsUnicode)
                                 {
-                                    PSTR pResStr = (LPSTR)((BYTE*)pCS + pCS->dwResultStrOffset);
-                                    BYTE bChar = (BYTE)pResStr[dwProcessedLen];
+                                    INT cbMB = 1;
 
-                                    if (bDestIsUnicode)
+                                    szMBStr[0] = bChar;
+                                    if (IsDBCSLeadByte(bChar) &&
+                                        dwProcessedLen + 1 < pCS->dwResultStrLen)
                                     {
-                                        INT cbMB = 1;
-
-                                        szMBStr[0] = bChar;
-                                        if (IsDBCSLeadByte(bChar) &&
-                                            (dwProcessedLen + 1) < pCS->dwResultStrLen)
-                                        {
-                                            szMBStr[1] = pResStr[dwProcessedLen + 1];
-                                            cbMB = 2;
-                                            ++dwProcessedLen;
-                                        }
-                                        Imm32AnsiToWide(szMBStr, cbMB, szWide, _countof(szWide));
-                                        PostMessageW(hWnd, WM_CHAR, szWide[0], 1);
+                                        szMBStr[1] = pResStr[dwProcessedLen + 1];
+                                        cbMB = 2;
+                                        ++dwProcessedLen;
                                     }
-                                    else
-                                    {
-                                        if (IsDBCSLeadByte(bChar))
-                                        {
-                                            if (KOR_IS_LEAD_BYTE(bChar))
-                                                lKeyData = KOR_SCAN_CODE_DBCS;
-                                            else
-                                                lKeyData = KOR_SCAN_CODE_SBCS;
-
-                                            PostMessageA(hWnd, WM_CHAR, bChar, lKeyData);
-                                            dwProcessedLen++;
-                                            bChar = (BYTE)pResStr[dwProcessedLen];
-                                        }
-                                        PostMessageA(hWnd, WM_CHAR, bChar, lKeyData);
-                                    }
+                                    Imm32AnsiToWide(szMBStr, cbMB, szWide, _countof(szWide));
+                                    PostMessageW(hWnd, WM_CHAR, szWide[0], 1);
                                 }
                                 else
                                 {
-                                    PWSTR pResStrW = (PWSTR)((PBYTE)pCS + pCS->dwResultStrOffset);
-                                    szWide[0] = pResStrW[dwProcessedLen];
-
-                                    if (bDestIsUnicode)
+                                    if (IsDBCSLeadByte(bChar))
                                     {
-                                        PostMessageW(hWnd, WM_CHAR, szWide[0], 1);
+                                        if (KOR_IS_LEAD_BYTE(bChar))
+                                            lKeyData = KOR_SCAN_CODE_DBCS;
+                                        else
+                                            lKeyData = KOR_SCAN_CODE_SBCS;
+
+                                        PostMessageA(hWnd, WM_CHAR, bChar, lKeyData);
+                                        ++dwProcessedLen;
+                                        bChar = pResStr[dwProcessedLen];
+                                    }
+                                    PostMessageA(hWnd, WM_CHAR, bChar, lKeyData);
+                                }
+                            }
+                            else
+                            {
+                                PWSTR pResStrW = (PWSTR)((PBYTE)pCS + pCS->dwResultStrOffset);
+                                szWide[0] = pResStrW[dwProcessedLen];
+
+                                if (bDestIsUnicode)
+                                {
+                                    PostMessageW(hWnd, WM_CHAR, szWide[0], 1);
+                                }
+                                else
+                                {
+                                    Imm32WideToAnsi(szWide, 1, szMBStr, _countof(szMBStr));
+                                    BYTE bLead = (BYTE)szMBStr[0], bChar;
+                                    if (IsDBCSLeadByte(bLead))
+                                    {
+                                        if (KOR_IS_LEAD_BYTE(bLead))
+                                            lKeyData = KOR_SCAN_CODE_DBCS;
+                                        else
+                                            lKeyData = KOR_SCAN_CODE_SBCS;
+
+                                        PostMessageA(hWnd, WM_CHAR, bLead, lKeyData);
+                                        bChar = szMBStr[1];
                                     }
                                     else
                                     {
-                                        Imm32WideToAnsi(szWide, 1, szMBStr, _countof(szMBStr));
-                                        BYTE bLead = (BYTE)szMBStr[0], bChar;
-                                        if (IsDBCSLeadByte(bLead))
-                                        {
-                                            if (KOR_IS_LEAD_BYTE(bLead))
-                                                lKeyData = KOR_SCAN_CODE_DBCS;
-                                            else
-                                                lKeyData = KOR_SCAN_CODE_SBCS;
-
-                                            PostMessageA(hWnd, WM_CHAR, bLead, lKeyData);
-                                            bChar = (BYTE)szMBStr[1];
-                                        }
-                                        else
-                                        {
-                                            bChar = (BYTE)szMBStr[0];
-                                        }
-
-                                        PostMessageA(hWnd, WM_CHAR, bChar, lKeyData);
+                                        bChar = szMBStr[0];
                                     }
+
+                                    PostMessageA(hWnd, WM_CHAR, bChar, lKeyData);
                                 }
-                                dwProcessedLen++;
                             }
+                            ++dwProcessedLen;
                         }
-                        pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
                     }
+                    pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                }
 
-                    if (wParam != 0)
+                if (wParam)
+                {
+                    pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
+
+                    BYTE bFirst = HIBYTE(wParam), bSecond = LOBYTE(wParam);
+                    s_chKorean = MAKEWORD(bFirst, bSecond);
+
+                    if (bSrcIsAnsi)
                     {
-                        pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
-
-                        BYTE bFirst = HIBYTE(wParam), bSecond = LOBYTE(wParam);
-                        s_chKorean = MAKEWORD(bFirst, bSecond);
-
-                        if (bSrcIsAnsi)
-                        {
-                            if (bDestIsUnicode)
-                            {
-                                CHAR szTmp[2] = { (CHAR)bFirst, (CHAR)bSecond };
-                                WCHAR wTmp[2];
-                                if (Imm32AnsiToWide(szTmp, 2, wTmp, _countof(wTmp)))
-                                    PostMessageW(hWnd, WM_INTERIM, wTmp[0], KOR_INTERIM_FLAGS);
-                            }
-                            else
-                            {
-                                PostMessageA(hWnd, WM_INTERIM, bFirst, KOR_INTERIM_FLAGS);
-                                PostMessageA(hWnd, WM_INTERIM, bSecond, KOR_INTERIM_FLAGS);
-                            }
-                        }
-                        else
-                        {
-                            if (bDestIsUnicode)
-                            {
-                                PostMessageW(hWnd, WM_INTERIM, wParam, KOR_INTERIM_FLAGS);
-                            }
-                            else
-                            {
-                                WCHAR wTmp[2] = { (WCHAR)wParam, 0 };
-                                CHAR szTmp[2];
-                                Imm32WideToAnsi(wTmp, 1, szTmp, _countof(szTmp));
-                                PostMessageA(hWnd, WM_INTERIM, (BYTE)szTmp[0], KOR_INTERIM_FLAGS);
-                                PostMessageA(hWnd, WM_INTERIM, (BYTE)szTmp[1], KOR_INTERIM_FLAGS);
-                            }
-                        }
-
                         if (bDestIsUnicode)
-                            PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                        {
+                            CHAR szTmp[2] = { (CHAR)bFirst, (CHAR)bSecond };
+                            WCHAR wTmp[2];
+                            if (Imm32AnsiToWide(szTmp, 2, wTmp, _countof(wTmp)))
+                                PostMessageW(hWnd, WM_INTERIM, wTmp[0], KOR_INTERIM_FLAGS);
+                        }
                         else
-                            PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
-
-                        pSendMessage(hwndIme, WM_IME_ENDCOMPOSITION, 0, 0);
+                        {
+                            PostMessageA(hWnd, WM_INTERIM, bFirst, KOR_INTERIM_FLAGS);
+                            PostMessageA(hWnd, WM_INTERIM, bSecond, KOR_INTERIM_FLAGS);
+                        }
                     }
                     else
                     {
-                        pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
-                        if (bSrcIsAnsi)
+                        if (bDestIsUnicode)
                         {
-                            if (bDestIsUnicode)
-                            {
-                                CHAR szTmp[2];
-                                szTmp[0] = LOBYTE(s_chKorean);
-                                szTmp[1] = HIBYTE(s_chKorean);
-                                WCHAR wTmp[2];
-                                if (Imm32AnsiToWide(szTmp, 2, wTmp, _countof(wTmp)))
-                                    PostMessageW(hWnd, WM_CHAR, wTmp[0], KOR_SCAN_CODE_SBCS);
-                                PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
-                                PostMessageW(hWnd, WM_KEYDOWN, VK_BACK, KOR_KEYDOWN_FLAGS);
-                            }
-                            else
-                            {
-                                PostMessageA(hWnd, WM_CHAR, LOBYTE(s_chKorean),
-                                             KOR_SCAN_CODE_SBCS);
-                                PostMessageA(hWnd, WM_CHAR, HIBYTE(s_chKorean),
-                                             KOR_SCAN_CODE_SBCS);
-                                PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
-                                PostMessageA(hWnd, WM_KEYDOWN, VK_BACK, KOR_KEYDOWN_FLAGS);
-                            }
+                            PostMessageW(hWnd, WM_INTERIM, wParam, KOR_INTERIM_FLAGS);
                         }
                         else
                         {
-                            if (bDestIsUnicode)
-                            {
-                                PostMessageW(hWnd, WM_CHAR, (WCHAR)s_chKorean, KOR_SCAN_CODE_SBCS);
-                                PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
-                                PostMessageW(hWnd, WM_KEYDOWN, VK_BACK, KOR_KEYDOWN_FLAGS);
-                            }
-                            else
-                            {
-                                CHAR szTmp[2];
-                                WCHAR wTmp[2] = { (WCHAR)s_chKorean, 0 };
-                                Imm32WideToAnsi(wTmp, 1, szTmp, _countof(szTmp));
-                                PostMessageA(hWnd, WM_CHAR, (BYTE)szTmp[0], KOR_SCAN_CODE_SBCS);
-                                PostMessageA(hWnd, WM_CHAR, (BYTE)szTmp[1], KOR_SCAN_CODE_SBCS);
-                                PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
-                                PostMessageA(hWnd, WM_KEYDOWN, VK_BACK, KOR_KEYDOWN_FLAGS);
-                            }
+                            WCHAR wTmp[2] = { (WCHAR)wParam, 0 };
+                            CHAR szTmp[2];
+                            Imm32WideToAnsi(wTmp, 1, szTmp, _countof(szTmp));
+                            PostMessageA(hWnd, WM_INTERIM, (BYTE)szTmp[0], KOR_INTERIM_FLAGS);
+                            PostMessageA(hWnd, WM_INTERIM, (BYTE)szTmp[1], KOR_INTERIM_FLAGS);
                         }
                     }
-                    break;
 
-                case WM_IMEKEYDOWN:
-                    pPostMessage(hWnd, WM_KEYDOWN, (WPARAM)(LOWORD(wParam)), lParam);
-                    break;
+                    if (bDestIsUnicode)
+                        PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                    else
+                        PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
 
-                case WM_IMEKEYUP:
-                    pPostMessage(hWnd, WM_KEYUP, (WPARAM)(LOWORD(wParam)), lParam);
-                    break;
+                    pSendMessage(hwndIme, WM_IME_ENDCOMPOSITION, 0, 0);
+                }
+                else
+                {
+                    pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
+                    if (bSrcIsAnsi)
+                    {
+                        if (bDestIsUnicode)
+                        {
+                            CHAR szTmp[2];
+                            szTmp[0] = LOBYTE(s_chKorean);
+                            szTmp[1] = HIBYTE(s_chKorean);
+                            WCHAR wTmp[2];
+                            if (Imm32AnsiToWide(szTmp, 2, wTmp, _countof(wTmp)))
+                                PostMessageW(hWnd, WM_CHAR, wTmp[0], KOR_SCAN_CODE_SBCS);
+                            PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                            PostMessageW(hWnd, WM_KEYDOWN, VK_BACK, KOR_KEYDOWN_FLAGS);
+                        }
+                        else
+                        {
+                            PostMessageA(hWnd, WM_CHAR, LOBYTE(s_chKorean), KOR_SCAN_CODE_SBCS);
+                            PostMessageA(hWnd, WM_CHAR, HIBYTE(s_chKorean), KOR_SCAN_CODE_SBCS);
+                            PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                            PostMessageA(hWnd, WM_KEYDOWN, VK_BACK, KOR_KEYDOWN_FLAGS);
+                        }
+                    }
+                    else
+                    {
+                        if (bDestIsUnicode)
+                        {
+                            PostMessageW(hWnd, WM_CHAR, (WCHAR)s_chKorean, KOR_SCAN_CODE_SBCS);
+                            PostMessageW(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                            PostMessageW(hWnd, WM_KEYDOWN, VK_BACK, KOR_KEYDOWN_FLAGS);
+                        }
+                        else
+                        {
+                            CHAR szTmp[2];
+                            WCHAR wTmp[2] = { (WCHAR)s_chKorean, 0 };
+                            Imm32WideToAnsi(wTmp, 1, szTmp, _countof(szTmp));
+                            PostMessageA(hWnd, WM_CHAR, (BYTE)szTmp[0], KOR_SCAN_CODE_SBCS);
+                            PostMessageA(hWnd, WM_CHAR, (BYTE)szTmp[1], KOR_SCAN_CODE_SBCS);
+                            PostMessageA(hWnd, WM_IME_REPORT, IR_STRINGEND, 0);
+                            PostMessageA(hWnd, WM_KEYDOWN, VK_BACK, KOR_KEYDOWN_FLAGS);
+                        }
+                    }
+                }
+                break;
 
-                default:
-                    pSendMessage(hwndIme, uMsg, wParam, lParam);
-                    break;
-            }
-        }
-        else
-        {
-            pSendMessage(hwndIme, uMsg, wParam, lParam);
+            case WM_IMEKEYDOWN:
+                pPostMessage(hWnd, WM_KEYDOWN, (WPARAM)LOWORD(wParam), lParam);
+                break;
+
+            case WM_IMEKEYUP:
+                pPostMessage(hWnd, WM_KEYUP, (WPARAM)LOWORD(wParam), lParam);
+                break;
+
+            default:
+                pSendMessage(hwndIme, uMsg, wParam, lParam);
+                break;
         }
     }
 
