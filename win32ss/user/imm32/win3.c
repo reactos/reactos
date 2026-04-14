@@ -1234,7 +1234,7 @@ Imm32JTransCompositionW(
     }
 
     HGLOBAL hEx, hStr;
-    PVOID pEx, pStr;
+    PVOID pEx = NULL, pStr = NULL;
     BOOL bExSuccess = FALSE, bStrSuccess = FALSE;
     LRESULT res;
     DWORD exSize, strSize;
@@ -1377,7 +1377,7 @@ WINNLSTranslateMessageJ(
         {
             // Move WM_IME_ENDCOMPOSITION to the end of the list
             PTRANSMSG pSrc = pEndComp + 1, pDest = pEndComp;
-            for (INT iEntry = 0; iEntry < cEntries - 1 && pSrc->message; ++iEntry)
+            for (INT iEntry = 0; iEntry < cEntries - 1 && pSrc->message != WM_NULL; ++iEntry)
                 *pDest++ = *pSrc++;
 
             pDest->message = WM_IME_ENDCOMPOSITION;
@@ -1614,22 +1614,22 @@ WINNLSTranslateMessageK(
                     {
                         pPostMessage(hWnd, WM_IME_REPORT, IR_STRINGSTART, 0);
 
-                        BYTE bLow = HIBYTE(wParam), bHigh = LOBYTE(wParam);
-                        s_chKorean = MAKEWORD(bLow, bHigh);
+                        BYTE bFirst = HIBYTE(wParam), bSecond = LOBYTE(wParam);
+                        s_chKorean = MAKEWORD(bFirst, bSecond);
 
                         if (bSrcIsAnsi)
                         {
                             if (bDestIsUnicode)
                             {
-                                CHAR szTmp[2] = { (CHAR)bLow, (CHAR)bHigh };
+                                CHAR szTmp[2] = { (CHAR)bFirst, (CHAR)bSecond };
                                 WCHAR wTmp[2];
                                 if (Imm32AnsiToWide(szTmp, 2, wTmp, _countof(wTmp)))
                                     PostMessageW(hWnd, WM_INTERIM, wTmp[0], KOR_INTERIM_FLAGS);
                             }
                             else
                             {
-                                PostMessageA(hWnd, WM_INTERIM, bLow, KOR_INTERIM_FLAGS);
-                                PostMessageA(hWnd, WM_INTERIM, bHigh, KOR_INTERIM_FLAGS);
+                                PostMessageA(hWnd, WM_INTERIM, bFirst, KOR_INTERIM_FLAGS);
+                                PostMessageA(hWnd, WM_INTERIM, bSecond, KOR_INTERIM_FLAGS);
                             }
                         }
                         else
