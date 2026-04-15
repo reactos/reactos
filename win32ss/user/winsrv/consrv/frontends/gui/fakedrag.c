@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FakeDrag functions *********************************************************/
-
 UINT FakeDragQueryFileA(HDROP hDrop, UINT lFile, LPSTR lpszFile, UINT lLength)
 {
     LPSTR lpDrop;
