@@ -22,6 +22,7 @@
 
 #include "concfg/font.h"
 #include "guiterm.h"
+#include "fakedrag.h"
 #include "resource.h"
 
 /* GLOBALS ********************************************************************/
@@ -36,7 +37,6 @@
 #define CONGUI_UPDATE_TIMER   1
 
 #define CURSOR_BLINK_TIME 500
-
 
 /**************************************************************\
 \** Define the Console Leader Process for the console window **/
@@ -714,7 +714,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     NtSetEvent(GuiData->hGuiInitEvent, NULL);
 
     /* We accept dropped files */
-    DragAcceptFiles(GuiData->hWindow, TRUE);
+    FakeDragAcceptFiles(GuiData->hWindow, TRUE);
 
     return (BOOL)DefWindowProcW(GuiData->hWindow, WM_NCCREATE, 0, (LPARAM)Create);
 }
@@ -2216,8 +2216,8 @@ OnDropFiles(PCONSRV_CONSOLE Console, HDROP hDrop)
 
     szPath[0] = L'"';
 
-    DragQueryFileW(hDrop, 0, &szPath[1], ARRAYSIZE(szPath) - 1);
-    DragFinish(hDrop);
+    FakeDragQueryFileW(hDrop, 0, &szPath[1], ARRAYSIZE(szPath) - 1);
+    FakeDragFinish(hDrop);
 
     if (wcschr(&szPath[1], L' ') != NULL)
     {

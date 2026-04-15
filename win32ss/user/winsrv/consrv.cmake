@@ -30,6 +30,7 @@ list(APPEND CONSRV_SOURCE
     consrv/frontends/terminal.c
     consrv/frontends/wcwidth.c
     consrv/frontends/gui/conwnd.c
+    consrv/frontends/gui/fakedrag.c
     consrv/frontends/gui/fullscreen.c
     consrv/frontends/gui/guiterm.c
     consrv/frontends/gui/guisettings.c
@@ -58,6 +59,6 @@ add_dependencies(consrv psdk)
 add_pch(consrv consrv/consrv.h CONSRV_SOURCE)
 #add_object_library(consrv ${CONSRV_SOURCE})
 #list(APPEND CONSRV_IMPORT_LIBS)
-list(APPEND CONSRV_DELAY_IMPORT_LIBS shell32 ole32 psapi)
+list(APPEND CONSRV_DELAY_IMPORT_LIBS ole32 psapi)
 list(APPEND CONSRV_TARGET_LINK_LIBS concfg uuid)
 set_module_type(consrv module UNICODE)
