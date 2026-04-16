@@ -1853,6 +1853,15 @@ static void test_GetMouseMovePointsEx_process(void)
     HDESK desk0, desk1;
     HWINSTA winstation0, winstation1;
 
+#ifdef __REACTOS__
+    if (is_reactos())
+    {
+        ok(FALSE, "Broken on ReactOS\n");
+        skip("Skipping test_GetMouseMovePointsEx_process due to CORE-20552\n");
+        return;
+    }
+#endif
+
     memset( out, 0, sizeof(out) );
     memset( out2, 0, sizeof(out2) );
 
