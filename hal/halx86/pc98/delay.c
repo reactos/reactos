@@ -25,6 +25,7 @@ HalpTscCalibrationISR(VOID);
 
 extern volatile ULONG TscCalibrationPhase;
 extern ULONG64 TscCalibrationArray[NUM_SAMPLES];
+extern UCHAR HalpStallExecutionStart;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -33,7 +34,7 @@ CODE_SEG("INIT")
 VOID
 HalpPrepareStallExecution(VOID)
 {
-    PUCHAR Instruction = (PUCHAR)((ULONG_PTR)KeStallExecutionProcessor + 1);
+    PUCHAR Instruction = &HalpStallExecutionStart;
     PKPRCB Prcb = KeGetCurrentPrcb();
 
     /* xor eax, eax; cpuid */
