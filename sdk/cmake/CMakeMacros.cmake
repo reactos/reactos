@@ -280,7 +280,7 @@ function(add_cd_file)
     list(FIND _CD_FOR "all" __cd)
     if(NOT __cd EQUAL -1)
         list(REMOVE_ITEM _CD_FOR "all")
-        list(APPEND _CD_FOR "bootcd;livecd;regtest")
+        list(APPEND _CD_FOR "bootcd;livecd;regtest;preinstall")
     endif()
 
     # do we add it to bootcd?
@@ -391,7 +391,25 @@ function(add_cd_file)
             #    add_dependencies(reactos_cab ${_CD_TARGET})
             #endif()
         endif()
-    endif() #end bootcd
+    endif() #end regtest
+
+    # do we add it to preinstall?
+    list(FIND _CD_FOR preinstall __cd)
+    if(NOT __cd EQUAL -1)
+        # manage dependency
+        if(_CD_TARGET)
+            add_dependencies(preinstall_partition ${_CD_TARGET} registry_inf)
+        endif()
+        foreach(item ${_CD_FILE})
+            if(_CD_NAME_ON_CD)
+                # rename it in the cd tree
+                set(__file ${_CD_NAME_ON_CD})
+            else()
+                get_filename_component(__file ${item} NAME)
+            endif()
+            set_property(GLOBAL APPEND PROPERTY PREINSTALL_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+        endforeach()
+    endif() #end preinstall
 endfunction()
 
 function(create_iso_lists)
@@ -424,36 +442,54 @@ function(create_iso_lists)
         FOR hybridcd)
 
     get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst "${_filelist}")
+    if(_filelist)
+        string(REPLACE ";" "\n" _filelist "${_filelist}")
+        file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst "${_filelist}\n")
+    endif()
     unset(_filelist)
     file(GENERATE
          OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd.$<CONFIG>.lst
          INPUT ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst)
 
     get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst "${_filelist}")
+    if(_filelist)
+        string(REPLACE ";" "\n" _filelist "${_filelist}")
+        file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst "${_filelist}\n")
+    endif()
     unset(_filelist)
     file(GENERATE
          OUTPUT ${REACTOS_BINARY_DIR}/boot/livecd.$<CONFIG>.lst
          INPUT ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst)
 
     get_property(_filelist GLOBAL PROPERTY HYBRIDCD_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst "${_filelist}")
+    if(_filelist)
+        string(REPLACE ";" "\n" _filelist "${_filelist}")
+        file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst "${_filelist}\n")
+    endif()
     unset(_filelist)
     file(GENERATE
          OUTPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.$<CONFIG>.lst
          INPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst)
 
     get_property(_filelist GLOBAL PROPERTY BOOTCDREGTEST_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst "${_filelist}")
+    if(_filelist)
+        string(REPLACE ";" "\n" _filelist "${_filelist}")
+        file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst "${_filelist}\n")
+    endif()
     unset(_filelist)
     file(GENERATE
          OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.$<CONFIG>.lst
          INPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst)
+
+    get_property(_filelist GLOBAL PROPERTY PREINSTALL_FILE_LIST)
+    if(_filelist)
+        string(REPLACE ";" "\n" _filelist "${_filelist}")
+        file(APPEND ${REACTOS_BINARY_DIR}/boot/preinstall.cmake.lst "${_filelist}\n")
+    endif()
+    unset(_filelist)
+    file(GENERATE
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/preinstall.$<CONFIG>.lst
+         INPUT ${REACTOS_BINARY_DIR}/boot/preinstall.cmake.lst)
 endfunction()
 
 # Create module_clean targets
@@ -874,6 +910,50 @@ function(create_registry_hives)
         TARGET livecd_hives
         DESTINATION reactos/system32/config
         FOR livecd)
+
+    # Preinstall hives (same as LiveCD but with preinstall.inf instead of livecd.inf)
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall)
+
+    list(APPEND _preinstall_inf_files
+        ${_registry_inf}
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/preinstall.inf
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/caroots.inf)
+    if(SARCH STREQUAL "xbox")
+        list(APPEND _preinstall_inf_files
+            ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst_xbox.inf)
+    elseif(SARCH STREQUAL "pc98")
+        list(APPEND _preinstall_inf_files
+            ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst_pc98.inf)
+    else()
+        list(APPEND _preinstall_inf_files
+            ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst.inf)
+    endif()
+
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/system
+               ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/software
+               ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/default
+               ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/sam
+               ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/security
+        COMMAND native-mkhive -h:SYSTEM,SOFTWARE,DEFAULT,SAM,SECURITY -d:${CMAKE_BINARY_DIR}/boot/bootdata/preinstall ${_preinstall_inf_files}
+        DEPENDS native-mkhive ${_preinstall_inf_files})
+
+    add_custom_target(preinstall_hives
+        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/system
+                ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/software
+                ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/default
+                ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/sam
+                ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/security)
+
+    add_cd_file(
+        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/system
+             ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/software
+             ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/default
+             ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/sam
+             ${CMAKE_BINARY_DIR}/boot/bootdata/preinstall/security
+        TARGET preinstall_hives
+        DESTINATION reactos/system32/config
+        FOR preinstall)
 
     # BCD hive (for EFI-compatible platforms)
     if(NOT ARCH STREQUAL "i386" OR NOT (SARCH STREQUAL "pc98" OR SARCH STREQUAL "xbox"))

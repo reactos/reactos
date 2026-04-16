@@ -185,7 +185,7 @@ DRESULT disk_ioctl(
                 *(DWORD*)buff = 512;
                 return RES_OK;
             case GET_BLOCK_SIZE:
-                *(DWORD*)buff = 512;
+                *(DWORD*)buff = 1;
                 return RES_OK;
             case GET_SECTOR_COUNT:
             {
@@ -197,7 +197,9 @@ DRESULT disk_ioctl(
                         sectorCount[pdrv] = ftell(driveHandle[pdrv]) / 512;
                 }
 
-                *(DWORD*)buff = sectorCount[pdrv];
+                /* Round down to track boundary (SectorsPerTrack=63)
+                 * to match mainstream mkfs.fat behavior */
+                *(DWORD*)buff = (sectorCount[pdrv] / 63) * 63;
                 return RES_OK;
             }
             case SET_SECTOR_COUNT:

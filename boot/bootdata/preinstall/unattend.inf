@@ -1,0 +1,31 @@
+[Unattend]
+Signature = "$ReactOS$"
+
+; Unattended 2nd stage setup for pre-installed disk image
+; First boot runs InstallReactOS() automatically
+UnattendSetupEnabled = yes
+
+; Install to \Device\Harddisk0\Partition1\ReactOS
+DestinationDiskNumber = 0
+DestinationPartitionNumber = 1
+InstallationDirectory=ReactOS
+
+FullName="ReactOS User"
+ComputerName="REACTOS"
+
+; TimeZone is set GMT as default
+TimeZoneIndex=85
+
+; set this option to automatically
+; specify language in 2nd mode setup
+; see hivesys.inf for available languages
+LocaleID = 409
+
+; set product option
+; 0: ReactOS Server
+; 1: ReactOS Workstation
+ProductOption = 1
+
+; disable Gecko install for faster setup
+DisableGeckoInst = yes
+

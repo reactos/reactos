@@ -2509,6 +2509,7 @@ FRESULT f_open (
 				dw = GET_FATTIME();
 				ST_DWORD(dir + DIR_CrtTime, dw);/* Set created time */
 				ST_DWORD(dir + DIR_WrtTime, dw);/* Set modified time */
+				ST_WORD(dir + DIR_LstAccDate, (WORD)(dw >> 16));
 				dir[DIR_Attr] = 0;				/* Reset attribute */
 				ST_DWORD(dir + DIR_FileSize, 0);/* Reset file size */
 				cl = ld_clust(dj.fs, dir);		/* Get cluster chain */
@@ -2834,7 +2835,7 @@ FRESULT f_sync (
 				st_clust(dir, fp->sclust);					/* Update start cluster */
 				tm = GET_FATTIME();							/* Update modified time */
 				ST_DWORD(dir + DIR_WrtTime, tm);
-				ST_WORD(dir + DIR_LstAccDate, 0);
+				ST_WORD(dir + DIR_LstAccDate, (WORD)(tm >> 16));
 				fp->flag &= ~FA__WRITTEN;
 				fp->fs->wflag = 1;
 				res = sync_fs(fp->fs);
@@ -3628,6 +3629,7 @@ FRESULT f_mkdir (
 				dir[DIR_Attr] = AM_DIR;
 				ST_DWORD(dir + DIR_CrtTime, tm);
 				ST_DWORD(dir + DIR_WrtTime, tm);
+				ST_WORD(dir + DIR_LstAccDate, (WORD)(tm >> 16));
 				st_clust(dir, dcl);
 				mem_cpy(dir + SZ_DIRE, dir, SZ_DIRE); 	/* Create ".." entry */
 				dir[SZ_DIRE + 1] = '.'; pcl = dj.sclust;
@@ -3650,6 +3652,7 @@ FRESULT f_mkdir (
 				dir[DIR_Attr] = AM_DIR;				/* Attribute */
 				ST_DWORD(dir + DIR_CrtTime, tm);	/* Created time */
 				ST_DWORD(dir + DIR_WrtTime, tm);	/* Modified time */
+				ST_WORD(dir + DIR_LstAccDate, (WORD)(tm >> 16));
 				st_clust(dir, dcl);					/* Table start cluster */
 				dj.fs->wflag = 1;
 				res = sync_fs(dj.fs);
@@ -3963,6 +3966,7 @@ FRESULT f_setlabel (
 				tm = GET_FATTIME();
 				ST_DWORD(dj.dir + DIR_CrtTime, tm);
 				ST_DWORD(dj.dir + DIR_WrtTime, tm);
+				ST_WORD(dj.dir + DIR_LstAccDate, (WORD)(tm >> 16));
 			} else {
 				dj.dir[0] = DDEM;			/* Remove the volume label */
 			}
@@ -3980,6 +3984,7 @@ FRESULT f_setlabel (
 						tm = GET_FATTIME();
 						ST_DWORD(dj.dir + DIR_CrtTime, tm);
 						ST_DWORD(dj.dir + DIR_WrtTime, tm);
+						ST_WORD(dj.dir + DIR_LstAccDate, (WORD)(tm >> 16));
 						dj.fs->wflag = 1;
 						res = sync_fs(dj.fs);
 					}
@@ -4138,7 +4143,15 @@ FRESULT f_mkfs (
 
 	/* Determine offset and size of FAT structure */
 	if (fmt == FS_FAT32) {
-		n_fat = ((n_clst * 4) + 8 + SS(fs) - 1) / SS(fs);
+		/* FAT size calculation per MS FAT32 spec, rounded up to
+		 * 8-sector boundary to match mainstream mkfs.fat behavior */
+		{
+			DWORD tmp1 = n_vol - 32;
+			DWORD tmp2 = (256 * au) + N_FATS;
+			tmp2 = tmp2 / 2;
+			n_fat = (tmp1 + tmp2 - 1) / tmp2;
+			n_fat = (n_fat + 7) & ~7;	/* Round up to multiple of 8 */
+		}
 		n_rsv = 32;
 		n_dir = 0;
 	} else {
@@ -4233,8 +4246,14 @@ FRESULT f_mkfs (
 	ST_DWORD(tbl + BPB_HiddSec, b_vol);		/* Hidden sectors */
 	n = GET_FATTIME();						/* Use current time as VSN */
 	if (fmt == FS_FAT32) {
+		WORD n_heads;
 		ST_WORD(tbl + BPB_SecPerTrk, 63);	/* Number of sectors per track */
-		ST_WORD(tbl + BPB_NumHeads, 255);	/* Number of heads */
+		/* Compute heads to keep CHS cylinders < 1024, matching mkfs.fat */
+		for (n_heads = 8; n_heads < 255; n_heads *= 2) {
+			if (n_vol / ((DWORD)n_heads * 63) < 1024) break;
+		}
+		if (n_heads > 255) n_heads = 255;
+		ST_WORD(tbl + BPB_NumHeads, n_heads);	/* Number of heads */
 		ST_DWORD(tbl + BS_VolID32, n);		/* VSN */
 		ST_DWORD(tbl + BPB_FATSz32, n_fat);	/* Number of sectors per FAT */
 		ST_DWORD(tbl + BPB_RootClus, 2);	/* Root directory start cluster (2) */
