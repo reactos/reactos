@@ -556,6 +556,8 @@ ConioWriteConsole(PFRONTEND FrontEnd,
             /* --- BS --- */
             else if (Buffer[i] == L'\b')
             {
+                INT OldX = Buff->CursorPosition.X;
+
                 /* Only handle BS if we are not on the first position of the first line */
                 if (Buff->CursorPosition.X == 0 && Buff->CursorPosition.Y == 0)
                     continue;
@@ -622,8 +624,8 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                     Ptr->Attributes = Buff->ScreenDefaultAttrib;
                 Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
 
-                UpdateRect.Left  = min(UpdateRect.Left , Buff->CursorPosition.X);
-                UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
+                UpdateRect.Left  = min(min(UpdateRect.Left , Buff->CursorPosition.X), OldX);
+                UpdateRect.Right = max(max(UpdateRect.Right, Buff->CursorPosition.X), OldX);
                 continue;
             }
             /* --- TAB --- */
@@ -778,6 +780,8 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                 Ptr->Attributes = Buff->ScreenDefaultAttrib;
             Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
             Ptr->Attributes |= COMMON_LVB_TRAILING_BYTE;
+
+            UpdateRect.Right++;
         }
         else
         {
