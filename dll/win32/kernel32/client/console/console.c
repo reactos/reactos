@@ -3316,44 +3316,33 @@ static NTSTATUS
 IntRegQueryValue(
     IN HANDLE hKey,
     IN PCWSTR pszValueName,
-    IN ULONG cbValue,
-    OUT PVOID pvValue)
+    OUT PVOID pvValue,
+    IN ULONG cbValue)
 {
     NTSTATUS status;
     UNICODE_STRING valueName;
-    ULONG cbInfoSize, cbResultLength;
+    ULONG cbInfo, cbResult;
     PKEY_VALUE_PARTIAL_INFORMATION pInfo;
-    PBYTE pbValue = pvValue;
+    HANDLE hProcessHeap = GetProcessHeap();
 
-    RtlInitUnicodeString(&valueName, pszValueName);
-
-    cbInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) - sizeof(UCHAR) + cbValue + valueName.Length;
-    pInfo = LocalAlloc(LPTR, cbInfoSize);
+    cbInfo = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + cbValue;
+    pInfo = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, cbInfo);
     if (!pInfo)
         return STATUS_NO_MEMORY;
 
-    status = NtQueryValueKey(hKey,
-                             &valueName,
-                             KeyValuePartialInformation,
-                             pInfo,
-                             cbInfoSize,
-                             &cbResultLength);
-
+    RtlInitUnicodeString(&valueName, pszValueName);
+    status = NtQueryValueKey(hKey, &valueName, KeyValuePartialInformation,
+                             pInfo, cbInfo, &cbResult);
     if (NT_SUCCESS(status))
     {
-        RtlMoveMemory(pbValue, pInfo->Data, pInfo->DataLength);
+        RtlCopyMemory(pvValue, pInfo->Data, pInfo->DataLength);
 
-        if (pInfo->Type == REG_SZ)
-        {
-            ULONG cbData = pInfo->DataLength;
-            if (cbData + sizeof(WCHAR) > cbValue)
-                cbData -= sizeof(WCHAR);
-
-            *(PWCHAR)(&pbValue[cbData]) = UNICODE_NULL;
-        }
+        /* SECURITY: Avoid buffer overrun */
+        if (pInfo->Type == REG_SZ && cbValue >= sizeof(UNICODE_NULL))
+            ((PWCHAR)pvValue)[cbValue / sizeof(WCHAR) - 1] = UNICODE_NULL;
     }
 
-    LocalFree(pInfo);
+    HeapFree(hProcessHeap, 0, pInfo);
     return status;
 }
 
@@ -3382,7 +3371,7 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
     status = IntRegOpenKey(NULL, ConsoleKey, &hKey);
     if (NT_SUCCESS(status))
     {
-        status = IntRegQueryValue(hKey, L"ConsoleIME", sizeof(String), String);
+        status = IntRegQueryValue(hKey, L"ConsoleIME", String, sizeof(String));
         if (NT_SUCCESS(status))
         {
             status = RtlStringCchLengthW(String, _countof(String), &cchLength);
