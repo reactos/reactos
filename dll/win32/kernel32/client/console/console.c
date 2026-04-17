@@ -45,6 +45,7 @@ static USHORT ExeNameLength;    // Count in number of characters without NULL
 static WCHAR StartDirBuffer[MAX_PATH + 1];  // NULL-terminated
 static USHORT StartDirLength;   // Count in number of characters without NULL
 
+BOOL g_bConImeNowStartingUp = FALSE;
 
 /* Default Console Control Handler ********************************************/
 
@@ -3298,6 +3299,169 @@ SetLastConsoleEventActive(VOID)
                                NULL,
                                CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepNotifyLastClose),
                                sizeof(*NotifyLastCloseRequest));
+}
+
+static NTSTATUS
+IntRegOpenKey(IN HANDLE hRootKey, IN PCWSTR pszKeyName, OUT PHANDLE phKey)
+{
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING keyName;
+
+    RtlInitUnicodeString(&keyName, pszKeyName);
+    InitializeObjectAttributes(&attr, &keyName, OBJ_CASE_INSENSITIVE, hRootKey, NULL);
+    return NtOpenKey(phKey, KEY_READ, &attr);
+}
+
+static NTSTATUS
+IntRegQueryValue(
+    IN HANDLE hKey,
+    IN PCWSTR pszValueName,
+    IN ULONG cbValue,
+    OUT PVOID pvValue)
+{
+    NTSTATUS status;
+    UNICODE_STRING valueName;
+    ULONG cbInfoSize, cbResultLength;
+    PKEY_VALUE_PARTIAL_INFORMATION pInfo;
+    PBYTE pbValue = pvValue;
+
+    RtlInitUnicodeString(&valueName, pszValueName);
+
+    cbInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) - sizeof(UCHAR) + cbValue + valueName.Length;
+    pInfo = LocalAlloc(LPTR, cbInfoSize);
+    if (!pInfo)
+        return STATUS_NO_MEMORY;
+
+    status = NtQueryValueKey(hKey,
+                             &valueName,
+                             KeyValuePartialInformation,
+                             pInfo,
+                             cbInfoSize,
+                             &cbResultLength);
+
+    if (NT_SUCCESS(status))
+    {
+        RtlMoveMemory(pbValue, pInfo->Data, pInfo->DataLength);
+
+        if (pInfo->Type == REG_SZ)
+        {
+            ULONG cbData = pInfo->DataLength;
+            if (cbData + sizeof(WCHAR) > cbValue)
+                cbData -= sizeof(WCHAR);
+
+            *(PWCHAR)(&pbValue[cbData]) = UNICODE_NULL;
+        }
+    }
+
+    LocalFree(pInfo);
+    return status;
+}
+
+/* Build the conime.exe command line */
+static VOID GetCommandLineString(OUT PWSTR pszBuffer, IN UINT cchBuffer)
+{
+    NTSTATUS status;
+    HANDLE hKey;
+    size_t cchLength;
+    WCHAR String[2 * MAX_PATH];
+    PCWSTR ConsoleKey =
+        L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console";
+
+    UINT cchSysDir = GetSystemDirectoryW(pszBuffer, cchBuffer);
+    if (cchSysDir)
+    {
+        pszBuffer[cchSysDir] = L'\\';
+        pszBuffer[cchSysDir + 1] = UNICODE_NULL;
+        cchBuffer -= cchSysDir + 1;
+    }
+    else
+    {
+        *pszBuffer = UNICODE_NULL;
+    }
+
+    status = IntRegOpenKey(NULL, ConsoleKey, &hKey);
+    if (NT_SUCCESS(status))
+    {
+        status = IntRegQueryValue(hKey, L"ConsoleIME", sizeof(String), String);
+        if (NT_SUCCESS(status))
+        {
+            status = RtlStringCchLengthW(String, _countof(String), &cchLength);
+            if (NT_SUCCESS(status) && cchLength < cchBuffer)
+            {
+                RtlStringCchCatW(pszBuffer, cchBuffer, String);
+                NtClose(hKey);
+                return;
+            }
+            *pszBuffer = UNICODE_NULL;
+        }
+        else
+        {
+            DPRINT("IntRegQueryValue failed: 0x%08X\n", status);
+        }
+        NtClose(hKey);
+    }
+    else
+    {
+        DPRINT1("IntRegOpenKey failed: 0x%08X\n", status);
+    }
+
+    RtlStringCchCatW(pszBuffer, cchBuffer, L"conime.exe");
+}
+
+/*
+ * @implemented
+ */
+DWORD WINAPI ConsoleIMERoutine(LPVOID unused)
+{
+    DWORD dwError, dwWait, dwCreationFlags;
+    HANDLE hEvent;
+    PROCESS_INFORMATION pi;
+    STARTUPINFOW si1, si2;
+    WCHAR szCommandLine[2 * MAX_PATH];
+
+    if (g_bConImeNowStartingUp)
+        return STATUS_UNSUCCESSFUL;
+
+    g_bConImeNowStartingUp = TRUE;
+
+    hEvent = CreateEventW(NULL, FALSE, FALSE, L"ConsoleIME_StartUp_Event");
+    if (!hEvent || GetLastError() == ERROR_ALREADY_EXISTS)
+    {
+        g_bConImeNowStartingUp = FALSE;
+        return ERROR_SUCCESS;
+    }
+
+    GetCommandLineString(szCommandLine, _countof(szCommandLine));
+    GetStartupInfoW(&si1);
+
+    RtlZeroMemory(&si2, sizeof(si2));
+    si2.lpDesktop = si1.lpDesktop;
+    si2.cb = sizeof(si2);
+    si2.wShowWindow = SW_HIDE;
+    si2.dwFlags = STARTF_FORCEONFEEDBACK;
+
+    dwCreationFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_BREAKAWAY_FROM_JOB |
+                      CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS;
+    if (CreateProcessW(NULL, szCommandLine, NULL, NULL, FALSE, dwCreationFlags,
+                       NULL, NULL, &si2, &pi))
+    {
+        dwWait = WaitForSingleObject(hEvent, 10 * 1000);
+        if (dwWait == WAIT_TIMEOUT)
+            TerminateProcess(pi.hProcess, 0);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        dwError = ERROR_SUCCESS;
+    }
+    else
+    {
+        dwError = GetLastError();
+        DPRINT1("ConIme.exe startup failed: 0x%08X", dwError);
+    }
+
+    CloseHandle(hEvent);
+
+    g_bConImeNowStartingUp = FALSE;
+    return dwError;
 }
 
 /* EOF */

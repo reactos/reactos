@@ -442,7 +442,7 @@ ConDllInitialize(IN ULONG Reason,
     /* Initialize the console dispatchers */
     ConnectInfo.CtrlRoutine = ConsoleControlDispatcher;
     ConnectInfo.PropRoutine = PropDialogHandler;
-    // ConnectInfo.ImeRoutine  = ImeRoutine;
+    ConnectInfo.ImeRoutine  = ConsoleIMERoutine;
 
     /* Set up the console properties */
     if (ConnectInfo.IsConsoleApp && Parameters->ConsoleHandle == NULL)
