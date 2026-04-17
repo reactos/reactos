@@ -588,7 +588,7 @@ BOOL
 WINAPI
 UnregisterConsoleIME(VOID);
 
-DWORD WINAPI ConsoleIMERoutine(LPVOID unused);
+WINBASEAPI DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused);
 #endif // FE_IME
 
 #ifdef UNICODE

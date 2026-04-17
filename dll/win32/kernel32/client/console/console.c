@@ -3351,9 +3351,9 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
 {
     NTSTATUS status;
     HANDLE hKey;
-    size_t cchLength;
-    WCHAR String[2 * MAX_PATH];
-    PCWSTR ConsoleKey =
+    size_t cchValue;
+    WCHAR szValue[2 * MAX_PATH];
+    static const PCWSTR ConsoleKey =
         L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console";
 
     UINT cchSysDir = GetSystemDirectoryW(pszBuffer, cchBuffer);
@@ -3368,18 +3368,24 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
         *pszBuffer = UNICODE_NULL;
     }
 
+    /* Open registry key */
     status = IntRegOpenKey(NULL, ConsoleKey, &hKey);
     if (NT_SUCCESS(status))
     {
-        status = IntRegQueryValue(hKey, L"ConsoleIME", String, sizeof(String));
+        /* Query "ConsoleIME" value */
+        status = IntRegQueryValue(hKey, L"ConsoleIME", szValue, sizeof(szValue));
         if (NT_SUCCESS(status))
         {
-            status = RtlStringCchLengthW(String, _countof(String), &cchLength);
-            if (NT_SUCCESS(status) && cchLength < cchBuffer)
+            /* Append value to pszBuffer */
+            status = RtlStringCchLengthW(szValue, _countof(szValue), &cchValue);
+            if (NT_SUCCESS(status) && cchValue < cchBuffer)
             {
-                RtlStringCchCatW(pszBuffer, cchBuffer, String);
-                NtClose(hKey);
-                return;
+                status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
+                if (NT_SUCCESS(status))
+                {
+                    NtClose(hKey);
+                    return; /* Success */
+                }
             }
             *pszBuffer = UNICODE_NULL;
         }
@@ -3400,7 +3406,7 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
 /*
  * @implemented
  */
-DWORD WINAPI ConsoleIMERoutine(LPVOID unused)
+DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
 {
     DWORD dwError, dwWait, dwCreationFlags;
     HANDLE hEvent;
