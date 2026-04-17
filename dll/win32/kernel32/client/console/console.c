@@ -44,7 +44,7 @@ static WCHAR ExeNameBuffer[EXENAME_LENGTH]; // NULL-terminated
 static USHORT ExeNameLength;    // Count in number of characters without NULL
 static WCHAR StartDirBuffer[MAX_PATH + 1];  // NULL-terminated
 static USHORT StartDirLength;   // Count in number of characters without NULL
-static BOOL g_bConsoleIMENowStartingUp = FALSE; // Is Console IME starting up?
+static LONG g_bConsoleIMEStartingUp = FALSE; // We use interlock, so LONG
 
 /* Default Console Control Handler ********************************************/
 
@@ -3410,16 +3410,14 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
 
     UNREFERENCED_PARAMETER(unused);
 
-    if (g_bConsoleIMENowStartingUp)
+    if (InterlockedCompareExchange(&g_bConsoleIMEStartingUp, TRUE, FALSE) != FALSE)
         return STATUS_UNSUCCESSFUL; /* NOTE: There's confusion between error codes and NTSTATUS */
-
-    g_bConsoleIMENowStartingUp = TRUE;
 
     hEvent = CreateEventW(NULL, FALSE, FALSE, L"ConsoleIME_StartUp_Event");
     dwError = GetLastError();
     if (!hEvent || dwError == ERROR_ALREADY_EXISTS)
     {
-        g_bConsoleIMENowStartingUp = FALSE;
+        InterlockedExchange(&g_bConsoleIMEStartingUp, FALSE);
         return ERROR_SUCCESS;
     }
 
@@ -3452,7 +3450,7 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
 
     CloseHandle(hEvent);
 
-    g_bConsoleIMENowStartingUp = FALSE;
+    InterlockedExchange(&g_bConsoleIMEStartingUp, FALSE);
     return dwError;
 }
 
