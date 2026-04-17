@@ -3301,18 +3301,6 @@ SetLastConsoleEventActive(VOID)
                                sizeof(*NotifyLastCloseRequest));
 }
 
-/* Open registry for reading */
-static NTSTATUS
-IntRegOpenKey(IN HANDLE hRootKey, IN PCWSTR pszKeyName, OUT PHANDLE phKey)
-{
-    OBJECT_ATTRIBUTES attr;
-    UNICODE_STRING keyName;
-
-    RtlInitUnicodeString(&keyName, pszKeyName);
-    InitializeObjectAttributes(&attr, &keyName, OBJ_CASE_INSENSITIVE, hRootKey, NULL);
-    return NtOpenKey(phKey, KEY_READ, &attr);
-}
-
 /* Query registry value */
 static NTSTATUS
 IntRegQueryValue(
@@ -3369,6 +3357,8 @@ static NTSTATUS IntPathQuoteSpacesW(IN OUT LPWSTR lpszPath, IN UINT cchPathMax)
 static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
 {
     NTSTATUS status;
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING keyName;
     HANDLE hKey;
     WCHAR szValue[2 * MAX_PATH];
     static const PCWSTR ConsoleKey =
@@ -3387,7 +3377,9 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
     }
 
     /* Open registry key */
-    status = IntRegOpenKey(NULL, ConsoleKey, &hKey);
+    RtlInitUnicodeString(&keyName, ConsoleKey);
+    InitializeObjectAttributes(&attr, &keyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    status = NtOpenKey(&hKey, KEY_QUERY_VALUE, &attr);
     if (NT_SUCCESS(status))
     {
         /* Query "ConsoleIME" value */
@@ -3406,7 +3398,7 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
                     return; /* Success */
                 }
             }
-            /* It failed. Let's think of a workaround */
+            /* It failed. Let's use a fallback path */
             pszBuffer[cchSysDir] = UNICODE_NULL;
         }
         else
@@ -3433,10 +3425,10 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
  */
 DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
 {
-    DWORD dwError, dwWait, dwCreationFlags;
+    DWORD dwError, dwCreationFlags;
     HANDLE hEvent;
     PROCESS_INFORMATION pi;
-    STARTUPINFOW si1, si2;
+    STARTUPINFOW si;
     WCHAR szCommandLine[2 * MAX_PATH];
 
     UNREFERENCED_PARAMETER(unused);
@@ -3453,20 +3445,19 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
     }
 
     GetConsoleIMECommandLine(szCommandLine, _countof(szCommandLine));
-    GetStartupInfoW(&si1);
 
-    RtlZeroMemory(&si2, sizeof(si2));
-    si2.cb = sizeof(si2);
-    si2.lpDesktop = si1.lpDesktop;
-    si2.wShowWindow = SW_HIDE;
-    si2.dwFlags = STARTF_FORCEONFEEDBACK | STARTF_USESHOWWINDOW;
+    RtlZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.lpDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo;
+    si.wShowWindow = SW_HIDE;
+    si.dwFlags = STARTF_FORCEONFEEDBACK | STARTF_USESHOWWINDOW;
 
     dwCreationFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_BREAKAWAY_FROM_JOB |
                       CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS;
     if (CreateProcessW(NULL, szCommandLine, NULL, NULL, FALSE, dwCreationFlags,
-                       NULL, NULL, &si2, &pi))
+                       NULL, NULL, &si, &pi))
     {
-        dwWait = WaitForSingleObject(hEvent, 10 * 1000);
+        DWORD dwWait = WaitForSingleObject(hEvent, 10 * 1000);
         if (dwWait == WAIT_TIMEOUT)
             TerminateProcess(pi.hProcess, 0);
         CloseHandle(pi.hThread);
