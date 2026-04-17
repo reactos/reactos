@@ -3309,23 +3309,21 @@ IntRegQueryValue(
     _Out_ PVOID pvValue,
     _In_ ULONG cbValue)
 {
-    NTSTATUS status;
-    UNICODE_STRING valueName;
-    ULONG cbInfo, cbResult;
-    PKEY_VALUE_PARTIAL_INFORMATION pInfo;
     HANDLE hProcessHeap = GetProcessHeap();
-
-    cbInfo = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + cbValue;
-    pInfo = HeapAlloc(hProcessHeap, 0, cbInfo);
+    const ULONG cbInfo = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + cbValue;
+    PKEY_VALUE_PARTIAL_INFORMATION pInfo = HeapAlloc(hProcessHeap, 0, cbInfo);
     if (!pInfo)
         return STATUS_NO_MEMORY;
 
+    UNICODE_STRING valueName;
     RtlInitUnicodeString(&valueName, pszValueName);
-    status = NtQueryValueKey(hKey, &valueName, KeyValuePartialInformation,
-                             pInfo, cbInfo, &cbResult);
+
+    ULONG cbResult;
+    NTSTATUS status = NtQueryValueKey(hKey, &valueName, KeyValuePartialInformation,
+                                      pInfo, cbInfo, &cbResult);
     if (NT_SUCCESS(status))
     {
-        ULONG cbCopy = min(pInfo->DataLength, cbValue);
+        const ULONG cbCopy = min(pInfo->DataLength, cbValue);
         RtlCopyMemory(pvValue, pInfo->Data, cbCopy);
 
         /* SECURITY: Avoid buffer overrun */
@@ -3343,7 +3341,7 @@ static NTSTATUS IntPathQuoteSpacesW(_Inout_ LPWSTR lpszPath, _In_ UINT cchPathMa
     if (!wcschr(lpszPath, L' '))
         return STATUS_SUCCESS;
 
-    size_t iLen = wcslen(lpszPath) + 1;
+    const size_t iLen = wcslen(lpszPath) + 1;
     if (iLen + 2 > cchPathMax)
         return STATUS_BUFFER_TOO_SMALL;
 
@@ -3446,8 +3444,8 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
     si.dwFlags = STARTF_FORCEONFEEDBACK | STARTF_USESHOWWINDOW;
 
     PROCESS_INFORMATION pi;
-    DWORD dwCreationFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_BREAKAWAY_FROM_JOB |
-                            CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS;
+    const DWORD dwCreationFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_BREAKAWAY_FROM_JOB |
+                                  CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS;
     if (CreateProcessW(NULL, szCommandLine, NULL, NULL, FALSE, dwCreationFlags,
                        NULL, NULL, &si, &pi))
     {
