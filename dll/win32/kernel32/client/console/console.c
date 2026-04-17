@@ -3345,6 +3345,22 @@ IntRegQueryValue(
     return status;
 }
 
+/* Quote a string if necessary */
+static NTSTATUS IntPathQuoteSpacesW(IN OUT LPWSTR lpszPath, IN UINT cchPathMax)
+{
+    if (!wcschr(lpszPath, L' '))
+        return STATUS_SUCCESS;
+
+    INT iLen = wcslen(lpszPath) + 1;
+    if (iLen + 2 >= cchPathMax)
+        return STATUS_BUFFER_TOO_SMALL;
+
+    RtlMoveMemory(lpszPath + 1, lpszPath, iLen * sizeof(WCHAR));
+    lpszPath[0] = lpszPath[iLen] = L'"';
+    lpszPath[iLen + 1] = UNICODE_NULL;
+    return STATUS_SUCCESS;
+}
+
 /* Build the conime.exe command line */
 static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
 {
@@ -3378,9 +3394,15 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
             status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
             if (NT_SUCCESS(status))
             {
-                NtClose(hKey);
-                return; /* Success */
+                /* Quote if necessary */
+                status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
+                if (NT_SUCCESS(status))
+                {
+                    NtClose(hKey);
+                    return; /* Success */
+                }
             }
+            /* It failed. Let's think of a workaround */
             *pszBuffer = UNICODE_NULL;
         }
         else
