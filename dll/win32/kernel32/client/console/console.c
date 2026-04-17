@@ -3394,7 +3394,7 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
             status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
             if (NT_SUCCESS(status))
             {
-                /* Quote if necessary */
+                /* SECURITY: Quote if necessary */
                 status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
                 if (NT_SUCCESS(status))
                 {
