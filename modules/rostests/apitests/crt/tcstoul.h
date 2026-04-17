@@ -19,7 +19,7 @@
            #expression, (unsigned long)(result), _value); \
     } while (0)
 
-START_TEST(tcstoul)
+static void Test_tcstoul(void)
 {
     ULONG Result;
     _TCHAR Dummy;
