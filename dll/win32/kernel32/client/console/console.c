@@ -3448,7 +3448,7 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
 
     RtlZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
-    si.lpDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo;
+    si.lpDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo.Buffer;
     si.wShowWindow = SW_HIDE;
     si.dwFlags = STARTF_FORCEONFEEDBACK | STARTF_USESHOWWINDOW;
 
