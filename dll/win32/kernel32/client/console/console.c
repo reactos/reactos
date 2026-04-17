@@ -3300,6 +3300,7 @@ SetLastConsoleEventActive(VOID)
                                sizeof(*NotifyLastCloseRequest));
 }
 
+/* Open registry for reading */
 static NTSTATUS
 IntRegOpenKey(IN HANDLE hRootKey, IN PCWSTR pszKeyName, OUT PHANDLE phKey)
 {
@@ -3311,6 +3312,7 @@ IntRegOpenKey(IN HANDLE hRootKey, IN PCWSTR pszKeyName, OUT PHANDLE phKey)
     return NtOpenKey(phKey, KEY_READ, &attr);
 }
 
+/* Query registry value */
 static NTSTATUS
 IntRegQueryValue(
     IN HANDLE hKey,
