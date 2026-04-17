@@ -3409,7 +3409,7 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
     }
     else
     {
-        DPRINT1("IntRegOpenKey failed: 0x%08X\n", status);
+        DPRINT1("Opening registry failed: 0x%08X\n", status);
     }
 
     RtlStringCchCatW(pszBuffer, cchBuffer, L"conime.exe");
