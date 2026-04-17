@@ -3398,7 +3398,7 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
                     return; /* Success */
                 }
             }
-            /* It failed. Let's use a fallback path */
+            /* It failed. Let's use a default path */
             pszBuffer[cchSysDir] = UNICODE_NULL;
         }
         else
@@ -3417,7 +3417,7 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
     /* SECURITY: Quote if necessary */
     status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
     if (!NT_SUCCESS(status))
-        RtlStringCchCopyW(pszBuffer, cchBuffer, L"conime.exe");
+        RtlStringCchCopyW(pszBuffer, cchBuffer, L"conime.exe"); /* Failed. Use filename only */
 }
 
 /*
