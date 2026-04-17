@@ -44,8 +44,7 @@ static WCHAR ExeNameBuffer[EXENAME_LENGTH]; // NULL-terminated
 static USHORT ExeNameLength;    // Count in number of characters without NULL
 static WCHAR StartDirBuffer[MAX_PATH + 1];  // NULL-terminated
 static USHORT StartDirLength;   // Count in number of characters without NULL
-
-BOOL g_bConImeNowStartingUp = FALSE;
+static BOOL g_bConsoleIMENowStartingUp = FALSE; // Is Console IME starting up?
 
 /* Default Console Control Handler ********************************************/
 
@@ -3356,7 +3355,7 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
         L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console";
 
     UINT cchSysDir = GetSystemDirectoryW(pszBuffer, cchBuffer);
-    if (cchSysDir)
+    if (cchSysDir > 0 && cchSysDir < cchBuffer - 1)
     {
         pszBuffer[cchSysDir] = L'\\';
         pszBuffer[cchSysDir + 1] = UNICODE_NULL;
@@ -3409,15 +3408,18 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
     STARTUPINFOW si1, si2;
     WCHAR szCommandLine[2 * MAX_PATH];
 
-    if (g_bConImeNowStartingUp)
-        return STATUS_UNSUCCESSFUL;
+    UNREFERENCED_PARAMETER(unused);
 
-    g_bConImeNowStartingUp = TRUE;
+    if (g_bConsoleIMENowStartingUp)
+        return STATUS_UNSUCCESSFUL; /* NOTE: There's confusion between error codes and NTSTATUS */
+
+    g_bConsoleIMENowStartingUp = TRUE;
 
     hEvent = CreateEventW(NULL, FALSE, FALSE, L"ConsoleIME_StartUp_Event");
-    if (!hEvent || GetLastError() == ERROR_ALREADY_EXISTS)
+    dwError = GetLastError();
+    if (!hEvent || dwError == ERROR_ALREADY_EXISTS)
     {
-        g_bConImeNowStartingUp = FALSE;
+        g_bConsoleIMENowStartingUp = FALSE;
         return ERROR_SUCCESS;
     }
 
@@ -3425,10 +3427,10 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
     GetStartupInfoW(&si1);
 
     RtlZeroMemory(&si2, sizeof(si2));
-    si2.lpDesktop = si1.lpDesktop;
     si2.cb = sizeof(si2);
+    si2.lpDesktop = si1.lpDesktop;
     si2.wShowWindow = SW_HIDE;
-    si2.dwFlags = STARTF_FORCEONFEEDBACK;
+    si2.dwFlags = STARTF_FORCEONFEEDBACK | STARTF_USESHOWWINDOW;
 
     dwCreationFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_BREAKAWAY_FROM_JOB |
                       CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS;
@@ -3445,12 +3447,12 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
     else
     {
         dwError = GetLastError();
-        DPRINT1("ConIme.exe startup failed: 0x%08X", dwError);
+        DPRINT1("conime.exe startup failed: 0x%08X\n", dwError);
     }
 
     CloseHandle(hEvent);
 
-    g_bConImeNowStartingUp = FALSE;
+    g_bConsoleIMENowStartingUp = FALSE;
     return dwError;
 }
 
