@@ -46,6 +46,7 @@ static WCHAR StartDirBuffer[MAX_PATH + 1];  // NULL-terminated
 static USHORT StartDirLength;   // Count in number of characters without NULL
 static LONG g_bConsoleIMEStartingUp = FALSE; // We use interlock, so LONG
 
+
 /* Default Console Control Handler ********************************************/
 
 static BOOL
