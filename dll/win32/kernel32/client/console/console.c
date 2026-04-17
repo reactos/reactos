@@ -3326,7 +3326,7 @@ IntRegQueryValue(
     HANDLE hProcessHeap = GetProcessHeap();
 
     cbInfo = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + cbValue;
-    pInfo = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, cbInfo);
+    pInfo = HeapAlloc(hProcessHeap, 0, cbInfo);
     if (!pInfo)
         return STATUS_NO_MEMORY;
 
@@ -3338,7 +3338,7 @@ IntRegQueryValue(
         RtlCopyMemory(pvValue, pInfo->Data, pInfo->DataLength);
 
         /* SECURITY: Avoid buffer overrun */
-        if (pInfo->Type == REG_SZ && cbValue >= sizeof(UNICODE_NULL))
+        if (pInfo->Type == REG_SZ)
             ((PWCHAR)pvValue)[cbValue / sizeof(WCHAR) - 1] = UNICODE_NULL;
     }
 
