@@ -3374,12 +3374,13 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
     if (cchSysDir > 0 && cchSysDir < cchBuffer - 1)
     {
         pszBuffer[cchSysDir] = L'\\';
-        pszBuffer[cchSysDir + 1] = UNICODE_NULL;
-        cchBuffer -= cchSysDir + 1;
+        ++cchSysDir;
+        pszBuffer[cchSysDir] = UNICODE_NULL;
     }
     else
     {
         *pszBuffer = UNICODE_NULL;
+        cchSysDir = 0;
     }
 
     /* Open registry key */
@@ -3403,7 +3404,7 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
                 }
             }
             /* It failed. Let's think of a workaround */
-            *pszBuffer = UNICODE_NULL;
+            pszBuffer[cchSysDir] = UNICODE_NULL;
         }
         else
         {
