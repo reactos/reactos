@@ -3304,10 +3304,10 @@ SetLastConsoleEventActive(VOID)
 /* Query registry value */
 static NTSTATUS
 IntRegQueryValue(
-    IN HANDLE hKey,
-    IN PCWSTR pszValueName,
-    OUT PVOID pvValue,
-    IN ULONG cbValue)
+    _In_ HANDLE hKey,
+    _In_ PCWSTR pszValueName,
+    _Out_ PVOID pvValue,
+    _In_ ULONG cbValue)
 {
     NTSTATUS status;
     UNICODE_STRING valueName;
@@ -3338,7 +3338,7 @@ IntRegQueryValue(
 }
 
 /* Quote a string if necessary */
-static NTSTATUS IntPathQuoteSpacesW(IN OUT LPWSTR lpszPath, IN UINT cchPathMax)
+static NTSTATUS IntPathQuoteSpacesW(_Inout_ LPWSTR lpszPath, _In_ UINT cchPathMax)
 {
     if (!wcschr(lpszPath, L' '))
         return STATUS_SUCCESS;
@@ -3354,7 +3354,7 @@ static NTSTATUS IntPathQuoteSpacesW(IN OUT LPWSTR lpszPath, IN UINT cchPathMax)
 }
 
 /* Build the conime.exe command line */
-static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
+static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
 {
     NTSTATUS status;
     OBJECT_ATTRIBUTES attr;
