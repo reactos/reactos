@@ -3356,11 +3356,6 @@ static NTSTATUS IntPathQuoteSpacesW(_Inout_ LPWSTR lpszPath, _In_ UINT cchPathMa
 /* Build the conime.exe command line */
 static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
 {
-    NTSTATUS status;
-    OBJECT_ATTRIBUTES attr;
-    UNICODE_STRING keyName;
-    HANDLE hKey;
-    WCHAR szValue[2 * MAX_PATH];
     static const PCWSTR ConsoleKey =
         L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console";
 
@@ -3377,12 +3372,16 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
     }
 
     /* Open registry key */
+    HANDLE hKey;
+    UNICODE_STRING keyName;
+    OBJECT_ATTRIBUTES attr;
     RtlInitUnicodeString(&keyName, ConsoleKey);
     InitializeObjectAttributes(&attr, &keyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    status = NtOpenKey(&hKey, KEY_QUERY_VALUE, &attr);
+    NTSTATUS status = NtOpenKey(&hKey, KEY_QUERY_VALUE, &attr);
     if (NT_SUCCESS(status))
     {
         /* Query "ConsoleIME" value */
+        WCHAR szValue[2 * MAX_PATH];
         status = IntRegQueryValue(hKey, L"ConsoleIME", szValue, sizeof(szValue));
         if (NT_SUCCESS(status) && szValue[0])
         {
@@ -3420,40 +3419,35 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
         RtlStringCchCopyW(pszBuffer, cchBuffer, L"conime.exe"); /* Failed. Use filename only */
 }
 
-/*
- * @implemented
- */
+/* @implemented */
 DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
 {
-    DWORD dwError, dwCreationFlags;
-    HANDLE hEvent;
-    PROCESS_INFORMATION pi;
-    STARTUPINFOW si;
-    WCHAR szCommandLine[2 * MAX_PATH];
-
     UNREFERENCED_PARAMETER(unused);
 
     if (InterlockedCompareExchange(&g_bConsoleIMEStartingUp, TRUE, FALSE) != FALSE)
         return STATUS_UNSUCCESSFUL; /* NOTE: There's confusion between error codes and NTSTATUS */
 
-    hEvent = CreateEventW(NULL, FALSE, FALSE, L"ConsoleIME_StartUp_Event");
-    dwError = GetLastError();
+    HANDLE hEvent = CreateEventW(NULL, FALSE, FALSE, L"ConsoleIME_StartUp_Event");
+    DWORD dwError = GetLastError();
     if (!hEvent || dwError == ERROR_ALREADY_EXISTS)
     {
         InterlockedExchange(&g_bConsoleIMEStartingUp, FALSE);
         return ERROR_SUCCESS;
     }
 
+    WCHAR szCommandLine[2 * MAX_PATH];
     GetConsoleIMECommandLine(szCommandLine, _countof(szCommandLine));
 
+    STARTUPINFOW si;
     RtlZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     si.lpDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo.Buffer;
     si.wShowWindow = SW_HIDE;
     si.dwFlags = STARTF_FORCEONFEEDBACK | STARTF_USESHOWWINDOW;
 
-    dwCreationFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_BREAKAWAY_FROM_JOB |
-                      CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS;
+    PROCESS_INFORMATION pi;
+    DWORD dwCreationFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_BREAKAWAY_FROM_JOB |
+                            CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS;
     if (CreateProcessW(NULL, szCommandLine, NULL, NULL, FALSE, dwCreationFlags,
                        NULL, NULL, &si, &pi))
     {
