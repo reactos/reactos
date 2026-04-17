@@ -3358,7 +3358,7 @@ IntRegQueryValue(
 }
 
 /* Build the conime.exe command line */
-static VOID GetCommandLineString(OUT PWSTR pszBuffer, IN UINT cchBuffer)
+static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
 {
     NTSTATUS status;
     HANDLE hKey;
@@ -3431,7 +3431,7 @@ DWORD WINAPI ConsoleIMERoutine(LPVOID unused)
         return ERROR_SUCCESS;
     }
 
-    GetCommandLineString(szCommandLine, _countof(szCommandLine));
+    GetConsoleIMECommandLine(szCommandLine, _countof(szCommandLine));
     GetStartupInfoW(&si1);
 
     RtlZeroMemory(&si2, sizeof(si2));
