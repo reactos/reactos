@@ -3351,7 +3351,6 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
 {
     NTSTATUS status;
     HANDLE hKey;
-    size_t cchValue;
     WCHAR szValue[2 * MAX_PATH];
     static const PCWSTR ConsoleKey =
         L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console";
@@ -3377,15 +3376,11 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
         if (NT_SUCCESS(status))
         {
             /* Append value to pszBuffer */
-            status = RtlStringCchLengthW(szValue, _countof(szValue), &cchValue);
-            if (NT_SUCCESS(status) && cchValue < cchBuffer)
+            status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
+            if (NT_SUCCESS(status))
             {
-                status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
-                if (NT_SUCCESS(status))
-                {
-                    NtClose(hKey);
-                    return; /* Success */
-                }
+                NtClose(hKey);
+                return; /* Success */
             }
             *pszBuffer = UNICODE_NULL;
         }
