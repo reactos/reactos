@@ -3355,7 +3355,7 @@ static NTSTATUS IntPathQuoteSpacesW(IN OUT LPWSTR lpszPath, IN UINT cchPathMax)
         return STATUS_SUCCESS;
 
     size_t iLen = wcslen(lpszPath) + 1;
-    if (iLen + 2 >= cchPathMax)
+    if (iLen + 2 > cchPathMax)
         return STATUS_BUFFER_TOO_SMALL;
 
     RtlMoveMemory(lpszPath + 1, lpszPath, iLen * sizeof(WCHAR));
