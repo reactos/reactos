@@ -3418,6 +3418,11 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
     }
 
     RtlStringCchCatW(pszBuffer, cchBuffer, L"conime.exe");
+
+    /* SECURITY: Quote if necessary */
+    status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
+    if (!NT_SUCCESS(status))
+        RtlStringCchCopyW(pszBuffer, cchBuffer, L"conime.exe");
 }
 
 /*
