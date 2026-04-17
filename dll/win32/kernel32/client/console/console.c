@@ -3336,18 +3336,18 @@ IntRegQueryValue(
 }
 
 /* Quote a string if necessary */
-static NTSTATUS IntPathQuoteSpacesW(_Inout_ LPWSTR lpszPath, _In_ UINT cchPathMax)
+static NTSTATUS IntPathQuoteSpacesW(_Inout_ PWSTR pszPath, _In_ UINT cchPathMax)
 {
-    if (!wcschr(lpszPath, L' '))
+    if (!wcschr(pszPath, L' '))
         return STATUS_SUCCESS;
 
-    const size_t ich = wcslen(lpszPath) + 1;
+    const size_t ich = wcslen(pszPath) + 1;
     if (ich + 2 > cchPathMax)
         return STATUS_BUFFER_TOO_SMALL;
 
-    RtlMoveMemory(lpszPath + 1, lpszPath, ich * sizeof(WCHAR));
-    lpszPath[0] = lpszPath[ich] = L'"';
-    lpszPath[ich + 1] = UNICODE_NULL;
+    RtlMoveMemory(pszPath + 1, pszPath, ich * sizeof(WCHAR));
+    pszPath[0] = pszPath[ich] = L'"';
+    pszPath[ich + 1] = UNICODE_NULL;
     return STATUS_SUCCESS;
 }
 
