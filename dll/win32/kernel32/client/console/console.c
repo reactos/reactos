@@ -3334,7 +3334,8 @@ IntRegQueryValue(
                              pInfo, cbInfo, &cbResult);
     if (NT_SUCCESS(status))
     {
-        RtlCopyMemory(pvValue, pInfo->Data, pInfo->DataLength);
+        ULONG cbCopy = min(pInfo->DataLength, cbValue);
+        RtlCopyMemory(pvValue, pInfo->Data, cbCopy);
 
         /* SECURITY: Avoid buffer overrun */
         if (pInfo->Type == REG_SZ)
@@ -3351,7 +3352,7 @@ static NTSTATUS IntPathQuoteSpacesW(IN OUT LPWSTR lpszPath, IN UINT cchPathMax)
     if (!wcschr(lpszPath, L' '))
         return STATUS_SUCCESS;
 
-    INT iLen = wcslen(lpszPath) + 1;
+    size_t iLen = wcslen(lpszPath) + 1;
     if (iLen + 2 >= cchPathMax)
         return STATUS_BUFFER_TOO_SMALL;
 
@@ -3373,9 +3374,8 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
     UINT cchSysDir = GetSystemDirectoryW(pszBuffer, cchBuffer);
     if (cchSysDir > 0 && cchSysDir < cchBuffer - 1)
     {
-        pszBuffer[cchSysDir] = L'\\';
-        ++cchSysDir;
-        pszBuffer[cchSysDir] = UNICODE_NULL;
+        RtlStringCchCatW(pszBuffer, cchBuffer, L"\\");
+        cchSysDir = (UINT)wcslen(pszBuffer);
     }
     else
     {
@@ -3389,7 +3389,7 @@ static VOID GetConsoleIMECommandLine(OUT PWSTR pszBuffer, IN UINT cchBuffer)
     {
         /* Query "ConsoleIME" value */
         status = IntRegQueryValue(hKey, L"ConsoleIME", szValue, sizeof(szValue));
-        if (NT_SUCCESS(status))
+        if (NT_SUCCESS(status) && szValue[0])
         {
             /* Append value to pszBuffer */
             status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
