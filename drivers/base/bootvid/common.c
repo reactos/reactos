@@ -44,9 +44,9 @@ BitBlt(
     _In_ ULONG Top,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
+    _In_reads_bytes_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG BitsPerPixel,
-    _In_ ULONG Delta)
+    _In_ ULONG Stride)
 {
     ULONG X, Y, Pixel;
     UCHAR Colors;
@@ -61,14 +61,14 @@ BitBlt(
         DbgPrint("Unhandled BitBlt\n"
                  "%lux%lu @ (%lu|%lu)\n"
                  "Bits Per Pixel %lu\n"
-                 "Buffer: %p. Delta: %lu\n",
+                 "Buffer: %p. Stride: %lu\n",
                  Width,
                  Height,
                  Left,
                  Top,
                  BitsPerPixel,
                  Buffer,
-                 Delta);
+                 Stride);
         return;
     }
 
@@ -96,7 +96,7 @@ BitBlt(
             }
         }
 
-        Buffer += Delta;
+        Buffer += Stride;
     }
 }
 
@@ -298,19 +298,19 @@ RleBitBlt(
 VOID
 NTAPI
 VidBufferToScreenBlt(
-    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
+    _In_reads_bytes_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta)
+    _In_ ULONG Stride)
 {
     /* Make sure we have a width and height */
     if (!Width || !Height)
         return;
 
     /* Call the helper function */
-    BitBlt(Left, Top, Width, Height, Buffer, 4, Delta);
+    BitBlt(Left, Top, Width, Height, Buffer, 4, Stride);
 }
 
 VOID
@@ -321,7 +321,7 @@ VidBitBlt(
     _In_ ULONG Top)
 {
     PBITMAPINFOHEADER BitmapInfoHeader;
-    LONG Delta;
+    LONG Stride;
     PUCHAR BitmapOffset;
     ULONG PaletteCount;
 
@@ -338,12 +338,12 @@ VidBitBlt(
     ASSERT((BitmapInfoHeader->biBitCount * BitmapInfoHeader->biPlanes) <= 4);
 
     /*
-     * Calculate the delta and align it on 32-bytes, then calculate
+     * Calculate the stride and align it on 32-bytes, then calculate
      * the actual start of the bitmap data.
      */
-    Delta = (BitmapInfoHeader->biBitCount * BitmapInfoHeader->biWidth) + 31;
-    Delta >>= 3;
-    Delta &= ~3;
+    Stride = (BitmapInfoHeader->biBitCount * BitmapInfoHeader->biWidth) + 31;
+    Stride >>= 3;
+    Stride &= ~3;
     BitmapOffset = Buffer + sizeof(BITMAPINFOHEADER) + PaletteCount * sizeof(ULONG);
 
     /* Check the compression of the bitmap */
@@ -371,8 +371,8 @@ VidBitBlt(
         else
         {
             /* Update buffer offset */
-            BitmapOffset += ((BitmapInfoHeader->biHeight - 1) * Delta);
-            Delta *= -1;
+            BitmapOffset += ((BitmapInfoHeader->biHeight - 1) * Stride);
+            Stride *= -1;
         }
 
         /* Make sure we have a width and a height */
@@ -385,7 +385,7 @@ VidBitBlt(
                    BitmapInfoHeader->biHeight,
                    BitmapOffset,
                    BitmapInfoHeader->biBitCount,
-                   Delta);
+                   Stride);
         }
     }
 }

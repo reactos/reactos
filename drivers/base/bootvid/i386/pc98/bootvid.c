@@ -298,11 +298,11 @@ DisplayCharacter(
 VOID
 PreserveRow(
     _In_ ULONG CurrentTop,
-    _In_ ULONG TopDelta,
+    _In_ ULONG Height,
     _In_ BOOLEAN Restore)
 {
     PULONG OldPosition, NewPosition;
-    ULONG PixelCount = TopDelta * (SCREEN_WIDTH / sizeof(ULONG));
+    ULONG PixelCount = Height * (SCREEN_WIDTH / sizeof(ULONG));
 
     if (Restore)
     {
@@ -417,12 +417,12 @@ ResetDisplay(
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_writes_bytes_all_(Delta * Height) PUCHAR Buffer,
+    _Out_writes_bytes_all_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta)
+    _In_ ULONG Stride)
 {
     ULONG X, Y;
     PUCHAR OutputBuffer;
@@ -430,11 +430,11 @@ VidScreenToBufferBlt(
     PUSHORT PixelsPosition;
 
     /* Clear the destination buffer */
-    RtlZeroMemory(Buffer, Delta * Height);
+    RtlZeroMemory(Buffer, Height * Stride);
 
     for (Y = 0; Y < Height; Y++)
     {
-        OutputBuffer = Buffer + Y * Delta;
+        OutputBuffer = Buffer + Y * Stride;
         PixelsPosition = (PUSHORT)(FrameBuffer + FB_OFFSET(Left, Top + Y));
 
         for (X = 0; X < Width; X += sizeof(USHORT))

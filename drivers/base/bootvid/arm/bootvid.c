@@ -158,7 +158,7 @@ DoScroll(
 VOID
 PreserveRow(
     _In_ ULONG CurrentTop,
-    _In_ ULONG TopDelta,
+    _In_ ULONG Height,
     _In_ BOOLEAN Restore)
 {
     PUSHORT Position1, Position2;
@@ -179,7 +179,7 @@ PreserveRow(
     }
 
     /* Set the count and loop every pixel */
-    Count = TopDelta * (SCREEN_WIDTH / 8);
+    Count = Height * (SCREEN_WIDTH / 8);
     while (Count--)
     {
         /* Write the data back on the other position */
@@ -282,12 +282,12 @@ VidCleanUp(VOID)
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_writes_bytes_all_(Delta * Height) PUCHAR Buffer,
+    _Out_writes_bytes_all_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta)
+    _In_ ULONG Stride)
 {
     UNIMPLEMENTED;
     while (TRUE);

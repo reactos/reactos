@@ -84,7 +84,7 @@ extern const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS];
 VOID
 PreserveRow(
     _In_ ULONG CurrentTop,
-    _In_ ULONG TopDelta,
+    _In_ ULONG Height,
     _In_ BOOLEAN Restore);
 
 VOID

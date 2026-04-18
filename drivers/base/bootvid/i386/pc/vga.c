@@ -270,7 +270,7 @@ DoScroll(
 VOID
 PreserveRow(
     _In_ ULONG CurrentTop,
-    _In_ ULONG TopDelta,
+    _In_ ULONG Height,
     _In_ BOOLEAN Restore)
 {
     PUCHAR Position1, Position2;
@@ -300,7 +300,7 @@ PreserveRow(
     }
 
     /* Set the count and loop every pixel */
-    Count = TopDelta * (SCREEN_WIDTH / 8);
+    Count = Height * (SCREEN_WIDTH / 8);
 #if defined(_M_IX86) || defined(_M_AMD64)
     __movsb(Position1, Position2, Count);
 #else
@@ -330,12 +330,12 @@ VidCleanUp(VOID)
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_writes_bytes_all_(Delta * Height) PUCHAR Buffer,
+    _Out_writes_bytes_all_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta)
+    _In_ ULONG Stride)
 {
     ULONG Plane;
     ULONG XDistance;
@@ -349,15 +349,15 @@ VidScreenToBufferBlt(
     ULONG b;
     ULONG x, y;
 
+    /* Clear the destination buffer */
+    RtlZeroMemory(Buffer, Height * Stride);
+
     /* Calculate total distance to copy on X */
     XDistance = Left + Width - 1;
 
     /* Calculate the 8-byte left and right deltas */
     LeftDelta = Left & 7;
     RightDelta = 8 - LeftDelta;
-
-    /* Clear the destination buffer */
-    RtlZeroMemory(Buffer, Delta * Height);
 
     /* Calculate the pixel offset and convert the X distance into byte form */
     PixelOffset = Top * (SCREEN_WIDTH / 8) + (Left >> 3);
@@ -419,7 +419,7 @@ VidScreenToBufferBlt(
 
             /* Update pixel position */
             PixelPosition += (SCREEN_WIDTH / 8);
-            i += Delta;
+            i += Stride;
         }
     }
 }
