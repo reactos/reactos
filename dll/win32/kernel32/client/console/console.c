@@ -3336,7 +3336,9 @@ IntRegQueryValue(
 }
 
 /* Quote a string if necessary */
-static NTSTATUS IntPathQuoteSpacesW(_Inout_ PWSTR pszPath, _In_ UINT cchPathMax)
+static NTSTATUS IntPathQuoteSpacesW(
+    _Inout_updates_z_(cchPathMax) PWSTR pszPath,
+    _In_ UINT cchPathMax)
 {
     if (!wcschr(pszPath, L' '))
         return STATUS_SUCCESS;
