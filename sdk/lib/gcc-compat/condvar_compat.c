@@ -6,20 +6,24 @@
  */
 
 #include <windef.h>
+#include <intrin.h>
 #include <winbase.h>
 
 static VOID WINAPI CondVar_Initialize(PRTL_CONDITION_VARIABLE ConditionVariable)
 {
+    __debugbreak();
     ConditionVariable->Ptr = NULL;
 }
 
 static VOID WINAPI CondVar_Wake(PRTL_CONDITION_VARIABLE ConditionVariable)
 {
+    __debugbreak();
     (void)ConditionVariable;
 }
 
 static VOID WINAPI CondVar_WakeAll(PRTL_CONDITION_VARIABLE ConditionVariable)
 {
+    __debugbreak();
     (void)ConditionVariable;
 }
 
@@ -28,9 +32,11 @@ static BOOL WINAPI CondVar_SleepCS(
     PRTL_CRITICAL_SECTION CriticalSection,
     DWORD Timeout)
 {
+    __debugbreak();
     (void)ConditionVariable;
     (void)CriticalSection;
     (void)Timeout;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
 
