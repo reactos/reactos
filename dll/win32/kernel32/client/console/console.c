@@ -3310,17 +3310,20 @@ IntRegQueryValue(
     _In_ ULONG cbValue)
 {
     HANDLE hProcessHeap = GetProcessHeap();
-    const ULONG cbInfo = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + cbValue;
-    PKEY_VALUE_PARTIAL_INFORMATION pInfo = HeapAlloc(hProcessHeap, 0, cbInfo);
+    ULONG cbInfo, cbResult;
+    PKEY_VALUE_PARTIAL_INFORMATION pInfo;
+    UNICODE_STRING valueName;
+    NTSTATUS status;
+
+    cbInfo = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + cbValue;
+    pInfo = HeapAlloc(hProcessHeap, 0, cbInfo);
     if (!pInfo)
         return STATUS_NO_MEMORY;
 
-    UNICODE_STRING valueName;
     RtlInitUnicodeString(&valueName, pszValueName);
 
-    ULONG cbResult;
-    NTSTATUS status = NtQueryValueKey(hKey, &valueName, KeyValuePartialInformation,
-                                      pInfo, cbInfo, &cbResult);
+    status = NtQueryValueKey(hKey, &valueName, KeyValuePartialInformation,
+                             pInfo, cbInfo, &cbResult);
     if (NT_SUCCESS(status))
     {
         const ULONG cbCopy = min(pInfo->DataLength, cbValue);
@@ -3340,27 +3343,36 @@ static NTSTATUS IntPathQuoteSpacesW(
     _Inout_updates_z_(cchPathMax) PWSTR pszPath,
     _In_ UINT cchPathMax)
 {
+    size_t cchLen;
+
     if (!wcschr(pszPath, L' '))
         return STATUS_SUCCESS;
 
-    const size_t cchLen = wcslen(pszPath);
-    if (cchLen + 2 + 1 > cchPathMax) /* 2 quotes and NUL */
+    cchLen = wcslen(pszPath) + 1;
+    if (cchLen + 2 > cchPathMax) /* for 2 quotes */
         return STATUS_BUFFER_TOO_SMALL;
 
-    RtlMoveMemory(pszPath + 1, pszPath, (cchLen + 1) * sizeof(WCHAR));
+    RtlMoveMemory(pszPath + 1, pszPath, cchLen * sizeof(WCHAR));
     pszPath[0] = L'"';
-    pszPath[cchLen + 1] = L'"';
-    pszPath[cchLen + 2] = UNICODE_NULL;
+    pszPath[cchLen] = L'"';
+    pszPath[cchLen + 1] = UNICODE_NULL;
     return STATUS_SUCCESS;
 }
 
 /* Build the conime.exe command line */
 static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
 {
+    UINT cchSysDir;
+    HANDLE hKey;
+    UNICODE_STRING keyName;
+    OBJECT_ATTRIBUTES attr;
+    NTSTATUS status;
+    WCHAR szValue[MAX_PATH];
+
     static const PCWSTR ConsoleKey =
         L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console";
 
-    UINT cchSysDir = GetSystemDirectoryW(pszBuffer, cchBuffer);
+    cchSysDir = GetSystemDirectoryW(pszBuffer, cchBuffer);
     if (cchSysDir > 0 && cchSysDir < cchBuffer - 1)
     {
         RtlStringCchCatW(pszBuffer, cchBuffer, L"\\");
@@ -3373,16 +3385,12 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
     }
 
     /* Open registry key */
-    HANDLE hKey;
-    UNICODE_STRING keyName;
-    OBJECT_ATTRIBUTES attr;
     RtlInitUnicodeString(&keyName, ConsoleKey);
     InitializeObjectAttributes(&attr, &keyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    NTSTATUS status = NtOpenKey(&hKey, KEY_QUERY_VALUE, &attr);
+    status = NtOpenKey(&hKey, KEY_QUERY_VALUE, &attr);
     if (NT_SUCCESS(status))
     {
         /* Query "ConsoleIME" value */
-        WCHAR szValue[MAX_PATH];
         status = IntRegQueryValue(hKey, L"ConsoleIME", szValue, sizeof(szValue));
         if (NT_SUCCESS(status))
         {
@@ -3404,10 +3412,6 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
                 }
                 /* It failed. Let's try the default path */
                 pszBuffer[cchSysDir] = UNICODE_NULL;
-            }
-            else
-            {
-                DPRINT1("Security works: '%S'\n", szValue);
             }
         }
         else
@@ -3432,13 +3436,20 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
 /* @implemented */
 DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
 {
+    HANDLE hEvent;
+    DWORD dwError;
+    WCHAR szCommandLine[2 * MAX_PATH];
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+    DWORD dwCreationFlags;
+
     UNREFERENCED_PARAMETER(unused);
 
     if (InterlockedCompareExchange(&g_bConsoleIMEStartingUp, TRUE, FALSE) != FALSE)
         return STATUS_UNSUCCESSFUL; /* NOTE: There's confusion between error codes and NTSTATUS */
 
-    HANDLE hEvent = CreateEventW(NULL, FALSE, FALSE, L"ConsoleIME_StartUp_Event");
-    DWORD dwError = GetLastError();
+    hEvent = CreateEventW(NULL, FALSE, FALSE, L"ConsoleIME_StartUp_Event");
+    dwError = GetLastError();
     if (dwError == ERROR_ALREADY_EXISTS)
     {
         CloseHandle(hEvent);
@@ -3450,24 +3461,20 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
         return ERROR_SUCCESS;
     }
 
-    WCHAR szCommandLine[2 * MAX_PATH];
     GetConsoleIMECommandLine(szCommandLine, _countof(szCommandLine));
 
-    STARTUPINFOW si;
     RtlZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     si.lpDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo.Buffer;
     si.wShowWindow = SW_HIDE;
     si.dwFlags = STARTF_FORCEONFEEDBACK | STARTF_USESHOWWINDOW;
 
-    PROCESS_INFORMATION pi;
-    const DWORD dwCreationFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_BREAKAWAY_FROM_JOB |
-                                  CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS;
+    dwCreationFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_BREAKAWAY_FROM_JOB |
+                      CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS;
     if (CreateProcessW(NULL, szCommandLine, NULL, NULL, FALSE, dwCreationFlags,
                        NULL, NULL, &si, &pi))
     {
-#define CONIME_STARTUP_TIMEOUT_MS (10 * 1000)
-        const DWORD dwWait = WaitForSingleObject(hEvent, CONIME_STARTUP_TIMEOUT_MS);
+        const DWORD dwWait = WaitForSingleObject(hEvent, 10 * 1000);
         if (dwWait == WAIT_TIMEOUT)
             TerminateProcess(pi.hProcess, 0);
         CloseHandle(pi.hThread);

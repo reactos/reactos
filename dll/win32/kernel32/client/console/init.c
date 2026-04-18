@@ -332,6 +332,9 @@ ConnectConsole(IN PWSTR SessionDir,
     return TRUE;
 }
 
+#ifndef _M_AMD64
+DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused);
+#endif
 
 BOOLEAN
 WINAPI
