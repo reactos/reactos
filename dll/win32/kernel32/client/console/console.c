@@ -3392,6 +3392,7 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
     {
         /* Query "ConsoleIME" value */
         status = IntRegQueryValue(hKey, L"ConsoleIME", szValue, sizeof(szValue));
+        NtClose(hKey);
         if (NT_SUCCESS(status))
         {
             /* SECURITY: Reject empty, backslashes, slashes, quotes, and colons */
@@ -3406,7 +3407,6 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
                     if (NT_SUCCESS(status))
                     {
                         DPRINT("ConsoleIME: '%S'\n", pszBuffer);
-                        NtClose(hKey);
                         return; /* Success */
                     }
                 }
@@ -3414,11 +3414,6 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
                 pszBuffer[cchSysDir] = UNICODE_NULL;
             }
         }
-        else
-        {
-            DPRINT("IntRegQueryValue failed: 0x%08X\n", status);
-        }
-        NtClose(hKey);
     }
     else
     {
