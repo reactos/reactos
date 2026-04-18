@@ -3341,13 +3341,14 @@ static NTSTATUS IntPathQuoteSpacesW(_Inout_ PWSTR pszPath, _In_ UINT cchPathMax)
     if (!wcschr(pszPath, L' '))
         return STATUS_SUCCESS;
 
-    const size_t ich = wcslen(pszPath) + 1;
-    if (ich + 2 > cchPathMax)
+    const size_t cchLen = wcslen(pszPath);
+    if (cchLen + 2 + 1 > cchPathMax) /* 2 quotes and NUL */
         return STATUS_BUFFER_TOO_SMALL;
 
-    RtlMoveMemory(pszPath + 1, pszPath, ich * sizeof(WCHAR));
-    pszPath[0] = pszPath[ich] = L'"';
-    pszPath[ich + 1] = UNICODE_NULL;
+    RtlMoveMemory(pszPath + 1, pszPath, (cchLen + 1) * sizeof(WCHAR));
+    pszPath[0] = L'"';
+    pszPath[cchLen + 1] = L'"';
+    pszPath[cchLen + 2] = UNICODE_NULL;
     return STATUS_SUCCESS;
 }
 
