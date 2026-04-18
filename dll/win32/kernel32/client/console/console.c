@@ -3437,8 +3437,14 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
 
     HANDLE hEvent = CreateEventW(NULL, FALSE, FALSE, L"ConsoleIME_StartUp_Event");
     DWORD dwError = GetLastError();
-    if (!hEvent || dwError == ERROR_ALREADY_EXISTS)
+    if (!hEvent)
     {
+        InterlockedExchange(&g_bConsoleIMEStartingUp, FALSE);
+        return ERROR_SUCCESS;
+    }
+    if (dwError == ERROR_ALREADY_EXISTS)
+    {
+        CloseHandle(hEvent);
         InterlockedExchange(&g_bConsoleIMEStartingUp, FALSE);
         return ERROR_SUCCESS;
     }
