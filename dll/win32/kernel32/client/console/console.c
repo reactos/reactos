@@ -3381,24 +3381,30 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
         /* Query "ConsoleIME" value */
         WCHAR szValue[MAX_PATH];
         status = IntRegQueryValue(hKey, L"ConsoleIME", szValue, sizeof(szValue));
-        if (NT_SUCCESS(status) && szValue[0] &&
-            /* SECURITY: Reject backslashes, slashes, quotes, and colons */
-            wcscspn(szValue, L"\\/\":") == wcslen(szValue))
+        if (NT_SUCCESS(status))
         {
-            /* Append value to pszBuffer */
-            status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
-            if (NT_SUCCESS(status))
+            /* SECURITY: Reject empty, backslashes, slashes, quotes, and colons */
+            if (szValue[0] && wcscspn(szValue, L"\\/\":") == wcslen(szValue))
             {
-                /* SECURITY: Quote if necessary */
-                status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
+                /* Append value to pszBuffer */
+                status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
                 if (NT_SUCCESS(status))
                 {
-                    NtClose(hKey);
-                    return; /* Success */
+                    /* SECURITY: Quote if necessary */
+                    status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
+                    if (NT_SUCCESS(status))
+                    {
+                        NtClose(hKey);
+                        return; /* Success */
+                    }
                 }
+                /* It failed. Let's try a default path */
+                pszBuffer[cchSysDir] = UNICODE_NULL;
             }
-            /* It failed. Let's try a default path */
-            pszBuffer[cchSysDir] = UNICODE_NULL;
+            else
+            {
+                DPRINT1("Security works!\n");
+            }
         }
         else
         {
