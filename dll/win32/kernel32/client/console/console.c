@@ -3468,7 +3468,7 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
     else
     {
         dwError = GetLastError();
-        DPRINT1("conime.exe startup failed: 0x%08X\n", dwError);
+        DPRINT1("'%S' startup failed: 0x%08X\n", szCommandLine, dwError);
     }
 
     CloseHandle(hEvent);
