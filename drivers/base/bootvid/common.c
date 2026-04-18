@@ -309,6 +309,11 @@ VidBufferToScreenBlt(
     if (!Width || !Height)
         return;
 
+#ifdef HAS_NATIVE_BUFFER_TO_SCREEN_BLT
+    if (VidBufferToScreenBltNative(Buffer, Left, Top, Width, Height, Delta))
+        return;
+#endif
+
     /* Call the helper function */
     BitBlt(Left, Top, Width, Height, Buffer, 4, Delta);
 }

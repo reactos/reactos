@@ -13,6 +13,7 @@
 
 #include <ntoskrnl.h>
 #include "inbv/logo.h"
+#include "inbv/inbvgop.h"
 
 /* See also mm/ARM3/miarm.h */
 #define MM_READONLY     1   // PAGE_READONLY
@@ -96,34 +97,6 @@ static UCHAR RotLineBuffer[SCREEN_WIDTH * 6];
 
 
 /* FADE-IN FUNCTION **********************************************************/
-
-/** From include/psdk/wingdi.h and bootvid/precomp.h **/
-typedef struct tagRGBQUAD
-{
-    UCHAR rgbBlue;
-    UCHAR rgbGreen;
-    UCHAR rgbRed;
-    UCHAR rgbReserved;
-} RGBQUAD, *LPRGBQUAD;
-
-//
-// Bitmap Header
-//
-typedef struct tagBITMAPINFOHEADER
-{
-    ULONG  biSize;
-    LONG   biWidth;
-    LONG   biHeight;
-    USHORT biPlanes;
-    USHORT biBitCount;
-    ULONG  biCompression;
-    ULONG  biSizeImage;
-    LONG   biXPelsPerMeter;
-    LONG   biYPelsPerMeter;
-    ULONG  biClrUsed;
-    ULONG  biClrImportant;
-} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
-/*******************************/
 
 static RGBQUAD MainPalette[16];
 
@@ -508,6 +481,9 @@ DisplayBootBitmap(
     _In_ BOOLEAN TextMode)
 {
     PVOID BootCopy = NULL, BootProgress = NULL, BootLogo = NULL, Header = NULL, Footer = NULL;
+
+    if (InbvGopHandleBootBitmap(TextMode))
+        return;
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
     UCHAR Buffer[RTL_NUMBER_OF(RotBarBuffer)];

@@ -7,6 +7,30 @@
 
 #pragma once
 
+/* Shared bitmap structures used by bootanim.c and inbvgop.c */
+typedef struct tagRGBQUAD
+{
+    UCHAR rgbBlue;
+    UCHAR rgbGreen;
+    UCHAR rgbRed;
+    UCHAR rgbReserved;
+} RGBQUAD, *LPRGBQUAD;
+
+typedef struct tagBITMAPINFOHEADER
+{
+    ULONG  biSize;
+    LONG   biWidth;
+    LONG   biHeight;
+    USHORT biPlanes;
+    USHORT biBitCount;
+    ULONG  biCompression;
+    ULONG  biSizeImage;
+    LONG   biXPelsPerMeter;
+    LONG   biYPelsPerMeter;
+    ULONG  biClrUsed;
+    ULONG  biClrImportant;
+} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
+
 //
 // Positions of areas and images
 //

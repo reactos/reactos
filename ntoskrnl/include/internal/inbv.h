@@ -42,6 +42,19 @@ InbvGetResourceAddress(
     _In_ ULONG ResourceNumber
 );
 
+BOOLEAN
+NTAPI
+InbvGetGopFrameBufferInfo(
+    _Out_ PLOADER_PARAMETER_FRAMEBUFFER FrameBufferInfo
+);
+
+CODE_SEG("INIT")
+BOOLEAN
+NTAPI
+InbvQueryBgrtInfo(
+    _Out_opt_ PLOADER_PARAMETER_BGRT BgrtInfo
+);
+
 //
 // Display Functions
 //

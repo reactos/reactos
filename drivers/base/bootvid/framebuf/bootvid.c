@@ -359,6 +359,48 @@ SetPixel(
     }
 }
 
+BOOLEAN
+VidBufferToScreenBltNative(
+    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Width,
+    _In_ ULONG Height,
+    _In_ ULONG Delta)
+{
+    ULONG y;
+
+    if (!FrameBufferStart || BytesPerPixel != sizeof(ULONG))
+        return FALSE;
+
+    /*
+     * Legacy bootvid callers pass 4bpp packed scanlines. Only intercept
+     * native 32bpp rows used by the GOP boot animation path.
+     */
+    if (Delta < Width * sizeof(ULONG))
+        return FALSE;
+
+    if (Left >= ScreenWidth || Top >= ScreenHeight)
+        return TRUE;
+
+    if (Width > ScreenWidth - Left)
+        Width = ScreenWidth - Left;
+    if (Height > ScreenHeight - Top)
+        Height = ScreenHeight - Top;
+
+    for (y = 0; y < Height; ++y)
+    {
+        PUCHAR Src = Buffer + y * Delta;
+        PUCHAR Dst = (PUCHAR)FrameBufferStart +
+                     (Top + y) * BytesPerScanLine +
+                     Left * BytesPerPixel;
+
+        RtlCopyMemory(Dst, Src, Width * sizeof(ULONG));
+    }
+
+    return TRUE;
+}
+
 VOID
 PreserveRow(
     _In_ ULONG CurrentTop,

@@ -265,7 +265,49 @@ WinLdrInitializePhase1(
         // FIXME: Extension->AcpiTableSize;
     }
 
-    if (OperatingSystemVersion >= _WIN32_WINNT_VISTA)
+#ifdef UEFIBOOT
+    /*
+     * Hand off the active UEFI framebuffer so ntoskrnl can keep using the
+     * firmware-owned display for the GOP boot animation path.
+     */
+    {
+        extern ULONG_PTR VramAddress;
+        extern ULONG VramSize;
+        extern PCM_FRAMEBUF_DEVICE_DATA FrameBufferData;
+
+        if (FrameBufferData != NULL &&
+            VramAddress != 0 &&
+            VramSize != 0 &&
+            FrameBufferData->ScreenWidth != 0 &&
+            FrameBufferData->ScreenHeight != 0 &&
+            FrameBufferData->PixelsPerScanLine != 0 &&
+            FrameBufferData->BitsPerPixel != 0)
+        {
+            Extension->GopFramebuffer.FrameBufferBase.QuadPart =
+                (ULONGLONG)(VramAddress + FrameBufferData->FrameBufferOffset);
+            Extension->GopFramebuffer.FrameBufferSize = VramSize;
+            Extension->GopFramebuffer.HorizontalResolution = FrameBufferData->ScreenWidth;
+            Extension->GopFramebuffer.VerticalResolution = FrameBufferData->ScreenHeight;
+            Extension->GopFramebuffer.PixelsPerScanLine = FrameBufferData->PixelsPerScanLine;
+            Extension->GopFramebuffer.PixelFormat = FrameBufferData->BitsPerPixel;
+            Extension->GopFramebuffer.RedMask = FrameBufferData->PixelMasks.RedMask;
+            Extension->GopFramebuffer.GreenMask = FrameBufferData->PixelMasks.GreenMask;
+            Extension->GopFramebuffer.BlueMask = FrameBufferData->PixelMasks.BlueMask;
+            Extension->GopFramebuffer.Reserved = FrameBufferData->PixelMasks.ReservedMask;
+
+            TRACE("Passing UEFI framebuffer to kernel:\n");
+            TRACE("  BaseAddress: 0x%llx\n", Extension->GopFramebuffer.FrameBufferBase.QuadPart);
+            TRACE("  Size: 0x%x\n", Extension->GopFramebuffer.FrameBufferSize);
+            TRACE("  Resolution: %lux%lu\n",
+                  Extension->GopFramebuffer.HorizontalResolution,
+                  Extension->GopFramebuffer.VerticalResolution);
+            TRACE("  PixelsPerScanLine: %lu\n", Extension->GopFramebuffer.PixelsPerScanLine);
+            TRACE("  BitsPerPixel: %lu\n", Extension->GopFramebuffer.PixelFormat);
+        }
+    }
+#endif
+
+    if (VersionToBoot >= _WIN32_WINNT_VISTA)
     {
         Extension->BootViaWinload = 1;
         Extension->LoaderPerformanceData = PaToVa(&WinLdrSystemBlock->LoaderPerformanceData);
@@ -1442,6 +1484,9 @@ LoadAndBootWindowsCommon(
                            BootPath);
 
     UiUpdateProgressBar(100, NULL);
+
+    /* Black out the screen for kernel handoff, keeping only the BGRT logo */
+    UiDrawBackdrop(UiGetScreenHeight());
 
     /* Save entry-point pointer and Loader block VAs */
     KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;

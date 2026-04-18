@@ -20,3 +20,14 @@ SetPixel(
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ UCHAR Color);
+
+#define HAS_NATIVE_BUFFER_TO_SCREEN_BLT
+
+BOOLEAN
+VidBufferToScreenBltNative(
+    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Width,
+    _In_ ULONG Height,
+    _In_ ULONG Delta);

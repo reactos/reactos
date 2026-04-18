@@ -237,6 +237,31 @@ typedef struct _FILEINFORMATION
     CHAR FileName[32];
 } FILEINFORMATION;
 
+typedef struct _LOADER_PARAMETER_FRAMEBUFFER
+{
+    LARGE_INTEGER FrameBufferBase;
+    ULONG FrameBufferSize;
+    ULONG HorizontalResolution;
+    ULONG VerticalResolution;
+    ULONG PixelsPerScanLine;
+    ULONG PixelFormat;
+    ULONG RedMask;
+    ULONG GreenMask;
+    ULONG BlueMask;
+    ULONG Reserved;
+} LOADER_PARAMETER_FRAMEBUFFER, *PLOADER_PARAMETER_FRAMEBUFFER;
+
+typedef struct _LOADER_PARAMETER_BGRT
+{
+    BOOLEAN Valid;
+    UCHAR ImageType;
+    USHORT Reserved;
+    ULONGLONG ImageAddress;
+    ULONG ImageSize;
+    ULONG ImageOffsetX;
+    ULONG ImageOffsetY;
+} LOADER_PARAMETER_BGRT, *PLOADER_PARAMETER_BGRT;
+
 typedef
 ARC_STATUS
 (*ARC_CLOSE)(
@@ -691,6 +716,10 @@ typedef struct _LOADER_PARAMETER_EXTENSION
     ULONG BootId;
     LOADER_PARAMETER_CI_EXTENSION *CodeIntegrityData;
     ULONG CodeIntegrityDataSize;
+#endif
+#if defined(__REACTOS__)
+    LOADER_PARAMETER_FRAMEBUFFER GopFramebuffer;
+    LOADER_PARAMETER_BGRT BgrtInfo;
 #endif
 } LOADER_PARAMETER_EXTENSION, *PLOADER_PARAMETER_EXTENSION;
 
