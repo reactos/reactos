@@ -3397,7 +3397,7 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
                     return; /* Success */
                 }
             }
-            /* It failed. Let's use a default path */
+            /* It failed. Let's try a default path */
             pszBuffer[cchSysDir] = UNICODE_NULL;
         }
         else
