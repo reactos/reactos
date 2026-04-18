@@ -3458,7 +3458,7 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
                        NULL, NULL, &si, &pi))
     {
 #define CONIME_STARTUP_TIMEOUT_MS (10 * 1000)
-        DWORD dwWait = WaitForSingleObject(hEvent, CONIME_STARTUP_TIMEOUT_MS);
+        const DWORD dwWait = WaitForSingleObject(hEvent, CONIME_STARTUP_TIMEOUT_MS);
         if (dwWait == WAIT_TIMEOUT)
             TerminateProcess(pi.hProcess, 0);
         CloseHandle(pi.hThread);
