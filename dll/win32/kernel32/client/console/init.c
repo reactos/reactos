@@ -332,7 +332,7 @@ ConnectConsole(IN PWSTR SessionDir,
     return TRUE;
 }
 
-#ifndef _M_AMD64
+#if !defined(_M_AMD64) || (_WIN32_WINNT < _WIN32_WINNT_WS03) || (_WIN32_WINNT > _WIN32_WINNT_VISTA)
 DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused);
 #endif
 
