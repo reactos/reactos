@@ -676,8 +676,10 @@ ApplyFixups:
         sub   di, 2
         cmp   ax, word ptr es:[di]     // Check fixup value
         jnz   PrintFileSystemError     // Fixup is corrupted, so print error
+        mov   ax, cx                   // Compute USA offset for k-th sector = 2*cx bytes
+        shl   ax, 1
+        add   si, ax                   // si -> USA word for current sector (USAoff + 2*cx)
         inc   cx
-        add   si, cx
         mov   ax, word ptr es:[si]     // Apply fixup
         mov   word ptr es:[di], ax
 
