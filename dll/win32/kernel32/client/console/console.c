@@ -3403,7 +3403,7 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
             }
             else
             {
-                DPRINT1("Security works!\n");
+                DPRINT1("Security works: '%S'\n", szValue);
             }
         }
         else
