@@ -3425,7 +3425,7 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
     /* SECURITY: Quote if necessary */
     status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
     if (!NT_SUCCESS(status))
-        RtlStringCchCopyW(pszBuffer, cchBuffer, L"conime.exe"); /* Failed. Use filename only */
+        RtlStringCchCopyW(pszBuffer, cchBuffer, L"conime.exe"); /* Use filename only */
 }
 
 /* @implemented */
