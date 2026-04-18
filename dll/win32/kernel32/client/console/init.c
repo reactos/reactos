@@ -460,7 +460,9 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
 }
 
 /* @implemented */
-DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
+DWORD
+WINAPI
+ConsoleIMERoutine(_In_ PVOID unused)
 {
     HANDLE hEvent;
     DWORD dwError;
