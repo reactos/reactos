@@ -3368,7 +3368,6 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
     OBJECT_ATTRIBUTES attr;
     NTSTATUS status;
     WCHAR szValue[MAX_PATH];
-
     static const PCWSTR ConsoleKey =
         L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console";
 
