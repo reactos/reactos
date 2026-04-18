@@ -3382,8 +3382,8 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
         WCHAR szValue[MAX_PATH];
         status = IntRegQueryValue(hKey, L"ConsoleIME", szValue, sizeof(szValue));
         if (NT_SUCCESS(status) && szValue[0] &&
-            /* SECURITY: Reject backslashes, slashes and quotes */
-            !wcschr(szValue, L'\\') && !wcschr(szValue, L'/') && !wcschr(szValue, L'"'))
+            /* SECURITY: Reject backslashes, slashes, quotes, and colons */
+            wcscspn(szValue, L"\\/\":") == wcslen(szValue))
         {
             /* Append value to pszBuffer */
             status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
