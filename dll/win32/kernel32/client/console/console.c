@@ -44,7 +44,7 @@ static WCHAR ExeNameBuffer[EXENAME_LENGTH]; // NULL-terminated
 static USHORT ExeNameLength;    // Count in number of characters without NULL
 static WCHAR StartDirBuffer[MAX_PATH + 1];  // NULL-terminated
 static USHORT StartDirLength;   // Count in number of characters without NULL
-static LONG g_bConsoleIMEStartingUp = FALSE; // We use interlock, so LONG
+static volatile LONG g_bConsoleIMEStartingUp = FALSE; // We use interlock, so LONG
 
 
 /* Default Console Control Handler ********************************************/
@@ -3327,7 +3327,7 @@ IntRegQueryValue(
         RtlCopyMemory(pvValue, pInfo->Data, cbCopy);
 
         /* SECURITY: Avoid buffer overrun */
-        if (pInfo->Type == REG_SZ)
+        if (pInfo->Type == REG_SZ && cbValue >= sizeof(UNICODE_NULL))
             ((PWCHAR)pvValue)[cbValue / sizeof(WCHAR) - 1] = UNICODE_NULL;
     }
 
@@ -3379,10 +3379,11 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
     if (NT_SUCCESS(status))
     {
         /* Query "ConsoleIME" value */
-        WCHAR szValue[2 * MAX_PATH];
+        WCHAR szValue[MAX_PATH];
         status = IntRegQueryValue(hKey, L"ConsoleIME", szValue, sizeof(szValue));
         if (NT_SUCCESS(status) && szValue[0] &&
-            !wcschr(szValue, L'\\')) /* SECURITY: Reject backslashes */
+            /* SECURITY: Reject backslashes, slashes and quotes */
+            !wcschr(szValue, L'\\') && !wcschr(szValue, L'/') && !wcschr(szValue, L'"'))
         {
             /* Append value to pszBuffer */
             status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
@@ -3450,7 +3451,8 @@ DWORD WINAPI ConsoleIMERoutine(_In_ PVOID unused)
     if (CreateProcessW(NULL, szCommandLine, NULL, NULL, FALSE, dwCreationFlags,
                        NULL, NULL, &si, &pi))
     {
-        DWORD dwWait = WaitForSingleObject(hEvent, 10 * 1000);
+#define CONIME_STARTUP_TIMEOUT_MS (10 * 1000)
+        DWORD dwWait = WaitForSingleObject(hEvent, CONIME_STARTUP_TIMEOUT_MS);
         if (dwWait == WAIT_TIMEOUT)
             TerminateProcess(pi.hProcess, 0);
         CloseHandle(pi.hThread);
