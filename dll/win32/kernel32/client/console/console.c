@@ -3394,6 +3394,7 @@ static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
                     status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
                     if (NT_SUCCESS(status))
                     {
+                        DPRINT("ConsoleIME: '%S'\n", pszBuffer);
                         NtClose(hKey);
                         return; /* Success */
                     }
