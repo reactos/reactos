@@ -88,7 +88,7 @@ protected:
         }
 
         size_t cNewItems = m_cItems + nGrow;
-        if (cNewItems < m_cItems || cNewItems >= ~(size_t)0 / sizeof(T_ITEM))
+        if (cNewItems < m_cItems || cNewItems > ~(size_t)0 / sizeof(T_ITEM))
             return FALSE;
 
         T_ITEM* pNewItems = (T_ITEM*)cicMemAlloc(cNewItems * sizeof(T_ITEM));
