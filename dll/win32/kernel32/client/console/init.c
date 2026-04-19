@@ -341,12 +341,13 @@ IntRegQueryValue(
     _Out_ PVOID pvValue,
     _In_ ULONG cbValue)
 {
-    HANDLE hProcessHeap = GetProcessHeap();
+    HANDLE hProcessHeap;
     ULONG cbInfo, cbResult;
     PKEY_VALUE_PARTIAL_INFORMATION pInfo;
     UNICODE_STRING valueName;
     NTSTATUS status;
 
+    hProcessHeap = GetProcessHeap();
     cbInfo = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + cbValue;
     pInfo = HeapAlloc(hProcessHeap, 0, cbInfo);
     if (!pInfo)
