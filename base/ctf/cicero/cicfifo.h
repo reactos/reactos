@@ -96,16 +96,15 @@ protected:
             CopyMemory(pNewItems, &m_pItems[m_iFront], cTail * sizeof(T_ITEM));
             CopyMemory(&pNewItems[cTail], m_pItems, m_iBack * sizeof(T_ITEM));
             INT_PTR cUsed = cTail + m_iBack;
-            m_iFront = 0;
             m_iBack = cUsed;
         }
         else
         {
             INT_PTR nCount = m_iBack - m_iFront;
             CopyMemory(pNewItems, &m_pItems[m_iFront], nCount * sizeof(T_ITEM));
-            m_iFront = 0;
             m_iBack = nCount;
         }
+        m_iFront = 0;
 
         cicMemFree(m_pItems);
         m_pItems = pNewItems;
