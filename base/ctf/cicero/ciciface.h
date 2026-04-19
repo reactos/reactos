@@ -46,7 +46,12 @@ public:
 
     operator T_IFACE*() { return m_ptr; }
     T_IFACE* operator->() { return m_ptr; }
-    T_IFACE** operator&() { return &m_ptr; }
+
+    T_IFACE** operator&()
+    {
+        cicAssert(!m_ptr);
+        return &m_ptr;
+    }
 
 private:
     CicInterface_RefCnt(const CicInterface_RefCnt<T_IFACE>&) = delete;
