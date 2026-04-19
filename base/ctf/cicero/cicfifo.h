@@ -14,16 +14,16 @@ class CicFirstInFirstOut
 {
 protected:
     T_ITEM* m_pItems;
-    size_t m_cItems;
-    size_t m_iFirstItem;
-    size_t m_iLastItem;
+    INT_PTR m_cItems;
+    INT_PTR m_iBack;
+    INT_PTR m_iFront;
 
 public:
     CicFirstInFirstOut()
         : m_pItems(NULL)
         , m_cItems(0)
-        , m_iFirstItem(0)
-        , m_iLastItem(0)
+        , m_iBack(0)
+        , m_iFront(0)
     {
     }
 
@@ -32,16 +32,16 @@ public:
         cicMemFree(m_pItems);
     }
 
-    size_t GetSize() const
+    INT_PTR GetSize() const
     {
-        if (m_iFirstItem == m_iLastItem)
+        if (m_iBack == m_iFront)
             return 0;
-        if (m_iFirstItem < m_iLastItem)
-            return m_iFirstItem + (m_cItems - m_iLastItem);
-        return m_iFirstItem - m_iLastItem;
+        if (m_iBack < m_iFront)
+            return m_iBack + (m_cItems - m_iFront);
+        return m_iBack - m_iFront;
     }
 
-    // First-In
+    // Like push_back
     BOOL SetData(const T_ITEM* pItem)
     {
         if (!m_cItems || GetSize() + 1 >= m_cItems) /* "+1" is for marking */
@@ -50,29 +50,29 @@ public:
                 return FALSE;
         }
 
-        m_pItems[m_iFirstItem] = *pItem;
+        m_pItems[m_iBack] = *pItem;
 
-        if (++m_iFirstItem == m_cItems)
-            m_iFirstItem = 0;
+        if (++m_iBack == m_cItems)
+            m_iBack = 0;
 
         return TRUE;
     }
 
-    // First-Out
+    // Like pop and pop_front
     BOOL GetData(T_ITEM* pItem)
     {
-        if (m_iLastItem == m_iFirstItem)
+        if (m_iFront == m_iBack)
             return FALSE;
-        *pItem = m_pItems[m_iLastItem];
-        ZeroMemory(&m_pItems[m_iLastItem], sizeof(T_ITEM));
-        if (++m_iLastItem == m_cItems)
-            m_iLastItem = 0;
+        *pItem = m_pItems[m_iFront];
+        ZeroMemory(&m_pItems[m_iFront], sizeof(T_ITEM));
+        if (++m_iFront == m_cItems)
+            m_iFront = 0;
         return TRUE;
     }
 
-    BOOL GrowBuffer(size_t nGrow)
+    BOOL GrowBuffer(INT_PTR nGrow)
     {
-        if (!nGrow)
+        if (nGrow <= 0)
             return TRUE;
 
         if (!m_pItems)
@@ -83,19 +83,19 @@ public:
             return !!m_pItems;
         }
 
-        size_t cNewItems = m_cItems + nGrow;
+        INT_PTR cNewItems = m_cItems + nGrow;
         T_ITEM* pNewItems = (T_ITEM*)cicMemAllocClear(cNewItems * sizeof(T_ITEM));
         if (!pNewItems)
             return FALSE;
 
-        if (m_iFirstItem < m_iLastItem)
+        if (m_iBack < m_iFront)
         {
-            size_t cTail = m_cItems - m_iLastItem;
-            CopyMemory(pNewItems, &m_pItems[m_iLastItem], cTail * sizeof(T_ITEM));
-            CopyMemory(&pNewItems[cTail], m_pItems, m_iFirstItem * sizeof(T_ITEM));
-            size_t cUsed = cTail + m_iFirstItem;
-            m_iLastItem = 0;
-            m_iFirstItem = cUsed;
+            INT_PTR cTail = m_cItems - m_iFront;
+            CopyMemory(pNewItems, &m_pItems[m_iFront], cTail * sizeof(T_ITEM));
+            CopyMemory(&pNewItems[cTail], m_pItems, m_iBack * sizeof(T_ITEM));
+            INT_PTR cUsed = cTail + m_iBack;
+            m_iFront = 0;
+            m_iBack = cUsed;
         }
         else
         {
