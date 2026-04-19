@@ -12,6 +12,7 @@
 template <typename T_ITEM>
 class CicFirstInFirstOut
 {
+public:
     T_ITEM* m_pItems;
     INT_PTR m_cItems;
     INT_PTR m_iFirstItem;
@@ -49,20 +50,20 @@ class CicFirstInFirstOut
         return TRUE;
     }
 
-    void GrowBuffer(INT_PTR nGrow)
+    BOOL GrowBuffer(INT_PTR nGrow)
     {
         if (!m_pItems)
         {
             m_pItems = (T_ITEM*)cicMemAllocClear(nGrow * sizeof(T_ITEM));
             if (m_pItems)
                 m_cItems = nGrow;
-            return;
+            return !!m_pItems;
         }
 
         INT_PTR cNewItems = m_cItems + nGrow;
         T_ITEM* pNewItems = cicMemAlloc(cNewItems * sizeof(T_ITEM));
         if (!pNewItems)
-            return;
+            return FALSE;
 
         CopyMemory(pNewItems, m_pItems, m_cItems * sizeof(T_ITEM));
         ZeroMemory(&pNewItems[m_cItems], nGrow * sizeof(T_ITEM));
@@ -77,18 +78,23 @@ class CicFirstInFirstOut
         cicMemFree(m_pItems);
         m_pItems = pNewItems;
         m_cItems = cNewItems;
+        return TRUE;
     }
 
-    INT_PTR SetData(T_ITEM* pItem)
+    BOOL SetData(T_ITEM* pItem)
     {
         if (!m_cItems || GetSize() + 1 >= m_cItems)
-            GrowBuffer(3);
+        {
+            if (!GrowBuffer(3))
+                return FALSE;
+        }
 
         m_pItems[m_iFirstItem] = *pItem;
 
         INT_PTR iItem = ++m_iFirstItem;
         if (iItem == m_cItems)
             m_iFirstItem = 0;
-        return iItem;
+
+        return TRUE;
     }
 };
