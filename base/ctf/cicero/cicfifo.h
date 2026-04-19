@@ -76,7 +76,9 @@ public:
 protected:
     BOOL GrowBuffer(INT_PTR nGrow)
     {
-        if (nGrow <= 0)
+        if (nGrow < 0)
+            return FALSE;
+        if (nGrow == 0)
             return TRUE;
 
         if (!m_pItems)
