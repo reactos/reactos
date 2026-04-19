@@ -496,15 +496,14 @@ ConsoleIMERoutine(_In_ PVOID unused)
         return ERROR_SUCCESS;
     }
 
-    /* Let's create a conime.exe process */
-    GetConsoleIMECommandLine(szCommandLine, _countof(szCommandLine));
-
     RtlZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     si.lpDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo.Buffer;
     si.wShowWindow = SW_HIDE;
     si.dwFlags = STARTF_FORCEONFEEDBACK | STARTF_USESHOWWINDOW;
 
+    /* Let's create a conime.exe process */
+    GetConsoleIMECommandLine(szCommandLine, _countof(szCommandLine));
     dwCreationFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_BREAKAWAY_FROM_JOB |
                       CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS;
     if (CreateProcessW(NULL, szCommandLine, NULL, NULL, FALSE, dwCreationFlags,
