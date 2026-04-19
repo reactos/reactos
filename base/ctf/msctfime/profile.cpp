@@ -9,16 +9,39 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
+// The callback function type
 typedef HRESULT (CALLBACK *FN_LanguageProfilesCallback)(TF_LANGUAGEPROFILE profile, LPARAM lParam);
 
-template <typename T_IFACE, typename T_DATA>
-struct CEnumrateValue
+/// @implemented
+HRESULT
+CicProfile::LanguageProfilesCallback(
+    _In_ TF_LANGUAGEPROFILE profile,
+    _Inout_ LPARAM lParam)
 {
-    FN_LanguageProfilesCallback m_fnCallback;
-    LPARAM m_lParam;
-    T_IFACE* m_iface;
+    if (!profile.fActive || !memcmp(&profile.clsid, &GUID_NULL, sizeof(GUID_NULL)))
+        return S_FALSE;
+    PLANG_PROF_ENUM_ARG pArg = (PLANG_PROF_ENUM_ARG)lParam;
+    if (!pArg)
+        return S_OK;
+    if (memcmp(&profile.catid, &pArg->catid, sizeof(profile.catid)) != 0)
+        return S_FALSE;
+    pArg->profile = profile;
+    return S_OK;
+}
 
-    CEnumrateValue(T_IFACE* iface) : m_iface(iface) { }
+template <typename T_IFACE, typename T_DATA>
+class CEnumValue
+{
+    T_IFACE* m_iface;
+    FN_LanguageProfilesCallback m_callback;
+    LPARAM m_lParam;
+
+public:
+    CEnumValue(T_IFACE* iface, FN_LanguageProfilesCallback callback, LPARAM lParam)
+        : m_iface(iface)
+        , m_callback(callback)
+        , m_lParam(lParam)
+    { }
 
     DWORD DoEnumrate()
     {
@@ -31,7 +54,7 @@ struct CEnumrateValue
             if (hr != S_OK)
                 break;
 
-            hr = m_fnCallback(data, m_lParam);
+            hr = m_callback(data, m_lParam);
             if (hr == S_OK)
                 return ERROR_SUCCESS;
         }
@@ -39,23 +62,6 @@ struct CEnumrateValue
         return ERROR_FILE_NOT_FOUND;
     }
 };
-
-/// @implemented
-HRESULT
-CicProfile::LanguageProfilesCallback(
-    _In_ TF_LANGUAGEPROFILE profile,
-    _Inout_opt_ LPARAM lParam)
-{
-    if (!profile.fActive || !memcmp(&profile.clsid, &GUID_NULL, sizeof(GUID_NULL)))
-        return S_FALSE;
-    PLANG_PROF_ENUM_ARG pArg = (PLANG_PROF_ENUM_ARG)lParam;
-    if (!pArg)
-        return S_OK;
-    if (memcmp(&profile.catid, &pArg->catid, sizeof(profile.catid)) != 0)
-        return S_FALSE;
-    pArg->profile = profile;
-    return S_OK;
-}
 
 /// @implemented
 CicProfile::CicProfile()
@@ -222,14 +228,14 @@ CicProfile::GetActiveLanguageProfile(
     if (FAILED(hr))
         return S_FALSE;
 
-    LANG_PROF_ENUM_ARG arg = { catid };
-    CEnumrateValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE> profiles(pEnum);
-    profiles.m_fnCallback = CicProfile::LanguageProfilesCallback;
-    profiles.m_lParam = (LPARAM)&arg;
-    DWORD ret = profiles.DoEnumrate();
+    LANG_PROF_ENUM_ARG arg;
+    arg.catid = catid;
+
+    CEnumValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE>
+        enumValue(pEnum, CicProfile::LanguageProfilesCallback, (LPARAM)&arg);
+    DWORD ret = enumValue.DoEnumrate();
     if (ret != ERROR_SUCCESS || !pProfile)
         return S_FALSE;
-
     *pProfile = arg.profile;
     return S_OK;
 }
@@ -242,9 +248,8 @@ HRESULT CicProfile::IsIME(HKL hKL)
     if (FAILED(hr))
         return S_FALSE;
 
-    CEnumrateValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE> profiles(pEnum);
-    profiles.m_fnCallback = CicProfile::LanguageProfilesCallback;
-    profiles.m_lParam = 0;
-    DWORD ret = profiles.DoEnumrate();
+    CEnumValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE>
+        enumValue(pEnum, CicProfile::LanguageProfilesCallback, 0);
+    DWORD ret = enumValue.DoEnumrate();
     return (ret == ERROR_SUCCESS) ? S_OK : S_FALSE;
 }
