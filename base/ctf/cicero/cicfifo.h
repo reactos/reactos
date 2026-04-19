@@ -15,15 +15,15 @@ class CicFirstInFirstOut
 protected:
     T_ITEM* m_pItems;
     size_t m_cItems;
-    size_t m_iLastItem;
     size_t m_iFirstItem;
+    size_t m_iLastItem;
 
 public:
     CicFirstInFirstOut()
         : m_pItems(NULL)
         , m_cItems(0)
-        , m_iLastItem(0)
         , m_iFirstItem(0)
+        , m_iLastItem(0)
     {
     }
 
@@ -34,21 +34,21 @@ public:
 
     size_t GetSize() const
     {
-        if (m_iLastItem == m_iFirstItem)
+        if (m_iFirstItem == m_iLastItem)
             return 0;
-        if (m_iLastItem < m_iFirstItem)
-            return m_iLastItem + m_cItems - m_iFirstItem;
-        return m_iLastItem - m_iFirstItem;
+        if (m_iFirstItem < m_iLastItem)
+            return m_iFirstItem + m_cItems - m_iLastItem;
+        return m_iFirstItem - m_iLastItem;
     }
 
     BOOL GetData(T_ITEM* pItem)
     {
-        if (m_iFirstItem == m_iLastItem)
+        if (m_iLastItem == m_iFirstItem)
             return FALSE;
-        *pItem = m_pItems[m_iFirstItem];
-        ZeroMemory(&m_pItems[m_iFirstItem], sizeof(T_ITEM));
-        if (++m_iFirstItem == m_cItems)
-            m_iFirstItem = 0;
+        *pItem = m_pItems[m_iLastItem];
+        ZeroMemory(&m_pItems[m_iLastItem], sizeof(T_ITEM));
+        if (++m_iLastItem == m_cItems)
+            m_iLastItem = 0;
         return TRUE;
     }
 
@@ -70,14 +70,14 @@ public:
         if (!pNewItems)
             return FALSE;
 
-        if (m_iLastItem < m_iFirstItem)
+        if (m_iFirstItem < m_iLastItem)
         {
-            size_t cTail = m_cItems - m_iFirstItem;
-            CopyMemory(pNewItems, &m_pItems[m_iFirstItem], cTail * sizeof(T_ITEM));
-            CopyMemory(&pNewItems[cTail], m_pItems, m_iLastItem * sizeof(T_ITEM));
-            size_t cUsed = cTail + m_iLastItem;
-            m_iFirstItem = 0;
-            m_iLastItem = cUsed;
+            size_t cTail = m_cItems - m_iLastItem;
+            CopyMemory(pNewItems, &m_pItems[m_iLastItem], cTail * sizeof(T_ITEM));
+            CopyMemory(&pNewItems[cTail], m_pItems, m_iFirstItem * sizeof(T_ITEM));
+            size_t cUsed = cTail + m_iFirstItem;
+            m_iLastItem = 0;
+            m_iFirstItem = cUsed;
         }
         else
         {
@@ -98,10 +98,10 @@ public:
                 return FALSE;
         }
 
-        m_pItems[m_iLastItem] = *pItem;
+        m_pItems[m_iFirstItem] = *pItem;
 
-        if (++m_iLastItem == m_cItems)
-            m_iLastItem = 0;
+        if (++m_iFirstItem == m_cItems)
+            m_iFirstItem = 0;
 
         return TRUE;
     }
