@@ -33,5 +33,5 @@ public:
 
 private:
     CicInterface_RefCnt(const CicInterface_RefCnt<T>&) = delete;
-    CicInterface_RefCnt<T>&operator=(const CicInterface_RefCnt<T>&) = delete;
+    CicInterface_RefCnt<T>& operator=(const CicInterface_RefCnt<T>&) = delete;
 };
