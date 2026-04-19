@@ -371,7 +371,7 @@ IntRegQueryValue(
     return status;
 }
 
-/* Quote a string if necessary */
+/* Quote a path string if necessary */
 static NTSTATUS
 IntPathQuoteSpacesW(
     _Inout_updates_z_(cchPathMax) PWSTR pszPath,
@@ -393,6 +393,7 @@ IntPathQuoteSpacesW(
     return STATUS_SUCCESS;
 }
 
+/* Reject bad relative paths */
 static inline BOOL IntIsSafeRelativePath(_Inout_z_ PWSTR pszPath)
 {
     /* Replace '/' with '\\' to detect the bad paths easily */
@@ -403,10 +404,8 @@ static inline BOOL IntIsSafeRelativePath(_Inout_z_ PWSTR pszPath)
             pszPath[ich] = L'\\';
     }
 
-    if (!memcmp(pszPath, L"..\\", 3 * sizeof(WCHAR)) || wcsstr(pszPath, L"\\..\\"))
-        return FALSE; /* Avoid path traversal */
-
-    return !wcschr(pszPath, L':'); /* Reject ADS (Alternate Data Stream) paths */
+    /* Avoid path traversal */
+    return (memcmp(pszPath, L"..\\", 3 * sizeof(WCHAR)) && !wcsstr(pszPath, L"\\..\\"));
 }
 
 /* Build the conime.exe command line */
