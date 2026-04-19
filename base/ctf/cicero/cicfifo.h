@@ -58,7 +58,7 @@ public:
         return TRUE;
     }
 
-    // Like pop and pop_front
+    // Like front and pop_front
     BOOL GetData(T_ITEM* pItem)
     {
         if (m_iFront == m_iBack)
