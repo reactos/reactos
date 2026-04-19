@@ -21,6 +21,18 @@
 
 #include <freeldr.h>
 
+#ifdef UEFIBOOT
+VOID
+UefiBootToFirmware(VOID);
+
+#define MAIN_BOOT_MENU_KEY_HINT \
+    "F8: Advanced   F9: Firmware Setup   F2: FreeLdr SETUP"
+#else
+#define MAIN_BOOT_MENU_KEY_HINT \
+    "Press F8 for troubleshooting and advanced startup options." \
+    "     F2: FreeLdr SETUP"
+#endif
+
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WARNING);
 
@@ -377,6 +389,12 @@ MainBootMenuKeyPressFilter(
         return TRUE;
 #endif
 
+#ifdef UEFIBOOT
+    case KEY_F9:
+        UefiBootToFirmware();
+        return TRUE;
+#endif
+
     default:
         /* We didn't handle the key */
         return FALSE;
@@ -451,8 +469,7 @@ VOID RunLoader(VOID)
         /* Show the operating system list menu */
         if (!UiDisplayMenu("Please select the operating system to start:",
                            /* The string is 80 characters long; don't make it longer! */
-                           "Press F8 for troubleshooting and advanced startup options."
-                           "     F2: FreeLdr SETUP",
+                           MAIN_BOOT_MENU_KEY_HINT,
                            OperatingSystemDisplayNames,
                            OperatingSystemCount,
                            SelectedOperatingSystem,
