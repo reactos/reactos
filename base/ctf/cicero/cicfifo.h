@@ -41,6 +41,24 @@ public:
         return m_iFirstItem - m_iLastItem;
     }
 
+    // First-In
+    BOOL SetData(const T_ITEM* pItem)
+    {
+        if (!m_cItems || GetSize() + 1 >= m_cItems) /* "+1" is for marking */
+        {
+            if (!GrowBuffer(!m_cItems ? 8 : (2 * m_cItems)))
+                return FALSE;
+        }
+
+        m_pItems[m_iFirstItem] = *pItem;
+
+        if (++m_iFirstItem == m_cItems)
+            m_iFirstItem = 0;
+
+        return TRUE;
+    }
+
+    // First-Out
     BOOL GetData(T_ITEM* pItem)
     {
         if (m_iLastItem == m_iFirstItem)
@@ -87,22 +105,6 @@ public:
         cicMemFree(m_pItems);
         m_pItems = pNewItems;
         m_cItems = cNewItems;
-        return TRUE;
-    }
-
-    BOOL SetData(const T_ITEM* pItem)
-    {
-        if (!m_cItems || GetSize() + 1 >= m_cItems) /* "+1" is for marking */
-        {
-            if (!GrowBuffer(!m_cItems ? 8 : (2 * m_cItems)))
-                return FALSE;
-        }
-
-        m_pItems[m_iFirstItem] = *pItem;
-
-        if (++m_iFirstItem == m_cItems)
-            m_iFirstItem = 0;
-
         return TRUE;
     }
 
