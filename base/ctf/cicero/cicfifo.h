@@ -18,6 +18,7 @@ protected:
     INT_PTR m_cItems;
     INT_PTR m_iBack;
     INT_PTR m_iFront;
+    //static_assert(std::is_trivially_copyable<T_ITEM>::value, ""); // FIXME
 
 public:
     CicFirstInFirstOut()
@@ -47,7 +48,7 @@ public:
     {
         if (!m_cItems || GetSize() + 1 >= m_cItems) /* "+1" is for marking */
         {
-            if (!GrowBuffer(!m_cItems ? 8 : (2 * m_cItems)))
+            if (!GrowBuffer(!m_cItems ? 8 : m_cItems))
                 return FALSE;
         }
 
@@ -65,7 +66,6 @@ public:
         if (m_iFront == m_iBack)
             return FALSE;
         *pItem = m_pItems[m_iFront];
-        ZeroMemory(&m_pItems[m_iFront], sizeof(T_ITEM));
         if (++m_iFront == m_cItems)
             m_iFront = 0;
         return TRUE;
@@ -78,14 +78,14 @@ public:
 
         if (!m_pItems)
         {
-            m_pItems = (T_ITEM*)cicMemAllocClear(nGrow * sizeof(T_ITEM));
+            m_pItems = (T_ITEM*)cicMemAlloc(nGrow * sizeof(T_ITEM));
             if (m_pItems)
                 m_cItems = nGrow;
             return !!m_pItems;
         }
 
         INT_PTR cNewItems = m_cItems + nGrow;
-        T_ITEM* pNewItems = (T_ITEM*)cicMemAllocClear(cNewItems * sizeof(T_ITEM));
+        T_ITEM* pNewItems = (T_ITEM*)cicMemAlloc(cNewItems * sizeof(T_ITEM));
         if (!pNewItems)
             return FALSE;
 
@@ -100,7 +100,10 @@ public:
         }
         else
         {
-            CopyMemory(pNewItems, m_pItems, m_cItems * sizeof(T_ITEM));
+            INT_PTR nCount = m_iBack - m_iFront;
+            CopyMemory(pNewItems, &m_pItems[m_iFront], nCount * sizeof(T_ITEM));
+            m_iFront = 0;
+            m_iBack = nCount;
         }
 
         cicMemFree(m_pItems);
