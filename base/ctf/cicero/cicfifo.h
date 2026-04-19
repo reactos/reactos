@@ -9,6 +9,7 @@
 
 #include "cicbase.h"
 
+// FIFO (First-In-First-Out) ring buffer
 template <typename T_ITEM>
 class CicFirstInFirstOut
 {
