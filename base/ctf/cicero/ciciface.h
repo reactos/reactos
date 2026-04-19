@@ -32,21 +32,15 @@ public:
 
     void Attach(T_IFACE* ptr)
     {
-        if (ptr)
-        {
-            m_ptr = ptr;
-            m_ptr->AddRef();
-        }
+        if (m_ptr)
+            m_ptr->Release();
+        m_ptr = ptr;
     }
 
     T_IFACE* Detach()
     {
         T_IFACE* old_ptr = m_ptr;
-        if (m_ptr)
-        {
-            m_ptr->Release();
-            m_ptr = NULL;
-        }
+        m_ptr = NULL;
         return old_ptr;
     }
 
