@@ -12,17 +12,18 @@
 template <typename T_ITEM>
 class CicFirstInFirstOut
 {
-public:
+protected:
     T_ITEM* m_pItems;
-    INT_PTR m_cItems;
-    INT_PTR m_iFirstItem;
-    INT_PTR m_iLastItem;
+    size_t m_cItems;
+    size_t m_iLastItem;
+    size_t m_iFirstItem;
 
+public:
     CicFirstInFirstOut()
         : m_pItems(NULL)
         , m_cItems(0)
-        , m_iFirstItem(0)
         , m_iLastItem(0)
+        , m_iFirstItem(0)
     {
     }
 
@@ -31,27 +32,30 @@ public:
         cicMemFree(m_pItems);
     }
 
-    INT_PTR GetSize() const
+    size_t GetSize() const
     {
-        if (m_iFirstItem == m_iLastItem)
+        if (m_iLastItem == m_iFirstItem)
             return 0;
-        if (m_iFirstItem <= m_iLastItem)
-            return m_iFirstItem + m_cItems - m_iLastItem;
-        return m_iFirstItem - m_iLastItem;
+        if (m_iLastItem < m_iFirstItem)
+            return m_iLastItem + m_cItems - m_iFirstItem;
+        return m_iLastItem - m_iFirstItem;
     }
 
     BOOL GetData(T_ITEM* pItem)
     {
-        if (m_iLastItem == m_iFirstItem)
+        if (m_iFirstItem == m_iLastItem)
             return FALSE;
-        *pItem = m_pItems[m_iLastItem];
-        if (++m_iLastItem == m_cItems)
-            m_iLastItem = 0;
+        *pItem = m_pItems[m_iFirstItem];
+        if (++m_iFirstItem == m_cItems)
+            m_iFirstItem = 0;
         return TRUE;
     }
 
-    BOOL GrowBuffer(INT_PTR nGrow)
+    BOOL GrowBuffer(size_t nGrow)
     {
+        if (!nGrow)
+            return TRUE;
+
         if (!m_pItems)
         {
             m_pItems = (T_ITEM*)cicMemAllocClear(nGrow * sizeof(T_ITEM));
@@ -60,19 +64,25 @@ public:
             return !!m_pItems;
         }
 
-        INT_PTR cNewItems = m_cItems + nGrow;
-        T_ITEM* pNewItems = cicMemAlloc(cNewItems * sizeof(T_ITEM));
+        size_t cNewItems = m_cItems + nGrow;
+        T_ITEM* pNewItems = (T_ITEM*)cicMemAlloc(cNewItems * sizeof(T_ITEM));
         if (!pNewItems)
             return FALSE;
 
-        CopyMemory(pNewItems, m_pItems, m_cItems * sizeof(T_ITEM));
-        ZeroMemory(&pNewItems[m_cItems], nGrow * sizeof(T_ITEM));
-
-        if (m_iFirstItem < m_iLastItem)
+        if (m_iLastItem < m_iFirstItem)
         {
-            size_t cbCopy = (m_cItems - m_iLastItem) * sizeof(T_ITEM);
-            CopyMemory(&pNewItems[m_iLastItem + nGrow], &m_pItems[m_iLastItem], cbCopy);
-            m_iLastItem += nGrow;
+            size_t cTail = m_cItems - m_iFirstItem;
+            CopyMemory(pNewItems, &m_pItems[m_iFirstItem], cTail * sizeof(T_ITEM));
+            CopyMemory(&pNewItems[cTail], m_pItems, m_iLastItem * sizeof(T_ITEM));
+            size_t cUsed = cTail + m_iLastItem;
+            ZeroMemory(&pNewItems[cUsed], (cNewItems - cUsed) * sizeof(T_ITEM));
+            m_iFirstItem = 0;
+            m_iLastItem = cUsed;
+        }
+        else
+        {
+            CopyMemory(pNewItems, m_pItems, m_cItems * sizeof(T_ITEM));
+            ZeroMemory(&pNewItems[m_cItems], nGrow * sizeof(T_ITEM));
         }
 
         cicMemFree(m_pItems);
@@ -81,20 +91,23 @@ public:
         return TRUE;
     }
 
-    BOOL SetData(T_ITEM* pItem)
+    BOOL SetData(const T_ITEM* pItem)
     {
-        if (!m_cItems || GetSize() + 1 >= m_cItems)
+        if (!m_cItems || GetSize() + 1 >= m_cItems) /* "+1" is for marking */
         {
-            if (!GrowBuffer(3))
+            if (!GrowBuffer(!m_cItems ? 8 : (2 * m_cItems)))
                 return FALSE;
         }
 
-        m_pItems[m_iFirstItem] = *pItem;
+        m_pItems[m_iLastItem] = *pItem;
 
-        INT_PTR iItem = ++m_iFirstItem;
-        if (iItem == m_cItems)
-            m_iFirstItem = 0;
+        if (++m_iLastItem == m_cItems)
+            m_iLastItem = 0;
 
         return TRUE;
     }
+
+private:
+    CicFirstInFirstOut(const CicFirstInFirstOut&) = delete;
+    CicFirstInFirstOut& operator=(const CicFirstInFirstOut&) = delete;
 };
