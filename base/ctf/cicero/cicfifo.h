@@ -15,13 +15,13 @@ class CicFirstInFirstOut
 {
 protected:
     T_ITEM* m_pItems;
-    INT_PTR m_cItems;
-    INT_PTR m_iBack;
-    INT_PTR m_iFront;
+    size_t m_cItems;
+    size_t m_iBack;
+    size_t m_iFront;
     //static_assert(std::is_trivially_copyable<T_ITEM>::value, ""); // FIXME
 
 public:
-    CicFirstInFirstOut(INT_PTR cInitial = 0)
+    CicFirstInFirstOut(size_t cInitial = 0)
         : m_pItems(NULL)
         , m_cItems(0)
         , m_iBack(0)
@@ -36,7 +36,7 @@ public:
         cicMemFree(m_pItems);
     }
 
-    INT_PTR GetSize() const
+    size_t GetSize() const
     {
         if (m_iBack == m_iFront)
             return 0;
@@ -74,10 +74,8 @@ public:
     }
 
 protected:
-    BOOL GrowBuffer(INT_PTR nGrow)
+    BOOL GrowBuffer(size_t nGrow)
     {
-        if (nGrow < 0)
-            return FALSE;
         if (nGrow == 0)
             return TRUE;
 
@@ -89,21 +87,24 @@ protected:
             return !!m_pItems;
         }
 
-        INT_PTR cNewItems = m_cItems + nGrow;
+        size_t cNewItems = m_cItems + nGrow;
+        if (cNewItems < m_cItems || cNewItems >= ~(size_t)0 / sizeof(T_ITEM))
+            return FALSE;
+
         T_ITEM* pNewItems = (T_ITEM*)cicMemAlloc(cNewItems * sizeof(T_ITEM));
         if (!pNewItems)
             return FALSE;
 
         if (m_iBack < m_iFront)
         {
-            INT_PTR cTail = m_cItems - m_iFront;
+            size_t cTail = m_cItems - m_iFront;
             CopyMemory(pNewItems, &m_pItems[m_iFront], cTail * sizeof(T_ITEM));
             CopyMemory(&pNewItems[cTail], m_pItems, m_iBack * sizeof(T_ITEM));
             m_iBack = cTail + m_iBack;
         }
         else
         {
-            INT_PTR nCount = m_iBack - m_iFront;
+            size_t nCount = m_iBack - m_iFront;
             CopyMemory(pNewItems, &m_pItems[m_iFront], nCount * sizeof(T_ITEM));
             m_iBack = nCount;
         }
