@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS msctfime.ime
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Profile of msctfime.ime
- * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2024-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "msctfime.h"
@@ -30,14 +30,14 @@ CicProfile::LanguageProfilesCallback(
 }
 
 template <typename T_IFACE, typename T_DATA>
-class CEnumValue
+class CicEnumValue
 {
     T_IFACE* m_iface;
     FN_LanguageProfilesCallback m_callback;
     LPARAM m_lParam;
 
 public:
-    CEnumValue(T_IFACE* iface, FN_LanguageProfilesCallback callback, LPARAM lParam)
+    CicEnumValue(T_IFACE* iface, FN_LanguageProfilesCallback callback, LPARAM lParam = 0)
         : m_iface(iface)
         , m_callback(callback)
         , m_lParam(lParam)
@@ -231,8 +231,8 @@ CicProfile::GetActiveLanguageProfile(
     LANG_PROF_ENUM_ARG arg;
     arg.catid = catid;
 
-    CEnumValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE>
-        enumValue(pEnum, CicProfile::LanguageProfilesCallback, (LPARAM)&arg);
+    CicEnumValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE>
+        enumValue(pEnum, LanguageProfilesCallback, (LPARAM)&arg);
     DWORD ret = enumValue.DoEnumrate();
     if (ret != ERROR_SUCCESS || !pProfile)
         return S_FALSE;
@@ -248,8 +248,8 @@ HRESULT CicProfile::IsIME(HKL hKL)
     if (FAILED(hr))
         return S_FALSE;
 
-    CEnumValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE>
-        enumValue(pEnum, CicProfile::LanguageProfilesCallback, 0);
+    CicEnumValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE>
+        enumValue(pEnum, LanguageProfilesCallback);
     DWORD ret = enumValue.DoEnumrate();
     return (ret == ERROR_SUCCESS) ? S_OK : S_FALSE;
 }
