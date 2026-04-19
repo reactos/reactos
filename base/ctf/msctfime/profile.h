@@ -9,15 +9,15 @@
 
 #include "sinks.h"
 
-typedef struct tagLANG_PROF_ENUM_ARG
-{
-    GUID catid;
-    TF_LANGUAGEPROFILE profile;
-} LANG_PROF_ENUM_ARG, *PLANG_PROF_ENUM_ARG;
-
 class CicProfile : public IUnknown
 {
 protected:
+    typedef struct tagLANG_PROF_ENUM_ARG
+    {
+        GUID catid;
+        TF_LANGUAGEPROFILE profile;
+    } LANG_PROF_ENUM_ARG, *PLANG_PROF_ENUM_ARG;
+
     ITfInputProcessorProfiles *m_pIPProfiles;
     CActiveLanguageProfileNotifySink *m_pActiveLanguageProfileNotifySink;
     LANGID  m_LangID1;
