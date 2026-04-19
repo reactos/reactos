@@ -371,7 +371,8 @@ IntRegQueryValue(
 }
 
 /* Quote a string if necessary */
-static NTSTATUS IntPathQuoteSpacesW(
+static NTSTATUS
+IntPathQuoteSpacesW(
     _Inout_updates_z_(cchPathMax) PWSTR pszPath,
     _In_ UINT cchPathMax)
 {
@@ -392,7 +393,10 @@ static NTSTATUS IntPathQuoteSpacesW(
 }
 
 /* Build the conime.exe command line */
-static VOID GetConsoleIMECommandLine(_Out_ PWSTR pszBuffer, _In_ UINT cchBuffer)
+static VOID
+GetConsoleIMECommandLine(
+    _Out_ PWSTR pszBuffer,
+    _In_ UINT cchBuffer)
 {
     UINT cchSysDir;
     HANDLE hKey;
