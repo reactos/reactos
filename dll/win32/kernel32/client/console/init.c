@@ -395,7 +395,7 @@ IntPathQuoteSpacesW(
 
 static inline BOOL IntIsSafeRelativePath(_Inout_z_ PWSTR pszPath)
 {
-    /* Replace '/' with '\\' */
+    /* Replace '/' with '\\' to detect the bad paths easily */
     INT ich;
     for (ich = 0; pszPath[ich]; ++ich)
     {
@@ -403,11 +403,10 @@ static inline BOOL IntIsSafeRelativePath(_Inout_z_ PWSTR pszPath)
             pszPath[ich] = L'\\';
     }
 
-    /* Please don't go to the ancestor's place. Avoid path traversal */
     if (!memcmp(pszPath, L"..\\", 3 * sizeof(WCHAR)) || wcsstr(pszPath, L"\\..\\"))
-        return FALSE;
+        return FALSE; /* Avoid path traversal */
 
-    return !wcschr(pszPath, L':'); /* Reject ADS (Alternate Data Stream) */
+    return !wcschr(pszPath, L':'); /* Reject ADS (Alternate Data Stream) paths */
 }
 
 /* Build the conime.exe command line */
