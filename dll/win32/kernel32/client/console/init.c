@@ -463,7 +463,10 @@ GetConsoleIMECommandLine(
         RtlStringCchCopyW(pszBuffer, cchBuffer, L"conime.exe"); /* Use filename only */
 }
 
-/* @implemented */
+/*
+ * @implemented
+ * This function is called from winsrv.dll to support console IMEs on East Asian console.
+ */
 DWORD
 WINAPI
 ConsoleIMERoutine(_In_ PVOID unused)
