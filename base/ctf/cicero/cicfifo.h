@@ -46,6 +46,9 @@ public:
         if (m_iFirstItem == m_iLastItem)
             return FALSE;
         *pItem = m_pItems[m_iFirstItem];
+#ifndef NDEBUG
+        ZeroMemory(&m_pItems[m_iFirstItem], sizeof(T_ITEM));
+#endif
         if (++m_iFirstItem == m_cItems)
             m_iFirstItem = 0;
         return TRUE;
@@ -58,7 +61,11 @@ public:
 
         if (!m_pItems)
         {
+#ifndef NDEBUG
             m_pItems = (T_ITEM*)cicMemAllocClear(nGrow * sizeof(T_ITEM));
+#else
+            m_pItems = (T_ITEM*)cicMemAlloc(nGrow * sizeof(T_ITEM));
+#endif
             if (m_pItems)
                 m_cItems = nGrow;
             return !!m_pItems;
@@ -75,14 +82,18 @@ public:
             CopyMemory(pNewItems, &m_pItems[m_iFirstItem], cTail * sizeof(T_ITEM));
             CopyMemory(&pNewItems[cTail], m_pItems, m_iLastItem * sizeof(T_ITEM));
             size_t cUsed = cTail + m_iLastItem;
+#ifndef NDEBUG
             ZeroMemory(&pNewItems[cUsed], (cNewItems - cUsed) * sizeof(T_ITEM));
+#endif
             m_iFirstItem = 0;
             m_iLastItem = cUsed;
         }
         else
         {
             CopyMemory(pNewItems, m_pItems, m_cItems * sizeof(T_ITEM));
+#ifndef NDEBUG
             ZeroMemory(&pNewItems[m_cItems], nGrow * sizeof(T_ITEM));
+#endif
         }
 
         cicMemFree(m_pItems);
