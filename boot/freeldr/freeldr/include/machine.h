@@ -142,4 +142,9 @@ VOID MachGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDat
 VOID MachVideoGetFontsFromFirmware(PULONG RomFontPointers);
 ULONG MachGetBootSectorLoadAddress(IN UCHAR DriveNumber);
 
+#ifdef UEFIBOOT
+BOOLEAN UefiFirmwareSetupSupported(VOID);
+VOID UefiBootToFirmware(VOID);
+#endif
+
 /* EOF */

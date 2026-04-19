@@ -21,17 +21,9 @@
 
 #include <freeldr.h>
 
-#ifdef UEFIBOOT
-VOID
-UefiBootToFirmware(VOID);
-
-#define MAIN_BOOT_MENU_KEY_HINT \
-    "F8: Advanced   F9: Firmware Setup   F2: FreeLdr SETUP"
-#else
 #define MAIN_BOOT_MENU_KEY_HINT \
     "Press F8 for troubleshooting and advanced startup options." \
     "     F2: FreeLdr SETUP"
-#endif
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WARNING);
@@ -386,12 +378,6 @@ MainBootMenuKeyPressFilter(
     /* Boot entry editor */
     case KEY_F10:
         EditOperatingSystemEntry(OperatingSystem);
-        return TRUE;
-#endif
-
-#ifdef UEFIBOOT
-    case KEY_F9:
-        UefiBootToFirmware();
         return TRUE;
 #endif
 

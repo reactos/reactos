@@ -8,7 +8,7 @@
 #include <uefildr.h>
 
 #include <debug.h>
-DBG_DEFAULT_CHANNEL(WARNING);
+DBG_DEFAULT_CHANNEL(HWDETECT);
 
 extern EFI_SYSTEM_TABLE *GlobalSystemTable;
 
@@ -21,7 +21,7 @@ extern EFI_SYSTEM_TABLE *GlobalSystemTable;
 
 static EFI_GUID EfiGlobalVariableGuid = EFI_GLOBAL_VARIABLE;
 
-static BOOLEAN
+BOOLEAN
 UefiFirmwareSetupSupported(VOID)
 {
     EFI_STATUS Status;
@@ -36,15 +36,15 @@ UefiFirmwareSetupSupported(VOID)
         &OsIndicationsSupported);
     if (Status != EFI_SUCCESS)
     {
-        WARN("Failed to query firmware setup support, status 0x%lx\n",
-             (ULONG)Status);
+        WARN("Failed to query firmware setup support, status 0x%Ix\n",
+             Status);
         return FALSE;
     }
 
     if (Size != sizeof(OsIndicationsSupported))
     {
-        WARN("Firmware setup support variable has unexpected size %lu\n",
-             (ULONG)Size);
+        WARN("Firmware setup support variable has unexpected size %Iu\n",
+             Size);
         return FALSE;
     }
 
@@ -72,15 +72,15 @@ UefiSetFirmwareSetupBoot(VOID)
     {
         if (Status != EFI_SUCCESS)
         {
-            WARN("Failed to query firmware setup request variable, status 0x%lx\n",
-                 (ULONG)Status);
+            WARN("Failed to query firmware setup request variable, status 0x%Ix\n",
+                 Status);
             return Status;
         }
 
         if (Size != sizeof(OsIndications))
         {
-            WARN("Firmware setup request variable has unexpected size %lu\n",
-                 (ULONG)Size);
+            WARN("Firmware setup request variable has unexpected size %Iu\n",
+                 Size);
             return EFI_INVALID_PARAMETER;
         }
     }
@@ -109,8 +109,8 @@ UefiBootToFirmware(VOID)
     Status = UefiSetFirmwareSetupBoot();
     if (Status != EFI_SUCCESS)
     {
-        WARN("Failed to request firmware setup, status 0x%lx\n",
-             (ULONG)Status);
+        WARN("Failed to request firmware setup, status 0x%Ix\n",
+             Status);
         UiMessageBox("Unable to request firmware setup.");
         return;
     }
