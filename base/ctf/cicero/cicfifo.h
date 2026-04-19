@@ -95,8 +95,7 @@ protected:
             INT_PTR cTail = m_cItems - m_iFront;
             CopyMemory(pNewItems, &m_pItems[m_iFront], cTail * sizeof(T_ITEM));
             CopyMemory(&pNewItems[cTail], m_pItems, m_iBack * sizeof(T_ITEM));
-            INT_PTR cUsed = cTail + m_iBack;
-            m_iBack = cUsed;
+            m_iBack = cTail + m_iBack;
         }
         else
         {
