@@ -72,27 +72,8 @@ PUBLIC RtlCaptureContext
     /* Store stack pointer */
     mov [rcx + CxRsp], rax
 
-    /* Store xmm registers */
-    movaps [rcx + CxXmm0], xmm0
-    movaps [rcx + CxXmm1], xmm1
-    movaps [rcx + CxXmm2], xmm2
-    movaps [rcx + CxXmm3], xmm3
-    movaps [rcx + CxXmm4], xmm4
-    movaps [rcx + CxXmm5], xmm5
-    movaps [rcx + CxXmm6], xmm6
-    movaps [rcx + CxXmm7], xmm7
-
     /* Load rflags into eax */
     mov eax, [rsp]
-
-    movaps [rcx + CxXmm8], xmm8
-    movaps [rcx + CxXmm9], xmm9
-    movaps [rcx + CxXmm10], xmm10
-    movaps [rcx + CxXmm11], xmm11
-    movaps [rcx + CxXmm12], xmm12
-    movaps [rcx + CxXmm13], xmm13
-    movaps [rcx + CxXmm14], xmm14
-    movaps [rcx + CxXmm15], xmm15
 
     /* Store eflags */
     mov [rcx + CxEFlags], eax
@@ -102,7 +83,28 @@ PUBLIC RtlCaptureContext
 
     /* Check if we are in user mode */
     test byte ptr [rcx + CxSegCs], 3
-    jz RtlCaptureContextExit
+    jnz RtlCaptureContextLegacy
+
+    /* Store xmm registers */
+    movaps [rcx + CxXmm0], xmm0
+    movaps [rcx + CxXmm1], xmm1
+    movaps [rcx + CxXmm2], xmm2
+    movaps [rcx + CxXmm3], xmm3
+    movaps [rcx + CxXmm4], xmm4
+    movaps [rcx + CxXmm5], xmm5
+    movaps [rcx + CxXmm6], xmm6
+    movaps [rcx + CxXmm7], xmm7
+    movaps [rcx + CxXmm8], xmm8
+    movaps [rcx + CxXmm9], xmm9
+    movaps [rcx + CxXmm10], xmm10
+    movaps [rcx + CxXmm11], xmm11
+    movaps [rcx + CxXmm12], xmm12
+    movaps [rcx + CxXmm13], xmm13
+    movaps [rcx + CxXmm14], xmm14
+    movaps [rcx + CxXmm15], xmm15
+    jmp RtlCaptureContextExit
+
+RtlCaptureContextLegacy:
 
     /* Store legacy floating point registers */
     fxsave [rcx + CxFltSave]
@@ -139,6 +141,10 @@ PUBLIC RtlpRestoreContextInternal
     /* Load rdx restore value into r9 */
     mov r9, [rcx + CxRdx]
 
+    /* Check if we go to user mode */
+    test byte ptr [rcx + CxSegCs], 3
+    jnz RestoreLegacyState
+
     /* Restore xmm registers */
     movaps xmm0, [rcx + CxXmm0]
     movaps xmm1, [rcx + CxXmm1]
@@ -156,6 +162,16 @@ PUBLIC RtlpRestoreContextInternal
     movaps xmm13, [rcx + CxXmm13]
     movaps xmm14, [rcx + CxXmm14]
     movaps xmm15, [rcx + CxXmm15]
+
+    /* Restore MXCSR */
+    ldmxcsr [rcx + CxMxCsr]
+    jmp RestoreStateDone
+
+RestoreLegacyState:
+
+    /* Restore legacy floating point registers */
+    fxrstor [rcx + CxFltSave]
+RestoreStateDone:
 
     /* Copy Return address (now in r8) to the target stack */
     mov [rdx - 2 * 8], r8
@@ -188,18 +204,6 @@ PUBLIC RtlpRestoreContextInternal
     /* Restore the registers we used */
     mov r8,  [rcx + CxR8]
     mov r9,  [rcx + CxR9]
-
-    /* Restore MXCSR */
-    ldmxcsr [rcx + CxMxCsr]
-
-    /* Check if we go to user mode */
-    test byte ptr [rcx + CxSegCs], 3
-    jz Exit
-
-    /* Restore legacy floating point registers */
-    fxrstor [rcx + CxFltSave]
-
-Exit:
 
     /* Check if we go to a different cs */
     mov ax, cs
@@ -329,4 +333,3 @@ RaiseStatus:
 
 
 END
-
