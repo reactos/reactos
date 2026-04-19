@@ -16,7 +16,7 @@ typedef HRESULT (CALLBACK *FN_LanguageProfilesCallback)(TF_LANGUAGEPROFILE profi
 HRESULT
 CicProfile::LanguageProfilesCallback(
     _In_ TF_LANGUAGEPROFILE profile,
-    _Inout_ LPARAM lParam)
+    _Inout_opt_ LPARAM lParam)
 {
     if (!profile.fActive || !memcmp(&profile.clsid, &GUID_NULL, sizeof(GUID_NULL)))
         return S_FALSE;
