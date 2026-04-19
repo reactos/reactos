@@ -79,7 +79,7 @@ class CicFirstInFirstOut
 
     INT_PTR SetData(T_ITEM* pItem)
     {
-        if (!m_cItems || GetSize() >= m_cItems - 1)
+        if (!m_cItems || GetSize() + 1 >= m_cItems)
             GrowBuffer(3);
 
         m_pItems[m_iFirstItem] = *pItem;
