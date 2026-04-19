@@ -471,7 +471,7 @@ DWORD
 WINAPI
 ConsoleIMERoutine(_In_ PVOID unused)
 {
-    HANDLE hEvent;
+    HANDLE hStartUpEvent;
     DWORD dwError;
     WCHAR szCommandLine[2 * MAX_PATH];
     STARTUPINFOW si;
@@ -483,14 +483,14 @@ ConsoleIMERoutine(_In_ PVOID unused)
     if (InterlockedCompareExchange(&g_bConsoleIMEStartingUp, TRUE, FALSE) != FALSE)
         return STATUS_UNSUCCESSFUL; /* NOTE: There's confusion between error codes and NTSTATUS */
 
-    hEvent = CreateEventW(NULL, FALSE, FALSE, L"ConsoleIME_StartUp_Event");
+    hStartUpEvent = CreateEventW(NULL, FALSE, FALSE, L"ConsoleIME_StartUp_Event");
     dwError = GetLastError();
     if (dwError == ERROR_ALREADY_EXISTS)
     {
-        CloseHandle(hEvent);
-        hEvent = NULL;
+        CloseHandle(hStartUpEvent);
+        hStartUpEvent = NULL;
     }
-    if (!hEvent)
+    if (!hStartUpEvent)
     {
         InterlockedExchange(&g_bConsoleIMEStartingUp, FALSE);
         return ERROR_SUCCESS;
@@ -499,8 +499,7 @@ ConsoleIMERoutine(_In_ PVOID unused)
     RtlZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     si.lpDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo.Buffer;
-    si.wShowWindow = SW_HIDE;
-    si.dwFlags = STARTF_FORCEONFEEDBACK | STARTF_USESHOWWINDOW;
+    si.dwFlags = STARTF_FORCEONFEEDBACK;
 
     /* Let's create a conime.exe process */
     GetConsoleIMECommandLine(szCommandLine, _countof(szCommandLine));
@@ -509,7 +508,8 @@ ConsoleIMERoutine(_In_ PVOID unused)
     if (CreateProcessW(NULL, szCommandLine, NULL, NULL, FALSE, dwCreationFlags,
                        NULL, NULL, &si, &pi))
     {
-        const DWORD dwWait = WaitForSingleObject(hEvent, 10 * 1000);
+        /* Wait for conime.exe starting up */
+        const DWORD dwWait = WaitForSingleObject(hStartUpEvent, 10 * 1000);
         if (dwWait == WAIT_TIMEOUT)
             TerminateProcess(pi.hProcess, 0);
         CloseHandle(pi.hThread);
@@ -522,7 +522,7 @@ ConsoleIMERoutine(_In_ PVOID unused)
         DPRINT1("'%S' startup failed: 0x%08X\n", szCommandLine, dwError);
     }
 
-    CloseHandle(hEvent);
+    CloseHandle(hStartUpEvent);
 
     InterlockedExchange(&g_bConsoleIMEStartingUp, FALSE);
     return dwError;
