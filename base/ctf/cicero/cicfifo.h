@@ -37,7 +37,7 @@ public:
         if (m_iFirstItem == m_iLastItem)
             return 0;
         if (m_iFirstItem < m_iLastItem)
-            return m_iFirstItem + m_cItems - m_iLastItem;
+            return m_iFirstItem + (m_cItems - m_iLastItem);
         return m_iFirstItem - m_iLastItem;
     }
 
