@@ -448,14 +448,14 @@ GetConsoleIMECommandLine(
         NtClose(hKey);
         if (NT_SUCCESS(status))
         {
-            /* SECURITY: Malicious relative paths should be rejected (ReactOS-only) */
+            /* Malicious relative paths should be rejected (ReactOS-only) */
             if (szValue[0] && IntIsSafeRelativePath(szValue))
             {
                 /* Append value to pszBuffer */
                 status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
                 if (NT_SUCCESS(status))
                 {
-                    /* SECURITY: Quote if necessary (ReactOS-only) */
+                    /* Quote the path if necessary (ReactOS-only). Avoid path traversal */
                     status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
                     if (NT_SUCCESS(status))
                     {
@@ -475,7 +475,7 @@ GetConsoleIMECommandLine(
 
     RtlStringCchCatW(pszBuffer, cchBuffer, L"conime.exe");
 
-    /* SECURITY: Quote if necessary (ReactOS-only) */
+    /* Quote the path if necessary (ReactOS-only). Avoid path traversal */
     status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
     if (!NT_SUCCESS(status))
         RtlStringCchCopyW(pszBuffer, cchBuffer, L"conime.exe"); /* Use filename only */
