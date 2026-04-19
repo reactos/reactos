@@ -60,7 +60,7 @@ class CicFirstInFirstOut
         }
 
         INT_PTR cNewItems = m_cItems + nGrow;
-        T_ITEM* pNewItems = cicMemAllocClear(cNewItems * sizeof(T_ITEM));
+        T_ITEM* pNewItems = cicMemAlloc(cNewItems * sizeof(T_ITEM));
         if (!pNewItems)
             return;
 
@@ -69,6 +69,7 @@ class CicFirstInFirstOut
         {
             size_t cbCopy = (m_cItems - m_iLastItem) * sizeof(T_ITEM);
             CopyMemory(&pNewItems[nGrow + m_iLastItem], &m_pItems[m_iLastItem], cbCopy);
+            ZeroMemory(&pNewItems[m_cItems], nGrow * sizeof(T_ITEM));
             m_iLastItem += nGrow;
         }
 
