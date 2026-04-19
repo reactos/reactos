@@ -43,7 +43,7 @@ public:
         , m_lParam(lParam)
     { }
 
-    DWORD DoEnumrate()
+    DWORD DoEnum()
     {
         HRESULT hr;
         T_DATA data;
@@ -233,7 +233,7 @@ CicProfile::GetActiveLanguageProfile(
 
     CicEnumValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE>
         enumValue(pEnum, LanguageProfilesCallback, (LPARAM)&arg);
-    DWORD ret = enumValue.DoEnumrate();
+    DWORD ret = enumValue.DoEnum();
     if (ret != ERROR_SUCCESS || !pProfile)
         return S_FALSE;
     *pProfile = arg.profile;
@@ -250,6 +250,6 @@ HRESULT CicProfile::IsIME(HKL hKL)
 
     CicEnumValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE>
         enumValue(pEnum, LanguageProfilesCallback);
-    DWORD ret = enumValue.DoEnumrate();
+    DWORD ret = enumValue.DoEnum();
     return (ret == ERROR_SUCCESS) ? S_OK : S_FALSE;
 }
