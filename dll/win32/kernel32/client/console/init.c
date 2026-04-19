@@ -510,7 +510,7 @@ ConsoleIMERoutine(_In_ PVOID unused)
     if (CreateProcessW(NULL, szCommandLine, NULL, NULL, FALSE, dwCreationFlags,
                        NULL, NULL, &si, &pi))
     {
-        /* Wait for conime.exe starting up */
+        /* Wait 10 seconds for conime.exe to start up */
         const DWORD dwWait = WaitForSingleObject(hStartUpEvent, 10 * 1000);
         if (dwWait == WAIT_TIMEOUT)
             TerminateProcess(pi.hProcess, 0);
