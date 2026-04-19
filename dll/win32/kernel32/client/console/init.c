@@ -465,7 +465,7 @@ GetConsoleIMECommandLine(
 
 /*
  * @implemented
- * This function is called from winsrv.dll to support console IMEs on East Asian console.
+ * This function is called from winsrv.dll to support Console IME on East Asian console.
  */
 DWORD
 WINAPI
@@ -496,6 +496,7 @@ ConsoleIMERoutine(_In_ PVOID unused)
         return ERROR_SUCCESS;
     }
 
+    /* Let's create a conime.exe process */
     GetConsoleIMECommandLine(szCommandLine, _countof(szCommandLine));
 
     RtlZeroMemory(&si, sizeof(si));
