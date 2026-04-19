@@ -483,8 +483,8 @@ GetConsoleIMECommandLine(
 /**
  * @brief
  * This function is called from winsrv.dll, in the context of the console application,
-  * to support Console IME on East Asian console.
- **/
+ * to support Console IME on East Asian console.
+ */
 DWORD
 WINAPI
 ConsoleIMERoutine(_In_ PVOID unused)
