@@ -71,6 +71,7 @@ public:
         return TRUE;
     }
 
+protected:
     BOOL GrowBuffer(INT_PTR nGrow)
     {
         if (nGrow <= 0)
