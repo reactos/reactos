@@ -393,6 +393,23 @@ IntPathQuoteSpacesW(
     return STATUS_SUCCESS;
 }
 
+static inline BOOL IntIsSafeRelativePath(_Inout_z_ PWSTR pszPath)
+{
+    /* Replace '/' with '\\' */
+    INT ich;
+    for (ich = 0; pszPath[ich]; ++ich)
+    {
+        if (pszPath[ich] == L'/')
+            pszPath[ich] = L'\\';
+    }
+
+    /* Please don't go to the ancestor's place */
+    if (memcmp(pszPath, L"..\\") == 0 || wcsstr(pszPath, L"\\..\\"))
+        return FALSE;
+
+    return !wcschr(pszPath, L':'); /* Reject ADS (Alternate Data Stream) */
+}
+
 /* Build the conime.exe command line */
 static VOID
 GetConsoleIMECommandLine(
@@ -431,8 +448,8 @@ GetConsoleIMECommandLine(
         NtClose(hKey);
         if (NT_SUCCESS(status))
         {
-            /* SECURITY: Reject empty, backslashes, slashes, quotes, and colons */
-            if (szValue[0] && wcscspn(szValue, L"\\/\":") == wcslen(szValue))
+            /* Check relative path */
+            if (szValue[0] && IntIsSafeRelativePath(szValue))
             {
                 /* Append value to pszBuffer */
                 status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
