@@ -9,29 +9,52 @@
 
 #include "cicbase.h"
 
-template <typename T>
+template <typename T_IFACE>
 class CicInterface_RefCnt
 {
 protected:
-    T* m_ptr;
+    T_IFACE* m_ptr;
 
 public:
-    CicInterface_RefCnt(T* ptr = NULL) : m_ptr(ptr)
+    CicInterface_RefCnt() : m_ptr(NULL) { }
+
+    CicInterface_RefCnt(T_IFACE* ptr) : m_ptr(ptr)
     {
         if (m_ptr)
             m_ptr->AddRef();
     }
+
     ~CicInterface_RefCnt()
     {
         if (m_ptr)
             m_ptr->Release();
     }
 
-    operator T*() { return m_ptr; }
-    T* operator->() { return m_ptr; }
-    T** operator&() { return &m_ptr; }
+    void Attach(T_IFACE* ptr)
+    {
+        if (ptr)
+        {
+            m_ptr = ptr;
+            m_ptr->AddRef();
+        }
+    }
+
+    T_IFACE* Detach()
+    {
+        T_IFACE* old_ptr = m_ptr;
+        if (m_ptr)
+        {
+            m_ptr->Release();
+            m_ptr = NULL;
+        }
+        return old_ptr;
+    }
+
+    operator T_IFACE*() { return m_ptr; }
+    T_IFACE* operator->() { return m_ptr; }
+    T_IFACE** operator&() { return &m_ptr; }
 
 private:
-    CicInterface_RefCnt(const CicInterface_RefCnt<T>&) = delete;
-    CicInterface_RefCnt<T>& operator=(const CicInterface_RefCnt<T>&) = delete;
+    CicInterface_RefCnt(const CicInterface_RefCnt<T_IFACE>&) = delete;
+    CicInterface_RefCnt<T_IFACE>& operator=(const CicInterface_RefCnt<T_IFACE>&) = delete;
 };
