@@ -247,8 +247,9 @@ CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     case FCIDM_SHVIEW_INSERTLINK:
         if (m_folderCM)
         {
-            lpcmi->lpVerb = MAKEINTRESOURCEA(idCmd);
-            return m_folderCM->InvokeCommand(lpcmi);
+            CMINVOKECOMMANDINFO cmi = *lpcmi;
+            cmi.lpVerb = MAKEINTRESOURCEA(idCmd);
+            return m_folderCM->InvokeCommand(&cmi);
         }
         WARN("m_folderCM is NULL!\n");
         return E_NOTIMPL;
