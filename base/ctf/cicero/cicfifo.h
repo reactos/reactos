@@ -65,11 +65,12 @@ class CicFirstInFirstOut
             return;
 
         CopyMemory(pNewItems, m_pItems, m_cItems * sizeof(T_ITEM));
-        if (m_iLastItem > m_iFirstItem)
+        ZeroMemory(&pNewItems[m_cItems], nGrow * sizeof(T_ITEM));
+
+        if (m_iFirstItem < m_iLastItem)
         {
             size_t cbCopy = (m_cItems - m_iLastItem) * sizeof(T_ITEM);
-            CopyMemory(&pNewItems[nGrow + m_iLastItem], &m_pItems[m_iLastItem], cbCopy);
-            ZeroMemory(&pNewItems[m_cItems], nGrow * sizeof(T_ITEM));
+            CopyMemory(&pNewItems[m_iLastItem + nGrow], &m_pItems[m_iLastItem], cbCopy);
             m_iLastItem += nGrow;
         }
 
