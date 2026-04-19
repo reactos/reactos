@@ -448,7 +448,7 @@ GetConsoleIMECommandLine(
         NtClose(hKey);
         if (NT_SUCCESS(status))
         {
-            /* Check relative path */
+            /* SECURITY: Malicious relative paths should be rejected (ReactOS-only) */
             if (szValue[0] && IntIsSafeRelativePath(szValue))
             {
                 /* Append value to pszBuffer */
