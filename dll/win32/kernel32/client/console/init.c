@@ -403,7 +403,7 @@ static inline BOOL IntIsSafeRelativePath(_Inout_z_ PWSTR pszPath)
             pszPath[ich] = L'\\';
     }
 
-    /* Please don't go to the ancestor's place */
+    /* Please don't go to the ancestor's place. Avoid path traversal */
     if (!memcmp(pszPath, L"..\\", 3 * sizeof(WCHAR)) || wcsstr(pszPath, L"\\..\\"))
         return FALSE;
 
