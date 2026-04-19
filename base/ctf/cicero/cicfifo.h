@@ -21,12 +21,14 @@ protected:
     //static_assert(std::is_trivially_copyable<T_ITEM>::value, ""); // FIXME
 
 public:
-    CicFirstInFirstOut()
+    CicFirstInFirstOut(INT_PTR cInitial = 0)
         : m_pItems(NULL)
         , m_cItems(0)
         , m_iBack(0)
         , m_iFront(0)
     {
+        if (cInitial)
+            GrowBuffer(cInitial);
     }
 
     ~CicFirstInFirstOut()
