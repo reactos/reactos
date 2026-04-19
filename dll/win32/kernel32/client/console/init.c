@@ -404,7 +404,7 @@ static inline BOOL IntIsSafeRelativePath(_Inout_z_ PWSTR pszPath)
     }
 
     /* Please don't go to the ancestor's place */
-    if (memcmp(pszPath, L"..\\") == 0 || wcsstr(pszPath, L"\\..\\"))
+    if (!memcmp(pszPath, L"..\\", 3 * sizeof(WCHAR)) || wcsstr(pszPath, L"\\..\\"))
         return FALSE;
 
     return !wcschr(pszPath, L':'); /* Reject ADS (Alternate Data Stream) */
