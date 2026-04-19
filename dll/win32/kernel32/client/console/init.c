@@ -455,7 +455,7 @@ GetConsoleIMECommandLine(
                 status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
                 if (NT_SUCCESS(status))
                 {
-                    /* SECURITY: Quote if necessary */
+                    /* SECURITY: Quote if necessary (ReactOS-only) */
                     status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
                     if (NT_SUCCESS(status))
                     {
@@ -475,7 +475,7 @@ GetConsoleIMECommandLine(
 
     RtlStringCchCatW(pszBuffer, cchBuffer, L"conime.exe");
 
-    /* SECURITY: Quote if necessary */
+    /* SECURITY: Quote if necessary (ReactOS-only) */
     status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
     if (!NT_SUCCESS(status))
         RtlStringCchCopyW(pszBuffer, cchBuffer, L"conime.exe"); /* Use filename only */
