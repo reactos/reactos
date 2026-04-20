@@ -17,12 +17,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(zonechk);
 static IClassFactory *g_pZoneMgrCF = NULL; /* Internet Zone Manager's Class Factory (cached) */
 CRITICAL_SECTION g_csZoneMgrLock; /* Guards g_pZoneMgrCF (ReactOS only) */
 
-/*************************************************************************
- * SHLWAPI_GetCachedZonesManagerInner
- *
- * An internal helper that caches the InternetSecurityManager's IClassFactory and
- * returns an instance of the specified interface.
- */
 static HRESULT
 SHLWAPI_GetCachedZonesManagerInner(
     _In_ REFIID riid,
@@ -48,6 +42,12 @@ SHLWAPI_GetCachedZonesManagerInner(
     return g_pZoneMgrCF->lpVtbl->CreateInstance(g_pZoneMgrCF, NULL, riid, ppv);
 }
 
+/*************************************************************************
+ * SHLWAPI_GetCachedZonesManager
+ *
+ * An internal helper that caches the InternetSecurityManager's IClassFactory and
+ * returns an instance of the specified interface.
+ */
 static HRESULT
 SHLWAPI_GetCachedZonesManager(
     _In_ REFIID riid,
