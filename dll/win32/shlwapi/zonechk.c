@@ -63,7 +63,7 @@ SHLWAPI_GetCachedZonesManager(
 /*************************************************************************
  * SuperPrivate_ZoneCheckPath
  *
- * An internal helper
+ * An internal helper, used in SHRegisterValidateTemplate
  */
 HRESULT SuperPrivate_ZoneCheckPath(PCWSTR pwszUrl, DWORD dwZone)
 {
