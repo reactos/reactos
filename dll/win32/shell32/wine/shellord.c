@@ -2632,11 +2632,29 @@ HRESULT WINAPI SHSetLocalizedName(LPCWSTR pszPath, LPCWSTR pszResModule, int ids
 
 /*************************************************************************
  *              LinkWindow_RegisterClass (SHELL32.258)
+#ifdef __REACTOS__
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/shell/linkwindow-registerclass
+#endif
  */
 BOOL WINAPI LinkWindow_RegisterClass(void)
 {
+#ifdef __REACTOS__
+    TRACE("()\n");
+
+    INITCOMMONCONTROLSEX iccx = { sizeof(iccx), ICC_LINK_CLASS };
+    InitCommonControlsEx(&iccx);
+
+    WNDCLASSW wc;
+    if (!GetClassInfoW(NULL, L"SysLink", &wc))
+        return FALSE;
+
+    wc.lpszClassName = L"Link Window";
+    return !!RegisterClassW(&wc); /* Superclassing! */
+#else
     FIXME("()\n");
     return TRUE;
+#endif
 }
 
 /*************************************************************************
