@@ -29,8 +29,8 @@ static IClassFactory *g_pcf = NULL;
  */
 static HRESULT
 SHLWAPI_GetCachedZonesManager(
-    _In_  const IID  *riid,
-    _Out_ void      **ppv)
+    _In_ REFIID riid,
+    _Out_ LPVOID *ppv)
 {
     if (g_pcf)
         return g_pcf->lpVtbl->CreateInstance(g_pcf, NULL, riid, ppv);
@@ -67,7 +67,7 @@ ZoneCheckUrlExCacheA(
     _In_opt_     IInternetSecurityMgrSite  *pSecuritySite,
     _In_opt_     IInternetSecurityManager  *pISM)
 {
-    WCHAR szUrl[2084];
+    WCHAR szUrl[2048];
     SHAnsiToUnicode(pszUrl, szUrl, _countof(szUrl));
     return ZoneCheckUrlExCacheW(NULL, szUrl, pbPolicy, cbPolicy, pbContext, cbContext,
                                 dwAction, dwFlags, pSecuritySite, pISM);
@@ -119,8 +119,7 @@ ZoneCheckUrlExCacheW(
     if (FAILED(hr))
         return hr;
 
-    dwPolicyBuf  = 0;
-    dwContextBuf = 0;
+    dwPolicyBuf = dwContextBuf = 0;
 
     if (pSecuritySite)
         pNewISM->lpVtbl->SetSecuritySite(pNewISM, pSecuritySite);
@@ -174,7 +173,7 @@ ZoneCheckPathA(
     _In_     DWORD   dwFlags,
     _In_opt_ IInternetSecurityMgrSite *pSecuritySite)
 {
-    WCHAR szPath[2084];
+    WCHAR szPath[2048];
     SHAnsiToUnicode(pszPath, szPath, _countof(szPath));
     return ZoneCheckPathW(szPath, dwAction, dwFlags, pSecuritySite);
 }
@@ -202,7 +201,7 @@ ZoneCheckUrlA(
     _In_     DWORD   dwFlags,
     _In_opt_ IInternetSecurityMgrSite *pSecuritySite)
 {
-    WCHAR szUrl[2084];
+    WCHAR szUrl[2048];
     SHAnsiToUnicode(pszUrl, szUrl, _countof(szUrl));
     return ZoneCheckUrlW(szUrl, dwAction, dwFlags, pSecuritySite);
 }
@@ -234,7 +233,7 @@ ZoneCheckUrlExA(
     _In_         DWORD   dwFlags,
     _In_opt_     IInternetSecurityMgrSite *pSecuritySite)
 {
-    WCHAR szUrl[2084];
+    WCHAR szUrl[2048];
     SHAnsiToUnicode(pszUrl, szUrl, _countof(szUrl));
     return ZoneCheckUrlExW(szUrl, pbPolicy, cbPolicy, pbContext, cbContext,
                            dwAction, dwFlags, pSecuritySite);
