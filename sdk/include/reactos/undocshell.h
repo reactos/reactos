@@ -139,7 +139,7 @@ BOOL WINAPI StrRetToStrNA(LPSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 
 /****************************************************************************
- * Folder Menu
+ * Misc.
  */
 
 VOID WINAPI
