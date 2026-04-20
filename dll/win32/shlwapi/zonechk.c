@@ -69,7 +69,7 @@ ZoneCheckUrlExCacheA(
 {
     WCHAR szUrl[2048];
     SHAnsiToUnicode(pszUrl, szUrl, _countof(szUrl));
-    return ZoneCheckUrlExCacheW(NULL, szUrl, pbPolicy, cbPolicy, pbContext, cbContext,
+    return ZoneCheckUrlExCacheW(szUrl, pbPolicy, cbPolicy, pbContext, cbContext,
                                 dwAction, dwFlags, pSecuritySite, pISM);
 }
 
@@ -78,7 +78,6 @@ ZoneCheckUrlExCacheA(
  */
 HRESULT WINAPI
 ZoneCheckUrlExCacheW(
-    _Inout_opt_  LPVOID                    pvReserved,
     _In_z_       PCWSTR                    pszUrl,
     _Out_writes_bytes_opt_(cbPolicy)
                  PBYTE                     pbPolicy,
@@ -154,7 +153,7 @@ ZoneCheckUrlExCacheW(
         pbContextEffect,
         cbContext,
         dwFlags,
-        PtrToUlong(pvReserved));
+        0);
 
     if (pSecuritySite)
         pNewISM->lpVtbl->SetSecuritySite(pNewISM, NULL);
@@ -253,6 +252,6 @@ ZoneCheckUrlExW(
     _In_         DWORD   dwFlags,
     _In_opt_     IInternetSecurityMgrSite *pSecuritySite)
 {
-    return ZoneCheckUrlExCacheW(NULL, pszUrl, pbPolicy, cbPolicy, pbContext, cbContext,
+    return ZoneCheckUrlExCacheW(pszUrl, pbPolicy, cbPolicy, pbContext, cbContext,
                                 dwAction, dwFlags, pSecuritySite, NULL);
 }

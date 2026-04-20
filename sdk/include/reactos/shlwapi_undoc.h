@@ -482,7 +482,6 @@ ZoneCheckUrlExCacheA(
 
 HRESULT WINAPI
 ZoneCheckUrlExCacheW(
-    _Inout_opt_  LPVOID                    pvReserved,
     _In_z_       PCWSTR                    pszUrl,
     _Out_writes_bytes_opt_(cbPolicy)
                  PBYTE                     pbPolicy,
