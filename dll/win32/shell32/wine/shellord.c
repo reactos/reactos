@@ -2506,7 +2506,7 @@ void WINAPI SHUpdateImageW(LPCWSTR pszHashItem, int iIndex, UINT uFlags, int iIm
  *
  * See SHUpdateImageW.
 #ifdef __REACTOS__
- * https://learn.microsoft.com/tr-tr/windows/win32/api/shlobj_core/nf-shlobj_core-shupdateimagea
+ * https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shupdateimagea
 #endif
  */
 VOID WINAPI SHUpdateImageA(LPCSTR pszHashItem, INT iIndex, UINT uFlags, INT iImageIndex)
