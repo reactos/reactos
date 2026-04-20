@@ -37,6 +37,7 @@ TODO:
 
 #include <atlwin.h>
 #include <ui/rosctrls.h>
+#include "CShellBagCache.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -256,6 +257,7 @@ private:
     HDPA                      m_LoadColumnsList;
     HDPA                      m_ListToFolderColMap;
     LISTVIEW_SORT_INFO        m_sortInfo;
+    CShellBagCache*           m_pShellBagCache;
     ULONG                     m_hNotify;            // Change notification handle
     HACCEL                    m_hAccel;
     DWORD                     m_dwAspects;
@@ -290,6 +292,9 @@ private:
     BOOL _Sort(int Col = -1);
     HRESULT _DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT _GetSnapToGrid();
+    HRESULT GetFolderPath(LPWSTR pszPath, UINT cchPath);
+    HRESULT LoadShellBagData();
+    HRESULT SaveShellBagData();
     void _MoveSelectionOnAutoArrange(POINT pt);
     INT _FindInsertableIndexFromPoint(POINT pt);
     void _HandleStatusBarResize(int width);
@@ -611,6 +616,7 @@ CDefView::CDefView() :
     m_apidl(NULL),
     m_pidlParent(NULL),
     m_LoadColumnsList(NULL),
+    m_pShellBagCache(nullptr),
     m_hNotify(0),
     m_hAccel(NULL),
     m_dwAspects(0),
@@ -638,6 +644,12 @@ CDefView::CDefView() :
 
 CDefView::~CDefView()
 {
+    if (m_pShellBagCache)
+    {
+        m_pShellBagCache->Release();
+        m_pShellBagCache = nullptr;
+    }
+
     TRACE(" destroying IShellView(%p)\n", this);
 
     _DoFolderViewCB(SFVM_VIEWRELEASE, 0, 0);
@@ -658,11 +670,100 @@ CDefView::~CDefView()
     DPA_Destroy(m_ListToFolderColMap);
 }
 
+// ##### helperfunctions for shellbags #####
+HRESULT CDefView::GetFolderPath(LPWSTR pszPath, UINT cchPath)
+{
+    if (!m_pidlParent || cchPath == 0)
+        return E_INVALIDARG;
+
+    if (SHGetPathFromIDListW(m_pidlParent, pszPath))
+        return S_OK;
+
+    return E_FAIL;  // not a filesystem folder
+}
+
+HRESULT CDefView::LoadShellBagData()
+{
+    if (!m_pShellBagCache)
+        return E_FAIL;
+
+    WCHAR szPath[MAX_PATH] = {};
+    if (FAILED(GetFolderPath(szPath, _countof(szPath))))
+        return S_FALSE;
+
+    SHELLBAG_DATA bagData = {};
+    HRESULT hr = m_pShellBagCache->GetShellBagData(szPath, &bagData);
+    if (FAILED(hr))
+        return hr;
+
+    if (bagData.uViewMode != 0)
+        SetCurrentViewMode(bagData.uViewMode);
+
+    if (bagData.uSort != 0)
+    {
+        m_sortInfo.ListColumn = bagData.uSort & 0x7FFFFFFF;
+        m_sortInfo.Direction = (bagData.uSort & 0x80000000) ? 1 : 0;
+        _Sort();
+    }
+
+    if (bagData.cxIcon > 0 && bagData.cyIcon > 0)
+        ListView_SetIconSpacing(m_ListView.m_hWnd, bagData.cxIcon, bagData.cyIcon);
+
+    ListView_Scroll(m_ListView.m_hWnd, bagData.ptScroll.x, bagData.ptScroll.y);
+
+    return S_OK;
+}
+
+HRESULT CDefView::SaveShellBagData()
+{
+    if (!m_pShellBagCache)
+        return E_FAIL;
+
+    WCHAR szPath[MAX_PATH] = {};
+    if (FAILED(GetFolderPath(szPath, _countof(szPath))))
+        return S_FALSE;
+
+    SHELLBAG_DATA bagData = {};
+    UINT uMode = 0;
+    GetCurrentViewMode(&uMode);
+    bagData.uViewMode = uMode;
+
+    bagData.uSort = m_sortInfo.ListColumn | (m_sortInfo.Direction ? 0x80000000u : 0);
+
+    POINT pt = {};
+    ListView_GetOrigin(m_ListView.m_hWnd, &pt);
+    bagData.ptScroll = pt;
+
+    // Correct way using ATL CWindow
+    CWindow wnd(m_hWnd);
+    wnd.GetWindowRect(&bagData.rcWindow);
+
+    if (uMode == FVM_ICON || uMode == FVM_SMALLICON || uMode == FVM_THUMBNAIL)
+    {
+        bagData.cxIcon = 80;
+        bagData.cyIcon = 80;
+    }
+
+    m_pShellBagCache->SetShellBagData(szPath, &bagData);
+    return S_OK;
+}
+
 HRESULT WINAPI CDefView::Initialize(IShellFolder *shellFolder)
 {
     m_pSFParent = shellFolder;
     shellFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, &m_pSF2Parent));
     shellFolder->QueryInterface(IID_PPV_ARG(IShellDetails, &m_pSDParent));
+
+    // Create shellbag cache
+    if (!m_pShellBagCache)
+    {
+        m_pShellBagCache = new CShellBagCache();
+        if (m_pShellBagCache)
+        {
+            m_pShellBagCache->AddRef();
+            m_pShellBagCache->Initialize();
+        }
+    }
 
     return S_OK;
 }
@@ -1313,7 +1414,9 @@ BOOL CDefView::_Sort(int Col)
 
     m_sortInfo.FolderColumn = MapListColumnToFolderColumn(m_sortInfo.ListColumn);
     ASSERT(m_sortInfo.Direction == 1 || m_sortInfo.Direction == -1);
-    return m_ListView.SortItems(ListViewCompareItems, this);
+    BOOL bResult = m_ListView.SortItems(ListViewCompareItems, this);
+    SaveShellBagData();
+    return bResult;
 }
 
 SFGAOF CDefView::GetItemAttributes(PCUITEMID_CHILD pidl, UINT Query)
@@ -2700,11 +2803,6 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         case NM_RETURN:
             TRACE("-- NM_RETURN %p\n", this);
             break;
-        case HDN_ENDTRACKW:
-            TRACE("-- HDN_ENDTRACKW %p\n", this);
-            //nColumn1 = m_ListView.GetColumnWidth(0);
-            //nColumn2 = m_ListView.GetColumnWidth(1);
-            break;
         case LVN_DELETEITEM:
             TRACE("-- LVN_DELETEITEM %p\n", this);
             /*delete the pidl because we made a copy of it*/
@@ -2896,6 +2994,9 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             }
             return FALSE;
         }
+            case HDN_ENDTRACKW:
+                SaveShellBagData();
+                break;
         default:
             TRACE("-- %p WM_COMMAND %x unhandled\n", this, lpnmh->code);
             break;
@@ -3640,6 +3741,7 @@ HRESULT STDMETHODCALLTYPE CDefView::SetCurrentViewMode(UINT ViewMode)
     }
 
     m_ListView.ModifyStyle(LVS_TYPEMASK, dwStyle);
+    SaveShellBagData();
 
     /* This will not necessarily be the actual mode set above.
        This mimics the behavior of Windows XP. */
@@ -3909,6 +4011,21 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
 
     SetWindowPos(HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
     UpdateWindow();
+
+    // Create and initialize shellbag cache if not already done
+    if (!m_pShellBagCache)
+    {
+        m_pShellBagCache = new CShellBagCache();
+        if (m_pShellBagCache)
+        {
+            m_pShellBagCache->AddRef();
+            m_pShellBagCache->Initialize();
+        }
+    }
+
+    // Load saved view settings
+    if (m_pShellBagCache)
+        LoadShellBagData();
 
     if (!m_hMenu)
     {
