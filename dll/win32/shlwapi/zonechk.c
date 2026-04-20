@@ -65,7 +65,7 @@ SHLWAPI_GetCachedZonesManager(
  *
  * An internal helper, used in SHRegisterValidateTemplate
  */
-HRESULT SuperPrivate_ZoneCheckPath(PCWSTR pwszUrl, DWORD dwZone)
+HRESULT SuperPrivate_ZoneCheckPath(PCWSTR pwszUrl, DWORD dwExpectedZone)
 {
     IInternetSecurityManager *pISM;
     HRESULT hr = SHLWAPI_GetCachedZonesManager(&IID_IInternetSecurityManager, (PVOID *)&pISM);
@@ -74,7 +74,7 @@ HRESULT SuperPrivate_ZoneCheckPath(PCWSTR pwszUrl, DWORD dwZone)
 
     DWORD dwRealZone = URLZONE_UNTRUSTED;
     hr = pISM->lpVtbl->MapUrlToZone(pISM, pwszUrl, &dwRealZone, 0);
-    if (SUCCEEDED(hr) && dwRealZone == dwZone)
+    if (SUCCEEDED(hr) && dwRealZone == dwExpectedZone)
         hr = S_OK;
     else
         hr = E_ACCESSDENIED;
