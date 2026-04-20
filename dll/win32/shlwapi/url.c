@@ -2676,12 +2676,12 @@ HRESULT WINAPI UrlFixupW(LPCWSTR url, LPWSTR translatedUrl, DWORD maxChars)
 BOOL WINAPI IsInternetESCEnabled(void)
 {
 #ifdef __REACTOS__
-    BOOL ret
+    BOOL ret;
     DWORD cbValue, dwValue;
     HKEY hKey;
     LSTATUS error;
     static const PCWSTR pszZoneMapKey =
-        L"Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap"
+        L"Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap";
 
     TRACE("()\n");
 
