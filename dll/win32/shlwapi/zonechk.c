@@ -112,8 +112,8 @@ ZoneCheckUrlExCacheW(
 {
     HRESULT hr;
     IInternetSecurityManager *pNewISM;
-    DWORD dwPolicyBuf, dwContextBuf, cbPolicyEffect;
-    PBYTE pbPolicyEffect, pbContextEffect;
+    DWORD dwPolicyBuf, dwContextBuf, cbPolicyUse, cbContextUse;
+    PBYTE pbPolicyUse, pbContextUse;
 
     if (!pszUrl)
         return E_INVALIDARG;
@@ -145,29 +145,28 @@ ZoneCheckUrlExCacheW(
 
     if (pbContext)
     {
-        pbContextEffect = pbContext;
+        pbContextUse = pbContext;
+        cbContextUse = cbContext;
     }
     else
     {
-        pbContextEffect = (PBYTE)&dwContextBuf;
-        cbContext = sizeof(dwContextBuf);
+        pbContextUse = (PBYTE)&dwContextBuf;
+        cbContextUse = sizeof(dwContextBuf);
     }
 
     if (pbPolicy)
     {
-        pbPolicyEffect = pbPolicy;
-        cbPolicyEffect = cbPolicy;
+        pbPolicyUse = pbPolicy;
+        cbPolicyUse = cbPolicy;
     }
     else
     {
-        pbPolicyEffect = (PBYTE)&dwPolicyBuf;
-        cbPolicyEffect = sizeof(dwPolicyBuf);
+        pbPolicyUse = (PBYTE)&dwPolicyBuf;
+        cbPolicyUse = sizeof(dwPolicyBuf);
     }
 
-    hr = pNewISM->lpVtbl->ProcessUrlAction(pNewISM, pszUrl, dwAction,
-                                           pbPolicyEffect, cbPolicyEffect,
-                                           pbContextEffect, cbContext,
-                                           dwFlags, 0);
+    hr = pNewISM->lpVtbl->ProcessUrlAction(pNewISM, pszUrl, dwAction, pbPolicyUse, cbPolicyUse,
+                                           pbContextUse, cbContextUse, dwFlags, 0);
 
     if (pSecuritySite)
         pNewISM->lpVtbl->SetSecuritySite(pNewISM, NULL);
@@ -295,9 +294,8 @@ ZoneCheckHostEx(
     _In_z_                           PCWSTR                     pszUrl,
     _In_                             DWORD                      dwAction)
 {
-    DWORD dwPolicyBuf, dwContextBuf, cbPolicyEff, cbContextEff;
-    PBYTE pbPolicyEffective;
-    PBYTE pbContextEffective;
+    DWORD dwPolicyBuf, dwContextBuf, cbPolicyUse, cbContextUse;
+    PBYTE pbPolicyUse, pbContextUse;
 
     if (!pISM)
         return E_INVALIDARG;
@@ -306,28 +304,26 @@ ZoneCheckHostEx(
 
     if (pbPolicy)
     {
-        pbPolicyEffective = pbPolicy;
-        cbPolicyEff = cbPolicy;
+        pbPolicyUse = pbPolicy;
+        cbPolicyUse = cbPolicy;
     }
     else
     {
-        pbPolicyEffective = (PBYTE)&dwPolicyBuf;
-        cbPolicyEff = sizeof(dwPolicyBuf);
+        pbPolicyUse = (PBYTE)&dwPolicyBuf;
+        cbPolicyUse = sizeof(dwPolicyBuf);
     }
 
     if (pbContext)
     {
-        pbContextEffective = pbContext;
-        cbContextEff = cbContext;
+        pbContextUse = pbContext;
+        cbContextUse = cbContext;
     }
     else
     {
-        pbContextEffective = (PBYTE)&dwContextBuf;
-        cbContextEff = sizeof(dwContextBuf);
+        pbContextUse = (PBYTE)&dwContextBuf;
+        cbContextUse = sizeof(dwContextBuf);
     }
 
-    return pISM->lpVtbl->ProcessUrlAction(pISM, pszUrl, dwAction,
-                                          pbPolicyEffective, cbPolicyEff,
-                                          pbContextEffective, cbContextEff,
-                                          0, 0);
+    return pISM->lpVtbl->ProcessUrlAction(pISM, pszUrl, dwAction, pbPolicyUse, cbPolicyUse,
+                                          pbContextUse, cbContextUse, 0, 0);
 }
