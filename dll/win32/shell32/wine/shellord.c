@@ -2623,7 +2623,6 @@ HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD
 /*************************************************************************
  *              SHSetLocalizedName (SHELL32.@)
 #ifdef __REACTOS__
- *
  * https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shsetlocalizedname
 #endif
  */
