@@ -15,33 +15,49 @@
 WINE_DEFAULT_DEBUG_CHANNEL(zonechk);
 
 static IClassFactory *g_pZoneMgrCF = NULL; /* Internet Zone Manager's Class Factory (cached) */
+CRITICAL_SECTION g_csZoneMgrLock;
 
 /*************************************************************************
- * SHLWAPI_GetCachedZonesManager
+ * SHLWAPI_GetCachedZonesManagerInner
  *
  * An internal helper that caches the InternetSecurityManager's IClassFactory and
  * returns an instance of the specified interface.
  */
 static HRESULT
-SHLWAPI_GetCachedZonesManager(
+SHLWAPI_GetCachedZonesManagerInner(
     _In_ REFIID riid,
     _Out_ PVOID *ppv)
 {
+    HRESULT hr;
+    IClassFactory *pCF;
+
     if (g_pZoneMgrCF)
         return g_pZoneMgrCF->lpVtbl->CreateInstance(g_pZoneMgrCF, NULL, riid, ppv);
 
-    CoGetClassObject(&CLSID_InternetSecurityManager, CLSCTX_INPROC_SERVER, NULL,
-                     &IID_IClassFactory, (PVOID *)&g_pZoneMgrCF);
-
-    SHPinDllOfCLSID(&CLSID_InternetSecurityManager);
-
-    if (!g_pZoneMgrCF)
+    hr = CoGetClassObject(&CLSID_InternetSecurityManager, CLSCTX_INPROC_SERVER, NULL,
+                          &IID_IClassFactory, (PVOID *)&pCF);
+    if (FAILED(hr))
     {
         *ppv = NULL;
         return E_FAIL;
     }
 
+    g_pZoneMgrCF = pCF;
+    SHPinDllOfCLSID(&CLSID_InternetSecurityManager);
+
     return g_pZoneMgrCF->lpVtbl->CreateInstance(g_pZoneMgrCF, NULL, riid, ppv);
+}
+
+static HRESULT
+SHLWAPI_GetCachedZonesManager(
+    _In_ REFIID riid,
+    _Out_ PVOID *ppv)
+{
+    HRESULT hr;
+    EnterCriticalSection(&g_csZoneMgrLock);
+    hr = SHLWAPI_GetCachedZonesManagerInner(riid, ppv);
+    LeaveCriticalSection(&g_csZoneMgrLock);
+    return hr;
 }
 
 /*************************************************************************
