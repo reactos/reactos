@@ -17,7 +17,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(zonechk);
 static IClassFactory *g_pcf = NULL;
 
 /* FIXME: CLSID_InternetSecurityManager */
-/* FIXME: ZoneCheckHost, ZoneCheckHostEx */
 
 /*************************************************************************
  * SHLWAPI_GetCachedZonesManager
