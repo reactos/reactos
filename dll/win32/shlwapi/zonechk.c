@@ -30,7 +30,7 @@ static IClassFactory *g_pcf = NULL;
 static HRESULT
 SHLWAPI_GetCachedZonesManager(
     _In_ REFIID riid,
-    _Out_ LPVOID *ppv)
+    _Out_ PVOID *ppv)
 {
     if (g_pcf)
         return g_pcf->lpVtbl->CreateInstance(g_pcf, NULL, riid, ppv);
@@ -39,7 +39,7 @@ SHLWAPI_GetCachedZonesManager(
                      CLSCTX_INPROC_SERVER,
                      NULL,
                      &IID_IClassFactory,
-                     (LPVOID *)&g_pcf);
+                     (PVOID *)&g_pcf);
 
     SHPinDllOfCLSID(&CLSID_InternetSecurityManager);
 
@@ -50,6 +50,29 @@ SHLWAPI_GetCachedZonesManager(
     }
 
     return g_pcf->lpVtbl->CreateInstance(g_pcf, NULL, riid, ppv);
+}
+
+/*************************************************************************
+ * SuperPrivate_ZoneCheckPath
+ *
+ * An internal helper
+ */
+HRESULT SuperPrivate_ZoneCheckPath(PCWSTR pwszUrl, DWORD dwZone)
+{
+    IInternetSecurityManager *pISM;
+    HRESULT hr = SHLWAPI_GetCachedZonesManager(&IID_IInternetSecurityManager, (PVOID *)&pISM);
+    if (FAILED(hr))
+        return E_ACCESSDENIED;
+
+    DWORD dwRealZone = URLZONE_UNTRUSTED;
+    hr = pISM->lpVtbl->MapUrlToZone(pISM, pwszUrl, &dwRealZone, 0);
+    if (SUCCEEDED(hr) && dwRealZone == dwZone)
+        hr = S_OK;
+    else
+        hr = E_ACCESSDENIED;
+
+    pISM->lpVtbl->Release(pISM);
+    return hr;
 }
 
 /*************************************************************************
@@ -101,18 +124,18 @@ ZoneCheckUrlExCacheW(
     if (pISM && pISM->lpVtbl)
     {
         hr = pISM->lpVtbl->QueryInterface(pISM, &IID_IInternetSecurityManager,
-                                          (LPVOID *)&pNewISM);
+                                          (PVOID *)&pNewISM);
     }
     else
     {
         hr = SHLWAPI_GetCachedZonesManager(&IID_IInternetSecurityManager,
-                                           (LPVOID *)&pNewISM);
+                                           (PVOID *)&pNewISM);
         if (FAILED(hr))
             return hr;
 
         if (pISM)
             hr = pISM->lpVtbl->QueryInterface(pISM, &IID_IInternetSecurityManager,
-                                              (LPVOID *)&pNewISM);
+                                              (PVOID *)&pNewISM);
     }
 
     if (FAILED(hr))
