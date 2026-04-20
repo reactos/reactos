@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Shell
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:     Implementing ZoneCheck* functions
+ * PURPOSE:     Implementing ZoneCheck* functions (Internet Zone Manager)
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -14,7 +14,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(zonechk);
 
-static IClassFactory *g_pcf = NULL;
+static IClassFactory *g_pZoneMgrCF = NULL; /* Internet Zone Manager's Class Factory (cached) */
 
 /*************************************************************************
  * SHLWAPI_GetCachedZonesManager
@@ -27,21 +27,21 @@ SHLWAPI_GetCachedZonesManager(
     _In_ REFIID riid,
     _Out_ PVOID *ppv)
 {
-    if (g_pcf)
-        return g_pcf->lpVtbl->CreateInstance(g_pcf, NULL, riid, ppv);
+    if (g_pZoneMgrCF)
+        return g_pZoneMgrCF->lpVtbl->CreateInstance(g_pZoneMgrCF, NULL, riid, ppv);
 
     CoGetClassObject(&CLSID_InternetSecurityManager, CLSCTX_INPROC_SERVER, NULL,
-                     &IID_IClassFactory, (PVOID *)&g_pcf);
+                     &IID_IClassFactory, (PVOID *)&g_pZoneMgrCF);
 
     SHPinDllOfCLSID(&CLSID_InternetSecurityManager);
 
-    if (!g_pcf)
+    if (!g_pZoneMgrCF)
     {
         *ppv = NULL;
         return E_FAIL;
     }
 
-    return g_pcf->lpVtbl->CreateInstance(g_pcf, NULL, riid, ppv);
+    return g_pZoneMgrCF->lpVtbl->CreateInstance(g_pZoneMgrCF, NULL, riid, ppv);
 }
 
 /*************************************************************************
