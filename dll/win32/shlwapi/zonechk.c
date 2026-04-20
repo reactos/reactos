@@ -9,7 +9,6 @@
 #include <winbase.h>
 #include <urlmon.h>
 #include <shlobj.h>
-#include <shobjidl.h>
 #define NO_SHLWAPI_REG
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
