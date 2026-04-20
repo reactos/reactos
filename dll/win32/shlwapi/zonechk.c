@@ -109,34 +109,22 @@ ZoneCheckUrlExCacheW(
     _In_opt_     IInternetSecurityManager  *pISM)
 {
     HRESULT hr;
-    IInternetSecurityManager *pNewISM;
+    IInternetSecurityManager *pWorkISM;
     DWORD dwPolicyBuf, dwContextBuf;
 
     if (!pszUrl)
         return E_INVALIDARG;
 
-    if (pISM && pISM->lpVtbl)
-    {
-        hr = pISM->lpVtbl->QueryInterface(pISM, &IID_IInternetSecurityManager,
-                                          (PVOID *)&pNewISM);
-    }
+    if (pISM)
+        hr = pISM->lpVtbl->QueryInterface(pISM, &IID_IInternetSecurityManager, (PVOID *)&pWorkISM);
     else
-    {
-        hr = SHLWAPI_GetCachedZonesManager(&IID_IInternetSecurityManager,
-                                           (PVOID *)&pNewISM);
-        if (FAILED(hr))
-            return hr;
-
-        if (pISM)
-            hr = pISM->lpVtbl->QueryInterface(pISM, &IID_IInternetSecurityManager,
-                                              (PVOID *)&pNewISM);
-    }
+        hr = SHLWAPI_GetCachedZonesManager(&IID_IInternetSecurityManager, (PVOID *)&pWorkISM);
 
     if (FAILED(hr))
         return hr;
 
     if (pSecuritySite)
-        pNewISM->lpVtbl->SetSecuritySite(pNewISM, pSecuritySite);
+        pWorkISM->lpVtbl->SetSecuritySite(pWorkISM, pSecuritySite);
 
     if (!pbContext)
     {
@@ -147,18 +135,18 @@ ZoneCheckUrlExCacheW(
 
     if (!pbPolicy)
     {
-        dwPolicyBuf = 0;
+        dwPolicyBuf  = 0;
         pbPolicy = (PBYTE)&dwPolicyBuf;
         cbPolicy = sizeof(dwPolicyBuf);
     }
 
-    hr = pNewISM->lpVtbl->ProcessUrlAction(pNewISM, pszUrl, dwAction, pbPolicy, cbPolicy,
-                                           pbContext, cbContext, dwFlags, 0);
+    hr = pWorkISM->lpVtbl->ProcessUrlAction(pWorkISM, pszUrl, dwAction, pbPolicy, cbPolicy,
+                                            pbContext, cbContext, dwFlags, 0);
 
     if (pSecuritySite)
-        pNewISM->lpVtbl->SetSecuritySite(pNewISM, NULL);
+        pWorkISM->lpVtbl->SetSecuritySite(pWorkISM, NULL);
 
-    pNewISM->lpVtbl->Release(pNewISM);
+    pWorkISM->lpVtbl->Release(pWorkISM);
     return hr;
 }
 
