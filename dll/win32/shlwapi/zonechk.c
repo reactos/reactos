@@ -167,16 +167,10 @@ ZoneCheckUrlExCacheW(
         cbPolicyEffect = sizeof(dwPolicyBuf);
     }
 
-    hr = pNewISM->lpVtbl->ProcessUrlAction(
-        pNewISM,
-        pszUrl,
-        dwAction,
-        pbPolicyEffect,
-        cbPolicyEffect,
-        pbContextEffect,
-        cbContext,
-        dwFlags,
-        0);
+    hr = pNewISM->lpVtbl->ProcessUrlAction(pNewISM, pszUrl, dwAction,
+                                           pbPolicyEffect, cbPolicyEffect,
+                                           pbContextEffect, cbContext,
+                                           dwFlags, 0);
 
     if (pSecuritySite)
         pNewISM->lpVtbl->SetSecuritySite(pNewISM, NULL);
