@@ -31,19 +31,19 @@ SHLWAPI_GetCachedZonesManagerInner(
     HRESULT hr;
     IClassFactory *pCF;
 
-    if (g_pZoneMgrCF)
-        return g_pZoneMgrCF->lpVtbl->CreateInstance(g_pZoneMgrCF, NULL, riid, ppv);
-
-    hr = CoGetClassObject(&CLSID_InternetSecurityManager, CLSCTX_INPROC_SERVER, NULL,
-                          &IID_IClassFactory, (PVOID *)&pCF);
-    if (FAILED(hr))
+    if (!g_pZoneMgrCF)
     {
-        *ppv = NULL;
-        return E_FAIL;
-    }
+        hr = CoGetClassObject(&CLSID_InternetSecurityManager, CLSCTX_INPROC_SERVER, NULL,
+                              &IID_IClassFactory, (PVOID *)&pCF);
+        if (FAILED(hr))
+        {
+            *ppv = NULL;
+            return E_FAIL;
+        }
 
-    g_pZoneMgrCF = pCF;
-    SHPinDllOfCLSID(&CLSID_InternetSecurityManager);
+        g_pZoneMgrCF = pCF;
+        SHPinDllOfCLSID(&CLSID_InternetSecurityManager);
+    }
 
     return g_pZoneMgrCF->lpVtbl->CreateInstance(g_pZoneMgrCF, NULL, riid, ppv);
 }
