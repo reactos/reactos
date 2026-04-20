@@ -269,3 +269,65 @@ ZoneCheckUrlExW(
     return ZoneCheckUrlExCacheW(pszUrl, pbPolicy, cbPolicy, pbContext, cbContext,
                                 dwAction, dwFlags, pSecuritySite, NULL);
 }
+
+/*************************************************************************
+ * ZoneCheckHost [SHLWAPI.234]
+ */
+HRESULT WINAPI
+ZoneCheckHost(
+    _In_z_ IInternetSecurityManager  *pISM,
+    _In_z_ PCWSTR                     pszUrl,
+    _In_   DWORD                      dwAction)
+{
+    return ZoneCheckHostEx(pISM, NULL, 0, NULL, 0, pszUrl, dwAction);
+}
+
+/*************************************************************************
+ * ZoneCheckHostEx [SHLWAPI.235]
+ */
+HRESULT WINAPI
+ZoneCheckHostEx(
+    _In_                             IInternetSecurityManager  *pISM,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE                      pbPolicy,
+    _In_                             DWORD                      cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE                      pbContext,
+    _In_                             DWORD                      cbContext,
+    _In_z_                           PCWSTR                     pszUrl,
+    _In_                             DWORD                      dwAction)
+{
+    DWORD dwPolicyBuf, dwContextBuf, cbPolicyEff, cbContextEff;
+    PBYTE pbPolicyEffective;
+    PBYTE pbContextEffective;
+
+    if (!pISM)
+        return E_INVALIDARG;
+
+    dwPolicyBuf = dwContextBuf = 0;
+
+    if (pbPolicy)
+    {
+        pbPolicyEffective = pbPolicy;
+        cbPolicyEff = cbPolicy;
+    }
+    else
+    {
+        pbPolicyEffective = (PBYTE)&dwPolicyBuf;
+        cbPolicyEff = sizeof(dwPolicyBuf);
+    }
+
+    if (pbContext)
+    {
+        pbContextEffective = pbContext;
+        cbContextEff = cbContext;
+    }
+    else
+    {
+        pbContextEffective = (PBYTE)&dwContextBuf;
+        cbContextEff = sizeof(dwContextBuf);
+    }
+
+    return pISM->lpVtbl->ProcessUrlAction(pISM, pszUrl, dwAction,
+                                          pbPolicyEffective, cbPolicyEff,
+                                          pbContextEffective, cbContextEff,
+                                          0, 0);
+}

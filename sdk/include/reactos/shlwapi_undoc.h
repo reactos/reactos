@@ -544,6 +544,22 @@ ZoneCheckUrlExW(
     _In_         DWORD   dwFlags,
     _In_opt_     IInternetSecurityMgrSite *pSecuritySite);
 
+HRESULT WINAPI
+ZoneCheckHost(
+    _In_z_ IInternetSecurityManager  *pISM,
+    _In_z_ PCWSTR                     pszUrl,
+    _In_   DWORD                      dwAction);
+
+HRESULT WINAPI
+ZoneCheckHostEx(
+    _In_                             IInternetSecurityManager  *pISM,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE                      pbPolicy,
+    _In_                             DWORD                      cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE                      pbContext,
+    _In_                             DWORD                      cbContext,
+    _In_z_                           PCWSTR                     pszUrl,
+    _In_                             DWORD                      dwAction);
+
 #ifdef UNICODE
     #define ZoneCheckUrlExCache ZoneCheckUrlExCacheW
     #define ZoneCheckPath ZoneCheckPathW

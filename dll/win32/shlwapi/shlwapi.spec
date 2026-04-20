@@ -231,8 +231,8 @@
 231 stdcall -noname ZoneCheckUrlExW(wstr ptr long ptr long long long ptr)
 232 stdcall -noname ZoneCheckUrlExCacheA(str ptr long ptr long long long ptr ptr)
 233 stdcall -noname ZoneCheckUrlExCacheW(wstr ptr long ptr long long long ptr ptr)
-234 stub -noname ZoneCheckHost
-235 stub -noname ZoneCheckHostEx
+234 stdcall -noname ZoneCheckHost(ptr wstr long)
+235 stdcall -noname ZoneCheckHostEx(ptr ptr long ptr long wstr long)
 236 stdcall -noname SHPinDllOfCLSID(ptr)
 237 stdcall -noname SHRegisterClassW(ptr)
 238 stdcall -noname SHUnregisterClassesA(ptr ptr long)
