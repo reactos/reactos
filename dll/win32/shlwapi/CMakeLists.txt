@@ -28,6 +28,7 @@ list(APPEND PCH_SKIP_SOURCE
     propbag.cpp
     utils.cpp
     wsprintf.c
+    zonechk.c
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi_stubs.c)
 
 add_library(shlwapi MODULE

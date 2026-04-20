@@ -5534,6 +5534,7 @@ INT WINAPI SHFormatDateTimeA(const FILETIME UNALIGNED *fileTime, DWORD *flags,
     return retval;
 }
 
+#ifndef __REACTOS__ /* See zonechk.c */
 /***********************************************************************
  *             ZoneCheckUrlExW [SHLWAPI.231]
  *
@@ -5558,6 +5559,7 @@ INT WINAPI ZoneCheckUrlExW(LPWSTR szURL, PVOID pUnknown, DWORD dwUnknown2,
 
     return 0;
 }
+#endif
 
 /***********************************************************************
  *             SHVerbExistsNA [SHLWAPI.196]
