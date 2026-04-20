@@ -115,7 +115,10 @@ ZoneCheckUrlExCacheW(
           pbPolicy, cbPolicy, pbContext, cbContext, dwAction, dwFlags, pSecuritySite, pISM);
 
     if (!pszUrl)
+    {
+        ERR("pszUrl was NULL\n");
         return E_INVALIDARG;
+    }
 
     if (pISM && pISM->lpVtbl)
         hr = pISM->lpVtbl->QueryInterface(pISM, &IID_IInternetSecurityManager, (PVOID *)&pWorkISM);
@@ -123,7 +126,10 @@ ZoneCheckUrlExCacheW(
         hr = SHLWAPI_GetCachedZonesManager(&IID_IInternetSecurityManager, (PVOID *)&pWorkISM);
 
     if (FAILED(hr))
+    {
+        ERR("hr: 0x%lX\n", hr);
         return hr;
+    }
 
     if (pSecuritySite)
         pWorkISM->lpVtbl->SetSecuritySite(pWorkISM, pSecuritySite);
