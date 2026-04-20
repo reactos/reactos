@@ -6,11 +6,9 @@
  */
 
 #include <windef.h>
-#include <winbase.h>
 #include <urlmon.h>
 #include <shlobj.h>
 #define NO_SHLWAPI_REG
-#include <shlwapi.h>
 #include <shlwapi_undoc.h>
 #include <wine/debug.h>
 
