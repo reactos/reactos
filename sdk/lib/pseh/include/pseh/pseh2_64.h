@@ -106,6 +106,7 @@ __asm__(
 __seh2$$begin_try__:                                                                \
     {                                                                               \
         __label__ __seh2$$leave_scope__;                                            \
+        /* GCC trick: keep this label reachable so it is not optimized away. */    \
         __asm__ __volatile__ goto ("" : : : : __seh2$$leave_scope__);
 
 #define _SEH2_EXCEPT(...)                                                                       \
