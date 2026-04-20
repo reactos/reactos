@@ -35,11 +35,8 @@ SHLWAPI_GetCachedZonesManager(
     if (g_pcf)
         return g_pcf->lpVtbl->CreateInstance(g_pcf, NULL, riid, ppv);
 
-    CoGetClassObject(&CLSID_InternetSecurityManager,
-                     CLSCTX_INPROC_SERVER,
-                     NULL,
-                     &IID_IClassFactory,
-                     (PVOID *)&g_pcf);
+    CoGetClassObject(&CLSID_InternetSecurityManager, CLSCTX_INPROC_SERVER, NULL,
+                     &IID_IClassFactory, (PVOID *)&g_pcf);
 
     SHPinDllOfCLSID(&CLSID_InternetSecurityManager);
 
