@@ -15,7 +15,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(zonechk);
 
 static IClassFactory *g_pZoneMgrCF = NULL; /* Internet Zone Manager's Class Factory (cached) */
-CRITICAL_SECTION g_csZoneMgrLock;
+CRITICAL_SECTION g_csZoneMgrLock; /* Guards g_pZoneMgrCF (ReactOS only) */
 
 /*************************************************************************
  * SHLWAPI_GetCachedZonesManagerInner
