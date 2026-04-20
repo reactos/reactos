@@ -139,6 +139,17 @@ BOOL WINAPI StrRetToStrNA(LPSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 
 /****************************************************************************
+ * Folder Menu
+ */
+
+VOID WINAPI
+CDefFolderMenu_MergeMenu(
+    _In_ HINSTANCE hInstance,
+    _In_ UINT uMainMerge,
+    _In_ UINT uPopupMerge,
+    _Inout_ LPQCMINFO lpQcmInfo);
+
+/****************************************************************************
  * SHChangeNotifyRegister API
  */
 #define SHCNRF_InterruptLevel       0x0001

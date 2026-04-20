@@ -136,19 +136,6 @@ SHGetSetFolderCustomSettingsA(LPSHFOLDERCUSTOMSETTINGSA pfcs,
 /*
  * Unimplemented
  */
-EXTERN_C VOID
-WINAPI
-CDefFolderMenu_MergeMenu(HINSTANCE hInstance,
-                         UINT uMainMerge,
-                         UINT uPopupMerge,
-                         LPQCMINFO lpQcmInfo)
-{
-    FIXME("CDefFolderMenu_MergeMenu() stub\n");
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C HRESULT
 WINAPI
 CDefFolderMenu_Create(LPITEMIDLIST pidlFolder,
