@@ -117,7 +117,7 @@ ZoneCheckUrlExCacheW(
     if (!pszUrl)
         return E_INVALIDARG;
 
-    if (pISM)
+    if (pISM && pISM->lpVtbl)
         hr = pISM->lpVtbl->QueryInterface(pISM, &IID_IInternetSecurityManager, (PVOID *)&pWorkISM);
     else
         hr = SHLWAPI_GetCachedZonesManager(&IID_IInternetSecurityManager, (PVOID *)&pWorkISM);
