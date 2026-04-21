@@ -720,7 +720,7 @@ HRESULT CDefView::SaveShellBagData()
     if (!m_pShellBagCache)
         return E_FAIL;
 
-    WCHAR szPath[MAX_PATH] = {};
+    WCHAR szPath[MAX_PATH];
     if (FAILED(GetFolderPath(szPath, _countof(szPath))))
         return S_FALSE;
 
