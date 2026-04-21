@@ -2629,77 +2629,65 @@ HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD
 HRESULT WINAPI SHSetLocalizedName(LPCWSTR pszPath, LPCWSTR pszResModule, int idsRes)
 {
 #ifdef __REACTOS__
-    HRESULT hr;
-    IShellFolder *pDesktopFolder = NULL;
-    IShellFolder *pParentFolder = NULL;
-    LPITEMIDLIST pidl = NULL;
-    LPCITEMIDLIST pidlLast = NULL;
-    PWSTR pszShortPath = NULL;
-    PWSTR pszLocalizedName = NULL;
-    INT cchShortMax = 0, cchShort = 0, cchName = 0;
-
     TRACE("(%s, %s, %d)\n", wine_dbgstr_w(pszPath), wine_dbgstr_w(pszResModule), idsRes);
 
-    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-    if (FAILED(hr))
-        return hr;
-
-    hr = SHGetDesktopFolder(&pDesktopFolder);
-    if (FAILED(hr))
-        goto cleanup_coinit;
-
-    hr = pDesktopFolder->lpVtbl->ParseDisplayName(pDesktopFolder, NULL, NULL,
-                                                  (LPWSTR)pszPath, NULL, &pidl, NULL);
-    if (FAILED(hr))
-        goto cleanup_desktop;
-
-    hr = SHBindToParent(pidl, &IID_IShellFolder, (void **)&pParentFolder, &pidlLast);
-    if (FAILED(hr))
-        goto cleanup_pidl;
-
-    cchShortMax = lstrlenW(pszResModule) + 1;
-    pszShortPath = LocalAlloc(LPTR, cchShortMax * sizeof(WCHAR));
-    if (!pszShortPath)
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (SUCCEEDED(hr))
     {
-        hr = E_OUTOFMEMORY;
-        goto cleanup_parent;
+        IShellFolder *pDesktopFolder;
+        hr = SHGetDesktopFolder(&pDesktopFolder);
+        if (SUCCEEDED(hr))
+        {
+            LPITEMIDLIST pidl;
+            hr = pDesktopFolder->lpVtbl->ParseDisplayName(pDesktopFolder, NULL, NULL,
+                                                          (LPWSTR)pszPath, NULL, &pidl, NULL);
+            if (SUCCEEDED(hr))
+            {
+                IShellFolder *pParentFolder;
+                LPCITEMIDLIST pidlLast;
+                hr = SHBindToParent(pidl, &IID_IShellFolder, (PVOID*)&pParentFolder, &pidlLast);
+                if (SUCCEEDED(hr))
+                {
+                    INT cchShortMax = lstrlenW(pszResModule) + 1;
+                    PWSTR pszShortPath = LocalAlloc(LPTR, cchShortMax * sizeof(WCHAR));
+                    if (pszShortPath)
+                    {
+                        INT cchShort = GetShortPathNameW(pszResModule, pszShortPath, cchShortMax);
+                        if (cchShort)
+                            pszResModule = pszShortPath;
+                        else
+                            cchShort = cchShortMax;
+
+                        /* 14 == '@' + ',' + '-' + (digits of max width 10) + NUL */
+                        INT cchName = cchShort + 14;
+                        PWSTR pszLocalName = LocalAlloc(LPTR, cchName * sizeof(WCHAR));
+                        if (pszLocalName)
+                        {
+                            wnsprintfW(pszLocalName, cchName, L"@%s,%d", pszResModule, -idsRes);
+                            hr = pParentFolder->lpVtbl->SetNameOf(pParentFolder, NULL, pidlLast,
+                                                                  pszLocalName, 0, NULL);
+                            LocalFree(pszLocalName);
+                        }
+                        else
+                        {
+                            hr = E_OUTOFMEMORY;
+                        }
+
+                        LocalFree(pszShortPath);
+                    }
+                    else
+                    {
+                        hr = E_OUTOFMEMORY;
+                    }
+                    pParentFolder->lpVtbl->Release(pParentFolder);
+                }
+                SHFree(pidl);
+            }
+            pDesktopFolder->lpVtbl->Release(pDesktopFolder);
+        }
+        CoUninitialize();
     }
 
-    cchShort = GetShortPathNameW(pszResModule, pszShortPath, cchShortMax);
-    if (cchShort != 0)
-        pszResModule = pszShortPath;
-    else
-        cchShort = cchShortMax;
-
-    cchName = cchShort + 14; /* 14 == '@' + ',' + '-' + (digits of max width 10) + NUL */
-    pszLocalizedName = LocalAlloc(LPTR, cchName * sizeof(WCHAR));
-    if (FAILED(hr))
-    {
-        hr = E_OUTOFMEMORY;
-        goto cleanup_shortpath;
-    }
-
-    wnsprintfW(pszLocalizedName, cchName, L"@%s,%d", pszResModule, -idsRes);
-
-    hr = pParentFolder->lpVtbl->SetNameOf(pParentFolder, NULL, pidlLast,
-                                          pszLocalizedName, 0, NULL);
-
-    LocalFree(pszLocalizedName);
-
-cleanup_shortpath:
-    LocalFree(pszShortPath);
-
-cleanup_parent:
-    pParentFolder->lpVtbl->Release(pParentFolder);
-
-cleanup_pidl:
-    SHFree(pidl);
-
-cleanup_desktop:
-    pDesktopFolder->lpVtbl->Release(pDesktopFolder);
-
-cleanup_coinit:
-    CoUninitialize();
     return hr;
 #else
     FIXME("%p, %s, %d - stub\n", pszPath, debugstr_w(pszResModule), idsRes);
