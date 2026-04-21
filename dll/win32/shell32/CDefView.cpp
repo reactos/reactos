@@ -673,13 +673,14 @@ CDefView::~CDefView()
 // ##### helperfunctions for shellbags #####
 HRESULT CDefView::GetFolderPath(LPWSTR pszPath, UINT cchPath)
 {
-    if (!m_pidlParent || cchPath == 0)
+    if (!m_pidlParent || !pszPath || cchPath == 0)
         return E_INVALIDARG;
 
-    if (SHGetPathFromIDListW(m_pidlParent, pszPath))
-        return S_OK;
+    WCHAR szTemp[MAX_PATH];
+    if (!SHGetPathFromIDListW(m_pidlParent, szTemp))
+        return E_FAIL;
 
-    return E_FAIL;  // not a filesystem folder
+    return StringCchCopyW(pszPath, cchPath, szTemp);
 }
 
 HRESULT CDefView::LoadShellBagData()
@@ -687,7 +688,7 @@ HRESULT CDefView::LoadShellBagData()
     if (!m_pShellBagCache)
         return E_FAIL;
 
-    WCHAR szPath[MAX_PATH] = {};
+    WCHAR szPath[MAX_PATH];
     if (FAILED(GetFolderPath(szPath, _countof(szPath))))
         return S_FALSE;
 
@@ -701,8 +702,8 @@ HRESULT CDefView::LoadShellBagData()
 
     if (bagData.uSort != 0)
     {
-        m_sortInfo.ListColumn = bagData.uSort & 0x7FFFFFFF;
-        m_sortInfo.Direction = (bagData.uSort & 0x80000000) ? 1 : 0;
+        m_sortInfo.ListColumn = bagData.uSort & ~SHELLBAG_SORT_DIRECTION_FLAG;
+        m_sortInfo.Direction = (bagData.uSort & SHELLBAG_SORT_DIRECTION_FLAG) ? 1 : 0;
         _Sort();
     }
 
@@ -728,15 +729,13 @@ HRESULT CDefView::SaveShellBagData()
     GetCurrentViewMode(&uMode);
     bagData.uViewMode = uMode;
 
-    bagData.uSort = m_sortInfo.ListColumn | (m_sortInfo.Direction ? 0x80000000u : 0);
+    bagData.uSort = m_sortInfo.ListColumn | (m_sortInfo.Direction ? SHELLBAG_SORT_DIRECTION_FLAG : 0);
 
-    POINT pt = {};
+    POINT pt;
     ListView_GetOrigin(m_ListView.m_hWnd, &pt);
     bagData.ptScroll = pt;
 
-    // Correct way using ATL CWindow
-    CWindow wnd(m_hWnd);
-    wnd.GetWindowRect(&bagData.rcWindow);
+    ::GetWindowRect(m_hWnd, &bagData.rcWindow);
 
     if (uMode == FVM_ICON || uMode == FVM_SMALLICON || uMode == FVM_THUMBNAIL)
     {

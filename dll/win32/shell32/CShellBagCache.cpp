@@ -328,12 +328,12 @@ void CShellBagCache::ClearCache()
 }
 
 // IUnknown implementation
-ULONG STDMETHODCALLTYPE CShellBagCache::AddRef()
+STDMETHODIMP_(ULONG) CShellBagCache::AddRef()
 {
     return InterlockedIncrement(&m_cRefCount);
 }
 
-ULONG STDMETHODCALLTYPE CShellBagCache::Release()
+STDMETHODIMP_(ULONG) CShellBagCache::Release()
 {
     LONG cRef = InterlockedDecrement(&m_cRefCount);
     if (cRef == 0)
@@ -343,7 +343,7 @@ ULONG STDMETHODCALLTYPE CShellBagCache::Release()
     return cRef;
 }
 
-HRESULT STDMETHODCALLTYPE CShellBagCache::QueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP CShellBagCache::QueryInterface(REFIID riid, void** ppv)
 {
     if (!ppv)
         return E_INVALIDARG;

@@ -4,6 +4,7 @@
 #include <shlobj.h>
 
 #define MAX_CACHE_ENTRIES 64
+#define SHELLBAG_SORT_DIRECTION_FLAG 0x80000000u
 
 typedef struct
 {
