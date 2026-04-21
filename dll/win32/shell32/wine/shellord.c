@@ -2634,22 +2634,23 @@ HRESULT WINAPI SHSetLocalizedName(LPCWSTR pszPath, LPCWSTR pszResModule, int ids
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     if (SUCCEEDED(hr))
     {
-        IShellFolder *pDesktopFolder;
-        hr = SHGetDesktopFolder(&pDesktopFolder);
+        IShellFolder *pDesktop;
+        hr = SHGetDesktopFolder(&pDesktop);
         if (SUCCEEDED(hr))
         {
             LPITEMIDLIST pidl;
-            hr = pDesktopFolder->lpVtbl->ParseDisplayName(pDesktopFolder, NULL, NULL,
-                                                          (LPWSTR)pszPath, NULL, &pidl, NULL);
+            hr = pDesktop->lpVtbl->ParseDisplayName(pDesktop, NULL, NULL,
+                                                    (LPWSTR)pszPath, NULL, &pidl, NULL);
             if (SUCCEEDED(hr))
             {
-                IShellFolder *pParentFolder;
+                IShellFolder *pParent;
                 LPCITEMIDLIST pidlLast;
-                hr = SHBindToParent(pidl, &IID_IShellFolder, (PVOID*)&pParentFolder, &pidlLast);
+                hr = SHBindToParent(pidl, &IID_IShellFolder, (PVOID*)&pParent, &pidlLast);
                 if (SUCCEEDED(hr))
                 {
+                    HANDLE hProcessHeap = GetProcessHeap();
                     INT cchShortMax = lstrlenW(pszResModule) + 1;
-                    PWSTR pszShortPath = LocalAlloc(LPTR, cchShortMax * sizeof(WCHAR));
+                    PWSTR pszShortPath = HeapAlloc(hProcessHeap, 0, cchShortMax * sizeof(WCHAR));
                     if (pszShortPath)
                     {
                         INT cchShort = GetShortPathNameW(pszResModule, pszShortPath, cchShortMax);
@@ -2660,30 +2661,29 @@ HRESULT WINAPI SHSetLocalizedName(LPCWSTR pszPath, LPCWSTR pszResModule, int ids
 
                         /* 14 == '@' + ',' + '-' + (digits of max width 10) + NUL */
                         INT cchName = cchShort + 14;
-                        PWSTR pszLocalName = LocalAlloc(LPTR, cchName * sizeof(WCHAR));
-                        if (pszLocalName)
+                        PWSTR pszName = HeapAlloc(hProcessHeap, 0, cchName * sizeof(WCHAR));
+                        if (pszName)
                         {
-                            wnsprintfW(pszLocalName, cchName, L"@%s,%d", pszResModule, -idsRes);
-                            hr = pParentFolder->lpVtbl->SetNameOf(pParentFolder, NULL, pidlLast,
-                                                                  pszLocalName, 0, NULL);
-                            LocalFree(pszLocalName);
+                            wnsprintfW(pszName, cchName, L"@%s,%d", pszResModule, -idsRes);
+                            hr = pParent->lpVtbl->SetNameOf(pParent, NULL, pidlLast, pszName,
+                                                            0, NULL);
+                            HeapFree(hProcessHeap, 0, pszName);
                         }
                         else
                         {
                             hr = E_OUTOFMEMORY;
                         }
-
-                        LocalFree(pszShortPath);
+                        HeapFree(hProcessHeap, 0, pszShortPath);
                     }
                     else
                     {
                         hr = E_OUTOFMEMORY;
                     }
-                    pParentFolder->lpVtbl->Release(pParentFolder);
+                    pParent->lpVtbl->Release(pParent);
                 }
                 SHFree(pidl);
             }
-            pDesktopFolder->lpVtbl->Release(pDesktopFolder);
+            pDesktop->lpVtbl->Release(pDesktop);
         }
         CoUninitialize();
     }
