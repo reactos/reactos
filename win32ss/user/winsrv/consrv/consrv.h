@@ -52,7 +52,7 @@ typedef struct _CONSOLE_PROCESS_DATA
 
     LPTHREAD_START_ROUTINE CtrlRoutine;
     LPTHREAD_START_ROUTINE PropRoutine; // We hold the property dialog handler there, till all the GUI thingie moves out from CSRSS.
-    // LPTHREAD_START_ROUTINE ImeRoutine;
+    LPTHREAD_START_ROUTINE ImeRoutine;
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 
 #include "include/conio.h"

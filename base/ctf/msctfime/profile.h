@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS msctfime.ime
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Profile of msctfime.ime
- * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2024-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
@@ -12,6 +12,12 @@
 class CicProfile : public IUnknown
 {
 protected:
+    typedef struct tagLANG_PROF_ENUM_ARG
+    {
+        GUID catid;
+        TF_LANGUAGEPROFILE profile;
+    } LANG_PROF_ENUM_ARG, *PLANG_PROF_ENUM_ARG;
+
     ITfInputProcessorProfiles *m_pIPProfiles;
     CActiveLanguageProfileNotifySink *m_pActiveLanguageProfileNotifySink;
     LANGID  m_LangID1;
@@ -42,12 +48,16 @@ public:
     HRESULT
     GetActiveLanguageProfile(
         _In_ HKL hKL,
-        _In_ REFGUID rguid,
-        _Out_ TF_LANGUAGEPROFILE *pProfile);
+        _In_ REFGUID catid,
+        _Out_ TF_LANGUAGEPROFILE* pProfile);
     HRESULT GetLangId(_Out_ LANGID *pLangID);
     HRESULT GetCodePageA(_Out_ UINT *puCodePage);
 
     HRESULT InitProfileInstance(_Inout_ TLS *pTLS);
+    HRESULT IsIME(HKL hKL);
 
-    BOOL IsIME(HKL hKL);
+    static HRESULT CALLBACK
+    LanguageProfilesCallback(
+        _In_ TF_LANGUAGEPROFILE profile,
+        _Inout_opt_ LPARAM lParam);
 };

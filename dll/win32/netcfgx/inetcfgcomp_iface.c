@@ -7,7 +7,6 @@ typedef struct
     const INetCfgComponentPrivate  *lpVtblPrivate;
     LONG  ref;
     NetCfgComponentItem * pItem;
-    INetCfgComponentPropertyUi * pProperty;
     INetCfg * pNCfg;
 } INetCfgComponentImpl;
 
@@ -221,11 +220,11 @@ HRESULT
 WINAPI
 INetCfgComponentPrivate_fnUnknown1(
     INetCfgComponentPrivate *iface,
-    DWORD dwParam1,
+    REFIID iid,
     DWORD dwParam2)
 {
 //    INetCfgComponentImpl *This = impl_from_INetCfgComponentPrivate(iface);
-    ERR("INetCfgComponentPrivate_fnUnknown1(%p %lx %lx)\n", iface, dwParam1, dwParam2);
+    ERR("INetCfgComponentPrivate_fnUnknown1(%p %s %lx)\n", iface, wine_dbgstr_guid(iid), dwParam2);
     return S_OK;
 }
 
@@ -563,8 +562,8 @@ CreateNotificationObject(
     DWORD dwSize, dwType;
     GUID CLSID_NotifyObject;
     LPOLESTR pStr;
-    INetCfgComponentPropertyUi * pNCCPU;
-    INetCfgComponentControl * pNCCC;
+    INetCfgComponentControl *pControl;
+    INetCfgComponentPropertyUi *pPropertyUi;
     HRESULT hr;
     LONG lRet;
     CLSID ClassGUID;
@@ -613,42 +612,43 @@ CreateNotificationObject(
     if (FAILED(hr))
         return E_FAIL;
 
-    hr = CoCreateInstance(&CLSID_NotifyObject, NULL, CLSCTX_INPROC_SERVER, &IID_INetCfgComponentPropertyUi, (LPVOID*)&pNCCPU);
+    hr = CoCreateInstance(&CLSID_NotifyObject, NULL, CLSCTX_INPROC_SERVER, &IID_INetCfgComponentControl, (LPVOID*)&pControl);
     if (FAILED(hr))
         return E_FAIL;
 
-    hr = INetCfgComponentPropertyUi_QueryInterface(pNCCPU, &IID_INetCfgComponentControl, (LPVOID*)&pNCCC);
+    hr = INetCfgComponentPropertyUi_QueryInterface(pControl, &IID_INetCfgComponentPropertyUi, (LPVOID*)&pPropertyUi);
     if (FAILED(hr))
     {
-        INetCfgComponentPropertyUi_Release(pNCCPU);
+        INetCfgComponentPropertyUi_Release(pControl);
         return hr;
     }
 
-    hr = INetCfgComponentPropertyUi_QueryPropertyUi(pNCCPU, pUnk);
+    hr = INetCfgComponentPropertyUi_QueryPropertyUi(pPropertyUi, pUnk);
     if (FAILED(hr))
     {
-        INetCfgComponentControl_Release(pNCCC);
-        INetCfgComponentPropertyUi_Release(pNCCPU);
+        INetCfgComponentControl_Release(pControl);
+        INetCfgComponentPropertyUi_Release(pPropertyUi);
         return hr;
     }
 
-    hr = INetCfgComponentControl_Initialize(pNCCC, iface, This->pNCfg, FALSE);
+    hr = INetCfgComponentControl_Initialize(pControl, iface, This->pNCfg, FALSE);
     if (FAILED(hr))
     {
-        INetCfgComponentControl_Release(pNCCC);
-        INetCfgComponentPropertyUi_Release(pNCCPU);
+        INetCfgComponentControl_Release(pControl);
+        INetCfgComponentPropertyUi_Release(pPropertyUi);
         return hr;
     }
 
-    hr = INetCfgComponentPropertyUi_SetContext(pNCCPU, pUnk);
+    hr = INetCfgComponentPropertyUi_SetContext(pPropertyUi, pUnk);
     if (FAILED(hr))
     {
-        INetCfgComponentControl_Release(pNCCC);
-        INetCfgComponentPropertyUi_Release(pNCCPU);
+        INetCfgComponentControl_Release(pControl);
+        INetCfgComponentPropertyUi_Release(pPropertyUi);
         return hr;
     }
-    This->pProperty = pNCCPU;
-    This->pItem->pNCCC = pNCCC;
+
+    This->pItem->pControl = pControl;
+    This->pItem->pPropertyUi = pPropertyUi;
 
     return S_OK;
 }
@@ -686,7 +686,7 @@ INetCfgComponent_fnRaisePropertyUi(
     INT_PTR iResult;
     INetCfgComponentImpl * This = (INetCfgComponentImpl*)iface;
 
-    if (!This->pProperty)
+    if (!This->pItem->pPropertyUi)
     {
          hr = CreateNotificationObject(This,iface, pUnk);
          if (FAILED(hr))
@@ -699,7 +699,7 @@ INetCfgComponent_fnRaisePropertyUi(
     dwDefPages = 0;
     Pages = 0;
 
-    hr = INetCfgComponentPropertyUi_MergePropPages(This->pProperty, &dwDefPages, (BYTE**)&hppages, &Pages, hwndParent, NULL);
+    hr = INetCfgComponentPropertyUi_MergePropPages(This->pItem->pPropertyUi, &dwDefPages, (BYTE**)&hppages, &Pages, hwndParent, NULL);
     if (FAILED(hr) || !Pages)
     {
         return hr;
@@ -720,14 +720,14 @@ INetCfgComponent_fnRaisePropertyUi(
     CoTaskMemFree(hppages);
     if (iResult > 0)
     {
-        hr = INetCfgComponentPropertyUi_ApplyProperties(This->pProperty);
+        hr = INetCfgComponentPropertyUi_ApplyProperties(This->pItem->pPropertyUi);
         /* indicate that settings should be stored */
         if (hr == S_OK)
             This->pItem->bChanged = TRUE;
     }
     else if (iResult == 0)
     {
-        hr = INetCfgComponentPropertyUi_CancelProperties(This->pProperty);
+        hr = INetCfgComponentPropertyUi_CancelProperties(This->pItem->pPropertyUi);
     }
     else 
     {
@@ -773,7 +773,6 @@ INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, N
     This->lpVtbl = (const INetCfgComponent*)&vt_NetCfgComponent;
     This->lpVtblBindings = (const INetCfgComponentBindings*)&vt_NetCfgComponentBindings;
     This->lpVtblPrivate = (const INetCfgComponentPrivate*)&vt_NetCfgComponentPrivate;
-    This->pProperty = NULL;
     This->pItem = pItem;
     This->pNCfg = pNCfg;
 

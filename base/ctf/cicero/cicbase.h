@@ -2,10 +2,13 @@
  * PROJECT:     ReactOS Cicero
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Cicero base
- * COPYRIGHT:   Copyright 2023-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2023-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
+
+#include <assert.h>
+#define cicAssert assert
 
 static inline LPVOID cicMemAlloc(SIZE_T size)
 {

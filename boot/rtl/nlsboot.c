@@ -20,6 +20,7 @@ BOOLEAN NlsMbOemCodePageTag = FALSE;
 PUSHORT NlsOemToUnicodeTable = NULL;
 PCHAR NlsUnicodeToOemTable = NULL;
 PUSHORT NlsUnicodeToMbOemTable = NULL;
+PUSHORT NlsLeadByteInfo = NULL;
 PUSHORT NlsOemLeadByteInfo = NULL;
 
 USHORT NlsOemDefaultChar = '\0';

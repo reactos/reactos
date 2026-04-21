@@ -45,34 +45,33 @@ DiskReadGptHeader(
 BOOLEAN
 DiskGetGptPartitionEntry(
     _In_ UCHAR DriveNumber,
+    _In_ ULONG SectorSize, // BlockSize
     _In_ ULONG PartitionNumber,
-    _Out_ PPARTITION_TABLE_ENTRY PartitionTableEntry)
+    _Out_ PPARTITION_INFORMATION PartitionEntry)
 {
     GPT_TABLE_HEADER GptHeader;
     GPT_PARTITION_ENTRY GptEntry;
-    GEOMETRY Geometry;
-    ULONG BlockSize;
     ULONGLONG EntryLba;
     ULONG EntryOffset;
     ULONG EntriesPerBlock;
     GUID UnusedGuid = EFI_PART_TYPE_UNUSED_GUID;
+    GUID SystemGuid = EFI_PART_TYPE_EFI_SYSTEM_PART_GUID;
 
-    if (!MachDiskGetDriveGeometry(DriveNumber, &Geometry))
-        return FALSE;
-    BlockSize = Geometry.BytesPerSector;
+    ASSERT(SectorSize >= 512);
 
     /* Read GPT header */
     if (!DiskReadGptHeader(DriveNumber, &GptHeader))
         return FALSE;
 
     /* Validate partition number */
-    if (PartitionNumber == 0 || PartitionNumber > GptHeader.NumberOfPartitionEntries)
+    //if (PartitionNumber == 0 || PartitionNumber > GptHeader.NumberOfPartitionEntries)
+    if (!(1 <= PartitionNumber && PartitionNumber <= GptHeader.NumberOfPartitionEntries))
         return FALSE;
 
     /* Convert to 0-based index */
     ULONG EntryIndex = PartitionNumber - 1;
 
-    EntriesPerBlock = BlockSize / GptHeader.SizeOfPartitionEntry;
+    EntriesPerBlock = SectorSize / GptHeader.SizeOfPartitionEntry;
     EntryLba = GptHeader.PartitionEntryLba + (EntryIndex / EntriesPerBlock);
     EntryOffset = (EntryIndex % EntriesPerBlock) * GptHeader.SizeOfPartitionEntry;
 
@@ -87,20 +86,18 @@ DiskGetGptPartitionEntry(
     if (RtlEqualMemory(&GptEntry.PartitionTypeGuid, &UnusedGuid, sizeof(UnusedGuid)))
         return FALSE;
 
-    /* Convert GPT entry to MBR-style PARTITION_TABLE_ENTRY */
-    RtlZeroMemory(PartitionTableEntry, sizeof(*PartitionTableEntry));
+    /* Calculate partition size in blocks */
+    ULONGLONG PartitionSizeBlocks = GptEntry.EndingLba - GptEntry.StartingLba + 1;
 
-    /* Calculate sector offset and count.
-     * GPT uses LBA, convert to 512-byte sectors. */
-    ULONGLONG SectorCount = (GptEntry.EndingLba - GptEntry.StartingLba + 1);
-
-    /* For GPT, we need to convert from device block size to 512-byte sectors */
-    ULONGLONG StartSector = (GptEntry.StartingLba * BlockSize) / 512;
-    ULONGLONG SectorCount512 = (SectorCount * BlockSize) / 512;
-
-    PartitionTableEntry->SectorCountBeforePartition = (ULONG)StartSector;
-    PartitionTableEntry->PartitionSectorCount = (ULONG)SectorCount512;
-    PartitionTableEntry->SystemIndicator = PARTITION_GPT; /* Mark as GPT partition */
+    /* Convert GPT entry to standard-style entry */
+    PartitionEntry->StartingOffset.QuadPart  = (GptEntry.StartingLba * SectorSize);
+    PartitionEntry->PartitionLength.QuadPart = (PartitionSizeBlocks * SectorSize);
+    PartitionEntry->HiddenSectors = 0;
+    PartitionEntry->PartitionNumber = PartitionNumber;
+    PartitionEntry->PartitionType = PARTITION_GPT; /* Mark as GPT partition */
+    PartitionEntry->BootIndicator = RtlEqualMemory(&GptEntry.PartitionTypeGuid, &SystemGuid, sizeof(SystemGuid));
+    PartitionEntry->RecognizedPartition = TRUE;
+    PartitionEntry->RewritePartition = FALSE;
 
     return TRUE;
 }

@@ -267,7 +267,7 @@ SetPixel(
 VOID
 PreserveRow(
     _In_ ULONG CurrentTop,
-    _In_ ULONG TopDelta,
+    _In_ ULONG Height,
     _In_ BOOLEAN Restore)
 {
     PUCHAR NewPosition, OldPosition;
@@ -287,7 +287,7 @@ PreserveRow(
     }
 
     /* Set the count and loop every pixel of backbuffer */
-    ULONG Count = TopDelta * SCREEN_WIDTH;
+    ULONG Count = Height * SCREEN_WIDTH;
 
     RtlCopyMemory(NewPosition, OldPosition, Count);
 
@@ -296,7 +296,7 @@ PreserveRow(
         NewPosition = BackBuffer + BB_OFFSET(0, CurrentTop);
 
         /* Set the count and loop every pixel of framebuffer */
-        for (ULONG y = 0; y < TopDelta; y++)
+        for (ULONG y = 0; y < Height; y++)
         {
             PULONG Frame = (PULONG)(FrameBufferStart + FB_OFFSET(0, CurrentTop + y));
 
@@ -401,22 +401,22 @@ VidSolidColorFill(
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_writes_bytes_all_(Delta * Height) PUCHAR Buffer,
+    _Out_writes_bytes_all_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta)
+    _In_ ULONG Stride)
 {
     /* Clear the destination buffer */
-    RtlZeroMemory(Buffer, Delta * Height);
+    RtlZeroMemory(Buffer, Height * Stride);
 
     /* Start the outer Y height loop */
     for (ULONG y = 0; y < Height; y++)
     {
         /* Set current scanline */
         PUCHAR Back = BackBuffer + BB_OFFSET(Left, Top + y);
-        PUCHAR Buf = Buffer + y * Delta;
+        PUCHAR Buf = Buffer + y * Stride;
 
         /* Start the X inner loop */
         for (ULONG x = 0; x < Width; x += sizeof(USHORT))

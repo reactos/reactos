@@ -2505,10 +2505,20 @@ void WINAPI SHUpdateImageW(LPCWSTR pszHashItem, int iIndex, UINT uFlags, int iIm
  *		SHUpdateImageA (SHELL32.191)
  *
  * See SHUpdateImageW.
+#ifdef __REACTOS__
+ * https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shupdateimagea
+#endif
  */
 VOID WINAPI SHUpdateImageA(LPCSTR pszHashItem, INT iIndex, UINT uFlags, INT iImageIndex)
 {
+#ifdef __REACTOS__
+    TRACE("(%s, %d, 0x%x, %d)\n", wine_dbgstr_a(pszHashItem), iIndex, uFlags, iImageIndex);
+    WCHAR szHashItem[MAX_PATH];
+    SHAnsiToUnicode(pszHashItem, szHashItem, _countof(szHashItem));
+    SHUpdateImageW(szHashItem, iIndex, uFlags, iImageIndex);
+#else
     FIXME("%s, %d, 0x%x, %d - stub\n", debugstr_a(pszHashItem), iIndex, uFlags, iImageIndex);
+#endif
 }
 
 INT WINAPI SHHandleUpdateImage(PCIDLIST_ABSOLUTE pidlExtra)

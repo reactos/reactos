@@ -2,7 +2,7 @@
  * PROJECT:     FreeLoader UEFI Support
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Disk Access Functions
- * COPYRIGHT:   Copyright 2022 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2022-2026 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
@@ -169,16 +169,17 @@ DiskReadGptHeader(
 static
 BOOLEAN
 UefiGetBootPartitionEntry(
-    IN UCHAR DriveNumber,
-    OUT PPARTITION_TABLE_ENTRY PartitionTableEntry,
-    OUT PULONG BootPartition)
+    _In_ UCHAR DriveNumber,
+    _Out_opt_ PPARTITION_INFORMATION PartitionEntry,
+    _Out_ PULONG BootPartition)
 {
     ULONG PartitionNum;
     ULONG ArcDriveIndex;
     EFI_BLOCK_IO* BootBlockIo;
     EFI_STATUS Status;
+    ULONG BlockSize;
     ULONGLONG BootPartitionSize;
-    PARTITION_TABLE_ENTRY TempPartitionEntry;
+    PARTITION_INFORMATION TempPartitionEntry;
 
     TRACE("UefiGetBootPartitionEntry: DriveNumber: %d\n", DriveNumber - FIRST_BIOS_DISK);
 
@@ -206,16 +207,25 @@ UefiGetBootPartitionEntry(
     BootPartitionSize = BootBlockIo->Media->LastBlock + 1;
 
     TRACE("Boot partition: Size=%llu blocks, BlockSize=%lu\n",
-        BootPartitionSize, BootBlockIo->Media->BlockSize);
+          BootPartitionSize, BootBlockIo->Media->BlockSize);
 
     /* If boot handle is the root device itself (not a logical partition) */
     if (!BootBlockIo->Media->LogicalPartition)
     {
         TRACE("Boot handle is root device, using partition 0\n");
         *BootPartition = 0;
-        if (PartitionTableEntry != NULL)
+        if (PartitionEntry)
         {
-            RtlZeroMemory(PartitionTableEntry, sizeof(*PartitionTableEntry));
+            // RtlZeroMemory(PartitionEntry, sizeof(*PartitionEntry));
+            /* Represent the whole disk */
+            PartitionEntry->StartingOffset.QuadPart  = 0ULL;
+            PartitionEntry->PartitionLength.QuadPart = (BootPartitionSize * BootBlockIo->Media->BlockSize);
+            PartitionEntry->HiddenSectors = 0;
+            PartitionEntry->PartitionNumber = *BootPartition;
+            PartitionEntry->PartitionType = PARTITION_GPT; /* Mark as GPT partition */
+            PartitionEntry->BootIndicator = TRUE;
+            PartitionEntry->RecognizedPartition = TRUE;
+            PartitionEntry->RewritePartition = FALSE;
         }
         return TRUE;
     }
@@ -228,14 +238,11 @@ UefiGetBootPartitionEntry(
     {
         /* For GPT, iterate through GPT partition entries */
         GPT_PARTITION_ENTRY GptEntry;
-        ULONG ArcDriveIndex = DriveNumber - FIRST_BIOS_DISK;
         EFI_BLOCK_IO* RootBlockIo;
-        ULONG BlockSize;
-        ULONGLONG EntryLba;
-        ULONG EntryOffset;
         ULONG EntriesPerBlock;
         EFI_STATUS Status;
         EFI_GUID UnusedGuid = EFI_PART_TYPE_UNUSED_GUID;
+        EFI_GUID SystemGuid = EFI_PART_TYPE_EFI_SYSTEM_PART_GUID;
 
         Status = GlobalSystemTable->BootServices->HandleProtocol(
             InternalUefiDisk[ArcDriveIndex].Handle,
@@ -251,8 +258,8 @@ UefiGetBootPartitionEntry(
         /* Iterate through GPT partition entries */
         for (ULONG i = 0; i < GptHeader.NumberOfPartitionEntries; i++)
         {
-            EntryLba = GptHeader.PartitionEntryLba + (i / EntriesPerBlock);
-            EntryOffset = (i % EntriesPerBlock) * GptHeader.SizeOfPartitionEntry;
+            ULONGLONG EntryLba = GptHeader.PartitionEntryLba + (i / EntriesPerBlock);
+            ULONG EntryOffset = (i % EntriesPerBlock) * GptHeader.SizeOfPartitionEntry;
 
             /* Read the block containing the partition entry */
             Status = RootBlockIo->ReadBlocks(
@@ -276,28 +283,30 @@ UefiGetBootPartitionEntry(
             ULONGLONG PartitionSizeBlocks = GptEntry.EndingLba - GptEntry.StartingLba + 1;
 
             TRACE("GPT Partition %lu: StartLba=%llu, EndLba=%llu, SizeBlocks=%llu\n",
-                i + 1, GptEntry.StartingLba, GptEntry.EndingLba, PartitionSizeBlocks);
+                  i + 1, GptEntry.StartingLba, GptEntry.EndingLba, PartitionSizeBlocks);
 
             /* Match partition by size (within 1 block tolerance for rounding) */
             if (PartitionSizeBlocks == BootPartitionSize ||
-                (PartitionSizeBlocks > 0 && 
+                (PartitionSizeBlocks > 0 &&
                  (PartitionSizeBlocks - 1 <= BootPartitionSize && 
                   BootPartitionSize <= PartitionSizeBlocks + 1)))
             {
                 TRACE("Found matching GPT partition %lu: Size matches (%llu blocks)\n",
-                    i + 1, BootPartitionSize);
+                      i + 1, BootPartitionSize);
 
                 *BootPartition = i + 1; /* GPT partitions are 1-indexed */
 
-                /* Convert GPT entry to MBR-style entry for compatibility */
-                if (PartitionTableEntry != NULL)
+                /* Convert GPT entry to standard-style entry */
+                if (PartitionEntry)
                 {
-                    RtlZeroMemory(PartitionTableEntry, sizeof(*PartitionTableEntry));
-                    ULONGLONG StartSector = (GptEntry.StartingLba * BlockSize) / 512;
-                    ULONGLONG SectorCount = (PartitionSizeBlocks * BlockSize) / 512;
-                    PartitionTableEntry->SectorCountBeforePartition = (ULONG)StartSector;
-                    PartitionTableEntry->PartitionSectorCount = (ULONG)SectorCount;
-                    PartitionTableEntry->SystemIndicator = PARTITION_GPT;
+                    PartitionEntry->StartingOffset.QuadPart  = (GptEntry.StartingLba * BlockSize);
+                    PartitionEntry->PartitionLength.QuadPart = ((ULONGLONG)PartitionSizeBlocks * BlockSize);
+                    PartitionEntry->HiddenSectors = 0;
+                    PartitionEntry->PartitionNumber = *BootPartition;
+                    PartitionEntry->PartitionType = PARTITION_GPT; /* Mark as GPT partition */
+                    PartitionEntry->BootIndicator = RtlEqualMemory(&GptEntry.PartitionTypeGuid, &SystemGuid, sizeof(SystemGuid));
+                    PartitionEntry->RecognizedPartition = TRUE;
+                    PartitionEntry->RewritePartition = FALSE;
                 }
                 return TRUE;
             }
@@ -306,36 +315,32 @@ UefiGetBootPartitionEntry(
     else
     {
         /* MBR partition matching */
+
+        BlockSize = BootBlockIo->Media->BlockSize;
+
         PartitionNum = FIRST_PARTITION;
-        while (DiskGetPartitionEntry(DriveNumber, PartitionNum, &TempPartitionEntry))
+        while (DiskGetPartitionEntry(DriveNumber, BlockSize, PartitionNum, &TempPartitionEntry))
         {
-            ULONGLONG PartitionSizeSectors = TempPartitionEntry.PartitionSectorCount;
-            ULONGLONG PartitionSizeBlocks;
+            /* Convert partition size to UEFI blocks */
+            ULONGLONG PartitionSizeBlocks = TempPartitionEntry.PartitionLength.QuadPart / BlockSize;
+            ULONGLONG StartingLba = TempPartitionEntry.StartingOffset.QuadPart / BlockSize;
+            ULONGLONG EndingLba = StartingLba + PartitionSizeBlocks - 1;
 
-            /* Convert partition size from MBR sectors (always 512 bytes) to UEFI blocks.
-             * MBR partition table always uses 512-byte sectors per specification.
-             * UEFI Block I/O protocol reports sizes in device's BlockSize bytes. */
-            /* Compare in bytes to avoid rounding issues, then convert to boot partition's block size */
-            ULONGLONG PartitionSizeBytes = PartitionSizeSectors * 512ULL;
-            PartitionSizeBlocks = PartitionSizeBytes / BootBlockIo->Media->BlockSize;
-
-            TRACE("Partition %lu: SizeSectors=%llu, SizeBlocks=%llu\n",
-                PartitionNum, PartitionSizeSectors, PartitionSizeBlocks);
+            TRACE("Partition %lu: StartLba=%llu, EndLba=%llu, SizeBlocks=%llu\n",
+                  PartitionNum, StartingLba, EndingLba, PartitionSizeBlocks);
 
             /* Match partition by size (within 1 block tolerance for rounding) */
             if (PartitionSizeBlocks == BootPartitionSize ||
-                (PartitionSizeBlocks > 0 && 
+                (PartitionSizeBlocks > 0 &&
                  (PartitionSizeBlocks - 1 <= BootPartitionSize && 
                   BootPartitionSize <= PartitionSizeBlocks + 1)))
             {
                 TRACE("Found matching partition %lu: Size matches (%llu blocks)\n",
-                    PartitionNum, BootPartitionSize);
+                      PartitionNum, BootPartitionSize);
 
                 *BootPartition = PartitionNum;
-                if (PartitionTableEntry != NULL)
-                {
-                    RtlCopyMemory(PartitionTableEntry, &TempPartitionEntry, sizeof(*PartitionTableEntry));
-                }
+                if (PartitionEntry)
+                    RtlCopyMemory(PartitionEntry, &TempPartitionEntry, sizeof(*PartitionEntry));
                 return TRUE;
             }
 
@@ -348,9 +353,18 @@ UefiGetBootPartitionEntry(
     {
         TRACE("Boot device is CD-ROM, using partition 0xFF\n");
         *BootPartition = 0xFF;
-        if (PartitionTableEntry != NULL)
+        if (PartitionEntry)
         {
-            RtlZeroMemory(PartitionTableEntry, sizeof(*PartitionTableEntry));
+            // RtlZeroMemory(PartitionEntry, sizeof(*PartitionEntry));
+            /* Represent the whole disk */
+            PartitionEntry->StartingOffset.QuadPart  = 0ULL;
+            PartitionEntry->PartitionLength.QuadPart = (BootPartitionSize * BootBlockIo->Media->BlockSize);
+            PartitionEntry->HiddenSectors = 0;
+            PartitionEntry->PartitionNumber = *BootPartition;
+            PartitionEntry->PartitionType = PARTITION_GPT; /* Mark as GPT partition */
+            PartitionEntry->BootIndicator = TRUE;
+            PartitionEntry->RecognizedPartition = TRUE;
+            PartitionEntry->RewritePartition = FALSE;
         }
         return TRUE;
     }
@@ -358,13 +372,12 @@ UefiGetBootPartitionEntry(
     /* Fallback: if we can't determine, use partition 1 */
     ERR("Could not determine boot partition, using partition 1 as fallback\n");
     PartitionNum = FIRST_PARTITION;
-    if (DiskGetPartitionEntry(DriveNumber, PartitionNum, &TempPartitionEntry))
+    if (DiskGetPartitionEntry(DriveNumber, BootBlockIo->Media->BlockSize,
+                              PartitionNum, &TempPartitionEntry))
     {
         *BootPartition = PartitionNum;
-        if (PartitionTableEntry != NULL)
-        {
-            RtlCopyMemory(PartitionTableEntry, &TempPartitionEntry, sizeof(*PartitionTableEntry));
-        }
+        if (PartitionEntry)
+            RtlCopyMemory(PartitionEntry, &TempPartitionEntry, sizeof(*PartitionEntry));
         return TRUE;
     }
 
@@ -409,10 +422,9 @@ UefiDiskOpen(CHAR *Path, OPENMODE OpenMode, ULONG *FileId)
     DISKCONTEXT* Context;
     UCHAR DriveNumber;
     ULONG DrivePartition, SectorSize;
-    ULONGLONG SectorOffset = 0;
-    ULONGLONG SectorCount = 0;
+    ULONGLONG SectorOffset;
+    ULONGLONG SectorCount;
     ULONG ArcDriveIndex;
-    PARTITION_TABLE_ENTRY PartitionTableEntry;
     EFI_BLOCK_IO* BlockIo;
     EFI_STATUS Status;
 
@@ -453,33 +465,29 @@ UefiDiskOpen(CHAR *Path, OPENMODE OpenMode, ULONG *FileId)
     if (!BlockIo->Media->MediaPresent)
     {
         ERR("Media not present for drive %d\n", DriveNumber);
-        return EINVAL;
+        return ENXIO;
     }
 
+#if 0
+    GEOMETRY Geometry;
+    if (!MachDiskGetDriveGeometry(DriveNumber, &Geometry))
+        return EIO;
+#endif
     SectorSize = BlockIo->Media->BlockSize;
 
     if (DrivePartition != 0xff && DrivePartition != 0)
     {
-        if (!DiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
-            return EINVAL;
+        PARTITION_INFORMATION PartitionEntry;
+        if (!DiskGetPartitionEntry(DriveNumber, SectorSize, DrivePartition, &PartitionEntry))
+            return EIO;
 
-        SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
-        SectorCount = PartitionTableEntry.PartitionSectorCount;
+        SectorOffset = PartitionEntry.StartingOffset.QuadPart / SectorSize;
+        SectorCount = PartitionEntry.PartitionLength.QuadPart / SectorSize;
     }
     else
     {
-        GEOMETRY Geometry;
-        if (!MachDiskGetDriveGeometry(DriveNumber, &Geometry))
-            return EINVAL;
-
-        if (SectorSize != Geometry.BytesPerSector)
-        {
-            ERR("SectorSize (%lu) != Geometry.BytesPerSector (%lu), expect problems!\n",
-                SectorSize, Geometry.BytesPerSector);
-        }
-
         SectorOffset = 0;
-        SectorCount = Geometry.Sectors;
+        SectorCount = BlockIo->Media->LastBlock + 1; // Geometry.Sectors;
     }
 
     Context = FrLdrTempAlloc(sizeof(DISKCONTEXT), TAG_HW_DISK_CONTEXT);
@@ -492,6 +500,7 @@ UefiDiskOpen(CHAR *Path, OPENMODE OpenMode, ULONG *FileId)
     Context->SectorCount = SectorCount;
     Context->SectorNumber = 0;
     FsSetDeviceSpecific(*FileId, Context);
+
     return ESUCCESS;
 }
 
@@ -998,7 +1007,6 @@ UefiSetBootpath(VOID)
     else
     {
         ULONG BootPartition;
-        PARTITION_TABLE_ENTRY PartitionEntry;
 
         /* This is a hard disk */
         /* If boot handle is a logical partition, we need to determine which partition number */
@@ -1013,7 +1021,7 @@ UefiSetBootpath(VOID)
         else
         {
             /* Boot handle is the root device itself */
-            if (!UefiGetBootPartitionEntry(FrldrBootDrive, &PartitionEntry, &BootPartition))
+            if (!UefiGetBootPartitionEntry(FrldrBootDrive, NULL, &BootPartition))
             {
                 ERR("Failed to get boot partition entry\n");
                 return FALSE;

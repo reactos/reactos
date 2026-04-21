@@ -29,9 +29,6 @@ typedef struct _GEOMETRY
     ULONGLONG Sectors;     ///< Total number of disk sectors/LBA blocks
 } GEOMETRY, *PGEOMETRY;
 
-// Some modules use the explicit MBR structures. TODO: Deprecate
-#include "disk/part_mbr.h"
-
 /*
  * Partition type defines (of PSDK)
  */
@@ -111,19 +108,20 @@ DiskInitialize(
 
 VOID
 DiskDetectPartitionType(
-    IN UCHAR DriveNumber);
+    _In_ UCHAR DriveNumber);
 
 BOOLEAN
 DiskGetBootPartitionEntry(
-    IN UCHAR DriveNumber,
-    OUT PPARTITION_TABLE_ENTRY PartitionTableEntry,
-    OUT PULONG BootPartition);
+    _In_ UCHAR DriveNumber,
+    _Out_opt_ PPARTITION_INFORMATION PartitionEntry,
+    _Out_ PULONG BootPartition);
 
 BOOLEAN
 DiskGetPartitionEntry(
-    IN UCHAR DriveNumber,
-    IN ULONG PartitionNumber,
-    OUT PPARTITION_TABLE_ENTRY PartitionTableEntry);
+    _In_ UCHAR DriveNumber,
+    _In_opt_ ULONG SectorSize,
+    _In_ ULONG PartitionNumber,
+    _Out_ PPARTITION_INFORMATION PartitionEntry);
 
 
 /*

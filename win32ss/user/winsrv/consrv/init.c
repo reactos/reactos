@@ -523,8 +523,9 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
         }
     }
 
-    /* Set the Property-Dialog handler */
+    /* Set the Property-Dialog and the IME handlers */
     ProcessData->PropRoutine = ConnectInfo->PropRoutine;
+    ProcessData->ImeRoutine = ConnectInfo->ImeRoutine;
 
     return STATUS_SUCCESS;
 }

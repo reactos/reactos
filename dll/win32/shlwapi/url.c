@@ -2668,9 +2668,37 @@ HRESULT WINAPI UrlFixupW(LPCWSTR url, LPWSTR translatedUrl, DWORD maxChars)
 
 /*************************************************************************
  * IsInternetESCEnabled [SHLWAPI.@]
+#ifdef __REACTOS__
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-isinternetescenabled
+#endif
  */
 BOOL WINAPI IsInternetESCEnabled(void)
 {
+#ifdef __REACTOS__
+    BOOL ret;
+    DWORD cbValue, dwValue;
+    HKEY hKey;
+    LSTATUS error;
+    static const PCWSTR pszZoneMapKey =
+        L"Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap";
+
+    TRACE("()\n");
+
+    ret = FALSE;
+    error = RegOpenKeyExW(HKEY_CURRENT_USER, pszZoneMapKey, 0, KEY_READ, &hKey);
+    if (error == ERROR_SUCCESS)
+    {
+        dwValue = 0;
+        cbValue = sizeof(dwValue);
+        error = RegQueryValueExW(hKey, L"IEharden", NULL, NULL, (PBYTE)&dwValue, &cbValue);
+        if (error == ERROR_SUCCESS)
+            ret = (dwValue == TRUE);
+        RegCloseKey(hKey);
+    }
+    return ret;
+#else
     FIXME(": stub\n");
     return FALSE;
+#endif
 }

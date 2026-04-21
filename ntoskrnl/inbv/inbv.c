@@ -557,38 +557,38 @@ InbvBitBlt(
 VOID
 NTAPI
 InbvBufferToScreenBlt(
-    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
+    _In_reads_bytes_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG X,
     _In_ ULONG Y,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta)
+    _In_ ULONG Stride)
 {
     /* Check if we're installed and we own it */
     if (InbvBootDriverInstalled &&
         (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
     {
         /* Do the blit */
-        VidBufferToScreenBlt(Buffer, X, Y, Width, Height, Delta);
+        VidBufferToScreenBlt(Buffer, X, Y, Width, Height, Stride);
     }
 }
 
 VOID
 NTAPI
 InbvScreenToBufferBlt(
-    _Out_writes_bytes_all_(Delta * Height) PUCHAR Buffer,
+    _Out_writes_bytes_all_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG X,
     _In_ ULONG Y,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta)
+    _In_ ULONG Stride)
 {
     /* Check if we're installed and we own it */
     if (InbvBootDriverInstalled &&
         (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
     {
         /* Do the blit */
-        VidScreenToBufferBlt(Buffer, X, Y, Width, Height, Delta);
+        VidScreenToBufferBlt(Buffer, X, Y, Width, Height, Stride);
     }
 }
 

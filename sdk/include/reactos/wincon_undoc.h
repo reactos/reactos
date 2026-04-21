@@ -587,6 +587,16 @@ WINBASEAPI
 BOOL
 WINAPI
 UnregisterConsoleIME(VOID);
+
+#ifdef _M_AMD64
+#if (_WIN32_WINNT >= _WIN32_WINNT_WS03) && (_WIN32_WINNT <= _WIN32_WINNT_VISTA)
+WINBASEAPI
+DWORD
+WINAPI
+ConsoleIMERoutine(
+  _In_ PVOID unused);
+#endif
+#endif
 #endif // FE_IME
 
 #ifdef UNICODE

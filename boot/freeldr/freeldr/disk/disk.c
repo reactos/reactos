@@ -13,7 +13,8 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(DISK);
 
-#include "disk/part_gpt.h"
+#include "part_mbr.h" // FIXME: For MASTER_BOOT_RECORD
+#include "part_gpt.h"
 
 // Defined in part_gpt.c
 extern BOOLEAN
@@ -85,30 +86,34 @@ DiskInitialize(
 {
     PMASTER_BOOT_RECORD Mbr;
     PULONG Buffer;
+    GEOMETRY Geometry;
     ULONGLONG SectorStart;
-    ULONG SectorSize;
+    ULONG MbrSectorSize;
     ULONG i;
     ULONG Checksum, Signature;
     BOOLEAN ValidPartitionTable;
     BOOLEAN IsCdRom;
     PGUID GptDiskGuid = NULL;
     GPT_TABLE_HEADER GptHeader;
-    PARTITION_TABLE_ENTRY PartitionTableEntry;
+    PARTITION_INFORMATION PartitionEntry;
     CHAR ArcName[MAX_PATH];
     NTSTATUS NtStatus;
 
     TRACE("DiskInitialize(0x%02X, '%s', Type: %lu)\n", DriveNumber, DeviceName, DeviceType);
 
+    if (!MachDiskGetDriveGeometry(DriveNumber, &Geometry))
+        return FALSE;
+
     IsCdRom = (DeviceType == CdromController);
     if (IsCdRom)
     {
         SectorStart = 16ULL;
-        SectorSize = 2048;
+        MbrSectorSize = 2048;
     }
     else // (DeviceType == FloppyDiskPeripheral || DiskPeripheral)
     {
         SectorStart = 0ULL;
-        SectorSize = 512;
+        MbrSectorSize = 512;
     }
 
     /* Read the MBR */
@@ -126,7 +131,7 @@ DiskInitialize(
 
     /* Calculate the MBR checksum */
     Checksum = 0;
-    for (i = 0; i < SectorSize / sizeof(ULONG); i++)
+    for (i = 0; i < MbrSectorSize / sizeof(ULONG); i++)
     {
         Checksum += Buffer[i];
     }
@@ -185,9 +190,9 @@ DiskInitialize(
 
     /* Add partitions */
     i = FIRST_PARTITION;
-    while (DiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
+    while (DiskGetPartitionEntry(DriveNumber, Geometry.BytesPerSector, i, &PartitionEntry))
     {
-        if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
+        if (PartitionEntry.PartitionType != PARTITION_ENTRY_UNUSED)
         {
             NtStatus = RtlStringCbPrintfA(ArcName, sizeof(ArcName),
                                           "%spartition(%lu)", DeviceName, i);

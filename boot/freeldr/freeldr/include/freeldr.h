@@ -56,7 +56,6 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <ntdddisk.h>
-#include <internal/hal.h>
 #include <drivers/pci/pci.h>
 #include <winerror.h>
 #include <ntstrsafe.h>

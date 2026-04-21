@@ -5,6 +5,7 @@
  * PURPOSE:     Block Device partition management
  * COPYRIGHT:   Copyright 2002-2003 Brian Palmer <brianp@sginet.com>
  *              Copyright 2019 Stanislav Motylkov <x86corez@gmail.com>
+ *              Copyright 2025-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #ifndef _M_ARM
@@ -15,6 +16,8 @@ DBG_DEFAULT_CHANNEL(DISK);
 
 #define MaxDriveNumber 0xFF
 static PARTITION_STYLE DiskPartitionType[MaxDriveNumber + 1];
+
+#include "part_mbr.h" // FIXME: For MASTER_BOOT_RECORD
 
 BOOLEAN
 DiskReadBootRecord(
@@ -56,15 +59,14 @@ DiskReadBootRecord(
 }
 
 #include "part_mbr.c"
-#include "part_brfr.c"
 #include "part_gpt.c"
+#include "part_brfr.c"
 
 VOID
 DiskDetectPartitionType(
-    IN UCHAR DriveNumber)
+    _In_ UCHAR DriveNumber)
 {
     MASTER_BOOT_RECORD MasterBootRecord;
-    PARTITION_TABLE_ENTRY PartitionTableEntry;
 
     /* Probe for Master Boot Record */
     if (DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
@@ -82,17 +84,13 @@ DiskDetectPartitionType(
         /* Check for GUID Partition Table */
         for (Index = 0; Index < 4; Index++)
         {
-            PPARTITION_TABLE_ENTRY ThisPartitionTableEntry;
-            ThisPartitionTableEntry = &MasterBootRecord.PartitionTable[Index];
+            PPARTITION_TABLE_ENTRY PartitionTableEntry = &MasterBootRecord.PartitionTable[Index];
 
-            if (ThisPartitionTableEntry->SystemIndicator != PARTITION_ENTRY_UNUSED)
+            if (PartitionTableEntry->SystemIndicator != PARTITION_ENTRY_UNUSED)
             {
                 PartitionCount++;
-
-                if (Index == 0 && ThisPartitionTableEntry->SystemIndicator == PARTITION_GPT)
-                {
+                if (Index == 0 && PartitionTableEntry->SystemIndicator == PARTITION_GPT)
                     GPTProtect = TRUE;
-                }
             }
         }
 
@@ -108,14 +106,14 @@ DiskDetectPartitionType(
     }
 
     /* Probe for Xbox-BRFR partitioning */
-    if (DiskGetBrfrPartitionEntry(DriveNumber, FATX_DATA_PARTITION, &PartitionTableEntry))
+    if (DiskIsBrfr(DriveNumber))
     {
         DiskPartitionType[DriveNumber] = PARTITION_STYLE_BRFR;
         TRACE("Drive 0x%X partition type Xbox-BRFR\n", DriveNumber);
         return;
     }
 
-    /* Failed to detect partitions, assume partitionless disk */
+    /* Failed to detect partitions, assume non-partitioned disk */
     DiskPartitionType[DriveNumber] = PARTITION_STYLE_RAW;
     TRACE("Drive 0x%X partition type unknown\n", DriveNumber);
 }
@@ -123,15 +121,24 @@ DiskDetectPartitionType(
 // FIXME: This function is specific to BIOS-based PC platform.
 BOOLEAN
 DiskGetBootPartitionEntry(
-    IN UCHAR DriveNumber,
-    OUT PPARTITION_TABLE_ENTRY PartitionTableEntry,
-    OUT PULONG BootPartition)
+    _In_ UCHAR DriveNumber,
+    _Out_opt_ PPARTITION_INFORMATION PartitionEntry,
+    _Out_ PULONG BootPartition)
 {
+#if 0
+    GEOMETRY Geometry;
+    if (!MachDiskGetDriveGeometry(DriveNumber, &Geometry))
+        return FALSE;
+#endif
+
     switch (DiskPartitionType[DriveNumber])
     {
         case PARTITION_STYLE_MBR:
         {
-            return DiskGetActivePartitionEntry(DriveNumber, PartitionTableEntry, BootPartition);
+            return DiskGetActivePartitionEntry(DriveNumber,
+            /* MBR partition table always uses 512-byte sectors per specification */
+                                               512, // Geometry.BytesPerSector
+                                               PartitionEntry, BootPartition);
         }
         case PARTITION_STYLE_GPT:
         {
@@ -145,7 +152,13 @@ DiskGetBootPartitionEntry(
         }
         case PARTITION_STYLE_BRFR:
         {
-            if (DiskGetBrfrPartitionEntry(DriveNumber, FATX_DATA_PARTITION, PartitionTableEntry))
+            PARTITION_INFORMATION TempPartitionEntry;
+            if (!PartitionEntry)
+                PartitionEntry = &TempPartitionEntry;
+            if (DiskGetBrfrPartitionEntry(DriveNumber,
+                                          512, // Geometry.BytesPerSector
+                                          FATX_DATA_PARTITION,
+                                          PartitionEntry))
             {
                 *BootPartition = FATX_DATA_PARTITION;
                 return TRUE;
@@ -163,19 +176,40 @@ DiskGetBootPartitionEntry(
 
 BOOLEAN
 DiskGetPartitionEntry(
-    IN UCHAR DriveNumber,
-    IN ULONG PartitionNumber,
-    OUT PPARTITION_TABLE_ENTRY PartitionTableEntry)
+    _In_ UCHAR DriveNumber,
+    _In_opt_ ULONG SectorSize,
+    _In_ ULONG PartitionNumber,
+    _Out_ PPARTITION_INFORMATION PartitionEntry)
 {
+    if (SectorSize == 0)
+    {
+        GEOMETRY Geometry;
+        if (!MachDiskGetDriveGeometry(DriveNumber, &Geometry))
+            return FALSE;
+        SectorSize = Geometry.BytesPerSector;
+    }
+    if (SectorSize < 512)
+    {
+        ERR("Drive 0x%X: Invalid sector size %lu\n", DriveNumber, SectorSize);
+        return FALSE;
+    }
+
     switch (DiskPartitionType[DriveNumber])
     {
         case PARTITION_STYLE_MBR:
         {
-            return DiskGetMbrPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+            return DiskGetMbrPartitionEntry(DriveNumber,
+            /* MBR partition table always uses 512-byte sectors per specification */
+                                            512, // SectorSize
+                                            PartitionNumber,
+                                            PartitionEntry);
         }
         case PARTITION_STYLE_GPT:
         {
-            return DiskGetGptPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+            return DiskGetGptPartitionEntry(DriveNumber,
+                                            SectorSize,
+                                            PartitionNumber,
+                                            PartitionEntry);
         }
         case PARTITION_STYLE_RAW:
         {
@@ -184,7 +218,10 @@ DiskGetPartitionEntry(
         }
         case PARTITION_STYLE_BRFR:
         {
-            return DiskGetBrfrPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+            return DiskGetBrfrPartitionEntry(DriveNumber,
+                                             512, // SectorSize
+                                             PartitionNumber,
+                                             PartitionEntry);
         }
         default:
         {

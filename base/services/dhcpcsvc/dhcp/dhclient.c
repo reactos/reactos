@@ -605,6 +605,8 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
             RegSetValueExA(hkey, "LeaseTerminatesTime", 0, REG_DWORD, (LPBYTE)&new_lease->expiry, sizeof(DWORD));
             RegSetValueExA(hkey, "T1", 0, REG_DWORD, (LPBYTE)&new_lease->renewal, sizeof(DWORD));
             RegSetValueExA(hkey, "T2", 0, REG_DWORD, (LPBYTE)&new_lease->rebind, sizeof(DWORD));
+            DWORD dwAddressType = 0;
+            RegSetValueExA(hkey, "AddressType", 0, REG_DWORD, (LPBYTE)&dwAddressType, sizeof(DWORD));
         }
 
         if( !NT_SUCCESS(Status) )
@@ -684,6 +686,8 @@ reset_adapter( PDHCP_ADAPTER Adapter) {
         RegSetValueExA(hkey, "T1", 0, REG_DWORD, (LPBYTE)&new_time, sizeof(DWORD));
         new_time = cur_time + lease - (lease / 8);
         RegSetValueExA(hkey, "T2", 0, REG_DWORD, (LPBYTE)&new_time, sizeof(DWORD));
+        DWORD dwAddressType = 0;
+        RegSetValueExA(hkey, "AddressType", 0, REG_DWORD, (LPBYTE)&dwAddressType, sizeof(DWORD));
     }
 
     if( Adapter->RouterMib.dwForwardNextHop ) {
@@ -1230,6 +1234,7 @@ state_panic(void *ipp)
     DWORD lease = 0;
     time_t cur_time, never_time = 0x7FFFFFFF;
     struct in_addr addr;
+    DWORD dwAddressType = 0;
 
     note("No DHCPOFFERS received.");
 
@@ -1327,6 +1332,7 @@ state_panic(void *ipp)
                 RegSetValueExA(hKey, "LeaseTerminatesTime", 0, REG_DWORD, (LPBYTE)&never_time, sizeof(DWORD));
                 RegSetValueExA(hKey, "T1", 0, REG_DWORD, (LPBYTE)&cur_time, sizeof(DWORD));
                 RegSetValueExA(hKey, "T2", 0, REG_DWORD, (LPBYTE)&cur_time, sizeof(DWORD));
+                RegSetValueExA(hKey, "AddressType", 0, REG_DWORD, (LPBYTE)&dwAddressType, sizeof(DWORD));
             }
         }
         else
@@ -1383,6 +1389,8 @@ state_panic(void *ipp)
                         RegSetValueExA(hKey, "LeaseTerminatesTime", 0, REG_DWORD, (LPBYTE)&never_time, sizeof(DWORD));
                         RegSetValueExA(hKey, "T1", 0, REG_DWORD, (LPBYTE)&cur_time, sizeof(DWORD));
                         RegSetValueExA(hKey, "T2", 0, REG_DWORD, (LPBYTE)&cur_time, sizeof(DWORD));
+                        dwAddressType = 1;
+                        RegSetValueExA(hKey, "AddressType", 0, REG_DWORD, (LPBYTE)&dwAddressType, sizeof(DWORD));
                     }
 
                     goto done;

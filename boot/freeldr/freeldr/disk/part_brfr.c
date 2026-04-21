@@ -18,9 +18,9 @@
 
 static struct
 {
-    ULONG SectorCountBeforePartition;
-    ULONG PartitionSectorCount;
-    UCHAR SystemIndicator;
+    ULONG SectorStart;
+    ULONG SectorCount;
+    UCHAR PartitionType;
 } XboxPartitions[] =
 {
     /* This is in the \Device\Harddisk0\Partition.. order used by the Xbox kernel */
@@ -31,33 +31,45 @@ static struct
     { 0x002EE400, 0x00177000, PARTITION_FAT_16 }  /* Cache3, Z: */
 };
 
+static BOOLEAN
+DiskIsBrfr(
+    _In_ UCHAR DriveNumber)
+{
+    /* Read the Xbox-specific sector */
+    if (!MachDiskReadLogicalSectors(DriveNumber, XBOX_SIGNATURE_SECTOR, 1, DiskReadBuffer))
+        return FALSE; /* Partition does not exist */
+
+    /* Verify the magic Xbox signature */
+    return (*((PULONG)DiskReadBuffer) == XBOX_SIGNATURE);
+}
+
 BOOLEAN
 DiskGetBrfrPartitionEntry(
-    IN UCHAR DriveNumber,
-    IN ULONG PartitionNumber,
-    OUT PPARTITION_TABLE_ENTRY PartitionTableEntry)
+    _In_ UCHAR DriveNumber,
+    _In_ ULONG SectorSize,
+    _In_ ULONG PartitionNumber,
+    _Out_ PPARTITION_INFORMATION PartitionEntry)
 {
-    /*
-     * Get partition entry of an Xbox-standard BRFR partitioned disk.
-     */
-    if (PartitionNumber >= 1 && PartitionNumber <= RTL_NUMBER_OF(XboxPartitions) &&
-        MachDiskReadLogicalSectors(DriveNumber, XBOX_SIGNATURE_SECTOR, 1, DiskReadBuffer))
-    {
-        if (*((PULONG)DiskReadBuffer) != XBOX_SIGNATURE)
-        {
-            /* No magic Xbox partitions */
-            return FALSE;
-        }
+    ASSERT(SectorSize >= 512);
 
-        RtlZeroMemory(PartitionTableEntry, sizeof(PARTITION_TABLE_ENTRY));
-        PartitionTableEntry->SystemIndicator = XboxPartitions[PartitionNumber - 1].SystemIndicator;
-        PartitionTableEntry->SectorCountBeforePartition = XboxPartitions[PartitionNumber - 1].SectorCountBeforePartition;
-        PartitionTableEntry->PartitionSectorCount = XboxPartitions[PartitionNumber - 1].PartitionSectorCount;
-        return TRUE;
-    }
+    if (!DiskIsBrfr(DriveNumber))
+        return FALSE; /* No magic Xbox partitions */
 
-    /* Partition does not exist */
-    return FALSE;
+    /* Get partition entry of an Xbox-standard BRFR partitioned disk */
+    if (!(1 <= PartitionNumber && PartitionNumber <= RTL_NUMBER_OF(XboxPartitions)))
+        return FALSE; /* Partition does not exist */
+
+    /* Convert to standard-style entry */
+    PartitionEntry->StartingOffset.QuadPart  = (ULONGLONG)XboxPartitions[PartitionNumber - 1].SectorStart * SectorSize;
+    PartitionEntry->PartitionLength.QuadPart = (ULONGLONG)XboxPartitions[PartitionNumber - 1].SectorCount * SectorSize;
+    PartitionEntry->HiddenSectors = 0;
+    PartitionEntry->PartitionNumber = PartitionNumber;
+    PartitionEntry->PartitionType = XboxPartitions[PartitionNumber - 1].PartitionType;
+    PartitionEntry->BootIndicator = (PartitionNumber == FATX_DATA_PARTITION);
+    PartitionEntry->RecognizedPartition = TRUE;
+    PartitionEntry->RewritePartition = FALSE;
+
+    return TRUE;
 }
 
 #endif

@@ -11,10 +11,6 @@
 
 #include <ks386.inc>
 
-EXTERN _HalpAcquireCmosSpinLock@0:PROC
-EXTERN _HalpReleaseCmosSpinLock@0:PROC
-EXTERN _DbgBreakPoint@0:PROC
-
 #define PIC1_BASE         HEX(20) /* IO base address for master PIC */
 #define PIC2_BASE         HEX(A0) /* IO base address for slave PIC */
 #define PIC1_COMMAND      PIC1_BASE
@@ -38,6 +34,15 @@ EXTERN _DbgBreakPoint@0:PROC
 /* FUNCTIONS *****************************************************************/
 
 .code
+
+#ifdef _USE_ML
+INIT_ASM SEGMENT PARA PUBLIC USE32 READ WRITE EXECUTE DISCARD
+#endif
+
+EXTERN _HalpAcquireCmosSpinLock@0:PROC
+EXTERN _HalpReleaseCmosSpinLock@0:PROC
+EXTERN _DbgBreakPoint@0:PROC
+
 PUBLIC _HalpCalibrateStallExecution@0
 _HalpCalibrateStallExecution@0:
 
@@ -340,8 +345,10 @@ AndItsNotYou:
     pop ebp
     ret
 
+#ifdef _USE_ML
+INIT_ASM ENDS
+#endif
 
-#ifndef _MINIHAL_
 PUBLIC _KeStallExecutionProcessor@4
 _KeStallExecutionProcessor@4:
 
@@ -367,6 +374,5 @@ SubtractLoop:
 Done:
     /* Return */
     ret 4
-#endif
 
 END

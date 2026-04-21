@@ -24,6 +24,7 @@
 RTL_CRITICAL_SECTION ConsoleLock;
 BOOLEAN ConsoleInitialized = FALSE;
 extern HANDLE InputWaitHandle;
+static volatile LONG g_bConsoleIMEStartingUp = FALSE; // We use interlock, so LONG
 
 static const PWSTR DefaultConsoleTitle = L"ReactOS Console";
 
@@ -332,6 +333,217 @@ ConnectConsole(IN PWSTR SessionDir,
     return TRUE;
 }
 
+/* Query registry value */
+static NTSTATUS
+IntRegQueryValue(
+    _In_ HANDLE hKey,
+    _In_ PCWSTR pszValueName,
+    _Out_ PVOID pvValue,
+    _In_ ULONG cbValue)
+{
+    HANDLE hProcessHeap;
+    ULONG cbInfo, cbResult;
+    PKEY_VALUE_PARTIAL_INFORMATION pInfo;
+    UNICODE_STRING valueName;
+    NTSTATUS status;
+
+    hProcessHeap = GetProcessHeap();
+    cbInfo = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + cbValue;
+    pInfo = HeapAlloc(hProcessHeap, 0, cbInfo);
+    if (!pInfo)
+        return STATUS_NO_MEMORY;
+
+    RtlInitUnicodeString(&valueName, pszValueName);
+
+    status = NtQueryValueKey(hKey, &valueName, KeyValuePartialInformation,
+                             pInfo, cbInfo, &cbResult);
+    if (NT_SUCCESS(status))
+    {
+        const ULONG cbCopy = min(pInfo->DataLength, cbValue);
+        RtlCopyMemory(pvValue, pInfo->Data, cbCopy);
+
+        /* SECURITY: Avoid buffer overrun */
+        if (pInfo->Type == REG_SZ && cbValue >= sizeof(UNICODE_NULL))
+            ((PWCHAR)pvValue)[cbValue / sizeof(WCHAR) - 1] = UNICODE_NULL;
+    }
+
+    HeapFree(hProcessHeap, 0, pInfo);
+    return status;
+}
+
+/* Quote a path string if necessary */
+static NTSTATUS
+IntPathQuoteSpacesW(
+    _Inout_updates_z_(cchPathMax) PWSTR pszPath,
+    _In_ UINT cchPathMax)
+{
+    size_t cchLen;
+
+    if (!wcschr(pszPath, L' '))
+        return STATUS_SUCCESS;
+
+    cchLen = wcslen(pszPath) + 1;
+    if (cchLen + 2 > cchPathMax) /* for 2 quotes */
+        return STATUS_BUFFER_TOO_SMALL;
+
+    RtlMoveMemory(pszPath + 1, pszPath, cchLen * sizeof(WCHAR));
+    pszPath[0] = L'"';
+    pszPath[cchLen] = L'"';
+    pszPath[cchLen + 1] = UNICODE_NULL;
+    return STATUS_SUCCESS;
+}
+
+/* Reject bad relative paths */
+static inline BOOL IntIsSafeRelativePath(_Inout_z_ PWSTR pszPath)
+{
+    /* Replace '/' with '\\' to detect the bad paths easily */
+    INT ich;
+    for (ich = 0; pszPath[ich]; ++ich)
+    {
+        if (pszPath[ich] == L'/')
+            pszPath[ich] = L'\\';
+    }
+
+    /* Avoid path traversal */
+    return (memcmp(pszPath, L"..\\", 3 * sizeof(WCHAR)) && !wcsstr(pszPath, L"\\..\\"));
+}
+
+/* Build the conime.exe command line */
+static VOID
+GetConsoleIMECommandLine(
+    _Out_ PWSTR pszBuffer,
+    _In_ UINT cchBuffer)
+{
+    UINT cchSysDir;
+    HANDLE hKey;
+    UNICODE_STRING keyName;
+    OBJECT_ATTRIBUTES attr;
+    NTSTATUS status;
+    WCHAR szValue[MAX_PATH];
+    static const PCWSTR ConsoleKey =
+        L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console";
+
+    cchSysDir = GetSystemDirectoryW(pszBuffer, cchBuffer);
+    if (cchSysDir > 0 && cchSysDir < cchBuffer - 1)
+    {
+        RtlStringCchCatW(pszBuffer, cchBuffer, L"\\");
+        cchSysDir = (UINT)wcslen(pszBuffer);
+    }
+    else
+    {
+        *pszBuffer = UNICODE_NULL;
+        cchSysDir = 0;
+    }
+
+    /* Open registry key */
+    RtlInitUnicodeString(&keyName, ConsoleKey);
+    InitializeObjectAttributes(&attr, &keyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    status = NtOpenKey(&hKey, KEY_QUERY_VALUE, &attr);
+    if (NT_SUCCESS(status))
+    {
+        /* Query "ConsoleIME" value */
+        status = IntRegQueryValue(hKey, L"ConsoleIME", szValue, sizeof(szValue));
+        NtClose(hKey);
+        if (NT_SUCCESS(status))
+        {
+            /* Malicious relative paths should be rejected (ReactOS-only) */
+            if (szValue[0] && IntIsSafeRelativePath(szValue))
+            {
+                /* Append value to pszBuffer */
+                status = RtlStringCchCatW(pszBuffer, cchBuffer, szValue);
+                if (NT_SUCCESS(status))
+                {
+                    /* Quote the path if necessary (ReactOS-only). Avoid path traversal */
+                    status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
+                    if (NT_SUCCESS(status))
+                    {
+                        DPRINT("ConsoleIME: '%S'\n", pszBuffer);
+                        return; /* Success */
+                    }
+                }
+                /* It failed. Let's try the default path */
+                pszBuffer[cchSysDir] = UNICODE_NULL;
+            }
+        }
+    }
+    else
+    {
+        DPRINT1("Opening registry failed: 0x%08X\n", status);
+    }
+
+    RtlStringCchCatW(pszBuffer, cchBuffer, L"conime.exe");
+
+    /* Quote the path if necessary (ReactOS-only). Avoid path traversal */
+    status = IntPathQuoteSpacesW(pszBuffer, cchBuffer);
+    if (!NT_SUCCESS(status))
+        RtlStringCchCopyW(pszBuffer, cchBuffer, L"conime.exe"); /* Use filename only */
+}
+
+/**
+ * @brief
+ * This function is called from winsrv.dll, in the context of the console application,
+ * to support Console IME on East Asian console.
+ */
+DWORD
+WINAPI
+ConsoleIMERoutine(_In_ PVOID unused)
+{
+    HANDLE hStartUpEvent;
+    DWORD dwError;
+    WCHAR szCommandLine[2 * MAX_PATH];
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+    DWORD dwCreationFlags;
+
+    UNREFERENCED_PARAMETER(unused);
+
+    if (InterlockedCompareExchange(&g_bConsoleIMEStartingUp, TRUE, FALSE) != FALSE)
+        return STATUS_UNSUCCESSFUL; /* NOTE: There's confusion between error codes and NTSTATUS */
+
+    hStartUpEvent = CreateEventW(NULL, FALSE, FALSE, L"ConsoleIME_StartUp_Event");
+    dwError = GetLastError();
+    if (dwError == ERROR_ALREADY_EXISTS)
+    {
+        CloseHandle(hStartUpEvent);
+        hStartUpEvent = NULL;
+    }
+    if (!hStartUpEvent)
+    {
+        InterlockedExchange(&g_bConsoleIMEStartingUp, FALSE);
+        return ERROR_SUCCESS;
+    }
+
+    RtlZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.lpDesktop = NtCurrentPeb()->ProcessParameters->DesktopInfo.Buffer;
+    si.dwFlags = STARTF_FORCEONFEEDBACK;
+
+    /* Let's create a conime.exe process */
+    GetConsoleIMECommandLine(szCommandLine, _countof(szCommandLine));
+    dwCreationFlags = CREATE_DEFAULT_ERROR_MODE | CREATE_BREAKAWAY_FROM_JOB |
+                      CREATE_NEW_PROCESS_GROUP | NORMAL_PRIORITY_CLASS;
+    if (CreateProcessW(NULL, szCommandLine, NULL, NULL, FALSE, dwCreationFlags,
+                       NULL, NULL, &si, &pi))
+    {
+        /* Wait 10 seconds for conime.exe to start up */
+        const DWORD dwWait = WaitForSingleObject(hStartUpEvent, 10 * 1000);
+        if (dwWait == WAIT_TIMEOUT)
+            TerminateProcess(pi.hProcess, 0);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        dwError = ERROR_SUCCESS;
+    }
+    else
+    {
+        dwError = GetLastError();
+        DPRINT1("'%S' startup failed: 0x%08X\n", szCommandLine, dwError);
+    }
+
+    CloseHandle(hStartUpEvent);
+
+    InterlockedExchange(&g_bConsoleIMEStartingUp, FALSE);
+    return dwError;
+}
 
 BOOLEAN
 WINAPI
@@ -442,7 +654,7 @@ ConDllInitialize(IN ULONG Reason,
     /* Initialize the console dispatchers */
     ConnectInfo.CtrlRoutine = ConsoleControlDispatcher;
     ConnectInfo.PropRoutine = PropDialogHandler;
-    // ConnectInfo.ImeRoutine  = ImeRoutine;
+    ConnectInfo.ImeRoutine  = ConsoleIMERoutine;
 
     /* Set up the console properties */
     if (ConnectInfo.IsConsoleApp && Parameters->ConsoleHandle == NULL)

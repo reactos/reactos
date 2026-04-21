@@ -655,18 +655,18 @@ ApplyOrCancelChanges(
                     }
                 }
             }
-            else if (pHead->pNCCC)
+            else if (pHead->pControl)
             {
                 if (bApply)
                 {
-                    INetCfgComponentControl_ApplyRegistryChanges(pHead->pNCCC);
+                    INetCfgComponentControl_ApplyRegistryChanges(pHead->pControl);
                     //FIXME
                     // implement INetCfgPnpReconfigCallback and pass it to
-                    INetCfgComponentControl_ApplyPnpChanges(pHead->pNCCC, NULL);
+                    INetCfgComponentControl_ApplyPnpChanges(pHead->pControl, NULL);
                 }
                 else
                 {
-                    INetCfgComponentControl_CancelChanges(pHead->pNCCC);
+                    INetCfgComponentControl_CancelChanges(pHead->pControl);
                 }
             }
         }

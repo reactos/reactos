@@ -2938,6 +2938,38 @@ FreeSettings(
     CoTaskMemFree(pSettings);
 }
 
+static
+BOOL
+NameServersChanged(
+    TcpipSettings *pCurrentConfig,
+    TcpipSettings *pOldConfig)
+{
+    IP_ADDR *pCurrentNs, *pOldNs;
+    BOOL Changed = FALSE;
+
+    pCurrentNs = pCurrentConfig->Ns;
+    pOldNs = pOldConfig->Ns;
+    while (pCurrentNs && pOldNs)
+    {
+        if (pCurrentNs->IpAddress != pOldNs->IpAddress)
+        {
+            Changed = TRUE;
+            break;
+        }
+
+        pCurrentNs = pCurrentNs->Next;
+        pOldNs = pOldNs->Next;
+    }
+
+    if (Changed == FALSE)
+    {
+        if (((pCurrentNs == NULL) && (pOldNs != NULL)) ||
+            ((pCurrentNs != NULL) && (pOldNs == NULL)))
+            Changed = TRUE;
+    }
+
+    return Changed;
+}
 
 /***************************************************************
  * INetCfgComponentPropertyUi interface
@@ -3914,6 +3946,28 @@ INetCfgComponentControl_fnApplyPnpChanges(
             (pFunc)(pAdapterName);
 
             FreeLibrary(hDhcpModule);
+        }
+    }
+
+    /* Notify the dnscache service if the name server list changed */
+    if (NameServersChanged(pCurrentConfig, pOldConfig))
+    {
+        SC_HANDLE hManager, hService;
+        SERVICE_STATUS ServiceStatus;
+
+        TRACE("Notify the dnscache service!\n");
+
+        hManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
+        if (hManager)
+        {
+            hService = OpenServiceW(hManager, L"Dnscache", SERVICE_PAUSE_CONTINUE);
+            if (hService)
+            {
+                ControlService(hService, SERVICE_CONTROL_PARAMCHANGE, &ServiceStatus);
+                CloseServiceHandle(hService);
+            }
+
+            CloseServiceHandle(hManager);
         }
     }
 

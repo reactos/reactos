@@ -8,7 +8,7 @@ DECLARE_INTERFACE_(INetCfgComponentPrivate, IUnknown)
     STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
     STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
     STDMETHOD_(ULONG,Release) (THIS) PURE;
-    STDMETHOD_(HRESULT,Unknown1)(THIS_ DWORD dwParam1, DWORD dwParam2) PURE;
+    STDMETHOD_(HRESULT,Unknown1)(THIS_ REFIID riid, DWORD dwParam2) PURE;
     /* ??? */
 };
 #undef INTERFACE

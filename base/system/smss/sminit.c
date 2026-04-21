@@ -811,16 +811,16 @@ NTAPI
 SmpTranslateSystemPartitionInformation(VOID)
 {
     NTSTATUS Status;
-    UNICODE_STRING UnicodeString, LinkTarget, SearchString, SystemPartition;
+    UNICODE_STRING UnicodeString, LinkTarget, SymLinkU, SystemPartition;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE KeyHandle, LinkHandle;
     ULONG Length, Context;
     size_t StrLength;
     WCHAR LinkBuffer[MAX_PATH];
-    CHAR ValueBuffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 512];
-    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)ValueBuffer;
-    CHAR DirInfoBuffer[sizeof(OBJECT_DIRECTORY_INFORMATION) + 512];
-    POBJECT_DIRECTORY_INFORMATION DirInfo = (PVOID)DirInfoBuffer;
+    struct { KEY_VALUE_PARTIAL_INFORMATION; CHAR Buffer[512]; } ValueBuffer;
+    struct { OBJECT_DIRECTORY_INFORMATION; WCHAR Buffer[256]; } DirInfoBuffer;
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)&ValueBuffer;
+    POBJECT_DIRECTORY_INFORMATION DirInfo = (PVOID)&DirInfoBuffer;
 
     /* Open the setup key */
     RtlInitUnicodeString(&UnicodeString, L"\\Registry\\Machine\\System\\Setup");
@@ -841,7 +841,7 @@ SmpTranslateSystemPartitionInformation(VOID)
     Status = NtQueryValueKey(KeyHandle,
                              &UnicodeString,
                              KeyValuePartialInformation,
-                             PartialInfo,
+                             &ValueBuffer,
                              sizeof(ValueBuffer),
                              &Length);
     NtClose(KeyHandle);
@@ -863,10 +863,10 @@ SmpTranslateSystemPartitionInformation(VOID)
     SystemPartition.Length = (USHORT)StrLength;
 
     /* Enumerate the directory looking for the symbolic link string */
-    RtlInitUnicodeString(&SearchString, L"SymbolicLink");
+    RtlInitUnicodeString(&SymLinkU, L"SymbolicLink");
     RtlInitEmptyUnicodeString(&LinkTarget, LinkBuffer, sizeof(LinkBuffer));
     Status = NtQueryDirectoryObject(SmpDosDevicesObjectDirectory,
-                                    DirInfo,
+                                    &DirInfoBuffer,
                                     sizeof(DirInfoBuffer),
                                     TRUE,
                                     TRUE,
@@ -876,7 +876,7 @@ SmpTranslateSystemPartitionInformation(VOID)
     while (NT_SUCCESS(Status))
     {
         /* Is this it? */
-        if (RtlEqualUnicodeString(&DirInfo->TypeName, &SearchString, TRUE) &&
+        if (RtlEqualUnicodeString(&DirInfo->TypeName, &SymLinkU, TRUE) &&
             (DirInfo->Name.Length == 2 * sizeof(WCHAR)) &&
             (DirInfo->Name.Buffer[1] == L':'))
         {
@@ -911,7 +911,7 @@ SmpTranslateSystemPartitionInformation(VOID)
 
         /* Couldn't find it, try again */
         Status = NtQueryDirectoryObject(SmpDosDevicesObjectDirectory,
-                                        DirInfo,
+                                        &DirInfoBuffer,
                                         sizeof(DirInfoBuffer),
                                         TRUE,
                                         FALSE,
@@ -928,6 +928,7 @@ SmpTranslateSystemPartitionInformation(VOID)
          * NOTE: This has been introduced in a post-SP1 Windows 7 update. */
         if (Status != STATUS_NO_MORE_ENTRIES)
             return;
+        DirInfo->Name.Buffer = DirInfoBuffer.Buffer;
         DirInfo->Name.Buffer[0] = SharedUserData->NtSystemRoot[0];
         DirInfo->Name.Buffer[1] = SharedUserData->NtSystemRoot[1]; // == L':';
 #else

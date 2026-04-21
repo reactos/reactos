@@ -118,21 +118,11 @@ void read_fat(DOS_FS * fs)
 	second_ok = (second_media.value & FAT_EXTD(fs)) == FAT_EXTD(fs);
 	if (first_ok && !second_ok) {
 	    printf("FATs differ - using first FAT.\n");
-#ifdef __REACTOS__
-        if (rw)
-            fs_write(fs->fat_start + fs->fat_size, eff_size, first);
-#else
 	    fs_write(fs->fat_start + fs->fat_size, eff_size, first);
-#endif
 	}
 	if (!first_ok && second_ok) {
 	    printf("FATs differ - using second FAT.\n");
-#ifdef __REACTOS__
-        if (rw)
-	        fs_write(fs->fat_start, eff_size, second);
-#else
 	    fs_write(fs->fat_start, eff_size, second);
-#endif
 	    memcpy(first, second, eff_size);
 	}
 	if (first_ok && second_ok) {
@@ -140,30 +130,15 @@ void read_fat(DOS_FS * fs)
 		printf("FATs differ but appear to be intact. Use which FAT ?\n"
 		       "1) Use first FAT\n2) Use second FAT\n");
 		if (get_key("12", "?") == '1') {
-#ifdef __REACTOS__
-            if (rw)
-                fs_write(fs->fat_start + fs->fat_size, eff_size, first);
-#else
 		    fs_write(fs->fat_start + fs->fat_size, eff_size, first);
-#endif
 		} else {
-#ifdef __REACTOS__
-            if (rw)
-                fs_write(fs->fat_start, eff_size, second);
-#else
 		    fs_write(fs->fat_start, eff_size, second);
-#endif
 		    memcpy(first, second, eff_size);
 		}
 	    } else {
 		printf("FATs differ but appear to be intact. Using first "
 		       "FAT.\n");
-#ifdef __REACTOS__
-        if (rw)
-            fs_write(fs->fat_start + fs->fat_size, eff_size, first);
-#else
 		fs_write(fs->fat_start + fs->fat_size, eff_size, first);
-#endif
 	    }
 	}
 	if (!first_ok && !second_ok) {
@@ -274,17 +249,10 @@ void set_fat(DOS_FS * fs, uint32_t cluster, int32_t new)
     default:
 	die("Bad FAT entry size: %d bits.", fs->fat_bits);
     }
-#ifdef __REACTOS__
-    if (rw)
-    {
-#endif
     fs_write(offs, size, data);
     if (fs->nfats > 1) {
 	fs_write(offs + fs->fat_size, size, data);
     }
-#ifdef __REACTOS__
-    }
-#endif
 }
 
 int bad_cluster(DOS_FS * fs, uint32_t cluster)
@@ -546,12 +514,7 @@ void reclaim_file(DOS_FS * fs)
 		de.size = htole32(le32toh(de.size) + fs->cluster_size);
 		reclaimed++;
 	    }
-#ifdef __REACTOS__
-        if (rw)
-            fs_write(offset, sizeof(DIR_ENT), &de);
-#else
 	    fs_write(offset, sizeof(DIR_ENT), &de);
-#endif
 	}
     if (reclaimed)
 	printf("Reclaimed %d unused cluster%s (%llu bytes) in %d chain%s.\n",
@@ -593,10 +556,8 @@ uint32_t update_free(DOS_FS * fs)
 	    else
 #ifdef __REACTOS__
 	    if (rw)
-            printf("  Auto-correcting.\n");
-#else
-		printf("  Auto-correcting.\n");
 #endif
+		printf("  Auto-correcting.\n");
 #ifndef __REACTOS__
 	    if (!interactive || get_key("12", "?") == '1')
 #else
@@ -619,14 +580,6 @@ uint32_t update_free(DOS_FS * fs)
     if (do_set) {
 	uint32_t le_free = htole32(free);
 	fs->free_clusters = free;
-#ifdef __REACTOS__
-    if (rw)
-        fs_write(fs->fsinfo_start + offsetof(struct info_sector, free_clusters),
-            sizeof(le_free), &le_free);
-#else
-	fs_write(fs->fsinfo_start + offsetof(struct info_sector, free_clusters),
-		 sizeof(le_free), &le_free);
-#endif
 	fs_write(fs->fsinfo_start + offsetof(struct info_sector, free_clusters),
 		 sizeof(le_free), &le_free);
     }

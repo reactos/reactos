@@ -254,6 +254,7 @@ typedef struct _HALP_ROLLOVER
     ULONG Increment;
 } HALP_ROLLOVER, *PHALP_ROLLOVER;
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpCalibrateStallExecution(VOID);

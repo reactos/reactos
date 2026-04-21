@@ -2,12 +2,66 @@
  * PROJECT:     ReactOS msctfime.ime
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Profile of msctfime.ime
- * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2024-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "msctfime.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
+
+// The callback function type
+typedef HRESULT (CALLBACK *FN_LanguageProfilesCallback)(TF_LANGUAGEPROFILE profile, LPARAM lParam);
+
+/// @implemented
+HRESULT
+CicProfile::LanguageProfilesCallback(
+    _In_ TF_LANGUAGEPROFILE profile,
+    _Inout_opt_ LPARAM lParam)
+{
+    if (!profile.fActive || !memcmp(&profile.clsid, &GUID_NULL, sizeof(GUID_NULL)))
+        return S_FALSE;
+    PLANG_PROF_ENUM_ARG pArg = (PLANG_PROF_ENUM_ARG)lParam;
+    if (!pArg)
+        return S_OK;
+    if (memcmp(&profile.catid, &pArg->catid, sizeof(profile.catid)) != 0)
+        return S_FALSE;
+    pArg->profile = profile;
+    return S_OK;
+}
+
+template <typename T_IFACE, typename T_DATA>
+class CicEnumValue
+{
+    T_IFACE* m_iface;
+    FN_LanguageProfilesCallback m_callback;
+    LPARAM m_lParam;
+
+public:
+    CicEnumValue(T_IFACE* iface, FN_LanguageProfilesCallback callback, LPARAM lParam = 0)
+        : m_iface(iface)
+        , m_callback(callback)
+        , m_lParam(lParam)
+    { }
+
+    DWORD DoEnum()
+    {
+        HRESULT hr;
+        T_DATA data;
+
+        for (;;)
+        {
+            hr = m_iface->Next(1, &data, NULL);
+            if (hr != S_OK)
+                break;
+
+            hr = m_callback(data, m_lParam);
+            if (hr == S_OK)
+                return ERROR_SUCCESS;
+        }
+
+        return ERROR_FILE_NOT_FOUND;
+    }
+};
 
 /// @implemented
 CicProfile::CicProfile()
@@ -162,19 +216,40 @@ CicProfile::InitProfileInstance(_Inout_ TLS *pTLS)
     return hr;
 }
 
-/// @unimplemented
+/// @implemented
 HRESULT
 CicProfile::GetActiveLanguageProfile(
     _In_ HKL hKL,
-    _In_ REFGUID rguid,
-    _Out_ TF_LANGUAGEPROFILE *pProfile)
+    _In_ REFGUID catid,
+    _Out_ TF_LANGUAGEPROFILE* pProfile)
 {
-    return E_NOTIMPL;
+    CicInterface_RefCnt<IEnumTfLanguageProfiles> pEnum;
+    HRESULT hr = m_pIPProfiles->EnumLanguageProfiles(LOWORD(hKL), &pEnum);
+    if (FAILED(hr))
+        return S_FALSE;
+
+    LANG_PROF_ENUM_ARG arg;
+    arg.catid = catid;
+
+    CicEnumValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE>
+        enumValue(pEnum, LanguageProfilesCallback, (LPARAM)&arg);
+    DWORD ret = enumValue.DoEnum();
+    if (ret != ERROR_SUCCESS || !pProfile)
+        return S_FALSE;
+    *pProfile = arg.profile;
+    return S_OK;
 }
 
-/// The return value of CicProfile::IsIME is brain-damaged.
-/// @unimplemented
-BOOL CicProfile::IsIME(HKL hKL)
+/// @implemented
+HRESULT CicProfile::IsIME(HKL hKL)
 {
-    return TRUE;
+    CicInterface_RefCnt<IEnumTfLanguageProfiles> pEnum;
+    HRESULT hr = m_pIPProfiles->EnumLanguageProfiles(LOWORD(hKL), &pEnum);
+    if (FAILED(hr))
+        return S_FALSE;
+
+    CicEnumValue<IEnumTfLanguageProfiles, TF_LANGUAGEPROFILE>
+        enumValue(pEnum, LanguageProfilesCallback);
+    DWORD ret = enumValue.DoEnum();
+    return (ret == ERROR_SUCCESS) ? S_OK : S_FALSE;
 }

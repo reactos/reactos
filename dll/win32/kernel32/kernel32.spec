@@ -90,7 +90,7 @@
 @ stdcall -version=0x600+ CompareStringOrdinal(wstr long wstr long long)
 @ stdcall CompareStringW(long long wstr long wstr long)
 @ stdcall ConnectNamedPipe(long ptr)
-;@ stdcall -arch=x86_64 ConsoleIMERoutine()
+@ stdcall -version=0x502-0x600 -arch=x86_64 ConsoleIMERoutine(ptr)
 @ stdcall ConsoleMenuControl(long long long)
 @ stdcall ContinueDebugEvent(long long long)
 @ stdcall -stub -version=0x600+ ConvertCalDateTimeToSystemTime(ptr ptr)

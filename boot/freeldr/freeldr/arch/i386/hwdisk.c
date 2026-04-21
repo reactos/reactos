@@ -87,9 +87,9 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     CONFIGURATION_TYPE DriveType;
     UCHAR DriveNumber;
     ULONG DrivePartition, SectorSize;
-    ULONGLONG SectorOffset = 0;
-    ULONGLONG SectorCount = 0;
-    PARTITION_TABLE_ENTRY PartitionTableEntry;
+    GEOMETRY Geometry;
+    ULONGLONG SectorOffset;
+    ULONGLONG SectorCount;
 
     if (DiskReadBufferSize == 0)
     {
@@ -102,38 +102,37 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         return EINVAL;
 
     DriveType = DiskGetConfigType(DriveNumber);
-    if (DriveType == CdromController)
+
+    if (!MachDiskGetDriveGeometry(DriveNumber, &Geometry))
+        return EIO;
+    if (Geometry.BytesPerSector == 0)
     {
-        /* This is a CD-ROM device */
-        SectorSize = 2048;
+        WARN("MachDiskGetDriveGeometry(0x%x) failed, fall back to hardcoded values\n", DriveNumber);
+        if (DriveType == CdromController)
+        {
+            /* This is a CD-ROM device */
+            Geometry.BytesPerSector = 2048;
+        }
+        else
+        {
+            /* This is either a floppy disk or a hard disk device, but it doesn't
+             * matter which one because they both have 512 bytes per sector */
+            Geometry.BytesPerSector = 512;
+        }
     }
-    else
-    {
-        /* This is either a floppy disk or a hard disk device, but it doesn't
-         * matter which one because they both have 512 bytes per sector */
-        SectorSize = 512;
-    }
+    SectorSize = Geometry.BytesPerSector;
 
     if (DrivePartition != 0xff && DrivePartition != 0)
     {
-        if (!DiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
-            return EINVAL;
+        PARTITION_INFORMATION PartitionEntry;
+        if (!DiskGetPartitionEntry(DriveNumber, SectorSize, DrivePartition, &PartitionEntry))
+            return EIO;
 
-        SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
-        SectorCount = PartitionTableEntry.PartitionSectorCount;
+        SectorOffset = PartitionEntry.StartingOffset.QuadPart / SectorSize;
+        SectorCount = PartitionEntry.PartitionLength.QuadPart / SectorSize;
     }
     else
     {
-        GEOMETRY Geometry;
-        if (!MachDiskGetDriveGeometry(DriveNumber, &Geometry))
-            return EINVAL;
-
-        if (SectorSize != Geometry.BytesPerSector)
-        {
-            ERR("SectorSize (%lu) != Geometry.BytesPerSector (%lu), expect problems!\n",
-                SectorSize, Geometry.BytesPerSector);
-        }
-
         SectorOffset = 0;
         SectorCount = Geometry.Sectors;
     }
@@ -202,7 +201,7 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     *Count = (ULONG)((ULONG_PTR)Ptr - (ULONG_PTR)Buffer);
     Context->SectorNumber = SectorOffset - Context->SectorOffset;
 
-    return (!ret) ? EIO : ESUCCESS;
+    return (ret ? ESUCCESS : EIO);
 }
 
 static ARC_STATUS
@@ -406,11 +405,9 @@ DiskGetBootPath(
     }
     else
     {
-        ULONG BootPartition;
-        PARTITION_TABLE_ENTRY PartitionEntry;
-
         /* This is a hard disk, find the boot partition */
-        if (!DiskGetBootPartitionEntry(FrldrBootDrive, &PartitionEntry, &BootPartition))
+        ULONG BootPartition;
+        if (!DiskGetBootPartitionEntry(FrldrBootDrive, NULL, &BootPartition))
         {
             ERR("Failed to get boot partition entry\n");
             return FALSE;
