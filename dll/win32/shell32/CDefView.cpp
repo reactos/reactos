@@ -2993,9 +2993,9 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             }
             return FALSE;
         }
-            case HDN_ENDTRACKW:
-                SaveShellBagData();
-                break;
+       case HDN_ENDTRACKW:
+           SaveShellBagData();
+           break;
         default:
             TRACE("-- %p WM_COMMAND %x unhandled\n", this, lpnmh->code);
             break;
