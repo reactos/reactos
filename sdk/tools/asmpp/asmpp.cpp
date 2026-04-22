@@ -358,6 +358,27 @@ iequals(const string &a, const string &b)
     return true;
 }
 
+const char*
+get_expression_operator(const string &op)
+{
+    const struct
+    {
+        const char* masm;
+        const char* gas;
+    } operators[] = {
+        {"and", "&"}, {"or", "|"}, {"shl", "<<"}, {"shr", ">>"}, {"not", "~"},
+        {"eq", "=="}, {"ne", "!="}, {"lt", "<"}, {"le", "<="}, {"gt", ">"}, {"ge", ">="},
+    };
+
+    for (const auto& entry : operators)
+    {
+        if (iequals(op, entry.masm))
+            return entry.gas;
+    }
+
+    return nullptr;
+}
+
 Token
 get_expected_token(Token&& tok, TOKEN_TYPE type)
 {
@@ -500,43 +521,45 @@ translate_expression(TokenList &tokens, size_t index, const vector<string> &macr
                 break;
 
             case TOKEN_TYPE::Instruction:
-                if (iequals(tok.str(), "and"))
-                {
-                    printf("&");
-                    index += 1;
-                }
-                else if (iequals(tok.str(), "or"))
-                {
-                    printf("|");
-                    index += 1;
-                }
-                else if (iequals(tok.str(), "shl"))
-                {
-                    printf("<<");
-                    index += 1;
-                }
-                else if (iequals(tok.str(), "not"))
-                {
-                    printf("~");
-                    index += 1;
-                }
-                else
+            {
+                const char* op = get_expression_operator(tok.str());
+                if (!op)
                 {
                     throw "Invalid expression";
                 }
+                printf("%s", op);
+                index += 1;
                 break;
+            }
 
             case TOKEN_TYPE::Operator:
                 if (tok.str() == ",")
                 {
                     return index;
                 }
+                index = translate_token(tokens, index, macro_params);
+                break;
+
+            case TOKEN_TYPE::Identifier:
+            {
+                const char* op = get_expression_operator(tok.str());
+                if (op)
+                {
+                    printf("%s", op);
+                    index += 1;
+                }
+                else
+                {
+                    index = translate_token(tokens, index, macro_params);
+                }
+                break;
+            }
+
             case TOKEN_TYPE::WhiteSpace:
             case TOKEN_TYPE::BraceOpen:
             case TOKEN_TYPE::BraceClose:
             case TOKEN_TYPE::DecNumber:
             case TOKEN_TYPE::HexNumber:
-            case TOKEN_TYPE::Identifier:
                 index = translate_token(tokens, index, macro_params);
                 break;
 
