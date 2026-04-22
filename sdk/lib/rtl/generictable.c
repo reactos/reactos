@@ -34,6 +34,7 @@ RtlpFindGenericTableNodeOrParent(IN PRTL_GENERIC_TABLE Table,
     /* Quick check to see if the table is empty */
     if (RtlIsGenericTableEmpty(Table))
     {
+        *NodeOrParent = NULL;
         return TableEmptyTree;
     }
 
