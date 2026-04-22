@@ -2629,8 +2629,6 @@ HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD
 HRESULT WINAPI SHSetLocalizedName(LPCWSTR pszPath, LPCWSTR pszResModule, int idsRes)
 {
 #ifdef __REACTOS__
-    TRACE("(%s, %s, %d)\n", wine_dbgstr_w(pszPath), wine_dbgstr_w(pszResModule), idsRes);
-
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     if (!SUCCEEDED(hr))
         return hr;
