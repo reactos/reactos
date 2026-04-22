@@ -2,12 +2,21 @@
  * Clang/llvm-mingw's libc++ imports Win7 SRW try-lock APIs even when
  * building the NT 5.2 ReactOS user-mode surface. Keep these as static
  * compatibility symbols instead of exporting them from kernel32.
+ *
+ * PSRWLOCK is gated on _WIN32_WINNT >= 0x0600 in <winbase.h>, but the
+ * shim is always built at the project-wide 0x502 surface. Fall back to
+ * the unconditionally defined PRTL_SRWLOCK typedef so the file compiles
+ * cleanly with both modern and older llvm-mingw / clang-cl toolchains.
  */
 #define _KERNEL32_
 
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
+
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0600)
+typedef RTL_SRWLOCK SRWLOCK, *PSRWLOCK;
+#endif
 
 #ifdef _WIN64
 #define RTL_SRWLOCK_ONE 1LL
