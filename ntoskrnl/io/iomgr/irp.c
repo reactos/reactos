@@ -1165,18 +1165,21 @@ IoCancelThreadIo(IN PETHREAD Thread)
 
     /* Start by cancelling all the IRPs in the current thread queue. */
     ListHead = &Thread->IrpList;
-    NextEntry = ListHead->Flink;
-    while (ListHead != NextEntry)
-    {
-        /* Get the IRP */
-        Irp = CONTAINING_RECORD(NextEntry, IRP, ThreadListEntry);
+NextEntry = ListHead->Flink;
+while (ListHead != NextEntry)
+{
+    /* Save the next entry before cancelling the current IRP */
+    PLIST_ENTRY TemporaryNext = NextEntry->Flink;
 
-        /* Cancel it */
-        IoCancelIrp(Irp);
+    /* Get the IRP */
+    Irp = CONTAINING_RECORD(NextEntry, IRP, ThreadListEntry);
 
-        /* Move to the next entry */
-        NextEntry = NextEntry->Flink;
-    }
+    /* Cancel it */
+    IoCancelIrp(Irp);
+
+    /* Move to the saved next entry */
+    NextEntry = TemporaryNext;
+}
 
      /* Wait 100 milliseconds */
     Interval.QuadPart = -1000000;
