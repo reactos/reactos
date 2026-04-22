@@ -2640,8 +2640,6 @@ HRESULT WINAPI SHSetLocalizedName(LPCWSTR pszPath, LPCWSTR pszResModule, int ids
 BOOL WINAPI LinkWindow_RegisterClass(void)
 {
 #ifdef __REACTOS__
-    TRACE("()\n");
-
     INITCOMMONCONTROLSEX iccx = { sizeof(iccx), ICC_LINK_CLASS };
     InitCommonControlsEx(&iccx);
 
