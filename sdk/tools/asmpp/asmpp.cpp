@@ -604,6 +604,55 @@ size_t translate_mem_ref(TokenList& tokens, size_t index, const vector<string>& 
     return index;
 }
 
+static
+bool
+is_number_token(const Token& tok)
+{
+    return ((tok.type() == TOKEN_TYPE::DecNumber) ||
+            (tok.type() == TOKEN_TYPE::HexNumber));
+}
+
+static
+size_t
+skip_whitespace(TokenList& tokens, size_t index)
+{
+    while ((index < tokens.size()) &&
+           (tokens[index].type() == TOKEN_TYPE::WhiteSpace))
+    {
+        index++;
+    }
+
+    return index;
+}
+
+static
+size_t
+translate_rip_relative_offset(TokenList& tokens, size_t index, const vector<string>& macro_params)
+{
+    size_t operatorIndex = skip_whitespace(tokens, index);
+    if ((operatorIndex == tokens.size()) ||
+        (tokens[operatorIndex].type() != TOKEN_TYPE::Operator) ||
+        ((tokens[operatorIndex].str() != "+") &&
+         (tokens[operatorIndex].str() != "-")))
+    {
+        return index;
+    }
+
+    size_t numberIndex = skip_whitespace(tokens, operatorIndex + 1);
+    if ((numberIndex == tokens.size()) ||
+        !is_number_token(tokens[numberIndex]))
+    {
+        return index;
+    }
+
+    while (index <= numberIndex)
+    {
+        index = translate_token(tokens, index, macro_params);
+    }
+
+    return index;
+}
+
 size_t translate_instruction_param(TokenList& tokens, size_t index, const vector<string>& macro_params)
 {
     switch (tokens[index].type())
@@ -645,6 +694,7 @@ size_t translate_instruction_param(TokenList& tokens, size_t index, const vector
                     !is_string_in_list(macro_params, tok.str()) &&
                     !g_processing_jmp)
                 {
+                    index = translate_rip_relative_offset(tokens, index, macro_params);
                     printf("[rip]");
                 }
                 break;
