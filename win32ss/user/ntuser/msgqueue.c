@@ -1886,7 +1886,6 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
             if ( ImmRet & IPHK_PROCESSBYIME )
             {
                Msg->wParam = VK_PROCESSKEY;
-               Ret = FALSE;
             }
         }
     }
