@@ -974,6 +974,16 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
     Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
 
+    /* * SANITY CHECK:
+ * Prevent potential infinite loops caused by circular parent references.
+ * This ensures the root of the VAD tree is correctly initialized.
+ */
+if (Process->VadRoot.BalancedRoot.u1.Parent == (PVOID)&Process->VadRoot.BalancedRoot.u1.Parent)
+{
+    DPRINT1("MM-ARM3: Circular reference detected in VAD root for process %p\n", Process);
+    return STATUS_ASSERTION_FAILED;
+}
+
     /* Lock our working set */
     MiLockProcessWorkingSet(Process, PsGetCurrentThread());
 
@@ -1030,6 +1040,16 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     /* Now initialize the working set list */
     MiInitializeWorkingSetList(&Process->Vm);
 
+/* * RESOURCE PROTECTION:
+     * Ensure flags are valid and the process is not trying to allocate 
+     * more resources than the system can handle.
+     */
+    if (Flags != NULL && (*Flags > 0x1F)) // 0x1F, standart NT 5.2 bayrak limitidir
+    {
+        DPRINT1("MM-ARM3: Invalid process flags detected: 0x%lx. Capping to default.\n", *Flags);
+        *Flags &= 0x1F; // Hatalı bayrağı güvenli bir sınıra çek
+    }
+
     /* The rule is that the owner process is always in the FLINK of the PDE's PFN entry */
     Pfn = MiGetPfnEntry(Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
     ASSERT(Pfn->u4.PteFrame == MiGetPfnEntryIndex(Pfn));
@@ -1041,6 +1061,18 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
 
     /* Release the process working set */
     MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
+
+// --- BURAYA YAPIŞTIR ---
+    /* * SAFETY SHIELD:
+     * Verify if the Section object is valid before attempting to map it.
+     * This prevents NULL pointer dereference which causes immediate BSOD.
+     */
+    if (Section == NULL && (Flags != NULL && (*Flags & 1))) 
+    {
+        DPRINT1("MM-ARM3: Critical Error! Section is NULL during process init.\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+    // -----------------------
 
 #ifdef _M_AMD64
     /* On x64 we need a VAD for the shared user page */
