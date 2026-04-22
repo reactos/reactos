@@ -2632,7 +2632,10 @@ HRESULT WINAPI SHSetLocalizedName(LPCWSTR pszPath, LPCWSTR pszResModule, int ids
     TRACE("(%s, %s, %d)\n", wine_dbgstr_w(pszPath), wine_dbgstr_w(pszResModule), idsRes);
 
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-    if (SUCCEEDED(hr))
+    if (!SUCCEEDED(hr))
+        return hr;
+
+    // Continue as usual
     {
         IShellFolder *pDesktop;
         hr = SHGetDesktopFolder(&pDesktop);
