@@ -298,6 +298,8 @@ unsigned int g_label_number = 0;
 
 bool g_processing_jmp = false;
 
+vector<bool> g_proc_frame_stack;
+
 enum class IDTYPE
 {
     Memory,
@@ -1007,6 +1009,31 @@ translate_record(TokenList &tokens, size_t index, const vector<string> &macro_pa
     return index;
 }
 
+static
+bool
+find_proc_frame(TokenList& tokens, size_t index, size_t& frameEndIndex)
+{
+    while (index < tokens.size())
+    {
+        Token tok = tokens[index];
+        if ((tok.type() == TOKEN_TYPE::NewLine) ||
+            (tok.type() == TOKEN_TYPE::Comment))
+        {
+            return false;
+        }
+
+        if (tok.type() == TOKEN_TYPE::KW_FRAME)
+        {
+            frameEndIndex = index + 1;
+            return true;
+        }
+
+        index++;
+    }
+
+    return false;
+}
+
 size_t
 translate_identifier_construct(TokenList& tokens, size_t index, const vector<string> &macro_params)
 {
@@ -1062,19 +1089,21 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
 
         case TOKEN_TYPE::KW_PROC:
         {
-            printf(".func %s\n", tok.str().c_str());
             printf("%s:", tok.str().c_str());
             index += 3;
 
-            if ((tokens[index].type() == TOKEN_TYPE::WhiteSpace) &&
-                (tokens[index + 1].type() == TOKEN_TYPE::KW_FRAME))
+            size_t frameEndIndex;
+            bool hasFrame = find_proc_frame(tokens, index, frameEndIndex);
+            g_proc_frame_stack.push_back(hasFrame);
+
+            if (hasFrame)
             {
 #ifdef TARGET_amd64
                 printf("\n.seh_proc %s\n", tok.str().c_str());
 #else
                 printf("\n.cfi_startproc\n");
 #endif
-                index += 2;
+                index = frameEndIndex;
             }
             add_identifier(tok, IDTYPE::Label);
             break;
@@ -1082,7 +1111,21 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
 
         case TOKEN_TYPE::KW_ENDP:
         {
-            printf(".seh_endproc\n.endfunc");
+            bool hasFrame = false;
+            if (!g_proc_frame_stack.empty())
+            {
+                hasFrame = g_proc_frame_stack.back();
+                g_proc_frame_stack.pop_back();
+            }
+
+            if (hasFrame)
+            {
+#ifdef TARGET_amd64
+                printf(".seh_endproc");
+#else
+                printf(".cfi_endproc");
+#endif
+            }
             index += 3;
             break;
         }
