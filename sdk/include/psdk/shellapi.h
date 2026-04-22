@@ -684,7 +684,8 @@ SHGetUnreadMailCountW(
     _Out_writes_opt_(cchShellExecuteCommand) PWSTR pszShellExecuteCommand,
     _In_ INT cchShellExecuteCommand);
 
-HRESULT WINAPI SHSetLocalizedName(LPCWSTR pszPath, LPCWSTR pszResModule, int idsRes);
+HRESULT WINAPI
+SHSetLocalizedName(_In_ PCWSTR pszPath, _In_ PCWSTR pszResModule, _In_ INT idsRes);
 
 #ifdef UNICODE
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAW_V1_SIZE

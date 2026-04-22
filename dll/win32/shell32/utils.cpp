@@ -2180,6 +2180,82 @@ SHELL32_ReparentAsAliasPidl(
     return (*ppidlNew != NULL);
 }
 
+/*************************************************************************
+ *              SHSetLocalizedName (SHELL32.@)
+#ifdef __REACTOS__
+ * https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shsetlocalizedname
+#endif
+ */
+EXTERN_C
+HRESULT WINAPI
+SHSetLocalizedName(_In_ PCWSTR pszPath, _In_ PCWSTR pszResModule, _In_ INT idsRes)
+{
+    HRESULT hr;
+    IShellFolder *pDesktop = NULL, *pParent = NULL;
+    LPITEMIDLIST pidl = NULL;
+    LPCITEMIDLIST pidlLast;
+    HANDLE hProcessHeap;
+    INT cchShortMax, cchShort, cchName;
+    PWSTR pszShortPath = NULL, pszName = NULL;
+
+    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = SHGetDesktopFolder(&pDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto Cleanup;
+
+    hr = pDesktop->ParseDisplayName(NULL, NULL, (LPWSTR)pszPath, NULL, &pidl, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto Cleanup;
+
+    hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pParent), &pidlLast);
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto Cleanup;
+
+    hProcessHeap = GetProcessHeap();
+    cchShortMax = lstrlenW(pszResModule) + 1;
+    pszShortPath = (PWSTR)HeapAlloc(hProcessHeap, 0, cchShortMax * sizeof(WCHAR));
+    if (!pszShortPath)
+    {
+        hr = E_OUTOFMEMORY;
+        goto Cleanup;
+    }
+
+    cchShort = GetShortPathNameW(pszResModule, pszShortPath, cchShortMax);
+    if (cchShort)
+        pszResModule = pszShortPath;
+    else
+        cchShort = cchShortMax;
+
+    /* 14 == '@' + ',' + '-' + (digits of max width 10) + NUL */
+    cchName = cchShort + 14;
+    pszName = (PWSTR)HeapAlloc(hProcessHeap, 0, cchName * sizeof(WCHAR));
+    if (!pszName)
+    {
+        hr = E_OUTOFMEMORY;
+        goto Cleanup;
+    }
+
+    wnsprintfW(pszName, cchName, L"@%s,%d", pszResModule, -idsRes);
+    hr = pParent->SetNameOf(NULL, pidlLast, pszName, 0, NULL);
+
+Cleanup:
+    if (pszName)
+        HeapFree(hProcessHeap, 0, pszName);
+    if (pszName)
+        HeapFree(hProcessHeap, 0, pszShortPath);
+    if (pParent)
+        pParent->Release();
+    if (pidl)
+        SHFree(pidl);
+    if (pDesktop)
+        pDesktop->Release();
+    CoUninitialize();
+    return hr;
+}
+
 //! Translate a PIDL to an "alias" PIDL.
 EXTERN_C HRESULT
 SHELL32_AliasTranslatePidl(
