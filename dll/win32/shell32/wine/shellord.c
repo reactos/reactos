@@ -2629,66 +2629,70 @@ HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD
 HRESULT WINAPI SHSetLocalizedName(LPCWSTR pszPath, LPCWSTR pszResModule, int idsRes)
 {
 #ifdef __REACTOS__
-    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-    if (!SUCCEEDED(hr))
+    HRESULT hr;
+    IShellFolder *pDesktop = NULL, *pParent = NULL;
+    LPITEMIDLIST pidl = NULL;
+    LPCITEMIDLIST pidlLast;
+    HANDLE hProcessHeap;
+    INT cchShortMax, cchShort, cchName;
+    PWSTR pszShortPath = NULL, pszName = NULL;
+
+    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr))
         return hr;
 
-    // Continue as usual
-    {
-        IShellFolder *pDesktop;
-        hr = SHGetDesktopFolder(&pDesktop);
-        if (SUCCEEDED(hr))
-        {
-            LPITEMIDLIST pidl;
-            hr = pDesktop->lpVtbl->ParseDisplayName(pDesktop, NULL, NULL,
-                                                    (LPWSTR)pszPath, NULL, &pidl, NULL);
-            if (SUCCEEDED(hr))
-            {
-                IShellFolder *pParent;
-                LPCITEMIDLIST pidlLast;
-                hr = SHBindToParent(pidl, &IID_IShellFolder, (PVOID*)&pParent, &pidlLast);
-                if (SUCCEEDED(hr))
-                {
-                    HANDLE hProcessHeap = GetProcessHeap();
-                    INT cchShortMax = lstrlenW(pszResModule) + 1;
-                    PWSTR pszShortPath = HeapAlloc(hProcessHeap, 0, cchShortMax * sizeof(WCHAR));
-                    if (pszShortPath)
-                    {
-                        INT cchShort = GetShortPathNameW(pszResModule, pszShortPath, cchShortMax);
-                        if (cchShort)
-                            pszResModule = pszShortPath;
-                        else
-                            cchShort = cchShortMax;
+    hr = SHGetDesktopFolder(&pDesktop);
+    if (FAILED(hr))
+        goto Cleanup;
 
-                        /* 14 == '@' + ',' + '-' + (digits of max width 10) + NUL */
-                        INT cchName = cchShort + 14;
-                        PWSTR pszName = HeapAlloc(hProcessHeap, 0, cchName * sizeof(WCHAR));
-                        if (pszName)
-                        {
-                            wnsprintfW(pszName, cchName, L"@%s,%d", pszResModule, -idsRes);
-                            hr = pParent->lpVtbl->SetNameOf(pParent, NULL, pidlLast, pszName,
-                                                            0, NULL);
-                            HeapFree(hProcessHeap, 0, pszName);
-                        }
-                        else
-                        {
-                            hr = E_OUTOFMEMORY;
-                        }
-                        HeapFree(hProcessHeap, 0, pszShortPath);
-                    }
-                    else
-                    {
-                        hr = E_OUTOFMEMORY;
-                    }
-                    pParent->lpVtbl->Release(pParent);
-                }
-                SHFree(pidl);
-            }
-            pDesktop->lpVtbl->Release(pDesktop);
-        }
-        CoUninitialize();
+    hr = pDesktop->lpVtbl->ParseDisplayName(pDesktop, NULL, NULL,
+                                            (LPWSTR)pszPath, NULL, &pidl, NULL);
+    if (FAILED(hr))
+        goto Cleanup;
+
+    hr = SHBindToParent(pidl, &IID_IShellFolder, (PVOID*)&pParent, &pidlLast);
+    if (FAILED(hr))
+        goto Cleanup;
+
+    hProcessHeap = GetProcessHeap();
+    cchShortMax = lstrlenW(pszResModule) + 1;
+    pszShortPath = HeapAlloc(hProcessHeap, 0, cchShortMax * sizeof(WCHAR));
+    if (!pszShortPath)
+    {
+        hr = E_OUTOFMEMORY;
+        goto Cleanup;
     }
 
+    cchShort = GetShortPathNameW(pszResModule, pszShortPath, cchShortMax);
+    if (cchShort)
+        pszResModule = pszShortPath;
+    else
+        cchShort = cchShortMax;
+
+    /* 14 == '@' + ',' + '-' + (digits of max width 10) + NUL */
+    cchName = cchShort + 14;
+    pszName = HeapAlloc(hProcessHeap, 0, cchName * sizeof(WCHAR));
+    if (!pszName)
+    {
+        hr = E_OUTOFMEMORY;
+        goto Cleanup;
+    }
+
+    wnsprintfW(pszName, cchName, L"@%s,%d", pszResModule, -idsRes);
+    hr = pParent->lpVtbl->SetNameOf(pParent, NULL, pidlLast, pszName, 0, NULL);
+
+Cleanup:
+    if (pszName)
+        HeapFree(hProcessHeap, 0, pszName);
+    if (pszName)
+        HeapFree(hProcessHeap, 0, pszShortPath);
+    if (pParent)
+        pParent->lpVtbl->Release(pParent);
+    if (pidl)
+        SHFree(pidl);
+    if (pDesktop)
+        pDesktop->lpVtbl->Release(pDesktop);
+    CoUninitialize();
     return hr;
 #else
     FIXME("%p, %s, %d - stub\n", pszPath, debugstr_w(pszResModule), idsRes);
