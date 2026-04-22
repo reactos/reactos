@@ -2661,12 +2661,11 @@ BOOL WINAPI LinkWindow_RegisterClass(void)
 BOOL WINAPI LinkWindow_UnregisterClass(DWORD dwUnused)
 {
 #ifdef __REACTOS__
-    TRACE("()\n");
-    return TRUE; /* Do nothing. This is correct. */
+    /* Do nothing. This is correct. */
 #else
     FIXME("()\n");
-    return TRUE;
 #endif
+    return TRUE;
 }
 
 /*************************************************************************
