@@ -517,7 +517,7 @@ translate_expression(TokenList &tokens, size_t index, const vector<string> &macr
                 }
                 else if (iequals(tok.str(), "not"))
                 {
-                    printf("!");
+                    printf("~");
                     index += 1;
                 }
                 else
