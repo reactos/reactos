@@ -1148,7 +1148,7 @@ IoCancelThreadIo(IN PETHREAD Thread)
     KIRQL OldIrql;
     ULONG Retries = 3000;
     LARGE_INTEGER Interval;
-    PLIST_ENTRY ListHead, NextEntry;
+    PLIST_ENTRY ListHead, NextEntry, TemporaryNext;
     PIRP Irp;
     PAGED_CODE();
 
@@ -1165,22 +1165,21 @@ IoCancelThreadIo(IN PETHREAD Thread)
 
     /* Start by cancelling all the IRPs in the current thread queue. */
     ListHead = &Thread->IrpList;
-NextEntry = ListHead->Flink;
-while (ListHead != NextEntry)
-{
-    /* Save the next entry before cancelling the current IRP */
-    PLIST_ENTRY TemporaryNext = NextEntry->Flink;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
+    {
+        /* Save the next entry before cancelling the current IRP */
+        TemporaryNext = NextEntry->Flink;
 
-    /* Get the IRP */
-    Irp = CONTAINING_RECORD(NextEntry, IRP, ThreadListEntry);
+        /* Get the IRP */
+        Irp = CONTAINING_RECORD(NextEntry, IRP, ThreadListEntry);
 
-    /* Cancel it */
-    IoCancelIrp(Irp);
+        /* Cancel it */
+        IoCancelIrp(Irp);
 
-    /* Move to the saved next entry */
-    NextEntry = TemporaryNext;
-}
-
+        /* Move to the saved next entry */
+        NextEntry = TemporaryNext;
+    }
      /* Wait 100 milliseconds */
     Interval.QuadPart = -1000000;
 
