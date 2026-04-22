@@ -1062,7 +1062,6 @@ if (Process->VadRoot.BalancedRoot.u1.Parent == (PVOID)&Process->VadRoot.Balanced
     /* Release the process working set */
     MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
 
-// --- BURAYA YAPIŞTIR ---
     /* * SAFETY SHIELD:
      * Verify if the Section object is valid before attempting to map it.
      * This prevents NULL pointer dereference which causes immediate BSOD.
