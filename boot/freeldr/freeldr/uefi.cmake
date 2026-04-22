@@ -47,15 +47,10 @@ if(ARCH STREQUAL "i386")
         arch/i386/i386idt.c)
     list(APPEND UEFILDR_COMMON_ASM_SOURCE
         arch/uefi/i386/uefiasm.S
-        arch/i386/i386trap.S
-        ${REACTOS_SOURCE_DIR}/sdk/lib/vcruntime/i386/__longjmp_nounwind.s
-        ${REACTOS_SOURCE_DIR}/sdk/lib/vcruntime/i386/_setjmp.s
-        ${REACTOS_SOURCE_DIR}/sdk/lib/vcruntime/i386/_setjmp3.s)
+        arch/i386/i386trap.S)
 elseif(ARCH STREQUAL "amd64")
     list(APPEND UEFILDR_COMMON_ASM_SOURCE
-        arch/uefi/amd64/uefiasm.S
-        ${REACTOS_SOURCE_DIR}/sdk/lib/vcruntime/amd64/__longjmp_noframe.s
-        ${REACTOS_SOURCE_DIR}/sdk/lib/vcruntime/amd64/_setjmp.s)
+        arch/uefi/amd64/uefiasm.S)
 elseif(ARCH STREQUAL "arm")
     list(APPEND UEFILDR_ARC_SOURCE
         arch/arm/macharm.c
@@ -110,7 +105,7 @@ add_library(uefifreeldr_common
     ${UEFILDR_BOOTMGR_SOURCE}
     ${FREELDR_NTLDR_SOURCE})
 
-target_link_libraries(uefifreeldr_common freetype)
+target_link_libraries(uefifreeldr_common freetype setjmp)
 
 target_compile_definitions(uefifreeldr_common PRIVATE _FRLDRLIB_ UEFIBOOT)
 
