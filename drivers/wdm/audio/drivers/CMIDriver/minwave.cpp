@@ -1586,7 +1586,11 @@ STDMETHODIMP CMiniportWaveStreamCMI::SetState(KSSTATE NewState)
 				KeReleaseMutex(&Miniport->mutex, false);
 				break;
 
+#ifdef __REACTOS__
+			case KSSTATE_STOP_AC3_VALUE:
+#else
 			case KSSTATE_STOP_AC3:
+#endif
 			case KSSTATE_STOP:
 				DBGPRINT(("---KSSTATE_STOP: previous state: %d", state));
 				KeWaitForSingleObject(&Miniport->mutex, Executive, KernelMode, FALSE, NULL);

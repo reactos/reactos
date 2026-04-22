@@ -5,6 +5,7 @@
     //  Do not remove indentation, this would break ARM build!
     CREATE_ALIAS2 daylight, _daylight
     CREATE_ALIAS snprintf, _snprintf
+    CREATE_ALIAS vsnprintf, _vsnprintf
     CREATE_ALIAS strcmpi, _strcmpi
     CREATE_ALIAS2 timezone, _timezone
     CREATE_ALIAS2 tzname, _tzname

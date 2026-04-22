@@ -37,7 +37,7 @@
 
 /**** DATA stored inside the stack ****/
 #define CmdLine BaseStack   // Command line for the program to be started
-#define PgmName [CmdLine + (1 + DOS_CMDLINE_LENGTH)]
+#define PgmName (CmdLine + (1 + DOS_CMDLINE_LENGTH))
 
 
 // WARNING! Using the VAL(x) macro doesn't work with GCC/GAS (because it inserts

@@ -42,7 +42,7 @@ set_module_type(ucrtbase_apitest win32cui)
 target_compile_definitions(ucrtbase_apitest PRIVATE USE_WINE_TODOS TEST_UCRTBASE TEST_DLL_NAME="ucrtbase.dll")
 
 target_link_libraries(ucrtbase_apitest ${PSEH_LIB} chkstk)
-if(NOT MSVC)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     # Add this manually here, so it can link to ucrtbase.dll and vcstartup
     target_link_libraries(ucrtbase_apitest -lgcc)
 endif()
