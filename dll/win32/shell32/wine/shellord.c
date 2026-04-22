@@ -2630,29 +2630,14 @@ HRESULT WINAPI SHSetLocalizedName(LPCWSTR pszPath, LPCWSTR pszResModule, int ids
     return S_OK;
 }
 
+#ifndef __REACTOS__ // See ../utils.cpp
 /*************************************************************************
  *              LinkWindow_RegisterClass (SHELL32.258)
-#ifdef __REACTOS__
- *
- * https://learn.microsoft.com/en-us/windows/win32/shell/linkwindow-registerclass
-#endif
  */
 BOOL WINAPI LinkWindow_RegisterClass(void)
 {
-#ifdef __REACTOS__
-    INITCOMMONCONTROLSEX iccx = { sizeof(iccx), ICC_LINK_CLASS };
-    InitCommonControlsEx(&iccx);
-
-    WNDCLASSW wc;
-    if (!GetClassInfoW(NULL, L"SysLink", &wc))
-        return FALSE;
-
-    wc.lpszClassName = L"Link Window";
-    return !!RegisterClassW(&wc); /* Superclassing! */
-#else
     FIXME("()\n");
     return TRUE;
-#endif
 }
 
 /*************************************************************************
@@ -2660,13 +2645,10 @@ BOOL WINAPI LinkWindow_RegisterClass(void)
  */
 BOOL WINAPI LinkWindow_UnregisterClass(DWORD dwUnused)
 {
-#ifdef __REACTOS__
-    /* Do nothing. This is correct. */
-#else
     FIXME("()\n");
-#endif
     return TRUE;
 }
+#endif
 
 /*************************************************************************
  *              SHFlushSFCache (SHELL32.526)
