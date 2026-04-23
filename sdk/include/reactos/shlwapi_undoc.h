@@ -504,6 +504,13 @@ ZoneCheckPathA(
     _In_opt_ IInternetSecurityMgrSite *pSecuritySite);
 
 HRESULT WINAPI
+ZoneCheckPathW(
+    _In_     PCWSTR pszPath,
+    _In_     DWORD dwAction,
+    _In_     DWORD dwFlags,
+    _In_opt_ IInternetSecurityMgrSite *pSecuritySite);
+
+HRESULT WINAPI
 ZoneCheckUrlA(
     _In_     PCSTR   pszUrl,
     _In_     DWORD   dwAction,
