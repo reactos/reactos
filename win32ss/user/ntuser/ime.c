@@ -295,7 +295,7 @@ IntCheckImeHotKey(
 {
     PIMEHOTKEY pHotKey;
     UINT uModifiers;
-    BOOL bKeyUp = (lParam & 0x80000000);
+    BOOL bKeyUp = (HIWORD(lParam) & KF_UP);
     const BYTE *KeyState = MessageQueue->afKeyState;
     static UINT s_uKeyUpVKey = 0;
 
