@@ -63,8 +63,11 @@ SHLWAPI_GetCachedZonesManager(
 EXTERN_C VOID SHLWAPI_DeleteCachedZonesManager(VOID)
 {
     EnterCriticalSection(&g_csZoneMgrLock);
-    g_pZoneMgrCF->lpVtbl->Release(g_pZoneMgrCF);
-    g_pZoneMgrCF = NULL;
+    if (g_pZoneMgrC)
+    {
+        g_pZoneMgrCF->lpVtbl->Release(g_pZoneMgrCF);
+        g_pZoneMgrCF = NULL;
+    }
     LeaveCriticalSection(&g_csZoneMgrLock);
 }
 
