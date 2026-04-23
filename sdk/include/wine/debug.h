@@ -87,44 +87,20 @@ struct __wine_debug_channel
 #define __WINE_IS_DEBUG_ON(dbcl,dbch) \
   (__WINE_GET_DEBUGGING##dbcl(dbch) && (__wine_dbg_get_channel_flags(dbch) & (1 << __WINE_DBCL##dbcl)))
 
-#ifdef __GNUC__
-
 #define __WINE_DPRINTF(dbcl,dbch) \
   do { if(__WINE_GET_DEBUGGING(dbcl,(dbch))) { \
        struct __wine_debug_channel * const __dbch = (dbch); \
        const enum __wine_debug_class __dbcl = __WINE_DBCL##dbcl; \
        __WINE_DBG_LOG
 
-#define __WINE_DBG_LOG(args...) \
-    ros_dbg_log( __dbcl, __dbch, __RELFILE__, __FUNCTION__, __LINE__, args); } } while(0)
-
-#define __WINE_PRINTF_ATTR(fmt,args) /*__attribute__((format (printf,fmt,args)))*/
-
-
-#ifdef WINE_NO_TRACE_MSGS
-#define WINE_TRACE(args...) do { } while(0)
-#define WINE_TRACE_(ch) WINE_TRACE
-#endif
-
-#ifdef WINE_NO_DEBUG_MSGS
-#define WINE_WARN(args...) do { } while(0)
-#define WINE_WARN_(ch) WINE_WARN
-#define WINE_FIXME(args...) do { } while(0)
-#define WINE_FIXME_(ch) WINE_FIXME
-#endif
-
-#elif defined(__SUNPRO_C)
-
-#define __WINE_DPRINTF(dbcl,dbch) \
-  do { if(__WINE_GET_DEBUGGING(dbcl,(dbch))) { \
-       struct __wine_debug_channel * const __dbch = (dbch); \
-       const enum __WINE_DEBUG_CLASS __dbcl = __WINE_DBCL##dbcl; \
-       __WINE_DBG_LOG
-
 #define __WINE_DBG_LOG(...) \
-   wine_dbg_log( __dbcl, __dbch, __func__, __VA_ARGS__); } } while(0)
+    ros_dbg_log( __dbcl, __dbch, __RELFILE__, __FUNCTION__, __LINE__, __VA_ARGS__); } } while(0)
 
+#if !defined(__REACTOS__) // (defined(__GNUC__) || defined(__clang__)) && (defined(__MINGW32__) || defined (_MSC_VER) || !defined(__WINE_USE_MSVCRT))
+#define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
+#else
 #define __WINE_PRINTF_ATTR(fmt,args)
+#endif
 
 #ifdef WINE_NO_TRACE_MSGS
 #define WINE_TRACE(...) do { } while(0)
@@ -138,25 +114,14 @@ struct __wine_debug_channel
 #define WINE_FIXME_(ch) WINE_FIXME
 #endif
 
-#else  /* !__GNUC__ && !__SUNPRO_C */
-
-#define __WINE_DPRINTF(dbcl,dbch) \
-    (!__WINE_GET_DEBUGGING(dbcl,(dbch)) || \
-     (ros_dbg_log(__WINE_DBCL##dbcl,(dbch),__RELFILE__,__FUNCTION__,__LINE__,"") == -1)) ? \
-     (void)0 : (void)wine_dbg_printf
-
-#define __WINE_PRINTF_ATTR(fmt, args)
-
-#endif  /* !__GNUC__ && !__SUNPRO_C */
-
 struct __wine_debug_functions
 {
-    char * (*get_temp_buffer)( size_t n );
-    void   (*release_temp_buffer)( char *buffer, size_t n );
-    const char * (*dbgstr_an)( const char * s, int n );
-    const char * (*dbgstr_wn)( const WCHAR *s, int n );
-    int (*dbg_vprintf)( const char *format, va_list args );
-    int (*dbg_vlog)( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
+    char * (* const get_temp_buffer)( size_t n );
+    void   (* const release_temp_buffer)( char *buffer, size_t n );
+    const char * (* const dbgstr_an)( const char * s, int n );
+    const char * (* const dbgstr_wn)( const WCHAR *s, int n );
+    int (* const dbg_vprintf)( const char *format, va_list args );
+    int (* dbg_vlog)( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
                      const char *file, const char *function, const int line, const char *format, va_list args );
 };
 
