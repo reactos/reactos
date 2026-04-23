@@ -407,6 +407,12 @@ WINSHLWAPI BOOL WINAPI PathFileExistsA(LPCSTR);
 WINSHLWAPI BOOL WINAPI PathFileExistsW(LPCWSTR);
 #define PathFileExists WINELIB_NAME_AW(PathFileExists)
 
+#ifndef __REACTOS__
+WINSHLWAPI BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR,DWORD*);
+WINSHLWAPI BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR,DWORD*);
+#define PathFileExistsAndAttributes WINELIB_NAME_AW(PathFileExistsAndAttributes)
+#endif
+
 WINSHLWAPI LPSTR  WINAPI PathFindExtensionA(LPCSTR);
 WINSHLWAPI LPWSTR WINAPI PathFindExtensionW(LPCWSTR);
 #define PathFindExtension WINELIB_NAME_AW(PathFindExtension)
