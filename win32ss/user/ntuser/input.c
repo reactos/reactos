@@ -491,7 +491,6 @@ IsRemoveAttachThread(PTHREADINFO pti)
     return Ret;
 }
 
-// Win: zzzAttachThreadInput
 NTSTATUS FASTCALL
 UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 {

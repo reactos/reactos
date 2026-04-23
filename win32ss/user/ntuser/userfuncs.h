@@ -1,6 +1,5 @@
 #pragma once
 
-// Win: ValidateHmenu
 FORCEINLINE PMENU UserGetMenuObject(HMENU hMenu)
 {
    PMENU pMenu = UserGetObject(gHandleTable, hMenu, TYPE_MENU);

@@ -406,7 +406,6 @@ CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
     return TRUE;
 }
 
-// Win: _GetProcessWindowStation
 PWINSTATION_OBJECT FASTCALL
 IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL)
 {

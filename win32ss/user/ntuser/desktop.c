@@ -1399,7 +1399,6 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
     return pdo->DesktopWindow;
 }
 
-// Win: _GetDesktopWindow
 PWND FASTCALL UserGetDesktopWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
@@ -1423,7 +1422,6 @@ HWND FASTCALL IntGetMessageWindow(VOID)
     return UserHMGetHandle(pdo->spwndMessage);
 }
 
-// Win: _GetMessageWindow
 PWND FASTCALL UserGetMessageWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();

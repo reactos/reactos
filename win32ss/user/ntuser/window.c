@@ -120,7 +120,6 @@ PWND FASTCALL ValidateHwndNoErr(HWND hWnd)
 }
 
 /* Temp HACK */
-// Win: ValidateHwnd
 PWND FASTCALL UserGetWindowObject(HWND hWnd)
 {
     PWND Window;
@@ -1292,7 +1291,6 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    return WndOldParent;
 }
 
-// Win: xxxSetParent
 HWND FASTCALL
 co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 {
@@ -1372,7 +1370,6 @@ IntUnlinkWindow(PWND Wnd)
     WndSetNext(Wnd, NULL);
 }
 
-// Win: ExpandWindowList
 BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
 {
     PWINDOWLIST pwlOld, pwlNew;
@@ -1393,7 +1390,6 @@ BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
     return TRUE;
 }
 
-// Win: InternalBuildHwndList
 PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFlags)
 {
     ASSERT(!WL_IS_BAD(pwl));
@@ -1423,7 +1419,6 @@ PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFla
     return pwl;
 }
 
-// Win: BuildHwndList
 PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
 {
     PWINDOWLIST pwl;
@@ -1469,7 +1464,6 @@ PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
     return pwl;
 }
 
-// Win: FreeHwndList
 VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget)
 {
     PWINDOWLIST pwl, *ppwl;
@@ -2833,7 +2827,6 @@ cleanup:
    return hwnd;
 }
 
-// Win: xxxDW_DestroyOwnedWindows
 VOID FASTCALL IntDestroyOwnedWindows(PWND Window)
 {
     HWND* List;
@@ -2869,7 +2862,6 @@ VOID FASTCALL IntDestroyOwnedWindows(PWND Window)
     ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
 }
 
-// Win: xxxDestroyWindow
 BOOLEAN co_UserDestroyWindow(PVOID Object)
 {
    HWND hWnd;

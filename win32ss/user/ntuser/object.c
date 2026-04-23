@@ -615,7 +615,6 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
    return Object;
 }
 
-// Win: HMMarkObjectDestroy
 BOOL
 FASTCALL
 UserMarkObjectDestroy(PVOID Object)
@@ -835,7 +834,6 @@ Exit:
    return Ret;
 }
 
-// Win: HMAssignmentLock
 PVOID FASTCALL UserAssignmentLock(PVOID *ppvObj, PVOID pvNew)
 {
     PVOID pvOld = *ppvObj;
@@ -856,7 +854,6 @@ PVOID FASTCALL UserAssignmentLock(PVOID *ppvObj, PVOID pvNew)
     return pvOld;
 }
 
-// Win: HMAssignmentUnlock
 PVOID FASTCALL UserAssignmentUnlock(PVOID *ppvObj)
 {
     PVOID pvOld = *ppvObj;

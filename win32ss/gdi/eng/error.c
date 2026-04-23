@@ -15,7 +15,6 @@ EngGetLastError(VOID)
 /*
  * @implemented
  * https://learn.microsoft.com/en-us/windows/win32/api/winddi/nf-winddi-engsetlasterror
- * Win: UserSetLastError
  */
 VOID
 APIENTRY

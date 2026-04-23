@@ -145,7 +145,6 @@ co_IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd, BOOL Clear)
    return Ret;
 }
 
-// Win: xxxFocusSetInputContext
 VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
 {
     PTHREADINFO pti;
@@ -185,7 +184,6 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
 //
 // Release Active, Capture and Focus Windows associated with this message queue.
 //
-// Win: xxxDeactivate
 BOOL FASTCALL
 IntDeactivateWindow(PTHREADINFO pti, HANDLE tid)
 {
@@ -612,7 +610,6 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
    return InAAPM;
 }
 
-// Win: xxxSendFocusMessages
 VOID FASTCALL
 IntSendFocusMessages( PTHREADINFO pti, PWND pWnd)
 {
@@ -1257,7 +1254,6 @@ co_IntMouseActivateWindow(PWND Wnd)
    return co_IntSetForegroundAndFocusWindow(Wnd, TRUE, TRUE);
 }
 
-/* Win: PWND xxxSetActiveWindow(Wnd) */
 BOOL FASTCALL
 UserSetActiveWindow( _In_opt_ PWND Wnd )
 {
@@ -1311,7 +1307,6 @@ UserSetActiveWindow( _In_opt_ PWND Wnd )
   return FALSE;
 }
 
-// Win: PWND xxxSetFocus(Window)
 HWND FASTCALL
 co_UserSetFocus(PWND Window)
 {

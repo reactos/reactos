@@ -90,7 +90,6 @@ DefWndHandleWindowPosChanging(PWND pWnd, WINDOWPOS* Pos)
     return 0;
 }
 
-/* Win: xxxHandleWindowPosChanged */
 LRESULT FASTCALL
 DefWndHandleWindowPosChanged(PWND pWnd, WINDOWPOS* Pos)
 {
@@ -120,7 +119,6 @@ DefWndHandleWindowPosChanged(PWND pWnd, WINDOWPOS* Pos)
 //
 // Handle a WM_SYSCOMMAND message. Called from DefWindowProc().
 //
-// Win: xxxSysCommand
 LRESULT FASTCALL
 DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
 {
@@ -361,7 +359,6 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
    return FALSE;
 }
 
-/* Win: xxxDWPPrint */
 VOID FASTCALL DefWndPrint( PWND pwnd, HDC hdc, ULONG uFlags)
 {
   /*
@@ -432,7 +429,6 @@ UserPaintCaption(PWND pWnd, INT Flags)
 }
 
 // WM_SETICON
-/* Win: xxxDWP_SetIcon */
 LRESULT FASTCALL
 DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
 {
@@ -471,7 +467,6 @@ DefWndSetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     return (LRESULT)hIconOld;
 }
 
-/* Win: DWP_GetIcon */
 LRESULT FASTCALL
 DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
 {

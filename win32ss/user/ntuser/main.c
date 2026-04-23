@@ -724,7 +724,6 @@ error:
 VOID
 UserDisplayNotifyShutdown(PPROCESSINFO ppiCurrent);
 
-// Win: xxxDestroyThreadInfo
 NTSTATUS
 NTAPI
 ExitThreadCallback(PETHREAD Thread)
