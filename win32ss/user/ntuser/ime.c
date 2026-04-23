@@ -681,7 +681,7 @@ IntImmProcessKey(
         if (!pIMC)
             return 0;
 
-        if ((lParam & (KF_UP << 16)) &&
+        if (HIWORD(lParam) & KF_UP) &&
             (pKL->piiex->ImeInfo.fdwProperty & IME_PROP_IGNORE_UPKEYS))
         {
             return 0;
@@ -709,7 +709,7 @@ IntImmProcessKey(
 
                 if (!(pKL->piiex->ImeInfo.fdwProperty & IME_PROP_NEED_ALTKEY))
                 {
-                    if (uVirtualKey == VK_MENU || (lParam & 0x20000000))
+                    if (uVirtualKey == VK_MENU || (HIWORD(lParam) & KF_ALTDOWN))
                         return 0;
                 }
                 break;
