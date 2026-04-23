@@ -34,8 +34,10 @@ static PCWSTR StrEndNW(_In_ PCWSTR psz, _In_ INT_PTR cch)
 
 static INT _SHMergePopupMenus(HMENU hMenu, HMENU hPopupMenu, UINT uIDAdjust, UINT uIDAdjustMax)
 {
-    UINT maxID = uIDAdjust;
-    const UINT itemCount = GetMenuItemCount(hPopupMenu);
+    INT maxID = uIDAdjust;
+    const INT itemCount = GetMenuItemCount(hPopupMenu);
+    if (itemCount == -1)
+        return maxID;
 
     MENUITEMINFOW mii = { sizeof(mii), MIIM_ID | MIIM_SUBMENU };
     for (INT i = itemCount - 1; i >= 0; --i)
@@ -44,9 +46,12 @@ static INT _SHMergePopupMenus(HMENU hMenu, HMENU hPopupMenu, UINT uIDAdjust, UIN
             continue;
 
         HMENU hTargetSubMenu = SHGetMenuFromID(hMenu, mii.wID);
-        UINT currentMax = Shell_MergeMenus(hTargetSubMenu, mii.hSubMenu, 0,
-                                           uIDAdjust, uIDAdjustMax,
-                                           MM_ADDSEPARATOR | MM_SUBMENUSHAVEIDS);
+        if (!hTargetSubMenu)
+            continue;
+
+        INT currentMax = Shell_MergeMenus(hTargetSubMenu, mii.hSubMenu, 0,
+                                          uIDAdjust, uIDAdjustMax,
+                                          MM_ADDSEPARATOR | MM_SUBMENUSHAVEIDS);
         maxID = max(maxID, currentMax);
     }
 
