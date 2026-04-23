@@ -37,7 +37,7 @@ DECLSPEC_HIDDEN DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
 extern CRITICAL_SECTION g_csZoneMgrLock;
 extern CRITICAL_SECTION g_csBagCacheLock;
 VOID FreeViewStatePropertyBagCache(VOID);
-EXTERN_C VOID SHLWAPI_DeleteCachedZonesManager(VOID);
+VOID SHLWAPI_DeleteCachedZonesManager(VOID);
 #endif
 
 /*************************************************************************
