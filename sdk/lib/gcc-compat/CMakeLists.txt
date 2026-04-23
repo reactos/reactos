@@ -9,7 +9,10 @@ list(APPEND SOURCE
 
 if(DLL_EXPORT_VERSION LESS 0x600)
     list(APPEND SOURCE
-        rand_s.c)
+        fseeki64_compat.c
+        rand_s.c
+        strnlen_compat.c
+        wchar_compat.c)
 endif()
 
 add_library(stdc++compat ${SOURCE})
