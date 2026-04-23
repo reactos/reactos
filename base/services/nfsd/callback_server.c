@@ -509,12 +509,15 @@ out:
 }
 
 #ifdef __REACTOS__
-int nfs41_handle_callback(void *rpc_clnt, void *cb, void * dummy)
-{
-    struct cb_compound_res **reply = dummy;
+int nfs41_handle_callback(void *rpc_clnt, void *cb, void **reply)
 #else
 int nfs41_handle_callback(void *rpc_clnt, void *cb, struct cb_compound_res **reply)
+#endif
 {
+#ifdef __REACTOS__
+    struct cb_compound_res **compound_reply = (struct cb_compound_res **)reply;
+#else
+    struct cb_compound_res **compound_reply = reply;
 #endif
     nfs41_rpc_clnt *rpc = (nfs41_rpc_clnt *)rpc_clnt;
     cb_req *request = (cb_req *)cb;
@@ -534,7 +537,7 @@ int nfs41_handle_callback(void *rpc_clnt, void *cb, struct cb_compound_res **rep
 
     case CB_COMPOUND:
         dprintf(1, "CB_COMPOUND\n");
-        handle_cb_compound(rpc, request, reply);
+        handle_cb_compound(rpc, request, compound_reply);
         break;
 
     default:
