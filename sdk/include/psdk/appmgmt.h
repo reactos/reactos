@@ -122,7 +122,7 @@ GetManagedApplications(
 #define MANAGED_APPS_FROMCATEGORY       0x2
 #define MANAGED_APPS_INFOLEVEL_DEFAULT  0x10000
 
-/* FIXME */
+/* FIXME: SAL2 annotation */
 DWORD WINAPI
 CommandLineFromMsiDescriptor(
     WCHAR *szDescriptor,
