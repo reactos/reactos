@@ -29,6 +29,7 @@
 
 #ifdef __REACTOS__
 EXTERN_C HRESULT VariantChangeTypeForRead(_Inout_ VARIANTARG *pvarg, _In_ VARTYPE vt);
+EXTERN_C VOID SHLWAPI_DeleteCachedZonesManager(VOID);
 #endif
 
 #include "resource.h"

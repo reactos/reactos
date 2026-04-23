@@ -77,6 +77,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
             if (fImpLoad) break;
 #ifdef __REACTOS__
 	    FreeViewStatePropertyBagCache();
+	    SHLWAPI_DeleteCachedZonesManager();
 	    DeleteCriticalSection(&g_csBagCacheLock);
 	    DeleteCriticalSection(&g_csZoneMgrLock);
 #endif

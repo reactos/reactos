@@ -60,12 +60,20 @@ SHLWAPI_GetCachedZonesManager(
     return hr;
 }
 
+EXTERN_C VOID SHLWAPI_DeleteCachedZonesManager(VOID)
+{
+    EnterCriticalSection(&g_csZoneMgrLock);
+    g_pZoneMgrCF->lpVtbl->Release(g_pZoneMgrCF);
+    g_pZoneMgrCF = NULL;
+    LeaveCriticalSection(&g_csZoneMgrLock);
+}
+
 /*************************************************************************
  * SuperPrivate_ZoneCheckPath
  *
  * An internal helper, used in SHRegisterValidateTemplate
  */
-HRESULT SuperPrivate_ZoneCheckPath(PCWSTR pwszUrl, DWORD dwExpectedZone)
+HRESULT SuperPrivate_ZoneCheckPath(PCWSTR pszPath, DWORD dwExpectedZone)
 {
     IInternetSecurityManager *pISM;
     HRESULT hr = SHLWAPI_GetCachedZonesManager(&IID_IInternetSecurityManager, (PVOID *)&pISM);
@@ -73,7 +81,7 @@ HRESULT SuperPrivate_ZoneCheckPath(PCWSTR pwszUrl, DWORD dwExpectedZone)
         return E_ACCESSDENIED;
 
     DWORD dwRealZone = URLZONE_UNTRUSTED;
-    hr = pISM->lpVtbl->MapUrlToZone(pISM, pwszUrl, &dwRealZone, 0);
+    hr = pISM->lpVtbl->MapUrlToZone(pISM, pszPath, &dwRealZone, 0);
     if (SUCCEEDED(hr) && dwRealZone == dwExpectedZone)
         hr = S_OK;
     else
@@ -312,7 +320,7 @@ ZoneCheckHostEx(
 {
     DWORD dwPolicyBuf, dwContextBuf;
 
-    if (!pISM)
+    if (!pISM || !pszUrl)
         return E_INVALIDARG;
 
     if (!pbPolicy)
