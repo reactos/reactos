@@ -32,7 +32,7 @@ SHLWAPI_GetCachedZonesManagerInner(
         if (FAILED(hr))
         {
             *ppv = NULL;
-            return E_FAIL;
+            return hr;
         }
 
         g_pZoneMgrCF = pCF;
@@ -101,6 +101,11 @@ ZoneCheckUrlExCacheA(
     _In_opt_     IInternetSecurityManager  *pISM)
 {
     WCHAR szUrl[2048];
+    if (!pszUrl)
+    {
+        ERR("pszUrl was NULL\n");
+        return E_INVALIDARG;
+    }
     SHAnsiToUnicode(pszUrl, szUrl, _countof(szUrl));
     return ZoneCheckUrlExCacheW(szUrl, pbPolicy, cbPolicy, pbContext, cbContext,
                                 dwAction, dwFlags, pSecuritySite, pISM);
@@ -182,6 +187,11 @@ ZoneCheckPathA(
     _In_opt_ IInternetSecurityMgrSite *pSecuritySite)
 {
     WCHAR szPath[2048];
+    if (!pszPath)
+    {
+        ERR("pszPath was NULL\n");
+        return E_INVALIDARG;
+    }
     SHAnsiToUnicode(pszPath, szPath, _countof(szPath));
     return ZoneCheckPathW(szPath, dwAction, dwFlags, pSecuritySite);
 }
@@ -210,6 +220,11 @@ ZoneCheckUrlA(
     _In_opt_ IInternetSecurityMgrSite *pSecuritySite)
 {
     WCHAR szUrl[2048];
+    if (!pszUrl)
+    {
+        ERR("pszUrl was NULL\n");
+        return E_INVALIDARG;
+    }
     SHAnsiToUnicode(pszUrl, szUrl, _countof(szUrl));
     return ZoneCheckUrlW(szUrl, dwAction, dwFlags, pSecuritySite);
 }
@@ -242,6 +257,11 @@ ZoneCheckUrlExA(
     _In_opt_                         IInternetSecurityMgrSite *pSecuritySite)
 {
     WCHAR szUrl[2048];
+    if (!pszUrl)
+    {
+        ERR("pszUrl was NULL\n");
+        return E_INVALIDARG;
+    }
     SHAnsiToUnicode(pszUrl, szUrl, _countof(szUrl));
     return ZoneCheckUrlExW(szUrl, pbPolicy, cbPolicy, pbContext, cbContext,
                            dwAction, dwFlags, pSecuritySite);
