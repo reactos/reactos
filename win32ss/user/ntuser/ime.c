@@ -681,7 +681,7 @@ IntImmProcessKey(
         if (!pIMC)
             return 0;
 
-        if (HIWORD(lParam) & KF_UP) &&
+        if ((HIWORD(lParam) & KF_UP) &&
             (pKL->piiex->ImeInfo.fdwProperty & IME_PROP_IGNORE_UPKEYS))
         {
             return 0;
