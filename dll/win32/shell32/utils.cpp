@@ -2200,18 +2200,19 @@ EXTERN_C BOOL WINAPI LinkWindow_RegisterClass(VOID)
     INITCOMMONCONTROLSEX iccx = { sizeof(iccx), ICC_LINK_CLASS };
     InitCommonControlsEx(&iccx);
 
-    WNDCLASSW wc;
-    if (!GetClassInfoW(NULL, L"SysLink", &wc))
+    WNDCLASSEXW wcx = { sizeof(wcx) };
+    if (!GetClassInfoExW(NULL, L"SysLink", &wcx))
         return FALSE;
 
-    wc.lpszClassName = L"Link Window";
-    return !!RegisterClassW(&wc); /* Superclassing! */
+    /* Superclassing! */
+    wcx.lpszClassName = L"Link Window";
+    return RegisterClassExW(&wcx) || (GetLastError() == ERROR_CLASS_ALREADY_EXISTS);
 }
 
 /*************************************************************************
  *              LinkWindow_UnregisterClass (SHELL32.259)
  */
-EXTERN_C BOOL WINAPI LinkWindow_UnregisterClass(DWORD dwUnused)
+EXTERN_C BOOL WINAPI LinkWindow_UnregisterClass(_In_ DWORD dwUnused)
 {
     /* Do nothing. This is correct. */
     return TRUE;

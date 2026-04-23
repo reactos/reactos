@@ -911,7 +911,7 @@ Activate_RunDLL(
 BOOL WINAPI SHSettingsChanged(LPCVOID unused, LPCWSTR pszKey);
 
 BOOL WINAPI LinkWindow_RegisterClass(VOID);
-BOOL WINAPI LinkWindow_UnregisterClass(DWORD dwUnused);
+BOOL WINAPI LinkWindow_UnregisterClass(_In_ DWORD dwUnused);
 
 /*****************************************************************************
  * Shell32 resources
