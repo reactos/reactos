@@ -2200,7 +2200,7 @@ SHSetLocalizedName(
     INT cchShortMax, cchShort, cchName;
     PWSTR pszShortPath = NULL, pszName = NULL;
 
-    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    hr = SHCoInitializeAnyApartment();
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -2208,7 +2208,7 @@ SHSetLocalizedName(
     if (FAILED_UNEXPECTEDLY(hr))
         goto Cleanup;
 
-    hr = pDesktop->ParseDisplayName(NULL, NULL, (LPWSTR)pszPath, NULL, &pidl, NULL);
+    hr = pDesktop->ParseDisplayName(NULL, NULL, (PWSTR)pszPath, NULL, &pidl, NULL);
     if (FAILED_UNEXPECTEDLY(hr))
         goto Cleanup;
 
@@ -2246,7 +2246,7 @@ SHSetLocalizedName(
 Cleanup:
     if (pszName)
         HeapFree(hProcessHeap, 0, pszName);
-    if (pszName)
+    if (pszShortPath)
         HeapFree(hProcessHeap, 0, pszShortPath);
     if (pParent)
         pParent->Release();
