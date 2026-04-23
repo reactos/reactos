@@ -136,7 +136,7 @@ InstallApplication(
 DWORD WINAPI
 UninstallApplication(
     _In_ LPWSTR ProductCode,
-    _In_ DWORD  dwStatus);
+    _In_ DWORD dwStatus);
 
 #ifdef __cplusplus
 } /* extern "C" */
