@@ -470,10 +470,12 @@ DECLARE_INTERFACE_(IAssociationElementOld, IUnknown) // {E58B1ABF-9596-4DBA-8997
 
 HRESULT WINAPI
 ZoneCheckUrlExCacheA(
-    _In_z_       PCSTR                     pszUrl,
-    _In_opt_     PBYTE                     pbPolicy,
+    _In_         PCSTR                     pszUrl,
+    _Out_writes_bytes_opt_(cbPolicy)
+                 PBYTE                     pbPolicy,
     _In_         DWORD                     cbPolicy,
-    _In_opt_     PBYTE                     pbContext,
+    _In_reads_bytes_opt_(cbContext)
+                 PBYTE                     pbContext,
     _In_         DWORD                     cbContext,
     _In_         DWORD                     dwAction,
     _In_         DWORD                     dwFlags,
@@ -482,7 +484,7 @@ ZoneCheckUrlExCacheA(
 
 HRESULT WINAPI
 ZoneCheckUrlExCacheW(
-    _In_z_       PCWSTR                    pszUrl,
+    _In_         PCWSTR                    pszUrl,
     _Out_writes_bytes_opt_(cbPolicy)
                  PBYTE                     pbPolicy,
     _In_         DWORD                     cbPolicy,
@@ -496,69 +498,62 @@ ZoneCheckUrlExCacheW(
 
 HRESULT WINAPI
 ZoneCheckPathA(
-    _In_z_   PCSTR   pszPath,
-    _In_     DWORD   dwAction,
-    _In_     DWORD   dwFlags,
-    _In_opt_ IInternetSecurityMgrSite *pSecuritySite);
-
-HRESULT WINAPI
-ZoneCheckPathW(
-    _In_z_   PCWSTR  pszPath,
-    _In_     DWORD   dwAction,
-    _In_     DWORD   dwFlags,
+    _In_     PCSTR pszPath,
+    _In_     DWORD dwAction,
+    _In_     DWORD dwFlags,
     _In_opt_ IInternetSecurityMgrSite *pSecuritySite);
 
 HRESULT WINAPI
 ZoneCheckUrlA(
-    _In_z_   PCSTR   pszUrl,
+    _In_     PCSTR   pszUrl,
     _In_     DWORD   dwAction,
     _In_     DWORD   dwFlags,
     _In_opt_ IInternetSecurityMgrSite *pSecuritySite);
 
 HRESULT WINAPI
 ZoneCheckUrlW(
-    _In_z_   PCWSTR  pszUrl,
+    _In_     PCWSTR  pszUrl,
     _In_     DWORD   dwAction,
     _In_     DWORD   dwFlags,
     _In_opt_ IInternetSecurityMgrSite *pSecuritySite);
 
 HRESULT WINAPI
 ZoneCheckUrlExA(
-    _In_z_       PCSTR   pszUrl,
-    _In_opt_     PBYTE   pbPolicy,
-    _In_         DWORD   cbPolicy,
-    _In_opt_     PBYTE   pbContext,
-    _In_         DWORD   cbContext,
-    _In_         DWORD   dwAction,
-    _In_         DWORD   dwFlags,
-    _In_opt_     IInternetSecurityMgrSite *pSecuritySite);
+    _In_                             PCSTR   pszUrl,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE   pbPolicy,
+    _In_                             DWORD   cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE   pbContext,
+    _In_                             DWORD   cbContext,
+    _In_                             DWORD   dwAction,
+    _In_                             DWORD   dwFlags,
+    _In_opt_                         IInternetSecurityMgrSite *pSecuritySite);
 
 HRESULT WINAPI
 ZoneCheckUrlExW(
-    _In_z_       PCWSTR  pszUrl,
-    _In_opt_     PBYTE   pbPolicy,
-    _In_         DWORD   cbPolicy,
-    _In_opt_     PBYTE   pbContext,
-    _In_         DWORD   cbContext,
-    _In_         DWORD   dwAction,
-    _In_         DWORD   dwFlags,
-    _In_opt_     IInternetSecurityMgrSite *pSecuritySite);
+    _In_                             PCWSTR  pszUrl,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE   pbPolicy,
+    _In_                             DWORD   cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE   pbContext,
+    _In_                             DWORD   cbContext,
+    _In_                             DWORD   dwAction,
+    _In_                             DWORD   dwFlags,
+    _In_opt_                         IInternetSecurityMgrSite *pSecuritySite);
 
 HRESULT WINAPI
 ZoneCheckHost(
-    _In_z_ IInternetSecurityManager  *pISM,
-    _In_z_ PCWSTR                     pszUrl,
+    _In_   IInternetSecurityManager  *pISM,
+    _In_   PCWSTR                     pszUrl,
     _In_   DWORD                      dwAction);
 
 HRESULT WINAPI
 ZoneCheckHostEx(
-    _In_                             IInternetSecurityManager  *pISM,
-    _Out_writes_bytes_opt_(cbPolicy) PBYTE                      pbPolicy,
-    _In_                             DWORD                      cbPolicy,
-    _In_reads_bytes_opt_(cbContext)  PBYTE                      pbContext,
-    _In_                             DWORD                      cbContext,
-    _In_z_                           PCWSTR                     pszUrl,
-    _In_                             DWORD                      dwAction);
+    _In_                             IInternetSecurityManager *pISM,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE                     pbPolicy,
+    _In_                             DWORD                     cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE                     pbContext,
+    _In_                             DWORD                     cbContext,
+    _In_                             PCWSTR                    pszUrl,
+    _In_                             DWORD                     dwAction);
 
 #ifdef UNICODE
     #define ZoneCheckUrlExCache ZoneCheckUrlExCacheW
