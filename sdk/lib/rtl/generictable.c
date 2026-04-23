@@ -34,7 +34,6 @@ RtlpFindGenericTableNodeOrParent(IN PRTL_GENERIC_TABLE Table,
     /* Quick check to see if the table is empty */
     if (RtlIsGenericTableEmpty(Table))
     {
-        *NodeOrParent = NULL;
         return TableEmptyTree;
     }
 
@@ -126,7 +125,7 @@ RtlInsertElementGenericTable(IN PRTL_GENERIC_TABLE Table,
                              IN ULONG BufferSize,
                              OUT PBOOLEAN NewElement OPTIONAL)
 {
-    PRTL_SPLAY_LINKS NodeOrParent;
+    PRTL_SPLAY_LINKS NodeOrParent = NULL;
     TABLE_SEARCH_RESULT Result;
 
     /* Get the splay links and table search result immediately */
