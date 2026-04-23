@@ -27,7 +27,6 @@
 #include <shlobj.h>
 #include <undocshell.h>
 #include <shlwapi.h>
-#include <shlwapi_undoc.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
@@ -995,86 +994,4 @@ UINT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAd
 	  }
 	}
 	return(uIDMax);
-}
-
-static INT _SHMergePopupMenus(HMENU hMenu, HMENU hPopupMenu, UINT uIDAdjust, UINT uIDAdjustMax)
-{
-    INT maxID = uIDAdjust;
-    const INT itemCount = GetMenuItemCount(hPopupMenu);
-
-    MENUITEMINFOW mii = { sizeof(mii), MIIM_ID | MIIM_SUBMENU };
-    for (INT i = itemCount - 1; i >= 0; --i)
-    {
-        if (!GetMenuItemInfoW(hPopupMenu, i, TRUE, &mii))
-            continue;
-
-        HMENU hTargetSubMenu = SHGetMenuFromID(hMenu, mii.wID);
-        INT currentMax = Shell_MergeMenus(
-            hTargetSubMenu, 
-            mii.hSubMenu, 
-            0, 
-            uIDAdjust, 
-            uIDAdjustMax, 
-            MM_ADDSEPARATOR | MM_SUBMENUSHAVEIDS);
-
-        maxID = max(maxID, currentMax);
-    }
-
-    return maxID;
-}
-
-static HMENU SHLoadPopupMenu(HINSTANCE hInstance, UINT uMenuId)
-{
-    HMENU hMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(uMenuId));
-    if (!hMenu)
-        return NULL;
-    HMENU hSubMenu = GetSubMenu(hMenu, 0);
-    RemoveMenu(hMenu, 0, MF_BYPOSITION);
-    DestroyMenu(hMenu);
-    return hSubMenu;
-}
-
-/*************************************************************************
- * CDefFolderMenu_MergeMenu         [SHELL32.702]
- */
-VOID WINAPI
-CDefFolderMenu_MergeMenu(
-    _In_ HINSTANCE hInstance,
-    _In_ UINT uMainMerge,
-    _In_ UINT uPopupMerge,
-    _Inout_ LPQCMINFO lpQcmInfo)
-{
-	TRACE("(%p, %u, %u, %p)\n", hInstance, uMainMerge, uPopupMerge, lpQcmInfo);
-
-    UINT idCmdFirst = lpQcmInfo->idCmdFirst;
-
-    if (uMainMerge)
-    {
-        HMENU hMenu = SHLoadPopupMenu(hInstance, uMainMerge);
-        if (hMenu)
-        {
-            const UINT uFlags = MM_ADDSEPARATOR | MM_SUBMENUSHAVEIDS | MM_DONTREMOVESEPS;
-            idCmdFirst = Shell_MergeMenus(lpQcmInfo->hmenu,
-                                          hMenu,
-                                          lpQcmInfo->indexMenu,
-                                          lpQcmInfo->idCmdFirst,
-                                          lpQcmInfo->idCmdLast,
-                                          uFlags);
-            DestroyMenu(hMenu);
-        }
-    }
-
-    if (uPopupMerge)
-    {
-        HMENU hMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(uPopupMerge));
-        if (hMenu)
-        {
-            INT id = _SHMergePopupMenus(lpQcmInfo->hmenu, hMenu,
-                                       lpQcmInfo->idCmdFirst, lpQcmInfo->idCmdLast);
-            idCmdFirst = max(idCmdFirst, id);
-            DestroyMenu(hMenu);
-        }
-    }
-
-    lpQcmInfo->idCmdFirst = idCmdFirst;
 }

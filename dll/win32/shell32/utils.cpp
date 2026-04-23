@@ -32,6 +32,83 @@ static PCWSTR StrEndNW(_In_ PCWSTR psz, _In_ INT_PTR cch)
     return pch;
 }
 
+static INT _SHMergePopupMenus(HMENU hMenu, HMENU hPopupMenu, UINT uIDAdjust, UINT uIDAdjustMax)
+{
+    UINT maxID = uIDAdjust;
+    const UINT itemCount = GetMenuItemCount(hPopupMenu);
+
+    MENUITEMINFOW mii = { sizeof(mii), MIIM_ID | MIIM_SUBMENU };
+    for (INT i = itemCount - 1; i >= 0; --i)
+    {
+        if (!GetMenuItemInfoW(hPopupMenu, i, TRUE, &mii))
+            continue;
+
+        HMENU hTargetSubMenu = SHGetMenuFromID(hMenu, mii.wID);
+        UINT currentMax = Shell_MergeMenus(hTargetSubMenu, mii.hSubMenu, 0,
+                                           uIDAdjust, uIDAdjustMax,
+                                           MM_ADDSEPARATOR | MM_SUBMENUSHAVEIDS);
+        maxID = max(maxID, currentMax);
+    }
+
+    return maxID;
+}
+
+static HMENU SHLoadPopupMenu(HINSTANCE hInstance, UINT uMenuId)
+{
+    HMENU hMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(uMenuId));
+    if (!hMenu)
+        return NULL;
+    HMENU hSubMenu = GetSubMenu(hMenu, 0);
+    RemoveMenu(hMenu, 0, MF_BYPOSITION);
+    DestroyMenu(hMenu);
+    return hSubMenu;
+}
+
+/*************************************************************************
+ * CDefFolderMenu_MergeMenu [SHELL32.702]
+ */
+EXTERN_C
+VOID WINAPI
+CDefFolderMenu_MergeMenu(
+    _In_ HINSTANCE hInstance,
+    _In_ UINT uMainMerge,
+    _In_ UINT uPopupMerge,
+    _Inout_ LPQCMINFO lpQcmInfo)
+{
+    UINT idCmdFirst = lpQcmInfo->idCmdFirst;
+    HMENU hPopupMenu;
+
+    if (uMainMerge)
+    {
+        hPopupMenu = SHLoadPopupMenu(hInstance, uMainMerge);
+        if (hPopupMenu)
+        {
+            enum { uFlags = MM_ADDSEPARATOR | MM_SUBMENUSHAVEIDS | MM_DONTREMOVESEPS };
+            idCmdFirst = Shell_MergeMenus(lpQcmInfo->hmenu,
+                                          hPopupMenu,
+                                          lpQcmInfo->indexMenu,
+                                          lpQcmInfo->idCmdFirst,
+                                          lpQcmInfo->idCmdLast,
+                                          uFlags);
+            DestroyMenu(hPopupMenu);
+        }
+    }
+
+    if (uPopupMerge)
+    {
+        hPopupMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(uPopupMerge));
+        if (hPopupMenu)
+        {
+            UINT id = _SHMergePopupMenus(lpQcmInfo->hmenu, hPopupMenu,
+                                         lpQcmInfo->idCmdFirst, lpQcmInfo->idCmdLast);
+            idCmdFirst = max(idCmdFirst, id);
+            DestroyMenu(hPopupMenu);
+        }
+    }
+
+    lpQcmInfo->idCmdFirst = idCmdFirst;
+}
+
 /*************************************************************************
  *  StrRStrA [SHELL32.389]
  */
