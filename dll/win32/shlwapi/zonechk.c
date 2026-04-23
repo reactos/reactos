@@ -125,9 +125,6 @@ ZoneCheckUrlExCacheW(
     IInternetSecurityManager *pWorkISM;
     DWORD dwPolicyBuf, dwContextBuf;
 
-    TRACE("(%s, %p, %ld, %p, %ld, %ld, 0x%lX, %p, %p)\n", wine_dbgstr_w(pszUrl),
-          pbPolicy, cbPolicy, pbContext, cbContext, dwAction, dwFlags, pSecuritySite, pISM);
-
     if (!pszUrl)
     {
         ERR("pszUrl was NULL\n");
@@ -292,9 +289,6 @@ ZoneCheckHostEx(
     _In_                             DWORD                      dwAction)
 {
     DWORD dwPolicyBuf, dwContextBuf;
-
-    TRACE("(%p, %p, %ld, %p, %ld, %s, %ld)\n", pISM, pbPolicy, cbPolicy, pbContext, cbContext,
-          wine_dbgstr_w(pszUrl), dwAction);
 
     if (!pISM)
         return E_INVALIDARG;
