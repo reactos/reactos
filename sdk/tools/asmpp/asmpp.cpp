@@ -618,8 +618,8 @@ static
 size_t
 skip_whitespace(TokenList& tokens, size_t index)
 {
-    while ((index < tokens.size()) &&
-           (tokens[index].type() == TOKEN_TYPE::WhiteSpace))
+    if ((index < tokens.size()) &&
+        (tokens[index].type() == TOKEN_TYPE::WhiteSpace))
     {
         index++;
     }
