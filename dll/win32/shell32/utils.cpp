@@ -2187,7 +2187,10 @@ SHELL32_ReparentAsAliasPidl(
  */
 EXTERN_C
 HRESULT WINAPI
-SHSetLocalizedName(_In_ PCWSTR pszPath, _In_ PCWSTR pszResModule, _In_ INT idsRes)
+SHSetLocalizedName(
+    _In_ PCWSTR pszPath,
+    _In_ PCWSTR pszResModule,
+    _In_ INT idsRes)
 {
     HRESULT hr;
     IShellFolder *pDesktop = NULL, *pParent = NULL;
