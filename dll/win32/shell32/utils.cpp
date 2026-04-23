@@ -2182,9 +2182,8 @@ SHELL32_ReparentAsAliasPidl(
 
 /*************************************************************************
  *              SHSetLocalizedName (SHELL32.@)
-#ifdef __REACTOS__
+ *
  * https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shsetlocalizedname
-#endif
  */
 EXTERN_C
 HRESULT WINAPI
