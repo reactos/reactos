@@ -178,7 +178,7 @@ ZoneCheckUrlExCacheW(
 
     if (!pbPolicy)
     {
-        dwPolicyBuf  = 0;
+        dwPolicyBuf = 0;
         pbPolicy = (PBYTE)&dwPolicyBuf;
         cbPolicy = sizeof(dwPolicyBuf);
     }
