@@ -105,17 +105,15 @@ HRESULT SuperPrivate_ZoneCheckPath(PCWSTR pszPath, DWORD dwExpectedZone)
  */
 HRESULT WINAPI
 ZoneCheckUrlExCacheA(
-    _In_         PCSTR                     pszUrl,
-    _Out_writes_bytes_opt_(cbPolicy)
-                 PBYTE                     pbPolicy,
-    _In_         DWORD                     cbPolicy,
-    _In_reads_bytes_opt_(cbContext)
-                 PBYTE                     pbContext,
-    _In_         DWORD                     cbContext,
-    _In_         DWORD                     dwAction,
-    _In_         DWORD                     dwFlags,
-    _In_opt_     IInternetSecurityMgrSite  *pSecuritySite,
-    _In_opt_     IInternetSecurityManager  *pISM)
+    _In_                             PCSTR                     pszUrl,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE                     pbPolicy,
+    _In_                             DWORD                     cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE                     pbContext,
+    _In_                             DWORD                     cbContext,
+    _In_                             DWORD                     dwAction,
+    _In_                             DWORD                     dwFlags,
+    _In_opt_                         IInternetSecurityMgrSite *pSecuritySite,
+    _In_opt_                         IInternetSecurityManager *pISM)
 {
     WCHAR szUrl[2048];
     if (!pszUrl)
@@ -133,17 +131,15 @@ ZoneCheckUrlExCacheA(
  */
 HRESULT WINAPI
 ZoneCheckUrlExCacheW(
-    _In_         PCWSTR                    pszUrl,
-    _Out_writes_bytes_opt_(cbPolicy)
-                 PBYTE                     pbPolicy,
-    _In_         DWORD                     cbPolicy,
-    _In_reads_bytes_opt_(cbContext)
-                 PBYTE                     pbContext,
-    _In_         DWORD                     cbContext,
-    _In_         DWORD                     dwAction,
-    _In_         DWORD                     dwFlags,
-    _In_opt_     IInternetSecurityMgrSite  *pSecuritySite,
-    _In_opt_     IInternetSecurityManager  *pISM)
+    _In_                             PCWSTR                    pszUrl,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE                     pbPolicy,
+    _In_                             DWORD                     cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE                     pbContext,
+    _In_                             DWORD                     cbContext,
+    _In_                             DWORD                     dwAction,
+    _In_                             DWORD                     dwFlags,
+    _In_opt_                         IInternetSecurityMgrSite *pSecuritySite,
+    _In_opt_                         IInternetSecurityManager *pISM)
 {
     HRESULT hr;
     IInternetSecurityManager *pWorkISM;
