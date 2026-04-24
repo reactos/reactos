@@ -9,7 +9,11 @@ static void test_LoadImage_1bpp(void)
     HDC hdc1, hdc2;
     HBITMAP hBmp1, hBmp2;
     BITMAP bitmap1, bitmap2;
-    BITMAPINFO bmi;
+    struct
+    {
+	    BITMAPINFOHEADER bmiHeader;
+	    RGBQUAD bmiColors[256];
+    } bmi;
     UINT size;
     HGLOBAL hMem;
     LPVOID lpBits;
@@ -47,7 +51,7 @@ static void test_LoadImage_1bpp(void)
 
     hMem = GlobalAlloc(GMEM_MOVEABLE, size);
     lpBits = GlobalLock(hMem);
-    result = GetDIBits(hdc1, hBmp1, 0, bitmap1.bmHeight, lpBits, &bmi, DIB_RGB_COLORS);
+    result = GetDIBits(hdc1, hBmp1, 0, bitmap1.bmHeight, lpBits, (PBITMAPINFO)&bmi, DIB_RGB_COLORS);
     if (!result)
     {
         skip("GetDIBits failed for 1 BPP bitmap\n");
@@ -104,7 +108,7 @@ static void test_LoadImage_1bpp(void)
     size = ((bitmap2.bmWidth * bitmap2.bmBitsPixel + 31) / 32) * 4 * bitmap2.bmHeight;
     ok(size == 16, "Expected 16, but size is %d\n", size);
 
-    result = GetDIBits(hdc2, hBmp2, 0, bitmap2.bmHeight, lpBits, &bmi, DIB_RGB_COLORS); // Check for success per Timo
+    result = GetDIBits(hdc2, hBmp2, 0, bitmap2.bmHeight, lpBits, (PBITMAPINFO)&bmi, DIB_RGB_COLORS); // Check for success per Timo
     if (!result)
     {
         skip("GetDIBits failed for 1 BPP bitmap\n");
