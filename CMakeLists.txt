@@ -238,14 +238,10 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
     # Version Options
     add_definitions(-DWINVER=0x502
-                    #-DWINVER=0x1000
                     -D_WIN32_IE=0x603
                     -D_WIN32_WINNT=0x502
-                    #-D_WIN32_WINNT=0x1000
                     -D_WIN32_WINDOWS=0x502
-                    #-D_WIN32_WINDOWS=0x1000
                     -D_SETUPAPI_VER=0x502
-                    #-D_SETUPAPI_VER=0x1000
                     -DMINGW_HAS_SECURE_API=1
                     -DD3D_UMD_INTERFACE_VERSION=0x000C # Vista
                     -DDXGKDDI_INTERFACE_VERSION=0x1052 # Vista

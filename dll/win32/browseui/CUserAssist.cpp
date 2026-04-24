@@ -10,12 +10,10 @@
 
 CUserAssist::CUserAssist()
 {
-
 }
 
 CUserAssist::~CUserAssist()
 {
-
 }
 
 // *** IUserAssist methods ***

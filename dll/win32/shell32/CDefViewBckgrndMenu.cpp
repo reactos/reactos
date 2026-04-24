@@ -11,6 +11,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 extern BOOL ShellCanPaste(const CComPtr<IShellFolder> &pSF);
+
 class CDefViewBckgrndMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu3,
