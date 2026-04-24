@@ -1045,11 +1045,9 @@ CommitWaveBufferApc(PVOID ApcContext,
            PIO_STATUS_BLOCK IoStatusBlock,
            ULONG Reserved)
 {
-    DWORD dwErrorCode;
     PSOUND_OVERLAPPED Overlap;
     KSSTREAM_HEADER* lpHeader;
 
-    dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
     Overlap = (PSOUND_OVERLAPPED)IoStatusBlock;
     lpHeader = Overlap->CompletionContext;
 
