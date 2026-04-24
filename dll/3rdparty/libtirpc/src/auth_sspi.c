@@ -422,7 +422,11 @@ authsspi_refresh(AUTH *auth, void *tmp)
                         0, 
                         &gd->ctx, 
                         &out_desc, 
-                        &ret_flags, 
+#ifndef __REACTOS__
+                        &ret_flags,
+#else
+                        (ULONG *)&ret_flags,
+#endif
                         &gd->expiry);
 #endif
 		if (recv_tokenp != SSPI_C_NO_BUFFER) {
@@ -721,7 +725,11 @@ uint32_t sspi_verify_mic(void *dummy, u_int seq, sspi_buffer_desc *bufin,
     log_hexdump(0, "sspi_verify_mic: calculating checksum over", bufin->value, bufin->length, 0);
     log_hexdump(0, "sspi_verify_mic: received checksum ", bufout->value, bufout->length, 0);
 
+#ifndef __REACTOS__
     return VerifySignature(ctx, &desc, seq, qop_state);
+#else
+    return VerifySignature(ctx, &desc, seq, (PULONG)qop_state);
+#endif
 }
 
 void sspi_release_buffer(sspi_buffer_desc *buf)
