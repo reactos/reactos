@@ -16,6 +16,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(zonechk);
 
 static IClassFactory *g_pZoneMgrCF = NULL; /* Internet Zone Manager's Class Factory (cached) */
 CRITICAL_SECTION g_csZoneMgrLock; /* Guards g_pZoneMgrCF (ReactOS only) */
+static HINSTANCE g_hinstZoneMgr = NULL;
 
 static HRESULT
 SHLWAPI_GetCachedZonesManagerInner(
@@ -36,7 +37,7 @@ SHLWAPI_GetCachedZonesManagerInner(
         }
 
         g_pZoneMgrCF = pCF;
-        SHPinDllOfCLSID(&CLSID_InternetSecurityManager);
+        g_hinstZoneMgr = SHPinDllOfCLSID(&CLSID_InternetSecurityManager);
     }
 
     return g_pZoneMgrCF->lpVtbl->CreateInstance(g_pZoneMgrCF, NULL, riid, ppv);
@@ -67,6 +68,11 @@ EXTERN_C VOID SHLWAPI_DeleteCachedZonesManager(VOID)
     {
         g_pZoneMgrCF->lpVtbl->Release(g_pZoneMgrCF);
         g_pZoneMgrCF = NULL;
+    }
+    if (g_hinstZoneMgr)
+    {
+        FreeLibrary(g_hinstZoneMgr);
+        g_hinstZoneMgr = NULL;
     }
     LeaveCriticalSection(&g_csZoneMgrLock);
 }
