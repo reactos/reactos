@@ -26,15 +26,12 @@ CConfiguration::CConfiguration()
       m_Submit(false),
       m_ListModules(false)
 {
-    WCHAR WindowsDirectory[MAX_PATH];
     WCHAR Interactive[32];
 
-    /* Check if we are running under ReactOS from the SystemRoot directory */
-    if(!GetWindowsDirectoryW(WindowsDirectory, MAX_PATH))
-        FATAL("GetWindowsDirectoryW failed\n");
-
-    m_IsReactOS = !_wcsnicmp(&WindowsDirectory[3], L"reactos", 7);
-    m_IsReactOS = m_IsReactOS || IsReactOS();
+    /* Check if we are running under ReactOS by calling our versionhelper function.
+       We cannot use the name of the SystemRoot folder, because bootcdregtest is using "c:\Windows".
+       Note: "IsReactOS()" without "::" would resolve to CConfiguration::IsReactOS(). */
+    m_IsReactOS = ::IsReactOS();
 
     if(GetEnvironmentVariableW(L"WINETEST_INTERACTIVE", Interactive, _countof(Interactive)))
         m_IsInteractive = _wtoi(Interactive);
