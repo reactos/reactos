@@ -421,8 +421,11 @@ WaveActivateSoundStreaming(
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE)lpParameter;
 
     PerformWaveStreaming(SoundDeviceInstance, NULL);
-    CloseHandle(SoundDeviceInstance->hSoundThread);
-    SoundDeviceInstance->hSoundThread = NULL;
+    if (SoundDeviceInstance->hSoundThread != NULL)
+    {
+        CloseHandle(SoundDeviceInstance->hSoundThread);
+        SoundDeviceInstance->hSoundThread = NULL;
+    }
     ExitThread(0);
 }
 
@@ -430,5 +433,6 @@ VOID
 InitiateSoundStreaming(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    SoundDeviceInstance->hSoundThread = CreateThread(NULL, 0, WaveActivateSoundStreaming, (PVOID)SoundDeviceInstance, 0, NULL);
+    if (SoundDeviceInstance->hSoundThread == NULL)
+        SoundDeviceInstance->hSoundThread = CreateThread(NULL, 0, WaveActivateSoundStreaming, (PVOID)SoundDeviceInstance, 0, NULL);
 }
