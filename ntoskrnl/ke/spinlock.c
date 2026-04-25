@@ -197,6 +197,7 @@ VOID
 NTAPI
 KeAcquireSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
+#if DBG
     /* Make sure we are at DPC or above! */
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
@@ -207,6 +208,7 @@ KeAcquireSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock)
                      0,
                      0);
     }
+#endif
 
     /* Do the inlined function */
     KxAcquireSpinLock(SpinLock);
@@ -220,6 +222,7 @@ VOID
 NTAPI
 KeReleaseSpinLockFromDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
+#if DBG
     /* Make sure we are at DPC or above! */
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
@@ -230,6 +233,7 @@ KeReleaseSpinLockFromDpcLevel(IN PKSPIN_LOCK SpinLock)
                      0,
                      0);
     }
+#endif
 
     /* Do the inlined function */
     KxReleaseSpinLock(SpinLock);
@@ -242,6 +246,7 @@ VOID
 FASTCALL
 KefAcquireSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
+#if DBG
     /* Make sure we are at DPC or above! */
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
@@ -252,6 +257,7 @@ KefAcquireSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock)
                      0,
                      0);
     }
+#endif
 
     /* Do the inlined function */
     KxAcquireSpinLock(SpinLock);
@@ -264,6 +270,7 @@ VOID
 FASTCALL
 KefReleaseSpinLockFromDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
+#if DBG
     /* Make sure we are at DPC or above! */
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
@@ -274,6 +281,7 @@ KefReleaseSpinLockFromDpcLevel(IN PKSPIN_LOCK SpinLock)
                      0,
                      0);
     }
+#endif
 
     /* Do the inlined function */
     KxReleaseSpinLock(SpinLock);
@@ -370,6 +378,7 @@ KeAcquireInStackQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock,
 #if 0
     KeAcquireQueuedSpinLockAtDpcLevel(LockHandle->LockQueue.Next);
 #else
+#if DBG
     /* Make sure we are at DPC or above! */
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
@@ -380,6 +389,7 @@ KeAcquireInStackQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock,
                      0,
                      0);
     }
+#endif
 #endif
 #endif
 
@@ -399,6 +409,7 @@ KeReleaseInStackQueuedSpinLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
     /* Call the internal function */
     KeReleaseQueuedSpinLockFromDpcLevel(LockHandle->LockQueue.Next);
 #else
+#if DBG
     /* Make sure we are at DPC or above! */
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
@@ -409,6 +420,7 @@ KeReleaseInStackQueuedSpinLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
                      0,
                      0);
     }
+#endif
 #endif
 #endif
 

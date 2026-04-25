@@ -192,6 +192,7 @@ VOID
 NTAPI
 ExpCheckPoolHeader(IN PPOOL_HEADER Entry)
 {
+#if DBG
     PPOOL_HEADER PreviousEntry, NextEntry;
 
     /* Is there a block before this one? */
@@ -289,6 +290,8 @@ ExpCheckPoolHeader(IN PPOOL_HEADER Entry)
                          (ULONG_PTR)Entry);
         }
     }
+#endif
+    UNREFERENCED_PARAMETER(Entry);
 }
 
 VOID
@@ -375,6 +378,7 @@ VOID
 NTAPI
 ExpCheckPoolBlocks(IN PVOID Block)
 {
+#if DBG
     BOOLEAN FoundBlock = FALSE;
     SIZE_T Size = 0;
     PPOOL_HEADER Entry;
@@ -409,6 +413,8 @@ ExpCheckPoolBlocks(IN PVOID Block)
         /* Otherwise, the blocks are messed up */
         KeBugCheckEx(BAD_POOL_HEADER, 10, (ULONG_PTR)Block, __LINE__, (ULONG_PTR)Entry);
     }
+#endif
+    UNREFERENCED_PARAMETER(Block);
 }
 
 FORCEINLINE
@@ -417,6 +423,7 @@ ExpCheckPoolIrqlLevel(IN POOL_TYPE PoolType,
                       IN SIZE_T NumberOfBytes,
                       IN PVOID Entry)
 {
+#if DBG
     //
     // Validate IRQL: It must be APC_LEVEL or lower for Paged Pool, and it must
     // be DISPATCH_LEVEL or lower for Non Paged Pool
@@ -434,6 +441,7 @@ ExpCheckPoolIrqlLevel(IN POOL_TYPE PoolType,
                      PoolType,
                      !Entry ? NumberOfBytes : (ULONG_PTR)Entry);
     }
+#endif
 }
 
 FORCEINLINE
