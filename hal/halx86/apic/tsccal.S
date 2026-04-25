@@ -39,9 +39,9 @@ _CalibrationISR_Exit:
     /* Read CMOS register C */
     mov al, HEX(0C)
     out HEX(70), al
-    jmp $+2
+    io_delay
     in al, HEX(71)
-    jmp $+2
+    io_delay
 
     /* Send EOI */
     call _HalpSendEOI@0
@@ -88,9 +88,9 @@ CalibrationISR_Exit:
     /* Read CMOS register C */
     mov al, HEX(0C)
     out HEX(70), al
-    jmp $+2
+    io_delay
     in al, HEX(71)
-    jmp $+2
+    io_delay
 
     /* Send EOI */
     call HalpSendEOI

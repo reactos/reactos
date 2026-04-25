@@ -14,6 +14,11 @@
 #include <asm.inc>
 #include <freeldr/include/arch/pc/x86common.h>
 
+#ifdef __clang__
+#define call CALL16
+#define ret RET16
+#endif
+
 #ifndef ROS_REGTEST
 #define WAIT_FOR_KEY
 #endif
@@ -225,7 +230,7 @@ found_drive:
 
     // Read the entire 2K-sized ISO9660 Primary Volume Descriptor at sector 16 (32K).
     // This calculation only holds for single-session ISOs, but we should never encounter anything else.
-    mov eax, 16
+    mov al, 16
     mov bx, trackbuf
     call getonesec
 
@@ -540,7 +545,7 @@ searchdir_iso:
     mov si, trackbuf
     pushad
     xchg bx, si
-    mov cx, word ptr ds:[BufSafe]
+    mov cx, trackbufsize / SECTOR_SIZE
     call getfssec
     popad
 
@@ -888,9 +893,9 @@ getlinsec_ebios:
 // Truncate BP to MaxTransfer
 //
 maxtrans:
-    cmp bp, word ptr ds:[MaxTransfer]
+    cmp bp, 127
     jna .ok
-    mov bp, word ptr ds:[MaxTransfer]
+    mov bp, 127
 .ok:
     ret
 
@@ -1091,14 +1096,7 @@ freeldr_sys:
 no_freeldr_msg:
     .ascii "FREELDR.SYS not found.", CR, LF, NUL
 
-.align 4
-BufSafe:
-    .word trackbufsize/SECTOR_SIZE              // Clusters we can load into trackbuf
-
 // Maximum transfer size
-.align 4
-MaxTransfer:
-    .word 127                                   // Hard disk modes
 MaxTransferCD:
     .word 32                                    // CD mode
 
@@ -1132,7 +1130,7 @@ sp_dummy:
 //
 // EBIOS disk address packet
 //
-.align 8
+.align 4
 dapa:
     .word 16                                    // Packet size
 .count:

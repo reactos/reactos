@@ -11,7 +11,13 @@
 #include <asm.inc>
 #include <freeldr/include/arch/pc/x86common.h>
 
+#ifdef __clang__
+#define call CALL16
+#define ret RET16
+#define BP_REL(x) [bp+x##Rel]
+#else
 #define BP_REL(x) [bp+x-offset start]
+#endif
 
 .code16
 
@@ -77,6 +83,23 @@ VolumeLabel:
     .ascii "NO NAME    "
 FileSystem:
     .ascii "FAT32   "
+
+#ifdef __clang__
+BytesPerSectorRel = BytesPerSector - start
+SectsPerClusterRel = SectsPerCluster - start
+ReservedSectorsRel = ReservedSectors - start
+NumberOfFatsRel = NumberOfFats - start
+MaxRootEntriesRel = MaxRootEntries - start
+SectorsPerFatRel = SectorsPerFat - start
+SectorsPerTrackRel = SectorsPerTrack - start
+NumberOfHeadsRel = NumberOfHeads - start
+HiddenSectorsRel = HiddenSectors - start
+SectorsPerFatBigRel = SectorsPerFatBig - start
+ExtendedFlagsRel = ExtendedFlags - start
+FSVersionRel = FSVersion - start
+RootDirStartClusterRel = RootDirStartCluster - start
+BootDriveRel = BootDrive - start
+#endif
 
 main:
     xor ax,ax               // Setup segment registers

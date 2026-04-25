@@ -1,7 +1,7 @@
 
 PnpBiosGetDeviceNodeCount:
 
-    mov ax, word ptr ds:[BSS_PnpBiosDataSegment]
+    mov ax, word ptr [BSS_PnpBiosDataSegment]
     push ax
 
     push cs
@@ -14,11 +14,15 @@ PnpBiosGetDeviceNodeCount:
 
     push 0
 
+#ifdef __clang__
+    call_far32 BSS_PnpBiosEntryPoint
+#else
     call dword ptr ds:[BSS_PnpBiosEntryPoint]
+#endif
     add sp, 12
 
     movzx ecx, ax
-    mov dword ptr ds:[BSS_PnpResult], ecx
+    mov dword ptr [BSS_PnpResult], ecx
 
     ret
 
@@ -26,16 +30,16 @@ PnpBiosGetDeviceNodeCount:
 PnpBiosGetDeviceNode:
 
     /* push bios segment */
-    mov ax, word ptr ds:[BSS_PnpBiosDataSegment]
+    mov ax, word ptr [BSS_PnpBiosDataSegment]
     push ax
 
     /* push control flag */
     push 1
 
     /* push pointer to node buffer (segment/offset) */
-    mov ax, word ptr ds:[BSS_PnpBiosBufferSegment]
+    mov ax, word ptr [BSS_PnpBiosBufferSegment]
     push ax
-    mov ax, word ptr ds:[BSS_PnpBiosBufferOffset]
+    mov ax, word ptr [BSS_PnpBiosBufferOffset]
     push ax
 
     /* push pointer to node number (segment/offset) */
@@ -47,11 +51,15 @@ PnpBiosGetDeviceNode:
     push 1
 
     /* call entry point */
+#ifdef __clang__
+    call_far32 BSS_PnpBiosEntryPoint
+#else
     call dword ptr ds:[BSS_PnpBiosEntryPoint]
+#endif
     add sp, 14
 
     movzx ecx, ax
-    mov dword ptr ds:[BSS_PnpResult], ecx
+    mov dword ptr [BSS_PnpResult], ecx
 
     ret
 
@@ -59,23 +67,27 @@ PnpBiosGetDeviceNode:
 PnpBiosGetDockStationInformation:
 
     /* push bios segment */
-    mov ax, word ptr ds:[BSS_PnpBiosDataSegment]
+    mov ax, word ptr [BSS_PnpBiosDataSegment]
     push ax
 
     /* push pointer to info structure (segment/offset) */
-    mov ax, word ptr ds:[BSS_PnpBiosBufferSegment]
+    mov ax, word ptr [BSS_PnpBiosBufferSegment]
     push ax
-    mov ax, word ptr ds:[BSS_PnpBiosBufferOffset]
+    mov ax, word ptr [BSS_PnpBiosBufferOffset]
     push ax
 
     /* push function number */
     push 5
 
     /* call entry point */
+#ifdef __clang__
+    call_far32 BSS_PnpBiosEntryPoint
+#else
     call dword ptr ds:[BSS_PnpBiosEntryPoint]
+#endif
     add sp, 8
 
     movzx ecx, ax
-    mov dword ptr ds:[BSS_PnpResult], ecx
+    mov dword ptr [BSS_PnpResult], ecx
 
     ret

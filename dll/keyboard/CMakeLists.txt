@@ -103,6 +103,11 @@ foreach(_keyboard_layout ${_keyboard_layouts})
     if(MSVC)
         # Merge the .text and .rdata section into the .data section
         target_link_options(${_keyboard_layout} PRIVATE "/ignore:4254;/SECTION:.data,ER;/MERGE:.text=.data;/MERGE:.rdata=.data;/MERGE:.bss=.data;/MERGE:.edata=.data")
+    elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        # LLD's MinGW driver already merges .edata into .rdata, which is
+        # merged into .data below.
+        target_link_options(${_keyboard_layout} PRIVATE
+            "SHELL:-Xlinker /ignore:4254 -Xlinker /SECTION:.data,ER -Xlinker /MERGE:.text=.data -Xlinker /MERGE:.rdata=.data -Xlinker /MERGE:.bss=.data")
     else()
         # Use a custom linker script
         target_link_options(${_keyboard_layout} PRIVATE "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/kbdlayout.lds")

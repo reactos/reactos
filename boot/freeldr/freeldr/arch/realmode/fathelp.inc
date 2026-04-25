@@ -44,6 +44,8 @@
 
 #define BootPartition           HEX(7dfd)
 
+MSG_LOADING_OFFSET = msgLoading - start
+
 
 // This code will be stored in the first 512 bytes
 // of freeldr.sys. The first 3 bytes will be a jmp
@@ -69,7 +71,7 @@ FatHelperEntryPoint:
     push ax
 
     /* Display "Loading FreeLoader..." message */
-    mov si, offset msgLoading - FREELDR_BASE
+    mov si, offset MSG_LOADING_OFFSET
     call CS_PutChars
 
     call ReadFatIntoMemory
@@ -96,7 +98,11 @@ LoadFile3:
     push ax
     xor  bx,bx              // Load ROSLDR starting at 0000:8000h
     push es
+#ifdef __clang__
+    call_far32_ss_bp -ReadClusterOffset
+#else
     call ReadCluster
+#endif
     pop  es
 
     xor  bx,bx
@@ -137,7 +143,11 @@ ReadFatIntoMemory:
     mov bx, HEX(7000)
     mov es,bx
     xor bx,bx
+#ifdef __clang__
+    call_far32_ss_bp -ReadSectorsOffset
+#else
     call ReadSectors
+#endif
     ret
 
 
@@ -230,7 +240,11 @@ CS_PutChars:
     mov ds, ax
 
     /* Display the message */
+#ifdef __clang__
+    call_far32_ss_bp -PutCharsOffset
+#else
     call PutChars
+#endif
 
     /* Restore necessary registers and return */
     pop ds
@@ -242,4 +256,3 @@ msgLoading:
 
     .org 510                // Pad to 510 bytes
     .word HEX(0aa55)        // BootSector signature
-

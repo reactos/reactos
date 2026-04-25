@@ -14,6 +14,9 @@
 #define RELOCATOR_PROGRAM_SIZE_BLOCKS   ((RELOCATOR_PROGRAM_SIZE + (RELOCATOR_BLOCK_SIZE - 1)) / RELOCATOR_BLOCK_SIZE)
 #define RELOCATOR_PROGRAM_SIZE_ALIGNED  (RELOCATOR_PROGRAM_SIZE_BLOCKS * RELOCATOR_BLOCK_SIZE)
 
+RELOCATOR_FUNCTION_SIZE = RELOCATOR_FUNCTION_END - RELOCATOR_FUNCTION_START
+RELOCATOR_FUNCTION_START_OFFSET = RELOCATOR_FUNCTION_START - start
+
 /* WARNING: This function must be called at the real-mode entry point since it restarts FreeLoader
  * This function will update BSS_CurrentSegmentBaseAddress and relocate if necessary */
 RelocateFreeLdr:
@@ -23,12 +26,14 @@ RelocateFreeLdr:
     /* Call the sub-function to retrieve the base address */
     call .SubCall
 .SubCall:
+RELOCATOR_SUBCALL_OFFSET = .SubCall - start
+
     /* Pop the return address into BX. Since the return address is consumed,
      * this function does not return to RelocateFreeLdr */
     pop bx
 
     /* Calculate IP base address and convert to segment value */
-	sub bx, offset .SubCall - RELOCATOR_FUNCTION_BASE
+	sub bx, offset RELOCATOR_SUBCALL_OFFSET
 	shr bx, 4
 
     /* Load CS base address into AX and add it with IP base address */
@@ -52,8 +57,8 @@ RelocateFreeLdr:
 
     /* Copy the realmode part of FRLDR16 code to TEMPCODE16_BASE */
     mov di, TEMPCODE16_BASE
-    mov si, offset RELOCATOR_FUNCTION_START - RELOCATOR_FUNCTION_BASE
-    mov cx, offset RELOCATOR_FUNCTION_END - RELOCATOR_FUNCTION_START
+    mov si, offset RELOCATOR_FUNCTION_START_OFFSET
+    mov cx, offset RELOCATOR_FUNCTION_SIZE
     rep movsb
 
     /* Jump to relocated realmode part */

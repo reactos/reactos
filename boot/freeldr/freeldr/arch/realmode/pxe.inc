@@ -25,7 +25,11 @@ PxeCallApi:
     push ax
     mov ax, word ptr ds:[BSS_PxeFunction]
     push ax
+#ifdef __clang__
+    call_far32 BSS_PxeEntryPoint
+#else
     call dword ptr ds:[BSS_PxeEntryPoint]
+#endif
     add esp, 6
     mov word ptr ds:[BSS_PxeResult], ax
 

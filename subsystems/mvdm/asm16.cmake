@@ -6,10 +6,34 @@
 
 if(NOT MSVC)
 ###
-### For GCC
+### For GCC / Clang
 ###
+
+# Clang's LLVM integrated assembler does not emit 16-bit ELF relocations for
+# the i386-unknown-elf target (errors out on `mov bx, offset Sym`, `.word Sym`,
+# etc.), so route 16-bit MASM-style assembly through the i686 GNU `as` from
+# the RosBE GCC toolchain.
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang" AND NOT ASM16_GAS)
+    set(_asm16_gas_hints "")
+    if(REACTOS_CLANG_GCC_TOOLCHAIN)
+        get_filename_component(_rosbe_mingw_root "${REACTOS_CLANG_GCC_TOOLCHAIN}" DIRECTORY)
+        list(APPEND _asm16_gas_hints
+            "${_rosbe_mingw_root}/i686-w64-mingw32/bin"
+            "${REACTOS_CLANG_GCC_TOOLCHAIN}/bin")
+    endif()
+    find_program(ASM16_GAS NAMES i686-w64-mingw32-as
+        HINTS ${_asm16_gas_hints})
+    if(NOT ASM16_GAS)
+        message(FATAL_ERROR
+            "asm16.cmake: cannot find i686-w64-mingw32-as for 16-bit MASM-style "
+            "assembly. Pass -DREACTOS_CLANG_GCC_TOOLCHAIN=<rosbe mingw-gcc dir> "
+            "or place i686-w64-mingw32-as on PATH.")
+    endif()
+endif()
+
 function(add_asm16_bin _target _binary_file _base_address)
     set(_concatenated_asm_file ${CMAKE_CURRENT_BINARY_DIR}/${_target}.asm)
+    set(_preprocessed_file ${CMAKE_CURRENT_BINARY_DIR}/${_target}.pp.s)
     set(_object_file ${CMAKE_CURRENT_BINARY_DIR}/${_target}.o)
 
     # unset(_source_file_list)
@@ -40,19 +64,42 @@ function(add_asm16_bin _target _binary_file _base_address)
     concatenate_files(${_concatenated_asm_file} ${_source_file_list})
     set_source_files_properties(${_concatenated_asm_file} PROPERTIES GENERATED TRUE)
 
-    ##
-    ## All this part is the same as CreateBootSectorTarget
-    ##
-    add_custom_command(
-        OUTPUT ${_object_file}
-        COMMAND ${CMAKE_ASM_COMPILER} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} -D__ASM__ -c ${_concatenated_asm_file}
-        DEPENDS ${_concatenated_asm_file})
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        # Step 1: CPP preprocess via Clang. We feed the result to GNU `as`,
+        # not Clang's integrated assembler, so undefine __clang__ to keep
+        # asm.inc on the GAS path (otherwise it adds case-only aliases that
+        # collide under MinGW GAS's case-insensitive macro names).
+        add_custom_command(
+            OUTPUT ${_preprocessed_file}
+            COMMAND ${CMAKE_ASM_COMPILER} -E -x assembler-with-cpp -U__clang__ -o ${_preprocessed_file} -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} -D__ASM__ ${_concatenated_asm_file}
+            DEPENDS ${_concatenated_asm_file})
 
-    add_custom_command(
-        OUTPUT ${_binary_file}
-        COMMAND native-obj2bin ${_object_file} ${_binary_file} ${_base_address}
-        # COMMAND objcopy --output-target binary --image-base 0x${_base_address} ${_object_file} ${_binary_file}
-        DEPENDS ${_object_file} native-obj2bin)
+        # Step 2: Assemble with GNU as (handles 16-bit relocations).
+        add_custom_command(
+            OUTPUT ${_object_file}
+            COMMAND ${ASM16_GAS} ${_preprocessed_file} -o ${_object_file}
+            DEPENDS ${_preprocessed_file})
+
+        # Step 3: Flatten to a raw binary at the expected real-mode load address
+        add_custom_command(
+            OUTPUT ${_binary_file}
+            COMMAND native-obj2bin ${_object_file} ${_binary_file} ${_base_address}
+            DEPENDS ${_object_file} native-obj2bin)
+    else()
+        ##
+        ## All this part is the same as CreateBootSectorTarget
+        ##
+        add_custom_command(
+            OUTPUT ${_object_file}
+            COMMAND ${CMAKE_ASM_COMPILER} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} -D__ASM__ -c ${_concatenated_asm_file}
+            DEPENDS ${_concatenated_asm_file})
+
+        add_custom_command(
+            OUTPUT ${_binary_file}
+            COMMAND native-obj2bin ${_object_file} ${_binary_file} ${_base_address}
+            # COMMAND objcopy --output-target binary --image-base 0x${_base_address} ${_object_file} ${_binary_file}
+            DEPENDS ${_object_file} native-obj2bin)
+    endif()
 
     add_custom_target(${_target} ALL DEPENDS ${_binary_file})
     # set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${_target} SUFFIX ".bin")

@@ -41,7 +41,15 @@
 #include <asm.inc>
 #include <freeldr/include/arch/pc/x86common.h>
 
+#ifdef __clang__
+#define call CALL16
+#define ret RET16
+#define BP_REL(x) [bp+x##Rel]
+#define BP_REL_PLUS(x, n) [bp+x##Rel+n]
+#else
 #define BP_REL(x) [bp+x-offset start]
+#define BP_REL_PLUS(x, n) [bp+x+n-offset start]
+#endif
 
 DataAreaStartHigh       =   2
 DataAreaStartLow        =   4
@@ -101,6 +109,19 @@ VolumeLabel:
 FileSystem:
     .ascii "FAT12   "
 
+#ifdef __clang__
+BytesPerSectorRel = BytesPerSector - start
+SectsPerClusterRel = SectsPerCluster - start
+ReservedSectorsRel = ReservedSectors - start
+NumberOfFatsRel = NumberOfFats - start
+MaxRootEntriesRel = MaxRootEntries - start
+SectorsPerFatRel = SectorsPerFat - start
+SectorsPerTrackRel = SectorsPerTrack - start
+NumberOfHeadsRel = NumberOfHeads - start
+HiddenSectorsRel = HiddenSectors - start
+BootDriveRel = BootDrive - start
+#endif
+
 main:
     xor ax, ax
     mov ss, ax
@@ -154,7 +175,7 @@ CalcDriveSize:
     mov al, byte ptr BP_REL(NumberOfFats)       // Number of fats
     mul word ptr BP_REL(SectorsPerFat)          // Times sectors per fat
     add ax, word ptr BP_REL(HiddenSectors)
-    adc dx, word ptr BP_REL(HiddenSectors+2)    // Add the number of hidden sectors
+    adc dx, word ptr BP_REL_PLUS(HiddenSectors, 2) // Add the number of hidden sectors
     add ax, word ptr BP_REL(ReservedSectors)    // Add the number of reserved sectors
     adc dx, cx                                  // Add carry bit
     mov word ptr [bp - DataAreaStartLow], ax    // Save the starting sector of the root directory
