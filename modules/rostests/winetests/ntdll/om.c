@@ -1675,8 +1675,8 @@ static void _test_object_name( unsigned line, HANDLE handle, const WCHAR *expect
     memset( buffer, 0, sizeof(buffer) );
     status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(buffer), &len );
     ok_(__FILE__,line)( status == STATUS_SUCCESS, "NtQueryObject failed %lx\n", status );
-    ok_(__FILE__,line)( len >= sizeof(OBJECT_NAME_INFORMATION) + str->Length || broken(/* __REACTOS__ */ GetNTVersion() < _WIN32_WINNT_VISTA), "unexpected len %lu\n", len );
-    ok_(__FILE__,line)( compare_unicode_string( str, expected_name ) || broken(/* __REACTOS__ */ GetNTVersion() < _WIN32_WINNT_VISTA), "got %s, expected %s\n",
+    ok_(__FILE__,line)( len >= sizeof(OBJECT_NAME_INFORMATION) + str->Length, "unexpected len %lu\n", len );
+    ok_(__FILE__,line)( compare_unicode_string( str, expected_name ), "got %s, expected %s\n",
                         debugstr_w(str->Buffer), debugstr_w(expected_name) );
 }
 
@@ -1879,12 +1879,22 @@ static void test_query_object(void)
     pNtClose(handle);
 
     handle = GetProcessWindowStation();
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+        swprintf( expect, ARRAY_SIZE(expect), L"\\Windows\\WindowStations\\WinSta0");
+    else
+#endif
     swprintf( expect, ARRAY_SIZE(expect), L"\\Sessions\\%u\\Windows\\WindowStations\\WinSta0", NtCurrentTeb()->Peb->SessionId );
     test_object_name( handle, expect );
     test_object_type( handle, L"WindowStation" );
     test_no_file_info( handle );
 
     handle = GetThreadDesktop( GetCurrentThreadId() );
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+        test_object_name( handle, L"\\SADesktop" );
+    else
+#endif
     test_object_name( handle, L"\\Default" );
     test_object_type( handle, L"Desktop" );
     test_no_file_info( handle );
