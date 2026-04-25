@@ -142,6 +142,7 @@ list(APPEND SOURCE
     user/ntuser/mouse.c
     user/ntuser/msgqueue.c
     user/ntuser/nonclient.c
+    user/ntuser/wndsnap.c
     user/ntuser/ntstubs.c
     user/ntuser/ntuser.c
     user/ntuser/painting.c

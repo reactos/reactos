@@ -37,7 +37,6 @@ DBG_DEFAULT_CHANNEL(UserDefwnd);
              (WindowRect.right - WindowRect.left == ParentClientRect.right) && \
              (WindowRect.bottom - WindowRect.top == ParentClientRect.bottom)))
 
-
 VOID FASTCALL
 UserDrawWindowFrame(HDC hdc,
                     RECTL *rect,
@@ -134,21 +133,6 @@ NC_GetSysPopupPos(PWND Wnd, RECT *Rect)
       Rect->right = Rect->left + UserGetSystemMetrics(SM_CYCAPTION) - 1;
       Rect->bottom = Rect->top + UserGetSystemMetrics(SM_CYCAPTION) - 1;
     }
-}
-
-static UINT
-GetSnapActivationPoint(PWND Wnd, POINT pt)
-{
-    // TODO: SPI_GETMOUSEDOCKTHRESHOLD
-    RECT wa;
-    if (!GetSnapSetting(bDockMoving))
-        return HTNOWHERE;
-    UserSystemParametersInfo(SPI_GETWORKAREA, 0, &wa, 0); /* FIXME: MultiMon of PWND */
-
-    if (pt.x <= wa.left) return HTLEFT;
-    if (pt.x >= wa.right-1) return HTRIGHT;
-    if (pt.y <= wa.top) return HTTOP; /* Maximize */
-    return HTNOWHERE;
 }
 
 LONG FASTCALL
@@ -267,6 +251,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    BOOL iconic;
    BOOL moved = FALSE;
    BOOL DragFullWindows = FALSE;
+   SNAP_PREVIEW_STATE snapPreview;
    PWND pWndParent = NULL;
    WPARAM syscommand = (wParam & 0xfff0);
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
@@ -369,6 +354,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    }
 
    hdc = UserGetDCEx( pWndParent, 0, DCX_CACHE );
+   SnapPreviewInit(&snapPreview);
    if (iconic)
    {
        DragCursor = pwnd->pcls->spicn;
@@ -406,8 +392,20 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    for(;;)
    {
       int dx = 0, dy = 0;
+      BOOL animating = SnapPreviewAdvance(hdc, &snapPreview, &pwnd->rcWindow);
 
-      if (!co_IntGetPeekMessage(&msg, 0, 0, 0, PM_REMOVE, TRUE)) break;
+      if (!co_IntGetPeekMessage(&msg, 0, 0, 0, PM_REMOVE, animating ? FALSE : TRUE))
+      {
+         if (animating)
+         {
+            LARGE_INTEGER Delay;
+
+            Delay.QuadPart = (LONGLONG)-SNAP_ANIM_STEP_DELAY_MS * 10000;
+            KeDelayExecutionThread(KernelMode, FALSE, &Delay);
+            continue;
+         }
+         break;
+      }
       if (IntCallMsgFilter( &msg, MSGF_SIZE )) continue;
 
       if (msg.message == WM_KEYDOWN && (msg.wParam == VK_RETURN || msg.wParam == VK_ESCAPE))
@@ -430,6 +428,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
             {
                 if (DragFullWindows)
                 {
+                    SnapPreviewHide(hdc, &snapPreview);
                     co_IntSnapWindow(pwnd, snapTo);
                     if (!wasSnap)
                         pwnd->InternalPos.NormalRect = origRect;
@@ -540,7 +539,8 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                       co_IntCalculateSnapPosition(pwnd, snapTo, &snapPreviewRect);
                       if (DragFullWindows)
                       {
-                          /* TODO: Show preview of snap */
+                          SnapPreviewShow(hdc, &snapPreview, snapTo, &snapPreviewRect, pt, &pwnd->rcWindow);
+                          continue; /* Don't move the actual window while preview is showing */
                       }
                       else
                       {
@@ -548,6 +548,11 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                           UserDrawMovingFrame(hdc, pFrameRect, thickframe);
                           continue;
                       }
+                  }
+                  else if (DragFullWindows && snapPreview.bVisible)
+                  {
+                      /* Cursor moved away from screen edge */
+                      SnapPreviewHide(hdc, &snapPreview);
                   }
               }
 
@@ -633,6 +638,8 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    }
 
    pwnd->head.pti->TIF_flags &= ~TIF_MOVESIZETRACKING;
+
+   SnapPreviewCleanup(hdc, &snapPreview);
 
    IntReleaseCapture();
 
