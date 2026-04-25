@@ -283,11 +283,53 @@ PolyBezierTo(
     _In_reads_(cpt) const POINT *apt,
     _In_ DWORD cpt)
 {
+    POINT pt1 = { 0, 0 };
+    BOOL ret = FALSE;
+
     HANDLE_EMETAFDC(BOOL, PolyBezierTo, FALSE, hdc, apt, cpt);
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
-    return NtGdiPolyPolyDraw(hdc , (PPOINT)apt, &cpt, 1, GdiPolyBezierTo);
+    if (cpt == 3)
+    {
+        /* If there are exactly 3 points, see if all three points of
+         * the PolyBezierTo are equal. */
+        if (apt[0].x == apt[1].x && apt[1].x == apt[2].x &&
+            apt[0].y == apt[1].y && apt[1].y == apt[2].y)
+        {
+            POINT pt1 = { 0, 0 }; // Current Position
+            /* If all points are equal and they equal the start point,
+             * then we can just return TRUE as an optimization. */
+            if (GetCurrentPositionEx(hdc, &pt1) &&
+                pt1.x == apt[0].x && pt1.y == apt[0].y)
+                return TRUE;
+            /* If they are all equal, but not equal to the start point,
+             * then we can just do a LineTo and return as an optimization. */
+            else
+                return LineTo(hdc, apt[0].x, apt[0].y); 
+        }
+    }
+
+    /* Following based on Wine 10.0 nulldrv_PolyBezierTo function */
+    POINT *pts = HeapAlloc(GetProcessHeap(), 0, (cpt + 1) * sizeof(*apt));
+
+    if (pts)
+    {
+        if (GetCurrentPositionEx(hdc, &pt1))
+        {
+            pts[0] = pt1;
+            memcpy(&pts[1], apt,  sizeof(*apt) * cpt);
+            cpt++;
+            ret = NtGdiPolyPolyDraw(hdc , (PPOINT)pts, &cpt, 1, GdiPolyBezierTo);
+        }
+        else
+            ret = FALSE;
+        HeapFree(GetProcessHeap(), 0, pts);
+    }
+    else
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+
+    return ret;
 }
 
 
@@ -356,11 +398,33 @@ PolylineTo(
     _In_reads_(cpt) const POINT *apt,
     _In_ DWORD cpt)
 {
+    POINT pt1 = { 0, 0 };
+    BOOL ret = FALSE;
+
     HANDLE_EMETAFDC(BOOL, PolylineTo, FALSE, hdc, apt, cpt);
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
-    return NtGdiPolyPolyDraw(hdc , (PPOINT)apt, &cpt, 1, GdiPolyLineTo);
+    /* Following based on Wine 10.0 nulldrv_PolylineTo function */
+    POINT *pts = HeapAlloc(GetProcessHeap(), 0, (cpt + 1) * sizeof(*apt));
+
+    if (pts)
+    {
+        if (GetCurrentPositionEx(hdc, &pt1))
+        {
+            pts[0] = pt1;
+            memcpy(&pts[1], apt,  sizeof(*apt) * cpt);
+            cpt++;
+            ret = NtGdiPolyPolyDraw(hdc , (PPOINT)pts, &cpt, 1, GdiPolyLineTo);
+        }
+        else
+            ret = FALSE;
+        HeapFree(GetProcessHeap(), 0, pts);
+    }
+    else
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+
+    return ret;
 }
 
 

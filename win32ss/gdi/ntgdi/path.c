@@ -323,6 +323,8 @@ PATH_ReserveEntries(
         pPointsNew = (POINT *)ExAllocatePoolWithTag(PagedPool, numEntriesToAllocate * sizeof(POINT), TAG_PATH);
         if (!pPointsNew)
             return FALSE;
+         else
+            memset(pPointsNew, 0, numEntriesToAllocate * sizeof(POINT));
 
         pFlagsNew = (BYTE *)ExAllocatePoolWithTag(PagedPool, numEntriesToAllocate * sizeof(BYTE), TAG_PATH);
         if (!pFlagsNew)
@@ -330,6 +332,8 @@ PATH_ReserveEntries(
             ExFreePoolWithTag(pPointsNew, TAG_PATH);
             return FALSE;
         }
+        else
+            memset(pFlagsNew, 0, numEntriesToAllocate * sizeof(BYTE));
 
         /* Copy old arrays to new arrays and discard old arrays */
         if (pPath->pPoints)
@@ -461,15 +465,25 @@ PATH_CheckRect(
 /* add a number of points, converting them to device coords */
 /* return a pointer to the first type byte so it can be fixed up if necessary */
 static BYTE *add_log_points( DC *dc, PPATH path, const POINT *points,
-                             DWORD count, BYTE type )
+                             DWORD count, BYTE type, BOOL bExtraPt )
 {
     BYTE *ret;
 
     if (!PATH_ReserveEntries( path, path->numEntriesUsed + count )) return NULL;
 
     ret = &path->pFlags[path->numEntriesUsed];
-    memcpy( &path->pPoints[path->numEntriesUsed], points, count * sizeof(*points) );
-    IntLPtoDP( dc, &path->pPoints[path->numEntriesUsed], count );
+
+    if (bExtraPt && path->numEntriesUsed == 1)
+    {
+        memcpy( &path->pPoints[0], points, (count + 1) * sizeof(*points) );
+        IntLPtoDP( dc, &path->pPoints[0], count + 1);
+    }
+    else
+    {
+        memcpy( &path->pPoints[path->numEntriesUsed], points, count * sizeof(*points) );
+        IntLPtoDP( dc, &path->pPoints[path->numEntriesUsed], count );
+    }
+
     memset( ret, type, count );
     path->numEntriesUsed += count;
     return ret;
@@ -531,10 +545,10 @@ static void close_figure( PPATH path )
 
 /* add a number of points, starting a new stroke if necessary */
 static BOOL add_log_points_new_stroke( DC *dc, PPATH path, const POINT *points,
-                                       DWORD count, BYTE type )
+                                       DWORD count, BYTE type, BOOL bExtraPt)
 {
     if (!start_new_stroke( path )) return FALSE;
-    if (!add_log_points( dc, path, points, count, type )) return FALSE;
+    if (!add_log_points( dc, path, points, count, type, bExtraPt )) return FALSE;
     update_current_pos( path );
 
     TRACE("ALPNS : Pos X %d Y %d\n",path->pos.x, path->pos.y);
@@ -612,7 +626,7 @@ PATH_LineTo(
            }
        }
     }
-    Ret = add_log_points_new_stroke( dc, pPath, &point, 1, PT_LINETO );
+    Ret = add_log_points_new_stroke( dc, pPath, &point, 1, PT_LINETO , FALSE);
     PATH_UnlockPath(pPath);
     return Ret;
 }
@@ -1143,7 +1157,7 @@ PATH_PolyBezierTo(
     pPath = PATH_LockPath(dc->dclevel.hPath);
     if (!pPath) return FALSE;
 
-    ret = add_log_points_new_stroke( dc, pPath, pts, cbPoints, PT_BEZIERTO );
+    ret = add_log_points_new_stroke( dc, pPath, pts, cbPoints, PT_BEZIERTO , TRUE);
 
     PATH_UnlockPath(pPath);
     return ret;
@@ -1166,7 +1180,7 @@ PATH_PolyBezier(
     pPath = PATH_LockPath(dc->dclevel.hPath);
     if (!pPath) return FALSE;
 
-    type = add_log_points( dc, pPath, pts, cbPoints, PT_BEZIERTO );
+    type = add_log_points( dc, pPath, pts, cbPoints, PT_BEZIERTO, FALSE );
     if (!type) return FALSE;
 
     type[0] = PT_MOVETO;
@@ -1217,7 +1231,7 @@ PATH_PolyDraw(
             break;
         case PT_LINETO:
         case PT_LINETO | PT_CLOSEFIGURE:
-            if (!add_log_points_new_stroke( dc, pPath, &pts[i], 1, PT_LINETO ))
+            if (!add_log_points_new_stroke( dc, pPath, &pts[i], 1, PT_LINETO , FALSE))
             {
                PATH_UnlockPath(pPath);
                return FALSE;
@@ -1227,7 +1241,7 @@ PATH_PolyDraw(
             if ((i + 2 < cbPoints) && (types[i + 1] == PT_BEZIERTO) &&
                 (types[i + 2] & ~PT_CLOSEFIGURE) == PT_BEZIERTO)
             {
-                if (!add_log_points_new_stroke( dc, pPath, &pts[i], 3, PT_BEZIERTO ))
+                if (!add_log_points_new_stroke( dc, pPath, &pts[i], 3, PT_BEZIERTO , FALSE))
                 {
                    PATH_UnlockPath(pPath);
                    return FALSE;
@@ -1278,7 +1292,10 @@ PATH_PolylineTo(
     pPath = PATH_LockPath(dc->dclevel.hPath);
     if (!pPath) return FALSE;
 
-    ret = add_log_points_new_stroke( dc, pPath, pts, cbPoints, PT_LINETO );
+    if (pPath->newStroke)
+        cbPoints--;
+
+    ret = add_log_points_new_stroke( dc, pPath, pts, cbPoints, PT_LINETO , TRUE);
     PATH_UnlockPath(pPath);
     return ret;
 }
@@ -1316,7 +1333,7 @@ PATH_PolyPolygon(
         count += counts[poly];
     }
 
-    type = add_log_points( dc, pPath, pts, count, PT_LINETO );
+    type = add_log_points( dc, pPath, pts, count, PT_LINETO, FALSE );
     if (!type)
     {
        PATH_UnlockPath(pPath);
