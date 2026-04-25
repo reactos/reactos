@@ -83,8 +83,13 @@ MACRO(STUBCODE_U, Name, SyscallId, ArgCount)
 ENDM
 MACRO(STUBCODE_K, Name, SyscallId, ArgCount)
     .ENDPROLOG
+#ifdef _USE_ML
     EXTERN Nt&Name:PROC
     lea rax, Nt&Name[rip]
+#else
+    EXTERN Nt\Name:PROC
+    lea rax, Nt\Name[rip]
+#endif
     mov r10, ArgCount * 8
     jmp KiZwSystemService
 ENDM
@@ -125,17 +130,27 @@ MACRO(START_PROC, Name, StackBytes)
     PUBLIC _&Name&@&StackBytes
     .PROC _&Name&@&StackBytes
 ENDM
-#else
+#elif defined(_USE_ML)
 MACRO(MAKE_LABEL, Name, StackBytes)
-    PUBLIC &Name
-    &Name:
+    PUBLIC Name
+    Name:
 ENDM
 MACRO(START_PROC, Name, StackBytes)
-    PUBLIC &Name
-    .PROC &Name
+    PUBLIC Name
+    .PROC Name
+ENDM
+#else
+MACRO(MAKE_LABEL, Name, StackBytes)
+    PUBLIC \Name
+    \Name:
+ENDM
+MACRO(START_PROC, Name, StackBytes)
+    PUBLIC \Name
+    .PROC \Name
 ENDM
 #endif
 
+#ifdef _USE_ML
 MACRO(STUB_U, Name, ArgCount)
     MAKE_LABEL Zw&Name, %ArgCount * 4
     START_PROC Nt&Name, %ArgCount * 4
@@ -150,5 +165,21 @@ MACRO(STUB_K, Name, ArgCount)
     .ENDP
     SyscallId = SyscallId + 1
 ENDM
+#else
+MACRO(STUB_U, Name, ArgCount)
+    MAKE_LABEL Zw\Name, %ArgCount * 4
+    START_PROC Nt\Name, %ArgCount * 4
+    STUBCODE_U Name, SyscallId, %ArgCount
+    .ENDP
+    SyscallId = SyscallId + 1
+ENDM
+
+MACRO(STUB_K, Name, ArgCount)
+    START_PROC Zw\Name, %ArgCount * 4
+    STUBCODE_K Name, SyscallId, %ArgCount
+    .ENDP
+    SyscallId = SyscallId + 1
+ENDM
+#endif
 
 #endif

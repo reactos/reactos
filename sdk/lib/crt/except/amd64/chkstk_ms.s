@@ -16,11 +16,18 @@
 .code64
 
 PUBLIC __chkstk
+/* Clang's compiler-rt (libclang_rt.builtins) already provides ___chkstk_ms for
+ * the MinGW x86_64 target, and clang.cmake links it into every module. Skip
+ * our alias on Clang to avoid a duplicate-symbol warning from lld. */
+#ifndef __clang__
 PUBLIC ___chkstk_ms
+#endif
 PUBLIC __alloca_probe
 
 __alloca_probe:
+#ifndef __clang__
 ___chkstk_ms:
+#endif
 .PROC __chkstk
 
     push rcx                    /* save temps */

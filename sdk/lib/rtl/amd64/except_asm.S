@@ -32,7 +32,7 @@ PUBLIC RtlCaptureContext
     mov [rcx + CxRax], rax
 
     /* Set ContextFlags */
-    mov dword ptr [rcx + CxContextFlags], (CONTEXT_FULL or CONTEXT_SEGMENTS)
+    mov dword ptr [rcx + CxContextFlags], (CONTEXT_FULL OR CONTEXT_SEGMENTS)
 
     /* Store the basic register context */
     mov [rcx + CxRcx], rcx
@@ -268,12 +268,12 @@ PUBLIC RtlRaiseException
 
     /* Allocate stack space for a CONTEXT record */
     sub rsp, CONTEXT_FRAME_LENGTH + 8
-    .allocstack CONTEXT_FRAME_LENGTH + 8
+    .ALLOCSTACK CONTEXT_FRAME_LENGTH + 8
 
     /* Save the ExceptionRecord pointer */
     mov [rsp + CONTEXT_FRAME_LENGTH + 8 + P1Home], rcx
 
-    .endprolog
+    .ENDPROLOG
 
     /* Save the return address in EXCEPTION_RECORD.ExceptionAddress */
     mov rdx, [rsp + CONTEXT_FRAME_LENGTH + 8]

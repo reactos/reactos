@@ -5,6 +5,8 @@
  * COPYRIGHT:   Copyright 2011-2024 Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
+#ifdef _USE_ML
+
 MACRO(ASSERT_TRAP_FRAME_INTS_ENABLED, Register)
 #if DBG
     LOCAL IntsAreEnabled
@@ -41,7 +43,6 @@ ENDM
 // Clobbers all volatile registers except rax.
 MACRO(HANDLE_USER_APCS, ThreadReg, TrapFrame)
     LOCAL NoUserApcPending
-
     /* Check for pending user APC */
     cmp byte ptr [ThreadReg + ThApcState + AsUserApcPending], 0
     jz NoUserApcPending
@@ -49,6 +50,50 @@ MACRO(HANDLE_USER_APCS, ThreadReg, TrapFrame)
     call KiInitiateUserApc
 NoUserApcPending:
 ENDM
+
+#else /* GAS / Clang */
+
+MACRO(ASSERT_TRAP_FRAME_INTS_ENABLED, Register)
+#if DBG
+    test dword ptr [Register + KTRAP_FRAME_EFlags], HEX(200)
+    jnz 1f
+    int HEX(2C)
+1:
+#endif
+ENDM
+
+MACRO(ASSERT_TRAP_FRAME_IRQL_VALID, Register)
+#if DBG
+    mov rax, cr8
+    cmp byte ptr [Register + KTRAP_FRAME_PreviousIrql], al
+    je 1f
+    int HEX(2C)
+1:
+#endif
+ENDM
+
+MACRO(ASSERT_IRQL_PASSIVE)
+#if DBG
+    mov rax, cr8
+    test rax, rax
+    jz 1f
+    int HEX(2C)
+1:
+#endif
+ENDM
+
+// Checks for user APCs and delivers them if necessary.
+// Clobbers all volatile registers except rax.
+MACRO(HANDLE_USER_APCS, ThreadReg, TrapFrame)
+    /* Check for pending user APC */
+    cmp byte ptr [ThreadReg + ThApcState + AsUserApcPending], 0
+    jz 1f
+    lea rcx, [TrapFrame]
+    call KiInitiateUserApc
+1:
+ENDM
+
+#endif /* _USE_ML */
 
 APIC_EOI = HEX(0FFFFFFFFFFFE00B0)
 
@@ -77,13 +122,12 @@ TF_CHECKUSERAPC         = HEX(100)
  * EnterTrap - Allocate KTRAP_FRAME_LENGTH and save registers to it
  */
 MACRO(EnterTrap, Flags)
-    LOCAL kernel_mode_entry
 
     /* Save the trap flags for this trap */
     CurrentTrapFlags = VAL(Flags)
 
     /* Size of hardware trap frame */
-    if (Flags AND TF_HAS_ERROR_CODE)
+    if ((Flags) AND TF_HAS_ERROR_CODE)
         .pushframe code
         SIZE_INITIAL_FRAME = 6 * 8
     else
@@ -122,7 +166,7 @@ MACRO(EnterTrap, Flags)
     movaps [rbp + KTRAP_FRAME_Xmm4], xmm4
     movaps [rbp + KTRAP_FRAME_Xmm5], xmm5
 
-    if (Flags AND TF_SEGMENTS)
+    if ((Flags) AND TF_SEGMENTS)
         /* Save segment selectors */
         mov [rbp + KTRAP_FRAME_SegDs], ds
         mov [rbp + KTRAP_FRAME_SegEs], es
@@ -144,10 +188,14 @@ MACRO(EnterTrap, Flags)
     mov ax, [rbp + KTRAP_FRAME_SegCs]
     and al, 1
     mov [rbp + KTRAP_FRAME_PreviousMode], al
+#ifdef _USE_ML
     jz kernel_mode_entry
+#else
+    jz 2f
+#endif
 
     /* Set sane segments */
-    mov ax, (KGDT64_R3_DATA or RPL_MASK)
+    mov ax, (KGDT64_R3_DATA OR RPL_MASK)
     mov ds, ax
     mov es, ax
     swapgs
@@ -157,7 +205,11 @@ MACRO(EnterTrap, Flags)
 
     ASSERT_IRQL_PASSIVE
 
+#ifdef _USE_ML
 kernel_mode_entry:
+#else
+2:
+#endif
 
 //    if (Flags AND TF_IRQL)
         /* Save previous irql */
@@ -165,7 +217,7 @@ kernel_mode_entry:
         mov [rbp + KTRAP_FRAME_PreviousIrql], al
 //    endif
 
-    if (Flags AND TF_DEBUG)
+    if ((Flags) AND TF_DEBUG)
         /* Save debug registers */
         mov rax, dr0
         mov [rbp + KTRAP_FRAME_Dr0], rax
@@ -189,18 +241,17 @@ ENDM
  *  ExitTrap - Restore registers and free stack space
  */
 MACRO(ExitTrap, Flags)
-    LOCAL kernel_mode_return
 
     ASSERT_TRAP_FRAME_IRQL_VALID rbp
 
-    if (Flags AND TF_SEGMENTS)
+    if ((Flags) AND TF_SEGMENTS)
         /* Restore segment selectors */
         mov ds, [rbp + KTRAP_FRAME_SegDs]
         mov es, [rbp + KTRAP_FRAME_SegEs]
         mov fs, [rbp + KTRAP_FRAME_SegFs]
     endif
 
-    if (Flags AND TF_IRQL)
+    if ((Flags) AND TF_IRQL)
         /* Restore previous irql */
         movzx rax, byte ptr [rbp + KTRAP_FRAME_PreviousIrql]
         mov cr8, rax
@@ -208,9 +259,13 @@ MACRO(ExitTrap, Flags)
 
     /* Check if we came from user mode */
     test byte ptr [rbp + KTRAP_FRAME_SegCs], 1
+#ifdef _USE_ML
     jz kernel_mode_return
+#else
+    jz 2f
+#endif
 
-    if (Flags AND TF_CHECKUSERAPC)
+    if ((Flags) AND TF_CHECKUSERAPC)
         mov r10, gs:[PcCurrentThread]
         HANDLE_USER_APCS r10, rbp
     endif
@@ -223,7 +278,11 @@ MACRO(ExitTrap, Flags)
     /* Swap gs to user mode */
     swapgs
 
+#ifdef _USE_ML
 kernel_mode_return:
+#else
+2:
+#endif
 
     /* Restore volatile registers */
     mov rax, [rbp + KTRAP_FRAME_Rax]
@@ -251,7 +310,7 @@ kernel_mode_return:
     /* Adjust stack pointer */
     add rsp, KTRAP_FRAME_Rip
 
-    if (Flags AND TF_SEND_EOI)
+    if ((Flags) AND TF_SEND_EOI)
         /* Write 0 to the local APIC EOI register */
         mov dword ptr [APIC_EOI], 0
     endif
@@ -261,6 +320,7 @@ kernel_mode_return:
 ENDM
 
 
+#ifdef _USE_ML
 MACRO(TRAP_ENTRY, Trap, Flags)
     EXTERN Trap&Handler :PROC
     PUBLIC &Trap
@@ -276,4 +336,20 @@ MACRO(TRAP_ENTRY, Trap, Flags)
         ExitTrap Flags
     ENDFUNC
 ENDM
+#else /* GAS / Clang */
+MACRO(TRAP_ENTRY, Trap, Flags)
+    EXTERN \Trap\()Handler :PROC
+    PUBLIC \Trap
+    FUNC \Trap
+        /* Common code to create the trap frame */
+        EnterTrap Flags
 
+        /* Call the C handler */
+        mov rcx, rbp
+        call \Trap\()Handler
+
+        /* Leave */
+        ExitTrap Flags
+    ENDFUNC
+ENDM
+#endif

@@ -49,6 +49,14 @@ extern "C" {
   typedef long clock_t;
 #endif
 
+#ifndef _TIMESPEC_DEFINED
+#define _TIMESPEC_DEFINED
+  struct timespec {
+    time_t tv_sec;
+    long tv_nsec;
+  };
+#endif
+
 #ifndef _SIZE_T_DEFINED
 #define _SIZE_T_DEFINED
 #undef size_t

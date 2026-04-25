@@ -22,10 +22,3 @@ list(APPEND UCRT_STDLIB_SOURCES
     stdlib/rotl.cpp
     stdlib/rotr.cpp
 )
-
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_asm_files(UCRT_STDLIB_ASM stdlib/clang-hacks.s)
-    list(APPEND UCRT_STDLIB_SOURCES
-        ${UCRT_STDLIB_ASM}
-    )
-endif()

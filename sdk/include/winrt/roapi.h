@@ -29,11 +29,7 @@ typedef enum RO_INIT_TYPE
 
 DECLARE_HANDLE(APARTMENT_SHUTDOWN_REGISTRATION_COOKIE);
 
-#ifdef __cplusplus
-typedef struct {} *RO_REGISTRATION_COOKIE;
-#else
 typedef struct _RO_REGISTRATION_COOKIE *RO_REGISTRATION_COOKIE;
-#endif
 
 ROAPI
 _Check_return_

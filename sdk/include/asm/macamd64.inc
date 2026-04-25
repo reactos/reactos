@@ -80,7 +80,7 @@ MACRO(LEAF_ENTRY, Name, Section, NoPad)
 //    db 6 dup (0cch)
 //endif
     align 16
-    public Name
+    PUBLIC Name
 .PROC Name
     END_PROLOGUE
 ENDM
@@ -91,7 +91,7 @@ MACRO(LEAF_ENTRY_ARG1, Name, Section, Arg1, NoPad)
 //    db 6 dup (0cch)
 //endif
     align 16
-    public Name
+    PUBLIC Name
 .PROC Name
     END_PROLOGUE
 ENDM
@@ -102,7 +102,7 @@ MACRO(LEAF_ENTRY_ARG2, Name, Section, Arg1, Arg2, NoPad)
 //    db 6 dup (0cch)
 //endif
     align 16
-    public Name
+    PUBLIC Name
 .PROC Name
     END_PROLOGUE
 ENDM
@@ -113,7 +113,7 @@ MACRO(LEAF_ENTRY_ARG3, Name, Section, Arg1, Arg2, Arg3, NoPad)
 //    db 6 dup (0cch)
 //endif
     align 16
-    public Name
+    PUBLIC Name
 .PROC Name
     END_PROLOGUE
 ENDM
@@ -135,7 +135,7 @@ MACRO(NESTED_ENTR, Name, Section, Handler, NoPad)
         db      6 dup (0cch)
     endif
     align   16
-    public  Name
+    PUBLIC  Name
     ifb <Handler>
 Name    proc    frame
     else

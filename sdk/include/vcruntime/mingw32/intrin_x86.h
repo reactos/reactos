@@ -699,7 +699,7 @@ __INTRIN_INLINE long long _InterlockedCompareExchange64(volatile long long * Des
 #endif /* (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 && defined(__x86_64__) */
 #endif /* !HAS_BUILTIN(_InterlockedCompareExchange64) */
 
-#if defined(__x86_64__) && !HAS_BUILTIN(_InterlockedCompareExchange128)
+#if defined(__x86_64__) && !HAS_BUILTIN(_InterlockedCompareExchange128) && !defined(__clang__)
 __INTRIN_INLINE unsigned char _InterlockedCompareExchange128(_Interlocked_operand_ __int64 volatile* Destination, __int64 ExchangeHigh, __int64 ExchangeLow, __int64* ComparandResult)
 {
     __int64 xchg[2] = { ExchangeLow, ExchangeHigh };
@@ -1302,11 +1302,7 @@ __INTRIN_INLINE unsigned long __cdecl _lrotr(unsigned long value, int shift)
 #endif
 
 #if defined __x86_64__
-#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
-static inline __attribute__((__always_inline__))
-#else
 __INTRIN_INLINE
-#endif
 unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
 {
     unsigned long long retval;
@@ -1353,11 +1349,7 @@ __INTRIN_INLINE unsigned long long __ull_rshift(unsigned long long Mask, int Bit
 	just confuses it. Also we declare Bit as an int and then truncate it to
 	match Visual C++ behavior
 */
-#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
-static inline __attribute__((__always_inline__))
-#else
 __INTRIN_INLINE
-#endif
 unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
 {
 	unsigned long long retval = Mask;
@@ -2004,11 +1996,7 @@ __INTRIN_INLINE void __invlpg(void *Address)
 
 
 /*** System operations ***/
-#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
-static inline __attribute__((__always_inline__))
-#else
 __INTRIN_INLINE
-#endif
 unsigned long long __readmsr(unsigned long reg)
 {
 #ifdef __x86_64__
@@ -2022,11 +2010,7 @@ unsigned long long __readmsr(unsigned long reg)
 #endif
 }
 
-#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
-static inline __attribute__((__always_inline__))
-#else
 __INTRIN_INLINE
-#endif
 void __writemsr(unsigned long Register, unsigned long long Value)
 {
 #ifdef __x86_64__

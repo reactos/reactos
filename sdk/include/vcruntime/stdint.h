@@ -174,7 +174,8 @@ __MINGW_EXTENSION typedef unsigned long long   uintmax_t;
 
 
 /* 7.18.4  Macros for integer constants */
-#if !defined ( __cplusplus) || defined (__STDC_CONSTANT_MACROS)
+#if !defined(__cplusplus) || defined(__STDC_CONSTANT_MACROS) || \
+    defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
 
 /* 7.18.4.1  Macros for minimum-width integer constants
 
@@ -207,6 +208,6 @@ __MINGW_EXTENSION typedef unsigned long long   uintmax_t;
 #define INTMAX_C(val) val##LL
 #define UINTMAX_C(val) val##ULL
 
-#endif  /* !defined ( __cplusplus) || defined __STDC_CONSTANT_MACROS */
+#endif  /* !defined(__cplusplus) || defined __STDC_CONSTANT_MACROS || C++11 */
 
 #endif

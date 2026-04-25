@@ -2439,7 +2439,15 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
 
 #endif /* _WTIME_DEFINED */
 
+  #if defined(_UCRT) || defined(__LARGE_MBSTATE_T)
+  typedef struct _Mbstatet {
+    unsigned long _Wchar;
+    unsigned short _Byte, _State;
+  } _Mbstatet;
+  typedef _Mbstatet mbstate_t;
+  #else
   typedef int mbstate_t;
+  #endif
   typedef wchar_t _Wint_t;
 
   wint_t
@@ -2596,7 +2604,11 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
   mbsinit(
     _In_opt_ const mbstate_t *_P)
   {
+    #if defined(_UCRT) || defined(__LARGE_MBSTATE_T)
+    return (!_P || (_P->_Wchar == 0 && _P->_Byte == 0 && _P->_State == 0));
+    #else
     return (!_P || *_P==0);
+    #endif
   }
 
   __CRT_INLINE

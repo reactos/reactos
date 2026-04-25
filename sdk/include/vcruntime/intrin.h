@@ -29,6 +29,15 @@
 //#include <arm64_neon.h>
 #endif /* _M_ARM64 */
 
+#if defined(__clang__) && !defined(_MSC_VER)
+#ifdef __lzcnt16
+#undef __lzcnt16
+#endif
+#ifdef __lzcnt64
+#undef __lzcnt64
+#endif
+#endif
+
 #if defined(__cplusplus)
 extern "C" {
 #endif

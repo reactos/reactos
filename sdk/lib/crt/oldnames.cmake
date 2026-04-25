@@ -2,11 +2,16 @@
 if(NOT MSVC)
     # Use the same trick as with the other import libs. See gcc.cmake --> generate_import_lib function
     set(LIBRARY_PRIVATE_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/oldnames.dir)
+    if(LLVM_DLLTOOL_MACHINE)
+        set(_oldnames_dlltool_args -d ${CMAKE_CURRENT_SOURCE_DIR}/moldname-msvcrt.def -k -l oldnames.a -m ${LLVM_DLLTOOL_MACHINE} -t oldnames)
+    else()
+        set(_oldnames_dlltool_args --def ${CMAKE_CURRENT_SOURCE_DIR}/moldname-msvcrt.def --kill-at --output-lib=oldnames.a -t oldnames)
+    endif()
     add_custom_command(
         OUTPUT ${LIBRARY_PRIVATE_DIR}/oldnames.a
         # ar just puts stuff into the archive, without looking twice. Just delete the lib, we're going to rebuild it anyway
         COMMAND ${CMAKE_COMMAND} -E rm -f ${LIBRARY_PRIVATE_DIR}/oldnames.a
-        COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_SOURCE_DIR}/moldname-msvcrt.def --kill-at --output-lib=oldnames.a -t oldnames
+        COMMAND ${CMAKE_DLLTOOL} ${_oldnames_dlltool_args}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/moldname-msvcrt.def
         WORKING_DIRECTORY ${LIBRARY_PRIVATE_DIR})
 
