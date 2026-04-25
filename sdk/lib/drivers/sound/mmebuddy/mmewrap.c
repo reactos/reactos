@@ -25,6 +25,7 @@ MmeSetState(
     PSOUND_DEVICE SoundDevice;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
     MMDEVICE_TYPE DeviceType;
+    BOOL OldState;
 
     VALIDATE_MMSYS_PARAMETER( PrivateHandle );
     SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
@@ -55,8 +56,16 @@ MmeSetState(
 
     if ( MMSUCCESS(Result) )
     {
+        /* Get old audio stream state */
+        OldState = SoundDeviceInstance->bPaused;
+
         /* Store audio stream pause state */
         SoundDeviceInstance->bPaused = !bStart;
+
+        if (SoundDeviceInstance->bPaused == FALSE && (OldState || DeviceType == WAVE_IN_DEVICE_TYPE))
+        {
+            InitiateSoundStreaming(SoundDeviceInstance);
+        }
     }
 
     return Result;
