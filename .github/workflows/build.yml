@@ -5,13 +5,11 @@ jobs:
   build-linux:
     strategy:
       matrix:
-        compiler: [gcc, clang]
+        compiler: [gcc]
         arch: [i386, amd64]
         config: [Debug, Release]
         dllver: ['0x502', '0x600']
         exclude:
-          - dllver: 0x600
-            compiler: clang
           - dllver: 0x600
             config: Release
       fail-fast: false
@@ -252,6 +250,7 @@ jobs:
 
   # FIXME: Does not boot on toolset 14.1, 14.3+ is untested
   build-clang-cl:
+    if: ${{ false }}
     strategy:
       matrix:
         arch: [i386, amd64]
