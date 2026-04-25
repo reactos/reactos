@@ -862,6 +862,11 @@ PUBLIC KiSystemCallEntry64
 
 GLOBAL_LABEL KiSystemCall64Again
 
+    /* Pass the trap frame pointer explicitly. Recovering it from
+     * _AddressOfReturnAddress() relies on compiler-specific frame layout
+     * at this assembly-to-C boundary. */
+    lea rcx, [rsp + MAX_SYSCALL_PARAM_SIZE]
+
     /* Call the C-handler (will enable interrupts) */
     call KiSystemCallHandler
 
