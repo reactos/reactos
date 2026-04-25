@@ -791,7 +791,7 @@ WdmAudSetWaveStateByMMixer(
     PSOUND_DEVICE SoundDevice;
     MMRESULT Result;
 
-    DPRINT1("WdmAuSetWaveState bStart %x\n", bStart);
+    DPRINT("WdmAuSetWaveState bStart %x\n", bStart);
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
@@ -853,7 +853,7 @@ WdmAudResetStreamByMMixer(
 {
     MIXER_STATUS Status;
 
-    DPRINT1("WdmaudResetStream bStartReset %x\n", bStartReset);
+    DPRINT("WdmaudResetStream bStartReset %x\n", bStartReset);
     if (SoundDeviceInstance->RTStreamingEnabled)
     {
         SoundDeviceInstance->ResetInProgress = bStartReset;
@@ -868,7 +868,7 @@ WdmAudResetStreamByMMixer(
     if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
         Status = MMixerSetWaveResetState(&MixerContext, SoundDeviceInstance->Handle, bStartReset);
-        DPRINT1("WdmaudResetStream Result %x\n", Status);
+        DPRINT("WdmaudResetStream Result %x\n", Status);
         if (Status == MM_STATUS_SUCCESS)
         {
             /* Completed successfully */
