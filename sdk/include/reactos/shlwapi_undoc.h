@@ -389,6 +389,17 @@ BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR lpszPath, DWORD* dwAttr);
 BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR lpszPath, DWORD* dwAttr);
 #endif
 
+LPSTR  WINAPI StrCpyNXA(LPSTR lpszDest, LPCSTR lpszSrc, int iLen);
+LPWSTR WINAPI StrCpyNXW(LPWSTR lpszDest, LPCWSTR lpszSrc, int iLen);
+
+#ifdef UNICODE
+    #define PathIsValidChar PathIsValidCharW
+    #define StrCpyNX StrCpyNXW
+#else
+    #define PathIsValidChar PathIsValidCharA
+    #define StrCpyNX StrCpyNXA
+#endif
+
 BOOL WINAPI
 IContextMenu_Invoke(
     _In_ IContextMenu *pContextMenu,

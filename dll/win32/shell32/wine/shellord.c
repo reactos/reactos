@@ -2495,10 +2495,40 @@ BOOL WINAPI SHFindFiles( PCIDLIST_ABSOLUTE pidlFolder, PCIDLIST_ABSOLUTE pidlSav
  *  uFlags can be one or more of the following flags:
  *  GIL_NOTFILENAME - pszHashItem is not a file name.
  *  GIL_SIMULATEDOC - Create a document icon using the specified icon.
+#ifdef __REACTOS__
+ * https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shupdateimagew
+#endif
  */
 void WINAPI SHUpdateImageW(LPCWSTR pszHashItem, int iIndex, UINT uFlags, int iImageIndex)
 {
+#ifdef __REACTOS__
+    // If iImageIndex == -1 (undetermined), it will fall back to the default value of 1.
+    INT iEffectiveImageIndex = (iImageIndex == -1) ? 1 : iImageIndex;
+
+    SHCNF_UPDATEIMAGE_DATA_1 item1;
+    item1.cbSize      = sizeof(item1);
+    item1.iIndex      = iIndex;
+    item1.iEffective  = iEffectiveImageIndex;
+    item1.uFlags      = uFlags;
+    item1.iEffective2 = iEffectiveImageIndex;
+    item1.terminator  = 0;
+
+    SHCNF_UPDATEIMAGE_DATA_2 item2;
+
+    LPWSTR pEnd = StrCpyNXW(item2.szHashItem, pszHashItem, _countof(item2.szHashItem));
+    *pEnd = UNICODE_NULL;
+
+    item2.cbOffset             = (WORD)((PBYTE)pEnd - (PBYTE)&item2);
+    item2.iIndex               = iIndex;
+    item2.iEffectiveImageIndex = iEffectiveImageIndex;
+    item2.uFlags               = uFlags;
+    item2.dwProcessId          = GetCurrentProcessId();
+    item2.terminator           = 0;
+
+    SHChangeNotify(SHCNE_UPDATEIMAGE, SHCNF_IDLIST, &item1, &item2);
+#else
     FIXME("%s, %d, 0x%x, %d - stub\n", debugstr_w(pszHashItem), iIndex, uFlags, iImageIndex);
+#endif
 }
 
 /*************************************************************************
@@ -2512,7 +2542,6 @@ void WINAPI SHUpdateImageW(LPCWSTR pszHashItem, int iIndex, UINT uFlags, int iIm
 VOID WINAPI SHUpdateImageA(LPCSTR pszHashItem, INT iIndex, UINT uFlags, INT iImageIndex)
 {
 #ifdef __REACTOS__
-    TRACE("(%s, %d, 0x%x, %d)\n", wine_dbgstr_a(pszHashItem), iIndex, uFlags, iImageIndex);
     WCHAR szHashItem[MAX_PATH];
     SHAnsiToUnicode(pszHashItem, szHashItem, _countof(szHashItem));
     SHUpdateImageW(szHashItem, iIndex, uFlags, iImageIndex);
@@ -2521,11 +2550,33 @@ VOID WINAPI SHUpdateImageA(LPCSTR pszHashItem, INT iIndex, UINT uFlags, INT iIma
 #endif
 }
 
+#ifdef __REACTOS__
+/**
+ * Upon receiving the SHCNE_UPDATEIMAGE notification, this function returns the
+ * corresponding icon index in its system image list.
+ * https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shhandleupdateimage
+ */
+#endif
 INT WINAPI SHHandleUpdateImage(PCIDLIST_ABSOLUTE pidlExtra)
 {
+#ifdef __REACTOS__
+    if (!pidlExtra)
+        return -1;
+
+    UNALIGNED const SHCNF_UPDATEIMAGE_DATA_2* pData =
+        (UNALIGNED const SHCNF_UPDATEIMAGE_DATA_2*)pidlExtra;
+    if (pData->dwProcessId == GetCurrentProcessId())
+        return pData->iEffectiveImageIndex;
+
+    WCHAR szHashItem[MAX_PATH];
+    StrCpyNW(szHashItem, pData->szHashItem, _countof(szHashItem));
+
+    return SHLookupIconIndexW(szHashItem, pData->iIndex, pData->uFlags);
+#else
     FIXME("%p - stub\n", pidlExtra);
 
     return -1;
+#endif
 }
 
 BOOL WINAPI SHObjectProperties(HWND hwnd, DWORD dwType, LPCWSTR szObject, LPCWSTR szPage)

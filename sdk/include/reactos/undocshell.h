@@ -175,6 +175,29 @@ typedef struct _SHCNF_PRINTJOB_INFO
 
 HRESULT WINAPI SHUpdateRecycleBinIcon(void);
 
+// Used in SHChangeNotify(SHCNE_UPDATEIMAGE)
+#include <pshpack1.h>
+typedef struct tagSHCNF_UPDATEIMAGE_DATA_1
+{
+    WORD   cbSize;
+    INT    iIndex;
+    INT    iEffective;
+    UINT   uFlags;
+    INT    iEffective2;
+    USHORT terminator;
+} SHCNF_UPDATEIMAGE_DATA_1, *PSHCNF_UPDATEIMAGE_DATA_1;
+typedef struct tagSHCNF_UPDATEIMAGE_DATA_2
+{
+    WORD  cbOffset;
+    INT   iIndex;
+    INT   iEffectiveImageIndex;
+    UINT  uFlags;
+    DWORD dwProcessId;
+    WCHAR szHashItem[MAX_PATH];
+    USHORT terminator;
+} SHCNF_UPDATEIMAGE_DATA_2, *PSHCNF_UPDATEIMAGE_DATA_2;
+#include <poppack.h>
+
 /****************************************************************************
  * Shell Common Dialogs
  */
@@ -314,6 +337,17 @@ ExtractIconResInfoW(
     _In_ WORD wIndex,
     _Out_ LPWORD lpSize,
     _Out_ LPHANDLE lpIcon);
+
+INT WINAPI SHLookupIconIndexA(LPCSTR  lpName, INT iIndex, UINT uFlags);
+INT WINAPI SHLookupIconIndexW(LPCWSTR lpName, INT iIndex, UINT uFlags);
+
+#ifdef UNICODE
+    #define ExtractIconResInfo ExtractIconResInfoW
+    #define SHLookupIconIndex SHLookupIconIndexW
+#else
+    #define ExtractIconResInfo ExtractIconResInfoA
+    #define SHLookupIconIndex SHLookupIconIndexA
+#endif
 
 /****************************************************************************
  * File Menu Routines
