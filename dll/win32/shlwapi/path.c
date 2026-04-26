@@ -1712,8 +1712,30 @@ BOOL WINAPI PathIsDirectoryA(LPCSTR lpszPath)
 
   if (PathIsUNCServerShareA(lpszPath))
   {
+#ifdef __REACTOS__
+    LPSTR lpSystem = NULL;
+    BYTE buffer[512] = {0};
+    DWORD cbBuffer = sizeof(buffer);
+    LPNETRESOURCEA pNetRes = (LPNETRESOURCEA)buffer;
+    DWORD dwError;
+
+    pNetRes->dwScope      = RESOURCE_GLOBALNET;
+    pNetRes->dwType       = RESOURCETYPE_ANY;
+    pNetRes->lpRemoteName = (LPSTR)lpszPath;
+
+    dwError = WNetGetResourceInformationA(pNetRes, pNetRes, &cbBuffer, &lpSystem);
+    if (dwError == NO_ERROR && pNetRes->dwDisplayType != RESOURCEDISPLAYTYPE_GENERIC)
+    {
+      if (pNetRes->dwDisplayType != RESOURCEDISPLAYTYPE_SHARE)
+        return FALSE;
+      if (pNetRes->dwType != RESOURCETYPE_ANY && pNetRes->dwType != RESOURCETYPE_DISK)
+        return FALSE;
+      return TRUE;
+    }
+#else
     FIXME("UNC Server Share not yet supported - FAILING\n");
     return FALSE;
+#endif
   }
 
   if ((dwAttr = GetFileAttributesA(lpszPath)) == INVALID_FILE_ATTRIBUTES)
@@ -1737,8 +1759,30 @@ BOOL WINAPI PathIsDirectoryW(LPCWSTR lpszPath)
 
   if (PathIsUNCServerShareW(lpszPath))
   {
+#ifdef __REACTOS__
+    LPWSTR lpSystem = NULL;
+    BYTE buffer[1024] = {0};
+    DWORD cbBuffer = sizeof(buffer);
+    LPNETRESOURCEW pNetRes = (LPNETRESOURCEW)buffer;
+    DWORD dwError;
+
+    pNetRes->dwScope      = RESOURCE_GLOBALNET;
+    pNetRes->dwType       = RESOURCETYPE_ANY;
+    pNetRes->lpRemoteName = (LPWSTR)lpszPath;
+
+    dwError = WNetGetResourceInformationW(pNetRes, pNetRes, &cbBuffer, &lpSystem);
+    if (dwError == NO_ERROR && pNetRes->dwDisplayType != RESOURCEDISPLAYTYPE_GENERIC)
+    {
+      if (pNetRes->dwDisplayType != RESOURCEDISPLAYTYPE_SHARE)
+        return FALSE;
+      if (pNetRes->dwType != RESOURCETYPE_ANY && pNetRes->dwType != RESOURCETYPE_DISK)
+        return FALSE;
+      return TRUE;
+    }
+#else
     FIXME("UNC Server Share not yet supported - FAILING\n");
     return FALSE;
+#endif
   }
 
   if ((dwAttr = GetFileAttributesW(lpszPath)) == INVALID_FILE_ATTRIBUTES)
