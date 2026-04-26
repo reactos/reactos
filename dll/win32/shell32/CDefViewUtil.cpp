@@ -34,9 +34,9 @@ ShellCanPaste(const CComPtr<IShellFolder> &pSF)
         return FALSE;
     
 
+    // Set the FORMATETC structure
     FORMATETC formatetc;
 
-     /* Set the FORMATETC structure*/
     InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
     bRet = SUCCEEDED(pDataObj->QueryGetData(&formatetc));
 
