@@ -322,8 +322,6 @@ PolyBezierTo(
             cpt++;
             ret = NtGdiPolyPolyDraw(hdc , (PPOINT)pts, &cpt, 1, GdiPolyBezierTo);
         }
-        else
-            ret = FALSE;
         HeapFree(GetProcessHeap(), 0, pts);
     }
     else
@@ -417,8 +415,6 @@ PolylineTo(
             cpt++;
             ret = NtGdiPolyPolyDraw(hdc , (PPOINT)pts, &cpt, 1, GdiPolyLineTo);
         }
-        else
-            ret = FALSE;
         HeapFree(GetProcessHeap(), 0, pts);
     }
     else
