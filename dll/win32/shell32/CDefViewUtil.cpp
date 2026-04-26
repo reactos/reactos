@@ -11,8 +11,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /**
  @brief
- * Small helper function for checking if you can paste to some folder
- */
+ * Small helper function for checking if pasting to some folder is possible.
+ **/
 BOOL
 ShellCanPaste(const CComPtr<IShellFolder> &pSF)
 {
