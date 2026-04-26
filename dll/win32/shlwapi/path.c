@@ -1726,11 +1726,8 @@ BOOL WINAPI PathIsDirectoryA(LPCSTR lpszPath)
     dwError = WNetGetResourceInformationA(pNetRes, pNetRes, &cbBuffer, &lpSystem);
     if (dwError == NO_ERROR && pNetRes->dwDisplayType != RESOURCEDISPLAYTYPE_GENERIC)
     {
-      if (pNetRes->dwDisplayType != RESOURCEDISPLAYTYPE_SHARE)
-        return FALSE;
-      if (pNetRes->dwType != RESOURCETYPE_ANY && pNetRes->dwType != RESOURCETYPE_DISK)
-        return FALSE;
-      return TRUE;
+      return (pNetRes->dwDisplayType == RESOURCEDISPLAYTYPE_SHARE) &&
+             (pNetRes->dwType == RESOURCETYPE_ANY || pNetRes->dwType == RESOURCETYPE_DISK);
     }
 #else
     FIXME("UNC Server Share not yet supported - FAILING\n");
@@ -1773,11 +1770,8 @@ BOOL WINAPI PathIsDirectoryW(LPCWSTR lpszPath)
     dwError = WNetGetResourceInformationW(pNetRes, pNetRes, &cbBuffer, &lpSystem);
     if (dwError == NO_ERROR && pNetRes->dwDisplayType != RESOURCEDISPLAYTYPE_GENERIC)
     {
-      if (pNetRes->dwDisplayType != RESOURCEDISPLAYTYPE_SHARE)
-        return FALSE;
-      if (pNetRes->dwType != RESOURCETYPE_ANY && pNetRes->dwType != RESOURCETYPE_DISK)
-        return FALSE;
-      return TRUE;
+      return (pNetRes->dwDisplayType == RESOURCEDISPLAYTYPE_SHARE) &&
+             (pNetRes->dwType == RESOURCETYPE_ANY || pNetRes->dwType == RESOURCETYPE_DISK);
     }
 #else
     FIXME("UNC Server Share not yet supported - FAILING\n");
