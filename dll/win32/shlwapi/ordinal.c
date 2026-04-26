@@ -5602,7 +5602,8 @@ HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
 {
 #ifdef __REACTOS__
     IServiceProvider *pSP;
-    HRESULT hr = IUnknown_QueryService(lpUnknown, &SID_STopLevelBrowser, &IID_IServiceProvider, (PVOID*)&pSP);
+    HRESULT hr = IUnknown_QueryService(lpUnknown, &SID_STopLevelBrowser,
+                                       &IID_IServiceProvider, (PVOID*)&pSP);
     if (FAILED(hr))
     {
         *lppOut = NULL;

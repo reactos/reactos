@@ -431,6 +431,12 @@ DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
 DWORD WINAPI SHGetAppCompatFlags(_In_ DWORD dwMask);
 
+HRESULT WINAPI
+IUnknown_QueryServiceForWebBrowserApp(
+    _In_ IUnknown* lpUnknown,
+    _In_ REFGUID riid,
+    _Out_ LPVOID *lppOut);
+
 /*****************************************************************************
  * IAssociationElementOld interface
  *
