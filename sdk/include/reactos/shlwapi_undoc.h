@@ -342,22 +342,6 @@ ShellMessageBoxWrapW(
   _In_ UINT fuStyle,
   ...);
 
-DWORD WINAPI
-SHRegSetPathA(
-    _In_ HKEY hKey,
-    _In_ LPCSTR lpszSubKey,
-    _In_ LPCSTR lpszValue,
-    _In_ LPCSTR lpszPath,
-    _In_ DWORD dwFlags);
-
-DWORD WINAPI
-SHRegSetPathW(
-    _In_ HKEY hKey,
-    _In_ LPCWSTR lpszSubKey,
-    _In_ LPCWSTR lpszValue,
-    _In_ LPCWSTR lpszPath,
-    _In_ DWORD dwFlags);
-
 /* dwWhich flags for PathFileExistsDefExtW, PathFindOnPathExW,
  * and PathFileExistsDefExtAndAttributesW */
 #define WHICH_PIF       (1 << 0)
