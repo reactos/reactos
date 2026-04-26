@@ -1,0 +1,19 @@
+/*
+ * PROJECT:     ReactOS uxtheme.dll
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATOR:  Copyright 2026 Karol Gocłowski <cyberwordixx@gazeta.pl>
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_MESSAGEBOX "Okno komunikatu"
+    IDS_ACTIVEWIN "Aktywne okno"
+    IDS_INACTIVEWIN "Nieaktywne okno"
+    IDS_OK "OK"
+    IDS_WINTEXT "Tekst okna"
+END
