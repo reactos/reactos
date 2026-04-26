@@ -5600,8 +5600,21 @@ INT WINAPI SHVerbExistsNA(LPSTR verb, PVOID pUnknown, PVOID pUnknown2, DWORD dwU
 HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
         REFGUID riid, LPVOID *lppOut)
 {
+#ifdef __REACTOS__
+    IServiceProvider *pSP;
+    HRESULT hr = IUnknown_QueryService(lpUnknown, &SID_STopLevelBrowser, &IID_IServiceProvider, (PVOID*)&pSP);
+    if (FAILED(hr))
+    {
+        *lppOut = NULL;
+        return hr;
+    }
+    hr = pSP->lpVtbl->QueryService(pSP, &IID_IWebBrowserApp, riid, lppOut);
+    pSP->lpVtbl->Release(pSP);
+    return hr;
+#else
     FIXME("%p %s %p semi-STUB\n", lpUnknown, debugstr_guid(riid), lppOut);
     return IUnknown_QueryService(lpUnknown,&IID_IWebBrowserApp,riid,lppOut);
+#endif
 }
 
 #ifdef __REACTOS__
