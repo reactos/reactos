@@ -35,6 +35,9 @@
 #include "winternl.h"
 #define NO_SHLWAPI_STREAM
 #include "shlwapi.h"
+#ifdef __REACTOS__
+#include "winnetwk.h"
+#endif
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
