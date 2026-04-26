@@ -77,9 +77,6 @@
 #define NDEBUG
 #include <debug.h>
 
-// FIXME: This value needs to be calculated at runtime
-#define MAX_SG_ELEMENTS 0x20
-
 #ifndef _MINIHAL_
 static KEVENT HalpDmaLock;
 static KSPIN_LOCK HalpDmaAdapterListLock;
@@ -983,6 +980,8 @@ typedef struct _SCATTER_GATHER_CONTEXT {
 	WAIT_CONTEXT_BLOCK Wcb;
 } SCATTER_GATHER_CONTEXT, *PSCATTER_GATHER_CONTEXT;
 
+#define MAX_SG_ELEMENTS 0x30
+#define SG_ELEMENT_MIN 4096 // Minimum bytes in a S/G element
 
 IO_ALLOCATION_ACTION
 NTAPI
@@ -997,6 +996,9 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	PSCATTER_GATHER_ELEMENT TempElements;
 	ULONG ElementCount = 0, RemainingLength = AdapterControlContext->Length;
 	PUCHAR CurrentVa = AdapterControlContext->CurrentVa;
+    // RemainingLength / Minimum BYTES in S/G element
+    //  + 1 for remainder of division + 1 for a safety cushion
+    ULONG Est_SG_Elements = min(RemainingLength / SG_ELEMENT_MIN + 2, MAX_SG_ELEMENTS);
 
 	/* Store the map register base for later in HalPutScatterGatherList */
 	AdapterControlContext->MapRegisterBase = MapRegisterBase;
@@ -1004,7 +1006,7 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
     // FIXME: HACK Allocate TempElements from pool to minimize stack usage.
     // A more efficient algorithm should be found to avoid allocations during S/G I/O operations.
     TempElements = ExAllocatePoolUninitialized(NonPagedPool,
-                                               sizeof(*TempElements) * MAX_SG_ELEMENTS,
+                                               sizeof(*TempElements) * Est_SG_Elements,
                                                TAG_DMA);
     if (!TempElements)
 	{
@@ -1033,6 +1035,9 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 		RemainingLength -= TempElements[ElementCount].Length;
 		ElementCount++;
 	}
+
+    DPRINT("Est_SG_Elements %d\n", Est_SG_Elements);
+    DPRINT("ElementCount is %d\n", ElementCount);
 
 	if (RemainingLength > 0)
 	{
