@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Undocumented SHLWAPI definitions
  * COPYRIGHT:   Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
- *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
@@ -341,6 +341,22 @@ ShellMessageBoxWrapW(
   _In_opt_ LPCWSTR lpcTitle,
   _In_ UINT fuStyle,
   ...);
+
+DWORD WINAPI
+SHRegSetPathA(
+    _In_ HKEY hKey,
+    _In_ LPCSTR lpszSubKey,
+    _In_ LPCSTR lpszValue,
+    _In_ LPCSTR lpszPath,
+    _In_ DWORD dwFlags);
+
+DWORD WINAPI
+SHRegSetPathW(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR lpszSubKey,
+    _In_ LPCWSTR lpszValue,
+    _In_ LPCWSTR lpszPath,
+    _In_ DWORD dwFlags);
 
 /* dwWhich flags for PathFileExistsDefExtW, PathFindOnPathExW,
  * and PathFileExistsDefExtAndAttributesW */

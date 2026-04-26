@@ -1154,7 +1154,25 @@ DWORD WINAPI SHRegSetPathA(HKEY hKey, LPCSTR lpszSubKey, LPCSTR lpszValue,
                            LPCSTR lpszPath, DWORD dwFlags)
 {
   char szBuff[MAX_PATH];
+#ifdef __REACTOS__
+  DWORD dwType;
+  LPCSTR pszData;
+  INT cch;
 
+  if (PathUnExpandEnvStringsA(lpszPath, szBuff, _countof(szBuff)))
+  {
+    dwType  = REG_EXPAND_SZ;
+    pszData = szBuff;
+  }
+  else
+  {
+    dwType  = REG_SZ;
+    pszData = lpszPath;
+  }
+
+  cch = lstrlenA(pszData);
+  return SHSetValueA(hKey, lpszSubKey, lpszValue, dwType, pszData, (cch + 1) * sizeof(CHAR));
+#else
   FIXME("(hkey=%p,%s,%s,%p,%d) - semi-stub\n",hKey, debugstr_a(lpszSubKey),
         debugstr_a(lpszValue), lpszPath, dwFlags);
 
@@ -1164,6 +1182,7 @@ DWORD WINAPI SHRegSetPathA(HKEY hKey, LPCSTR lpszSubKey, LPCSTR lpszValue,
 
   return SHSetValueA(hKey,lpszSubKey, lpszValue, REG_SZ, szBuff,
                      lstrlenA(szBuff));
+#endif
 }
 
 /*************************************************************************
@@ -1175,7 +1194,25 @@ DWORD WINAPI SHRegSetPathW(HKEY hKey, LPCWSTR lpszSubKey, LPCWSTR lpszValue,
                            LPCWSTR lpszPath, DWORD dwFlags)
 {
   WCHAR szBuff[MAX_PATH];
+#ifdef __REACTOS__
+  DWORD dwType;
+  LPCWSTR pszData;
+  INT cch;
 
+  if (PathUnExpandEnvStringsW(lpszPath, szBuff, _countof(szBuff)))
+  {
+    dwType  = REG_EXPAND_SZ;
+    pszData = szBuff;
+  }
+  else
+  {
+    dwType  = REG_SZ;
+    pszData = lpszPath;
+  }
+
+  cch = lstrlenW(pszData);
+  return SHSetValueW(hKey, lpszSubKey, lpszValue, dwType, pszData, (cch + 1) * sizeof(WCHAR));
+#else
   FIXME("(hkey=%p,%s,%s,%p,%d) - semi-stub\n",hKey, debugstr_w(lpszSubKey),
         debugstr_w(lpszValue), lpszPath, dwFlags);
 
@@ -1185,6 +1222,7 @@ DWORD WINAPI SHRegSetPathW(HKEY hKey, LPCWSTR lpszSubKey, LPCWSTR lpszValue,
 
   return SHSetValueW(hKey,lpszSubKey, lpszValue, REG_SZ, szBuff,
                      lstrlenW(szBuff));
+#endif
 }
 
 /*************************************************************************
