@@ -1159,6 +1159,8 @@ DWORD WINAPI SHRegSetPathA(HKEY hKey, LPCSTR lpszSubKey, LPCSTR lpszValue,
   LPCSTR pszData;
   INT cch;
 
+  UNREFERENCED_PARAMETER(dwFlags);
+
   if (PathUnExpandEnvStringsA(lpszPath, szBuff, _countof(szBuff)))
   {
     dwType  = REG_EXPAND_SZ;
@@ -1198,6 +1200,8 @@ DWORD WINAPI SHRegSetPathW(HKEY hKey, LPCWSTR lpszSubKey, LPCWSTR lpszValue,
   DWORD dwType;
   LPCWSTR pszData;
   INT cch;
+
+  UNREFERENCED_PARAMETER(dwFlags);
 
   if (PathUnExpandEnvStringsW(lpszPath, szBuff, _countof(szBuff)))
   {
