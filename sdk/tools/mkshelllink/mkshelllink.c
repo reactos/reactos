@@ -170,6 +170,8 @@ typedef struct _ID_LIST_FILE
     uint16_t uFileDate;
     uint16_t uFileTime;
     uint16_t uFileAttribs;
+    /* Here are coming two strings. The first is the long name.
+    The second the dos name when needed or just 0x00 */
     char szName[0];
 } ID_LIST_FILE;
 
@@ -334,10 +336,11 @@ int main(int argc, const char *argv[])
 
     if (Header.Flags & LINK_ID_LIST)
     {
-        ID_LIST_FILE IdListFile;
         ID_LIST_GUID IdListGuid;
         ID_LIST_DRIVE IdListDrive;
-        unsigned cbListSize = sizeof(IdListGuid) + sizeof(uint16_t), cchName;
+        ID_LIST_FILE IdListFile;
+        unsigned int cbListSize = sizeof(IdListGuid) + sizeof(uint16_t);
+        unsigned int cchName;
         const char *pszName = pszTarget;
         size_t specialPathLen = 0;
         const struct SPECIALFOLDER *special = get_special_folder(pszTarget);
@@ -370,7 +373,11 @@ int main(int argc, const char *argv[])
                 ++cchName;
 
             if (cchName != 1 || pszName[0] != '.')
-                cbListSize += sizeof(IdListFile) + 2 * (cchName + 1);
+            {
+                /* Don't care about the DOS name */
+                //cbListSize += sizeof(IdListFile) + 2 * (cchName + 1);
+                cbListSize += sizeof(IdListFile) + (cchName + 1) + 1;
+            }
 
             if (special && ((pszName+cchName)-pszTarget == specialPathLen))
             {
@@ -417,16 +424,19 @@ int main(int argc, const char *argv[])
             if (cchName != 1 || pszName[0] != '.')
             {
                 memset(&IdListFile, 0, sizeof(IdListFile));
-                IdListFile.Size = sizeof(IdListFile) + 2 * (cchName + 1);
+                /* Don't care about the DOS name */
+                //IdListFile.Size = sizeof(IdListFile) + 2 * (cchName + 1);
+                IdListFile.Size = sizeof(IdListFile) + (cchName + 1) + 1;
                 if (!pszName[cchName])
                     IdListFile.Type = PT_VALUE; // File
                 else
                     IdListFile.Type = PT_FOLDER;
                 fwrite(&IdListFile, sizeof(IdListFile), 1, pFile);
                 fwrite(pszName, cchName, 1, pFile);
-                fputc(0, pFile);
-                fwrite(pszName, cchName, 1, pFile);
-                fputc(0, pFile);
+                fputc(0, pFile); // NUL-terminate
+                /* Don't care about the DOS name */
+                //fwrite(pszName, cchName, 1, pFile);
+                fputc(0, pFile); // NUL-terminate
             }
 
             pszName += cchName;
