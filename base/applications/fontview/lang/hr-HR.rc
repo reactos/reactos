@@ -1,0 +1,35 @@
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Croatian resource file
+ * TRANSLATOR:  Copyright 2026 Ivan Ivo <ivan.ivo4445@gmail.com>
+ */
+
+LANGUAGE LANG_CROATIAN, SUBLANG_CROATIAN_CROATIA
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALL "&Instaliraj"
+    IDS_PRINT "&Ispiši"
+    IDS_STRING "Gojazni dječak ždere fiktivni kupus. 1234567890"
+    IDS_OPEN "Otvori font..."
+    IDS_ERROR "Greška"
+    IDS_ERROR_NOMEM "Nema dovoljno memorije za dovršetak operacije."
+    IDS_ERROR_NOFONT "Datoteka %1 nije valjana datoteka fonta."
+    IDS_ERROR_NOCLASS "Nije moguće inicijalizirati klasu prozora."
+    IDS_ERROR_ISINSTALLED "Ovaj font je već instaliran!" 
+    IDS_ERROR_FONTCPY "Neuspjelo kopiranje datoteke fonta!"
+    IDS_ERROR_OPENKEY "Neuspjelo otvaranje ključa registra za fontove!"
+    IDS_ERROR_REGISTER "Neuspjela registracija novog fonta!"
+    IDS_SUCCESS "Uspjeh"
+    IDS_COMPLETED "Instalacija fonta je završena."
+    IDS_FILTER_LIST "Svi podržani fontovi (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
+Datoteka fonta (*.fon;*.fnt)\0*.fon;*.fnt\0\
+TrueType font (*.ttf)\0*.ttf\0\
+Kolekcija TrueType fontova (*.ttc)\0*.ttc\0\
+OpenType font (*.otf)\0*.otf\0\
+Kolekcija OpenType fontova (*.otc)\0*.otc\0\
+Sve datoteke (*.*)\0*.*\0"
+    IDS_PREVIOUS "< P&rethodno"
+    IDS_NEXT "&Sljedeće >"
+END
