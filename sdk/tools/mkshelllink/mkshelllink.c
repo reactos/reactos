@@ -194,10 +194,11 @@ static const struct SPECIALFOLDER
 {
     unsigned char csidl;
     const char* name;
+    const char* dummyPath;
 } g_specialfolders[] = {
-    { CSIDL_WINDOWS, "windows" },
-    { CSIDL_SYSTEM, "system" },
-    { 0, NULL}
+    { CSIDL_WINDOWS, "windows", "X:\\reactos" },
+    { CSIDL_SYSTEM,  "system",  "X:\\reactos\\system32" },
+    { 0, NULL, NULL }
 };
 
 
@@ -338,7 +339,7 @@ int main(int argc, const char *argv[])
         ID_LIST_DRIVE IdListDrive;
         unsigned cbListSize = sizeof(IdListGuid) + sizeof(uint16_t), cchName;
         const char *pszName = pszTarget;
-        int index = 1, specialindex = -1;
+        size_t specialPathLen = 0;
         const struct SPECIALFOLDER *special = get_special_folder(pszTarget);
 
         /* ID list. It appears explorer does not accept links
@@ -349,14 +350,13 @@ int main(int argc, const char *argv[])
             CsidlBlock.cbSize = sizeof(CsidlBlock);
             CsidlBlock.dwSignature = EXP_SPECIAL_FOLDER_SIG;
             CsidlBlock.idSpecialFolder = special->csidl;
-            specialindex = 3; // Skip GUID, drive and fake windows/reactos folder
-            sprintf(targetpath, "x:\\reactos\\%s", pszTarget + sizeof("shell:") + strlen(special->name));
+            specialPathLen = strlen(special->dummyPath);
+            sprintf(targetpath, "%s\\%s", special->dummyPath, pszTarget + sizeof("shell:") + strlen(special->name));
             pszName = pszTarget = targetpath;
         }
 
         if (pszName[0] && pszName[0] != ':' && pszName[1] == ':')
         {
-            ++index;
             cbListSize += sizeof(IdListDrive);
             pszName += 2;
             while (is_path_separator(*pszName))
@@ -372,8 +372,9 @@ int main(int argc, const char *argv[])
             if (cchName != 1 || pszName[0] != '.')
                 cbListSize += sizeof(IdListFile) + 2 * (cchName + 1);
 
-            if (++index == specialindex)
+            if (special && ((pszName+cchName)-pszTarget == specialPathLen))
             {
+                /* Point the special folder block to the rest of the path in the ID list */
                 CsidlBlock.cbOffset = cbListSize - sizeof(uint16_t);
                 pCsidlBlock = &CsidlBlock;
             }
