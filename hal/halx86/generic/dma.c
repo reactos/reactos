@@ -981,7 +981,6 @@ typedef struct _SCATTER_GATHER_CONTEXT {
 } SCATTER_GATHER_CONTEXT, *PSCATTER_GATHER_CONTEXT;
 
 #define MAX_SG_ELEMENTS 0x30
-#define SG_ELEMENT_MIN 4096 // Minimum bytes in a S/G element
 
 IO_ALLOCATION_ACTION
 NTAPI
@@ -996,9 +995,10 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	PSCATTER_GATHER_ELEMENT TempElements;
 	ULONG ElementCount = 0, RemainingLength = AdapterControlContext->Length;
 	PUCHAR CurrentVa = AdapterControlContext->CurrentVa;
-    // RemainingLength / Minimum BYTES in S/G element
-    //  + 1 for remainder of division + 1 for a safety cushion
-    ULONG Est_SG_Elements = min(RemainingLength / SG_ELEMENT_MIN + 2, MAX_SG_ELEMENTS);
+    // RemainingLength / PAGE_SIZE + 1 for the remainder of our division
+    // + 1 for a safety cushion gives a good safe value. Using the
+    // min function with MAX_SG_ELEMENTS keeps us from getting too large.
+    ULONG Est_SG_Elements = min(RemainingLength / PAGE_SIZE + 2, MAX_SG_ELEMENTS);
 
 	/* Store the map register base for later in HalPutScatterGatherList */
 	AdapterControlContext->MapRegisterBase = MapRegisterBase;
