@@ -1,11 +1,11 @@
+/*
+ * PROJECT:     ReactOS WineMine
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Croatian resource file
+ * TRANSLATOR:  Copyright 2026 Šimun Tech <simuntech123@proton.me>
+ * IDS_ABOUT    Copyright 2000 Joshua Thielen"
+ */
 LANGUAGE LANG_CROATIAN, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_APPNAME "WineMine"
-    IDS_NOBODY "Nitko"
-    IDS_ABOUT "Copyright 2026 Šimun Tech"
-END
 
 IDM_WINEMINE MENU
 BEGIN
