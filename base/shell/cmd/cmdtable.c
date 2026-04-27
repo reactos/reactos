@@ -59,6 +59,7 @@ COMMAND cmds[] =
 
 #ifdef INCLUDE_CMD_CLS
     {_T("cls"), 0, cmd_cls},
+    {_T("clear"), 0, cmd_cls},
 #endif
 
 #ifdef INCLUDE_CMD_COLOR
