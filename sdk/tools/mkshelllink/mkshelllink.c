@@ -88,6 +88,8 @@ DEFINE_GUID2(CLSID_MyComputer,0x20D04FE0,0x3AEA,0x1069,0xA2,0xD8,0x08,0x00,0x2B,
 #define SLDF_HAS_ARGS           0x00000020
 #define SLDF_HAS_ICONLOCATION   0x00000040
 #define SLDF_UNICODE            0x00000080
+#define SLDF_HAS_EXP_SZ         0x00000200
+#define SLDF_HAS_EXP_ICON_SZ    0x00004000
 
 #define LINK_ID_LIST            SLDF_HAS_ID_LIST
 #define LINK_FILE               SLDF_HAS_LINK_INFO
@@ -194,6 +196,18 @@ typedef struct _EXP_SPECIAL_FOLDER
     uint32_t cbOffset;
 } EXP_SPECIAL_FOLDER;
 
+#define MAX_PATH 260
+
+#define EXP_SZ_LINK_SIG 0xA0000001
+#define EXP_SZ_ICON_SIG 0xA0000007
+typedef struct _EXP_SZ_LINK
+{
+    uint32_t cbSize;
+    uint32_t dwSignature;
+    char szTarget[MAX_PATH];
+    wchar_t szwTarget[MAX_PATH];
+} EXP_SZ_LINK;
+
 #pragma pack(pop)
 
 
@@ -207,10 +221,11 @@ static const struct SPECIALFOLDER
     unsigned char csidl;
     const char* name;
     const char* dummyPath;
+    const char* unexpPath;
 } g_specialfolders[] = {
-    { CSIDL_WINDOWS, "windows", "X:\\reactos" },
-    { CSIDL_SYSTEM,  "system",  "X:\\reactos\\system32" },
-    { 0, NULL, NULL }
+    { CSIDL_WINDOWS, "windows", "X:\\reactos", "%SystemRoot%" },
+    { CSIDL_SYSTEM,  "system",  "X:\\reactos\\system32", "%SystemRoot%\\system32" },
+    { 0, NULL, NULL, NULL }
 };
 
 
@@ -251,6 +266,14 @@ my_mbstowcs(
 static bool is_path_separator(char c)
 {
     return (c == '\\' || c == '/');
+}
+
+/* Check whether a string contains Win32 environment variables,
+ * by searching for a pair of '%'. */
+static bool has_env_variables(const char *str)
+{
+    const char *ptr = strchr(str, '%');
+    return (ptr && strchr(ptr + 1, '%'));
 }
 
 static const struct SPECIALFOLDER* get_special_folder(const char *target)
@@ -304,21 +327,24 @@ static void write_string(FILE *pFile, bool bUnicode, const char *str)
 
 int main(int argc, const char *argv[])
 {
-    int i;
     const char *pszOutputPath = "shortcut.lnk";
     const char *pszTarget = NULL;
     const char *pszDescription = NULL;
     const char *pszWorkingDir = NULL;
     const char *pszCmdLineArgs = NULL;
     const char *pszIcon = NULL;
-    char targetpath[260];
+    char targetpath[MAX_PATH];
     int32_t IconIndex = 0;
     GUID Guid = CLSID_MyComputer;
     bool bHelp = false, bUnicode = false, bMinimized = false;
+    int i;
     FILE *pFile;
     LNK_HEADER Header;
     uint32_t dwTmp;
+    const struct SPECIALFOLDER *special;
     EXP_SPECIAL_FOLDER CsidlBlock, *pCsidlBlock = NULL;
+    EXP_SZ_LINK SzLinkBlock, *pSzLinkBlock = NULL;
+    EXP_SZ_LINK SzIconBlock, *pSzIconBlock = NULL;
 
     /* Parse the command-line */
     for (i = 1; i < argc; ++i)
@@ -403,6 +429,30 @@ int main(int argc, const char *argv[])
         Header.Flags |= LINK_ICON;
     Header.IconIndex = IconIndex;
     Header.ShowCmd = (bMinimized ? SW_SHOWMINNOACTIVE : SW_SHOWNORMAL);
+
+    /* Verify the target type before proceeding further */
+    special = get_special_folder(pszTarget);
+    if (special)
+        Header.Flags |= LINK_ID_LIST; // Definitively needed in this case.
+
+    /* Check whether the target path contains Win32 environment variables */
+    if (has_env_variables(pszTarget))
+    {
+        Header.Flags |= SLDF_HAS_EXP_SZ;
+        Header.Flags &= ~LINK_ID_LIST; // We cannot deal with PIDLs in this case.
+    }
+    if ((Header.Flags & LINK_ID_LIST) && special)
+        Header.Flags &= ~LINK_RELATIVE_PATH;
+
+    /* If it's not a direct target, check whether it uses a special
+     * folder that is defined using Win32 environment variables */
+    if (special && special->unexpPath && has_env_variables(special->unexpPath))
+        Header.Flags |= SLDF_HAS_EXP_SZ;
+
+    /* Check whether the icon path contains Win32 environment variables */
+    if (pszIcon && has_env_variables(pszIcon))
+        Header.Flags |= SLDF_HAS_EXP_ICON_SZ;
+
     fwrite(&Header, sizeof(Header), 1, pFile);
 
     if (Header.Flags & LINK_ID_LIST)
@@ -412,23 +462,23 @@ int main(int argc, const char *argv[])
         ID_LIST_FILE IdListFile;
         unsigned int cbListSize = sizeof(IdListGuid) + sizeof(uint16_t);
         unsigned int cchName;
-        const char *pszName = pszTarget;
+        const char *pszName;
+        const char *pszOrgTarget = pszTarget;
         size_t specialPathLen = 0;
         uint16_t uhTmp;
-        const struct SPECIALFOLDER *special = get_special_folder(pszTarget);
 
         /* ID list. It appears explorer does not accept links
          * without an ID list. It is relative to desktop. */
         if (special)
         {
-            Header.Flags &= ~LINK_RELATIVE_PATH;
             CsidlBlock.cbSize = sizeof(CsidlBlock);
             CsidlBlock.dwSignature = EXP_SPECIAL_FOLDER_SIG;
             CsidlBlock.idSpecialFolder = special->csidl;
             specialPathLen = strlen(special->dummyPath);
-            sprintf(targetpath, "%s\\%s", special->dummyPath, pszTarget + sizeof("shell:") + strlen(special->name));
-            pszName = pszTarget = targetpath;
+            sprintf(targetpath, "%s\\%s", special->dummyPath, pszOrgTarget + sizeof("shell:") + strlen(special->name));
+            pszTarget = targetpath;
         }
+        pszName = pszTarget;
 
         if (pszName[0] && pszName[0] != ':' && pszName[1] == ':')
         {
@@ -519,6 +569,39 @@ int main(int argc, const char *argv[])
         /* End of ID list */
         uhTmp = 0;
         fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
+
+        /* Reset the target path to the actual unexpanded path */
+        if (special)
+        {
+            sprintf(targetpath, "%s\\%s", special->unexpPath, pszOrgTarget + sizeof("shell:") + strlen(special->name));
+            pszTarget = targetpath;
+        }
+    }
+
+    if (Header.Flags & SLDF_HAS_EXP_SZ)
+    {
+        memset(&SzLinkBlock, 0, sizeof(SzLinkBlock));
+        SzLinkBlock.cbSize = sizeof(SzLinkBlock);
+        SzLinkBlock.dwSignature = EXP_SZ_LINK_SIG;
+
+        /* We have to store both ANSI and UTF16 versions of the string! */
+        strncpy(SzLinkBlock.szTarget, pszTarget, _countof(SzLinkBlock.szTarget));
+        mbstowcs(SzLinkBlock.szwTarget, pszTarget, _countof(SzLinkBlock.szwTarget));
+
+        pSzLinkBlock = &SzLinkBlock;
+    }
+
+    if (Header.Flags & SLDF_HAS_EXP_ICON_SZ)
+    {
+        memset(&SzIconBlock, 0, sizeof(SzIconBlock));
+        SzIconBlock.cbSize = sizeof(SzIconBlock);
+        SzIconBlock.dwSignature = EXP_SZ_ICON_SIG;
+
+        /* We have to store both ANSI and UTF16 versions of the string! */
+        strncpy(SzIconBlock.szTarget, pszIcon, _countof(SzIconBlock.szTarget));
+        mbstowcs(SzIconBlock.szwTarget, pszIcon, _countof(SzIconBlock.szwTarget));
+
+        pSzIconBlock = &SzIconBlock;
     }
 
     /* Description */
@@ -544,6 +627,10 @@ int main(int argc, const char *argv[])
     /* Write the data block list */
     if (pCsidlBlock)
         fwrite(pCsidlBlock, sizeof(*pCsidlBlock), 1, pFile);
+    if (pSzLinkBlock)
+        fwrite(pSzLinkBlock, sizeof(*pSzLinkBlock), 1, pFile);
+    if (pSzIconBlock)
+        fwrite(pSzIconBlock, sizeof(*pSzIconBlock), 1, pFile);
     /* End of data block list */
     dwTmp = 0;
     fwrite(&dwTmp, sizeof(dwTmp), 1, pFile);
