@@ -296,6 +296,42 @@ static bool has_env_variables(const char *str)
     return (ptr && strchr(ptr + 1, '%'));
 }
 
+static void strip_quotes_and_unescape_envvars(char **pstr)
+{
+    char *str = *pstr;
+    char *ptr, *dst;
+
+    /* Skip leading spaces */
+    while (isspace(*str))
+        ++str;
+
+    /* Strip trailing spaces */
+    ptr = str + strlen(str);
+    while ((ptr > str) && isspace(*(ptr-1)))
+        --ptr;
+    *ptr = '\0';
+
+    /* If quoted, skip the leading and strip the trailing quotes */
+    if ((ptr > str + 1) && (*str == '"') && (*(ptr-1) == '"'))
+    {
+        ++str;
+        *(--ptr) = '\0';
+    }
+
+    /* Un-escape the '^%' in environment variables names */
+    for (dst = ptr = str; *ptr; ++ptr, ++dst)
+    {
+        if (*ptr == '^' && *(ptr+1) == '%')
+            ++ptr;
+        if (ptr > dst) // Copy characters as soon as source advances destination.
+            *dst = *ptr;
+    }
+    *dst = '\0';
+
+    /* Return the string */
+    *pstr = str;
+}
+
 static const struct SPECIALFOLDER* get_special_folder(const char *target)
 {
     char buf[256];
@@ -419,12 +455,6 @@ int main(int argc, const char *argv[])
             ++i;
             trace("argv[%d]: %s\n", i, argv[i]);
             pszIcon = argv[i];
-            if ((i + 1 < argc) && isdigit(argv[i + 1][0]))
-            {
-                ++i;
-                trace("argv[%d]: %s\n", i, argv[i]);
-                IconIndex = atoi(argv[i]);
-            }
         }
         else if (!strcmp(argv[i] + 1, "m"))
             bMinimized = true;
@@ -452,7 +482,7 @@ int main(int argc, const char *argv[])
 
     if (!pszTarget || bHelp)
     {
-        printf("Usage: %s [-h][-v][-o path][-u][-d descr][-w path][-c cmdline_args][-i icon_path [nr]][-g guid] target\n"
+        printf("Usage: %s [-h][-v][-o path][-u][-d descr][-w path][-c cmdline_args][-i [icon_path[,nr]]][-g guid] target\n"
                "-h\tShows this help.\n"
                "-v\tEnables verbose mode for diagnostics.\n"
                "-o path\tSets the output path.\n"
@@ -460,11 +490,51 @@ int main(int argc, const char *argv[])
                "-d descr\tSets the shortcut description.\n"
                "-w path\tSets the working directory for the executable.\n"
                "-c cmdline_args\tSets the command-line arguments passed to the program.\n"
-               "-i icon_path [nr]\tSets the icon file and optionally its index.\n"
+               "-i [icon_path[,nr]]\tSets the icon path and optionally its index. If only an index is given (but no path), the target file is used instead.\n"
                "-m\tStart minimized.\n"
                "-g guid\tSets the GUID to which the target path is relative. Default value is MyComputer GUID.\n"
                "target\tAbsolute or relative to GUID specified with the -g option path.\n", argv[0]);
         return 0;
+    }
+
+    /* Process the parameters */
+    if (pszTarget)
+        strip_quotes_and_unescape_envvars((char**)&pszTarget);
+    if (pszWorkingDir)
+        strip_quotes_and_unescape_envvars((char**)&pszWorkingDir);
+    if (pszCmdLineArgs)
+        strip_quotes_and_unescape_envvars((char**)&pszCmdLineArgs);
+    if (pszIcon)
+    {
+        char *ptr, *endptr;
+
+        strip_quotes_and_unescape_envvars((char**)&pszIcon);
+
+        /* Check whether only an icon index was given */
+        dwTmp = strtol(pszIcon, &endptr, 0);
+        if (endptr && endptr != pszIcon)
+        {
+            /* Only an index was given; save it, and use the target as the icon file */
+            IconIndex = dwTmp;
+            pszIcon = (char*)1; // Canary value to tell to use pszTarget, once resolved.
+        }
+        else
+        {
+            /* No index was given: this is a file path, optionally followed by the icon index */
+            ptr = strrchr(pszIcon, ',');
+            if (ptr) // && isdigit(ptr[1])
+            {
+                /* We may have an index that follows the icon path */
+                dwTmp = strtol(ptr+1, &endptr, 0);
+                if (endptr && endptr != (ptr+1))
+                {
+                    /* It's valid, retrieve it and truncate the string to where the icon path ends */
+                    IconIndex = dwTmp;
+                    *ptr = '\0';
+                }
+            }
+            pszIcon = pszIcon;
+        }
     }
 
     trace("OutputPath  = %s\n"
@@ -475,7 +545,7 @@ int main(int argc, const char *argv[])
           "Icon        = %s (%d)\n\n",
           pszOutputPath, pszTarget, pszDescription,
           pszWorkingDir, pszCmdLineArgs,
-          pszIcon, IconIndex);
+          (pszIcon == (char*)1) ? pszTarget : pszIcon, IconIndex);
 
     pFile = fopen(pszOutputPath, "wb");
     if (!pFile)
@@ -521,8 +591,14 @@ int main(int argc, const char *argv[])
     if (special && special->unexpPath && has_env_variables(special->unexpPath))
         Header.Flags |= SLDF_HAS_EXP_SZ;
 
-    /* Check whether the icon path contains Win32 environment variables */
-    if (pszIcon && has_env_variables(pszIcon))
+    /*
+     * For the icon, first check the canary value that tells to use the target path.
+     * If present, the icon path will contain Win32 environment variables if the target has them.
+     * Otherwise, explicitly check whether the specified icon path contains environment variables.
+     */
+    if ((pszIcon == (char*)1) && (Header.Flags & SLDF_HAS_EXP_SZ))
+        Header.Flags |= SLDF_HAS_EXP_ICON_SZ;
+    else if (pszIcon && has_env_variables(pszIcon))
         Header.Flags |= SLDF_HAS_EXP_ICON_SZ;
 
     trace("Header.Flags     = 0x%08x\n"
@@ -654,6 +730,10 @@ int main(int argc, const char *argv[])
             pszTarget = targetpath;
         }
     }
+
+    /* Now, set the icon path to the target path if it has the specific canary value */
+    if (pszIcon == (char*)1)
+        pszIcon = pszTarget;
 
     if (Header.Flags & SLDF_HAS_EXP_SZ)
     {
