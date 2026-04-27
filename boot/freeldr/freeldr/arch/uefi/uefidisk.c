@@ -19,6 +19,13 @@ DBG_DEFAULT_CHANNEL(DISK);
 
 /* Maximum block size we support (8KB) - filters out flash devices */
 #define MAX_SUPPORTED_BLOCK_SIZE 8192
+/*
+ * A one-page transfer size forces large Block I/O reads to be split into
+ * many small firmware requests, which hurts throughput on some UEFI devices.
+ * Use a larger default chunk size and keep the bounce buffer only as an
+ * alignment aid for callers that need it.
+ */
+#define UEFI_BLOCKIO_CHUNK_SIZE (128 * 1024)
 
 #include "disk/part_gpt.h"
 
@@ -158,6 +165,79 @@ UefiEnsureDiskReadBufferAligned(
     return TRUE;
 }
 
+static
+EFI_STATUS
+UefiReadBlocks(
+    IN EFI_BLOCK_IO* BlockIo,
+    IN ULONGLONG SectorNumber,
+    IN ULONG BlockSize,
+    OUT PVOID Buffer,
+    IN ULONG SectorCount)
+{
+    if (!BlockIo || !Buffer || SectorCount == 0 || BlockSize == 0)
+        return EFI_INVALID_PARAMETER;
+
+    return BlockIo->ReadBlocks(BlockIo,
+                               BlockIo->Media->MediaId,
+                               SectorNumber,
+                               (UINTN)SectorCount * BlockSize,
+                               Buffer);
+}
+
+static
+ULONG
+UefiGetMaxChunkSectors(
+    IN ULONG BlockSize)
+{
+    if (BlockSize == 0 || DiskReadBufferSize < BlockSize)
+        return 0;
+
+    return DiskReadBufferSize / BlockSize;
+}
+
+static
+EFI_STATUS
+UefiReadBlocksChunked(
+    IN EFI_BLOCK_IO* BlockIo,
+    IN ULONGLONG SectorNumber,
+    IN ULONG BlockSize,
+    OUT PVOID Buffer,
+    IN ULONG SectorCount)
+{
+    EFI_STATUS Status;
+    ULONG MaxSectors;
+    PUCHAR CurrentBuffer;
+
+    if (!BlockIo || !Buffer || SectorCount == 0 || BlockSize == 0)
+        return EFI_INVALID_PARAMETER;
+
+    MaxSectors = UefiGetMaxChunkSectors(BlockSize);
+    if (MaxSectors == 0)
+        return EFI_BAD_BUFFER_SIZE;
+
+    CurrentBuffer = (PUCHAR)Buffer;
+
+    while (SectorCount)
+    {
+        ULONG ReadSectors = min(SectorCount, MaxSectors);
+        UINTN ReadSize = (UINTN)ReadSectors * BlockSize;
+
+        Status = UefiReadBlocks(BlockIo,
+                                SectorNumber,
+                                BlockSize,
+                                CurrentBuffer,
+                                ReadSectors);
+        if (EFI_ERROR(Status))
+            return Status;
+
+        CurrentBuffer += ReadSize;
+        SectorNumber += ReadSectors;
+        SectorCount -= ReadSectors;
+    }
+
+    return EFI_SUCCESS;
+}
+
 /* GPT Support Functions *****************************************************/
 
 // Defined in part_gpt.c
@@ -262,12 +342,11 @@ UefiGetBootPartitionEntry(
             ULONG EntryOffset = (i % EntriesPerBlock) * GptHeader.SizeOfPartitionEntry;
 
             /* Read the block containing the partition entry */
-            Status = RootBlockIo->ReadBlocks(
-                RootBlockIo,
-                RootBlockIo->Media->MediaId,
-                EntryLba,
-                BlockSize,
-                DiskReadBuffer);
+            Status = UefiReadBlocks(RootBlockIo,
+                                    EntryLba,
+                                    BlockSize,
+                                    DiskReadBuffer,
+                                    1);
 
             if (EFI_ERROR(Status))
                 continue;
@@ -520,7 +599,7 @@ UefiDiskRead(ULONG FileId, VOID *Buffer, ULONG N, ULONG *Count)
     ASSERT(DiskReadBufferSize > 0);
 
     TotalSectors = (N + Context->SectorSize - 1) / Context->SectorSize;
-    MaxSectors   = DiskReadBufferSize / Context->SectorSize;
+    MaxSectors   = UefiGetMaxChunkSectors(Context->SectorSize);
     SectorOffset = Context->SectorOffset + Context->SectorNumber;
 
     // If MaxSectors is 0, this will lead to infinite loop.
@@ -568,16 +647,16 @@ UefiDiskRead(ULONG FileId, VOID *Buffer, ULONG N, ULONG *Count)
     {
         ReadSectors = min(TotalSectors, MaxSectors);
 
-        Status = BlockIo->ReadBlocks(
-            BlockIo,
-            BlockIo->Media->MediaId,
-            SectorOffset,
-            ReadSectors * Context->SectorSize,
-            DiskReadBuffer);
+        Status = UefiReadBlocks(BlockIo,
+                                SectorOffset,
+                                Context->SectorSize,
+                                DiskReadBuffer,
+                                ReadSectors);
 
         if (EFI_ERROR(Status))
         {
-            ERR("ReadBlocks failed: Status = 0x%lx\n", (ULONG)Status);
+            ERR("ReadBlocks failed: DriveNumber=%d, SectorNumber=%llu, SectorCount=%lu, Status=0x%lx\n",
+                Context->DriveNumber, SectorOffset, ReadSectors, (ULONG)Status);
             ret = FALSE;
             break;
         }
@@ -1044,7 +1123,7 @@ UefiInitializeBootDevices(VOID)
     EFI_STATUS Status;
     ULONG ArcDriveIndex;
 
-    DiskReadBufferSize = EFI_PAGE_SIZE;
+    DiskReadBufferSize = UEFI_BLOCKIO_CHUNK_SIZE;
     DiskReadBuffer = NULL;
     DiskReadBufferRaw = NULL;
     DiskReadBufferAlignment = 1;
@@ -1181,27 +1260,26 @@ UefiDiskReadLogicalSectors(
     if (!UefiIsAlignedPointer(Buffer, (IoAlign == 0) ? 1 : IoAlign))
     {
         ULONG TotalSectors = SectorCount;
-        ULONG MaxSectors = DiskReadBufferSize / BlockSize;
+        ULONG MaxSectors = UefiGetMaxChunkSectors(BlockSize);
         ULONGLONG CurrentSector = SectorNumber;
         PUCHAR OutPtr = (PUCHAR)Buffer;
 
         if (MaxSectors == 0)
         {
-            ERR("DiskReadBufferSize too small for block size %lu\n", BlockSize);
+            ERR("UEFI Block I/O chunk size too small for block size %lu\n", BlockSize);
             return FALSE;
         }
 
         while (TotalSectors)
         {
             ULONG ReadSectors = min(TotalSectors, MaxSectors);
-            UINTN ReadSize = ReadSectors * BlockSize;
+            UINTN ReadSize;
 
-            Status = BlockIo->ReadBlocks(
-                BlockIo,
-                BlockIo->Media->MediaId,
-                CurrentSector,
-                ReadSize,
-                DiskReadBuffer);
+            Status = UefiReadBlocks(BlockIo,
+                                    CurrentSector,
+                                    BlockSize,
+                                    DiskReadBuffer,
+                                    ReadSectors);
 
             if (EFI_ERROR(Status))
             {
@@ -1216,6 +1294,7 @@ UefiDiskReadLogicalSectors(
                 return FALSE;
             }
 
+            ReadSize = (UINTN)ReadSectors * BlockSize;
             RtlCopyMemory(OutPtr, DiskReadBuffer, ReadSize);
             OutPtr += ReadSize;
             CurrentSector += ReadSectors;
@@ -1225,24 +1304,24 @@ UefiDiskReadLogicalSectors(
         return TRUE;
     }
 
-    Status = BlockIo->ReadBlocks(
-        BlockIo,
-        BlockIo->Media->MediaId,
-        SectorNumber,
-        SectorCount * BlockSize,
-        Buffer);
-
-    if (EFI_ERROR(Status))
     {
-        ERR("ReadBlocks failed: DriveNumber=%d, SectorNumber=%llu, SectorCount=%lu, Status=0x%lx\n",
-            DriveNumber, SectorNumber, SectorCount, (ULONG)Status);
-        ERR("ReadBlocks details: BlockSize=%lu, IoAlign=%lu, Buffer=%p, DiskReadBuffer=%p, MediaId=0x%lx\n",
-            BlockSize, IoAlign, Buffer, DiskReadBuffer, (ULONG)BlockIo->Media->MediaId);
-        ERR("ReadBlocks media: LastBlock=%llu, LogicalPartition=%s, RemovableMedia=%s\n",
-            BlockIo->Media->LastBlock,
-            BlockIo->Media->LogicalPartition ? "TRUE" : "FALSE",
-            BlockIo->Media->RemovableMedia ? "TRUE" : "FALSE");
-        return FALSE;
+        Status = UefiReadBlocksChunked(BlockIo,
+                                       SectorNumber,
+                                       BlockSize,
+                                       Buffer,
+                                       SectorCount);
+        if (EFI_ERROR(Status))
+        {
+            ERR("ReadBlocks failed: DriveNumber=%d, SectorNumber=%llu, SectorCount=%lu, Status=0x%lx\n",
+                DriveNumber, SectorNumber, SectorCount, (ULONG)Status);
+            ERR("ReadBlocks details: BlockSize=%lu, IoAlign=%lu, Buffer=%p, DiskReadBuffer=%p, MediaId=0x%lx\n",
+                BlockSize, IoAlign, Buffer, DiskReadBuffer, (ULONG)BlockIo->Media->MediaId);
+            ERR("ReadBlocks media: LastBlock=%llu, LogicalPartition=%s, RemovableMedia=%s\n",
+                BlockIo->Media->LastBlock,
+                BlockIo->Media->LogicalPartition ? "TRUE" : "FALSE",
+                BlockIo->Media->RemovableMedia ? "TRUE" : "FALSE");
+            return FALSE;
+        }
     }
 
     return TRUE;
