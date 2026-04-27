@@ -357,7 +357,11 @@
 
   FT_EXPORT_DEF( FT_Error )
   FT_Library_SetLcdGeometry( FT_Library  library,
+#ifdef __REACTOS__
+                             FT_Vector   sub[3] )
+#else
                              FT_Vector*  sub )
+#endif
   {
     FT_UNUSED( library );
     FT_UNUSED( sub );
@@ -418,7 +422,11 @@
 
   FT_EXPORT_DEF( FT_Error )
   FT_Library_SetLcdGeometry( FT_Library  library,
+#ifdef __REACTOS__
                              FT_Vector   sub[3] )
+#else
+                             FT_Vector*  sub )
+#endif
   {
     if ( !library )
       return FT_THROW( Invalid_Library_Handle );
