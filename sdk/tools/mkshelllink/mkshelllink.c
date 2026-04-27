@@ -4,6 +4,7 @@
  * PURPOSE:     Shell Link maker
  * COPYRIGHT:   Copyright 2011 Rafal Harabien <rafalh@reactos.org>
  *              Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
+ *              Copyright 2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
@@ -25,6 +26,15 @@ typedef unsigned __int8  uint8_t;
 typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
 typedef __int32 int32_t;
+#endif
+
+C_ASSERT(sizeof(wchar_t) == sizeof(uint16_t)); // Ensure wchar_t is 16-bit (UTF16 character)
+
+#ifndef _countof
+#define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
+#endif
+#ifndef min
+#define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
 #ifdef _WIN32
@@ -206,6 +216,38 @@ static const struct SPECIALFOLDER
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * Poor-man ANSI-to-UTF16LE conversion.
+ * We cannot use the host mbstowcs() routine, since on *nix systems the iconv
+ * library being used may have been compiled with a 32-bit wchar_t (even if
+ * the tool is compiled with: `-fshort-wchar -fwide-exec-charset=UTF-16LE`).
+ */
+size_t
+my_mbstowcs(
+    wchar_t *wcstr,
+    const char *mbstr,
+    size_t count)
+{
+    size_t i;
+    size_t len = strlen(mbstr) + 1; // Count the NUL-terminator.
+
+    /* Convert up to the NUL-terminator (included) and at most 'count' characters */
+    count = min(count, len);
+
+    /* POSIX extension: if wcstr is NULL, return the number of wide
+     * characters that would be written to wcstr, if converted. */
+    if (!wcstr)
+        return count;
+
+    if (count == 0)
+        return (size_t)0; // dest string exists, but 0 bytes converted.
+    for (i = 0; i < count; ++i)
+        wcstr[i] = (wchar_t)mbstr[i];
+    /* Return the number of wide characters, excluding the NUL-terminator, written to wcstr */
+    return (i - 1);
+}
+#define mbstowcs my_mbstowcs
+
 static bool is_path_separator(char c)
 {
     return (c == '\\' || c == '/');
@@ -235,6 +277,31 @@ static const struct SPECIALFOLDER* get_special_folder(const char *target)
     }
 }
 
+/*
+ * Write an ANSI string buffer to the shell link,
+ * converting it to UTF16LE Unicode if necessary.
+ */
+static void write_string(FILE *pFile, bool bUnicode, const char *str)
+{
+    uint16_t uhTmp;
+
+    /* String length in number of ANSI or Unicode characters */
+    uhTmp = strlen(str);
+    fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
+
+    /* String data (ANSI or Unicode) */
+    if (!bUnicode)
+    {
+        fwrite(str, uhTmp, 1, pFile);
+    }
+    else
+    {
+        wchar_t tmpBufferU[1024]; // Large-enough buffer for string conversions.
+        uhTmp = (uint16_t)mbstowcs(tmpBufferU, str, _countof(tmpBufferU));
+        fwrite(tmpBufferU, uhTmp * sizeof(wchar_t), 1, pFile);
+    }
+}
+
 int main(int argc, const char *argv[])
 {
     int i;
@@ -247,10 +314,9 @@ int main(int argc, const char *argv[])
     char targetpath[260];
     int32_t IconIndex = 0;
     GUID Guid = CLSID_MyComputer;
-    bool bHelp = false, bMinimized = false;
+    bool bHelp = false, bUnicode = false, bMinimized = false;
     FILE *pFile;
     LNK_HEADER Header;
-    uint16_t uhTmp;
     uint32_t dwTmp;
     EXP_SPECIAL_FOLDER CsidlBlock, *pCsidlBlock = NULL;
 
@@ -263,6 +329,8 @@ int main(int argc, const char *argv[])
             bHelp = true;
         else if (!strcmp(argv[i] + 1, "o") && (i + 1 < argc))
             pszOutputPath = argv[++i];
+        else if (!strcmp(argv[i] + 1, "u"))
+            bUnicode = true;
         else if (!strcmp(argv[i] + 1, "d") && (i + 1 < argc))
             pszDescription = argv[++i];
         else if (!strcmp(argv[i] + 1, "w") && (i + 1 < argc))
@@ -297,9 +365,10 @@ int main(int argc, const char *argv[])
 
     if (!pszTarget || bHelp)
     {
-        printf("Usage: %s [-h][-o path][-d descr][-w path][-c cmdline_args][-i icon_path [nr]][-g guid] target\n"
+        printf("Usage: %s [-h][-o path][-u][-d descr][-w path][-c cmdline_args][-i icon_path [nr]][-g guid] target\n"
                "-h\tShows this help.\n"
                "-o path\tSets the output path.\n"
+               "-u\tCreates a Unicode-aware shortcut.\n"
                "-d descr\tSets the shortcut description.\n"
                "-w path\tSets the working directory for the executable.\n"
                "-c cmdline_args\tSets the command-line arguments passed to the program.\n"
@@ -322,6 +391,8 @@ int main(int argc, const char *argv[])
     Header.Size = sizeof(Header);
     Header.Guid = CLSID_ShellLink;
     Header.Flags = LINK_ID_LIST;
+    if (bUnicode)
+        Header.Flags |= LINK_UNICODE;
     if (pszDescription)
         Header.Flags |= LINK_DESCRIPTION;
     if (pszWorkingDir)
@@ -343,6 +414,7 @@ int main(int argc, const char *argv[])
         unsigned int cchName;
         const char *pszName = pszTarget;
         size_t specialPathLen = 0;
+        uint16_t uhTmp;
         const struct SPECIALFOLDER *special = get_special_folder(pszTarget);
 
         /* ID list. It appears explorer does not accept links
@@ -449,45 +521,25 @@ int main(int argc, const char *argv[])
         fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
     }
 
+    /* Description */
     if (Header.Flags & LINK_DESCRIPTION)
-    {
-        /* Description */
-        uhTmp = strlen(pszDescription);
-        fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
-        fputs(pszDescription, pFile);
-    }
+        write_string(pFile, bUnicode, pszDescription);
 
+    /* Relative path */
     if (Header.Flags & LINK_RELATIVE_PATH)
-    {
-        /* Relative path */
-        uhTmp = strlen(pszTarget);
-        fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
-        fputs(pszTarget, pFile);
-    }
+        write_string(pFile, bUnicode, pszTarget);
 
+    /* Working directory */
     if (Header.Flags & LINK_WORKING_DIR)
-    {
-        /* Working directory */
-        uhTmp = strlen(pszWorkingDir);
-        fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
-        fputs(pszWorkingDir, pFile);
-    }
+        write_string(pFile, bUnicode, pszWorkingDir);
 
+    /* Command-line arguments */
     if (Header.Flags & LINK_CMDLINE_ARGS)
-    {
-        /* Command-line arguments */
-        uhTmp = strlen(pszCmdLineArgs);
-        fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
-        fputs(pszCmdLineArgs, pFile);
-    }
+        write_string(pFile, bUnicode, pszCmdLineArgs);
 
+    /* Icon path */
     if (Header.Flags & LINK_ICON)
-    {
-        /* Icon path */
-        uhTmp = strlen(pszIcon);
-        fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
-        fputs(pszIcon, pFile);
-    }
+        write_string(pFile, bUnicode, pszIcon);
 
     /* Write the data block list */
     if (pCsidlBlock)
