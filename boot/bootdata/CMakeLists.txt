@@ -58,14 +58,16 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcdregtest/unattend.inf DESTINAT
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/livecd/unattend.inf DESTINATION reactos NO_CAB FOR livecd)
 
 # LiveImage shortcuts
-macro(add_livecd_shortcut name app dest)
-    add_link(NAME ${name} CMD_LINE_ARGS ${app} ICON ${app} PATH livecd_start.cmd GUID "{450D8FBA-AD25-11D0-98A8-0800361B1103}" MINIMIZE)
-    list(APPEND LIVECD_SHORTCUTS "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk")
+add_custom_target(livecd_links)
+function(add_livecd_shortcut name app dest)
+    add_link(${name} livecd_start.cmd GUID "{450D8FBA-AD25-11D0-98A8-0800361B1103}" CMD_LINE_ARGS ${app} ICON ${app} MINIMIZE)
+    # Only on CMake 3.20+: target_sources(livecd_links PRIVATE ...)
+    set_property(TARGET livecd_links APPEND PROPERTY SOURCES "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk")
     add_cd_file(FILE "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk"
                 TARGET livecd_links
                 DESTINATION ${dest}
                 FOR livecd)
-endmacro(add_livecd_shortcut)
+endfunction()
 
 ## NOTE: What would be nice is to create this list using /media/inf/shortcuts.inf
 ## and taking their default english translation!
@@ -100,5 +102,3 @@ add_livecd_shortcut("WineMine" winmine.exe "Profiles/All Users/Start Menu/Progra
 add_livecd_shortcut("ReactOS Explorer" explorer.exe "Profiles/All Users/Start Menu/Programs")
 add_livecd_shortcut("Command Prompt" cmd.exe "Profiles/Default User/Application Data/Microsoft/Internet Explorer/Quick Launch")
 add_livecd_shortcut("ReactOS Explorer" explorer.exe "Profiles/Default User/Application Data/Microsoft/Internet Explorer/Quick Launch")
-
-add_custom_target(livecd_links DEPENDS ${LIVECD_SHORTCUTS})
