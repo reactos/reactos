@@ -112,7 +112,7 @@ UINT16 hdac_format(PHDAC_STREAM stream) {
 			return 0;
 		format |= channels - 1;
 
-		switch (stream->streamFormat.ContainerSize) {
+		switch (stream->streamFormat.ValidBitsPerSample) {
 		case 8:
 			format |= AC_FMT_BITS_8;
 			break;
@@ -171,6 +171,5 @@ void hdac_stream_setup(PHDAC_STREAM stream) {
 	/* set the interrupt enable bits in the descriptor control register */
 	stream_update32(stream, SD_CTL, 0, SD_INT_MASK);
 
-	stream->fifoSize = 0;
 	stream->fifoSize = stream_read16(stream, SD_FIFOSIZE) + 1;
 }

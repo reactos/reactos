@@ -928,7 +928,7 @@ HDA_SetupDmaEngineWithBdl(
 	WdfInterruptAcquireLock(devData->FdoContext->Interrupt);
 
 	stream->bufSz = BufferLength;
-	stream->numBlocks = (UINT16)Lvi;
+	stream->numBlocks = (UINT16)(Lvi + 1);
 
 	RtlZeroMemory(&stream->isr, sizeof(HDAC_ISR_CALLBACK));
 	stream->isr.IOC = TRUE;

@@ -176,7 +176,7 @@ URL: https://code.google.com/archive/p/cmediadrivers/
 
 Title: HD Audio Driver for Windows 10 / 11 with Skylake -> Raptor Lake DSP support
 Path: drivers/wdm/audio/hdaudbus
-Used Version: git commit ad50bcc
+Used Version: git commit 5477b93
 License: BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
 URL: https://github.com/coolstar/sklhdaudbus/tree/master
 

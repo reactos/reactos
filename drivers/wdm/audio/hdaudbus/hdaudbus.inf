@@ -39,6 +39,9 @@ ExcludeFromSelect = PCI\CC_0403
 %HDAudio.DeviceDesc% = HDAudio_Device, PCI\VEN_8086&DEV_7E28&CC_0401 ;Intel Meteor Lake-P
 %HDAudio.DeviceDesc% = HDAudio_Device, PCI\VEN_8086&DEV_7728&CC_0401 ;Intel Arrow Lake-P
 %HDAudio.DeviceDesc% = HDAudio_Device, PCI\VEN_8086&DEV_A828&CC_0401 ;Intel Lunar Lake-P
+%HDAudio.DeviceDesc% = HDAudio_Device, PCI\VEN_8086&DEV_D328&CC_0401 ;Intel Nova Lake
+%HDAudio.DeviceDesc% = HDAudio_Device, PCI\VEN_8086&DEV_E328&CC_0401 ;Intel Panther Lake-H
+%HDAudio.DeviceDesc% = HDAudio_Device, PCI\VEN_8086&DEV_E428&CC_0401 ;Intel Panther Lake
 
 [HDAudio_Device.NT]
 CopyFiles = Drivers_Dir
