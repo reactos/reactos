@@ -1920,7 +1920,7 @@ typedef struct _PEB {
 } PEB,*PPEB;
 #endif /* __REACTOS__ */
 
-#ifdef _MSC_VER
+#ifdef __REACTOS__
 __kernel_entry
 NTSTATUS NTAPI ZwQueryInformationProcess(
     IN HANDLE ProcessHandle,
