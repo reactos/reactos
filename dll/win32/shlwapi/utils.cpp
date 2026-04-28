@@ -14,22 +14,22 @@
 #define IShellFolder_ParseDisplayName _disabled_IShellFolder_ParseDisplayName_
 #define IShellFolder_CompareIDs _disabled_IShellFolder_CompareIDs_
 
-#include "precomp.h"
+#define WIN32_LEAN_AND_MEAN
+#define _FORCENAMELESSUNION
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <atlstr.h>
-
 #include <shlwapi_undoc.h>
+#include <shellutils.h>
 #include <ishellfolder_helpers.h>
-
 #include <strsafe.h>
 
-#ifndef FAILED_UNEXPECTEDLY
-#define FAILED_UNEXPECTEDLY FAILED /* FIXME: Make shellutils.h usable without ATL */
-#endif
-
+#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 EXTERN_C LSTATUS WINAPI RegGetValueW(HKEY, LPCWSTR, LPCWSTR, DWORD, LPDWORD, PVOID, LPDWORD);

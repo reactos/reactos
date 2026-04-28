@@ -9,6 +9,7 @@
 #pragma once
 
 #include <winreg.h> // For REGSAM
+#include <shlobj.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -88,11 +89,15 @@ BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
 
 HRESULT WINAPI CLSIDFromStringWrap(_In_ LPCWSTR idstr, _Out_ CLSID *id);
 HMODULE WINAPI SHPinDllOfCLSID(REFIID refiid);
+#ifdef OLECMDERR_E_NOTSUPPORTED
 HRESULT WINAPI IUnknown_QueryStatus(IUnknown *lpUnknown, REFGUID pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT* pCmdText);
+#endif
 HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT* pvaIn, VARIANT* pvaOut);
 LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT wMask, UINT wFlags);
 HWND WINAPI SHSetParentHwnd(HWND hWnd, HWND hWndParent);
+#ifdef MULTICLASSINFO_GETTYPEINFO
 HRESULT WINAPI ConnectToConnectionPoint(IUnknown *lpUnkSink, REFIID riid, BOOL bAdviseOnly, IUnknown *lpUnknown, LPDWORD lpCookie, IConnectionPoint **lppCP);
+#endif
 BOOL WINAPI SHIsSameObject(IUnknown *lpInt1, IUnknown *lpInt2);
 BOOL WINAPI SHLoadMenuPopup(HINSTANCE hInst, LPCWSTR szName);
 void WINAPI SHPropagateMessage(HWND hWnd, UINT uiMsgId, WPARAM wParam, LPARAM lParam, BOOL bSend);
@@ -110,6 +115,7 @@ HRESULT WINAPI SHIsExpandableFolder(LPSHELLFOLDER lpFolder, LPCITEMIDLIST pidl);
 DWORD WINAPI SHFillRectClr(HDC hDC, LPCRECT pRect, COLORREF cRef);
 int WINAPI SHSearchMapInt(const int *lpKeys, const int *lpValues, int iLen, int iKey);
 
+#ifdef OLECMDERR_E_NOTSUPPORTED
 HRESULT WINAPI
 MayQSForward(
     _In_ IUnknown *lpUnknown,
@@ -118,6 +124,7 @@ MayQSForward(
     _In_ ULONG cCmds,
     _Inout_ OLECMD *prgCmds,
     _Inout_ OLECMDTEXT *pCmdText);
+#endif
 
 HRESULT WINAPI
 MayExecForward(
@@ -129,7 +136,9 @@ MayExecForward(
     _In_ VARIANT *pvaIn,
     _Inout_ VARIANT *pvaOut);
 
+#ifdef OLECMDERR_E_NOTSUPPORTED
 HRESULT WINAPI IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds);
+#endif
 BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
 HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
 VOID WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id);
@@ -137,12 +146,14 @@ EXTERN_C BOOL WINAPI SHBoolSystemParametersInfo(UINT uiAction, PVOID pvParam);
 
 HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU, BOOL bCreate, PHKEY phKey);
 
+#ifdef __WINE_SHLOBJ_H
 BOOL WINAPI SHAddDataBlock(LPDBLIST* lppList, const DATABLOCK_HEADER *lpNewItem);
 BOOL WINAPI SHRemoveDataBlock(LPDBLIST* lppList, DWORD dwSignature);
 DATABLOCK_HEADER* WINAPI SHFindDataBlock(LPDBLIST lpList, DWORD dwSignature);
 HRESULT WINAPI SHWriteDataBlockList(IStream* lpStream, LPDBLIST lpList);
 HRESULT WINAPI SHReadDataBlockList(IStream* lpStream, LPDBLIST* lppList);
 VOID WINAPI SHFreeDataBlockList(LPDBLIST lpList);
+#endif
 
 LONG
 WINAPI
