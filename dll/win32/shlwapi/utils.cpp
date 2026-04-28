@@ -465,7 +465,11 @@ IShellFolder_CompareIDs(
     return psf->CompareIDs(lParam, pidl1, pidl2);
 }
 
-// Used in SHDialogBox below
+/*************************************************************************
+ * SHDialogProc [INTERNAL]
+ *
+ * Used in SHDialogBox below
+ */
 static INT_PTR CALLBACK
 SHDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
