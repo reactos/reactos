@@ -417,4 +417,7 @@ NtSystemDebugControl(
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
+
+    /* Unreachable */
+    return STATUS_UNSUCCESSFUL;
 }

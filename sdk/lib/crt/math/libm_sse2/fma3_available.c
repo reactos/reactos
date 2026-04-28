@@ -51,7 +51,7 @@ int __cdecl _set_FMA3_enable(int flag)
 
 int __fma3_lib_init(void);
 
-_CRTALLOC(".CRT$XIC") static _PIFV init_fma3 = __fma3_lib_init;
+_CRTALLOC(".CRT$XIC") static __attribute__((used)) _PIFV init_fma3 = __fma3_lib_init;
 
 int __fma3_lib_init(void)
 {
