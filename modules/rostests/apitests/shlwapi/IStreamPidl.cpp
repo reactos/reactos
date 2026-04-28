@@ -47,6 +47,13 @@ static void Test_RoundTrip_SimplePidl(void)
     HRESULT hr;
     IStream *pstm;
 
+    ok(pidlSrc != NULL, "pidlSrc was NULL.\n");
+    if (!pidlSrc)
+    {
+        skip("pidlSrc was NULL.\n");
+        return;
+    }
+
     pstm = SHCreateMemStream(NULL, 0);
     ok(pstm != NULL, "pstm was NULL.\n");
     if (!pstm)
@@ -279,6 +286,13 @@ static void Test_Write_StreamPosition(void)
     LARGE_INTEGER zero;
     HRESULT hr;
     UINT expectedPos;
+
+    ok(pidlSrc != NULL, "pidlSrc was NULL\n");
+    if (!pidlSrc)
+    {
+        skip("pidlSrc was NULL\n");
+        return;
+    }
 
     ok(pstm != NULL, "pstm was NULL.\n");
     if (!pstm)
