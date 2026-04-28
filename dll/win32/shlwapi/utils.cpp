@@ -476,12 +476,12 @@ SHDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (uMsg == WM_INITDIALOG)
     {
         pData = (PSHDIALOG)lParam;
-        SetWindowLongA(hWnd, DWLP_USER, lParam);
+        SetWindowLongPtrA(hWnd, DWLP_USER, lParam);
         lParam = (LPARAM)pData->pThis;
     }
     else
     {
-        pData = (PSHDIALOG)GetWindowLongA(hWnd, DWLP_USER);
+        pData = (PSHDIALOG)GetWindowLongPtrA(hWnd, DWLP_USER);
     }
 
     if (pData && pData->fn)
@@ -521,11 +521,11 @@ SHDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
  */
 EXTERN_C INT_PTR WINAPI
 SHDialogBox(
-    _In_ HINSTANCE     hInstance,
-    _In_ LPCSTR        lpTemplateName,
-    _In_ HWND          hWndParent,
-    _In_ SHDIALOG_PROC fn,
-    _Inout_opt_ PVOID  pThis)
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCSTR lpTemplateName,
+    _In_opt_ HWND hWndParent,
+    _In_opt_ SHDIALOGPROC fn,
+    _Inout_opt_ PVOID pThis)
 {
     SHDIALOG data = { fn, pThis };
     return DialogBoxParamA(hInstance, lpTemplateName, hWndParent, SHDialogProc, (LPARAM)&data);
