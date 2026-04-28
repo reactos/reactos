@@ -349,6 +349,7 @@ START_TEST(IStreamPidl)
     if (!g_fnIStream_ReadPidl || !g_fnIStream_WritePidl)
     {
         skip("IStream_ReadPidl or IStream_WritePidl not found\n");
+        FreeLibrary(hSHLWAPI);
         return;
     }
 
