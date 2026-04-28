@@ -75,7 +75,6 @@ static void Test_RoundTrip_SimplePidl(void)
 
 static void Test_RoundTrip_EmptyPidl(void)
 {
-    /* cb=0 の終端だけ */
     LPITEMIDLIST pidlSrc = (LPITEMIDLIST)CoTaskMemAlloc(sizeof(USHORT));
     LPITEMIDLIST pidlDst = NULL;
     HRESULT hr;
@@ -108,7 +107,7 @@ static void Test_RoundTrip_EmptyPidl(void)
 
 static void Test_RoundTrip_MultiItemPidl(void)
 {
-    UINT cbTotal = 4 + 5 + 2; /* 11 バイト */
+    UINT cbTotal = 4 + 5 + 2;
     LPITEMIDLIST pidlSrc = (LPITEMIDLIST)CoTaskMemAlloc(cbTotal);
     LPITEMIDLIST pidlDst = NULL;
     PBYTE p;
