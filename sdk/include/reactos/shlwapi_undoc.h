@@ -144,6 +144,9 @@ HRESULT WINAPI SHWriteDataBlockList(IStream* lpStream, LPDBLIST lpList);
 HRESULT WINAPI SHReadDataBlockList(IStream* lpStream, LPDBLIST* lppList);
 VOID WINAPI SHFreeDataBlockList(LPDBLIST lpList);
 
+HRESULT WINAPI IStream_ReadPidl(_In_ IStream *pstm, _Out_ LPITEMIDLIST *ppidlOut);
+HRESULT WINAPI IStream_WritePidl(_In_ IStream *pstm, _In_ LPCITEMIDLIST pidlWrite);
+
 LONG
 WINAPI
 RegCreateKeyExWrapW(

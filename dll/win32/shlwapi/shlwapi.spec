@@ -509,8 +509,8 @@
 509 stdcall -noname IUnknown_OnFocusChangeIS(ptr ptr long)
 510 stdcall -noname SHLockSharedEx(ptr long long)
 511 stdcall -noname PathFileExistsDefExtAndAttributesW(wstr long ptr)
-512 stub -ordinal IStream_ReadPidl
-513 stub -ordinal IStream_WritePidl
+512 stdcall -noname IStream_ReadPidl(ptr ptr)
+513 stdcall -noname IStream_WritePidl(ptr ptr)
 514 stdcall -noname IUnknown_ProfferService(ptr ptr ptr ptr)
 515 stdcall -ordinal SHGetViewStatePropertyBag(ptr wstr long ptr ptr)
 516 stdcall -noname SKGetValueW(long wstr wstr ptr ptr ptr)

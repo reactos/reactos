@@ -30,6 +30,9 @@
 #define NO_SHLWAPI_REG
 #define NO_SHLWAPI_PATH
 #include "shlwapi.h"
+#ifdef __REACTOS__
+#include "shlobj.h"
+#endif
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -673,3 +676,72 @@ HRESULT WINAPI IStream_Size(IStream *lpStream, ULARGE_INTEGER* lpulSize)
     *lpulSize = statstg.cbSize;
   return hRet;
 }
+
+#ifdef __REACTOS__
+/*************************************************************************
+ * IStream_ReadPidl [SHLWAPI.512]
+ *
+ * https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/util/istream/readpidl.htm
+ */
+HRESULT WINAPI
+IStream_ReadPidl(_In_ IStream *pstm, _Out_ LPITEMIDLIST *ppidlOut)
+{
+    LPITEMIDLIST pidl, pidlEnd;
+    LPSHITEMID pItem;
+    UINT cbSize;
+    HRESULT hr;
+
+    *ppidlOut = NULL;
+
+    hr = SHIStream_Read(pstm, &cbSize, sizeof(cbSize));
+    if (FAILED(hr))
+        return hr;
+
+    pidl = (LPITEMIDLIST)CoTaskMemAlloc(cbSize);
+    if (!pidl)
+        return E_OUTOFMEMORY;
+
+    hr = SHIStream_Read(pstm, pidl, cbSize);
+    if (FAILED(hr))
+    {
+        CoTaskMemFree(pidl);
+        return hr;
+    }
+
+    pidlEnd = (LPITEMIDLIST)((PBYTE)pidl + cbSize - sizeof(WORD));
+    for (pItem = &pidl->mkid; pItem <= (LPSHITEMID)pidlEnd;)
+    {
+        if (pItem->cb == 0)
+            break;
+        pItem = (LPSHITEMID)((PBYTE)pItem + pItem->cb);
+    }
+
+    if ((LPITEMIDLIST)pItem == pidlEnd && !pItem->cb)
+    {
+        *ppidlOut = pidl;
+        hr = S_OK;
+    }
+    else
+    {
+        hr = E_INVALIDARG;
+    }
+
+    CoTaskMemFree(pidl);
+    return hr;
+}
+
+/*************************************************************************
+ * IStream_WritePidl [SHLWAPI.513]
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/util/istream/writepidl.htm
+ */
+HRESULT WINAPI
+IStream_WritePidl(_In_ IStream *pstm, _In_ LPCITEMIDLIST pidlWrite)
+{
+    UINT size = ILGetSize(pidlWrite);
+    HRESULT hr = SHIStream_Write(pstm, &size, sizeof(size));
+    if (FAILED(hr))
+        return hr;
+    return SHIStream_Write(pstm, pidlWrite, size);
+}
+#endif /* def __REACTOS__ */
