@@ -54,7 +54,8 @@ static void Test_CharUpperNoDBCSA(void)
     // Empty string
     {
         char buf[] = "";
-        g_fnCharUpperNoDBCSA(buf);
+        PCSTR ret = g_fnCharUpperNoDBCSA(buf);
+        ok(ret == NULL, "ret was not NULL.\n");
         ok_int(buf[0], ANSI_NULL);
     }
 
@@ -99,7 +100,8 @@ static void Test_CharLowerNoDBCSA(void)
     // Empty string
     {
         char buf[] = "";
-        g_fnCharLowerNoDBCSA(buf);
+        PCSTR ret = g_fnCharLowerNoDBCSA(buf);
+        ok(ret == NULL, "ret was not NULL.\n");
         ok_int(buf[0], ANSI_NULL);
     }
 
@@ -144,7 +146,8 @@ static void Test_CharUpperNoDBCSW(void)
     // Empty string
     {
         wchar_t buf[] = L"";
-        g_fnCharUpperNoDBCSW(buf);
+        PCWSTR ret = g_fnCharUpperNoDBCSW(buf);
+        ok(ret == NULL, "ret was not NULL.\n");
         ok_int(buf[0], UNICODE_NULL);
     }
 
@@ -189,7 +192,8 @@ static void Test_CharLowerNoDBCSW(void)
     // Empty string
     {
         wchar_t buf[] = L"";
-        g_fnCharLowerNoDBCSW(buf);
+        PCWSTR ret = g_fnCharLowerNoDBCSW(buf);
+        ok(ret == NULL, "ret was not NULL.\n");
         ok_int(buf[0], UNICODE_NULL);
     }
 
