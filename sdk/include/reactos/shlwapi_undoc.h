@@ -448,7 +448,7 @@ IUnknown_QueryServiceForWebBrowserApp(
     _In_ REFGUID riid,
     _Out_ LPVOID *lppOut);
 
-typedef BOOL (CALLBACK *SHDIALOGPROC)(
+typedef INT_PTR (CALLBACK *SHDIALOGPROC)(
     PVOID  pThis,
     HWND   hWnd,
     UINT   uMsg,
