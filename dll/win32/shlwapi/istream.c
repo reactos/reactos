@@ -741,10 +741,10 @@ IStream_ReadPidl(_In_ IStream *pstm, _Out_ LPITEMIDLIST *ppidlOut)
 HRESULT WINAPI
 IStream_WritePidl(_In_ IStream *pstm, _In_ LPCITEMIDLIST pidlWrite)
 {
-    UINT size = ILGetSize(pidlWrite);
-    HRESULT hr = SHIStream_Write(pstm, &size, sizeof(size));
+    UINT cbSize = ILGetSize(pidlWrite);
+    HRESULT hr = SHIStream_Write(pstm, &cbSize, sizeof(cbSize));
     if (FAILED(hr))
         return hr;
-    return SHIStream_Write(pstm, pidlWrite, size);
+    return SHIStream_Write(pstm, pidlWrite, cbSize);
 }
 #endif /* def __REACTOS__ */
