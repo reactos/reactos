@@ -464,3 +464,69 @@ IShellFolder_CompareIDs(
 
     return psf->CompareIDs(lParam, pidl1, pidl2);
 }
+
+static INT_PTR CALLBACK
+SHDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PSHDIALOG pData;
+    INT_PTR   result;
+    HWND      hwndItem;
+    LRESULT   ret;
+
+    if (uMsg == WM_INITDIALOG)
+    {
+        pData = (PSHDIALOG)lParam;
+        SetWindowLongA(hWnd, DWLP_USER, lParam);
+        lParam = (LPARAM)pData->pThis;
+    }
+    else
+    {
+        pData = (PSHDIALOG)GetWindowLongA(hWnd, DWLP_USER);
+    }
+
+    if (pData && pData->fn)
+    {
+        result = pData->fn(pData->pThis, hWnd, uMsg, wParam, lParam);
+        if (result)
+            return result;
+    }
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            return TRUE;
+
+        case WM_COMMAND:
+        {
+            hwndItem = GetDlgItem(hWnd, LOWORD(wParam));
+
+            if (LOWORD(wParam) == IDHELP)
+                return FALSE;
+
+            ret = SendMessageA(hwndItem, WM_GETDLGCODE, 0, 0);
+            if (!(ret & (DLGC_DEFPUSHBUTTON | DLGC_UNDEFPUSHBUTTON)))
+                return FALSE;
+
+            EndDialog(hWnd, LOWORD(wParam));
+            return TRUE;
+        }
+
+        default:
+            return FALSE;
+    }
+}
+
+/*************************************************************************
+ * SHDialogBox [SHLWAPI.277]
+ */
+EXTERN_C INT_PTR WINAPI
+SHDialogBox(
+    _In_ HINSTANCE     hInstance,
+    _In_ LPCSTR        lpTemplateName,
+    _In_ HWND          hWndParent,
+    _In_ SHDIALOG_PROC fn,
+    _Inout_opt_ PVOID  pThis)
+{
+    SHDIALOG data = { fn, pThis };
+    return DialogBoxParamA(hInstance, lpTemplateName, hWndParent, SHDialogProc, (LPARAM)&data);
+}
