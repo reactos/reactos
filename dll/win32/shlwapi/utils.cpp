@@ -506,6 +506,9 @@ SHDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 return FALSE;
 
             hwndItem = GetDlgItem(hWnd, LOWORD(wParam));
+            if (!hwndItem)
+                return FALSE;
+
             ret = SendMessageA(hwndItem, WM_GETDLGCODE, 0, 0);
             if (!(ret & (DLGC_DEFPUSHBUTTON | DLGC_UNDEFPUSHBUTTON)))
                 return FALSE;
@@ -527,7 +530,7 @@ SHDialogBox(
     _In_ PCSTR lpTemplateName,
     _In_opt_ HWND hWndParent,
     _In_opt_ SHDIALOGPROC fn,
-    _Inout_opt_ PVOID pThis)
+    _In_opt_ PVOID pThis)
 {
     SHDIALOG data = { fn, pThis };
     return DialogBoxParamA(hInstance, lpTemplateName, hWndParent, SHDialogProc, (LPARAM)&data);

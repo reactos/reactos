@@ -467,7 +467,7 @@ SHDialogBox(
     _In_ PCSTR lpTemplateName,
     _In_opt_ HWND hWndParent,
     _In_opt_ SHDIALOGPROC fn,
-    _Inout_opt_ PVOID pThis);
+    _In_opt_ PVOID pThis);
 
 /*****************************************************************************
  * IAssociationElementOld interface
