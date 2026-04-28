@@ -41,6 +41,60 @@ GetVersionMajorMinor()
     return MAKEWORD(HIBYTE(version), LOBYTE(version));
 }
 
+static BOOL CharLowerNoDBCSAWorker(PSTR lpString, INT cchSrc, BOOL bUppercase)
+{
+    CHAR szBuff[MAX_PATH];
+    INT cch = cchSrc ? cchSrc : lstrlenA(lpString);
+    if (!lpString || FAILED(StringCchCopyA(szBuff, _countof(szBuff), lpString)))
+        return FALSE;
+    return LCMapStringA(LOCALE_SYSTEM_DEFAULT,
+                        bUppercase ? LCMAP_UPPERCASE : LCMAP_LOWERCASE,
+                        szBuff, cch, lpString, cch);
+}
+
+static BOOL CharLowerNoDBCSWWorker(PWSTR lpString, INT cchSrc, BOOL bUppercase)
+{
+    WCHAR szDest[MAX_PATH];
+    INT cch = cchSrc ? cchSrc : lstrlenW(lpString);
+    if (!lpString || FAILED(StringCchCopyW(szDest, _countof(szDest), lpString)))
+        return FALSE;
+    return LCMapStringW(LOCALE_SYSTEM_DEFAULT,
+                        (bUppercase ? LCMAP_UPPERCASE : LCMAP_LOWERCASE),
+                        szDest, cch, lpString, cch);
+}
+
+/*************************************************************************
+ * CharLowerNoDBCSA [SHLWAPI.453]
+ */
+EXTERN_C PSTR WINAPI CharLowerNoDBCSA(_Inout_ PSTR lpString)
+{
+    return CharLowerNoDBCSAWorker(lpString, 0, FALSE) ? lpString : NULL;
+}
+
+/*************************************************************************
+ * CharLowerNoDBCSW [SHLWAPI.454]
+ */
+EXTERN_C PWSTR WINAPI CharLowerNoDBCSW(_Inout_ PWSTR lpString)
+{
+    return CharLowerNoDBCSWWorker(lpString, 0, FALSE) ? lpString : NULL;
+}
+
+/*************************************************************************
+ * CharUpperNoDBCSA [SHLWAPI.451]
+ */
+EXTERN_C PSTR WINAPI CharUpperNoDBCSA(_Inout_ PSTR lpString)
+{
+    return CharLowerNoDBCSAWorker(lpString, 0, TRUE) ? lpString : NULL;
+}
+
+/*************************************************************************
+ * CharUpperNoDBCSW [SHLWAPI.452]
+ */
+EXTERN_C PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString)
+{
+    return CharLowerNoDBCSWWorker(lpString, 0, TRUE) ? lpString : NULL;
+}
+
 static HRESULT
 SHInvokeCommandOnContextMenuInternal(
     _In_opt_ HWND hWnd,

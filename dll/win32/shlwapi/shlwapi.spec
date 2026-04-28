@@ -448,10 +448,10 @@
 448 stdcall -noname FixSlashesAndColonW(wstr)
 449 stub -noname NextPathA
 450 stub -noname NextPathW
-451 stub -noname CharUpperNoDBCSA
-452 stub -noname CharUpperNoDBCSW
-453 stub -noname CharLowerNoDBCSA
-454 stub -noname CharLowerNoDBCSW
+451 stdcall -noname CharUpperNoDBCSA(str)
+452 stdcall -noname CharUpperNoDBCSW(wstr)
+453 stdcall -noname CharLowerNoDBCSA(str)
+454 stdcall -noname CharLowerNoDBCSW(wstr)
 455 stdcall -noname PathIsValidCharA(long long)
 456 stdcall -noname PathIsValidCharW(long long)
 457 stdcall -noname GetLongPathNameWrapW(wstr ptr long) kernel32.GetLongPathNameW
