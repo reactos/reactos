@@ -8,10 +8,7 @@
 #include <apitest.h>
 #include <shlwapi.h>
 #include <shlobj.h>
-#include <stdio.h>
 #include <shlwapi_undoc.h>
-#include <versionhelpers.h>
-#include <strsafe.h>
 
 typedef HRESULT (WINAPI *FN_IStream_ReadPidl)(IStream *, _Out_ LPITEMIDLIST *);
 typedef HRESULT (WINAPI *FN_IStream_WritePidl)(IStream *, LPCITEMIDLIST);
@@ -51,6 +48,12 @@ static void Test_RoundTrip_SimplePidl(void)
     IStream *pstm;
 
     pstm = SHCreateMemStream(NULL, 0);
+    ok(pstm != NULL, "pstm was NULL.\n");
+    if (!pstm)
+    {
+        skip("pstm was NULL.\n");
+        return;
+    }
 
     hr = g_fnIStream_WritePidl(pstm, pidlSrc);
     ok_hr(hr, S_OK);
@@ -80,9 +83,22 @@ static void Test_RoundTrip_EmptyPidl(void)
     HRESULT hr;
     IStream *pstm;
 
+    ok(pidlSrc != NULL, "CoTaskMemAlloc failed\n");
+    if (!pidlSrc)
+    {
+        skip("pidlSrc was NULL\n");
+        return;
+    }
+
     ZeroMemory(pidlSrc, sizeof(USHORT));
 
     pstm = SHCreateMemStream(NULL, 0);
+    ok(pstm != NULL, "pstm was NULL\n");
+    if (!pstm)
+    {
+        skip("pstm was NULL\n");
+        return;
+    }
 
     hr = g_fnIStream_WritePidl(pstm, pidlSrc);
     ok_hr(hr, S_OK);
@@ -114,6 +130,13 @@ static void Test_RoundTrip_MultiItemPidl(void)
     HRESULT hr;
     IStream *pstm;
 
+    ok(pidlSrc != NULL, "CoTaskMemAlloc failed\n");
+    if (!pidlSrc)
+    {
+        skip("pidlSrc was NULL\n");
+        return;
+    }
+
     ZeroMemory(pidlSrc, cbTotal);
     p = (PBYTE)pidlSrc;
 
@@ -124,6 +147,12 @@ static void Test_RoundTrip_MultiItemPidl(void)
     *p++ = 0x01; *p++ = 0x02; *p++ = 0x03;
 
     pstm = SHCreateMemStream(NULL, 0);
+    ok(pstm != NULL, "pstm was NULL\n");
+    if (!pstm)
+    {
+        skip("pstm was NULL\n");
+        return;
+    }
 
     hr = g_fnIStream_WritePidl(pstm, pidlSrc);
     ok_hr(hr, S_OK);
@@ -150,6 +179,13 @@ static void Test_Read_EmptyStream(void)
     LPITEMIDLIST pidl = NULL;
     HRESULT hr;
 
+    ok(pstm != NULL, "pstm was NULL\n");
+    if (!pstm)
+    {
+        skip("pstm was NULL\n");
+        return;
+    }
+
     hr = g_fnIStream_ReadPidl(pstm, &pidl);
     ok(FAILED(hr), "hr was wrongly succeeded\n");
     ok(pidl == NULL, "pidl was not NULL\n");
@@ -164,6 +200,13 @@ static void Test_Read_TooSmallCbSize(void)
     UINT cbSize = 1;
     ULONG cbWritten;
     HRESULT hr;
+
+    ok(pstm != NULL, "pstm was NULL.\n");
+    if (!pstm)
+    {
+        skip("pstm was NULL.\n");
+        return;
+    }
 
     pstm->Write(&cbSize, sizeof(cbSize), &cbWritten);
 
@@ -183,6 +226,13 @@ static void Test_Read_TruncatedData(void)
     ULONG cbWritten;
     HRESULT hr;
 
+    ok(pstm != NULL, "pstm was NULL.\n");
+    if (!pstm)
+    {
+        skip("pstm was NULL.\n");
+        return;
+    }
+
     pstm->Write(&cbSize, sizeof(cbSize), &cbWritten);
 
     RewindStream(pstm);
@@ -201,6 +251,13 @@ static void Test_Read_MissingTerminator(void)
     BYTE rawData[4] = {0x04, 0x00, 0x11, 0x22};
     ULONG cbWritten;
     HRESULT hr;
+
+    ok(pstm != NULL, "pstm was NULL.\n");
+    if (!pstm)
+    {
+        skip("pstm was NULL.\n");
+        return;
+    }
 
     pstm->Write(&cbSize, sizeof(cbSize), &cbWritten);
     pstm->Write(rawData, cbSize, &cbWritten);
@@ -223,6 +280,13 @@ static void Test_Write_StreamPosition(void)
     HRESULT hr;
     UINT expectedPos;
 
+    ok(pstm != NULL, "pstm was NULL.\n");
+    if (!pstm)
+    {
+        skip("pstm was NULL.\n");
+        return;
+    }
+
     zero.QuadPart = 0;
 
     hr = g_fnIStream_WritePidl(pstm, pidlSrc);
@@ -242,6 +306,13 @@ static void Test_Read_OutputNullOnFailure(void)
     IStream *pstm = SHCreateMemStream(NULL, 0);
     LPITEMIDLIST pidl = (LPITEMIDLIST)UlongToPtr(0xDEADBEEF);
     HRESULT hr;
+
+    ok(pstm != NULL, "pstm was NULL.\n");
+    if (!pstm)
+    {
+        skip("pstm was NULL.\n");
+        return;
+    }
 
     hr = g_fnIStream_ReadPidl(pstm, &pidl);
     ok(FAILED(hr), "hr was 0x%X\n", hr);
