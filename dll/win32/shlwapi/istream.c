@@ -736,7 +736,7 @@ IStream_ReadPidl(_In_ IStream *pstm, _Out_ LPITEMIDLIST *ppidlOut)
 /*************************************************************************
  * IStream_WritePidl [SHLWAPI.513]
  *
- * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/util/istream/writepidl.htm
+ * https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/util/istream/writepidl.htm
  */
 HRESULT WINAPI
 IStream_WritePidl(_In_ IStream *pstm, _In_ LPCITEMIDLIST pidlWrite)
