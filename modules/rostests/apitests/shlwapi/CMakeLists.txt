@@ -8,6 +8,7 @@ list(APPEND SOURCE
     AssocQueryString.c
     IShellFolderHelpers.cpp
     IsQSForward.cpp
+    IStreamPidl.cpp
     PathFileExistsDefExtAndAttributesW.c
     PathFindOnPath.c
     PathIsUNC.c

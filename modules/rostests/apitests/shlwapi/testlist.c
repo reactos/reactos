@@ -6,6 +6,7 @@ extern void func_PathFileExistsDefExtAndAttributesW(void);
 extern void func_PathFindOnPath(void);
 extern void func_IShellFolderHelpers(void);
 extern void func_IsQSForward(void);
+extern void func_IStreamPidl(void);
 extern void func_isuncpath(void);
 extern void func_isuncpathserver(void);
 extern void func_isuncpathservershare(void);
@@ -27,6 +28,7 @@ const struct test winetest_testlist[] =
     { "PathFindOnPath", func_PathFindOnPath },
     { "IShellFolderHelpers", func_IShellFolderHelpers },
     { "IsQSForward", func_IsQSForward },
+    { "IStreamPidl", func_IStreamPidl },
     { "PathIsUNC", func_isuncpath },
     { "PathIsUNCServer", func_isuncpathserver },
     { "PathIsUNCServerShare", func_isuncpathservershare },
