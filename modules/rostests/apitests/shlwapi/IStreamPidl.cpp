@@ -241,7 +241,7 @@ static void Test_Write_StreamPosition(void)
 static void Test_Read_OutputNullOnFailure(void)
 {
     IStream *pstm = SHCreateMemStream(NULL, 0);
-    LPITEMIDLIST pidl = (LPITEMIDLIST)(void *)0xDEADBEEF;
+    LPITEMIDLIST pidl = (LPITEMIDLIST)UlongToPtr(0xDEADBEEF);
     HRESULT hr;
 
     hr = g_fnIStream_ReadPidl(pstm, &pidl);
