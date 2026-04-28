@@ -1,5 +1,5 @@
 
-add_definitions(-DUSE_WINE_TODOS)
+add_definitions(-DUSE_WINE_TODOS -DWIN32_LEAN_AND_MEAN=)
 
 list(APPEND SOURCE
     browse_ctx.c
