@@ -697,7 +697,10 @@ IStream_ReadPidl(_In_ IStream *pstm, _Out_ LPITEMIDLIST *ppidlOut)
     if (FAILED(hr))
         return hr;
 
-    pidl = (LPITEMIDLIST)CoTaskMemAlloc(cbSize);
+    if (cbSize < sizeof(USHORT))
+        return E_INVALIDARG;
+
+    pidl = CoTaskMemAlloc(cbSize);
     if (!pidl)
         return E_OUTOFMEMORY;
 
@@ -708,12 +711,12 @@ IStream_ReadPidl(_In_ IStream *pstm, _Out_ LPITEMIDLIST *ppidlOut)
         return hr;
     }
 
-    pidlEnd = (LPITEMIDLIST)((PBYTE)pidl + cbSize - sizeof(WORD));
-    for (pItem = &pidl->mkid; pItem <= (LPSHITEMID)pidlEnd;)
+    pidlEnd = (LPITEMIDLIST)((PBYTE)pidl + cbSize - sizeof(USHORT));
+    for (pItem = &pidl->mkid; pItem <= (LPSHITEMID)pidlEnd;
+         pItem = (LPSHITEMID)((PBYTE)pItem + pItem->cb))
     {
-        if (pItem->cb == 0)
+        if (!pItem->cb)
             break;
-        pItem = (LPSHITEMID)((PBYTE)pItem + pItem->cb);
     }
 
     if ((LPITEMIDLIST)pItem == pidlEnd && !pItem->cb)
@@ -723,10 +726,10 @@ IStream_ReadPidl(_In_ IStream *pstm, _Out_ LPITEMIDLIST *ppidlOut)
     }
     else
     {
+        CoTaskMemFree(pidl);
         hr = E_INVALIDARG;
     }
 
-    CoTaskMemFree(pidl);
     return hr;
 }
 
