@@ -465,13 +465,14 @@ IShellFolder_CompareIDs(
     return psf->CompareIDs(lParam, pidl1, pidl2);
 }
 
+// Used in SHDialogBox below
 static INT_PTR CALLBACK
 SHDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PSHDIALOG pData;
-    INT_PTR   result;
-    HWND      hwndItem;
-    LRESULT   ret;
+    INT_PTR result;
+    HWND hwndItem;
+    LRESULT ret;
 
     if (uMsg == WM_INITDIALOG)
     {
@@ -497,19 +498,16 @@ SHDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return TRUE;
 
         case WM_COMMAND:
-        {
-            hwndItem = GetDlgItem(hWnd, LOWORD(wParam));
-
             if (LOWORD(wParam) == IDHELP)
                 return FALSE;
 
+            hwndItem = GetDlgItem(hWnd, LOWORD(wParam));
             ret = SendMessageA(hwndItem, WM_GETDLGCODE, 0, 0);
             if (!(ret & (DLGC_DEFPUSHBUTTON | DLGC_UNDEFPUSHBUTTON)))
                 return FALSE;
 
             EndDialog(hWnd, LOWORD(wParam));
             return TRUE;
-        }
 
         default:
             return FALSE;
