@@ -41,25 +41,29 @@ GetVersionMajorMinor()
     return MAKEWORD(HIBYTE(version), LOBYTE(version));
 }
 
-static BOOL CharLowerNoDBCSAWorker(PSTR lpString, INT cchSrc, BOOL bUppercase)
+static BOOL CharLowerNoDBCSAWorker(PSTR lpString, INT cchMax, BOOL bUppercase)
 {
     CHAR szBuff[MAX_PATH];
-    INT cch = cchSrc ? cchSrc : lstrlenA(lpString);
-    if (!lpString || FAILED(StringCchCopyA(szBuff, _countof(szBuff), lpString)))
+    INT cch;
+    if (!lpString)
         return FALSE;
-    return LCMapStringA(LOCALE_SYSTEM_DEFAULT,
-                        bUppercase ? LCMAP_UPPERCASE : LCMAP_LOWERCASE,
+    cch = cchMax ? cchMax : lstrlenA(lpString);
+    if (FAILED(StringCchCopyA(szBuff, _countof(szBuff), lpString)))
+        return FALSE;
+    return LCMapStringA(LOCALE_SYSTEM_DEFAULT, (bUppercase ? LCMAP_UPPERCASE : LCMAP_LOWERCASE),
                         szBuff, cch, lpString, cch);
 }
 
-static BOOL CharLowerNoDBCSWWorker(PWSTR lpString, INT cchSrc, BOOL bUppercase)
+static BOOL CharLowerNoDBCSWWorker(PWSTR lpString, INT cchMax, BOOL bUppercase)
 {
     WCHAR szDest[MAX_PATH];
-    INT cch = cchSrc ? cchSrc : lstrlenW(lpString);
-    if (!lpString || FAILED(StringCchCopyW(szDest, _countof(szDest), lpString)))
+    INT cch;
+    if (!lpString)
         return FALSE;
-    return LCMapStringW(LOCALE_SYSTEM_DEFAULT,
-                        (bUppercase ? LCMAP_UPPERCASE : LCMAP_LOWERCASE),
+    cch = cchMax ? cchMax : lstrlenW(lpString);
+    if (FAILED(StringCchCopyW(szDest, _countof(szDest), lpString)))
+        return FALSE;
+    return LCMapStringW(LOCALE_SYSTEM_DEFAULT, (bUppercase ? LCMAP_UPPERCASE : LCMAP_LOWERCASE),
                         szDest, cch, lpString, cch);
 }
 
