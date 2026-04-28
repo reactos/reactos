@@ -2,6 +2,7 @@
 #include <apitest.h>
 
 extern void func_AssocQueryString(void);
+extern void func_CharUpperNoDBCS(void);
 extern void func_PathFileExistsDefExtAndAttributesW(void);
 extern void func_PathFindOnPath(void);
 extern void func_IShellFolderHelpers(void);
@@ -23,6 +24,7 @@ extern void func_StrToInt(void);
 const struct test winetest_testlist[] =
 {
     { "AssocQueryString", func_AssocQueryString },
+    { "CharUpperNoDBCS", func_CharUpperNoDBCS },
     { "PathFileExistsDefExtAndAttributesW", func_PathFileExistsDefExtAndAttributesW },
     { "PathFindOnPath", func_PathFindOnPath },
     { "IShellFolderHelpers", func_IShellFolderHelpers },

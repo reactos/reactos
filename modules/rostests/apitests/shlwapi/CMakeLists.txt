@@ -6,6 +6,7 @@ include_directories($<TARGET_FILE_DIR:shlwapi_resource_dll>)
 
 list(APPEND SOURCE
     AssocQueryString.c
+    CharUpperNoDBCS.cpp
     IShellFolderHelpers.cpp
     IsQSForward.cpp
     PathFileExistsDefExtAndAttributesW.c
