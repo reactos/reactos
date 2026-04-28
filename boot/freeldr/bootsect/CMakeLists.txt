@@ -4,6 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/boot/freeldr)
 if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 
     CreateBootSectorTarget(dosmbr ${CMAKE_CURRENT_SOURCE_DIR}/dosmbr.S ${CMAKE_CURRENT_BINARY_DIR}/dosmbr.bin 7c00)
+    CreateBootSectorTarget(gptmbr ${CMAKE_CURRENT_SOURCE_DIR}/gptmbr.S ${CMAKE_CURRENT_BINARY_DIR}/gptmbr.bin 7e00)
     CreateBootSectorTarget(ext ${CMAKE_CURRENT_SOURCE_DIR}/ext.S ${CMAKE_CURRENT_BINARY_DIR}/ext.bin 7c00)
     CreateBootSectorTarget(extldr ${CMAKE_CURRENT_SOURCE_DIR}/extldr.S ${CMAKE_CURRENT_BINARY_DIR}/extldr.sys 8000)
 
@@ -32,6 +33,7 @@ if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     CreateBootSectorTarget(isombr ${CMAKE_CURRENT_SOURCE_DIR}/isombr.S ${CMAKE_CURRENT_BINARY_DIR}/isombr.bin 7000)
 
     add_cd_file(TARGET dosmbr DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/dosmbr.bin FOR bootcd regtest)
+    add_cd_file(TARGET gptmbr DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/gptmbr.bin FOR bootcd regtest)
     add_cd_file(TARGET ext DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/ext.bin FOR bootcd regtest)
     add_cd_file(TARGET extldr DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/extldr.sys FOR bootcd regtest)
     add_cd_file(TARGET btrfsvbr DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/btrfs.bin FOR bootcd regtest)
