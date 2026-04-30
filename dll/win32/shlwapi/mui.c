@@ -30,10 +30,10 @@ typedef struct PUIITEM
     DWORD wLangId;
 } PUIITEM, *PPUIITEM, *LPPUIITEM;
 
-static HDPA g_hdpaPUI = NULL;
+static HDPA g_hdpaPUI = NULL; /* Dynamic pointer array (DPA) of PUIITEM */
 static WCHAR g_szMuiDest[MAX_PATH] = L"";
 static LANGID g_wGotLangId = 0;
-static BOOL g_bIECheckVersion = FALSE;
+static BOOL g_bCheckIEVersion = FALSE;
 static BOOL g_bIEVersionChecked = FALSE;
 static UINT g_nACP = CP_ACP;
 static BOOL g_bGotACP = FALSE;
@@ -111,11 +111,13 @@ static BOOL ShouldMungeLangId(_In_ LANGID wLangId)
     if (wLangId == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US) || wLangId == wSysUILangId)
         return FALSE;
 
+    EnterCriticalPolicySection(&g_csMuiLock);
     if (!g_bGotACP)
     {
         g_nACP = GetACP();
         g_bGotACP = TRUE;
     }
+    LeaveCriticalPolicySection(&g_csMuiLock);
 
     if (!GetLocaleInfoA(wLangId, LOCALE_IDEFAULTANSICODEPAGE, szText, _countof(szText)))
         return FALSE;
@@ -404,7 +406,7 @@ MLLoadLibraryW(
     if (!g_bIEVersionChecked)
     {
         g_bIEVersionChecked = TRUE;
-        g_bIECheckVersion = SHRegGetBoolUSValueA(
+        g_bCheckIEVersion = SHRegGetBoolUSValueA(
             "Software\\Microsoft\\Internet Explorer\\International",
             "CheckVersion", TRUE, TRUE);
     }
@@ -431,7 +433,7 @@ MLLoadLibraryW(
         pszLoadPath = szMuiPath;
     }
 
-    if (g_bIECheckVersion && szModPath[0] && szMuiPath[0] &&
+    if (g_bCheckIEVersion && szModPath[0] && szMuiPath[0] &&
         !CheckFileVersion(szModPath, szMuiPath))
     {
         pszLoadPath = szModPath;
