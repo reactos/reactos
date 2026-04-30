@@ -27,7 +27,7 @@ CRITICAL_SECTION g_csMuiLock;
 typedef struct PUIITEM
 {
     HMODULE hModule;
-    DWORD wLangId;
+    LANGID wLangId;
 } PUIITEM, *PPUIITEM, *LPPUIITEM;
 
 static HDPA g_hdpaPUI = NULL; /* Dynamic pointer array (DPA) of PUIITEM */
@@ -111,13 +111,13 @@ static BOOL ShouldMungeLangId(_In_ LANGID wLangId)
     if (wLangId == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US) || wLangId == wSysUILangId)
         return FALSE;
 
-    EnterCriticalPolicySection(&g_csMuiLock);
+    EnterCriticalSection(&g_csMuiLock);
     if (!g_bGotACP)
     {
         g_nACP = GetACP();
         g_bGotACP = TRUE;
     }
-    LeaveCriticalPolicySection(&g_csMuiLock);
+    LeaveCriticalSection(&g_csMuiLock);
 
     if (!GetLocaleInfoA(wLangId, LOCALE_IDEFAULTANSICODEPAGE, szText, _countof(szText)))
         return FALSE;
