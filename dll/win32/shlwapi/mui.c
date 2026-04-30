@@ -103,6 +103,7 @@ static BOOL ShouldMungeLangId(_In_ LANGID wLangId)
 {
     CHAR szText[8];
     LANGID wSysUILangId;
+    UINT nACP;
 
     wSysUILangId = GetSystemDefaultUILanguage();
     if (wLangId == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US) || wLangId == wSysUILangId)
@@ -114,12 +115,13 @@ static BOOL ShouldMungeLangId(_In_ LANGID wLangId)
         g_nACP = GetACP();
         g_bGotACP = TRUE;
     }
+    nACP = g_nACP;
     LeaveCriticalSection(&g_csMuiLock);
 
     if (!GetLocaleInfoA(wLangId, LOCALE_IDEFAULTANSICODEPAGE, szText, _countof(szText)))
         return FALSE;
 
-    return g_nACP != StrToIntA(szText);
+    return nACP != StrToIntA(szText);
 }
 
 // Resolve a normalized language ID from dwCrossCodePage, falling back to the system
@@ -169,6 +171,7 @@ static HRESULT GetMUIPath(
         }
         else
         {
+            // "0"
             szIEDir[0] = L'0';
             szIEDir[1] = UNICODE_NULL;
         }
@@ -221,6 +224,7 @@ static BOOL IsMUICompatible(_In_ DWORD versionMS, _In_ DWORD versionLS)
     PSTR dash;
     DWORD minMS, minLS, maxMS, maxLS;
     ULONGLONG version, minVer, maxVer;
+    LSTATUS error;
 
     if (!GetModuleFileNameA(NULL, szModulePath, ARRAYSIZE(szModulePath)))
         return FALSE;
@@ -229,17 +233,10 @@ static BOOL IsMUICompatible(_In_ DWORD versionMS, _In_ DWORD versionLS)
 
     type = REG_NONE;
     cbData = sizeof(szVerRange);
-    if (SHRegGetUSValueA("Software\\Microsoft\\Internet Explorer\\International",
-                         pszFileName,
-                         &type,
-                         szVerRange,
-                         &cbData,
-                         TRUE,   // ignore HKCU/HKLM priority
-                         NULL,
-                         0) != ERROR_SUCCESS)
-    {
+    error = SHRegGetUSValueA("Software\\Microsoft\\Internet Explorer\\International", pszFileName,
+                             &type, szVerRange, &cbData, TRUE, NULL, 0);
+    if (error != ERROR_SUCCESS)
         return FALSE;
-    }
 
     dash = StrChrA(szVerRange, '-');
     if (!dash || !dash[1])
@@ -728,7 +725,7 @@ MLWinHelpW(
     _In_ ULONG_PTR dwData)
 {
 #ifdef NO_MUI
-    return NULL;
+    return FALSE;
 #else
     WCHAR szPath[MAX_PATH];
     if (FAILED(GetFilePathFromLangId(lpszHelp, szPath, _countof(szPath), 0)))
