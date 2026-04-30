@@ -671,6 +671,82 @@ LoadSetupInf(
     return ERROR_SUCCESS;
 }
 
+static
+PVOLENTRY
+FindInstallSourceVolume(
+    _In_ PPARTLIST PartitionList,
+    _In_opt_ PCUNICODE_STRING SourceRootPath,
+    _Out_opt_ PDISKENTRY* SourceDisk)
+{
+    PLIST_ENTRY Entry;
+    ULONG DiskNumber, PartitionNumber;
+    UNICODE_STRING DeviceName;
+    PVOLENTRY Volume;
+
+    if (SourceDisk)
+        *SourceDisk = NULL;
+
+    if (!PartitionList ||
+        !SourceRootPath || !SourceRootPath->Buffer || !SourceRootPath->Length)
+    {
+        return NULL;
+    }
+
+    for (Entry = PartitionList->VolumesList.Flink;
+         Entry != &PartitionList->VolumesList;
+         Entry = Entry->Flink)
+    {
+        Volume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+        if (*Volume->Info.DeviceName)
+        {
+            RtlInitUnicodeString(&DeviceName, Volume->Info.DeviceName);
+            if (RtlEqualUnicodeString(SourceRootPath, &DeviceName, TRUE))
+            {
+                if (SourceDisk && Volume->PartEntry)
+                    *SourceDisk = Volume->PartEntry->DiskEntry;
+                return Volume;
+            }
+        }
+
+        if (Volume->PartEntry && *Volume->PartEntry->DeviceName)
+        {
+            RtlInitUnicodeString(&DeviceName, Volume->PartEntry->DeviceName);
+            if (RtlEqualUnicodeString(SourceRootPath, &DeviceName, TRUE))
+            {
+                if (SourceDisk)
+                    *SourceDisk = Volume->PartEntry->DiskEntry;
+                return Volume;
+            }
+        }
+    }
+
+    if (!NtPathToDiskPartComponents(SourceRootPath->Buffer,
+                                    &DiskNumber,
+                                    &PartitionNumber,
+                                    NULL))
+    {
+        return NULL;
+    }
+    UNREFERENCED_PARAMETER(PartitionNumber);
+
+    for (Entry = PartitionList->DiskListHead.Flink;
+         Entry != &PartitionList->DiskListHead;
+         Entry = Entry->Flink)
+    {
+        PDISKENTRY DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+
+        if (DiskEntry->DiskNumber == DiskNumber)
+        {
+            if (SourceDisk)
+                *SourceDisk = DiskEntry;
+            break;
+        }
+    }
+
+    return NULL;
+}
+
 /**
  * @brief   Find or set the active system partition.
  **/
@@ -680,9 +756,11 @@ InitSystemPartition(
     /**/_In_ PPARTLIST PartitionList,       /* HACK HACK! */
     /**/_In_ PPARTENTRY InstallPartition,   /* HACK HACK! */
     /**/_Out_ PPARTENTRY* pSystemPartition, /* HACK HACK! */
+    _In_opt_ PCUNICODE_STRING SourceRootPath,
     _In_opt_ PFSVOL_CALLBACK FsVolCallback,
     _In_opt_ PVOID Context)
 {
+    BOOLEAN ForceSelect;
     FSVOL_OP Result;
     PPARTENTRY SystemPartition;
     PPARTENTRY OldActivePart;
@@ -694,8 +772,26 @@ InitSystemPartition(
      */
     if (InstallPartition->DiskEntry->MediaType == FixedMedia)
     {
+        PDISKENTRY SourceDisk = NULL;
+        PVOLENTRY SourceVolume;
+
+        SourceVolume = FindInstallSourceVolume(PartitionList,
+                                              SourceRootPath,
+                                              &SourceDisk);
+
+        /*
+         * Only fall back to the install disk when setup is actually booted
+         * from a fixed-disk CDFS source on the current system disk.
+         */
+        ForceSelect = (SourceVolume &&
+                       SourceDisk &&
+                       (SourceDisk == GetSystemDisk(PartitionList)) &&
+                       (SourceDisk != InstallPartition->DiskEntry) &&
+                       (SourceDisk->MediaType == FixedMedia) &&
+                       (_wcsicmp(SourceVolume->Info.FileSystem, L"CDFS") == 0));
+
         SystemPartition = FindSupportedSystemPartition(PartitionList,
-                                                       TRUE,
+                                                       ForceSelect,
                                                        InstallPartition->DiskEntry,
                                                        InstallPartition);
         /* Use the original system partition as the old active partition hint */
@@ -906,45 +1002,30 @@ InitDestinationPaths(
         if (DiskEntry->BiosFound)
         {
             ULONG RdiskNumber = DiskEntry->HwFixedDiskNumber;
-            {
-                PPARTLIST PartList = DiskEntry->PartList;
-                PLIST_ENTRY Entry;
-                for (Entry = PartList->DiskListHead.Flink;
-                     Entry != &PartList->DiskListHead;
-                     Entry = Entry->Flink)
-                {
-                    PDISKENTRY OtherDisk = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
-                    if (OtherDisk == DiskEntry)
-                        continue;
+            PDISKENTRY SourceDisk = NULL;
+            PVOLENTRY SourceVolume;
 
-                    /*
-                     * HwFixedDiskNumber already excludes removable media.
-                     * Adjust only for earlier fixed disks that expose CDFS,
-                     * such as LiveCD install media backed by a fixed disk.
-                     */
-                    if (OtherDisk->MediaType == FixedMedia &&
-                        OtherDisk->BiosFound &&
-                        OtherDisk->HwFixedDiskNumber < DiskEntry->HwFixedDiskNumber)
-                    {
-                        PVOLENTRY Volume2;
-                        PLIST_ENTRY VolEntry;
-                        for (VolEntry = PartList->VolumesList.Flink;
-                             VolEntry != &PartList->VolumesList;
-                             VolEntry = VolEntry->Flink)
-                        {
-                            Volume2 = CONTAINING_RECORD(VolEntry, VOLENTRY, ListEntry);
-                            if (Volume2->PartEntry &&
-                                Volume2->PartEntry->DiskEntry == OtherDisk &&
-                                _wcsicmp(Volume2->Info.FileSystem, L"CDFS") == 0)
-                            {
-                                if (RdiskNumber > 0)
-                                    RdiskNumber--;
-                                break;
-                            }
-                        }
-                    }
-                }
+            SourceVolume = FindInstallSourceVolume(DiskEntry->PartList,
+                                                  &pSetupData->SourceRootPath,
+                                                  &SourceDisk);
+
+            /*
+             * HwFixedDiskNumber already excludes removable media.
+             * Compensate only for the actual fixed-disk CDFS source disk,
+             * such as a LiveCD image backed by a fixed disk.
+             */
+            if (SourceVolume &&
+                SourceDisk &&
+                (SourceDisk != DiskEntry) &&
+                (SourceDisk->MediaType == FixedMedia) &&
+                SourceDisk->BiosFound &&
+                (SourceDisk->HwFixedDiskNumber < DiskEntry->HwFixedDiskNumber) &&
+                (_wcsicmp(SourceVolume->Info.FileSystem, L"CDFS") == 0))
+            {
+                if (RdiskNumber > 0)
+                    RdiskNumber--;
             }
+
             Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                              L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
                              RdiskNumber,

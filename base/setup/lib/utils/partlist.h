@@ -314,6 +314,10 @@ GetDiskBySignature(
     _In_ PPARTLIST List,
     _In_ ULONG Signature);
 
+PDISKENTRY
+GetSystemDisk(
+    IN PPARTLIST List);
+
 PPARTENTRY
 GetPartition(
     _In_ PDISKENTRY DiskEntry,

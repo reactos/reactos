@@ -1907,7 +1907,6 @@ AddDiskToList(
  * If no system partition has been determined, we retrieve the first disk
  * that verifies the mentioned criteria above.
  */
-static
 PDISKENTRY
 GetSystemDisk(
     IN PPARTLIST List)

@@ -1217,8 +1217,103 @@ SummaryDlgProc(
 typedef struct _FSVOL_CONTEXT
 {
     PSETUPDATA pSetupData;
-    // PAGE_NUMBER NextPageOnAbort;
+    BOOLEAN RejectedSystemPartitionChange;
 } FSVOL_CONTEXT, *PFSVOL_CONTEXT;
+
+static
+VOID
+DescribeSystemPartition(
+    _Out_writes_(cchBuffer) PWSTR Buffer,
+    _In_ SIZE_T cchBuffer,
+    _In_opt_ PPARTENTRY PartEntry)
+{
+    ULONG PartitionNumber;
+    WCHAR Details[64] = L"";
+
+    if (!Buffer || cchBuffer == 0)
+        return;
+
+    *Buffer = UNICODE_NULL;
+
+    if (!PartEntry || !PartEntry->DiskEntry)
+    {
+        StringCchCopyW(Buffer, cchBuffer, L"(unknown)");
+        return;
+    }
+
+    if (!PartEntry->IsPartitioned)
+    {
+        StringCchPrintfW(Buffer, cchBuffer,
+                         L"Disk %lu, unpartitioned space",
+                         PartEntry->DiskEntry->DiskNumber);
+        return;
+    }
+
+    PartitionNumber = PartEntry->OnDiskPartitionNumber ?
+                      PartEntry->OnDiskPartitionNumber :
+                      PartEntry->PartitionNumber;
+
+    if (PartEntry->Volume)
+    {
+        if (PartEntry->Volume->Info.DriveLetter && *PartEntry->Volume->Info.FileSystem)
+        {
+            StringCchPrintfW(Details, ARRAYSIZE(Details),
+                             L" (%C:, %s)",
+                             PartEntry->Volume->Info.DriveLetter,
+                             PartEntry->Volume->Info.FileSystem);
+        }
+        else if (PartEntry->Volume->Info.DriveLetter)
+        {
+            StringCchPrintfW(Details, ARRAYSIZE(Details),
+                             L" (%C:)",
+                             PartEntry->Volume->Info.DriveLetter);
+        }
+        else if (*PartEntry->Volume->Info.FileSystem)
+        {
+            StringCchPrintfW(Details, ARRAYSIZE(Details),
+                             L" (%s)",
+                             PartEntry->Volume->Info.FileSystem);
+        }
+    }
+
+    StringCchPrintfW(Buffer, cchBuffer,
+                     L"Disk %lu, partition %lu%s",
+                     PartEntry->DiskEntry->DiskNumber,
+                     PartitionNumber,
+                     Details);
+}
+
+static
+INT
+ConfirmSystemPartitionChange(
+    _In_ PFSVOL_CONTEXT FsVolContext,
+    _In_ PPARTENTRY NewSystemPartition)
+{
+    HWND hWndOwner;
+    PPARTENTRY CurrentSystemPartition = NULL;
+    WCHAR CurrentPartition[128];
+    WCHAR NewPartition[128];
+
+    if (FsVolContext->pSetupData &&
+        FsVolContext->pSetupData->PartitionList)
+    {
+        CurrentSystemPartition = FsVolContext->pSetupData->PartitionList->SystemPartition;
+    }
+
+    DescribeSystemPartition(CurrentPartition, ARRAYSIZE(CurrentPartition), CurrentSystemPartition);
+    DescribeSystemPartition(NewPartition, ARRAYSIZE(NewPartition), NewSystemPartition);
+
+    hWndOwner = UiContext.hwndDlg ? GetParent(UiContext.hwndDlg) : NULL;
+    return DisplayMessage(hWndOwner,
+                          MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2,
+                          L"ReactOS Setup",
+                          L"Setup needs to use a different system partition for boot files.\n\n"
+                          L"Current system partition:\n%s\n\n"
+                          L"New system partition:\n%s\n\n"
+                          L"Continue?",
+                          CurrentPartition,
+                          NewPartition);
+}
 
 static
 BOOLEAN
@@ -1299,9 +1394,26 @@ FsVolCallback(
 
     switch (FormatStatus)
     {
+    /* FIXME: Deprecate this notification once setup owns the policy. */
     case ChangeSystemPartition:
     {
-        return FSVOL_DOIT;
+        PPARTENTRY NewSystemPartition = (PPARTENTRY)Param1;
+
+        /*
+         * Keep unattended installs non-interactive, but require
+         * confirmation before switching the GUI setup system partition.
+         */
+        if (FsVolContext->pSetupData &&
+            FsVolContext->pSetupData->bUnattend)
+        {
+            return FSVOL_DOIT;
+        }
+
+        if (ConfirmSystemPartitionChange(FsVolContext, NewSystemPartition) == IDYES)
+            return FSVOL_DOIT;
+
+        FsVolContext->RejectedSystemPartitionChange = TRUE;
+        return FSVOL_ABORT;
     }
 
     case FSVOLNOTIFY_PARTITIONERROR:
@@ -1838,6 +1950,7 @@ PrepareAndDoCopyThread(
 
     /* Create context for the volume/partition operations */
     FsVolContext.pSetupData = pSetupData;
+    FsVolContext.RejectedSystemPartitionChange = FALSE;
 
     /* Set status text */
     SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
@@ -1849,6 +1962,7 @@ PrepareAndDoCopyThread(
     Success = InitSystemPartition(pSetupData->PartitionList,
                                   InstallPartition,
                                   &SystemPartition,
+                                  &pSetupData->USetupData.SourceRootPath,
                                   FsVolCallback,
                                   &FsVolContext);
     // if (!Success)
@@ -1858,11 +1972,18 @@ PrepareAndDoCopyThread(
     //
     if (!Success)
     {
-        /* Display an error if an unexpected failure happened */
-        MessageBoxW(GetParent(hwndDlg), L"Failed to find or set the system partition!", L"Error", MB_ICONERROR);
-
         /* Re-enable the Close/Cancel buttons */
         PropSheet_SetCloseCancel(GetParent(hwndDlg), TRUE);
+
+        if (FsVolContext.RejectedSystemPartitionChange)
+        {
+            PropSheet_SetWizButtons(GetParent(hwndDlg),
+                                    pSetupData->bUnattend ? 0 : PSWIZB_BACK);
+            return 1;
+        }
+
+        /* Display an error if an unexpected failure happened */
+        MessageBoxW(GetParent(hwndDlg), L"Failed to find or set the system partition!", L"Error", MB_ICONERROR);
 
         /*
          * We failed due to an unexpected error, keep on the copy page to view the current state,

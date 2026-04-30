@@ -2286,6 +2286,7 @@ StartPartitionOperationsPage(PINPUT_RECORD Ir)
     Success = InitSystemPartition(PartitionList,
                                   InstallPartition,
                                   &SystemPartition,
+                                  &USetupData.SourceRootPath,
                                   FsVolCallback,
                                   &FsVolContext);
     if (!Success)
