@@ -980,6 +980,7 @@ typedef struct _SCATTER_GATHER_CONTEXT {
 	WAIT_CONTEXT_BLOCK Wcb;
 } SCATTER_GATHER_CONTEXT, *PSCATTER_GATHER_CONTEXT;
 
+// FIXME: This value needs to be calculated at runtime
 #define MAX_SG_ELEMENTS 0x30
 
 IO_ALLOCATION_ACTION
