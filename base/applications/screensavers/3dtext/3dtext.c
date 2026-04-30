@@ -113,7 +113,7 @@ GLvoid Delete3DCharacters(GLvoid)
 GLvoid glPrint(GLvoid)
 {
     // If there's no text, do nothing
-    if (_tcslen(g_Text) == 0)
+    if (!g_Text[0])
         return;
 
     // Draws The Display List Text
