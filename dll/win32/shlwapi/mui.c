@@ -741,13 +741,11 @@ MLHtmlHelpW(
     return NULL;
 #else
     WCHAR szPathW[MAX_PATH];
-
-    if (uCommand != HH_DISPLAY_TOPIC && uCommand != HH_DISPLAY_TEXT_POPUP)
-        return HtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
-
-    if (FAILED(GetFilePathFromLangId(pszFile, szPathW, _countof(szPathW), wLangId)))
-        return HtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
-
-    return HtmlHelpW(hwndCaller, szPathW, uCommand, dwData);
+    if ((uCommand == HH_DISPLAY_TOPIC || uCommand == HH_DISPLAY_TEXT_POPUP) &&
+        SUCCEEDED(GetFilePathFromLangId(pszFile, szPathW, _countof(szPathW), wLangId)))
+    {
+        return HtmlHelpW(hwndCaller, szPathW, uCommand, dwData);
+    }
+    return HtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
 #endif
 }
