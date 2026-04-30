@@ -24,13 +24,13 @@ CRITICAL_SECTION g_csMuiLock;
 
 #ifndef NO_MUI
 
-typedef struct PUIITEM
+typedef struct MUI_ITEM
 {
     HINSTANCE hInst;
     LANGID wLangId;
-} PUIITEM, *PPUIITEM;
+} MUI_ITEM, *PMUI_ITEM;
 
-static HDPA g_hdpaPUI = NULL; /* Dynamic pointer array (DPA) of PUIITEM */
+static HDPA g_hdpaMUI = NULL; /* Dynamic pointer array (DPA) of MUI_ITEM */
 static WCHAR g_szMuiDest[MAX_PATH] = L"";
 static LANGID g_wGotLangId = 0;
 static BOOL g_bCheckIEVersion = FALSE;
@@ -41,26 +41,26 @@ static BOOL g_bGotACP = FALSE;
 // See https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/mlui/index.htm
 
 // Initialize the global DPA list used to track MUI-loaded module instances.
-static inline BOOL InitPUI_NoLock(VOID)
+static inline BOOL InitMUI_NoLock(VOID)
 {
-    if (!g_hdpaPUI)
-        g_hdpaPUI = DPA_Create(4);
+    if (!g_hdpaMUI)
+        g_hdpaMUI = DPA_Create(4);
 
-    return !!g_hdpaPUI;
+    return !!g_hdpaMUI;
 }
 
-static BOOL InitPUI(VOID)
+static BOOL InitMUI(VOID)
 {
     BOOL ret;
 
     EnterCriticalSection(&g_csMuiLock);
-    ret = InitPUI_NoLock();
+    ret = InitMUI_NoLock();
     LeaveCriticalSection(&g_csMuiLock);
 
     return ret;
 }
 
-static VOID DeinitPUI_NoLock(_Inout_opt_ HDPA hDPA)
+static VOID DeinitMUI_NoLock(_Inout_opt_ HDPA hDPA)
 {
     INT iItem, cItems;
 
@@ -74,22 +74,22 @@ static VOID DeinitPUI_NoLock(_Inout_opt_ HDPA hDPA)
     DPA_Destroy(hDPA);
 }
 
-// Search the PUI list for an entry matching the given instance handle and return its index.
-static INT GetPUIITEM_NoLock(_In_ HINSTANCE hInst)
+// Search the MUI list for an entry matching the given instance handle and return its index.
+static INT GetMUI_ITEM_NoLock(_In_ HINSTANCE hInst)
 {
     INT cItems, iItem;
-    PPUIITEM pItem;
+    PMUI_ITEM pItem;
 
-    if (!InitPUI_NoLock())
+    if (!InitMUI_NoLock())
         return -1;
 
-    cItems = DPA_GetPtrCount(g_hdpaPUI);
+    cItems = DPA_GetPtrCount(g_hdpaMUI);
     if (cItems <= 0)
         return -1;
 
     for (iItem = 0; iItem < cItems; ++iItem)
     {
-        pItem = DPA_GetPtr(g_hdpaPUI, iItem);
+        pItem = DPA_GetPtr(g_hdpaMUI, iItem);
         if (pItem && pItem->hInst == hInst)
             return iItem;
     }
@@ -308,8 +308,10 @@ static BOOL CheckFileVersion(_In_ PCWSTR pszFileName, _In_ PCWSTR pszMuiPath)
     }
 
 Cleanup:
-    LocalFree(ver2);
-    LocalFree(ver1);
+    if (ver2)
+        LocalFree(ver2);
+    if (ver1)
+        LocalFree(ver1);
     return ret;
 }
 
@@ -341,12 +343,12 @@ GetFilePathFromLangId(
 
 #endif /* ndef NO_MUI */
 
-VOID DeinitPUI(VOID)
+VOID DeinitMUI(VOID)
 {
 #ifndef NO_MUI
     EnterCriticalSection(&g_csMuiLock);
-    DeinitPUI_NoLock(g_hdpaPUI);
-    g_hdpaPUI = NULL;
+    DeinitMUI_NoLock(g_hdpaMUI);
+    g_hdpaMUI = NULL;
     LeaveCriticalSection(&g_csMuiLock);
 #endif
 }
@@ -586,7 +588,7 @@ BOOL WINAPI MLIsMLHInstance(_In_ HINSTANCE hInstance)
 #else
     INT iItem;
     EnterCriticalSection(&g_csMuiLock);
-    iItem = GetPUIITEM_NoLock(hInstance);
+    iItem = GetMUI_ITEM_NoLock(hInstance);
     LeaveCriticalSection(&g_csMuiLock);
     return iItem >= 0;
 #endif
@@ -604,15 +606,15 @@ HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId)
     return E_NOTIMPL;
 #else
     INT iInserted;
-    PPUIITEM pItem;
+    PMUI_ITEM pItem;
 
     if (!hInstance)
         return E_INVALIDARG;
 
-    if (!InitPUI())
+    if (!InitMUI())
         return E_OUTOFMEMORY;
 
-    pItem = LocalAlloc(LPTR, sizeof(PUIITEM));
+    pItem = LocalAlloc(LPTR, sizeof(MUI_ITEM));
     if (!pItem)
         return E_OUTOFMEMORY;
 
@@ -620,7 +622,7 @@ HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId)
     pItem->wLangId = wLangId;
 
     EnterCriticalSection(&g_csMuiLock);
-    iInserted = DPA_AppendPtr(g_hdpaPUI, pItem);
+    iInserted = DPA_AppendPtr(g_hdpaMUI, pItem);
     LeaveCriticalSection(&g_csMuiLock);
 
     if (iInserted == DPA_ERR)
@@ -646,12 +648,12 @@ HRESULT WINAPI MLClearMLHInstance(_In_ HINSTANCE hInstance)
 #else
     INT iItem;
     EnterCriticalSection(&g_csMuiLock);
-    iItem = GetPUIITEM_NoLock(hInstance);
+    iItem = GetMUI_ITEM_NoLock(hInstance);
     if (iItem >= 0)
     {
-        PPUIITEM pItem = DPA_GetPtr(g_hdpaPUI, iItem);
+        PMUI_ITEM pItem = DPA_GetPtr(g_hdpaMUI, iItem);
         LocalFree(pItem);
-        DPA_DeletePtr(g_hdpaPUI, iItem);
+        DPA_DeletePtr(g_hdpaMUI, iItem);
     }
     LeaveCriticalSection(&g_csMuiLock);
     return S_OK;
@@ -669,7 +671,7 @@ MLWinHelpA(
     _In_ ULONG_PTR dwData)
 {
 #ifdef NO_MUI
-    return NULL;
+    return FALSE;
 #else
     LPWSTR pszHelp = NULL;
     WCHAR szHelp[MAX_PATH];
