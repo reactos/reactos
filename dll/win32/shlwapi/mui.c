@@ -478,7 +478,7 @@ MLBuildResURLA(
     _In_ HMODULE hModule,
     _In_ DWORD dwCrossCodePage,
     _In_ PCSTR pszRes,
-    _Out_writes_(dwDestLen) PSTR pszDest,
+    _Out_writes_(cchDest) PSTR pszDest,
     _In_ INT cchDest)
 {
 #ifdef NO_MUI
@@ -508,7 +508,7 @@ MLBuildResURLW(
     _In_ HMODULE hModule,
     _In_ DWORD dwCrossCodePage,
     _In_ PCWSTR pszRes,
-    _Out_writes_(dwDestLen) PWSTR pszDest,
+    _Out_writes_(cchDest) PWSTR pszDest,
     _In_ size_t cchDest)
 {
 #ifdef NO_MUI
