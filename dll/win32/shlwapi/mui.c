@@ -31,7 +31,7 @@ typedef struct MUI_ITEM
 } MUI_ITEM, *PMUI_ITEM;
 
 static HDPA g_hdpaMUI = NULL; /* Dynamic pointer array (DPA) of MUI_ITEM */
-static WCHAR g_szMuiDest[MAX_PATH] = L"";
+static WCHAR g_szMuiDir[MAX_PATH] = L"";
 static LANGID g_wGotLangId = 0;
 static BOOL g_bCheckIEVersion = FALSE;
 static BOOL g_bIEVersionChecked = FALSE;
@@ -157,7 +157,7 @@ static HRESULT GetMUIPath(
 
     EnterCriticalSection(&g_csMuiLock);
 
-    if (!g_szMuiDest[0] || g_wGotLangId != wLangId)
+    if (!g_szMuiDir[0] || g_wGotLangId != wLangId)
     {
         g_wGotLangId = wLangId;
 
@@ -176,10 +176,10 @@ static HRESULT GetMUIPath(
             szIEDir[1] = UNICODE_NULL;
         }
 
-        StringCchPrintfW(g_szMuiDest, _countof(g_szMuiDest), L"%s\\mui\\%04x\\", szIEDir, wLangId);
+        StringCchPrintfW(g_szMuiDir, _countof(g_szMuiDir), L"%s\\mui\\%04x\\", szIEDir, wLangId);
     }
 
-    StrCpyNW(pszDest, g_szMuiDest, cchDest);
+    StrCpyNW(pszDest, g_szMuiDir, cchDest);
     StrCatBuffW(pszDest, pszFileNameOnly, cchDest);
 
     LeaveCriticalSection(&g_csMuiLock);
@@ -702,14 +702,14 @@ MLHtmlHelpA(
     lpszPathW = NULL;
     if (pszFile)
     {
-        SHAnsiToUnicode(pszFile, szPathW, MAX_PATH);
+        SHAnsiToUnicode(pszFile, szPathW, _countof(szPathW));
         lpszPathW = szPathW;
     }
 
-    if (FAILED(GetFilePathFromLangId(lpszPathW, szPathW, MAX_PATH, wLangId)))
+    if (FAILED(GetFilePathFromLangId(lpszPathW, szPathW, _countof(szPathW), wLangId)))
         return HtmlHelpA(hwndCaller, pszFile, uCommand, dwData);
 
-    SHUnicodeToAnsi(szPathW, szPathA, MAX_PATH);
+    SHUnicodeToAnsi(szPathW, szPathA, _countof(szPathA));
     return HtmlHelpA(hwndCaller, szPathA, uCommand, dwData);
 #endif
 }
@@ -753,7 +753,7 @@ MLHtmlHelpW(
     if (uCommand != HH_DISPLAY_TOPIC && uCommand != HH_DISPLAY_TEXT_POPUP)
         return HtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
 
-    if (FAILED(GetFilePathFromLangId(pszFile, szPathW, MAX_PATH, wLangId)))
+    if (FAILED(GetFilePathFromLangId(pszFile, szPathW, _countof(szPathW), wLangId)))
         return HtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
 
     return HtmlHelpW(hwndCaller, szPathW, uCommand, dwData);
