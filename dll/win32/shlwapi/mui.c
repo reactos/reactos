@@ -670,11 +670,14 @@ MLWinHelpA(
 #ifdef NO_MUI
     return FALSE;
 #else
-    LPWSTR pszHelp = NULL;
     WCHAR szHelp[MAX_PATH];
-    if (lpszHelp && SHAnsiToUnicode(lpszHelp, szHelp, _countof(szHelp)))
-        pszHelp = szHelp;
-    return MLWinHelpW(hWndMain, pszHelp, uCommand, dwData);
+    LPWSTR pszHelpW = NULL;
+    if (lpszHelp)
+    {
+        SHAnsiToUnicode(lpszHelp, szHelp, _countof(szHelp));
+        pszHelpW = szHelp;
+    }
+    return MLWinHelpW(hWndMain, pszHelpW, uCommand, dwData);
 #endif
 }
 
@@ -694,13 +697,11 @@ MLHtmlHelpA(
 #else
     WCHAR szPathW[MAX_PATH];
     LPCWSTR pszFileW = NULL;
-
     if (pszFile)
     {
         SHAnsiToUnicode(pszFile, szPathW, _countof(szPathW));
         pszFileW = szPathW;
     }
-
     return MLHtmlHelpW(hwndCaller, pszFileW, uCommand, dwData, wLangId);
 #endif
 }
