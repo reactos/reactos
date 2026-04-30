@@ -9,6 +9,7 @@ extern void func_IsQSForward(void);
 extern void func_isuncpath(void);
 extern void func_isuncpathserver(void);
 extern void func_isuncpathservershare(void);
+extern void func_MUI(void);
 extern void func_PathUnExpandEnvStrings(void);
 extern void func_PathUnExpandEnvStringsForUser(void);
 extern void func_SHAreIconsEqual(void);
@@ -27,6 +28,7 @@ const struct test winetest_testlist[] =
     { "PathFindOnPath", func_PathFindOnPath },
     { "IShellFolderHelpers", func_IShellFolderHelpers },
     { "IsQSForward", func_IsQSForward },
+    { "MUI", func_MUI },
     { "PathIsUNC", func_isuncpath },
     { "PathIsUNCServer", func_isuncpathserver },
     { "PathIsUNCServerShare", func_isuncpathservershare },

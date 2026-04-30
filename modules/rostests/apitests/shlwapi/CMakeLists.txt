@@ -8,6 +8,7 @@ list(APPEND SOURCE
     AssocQueryString.c
     IShellFolderHelpers.cpp
     IsQSForward.cpp
+    MUI.c
     PathFileExistsDefExtAndAttributesW.c
     PathFindOnPath.c
     PathIsUNC.c
