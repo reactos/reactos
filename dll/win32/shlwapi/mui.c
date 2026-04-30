@@ -450,7 +450,8 @@ MLLoadLibraryW(
             hinstLoaded = LoadLibraryW(lpszLibFileName);
     }
 
-    MLSetMLHInstance(hinstLoaded, wLangId);
+    if (hinstLoaded)
+        MLSetMLHInstance(hinstLoaded, wLangId);
     return hinstLoaded;
 #endif
 }
@@ -698,7 +699,7 @@ MLHtmlHelpA(
 #else
     WCHAR szPathW[MAX_PATH];
     CHAR szPathA[MAX_PATH];
-    PWSTR lpszPathW = NULL;
+    PWSTR lpszPathW;
 
     if (uCommand != HH_DISPLAY_TOPIC && uCommand != HH_DISPLAY_TEXT_POPUP)
         return HtmlHelpA(hwndCaller, pszFile, uCommand, dwData);
@@ -732,7 +733,7 @@ MLWinHelpW(
     return NULL;
 #else
     WCHAR szPath[MAX_PATH];
-    if (GetFilePathFromLangId(lpszHelp, szPath, _countof(szPath), 0))
+    if (FAILED(GetFilePathFromLangId(lpszHelp, szPath, _countof(szPath), 0))
         return WinHelpW(hWndMain, lpszHelp, uCommand, dwData);
     else
         return WinHelpW(hWndMain, szPath, uCommand, dwData);
