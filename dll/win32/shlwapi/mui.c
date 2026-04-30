@@ -66,7 +66,7 @@ VOID DeinitPUI(VOID)
     if (g_hdpaPUI)
     {
         cItems = DPA_GetPtrCount(g_hdpaPUI);
-        for (iItem = 0; iItem < cItems; iItem++)
+        for (iItem = 0; iItem < cItems; ++iItem)
             LocalFree(DPA_GetPtr(g_hdpaPUI, iItem));
 
         DPA_Destroy(g_hdpaPUI);
