@@ -16,7 +16,13 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-/* See https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/mlui/index.htm */
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+    #define NO_MUI
+#endif
+
+CRITICAL_SECTION g_csMuiLock;
+
+#ifndef NO_MUI
 
 typedef struct PUIITEM
 {
@@ -24,7 +30,6 @@ typedef struct PUIITEM
     DWORD wLangId;
 } PUIITEM, *PPUIITEM, *LPPUIITEM;
 
-CRITICAL_SECTION g_csMuiLock;
 static HDPA g_hdpaPUI = NULL;
 static WCHAR g_szMuiDest[MAX_PATH] = L"";
 static LANGID g_wGotLangId = 0;
@@ -32,7 +37,8 @@ static BOOL g_bIECheckVersion = FALSE;
 static BOOL g_bIEVersionChecked = FALSE;
 static UINT g_nACP = CP_ACP;
 static BOOL g_bGotACP = FALSE;
-HINSTANCE g_mluiInfo = NULL;
+
+// See https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/mlui/index.htm
 
 // Initialize the global DPA list used to track MUI-loaded module instances.
 static BOOL InitPUI_NoLock(VOID)
@@ -69,14 +75,6 @@ static VOID DeinitPUI_NoLock(HDPA hDPA)
         LocalFree(DPA_GetPtr(hDPA, iItem));
 
     DPA_Destroy(hDPA);
-}
-
-VOID DeinitPUI(VOID)
-{
-    EnterCriticalSection(&g_csMuiLock);
-    DeinitPUI_NoLock(g_hdpaPUI);
-    g_hdpaPUI = NULL;
-    LeaveCriticalSection(&g_csMuiLock);
 }
 
 // Search the PUI list for an entry matching the given instance handle and return its index.
@@ -346,6 +344,18 @@ GetFilePathFromLangId(
     return hr;
 }
 
+#endif /* ndef NO_MUI */
+
+VOID DeinitPUI(VOID)
+{
+#ifndef NO_MUI
+    EnterCriticalSection(&g_csMuiLock);
+    DeinitPUI_NoLock(g_hdpaPUI);
+    g_hdpaPUI = NULL;
+    LeaveCriticalSection(&g_csMuiLock);
+#endif
+}
+
 /*************************************************************************
  * MLLoadLibraryA [SHLWAPI.377]
  *
@@ -357,9 +367,13 @@ MLLoadLibraryA(
     _In_ HMODULE hModule,
     _In_ DWORD dwCrossCodePage)
 {
+#ifdef NO_MUI
+    return LoadLibraryExA(lpszLibFileName, NULL, 0);
+#else
     WCHAR szBuff[MAX_PATH];
     SHAnsiToUnicode(lpszLibFileName, szBuff, _countof(szBuff));
     return MLLoadLibraryW(szBuff, hModule, dwCrossCodePage);
+#endif
 }
 
 /*************************************************************************
@@ -375,6 +389,9 @@ MLLoadLibraryW(
     _In_ HMODULE hModule,
     _In_ DWORD dwCrossCodePage)
 {
+#ifdef NO_MUI
+    return LoadLibraryExW(lpszLibFileName, NULL, 0);
+#else
     LANGID wLangId, wSysLangId;
     WCHAR szModPath[MAX_PATH], szMuiPath[MAX_PATH];
     PCWSTR pszLoadPath;
@@ -436,6 +453,7 @@ MLLoadLibraryW(
 
     MLSetMLHInstance(hinstLoaded, wLangId);
     return hinstLoaded;
+#endif
 }
 
 /*************************************************************************
@@ -446,8 +464,12 @@ MLLoadLibraryW(
  */
 BOOL WINAPI MLFreeLibrary(_In_ HMODULE hModule)
 {
+#ifdef NO_MUI
+    return FALSE;
+#else
     MLClearMLHInstance(hModule);
     return FreeLibrary(hModule);
+#endif
 }
 
 /*************************************************************************
@@ -464,6 +486,9 @@ MLBuildResURLA(
     _Out_writes_(dwDestLen) PSTR pszDest,
     _In_ INT cchDest)
 {
+#ifdef NO_MUI
+    return E_NOTIMPL;
+#else
     HRESULT hr;
     WCHAR szLibNameW[MAX_PATH], szResW[MAX_PATH], szDestW[MAX_PATH];
 
@@ -474,6 +499,7 @@ MLBuildResURLA(
 
     SHUnicodeToAnsi(szDestW, pszDest, cchDest);
     return hr;
+#endif
 }
 
 /*************************************************************************
@@ -490,6 +516,9 @@ MLBuildResURLW(
     _Out_writes_(dwDestLen) PWSTR pszDest,
     _In_ size_t cchDest)
 {
+#ifdef NO_MUI
+    return E_NOTIMPL;
+#else
     HRESULT hr;
     static const WCHAR k_szResPrefix[] = L"res://";
     INT cchPrefix;
@@ -545,6 +574,7 @@ MLBuildResURLW(
 cleanup:
     *pszDest = UNICODE_NULL;
     return hr;
+#endif
 }
 
 /*************************************************************************
@@ -555,11 +585,15 @@ cleanup:
  */
 BOOL WINAPI MLIsMLHInstance(_In_ HINSTANCE hInstance)
 {
+#ifdef NO_MUI
+    return FALSE;
+#else
     INT iItem;
     EnterCriticalSection(&g_csMuiLock);
     iItem = GetPUIITEM_NoLock(hInstance);
     LeaveCriticalSection(&g_csMuiLock);
     return iItem >= 0;
+#endif
 }
 
 /*************************************************************************
@@ -570,6 +604,9 @@ BOOL WINAPI MLIsMLHInstance(_In_ HINSTANCE hInstance)
  */
 HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId)
 {
+#ifdef NO_MUI
+    return E_NOTIMPL;
+#else
     INT iInserted;
     PPUIITEM pItem;
 
@@ -597,6 +634,7 @@ HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId)
     }
 
     return S_OK;
+#endif
 }
 
 /*************************************************************************
@@ -607,6 +645,9 @@ HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId)
  */
 HRESULT WINAPI MLClearMLHInstance(_In_ HINSTANCE hInstance)
 {
+#ifdef NO_MUI
+    return E_NOTIMPL;
+#else
     INT iItem;
     EnterCriticalSection(&g_csMuiLock);
     iItem = GetPUIITEM_NoLock(hInstance);
@@ -618,6 +659,7 @@ HRESULT WINAPI MLClearMLHInstance(_In_ HINSTANCE hInstance)
     }
     LeaveCriticalSection(&g_csMuiLock);
     return S_OK;
+#endif
 }
 
 /*************************************************************************
@@ -630,11 +672,15 @@ MLWinHelpA(
     _In_ UINT uCommand,
     _In_ ULONG_PTR dwData)
 {
+#ifdef NO_MUI
+    return WinHelpA(hWndMain, lpszHelp, uCommand, dwData);
+#else
     LPWSTR pszHelp = NULL;
     WCHAR szHelp[MAX_PATH];
     if (lpszHelp && SHAnsiToUnicode(lpszHelp, szHelp, _countof(szHelp)))
         pszHelp = szHelp;
     return MLWinHelpW(hWndMain, pszHelp, uCommand, dwData);
+#endif
 }
 
 /*************************************************************************
@@ -648,6 +694,9 @@ MLHtmlHelpA(
     _In_ DWORD_PTR dwData,
     _In_ UINT wLangId)
 {
+#ifdef NO_MUI
+    return HtmlHelpA(hwndCaller, pszFile, uCommand, dwData);
+#else
     WCHAR szPathW[MAX_PATH];
     CHAR szPathA[MAX_PATH];
     PWSTR lpszPathW = NULL;
@@ -667,6 +716,7 @@ MLHtmlHelpA(
 
     SHUnicodeToAnsi(szPathW, szPathA, MAX_PATH);
     return HtmlHelpA(hwndCaller, szPathA, uCommand, dwData);
+#endif
 }
 
 /*************************************************************************
@@ -679,11 +729,15 @@ MLWinHelpW(
     _In_ UINT uCommand,
     _In_ ULONG_PTR dwData)
 {
+#ifdef NO_MUI
+    return WinHelpW(hWndMain, lpszHelp, uCommand, dwData);
+#else
     WCHAR szPath[MAX_PATH];
     if (GetFilePathFromLangId(lpszHelp, szPath, _countof(szPath), 0))
         return WinHelpW(hWndMain, lpszHelp, uCommand, dwData);
     else
         return WinHelpW(hWndMain, szPath, uCommand, dwData);
+#endif
 }
 
 /*************************************************************************
@@ -697,6 +751,9 @@ MLHtmlHelpW(
     _In_ DWORD_PTR dwData,
     _In_ UINT wLangId)
 {
+#ifdef NO_MUI
+    return HtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
+#else
     WCHAR szPathW[MAX_PATH];
 
     if (uCommand != HH_DISPLAY_TOPIC && uCommand != HH_DISPLAY_TEXT_POPUP)
@@ -706,4 +763,5 @@ MLHtmlHelpW(
         return HtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
 
     return HtmlHelpW(hwndCaller, szPathW, uCommand, dwData);
+#endif
 }
