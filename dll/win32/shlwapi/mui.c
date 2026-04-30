@@ -32,6 +32,7 @@ static BOOL g_bIECheckVersion = FALSE;
 static BOOL g_bIEVersionChecked = FALSE;
 static UINT g_nACP = CP_ACP;
 static BOOL g_bGotACP = FALSE;
+HINSTANCE g_mluiInfo = NULL;
 
 // Initialize the global DPA list used to track MUI-loaded module instances.
 static BOOL InitPUI_NoLock(VOID)
@@ -54,6 +55,25 @@ static BOOL InitPUI(VOID)
     LeaveCriticalSection(&g_csMuiLock);
 
     return ret;
+}
+
+VOID DeinitPUI(VOID)
+{
+    INT iItem, cItems;
+
+    EnterCriticalSection(&g_csMuiLock);
+
+    if (g_hdpaPUI)
+    {
+        cItems = DPA_GetPtrCount(g_hdpaPUI);
+        for (iItem = 0; iItem < cItems; iItem++)
+            LocalFree(DPA_GetPtr(g_hdpaPUI, iItem));
+
+        DPA_Destroy(g_hdpaPUI);
+        g_hdpaPUI = NULL;
+    }
+
+    LeaveCriticalSection(&g_csMuiLock);
 }
 
 // Search the PUI list for an entry matching the given instance handle and return its index.
