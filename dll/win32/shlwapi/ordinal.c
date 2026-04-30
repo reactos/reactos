@@ -3818,6 +3818,7 @@ HICON WINAPI ExtractIconWrapW(HINSTANCE hInstance, LPCWSTR lpszExeFileName,
     return ExtractIconW(hInstance, lpszExeFileName, nIconIndex);
 }
 
+#ifndef __REACTOS__ /* See mui.c */
 /*************************************************************************
  *      @	[SHLWAPI.377]
  *
@@ -3892,6 +3893,7 @@ HMODULE WINAPI MLLoadLibraryW(LPCWSTR new_mod, HMODULE inst_hwnd, DWORD dwCrossC
     }
     return NULL;
 }
+#endif /* ndef __REACTOS__ */
 
 /*************************************************************************
  * ColorAdjustLuma      [SHLWAPI.@]
@@ -4117,6 +4119,7 @@ DWORD WINAPI SHWinHelpOnDemandA(HWND hwnd, LPCSTR helpfile, DWORD flags1, VOID *
     return 0;
 }
 
+#ifndef __REACTOS__ /* See mui.c */
 /*************************************************************************
  *      @	[SHLWAPI.418]
  *
@@ -4136,6 +4139,7 @@ BOOL WINAPI MLFreeLibrary(HMODULE hModule)
 	FIXME("(%p) semi-stub\n", hModule);
 	return FreeLibrary(hModule);
 }
+#endif
 
 /*************************************************************************
  *      @	[SHLWAPI.419]
@@ -4145,6 +4149,7 @@ BOOL WINAPI SHFlushSFCacheWrap(void) {
   return TRUE;
 }
 
+#ifndef __REACTOS__ /* See mui.c */
 /*************************************************************************
  *      @      [SHLWAPI.429]
  * FIXME I have no idea what this function does or what its arguments are.
@@ -4154,7 +4159,6 @@ BOOL WINAPI MLIsMLHInstance(HINSTANCE hInst)
        FIXME("(%p) stub\n", hInst);
        return FALSE;
 }
-
 
 /*************************************************************************
  *      @	[SHLWAPI.430]
@@ -4173,6 +4177,7 @@ DWORD WINAPI MLClearMLHInstance(DWORD x)
 	FIXME("(0x%08x)stub\n", x);
 	return 0xabba1247;
 }
+#endif /* ndef __REACTOS__ */
 
 /*************************************************************************
  * @ [SHLWAPI.432]

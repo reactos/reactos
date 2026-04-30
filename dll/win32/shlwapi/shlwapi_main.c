@@ -36,6 +36,7 @@ DECLSPEC_HIDDEN DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
 #ifdef __REACTOS__
 extern CRITICAL_SECTION g_csZoneMgrLock;
 extern CRITICAL_SECTION g_csBagCacheLock;
+extern CRITICAL_SECTION g_csMuiLock;
 VOID FreeViewStatePropertyBagCache(VOID);
 VOID SHLWAPI_DeleteCachedZonesManager(VOID);
 #endif
@@ -72,6 +73,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 #ifdef __REACTOS__
 	    InitializeCriticalSection(&g_csZoneMgrLock);
 	    InitializeCriticalSection(&g_csBagCacheLock);
+	    InitializeCriticalSection(&g_csMuiLock);
 #endif
 	    break;
 	  case DLL_PROCESS_DETACH:
@@ -79,6 +81,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 #ifdef __REACTOS__
 	    FreeViewStatePropertyBagCache();
 	    SHLWAPI_DeleteCachedZonesManager();
+	    DeleteCriticalSection(&g_csMuiLock);
 	    DeleteCriticalSection(&g_csBagCacheLock);
 	    DeleteCriticalSection(&g_csZoneMgrLock);
 #endif

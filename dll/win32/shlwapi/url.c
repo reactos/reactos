@@ -2535,6 +2535,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
 }
 #endif
 
+#ifndef __REACTOS__ /* See mui.c */
 /*************************************************************************
  *  MLBuildResURLA	[SHLWAPI.405]
  *
@@ -2633,6 +2634,7 @@ HRESULT WINAPI MLBuildResURLW(LPCWSTR lpszLibName, HMODULE hMod, DWORD dwFlags,
   }
   return hRet;
 }
+#endif /* ndef __REACTOS__ */
 
 /***********************************************************************
  *             UrlFixupW [SHLWAPI.462]

@@ -392,10 +392,10 @@
 392 stdcall -noname EndDialogWrap(ptr ptr) user32.EndDialog
 393 stdcall -noname CreateDialogIndirectParamWrapW(long ptr long ptr long) user32.CreateDialogIndirectParamW
 394 stdcall -noname SHChangeNotifyWrap(long long ptr ptr)
-395 stub -noname MLWinHelpA
-396 stub -noname MLHtmlHelpA
-397 stub -noname MLWinHelpW
-398 stub -noname MLHtmlHelpW
+395 stdcall -noname MLWinHelpA(ptr str long ptr)
+396 stdcall -noname MLHtmlHelpA(ptr str long ptr long)
+397 stdcall -noname MLWinHelpW(ptr wstr long ptr)
+398 stdcall -noname MLHtmlHelpW(ptr wstr long ptr long)
 399 stdcall -noname StrCpyNXA(ptr str long)
 400 stdcall -noname StrCpyNXW(ptr wstr long)
 401 stdcall -noname PageSetupDlgWrapW(ptr)

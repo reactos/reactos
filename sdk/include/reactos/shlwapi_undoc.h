@@ -469,6 +469,89 @@ SHDialogBox(
     _In_opt_ SHDIALOGPROC fn,
     _In_opt_ PVOID pThis);
 
+#define ML_NO_CROSSCODEPAGE 0
+#define ML_CROSSCODEPAGE_NT 1
+#define ML_CROSSCODEPAGE    2
+#define ML_SHELL_LANGUAGE   4
+#define ML_CROSSCODEPAGE_MASK (ML_CROSSCODEPAGE_NT | ML_CROSSCODEPAGE | ML_SHELL_LANGUAGE)
+
+HMODULE WINAPI
+MLLoadLibraryA(
+    _In_ LPCSTR lpszLibFileName,
+    _In_ HMODULE hModule,
+    _In_ DWORD dwCrossCodePage);
+
+HMODULE WINAPI
+MLLoadLibraryW(
+    _In_ LPCWSTR lpszLibFileName,
+    _In_ HMODULE hModule,
+    _In_ DWORD dwCrossCodePage);
+
+BOOL WINAPI MLIsMLHInstance(_In_ HINSTANCE hInstance);
+HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId);
+HRESULT WINAPI MLClearMLHInstance(_In_ HINSTANCE hInstance);
+BOOL WINAPI MLFreeLibrary(_In_ HMODULE hModule);
+
+HRESULT WINAPI
+MLBuildResURLA(
+    _In_ PCSTR pszLibName,
+    _In_ HMODULE hModule,
+    _In_ DWORD dwCrossCodePage,
+    _In_ PCSTR pszRes,
+    _Out_writes_(dwDestLen) PSTR pszDest,
+    _In_ INT cchDest);
+
+HRESULT WINAPI
+MLBuildResURLW(
+    _In_ PCWSTR pszLibName,
+    _In_ HMODULE hModule,
+    _In_ DWORD dwCrossCodePage,
+    _In_ PCWSTR pszRes,
+    _Out_writes_(dwDestLen) PWSTR pszDest,
+    _In_ size_t cchDest);
+
+BOOL WINAPI
+MLWinHelpA(
+    _In_opt_ HWND hWndMain,
+    _In_ LPCSTR lpszHelp,
+    _In_ UINT uCommand,
+    _In_ ULONG_PTR dwData);
+
+BOOL WINAPI
+MLWinHelpW(
+    _In_opt_ HWND hWndMain,
+    _In_ LPCWSTR lpszHelp,
+    _In_ UINT uCommand,
+    _In_ ULONG_PTR dwData);
+
+HWND WINAPI
+MLHtmlHelpA(
+    _In_opt_ HWND hwndCaller,
+    _In_ LPCSTR pszFile,
+    _In_ UINT uCommand,
+    _In_ DWORD_PTR dwData,
+    _In_ UINT wLangId);
+
+HWND WINAPI
+MLHtmlHelpW(
+    _In_opt_ HWND hwndCaller,
+    _In_ LPCWSTR pszFile,
+    _In_ UINT uCommand,
+    _In_ DWORD_PTR dwData,
+    _In_ UINT wLangId);
+
+#ifdef UNICODE
+    #define MLLoadLibrary MLLoadLibraryW
+    #define MLBuildResURL MLBuildResURLW
+    #define MLWinHelp MLWinHelpW
+    #define MLHtmlHelp MLHtmlHelpW
+#else
+    #define MLLoadLibrary MLLoadLibraryA
+    #define MLBuildResURL MLBuildResURLA
+    #define MLWinHelp MLWinHelpA
+    #define MLHtmlHelp MLHtmlHelpA
+#endif
+
 /*****************************************************************************
  * IAssociationElementOld interface
  *
