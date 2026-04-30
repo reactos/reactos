@@ -57,22 +57,25 @@ static BOOL InitPUI(VOID)
     return ret;
 }
 
-VOID DeinitPUI(VOID)
+static VOID DeinitPUI_NoLock(HDPA hDPA)
 {
     INT iItem, cItems;
 
+    if (!hDPA)
+        return;
+
+    cItems = DPA_GetPtrCount(hDPA);
+    for (iItem = 0; iItem < cItems; ++iItem)
+        LocalFree(DPA_GetPtr(hDPA, iItem));
+
+    DPA_Destroy(hDPA);
+}
+
+VOID DeinitPUI(VOID)
+{
     EnterCriticalSection(&g_csMuiLock);
-
-    if (g_hdpaPUI)
-    {
-        cItems = DPA_GetPtrCount(g_hdpaPUI);
-        for (iItem = 0; iItem < cItems; ++iItem)
-            LocalFree(DPA_GetPtr(g_hdpaPUI, iItem));
-
-        DPA_Destroy(g_hdpaPUI);
-        g_hdpaPUI = NULL;
-    }
-
+    DeinitPUI_NoLock(g_hdpaPUI);
+    g_hdpaPUI = NULL;
     LeaveCriticalSection(&g_csMuiLock);
 }
 
