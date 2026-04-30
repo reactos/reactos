@@ -26,6 +26,13 @@
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
 #define expectf(expected, got) ok(got == expected, "Expected %.2f, got %.2f\n", expected, got)
 
+static BOOL compare_uint(unsigned int x, unsigned int y, unsigned int max_diff)
+{
+    unsigned int diff = x > y ? x - y : y - x;
+
+    return diff <= max_diff;
+}
+
 static BOOL compare_float(float f, float g, unsigned int ulps)
 {
     int x = *(int *)&f;
@@ -36,26 +43,28 @@ static BOOL compare_float(float f, float g, unsigned int ulps)
     if (y < 0)
         y = INT_MIN - y;
 
-    if (abs(x - y) > ulps)
-        return FALSE;
-
-    return TRUE;
+    return compare_uint(x, y, ulps);
 }
 
 static void test_constructor_destructor(void)
 {
     GpCustomLineCap *custom;
-    GpPath *path, *path2;
+    GpPath *path, *path2, *pathFarAway;
     GpStatus stat;
 
     stat = GdipCreatePath(FillModeAlternate, &path);
     expect(Ok, stat);
-    stat = GdipAddPathRectangle(path, 5.0, 5.0, 10.0, 10.0);
+    stat = GdipAddPathRectangle(path, -5.0, -4.0, 10.0, 8.0);
     expect(Ok, stat);
 
     stat = GdipCreatePath(FillModeAlternate, &path2);
     expect(Ok, stat);
-    stat = GdipAddPathRectangle(path2, 5.0, 5.0, 10.0, 10.0);
+    stat = GdipAddPathRectangle(path2, -5.0, -5.0, 10.0, 10.0);
+    expect(Ok, stat);
+
+    stat = GdipCreatePath(FillModeAlternate, &pathFarAway);
+    expect(Ok, stat);
+    stat = GdipAddPathRectangle(pathFarAway, 5.0, 5.0, 10.0, 10.0);
     expect(Ok, stat);
 
     /* NULL args */
@@ -70,18 +79,39 @@ static void test_constructor_destructor(void)
     stat = GdipDeleteCustomLineCap(NULL);
     expect(InvalidParameter, stat);
 
-    /* valid args */
-    stat = GdipCreateCustomLineCap(NULL, path2, LineCapFlat, 0.0, &custom);
+    /* If both parameters are provided, then fillPath will be ignored. */
+    custom = NULL;
+    stat = GdipCreateCustomLineCap(path, path2, LineCapFlat, 0.0, &custom);
     expect(Ok, stat);
+    ok(custom != NULL, "Custom line cap was not created\n");
     stat = GdipDeleteCustomLineCap(custom);
     expect(Ok, stat);
-    /* it's strange but native returns NotImplemented on stroke == NULL */
+
+    /* valid args */
     custom = NULL;
-    stat = GdipCreateCustomLineCap(path, NULL, LineCapFlat, 10.0, &custom);
+    stat = GdipCreateCustomLineCap(NULL, path2, LineCapFlat, 0.0, &custom);
+    expect(Ok, stat);
+    ok(custom != NULL, "Custom line cap was not created\n");
+    stat = GdipDeleteCustomLineCap(custom);
+    expect(Ok, stat);
+
+    custom = NULL;
+    stat = GdipCreateCustomLineCap(path, NULL, LineCapFlat, 0.0, &custom);
+    expect(Ok, stat);
+    ok(custom != NULL, "Custom line cap was not created\n");
+    stat = GdipDeleteCustomLineCap(custom);
+    expect(Ok, stat);
+
+    /* Custom line cap position (0, 0) is a place corresponding to the end of line.
+    *  If Custom Line Cap is too big and too far from position (0, 0),
+    *  then NotImplemented will be returned, due to floating point precision limitation. */
+    custom = NULL;
+    stat = GdipCreateCustomLineCap(pathFarAway, NULL, LineCapFlat, 10.0, &custom);
     todo_wine expect(NotImplemented, stat);
     todo_wine ok(custom == NULL, "Expected a failure on creation\n");
     if(stat == Ok) GdipDeleteCustomLineCap(custom);
 
+    GdipDeletePath(pathFarAway);
     GdipDeletePath(path2);
     GdipDeletePath(path);
 }
@@ -164,6 +194,14 @@ static void test_inset(void)
     stat = GdipGetCustomLineCapBaseInset(custom, &inset);
     expect(Ok, stat);
     expectf(0.0, inset);
+
+    stat = GdipSetCustomLineCapBaseInset(custom, 2.0);
+    expect(Ok, stat);
+
+    inset = (REAL)0xdeadbeef;
+    stat = GdipGetCustomLineCapBaseInset(custom, &inset);
+    expect(Ok, stat);
+    ok(inset == 2.0, "Unexpected inset value %f\n", inset);
 
     GdipDeleteCustomLineCap(custom);
     GdipDeletePath(path);
@@ -283,13 +321,14 @@ static void test_create_adjustable_cap(void)
     ok(base == LineCapTriangle, "Unexpected base cap %d\n", base);
 
     stat = GdipSetCustomLineCapBaseCap((GpCustomLineCap*)cap, LineCapSquare);
-todo_wine
     ok(stat == Ok, "Unexpected return code, %d\n", stat);
 
     stat = GdipGetCustomLineCapBaseCap((GpCustomLineCap*)cap, &base);
     ok(stat == Ok, "Unexpected return code, %d\n", stat);
-todo_wine
     ok(base == LineCapSquare, "Unexpected base cap %d\n", base);
+
+    stat = GdipSetCustomLineCapBaseCap((GpCustomLineCap*)cap, LineCapSquareAnchor);
+    ok(stat == InvalidParameter, "Unexpected return code, %d\n", stat);
 
     /* Base inset */
     stat = GdipGetAdjustableArrowCapWidth(cap, &width);
@@ -371,6 +410,33 @@ static void test_captype(void)
     GdipDeleteCustomLineCap((GpCustomLineCap*)arrowcap);
 }
 
+static void test_strokecap(void)
+{
+    GpCustomLineCap *cap;
+    GpStatus stat;
+    GpPath *path;
+
+    /* default cap */
+    stat = GdipCreatePath(FillModeAlternate, &path);
+    ok(stat == Ok, "Failed to create path, %d\n", stat);
+    stat = GdipAddPathRectangle(path, 5.0, 5.0, 10.0, 10.0);
+    ok(stat == Ok, "AddPathRectangle failed, %d\n", stat);
+
+    stat = GdipCreateCustomLineCap(NULL, path, LineCapFlat, 0.0, &cap);
+    ok(stat == Ok, "Failed to create cap, %d\n", stat);
+
+    stat = GdipSetCustomLineCapStrokeCaps(cap, LineCapSquare, LineCapFlat);
+    ok(stat == Ok, "Unexpected return code, %d\n", stat);
+
+    stat = GdipSetCustomLineCapStrokeCaps(cap, LineCapSquareAnchor, LineCapFlat);
+    ok(stat == InvalidParameter, "Unexpected return code, %d\n", stat);
+
+    stat = GdipSetCustomLineCapStrokeCaps(cap, LineCapFlat, LineCapSquareAnchor);
+    ok(stat == InvalidParameter, "Unexpected return code, %d\n", stat);
+    GdipDeleteCustomLineCap(cap);
+    GdipDeletePath(path);
+}
+
 START_TEST(customlinecap)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -396,6 +462,7 @@ START_TEST(customlinecap)
     test_scale();
     test_create_adjustable_cap();
     test_captype();
+    test_strokecap();
 
     GdiplusShutdown(gdiplusToken);
 }
