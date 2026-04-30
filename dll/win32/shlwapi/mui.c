@@ -26,7 +26,7 @@ CRITICAL_SECTION g_csMuiLock;
 
 typedef struct PUIITEM
 {
-    HMODULE hModule;
+    HINSTANCE hInst;
     LANGID wLangId;
 } PUIITEM, *PPUIITEM;
 
@@ -78,7 +78,7 @@ static VOID DeinitPUI_NoLock(HDPA hDPA)
 }
 
 // Search the PUI list for an entry matching the given instance handle and return its index.
-static INT GetPUIITEM_NoLock(_In_ HMODULE hModule)
+static INT GetPUIITEM_NoLock(_In_ HINSTANCE hInst)
 {
     INT cItems, iItem;
     PPUIITEM pItem;
@@ -93,7 +93,7 @@ static INT GetPUIITEM_NoLock(_In_ HMODULE hModule)
     for (iItem = 0; iItem < cItems; ++iItem)
     {
         pItem = DPA_GetPtr(g_hdpaPUI, iItem);
-        if (pItem && pItem->hModule == hModule)
+        if (pItem && pItem->hInst == hInst)
             return iItem;
     }
 
@@ -622,7 +622,7 @@ HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId)
     if (!pItem)
         return E_OUTOFMEMORY;
 
-    pItem->hModule = hInstance;
+    pItem->hInst = hInstance;
     pItem->wLangId = wLangId;
 
     EnterCriticalSection(&g_csMuiLock);
