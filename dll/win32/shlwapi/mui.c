@@ -322,7 +322,6 @@ GetFilePathFromLangId(
 {
     HRESULT hr = S_OK;
     LPCWSTR lpszResolved = lpszSourcePath;
-    INT cchCopy = MAX_PATH;
     WCHAR szMUIPath[MAX_PATH];
     LANGID wLangId;
 
@@ -336,10 +335,7 @@ GetFilePathFromLangId(
         lpszResolved = szMUIPath;
     }
 
-    if (cchOutPath < MAX_PATH)
-        cchCopy = cchOutPath;
-
-    StringCchCopyW(lpszOutPath, cchCopy, lpszResolved);
+    StringCchCopyW(lpszOutPath, cchOutPath, lpszResolved);
     return hr;
 }
 
@@ -733,7 +729,7 @@ MLWinHelpW(
     return NULL;
 #else
     WCHAR szPath[MAX_PATH];
-    if (FAILED(GetFilePathFromLangId(lpszHelp, szPath, _countof(szPath), 0))
+    if (FAILED(GetFilePathFromLangId(lpszHelp, szPath, _countof(szPath), 0)))
         return WinHelpW(hWndMain, lpszHelp, uCommand, dwData);
     else
         return WinHelpW(hWndMain, szPath, uCommand, dwData);
