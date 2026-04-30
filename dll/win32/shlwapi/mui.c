@@ -41,15 +41,12 @@ static BOOL g_bGotACP = FALSE;
 // See https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/mlui/index.htm
 
 // Initialize the global DPA list used to track MUI-loaded module instances.
-static BOOL InitPUI_NoLock(VOID)
+static inline BOOL InitPUI_NoLock(VOID)
 {
-    BOOL ret;
-
     if (!g_hdpaPUI)
         g_hdpaPUI = DPA_Create(4);
-    ret = !!g_hdpaPUI;
 
-    return ret;
+    return !!g_hdpaPUI;
 }
 
 static BOOL InitPUI(VOID)
@@ -63,7 +60,7 @@ static BOOL InitPUI(VOID)
     return ret;
 }
 
-static VOID DeinitPUI_NoLock(HDPA hDPA)
+static VOID DeinitPUI_NoLock(_Inout_opt_ HDPA hDPA)
 {
     INT iItem, cItems;
 
