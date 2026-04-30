@@ -731,8 +731,7 @@ MLWinHelpW(
     WCHAR szPath[MAX_PATH];
     if (FAILED(GetFilePathFromLangId(lpszHelp, szPath, _countof(szPath), 0)))
         return WinHelpW(hWndMain, lpszHelp, uCommand, dwData);
-    else
-        return WinHelpW(hWndMain, szPath, uCommand, dwData);
+    return WinHelpW(hWndMain, szPath, uCommand, dwData);
 #endif
 }
 
