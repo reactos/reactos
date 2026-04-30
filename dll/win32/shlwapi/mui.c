@@ -28,7 +28,7 @@ typedef struct PUIITEM
 {
     HMODULE hModule;
     LANGID wLangId;
-} PUIITEM, *PPUIITEM, *LPPUIITEM;
+} PUIITEM, *PPUIITEM;
 
 static HDPA g_hdpaPUI = NULL; /* Dynamic pointer array (DPA) of PUIITEM */
 static WCHAR g_szMuiDest[MAX_PATH] = L"";
