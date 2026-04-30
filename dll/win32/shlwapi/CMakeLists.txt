@@ -62,3 +62,8 @@ add_delay_importlibs(shlwapi hhctrl userenv oleaut32 ole32 comctl32 comdlg32 mpr
 add_importlibs(shlwapi user32 gdi32 advapi32 wininet msvcrt kernel32 ntdll)
 add_pch(shlwapi precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET shlwapi DESTINATION reactos/system32 FOR all)
+
+option(SHLWAPI_NO_MUI "Disable shlwapi MUI" OFF)
+if(SHLWAPI_NO_MUI)
+    target_compile_definitions(shlwapi PRIVATE SHLWAPI_NO_MUI)
+endif()

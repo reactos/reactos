@@ -16,13 +16,13 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-    #define NO_MUI
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) && !defined(SHLWAPI_NO_MUI)
+    #define SHLWAPI_NO_MUI
 #endif
 
 CRITICAL_SECTION g_csMuiLock;
 
-#ifndef NO_MUI
+#ifndef SHLWAPI_NO_MUI
 
 typedef struct MUI_ITEM
 {
@@ -338,11 +338,11 @@ GetFilePathFromLangId(
     return hr;
 }
 
-#endif /* ndef NO_MUI */
+#endif /* ndef SHLWAPI_NO_MUI */
 
 VOID DeinitMUI(VOID)
 {
-#ifndef NO_MUI
+#ifndef SHLWAPI_NO_MUI
     EnterCriticalSection(&g_csMuiLock);
     DeinitMUI_NoLock(g_hdpaMUI);
     g_hdpaMUI = NULL;
@@ -361,7 +361,7 @@ MLLoadLibraryA(
     _In_ HMODULE hModule,
     _In_ DWORD dwCrossCodePage)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return LoadLibraryExA(lpszLibFileName, NULL, 0);
 #else
     WCHAR szBuff[MAX_PATH];
@@ -383,7 +383,7 @@ MLLoadLibraryW(
     _In_ HMODULE hModule,
     _In_ DWORD dwCrossCodePage)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return LoadLibraryExW(lpszLibFileName, NULL, 0);
 #else
     LANGID wLangId, wSysLangId;
@@ -459,7 +459,7 @@ MLLoadLibraryW(
  */
 BOOL WINAPI MLFreeLibrary(_In_ HMODULE hModule)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return FALSE;
 #else
     MLClearMLHInstance(hModule);
@@ -481,7 +481,7 @@ MLBuildResURLA(
     _Out_writes_(cchDest) PSTR pszDest,
     _In_ INT cchDest)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return E_NOTIMPL;
 #else
     HRESULT hr;
@@ -511,7 +511,7 @@ MLBuildResURLW(
     _Out_writes_(cchDest) PWSTR pszDest,
     _In_ size_t cchDest)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return E_NOTIMPL;
 #else
     HRESULT hr;
@@ -580,7 +580,7 @@ cleanup:
  */
 BOOL WINAPI MLIsMLHInstance(_In_ HINSTANCE hInstance)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return FALSE;
 #else
     INT iItem;
@@ -599,7 +599,7 @@ BOOL WINAPI MLIsMLHInstance(_In_ HINSTANCE hInstance)
  */
 HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return E_NOTIMPL;
 #else
     INT iInserted;
@@ -640,7 +640,7 @@ HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId)
  */
 HRESULT WINAPI MLClearMLHInstance(_In_ HINSTANCE hInstance)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return E_NOTIMPL;
 #else
     INT iItem;
@@ -667,7 +667,7 @@ MLWinHelpA(
     _In_ UINT uCommand,
     _In_ ULONG_PTR dwData)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return FALSE;
 #else
     WCHAR szHelp[MAX_PATH];
@@ -692,7 +692,7 @@ MLHtmlHelpA(
     _In_ DWORD_PTR dwData,
     _In_ UINT wLangId)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return NULL;
 #else
     WCHAR szPathW[MAX_PATH];
@@ -716,7 +716,7 @@ MLWinHelpW(
     _In_ UINT uCommand,
     _In_ ULONG_PTR dwData)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return FALSE;
 #else
     WCHAR szPath[MAX_PATH];
@@ -737,7 +737,7 @@ MLHtmlHelpW(
     _In_ DWORD_PTR dwData,
     _In_ UINT wLangId)
 {
-#ifdef NO_MUI
+#ifdef SHLWAPI_NO_MUI
     return NULL;
 #else
     WCHAR szPathW[MAX_PATH];
