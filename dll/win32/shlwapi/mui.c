@@ -171,7 +171,7 @@ static HRESULT GetMUIPath(
         }
         else
         {
-            // "0"
+            // Generate "0\mui\XXXX\filename" path
             szIEDir[0] = L'0';
             szIEDir[1] = UNICODE_NULL;
         }
@@ -693,24 +693,15 @@ MLHtmlHelpA(
     return NULL;
 #else
     WCHAR szPathW[MAX_PATH];
-    CHAR szPathA[MAX_PATH];
-    PWSTR lpszPathW;
+    LPCWSTR pszFileW = NULL;
 
-    if (uCommand != HH_DISPLAY_TOPIC && uCommand != HH_DISPLAY_TEXT_POPUP)
-        return HtmlHelpA(hwndCaller, pszFile, uCommand, dwData);
-
-    lpszPathW = NULL;
     if (pszFile)
     {
         SHAnsiToUnicode(pszFile, szPathW, _countof(szPathW));
-        lpszPathW = szPathW;
+        pszFileW = szPathW;
     }
 
-    if (FAILED(GetFilePathFromLangId(lpszPathW, szPathW, _countof(szPathW), wLangId)))
-        return HtmlHelpA(hwndCaller, pszFile, uCommand, dwData);
-
-    SHUnicodeToAnsi(szPathW, szPathA, _countof(szPathA));
-    return HtmlHelpA(hwndCaller, szPathA, uCommand, dwData);
+    return MLHtmlHelpW(hwndCaller, pszFileW, uCommand, dwData, wLangId);
 #endif
 }
 
