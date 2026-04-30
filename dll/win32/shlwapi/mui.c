@@ -44,7 +44,7 @@ static BOOL g_bGotACP = FALSE;
 static inline BOOL InitMUI_NoLock(VOID)
 {
     if (!g_hdpaMUI)
-        g_hdpaMUI = DPA_Create(4);
+        g_hdpaMUI = DPA_Create(sizeof(INT));
 
     return !!g_hdpaMUI;
 }
