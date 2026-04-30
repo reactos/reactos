@@ -675,7 +675,7 @@ MLWinHelpA(
     _In_ ULONG_PTR dwData)
 {
 #ifdef NO_MUI
-    return WinHelpA(hWndMain, lpszHelp, uCommand, dwData);
+    return NULL;
 #else
     LPWSTR pszHelp = NULL;
     WCHAR szHelp[MAX_PATH];
@@ -697,7 +697,7 @@ MLHtmlHelpA(
     _In_ UINT wLangId)
 {
 #ifdef NO_MUI
-    return HtmlHelpA(hwndCaller, pszFile, uCommand, dwData);
+    return NULL;
 #else
     WCHAR szPathW[MAX_PATH];
     CHAR szPathA[MAX_PATH];
@@ -732,7 +732,7 @@ MLWinHelpW(
     _In_ ULONG_PTR dwData)
 {
 #ifdef NO_MUI
-    return WinHelpW(hWndMain, lpszHelp, uCommand, dwData);
+    return NULL;
 #else
     WCHAR szPath[MAX_PATH];
     if (GetFilePathFromLangId(lpszHelp, szPath, _countof(szPath), 0))
@@ -754,7 +754,7 @@ MLHtmlHelpW(
     _In_ UINT wLangId)
 {
 #ifdef NO_MUI
-    return HtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
+    return NULL;
 #else
     WCHAR szPathW[MAX_PATH];
 
