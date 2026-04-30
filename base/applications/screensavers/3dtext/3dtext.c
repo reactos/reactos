@@ -78,8 +78,10 @@ GLvoid Build3DCharacters(GLvoid)
     // Selects The Font We Created
     SelectObject(hDC, font);
 
+    size_t g_Text_length = _tcslen(g_Text);
+
     // Calculate the string extent
-    for (i = 0; i < _tcslen(g_Text); i++)
+    for (i = 0; i < g_Text_length; i++)
     {
         wglUseFontOutlines(hDC,                     // Select The Current DC
                            g_Text[i],               // Starting Character
@@ -116,8 +118,10 @@ GLvoid glPrint(GLvoid)
     if (!g_Text[0])
         return;
 
+    size_t g_Text_length = _tcslen(g_Text);
+
     // Draws The Display List Text
-    for (int i = 0; i < _tcslen(g_Text); i++)
+    for (size_t i = 0; i < g_Text_length; i++)
     {
         glCallList(base + i);
     }
