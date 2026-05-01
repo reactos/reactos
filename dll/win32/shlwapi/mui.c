@@ -141,10 +141,10 @@ static BOOL ShouldMungeLangId(_In_ LANGID wLangId)
 // UI language if munging is required.
 static LANGID GetNormalizedLangId(_In_ DWORD dwCrossCodePage)
 {
-    LANGID wLangId = GetUserDefaultUILanguage();
-    if (!(dwCrossCodePage & ML_CROSSCODEPAGE_MASK) && ShouldMungeLangId(wLangId))
+    LANGID wUserLangId = GetUserDefaultUILanguage();
+    if (!(dwCrossCodePage & ML_CROSSCODEPAGE_MASK) && ShouldMungeLangId(wUserLangId))
         return GetSystemDefaultUILanguage();
-    return wLangId;
+    return wUserLangId;
 }
 
 // Build the MUI-localized path for an IE file by looking up the IE install
@@ -330,20 +330,20 @@ GetFilePathFromLangId(
     PCWSTR lpszSourcePath,
     PWSTR lpszOutPath,
     INT cchOutPath,
-    LCID lcid)
+    LANGID wLangId)
 {
     HRESULT hr = S_OK;
     LPCWSTR lpszResolved = lpszSourcePath;
     WCHAR szMUIPath[MAX_PATH];
-    LANGID wLangId;
+    LANGID wNormalLangId;
 
     if (!lpszSourcePath || lpszSourcePath[0] == L'>')
         return E_FAIL;
 
-    wLangId = GetNormalizedLangId(lcid);
-    if (wLangId != 0 && GetSystemDefaultUILanguage() != wLangId)
+    wNormalLangId = GetNormalizedLangId(wLangId);
+    if (wNormalLangId != 0 && GetSystemDefaultUILanguage() != wNormalLangId)
     {
-        GetMUIPath(szMUIPath, _countof(szMUIPath), lpszSourcePath, wLangId);
+        GetMUIPath(szMUIPath, _countof(szMUIPath), lpszSourcePath, wNormalLangId);
         lpszResolved = szMUIPath;
     }
 
