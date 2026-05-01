@@ -105,7 +105,9 @@ __asm__(
      */                                                                             \
 __seh2$$begin_try__:                                                                \
     {                                                                               \
-        __label__ __seh2$$leave_scope__;
+        __label__ __seh2$$leave_scope__;                                            \
+        /* GCC trick: keep this label reachable so it is not optimized away. */    \
+        __asm__ __volatile__ goto ("" : : : : __seh2$$leave_scope__);
 
 #define _SEH2_EXCEPT(...)                                                                       \
 __seh2$$leave_scope__: __MINGW_ATTRIB_UNUSED;                                                   \
@@ -116,7 +118,7 @@ __seh2$$end_try__:(void)0;                                                      
     if (0)                                                                                      \
     {                                                                                           \
         __label__ __seh2$$leave_scope__;                                                        \
-        long __MINGW_ATTRIB_UNUSED __seh2$$exception_code__;                                    \
+        volatile long __MINGW_ATTRIB_UNUSED __seh2$$exception_code__;                           \
         /* Add our handlers to the list */                                                      \
         if (0)                                                                                  \
         {                                                                                       \
