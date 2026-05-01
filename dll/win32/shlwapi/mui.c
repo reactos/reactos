@@ -30,7 +30,9 @@ typedef struct MUI_ITEM
     LANGID wLangId;
 } MUI_ITEM, *PMUI_ITEM;
 
-static HDPA g_hdpaMUI = NULL; /* Dynamic pointer array (DPA) of MUI_ITEM */
+static PMUI_ITEM *g_ppMuiItems = NULL;
+static size_t g_cMuiItems = 0;
+static size_t g_cMuiCapacity = 0;
 static WCHAR g_szMuiDir[MAX_PATH] = L"";
 static LANGID g_wGotLangId = 0;
 static BOOL g_bCheckIEVersion = FALSE;
@@ -40,13 +42,23 @@ static BOOL g_bGotACP = FALSE;
 
 // See https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/mlui/index.htm
 
-// Initialize the global DPA list used to track MUI-loaded module instances.
-static inline BOOL InitMUI_NoLock(VOID)
+static BOOL InitMUI_NoLock(void)
 {
-    if (!g_hdpaMUI)
-        g_hdpaMUI = DPA_Create(sizeof(INT));
+    size_t cCapacity;
+    PMUI_ITEM *ppMuiItems;
 
-    return !!g_hdpaMUI;
+    if (g_ppMuiItems)
+        return TRUE;
+
+    cCapacity = 4;
+    ppMuiItems = LocalAlloc(LPTR, cCapacity * sizeof(PMUI_ITEM));
+    if (!ppMuiItems)
+        return FALSE;
+
+    g_ppMuiItems = ppMuiItems;
+    g_cMuiCapacity = cCapacity;
+    g_cMuiItems = 0;
+    return TRUE;
 }
 
 static BOOL InitMUI(VOID)
@@ -60,36 +72,37 @@ static BOOL InitMUI(VOID)
     return ret;
 }
 
-static VOID DeinitMUI_NoLock(_Inout_opt_ HDPA hDPA)
+static VOID DeinitMUI_NoLock(VOID)
 {
-    INT iItem, cItems;
+    size_t iItem, cItems;
 
-    if (!hDPA)
+    if (!g_ppMuiItems)
         return;
 
-    cItems = DPA_GetPtrCount(hDPA);
+    cItems = g_cMuiItems;
     for (iItem = 0; iItem < cItems; ++iItem)
-        LocalFree(DPA_GetPtr(hDPA, iItem));
+        LocalFree(g_ppMuiItems[iItem]);
 
-    DPA_Destroy(hDPA);
+    g_ppMuiItems = LocalFree(g_ppMuiItems);
+    g_cMuiItems = g_cMuiCapacity = 0;
 }
 
 // Search the MUI list for an entry matching the given instance handle and return its index.
-static INT GetMUI_ITEM_NoLock(_In_ HINSTANCE hInst)
+static INT_PTR GetMUI_ITEM_NoLock(_In_ HINSTANCE hInst)
 {
-    INT cItems, iItem;
+    size_t cItems, iItem;
     PMUI_ITEM pItem;
 
     if (!InitMUI_NoLock())
         return -1;
 
-    cItems = DPA_GetPtrCount(g_hdpaMUI);
+    cItems = g_cMuiItems;
     if (cItems <= 0)
         return -1;
 
     for (iItem = 0; iItem < cItems; ++iItem)
     {
-        pItem = DPA_GetPtr(g_hdpaMUI, iItem);
+        pItem = g_ppMuiItems[iItem];
         if (pItem && pItem->hInst == hInst)
             return iItem;
     }
@@ -200,7 +213,7 @@ ConvertVersionStrToDwords(
 
     *pdwVersionMS = *pdwVersionLS = 0;
 
-    parts[0] = parts[1] = parts[2] = parts[3] = 0;
+    ZeroMemory(parts, sizeof(parts));
     pch = pszSrc;
 
     for (i = 0; i < 4 && pch; ++i)
@@ -338,14 +351,40 @@ GetFilePathFromLangId(
     return hr;
 }
 
+static BOOL AddMUIItem_NoLock(PMUI_ITEM pItem)
+{
+    PMUI_ITEM *ppItems = g_ppMuiItems;
+    PMUI_ITEM *ppNew;
+    size_t cNewCapacity, cbNewItems;
+
+    if (g_cMuiItems + 1 < g_cMuiCapacity)
+    {
+        ppItems[g_cMuiItems++] = pItem;
+        return TRUE;
+    }
+
+    cNewCapacity = (g_cMuiCapacity + 4);
+    cbNewItems = cNewCapacity * sizeof(PMUI_ITEM);
+    if (ppItems)
+        ppNew = LocalReAlloc(ppItems, cbNewItems, LMEM_MOVEABLE | LMEM_ZEROINIT);
+    else
+        ppNew = LocalAlloc(LPTR, cbNewItems);
+    if (!ppNew)
+        return FALSE;
+
+    ppNew[g_cMuiItems++] = pItem;
+    g_ppMuiItems = ppNew;
+    g_cMuiCapacity = cNewCapacity;
+    return TRUE;
+}
+
 #endif /* ndef SHLWAPI_NO_MUI */
 
 VOID DeinitMUI(VOID)
 {
 #ifndef SHLWAPI_NO_MUI
     EnterCriticalSection(&g_csMuiLock);
-    DeinitMUI_NoLock(g_hdpaMUI);
-    g_hdpaMUI = NULL;
+    DeinitMUI_NoLock();
     LeaveCriticalSection(&g_csMuiLock);
 #endif
 }
@@ -365,8 +404,13 @@ MLLoadLibraryA(
     return LoadLibraryExA(lpszLibFileName, NULL, 0);
 #else
     WCHAR szBuff[MAX_PATH];
-    SHAnsiToUnicode(lpszLibFileName, szBuff, _countof(szBuff));
-    return MLLoadLibraryW(szBuff, hModule, dwCrossCodePage);
+    LPWSTR pszLibFileNameW = NULL;
+    if (lpszLibFileName)
+    {
+        SHAnsiToUnicode(lpszLibFileName, szBuff, _countof(szBuff));
+        pszLibFileNameW = szBuff;
+    }
+    return MLLoadLibraryW(pszLibFileNameW, hModule, dwCrossCodePage);
 #endif
 }
 
@@ -447,6 +491,7 @@ MLLoadLibraryW(
 
     if (hinstLoaded)
         MLSetMLHInstance(hinstLoaded, wLangId);
+
     return hinstLoaded;
 #endif
 }
@@ -478,7 +523,7 @@ MLBuildResURLA(
     _In_ HMODULE hModule,
     _In_ DWORD dwCrossCodePage,
     _In_ PCSTR pszRes,
-    _Out_writes_(cchDest) PSTR pszDest,
+    _Out_writes_opt_(cchDest) PSTR pszDest,
     _In_ INT cchDest)
 {
 #ifdef SHLWAPI_NO_MUI
@@ -486,13 +531,32 @@ MLBuildResURLA(
 #else
     HRESULT hr;
     WCHAR szLibNameW[MAX_PATH], szResW[MAX_PATH], szDestW[MAX_PATH];
+    PWSTR pszLibNameW = NULL, pszResW = NULL, pszDestW = NULL;
+    INT cchDestW = 0;
 
-    SHAnsiToUnicode(pszLibName, szLibNameW, _countof(szLibNameW));
-    SHAnsiToUnicode(pszRes, szResW, _countof(szResW));
+    if (pszLibName)
+    {
+        SHAnsiToUnicode(pszLibName, szLibNameW, _countof(szLibNameW));
+        pszLibNameW = szLibNameW;
+    }
 
-    hr = MLBuildResURLW(szLibNameW, hModule, dwCrossCodePage, szResW, szDestW, _countof(szDestW));
+    if (pszRes)
+    {
+        SHAnsiToUnicode(pszRes, szResW, _countof(szResW));
+        pszResW = szResW;
+    }
 
-    SHUnicodeToAnsi(szDestW, pszDest, cchDest);
+    if (pszDest)
+    {
+        pszDestW = szDestW;
+        cchDestW = _countof(szDestW);
+    }
+
+    hr = MLBuildResURLW(pszLibNameW, hModule, dwCrossCodePage, pszResW, pszDestW, cchDestW);
+
+    if (pszDest)
+        SHUnicodeToAnsi(szDestW, pszDest, cchDest);
+
     return hr;
 #endif
 }
@@ -509,7 +573,7 @@ MLBuildResURLW(
     _In_ DWORD dwCrossCodePage,
     _In_ PCWSTR pszRes,
     _Out_writes_(cchDest) PWSTR pszDest,
-    _In_ size_t cchDest)
+    _In_ INT cchDest)
 {
 #ifdef SHLWAPI_NO_MUI
     return E_NOTIMPL;
@@ -518,7 +582,7 @@ MLBuildResURLW(
     static const WCHAR k_szResPrefix[] = L"res://";
     INT cchPrefix;
     PWSTR pszCursor;
-    size_t cchRemain, cchDllPath, cchResName;
+    INT cchRemain, cchDllPath, cchResName;
     HMODULE hMui;
     WCHAR szDllPath[MAX_PATH];
     BOOL bGotPath;
@@ -583,7 +647,7 @@ BOOL WINAPI MLIsMLHInstance(_In_ HINSTANCE hInstance)
 #ifdef SHLWAPI_NO_MUI
     return FALSE;
 #else
-    INT iItem;
+    INT_PTR iItem;
     EnterCriticalSection(&g_csMuiLock);
     iItem = GetMUI_ITEM_NoLock(hInstance);
     LeaveCriticalSection(&g_csMuiLock);
@@ -602,8 +666,8 @@ HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId)
 #ifdef SHLWAPI_NO_MUI
     return E_NOTIMPL;
 #else
-    INT iInserted;
     PMUI_ITEM pItem;
+    BOOL bAdded;
 
     if (!hInstance)
         return E_INVALIDARG;
@@ -618,11 +682,12 @@ HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId)
     pItem->hInst = hInstance;
     pItem->wLangId = wLangId;
 
+    bAdded = FALSE;
     EnterCriticalSection(&g_csMuiLock);
-    iInserted = DPA_AppendPtr(g_hdpaMUI, pItem);
+    bAdded = AddMUIItem_NoLock(pItem);
     LeaveCriticalSection(&g_csMuiLock);
 
-    if (iInserted == DPA_ERR)
+    if (!bAdded)
     {
         LocalFree(pItem);
         return E_OUTOFMEMORY;
@@ -643,14 +708,15 @@ HRESULT WINAPI MLClearMLHInstance(_In_ HINSTANCE hInstance)
 #ifdef SHLWAPI_NO_MUI
     return E_NOTIMPL;
 #else
-    INT iItem;
+    INT_PTR iItem;
     EnterCriticalSection(&g_csMuiLock);
     iItem = GetMUI_ITEM_NoLock(hInstance);
     if (iItem >= 0)
     {
-        PMUI_ITEM pItem = DPA_GetPtr(g_hdpaMUI, iItem);
-        LocalFree(pItem);
-        DPA_DeletePtr(g_hdpaMUI, iItem);
+        LocalFree(g_ppMuiItems[iItem]);
+        g_cMuiItems--;
+        g_ppMuiItems[iItem] = g_ppMuiItems[g_cMuiItems];
+        g_ppMuiItems[g_cMuiItems] = NULL;
     }
     LeaveCriticalSection(&g_csMuiLock);
     return S_OK;

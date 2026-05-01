@@ -112,7 +112,7 @@ static void Test_MLBuildResURLW_InvalidHInstSentinel(void)
 static void Test_MLBuildResURLW_InvalidFlags(void)
 {
     WCHAR szDest[MAX_PATH] = L"";
-    HRESULT hr = g_fnMLBuildResURLW(L"foo.dll", GetModuleHandleW(NULL), 
+    HRESULT hr = g_fnMLBuildResURLW(L"foo.dll", GetModuleHandleW(NULL),
                                     999, L"res", szDest, MAX_PATH);
     ok_hr(hr, E_INVALIDARG);
 }

@@ -508,7 +508,7 @@ MLBuildResURLW(
     _In_ DWORD dwCrossCodePage,
     _In_ PCWSTR pszRes,
     _Out_writes_(dwDestLen) PWSTR pszDest,
-    _In_ size_t cchDest);
+    _In_ INT cchDest);
 
 BOOL WINAPI
 MLWinHelpA(
