@@ -228,7 +228,7 @@ static void Test_MLLoadLibraryA_ValidSystemDll(void)
         g_fnMLFreeLibrary(h);
 }
 
-START_TEST(MUI)
+START_TEST(ML)
 {
     HRESULT hrCoInit;
     HINSTANCE hSHLWAPI;

@@ -479,13 +479,13 @@ HMODULE WINAPI
 MLLoadLibraryA(
     _In_ LPCSTR lpszLibFileName,
     _In_ HMODULE hModule,
-    _In_ DWORD dwCrossCodePage);
+    _In_ DWORD dwFlags);
 
 HMODULE WINAPI
 MLLoadLibraryW(
     _In_ LPCWSTR lpszLibFileName,
     _In_ HMODULE hModule,
-    _In_ DWORD dwCrossCodePage);
+    _In_ DWORD dwFlags);
 
 BOOL WINAPI MLIsMLHInstance(_In_ HINSTANCE hInstance);
 HRESULT WINAPI MLSetMLHInstance(_In_ HINSTANCE hInstance, _In_ LANGID wLangId);
@@ -496,7 +496,7 @@ HRESULT WINAPI
 MLBuildResURLA(
     _In_ PCSTR pszLibName,
     _In_ HMODULE hModule,
-    _In_ DWORD dwCrossCodePage,
+    _In_ DWORD dwFlags,
     _In_ PCSTR pszRes,
     _Out_writes_(dwDestLen) PSTR pszDest,
     _In_ INT cchDest);
@@ -505,7 +505,7 @@ HRESULT WINAPI
 MLBuildResURLW(
     _In_ PCWSTR pszLibName,
     _In_ HMODULE hModule,
-    _In_ DWORD dwCrossCodePage,
+    _In_ DWORD dwFlags,
     _In_ PCWSTR pszRes,
     _Out_writes_(dwDestLen) PWSTR pszDest,
     _In_ INT cchDest);
@@ -530,7 +530,7 @@ MLHtmlHelpA(
     _In_ LPCSTR pszFile,
     _In_ UINT uCommand,
     _In_ DWORD_PTR dwData,
-    _In_ UINT wLangId);
+    _In_ DWORD dwFlags);
 
 HWND WINAPI
 MLHtmlHelpW(
@@ -538,7 +538,7 @@ MLHtmlHelpW(
     _In_ LPCWSTR pszFile,
     _In_ UINT uCommand,
     _In_ DWORD_PTR dwData,
-    _In_ UINT wLangId);
+    _In_ DWORD dwFlags);
 
 #ifdef UNICODE
     #define MLLoadLibrary MLLoadLibraryW

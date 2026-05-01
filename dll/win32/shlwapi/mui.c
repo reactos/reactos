@@ -137,12 +137,12 @@ static BOOL ShouldMungeLangId(_In_ LANGID wLangId)
     return nACP != StrToIntA(szText);
 }
 
-// Resolve a normalized language ID from dwCrossCodePage, falling back to the system
+// Resolve a normalized language ID from dwFlags, falling back to the system
 // UI language if munging is required.
-static LANGID GetNormalizedLangId(_In_ DWORD dwCrossCodePage)
+static LANGID GetNormalizedLangId(_In_ DWORD dwFlags)
 {
     LANGID wUserLangId = GetUserDefaultUILanguage();
-    if (!(dwCrossCodePage & ML_CROSSCODEPAGE_MASK) && ShouldMungeLangId(wUserLangId))
+    if (!(dwFlags & ML_CROSSCODEPAGE_MASK) && ShouldMungeLangId(wUserLangId))
         return GetSystemDefaultUILanguage();
     return wUserLangId;
 }
@@ -330,7 +330,7 @@ GetFilePathFromLangId(
     PCWSTR lpszSourcePath,
     PWSTR lpszOutPath,
     INT cchOutPath,
-    LANGID wLangId)
+    DWORD dwFlags)
 {
     HRESULT hr = S_OK;
     LPCWSTR lpszResolved = lpszSourcePath;
@@ -340,7 +340,7 @@ GetFilePathFromLangId(
     if (!lpszSourcePath || lpszSourcePath[0] == L'>')
         return E_FAIL;
 
-    wNormalLangId = GetNormalizedLangId(wLangId);
+    wNormalLangId = GetNormalizedLangId(dwFlags);
     if (wNormalLangId != 0 && GetSystemDefaultUILanguage() != wNormalLangId)
     {
         GetMUIPath(szMUIPath, _countof(szMUIPath), lpszSourcePath, wNormalLangId);
@@ -398,7 +398,7 @@ HMODULE WINAPI
 MLLoadLibraryA(
     _In_ LPCSTR lpszLibFileName,
     _In_ HMODULE hModule,
-    _In_ DWORD dwCrossCodePage)
+    _In_ DWORD dwFlags)
 {
 #ifdef SHLWAPI_NO_MUI
     return LoadLibraryExA(lpszLibFileName, NULL, 0);
@@ -410,7 +410,7 @@ MLLoadLibraryA(
         SHAnsiToUnicode(lpszLibFileName, szBuff, _countof(szBuff));
         pszLibFileNameW = szBuff;
     }
-    return MLLoadLibraryW(pszLibFileNameW, hModule, dwCrossCodePage);
+    return MLLoadLibraryW(pszLibFileNameW, hModule, dwFlags);
 #endif
 }
 
@@ -425,7 +425,7 @@ HMODULE WINAPI
 MLLoadLibraryW(
     _In_ LPCWSTR lpszLibFileName,
     _In_ HMODULE hModule,
-    _In_ DWORD dwCrossCodePage)
+    _In_ DWORD dwFlags)
 {
 #ifdef SHLWAPI_NO_MUI
     return LoadLibraryExW(lpszLibFileName, NULL, 0);
@@ -448,7 +448,7 @@ MLLoadLibraryW(
     }
     LeaveCriticalSection(&g_csMuiLock);
 
-    wLangId = GetNormalizedLangId(dwCrossCodePage);
+    wLangId = GetNormalizedLangId(dwFlags);
     wSysLangId = GetSystemDefaultUILanguage();
 
     szModPath[0] = szMuiPath[0] = UNICODE_NULL;
@@ -521,7 +521,7 @@ HRESULT WINAPI
 MLBuildResURLA(
     _In_ PCSTR pszLibName,
     _In_ HMODULE hModule,
-    _In_ DWORD dwCrossCodePage,
+    _In_ DWORD dwFlags,
     _In_ PCSTR pszRes,
     _Out_writes_opt_(cchDest) PSTR pszDest,
     _In_ INT cchDest)
@@ -552,7 +552,7 @@ MLBuildResURLA(
         cchDestW = _countof(szDestW);
     }
 
-    hr = MLBuildResURLW(pszLibNameW, hModule, dwCrossCodePage, pszResW, pszDestW, cchDestW);
+    hr = MLBuildResURLW(pszLibNameW, hModule, dwFlags, pszResW, pszDestW, cchDestW);
 
     if (pszDest)
         SHUnicodeToAnsi(szDestW, pszDest, cchDest);
@@ -570,7 +570,7 @@ HRESULT WINAPI
 MLBuildResURLW(
     _In_ PCWSTR pszLibName,
     _In_ HMODULE hModule,
-    _In_ DWORD dwCrossCodePage,
+    _In_ DWORD dwFlags,
     _In_ PCWSTR pszRes,
     _Out_writes_(cchDest) PWSTR pszDest,
     _In_ INT cchDest)
@@ -588,7 +588,7 @@ MLBuildResURLW(
     BOOL bGotPath;
 
     if (!pszLibName || !hModule || hModule == INVALID_HANDLE_VALUE ||
-        (dwCrossCodePage != ML_NO_CROSSCODEPAGE && dwCrossCodePage != ML_CROSSCODEPAGE) ||
+        (dwFlags != ML_NO_CROSSCODEPAGE && dwFlags != ML_CROSSCODEPAGE) ||
         !pszRes || !pszDest)
     {
         return E_INVALIDARG;
@@ -605,7 +605,7 @@ MLBuildResURLW(
     pszCursor = pszDest + cchPrefix;
     cchRemain = cchDest - cchPrefix;
 
-    hMui = MLLoadLibraryW(pszLibName, hModule, dwCrossCodePage);
+    hMui = MLLoadLibraryW(pszLibName, hModule, dwFlags);
     if (!hMui)
         goto cleanup;
 
@@ -756,7 +756,7 @@ MLHtmlHelpA(
     _In_ LPCSTR pszFile,
     _In_ UINT uCommand,
     _In_ DWORD_PTR dwData,
-    _In_ UINT wLangId)
+    _In_ DWORD dwFlags)
 {
 #ifdef SHLWAPI_NO_MUI
     return NULL;
@@ -768,7 +768,7 @@ MLHtmlHelpA(
         SHAnsiToUnicode(pszFile, szPathW, _countof(szPathW));
         pszFileW = szPathW;
     }
-    return MLHtmlHelpW(hwndCaller, pszFileW, uCommand, dwData, wLangId);
+    return MLHtmlHelpW(hwndCaller, pszFileW, uCommand, dwData, dwFlags);
 #endif
 }
 
@@ -801,16 +801,18 @@ MLHtmlHelpW(
     _In_ LPCWSTR pszFile,
     _In_ UINT uCommand,
     _In_ DWORD_PTR dwData,
-    _In_ UINT wLangId)
+    _In_ DWORD dwFlags)
 {
 #ifdef SHLWAPI_NO_MUI
     return NULL;
 #else
     WCHAR szPathW[MAX_PATH];
-    if ((uCommand == HH_DISPLAY_TOPIC || uCommand == HH_DISPLAY_TEXT_POPUP) &&
-        SUCCEEDED(GetFilePathFromLangId(pszFile, szPathW, _countof(szPathW), wLangId)))
+    HRESULT hr;
+    if ((uCommand == HH_DISPLAY_TOPIC || uCommand == HH_DISPLAY_TEXT_POPUP))
     {
-        return HtmlHelpW(hwndCaller, szPathW, uCommand, dwData);
+        hr = GetFilePathFromLangId(pszFile, szPathW, _countof(szPathW), dwFlags);
+        if (SUCCEEDED(hr))
+            return HtmlHelpW(hwndCaller, szPathW, uCommand, dwData);
     }
     return HtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
 #endif
