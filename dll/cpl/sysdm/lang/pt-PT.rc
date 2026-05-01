@@ -55,7 +55,7 @@ CAPTION "Avançado"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tem de ter a sessão iniciada como ""Administrador"" para fazer a maior parte destas configurações.", IDC_STATIC, 12, 5, 236, 17
-    GROUPBOX "Performance", IDC_STATIC, 6, 28, 244, 50
+    GROUPBOX "Desempenho", IDC_STATIC, 6, 28, 244, 50
     LTEXT "As opções de desempenho controlam como as aplicações usam a memória, o que afecta a velocidade do seu computador.", IDC_STATIC, 16, 39, 228, 17
     PUSHBUTTON "&Definições", IDC_PERFOR, 194, 58, 50, 15
     GROUPBOX "Perfis de utilizador", IDC_STATIC, 6, 85, 244, 48
@@ -258,7 +258,7 @@ BEGIN
     LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT "Recomendado:", IDC_STATIC, 18, 199, 52, 9
     LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
-    LTEXT "Actualmente:", IDC_STATIC, 18, 210, 66, 9
+    LTEXT "Atribuido:", IDC_STATIC, 18, 210, 66, 9
     LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
     DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Cancelar", IDCANCEL, 168, 230, 48, 15
