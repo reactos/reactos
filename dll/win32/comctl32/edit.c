@@ -5142,7 +5142,20 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         break;
 
     case WM_VSCROLL:
+#ifdef __REACTOS__
+    {
+        SCROLLINFO si;
+
+        ZeroMemory(&si, sizeof(si));
+        si.cbSize = sizeof(si);
+        si.fMask = SIF_TRACKPOS;
+        if (!GetScrollInfo(hwnd, SB_VERT, &si))
+            return 1;
+        result = EDIT_WM_VScroll(es, LOWORD(wParam), si.nTrackPos);
+    }
+#else
         result = EDIT_WM_VScroll(es, LOWORD(wParam), (short)HIWORD(wParam));
+#endif
         break;
 
     case WM_MOUSEWHEEL:
