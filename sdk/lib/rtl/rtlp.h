@@ -27,7 +27,7 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #endif
 
 #define ROUND_DOWN(n, align) \
-    (((ULONG_PTR)(n)) & ~((align) - 1l))
+    (((ULONG_PTR)(n)) & ~((ULONG_PTR)(align) - 1))
 
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG_PTR)(n)) + (align) - 1, (align))
