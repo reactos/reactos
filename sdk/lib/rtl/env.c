@@ -512,14 +512,20 @@ found:
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-RtlQueryEnvironmentVariable_U(PWSTR Environment,
-                              PCUNICODE_STRING Name,
-                              PUNICODE_STRING Value)
+NTSTATUS
+NTAPI
+RtlQueryEnvironmentVariable(
+    _In_opt_ PVOID Environment,
+    _In_reads_(NameLength) PWSTR Name,
+    _In_ SIZE_T NameLength,
+    _Out_writes_(ValueLength) PWSTR Value,
+    _In_ SIZE_T ValueLength,
+    _Out_ PSIZE_T ReturnLength)
 {
     NTSTATUS Status;
     PWSTR wcs;
-    UNICODE_STRING var;
+    PWSTR varName;
+    SIZE_T varNameLen;
     PWSTR val;
     BOOLEAN SysEnvUsed = FALSE;
 
@@ -544,42 +550,42 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
         return STATUS_VARIABLE_NOT_FOUND;
     }
 
-    Value->Length = 0;
+    *ReturnLength = 0;
 
     wcs = Environment;
     DPRINT("Starting search at :%p\n", wcs);
     while (*wcs)
     {
-        var.Buffer = wcs++;
+        varName = wcs++;
         wcs = wcschr(wcs, L'=');
         if (wcs == NULL)
         {
-            wcs = var.Buffer + wcslen(var.Buffer);
+            wcs = varName + wcslen(varName);
             DPRINT("Search at :%S\n", wcs);
         }
-
         if (*wcs)
         {
-            var.Length = var.MaximumLength = (USHORT)(wcs - var.Buffer) * sizeof(WCHAR);
+            varNameLen = (wcs - varName);
             val = ++wcs;
             wcs += wcslen(wcs);
             DPRINT("Search at :%S\n", wcs);
 
-            if (RtlEqualUnicodeString(&var, Name, TRUE))
+            if ((varNameLen == NameLength) && _wcsnicmp(varName, Name, NameLength) == 0)
             {
-                Value->Length = (USHORT)(wcs - val) * sizeof(WCHAR);
-                if (Value->Length <= Value->MaximumLength)
+                *ReturnLength = (wcs - val);
+                if (*ReturnLength < ValueLength)
                 {
-                    memcpy(Value->Buffer,
-                           val,
-                           min(Value->Length + sizeof(WCHAR), Value->MaximumLength));
+                    memcpy(Value, val, (*ReturnLength + 1) * sizeof(WCHAR));
                     DPRINT("Value %S\n", val);
                     DPRINT("Return STATUS_SUCCESS\n");
                     Status = STATUS_SUCCESS;
                 }
                 else
                 {
+                    if (ValueLength > 0)
+                        Value[0] = UNICODE_NULL;
                     DPRINT("Return STATUS_BUFFER_TOO_SMALL\n");
+                    *ReturnLength += 1;
                     Status = STATUS_BUFFER_TOO_SMALL;
                 }
 
@@ -598,6 +604,41 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
 
     DPRINT("Return STATUS_VARIABLE_NOT_FOUND: %wZ\n", Name);
     return STATUS_VARIABLE_NOT_FOUND;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlQueryEnvironmentVariable_U(
+    _In_opt_ PWSTR Environment,
+    _In_ PCUNICODE_STRING Name,
+    _Out_ PUNICODE_STRING Value)
+{
+    NTSTATUS Status;
+    SIZE_T ReturnLength;
+
+    Status = RtlQueryEnvironmentVariable(Environment,
+                                         Name->Buffer,
+                                         Name->Length / sizeof(WCHAR),
+                                         Value->Buffer,
+                                         Value->MaximumLength / sizeof(WCHAR),
+                                         &ReturnLength);
+
+    if (ReturnLength > UNICODE_STRING_MAX_CHARS)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Correct for extra length returned by RtlQueryEnvironmentVariable */
+    if (Status == STATUS_BUFFER_TOO_SMALL)
+    {
+        ReturnLength -= 1;
+    }
+
+    Value->Length = (USHORT)ReturnLength * sizeof(WCHAR);
+    return Status;
 }
 
 /* EOF */
