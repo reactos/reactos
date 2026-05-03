@@ -290,6 +290,8 @@ PolyBezierTo(
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
+    /* This section of code is just an optimization so we can do an early return.
+     * Everything would work the same even if this code were removed. */
     if (cpt == 3)
     {
         /* If there are exactly 3 points, see if all three points of
@@ -302,30 +304,33 @@ PolyBezierTo(
              * then we can just return TRUE as an optimization. */
             if (GetCurrentPositionEx(hdc, &pt1) &&
                 pt1.x == apt[0].x && pt1.y == apt[0].y)
+            {
                 return TRUE;
+            }
             /* If they are all equal, but not equal to the start point,
              * then we can just do a LineTo and return as an optimization. */
-            else
-                return LineTo(hdc, apt[0].x, apt[0].y); 
+            return LineTo(hdc, apt[0].x, apt[0].y);
         }
     }
 
     /* Following based on Wine 10.0 nulldrv_PolyBezierTo function */
     POINT *pts = HeapAlloc(GetProcessHeap(), 0, (cpt + 1) * sizeof(*apt));
 
-    if (pts)
+    if (!pts)
     {
-        if (GetCurrentPositionEx(hdc, &pt1))
-        {
-            pts[0] = pt1;
-            memcpy(&pts[1], apt,  sizeof(*apt) * cpt);
-            cpt++;
-            ret = NtGdiPolyPolyDraw(hdc , (PPOINT)pts, &cpt, 1, GdiPolyBezierTo);
-        }
-        HeapFree(GetProcessHeap(), 0, pts);
-    }
-    else
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    if (GetCurrentPositionEx(hdc, &pt1))
+    {
+        pts[0] = pt1;
+        memcpy(&pts[1], apt, sizeof(*apt) * cpt);
+        cpt++;
+        ret = NtGdiPolyPolyDraw(hdc, (PPOINT)pts, &cpt, 1, GdiPolyBezierTo);
+    }
+
+    HeapFree(GetProcessHeap(), 0, pts);
 
     return ret;
 }
@@ -406,19 +411,21 @@ PolylineTo(
     /* Following based on Wine 10.0 nulldrv_PolylineTo function */
     POINT *pts = HeapAlloc(GetProcessHeap(), 0, (cpt + 1) * sizeof(*apt));
 
-    if (pts)
+    if (!pts)
     {
-        if (GetCurrentPositionEx(hdc, &pt1))
-        {
-            pts[0] = pt1;
-            memcpy(&pts[1], apt,  sizeof(*apt) * cpt);
-            cpt++;
-            ret = NtGdiPolyPolyDraw(hdc , (PPOINT)pts, &cpt, 1, GdiPolyLineTo);
-        }
-        HeapFree(GetProcessHeap(), 0, pts);
-    }
-    else
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    if (GetCurrentPositionEx(hdc, &pt1))
+    {
+        pts[0] = pt1;
+        memcpy(&pts[1], apt, sizeof(*apt) * cpt);
+        cpt++;
+        ret = NtGdiPolyPolyDraw(hdc, (PPOINT)pts, &cpt, 1, GdiPolyLineTo);
+    }
+
+    HeapFree(GetProcessHeap(), 0, pts);
 
     return ret;
 }
