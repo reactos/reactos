@@ -282,19 +282,25 @@ Bus_StartFdo (
 
     AcpiStatus = AcpiInitializeSubsystem();
     if(ACPI_FAILURE(AcpiStatus)){
-        DPRINT1("Unable to AcpiInitializeSubsystem\n");
+        DPRINT1("Unable to AcpiInitializeSubsystem: %s (0x%08X)\n",
+                AcpiFormatException(AcpiStatus),
+                AcpiStatus);
         return STATUS_UNSUCCESSFUL;
     }
 
     AcpiStatus = AcpiInitializeTables(NULL, 16, 0);
     if (ACPI_FAILURE(AcpiStatus)){
-        DPRINT1("Unable to AcpiInitializeTables\n");
-		return STATUS_UNSUCCESSFUL;
+        DPRINT1("Unable to AcpiInitializeTables: %s (0x%08X)\n",
+                AcpiFormatException(AcpiStatus),
+                AcpiStatus);
+			return STATUS_UNSUCCESSFUL;
     }
 
     AcpiStatus = AcpiLoadTables();
     if(ACPI_FAILURE(AcpiStatus)){
-        DPRINT1("Unable to AcpiLoadTables\n");
+        DPRINT1("Unable to AcpiLoadTables: %s (0x%08X)\n",
+                AcpiFormatException(AcpiStatus),
+                AcpiStatus);
         AcpiTerminate();
         return STATUS_UNSUCCESSFUL;
     }
@@ -309,7 +315,9 @@ Bus_StartFdo (
     /* Initialize ACPI bus manager */
     AcpiStatus = acpi_init();
     if (!ACPI_SUCCESS(AcpiStatus)) {
-        DPRINT1("acpi_init() failed with status 0x%X\n", AcpiStatus);
+        DPRINT1("acpi_init() failed: %s (0x%08X)\n",
+                AcpiFormatException(AcpiStatus),
+                AcpiStatus);
         AcpiTerminate();
         return STATUS_UNSUCCESSFUL;
     }

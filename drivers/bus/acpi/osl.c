@@ -6,6 +6,8 @@
 
 #include "precomp.h"
 
+#include <arc/arc.h>
+#include <reactos/drivers/acpi/acpi.h>
 #include <pseh/pseh2.h>
 
 #define NDEBUG
@@ -16,6 +18,174 @@ static BOOLEAN AcpiInterruptHandlerRegistered = FALSE;
 static ACPI_OSD_HANDLER AcpiIrqHandler = NULL;
 static PVOID AcpiIrqContext = NULL;
 static ULONG AcpiIrqNumber = 0;
+/* TODO: Replace these local declarations with <ndk/kefuncs.h> once the
+ * acpi.sys build context can consume the required NDK dependencies cleanly.
+ */
+extern NTSYSAPI PLOADER_PARAMETER_BLOCK KeLoaderBlock;
+extern NTSYSAPI
+PCONFIGURATION_COMPONENT_DATA
+NTAPI
+KeFindConfigurationNextEntry(
+    _In_ PCONFIGURATION_COMPONENT_DATA Child,
+    _In_ CONFIGURATION_CLASS Class,
+    _In_ CONFIGURATION_TYPE Type,
+    _In_opt_ PULONG ComponentKey,
+    _Inout_ PCONFIGURATION_COMPONENT_DATA *NextLink);
+
+static ACPI_TABLE_RSDP *AcpiLoaderRsdp = NULL;
+
+static
+UCHAR
+AcpiChecksumBuffer(
+    _In_reads_bytes_(Length) const UCHAR *Buffer,
+    _In_ ULONG Length)
+{
+    ULONG Index;
+    UCHAR Sum;
+
+    Sum = 0;
+    for (Index = 0; Index < Length; ++Index)
+        Sum = (UCHAR)(Sum + Buffer[Index]);
+
+    return (UCHAR)(0 - Sum);
+}
+
+static
+PACPI_BIOS_MULTI_NODE
+AcpiGetLoaderAcpiBiosNode(VOID)
+{
+    PCONFIGURATION_COMPONENT_DATA ComponentEntry = NULL;
+    PCONFIGURATION_COMPONENT_DATA Next = NULL;
+    PCM_PARTIAL_RESOURCE_LIST ResourceList;
+
+    if (!KeLoaderBlock || !KeLoaderBlock->ConfigurationRoot)
+        return NULL;
+
+    ComponentEntry = KeFindConfigurationNextEntry(KeLoaderBlock->ConfigurationRoot,
+                                                  AdapterClass,
+                                                  MultiFunctionAdapter,
+                                                  NULL,
+                                                  &Next);
+    while (ComponentEntry)
+    {
+        if ((ComponentEntry->ComponentEntry.Identifier != NULL) &&
+            !_stricmp(ComponentEntry->ComponentEntry.Identifier, "ACPI BIOS"))
+        {
+            break;
+        }
+
+        Next = ComponentEntry;
+        ComponentEntry = KeFindConfigurationNextEntry(KeLoaderBlock->ConfigurationRoot,
+                                                      AdapterClass,
+                                                      MultiFunctionAdapter,
+                                                      NULL,
+                                                      &Next);
+    }
+
+    if (!ComponentEntry)
+        return NULL;
+
+    ResourceList = ComponentEntry->ConfigurationData;
+    if (!ResourceList ||
+        (ComponentEntry->ComponentEntry.ConfigurationDataLength <
+         FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) +
+         FIELD_OFFSET(ACPI_BIOS_MULTI_NODE, E820Entry)) ||
+        (ResourceList->Count < 1) ||
+        (ResourceList->PartialDescriptors[0].Type != CmResourceTypeDeviceSpecific))
+    {
+        DPRINT1("Loader ACPI BIOS node is missing valid device-specific data\n");
+        return NULL;
+    }
+
+    return (PACPI_BIOS_MULTI_NODE)(ResourceList + 1);
+}
+
+static
+ACPI_PHYSICAL_ADDRESS
+AcpiBuildLoaderRootPointer(VOID)
+{
+    PACPI_BIOS_MULTI_NODE NodeData;
+    ACPI_TABLE_HEADER *RootTable;
+    PHYSICAL_ADDRESS PhysicalAddress;
+
+    if (AcpiLoaderRsdp != NULL)
+    {
+        PhysicalAddress = MmGetPhysicalAddress(AcpiLoaderRsdp);
+        return (ACPI_PHYSICAL_ADDRESS)PhysicalAddress.QuadPart;
+    }
+
+    NodeData = AcpiGetLoaderAcpiBiosNode();
+    if (!NodeData || (NodeData->RsdtAddress.QuadPart == 0))
+        return 0;
+
+    RootTable = MmMapIoSpace(NodeData->RsdtAddress, sizeof(*RootTable), MmNonCached);
+    if (!RootTable)
+    {
+        DPRINT1("Unable to map loader ACPI root table at 0x%I64x\n",
+                NodeData->RsdtAddress.QuadPart);
+        return 0;
+    }
+
+    AcpiLoaderRsdp = ExAllocatePoolWithTag(NonPagedPool,
+                                           sizeof(*AcpiLoaderRsdp),
+                                           'dspR');
+    if (!AcpiLoaderRsdp)
+    {
+        MmUnmapIoSpace(RootTable, sizeof(*RootTable));
+        DPRINT1("Unable to allocate synthetic RSDP for loader ACPI tables\n");
+        return 0;
+    }
+
+    RtlZeroMemory(AcpiLoaderRsdp, sizeof(*AcpiLoaderRsdp));
+    RtlCopyMemory(AcpiLoaderRsdp->Signature,
+                  ACPI_SIG_RSDP,
+                  sizeof(AcpiLoaderRsdp->Signature));
+    RtlCopyMemory(AcpiLoaderRsdp->OemId, "ROS   ", sizeof(AcpiLoaderRsdp->OemId));
+
+    if (RtlEqualMemory(RootTable->Signature, ACPI_SIG_XSDT, ACPI_NAMESEG_SIZE))
+    {
+        AcpiLoaderRsdp->Revision = 2;
+        AcpiLoaderRsdp->Length = sizeof(*AcpiLoaderRsdp);
+        AcpiLoaderRsdp->XsdtPhysicalAddress = NodeData->RsdtAddress.QuadPart;
+    }
+    else if (RtlEqualMemory(RootTable->Signature, ACPI_SIG_RSDT, ACPI_NAMESEG_SIZE))
+    {
+        if (NodeData->RsdtAddress.QuadPart > MAXULONG)
+        {
+            DPRINT1("Loader RSDT address does not fit in 32 bits: 0x%I64x\n",
+                    NodeData->RsdtAddress.QuadPart);
+            ExFreePoolWithTag(AcpiLoaderRsdp, 'dspR');
+            AcpiLoaderRsdp = NULL;
+            MmUnmapIoSpace(RootTable, sizeof(*RootTable));
+            return 0;
+        }
+
+        AcpiLoaderRsdp->Revision = 0;
+        AcpiLoaderRsdp->RsdtPhysicalAddress = NodeData->RsdtAddress.LowPart;
+    }
+    else
+    {
+        DPRINT1("Loader ACPI root table has unexpected signature '%.4s'\n",
+                RootTable->Signature);
+        ExFreePoolWithTag(AcpiLoaderRsdp, 'dspR');
+        AcpiLoaderRsdp = NULL;
+        MmUnmapIoSpace(RootTable, sizeof(*RootTable));
+        return 0;
+    }
+
+    AcpiLoaderRsdp->Checksum = AcpiChecksumBuffer((const UCHAR *)AcpiLoaderRsdp,
+                                                  ACPI_RSDP_CHECKSUM_LENGTH);
+    if (AcpiLoaderRsdp->Revision >= 2)
+    {
+        AcpiLoaderRsdp->ExtendedChecksum =
+            AcpiChecksumBuffer((const UCHAR *)AcpiLoaderRsdp,
+                               sizeof(*AcpiLoaderRsdp));
+    }
+
+    MmUnmapIoSpace(RootTable, sizeof(*RootTable));
+    PhysicalAddress = MmGetPhysicalAddress(AcpiLoaderRsdp);
+    return (ACPI_PHYSICAL_ADDRESS)PhysicalAddress.QuadPart;
+}
 
 ACPI_STATUS
 AcpiOsInitialize (void)
@@ -44,8 +214,19 @@ AcpiOsGetRootPointer (
     void)
 {
     ACPI_PHYSICAL_ADDRESS pa = 0;
+    PHYSICAL_ADDRESS PhysicalAddress;
 
     DPRINT("AcpiOsGetRootPointer\n");
+
+    if (AcpiLoaderRsdp != NULL)
+    {
+        PhysicalAddress = MmGetPhysicalAddress(AcpiLoaderRsdp);
+        return (ACPI_PHYSICAL_ADDRESS)PhysicalAddress.QuadPart;
+    }
+
+    pa = AcpiBuildLoaderRootPointer();
+    if (pa != 0)
+        return pa;
 
     AcpiFindRootPointer(&pa);
     return pa;
@@ -114,7 +295,7 @@ AcpiOsMapMemory (
 
     DPRINT("AcpiOsMapMemory(phys 0x%p  size 0x%X)\n", phys, length);
 
-    Address.QuadPart = (ULONG)phys;
+    Address.QuadPart = (ULONGLONG)phys;
     Ptr = MmMapIoSpace(Address, length, MmNonCached);
     if (!Ptr)
     {
