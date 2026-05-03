@@ -56,9 +56,72 @@
 static CONTROLLER_INFO gControllerInfo[MAX_CONTROLLERS];
 static ULONG gNumberOfControllers = 0;
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwWaitForSingleObject(
+    _In_ HANDLE Handle,
+    _In_ BOOLEAN Alertable,
+    _In_opt_ PLARGE_INTEGER Timeout);
+
 /* Queue thread management */
 static KEVENT QueueThreadTerminate;
 static PVOID QueueThreadObject;
+
+static VOID
+Cleanup(PDRIVER_OBJECT DriverObject)
+{
+    ULONG i, j;
+
+    PAGED_CODE();
+    UNREFERENCED_PARAMETER(DriverObject);
+
+    if (QueueThreadObject)
+    {
+        KeSetEvent(&QueueThreadTerminate, 0, FALSE);
+        KeWaitForSingleObject(QueueThreadObject, Executive, KernelMode, FALSE, NULL);
+        ObDereferenceObject(QueueThreadObject);
+        QueueThreadObject = NULL;
+    }
+
+    for (i = 0; i < gNumberOfControllers; i++)
+    {
+        for (j = 0; j < gControllerInfo[i].NumberOfDrives; j++)
+        {
+            if (!gControllerInfo[i].DriveInfo[j].Initialized)
+                continue;
+
+            if (gControllerInfo[i].DriveInfo[j].DeviceObject)
+            {
+                UNICODE_STRING Link;
+
+                RtlInitUnicodeString(&Link, gControllerInfo[i].DriveInfo[j].ArcPathBuffer);
+                IoDeassignArcName(&Link);
+
+                IoDeleteDevice(gControllerInfo[i].DriveInfo[j].DeviceObject);
+                gControllerInfo[i].DriveInfo[j].DeviceObject = NULL;
+            }
+
+            gControllerInfo[i].DriveInfo[j].Initialized = FALSE;
+        }
+
+        if (gControllerInfo[i].InterruptObject)
+        {
+            IoDisconnectInterrupt(gControllerInfo[i].InterruptObject);
+            gControllerInfo[i].InterruptObject = NULL;
+        }
+
+        if (gControllerInfo[i].Initialized)
+        {
+            if (HwPowerOff(&gControllerInfo[i]) != STATUS_SUCCESS)
+            {
+                WARN_(FLOPPY, "cleanup: warning: HwPowerOff failed\n");
+            }
+
+            gControllerInfo[i].Initialized = FALSE;
+        }
+    }
+}
 
 
 static VOID NTAPI
@@ -381,46 +444,11 @@ Unload(PDRIVER_OBJECT DriverObject)
  *     DriverObject - The driver that is being unloaded
  */
 {
-    ULONG i,j;
-
     PAGED_CODE();
-    UNREFERENCED_PARAMETER(DriverObject);
 
     TRACE_(FLOPPY, "unloading\n");
 
-    KeSetEvent(&QueueThreadTerminate, 0, FALSE);
-    KeWaitForSingleObject(QueueThreadObject, Executive, KernelMode, FALSE, 0);
-    ObDereferenceObject(QueueThreadObject);
-
-    for(i = 0; i < gNumberOfControllers; i++)
-    {
-        if(!gControllerInfo[i].Initialized)
-            continue;
-
-        for(j = 0; j < gControllerInfo[i].NumberOfDrives; j++)
-        {
-            if(!gControllerInfo[i].DriveInfo[j].Initialized)
-                continue;
-
-            if(gControllerInfo[i].DriveInfo[j].DeviceObject)
-            {
-                UNICODE_STRING Link;
-
-                RtlInitUnicodeString(&Link, gControllerInfo[i].DriveInfo[j].ArcPathBuffer);
-                IoDeassignArcName(&Link);
-
-                IoDeleteDevice(gControllerInfo[i].DriveInfo[j].DeviceObject);
-            }
-        }
-
-        IoDisconnectInterrupt(gControllerInfo[i].InterruptObject);
-
-        /* Power down the controller */
-        if(HwPowerOff(&gControllerInfo[i]) != STATUS_SUCCESS)
-        {
-            WARN_(FLOPPY, "unload: warning: HwPowerOff failed\n");
-        }
-    }
+    Cleanup(DriverObject);
 }
 
 
@@ -1285,6 +1313,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, *PsThreadType, KernelMode, &QueueThreadObject, NULL) != STATUS_SUCCESS)
     {
         WARN_(FLOPPY, "Unable to reference returned thread handle; failing init\n");
+        KeSetEvent(&QueueThreadTerminate, 0, FALSE);
+        ZwWaitForSingleObject(ThreadHandle, FALSE, NULL);
+        ZwClose(ThreadHandle);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -1300,7 +1331,10 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
      * it finds even one drive attached to one controller.
      */
     if(!AddControllers(DriverObject))
+    {
+        Cleanup(DriverObject);
         return STATUS_NO_SUCH_DEVICE;
+    }
 
     return STATUS_SUCCESS;
 }
