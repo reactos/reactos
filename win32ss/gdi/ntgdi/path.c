@@ -461,7 +461,7 @@ PATH_CheckRect(
 /* add a number of points, converting them to device coords */
 /* return a pointer to the first type byte so it can be fixed up if necessary */
 static BYTE *add_log_points( DC *dc, PPATH path, const POINT *points,
-                             DWORD count, BYTE type, BOOL bExtraPt )
+                             DWORD count, BYTE type, BOOL bExtraPt)
 {
     BYTE *ret;
 
@@ -544,7 +544,7 @@ static BOOL add_log_points_new_stroke( DC *dc, PPATH path, const POINT *points,
                                        DWORD count, BYTE type, BOOL bExtraPt)
 {
     if (!start_new_stroke( path )) return FALSE;
-    if (!add_log_points( dc, path, points, count, type, bExtraPt)) return FALSE;
+    if (!add_log_points(dc, path, points, count, type, bExtraPt)) return FALSE;
     update_current_pos( path );
 
     TRACE("ALPNS : Pos X %d Y %d\n",path->pos.x, path->pos.y);
