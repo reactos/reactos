@@ -299,7 +299,6 @@ PolyBezierTo(
         if (apt[0].x == apt[1].x && apt[1].x == apt[2].x &&
             apt[0].y == apt[1].y && apt[1].y == apt[2].y)
         {
-            POINT pt1 = { 0, 0 }; // Current Position
             /* If all points are equal and they equal the start point,
              * then we can just return TRUE as an optimization. */
             if (GetCurrentPositionEx(hdc, &pt1) &&
@@ -315,7 +314,6 @@ PolyBezierTo(
 
     /* Following based on Wine 10.0 nulldrv_PolyBezierTo function */
     POINT *pts = HeapAlloc(GetProcessHeap(), 0, (cpt + 1) * sizeof(*apt));
-
     if (!pts)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -410,7 +408,6 @@ PolylineTo(
 
     /* Following based on Wine 10.0 nulldrv_PolylineTo function */
     POINT *pts = HeapAlloc(GetProcessHeap(), 0, (cpt + 1) * sizeof(*apt));
-
     if (!pts)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
