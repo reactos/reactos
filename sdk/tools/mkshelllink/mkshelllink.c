@@ -9,6 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,11 @@
 
 #ifndef C_ASSERT
 #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
+#endif
+
+/* Function attributes for GCC */
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl // __attribute__((cdecl)) // warning: ‘cdecl’ attribute ignored
 #endif
 
 #ifndef _MSC_VER
@@ -213,6 +219,8 @@ typedef struct _EXP_SZ_LINK
 
 /* GLOBALS *******************************************************************/
 
+static bool g_Verbose = false;
+
 /* For a complete list, see: https://smallvoid.com/article/winnt-shell-keyword.html */
 #define CSIDL_WINDOWS   0x24
 #define CSIDL_SYSTEM    0x25
@@ -262,6 +270,18 @@ my_mbstowcs(
     return (i - 1);
 }
 #define mbstowcs my_mbstowcs
+
+static void __cdecl trace(const char *format, ...)
+{
+    va_list args;
+
+    if (!g_Verbose)
+        return;
+
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+}
 
 static bool is_path_separator(char c)
 {
@@ -346,28 +366,65 @@ int main(int argc, const char *argv[])
     EXP_SZ_LINK SzLinkBlock, *pSzLinkBlock = NULL;
     EXP_SZ_LINK SzIconBlock, *pSzIconBlock = NULL;
 
+    /* Check for verbose mode in the command-line */
+    for (i = 1; i < argc; ++i)
+    {
+        if ((argv[i][0] == '-' || argv[i][0] == '/') &&
+            !strcmp(argv[i] + 1, "v"))
+        {
+            g_Verbose = true;
+            break;
+        }
+    }
+
     /* Parse the command-line */
     for (i = 1; i < argc; ++i)
     {
+        trace("argv[%d]: %s\n", i, argv[i]);
+
         if (argv[i][0] != '-' && argv[i][0] != '/')
             pszTarget = argv[i];
         else if (!strcmp(argv[i] + 1, "h"))
             bHelp = true;
+        else if (!strcmp(argv[i] + 1, "v"))
+            /* Verbose mode, separately handled above */;
         else if (!strcmp(argv[i] + 1, "o") && (i + 1 < argc))
-            pszOutputPath = argv[++i];
+        {
+            ++i;
+            trace("argv[%d]: %s\n", i, argv[i]);
+            pszOutputPath = argv[i];
+        }
         else if (!strcmp(argv[i] + 1, "u"))
             bUnicode = true;
         else if (!strcmp(argv[i] + 1, "d") && (i + 1 < argc))
-            pszDescription = argv[++i];
+        {
+            ++i;
+            trace("argv[%d]: %s\n", i, argv[i]);
+            pszDescription = argv[i];
+        }
         else if (!strcmp(argv[i] + 1, "w") && (i + 1 < argc))
-            pszWorkingDir = argv[++i];
+        {
+            ++i;
+            trace("argv[%d]: %s\n", i, argv[i]);
+            pszWorkingDir = argv[i];
+        }
         else if (!strcmp(argv[i] + 1, "c") && (i + 1 < argc))
-            pszCmdLineArgs = argv[++i];
+        {
+            ++i;
+            trace("argv[%d]: %s\n", i, argv[i]);
+            pszCmdLineArgs = argv[i];
+        }
         else if (!strcmp(argv[i] + 1, "i") && (i + 1 < argc))
         {
-            pszIcon = argv[++i];
+            ++i;
+            trace("argv[%d]: %s\n", i, argv[i]);
+            pszIcon = argv[i];
             if ((i + 1 < argc) && isdigit(argv[i + 1][0]))
-                IconIndex = atoi(argv[++i]);
+            {
+                ++i;
+                trace("argv[%d]: %s\n", i, argv[i]);
+                IconIndex = atoi(argv[i]);
+            }
         }
         else if (!strcmp(argv[i] + 1, "m"))
             bMinimized = true;
@@ -375,7 +432,9 @@ int main(int argc, const char *argv[])
         {
             unsigned Data4Tmp[8], j;
 
-            sscanf(argv[++i], "{%8x-%4hx-%4hx-%2x%2x-%2x%2x%2x%2x%2x%2x}",
+            ++i;
+            trace("argv[%d]: %s\n", i, argv[i]);
+            sscanf(argv[i], "{%8x-%4hx-%4hx-%2x%2x-%2x%2x%2x%2x%2x%2x}",
                    &Guid.Data1, &Guid.Data2, &Guid.Data3,
                    &Data4Tmp[0], &Data4Tmp[1], &Data4Tmp[2], &Data4Tmp[3],
                    &Data4Tmp[4], &Data4Tmp[5], &Data4Tmp[6], &Data4Tmp[7]);
@@ -388,11 +447,14 @@ int main(int argc, const char *argv[])
             bHelp = true;
         }
     }
+    if (argc > 1)
+        trace("\n");
 
     if (!pszTarget || bHelp)
     {
-        printf("Usage: %s [-h][-o path][-u][-d descr][-w path][-c cmdline_args][-i icon_path [nr]][-g guid] target\n"
+        printf("Usage: %s [-h][-v][-o path][-u][-d descr][-w path][-c cmdline_args][-i icon_path [nr]][-g guid] target\n"
                "-h\tShows this help.\n"
+               "-v\tEnables verbose mode for diagnostics.\n"
                "-o path\tSets the output path.\n"
                "-u\tCreates a Unicode-aware shortcut.\n"
                "-d descr\tSets the shortcut description.\n"
@@ -404,6 +466,16 @@ int main(int argc, const char *argv[])
                "target\tAbsolute or relative to GUID specified with the -g option path.\n", argv[0]);
         return 0;
     }
+
+    trace("OutputPath  = %s\n"
+          "Target      = %s\n"
+          "Description = %s\n"
+          "WorkingDir  = %s\n"
+          "CmdLineArgs = %s\n"
+          "Icon        = %s (%d)\n\n",
+          pszOutputPath, pszTarget, pszDescription,
+          pszWorkingDir, pszCmdLineArgs,
+          pszIcon, IconIndex);
 
     pFile = fopen(pszOutputPath, "wb");
     if (!pFile)
@@ -452,6 +524,11 @@ int main(int argc, const char *argv[])
     /* Check whether the icon path contains Win32 environment variables */
     if (pszIcon && has_env_variables(pszIcon))
         Header.Flags |= SLDF_HAS_EXP_ICON_SZ;
+
+    trace("Header.Flags     = 0x%08x\n"
+          "Header.IconIndex = %d\n"
+          "Header.ShowCmd   = %u\n",
+          Header.Flags, Header.IconIndex, Header.ShowCmd);
 
     fwrite(&Header, sizeof(Header), 1, pFile);
 
