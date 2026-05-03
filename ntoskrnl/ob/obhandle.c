@@ -1524,6 +1524,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
                 OUT PVOID *ReturnedObject,
                 OUT PHANDLE ReturnedHandle)
 {
+    PEPROCESS Process = PsGetCurrentProcess();
     HANDLE_TABLE_ENTRY NewEntry;
     POBJECT_HEADER ObjectHeader;
     HANDLE Handle;
@@ -1566,17 +1567,18 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
         KernelHandle = TRUE;
 
         /* Check if we're not in the system process */
-        if (PsGetCurrentProcess() != PsInitialSystemProcess)
+        if (Process != PsInitialSystemProcess)
         {
             /* Attach to the system process */
             KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
             AttachedToProcess = TRUE;
+            Process = PsInitialSystemProcess;
         }
     }
     else
     {
         /* Get the current handle table */
-        HandleTable = PsGetCurrentProcess()->ObjectTable;
+        HandleTable = Process->ObjectTable;
     }
 
     /* Increment the handle count */
@@ -1584,7 +1586,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
                                      AccessState,
                                      AccessMode,
                                      HandleAttributes,
-                                     PsGetCurrentProcess(),
+                                     Process,
                                      OpenReason);
     if (!NT_SUCCESS(Status))
     {
@@ -1704,7 +1706,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
 
     /* Decrement the handle count and detach */
     ObpDecrementHandleCount(&ObjectHeader->Body,
-                            PsGetCurrentProcess(),
+                            Process,
                             GrantedAccess,
                             ObjectType);
 
