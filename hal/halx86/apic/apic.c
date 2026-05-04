@@ -885,4 +885,3 @@ KeRaiseIrqlToSynchLevel(VOID)
 }
 
 #endif /* !_M_AMD64 */
-

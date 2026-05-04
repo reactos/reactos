@@ -239,6 +239,32 @@ PHAL_SW_INTERRUPT_HANDLER __cdecl HalpDispatchInterrupt2(VOID);
 DECLSPEC_NORETURN VOID FASTCALL HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 DECLSPEC_NORETURN VOID FASTCALL HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 
+#ifdef _M_AMD64
+/* apic/msi support */
+CODE_SEG("INIT")
+BOOLEAN
+NTAPI
+HalpInitializeMsiVectors(VOID);
+
+BOOLEAN
+NTAPI
+HalpAllocateMsiVector(
+    _In_ KIRQL DesiredIrql,
+    _Out_ PUCHAR OutVector,
+    _Out_ PKIRQL OutIrql,
+    _Out_ PKAFFINITY OutAffinity);
+
+BOOLEAN
+NTAPI
+HalpFreeMsiVector(
+    _In_ UCHAR Vector);
+
+KIRQL
+FASTCALL
+HalpMsiVectorToIrql(
+    _In_ UCHAR Vector);
+#endif /* _M_AMD64 */
+
 /* profil.c */
 extern BOOLEAN HalpProfilingStopped;
 
@@ -555,6 +581,66 @@ HalpDebugPciDumpBus(
     IN ULONG k,
     IN PPCI_COMMON_CONFIG PciData
 );
+
+#ifdef _M_AMD64
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpAcpiPcieInitializeExtendedConfig(
+    VOID
+);
+#endif
+
+#ifdef _M_AMD64
+/* MSI/MSI-X Capability Functions */
+
+UCHAR
+NTAPI
+HalpPciDetectMsiCapability(
+    IN PBUS_HANDLER BusHandler,
+    IN PCI_SLOT_NUMBER Slot
+);
+
+UCHAR
+NTAPI
+HalpPciDetectMsiXCapability(
+    IN PBUS_HANDLER BusHandler,
+    IN PCI_SLOT_NUMBER Slot
+);
+
+BOOLEAN
+NTAPI
+HalpPciEnableMsi(
+    IN PBUS_HANDLER BusHandler,
+    IN PCI_SLOT_NUMBER Slot,
+    IN ULONG Vector,
+    IN UCHAR ProcessorNumber
+);
+
+BOOLEAN
+NTAPI
+HalpPciEnableMsiX(
+    IN PBUS_HANDLER BusHandler,
+    IN PCI_SLOT_NUMBER Slot,
+    IN ULONG TableEntry,
+    IN ULONG Vector,
+    IN UCHAR ProcessorNumber
+);
+
+BOOLEAN
+NTAPI
+HalpPciDisableMsi(
+    IN PBUS_HANDLER BusHandler,
+    IN PCI_SLOT_NUMBER Slot
+);
+
+BOOLEAN
+NTAPI
+HalpPciDisableMsiX(
+    IN PBUS_HANDLER BusHandler,
+    IN PCI_SLOT_NUMBER Slot
+);
+#endif /* _M_AMD64 */
 
 VOID
 NTAPI
