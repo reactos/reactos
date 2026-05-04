@@ -1103,12 +1103,12 @@ typedef struct tagSHELL_LINK_HEADER
     FILETIME ftCreationTime;
     FILETIME ftLastAccessTime;
     FILETIME ftLastWriteTime;
-    DWORD nFileSizeLow; /* only the least significant 32 bits */
-    /* The index of an icon (signed?) */
-    DWORD nIconIndex;
+    DWORD nFileSizeLow; /* Only the least significant 32 bits */
+    /* The signed icon index */
+    INT nIconIndex;
     /* The expected window state of an application launched by the link */
     DWORD nShowCommand;
-    /* The keystrokes used to launch the application */
+    /* The hotkey used to launch the application */
     WORD wHotKey;
     /* Reserved (must be zero) */
     WORD wReserved1;
