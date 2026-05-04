@@ -37,7 +37,6 @@ enum E_STRING
     SYSS_PROGRAMFILES,
     SYSS_COMMONFILES,
     MMSY_STARTMENU,
-    EOLD_PROGRAMS,
 };
 
 typedef struct PART_TEST
@@ -110,7 +109,6 @@ static PART_MATCH PartMatches[] =
     { { SH32_PROGRAMS, 1 }, { SH32_ADMINTOOLS, 1 } },
     { { SH32_PROGRAMS, 1 }, { UENV_PROGRAMS, 1 } },
     { { SH32_PROGRAMS, 1 }, { UENV_STARTUP, 1 } },
-    { { SH32_PROGRAMS, 1 }, { EOLD_PROGRAMS, 0 } },
     // StartUp
     { { SH32_STARTUP, 2 }, { UENV_STARTUP, 2 } },
     // Program Files
