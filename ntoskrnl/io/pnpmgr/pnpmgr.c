@@ -445,7 +445,6 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
         if (!NewList)
         {
             /* Fail */
-            ExFreePool(PnpBusTypeGuidList);
             goto Quickie;
         }
 
@@ -471,6 +470,13 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
 
 Quickie:
     ExReleaseFastMutex(&PnpBusTypeGuidList->Lock);
+
+    if (!NewList)
+    {
+        /* It failed, cleanup after releasing the lock */
+        ExFreePool(PnpBusTypeGuidList);
+    }
+
     return FoundIndex;
 }
 
