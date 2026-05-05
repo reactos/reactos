@@ -12,6 +12,7 @@
 @ stdcall AcquireSRWLockShared(ptr)
 @ stdcall ReleaseSRWLockExclusive(ptr)
 @ stdcall ReleaseSRWLockShared(ptr)
+@ stdcall TryAcquireSRWLockExclusive(ptr) ntdll_vista.RtlTryAcquireSRWLockExclusive
 
 @ stdcall InitializeConditionVariable(ptr)
 @ stdcall SleepConditionVariableCS(ptr ptr long)
