@@ -5146,11 +5146,13 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     {
         SCROLLINFO si;
 
-        ZeroMemory(&si, sizeof(si));
         si.cbSize = sizeof(si);
         si.fMask = SIF_TRACKPOS;
         if (!GetScrollInfo(hwnd, SB_VERT, &si))
-            return 1;
+        {
+            result = 1;
+            break;
+        }
         result = EDIT_WM_VScroll(es, LOWORD(wParam), si.nTrackPos);
     }
 #else
