@@ -97,8 +97,8 @@ _KeStallExecutionProcessor@4:
      * Force the in-order execution of the RDTSC instruction.
      * HAL will overwrite this with a no-op instruction on older processors.
      */
-PUBLIC _HalpStallExecutionStart
-_HalpStallExecutionStart:
+PUBLIC _HalpStallExecutionSerialize
+_HalpStallExecutionSerialize:
     xor eax, eax
     cpuid
 
