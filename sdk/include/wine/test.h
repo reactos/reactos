@@ -925,6 +925,7 @@ static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_w
 extern const char *wine_dbgstr_variant(const VARIANT *var);
 static inline const char *debugstr_variant( const VARIANT *v ) { return wine_dbgstr_variant( v ); }
 #endif
+extern const char * __cdecl __wine_dbg_strdup( const char *str );
 
 /* strcmpW is available for tests compiled under Wine, but not in standalone
  * builds under Windows, so we reimplement it under a different name. */
@@ -1330,6 +1331,19 @@ const char *wine_dbgstr_variant(const VARIANT *var)
     return buf;
 }
 #endif
+
+/* FIXME: this is not 100% thread-safe */
+const char * __cdecl __wine_dbg_strdup( const char *str )
+{
+    static char *list[32];
+    static LONG pos;
+    char *ret = _strdup( str );
+    int idx;
+
+    idx = InterlockedIncrement( &pos ) % ARRAY_SIZE(list);
+    free( InterlockedExchangePointer( (void **)&list[idx], ret ));
+    return ret;
+}
 
 #endif
 
