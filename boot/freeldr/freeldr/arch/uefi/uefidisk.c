@@ -57,7 +57,6 @@ static UCHAR PcBiosDiskCount;
 UCHAR FrldrBootDrive;
 ULONG FrldrBootPartition;
 SIZE_T DiskReadBufferSize;
-PVOID Buffer;
 
 /* UEFI-specific */
 static ULONG UefiBootRootIndex = 0;
