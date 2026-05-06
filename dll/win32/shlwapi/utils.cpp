@@ -215,6 +215,107 @@ SHInvokeCommandOnContextMenu(
     return SHInvokeCommandOnContextMenuEx(hWnd, pUnk, pCM, fCMIC, CMF_EXTENDEDVERBS, pszVerb, NULL);
 }
 
+static inline BOOL
+IsTextAsciiOnly(PCSTR psz)
+{
+    for (const signed char *pch = (const signed char *)psz; *pch; ++pch)
+    {
+        if (*pch < 0)
+            return FALSE;
+    }
+    return TRUE;
+}
+
+/*************************************************************************
+ * SHInvokeCommandsOnContextMenu [SHLWAPI.541]
+ */
+EXTERN_C
+HRESULT WINAPI
+SHInvokeCommandsOnContextMenu(
+    _In_opt_ HWND hwnd,
+    _In_opt_ IUnknown *punkSite,
+    _In_ IContextMenu *pCM,
+    _In_ DWORD fMask,
+    _In_reads_opt_(cVerbs) PCSTR *pVerbs,
+    _In_ UINT cVerbs)
+{
+    HRESULT hr;
+    CMINVOKECOMMANDINFOEX ici;
+    WCHAR szVerbW[MAX_PATH];
+    HMENU hMenu = NULL;
+    UINT iVerb, idDefault = (UINT)-1;
+    PCSTR pszVerbA = NULL;
+
+    if (!pCM)
+        return E_OUTOFMEMORY;
+
+    hMenu = CreatePopupMenu();
+    if (!hMenu)
+        return E_OUTOFMEMORY;
+
+    if (punkSite)
+        IUnknown_SetSite(pCM, punkSite);
+
+    hr = pCM->QueryContextMenu(hMenu, 0, 1, MAXSHORT, (cVerbs ? 0 : CMF_DEFAULTONLY));
+    if (FAILED(hr))
+        goto Cleanup;
+
+    if (!cVerbs)
+    {
+        idDefault = GetMenuDefaultItem(hMenu, FALSE, 0);
+        if (idDefault != (UINT)-1)
+            pszVerbA = MAKEINTRESOURCEA(idDefault - 1);
+    }
+
+    ZeroMemory(&ici, sizeof(ici));
+    ici.cbSize = sizeof(ici);
+    ici.hwnd   = hwnd;
+    ici.nShow  = SW_SHOWNORMAL;
+
+    iVerb = 0;
+    do
+    {
+        if (cVerbs)
+            pszVerbA = pVerbs[iVerb];
+
+        if (!pszVerbA && idDefault == (UINT)-1)
+        {
+            hr = E_FAIL;
+            break;
+        }
+
+        ici.fMask   = fMask;
+        ici.lpVerb  = pszVerbA;
+        ici.lpVerbW = NULL;
+
+        if (idDefault == (UINT)-1 && !IS_INTRESOURCE(pszVerbA) && IsTextAsciiOnly(pszVerbA))
+        {
+            size_t ich;
+            for (ich = 0; pszVerbA[ich] && ich + 1 < _countof(szVerbW); ++ich)
+            {
+                szVerbW[ich] = (BYTE)pszVerbA[ich];
+            }
+            szVerbW[ich] = UNICODE_NULL;
+
+            ici.lpVerbW = szVerbW;
+            ici.fMask |= CMIC_MASK_UNICODE;
+        }
+
+        hr = pCM->InvokeCommand((LPCMINVOKECOMMANDINFO)&ici);
+
+        if (SUCCEEDED(hr) || hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))
+            break;
+
+        ++iVerb;
+    } while (iVerb < cVerbs);
+
+Cleanup:
+    if (punkSite)
+        IUnknown_SetSite(pCM, NULL);
+    DestroyMenu(hMenu);
+    return hr;
+}
+
 /*************************************************************************
  * SHInvokeCommandWithFlagsAndSite [SHLWAPI.571]
  */

@@ -538,7 +538,7 @@
 538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)
 539 stub -noname IUnknown_ShowBrowserBar
 540 stdcall -noname SHInvokeCommandOnContextMenu(ptr ptr ptr long str)
-541 stub -noname SHInvokeCommandsOnContextMenu
+541 stdcall -noname SHInvokeCommandsOnContextMenu(ptr ptr ptr long ptr long)
 542 stdcall -noname GetUIVersion()
 543 stdcall -noname CreateColorSpaceWrapW(ptr) gdi32.CreateColorSpaceW
 544 stub -noname QuerySourceCreateFromKey

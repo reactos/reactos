@@ -111,6 +111,15 @@ DWORD WINAPI SHFillRectClr(HDC hDC, LPCRECT pRect, COLORREF cRef);
 int WINAPI SHSearchMapInt(const int *lpKeys, const int *lpValues, int iLen, int iKey);
 
 HRESULT WINAPI
+SHInvokeCommandsOnContextMenu(
+    _In_opt_ HWND hwnd,
+    _In_opt_ IUnknown *punkSite,
+    _In_ IContextMenu *pCM,
+    _In_ DWORD fMask,
+    _In_reads_opt_(cVerbs) PCSTR *pVerbs,
+    _In_ UINT cVerbs);
+
+HRESULT WINAPI
 MayQSForward(
     _In_ IUnknown *lpUnknown,
     _In_ INT nUnknown,
