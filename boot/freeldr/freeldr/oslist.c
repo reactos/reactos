@@ -93,7 +93,7 @@ InitOperatingSystemList(
                                SettingValue, sizeof(SettingValue));
         if (!*SettingName)
         {
-            ERR("Invalid OS entry %lu, skipping.\n", i);
+            TRACE("Unkeyed OS entry %lu: separator.\n", i);
             continue;
         }
 
