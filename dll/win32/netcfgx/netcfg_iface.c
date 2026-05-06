@@ -255,7 +255,7 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
     DWORD dwType;
     WCHAR szName[100];
     WCHAR szText[100];
-    HKEY hSubKey, hNDIKey;
+    HKEY hSubKey, hNDIKey, hInterfacesKey;
     NetCfgComponentItem * pLast = NULL, *pCurrent;
 
     *pHead = NULL;
@@ -341,6 +341,44 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
                                 wcscpy(pCurrent->szBindName, szText);
                         }
                     }
+
+                    if (RegOpenKeyExW(hNDIKey, L"Interfaces", 0, KEY_READ, &hInterfacesKey) == ERROR_SUCCESS)
+                    {
+                        /* retrieve LowerRange */
+                        dwSize = sizeof(szText);
+                        if (RegQueryValueExW(hInterfacesKey, L"LowerRange", NULL, &dwType, (LPBYTE)szText, &dwSize) == ERROR_SUCCESS)
+                        {
+                            if (dwType == REG_SZ)
+                            {
+                                szText[(sizeof(szText)/sizeof(WCHAR))-1] = L'\0';
+                                pCurrent->pszLowerRange = CoTaskMemAlloc((wcslen(szText)+1)* sizeof(WCHAR));
+                                if (pCurrent->pszLowerRange)
+                                {
+                                    wcscpy(pCurrent->pszLowerRange, szText);
+                                    TRACE("LowerRange: %S\n", pCurrent->pszLowerRange);
+                                }
+                            }
+                        }
+
+                        /* retrieve UpperRange */
+                        dwSize = sizeof(szText);
+                        if (RegQueryValueExW(hInterfacesKey, L"UpperRange", NULL, &dwType, (LPBYTE)szText, &dwSize) == ERROR_SUCCESS)
+                        {
+                            if (dwType == REG_SZ)
+                            {
+                                szText[(sizeof(szText)/sizeof(WCHAR))-1] = L'\0';
+                                pCurrent->pszUpperRange = CoTaskMemAlloc((wcslen(szText)+1)* sizeof(WCHAR));
+                                if (pCurrent->pszUpperRange)
+                                {
+                                    wcscpy(pCurrent->pszUpperRange, szText);
+                                    TRACE("UpperRange: %S\n", pCurrent->pszUpperRange);
+                                }
+                            }
+                        }
+
+                        RegCloseKey(hInterfacesKey);
+                    }
+
                     RegCloseKey(hNDIKey);
                 }
                 RegCloseKey(hSubKey);
@@ -393,7 +431,7 @@ EnumerateNetworkAdapter(NetCfgComponentItem ** pHead)
     DWORD dwSize, dwIndex;
     HDEVINFO hInfo;
     SP_DEVINFO_DATA DevInfo;
-    HKEY hKey;
+    HKEY hKey, hInterfacesKey;
     WCHAR szNetCfg[50];
     WCHAR szAdapterNetCfg[MAX_DEVICE_ID_LEN];
     WCHAR szDetail[200] = L"SYSTEM\\CurrentControlSet\\Control\\Class\\";
@@ -461,6 +499,35 @@ EnumerateNetworkAdapter(NetCfgComponentItem ** pHead)
             pCurrent->szDisplayName = CoTaskMemAlloc((wcslen(szAdapterNetCfg)+1) * sizeof(WCHAR));
             if (pCurrent->szDisplayName)
                 wcscpy(pCurrent->szDisplayName, szAdapterNetCfg);
+        }
+
+        if (RegOpenKeyExW(hKey, L"NDI\\Interfaces", 0, KEY_READ, &hInterfacesKey) == ERROR_SUCCESS)
+        {
+            /* retrieve LowerRange */
+            dwSize = sizeof(szAdapterNetCfg);
+            if (RegQueryValueExW(hInterfacesKey, L"LowerRange", NULL, NULL, (LPBYTE)szAdapterNetCfg, &dwSize) == ERROR_SUCCESS)
+            {
+                pCurrent->pszLowerRange = CoTaskMemAlloc((wcslen(szAdapterNetCfg) + 1) * sizeof(WCHAR));
+                if (pCurrent->pszLowerRange)
+                {
+                    wcscpy(pCurrent->pszLowerRange, szAdapterNetCfg);
+                    TRACE("LowerRange: %S\n", pCurrent->pszLowerRange);
+                }
+            }
+
+            /* retrieve UpperRange */
+            dwSize = sizeof(szAdapterNetCfg);
+            if (RegQueryValueExW(hInterfacesKey, L"UpperRange", NULL, NULL, (LPBYTE)szAdapterNetCfg, &dwSize) == ERROR_SUCCESS)
+            {
+                pCurrent->pszUpperRange = CoTaskMemAlloc((wcslen(szAdapterNetCfg) + 1) * sizeof(WCHAR));
+                if (pCurrent->pszUpperRange)
+                {
+                    wcscpy(pCurrent->pszUpperRange, szAdapterNetCfg);
+                    TRACE("UpperRange: %S\n", pCurrent->pszUpperRange);
+                }
+            }
+
+            RegCloseKey(hInterfacesKey);
         }
 
         RegCloseKey(hKey);
@@ -682,6 +749,8 @@ FreeComponentItem(NetCfgComponentItem *pItem)
     CoTaskMemFree(pItem->szId);
     CoTaskMemFree(pItem->szBindName);
     CoTaskMemFree(pItem->szNodeId);
+    CoTaskMemFree(pItem->pszUpperRange);
+    CoTaskMemFree(pItem->pszLowerRange);
     CoTaskMemFree(pItem->pszBinding);
     CoTaskMemFree(pItem);
 }
