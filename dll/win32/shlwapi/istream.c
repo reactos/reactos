@@ -711,6 +711,7 @@ IStream_ReadPidl(_In_ IStream *pstm, _Out_ LPITEMIDLIST *ppidlOut)
         return hr;
     }
 
+    /* Validate that the PIDL is well-formed */
     pidlEnd = (LPITEMIDLIST)((PBYTE)pidl + cbSize - sizeof(USHORT));
     for (pItem = &pidl->mkid; pItem <= (LPSHITEMID)pidlEnd;
          pItem = (LPSHITEMID)((PBYTE)pItem + pItem->cb))
