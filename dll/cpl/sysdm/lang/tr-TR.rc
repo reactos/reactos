@@ -42,7 +42,7 @@ BEGIN
     GROUPBOX "Donanım Profilleri", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
     LTEXT "Donanım profilleri, ayrı donanım yapılandırmalarını kurmanız ve saklamanız için size bir yol sunar.", IDC_STATIC, 42, 160, 204, 24
-    PUSHBUTTON "D&onanım Profilleri
+    PUSHBUTTON "D&onanım Profilleri", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
 
 
 
@@ -50,7 +50,7 @@ BEGIN
 
 
 
-", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
+
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
