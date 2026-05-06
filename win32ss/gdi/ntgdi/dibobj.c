@@ -781,13 +781,16 @@ GreGetDIBitsInternal(
     }
 
     /* Validate input:
-       - negative width is always an invalid value
+       - non-null Bits and negative width is an invalid combination
        - non-null Bits and zero bpp is an invalid combination
        - only check the rest of the input params if either bpp is non-zero or Bits are set */
-    if (width < 0 || (bpp == 0 && Bits))
+    if (Bits != NULL)
     {
-        ScanLines = 0;
-        goto done;
+        if ((width < 0) || (bpp == 0))
+        {
+            ScanLines = 0;
+            goto done;
+        }
     }
 
     if (Bits || bpp)
@@ -2317,13 +2320,13 @@ DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig, DWORD usage
         if(!numColors) numColors = 1 << pbmci->bmciHeader.bcBitCount;
         if(usage == DIB_PAL_COLORS)
         {
-            RtlZeroMemory(pbmci->bmciColors, (1 << pbmci->bmciHeader.bcBitCount) * sizeof(WORD));
+            RtlZeroMemory(pbmci->bmciColors, ((SIZE_T)1 << pbmci->bmciHeader.bcBitCount) * sizeof(WORD));
             RtlCopyMemory(pbmci->bmciColors, converted->bmiColors, numColors * sizeof(WORD));
         }
         else
         {
             UINT i;
-            RtlZeroMemory(pbmci->bmciColors, (1 << pbmci->bmciHeader.bcBitCount) * sizeof(RGBTRIPLE));
+            RtlZeroMemory(pbmci->bmciColors, ((SIZE_T)1 << pbmci->bmciHeader.bcBitCount) * sizeof(RGBTRIPLE));
             for(i=0; i<numColors; i++)
             {
                 pbmci->bmciColors[i].rgbtRed = converted->bmiColors[i].rgbRed;
