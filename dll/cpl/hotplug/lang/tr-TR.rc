@@ -1,4 +1,5 @@
 /* TRANSLATOR: 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2026 Hasan Eliküçük (Random Developer 31) <hasanelk101@gmail.com>
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -20,15 +21,15 @@ BEGIN
 END
 
 IDD_CONFIRM_STOP_HARDWARE_DIALOG DIALOGEX 32, 10, 256, 148
-CAPTION "Stop a Hardware Device"
+CAPTION "Donanım Aygıtını Durdur"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Confirm devices to be stopped, choose OK to continue.", IDC_STATIC, 7, 8, 241, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "ReactOS will attempt to stop the following devices. After the devices are stopped they may be removed safely.", IDC_STATIC, 7, 22, 240, 18, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Durdurulacak cihazları onaylayın, devam etmek için Tamam'ı seçin.", IDC_STATIC, 7, 8, 241, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "ReactOS aşağıdaki aygıtları durdurmaya çalışacaktır. Aygıtlar durdurulduktan sonra güvenli bir şekilde kaldırılabilirler.", IDC_STATIC, 7, 22, 240, 18, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_CONFIRM_STOP_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 8, 45, 240, 78
-    DEFPUSHBUTTON "OK", IDOK, 144, 127, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 198, 127, 50, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 144, 127, 50, 14
+    PUSHBUTTON "İptal", IDCANCEL, 198, 127, 50, 14
 END
 
 
@@ -50,6 +51,6 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Donanımı Güvenli Kaldır"
     IDS_CPLDESCRIPTION "Aygıtları bilgisayarınızdan güvenle çıkarın veya çıkarın."
-    IDS_UNKNOWN_DEVICE "Unknown Device"
-    IDS_EJECT_ERROR_FORMAT "Failed to remove device (0x%x)\0"
+    IDS_UNKNOWN_DEVICE "Bilinmeyen Cihaz"
+    IDS_EJECT_ERROR_FORMAT "Aygıt kaldırılamadı (0x%x)\0"
 END
