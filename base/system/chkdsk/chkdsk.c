@@ -307,7 +307,11 @@ ChkdskCallback(
             status = (PBOOLEAN)Argument;
             if (*status == FALSE)
             {
-                ConResPuts(StdOut, IDS_CHKDSK_FAIL);
+                ConResPrintf(StdOut, IDS_CHKDSK_FAIL, Modifier);
+                if (Modifier == STATUS_DISK_CORRUPT_ERROR)
+                    ConResPuts(StdOut, IDS_RUN_AGAIN);
+                else
+                    ConPrintf(StdOut, L"\n");
                 Error = TRUE;
             }
             break;
