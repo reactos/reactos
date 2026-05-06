@@ -247,7 +247,7 @@ SHInvokeCommandsOnContextMenu(
     PCSTR pszVerbA = NULL;
 
     if (!pCM)
-        return E_OUTOFMEMORY;
+        return E_INVALIDARG;
 
     hMenu = CreatePopupMenu();
     if (!hMenu)
