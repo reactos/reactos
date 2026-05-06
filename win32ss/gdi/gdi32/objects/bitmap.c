@@ -410,7 +410,7 @@ GetDIBits(
     LPBITMAPINFO lpbmi,
     UINT uUsage)
 {
-    UINT cjBmpScanSize;
+    UINT cjMaxBits;
     UINT cjInfoSize;
 
     if (!hDC || !GdiValidateHandle((HGDIOBJ) hDC) || !lpbmi)
@@ -419,7 +419,6 @@ GetDIBits(
         return 0;
     }
 
-    cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
     /* Caller must provide maximum size possible */
     cjInfoSize = DIB_BitmapInfoSize(lpbmi, uUsage, TRUE);
 
@@ -434,10 +433,23 @@ GetDIBits(
                 return 0;
             }
         }
+
+        cjMaxBits = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
+    }
+    else
+    {
+        cjMaxBits = 0;
     }
 
-    return NtGdiGetDIBitsInternal(hDC, hbmp, uStartScan, cScanLines, lpvBits, lpbmi, uUsage,
-        cjBmpScanSize, cjInfoSize);
+    return NtGdiGetDIBitsInternal(hDC,
+                                  hbmp,
+                                  uStartScan,
+                                  cScanLines,
+                                  lpvBits,
+                                  lpbmi,
+                                  uUsage,
+                                  cjMaxBits,
+                                  cjInfoSize);
 }
 
 /*
