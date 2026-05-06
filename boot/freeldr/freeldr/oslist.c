@@ -161,6 +161,7 @@ InitOperatingSystemList(
         if (HadSection)
         {
             /* This is a new OS entry: try to read the boot type */
+            *BootType = ANSI_NULL;
             IniReadSettingByName(SectionId, "BootType", BootType, sizeof(BootType));
         }
         else
