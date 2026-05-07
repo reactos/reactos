@@ -1,0 +1,38 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+{
+1000, "ReactOS"
+}
+
+STRINGTABLE
+{
+2000, "Lunar ReactOS"
+}
+
+STRINGTABLE
+{
+3000, "Normal"
+3001, "Grandes Polices"
+3002, "Très Grandes Polices"
+}
+
+STRINGTABLE
+{
+4000, "Normal"
+4001, "Grandes Polices"
+4002, "Très Grandes Polices"
+}
+
+STRINGTABLE
+{
+5000, "Lunar"
+5001, "Style Visuel"
+5002, "Projet ReactOS"
+5003, "Cernodile & Illen, basé sur Lautus"
+5004, "Distribué sous GNU/GPL 2.0, 2019"
+5005, "https://reactos.org/"
+5006, "1.1"
+5007, "Style Visuel pour ReactOS"
+}
+
