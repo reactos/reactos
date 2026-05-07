@@ -523,6 +523,13 @@ IShellFolder_CompareIDs(
     return psf->CompareIDs(lParam, pidl1, pidl2);
 }
 
+// Used in SHDialogBox
+typedef struct tagSHDIALOG
+{
+    SHDIALOGPROC fn;
+    PVOID pThis;
+} SHDIALOG, *PSHDIALOG, *LPSHDIALOG;
+
 /*************************************************************************
  * SHDialogProc [INTERNAL]
  *

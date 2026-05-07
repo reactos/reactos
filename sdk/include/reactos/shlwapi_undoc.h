@@ -458,12 +458,6 @@ typedef INT_PTR (CALLBACK *SHDIALOGPROC)(
     WPARAM wParam,
     LPARAM lParam);
 
-typedef struct tagSHDIALOG
-{
-    SHDIALOGPROC fn;
-    PVOID pThis;
-} SHDIALOG, *PSHDIALOG, *LPSHDIALOG;
-
 INT_PTR WINAPI
 SHDialogBox(
     _In_opt_ HINSTANCE hInstance,
