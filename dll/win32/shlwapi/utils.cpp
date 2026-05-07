@@ -528,7 +528,7 @@ typedef struct tagSHDIALOG
 {
     SHDIALOGPROC fn;
     PVOID pThis;
-} SHDIALOG, *PSHDIALOG, *LPSHDIALOG;
+} SHDIALOG, *PSHDIALOG;
 
 /*************************************************************************
  * SHDialogProc [INTERNAL]
