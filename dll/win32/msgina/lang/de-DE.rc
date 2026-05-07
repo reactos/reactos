@@ -2,10 +2,10 @@
  * PROJECT:     ReactOS msgina.dll
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     German resource file
- * TRANSLATORS: Copyright 2007-2014 Daniel Reimer <reimer.daniel@freenet.de>
+ * TRANSLATORS: Copyright 2007 Daniel Reimer <reimer.daniel@freenet.de>
+ *              Copyright 2010 Sven Knurr (tux.) <forenkrams@tuxproject.de>
+ *              Copyright 2013-2014 Zehnvor <sixlivezehn@googlemail.com>
  *              Copyright 2013-2019 Eric Kohl <eric.kohl@reactos.org>
- *              Copyright 2020 Vladimir Barinov <source.hl2@yandex.ru>
- *              Copyright 2021 Arnav Bhatt <arnavbhatt288@gmail.com>
  *              Copyright 2026 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
