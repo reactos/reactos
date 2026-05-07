@@ -46,6 +46,8 @@ UINT
 ClassifyFile(PCWSTR Path);
 BOOL
 OpensWithExplorer(PCWSTR Path);
+UINT
+WaitForProcess(HANDLE hProcess);
 BOOL
 StartProcess(const CStringW &Path, BOOL Wait);
 BOOL

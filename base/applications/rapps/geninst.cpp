@@ -850,8 +850,7 @@ HRESULT
 ExtractArchiveForExecution(PCWSTR pszArchive, const CStringW &PackageName, CStringW &TempDir, CStringW &App)
 {
     WCHAR TempDirBuf[MAX_PATH], UniqueDir[MAX_PATH];
-    CAppDB db(CAppDB::GetDefaultPath());
-    db.UpdateAvailable();
+    CAvailableAppDB db;
     CAvailableApplicationInfo *pAppInfo = db.FindAvailableByPackageName(PackageName);
     if (!pAppInfo)
         return HResultFromWin32(ERROR_NOT_FOUND);

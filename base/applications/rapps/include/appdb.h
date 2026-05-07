@@ -53,3 +53,12 @@ class CAppDB
         return m_Available.GetCount();
     }
 };
+
+class CAvailableAppDB : public CAppDB
+{
+  public:
+    CAvailableAppDB() : CAppDB(CAppDB::GetDefaultPath())
+    {
+        UpdateAvailable();
+    }
+};

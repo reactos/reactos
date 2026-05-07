@@ -142,7 +142,7 @@ CAppDB::EnumerateFiles()
         PathRemoveExtensionW(szPkgName.GetBuffer(MAX_PATH));
         szPkgName.ReleaseBuffer();
 
-        CAppInfo *Info = FindByPackageName(szPkgName);
+        CAppInfo *Info = FindAvailableByPackageName(szPkgName);
         ATLASSERT(Info == NULL);
         if (!Info)
         {

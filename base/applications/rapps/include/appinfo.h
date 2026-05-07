@@ -99,6 +99,7 @@ enum InstallerType
 #define DB_SAVEAS L"SaveAs"
 #define DB_SILENTARGS L"SilentParameters"
 #define DB_NTVER L"NTVersion" // "Max-" || "Min-Max" || "Min" || "Min+"
+#define DB_DEPENDENCIES L"Dependencies"
 
 #define DB_GENINSTSECTION L"Generate"
 #define GENERATE_ARPSUBKEY L"RApps" // Our uninstall data is stored here
@@ -178,6 +179,8 @@ class CAvailableApplicationInfo : public CAppInfo
 
     bool
     IsCompatible() const;
+    bool
+    IsInstalled() const;
 
     virtual BOOL
     Valid() const override;
