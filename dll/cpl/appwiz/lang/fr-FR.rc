@@ -84,7 +84,7 @@ BEGIN
     IDS_CANTMAKESHORTCUT "Échec lors de la création du raccourci."
     IDS_NO_MEMORY "La mémoire n'a pas pu être allouée !"
     IDS_NO_DIRECTORY "Aucun répertoire spécifié !"
-    IDS_INVALID_PATH "Le répertoire spécifié n'est pas valide !"
+    IDS_INVALID_PATH "Le répertoire spécifié est invalide !"
     IDS_INVALID_NAME "Le nom de raccourci saisi contient des caractères invalides pour les noms de fichier, ou est trop long."
     IDS_BROWSE_FOR_TARGET "Veuillez sélectionner la cible du raccourci ci-dessous :"
 END
