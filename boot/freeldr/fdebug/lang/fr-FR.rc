@@ -13,7 +13,7 @@ BEGIN
         MENUITEM "Démarrer la &Capture", IDM_FILE_STARTCAPTURE
         MENUITEM "A&rréter la Capture", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Écho &Locale", IDM_FILE_LOCALECHO
+        MENUITEM "Écho &local", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
         MENUITEM "&Quitter", IDM_EXIT
     END
