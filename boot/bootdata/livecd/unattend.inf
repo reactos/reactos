@@ -11,6 +11,6 @@ UnattendSetupEnabled = no
 LocaleID = 409
 
 ; Enable this section to enable the default ReactOS theme.
-;[Shell]
-;DefaultThemesOff = no
-;CustomDefaultThemeFile = "%WINDIR%\Resources\Themes\Lautus\lautus.msstyles"
+[Shell]
+DefaultThemesOff = no
+CustomDefaultThemeFile = "%WINDIR%\Resources\Themes\Lautus\lautus.msstyles"
