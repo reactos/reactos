@@ -3266,8 +3266,8 @@ GenerateDeviceID(
         if (dwInstanceNumber >= 10000)
             return CR_FAILURE;
 
-        swprintf(szGeneratedInstance, L"Root\\%ls\\%04lu",
-                 pszDeviceID, dwInstanceNumber);
+        _swprintf(szGeneratedInstance, L"Root\\%ls\\%04lu",
+                  pszDeviceID, dwInstanceNumber);
 
         /* Try to open the enum key of the device instance */
         dwError = RegOpenKeyEx(hEnumKey, szGeneratedInstance, 0, KEY_QUERY_VALUE, &hKey);
@@ -4142,9 +4142,9 @@ PNP_HwProfFlags(
     }
     else
     {
-        swprintf(szKeyName,
-                 L"System\\CurrentControlSet\\HardwareProfiles\\%04lu\\System\\CurrentControlSet\\Enum",
-                 ulConfig);
+        _swprintf(szKeyName,
+                  L"System\\CurrentControlSet\\HardwareProfiles\\%04lu\\System\\CurrentControlSet\\Enum",
+                  ulConfig);
     }
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -4287,7 +4287,7 @@ PNP_GetHwProfInfo(
         goto done;
     }
 
-    swprintf(szProfileName, L"%04lu", pHWProfileInfo->HWPI_ulHWProfile);
+    _swprintf(szProfileName, L"%04lu", pHWProfileInfo->HWPI_ulHWProfile);
 
     lError = RegOpenKeyExW(hKeyProfiles,
                            szProfileName,

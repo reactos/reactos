@@ -457,7 +457,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
                         LPVOID  pv;
                         HGLOBAL hmem = SHAllocShared(pidl, ILGetSize(pidl), 0);
                         pv = SHLockShared(hmem, 0);
-                        chars = swprintf(buf, L":%p", pv);
+                        chars = _swprintf(buf, L":%p", pv);
 
                         if (chars >= ARRAY_SIZE(buf))
                             ERR("pidl format buffer too small!\n");
@@ -2527,7 +2527,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             wcmd = wcmdAlloc;
             wcmdLen = len;
         }
-        swprintf(wcmd, L"\"%s\"", (LPWSTR)wszApplicationName);
+        _swprintf(wcmd, L"\"%s\"", (LPWSTR)wszApplicationName);
         if (sei_tmp.lpParameters[0])
         {
             strcatW(wcmd, L" ");
@@ -2561,7 +2561,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
                                           NULL, &env, NULL, NULL);
             if (retval > 32)
             {
-                swprintf(lpQuotedFile, L"\"%s\"", lpFile);
+                _swprintf(lpQuotedFile, L"\"%s\"", lpFile);
                 retval = SHELL_quote_and_execute(wExec, lpQuotedFile,
                                                  wszKeyname,
                                                  wszApplicationName, env,

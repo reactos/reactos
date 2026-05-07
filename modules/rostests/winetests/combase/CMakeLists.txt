@@ -1,7 +1,6 @@
 
 add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
-remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
 spec2def(wine.combase.test.dll wine.combase.test.spec)

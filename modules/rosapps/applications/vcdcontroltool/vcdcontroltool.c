@@ -148,7 +148,7 @@ RefreshDevicesList(WCHAR Letter)
                                 LoadString(hInstance, IDS_NOMOUNTED, szFormat, sizeof(szFormat) / sizeof(WCHAR));
                                 szFormat[(sizeof(szFormat) / sizeof(WCHAR)) - 1] = L'\0';
 
-                                swprintf(szText, szFormat, szImage);
+                                _swprintf(szText, szFormat, szImage);
                                 lvItem.pszText = szText;
                             }
                             else

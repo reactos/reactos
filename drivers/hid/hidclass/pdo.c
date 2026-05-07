@@ -208,16 +208,16 @@ HidClassPDO_HandleQueryHardwareId(
         //
         // multi-tlc device
         //
-        Offset = swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x&Col%02x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber, PDODeviceExtension->CollectionNumber) + 1;
-        Offset += swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Col%02x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->CollectionNumber) + 1;
+        Offset = _swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x&Col%02x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber, PDODeviceExtension->CollectionNumber) + 1;
+        Offset += _swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Col%02x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->CollectionNumber) + 1;
     }
     else
     {
         //
         // single tlc device
         //
-        Offset = swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber) + 1;
-        Offset += swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID) + 1;
+        Offset = _swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber) + 1;
+        Offset += _swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID) + 1;
     }
 
     //
@@ -235,27 +235,27 @@ HidClassPDO_HandleQueryHardwareId(
                 //
                 // Pointer / Mouse
                 //
-                Offset += swprintf(&Buffer[Offset], L"HID_DEVICE_SYSTEM_MOUSE") + 1;
+                Offset += _swprintf(&Buffer[Offset], L"HID_DEVICE_SYSTEM_MOUSE") + 1;
                 break;
             case HID_USAGE_GENERIC_GAMEPAD:
             case HID_USAGE_GENERIC_JOYSTICK:
                 //
                 // Joystick / Gamepad
                 //
-                Offset += swprintf(&Buffer[Offset], L"HID_DEVICE_SYSTEM_GAME") + 1;
+                Offset += _swprintf(&Buffer[Offset], L"HID_DEVICE_SYSTEM_GAME") + 1;
                 break;
             case HID_USAGE_GENERIC_KEYBOARD:
             case HID_USAGE_GENERIC_KEYPAD:
                 //
                 // Keyboard / Keypad
                 //
-                Offset += swprintf(&Buffer[Offset], L"HID_DEVICE_SYSTEM_KEYBOARD") + 1;
+                Offset += _swprintf(&Buffer[Offset], L"HID_DEVICE_SYSTEM_KEYBOARD") + 1;
                 break;
             case HID_USAGE_GENERIC_SYSTEM_CTL:
                 //
                 // System Control
                 //
-                Offset += swprintf(&Buffer[Offset], L"HID_DEVICE_SYSTEM_CONTROL") + 1;
+                Offset += _swprintf(&Buffer[Offset], L"HID_DEVICE_SYSTEM_CONTROL") + 1;
                 break;
         }
     }
@@ -264,18 +264,18 @@ HidClassPDO_HandleQueryHardwareId(
         //
         // Consumer Audio Control
         //
-        Offset += swprintf(&Buffer[Offset], L"HID_DEVICE_SYSTEM_CONSUMER") + 1;
+        Offset += _swprintf(&Buffer[Offset], L"HID_DEVICE_SYSTEM_CONSUMER") + 1;
     }
 
     //
     // add HID_DEVICE_UP:0001_U:0002'
     //
-    Offset += swprintf(&Buffer[Offset], L"HID_DEVICE_UP:%04x_U:%04x", CollectionDescription->UsagePage, CollectionDescription->Usage) + 1;
+    Offset += _swprintf(&Buffer[Offset], L"HID_DEVICE_UP:%04x_U:%04x", CollectionDescription->UsagePage, CollectionDescription->Usage) + 1;
 
     //
     // add HID
     //
-    Offset +=swprintf(&Buffer[Offset], L"HID_DEVICE") + 1;
+    Offset += _swprintf(&Buffer[Offset], L"HID_DEVICE") + 1;
 
     //
     // free old buffer
@@ -337,7 +337,7 @@ HidClassPDO_HandleQueryInstanceId(
     //
     // write device id
     //
-    swprintf(Buffer, L"%04x", PDODeviceExtension->CollectionNumber);
+    _swprintf(Buffer, L"%04x", PDODeviceExtension->CollectionNumber);
     Irp->IoStatus.Information = (ULONG_PTR)Buffer;
 
     //

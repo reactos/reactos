@@ -40,7 +40,7 @@ ErrorMessage(
     if (szFormat)
     {
         va_start(arg_ptr, szFormat);
-        vswprintf(szMessage, szFormat, arg_ptr);
+        _vswprintf(szMessage, szFormat, arg_ptr);
         va_end(arg_ptr);
     }
 

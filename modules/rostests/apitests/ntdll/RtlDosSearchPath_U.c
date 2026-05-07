@@ -223,8 +223,8 @@ RunTestCases(
 
     for (i = 0; i < sizeof(Tests) / sizeof(Tests[0]); i++)
     {
-        swprintf(SearchPath, Tests[i].SearchPath, CustomPath, CustomPath, CustomPath, CustomPath);
-        swprintf(FileName, Tests[i].FileName, CustomPath, CustomPath, CustomPath, CustomPath);
+        _swprintf(SearchPath, Tests[i].SearchPath, CustomPath, CustomPath, CustomPath, CustomPath);
+        _swprintf(FileName, Tests[i].FileName, CustomPath, CustomPath, CustomPath, CustomPath);
         RtlFillMemory(Buffer, sizeof(Buffer), 0x55);
         PartName = InvalidPointer;
 
@@ -239,7 +239,7 @@ RunTestCases(
 
         if (Tests[i].ResultPath)
         {
-            swprintf(ResultPath, Tests[i].ResultPath, CustomPath, CustomPath, CustomPath, CustomPath);
+            _swprintf(ResultPath, Tests[i].ResultPath, CustomPath, CustomPath, CustomPath, CustomPath);
             if (Tests[i].ResultFileName)
             {
                 ok(PartName == &Buffer[wcslen(ResultPath)],
@@ -270,14 +270,14 @@ RunTestCases(
 
 #define MAKE_DIRECTORY(path)                                                \
 do {                                                                        \
-    swprintf(FileName, path, CustomPath);                                   \
+    _swprintf(FileName, path, CustomPath);                                  \
     Success = CreateDirectoryW(FileName, NULL);                             \
     ok(Success, "CreateDirectory failed, results might not be accurate\n"); \
 } while (0)
 
 #define MAKE_FILE(path)                                                     \
 do {                                                                        \
-    swprintf(FileName, path, CustomPath);                                   \
+    _swprintf(FileName, path, CustomPath);                                  \
     Handle = CreateFileW(FileName, 0, 0, NULL, CREATE_NEW, 0, NULL);        \
     ok(Handle != INVALID_HANDLE_VALUE,                                      \
        "CreateFile failed, results might not be accurate\n");               \
@@ -286,7 +286,7 @@ do {                                                                        \
 
 #define DELETE_DIRECTORY(path)                                              \
 do {                                                                        \
-    swprintf(FileName, path, CustomPath);                                   \
+    _swprintf(FileName, path, CustomPath);                                  \
     Success = RemoveDirectoryW(FileName);                                   \
     ok(Success,                                                             \
        "RemoveDirectory failed (%lu), test might leave stale directory\n",  \
@@ -295,7 +295,7 @@ do {                                                                        \
 
 #define DELETE_FILE(path)                                                   \
 do {                                                                        \
-    swprintf(FileName, path, CustomPath);                                   \
+    _swprintf(FileName, path, CustomPath);                                  \
     Success = DeleteFileW(FileName);                                        \
     ok(Success,                                                             \
        "DeleteFile failed (%lu), test might leave stale file\n",            \
@@ -313,12 +313,12 @@ START_TEST(RtlDosSearchPath_U)
     WCHAR CustomPath[MAX_PATH] = L"RtlDosSearchPath_U_TestPath";
     HANDLE Handle;
 
-    swprintf(FileName, L"C:\\%ls", CustomPath);
+    _swprintf(FileName, L"C:\\%ls", CustomPath);
     /* Make sure this directory doesn't exist */
     while (GetFileAttributesW(FileName) != INVALID_FILE_ATTRIBUTES)
     {
         wcscat(CustomPath, L"X");
-        swprintf(FileName, L"C:\\%ls", CustomPath);
+        _swprintf(FileName, L"C:\\%ls", CustomPath);
     }
     Success = CreateDirectoryW(FileName, NULL);
     ok(Success, "CreateDirectory failed, results might not be accurate\n");

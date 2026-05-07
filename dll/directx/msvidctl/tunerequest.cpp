@@ -26,7 +26,7 @@ public:
             OutputDebugStringW(L"CTuneRequest::Release : delete\n");
 
             WCHAR Buffer[100];
-            swprintf(Buffer, L"CTuneRequest::Release : m_TuningSpace %p delete\n", m_TuningSpace);
+            _swprintf(Buffer, L"CTuneRequest::Release : m_TuningSpace %p delete\n", m_TuningSpace);
             OutputDebugStringW(Buffer);
 
 
@@ -113,7 +113,7 @@ CTuneRequest::QueryInterface(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CTuneRequest::QueryInterface: NoInterface for %s", lpstr);
+    _swprintf(Buffer, L"CTuneRequest::QueryInterface: NoInterface for %s", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 
@@ -186,7 +186,7 @@ CTuneRequest::Clone(ITuneRequest **NewTuneRequest)
 {
 #ifdef MSVIDCTL_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CTuneRequest::Clone %p\n", NewTuneRequest);
+    _swprintf(Buffer, L"CTuneRequest::Clone %p\n", NewTuneRequest);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -238,7 +238,7 @@ CTuneRequest::put_ONID(long ONID)
 {
 #ifdef MSVIDCTL_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CTuneRequest::put_ONID : %lu\n", ONID);
+    _swprintf(Buffer, L"CTuneRequest::put_ONID : %lu\n", ONID);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -264,7 +264,7 @@ CTuneRequest::put_TSID(long TSID)
 {
 #ifdef MSVIDCTL_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CTuneRequest::put_TSID : %lu\n", TSID);
+    _swprintf(Buffer, L"CTuneRequest::put_TSID : %lu\n", TSID);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -290,7 +290,7 @@ CTuneRequest::put_SID(long SID)
 {
 #ifdef MSVIDCTL_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CTuneRequest::put_SID : %lu\n", SID);
+    _swprintf(Buffer, L"CTuneRequest::put_SID : %lu\n", SID);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -313,7 +313,7 @@ CTuneRequest_fnConstructor(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(riid, &lpstr);
-    swprintf(Buffer, L"CTuneRequest_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
+    _swprintf(Buffer, L"CTuneRequest_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
     OutputDebugStringW(Buffer);
 #endif
 

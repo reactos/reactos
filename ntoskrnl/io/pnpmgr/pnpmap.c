@@ -470,7 +470,7 @@ IopEnumerateDetectedDevices(
             goto nextdevice;
         }
 
-        swprintf(Level2Name, L"%04lu", DeviceIndex);
+        _swprintf(Level2Name, L"%04lu", DeviceIndex);
         RtlInitUnicodeString(&Level2NameU, Level2Name);
         InitializeObjectAttributes(&ObjectAttributes, &Level2NameU, OBJ_KERNEL_HANDLE, hLevel1Key, NULL);
 

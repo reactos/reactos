@@ -353,33 +353,33 @@ RtlConvertSidToUnicodeString(IN PUNICODE_STRING String,
     if (!RtlValidSid(Sid)) return STATUS_INVALID_SID;
 
     wcs = Buffer;
-    wcs += swprintf(wcs, L"S-1-");
+    wcs += _swprintf(wcs, L"S-1-");
 
     if ((Sid->IdentifierAuthority.Value[0] == 0) &&
         (Sid->IdentifierAuthority.Value[1] == 0))
     {
-        wcs += swprintf(wcs,
-                        L"%lu",
-                        (ULONG)Sid->IdentifierAuthority.Value[2] << 24 |
-                        (ULONG)Sid->IdentifierAuthority.Value[3] << 16 |
-                        (ULONG)Sid->IdentifierAuthority.Value[4] << 8 |
-                        (ULONG)Sid->IdentifierAuthority.Value[5]);
+        wcs += _swprintf(wcs,
+                         L"%lu",
+                         (ULONG)Sid->IdentifierAuthority.Value[2] << 24 |
+                         (ULONG)Sid->IdentifierAuthority.Value[3] << 16 |
+                         (ULONG)Sid->IdentifierAuthority.Value[4] << 8 |
+                         (ULONG)Sid->IdentifierAuthority.Value[5]);
     }
     else
     {
-        wcs += swprintf(wcs,
-                        L"0x%02hx%02hx%02hx%02hx%02hx%02hx",
-                        Sid->IdentifierAuthority.Value[0],
-                        Sid->IdentifierAuthority.Value[1],
-                        Sid->IdentifierAuthority.Value[2],
-                        Sid->IdentifierAuthority.Value[3],
-                        Sid->IdentifierAuthority.Value[4],
-                        Sid->IdentifierAuthority.Value[5]);
+        wcs += _swprintf(wcs,
+                         L"0x%02hx%02hx%02hx%02hx%02hx%02hx",
+                         Sid->IdentifierAuthority.Value[0],
+                         Sid->IdentifierAuthority.Value[1],
+                         Sid->IdentifierAuthority.Value[2],
+                         Sid->IdentifierAuthority.Value[3],
+                         Sid->IdentifierAuthority.Value[4],
+                         Sid->IdentifierAuthority.Value[5]);
     }
 
     for (i = 0; i < Sid->SubAuthorityCount; i++)
     {
-        wcs += swprintf(wcs, L"-%u", Sid->SubAuthority[i]);
+        wcs += _swprintf(wcs, L"-%u", Sid->SubAuthority[i]);
     }
 
     if (AllocateBuffer)

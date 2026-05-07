@@ -972,7 +972,7 @@ CreateUserProfileExW(
 
         for (i = 0; i < 1000; i++)
         {
-            swprintf(szUserProfileName, L"%s.%03u", lpUserName, i);
+            _swprintf(szUserProfileName, L"%s.%03u", lpUserName, i);
 
             StringCbCopyW(szUserProfilePath, sizeof(szUserProfilePath), szProfilesPath);
             StringCbCatW(szUserProfilePath, sizeof(szUserProfilePath), L"\\");

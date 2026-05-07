@@ -1030,7 +1030,7 @@ AddControllers(PDRIVER_OBJECT DriverObject)
 
             DriveNumber = (UCHAR)(i*4 + j); /* loss of precision is OK; there are only 16 of 'em */
 
-            swprintf(gControllerInfo[i].DriveInfo[j].DeviceNameBuffer, L"\\Device\\Floppy%d", DriveNumber);
+            _swprintf(gControllerInfo[i].DriveInfo[j].DeviceNameBuffer, L"\\Device\\Floppy%d", DriveNumber);
             RtlInitUnicodeString(&DeviceName, gControllerInfo[i].DriveInfo[j].DeviceNameBuffer);
 
             if(IoCreateDevice(DriverObject, sizeof(PVOID), &DeviceName,
@@ -1047,8 +1047,8 @@ AddControllers(PDRIVER_OBJECT DriverObject)
                           gControllerInfo[i].DriveInfo[j].DeviceObject);
 
             /* 3b.5: Create an ARC path in case we're booting from this drive */
-            swprintf(gControllerInfo[i].DriveInfo[j].ArcPathBuffer,
-                     L"\\ArcName\\multi(%d)disk(%d)fdisk(%d)", gControllerInfo[i].BusNumber, i, DriveNumber);
+            _swprintf(gControllerInfo[i].DriveInfo[j].ArcPathBuffer,
+                      L"\\ArcName\\multi(%d)disk(%d)fdisk(%d)", gControllerInfo[i].BusNumber, i, DriveNumber);
 
             RtlInitUnicodeString(&ArcPath, gControllerInfo[i].DriveInfo[j].ArcPathBuffer);
             IoAssignArcName(&ArcPath, &DeviceName);

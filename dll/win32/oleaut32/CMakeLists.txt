@@ -9,7 +9,8 @@ add_definitions(
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL
     -DENTRY_PREFIX=OLEAUTPS_
-    -DPROXY_CLSID=CLSID_PSFactoryBuffer)
+    -DPROXY_CLSID=CLSID_PSFactoryBuffer
+    -D_CRT_NON_CONFORMING_SWPRINTFS)
 
 spec2def(oleaut32.dll oleaut32.spec ADD_IMPORTLIB)
 add_rpcproxy_files(oleaut32_oaidl.idl oleaut32_ocidl.idl)

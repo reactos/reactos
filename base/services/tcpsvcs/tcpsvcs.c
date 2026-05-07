@@ -72,7 +72,7 @@ CreateServers(PSERVICEINFO pServInfo)
 
     if ((RetVal = WSAStartup(MAKEWORD(2, 2), &wsaData)) != 0)
     {
-        swprintf(buf, L"WSAStartup() failed : %lu\n", RetVal);
+        _swprintf(buf, L"WSAStartup() failed : %lu\n", RetVal);
         LogEvent(buf, 0, 100, LOG_ALL);
         return FALSE;
     }
@@ -84,7 +84,7 @@ CreateServers(PSERVICEINFO pServInfo)
     /* Create worker threads. */
     for (i = 0; i < NUM_SERVICES; i++)
     {
-        swprintf(buf, L"Creating thread for %s server", Services[i].lpName);
+        _swprintf(buf, L"Creating thread for %s server", Services[i].lpName);
         LogEvent(buf, 0, 0, LOG_FILE);
 
         hThread[i] = CreateThread(NULL,
@@ -96,7 +96,7 @@ CreateServers(PSERVICEINFO pServInfo)
 
         if (hThread[i] == NULL)
         {
-            swprintf(buf, L"\nError creating %s server thread\n", Services[i].lpName);
+            _swprintf(buf, L"\nError creating %s server thread\n", Services[i].lpName);
             LogEvent(buf, GetLastError(), 0, LOG_ALL);
             return FALSE;
         }

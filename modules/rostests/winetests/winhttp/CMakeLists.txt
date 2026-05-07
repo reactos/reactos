@@ -1,6 +1,5 @@
 
 add_definitions(-DUSE_WINE_TODOS)
-remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 
 list(APPEND SOURCE
     notification.c

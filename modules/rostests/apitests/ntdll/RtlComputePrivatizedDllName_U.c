@@ -48,8 +48,8 @@ static void ok_strings_(PCUNICODE_STRING RealName, PCUNICODE_STRING LocalName, L
     int RealLen;
     int ExpectLen;
 
-    RealLen = swprintf(ExpectReal, L"%s%s", ProcessDir, DllName) * sizeof(WCHAR);
-    ExpectLen = swprintf(ExpectLocal, L"%s%s", LocalDir, DllName) * sizeof(WCHAR);
+    RealLen = _swprintf(ExpectReal, L"%s%s", ProcessDir, DllName) * sizeof(WCHAR);
+    ExpectLen = _swprintf(ExpectLocal, L"%s%s", LocalDir, DllName) * sizeof(WCHAR);
 
     ok_(__FILE__, line)(RealLen == RealName->Length, "Expected Real %u, got %u\n",
                         (UINT)RealLen, (UINT)RealName->Length);

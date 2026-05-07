@@ -106,7 +106,7 @@ CBDASignalStatistics::get_SignalStrength(LONG *plDbStrength)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDASignalStatistics::get_SignalStrength: m_NodeId %lu hr %lx, BytesReturned %lu plDbStrength %ld\n", m_NodeId, hr, BytesReturned, *plDbStrength);
+    _swprintf(Buffer, L"CBDASignalStatistics::get_SignalStrength: m_NodeId %lu hr %lx, BytesReturned %lu plDbStrength %ld\n", m_NodeId, hr, BytesReturned, *plDbStrength);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -137,7 +137,7 @@ CBDASignalStatistics::get_SignalQuality(LONG *plPercentQuality)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDASignalStatistics::get_SignalQuality: m_NodeId %lu hr %lx, BytesReturned %lu plPercentQuality %lu\n", m_NodeId, hr, BytesReturned, *plPercentQuality);
+    _swprintf(Buffer, L"CBDASignalStatistics::get_SignalQuality: m_NodeId %lu hr %lx, BytesReturned %lu plPercentQuality %lu\n", m_NodeId, hr, BytesReturned, *plPercentQuality);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -172,7 +172,7 @@ CBDASignalStatistics::get_SignalPresent(BOOLEAN *pfPresent)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDASignalStatistics::get_SignalPresent: m_NodeId %lu hr %lx, BytesReturned %lu Present %lu\n", m_NodeId, hr, BytesReturned, Present);
+    _swprintf(Buffer, L"CBDASignalStatistics::get_SignalPresent: m_NodeId %lu hr %lx, BytesReturned %lu Present %lu\n", m_NodeId, hr, BytesReturned, Present);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -206,7 +206,7 @@ CBDASignalStatistics::get_SignalLocked(BOOLEAN *pfLocked)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDASignalStatistics::get_SignalLocked: m_NodeId %lu hr %lx, BytesReturned %lu Locked %lu\n", m_NodeId, hr, BytesReturned, Locked);
+    _swprintf(Buffer, L"CBDASignalStatistics::get_SignalLocked: m_NodeId %lu hr %lx, BytesReturned %lu Locked %lu\n", m_NodeId, hr, BytesReturned, Locked);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -229,7 +229,7 @@ CBDASignalStatistics::put_SampleTime(LONG lmsSampleTime)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDASignalStatistics::put_SampleTime: m_NodeId %lu hr %lx\n", m_NodeId, hr);
+    _swprintf(Buffer, L"CBDASignalStatistics::put_SampleTime: m_NodeId %lu hr %lx\n", m_NodeId, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -253,7 +253,7 @@ CBDASignalStatistics::get_SampleTime(LONG *plmsSampleTime)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDASignalStatistics::get_SampleTime: m_NodeId %lu hr %lx, BytesReturned %lu \n", m_NodeId, hr, BytesReturned);
+    _swprintf(Buffer, L"CBDASignalStatistics::get_SampleTime: m_NodeId %lu hr %lx, BytesReturned %lu \n", m_NodeId, hr, BytesReturned);
     OutputDebugStringW(Buffer);
 #endif
 

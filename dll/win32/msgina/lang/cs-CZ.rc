@@ -239,7 +239,7 @@ BEGIN
     IDS_PASSWORDEXPIRED "Heslu vypršela platnost a musí být změněno."
     IDS_ACCOUNTEXPIRED "Platnost vašeho účtu vypršela. Kontaktujte prosím správce vašeho systému."
     IDS_ACCOUNTLOCKED "Nebylo možné vás přihlásit, protože váš účet byl uzamčen. Obraťte se prosím na správce vašeho systému."
-    IDS_INVALIDLOGONHOURS "Váš účet má časové omezení, které vám bránit se teď přihlásit. Zkuste to prosím později."
+    IDS_INVALIDLOGONHOURS "Váš účet má časové omezení, které vám brání se teď přihlásit. Zkuste to prosím později."
     IDS_INVALIDWORKSTATION "Váš účet je nastaven tak, že se nemůžete přihlásit z tohoto počítače. Zkuste prosím jiný počítač."
     IDS_ACCOUNTRESTRICTION "Není možné vás přihlásit kvůli omezení účtu."
     IDS_EMERGENCYLOGOFFTITLE "Odhlásit se z ReactOS"

@@ -2,8 +2,6 @@
 remove_definitions(-DWINVER=0x502 -D_WIN32_WINNT=0x502)
 add_definitions(-DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00 -DNTDDI_VERSION=0x0A000005)
 
-remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
-
 list(APPEND SOURCE
     broadcast.c
     class.c

@@ -119,7 +119,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
 
     /* Create a random UUID for the named pipe & event*/
     UuidCreate(&RandomUuid);
-    swprintf(UuidString, L"{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+    _swprintf(UuidString, L"{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
         RandomUuid.Data1, RandomUuid.Data2, RandomUuid.Data3,
         RandomUuid.Data4[0], RandomUuid.Data4[1], RandomUuid.Data4[2],
         RandomUuid.Data4[3], RandomUuid.Data4[4], RandomUuid.Data4[5],

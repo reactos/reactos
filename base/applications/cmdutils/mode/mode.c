@@ -76,7 +76,7 @@ int ShowParallelStatus(INT nPortNum)
     WCHAR buffer[250];
     WCHAR szPortName[MAX_PORTNAME_LEN];
 
-    swprintf(szPortName, L"LPT%d", nPortNum);
+    _swprintf(szPortName, L"LPT%d", nPortNum);
 
     ConPuts(StdOut, L"\n");
     UnderlinedResPrintf(StdOut, IDS_DEVICE_STATUS_HEADER, szPortName);
@@ -113,8 +113,8 @@ int SetParallelState(INT nPortNum)
     WCHAR szPortName[MAX_PORTNAME_LEN];
     WCHAR szTargetPath[MAX_PORTNAME_LEN];
 
-    swprintf(szPortName, L"LPT%d", nPortNum);
-    swprintf(szTargetPath, L"COM%d", nPortNum);
+    _swprintf(szPortName, L"LPT%d", nPortNum);
+    _swprintf(szTargetPath, L"COM%d", nPortNum);
     if (!DefineDosDeviceW(DDD_REMOVE_DEFINITION, szPortName, szTargetPath))
     {
         ConPrintf(StdErr, L"ERROR: SetParallelState(%d) - DefineDosDevice(%s) failed: 0x%lx\n", nPortNum, szPortName, GetLastError());
@@ -528,7 +528,7 @@ SerialPortQuery(INT nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOOL bWr
     ASSERT(pDCB);
     ASSERT(pCommTimeouts);
 
-    swprintf(szPortName, L"COM%d", nPortNum);
+    _swprintf(szPortName, L"COM%d", nPortNum);
     hPort = CreateFileW(szPortName,
                         bWrite ? GENERIC_WRITE : GENERIC_READ,
                         0,     // exclusive
@@ -604,7 +604,7 @@ int ShowSerialStatus(INT nPortNum)
         dcb.StopBits = 0;
     }
 
-    swprintf(szPortName, L"COM%d", nPortNum);
+    _swprintf(szPortName, L"COM%d", nPortNum);
 
     ConPuts(StdOut, L"\n");
     UnderlinedResPrintf(StdOut, IDS_DEVICE_STATUS_HEADER, szPortName);

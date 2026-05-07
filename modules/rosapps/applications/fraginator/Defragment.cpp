@@ -6,7 +6,7 @@
 // and fits it to a given length. If it has to truncate it will first truncate from the path,
 // substituting in periods. So you might end up with something like:
 // C:\Program Files\Micro...\Register.exe
-int FitName (wchar_t *destination, const wchar_t *path, const wchar_t *filename, uint32 totalWidth)
+int FitName (wchar_t *destination, size_t destsize, const wchar_t *path, const wchar_t *filename, uint32 totalWidth)
 {
 	uint32 pathLen=0;
 	uint32 fnLen=0;
@@ -73,7 +73,7 @@ int FitName (wchar_t *destination, const wchar_t *path, const wchar_t *filename,
 	wcscpy (fmtString, fmtStrPath);
 	wcscat (fmtString, fmtStrFile);
 	/*swprintf (fmtString, L"%s%s", fmtStrPath, fmtStrFile);*/
-	swprintf (destination, fmtString, path,filename);
+	swprintf(destination, destsize, fmtString, path,filename);
 
 	return (1);
 }
@@ -316,7 +316,7 @@ void Defragment::Start (void)
             SetStatusString (Volume.GetDBDir (Info.DirIndice) + Info.Name);
         else
         {
-            FitName (PrintName, Volume.GetDBDir (Info.DirIndice).c_str(), Info.Name.c_str(), Width);
+            FitName (PrintName, _countof(PrintName), Volume.GetDBDir (Info.DirIndice).c_str(), Info.Name.c_str(), Width);
             SetStatusString (PrintName);
         }
 

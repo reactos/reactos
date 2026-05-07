@@ -1,5 +1,6 @@
 
 add_definitions(
+    -D_CRT_NON_CONFORMING_SWPRINTFS
     -D_WINE)
 
 spec2def(mpr.dll mpr.spec ADD_IMPORTLIB)

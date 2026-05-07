@@ -19,6 +19,7 @@ list(APPEND SOURCE
     PathUnExpandEnvStringsForUser.c
     SHAreIconsEqual.c
     SHGetRestriction.c
+    SHInvokeCommandsOnContextMenu.cpp
     SHLoadIndirectString.c
     SHLoadRegUIString.c
     SHPropertyBag.cpp

@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
     }
 
     /* Build the full drive name */
-    swprintf(DriveName, L"\\\\.\\PHYSICALDRIVE%lu", ulDrive);
+    _swprintf(DriveName, L"\\\\.\\PHYSICALDRIVE%lu", ulDrive);
 
     /* Open the drive */
     hDisk = CreateFileW(DriveName,

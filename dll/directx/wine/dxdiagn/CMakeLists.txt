@@ -16,6 +16,7 @@ add_library(dxdiagn MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/dxdiagn.def)
 
 set_module_type(dxdiagn win32dll)
+target_compile_definitions(dxdiagn PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(dxdiagn strmiids dxguid uuid wine)
 add_dependencies(dxdiagn wineheaders)
 add_importlibs(dxdiagn d3d9 ddraw version ole32 oleaut32 psapi user32 dsound msvcrt kernel32 ntdll)
