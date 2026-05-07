@@ -9,3 +9,8 @@ UnattendSetupEnabled = no
 ; Set this option to automatically specify language in the language setup.
 ; See hivesys.inf for available languages.
 LocaleID = 409
+
+; Enable this section to enable the default ReactOS theme.
+;[Shell]
+;DefaultThemesOff = no
+;CustomDefaultThemeFile = "%WINDIR%\Resources\Themes\Lautus\lautus.msstyles"
