@@ -1,11 +1,8 @@
-/* FontSub by Katayama Hirofumi MZ
- *
- * To the extent possible under law, the person who associated CC0 with
- * FontSub has waived all copyright and related or neighboring rights
- * to FontSub.
- *
- * You should have received a copy of the CC0 legalcode along with this
- * work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+/*
+ * PROJECT:     ReactOS Font Substitution Utility
+ * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0.html)
+ * PURPOSE:     French translation
+ * COPYRIGHT:   Copyright 2026 Thomas Anderson <your-email@example.com>
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
