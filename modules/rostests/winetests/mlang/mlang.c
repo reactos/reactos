@@ -20,9 +20,6 @@
  */
 
 #define COBJMACROS
-#ifdef __REACTOS__
-#define CONST_VTABLE
-#endif
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -582,7 +579,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenA = 0;
     lenW = ARRAY_SIZE(bufW);
     ret = IMultiLanguage2_ConvertStringToUnicode(iML2, NULL, 1252, stringA, &lenA, bufW, &lenW);
-    ok(ret == S_OK, "IMultiLanguage2_ConvertStringToUnicode failed: %08x\n", ret);
+    ok(ret == S_OK, "IMultiLanguage2_ConvertStringToUnicode failed: %08lx\n", ret);
     ok(lenA == 0, "expected lenA 0, got %u\n", lenA);
     ok(lenW == 0, "expected lenW 0, got %u\n", lenW);
 
@@ -590,7 +587,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenA = -1;
     lenW = ARRAY_SIZE(bufW);
     ret = IMultiLanguage2_ConvertStringToUnicode(iML2, NULL, 1252, stringA, &lenA, bufW, &lenW);
-    ok(ret == S_OK, "IMultiLanguage2_ConvertStringToUnicode failed: %08x\n", ret);
+    ok(ret == S_OK, "IMultiLanguage2_ConvertStringToUnicode failed: %08lx\n", ret);
     ok(lenA == lstrlenA(stringA), "expected lenA %u, got %u\n", lstrlenA(stringA), lenA);
     ok(lenW == lstrlenW(stringW), "expected lenW %u, got %u\n", lstrlenW(stringW), lenW);
     if (lenW < ARRAY_SIZE(bufW)) {
@@ -604,7 +601,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenA = -1;
     lenW = 5;
     ret = IMultiLanguage2_ConvertStringToUnicode(iML2, NULL, 1252, stringA, &lenA, bufW, &lenW);
-    ok(ret == E_FAIL, "IMultiLanguage2_ConvertStringToUnicode should fail: %08x\n", ret);
+    ok(ret == E_FAIL, "IMultiLanguage2_ConvertStringToUnicode should fail: %08lx\n", ret);
     ok(lenW == 0, "expected lenW 0, got %u\n", lenW);
     /* still has to do partial conversion */
     ok(!memcmp(bufW, stringW, 5 * sizeof(WCHAR)), "bufW/stringW mismatch\n");
@@ -613,7 +610,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenA = -1;
     lenW = ARRAY_SIZE(bufW);
     ret = IMultiLanguage2_ConvertStringToUnicode(iML2, NULL, CP_UNICODE, stringA, &lenA, bufW, &lenW);
-    ok(ret == S_OK, "IMultiLanguage2_ConvertStringToUnicode failed: %08x\n", ret);
+    ok(ret == S_OK, "IMultiLanguage2_ConvertStringToUnicode failed: %08lx\n", ret);
     ok(lenA == lstrlenA(stringA), "expected lenA %u, got %u\n", lstrlenA(stringA), lenA);
     ok(lenW == lstrlenW(stringW)/(int)sizeof(WCHAR), "wrong lenW %u\n", lenW);
     ok(bufW[lenW] != 0, "buf should not be 0 terminated\n");
@@ -624,7 +621,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenA = lstrlenA(stringA);
     lenW = 0;
     ret = IMultiLanguage2_ConvertStringToUnicode(iML2, NULL, 1252, stringA, &lenA, NULL, &lenW);
-    ok(ret == S_OK, "IMultiLanguage2_ConvertStringToUnicode failed: %08x\n", ret);
+    ok(ret == S_OK, "IMultiLanguage2_ConvertStringToUnicode failed: %08lx\n", ret);
     ok(lenA == lstrlenA(stringA), "expected lenA %u, got %u\n", lstrlenA(stringA), lenA);
     expected_len = MultiByteToWideChar(1252, 0, stringA, lenA, NULL, 0);
     ok(lenW == expected_len, "expected lenW %u, got %u\n", expected_len, lenW);
@@ -633,7 +630,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenA = lstrlenA(stringA);
     lenW = ARRAY_SIZE(bufW);
     ret = pConvertINetMultiByteToUnicode(NULL, 1252, stringA, (INT *)&lenA, NULL, (INT *)&lenW);
-    ok(ret == S_OK, "ConvertINetMultiByteToUnicode failed: %08x\n", ret);
+    ok(ret == S_OK, "ConvertINetMultiByteToUnicode failed: %08lx\n", ret);
     ok(lenA == lstrlenA(stringA), "expected lenA %u, got %u\n", lstrlenA(stringA), lenA);
     expected_len = MultiByteToWideChar(1252, 0, stringA, lenA, NULL, 0);
     ok(lenW == expected_len, "expected lenW %u, got %u\n", expected_len, lenW);
@@ -642,7 +639,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenA = lstrlenA(stringA);
     lenW = 0;
     ret = pConvertINetMultiByteToUnicode(NULL, 1252, stringA, (INT *)&lenA, NULL, (INT *)&lenW);
-    ok(ret == S_OK, "ConvertINetMultiByteToUnicode failed: %08x\n", ret);
+    ok(ret == S_OK, "ConvertINetMultiByteToUnicode failed: %08lx\n", ret);
     ok(lenA == lstrlenA(stringA), "expected lenA %u, got %u\n", lstrlenA(stringA), lenA);
     expected_len = MultiByteToWideChar(1252, 0, stringA, lenA, NULL, 0);
     ok(lenW == expected_len, "expected lenW %u, got %u\n", expected_len, lenW);
@@ -653,7 +650,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenW = 0;
     lenA = sizeof(bufA);
     ret = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, stringW, &lenW, bufA, &lenA);
-    ok(ret == S_OK, "IMultiLanguage2_ConvertStringFromUnicode failed: %08x\n", ret);
+    ok(ret == S_OK, "IMultiLanguage2_ConvertStringFromUnicode failed: %08lx\n", ret);
     ok(lenA == 0, "expected lenA 0, got %u\n", lenA);
     ok(lenW == 0, "expected lenW 0, got %u\n", lenW);
 
@@ -661,7 +658,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenW = -1;
     lenA = sizeof(bufA);
     ret = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, stringW, &lenW, bufA, &lenA);
-    ok(ret == S_OK, "IMultiLanguage2_ConvertStringFromUnicode failed: %08x\n", ret);
+    ok(ret == S_OK, "IMultiLanguage2_ConvertStringFromUnicode failed: %08lx\n", ret);
     ok(lenA == lstrlenA(stringA), "expected lenA %u, got %u\n", lstrlenA(stringA), lenA);
     ok(lenW == lstrlenW(stringW), "expected lenW %u, got %u\n", lstrlenW(stringW), lenW);
     ok(bufA[lenA] != 0, "buf should not be 0 terminated\n");
@@ -672,7 +669,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenW = -1;
     lenA = 5;
     ret = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, stringW, &lenW, bufA, &lenA);
-    ok(ret == E_FAIL, "IMultiLanguage2_ConvertStringFromUnicode should fail: %08x\n", ret);
+    ok(ret == E_FAIL, "IMultiLanguage2_ConvertStringFromUnicode should fail: %08lx\n", ret);
     ok(lenA == 0, "expected lenA 0, got %u\n", lenA);
     /* still has to do partial conversion */
     ok(!memcmp(bufA, stringA, 5), "bufW/stringW mismatch\n");
@@ -681,7 +678,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenW = -1;
     lenA = sizeof(bufA);
     ret = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, CP_UNICODE, stringW, &lenW, bufA, &lenA);
-    ok(ret == S_OK, "IMultiLanguage2_ConvertStringFromUnicode failed: %08x\n", ret);
+    ok(ret == S_OK, "IMultiLanguage2_ConvertStringFromUnicode failed: %08lx\n", ret);
     ok(lenA == lstrlenA(stringA) * (int)sizeof(WCHAR), "wrong lenA %u\n", lenA);
     ok(lenW == lstrlenW(stringW), "expected lenW %u, got %u\n", lstrlenW(stringW), lenW);
     ok(bufA[lenA] != 0 && bufA[lenA+1] != 0, "buf should not be 0 terminated\n");
@@ -693,7 +690,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
     lenW = lstrlenW(stringW);
     lenA = 0;
     ret = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, stringW, &lenW, NULL, &lenA);
-    ok(ret == S_OK, "IMultiLanguage2_ConvertStringFromUnicode failed: %08x\n", ret);
+    ok(ret == S_OK, "IMultiLanguage2_ConvertStringFromUnicode failed: %08lx\n", ret);
     ok(lenW == lstrlenW(stringW), "expected lenW %u, got %u\n", lstrlenW(stringW), lenW);
     expected_len = WideCharToMultiByte(1252, 0, stringW, lenW, NULL, 0, NULL, NULL);
     ok(lenA == expected_len, "expected lenA %u, got %u\n", expected_len, lenA);
@@ -701,7 +698,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
 
 static void cpinfo_cmp(MIMECPINFO *cpinfo1, MIMECPINFO *cpinfo2)
 {
-    ok(cpinfo1->dwFlags == cpinfo2->dwFlags, "dwFlags mismatch: %08x != %08x\n", cpinfo1->dwFlags, cpinfo2->dwFlags);
+    ok(cpinfo1->dwFlags == cpinfo2->dwFlags, "dwFlags mismatch: %08lx != %08lx\n", cpinfo1->dwFlags, cpinfo2->dwFlags);
     ok(cpinfo1->uiCodePage == cpinfo2->uiCodePage, "uiCodePage mismatch: %u != %u\n", cpinfo1->uiCodePage, cpinfo2->uiCodePage);
     ok(cpinfo1->uiFamilyCodePage == cpinfo2->uiFamilyCodePage, "uiFamilyCodePage mismatch: %u != %u\n", cpinfo1->uiFamilyCodePage, cpinfo2->uiFamilyCodePage);
     ok(!lstrcmpW(cpinfo1->wszDescription, cpinfo2->wszDescription), "wszDescription mismatch\n");
@@ -791,42 +788,42 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 
     total = 0;
     ret = IMultiLanguage2_GetNumberOfCodePageInfo(iML2, &total);
-    ok(ret == S_OK && total != 0, "IMultiLanguage2_GetNumberOfCodePageInfo: expected S_OK/!0, got %08x/%u\n", ret, total);
+    ok(ret == S_OK && total != 0, "IMultiLanguage2_GetNumberOfCodePageInfo: expected S_OK/!0, got %08lx/%u\n", ret, total);
 
     trace("total mlang supported codepages %u\n", total);
 
     ret = IMultiLanguage2_EnumCodePages(iML2, flags, LANG_NEUTRAL, &iEnumCP);
-    ok(ret == S_OK && iEnumCP, "IMultiLanguage2_EnumCodePages: expected S_OK/!NULL, got %08x/%p\n", ret, iEnumCP);
+    ok(ret == S_OK && iEnumCP, "IMultiLanguage2_EnumCodePages: expected S_OK/!NULL, got %08lx/%p\n", ret, iEnumCP);
 
     ret = IEnumCodePage_Reset(iEnumCP);
-    ok(ret == S_OK, "IEnumCodePage_Reset: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IEnumCodePage_Reset: expected S_OK, got %08lx\n", ret);
     n = 65536;
     ret = IEnumCodePage_Next(iEnumCP, 0, NULL, &n);
     ok(ret == S_FALSE || ret == E_FAIL,
-            "IEnumCodePage_Next: expected S_FALSE or E_FAIL, got %08x\n", ret);
+            "IEnumCodePage_Next: expected S_FALSE or E_FAIL, got %08lx\n", ret);
     if (ret == S_FALSE)
-        ok(n == 0, "IEnumCodePage_Next: expected 0/S_FALSE, got %u/%08x\n", n, ret);
+        ok(n == 0, "IEnumCodePage_Next: expected 0/S_FALSE, got %lu/%08lx\n", n, ret);
     else if (ret == E_FAIL)
-        ok(n == 65536, "IEnumCodePage_Next: expected 65536/E_FAIL, got %u/%08x\n", n, ret);
+        ok(n == 65536, "IEnumCodePage_Next: expected 65536/E_FAIL, got %lu/%08lx\n", n, ret);
     ret = IEnumCodePage_Next(iEnumCP, 0, NULL, NULL);
     ok(ret == S_FALSE || ret == E_FAIL,
-            "IEnumCodePage_Next: expected S_FALSE or E_FAIL, got %08x\n", ret);
+            "IEnumCodePage_Next: expected S_FALSE or E_FAIL, got %08lx\n", ret);
 
     cpinfo = HeapAlloc(GetProcessHeap(), 0, sizeof(*cpinfo) * total * 2);
 
     n = total * 2;
     ret = IEnumCodePage_Next(iEnumCP, 0, cpinfo, &n);
-    ok(ret == S_FALSE && n == 0, "IEnumCodePage_Next: expected S_FALSE/0, got %08x/%u\n", ret, n);
+    ok(ret == S_FALSE && n == 0, "IEnumCodePage_Next: expected S_FALSE/0, got %08lx/%lu\n", ret, n);
 
     n = total * 2;
     ret = IEnumCodePage_Next(iEnumCP, n, cpinfo, &n);
-    ok(ret == S_OK && n != 0, "IEnumCodePage_Next: expected S_OK/!0, got %08x/%u\n", ret, n);
+    ok(ret == S_OK && n != 0, "IEnumCodePage_Next: expected S_OK/!0, got %08lx/%lu\n", ret, n);
 
-    trace("flags %08x, enumerated codepages %u\n", flags, n);
+    trace("flags %08lx, enumerated codepages %lu\n", flags, n);
 
     if (!flags)
     {
-	ok(n == total, "IEnumCodePage_Next: expected %u, got %u\n", total, n);
+	ok(n == total, "IEnumCodePage_Next: expected %u, got %lu\n", total, n);
 
 	flags = MIMECONTF_MIME_LATEST;
     }
@@ -865,7 +862,7 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 	      wine_dbgstr_w(cpinfo[i].wszProportionalFont),
 	      cpinfo[i].bGDICharset);
 #endif
-	ok(cpinfo[i].dwFlags & flags, "enumerated flags %08x do not include requested %08x\n", cpinfo[i].dwFlags, flags);
+	ok(cpinfo[i].dwFlags & flags, "enumerated flags %08lx do not include requested %08lx\n", cpinfo[i].dwFlags, flags);
 
 	if (TranslateCharsetInfo((DWORD *)(INT_PTR)cpinfo[i].uiFamilyCodePage, &csi, TCI_SRCCODEPAGE))
 	    ok(cpinfo[i].bGDICharset == csi.ciCharset, "%d != %d\n", cpinfo[i].bGDICharset, csi.ciCharset);
@@ -883,17 +880,17 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 	if (IsValidCodePage(cpinfo[i].uiCodePage))
 	{
 	    ret = IMultiLanguage2_IsConvertible(iML2, cpinfo[i].uiCodePage, CP_UNICODE);
-	    ok(ret == S_OK, "IMultiLanguage2_IsConvertible(%u -> CP_UNICODE) = %08x\n", cpinfo[i].uiCodePage, ret);
+	    ok(ret == S_OK, "IMultiLanguage2_IsConvertible(%u -> CP_UNICODE) = %08lx\n", cpinfo[i].uiCodePage, ret);
 	    ret = IMultiLanguage2_IsConvertible(iML2, CP_UNICODE, cpinfo[i].uiCodePage);
-	    ok(ret == S_OK, "IMultiLanguage2_IsConvertible(CP_UNICODE -> %u) = %08x\n", cpinfo[i].uiCodePage, ret);
+	    ok(ret == S_OK, "IMultiLanguage2_IsConvertible(CP_UNICODE -> %u) = %08lx\n", cpinfo[i].uiCodePage, ret);
 
             convertible = check_convertible(iML2, cpinfo[i].uiCodePage, CP_UTF8);
             if (convertible != E_FAIL)
             {
                 ret = IMultiLanguage2_IsConvertible(iML2, cpinfo[i].uiCodePage, CP_UTF8);
-                ok(ret == convertible, "IMultiLanguage2_IsConvertible(%u -> CP_UTF8) = %08x\n", cpinfo[i].uiCodePage, ret);
+                ok(ret == convertible, "IMultiLanguage2_IsConvertible(%u -> CP_UTF8) = %08lx\n", cpinfo[i].uiCodePage, ret);
                 ret = IMultiLanguage2_IsConvertible(iML2, CP_UTF8, cpinfo[i].uiCodePage);
-                ok(ret == convertible, "IMultiLanguage2_IsConvertible(CP_UTF8 -> %u) = %08x\n", cpinfo[i].uiCodePage, ret);
+                ok(ret == convertible, "IMultiLanguage2_IsConvertible(CP_UTF8 -> %u) = %08lx\n", cpinfo[i].uiCodePage, ret);
             }
 	}
 	else
@@ -908,7 +905,7 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
         /* _autoxxx charsets are a fake and GetCharsetInfo fails for them */
         if (memcmp(cpinfo[i].wszWebCharset, autoW, 5 * sizeof(WCHAR)))
         {
-            ok (ret == S_OK, "IMultiLanguage2_GetCharsetInfo failed: %08x\n", ret);
+            ok (ret == S_OK, "IMultiLanguage2_GetCharsetInfo failed: %08lx\n", ret);
 #ifdef DUMP_CP_INFO
             trace("%s: %u %u %s\n", wine_dbgstr_w(cpinfo[i].wszWebCharset), mcsi.uiCodePage, mcsi.uiInternetEncoding, wine_dbgstr_w(mcsi.wszCharset));
 #endif
@@ -934,7 +931,7 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
         /* _autoxxx charsets are a fake and GetCharsetInfo fails for them */
         if (memcmp(cpinfo[i].wszHeaderCharset, autoW, 5 * sizeof(WCHAR)))
         {
-            ok (ret == S_OK, "IMultiLanguage2_GetCharsetInfo failed: %08x\n", ret);
+            ok (ret == S_OK, "IMultiLanguage2_GetCharsetInfo failed: %08lx\n", ret);
 #ifdef DUMP_CP_INFO
             trace("%s: %u %u %s\n", wine_dbgstr_w(cpinfo[i].wszHeaderCharset), mcsi.uiCodePage, mcsi.uiInternetEncoding, wine_dbgstr_w(mcsi.wszCharset));
 #endif
@@ -960,7 +957,7 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
         /* _autoxxx charsets are a fake and GetCharsetInfo fails for them */
         if (memcmp(cpinfo[i].wszBodyCharset, autoW, 5 * sizeof(WCHAR)))
         {
-            ok (ret == S_OK, "IMultiLanguage2_GetCharsetInfo failed: %08x\n", ret);
+            ok (ret == S_OK, "IMultiLanguage2_GetCharsetInfo failed: %08lx\n", ret);
 #ifdef DUMP_CP_INFO
             trace("%s: %u %u %s\n", wine_dbgstr_w(cpinfo[i].wszBodyCharset), mcsi.uiCodePage, mcsi.uiInternetEncoding, wine_dbgstr_w(mcsi.wszCharset));
 #endif
@@ -982,13 +979,13 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
     /* now IEnumCodePage_Next should fail, since pointer is at the end */
     n = 1;
     ret = IEnumCodePage_Next(iEnumCP, 1, &cpinfo2, &n);
-    ok(ret == S_FALSE && n == 0, "IEnumCodePage_Next: expected S_FALSE/0, got %08x/%u\n", ret, n);
+    ok(ret == S_FALSE && n == 0, "IEnumCodePage_Next: expected S_FALSE/0, got %08lx/%lu\n", ret, n);
 
     ret = IEnumCodePage_Reset(iEnumCP);
-    ok(ret == S_OK, "IEnumCodePage_Reset: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IEnumCodePage_Reset: expected S_OK, got %08lx\n", ret);
     n = 0;
     ret = IEnumCodePage_Next(iEnumCP, 1, &cpinfo2, &n);
-    ok(n == 1 && ret == S_OK, "IEnumCodePage_Next: expected 1/S_OK, got %u/%08x\n", n, ret);
+    ok(n == 1 && ret == S_OK, "IEnumCodePage_Next: expected 1/S_OK, got %lu/%08lx\n", n, ret);
     cpinfo_cmp(cpinfo, &cpinfo2);
 
     if (0)
@@ -997,13 +994,13 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
      * it's not used here.
      */
     ret = IEnumCodePage_Skip(iEnumCP, 1);
-    ok(ret == S_OK, "IEnumCodePage_Skip: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IEnumCodePage_Skip: expected S_OK, got %08lx\n", ret);
     }
     for (i = 0; i < total - 1; i++)
     {
         n = 0;
         ret = IEnumCodePage_Next(iEnumCP, 1, &cpinfo2, &n);
-        ok(n == 1 && ret == S_OK, "IEnumCodePage_Next: expected 1/S_OK, got %u/%08x\n", n, ret);
+        ok(n == 1 && ret == S_OK, "IEnumCodePage_Next: expected 1/S_OK, got %lu/%08lx\n", n, ret);
         cpinfo_cmp(&cpinfo[i + 1], &cpinfo2);
     }
 
@@ -1024,19 +1021,18 @@ static void test_GetCharsetInfo_other(IMultiLanguage *ml)
     WCHAR iso88591_6W[] =    {'-','I','S','O','8','8','5','9','1',0};
     WCHAR iso88591_7W[] =    {' ','I','S','O','-','8','8','5','9','-','1',0};
     struct other {
-        int todo;
         HRESULT hr;
         WCHAR* charset;
         WCHAR* ret_charset;
     } other[] = {
-        { 0, S_OK,   asciiW, asciiW },
-        { 0, S_OK,   iso88591_1W, iso88591_1retW },
-        { 1, S_OK,   iso88591_2W, iso88591_2retW },
-        { 0, E_FAIL, iso88591_3W, 0 },
-        { 0, E_FAIL, iso88591_4W, 0 },
-        { 0, E_FAIL, iso88591_5W, 0 },
-        { 0, E_FAIL, iso88591_6W, 0 },
-        { 0, E_FAIL, iso88591_7W, 0 },
+        { S_OK,   asciiW, asciiW },
+        { S_OK,   iso88591_1W, iso88591_1retW },
+        { S_OK,   iso88591_2W, iso88591_2retW },
+        { E_FAIL, iso88591_3W, 0 },
+        { E_FAIL, iso88591_4W, 0 },
+        { E_FAIL, iso88591_5W, 0 },
+        { E_FAIL, iso88591_6W, 0 },
+        { E_FAIL, iso88591_7W, 0 },
     };
     MIMECSETINFO info;
     HRESULT hr;
@@ -1046,11 +1042,9 @@ static void test_GetCharsetInfo_other(IMultiLanguage *ml)
     {
         hr = IMultiLanguage_GetCharsetInfo(ml, other[i].charset, &info);
 
-        todo_wine_if(other[i].todo)
-        ok(hr == other[i].hr, "#%d: got %08x, expected %08x\n", i, hr, other[i].hr);
+        ok(hr == other[i].hr, "#%d: got %08lx, expected %08lx\n", i, hr, other[i].hr);
 
         if (hr == S_OK)
-            todo_wine_if(other[i].todo)
             ok(!lstrcmpW(info.wszCharset, other[i].ret_charset), "#%d: got %s, expected %s\n",
                 i, wine_dbgstr_w(info.wszCharset), wine_dbgstr_w(other[i].ret_charset));
     }
@@ -1076,36 +1070,36 @@ static void test_EnumScripts(IMultiLanguage2 *iML2, DWORD flags)
 
     total = 0;
     ret = IMultiLanguage2_GetNumberOfScripts(iML2, &total);
-    ok(ret == S_OK && total != 0, "IMultiLanguage2_GetNumberOfScripts: expected S_OK/!0, got %08x/%u\n", ret, total);
+    ok(ret == S_OK && total != 0, "IMultiLanguage2_GetNumberOfScripts: expected S_OK/!0, got %08lx/%u\n", ret, total);
 
     trace("total mlang supported scripts %u\n", total);
 
     ret = IMultiLanguage2_EnumScripts(iML2, flags, LANG_NEUTRAL, &iEnumScript);
-    ok(ret == S_OK && iEnumScript, "IMultiLanguage2_EnumScripts: expected S_OK/!NULL, got %08x/%p\n", ret, iEnumScript);
+    ok(ret == S_OK && iEnumScript, "IMultiLanguage2_EnumScripts: expected S_OK/!NULL, got %08lx/%p\n", ret, iEnumScript);
 
     ret = IEnumScript_Reset(iEnumScript);
-    ok(ret == S_OK, "IEnumScript_Reset: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IEnumScript_Reset: expected S_OK, got %08lx\n", ret);
     n = 65536;
     ret = IEnumScript_Next(iEnumScript, 0, NULL, &n);
-    ok(n == 65536 && ret == E_FAIL, "IEnumScript_Next: expected 65536/E_FAIL, got %u/%08x\n", n, ret);
+    ok(n == 65536 && ret == E_FAIL, "IEnumScript_Next: expected 65536/E_FAIL, got %lu/%08lx\n", n, ret);
     ret = IEnumScript_Next(iEnumScript, 0, NULL, NULL);
-    ok(ret == E_FAIL, "IEnumScript_Next: expected E_FAIL, got %08x\n", ret);
+    ok(ret == E_FAIL, "IEnumScript_Next: expected E_FAIL, got %08lx\n", ret);
 
     sinfo = HeapAlloc(GetProcessHeap(), 0, sizeof(*sinfo) * total * 2);
 
     n = total * 2;
     ret = IEnumScript_Next(iEnumScript, 0, sinfo, &n);
-    ok(ret == S_FALSE && n == 0, "IEnumScript_Next: expected S_FALSE/0, got %08x/%u\n", ret, n);
+    ok(ret == S_FALSE && n == 0, "IEnumScript_Next: expected S_FALSE/0, got %08lx/%lu\n", ret, n);
 
     n = total * 2;
     ret = IEnumScript_Next(iEnumScript, n, sinfo, &n);
-    ok(ret == S_OK && n != 0, "IEnumScript_Next: expected S_OK, got %08x/%u\n", ret, n);
+    ok(ret == S_OK && n != 0, "IEnumScript_Next: expected S_OK, got %08lx/%lu\n", ret, n);
 
-    trace("flags %08x, enumerated scripts %u\n", flags, n);
+    trace("flags %08lx, enumerated scripts %lu\n", flags, n);
 
     if (!flags)
     {
-	ok(n == total, "IEnumScript_Next: expected %u, got %u\n", total, n);
+	ok(n == total, "IEnumScript_Next: expected %u, got %lu\n", total, n);
     }
 
     total = n;
@@ -1132,13 +1126,13 @@ static void test_EnumScripts(IMultiLanguage2 *iML2, DWORD flags)
     /* now IEnumScript_Next should fail, since pointer is at the end */
     n = 1;
     ret = IEnumScript_Next(iEnumScript, 1, &sinfo2, &n);
-    ok(ret == S_FALSE && n == 0, "IEnumScript_Next: expected S_FALSE/0, got %08x/%u\n", ret, n);
+    ok(ret == S_FALSE && n == 0, "IEnumScript_Next: expected S_FALSE/0, got %08lx/%lu\n", ret, n);
 
     ret = IEnumScript_Reset(iEnumScript);
-    ok(ret == S_OK, "IEnumScript_Reset: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IEnumScript_Reset: expected S_OK, got %08lx\n", ret);
     n = 0;
     ret = IEnumScript_Next(iEnumScript, 1, &sinfo2, &n);
-    ok(n == 1 && ret == S_OK, "IEnumScript_Next: expected 1/S_OK, got %u/%08x\n", n, ret);
+    ok(n == 1 && ret == S_OK, "IEnumScript_Next: expected 1/S_OK, got %lu/%08lx\n", n, ret);
     scriptinfo_cmp(sinfo, &sinfo2);
 
     if (0)
@@ -1147,13 +1141,13 @@ static void test_EnumScripts(IMultiLanguage2 *iML2, DWORD flags)
      * it's not used here.
      */
     ret = IEnumScript_Skip(iEnumScript, 1);
-    ok(ret == S_OK, "IEnumScript_Skip: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IEnumScript_Skip: expected S_OK, got %08lx\n", ret);
     }
     for (i = 0; i < total - 1; i++)
     {
         n = 0;
         ret = IEnumScript_Next(iEnumScript, 1, &sinfo2, &n);
-        ok(n == 1 && ret == S_OK, "IEnumScript_Next: expected 1/S_OK, got %u/%08x\n", n, ret);
+        ok(n == 1 && ret == S_OK, "IEnumScript_Next: expected 1/S_OK, got %lu/%08lx\n", n, ret);
         scriptinfo_cmp(&sinfo[i + 1], &sinfo2);
     }
 
@@ -1166,44 +1160,44 @@ static void IMLangFontLink_Test(IMLangFontLink* iMLFL)
     DWORD dwCodePages, dwManyCodePages;
     DWORD dwCmpCodePages;
     UINT CodePage;
-    static const WCHAR str[] = { 'd', 0x0436, 0xff90 };
+    static const WCHAR str[] = { 'd', 0x0436, 0xff90, 0x0160 };
     LONG processed;
     HRESULT ret;
 
     dwCodePages = ~0u;
     ret = IMLangFontLink_CodePageToCodePages(iMLFL, -1, &dwCodePages);
-    ok(ret == E_FAIL, "IMLangFontLink_CodePageToCodePages should fail: %x\n", ret);
-    ok(dwCodePages == 0, "expected 0, got %u\n", dwCodePages);
+    ok(ret == E_FAIL, "IMLangFontLink_CodePageToCodePages should fail: %lx\n", ret);
+    ok(dwCodePages == 0, "expected 0, got %lu\n", dwCodePages);
 
     dwCodePages = 0;
     ret = IMLangFontLink_CodePageToCodePages(iMLFL, 932, &dwCodePages);
-    ok(ret == S_OK, "IMLangFontLink_CodePageToCodePages error %x\n", ret);
-    ok(dwCodePages == FS_JISJAPAN, "expected FS_JISJAPAN, got %08x\n", dwCodePages);
+    ok(ret == S_OK, "IMLangFontLink_CodePageToCodePages error %lx\n", ret);
+    ok(dwCodePages == FS_JISJAPAN, "expected FS_JISJAPAN, got %08lx\n", dwCodePages);
     CodePage = 0;
     ret = IMLangFontLink_CodePagesToCodePage(iMLFL, dwCodePages, 1035, &CodePage);
-    ok(ret == S_OK, "IMLangFontLink_CodePagesToCodePage error %x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink_CodePagesToCodePage error %lx\n", ret);
     ok(CodePage == 932, "Incorrect CodePage Returned (%i)\n",CodePage);
 
     dwManyCodePages = 0;
     ret = IMLangFontLink_CodePageToCodePages(iMLFL, 1252, &dwManyCodePages);
-    ok(ret == S_OK, "IMLangFontLink_CodePageToCodePages error %x\n", ret);
-    ok(dwManyCodePages == FS_LATIN1, "expected FS_LATIN1, got %08x\n", dwManyCodePages);
+    ok(ret == S_OK, "IMLangFontLink_CodePageToCodePages error %lx\n", ret);
+    ok(dwManyCodePages == FS_LATIN1, "expected FS_LATIN1, got %08lx\n", dwManyCodePages);
     dwCodePages = 0;
     ret = IMLangFontLink_CodePageToCodePages(iMLFL, 1256, &dwCodePages);
-    ok(ret == S_OK, "IMLangFontLink_CodePageToCodePages error %x\n", ret);
-    ok(dwCodePages == FS_ARABIC, "expected FS_ARABIC, got %08x\n", dwCodePages);
+    ok(ret == S_OK, "IMLangFontLink_CodePageToCodePages error %lx\n", ret);
+    ok(dwCodePages == FS_ARABIC, "expected FS_ARABIC, got %08lx\n", dwCodePages);
     dwManyCodePages |= dwCodePages;
     ret = IMLangFontLink_CodePageToCodePages(iMLFL, 874, &dwCodePages);
-    ok(ret == S_OK, "IMLangFontLink_CodePageToCodePages error %x\n", ret);
-    ok(dwCodePages == FS_THAI, "expected FS_THAI, got %08x\n", dwCodePages);
+    ok(ret == S_OK, "IMLangFontLink_CodePageToCodePages error %lx\n", ret);
+    ok(dwCodePages == FS_THAI, "expected FS_THAI, got %08lx\n", dwCodePages);
     dwManyCodePages |= dwCodePages;
 
     ret = IMLangFontLink_CodePagesToCodePage(iMLFL, dwManyCodePages, 1256, &CodePage);
-    ok(ret == S_OK, "IMLangFontLink_CodePagesToCodePage error %x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink_CodePagesToCodePage error %lx\n", ret);
     ok(CodePage == 1256, "Incorrect CodePage Returned (%i)\n",CodePage);
 
     ret = IMLangFontLink_CodePagesToCodePage(iMLFL, dwManyCodePages, 936, &CodePage);
-    ok(ret == S_OK, "IMLangFontLink_CodePagesToCodePage error %x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink_CodePagesToCodePage error %lx\n", ret);
     ok(CodePage == 1252, "Incorrect CodePage Returned (%i)\n",CodePage);
 
     /* Tests for GetCharCodePages */
@@ -1213,101 +1207,161 @@ static void IMLangFontLink_Test(IMLangFontLink* iMLFL)
         | FS_HEBREW | FS_ARABIC | FS_BALTIC | FS_VIETNAMESE | FS_THAI
         | FS_JISJAPAN | FS_CHINESESIMP | FS_WANSUNG | FS_CHINESETRAD;
     ret = IMLangFontLink_GetCharCodePages(iMLFL, 'd', &dwCodePages);
-    ok(ret == S_OK, "IMLangFontLink_GetCharCodePages error %x\n", ret);
-    ok(dwCodePages == dwCmpCodePages, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
+    ok(ret == S_OK, "IMLangFontLink_GetCharCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
 
     dwCodePages = 0;
     processed = 0;
     ret = IMLangFontLink_GetStrCodePages(iMLFL, str, 1, 0, &dwCodePages, &processed);
-    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %x\n", ret);
-    ok(dwCodePages == dwCmpCodePages, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
-    ok(processed == 1, "expected 1, got %d\n", processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 1, "expected 1, got %ld\n", processed);
+
+    /* Latin 2 */
+    dwCmpCodePages = FS_LATIN1 | FS_LATIN2 | FS_TURKISH | FS_BALTIC;
+    ret = IMLangFontLink_GetCharCodePages(iMLFL, 0x0160, &dwCodePages);
+    ok(ret == S_OK, "IMLangFontLink_GetCharCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+
+    dwCodePages = 0;
+    processed = 0;
+    ret = IMLangFontLink_GetStrCodePages(iMLFL, &str[3], 1, 0, &dwCodePages, &processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 1, "expected 1, got %ld\n", processed);
 
     /* Cyrillic */
     dwCmpCodePages = FS_CYRILLIC | FS_JISJAPAN | FS_CHINESESIMP | FS_WANSUNG;
     ret = IMLangFontLink_GetCharCodePages(iMLFL, 0x0436, &dwCodePages);
-    ok(ret == S_OK, "IMLangFontLink_GetCharCodePages error %x\n", ret);
-    ok(dwCodePages == dwCmpCodePages, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
+    ok(ret == S_OK, "IMLangFontLink_GetCharCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
 
     dwCodePages = 0;
     processed = 0;
     ret = IMLangFontLink_GetStrCodePages(iMLFL, &str[1], 1, 0, &dwCodePages, &processed);
-    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %x\n", ret);
-    ok(dwCodePages == dwCmpCodePages, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
-    ok(processed == 1, "expected 1, got %d\n", processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 1, "expected 1, got %ld\n", processed);
 
     /* Japanese */
     dwCmpCodePages =  FS_JISJAPAN;
     ret = IMLangFontLink_GetCharCodePages(iMLFL, 0xff90, &dwCodePages);
-    ok(ret == S_OK, "IMLangFontLink_GetCharCodePages error %x\n", ret);
-    ok(dwCodePages == dwCmpCodePages, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
+    ok(ret == S_OK, "IMLangFontLink_GetCharCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
 
     dwCodePages = 0;
     processed = 0;
     ret = IMLangFontLink_GetStrCodePages(iMLFL, &str[2], 1, 0, &dwCodePages, &processed);
-    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %x\n", ret);
-    ok(dwCodePages == dwCmpCodePages, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
-    ok(processed == 1, "expected 1, got %d\n", processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 1, "expected 1, got %ld\n", processed);
 
     dwCmpCodePages = FS_CYRILLIC | FS_JISJAPAN | FS_CHINESESIMP | FS_WANSUNG;
     dwCodePages = 0;
     processed = 0;
     ret = IMLangFontLink_GetStrCodePages(iMLFL, str, 2, 0, &dwCodePages, &processed);
-    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %x\n", ret);
-    ok(dwCodePages == dwCmpCodePages, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
-    ok(processed == 2, "expected 2, got %d\n", processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 2, "expected 2, got %ld\n", processed);
 
     dwCmpCodePages = FS_JISJAPAN;
     dwCodePages = 0;
     processed = 0;
     ret = IMLangFontLink_GetStrCodePages(iMLFL, str, 3, 0, &dwCodePages, &processed);
-    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %x\n", ret);
-    ok(dwCodePages == dwCmpCodePages, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
-    ok(processed == 3, "expected 3, got %d\n", processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 3, "expected 3, got %ld\n", processed);
+
+    dwCmpCodePages = FS_JISJAPAN;
+    dwCodePages = 0;
+    processed = 0;
+    ret = IMLangFontLink_GetStrCodePages(iMLFL, str, 4, 0, &dwCodePages, &processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 3, "expected 3, got %ld\n", processed);
+
+    dwCmpCodePages = FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC | FS_GREEK | FS_TURKISH
+        | FS_HEBREW | FS_ARABIC | FS_BALTIC | FS_VIETNAMESE | FS_THAI
+        | FS_JISJAPAN | FS_CHINESESIMP | FS_WANSUNG | FS_CHINESETRAD;
+    dwCodePages = 0;
+    processed = 0;
+    ret = IMLangFontLink_GetStrCodePages(iMLFL, str, 4, FS_LATIN1, &dwCodePages, &processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 1, "expected 1, got %ld\n", processed);
+
+    dwCmpCodePages = FS_CYRILLIC | FS_JISJAPAN | FS_CHINESESIMP | FS_WANSUNG;
+    dwCodePages = 0;
+    processed = 0;
+    ret = IMLangFontLink_GetStrCodePages(iMLFL, str, 4, FS_CYRILLIC, &dwCodePages, &processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 2, "expected 2, got %ld\n", processed);
+
+    dwCmpCodePages = FS_JISJAPAN;
+    dwCodePages = 0;
+    processed = 0;
+    ret = IMLangFontLink_GetStrCodePages(iMLFL, str, 4, FS_JISJAPAN, &dwCodePages, &processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 3, "expected 3, got %ld\n", processed);
+
+    dwCmpCodePages = FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC | FS_GREEK | FS_TURKISH
+        | FS_HEBREW | FS_ARABIC | FS_BALTIC | FS_VIETNAMESE | FS_THAI
+        | FS_JISJAPAN | FS_CHINESESIMP | FS_WANSUNG | FS_CHINESETRAD;
+    dwCodePages = 0;
+    processed = 0;
+    ret = IMLangFontLink_GetStrCodePages(iMLFL, str, 4, FS_TURKISH, &dwCodePages, &processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 1, "expected 1, got %ld\n", processed);
+
+    dwCmpCodePages = FS_JISJAPAN;
+    dwCodePages = 0;
+    processed = 0;
+    ret = IMLangFontLink_GetStrCodePages(iMLFL, &str[1], 3, FS_TURKISH, &dwCodePages, &processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 2, "expected 2, got %ld\n", processed);
+
+    dwCmpCodePages = FS_JISJAPAN;
+    dwCodePages = 0;
+    processed = 0;
+    ret = IMLangFontLink_GetStrCodePages(iMLFL, L"\uff90a", 2, FS_LATIN1, &dwCodePages, &processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 1, "expected 1, got %ld\n", processed);
 
     dwCodePages = 0xffff;
     processed = -1;
     ret = IMLangFontLink_GetStrCodePages(iMLFL, &str[2], 1, 0, &dwCodePages, &processed);
-    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %x\n", ret);
-    ok(dwCodePages == dwCmpCodePages, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
-    ok(processed == 1, "expected 0, got %d\n", processed);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
+    ok(dwCodePages == dwCmpCodePages, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 1, "expected 0, got %ld\n", processed);
 
     ret = IMLangFontLink_GetStrCodePages(iMLFL, &str[2], 1, 0, NULL, NULL);
-    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %lx\n", ret);
 
     dwCodePages = 0xffff;
     processed = -1;
     ret = IMLangFontLink_GetStrCodePages(iMLFL, str, -1, 0, &dwCodePages, &processed);
-    ok(ret == E_INVALIDARG, "IMLangFontLink_GetStrCodePages should fail: %x\n", ret);
-    ok(dwCodePages == 0, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
-    ok(processed == 0, "expected 0, got %d\n", processed);
+    ok(ret == E_INVALIDARG, "IMLangFontLink_GetStrCodePages should fail: %lx\n", ret);
+    ok(dwCodePages == 0, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 0, "expected 0, got %ld\n", processed);
 
     dwCodePages = 0xffff;
     processed = -1;
     ret = IMLangFontLink_GetStrCodePages(iMLFL, NULL, 1, 0, &dwCodePages, &processed);
-    ok(ret == E_INVALIDARG, "IMLangFontLink_GetStrCodePages should fail: %x\n", ret);
-    ok(dwCodePages == 0, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
-    ok(processed == 0, "expected 0, got %d\n", processed);
+    ok(ret == E_INVALIDARG, "IMLangFontLink_GetStrCodePages should fail: %lx\n", ret);
+    ok(dwCodePages == 0, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 0, "expected 0, got %ld\n", processed);
 
     dwCodePages = 0xffff;
     processed = -1;
     ret = IMLangFontLink_GetStrCodePages(iMLFL, str, 0, 0, &dwCodePages, &processed);
-    ok(ret == E_INVALIDARG, "IMLangFontLink_GetStrCodePages should fail: %x\n", ret);
-    ok(dwCodePages == 0, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
-    ok(processed == 0, "expected 0, got %d\n", processed);
-}
-
-/* copied from libs/wine/string.c */
-static WCHAR *strstrW(const WCHAR *str, const WCHAR *sub)
-{
-    while (*str)
-    {
-        const WCHAR *p1 = str, *p2 = sub;
-        while (*p1 && *p2 && *p1 == *p2) { p1++; p2++; }
-        if (!*p2) return (WCHAR *)str;
-        str++;
-    }
-    return NULL;
+    ok(ret == E_INVALIDARG, "IMLangFontLink_GetStrCodePages should fail: %lx\n", ret);
+    ok(dwCodePages == 0, "expected %lx, got %lx\n", dwCmpCodePages, dwCodePages);
+    ok(processed == 0, "expected 0, got %ld\n", processed);
 }
 
 static void test_rfc1766(IMultiLanguage2 *iML2)
@@ -1319,7 +1373,7 @@ static void test_rfc1766(IMultiLanguage2 *iML2)
     BSTR rfcstr;
 
     ret = IMultiLanguage2_EnumRfc1766(iML2, LANG_NEUTRAL, &pEnumRfc1766);
-    ok(ret == S_OK, "IMultiLanguage2_EnumRfc1766 error %08x\n", ret);
+    ok(ret == S_OK, "IMultiLanguage2_EnumRfc1766 error %08lx\n", ret);
 
     while (1)
     {
@@ -1335,11 +1389,11 @@ static void test_rfc1766(IMultiLanguage2 *iML2)
 
         /* verify the Rfc1766 value */
         ret = IMultiLanguage2_GetRfc1766FromLcid(iML2, info.lcid, &rfcstr);
-        ok(ret == S_OK, "Expected S_OK, got %08x\n", ret);
+        ok(ret == S_OK, "Expected S_OK, got %08lx\n", ret);
 
         /* not an exact 1:1 correspondence between lcid and rfc1766 in the
          * mlang database, e.g., nb-no -> 1044 -> no */
-        ok(strstrW(info.wszRfc1766, rfcstr) != NULL,
+        ok(wcsstr(info.wszRfc1766, rfcstr) != NULL,
            "Expected matching locale names\n");
 
         SysFreeString(rfcstr);
@@ -1367,41 +1421,41 @@ static void test_GetLcidFromRfc1766(IMultiLanguage2 *iML2)
         /* IE <6.0 guess 0x412 (ko) from "kok" */
         ok((ret == lcid_table[i].hr) ||
             broken(lcid_table[i].broken_lcid && (ret == S_FALSE)),
-            "#%02d: HRESULT 0x%x (expected 0x%x)\n", i, ret, lcid_table[i].hr);
+            "#%02ld: HRESULT 0x%lx (expected 0x%lx)\n", i, ret, lcid_table[i].hr);
 
         ok((lcid == lcid_table[i].lcid) ||
             broken(lcid == lcid_table[i].broken_lcid),   /* IE <6.0 */
-            "#%02d: got LCID 0x%x (expected 0x%x)\n", i, lcid, lcid_table[i].lcid);
+            "#%02ld: got LCID 0x%lx (expected 0x%lx)\n", i, lcid, lcid_table[i].lcid);
     }
 
 
     ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, NULL, en);
-    ok(ret == E_INVALIDARG, "GetLcidFromRfc1766 returned: %08x\n", ret);
+    ok(ret == E_INVALIDARG, "GetLcidFromRfc1766 returned: %08lx\n", ret);
 
     ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, NULL);
-    ok(ret == E_INVALIDARG, "GetLcidFromRfc1766 returned: %08x\n", ret);
+    ok(ret == E_INVALIDARG, "GetLcidFromRfc1766 returned: %08lx\n", ret);
 
     ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, en_them);
-    ok((ret == E_FAIL || ret == S_FALSE), "GetLcidFromRfc1766 returned: %08x\n", ret);
+    ok((ret == E_FAIL || ret == S_FALSE), "GetLcidFromRfc1766 returned: %08lx\n", ret);
     if (ret == S_FALSE)
     {
         BSTR rfcstr;
         static WCHAR en[] = {'e','n',0};
 
         ret = IMultiLanguage2_GetRfc1766FromLcid(iML2, lcid, &rfcstr);
-        ok(ret == S_OK, "Expected S_OK, got %08x\n", ret);
+        ok(ret == S_OK, "Expected S_OK, got %08lx\n", ret);
         ok_w2("Expected \"%s\",  got \"%s\"n", en, rfcstr);
     }
 
     ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, english);
-    ok((ret == E_FAIL || ret == S_FALSE), "GetLcidFromRfc1766 returned: %08x\n", ret);
+    ok((ret == E_FAIL || ret == S_FALSE), "GetLcidFromRfc1766 returned: %08lx\n", ret);
     if (ret == S_FALSE)
     {
         BSTR rfcstr;
         static WCHAR en[] = {'e','n',0};
 
         ret = IMultiLanguage2_GetRfc1766FromLcid(iML2, lcid, &rfcstr);
-        ok(ret == S_OK, "Expected S_OK, got %08x\n", ret);
+        ok(ret == S_OK, "Expected S_OK, got %08lx\n", ret);
         ok_w2("Expected \"%s\",  got \"%s\"n", en, rfcstr);
     }
 
@@ -1420,18 +1474,18 @@ static void test_Rfc1766ToLcid(void)
         /* IE <6.0 guess 0x412 (ko) from "kok" */
         ok( (ret == lcid_table[i].hr) ||
             broken(lcid_table[i].broken_lcid && (ret == S_FALSE)),
-            "#%02d: HRESULT 0x%x (expected 0x%x)\n", i, ret, lcid_table[i].hr);
+            "#%02ld: HRESULT 0x%lx (expected 0x%lx)\n", i, ret, lcid_table[i].hr);
 
         ok( (lcid == lcid_table[i].lcid) ||
             broken(lcid == lcid_table[i].broken_lcid),  /* IE <6.0 */
-            "#%02d: got LCID 0x%x (expected 0x%x)\n", i, lcid, lcid_table[i].lcid);
+            "#%02ld: got LCID 0x%lx (expected 0x%lx)\n", i, lcid, lcid_table[i].lcid);
     }
 
     ret = pRfc1766ToLcidA(&lcid, NULL);
-    ok(ret == E_INVALIDARG, "got 0x%08x (expected E_INVALIDARG)\n", ret);
+    ok(ret == E_INVALIDARG, "got 0x%08lx (expected E_INVALIDARG)\n", ret);
 
     ret = pRfc1766ToLcidA(NULL, "en");
-    ok(ret == E_INVALIDARG, "got 0x%08x (expected E_INVALIDARG)\n", ret);
+    ok(ret == E_INVALIDARG, "got 0x%08lx (expected E_INVALIDARG)\n", ret);
 }
 
 static void test_GetNumberOfCodePageInfo(IMultiLanguage2 *iML2)
@@ -1442,10 +1496,10 @@ static void test_GetNumberOfCodePageInfo(IMultiLanguage2 *iML2)
     value = 0xdeadbeef;
     hr = IMultiLanguage2_GetNumberOfCodePageInfo(iML2, &value);
     ok( (hr == S_OK) && value,
-        "got 0x%x with %d (expected S_OK with '!= 0')\n", hr, value);
+        "got 0x%lx with %d (expected S_OK with '!= 0')\n", hr, value);
 
     hr = IMultiLanguage2_GetNumberOfCodePageInfo(iML2, NULL);
-    ok(hr == E_INVALIDARG, "got 0x%x (expected E_INVALIDARG)\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%lx (expected E_INVALIDARG)\n", hr);
 
 }
 
@@ -1463,7 +1517,7 @@ static void test_GetRfc1766FromLcid(IMultiLanguage2 *iML2)
         rfcstr = NULL;
         hr = IMultiLanguage2_GetRfc1766FromLcid(iML2, lcid_table[i].lcid, &rfcstr);
         ok(hr == lcid_table[i].hr,
-            "#%02d: HRESULT 0x%x (expected 0x%x)\n", i, hr, lcid_table[i].hr);
+            "#%02ld: HRESULT 0x%lx (expected 0x%lx)\n", i, hr, lcid_table[i].hr);
 
         if (hr != S_OK)
             continue;   /* no result-string created */
@@ -1475,13 +1529,13 @@ static void test_GetRfc1766FromLcid(IMultiLanguage2 *iML2)
         /* IE <6.0 return "x-kok" for LCID 0x457 ("kok") */
         ok( (!lstrcmpA(buffer, expected)) ||
             broken(!lstrcmpA(buffer, lcid_table[i].broken_rfc)),
-            "#%02d: got '%s' (expected '%s')\n", i, buffer, expected);
+            "#%02ld: got '%s' (expected '%s')\n", i, buffer, expected);
 
         SysFreeString(rfcstr);
     }
 
     hr = IMultiLanguage2_GetRfc1766FromLcid(iML2, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), NULL);
-    ok(hr == E_INVALIDARG, "got 0x%x (expected E_INVALIDARG)\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%lx (expected E_INVALIDARG)\n", hr);
 }
 
 static void test_LcidToRfc1766(void)
@@ -1501,7 +1555,7 @@ static void test_LcidToRfc1766(void)
         /* IE <5.0 does not recognize 0x180c (fr-mc) and 0x457 (kok) */
         ok( (hr == lcid_table[i].hr) ||
             broken(lcid_table[i].broken_lcid && (hr == E_FAIL)),
-            "#%02d: HRESULT 0x%x (expected 0x%x)\n", i, hr, lcid_table[i].hr);
+            "#%02ld: HRESULT 0x%lx (expected 0x%lx)\n", i, hr, lcid_table[i].hr);
 
         if (hr != S_OK)
             continue;
@@ -1513,27 +1567,27 @@ static void test_LcidToRfc1766(void)
         /* IE <5.0 return "fr" for LCID 0x180c ("fr-mc") */
         ok( (!lstrcmpA(buffer, expected)) ||
             broken(!lstrcmpA(buffer, lcid_table[i].broken_rfc)),
-            "#%02d: got '%s' (expected '%s')\n", i, buffer, expected);
+            "#%02ld: got '%s' (expected '%s')\n", i, buffer, expected);
 
     }
 
     memset(buffer, '#', sizeof(buffer)-1);
     buffer[sizeof(buffer)-1] = '\0';
     hr = pLcidToRfc1766A(-1, buffer, MAX_RFC1766_NAME);
-    ok(hr == E_FAIL, "got 0x%08x and '%s' (expected E_FAIL)\n", hr, buffer);
+    ok(hr == E_FAIL, "got 0x%08lx and '%s' (expected E_FAIL)\n", hr, buffer);
 
     hr = pLcidToRfc1766A(LANG_ENGLISH, NULL, MAX_RFC1766_NAME);
-    ok(hr == E_INVALIDARG, "got 0x%08x (expected E_INVALIDARG)\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx (expected E_INVALIDARG)\n", hr);
 
     memset(buffer, '#', sizeof(buffer)-1);
     buffer[sizeof(buffer)-1] = '\0';
     hr = pLcidToRfc1766A(LANG_ENGLISH, buffer, -1);
-    ok(hr == E_INVALIDARG, "got 0x%08x and '%s' (expected E_INVALIDARG)\n", hr, buffer);
+    ok(hr == E_INVALIDARG, "got 0x%08lx and '%s' (expected E_INVALIDARG)\n", hr, buffer);
 
     memset(buffer, '#', sizeof(buffer)-1);
     buffer[sizeof(buffer)-1] = '\0';
     hr = pLcidToRfc1766A(LANG_ENGLISH, buffer, 0);
-    ok(hr == E_INVALIDARG, "got 0x%08x and '%s' (expected E_INVALIDARG)\n", hr, buffer);
+    ok(hr == E_INVALIDARG, "got 0x%08lx and '%s' (expected E_INVALIDARG)\n", hr, buffer);
 }
 
 static void test_GetRfc1766Info(IMultiLanguage2 *iML2)
@@ -1552,12 +1606,12 @@ static void test_GetRfc1766Info(IMultiLanguage2 *iML2)
 
         ret = IMultiLanguage2_GetRfc1766Info(iML2, info_table[i].lcid, info_table[i].lang, prfc);
         WideCharToMultiByte(CP_ACP, 0, prfc->wszRfc1766, -1, rfc1766A, MAX_RFC1766_NAME, NULL, NULL);
-        ok(ret == S_OK, "#%02d: got 0x%x (expected S_OK)\n", i, ret);
+        ok(ret == S_OK, "#%02ld: got 0x%lx (expected S_OK)\n", i, ret);
         ok(prfc->lcid == info_table[i].lcid,
-            "#%02d: got 0x%04x (expected 0x%04x)\n", i, prfc->lcid, info_table[i].lcid);
+            "#%02ld: got 0x%04lx (expected 0x%04lx)\n", i, prfc->lcid, info_table[i].lcid);
 
         ok(!lstrcmpA(rfc1766A, info_table[i].rfc1766),
-            "#%02d: got '%s' (expected '%s')\n", i, rfc1766A, info_table[i].rfc1766);
+            "#%02ld: got '%s' (expected '%s')\n", i, rfc1766A, info_table[i].rfc1766);
 
         /* Some IE versions truncate an oversized name one character too short */
         if (info_table[i].broken_name) {
@@ -1570,24 +1624,24 @@ static void test_GetRfc1766Info(IMultiLanguage2 *iML2)
                (info_table[i].broken_name && (
                 broken(!lstrcmpW(prfc->wszLocaleName, info_table[i].broken_name)) || /* IE < 6.0 */
                 broken(!lstrcmpW(prfc->wszLocaleName, short_broken_name)))),
-                "#%02d: got %s (expected %s)\n", i,
+                "#%02ld: got %s (expected %s)\n", i,
                 wine_dbgstr_w(prfc->wszLocaleName), wine_dbgstr_w(info_table[i].localename));
         }
     }
 
     /* SUBLANG_NEUTRAL only allowed for English, Arabic, Chinese */
     ret = IMultiLanguage2_GetRfc1766Info(iML2, MAKELANGID(LANG_GERMAN, SUBLANG_NEUTRAL), LANG_ENGLISH, prfc);
-    ok(ret == E_FAIL, "got 0x%x (expected E_FAIL)\n", ret);
+    ok(ret == E_FAIL, "got 0x%lx (expected E_FAIL)\n", ret);
 
     ret = IMultiLanguage2_GetRfc1766Info(iML2, MAKELANGID(LANG_ITALIAN, SUBLANG_NEUTRAL), LANG_ENGLISH, prfc);
-    ok(ret == E_FAIL, "got 0x%x (expected E_FAIL)\n", ret);
+    ok(ret == E_FAIL, "got 0x%lx (expected E_FAIL)\n", ret);
 
     /* NULL not allowed */
     ret = IMultiLanguage2_GetRfc1766Info(iML2, 0, LANG_ENGLISH, prfc);
-    ok(ret == E_FAIL, "got 0x%x (expected E_FAIL)\n", ret);
+    ok(ret == E_FAIL, "got 0x%lx (expected E_FAIL)\n", ret);
 
     ret = IMultiLanguage2_GetRfc1766Info(iML2, LANG_ENGLISH, LANG_ENGLISH, NULL);
-    ok(ret == E_INVALIDARG, "got 0x%x (expected E_INVALIDARG)\n", ret);
+    ok(ret == E_INVALIDARG, "got 0x%lx (expected E_INVALIDARG)\n", ret);
 }
 
 static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
@@ -1607,7 +1661,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     destsz = sizeof(dest);
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, NULL,
                                                   &srcsz, dest, &destsz);
-    ok(hr == S_OK || hr == E_FAIL,"expected S_OK or E_FAIL, got %08x\n",hr);
+    ok(hr == S_OK || hr == E_FAIL,"expected S_OK or E_FAIL, got %08lx\n",hr);
     if (hr == S_OK)
     {
         ok(srcsz == lstrlenW(src) + 1,
@@ -1628,7 +1682,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     destsz = sizeof(dest);
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, src,
                                                   NULL, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(!strncmp(dest, "abc", 3),
        "Expected first three chars to be \"abc\"\n");
     ok(!memcmp(&dest[3], invariate, sizeof(dest) - 3),
@@ -1641,7 +1695,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     destsz = sizeof(dest);
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, NULL,
                                                   NULL, dest, &destsz);
-    ok(hr == S_OK || hr == E_FAIL, "Expected S_OK or E_FAIL, got %08x\n", hr);
+    ok(hr == S_OK || hr == E_FAIL, "Expected S_OK or E_FAIL, got %08lx\n", hr);
     ok(!memcmp(dest, invariate, sizeof(dest)),
        "Expected dest to be unchanged, got %s\n", dest);
     ok(destsz == 0, "Expected 0, got %u\n", destsz);
@@ -1652,7 +1706,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     destsz = sizeof(dest);
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, src,
                                                   &srcsz, NULL, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src) + 1,
        "Expected %u, got %u\n", lstrlenW(src) + 1, srcsz);
     ok(destsz == lstrlenW(src) + 1,
@@ -1662,7 +1716,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     memset(dest, 'x', sizeof(dest));
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, src,
                                                   &srcsz, dest, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src) + 1,
        "Expected %u, got %u\n", lstrlenW(src) + 1, srcsz);
     ok(!memcmp(dest, invariate, sizeof(dest)),
@@ -1674,7 +1728,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     destsz = sizeof(dest);
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, src,
                                                   &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == 0, "Expected 0, got %u\n", srcsz);
     ok(!memcmp(dest, invariate, sizeof(dest)),
        "Expected dest to be unchanged, got %s\n", dest);
@@ -1686,7 +1740,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     destsz = sizeof(dest);
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, src,
                                                   &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src),
        "Expected %u, got %u\n", lstrlenW(src), srcsz);
     ok(!strncmp(dest, "abc", 3), "Expected first three chars to be \"abc\"\n");
@@ -1701,7 +1755,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     destsz = sizeof(dest);
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, src,
                                                   &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src) + 1, "Expected 3, got %u\n", srcsz);
     ok(!lstrcmpA(dest, "abc"), "Expected \"abc\", got \"%s\"\n", dest);
     ok(destsz == lstrlenW(src) + 1,
@@ -1713,7 +1767,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     destsz = sizeof(dest);
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, src,
                                                   &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src),
        "Expected %u, got %u\n", lstrlenW(src), srcsz);
     ok(!strncmp(dest, "abc", 3), "Expected first three chars to be \"abc\"\n");
@@ -1728,7 +1782,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     destsz = 0;
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, src,
                                                   &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src) + 1,
        "Expected %u, got %u\n", lstrlenW(src) + 1, srcsz);
     ok(!memcmp(dest, invariate, sizeof(dest)),
@@ -1742,7 +1796,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     destsz = lstrlenW(src);
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, src,
                                                   &srcsz, dest, &destsz);
-    ok(hr == E_FAIL, "Expected E_FAIL, got %08x\n", hr);
+    ok(hr == E_FAIL, "Expected E_FAIL, got %08lx\n", hr);
     ok(srcsz == 0, "Expected 0, got %u\n", srcsz);
     ok(!strncmp(dest, "abc", 3), "Expected first three chars to be \"abc\"\n");
     ok(!memcmp(&dest[3], invariate, sizeof(dest) - 3),
@@ -1755,7 +1809,7 @@ static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
     destsz = lstrlenW(src) * sizeof(WCHAR);
     hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, 1252, src,
                                                   &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src) + 1,
        "Expected %u, got %u\n", lstrlenW(src) + 1, srcsz);
     ok(!lstrcmpA(dest, "abc"), "Expected \"abc\", got \"%s\"\n", dest);
@@ -1779,7 +1833,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     srcsz = lstrlenW(src) + 1;
     destsz = sizeof(dest);
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, NULL, &srcsz, dest, &destsz);
-    ok(hr == S_OK || hr == E_FAIL, "Expected S_OK or E_FAIL, got %08x\n", hr);
+    ok(hr == S_OK || hr == E_FAIL, "Expected S_OK or E_FAIL, got %08lx\n", hr);
     if (hr == S_OK)
         ok(srcsz == lstrlenW(src) + 1,
            "Expected %u, got %u\n", lstrlenW(src) + 1, srcsz);
@@ -1794,7 +1848,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     memset(dest, 'x', sizeof(dest));
     destsz = sizeof(dest);
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, src, NULL, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(!strncmp(dest, "abc", 3),
        "Expected first three chars to be \"abc\"\n");
     ok(!memcmp(&dest[3], invariate, sizeof(dest) - 3),
@@ -1806,7 +1860,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     memset(dest, 'x', sizeof(dest));
     destsz = sizeof(dest);
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, NULL, NULL, dest, &destsz);
-    ok(hr == S_OK || hr == E_FAIL, "Expected S_OK or E_FAIL, got %08x\n", hr);
+    ok(hr == S_OK || hr == E_FAIL, "Expected S_OK or E_FAIL, got %08lx\n", hr);
     ok(!memcmp(dest, invariate, sizeof(dest)),
        "Expected dest to be unchanged, got %s\n", dest);
     ok(destsz == 0, "Expected 0, got %u\n", destsz);
@@ -1816,7 +1870,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     srcsz = lstrlenW(src) + 1;
     destsz = sizeof(dest);
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, src, &srcsz, NULL, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src) + 1,
        "Expected %u, got %u\n", lstrlenW(src) + 1, srcsz);
     ok(destsz == lstrlenW(src) + 1,
@@ -1825,7 +1879,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     /* lpnMultiCharCount NULL */
     memset(dest, 'x', sizeof(dest));
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, src, &srcsz, dest, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src) + 1,
        "Expected %u, got %u\n", lstrlenW(src) + 1, srcsz);
     ok(!memcmp(dest, invariate, sizeof(dest)),
@@ -1836,7 +1890,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     srcsz = 0;
     destsz = sizeof(dest);
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, src, &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == 0, "Expected 0, got %u\n", srcsz);
     ok(!memcmp(dest, invariate, sizeof(dest)),
        "Expected dest to be unchanged, got %s\n", dest);
@@ -1847,7 +1901,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     srcsz = lstrlenW(src);
     destsz = sizeof(dest);
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, src, &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src),
        "Expected %u, got %u\n", lstrlenW(src), srcsz);
     ok(!strncmp(dest, "abc", 3), "Expected first three chars to be \"abc\"\n");
@@ -1861,7 +1915,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     srcsz = lstrlenW(src) + 1;
     destsz = sizeof(dest);
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, src, &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src) + 1, "Expected 3, got %u\n", srcsz);
     ok(!lstrcmpA(dest, "abc"), "Expected \"abc\", got \"%s\"\n", dest);
     ok(destsz == lstrlenW(src) + 1,
@@ -1872,7 +1926,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     srcsz = -1;
     destsz = sizeof(dest);
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, src, &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src),
        "Expected %u, got %u\n", lstrlenW(src), srcsz);
     ok(!strncmp(dest, "abc", 3), "Expected first three chars to be \"abc\"\n");
@@ -1886,7 +1940,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     srcsz = lstrlenW(src) + 1;
     destsz = 0;
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, src, &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src) + 1,
        "Expected %u, got %u\n", lstrlenW(src) + 1, srcsz);
     ok(!memcmp(dest, invariate, sizeof(dest)),
@@ -1899,7 +1953,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     srcsz = lstrlenW(src) + 1;
     destsz = lstrlenW(src);
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, src, &srcsz, dest, &destsz);
-    ok(hr == E_FAIL, "Expected E_FAIL, got %08x\n", hr);
+    ok(hr == E_FAIL, "Expected E_FAIL, got %08lx\n", hr);
     ok(srcsz == 0, "Expected 0, got %u\n", srcsz);
     ok(!strncmp(dest, "abc", 3), "Expected first three chars to be \"abc\"\n");
     ok(!memcmp(&dest[3], invariate, sizeof(dest) - 3),
@@ -1911,7 +1965,7 @@ static void test_ConvertINetUnicodeToMultiByte(void)
     srcsz = lstrlenW(src) + 1;
     destsz = lstrlenW(src) * sizeof(WCHAR);
     hr = pConvertINetUnicodeToMultiByte(NULL, 1252, src, &srcsz, dest, &destsz);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(srcsz == lstrlenW(src) + 1,
        "Expected %u, got %u\n", lstrlenW(src) + 1, srcsz);
     ok(!lstrcmpA(dest, "abc"), "Expected \"abc\", got \"%s\"\n", dest);
@@ -1996,7 +2050,7 @@ static void test_JapaneseConversion(void)
             skip("Code page identifier 50220 is not supported\n");
             break;
         }
-        ok(hr == S_OK,"(%i) Expected S_OK, got %08x\n", i, hr);
+        ok(hr == S_OK,"(%i) Expected S_OK, got %08lx\n", i, hr);
         ok(destsz == outlen, "(%i) Expected %i, got %i\n",i,outlen,destsz);
         ok(srcsz == unc_jp[i][0],"(%i) Expected %i, got %i\n",i,unc_jp[i][0],srcsz);
         ok(memcmp(output,&jis_jp[i][1],destsz)==0,"(%i) Strings do not match\n",i);
@@ -2015,7 +2069,7 @@ static void test_JapaneseConversion(void)
         if (i == 2) j = 1;
         if (i == 5) j = 4;
 
-        ok(hr == S_OK,"(%i) Expected S_OK, got %08x\n",i, hr);
+        ok(hr == S_OK,"(%i) Expected S_OK, got %08lx\n",i, hr);
         ok(destsz == unc_jp[j][0],"(%i) Expected %i, got %i\n",i,unc_jp[j][0],destsz);
         ok(srcsz == outlen,"(%i) Expected %i, got %i\n",i,outlen,srcsz);
         ok(memcmp(outputW,&unc_jp[j][1],destsz)==0,"(%i) Strings do not match\n",i);
@@ -2034,7 +2088,7 @@ static void test_JapaneseConversion(void)
             skip("Code page identifier 932 is not supported\n");
             break;
         }
-        ok(hr == S_OK,"(%i) Expected S_OK, got %08x\n",i,hr);
+        ok(hr == S_OK,"(%i) Expected S_OK, got %08lx\n",i,hr);
         ok(destsz == outlen,"(%i) Expected %i, got %i\n",i,outlen,destsz);
         ok(srcsz == unc_jp[i][0],"(%i) Expected %i, got %i\n",i,unc_jp[i][0],srcsz);
         ok(memcmp(output,&sjis_jp[i][1],outlen)==0,"(%i) Strings do not match\n",i);
@@ -2043,7 +2097,7 @@ static void test_JapaneseConversion(void)
         destsz = 30;
         hr = pConvertINetMultiByteToUnicode(NULL, 932, output, &srcsz, outputW,&destsz);
 
-        ok(hr == S_OK,"(%i) Expected S_OK, got %08x\n", i, hr);
+        ok(hr == S_OK,"(%i) Expected S_OK, got %08lx\n", i, hr);
         ok(destsz == unc_jp[i][0],"(%i) Expected %i, got %i\n",i,unc_jp[i][0],destsz);
         ok(srcsz == outlen,"(%i) Expected %i, got %i\n",i,outlen,srcsz);
         ok(memcmp(outputW,&unc_jp[i][1],destsz)==0,"(%i) Strings do not match\n",i);
@@ -2062,7 +2116,7 @@ static void test_JapaneseConversion(void)
             skip("Code page identifier 51932 is not supported\n");
             break;
         }
-        ok(hr == S_OK, "(%i) Expected S_OK, got %08x\n",i,hr);
+        ok(hr == S_OK, "(%i) Expected S_OK, got %08lx\n",i,hr);
         ok(destsz == outlen, "(%i) Expected %i, got %i\n",i,outlen,destsz);
         ok(srcsz == unc_jp[i][0],"(%i) Expected %i, got %i\n",i,unc_jp[i][0],destsz);
         ok(memcmp(output,&euc_jp[i][1],outlen)==0,"(%i) Strings do not match\n",i);
@@ -2071,7 +2125,7 @@ static void test_JapaneseConversion(void)
         destsz = 30;
         hr = pConvertINetMultiByteToUnicode(NULL, 51932, output, &srcsz, outputW,&destsz);
 
-        ok(hr == S_OK,"(%i) Expected S_OK, got %08x\n",i,hr);
+        ok(hr == S_OK,"(%i) Expected S_OK, got %08lx\n",i,hr);
         ok(destsz == unc_jp[i][0],"(%i) Expected %i, got %i\n",i,unc_jp[i][0],destsz);
         ok(srcsz == outlen,"(%i) Expected %i, got %i\n",i,outlen,srcsz);
         ok(memcmp(outputW,&unc_jp[i][1],destsz)==0,"(%i) Strings do not match\n",i);
@@ -2087,7 +2141,7 @@ static void test_JapaneseConversion(void)
         skip("Code page identifier 50932 is not supported\n");
         return;
     }
-    ok(hr == S_OK,"(%i) Expected S_OK, got %08x\n",i,hr);
+    ok(hr == S_OK,"(%i) Expected S_OK, got %08lx\n",i,hr);
     ok(destsz == unc_jp[i][0],"(%i) Expected %i, got %i\n",i,unc_jp[i][0],destsz);
     ok(srcsz == jis_jp[i][0],"(%i) Expected %i, got %i\n",i,jis_jp[i][0],srcsz);
     ok(memcmp(outputW,&unc_jp[i][1],destsz)==0,"(%i) Strings do not match\n",i);
@@ -2096,7 +2150,7 @@ static void test_JapaneseConversion(void)
     destsz = 30;
     srcsz = sjis_jp[i][0];
     hr = pConvertINetMultiByteToUnicode(NULL, 50932, &sjis_jp[i][1], &srcsz, outputW, &destsz);
-    ok(hr == S_OK,"(%i) Expected S_OK, got %08x\n",i,hr);
+    ok(hr == S_OK,"(%i) Expected S_OK, got %08lx\n",i,hr);
     ok(destsz == unc_jp[i][0],"(%i) Expected %i, got %i\n",i,unc_jp[i][0],destsz);
     ok(srcsz == sjis_jp[i][0],"(%i) Expected %i, got %i\n",i,sjis_jp[i][0],srcsz);
     ok(memcmp(outputW,&unc_jp[i][1],destsz)==0,"(%i) Strings do not match\n",i);
@@ -2110,23 +2164,23 @@ static void test_GetScriptFontInfo(IMLangFontLink2 *font_link)
 
     nfonts = 0;
     hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidAsciiLatin, 0, &nfonts, NULL);
-    ok(hr == S_OK, "GetScriptFontInfo failed %u\n", GetLastError());
+    ok(hr == S_OK, "GetScriptFontInfo failed %lu\n", GetLastError());
     ok(nfonts, "unexpected result\n");
 
     nfonts = 0;
     hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidAsciiLatin, SCRIPTCONTF_FIXED_FONT, &nfonts, NULL);
-    ok(hr == S_OK, "GetScriptFontInfo failed %u\n", GetLastError());
+    ok(hr == S_OK, "GetScriptFontInfo failed %lu\n", GetLastError());
     ok(nfonts, "unexpected result\n");
 
     nfonts = 0;
     hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidAsciiLatin, SCRIPTCONTF_PROPORTIONAL_FONT, &nfonts, NULL);
-    ok(hr == S_OK, "GetScriptFontInfo failed %u\n", GetLastError());
+    ok(hr == S_OK, "GetScriptFontInfo failed %lu\n", GetLastError());
     ok(nfonts, "unexpected result\n");
 
     nfonts = 1;
     memset(sfi, 0, sizeof(sfi));
     hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidAsciiLatin, SCRIPTCONTF_FIXED_FONT, &nfonts, sfi);
-    ok(hr == S_OK, "GetScriptFontInfo failed %u\n", GetLastError());
+    ok(hr == S_OK, "GetScriptFontInfo failed %lu\n", GetLastError());
     ok(nfonts == 1, "got %u, expected 1\n", nfonts);
     ok(sfi[0].scripts != 0, "unexpected result\n");
     ok(sfi[0].wszFont[0], "unexpected result\n");
@@ -2134,7 +2188,7 @@ static void test_GetScriptFontInfo(IMLangFontLink2 *font_link)
     nfonts = 1;
     memset(sfi, 0, sizeof(sfi));
     hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidAsciiLatin, SCRIPTCONTF_PROPORTIONAL_FONT, &nfonts, sfi);
-    ok(hr == S_OK, "GetScriptFontInfo failed %u\n", GetLastError());
+    ok(hr == S_OK, "GetScriptFontInfo failed %lu\n", GetLastError());
     ok(nfonts == 1, "got %u, expected 1\n", nfonts);
     ok(sfi[0].scripts != 0, "unexpected result\n");
     ok(sfi[0].wszFont[0], "unexpected result\n");
@@ -2173,7 +2227,7 @@ static void test_CodePageToScriptID(IMLangFontLink2 *font_link)
     for (i = 0; i < ARRAY_SIZE(cp_sid); i++)
     {
         hr = IMLangFontLink2_CodePageToScriptID(font_link, cp_sid[i].cp, &sid);
-        ok(hr == cp_sid[i].hr, "%u CodePageToScriptID failed 0x%08x %u\n", i, hr, GetLastError());
+        ok(hr == cp_sid[i].hr, "%u CodePageToScriptID failed 0x%08lx %lu\n", i, hr, GetLastError());
         if (SUCCEEDED(hr))
         {
             ok(sid == cp_sid[i].sid,
@@ -2199,24 +2253,24 @@ static void test_GetFontUnicodeRanges(IMLangFontLink2 *font_link)
 
     count = 0;
     hr = IMLangFontLink2_GetFontUnicodeRanges(font_link, NULL, &count, NULL);
-    ok(hr == E_FAIL, "expected E_FAIL, got 0x%08x\n", hr);
+    ok(hr == E_FAIL, "expected E_FAIL, got 0x%08lx\n", hr);
 
     hr = IMLangFontLink2_GetFontUnicodeRanges(font_link, hdc, NULL, NULL);
-    ok(hr == E_INVALIDARG, "expected E_FAIL, got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "expected E_FAIL, got 0x%08lx\n", hr);
 
     count = 0;
     hr = IMLangFontLink2_GetFontUnicodeRanges(font_link, hdc, &count, NULL);
-    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "expected S_OK, got 0x%08lx\n", hr);
     ok(count, "expected count > 0\n");
 
     ur = HeapAlloc(GetProcessHeap(), 0, sizeof(*ur) * count);
 
     hr = IMLangFontLink2_GetFontUnicodeRanges(font_link, hdc, &count, ur);
-    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "expected S_OK, got 0x%08lx\n", hr);
 
     count--;
     hr = IMLangFontLink2_GetFontUnicodeRanges(font_link, hdc, &count, ur);
-    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "expected S_OK, got 0x%08lx\n", hr);
 
     HeapFree(GetProcessHeap(), 0, ur);
 
@@ -2230,7 +2284,7 @@ static void test_IsCodePageInstallable(IMultiLanguage2 *ml2)
     UINT i;
     HRESULT hr;
 
-    for (i = 0; i < 0xffff; i++)
+    for (i = 0; i < 1000; i++)
     {
         hr = IMultiLanguage2_IsCodePageInstallable(ml2, i);
 
@@ -2241,7 +2295,7 @@ static void test_IsCodePageInstallable(IMultiLanguage2 *ml2)
             ok(hr == S_OK ||
                broken(hr == S_FALSE) ||  /* win2k */
                broken(hr == E_INVALIDARG),  /* win2k */
-               "code page %u is valid but not installable 0x%08x\n", i, hr);
+               "code page %u is valid but not installable 0x%08lx\n", i, hr);
     }
 }
 
@@ -2249,17 +2303,48 @@ static void test_GetGlobalFontLinkObject(void)
 {
     HRESULT ret;
     void *unknown;
+    LONG refcount;
+    IMLangFontLink2 *IMLFL2;
+    IMLangFontLink *IMLFL;
+    IMLangCodePages *IMLCP;
+    IMultiLanguage *IML;
+    IMultiLanguage2 *IML2;
 
     ret = GetGlobalFontLinkObject(NULL);
-    ok(ret == E_INVALIDARG, "expected E_INVALIDARG got %#x\n", ret);
+    ok(ret == E_INVALIDARG, "expected E_INVALIDARG got %#lx\n", ret);
 
     unknown = (void *)0xdeadbeef;
-    ret = GetGlobalFontLinkObject(&unknown);
-todo_wine {
-    ok(ret == S_OK, "expected S_OK got %#x\n", ret);
+    ret = GetGlobalFontLinkObject((IMLangFontLink**)&unknown);
+    ok(ret == S_OK, "expected S_OK got %#lx\n", ret);
     ok(unknown != NULL && unknown != (void *)0xdeadbeef,
        "GetGlobalFontLinkObject() returned %p\n", unknown);
-    }
+    if (unknown == (void *)0xdeadbeef || !unknown) return;
+
+    ret = IUnknown_QueryInterface((IUnknown*)unknown, &IID_IMLangFontLink2, (void**)&IMLFL2);
+    todo_wine ok(ret == E_NOINTERFACE, "expected E_NOINTERFACE got %#lx\n", ret);
+    if (ret == S_OK) IMLangFontLink2_Release(IMLFL2);
+
+    ret = IUnknown_QueryInterface((IUnknown*)unknown, &IID_IMultiLanguage, (void**)&IML);
+    todo_wine ok(ret == E_NOINTERFACE, "expected E_NOINTERFACE got %#lx\n", ret);
+    if (ret == S_OK) IMultiLanguage_Release(IML);
+
+    ret = IUnknown_QueryInterface((IUnknown*)unknown, &IID_IMultiLanguage2, (void**)&IML2);
+    todo_wine ok(ret == E_NOINTERFACE, "expected E_NOINTERFACE got %#lx\n", ret);
+    if (ret == S_OK) IMultiLanguage2_Release(IML2);
+
+    ret = IUnknown_QueryInterface((IUnknown*)unknown, &IID_IMLangFontLink, (void**)&IMLFL);
+    ok(ret == S_OK, "expected S_OK got %#lx\n", ret);
+    IMLangFontLink_Release(IMLFL);
+
+    ret = IUnknown_QueryInterface((IUnknown*)unknown, &IID_IMLangCodePages, (void**)&IMLCP);
+    ok(ret == S_OK, "expected S_OK got %#lx\n", ret);
+    IMLangCodePages_Release(IMLCP);
+
+    ok(unknown == IMLFL, "IUnknown from GetGlobalFontLinkObject isn't IMLangFontLink\n");
+    ok(unknown == IMLCP, "IUnknown from GetGlobalFontLinkObject isn't IMLangCodePages\n");
+
+    refcount = IUnknown_Release((IUnknown*)unknown);
+    ok(refcount == 1, "Got refcount %ld\n", refcount);
 }
 
 static void test_IMLangConvertCharset(IMultiLanguage *ml)
@@ -2272,38 +2357,38 @@ static void test_IMLangConvertCharset(IMultiLanguage *ml)
     HRESULT hr;
 
     hr = IMultiLanguage_CreateConvertCharset(ml, CP_ACP, CP_UTF8, 0, &convert);
-todo_wine
-    ok(hr == S_FALSE, "expected S_FALSE got 0x%08x\n", hr);
+    todo_wine
+    ok(hr == S_FALSE, "expected S_FALSE got 0x%08lx\n", hr);
 
     hr = IMLangConvertCharset_GetSourceCodePage(convert, NULL);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     cp = CP_UTF8;
     hr = IMLangConvertCharset_GetSourceCodePage(convert, &cp);
-    ok(hr == S_OK, "expected S_OK got 0x%08x\n", hr);
+    ok(hr == S_OK, "expected S_OK got 0x%08lx\n", hr);
     ok(cp == CP_ACP, "got %d\n", cp);
 
     hr = IMLangConvertCharset_GetDestinationCodePage(convert, NULL);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     cp = CP_ACP;
     hr = IMLangConvertCharset_GetDestinationCodePage(convert, &cp);
-    ok(hr == S_OK, "expected S_OK got 0x%08x\n", hr);
+    ok(hr == S_OK, "expected S_OK got 0x%08lx\n", hr);
     ok(cp == CP_UTF8, "got %d\n", cp);
 
     /* DoConversionToUnicode */
     hr = IMLangConvertCharset_Initialize(convert, CP_UTF8, CP_UNICODE, 0);
-    ok(hr == S_OK, "expected S_OK got 0x%08x\n", hr);
+    ok(hr == S_OK, "expected S_OK got 0x%08lx\n", hr);
 
     hr = IMLangConvertCharset_DoConversionToUnicode(convert, NULL, NULL, NULL, NULL);
-    ok(hr == E_FAIL || broken(hr == S_OK) /* win2k */, "got 0x%08x\n", hr);
+    ok(hr == E_FAIL || broken(hr == S_OK) /* win2k */, "got 0x%08lx\n", hr);
 
     src_size = -1;
     dst_size = 20;
     buffW[0] = 0;
     buffW[4] = 4;
     hr = IMLangConvertCharset_DoConversionToUnicode(convert, strA, &src_size, buffW, &dst_size);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
     ok(!memcmp(buffW, strW, 4*sizeof(WCHAR)), "got converted string %s\n", wine_dbgstr_wn(buffW, dst_size));
     ok(dst_size == 4, "got %d\n", dst_size);
     ok(buffW[4] == 4, "got %d\n", buffW[4]);
@@ -2313,13 +2398,13 @@ todo_wine
     dst_size = 0;
     buffW[0] = 1;
     hr = IMLangConvertCharset_DoConversionToUnicode(convert, strA, &src_size, buffW, &dst_size);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
     ok(buffW[0] == 1, "got %d\n", buffW[0]);
     ok(dst_size == 4, "got %d\n", dst_size);
     ok(src_size == 4, "got %d\n", src_size);
 
     hr = IMLangConvertCharset_Initialize(convert, CP_UNICODE, CP_UNICODE, 0);
-    ok(hr == S_OK, "expected S_OK got 0x%08x\n", hr);
+    ok(hr == S_OK, "expected S_OK got 0x%08lx\n", hr);
 
     IMLangConvertCharset_Release(convert);
 }
@@ -2464,21 +2549,21 @@ static void test_DetectOutboundCodePageInIStream(IMultiLanguage3 *ml)
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
         ARRAY_SIZE(preferred), detected, &nb_detected, NULL);
-    ok(hr == E_INVALIDARG, "got %08x\n", hr);
+    ok(hr == E_INVALIDARG, "got %08lx\n", hr);
 
     nb_detected = 1;
     memset(detected, 0, sizeof(detected));
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
         ARRAY_SIZE(preferred), NULL, &nb_detected, NULL);
-    ok(hr == E_INVALIDARG, "got %08x\n", hr);
+    ok(hr == E_INVALIDARG, "got %08lx\n", hr);
 
     nb_detected = 1;
     memset(detected, 0, sizeof(detected));
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
         ARRAY_SIZE(preferred), detected, &nb_detected, NULL);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     ok(nb_detected == 1, "got %u\n", nb_detected);
     ok(detected[0] == 65001, "got %u\n", detected[0]);
 
@@ -2487,7 +2572,7 @@ static void test_DetectOutboundCodePageInIStream(IMultiLanguage3 *ml)
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
         ARRAY_SIZE(preferred), detected, &nb_detected, NULL);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     todo_wine ok(nb_detected == 2, "got %u\n", nb_detected);
     ok(detected[0] == 65001, "got %u\n", detected[0]);
     todo_wine ok(detected[1] == 65000, "got %u\n", detected[1]);
@@ -2497,7 +2582,7 @@ static void test_DetectOutboundCodePageInIStream(IMultiLanguage3 *ml)
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
         ARRAY_SIZE(preferred), detected, &nb_detected, NULL);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     todo_wine ok(nb_detected == 3, "got %u\n", nb_detected);
     ok(detected[0] == 65001, "got %u\n", detected[0]);
     todo_wine ok(detected[1] == 65000, "got %u\n", detected[1]);
@@ -2508,7 +2593,7 @@ static void test_DetectOutboundCodePageInIStream(IMultiLanguage3 *ml)
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
         ARRAY_SIZE(preferred), detected, &nb_detected, NULL);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     todo_wine ok(nb_detected == 3, "got %u\n", nb_detected);
     ok(detected[0] == 65001, "got %u\n", detected[0]);
     todo_wine ok(detected[1] == 65000, "got %u\n", detected[1]);
@@ -2520,11 +2605,34 @@ static void test_DetectOutboundCodePageInIStream(IMultiLanguage3 *ml)
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred2,
         ARRAY_SIZE(preferred2), detected, &nb_detected, NULL);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     todo_wine ok(nb_detected == 3, "got %u\n", nb_detected);
     ok(detected[0] == 65001, "got %u\n", detected[0]);
     todo_wine ok(detected[1] == 65000, "got %u\n", detected[1]);
     todo_wine ok(detected[2] == 1200, "got %u\n", detected[2]);
+}
+
+/* Returns true if the user interface is in English. Note that this does not
+ * presume of the formatting of dates, numbers, etc.
+ */
+static BOOL is_lang_english(void)
+{
+    static HMODULE hkernel32 = NULL;
+    static LANGID (WINAPI *pGetThreadUILanguage)(void) = NULL;
+    static LANGID (WINAPI *pGetUserDefaultUILanguage)(void) = NULL;
+
+    if (!hkernel32)
+    {
+        hkernel32 = GetModuleHandleA("kernel32.dll");
+        pGetThreadUILanguage = (void*)GetProcAddress(hkernel32, "GetThreadUILanguage");
+        pGetUserDefaultUILanguage = (void*)GetProcAddress(hkernel32, "GetUserDefaultUILanguage");
+    }
+    if (pGetThreadUILanguage)
+        return PRIMARYLANGID(pGetThreadUILanguage()) == LANG_ENGLISH;
+    if (pGetUserDefaultUILanguage)
+        return PRIMARYLANGID(pGetUserDefaultUILanguage()) == LANG_ENGLISH;
+
+    return PRIMARYLANGID(GetUserDefaultLangID()) == LANG_ENGLISH;
 }
 
 static void test_GetCodePageInfo(IMultiLanguage2 *iML2)
@@ -2544,7 +2652,7 @@ static void test_GetCodePageInfo(IMultiLanguage2 *iML2)
     {
         ret = IMultiLanguage2_GetCodePageInfo(iML2, test_data[i].cpinfo.uiCodePage, LANG_NEUTRAL, &cpinfo);
         todo_wine_if(test_data[i].todo_GetCodePageInfo)
-        ok(ret == S_OK, "%d: IMultiLanguage2_GetCodePageInfo failed: 0x%08x.\n", i, ret);
+        ok(ret == S_OK, "%d: IMultiLanguage2_GetCodePageInfo failed: 0x%08lx.\n", i, ret);
 
         if (ret == S_OK)
         {
@@ -2553,7 +2661,7 @@ static void test_GetCodePageInfo(IMultiLanguage2 *iML2)
             ok((cpinfo.dwFlags == cpinfo_cmp.dwFlags ) ||
                /* some code pages are not installed on the Wine Test Bot */
                ((cpinfo.dwFlags & VALID_MASK) == (cpinfo_cmp.dwFlags & VALID_MASK)),
-               "%d: got wrong dwFlags expected 0x%x return 0x%x.\n",
+               "%d: got wrong dwFlags expected 0x%lx return 0x%lx.\n",
                i, cpinfo_cmp.dwFlags, cpinfo.dwFlags);
             ok(cpinfo.uiCodePage == cpinfo_cmp.uiCodePage,
                "%d: got wrong uiCodePage expected %u return %u.\n",
@@ -2576,10 +2684,9 @@ static void test_GetCodePageInfo(IMultiLanguage2 *iML2)
                    "%d: got wrong wszBodyCharset expected %s return %s.\n",
                i, wine_dbgstr_w(cpinfo_cmp.wszBodyCharset), wine_dbgstr_w(cpinfo.wszBodyCharset));
 
-            if ((PRIMARYLANGID(LANGIDFROMLCID(GetSystemDefaultLCID())) != LANG_ENGLISH) ||
-                (PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale())) != LANG_ENGLISH))
+            if (!is_lang_english())
             {
-                /* FIXME: Windows returns description and font name in system's language */
+                /* FIXME: Cannot test non-English descriptions and font names */
                 skip("Non-English locale\n");
             }
             else
@@ -2613,6 +2720,8 @@ static void test_MapFont(IMLangFontLink *font_link, IMLangFontLink2 *font_link2)
     HRESULT ret;
     HDC hdc;
     WCHAR ch;
+    UINT charset;
+    FONTSIGNATURE fs;
 
     hdc = GetDC(NULL);
     codepages = FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC | FS_GREEK | FS_TURKISH |
@@ -2624,74 +2733,106 @@ static void test_MapFont(IMLangFontLink *font_link, IMLangFontLink2 *font_link2)
     /* Tests for IMLangFontLink */
 
     ret = IMLangFontLink_ResetFontMapping(font_link);
-    ok(ret == S_OK, "IMLangFontLink_ResetFontMapping: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink_ResetFontMapping: expected S_OK, got %08lx\n", ret);
 
     ret = IMLangFontLink_MapFont(font_link, NULL, 0, NULL, NULL);
-    ok(ret == E_FAIL, "IMLangFontLink_MapFont: expected E_FAIL, got %08x\n", ret);
+    ok(ret == E_FAIL, "IMLangFontLink_MapFont: expected E_FAIL, got %08lx\n", ret);
     ret = IMLangFontLink_MapFont(font_link, NULL, codepages, old_font, &new_font);
-    ok(ret == E_FAIL, "IMLangFontLink_MapFont: expected E_FAIL, got %08x\n", ret);
+    ok(ret == E_FAIL, "IMLangFontLink_MapFont: expected E_FAIL, got %08lx\n", ret);
     ret = IMLangFontLink_MapFont(font_link, hdc, codepages, NULL, &new_font);
-    ok(ret == E_FAIL, "IMLangFontLink_MapFont: expected E_FAIL, got %08x\n", ret);
+    ok(ret == E_FAIL, "IMLangFontLink_MapFont: expected E_FAIL, got %08lx\n", ret);
 
     ret = IMLangFontLink_MapFont(font_link, hdc, codepages, old_font, NULL);
-    ok(ret == S_OK, "IMLangFontLink_MapFont: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink_MapFont: expected S_OK, got %08lx\n", ret);
     ret = IMLangFontLink_MapFont(font_link, hdc, codepages, old_font, &new_font);
-    ok(ret == S_OK && new_font != NULL, "IMLangFontLink_MapFont: expected S_OK/!NULL, got %08x/%p\n", ret, new_font);
+    ok(ret == S_OK && new_font != NULL, "IMLangFontLink_MapFont: expected S_OK/!NULL, got %08lx/%p\n", ret, new_font);
     last_font = new_font;
     ret = IMLangFontLink_MapFont(font_link, hdc, codepages, old_font, &new_font);
-    ok(ret == S_OK && new_font == last_font, "IMLangFontLink_MapFont: expected S_OK/%p, got %08x/%p\n", last_font, ret, new_font);
+    ok(ret == S_OK && new_font == last_font, "IMLangFontLink_MapFont: expected S_OK/%p, got %08lx/%p\n", last_font, ret, new_font);
 
     ret = IMLangFontLink_ReleaseFont(font_link, NULL);
-    ok(ret == E_FAIL, "IMLangFontLink_ReleaseFont: expected E_FAIL, got %08x\n", ret);
+    ok(ret == E_FAIL, "IMLangFontLink_ReleaseFont: expected E_FAIL, got %08lx\n", ret);
     ret = IMLangFontLink_ReleaseFont(font_link, new_font);
-    ok(ret == S_OK, "IMLangFontLink_ReleaseFont: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink_ReleaseFont: expected S_OK, got %08lx\n", ret);
     ret = IMLangFontLink_ResetFontMapping(font_link);
-    ok(ret == S_OK, "IMLangFontLink_ResetFontMapping: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink_ResetFontMapping: expected S_OK, got %08lx\n", ret);
 
     /* Tests for IMLangFontLink2 */
 
     ret = IMLangFontLink2_ResetFontMapping(font_link2);
-    ok(ret == S_OK, "IMLangFontLink2_ResetFontMapping: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink2_ResetFontMapping: expected S_OK, got %08lx\n", ret);
 
     ret = IMLangFontLink2_MapFont(font_link2, NULL, 0, 0, NULL);
-    ok(ret == E_FAIL, "IMLangFontLink2_MapFont: expected E_FAIL, got %08x\n", ret);
+    ok(ret == E_FAIL, "IMLangFontLink2_MapFont: expected E_FAIL, got %08lx\n", ret);
     ret = IMLangFontLink2_MapFont(font_link2, NULL, codepages, ch, &new_font);
-    ok(ret == E_FAIL, "IMLangFontLink2_MapFont: expected E_FAIL, got %08x\n", ret);
+    ok(ret == E_FAIL, "IMLangFontLink2_MapFont: expected E_FAIL, got %08lx\n", ret);
     ret = IMLangFontLink2_MapFont(font_link2, hdc, 0, 0, NULL);
-    ok(ret == E_INVALIDARG, "IMLangFontLink2_MapFont: expected E_INVALIDARG, got %08x\n", ret);
+    ok(ret == E_INVALIDARG, "IMLangFontLink2_MapFont: expected E_INVALIDARG, got %08lx\n", ret);
     ret = IMLangFontLink2_MapFont(font_link2, hdc, 0, ch, NULL);
-    ok(ret == E_INVALIDARG, "IMLangFontLink2_MapFont: expected E_INVALIDARG, got %08x\n", ret);
+    ok(ret == E_INVALIDARG, "IMLangFontLink2_MapFont: expected E_INVALIDARG, got %08lx\n", ret);
 
     ret = IMLangFontLink2_MapFont(font_link2, hdc, 0, ch, &new_font);
     todo_wine
     ok(ret == S_OK || broken(ret == E_FAIL), /* got E_FAIL on winxp and win2k */
-       "IMLangFontLink2_MapFont: expected S_OK || E_FAIL, got %08x\n", ret);
+       "IMLangFontLink2_MapFont: expected S_OK || E_FAIL, got %08lx\n", ret);
     ret = IMLangFontLink2_MapFont(font_link2, hdc, codepages, 0, NULL);
-    ok(ret == S_OK, "IMLangFontLink2_MapFont: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink2_MapFont: expected S_OK, got %08lx\n", ret);
     ret = IMLangFontLink2_MapFont(font_link2, hdc, codepages, 0, &new_font);
-    ok(ret == S_OK && new_font != NULL, "IMLangFontLink2_MapFont: expected S_OK/!NULL, got %08x/%p\n", ret, new_font);
+    ok(ret == S_OK && new_font != NULL, "IMLangFontLink2_MapFont: expected S_OK/!NULL, got %08lx/%p\n", ret, new_font);
     last_font = new_font;
     ret = IMLangFontLink2_MapFont(font_link2, hdc, codepages, 0, &new_font);
-    ok(ret == S_OK && new_font == last_font, "IMLangFontLink2_MapFont: expected S_OK/%p, got %08x/%p\n", last_font, ret, new_font);
+    ok(ret == S_OK && new_font == last_font, "IMLangFontLink2_MapFont: expected S_OK/%p, got %08lx/%p\n", last_font, ret, new_font);
+
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA || is_reactos()) // Broken on Windows 2003
+    {
+#endif
+    /* check that the returned font can directly handle the codepage (instead of relying on a child font) */
+    ret = IMLangFontLink2_MapFont(font_link2, hdc, FS_JISJAPAN, 0, &new_font);
+    old_font = SelectObject(hdc, new_font);
+    charset = GetTextCharsetInfo(hdc, &fs, 0);
+    SelectObject(hdc, old_font);
+    ok(ret == S_OK && charset == SHIFTJIS_CHARSET && !!(fs.fsCsb[0] & FS_JISJAPAN), "IMLangFontLink2_MapFont: expected S_OK/%u/1, got %08lx/%u/0\n", SHIFTJIS_CHARSET, ret, charset);
+#ifdef __REACTOS__
+    }
+#endif
 
     ret = IMLangFontLink2_ReleaseFont(font_link2, NULL);
-    ok(ret == E_FAIL, "IMLangFontLink2_ReleaseFont: expected E_FAIL, got %08x\n", ret);
+    ok(ret == E_FAIL, "IMLangFontLink2_ReleaseFont: expected E_FAIL, got %08lx\n", ret);
     ret = IMLangFontLink2_ReleaseFont(font_link2, new_font);
-    ok(ret == S_OK, "IMLangFontLink2_ReleaseFont: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink2_ReleaseFont: expected S_OK, got %08lx\n", ret);
     ret = IMLangFontLink2_ResetFontMapping(font_link2);
-    ok(ret == S_OK, "IMLangFontLink2_ResetFontMapping: expected S_OK, got %08x\n", ret);
+    ok(ret == S_OK, "IMLangFontLink2_ResetFontMapping: expected S_OK, got %08lx\n", ret);
 
     /* Show that the font cache is global */
     ret = IMLangFontLink_MapFont(font_link, hdc, codepages, old_font, &font1);
-    ok(ret == S_OK, "MapFont() failed, hr %#x.\n", ret);
+    ok(ret == S_OK, "MapFont() failed, hr %#lx.\n", ret);
     ret = IMLangFontLink2_MapFont(font_link2, hdc, codepages, 0, &font2);
-    ok(ret == S_OK, "MapFont() failed, hr %#x.\n", ret);
+    ok(ret == S_OK, "MapFont() failed, hr %#lx.\n", ret);
     ok(font1 != NULL && font2 != NULL, "expected !NULL/!NULL, got %p/%p\n", font1, font2);
     ok(font1 == font2, "expected equal, got not equal\n");
 
     IMLangFontLink_GetFontCodePages(font_link, hdc, font1, &font_codepages);
     ok((codepages & (~font_codepages)) != 0 && (codepages & font_codepages) != 0,
        "code pages of font is incorrect\n");
+
+    font_codepages = 1;
+    ret = IMLangFontLink_GetFontCodePages(font_link, NULL, font1, &font_codepages);
+    ok(ret == E_FAIL && !font_codepages, "expected E_FAIL, but got: %lx, font_codepages:%lx \n",
+            ret, font_codepages);
+    font_codepages = 2;
+    ret = IMLangFontLink_GetFontCodePages(font_link, hdc, NULL, &font_codepages);
+    ok(ret == E_FAIL && !font_codepages, "expected E_FAIL, but got: %lx, font_codepages:%lx \n",
+            ret, font_codepages);
+
+    font_codepages = 3;
+    ret = IMLangFontLink_GetFontCodePages(font_link, (void*)0xabc, font1, &font_codepages);
+    ok(ret == E_FAIL && !font_codepages, "expected E_FAIL, but got: %lx, font_codepages:%lx \n",
+            ret, font_codepages);
+    font_codepages = 4;
+    ret = IMLangFontLink_GetFontCodePages(font_link, hdc, (void*)0x123456, &font_codepages);
+    ok(ret == E_FAIL && !font_codepages, "expected E_FAIL, but got: %lx, font_codepages:%lx \n",
+            ret, font_codepages);
 
     IMLangFontLink_ResetFontMapping(font_link);
     IMLangFontLink2_ResetFontMapping(font_link2);
@@ -2710,14 +2851,14 @@ START_TEST(mlang)
     if (!init_function_ptrs())
         return;
 
+    test_GetGlobalFontLinkObject();
+
     CoInitialize(NULL);
     test_Rfc1766ToLcid();
     test_LcidToRfc1766();
 
     test_ConvertINetUnicodeToMultiByte();
     test_JapaneseConversion();
-
-    test_GetGlobalFontLinkObject();
 
     trace("IMultiLanguage\n");
     ret = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
@@ -2756,9 +2897,9 @@ START_TEST(mlang)
     test_EnumScripts(iML2, SCRIPTCONTF_SCRIPT_USER | SCRIPTCONTF_SCRIPT_HIDE | SCRIPTCONTF_SCRIPT_SYSTEM);
 
     ret = IMultiLanguage2_IsConvertible(iML2, CP_UTF8, CP_UNICODE);
-    ok(ret == S_OK, "IMultiLanguage2_IsConvertible(CP_UTF8 -> CP_UNICODE) = %08x\n", ret);
+    ok(ret == S_OK, "IMultiLanguage2_IsConvertible(CP_UTF8 -> CP_UNICODE) = %08lx\n", ret);
     ret = IMultiLanguage2_IsConvertible(iML2, CP_UNICODE, CP_UTF8);
-    ok(ret == S_OK, "IMultiLanguage2_IsConvertible(CP_UNICODE -> CP_UTF8) = %08x\n", ret);
+    ok(ret == S_OK, "IMultiLanguage2_IsConvertible(CP_UNICODE -> CP_UTF8) = %08lx\n", ret);
 
     test_multibyte_to_unicode_translations(iML2);
     test_IMultiLanguage2_ConvertStringFromUnicode(iML2);
