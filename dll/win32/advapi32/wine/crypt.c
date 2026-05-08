@@ -622,10 +622,6 @@ BOOL WINAPI CryptContextAddRef (HCRYPTPROV hProv, DWORD *pdwReserved, DWORD dwFl
 		return FALSE;
 	}
 
-#ifdef __REACTOS__
-	_SEH2_TRY
-	{
-#endif
 	if (pProv->dwMagic != MAGIC_CRYPTPROV)
 	{
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -633,15 +629,6 @@ BOOL WINAPI CryptContextAddRef (HCRYPTPROV hProv, DWORD *pdwReserved, DWORD dwFl
 	}
 
 	InterlockedIncrement(&pProv->refcount);
-#ifdef __REACTOS__
-	}
-	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        _SEH2_YIELD(return FALSE);
-    }
-    _SEH2_END;
-#endif
 	return TRUE;
 }
 
@@ -759,25 +746,12 @@ BOOL WINAPI CryptCreateHash (HCRYPTPROV hProv, ALG_ID Algid, HCRYPTKEY hKey,
 
 	TRACE("(0x%lx, 0x%x, 0x%lx, %08x, %p)\n", hProv, Algid, hKey, dwFlags, phHash);
 
-#ifdef __REACTOS__
-	_SEH2_TRY
-	{
-#endif
 	if (!prov || !phHash || prov->dwMagic != MAGIC_CRYPTPROV ||
 		(key && key->dwMagic != MAGIC_CRYPTKEY))
 	{
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return FALSE;
 	}
-#ifdef __REACTOS__
-	}
-	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        _SEH2_YIELD(return FALSE);
-    }
-    _SEH2_END;
-#endif
 	if (dwFlags)
 	{
 		SetLastError(NTE_BAD_FLAGS);
@@ -832,10 +806,6 @@ BOOL WINAPI CryptDecrypt (HCRYPTKEY hKey, HCRYPTHASH hHash, BOOL Final,
 
 	TRACE("(0x%lx, 0x%lx, %d, %08x, %p, %p)\n", hKey, hHash, Final, dwFlags, pbData, pdwDataLen);
 
-#ifdef __REACTOS__
-	_SEH2_TRY
-	{
-#endif
 	if (!key || !pbData || !pdwDataLen ||
 		!key->pProvider || key->dwMagic != MAGIC_CRYPTKEY ||
 		key->pProvider->dwMagic != MAGIC_CRYPTPROV)
@@ -847,15 +817,6 @@ BOOL WINAPI CryptDecrypt (HCRYPTKEY hKey, HCRYPTHASH hHash, BOOL Final,
 	prov = key->pProvider;
 	return prov->pFuncs->pCPDecrypt(prov->hPrivate, key->hPrivate, hash ? hash->hPrivate : 0,
 			Final, dwFlags, pbData, pdwDataLen);
-#ifdef __REACTOS__
-	}
-	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        _SEH2_YIELD(return FALSE);
-    }
-    _SEH2_END;
-#endif
 }
 
 /******************************************************************************
@@ -1138,10 +1099,6 @@ BOOL WINAPI CryptEncrypt (HCRYPTKEY hKey, HCRYPTHASH hHash, BOOL Final,
 
 	TRACE("(0x%lx, 0x%lx, %d, %08x, %p, %p, %d)\n", hKey, hHash, Final, dwFlags, pbData, pdwDataLen, dwBufLen);
 
-#ifdef __REACTOS__
-	_SEH2_TRY
-	{
-#endif
 	if (!key || !pdwDataLen || !key->pProvider ||
 		key->dwMagic != MAGIC_CRYPTKEY || key->pProvider->dwMagic != MAGIC_CRYPTPROV)
 	{
@@ -1152,15 +1109,6 @@ BOOL WINAPI CryptEncrypt (HCRYPTKEY hKey, HCRYPTHASH hHash, BOOL Final,
 	prov = key->pProvider;
 	return prov->pFuncs->pCPEncrypt(prov->hPrivate, key->hPrivate, hash ? hash->hPrivate : 0,
 			Final, dwFlags, pbData, pdwDataLen, dwBufLen);
-#ifdef __REACTOS__
-	}
-	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        _SEH2_YIELD(return FALSE);
-    }
-    _SEH2_END;
-#endif
 }
 
 /******************************************************************************
@@ -1473,10 +1421,6 @@ BOOL WINAPI CryptExportKey (HCRYPTKEY hKey, HCRYPTKEY hExpKey, DWORD dwBlobType,
 
 	TRACE("(0x%lx, 0x%lx, %d, %08x, %p, %p)\n", hKey, hExpKey, dwBlobType, dwFlags, pbData, pdwDataLen);
 
-#ifdef __REACTOS__
-	_SEH2_TRY
-	{
-#endif
 	if (!key || !pdwDataLen || !key->pProvider ||
 		key->dwMagic != MAGIC_CRYPTKEY || key->pProvider->dwMagic != MAGIC_CRYPTPROV)
 	{
@@ -1487,15 +1431,6 @@ BOOL WINAPI CryptExportKey (HCRYPTKEY hKey, HCRYPTKEY hExpKey, DWORD dwBlobType,
 	prov = key->pProvider;
 	return prov->pFuncs->pCPExportKey(prov->hPrivate, key->hPrivate, expkey ? expkey->hPrivate : 0,
 			dwBlobType, dwFlags, pbData, pdwDataLen);
-#ifdef __REACTOS__
-	}
-	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        _SEH2_YIELD(return FALSE);
-    }
-    _SEH2_END;
-#endif
 }
 
 /******************************************************************************
