@@ -1,0 +1,26 @@
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nUtilitée: arping [-t] [-n count] -s ip-source hôte-cible\n\n\
+Options:\n\
+    -t             Ping l'hôte spécifier jusqu'à arrêt.\n\
+                   Pour arrêter - taper Control-C.\n\
+    -n count       Nombre de paquets à envoyer.\n\
+    -s             Utiliser cet IP source.\n\n\0"
+    IDS_BAD_OPTION_FORMAT "mauvais format d'option %1.\n\0"
+    IDS_BAD_OPTION "mauvais option %1.\n\0"
+    IDS_BAD_PARAMETER "mauvais paramètre %1.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED "nom ou addresse IP de l'hôte doit être spécifiée.\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK "Impossible d'initialiser winsock dll.\n\0"
+    IDS_UNKNOWN_HOST "hôte inconnu %1.\n\0"
+    IDS_SRC_MUST_BE_SPECIFIED "L'adresse IP de l'hôte source doit être spécifiée.\n\0"
+    IDS_BAD_VALUE_OPTION_N "Mauvais valeur pour l'option -n, tranche valide est de 1 à %1!u!.\n\0"
+    IDS_ARPING_TO_FROM "ARPING %1 depuis %2\n\0"
+    IDS_MS "ms\0"
+    IDS_1MS "1ms\0"
+    IDS_REPLY_FROM "Réponse Unicast depuis %1 [%2]  %3%4\n\0"
+    IDS_ARPING_STATISTICS "Envoyer %1!u! paquets\n\
+Reçu %2!u! Réponse(s)\n\0"
+END
