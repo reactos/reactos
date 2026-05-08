@@ -31,6 +31,9 @@
 #define expectf(expected, got) expectf_((expected), (got), 0.001)
 
 static GpStatus (WINAPI *pGdipGraphicsSetAbort)(GpGraphics*,GdiplusAbort*);
+#ifdef __REACTOS__
+static GpStatus (WINAPI *pGdipDrawImageFX)(GpGraphics*, GpImage*, GpRectF*, GpMatrix*, CGpEffect*, GpImageAttributes*, GpUnit);
+#endif
 
 static const REAL mm_per_inch = 25.4;
 static const REAL point_per_inch = 72.0;
@@ -1316,6 +1319,15 @@ static void test_GdipDrawImageFX(void)
     GpRectF source;
     BYTE buff[400];
     HDC hdc;
+
+#ifdef __REACTOS__
+    if (!pGdipDrawImageFX)
+    {
+        win_skip("GdipDrawImageFX() is not supported.\n");
+        return;
+    }
+#define GdipDrawImageFX pGdipDrawImageFX
+#endif
 
     if (!(hdc = GetDC( hwnd )))
         return;
@@ -7498,6 +7510,9 @@ START_TEST(graphics)
     if (_controlfp_s) _controlfp_s(0, 0, 0x0008001e);
 
     pGdipGraphicsSetAbort = (void*)GetProcAddress(gdiplus_mod, "GdipGraphicsSetAbort");
+#ifdef __REACTOS__
+    pGdipDrawImageFX = (void*)GetProcAddress(gdiplus_mod, "GdipDrawImageFX");
+#endif
 
     memset( &class, 0, sizeof(class) );
     class.lpszClassName = "gdiplus_test";
