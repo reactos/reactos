@@ -1,9 +1,10 @@
 /*
- * PROJECT:     Text Input DLL
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/input/lang/uk-UA.rc
- * PURPOSE:     Ukrainian Language File for input.dll
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk, Ostap Burtoviy
+ * PROJECT:     ReactOS Language Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2007 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2010-2011 Igor Paliychuk <igor-hkr@mail.ru>
+ *              Copyright 2026 Ostap Burtoviy <burtovijostap@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -23,7 +24,7 @@ BEGIN
     PUSHBUTTON "В&идалити", IDC_REMOVE_BUTTON, 175, 125, 70, 14
     PUSHBUTTON "В&ластивості...", IDC_PROP_BUTTON, 175, 145, 70, 14
     GROUPBOX "Налаштування", -1, 5, 195, 245, 30
-    PUSHBUTTON "Мовна па&нель ...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
+    PUSHBUTTON "Мовна па&нель...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
     PUSHBUTTON "&Параметри клавіатури...", IDC_KEY_SET_BTN, 133, 205, 110, 14
 END
 
@@ -50,7 +51,7 @@ BEGIN
     RTEXT "&Сполучення клавіш", -1, 177, 47, 79, 9
     CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
     PUSHBUTTON "З&міна сполучення клавіш...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
-    DEFPUSHBUTTON "ОК", IDOK, 66, 140, 70, 14
+    DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 146, 140, 70, 14
 END
 

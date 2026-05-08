@@ -1,8 +1,11 @@
 /*
- * PROJECT:    Display Control Panel Applet
- * LICENSE:    GPL - See COPYING in the top level directory
- * PURPOSE:    Ukrainian Language File
- * TRANSLATOR: Artem Reznikov, Sakara Yevhen, Igor Paliychuk, Ostap Burtoviy
+ * PROJECT:     ReactOS Display Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2006-2008 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2010 Sakara Yevhen <eresid@gmail.com>
+ *              Copyright 2010-2011 Igor Paliychuk <igor-hkr@mail.ru>
+ *              Copyright 2026 Ostap Burtoviy <burtovijostap@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -127,7 +130,7 @@ BEGIN
     AUTOCHECKBOX "&Приховувати покажчики виклику з клавіатури до натиснення <Alt>", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
     AUTOCHECKBOX "Використовувати п&ласкі меню", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Скасувати", IDCANCEL, 226, 165, 50, 14
-    DEFPUSHBUTTON "ОК", IDOK, 172, 165, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
 
 IDD_SETTINGS DIALOGEX 0, 0, 246, 202
@@ -273,8 +276,8 @@ BEGIN
     IDS_WINTEXT "Текст у вікні"
     IDS_MESSBOX "Вікно повідомлення"
     IDS_MESSTEXT "Повідомлення"
-    IDS_BUTTEXT "ОК"
-    IDS_CLASSIC_THEME "Класична Тема"
+    IDS_BUTTEXT "OK"
+    IDS_CLASSIC_THEME "Класична тема"
 END
 
 STRINGTABLE

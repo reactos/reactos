@@ -1,9 +1,10 @@
 /*
- * PROJECT:     browseui
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/browseui/lang/uk-UA.rc
- * PURPOSE:     Ukrainian Language File
- * TRANSLATORS: Igor Paliychuk, Yaroslav Kibysh, Ostap Burtoviy
+ * PROJECT:     ReactOS Win32 BrowseUI
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2010-2011 Igor Paliychuk <igor-hkr@mail.ru>
+ *              Copyright 2019 Yaroslav Kibysh <yanet.prod@gmail.com>
+ *              Copyright 2026 Ostap Burtoviy <burtovijostap@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -145,16 +146,22 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | WS_DLGFRA
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Шукати за будь-яким або всіма критеріями нижче.", IDC_SEARCH_LABEL, 4, 2, 120, 20
+
     LTEXT "Повне або часткове &ім'я файлу:", -1, 10, 25, 500, 10
     EDITTEXT IDC_SEARCH_FILENAME, 10, 35, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+
     LTEXT "&Слово або фраза у файлі:", -1, 10, 50, 500, 10
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+
     LTEXT "&Шукати в:", -1, 10, 75, 500, 10
     CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY, 10, 85, 200, 200
+
     DEFPUSHBUTTON "&Знайти", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "Зупинити", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
+
     AUTOCHECKBOX "Шукати в прихованих файлах і папках",
                  IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
 END
 

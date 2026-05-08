@@ -1,9 +1,10 @@
 /*
- * PROJECT:     International Control Panel Applet
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/intl/lang/uk-UA.rc
- * PURPOSE:     Ukrainian Language File for International Control Panel Applet
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk, Ostap Burtoviy
+ * PROJECT:     ReactOS International Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2006-2007 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2011 Igor Paliychuk <igor-hkr@mail.ru>
+ *              Copyright 2026 Ostap Burtoviy <burtovijostap@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
