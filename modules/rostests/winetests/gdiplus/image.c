@@ -5331,6 +5331,13 @@ static void test_CloneBitmapArea(void)
     GdipDisposeImage((GpImage *)copy);
     GdipDisposeImage((GpImage *)bitmap);
 
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() < NTDDI_WIN7))
+    {
+        trace("Skipping test cases pre Win 7, because they fail.\n");
+    }
+    else
+#endif
     for(i=0; i<ARRAY_SIZE(td); i++)
     {
         status = GdipCreateBitmapFromScan0(3, 3, 4*3, td[i].src_format, td[i].src_pixeldata, &bitmap);
