@@ -156,7 +156,7 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, SIZE_T *pcchText, EOL
 HLOCAL
 ReadText(HANDLE hFile, ENCODING *pencFile, EOLN *piEoln)
 {
-    PBYTE pBytes = NULL;
+    LPBYTE pBytes = NULL;
     LPWSTR pszText, pszNewText = NULL;
     DWORD dwSize, dwPos;
     SIZE_T i, cchText, cbContent;
@@ -238,7 +238,7 @@ ReadText(HANDLE hFile, ENCODING *pencFile, EOLN *piEoln)
 
             if (encFile == ENCODING_UTF16BE) /* big endian; Swap bytes */
             {
-                BYTE tmp, *pb = (PBYTE)pszNewText;
+                BYTE tmp, *pb = (LPBYTE)pszNewText;
                 for (i = 0; i < cchText * 2; i += 2)
                 {
                     tmp = pb[i];
