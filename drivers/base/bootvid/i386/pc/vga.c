@@ -360,15 +360,15 @@ VidScreenToBufferBlt(
     /* Calculate the starting pixel block offset */
     PixelOffset = Top * (SCREEN_WIDTH / 8) + (Left >> 3);
 
+    /* Set Mode 0 */
+    ReadWriteMode(0);
+
     /* Loop the 4 planes */
     for (Plane = 0; Plane < 4; ++Plane)
     {
         /* Set the current pixel position and reset buffer loop variable */
         PixelPosition = (PUCHAR)(VgaBase + PixelOffset);
         i = Buffer;
-
-        /* Set Mode 0 */
-        ReadWriteMode(0);
 
         /* Set the current plane */
         __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (Plane << 8) | IND_READ_MAP);
