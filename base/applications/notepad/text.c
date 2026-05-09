@@ -130,12 +130,16 @@ ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, SIZE_T *pcchText, EOL
         cchNew = cchText + cNonCRLFs;
         hLocal = LocalAlloc(LMEM_MOVEABLE, (cchNew + 1) * sizeof(WCHAR));
         if (!hLocal)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE; /* Failure */
+        }
 
         pszNew = LocalLock(hLocal);
         if (!pszNew)
         {
             LocalFree(hLocal);
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE; /* Failure */
         }
 
@@ -174,11 +178,17 @@ ReadText(HANDLE hFile, ENCODING *pencFile, EOLN *piEoln)
     {
         hNewLocal = LocalAlloc(LMEM_MOVEABLE, sizeof(UNICODE_NULL));
         if (!hNewLocal)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto done;
+        }
 
         pszNewText = LocalLock(hNewLocal);
         if (!pszNewText)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto done;
+        }
 
         *pszNewText = UNICODE_NULL;
         LocalUnlock(hNewLocal);
@@ -226,13 +236,25 @@ ReadText(HANDLE hFile, ENCODING *pencFile, EOLN *piEoln)
         /* Allocate the buffer for EM_SETHANDLE */
         pszText = (LPWSTR)&pBytes[dwPos];
         cchText = (dwSize - dwPos) / sizeof(WCHAR);
+        if (cchText >= MAXLONG / sizeof(WCHAR))
+        {
+            SetLastError(ERROR_FILE_TOO_LARGE);
+            goto done;
+        }
+
         hNewLocal = LocalAlloc(LMEM_MOVEABLE, (cchText + 1) * sizeof(WCHAR));
         if (!hNewLocal)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto done;
+        }
 
         pszNewText = LocalLock(hNewLocal);
-        if (pszNewText == NULL)
+        if (!pszNewText)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto done;
+        }
 
         CopyMemory(pszNewText, pszText, cchText * sizeof(WCHAR));
 
@@ -256,17 +278,26 @@ ReadText(HANDLE hFile, ENCODING *pencFile, EOLN *piEoln)
         iCodePage = ((encFile == ENCODING_UTF8 || encFile == ENCODING_UTF8BOM)
                      ? CP_UTF8 : CP_ACP);
         cbContent = dwSize - dwPos;
-        if (cbContent > MAXLONG)
+        if (cbContent >= MAXLONG / sizeof(WCHAR))
+        {
+            SetLastError(ERROR_FILE_TOO_LARGE);
             goto done;
+        }
 
         /* Allocate the buffer for EM_SETHANDLE */
         hNewLocal = LocalAlloc(LMEM_MOVEABLE, (cbContent + 1) * sizeof(WCHAR));
         if (!hNewLocal)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto done;
+        }
 
         pszNewText = LocalLock(hNewLocal);
         if (!pszNewText)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto done;
+        }
 
         /* Do conversion */
         cchText = 0;
