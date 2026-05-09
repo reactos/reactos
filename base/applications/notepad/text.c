@@ -331,7 +331,10 @@ done:
     if (pszNewText)
         LocalUnlock(hNewLocal);
     if (!bSuccess && hNewLocal)
-        hNewLocal = LocalFree(hNewLocal);
+    {
+        LocalFree(hNewLocal);
+        hNewLocal = NULL;
+    }
     return hNewLocal;
 }
 
