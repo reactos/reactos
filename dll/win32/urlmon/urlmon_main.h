@@ -21,9 +21,6 @@
 #define __WINE_URLMON_MAIN_H
 
 #include <stdarg.h>
-#ifdef __REACTOS__
-#include <wchar.h>
-#endif
 
 #define COBJMACROS
 
@@ -37,60 +34,59 @@
 #include "urlmon.h"
 #include "wininet.h"
 
-#include "wine/heap.h"
 #include "wine/list.h"
 
-extern HINSTANCE hProxyDll DECLSPEC_HIDDEN;
-extern HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT ZoneMgrImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT StdURLMoniker_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT HttpSProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT FtpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT GopherProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT MimeFilter_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT Uri_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HINSTANCE hProxyDll;
+extern HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT ZoneMgrImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT StdURLMoniker_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT HttpSProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT FtpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT GopherProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT MimeFilter_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
+extern HRESULT Uri_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 
-extern BOOL WINAPI URLMON_DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI URLMON_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI URLMON_DllRegisterServer(void) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI URLMON_DllUnregisterServer(void) DECLSPEC_HIDDEN;
+extern BOOL WINAPI URLMON_DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+extern HRESULT WINAPI URLMON_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv);
+extern HRESULT WINAPI URLMON_DllRegisterServer(void);
+extern HRESULT WINAPI URLMON_DllUnregisterServer(void);
 
-extern GUID const CLSID_PSFactoryBuffer DECLSPEC_HIDDEN;
-extern GUID const CLSID_CUri DECLSPEC_HIDDEN;
+extern GUID const CLSID_PSFactoryBuffer;
+extern GUID const CLSID_CUri;
 
 /**********************************************************************
  * Dll lifetime tracking declaration for urlmon.dll
  */
-extern LONG URLMON_refCount DECLSPEC_HIDDEN;
+extern LONG URLMON_refCount;
 static inline void URLMON_LockModule(void) { InterlockedIncrement( &URLMON_refCount ); }
 static inline void URLMON_UnlockModule(void) { InterlockedDecrement( &URLMON_refCount ); }
 
 extern HINSTANCE urlmon_instance;
 
-IInternetProtocolInfo *get_protocol_info(LPCWSTR) DECLSPEC_HIDDEN;
-HRESULT get_protocol_handler(IUri*,CLSID*,IClassFactory**) DECLSPEC_HIDDEN;
-IInternetProtocol *get_mime_filter(LPCWSTR) DECLSPEC_HIDDEN;
-BOOL is_registered_protocol(LPCWSTR) DECLSPEC_HIDDEN;
-HRESULT register_namespace(IClassFactory*,REFIID,LPCWSTR,BOOL) DECLSPEC_HIDDEN;
-HINTERNET get_internet_session(IInternetBindInfo*) DECLSPEC_HIDDEN;
-WCHAR *get_useragent(void) DECLSPEC_HIDDEN;
-void update_user_agent(WCHAR*) DECLSPEC_HIDDEN;
-void free_session(void) DECLSPEC_HIDDEN;
+IInternetProtocolInfo *get_protocol_info(LPCWSTR);
+HRESULT get_protocol_handler(IUri*,CLSID*,IClassFactory**);
+IInternetProtocol *get_mime_filter(LPCWSTR);
+BOOL is_registered_protocol(LPCWSTR);
+HRESULT register_namespace(IClassFactory*,REFIID,LPCWSTR,BOOL);
+HINTERNET get_internet_session(IInternetBindInfo*);
+WCHAR *get_useragent(void);
+void update_user_agent(WCHAR*);
+void free_session(void);
 
-HRESULT find_mime_from_ext(const WCHAR*,WCHAR**) DECLSPEC_HIDDEN;
+HRESULT find_mime_from_ext(const WCHAR*,WCHAR**);
 
-HRESULT bind_to_storage(IUri*,IBindCtx*,REFIID,void**) DECLSPEC_HIDDEN;
-HRESULT bind_to_object(IMoniker*,IUri*,IBindCtx*,REFIID,void**ppv) DECLSPEC_HIDDEN;
+HRESULT bind_to_storage(IUri*,IBindCtx*,REFIID,void**);
+HRESULT bind_to_object(IMoniker*,IUri*,IBindCtx*,REFIID,void**ppv);
 
-HRESULT create_default_callback(IBindStatusCallback**) DECLSPEC_HIDDEN;
-HRESULT wrap_callback(IBindStatusCallback*,IBindStatusCallback**) DECLSPEC_HIDDEN;
-IBindStatusCallback *bsc_from_bctx(IBindCtx*) DECLSPEC_HIDDEN;
+HRESULT create_default_callback(IBindStatusCallback**);
+HRESULT wrap_callback(IBindStatusCallback*,IBindStatusCallback**);
+IBindStatusCallback *bsc_from_bctx(IBindCtx*);
 
 typedef HRESULT (*stop_cache_binding_proc_t)(void*,const WCHAR*,HRESULT,const WCHAR*);
-HRESULT download_to_cache(IUri*,stop_cache_binding_proc_t,void*,IBindStatusCallback*) DECLSPEC_HIDDEN;
+HRESULT download_to_cache(IUri*,stop_cache_binding_proc_t,void*,IBindStatusCallback*);
 
 typedef struct ProtocolVtbl ProtocolVtbl;
 
@@ -158,16 +154,16 @@ struct ProtocolVtbl {
 #define FLAG_ERROR                    0x0040
 #define FLAG_SYNC_READ                0x0080
 
-HRESULT protocol_start(Protocol*,IInternetProtocol*,IUri*,IInternetProtocolSink*,IInternetBindInfo*) DECLSPEC_HIDDEN;
-HRESULT protocol_continue(Protocol*,PROTOCOLDATA*) DECLSPEC_HIDDEN;
-HRESULT protocol_read(Protocol*,void*,ULONG,ULONG*) DECLSPEC_HIDDEN;
-HRESULT protocol_lock_request(Protocol*) DECLSPEC_HIDDEN;
-HRESULT protocol_unlock_request(Protocol*) DECLSPEC_HIDDEN;
-HRESULT protocol_abort(Protocol*,HRESULT) DECLSPEC_HIDDEN;
-HRESULT protocol_syncbinding(Protocol*) DECLSPEC_HIDDEN;
-void protocol_close_connection(Protocol*) DECLSPEC_HIDDEN;
+HRESULT protocol_start(Protocol*,IInternetProtocol*,IUri*,IInternetProtocolSink*,IInternetBindInfo*);
+HRESULT protocol_continue(Protocol*,PROTOCOLDATA*);
+HRESULT protocol_read(Protocol*,void*,ULONG,ULONG*);
+HRESULT protocol_lock_request(Protocol*);
+HRESULT protocol_unlock_request(Protocol*);
+HRESULT protocol_abort(Protocol*,HRESULT);
+HRESULT protocol_syncbinding(Protocol*);
+void protocol_close_connection(Protocol*);
 
-void find_domain_name(const WCHAR*,DWORD,INT*) DECLSPEC_HIDDEN;
+void find_domain_name(const WCHAR*,DWORD,INT*);
 
 typedef struct _task_header_t task_header_t;
 
@@ -219,8 +215,8 @@ typedef struct {
     BSTR display_uri;
 }  BindProtocol;
 
-HRESULT create_binding_protocol(BindProtocol**) DECLSPEC_HIDDEN;
-void set_binding_sink(BindProtocol*,IInternetProtocolSink*,IInternetBindInfo*) DECLSPEC_HIDDEN;
+HRESULT create_binding_protocol(BindProtocol**);
+void set_binding_sink(BindProtocol*,IInternetProtocolSink*,IInternetBindInfo*);
 
 typedef struct {
     HWND notif_hwnd;
@@ -229,41 +225,20 @@ typedef struct {
     struct list entry;
 } tls_data_t;
 
-tls_data_t *get_tls_data(void) DECLSPEC_HIDDEN;
+tls_data_t *get_tls_data(void);
 
-void unregister_notif_wnd_class(void) DECLSPEC_HIDDEN;
-HWND get_notif_hwnd(void) DECLSPEC_HIDDEN;
-void release_notif_hwnd(HWND) DECLSPEC_HIDDEN;
+void unregister_notif_wnd_class(void);
+HWND get_notif_hwnd(void);
+void release_notif_hwnd(HWND);
 
-const char *debugstr_bindstatus(ULONG) DECLSPEC_HIDDEN;
+const char *debugstr_bindstatus(ULONG);
 
-static inline void* __WINE_ALLOC_SIZE(2) heap_realloc_zero(void *mem, size_t size)
-{
-    return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, size);
-}
-
-static inline LPWSTR heap_strdupW(LPCWSTR str)
+static inline WCHAR *strndupW(LPCWSTR str, int len)
 {
     LPWSTR ret = NULL;
 
     if(str) {
-        DWORD size;
-
-        size = (lstrlenW(str)+1)*sizeof(WCHAR);
-        ret = heap_alloc(size);
-        if(ret)
-            memcpy(ret, str, size);
-    }
-
-    return ret;
-}
-
-static inline LPWSTR heap_strndupW(LPCWSTR str, int len)
-{
-    LPWSTR ret = NULL;
-
-    if(str) {
-        ret = heap_alloc((len+1)*sizeof(WCHAR));
+        ret = malloc((len + 1) * sizeof(WCHAR));
         if(ret) {
             memcpy(ret, str, len*sizeof(WCHAR));
             ret[len] = 0;
@@ -273,29 +248,15 @@ static inline LPWSTR heap_strndupW(LPCWSTR str, int len)
     return ret;
 }
 
-static inline LPWSTR heap_strdupAtoW(const char *str)
+static inline WCHAR *strdupAtoW(const char *str)
 {
     LPWSTR ret = NULL;
 
     if(str) {
         DWORD len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-        ret = heap_alloc(len*sizeof(WCHAR));
+        ret = malloc(len * sizeof(WCHAR));
         if(ret)
             MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
-    }
-
-    return ret;
-}
-
-static inline char *heap_strdupWtoA(const WCHAR *str)
-{
-    char *ret = NULL;
-
-    if(str) {
-        size_t size = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
-        ret = heap_alloc(size);
-        if(ret)
-            WideCharToMultiByte(CP_ACP, 0, str, -1, ret, size, NULL, NULL);
     }
 
     return ret;

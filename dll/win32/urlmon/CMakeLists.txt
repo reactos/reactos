@@ -4,7 +4,6 @@ add_definitions(
     -DENTRY_PREFIX=URLMON_
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL
-    -D_CRT_NON_CONFORMING_SWPRINTFS
     -DPROXY_CLSID_IS={0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}})
 
 spec2def(urlmon.dll urlmon.spec ADD_IMPORTLIB)
@@ -49,10 +48,11 @@ add_library(urlmon MODULE
     urlmon.rc
     ${CMAKE_CURRENT_BINARY_DIR}/urlmon.def)
 
-set_module_type(urlmon win32dll)
-target_link_libraries(urlmon uuid wine ${PSEH_LIB} oldnames)
+add_idl_reg_scripts(urlmon registry urlmon_urlmon.idl)
+set_module_type(urlmon win32dll ENTRYPOINT 0)
+target_link_libraries(urlmon uuid wine oldnames)
 add_delay_importlibs(urlmon advpack)
-add_importlibs(urlmon rpcrt4 propsys ole32 oleaut32 shlwapi shell32 wininet user32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
+add_importlibs(urlmon rpcrt4 propsys ole32 oleaut32 shlwapi normaliz shell32 wininet user32 advapi32 kernel32_vista ucrtbase kernel32 ntdll)
 add_pch(urlmon precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET urlmon DESTINATION reactos/system32 FOR all)
 set_wine_module_FIXME(urlmon) # CORE-5743: No ARRAY_SIZE macro
