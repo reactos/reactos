@@ -273,7 +273,7 @@ ReadText(HANDLE hFile, ENCODING *pencFile, EOLN *piEoln)
         if (cbContent > 0)
         {
             cchText = MultiByteToWideChar(iCodePage, 0,
-                                          (PCSTR)&pBytes[dwPos], (INT)cbContent,
+                                          (LPCSTR)&pBytes[dwPos], (INT)cbContent,
                                           pszNewText, (INT)cbContent);
             if (!cchText)
                 goto done;
