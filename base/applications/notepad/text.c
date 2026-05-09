@@ -261,7 +261,7 @@ ReadText(HANDLE hFile, ENCODING *pencFile, EOLN *piEoln)
 
         /* Allocate the buffer for EM_SETHANDLE */
         hNewLocal = LocalAlloc(LMEM_MOVEABLE, (cbContent + 1) * sizeof(WCHAR));
-        if (hNewLocal == NULL)
+        if (!hNewLocal)
             goto done;
 
         pszNewText = LocalLock(hNewLocal);
