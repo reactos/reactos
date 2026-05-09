@@ -39,7 +39,11 @@
 #include "wine/debug.h"
 
 #include "msiserver.h"
+#ifdef __REACTOS__
 #include "winemsi_s.h"
+#else
+#include "winemsi.h"
+#endif
 
 static const BOOL is_64bit = sizeof(void *) > sizeof(int);
 extern BOOL is_wow64;
@@ -370,6 +374,19 @@ enum platform
     PLATFORM_ARM64
 };
 
+static inline BOOL is_platform_64bit(enum platform platform)
+{
+    switch (platform)
+    {
+    case PLATFORM_INTEL64:
+    case PLATFORM_X64:
+    case PLATFORM_ARM64:
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+
 enum clr_version
 {
     CLR_VERSION_V10,
@@ -406,6 +423,7 @@ typedef struct tagMSIPACKAGE
     struct list folders;
     struct list binaries;
     struct list cabinet_streams;
+    struct list drlocators;
     LPWSTR ActionFormat;
     LPWSTR LastAction;
     LPWSTR LastActionTemplate;
@@ -715,6 +733,16 @@ struct tagMSIMIME
     MSICLASS *Class;
 };
 
+typedef struct
+{
+    struct list entry;
+    WCHAR *Signature;
+    WCHAR *Parent;
+    WCHAR *Path;
+    int Depth;
+    BOOL Seen;
+} MSIDRLOCATOR;
+
 #define SEQUENCE_UI       0x1
 #define SEQUENCE_EXEC     0x2
 
@@ -726,8 +754,8 @@ struct tagMSIMIME
 #define MSIHANDLETYPE_PACKAGE 5
 #define MSIHANDLETYPE_PREVIEW 6
 
-#define MSI_MAJORVERSION 4
-#define MSI_MINORVERSION 5
+#define MSI_MAJORVERSION 5
+#define MSI_MINORVERSION 0
 #define MSI_BUILDNUMBER 6001
 
 #define GUID_SIZE 39
@@ -775,7 +803,7 @@ extern UINT msi_commit_streams( MSIDATABASE *db );
 
 
 /* string table functions */
-extern BOOL msi_add_string( string_table *st, const WCHAR *data, int len, BOOL persistent );
+extern int msi_add_string( string_table *st, const WCHAR *data, int len, BOOL persistent );
 extern UINT msi_string2id( const string_table *st, const WCHAR *data, int len, UINT *id );
 extern VOID msi_destroy_stringtable( string_table *st );
 extern const WCHAR *msi_string_lookup( const string_table *st, UINT id, int *len );
@@ -784,7 +812,7 @@ extern string_table *msi_load_string_table( IStorage *stg, UINT *bytes_per_strre
 extern UINT msi_save_string_table( const string_table *st, IStorage *storage, UINT *bytes_per_strref );
 extern UINT msi_get_string_table_codepage( const string_table *st );
 extern UINT msi_set_string_table_codepage( string_table *st, UINT codepage );
-extern WCHAR *msi_strdupW( const WCHAR *value, int len );
+extern WCHAR *msi_strdupW( const WCHAR *value, int len ) __WINE_DEALLOC(free) __WINE_MALLOC;
 
 extern BOOL TABLE_Exists( MSIDATABASE *db, LPCWSTR name );
 extern MSICONDITION MSI_DatabaseIsTablePersistent( MSIDATABASE *db, LPCWSTR table );
@@ -855,7 +883,7 @@ extern UINT copy_remote_record(const struct wire_record *rec, MSIHANDLE handle);
 
 /* stream internals */
 extern void enum_stream_names( IStorage *stg );
-extern WCHAR *encode_streamname(BOOL is_table, const WCHAR *in);
+extern WCHAR *encode_streamname(BOOL is_table, const WCHAR *in) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern BOOL decode_streamname(LPCWSTR in, LPWSTR out);
 
 /* database internals */
@@ -943,7 +971,7 @@ extern UINT MSIREG_OpenClassesUpgradeCodesKey(LPCWSTR szUpgradeCode, HKEY* key, 
 extern UINT MSIREG_DeleteLocalClassesProductKey(LPCWSTR szProductCode);
 extern UINT MSIREG_DeleteLocalClassesFeaturesKey(LPCWSTR szProductCode);
 extern UINT msi_locate_product(LPCWSTR szProduct, MSIINSTALLCONTEXT *context);
-extern WCHAR *msi_reg_get_val_str( HKEY hkey, const WCHAR *name );
+extern WCHAR *msi_reg_get_val_str( HKEY hkey, const WCHAR *name ) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern BOOL msi_reg_get_val_dword( HKEY hkey, LPCWSTR name, DWORD *val);
 
 extern DWORD msi_version_str_to_dword(LPCWSTR p);
@@ -965,12 +993,15 @@ extern void msi_dialog_unregister_class( void );
 extern UINT msi_get_suminfo( IStorage *stg, UINT uiUpdateCount, MSISUMMARYINFO **si );
 extern UINT msi_get_db_suminfo( MSIDATABASE *db, UINT uiUpdateCount, MSISUMMARYINFO **si );
 extern WCHAR *msi_suminfo_dup_string( MSISUMMARYINFO *si,
-                                      UINT property );
+                                      UINT property ) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern INT msi_suminfo_get_int32( MSISUMMARYINFO *si, UINT uiProperty );
-extern WCHAR *msi_get_suminfo_product( IStorage *stg );
+extern WCHAR *msi_get_suminfo_product( IStorage *stg ) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern UINT msi_add_suminfo( MSIDATABASE *db, LPWSTR **records, int num_records, int num_columns );
 extern UINT msi_export_suminfo( MSIDATABASE *db, HANDLE handle );
 extern UINT msi_load_suminfo_properties( MSIPACKAGE *package );
+extern UINT msi_suminfo_persist( MSISUMMARYINFO * );
+extern UINT msi_suminfo_get_prop( MSISUMMARYINFO *, UINT, UINT *, INT *, FILETIME *, awstring *, DWORD * );
+extern UINT msi_suminfo_set_prop( MSISUMMARYINFO *, UINT, UINT, INT, FILETIME *, awcstring * );
 
 /* undocumented functions */
 UINT WINAPI MsiCreateAndVerifyInstallerDirectory( DWORD );
@@ -1023,30 +1054,30 @@ extern UINT ACTION_MsiUnpublishAssemblies(MSIPACKAGE *package);
 
 /* Helpers */
 extern DWORD deformat_string(MSIPACKAGE *package, LPCWSTR ptr, WCHAR** data );
-extern WCHAR *msi_dup_record_field( MSIRECORD *row, INT index );
-extern WCHAR *msi_dup_property( MSIDATABASE *db, const WCHAR *prop );
+extern WCHAR *msi_dup_record_field( MSIRECORD *row, INT index ) __WINE_DEALLOC(free) __WINE_MALLOC;
+extern WCHAR *msi_dup_property( MSIDATABASE *db, const WCHAR *prop ) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern UINT msi_set_property( MSIDATABASE *, const WCHAR *, const WCHAR *, int );
 extern UINT msi_get_property( MSIDATABASE *, LPCWSTR, LPWSTR, LPDWORD );
 extern int msi_get_property_int( MSIDATABASE *package, LPCWSTR prop, int def );
 extern WCHAR *msi_resolve_source_folder(MSIPACKAGE *package, const WCHAR *name,
-                                        MSIFOLDER **folder);
+                                        MSIFOLDER **folder) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern void msi_resolve_target_folder(MSIPACKAGE *package, const WCHAR *name, BOOL load_prop);
-extern WCHAR *msi_normalize_path(const WCHAR *);
+extern WCHAR *msi_normalize_path(const WCHAR *) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern WCHAR *msi_resolve_file_source(MSIPACKAGE *package,
-                                      MSIFILE *file);
+                                      MSIFILE *file) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern const WCHAR *msi_get_target_folder(MSIPACKAGE *package, const WCHAR *name);
 extern void msi_reset_source_folders( MSIPACKAGE *package );
 extern MSICOMPONENT *msi_get_loaded_component(MSIPACKAGE *package, const WCHAR *Component);
 extern MSIFEATURE *msi_get_loaded_feature(MSIPACKAGE *package, const WCHAR *Feature);
 extern MSIFILE *msi_get_loaded_file(MSIPACKAGE *package, const WCHAR *file);
 extern MSIFOLDER *msi_get_loaded_folder(MSIPACKAGE *package, const WCHAR *dir);
-extern WCHAR *msi_create_temp_file(MSIDATABASE *db);
+extern WCHAR *msi_create_temp_file(MSIDATABASE *db) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern void msi_free_action_script(MSIPACKAGE *package, UINT script);
-extern WCHAR *msi_build_icon_path(MSIPACKAGE *, const WCHAR *);
-extern WCHAR * WINAPIV msi_build_directory_name(DWORD , ...);
+extern WCHAR *msi_build_icon_path(MSIPACKAGE *, const WCHAR *) __WINE_DEALLOC(free) __WINE_MALLOC;
+extern WCHAR * WINAPIV msi_build_directory_name(DWORD , ...) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern void msi_reduce_to_long_filename(WCHAR *);
 extern WCHAR *msi_create_component_advertise_string(MSIPACKAGE *, MSICOMPONENT *,
-                                                    const WCHAR *);
+                                                    const WCHAR *) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern void ACTION_UpdateComponentStates(MSIPACKAGE *package, MSIFEATURE *feature);
 extern UINT msi_register_unique_action(MSIPACKAGE *, const WCHAR *);
 extern BOOL msi_action_is_unique(const MSIPACKAGE *, const WCHAR *);
@@ -1060,25 +1091,26 @@ extern UINT msi_uninstall_assembly(MSIPACKAGE *, MSICOMPONENT *);
 extern void msi_destroy_assembly_caches(MSIPACKAGE *);
 extern BOOL msi_is_global_assembly(MSICOMPONENT *);
 extern IAssemblyEnum *msi_create_assembly_enum(MSIPACKAGE *, const WCHAR *);
-extern WCHAR *msi_get_assembly_path(MSIPACKAGE *, const WCHAR *);
+extern WCHAR *msi_get_assembly_path(MSIPACKAGE *, const WCHAR *) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern WCHAR **msi_split_string(const WCHAR *, WCHAR);
 extern UINT msi_set_original_database_property(MSIDATABASE *, const WCHAR *);
-extern WCHAR *msi_get_error_message(MSIDATABASE *, int);
+extern WCHAR *msi_get_error_message(MSIDATABASE *, int) __WINE_DEALLOC(free) __WINE_MALLOC;
 extern UINT msi_strncpyWtoA(const WCHAR *str, int len, char *buf, DWORD *sz, BOOL remote);
 extern UINT msi_strncpyW(const WCHAR *str, int len, WCHAR *buf, DWORD *sz);
-extern WCHAR *msi_get_package_code(MSIDATABASE *db);
+extern WCHAR *msi_get_package_code(MSIDATABASE *db) __WINE_DEALLOC(free) __WINE_MALLOC;
 
 /* wrappers for filesystem functions */
 static inline void msi_disable_fs_redirection( MSIPACKAGE *package )
 {
-    if (is_wow64 && package->platform == PLATFORM_X64) Wow64DisableWow64FsRedirection( &package->cookie );
+    if (is_wow64 && is_platform_64bit( package->platform )) Wow64DisableWow64FsRedirection( &package->cookie );
 }
 static inline void msi_revert_fs_redirection( MSIPACKAGE *package )
 {
-    if (is_wow64 && package->platform == PLATFORM_X64) Wow64RevertWow64FsRedirection( package->cookie );
+    if (is_wow64 && is_platform_64bit( package->platform )) Wow64RevertWow64FsRedirection( package->cookie );
 }
 extern BOOL msi_get_temp_file_name( MSIPACKAGE *, const WCHAR *, const WCHAR *, WCHAR * );
 extern HANDLE msi_create_file( MSIPACKAGE *, const WCHAR *, DWORD, DWORD, DWORD, DWORD );
+extern BOOL msi_copy_file( MSIPACKAGE *, const WCHAR *, const WCHAR *, BOOL );
 extern BOOL msi_delete_file( MSIPACKAGE *, const WCHAR * );
 extern BOOL msi_remove_directory( MSIPACKAGE *, const WCHAR * );
 extern DWORD msi_get_file_attributes( MSIPACKAGE *, const WCHAR * );
@@ -1092,7 +1124,7 @@ extern DWORD msi_get_disk_file_size( MSIPACKAGE *, const WCHAR * );
 extern VS_FIXEDFILEINFO *msi_get_disk_file_version( MSIPACKAGE *, const WCHAR * );
 extern UINT msi_get_filehash( MSIPACKAGE *, const WCHAR *, MSIFILEHASHINFO * );
 extern WCHAR *msi_get_font_file_version( MSIPACKAGE *,
-                                         const WCHAR * );
+                                         const WCHAR * ) __WINE_DEALLOC(free) __WINE_MALLOC;
 
 /* media */
 

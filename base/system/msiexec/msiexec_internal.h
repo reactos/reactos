@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <corecrt.h>
+
 #ifdef __WINE_CRT_PRINTF_ATTR
 extern void report_error(const char* msg, ...) __WINE_CRT_PRINTF_ATTR(1, 2);
 #else
