@@ -301,34 +301,37 @@ CreateSymbolicLink(
     IN LPCWSTR ReferenceString,
     IN struct DeviceInfo *devInfo)
 {
-    DWORD Length, Index, Offset;
-    LPWSTR Key;
+    DWORD Length, Index;
+    WCHAR GuidString[40];
+    LPWSTR SymbolicLink;
 
-    Length = wcslen(devInfo->instanceId) + 4 /* prepend ##?# */ + 41 /* #{GUID} + */ + 1 /* zero byte */;
+    Length = wcslen(devInfo->instanceId) + wcslen(ReferenceString) + 4 /* prepend ##?# */ + 41 /* #{GUID} + */ + 1 /* zero byte */;
 
-    Key = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Length * sizeof(WCHAR));
-    if (!Key)
+    SymbolicLink = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Length * sizeof(WCHAR));
+    if (!SymbolicLink)
         return NULL;
 
-    wcscpy(Key, L"##?#");
-    wcscat(Key, devInfo->instanceId);
+    wcscpy(SymbolicLink, L"\\\\?\\");
+    wcscat(SymbolicLink, devInfo->instanceId);
 
-    for(Index = 4; Index < Length; Index++)
+    for(Index = 4; Index < wcslen(devInfo->instanceId); Index++)
     {
-        if (Key[Index] == L'\\')
+        if (SymbolicLink[Index] == L'\\')
         {
-            Key[Index] = L'#';
+            SymbolicLink[Index] = L'#';
         }
     }
 
-    wcscat(Key, L"#");
+    wcscat(SymbolicLink, L"#");
 
-    Offset = wcslen(Key);
-    pSetupStringFromGuid(InterfaceGuid, Key + Offset, Length - Offset);
+    pSetupStringFromGuid(InterfaceGuid, GuidString, ARRAYSIZE(GuidString));
+    wcscat(SymbolicLink, GuidString);
+    wcscat(SymbolicLink, L"\\");
+    wcscat(SymbolicLink, ReferenceString);
+    SymbolicLink[Length - 1] = UNICODE_NULL;
 
-    return Key;
+    return SymbolicLink;
 }
-
 
 static BOOL
 InstallOneInterface(
