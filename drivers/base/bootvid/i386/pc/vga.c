@@ -370,6 +370,9 @@ VidScreenToBufferBlt(
     LeftDelta = Left & 7;
     RightDelta = 8 - LeftDelta;
 
+    /* Set Mode 0 */
+    ReadWriteMode(0);
+
     /* Calculate the pixel offset and convert the X distance into byte form */
     PixelOffset = Top * (SCREEN_WIDTH / 8) + (Left >> 3);
 
@@ -379,9 +382,6 @@ VidScreenToBufferBlt(
         /* Set the current pixel position and reset buffer loop variable */
         PixelPosition = (PUCHAR)(VgaBase + PixelOffset);
         i = Buffer;
-
-        /* Set Mode 0 */
-        ReadWriteMode(0);
 
         /* Set the current plane */
         __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (Plane << 8) | IND_READ_MAP);
