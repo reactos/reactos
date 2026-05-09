@@ -45,7 +45,7 @@ const UCHAR PixelMask[8] =
     (1 << 1),
     (1 << 0),
 };
-static const ULONG lookup[16] =
+static const ULONG ReverseAndUnpackMonochromePixels[16] =
 {
     0x0000,
     0x0100,
@@ -337,17 +337,10 @@ VidScreenToBufferBlt(
     _In_ ULONG Height,
     _In_ ULONG Stride)
 {
-    ULONG Plane;
     ULONG LineStart, LineEnd, LineWidth;
-    ULONG LeftDelta, RightDelta;
-    ULONG PixelOffset;
-    PUCHAR PixelPosition;
-    PUCHAR k, i;
-    PULONG m;
-    UCHAR Value, Value2;
-    UCHAR a;
-    ULONG b;
-    ULONG x, y;
+    ULONG LeftShift, RightShift;
+    PUCHAR PixelPtr;
+    ULONG Plane, X, Y;
 
     /* Clear the destination buffer */
     RtlZeroMemory(Buffer, Height * Stride);
@@ -355,7 +348,11 @@ VidScreenToBufferBlt(
     if (Height == 0)
         return;
 
-    /* Calculate total distance to copy on X */
+    /*
+     * The VGA bootvid does not read pixels
+     * that do not fall into a byte block (i.e. Width % 8 != 0).
+     * This is by design.
+     */
     LineStart = Left / 8;
     LineEnd = (Left + Width - 1) / 8;
     if (LineStart > LineEnd)
@@ -366,66 +363,50 @@ VidScreenToBufferBlt(
     if (LineWidth == 0)
         return;
 
-    /* Calculate the 8-byte left and right deltas */
-    LeftDelta = Left & 7;
-    RightDelta = 8 - LeftDelta;
+    LeftShift = Left & 7;
+    RightShift = 8 - LeftShift;
 
-    /* Set Mode 0 */
+    /* Select read mode 0 */
     ReadWriteMode(0);
 
-    /* Calculate the pixel offset and convert the X distance into byte form */
-    PixelOffset = Top * (SCREEN_WIDTH / 8) + (Left >> 3);
-
-    /* Loop the 4 planes */
+    PixelPtr = (PUCHAR)(VgaBase + (Left / 8) + Top * (SCREEN_WIDTH / 8));
     for (Plane = 0; Plane < 4; ++Plane)
     {
-        /* Set the current pixel position and reset buffer loop variable */
-        PixelPosition = (PUCHAR)(VgaBase + PixelOffset);
-        i = Buffer;
+        PUCHAR OutputBuffer = Buffer;
+        PUCHAR PixelPosition = PixelPtr;
 
-        /* Set the current plane */
+        /* Select the current plane to read the pixels */
         __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (Plane << 8) | IND_READ_MAP);
 
-        /* Start the outer Y height loop */
-        for (y = Height; y > 0; --y)
+        for (Y = 0; Y < Height; ++Y)
         {
-            /* Read the current value */
-            m = (PULONG)i;
-            Value = READ_REGISTER_UCHAR(PixelPosition);
+            PULONG Destination = (PULONG)OutputBuffer;
+            UCHAR CurrPixels;
+            PUCHAR NextPosition;
 
-            /* Set Pixel Position loop variable */
-            k = PixelPosition + 1;
+            CurrPixels = READ_REGISTER_UCHAR(PixelPosition);
+            NextPosition = PixelPosition;
 
-            /* Start the X inner loop */
-            for (x = LineWidth; x > 0; --x)
+            for (X = 0; X < LineWidth; ++X)
             {
-                /* Read the current value */
-                Value2 = READ_REGISTER_UCHAR(k);
+                UCHAR NextPixels, Px;
+                ULONG Result;
 
-                /* Increase pixel position */
-                k++;
+                NextPixels = READ_REGISTER_UCHAR(++NextPosition);
 
-                /* Do the blt */
-                a = Value2 >> (UCHAR)RightDelta;
-                a |= Value << (UCHAR)LeftDelta;
-                b = lookup[a & 0xF];
-                a >>= 4;
-                b <<= 16;
-                b |= lookup[a];
+                /* Store 8 pixels at once */
+                Px = CurrPixels << LeftShift;
+                Px |= NextPixels >> RightShift;
+                Result = ReverseAndUnpackMonochromePixels[Px >> 4];
+                Result |= ReverseAndUnpackMonochromePixels[Px & 0x0F] << 16;
 
-                /* Save new value to buffer */
-                *m |= (b << Plane);
+                *Destination++ |= Result << Plane;
 
-                /* Move to next destination location */
-                m++;
-
-                /* Write new value */
-                Value = Value2;
+                CurrPixels = NextPixels;
             }
 
-            /* Update pixel position */
             PixelPosition += (SCREEN_WIDTH / 8);
-            i += Stride;
+            OutputBuffer += Stride;
         }
     }
 }
