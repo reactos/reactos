@@ -352,10 +352,19 @@ VidScreenToBufferBlt(
     /* Clear the destination buffer */
     RtlZeroMemory(Buffer, Height * Stride);
 
+    if (Height == 0)
+        return;
+
     /* Calculate total distance to copy on X */
     LineStart = Left / 8;
     LineEnd = (Left + Width - 1) / 8;
+    if (LineStart > LineEnd)
+        return;
     LineWidth = (LineEnd - LineStart) + 1;
+
+    /* This check helps the compiler to compile the inner loop into a do-while loop */
+    if (LineWidth == 0)
+        return;
 
     /* Calculate the 8-byte left and right deltas */
     LeftDelta = Left & 7;
@@ -387,35 +396,31 @@ VidScreenToBufferBlt(
             /* Set Pixel Position loop variable */
             k = PixelPosition + 1;
 
-            /* Check if we're still within bounds */
-            if (LineStart <= LineEnd)
+            /* Start the X inner loop */
+            for (x = LineWidth; x > 0; --x)
             {
-                /* Start the X inner loop */
-                for (x = LineWidth; x > 0; --x)
-                {
-                    /* Read the current value */
-                    Value2 = READ_REGISTER_UCHAR(k);
+                /* Read the current value */
+                Value2 = READ_REGISTER_UCHAR(k);
 
-                    /* Increase pixel position */
-                    k++;
+                /* Increase pixel position */
+                k++;
 
-                    /* Do the blt */
-                    a = Value2 >> (UCHAR)RightDelta;
-                    a |= Value << (UCHAR)LeftDelta;
-                    b = lookup[a & 0xF];
-                    a >>= 4;
-                    b <<= 16;
-                    b |= lookup[a];
+                /* Do the blt */
+                a = Value2 >> (UCHAR)RightDelta;
+                a |= Value << (UCHAR)LeftDelta;
+                b = lookup[a & 0xF];
+                a >>= 4;
+                b <<= 16;
+                b |= lookup[a];
 
-                    /* Save new value to buffer */
-                    *m |= (b << Plane);
+                /* Save new value to buffer */
+                *m |= (b << Plane);
 
-                    /* Move to next destination location */
-                    m++;
+                /* Move to next destination location */
+                m++;
 
-                    /* Write new value */
-                    Value = Value2;
-                }
+                /* Write new value */
+                Value = Value2;
             }
 
             /* Update pixel position */
