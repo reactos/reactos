@@ -2689,6 +2689,7 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
         if (SymbolicLink[Index] == L'}' && SymbolicLink[Index + 1] == L'\\')
         {
             /* Found it */
+            SymbolicLink[Index + 1] = L'#';
             break;
         }
         /* Replace all '\' backslashes by '#' pounds in symbolic link */
@@ -2709,8 +2710,7 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
         return INVALID_HANDLE_VALUE;
     }
 
-    ReferenceString[0] = L'#';
-    wcscpy(ReferenceString + 1, &SymbolicLink[Index + 2]); /* Skip first '\' backslash */
+    wcscpy(ReferenceString, &SymbolicLink[Index + 1]);
 
     /* Null-terminate symbolic link at the beginning of the reference part,
      * as we don't need a ref part in key name. */
@@ -2744,17 +2744,19 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
     {
         if (InfHandle && InfSectionName)
         {
-            if (!SetupInstallFromInfSection(NULL /*FIXME */,
-                                            InfHandle,
-                                            InfSectionName,
-                                            SPINST_INIFILES | SPINST_REGISTRY | SPINST_INI2REG | SPINST_FILES | SPINST_BITREG | SPINST_REGSVR | SPINST_UNREGSVR | SPINST_PROFILEITEMS | SPINST_COPYINF,
-                                            hDevParamKey,
-                                            NULL,
-                                            0,
-                                            set->SelectedDevice->InstallParams.InstallMsgHandler,
-                                            set->SelectedDevice->InstallParams.InstallMsgHandlerContext,
-                                            INVALID_HANDLE_VALUE,
-                                            NULL))
+            if (!SetupInstallFromInfSectionW(NULL /*FIXME */,
+                                             InfHandle,
+                                             InfSectionName,
+                                             SPINST_INIFILES | SPINST_REGISTRY | SPINST_INI2REG |
+                                                 SPINST_FILES | SPINST_BITREG | SPINST_REGSVR |
+                                                 SPINST_UNREGSVR | SPINST_PROFILEITEMS | SPINST_COPYINF,
+                                             hDevParamKey,
+                                             NULL,
+                                             0,
+                                             set->SelectedDevice->InstallParams.InstallMsgHandler,
+                                             set->SelectedDevice->InstallParams.InstallMsgHandlerContext,
+                                             INVALID_HANDLE_VALUE,
+                                             NULL))
             {
                 RegCloseKey(hDevParamKey);
                 return INVALID_HANDLE_VALUE;
