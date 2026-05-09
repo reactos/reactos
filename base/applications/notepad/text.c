@@ -82,11 +82,10 @@ ReplaceNewLines(LPWSTR pszNew, SIZE_T cchNew, LPCWSTR pszOld, SIZE_T cchOld)
 static BOOL
 ProcessNewLinesAndNulls(HLOCAL *phLocal, LPWSTR *ppszText, SIZE_T *pcchText, EOLN *piEoln)
 {
-    SIZE_T ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 }, cNonCRLFs;
+    SIZE_T ich, cchText = *pcchText, adwEolnCount[3] = { 0, 0, 0 }, cNonCRLFs, cchNew;
     LPWSTR pszText = *ppszText, pszNew;
     EOLN iEoln;
     BOOL bPrevCR = FALSE;
-    SIZE_T cchNew;
     HLOCAL hLocal;
 
     /* Replace '\0' with SPACE. Count newlines. */
