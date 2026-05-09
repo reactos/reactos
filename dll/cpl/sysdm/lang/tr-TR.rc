@@ -1,4 +1,5 @@
 /* TRANSLATOR: 2013, 2014, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2026 Hasan Eliküçük (Random Developer 31) <hasanelk101@gmail.com>  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -94,7 +95,7 @@ BEGIN
     LTEXT "ReactOS başladığında:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&bir donanım profili seçene kadar bekle.", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
     AUTORADIOBUTTON "bi&r profil seçmezsem listelenen ilk profili seç:", IDC_HRDPROFSELECT, 14, 173, 190, 8
-    LTEXT "saniye sonra", IDC_STATIC, 65, 187, 35, 8
+    LTEXT "Saniye sonra", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
@@ -326,7 +327,7 @@ BEGIN
 END
 
 IDD_VISUALEFFECTS DIALOGEX 6, 18, 227, 204
-CAPTION "Visual Effects"
+CAPTION "Görsel Efektler"
 FONT 8, "MS Shell Dlg"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
@@ -335,24 +336,24 @@ BEGIN
 END
 
 IDD_ADVANCEDPERF DIALOGEX 6, 18, 227, 128
-CAPTION "Advanced"
+CAPTION "Gelişmiş"
 FONT 8, "MS Shell Dlg"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
-   GROUPBOX "CPU scheduling", IDC_STATIC, 7, 8, 213, 46
-   LTEXT "Adjust for best performance of:", IDC_STATIC, 14, 23, 199, 8
-   AUTORADIOBUTTON "&Programs", IDC_CPUCLIENT, 14, 36, 75, 12
-   AUTORADIOBUTTON "Background &services", IDC_CPUSERVER, 96, 36, 85, 12
-   GROUPBOX "Virtual memory", IDC_STATIC, 7, 60, 213, 57
-   LTEXT "A paging file is an area on the hard disk that ReactOS uses as if it were RAM.", IDC_STATIC, 14, 74, 199, 16
-   PUSHBUTTON "&Change...", IDC_CHANGESWAP, 163, 97, 50, 14
+   GROUPBOX "CPU zamanlaması", IDC_STATIC, 7, 8, 213, 46
+   LTEXT "En iyi performansı elde etmek için şu ayarları yapın:", IDC_STATIC, 14, 23, 199, 8
+   AUTORADIOBUTTON "&Programlar", IDC_CPUCLIENT, 14, 36, 75, 12
+   AUTORADIOBUTTON "Arka Plan &Servisleri", IDC_CPUSERVER, 96, 36, 85, 12
+   GROUPBOX "Sanal Bellek", IDC_STATIC, 7, 60, 213, 57
+   LTEXT "Sayfalama dosyası, ReactOS'un RAM gibi kullandığı sabit disk üzerindeki bir alandır.", IDC_STATIC, 14, 74, 199, 16
+   PUSHBUTTON "&Değiştir...", IDC_CHANGESWAP, 163, 97, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Sistem"
     IDS_CPLSYSTEMDESCRIPTION "Bilgisayar hakkında bilgi görüntüler ve türlü sistem ve donanım ayarlarını değiştirir."
-    IDS_PERFORMANCEOPTIONS "Performance Options"
+    IDS_PERFORMANCEOPTIONS "Performans Seçenekleri"
     IDS_MEGABYTE "MB Bellek"
     IDS_GIGABYTE "GB Bellek"
     IDS_TERABYTE "TB Bellek"
