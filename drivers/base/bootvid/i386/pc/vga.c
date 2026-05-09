@@ -338,7 +338,7 @@ VidScreenToBufferBlt(
     _In_ ULONG Stride)
 {
     ULONG Plane;
-    ULONG XDistance;
+    ULONG LineStart, LineEnd, LineWidth;
     ULONG LeftDelta, RightDelta;
     ULONG PixelOffset;
     PUCHAR PixelPosition;
@@ -353,7 +353,9 @@ VidScreenToBufferBlt(
     RtlZeroMemory(Buffer, Height * Stride);
 
     /* Calculate total distance to copy on X */
-    XDistance = Left + Width - 1;
+    LineStart = Left / 8;
+    LineEnd = (Left + Width - 1) / 8;
+    LineWidth = (LineEnd - LineStart) + 1;
 
     /* Calculate the 8-byte left and right deltas */
     LeftDelta = Left & 7;
@@ -361,7 +363,6 @@ VidScreenToBufferBlt(
 
     /* Calculate the pixel offset and convert the X distance into byte form */
     PixelOffset = Top * (SCREEN_WIDTH / 8) + (Left >> 3);
-    XDistance >>= 3;
 
     /* Loop the 4 planes */
     for (Plane = 0; Plane < 4; ++Plane)
@@ -387,10 +388,10 @@ VidScreenToBufferBlt(
             k = PixelPosition + 1;
 
             /* Check if we're still within bounds */
-            if (Left <= XDistance)
+            if (LineStart <= LineEnd)
             {
                 /* Start the X inner loop */
-                for (x = (XDistance - Left) + 1; x > 0; --x)
+                for (x = LineWidth; x > 0; --x)
                 {
                     /* Read the current value */
                     Value2 = READ_REGISTER_UCHAR(k);
