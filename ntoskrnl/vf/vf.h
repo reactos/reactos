@@ -125,8 +125,6 @@ extern VF_DMA_FAULT_STATE VfDmaFaultState;
 
 /* LIST ENTRIES */
 extern LIST_ENTRY VfDriverList;
-extern LIST_ENTRY VfIrpTrackList;
-extern LIST_ENTRY VfIrpHookList;
 extern LIST_ENTRY VfSpinlockList;
 extern LIST_ENTRY VfDmaAdapterList;
 extern LIST_ENTRY VfThreadLockList;
@@ -136,8 +134,6 @@ extern LIST_ENTRY VfSpinlockDependencyList;
 extern KSPIN_LOCK VfSpinlockLock;
 extern KSPIN_LOCK VfDmaLock;
 extern KSPIN_LOCK VfDriverListLock;
-extern KSPIN_LOCK VfIrpTrackLock;
-extern KSPIN_LOCK VfIrpHookLock;
 extern KSPIN_LOCK VfThreadLockListLock;
 extern KSPIN_LOCK VfSpinlockDepLock;
 
@@ -186,19 +182,6 @@ typedef struct _VF_DRIVER_ENTRY
     SIZE_T PeakNonPagedPoolUsageInBytes;
 } VF_DRIVER_ENTRY;
 
-typedef struct _VF_IRP_TRACK
-{
-    LIST_ENTRY  ListEntry;
-    PIRP        Irp;
-    PDRIVER_OBJECT DriverObject;
-    LONG        ReferenceCount;
-    UCHAR       MajorFunction;
-    KIRQL       DispatchIrql;
-    BOOLEAN     PendingReturned;
-    BOOLEAN     Completed;
-    BOOLEAN     CancelRoutineSet;
-} VF_IRP_TRACK, *PVF_IRP_TRACK;
-
 typedef struct _VF_SPINLOCK_TRACK
 {
     LIST_ENTRY ListEntry;
@@ -222,13 +205,6 @@ typedef struct _VF_DMA_OPS
     DMA_OPERATIONS Original;
 } VF_DMA_OPS;
 
-typedef struct _VF_IRP_HOOK
-{
-    LIST_ENTRY ListEntry;
-    PDRIVER_OBJECT DriverObject;
-    PDRIVER_DISPATCH OriginalMajor[IRP_MJ_MAXIMUM_FUNCTION + 1];
-} VF_IRP_HOOK;
-
 typedef struct _VF_THREAD_LOCK_STACK
 {
     LIST_ENTRY ListEntry;
@@ -248,23 +224,6 @@ typedef struct _VF_SPINLOCK_DEPENDENCY
 /* ============================================================
    FUNCTION PROTOTYPES
    ============================================================ */
-
-NTSTATUS
-VfIoIncrementRef(
-    PIRP Irp
-);
-
-VOID
-VfIoDecrementRef(
-    PIRP Irp
-);
-
-VOID
-VfIoCompleteRequest(
-    PIRP Irp,
-    CCHAR PriorityBoost
-);
-
 VOID
 VfValidateDmaAdapter(
     PDMA_ADAPTER Adapter
