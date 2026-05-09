@@ -5,7 +5,7 @@
  * COPYRIGHT:  Copyright 1998,99 Marcel Baur <mbaur@g26.ethz.ch>
  *             Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *             Copyright 2002 Andriy Palamarchuk
- *             Copyright 2019-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2019-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "notepad.h"
@@ -230,89 +230,89 @@ ReadText(HANDLE hFile, ENCODING *pencFile, EOLN *piEoln)
 
     switch(encFile)
     {
-    case ENCODING_UTF16BE:
-    case ENCODING_UTF16LE:
-    {
-        /* Allocate the buffer for EM_SETHANDLE */
-        pszText = (LPWSTR)&pBytes[dwPos];
-        cchText = (dwSize - dwPos) / sizeof(WCHAR);
-        if (cchText >= MAXLONG / sizeof(WCHAR))
+        case ENCODING_UTF16BE:
+        case ENCODING_UTF16LE:
         {
-            SetLastError(ERROR_FILE_TOO_LARGE);
-            goto done;
-        }
-
-        hNewLocal = LocalAlloc(LMEM_MOVEABLE, (cchText + 1) * sizeof(WCHAR));
-        if (!hNewLocal)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto done;
-        }
-
-        pszNewText = LocalLock(hNewLocal);
-        if (!pszNewText)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto done;
-        }
-
-        CopyMemory(pszNewText, pszText, cchText * sizeof(WCHAR));
-
-        if (encFile == ENCODING_UTF16BE) /* big endian; Swap bytes */
-        {
-            BYTE tmp, *pb = (LPBYTE)pszNewText;
-            for (i = 0; i < cchText * 2; i += 2)
+            /* Allocate the buffer for EM_SETHANDLE */
+            pszText = (LPWSTR)&pBytes[dwPos];
+            cchText = (dwSize - dwPos) / sizeof(WCHAR);
+            if (cchText >= MAXLONG / sizeof(WCHAR))
             {
-                tmp = pb[i];
-                pb[i] = pb[i + 1];
-                pb[i + 1] = tmp;
-            }
-        }
-        break;
-    }
-
-    case ENCODING_ANSI:
-    case ENCODING_UTF8:
-    case ENCODING_UTF8BOM:
-    {
-        iCodePage = ((encFile == ENCODING_UTF8 || encFile == ENCODING_UTF8BOM)
-                     ? CP_UTF8 : CP_ACP);
-        cbContent = dwSize - dwPos;
-        if (cbContent >= MAXLONG / sizeof(WCHAR))
-        {
-            SetLastError(ERROR_FILE_TOO_LARGE);
-            goto done;
-        }
-
-        /* Allocate the buffer for EM_SETHANDLE */
-        hNewLocal = LocalAlloc(LMEM_MOVEABLE, (cbContent + 1) * sizeof(WCHAR));
-        if (!hNewLocal)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto done;
-        }
-
-        pszNewText = LocalLock(hNewLocal);
-        if (!pszNewText)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto done;
-        }
-
-        /* Do conversion */
-        cchText = 0;
-        if (cbContent > 0)
-        {
-            cchText = MultiByteToWideChar(iCodePage, 0,
-                                          (LPCSTR)&pBytes[dwPos], (INT)cbContent,
-                                          pszNewText, (INT)cbContent);
-            if (!cchText)
+                SetLastError(ERROR_FILE_TOO_LARGE);
                 goto done;
-        }
-        break;
-    }
+            }
 
-    DEFAULT_UNREACHABLE;
+            hNewLocal = LocalAlloc(LMEM_MOVEABLE, (cchText + 1) * sizeof(WCHAR));
+            if (!hNewLocal)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto done;
+            }
+
+            pszNewText = LocalLock(hNewLocal);
+            if (!pszNewText)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto done;
+            }
+
+            CopyMemory(pszNewText, pszText, cchText * sizeof(WCHAR));
+
+            if (encFile == ENCODING_UTF16BE) /* big endian; Swap bytes */
+            {
+                BYTE tmp, *pb = (LPBYTE)pszNewText;
+                for (i = 0; i < cchText * 2; i += 2)
+                {
+                    tmp = pb[i];
+                    pb[i] = pb[i + 1];
+                    pb[i + 1] = tmp;
+                }
+            }
+            break;
+        }
+
+        case ENCODING_ANSI:
+        case ENCODING_UTF8:
+        case ENCODING_UTF8BOM:
+        {
+            iCodePage = ((encFile == ENCODING_UTF8 || encFile == ENCODING_UTF8BOM)
+                         ? CP_UTF8 : CP_ACP);
+            cbContent = dwSize - dwPos;
+            if (cbContent >= MAXLONG / sizeof(WCHAR))
+            {
+                SetLastError(ERROR_FILE_TOO_LARGE);
+                goto done;
+            }
+
+            /* Allocate the buffer for EM_SETHANDLE */
+            hNewLocal = LocalAlloc(LMEM_MOVEABLE, (cbContent + 1) * sizeof(WCHAR));
+            if (!hNewLocal)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto done;
+            }
+
+            pszNewText = LocalLock(hNewLocal);
+            if (!pszNewText)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto done;
+            }
+
+            /* Do conversion */
+            cchText = 0;
+            if (cbContent > 0)
+            {
+                cchText = MultiByteToWideChar(iCodePage, 0,
+                                              (LPCSTR)&pBytes[dwPos], (INT)cbContent,
+                                              pszNewText, (INT)cbContent);
+                if (!cchText)
+                    goto done;
+            }
+            break;
+        }
+
+        DEFAULT_UNREACHABLE;
     }
 
     pszNewText[cchText] = UNICODE_NULL;
