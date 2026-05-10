@@ -28,18 +28,22 @@ static inline INT FindNearestColor(INT r, INT g, INT b, const RGBQUAD* palette, 
     return bestIdx;
 }
 
-void FloydSteinberg(const BYTE* srcBuf, INT srcStride, INT W, INT H,
+struct ERR_RGB { float r, g, b; };
+
+void FloydSteinberg(const BYTE* srcBuf, INT srcStride, SIZE_T W, SIZE_T H,
                     const RGBQUAD* palette, INT nColors, PBYTE indexImg)
 {
-    struct ERR_RGB { float r, g, b; };
-    const INT nCount = W * H;
-    ERR_RGB* err = (ERR_RGB*)LocalAlloc(LPTR, nCount * sizeof(ERR_RGB));
-    for (INT i = 0; i < nCount; ++i)
-        err[i].r = err[i].g = err[i].b = 0.0f;
+    if (!W || !H || !srcBuf || !palette || nColors <= 0 || !indexImg)
+        return;
 
-    for (INT y = 0; y < H; y++)
+    const SIZE_T nCount = W * H;
+    ERR_RGB* err = (ERR_RGB*)LocalAlloc(LPTR, nCount * sizeof(ERR_RGB));
+    if (!err)
+        return;
+
+    for (SIZE_T y = 0; y < H; y++)
     {
-        for (INT x = 0; x < W; x++)
+        for (SIZE_T x = 0; x < W; x++)
         {
             const BYTE* px = srcBuf + y * srcStride + x * 3;
             const float fr = (float)px[2] + err[y*W + x].r; // R
@@ -58,7 +62,7 @@ void FloydSteinberg(const BYTE* srcBuf, INT srcStride, INT W, INT H,
             const float eb = fb - (float)palette[idx].rgbBlue;
 
 #define SPREAD(nx, ny, w) do { \
-    if ((unsigned)(nx) < (unsigned)W && (unsigned)(ny) < (unsigned)H) { \
+    if ((SIZE_T)(nx) < (SIZE_T)W && (SIZE_T)(ny) < (SIZE_T)H) { \
         ERR_RGB& e = err[ny * W + nx]; \
         e.r += er * (w); e.g += eg * (w); e.b += eb * (w); \
     } \
@@ -67,6 +71,7 @@ void FloydSteinberg(const BYTE* srcBuf, INT srcStride, INT W, INT H,
             SPREAD(x - 1, y + 1, 3.f / 16);
             SPREAD(x,     y + 1, 5.f / 16);
             SPREAD(x + 1, y + 1, 1.f / 16);
+#undef SPREAD
         }
     }
 

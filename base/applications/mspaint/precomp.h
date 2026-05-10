@@ -149,5 +149,5 @@ extern CPaletteWindow paletteWindow;
 extern CCanvasWindow canvasWindow;
 extern CTextEditWindow textEditWindow;
 
-void FloydSteinberg(const BYTE* srcBuf, INT srcStride, INT W, INT H,
+void FloydSteinberg(const BYTE* srcBuf, INT srcStride, SIZE_T W, SIZE_T H,
                     const RGBQUAD* palette, INT nColors, PBYTE indexImg);
