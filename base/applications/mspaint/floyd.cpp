@@ -67,7 +67,7 @@ void FloydSteinberg(const BYTE* srcBuf, INT srcStride, SIZE_T W, SIZE_T H,
             const float eb = fb - (float)palette[idx].rgbBlue;
 
 #define SPREAD(nx, ny, w) do { \
-    if ((SIZE_T)(nx) < (SIZE_T)W && (SIZE_T)(ny) < (SIZE_T)H) { \
+    if ((nx) < W && (ny) < H) { \
         ERR_RGB& e = err[ny * W + nx]; \
         e.r += er * (w); e.g += eg * (w); e.b += eb * (w); \
     } \
