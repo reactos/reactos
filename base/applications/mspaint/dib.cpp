@@ -667,7 +667,7 @@ static void BuildPalette(INT nBpp, RGBQUAD* palette)
         for (INT i = 0; i < 16; ++i)
             palette[i] = win16[i];
     }
-    else // nBpp == 8
+    else if (nBpp == 8)
     {
         // 6~6~6 color cubes (216 colors)
         static const BYTE step6[6] = { 0, 51, 102, 153, 204, 255 };
