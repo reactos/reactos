@@ -659,11 +659,6 @@ static void BuildPalette(INT nBpp, RGBQUAD* palette)
     }
 }
 
-static inline INT DibStride(INT width, INT bpp)
-{
-    return ((width * bpp + 31) / 32) * 4;
-}
-
 HBITMAP CreateReducedColorBitmap(HBITMAP hBitmap, INT nBpp)
 {
     if (!hBitmap)
@@ -680,7 +675,7 @@ HBITMAP CreateReducedColorBitmap(HBITMAP hBitmap, INT nBpp)
     if (W <= 0 || H <= 0)
         return NULL;
 
-    const INT srcStride = DibStride(W, 24);
+    const INT srcStride = WIDTHBYTES(W * 24);
     PBYTE srcBuf = (PBYTE)LocalAlloc(LPTR, srcStride * H);
 
     BITMAPINFOHEADER bihSrc = {};
@@ -689,7 +684,6 @@ HBITMAP CreateReducedColorBitmap(HBITMAP hBitmap, INT nBpp)
     bihSrc.biHeight      = -H; // Top-down
     bihSrc.biPlanes      = 1;
     bihSrc.biBitCount    = 24;
-    bihSrc.biCompression = BI_RGB;
 
     BITMAPINFO biSrc = {};
     biSrc.bmiHeader = bihSrc;
@@ -722,7 +716,7 @@ HBITMAP CreateReducedColorBitmap(HBITMAP hBitmap, INT nBpp)
     PBYTE indexImg = (PBYTE)LocalAlloc(LPTR, W * H);
     FloydSteinberg(srcBuf, srcStride, W, H, palette, nColors, indexImg);
 
-    const INT dstStride = DibStride(W, nBpp);
+    const INT dstStride = WIDTHBYTES(W * nBpp);
     PBYTE dstBuf = (PBYTE)LocalAlloc(LPTR, dstStride * H);
     PackIndexImage(indexImg, W, H, nBpp, dstBuf, dstStride);
 

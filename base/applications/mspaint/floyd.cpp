@@ -28,7 +28,12 @@ static inline INT FindNearestColor(INT r, INT g, INT b, const RGBQUAD* palette, 
     return bestIdx;
 }
 
-struct ERR_RGB { float r, g, b; };
+typedef struct tagERR_RGB
+{
+    float r;
+    float g;
+    float b;
+} ERR_RGB, *PERR_RGB;
 
 void FloydSteinberg(const BYTE* srcBuf, INT srcStride, SIZE_T W, SIZE_T H,
                     const RGBQUAD* palette, INT nColors, PBYTE indexImg)
@@ -37,7 +42,7 @@ void FloydSteinberg(const BYTE* srcBuf, INT srcStride, SIZE_T W, SIZE_T H,
         return;
 
     const SIZE_T nCount = W * H;
-    ERR_RGB* err = (ERR_RGB*)LocalAlloc(LPTR, nCount * sizeof(ERR_RGB));
+    PERR_RGB err = (PERR_RGB)LocalAlloc(LPTR, nCount * sizeof(ERR_RGB));
     if (!err)
         return;
 
