@@ -670,13 +670,19 @@ static void BuildPalette(INT nBpp, RGBQUAD* palette)
     }
     else if (nBpp == 8)
     {
-        // 6~6~6 color cubes (216 colors)
+        // 6 x 6 x 6 color cubes (216 colors)
         static const BYTE step6[6] = { 0, 51, 102, 153, 204, 255 };
         INT idx = 0;
         for (INT ri = 0; ri < 6; ++ri)
+        {
             for (INT gi = 0; gi < 6; ++gi)
+            {
                 for (INT bi = 0; bi < 6; ++bi)
+                {
                     palette[idx++] = { step6[bi], step6[gi], step6[ri], 0 };
+                }
+            }
+        }
 
         // 40 grayscale colors
         for (INT i = 0; i < 40; ++i, ++idx)
@@ -712,19 +718,19 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
     if (!GetObject(hBitmap, sizeof(bm), &bm))
         return NULL;
 
-    const INT W = bm.bmWidth, H = bm.bmHeight;
-    if (W <= 0 || H <= 0)
+    const SIZE_T W = bm.bmWidth, H = bm.bmHeight;
+    if (W <= 0 || H <= 0 || W > MAXLONG || H > MAXLONG)
         return NULL;
 
-    const INT srcStride = WIDTHBYTES(W * 24);
+    const SIZE_T srcStride = WIDTHBYTES(W * 24);
     CHeapPtr<BYTE, CLocalAllocator> srcBuf;
     if (!srcBuf.Allocate(srcStride * H))
         return NULL;
 
     BITMAPINFOHEADER bihSrc = {};
     bihSrc.biSize     = sizeof(bihSrc);
-    bihSrc.biWidth    = W;
-    bihSrc.biHeight   = -H; // Top-down
+    bihSrc.biWidth    = (LONG)W;
+    bihSrc.biHeight   = -(LONG)H; // Top-down
     bihSrc.biPlanes   = 1;
     bihSrc.biBitCount = 24;
 
@@ -776,8 +782,8 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
 
     PBITMAPINFO pBI = reinterpret_cast<PBITMAPINFO>((PBYTE)biMem);
     pBI->bmiHeader.biSize         = sizeof(BITMAPINFOHEADER);
-    pBI->bmiHeader.biWidth        = W;
-    pBI->bmiHeader.biHeight       = -H; // Top-down
+    pBI->bmiHeader.biWidth        = (LONG)W;
+    pBI->bmiHeader.biHeight       = -(LONG)H; // Top-down
     pBI->bmiHeader.biPlanes       = 1;
     pBI->bmiHeader.biBitCount     = (WORD)nBpp;
     pBI->bmiHeader.biCompression  = BI_RGB;
