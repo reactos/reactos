@@ -741,7 +741,7 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
     if (!hScreenDC)
         return NULL;
 
-    BOOL bGot = (GetDIBits(hScreenDC, hBitmap, 0, H, srcBuf, &biSrc, DIB_RGB_COLORS) == H);
+    BOOL bGot = ((SIZE_T)GetDIBits(hScreenDC, hBitmap, 0, H, srcBuf, &biSrc, DIB_RGB_COLORS) == H);
     ReleaseDC(NULL, hScreenDC);
     if (!bGot)
         return NULL;
