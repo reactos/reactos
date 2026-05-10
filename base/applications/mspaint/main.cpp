@@ -242,7 +242,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
     static BOOL bWasBitmap = -1;
     static INT cNonBmpFilters = 0;
 
-    if (sfn.lStructSize == 0 && bWasBitmap != !!pnBitmapBpp)
+    if (sfn.lStructSize == 0 || bWasBitmap != !!pnBitmapBpp)
     {
         bWasBitmap = !!pnBitmapBpp;
         INT flags = CImage::excludeDefaultSave | (pnBitmapBpp ? CImage::excludeBMP : 0);

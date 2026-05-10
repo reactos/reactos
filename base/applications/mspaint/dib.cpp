@@ -769,13 +769,13 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
         return NULL;
     FloydSteinberg(srcBuf, srcStride, W, H, palette, nColors, indexImg);
 
-    const INT dstStride = WIDTHBYTES(W * nBpp);
+    const SIZE_T dstStride = WIDTHBYTES(W * nBpp);
     CHeapPtr<BYTE, CLocalAllocator> dstBuf;
     if (!dstBuf.Allocate(dstStride * H))
         return NULL;
     PackIndexImage(indexImg, W, H, nBpp, dstBuf, dstStride);
 
-    const size_t biBytes = sizeof(BITMAPINFOHEADER) + nColors * sizeof(RGBQUAD);
+    const SIZE_T biBytes = sizeof(BITMAPINFOHEADER) + nColors * sizeof(RGBQUAD);
     CHeapPtr<BYTE, CLocalAllocator> biMem;
     if (!biMem.Allocate(biBytes))
         return NULL;
