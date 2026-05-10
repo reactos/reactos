@@ -239,10 +239,12 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
 {
     static OPENFILENAMEW sfn = { 0 };
     static CStringW strFilter;
+    static BOOL bWasBitmap = FALSE;
     static INT cNonBmpFilters = 0;
 
-    if (sfn.lStructSize == 0)
+    if (sfn.lStructSize == 0 && bWasBitmap != !!pnBitmapBpp)
     {
+        bWasBitmap = !!pnBitmapBpp;
         INT flags = CImage::excludeDefaultSave | (pnBitmapBpp ? CImage::excludeBMP : 0);
 
         // Get the export filter

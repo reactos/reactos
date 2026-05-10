@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include <atlalloc.h>
 
 INT g_fileSize = 0;
 float g_xDpi = 96;
@@ -724,33 +725,28 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
         return NULL;
 
     const INT srcStride = WIDTHBYTES(W * 24);
-    PBYTE srcBuf = (PBYTE)LocalAlloc(LPTR, srcStride * H);
-    if (!srcBuf)
+    CHeapPtr<BYTE, CLocalAllocator> srcBuf;
+    if (!srcBuf.Allocate(srcStride * H))
         return NULL;
 
     BITMAPINFOHEADER bihSrc = {};
-    bihSrc.biSize        = sizeof(bihSrc);
-    bihSrc.biWidth       = W;
-    bihSrc.biHeight      = -H; // Top-down
-    bihSrc.biPlanes      = 1;
-    bihSrc.biBitCount    = 24;
+    bihSrc.biSize     = sizeof(bihSrc);
+    bihSrc.biWidth    = W;
+    bihSrc.biHeight   = -H; // Top-down
+    bihSrc.biPlanes   = 1;
+    bihSrc.biBitCount = 24;
 
     BITMAPINFO biSrc = {};
     biSrc.bmiHeader = bihSrc;
 
     HDC hScreenDC = GetDC(NULL);
     if (!hScreenDC)
-    {
-        LocalFree(srcBuf);
         return NULL;
-    }
+
     BOOL bGot = (GetDIBits(hScreenDC, hBitmap, 0, H, srcBuf, &biSrc, DIB_RGB_COLORS) == H);
     ReleaseDC(NULL, hScreenDC);
     if (!bGot)
-    {
-        LocalFree(srcBuf);
         return NULL;
-    }
 
     if (nBpp == 24)
     {
@@ -759,26 +755,35 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
         HBITMAP hRes = CreateDIBSection(hdc, &biSrc, DIB_RGB_COLORS, &pBits, NULL, 0);
         ReleaseDC(NULL, hdc);
         if (hRes && pBits)
-            memcpy(pBits, srcBuf, srcStride * H);
+            CopyMemory(pBits, srcBuf, srcStride * H);
         LocalFree(srcBuf);
         return hRes;
     }
 
-    const INT nColors = 1 << nBpp;   // 2 / 16 / 256
-    RGBQUAD* palette = (RGBQUAD*)LocalAlloc(LPTR, nColors * sizeof(RGBQUAD));
+    const INT nColors = 1 << nBpp;
+    CHeapPtr<RGBQUAD, CLocalAllocator> palette;
+    if (!palette.Allocate(nColors))
+        return NULL;
+
     BuildPalette(nBpp, palette);
 
-    PBYTE indexImg = (PBYTE)LocalAlloc(LPTR, W * H);
+    CHeapPtr<BYTE, CLocalAllocator> indexImg;
+    if (!indexImg.Allocate(W * H))
+        return NULL;
     FloydSteinberg(srcBuf, srcStride, W, H, palette, nColors, indexImg);
 
     const INT dstStride = WIDTHBYTES(W * nBpp);
-    PBYTE dstBuf = (PBYTE)LocalAlloc(LPTR, dstStride * H);
+    CHeapPtr<BYTE, CLocalAllocator> dstBuf;
+    if (!dstBuf.Allocate(dstStride * H))
+        return NULL;
     PackIndexImage(indexImg, W, H, nBpp, dstBuf, dstStride);
 
     const size_t biBytes = sizeof(BITMAPINFOHEADER) + nColors * sizeof(RGBQUAD);
-    PBYTE biMem = (PBYTE)LocalAlloc(LPTR, biBytes);
-    PBITMAPINFO pBI = reinterpret_cast<PBITMAPINFO>(biMem);
+    CHeapPtr<BYTE, CLocalAllocator> biMem;
+    if (!biMem.Allocate(biBytes))
+        return NULL;
 
+    PBITMAPINFO pBI = reinterpret_cast<PBITMAPINFO>((PBYTE)biMem);
     pBI->bmiHeader.biSize         = sizeof(BITMAPINFOHEADER);
     pBI->bmiHeader.biWidth        = W;
     pBI->bmiHeader.biHeight       = -H; // Top-down
@@ -802,12 +807,6 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
 
     if (hbmResult && pBits)
         CopyMemory(pBits, dstBuf, (size_t)dstStride * H);
-
-    LocalFree(srcBuf);
-    LocalFree(palette);
-    LocalFree(indexImg);
-    LocalFree(dstBuf);
-    LocalFree(biMem);
 
     return hbmResult;
 }
