@@ -30,13 +30,13 @@ static inline INT FindNearestColor(INT r, INT g, INT b, const RGBQUAD* palette, 
         const INT dg = g - (INT)palette[i].rgbGreen;
         const INT db = b - (INT)palette[i].rgbBlue;
         const DWORD dist = (DWORD)(dr*dr + dg*dg + db*db);
+        if (dist == 0)
+            break;
         if (dist < bestDist)
         {
             bestDist = dist;
             bestIdx = i;
         }
-        if (dist == 0)
-            break;
     }
     return bestIdx;
 }
