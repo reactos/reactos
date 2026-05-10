@@ -7,6 +7,19 @@
 
 #include "precomp.h"
 
+/**
+ * @brief Finds the palette entry whose RGB value is closest to a given color.
+ *
+ * Uses squared Euclidean distance in RGB space.  The search short-circuits on
+ * an exact match (distance == 0).
+ *
+ * @param r        Red component of the input color (0–255).
+ * @param g        Green component of the input color (0–255).
+ * @param b        Blue component of the input color (0–255).
+ * @param palette  Array of candidate palette entries.
+ * @param nColors  Number of entries in @p palette.
+ * @return         Zero-based index of the nearest palette entry.
+ */
 static inline INT FindNearestColor(INT r, INT g, INT b, const RGBQUAD* palette, INT nColors)
 {
     INT bestIdx  = 0;
@@ -35,6 +48,24 @@ typedef struct tagERR_RGB
     float b;
 } ERR_RGB, *PERR_RGB;
 
+/**
+ * @brief Quantizes a 24-bit BGR image to a palette using serpentine
+ *        Floyd-Steinberg error diffusion.
+ *
+ * Each pixel's quantization error is distributed to its unprocessed neighbors
+ * with the standard 7/16, 3/16, 5/16, 1/16 weights.  Rows are scanned
+ * alternately left-to-right and right-to-left (serpentine order) to suppress
+ * the vertical stripe artifacts that arise from unidirectional scanning.
+ *
+ * @param srcBuf    Source image data; 24-bit BGR, top-down.
+ * @param srcStride Row stride of @p srcBuf in bytes (must be DWORD-aligned).
+ * @param W         Image width in pixels.
+ * @param H         Image height in pixels.
+ * @param palette   Palette to quantize against.
+ * @param nColors   Number of entries in @p palette.
+ * @param indexImg  Output buffer; one byte per pixel, row-major, no padding.
+ *                  Must be at least @p W * @p H bytes.
+ */
 void FloydSteinberg(const BYTE* srcBuf, INT srcStride, SIZE_T W, SIZE_T H,
                     const RGBQUAD* palette, INT nColors, PBYTE indexImg)
 {

@@ -586,7 +586,23 @@ BOOL IsBitmapBlackAndWhite(HBITMAP hbm)
     return ::GetObjectW(hbm, sizeof(bm), &bm) && (bm.bmBitsPixel == 1);
 }
 
-static void PackIndexImage(const BYTE* indexImg, INT W, INT H, INT nBpp, PBYTE dstBuf, int dstStride)
+/**
+ * @brief Packs a flat index image into a stride-aligned packed-pixel buffer.
+ *
+ * Converts a per-pixel index array (one byte per pixel) into the packed format
+ * required by Windows DIBs: 8 bpp is a straight byte copy, 4 bpp packs two
+ * nibbles per byte (high nibble first), and 1 bpp packs eight pixels per byte
+ * (MSB first).  The destination buffer is zeroed before packing so unused
+ * padding bits are always zero.
+ *
+ * @param indexImg  Source buffer; one byte per pixel, row-major, no padding.
+ * @param W         Image width in pixels.
+ * @param H         Image height in pixels.
+ * @param nBpp      Bits per pixel of the destination format (1, 4, or 8).
+ * @param dstBuf    Destination buffer; must be at least @p dstStride * @p H bytes.
+ * @param dstStride Row stride of the destination buffer in bytes (DWORD-aligned).
+ */
+static void PackIndexImage(const BYTE* indexImg, INT W, INT H, INT nBpp, PBYTE dstBuf, INT dstStride)
 {
     ZeroMemory(dstBuf, dstStride * H);
 
@@ -597,30 +613,41 @@ static void PackIndexImage(const BYTE* indexImg, INT W, INT H, INT nBpp, PBYTE d
 
         switch (nBpp)
         {
-        case 8:
-            memcpy(dst, src, W);
-            break;
-        case 4:
-            for (int x = 0; x < W; x++)
-            {
-                BYTE v = src[x] & 0x0F;
-                if (x & 1)
-                    dst[x >> 1] |= v;
-                else
-                    dst[x >> 1] |= (v << 4);
-            }
-            break;
-        case 1:
-            for (INT x = 0; x < W; x++)
-            {
-                if (src[x])
-                    dst[x >> 3] |= (BYTE)(0x80 >> (x & 7));
-            }
-            break;
+            case 8:
+                CopyMemory(dst, src, W);
+                break;
+            case 4:
+                for (int x = 0; x < W; x++)
+                {
+                    BYTE v = src[x] & 0x0F;
+                    if (x & 1)
+                        dst[x >> 1] |= v;
+                    else
+                        dst[x >> 1] |= (v << 4);
+                }
+                break;
+            case 1:
+                for (INT x = 0; x < W; x++)
+                {
+                    if (src[x])
+                        dst[x >> 3] |= (BYTE)(0x80 >> (x & 7));
+                }
+                break;
         }
     }
 }
 
+/**
+ * @brief Fills a palette array with a standard color set for the given bit depth.
+ *
+ * - 1 bpp: two entries - black and white.
+ * - 4 bpp: the 16-color Windows standard palette (RGBQUAD / BGRA order).
+ * - 8 bpp: 216-entry 6Å~6Å~6 RGB color cube followed by 40 evenly-spaced
+ *          grayscale entries (256 entries total).
+ *
+ * @param nBpp    Bit depth that determines the palette size (1, 4, or 8).
+ * @param palette Output array; must hold at least @c (1 << nBpp) RGBQUAD entries.
+ */
 static void BuildPalette(INT nBpp, RGBQUAD* palette)
 {
     if (nBpp == 1)
@@ -659,6 +686,27 @@ static void BuildPalette(INT nBpp, RGBQUAD* palette)
     }
 }
 
+/**
+ * @brief Creates a new DIB with a reduced color depth from an existing bitmap.
+ *
+ * Reads the source bitmap as a 24-bit BGR DIB, optionally applies
+ * Floyd-Steinberg dithering to map pixels to a standard palette, packs the
+ * result into the target bit depth, and returns a new @c HBITMAP.
+ *
+ * Supported target depths:
+ * | @p nBpp | Output format                              |
+ * |---------|--------------------------------------------|
+ * | 1       | Monochrome (black / white)                 |
+ * | 4       | 16-color Windows standard palette          |
+ * | 8       | 256-color (6Å~6Å~6 cube + 40 grays)        |
+ * | 24      | 24-bit BGR copy (no quantization)          |
+ *
+ * @param hBitmap  Handle to the source bitmap.  Must not be @c NULL.
+ * @param nBpp     Desired bit depth of the output bitmap (1, 4, 8, or 24).
+ * @return         Handle to the newly created bitmap, or @c NULL on failure.
+ *                 The caller is responsible for destroying the returned handle
+ *                 with @c DeleteObject.
+ */
 HBITMAP CreateReducedColorBitmap(HBITMAP hBitmap, INT nBpp)
 {
     if (!hBitmap)
@@ -738,10 +786,10 @@ HBITMAP CreateReducedColorBitmap(HBITMAP hBitmap, INT nBpp)
 
     PVOID pBits = NULL;
     HDC hdc = GetDC(NULL);
-    HBITMAP hResult = CreateDIBSection(hdc, pBI, DIB_RGB_COLORS, &pBits, NULL, 0);
+    HBITMAP hbmResult = CreateDIBSection(hdc, pBI, DIB_RGB_COLORS, &pBits, NULL, 0);
     ReleaseDC(NULL, hdc);
 
-    if (hResult && pBits)
+    if (hbmResult && pBits)
         CopyMemory(pBits, dstBuf, (size_t)dstStride * H);
 
     LocalFree(srcBuf);
@@ -750,5 +798,5 @@ HBITMAP CreateReducedColorBitmap(HBITMAP hBitmap, INT nBpp)
     LocalFree(dstBuf);
     LocalFree(biMem);
 
-    return hResult;
+    return hbmResult;
 }
