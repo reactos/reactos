@@ -273,4 +273,8 @@ BEGIN
     IDS_SAVEERROR "無法儲存點陣圖到檔案：\n\n%s"
     IDS_CANTSENDMAIL "無法傳送郵件。"
     IDS_LOSECOLOR "這個操作會導致色彩資訊丟失。您確定要繼續嗎？"
+    IDS_MONOBMP "Monochrome Bitmap (*.bmp;*.dib)"
+    IDS_4BPPBMP "16-Color Bitmap (*.bmp;*.dib)"
+    IDS_8BPPBMP "256-Color Bitmap (*.bmp;*.dib)"
+    IDS_24BPPBMP "24-bit Bitmap (*.bmp;*.dib)"
 END

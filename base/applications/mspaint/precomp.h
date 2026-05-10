@@ -114,8 +114,6 @@ inline void Swap(T& a, T& b)
 #include "dialogs.h"
 #include "atlimagedx.h"
 
-/* GLOBAL VARIABLES *************************************************/
-
 extern HINSTANCE g_hinstExe;
 
 extern WCHAR g_szFileName[MAX_LONG_PATH];
@@ -150,3 +148,6 @@ extern CToolSettingsWindow toolSettingsWindow;
 extern CPaletteWindow paletteWindow;
 extern CCanvasWindow canvasWindow;
 extern CTextEditWindow textEditWindow;
+
+void FloydSteinberg(const BYTE* srcBuf, INT srcStride, INT W, INT H,
+                    const RGBQUAD* palette, INT nColors, PBYTE indexImg);

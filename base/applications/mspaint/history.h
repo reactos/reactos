@@ -51,6 +51,7 @@ public:
     void NotifyImageChanged();
     BOOL IsBlackAndWhite();
     void PushBlackAndWhite();
+    BOOL ReduceColors(INT nBpp);
 
 protected:
     HDC m_hDrawingDC; // The device context for this class

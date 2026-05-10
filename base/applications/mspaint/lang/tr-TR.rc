@@ -274,4 +274,8 @@ BEGIN
     IDS_SAVEERROR "Bit eşlemi dosyaya kaydedilemedi:\n\n%s"
     IDS_CANTSENDMAIL "Posta gönderilemedi."
     IDS_LOSECOLOR "Bu işlem sırasında renk bilgisi kaybolacaktır. Devam edeceğinizden emin misiniz?"
+    IDS_MONOBMP "Monochrome Bitmap (*.bmp;*.dib)"
+    IDS_4BPPBMP "16-Color Bitmap (*.bmp;*.dib)"
+    IDS_8BPPBMP "256-Color Bitmap (*.bmp;*.dib)"
+    IDS_24BPPBMP "24-bit Bitmap (*.bmp;*.dib)"
 END

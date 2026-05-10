@@ -11,6 +11,7 @@ list(APPEND SOURCE
     dialogs.cpp
     dib.cpp
     drawing.cpp
+    floyd.cpp
     fullscreen.cpp
     history.cpp
     main.cpp

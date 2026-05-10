@@ -229,3 +229,7 @@
 #define IDS_SAVEERROR   941
 #define IDS_CANTSENDMAIL 942
 #define IDS_LOSECOLOR   943
+#define IDS_MONOBMP     344
+#define IDS_4BPPBMP     345
+#define IDS_8BPPBMP     346
+#define IDS_24BPPBMP    347

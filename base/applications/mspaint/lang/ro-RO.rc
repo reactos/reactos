@@ -274,4 +274,8 @@ BEGIN
     IDS_SAVEERROR "Nu s-a putut salva imaginea bitmap („hartă de biți”) în fișierul:\n\n%s"
     IDS_CANTSENDMAIL "Nu s-a putut trimite un e-mail."
     IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sunteți sigur că veți continua?"
+    IDS_MONOBMP "Monochrome Bitmap (*.bmp;*.dib)"
+    IDS_4BPPBMP "16-Color Bitmap (*.bmp;*.dib)"
+    IDS_8BPPBMP "256-Color Bitmap (*.bmp;*.dib)"
+    IDS_24BPPBMP "24-bit Bitmap (*.bmp;*.dib)"
 END

@@ -273,4 +273,8 @@ BEGIN
     IDS_SAVEERROR "Échec lors de la sauvegarde dans le fichier :\n\n%s"
     IDS_CANTSENDMAIL "Échec lors de l'envoi d'un mail."
     IDS_LOSECOLOR "Les informations de couleurs vont être perdues dans cette opération. Êtes-vous sûr de continuer ?"
+    IDS_MONOBMP "Monochrome Bitmap (*.bmp;*.dib)"
+    IDS_4BPPBMP "16-Color Bitmap (*.bmp;*.dib)"
+    IDS_8BPPBMP "256-Color Bitmap (*.bmp;*.dib)"
+    IDS_24BPPBMP "24-bit Bitmap (*.bmp;*.dib)"
 END

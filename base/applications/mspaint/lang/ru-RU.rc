@@ -276,4 +276,8 @@ BEGIN
     IDS_SAVEERROR "Не удалось сохранить точечный рисунок в файл:\n\n%s"
     IDS_CANTSENDMAIL "Не удалось отправить письмо."
     IDS_LOSECOLOR "В результате этой операции сведения о цвете будут потеряны. Продолжить?"
+    IDS_MONOBMP "Monochrome Bitmap (*.bmp;*.dib)"
+    IDS_4BPPBMP "16-Color Bitmap (*.bmp;*.dib)"
+    IDS_8BPPBMP "256-Color Bitmap (*.bmp;*.dib)"
+    IDS_24BPPBMP "24-bit Bitmap (*.bmp;*.dib)"
 END

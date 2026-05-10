@@ -357,3 +357,38 @@ void ImageModel::UnlockBitmap(HBITMAP hbmLocked)
     m_hbmMaster = hbmLocked;
     m_hbmOld = ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 }
+
+BOOL ImageModel::ReduceColors(INT nBpp)
+{
+    if (!nBpp)
+        return TRUE;
+
+    BITMAP bm;
+    HBITMAP hbmLocked = LockBitmap();
+    GetObjectW(hbmLocked, sizeof(bm), &bm);
+    UnlockBitmap(hbmLocked);
+
+    if (nBpp < bm.bmBitsPixel)
+    {
+        CStringW strText(MAKEINTRESOURCEW(IDS_LOSECOLOR));
+        CStringW strTitle(MAKEINTRESOURCEW(IDS_PROGRAMNAME));
+        INT id = MessageBox(mainWindow, strText, strTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
+        if (id != IDYES)
+            return FALSE;
+    }
+
+    hbmLocked = LockBitmap();
+    HBITMAP hbmNew = CreateReducedColorBitmap(hbmLocked, nBpp);
+    UnlockBitmap(hbmLocked);
+
+    if (!hbmNew)
+    {
+        ShowOutOfMemory();
+        return FALSE;
+    }
+
+    PushImageForUndo(hbmNew);
+    ClearHistory();
+    NotifyImageChanged();
+    return TRUE;
+}

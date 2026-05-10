@@ -235,17 +235,51 @@ BOOL CMainWindow::GetOpenFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
     return ::GetOpenFileNameW(&ofn);
 }
 
-BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
+BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pnBitmapBpp)
 {
     static OPENFILENAMEW sfn = { 0 };
     static CStringW strFilter;
+    static INT cNonBmpFilters = 0;
 
     if (sfn.lStructSize == 0)
     {
+        INT flags = CImage::excludeDefaultSave | (pnBitmapBpp ? CImage::excludeBMP : 0);
+
         // Get the export filter
         CSimpleArray<GUID> aguidFileTypesE;
-        CImage::GetExporterFilterString(strFilter, aguidFileTypesE, NULL,
-                                        CImage::excludeDefaultSave, L'|');
+        CImage::GetExporterFilterString(strFilter, aguidFileTypesE, NULL, flags, L'|');
+        cNonBmpFilters = aguidFileTypesE.GetSize();
+
+        if (pnBitmapBpp)
+        {
+            strFilter = strFilter.Left(strFilter.GetLength() - 1);
+            CStringW strText;
+
+            strText.LoadString(IDS_MONOBMP);
+            strFilter += strText;
+            strFilter += L'|';
+            strFilter += L"*.bmp;*.dib";
+            strFilter += L'|';
+
+            strText.LoadString(IDS_4BPPBMP);
+            strFilter += strText;
+            strFilter += L'|';
+            strFilter += L"*.bmp;*.dib";
+            strFilter += L'|';
+
+            strText.LoadString(IDS_8BPPBMP);
+            strFilter += strText;
+            strFilter += L'|';
+            strFilter += L"*.bmp;*.dib";
+            strFilter += L'|';
+
+            strText.LoadString(IDS_24BPPBMP);
+            strFilter += strText;
+            strFilter += L'|';
+            strFilter += L"*.bmp;*.dib";
+            strFilter += L'|';
+        }
+
         strFilter.Replace(L'|', UNICODE_NULL);
 
         // Initializing the OPENFILENAME structure for GetSaveFileName
@@ -276,7 +310,32 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
 
     sfn.lpstrFile = pszFile;
     sfn.nMaxFile  = cchMaxFile;
-    return ::GetSaveFileNameW(&sfn);
+    if (!::GetSaveFileNameW(&sfn))
+        return FALSE;
+
+    if (pnBitmapBpp)
+    {
+        switch ((sfn.nFilterIndex - 1) - cNonBmpFilters)
+        {
+            case 0:
+                *pnBitmapBpp = 1;
+                break;
+            case 1:
+                *pnBitmapBpp = 4;
+                break;
+            case 2:
+                *pnBitmapBpp = 8;
+                break;
+            case 3:
+                *pnBitmapBpp = 24;
+                break;
+            default:
+                *pnBitmapBpp = 0;
+                break;
+        }
+    }
+
+    return TRUE;
 }
 
 BOOL CMainWindow::ChooseColor(IN OUT COLORREF *prgbColor)
@@ -421,11 +480,17 @@ void CMainWindow::saveImage(BOOL overwrite)
     if (g_isAFile && overwrite)
     {
         imageModel.SaveImage(g_szFileName);
+        return;
     }
-    else if (GetSaveFileName(g_szFileName, _countof(g_szFileName)))
-    {
-        imageModel.SaveImage(g_szFileName);
-    }
+
+    INT nBitmapBpp;
+    if (!GetSaveFileName(g_szFileName, _countof(g_szFileName), &nBitmapBpp))
+        return;
+
+    if (nBitmapBpp && !imageModel.ReduceColors(nBitmapBpp))
+        return;
+
+    imageModel.SaveImage(g_szFileName);
 }
 
 void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)

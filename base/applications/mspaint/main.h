@@ -31,7 +31,7 @@ public:
 
     HWND DoCreate();
     BOOL GetOpenFileName(IN OUT LPWSTR pszFile, INT cchMaxFile);
-    BOOL GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile);
+    BOOL GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pnBitmapBpp = NULL);
     BOOL ChooseColor(IN OUT COLORREF *prgbColor);
     VOID TrackPopupMenu(POINT ptScreen, INT iSubMenu);
     BOOL CanUndo() const;

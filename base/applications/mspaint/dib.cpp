@@ -667,3 +667,176 @@ HBITMAP ConvertToBlackAndWhite(HBITMAP hbm)
 
     return hNewBitmap;
 }
+
+static void PackIndexImage(const BYTE* indexImg, INT W, INT H, INT nBpp, PBYTE dstBuf, int dstStride)
+{
+    ZeroMemory(dstBuf, dstStride * H);
+
+    for (INT y = 0; y < H; ++y)
+    {
+        const BYTE* src = indexImg + y * W;
+        PBYTE dst = dstBuf + y * dstStride;
+
+        switch (nBpp)
+        {
+        case 8:
+            memcpy(dst, src, W);
+            break;
+        case 4:
+            for (int x = 0; x < W; x++)
+            {
+                BYTE v = src[x] & 0x0F;
+                if (x & 1)
+                    dst[x >> 1] |= v;
+                else
+                    dst[x >> 1] |= (v << 4);
+            }
+            break;
+        case 1:
+            for (INT x = 0; x < W; x++)
+            {
+                if (src[x])
+                    dst[x >> 3] |= (BYTE)(0x80 >> (x & 7));
+            }
+            break;
+        }
+    }
+}
+
+static void BuildPalette(INT nBpp, RGBQUAD* palette)
+{
+    if (nBpp == 1)
+    {
+        palette[0] = { 0,   0,   0,   0 }; // Black
+        palette[1] = { 255, 255, 255, 0 }; // White
+    }
+    else if (nBpp == 4)
+    {
+        // Windows standard 16 colors (BGRA)
+        static const RGBQUAD win16[16] = {
+            {   0,   0,   0, 0 }, {   0,   0, 128, 0 }, {   0, 128,   0, 0 }, {   0, 128, 128, 0 },
+            { 128,   0,   0, 0 }, { 128,   0, 128, 0 }, { 128, 128,   0, 0 }, { 192, 192, 192, 0 },
+            { 128, 128, 128, 0 }, {   0,   0, 255, 0 }, {   0, 255,   0, 0 }, {   0, 255, 255, 0 },
+            { 255,   0,   0, 0 }, { 255,   0, 255, 0 }, { 255, 255,   0, 0 }, { 255, 255, 255, 0 },
+        };
+        for (INT i = 0; i < 16; ++i)
+            palette[i] = win16[i];
+    }
+    else // nBpp == 8
+    {
+        // 6~6~6 color cubes (216 colors)
+        static const BYTE step6[6] = { 0, 51, 102, 153, 204, 255 };
+        INT idx = 0;
+        for (INT ri = 0; ri < 6; ++ri)
+            for (INT gi = 0; gi < 6; ++gi)
+                for (INT bi = 0; bi < 6; ++bi)
+                    palette[idx++] = { step6[bi], step6[gi], step6[ri], 0 };
+
+        // 40 grayscale colors
+        for (INT i = 0; i < 40; ++i, ++idx)
+        {
+            BYTE v = (BYTE)((i * 255 + 19) / 39); // 0..255
+            palette[idx] = { v, v, v, 0 };
+        }
+    }
+}
+
+static inline INT DibStride(INT width, INT bpp)
+{
+    return ((width * bpp + 31) / 32) * 4;
+}
+
+HBITMAP CreateReducedColorBitmap(HBITMAP hBitmap, INT nBpp)
+{
+    if (!hBitmap)
+        return NULL;
+
+    if (nBpp != 1 && nBpp != 4 && nBpp != 8 && nBpp != 24)
+        return NULL;
+
+    BITMAP bm;
+    if (!GetObject(hBitmap, sizeof(bm), &bm))
+        return NULL;
+
+    const INT W = bm.bmWidth, H = bm.bmHeight;
+    if (W <= 0 || H <= 0)
+        return NULL;
+
+    const INT srcStride = DibStride(W, 24);
+    PBYTE srcBuf = (PBYTE)LocalAlloc(LPTR, srcStride * H);
+
+    BITMAPINFOHEADER bihSrc = {};
+    bihSrc.biSize        = sizeof(bihSrc);
+    bihSrc.biWidth       = W;
+    bihSrc.biHeight      = -H; // Top-down
+    bihSrc.biPlanes      = 1;
+    bihSrc.biBitCount    = 24;
+    bihSrc.biCompression = BI_RGB;
+
+    BITMAPINFO biSrc = {};
+    biSrc.bmiHeader = bihSrc;
+
+    HDC hScreenDC = GetDC(NULL);
+    BOOL bGot = (GetDIBits(hScreenDC, hBitmap, 0, H, srcBuf, &biSrc, DIB_RGB_COLORS) == H);
+    ReleaseDC(NULL, hScreenDC);
+    if (!bGot)
+    {
+        LocalFree(srcBuf);
+        return NULL;
+    }
+
+    if (nBpp == 24)
+    {
+        PVOID pBits = NULL;
+        HDC hdc = GetDC(NULL);
+        HBITMAP hRes = CreateDIBSection(hdc, &biSrc, DIB_RGB_COLORS, &pBits, NULL, 0);
+        ReleaseDC(NULL, hdc);
+        if (hRes && pBits)
+            memcpy(pBits, srcBuf, srcStride * H);
+        LocalFree(srcBuf);
+        return hRes;
+    }
+
+    const INT nColors = 1 << nBpp;   // 2 / 16 / 256
+    RGBQUAD* palette = (RGBQUAD*)LocalAlloc(LPTR, nColors * sizeof(RGBQUAD));
+    BuildPalette(nBpp, palette);
+
+    PBYTE indexImg = (PBYTE)LocalAlloc(LPTR, W * H);
+    FloydSteinberg(srcBuf, srcStride, W, H, palette, nColors, indexImg);
+
+    const INT dstStride = DibStride(W, nBpp);
+    PBYTE dstBuf = (PBYTE)LocalAlloc(LPTR, dstStride * H);
+    PackIndexImage(indexImg, W, H, nBpp, dstBuf, dstStride);
+
+    const size_t biBytes = sizeof(BITMAPINFOHEADER) + nColors * sizeof(RGBQUAD);
+    PBYTE biMem = (PBYTE)LocalAlloc(LPTR, biBytes);
+    PBITMAPINFO pBI = reinterpret_cast<PBITMAPINFO>(biMem);
+
+    pBI->bmiHeader.biSize         = sizeof(BITMAPINFOHEADER);
+    pBI->bmiHeader.biWidth        = W;
+    pBI->bmiHeader.biHeight       = -H; // Top-down
+    pBI->bmiHeader.biPlanes       = 1;
+    pBI->bmiHeader.biBitCount     = (WORD)nBpp;
+    pBI->bmiHeader.biCompression  = BI_RGB;
+    pBI->bmiHeader.biSizeImage    = (DWORD)(dstStride * H);
+    pBI->bmiHeader.biClrUsed      = (DWORD)nColors;
+    pBI->bmiHeader.biClrImportant = (DWORD)nColors;
+    for (INT i = 0; i < nColors; i++)
+        pBI->bmiColors[i] = palette[i];
+
+    PVOID pBits = NULL;
+    HDC hdc = GetDC(NULL);
+    HBITMAP hResult = CreateDIBSection(hdc, pBI, DIB_RGB_COLORS, &pBits, NULL, 0);
+    ReleaseDC(NULL, hdc);
+
+    if (hResult && pBits)
+        CopyMemory(pBits, dstBuf, (size_t)dstStride * H);
+
+    LocalFree(srcBuf);
+    LocalFree(palette);
+    LocalFree(indexImg);
+    LocalFree(dstBuf);
+    LocalFree(biMem);
+
+    return hResult;
+}
