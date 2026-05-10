@@ -42,7 +42,8 @@ void FloydSteinberg(const BYTE* srcBuf, INT srcStride, SIZE_T W, SIZE_T H,
         return;
 
     PERR_RGB err = (PERR_RGB)LocalAlloc(LPTR, W * H * sizeof(ERR_RGB));
-    if (!err) return;
+    if (!err)
+        return;
 
     for (SIZE_T y = 0; y < H; y++)
     {
