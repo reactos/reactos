@@ -34,9 +34,9 @@ static inline INT FindNearestColor(INT r, INT g, INT b, const RGBQUAD* palette, 
         {
             bestDist = dist;
             bestIdx = i;
+            if (dist == 0)
+                break;
         }
-        if (dist == 0)
-            break;
     }
     return bestIdx;
 }
