@@ -47,7 +47,7 @@ BEGIN
     EDITTEXT IDC_SCREENS_TIMEDELAY, 42, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 62, 123, 12, 13
-    LTEXT "Dakika", IDC_MINTEXT, 76, 125, 26, 9
+    LTEXT "dakika", IDC_MINTEXT, 76, 125, 26, 9
     AUTOCHECKBOX "&Çıkışta Parola Sor", IDC_SCREENS_USEPASSCHK, 108, 120, 117, 19
     GROUPBOX "Monitörün Güç Tasarrufu Özellikleri", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Monitörünüzün güç ayarlarını düzenlemek için ""Güç Ayarları""na tıklayınız.", IDC_STATIC, 16, 161, 146, 27
