@@ -694,14 +694,6 @@ static void BuildPalette(INT nBpp, RGBQUAD* palette)
  * Floyd-Steinberg dithering to map pixels to a standard palette, packs the
  * result into the target bit depth, and returns a new @c HBITMAP.
  *
- * Supported target depths:
- * | @p nBpp | Output format                              |
- * |---------|--------------------------------------------|
- * | 1       | Monochrome (black / white)                 |
- * | 4       | 16-color Windows standard palette          |
- * | 8       | 256-color (6~6~6 cube + 40 grays)        |
- * | 24      | 24-bit BGR copy (no quantization)          |
- *
  * @param hBitmap  Handle to the source bitmap.  Must not be @c NULL.
  * @param nBpp     Desired bit depth of the output bitmap (1, 4, 8, or 24).
  * @return         Handle to the newly created bitmap, or @c NULL on failure.

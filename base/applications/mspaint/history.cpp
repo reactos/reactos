@@ -363,6 +363,9 @@ BOOL ImageModel::SetBpp(INT nBpp)
     }
     UnlockBitmap(hbmLocked);
 
+    if (nBpp == bm.bmBitsPixel)
+        return TRUE;
+
     if (nBpp < bm.bmBitsPixel)
     {
         CStringW strText(MAKEINTRESOURCEW(IDS_LOSECOLOR));

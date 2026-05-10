@@ -72,7 +72,14 @@ void FloydSteinberg(const BYTE* srcBuf, INT srcStride, SIZE_T W, SIZE_T H,
     if (!W || !H || !srcBuf || !palette || nColors <= 0 || !indexImg)
         return;
 
-    PERR_RGB err = (PERR_RGB)LocalAlloc(LPTR, W * H * sizeof(ERR_RGB));
+    if (W > ((SIZE_T)-1) / H)
+        return;
+    const SIZE_T pixelCount = W * H;
+    if (pixelCount > ((SIZE_T)-1) / sizeof(ERR_RGB))
+        return;
+    const SIZE_T errSize = pixelCount * sizeof(ERR_RGB);
+
+    PERR_RGB err = (PERR_RGB)LocalAlloc(LPTR, errSize);
     if (!err)
         return;
 
