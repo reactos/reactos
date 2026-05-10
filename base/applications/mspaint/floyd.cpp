@@ -41,19 +41,22 @@ void FloydSteinberg(const BYTE* srcBuf, INT srcStride, SIZE_T W, SIZE_T H,
     if (!W || !H || !srcBuf || !palette || nColors <= 0 || !indexImg)
         return;
 
-    const SIZE_T nCount = W * H;
-    PERR_RGB err = (PERR_RGB)LocalAlloc(LPTR, nCount * sizeof(ERR_RGB));
-    if (!err)
-        return;
+    PERR_RGB err = (PERR_RGB)LocalAlloc(LPTR, W * H * sizeof(ERR_RGB));
+    if (!err) return;
 
     for (SIZE_T y = 0; y < H; y++)
     {
-        for (SIZE_T x = 0; x < W; x++)
+        const BOOL leftToRight = (y & 1) == 0;
+        const SIZE_T xStart = leftToRight ? 0      : W - 1;
+        const SIZE_T xEnd   = leftToRight ? W - 1  : 0;
+        const SIZE_T xStep  = leftToRight ? 1       : (SIZE_T)-1;
+
+        for (SIZE_T x = xStart; ; x += xStep)
         {
             const BYTE* px = srcBuf + y * srcStride + x * 3;
-            const float fr = (float)px[2] + err[y*W + x].r; // R
-            const float fg = (float)px[1] + err[y*W + x].g; // G
-            const float fb = (float)px[0] + err[y*W + x].b; // B
+            const float fr = (float)px[2] + err[y*W + x].r;
+            const float fg = (float)px[1] + err[y*W + x].g;
+            const float fb = (float)px[0] + err[y*W + x].b;
 
             const INT ir = (INT)max(0.f, min(255.f, fr));
             const INT ig = (INT)max(0.f, min(255.f, fg));
@@ -72,11 +75,24 @@ void FloydSteinberg(const BYTE* srcBuf, INT srcStride, SIZE_T W, SIZE_T H,
         e.r += er * (w); e.g += eg * (w); e.b += eb * (w); \
     } \
 } while (0)
-            SPREAD(x + 1, y,     7.f / 16);
-            SPREAD(x - 1, y + 1, 3.f / 16);
-            SPREAD(x,     y + 1, 5.f / 16);
-            SPREAD(x + 1, y + 1, 1.f / 16);
+            if (leftToRight)
+            {
+                SPREAD(x + 1, y,     7.f/16);
+                SPREAD(x - 1, y + 1, 3.f/16);
+                SPREAD(x,     y + 1, 5.f/16);
+                SPREAD(x + 1, y + 1, 1.f/16);
+            }
+            else
+            {
+                SPREAD(x - 1, y,     7.f/16);
+                SPREAD(x + 1, y + 1, 3.f/16);
+                SPREAD(x,     y + 1, 5.f/16);
+                SPREAD(x - 1, y + 1, 1.f/16);
+            }
 #undef SPREAD
+
+            if (x == xEnd)
+                break;
         }
     }
 
