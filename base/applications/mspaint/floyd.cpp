@@ -1,7 +1,7 @@
 /*
  * PROJECT:    PAINT for ReactOS
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:    Floyd Steinberg's error variance method
+ * PURPOSE:    Floyd Steinberg's error diffusion
  * COPYRIGHT:  Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
