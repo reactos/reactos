@@ -370,7 +370,7 @@ BOOL ImageModel::SetBpp(INT nBpp)
     {
         CStringW strText(MAKEINTRESOURCEW(IDS_LOSECOLOR));
         CStringW strTitle(MAKEINTRESOURCEW(IDS_PROGRAMNAME));
-        INT id = MessageBox(mainWindow, strText, strTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
+        INT id = MessageBox(mainWindow, strText, strTitle, MB_ICONINFORMATION | MB_YESNO);
         if (id != IDYES)
             return FALSE;
     }
