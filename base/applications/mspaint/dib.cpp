@@ -751,11 +751,11 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
     {
         PVOID pBits = NULL;
         HDC hdc = GetDC(NULL);
-        HBITMAP hRes = CreateDIBSection(hdc, &biSrc, DIB_RGB_COLORS, &pBits, NULL, 0);
+        HBITMAP hbmResult = CreateDIBSection(hdc, &biSrc, DIB_RGB_COLORS, &pBits, NULL, 0);
         ReleaseDC(NULL, hdc);
-        if (hRes && pBits)
+        if (hbmResult && pBits)
             CopyMemory(pBits, srcBuf, srcStride * H);
-        return hRes;
+        return hbmResult;
     }
 
     const INT nColors = 1 << nBpp;
