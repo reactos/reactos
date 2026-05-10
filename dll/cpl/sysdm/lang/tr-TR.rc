@@ -95,7 +95,7 @@ BEGIN
     LTEXT "ReactOS başladığında:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&bir donanım profili seçene kadar bekle.", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
     AUTORADIOBUTTON "bi&r profil seçmezsem listelenen ilk profili seç:", IDC_HRDPROFSELECT, 14, 173, 190, 8
-    LTEXT "Saniye sonra", IDC_STATIC, 65, 187, 35, 8
+    LTEXT "saniye sonra", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
