@@ -642,7 +642,7 @@ static void PackIndexImage(const BYTE* indexImg, INT W, INT H, INT nBpp, PBYTE d
  *
  * - 1 bpp: two entries - black and white.
  * - 4 bpp: the 16-color Windows standard palette (RGBQUAD / BGRA order).
- * - 8 bpp: 216-entry 6~6~6 RGB color cube followed by 40 evenly-spaced
+ * - 8 bpp: 216-entry 6 x 6 x 6 RGB color cube followed by 40 evenly-spaced
  *          grayscale entries (256 entries total).
  *
  * @param nBpp    Bit depth that determines the palette size (1, 4, or 8).
@@ -725,6 +725,8 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
 
     const INT srcStride = WIDTHBYTES(W * 24);
     PBYTE srcBuf = (PBYTE)LocalAlloc(LPTR, srcStride * H);
+    if (!srcBuf)
+        return NULL;
 
     BITMAPINFOHEADER bihSrc = {};
     bihSrc.biSize        = sizeof(bihSrc);
@@ -737,6 +739,11 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
     biSrc.bmiHeader = bihSrc;
 
     HDC hScreenDC = GetDC(NULL);
+    if (!hScreenDC)
+    {
+        LocalFree(srcBuf);
+        return NULL;
+    }
     BOOL bGot = (GetDIBits(hScreenDC, hBitmap, 0, H, srcBuf, &biSrc, DIB_RGB_COLORS) == H);
     ReleaseDC(NULL, hScreenDC);
     if (!bGot)
@@ -785,9 +792,13 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
         pBI->bmiColors[i] = palette[i];
 
     PVOID pBits = NULL;
+    HBITMAP hbmResult = NULL;
     HDC hdc = GetDC(NULL);
-    HBITMAP hbmResult = CreateDIBSection(hdc, pBI, DIB_RGB_COLORS, &pBits, NULL, 0);
-    ReleaseDC(NULL, hdc);
+    if (hdc)
+    {
+        hbmResult = CreateDIBSection(hdc, pBI, DIB_RGB_COLORS, &pBits, NULL, 0);
+        ReleaseDC(NULL, hdc);
+    }
 
     if (hbmResult && pBits)
         CopyMemory(pBits, dstBuf, (size_t)dstStride * H);

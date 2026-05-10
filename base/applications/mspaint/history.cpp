@@ -356,7 +356,11 @@ BOOL ImageModel::SetBpp(INT nBpp)
 
     BITMAP bm;
     HBITMAP hbmLocked = LockBitmap();
-    GetObjectW(hbmLocked, sizeof(bm), &bm);
+    if (!GetObjectW(hbmLocked, sizeof(bm), &bm))
+    {
+        UnlockBitmap(hbmLocked);
+        return FALSE;
+    }
     UnlockBitmap(hbmLocked);
 
     if (nBpp < bm.bmBitsPixel)
@@ -379,7 +383,6 @@ BOOL ImageModel::SetBpp(INT nBpp)
     }
 
     PushImageForUndo(hbmNew);
-    ClearHistory();
     NotifyImageChanged();
     return TRUE;
 }
