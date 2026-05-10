@@ -707,7 +707,7 @@ static void BuildPalette(INT nBpp, RGBQUAD* palette)
  *                 The caller is responsible for destroying the returned handle
  *                 with @c DeleteObject.
  */
-HBITMAP CreateReducedColorBitmap(HBITMAP hBitmap, INT nBpp)
+HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
 {
     if (!hBitmap)
         return NULL;

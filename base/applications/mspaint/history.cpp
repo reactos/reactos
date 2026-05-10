@@ -349,7 +349,7 @@ void ImageModel::UnlockBitmap(HBITMAP hbmLocked)
     m_hbmOld = ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 }
 
-BOOL ImageModel::ReduceColors(INT nBpp)
+BOOL ImageModel::SetBpp(INT nBpp)
 {
     if (!nBpp)
         return TRUE;
@@ -369,7 +369,7 @@ BOOL ImageModel::ReduceColors(INT nBpp)
     }
 
     hbmLocked = LockBitmap();
-    HBITMAP hbmNew = CreateReducedColorBitmap(hbmLocked, nBpp);
+    HBITMAP hbmNew = CreateNBppBitmap(hbmLocked, nBpp);
     UnlockBitmap(hbmLocked);
 
     if (!hbmNew)

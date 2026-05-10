@@ -487,7 +487,7 @@ void CMainWindow::saveImage(BOOL overwrite)
     if (!GetSaveFileName(g_szFileName, _countof(g_szFileName), &nBitmapBpp))
         return;
 
-    if (nBitmapBpp && !imageModel.ReduceColors(nBitmapBpp))
+    if (nBitmapBpp && !imageModel.SetBpp(nBitmapBpp))
         return;
 
     imageModel.SaveImage(g_szFileName);
@@ -1264,12 +1264,12 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 CWaitCursor waitCursor;
                 if (attributesDialog.m_bBlackAndWhite)
                 {
-                    if (!imageModel.IsBlackAndWhite() && !imageModel.ReduceColors(1))
+                    if (!imageModel.IsBlackAndWhite() && !imageModel.SetBpp(1))
                         break;
                 }
                 else
                 {
-                    if (imageModel.IsBlackAndWhite() && !imageModel.ReduceColors(24))
+                    if (imageModel.IsBlackAndWhite() && !imageModel.SetBpp(24))
                         break;
                 }
 

@@ -50,7 +50,7 @@ public:
     void Clamp(POINT& pt) const;
     void NotifyImageChanged();
     BOOL IsBlackAndWhite();
-    BOOL ReduceColors(INT nBpp);
+    BOOL SetBpp(INT nBpp);
 
 protected:
     HDC m_hDrawingDC; // The device context for this class

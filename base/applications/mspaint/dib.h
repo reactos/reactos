@@ -45,4 +45,4 @@ HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal);
 HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF);
 HBITMAP getSubImage(HBITMAP hbmWhole, const RECT& rcPartial);
 void putSubImage(HBITMAP hbmWhole, const RECT& rcPartial, HBITMAP hbmPart);
-HBITMAP CreateReducedColorBitmap(HBITMAP hBitmap, INT nBpp);
+HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp);
