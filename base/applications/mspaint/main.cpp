@@ -254,7 +254,9 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
 
         if (pnBitmapBpp)
         {
-            strFilter = strFilter.Left(strFilter.GetLength() - 1);
+            if (strFilter.GetLength() > 0)
+                strFilter = strFilter.Left(strFilter.GetLength() - 1);
+
             CStringW strText;
 
             strText.LoadString(IDS_MONOBMP);

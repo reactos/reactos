@@ -603,11 +603,12 @@ BOOL IsBitmapBlackAndWhite(HBITMAP hbm)
  * @param dstBuf    Destination buffer; must be at least @p dstStride * @p H bytes.
  * @param dstStride Row stride of the destination buffer in bytes (DWORD-aligned).
  */
-static void PackIndexImage(const BYTE* indexImg, INT W, INT H, INT nBpp, PBYTE dstBuf, INT dstStride)
+static void
+PackIndexImage(const BYTE* indexImg, SIZE_T W, SIZE_T H, INT nBpp, PBYTE dstBuf, INT dstStride)
 {
     ZeroMemory(dstBuf, dstStride * H);
 
-    for (INT y = 0; y < H; ++y)
+    for (SIZE_T y = 0; y < H; ++y)
     {
         const BYTE* src = indexImg + y * W;
         PBYTE dst = dstBuf + y * dstStride;
@@ -618,7 +619,7 @@ static void PackIndexImage(const BYTE* indexImg, INT W, INT H, INT nBpp, PBYTE d
                 CopyMemory(dst, src, W);
                 break;
             case 4:
-                for (int x = 0; x < W; x++)
+                for (SIZE_T x = 0; x < W; ++x)
                 {
                     BYTE v = src[x] & 0x0F;
                     if (x & 1)
@@ -628,7 +629,7 @@ static void PackIndexImage(const BYTE* indexImg, INT W, INT H, INT nBpp, PBYTE d
                 }
                 break;
             case 1:
-                for (INT x = 0; x < W; x++)
+                for (SIZE_T x = 0; x < W; ++x)
                 {
                     if (src[x])
                         dst[x >> 3] |= (BYTE)(0x80 >> (x & 7));
