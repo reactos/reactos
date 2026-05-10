@@ -50,7 +50,6 @@ public:
     void Clamp(POINT& pt) const;
     void NotifyImageChanged();
     BOOL IsBlackAndWhite();
-    void PushBlackAndWhite();
     BOOL ReduceColors(INT nBpp);
 
 protected:

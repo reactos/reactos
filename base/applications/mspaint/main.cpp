@@ -1262,15 +1262,15 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (attributesDialog.DoModal(mainWindow.m_hWnd))
             {
                 CWaitCursor waitCursor;
-                if (attributesDialog.m_bBlackAndWhite && !imageModel.IsBlackAndWhite())
+                if (attributesDialog.m_bBlackAndWhite)
                 {
-                    CStringW strText(MAKEINTRESOURCEW(IDS_LOSECOLOR));
-                    CStringW strTitle(MAKEINTRESOURCEW(IDS_PROGRAMNAME));
-                    INT id = MessageBox(strText, strTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
-                    if (id != IDYES)
+                    if (!imageModel.IsBlackAndWhite() && !imageModel.ReduceColors(1))
                         break;
-
-                    imageModel.PushBlackAndWhite();
+                }
+                else
+                {
+                    if (imageModel.IsBlackAndWhite() && !imageModel.ReduceColors(24))
+                        break;
                 }
 
                 if (imageModel.GetWidth() != attributesDialog.newWidth ||

@@ -334,15 +334,6 @@ BOOL ImageModel::IsBlackAndWhite()
     return bBlackAndWhite;
 }
 
-void ImageModel::PushBlackAndWhite()
-{
-    HBITMAP hBitmap = LockBitmap();
-    HBITMAP hNewBitmap = ConvertToBlackAndWhite(hBitmap);
-    UnlockBitmap(hBitmap);
-
-    PushImageForUndo(hNewBitmap);
-}
-
 HBITMAP ImageModel::LockBitmap()
 {
     // NOTE: An app cannot select a bitmap into more than one device context at a time.
