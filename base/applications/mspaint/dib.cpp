@@ -670,7 +670,7 @@ static void BuildPalette(INT nBpp, RGBQUAD* palette)
     }
     else if (nBpp == 8)
     {
-        // 6Å~6Å~6 color cubes (216 colors)
+        // 6¬Å~6¬Å~6 color cubes (216 colors)
         static const BYTE step6[6] = { 0, 51, 102, 153, 204, 255 };
         INT idx = 0;
         for (INT ri = 0; ri < 6; ++ri)
@@ -699,7 +699,7 @@ static void BuildPalette(INT nBpp, RGBQUAD* palette)
  * |---------|--------------------------------------------|
  * | 1       | Monochrome (black / white)                 |
  * | 4       | 16-color Windows standard palette          |
- * | 8       | 256-color (6Å~6Å~6 cube + 40 grays)        |
+ * | 8       | 256-color (6¬Å~6¬Å~6 cube + 40 grays)        |
  * | 24      | 24-bit BGR copy (no quantization)          |
  *
  * @param hBitmap  Handle to the source bitmap.  Must not be @c NULL.
@@ -756,7 +756,6 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
         ReleaseDC(NULL, hdc);
         if (hRes && pBits)
             CopyMemory(pBits, srcBuf, srcStride * H);
-        LocalFree(srcBuf);
         return hRes;
     }
 
