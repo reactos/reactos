@@ -1537,6 +1537,7 @@ HvValidateHive(
             /* Go to the next if this bin does not exist */
             if (Hive->Storage[StorageIndex].BlockList[BlockIndex].BinAddress == (ULONG_PTR)NULL)
             {
+                BlockIndex++;
                 continue;
             }
 
