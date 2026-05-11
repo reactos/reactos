@@ -232,6 +232,21 @@ CreateListViewColumns(
     IN const INT* pColsAlign,
     IN UINT nNumOfColumns);
 
+size_t
+LoadAllocStringW(
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    _In_opt_ _Outptr_ PWSTR* pString,
+    _In_opt_ size_t cchBufferLen /*,
+    _In_opt_ PCWSTR pDefaultString*/);
+
+size_t
+FormatAllocStringWV(
+    _In_opt_ _Outptr_ PWSTR* pString,
+    _In_opt_ size_t cchBufferLen,
+    _In_ PCWSTR pszFormat,
+    _In_ va_list args);
+
 INT
 DisplayMessageV(
     _In_opt_ HWND hWnd,
@@ -261,7 +276,8 @@ VOID
 SetWindowResTextW(
     _In_ HWND hWnd,
     _In_opt_ HINSTANCE hInstance,
-    _In_ UINT uID);
+    _In_ UINT uID /*,
+    _In_opt_ PCWSTR pDefaultString*/);
 
 VOID
 SetWindowResPrintfVW(

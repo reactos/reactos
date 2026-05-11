@@ -126,6 +126,66 @@ CreateTitleFont(
     return CreateBoldFont(hOrigFont, 12);
 }
 
+size_t
+LoadAllocStringW(
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    _In_opt_ _Outptr_ PWSTR* pString,
+    _In_opt_ size_t cchBufferLen /*,
+    _In_opt_ PCWSTR pDefaultString*/)
+{
+    PCWSTR pStr;
+    size_t Length;
+
+    /* Try to load the string from the resource */
+    Length = LoadStringW(hInstance, uID, (PWSTR)&pStr, 0);
+    if (Length == 0)
+    {
+        /* No resource string was found, return NULL */
+        *pString = NULL;
+        return 0;
+    }
+
+    /* If the caller gave a pointer to a buffer on input, verify whether it
+     * is large enough to contain the string. If not, allocate a new buffer. */
+    if (!*pString || (cchBufferLen < Length + 1))
+    {
+        /* Allocate a new buffer, adding a NUL-terminator */
+        *pString = HeapAlloc(GetProcessHeap(), 0, (Length + 1) * sizeof(WCHAR));
+        if (!*pString)
+            return 0;
+    }
+
+    /* Copy the string, NUL-terminated */
+    StringCchCopyNW(*pString, Length + 1, pStr, Length);
+    return Length;
+}
+
+size_t
+FormatAllocStringWV(
+    _In_opt_ _Outptr_ PWSTR* pString,
+    _In_opt_ size_t cchBufferLen,
+    _In_ PCWSTR pszFormat,
+    _In_ va_list args)
+{
+    size_t Length;
+
+    /* Retrieve the message length. If it is too long, allocate
+     * an auxiliary buffer; otherwise use the caller's buffer. */
+    Length = _vscwprintf(pszFormat, args); // Doesn't count the NUL-terminator.
+    if (!*pString || (Length >= cchBufferLen))
+    {
+        /* Allocate a new buffer, adding a NUL-terminator */
+        *pString = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (Length + 1) * sizeof(WCHAR));
+        if (!*pString)
+            return 0;
+    }
+
+    /* Do the printf */
+    StringCchVPrintfW(*pString, Length + 1, pszFormat, args);
+    return Length;
+}
+
 INT
 DisplayMessageV(
     _In_opt_ HWND hWnd,
@@ -137,10 +197,9 @@ DisplayMessageV(
     INT iRes;
     HINSTANCE hInstance = NULL;
     MSGBOXPARAMSW mb = {0};
-    LPWSTR Format;
-    size_t MsgLen;
-    WCHAR  StaticBuffer[256];
-    LPWSTR Buffer = StaticBuffer; // Use the static buffer by default.
+    PWSTR Format;
+    WCHAR StaticBuffer[256];
+    PWSTR Buffer = StaticBuffer; // Use the static buffer by default.
 
     /* We need to retrieve the current module's instance handle if either
      * the title or the format message is specified by a resource ID */
@@ -148,62 +207,31 @@ DisplayMessageV(
         hInstance = GetModuleHandleW(NULL); // SetupData.hInstance;
 
     /* Retrieve the format message string if this is a resource */
-    if (pszFormatMessage && IS_INTRESOURCE(pszFormatMessage)) do
+    if (pszFormatMessage && IS_INTRESOURCE(pszFormatMessage))
     {
-        // LoadAllocStringW()
-        PCWSTR pStr;
-
-        /* Try to load the string from the resource */
-        MsgLen = LoadStringW(hInstance, PtrToUlong(pszFormatMessage), (LPWSTR)&pStr, 0);
-        if (MsgLen == 0)
-        {
-            /* No resource string was found, return NULL */
-            Format = NULL;
-            break;
-        }
-
-        /* Allocate a new buffer, adding a NULL-terminator */
-        Format = HeapAlloc(GetProcessHeap(), 0, (MsgLen + 1) * sizeof(WCHAR));
-        if (!Format)
-        {
-            MsgLen = 0;
-            break;
-        }
-
-        /* Copy the string, NULL-terminated */
-        StringCchCopyNW(Format, MsgLen + 1, pStr, MsgLen);
-    } while (0);
+        Format = NULL;
+        (void)LoadAllocStringW(hInstance, PtrToUlong(pszFormatMessage), &Format, 0);
+    }
     else
     {
-        Format = (LPWSTR)pszFormatMessage;
+        Format = (PWSTR)pszFormatMessage;
     }
 
     if (Format)
     {
-        /*
-         * Retrieve the message length. If it is too long, allocate
-         * an auxiliary buffer; otherwise use the static buffer.
-         * The string is built to be NULL-terminated.
-         */
-        MsgLen = _vscwprintf(Format, args);
-        if (MsgLen >= _countof(StaticBuffer))
+        /* Format the message and retrieve its length. If it is too long,
+         * an auxiliary buffer is allocated; otherwise the static buffer
+         * is used. The string is built to be NUL-terminated. */
+        (void)FormatAllocStringWV(&Buffer, _countof(StaticBuffer), Format, args);
+        if (!Buffer)
         {
-            Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (MsgLen + 1) * sizeof(WCHAR));
-            if (!Buffer)
-            {
-                /* Allocation failed, use the original format string verbatim */
-                Buffer = Format;
-            }
-        }
-        if (Buffer != Format)
-        {
-            /* Do the printf as we use the caller's format string */
-            StringCchVPrintfW(Buffer, MsgLen + 1, Format, args);
+            /* Allocation failed, use the original format string verbatim */
+            Buffer = Format;
         }
     }
     else
     {
-        Format = (LPWSTR)pszFormatMessage;
+        Format = (PWSTR)pszFormatMessage;
         Buffer = Format;
     }
 
@@ -271,11 +299,19 @@ VOID
 SetWindowResTextW(
     _In_ HWND hWnd,
     _In_opt_ HINSTANCE hInstance,
-    _In_ UINT uID)
+    _In_ UINT uID /*,
+    _In_opt_ PCWSTR pDefaultString*/)
 {
     WCHAR szText[256];
-    LoadStringW(hInstance, uID, szText, _countof(szText));
-    SetWindowTextW(hWnd, szText);
+    PWSTR String = szText; // Use the static buffer by default.
+
+    /* Try to load the string from the resource */
+    (void)LoadAllocStringW(hInstance, uID, &String, _countof(szText));
+    if (!String)
+        return;
+    SetWindowTextW(hWnd, String);
+    if (String != szText)
+        HeapFree(GetProcessHeap(), 0, String);
 }
 
 VOID
@@ -287,10 +323,32 @@ SetWindowResPrintfVW(
 {
     WCHAR ResBuffer[256];
     WCHAR szText[256];
+    PWSTR ResFmt = ResBuffer; // Use the static buffers by default.
+    PWSTR String = szText;
 
-    LoadStringW(hInstance, uID, ResBuffer, _countof(ResBuffer));
-    StringCchVPrintfW(szText, _countof(szText), ResBuffer, args);
-    SetWindowTextW(hWnd, szText);
+    /* Try to load the string from the resource */
+    (void)LoadAllocStringW(hInstance, uID, &ResFmt, _countof(ResBuffer));
+    if (!ResFmt)
+        return;
+
+    /* Format the string and retrieve its length. If it is too long,
+     * an auxiliary buffer is allocated; otherwise the static buffer
+     * is used. The string is built to be NUL-terminated. */
+    (void)FormatAllocStringWV(&String, _countof(szText), ResFmt, args);
+    if (!String)
+    {
+        /* Allocation failed, use the original format string verbatim */
+        String = ResFmt;
+    }
+
+    SetWindowTextW(hWnd, String);
+
+    /* Free the buffers if needed */
+    if ((String != szText) && (String != ResFmt))
+        HeapFree(GetProcessHeap(), 0, String);
+
+    if (ResFmt && (ResFmt != ResBuffer))
+        HeapFree(GetProcessHeap(), 0, ResFmt);
 }
 
 VOID
