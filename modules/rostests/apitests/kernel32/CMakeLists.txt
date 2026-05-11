@@ -9,6 +9,7 @@ list(APPEND SOURCE
     DefaultActCtx.c
     DeviceIoControl.c
     dosdev.c
+    EnumSystemCodePages.c
     FindActCtxSectionStringW.c
     FindFiles.c
     FLS.c
