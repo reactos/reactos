@@ -1890,6 +1890,8 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer","SearchHidden",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer","SelectExtOnRename",0x00010001,0x00000000
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer","ShellState",0x00000003,24,00,00,00,23,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,0d,00,00,00,00,00,00,00,00,00,00,00
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts",,0x00000012
