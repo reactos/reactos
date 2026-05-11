@@ -118,6 +118,7 @@ list(APPEND SOURCE
     RtlGetLongestNtPathLength.c
     RtlGetNtProductType.c
     RtlGetProcessHeaps.c
+    RtlGetProductInfo.c
     RtlGetUnloadEventTrace.c
     RtlHandle.c
     RtlImageDirectoryEntryToData.c
