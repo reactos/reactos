@@ -46,10 +46,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT       "ReactOS 安裝程式可以升級下列的其中一個可用的 ReactOS 安裝。如果某個 ReactOS 安裝損毀，安裝程式可以嘗試修復它。", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "安裝程式可以升級下列的其中一個可用的 ReactOS 安裝。如果某個 ReactOS 安裝損毀，安裝程式可以嘗試修復它。", IDC_STATIC, 6, 6, 303, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "不要升級(&D)", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "按［下一步］升級已選擇的 ReactOS 安裝，或按［不要升級］進行全新的 ReactOS 安裝。", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "Click Next to upgrade the selected OS installation, or on 'Do not upgrade' to perform a new installation.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143

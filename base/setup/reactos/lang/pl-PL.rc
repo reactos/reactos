@@ -49,7 +49,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "Instalator może uaktualnić jedną z poniższych instalacji systemu ReactOS. Jeśl instalacja systemu ReactOS jest uszkodzona, instalator może podjąć próbę jej naprawy.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "Instalator może uaktualnić jedną z poniższych instalacji systemu ReactOS. Jeśl instalacja systemu ReactOS jest uszkodzona, instalator może podjąć próbę jej naprawy.", IDC_STATIC, 6, 6, 303, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&Nowa instalacja", IDC_SKIPUPGRADE, 230, 128, 80, 14
     LTEXT       "Kliknij Dalej, aby uaktualnić wybraną instalację systemu, lub na 'Nowa instalacja' aby wykonać nową instalację systemu ReactOS.", IDC_STATIC, 7, 124, 216, 16
@@ -61,11 +61,11 @@ CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Komputer:", IDC_STATIC, 20, 15, 80, 10
-    COMBOBOX IDC_COMPUTER, 100, 15, 150, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    COMBOBOX IDC_COMPUTER, 100, 15, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Monitor:", IDC_STATIC, 20, 35, 80, 10
-    COMBOBOX IDC_DISPLAY, 100, 35, 150, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    COMBOBOX IDC_DISPLAY, 100, 35, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Klawiatura:", IDC_STATIC, 20, 55, 80, 10
-    COMBOBOX IDC_KEYBOARD, 100, 55, 150, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    COMBOBOX IDC_KEYBOARD, 100, 55, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Kliknij Dalej, aby ustalić miejsce instalacji.", IDC_STATIC, 7, 128, 297, 8
 END
 

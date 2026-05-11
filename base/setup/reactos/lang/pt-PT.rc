@@ -38,9 +38,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "O instalador pode actualizar uma das instalações disponíveis listadas abaixo, ou, reparar uma instalação danificada do ReactOS.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "O instalador pode actualizar uma das instalações disponíveis listadas abaixo, ou, reparar uma instalação danificada do ReactOS.", IDC_STATIC, 6, 6, 303, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
-    PUSHBUTTON  "&Nova inst.", IDC_SKIPUPGRADE, 230, 128, 80, 14
+    PUSHBUTTON  "&Nova instalação", IDC_SKIPUPGRADE, 230, 128, 80, 14
     LTEXT       "Clique Avançar para actualizar a instalação seleccionada, ou 'Nova instalação' para uma nova instalação.", IDC_STATIC, 7, 124, 222, 16
 END
 

@@ -34,7 +34,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT       "ReactOS セットアップは、以下のリストのうち、一つをアップグレードできます。また、ReactOS インストールが壊れていれば、セットアップは修正を試すことができます。", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "セットアップは、以下のリストのうち、一つをアップグレードできます。また、ReactOS インストールが壊れていれば、セットアップは修正を試すことができます。", IDC_STATIC, 6, 6, 303, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "アップグレードしない(&D)", IDC_SKIPUPGRADE, 218, 127, 92, 14
     LTEXT       "次へをクリックしてOSのインストールをアップグレードするか、「アップグレードしない」をクリックしてください。", IDC_STATIC, 7, 124, 207, 16
