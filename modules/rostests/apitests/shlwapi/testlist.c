@@ -8,9 +8,9 @@ extern void func_PathFindOnPath(void);
 extern void func_IShellFolderHelpers(void);
 extern void func_IsQSForward(void);
 extern void func_IStreamPidl(void);
-extern void func_isuncpath(void);
-extern void func_isuncpathserver(void);
-extern void func_isuncpathservershare(void);
+extern void func_PathIsUNC(void);
+extern void func_PathIsUNCServer(void);
+extern void func_PathIsUNCServerShare(void);
 extern void func_PathUnExpandEnvStrings(void);
 extern void func_PathUnExpandEnvStringsForUser(void);
 extern void func_SHAreIconsEqual(void);
@@ -32,9 +32,9 @@ const struct test winetest_testlist[] =
     { "IShellFolderHelpers", func_IShellFolderHelpers },
     { "IsQSForward", func_IsQSForward },
     { "IStreamPidl", func_IStreamPidl },
-    { "PathIsUNC", func_isuncpath },
-    { "PathIsUNCServer", func_isuncpathserver },
-    { "PathIsUNCServerShare", func_isuncpathservershare },
+    { "PathIsUNC", func_PathIsUNC },
+    { "PathIsUNCServer", func_PathIsUNCServer },
+    { "PathIsUNCServerShare", func_PathIsUNCServerShare },
     { "PathUnExpandEnvStrings", func_PathUnExpandEnvStrings },
     { "PathUnExpandEnvStringsForUser", func_PathUnExpandEnvStringsForUser },
     { "SHAreIconsEqual", func_SHAreIconsEqual },

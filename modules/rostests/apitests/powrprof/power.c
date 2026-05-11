@@ -4841,7 +4841,7 @@ void test_WritePwrScheme(void)
 
 }
 
-void func_power(void)
+START_TEST(power)
 {
    if (1)
       skip("CallNtPowerInformation test is broken and fails on Windows\n");

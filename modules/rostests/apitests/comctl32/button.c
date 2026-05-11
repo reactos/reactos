@@ -923,7 +923,7 @@ void Test_MessagesThemed()
     DestroyWindow(hWnd2);
 }
 
-START_TEST(button)
+START_TEST(buttonv6)
 {
     LoadLibraryW(L"comctl32.dll"); /* same as statically linking to comctl32 and doing InitCommonControls */
     Test_TextMargin();

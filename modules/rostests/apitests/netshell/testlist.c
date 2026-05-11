@@ -1,10 +1,10 @@
 #define STANDALONE
 #include <apitest.h>
 
-extern void func_isvalidname(void);
+extern void func_NcIsValidConnectionName(void);
 
 const struct test winetest_testlist[] =
 {
-    { "NcIsValidConnectionName", func_isvalidname },
+    { "NcIsValidConnectionName", func_NcIsValidConnectionName },
     { 0, 0 }
 };
