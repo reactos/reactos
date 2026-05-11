@@ -1,4 +1,5 @@
 /* TRANSLATOR: 2013, 2014, 2016, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2026 Hasan Eliküçük (Random Developer 31) <hasanelk101@gmail.com>  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -88,5 +89,5 @@ BEGIN
     IDS_NO_DIRECTORY "Hiç dizin verilmedi!"
     IDS_INVALID_PATH "Verilen yol geçersiz!"
     IDS_INVALID_NAME "Girdiğiniz kısayol adı, ya geçersiz karakterler içeriyor ya dosya adları için geçersiz ya da çok uzun."
-    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
+    IDS_BROWSE_FOR_TARGET "Lütfen aşağıdaki kısayolun hedefi seçin:"
 END

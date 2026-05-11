@@ -1,4 +1,5 @@
 /* TRANSLATOR: 2013, 2014, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2026 Hasan Eliküçük (Random Developer 31) <hasanelk101@gmail.com>  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -326,33 +327,33 @@ BEGIN
 END
 
 IDD_VISUALEFFECTS DIALOGEX 6, 18, 227, 204
-CAPTION "Visual Effects"
+CAPTION "Görsel Efektler"
 FONT 8, "MS Shell Dlg"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
-   LTEXT "Select the settings you want to use for the appearance and performance of ReactOS on this computer.", IDC_STATIC, 7, 6, 208, 18
+   LTEXT "Bu bilgisayarda ReactOS'un görünümü ve performansı için kullanmak istediğiniz ayarları seçin.", IDC_STATIC, 7, 6, 208, 18
    CONTROL "", IDC_TREE, "SysTreeView32", TVS_LINESATROOT | TVS_DISABLEDRAGDROP | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 32, 213, 168
 END
 
 IDD_ADVANCEDPERF DIALOGEX 6, 18, 227, 128
-CAPTION "Advanced"
+CAPTION "Gelişmiş"
 FONT 8, "MS Shell Dlg"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
-   GROUPBOX "CPU scheduling", IDC_STATIC, 7, 8, 213, 46
-   LTEXT "Adjust for best performance of:", IDC_STATIC, 14, 23, 199, 8
-   AUTORADIOBUTTON "&Programs", IDC_CPUCLIENT, 14, 36, 75, 12
-   AUTORADIOBUTTON "Background &services", IDC_CPUSERVER, 96, 36, 85, 12
-   GROUPBOX "Virtual memory", IDC_STATIC, 7, 60, 213, 57
-   LTEXT "A paging file is an area on the hard disk that ReactOS uses as if it were RAM.", IDC_STATIC, 14, 74, 199, 16
-   PUSHBUTTON "&Change...", IDC_CHANGESWAP, 163, 97, 50, 14
+   GROUPBOX "CPU zamanlaması", IDC_STATIC, 7, 8, 213, 46
+   LTEXT "En iyi performansı elde etmek için şu ayarları yapın:", IDC_STATIC, 14, 23, 199, 8
+   AUTORADIOBUTTON "&Programlar", IDC_CPUCLIENT, 14, 36, 75, 12
+   AUTORADIOBUTTON "Arka Plan &Servisleri", IDC_CPUSERVER, 96, 36, 85, 12
+   GROUPBOX "Sanal Bellek", IDC_STATIC, 7, 60, 213, 57
+   LTEXT "Sayfalama dosyası, ReactOS'un RAM gibi kullandığı sabit disk üzerindeki bir alandır.", IDC_STATIC, 14, 74, 199, 16
+   PUSHBUTTON "&Değiştir...", IDC_CHANGESWAP, 163, 97, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Sistem"
     IDS_CPLSYSTEMDESCRIPTION "Bilgisayar hakkında bilgi görüntüler ve türlü sistem ve donanım ayarlarını değiştirir."
-    IDS_PERFORMANCEOPTIONS "Performance Options"
+    IDS_PERFORMANCEOPTIONS "Performans Seçenekleri"
     IDS_MEGABYTE "MB Bellek"
     IDS_GIGABYTE "GB Bellek"
     IDS_TERABYTE "TB Bellek"
