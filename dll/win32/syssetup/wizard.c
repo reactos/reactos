@@ -771,7 +771,6 @@ WriteOwnerSettings(WCHAR * OwnerName,
                         0,
                         KEY_ALL_ACCESS,
                         &hKey);
-
     if (res != ERROR_SUCCESS)
     {
         return FALSE;
@@ -782,8 +781,7 @@ WriteOwnerSettings(WCHAR * OwnerName,
                          0,
                          REG_SZ,
                          (LPBYTE)OwnerName,
-                         (wcslen(OwnerName) + 1) * sizeof(WCHAR));
-
+                         (DWORD)((wcslen(OwnerName) + 1) * sizeof(WCHAR)));
     if (res != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
@@ -795,7 +793,7 @@ WriteOwnerSettings(WCHAR * OwnerName,
                          0,
                          REG_SZ,
                          (LPBYTE)OwnerOrganization,
-                         (wcslen(OwnerOrganization) + 1) * sizeof(WCHAR));
+                         (DWORD)((wcslen(OwnerOrganization) + 1) * sizeof(WCHAR)));
 
     RegCloseKey(hKey);
     return (res == ERROR_SUCCESS);
@@ -963,7 +961,7 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
                                0,
                                REG_SZ,
                                (LPBYTE)ComputerName,
-                               (wcslen(ComputerName) + 1) * sizeof(WCHAR));
+                               (DWORD)((wcslen(ComputerName) + 1) * sizeof(WCHAR)));
         if (lError != ERROR_SUCCESS)
         {
             DPRINT1("RegSetValueEx(\"Hostname\") failed (%08lX)\n", lError);
@@ -1009,7 +1007,7 @@ WriteDefaultLogonData(LPWSTR Domain)
                            0,
                            REG_SZ,
                            (LPBYTE)Domain,
-                           (wcslen(Domain)+ 1) * sizeof(WCHAR));
+                           (DWORD)((wcslen(Domain) + 1) * sizeof(WCHAR)));
     if (lError != ERROR_SUCCESS)
     {
         DPRINT1("RegSetValueEx(\"DefaultDomainName\") failed!\n");
@@ -1020,7 +1018,7 @@ WriteDefaultLogonData(LPWSTR Domain)
                            0,
                            REG_SZ,
                            (LPBYTE)szAdministratorName,
-                           (wcslen(szAdministratorName)+ 1) * sizeof(WCHAR));
+                           (DWORD)((wcslen(szAdministratorName) + 1) * sizeof(WCHAR)));
     if (lError != ERROR_SUCCESS)
     {
         DPRINT1("RegSetValueEx(\"DefaultUserName\") failed!\n");
@@ -1358,7 +1356,7 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
     PropSheet_SetWizButtons(MainWindow, 0);
     EnableWindow(MainWindow, FALSE);
 
-    while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
+    while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE)) != WAIT_OBJECT_0)
     {
        /* We still need to process main window messages to avoid freeze */
        while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
@@ -1476,7 +1474,7 @@ WriteUserLocale(VOID)
                             0, NULL, REG_OPTION_NON_VOLATILE,
                             KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
         {
-            RegSetValueExW(hKey, L"Locale", 0, REG_SZ, (LPBYTE)Locale, (wcslen(Locale) + 1) * sizeof(WCHAR));
+            RegSetValueExW(hKey, L"Locale", 0, REG_SZ, (LPBYTE)Locale, (DWORD)((wcslen(Locale) + 1) * sizeof(WCHAR)));
             RegCloseKey(hKey);
         }
     }
@@ -2525,10 +2523,11 @@ ShowStepError(
 
     if (RegistrationNotify->MessageID != IDS_TIMEOUT)
     {
+        size_t ErrMsgLen = wcslen(ErrorMessage);
         FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL,
                        RegistrationNotify->LastError, 0,
-                       ErrorMessage + wcslen(ErrorMessage),
-                       ARRAYSIZE(ErrorMessage) - wcslen(ErrorMessage),
+                       ErrorMessage + ErrMsgLen,
+                       (DWORD)(ARRAYSIZE(ErrorMessage) - ErrMsgLen),
                        NULL);
     }
 
@@ -2672,25 +2671,25 @@ SetInstallationCompleted(VOID)
     DWORD InProgress = 0;
     DWORD InstallDate;
 
-    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
-                       L"SYSTEM\\Setup",
-                       0,
-                       KEY_WRITE,
-                       &hKey ) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"SYSTEM\\Setup",
+                      0,
+                      KEY_WRITE,
+                      &hKey) == ERROR_SUCCESS)
     {
-        RegSetValueExW( hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress) );
-        RegCloseKey( hKey );
+        RegSetValueExW(hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress));
+        RegCloseKey(hKey);
     }
 
-    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
-                       L"Software\\Microsoft\\Windows NT\\CurrentVersion",
-                       0,
-                       KEY_WRITE,
-                       &hKey ) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"Software\\Microsoft\\Windows NT\\CurrentVersion",
+                      0,
+                      KEY_WRITE,
+                      &hKey) == ERROR_SUCCESS)
     {
         InstallDate = (DWORD)time(NULL);
-        RegSetValueExW( hKey, L"InstallDate", 0, REG_DWORD, (LPBYTE)&InstallDate, sizeof(InstallDate) );
-        RegCloseKey( hKey );
+        RegSetValueExW(hKey, L"InstallDate", 0, REG_DWORD, (LPBYTE)&InstallDate, sizeof(InstallDate));
+        RegCloseKey(hKey);
     }
 }
 
@@ -3077,7 +3076,7 @@ ProcessUnattendSection(
                                        0,
                                        REG_SZ,
                                        (const BYTE*)szPath,
-                                       (wcslen(szPath) + 1) * sizeof(WCHAR)) == ERROR_SUCCESS)
+                                       (DWORD)((wcslen(szPath) + 1) * sizeof(WCHAR))) == ERROR_SUCCESS)
                     {
                         i++;
                     }
@@ -3125,7 +3124,7 @@ ProcessUnattendSection(
 
             DWORD dwType = wcschr(szValue, '%') != NULL ? REG_EXPAND_SZ : REG_SZ;
 
-            if (RegSetValueExW(hKey, szName, 0, dwType, (const BYTE*)szValue, (DWORD)(wcslen(szValue) + 1) * sizeof(TCHAR)) != ERROR_SUCCESS)
+            if (RegSetValueExW(hKey, szName, 0, dwType, (const BYTE*)szValue, (DWORD)((wcslen(szValue) + 1) * sizeof(WCHAR))) != ERROR_SUCCESS)
             {
                 DPRINT1(" - Error %d\n", GetLastError());
             }
@@ -3174,14 +3173,12 @@ AddInstallationSource(
     LPWSTR Buffer = NULL;
     LPWSTR Path;
 
-    res = RegQueryValueExW(
-        hKey,
-        L"Installation Sources",
-        NULL,
-        &dwRegType,
-        NULL,
-        &dwPathLength);
-
+    res = RegQueryValueExW(hKey,
+                           L"Installation Sources",
+                           NULL,
+                           &dwRegType,
+                           NULL,
+                           &dwPathLength);
     if (res != ERROR_SUCCESS ||
         dwRegType != REG_MULTI_SZ ||
         dwPathLength == 0 ||
@@ -3192,21 +3189,19 @@ AddInstallationSource(
     }
 
     /* Reserve space for existing data + new string */
-    dwNewLength = dwPathLength + (wcslen(lpPath) + 1) * sizeof(WCHAR);
+    dwNewLength = dwPathLength + (DWORD)((wcslen(lpPath) + 1) * sizeof(WCHAR));
     Buffer = HeapAlloc(GetProcessHeap(), 0, dwNewLength);
     if (!Buffer)
         return;
 
     ZeroMemory(Buffer, dwNewLength);
 
-    res = RegQueryValueExW(
-        hKey,
-        L"Installation Sources",
-        NULL,
-        NULL,
-        (LPBYTE)Buffer,
-        &dwPathLength);
-
+    res = RegQueryValueExW(hKey,
+                           L"Installation Sources",
+                           NULL,
+                           NULL,
+                           (LPBYTE)Buffer,
+                           &dwPathLength);
     if (res != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, Buffer);
@@ -3230,7 +3225,7 @@ AddInstallationSource(
 set:
     if (dwPathLength == 0)
     {
-        dwNewLength = (wcslen(lpPath) + 1 + 1) * sizeof(WCHAR);
+        dwNewLength = (DWORD)((wcslen(lpPath) + 1 + 1) * sizeof(WCHAR));
         Buffer = HeapAlloc(GetProcessHeap(), 0, dwNewLength);
         if (!Buffer)
             return;
@@ -3241,13 +3236,12 @@ set:
     StringCbCopyW(Path, dwNewLength - (Path - Buffer) * sizeof(WCHAR), lpPath);
     Buffer[dwNewLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
 
-    RegSetValueExW(
-        hKey,
-        L"Installation Sources",
-        0,
-        REG_MULTI_SZ,
-        (LPBYTE)Buffer,
-        dwNewLength);
+    RegSetValueExW(hKey,
+                   L"Installation Sources",
+                   0,
+                   REG_MULTI_SZ,
+                   (LPBYTE)Buffer,
+                   dwNewLength);
 
 cleanup:
     HeapFree(GetProcessHeap(), 0, Buffer);
@@ -3358,14 +3352,14 @@ ProcessSetupInf(
                              0,
                              REG_SZ,
                              (LPBYTE)pSetupData->SourcePath,
-                             (wcslen(pSetupData->SourcePath) + 1) * sizeof(WCHAR));
+                             (DWORD)((wcslen(pSetupData->SourcePath) + 1) * sizeof(WCHAR)));
 
         res = RegSetValueExW(hKey,
                              L"ServicePackSourcePath",
                              0,
                              REG_SZ,
                              (LPBYTE)pSetupData->SourcePath,
-                             (wcslen(pSetupData->SourcePath) + 1) * sizeof(WCHAR));
+                             (DWORD)((wcslen(pSetupData->SourcePath) + 1) * sizeof(WCHAR)));
 
         RegCloseKey(hKey);
     }

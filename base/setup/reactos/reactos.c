@@ -2927,7 +2927,7 @@ Retry:
     if (!RetryOnce && !FoundDrive)
     {
         ULONG DiskNumber, PartitionNumber;
-        INT Length;
+        UINT Length;
 
         NTSTATUS Status;
         OBJECT_ATTRIBUTES ObjectAttributes;
@@ -2942,7 +2942,7 @@ Retry:
         }
 
         /* Check whether \Device\HarddiskX\PartitionY is a symlink */
-        RtlInitEmptyUnicodeString(&SymLink, (PWCHAR)pwszNTPath, Length * sizeof(WCHAR));
+        RtlInitEmptyUnicodeString(&SymLink, (PWCHAR)pwszNTPath, (USHORT)(Length * sizeof(WCHAR)));
         SymLink.Length = SymLink.MaximumLength;
 
         InitializeObjectAttributes(&ObjectAttributes,
