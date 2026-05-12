@@ -478,7 +478,7 @@ static void SMTPTransport_CallbackMessageSendTo(IInternetTransport *iface, char 
 
     for (; This->ulCurrentAddressIndex < This->pending_message.rAddressList.cAddress; This->ulCurrentAddressIndex++)
     {
-        TRACE("address[%d]: %s\n", This->ulCurrentAddressIndex,
+        TRACE("address[%ld]: %s\n", This->ulCurrentAddressIndex,
             This->pending_message.rAddressList.prgAddress[This->ulCurrentAddressIndex].szEmail);
 
         if ((This->pending_message.rAddressList.prgAddress[This->ulCurrentAddressIndex].addrtype & ADDR_TOFROM_MASK) == ADDR_TO)
@@ -685,13 +685,13 @@ static HRESULT WINAPI SMTPTransport_SendMessage(ISMTPTransport2 *iface,
     {
         if ((pMessage->rAddressList.prgAddress[i].addrtype & ADDR_TOFROM_MASK) == ADDR_FROM)
         {
-            TRACE("address[%d]: ADDR_FROM, %s\n", i,
+            TRACE("address[%ld]: ADDR_FROM, %s\n", i,
                 pMessage->rAddressList.prgAddress[i].szEmail);
             pszFromAddress = pMessage->rAddressList.prgAddress[i].szEmail;
         }
         else if ((pMessage->rAddressList.prgAddress[i].addrtype & ADDR_TOFROM_MASK) == ADDR_TO)
         {
-            TRACE("address[%d]: ADDR_TO, %s\n", i,
+            TRACE("address[%ld]: ADDR_TO, %s\n", i,
                 pMessage->rAddressList.prgAddress[i].szEmail);
         }
     }
@@ -891,7 +891,7 @@ static HRESULT WINAPI SMTPTransport_CommandDOT(ISMTPTransport2 *iface)
 static HRESULT WINAPI SMTPTransport_SendDataStream(ISMTPTransport2 *iface,
     IStream *pStream, ULONG cbSize)
 {
-    FIXME("(%p, %d)\n", pStream, cbSize);
+    FIXME("(%p, %ld)\n", pStream, cbSize);
     return E_NOTIMPL;
 }
 
