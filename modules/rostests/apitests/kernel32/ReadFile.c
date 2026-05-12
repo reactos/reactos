@@ -82,7 +82,7 @@ static void Test_ReadFile_sync(HANDLE hFile)
         bResult = ReadFile(hFile, Buffer, sizeof(Buffer), NULL, NULL);
         ok_eq_bool(bResult, TRUE);
         ok_eq_ulong(GetLastError(), 0xdeadbeef);
-    EndSeh((GetNTVersion() >= _WIN32_WINNT_WIN8) ? STATUS_SUCCESS : EXCEPTION_ACCESS_VIOLATION);
+    EndSeh(is_reactos() || (GetNTVersion() >= _WIN32_WINNT_WIN8) ? STATUS_SUCCESS : EXCEPTION_ACCESS_VIOLATION);
 
     /* Test with NULL lpNumberOfBytesRead at end of file */
     ok(SetFilePointer(hFile, 0, NULL, FILE_END) > 0, "SetFilePointer failed\n");
@@ -91,7 +91,7 @@ static void Test_ReadFile_sync(HANDLE hFile)
         bResult = ReadFile(hFile, Buffer, sizeof(Buffer), NULL, NULL);
         ok_eq_bool(bResult, TRUE);
         ok_eq_ulong(GetLastError(), 0xdeadbeef);
-    EndSeh((GetNTVersion() >= _WIN32_WINNT_WIN8) ? STATUS_SUCCESS : EXCEPTION_ACCESS_VIOLATION);
+    EndSeh(is_reactos() || (GetNTVersion() >= _WIN32_WINNT_WIN8) ? STATUS_SUCCESS : EXCEPTION_ACCESS_VIOLATION);
 }
 
 static void Test_ReadFile_async(HANDLE hFile)

@@ -48,7 +48,7 @@ static void Test_DeviceIoControl_Parameters(void)
                               NULL);
         ok_eq_bool(ret, TRUE);
         ok_eq_ulong(GetLastError(), 0xDEADBEEF);
-    EndSeh((GetNTVersion() >= _WIN32_WINNT_WIN8) ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER);
+    EndSeh(is_reactos() || (GetNTVersion() >= _WIN32_WINNT_WIN8) ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER);
 
     CloseHandle(hDevice);
 }

@@ -65,7 +65,7 @@ static void Test_WriteFile_sync(HANDLE hFile)
         bResult = WriteFile(hFile, Buffer, sizeof(Buffer), NULL, NULL);
         ok_eq_bool(bResult, TRUE);
         ok_eq_ulong(GetLastError(), 0xdeadbeef);
-    EndSeh((GetNTVersion() >= _WIN32_WINNT_WIN8) ? STATUS_SUCCESS : EXCEPTION_ACCESS_VIOLATION);
+    EndSeh(is_reactos() || (GetNTVersion() >= _WIN32_WINNT_WIN8) ? STATUS_SUCCESS : EXCEPTION_ACCESS_VIOLATION);
 }
 
 static void Test_WriteFile_async(HANDLE hFile)
