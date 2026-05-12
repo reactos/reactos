@@ -25,7 +25,7 @@
     threading(both),
     uuid(b196b286-bab4-101a-b69c-00aa00341d07)
 ]
-coclass PSFactoryBuffer { interface IFactoryBuffer; }
+coclass PSFactoryBuffer { interface IPSFactoryBuffer; }
 
 [
     helpstring("Standard Font"),
