@@ -23,7 +23,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
-static WCHAR bscb_holderW[] = { '_','B','S','C','B','_','H','o','l','d','e','r','_',0 };
+static WCHAR bscb_holderW[] = L"_BSCB_Holder_";
 
 extern IID IID_IBindStatusCallbackHolder;
 
@@ -146,7 +146,7 @@ static ULONG WINAPI BindStatusCallback_AddRef(IBindStatusCallbackEx *iface)
     BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref = %d\n", This, ref);
+    TRACE("(%p) ref = %ld\n", This, ref);
 
     return ref;
 }
@@ -156,13 +156,13 @@ static ULONG WINAPI BindStatusCallback_Release(IBindStatusCallbackEx *iface)
     BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref = %d\n", This, ref);
+    TRACE("(%p) ref = %ld\n", This, ref);
 
     if(!ref) {
         if(This->serv_prov)
             IServiceProvider_Release(This->serv_prov);
         IBindStatusCallback_Release(This->callback);
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -173,7 +173,7 @@ static HRESULT WINAPI BindStatusCallback_OnStartBinding(IBindStatusCallbackEx *i
 {
     BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
-    TRACE("(%p)->(%d %p)\n", This, dwReserved, pbind);
+    TRACE("(%p)->(%ld %p)\n", This, dwReserved, pbind);
 
     return IBindStatusCallback_OnStartBinding(This->callback, 0xff, pbind);
 }
@@ -191,7 +191,7 @@ static HRESULT WINAPI BindStatusCallback_OnLowResource(IBindStatusCallbackEx *if
 {
     BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
-    TRACE("(%p)->(%d)\n", This, reserved);
+    TRACE("(%p)->(%ld)\n", This, reserved);
 
     return IBindStatusCallback_OnLowResource(This->callback, reserved);
 }
@@ -201,7 +201,7 @@ static HRESULT WINAPI BindStatusCallback_OnProgress(IBindStatusCallbackEx *iface
 {
     BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
-    TRACE("%p)->(%u %u %s %s)\n", This, ulProgress, ulProgressMax, debugstr_bindstatus(ulStatusCode),
+    TRACE("%p)->(%lu %lu %s %s)\n", This, ulProgress, ulProgressMax, debugstr_bindstatus(ulStatusCode),
             debugstr_w(szStatusText));
 
     return IBindStatusCallback_OnProgress(This->callback, ulProgress,
@@ -213,7 +213,7 @@ static HRESULT WINAPI BindStatusCallback_OnStopBinding(IBindStatusCallbackEx *if
 {
     BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
-    TRACE("(%p)->(%08x %s)\n", This, hresult, debugstr_w(szError));
+    TRACE("(%p)->(%08lx %s)\n", This, hresult, debugstr_w(szError));
 
     return IBindStatusCallback_OnStopBinding(This->callback, hresult, szError);
 }
@@ -245,7 +245,7 @@ static HRESULT WINAPI BindStatusCallback_OnDataAvailable(IBindStatusCallbackEx *
 {
     BindStatusCallback *This = impl_from_IBindStatusCallbackEx(iface);
 
-    TRACE("(%p)->(%08x %d %p %p)\n", This, grfBSCF, dwSize, pformatetc, pstgmed);
+    TRACE("(%p)->(%08lx %ld %p %p)\n", This, grfBSCF, dwSize, pformatetc, pstgmed);
 
     return IBindStatusCallback_OnDataAvailable(This->callback, grfBSCF, dwSize, pformatetc, pstgmed);
 }
@@ -393,7 +393,7 @@ static HRESULT WINAPI BSCHttpNegotiate_BeginningTransaction(IHttpNegotiate2 *ifa
     IHttpNegotiate *http_negotiate;
     HRESULT hres = S_OK;
 
-    TRACE("(%p)->(%s %s %d %p)\n", This, debugstr_w(szURL), debugstr_w(szHeaders), dwReserved,
+    TRACE("(%p)->(%s %s %ld %p)\n", This, debugstr_w(szURL), debugstr_w(szHeaders), dwReserved,
           pszAdditionalHeaders);
 
     *pszAdditionalHeaders = NULL;
@@ -417,7 +417,7 @@ static HRESULT WINAPI BSCHttpNegotiate_OnResponse(IHttpNegotiate2 *iface, DWORD 
     IHttpNegotiate *http_negotiate;
     HRESULT hres = S_OK;
 
-    TRACE("(%p)->(%d %s %s %p)\n", This, dwResponseCode, debugstr_w(szResponseHeaders),
+    TRACE("(%p)->(%ld %s %s %p)\n", This, dwResponseCode, debugstr_w(szResponseHeaders),
           debugstr_w(szRequestHeaders), pszAdditionalRequestHeaders);
 
     http_negotiate = get_callback_iface(This, &IID_IHttpNegotiate);
@@ -442,7 +442,7 @@ static HRESULT WINAPI BSCHttpNegotiate_GetRootSecurityId(IHttpNegotiate2 *iface,
     IHttpNegotiate2 *http_negotiate2;
     HRESULT hres = E_FAIL;
 
-    TRACE("(%p)->(%p %p %ld)\n", This, pbSecurityId, pcbSecurityId, dwReserved);
+    TRACE("(%p)->(%p %p %Id)\n", This, pbSecurityId, pcbSecurityId, dwReserved);
 
     http_negotiate2 = get_callback_iface(This, &IID_IHttpNegotiate2);
     if(http_negotiate2) {
@@ -538,7 +538,7 @@ static HRESULT WINAPI BSCInternetBindInfo_GetBindString(IInternetBindInfo *iface
     IInternetBindInfo *bind_info;
     HRESULT hres;
 
-    TRACE("(%p)->(%d %p %d %p)\n", This, string_type, strs, cnt, fetched);
+    TRACE("(%p)->(%ld %p %ld %p)\n", This, string_type, strs, cnt, fetched);
 
     hres = IBindStatusCallback_QueryInterface(This->callback, &IID_IInternetBindInfo, (void**)&bind_info);
     if(FAILED(hres))
@@ -579,7 +579,7 @@ HRESULT wrap_callback(IBindStatusCallback *bsc, IBindStatusCallback **ret_iface)
 {
     BindStatusCallback *ret;
 
-    ret = heap_alloc_zero(sizeof(BindStatusCallback));
+    ret = calloc(1, sizeof(BindStatusCallback));
     if(!ret)
         return E_OUTOFMEMORY;
 
@@ -619,7 +619,7 @@ HRESULT WINAPI RegisterBindStatusCallback(IBindCtx *pbc, IBindStatusCallback *pb
     IBindStatusCallback *bsc, *prev = NULL;
     HRESULT hres;
 
-    TRACE("(%p %p %p %x)\n", pbc, pbsc, ppbscPrevious, dwReserved);
+    TRACE("(%p %p %p %lx)\n", pbc, pbsc, ppbscPrevious, dwReserved);
 
     if (!pbc || !pbsc)
         return E_INVALIDARG;
@@ -737,7 +737,7 @@ static ULONG WINAPI AsyncBindCtx_AddRef(IBindCtx *iface)
     AsyncBindCtx *This = impl_from_IBindCtx(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     return ref;
 }
@@ -747,11 +747,11 @@ static ULONG WINAPI AsyncBindCtx_Release(IBindCtx *iface)
     AsyncBindCtx *This = impl_from_IBindCtx(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
         IBindCtx_Release(This->bindctx);
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -871,7 +871,7 @@ static HRESULT init_bindctx(IBindCtx *bindctx, DWORD options,
     HRESULT hres;
 
     if(options)
-        FIXME("not supported options %08x\n", options);
+        FIXME("not supported options %08lx\n", options);
     if(format)
         FIXME("format is not supported\n");
 
@@ -902,7 +902,7 @@ HRESULT WINAPI CreateAsyncBindCtx(DWORD reserved, IBindStatusCallback *callback,
     IBindCtx *bindctx;
     HRESULT hres;
 
-    TRACE("(%08x %p %p %p)\n", reserved, callback, format, pbind);
+    TRACE("(%08lx %p %p %p)\n", reserved, callback, format, pbind);
 
     if(!pbind || !callback)
         return E_INVALIDARG;
@@ -934,13 +934,13 @@ HRESULT WINAPI CreateAsyncBindCtxEx(IBindCtx *ibind, DWORD options,
     IBindCtx *bindctx;
     HRESULT hres;
 
-    TRACE("(%p %08x %p %p %p %d)\n", ibind, options, callback, format, pbind, reserved);
+    TRACE("(%p %08lx %p %p %p %ld)\n", ibind, options, callback, format, pbind, reserved);
 
     if(!pbind)
         return E_INVALIDARG;
 
     if(reserved)
-        WARN("reserved=%d\n", reserved);
+        WARN("reserved=%ld\n", reserved);
 
     if(ibind) {
         IBindCtx_AddRef(ibind);
@@ -951,7 +951,7 @@ HRESULT WINAPI CreateAsyncBindCtxEx(IBindCtx *ibind, DWORD options,
             return hres;
     }
 
-    ret = heap_alloc(sizeof(AsyncBindCtx));
+    ret = malloc(sizeof(AsyncBindCtx));
 
     ret->IBindCtx_iface.lpVtbl = &AsyncBindCtxVtbl;
     ret->ref = 1;
