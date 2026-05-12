@@ -1,5 +1,12 @@
-/* TRANSLATOR: 2013-2020 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net> */
-/* TRANSLATOR: 2026 Hasan Eliküçük (Random Developer 31) <hasanelk101@gmail.com> */
+/*
+ * PROJECT:     ReactOS Display Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2020 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              Copyright 2021-2023 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2024 Ethem De Santa (scropool) <oyunyumru4@gmail.com>
+ *              Copyright 2026 Hasan Eliküçük <hasanelk101@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
