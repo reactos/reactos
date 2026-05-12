@@ -19,8 +19,6 @@
  */
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windows.h"
 #include "ole2.h"
 #include "ocidl.h"
@@ -41,9 +39,9 @@ static void test_create(void)
     ULONG ref;
 
     hr = MimeOleGetInternat(&internat);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
     hr = MimeOleGetInternat(&internat2);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
 
     /* Under w2k8 it's no longer a singleton */
     if(internat == internat2)
@@ -53,18 +51,18 @@ static void test_create(void)
         ref = IMimeInternational_Release(internat2);
         ok(ref == 2 ||
            ref == 1, /* win95 - object is a static singleton */
-           "got %d\n", ref);
+           "got %ld\n", ref);
 
         ref = IMimeInternational_Release(internat);
-        ok(ref == 1, "got %d\n", ref);
+        ok(ref == 1, "got %ld\n", ref);
     }
     else
     {
         ref = IMimeInternational_Release(internat2);
-        ok(ref == 0, "got %d\n", ref);
+        ok(ref == 0, "got %ld\n", ref);
 
         ref = IMimeInternational_Release(internat);
-        ok(ref == 0, "got %d\n", ref);
+        ok(ref == 0, "got %ld\n", ref);
     }
 
 }
@@ -153,46 +151,46 @@ static void test_charset(void)
     MIMECSETINFO mlang_cs_info;
 
     hr = MimeOleGetInternat(&internat);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
 
     hr = IMimeInternational_FindCharset(internat, "nonexistent", &hcs);
-    ok(hr == MIME_E_NOT_FOUND, "got %08x\n", hr);
+    ok(hr == MIME_E_NOT_FOUND, "got %08lx\n", hr);
 
     hr = IMimeInternational_FindCharset(internat, "windows-1252", &hcs_windows_1252);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     hr = IMimeInternational_FindCharset(internat, "windows-1252", &hcs);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     ok(hcs_windows_1252 == hcs, "got different hcharsets for the same name\n");
     hr = IMimeInternational_FindCharset(internat, "WiNdoWs-1252", &hcs);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     ok(hcs_windows_1252 == hcs, "got different hcharsets for the same name\n");
 
     hr = IMimeInternational_FindCharset(internat, "windows-1251", &hcs_windows_1251);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     ok(hcs_windows_1252 != hcs_windows_1251, "got the same hcharset for the different names\n");
 
     hr = IMimeInternational_GetCharsetInfo(internat, hcs_windows_1252, &cs_info);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
 
     hr = mlang_getcsetinfo("windows-1252", &mlang_cs_info);
-    ok(hr == S_OK, "got %08x\n", hr);
-    ok(cs_info.cpiWindows == mlang_cs_info.uiCodePage, "cpiWindows %d while mlang uiCodePage %d\n",
+    ok(hr == S_OK, "got %08lx\n", hr);
+    ok(cs_info.cpiWindows == mlang_cs_info.uiCodePage, "cpiWindows %ld while mlang uiCodePage %d\n",
        cs_info.cpiWindows, mlang_cs_info.uiCodePage);
-    ok(cs_info.cpiInternet == mlang_cs_info.uiInternetEncoding, "cpiInternet %d while mlang uiInternetEncoding %d\n",
+    ok(cs_info.cpiInternet == mlang_cs_info.uiInternetEncoding, "cpiInternet %ld while mlang uiInternetEncoding %d\n",
        cs_info.cpiInternet, mlang_cs_info.uiInternetEncoding);
     ok(cs_info.hCharset == hcs_windows_1252, "hCharset doesn't match requested\n");
     ok(!strcmp(cs_info.szName, "windows-1252"), "szName doesn't match requested\n");
 
     hr = IMimeInternational_GetCodePageCharset(internat, 1252, CHARSET_BODY, &hcs);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     hr = IMimeInternational_GetCharsetInfo(internat, hcs, &cs_info);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
 
     hr = mlang_getcsetinfo_from_cp(1252, CHARSET_BODY, &mlang_cs_info);
-    ok(hr == S_OK, "got %08x\n", hr);
-    ok(cs_info.cpiWindows == mlang_cs_info.uiCodePage, "cpiWindows %d while mlang uiCodePage %d\n",
+    ok(hr == S_OK, "got %08lx\n", hr);
+    ok(cs_info.cpiWindows == mlang_cs_info.uiCodePage, "cpiWindows %ld while mlang uiCodePage %d\n",
        cs_info.cpiWindows, mlang_cs_info.uiCodePage);
-    ok(cs_info.cpiInternet == mlang_cs_info.uiInternetEncoding, "cpiInternet %d while mlang uiInternetEncoding %d\n",
+    ok(cs_info.cpiInternet == mlang_cs_info.uiInternetEncoding, "cpiInternet %ld while mlang uiInternetEncoding %d\n",
        cs_info.cpiInternet, mlang_cs_info.uiInternetEncoding);
 
     IMimeInternational_Release(internat);
@@ -205,24 +203,24 @@ static void test_defaultcharset(void)
     HCHARSET hcs_default, hcs, hcs_windows_1251;
 
     hr = MimeOleGetInternat(&internat);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
 
     hr = IMimeInternational_GetDefaultCharset(internat, &hcs_default);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
     hr = IMimeInternational_GetCodePageCharset(internat, GetACP(), CHARSET_BODY, &hcs);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
     ok(hcs_default == hcs, "Unexpected default charset\n");
 
     hr = IMimeInternational_FindCharset(internat, "windows-1251", &hcs_windows_1251);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     hr = IMimeInternational_SetDefaultCharset(internat, hcs_windows_1251);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
     hr = IMimeInternational_GetDefaultCharset(internat, &hcs);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
     ok(hcs == hcs_windows_1251, "didn't retrieve recently set default\n");
     /* Set the old default back again */
     hr = IMimeInternational_SetDefaultCharset(internat, hcs_default);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
 
     IMimeInternational_Release(internat);
 }
@@ -235,58 +233,58 @@ static void test_convert(void)
     ULONG read;
     PROPVARIANT prop_in, prop_out;
     static char test_string[] = "test string";
-    static WCHAR test_stringW[] = {'t','e','s','t',' ','s','t','r','i','n','g',0};
+    static WCHAR test_stringW[] = L"test string";
 
     hr = MimeOleGetInternat(&internat);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
 
     src.pBlobData = (BYTE*)test_string;
     src.cbSize = sizeof(test_string);
     hr = IMimeInternational_ConvertBuffer(internat, 1252, 28591, &src, &dst, &read);
-    ok(hr == S_OK, "ret %08x\n", hr);
-    ok(read == sizeof(test_string), "got %d\n", read);
-    ok(dst.cbSize == sizeof(test_string), "got %d\n", dst.cbSize);
+    ok(hr == S_OK, "ret %08lx\n", hr);
+    ok(read == sizeof(test_string), "got %ld\n", read);
+    ok(dst.cbSize == sizeof(test_string), "got %ld\n", dst.cbSize);
     CoTaskMemFree(dst.pBlobData);
 
     src.cbSize = 2;
     hr = IMimeInternational_ConvertBuffer(internat, 1252, 28591, &src, &dst, &read);
-    ok(hr == S_OK, "ret %08x\n", hr);
-    ok(read == 2, "got %d\n", read);
-    ok(dst.cbSize == 2, "got %d\n", dst.cbSize);
+    ok(hr == S_OK, "ret %08lx\n", hr);
+    ok(read == 2, "got %ld\n", read);
+    ok(dst.cbSize == 2, "got %ld\n", dst.cbSize);
     CoTaskMemFree(dst.pBlobData);
 
     prop_in.vt = VT_LPWSTR;
-    prop_in.u.pwszVal = test_stringW;
+    prop_in.pwszVal = test_stringW;
     hr = IMimeInternational_ConvertString(internat, CP_UNICODE, 1252, &prop_in, &prop_out);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
     ok(prop_out.vt == VT_LPSTR, "got %d\n", prop_out.vt);
-    ok(!strcmp(prop_out.u.pszVal, test_string), "got %s\n", prop_out.u.pszVal);
+    ok(!strcmp(prop_out.pszVal, test_string), "got %s\n", prop_out.pszVal);
     PropVariantClear(&prop_out);
 
     /* If in.vt is VT_LPWSTR, ignore cpiSrc */
     prop_in.vt = VT_LPWSTR;
-    prop_in.u.pwszVal = test_stringW;
+    prop_in.pwszVal = test_stringW;
     hr = IMimeInternational_ConvertString(internat, 28591, 1252, &prop_in, &prop_out);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
     ok(prop_out.vt == VT_LPSTR, "got %d\n", prop_out.vt);
-    ok(!strcmp(prop_out.u.pszVal, test_string), "got %s\n", prop_out.u.pszVal);
+    ok(!strcmp(prop_out.pszVal, test_string), "got %s\n", prop_out.pszVal);
     PropVariantClear(&prop_out);
 
     prop_in.vt = VT_LPSTR;
-    prop_in.u.pszVal = test_string;
+    prop_in.pszVal = test_string;
     hr = IMimeInternational_ConvertString(internat, 28591, CP_UNICODE, &prop_in, &prop_out);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
     ok(prop_out.vt == VT_LPWSTR, "got %d\n", prop_out.vt);
-    ok(!lstrcmpW(prop_out.u.pwszVal, test_stringW), "mismatched strings\n");
+    ok(!lstrcmpW(prop_out.pwszVal, test_stringW), "mismatched strings\n");
     PropVariantClear(&prop_out);
 
     /* If in.vt is VT_LPSTR and cpiSrc is CP_UNICODE, use another multibyte codepage (probably GetACP()) */
     prop_in.vt = VT_LPSTR;
-    prop_in.u.pszVal = test_string;
+    prop_in.pszVal = test_string;
     hr = IMimeInternational_ConvertString(internat, CP_UNICODE, CP_UNICODE, &prop_in, &prop_out);
-    ok(hr == S_OK, "ret %08x\n", hr);
+    ok(hr == S_OK, "ret %08lx\n", hr);
     ok(prop_out.vt == VT_LPWSTR, "got %d\n", prop_out.vt);
-    ok(!lstrcmpW(prop_out.u.pwszVal, test_stringW), "mismatched strings\n");
+    ok(!lstrcmpW(prop_out.pwszVal, test_stringW), "mismatched strings\n");
     PropVariantClear(&prop_out);
 
     IMimeInternational_Release(internat);
