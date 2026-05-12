@@ -17,7 +17,6 @@
  */
 
 #define COBJMACROS
-#define NONAMELESSUNION
 
 #include <assert.h>
 
@@ -25,7 +24,6 @@
 #include "inetcomm_private.h"
 
 #include "wine/debug.h"
-#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
@@ -59,39 +57,23 @@ typedef struct {
     WCHAR url[1];
 } MimeHtmlBinding;
 
-static const WCHAR mhtml_prefixW[] = {'m','h','t','m','l',':'};
-static const WCHAR mhtml_separatorW[] = {'!','x','-','u','s','c',':'};
-
-static inline LPWSTR heap_strdupW(LPCWSTR str)
-{
-    LPWSTR ret = NULL;
-
-    if(str) {
-        DWORD size;
-
-        size = (lstrlenW(str)+1)*sizeof(WCHAR);
-        ret = heap_alloc(size);
-        if(ret)
-            memcpy(ret, str, size);
-    }
-
-    return ret;
-}
+static const WCHAR mhtml_prefixW[] = L"mhtml:";
+static const WCHAR mhtml_separatorW[] = L"!x-usc:";
 
 static HRESULT parse_mhtml_url(const WCHAR *url, mhtml_url_t *r)
 {
     const WCHAR *p;
 
-    if(_wcsnicmp(url, mhtml_prefixW, ARRAY_SIZE(mhtml_prefixW)))
+    if(wcsnicmp(url, mhtml_prefixW, lstrlenW(mhtml_prefixW)))
         return E_FAIL;
 
-    r->mhtml = url + ARRAY_SIZE(mhtml_prefixW);
+    r->mhtml = url + lstrlenW(mhtml_prefixW);
     p = wcschr(r->mhtml, '!');
     if(p) {
         r->mhtml_len = p - r->mhtml;
         /* FIXME: We handle '!' and '!x-usc:' in URLs as the same thing. Those should not be the same. */
-        if(!wcsncmp(p, mhtml_separatorW, ARRAY_SIZE(mhtml_separatorW)))
-            p += ARRAY_SIZE(mhtml_separatorW);
+        if(!wcsncmp(p, mhtml_separatorW, lstrlenW(mhtml_separatorW)))
+            p += lstrlenW(mhtml_separatorW);
         else
             p++;
     }else {
@@ -141,7 +123,7 @@ static HRESULT on_mime_message_available(MimeHtmlProtocol *protocol, IMimeMessag
             if(FAILED(hres))
                 return report_result(protocol, hres);
 
-            found = !lstrcmpW(protocol->location, value.u.pwszVal);
+            found = !lstrcmpW(protocol->location, value.pwszVal);
             PropVariantClear(&value);
         }while(!found);
     }else {
@@ -159,7 +141,7 @@ static HRESULT on_mime_message_available(MimeHtmlProtocol *protocol, IMimeMessag
     value.vt = VT_LPWSTR;
     hres = IMimeBody_GetProp(mime_body, "content-type", 0, &value);
     if(SUCCEEDED(hres)) {
-        hres = IInternetProtocolSink_ReportProgress(protocol->sink, BINDSTATUS_MIMETYPEAVAILABLE, value.u.pwszVal);
+        hres = IInternetProtocolSink_ReportProgress(protocol->sink, BINDSTATUS_MIMETYPEAVAILABLE, value.pwszVal);
         PropVariantClear(&value);
     }
 
@@ -230,7 +212,7 @@ static ULONG WINAPI BindStatusCallback_AddRef(IBindStatusCallback *iface)
     MimeHtmlBinding *This = impl_from_IBindStatusCallback(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     return ref;
 }
@@ -240,14 +222,14 @@ static ULONG WINAPI BindStatusCallback_Release(IBindStatusCallback *iface)
     MimeHtmlBinding *This = impl_from_IBindStatusCallback(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
         if(This->protocol)
             IInternetProtocol_Release(&This->protocol->IInternetProtocol_iface);
         if(This->stream)
             IStream_Release(This->stream);
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -258,7 +240,7 @@ static HRESULT WINAPI BindStatusCallback_OnStartBinding(IBindStatusCallback *ifa
 {
     MimeHtmlBinding *This = impl_from_IBindStatusCallback(iface);
 
-    TRACE("(%p)->(%x %p)\n", This, dwReserved, pib);
+    TRACE("(%p)->(%lx %p)\n", This, dwReserved, pib);
 
     assert(!This->stream);
     return CreateStreamOnHGlobal(NULL, TRUE, &This->stream);
@@ -278,7 +260,7 @@ static HRESULT WINAPI BindStatusCallback_OnProgress(IBindStatusCallback *iface, 
         ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText)
 {
     MimeHtmlBinding *This = impl_from_IBindStatusCallback(iface);
-    TRACE("(%p)->(%u/%u %u %s)\n", This, ulProgress, ulProgressMax, ulStatusCode, debugstr_w(szStatusText));
+    TRACE("(%p)->(%lu/%lu %lu %s)\n", This, ulProgress, ulProgressMax, ulStatusCode, debugstr_w(szStatusText));
     return S_OK;
 }
 
@@ -287,7 +269,7 @@ static HRESULT WINAPI BindStatusCallback_OnStopBinding(IBindStatusCallback *ifac
     MimeHtmlBinding *This = impl_from_IBindStatusCallback(iface);
     IMimeMessage *mime_message = NULL;
 
-    TRACE("(%p)->(%x %s)\n", This, hresult, debugstr_w(szError));
+    TRACE("(%p)->(%lx %s)\n", This, hresult, debugstr_w(szError));
 
     if(SUCCEEDED(hresult)) {
         hresult = load_mime_message(This->stream, &mime_message);
@@ -333,7 +315,7 @@ static HRESULT WINAPI BindStatusCallback_OnDataAvailable(IBindStatusCallback *if
     assert(pstgmed->tymed == TYMED_ISTREAM);
 
     while(1) {
-        hres = IStream_Read(pstgmed->u.pstm, buf, sizeof(buf), &read);
+        hres = IStream_Read(pstgmed->pstm, buf, sizeof(buf), &read);
         if(FAILED(hres))
             return hres;
         if(!read)
@@ -402,7 +384,7 @@ static ULONG WINAPI MimeHtmlProtocol_AddRef(IUnknown *iface)
     MimeHtmlProtocol *This = impl_from_IUnknown(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     return ref;
 }
@@ -412,15 +394,15 @@ static ULONG WINAPI MimeHtmlProtocol_Release(IUnknown *iface)
     MimeHtmlProtocol *This = impl_from_IUnknown(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%x\n", This, ref);
+    TRACE("(%p) ref=%lx\n", This, ref);
 
     if(!ref) {
         if(This->sink)
             IInternetProtocolSink_Release(This->sink);
         if(This->stream)
             IStream_Release(This->stream);
-        heap_free(This->location);
-        heap_free(This);
+        free(This->location);
+        free(This);
     }
 
     return ref;
@@ -469,26 +451,26 @@ static HRESULT WINAPI MimeHtmlProtocol_Start(IInternetProtocol *iface, const WCH
     IMoniker *mon;
     HRESULT hres;
 
-    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink, pOIBindInfo, grfPI, dwReserved);
+    TRACE("(%p)->(%s %p %p %08lx %Ix)\n", This, debugstr_w(szUrl), pOIProtSink, pOIBindInfo, grfPI, dwReserved);
 
     hres = parse_mhtml_url(szUrl, &url);
     if(FAILED(hres))
         return hres;
 
-    if(url.location && !(This->location = heap_strdupW(url.location)))
+    if(url.location && !(This->location = wcsdup(url.location)))
         return E_OUTOFMEMORY;
 
     hres = IInternetBindInfo_GetBindInfo(pOIBindInfo, &bindf, &bindinfo);
     if(FAILED(hres)) {
-        WARN("GetBindInfo failed: %08x\n", hres);
+        WARN("GetBindInfo failed: %08lx\n", hres);
         return hres;
     }
     if((bindf & (BINDF_ASYNCHRONOUS|BINDF_FROMURLMON|BINDF_NEEDFILE)) != (BINDF_ASYNCHRONOUS|BINDF_FROMURLMON|BINDF_NEEDFILE))
-        FIXME("unsupported bindf %x\n", bindf);
+        FIXME("unsupported bindf %lx\n", bindf);
 
     IInternetProtocolSink_AddRef(This->sink = pOIProtSink);
 
-    binding = heap_alloc(FIELD_OFFSET(MimeHtmlBinding,  url[url.mhtml_len+1]));
+    binding = malloc(FIELD_OFFSET(MimeHtmlBinding, url[url.mhtml_len+1]));
     if(!binding)
         return E_OUTOFMEMORY;
     memcpy(binding->url, url.mhtml, url.mhtml_len*sizeof(WCHAR));
@@ -496,7 +478,7 @@ static HRESULT WINAPI MimeHtmlProtocol_Start(IInternetProtocol *iface, const WCH
 
     hres = CreateURLMoniker(NULL, binding->url, &mon);
     if(FAILED(hres)) {
-        heap_free(binding);
+        free(binding);
         return hres;
     }
 
@@ -538,14 +520,14 @@ static HRESULT WINAPI MimeHtmlProtocol_Continue(IInternetProtocol *iface, PROTOC
 static HRESULT WINAPI MimeHtmlProtocol_Abort(IInternetProtocol *iface, HRESULT hrReason, DWORD dwOptions)
 {
     MimeHtmlProtocol *This = impl_from_IInternetProtocol(iface);
-    FIXME("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
+    FIXME("(%p)->(%08lx %08lx)\n", This, hrReason, dwOptions);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI MimeHtmlProtocol_Terminate(IInternetProtocol *iface, DWORD dwOptions)
 {
     MimeHtmlProtocol *This = impl_from_IInternetProtocol(iface);
-    TRACE("(%p)->(%08x)\n", This, dwOptions);
+    TRACE("(%p)->(%08lx)\n", This, dwOptions);
     return S_OK;
 }
 
@@ -569,7 +551,7 @@ static HRESULT WINAPI MimeHtmlProtocol_Read(IInternetProtocol *iface, void* pv, 
     ULONG read = 0;
     HRESULT hres;
 
-    TRACE("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
+    TRACE("(%p)->(%p %lu %p)\n", This, pv, cb, pcbRead);
 
     hres = IStream_Read(This->stream, pv, cb, &read);
     if(pcbRead)
@@ -584,14 +566,14 @@ static HRESULT WINAPI MimeHtmlProtocol_Seek(IInternetProtocol *iface, LARGE_INTE
         DWORD dwOrigin, ULARGE_INTEGER* plibNewPosition)
 {
     MimeHtmlProtocol *This = impl_from_IInternetProtocol(iface);
-    FIXME("(%p)->(%d %d %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
+    FIXME("(%p)->(%ld %ld %p)\n", This, dlibMove.LowPart, dwOrigin, plibNewPosition);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI MimeHtmlProtocol_LockRequest(IInternetProtocol *iface, DWORD dwOptions)
 {
     MimeHtmlProtocol *This = impl_from_IInternetProtocol(iface);
-    FIXME("(%p)->(%d)\n", This, dwOptions);
+    FIXME("(%p)->(%ld)\n", This, dwOptions);
     return S_OK;
 }
 
@@ -646,7 +628,7 @@ static HRESULT WINAPI MimeHtmlProtocolInfo_ParseUrl(IInternetProtocolInfo *iface
         DWORD* pcchResult, DWORD dwReserved)
 {
     MimeHtmlProtocol *This = impl_from_IInternetProtocolInfo(iface);
-    FIXME("(%p)->(%s %d %x %p %d %p %d)\n", This, debugstr_w(pwzUrl), ParseAction,
+    FIXME("(%p)->(%s %d %lx %p %ld %p %ld)\n", This, debugstr_w(pwzUrl), ParseAction,
           dwParseFlags, pwzResult, cchResult, pcchResult, dwReserved);
     return INET_E_DEFAULT_ACTION;
 }
@@ -656,12 +638,12 @@ static HRESULT WINAPI MimeHtmlProtocolInfo_CombineUrl(IInternetProtocolInfo *ifa
         DWORD cchResult, DWORD* pcchResult, DWORD dwReserved)
 {
     MimeHtmlProtocol *This = impl_from_IInternetProtocolInfo(iface);
-    size_t len = ARRAY_SIZE(mhtml_prefixW);
+    size_t len = lstrlenW(mhtml_prefixW);
     mhtml_url_t url;
     WCHAR *p;
     HRESULT hres;
 
-    TRACE("(%p)->(%s %s %08x %p %d %p %d)\n", This, debugstr_w(pwzBaseUrl),
+    TRACE("(%p)->(%s %s %08lx %p %ld %p %ld)\n", This, debugstr_w(pwzBaseUrl),
           debugstr_w(pwzRelativeUrl), dwCombineFlags, pwzResult, cchResult,
           pcchResult, dwReserved);
 
@@ -669,27 +651,26 @@ static HRESULT WINAPI MimeHtmlProtocolInfo_CombineUrl(IInternetProtocolInfo *ifa
     if(FAILED(hres))
         return hres;
 
-    if(!_wcsnicmp(pwzRelativeUrl, mhtml_prefixW, ARRAY_SIZE(mhtml_prefixW))) {
+    if(!wcsnicmp(pwzRelativeUrl, mhtml_prefixW, len)) {
         FIXME("Relative URL is mhtml protocol\n");
         return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
     }
 
     len += url.mhtml_len;
     if(*pwzRelativeUrl)
-        len += lstrlenW(pwzRelativeUrl) + ARRAY_SIZE(mhtml_separatorW);
+        len += lstrlenW(pwzRelativeUrl) + lstrlenW(mhtml_separatorW);
     if(len >= cchResult) {
         *pcchResult = 0;
         return E_FAIL;
     }
 
-    memcpy(pwzResult, mhtml_prefixW, sizeof(mhtml_prefixW));
-    p = pwzResult + ARRAY_SIZE(mhtml_prefixW);
+    lstrcpyW(pwzResult, mhtml_prefixW);
+    p = pwzResult + lstrlenW(mhtml_prefixW);
     memcpy(p, url.mhtml, url.mhtml_len*sizeof(WCHAR));
     p += url.mhtml_len;
     if(*pwzRelativeUrl) {
-        memcpy(p, mhtml_separatorW, sizeof(mhtml_separatorW));
-        p += ARRAY_SIZE(mhtml_separatorW);
-        lstrcpyW(p, pwzRelativeUrl);
+        lstrcpyW(p, mhtml_separatorW);
+        lstrcatW(p, pwzRelativeUrl);
     }else {
         *p = 0;
     }
@@ -702,7 +683,7 @@ static HRESULT WINAPI MimeHtmlProtocolInfo_CompareUrl(IInternetProtocolInfo *ifa
         LPCWSTR pwzUrl2, DWORD dwCompareFlags)
 {
     MimeHtmlProtocol *This = impl_from_IInternetProtocolInfo(iface);
-    FIXME("(%p)->(%s %s %08x)\n", This, debugstr_w(pwzUrl1), debugstr_w(pwzUrl2), dwCompareFlags);
+    FIXME("(%p)->(%s %s %08lx)\n", This, debugstr_w(pwzUrl1), debugstr_w(pwzUrl2), dwCompareFlags);
     return E_NOTIMPL;
 }
 
@@ -711,7 +692,7 @@ static HRESULT WINAPI MimeHtmlProtocolInfo_QueryInfo(IInternetProtocolInfo *ifac
         DWORD dwReserved)
 {
     MimeHtmlProtocol *This = impl_from_IInternetProtocolInfo(iface);
-    FIXME("(%p)->(%s %08x %08x %p %d %p %d)\n", This, debugstr_w(pwzUrl), QueryOption, dwQueryFlags, pBuffer,
+    FIXME("(%p)->(%s %08x %08lx %p %ld %p %ld)\n", This, debugstr_w(pwzUrl), QueryOption, dwQueryFlags, pBuffer,
           cbBuffer, pcbBuf, dwReserved);
     return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
 }
@@ -730,7 +711,7 @@ HRESULT MimeHtmlProtocol_create(IUnknown *outer, void **obj)
 {
     MimeHtmlProtocol *protocol;
 
-    protocol = heap_alloc(sizeof(*protocol));
+    protocol = malloc(sizeof(*protocol));
     if(!protocol)
         return E_OUTOFMEMORY;
 
