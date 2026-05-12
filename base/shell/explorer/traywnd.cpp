@@ -1601,6 +1601,10 @@ ChangePos:
         RECT rcScreen;
         SIZE WndSize, EdgeSize, DlgFrameSize;
         SIZE StartBtnSize = m_StartButton.GetSize();
+        REGSHELLSTATE rss = { 0 };
+        DWORD dwSize = sizeof(REGSHELLSTATE);
+        DWORD dwType;
+        LSTATUS err;
 
         EdgeSize.cx = GetSystemMetrics(SM_CXEDGE);
         EdgeSize.cy = GetSystemMetrics(SM_CYEDGE);
@@ -1671,6 +1675,26 @@ ChangePos:
         /* Determine which monitor we are on. It shouldn't matter which docked
            position rectangle we use */
         m_Monitor = GetMonitorFromRect(&m_TrayRects[ABE_LEFT]);
+
+        /* See if we have a good ShellState registry entry. If not, create one. */
+        err = SHGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                          L"ShellState", &dwType, &rss, &dwSize);
+        if (err != ERROR_SUCCESS || dwType != REG_BINARY || rss.dwSize < REGSHELLSTATE_SIZE)
+        {
+            ZeroMemory(&rss, REGSHELLSTATE_SIZE);
+            rss.dwSize = REGSHELLSTATE_SIZE;
+            rss.ss.fDoubleClickInWebView = 1;
+            rss.ss.fShowCompColor = 1;
+            rss.ss.fShowExtensions = 1;
+            rss.ss.fShowAllObjects = 1;
+            rss.ss.fShowInfoTip = 1;
+            rss.ss.iSortDirection = 1;
+            rss.ss.fStartPanelOn = 1;
+            rss.ss.version = REGSHELLSTATE_VERSION;
+            TRACE("No Registry ShellState, so setting Defaults\n");
+            SHSetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                        L"ShellState", REG_BINARY, &rss, REGSHELLSTATE_SIZE);
+        }
     }
 
     VOID AlignControls(IN PRECT prcClient OPTIONAL)
