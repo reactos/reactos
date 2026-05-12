@@ -17,6 +17,13 @@
 #define CurrentArchitecture L"ppc"
 #endif
 
+template<class T> struct Deleter
+{
+    Deleter(T ptr) : p(ptr) {}
+    ~Deleter () { delete p; }
+    T p;
+};
+
 static inline HRESULT
 HResultFromWin32(UINT Error)
 {

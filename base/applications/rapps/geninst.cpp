@@ -850,12 +850,11 @@ HRESULT
 ExtractArchiveForExecution(PCWSTR pszArchive, const CStringW &PackageName, CStringW &TempDir, CStringW &App)
 {
     WCHAR TempDirBuf[MAX_PATH], UniqueDir[MAX_PATH];
-    CAvailableAppDB db;
-    CAvailableApplicationInfo *pAppInfo = db.FindAvailableByPackageName(PackageName);
+    CAvailableApplicationInfo *pAppInfo = CAppDB::CreateAvailableAppInstance(PackageName);
+    Deleter <CAvailableApplicationInfo*>del(pAppInfo);
     if (!pAppInfo)
         return HResultFromWin32(ERROR_NOT_FOUND);
     CConfigParser *pCfg = pAppInfo->GetConfigParser();
-
     if (!GetTempPathW(_countof(TempDirBuf), TempDirBuf))
         return E_FAIL;
     wsprintfW(UniqueDir, L"~%s-%u", RAPPS_NAME, GetCurrentProcessId());

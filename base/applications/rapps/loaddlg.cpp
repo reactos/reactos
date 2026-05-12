@@ -586,7 +586,6 @@ CDownloadManager::Add(const DownloadInfo &Info)
 
     if (!Info.szDependencies.IsEmpty())
     {
-        CAvailableAppDB db;
         CStringW deps = Info.szDependencies;
         for (int pos = 1; pos > 0; deps = deps.Mid(pos + 1))
         {
@@ -599,7 +598,8 @@ CDownloadManager::Add(const DownloadInfo &Info)
             if (suffix > 0)
                 pkg = pkg.Left(suffix);
 
-            CAvailableApplicationInfo *pApp = db.FindAvailableByPackageName(pkg);
+            CAvailableApplicationInfo *pApp = CAppDB::CreateAvailableAppInstance(pkg);
+            Deleter <CAvailableApplicationInfo*>del(pApp);
             if (!pApp || pApp->IsInstalled())
                 continue;
             // Add the dependency before the application in the list

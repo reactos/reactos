@@ -47,18 +47,11 @@ class CAppDB
     CreateInstalledAppByRegistryKey(LPCWSTR Name);
     static CInstalledApplicationInfo *
     CreateInstalledAppInstance(LPCWSTR KeyName, BOOL User, REGSAM WowSam);
+    static CAvailableApplicationInfo *
+    CreateAvailableAppInstance(const CStringW &PkgName, PCWSTR DBPath = NULL);
 
     size_t GetAvailableCount() const
     {
         return m_Available.GetCount();
-    }
-};
-
-class CAvailableAppDB : public CAppDB
-{
-  public:
-    CAvailableAppDB() : CAppDB(CAppDB::GetDefaultPath())
-    {
-        UpdateAvailable();
     }
 };
