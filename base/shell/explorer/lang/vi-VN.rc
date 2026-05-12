@@ -1,0 +1,219 @@
+/*
+ * PROJECT:      ReactOS Explorer
+ * LICENSE:      LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:      Vietnamese resource file
+ * TRANSLATOR:   Nguyen Duc Thinh <ducthinh100812@gmail.com>
+ */
+
+LANGUAGE LANG_VIETNAMESE, SUBLANG_DEFAULT
+
+IDM_TRAYWND MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "Điều &chỉnh Ngày/Giờ", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Tùy chỉnh Thông báo...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "Sắp xếp cửa sổ dạng &thác nước", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Sắp xếp cửa sổ theo chiều &ngang", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Sắp xếp cửa sổ theo chiều &dọc", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "Hiển thị &màn hình nền", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Hoàn tác", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
+        MENUITEM "Trình quản lý &tác vụ", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&Khóa thanh tác vụ", ID_LOCKTASKBAR
+        MENUITEM "T&huộc tính", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
+IDM_STARTMENU MENUEX
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&Chương trình", IDM_PROGRAMS
+        BEGIN
+            MENUITEM "(Trống)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Yêu thích", IDM_FAVORITES
+        BEGIN
+            MENUITEM "(Trống)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Tài liệu", IDM_DOCUMENTS
+        BEGIN
+            MENUITEM "(Trống)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Cài đặt", IDM_SETTINGS
+        BEGIN
+            MENUITEM "&Bảng điều khiển", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Bảo mật...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "Kết nối &mạng", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "Máy &in và Máy Fax", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "Thanh tác vụ và &Trình đơn Start", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+        END
+        MENUITEM "&Tìm kiếm", IDM_SEARCH, MFT_STRING, MFS_ENABLED
+        MENUITEM "Trợ giúp và &Hỗ trợ", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Chạy...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "Đồng &bộ hóa", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "Đăng &xuất %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Ngắt kết nối...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Tháo &máy tính", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "Tắ&t máy...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Thanh tác vụ"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX "Diện mạo thanh tác vụ", IDC_STATIC, 6, 6, 240, 120
+    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
+    AUTOCHECKBOX "&Khóa thanh tác vụ", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "&Tự động ẩn thanh tác vụ", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "&Giữ thanh tác vụ luôn nằm trên các cửa sổ khác", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "&Gom nhóm các nút tương tự trên thanh tác vụ", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "Hiện thanh Khởi động &nhanh", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
+    AUTOCHECKBOX "Dùng biểu tượng &nhỏ", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
+END
+
+IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Trình đơn Start"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
+    AUTORADIOBUTTON "Trình đơn &Start", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    LTEXT "Kiểu trình đơn này giúp bạn truy cập dễ dàng vào các thư mục, chương trình yêu thích và tìm kiếm.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
+    PUSHBUTTON "&Tùy chỉnh...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
+    AUTORADIOBUTTON "Trình đơn Start &cổ điển", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
+    LTEXT "Kiểu trình đơn này mang lại giao diện và chức năng cổ điển.", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
+    PUSHBUTTON "&Tùy chỉnh...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
+END
+
+IDD_TASKBARPROP_NOTIFY DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Vùng thông báo"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 6, 229, 24
+    GROUPBOX "Biểu tượng", IDC_STATIC, 6, 36, 240, 56
+    LTEXT "Bạn có thể giữ cho vùng thông báo gọn gàng bằng cách ẩn các biểu tượng mà bạn không nhấp vào gần đây.", IDC_STATIC, 13, 48, 223, 16
+    AUTOCHECKBOX "Ẩ&n các biểu tượng không hoạt động", IDC_TASKBARPROP_HIDEICONS, 13, 70, 135, 10
+    PUSHBUTTON "&Tùy chỉnh...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14
+    GROUPBOX "Biểu tượng hệ thống", IDC_STATIC, 6, 99, 240, 56
+    LTEXT "Chọn các biểu tượng hệ thống luôn luôn hiển thị.", IDC_STATIC, 13, 113, 223, 8
+    AUTOCHECKBOX "Đồ&ng hồ", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
+    AUTOCHECKBOX "Hiện số giây", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
+    AUTOCHECKBOX "&Màn hình nền", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
+END
+
+IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Tùy chỉnh thông báo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT            "ReactOS hiển thị các biểu tượng cho các thông báo đang hoạt động hoặc khẩn cấp, và ẩn các biểu tượng không hoạt động. Bạn có thể thay đổi hành vi này cho các mục trong danh sách dưới đây.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "Chọn một mục, sau đó chọn hành vi thông báo của nó:", IDC_STATIC, 6, 40, 220, 10
+    CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
+    COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
+    PUSHBUTTON       "&Khôi phục mặc định", IDC_TASKBARPROP_NOTIREST, 150, 188, 76, 14
+    DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
+    PUSHBUTTON       "Hủy bỏ", IDCANCEL, 176, 220, 50, 14
+END
+
+IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Tùy chỉnh trình đơn Start cổ điển"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Trình đơn Start", IDC_STATIC, 8, 7, 218, 114
+    ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
+    LTEXT            "Bạn có thể tùy chỉnh trình đơn Start bằng cách thêm hoặc xóa các mục.", IDC_STATIC, 48, 17, 108, 39
+    PUSHBUTTON       "&Thêm...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
+    PUSHBUTTON       "&Xóa...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
+    PUSHBUTTON       "&Nâng cao", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
+    PUSHBUTTON       "Sắp &xếp", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
+    ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
+    LTEXT            "Để xóa hồ sơ về các tài liệu, chương trình và trang web đã truy cập gần đây, hãy nhấn Xóa sạch.", IDC_STATIC, 49, 85, 108, 33
+    PUSHBUTTON       "Xóa &sạch", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
+    LTEXT            "Các tùy chọn trình đơn Start &nâng cao:", IDC_STATIC, 8, 129, 150, 8
+    CONTROL          "StartMenuSettings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
+    PUSHBUTTON       "Hủy bỏ", IDCANCEL, 176, 220, 50, 14
+END
+
+IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
+CAPTION "Cảnh báo tên tệp"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON    "&Bỏ qua", IDIGNORE, 215, 60, 50, 14
+    PUSHBUTTON       "Đổi &tên", IDC_FILE_RENAME, 159, 60, 50, 14
+    LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
+    AUTOCHECKBOX      "&Không thực hiện kiểm tra này khi khởi động", IDC_NOTCHECK, 7, 62, 160, 10
+    ICON             32515, IDC_STATIC, 7, 7, 21, 20
+    LTEXT            "Có một tệp hoặc thư mục trên máy tính của bạn tên là %s, điều này có thể khiến một số ứng dụng hoạt động không đúng. Đổi tên nó thành %s sẽ giải quyết được vấn đề. Bạn có muốn đổi tên nó ngay bây giờ không?", IDC_STATIC, 34, 7, 224, 37
+END
+
+IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
+STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
+CAPTION "Nâng cao"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Cài đặt trình đơn Start ", IDC_STATIC, 7, 7, 238, 42
+    AUTOCHECKBOX      "&Mở trình đơn con khi tôi di chuột dừng trên chúng", IDC_AUTOOPEN, 14, 21, 224, 10
+    AUTOCHECKBOX      "Làm nổi bật các chương trình &mới cài đặt", IDC_HIGHLIGHT, 14, 35, 224, 10
+    LTEXT            "Các mục trên trình đơn &Start:", IDC_STATIC, 7, 53, 238, 8
+    CONTROL          "StartMenuSettings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
+    GROUPBOX         "Tài liệu gần đây ", IDC_STATIC, 7, 133, 238, 56
+    LTEXT            "Chọn tùy chọn này để truy cập nhanh vào các tài liệu bạn đã mở gần đây nhất. Việc xóa danh sách này không xóa các tài liệu đó.", IDC_STATIC, 14, 144, 224, 21
+    AUTOCHECKBOX      "Liệt kê các tài liệu đã mở gần &đây nhất", IDC_RECENTLY, 14, 168, 160, 10
+    PUSHBUTTON       "Xóa &danh sách", IDC_CLEAR, 182, 168, 55, 14
+END
+
+IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
+CAPTION "Chung"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX         "Chọn kích cỡ biểu tượng cho chương trình ", IDC_STATIC, 7, 7, 238, 37
+    ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
+    ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
+    AUTORADIOBUTTON  "Biểu tượng &lớn", IDC_CHOOSELARGE, 43, 25, 60, 10
+    AUTORADIOBUTTON  "Biểu tượng &nhỏ", IDC_CHOOSESMALL, 177, 25, 60, 10, NOT WS_TABSTOP
+    GROUPBOX         "Chương trình ", IDC_STATIC, 7, 49, 238, 70
+    LTEXT            "Trình đơn Start chứa các lối tắt đến các chương trình bạn hay dùng nhất. Việc xóa danh sách lối tắt không làm xóa chương trình.", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "&Số lượng chương trình trên Start:", IDC_STATIC, 14, 86, 115, 8
+    EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
+    CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
+    PUSHBUTTON       "Xóa &danh sách", IDC_CLEARLIST, 182, 98, 57, 14
+    GROUPBOX         "Hiển thị trên trình đơn Start ", IDC_STATIC, 7, 126, 238, 63
+    AUTOCHECKBOX      "&Internet:", IDC_SHOWINTERNET, 14, 140, 42, 10
+    COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+    AUTOCHECKBOX      "&Thư điện tử:", IDC_SHOWEMAIL, 14, 157, 50, 10
+    COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+    IDS_START "Bắt đầu"
+    IDS_PROPERTIES "T&huộc tính"
+    IDS_OPEN_ALL_USERS "&Mở cho tất cả người dùng"
+    IDS_EXPLORE_ALL_USERS "&Khám phá cho tất cả người dùng"
+    IDS_STARTUP_ERROR "Hệ thống không thể khởi động explorer vì sổ đăng ký (registry) bị hỏng hoặc không khả dụng."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Thanh tác vụ và Trình đơn Start"
+    IDS_RESTORE_ALL "&Hiện các cửa sổ đang mở"
+    IDS_TRAYWND_UNDO_CASCADE "&Hoàn tác sắp xếp thác nước"
+    IDS_TRAYWND_UNDO_TILE "&Hoàn tác sắp xếp ô cờ"
+    IDS_TRAYDESKBTN_TOOLTIP "Hiện Màn hình nền/Cửa sổ"
+END

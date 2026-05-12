@@ -1,0 +1,40 @@
+/* Vietnamese (vi-VN) translation */
+LANGUAGE LANG_VIETNAMESE, SUBLANG_DEFAULT
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS - Chào mừng"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Chào mừng bạn đến với Hệ điều hành ReactOS.\n\nNhấp vào một chủ đề ở bên trái."
+    IDS_FONTNAME "Tahoma"
+    IDS_CHECKTEXT "&Hiển thị lại hộp thoại này"
+    IDS_CLOSETEXT "&Thoát"
+END
+
+/* Topic buttons */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_BUTTON0 "&Cài đặt ReactOS"
+    IDS_TOPIC_BUTTON1 "&Xem nội dung đĩa CD"
+    IDS_TOPIC_BUTTON2 "&Thoát"
+END
+
+/* Topic titles */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_TITLE0 "Cài đặt ReactOS"
+    IDS_TOPIC_TITLE1 "Xem nội dung đĩa CD"
+    IDS_TOPIC_TITLE2 "Thoát"
+END
+
+/* Topic descriptions */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_DESC0 "Tạo một bản cài đặt ReactOS mới trên máy tính của bạn hoặc nâng cấp bản cài đặt hiện có."
+    IDS_TOPIC_DESC1 "Xem nội dung đĩa CD."
+    IDS_TOPIC_DESC2 "Nhấp để thoát khỏi ứng dụng này."
+END
+

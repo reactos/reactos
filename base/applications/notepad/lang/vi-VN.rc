@@ -1,0 +1,191 @@
+LANGUAGE LANG_VIETNAMESE, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
+    "N", CMD_NEW_WINDOW, VIRTKEY, CONTROL, SHIFT
+    "^O", CMD_OPEN
+    "^P", CMD_PRINT
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F3, CMD_SEARCH_PREV, VIRTKEY, SHIFT
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&Tệp"
+    BEGIN
+        MENUITEM "&Mới\tCtrl+N", CMD_NEW
+        MENUITEM "Cửa sổ &mới\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "&Mở...\tCtrl+O", CMD_OPEN
+        MENUITEM "&Lưu\tCtrl+S", CMD_SAVE
+        MENUITEM "Lưu &dưới dạng...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Thiết lập &trang...", CMD_PAGE_SETUP
+        MENUITEM "&In...\tCtrl+P", CMD_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "Th&oát", CMD_EXIT
+    END
+    POPUP "&Chỉnh sửa"
+    BEGIN
+        MENUITEM "&Hoàn tác\tCtrl+Z", CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cắ&t\tCtrl+X", CMD_CUT
+        MENUITEM "&Sao chép\tCtrl+C", CMD_COPY
+        MENUITEM "&Dán\tCtrl+V", CMD_PASTE
+        MENUITEM "&Xóa\tDel", CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Tìm...\tCtrl+F", CMD_SEARCH
+        MENUITEM "Tìm &tiếp\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Thay &thế...\tCtrl+H", CMD_REPLACE
+        MENUITEM "&Đi đến...\tCtrl+G", CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Chọn &tất cả\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Thời gian/&Ngày tháng\tF5", CMD_TIME_DATE
+    END
+    POPUP "Định &dạng"
+    BEGIN
+        MENUITEM "&Ngắt dòng", CMD_WRAP
+        MENUITEM "&Phông chữ...", CMD_FONT
+    END
+    POPUP "&Xem"
+    BEGIN
+        MENUITEM "Thanh &trạng thái", CMD_STATUSBAR
+    END
+    POPUP "Trợ &giúp"
+    BEGIN
+        MENUITEM "Xem trợ &giúp", CMD_HELP_CONTENTS
+        MENUITEM SEPARATOR
+        MENUITEM "&Giới thiệu về Notepad", CMD_HELP_ABOUT_NOTEPAD
+    END
+END
+
+/* Dialog 'Page setup' */
+DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+FONT 8, "MS Shell Dlg"
+CAPTION "Thiết lập trang"
+BEGIN
+    GROUPBOX "Xem trước", 0, 240, 6, 120, 153, BS_GROUPBOX
+    CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
+    CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
+    CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
+    GROUPBOX "Giấy", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "&Kích cỡ:", stc2, 16, 22, 36, 8
+    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Nguồn:", stc3, 16, 42, 36, 8
+    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "Hướng giấy", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "Khổ &dọc", rad1, 16, 80, 52, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Khổ &ngang", rad2, 16, 100, 52, 12
+    GROUPBOX "Lề (mm)", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "Trái:", stc15, 88, 82, 30, 8
+    EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "Phải:", stc16, 159, 82, 30, 8
+    EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "Trên:", stc17, 88, 102, 30, 8
+    EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "Dưới:", stc18, 159, 102, 30, 8
+    EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Tiêu đề trên:", 0x140, 8, 132, 45, 15
+    EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Tiêu đề &dưới:", 0x142, 8, 149, 45, 15
+    EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "Trợ giúp", IDHELP, 8, 170, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    PUSHBUTTON "Hủy bỏ", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "&Máy in...", psh3, 310, 170, 50, 14
+END
+
+/* Dialog 'Encoding' */
+DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Bảng mã"
+BEGIN
+    COMBOBOX ID_ENCODING, 124, 0, 125, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Bảng mã:", 0x155, 65, 2, 41, 12
+    COMBOBOX ID_EOLN, 124, 18, 125, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Kết thúc dòng:", 0x156, 65, 20, 45, 12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOGEX 0, 0, 165, 50
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Đi đến dòng"
+BEGIN
+    LTEXT "Số dòng:", 0x155, 5, 12, 41, 12
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, ES_NUMBER
+    DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15
+    PUSHBUTTON "Hủy bỏ", IDCANCEL, 120, 30, 40, 15
+END
+
+DIALOG_PRINTING DIALOG 0, 0, 160, 100
+CAPTION "Đang in"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT "Tiến trình in đang bắt đầu...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "(Tên tệp)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
+    CTEXT "Trang %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
+    PUSHBUTTON "Hủy bỏ", IDCANCEL, 50, 75, 60, 20
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PAGESETUP_HEADERVALUE "&f"
+    STRING_PAGESETUP_FOOTERVALUE "Trang &p"
+    STRING_NOTEPAD "Notepad"
+    STRING_ERROR "LỖI"
+    STRING_WARNING "CẢNH BÁO"
+    STRING_INFO "Thông tin"
+    STRING_UNTITLED "Chưa đặt tên"
+    STRING_ALL_FILES "Tất cả các tệp (*.*)"
+    STRING_TEXT_FILES_TXT "Tệp văn bản (*.txt)"
+    STRING_TOOLARGE "Tệp '%s' quá lớn đối với Notepad.\n\
+Vui lòng sử dụng một trình soạn thảo khác."
+    STRING_NOTEXT "Bạn chưa nhập bất kỳ văn bản nào.\n\
+Vui lòng nhập nội dung nào đó và thử lại."
+    STRING_DOESNOTEXIST "Tệp '%s'\nkhông tồn tại.\n\n\
+Bạn có muốn tạo tệp mới không?"
+    STRING_NOTSAVED "Tệp '%s'\nđã được thay đổi.\n\n\
+Bạn có muốn lưu các thay đổi không?"
+    STRING_NOTFOUND "Không thể tìm thấy '%s'."
+    STRING_OUT_OF_MEMORY "Không đủ bộ nhớ để hoàn thành tác vụ này.\n\
+Hãy đóng một hoặc nhiều ứng dụng để tăng dung lượng bộ nhớ trống."
+    STRING_CANNOTFIND "Không thể tìm thấy '%s'"
+    STRING_ANSI "ANSI"
+    STRING_UNICODE "Unicode"
+    STRING_UNICODE_BE "Unicode (Big Endian)"
+    STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 có BOM"
+    STRING_CRLF "Windows (CR + LF)"
+    STRING_LF "Unix (LF)"
+    STRING_CR "Mac (CR)"
+    STRING_LINE_COLUMN "Dòng %d, cột %d"
+    STRING_PRINTERROR "Không thể in tệp '%s'.\n\nHãy đảm bảo rằng máy in đã được bật và được cấu hình đúng cách."
+    STRING_DEFAULTFONT "Lucida Console"
+    STRING_LINE_NUMBER_OUT_OF_RANGE "Số dòng được chỉ định nằm ngoài phạm vi."
+    STRING_NOWPRINTING "Đang in trang..."
+    STRING_PRINTCANCELING "Tiến trình in đang được hủy bỏ..."
+    STRING_PRINTCOMPLETE "Quá trình in đã hoàn tất thành công."
+    STRING_PRINTCANCELED "Quá trình in đã bị hủy bỏ."
+    STRING_PRINTFAILED "In thất bại."
+
+    STRING_TEXT_DOCUMENT "Tài liệu văn bản"
+    STRING_NOTEPAD_AUTHORS "Bản quyền 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
+END
+
+
+
+

@@ -1,0 +1,273 @@
+/*
+ * PROJECT:      ReactOS Applications Manager
+ * LICENSE:      GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:      Vietnamese resource file
+ * TRANSLATORS:  Nguyen Duc Thinh <ducthinh100812@gmail.com>
+ */
+
+LANGUAGE LANG_VIETNAMESE, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Tệp"
+    BEGIN
+        MENUITEM "&Cài đặt", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "Th&oát", ID_EXIT
+    END
+    POPUP "&Chương trình"
+    BEGIN
+        MENUITEM "&Cài đặt\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Gỡ cài đặt\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Thay đổi", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Xóa khỏi Registry", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Làm mới\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Cập nhật cơ sở &dữ liệu\tCtrl+F5", ID_RESETDB
+    END
+    POPUP "Trợ &giúp"
+    BEGIN
+        MENUITEM "Trợ giúp\tF1", ID_HELP, GRAYED
+        MENUITEM "&Giới thiệu", ID_ABOUT
+    END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Mở liên kết trong trình duyệt", ID_OPEN_LINK
+        MENUITEM "&Sao chép liên kết vào bộ nhớ tạm", ID_COPY_LINK
+    END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Cài đặt"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Chung", -1, 4, 2, 240, 61
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
+    GROUPBOX "Tải xuống", -1, 4, 65, 240, 51
+    LTEXT "Thư mục tải xuống:", -1, 16, 75, 100, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
+    PUSHBUTTON "&Chọn", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "&Xóa bộ cài sau khi cài đặt xong", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "Nguồn phần mềm", -1, 4, 118, 240, 46
+    AUTORADIOBUTTON "Dùng mặc định", IDC_SOURCE_DEFAULT, 15, 132, 74, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Nguồn chỉ định", IDC_USE_SOURCE, 15, 147, 74, 10
+    EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
+    GROUPBOX "Proxy", -1, 4, 166, 240, 76
+    AUTORADIOBUTTON "Dùng cài đặt proxy hệ thống", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Trực tiếp (Không proxy)", IDC_NO_PROXY, 15, 195, 210, 10
+    AUTORADIOBUTTON "Proxy", IDC_USE_PROXY, 15, 210, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "Không proxy cho", -1, 26, 226, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Mặc định", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
+    PUSHBUTTON "Hủy bỏ", IDCANCEL, 181, 245, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Cài đặt chương trình"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "&Cài đặt từ đĩa (CD hoặc DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Tải xuống và cài đặt", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Hủy bỏ", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Đang tải %ls…"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Hủy bỏ", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_INSTALL "Cài đặt"
+    IDS_TOOLTIP_UNINSTALL "Gỡ cài đặt"
+    IDS_TOOLTIP_MODIFY "Thay đổi"
+    IDS_TOOLTIP_SELECT_ALL "Chọn/Bỏ chọn tất cả"
+    IDS_TOOLTIP_SETTINGS "Cài đặt"
+    IDS_TOOLTIP_REFRESH "Làm mới"
+    IDS_TOOLTIP_UPDATE_DB "Cập nhật cơ sở dữ liệu"
+    IDS_TOOLTIP_EXIT "Thoát"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_NAME "Tên"
+    IDS_APP_INST_VERSION "Phiên bản"
+    IDS_APP_DESCRIPTION "Mô tả"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INFO_VERSION "\nPhiên bản: "
+    IDS_INFO_DESCRIPTION "\nMô tả: "
+    IDS_INFO_PUBLISHER "\nNhà phát hành: "
+    IDS_INFO_HELPLINK "\nLiên kết trợ giúp: "
+    IDS_INFO_HELPPHONE "\nĐiện thoại hỗ trợ: "
+    IDS_INFO_README "\nTệp Readme: "
+    IDS_INFO_REGOWNER "\nChủ sở hữu đã đăng ký: "
+    IDS_INFO_PRODUCTID "\nMã sản phẩm: "
+    IDS_INFO_CONTACT "\nLiên hệ: "
+    IDS_INFO_UPDATEINFO "\nThông tin cập nhật: "
+    IDS_INFO_INFOABOUT "\nThông tin về: "
+    IDS_INFO_COMMENTS "\nBình luận: "
+    IDS_INFO_INSTLOCATION "\nVị trí cài đặt: "
+    IDS_INFO_INSTALLSRC "\nNguồn cài đặt: "
+    IDS_INFO_UNINSTALLSTR "\nChuỗi gỡ cài đặt: "
+    IDS_INFO_MODIFYPATH "\nĐường dẫn thay đổi: "
+    IDS_INFO_INSTALLDATE "\nNgày cài đặt: "
+    IDS_AINFO_PACKAGE_NAME "\nTên gói: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_AINFO_VERSION "\nPhiên bản: "
+    IDS_AINFO_AVAILABLEVERSION "\nPhiên bản hiện có: "
+    IDS_AINFO_DESCRIPTION "\nMô tả: "
+    IDS_AINFO_SIZE "\nDung lượng: "
+    IDS_AINFO_URLSITE "\nTrang chủ: "
+    IDS_AINFO_LICENSE "\nGiấy phép: "
+    IDS_AINFO_URLDOWNLOAD "\nTải xuống: "
+    IDS_AINFO_LANGUAGES "\nNgôn ngữ: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAT_AUDIO "Âm thanh"
+    IDS_CAT_DEVEL "Phát triển"
+    IDS_CAT_DRIVERS "Trình điều khiển"
+    IDS_CAT_EDU "Giáo dục & Giải trí"
+    IDS_CAT_ENGINEER "Kỹ thuật"
+    IDS_CAT_FINANCE "Tài chính"
+    IDS_CAT_GAMES "Trò chơi & Vui vẻ"
+    IDS_CAT_GRAPHICS "Đồ họa"
+    IDS_CAT_INTERNET "Internet & Mạng"
+    IDS_CAT_LIBS "Thư viện"
+    IDS_CAT_OFFICE "Văn phòng"
+    IDS_CAT_OTHER "Khác"
+    IDS_CAT_SCIENCE "Khoa học"
+    IDS_CAT_TOOLS "Công cụ"
+    IDS_CAT_VIDEO "Video"
+    IDS_CAT_THEMES "Giao diện"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "Trình quản lý ứng dụng ReactOS"
+    IDS_APP_AUTHORS "Bản quyền 2009 Dmitry Chapyshev"
+    IDS_WELCOME_TITLE "Chào mừng bạn đến với Trình quản lý ứng dụng ReactOS!"
+    IDS_WELCOME_TEXT "Chọn một danh mục bên trái, sau đó chọn một ứng dụng để cài đặt hoặc gỡ bỏ.\nTrang web ReactOS: "
+    IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Thêm/Xóa chương trình"
+    IDS_APPWIZ_TEXT1 "Chọn ""Ứng dụng"" hoặc ""Bản cập nhật"" để xem danh sách các ứng dụng hoặc bản cập nhật đã cài đặt trên hệ thống."
+    IDS_APPWIZ_TEXT2 "Để gỡ bỏ một chương trình hoặc thay đổi các thành phần đã cài đặt của nó, hãy chọn nó từ danh sách và nhấn vào ""Gỡ cài đặt"" hoặc ""Thay đổi""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Tìm kiếm…"
+    IDS_APPS_COUNT "Số lượng ứng dụng: %d"
+    IDS_APPS_SELECT_COUNT "; Đã chọn: %d"
+    IDS_INSTALLED "Đã cài đặt"
+    IDS_AVAILABLEFORINST "Có thể cài đặt"
+    IDS_UPDATES "Bản cập nhật"
+    IDS_APPLICATIONS "Ứng dụng"
+    IDS_CHOOSE_FOLDER_TEXT "Chọn thư mục sẽ dùng để lưu trữ các tệp tải xuống:"
+    IDS_CHOOSE_FOLDER_ERROR "Thư mục bạn chỉ định không tồn tại. Bạn có muốn tạo nó không?"
+    IDS_URL_INVALID "URL bạn chỉ định không hợp lệ hoặc không được hỗ trợ. Vui lòng sửa lại!"
+    IDS_APP_REG_REMOVE "Bạn có chắc chắn muốn xóa dữ liệu của chương trình đã cài đặt này khỏi registry không?"
+    IDS_INFORMATION "Thông tin"
+    IDS_UNABLE_TO_DOWNLOAD "Không thể tải xuống gói! Không tìm thấy địa chỉ!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Không thể tải xuống gói! Hãy kiểm tra kết nối Internet!"
+    IDS_UNABLE_TO_REMOVE "Không thể xóa dữ liệu của chương trình khỏi registry!"
+    IDS_UNABLE_TO_INSTALL "Không thể mở bộ cài đặt!"
+    IDS_UNABLE_TO_QUERY_CERT "Không thể truy xuất thông tin chứng chỉ.\n\nBạn có muốn tiếp tục không?"
+    IDS_INTEG_CHECK_TITLE "Đang xác minh tính toàn vẹn của gói…"
+    IDS_INTEG_CHECK_FAIL "Gói không vượt qua kiểm tra tính toàn vẹn, nó có thể đã bị hỏng hoặc bị can thiệp trong quá trình tải xuống. Không khuyến nghị chạy phần mềm này."
+    IDS_INTERRUPTED_DOWNLOAD "Quá trình tải xuống đã bị gián đoạn. Kiểm tra kết nối Internet."
+    IDS_UNABLE_TO_WRITE "Không thể ghi vào đĩa. Đĩa có thể đã đầy."
+    IDS_INSTALL_SELECTED "Cài đặt mục đã chọn"
+    IDS_SELECTEDFORINST "Đã chọn để cài đặt"
+    IDS_MISMATCH_CERT_INFO "Chứng chỉ được sử dụng không xác định:\nĐối tượng: %s\nNgười cấp: %s\nBạn có muốn tiếp tục không?"
+    IDS_UNABLE_PATH "Định dạng đường dẫn không đúng."
+    IDS_APP_DISPLAY_DETAILS "Chi tiết"
+    IDS_APP_DISPLAY_LIST "Danh sách"
+    IDS_APP_DISPLAY_TILE "Ô cờ"
+    IDS_NO_SEARCH_RESULTS "Không có kết quả tìm kiếm"
+    IDS_CFG_SAVE_WINDOW_POS "Lưu vị trí cửa sổ"
+    IDS_CFG_UPDATE_AVLIST "Cập nhật danh sách các chương trình có sẵn khi khởi động"
+    IDS_CFG_LOG_ENABLED "Ghi nhật ký cài đặt và gỡ bỏ chương trình"
+    IDS_CFG_SMALL_ICONS "Biểu tượng nhỏ"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALLED "Đã cài đặt"
+    IDS_STATUS_NOTINSTALLED "Chưa cài đặt"
+    IDS_STATUS_DOWNLOADED "Đã tải về"
+    IDS_STATUS_UPDATE_AVAILABLE "Có bản cập nhật"
+    IDS_STATUS_DOWNLOADING "Đang tải…"
+    IDS_STATUS_INSTALLING "Đang cài đặt…"
+    IDS_STATUS_WAITING "Đang chờ cài đặt…"
+    IDS_STATUS_FINISHED "Hoàn tất"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE_OPENSOURCE "Mã nguồn mở"
+    IDS_LICENSE_FREEWARE "Miễn phí"
+    IDS_LICENSE_TRIAL "Dùng thử/Demo"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Hỗ trợ ngôn ngữ của bạn"
+    IDS_LANGUAGE_NO_TRANSLATION "Hỗ trợ các ngôn ngữ khác"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Hỗ trợ tiếng Anh"
+    IDS_LANGUAGE_SINGLE "Một ngôn ngữ"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (và +%d ngôn ngữ khác)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d ngôn ngữ hiện có)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DL_DIALOG_DB_DISP "Cơ sở dữ liệu ứng dụng"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Đang cập nhật cơ sở dữ liệu…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Đang cập nhật cơ sở dữ liệu… (Nguồn không chính thức)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "Sử dụng: "
+    IDS_CMD_NEED_PACKAGE_NAME "Lỗi: tùy chọn %1 yêu cầu một hoặc nhiều tên gói.\n"
+    IDS_CMD_NEED_FILE_NAME "Lỗi: tùy chọn %1 yêu cầu một tên tệp.\n"
+    IDS_CMD_NEED_PARAMS "Lỗi: tùy chọn %1 yêu cầu một hoặc nhiều tham số.\n"
+    IDS_CMD_INVALID_OPTION "Lỗi: Tùy chọn dòng lệnh không xác định hoặc không hợp lệ.\n"
+    IDS_CMD_FIND_RESULT_FOR "Kết quả tìm kiếm cho %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Không tìm thấy gói %1.\n"
+    IDS_CMD_PACKAGE_INFO "Thông tin về gói %1:\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "Bạn có chắc chắn muốn gỡ cài đặt %s không?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Cài đặt hoàn tất, chạy %s ngay bây giờ?"
+END
+
+
