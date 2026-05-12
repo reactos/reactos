@@ -41,8 +41,6 @@
 #include <string.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "winerror.h"
 #include "windef.h"
 #include "winbase.h"
@@ -201,8 +199,8 @@ static void OLEPictureImpl_SetBitmap(OLEPictureImpl *This)
   BITMAP bm;
   HDC hdcRef;
 
-  TRACE("bitmap handle %p\n", This->desc.u.bmp.hbitmap);
-  if(GetObjectW(This->desc.u.bmp.hbitmap, sizeof(bm), &bm) != sizeof(bm)) {
+  TRACE("bitmap handle %p\n", This->desc.bmp.hbitmap);
+  if(GetObjectW(This->desc.bmp.hbitmap, sizeof(bm), &bm) != sizeof(bm)) {
     ERR("GetObject fails\n");
     return;
   }
@@ -230,8 +228,8 @@ static void OLEPictureImpl_SetIcon(OLEPictureImpl * This)
 {
     ICONINFO infoIcon;
 
-    TRACE("icon handle %p\n", This->desc.u.icon.hicon);
-    if (GetIconInfo(This->desc.u.icon.hicon, &infoIcon)) {
+    TRACE("icon handle %p\n", This->desc.icon.hicon);
+    if (GetIconInfo(This->desc.icon.hicon, &infoIcon)) {
         HDC hdcRef;
         BITMAP bm;
 
@@ -254,20 +252,8 @@ static void OLEPictureImpl_SetIcon(OLEPictureImpl * This)
         DeleteObject(infoIcon.hbmMask);
         if (infoIcon.hbmColor) DeleteObject(infoIcon.hbmColor);
     } else {
-        ERR("GetIconInfo() fails on icon %p\n", This->desc.u.icon.hicon);
+        ERR("GetIconInfo() fails on icon %p\n", This->desc.icon.hicon);
     }
-}
-
-static void OLEPictureImpl_SetEMF(OLEPictureImpl *This)
-{
-    ENHMETAHEADER emh;
-
-    GetEnhMetaFileHeader(This->desc.u.emf.hemf, sizeof(emh), &emh);
-
-    This->origWidth = 0;
-    This->origHeight = 0;
-    This->himetricWidth = emh.rclFrame.right - emh.rclFrame.left;
-    This->himetricHeight = emh.rclFrame.bottom - emh.rclFrame.top;
 }
 
 /************************************************************************
@@ -290,7 +276,7 @@ static HRESULT OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn, OLEPictu
   /*
    * Allocate space for the object.
    */
-  newObject = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(OLEPictureImpl));
+  newObject = calloc(1, sizeof(OLEPictureImpl));
   if (!newObject)
     return E_OUTOFMEMORY;
 
@@ -307,7 +293,7 @@ static HRESULT OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn, OLEPictu
                         &newObject->pCP);
   if (hr != S_OK)
   {
-    HeapFree(GetProcessHeap(), 0, newObject);
+    free(newObject);
     return hr;
   }
 
@@ -338,9 +324,9 @@ static HRESULT OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn, OLEPictu
 	break;
 
       case PICTYPE_METAFILE:
-	TRACE("metafile handle %p\n", pictDesc->u.wmf.hmeta);
-	newObject->himetricWidth = pictDesc->u.wmf.xExt;
-	newObject->himetricHeight = pictDesc->u.wmf.yExt;
+	TRACE("metafile handle %p\n", pictDesc->wmf.hmeta);
+	newObject->himetricWidth = pictDesc->wmf.xExt;
+	newObject->himetricHeight = pictDesc->wmf.yExt;
 	break;
 
       case PICTYPE_NONE:
@@ -353,7 +339,8 @@ static HRESULT OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn, OLEPictu
         break;
 
       case PICTYPE_ENHMETAFILE:
-        OLEPictureImpl_SetEMF(newObject);
+        FIXME("EMF is not supported\n");
+        newObject->himetricWidth = newObject->himetricHeight = 0;
         break;
 
       default:
@@ -386,18 +373,18 @@ static void OLEPictureImpl_Destroy(OLEPictureImpl* Obj)
   if(Obj->fOwn) { /* We need to destroy the picture */
     switch(Obj->desc.picType) {
     case PICTYPE_BITMAP:
-      DeleteObject(Obj->desc.u.bmp.hbitmap);
+      DeleteObject(Obj->desc.bmp.hbitmap);
       if (Obj->hbmMask != NULL) DeleteObject(Obj->hbmMask);
       if (Obj->hbmXor != NULL) DeleteObject(Obj->hbmXor);
       break;
     case PICTYPE_METAFILE:
-      DeleteMetaFile(Obj->desc.u.wmf.hmeta);
+      DeleteMetaFile(Obj->desc.wmf.hmeta);
       break;
     case PICTYPE_ICON:
-      DestroyIcon(Obj->desc.u.icon.hicon);
+      DestroyIcon(Obj->desc.icon.hicon);
       break;
     case PICTYPE_ENHMETAFILE:
-      DeleteEnhMetaFile(Obj->desc.u.emf.hemf);
+      DeleteEnhMetaFile(Obj->desc.emf.hemf);
       break;
     case PICTYPE_NONE:
     case PICTYPE_UNINITIALIZED:
@@ -408,53 +395,34 @@ static void OLEPictureImpl_Destroy(OLEPictureImpl* Obj)
       break;
     }
   }
-  HeapFree(GetProcessHeap(), 0, Obj->data);
-  HeapFree(GetProcessHeap(), 0, Obj);
+  free(Obj->data);
+  free(Obj);
 }
 
-
-/************************************************************************
- * OLEPictureImpl_AddRef (IUnknown)
- *
- * See Windows documentation for more details on IUnknown methods.
- */
 static ULONG WINAPI OLEPictureImpl_AddRef(
   IPicture* iface)
 {
   OLEPictureImpl *This = impl_from_IPicture(iface);
   ULONG refCount = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p)->(ref before=%d)\n", This, refCount - 1);
+  TRACE("%p, refcount %lu.\n", iface, refCount);
 
   return refCount;
 }
 
-/************************************************************************
- * OLEPictureImpl_Release (IUnknown)
- *
- * See Windows documentation for more details on IUnknown methods.
- */
 static ULONG WINAPI OLEPictureImpl_Release(
       IPicture* iface)
 {
   OLEPictureImpl *This = impl_from_IPicture(iface);
   ULONG refCount = InterlockedDecrement(&This->ref);
 
-  TRACE("(%p)->(ref before=%d)\n", This, refCount + 1);
+  TRACE("%p, refcount %lu.\n", iface, refCount);
 
-  /*
-   * If the reference count goes down to 0, perform suicide.
-   */
   if (!refCount) OLEPictureImpl_Destroy(This);
 
   return refCount;
 }
 
-/************************************************************************
- * OLEPictureImpl_QueryInterface (IUnknown)
- *
- * See Windows documentation for more details on IUnknown methods.
- */
 static HRESULT WINAPI OLEPictureImpl_QueryInterface(
   IPicture*  iface,
   REFIID  riid,
@@ -533,16 +501,16 @@ static HRESULT WINAPI OLEPictureImpl_get_Handle(IPicture *iface,
     *phandle = 0;
     break;
   case PICTYPE_BITMAP:
-    *phandle = HandleToUlong(This->desc.u.bmp.hbitmap);
+    *phandle = HandleToUlong(This->desc.bmp.hbitmap);
     break;
   case PICTYPE_METAFILE:
-    *phandle = HandleToUlong(This->desc.u.wmf.hmeta);
+    *phandle = HandleToUlong(This->desc.wmf.hmeta);
     break;
   case PICTYPE_ICON:
-    *phandle = HandleToUlong(This->desc.u.icon.hicon);
+    *phandle = HandleToUlong(This->desc.icon.hicon);
     break;
   case PICTYPE_ENHMETAFILE:
-    *phandle = HandleToUlong(This->desc.u.emf.hemf);
+    *phandle = HandleToUlong(This->desc.emf.hemf);
     break;
   default:
     FIXME("Unimplemented type %d\n", This->desc.picType);
@@ -566,7 +534,7 @@ static HRESULT WINAPI OLEPictureImpl_get_hPal(IPicture *iface,
 
     if (This->desc.picType == PICTYPE_BITMAP)
     {
-        *phandle = HandleToUlong(This->desc.u.bmp.hpal);
+        *phandle = HandleToUlong(This->desc.bmp.hpal);
         return S_OK;
     }
 
@@ -589,26 +557,18 @@ static HRESULT WINAPI OLEPictureImpl_get_Type(IPicture *iface,
   return S_OK;
 }
 
-/************************************************************************
- * OLEPictureImpl_get_Width
- */
-static HRESULT WINAPI OLEPictureImpl_get_Width(IPicture *iface,
-					       OLE_XSIZE_HIMETRIC *pwidth)
+static HRESULT WINAPI OLEPictureImpl_get_Width(IPicture *iface, OLE_XSIZE_HIMETRIC *pwidth)
 {
   OLEPictureImpl *This = impl_from_IPicture(iface);
-  TRACE("(%p)->(%p): width is %d\n", This, pwidth, This->himetricWidth);
+  TRACE("%p, %p.\n", iface, pwidth);
   *pwidth = This->himetricWidth;
   return S_OK;
 }
 
-/************************************************************************
- * OLEPictureImpl_get_Height
- */
-static HRESULT WINAPI OLEPictureImpl_get_Height(IPicture *iface,
-						OLE_YSIZE_HIMETRIC *pheight)
+static HRESULT WINAPI OLEPictureImpl_get_Height(IPicture *iface, OLE_YSIZE_HIMETRIC *pheight)
 {
   OLEPictureImpl *This = impl_from_IPicture(iface);
-  TRACE("(%p)->(%p): height is %d\n", This, pheight, This->himetricHeight);
+  TRACE("%p, %p.\n", iface, pheight);
   *pheight = This->himetricHeight;
   return S_OK;
 }
@@ -667,8 +627,8 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
 					    LPCRECT prcWBounds)
 {
   OLEPictureImpl *This = impl_from_IPicture(iface);
-  TRACE("(%p)->(%p, (%d,%d), (%d,%d) <- (%d,%d), (%d,%d), %p)\n",
-	This, hdc, x, y, cx, cy, xSrc, ySrc, cxSrc, cySrc, prcWBounds);
+  TRACE("%p, %p, (%ld,%ld), (%ld,%ld), (%ld,%ld), (%ld,%ld), %p)\n", iface, hdc, x, y, cx, cy, xSrc, ySrc,
+          cxSrc, cySrc, prcWBounds);
   if(prcWBounds)
   TRACE("prcWBounds %s\n", wine_dbgstr_rect(prcWBounds));
 
@@ -699,7 +659,7 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
     else
     {
         hbmMask = 0;
-        hbmXor = This->desc.u.bmp.hbitmap;
+        hbmXor = This->desc.bmp.hbitmap;
     }
 
     render_masked_bitmap(This, hdc, x, y, cx, cy, xSrc, ySrc, cxSrc, cySrc, hbmMask, hbmXor);
@@ -710,7 +670,7 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
   {
     ICONINFO info;
 
-    if (!GetIconInfo(This->desc.u.icon.hicon, &info))
+    if (!GetIconInfo(This->desc.icon.hicon, &info))
         return E_FAIL;
 
     render_masked_bitmap(This, hdc, x, y, cx, cy, xSrc, ySrc, cxSrc, cySrc, info.hbmMask, info.hbmColor);
@@ -736,7 +696,7 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
     SetViewportOrgEx(hdc, x, y, &prevOrg);
     SetViewportExtEx(hdc, cx, cy, &prevExt);
 
-    if (!PlayMetaFile(hdc, This->desc.u.wmf.hmeta))
+    if (!PlayMetaFile(hdc, This->desc.wmf.hmeta))
         ERR("PlayMetaFile failed!\n");
 
     /* We're done, restore the DC to the previous settings for converting
@@ -752,7 +712,7 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
   case PICTYPE_ENHMETAFILE:
   {
     RECT rc = { x, y, x + cx, y + cy };
-    PlayEnhMetaFile(hdc, This->desc.u.emf.hemf, &rc);
+    PlayEnhMetaFile(hdc, This->desc.emf.hemf, &rc);
     break;
   }
 
@@ -775,7 +735,7 @@ static HRESULT WINAPI OLEPictureImpl_set_hPal(IPicture *iface,
 
     if (This->desc.picType == PICTYPE_BITMAP)
     {
-        This->desc.u.bmp.hpal = ULongToHandle(hpal);
+        This->desc.bmp.hpal = ULongToHandle(hpal);
         OLEPicture_SendNotify(This,DISPID_PICT_HPAL);
         return S_OK;
     }
@@ -809,10 +769,10 @@ static HRESULT WINAPI OLEPictureImpl_SelectPicture(IPicture *iface,
       if (phdcOut)
 	  *phdcOut = This->hDCCur;
       if (This->hDCCur) SelectObject(This->hDCCur,This->stock_bitmap);
-      if (hdcIn) SelectObject(hdcIn,This->desc.u.bmp.hbitmap);
+      if (hdcIn) SelectObject(hdcIn,This->desc.bmp.hbitmap);
       This->hDCCur = hdcIn;
       if (phbmpOut)
-	  *phbmpOut = HandleToUlong(This->desc.u.bmp.hbitmap);
+	  *phbmpOut = HandleToUlong(This->desc.bmp.hbitmap);
       return S_OK;
   } else {
       FIXME("Don't know how to select picture type %d\n",This->desc.picType);
@@ -857,6 +817,19 @@ static HRESULT WINAPI OLEPictureImpl_PictureChanged(IPicture *iface)
   OLEPicture_SendNotify(This,DISPID_PICT_HANDLE);
   This->bIsDirty = TRUE;
   return S_OK;
+}
+
+/************************************************************************
+ * OLEPictureImpl_SaveAsFile
+ */
+static HRESULT WINAPI OLEPictureImpl_SaveAsFile(IPicture *iface,
+						IStream *pstream,
+						BOOL SaveMemCopy,
+						LONG *pcbSize)
+{
+  OLEPictureImpl *This = impl_from_IPicture(iface);
+  FIXME("(%p)->(%p, %d, %p), hacked stub.\n", This, pstream, SaveMemCopy, pcbSize);
+  return IStream_Write(pstream,This->data,This->datalen,(ULONG*)pcbSize);
 }
 
 /************************************************************************
@@ -1008,13 +981,40 @@ static HRESULT WINAPI OLEPictureImpl_IsDirty(
   return E_NOTIMPL;
 }
 
+static HRESULT OLEPictureImpl_LoadDIB(OLEPictureImpl *This, BYTE *xbuf, ULONG xread)
+{
+    BITMAPFILEHEADER	*bfh = (BITMAPFILEHEADER*)xbuf;
+    BITMAPINFO		*bi = (BITMAPINFO*)(bfh+1);
+    HDC			hdcref;
+
+    /* Does not matter whether this is a coreheader or not, we only use
+     * components which are in both
+     */
+    hdcref = GetDC(0);
+    This->desc.bmp.hbitmap = CreateDIBitmap(
+	hdcref,
+	&(bi->bmiHeader),
+	CBM_INIT,
+	xbuf+bfh->bfOffBits,
+	bi,
+       DIB_RGB_COLORS
+    );
+    ReleaseDC(0, hdcref);
+    if (This->desc.bmp.hbitmap == 0)
+        return E_FAIL;
+    This->desc.picType = PICTYPE_BITMAP;
+    OLEPictureImpl_SetBitmap(This);
+    return S_OK;
+}
+
 static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSource *src)
 {
     HRESULT hr;
     BITMAPINFOHEADER bih;
+    HDC hdcref;
     UINT width, height;
     UINT stride, buffersize;
-    BYTE *bits, *mask = NULL;
+    LPBYTE bits=NULL;
     WICRect rc;
     IWICBitmapSource *real_source;
     UINT x, y;
@@ -1042,17 +1042,10 @@ static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSour
     stride = 4 * width;
     buffersize = stride * height;
 
-    mask = HeapAlloc(GetProcessHeap(), 0, buffersize);
-    if (!mask)
+    bits = malloc(buffersize);
+    if (!bits)
     {
         hr = E_OUTOFMEMORY;
-        goto end;
-    }
-
-    This->desc.u.bmp.hbitmap = CreateDIBSection(0, (BITMAPINFO*)&bih, DIB_RGB_COLORS, (void **)&bits, NULL, 0);
-    if (This->desc.u.bmp.hbitmap == 0)
-    {
-        hr = E_FAIL;
         goto end;
     }
 
@@ -1062,8 +1055,21 @@ static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSour
     rc.Height = height;
     hr = IWICBitmapSource_CopyPixels(real_source, &rc, stride, buffersize, bits);
     if (FAILED(hr))
+        goto end;
+
+    hdcref = GetDC(0);
+    This->desc.bmp.hbitmap = CreateDIBitmap(
+        hdcref,
+        &bih,
+        CBM_INIT,
+        bits,
+        (BITMAPINFO*)&bih,
+        DIB_RGB_COLORS);
+
+    if (This->desc.bmp.hbitmap == 0)
     {
-        DeleteObject(This->desc.u.bmp.hbitmap);
+        hr = E_FAIL;
+        ReleaseDC(0, hdcref);
         goto end;
     }
 
@@ -1077,25 +1083,23 @@ static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSour
             if((*pixel & 0x80000000) == 0)
             {
                 has_alpha = TRUE;
-                *(DWORD *)(mask + stride * y + 4 * x) = black;
+                *pixel = black;
             }
             else
-                *(DWORD *)(mask + stride * y + 4 * x) = white;
+                *pixel = white;
         }
     }
 
     if (has_alpha)
     {
-        HDC hdcref, hdcBmp, hdcXor, hdcMask;
+        HDC hdcBmp, hdcXor, hdcMask;
         HBITMAP hbmoldBmp, hbmoldXor, hbmoldMask;
-
-        hdcref = GetDC(0);
 
         This->hbmXor = CreateDIBitmap(
             hdcref,
             &bih,
             CBM_INIT,
-            mask,
+            bits,
             (BITMAPINFO*)&bih,
             DIB_RGB_COLORS
         );
@@ -1105,7 +1109,7 @@ static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSour
         hdcXor = CreateCompatibleDC(NULL);
         hdcMask = CreateCompatibleDC(NULL);
 
-        hbmoldBmp = SelectObject(hdcBmp,This->desc.u.bmp.hbitmap);
+        hbmoldBmp = SelectObject(hdcBmp,This->desc.bmp.hbitmap);
         hbmoldXor = SelectObject(hdcXor,This->hbmXor);
         hbmoldMask = SelectObject(hdcMask,This->hbmMask);
 
@@ -1120,11 +1124,12 @@ static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSour
         DeleteDC(hdcBmp);
         DeleteDC(hdcXor);
         DeleteDC(hdcMask);
-        ReleaseDC(0, hdcref);
     }
 
+    ReleaseDC(0, hdcref);
+
 end:
-    HeapFree(GetProcessHeap(), 0, mask);
+    free(bits);
     IWICBitmapSource_Release(real_source);
     return hr;
 }
@@ -1191,7 +1196,7 @@ static HRESULT OLEPictureImpl_LoadIcon(OLEPictureImpl *This, BYTE *xbuf, ULONG x
     HDC hdcRef;
     int	i;
 
-    TRACE("(this %p, xbuf %p, xread %u)\n", This, xbuf, xread);
+    TRACE("(this %p, xbuf %p, xread %lu)\n", This, xbuf, xread);
 
     /*
     FIXME("icon.idReserved=%d\n",cifd->idReserved);
@@ -1229,13 +1234,13 @@ static HRESULT OLEPictureImpl_LoadIcon(OLEPictureImpl *This, BYTE *xbuf, ULONG x
     }
     if (xread < cifd->idEntries[i].dwDIBOffset + cifd->idEntries[i].dwDIBSize)
     {
-        ERR("Icon data address %u is over %u bytes available.\n",
+        ERR("Icon data address %lu is over %lu bytes available.\n",
             cifd->idEntries[i].dwDIBOffset + cifd->idEntries[i].dwDIBSize, xread);
         return E_FAIL;
     }
     if (cifd->idType == 2)
     {
-        LPBYTE buf = HeapAlloc(GetProcessHeap(), 0, cifd->idEntries[i].dwDIBSize + 4);
+        BYTE *buf = malloc(cifd->idEntries[i].dwDIBSize + 4);
         memcpy(buf, &cifd->idEntries[i].xHotspot, 4);
         memcpy(buf + 4, xbuf+cifd->idEntries[i].dwDIBOffset, cifd->idEntries[i].dwDIBSize);
         hicon = CreateIconFromResourceEx(
@@ -1247,7 +1252,7 @@ static HRESULT OLEPictureImpl_LoadIcon(OLEPictureImpl *This, BYTE *xbuf, ULONG x
 		    cifd->idEntries[i].bHeight,
 		    0
 	);
-	HeapFree(GetProcessHeap(), 0, buf);
+	free(buf);
     }
     else
     {
@@ -1266,7 +1271,7 @@ static HRESULT OLEPictureImpl_LoadIcon(OLEPictureImpl *This, BYTE *xbuf, ULONG x
 	return E_FAIL;
     } else {
 	This->desc.picType = PICTYPE_ICON;
-	This->desc.u.icon.hicon = hicon;
+	This->desc.icon.hicon = hicon;
 	This->origWidth = cifd->idEntries[i].bWidth;
 	This->origHeight = cifd->idEntries[i].bHeight;
 	hdcRef = CreateCompatibleDC(0);
@@ -1289,7 +1294,7 @@ static HRESULT OLEPictureImpl_LoadEnhMetafile(OLEPictureImpl *This,
     GetEnhMetaFileHeader(hemf, sizeof(hdr), &hdr);
 
     This->desc.picType = PICTYPE_ENHMETAFILE;
-    This->desc.u.emf.hemf = hemf;
+    This->desc.emf.hemf = hemf;
 
     This->origWidth = 0;
     This->origHeight = 0;
@@ -1315,9 +1320,9 @@ static HRESULT OLEPictureImpl_LoadAPM(OLEPictureImpl *This,
     if (!hmf) return E_FAIL;
 
     This->desc.picType = PICTYPE_METAFILE;
-    This->desc.u.wmf.hmeta = hmf;
-    This->desc.u.wmf.xExt = 0;
-    This->desc.u.wmf.yExt = 0;
+    This->desc.wmf.hmeta = hmf;
+    This->desc.wmf.xExt = 0;
+    This->desc.wmf.yExt = 0;
 
     This->origWidth = 0;
     This->origHeight = 0;
@@ -1368,7 +1373,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
    */
   hr = IStream_Stat(pStm,&statstg,STATFLAG_NONAME);
   if (hr != S_OK) {
-      TRACE("stat failed with hres %x, proceeding to read all data.\n",hr);
+      TRACE("stat failed with hres %#lx, proceeding to read all data.\n",hr);
       statfailed = TRUE;
       /* we will read at least 8 byte ... just right below */
       statstg.cbSize.QuadPart = 8;
@@ -1380,7 +1385,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
   do {
       hr = IStream_Read(pStm, header, 8, &xread);
       if (hr != S_OK || xread!=8) {
-          ERR("Failure while reading picture header (hr is %x, nread is %d).\n",hr,xread);
+          ERR("Failure while reading picture header (hr is %#lx, nread is %ld).\n",hr,xread);
           return (hr?hr:E_FAIL);
       }
       headerread += xread;
@@ -1388,7 +1393,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
 
       if (!memcmp(&(header[0]),"lt\0\0", 4) && (statfailed || (header[1] + headerread <= statstg.cbSize.QuadPart))) {
           if (toread != 0 && toread != header[1]) 
-              FIXME("varying lengths of image data (prev=%u curr=%u), only last one will be used\n",
+              FIXME("varying lengths of image data (prev=%lu curr=%lu), only last one will be used\n",
                   toread, header[1]);
           toread = header[1];
           if (statfailed)
@@ -1413,7 +1418,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
               else toread -= 8;
               xread = 8;
           } else {
-              FIXME("Unknown stream header magic: %08x\n", header[0]);
+              FIXME("Unknown stream header magic: %#lx.\n", header[0]);
               toread = header[1];
           }
       }
@@ -1425,7 +1430,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
       ULONG nread = 42;
 
       TRACE("Reading all data from stream.\n");
-      xbuf = HeapAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY, origsize);
+      xbuf = calloc(1, origsize);
       if (headerisdata)
           memcpy (xbuf, header, 8);
       while (1) {
@@ -1438,19 +1443,20 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
           if (!nread || hr != S_OK) /* done, or error */
               break;
           if (xread == origsize) {
-              origsize += sizeinc;
               sizeinc = 2*sizeinc; /* exponential increase */
-              xbuf = HeapReAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY, xbuf, origsize);
+              xbuf = realloc(xbuf, origsize + sizeinc);
+              memset(xbuf + origsize, 0, sizeinc);
+              origsize += sizeinc;
           }
       }
       if (hr != S_OK)
-          TRACE("hr in no-stat loader case is %08x\n", hr);
-      TRACE("loaded %d bytes.\n", xread);
+          TRACE("hr in no-stat loader case is %#lx.\n", hr);
+      TRACE("loaded %ld bytes.\n", xread);
       This->datalen = xread;
       This->data    = xbuf;
   } else {
       This->datalen = toread+(headerisdata?8:0);
-      xbuf = This->data = HeapAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY, This->datalen);
+      xbuf = This->data = calloc(1, This->datalen);
       if (!xbuf)
           return E_OUTOFMEMORY;
 
@@ -1465,7 +1471,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
               break;
       }
       if (xread != This->datalen)
-          ERR("Could only read %d of %d bytes out of stream?\n",xread,This->datalen);
+          ERR("Could only read %ld of %d bytes out of stream?\n", xread, This->datalen);
   }
   if (This->datalen == 0) { /* Marks the "NONE" picture */
       This->desc.picType = PICTYPE_NONE;
@@ -1488,7 +1494,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
     hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICJpegDecoder, xbuf, xread);
     break;
   case BITMAP_FORMAT_BMP: /* Bitmap */
-    hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICBmpDecoder, xbuf, xread);
+    hr = OLEPictureImpl_LoadDIB(This, xbuf, xread);
     break;
   case BITMAP_FORMAT_PNG: /* PNG */
     hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICPngDecoder, xbuf, xread);
@@ -1508,14 +1514,14 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
     hr = OLEPictureImpl_LoadEnhMetafile(This, xbuf, xread);
     if (hr == S_OK) break;
 
-    FIXME("Unknown magic %04x, %d read bytes:\n",magic,xread);
+    FIXME("Unknown magic %04x, %ld read bytes:\n", magic, xread);
     hr=E_FAIL;
     for (i=0;i<xread+8;i++) {
-	if (i<8) MESSAGE("%02x ",((unsigned char*)header)[i]);
-	else MESSAGE("%02x ",xbuf[i-8]);
-        if (i % 10 == 9) MESSAGE("\n");
+	if (i<8) FIXME("%02x ",((unsigned char*)header)[i]);
+	else FIXME("%02x ",xbuf[i-8]);
+        if (i % 10 == 9) FIXME("\n");
     }
-    MESSAGE("\n");
+    FIXME("\n");
     break;
   }
   }
@@ -1527,69 +1533,121 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
   return hr;
 }
 
-static BOOL serializeBMP(HBITMAP hBitmap, void ** ppBuffer, unsigned int * pLength)
+/* pass NULL buffer to fetch size */
+static HRESULT serializeBMP(HBITMAP hbmp, void **buffer, unsigned int *length)
 {
-    BOOL success = FALSE;
-    HDC hDC;
-    BITMAPINFO * pInfoBitmap;
-    int iNumPaletteEntries;
-    unsigned char * pPixelData;
-    BITMAPFILEHEADER * pFileHeader;
-    BITMAPINFO * pInfoHeader;
+    char infobuf[sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD)] = { 0 };
+    BITMAPINFO *info = (BITMAPINFO *)infobuf;
+    BITMAP bm;
+    HBITMAP hdib = NULL;
+    BITMAPINFO *bitmap;
+    BITMAPFILEHEADER *filehdr;
+    int numentries;
+    HDC hdc;
+    HRESULT hr = S_OK;
+    unsigned char *data = NULL;
 
-    pInfoBitmap = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-        sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+    hdc = GetDC(0);
+    if (!GetObjectW(hbmp, sizeof(bm), &bm)) {
+        hr = E_INVALIDARG;
+        goto done;
+    }
+
+    /* Convert 16bpp/32bpp bitmap to 24bpp */
+    if (bm.bmBitsPixel == 16 || bm.bmBitsPixel == 32) {
+        void *bits;
+        info->bmiHeader.biSize = sizeof(info->bmiHeader);
+        info->bmiHeader.biWidth = bm.bmWidth;
+        info->bmiHeader.biHeight = bm.bmHeight;
+        info->bmiHeader.biPlanes = 1;
+        info->bmiHeader.biBitCount = 24;
+        info->bmiHeader.biCompression = BI_RGB;
+        hdib = CreateDIBSection(hdc, info, DIB_RGB_COLORS, &bits, NULL, 0);
+        if (!hdib) {
+            hr = E_OUTOFMEMORY;
+            goto done;
+        }
+        if (buffer) {
+            HDC src, dst;
+            src = CreateCompatibleDC(hdc);
+            dst = CreateCompatibleDC(hdc);
+            SelectObject(src, hbmp);
+            SelectObject(dst, hdib);
+            if (!BitBlt(dst, 0, 0, bm.bmWidth, bm.bmHeight, src, 0, 0, SRCCOPY))
+                hr = E_INVALIDARG;
+            DeleteDC(src);
+            DeleteDC(dst);
+            if (FAILED(hr))
+                goto done;
+        }
+        hbmp = hdib;
+    }
 
     /* Find out bitmap size and padded length */
-    hDC = GetDC(0);
-    pInfoBitmap->bmiHeader.biSize = sizeof(pInfoBitmap->bmiHeader);
-    GetDIBits(hDC, hBitmap, 0, 0, NULL, pInfoBitmap, DIB_RGB_COLORS);
-
-    /* Fetch bitmap palette & pixel data */
-
-    pPixelData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pInfoBitmap->bmiHeader.biSizeImage);
-    GetDIBits(hDC, hBitmap, 0, pInfoBitmap->bmiHeader.biHeight, pPixelData, pInfoBitmap, DIB_RGB_COLORS);
+    info->bmiHeader.biSize = sizeof(info->bmiHeader);
+    if (!GetDIBits(hdc, hbmp, 0, 0, NULL, info, DIB_RGB_COLORS)) {
+        hr = E_INVALIDARG;
+        goto done;
+    }
 
     /* Calculate the total length required for the BMP data */
-    if (pInfoBitmap->bmiHeader.biClrUsed != 0) {
-	iNumPaletteEntries = pInfoBitmap->bmiHeader.biClrUsed;
-	if (iNumPaletteEntries > 256) iNumPaletteEntries = 256;
+    if (info->bmiHeader.biClrUsed != 0) {
+        numentries = info->bmiHeader.biClrUsed;
+    if (numentries > 256)
+        numentries = 256;
     } else {
-	if (pInfoBitmap->bmiHeader.biBitCount <= 8)
-	    iNumPaletteEntries = 1 << pInfoBitmap->bmiHeader.biBitCount;
-	else
-    	    iNumPaletteEntries = 0;
+        if (info->bmiHeader.biBitCount <= 8)
+            numentries = 1 << info->bmiHeader.biBitCount;
+        else
+            numentries = 0;
     }
-    *pLength =
+
+    *length =
         sizeof(BITMAPFILEHEADER) +
         sizeof(BITMAPINFOHEADER) +
-        iNumPaletteEntries * sizeof(RGBQUAD) +
-        pInfoBitmap->bmiHeader.biSizeImage;
-    *ppBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, *pLength);
+        numentries * sizeof(RGBQUAD) +
+        info->bmiHeader.biSizeImage;
+
+    if (!buffer)
+        goto done;
+
+    /* Fetch bitmap palette & pixel data */
+    if (!(data = malloc(info->bmiHeader.biSizeImage))) {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    if (!GetDIBits(hdc, hbmp, 0, info->bmiHeader.biHeight, data, info, DIB_RGB_COLORS)) {
+        hr = E_INVALIDARG;
+        goto done;
+    }
+
+    if (!(*buffer = malloc(*length))) {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
 
     /* Fill the BITMAPFILEHEADER */
-    pFileHeader = *ppBuffer;
-    pFileHeader->bfType = BITMAP_FORMAT_BMP;
-    pFileHeader->bfSize = *pLength;
-    pFileHeader->bfOffBits =
+    filehdr = *buffer;
+    filehdr->bfType = BITMAP_FORMAT_BMP;
+    filehdr->bfSize = *length;
+    filehdr->bfReserved1 = 0;
+    filehdr->bfReserved2 = 0;
+    filehdr->bfOffBits =
         sizeof(BITMAPFILEHEADER) +
         sizeof(BITMAPINFOHEADER) +
-        iNumPaletteEntries * sizeof(RGBQUAD);
+        numentries * sizeof(RGBQUAD);
 
     /* Fill the BITMAPINFOHEADER and the palette data */
-    pInfoHeader = (BITMAPINFO *)((unsigned char *)(*ppBuffer) + sizeof(BITMAPFILEHEADER));
-    memcpy(pInfoHeader, pInfoBitmap, sizeof(BITMAPINFOHEADER) + iNumPaletteEntries * sizeof(RGBQUAD));
-    memcpy(
-        (unsigned char *)(*ppBuffer) +
-            sizeof(BITMAPFILEHEADER) +
-            sizeof(BITMAPINFOHEADER) +
-            iNumPaletteEntries * sizeof(RGBQUAD),
-        pPixelData, pInfoBitmap->bmiHeader.biSizeImage);
-    success = TRUE;
+    bitmap = (BITMAPINFO *)((unsigned char *)(*buffer) + sizeof(BITMAPFILEHEADER));
+    memcpy(bitmap, info, sizeof(BITMAPINFOHEADER) + numentries * sizeof(RGBQUAD));
+    memcpy((unsigned char *)(*buffer) + filehdr->bfOffBits, data, bitmap->bmiHeader.biSizeImage);
 
-    HeapFree(GetProcessHeap(), 0, pPixelData);
-    HeapFree(GetProcessHeap(), 0, pInfoBitmap);
-    return success;
+done:
+    free(data);
+    ReleaseDC(0, hdc);
+    if (hdib) DeleteObject(hdib);
+    return hr;
 }
 
 static BOOL serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
@@ -1604,7 +1662,7 @@ static BOOL serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 		unsigned char * pIconData = NULL;
 		unsigned int iDataSize = 0;
 
-        pInfoBitmap = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+        pInfoBitmap = calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
 
 		/* Find out icon size */
 		hDC = GetDC(0);
@@ -1636,7 +1694,7 @@ static BOOL serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 */
 			/* Let's start with one CURSORICONFILEDIR and one CURSORICONFILEDIRENTRY */
 			iDataSize += 3 * sizeof(WORD) + sizeof(CURSORICONFILEDIRENTRY) + sizeof(BITMAPINFOHEADER);
-			pIconData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, iDataSize);
+			pIconData = calloc(1, iDataSize);
 
 			/* Fill out the CURSORICONFILEDIR */
 			pIconDir = (CURSORICONFILEDIR *)pIconData;
@@ -1685,7 +1743,7 @@ static BOOL serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 			iDataSize += pIconBitmapHeader->biHeight * iLengthScanLineMask;
 			pIconBitmapHeader->biSizeImage += pIconBitmapHeader->biHeight * iLengthScanLineMask;
 			pIconBitmapHeader->biHeight *= 2;
-			pIconData = HeapReAlloc(GetProcessHeap(), 0, pIconData, iDataSize);
+			pIconData = realloc(pIconData, iDataSize);
 			pIconEntry = (CURSORICONFILEDIRENTRY *)(pIconData + 3 * sizeof(WORD));
 			pIconBitmapHeader = (BITMAPINFOHEADER *)(pIconData + 3 * sizeof(WORD) + sizeof(CURSORICONFILEDIRENTRY));
 			pIconEntry->dwDIBSize = iDataSize - (3 * sizeof(WORD) + sizeof(CURSORICONFILEDIRENTRY));
@@ -1735,23 +1793,11 @@ static BOOL serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 		if (hDC) ReleaseDC(0, hDC);
 		DeleteObject(infoIcon.hbmMask);
 		if (infoIcon.hbmColor) DeleteObject(infoIcon.hbmColor);
-		HeapFree(GetProcessHeap(), 0, pInfoBitmap);
+		free(pInfoBitmap);
 	} else {
-		printf("ERROR: Unable to get icon information (error %u)\n",
-			GetLastError());
+		ERR("Unable to get icon information (error %lu)\n", GetLastError());
 	}
         return success;
-}
-
-static BOOL serializeEMF(HENHMETAFILE hemf, void **buf, unsigned *size)
-{
-    *size = GetEnhMetaFileBits(hemf, 0, NULL);
-    if (!*size) return FALSE;
-
-    *buf = HeapAlloc(GetProcessHeap(), 0, *size);
-    if (!*buf) return FALSE;
-
-    return GetEnhMetaFileBits(hemf, *size, *buf) != 0;
 }
 
 static HRESULT WINAPI OLEPictureImpl_Save(
@@ -1762,7 +1808,6 @@ static HRESULT WINAPI OLEPictureImpl_Save(
     unsigned int iDataSize;
     DWORD header[2];
     ULONG dummy;
-    BOOL serializeResult = FALSE;
     OLEPictureImpl *This = impl_from_IPersistStream(iface);
 
     TRACE("%p %p %d\n", This, pStm, fClearDirty);
@@ -1776,12 +1821,12 @@ static HRESULT WINAPI OLEPictureImpl_Save(
 
     case PICTYPE_ICON:
         if (This->bIsDirty || !This->data) {
-            if (!serializeIcon(This->desc.u.icon.hicon, &pIconData, &iDataSize)) {
+            if (!serializeIcon(This->desc.icon.hicon, &pIconData, &iDataSize)) {
                 ERR("(%p,%p,%d), serializeIcon() failed\n", This, pStm, fClearDirty);
                 hResult = E_FAIL;
                 break;
             }
-            HeapFree(GetProcessHeap(), 0, This->data);
+            free(This->data);
             This->data = pIconData;
             This->datalen = iDataSize;
         }
@@ -1796,7 +1841,7 @@ static HRESULT WINAPI OLEPictureImpl_Save(
         if (This->bIsDirty || !This->data) {
             switch (This->keepOrigFormat ? This->loadtime_format : BITMAP_FORMAT_BMP) {
             case BITMAP_FORMAT_BMP:
-                serializeResult = serializeBMP(This->desc.u.bmp.hbitmap, &pIconData, &iDataSize);
+                hResult = serializeBMP(This->desc.bmp.hbitmap, &pIconData, &iDataSize);
                 break;
             case BITMAP_FORMAT_JPEG:
                 FIXME("(%p,%p,%d), PICTYPE_BITMAP (format JPEG) not implemented!\n",This,pStm,fClearDirty);
@@ -1812,13 +1857,10 @@ static HRESULT WINAPI OLEPictureImpl_Save(
                 break;
             }
 
-            if (!serializeResult)
-            {
-                hResult = E_FAIL;
+            if (hResult != S_OK)
                 break;
-            }
 
-            HeapFree(GetProcessHeap(), 0, This->data);
+            free(This->data);
             This->data = pIconData;
             This->datalen = iDataSize;
         }
@@ -1829,30 +1871,11 @@ static HRESULT WINAPI OLEPictureImpl_Save(
         IStream_Write(pStm, This->data, This->datalen, &dummy);
         hResult = S_OK;
         break;
-
-    case PICTYPE_ENHMETAFILE:
-        if (This->bIsDirty || !This->data)
-        {
-            serializeResult = serializeEMF(This->desc.u.emf.hemf, &pIconData, &iDataSize);
-            if (!serializeResult)
-            {
-                hResult = E_FAIL;
-                break;
-            }
-
-            HeapFree(GetProcessHeap(), 0, This->data);
-            This->data = pIconData;
-            This->datalen = iDataSize;
-        }
-        header[0] = 0x0000746c;
-        header[1] = This->datalen;
-        IStream_Write(pStm, header, 2 * sizeof(DWORD), &dummy);
-        IStream_Write(pStm, This->data, This->datalen, &dummy);
-        hResult = S_OK;
-        break;
-
     case PICTYPE_METAFILE:
         FIXME("(%p,%p,%d), PICTYPE_METAFILE not implemented!\n",This,pStm,fClearDirty);
+        break;
+    case PICTYPE_ENHMETAFILE:
+        FIXME("(%p,%p,%d),PICTYPE_ENHMETAFILE not implemented!\n",This,pStm,fClearDirty);
         break;
     default:
         FIXME("(%p,%p,%d), [unknown type] not implemented!\n",This,pStm,fClearDirty);
@@ -1862,106 +1885,62 @@ static HRESULT WINAPI OLEPictureImpl_Save(
     return hResult;
 }
 
-static HRESULT WINAPI OLEPictureImpl_GetSizeMax(
-  IPersistStream* iface,ULARGE_INTEGER*pcbSize)
+static HRESULT WINAPI OLEPictureImpl_GetSizeMax(IPersistStream *iface, ULARGE_INTEGER *size)
 {
-  OLEPictureImpl *This = impl_from_IPersistStream(iface);
-  FIXME("(%p,%p),stub!\n",This,pcbSize);
-  return E_NOTIMPL;
-}
+    HRESULT hr = E_NOTIMPL;
+    OLEPictureImpl *This = impl_from_IPersistStream(iface);
+    unsigned int datasize = This->datalen;
 
-/************************************************************************
- * OLEPictureImpl_SaveAsFile
- */
-static HRESULT WINAPI OLEPictureImpl_SaveAsFile(IPicture *iface,
-    IStream *stream, BOOL mem_copy, LONG *size)
-{
-    OLEPictureImpl *This = impl_from_IPicture(iface);
-    void *data;
-    unsigned data_size;
-    ULONG written;
-    HRESULT hr;
+    FIXME("(%p,%p), partial stub!\n", This, size);
 
-    FIXME("(%p)->(%p,%d,%p): semi-stub\n", This, stream, mem_copy, size);
+    if (!size)
+        return E_INVALIDARG;
 
-    switch (This->desc.picType)
-    {
+    switch (This->desc.picType) {
     case PICTYPE_NONE:
-        return S_OK;
-
+        hr = S_OK;
+        break;
     case PICTYPE_ICON:
-        if (!mem_copy) return E_FAIL;
-
-        if (This->bIsDirty || !This->data)
-        {
-            if (!serializeIcon(This->desc.u.icon.hicon, &data, &data_size))
-                return E_FAIL;
-            HeapFree(GetProcessHeap(), 0, This->data);
-            This->data = data;
-            This->datalen = data_size;
-        }
-        hr = IStream_Write(stream, This->data, This->datalen, &written);
-        if (hr == S_OK && size) *size = written;
-        return hr;
-
+        FIXME("(%p), PICTYPE_ICON not implemented!\n",This);
+        break;
     case PICTYPE_BITMAP:
-        if (!mem_copy) return E_FAIL;
-
-        if (This->bIsDirty || !This->data)
-        {
-            switch (This->keepOrigFormat ? This->loadtime_format : BITMAP_FORMAT_BMP)
-            {
+        if (This->bIsDirty || !This->data) {
+            switch (This->keepOrigFormat ? This->loadtime_format : BITMAP_FORMAT_BMP) {
             case BITMAP_FORMAT_BMP:
-                if (!serializeBMP(This->desc.u.bmp.hbitmap, &data, &data_size))
-                    return E_FAIL;
+                hr = serializeBMP(This->desc.bmp.hbitmap, NULL, &datasize);
                 break;
             case BITMAP_FORMAT_JPEG:
-                FIXME("BITMAP_FORMAT_JPEG is not implemented\n");
-                return E_NOTIMPL;
+                FIXME("(%p), PICTYPE_BITMAP (format JPEG) not implemented!\n",This);
+                break;
             case BITMAP_FORMAT_GIF:
-                FIXME("BITMAP_FORMAT_GIF is not implemented\n");
-                return E_NOTIMPL;
+                FIXME("(%p), PICTYPE_BITMAP (format GIF) not implemented!\n",This);
+                break;
             case BITMAP_FORMAT_PNG:
-                FIXME("BITMAP_FORMAT_PNG is not implemented\n");
-                return E_NOTIMPL;
+                FIXME("(%p), PICTYPE_BITMAP (format PNG) not implemented!\n",This);
+                break;
             default:
-                FIXME("PICTYPE_BITMAP/%#x is not implemented\n", This->loadtime_format);
-                return E_NOTIMPL;
+                FIXME("(%p), PICTYPE_BITMAP (format UNKNOWN, using BMP?) not implemented!\n",This);
+                break;
             }
+        } else hr = S_OK;
 
-            HeapFree(GetProcessHeap(), 0, This->data);
-            This->data = data;
-            This->datalen = data_size;
-        }
-        hr = IStream_Write(stream, This->data, This->datalen, &written);
-        if (hr == S_OK && size) *size = written;
-        return hr;
-
+        break;
     case PICTYPE_METAFILE:
-        FIXME("PICTYPE_METAFILE is not implemented\n");
-        return E_NOTIMPL;
-
+        FIXME("(%p), PICTYPE_METAFILE not implemented!\n",This);
+        break;
     case PICTYPE_ENHMETAFILE:
-        if (!mem_copy) return E_FAIL;
-
-        if (This->bIsDirty || !This->data)
-        {
-            if (!serializeEMF(This->desc.u.emf.hemf, &data, &data_size))
-                return E_FAIL;
-            HeapFree(GetProcessHeap(), 0, This->data);
-            This->data = data;
-            This->datalen = data_size;
-        }
-        hr = IStream_Write(stream, This->data, This->datalen, &written);
-        if (hr == S_OK && size) *size = written;
-        return hr;
-
+        FIXME("(%p), PICTYPE_ENHMETAFILE not implemented!\n",This);
+        break;
     default:
-        FIXME("%#x is not implemented\n", This->desc.picType);
+        FIXME("(%p), [unknown type] not implemented!\n",This);
         break;
     }
-    return E_NOTIMPL;
+
+    size->HighPart = 0;
+    size->LowPart = datasize + 8;
+    return hr;
 }
+
 
 /************************************************************************
  *    IDispatch
@@ -2035,7 +2014,6 @@ static HRESULT WINAPI OLEPictureImpl_GetTypeInfo(
   LCID        lcid,
   ITypeInfo** ppTInfo)
 {
-  static const WCHAR stdole2tlb[] = {'s','t','d','o','l','e','2','.','t','l','b',0};
   ITypeLib *tl;
   HRESULT hres;
 
@@ -2044,7 +2022,7 @@ static HRESULT WINAPI OLEPictureImpl_GetTypeInfo(
   if (iTInfo != 0)
     return E_FAIL;
 
-  hres = LoadTypeLib(stdole2tlb, &tl);
+  hres = LoadTypeLib(L"stdole2.tlb", &tl);
   if (FAILED(hres))
   {
     ERR("Could not load stdole2.tlb\n");
@@ -2053,7 +2031,7 @@ static HRESULT WINAPI OLEPictureImpl_GetTypeInfo(
 
   hres = ITypeLib_GetTypeInfoOfGuid(tl, &IID_IPictureDisp, ppTInfo);
   if (FAILED(hres))
-    ERR("Did not get IPictureDisp typeinfo from typelib, hres %x\n", hres);
+    ERR("Did not get IPictureDisp typeinfo from typelib, hres %#lx.\n", hres);
 
   return hres;
 }
@@ -2249,7 +2227,7 @@ static HRESULT WINAPI OLEPictureImpl_Invoke(
     break;
   }
 
-  ERR("invalid dispid 0x%x or wFlags 0x%x\n", dispIdMember, wFlags);
+  ERR("invalid dispid %#lx or wFlags 0x%x\n", dispIdMember, wFlags);
   return DISP_E_MEMBERNOTFOUND;
 }
 
@@ -2348,7 +2326,7 @@ HRESULT WINAPI OleLoadPicture( LPSTREAM lpstream, LONG lSize, BOOL fRunmode,
   IPicture	*newpic;
   HRESULT hr;
 
-  TRACE("(%p,%d,%d,%s,%p), partially implemented.\n",
+  TRACE("%p, %ld, %d, %s, %p), partially implemented.\n",
 	lpstream, lSize, fRunmode, debugstr_guid(riid), ppvObj);
 
   hr = OleCreatePictureIndirect(NULL,riid,!fRunmode,(LPVOID*)&newpic);
@@ -2387,7 +2365,7 @@ HRESULT WINAPI OleLoadPictureEx( LPSTREAM lpstream, LONG lSize, BOOL fRunmode,
   IPicture	*newpic;
   HRESULT hr;
 
-  FIXME("(%p,%d,%d,%s,x=%d,y=%d,f=%x,%p), partially implemented.\n",
+  FIXME("%p, %ld, %d, %s, %lu, %lu, %#lx, %p, partially implemented.\n",
 	lpstream, lSize, fRunmode, debugstr_guid(riid), xsiz, ysiz, flags, ppvObj);
 
   hr = OleCreatePictureIndirect(NULL,riid,!fRunmode,(LPVOID*)&newpic);
@@ -2498,15 +2476,13 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
 		DWORD dwReserved, OLE_COLOR clrReserved, REFIID riid,
 		LPVOID *ppvRet )
 {
-  static const WCHAR file[] = { 'f','i','l','e',':',0 };
   IStream *stream;
   HRESULT hRes;
   WCHAR *file_candidate;
   WCHAR path_buf[MAX_PATH];
 
-  TRACE("(%s,%p,%d,%08x,%s,%p): stub\n",
-        debugstr_w(szURLorPath), punkCaller, dwReserved, clrReserved,
-        debugstr_guid(riid), ppvRet);
+  TRACE("%s, %p, %ld, %#lx, %s, %p.\n", debugstr_w(szURLorPath), punkCaller, dwReserved,
+        clrReserved, debugstr_guid(riid), ppvRet);
 
   if (!szURLorPath || !ppvRet)
       return E_INVALIDARG;
@@ -2514,7 +2490,7 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
   *ppvRet = NULL;
 
   /* Convert file URLs to DOS paths. */
-  if (wcsncmp(szURLorPath, file, 5) == 0) {
+  if (wcsncmp(szURLorPath, L"file:", 5) == 0) {
       DWORD size;
       hRes = CoInternetParseUrl(szURLorPath, PARSE_PATH_FROM_URL, 0, path_buf,
                                 ARRAY_SIZE(path_buf), &size, 0);

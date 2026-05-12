@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,6 +35,7 @@
 #include "ole2.h"
 #include "olectl.h"
 #include "oleauto.h"
+#include "rpcproxy.h"
 #include "initguid.h"
 #include "typelib.h"
 #include "oleaut32_oaidl.h"
@@ -115,7 +117,7 @@ static inline size_t bstr_alloc_size(size_t size)
 
 static inline bstr_t *bstr_from_str(BSTR str)
 {
-    return CONTAINING_RECORD((void *)str, bstr_t, u.str);
+    return CONTAINING_RECORD(str, bstr_t, u.str);
 }
 
 static inline bstr_cache_entry_t *get_cache_entry_from_idx(unsigned cache_idx)
@@ -505,9 +507,6 @@ void WINAPI SetOaNoCache(void)
     bstr_cache_enabled = FALSE;
 }
 
-static const WCHAR	_delimiter[] = {'!',0}; /* default delimiter apparently */
-static const WCHAR	*pdelimiter = &_delimiter[0];
-
 /***********************************************************************
  *		RegisterActiveObject (OLEAUT32.33)
  *
@@ -533,7 +532,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH RegisterActiveObject(
         DWORD                   rot_flags = ROTFLAGS_REGISTRATIONKEEPSALIVE; /* default registration is strong */
 
 	StringFromGUID2(rcid,guidbuf,39);
-	ret = CreateItemMoniker(pdelimiter,guidbuf,&moniker);
+	ret = CreateItemMoniker(L"!", guidbuf, &moniker);
 	if (FAILED(ret))
 		return ret;
 	ret = GetRunningObjectTable(0,&runobtable);
@@ -597,7 +596,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH GetActiveObject(REFCLSID rcid,LPVOID preserved,
 	LPMONIKER		moniker;
 
 	StringFromGUID2(rcid,guidbuf,39);
-	ret = CreateItemMoniker(pdelimiter,guidbuf,&moniker);
+	ret = CreateItemMoniker(L"!", guidbuf, &moniker);
 	if (FAILED(ret))
 		return ret;
 	ret = GetRunningObjectTable(0,&runobtable);
@@ -660,15 +659,14 @@ ULONG WINAPI OaBuildVersion(void)
     case 0x00000005:  /* W2K */
 		return MAKELONG(0xffff, 40);
     case 0x00000105:  /* WinXP */
-#ifdef __REACTOS__
-    case 0x00000205:  /* Win2K3 */
-#endif /* __REACTOS__ */
     case 0x00000006:  /* Vista */
     case 0x00000106:  /* Win7 */
+    case 0x00000205:  /* W2K3 */
+    case 0x00000206:  /* Win8, Win10, Win11 */
 		return MAKELONG(0xffff, 50);
     default:
 		FIXME("Version value not known yet. Please investigate it !\n");
-		return MAKELONG(0xffff, 40);  /* for now return the same value as for w2k */
+		return MAKELONG(0xffff, 50);  /* for now return the same value as for Win10 */
     }
 }
 
@@ -697,7 +695,7 @@ HRESULT WINAPI OleTranslateColor(
   COLORREF colorref;
   BYTE b = HIBYTE(HIWORD(clr));
 
-  TRACE("(%08x, %p, %p)\n", clr, hpal, pColorRef);
+  TRACE("%#lx, %p, %p.\n", clr, hpal, pColorRef);
 
   /*
    * In case pColorRef is NULL, provide our own to simplify the code.
@@ -762,10 +760,10 @@ HRESULT WINAPI OleTranslateColor(
   return S_OK;
 }
 
-extern HRESULT WINAPI OLEAUTPS_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DECLSPEC_HIDDEN;
-extern BOOL WINAPI OLEAUTPS_DllMain(HINSTANCE, DWORD, LPVOID) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI OLEAUTPS_DllRegisterServer(void) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI OLEAUTPS_DllUnregisterServer(void) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI OLEAUTPS_DllGetClassObject(REFCLSID, REFIID, LPVOID *);
+extern BOOL WINAPI OLEAUTPS_DllMain(HINSTANCE, DWORD, LPVOID);
+extern HRESULT WINAPI OLEAUTPS_DllRegisterServer(void);
+extern HRESULT WINAPI OLEAUTPS_DllUnregisterServer(void);
 
 extern HRESULT WINAPI CreateProxyFromTypeInfo(ITypeInfo *typeinfo,
         IUnknown *outer, REFIID iid, IRpcProxyBuffer **proxy, void **obj);
@@ -820,7 +818,7 @@ static BOOL actctx_get_typelib_module(REFIID iid, WCHAR *module, DWORD len)
 
     if (tlib->name_len/sizeof(WCHAR) >= len)
     {
-        ERR("need larger module buffer, %u\n", tlib->name_len);
+        ERR("need larger module buffer, %lu.\n", tlib->name_len);
         return FALSE;
     }
 
@@ -832,13 +830,13 @@ static BOOL actctx_get_typelib_module(REFIID iid, WCHAR *module, DWORD len)
 static HRESULT reg_get_typelib_module(REFIID iid, WCHAR *module, DWORD len)
 {
     REGSAM opposite = (sizeof(void*) == 8) ? KEY_WOW64_32KEY : KEY_WOW64_64KEY;
-    char tlguid[200], typelibkey[300], interfacekey[300], ver[100], tlfn[260];
+    char tlguid[200], typelibkey[316], interfacekey[300], ver[100], tlfn[260];
     DWORD tlguidlen, verlen, type;
     LONG tlfnlen, err;
     BOOL is_wow64;
     HKEY ikey;
 
-    sprintf( interfacekey, "Interface\\{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\\Typelib",
+    sprintf( interfacekey, "Interface\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\\Typelib",
         iid->Data1, iid->Data2, iid->Data3,
         iid->Data4[0], iid->Data4[1], iid->Data4[2], iid->Data4[3],
         iid->Data4[4], iid->Data4[5], iid->Data4[6], iid->Data4[7]
@@ -989,7 +987,7 @@ static HRESULT WINAPI dispatch_typelib_ps_CreateProxy(IPSFactoryBuffer *iface,
         hr = dispatch_create_proxy(outer, proxy, out);
 
     if (FAILED(hr))
-        ERR("Failed to create proxy, hr %#x.\n", hr);
+        ERR("Failed to create proxy, hr %#lx.\n", hr);
 
     ITypeInfo_ReleaseTypeAttr(typeinfo, attr);
     ITypeInfo_Release(typeinfo);
@@ -1007,6 +1005,114 @@ static HRESULT dispatch_create_stub(IUnknown *server, IRpcStubBuffer **stub)
     hr = IPSFactoryBuffer_CreateStub(factory, &IID_IDispatch, server, stub);
     IPSFactoryBuffer_Release(factory);
     return hr;
+}
+
+struct dispinterface_stub
+{
+    CInterfaceStubVtbl stub_vtbl;
+    CStdStubBuffer stub_buffer;
+};
+
+static struct dispinterface_stub *impl_from_IRpcStubBuffer(IRpcStubBuffer *iface)
+{
+    return CONTAINING_RECORD(&iface->lpVtbl, struct dispinterface_stub, stub_buffer.lpVtbl);
+}
+
+static ULONG WINAPI dispinterface_stub_Release(IRpcStubBuffer *iface)
+{
+    struct dispinterface_stub *stub = impl_from_IRpcStubBuffer(iface);
+    unsigned int refcount = InterlockedDecrement(&stub->stub_buffer.RefCount);
+
+    TRACE("%p decreasing refcount to %u.\n", stub, refcount);
+
+    if (!refcount)
+    {
+        /* Copied from NdrCStdStubBuffer_Release(), but supposedly incorrect
+         * according to the comment there. */
+        IRpcStubBuffer_Disconnect(iface);
+
+        free(stub);
+    }
+    return refcount;
+}
+
+extern const ExtendedProxyFileInfo oleaut32_oaidl_ProxyFileInfo;
+
+static const CInterfaceStubVtbl *find_idispatch_stub_vtbl(void)
+{
+    CInterfaceStubVtbl *const *vtbl;
+
+    for (vtbl = oleaut32_oaidl_ProxyFileInfo.pStubVtblList; *vtbl; ++vtbl)
+    {
+        if (IsEqualGUID((*vtbl)->header.piid, &IID_IDispatch))
+            return *vtbl;
+    }
+
+    assert(0);
+    return NULL;
+}
+
+/* Normal dispinterfaces have an IID specified by the IDL compiler as DIID_*,
+ * but are otherwise identical to IDispatch. Unfortunately, such interfaces may
+ * not actually support IDispatch in QueryInterface.
+ *
+ * This becomes a problem, since CreateStub() was designed such that, for some
+ * reason, the caller need not actually pass the interface matching "iid". As
+ * such the standard rpcrt4 implementation will query the server for the
+ * relevant IID.
+ *
+ * This means that we cannot just pass IID_IDispatch with the object, even
+ * though it is in theory an IDispatch. However, while the standard stub
+ * constructor is not exported from rpcrt4, all of the vtbl methods are, and
+ * the type is public, so we *can* manually create it ourselves, bypassing the
+ * QueryInterface check.
+ *
+ * This relies on some rpcrt4 implementation details.
+ */
+static HRESULT dispinterface_create_stub(IUnknown *server, const GUID *iid, IRpcStubBuffer **stub)
+{
+    const CInterfaceStubVtbl *stub_vtbl = find_idispatch_stub_vtbl();
+    struct dispinterface_stub *object;
+    void *dispatch;
+    HRESULT hr;
+
+    if (!(object = calloc(1, sizeof(*object))))
+        return E_OUTOFMEMORY;
+
+    /* It's possible we can just assume that "server" is already the
+     * dispinterface type—we don't have tests for this—but since rpcrt4 queries
+     * (which we do have tests for) it makes sense for us to match that
+     * behaviour. */
+    if (FAILED(hr = IUnknown_QueryInterface(server, iid, &dispatch)))
+    {
+        ERR("Object does not support interface %s.\n", debugstr_guid(iid));
+        free(object);
+        return hr;
+    }
+
+    object->stub_vtbl.header = stub_vtbl->header;
+    object->stub_vtbl.Vtbl.QueryInterface             = CStdStubBuffer_QueryInterface;
+    object->stub_vtbl.Vtbl.AddRef                     = CStdStubBuffer_AddRef;
+    object->stub_vtbl.Vtbl.Release                    = dispinterface_stub_Release;
+    object->stub_vtbl.Vtbl.Connect                    = CStdStubBuffer_Connect;
+    object->stub_vtbl.Vtbl.Disconnect                 = CStdStubBuffer_Disconnect;
+    object->stub_vtbl.Vtbl.Invoke                     = CStdStubBuffer_Invoke;
+    object->stub_vtbl.Vtbl.IsIIDSupported             = CStdStubBuffer_IsIIDSupported;
+    object->stub_vtbl.Vtbl.CountRefs                  = CStdStubBuffer_CountRefs;
+    object->stub_vtbl.Vtbl.DebugServerQueryInterface  = CStdStubBuffer_DebugServerQueryInterface;
+    object->stub_vtbl.Vtbl.DebugServerRelease         = CStdStubBuffer_DebugServerRelease;
+    object->stub_buffer.lpVtbl = &object->stub_vtbl.Vtbl;
+    object->stub_buffer.RefCount = 1;
+    object->stub_buffer.pvServerObject = dispatch;
+    /* rpcrt4 will also fill pPSFactory, but it never uses it except in the
+     * Release method (which we reimplement). It's only to keep a reference to
+     * the module to implement NdrDllCanUnloadNow(). We use the default
+     * DllCanUnloadNow() from winecrt0, which always returns S_FALSE, so don't
+     * bother filling pPSFactory. */
+
+    TRACE("Created stub %p.\n", object);
+    *stub = (IRpcStubBuffer *)&object->stub_buffer.lpVtbl;
+    return S_OK;
 }
 
 static HRESULT WINAPI dispatch_typelib_ps_CreateStub(IPSFactoryBuffer *iface,
@@ -1032,10 +1138,10 @@ static HRESULT WINAPI dispatch_typelib_ps_CreateStub(IPSFactoryBuffer *iface,
     if (attr->typekind == TKIND_INTERFACE || (attr->wTypeFlags & TYPEFLAG_FDUAL))
         hr = CreateStubFromTypeInfo(typeinfo, iid, server, stub);
     else
-        hr = dispatch_create_stub(server, stub);
+        hr = dispinterface_create_stub(server, iid, stub);
 
     if (FAILED(hr))
-        ERR("Failed to create proxy, hr %#x.\n", hr);
+        ERR("Failed to create stub, hr %#lx.\n", hr);
 
     ITypeInfo_ReleaseTypeAttr(typeinfo, attr);
     ITypeInfo_Release(typeinfo);
@@ -1090,31 +1196,13 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
     return OLEAUTPS_DllGetClassObject(rclsid, iid, ppv);
 }
 
-/***********************************************************************
- *		DllCanUnloadNow (OLEAUT32.@)
- *
- * Determine if this dll can be unloaded from the callers address space.
- *
- * PARAMS
- *  None.
- *
- * RETURNS
- *  Always returns S_FALSE. This dll cannot be unloaded.
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return S_FALSE;
-}
-
 /*****************************************************************************
  *              DllMain         [OLEAUT32.@]
  */
 BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
 {
-    static const WCHAR oanocacheW[] = {'o','a','n','o','c','a','c','h','e',0};
-
     if(fdwReason == DLL_PROCESS_ATTACH)
-        bstr_cache_enabled = !GetEnvironmentVariableW(oanocacheW, NULL, 0);
+        bstr_cache_enabled = !GetEnvironmentVariableW(L"oanocache", NULL, 0);
 
     return OLEAUTPS_DllMain( hInstDll, fdwReason, lpvReserved );
 }
@@ -1150,97 +1238,58 @@ HCURSOR WINAPI OleIconToCursor( HINSTANCE hinstExe, HICON hIcon)
  */
 HRESULT WINAPI GetAltMonthNames(LCID lcid, LPOLESTR **str)
 {
-    static const WCHAR ar_month1W[] = {0x645,0x62d,0x631,0x645,0};
-    static const WCHAR ar_month2W[] = {0x635,0x641,0x631,0};
-    static const WCHAR ar_month3W[] = {0x631,0x628,0x64a,0x639,' ',0x627,0x644,0x627,0x648,0x644,0};
-    static const WCHAR ar_month4W[] = {0x631,0x628,0x64a,0x639,' ',0x627,0x644,0x62b,0x627,0x646,0x64a,0};
-    static const WCHAR ar_month5W[] = {0x62c,0x645,0x627,0x62f,0x649,' ',0x627,0x644,0x627,0x648,0x644,0x649,0};
-    static const WCHAR ar_month6W[] = {0x62c,0x645,0x627,0x62f,0x649,' ',0x627,0x644,0x62b,0x627,0x646,0x64a,0x629,0};
-    static const WCHAR ar_month7W[] = {0x631,0x62c,0x628,0};
-    static const WCHAR ar_month8W[] = {0x634,0x639,0x628,0x627,0x646,0};
-    static const WCHAR ar_month9W[] = {0x631,0x645,0x636,0x627,0x646,0};
-    static const WCHAR ar_month10W[] = {0x634,0x648,0x627,0x643,0};
-    static const WCHAR ar_month11W[] = {0x630,0x648,' ',0x627,0x644,0x642,0x639,0x62f,0x629,0};
-    static const WCHAR ar_month12W[] = {0x630,0x648,' ',0x627,0x644,0x62d,0x62c,0x629,0};
-
     static const WCHAR *arabic_hijri[] =
     {
-        ar_month1W,
-        ar_month2W,
-        ar_month3W,
-        ar_month4W,
-        ar_month5W,
-        ar_month6W,
-        ar_month7W,
-        ar_month8W,
-        ar_month9W,
-        ar_month10W,
-        ar_month11W,
-        ar_month12W,
+        L"\x0645\x062d\x0631\x0645",
+        L"\x0635\x0641\x0631",
+        L"\x0631\x0628\x064a\x0639 \x0627\x0644\x0627\x0648\x0644",
+        L"\x0631\x0628\x064a\x0639 \x0627\x0644\x062b\x0627\x0646\x064a",
+        L"\x062c\x0645\x0627\x062f\x0649 \x0627\x0644\x0627\x0648\x0644\x0649",
+        L"\x062c\x0645\x0627\x062f\x0649 \x0627\x0644\x062b\x0627\x0646\x064a\x0629",
+        L"\x0631\x062c\x0628",
+        L"\x0634\x0639\x0628\x0627\x0646",
+        L"\x0631\x0645\x0636\x0627\x0646",
+        L"\x0634\x0648\x0627\x0643",
+        L"\x0630\x0648 \x0627\x0644\x0642\x0639\x062f\x0629",
+        L"\x0630\x0648 \x0627\x0644\x062d\x062c\x0629",
         NULL
     };
-
-    static const WCHAR pl_month1W[] = {'s','t','y','c','z','n','i','a',0};
-    static const WCHAR pl_month2W[] = {'l','u','t','e','g','o',0};
-    static const WCHAR pl_month3W[] = {'m','a','r','c','a',0};
-    static const WCHAR pl_month4W[] = {'k','w','i','e','t','n','i','a',0};
-    static const WCHAR pl_month5W[] = {'m','a','j','a',0};
-    static const WCHAR pl_month6W[] = {'c','z','e','r','w','c','a',0};
-    static const WCHAR pl_month7W[] = {'l','i','p','c','a',0};
-    static const WCHAR pl_month8W[] = {'s','i','e','r','p','n','i','a',0};
-    static const WCHAR pl_month9W[] = {'w','r','z','e',0x15b,'n','i','a',0};
-    static const WCHAR pl_month10W[] = {'p','a',0x17a,'d','z','i','e','r','n','i','k','a',0};
-    static const WCHAR pl_month11W[] = {'l','i','s','t','o','p','a','d','a',0};
-    static const WCHAR pl_month12W[] = {'g','r','u','d','n','i','a',0};
 
     static const WCHAR *polish_genitive_names[] =
     {
-        pl_month1W,
-        pl_month2W,
-        pl_month3W,
-        pl_month4W,
-        pl_month5W,
-        pl_month6W,
-        pl_month7W,
-        pl_month8W,
-        pl_month9W,
-        pl_month10W,
-        pl_month11W,
-        pl_month12W,
+        L"stycznia",
+        L"lutego",
+        L"marca",
+        L"kwietnia",
+        L"maja",
+        L"czerwca",
+        L"lipca",
+        L"sierpnia",
+        L"wrze\x015bnia",
+        L"pa\x017a" "dziernika",
+        L"listopada",
+        L"grudnia",
         NULL
     };
-
-    static const WCHAR ru_month1W[] = {0x44f,0x43d,0x432,0x430,0x440,0x44f,0};
-    static const WCHAR ru_month2W[] = {0x444,0x435,0x432,0x440,0x430,0x43b,0x44f,0};
-    static const WCHAR ru_month3W[] = {0x43c,0x430,0x440,0x442,0x430,0};
-    static const WCHAR ru_month4W[] = {0x430,0x43f,0x440,0x435,0x43b,0x44f,0};
-    static const WCHAR ru_month5W[] = {0x43c,0x430,0x44f,0};
-    static const WCHAR ru_month6W[] = {0x438,0x44e,0x43d,0x44f,0};
-    static const WCHAR ru_month7W[] = {0x438,0x44e,0x43b,0x44f,0};
-    static const WCHAR ru_month8W[] = {0x430,0x432,0x433,0x443,0x441,0x442,0x430,0};
-    static const WCHAR ru_month9W[] = {0x441,0x435,0x43d,0x442,0x44f,0x431,0x440,0x44f,0};
-    static const WCHAR ru_month10W[] = {0x43e,0x43a,0x442,0x44f,0x431,0x440,0x44f,0};
-    static const WCHAR ru_month11W[] = {0x43d,0x43e,0x44f,0x431,0x440,0x44f,0};
-    static const WCHAR ru_month12W[] = {0x434,0x435,0x43a,0x430,0x431,0x440,0x44f,0};
 
     static const WCHAR *russian_genitive_names[] =
     {
-        ru_month1W,
-        ru_month2W,
-        ru_month3W,
-        ru_month4W,
-        ru_month5W,
-        ru_month6W,
-        ru_month7W,
-        ru_month8W,
-        ru_month9W,
-        ru_month10W,
-        ru_month11W,
-        ru_month12W,
+        L"\x044f\x043d\x0432\x0430\x0440\x044f",
+        L"\x0444\x0435\x0432\x0440\x0430\x043b\x044f",
+        L"\x043c\x0430\x0440\x0442\x0430",
+        L"\x0430\x043f\x0440\x0435\x043b\x044f",
+        L"\x043c\x0430\x044f",
+        L"\x0438\x044e\x043d\x044f",
+        L"\x0438\x044e\x043b\x044f",
+        L"\x0430\x0432\x0433\x0443\x0441\x0442\x0430",
+        L"\x0441\x0435\x043d\x0442\x044f\x0431\x0440\x044f",
+        L"\x043e\x043a\x0442\x044f\x0431\x0440\x044f",
+        L"\x043d\x043e\x044f\x0431\x0440\x044f",
+        L"\x0434\x0435\x043a\x0430\x0431\x0440\x044f",
         NULL
     };
 
-    TRACE("%#x, %p\n", lcid, str);
+    TRACE("%#lx, %p.\n", lcid, str);
 
     if (PRIMARYLANGID(LANGIDFROMLCID(lcid)) == LANG_ARABIC)
         *str = (LPOLESTR *)arabic_hijri;
