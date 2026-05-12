@@ -1684,10 +1684,8 @@ ChangePos:
             ZeroMemory(&rss, REGSHELLSTATE_SIZE);
             rss.dwSize = REGSHELLSTATE_SIZE;
             rss.ss.fDoubleClickInWebView = 1;
-            rss.ss.fShowCompColor = 1;
             rss.ss.fShowExtensions = 1;
             rss.ss.fShowAllObjects = 1;
-            rss.ss.fShowInfoTip = 1;
             rss.ss.iSortDirection = 1;
             rss.ss.fStartPanelOn = 1;
             rss.ss.version = REGSHELLSTATE_VERSION;
