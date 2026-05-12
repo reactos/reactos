@@ -12,7 +12,7 @@
 @ varargs MakeString(ptr long)
 @ stub MatchCmdLine
 @ stdcall MatchEnumTag(ptr wstr long ptr ptr)
-@ stub MatchTagsInCmdLine
+@ stdcall MatchTagsInCmdLine(ptr ptr long long ptr long ptr)
 @ stdcall MatchToken(wstr wstr)
 @ stdcall NsGetFriendlyNameFromIfName(long wstr ptr ptr)
 @ stub NsGetIfNameFromFriendlyName

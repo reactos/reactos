@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS GUI first stage setup application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Resource header
+ * COPYRIGHT:   Copyright 2008-2010 Matthias Kupfer <mkupfer@reactos.org>
+ *              Copyright 2008-2009 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2018-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ */
+
 #pragma once
 
 /* Bitmaps */
@@ -62,9 +71,11 @@
 #define IDC_ITEM             2062
 #define IDC_PROCESSPROGRESS  2063
 
-#define IDD_RESTARTPAGE      2070
+#define IDD_FINISHPAGE       2070
 #define IDC_FINISHTITLE      2071
-#define IDC_RESTART_PROGRESS 2072
+#define IDC_FINISHTEXT       2072
+#define IDC_RESTART_PROGRESS 2073
+#define IDD_ABORTPAGE        2075 // Page derived from IDD_FINISHPAGE
 
 #define IDD_ADVINSTOPTS      2080
 #define IDC_PATH             2081
@@ -96,12 +107,14 @@
 #define IDS_SUMMARYSUBTITLE  5010
 #define IDS_PROCESSTITLE     5011
 #define IDS_PROCESSSUBTITLE  5012
-#define IDS_RESTARTTITLE     5013
-#define IDS_RESTARTSUBTITLE  5014
 #define IDS_ABORTSETUP       5020
 #define IDS_ABORTSETUP2      5021
 #define IDS_NO_TXTSETUP_SIF  5022
+#define IDS_FINISH_NO_REBOOT 5023
+#define IDS_ABORT_NO_REBOOT  5024
 #define IDS_INSTALLBTN       5030
+#define IDS_RESTARTBTN       5031
+#define IDS_POSTPONEBTN      5032
 #define IDS_VOLUME_NOFORMAT  5040
 
 #define IDS_INSTALLATION_NAME   5100

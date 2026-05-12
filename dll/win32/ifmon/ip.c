@@ -242,7 +242,7 @@ IpShowAdapters(
     WCHAR szFriendlyName[80];
     DWORD dwFriendlyNameSize;
     PTCPIP_PROPERTIES pProperties = NULL;
-    PWSTR pBuffer;
+    PWSTR pBuffer, pStart, pEnd;
 
     dwError = NhpAllocateAndGetInterfaceInfoFromStack(&pTable,
                                                       &dwCount,
@@ -291,58 +291,79 @@ IpShowAdapters(
                 {
                     PrintMessageFromModule(hDllInstance, (pProperties->dwDhcp) ? IDS_DHCP_ON : IDS_DHCP_OFF);
 
-                    if (*pProperties->pszIpAddress == UNICODE_NULL)
+                    if (pProperties->dwDhcp == 0)
                     {
-                        PrintMessageFromModule(hDllInstance, IDS_NOIPADDRESS);
-                    }
-                    else
-                    {
-                        PrintMessageFromModule(hDllInstance, IDS_IPADDRESS, pProperties->pszIpAddress);
-                    }
+                        if (*pProperties->pszIpAddress == UNICODE_NULL)
+                        {
+                            PrintMessageFromModule(hDllInstance, IDS_NOIPADDRESS);
+                        }
+                        else
+                        {
+                            PrintMessageFromModule(hDllInstance, IDS_IPADDRESS, pProperties->pszIpAddress);
+                        }
 
-                    if (*pProperties->pszSubnetMask == UNICODE_NULL)
-                    {
-                        PrintMessageFromModule(hDllInstance, IDS_NOSUBNETMASK);
-                    }
-                    else
-                    {
-                        PrintMessageFromModule(hDllInstance, IDS_SUBNETMASK, pProperties->pszSubnetMask);
-                    }
+                        if (*pProperties->pszSubnetMask == UNICODE_NULL)
+                        {
+                            PrintMessageFromModule(hDllInstance, IDS_NOSUBNETMASK);
+                        }
+                        else
+                        {
+                            PrintMessageFromModule(hDllInstance, IDS_SUBNETMASK, pProperties->pszSubnetMask);
+                        }
 
-                    pBuffer = ExtractParameterValue(pProperties->pszParameters, L"DefGw");
-                    if (pBuffer)
-                    {
-                        PrintMessage(L"    Default Gateway:                      %s\n", pBuffer);
-                        HeapFree(GetProcessHeap(), 0, pBuffer);
-                    }
+                        pBuffer = ExtractParameterValue(pProperties->pszParameters, L"DefGw");
+                        if (pBuffer)
+                        {
+                            PrintMessageFromModule(hDllInstance, IDS_DEFAULTGATEWAY, pBuffer);
+                            HeapFree(GetProcessHeap(), 0, pBuffer);
+                        }
 
-                    pBuffer = ExtractParameterValue(pProperties->pszParameters, L"GwMetric");
-                    if (pBuffer)
-                    {
-                        PrintMessage(L"    Gateway Metric:                       %s\n", pBuffer);
-                        HeapFree(GetProcessHeap(), 0, pBuffer);
+                        pBuffer = ExtractParameterValue(pProperties->pszParameters, L"GwMetric");
+                        if (pBuffer)
+                        {
+                            PrintMessageFromModule(hDllInstance, IDS_GATEWAYMETRIC, pBuffer);
+                            HeapFree(GetProcessHeap(), 0, pBuffer);
+                        }
                     }
 
                     pBuffer = ExtractParameterValue(pProperties->pszParameters, L"IfMetric");
                     if (pBuffer)
                     {
-                        PrintMessage(L"    Interface Metric:                     %s\n", pBuffer);
+                        PrintMessageFromModule(hDllInstance, IDS_INTERFACEMETRIC, pBuffer);
                         HeapFree(GetProcessHeap(), 0, pBuffer);
                     }
                 }
 
                 if (DisplayFlags & DISPLAY_DNS)
                 {
-
-                    pBuffer = ExtractParameterValue(pProperties->pszParameters, L"DNS");
-                    if (pBuffer)
+                    if (pProperties->dwDhcp == 0)
                     {
-                        PrintMessage(L"    Statically configured DNS Servers:    %s\n", pBuffer);
-                        HeapFree(GetProcessHeap(), 0, pBuffer);
+                        pBuffer = ExtractParameterValue(pProperties->pszParameters, L"DNS");
+                        if (pBuffer)
+                        {
+                            pEnd = wcschr(pBuffer, L',');
+                            if (pEnd == NULL)
+                            {
+                                PrintMessageFromModule(hDllInstance, IDS_STATICNAMESERVER, pBuffer);
+                            }
+                            else
+                            {
+                                pStart = pBuffer;
+                                *pEnd = UNICODE_NULL;
+                                PrintMessageFromModule(hDllInstance, IDS_STATICNAMESERVER, pBuffer);
+                                for (;;)
+                                {
+                                    pStart = pEnd + 1;
+                                    pEnd = wcschr(pStart, L',');
+                                    if (pEnd == NULL)
+                                        break;
+                                    *pEnd = UNICODE_NULL;
+                                    PrintMessageFromModule(hDllInstance, IDS_EMPTYLINE, pBuffer);
+                                }
+                            }
+                            HeapFree(GetProcessHeap(), 0, pBuffer);
+                        }
                     }
-
-//                    PrintMessage(L"    DNS servers configured through DHCP:  %s\n", IpBuffer);
-//                    PrintMessage(L"                                          %s\n", IpBuffer);
                 }
 
                 CoTaskMemFree(pProperties);
@@ -461,7 +482,7 @@ IpDumpFn(
     }
 
     PrintMessageFromModule(hDllInstance, IDS_DUMP_HEADERLINE);
-    PrintMessage(L"# Interface IP Configuration\n");
+    PrintMessageFromModule(hDllInstance, IDS_DUMP_IP_HEADER);
     PrintMessageFromModule(hDllInstance, IDS_DUMP_HEADERLINE);
     PrintMessage(L"pushd interface ip\n");
     PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
@@ -486,7 +507,7 @@ IpDumpFn(
                                    0);
 
         PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
-        PrintMessageFromModule(hDllInstance, IDS_DUMP_IP_HEADER, szFriendlyName);
+        PrintMessageFromModule(hDllInstance, IDS_DUMP_IP_INTERFACE, szFriendlyName);
         PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
 
         GetInterfaceProperties(&pTable[i].DeviceGuid, &pProperties);
@@ -532,7 +553,7 @@ IpDumpFn(
 
     PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
     PrintMessage(L"popd\n");
-    PrintMessage(L"# End of Interface IP Configuration\n");
+    PrintMessageFromModule(hDllInstance, IDS_DUMP_IP_FOOTER);
     PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
 
     if (pTable)

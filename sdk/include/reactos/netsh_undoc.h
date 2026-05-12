@@ -24,6 +24,17 @@ MakeString(
     ...);
 
 DWORD
+WINAPI
+MatchTagsInCmdLine(
+    _In_ HANDLE hModule,
+    _Inout_ LPWSTR *ppwcArguments,
+    _In_ DWORD dwCurrentIndex,
+    _In_ DWORD dwArgCount,
+    _In_ TAG_TYPE *pttTags,
+    _In_ DWORD dwTagCount,
+    _Out_ DWORD *pdwTagType);
+
+DWORD
 WINAPI 
 NsGetFriendlyNameFromIfName(
     _In_ DWORD dwParam1,

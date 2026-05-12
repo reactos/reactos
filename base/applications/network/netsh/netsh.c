@@ -369,6 +369,36 @@ MatchEnumTag(
     return ERROR_NOT_FOUND;
 }
 
+DWORD
+WINAPI
+MatchTagsInCmdLine(
+    _In_ HANDLE hModule,
+    _Inout_ LPWSTR *ppwcArguments,
+    _In_ DWORD dwCurrentIndex,
+    _In_ DWORD dwArgCount,
+    _In_ TAG_TYPE *pttTags,
+    _In_ DWORD dwTagCount,
+    _Out_ DWORD *pdwTagType)
+{
+    DWORD i;
+
+    DPRINT1("MatchTagsInCmdLine(%p %p %lu %lu %p %lu %p) stub!\n",
+            hModule, ppwcArguments, dwCurrentIndex, dwArgCount,
+            pttTags, dwTagCount, pdwTagType);
+
+    for (i = dwCurrentIndex; i < dwArgCount; i++)
+    {
+        DPRINT1("Argument %lu: %S\n", i, ppwcArguments[i]);
+    }
+
+    for (i = 0; i < dwTagCount; i++)
+    {
+        DPRINT1("Tag %lu: %S\n", i, pttTags[i].pwszTag);
+    }
+
+    return 0;
+}
+
 BOOL
 WINAPI
 MatchToken(

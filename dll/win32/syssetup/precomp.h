@@ -22,4 +22,18 @@
 #include "globals.h"
 #include "resource.h"
 
+#define EnableDlgItem(hDlg, nID, bEnable)   \
+    EnableWindow(GetDlgItem((hDlg), (nID)), (bEnable))
+
+#define ShowDlgItem(hDlg, nID, nCmdShow)    \
+    ShowWindow(GetDlgItem((hDlg), (nID)), (nCmdShow))
+
+/* These are public names and values determined from MFC, and compatible with Windows */
+// Property Sheet control IDs (determined with Spy++)
+#define IDC_TAB_CONTROL                 0x3020
+#define ID_APPLY_NOW                    0x3021
+#define ID_WIZBACK                      0x3023
+#define ID_WIZNEXT                      0x3024
+#define ID_WIZFINISH                    0x3025
+
 #endif /* _SYSSETUP_PCH_ */

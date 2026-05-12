@@ -211,7 +211,7 @@ WelcomeDlgProc(HWND hwndDlg,
             hwndControl = GetParent(hwndDlg);
 
             /* Center the wizard window */
-            CenterWindow (hwndControl);
+            CenterWindow(hwndControl);
 
             /* Hide the system menu */
             dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
@@ -219,8 +219,8 @@ WelcomeDlgProc(HWND hwndDlg,
 
             /* Hide and disable the 'Cancel' button */
             hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
-            ShowWindow (hwndControl, SW_HIDE);
-            EnableWindow (hwndControl, FALSE);
+            ShowWindow(hwndControl, SW_HIDE);
+            EnableWindow(hwndControl, FALSE);
 
             /* Set title font */
             SendDlgItemMessage(hwndDlg,
@@ -231,7 +231,6 @@ WelcomeDlgProc(HWND hwndDlg,
         }
         break;
 
-
         case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
@@ -239,15 +238,27 @@ WelcomeDlgProc(HWND hwndDlg,
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
+                {
                     LogItem(L"BEGIN", L"WelcomePage");
-                    /* Enable the Next button */
+                    /* Only "Next" for the first page and hide "Back" */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+                    // PropSheet_ShowWizButtons(GetParent(hwndDlg), 0, PSWIZB_BACK);
+                    ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_HIDE);
                     if (pSetupData->UnattendSetup)
                     {
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_ACKPAGE);
                         return TRUE;
                     }
                     break;
+                }
+
+                case PSN_KILLACTIVE:
+                {
+                    /* Show "Back" button */
+                    // PropSheet_ShowWizButtons(GetParent(hwndDlg), PSWIZB_BACK, PSWIZB_BACK);
+                    ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_SHOW);
+                    break;
+                }
 
                 case PSN_WIZNEXT:
                     LogItem(L"END", L"WelcomePage");
@@ -1722,7 +1733,7 @@ UpdateAutoDaylightCheckbox(HWND hwndDlg, PTIMEZONE_ENTRY Entry)
     BOOL bHasDST = (Entry != NULL && HasDaylightSavingTime(Entry));
 
     /* Enable or disable the checkbox based on DST support */
-    EnableWindow(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT), bHasDST);
+    EnableDlgItem(hwndDlg, IDC_AUTODAYLIGHT, bHasDST);
 
     /* Check the checkbox only if DST is supported, otherwise uncheck it */
     SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK,
@@ -1920,12 +1931,12 @@ DateTimePageDlgProc(HWND hwndDlg,
                 if (!SetupData->DisableAutoDaylightTimeSet && Entry != NULL && HasDaylightSavingTime(Entry))
                 {
                     SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT), TRUE);
+                    EnableDlgItem(hwndDlg, IDC_AUTODAYLIGHT, TRUE);
                 }
                 else
                 {
                     SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT), FALSE);
+                    EnableDlgItem(hwndDlg, IDC_AUTODAYLIGHT, FALSE);
                 }
             }
             else
@@ -2552,16 +2563,18 @@ ProcessPageDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT4), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_CHECK4), SW_HIDE);
+            ShowDlgItem(hwndDlg, IDC_TASKTEXT4, SW_HIDE);
+            ShowDlgItem(hwndDlg, IDC_CHECK4, SW_HIDE);
             s_hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON), IMAGE_ICON, 16, 16, 0);
             s_hArrowIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_ARROWICON), IMAGE_ICON, 16, 16, 0);
             s_hCrossIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CROSSICON), IMAGE_ICON, 16, 16, 0);
             s_hNormalFont = (HFONT)SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_GETFONT, 0, 0);
             break;
+        }
 
         case WM_DESTROY:
             DestroyIcon(s_hCheckIcon);
@@ -2573,12 +2586,17 @@ ProcessPageDlgProc(HWND hwndDlg,
             switch (((LPNMHDR)lParam)->code)
             {
                 case PSN_SETACTIVE:
+                {
                     LogItem(L"BEGIN", L"ProcessPage");
 
-                    /* Disable the Back and Next buttons */
+                    /* Disable all buttons during installation; hide "Back" */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
+                    // PropSheet_ShowWizButtons(GetParent(hwndDlg), 0, PSWIZB_BACK);
+                    ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_HIDE);
+
                     RunItemCompletionThread(hwndDlg);
                     break;
+                }
 
                 case PSN_WIZNEXT:
                     LogItem(L"END", L"ProcessPage");
@@ -2682,7 +2700,6 @@ FinishDlgProc(HWND hwndDlg,
               WPARAM wParam,
               LPARAM lParam)
 {
-
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -2708,8 +2725,12 @@ FinishDlgProc(HWND hwndDlg,
                 SetInstallationCompleted();
                 PostQuitMessage(0);
             }
+
+            /* Ensure that the installer wizard window is made visible and focused */
+            ShowWindow(GetParent(hwndDlg), SW_SHOW);
+            SwitchToThisWindow(GetParent(hwndDlg), TRUE);
+            break;
         }
-        break;
 
         case WM_DESTROY:
         {
@@ -2720,11 +2741,11 @@ FinishDlgProc(HWND hwndDlg,
 
         case WM_TIMER:
         {
-            INT Position;
             HWND hWndProgress;
+            INT Position;
 
             hWndProgress = GetDlgItem(hwndDlg, IDC_RESTART_PROGRESS);
-            Position = SendMessage(hWndProgress, PBM_GETPOS, 0, 0);
+            Position = SendMessageW(hWndProgress, PBM_GETPOS, 0, 0);
             if (Position == 300)
             {
                 KillTimer(hwndDlg, 1);
@@ -2732,10 +2753,10 @@ FinishDlgProc(HWND hwndDlg,
             }
             else
             {
-                SendMessage(hWndProgress, PBM_SETPOS, Position + 1, 0);
+                SendMessageW(hWndProgress, PBM_SETPOS, Position + 1, 0);
             }
+            return TRUE;
         }
-        return TRUE;
 
         case WM_NOTIFY:
         {
@@ -2744,14 +2765,22 @@ FinishDlgProc(HWND hwndDlg,
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
-                    /* Enable the correct buttons on for the active page */
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH);
+                {
+                    HWND hWndParent = GetParent(hwndDlg);
 
-                    SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0,
-                                       MAKELPARAM(0, 300));
+                    /* Only "Finish" for closing the wizard, and hide "Back" and "Next" */
+                    PropSheet_SetWizButtons(hWndParent, PSWIZB_FINISH);
+                    // PropSheet_ShowWizButtons(hWndParent, 0, PSWIZB_BACK | PSWIZB_NEXT | PSWIZB_CANCEL);
+                    ShowDlgItem(hWndParent, ID_WIZBACK, SW_HIDE);
+                    ShowDlgItem(hWndParent, ID_WIZNEXT, SW_HIDE);
+
+                    /* Set up the reboot progress bar and countdown timer.
+                     * 300 steps at 50 ms each: 15 seconds */
+                    SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, 300));
                     SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETPOS, 0, 0);
                     SetTimer(hwndDlg, 1, 50, NULL);
                     break;
+                }
 
                 case PSN_WIZFINISH:
                     DestroyWindow(GetParent(hwndDlg));
@@ -2760,8 +2789,8 @@ FinishDlgProc(HWND hwndDlg,
                 default:
                     break;
             }
+            break;
         }
-        break;
 
         default:
             break;

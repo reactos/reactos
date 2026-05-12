@@ -18,6 +18,22 @@
 
 import "oaidl.idl";
 
+#ifndef __WIDL__
+#define threading(model)
+#define progid(str)
+#define vi_progid(str)
+#endif
+
+[
+    helpstring("Active DS Type Library"),
+    uuid(97d25db0-0363-11cf-abc4-02608c9e7553),
+    version(1.0)
+]
+library ActiveDs
+{
+
+importlib("stdole2.tlb");
+
 typedef enum
 {
     ADS_RIGHT_DS_CREATE_CHILD         = 0x00000001,
@@ -83,8 +99,6 @@ typedef enum
     ADS_SEARCHPREF_EXTENDED_DN
 } ADS_SEARCHPREF_ENUM;
 
-typedef ADS_SEARCHPREF_ENUM *PADS_SEARCHPREF_INFO;
-
 typedef enum
 {
     ADS_STATUS_S_OK,
@@ -124,6 +138,13 @@ typedef enum
     ADSTYPE_DN_WITH_BINARY,
     ADSTYPE_DN_WITH_STRING
 } ADSTYPEENUM;
+
+typedef enum
+{
+    ADS_SCOPE_BASE,
+    ADS_SCOPE_ONELEVEL,
+    ADS_SCOPE_SUBTREE
+} ADS_SCOPEENUM;
 
 typedef enum
 {
@@ -304,7 +325,7 @@ typedef struct _adsvalue
         ADS_NT_SECURITY_DESCRIPTOR SecurityDescriptor;
         PADS_DN_WITH_BINARY pDNWithBinary;
         PADS_DN_WITH_STRING pDNWithString;
-    };
+    } DUMMYUNIONNAME;
 } ADSVALUE, *PADSVALUE;
 
 typedef struct ads_searchpref_info
@@ -312,7 +333,7 @@ typedef struct ads_searchpref_info
     ADS_SEARCHPREF dwSearchPref;
     ADSVALUE vValue;
     ADS_STATUS dwStatus;
-} ADS_SEARCHPREF_INFO;
+} ADS_SEARCHPREF_INFO, *PADS_SEARCHPREF_INFO;
 
 typedef struct ads_search_column
 {
@@ -322,6 +343,55 @@ typedef struct ads_search_column
     DWORD dwNumValues;
     HANDLE hReserved;
 } ADS_SEARCH_COLUMN, *PADS_SEARCH_COLUMN;
+
+typedef struct _ads_object_info
+{
+    LPWSTR pszRDN;
+    LPWSTR pszObjectDN;
+    LPWSTR pszParentDN;
+    LPWSTR pszSchemaDN;
+    LPWSTR pszClassName;
+} ADS_OBJECT_INFO, *PADS_OBJECT_INFO;
+
+typedef struct _ads_attr_info
+{
+    LPWSTR pszAttrName;
+    DWORD dwControlCode;
+    ADSTYPE dwADsType;
+    PADSVALUE pADsValues;
+    DWORD dwNumValues;
+} ADS_ATTR_INFO, *PADS_ATTR_INFO;
+
+typedef enum
+{
+    ADS_SECURITY_INFO_OWNER = 0x1,
+    ADS_SECURITY_INFO_GROUP = 0x2,
+    ADS_SECURITY_INFO_DACL  = 0x4,
+    ADS_SECURITY_INFO_SACL  = 0x8
+} ADS_SECURITY_INFO_ENUM;
+
+typedef enum
+{
+    ADS_SETTYPE_FULL = 1,
+    ADS_SETTYPE_PROVIDER = 2,
+    ADS_SETTYPE_SERVER = 3,
+    ADS_SETTYPE_DN = 4
+} ADS_SETTYPE_ENUM;
+
+typedef enum
+{
+    ADS_FORMAT_WINDOWS = 1,
+    ADS_FORMAT_WINDOWS_NO_SERVER = 2,
+    ADS_FORMAT_WINDOWS_DN = 3,
+    ADS_FORMAT_WINDOWS_PARENT = 4,
+    ADS_FORMAT_X500 = 5,
+    ADS_FORMAT_X500_NO_SERVER = 6,
+    ADS_FORMAT_X500_DN = 7,
+    ADS_FORMAT_X500_PARENT = 8,
+    ADS_FORMAT_SERVER = 9,
+    ADS_FORMAT_PROVIDER = 10,
+    ADS_FORMAT_LEAF = 11
+} ADS_FORMAT_ENUM;
 
 /*****************************************************************************
  *    IADsContainer interface
@@ -414,7 +484,7 @@ interface IADs : IDispatch
 
     [id(0x0000000e)]
     HRESULT GetInfoEx( [in] VARIANT vProperties, [in] long lnReserved);
-};
+}
 
 /*****************************************************************************
  *    IADsMembers interface
@@ -438,7 +508,7 @@ interface IADsMembers : IDispatch
 
     [id(0x00000003), propput]
     HRESULT Filter([in] VARIANT pvFilter);
-};
+}
 
 /*****************************************************************************
  *    IADsGroup interface
@@ -467,7 +537,7 @@ interface IADsGroup : IADs {
 
     [id(0x00000013)]
     HRESULT Remove([in] BSTR bstrItemToBeRemoved);
-};
+}
 
 /*****************************************************************************
  *    IADsUser interface
@@ -752,7 +822,7 @@ interface IADsUser : IADs
 
     [id(0x00000044)]
     HRESULT ChangePassword([in] BSTR bstrOldPassword, [in] BSTR bstrNewPassword);
-};
+}
 
 /*****************************************************************************
  *    IDirectorySearch interface
@@ -776,4 +846,111 @@ interface IDirectorySearch : IUnknown
                     [out] PADS_SEARCH_COLUMN pSearchColumn);
     HRESULT FreeColumn([in] PADS_SEARCH_COLUMN pSearchColumn);
     HRESULT CloseSearchHandle([in] ADS_SEARCH_HANDLE hSearchResult);
-};
+}
+
+/*****************************************************************************
+ *    IDirectoryObject interface
+ */
+[
+    odl,
+    local,
+    uuid(e798de2c-22e4-11d0-84fe-00c04fd8d503)
+]
+interface IDirectoryObject : IUnknown
+{
+    HRESULT GetObjectInformation(PADS_OBJECT_INFO *info);
+    HRESULT GetObjectAttributes(LPWSTR *names, DWORD count, PADS_ATTR_INFO *attrs, DWORD *count_returned);
+    HRESULT SetObjectAttributes(PADS_ATTR_INFO attrs, DWORD count, DWORD *count_set);
+    HRESULT CreateDSObject(LPWSTR name, PADS_ATTR_INFO attrs, DWORD count, IDispatch **obj);
+    HRESULT DeleteDSObject(LPWSTR name);
+}
+
+/*****************************************************************************
+ *    IID_IADsOpenDSObject interface
+ */
+[
+    odl,
+    uuid(ddf2891e-0f9c-11d0-8ad4-00c04fd8d503),
+    dual,
+    oleautomation
+]
+interface IADsOpenDSObject : IDispatch
+{
+    HRESULT OpenDSObject([in] BSTR path, [in] BSTR user, [in] BSTR password, [in] long reserved, [out,retval] IDispatch **obj);
+}
+
+/*****************************************************************************
+ *   IADsPathname interface
+ */
+[
+    odl,
+    uuid(d592aed4-f420-11d0-a36e-00c04fb950dc),
+    dual,
+    oleautomation
+]
+interface IADsPathname : IDispatch
+{
+    HRESULT Set(BSTR path, long type);
+    HRESULT SetDisplayType(long type);
+    HRESULT Retrieve(long type, BSTR *path);
+    HRESULT GetNumElements(long *count);
+    HRESULT GetElement(long index, BSTR *element);
+    HRESULT AddLeafElement(BSTR element);
+    HRESULT RemoveLeafElement(void);
+    HRESULT CopyPath(IDispatch **path);
+    HRESULT GetEscapedElement(long reserved, BSTR element, BSTR *str);
+    HRESULT get_EscapedMode(long *mode);
+    HRESULT put_EscapedMode(long mode);
+}
+
+/*****************************************************************************
+ *    IADsADSystemInfo interface
+ */
+[
+    odl,
+    uuid(5bb11929-afd1-11d2-9cb9-0000f87a369e),
+    dual,
+    oleautomation
+]
+interface IADsADSystemInfo : IDispatch
+{
+    [id(0x00000002), propget]
+    HRESULT UserName([out, retval] BSTR *retval);
+    [id(0x00000003), propget]
+    HRESULT ComputerName([out, retval] BSTR *retval);
+    [id(0x00000004), propget]
+    HRESULT SiteName([out, retval] BSTR *retval);
+    [id(0x00000005), propget]
+    HRESULT DomainShortName([out, retval] BSTR *retval);
+    [id(0x00000006), propget]
+    HRESULT DomainDNSName([out, retval] BSTR *retval);
+    [id(0x00000007), propget]
+    HRESULT ForestDNSName([out, retval] BSTR *retval);
+    [id(0x00000008), propget]
+    HRESULT PDCRoleOwner([out, retval] BSTR *retval);
+    [id(0x00000009), propget]
+    HRESULT SchemaRoleOwner([out, retval] BSTR *retval);
+    [id(0x0000000a), propget]
+    HRESULT IsNativeMode([out, retval] VARIANT_BOOL *retval);
+    [id(0x0000000b)]
+    HRESULT GetAnyDCName([out, retval] BSTR *retval);
+    [id(0x0000000c)]
+    HRESULT GetDCSiteName([in] BSTR server, [out, retval] BSTR *retval);
+    [id(0x0000000d)]
+    HRESULT RefreshSchemaCache();
+    [id(0x0000000e)]
+    HRESULT GetTrees([out, retval] VARIANT *retval);
+}
+
+[
+    helpstring("AD System Info Object"),
+    uuid(50b6327f-afd1-11d2-9cb9-0000f87a369e),
+    progid("ADSystemInfo"),
+    version(1.0)
+]
+coclass ADSystemInfo
+{
+    interface IADsADSystemInfo;
+}
+
+} /* library */
