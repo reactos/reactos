@@ -1804,4 +1804,126 @@ NtGetNextProcess(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+NtGetNextThread(
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ ULONG HandleAttributes,
+    _In_opt_ _Reserved_ ULONG Flags,
+    _Out_ PHANDLE NewThreadHandle)
+{
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    PEPROCESS Process;
+    PETHREAD Thread, NextThread;
+    HANDLE NextThreadHandle;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Enter SEH for probing */
+    _SEH2_TRY
+    {
+        if (PreviousMode != KernelMode)
+            ProbeForWriteHandle(NewThreadHandle);
+        *NewThreadHandle = NULL;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Exception while accessing NewThreadHandle\n");
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    /* Flags is reserved and must be 0 */
+    if (Flags != 0)
+    {
+        DPRINT1("Warning: NtGetNextThread Flags %lx\n", Flags);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Validate handle attributes */
+    HandleAttributes = ObpValidateAttributes(HandleAttributes, PreviousMode);
+
+    /* Reference the processs */
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_QUERY_INFORMATION,
+                                       PsProcessType,
+                                       PreviousMode,
+                                       (PVOID*)&Process,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to reference process handle 0x%p\n", ProcessHandle);
+        return Status;
+    }
+
+    /* Check if the user passed a thread handle */
+    if (ThreadHandle != NULL)
+    {
+        /* Reference the thread */
+        Status = ObReferenceObjectByHandle(ThreadHandle,
+                                           THREAD_QUERY_LIMITED_INFORMATION,
+                                           PsThreadType,
+                                           PreviousMode,
+                                           (PVOID*)&Thread,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to reference thread handle 0x%p\n", ThreadHandle);
+            ObDereferenceObject(Process);
+            return Status;
+        }
+    }
+    else
+    {
+        Thread = NULL;
+    }
+
+    /* Get the next thread (this will dereference the previous thread) */
+    NextThread = PsGetNextProcessThread(Process, Thread);
+
+    /* Dereference the process */
+    ObDereferenceObject(Process);
+
+    /* Fail, if no thread was found */
+    if (NextThread == NULL)
+    {
+        return STATUS_NO_MORE_ENTRIES;
+    }
+
+    /* Open the Thread Object */
+    Status = ObOpenObjectByPointer(NextThread,
+                                   HandleAttributes,
+                                   NULL,
+                                   DesiredAccess,
+                                   PsThreadType,
+                                   PreviousMode,
+                                   &NextThreadHandle);
+
+    /* Dereference the next thread */
+    ObDereferenceObject(NextThread);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open next thread object\n");
+        return Status;
+    }
+
+    /* Return the new thread handle */
+    _SEH2_TRY
+    {
+        *NewThreadHandle = NextThreadHandle;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Exception while accessing NewThreadHandle\n");
+        ObCloseHandle(NextThreadHandle, PreviousMode);
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    return STATUS_SUCCESS;
+}
+
 /* EOF */
