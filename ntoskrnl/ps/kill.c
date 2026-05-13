@@ -316,6 +316,18 @@ PspDeleteProcess(IN PVOID ObjectBody)
         Process->SectionObject = NULL;
     }
 
+/* Check if we have a token, and dereference it */
+    if (Process->Token.Object)
+    {
+        /* Get the actual token and mask the fast reference count */
+        PACCESS_TOKEN Token = (PACCESS_TOKEN)((ULONG_PTR)Process->Token.Object & ~MAX_FAST_REFS);
+        if (Token)
+        {
+            ObDereferenceObject(Token);
+            Process->Token.Object = NULL;
+        }
+    }
+
 #if defined(_X86_)
     /* Clean Ldt and Vdm objects */
     PspDeleteLdt(Process);
