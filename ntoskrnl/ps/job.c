@@ -47,7 +47,7 @@ GENERIC_MAPPING PspJobMapping =
 
     STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
 
-    STANDARD_RIGHTS_ALL | THREAD_ALL_ACCESS // bug fixed only in vista
+    JOB_OBJECT_ALL_ACCESS
 };
 
 ULONG PspJobInfoLengths[] =
