@@ -272,7 +272,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_REG_DONE "Hecho"
-    IDS_REG_REGHIVEUPDATE "Actualizando colmenas del registro"
+    IDS_REG_REGHIVEUPDATE "Actualizando subárboles del Registro"
     IDS_REG_IMPORTFILE "Importando %s"
     IDS_REG_DISPLAYSETTINGSUPDATE "Actualizando la configuración del registro de pantalla"
     IDS_REG_LOCALESETTINGSUPDATE "Actualizando la configuración regional"
