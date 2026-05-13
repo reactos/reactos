@@ -40,7 +40,8 @@ WmipSecurityMethod(
     _Inout_ PULONG CapturedLength,
     _Inout_ PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
     _In_ POOL_TYPE PoolType,
-    _In_ PGENERIC_MAPPING GenericMapping)
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ KPROCESSOR_MODE AccessMode)
 {
     PAGED_CODE();
 

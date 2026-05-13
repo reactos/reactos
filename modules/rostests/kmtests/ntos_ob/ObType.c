@@ -87,6 +87,23 @@ OpenProc(
 }
 
 static
+NTSTATUS
+NTAPI
+OpenProc_NT6(
+    _In_ OB_OPEN_REASON OpenReason,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_opt_ PEPROCESS Process,
+    _In_ PVOID Object,
+    _In_ PACCESS_MASK GrantedAccess,
+    _In_ ULONG HandleCount)
+{
+    DPRINT("OpenProc() 0x%p, OpenReason %d, HandleCount %lu, AccessMask 0x%lX\n",
+        Object, OpenReason, HandleCount, *GrantedAccess);
+    ++Counts.Open;
+    return STATUS_SUCCESS;
+}
+
+static
 VOID
 NTAPI
 CloseProc(
@@ -186,6 +203,9 @@ ObtCreateObjectTypes(VOID)
     if (skip(GetNTVersion() < _WIN32_WINNT_VISTA, "Custom object types are not supported on Vista+.\n"))
         return STATUS_NOT_SUPPORTED;
 
+    if (skip(is_reactos(), "Cannot run this test on REactOS, because it uses NT6 type callbacks\n"))
+        return STATUS_NOT_SUPPORTED;
+
     RtlCopyMemory(&Name.DirectoryName, L"\\ObjectTypes\\", sizeof Name.DirectoryName);
 
     for (i = 0; i < NUM_OBTYPES; ++i)
@@ -210,7 +230,7 @@ ObtCreateObjectTypes(VOID)
         ObTypeInitializer[i].CloseProcedure = CloseProc;
         ObTypeInitializer[i].DeleteProcedure = DeleteProc;
         ObTypeInitializer[i].DumpProcedure = DumpProc;
-        ObTypeInitializer[i].OpenProcedure = OpenProc;
+        ObTypeInitializer[i].OpenProcedure = is_reactos() ? OpenProc_NT6 : (OB_OPEN_METHOD)OpenProc;
         ObTypeInitializer[i].ParseProcedure = ParseProc;
         ObTypeInitializer[i].OkayToCloseProcedure = OkayToCloseProc;
         ObTypeInitializer[i].QueryNameProcedure = QueryNameProc;
@@ -235,7 +255,7 @@ ObtCreateObjectTypes(VOID)
                     ObTypes[i]->TypeInfo.CloseProcedure = CloseProc;
                     ObTypes[i]->TypeInfo.DeleteProcedure = DeleteProc;
                     ObTypes[i]->TypeInfo.DumpProcedure = DumpProc;
-                    ObTypes[i]->TypeInfo.OpenProcedure = OpenProc;
+                    ObTypes[i]->TypeInfo.OpenProcedure = is_reactos() ? OpenProc_NT6 : (OB_OPEN_METHOD)OpenProc;
                     ObTypes[i]->TypeInfo.ParseProcedure = ParseProc;
                     ObTypes[i]->TypeInfo.OkayToCloseProcedure = OkayToCloseProc;
                     ObTypes[i]->TypeInfo.QueryNameProcedure = QueryNameProc;

@@ -1655,7 +1655,8 @@ IopGetSetSecurityObject(IN PVOID ObjectBody,
                         IN OUT PULONG BufferLength,
                         IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
                         IN POOL_TYPE PoolType,
-                        IN OUT PGENERIC_MAPPING GenericMapping)
+                        IN OUT PGENERIC_MAPPING GenericMapping,
+                        IN KPROCESSOR_MODE AccessMode)
 {
     IO_STATUS_BLOCK IoStatusBlock;
     PIO_STACK_LOCATION StackPtr;

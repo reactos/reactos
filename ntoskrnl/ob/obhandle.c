@@ -995,13 +995,12 @@ ObpIncrementHandleCount(IN PVOID Object,
     {
         /* Call it */
         ObpCalloutStart(&CalloutIrql);
+        ACCESS_MASK GrantedAccess = AccessState ? AccessState->RemainingDesiredAccess : 0;
         Status = ObjectType->TypeInfo.OpenProcedure(OpenReason,
+                                                    ProbeMode,
                                                     Process,
                                                     Object,
-                                                    AccessState ?
-                                                    AccessState->
-                                                    PreviouslyGrantedAccess :
-                                                    0,
+                                                    &GrantedAccess,
                                                     ProcessHandleCount);
         ObpCalloutEnd(CalloutIrql, "Open", ObjectType, Object);
 
@@ -1223,9 +1222,10 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
         /* Call it */
         ObpCalloutStart(&CalloutIrql);
         Status = ObjectType->TypeInfo.OpenProcedure(ObCreateHandle,
+                                                    AccessMode,
                                                     Process,
                                                     Object,
-                                                    *DesiredAccess,
+                                                    DesiredAccess,
                                                     ProcessHandleCount);
         ObpCalloutEnd(CalloutIrql, "Open", ObjectType, Object);
 

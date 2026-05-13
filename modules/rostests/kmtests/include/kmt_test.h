@@ -226,6 +226,9 @@ extern PKMT_RESULTBUFFER ResultBuffer;
 #define trace_(file, line, ...)      KmtTrace(     file ":" KMT_STRINGIZE(line), __VA_ARGS__)
 #define skip_(test, file, line, ...) KmtSkip(test, file ":" KMT_STRINGIZE(line), __VA_ARGS__)
 
+#define is_reactos() \
+    (*(unsigned*)((size_t)0x7FFE0FFC) == 0x8EAC705)
+
 BOOLEAN KmtVOk(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments)   KMT_FORMAT(ms_printf, 3, 0);
 BOOLEAN KmtOk(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)                  KMT_FORMAT(ms_printf, 3, 4);
 VOID KmtVTrace(PCSTR FileAndLine, PCSTR Format, va_list Arguments)                  KMT_FORMAT(ms_printf, 2, 0);

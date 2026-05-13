@@ -730,7 +730,8 @@ CmpSecurityMethod(
     IN OUT PULONG CapturedLength,
     IN OUT PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
     IN POOL_TYPE PoolType,
-    IN PGENERIC_MAPPING GenericMapping
+    IN PGENERIC_MAPPING GenericMapping,
+    IN KPROCESSOR_MODE AccessMode
 );
 
 NTSTATUS

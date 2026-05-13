@@ -195,7 +195,8 @@ ObpDeleteObject(IN PVOID Object,
                                                NULL,
                                                &Header->SecurityDescriptor,
                                                0,
-                                               NULL);
+                                               NULL,
+                                               ExGetPreviousMode());
         ObpCalloutEnd(CalloutIrql, "Security", ObjectType, Object);
     }
 
@@ -1706,7 +1707,8 @@ NtQueryObject(IN HANDLE ObjectHandle,
                                                            &BasicInfo->SecurityDescriptorSize,
                                                            &ObjectHeader->SecurityDescriptor,
                                                            ObjectType->TypeInfo.PoolType,
-                                                           &ObjectType->TypeInfo.GenericMapping);
+                                                           &ObjectType->TypeInfo.GenericMapping,
+                                                           ExGetPreviousMode());
                 }
 
                 /* Break out with success */
