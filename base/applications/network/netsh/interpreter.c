@@ -389,6 +389,7 @@ InterpretInteractive(VOID)
     DWORD dwArgCount = 0;
     BOOL bWhiteSpace = TRUE;
     BOOL bDone = FALSE;
+    BOOL bInQuotes = FALSE;
     LPWSTR ptr;
     DWORD dwError = ERROR_SUCCESS;
 
@@ -409,7 +410,10 @@ InterpretInteractive(VOID)
         ptr = input_line;
         while (*ptr != 0)
         {
-            if (iswspace(*ptr) || *ptr == L'\n')
+            if (*ptr == L'\"')
+                bInQuotes = (bInQuotes) ? FALSE : TRUE;
+
+            if ((iswspace(*ptr) && (bInQuotes == FALSE)) || *ptr == L'\n')
             {
                 *ptr = 0;
                 bWhiteSpace = TRUE;
