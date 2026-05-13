@@ -111,6 +111,15 @@ set(dir_startmenu_entertainment "${dir_startmenu_accessories}/Entertainment")
 set(dir_startmenu_systemtools   "${dir_startmenu_accessories}/System Tools")
 set(dir_quicklaunch             "Profiles/Default User/Application Data/Microsoft/Internet Explorer/Quick Launch")
 
+cmdenvvar(envvar_systemdrive "SystemDrive" TRUE)
+cmdenvvar(envvar_archdir     "PROCESSOR_ARCHITECTURE:x86=I386" TRUE)
+add_livecd_shortcut("Install ReactOS"
+    "shell:system\\cmd.exe"
+    CMDLINE_ARGS "/D /E:ON /C \"start ${envvar_systemdrive}\\${envvar_archdir}\\reactos.exe\""
+    ICON "${envvar_systemroot}\\system32\\msiexec.exe"
+    MINIMIZE
+    DESTINATION "${dir_allusers_desktop}")
+
 add_livecd_shortcut("Read Me"
     "shell:windows\\readme.txt"
     ICON "${envvar_systemroot}\\system32\\shell32.dll" ICON_INDEX -152
