@@ -162,7 +162,7 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 #define PROCESS_QUERY_INFORMATION               0x0400
 #define PROCESS_SUSPEND_RESUME                  0x0800
 #define PROCESS_QUERY_LIMITED_INFORMATION       0x1000
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(__REACTOS__)
 #define PROCESS_ALL_ACCESS                      (STANDARD_RIGHTS_REQUIRED | \
                                                  SYNCHRONIZE | \
                                                  0xFFFF)
