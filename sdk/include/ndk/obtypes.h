@@ -191,9 +191,10 @@ typedef VOID
 typedef NTSTATUS
 (NTAPI *OB_OPEN_METHOD)(
     _In_ OB_OPEN_REASON Reason,
+    _In_ KPROCESSOR_MODE AccessMode,
     _In_opt_ PEPROCESS Process,
     _In_ PVOID ObjectBody,
-    _In_ ACCESS_MASK GrantedAccess,
+    _In_ PACCESS_MASK GrantedAccess,
     _In_ ULONG HandleCount
 );
 
@@ -234,7 +235,8 @@ typedef NTSTATUS
     _Inout_ PULONG CapturedLength,
     _Inout_ PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
     _In_ POOL_TYPE PoolType,
-    _In_ PGENERIC_MAPPING GenericMapping
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ KPROCESSOR_MODE AccessMode
 );
 
 typedef NTSTATUS

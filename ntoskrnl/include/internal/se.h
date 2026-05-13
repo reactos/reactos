@@ -517,7 +517,8 @@ SeDefaultObjectMethod(
     _Inout_opt_ PULONG ReturnLength,
     _Inout_opt_ PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
     _In_ POOL_TYPE PoolType,
-    _In_ PGENERIC_MAPPING GenericMapping);
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ KPROCESSOR_MODE AccessMode);
 
 VOID
 NTAPI
