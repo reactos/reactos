@@ -22,7 +22,7 @@ BEGIN
 y preparará la segunda parte de la instalación.", IDC_STATIC, 115, 40, 195, 27
 ////
     GROUPBOX " INFORMACIÓN IMPORTANTE ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
-    LTEXT "ReactOS está en en fase alfa, con limitaciones importantes y \
+    LTEXT "ReactOS está en fase alfa, con limitaciones importantes y \
 todavía en desarrollo. Se recomienda usarlo solo para \
 evaluación y pruebas, y no como su sistema operativo de uso diario.\n\
 Puede corromper sus datos o dañar su hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
@@ -313,13 +313,13 @@ el programa de instalación no puede instalar ReactOS.\
 
     IDS_ERROR_COULD_NOT_FORMAT "La instalación actualmente no puede formatear una partición en %s.\n\
 \nHaga clic en Aceptar para continuar la instalación.\
-\nHaga clic en CANCELAR para salir de la instalación."
+\nHaga clic en Cancelar para salir de la instalación."
 
     IDS_ERROR_FORMATTING_PARTITION "La instalación no puede formatear la partición:\n %s\n"
 
     IDS_ERROR_COULD_NOT_CHECK "La instalación actualmente no puede comprobar una partición formateada en %s.\n\
 \nHaga clic en Aceptar para continuar la instalación.\
-\nHaga clic en CANCELAR para salir de la instalación."
+\nHaga clic en Cancelar para salir de la instalación."
 
     IDS_ERROR_CHECKING_PARTITION "ChkDsk detectó algunos errores de disco.\n(Estado 0x%08lx)."
 
