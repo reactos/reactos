@@ -1806,7 +1806,7 @@ PsGetProcessSignatureLevel(
 #endif // !NTOS_MODE_USER
 
 #ifdef __cplusplus
-}
+}; // extern "C"
 #endif
 
 #endif // _PSTYPES_H
