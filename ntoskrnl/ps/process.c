@@ -1615,27 +1615,4 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     return Status;
 }
 
-/*
- * @unimplemented
- */
-UCHAR
-NTAPI
-PsGetProcessSignatureLevel(
-    _In_ PEPROCESS Process)
-{
-    static BOOLEAN Warned = FALSE;
-
-    /*
-     * This is a stub for an NT 6.0 (Windows Vista) function.
-     * It returns 0 as a default signature level.
-     */
-    if (!Warned)
-    {
-        DPRINT1("PsGetProcessSignatureLevel: NT 6.0 stub called!\n");
-        Warned = TRUE;
-    }
-
-    return 0;
-}
-
 /* EOF */
