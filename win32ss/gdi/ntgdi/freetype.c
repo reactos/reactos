@@ -934,8 +934,8 @@ static NTSTATUS FontLink_PopulateEntries(VOID)
         szzFontLink[_countof(szzFontLink) - 1] = UNICODE_NULL;
         szzFontLink[_countof(szzFontLink) - 2] = UNICODE_NULL;
 
-        DPRINT1("szName: %S\n", szName);
-        DPRINT1("szzFontLink: %S\n", szzFontLink);
+        DPRINT("szName: %S\n", szName);
+        DPRINT("szzFontLink: %S\n", szzFontLink);
 
         FontLink_AddEntry(szName, szzFontLink);
     }

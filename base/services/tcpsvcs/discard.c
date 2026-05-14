@@ -24,7 +24,7 @@ ReceiveIncomingPackets(SOCKET sock)
         {
             TCHAR logBuf[256];
 
-            swprintf(logBuf, L"Discard: Received %d bytes from client", readBytes);
+            _swprintf(logBuf, L"Discard: Received %d bytes from client", readBytes);
             LogEvent(logBuf, 0, 0, LOG_FILE);
         }
         else if (readBytes == SOCKET_ERROR)

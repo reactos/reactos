@@ -165,10 +165,11 @@ void THEMING_Initialize (void)
         {
 #ifdef __REACTOS__ /* r73803 */
             WARN("Could not re-register class %s: %x\n",
+                debugstr_w (subclasses[i].className), GetLastError ());
 #else
             ERR("Could not re-register class %s: %x\n",
-#endif
                 debugstr_w (subclasses[i].className), GetLastError ());
+#endif
         }
         else
         {

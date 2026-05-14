@@ -31,7 +31,7 @@ BOOL StartD3DTest(GUID *lpDevice, HWND hWnd, HINSTANCE hInstance, WCHAR* pszCapt
     LoadStringW(hInstance, IDS_D3DTEST_D3Dx, szTestDescriptionRaw, sizeof(szTestDescriptionRaw) / sizeof(WCHAR));
     //LoadStringW(hInstance, resResult, szResult, sizeof(szResult) / sizeof(WCHAR));
 
-    swprintf(szTestDescription, szTestDescriptionRaw, TestNr);
+    _swprintf(szTestDescription, szTestDescriptionRaw, TestNr);
     if (MessageBox(NULL, szTestDescription, szCaption, MB_YESNO | MB_ICONQUESTION) == IDNO)
         return FALSE;
 

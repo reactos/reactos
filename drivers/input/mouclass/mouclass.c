@@ -323,7 +323,7 @@ CreateClassDeviceObject(
 	DeviceIdW = &DeviceNameU.Buffer[PrefixLength / sizeof(WCHAR)];
 	while (DeviceId < 9999)
 	{
-		DeviceNameU.Length = (USHORT)(PrefixLength + swprintf(DeviceIdW, L"%lu", DeviceId) * sizeof(WCHAR));
+		DeviceNameU.Length = (USHORT)(PrefixLength + _swprintf(DeviceIdW, L"%lu", DeviceId) * sizeof(WCHAR));
 		Status = IoCreateDevice(
 			DriverObject,
 			sizeof(CLASS_DEVICE_EXTENSION),

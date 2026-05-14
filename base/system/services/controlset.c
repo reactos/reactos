@@ -187,11 +187,11 @@ ScmCopyControlSet(
     DWORD dwError;
 
     /* Create the source control set name */
-    swprintf(szSourceControlSetName, L"SYSTEM\\ControlSet%03lu", dwSourceControlSet);
+    _swprintf(szSourceControlSetName, L"SYSTEM\\ControlSet%03lu", dwSourceControlSet);
     DPRINT("Source control set: %S\n", szSourceControlSetName);
 
     /* Create the destination control set name */
-    swprintf(szDestinationControlSetName, L"SYSTEM\\ControlSet%03lu", dwDestinationControlSet);
+    _swprintf(szDestinationControlSetName, L"SYSTEM\\ControlSet%03lu", dwDestinationControlSet);
     DPRINT("Destination control set: %S\n", szDestinationControlSetName);
 
     /* Open the source control set key */
@@ -248,7 +248,7 @@ ScmDeleteControlSet(
     DPRINT("ScmDeleteControSet(%lu)\n", dwControlSet);
 
     /* Create the control set name */
-    swprintf(szControlSetName, L"SYSTEM\\ControlSet%03lu", dwControlSet);
+    _swprintf(szControlSetName, L"SYSTEM\\ControlSet%03lu", dwControlSet);
     DPRINT("Control set: %S\n", szControlSetName);
 
     /* Open the system key */

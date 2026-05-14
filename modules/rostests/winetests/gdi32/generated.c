@@ -25,7 +25,7 @@
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300) && defined(__cplusplus)
 # define _TYPE_ALIGNMENT(type) __alignof(type)
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
 # define _TYPE_ALIGNMENT(type) __alignof__(type)
 #else
 /*
@@ -47,23 +47,23 @@
  * Test helper macros
  */
 
-#define TEST_TYPE_SIZE(type, size)             C_ASSERT(sizeof(type) == size);
+#define TEST_TYPE_SIZE(type, size)              C_ASSERT(sizeof(type) == size);
 
 #ifdef TYPE_ALIGNMENT
-# define TEST_TYPE_ALIGN(type, align)          C_ASSERT(TYPE_ALIGNMENT(type) == align);
+# define TEST_TYPE_ALIGN(type, align)           C_ASSERT(TYPE_ALIGNMENT(type) == align);
 #else
 # define TEST_TYPE_ALIGN(type, align)
 #endif
 
 #ifdef _TYPE_ALIGNMENT
-# define TEST_TARGET_ALIGN(type, align)        C_ASSERT(_TYPE_ALIGNMENT(*(type)0) == align);
-# define TEST_FIELD_ALIGN(type, field, align)  C_ASSERT(_TYPE_ALIGNMENT(((type*)0)->field) == align);
+# define TEST_TARGET_ALIGN(type, align)         C_ASSERT(_TYPE_ALIGNMENT(*(type)0) == align);
+# define TEST_FIELD_ALIGN(type, field, align)   C_ASSERT(_TYPE_ALIGNMENT(((type*)0)->field) == align);
 #else
 # define TEST_TARGET_ALIGN(type, align)
 # define TEST_FIELD_ALIGN(type, field, align)
 #endif
 
-#define TEST_FIELD_OFFSET(type, field, offset) C_ASSERT(FIELD_OFFSET(type, field) == offset);
+#define TEST_FIELD_OFFSET(type, field, offset)  C_ASSERT(FIELD_OFFSET(type, field) == offset);
 
 #define TEST_TARGET_SIZE(type, size)            TEST_TYPE_SIZE(*(type)0, size)
 #define TEST_FIELD_SIZE(type, field, size)      TEST_TYPE_SIZE((((type*)0)->field), size)
@@ -468,6 +468,7 @@ static void test_pack_COLOR16(void)
     /* COLOR16 */
     TEST_TYPE_SIZE   (COLOR16, 2)
     TEST_TYPE_ALIGN  (COLOR16, 2)
+    TEST_TYPE_UNSIGNED(COLOR16)
 }
 
 static void test_pack_COLORADJUSTMENT(void)
@@ -3014,6 +3015,7 @@ static void test_pack_FXPT16DOT16(void)
     /* FXPT16DOT16 */
     TEST_TYPE_SIZE   (FXPT16DOT16, 4)
     TEST_TYPE_ALIGN  (FXPT16DOT16, 4)
+    TEST_TYPE_SIGNED (FXPT16DOT16)
 }
 
 static void test_pack_FXPT2DOT30(void)
@@ -3021,6 +3023,7 @@ static void test_pack_FXPT2DOT30(void)
     /* FXPT2DOT30 */
     TEST_TYPE_SIZE   (FXPT2DOT30, 4)
     TEST_TYPE_ALIGN  (FXPT2DOT30, 4)
+    TEST_TYPE_SIGNED (FXPT2DOT30)
 }
 
 static void test_pack_GCP_RESULTSA(void)
@@ -3295,6 +3298,7 @@ static void test_pack_LCSCSTYPE(void)
     /* LCSCSTYPE */
     TEST_TYPE_SIZE   (LCSCSTYPE, 4)
     TEST_TYPE_ALIGN  (LCSCSTYPE, 4)
+    TEST_TYPE_SIGNED (LCSCSTYPE)
 }
 
 static void test_pack_LCSGAMUTMATCH(void)
@@ -3302,6 +3306,7 @@ static void test_pack_LCSGAMUTMATCH(void)
     /* LCSGAMUTMATCH */
     TEST_TYPE_SIZE   (LCSGAMUTMATCH, 4)
     TEST_TYPE_ALIGN  (LCSGAMUTMATCH, 4)
+    TEST_TYPE_SIGNED (LCSGAMUTMATCH)
 }
 
 static void test_pack_LINEDDAPROC(void)
@@ -6991,6 +6996,7 @@ static void test_pack_COLOR16(void)
     /* COLOR16 */
     TEST_TYPE_SIZE   (COLOR16, 2)
     TEST_TYPE_ALIGN  (COLOR16, 2)
+    TEST_TYPE_UNSIGNED(COLOR16)
 }
 
 static void test_pack_COLORADJUSTMENT(void)
@@ -9537,6 +9543,7 @@ static void test_pack_FXPT16DOT16(void)
     /* FXPT16DOT16 */
     TEST_TYPE_SIZE   (FXPT16DOT16, 4)
     TEST_TYPE_ALIGN  (FXPT16DOT16, 4)
+    TEST_TYPE_SIGNED (FXPT16DOT16)
 }
 
 static void test_pack_FXPT2DOT30(void)
@@ -9544,6 +9551,7 @@ static void test_pack_FXPT2DOT30(void)
     /* FXPT2DOT30 */
     TEST_TYPE_SIZE   (FXPT2DOT30, 4)
     TEST_TYPE_ALIGN  (FXPT2DOT30, 4)
+    TEST_TYPE_SIGNED (FXPT2DOT30)
 }
 
 static void test_pack_GCP_RESULTSA(void)
@@ -9818,6 +9826,7 @@ static void test_pack_LCSCSTYPE(void)
     /* LCSCSTYPE */
     TEST_TYPE_SIZE   (LCSCSTYPE, 4)
     TEST_TYPE_ALIGN  (LCSCSTYPE, 4)
+    TEST_TYPE_SIGNED (LCSCSTYPE)
 }
 
 static void test_pack_LCSGAMUTMATCH(void)
@@ -9825,6 +9834,7 @@ static void test_pack_LCSGAMUTMATCH(void)
     /* LCSGAMUTMATCH */
     TEST_TYPE_SIZE   (LCSGAMUTMATCH, 4)
     TEST_TYPE_ALIGN  (LCSGAMUTMATCH, 4)
+    TEST_TYPE_SIGNED (LCSGAMUTMATCH)
 }
 
 static void test_pack_LINEDDAPROC(void)

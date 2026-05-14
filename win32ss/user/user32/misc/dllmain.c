@@ -497,11 +497,11 @@ DllMain(
             else
             {
                 /* Use the session path */
-                swprintf(SessionDir,
-                         L"%ws\\%ld%ws",
-                         SESSION_DIR,
-                         SessionId,
-                         WIN_OBJ_DIR);
+                _swprintf(SessionDir,
+                          L"%ws\\%ld%ws",
+                          SESSION_DIR,
+                          SessionId,
+                          WIN_OBJ_DIR);
             }
 
             TRACE("Checkpoint (call CSR)\n");

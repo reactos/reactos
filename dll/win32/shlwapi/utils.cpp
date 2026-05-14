@@ -41,6 +41,64 @@ GetVersionMajorMinor()
     return MAKEWORD(HIBYTE(version), LOBYTE(version));
 }
 
+static BOOL CharLowerNoDBCSAWorker(PSTR lpString, INT cchMax, BOOL bUppercase)
+{
+    CHAR szBuff[MAX_PATH];
+    INT cch;
+    if (!lpString)
+        return FALSE;
+    cch = cchMax ? cchMax : lstrlenA(lpString);
+    if (FAILED(StringCchCopyA(szBuff, _countof(szBuff), lpString)))
+        return FALSE;
+    return LCMapStringA(LOCALE_SYSTEM_DEFAULT, (bUppercase ? LCMAP_UPPERCASE : LCMAP_LOWERCASE),
+                        szBuff, cch, lpString, cch);
+}
+
+static BOOL CharLowerNoDBCSWWorker(PWSTR lpString, INT cchMax, BOOL bUppercase)
+{
+    WCHAR szDest[MAX_PATH];
+    INT cch;
+    if (!lpString)
+        return FALSE;
+    cch = cchMax ? cchMax : lstrlenW(lpString);
+    if (FAILED(StringCchCopyW(szDest, _countof(szDest), lpString)))
+        return FALSE;
+    return LCMapStringW(LOCALE_SYSTEM_DEFAULT, (bUppercase ? LCMAP_UPPERCASE : LCMAP_LOWERCASE),
+                        szDest, cch, lpString, cch);
+}
+
+/*************************************************************************
+ * CharLowerNoDBCSA [SHLWAPI.453]
+ */
+EXTERN_C PSTR WINAPI CharLowerNoDBCSA(_Inout_ PSTR lpString)
+{
+    return CharLowerNoDBCSAWorker(lpString, 0, FALSE) ? lpString : NULL;
+}
+
+/*************************************************************************
+ * CharLowerNoDBCSW [SHLWAPI.454]
+ */
+EXTERN_C PWSTR WINAPI CharLowerNoDBCSW(_Inout_ PWSTR lpString)
+{
+    return CharLowerNoDBCSWWorker(lpString, 0, FALSE) ? lpString : NULL;
+}
+
+/*************************************************************************
+ * CharUpperNoDBCSA [SHLWAPI.451]
+ */
+EXTERN_C PSTR WINAPI CharUpperNoDBCSA(_Inout_ PSTR lpString)
+{
+    return CharLowerNoDBCSAWorker(lpString, 0, TRUE) ? lpString : NULL;
+}
+
+/*************************************************************************
+ * CharUpperNoDBCSW [SHLWAPI.452]
+ */
+EXTERN_C PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString)
+{
+    return CharLowerNoDBCSWWorker(lpString, 0, TRUE) ? lpString : NULL;
+}
+
 static HRESULT
 SHInvokeCommandOnContextMenuInternal(
     _In_opt_ HWND hWnd,
@@ -155,6 +213,107 @@ SHInvokeCommandOnContextMenu(
     _In_opt_ LPCSTR pszVerb)
 {
     return SHInvokeCommandOnContextMenuEx(hWnd, pUnk, pCM, fCMIC, CMF_EXTENDEDVERBS, pszVerb, NULL);
+}
+
+static inline BOOL
+IsTextAsciiOnly(PCSTR psz)
+{
+    for (const signed char *pch = (const signed char *)psz; *pch; ++pch)
+    {
+        if (*pch < 0)
+            return FALSE;
+    }
+    return TRUE;
+}
+
+/*************************************************************************
+ * SHInvokeCommandsOnContextMenu [SHLWAPI.541]
+ */
+EXTERN_C
+HRESULT WINAPI
+SHInvokeCommandsOnContextMenu(
+    _In_opt_ HWND hwnd,
+    _In_opt_ IUnknown *punkSite,
+    _In_ IContextMenu *pCM,
+    _In_ DWORD fMask,
+    _In_reads_opt_(cVerbs) PCSTR *pVerbs,
+    _In_ UINT cVerbs)
+{
+    HRESULT hr;
+    CMINVOKECOMMANDINFOEX ici;
+    WCHAR szVerbW[MAX_PATH];
+    HMENU hMenu = NULL;
+    UINT iVerb, idDefault = (UINT)-1;
+    PCSTR pszVerbA = NULL;
+
+    if (!pCM)
+        return E_INVALIDARG;
+
+    hMenu = CreatePopupMenu();
+    if (!hMenu)
+        return E_OUTOFMEMORY;
+
+    if (punkSite)
+        IUnknown_SetSite(pCM, punkSite);
+
+    hr = pCM->QueryContextMenu(hMenu, 0, 1, MAXSHORT, (cVerbs ? 0 : CMF_DEFAULTONLY));
+    if (FAILED(hr))
+        goto Cleanup;
+
+    if (!cVerbs)
+    {
+        idDefault = GetMenuDefaultItem(hMenu, FALSE, 0);
+        if (idDefault != (UINT)-1)
+            pszVerbA = MAKEINTRESOURCEA(idDefault - 1);
+    }
+
+    ZeroMemory(&ici, sizeof(ici));
+    ici.cbSize = sizeof(ici);
+    ici.hwnd   = hwnd;
+    ici.nShow  = SW_SHOWNORMAL;
+
+    iVerb = 0;
+    do
+    {
+        if (cVerbs)
+            pszVerbA = pVerbs[iVerb];
+
+        if (!pszVerbA && idDefault == (UINT)-1)
+        {
+            hr = E_FAIL;
+            break;
+        }
+
+        ici.fMask   = fMask;
+        ici.lpVerb  = pszVerbA;
+        ici.lpVerbW = NULL;
+
+        if (idDefault == (UINT)-1 && !IS_INTRESOURCE(pszVerbA) && IsTextAsciiOnly(pszVerbA))
+        {
+            size_t ich;
+            for (ich = 0; pszVerbA[ich] && ich + 1 < _countof(szVerbW); ++ich)
+            {
+                szVerbW[ich] = (BYTE)pszVerbA[ich];
+            }
+            szVerbW[ich] = UNICODE_NULL;
+
+            ici.lpVerbW = szVerbW;
+            ici.fMask |= CMIC_MASK_UNICODE;
+        }
+
+        hr = pCM->InvokeCommand((LPCMINVOKECOMMANDINFO)&ici);
+
+        if (SUCCEEDED(hr) || hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))
+            break;
+
+        ++iVerb;
+    } while (iVerb < cVerbs);
+
+Cleanup:
+    if (punkSite)
+        IUnknown_SetSite(pCM, NULL);
+    DestroyMenu(hMenu);
+    return hr;
 }
 
 /*************************************************************************
@@ -470,6 +629,13 @@ IShellFolder_CompareIDs(
  *
  * Used in SHDialogBox below
  */
+
+typedef struct tagSHDIALOG
+{
+    SHDIALOGPROC fn;
+    PVOID pThis;
+} SHDIALOG, *PSHDIALOG;
+
 static INT_PTR CALLBACK
 SHDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {

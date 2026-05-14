@@ -1,9 +1,10 @@
 /*
- * PROJECT:     Text Input DLL
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/input/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for input.dll
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk
+ * PROJECT:     ReactOS Language Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2007 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2010-2011 Igor Paliychuk <igor-hkr@mail.ru>
+ *              Copyright 2026 Ostap Burtoviy <burtovijostap@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -13,17 +14,17 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Параметри"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Default input &language", -1, 5, 5, 246, 55
-    LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 23
+    GROUPBOX "Мова введення &за замовчуванням", -1, 5, 5, 246, 55
+    LTEXT "Виберіть одну зі встановлених мов введення для використання під час запуску комп'ютера.", -1, 15, 15, 230, 23
     COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "&Installed services", -1, 5, 65, 246, 125
+    GROUPBOX "&Встановлені служби", -1, 5, 65, 246, 125
     LTEXT "Виберіть потрібні розкладки для кожної мови введення зі списку. Для зміни списку використовуйте кнопки ""Додати"" і ""Видалити"".", -1, 15, 78, 230, 25
     CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
     PUSHBUTTON "&Додати...", IDC_ADD_BUTTON, 175, 105, 70, 14
     PUSHBUTTON "В&идалити", IDC_REMOVE_BUTTON, 175, 125, 70, 14
     PUSHBUTTON "В&ластивості...", IDC_PROP_BUTTON, 175, 145, 70, 14
     GROUPBOX "Налаштування", -1, 5, 195, 245, 30
-    PUSHBUTTON "Language &Bar...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
+    PUSHBUTTON "Мовна па&нель...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
     PUSHBUTTON "&Параметри клавіатури...", IDC_KEY_SET_BTN, 133, 205, 110, 14
 END
 
@@ -118,7 +119,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "Alt зліва+Shift"
     IDS_SWITCH_BET_INLANG "Перемикання мов вводу"
-    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
+    IDS_REBOOT_NOW "Для застосування параметрів необхідно перезавантажити систему. Перезавантажити зараз?"
 END
 
 STRINGTABLE

@@ -155,7 +155,7 @@ static BOOL init_function_ptrs(void)
         !pNtRequestPort || !pNtRegisterThreadTerminatePort ||
         !pNtConnectPort || !pRtlInitUnicodeString)
     {
-        win_skip("Needed port functions are not available\n");
+        todo_wine win_skip("Needed port functions are not available\n");
         FreeLibrary(hntdll);
         return FALSE;
     }
@@ -183,10 +183,10 @@ static void ProcessConnectionRequest(union lpc_message *LpcMessage, PHANDLE pAcc
     }
 
     status = pNtAcceptConnectPort(pAcceptPortHandle, 0, &LpcMessage->msg, 1, NULL, NULL);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %lx\n", status);
     
     status = pNtCompleteConnectPort(*pAcceptPortHandle);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %lx\n", status);
 }
 
 static void ProcessLpcRequest(HANDLE PortHandle, union lpc_message *LpcMessage)
@@ -202,7 +202,7 @@ static void ProcessLpcRequest(HANDLE PortHandle, union lpc_message *LpcMessage)
         strcpy((LPSTR)LpcMessage->msg64.Data, REPLY);
 
         status = pNtReplyPort(PortHandle, &LpcMessage->msg);
-        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
+        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %lx\n", status);
         ok(LpcMessage->msg64.MessageType == LPC_REQUEST,
            "Expected LPC_REQUEST, got %d\n", LpcMessage->msg64.MessageType);
         ok(!strcmp((LPSTR)LpcMessage->msg64.Data, REPLY),
@@ -217,7 +217,7 @@ static void ProcessLpcRequest(HANDLE PortHandle, union lpc_message *LpcMessage)
         strcpy((LPSTR)LpcMessage->msg.Data, REPLY);
 
         status = pNtReplyPort(PortHandle, &LpcMessage->msg);
-        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
+        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %lx\n", status);
         ok(LpcMessage->msg.MessageType == LPC_REQUEST,
            "Expected LPC_REQUEST, got %d\n", LpcMessage->msg.MessageType);
         ok(!strcmp((LPSTR)LpcMessage->msg.Data, REPLY),
@@ -239,11 +239,11 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
     sqos.EffectiveOnly = TRUE;
 
     status = pNtConnectPort(&PortHandle, &port, &sqos, 0, 0, &len, NULL, NULL);
-    todo_wine ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
+    todo_wine ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %lx\n", status);
     if (status != STATUS_SUCCESS) return 1;
 
     status = pNtRegisterThreadTerminatePort(PortHandle);
-    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %lx\n", status);
 
     if (is_wow64)
     {
@@ -256,7 +256,7 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
         strcpy((LPSTR)LpcMessage->msg64.Data, REQUEST1);
 
         status = pNtRequestPort(PortHandle, &LpcMessage->msg);
-        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
+        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %lx\n", status);
         ok(LpcMessage->msg64.MessageType == 0, "Expected 0, got %d\n", LpcMessage->msg64.MessageType);
         ok(!strcmp((LPSTR)LpcMessage->msg64.Data, REQUEST1),
            "Expected %s, got %s\n", REQUEST1, LpcMessage->msg64.Data);
@@ -269,7 +269,7 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
 
         /* Send the message and wait for the reply */
         status = pNtRequestWaitReplyPort(PortHandle, &LpcMessage->msg, &out->msg);
-        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
+        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %lx\n", status);
         ok(!strcmp((LPSTR)out->msg64.Data, REPLY), "Expected %s, got %s\n", REPLY, out->msg64.Data);
         ok(out->msg64.MessageType == LPC_REPLY, "Expected LPC_REPLY, got %d\n", out->msg64.MessageType);
     }
@@ -284,7 +284,7 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
         strcpy((LPSTR)LpcMessage->msg.Data, REQUEST1);
 
         status = pNtRequestPort(PortHandle, &LpcMessage->msg);
-        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
+        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %lx\n", status);
         ok(LpcMessage->msg.MessageType == 0, "Expected 0, got %d\n", LpcMessage->msg.MessageType);
         ok(!strcmp((LPSTR)LpcMessage->msg.Data, REQUEST1),
            "Expected %s, got %s\n", REQUEST1, LpcMessage->msg.Data);
@@ -297,7 +297,7 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
 
         /* Send the message and wait for the reply */
         status = pNtRequestWaitReplyPort(PortHandle, &LpcMessage->msg, &out->msg);
-        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %x\n", status);
+        ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %lx\n", status);
         ok(!strcmp((LPSTR)out->msg.Data, REPLY), "Expected %s, got %s\n", REPLY, out->msg.Data);
         ok(out->msg.MessageType == LPC_REPLY, "Expected LPC_REPLY, got %d\n", out->msg.MessageType);
     }
@@ -324,7 +324,7 @@ static void test_ports_server( HANDLE PortHandle )
         status = pNtReplyWaitReceivePort(PortHandle, NULL, NULL, &LpcMessage->msg);
         todo_wine
         {
-            ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d(%x)\n", status, status);
+            ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld(%lx)\n", status, status);
         }
         /* STATUS_INVALID_HANDLE: win2k without admin rights will perform an
          *                        endless loop here
@@ -384,7 +384,7 @@ START_TEST(port)
 
     status = pNtCreatePort(&port_handle, &obj, 100, 100, 0);
     if (status == STATUS_ACCESS_DENIED) skip("Not enough rights\n");
-    else todo_wine ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
+    else ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld\n", status);
 
     if (status == STATUS_SUCCESS)
     {

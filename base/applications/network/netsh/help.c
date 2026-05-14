@@ -90,7 +90,7 @@ PrintShortGroupCommands(
     pCommand = pGroup->pCommandListHead;
     while (pCommand != NULL)
     {
-        swprintf(szBuffer1, L"%s %s", pGroup->pwszCmdGroupToken, pCommand->pwszCmdToken);
+        _swprintf(szBuffer1, L"%s %s", pGroup->pwszCmdGroupToken, pCommand->pwszCmdToken);
         LoadStringW(pContext->hModule, pCommand->dwShortCmdHelpToken, szBuffer2, _countof(szBuffer2));
 
         ConPrintf(StdOut, L"%-15s - %s", szBuffer1, szBuffer2);

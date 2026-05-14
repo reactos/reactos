@@ -121,12 +121,12 @@ NTSTATUS NTAPI FreeBT_AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJEC
 
     deviceObject = NULL;
 
-    swprintf(wszDeviceName, L"\\Device\\FbtUsb%02d", instanceNumber);
+    _swprintf(wszDeviceName, L"\\Device\\FbtUsb%02d", instanceNumber);
     RtlInitUnicodeString(&uniDeviceName, wszDeviceName);
     ntStatus=STATUS_OBJECT_NAME_COLLISION;
     while (instanceNumber<99 && !NT_SUCCESS(ntStatus))
     {
-        swprintf(wszDeviceName, L"\\Device\\FbtUsb%02d", instanceNumber);
+        _swprintf(wszDeviceName, L"\\Device\\FbtUsb%02d", instanceNumber);
         uniDeviceName.Length = wcslen(wszDeviceName) * sizeof(WCHAR);
         FreeBT_DbgPrint(1, ("FBTUSB: Attempting to create device %ws\n", wszDeviceName));
         ntStatus = IoCreateDevice(
@@ -157,7 +157,7 @@ NTSTATUS NTAPI FreeBT_AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJEC
     deviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
     deviceObject->Flags |= DO_DIRECT_IO;
 
-    swprintf(deviceExtension->wszDosDeviceName, L"\\DosDevices\\FbtUsb%02d", instanceNumber);
+    _swprintf(deviceExtension->wszDosDeviceName, L"\\DosDevices\\FbtUsb%02d", instanceNumber);
     RtlInitUnicodeString(&uniDosDeviceName, deviceExtension->wszDosDeviceName);
     ntStatus=IoCreateSymbolicLink(&uniDosDeviceName, &uniDeviceName);
     if (!NT_SUCCESS(ntStatus))

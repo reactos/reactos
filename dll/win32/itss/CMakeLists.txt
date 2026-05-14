@@ -1,5 +1,5 @@
 
-add_definitions(-D__ROS_LONG64__)
+add_definitions(-D__ROS_LONG64__ -D_CRT_NON_CONFORMING_SWPRINTFS)
 spec2def(itss.dll itss.spec)
 
 list(APPEND SOURCE

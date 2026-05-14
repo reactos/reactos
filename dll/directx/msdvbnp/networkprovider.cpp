@@ -187,7 +187,7 @@ CNetworkProvider::QueryInterface(
             WCHAR Buffer[MAX_PATH];
             LPOLESTR lpstr;
             StringFromCLSID(refiid, &lpstr);
-            swprintf(Buffer, L"CNetworkProvider::QueryInterface: DeviceFilter %lu supports %s !!!\n", Index, lpstr);
+            _swprintf(Buffer, L"CNetworkProvider::QueryInterface: DeviceFilter %lu supports %s !!!\n", Index, lpstr);
             OutputDebugStringW(Buffer);
             CoTaskMemFree(lpstr);
 #endif
@@ -198,7 +198,7 @@ CNetworkProvider::QueryInterface(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CNetworkProvider::QueryInterface: NoInterface for %s !!!\n", lpstr);
+    _swprintf(Buffer, L"CNetworkProvider::QueryInterface: NoInterface for %s !!!\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 
@@ -560,7 +560,7 @@ CNetworkProvider_fnConstructor(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(riid, &lpstr);
-    swprintf(Buffer, L"CNetworkProvider_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
+    _swprintf(Buffer, L"CNetworkProvider_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
     OutputDebugStringW(Buffer);
 #endif
 

@@ -31,7 +31,7 @@
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 
-#include <stdio.h>  // For swprintf()
+#include <stdio.h>  // For _swprintf()
 #include <stdlib.h> // For wcstoul()
 #include <strsafe.h>
 

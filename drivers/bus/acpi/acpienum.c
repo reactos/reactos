@@ -107,12 +107,12 @@ Bus_PlugInDevice (
     // Copy the hardware IDs
     //
 		index = 0;
-		index += swprintf(&temp[index],
+		index += _swprintf(&temp[index],
 							L"ACPI\\%hs",
 							Device->pnp.hardware_id);
 		temp[index++] = UNICODE_NULL;
 
-		index += swprintf(&temp[index],
+		index += _swprintf(&temp[index],
 							L"*%hs",
 							Device->pnp.hardware_id);
 		temp[index++] = UNICODE_NULL;

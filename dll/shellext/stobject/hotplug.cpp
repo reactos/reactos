@@ -194,7 +194,7 @@ static void _ShowContextMenu(CSysTray * pSysTray)
         if (cr != CR_SUCCESS)
         {
             WCHAR strInfo[128];
-            swprintf(strInfo, L"Problem Ejecting %wS", g_strMenuSel);
+            _swprintf(strInfo, L"Problem Ejecting %wS", g_strMenuSel);
             MessageBox(0, L"The device cannot be stopped right now! Try stopping it again later!", strInfo, MB_OK | MB_ICONEXCLAMATION);
         }
         else
@@ -342,7 +342,7 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
                     break;
                 case DBT_DEVICEREMOVECOMPLETE:
                     WCHAR strInfo[128];
-                    swprintf(strInfo, L"The %wS can now be safely removed from the system.", g_strMenuSel);
+                    _swprintf(strInfo, L"The %wS can now be safely removed from the system.", g_strMenuSel);
                     NotifyBalloon(pSysTray, L"Safe to Remove Hardware", strInfo);
 
                     lResult = true;

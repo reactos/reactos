@@ -342,7 +342,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
 {
     HANDLE hFile;
     TCHAR log[5];
-    HLOCAL hLocal;
+    HLOCAL hOldLocal, hNewLocal;
 
     /* Close any files and prompt to save changes */
     if (!DoCloseFile())
@@ -360,13 +360,15 @@ VOID DoOpenFile(LPCTSTR szFileName)
     }
 
     /* To make loading file quicker, we use the internal handle of EDIT control */
-    hLocal = (HLOCAL)SendMessageW(Globals.hEdit, EM_GETHANDLE, 0, 0);
-    if (!ReadText(hFile, &hLocal, &Globals.encFile, &Globals.iEoln))
+    hOldLocal = (HLOCAL)SendMessageW(Globals.hEdit, EM_GETHANDLE, 0, 0);
+    hNewLocal = ReadText(hFile, &Globals.encFile, &Globals.iEoln);
+    if (!hNewLocal)
     {
         ShowLastError();
         goto done;
     }
-    SendMessageW(Globals.hEdit, EM_SETHANDLE, (WPARAM)hLocal, 0);
+    SendMessageW(Globals.hEdit, EM_SETHANDLE, (WPARAM)hNewLocal, 0);
+    LocalFree(hOldLocal);
     /* No need of EM_SETMODIFY and EM_EMPTYUNDOBUFFER here. EM_SETHANDLE does instead. */
 
     SetFocus(Globals.hEdit);

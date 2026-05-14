@@ -51,10 +51,16 @@ typedef struct tagNetCfgComponentItem
     DWORD dwCharacteristics;    //Y
     ULONG Status;               //Y
     BOOL bChanged;              //Y
+    LPWSTR pszUpperRange;
+    LPWSTR pszLowerRange;
     LPWSTR pszBinding;
+    DWORD dwSupportedNotifications;
     INetCfgComponentControl *pControl;
     INetCfgComponentPropertyUi *pPropertyUi;
     INetCfgComponentSetup *pSetup;
+    INetCfgComponentNotifyBinding *pNotifyBinding;
+    INetCfgComponentNotifyGlobal *pNotifyGlobal;
+    INetCfgComponentUpperEdge *pUpperEdge;
     struct tagNetCfgComponentItem *pNext;
 } NetCfgComponentItem;
 

@@ -94,7 +94,7 @@ DetailDisk(
     if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_GPT)
         PrintGUID(szBuffer, &CurrentDisk->LayoutBuffer->Gpt.DiskId);
     else if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_MBR)
-        swprintf(szBuffer, L"%08lx", CurrentDisk->LayoutBuffer->Mbr.Signature);
+        _swprintf(szBuffer, L"%08lx", CurrentDisk->LayoutBuffer->Mbr.Signature);
     else
         wcscpy(szBuffer, L"00000000");
     ConResPrintf(StdOut, IDS_DETAIL_DISK_ID, szBuffer);
@@ -194,7 +194,7 @@ DetailPartition(
     }
     else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        swprintf(szBuffer, L"%02x", PartEntry->Mbr.PartitionType);
+        _swprintf(szBuffer, L"%02x", PartEntry->Mbr.PartitionType);
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_TYPE, szBuffer);
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, "");
         LoadStringW(GetModuleHandle(NULL),

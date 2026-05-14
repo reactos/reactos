@@ -1109,7 +1109,7 @@ FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
     INT i;
 
     // Print the number in uniform mode
-    swprintf(wszNumber, L"%I64u", Num);
+    _swprintf(wszNumber, L"%I64u", Num);
 
     // Get system strings for decimal and thousand separators.
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, wszDecimalSep, _countof(wszDecimalSep));

@@ -448,10 +448,10 @@
 448 stdcall -noname FixSlashesAndColonW(wstr)
 449 stub -noname NextPathA
 450 stub -noname NextPathW
-451 stub -noname CharUpperNoDBCSA
-452 stub -noname CharUpperNoDBCSW
-453 stub -noname CharLowerNoDBCSA
-454 stub -noname CharLowerNoDBCSW
+451 stdcall -noname CharUpperNoDBCSA(str)
+452 stdcall -noname CharUpperNoDBCSW(wstr)
+453 stdcall -noname CharLowerNoDBCSA(str)
+454 stdcall -noname CharLowerNoDBCSW(wstr)
 455 stdcall -noname PathIsValidCharA(long long)
 456 stdcall -noname PathIsValidCharW(long long)
 457 stdcall -noname GetLongPathNameWrapW(wstr ptr long) kernel32.GetLongPathNameW
@@ -509,8 +509,8 @@
 509 stdcall -noname IUnknown_OnFocusChangeIS(ptr ptr long)
 510 stdcall -noname SHLockSharedEx(ptr long long)
 511 stdcall -noname PathFileExistsDefExtAndAttributesW(wstr long ptr)
-512 stub -ordinal IStream_ReadPidl
-513 stub -ordinal IStream_WritePidl
+512 stdcall -noname IStream_ReadPidl(ptr ptr)
+513 stdcall -noname IStream_WritePidl(ptr ptr)
 514 stdcall -noname IUnknown_ProfferService(ptr ptr ptr ptr)
 515 stdcall -ordinal SHGetViewStatePropertyBag(ptr wstr long ptr ptr)
 516 stdcall -noname SKGetValueW(long wstr wstr ptr ptr ptr)
@@ -538,7 +538,7 @@
 538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)
 539 stub -noname IUnknown_ShowBrowserBar
 540 stdcall -noname SHInvokeCommandOnContextMenu(ptr ptr ptr long str)
-541 stub -noname SHInvokeCommandsOnContextMenu
+541 stdcall -noname SHInvokeCommandsOnContextMenu(ptr ptr ptr long ptr long)
 542 stdcall -noname GetUIVersion()
 543 stdcall -noname CreateColorSpaceWrapW(ptr) gdi32.CreateColorSpaceW
 544 stub -noname QuerySourceCreateFromKey

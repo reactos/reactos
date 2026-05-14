@@ -1,6 +1,6 @@
 
 add_definitions(
-    -DCOM_NO_WINDOWS_H)
+    -DCOM_NO_WINDOWS_H -D_CRT_NON_CONFORMING_SWPRINTFS)
 
 spec2def(mlang.dll mlang.spec ADD_IMPORTLIB)
 
@@ -11,8 +11,9 @@ list(APPEND SOURCE
 
 add_library(mlang MODULE ${SOURCE} mlang.rc)
 set_module_type(mlang win32dll UNICODE)
-target_link_libraries(mlang uuid wine oldnames)
+add_idl_reg_scripts(mlang registry mlang_classes.idl)
+target_link_libraries(mlang uuid wine wine_dll_canunload wine_dll_register oldnames)
 add_delay_importlibs(mlang oleaut32)
-add_importlibs(mlang gdi32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(mlang gdi32 advapi32 msvcrt kernel32 kernel32_vista ntdll)
 add_cd_file(TARGET mlang DESTINATION reactos/system32 FOR all)
 set_wine_module_FIXME(mlang) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

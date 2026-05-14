@@ -54,6 +54,8 @@ add_library(jscript MODULE
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/jscript.def)
 
+target_compile_definitions(jscript PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
+
 if(MSVC)
     # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
     # Disable warning C4267: '=': conversion from 'size_t' to 'WCHAR', possible loss of data

@@ -5,15 +5,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Willkommen beim ReactOS Installationsassistenten.", IDC_WELCOMETITLE, 115, 9, 189, 31
-    LTEXT "Dieser Assistent wird ReactOS auf Ihrem Computer installieren. Dazu werden einige Informationen von Ihnen benötigt.", IDC_STATIC, 115, 50, 189, 100
-    LTEXT "Klicken Sie auf Weiter, um fortzufahren.", IDC_STATIC, 115, 160, 189, 31
+    LTEXT "Willkommen beim ReactOS Installationsassistenten", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Dieser Assistent wird ReactOS auf Ihrem Computer installieren.\nDazu werden einige Informationen von Ihnen benötigt.", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Klicken Sie auf Weiter, um fortzufahren.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Die Entwicklung von ReactOS wurde teilweise durch folgende Open-Source-Projekte ermöglicht:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 291, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
@@ -125,13 +125,13 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Fertigstellung der Installation"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fertigstellung des ReactOS Installationsassistenten", IDC_FINISHTITLE, 115, 9, 195, 37
-    LTEXT "Die Installation von ReactOS wurde erfolgreich fertiggestellt.\n\nWenn Sie auf Fertig klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Entfernen Sie die CD und klicken Sie auf Fertig, um den Computer neuzustarten.", IDC_STATIC, 115, 160, 195, 31
+    LTEXT "Fertigstellung des ReactOS Installationsassistenten", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Die Installation von ReactOS wurde erfolgreich fertiggestellt.\n\nEntfernen Sie die CD und klicken Sie auf Fertig, um den Computer neuzustarten.", IDC_STATIC, 115, 40, 195, 48
+    LTEXT "Your computer will automatically restart in 15 seconds.", IDC_STATIC, 115, 110, 195, 24
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -146,7 +146,7 @@ END
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Bitte warten..."
-FONT 8, "MS Shell Dlg", 400, 0, 1
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4

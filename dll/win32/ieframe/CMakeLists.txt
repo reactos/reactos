@@ -41,6 +41,7 @@ list(APPEND ieframe_rc_deps
 set_source_files_properties(ieframe.rc PROPERTIES OBJECT_DEPENDS "${ieframe_rc_deps}")
 add_dependencies(ieframe stdole2)
 set_module_type(ieframe win32dll)
+target_compile_definitions(ieframe PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(ieframe uuid wine)
 add_importlibs(ieframe urlmon shell32 comctl32 shlwapi oleaut32 ole32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(ieframe precomp.h SOURCE)

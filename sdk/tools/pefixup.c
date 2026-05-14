@@ -521,8 +521,17 @@ int main(int argc, char **argv)
 
     if (!result)
     {
-        /* Success. Recalculate the checksum only if this is not a reproducible build file */
-        if (nt_header->OptionalHeader.CheckSum != 0)
+        int is_kernel_image = (mode == MODE_KERNELDRIVER ||
+                               mode == MODE_WDMDRIVER ||
+                               mode == MODE_KERNELDLL ||
+                               mode == MODE_KERNEL);
+
+        /*
+         * Preserve linker-produced zero checksums unless this is a kernel-mode
+         * image, where the NT loader requires a valid checksum. This fixes
+         * lld-built drivers, which otherwise keep the reproducible zero value.
+         */
+        if (nt_header->OptionalHeader.CheckSum != 0 || is_kernel_image)
             fix_checksum(buffer, len, nt_header);
 
         /* We could optimize by only writing the changed parts, but keep it simple for now */

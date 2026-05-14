@@ -8,6 +8,7 @@ list(APPEND SOURCE
 
 add_library(jsproxy MODULE ${SOURCE} rsrc.rc)
 set_module_type(jsproxy win32dll)
+target_compile_definitions(jsproxy PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(jsproxy uuid wine)
 add_importlibs(jsproxy oleaut32 ole32 ws2_32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET jsproxy DESTINATION reactos/system32 FOR all)

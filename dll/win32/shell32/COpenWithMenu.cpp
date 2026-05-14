@@ -489,7 +489,7 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
     }
 
     /* Query name */
-    swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\FileDescription", wLang, wCode);
+    _swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\FileDescription", wLang, wCode);
     success = VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen) && (cchLen > 1);
     if (success)
         StringCchCopyNW(pApp->wszName, _countof(pApp->wszName), pResult, cchLen);

@@ -10,8 +10,6 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#define NONAMELESSUNION
-
 #include <wine/test.h>
 
 #include <wingdi.h>

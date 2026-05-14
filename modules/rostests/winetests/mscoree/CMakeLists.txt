@@ -1,5 +1,4 @@
 
-remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 add_definitions(-DUSE_WINE_TODOS)
 
 add_executable(mscoree_winetest

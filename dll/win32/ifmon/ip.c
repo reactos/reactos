@@ -8,6 +8,7 @@
 #include "precomp.h"
 
 #include <guiddef.h>
+#include <devguid.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -43,37 +44,189 @@ IpGroups[] =
 
 
 static
-BOOL
-FormatIPv4Address(
-    _Out_ PWCHAR pBuffer,
-    _In_ PSOCKET_ADDRESS SocketAddress)
+HRESULT
+GetInterfaceProperties(
+    GUID *InterfaceGuid,
+    PTCPIP_PROPERTIES *ppProperties)
 {
-    if (SocketAddress->lpSockaddr->sa_family == AF_INET)
+    INetCfg *pNetCfg = NULL;
+    INetCfgLock *pNetCfgLock = NULL;
+    INetCfgClass *pNetCfgClass = NULL;
+    INetCfgComponent *pTcpipComponent = NULL;
+    INetCfgComponentPrivate *pTcpipComponentPrivate = NULL;
+    ITcpipProperties *pTcpipProperties = NULL;
+
+    BOOL fWriteLocked = FALSE, fInitialized = FALSE;
+    HRESULT hr;
+
+    DPRINT("GetInterfaceProperties()\n");
+
+    hr = CoInitialize(NULL);
+    if (hr != S_OK)
     {
-        struct sockaddr_in *si = (struct sockaddr_in *)(SocketAddress->lpSockaddr);
-        RtlIpv4AddressToStringW(&(si->sin_addr), pBuffer);
-        return TRUE;
+        DPRINT1("CoInitialize failed\n");
+        goto exit;
     }
 
-    return FALSE;
+    hr = CoCreateInstance(&CLSID_CNetCfg,
+                          NULL,
+                          CLSCTX_INPROC_SERVER,
+                          &IID_INetCfg,
+                          (PVOID*)&pNetCfg);
+    if (hr != S_OK)
+    {
+        DPRINT1("CoCreateInstance failed\n");
+        goto exit;
+    }
+
+    /* Acquire the write-lock */
+    hr = INetCfg_QueryInterface(pNetCfg,
+                                &IID_INetCfgLock,
+                                (PVOID*)&pNetCfgLock);
+    if (hr != S_OK)
+    {
+        DPRINT1("QueryInterface failed\n");
+        goto exit;
+    }
+
+    hr = INetCfgLock_AcquireWriteLock(pNetCfgLock, 5000,
+                                      L"NetSh",
+                                      NULL);
+    if (hr != S_OK)
+    {
+        DPRINT1("AcquireWriteLock failed\n");
+        goto exit;
+    }
+
+    fWriteLocked = TRUE;
+
+    /* Initialize the network configuration */
+    hr = INetCfg_Initialize(pNetCfg, NULL);
+    if (hr != S_OK)
+    {
+        DPRINT1("Initialize failed\n");
+        goto exit;
+    }
+
+    fInitialized = TRUE;
+
+    GUID ClassGuid = GUID_DEVCLASS_NETTRANS;
+    hr = INetCfg_QueryNetCfgClass(pNetCfg, &ClassGuid, &IID_INetCfgClass, (PVOID*)&pNetCfgClass);
+    if (hr != S_OK)
+    {
+        DPRINT1("INetCfg_QueryNetCfgClass failed!\n");
+        goto exit;
+    }
+
+    hr = INetCfgClass_FindComponent(pNetCfgClass, L"MS_TCPIP", &pTcpipComponent);
+    if (hr != S_OK)
+    {
+        DPRINT1("INetCfgClass_FindComponent failed\n");
+        goto exit;
+    }
+
+    hr = INetCfgComponent_QueryInterface(pTcpipComponent, &IID_INetCfgComponentPrivate, (PVOID*)&pTcpipComponentPrivate);
+    if (hr != S_OK)
+    {
+        DPRINT1("INetCfgComponent_QueryInterface failed\n");
+        goto exit;
+    }
+
+    hr = INetCfgComponentPrivate_Unknown1(pTcpipComponentPrivate, &IID_ITcpipProperties, (PVOID*)&pTcpipProperties);
+    if (hr != S_OK)
+    {
+        DPRINT1("INetCfgComponentPrivate_Unknown1 failed\n");
+        goto exit;
+    }
+
+    PTCPIP_PROPERTIES pInfo = NULL;
+    hr = ITcpipProperties_Unknown1(pTcpipProperties, InterfaceGuid, &pInfo);
+    if (hr != S_OK)
+    {
+        DPRINT1("ITcpipProperties_Unknown1 failed\n");
+    }
+    else
+    {
+        DPRINT("pInfo: %p\n", pInfo);
+        DPRINT("dwDhcp: %lx\n", pInfo->dwDhcp);
+        DPRINT("IpAddress: %p\n", pInfo->pszIpAddress);
+        DPRINT("IpAddress: %S\n", pInfo->pszIpAddress);
+        DPRINT("SubnetMask: %p\n", pInfo->pszSubnetMask);
+        DPRINT("SubnetMask: %S\n", pInfo->pszSubnetMask);
+        DPRINT("Parameters: %p\n", pInfo->pszParameters);
+        DPRINT("Parameters: %S\n", pInfo->pszParameters);
+
+        *ppProperties = pInfo;
+    }
+
+    DPRINT("Done!\n");
+exit:
+    if (pTcpipProperties)
+        ITcpipProperties_Release(pTcpipProperties);
+
+    if (pTcpipComponentPrivate)
+        INetCfgComponentPrivate_Release(pTcpipComponentPrivate);
+
+    if (pTcpipComponent != NULL)
+        INetCfgComponent_Release(pTcpipComponent);
+
+    if (pNetCfgClass != NULL)
+        INetCfgClass_Release(pNetCfgClass);
+
+    if (fInitialized)
+        INetCfg_Uninitialize(pNetCfg);
+
+    if (fWriteLocked)
+        INetCfgLock_ReleaseWriteLock(pNetCfgLock);
+
+    if (pNetCfgLock != NULL)
+        INetCfgLock_Release(pNetCfgLock);
+
+    if (pNetCfg != NULL)
+        INetCfg_Release(pNetCfg);
+
+    CoUninitialize();
+
+    DPRINT("GetInterfaceProperties() done!\n");
+
+    return hr;
 }
 
 
 static
-BOOL
-FormatIPv4NetMask(
-    _Out_ PWCHAR pBuffer,
-    _In_ ULONG PrefixLength)
+PWSTR
+ExtractParameterValue(
+    PWSTR pszParameters,
+    PWSTR pszParameter)
 {
-    ULONG i;
-    IN_ADDR NetMask;
+    PWSTR pToken, pStart, pEnd, pBuffer;
+    INT length;
 
-    NetMask.S_un.S_addr = 0;
-    for (i = 0; i < PrefixLength; i++)
-        NetMask.S_un.S_addr = NetMask.S_un.S_addr | (1 << (31 - i));
+    pToken = wcsstr(pszParameters, pszParameter);
+    if (pToken == NULL)
+        return NULL;
 
-    RtlIpv4AddressToStringW(&NetMask, pBuffer);
-    return TRUE;
+    pStart = wcschr(pToken, L'=');
+    if (pStart == NULL)
+        return NULL;
+
+    pStart++;
+    pEnd = wcschr(pStart, L';');
+    if (pEnd == NULL)
+        length = wcslen(pStart);
+    else
+        length = pEnd - pStart;
+
+    if (length == 0)
+        return NULL;
+
+    pBuffer = (PWSTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (length + 1) * sizeof(WCHAR));
+    if (pBuffer)
+    {
+        CopyMemory(pBuffer, pStart, length * sizeof(WCHAR));
+    }
+
+    return pBuffer;
 }
 
 
@@ -83,171 +236,146 @@ IpShowAdapters(
     _In_ DWORD DisplayFlags,
     _In_ PWSTR InterfaceName)
 {
-    PIP_ADAPTER_ADDRESSES pAdapterAddresses = NULL, Ptr;
-    PIP_ADAPTER_UNICAST_ADDRESS pUnicastAddress;
-    PIP_ADAPTER_PREFIX pPrefix;
-    PIP_ADAPTER_DNS_SERVER_ADDRESS pDnsServer;
-    WCHAR IpBuffer[17], MaskBuffer[17];
-    BOOL First;
-    ULONG adaptOutBufLen = 15000;
-    DWORD Error = ERROR_SUCCESS;
-    ULONG Flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_INCLUDE_PREFIX;
+    IP_INTERFACE_NAME_INFO *pTable = NULL;
+    DWORD dwCount = 0, i;
+    DWORD dwError;
+    WCHAR szFriendlyName[80];
+    DWORD dwFriendlyNameSize;
+    PTCPIP_PROPERTIES pProperties = NULL;
+    PWSTR pBuffer, pStart, pEnd;
 
-    /* set required buffer size */
-    pAdapterAddresses = (PIP_ADAPTER_ADDRESSES)malloc(adaptOutBufLen);
-    if (pAdapterAddresses == NULL)
+    dwError = NhpAllocateAndGetInterfaceInfoFromStack(&pTable,
+                                                      &dwCount,
+                                                      FALSE,
+                                                      GetProcessHeap(),
+                                                      0);
+    if (dwError != ERROR_SUCCESS)
     {
-        Error = ERROR_NOT_ENOUGH_MEMORY;
-        goto done;
+        DPRINT1("NhpAllocateAndGetInterfaceInfoFromStack() failed (Error %lu)\n", dwError);
+        return dwError;
     }
 
-    Error = GetAdaptersAddresses(AF_INET, Flags, NULL, pAdapterAddresses, &adaptOutBufLen);
-    if (Error == ERROR_BUFFER_OVERFLOW)
+    DPRINT("\nEntries: %lu\n", dwCount);
+
+    for (i = 0; i < dwCount; i++)
     {
-        free(pAdapterAddresses);
-        pAdapterAddresses = (PIP_ADAPTER_ADDRESSES)malloc(adaptOutBufLen);
-        if (pAdapterAddresses == NULL)
+        DPRINT("\nEntry %lu\n", i);
+        DPRINT("Index: %lu\n", pTable[i].Index);
+        DPRINT("MediaType: %lu\n", pTable[i].MediaType);
+        DPRINT("ConnectionType: %u\n", pTable[i].ConnectionType);
+        DPRINT("AccessType: %u\n", pTable[i].AccessType);
+        DPRINT("DeviceGuid: %08lx\n", pTable[i].DeviceGuid.Data1);
+        DPRINT("InterfaceGuid: %08lx\n", pTable[i].InterfaceGuid.Data1);
+
+        dwFriendlyNameSize = sizeof(szFriendlyName);
+        NhGetInterfaceNameFromGuid(&pTable[i].DeviceGuid,
+                                   szFriendlyName,
+                                   &dwFriendlyNameSize,
+                                   0,
+                                   0);
+
+        if ((InterfaceName == NULL) || MatchToken(InterfaceName, szFriendlyName))
         {
-            Error = ERROR_NOT_ENOUGH_MEMORY;
-            goto done;
-        }
-    }
+            PrintMessageFromModule(hDllInstance, IDS_IP_HEADER, szFriendlyName);
 
-    Error = GetAdaptersAddresses(AF_INET, Flags, NULL, pAdapterAddresses, &adaptOutBufLen);
-    if (Error != ERROR_SUCCESS)
-        goto done;
+            GetInterfaceProperties(&pTable[i].DeviceGuid, &pProperties);
 
-    Ptr = pAdapterAddresses;
-    while (Ptr)
-    {
-        if (InterfaceName == NULL || MatchToken(InterfaceName, Ptr->FriendlyName))
-        {
-            PrintMessageFromModule(hDllInstance, IDS_IP_HEADER, Ptr->FriendlyName);
-
-            if (DisplayFlags & DISPLAY_ADRESSES)
+            if (pProperties)
             {
-                PrintMessageFromModule(hDllInstance, (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED) ? IDS_DHCP_ON : IDS_DHCP_OFF);
+                DPRINT("Dhcp %lu\n", pProperties->dwDhcp);
+                DPRINT("IpAddress %S\n", pProperties->pszIpAddress);
+                DPRINT("SubnetMask %S\n", pProperties->pszSubnetMask);
+                DPRINT("Parameters %S\n", pProperties->pszParameters);
 
-                if (Ptr->FirstUnicastAddress == NULL)
+                if (DisplayFlags & DISPLAY_ADRESSES)
                 {
-                    PrintMessageFromModule(hDllInstance, IDS_NOIPADDRESS);
-                }
-                else
-                {
-                    First = TRUE;
-                    pUnicastAddress = Ptr->FirstUnicastAddress;
-                    while (pUnicastAddress)
+                    PrintMessageFromModule(hDllInstance, (pProperties->dwDhcp) ? IDS_DHCP_ON : IDS_DHCP_OFF);
+
+                    if (pProperties->dwDhcp == 0)
                     {
-                        if (FormatIPv4Address(IpBuffer, &pUnicastAddress->Address))
+                        if (*pProperties->pszIpAddress == UNICODE_NULL)
                         {
-                            PrintMessageFromModule(hDllInstance, IDS_IPADDRESS, IpBuffer);
-#if 0
-                            if (First)
-                            {
-                                PrintMessageFromModule(hDllInstance, (pUnicastAddress->Next)? IDS_IPADDRESSES : IDS_IPADDRESS, IpBuffer);
-                            }
-                            else
-                            {
-                                PrintMessageFromModule(hDllInstance, IDS_EMPTYLINE, IpBuffer);
-                            }
-                            First = FALSE;
-#endif
+                            PrintMessageFromModule(hDllInstance, IDS_NOIPADDRESS);
+                        }
+                        else
+                        {
+                            PrintMessageFromModule(hDllInstance, IDS_IPADDRESS, pProperties->pszIpAddress);
                         }
 
-                        pUnicastAddress = pUnicastAddress->Next;
+                        if (*pProperties->pszSubnetMask == UNICODE_NULL)
+                        {
+                            PrintMessageFromModule(hDllInstance, IDS_NOSUBNETMASK);
+                        }
+                        else
+                        {
+                            PrintMessageFromModule(hDllInstance, IDS_SUBNETMASK, pProperties->pszSubnetMask);
+                        }
+
+                        pBuffer = ExtractParameterValue(pProperties->pszParameters, L"DefGw");
+                        if (pBuffer)
+                        {
+                            PrintMessageFromModule(hDllInstance, IDS_DEFAULTGATEWAY, pBuffer);
+                            HeapFree(GetProcessHeap(), 0, pBuffer);
+                        }
+
+                        pBuffer = ExtractParameterValue(pProperties->pszParameters, L"GwMetric");
+                        if (pBuffer)
+                        {
+                            PrintMessageFromModule(hDllInstance, IDS_GATEWAYMETRIC, pBuffer);
+                            HeapFree(GetProcessHeap(), 0, pBuffer);
+                        }
+                    }
+
+                    pBuffer = ExtractParameterValue(pProperties->pszParameters, L"IfMetric");
+                    if (pBuffer)
+                    {
+                        PrintMessageFromModule(hDllInstance, IDS_INTERFACEMETRIC, pBuffer);
+                        HeapFree(GetProcessHeap(), 0, pBuffer);
                     }
                 }
 
-                if (Ptr->FirstPrefix == NULL)
+                if (DisplayFlags & DISPLAY_DNS)
                 {
-                    PrintMessage(L"    SubnetMask:                           %s\n", L"None");
-                }
-                else
-                {
-                    First = TRUE;
-                    pPrefix = Ptr->FirstPrefix;
-                    while (pPrefix)
+                    if (pProperties->dwDhcp == 0)
                     {
-                        FormatIPv4NetMask(MaskBuffer, pPrefix->PrefixLength);
-                        PrintMessage(L"    SubnetMask:                           %s\n", MaskBuffer);
-#if 0
-                        if (FormatIPv4Address(IpBuffer, &pPrefix->Address))
+                        pBuffer = ExtractParameterValue(pProperties->pszParameters, L"DNS");
+                        if (pBuffer)
                         {
-                            FormatIPv4NetMask(MaskBuffer, pPrefix->PrefixLength);
-
-                            if (First)
+                            pEnd = wcschr(pBuffer, L',');
+                            if (pEnd == NULL)
                             {
-                                if (pPrefix->Next)
-                                    PrintMessage(L"    SubnetMasks:                          %s/%lu (Mask: %s)\n", IpBuffer, pPrefix->PrefixLength, MaskBuffer);
-                                else
-                                    PrintMessage(L"    SubnetMask:                           %s/%lu (Mask: %s)\n", IpBuffer, pPrefix->PrefixLength, MaskBuffer);
+                                PrintMessageFromModule(hDllInstance, IDS_STATICNAMESERVER, pBuffer);
                             }
                             else
                             {
-                                PrintMessage(L"                                          %s/%lu (Mask: %s)\n", IpBuffer, pPrefix->PrefixLength, MaskBuffer);
+                                pStart = pBuffer;
+                                *pEnd = UNICODE_NULL;
+                                PrintMessageFromModule(hDllInstance, IDS_STATICNAMESERVER, pBuffer);
+                                for (;;)
+                                {
+                                    pStart = pEnd + 1;
+                                    pEnd = wcschr(pStart, L',');
+                                    if (pEnd == NULL)
+                                        break;
+                                    *pEnd = UNICODE_NULL;
+                                    PrintMessageFromModule(hDllInstance, IDS_EMPTYLINE, pBuffer);
+                                }
                             }
-                            First = FALSE;
+                            HeapFree(GetProcessHeap(), 0, pBuffer);
                         }
-#endif
-                        pPrefix = pPrefix->Next;
                     }
                 }
 
-//                PrintMessage(L"    Default Gateway:                      %s\n", L"---");
-//                PrintMessage(L"    Gateway Metric:                       %s\n", L"---");
-//                PrintMessage(L"    Interface Metric:                     %s\n", L"---");
-            }
-
-            if (DisplayFlags & DISPLAY_DNS)
-            {
-                if (Ptr->FirstDnsServerAddress == NULL)
-                {
-                    if (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED)
-                        PrintMessage(L"    DNS servers configured through DHCP:  %s\n", L"None");
-                    else
-                        PrintMessage(L"    Statically configured DNS Servers:    %s\n", L"None");
-                }
-                else
-                {
-                    First = TRUE;
-                    pDnsServer = Ptr->FirstDnsServerAddress;
-                    while (pDnsServer)
-                    {
-                        if (FormatIPv4Address(IpBuffer, &pDnsServer->Address))
-                        {
-                            if (First == TRUE)
-                            {
-                                if (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED)
-                                    PrintMessage(L"    DNS servers configured through DHCP:  %s\n", IpBuffer);
-                                else
-                                    PrintMessage(L"    Statically configured DNS Servers:    %s\n", IpBuffer);
-                            }
-                            else
-                            {
-                                PrintMessage(L"                                          %s\n", IpBuffer);
-                            }
-
-                            First = FALSE;
-                        }
-
-                        pDnsServer = pDnsServer->Next;
-                    }
-                }
-
-//                PrintMessage(L"    Register with which suffix:\n");
+                CoTaskMemFree(pProperties);
+                pProperties = NULL;
             }
         }
-
-        Ptr = Ptr->Next;
     }
 
-    PrintMessage(L"\n");
+    if (pTable)
+        HeapFree(GetProcessHeap(), 0, pTable);
 
-done:
-    if (pAdapterAddresses)
-        free(pAdapterAddresses);
-
-    return Error;
+    return ERROR_SUCCESS;
 }
 
 
@@ -332,110 +460,105 @@ IpDumpFn(
     _In_ DWORD dwArgCount,
     _In_ LPCVOID pvData)
 {
-    PIP_ADAPTER_ADDRESSES pAdapterAddresses = NULL, Ptr;
-    PIP_ADAPTER_UNICAST_ADDRESS pUnicastAddress;
-//    PIP_ADAPTER_PREFIX pPrefix;
-    PIP_ADAPTER_DNS_SERVER_ADDRESS pDnsServer;
-    WCHAR AddressBuffer[17], MaskBuffer[17];
-    ULONG adaptOutBufLen = 15000;
-    ULONG Flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_INCLUDE_PREFIX;
-    DWORD Error = ERROR_SUCCESS;
+    IP_INTERFACE_NAME_INFO *pTable = NULL;
+    DWORD dwCount = 0, i;
+    DWORD dwError;
+    WCHAR szFriendlyName[80];
+    DWORD dwFriendlyNameSize;
+    PTCPIP_PROPERTIES pProperties = NULL;
+    PWSTR pBuffer;
 
     DPRINT("IpDumpFn(%S %p %lu %p)\n", pwszRouter, ppwcArguments, dwArgCount, pvData);
 
+    dwError = NhpAllocateAndGetInterfaceInfoFromStack(&pTable,
+                                                      &dwCount,
+                                                      FALSE,
+                                                      GetProcessHeap(),
+                                                      0);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("NhpAllocateAndGetInterfaceInfoFromStack() failed (Error %lu)\n", dwError);
+        return dwError;
+    }
+
     PrintMessageFromModule(hDllInstance, IDS_DUMP_HEADERLINE);
-    PrintMessage(L"# Interface IP Configuration\n");
+    PrintMessageFromModule(hDllInstance, IDS_DUMP_IP_HEADER);
     PrintMessageFromModule(hDllInstance, IDS_DUMP_HEADERLINE);
     PrintMessage(L"pushd interface ip\n");
     PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
 
-    /* set required buffer size */
-    pAdapterAddresses = (PIP_ADAPTER_ADDRESSES)malloc(adaptOutBufLen);
-    if (pAdapterAddresses == NULL)
-    {
-        Error = ERROR_NOT_ENOUGH_MEMORY;
-        goto done;
-    }
+    DPRINT("\nEntries: %lu\n", dwCount);
 
-    Error = GetAdaptersAddresses(AF_INET, Flags, NULL, pAdapterAddresses, &adaptOutBufLen);
-    if (Error == ERROR_BUFFER_OVERFLOW)
+    for (i = 0; i < dwCount; i++)
     {
-       free(pAdapterAddresses);
-       pAdapterAddresses = (PIP_ADAPTER_ADDRESSES)malloc(adaptOutBufLen);
-       if (pAdapterAddresses == NULL)
-       {
-           Error = ERROR_NOT_ENOUGH_MEMORY;
-           goto done;
-       }
-    }
+        DPRINT("\nEntry %lu\n", i);
+        DPRINT("Index: %lu\n", pTable[i].Index);
+        DPRINT("MediaType: %lu\n", pTable[i].MediaType);
+        DPRINT("ConnectionType: %u\n", pTable[i].ConnectionType);
+        DPRINT("AccessType: %u\n", pTable[i].AccessType);
+        DPRINT("DeviceGuid: %08lx\n", pTable[i].DeviceGuid.Data1);
+        DPRINT("InterfaceGuid: %08lx\n", pTable[i].InterfaceGuid.Data1);
 
-    Error = GetAdaptersAddresses(AF_INET, Flags, NULL, pAdapterAddresses, &adaptOutBufLen);
-    if (Error != ERROR_SUCCESS)
-        goto done;
+        dwFriendlyNameSize = sizeof(szFriendlyName);
+        NhGetInterfaceNameFromGuid(&pTable[i].DeviceGuid,
+                                   szFriendlyName,
+                                   &dwFriendlyNameSize,
+                                   0,
+                                   0);
 
-    Ptr = pAdapterAddresses;
-    while (Ptr)
-    {
-        if (Ptr->IfType != IF_TYPE_SOFTWARE_LOOPBACK)
+        PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
+        PrintMessageFromModule(hDllInstance, IDS_DUMP_IP_INTERFACE, szFriendlyName);
+        PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
+
+        GetInterfaceProperties(&pTable[i].DeviceGuid, &pProperties);
+
+        if (pProperties)
         {
-            PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
-            PrintMessageFromModule(hDllInstance, IDS_DUMP_IP_HEADER, Ptr->FriendlyName);
-            PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
+            DPRINT("Dhcp %lu\n", pProperties->dwDhcp);
+            DPRINT("IpAddress %S\n", pProperties->pszIpAddress);
+            DPRINT("SubnetMask %S\n", pProperties->pszSubnetMask);
+            DPRINT("Parameters %S\n", pProperties->pszParameters);
 
-            if (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED)
+            if (pProperties->dwDhcp)
             {
                 PrintMessage(L"set address name=\"%s\" source=dhcp\n",
-                             Ptr->FriendlyName);
+                             szFriendlyName);
             }
             else
             {
-                pUnicastAddress = Ptr->FirstUnicastAddress;
-                while (pUnicastAddress)
-                {
-                    FormatIPv4Address(AddressBuffer, &pUnicastAddress->Address);
-                    wcscpy(MaskBuffer, L"?");
-
-                    PrintMessage(L"set address name=\"%s\" source=static address=%s mask=%s\n",
-                                 Ptr->FriendlyName, AddressBuffer, MaskBuffer);
-
-                    pUnicastAddress = pUnicastAddress->Next;
-                }
+                PrintMessage(L"set address name=\"%s\" source=static address=%s mask=%s\n",
+                             szFriendlyName, pProperties->pszIpAddress, pProperties->pszSubnetMask);
             }
 
-            if (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED)
+            if (pProperties->dwDhcp)
             {
                 PrintMessage(L"set dns name=\"%s\" source=dhcp\n",
-                             Ptr->FriendlyName);
+                             szFriendlyName);
             }
             else
             {
-                pDnsServer = Ptr->FirstDnsServerAddress;
-                while (pDnsServer)
+                pBuffer = ExtractParameterValue(pProperties->pszParameters, L"DNS");
+                if (pBuffer)
                 {
-                    FormatIPv4Address(AddressBuffer, &pDnsServer->Address);
-
-                    PrintMessage(L"set dns name=\"%s\" source=%s address=%s\n",
-                                 Ptr->FriendlyName);
-
-                    pDnsServer = pDnsServer->Next;
+                    PrintMessage(L"set dns name=\"%s\" source=static address=%s\n",
+                                 szFriendlyName, pBuffer);
+                    HeapFree(GetProcessHeap(), 0, pBuffer);
                 }
-
             }
 
-            PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
+            CoTaskMemFree(pProperties);
+            pProperties = NULL;
         }
-
-        Ptr = Ptr->Next;
     }
-
-done:
-    if (pAdapterAddresses)
-        free(pAdapterAddresses);
 
     PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
     PrintMessage(L"popd\n");
-    PrintMessage(L"# End of Interface IP Configuration\n");
+    PrintMessageFromModule(hDllInstance, IDS_DUMP_IP_FOOTER);
     PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
+
+    if (pTable)
+        HeapFree(GetProcessHeap(), 0, pTable);
+
 
     return ERROR_SUCCESS;
 }

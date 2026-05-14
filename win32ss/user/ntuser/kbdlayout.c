@@ -312,7 +312,7 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
     }
 
     /* Set keyboard layout name */
-    swprintf(pkf->awchKF, L"%wZ", pwszKLID);
+    _swprintf(pkf->awchKF, L"%wZ", pwszKLID);
 
     /* Open layout registry key */
     RtlStringCbCatW(wszLayoutRegKey, sizeof(wszLayoutRegKey), pkf->awchKF);

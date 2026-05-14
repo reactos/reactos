@@ -89,7 +89,42 @@ INetCfgComponentBindings_fnSupportsBindingInterface(
     DWORD dwFlags,
     LPCWSTR pszwInterfaceName)
 {
-    return E_NOTIMPL;
+    INetCfgComponentImpl *pComponent;
+    PWSTR pszRange, pszStart, pszEnd;
+
+    pComponent = impl_from_INetCfgComponentBindings(iface);
+
+    if (!((dwFlags & NCF_UPPER) || (dwFlags & NCF_LOWER)))
+        return E_INVALIDARG;
+
+    if (!pszwInterfaceName)
+        return E_POINTER;
+
+    pszRange = (dwFlags & NCF_UPPER) ? pComponent->pItem->pszUpperRange : pComponent->pItem->pszLowerRange;
+    TRACE("Range: %S\n", pszRange);
+
+    pszStart = pszRange;
+    for (;;)
+    {
+        pszEnd = wcschr(pszStart, L',');
+        if (pszEnd == NULL)
+        {
+            TRACE("%S -- %S\n", pszStart, pszwInterfaceName);
+            return (_wcsicmp(pszStart, pszwInterfaceName)) ? S_FALSE : S_OK;
+        }
+        else
+        {
+            *pszEnd = UNICODE_NULL;
+            TRACE("%S -- %S\n", pszStart, pszwInterfaceName);
+            if (_wcsicmp(pszStart, pszwInterfaceName) == 0)
+                return S_OK;
+
+            *pszEnd = L',';
+            pszStart = pszEnd + 1;
+        }
+    }
+
+    return S_FALSE;
 }
 
 HRESULT
@@ -583,6 +618,9 @@ CreateNotifyObject(
     INetCfgComponentControl *pControl;
     INetCfgComponentPropertyUi *pPropertyUi;
     INetCfgComponentSetup *pSetup;
+    INetCfgComponentNotifyBinding *pNotifyBinding;
+    INetCfgComponentNotifyGlobal *pNotifyGlobal;
+    INetCfgComponentUpperEdge *pUpperEdge;
     HRESULT hr;
     LONG lRet;
     CLSID ClassGUID;
@@ -652,7 +690,31 @@ CreateNotifyObject(
         This->pItem->pSetup = pSetup;
     }
 
+    hr = INetCfgComponentControl_QueryInterface(pControl, &IID_INetCfgComponentNotifyBinding, (LPVOID*)&pNotifyBinding);
+    if (SUCCEEDED(hr))
+    {
+        This->pItem->pNotifyBinding = pNotifyBinding;
+    }
+
+    hr = INetCfgComponentControl_QueryInterface(pControl, &IID_INetCfgComponentNotifyGlobal, (LPVOID*)&pNotifyGlobal);
+    if (SUCCEEDED(hr))
+    {
+        This->pItem->pNotifyGlobal = pNotifyGlobal;
+    }
+
+    hr = INetCfgComponentControl_QueryInterface(pControl, &IID_INetCfgComponentUpperEdge, (LPVOID*)&pUpperEdge);
+    if (SUCCEEDED(hr))
+    {
+        This->pItem->pUpperEdge = pUpperEdge;
+    }
+
     INetCfgComponentControl_Initialize(pControl, iface, This->pNCfg, FALSE);
+
+    if (This->pItem->pNotifyGlobal)
+    {
+        INetCfgComponentNotifyGlobal_GetSupportedNotifications(This->pItem->pNotifyGlobal,
+                                                               &This->pItem->dwSupportedNotifications);
+    }
 
     return S_OK;
 }

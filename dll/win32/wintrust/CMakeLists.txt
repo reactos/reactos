@@ -1,6 +1,4 @@
 
-remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
-
 spec2def(wintrust.dll wintrust.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

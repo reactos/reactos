@@ -19,6 +19,7 @@
 #include <winreg.h>
 #include <wincon.h>
 #include <winuser.h>
+#include <iphlpapi.h>
 #include <iphlpapi_undoc.h>
 
 #include <ndk/rtlfuncs.h>

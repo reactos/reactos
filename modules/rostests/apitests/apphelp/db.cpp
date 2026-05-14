@@ -1219,9 +1219,9 @@ static void test_mode_generic(const WCHAR* workdir, HSDB hsdb, size_t cur)
 
     memset(&query, 0xab, sizeof(query));
 
-    swprintf(exename, L"%s\\%s", workdir, test_exedata[cur].name);
+    _swprintf(exename, L"%s\\%s", workdir, test_exedata[cur].name);
     if (test_exedata[cur].extra_file)
-        swprintf(testfile, L"%s\\%s", workdir, test_exedata[cur].extra_file);
+        _swprintf(testfile, L"%s\\%s", workdir, test_exedata[cur].extra_file);
     test_create_exe(exename, 0);
 
     if (test_exedata[cur].extra_file)
@@ -1403,7 +1403,7 @@ static void test_MatchApplications(void)
     ok(ret, "CreateDirectoryW error: %d\n", GetLastError());
 
     /* SdbInitDatabase needs an nt-path */
-    swprintf(dbpath, L"\\??\\%s\\test.sdb", workdir);
+    _swprintf(dbpath, L"\\??\\%s\\test.sdb", workdir);
 
     test_create_db(dbpath + 4, g_WinVersion >= WINVER_WIN10);
 
@@ -1506,7 +1506,7 @@ static void test_match_ex(const WCHAR* workdir, HSDB hsdb)
         if (!TestName)
             continue;
 
-        swprintf(exename, L"%s\\%s", workdir, AppName);
+        _swprintf(exename, L"%s\\%s", workdir, AppName);
         test_create_exe(exename, 0);
 
         ret = pSdbGetMatchingExe(hsdb, exename, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
@@ -1551,7 +1551,7 @@ static void test_MatchApplicationsEx(void)
     ok(ret, "CreateDirectoryW error: %d\n", GetLastError());
 
     /* SdbInitDatabase needs an nt-path */
-    swprintf(dbpath, L"\\??\\%s\\test.sdb", workdir);
+    _swprintf(dbpath, L"\\??\\%s\\test.sdb", workdir);
 
     if (extract_resource(dbpath + 4, MAKEINTRESOURCEW(101)))
     {
@@ -1596,7 +1596,7 @@ static void test_TagRef(void)
     ok(ret, "GetTempPathA error: %d\n", GetLastError());
 
     /* SdbInitDatabase needs an nt-path */
-    swprintf(dbpath, L"\\??\\%stest.sdb", tmpdir);
+    _swprintf(dbpath, L"\\??\\%stest.sdb", tmpdir);
 
     test_create_db(dbpath + 4, g_WinVersion >= WINVER_WIN10);
 
@@ -1916,7 +1916,7 @@ static void test_Data(void)
     ok(ret, "CreateDirectoryW error: %d\n", GetLastError());
 
     /* SdbInitDatabase needs an nt-path */
-    swprintf(dbpath, L"\\??\\%s\\test.sdb", workdir);
+    _swprintf(dbpath, L"\\??\\%s\\test.sdb", workdir);
 
     if (extract_resource(dbpath + 4, MAKEINTRESOURCEW(101)))
     {

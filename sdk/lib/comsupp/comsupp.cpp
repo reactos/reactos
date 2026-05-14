@@ -9,6 +9,7 @@
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
 #define _INC_WINDOWS
 
 #include <windef.h>

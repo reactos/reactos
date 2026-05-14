@@ -81,3 +81,20 @@ BOOL APIENTRY MprAdminIsServiceRunning(LPWSTR server)
 
     return FALSE;
 }
+
+/***********************************************************************
+ *      MprConfigServerConnect (MPRAPI.@)
+ */
+DWORD
+APIENTRY
+MprConfigServerConnect(
+    _In_ LPWSTR lpwsServerName,
+    _Out_ HANDLE *phMprConfig)
+{
+    FIXME("(%s %p): stub!\n", debugstr_w(lpwsServerName), phMprConfig);
+
+    if (phMprConfig == NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    return ERROR_SUCCESS;
+}

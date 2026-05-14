@@ -1,4 +1,11 @@
-/*  Portuguese (PT) translation by Jose Jesus zecarlos1957@hotmail.com 25-2-2021 */
+/*
+ * PROJECT:     ReactOS Device Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATORS: Copyright 2007 Marcelo Zamperetti <marcelohz@gmail.com>
+ *              Copyright 2020-2026 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ *              Copyright 2021 Gabriel Aguiar <fgygh5804@gmail.com>
+ */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -199,7 +206,7 @@ BEGIN
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
     LTEXT "Fornecedor:", -1, 14, 134, 50, 8
     EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Versão do arquivo:", -1, 14, 150, 50, 8
+    LTEXT "Versão do ficheiro:", -1, 14, 150, 50, 8
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Direitos autorais:", -1, 14, 166, 50, 8
     EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
@@ -316,10 +323,10 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_TYPE_MEMORY           "Memory"
-  IDS_TYPE_PORT             "Input/output (IO)"
-  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
-  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
+  IDS_TYPE_MEMORY           "Memória"
+  IDS_TYPE_PORT             "Entrada/Saida (IO)"
+  IDS_TYPE_DMA              "Acesso directo à memória (DMA)"
+  IDS_TYPE_IRQ              "Pedido de Interrupção (IRQ)"
 END
 
 /* Hints */

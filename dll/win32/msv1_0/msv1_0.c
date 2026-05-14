@@ -614,6 +614,7 @@ MsvpChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
     }
 
     RequestBuffer = (PMSV1_0_CHANGEPASSWORD_REQUEST)ProtocolSubmitBuffer;
+    ASSERT(RequestBuffer->MessageType == MsV1_0ChangePassword);
 
     /* Fix-up pointers in the request buffer info */
     PtrOffset = (ULONG_PTR)ProtocolSubmitBuffer - (ULONG_PTR)ClientBufferBase;
@@ -874,6 +875,7 @@ MsvpEnumerateUsers(
     _Out_ PULONG ReturnBufferLength,
     _Out_ PNTSTATUS ProtocolStatus)
 {
+    PMSV1_0_ENUMUSERS_REQUEST RequestBuffer;
     PMSV1_0_ENUMUSERS_RESPONSE LocalBuffer = NULL;
     PVOID ClientBaseAddress = NULL;
     ULONG BufferLength;
@@ -891,6 +893,9 @@ MsvpEnumerateUsers(
         ERR("Invalid SubmitBufferLength %lu\n", SubmitBufferLength);
         return STATUS_INVALID_PARAMETER;
     }
+
+    RequestBuffer = (PMSV1_0_ENUMUSERS_REQUEST)ProtocolSubmitBuffer;
+    ASSERT(RequestBuffer->MessageType == MsV1_0EnumerateUsers);
 
     RtlAcquireResourceShared(&LogonListResource, TRUE);
 
@@ -1020,6 +1025,7 @@ MsvpGetUserInfo(
     }
 
     RequestBuffer = (PMSV1_0_GETUSERINFO_REQUEST)ProtocolSubmitBuffer;
+    ASSERT(RequestBuffer->MessageType == MsV1_0GetUserInfo);
 
     TRACE("LogonId: 0x%lx\n", RequestBuffer->LogonId.LowPart);
 
@@ -1123,6 +1129,93 @@ done:
 }
 
 
+static
+NTSTATUS
+MsvpLm20ChallengeRequest(
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferLength,
+    _Out_ PVOID *ProtocolReturnBuffer,
+    _Out_ PULONG ReturnBufferLength,
+    _Out_ PNTSTATUS ProtocolStatus)
+{
+    PMSV1_0_LM20_CHALLENGE_REQUEST RequestBuffer;
+    PMSV1_0_LM20_CHALLENGE_RESPONSE LocalBuffer = NULL;
+    PVOID ClientBaseAddress = NULL;
+    ULONG BufferLength;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("MsvpLm20ChallengeRequest()\n");
+
+    if (SubmitBufferLength < sizeof(MSV1_0_LM20_CHALLENGE_REQUEST))
+    {
+        ERR("Invalid SubmitBufferLength %lu\n", SubmitBufferLength);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    RequestBuffer = (PMSV1_0_LM20_CHALLENGE_REQUEST)ProtocolSubmitBuffer;
+    ASSERT(RequestBuffer->MessageType == MsV1_0Lm20ChallengeRequest);
+
+    BufferLength = sizeof(MSV1_0_LM20_CHALLENGE_RESPONSE);
+
+    LocalBuffer = DispatchTable.AllocateLsaHeap(BufferLength);
+    if (LocalBuffer == NULL)
+    {
+        ERR("Failed to allocate the local buffer!\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = DispatchTable.AllocateClientBuffer(ClientRequest,
+                                                BufferLength,
+                                                &ClientBaseAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("DispatchTable.AllocateClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    TRACE("ClientBaseAddress: %p\n", ClientBaseAddress);
+
+    /* Fill the local buffer */
+    LocalBuffer->MessageType = MsV1_0Lm20ChallengeRequest;
+    if (!RtlGenRandom(LocalBuffer->ChallengeToClient, MSV1_0_CHALLENGE_LENGTH))
+    {
+        ERR("Failed to generate random challenge!\n");
+        Status = STATUS_UNSUCCESSFUL;
+        goto done;
+    }
+
+    Status = DispatchTable.CopyToClientBuffer(ClientRequest,
+                                              BufferLength,
+                                              ClientBaseAddress,
+                                              LocalBuffer);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("DispatchTable.CopyToClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    *ProtocolReturnBuffer = ClientBaseAddress;
+    *ReturnBufferLength = BufferLength;
+    *ProtocolStatus = STATUS_SUCCESS;
+
+done:
+    if (LocalBuffer != NULL)
+        DispatchTable.FreeLsaHeap(LocalBuffer);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (ClientBaseAddress != NULL)
+            DispatchTable.FreeClientBuffer(ClientRequest,
+                                           ClientBaseAddress);
+    }
+
+    return Status;
+}
+
+
 /*
  * @unimplemented
  */
@@ -1152,29 +1245,38 @@ LsaApCallPackage(IN PLSA_CLIENT_REQUEST ClientRequest,
     switch (MessageType)
     {
         case MsV1_0Lm20ChallengeRequest:
+            Status = MsvpLm20ChallengeRequest(ClientRequest,
+                                              ProtocolSubmitBuffer,
+                                              ClientBufferBase,
+                                              SubmitBufferLength,
+                                              ProtocolReturnBuffer,
+                                              ReturnBufferLength,
+                                              ProtocolStatus);
+            break;
+
         case MsV1_0Lm20GetChallengeResponse:
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
         case MsV1_0EnumerateUsers:
-             Status = MsvpEnumerateUsers(ClientRequest,
-                                         ProtocolSubmitBuffer,
-                                         ClientBufferBase,
-                                         SubmitBufferLength,
-                                         ProtocolReturnBuffer,
-                                         ReturnBufferLength,
-                                         ProtocolStatus);
-             break;
+            Status = MsvpEnumerateUsers(ClientRequest,
+                                        ProtocolSubmitBuffer,
+                                        ClientBufferBase,
+                                        SubmitBufferLength,
+                                        ProtocolReturnBuffer,
+                                        ReturnBufferLength,
+                                        ProtocolStatus);
+            break;
 
         case MsV1_0GetUserInfo:
-             Status = MsvpGetUserInfo(ClientRequest,
-                                      ProtocolSubmitBuffer,
-                                      ClientBufferBase,
-                                      SubmitBufferLength,
-                                      ProtocolReturnBuffer,
-                                      ReturnBufferLength,
-                                      ProtocolStatus);
-             break;
+            Status = MsvpGetUserInfo(ClientRequest,
+                                     ProtocolSubmitBuffer,
+                                     ClientBufferBase,
+                                     SubmitBufferLength,
+                                     ProtocolReturnBuffer,
+                                     ReturnBufferLength,
+                                     ProtocolStatus);
+            break;
 
         case MsV1_0ReLogonUsers:
             Status = STATUS_INVALID_PARAMETER;

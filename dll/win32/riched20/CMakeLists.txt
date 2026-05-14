@@ -1,5 +1,4 @@
 
-remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 spec2def(riched20.dll riched20.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

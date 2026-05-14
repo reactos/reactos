@@ -18,11 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "ntdll_test.h"
+#include <stdarg.h>
 
-#ifdef __REACTOS__
-typedef void (CALLBACK *PTP_IO_CALLBACK)(PTP_CALLBACK_INSTANCE,void*,void*,IO_STATUS_BLOCK*,PTP_IO);
-#endif
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
+#include "winbase.h"
+#include "winternl.h"
+#include "wine/test.h"
 
 static NTSTATUS (WINAPI *pTpAllocCleanupGroup)(TP_CLEANUP_GROUP **);
 static NTSTATUS (WINAPI *pTpAllocIoCompletion)(TP_IO **,HANDLE,PTP_IO_CALLBACK,void *,TP_CALLBACK_ENVIRON *);
@@ -584,7 +587,7 @@ static void test_tp_simple(void)
     IMAGE_NT_HEADERS *nt = RtlImageNtHeader( NtCurrentTeb()->Peb->ImageBaseAddress );
     TP_POOL_STACK_INFORMATION stack_info;
     TP_CALLBACK_ENVIRON environment;
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || _WIN32_WINNT >= _WIN32_WINNT_WIN7
     TP_CALLBACK_ENVIRON_V3 environment3;
 #endif
     TP_CLEANUP_GROUP *group;
@@ -622,8 +625,8 @@ static void test_tp_simple(void)
     result = WaitForSingleObject(semaphore, 1000);
     ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
 
-#ifndef __REACTOS__ // Windows 7
     /* test with environment version 3 */
+#if !defined(__REACTOS__) || _WIN32_WINNT >= _WIN32_WINNT_WIN7
     memset(&environment3, 0, sizeof(environment3));
     environment3.Version = 3;
     environment3.Pool = pool;
@@ -690,6 +693,14 @@ static void test_tp_simple(void)
     pTpReleaseCleanupGroupMembers(group, TRUE, NULL);
     ok(userdata < 100, "expected userdata < 100, got %lu\n", userdata);
 
+#ifdef __REACTOS__
+    if (!pTpQueryPoolStackInformation)
+    {
+        skip("TpQueryPoolStackInformation not available\n");
+    }
+    else
+    {
+#endif
     /* test querying and setting the stack size */
     status = pTpQueryPoolStackInformation(pool, &stack_info);
     ok(!status, "TpQueryPoolStackInformation failed: %lx\n", status);
@@ -705,6 +716,9 @@ static void test_tp_simple(void)
     ok(!status, "TpQueryPoolStackInformation failed: %lx\n", status);
     ok(stack_info.StackReserve == 1, "expected 1 byte StackReserve, got %ld\n", (ULONG)stack_info.StackReserve);
     ok(stack_info.StackCommit == 1, "expected 1 byte StackCommit, got %ld\n", (ULONG)stack_info.StackCommit);
+#ifdef __REACTOS__
+    }
+#endif
 
     /* cleanup */
     pTpReleaseCleanupGroup(group);
@@ -1916,6 +1930,14 @@ static void test_tp_multi_wait(void)
     DWORD result;
     int i;
 
+#ifdef __REACTOS__
+    if (pTpSetPoolStackInformation == NULL)
+    {
+        win_skip("TpSetPoolStackInformation not available\n");
+        return;
+    }
+#endif
+
     semaphore = CreateSemaphoreW(NULL, 0, 512, NULL);
     ok(semaphore != NULL, "failed to create semaphore\n");
     multi_wait_info.semaphore = semaphore;
@@ -2039,11 +2061,7 @@ static DWORD WINAPI io_wait_thread(void *arg)
 static void test_tp_io(void)
 {
     TP_CALLBACK_ENVIRON environment = {.Version = 1};
-#ifdef __REACTOS__
     OVERLAPPED ovl = {0}, ovl2 = {0};
-#else
-    OVERLAPPED ovl = {}, ovl2 = {};
-#endif
     HANDLE client, server, thread;
     struct io_cb_ctx userdata;
     char in[1], in2[1];
@@ -2263,11 +2281,7 @@ static void CALLBACK kernel32_io_cb(TP_CALLBACK_INSTANCE *instance, void *userda
 static void test_kernel32_tp_io(void)
 {
     TP_CALLBACK_ENVIRON environment = {.Version = 1};
-#ifdef __REACTOS__
     OVERLAPPED ovl = {0}, ovl2 = {0};
-#else
-    OVERLAPPED ovl = {}, ovl2 = {};
-#endif
     HANDLE client, server, thread;
     struct io_cb_ctx userdata;
     char in[1], in2[1];

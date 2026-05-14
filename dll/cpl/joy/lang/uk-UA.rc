@@ -1,9 +1,10 @@
 /*
- * PROJECT:     Joystick Properties Control Panel Applet
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/joy/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for joy.cpl
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk
+ * PROJECT:     ReactOS Control Panel for Game Controllers
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2007 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2011 Igor Paliychuk <igor-hkr@mail.ru>
+ *              Copyright 2026 Ostap Burtoviy <burtovijostap@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -86,8 +87,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Ігрові пристрої"
-    IDS_CPLSYSTEMDESCRIPTION "Додавання, видалення й настройка параметрів ігрових пристроїв, наприклад, джойстиків або ігрових планшетів."
+    IDS_CPLSYSTEMDESCRIPTION "Додавання, видалення й налаштування параметрів ігрових пристроїв, наприклад, джойстиків або ігрових планшетів."
     IDS_CONTROLLER "Пристрій"
     IDS_STATUS "Стан"
-    IDS_NONE "(None)"
+    IDS_NONE "(Немає)"
 END

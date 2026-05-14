@@ -12,5 +12,6 @@ list(APPEND SOURCE
 
 add_library(ifmon MODULE ${SOURCE})
 set_module_type(ifmon win32dll UNICODE)
-add_importlibs(ifmon netsh iphlpapi msvcrt kernel32 ntdll)
+target_link_libraries(ifmon uuid)
+add_importlibs(ifmon netsh ole32 iphlpapi msvcrt kernel32 ntdll)
 add_cd_file(TARGET ifmon DESTINATION reactos/system32 FOR all)

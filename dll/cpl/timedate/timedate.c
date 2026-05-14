@@ -44,7 +44,7 @@ VOID DisplayWin32Error(DWORD dwErrorCode)
                    NULL );
 
 #if DBG
-    if (swprintf(szMsg, L"%hs:%d: %s", file, line, (PWSTR)lpMsgBuf))
+    if (_swprintf(szMsg, L"%hs:%d: %s", file, line, (PWSTR)lpMsgBuf))
     {
         MessageBoxW(NULL, szMsg, NULL, MB_OK | MB_ICONERROR);
     }

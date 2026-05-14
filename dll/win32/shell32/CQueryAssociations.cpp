@@ -425,7 +425,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
                 }
                 else
                 {
-                    hr = HRESULT_FROM_WIN32(ret);
+                    hr = E_OUTOFMEMORY;
                 }
             }
             else

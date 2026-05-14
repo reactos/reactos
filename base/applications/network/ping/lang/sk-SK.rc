@@ -1,0 +1,66 @@
+/*
+ * PROJECT:     ReactOS Ping Command
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATOR:  Copyright 2026 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n\
+Použitie: ping [-t] [-a] [-n počet] [-l veľkosť] [-f] [-i TTL] [-v TOS]\n\
+               [-w timeout] [-4] [-6] cieľ\n\
+\n\
+Voľby:\n\
+    -t           Posiela ping na určeného hostiteľa, dokým nie je zastavený.\n\
+                 Pre výpis štatistiky a pokračovanie - stlačte Ctrl-Break;\n\
+                 Pre zastavenie - stlačte Ctrl-C.\n\
+    -a           Prevedie adresy na názvy hostiteľov.\n\
+    -n počet     Počet požiadaviek na odozvu, ktoré budú zaslané.\n\
+    -l veľkosť   Veľkosť vyrovnávacej pamäte.\n\
+    -f           Nastaví v paketoch príznak Don't Fragment (len IPv4).\n\
+    -i TTL       Time To Live.\n\
+    -v TOS       Type Of Service (Len IPv4. Toto nastavenie je zastarané\n\
+                 a nemá žiadny vplyv na pole typu služby v IP hlavičke).\n\
+    -w timeout   Doba v milisekundách, počas ktorej sa bude čakať na odpoveď.\n\
+    -4           Vynúti použitie IPv4.\n\
+    -6           Vynúti použitie IPv6.\n\
+\n"
+
+    IDS_CTRL_BREAK "Ctrl-Break\n"
+    IDS_CTRL_C "Ctrl-C\n"
+    IDS_NO_RESOURCES "Nie je k dispozícii dostatok voľných zdrojov.\n"
+    IDS_MISSING_ADDRESS "Musí byť uvedená IP adresa.\n"
+    IDS_MISSING_VALUE "Musí byť zadaná hodnota pre voľbu %s.\n"
+    IDS_BAD_OPTION "Nesprávna voľba %s.\n"
+    IDS_BAD_PARAMETER "Nesprávny parameter %s.\n"
+    IDS_BAD_VALUE "Nesprávna hodnota voľby %s, platný rozsah je od %u do %u.\n"
+    IDS_WRONG_FAMILY "Voľba %s je podporovaná len pre %s.\n"
+    IDS_UNKNOWN_HOST "Ping nenašiel hostiteľa %s. Skontrolujte prosím jeho názov a skúste to znova.\n"
+    IDS_PINGING_ADDRESS "\nPosielam ping na %s "
+    IDS_PINGING_HOSTNAME "\nPosielam ping na %s [%s] "
+    IDS_SOURCE_ADDRESS "z %s %s"
+    IDS_PING_SIZE "s %lu bajtmi dát:\n\n"
+    IDS_REPLY_FROM "Odpoveď od %s: "
+    IDS_REPLY_BYTES "bajtov=%d "
+    IDS_REPLY_TIME_MS "čas=%lums "
+    IDS_REPLY_TIME_0MS "čas<1ms "
+    IDS_REPLY_TTL "TTL=%d\n"
+    IDS_REPLY_STATUS "Vrátila sa odpoveď na echo %lu.\n"
+    IDS_DEST_HOST_UNREACHABLE "Cieľový hostiteľ nie je dostupný.\n"
+    IDS_DEST_NET_UNREACHABLE "Cieľová sieť nie je dostupná.\n"
+    IDS_REQUEST_TIMED_OUT "Časový limit požiadavky vypršiel.\n"
+    IDS_TTL_EXPIRED "Vypršalo TTL počas prenosu.\n"
+    IDS_TRANSMIT_FAILED "PING: prenos zlyhal. (Chyba %u)\n"
+
+    IDS_STATISTICS "\n\
+Štatistika pre %s:\n\
+    Pakety: Odoslané = %d, Prijaté = %d, Stratené %d (%d%% strata),\n"
+
+    IDS_APPROXIMATE_RTT "Približný čas prijatia odozvy v milisekundách:\n\
+    Minimum = %lums, Maximum = %lums, Priemer = %lums\n"
+
+    IDS_WINSOCK_FAIL "Inicializácia WinSock zlyhala: %i\n"
+END

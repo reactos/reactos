@@ -1,4 +1,12 @@
-/* TRANSLATOR: 2013-2020 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net> */
+/*
+ * PROJECT:     ReactOS Display Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2020 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              Copyright 2021-2023 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2024 Ethem De Santa (scropool) <oyunyumru4@gmail.com>
+ *              Copyright 2026 Hasan Eliküçük <hasanelk101@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -29,7 +37,7 @@ BEGIN
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Renk:", IDC_STATIC, 188, 156, 55, 9
     PUSHBUTTON " ", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
+    PUSHBUTTON "Masaüstünü &Özelleştir...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
@@ -224,7 +232,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESKTOP_ITEMS "Desktop Items"
+    IDS_DESKTOP_ITEMS "Masaüstü Öğeleri"
 END
 
 STRINGTABLE

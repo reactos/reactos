@@ -129,6 +129,8 @@ list(APPEND SOURCE
     RtlNtPathNameToDosPathName.c
     RtlpApplyLengthFunction.c
     RtlpEnsureBufferSize.c
+    RtlQueryEnvironmentVariable.c
+    RtlQueryEnvironmentVariable_U.c
     RtlQueryTimeZoneInfo.c
     RtlReAllocateHeap.c
     RtlRemovePrivileges.c

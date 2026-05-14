@@ -10,7 +10,7 @@ BEGIN
     LTEXT "A finalizar Programa... Por favor aguarde", IDC_STATIC, 7, 7, 186, 11
     CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
     LTEXT "Se finalizar o programa imediatamente, irá perder todas as alterações não guardadas. Para finalizar o programa agora, pressione Finalizar Agora.", IDC_STATIC, 7, 40, 186, 26
-    DEFPUSHBUTTON "&Finalizar Agora", IDC_END_NOW, 150, 71, 43, 17
+    DEFPUSHBUTTON "&Finalizar Agora", IDC_END_NOW, 130, 71, 63, 17
 END
 
 IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
@@ -19,10 +19,10 @@ CAPTION "Finalizar Programa - "
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Cancelar", IDCANCEL, 142, 98, 43, 17
-    PUSHBUTTON "&Finalizar Agora", IDC_END_NOW, 78, 98, 43, 17
+    PUSHBUTTON "&Finalizar Agora", IDC_END_NOW, 74, 98, 63, 17
     LTEXT "O programa não está a responder.", IDC_STATIC, 7, 7, 178, 8
     LTEXT "Para retornar ao ReactOS e verificar o estado do programa, pressione Cancelar.", IDC_STATIC, 7, 26, 178, 16
-    LTEXT "Se finalizar o programa imediatamente, irá perder todas as alterações não guardadas. Para finalizar o programa agora, pressione Finalizar Agora.", IDC_STATIC, 7, 53, 178, 26
+    LTEXT "Se finalizar o programa imediatamente, irá perder todas as alterações não guardadas. Para finalizar o programa agora, pressione Finalizar Agora.", IDC_STATIC, 7, 53, 178, 33
 END
 
 

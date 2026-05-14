@@ -474,9 +474,9 @@ Bus_PDO_QueryDeviceId(
             }
             else
             {
-                length = swprintf(temp,
-                                  L"ACPI\\%hs",
-                                  Device->pnp.hardware_id);
+                length = _swprintf(temp,
+                                   L"ACPI\\%hs",
+                                   Device->pnp.hardware_id);
             }
         }
         else
@@ -485,8 +485,8 @@ Bus_PDO_QueryDeviceId(
              * these are direct children of the ACPI root device
              * and therefore have no handle
              */
-            length = swprintf(temp,
-                              L"ACPI\\FixedButton");
+            length = _swprintf(temp,
+                               L"ACPI\\FixedButton");
         }
 
         temp[length++] = UNICODE_NULL;
@@ -515,17 +515,17 @@ Bus_PDO_QueryDeviceId(
            acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
 
            if (Device->flags.unique_id)
-              length = swprintf(temp,
-                                L"%hs",
-                                Device->pnp.unique_id);
+              length = _swprintf(temp,
+                                 L"%hs",
+                                 Device->pnp.unique_id);
            else
               /* FIXME: Generate unique id! */
-              length = swprintf(temp, L"%ls", L"0");
+              length = _swprintf(temp, L"%ls", L"0");
         }
         else
         {
            /* FIXME: Generate unique id! */
-           length = swprintf(temp, L"%ls", L"0");
+           length = _swprintf(temp, L"%ls", L"0");
         }
 
         temp[length++] = UNICODE_NULL;
@@ -570,14 +570,14 @@ Bus_PDO_QueryDeviceId(
             }
             else
             {
-                length += swprintf(&temp[length],
-                                   L"ACPI\\%hs",
-                                   Device->pnp.hardware_id);
+                length += _swprintf(&temp[length],
+                                    L"ACPI\\%hs",
+                                    Device->pnp.hardware_id);
                 temp[length++] = UNICODE_NULL;
 
-                length += swprintf(&temp[length],
-                                   L"*%hs",
-                                   Device->pnp.hardware_id);
+                length += _swprintf(&temp[length],
+                                    L"*%hs",
+                                    Device->pnp.hardware_id);
                 temp[length++] = UNICODE_NULL;
                 temp[length++] = UNICODE_NULL;
                 src = temp;
@@ -585,12 +585,12 @@ Bus_PDO_QueryDeviceId(
         }
         else
         {
-            length += swprintf(&temp[length],
-                               L"ACPI\\FixedButton");
+            length += _swprintf(&temp[length],
+                                L"ACPI\\FixedButton");
             temp[length++] = UNICODE_NULL;
 
-            length += swprintf(&temp[length],
-                               L"*FixedButton");
+            length += _swprintf(&temp[length],
+                                L"*FixedButton");
             temp[length++] = UNICODE_NULL;
             temp[length++] = UNICODE_NULL;
             src = temp;
@@ -633,14 +633,14 @@ Bus_PDO_QueryDeviceId(
 
             if (strcmp(Device->pnp.hardware_id, "Processor") == 0)
             {
-                length += swprintf(&temp[length],
-                                   L"ACPI\\%hs",
-                                   Device->pnp.hardware_id);
+                length += _swprintf(&temp[length],
+                                    L"ACPI\\%hs",
+                                    Device->pnp.hardware_id);
                 temp[length++] = UNICODE_NULL;
 
-                length += swprintf(&temp[length],
-                                   L"*%hs",
-                                   Device->pnp.hardware_id);
+                length += _swprintf(&temp[length],
+                                    L"*%hs",
+                                    Device->pnp.hardware_id);
                 temp[length++] = UNICODE_NULL;
                 temp[length++] = UNICODE_NULL;
             }
@@ -648,14 +648,14 @@ Bus_PDO_QueryDeviceId(
             {
                 for (i = 0; i < Device->pnp.cid_list->Count; i++)
                 {
-                    length += swprintf(&temp[length],
-                                   L"ACPI\\%hs",
-                                   Device->pnp.cid_list->Ids[i].String);
+                    length += _swprintf(&temp[length],
+                                        L"ACPI\\%hs",
+                                        Device->pnp.cid_list->Ids[i].String);
                     temp[length++] = UNICODE_NULL;
 
-                    length += swprintf(&temp[length],
-                                   L"*%hs",
-                                   Device->pnp.cid_list->Ids[i].String);
+                    length += _swprintf(&temp[length],
+                                        L"*%hs",
+                                        Device->pnp.cid_list->Ids[i].String);
                     temp[length++] = UNICODE_NULL;
                 }
 

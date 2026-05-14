@@ -307,16 +307,16 @@ IoReportDetectedDevice(
 
     /* Add DETECTEDInterfaceType\DriverName */
     IdLength = 0;
-    IdLength += swprintf(&HardwareId[IdLength],
-                         L"DETECTED%ls\\%wZ",
-                         IfString,
-                         &ServiceName);
+    IdLength += _swprintf(&HardwareId[IdLength],
+                          L"DETECTED%ls\\%wZ",
+                          IfString,
+                          &ServiceName);
     IdLength++;
 
     /* Add DETECTED\DriverName */
-    IdLength += swprintf(&HardwareId[IdLength],
-                         L"DETECTED\\%wZ",
-                         &ServiceName);
+    IdLength += _swprintf(&HardwareId[IdLength],
+                          L"DETECTED\\%wZ",
+                          &ServiceName);
     IdLength++;
 
     /* Terminate the string with another null */

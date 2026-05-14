@@ -53,7 +53,7 @@ StartChild(char **argv)
         trace("Starting '%ls', which is already relative\n", FileName);
     }
 
-    swprintf(CommandLine, L"\"%ls\" GetModuleFileName relative", FileName);
+    _swprintf(CommandLine, L"\"%ls\" GetModuleFileName relative", FileName);
 
     RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
     StartupInfo.cb = sizeof(StartupInfo);

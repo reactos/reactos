@@ -111,6 +111,15 @@ DWORD WINAPI SHFillRectClr(HDC hDC, LPCRECT pRect, COLORREF cRef);
 int WINAPI SHSearchMapInt(const int *lpKeys, const int *lpValues, int iLen, int iKey);
 
 HRESULT WINAPI
+SHInvokeCommandsOnContextMenu(
+    _In_opt_ HWND hwnd,
+    _In_opt_ IUnknown *punkSite,
+    _In_ IContextMenu *pCM,
+    _In_ DWORD fMask,
+    _In_reads_opt_(cVerbs) PCSTR *pVerbs,
+    _In_ UINT cVerbs);
+
+HRESULT WINAPI
 MayQSForward(
     _In_ IUnknown *lpUnknown,
     _In_ INT nUnknown,
@@ -143,6 +152,9 @@ DATABLOCK_HEADER* WINAPI SHFindDataBlock(LPDBLIST lpList, DWORD dwSignature);
 HRESULT WINAPI SHWriteDataBlockList(IStream* lpStream, LPDBLIST lpList);
 HRESULT WINAPI SHReadDataBlockList(IStream* lpStream, LPDBLIST* lppList);
 VOID WINAPI SHFreeDataBlockList(LPDBLIST lpList);
+
+HRESULT WINAPI IStream_ReadPidl(_In_ IStream *pstm, _Out_ LPITEMIDLIST *ppidlOut);
+HRESULT WINAPI IStream_WritePidl(_In_ IStream *pstm, _In_ LPCITEMIDLIST pidlWrite);
 
 LONG
 WINAPI
@@ -455,12 +467,6 @@ typedef INT_PTR (CALLBACK *SHDIALOGPROC)(
     WPARAM wParam,
     LPARAM lParam);
 
-typedef struct tagSHDIALOG
-{
-    SHDIALOGPROC fn;
-    PVOID pThis;
-} SHDIALOG, *PSHDIALOG, *LPSHDIALOG;
-
 INT_PTR WINAPI
 SHDialogBox(
     _In_opt_ HINSTANCE hInstance,
@@ -551,6 +557,12 @@ MLHtmlHelpW(
     #define MLWinHelp MLWinHelpA
     #define MLHtmlHelp MLHtmlHelpA
 #endif
+
+PSTR WINAPI CharLowerNoDBCSA(_Inout_ PSTR lpString);
+PWSTR WINAPI CharLowerNoDBCSW(_Inout_ PWSTR lpString);
+PSTR WINAPI CharUpperNoDBCSA(_Inout_ PSTR lpString);
+PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString);
+
 
 /*****************************************************************************
  * IAssociationElementOld interface

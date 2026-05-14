@@ -634,22 +634,22 @@ GetProcessorInformation(VOID)
     }
 
     Length = 0;
-    Length += swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
-    Length += swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
-    Length += swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level2Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level2Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
-    Length += swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level2Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level2Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
-    Length += swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level3Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level3Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
-    Length += swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level3Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level3Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
@@ -664,7 +664,7 @@ GetProcessorInformation(VOID)
     ProcessorIdString = ExAllocatePoolWithTag(PagedPool, Length, 'IpcA');
     if (ProcessorIdString != NULL)
     {
-        Length = swprintf(ProcessorIdString, L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
+        Length = _swprintf(ProcessorIdString, L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
         ProcessorIdString[Length++] = UNICODE_NULL;
         DPRINT("ProcessorIdString: %S\n", ProcessorIdString);
     }

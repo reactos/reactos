@@ -124,7 +124,7 @@ BEGIN
     AUTOCHECKBOX "Utilizar íco&nes grandes", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
     AUTOCHECKBOX "Mostr&ar sombras sob os menus", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
     AUTOCHECKBOX "&Mostrar o conteúdo das janelas ao arrastar", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
-    AUTOCHECKBOX "&Ocultar letras sublinhadas para navegação por teclado até que a tecla Alt seja premida", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19//FIXME: text cutoff. I used "&Ocultar letras sublinhadas para navegação pelo teclado até que Alt seja premida" AND A WIDTH OF 270 for the backport
+    AUTOCHECKBOX "&Ocultar letras sublinhadas para navegação por teclado até pressionar a tecla Alt.", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
     AUTOCHECKBOX "Utilizar menus &planos", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Cancelar", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
@@ -139,7 +139,7 @@ BEGIN
     LTEXT "Arraste os ícones dos monitores, para que correspondam à disposição física dos seus monitores.", IDC_SETTINGS_MONTEXT, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 250, 82, WS_EX_CLIENTEDGE
-    LTEXT "Monitor:", 1820, 3, 107, 70, 9//FIXME: add accel. I used "&Monitor:" for the backport
+    LTEXT "&Visualização:", 1820, 3, 107, 70, 9
     LTEXT "<Desconhecido>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "&Resolução do ecrã", 1818, 3, 142, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 152, 58, 17

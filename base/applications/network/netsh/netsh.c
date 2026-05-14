@@ -296,7 +296,7 @@ MakeQuotedString(
     if (pszQuotedString == NULL)
         return NULL;
 
-    swprintf(pszQuotedString, L"\"%s\"", pszString);
+    _swprintf(pszQuotedString, L"\"%s\"", pszString);
 
     return pszQuotedString;
 }
@@ -369,6 +369,54 @@ MatchEnumTag(
     return ERROR_NOT_FOUND;
 }
 
+DWORD
+WINAPI
+MatchTagsInCmdLine(
+    _In_ HANDLE hModule,
+    _Inout_ LPWSTR *ppwcArguments,
+    _In_ DWORD dwCurrentIndex,
+    _In_ DWORD dwArgCount,
+    _In_ TAG_TYPE *pttTags,
+    _In_ DWORD dwTagCount,
+    _Out_ DWORD *pdwTagType)
+{
+    PWSTR pszEqual;
+    DWORD i, j, dwTagLength;
+
+    DPRINT1("MatchTagsInCmdLine(%p %p %lu %lu %p %lu %p)\n",
+            hModule, ppwcArguments, dwCurrentIndex, dwArgCount,
+            pttTags, dwTagCount, pdwTagType);
+
+    for (i = dwCurrentIndex; i < dwArgCount; i++)
+    {
+        DPRINT("Argument %lu: %S\n", i, ppwcArguments[i]);
+
+        /* Skip arguments that do not have a tag */
+        pszEqual = wcschr(ppwcArguments[i], L'=');
+        if (pszEqual == NULL)
+            continue;
+
+        dwTagLength = pszEqual - ppwcArguments[i];
+        DPRINT("Tag length %lu\n", dwTagLength);
+        DPRINT("Value length %lu\n", wcslen(pszEqual + 1));
+
+        pdwTagType[i - dwCurrentIndex] = (DWORD)-1;
+        for (j = 0; j < dwTagCount; j++)
+        {
+            DPRINT("Test tag %S\n", pttTags[j].pwszTag);
+            if ((wcslen(pttTags[i].pwszTag) == dwTagLength) &&
+                (_wcsnicmp(ppwcArguments[i], pttTags[j].pwszTag, dwTagLength) == 0))
+            {
+                DPRINT("Found tag %S\n", pttTags[j].pwszTag);
+                pttTags[j].bPresent = TRUE;
+                pdwTagType[i - dwCurrentIndex] = j;
+            }
+        }
+    }
+
+    return 0;
+}
+
 BOOL
 WINAPI
 MatchToken(
@@ -418,6 +466,19 @@ NsGetFriendlyNameFromIfName(
     }
 
     return ret;
+}
+
+DWORD
+WINAPI
+NsGetIfNameFromFriendlyName(
+    _In_ DWORD dwUnknown1,
+    _In_ PWSTR pszFriendlyName, 
+    _Inout_ PWSTR pszIfName,
+    _Inout_ PDWORD pdwIfName)
+{
+    DPRINT1("NsGetIfNameFromFriendlyName(%lx %S %p %p)\n",
+            dwUnknown1, pszFriendlyName, pszIfName, pdwIfName);
+    return 0;
 }
 
 DWORD

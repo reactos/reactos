@@ -174,13 +174,36 @@ OpensWithExplorer(PCWSTR Path)
     return SUCCEEDED(hr) && !StrCmpIW(PathFindFileNameW(szCmd), L"explorer.exe"); // .cab
 }
 
+UINT
+WaitForProcess(HANDLE hProcess)
+{
+    DWORD code = STILL_ACTIVE;
+    for (;;)
+    {
+        DWORD wait = MsgWaitForMultipleObjects(1, &hProcess, FALSE, INFINITE, QS_ALLEVENTS);
+        if (wait == WAIT_OBJECT_0 + 1)
+        {
+            MSG msg;
+            while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+            {
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            }
+        }
+        else
+        {
+            // TODO: if (wait == WAIT_OBJECT_0) GetExitCodeProcess for MSI reboot codes
+            break;
+        }
+    }
+    return code;
+}
+
 BOOL
 StartProcess(const CStringW &Path, BOOL Wait)
 {
     PROCESS_INFORMATION pi;
     STARTUPINFOW si;
-    DWORD dwRet;
-    MSG msg;
 
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
@@ -201,37 +224,16 @@ StartProcess(const CStringW &Path, BOOL Wait)
     if (Wait)
     {
         EnableWindow(hMainWnd, FALSE);
-    }
 
-    while (Wait)
-    {
-        dwRet = MsgWaitForMultipleObjects(1, &pi.hProcess, FALSE, INFINITE, QS_ALLEVENTS);
-        if (dwRet == WAIT_OBJECT_0 + 1)
-        {
-            while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
-            {
-                TranslateMessage(&msg);
-                DispatchMessageW(&msg);
-            }
-        }
-        else
-        {
-            if (dwRet == WAIT_OBJECT_0 || dwRet == WAIT_FAILED)
-                break;
-        }
-    }
+        WaitForProcess(pi.hProcess);
 
-    CloseHandle(pi.hProcess);
-
-    if (Wait)
-    {
         EnableWindow(hMainWnd, TRUE);
         SetForegroundWindow(hMainWnd);
         // We got the real activation message during MsgWaitForMultipleObjects while
         // we were disabled, we need to set the focus again now.
         SetFocus(hMainWnd);
     }
-
+    CloseHandle(pi.hProcess);
     return TRUE;
 }
 

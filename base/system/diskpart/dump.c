@@ -90,9 +90,9 @@ DumpDisk(
         goto done;
     }
 
-    swprintf(Buffer,
-             L"\\Device\\Harddisk%d\\Partition0",
-             CurrentDisk->DiskNumber);
+    _swprintf(Buffer,
+              L"\\Device\\Harddisk%d\\Partition0",
+              CurrentDisk->DiskNumber);
     RtlInitUnicodeString(&Name,
                         Buffer);
 
@@ -195,10 +195,10 @@ DumpPartition(
         goto done;
     }
 
-    swprintf(Buffer,
-             L"\\Device\\Harddisk%d\\Partition%d",
-             CurrentDisk->DiskNumber,
-             CurrentPartition->PartitionNumber);
+    _swprintf(Buffer,
+              L"\\Device\\Harddisk%d\\Partition%d",
+              CurrentDisk->DiskNumber,
+              CurrentPartition->PartitionNumber);
     RtlInitUnicodeString(&Name,
                         Buffer);
 

@@ -455,7 +455,7 @@ HalpGetChipHacks(IN USHORT VendorId,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Query value */
-    swprintf(Buffer, L"%04X%04X", VendorId, DeviceId);
+    _swprintf(Buffer, L"%04X%04X", VendorId, DeviceId);
     RtlInitUnicodeString(&ValueName, Buffer);
     Status = ZwQueryValueKey(KeyHandle,
                              &ValueName,

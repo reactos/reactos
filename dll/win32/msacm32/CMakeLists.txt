@@ -18,6 +18,7 @@ add_library(msacm32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/msacm32.def)
 
 set_module_type(msacm32 win32dll ENTRYPOINT DllMain 12 UNICODE)
+target_compile_definitions(msacm32 PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(msacm32 wine oldnames)
 add_importlibs(msacm32 advapi32 user32 winmm msvcrt kernel32 ntdll)
 add_pch(msacm32 precomp.h SOURCE)

@@ -131,25 +131,25 @@ PrintByteDataLine(PWCHAR pBuffer, UINT uOffset, PBYTE pData, UINT uLength)
 
     if (uOffset != 0)
     {
-        n = swprintf(p, L"\r\n");
+        n = _swprintf(p, L"\r\n");
         p += n;
         r += n;
     }
 
-    n = swprintf(p, L"%04lx:", uOffset);
+    n = _swprintf(p, L"%04lx:", uOffset);
     p += n;
     r += n;
 
     for (i = 0; i < uLength; i++)
     {
-        n = swprintf(p, L" %02x", pData[i]);
+        n = _swprintf(p, L" %02x", pData[i]);
         p += n;
         r += n;
     }
 
     for (i = 0; i < 9 - uLength; i++)
     {
-        n = swprintf(p, L"   ");
+        n = _swprintf(p, L"   ");
         p += n;
         r += n;
     }
@@ -157,7 +157,7 @@ PrintByteDataLine(PWCHAR pBuffer, UINT uOffset, PBYTE pData, UINT uLength)
     for (i = 0; i < uLength; i++)
     {
         // NOTE: Normally iswprint should return FALSE for tabs...
-        n = swprintf(p, L"%c", (iswprint(pData[i]) && (pData[i] != L'\t')) ? pData[i] : L'.');
+        n = _swprintf(p, L"%c", (iswprint(pData[i]) && (pData[i] != L'\t')) ? pData[i] : L'.');
         p += n;
         r += n;
     }
@@ -174,18 +174,18 @@ PrintWordDataLine(PWCHAR pBuffer, UINT uOffset, PULONG pData, UINT uLength)
 
     if (uOffset != 0)
     {
-        n = swprintf(p, L"\r\n");
+        n = _swprintf(p, L"\r\n");
         p += n;
         r += n;
     }
 
-    n = swprintf(p, L"%04lx:", uOffset);
+    n = _swprintf(p, L"%04lx:", uOffset);
     p += n;
     r += n;
 
     for (i = 0; i < uLength / sizeof(ULONG); i++)
     {
-        n = swprintf(p, L" %08lx", pData[i]);
+        n = _swprintf(p, L" %08lx", pData[i]);
         p += n;
         r += n;
     }
@@ -193,7 +193,7 @@ PrintWordDataLine(PWCHAR pBuffer, UINT uOffset, PULONG pData, UINT uLength)
     /* Display the remaining bytes if uLength was not a multiple of sizeof(ULONG) */
     for (i = (uLength / sizeof(ULONG)) * sizeof(ULONG); i < uLength; i++)
     {
-        n = swprintf(p, L" %02x", ((PBYTE)pData)[i]);
+        n = _swprintf(p, L" %02x", ((PBYTE)pData)[i]);
         p += n;
         r += n;
     }

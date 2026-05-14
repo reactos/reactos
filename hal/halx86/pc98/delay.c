@@ -25,6 +25,7 @@ HalpTscCalibrationISR(VOID);
 
 extern volatile ULONG TscCalibrationPhase;
 extern ULONG64 TscCalibrationArray[NUM_SAMPLES];
+extern UCHAR HalpStallExecutionSerialize;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -33,7 +34,7 @@ CODE_SEG("INIT")
 VOID
 HalpPrepareStallExecution(VOID)
 {
-    PUCHAR Instruction = (PUCHAR)((ULONG_PTR)KeStallExecutionProcessor + 1);
+    PUCHAR Instruction = &HalpStallExecutionSerialize;
     PKPRCB Prcb = KeGetCurrentPrcb();
 
     /* xor eax, eax; cpuid */
@@ -48,7 +49,7 @@ HalpPrepareStallExecution(VOID)
      * Intel "Using the RDTSC Instruction for Performance Monitoring".
      *
      * Patch the KeStallExecutionProcessor function to remove the serializing instruction
-     * for the Pentium and Pentium MMX processors.
+     * for the Pentium and Pentium MMX processors because the CPUID instruction is slow.
      */
     if ((Prcb->CpuType < 6) && !strcmp(Prcb->VendorString, "GenuineIntel"))
     {

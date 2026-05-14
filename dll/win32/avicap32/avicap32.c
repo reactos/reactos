@@ -226,11 +226,11 @@ capGetDriverDescriptionW(WORD wDriverIndex,
                                 if (VerQueryValueW(Version, L"\\", &Ms, &Ls))
                                 {
                                     memmove(&FileInfo, Ms, Ls);
-                                    swprintf(szVersion, L"Version: %d.%d.%d.%d",
-                                             HIWORD(FileInfo.dwFileVersionMS),
-                                             LOWORD(FileInfo.dwFileVersionMS),
-                                             HIWORD(FileInfo.dwFileVersionLS),
-                                             LOWORD(FileInfo.dwFileVersionLS));
+                                    _swprintf(szVersion, L"Version: %d.%d.%d.%d",
+                                              HIWORD(FileInfo.dwFileVersionMS),
+                                              LOWORD(FileInfo.dwFileVersionMS),
+                                              HIWORD(FileInfo.dwFileVersionLS),
+                                              LOWORD(FileInfo.dwFileVersionLS));
 
                                     lstrcpynW(lpszVer, szVersion, cbVer);
                                 }

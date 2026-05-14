@@ -10,6 +10,8 @@
 #include <ip2string.h>
 #include <ntstatus.h>
 
+#define IP_STRING_MIN_LENGTH  8   /* 0.0.0.0 + NULL */
+#define IP_STRING_MAX_LENGTH  16  /* xxx.xxx.xxx.xxx + NULL */
 
 typedef DWORD (WINAPI *PDHCPFALLBACKREFRESHPARAMS)(PWSTR pAdapterName);
 
@@ -62,6 +64,7 @@ typedef struct _AdapterSettings
     struct _AdapterSettings *pNext;
 
     WCHAR AdapterName[45];
+    GUID AdapterGuid;
     DWORD Index;
 
     IP_ADDR *OldIp;
@@ -191,6 +194,315 @@ DisplayError(UINT ResTxt, UINT ResTitle, UINT Type)
     MessageBoxW(NULL, szBuffer, szTitle, Type);
 }
 
+static
+AdapterSettings*
+GetAdapterByGuid(
+    TcpipConfNotifyImpl *This,
+    GUID *pAdapterGuid)
+{
+    AdapterSettings *pAdapter;
+
+    pAdapter = This->pAdapterListHead;
+    while (pAdapter)
+    {
+        if (IsEqualGUID(pAdapterGuid, &pAdapter->AdapterGuid))
+            return pAdapter;
+
+        pAdapter = pAdapter->pNext;
+    }
+
+    return NULL;
+}
+
+static
+HRESULT
+BuildIpAddressString(
+    AdapterSettings *pAdapter,
+    LPWSTR *ppszIpAddress)
+{
+    PWSTR pszIpAddress, pString;
+    DWORD dwSize;
+    IP_ADDR *pAddr;
+    IN_ADDR Address;
+
+    if (pAdapter->NewDhcpEnabled)
+    {
+        dwSize = IP_STRING_MIN_LENGTH;
+    }
+    else
+    {
+        dwSize = 0;
+        pAddr = pAdapter->NewIp;
+        while (pAddr != NULL)
+        {
+            dwSize++;
+            pAddr = pAddr->Next;
+        }
+
+        dwSize *=  IP_STRING_MAX_LENGTH;
+    }
+
+    pszIpAddress = CoTaskMemAlloc(dwSize * sizeof(WCHAR));
+    if (pszIpAddress == NULL)
+        return E_OUTOFMEMORY;
+
+    ZeroMemory(pszIpAddress, dwSize * sizeof(WCHAR));
+
+    if (pAdapter->NewDhcpEnabled)
+    {
+        wcscpy(pszIpAddress, L"0.0.0.0");
+    }
+    else
+    {
+        pString = pszIpAddress;
+        pAddr = pAdapter->NewIp;
+        while (pAddr != NULL)
+        {
+            if (pString != pszIpAddress)
+            {
+                *pString = L',';
+                pString++;
+            }
+
+            Address.S_un.S_addr = htonl(pAddr->IpAddress);
+            pString = RtlIpv4AddressToStringW(&Address, pString);
+
+            pAddr = pAddr->Next;
+        }
+    }
+
+    *ppszIpAddress = pszIpAddress;
+
+    return S_OK;
+}
+
+static
+HRESULT
+BuildSubnetMaskString(
+    AdapterSettings *pAdapter,
+    LPWSTR *ppszSubnetMask)
+{
+    PWSTR pszSubnetMask, pString;
+    DWORD dwSize;
+    IP_ADDR *pAddr;
+    IN_ADDR Address;
+
+    /* Build the SubnetMask string */
+    if (pAdapter->NewDhcpEnabled)
+    {
+        dwSize = IP_STRING_MIN_LENGTH;
+    }
+    else
+    {
+        dwSize = 0;
+        pAddr = pAdapter->NewIp;
+        while (pAddr != NULL)
+        {
+            dwSize++;
+            pAddr = pAddr->Next;
+        }
+
+        dwSize *= IP_STRING_MAX_LENGTH;
+    }
+
+    pszSubnetMask = CoTaskMemAlloc(dwSize * sizeof(WCHAR));
+    if (pszSubnetMask == NULL)
+        return E_OUTOFMEMORY;
+
+    ZeroMemory(pszSubnetMask, dwSize * sizeof(WCHAR));
+
+    if (pAdapter->NewDhcpEnabled)
+    {
+        wcscpy(pszSubnetMask, L"0.0.0.0");
+    }
+    else
+    {
+        pString = pszSubnetMask;
+        pAddr = pAdapter->NewIp;
+        while (pAddr != NULL)
+        {
+            if (pString != pszSubnetMask)
+            {
+                *pString = L',';
+                pString++;
+            }
+
+            Address.S_un.S_addr = htonl(pAddr->u.SubnetMask);
+            pString = RtlIpv4AddressToStringW(&Address, pString);
+
+            pAddr = pAddr->Next;
+        }
+    }
+
+    *ppszSubnetMask = pszSubnetMask;
+
+    return S_OK;
+}
+
+static
+HRESULT
+BuildParametersString(
+    AdapterSettings *pAdapter,
+    LPWSTR *ppszParameters)
+{
+    PWSTR pszParameters, pString;
+    PWSTR pszDefGateway = NULL;
+    PWSTR pszGatewayMetric = NULL;
+    PWSTR pszNameServers = NULL;
+    DWORD dwCount;
+    INT nLength;
+    IP_ADDR *pAddr;
+    IN_ADDR Address;
+    HRESULT hr = S_OK;
+
+    /* Format: "DefGw=;GwMetric=;IfMetric=0;DNS=;WINS=;DynamicUpdate=1;NameRegistration=0;" */
+
+    /* Count Gateway entries */
+    dwCount = 0;
+    pAddr = pAdapter->NewGw;
+    while (pAddr != NULL)
+    {
+        dwCount++;
+        pAddr = pAddr->Next;
+    }
+
+    /* Build Default Gateway string */
+    pszDefGateway = CoTaskMemAlloc(dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
+    if (pszDefGateway == NULL)
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    ZeroMemory(pszDefGateway, dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
+
+    pString = pszDefGateway;
+    pAddr = pAdapter->NewGw;
+    while (pAddr != NULL)
+    {
+        if (pString != pszDefGateway)
+        {
+            *pString = L',';
+            pString++;
+        }
+
+        Address.S_un.S_addr = htonl(pAddr->u.SubnetMask);
+        pString = RtlIpv4AddressToStringW(&Address, pString);
+
+        pAddr = pAddr->Next;
+    }
+
+    TRACE("DefaultGateway %S\n", pszDefGateway);
+
+    /* Build Gateway Metric string */
+    pszGatewayMetric = CoTaskMemAlloc(dwCount * 5 * sizeof(WCHAR));
+    if (pszGatewayMetric == NULL)
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    ZeroMemory(pszGatewayMetric, dwCount * 5 * sizeof(WCHAR));
+
+    pString = pszGatewayMetric;
+    pAddr = pAdapter->NewGw;
+    while (pAddr != NULL)
+    {
+        if (pString != pszGatewayMetric)
+        {
+            *pString = L',';
+            pString++;
+        }
+
+        nLength = _swprintf(pString, L"%hu", pAddr->u.Metric);
+        pString += nLength;
+
+        pAddr = pAddr->Next;
+    }
+
+    TRACE("Gateway Metric %S\n", pszGatewayMetric);
+
+    /* Build the DNS string */
+    dwCount = 0;
+    pAddr = pAdapter->NewNs;
+    while (pAddr != NULL)
+    {
+        dwCount++;
+        pAddr = pAddr->Next;
+    }
+
+    pszNameServers = CoTaskMemAlloc(dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
+    if (pszNameServers == NULL)
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    ZeroMemory(pszNameServers, dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
+
+    pString = pszNameServers;
+    pAddr = pAdapter->NewNs;
+    while (pAddr != NULL)
+    {
+        if (pString != pszNameServers)
+        {
+            *pString = L',';
+            pString++;
+        }
+
+        Address.S_un.S_addr = htonl(pAddr->IpAddress);
+        pString = RtlIpv4AddressToStringW(&Address, pString);
+
+        pAddr = pAddr->Next;
+    }
+
+    TRACE("Name Servers %S\n", pszNameServers);
+
+    /* Get the Parameters string length */
+    nLength = _scwprintf(L"DefGw=%s;GwMetric=%s;IfMetric=%lu;DNS=%s;",
+                         pszDefGateway,
+                         pszGatewayMetric,
+                         pAdapter->NewMetric,
+                         pszNameServers);
+
+    TRACE("Param string length %d\n", nLength);
+    if (nLength == -1)
+    {
+        hr = E_FAIL;
+        goto done;
+    }
+
+    /* Allocate the Parameters buffer */
+    pszParameters = CoTaskMemAlloc((nLength + 1) * sizeof(WCHAR));
+    if (pszParameters == NULL)
+        return E_OUTOFMEMORY;
+
+    ZeroMemory(pszParameters, (nLength + 1) * sizeof(WCHAR));
+
+    /* Fill the Parameters buffer */
+    _swprintf(pszParameters,
+              L"DefGw=%s;GwMetric=%s;IfMetric=%lu;DNS=%s;",
+              pszDefGateway,
+              pszGatewayMetric,
+              pAdapter->NewMetric,
+              pszNameServers);
+
+    TRACE("Parameters %S\n", pszParameters);
+
+    *ppszParameters = pszParameters;
+
+done:
+    if (pszDefGateway)
+        CoTaskMemFree(pszDefGateway);
+
+    if (pszGatewayMetric)
+        CoTaskMemFree(pszGatewayMetric);
+
+    if (pszNameServers)
+        CoTaskMemFree(pszNameServers);
+
+    return hr;
+}
 
 /***************************************************************
  * TCP/IP Filter Dialog
@@ -676,8 +988,8 @@ InsertIpAddressToListView(
         li.iItem = itemCount;
         li.iSubItem = 0;
         dwIpAddr = pAddr->IpAddress;
-        swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
-                 FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+        _swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
+                  FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
 
         li.pszText = szBuffer;
         li.iItem = SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
@@ -686,13 +998,13 @@ InsertIpAddressToListView(
             if (bSubMask)
             {
                 dwIpAddr = pAddr->u.SubnetMask;
-                swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
-                         FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+                _swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
+                          FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
             }
             else
             {
                 if (pAddr->u.Metric)
-                    swprintf(szBuffer, L"%u", pAddr->u.Metric);
+                    _swprintf(szBuffer, L"%u", pAddr->u.Metric);
                 else
                     LoadStringW(netcfgx_hInstance, IDS_AUTOMATIC, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
             }
@@ -1479,7 +1791,7 @@ TcpipAdvancedIpDlg(
                     {
                         if (Gw.Metric)
                         {
-                            swprintf(szBuffer, L"%u", Gw.Metric);
+                            _swprintf(szBuffer, L"%u", Gw.Metric);
                             li.iSubItem = 1;
                             li.pszText = szBuffer;
                             SendDlgItemMessageW(hwndDlg, IDC_GWLIST, LVM_SETITEMW, 0, (LPARAM)&li);
@@ -1521,7 +1833,7 @@ TcpipAdvancedIpDlg(
                         (void)SendDlgItemMessageW(hwndDlg, IDC_GWLIST, LVM_SETITEMW, 0, (LPARAM)&li);
                         if (Gw.Metric)
                         {
-                            swprintf(szBuffer, L"%u", Gw.Metric);
+                            _swprintf(szBuffer, L"%u", Gw.Metric);
                             li.iSubItem = 1;
                             li.pszText = szBuffer;
                             SendDlgItemMessageW(hwndDlg, IDC_GWLIST, LVM_SETITEMW, 0, (LPARAM)&li);
@@ -1647,8 +1959,8 @@ InitializeTcpipAdvancedDNSDlg(
     while(pAddr)
     {
         dwIpAddr = pAddr->IpAddress;
-        swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
-                 FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+        _swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
+                  FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
 
         SendDlgItemMessageW(hwndDlg, IDC_DNSADDRLIST, LB_ADDSTRING, 0, (LPARAM)szBuffer);
         pAddr = pAddr->Next;
@@ -1916,7 +2228,7 @@ TcpipAdvancedDnsDlg(
                         if (LoadStringW(netcfgx_hInstance, IDS_DNS_SUFFIX, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
                         {
                             szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
-                            swprintf(szBuffer, szFormat, szSuffix);
+                            _swprintf(szBuffer, szFormat, szSuffix);
                             if (LoadStringW(netcfgx_hInstance, IDS_TCPIP, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
                                 szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
                             else
@@ -3354,6 +3666,7 @@ LoadAdapterSettings(
     }
 
     wcscpy(pAdapter->AdapterName, pAdapterName);
+    CLSIDFromString(pAdapter->AdapterName, &pAdapter->AdapterGuid);
 
     pAdapter->OldDhcpEnabled = pAdapterInfo->DhcpEnabled;
     pAdapter->NewDhcpEnabled = pAdapterInfo->DhcpEnabled;
@@ -3690,17 +4003,17 @@ CreateMultiSzString(IP_ADDR * pAddr, COPY_TYPE Type, LPDWORD Size, BOOL bComma)
         if (Type == IPADDR)
         {
             dwIpAddr = pTemp->IpAddress;
-            swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
-                    FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            _swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
+                      FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }else if (Type == SUBMASK)
         {
             dwIpAddr = pTemp->u.SubnetMask;
-            swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
-                    FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            _swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
+                      FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }
         else if (Type == METRIC)
         {
-            swprintf(szBuffer, L"%u", pTemp->u.Metric);
+            _swprintf(szBuffer, L"%u", pTemp->u.Metric);
         }
 
         dwSize += wcslen(szBuffer) + 1;
@@ -3720,17 +4033,17 @@ CreateMultiSzString(IP_ADDR * pAddr, COPY_TYPE Type, LPDWORD Size, BOOL bComma)
         if (Type == IPADDR)
         {
             dwIpAddr = pTemp->IpAddress;
-            swprintf(pStr, L"%lu.%lu.%lu.%lu",
-                    FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            _swprintf(pStr, L"%lu.%lu.%lu.%lu",
+                      FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }else if (Type == SUBMASK)
         {
             dwIpAddr = pTemp->u.SubnetMask;
-            swprintf(pStr, L"%lu.%lu.%lu.%lu",
-                    FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            _swprintf(pStr, L"%lu.%lu.%lu.%lu",
+                      FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }
         else if (Type == METRIC)
         {
-            swprintf(pStr, L"%u", pTemp->u.Metric);
+            _swprintf(pStr, L"%u", pTemp->u.Metric);
         }
 
         if (bComma)
@@ -4238,12 +4551,88 @@ HRESULT
 WINAPI
 ITcpipProperties_fnUnknown1(
     ITcpipProperties *iface,
-    DWORD dwParam1,
-    DWORD dwParam2)
+    GUID *pAdapterName,
+    PTCPIP_PROPERTIES *ppProperties)
 {
-    ERR("ITcpipProperties_fnUnknown1(0x%lx 0x%lx)\n", dwParam1, dwParam2);
-//    TcpipConfNotifyImpl *This = impl_from_ITcpipProperties(iface);
-    return S_OK;
+    AdapterSettings *pAdapter;
+    PTCPIP_PROPERTIES pProperties;
+    PWSTR pszIpAddress = NULL;
+    PWSTR pszSubnetMask = NULL;
+    PWSTR pszParameters = NULL;
+    PWSTR pPtr;
+    DWORD dwSize;
+    HRESULT hr = S_OK;
+
+    ERR("ITcpipProperties_fnUnknown1(%s %p)\n", wine_dbgstr_guid(pAdapterName), ppProperties);
+    TcpipConfNotifyImpl *This = impl_from_ITcpipProperties(iface);
+
+    pAdapter = GetAdapterByGuid(This, pAdapterName);
+    if (pAdapter == NULL)
+        return E_FAIL;
+
+    /* Build the IpAddress string */
+    hr = BuildIpAddressString(pAdapter, &pszIpAddress);
+    if (FAILED(hr))
+        goto done;
+
+    TRACE("IpAddress string: %S\n", pszIpAddress);
+
+    /* Build the Parameters string */
+    hr = BuildSubnetMaskString(pAdapter, &pszSubnetMask);
+    if (FAILED(hr))
+        goto done;
+
+    TRACE("SubnetMask string: %S\n", pszSubnetMask);
+
+    /* Build the Parameters string */
+    hr = BuildParametersString(pAdapter, &pszParameters);
+    if (FAILED(hr))
+        goto done;
+
+    TRACE("Parameters string: %S\n", pszParameters);
+
+    dwSize = sizeof(TCPIP_PROPERTIES) +
+             ((wcslen(pszIpAddress) + 1) * sizeof(WCHAR)) +
+             ((wcslen(pszSubnetMask) + 1) * sizeof(WCHAR)) +
+             ((wcslen(pszParameters) + 1) * sizeof(WCHAR));
+
+    pProperties = CoTaskMemAlloc(dwSize);
+    if (pProperties == NULL)
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+ 
+    ZeroMemory(pProperties, dwSize);
+
+    pProperties->dwDhcp = (pAdapter->NewDhcpEnabled) ? DWORD_MAX : 0;
+
+    pPtr = (PWSTR)(pProperties + 1);
+
+    pProperties->pszIpAddress = pPtr;
+    wcscpy(pProperties->pszIpAddress, pszIpAddress);
+    pPtr += (wcslen(pszIpAddress) + 1);
+
+    pProperties->pszSubnetMask = pPtr;
+    wcscpy(pProperties->pszSubnetMask, pszSubnetMask);
+    pPtr += (wcslen(pszSubnetMask) + 1);
+
+    pProperties->pszParameters = pPtr;
+    wcscpy(pProperties->pszParameters, pszParameters);
+
+    *ppProperties = pProperties;
+
+done:
+    if (pszIpAddress)
+        CoTaskMemFree(pszIpAddress);
+
+    if (pszSubnetMask)
+        CoTaskMemFree(pszSubnetMask);
+
+    if (pszParameters)
+        CoTaskMemFree(pszParameters);
+
+    return hr;
 }
 
 static const ITcpipPropertiesVtbl vt_TcpipProperties =

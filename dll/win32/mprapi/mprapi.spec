@@ -82,7 +82,7 @@
 @ stub MprConfigInterfaceTransportRemove
 @ stub MprConfigInterfaceTransportSetInfo
 @ stub MprConfigServerBackup
-@ stub MprConfigServerConnect
+@ stdcall MprConfigServerConnect(wstr ptr)
 @ stub MprConfigServerDisconnect
 @ stub MprConfigServerGetInfo
 @ stub MprConfigServerInstall

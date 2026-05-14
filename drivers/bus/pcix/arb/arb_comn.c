@@ -95,10 +95,10 @@ PciInitializeArbiters(IN PPCI_FDO_EXTENSION FdoExtension)
         /* Setup the instance */
         ArbiterInterface->BusFdoExtension = FdoExtension;
         ArbiterInterface->Interface = CurrentInterface;
-        swprintf(ArbiterInterface->InstanceName,
-                 L"PCI %S (b=%02x)",
-                 PciArbiterNames[ArbiterType - PciArb_Io],
-                 FdoExtension->BaseBus);
+        _swprintf(ArbiterInterface->InstanceName,
+                  L"PCI %S (b=%02x)",
+                  PciArbiterNames[ArbiterType - PciArb_Io],
+                  FdoExtension->BaseBus);
 
         /* Call the interface initializer for it */
         Status = CurrentInterface->Initializer(ArbiterInterface);

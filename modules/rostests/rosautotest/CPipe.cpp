@@ -25,7 +25,7 @@ CPipe::CPipe()
     // Construct a unique pipe name.
     WCHAR wszPipeName[MAX_PATH];
     InterlockedIncrement(&m_lPipeCount);
-    swprintf(wszPipeName, L"\\\\.\\pipe\\TestmanPipe%ld", m_lPipeCount);
+    _swprintf(wszPipeName, L"\\\\.\\pipe\\TestmanPipe%ld", m_lPipeCount);
 
     // Create a named pipe with the default settings, but overlapped (asynchronous) operations.
     // Latter feature is why we can't simply use CreatePipe.
