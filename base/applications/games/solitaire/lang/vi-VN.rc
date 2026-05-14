@@ -1,9 +1,8 @@
 /*
- * PROJECT:     Solitaire
+ * PROJECT:     ReactOS Solitaire
  * LICENSE:     Freeware, permission to use under Public Domain
- * FILE:        base/applications/games/solitaire/lang/vi-VN.rc
- * PURPOSE:     Vietnamese Language File for Solitaire
- * TRANSLATOR:  Nguyen Duc Thinh <ducthinh100812@gmail.com>
+ * PURPOSE:     Vietnamese resource file
+ * TRANSLATOR:  Copyright 2026 Nguyen Duc Thinh <ducthinh100812@gmail.com>
  */
 
 LANGUAGE LANG_VIETNAMESE, SUBLANG_DEFAULT

@@ -1,4 +1,10 @@
-/* Vietnamese (vi-VN) translation */
+/*
+ * PROJECT:     ReactOS "Welcome"/AutoRun application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Vietnamese resource file
+ * TRANSLATOR:  Copyright 2026 Nguyen Duc Thinh <ducthinh100812@gmail.com>
+ */
+
 LANGUAGE LANG_VIETNAMESE, SUBLANG_DEFAULT
 
 /* String Tables */
