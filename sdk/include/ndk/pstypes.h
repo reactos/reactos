@@ -1792,8 +1792,21 @@ typedef struct _WIN32_CALLOUTS_FPNS
 
 #endif // !NTOS_MODE_USER
 
+/* Function Prototypes *******************************************************/
+
+#ifndef NTOS_MODE_USER
+
+/* NT 6.0 (Windows Vista) */
+UCHAR
+NTAPI
+PsGetProcessSignatureLevel(
+    _In_ PEPROCESS Process
+);
+
+#endif // !NTOS_MODE_USER
+
 #ifdef __cplusplus
-}; // extern "C"
+}
 #endif
 
 #endif // _PSTYPES_H

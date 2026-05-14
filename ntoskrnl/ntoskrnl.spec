@@ -998,6 +998,7 @@
 @ stdcall PsGetProcessSectionBaseAddress(ptr)
 @ stdcall PsGetProcessSecurityPort(ptr)
 @ stdcall PsGetProcessSessionId(ptr)
+@ stdcall PsGetProcessSignatureLevel(ptr)
 @ stdcall PsGetProcessSessionIdEx(ptr)
 @ stdcall PsGetProcessWin32Process(ptr)
 @ stdcall PsGetProcessWin32WindowStation(ptr)
