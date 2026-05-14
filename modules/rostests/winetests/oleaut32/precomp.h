@@ -12,8 +12,8 @@
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include <wine/test.h>
-
+#include <windef.h>
+#include <winbase.h>
 #include <winreg.h>
 #include <winnls.h>
 #include <wingdi.h>
@@ -21,5 +21,7 @@
 #include <olectl.h>
 #include <tmarshal.h>
 #include <test_tlb.h>
+
+#include <wine/test.h>
 
 #endif /* !_OLEAUT32_WINETEST_PRECOMP_H_ */
