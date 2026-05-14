@@ -316,7 +316,7 @@ PspDeleteProcess(IN PVOID ObjectBody)
         Process->SectionObject = NULL;
     }
 
-/* Check if we have a token, and dereference it */
+    /* Check if we have a token, and dereference it */
     if (Process->Token.Object)
     {
         /* Get the actual token and mask the fast reference count */
