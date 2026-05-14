@@ -258,7 +258,7 @@ BEGIN
 
     IDS_CONFIG_SYSTEM_PARTITION "Configurando la partición del sistema..."
     IDS_PREPARE_PARTITIONS "Preparando particiones..."
-    IDS_PREPARE_FILES "Preparando la lista de archivos que se copiarán, espere por favor..."
+    IDS_PREPARE_FILES "Preparando la lista de archivos a copiar, espere un momento..."
     IDS_COPYING_FILES "Copiando los archivos..."
 
     IDS_CREATE_REGISTRY "Creando el registro..."
@@ -291,7 +291,7 @@ BEGIN
 alfanuméricos (a-z, A-Z, 0-9), y\n . \\ - _\n\
 No se permiten espacios."
 
-    IDS_ERROR_DIRECTORY_NAME_TITLE "Ruta de instalación no válida"
+    IDS_ERROR_DIRECTORY_NAME_TITLE "Ruta de instalación incorrecta"
     IDS_ERROR_DIRECTORY_NAME "La ruta de instalación de ReactOS debe seguir el esquema de nombres DOS 8.3, \
 y contener únicamente letras, dígitos, guiones y puntos. No se permiten espacios."
 
@@ -299,8 +299,8 @@ y contener únicamente letras, dígitos, guiones y puntos. No se permiten espaci
     IDS_ERROR_CREATE_PARTITION "No se pudo crear una nueva partición."
 
     IDS_WARN_DELETE_PARTITION_TITLE "¿Eliminar partición?"
-    IDS_WARN_DELETE_PARTITION "¿Está seguro de que desea eliminar la partición seleccionada?"
-    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "¿Está seguro de que desea eliminar la partición extendida seleccionada y TODAS las particiones lógicas que contiene?"
+    IDS_WARN_DELETE_PARTITION "¿Está seguro que desea eliminar la partición seleccionada?"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "¿Está seguro que desea eliminar la partición extendida seleccionada y TODAS las particiones lógicas que contiene?"
 
     IDS_ERROR_WRITE_PTABLE "La instalación no pudo escribir las tablas de partición."
 
@@ -311,13 +311,13 @@ el programa de instalación no puede instalar ReactOS.\
 
     IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Volumen no reconocido al intentar formatear la partición."
 
-    IDS_ERROR_COULD_NOT_FORMAT "La instalación actualmente no puede formatear una partición en %s.\n\
+    IDS_ERROR_COULD_NOT_FORMAT "La instalación en este momento no puede formatear una partición en %s.\n\
 \nHaga clic en Aceptar para continuar la instalación.\
 \nHaga clic en Cancelar para salir de la instalación."
 
     IDS_ERROR_FORMATTING_PARTITION "La instalación no puede formatear la partición:\n %s\n"
 
-    IDS_ERROR_COULD_NOT_CHECK "La instalación actualmente no puede comprobar una partición formateada en %s.\n\
+    IDS_ERROR_COULD_NOT_CHECK "La instalación en este momento no puede comprobar una partición formateada en %s.\n\
 \nHaga clic en Aceptar para continuar la instalación.\
 \nHaga clic en Cancelar para salir de la instalación."
 
@@ -326,7 +326,7 @@ el programa de instalación no puede instalar ReactOS.\
     IDS_ERROR_WRITE_BOOT "La instalación no pudo instalar el código de arranque %s en la partición del sistema."
     IDS_ERROR_INSTALL_BOOTCODE "La instalación no pudo instalar el código de arranque %s en el disco de arranque."
     IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "La instalación no pudo instalar el código de arranque en el medio extraíble."
-    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "La instalación actualmente no admite instalar el cargador de arranque en el equipo que está utilizando.\
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "La instalación en este momento no admite instalar el cargador de arranque en el equipo que está utilizando.\
 \nHaga clic en Aceptar para continuar de todos modos."
     IDS_ERROR_BOOTLDR_FAILED "La instalación no pudo instalar el cargador de arranque (Estado 0x%08lx)."
 END
