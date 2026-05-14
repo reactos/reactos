@@ -120,6 +120,14 @@ CompareVersion(const CStringW &left, const CStringW &right)
     }
 }
 
+bool
+CAvailableApplicationInfo::IsInstalled() const
+{
+    CStringW szRegName;
+    m_Parser->GetString(DB_REGNAME, szRegName);
+    return ::GetInstalledVersion(NULL, szRegName) || ::GetInstalledVersion(NULL, szDisplayName);
+}
+
 VOID
 CAvailableApplicationInfo::InsertVersionInfo(CAppRichEdit *RichEdit)
 {
