@@ -42,4 +42,12 @@ NsGetFriendlyNameFromIfName(
     _Inout_ PWSTR pszFriendlyName,
     _Inout_ PDWORD pdwFriendlyName);
 
+DWORD
+WINAPI
+NsGetIfNameFromFriendlyName(
+    _In_ DWORD dwUnknown1,
+    _In_ PWSTR pszFriendlyName, 
+    _Inout_ PWSTR pszIfName,
+    _Inout_ PDWORD pdwIfName);
+
 #endif /* __NETSH_UNDOC_H__ */

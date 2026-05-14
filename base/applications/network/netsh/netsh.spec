@@ -15,7 +15,7 @@
 @ stdcall MatchTagsInCmdLine(ptr ptr long long ptr long ptr)
 @ stdcall MatchToken(wstr wstr)
 @ stdcall NsGetFriendlyNameFromIfName(long wstr ptr ptr)
-@ stub NsGetIfNameFromFriendlyName
+@ stdcall NsGetIfNameFromFriendlyName(long wstr ptr ptr)
 @ stdcall PreprocessCommand(ptr ptr long long ptr long long long ptr)
 @ varargs PrintError(ptr long)
 @ stub PrintErrorLog
