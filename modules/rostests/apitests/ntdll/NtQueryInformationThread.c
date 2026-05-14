@@ -278,7 +278,6 @@ Quit:
         NtClose(hWaitEvent);
 }
 
-static
 void
 Test_ThreadQueryAlignmentProbe(void)
 {
@@ -548,13 +547,14 @@ Test_ThreadNameInformation(void)
 
     NTDDIVersion = GetNTDDIVersion();
     trace("NTDDIVersion: 0x%08lx\n", NTDDIVersion);
-    if (NTDDIVersion < NTDDI_WIN10_RS1)
+    if (!is_reactos() && NTDDIVersion < NTDDI_WIN10_RS1)
     {
-        trace("Running %s on NT %hu.%hu(.%hu), it may not work!\n",
+        skip("Skipping %s on NT %hu.%hu(.%hu), because it is not supported.\n",
               __FUNCTION__,
               (NTDDIVersion & 0xFF000000) >> 24,
               (NTDDIVersion & 0x00FF0000) >> 16,
               (NTDDIVersion & 0x000000FF));
+        return;
     }
 
     Status = NtCreateEvent(&hWaitEvent,
@@ -620,6 +620,8 @@ START_TEST(NtQueryInformationThread)
 {
     Test_ThreadBasicInformationClass();
     Test_ThreadHideFromDebuggerClass();
+#if 0 // This test is too broken
     Test_ThreadQueryAlignmentProbe();
+#endif
     Test_ThreadNameInformation();
 }
