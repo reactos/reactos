@@ -215,12 +215,12 @@ StartProcess(
 static BOOL
 StartShell(VOID)
 {
-    WCHAR Shell[MAX_PATH];
-    WCHAR szMsg[RC_STRING_MAX_SIZE];
     DWORD Type, Size;
     DWORD Value = 0;
     LONG rc;
     HKEY hKey;
+    WCHAR Shell[MAX_PATH];
+    WCHAR szMsg[RC_STRING_MAX_SIZE];
 
     /* Safe Mode shell run */
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -313,14 +313,14 @@ StartShell(VOID)
         StringCchCatW(Shell, ARRAYSIZE(Shell), L"explorer.exe");
     }
 
-    if (!StartProcess(Shell))
-    {
-        WARN("Failed to start default shell '%s'\n", debugstr_w(Shell));
-        LoadStringW(GetModuleHandle(NULL), IDS_SHELL_FAIL, szMsg, ARRAYSIZE(szMsg));
-        MessageBoxW(NULL, szMsg, NULL, MB_OK);
-        return FALSE;
-    }
-    return TRUE;
+    if (StartProcess(Shell))
+        return TRUE;
+
+    /* We failed, display an error message and quit */
+    ERR("Failed to start default shell '%s'\n", debugstr_w(Shell));
+    LoadStringW(GetModuleHandle(NULL), IDS_SHELL_FAIL, szMsg, ARRAYSIZE(szMsg));
+    MessageBoxW(NULL, szMsg, NULL, MB_OK);
+    return FALSE;
 }
 
 const WCHAR g_RegColorNames[][32] = {
@@ -599,7 +599,7 @@ ExpandInstallerPath(
     }
 
     /* Installer not found */
-    ERR("Couldn't find the installer '%s'.\n", debugstr_w(lpInstallerPath));
+    ERR("Couldn't find the installer '%s'\n", debugstr_w(lpInstallerPath));
     *lpInstallerPath = UNICODE_NULL;
     return FALSE;
 }
@@ -617,8 +617,8 @@ StartInstaller(IN LPCWSTR lpInstallerName)
             return TRUE;
     }
 
-    /* We failed. Display an error message and quit. */
-    ERR("Failed to start the installer '%s'.\n", debugstr_w(Installer));
+    /* We failed, display an error message and quit */
+    ERR("Failed to start the installer '%s'\n", debugstr_w(Installer));
     LoadStringW(GetModuleHandle(NULL), IDS_INSTALLER_FAIL, szMsg, ARRAYSIZE(szMsg));
     MessageBoxW(NULL, szMsg, NULL, MB_OK);
     return FALSE;
