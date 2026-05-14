@@ -25,6 +25,7 @@
  */
 
 #include "userinit.h"
+#include <userenv.h>
 
 #define CMP_MAGIC  0x01234567
 
@@ -178,7 +179,8 @@ GetShell(
 
 static BOOL
 StartProcess(
-    IN LPCWSTR CommandLine)
+    _In_ PCWSTR CommandLine,
+    _In_opt_ PVOID pEnvironment)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -197,8 +199,8 @@ StartProcess(
                         NULL,
                         NULL,
                         FALSE,
-                        NORMAL_PRIORITY_CLASS,
-                        NULL,
+                        NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT,
+                        pEnvironment,
                         NULL,
                         &si,
                         &pi))
@@ -213,7 +215,8 @@ StartProcess(
 }
 
 static BOOL
-StartShell(VOID)
+StartShell(
+    _In_opt_ PVOID pEnvironment)
 {
     DWORD Type, Size;
     DWORD Value = 0;
@@ -257,7 +260,7 @@ StartShell(VOID)
                                 TRACE("Key located - %s\n", debugstr_w(Shell));
 
                                 /* Try to run alternate shell */
-                                if (StartProcess(Shell))
+                                if (StartProcess(Shell, pEnvironment))
                                 {
                                     TRACE("Alternate shell started (Safe Mode)\n");
                                     return TRUE;
@@ -284,14 +287,14 @@ StartShell(VOID)
     }
 
     /* Try to run shell in user key */
-    if (GetShell(Shell, HKEY_CURRENT_USER) && StartProcess(Shell))
+    if (GetShell(Shell, HKEY_CURRENT_USER) && StartProcess(Shell, pEnvironment))
     {
         TRACE("Started shell from HKEY_CURRENT_USER\n");
         return TRUE;
     }
 
     /* Try to run shell in local machine key */
-    if (GetShell(Shell, HKEY_LOCAL_MACHINE) && StartProcess(Shell))
+    if (GetShell(Shell, HKEY_LOCAL_MACHINE) && StartProcess(Shell, pEnvironment))
     {
         TRACE("Started shell from HKEY_LOCAL_MACHINE\n");
         return TRUE;
@@ -313,7 +316,7 @@ StartShell(VOID)
         StringCchCatW(Shell, ARRAYSIZE(Shell), L"explorer.exe");
     }
 
-    if (StartProcess(Shell))
+    if (StartProcess(Shell, pEnvironment))
         return TRUE;
 
     /* We failed, display an error message and quit */
@@ -613,7 +616,7 @@ StartInstaller(IN LPCWSTR lpInstallerName)
     if (ExpandInstallerPath(lpInstallerName, Installer, ARRAYSIZE(Installer)))
     {
         /* We have found the installer */
-        if (StartProcess(Installer))
+        if (StartProcess(Installer, NULL))
             return TRUE;
     }
 
@@ -688,10 +691,23 @@ Restart:
     switch (State.Run)
     {
         case SHELL:
-            Success = StartShell();
+        {
+            /* In LiveCD mode, create a suitable environment block for the
+             * shell; otherwise, use the current one (built by WinLogon) */
+            PVOID pEnvironment = NULL;
+            if (bIsLiveCD && /* In LiveCD mode we run under the LocalSystem account */
+                !CreateEnvironmentBlock(&pEnvironment, NULL, TRUE))
+            {
+                WARN("CreateEnvironmentBlock() failed, fall back to default (error %lu)\n",
+                     GetLastError());
+            }
+            Success = StartShell(pEnvironment);
+            if (pEnvironment)
+                DestroyEnvironmentBlock(pEnvironment);
             if (Success)
                 NotifyLogon();
             break;
+        }
 
         case INSTALLER:
             Success = StartInstaller(L"reactos.exe");
