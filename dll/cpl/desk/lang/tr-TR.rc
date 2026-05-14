@@ -118,7 +118,7 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efektler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "&Araç ipuçları ve menüler için aşağıdaki geçiş etkisini kullan:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
+    AUTOCHECKBOX "&Araç ipuçları ve menüler için aşağıdaki geçiş efektini kullan:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Ekran yazı tiplerinin kenarlarını yumuşatmak için aşağıdaki yöntemi kullan:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
