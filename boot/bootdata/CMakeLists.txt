@@ -60,25 +60,13 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/livecd/unattend.inf DESTINATION rea
 # LiveImage shortcuts
 add_custom_target(livecd_links)
 function(add_livecd_shortcut name path)
-    cmake_parse_arguments(_shortcut "" "WORKDIR;CMDLINE_ARGS;ICON;ICON_INDEX" "DESTINATION" ${ARGN})
+    # Only handle DESTINATION; transfer all the other parameters verbatim to add_link()
+    cmake_parse_arguments(_shortcut "" "" "DESTINATION" ${ARGN})
     if(NOT _shortcut_DESTINATION)
         message(FATAL_ERROR "You must provide at least one destination")
     endif()
 
-    if(DEFINED _shortcut_WORKDIR)
-        set(_shortcut_WORKDIR WORKDIR "${_shortcut_WORKDIR}")
-    endif()
-    if(DEFINED _shortcut_CMDLINE_ARGS)
-        set(_shortcut_CMDLINE_ARGS CMDLINE_ARGS "${_shortcut_CMDLINE_ARGS}")
-    endif()
-    if(DEFINED _shortcut_ICON)
-        set(_shortcut_ICON ICON "${_shortcut_ICON}")
-    endif()
-    if(DEFINED _shortcut_ICON_INDEX)
-        set(_shortcut_ICON_INDEX ICON_INDEX ${_shortcut_ICON_INDEX})
-    endif()
-
-    add_link(${name} ${path} ${_shortcut_WORKDIR} ${_shortcut_CMDLINE_ARGS} ${_shortcut_ICON} ${_shortcut_ICON_INDEX})
+    add_link(${name} ${path} ${_shortcut_UNPARSED_ARGUMENTS})
     # Only on CMake 3.20+: target_sources(livecd_links PRIVATE ...)
     set_property(TARGET livecd_links APPEND PROPERTY SOURCES "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk")
 
