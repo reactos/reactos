@@ -1,9 +1,8 @@
- /*
- * PROJECT:     ReactOS Command shell (Dutch translation)
+/*
+ * PROJECT:     ReactOS Command shell
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * FILE:        base/shell/cmd/lang/nl-NL.rc
- * PURPOSE:     Dutch (The Netherlands) resource file
- * TRANSLATORS: Copyright 2026 Hans-Kramer <Hanskramer [UNDERSCRORE] 666 [AT] hotmail [DOT] com>
+ * PURPOSE:     Dutch (Netherlands) resource file
+ * TRANSLATOR:  Copyright 2026 Hans-Kramer <hanskramer_666@hotmail.com>
  */
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
