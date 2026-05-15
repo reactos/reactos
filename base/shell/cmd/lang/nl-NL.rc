@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Command shell
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Dutch (Netherlands) resource file
- * TRANSLATOR:  Copyright 2026 Hans-Kramer <hanskramer_666@hotmail.com>
+ * TRANSLATOR:  Copyright 2026 Hans Kramer <hanskramer_666@hotmail.com>
  */
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
