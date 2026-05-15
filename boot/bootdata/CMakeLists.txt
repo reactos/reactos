@@ -78,17 +78,27 @@ function(add_livecd_shortcut name path)
     endforeach()
 endfunction()
 
+# Win32: Use pseudo-escape hacks to work-around variables expansion by CMD.EXE
+if(CMAKE_HOST_WIN32)
+    macro(cmdenvvar var name used_in_quotes)
+        if(${used_in_quotes})
+            set(${var} "%^${name}^%") # The name itself is surrounded by '^'
+        else()
+            set(${var} "^%${name}^%") # The '%' are pseudo-escaped to '^%'
+        endif()
+    endmacro()
+else()
+    macro(cmdenvvar var name used_in_quotes)
+        set(${var} "%${name}%")
+    endmacro()
+endif()
+
+cmdenvvar(envvar_systemroot "SystemRoot" FALSE)
+cmdenvvar(envvar_homedrive  "HOMEDRIVE"  FALSE)
+cmdenvvar(envvar_homepath   "HOMEPATH"   FALSE)
+
 ## NOTE: What would be nice is to create this list using /media/inf/shortcuts.inf
 ## and taking their default english translation!
-
-set(env_percent "%")
-# Win32: Use pseudo-escapes '^%' to work-around variables expansion by CMD.EXE
-if (CMAKE_HOST_WIN32)
-    set(env_percent "^%")
-endif()
-set(envvar_systemroot   "${env_percent}SystemRoot${env_percent}")
-set(envvar_homedrive    "${env_percent}HOMEDRIVE${env_percent}")
-set(envvar_homepath     "${env_percent}HOMEPATH${env_percent}")
 
 set(dir_allusers_desktop        "Profiles/All Users/Desktop")
 set(dir_startmenu_programs      "Profiles/All Users/Start Menu/Programs")
