@@ -258,16 +258,17 @@ WdmAudGetDeviceInterface(
     }
     else
     {
-        __try
+        _SEH2_TRY
         {
             ProbeForWrite(DeviceInfo->u.Interface.DeviceInterfaceString, Length, sizeof(WCHAR));
             RtlMoveMemory(DeviceInfo->u.Interface.DeviceInterfaceString, Device, Length);
         }
-        __except(EXCEPTION_EXECUTE_HANDLER)
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             FreeItem(Device);
-            return SetIrpIoStatus(Irp, GetExceptionCode(), 0);
+            return SetIrpIoStatus(Irp, _SEH2_GetExceptionCode(), 0);
         }
+        _SEH2_END;
     }
 
     FreeItem(Device);
