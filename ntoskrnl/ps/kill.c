@@ -316,15 +316,14 @@ PspDeleteProcess(IN PVOID ObjectBody)
         Process->SectionObject = NULL;
     }
 
-    /* Check if we have a token, and dereference it */
+    /* Check if we have a primary token, and release it */
     if (Process->Token.Object)
     {
-        /* Get the actual token and mask the fast reference count */
-        PACCESS_TOKEN Token = (PACCESS_TOKEN)((ULONG_PTR)Process->Token.Object & ~MAX_FAST_REFS);
+        /* Get the token from the fast reference and release it */
+        PACCESS_TOKEN Token = ExFreeFastReference(&Process->Token, NULL);
         if (Token)
         {
             ObDereferenceObject(Token);
-            Process->Token.Object = NULL;
         }
     }
 
