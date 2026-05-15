@@ -75,3 +75,40 @@ int ConvertSecurityDescriptorToSecDes()
     __wine_spec_unimplemented_stub("activeds.dll", __FUNCTION__);
     return 0;
 }
+
+int ConvertTrusteeToSid()
+{
+    DbgPrint("WARNING: calling stub ConvertTrusteeToSid()\n");
+    __wine_spec_unimplemented_stub("activeds.dll", __FUNCTION__);
+    return 0;
+}
+
+HRESULT
+WINAPI
+BinarySDToSecurityDescriptor(
+    _In_ PSECURITY_DESCRIPTOR pSecurityDescriptor,
+    _Out_ VARIANT* pVarsec,
+    _In_ LPCWSTR pszServerName,
+    _In_ LPCWSTR userName,
+    _In_ LPCWSTR passWord,
+    _In_ DWORD dwFlags)
+{
+    DbgPrint("ACTIVEDS: %s is unimplemented, please try again later.\n", __FUNCTION__);
+    return E_NOTIMPL;
+}
+
+HRESULT
+WINAPI
+SecurityDescriptorToBinarySD(
+  _In_ VARIANT vVarSecDes,
+  _Out_ PSECURITY_DESCRIPTOR *ppSecurityDescriptor,
+  _Out_ PDWORD pdwSDLength,
+  _In_ LPCWSTR pszServerName,
+  _In_ LPCWSTR userName,
+  _In_ LPCWSTR passWord,
+  _In_ DWORD dwFlags)
+{
+    DbgPrint("ACTIVEDS: %s is unimplemented, please try again later.\n", __FUNCTION__);
+    return E_NOTIMPL;
+}
+

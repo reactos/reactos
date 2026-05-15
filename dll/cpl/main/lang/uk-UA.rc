@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Main Control Panel
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/main/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for ReactOS Main Control Panel Applet
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2006-2008 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2011 Igor Paliychuk <igor-hkr@mail.ru>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT

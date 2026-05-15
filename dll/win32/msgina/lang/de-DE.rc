@@ -1,3 +1,14 @@
+/*
+ * PROJECT:     ReactOS msgina.dll
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2007 Daniel Reimer <reimer.daniel@freenet.de>
+ *              Copyright 2010 Sven Knurr (tux.) <forenkrams@tuxproject.de>
+ *              Copyright 2013-2014 Zehnvor <sixlivezehn@googlemail.com>
+ *              Copyright 2013-2019 Eric Kohl <eric.kohl@reactos.org>
+ *              Copyright 2026 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_STATUS DIALOGEX 0, 0, 275, 78
@@ -235,9 +246,9 @@ BEGIN
     IDS_INVALIDWORKSTATION "Ihr Konto sieht es nicht vor, dass Sie sich an diesem Computer anmelden. Bitte melden Sie sich an einem anderen Computer an."
     IDS_ACCOUNTRESTRICTION "Wegen einer Kontenbeschränkung dürfen Sie sich nicht anmelden."
     IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
-    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
-    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
-    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYLOGOFF "Klicken Sie auf OK, um sich sofort abzumelden. Nicht gespeicherte Daten gehen verloren. Verwenden Sie dies nur als letzte Option."
+    IDS_EMERGENCYRESTARTTITLE "Notfallneustart"
+    IDS_EMERGENCYRESTART "Klicken Sie auf OK, um den Computer sofort neu zu starten. Nicht gespeicherte Daten gehen verloren. Verwenden Sie dies nur als letzte Option."
 END
 
 /* Shutdown Dialog Strings */

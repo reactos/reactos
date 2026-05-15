@@ -25,17 +25,21 @@ enum E_MODULE
 
 enum E_STRING
 {
+    // s00.
     SH32_PROGRAMS,
     SH32_STARTUP,
     SH32_STARTMENU,
     SH32_PROGRAM_FILES,
     SH32_PROGRAM_FILES_COMMON,
     SH32_ADMINTOOLS,
+    // s06.
     UENV_STARTMENU,
     UENV_PROGRAMS,
     UENV_STARTUP,
+    // s09.
     SYSS_PROGRAMFILES,
     SYSS_COMMONFILES,
+    // s11.
     MMSY_STARTMENU,
 };
 
@@ -88,10 +92,9 @@ static void InitParts(void)
         { SYSS_COMMONFILES, { syssetup, 3601 /* IDS_COMMONFILES "Common Files" */, 1 } },
         { MMSY_STARTMENU, { mmsys, 5851 /* IDS_STARTMENU "Start Menu" */, 1 } },
     };
+
     for (auto& pair : s_pairs)
-    {
         parts.insert(std::make_pair(pair.eString, pair.part_test));
-    }
 }
 
 static PART_MATCH PartMatches[] =
@@ -211,7 +214,7 @@ static void TEST_NumParts(void)
 
         if (!mod[m])
         {
-            skip("No module for test %d\n", p.first);
+            // Failure is already reported by TEST_LocaleTests().
             continue;
         }
 
@@ -220,7 +223,8 @@ static void TEST_NumParts(void)
         LoadStringWrapW(mod[m], p.second.id, szBuffer, _countof(szBuffer));
         p.second.gotParts = CountParts(szBuffer);
 
-        ok(p.second.nParts == p.second.gotParts, "Locale 0x%lX: Num parts mismatch %d - expected %lu, got %lu\n",
+        ok(p.second.gotParts == p.second.nParts,
+           "Locale 0x%04lX, num parts mismatch s%02d, expected %lu got %lu. Will skip related checks.\n",
            curLcid, p.first, p.second.nParts, p.second.gotParts);
     }
 }
@@ -232,13 +236,13 @@ static BOOL LoadPart(_In_ PART* p, _Out_ LPWSTR str, _In_ SIZE_T size)
 
     if (!mod[m])
     {
-        SetLastError(ERROR_FILE_NOT_FOUND);
+        // Failure is already reported by TEST_LocaleTests().
         return FALSE;
     }
 
     if (s.nParts != s.gotParts)
     {
-        SetLastError(ERROR_INVALID_DATA);
+        // Failure is already reported by TEST_NumParts().
         return FALSE;
     }
 
@@ -259,22 +263,16 @@ static void TEST_PartMatches(void)
     {
         WCHAR szP1[MAX_PATH], szP2[MAX_PATH];
 
-        if (!LoadPart(&match.p1, szP1, _countof(szP1)))
+        if (!LoadPart(&match.p1, szP1, _countof(szP1)) ||
+            !LoadPart(&match.p2, szP2, _countof(szP2)))
         {
-            skip("%s for match test %d (pair 1)\n", GetLastError() == ERROR_FILE_NOT_FOUND
-                ? "No module" : "Invalid data", match.p1.Num);
+            // Failures are already reported.
             continue;
         }
 
-        if (!LoadPart(&match.p2, szP2, _countof(szP2)))
-        {
-            skip("%s for match test %d (pair 2)\n", GetLastError() == ERROR_FILE_NOT_FOUND
-                ? "No module" : "Invalid data", match.p2.Num);
-            continue;
-        }
-
-        ok(wcscmp(szP1, szP2) == 0, "Locale 0x%lX: Mismatching pairs %u:%u / %u:%u '%S' vs. '%S'\n",
-           curLcid, match.p1.Num, match.p1.Idx, match.p2.Num, match.p2.Idx, szP1, szP2);
+        ok(wcscmp(szP1, szP2) == 0,
+           "Locale 0x%04lX, mismatching pairs s%02d:i%u s%02d:i%u, '%S'(l=%Iu) vs. '%S'(l=%Iu)\n",
+           curLcid, match.p1.Num, match.p1.Idx, match.p2.Num, match.p2.Idx, szP1, wcslen(szP1), szP2, wcslen(szP2));
     }
 }
 
@@ -327,7 +325,7 @@ static void TEST_LocaleTests(void)
         mod[m] = LoadLibraryExW(lib[m], NULL, LOAD_LIBRARY_AS_DATAFILE);
         if (!mod[m])
         {
-            trace("Failed to load '%S', error %lu\n", lib[m], GetLastError());
+            ok(FALSE, "Failed to load '%S', error %lu. Will skip related checks.\n", lib[m], GetLastError());
             continue;
         }
 

@@ -10,7 +10,7 @@ BEGIN
     LTEXT "Program sonlandırılıyor... Lütfen bekleyiniz.", IDC_STATIC, 7, 7, 186, 11
     CONTROL "İlerleme", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
     LTEXT "Programı hemen kapatmayı seçerseniz, bütün kaydedilmiş veriyi kaybedeceksiniz. Programdan şimdi çıkmak için ""Şimdi Sonlandır""'a tıklayınız.", IDC_STATIC, 7, 40, 186, 26
-    DEFPUSHBUTTON "&Şimdi Sonlandır", IDC_END_NOW, 150, 71, 43, 17
+    DEFPUSHBUTTON "&Şimdi Sonlandır", IDC_END_NOW, 130, 71, 63, 17
 END
 
 IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
@@ -19,10 +19,10 @@ CAPTION "Programı Sonlandır - "
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "İptal", IDCANCEL, 142, 98, 43, 17
-    PUSHBUTTON "&Şimdi Sonlandır", IDC_END_NOW, 78, 98, 43, 17
+    PUSHBUTTON "&Şimdi Sonlandır", IDC_END_NOW, 74, 98, 63, 17
     LTEXT "Bu program yanıt vermiyor.", IDC_STATIC, 7, 7, 178, 8
     LTEXT "ReactOS'a dönmek ve programın durumunu denetlemek için İptal'e tıklayınız.", IDC_STATIC, 7, 26, 178, 16
-    LTEXT "Programı hemen kapatmayı seçerseniz, tüm saklanmamış veriyi yitireceksiniz. Programdan şimdi çıkmak için ""Şimdi Sonlandır""'a tıklayınız.", IDC_STATIC, 7, 53, 178, 26
+    LTEXT "Programı hemen kapatmayı seçerseniz, tüm saklanmamış veriyi yitireceksiniz. Programdan şimdi çıkmak için ""Şimdi Sonlandır""'a tıklayınız.", IDC_STATIC, 7, 53, 178, 33
 END
 
 

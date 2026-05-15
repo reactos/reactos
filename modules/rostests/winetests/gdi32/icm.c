@@ -27,8 +27,6 @@
 
 #include "wine/test.h"
 
-static const WCHAR displayW[] = {'D','I','S','P','L','A','Y',0};
-
 static void test_GetICMProfileA( HDC dc )
 {
     BOOL ret;
@@ -50,12 +48,12 @@ static void test_GetICMProfileA( HDC dc )
     size = MAX_PATH;
     ret = GetICMProfileA( dc, &size, NULL );
     ok( !ret, "GetICMProfileA succeeded\n" );
-    ok( size > 0, "got %u\n", size );
+    ok( size > 0, "got %lu\n", size );
 
     size = 0;
     ret = GetICMProfileA( dc, &size, NULL );
     ok( !ret, "GetICMProfileA succeeded\n" );
-    ok( size > 0, "got %u\n", size );
+    ok( size > 0, "got %lu\n", size );
 
     size = MAX_PATH;
     ret = GetICMProfileA( NULL, &size, filename );
@@ -69,14 +67,14 @@ static void test_GetICMProfileA( HDC dc )
     ok( !ret, "GetICMProfileA succeeded\n" );
     ok( size, "expected size > 0\n" );
     ok( filename[0] == 0, "Expected filename to be empty\n" );
-    ok( error == ERROR_INSUFFICIENT_BUFFER, "got %d, expected ERROR_INSUFFICIENT_BUFFER\n", error );
+    ok( error == ERROR_INSUFFICIENT_BUFFER, "got %ld, expected ERROR_INSUFFICIENT_BUFFER\n", error );
 
     ret = GetICMProfileA( dc, NULL, filename );
     ok( !ret, "GetICMProfileA succeeded\n" );
 
     size = MAX_PATH;
     ret = GetICMProfileA( dc, &size, filename );
-    ok( ret, "GetICMProfileA failed %d\n", GetLastError() );
+    ok( ret, "GetICMProfileA failed %ld\n", GetLastError() );
 
     trace( "%s\n", filename );
 }
@@ -104,7 +102,7 @@ static void test_GetICMProfileW( HDC dc )
         /* Vista crashes */
         size = MAX_PATH;
         ret = GetICMProfileW( dc, &size, NULL );
-        ok( ret, "GetICMProfileW failed %d\n", GetLastError() );
+        ok( ret, "GetICMProfileW failed %ld\n", GetLastError() );
     }
 
     ret = GetICMProfileW( dc, NULL, filename );
@@ -117,7 +115,7 @@ static void test_GetICMProfileW( HDC dc )
     size = 0;
     ret = GetICMProfileW( dc, &size, NULL );
     ok( !ret, "GetICMProfileW succeeded\n" );
-    ok( size > 0, "got %u\n", size );
+    ok( size > 0, "got %lu\n", size );
 
     size = 0;
     SetLastError(0xdeadbeef);
@@ -125,11 +123,11 @@ static void test_GetICMProfileW( HDC dc )
     error = GetLastError();
     ok( !ret, "GetICMProfileW succeeded\n" );
     ok( size, "expected size > 0\n" );
-    ok( error == ERROR_INSUFFICIENT_BUFFER, "got %d, expected ERROR_INSUFFICIENT_BUFFER\n", error );
+    ok( error == ERROR_INSUFFICIENT_BUFFER, "got %ld, expected ERROR_INSUFFICIENT_BUFFER\n", error );
 
     size = MAX_PATH;
     ret = GetICMProfileW( dc, &size, filename );
-    ok( ret, "GetICMProfileW failed %d\n", GetLastError() );
+    ok( ret, "GetICMProfileW failed %ld\n", GetLastError() );
 }
 
 static void test_SetICMMode( HDC dc )
@@ -147,36 +145,36 @@ static void test_SetICMMode( HDC dc )
 
     SetLastError( 0xdeadbeef );
     ret = SetICMMode( NULL, 0 );
-    ok( !ret, "SetICMMode succeeded (%d)\n", GetLastError() );
+    ok( !ret, "SetICMMode succeeded (%ld)\n", GetLastError() );
 
     ret = SetICMMode( dc, -1 );
-    ok( !ret, "SetICMMode succeeded (%d)\n", GetLastError() );
+    ok( !ret, "SetICMMode succeeded (%ld)\n", GetLastError() );
 
     save = SetICMMode( dc, ICM_QUERY );
-    ok( save == ICM_ON || save == ICM_OFF, "SetICMMode failed (%d)\n", GetLastError() );
+    ok( save == ICM_ON || save == ICM_OFF, "SetICMMode failed (%ld)\n", GetLastError() );
 
     if (save == ICM_ON) knob = ICM_OFF; else knob = ICM_ON;
 
     ret = SetICMMode( dc, knob );
-    todo_wine ok( ret, "SetICMMode failed (%d)\n", GetLastError() );
+    todo_wine ok( ret, "SetICMMode failed (%ld)\n", GetLastError() );
 
     ret = SetICMMode( dc, ICM_QUERY );
-    todo_wine ok( ret == knob, "SetICMMode failed (%d)\n", GetLastError() );
+    todo_wine ok( ret == knob, "SetICMMode failed (%ld)\n", GetLastError() );
 
     ret = SetICMMode( dc, save );
-    ok( ret, "SetICMMode failed (%d)\n", GetLastError() );
+    ok( ret, "SetICMMode failed (%ld)\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
-    dc = CreateDCW( displayW, NULL, NULL, NULL );
+    dc = CreateDCW( L"DISPLAY", NULL, NULL, NULL );
     if ( !dc && ( GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) )
     {
         win_skip( "CreateDCW is not implemented\n" );
         return;
     }
-    ok( dc != NULL, "CreateDCW failed (%d)\n", GetLastError() );
+    ok( dc != NULL, "CreateDCW failed (%ld)\n", GetLastError() );
 
     ret = SetICMMode( dc, ICM_QUERY );
-    ok( ret == ICM_OFF, "SetICMMode failed (%d)\n", GetLastError() );
+    ok( ret == ICM_OFF, "SetICMMode failed (%ld)\n", GetLastError() );
 
     DeleteDC( dc );
 }
@@ -237,31 +235,31 @@ static void test_SetICMProfileA( HDC dc )
 
     len = sizeof(profile);
     ret = GetICMProfileA( dc, &len, profile );
-    ok(ret, "GetICMProfileA failed %u\n", GetLastError());
+    ok(ret, "GetICMProfileA failed %lu\n", GetLastError());
 
     SetLastError( 0xdeadbeef );
     ret = SetICMProfileA( NULL, NULL );
     error = GetLastError();
     ok(!ret, "SetICMProfileA succeeded\n");
     ok(error == ERROR_INVALID_PARAMETER,
-       "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+       "expected ERROR_INVALID_PARAMETER, got %lu\n", error);
 
     SetLastError( 0xdeadbeef );
     ret = SetICMProfileA( NULL, profile );
     error = GetLastError();
     ok(!ret, "SetICMProfileA succeeded\n");
     ok(error == ERROR_INVALID_HANDLE,
-       "expected ERROR_INVALID_HANDLE, got %u\n", error);
+       "expected ERROR_INVALID_HANDLE, got %lu\n", error);
 
     SetLastError( 0xdeadbeef );
     ret = SetICMProfileA( dc, NULL );
     error = GetLastError();
     ok(!ret, "SetICMProfileA succeeded\n");
     ok(error == ERROR_INVALID_PARAMETER,
-       "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+       "expected ERROR_INVALID_PARAMETER, got %lu\n", error);
 
     ret = SetICMProfileA( dc, profile );
-    ok(ret, "SetICMProfileA failed %u\n", GetLastError());
+    ok(ret, "SetICMProfileA failed %lu\n", GetLastError());
 }
 
 static void test_SetICMProfileW( HDC dc )
@@ -278,30 +276,30 @@ static void test_SetICMProfileW( HDC dc )
         return;
     }
 
-    len = sizeof(profile)/sizeof(profile[0]);
+    len = ARRAY_SIZE(profile);
     ret = GetICMProfileW( dc, &len, profile );
-    ok(ret, "GetICMProfileW failed %u\n", GetLastError());
+    ok(ret, "GetICMProfileW failed %lu\n", GetLastError());
 
     SetLastError( 0xdeadbeef );
     ret = SetICMProfileW( NULL, NULL );
     error = GetLastError();
     ok(!ret, "SetICMProfileW succeeded\n");
-    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %lu\n", error);
 
     SetLastError( 0xdeadbeef );
     ret = SetICMProfileW( NULL, profile );
     error = GetLastError();
     ok(!ret, "SetICMProfileW succeeded\n");
-    ok(error == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %u\n", error);
+    ok(error == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %lu\n", error);
 
     SetLastError( 0xdeadbeef );
     ret = SetICMProfileW( dc, NULL );
     error = GetLastError();
     ok(!ret, "SetICMProfileW succeeded\n");
-    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %lu\n", error);
 
     ret = SetICMProfileW( dc, profile );
-    ok(ret, "SetICMProfileW failed %u\n", GetLastError());
+    ok(ret, "SetICMProfileW failed %lu\n", GetLastError());
 }
 
 START_TEST(icm)

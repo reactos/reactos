@@ -2,6 +2,7 @@
  * Implementation of the Active Directory Service Interface
  *
  * Copyright 2005 Detlef Riekenberg
+ * Copyright 2019 Dmitry Timoshkov
  *
  * This file contains only stubs to get the printui.dll up and running
  * activeds.dll is much much more than this
@@ -30,40 +31,26 @@
 #include "winuser.h"
 
 #include "objbase.h"
+#include "initguid.h"
 #include "iads.h"
 #include "adshlp.h"
+#include "adserr.h"
 
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(activeds);
 
 /*****************************************************
- * DllMain
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("(%p, %d, %p)\n",hinstDLL, fdwReason, lpvReserved);
-
-    switch(fdwReason)
-    {
-#ifndef __REACTOS__
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
-#endif
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls( hinstDLL );
-        break;
-    }
-    return TRUE;
-}
-
-/*****************************************************
  * ADsGetObject     [ACTIVEDS.3]
  */
-HRESULT WINAPI ADsGetObject(LPCWSTR lpszPathName, REFIID riid, VOID** ppObject)
+HRESULT WINAPI ADsGetObject(LPCWSTR path, REFIID riid, void **obj)
 {
-    FIXME("(%s)->(%s,%p)!stub\n",debugstr_w(lpszPathName), debugstr_guid(riid), ppObject);
-    return E_NOTIMPL;
+    HRESULT hr;
+
+    hr = ADsOpenObject(path, NULL, NULL, ADS_SECURE_AUTHENTICATION, riid, obj);
+    if (hr != S_OK)
+        hr = ADsOpenObject(path, NULL, NULL, 0, riid, obj);
+    return hr;
 }
 
 /*****************************************************
@@ -89,17 +76,51 @@ HRESULT WINAPI ADsFreeEnumerator(IEnumVARIANT* pEnumVariant)
  */
 HRESULT WINAPI ADsEnumerateNext(IEnumVARIANT* pEnumVariant, ULONG cElements, VARIANT* pvar, ULONG * pcElementsFetched)
 {
-    FIXME("(%p)->(%u, %p, %p)!stub\n",pEnumVariant, cElements, pvar, pcElementsFetched);
+    FIXME("(%p)->(%lu, %p, %p)!stub\n",pEnumVariant, cElements, pvar, pcElementsFetched);
     return E_NOTIMPL;
 }
 
 /*****************************************************
  * ADsBuildVarArrayStr     [ACTIVEDS.7]
  */
-HRESULT WINAPI ADsBuildVarArrayStr(LPWSTR *lppPathNames, DWORD dwPathNames, VARIANT* pvar)
+HRESULT WINAPI ADsBuildVarArrayStr(LPWSTR *str, DWORD count, VARIANT *var)
 {
-    FIXME("(%p, %d, %p)!stub\n",*lppPathNames, dwPathNames, pvar);
-    return E_NOTIMPL;
+    HRESULT hr;
+    SAFEARRAY *sa;
+    LONG idx, end = count;
+
+    TRACE("(%p, %lu, %p)\n", str, count, var);
+
+    if (!var) return E_ADS_BAD_PARAMETER;
+
+    sa = SafeArrayCreateVector(VT_VARIANT, 0, count);
+    if (!sa) return E_OUTOFMEMORY;
+
+    VariantInit(var);
+    for (idx = 0; idx < end; idx++)
+    {
+        VARIANT item;
+
+        V_VT(&item) = VT_BSTR;
+        V_BSTR(&item) = SysAllocString(str[idx]);
+        if (!V_BSTR(&item))
+        {
+            hr = E_OUTOFMEMORY;
+            goto fail;
+        }
+
+        hr = SafeArrayPutElement(sa, &idx, &item);
+        SysFreeString(V_BSTR(&item));
+        if (hr != S_OK) goto fail;
+    }
+
+    V_VT(var) = VT_ARRAY | VT_VARIANT;
+    V_ARRAY(var) = sa;
+    return S_OK;
+
+fail:
+    SafeArrayDestroy(sa);
+    return hr;
 }
 
 /*****************************************************
@@ -107,18 +128,87 @@ HRESULT WINAPI ADsBuildVarArrayStr(LPWSTR *lppPathNames, DWORD dwPathNames, VARI
  */
 HRESULT WINAPI ADsBuildVarArrayInt(LPDWORD lpdwObjectTypes, DWORD dwObjectTypes, VARIANT* pvar)
 {
-    FIXME("(%p, %d, %p)!stub\n",lpdwObjectTypes, dwObjectTypes, pvar);
+    FIXME("(%p, %ld, %p)!stub\n",lpdwObjectTypes, dwObjectTypes, pvar);
     return E_NOTIMPL;
 }
 
 /*****************************************************
  * ADsOpenObject     [ACTIVEDS.9]
  */
-HRESULT WINAPI ADsOpenObject(LPCWSTR lpszPathName, LPCWSTR lpszUserName, LPCWSTR lpszPassword, DWORD dwReserved, REFIID riid, VOID** ppObject)
+HRESULT WINAPI ADsOpenObject(LPCWSTR path, LPCWSTR user, LPCWSTR password, DWORD reserved, REFIID riid, void **obj)
 {
-    FIXME("(%s,%s,%u,%s,%p)!stub\n", debugstr_w(lpszPathName),
-          debugstr_w(lpszUserName), dwReserved, debugstr_guid(riid), ppObject);
-    return E_NOTIMPL;
+    HRESULT hr;
+    HKEY hkey, hprov;
+    WCHAR provider[MAX_PATH], progid[MAX_PATH];
+    DWORD idx = 0;
+
+    TRACE("(%s,%s,%lu,%s,%p)\n", debugstr_w(path), debugstr_w(user), reserved, debugstr_guid(riid), obj);
+
+    if (!path || !riid || !obj)
+        return E_INVALIDARG;
+
+    hr = E_FAIL;
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\ADs\\Providers", 0, KEY_READ, &hkey))
+        return hr;
+
+    for (;;)
+    {
+        if (RegEnumKeyW(hkey, idx++, provider, ARRAY_SIZE(provider)))
+            break;
+
+        TRACE("provider %s\n", debugstr_w(provider));
+
+        if (!wcsnicmp(path, provider, wcslen(provider)) && path[wcslen(provider)] == ':')
+        {
+            LONG size;
+
+            if (RegOpenKeyExW(hkey, provider, 0, KEY_READ, &hprov))
+                break;
+
+            size = ARRAY_SIZE(progid);
+            if (!RegQueryValueW(hprov, NULL, progid, &size))
+            {
+                CLSID clsid;
+
+                if (CLSIDFromProgID(progid, &clsid) == S_OK)
+                {
+                    IADsOpenDSObject *adsopen;
+                    IDispatch *disp;
+
+                    TRACE("ns %s => clsid %s\n", debugstr_w(progid), wine_dbgstr_guid(&clsid));
+                    if (CoCreateInstance(&clsid, 0, CLSCTX_INPROC_SERVER, &IID_IADsOpenDSObject, (void **)&adsopen) == S_OK)
+                    {
+                        BSTR bpath, buser, bpassword;
+
+                        bpath = SysAllocString(path);
+                        buser = SysAllocString(user);
+                        bpassword = SysAllocString(password);
+
+                        hr = IADsOpenDSObject_OpenDSObject(adsopen, bpath, buser, bpassword, reserved, &disp);
+                        if (hr == S_OK)
+                        {
+                            hr = IDispatch_QueryInterface(disp, riid, obj);
+                            IDispatch_Release(disp);
+                        }
+
+                        SysFreeString(bpath);
+                        SysFreeString(buser);
+                        SysFreeString(bpassword);
+
+                        IADsOpenDSObject_Release(adsopen);
+                    }
+                }
+            }
+
+            RegCloseKey(hprov);
+            break;
+        }
+    }
+
+    RegCloseKey(hkey);
+
+    return hr;
 }
 
 /*****************************************************
@@ -126,7 +216,7 @@ HRESULT WINAPI ADsOpenObject(LPCWSTR lpszPathName, LPCWSTR lpszUserName, LPCWSTR
  */
 VOID WINAPI ADsSetLastError(DWORD dwErr, LPWSTR pszError, LPWSTR pszProvider)
 {
-    FIXME("(%d,%p,%p)!stub\n", dwErr, pszError, pszProvider);
+    FIXME("(%ld,%p,%p)!stub\n", dwErr, pszError, pszProvider);
 }
 
 /*****************************************************
@@ -134,7 +224,7 @@ VOID WINAPI ADsSetLastError(DWORD dwErr, LPWSTR pszError, LPWSTR pszProvider)
  */
 HRESULT WINAPI ADsGetLastError(LPDWORD perror, LPWSTR errorbuf, DWORD errorbuflen, LPWSTR namebuf, DWORD namebuflen)
 {
-    FIXME("(%p,%p,%d,%p,%d)!stub\n", perror, errorbuf, errorbuflen, namebuf, namebuflen);
+    FIXME("(%p,%p,%ld,%p,%ld)!stub\n", perror, errorbuf, errorbuflen, namebuf, namebuflen);
     return E_NOTIMPL;
 }
 
@@ -143,8 +233,7 @@ HRESULT WINAPI ADsGetLastError(LPDWORD perror, LPWSTR errorbuf, DWORD errorbufle
  */
 LPVOID WINAPI AllocADsMem(DWORD cb)
 {
-    FIXME("(%d)!stub\n",cb);
-    return NULL;
+    return malloc(cb);
 }
 
 /*****************************************************
@@ -152,8 +241,8 @@ LPVOID WINAPI AllocADsMem(DWORD cb)
  */
 BOOL WINAPI FreeADsMem(LPVOID pMem)
 {
-    FIXME("(%p)!stub\n",pMem);
-    return FALSE;
+    free(pMem);
+    return TRUE;
 }
 
 /*****************************************************
@@ -161,8 +250,7 @@ BOOL WINAPI FreeADsMem(LPVOID pMem)
  */
 LPVOID WINAPI ReallocADsMem(LPVOID pOldMem, DWORD cbOld, DWORD cbNew)
 {
-    FIXME("(%p,%d,%d)!stub\n", pOldMem, cbOld, cbNew);
-    return NULL;
+    return realloc(pOldMem, cbNew);
 }
 
 /*****************************************************
@@ -170,8 +258,8 @@ LPVOID WINAPI ReallocADsMem(LPVOID pOldMem, DWORD cbOld, DWORD cbNew)
  */
 LPWSTR WINAPI AllocADsStr(LPWSTR pStr)
 {
-    FIXME("(%p)!stub\n",pStr);
-    return NULL;
+    TRACE("(%p)\n", pStr);
+    return wcsdup(pStr);
 }
 
 /*****************************************************
@@ -179,8 +267,9 @@ LPWSTR WINAPI AllocADsStr(LPWSTR pStr)
  */
 BOOL WINAPI FreeADsStr(LPWSTR pStr)
 {
-    FIXME("(%p)!stub\n",pStr);
-    return FALSE;
+    TRACE("(%p)\n", pStr);
+
+    return FreeADsMem(pStr);
 }
 
 /*****************************************************
@@ -197,6 +286,6 @@ BOOL WINAPI ReallocADsStr(LPWSTR *ppStr, LPWSTR pStr)
  */
 HRESULT WINAPI ADsEncodeBinaryData(PBYTE pbSrcData, DWORD dwSrcLen, LPWSTR *ppszDestData)
 {
-    FIXME("(%p,%d,%p)!stub\n", pbSrcData, dwSrcLen, *ppszDestData);
+    FIXME("(%p,%ld,%p)!stub\n", pbSrcData, dwSrcLen, *ppszDestData);
     return E_NOTIMPL;
 }
