@@ -96,11 +96,13 @@ WriteFile(IN HANDLE hFile,
         }
 
         /*
-         * lpNumberOfBytesWritten must not be NULL here, in fact Win doesn't
-         * check that case either and crashes (only after the operation
-         * completed).
+         * The new version of Windows checks lpNumberOfBytesWritten to avoid crashes,
+         * and here we also perform the check as an improvement.
          */
-        *lpNumberOfBytesWritten = Iosb.Information;
+        if (lpNumberOfBytesWritten != NULL)
+        {
+            *lpNumberOfBytesWritten = Iosb.Information;
+        }
 
         if (!NT_SUCCESS(Status))
         {
@@ -218,11 +220,13 @@ ReadFile(IN HANDLE hFile,
         }
 
         /*
-         * lpNumberOfBytesRead must not be NULL here, in fact Win doesn't
-         * check that case either and crashes (only after the operation
-         * completed).
+         * The new version of Windows checks lpNumberOfBytesRead to avoid crashes,
+         * and here we also perform the check as an improvement.
          */
-        *lpNumberOfBytesRead = Iosb.Information;
+        if (lpNumberOfBytesRead != NULL)
+        {
+            *lpNumberOfBytesRead = Iosb.Information;
+        }
 
         if (!NT_SUCCESS(Status))
         {
