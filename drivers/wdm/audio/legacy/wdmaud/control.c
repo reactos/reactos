@@ -253,12 +253,21 @@ WdmAudGetDeviceInterface(
     {
         /* buffer too small */
         DeviceInfo->u.Interface.DeviceInterfaceStringSize = Length;
+        FreeItem(Device);
         return SetIrpIoStatus(Irp, STATUS_BUFFER_OVERFLOW, sizeof(WDMAUD_DEVICE_INFO));
     }
     else
     {
-        //FIXME SEH
-        RtlMoveMemory(DeviceInfo->u.Interface.DeviceInterfaceString, Device, Length);
+        __try
+        {
+            ProbeForWrite(DeviceInfo->u.Interface.DeviceInterfaceString, Length, sizeof(WCHAR));
+            RtlMoveMemory(DeviceInfo->u.Interface.DeviceInterfaceString, Device, Length);
+        }
+        __except(EXCEPTION_EXECUTE_HANDLER)
+        {
+            FreeItem(Device);
+            return SetIrpIoStatus(Irp, GetExceptionCode(), 0);
+        }
     }
 
     FreeItem(Device);
