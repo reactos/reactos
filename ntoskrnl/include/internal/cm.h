@@ -337,7 +337,7 @@ typedef struct _CM_NOTIFY_BLOCK
 //
 // Post Block
 //
-typedef struct _CM_POST_BLOCK
+typedef struct _CMP_POST_BLOCK
 {
     LIST_ENTRY NotifyList; /* link to CM_NOTIFY_BLOCK->PostList */
     BOOLEAN IsMasterPostBlock;
