@@ -148,7 +148,7 @@ BEGIN
     LTEXT "Director de destinație:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     AUTOCHECKBOX "Confirm că toate setările de instalare sunt corecte. Recunosc, de asemenea, că\nReactOS este un software de calitate alfa și se poate deteriora pe computerul meu sau îmi poate deteriora datele.",
-        IDC_CONFIRM_INSTALL, 7, 104, 310, 18, BS_MULTILINE
+        IDC_CONFIRM_INSTALL, 7, 104, 310, 18, BS_MULTILINE | WS_TABSTOP
     LTEXT "Vă rugăm să confirmați că toate setările de instalare sunt corecte,\nfaceți clic pe Instalare pentru a începe procesul de instalare.", IDC_STATIC, 7, 124, 303, 18
 END
 

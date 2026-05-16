@@ -146,7 +146,7 @@ BEGIN
     LTEXT "Hedef dizin:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     AUTOCHECKBOX "Bütün kurulum ayarlarının doğru olduğunu onaylıyorum. Ayrıca, ReactOS'un alfa durumunda yazılım olduğunu ve bilgisayarımı bozacağını veya verilerimi bozacağını kabul ediyorum.",
-        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
+        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE | WS_TABSTOP
     LTEXT "Lütfen bütün kurulum ayarlarının doğru olduğundan emin olunuz,\nardından kurulum işlemine başlamak için Kur'a tıklayınız.", IDC_STATIC, 7, 124, 303, 18
 END
 

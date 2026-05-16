@@ -150,7 +150,7 @@ BEGIN
     LTEXT "Katalog docelowy:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     AUTOCHECKBOX "Potwierdzam, że wszystkie ustawienia instalacji są poprawne. Przyjmuję równierz, że system ReactOS to oprogramowanie w fazie Alpha i może w każdej chwili przestać działać lub nieodwracalnie uszkodzić moje dane na dysku.",
-        IDC_CONFIRM_INSTALL, 7, 100, 303, 24, BS_MULTILINE
+        IDC_CONFIRM_INSTALL, 7, 100, 303, 24, BS_MULTILINE | WS_TABSTOP
     LTEXT "Potwierdź, że wszystkie ustawienia instalacji są poprawne, a następnie kliknij na Instaluj, aby rozpocząć proces instalacji.", IDC_STATIC, 7, 127, 303, 18
 END
 
