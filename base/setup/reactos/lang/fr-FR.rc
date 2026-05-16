@@ -139,7 +139,7 @@ BEGIN
     LTEXT "Dossier de destination :", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     AUTOCHECKBOX "Je confirme que tous les paramètres sont corrects. Je reconnais également que\nReactOS est un logiciel dans un état de qualité Alpha et peut endommager mon ordinateur ou corrompre mes données.",
-        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
+        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE | WS_TABSTOP
     LTEXT "Merci de confirmer que tous les paramètres d'installation sont corrects,\npuis appuyer sur Installer pour démarrer le processus d'installation.", IDC_STATIC, 7, 124, 303, 18
 END
 
