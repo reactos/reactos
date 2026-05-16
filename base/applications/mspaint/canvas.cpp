@@ -11,82 +11,11 @@ CCanvasWindow canvasWindow;
 
 /* FUNCTIONS ********************************************************/
 
-static HCURSOR CreateRubberCursor(INT diameter, COLORREF bgColor)
+HCURSOR
+CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber)
 {
+    const INT diameter = 2 * radius;
     if (diameter <= 2)
-    {
-        HCURSOR hCursor = ::LoadCursor(NULL, IDC_CROSS);
-        return hCursor ? CopyCursor(hCursor) : NULL;
-    }
-
-    const INT width = diameter, height = diameter;
-    const DWORD hotX = width / 2, hotY = height / 2;
-
-    HDC hdcScreen = ::GetDC(NULL);
-    if (!hdcScreen)
-        return NULL;
-    HDC hdcMem = ::CreateCompatibleDC(hdcScreen);
-    if (!hdcMem)
-    {
-        ::ReleaseDC(NULL, hdcScreen);
-        return NULL;
-    }
-
-    RECT rc = { 0, 0, width, height };
-
-    // Create the AND mask bitmap. This must be monochrome (1bpp):
-    // white bits are transparent, black bits are opaque.
-    HBITMAP hbmMask = ::CreateBitmap(width, height, 1, 1, NULL);
-    if (hbmMask)
-    {
-        HBITMAP hbmOld = (HBITMAP)::SelectObject(hdcMem, hbmMask);
-        ::FillRect(hdcMem, &rc, (HBRUSH)::GetStockObject(BLACK_BRUSH)); // Entire opaque
-        ::SelectObject(hdcMem, hbmOld);
-    }
-
-    // Create the color (XOR) bitmap
-    HBITMAP hbmColor = ::CreateCompatibleBitmap(hdcScreen, width, height);
-    if (hbmColor)
-    {
-        HBITMAP hbmOld = (HBITMAP)::SelectObject(hdcMem, hbmColor);
-
-        HBRUSH hBrush = CreateSolidBrush(bgColor);
-        if (hBrush)
-        {
-            INT sum = GetRValue(bgColor) + GetGValue(bgColor) + GetBValue(bgColor);
-            COLORREF rgbPenColor = (sum >= 255 / 3 / 2) ? RGB(0, 0, 0) : RGB(255, 255, 255);
-            HPEN hPen = CreatePen(PS_SOLID, 1, rgbPenColor);
-            if (hPen)
-            {
-                HGDIOBJ hbrOld = ::SelectObject(hdcMem, hBrush);
-                HGDIOBJ hPenOld = ::SelectObject(hdcMem, hPen);
-                ::Rectangle(hdcMem, rc.left, rc.top, rc.right, rc.bottom);
-                ::SelectObject(hdcMem, hPenOld);
-                ::SelectObject(hdcMem, hbrOld);
-
-                ::DeleteObject(hPen);
-            }
-            ::DeleteObject(hBrush);
-        }
-
-        ::SelectObject(hdcMem, hbmOld);
-    }
-
-    ::ReleaseDC(NULL, hdcScreen);
-    ::DeleteDC(hdcMem);
-
-    ICONINFO ii = { FALSE, hotX, hotY, hbmMask, hbmColor };
-    HCURSOR hCursor = (HCURSOR)::CreateIconIndirect(&ii);
-
-    ::DeleteObject(hbmMask);
-    ::DeleteObject(hbmColor);
-
-    return hCursor;
-}
-
-static HCURSOR CreateBrushCursor(BrushStyle style, INT diameter, COLORREF fgColor)
-{
-    if (diameter <= 1)
     {
         HCURSOR hCursor = ::LoadCursor(NULL, IDC_CROSS);
         return hCursor ? CopyCursor(hCursor) : NULL;
@@ -118,19 +47,28 @@ static HCURSOR CreateBrushCursor(BrushStyle style, INT diameter, COLORREF fgColo
         // Fill with white brush
         ::FillRect(hdcMem, &rc, (HBRUSH)::GetStockObject(WHITE_BRUSH));
 
-        // Draw aim with white pen
-        ::SelectObject(hdcMem, (HPEN)::GetStockObject(WHITE_PEN));
-        ::MoveToEx(hdcMem, 0, hotY, NULL);
-        ::LineTo(hdcMem, aim2, hotY);
-        ::MoveToEx(hdcMem, width - aim2, hotY, NULL);
-        ::LineTo(hdcMem, width, hotY);
-        ::MoveToEx(hdcMem, hotX, 0, NULL);
-        ::LineTo(hdcMem, hotX, aim2);
-        ::MoveToEx(hdcMem, hotX, height - aim2, NULL);
-        ::LineTo(hdcMem, hotX, height);
+        if (!is_rubber)
+        {
+            // Draw aim with white pen
+            ::SelectObject(hdcMem, (HPEN)::GetStockObject(WHITE_PEN));
+            ::MoveToEx(hdcMem, 0, hotY, NULL);
+            ::LineTo(hdcMem, aim2, hotY);
+            ::MoveToEx(hdcMem, width - aim2, hotY, NULL);
+            ::LineTo(hdcMem, width, hotY);
+            ::MoveToEx(hdcMem, hotX, 0, NULL);
+            ::LineTo(hdcMem, hotX, aim2);
+            ::MoveToEx(hdcMem, hotX, height - aim2, NULL);
+            ::LineTo(hdcMem, hotX, height);
+        }
 
-        // Draw brush by black
-        Brush(hdcMem, hotX, hotY, hotX, hotY, RGB(0, 0, 0), style, diameter);
+        // Draw brush or erase by black
+        if (is_rubber)
+            Erase(hdcMem, hotX, hotY, hotX, hotY, RGB(0, 0, 0), radius + 1);
+        else
+            Brush(hdcMem, hotX, hotY, hotX, hotY, RGB(0, 0, 0), style, diameter);
+
+        if (is_rubber)
+            InflateRect(&rc, -1, -1);
 
         ::SelectObject(hdcMem, hbmOld);
     }
@@ -144,19 +82,32 @@ static HCURSOR CreateBrushCursor(BrushStyle style, INT diameter, COLORREF fgColo
         // Fill with black brush
         ::FillRect(hdcMem, &rc, (HBRUSH)::GetStockObject(BLACK_BRUSH));
 
-        // Draw aim with white pen
-        ::SelectObject(hdcMem, (HPEN)::GetStockObject(WHITE_PEN));
-        ::MoveToEx(hdcMem, 0, hotY, NULL);
-        ::LineTo(hdcMem, aim2, hotY);
-        ::MoveToEx(hdcMem, width - aim2, hotY, NULL);
-        ::LineTo(hdcMem, width, hotY);
-        ::MoveToEx(hdcMem, hotX, 0, NULL);
-        ::LineTo(hdcMem, hotX, aim2);
-        ::MoveToEx(hdcMem, hotX, height - aim2, NULL);
-        ::LineTo(hdcMem, hotX, height);
+        if (is_rubber)
+        {
+            // Draw for rubber border
+            INT avg = (GetRValue(color) + GetGValue(color) + GetBValue(color)) / 3;
+            COLORREF color2 = (avg > 255 / 2) ? RGB(0, 0, 0) : RGB(255, 255, 255);
+            Erase(hdcMem, hotX, hotY, hotX, hotY, color2, radius + 1);
+        }
+        else
+        {
+            // Draw aim with white pen
+            ::SelectObject(hdcMem, (HPEN)::GetStockObject(WHITE_PEN));
+            ::MoveToEx(hdcMem, 0, hotY, NULL);
+            ::LineTo(hdcMem, aim2, hotY);
+            ::MoveToEx(hdcMem, width - aim2, hotY, NULL);
+            ::LineTo(hdcMem, width, hotY);
+            ::MoveToEx(hdcMem, hotX, 0, NULL);
+            ::LineTo(hdcMem, hotX, aim2);
+            ::MoveToEx(hdcMem, hotX, height - aim2, NULL);
+            ::LineTo(hdcMem, hotX, height);
+        }
 
-        // Draw brush with foreground color
-        Brush(hdcMem, hotX, hotY, hotX, hotY, fgColor, style, diameter);
+        // Draw brush or erase with color
+        if (is_rubber)
+            Erase(hdcMem, hotX, hotY, hotX, hotY, color, radius);
+        else
+            Brush(hdcMem, hotX, hotY, hotX, hotY, color, style, diameter);
 
         ::SelectObject(hdcMem, hbmOld);
     }
@@ -173,11 +124,42 @@ static HCURSOR CreateBrushCursor(BrushStyle style, INT diameter, COLORREF fgColo
     return hCursor;
 }
 
+CStyledCursor::CStyledCursor()
+    : m_hCursor(NULL)
+    , m_style(BrushStyleRound)
+    , m_radius(0)
+    , m_color(CLR_INVALID)
+    , m_is_rubber(FALSE)
+{
+}
+
+CStyledCursor::~CStyledCursor()
+{
+    if (m_hCursor)
+        ::DestroyCursor(m_hCursor);
+}
+
+void CStyledCursor::SetStyle(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber)
+{
+    if (m_hCursor && m_style == style && m_radius == radius && m_color == color &&
+        m_is_rubber == is_rubber)
+    {
+        return;
+    }
+
+    if (m_hCursor)
+        DestroyCursor(m_hCursor);
+
+    m_hCursor = CreateStyledCursor(style, radius, color, is_rubber);
+    m_style = style;
+    m_radius = radius;
+    m_color = color;
+    m_is_rubber = is_rubber;
+}
+
 CCanvasWindow::CCanvasWindow()
     : m_drawing(FALSE)
     , m_hitCanvasSizeBox(HIT_NONE)
-    , m_hBrushCursor(NULL)
-    , m_hRubberCursor(NULL)
     , m_ptOrig { -1, -1 }
 {
     m_rcResizing.SetRectEmpty();
@@ -185,10 +167,6 @@ CCanvasWindow::CCanvasWindow()
 
 CCanvasWindow::~CCanvasWindow()
 {
-    if (m_hBrushCursor)
-        DestroyCursor(m_hBrushCursor);
-    if (m_hRubberCursor)
-        DestroyCursor(m_hRubberCursor);
 }
 
 RECT CCanvasWindow::GetBaseRect()
@@ -811,42 +789,17 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
                 break;
             case TOOL_RUBBER:
             {
-                // Cached for speed
-                static INT s_rubberRadius = -1;
-                static COLORREF s_bgColor;
-                INT rubberRadius = toolsModel.GetRubberRadius();
-                COLORREF bgColor = paletteModel.GetBgColor();
-                if (!m_hRubberCursor || s_rubberRadius != rubberRadius || s_bgColor != bgColor)
-                {
-                    if (m_hRubberCursor)
-                        DestroyCursor(m_hRubberCursor);
-                    m_hRubberCursor = CreateRubberCursor(2 * rubberRadius, bgColor);
-                    s_rubberRadius = rubberRadius;
-                    s_bgColor = bgColor;
-                }
+                m_hRubberCursor.SetStyle(BrushStyleSquare, toolsModel.GetRubberRadius(),
+                                         paletteModel.GetBgColor(), TRUE);
                 if (m_hRubberCursor)
                     ::SetCursor(m_hRubberCursor);
                 break;
             }
             case TOOL_BRUSH:
             {
-                // Cached for speed
-                static INT s_brushWidth = -1;
-                static BrushStyle s_brushStyle;
-                static COLORREF s_fgColor;
-                BrushStyle brushStyle = toolsModel.GetBrushStyle();
-                INT brushWidth = toolsModel.GetBrushWidth();
-                COLORREF fgColor = paletteModel.GetFgColor();
-                if (!m_hBrushCursor || s_brushWidth != brushWidth || s_brushStyle != brushStyle ||
-                    s_fgColor != fgColor)
-                {
-                    if (m_hBrushCursor)
-                        DestroyCursor(m_hBrushCursor);
-                    m_hBrushCursor = CreateBrushCursor(brushStyle, brushWidth, fgColor);
-                    s_brushWidth = brushWidth;
-                    s_brushStyle = brushStyle;
-                    s_fgColor = fgColor;
-                }
+                m_hBrushCursor.SetStyle(toolsModel.GetBrushStyle(),
+                                        toolsModel.GetBrushWidth() / 2,
+                                        paletteModel.GetFgColor(), FALSE);
                 if (m_hBrushCursor)
                     ::SetCursor(m_hBrushCursor);
                 break;

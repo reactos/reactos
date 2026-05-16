@@ -28,14 +28,6 @@ enum TOOLTYPE
     TOOL_MAX = TOOL_RRECT,
 };
 
-enum BrushStyle
-{
-    BrushStyleRound,
-    BrushStyleSquare,
-    BrushStyleForeSlash,
-    BrushStyleBackSlash,
-};
-
 /* CLASSES **********************************************************/
 
 struct ToolBase

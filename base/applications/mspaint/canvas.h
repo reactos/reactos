@@ -7,6 +7,25 @@
 
 #pragma once
 
+class CStyledCursor
+{
+public:
+    CStyledCursor();
+    ~CStyledCursor();
+
+    void SetStyle(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber);
+    operator HCURSOR() const { return m_hCursor; }
+
+protected:
+    HCURSOR m_hCursor;
+    BrushStyle m_style;
+    INT m_radius;
+    COLORREF m_color;
+    BOOL m_is_rubber;
+
+    static HCURSOR CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber);
+};
+
 class CCanvasWindow : public CWindowImpl<CCanvasWindow>
 {
 public:
@@ -56,8 +75,8 @@ public:
 
 protected:
     HITTEST m_hitCanvasSizeBox;
-    HCURSOR m_hBrushCursor;
-    HCURSOR m_hRubberCursor;
+    CStyledCursor m_hBrushCursor;
+    CStyledCursor m_hRubberCursor;
     POINT m_ptOrig; // The origin of drag start
     CRect m_rcResizing; // Resizing rectagle
 

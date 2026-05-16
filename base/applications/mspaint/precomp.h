@@ -66,6 +66,14 @@ enum HITTEST // hit
     HIT_INNER,
 };
 
+enum BrushStyle
+{
+    BrushStyleRound,
+    BrushStyleSquare,
+    BrushStyleForeSlash,
+    BrushStyleBackSlash,
+};
+
 /* COMMON FUNCTIONS *************************************************/
 
 void ShowOutOfMemory(void);
