@@ -51,19 +51,23 @@ static HCURSOR CreateRubberCursor(INT diameter, COLORREF bgColor)
         HBITMAP hbmOld = (HBITMAP)::SelectObject(hdcMem, hbmColor);
 
         HBRUSH hBrush = CreateSolidBrush(bgColor);
-        INT sum = GetRValue(bgColor) + GetGValue(bgColor) + GetBValue(bgColor);
-        COLORREF rgbPenColor = (sum >= 255 / 3 / 2) ? RGB(0, 0, 0) : RGB(255, 255, 255);
+        if (hBrush)
+        {
+            INT sum = GetRValue(bgColor) + GetGValue(bgColor) + GetBValue(bgColor);
+            COLORREF rgbPenColor = (sum >= 255 / 3 / 2) ? RGB(0, 0, 0) : RGB(255, 255, 255);
+            HPEN hPen = CreatePen(PS_SOLID, 1, rgbPenColor);
+            if (hPen)
+            {
+                HGDIOBJ hbrOld = ::SelectObject(hdcMem, hBrush);
+                HGDIOBJ hPenOld = ::SelectObject(hdcMem, hPen);
+                ::Rectangle(hdcMem, rc.left, rc.top, rc.right, rc.bottom);
+                ::SelectObject(hdcMem, hPenOld);
+                ::SelectObject(hdcMem, hbrOld);
 
-        HPEN hPen = CreatePen(PS_SOLID, 1, rgbPenColor);
-
-        HGDIOBJ hbrOld = ::SelectObject(hdcMem, hBrush);
-        HGDIOBJ hPenOld = ::SelectObject(hdcMem, hPen);
-        ::Rectangle(hdcMem, rc.left, rc.top, rc.right, rc.bottom);
-        ::SelectObject(hdcMem, hPenOld);
-        ::SelectObject(hdcMem, hbrOld);
-
-        ::DeleteObject(hPen);
-        ::DeleteObject(hBrush);
+                ::DeleteObject(hPen);
+            }
+            ::DeleteObject(hBrush);
+        }
 
         ::SelectObject(hdcMem, hbmOld);
     }
