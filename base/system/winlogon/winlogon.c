@@ -54,12 +54,6 @@ StartServicesManager(VOID)
     /* Start the service control manager (services.exe) */
     ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
     StartupInfo.cb = sizeof(StartupInfo);
-    StartupInfo.lpReserved = NULL;
-    StartupInfo.lpDesktop = NULL;
-    StartupInfo.lpTitle = NULL;
-    StartupInfo.dwFlags = 0;
-    StartupInfo.cbReserved2 = 0;
-    StartupInfo.lpReserved2 = 0;
 
     TRACE("WL: Creating new process - %S\n", ServiceString);
 
@@ -102,12 +96,6 @@ StartLsass(VOID)
     /* Start the local security authority subsystem (lsass.exe) */
     ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
     StartupInfo.cb = sizeof(StartupInfo);
-    StartupInfo.lpReserved = NULL;
-    StartupInfo.lpDesktop = NULL;
-    StartupInfo.lpTitle = NULL;
-    StartupInfo.dwFlags = 0;
-    StartupInfo.cbReserved2 = 0;
-    StartupInfo.lpReserved2 = 0;
 
     TRACE("WL: Creating new process - %S\n", ServiceString);
 
