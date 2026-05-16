@@ -11,9 +11,158 @@ CCanvasWindow canvasWindow;
 
 /* FUNCTIONS ********************************************************/
 
+static HCURSOR CreateRubberCursor(INT diameter)
+{
+    if (diameter <= 2)
+    {
+        HCURSOR hCursor = ::LoadCursor(NULL, IDC_CROSS);
+        return hCursor ? CopyCursor(hCursor) : NULL;
+    }
+
+    const INT width = diameter, height = diameter;
+    const DWORD hotX = width / 2, hotY = height / 2;
+
+    HDC hdcScreen = ::GetDC(NULL);
+    if (!hdcScreen)
+        return NULL;
+    HDC hdcMem = ::CreateCompatibleDC(hdcScreen);
+    if (!hdcMem)
+    {
+        ::ReleaseDC(NULL, hdcScreen);
+        return NULL;
+    }
+
+    RECT rc = { 0, 0, width, height };
+
+    // Create the AND mask bitmap. This must be monochrome (1bpp):
+    // white bits are transparent, black bits are opaque.
+    HBITMAP hbmMask = ::CreateBitmap(width, height, 1, 1, NULL);
+    if (hbmMask)
+    {
+        HBITMAP hbmOld = (HBITMAP)::SelectObject(hdcMem, hbmMask);
+        ::FillRect(hdcMem, &rc, (HBRUSH)::GetStockObject(BLACK_BRUSH)); // Entire opaque
+        ::SelectObject(hdcMem, hbmOld);
+    }
+
+    // Create the color (XOR) bitmap
+    HBITMAP hbmColor = ::CreateCompatibleBitmap(hdcScreen, width, height);
+    if (hbmColor)
+    {
+        HBITMAP hbmOld = (HBITMAP)::SelectObject(hdcMem, hbmColor);
+
+        ::SelectObject(hdcMem, (HBRUSH)::GetStockObject(WHITE_BRUSH));
+        ::SelectObject(hdcMem, (HPEN)::GetStockObject(BLACK_PEN));
+        ::Rectangle(hdcMem, rc.left, rc.top, rc.right, rc.bottom);
+
+        ::SelectObject(hdcMem, hbmOld);
+    }
+
+    ::ReleaseDC(NULL, hdcScreen);
+    ::DeleteDC(hdcMem);
+
+    ICONINFO ii = { FALSE, hotX, hotY, hbmMask, hbmColor };
+    HCURSOR hCursor = (HCURSOR)::CreateIconIndirect(&ii);
+
+    ::DeleteObject(hbmMask);
+    ::DeleteObject(hbmColor);
+
+    return hCursor;
+}
+
+static HCURSOR CreateBrushCursor(BrushStyle style, INT diameter, COLORREF fgColor)
+{
+    if (diameter <= 1)
+    {
+        HCURSOR hCursor = ::LoadCursor(NULL, IDC_CROSS);
+        return hCursor ? CopyCursor(hCursor) : NULL;
+    }
+
+    const INT aim1 = 6, aim2 = aim1 - 2;
+    const INT width = diameter + 2 * aim1, height = diameter + 2 * aim1;
+    const DWORD hotX = width / 2, hotY = height / 2;
+
+    HDC hdcScreen = ::GetDC(NULL);
+    if (!hdcScreen)
+        return NULL;
+    HDC hdcMem = ::CreateCompatibleDC(hdcScreen);
+    if (!hdcMem)
+    {
+        ::ReleaseDC(NULL, hdcScreen);
+        return NULL;
+    }
+
+    RECT rc = { 0, 0, width, height };
+
+    // Create the AND mask bitmap. This must be monochrome (1bpp):
+    // white bits are transparent, black bits are opaque.
+    HBITMAP hbmMask = ::CreateBitmap(width, height, 1, 1, NULL);
+    if (hbmMask)
+    {
+        HBITMAP hbmOld = (HBITMAP)::SelectObject(hdcMem, hbmMask);
+
+        // Fill with white brush
+        ::FillRect(hdcMem, &rc, (HBRUSH)::GetStockObject(WHITE_BRUSH));
+
+        // Draw aim with white pen
+        ::SelectObject(hdcMem, (HPEN)::GetStockObject(WHITE_PEN));
+        ::MoveToEx(hdcMem, 0, hotY, NULL);
+        ::LineTo(hdcMem, aim2, hotY);
+        ::MoveToEx(hdcMem, width - aim2, hotY, NULL);
+        ::LineTo(hdcMem, width, hotY);
+        ::MoveToEx(hdcMem, hotX, 0, NULL);
+        ::LineTo(hdcMem, hotX, aim2);
+        ::MoveToEx(hdcMem, hotX, height - aim2, NULL);
+        ::LineTo(hdcMem, hotX, height);
+
+        // Draw brush by black
+        Brush(hdcMem, hotX, hotY, hotX, hotY, RGB(0, 0, 0), style, diameter);
+
+        ::SelectObject(hdcMem, hbmOld);
+    }
+
+    // Create the color (XOR) bitmap
+    HBITMAP hbmColor = ::CreateCompatibleBitmap(hdcScreen, width, height);
+    if (hbmColor)
+    {
+        HBITMAP hbmOld = (HBITMAP)::SelectObject(hdcMem, hbmColor);
+
+        // Fill with black brush
+        ::FillRect(hdcMem, &rc, (HBRUSH)::GetStockObject(BLACK_BRUSH));
+
+        // Draw aim with white pen
+        ::SelectObject(hdcMem, (HPEN)::GetStockObject(WHITE_PEN));
+        ::MoveToEx(hdcMem, 0, hotY, NULL);
+        ::LineTo(hdcMem, aim2, hotY);
+        ::MoveToEx(hdcMem, width - aim2, hotY, NULL);
+        ::LineTo(hdcMem, width, hotY);
+        ::MoveToEx(hdcMem, hotX, 0, NULL);
+        ::LineTo(hdcMem, hotX, aim2);
+        ::MoveToEx(hdcMem, hotX, height - aim2, NULL);
+        ::LineTo(hdcMem, hotX, height);
+
+        // Draw brush with foreground color
+        Brush(hdcMem, hotX, hotY, hotX, hotY, fgColor, style, diameter);
+
+        ::SelectObject(hdcMem, hbmOld);
+    }
+
+    ::ReleaseDC(NULL, hdcScreen);
+    ::DeleteDC(hdcMem);
+
+    ICONINFO ii = { FALSE, hotX, hotY, hbmMask, hbmColor };
+    HCURSOR hCursor = (HCURSOR)::CreateIconIndirect(&ii);
+
+    ::DeleteObject(hbmMask);
+    ::DeleteObject(hbmColor);
+
+    return hCursor;
+}
+
 CCanvasWindow::CCanvasWindow()
     : m_drawing(FALSE)
     , m_hitCanvasSizeBox(HIT_NONE)
+    , m_hBrushCursor(NULL)
+    , m_hRubberCursor(NULL)
     , m_ptOrig { -1, -1 }
 {
     m_rcResizing.SetRectEmpty();
@@ -21,6 +170,10 @@ CCanvasWindow::CCanvasWindow()
 
 CCanvasWindow::~CCanvasWindow()
 {
+    if (m_hBrushCursor)
+        DestroyCursor(m_hBrushCursor);
+    if (m_hRubberCursor)
+        DestroyCursor(m_hRubberCursor);
 }
 
 RECT CCanvasWindow::GetBaseRect()
@@ -641,6 +794,45 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             case TOOL_AIRBRUSH:
                 ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_AIRBRUSH)));
                 break;
+            case TOOL_RUBBER:
+            {
+                // Cached for speed
+                static INT s_rubberRadius = -1;
+                INT rubberRadius = toolsModel.GetRubberRadius();
+                if (!m_hRubberCursor || s_rubberRadius != rubberRadius)
+                {
+                    if (m_hRubberCursor)
+                        DestroyCursor(m_hRubberCursor);
+                    m_hRubberCursor = CreateRubberCursor(2 * rubberRadius);
+                    s_rubberRadius = rubberRadius;
+                }
+                if (m_hRubberCursor)
+                    ::SetCursor(m_hRubberCursor);
+                break;
+            }
+            case TOOL_BRUSH:
+            {
+                // Cached for speed
+                static INT s_brushWidth = -1;
+                static BrushStyle s_brushStyle;
+                static COLORREF s_fgColor;
+                BrushStyle brushStyle = toolsModel.GetBrushStyle();
+                INT brushWidth = toolsModel.GetBrushWidth();
+                COLORREF fgColor = paletteModel.GetFgColor();
+                if (!m_hBrushCursor || s_brushWidth != brushWidth || s_brushStyle != brushStyle ||
+                    s_fgColor != fgColor)
+                {
+                    if (m_hBrushCursor)
+                        DestroyCursor(m_hBrushCursor);
+                    m_hBrushCursor = CreateBrushCursor(brushStyle, brushWidth, fgColor);
+                    s_brushWidth = brushWidth;
+                    s_brushStyle = brushStyle;
+                    s_fgColor = fgColor;
+                }
+                if (m_hBrushCursor)
+                    ::SetCursor(m_hBrushCursor);
+                break;
+            }
             default:
                 ::SetCursor(::LoadCursorW(NULL, (LPCWSTR)IDC_CROSS));
         }

@@ -81,6 +81,7 @@ private:
     ToolBase *m_pToolObject;
 
     ToolBase *GetOrCreateTool(TOOLTYPE nTool);
+    void SendSetCursor();
 
 public:
     ToolsModel();

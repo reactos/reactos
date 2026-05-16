@@ -56,6 +56,8 @@ public:
 
 protected:
     HITTEST m_hitCanvasSizeBox;
+    HCURSOR m_hBrushCursor;
+    HCURSOR m_hRubberCursor;
     POINT m_ptOrig; // The origin of drag start
     CRect m_rcResizing; // Resizing rectagle
 

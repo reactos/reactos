@@ -72,10 +72,17 @@ INT ToolsModel::GetBrushWidth() const
     return m_brushWidth;
 }
 
+void ToolsModel::SendSetCursor()
+{
+    canvasWindow.SendMessage(WM_SETCURSOR, (WPARAM)((HWND)canvasWindow),
+                             MAKELPARAM(HTCLIENT, WM_MOUSEMOVE));
+}
+
 void ToolsModel::SetBrushWidth(INT nBrushWidth)
 {
     m_brushWidth = nBrushWidth;
     NotifyToolSettingsChanged();
+    SendSetCursor();
     imageModel.NotifyImageChanged();
 }
 
@@ -128,6 +135,7 @@ BrushStyle ToolsModel::GetBrushStyle() const
 void ToolsModel::SetBrushStyle(BrushStyle nBrushStyle)
 {
     m_brushStyle = nBrushStyle;
+    SendSetCursor();
     NotifyToolSettingsChanged();
 }
 
@@ -199,6 +207,7 @@ int ToolsModel::GetRubberRadius() const
 void ToolsModel::SetRubberRadius(int nRubberRadius)
 {
     m_rubberRadius = nRubberRadius;
+    SendSetCursor();
     NotifyToolSettingsChanged();
 }
 
