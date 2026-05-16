@@ -271,6 +271,39 @@ CDROM_SCAN_FOR_SPECIAL_INFO CdRomBadItems[] = {                     // Type (HH,
     { "", "PIONEER DVD-RW  DVR-106D"               , NULL  ,   0x10 }, // hh  , ?
     { "", "ASUS DVD-RW DRW-0402P"                  , NULL  ,   0x10 }, // hh  , ?
 
+    { "", "TSSTcorp CDDVDW SH-S203B"               , NULL  ,   0x10 }, // hh  , 2007/06/15
+    { "", "TSSTcorp CDDVDW SH-S223F"               , NULL  ,   0x10 }, // hh  , 2008/05/20
+    { "", "TSSTcorp DVD-ROM SH-D162C"              , NULL  ,   0x10 }, // hh  , 2005/11/02
+    { "", "TSSTcorp CDDVDW TS-L632D"               , NULL  ,   0x10 }, // slim, 2006/04/18
+    { "", "TSSTcorp CDDVDW TS-H653B"               , NULL  ,   0x10 }, // hh  , 2007/02/09
+
+    { "", "LITE-ON DVDRW SOHW-1673S"               , NULL  ,   0x10 }, // hh  , 2005/01/24
+    { "", "LITE-ON DVDRW LH-20A1P"                 , NULL  ,   0x10 }, // hh  , 2006/12/11
+    { "", "LITE-ON DVDRW SHM-165P6S"               , NULL  ,   0x10 }, // hh  , 2005/09/14
+    { "", "PLDS DVD+-RW DH-16A6S"                  , NULL  ,   0x10 }, // hh  , 2008/03/05
+
+    { "", "MATSHITA DVD-RAM UJ-840S"               , NULL  ,   0x10 }, // slim, 2005/04/12
+    { "", "MATSHITA DVD-RAM UJ-850S"               , NULL  ,   0x10 }, // slim, 2006/02/22
+    { "", "MATSHITA DVD+-RW UJ-875S"               , NULL  ,   0x10 }, // slim, 2008/01/15
+
+    { "", "_NEC DVD_RW ND-3520A"                   , NULL  ,   0x10 }, // hh  , 2004/12/10
+    { "", "_NEC DVD_RW ND-3540A"                   , NULL  ,   0x10 }, // hh  , 2005/04/04
+    { "", "_NEC DVD_RW ND-3550A"                   , NULL  ,   0x10 }, // hh  , 2005/10/18
+    { "", "_NEC DVD_RW ND-4550A"                   , NULL  ,   0x10 }, // hh  , 2005/09/20
+
+    { "", "SONY DVD RW DRU-810A"                   , NULL  ,   0x10 }, // hh  , 2005/08/11
+    { "", "SONY DVD RW DW-Q30A"                    , NULL  ,   0x10 }, // hh  , 2005/09/01
+    { "", "SONY DVD RW DRU-830A"                   , NULL  ,   0x10 }, // hh  , 2006/10/15
+    { "", "SONY CD-RW CRX230ED"                    , NULL  ,   0x10 }, // hh  , 2004/03/25
+
+    { "", "PIONEER DVD-RW  DVR-111D"               , NULL  ,   0x10 }, // hh  , 2006/02/14
+    { "", "PIONEER DVD-RW  DVR-112D"               , NULL  ,   0x10 }, // hh  , 2007/01/08
+    { "", "PIONEER DVD-RW  DVR-115D"               , NULL  ,   0x10 }, // hh  , 2008/01/11
+
+    { "", "BENQ DVD DD DW1620"                     , NULL  ,   0x10 }, // hh  , 2004/07/19
+    { "", "BENQ DVD DD DW1640"                     , NULL  ,   0x10 }, // hh  , 2005/04/28
+    { "", "PHILIPS DVDR1640K"                      , NULL  ,   0x10 }, // hh  , 2004/09/12
+
 
     // Sony sourced some drives from LG also....
 
