@@ -117,7 +117,11 @@ GpStatus WINGDIPAPI GdipGetImageAttributesAdjustedPalette(GpImageAttributes *ima
     TRACE("(%p,%p,%u)\n", imageattr, palette, type);
 
     if (!imageattr || !palette || !palette->Count ||
+#ifdef __REACTOS__
+        type >= ColorAdjustTypeCount || type <= ColorAdjustTypeDefault)
+#else
         type >= ColorAdjustTypeCount || type == ColorAdjustTypeDefault)
+#endif
         return InvalidParameter;
 
     apply_image_attributes(imageattr, (LPBYTE)palette->Entries, palette->Count, 1, 0,
