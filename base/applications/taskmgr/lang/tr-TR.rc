@@ -1,5 +1,11 @@
-// COPYRIGHT: 2013-2019 Erdem Ersoy
-// COPYRIGHT: 2026 Hasan Eliküçük
+/*
+ * PROJECT:     ReactOS Task Manager
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2019 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2026 Hasan Eliküçük <hasanelk101@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 

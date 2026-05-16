@@ -1,4 +1,11 @@
-/* TRANSLATORS: 2013-2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>, 2026 Hasan Eliküçük <hasanelk101@gmail.com> */
+/*
+ * PROJECT:     ReactOS Registry Editor
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2015 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              Copyright 2021-2023 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2026 Hasan Eliküçük <hasanelk101@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 

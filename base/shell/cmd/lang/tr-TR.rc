@@ -1,8 +1,11 @@
-/* TRANSLATORS:
-2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
-2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
-2026 Hasan Eliküçük <hasanelk101@gmail.com>
-*/
+/*
+ * PROJECT:     ReactOS Command shell
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2015 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2026 Hasan Eliküçük <hasanelk101@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
