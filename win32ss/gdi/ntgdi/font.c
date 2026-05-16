@@ -998,7 +998,7 @@ NtGdiGetOutlineTextMetricsInternalW(
      TEXTOBJ_UnlockText(TextObj);
      return 0;
   }
-  TextIntUpdateSize(dc, TextObj, FontGDI, TRUE);
+  TextIntUpdateSize(TextObj, FontGDI, TRUE);
   TEXTOBJ_UnlockText(TextObj);
   Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL, FALSE);
   if (!otm) return Size;
