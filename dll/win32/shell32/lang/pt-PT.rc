@@ -381,7 +381,7 @@ BEGIN
     ICON IDI_SHELL_SECURITY, -1, 7, 7, 21, 20
     LTEXT "Que conta de utilizador quer utilizar para executar este programa?", -1, 32, 12, 200, 16
     AUTORADIOBUTTON "Utilizador actual %s", IDC_RUNAS_CURRENT, 7, 35, 226, 10, WS_GROUP
-    AUTOCHECKBOX "&Protect my computer and data from unauthorized program activity\n\nThis option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
+    AUTOCHECKBOX "&Proteger o meu computador e os meus dados contra actividades não autorizadas de programas\n\nEsta opção pode impedir que os vírus informáticos danifiquem o seu computador ou os seus dados pessoais, mas a sua selecção pode fazer com que o programa funcione incorretamente.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
     AUTORADIOBUTTON "O seguinte utilizador:", IDC_RUNAS_OTHER, 7, 110, 226, 10
     LTEXT "Nome do utilizador:", -1, 18, 124, 54, 10
     COMBOBOX IDC_RUNAS_NAME, 75, 122, 134, 40, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
@@ -984,8 +984,8 @@ BEGIN
     IDS_PRINT_VERB "Imprimir"
     IDS_CMD_VERB "Linha de Comandos aqui"
 
-    IDS_MULTIPLETYPES   "Multiple Types"
-    IDS_VARIOUSFOLDERS  "Various Folders"
+    IDS_MULTIPLETYPES   "Tipos diversos"
+    IDS_VARIOUSFOLDERS  "Várias pastas"
     IDS_FILE_FOLDER "%u Ficheiros, %u Pastas"
 
     IDS_PRINTERS "Impressoras"
@@ -1012,9 +1012,9 @@ BEGIN
 
     IDS_SEARCH_BROWSEITEM "Procurar..."
 
-    IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
-    IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
-    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
+    IDS_RECYCLE_CLEANER_DISPLAYNAME "Reciclagem"
+    IDS_RECYCLE_CLEANER_DESCRIPTION "A Reciclagem contém ficheiros que eliminou do seu computador. Estes ficheiros não são removidos permanentemente até que esvazie a Reciclagem."
+    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&Ver ficheiros"
 
     IDS_TITLE_MYCOMP "O Meu Computador"
     IDS_TITLE_MYNET "Os Meus Locais na Rede"
@@ -1051,9 +1051,9 @@ BEGIN
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Mostrar 'Ferramentas administrativas'"
     IDS_ADVANCED_SMALL_START_MENU "Mostrar ícones pequenos no menu 'Iniciar'"
 
-    IDS_VISEFFECT_DRAGFULL "Show window contents while dragging"
-    IDS_VISEFFECT_FONTSMOOTHING "Smooth edges of screen fonts"
-    IDS_VISEFFECT_LISTVIEWSHADOW "Use drop shadows for icon labels on the desktop"
+    IDS_VISEFFECT_DRAGFULL "Mostrar o conteúdo das janelas ao arrastar"
+    IDS_VISEFFECT_FONTSMOOTHING "Suavizar os limites dos tipos de letra no ecrã"
+    IDS_VISEFFECT_LISTVIEWSHADOW "Utilizar sombras para nomes de ícones no ambiente de trabalho."
 
     IDS_NEWEXT_ADVANCED_LEFT "<< A&vançado"
     IDS_NEWEXT_ADVANCED_RIGHT "Avança&do >>"
