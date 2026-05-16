@@ -46,14 +46,12 @@ static
 BOOL
 StartServicesManager(VOID)
 {
-    STARTUPINFOW StartupInfo;
+    STARTUPINFOW StartupInfo = { sizeof(StartupInfo) };
     PROCESS_INFORMATION ProcessInformation;
     LPCWSTR ServiceString = L"services.exe";
     BOOL res;
 
     /* Start the service control manager (services.exe) */
-    ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
-    StartupInfo.cb = sizeof(StartupInfo);
 
     TRACE("WL: Creating new process - %S\n", ServiceString);
 
@@ -88,14 +86,12 @@ static
 BOOL
 StartLsass(VOID)
 {
-    STARTUPINFOW StartupInfo;
+    STARTUPINFOW StartupInfo = { sizeof(StartupInfo) };
     PROCESS_INFORMATION ProcessInformation;
     LPCWSTR ServiceString = L"lsass.exe";
     BOOL res;
 
     /* Start the local security authority subsystem (lsass.exe) */
-    ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
-    StartupInfo.cb = sizeof(StartupInfo);
 
     TRACE("WL: Creating new process - %S\n", ServiceString);
 
