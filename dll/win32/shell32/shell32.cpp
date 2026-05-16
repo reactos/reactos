@@ -73,23 +73,30 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
     HANDLE hUserToken = NULL;
     LPVOID pEnv = NULL;
     BOOL bResult = FALSE;
+
     if (!lpEnvironment)
         return FALSE;
+
     if (!OpenProcessToken(GetCurrentProcess(),
                           TOKEN_QUERY | TOKEN_DUPLICATE | TOKEN_ASSIGN_PRIMARY,
                           &hUserToken))
     {
         return FALSE;
     }
+
     if (!CreateEnvironmentBlock(&pEnv, hUserToken, TRUE))
     {
         CloseHandle(hUserToken);
         return FALSE;
     }
+
     *lpEnvironment = pEnv;
     bResult = TRUE;
+
     if (bUpdateSelf)
     {
+        CSimpleMap<CStringW, bool> newVarNames;
+
         LPWSTR pszz = (LPWSTR)pEnv;
         while (pszz && *pszz)
         {
@@ -99,8 +106,11 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
                 if (pchEqual)
                 {
                     *pchEqual = L'\0';
+                    CStringW key(pszz);
+                    key.MakeUpper();
+                    newVarNames.Add(key, true);
                     SetEnvironmentVariableW(pszz, pchEqual + 1);
-                    *pchEqual = L'='; /* restore */
+                    *pchEqual = L'=';
                 }
             }
             pszz += wcslen(pszz) + 1;
@@ -112,50 +122,30 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
             LPWSTR pCur = (LPWSTR)pCurEnv;
             while (pCur && *pCur)
             {
-                /* skip special variables starting with = */
                 if (pCur[0] != L'=')
                 {
                     LPWSTR pchEqual = wcschr(pCur, L'=');
                     if (pchEqual)
                     {
                         *pchEqual = L'\0';
-
-                        /* check if this variable exists in the new block */
-                        BOOL bFound = FALSE;
-                        LPWSTR pNew = (LPWSTR)pEnv;
-                        while (pNew && *pNew)
-                        {
-                            if (pNew[0] != L'=')
-                            {
-                                LPWSTR pNewEqual = wcschr(pNew, L'=');
-                                if (pNewEqual)
-                                {
-                                    *pNewEqual = L'\0';
-                                    if (_wcsicmp(pCur, pNew) == 0)
-                                        bFound = TRUE;
-                                    *pNewEqual = L'='; /* restore */
-                                }
-                                if (bFound)
-                                    break;
-                            }
-                            pNew += wcslen(pNew) + 1;
-                        }
-
-                        if (!bFound)
-                            SetEnvironmentVariableW(pCur, NULL); /* delete */
-
-                        *pchEqual = L'='; /* restore */
+                        CStringW key(pCur);
+                        key.MakeUpper();
+                        if (newVarNames.FindKey(key) < 0)
+                            SetEnvironmentVariableW(pCur, NULL);
+                        *pchEqual = L'=';
                     }
                 }
                 pCur += wcslen(pCur) + 1;
             }
             FreeEnvironmentStringsW(pCurEnv);
         }
-        /* We free the environment block now that we have applied it to the process
+
+        /* We free the environment block now that we have applied it to the process;
          * the caller gets NULL back in *lpEnvironment in this case. */
         DestroyEnvironmentBlock(pEnv);
         *lpEnvironment = NULL;
     }
+
     CloseHandle(hUserToken);
     return bResult;
 }
