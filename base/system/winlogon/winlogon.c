@@ -53,7 +53,6 @@ StartServicesManager(VOID)
 
     /* Start the service control manager (services.exe) */
     TRACE("WL: Creating new process - %S\n", ServiceString);
-
     res = CreateProcessW(ServiceString,
                          NULL,
                          NULL,
