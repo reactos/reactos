@@ -5,7 +5,7 @@
  * PURPOSE:         Logon
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Filip Navara
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -52,7 +52,6 @@ StartServicesManager(VOID)
     BOOL res;
 
     /* Start the service control manager (services.exe) */
-
     TRACE("WL: Creating new process - %S\n", ServiceString);
 
     res = CreateProcessW(ServiceString,
