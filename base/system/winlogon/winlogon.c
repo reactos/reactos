@@ -91,7 +91,6 @@ StartLsass(VOID)
 
     /* Start the local security authority subsystem (lsass.exe) */
     TRACE("WL: Creating new process - %S\n", ServiceString);
-
     res = CreateProcessW(ServiceString,
                          NULL,
                          NULL,
