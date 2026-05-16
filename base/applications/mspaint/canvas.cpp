@@ -11,7 +11,7 @@ CCanvasWindow canvasWindow;
 
 /* FUNCTIONS ********************************************************/
 
-static HCURSOR CreateRubberCursor(INT diameter)
+static HCURSOR CreateRubberCursor(INT diameter, COLORREF bgColor)
 {
     if (diameter <= 2)
     {
@@ -50,9 +50,20 @@ static HCURSOR CreateRubberCursor(INT diameter)
     {
         HBITMAP hbmOld = (HBITMAP)::SelectObject(hdcMem, hbmColor);
 
-        ::SelectObject(hdcMem, (HBRUSH)::GetStockObject(WHITE_BRUSH));
-        ::SelectObject(hdcMem, (HPEN)::GetStockObject(BLACK_PEN));
+        HBRUSH hBrush = CreateSolidBrush(bgColor);
+        INT sum = GetRValue(bgColor) + GetGValue(bgColor) + GetBValue(bgColor);
+        COLORREF rgbPenColor = (sum >= 255 / 3 / 2) ? RGB(0, 0, 0) : RGB(255, 255, 255);
+
+        HPEN hPen = CreatePen(PS_SOLID, 1, rgbPenColor);
+
+        HGDIOBJ hbrOld = ::SelectObject(hdcMem, hBrush);
+        HGDIOBJ hPenOld = ::SelectObject(hdcMem, hPen);
         ::Rectangle(hdcMem, rc.left, rc.top, rc.right, rc.bottom);
+        ::SelectObject(hdcMem, hPenOld);
+        ::SelectObject(hdcMem, hbrOld);
+
+        ::DeleteObject(hPen);
+        ::DeleteObject(hBrush);
 
         ::SelectObject(hdcMem, hbmOld);
     }
@@ -798,13 +809,16 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             {
                 // Cached for speed
                 static INT s_rubberRadius = -1;
+                static COLORREF s_bgColor;
                 INT rubberRadius = toolsModel.GetRubberRadius();
-                if (!m_hRubberCursor || s_rubberRadius != rubberRadius)
+                COLORREF bgColor = paletteModel.GetBgColor();
+                if (!m_hRubberCursor || s_rubberRadius != rubberRadius || s_bgColor != bgColor)
                 {
                     if (m_hRubberCursor)
                         DestroyCursor(m_hRubberCursor);
-                    m_hRubberCursor = CreateRubberCursor(2 * rubberRadius);
+                    m_hRubberCursor = CreateRubberCursor(2 * rubberRadius, bgColor);
                     s_rubberRadius = rubberRadius;
+                    s_bgColor = bgColor;
                 }
                 if (m_hRubberCursor)
                     ::SetCursor(m_hRubberCursor);
