@@ -347,3 +347,20 @@ Server_RemoveDNSRegistrations(
     /* FIXME: Call dnsapi.DnsRemoveRegistrations() */
     return ERROR_SUCCESS;
 }
+
+
+/* Function 7 */
+DWORD
+__stdcall
+Server_RequestParams(
+    _In_ PDHCP_SERVER_NAME ServerName,
+    _In_ LPWSTR AdapterName,
+    _In_ DHCPCAPI_CLASSID *ClassId,
+    _In_ DWORD Unknown4,
+    _In_ DWORD Unknown5,
+    _In_ DWORD Unknown6)
+{
+    DPRINT1("Server_RequestParams(%S %p)\n", AdapterName, ClassId);
+    UNIMPLEMENTED;
+    return ERROR_SUCCESS;
+}

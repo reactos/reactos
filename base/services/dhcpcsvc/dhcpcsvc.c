@@ -601,7 +601,7 @@ DhcpReleaseParameters(
  * \return ERROR_SUCCESS on success
  */
 DWORD
-WINAPI
+APIENTRY
 DhcpRemoveDNSRegistrations(VOID)
 {
     DWORD ret;
@@ -611,6 +611,55 @@ DhcpRemoveDNSRegistrations(VOID)
     RpcTryExcept
     {
         ret = Client_RemoveDNSRegistrations(NULL);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+DWORD
+APIENTRY
+DhcpRequestParams(
+    _In_ DWORD Flags,
+    _In_ PVOID Reserved,
+    _In_ LPWSTR AdapterName,
+    _In_ LPDHCPCAPI_CLASSID ClassId,
+    _In_ DHCPCAPI_PARAMS_ARRAY SendParams,
+    _Inout_ DHCPCAPI_PARAMS_ARRAY RecdParams,
+    _In_ LPBYTE Buffer,
+    _Inout_ LPDWORD pSize,
+    _In_ LPWSTR RequestIdStr)
+{
+    DWORD ret = ERROR_SUCCESS;
+
+    DPRINT1("DhcpRequestParams(%lx %p %S %p %p %p %p %p %S)\n",
+            Flags, Reserved, AdapterName, ClassId, SendParams,
+            RecdParams, Buffer, pSize, RequestIdStr);
+
+    if ((Reserved != NULL) || (AdapterName == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    if (ClassId != NULL)
+    {
+        if (ClassId->Flags != 0)
+            return ERROR_INVALID_PARAMETER;
+
+        if ((ClassId->Data == NULL) || (ClassId->nBytesData == 0))
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    RpcTryExcept
+    {
+        ret = Client_RequestParams(NULL,
+                                   AdapterName,
+                                   ClassId,
+                                   0,
+                                   0,
+                                   0);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -644,20 +693,22 @@ DhcpStaticRefreshParams(DWORD AdapterIndex,
     return (ret == ERROR_SUCCESS) ? 1 : 0;
 }
 
-
-DWORD APIENTRY
-DhcpRequestParams(DWORD Flags,
-                  PVOID Reserved,
-                  LPWSTR AdapterName,
-                  LPDHCPCAPI_CLASSID ClassId,
-                  DHCPCAPI_PARAMS_ARRAY SendParams,
-                  DHCPCAPI_PARAMS_ARRAY RecdParams,
-                  LPBYTE Buffer,
-                  LPDWORD pSize,
-                  LPWSTR RequestIdStr)
+DWORD
+APIENTRY
+DhcpUndoRequestParams(
+    _In_ DWORD  Flags,
+    _In_ LPVOID Reserved,
+    _In_ LPWSTR AdapterName,
+    _In_ LPWSTR RequestIdStr)
 {
+    DPRINT1("DhcpUndoRequestParams(%lx %p %S %S)\n",
+            Flags, Reserved, AdapterName, RequestIdStr);
+
+    if ((Flags != 0) || (Reserved != NULL) || (RequestIdStr == NULL))
+        return ERROR_INVALID_PARAMETER;
+
     UNIMPLEMENTED;
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 static VOID

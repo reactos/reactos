@@ -34,7 +34,7 @@
 @ stub DhcpRequestOptions
 @ stdcall DhcpRequestParams(long ptr ptr ptr long ptr long ptr ptr ptr ptr)
 @ stdcall DhcpStaticRefreshParams(long long long)
-@ stub DhcpUndoRequestParams
+@ stdcall DhcpUndoRequestParams(long ptr wstr wstr)
 @ stub McastApiCleanup
 @ stub McastApiStartup
 @ stub McastEnumerateScopes
