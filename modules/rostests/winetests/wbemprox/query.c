@@ -2101,6 +2101,13 @@ static void test_SoftwareLicensingProduct( IWbemServices *services )
     DWORD count;
 
     hr = IWbemServices_ExecQuery( services, wql, query, 0, NULL, &result );
+#ifdef __REACTOS__
+    if (hr != S_OK)
+    {
+        win_skip( "class not found\n" );
+        return;
+    }
+#endif
     ok( hr == S_OK , "got %#lx\n", hr );
 
     for (;;)
@@ -2487,6 +2494,13 @@ static void test_MSFT_PhysicalDisk( IWbemLocator *locator )
     HRESULT hr;
 
     hr = IWbemLocator_ConnectServer( locator, path, NULL, NULL, NULL, 0, NULL, NULL, &services );
+#ifdef __REACTOS__
+    if (hr != S_OK)
+    {
+        win_skip( "class not found\n" );
+        return;
+    }
+#endif
     ok( hr == S_OK, "failed to get IWbemServices interface %#lx\n", hr );
 
     hr = IWbemServices_ExecQuery( services, wql, query, 0, NULL, &result );
