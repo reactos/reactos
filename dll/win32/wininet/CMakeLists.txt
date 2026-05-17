@@ -7,9 +7,11 @@ add_definitions(
     -D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D_WINE)
+    -D_WINE
+    -D_WININET_INTERNAL_)
 
 spec2def(wininet.dll wininet.spec ADD_IMPORTLIB)
+add_message_headers(UNICODE winineterror.mc)
 
 list(APPEND SOURCE
     cookie.c
@@ -17,6 +19,7 @@ list(APPEND SOURCE
     ftp.c
     gopher.c
     http.c
+    inet_ntop.c
     internet.c
     utility.c)
 
@@ -33,8 +36,10 @@ add_library(wininet MODULE
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
     $<TARGET_OBJECTS:wininet_inflate>
+    ${CMAKE_CURRENT_BINARY_DIR}/winineterror.rc
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wininet.def)
+add_dependencies(wininet winineterror)
 
 if(MSVC)
     # Disable warning C4090: 'function': different 'const' qualifiers
