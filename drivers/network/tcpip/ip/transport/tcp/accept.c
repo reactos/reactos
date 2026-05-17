@@ -37,6 +37,8 @@ NTSTATUS TCPCheckPeerForAccept(PVOID Context,
                                                  &ipaddr,
                                                  &RemoteAddress->Address[0].Address[0].sin_port));
 
+    RemoteAddress->Address[0].Address[0].sin_port =
+        WH2N(RemoteAddress->Address[0].Address[0].sin_port);
     RemoteAddress->Address[0].Address[0].in_addr = ipaddr.addr;
 
     return Status;
