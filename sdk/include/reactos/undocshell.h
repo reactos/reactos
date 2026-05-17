@@ -1000,6 +1000,7 @@ BOOL WINAPI LinkWindow_UnregisterClass(_In_ DWORD dwUnused);
 #define TRAYCMD_TILE_V              405
 #define TRAYCMD_TOGGLE_DESKTOP      407
 #define TRAYCMD_DATE_AND_TIME       408
+#define TRAYCMD_EJECT               410
 #define TRAYCMD_TASKBAR_PROPERTIES  413
 #define TRAYCMD_MINIMIZE_ALL        415
 #define TRAYCMD_RESTORE_ALL         416

@@ -459,6 +459,9 @@ public:
 
     LRESULT DoExitWindows()
     {
+        if (SHRestricted(REST_NOCLOSE))
+            return 0;
+
         SaveState();
 
         /* Display the ReactOS Shutdown Dialog */
@@ -728,6 +731,22 @@ public:
         m_StartMenuPopup->OnSelect(MPOS_CANCELLEVEL);
     }
 
+    VOID ShowFolder(INT csidl, BOOL bExplore)
+    {
+        if (SHRestricted(REST_NOSETFOLDERS))
+            return;
+        SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_INVOKEIDLIST };
+        if (bExplore)
+            sei.lpVerb = L"explore";
+        sei.nShow = SW_SHOWNORMAL;
+        sei.lpIDList = SHCloneSpecialIDList(NULL, csidl, FALSE);
+        if (sei.lpIDList)
+        {
+            ShellExecuteExW(&sei);
+            ILFree((LPITEMIDLIST)sei.lpIDList);
+        }
+    }
+
     LRESULT HandleHotKey(DWORD id)
     {
         switch (id)
@@ -740,9 +759,7 @@ public:
             ExecResourceCmd(IDS_HELP_COMMAND);
             break;
         case IDHK_EXPLORE:
-            //FIXME: We don't support this yet:
-            //ShellExecuteW(0, L"explore", NULL, NULL, NULL, 1);
-            ShellExecuteW(0, NULL, L"explorer.exe", L"/e ,", NULL, 1);
+            ShowFolder(CSIDL_DRIVES, TRUE);
             break;
         case IDHK_FIND:
             SHFindFiles(NULL, NULL);
@@ -774,12 +791,24 @@ public:
         return 0;
     }
 
+    static DWORD CALLBACK EjectThreadProc(LPVOID arg)
+    {
+        //CM_Request_Eject_PC(); // FIXME: setupapi
+        return 0;
+    }
+
     LRESULT HandleCommand(UINT uCommand)
     {
         switch (uCommand)
         {
             case TRAYCMD_STARTMENU:
-                // TODO:
+                SetForegroundWindow(m_hWnd);
+#if 0 // FIXME: This won't work
+                m_StartButton.SendMessage(BM_SETSTATE, TRUE, 0);
+                m_StartButton.SendMessage(BM_SETSTATE, FALSE, 0);
+#else
+                m_StartButton.SendMessage(BM_CLICK, 0, 0);
+#endif
                 break;
             case TRAYCMD_RUN_DIALOG:
                 HideStartMenu();
@@ -803,6 +832,9 @@ public:
                 break;
             case TRAYCMD_DATE_AND_TIME:
                 ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
+                break;
+            case TRAYCMD_EJECT:
+                SHCreateThread(EjectThreadProc, NULL, CTF_INSIST, NULL);
                 break;
             case TRAYCMD_TASKBAR_PROPERTIES:
                 DisplayProperties();
@@ -832,19 +864,21 @@ public:
                 ExecResourceCmd(IDS_HELP_COMMAND);
                 break;
             case TRAYCMD_CONTROL_PANEL:
-                // TODO:
+                ShowFolder(CSIDL_CONTROLS, FALSE);
                 break;
             case TRAYCMD_SHUTDOWN_DIALOG:
                 DoExitWindows();
                 break;
             case TRAYCMD_PRINTERS_AND_FAXES:
-                // TODO:
+                ShowFolder(CSIDL_PRINTERS, FALSE);
                 break;
             case TRAYCMD_LOCK_DESKTOP:
                 // TODO:
                 break;
             case TRAYCMD_SWITCH_USER_DIALOG:
-                // TODO:
+                UpdateWindow();
+                Sleep(100);
+                //DisconnectWindowsDialog(m_DesktopWnd); // FIXME: shell32
                 break;
             case IDM_SEARCH:
             case TRAYCMD_SEARCH_FILES:
@@ -853,7 +887,6 @@ public:
             case TRAYCMD_SEARCH_COMPUTERS:
                 SHFindComputer(NULL, NULL);
                 break;
-
             default:
                 break;
         }
