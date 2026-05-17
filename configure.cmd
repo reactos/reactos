@@ -198,6 +198,9 @@ if EXIST CMakeCache.txt (
     del /q CMakeCache.txt
 )
 
+REM remove trailing \ at the end to fix 'The source directory "C:/ros/"" does not exist."'
+set REACTOS_SOURCE_DIR=%REACTOS_SOURCE_DIR:~0,-1%
+
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %CMAKE_PARAMS% "%REACTOS_SOURCE_DIR%"
 ) else if %USE_CLANG_CL% == 1 (
