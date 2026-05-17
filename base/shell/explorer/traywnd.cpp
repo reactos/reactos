@@ -8,6 +8,7 @@
 
 #include "precomp.h"
 #include <commoncontrols.h>
+#include <cfgmgr32.h>
 #include "appbar.h"
 
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
@@ -793,7 +794,7 @@ public:
 
     static DWORD CALLBACK EjectThreadProc(LPVOID arg)
     {
-        //CM_Request_Eject_PC(); // FIXME: setupapi
+        CM_Request_Eject_PC();
         return 0;
     }
 
