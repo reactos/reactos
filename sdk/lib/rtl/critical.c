@@ -856,11 +856,68 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     return FALSE;
 }
 
+/*++
+ * RtlCheckForOrphanedCriticalSections
+ * @implemented NT5
+ *
+ *     Checks if the given thread owns any critical sections at the time
+ *     of its exit, and emits a debug message for each orphaned section found.
+ *
+ * Params:
+ *     ThreadHandle - Handle to the thread to check.
+ *
+ * Returns:
+ *     Nothing
+ *
+ * Remarks:
+ *     This function is typically called by the loader during thread exit.
+ *
+ *--*/
 VOID
 NTAPI
 RtlCheckForOrphanedCriticalSections(HANDLE ThreadHandle)
 {
-    UNIMPLEMENTED;
+    THREAD_BASIC_INFORMATION ThreadInfo;
+    NTSTATUS Status;
+    PLIST_ENTRY ListEntry;
+    PRTL_CRITICAL_SECTION_DEBUG DebugInfo;
+    PRTL_CRITICAL_SECTION CriticalSection;
+
+    /* Get the thread ID from the handle */
+    Status = NtQueryInformationThread(ThreadHandle,
+                                      ThreadBasicInformation,
+                                      &ThreadInfo,
+                                      sizeof(ThreadInfo),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+        return;
+
+    /* Lock the critical section list */
+    RtlEnterCriticalSection(&RtlCriticalSectionLock);
+
+    /* Walk global list */
+    ListEntry = RtlCriticalSectionList.Flink;
+    while (ListEntry != &RtlCriticalSectionList)
+    {
+        DebugInfo = CONTAINING_RECORD(ListEntry,
+                                      RTL_CRITICAL_SECTION_DEBUG,
+                                      ProcessLocksList);
+        CriticalSection = DebugInfo->CriticalSection;
+
+        /* Check if this CS is owned by the target thread */
+        if (CriticalSection &&
+            CriticalSection->OwningThread == ThreadInfo.ClientId.UniqueThread)
+        {
+            DPRINT1("RtlCheckForOrphanedCriticalSections: "
+                    "Thread %p is exiting while owning critical section %p!\n",
+                    ThreadInfo.ClientId.UniqueThread,
+                    CriticalSection);
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    RtlLeaveCriticalSection(&RtlCriticalSectionLock);
 }
 
 LOGICAL
