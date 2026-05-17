@@ -2101,6 +2101,13 @@ static void test_SoftwareLicensingProduct( IWbemServices *services )
     DWORD count;
 
     hr = IWbemServices_ExecQuery( services, wql, query, 0, NULL, &result );
+#ifdef __REACTOS__
+    if (hr != S_OK)
+    {
+        win_skip( "class not found\n" );
+        return;
+    }
+#endif
     ok( hr == S_OK , "got %#lx\n", hr );
 
     for (;;)
@@ -2451,9 +2458,23 @@ static void test_MSSMBios_RawSMBiosTables( IWbemLocator *locator )
 
     hr = IWbemLocator_ConnectServer( locator, path, NULL, NULL, NULL, 0, NULL, NULL, &services );
     ok( hr == S_OK, "failed to get IWbemServices interface %#lx\n", hr );
+#ifdef __REACTOS__
+    if (hr != S_OK)
+    {
+        win_skip("MSSMBios_RawSMBiosTables is unavailable\n");
+        return;
+    }
+#endif
 
     hr = IWbemServices_CreateInstanceEnum( services, bios, 0, NULL, &iter );
     ok( hr == S_OK, "got %#lx\n", hr );
+#ifdef __REACTOS__
+    if (hr != S_OK)
+    {
+        win_skip("IWbemServices_CreateInstanceEnum failed\n");
+        return;
+    }
+#endif
 
     hr = IEnumWbemClassObject_Next( iter, WBEM_INFINITE, 1, &obj, &count );
     if (hr != S_OK) goto done;
@@ -2487,6 +2508,13 @@ static void test_MSFT_PhysicalDisk( IWbemLocator *locator )
     HRESULT hr;
 
     hr = IWbemLocator_ConnectServer( locator, path, NULL, NULL, NULL, 0, NULL, NULL, &services );
+#ifdef __REACTOS__
+    if (hr != S_OK)
+    {
+        win_skip( "class not found\n" );
+        return;
+    }
+#endif
     ok( hr == S_OK, "failed to get IWbemServices interface %#lx\n", hr );
 
     hr = IWbemServices_ExecQuery( services, wql, query, 0, NULL, &result );
