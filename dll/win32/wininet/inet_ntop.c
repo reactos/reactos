@@ -24,6 +24,7 @@
 #include <windef.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
+#include <string.h>
 
 #if DLL_EXPORT_VERSION < 0x600
 #define inet_ntop wininet_inet_ntop
