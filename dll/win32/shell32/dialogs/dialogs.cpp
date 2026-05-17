@@ -1687,3 +1687,13 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
 
     FreeLibrary(msginaDll);
 }
+
+/*************************************************************************
+ * DisconnectWindowsDialog  [SHELL32.254]
+ *
+ * https://undoc.airesoft.co.uk/shell32.dll/DisconnectWindowsDialog.php
+ */
+EXTERN_C void WINAPI DisconnectWindowsDialog(_In_opt_ HWND hwndUnused)
+{
+    FIXME("stub\n");
+}

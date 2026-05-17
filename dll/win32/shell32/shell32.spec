@@ -250,7 +250,7 @@
 251 stdcall -noname PathRemoveArgs(wstr) PathRemoveArgsW
 252 stdcall -noname PathIsURL(wstr) shlwapi.PathIsURLW
 253 stub -noname SHIsCurrentProcessConsoleSession
-254 stub -noname DisconnectWindowsDialog
+254 stdcall -noname DisconnectWindowsDialog(ptr)
 255 stdcall Options_RunDLL(ptr ptr str long)
 256 stdcall SHCreateShellFolderView(ptr ptr)
 257 stdcall -noname SHGetShellFolderViewCB(ptr)

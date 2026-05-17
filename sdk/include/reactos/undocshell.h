@@ -247,6 +247,7 @@ void WINAPI RunFileDlg(
 
 int WINAPI LogoffWindowsDialog(HWND hWndOwner);
 void WINAPI ExitWindowsDialog(HWND hWndOwner);
+void WINAPI DisconnectWindowsDialog(_In_opt_ HWND hwndUnused);
 
 BOOL WINAPI SHFindComputer(
     LPCITEMIDLIST pidlRoot,
