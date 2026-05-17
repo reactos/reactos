@@ -874,7 +874,7 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  **/
 VOID
 NTAPI
-RtlCheckForOrphanedCriticalSections(HANDLE ThreadHandle)
+RtlCheckForOrphanedCriticalSections(_In_ HANDLE ThreadHandle)
 {
     THREAD_BASIC_INFORMATION ThreadInfo;
     NTSTATUS Status;
