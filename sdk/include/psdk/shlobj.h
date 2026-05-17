@@ -243,6 +243,14 @@ SHGetPathFromIDListW(
 
 #define SHGetPathFromIDList WINELIB_NAME_AW(SHGetPathFromIDList)
 
+BOOL
+WINAPI
+SHGetPathFromIDListEx(
+  _In_ PCIDLIST_ABSOLUTE pidl,
+  _Out_writes_(cchPath) PWSTR pszPath,
+  _In_ DWORD cchPath,
+  _In_ GPFIDL_FLAGS uOpts);
+
 INT          WINAPI SHHandleUpdateImage(_In_ PCIDLIST_ABSOLUTE);
 
 HRESULT
@@ -2836,6 +2844,44 @@ DECLARE_INTERFACE_(IShellFolderBand, IUnknown)
 DECLARE_HANDLE(FARPROC16);
 LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC16 pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6);
 #endif
+
+#if (_WIN32_WINNT >= 0x0600)
+
+HRESULT
+WINAPI
+SHGetKnownFolderIDList(
+  _In_ REFKNOWNFOLDERID rfid,
+  _In_ DWORD dwFlags,
+  _In_opt_ HANDLE hToken,
+  _Outptr_ PIDLIST_ABSOLUTE *ppidl);
+
+HRESULT
+WINAPI
+SHGetKnownFolderPath(
+  _In_ REFKNOWNFOLDERID rfid,
+  _In_ DWORD dwFlags,
+  _In_opt_ HANDLE hToken,
+  _Outptr_ PWSTR *ppszPath);
+
+HRESULT
+WINAPI
+SHGetKnownFolderItem(
+  _In_ REFKNOWNFOLDERID rfid,
+  _In_ DWORD dwFlags,
+  _In_opt_ HANDLE hToken,
+  _In_ REFIID riid,
+  _Outptr_ void **ppv);
+
+HRESULT
+WINAPI
+SHCreateItemInKnownFolder(
+  _In_ REFKNOWNFOLDERID kfid,
+  _In_ DWORD dwKFFlags,
+  _In_opt_ PCWSTR pszItem,
+  _In_ REFIID riid,
+  _Outptr_ void **ppv);
+
+#endif /* (_WIN32_WINNT >= 0x0600) */
 
 #ifdef __cplusplus
 } /* extern "C" */

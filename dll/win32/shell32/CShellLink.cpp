@@ -2576,20 +2576,20 @@ HRESULT STDMETHODCALLTYPE CShellLink::QueryContextMenu(HMENU hMenu, UINT indexMe
 
 HRESULT CShellLink::DoOpenFileLocation()
 {
-    // TODO: SHOpenFolderAndSelectItems
-    WCHAR szParams[MAX_PATH + 64];
-    StringCbPrintfW(szParams, sizeof(szParams), L"/select,%s", m_sPath);
+    if (m_pPidl)
+        return SHOpenFolderAndSelectItems(m_pPidl, 0, NULL, 0);
 
-    INT_PTR ret;
-    ret = reinterpret_cast<INT_PTR>(ShellExecuteW(NULL, NULL, L"explorer.exe", szParams,
-                                                  NULL, m_Header.nShowCommand));
-    if (ret <= 32)
+    if (m_sPath)
     {
-        ERR("ret: %08lX\n", ret);
-        return E_FAIL;
+        PIDLIST_ABSOLUTE pidl = ILCreateFromPathW(m_sPath);
+        if (!pidl)
+            return E_FAIL;
+        HRESULT hr = SHOpenFolderAndSelectItems(pidl, 0, NULL, 0);
+        ILFree(pidl);
+        return hr;
     }
 
-    return S_OK;
+    return E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)

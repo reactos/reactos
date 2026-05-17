@@ -1,0 +1,521 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProjectSchemaDefinitions xmlns="clr-namespace:Microsoft.Build.Framework.XamlTypes;assembly=Microsoft.Build.Framework" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:transformCallback="Microsoft.Cpp.Dev10.ConvertPropertyCallback">
+  <Rule
+    Name="Bison"
+    PageTemplate="tool"
+    DisplayName="Bison files"
+    SwitchPrefix="--"
+    Order="200">
+    <Rule.DataSource>
+      <DataSource
+        Persistence="ProjectFile"
+        ItemType="Bison" />
+    </Rule.DataSource>
+    <Rule.Categories>
+      <Category
+        Name="General">
+        <Category.DisplayName>
+          <sys:String>General</sys:String>
+        </Category.DisplayName>
+      </Category>
+      <Category
+        Name="Bison Options">
+        <Category.DisplayName>
+          <sys:String>Bison Options</sys:String>
+        </Category.DisplayName>
+      </Category>
+      <Category
+        Name="Command Line"
+        Subtype="CommandLine">
+        <Category.DisplayName>
+          <sys:String>Command Line</sys:String>
+        </Category.DisplayName>
+      </Category>
+    </Rule.Categories>
+
+    <StringListProperty
+      Name="OutputFile"
+      Category="Bison Options"
+      IsRequired="true"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Output File Name"
+      Description="Specify the file for the parser implementation file. --output=value"
+      Switch="output=&quot;[value]&quot;"
+      />
+
+    <StringListProperty
+      Name="DefinesFile"
+      Category="Bison Options"
+      Subtype="file"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Defines File Name"
+      Description="Pretend that %defines was specified, i.e., write an extra output file containing macro definitions for the token type names defined in the grammar, as well as a few other declarations. --defines=value"
+      Switch="defines=&quot;[value]&quot;"
+      />
+    
+    <BoolProperty
+      Name="Debug"
+      Category="Bison Options"
+      DisplayName="Debug"
+      Description="In the parser implementation file, define the macro YYDEBUG to 1 if it is not already defined, so that the debugging facilities are compiled. (--debug)"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Enabling-Traces.html#Enabling-Traces"
+      Switch="debug" />
+    
+    <BoolProperty
+      Name="Verbose"
+      Category="Bison Options"
+      DisplayName="Verbose"
+      Description="Write an extra output file containing verbose descriptions of the parser states and what is done for each type of lookahead token in that state. (--verbose)"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Understanding.html#Understanding"
+      Switch="verbose" />
+
+    <BoolProperty
+      Name="NoLines"
+      Category="Bison Options"
+      DisplayName="No lines"
+      Description="Don’t put any #line preprocessor commands in the parser implementation file. (--no-lines)"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      Switch="no-lines" />
+
+    <StringListProperty
+      Name="FilePrefix"
+      Category="Bison Options"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="File Prefix"
+      Description="Pretend that %file-prefix was specified, i.e., specify prefix to use for all Bison output file names. --file-prefix=prefix"
+      Switch="file-prefix=&quot;[value]&quot;"
+      />
+
+    <StringListProperty
+      Name="GraphFile"
+      Category="Bison Options"
+      Subtype="file"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Graph File"
+      Description="Output a graphical representation of the parser’s automaton computed by Bison, in Graphviz DOT format. --graph=file"
+      Switch="graph=&quot;[value]&quot;"
+      />
+
+    <EnumProperty
+      Name="Warnings"
+      Category="Bison Options"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Warnings"
+      Description="Output warnings falling in category. (--warnings=category)">
+
+      <EnumValue
+        Name="midrule-values"
+        DisplayName="midrule-values"
+        Switch="warnings=midrule-values"/>
+      <EnumValue
+        Name="yacc"
+        DisplayName="yacc"
+        Switch="warnings=yacc"/>
+      <EnumValue
+        Name="conflicts-sr"
+        DisplayName="conflicts-sr"
+        Switch="warnings=conflicts-sr"/>
+      <EnumValue
+        Name="conflicts-rr"
+        DisplayName="conflicts-rr"
+        Switch="warnings=conflicts-rr"/>
+      <EnumValue
+        Name="other"
+        DisplayName="other"
+        Switch="warnings=other"/>
+      <EnumValue
+        Name="all"
+        DisplayName="all"
+        Switch="warnings=all"/>
+      <EnumValue
+        Name="none"
+        DisplayName="none"
+        Switch="warnings=none"/>
+      <EnumValue
+        Name="error"
+        DisplayName="error"
+        Switch="warnings=error"/>
+    </EnumProperty>
+
+    <EnumProperty
+      Name="Report"
+      Category="Bison Options"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Report"
+      Description="Write an extra output file containing verbose description of the comma separated list of things. (--report=things)">
+      
+      <EnumValue
+        Name="state"
+        DisplayName="state"
+        Switch="report=state"/>
+      <EnumValue
+        Name="itemset"
+        DisplayName="itemset"
+        Switch="report=itemset"/>
+      <EnumValue
+        Name="lookahead"
+        DisplayName="lookahead"
+        Switch="report=lookahead"/>
+      <EnumValue
+        Name="solved"
+        DisplayName="solved"
+        Switch="report=solved"/>
+      <EnumValue
+        Name="all"
+        DisplayName="all"
+        Switch="report=all"/>
+      <EnumValue
+        Name="none"
+        DisplayName="none"
+        Switch="report=none"/>
+    </EnumProperty>
+
+    <StringListProperty
+      Name="ReportFile"
+      Category="Bison Options"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Report File Name"
+      Description="Specify the file for the verbose description. --report-file=value"
+      Switch="report-file=&quot;[value]&quot;"
+      />
+
+    <StringListProperty
+      Name="Inputs"
+      Category="Command Line"
+      IsRequired="true"
+      Switch=" ">
+      <StringListProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          ItemType="Bison"
+          SourceType="Item" />
+      </StringListProperty.DataSource>
+    </StringListProperty>
+    <StringProperty
+      Name="CommandLineTemplate"
+      DisplayName="Command Line"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <DynamicEnumProperty
+      Name="BisonBeforeTargets"
+      Category="General"
+      EnumProvider="Targets"
+      IncludeInCommandLine="False">
+      <DynamicEnumProperty.DisplayName>
+        <sys:String>Execute Before</sys:String>
+      </DynamicEnumProperty.DisplayName>
+      <DynamicEnumProperty.Description>
+        <sys:String>Specifies the targets for the build customization to run before.</sys:String>
+      </DynamicEnumProperty.Description>
+      <DynamicEnumProperty.ProviderSettings>
+        <NameValuePair
+          Name="Exclude"
+          Value="^BisonBeforeTargets|^Compute" />
+      </DynamicEnumProperty.ProviderSettings>
+      <DynamicEnumProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          HasConfigurationCondition="true" />
+      </DynamicEnumProperty.DataSource>
+    </DynamicEnumProperty>
+    <DynamicEnumProperty
+      Name="BisonAfterTargets"
+      Category="General"
+      EnumProvider="Targets"
+      IncludeInCommandLine="False">
+      <DynamicEnumProperty.DisplayName>
+        <sys:String>Execute After</sys:String>
+      </DynamicEnumProperty.DisplayName>
+      <DynamicEnumProperty.Description>
+        <sys:String>Specifies the targets for the build customization to run after.</sys:String>
+      </DynamicEnumProperty.Description>
+      <DynamicEnumProperty.ProviderSettings>
+        <NameValuePair
+          Name="Exclude"
+          Value="^BisonAfterTargets|^Compute" />
+      </DynamicEnumProperty.ProviderSettings>
+      <DynamicEnumProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          ItemType=""
+          HasConfigurationCondition="true" />
+      </DynamicEnumProperty.DataSource>
+    </DynamicEnumProperty>
+    <StringListProperty
+      Name="Outputs"
+      DisplayName="Outputs"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <StringProperty
+      Name="ExecutionDescription"
+      DisplayName="Execution Description"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <StringListProperty
+      Name="AdditionalDependencies"
+      DisplayName="Additional Dependencies"
+      IncludeInCommandLine="False"
+      Visible="false" />
+    <StringProperty
+      Subtype="AdditionalOptions"
+      Name="AdditionalOptions"
+      Category="Command Line">
+      <StringProperty.DisplayName>
+        <sys:String>Additional Options</sys:String>
+      </StringProperty.DisplayName>
+      <StringProperty.Description>
+        <sys:String>Additional Options</sys:String>
+      </StringProperty.Description>
+    </StringProperty>
+  </Rule>
+  <ItemType
+    Name="Bison"
+    DisplayName="Bison files" />
+  <FileExtension
+    Name="*.y"
+    ContentType="Bison" />
+  <ContentType
+    Name="Bison"
+    DisplayName="Bison files"
+    ItemType="Bison" />
+  <Rule
+    Name="Flex"
+    PageTemplate="tool"
+    DisplayName="Flex files"
+    SwitchPrefix="--"
+    Order="200">
+    <Rule.DataSource>
+      <DataSource
+        Persistence="ProjectFile"
+        ItemType="Flex" />
+    </Rule.DataSource>
+    <Rule.Categories>
+      <Category
+        Name="General">
+        <Category.DisplayName>
+          <sys:String>General</sys:String>
+        </Category.DisplayName>
+      </Category>
+      <Category
+        Name="Flex Options">
+        <Category.DisplayName>
+          <sys:String>Flex Options</sys:String>
+        </Category.DisplayName>
+      </Category>
+      <Category
+        Name="Command Line"
+        Subtype="CommandLine">
+        <Category.DisplayName>
+          <sys:String>Command Line</sys:String>
+        </Category.DisplayName>
+      </Category>
+    </Rule.Categories>
+
+    <StringListProperty
+      Name="OutputFile"
+      Category="Flex Options"
+      IsRequired="true"
+      HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+      DisplayName="Output File Name"
+      Description="Directs flex to write the scanner to the file ‘FILE’ instead of ‘lex.yy.c’. --outfile=value"
+      Switch="outfile=&quot;[value]&quot;"
+      />
+
+    <StringListProperty
+      Name="HeaderFile"
+      Category="Flex Options"
+      HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+      DisplayName="Header File Name"
+      Description="Instructs flex to write a C header to ‘FILE’. This file contains function prototypes, extern variables, and types used by the scanner. Only the external API is exported by the header file.         (--header-file=value)"
+      Switch="header-file=&quot;[value]&quot;"
+      />
+
+    <StringListProperty
+      Name="Prefix"
+      Category="Flex Options"
+      HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+      DisplayName="Prefix"
+      Description="Changes the default ‘yy’ prefix used by flex for all globally-visible variable and function names to instead be ‘PREFIX’. For example, ‘--prefix=foo’ changes the name of yytext to footext. It also changes the name of the default output file from lex.yy.c to lex.foo.c.         (--prefix=value)"
+      Switch="prefix=&quot;[value]&quot;"
+      />
+
+	  <BoolProperty
+      Name="Wincompat"
+      Category="Flex Options"
+      DisplayName="Windows compatibility mode"
+      Description="This option changes 'unistd.h' unix header with windows analog 'io.h' and replaces isatty/fileno functions to safe windows analogs _isatty/_fileno.            (--wincompat)"
+      HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+      Switch="wincompat" />
+
+  <BoolProperty
+      Name="CaseInsensitive"
+      Category="Flex Options"
+      DisplayName="Case-insensitive mode"
+      Description="Instructs flex to generate a case-insensitive scanner. The case of letters given in the flex input patterns will be ignored, and tokens in the input will be matched regardless of case. The matched text given in yytext will have the preserved case (i.e., it will not be folded).            (--case-insensitive)"
+      HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+      Switch="case-insensitive" />
+
+    <BoolProperty
+      Name="LexCompat"
+      Category="Flex Options"
+      DisplayName="Lex-compatibility mode"
+      Description="Turns on maximum compatibility with the original AT&amp;T lex implementation. Note that this does not mean full compatibility. Use of this option costs a considerable amount of performance, and it cannot be used with the ‘--c++’, ‘--full’, ‘--fast’, ‘-Cf’, or ‘-CF’ options.            (--lex-compat)"
+      HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+      Switch="lex-compat" />
+
+    <BoolProperty
+      Name="Stack"
+      Category="Flex Options"
+      DisplayName="Start Condition Stacks"
+      Description="Enables the use of start condition stacks.            (--stack)"
+      HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+      Switch="stack" />
+
+    <BoolProperty
+      Name="BisonBridge"
+      Category="Flex Options"
+      DisplayName="Bison Bridge Mode"
+      Description="Instructs flex to generate a C scanner that is meant to be called by a GNU bison parser. The scanner has minor API changes for bison compatibility. In particular, the declaration of yylex is modified to take an additional parameter, yylval.            (--bison-bridge)"
+      HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+      Switch="bison-bridge" />
+
+    <BoolProperty
+      Name="Noline"
+      Category="Flex Options"
+      DisplayName="No #line Directives"
+      Description="Instructs flex not to generate #line directives.            (--noline)"
+      HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+      Switch="noline" />
+
+    <BoolProperty
+       Name="Reentrant"
+       Category="Flex Options"
+       DisplayName="Generate Reentrant Scanner"
+       Description="Instructs flex to generate a reentrant C scanner. The generated scanner may safely be used in a multi-threaded environment. The API for a reentrant scanner is different than for a non-reentrant scanner.            (--reentrant)"
+       HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+       Switch="reentrant" />
+
+    <BoolProperty
+       Name="Cpp"
+       Category="Flex Options"
+       DisplayName="Generate C++ Scanner"
+       Description="Specifies that you want flex to generate a C++ scanner class.           (--c++)"
+       HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+       Switch="c++" />
+
+    <StringListProperty
+      Name="CppClassName"
+      Category="Flex Options"
+      HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+      DisplayName="C++ Class Name"
+      Description="Only applies when generating a C++ scanner (the ‘--c++’ option). It informs flex that you have derived NAME as a subclass of yyFlexLexer, so flex will place your actions in the member function foo::yylex() instead of yyFlexLexer::yylex(). It also generates a yyFlexLexer::yylex() member function that emits a run-time error (by invoking yyFlexLexer::LexerError()) if called.         (--yyclass=value)"
+      Switch="yyclass=&quot;[value]&quot;" />
+
+	   <BoolProperty
+       Name="Debug"
+       Category="Flex Options"
+       DisplayName="Debug Mode"
+       Description="Makes the generated scanner run in debug mode. Whenever a pattern is recognized and the global variable yy_flex_debug is non-zero (which is the default), the scanner will write to ‘stderr’ a line of the form: -accepting rule at line 53 ('the matched text').           (--debug)"
+       HelpUrl="https://westes.github.io/flex/manual/Scanner-Options.html#Scanner-Options"
+       Switch="debug" />
+
+    <StringListProperty
+      Name="Inputs"
+      Category="Command Line"
+      IsRequired="true"
+      Switch=" ">
+      <StringListProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          ItemType="Flex"
+          SourceType="Item" />
+      </StringListProperty.DataSource>
+    </StringListProperty>
+    <StringProperty
+      Name="CommandLineTemplate"
+      DisplayName="Command Line"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <DynamicEnumProperty
+      Name="FlexBeforeTargets"
+      Category="General"
+      EnumProvider="Targets"
+      IncludeInCommandLine="False">
+      <DynamicEnumProperty.DisplayName>
+        <sys:String>Execute Before</sys:String>
+      </DynamicEnumProperty.DisplayName>
+      <DynamicEnumProperty.Description>
+        <sys:String>Specifies the targets for the build customization to run before.</sys:String>
+      </DynamicEnumProperty.Description>
+      <DynamicEnumProperty.ProviderSettings>
+        <NameValuePair
+          Name="Exclude"
+          Value="^FlexBeforeTargets|^Compute" />
+      </DynamicEnumProperty.ProviderSettings>
+      <DynamicEnumProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          HasConfigurationCondition="true" />
+      </DynamicEnumProperty.DataSource>
+    </DynamicEnumProperty>
+    <DynamicEnumProperty
+      Name="FlexAfterTargets"
+      Category="General"
+      EnumProvider="Targets"
+      IncludeInCommandLine="False">
+      <DynamicEnumProperty.DisplayName>
+        <sys:String>Execute After</sys:String>
+      </DynamicEnumProperty.DisplayName>
+      <DynamicEnumProperty.Description>
+        <sys:String>Specifies the targets for the build customization to run after.</sys:String>
+      </DynamicEnumProperty.Description>
+      <DynamicEnumProperty.ProviderSettings>
+        <NameValuePair
+          Name="Exclude"
+          Value="^FlexAfterTargets|^Compute" />
+      </DynamicEnumProperty.ProviderSettings>
+      <DynamicEnumProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          ItemType=""
+          HasConfigurationCondition="true" />
+      </DynamicEnumProperty.DataSource>
+    </DynamicEnumProperty>
+    <StringListProperty
+      Name="Outputs"
+      DisplayName="Outputs"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <StringProperty
+      Name="ExecutionDescription"
+      DisplayName="Execution Description"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <StringListProperty
+      Name="AdditionalDependencies"
+      DisplayName="Additional Dependencies"
+      IncludeInCommandLine="False"
+      Visible="false" />
+    <StringProperty
+      Subtype="AdditionalOptions"
+      Name="AdditionalOptions"
+      Category="Command Line">
+      <StringProperty.DisplayName>
+        <sys:String>Additional Options</sys:String>
+      </StringProperty.DisplayName>
+      <StringProperty.Description>
+        <sys:String>Additional Options</sys:String>
+      </StringProperty.Description>
+    </StringProperty>
+  </Rule>
+  <ItemType
+    Name="Flex"
+    DisplayName="Flex files" />
+  <FileExtension
+    Name="*.l"
+    ContentType="Flex" />
+  <ContentType
+    Name="Flex"
+    DisplayName="Flex files"
+    ItemType="Flex" />
+  </ProjectSchemaDefinitions>

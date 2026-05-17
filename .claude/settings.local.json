@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C F:/reactos log --oneline -- base/applications/cmdutils/taskkill/taskkill.c)",
+      "Bash(git *)",
+      "Bash(Get-ChildItem -Path \"F:\\\\reactos\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(Head -30)",
+      "PowerShell(Get-ChildItem -Path \"F:\\\\reactos\\\\dll\\\\win32\" -Directory | Where-Object { $_.Name -match \"d3d|direct|dxva|dxgi|opengl|ddraw\" })",
+      "Bash(xargs grep -l \"ARRAY_SIZE\")",
+      "Bash(xargs grep -l \"define ARRAY_SIZE\")",
+      "PowerShell(ninja *)",
+      "Bash(cmd /c \"F:/reactos/output-VS-amd64/_build.bat\" -k 0 dll/win32/comdlg32/CMakeFiles/comdlg32.dir/itemdlg.c.obj)",
+      "Bash(cmd.exe /c \"\\\\\"F:\\\\\\\\reactos\\\\\\\\output-VS-amd64\\\\\\\\_build.bat\\\\\" -k 0 dll/win32/comdlg32/CMakeFiles/comdlg32.dir/itemdlg.c.obj\")",
+      "PowerShell(& \"F:\\\\reactos\\\\output-VS-amd64\\\\_build.bat\" \"-k\" \"0\" \"dll/win32/comdlg32/CMakeFiles/comdlg32.dir/itemdlg.c.obj\" 2>&1 | Select-Object -Last 60)",
+      "PowerShell(& \"F:\\\\reactos\\\\output-VS-amd64\\\\_build.bat\" \"-k\" \"0\" \"sdk/include/psdk/CMakeFiles/shobjidl.h.dir/build.make\" 2>&1 | Select-Object -Last 20)",
+      "PowerShell(& \"F:\\\\reactos\\\\output-VS-amd64\\\\_build.bat\" \"-k\" \"0\" \"sdk/include/psdk/shobjidl.h\" 2>&1 | Select-Object -Last 20)",
+      "Bash(xargs grep -l \"spec2def\")",
+      "Bash(xargs grep -l \"ExplorerBrowser\")",
+      "Bash(xargs grep -l \"ExplorerBrowser_Constructor\")",
+      "Bash(xargs grep -l \"IShellItem_Constructor\\\\|IShellLink_Constructor\")",
+      "Bash(xargs grep -l \"IExplorerBrowser\\\\|ExplorerBrowser\")",
+      "Bash(ninja -C ../build shell32)",
+      "PowerShell(Get-ChildItem F:\\\\reactos -Directory | Where-Object { $_.Name -match \"^output|^build\" } | Select-Object Name)",
+      "PowerShell(head *)",
+      "Bash(grep -v \"//\")"
+    ]
+  }
+}

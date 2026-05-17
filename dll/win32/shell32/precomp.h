@@ -78,6 +78,7 @@
 #include "shfldr.h"
 #include "CShellItem.h"
 #include "CShellLink.h"
+#include "CExplorerBrowser.h"
 #include "CFolderItemVerbs.h"
 #include "CFolderItems.h"
 #include "CFolder.h"

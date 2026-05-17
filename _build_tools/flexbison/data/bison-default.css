@@ -1,0 +1,61 @@
+/* Default styling rules for Bison when doing terminal output.
+   Copyright (C) 2019-2021 Free Software Foundation, Inc.
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
+
+/* This is an experimental feature.  The class names may change in the
+   future.  */
+
+/* Diagnostics.  */
+.warning   { color: purple; }
+.error     { color: red; }
+.note      { color: cyan; }
+
+.fixit-insert { color: green; }
+
+/* Semantic values in Bison's own parser traces.  */
+.value     { color: green; }
+
+/* "Sections" in traces (--trace).  */
+.trace0    { color: green; }
+
+/* Syntax error messages.  */
+.expected   { color: green; }
+.unexpected { color: red; }
+
+
+/* Counterexamples.  */
+
+/* Cex: point in rule.  */
+.cex-dot { color: red; }
+
+/* Cex: coloring various rules.  */
+.cex-0   { color: yellow; }
+.cex-1   { color: green; }
+.cex-2   { color: blue; }
+.cex-3   { color: purple; }
+.cex-4   { color: violet; }
+.cex-5   { color: orange; }
+.cex-6   { color: brown; }
+.cex-7   { color: mauve; }
+.cex-8   { color: #013220; } /* Dark green. */
+.cex-9   { color: #e75480; } /* Dark pink. */
+.cex-10  { color: cyan; }
+.cex-11  { color: orange; }
+
+/* Cex: derivation rewriting steps.  */
+.cex-step { font-style: italic; }
+
+/* Cex: leaves of a derivation.  */
+.cex-leaf { font-weight: 600; }

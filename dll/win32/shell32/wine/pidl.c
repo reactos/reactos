@@ -1671,7 +1671,56 @@ HRESULT WINAPI SHGetNameFromIDList(PCIDLIST_ABSOLUTE pidl, SIGDN sigdnName, PWST
 HRESULT WINAPI SHGetItemFromDataObject(IDataObject *pdtobj, DATAOBJ_GET_ITEM_FLAGS dwFlags,
                                        REFIID riid, void **ppv)
 {
-    return E_NOTIMPL; // FIXME
+    FORMATETC fmt;
+    STGMEDIUM stgm;
+    CIDA *pCIDA;
+    LPITEMIDLIST pidlFull;
+    HRESULT hr;
+
+    TRACE("(%p, 0x%x, %s, %p)\n", pdtobj, dwFlags, debugstr_guid(riid), ppv);
+
+    if (!pdtobj || !ppv)
+        return E_INVALIDARG;
+    *ppv = NULL;
+
+    fmt.cfFormat = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLISTW);
+    fmt.ptd = NULL;
+    fmt.dwAspect = DVASPECT_CONTENT;
+    fmt.lindex = -1;
+    fmt.tymed = TYMED_HGLOBAL;
+
+    hr = IDataObject_GetData(pdtobj, &fmt, &stgm);
+    if (FAILED(hr))
+        return hr;
+
+    pCIDA = GlobalLock(stgm.u.hGlobal);
+    if (!pCIDA)
+    {
+        ReleaseStgMedium(&stgm);
+        return E_FAIL;
+    }
+
+    if (pCIDA->cidl < 1)
+        hr = E_FAIL;
+    else if ((dwFlags & DOGIF_ONLY_IF_ONE) && pCIDA->cidl != 1)
+        hr = E_FAIL;
+    else
+    {
+        LPITEMIDLIST pidlParent = (LPITEMIDLIST)((LPBYTE)pCIDA + pCIDA->aoffset[0]);
+        LPITEMIDLIST pidlChild  = (LPITEMIDLIST)((LPBYTE)pCIDA + pCIDA->aoffset[1]);
+        pidlFull = ILCombine(pidlParent, pidlChild);
+        hr = pidlFull ? S_OK : E_OUTOFMEMORY;
+    }
+
+    GlobalUnlock(stgm.u.hGlobal);
+    ReleaseStgMedium(&stgm);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = SHCreateItemFromIDList(pidlFull, riid, ppv);
+        ILFree(pidlFull);
+    }
+    return hr;
 }
 
 /*************************************************************************

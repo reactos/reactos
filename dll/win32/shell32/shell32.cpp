@@ -324,6 +324,7 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_ExeDropHandler, CExeDropHandler)
     OBJECT_ENTRY(CLSID_QueryAssociations, CQueryAssociations)
     OBJECT_ENTRY(CLSID_UserNotification, CUserNotification)
+    OBJECT_ENTRY(CLSID_ExplorerBrowser, CExplorerBrowser)
 END_OBJECT_MAP()
 
 CShell32Module  gModule;

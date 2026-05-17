@@ -204,6 +204,9 @@ static void mark_task_process(const WCHAR *str, int *status_code)
     BOOL is_numeric;
     unsigned int i;
     DWORD pid;
+#ifdef __REACTOS__
+    unsigned int prev_pkill_size;
+#endif
 
     is_numeric = TRUE;
     while (*p)
@@ -241,6 +244,9 @@ static void mark_task_process(const WCHAR *str, int *status_code)
         return;
     }
 
+#ifdef __REACTOS__
+    prev_pkill_size = pkill_size;
+#endif
     for (i = 0; i < process_count; ++i)
     {
         if (!wcsicmp(process_list[i].p.szExeFile, str) && !process_list[i].matched)
@@ -263,8 +269,7 @@ static void mark_task_process(const WCHAR *str, int *status_code)
     }
 
 #ifdef __REACTOS__
-    // Cannot find any process matching the PID or name
-    if (pkill_size == 0)
+    if (pkill_size == prev_pkill_size)
     {
 #endif
 not_found:

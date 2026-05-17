@@ -1,0 +1,281 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProjectSchemaDefinitions xmlns="clr-namespace:Microsoft.Build.Framework.XamlTypes;assembly=Microsoft.Build.Framework" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:transformCallback="Microsoft.Cpp.Dev10.ConvertPropertyCallback">
+  <Rule
+    Name="Bison"
+    PageTemplate="tool"
+    DisplayName="Bison files"
+    SwitchPrefix="--"
+    Order="200">
+    <Rule.DataSource>
+      <DataSource
+        Persistence="ProjectFile"
+        ItemType="Bison" />
+    </Rule.DataSource>
+    <Rule.Categories>
+      <Category
+        Name="General">
+        <Category.DisplayName>
+          <sys:String>General</sys:String>
+        </Category.DisplayName>
+      </Category>
+      <Category
+        Name="Bison Options">
+        <Category.DisplayName>
+          <sys:String>Bison Options</sys:String>
+        </Category.DisplayName>
+      </Category>
+      <Category
+        Name="Command Line"
+        Subtype="CommandLine">
+        <Category.DisplayName>
+          <sys:String>Command Line</sys:String>
+        </Category.DisplayName>
+      </Category>
+    </Rule.Categories>
+
+    <StringListProperty
+      Name="OutputFile"
+      Category="Bison Options"
+      IsRequired="true"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Output File Name"
+      Description="Specify the file for the parser implementation file. --output=value"
+      Switch="output=&quot;[value]&quot;"
+      />
+
+    <StringListProperty
+      Name="DefinesFile"
+      Category="Bison Options"
+      Subtype="file"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Defines File Name"
+      Description="Pretend that %defines was specified, i.e., write an extra output file containing macro definitions for the token type names defined in the grammar, as well as a few other declarations. --defines=value"
+      Switch="defines=&quot;[value]&quot;"
+      />
+    
+    <BoolProperty
+      Name="Debug"
+      Category="Bison Options"
+      DisplayName="Debug"
+      Description="In the parser implementation file, define the macro YYDEBUG to 1 if it is not already defined, so that the debugging facilities are compiled. (--debug)"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Enabling-Traces.html#Enabling-Traces"
+      Switch="debug" />
+    
+    <BoolProperty
+      Name="Verbose"
+      Category="Bison Options"
+      DisplayName="Verbose"
+      Description="Write an extra output file containing verbose descriptions of the parser states and what is done for each type of lookahead token in that state. (--verbose)"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Understanding.html#Understanding"
+      Switch="verbose" />
+
+    <BoolProperty
+      Name="NoLines"
+      Category="Bison Options"
+      DisplayName="No lines"
+      Description="Don’t put any #line preprocessor commands in the parser implementation file. (--no-lines)"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      Switch="no-lines" />
+
+    <StringListProperty
+      Name="FilePrefix"
+      Category="Bison Options"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="File Prefix"
+      Description="Pretend that %file-prefix was specified, i.e., specify prefix to use for all Bison output file names. --file-prefix=prefix"
+      Switch="file-prefix=&quot;[value]&quot;"
+      />
+
+    <StringListProperty
+      Name="GraphFile"
+      Category="Bison Options"
+      Subtype="file"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Graph File"
+      Description="Output a graphical representation of the parser’s automaton computed by Bison, in Graphviz DOT format. --graph=file"
+      Switch="graph=&quot;[value]&quot;"
+      />
+
+    <EnumProperty
+      Name="Warnings"
+      Category="Bison Options"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Warnings"
+      Description="Output warnings falling in category. (--warnings=category)">
+
+      <EnumValue
+        Name="midrule-values"
+        DisplayName="midrule-values"
+        Switch="warnings=midrule-values"/>
+      <EnumValue
+        Name="yacc"
+        DisplayName="yacc"
+        Switch="warnings=yacc"/>
+      <EnumValue
+        Name="conflicts-sr"
+        DisplayName="conflicts-sr"
+        Switch="warnings=conflicts-sr"/>
+      <EnumValue
+        Name="conflicts-rr"
+        DisplayName="conflicts-rr"
+        Switch="warnings=conflicts-rr"/>
+      <EnumValue
+        Name="other"
+        DisplayName="other"
+        Switch="warnings=other"/>
+      <EnumValue
+        Name="all"
+        DisplayName="all"
+        Switch="warnings=all"/>
+      <EnumValue
+        Name="none"
+        DisplayName="none"
+        Switch="warnings=none"/>
+      <EnumValue
+        Name="error"
+        DisplayName="error"
+        Switch="warnings=error"/>
+    </EnumProperty>
+
+    <EnumProperty
+      Name="Report"
+      Category="Bison Options"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Report"
+      Description="Write an extra output file containing verbose description of the comma separated list of things. (--report=things)">
+      
+      <EnumValue
+        Name="state"
+        DisplayName="state"
+        Switch="report=state"/>
+      <EnumValue
+        Name="itemset"
+        DisplayName="itemset"
+        Switch="report=itemset"/>
+      <EnumValue
+        Name="lookahead"
+        DisplayName="lookahead"
+        Switch="report=lookahead"/>
+      <EnumValue
+        Name="solved"
+        DisplayName="solved"
+        Switch="report=solved"/>
+      <EnumValue
+        Name="all"
+        DisplayName="all"
+        Switch="report=all"/>
+      <EnumValue
+        Name="none"
+        DisplayName="none"
+        Switch="report=none"/>
+    </EnumProperty>
+
+    <StringListProperty
+      Name="ReportFile"
+      Category="Bison Options"
+      HelpUrl="https://www.gnu.org/software/bison/manual/html_node/Bison-Options.html#Bison-Options"
+      DisplayName="Report File Name"
+      Description="Specify the file for the verbose description. --report-file=value"
+      Switch="report-file=&quot;[value]&quot;"
+      />
+
+    <StringListProperty
+      Name="Inputs"
+      Category="Command Line"
+      IsRequired="true"
+      Switch=" ">
+      <StringListProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          ItemType="Bison"
+          SourceType="Item" />
+      </StringListProperty.DataSource>
+    </StringListProperty>
+    <StringProperty
+      Name="CommandLineTemplate"
+      DisplayName="Command Line"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <DynamicEnumProperty
+      Name="BisonBeforeTargets"
+      Category="General"
+      EnumProvider="Targets"
+      IncludeInCommandLine="False">
+      <DynamicEnumProperty.DisplayName>
+        <sys:String>Execute Before</sys:String>
+      </DynamicEnumProperty.DisplayName>
+      <DynamicEnumProperty.Description>
+        <sys:String>Specifies the targets for the build customization to run before.</sys:String>
+      </DynamicEnumProperty.Description>
+      <DynamicEnumProperty.ProviderSettings>
+        <NameValuePair
+          Name="Exclude"
+          Value="^BisonBeforeTargets|^Compute" />
+      </DynamicEnumProperty.ProviderSettings>
+      <DynamicEnumProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          HasConfigurationCondition="true" />
+      </DynamicEnumProperty.DataSource>
+    </DynamicEnumProperty>
+    <DynamicEnumProperty
+      Name="BisonAfterTargets"
+      Category="General"
+      EnumProvider="Targets"
+      IncludeInCommandLine="False">
+      <DynamicEnumProperty.DisplayName>
+        <sys:String>Execute After</sys:String>
+      </DynamicEnumProperty.DisplayName>
+      <DynamicEnumProperty.Description>
+        <sys:String>Specifies the targets for the build customization to run after.</sys:String>
+      </DynamicEnumProperty.Description>
+      <DynamicEnumProperty.ProviderSettings>
+        <NameValuePair
+          Name="Exclude"
+          Value="^BisonAfterTargets|^Compute" />
+      </DynamicEnumProperty.ProviderSettings>
+      <DynamicEnumProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          ItemType=""
+          HasConfigurationCondition="true" />
+      </DynamicEnumProperty.DataSource>
+    </DynamicEnumProperty>
+    <StringListProperty
+      Name="Outputs"
+      DisplayName="Outputs"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <StringProperty
+      Name="ExecutionDescription"
+      DisplayName="Execution Description"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <StringListProperty
+      Name="AdditionalDependencies"
+      DisplayName="Additional Dependencies"
+      IncludeInCommandLine="False"
+      Visible="false" />
+    <StringProperty
+      Subtype="AdditionalOptions"
+      Name="AdditionalOptions"
+      Category="Command Line">
+      <StringProperty.DisplayName>
+        <sys:String>Additional Options</sys:String>
+      </StringProperty.DisplayName>
+      <StringProperty.Description>
+        <sys:String>Additional Options</sys:String>
+      </StringProperty.Description>
+    </StringProperty>
+  </Rule>
+  <ItemType
+    Name="Bison"
+    DisplayName="Bison files" />
+  <FileExtension
+    Name="*.y"
+    ContentType="Bison" />
+  <ContentType
+    Name="Bison"
+    DisplayName="Bison files"
+    ItemType="Bison" />
+  </ProjectSchemaDefinitions>

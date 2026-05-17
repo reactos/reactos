@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <PropertyPageSchema
+      Include="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml" />
+    <AvailableItemName
+      Include="Flex">
+      <Targets>FlexTarget</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+  <UsingTask
+    TaskName="Flex"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <Target
+    Name="FlexTarget"
+    BeforeTargets="$(FlexBeforeTargets)"
+    AfterTargets="$(FlexAfterTargets)"
+    Condition="'@(Flex)' != ''"
+    DependsOnTargets="$(FlexDependsOn);ComputeFlexOutput"
+    Outputs="%(Flex.Outputs)"
+    Inputs="%(Flex.Identity);%(Flex.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <Flex
+        Remove="@(Flex)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <Flex_tlog
+        Include="%(Flex.Outputs)"
+        Condition="'%(Flex.Outputs)' != '' and '%(Flex.ExcludedFromBuild)' != 'true'">
+        <Source>@(Flex, '|')</Source>
+      </Flex_tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(Flex.ExecutionDescription)" />
+    <WriteLinesToFile
+      Condition="'@(Flex_tlog)' != '' and '%(Flex_tlog.ExcludedFromBuild)' != 'true'"
+      File="$(IntDir)$(ProjectName).write.1.tlog"
+      Lines="^%(Flex_tlog.Source);@(Flex_tlog-&gt;'%(Fullpath)')" />
+    <Flex
+      Condition="'@(Flex)' != '' and '%(Flex.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(Flex.CommandLineTemplate)"
+      OutputFile="%(Flex.OutputFile)"
+      HeaderFile="%(Flex.HeaderFile)"
+      Prefix="%(Flex.Prefix)"
+      Wincompat="%(Flex.Wincompat)"
+      CaseInsensitive="%(Flex.CaseInsensitive)"
+      LexCompat="%(Flex.LexCompat)"
+      Stack="%(Flex.Stack)"
+      BisonBridge="%(Flex.BisonBridge)"
+      Noline="%(Flex.Noline)"
+      Reentrant="%(Flex.Reentrant)"
+      Cpp="%(Flex.Cpp)"
+      CppClassName="%(Flex.CppClassName)"
+      Debug="%(Flex.Debug)"
+      AdditionalOptions="%(Flex.AdditionalOptions)"
+      Inputs="%(Flex.Identity)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            ComputeFlexOutput;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            ComputeFlexOutput;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="ComputeFlexOutput"
+    Condition="'@(Flex)' != ''">
+    <ItemGroup>
+      <FlexDirsToMake
+        Condition="'@(Flex)' != '' and '%(Flex.ExcludedFromBuild)' != 'true'"
+        Include="%(Flex.Outputs)" />
+      <Link
+        Include="%(FlexDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(FlexDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(FlexDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(FlexDirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+</Project>

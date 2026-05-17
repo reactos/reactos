@@ -37,6 +37,14 @@
 #include <mbedtls/sha1.h>
 #include <mbedtls/sha256.h>
 #include <mbedtls/sha512.h>
+#include <mbedtls/aes.h>
+#include <mbedtls/des.h>
+#include <mbedtls/gcm.h>
+#include <mbedtls/rsa.h>
+#include <mbedtls/bignum.h>
+#include <mbedtls/ecdh.h>
+#include <mbedtls/ecp.h>
+#include <mbedtls/ecdsa.h>
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(bcrypt);
@@ -252,8 +260,11 @@ NTSTATUS WINAPI BCryptEnumAlgorithms(ULONG dwAlgOperations, ULONG *pAlgCount,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-#define MAGIC_ALG  (('A' << 24) | ('L' << 16) | ('G' << 8) | '0')
-#define MAGIC_HASH (('H' << 24) | ('A' << 16) | ('S' << 8) | 'H')
+#define MAGIC_ALG    (('A' << 24) | ('L' << 16) | ('G' << 8) | '0')
+#define MAGIC_HASH   (('H' << 24) | ('A' << 16) | ('S' << 8) | 'H')
+#define MAGIC_KEY    (('K' << 24) | ('E' << 16) | ('Y' << 8) | '0')
+#define MAGIC_KPAIR  (('K' << 24) | ('P' << 16) | ('A' << 8) | 'R')
+#define MAGIC_SECRET (('S' << 24) | ('E' << 16) | ('C' << 8) | 'T')
 struct object
 {
     ULONG magic;
@@ -269,20 +280,30 @@ enum alg_id
     ALG_ID_SHA512,
     ALG_ID_ECDSA_P256,
     ALG_ID_ECDSA_P384,
+    ALG_ID_AES,
+    ALG_ID_RSA,
+    ALG_ID_ECDH_P256,
+    ALG_ID_ECDH_P384,
+    ALG_ID_3DES,
 };
 
 static const struct {
     ULONG hash_length;
     const WCHAR *alg_name;
 } alg_props[] = {
-    /* ALG_ID_MD5    */ { 16, BCRYPT_MD5_ALGORITHM },
-    /* ALG_ID_RNG    */ {  0, BCRYPT_RNG_ALGORITHM },
-    /* ALG_ID_SHA1   */ { 20, BCRYPT_SHA1_ALGORITHM },
-    /* ALG_ID_SHA256 */ { 32, BCRYPT_SHA256_ALGORITHM },
-    /* ALG_ID_SHA384 */ { 48, BCRYPT_SHA384_ALGORITHM },
-    /* ALG_ID_SHA512 */ { 64, BCRYPT_SHA512_ALGORITHM },
-    /* ALG_ID_ECDSA_P256 */ { 0, BCRYPT_ECDSA_P256_ALGORITHM },
-    /* ALG_ID_ECDSA_P384 */ { 0, BCRYPT_ECDSA_P384_ALGORITHM },
+    /* ALG_ID_MD5        */ { 16, BCRYPT_MD5_ALGORITHM },
+    /* ALG_ID_RNG        */ {  0, BCRYPT_RNG_ALGORITHM },
+    /* ALG_ID_SHA1       */ { 20, BCRYPT_SHA1_ALGORITHM },
+    /* ALG_ID_SHA256     */ { 32, BCRYPT_SHA256_ALGORITHM },
+    /* ALG_ID_SHA384     */ { 48, BCRYPT_SHA384_ALGORITHM },
+    /* ALG_ID_SHA512     */ { 64, BCRYPT_SHA512_ALGORITHM },
+    /* ALG_ID_ECDSA_P256 */ {  0, BCRYPT_ECDSA_P256_ALGORITHM },
+    /* ALG_ID_ECDSA_P384 */ {  0, BCRYPT_ECDSA_P384_ALGORITHM },
+    /* ALG_ID_AES        */ {  0, BCRYPT_AES_ALGORITHM },
+    /* ALG_ID_RSA        */ {  0, BCRYPT_RSA_ALGORITHM },
+    /* ALG_ID_ECDH_P256  */ {  0, BCRYPT_ECDH_P256_ALGORITHM },
+    /* ALG_ID_ECDH_P384  */ {  0, BCRYPT_ECDH_P384_ALGORITHM },
+    /* ALG_ID_3DES       */ {  0, BCRYPT_3DES_ALGORITHM },
 };
 
 struct algorithm
@@ -357,6 +378,11 @@ NTSTATUS WINAPI BCryptOpenAlgorithmProvider( BCRYPT_ALG_HANDLE *handle, LPCWSTR 
     else if (!strcmpW( id, BCRYPT_SHA512_ALGORITHM )) alg_id = ALG_ID_SHA512;
     else if (!strcmpW( id, BCRYPT_ECDSA_P256_ALGORITHM )) alg_id = ALG_ID_ECDSA_P256;
     else if (!strcmpW( id, BCRYPT_ECDSA_P384_ALGORITHM )) alg_id = ALG_ID_ECDSA_P384;
+    else if (!strcmpW( id, BCRYPT_AES_ALGORITHM )) alg_id = ALG_ID_AES;
+    else if (!strcmpW( id, BCRYPT_RSA_ALGORITHM )) alg_id = ALG_ID_RSA;
+    else if (!strcmpW( id, BCRYPT_3DES_ALGORITHM )) alg_id = ALG_ID_3DES;
+    else if (!strcmpW( id, BCRYPT_ECDH_P256_ALGORITHM )) alg_id = ALG_ID_ECDH_P256;
+    else if (!strcmpW( id, BCRYPT_ECDH_P384_ALGORITHM )) alg_id = ALG_ID_ECDH_P384;
     else
     {
         FIXME( "algorithm %s not supported\n", debugstr_w(id) );
@@ -855,7 +881,140 @@ static NTSTATUS hmac_finish( struct hash *hash, UCHAR *output, ULONG size )
 
     return STATUS_SUCCESS;
 }
-#endif
+
+/* ---- AES symmetric key support ---- */
+
+#define AES_BLOCK_SIZE 16
+
+struct key
+{
+    struct object hdr;
+    enum alg_id   alg_id;
+    ULONG         block_size;
+    ULONG         key_len;              /* key length in bytes */
+    WCHAR         chaining_mode[64];
+    UCHAR         key_data[32];         /* raw key bytes, up to 256-bit */
+    mbedtls_aes_context  aes_enc;
+    mbedtls_aes_context  aes_dec;
+    mbedtls_gcm_context  gcm;
+    BOOL                 gcm_key_set;
+    mbedtls_des3_context des3_enc;
+    mbedtls_des3_context des3_dec;
+};
+
+/* RSA/ECDH asymmetric key pair */
+struct key_pair
+{
+    struct object    hdr;
+    enum alg_id      alg_id;
+    ULONG            bitlen;
+    BOOL             finalized;
+    BOOL             has_private;
+    union {
+        mbedtls_rsa_context   rsa;
+        mbedtls_ecdh_context  ecdh;
+        mbedtls_ecdsa_context ecdsa;
+    } u;
+};
+
+/* ECDH shared secret (result of BCryptSecretAgreement) */
+struct secret
+{
+    struct object hdr;
+    enum alg_id   alg_id;   /* ECDH algorithm that produced this secret */
+    ULONG         secret_len;
+    UCHAR         secret[66]; /* up to 66 bytes for P-521; 32 for P-256, 48 for P-384 */
+};
+
+/* Simple RNG shim for mbedTLS (uses Windows RtlGenRandom) */
+static int rng_cb( void *p_rng, unsigned char *output, size_t len )
+{
+    (void)p_rng;
+    return RtlGenRandom( output, (ULONG)len ) ? 0 : -1;
+}
+
+static NTSTATUS key_init( struct key *key, enum alg_id alg_id, const UCHAR *secret, ULONG secretlen )
+{
+    key->hdr.magic  = MAGIC_KEY;
+    key->alg_id     = alg_id;
+    key->key_len    = secretlen;
+    strcpyW(key->chaining_mode, BCRYPT_CHAIN_MODE_CBC);
+
+    if (alg_id == ALG_ID_AES)
+    {
+        if (secretlen != 16 && secretlen != 24 && secretlen != 32) return STATUS_INVALID_PARAMETER;
+        memcpy(key->key_data, secret, secretlen);
+        key->block_size = AES_BLOCK_SIZE;
+
+        mbedtls_aes_init(&key->aes_enc);
+        mbedtls_aes_init(&key->aes_dec);
+        mbedtls_gcm_init(&key->gcm);
+        key->gcm_key_set = FALSE;
+
+        if (mbedtls_aes_setkey_enc(&key->aes_enc, secret, secretlen * 8) != 0 ||
+            mbedtls_aes_setkey_dec(&key->aes_dec, secret, secretlen * 8) != 0)
+        {
+            mbedtls_aes_free(&key->aes_enc);
+            mbedtls_aes_free(&key->aes_dec);
+            mbedtls_gcm_free(&key->gcm);
+            return STATUS_INTERNAL_ERROR;
+        }
+        return STATUS_SUCCESS;
+    }
+
+    if (alg_id == ALG_ID_3DES)
+    {
+        /* 3DES: 16 bytes (2-key) or 24 bytes (3-key) */
+        if (secretlen != 16 && secretlen != 24) return STATUS_INVALID_PARAMETER;
+        memcpy(key->key_data, secret, secretlen);
+        key->block_size = 8; /* DES block */
+
+        mbedtls_des3_init(&key->des3_enc);
+        mbedtls_des3_init(&key->des3_dec);
+
+        if (secretlen == 24)
+        {
+            if (mbedtls_des3_set3key_enc(&key->des3_enc, secret) != 0 ||
+                mbedtls_des3_set3key_dec(&key->des3_dec, secret) != 0)
+            {
+                mbedtls_des3_free(&key->des3_enc);
+                mbedtls_des3_free(&key->des3_dec);
+                return STATUS_INTERNAL_ERROR;
+            }
+        }
+        else /* 16 bytes = 2-key 3DES */
+        {
+            if (mbedtls_des3_set2key_enc(&key->des3_enc, secret) != 0 ||
+                mbedtls_des3_set2key_dec(&key->des3_dec, secret) != 0)
+            {
+                mbedtls_des3_free(&key->des3_enc);
+                mbedtls_des3_free(&key->des3_dec);
+                return STATUS_INTERNAL_ERROR;
+            }
+        }
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+static void key_free( struct key *key )
+{
+    if (key->alg_id == ALG_ID_AES)
+    {
+        mbedtls_aes_free(&key->aes_enc);
+        mbedtls_aes_free(&key->aes_dec);
+        mbedtls_gcm_free(&key->gcm);
+    }
+    else if (key->alg_id == ALG_ID_3DES)
+    {
+        mbedtls_des3_free(&key->des3_enc);
+        mbedtls_des3_free(&key->des3_dec);
+    }
+    HeapFree(GetProcessHeap(), 0, key);
+}
+
+#endif /* SONAME_LIBMBEDTLS */
 
 #define OBJECT_LENGTH_MD5       274
 #define OBJECT_LENGTH_SHA1      278
@@ -949,6 +1108,100 @@ static NTSTATUS get_alg_property( enum alg_id id, const WCHAR *prop, UCHAR *buf,
         FIXME( "unsupported sha512 algorithm property %s\n", debugstr_w(prop) );
         return STATUS_NOT_IMPLEMENTED;
 
+    case ALG_ID_AES:
+        if (!strcmpW( prop, BCRYPT_OBJECT_LENGTH ))
+        {
+            /* size of struct key, returned so callers can allocate the object buffer */
+            value = 512; /* conservative upper bound including mbedtls contexts */
+            break;
+        }
+        if (!strcmpW( prop, BCRYPT_BLOCK_LENGTH ))
+        {
+            value = 16;
+            break;
+        }
+        if (!strcmpW( prop, BCRYPT_KEY_LENGTHS ))
+        {
+            BCRYPT_KEY_LENGTHS_STRUCT *kl = (BCRYPT_KEY_LENGTHS_STRUCT *)buf;
+            *ret_size = sizeof(*kl);
+            if (size < sizeof(*kl)) return STATUS_BUFFER_TOO_SMALL;
+            if (kl)
+            {
+                kl->dwMinLength = 128;
+                kl->dwMaxLength = 256;
+                kl->dwIncrement = 64;
+            }
+            return STATUS_SUCCESS;
+        }
+        FIXME( "unsupported AES algorithm property %s\n", debugstr_w(prop) );
+        return STATUS_NOT_IMPLEMENTED;
+
+    case ALG_ID_3DES:
+        if (!strcmpW( prop, BCRYPT_OBJECT_LENGTH ))
+        {
+            value = 512;
+            break;
+        }
+        if (!strcmpW( prop, BCRYPT_BLOCK_LENGTH ))
+        {
+            value = 8; /* DES block = 8 bytes */
+            break;
+        }
+        if (!strcmpW( prop, BCRYPT_KEY_LENGTHS ))
+        {
+            BCRYPT_KEY_LENGTHS_STRUCT *kl = (BCRYPT_KEY_LENGTHS_STRUCT *)buf;
+            *ret_size = sizeof(*kl);
+            if (size < sizeof(*kl)) return STATUS_BUFFER_TOO_SMALL;
+            if (kl)
+            {
+                kl->dwMinLength = 112; /* 2-key 3DES effective bits */
+                kl->dwMaxLength = 168; /* 3-key 3DES effective bits */
+                kl->dwIncrement = 56;
+            }
+            return STATUS_SUCCESS;
+        }
+        FIXME( "unsupported 3DES algorithm property %s\n", debugstr_w(prop) );
+        return STATUS_NOT_IMPLEMENTED;
+
+    case ALG_ID_RSA:
+        if (!strcmpW( prop, BCRYPT_OBJECT_LENGTH ))
+        {
+            value = 512; /* struct key_pair upper bound */
+            break;
+        }
+        FIXME( "unsupported RSA algorithm property %s\n", debugstr_w(prop) );
+        return STATUS_NOT_IMPLEMENTED;
+
+    case ALG_ID_ECDSA_P256:
+    case ALG_ID_ECDSA_P384:
+        if (!strcmpW( prop, BCRYPT_OBJECT_LENGTH ))
+        {
+            value = 512;
+            break;
+        }
+        if (!strcmpW( prop, BCRYPT_KEY_LENGTH ))
+        {
+            value = (id == ALG_ID_ECDSA_P256) ? 256 : 384;
+            break;
+        }
+        FIXME( "unsupported ECDSA algorithm property %s\n", debugstr_w(prop) );
+        return STATUS_NOT_IMPLEMENTED;
+
+    case ALG_ID_ECDH_P256:
+    case ALG_ID_ECDH_P384:
+        if (!strcmpW( prop, BCRYPT_OBJECT_LENGTH ))
+        {
+            value = 512; /* struct key_pair upper bound */
+            break;
+        }
+        if (!strcmpW( prop, BCRYPT_KEY_LENGTH ))
+        {
+            value = (id == ALG_ID_ECDH_P256) ? 256 : 384;
+            break;
+        }
+        FIXME( "unsupported ECDH algorithm property %s\n", debugstr_w(prop) );
+        return STATUS_NOT_IMPLEMENTED;
+
     default:
         FIXME( "unsupported algorithm %u\n", id );
         return STATUS_NOT_IMPLEMENTED;
@@ -995,6 +1248,63 @@ NTSTATUS WINAPI BCryptGetProperty( BCRYPT_HANDLE handle, LPCWSTR prop, UCHAR *bu
     {
         const struct hash *hash = (const struct hash *)object;
         return get_hash_property( hash->alg_id, prop, buffer, count, res );
+    }
+    case MAGIC_KEY:
+    {
+#ifdef SONAME_LIBMBEDTLS
+        const struct key *key = (const struct key *)object;
+        if (!strcmpW( prop, BCRYPT_KEY_LENGTH ))
+        {
+            if (count < sizeof(ULONG)) { *res = sizeof(ULONG); return STATUS_BUFFER_TOO_SMALL; }
+            if (buffer) *(ULONG *)buffer = key->key_len * 8;
+            *res = sizeof(ULONG);
+            return STATUS_SUCCESS;
+        }
+        if (!strcmpW( prop, BCRYPT_BLOCK_LENGTH ))
+        {
+            if (count < sizeof(ULONG)) { *res = sizeof(ULONG); return STATUS_BUFFER_TOO_SMALL; }
+            if (buffer) *(ULONG *)buffer = key->block_size;
+            *res = sizeof(ULONG);
+            return STATUS_SUCCESS;
+        }
+        if (!strcmpW( prop, BCRYPT_CHAINING_MODE ))
+        {
+            ULONG sz = (strlenW(key->chaining_mode) + 1) * sizeof(WCHAR);
+            *res = sz;
+            if (count < sz) return STATUS_BUFFER_TOO_SMALL;
+            if (buffer) memcpy(buffer, key->chaining_mode, sz);
+            return STATUS_SUCCESS;
+        }
+        FIXME( "unsupported key property %s\n", debugstr_w(prop) );
+        return STATUS_NOT_IMPLEMENTED;
+#else
+        FIXME( "key object not supported without mbedTLS\n" );
+        return STATUS_NOT_IMPLEMENTED;
+#endif
+    }
+    case MAGIC_KPAIR:
+    {
+#ifdef SONAME_LIBMBEDTLS
+        const struct key_pair *kp = (const struct key_pair *)object;
+        if (!strcmpW( prop, BCRYPT_KEY_LENGTH ))
+        {
+            if (count < sizeof(ULONG)) { *res = sizeof(ULONG); return STATUS_BUFFER_TOO_SMALL; }
+            if (buffer) *(ULONG *)buffer = kp->bitlen;
+            *res = sizeof(ULONG);
+            return STATUS_SUCCESS;
+        }
+        if (!strcmpW( prop, BCRYPT_KEY_STRENGTH ))
+        {
+            if (count < sizeof(ULONG)) { *res = sizeof(ULONG); return STATUS_BUFFER_TOO_SMALL; }
+            if (buffer) *(ULONG *)buffer = kp->bitlen;
+            *res = sizeof(ULONG);
+            return STATUS_SUCCESS;
+        }
+        FIXME( "unsupported key-pair property %s\n", debugstr_w(prop) );
+        return STATUS_NOT_IMPLEMENTED;
+#else
+        return STATUS_NOT_IMPLEMENTED;
+#endif
     }
     default:
         WARN( "unknown magic %08x\n", object->magic );
@@ -1124,6 +1434,1873 @@ NTSTATUS WINAPI BCryptHash( BCRYPT_ALG_HANDLE algorithm, UCHAR *secret, ULONG se
 
     return BCryptDestroyHash( handle );
 }
+
+/* Supported algorithm list for BCryptEnumAlgorithms */
+static const struct
+{
+    ULONG        class_flag;
+    const WCHAR *name;
+} supported_algs[] =
+{
+    { BCRYPT_HASH_OPERATION,      BCRYPT_MD5_ALGORITHM    },
+    { BCRYPT_HASH_OPERATION,      BCRYPT_SHA1_ALGORITHM   },
+    { BCRYPT_HASH_OPERATION,      BCRYPT_SHA256_ALGORITHM },
+    { BCRYPT_HASH_OPERATION,      BCRYPT_SHA384_ALGORITHM },
+    { BCRYPT_HASH_OPERATION,      BCRYPT_SHA512_ALGORITHM },
+    { BCRYPT_CIPHER_OPERATION,    BCRYPT_AES_ALGORITHM    },
+    { BCRYPT_CIPHER_OPERATION,    BCRYPT_3DES_ALGORITHM   },
+    { BCRYPT_RNG_OPERATION,       BCRYPT_RNG_ALGORITHM    },
+    { BCRYPT_ASYMMETRIC_ENCRYPTION_OPERATION | BCRYPT_SIGNATURE_OPERATION, BCRYPT_RSA_ALGORITHM },
+    { BCRYPT_SIGNATURE_OPERATION,              BCRYPT_ECDSA_P256_ALGORITHM },
+    { BCRYPT_SIGNATURE_OPERATION,              BCRYPT_ECDSA_P384_ALGORITHM },
+    { BCRYPT_SECRET_AGREEMENT_OPERATION,       BCRYPT_ECDH_P256_ALGORITHM  },
+    { BCRYPT_SECRET_AGREEMENT_OPERATION,       BCRYPT_ECDH_P384_ALGORITHM  },
+};
+
+NTSTATUS WINAPI BCryptEnumAlgorithms( ULONG dwAlgOperations, ULONG *pAlgCount,
+                                      BCRYPT_ALGORITHM_IDENTIFIER **ppAlgList, ULONG dwFlags )
+{
+    BCRYPT_ALGORITHM_IDENTIFIER *list;
+    ULONG i, count = 0;
+
+    TRACE( "%08x, %p, %p, %08x\n", dwAlgOperations, pAlgCount, ppAlgList, dwFlags );
+
+    if (!pAlgCount || !ppAlgList) return STATUS_INVALID_PARAMETER;
+
+    /* count matching entries */
+    for (i = 0; i < ARRAY_SIZE(supported_algs); i++)
+    {
+        if (!dwAlgOperations || (supported_algs[i].class_flag & dwAlgOperations))
+            count++;
+    }
+
+    list = HeapAlloc( GetProcessHeap(), 0, count * sizeof(*list) );
+    if (!list) return STATUS_NO_MEMORY;
+
+    count = 0;
+    for (i = 0; i < ARRAY_SIZE(supported_algs); i++)
+    {
+        if (!dwAlgOperations || (supported_algs[i].class_flag & dwAlgOperations))
+        {
+            list[count].pszName  = (LPWSTR)supported_algs[i].name;
+            list[count].dwClass  = supported_algs[i].class_flag;
+            list[count].dwFlags  = 0;
+            count++;
+        }
+    }
+
+    *pAlgCount = count;
+    *ppAlgList = list;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS WINAPI BCryptDuplicateKey( BCRYPT_KEY_HANDLE handle, BCRYPT_KEY_HANDLE *handle_copy,
+                                     UCHAR *object, ULONG objectlen, ULONG flags )
+{
+    TRACE( "%p, %p, %p, %u, %08x\n", handle, handle_copy, object, objectlen, flags );
+
+    if (!handle_copy) return STATUS_INVALID_PARAMETER;
+
+#ifdef SONAME_LIBMBEDTLS
+    {
+        struct object *obj = handle;
+        if (!obj) return STATUS_INVALID_HANDLE;
+
+        if (obj->magic == MAGIC_KEY)
+        {
+            struct key *orig = (struct key *)obj;
+            struct key *copy = HeapAlloc( GetProcessHeap(), 0, sizeof(*copy) );
+            if (!copy) return STATUS_NO_MEMORY;
+            memcpy( copy, orig, sizeof(*copy) );
+            /* Re-initialize mbedTLS contexts from saved key data */
+            if (orig->alg_id == ALG_ID_AES)
+            {
+                mbedtls_aes_init(&copy->aes_enc);
+                mbedtls_aes_init(&copy->aes_dec);
+                mbedtls_gcm_init(&copy->gcm);
+                copy->gcm_key_set = FALSE;
+                mbedtls_aes_setkey_enc(&copy->aes_enc, copy->key_data, copy->key_len * 8);
+                mbedtls_aes_setkey_dec(&copy->aes_dec, copy->key_data, copy->key_len * 8);
+                if (orig->gcm_key_set)
+                {
+                    if (mbedtls_gcm_setkey(&copy->gcm, MBEDTLS_CIPHER_ID_AES,
+                                            copy->key_data, copy->key_len * 8) == 0)
+                        copy->gcm_key_set = TRUE;
+                }
+            }
+            else if (orig->alg_id == ALG_ID_3DES)
+            {
+                mbedtls_des3_init(&copy->des3_enc);
+                mbedtls_des3_init(&copy->des3_dec);
+                if (orig->key_len == 24)
+                {
+                    mbedtls_des3_set3key_enc(&copy->des3_enc, copy->key_data);
+                    mbedtls_des3_set3key_dec(&copy->des3_dec, copy->key_data);
+                }
+                else
+                {
+                    mbedtls_des3_set2key_enc(&copy->des3_enc, copy->key_data);
+                    mbedtls_des3_set2key_dec(&copy->des3_dec, copy->key_data);
+                }
+            }
+            *handle_copy = copy;
+            return STATUS_SUCCESS;
+        }
+    }
+#endif
+    FIXME( "unsupported handle type\n" );
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS WINAPI BCryptGenerateKeyPair( BCRYPT_ALG_HANDLE algorithm, BCRYPT_KEY_HANDLE *handle,
+                                        ULONG length, ULONG flags )
+{
+    struct algorithm *alg = algorithm;
+
+    TRACE( "%p, %p, %u, %08x\n", algorithm, handle, length, flags );
+
+    if (!alg || alg->hdr.magic != MAGIC_ALG) return STATUS_INVALID_HANDLE;
+    if (!handle) return STATUS_INVALID_PARAMETER;
+
+#ifdef SONAME_LIBMBEDTLS
+    if (alg->id == ALG_ID_RSA)
+    {
+        struct key_pair *kp;
+        if (length < 512 || length > 16384 || (length % 64))
+            return STATUS_INVALID_PARAMETER;
+
+        kp = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*kp) );
+        if (!kp) return STATUS_NO_MEMORY;
+
+        kp->hdr.magic  = MAGIC_KPAIR;
+        kp->alg_id     = ALG_ID_RSA;
+        kp->bitlen     = length;
+        kp->finalized  = FALSE;
+        kp->has_private= FALSE;
+        mbedtls_rsa_init( &kp->u.rsa, MBEDTLS_RSA_PKCS_V15, 0 );
+
+        *handle = kp;
+        return STATUS_SUCCESS;
+    }
+    if (alg->id == ALG_ID_ECDH_P256 || alg->id == ALG_ID_ECDH_P384)
+    {
+        struct key_pair *kp;
+        ULONG expected_bits = (alg->id == ALG_ID_ECDH_P256) ? 256 : 384;
+
+        if (length != 0 && length != expected_bits)
+            return STATUS_INVALID_PARAMETER;
+
+        kp = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*kp) );
+        if (!kp) return STATUS_NO_MEMORY;
+
+        kp->hdr.magic  = MAGIC_KPAIR;
+        kp->alg_id     = alg->id;
+        kp->bitlen     = expected_bits;
+        kp->finalized  = FALSE;
+        kp->has_private= FALSE;
+        mbedtls_ecdh_init( &kp->u.ecdh );
+
+        *handle = kp;
+        return STATUS_SUCCESS;
+    }
+    if (alg->id == ALG_ID_ECDSA_P256 || alg->id == ALG_ID_ECDSA_P384)
+    {
+        struct key_pair *kp;
+        ULONG expected_bits = (alg->id == ALG_ID_ECDSA_P256) ? 256 : 384;
+
+        if (length != 0 && length != expected_bits)
+            return STATUS_INVALID_PARAMETER;
+
+        kp = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*kp) );
+        if (!kp) return STATUS_NO_MEMORY;
+
+        kp->hdr.magic  = MAGIC_KPAIR;
+        kp->alg_id     = alg->id;
+        kp->bitlen     = expected_bits;
+        kp->finalized  = FALSE;
+        kp->has_private= FALSE;
+        mbedtls_ecdsa_init( &kp->u.ecdsa );
+
+        *handle = kp;
+        return STATUS_SUCCESS;
+    }
+#endif
+    FIXME( "algorithm %u key pair generation not supported\n", alg->id );
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS WINAPI BCryptFinalizeKeyPair( BCRYPT_KEY_HANDLE handle, ULONG flags )
+{
+    TRACE( "%p, %08x\n", handle, flags );
+
+#ifdef SONAME_LIBMBEDTLS
+    {
+        struct key_pair *kp = handle;
+        if (!kp || kp->hdr.magic != MAGIC_KPAIR) return STATUS_INVALID_HANDLE;
+        if (kp->finalized) return STATUS_SUCCESS;
+
+        if (kp->alg_id == ALG_ID_RSA)
+        {
+            if (mbedtls_rsa_gen_key( &kp->u.rsa, rng_cb, NULL, kp->bitlen, 65537 ) != 0)
+                return STATUS_INTERNAL_ERROR;
+            kp->finalized  = TRUE;
+            kp->has_private= TRUE;
+            return STATUS_SUCCESS;
+        }
+        if (kp->alg_id == ALG_ID_ECDH_P256 || kp->alg_id == ALG_ID_ECDH_P384)
+        {
+            mbedtls_ecp_group_id grp_id = (kp->alg_id == ALG_ID_ECDH_P256)
+                                          ? MBEDTLS_ECP_DP_SECP256R1
+                                          : MBEDTLS_ECP_DP_SECP384R1;
+            if (mbedtls_ecdh_setup( &kp->u.ecdh, grp_id ) != 0)
+                return STATUS_INTERNAL_ERROR;
+            if (mbedtls_ecdh_gen_public( &kp->u.ecdh.grp, &kp->u.ecdh.d, &kp->u.ecdh.Q,
+                                          rng_cb, NULL ) != 0)
+                return STATUS_INTERNAL_ERROR;
+            kp->finalized  = TRUE;
+            kp->has_private= TRUE;
+            return STATUS_SUCCESS;
+        }
+        if (kp->alg_id == ALG_ID_ECDSA_P256 || kp->alg_id == ALG_ID_ECDSA_P384)
+        {
+            mbedtls_ecp_group_id grp_id = (kp->alg_id == ALG_ID_ECDSA_P256)
+                                          ? MBEDTLS_ECP_DP_SECP256R1
+                                          : MBEDTLS_ECP_DP_SECP384R1;
+            if (mbedtls_ecdsa_genkey( &kp->u.ecdsa, grp_id, rng_cb, NULL ) != 0)
+                return STATUS_INTERNAL_ERROR;
+            kp->finalized  = TRUE;
+            kp->has_private= TRUE;
+            return STATUS_SUCCESS;
+        }
+    }
+#endif
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS WINAPI BCryptImportKeyPair( BCRYPT_ALG_HANDLE algorithm, BCRYPT_KEY_HANDLE decrypt_key,
+                                      LPCWSTR type, BCRYPT_KEY_HANDLE *handle,
+                                      UCHAR *input, ULONG inputlen, ULONG flags )
+{
+    struct algorithm *alg = algorithm;
+
+    TRACE( "%p, %p, %s, %p, %p, %u, %08x\n", algorithm, decrypt_key, debugstr_w(type),
+           handle, input, inputlen, flags );
+
+    if (!alg || alg->hdr.magic != MAGIC_ALG) return STATUS_INVALID_HANDLE;
+    if (!type || !handle || !input) return STATUS_INVALID_PARAMETER;
+
+#ifdef SONAME_LIBMBEDTLS
+    if (alg->id == ALG_ID_RSA &&
+        (!strcmpW( type, BCRYPT_RSAPUBLIC_BLOB ) || !strcmpW( type, BCRYPT_RSAPRIVATE_BLOB )))
+    {
+        const BCRYPT_RSAKEY_BLOB *hdr = (const BCRYPT_RSAKEY_BLOB *)input;
+        BOOL is_public = !strcmpW( type, BCRYPT_RSAPUBLIC_BLOB );
+        const UCHAR *p = (const UCHAR *)(hdr + 1);
+        mbedtls_mpi N, E, D, P, Q;
+        struct key_pair *kp;
+        int ret;
+
+        if (inputlen < sizeof(*hdr)) return STATUS_INVALID_PARAMETER;
+        if (is_public  && hdr->Magic != BCRYPT_RSAPUBLIC_MAGIC)  return STATUS_INVALID_PARAMETER;
+        if (!is_public && hdr->Magic != BCRYPT_RSAPRIVATE_MAGIC) return STATUS_INVALID_PARAMETER;
+
+        kp = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*kp) );
+        if (!kp) return STATUS_NO_MEMORY;
+
+        kp->hdr.magic  = MAGIC_KPAIR;
+        kp->alg_id     = ALG_ID_RSA;
+        kp->bitlen     = hdr->BitLength;
+        kp->finalized  = TRUE;
+        kp->has_private= !is_public;
+        mbedtls_rsa_init( &kp->u.rsa, MBEDTLS_RSA_PKCS_V15, 0 );
+
+        mbedtls_mpi_init(&N); mbedtls_mpi_init(&E);
+        mbedtls_mpi_init(&D); mbedtls_mpi_init(&P); mbedtls_mpi_init(&Q);
+
+        /* Public exponent (big-endian) */
+        mbedtls_mpi_read_binary(&E, p, hdr->cbPublicExp); p += hdr->cbPublicExp;
+        /* Modulus */
+        mbedtls_mpi_read_binary(&N, p, hdr->cbModulus);   p += hdr->cbModulus;
+
+        if (!is_public && hdr->cbPrime1 && hdr->cbPrime2)
+        {
+            mbedtls_mpi_read_binary(&P, p, hdr->cbPrime1); p += hdr->cbPrime1;
+            mbedtls_mpi_read_binary(&Q, p, hdr->cbPrime2);
+        }
+
+        ret = mbedtls_rsa_import( &kp->u.rsa, &N, is_public ? NULL : &P,
+                                   is_public ? NULL : &Q, NULL, &E );
+        if (ret == 0 && !is_public)
+            ret = mbedtls_rsa_complete( &kp->u.rsa );
+
+        mbedtls_mpi_free(&N); mbedtls_mpi_free(&E);
+        mbedtls_mpi_free(&D); mbedtls_mpi_free(&P); mbedtls_mpi_free(&Q);
+
+        if (ret != 0)
+        {
+            mbedtls_rsa_free( &kp->u.rsa );
+            HeapFree( GetProcessHeap(), 0, kp );
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        *handle = kp;
+        return STATUS_SUCCESS;
+    }
+#endif
+#ifdef SONAME_LIBMBEDTLS
+    if ((alg->id == ALG_ID_ECDSA_P256 || alg->id == ALG_ID_ECDSA_P384) &&
+        (!strcmpW( type, BCRYPT_ECCPUBLIC_BLOB ) || !strcmpW( type, BCRYPT_ECCPRIVATE_BLOB )))
+    {
+        const BCRYPT_ECCKEY_BLOB *hdr = (const BCRYPT_ECCKEY_BLOB *)input;
+        BOOL is_public = !strcmpW( type, BCRYPT_ECCPUBLIC_BLOB );
+        ULONG expected_magic_pub, expected_magic_priv, coord_size;
+        struct key_pair *kp;
+
+        if (alg->id == ALG_ID_ECDSA_P256)
+        {
+            expected_magic_pub  = BCRYPT_ECDSA_PUBLIC_P256_MAGIC;
+            expected_magic_priv = BCRYPT_ECDSA_PRIVATE_P256_MAGIC;
+            coord_size = 32;
+        }
+        else
+        {
+            expected_magic_pub  = BCRYPT_ECDSA_PUBLIC_P384_MAGIC;
+            expected_magic_priv = BCRYPT_ECDSA_PRIVATE_P384_MAGIC;
+            coord_size = 48;
+        }
+
+        if (inputlen < sizeof(*hdr)) return STATUS_INVALID_PARAMETER;
+        if (is_public  && hdr->dwMagic != expected_magic_pub)  return STATUS_INVALID_PARAMETER;
+        if (!is_public && hdr->dwMagic != expected_magic_priv) return STATUS_INVALID_PARAMETER;
+        if (hdr->cbKey != coord_size) return STATUS_INVALID_PARAMETER;
+
+        {
+            ULONG min_len = sizeof(*hdr) + 2 * coord_size + (is_public ? 0 : coord_size);
+            if (inputlen < min_len) return STATUS_INVALID_PARAMETER;
+        }
+
+        kp = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*kp) );
+        if (!kp) return STATUS_NO_MEMORY;
+
+        kp->hdr.magic   = MAGIC_KPAIR;
+        kp->alg_id      = alg->id;
+        kp->bitlen      = coord_size * 8;
+        kp->finalized   = TRUE;
+        kp->has_private = !is_public;
+        mbedtls_ecdsa_init( &kp->u.ecdsa );
+
+        if (mbedtls_ecp_group_load( &kp->u.ecdsa.grp,
+                                     (alg->id == ALG_ID_ECDSA_P256)
+                                      ? MBEDTLS_ECP_DP_SECP256R1
+                                      : MBEDTLS_ECP_DP_SECP384R1 ) != 0)
+        {
+            mbedtls_ecdsa_free( &kp->u.ecdsa );
+            HeapFree( GetProcessHeap(), 0, kp );
+            return STATUS_INTERNAL_ERROR;
+        }
+
+        {
+            const UCHAR *p = (const UCHAR *)(hdr + 1);
+            UCHAR point_buf[1 + 2 * 48];
+            point_buf[0] = 0x04;
+            memcpy( point_buf + 1,              p,              coord_size );
+            memcpy( point_buf + 1 + coord_size, p + coord_size, coord_size );
+
+            if (mbedtls_ecp_point_read_binary( &kp->u.ecdsa.grp, &kp->u.ecdsa.Q,
+                                                point_buf, 1 + 2 * coord_size ) != 0)
+            {
+                mbedtls_ecdsa_free( &kp->u.ecdsa );
+                HeapFree( GetProcessHeap(), 0, kp );
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            if (!is_public)
+            {
+                p += 2 * coord_size;
+                if (mbedtls_mpi_read_binary( &kp->u.ecdsa.d, p, coord_size ) != 0)
+                {
+                    mbedtls_ecdsa_free( &kp->u.ecdsa );
+                    HeapFree( GetProcessHeap(), 0, kp );
+                    return STATUS_INVALID_PARAMETER;
+                }
+            }
+        }
+
+        *handle = kp;
+        return STATUS_SUCCESS;
+    }
+    if ((alg->id == ALG_ID_ECDH_P256 || alg->id == ALG_ID_ECDH_P384) &&
+        (!strcmpW( type, BCRYPT_ECCPUBLIC_BLOB ) || !strcmpW( type, BCRYPT_ECCPRIVATE_BLOB )))
+    {
+        const BCRYPT_ECCKEY_BLOB *hdr = (const BCRYPT_ECCKEY_BLOB *)input;
+        BOOL is_public = !strcmpW( type, BCRYPT_ECCPUBLIC_BLOB );
+        mbedtls_ecp_group_id grp_id;
+        ULONG expected_magic_pub, expected_magic_priv, coord_size;
+        struct key_pair *kp;
+
+        if (alg->id == ALG_ID_ECDH_P256)
+        {
+            grp_id           = MBEDTLS_ECP_DP_SECP256R1;
+            expected_magic_pub  = BCRYPT_ECDH_PUBLIC_P256_MAGIC;
+            expected_magic_priv = BCRYPT_ECDH_PRIVATE_P256_MAGIC;
+            coord_size       = 32;
+        }
+        else
+        {
+            grp_id           = MBEDTLS_ECP_DP_SECP384R1;
+            expected_magic_pub  = BCRYPT_ECDH_PUBLIC_P384_MAGIC;
+            expected_magic_priv = BCRYPT_ECDH_PRIVATE_P384_MAGIC;
+            coord_size       = 48;
+        }
+
+        if (inputlen < sizeof(*hdr)) return STATUS_INVALID_PARAMETER;
+        if (is_public  && hdr->dwMagic != expected_magic_pub)  return STATUS_INVALID_PARAMETER;
+        if (!is_public && hdr->dwMagic != expected_magic_priv) return STATUS_INVALID_PARAMETER;
+        if (hdr->cbKey != coord_size) return STATUS_INVALID_PARAMETER;
+
+        /* Public blob: X (cbKey) + Y (cbKey); Private blob: X + Y + d */
+        {
+            ULONG min_len = sizeof(*hdr) + 2 * coord_size + (is_public ? 0 : coord_size);
+            if (inputlen < min_len) return STATUS_INVALID_PARAMETER;
+        }
+
+        kp = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*kp) );
+        if (!kp) return STATUS_NO_MEMORY;
+
+        kp->hdr.magic   = MAGIC_KPAIR;
+        kp->alg_id      = alg->id;
+        kp->bitlen      = coord_size * 8;
+        kp->finalized   = TRUE;
+        kp->has_private = !is_public;
+        mbedtls_ecdh_init( &kp->u.ecdh );
+
+        if (mbedtls_ecdh_setup( &kp->u.ecdh, grp_id ) != 0)
+        {
+            HeapFree( GetProcessHeap(), 0, kp );
+            return STATUS_INTERNAL_ERROR;
+        }
+
+        {
+            const UCHAR *p = (const UCHAR *)(hdr + 1);
+            /* Read uncompressed point: 0x04 || X || Y */
+            UCHAR point_buf[1 + 2 * 48]; /* up to P-384 */
+            point_buf[0] = 0x04;
+            memcpy( point_buf + 1,               p,              coord_size );
+            memcpy( point_buf + 1 + coord_size,  p + coord_size, coord_size );
+
+            if (mbedtls_ecp_point_read_binary( &kp->u.ecdh.grp, &kp->u.ecdh.Q,
+                                                point_buf, 1 + 2 * coord_size ) != 0)
+            {
+                mbedtls_ecdh_free( &kp->u.ecdh );
+                HeapFree( GetProcessHeap(), 0, kp );
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            if (!is_public)
+            {
+                p += 2 * coord_size;
+                if (mbedtls_mpi_read_binary( &kp->u.ecdh.d, p, coord_size ) != 0)
+                {
+                    mbedtls_ecdh_free( &kp->u.ecdh );
+                    HeapFree( GetProcessHeap(), 0, kp );
+                    return STATUS_INVALID_PARAMETER;
+                }
+            }
+        }
+
+        *handle = kp;
+        return STATUS_SUCCESS;
+    }
+#endif
+    FIXME( "key pair type %s not supported\n", debugstr_w(type) );
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS WINAPI BCryptSignHash( BCRYPT_KEY_HANDLE handle, void *padding_info,
+                                 UCHAR *hash, ULONG hashlen,
+                                 UCHAR *sig, ULONG siglen, ULONG *retlen, ULONG flags )
+{
+    TRACE( "%p, %p, %p, %u, %p, %u, %p, %08x\n",
+           handle, padding_info, hash, hashlen, sig, siglen, retlen, flags );
+
+#ifdef SONAME_LIBMBEDTLS
+    {
+        struct key_pair *kp = handle;
+
+        if (!kp || kp->hdr.magic != MAGIC_KPAIR) return STATUS_INVALID_HANDLE;
+        if (!kp->has_private) return STATUS_INVALID_PARAMETER;
+        if (!hash || !hashlen) return STATUS_INVALID_PARAMETER;
+
+        if (kp->alg_id == ALG_ID_RSA)
+        {
+            mbedtls_md_type_t md = MBEDTLS_MD_NONE;
+            ULONG key_bytes;
+            int ret;
+
+            if (!(flags & (BCRYPT_PAD_PKCS1 | BCRYPT_PAD_PSS)))
+            {
+                FIXME("RSA: unsupported padding flags %08x\n", flags);
+                return STATUS_NOT_IMPLEMENTED;
+            }
+
+            key_bytes = (ULONG)mbedtls_rsa_get_len( &kp->u.rsa );
+            if (retlen) *retlen = key_bytes;
+            if (!sig) return STATUS_SUCCESS;
+            if (siglen < key_bytes) return STATUS_BUFFER_TOO_SMALL;
+
+            if (flags & BCRYPT_PAD_PKCS1)
+            {
+                BCRYPT_PKCS1_PADDING_INFO *pkcs1 = padding_info;
+                if (pkcs1 && pkcs1->pszAlgId)
+                {
+                    if      (!strcmpW( pkcs1->pszAlgId, BCRYPT_SHA1_ALGORITHM   )) md = MBEDTLS_MD_SHA1;
+                    else if (!strcmpW( pkcs1->pszAlgId, BCRYPT_SHA256_ALGORITHM )) md = MBEDTLS_MD_SHA256;
+                    else if (!strcmpW( pkcs1->pszAlgId, BCRYPT_SHA384_ALGORITHM )) md = MBEDTLS_MD_SHA384;
+                    else if (!strcmpW( pkcs1->pszAlgId, BCRYPT_SHA512_ALGORITHM )) md = MBEDTLS_MD_SHA512;
+                    else if (!strcmpW( pkcs1->pszAlgId, BCRYPT_MD5_ALGORITHM    )) md = MBEDTLS_MD_MD5;
+                }
+                if (md == MBEDTLS_MD_NONE)
+                {
+                    if      (hashlen == 20) md = MBEDTLS_MD_SHA1;
+                    else if (hashlen == 32) md = MBEDTLS_MD_SHA256;
+                    else if (hashlen == 48) md = MBEDTLS_MD_SHA384;
+                    else if (hashlen == 64) md = MBEDTLS_MD_SHA512;
+                    else if (hashlen == 16) md = MBEDTLS_MD_MD5;
+                }
+                mbedtls_rsa_set_padding( &kp->u.rsa, MBEDTLS_RSA_PKCS_V15, MBEDTLS_MD_NONE );
+                ret = mbedtls_rsa_rsassa_pkcs1_v15_sign( &kp->u.rsa, rng_cb, NULL,
+                    MBEDTLS_RSA_PRIVATE, md, hashlen, hash, sig );
+            }
+            else /* BCRYPT_PAD_PSS */
+            {
+                BCRYPT_PSS_PADDING_INFO *pss = padding_info;
+                if (pss && pss->pszAlgId)
+                {
+                    if      (!strcmpW( pss->pszAlgId, BCRYPT_SHA1_ALGORITHM   )) md = MBEDTLS_MD_SHA1;
+                    else if (!strcmpW( pss->pszAlgId, BCRYPT_SHA256_ALGORITHM )) md = MBEDTLS_MD_SHA256;
+                    else if (!strcmpW( pss->pszAlgId, BCRYPT_SHA384_ALGORITHM )) md = MBEDTLS_MD_SHA384;
+                    else if (!strcmpW( pss->pszAlgId, BCRYPT_SHA512_ALGORITHM )) md = MBEDTLS_MD_SHA512;
+                }
+                if (md == MBEDTLS_MD_NONE)
+                {
+                    if      (hashlen == 20) md = MBEDTLS_MD_SHA1;
+                    else if (hashlen == 32) md = MBEDTLS_MD_SHA256;
+                    else if (hashlen == 48) md = MBEDTLS_MD_SHA384;
+                    else if (hashlen == 64) md = MBEDTLS_MD_SHA512;
+                }
+                mbedtls_rsa_set_padding( &kp->u.rsa, MBEDTLS_RSA_PKCS_V21, md );
+                ret = mbedtls_rsa_rsassa_pss_sign( &kp->u.rsa, rng_cb, NULL,
+                    MBEDTLS_RSA_PRIVATE, md, hashlen, hash, sig );
+            }
+
+            if (ret != 0)
+            {
+                WARN( "RSA sign failed: -0x%04x\n", -ret );
+                return STATUS_INTERNAL_ERROR;
+            }
+            return STATUS_SUCCESS;
+        }
+
+        if (kp->alg_id == ALG_ID_ECDSA_P256 || kp->alg_id == ALG_ID_ECDSA_P384)
+        {
+            ULONG coord_size = (kp->alg_id == ALG_ID_ECDSA_P256) ? 32 : 48;
+            ULONG sig_size   = 2 * coord_size;
+            mbedtls_mpi r, s;
+            int ret;
+
+            if (retlen) *retlen = sig_size;
+            if (!sig) return STATUS_SUCCESS;
+            if (siglen < sig_size) return STATUS_BUFFER_TOO_SMALL;
+
+            mbedtls_mpi_init( &r );
+            mbedtls_mpi_init( &s );
+            ret = mbedtls_ecdsa_sign( &kp->u.ecdsa.grp, &r, &s, &kp->u.ecdsa.d,
+                                       hash, hashlen, rng_cb, NULL );
+            if (ret == 0)
+            {
+                ret  = mbedtls_mpi_write_binary( &r, sig,             coord_size );
+                ret |= mbedtls_mpi_write_binary( &s, sig + coord_size, coord_size );
+            }
+            mbedtls_mpi_free( &r );
+            mbedtls_mpi_free( &s );
+            return (ret == 0) ? STATUS_SUCCESS : STATUS_INTERNAL_ERROR;
+        }
+
+        FIXME( "algorithm %u not supported for signing\n", kp->alg_id );
+        return STATUS_NOT_IMPLEMENTED;
+    }
+#endif
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS WINAPI BCryptVerifySignature( BCRYPT_KEY_HANDLE handle, void *padding_info,
+                                        UCHAR *hash, ULONG hashlen,
+                                        UCHAR *sig, ULONG siglen, ULONG flags )
+{
+    TRACE( "%p, %p, %p, %u, %p, %u, %08x\n",
+           handle, padding_info, hash, hashlen, sig, siglen, flags );
+
+#ifdef SONAME_LIBMBEDTLS
+    {
+        struct key_pair *kp = handle;
+
+        if (!kp || kp->hdr.magic != MAGIC_KPAIR) return STATUS_INVALID_HANDLE;
+        if (!hash || !hashlen || !sig || !siglen) return STATUS_INVALID_PARAMETER;
+
+        if (kp->alg_id == ALG_ID_RSA)
+        {
+            mbedtls_md_type_t md = MBEDTLS_MD_NONE;
+            int ret;
+
+            if (!(flags & (BCRYPT_PAD_PKCS1 | BCRYPT_PAD_PSS)))
+            {
+                FIXME("RSA: unsupported padding flags %08x\n", flags);
+                return STATUS_NOT_IMPLEMENTED;
+            }
+
+            if (flags & BCRYPT_PAD_PKCS1)
+            {
+                BCRYPT_PKCS1_PADDING_INFO *pkcs1 = padding_info;
+                if (pkcs1 && pkcs1->pszAlgId)
+                {
+                    if      (!strcmpW( pkcs1->pszAlgId, BCRYPT_SHA1_ALGORITHM   )) md = MBEDTLS_MD_SHA1;
+                    else if (!strcmpW( pkcs1->pszAlgId, BCRYPT_SHA256_ALGORITHM )) md = MBEDTLS_MD_SHA256;
+                    else if (!strcmpW( pkcs1->pszAlgId, BCRYPT_SHA384_ALGORITHM )) md = MBEDTLS_MD_SHA384;
+                    else if (!strcmpW( pkcs1->pszAlgId, BCRYPT_SHA512_ALGORITHM )) md = MBEDTLS_MD_SHA512;
+                    else if (!strcmpW( pkcs1->pszAlgId, BCRYPT_MD5_ALGORITHM    )) md = MBEDTLS_MD_MD5;
+                }
+                if (md == MBEDTLS_MD_NONE)
+                {
+                    if      (hashlen == 20) md = MBEDTLS_MD_SHA1;
+                    else if (hashlen == 32) md = MBEDTLS_MD_SHA256;
+                    else if (hashlen == 48) md = MBEDTLS_MD_SHA384;
+                    else if (hashlen == 64) md = MBEDTLS_MD_SHA512;
+                    else if (hashlen == 16) md = MBEDTLS_MD_MD5;
+                }
+                mbedtls_rsa_set_padding( &kp->u.rsa, MBEDTLS_RSA_PKCS_V15, MBEDTLS_MD_NONE );
+                ret = mbedtls_rsa_rsassa_pkcs1_v15_verify( &kp->u.rsa, NULL, NULL,
+                    MBEDTLS_RSA_PUBLIC, md, hashlen, hash, sig );
+            }
+            else /* BCRYPT_PAD_PSS */
+            {
+                BCRYPT_PSS_PADDING_INFO *pss = padding_info;
+                if (pss && pss->pszAlgId)
+                {
+                    if      (!strcmpW( pss->pszAlgId, BCRYPT_SHA1_ALGORITHM   )) md = MBEDTLS_MD_SHA1;
+                    else if (!strcmpW( pss->pszAlgId, BCRYPT_SHA256_ALGORITHM )) md = MBEDTLS_MD_SHA256;
+                    else if (!strcmpW( pss->pszAlgId, BCRYPT_SHA384_ALGORITHM )) md = MBEDTLS_MD_SHA384;
+                    else if (!strcmpW( pss->pszAlgId, BCRYPT_SHA512_ALGORITHM )) md = MBEDTLS_MD_SHA512;
+                }
+                if (md == MBEDTLS_MD_NONE)
+                {
+                    if      (hashlen == 20) md = MBEDTLS_MD_SHA1;
+                    else if (hashlen == 32) md = MBEDTLS_MD_SHA256;
+                    else if (hashlen == 48) md = MBEDTLS_MD_SHA384;
+                    else if (hashlen == 64) md = MBEDTLS_MD_SHA512;
+                }
+                mbedtls_rsa_set_padding( &kp->u.rsa, MBEDTLS_RSA_PKCS_V21, md );
+                ret = mbedtls_rsa_rsassa_pss_verify( &kp->u.rsa, NULL, NULL,
+                    MBEDTLS_RSA_PUBLIC, md, hashlen, hash, sig );
+            }
+
+            if (ret == MBEDTLS_ERR_RSA_VERIFY_FAILED) return STATUS_INVALID_SIGNATURE;
+            if (ret != 0)
+            {
+                WARN( "RSA verify failed: -0x%04x\n", -ret );
+                return STATUS_INTERNAL_ERROR;
+            }
+            return STATUS_SUCCESS;
+        }
+
+        if (kp->alg_id == ALG_ID_ECDSA_P256 || kp->alg_id == ALG_ID_ECDSA_P384)
+        {
+            ULONG coord_size = (kp->alg_id == ALG_ID_ECDSA_P256) ? 32 : 48;
+            ULONG sig_size   = 2 * coord_size;
+            mbedtls_mpi r, s;
+            int ret;
+
+            if (siglen != sig_size) return STATUS_INVALID_PARAMETER;
+
+            mbedtls_mpi_init( &r );
+            mbedtls_mpi_init( &s );
+            mbedtls_mpi_read_binary( &r, sig,             coord_size );
+            mbedtls_mpi_read_binary( &s, sig + coord_size, coord_size );
+            ret = mbedtls_ecdsa_verify( &kp->u.ecdsa.grp, hash, hashlen,
+                                         &kp->u.ecdsa.Q, &r, &s );
+            mbedtls_mpi_free( &r );
+            mbedtls_mpi_free( &s );
+            if (ret == MBEDTLS_ERR_ECP_VERIFY_FAILED) return STATUS_INVALID_SIGNATURE;
+            if (ret != 0) return STATUS_INTERNAL_ERROR;
+            return STATUS_SUCCESS;
+        }
+
+        FIXME( "algorithm %u not supported for verify\n", kp->alg_id );
+        return STATUS_NOT_IMPLEMENTED;
+    }
+#endif
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS WINAPI BCryptFreeBuffer( PVOID buffer )
+{
+    TRACE( "%p\n", buffer );
+    HeapFree( GetProcessHeap(), 0, buffer );
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS WINAPI BCryptDuplicateHash( BCRYPT_HASH_HANDLE handle, BCRYPT_HASH_HANDLE *handle_copy,
+                                     UCHAR *object, ULONG objectlen, ULONG flags )
+{
+    struct hash *hash_orig = handle;
+    struct hash *hash_copy;
+
+    TRACE( "%p, %p, %p, %u, %08x\n", handle, handle_copy, object, objectlen, flags );
+
+    if (!hash_orig || hash_orig->hdr.magic != MAGIC_HASH) return STATUS_INVALID_HANDLE;
+    if (!handle_copy) return STATUS_INVALID_PARAMETER;
+
+    if (!(hash_copy = HeapAlloc( GetProcessHeap(), 0, sizeof(*hash_copy) )))
+        return STATUS_NO_MEMORY;
+
+    memcpy( hash_copy, hash_orig, sizeof(*hash_copy) );
+    *handle_copy = hash_copy;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS WINAPI BCryptSetProperty( BCRYPT_HANDLE handle, LPCWSTR prop, UCHAR *value, ULONG size, ULONG flags )
+{
+    struct object *object = handle;
+
+    TRACE( "%p, %s, %p, %u, %08x\n", handle, debugstr_w(prop), value, size, flags );
+
+    if (!object) return STATUS_INVALID_HANDLE;
+
+    switch (object->magic)
+    {
+    case MAGIC_ALG:
+        FIXME( "setting property %s on algorithm not supported\n", debugstr_w(prop) );
+        return STATUS_NOT_IMPLEMENTED;
+
+#ifdef SONAME_LIBMBEDTLS
+    case MAGIC_KEY:
+    {
+        struct key *key = (struct key *)object;
+        if (!strcmpW( prop, BCRYPT_CHAINING_MODE ))
+        {
+            if (!value || size < sizeof(WCHAR)) return STATUS_INVALID_PARAMETER;
+            lstrcpynW( key->chaining_mode, (const WCHAR *)value,
+                       sizeof(key->chaining_mode) / sizeof(WCHAR) );
+            /* Lazily initialize GCM key when switching to GCM mode (AES only) */
+            if (key->alg_id == ALG_ID_AES &&
+                !strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_GCM ) && !key->gcm_key_set)
+            {
+                mbedtls_gcm_free(&key->gcm);
+                mbedtls_gcm_init(&key->gcm);
+                if (mbedtls_gcm_setkey(&key->gcm, MBEDTLS_CIPHER_ID_AES,
+                                        key->key_data, key->key_len * 8) == 0)
+                    key->gcm_key_set = TRUE;
+            }
+            return STATUS_SUCCESS;
+        }
+        FIXME( "unsupported key property %s\n", debugstr_w(prop) );
+        return STATUS_NOT_IMPLEMENTED;
+    }
+#endif
+
+    default:
+        WARN( "unknown magic %08x\n", object->magic );
+        return STATUS_INVALID_HANDLE;
+    }
+}
+
+NTSTATUS WINAPI BCryptGenerateSymmetricKey( BCRYPT_ALG_HANDLE algorithm, BCRYPT_KEY_HANDLE *handle,
+                                            UCHAR *object, ULONG objectlen,
+                                            UCHAR *secret, ULONG secretlen, ULONG flags )
+{
+    struct algorithm *alg = algorithm;
+    NTSTATUS status;
+
+    TRACE( "%p, %p, %p, %u, %p, %u, %08x\n", algorithm, handle, object, objectlen,
+           secret, secretlen, flags );
+
+    if (!alg || alg->hdr.magic != MAGIC_ALG) return STATUS_INVALID_HANDLE;
+    if (!handle || !secret) return STATUS_INVALID_PARAMETER;
+
+#ifdef SONAME_LIBMBEDTLS
+    {
+        struct key *key;
+        if (!(key = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*key) )))
+            return STATUS_NO_MEMORY;
+
+        status = key_init( key, alg->id, secret, secretlen );
+        if (status != STATUS_SUCCESS)
+        {
+            HeapFree( GetProcessHeap(), 0, key );
+            return status;
+        }
+        *handle = key;
+        return STATUS_SUCCESS;
+    }
+#else
+    FIXME( "BCryptGenerateSymmetricKey not supported without mbedTLS\n" );
+    return STATUS_NOT_IMPLEMENTED;
+#endif
+}
+
+NTSTATUS WINAPI BCryptDestroyKey( BCRYPT_KEY_HANDLE handle )
+{
+    struct object *obj = handle;
+
+    TRACE( "%p\n", handle );
+
+    if (!obj) return STATUS_INVALID_HANDLE;
+
+#ifdef SONAME_LIBMBEDTLS
+    if (obj->magic == MAGIC_KEY)
+    {
+        struct key *key = (struct key *)obj;
+        key->hdr.magic = 0;
+        key_free( key );
+        return STATUS_SUCCESS;
+    }
+    if (obj->magic == MAGIC_KPAIR)
+    {
+        struct key_pair *kp = (struct key_pair *)obj;
+        kp->hdr.magic = 0;
+        if (kp->alg_id == ALG_ID_RSA)
+            mbedtls_rsa_free( &kp->u.rsa );
+        else if (kp->alg_id == ALG_ID_ECDSA_P256 || kp->alg_id == ALG_ID_ECDSA_P384)
+            mbedtls_ecdsa_free( &kp->u.ecdsa );
+        else
+            mbedtls_ecdh_free( &kp->u.ecdh );
+        HeapFree( GetProcessHeap(), 0, kp );
+        return STATUS_SUCCESS;
+    }
+#endif
+    return STATUS_INVALID_HANDLE;
+}
+
+NTSTATUS WINAPI BCryptEncrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inputlen,
+                                VOID *padding, UCHAR *iv, ULONG ivlen,
+                                UCHAR *output, ULONG outputlen, ULONG *retlen, ULONG flags )
+{
+    TRACE( "%p, %p, %u, %p, %p, %u, %p, %u, %p, %08x\n",
+           handle, input, inputlen, padding, iv, ivlen, output, outputlen, retlen, flags );
+
+#ifdef SONAME_LIBMBEDTLS
+    {
+        struct object *obj = (struct object *)handle;
+        struct key *key;
+        BOOL use_padding;
+        ULONG pad_len, full_len, required, rem;
+        UCHAR iv_buf[AES_BLOCK_SIZE] = {0};
+        UCHAR pad_block[AES_BLOCK_SIZE];
+
+        if (!obj) return STATUS_INVALID_HANDLE;
+
+        /* RSA asymmetric encryption using public key */
+        if (obj->magic == MAGIC_KPAIR)
+        {
+            struct key_pair *kp = (struct key_pair *)obj;
+            ULONG key_bytes;
+            int ret;
+
+            if (kp->alg_id != ALG_ID_RSA) return STATUS_NOT_IMPLEMENTED;
+            if (!kp->finalized) return STATUS_INVALID_HANDLE;
+
+            key_bytes = (ULONG)mbedtls_rsa_get_len( &kp->u.rsa );
+            if (retlen) *retlen = key_bytes;
+            if (!output) return STATUS_SUCCESS;
+            if (outputlen < key_bytes) return STATUS_BUFFER_TOO_SMALL;
+
+            if (flags & BCRYPT_PAD_OAEP)
+            {
+                BCRYPT_OAEP_PADDING_INFO *oaep = (BCRYPT_OAEP_PADDING_INFO *)padding;
+                mbedtls_md_type_t md = MBEDTLS_MD_SHA1;
+                const unsigned char *label = NULL;
+                size_t label_len = 0;
+
+                if (oaep && oaep->pszAlgId)
+                {
+                    if      (!strcmpW( oaep->pszAlgId, BCRYPT_SHA256_ALGORITHM )) md = MBEDTLS_MD_SHA256;
+                    else if (!strcmpW( oaep->pszAlgId, BCRYPT_SHA384_ALGORITHM )) md = MBEDTLS_MD_SHA384;
+                    else if (!strcmpW( oaep->pszAlgId, BCRYPT_SHA512_ALGORITHM )) md = MBEDTLS_MD_SHA512;
+                }
+                if (oaep) { label = oaep->pbLabel; label_len = oaep->cbLabel; }
+                mbedtls_rsa_set_padding( &kp->u.rsa, MBEDTLS_RSA_PKCS_V21, md );
+                ret = mbedtls_rsa_rsaes_oaep_encrypt( &kp->u.rsa, rng_cb, NULL,
+                    MBEDTLS_RSA_PUBLIC, label, label_len, inputlen, input, output );
+            }
+            else if (flags & BCRYPT_PAD_PKCS1)
+            {
+                mbedtls_rsa_set_padding( &kp->u.rsa, MBEDTLS_RSA_PKCS_V15, MBEDTLS_MD_NONE );
+                ret = mbedtls_rsa_rsaes_pkcs1_v15_encrypt( &kp->u.rsa, rng_cb, NULL,
+                    MBEDTLS_RSA_PUBLIC, inputlen, input, output );
+            }
+            else
+            {
+                FIXME( "unsupported RSA padding flags %08x\n", flags );
+                return STATUS_NOT_SUPPORTED;
+            }
+
+            if (ret != 0)
+            {
+                WARN( "RSA encrypt failed: -0x%04x\n", -ret );
+                return STATUS_UNSUCCESSFUL;
+            }
+            return STATUS_SUCCESS;
+        }
+
+        key = (struct key *)obj;
+        use_padding = (flags & BCRYPT_BLOCK_PADDING) != 0;
+
+        if (key->hdr.magic != MAGIC_KEY) return STATUS_INVALID_HANDLE;
+        if (key->alg_id != ALG_ID_AES && key->alg_id != ALG_ID_3DES)
+        {
+            FIXME( "algorithm %u not supported for encrypt\n", key->alg_id );
+            return STATUS_NOT_IMPLEMENTED;
+        }
+        if (!input && inputlen) return STATUS_INVALID_PARAMETER;
+
+        {
+            ULONG blk = key->block_size;
+            if (use_padding)
+            {
+                rem = inputlen % blk;
+                pad_len = rem ? (blk - rem) : blk;
+                required = inputlen + pad_len;
+            }
+            else
+            {
+                if (inputlen % blk) return STATUS_INVALID_BUFFER_SIZE;
+                required = inputlen;
+                pad_len  = 0;
+                rem      = 0;
+            }
+
+            if (retlen) *retlen = required;
+            if (!output) return STATUS_SUCCESS;
+            if (outputlen < required) return STATUS_BUFFER_TOO_SMALL;
+
+            if (iv && ivlen >= blk) memcpy( iv_buf, iv, blk );
+
+            full_len = (inputlen / blk) * blk;
+
+            if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_CBC ))
+            {
+                if (key->alg_id == ALG_ID_AES)
+                {
+                    if (full_len > 0)
+                        mbedtls_aes_crypt_cbc( &key->aes_enc, MBEDTLS_AES_ENCRYPT, full_len,
+                                               iv_buf, input, output );
+                    if (use_padding)
+                    {
+                        rem = inputlen - full_len;
+                        memcpy( pad_block, input + full_len, rem );
+                        memset( pad_block + rem, (UCHAR)pad_len, pad_len );
+                        mbedtls_aes_crypt_cbc( &key->aes_enc, MBEDTLS_AES_ENCRYPT, blk,
+                                               iv_buf, pad_block, output + full_len );
+                    }
+                }
+                else /* 3DES */
+                {
+                    if (full_len > 0)
+                        mbedtls_des3_crypt_cbc( &key->des3_enc, MBEDTLS_DES_ENCRYPT, full_len,
+                                                iv_buf, input, output );
+                    if (use_padding)
+                    {
+                        rem = inputlen - full_len;
+                        memcpy( pad_block, input + full_len, rem );
+                        memset( pad_block + rem, (UCHAR)pad_len, pad_len );
+                        mbedtls_des3_crypt_cbc( &key->des3_enc, MBEDTLS_DES_ENCRYPT, blk,
+                                                iv_buf, pad_block, output + full_len );
+                    }
+                }
+            }
+            else if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_ECB ))
+            {
+                ULONG i;
+                if (key->alg_id == ALG_ID_AES)
+                {
+                    for (i = 0; i < full_len; i += blk)
+                        mbedtls_aes_crypt_ecb( &key->aes_enc, MBEDTLS_AES_ENCRYPT, input + i, output + i );
+                    if (use_padding)
+                    {
+                        rem = inputlen - full_len;
+                        memcpy( pad_block, input + full_len, rem );
+                        memset( pad_block + rem, (UCHAR)pad_len, pad_len );
+                        mbedtls_aes_crypt_ecb( &key->aes_enc, MBEDTLS_AES_ENCRYPT, pad_block, output + full_len );
+                    }
+                }
+                else /* 3DES */
+                {
+                    for (i = 0; i < full_len; i += blk)
+                        mbedtls_des3_crypt_ecb( &key->des3_enc, input + i, output + i );
+                    if (use_padding)
+                    {
+                        rem = inputlen - full_len;
+                        memcpy( pad_block, input + full_len, rem );
+                        memset( pad_block + rem, (UCHAR)pad_len, pad_len );
+                        mbedtls_des3_crypt_ecb( &key->des3_enc, pad_block, output + full_len );
+                    }
+                }
+            }
+            else if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_GCM ))
+            {
+                BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *auth = (BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *)padding;
+                if (!auth) return STATUS_INVALID_PARAMETER;
+                if (key->alg_id != ALG_ID_AES) return STATUS_NOT_IMPLEMENTED;
+
+                if (!key->gcm_key_set)
+                {
+                    mbedtls_gcm_free(&key->gcm);
+                    mbedtls_gcm_init(&key->gcm);
+                    if (mbedtls_gcm_setkey(&key->gcm, MBEDTLS_CIPHER_ID_AES,
+                                            key->key_data, key->key_len * 8) != 0)
+                        return STATUS_INTERNAL_ERROR;
+                    key->gcm_key_set = TRUE;
+                }
+
+                if (retlen) *retlen = inputlen;
+                if (!output) return STATUS_SUCCESS;
+                if (outputlen < inputlen) return STATUS_BUFFER_TOO_SMALL;
+
+                if (mbedtls_gcm_crypt_and_tag(&key->gcm, MBEDTLS_GCM_ENCRYPT, inputlen,
+                                               auth->pbNonce, auth->cbNonce,
+                                               auth->pbAuthData, auth->cbAuthData,
+                                               input, output,
+                                               auth->cbTag, auth->pbTag) != 0)
+                    return STATUS_INTERNAL_ERROR;
+
+                return STATUS_SUCCESS;
+            }
+            else
+            {
+                FIXME( "chaining mode %s not supported\n", debugstr_w(key->chaining_mode) );
+                return STATUS_NOT_IMPLEMENTED;
+            }
+
+            /* update caller's IV to last ciphertext block (CBC/ECB) */
+            if (iv && ivlen >= blk && required > 0)
+                memcpy( iv, output + required - blk, blk );
+        }
+
+        return STATUS_SUCCESS;
+    }
+#else
+    FIXME( "BCryptEncrypt not supported without mbedTLS\n" );
+    return STATUS_NOT_IMPLEMENTED;
+#endif
+}
+
+NTSTATUS WINAPI BCryptDecrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inputlen,
+                                VOID *padding, UCHAR *iv, ULONG ivlen,
+                                UCHAR *output, ULONG outputlen, ULONG *retlen, ULONG flags )
+{
+    TRACE( "%p, %p, %u, %p, %p, %u, %p, %u, %p, %08x\n",
+           handle, input, inputlen, padding, iv, ivlen, output, outputlen, retlen, flags );
+
+#ifdef SONAME_LIBMBEDTLS
+    {
+        struct object *obj = (struct object *)handle;
+        struct key *key;
+        BOOL use_padding;
+        UCHAR iv_buf[AES_BLOCK_SIZE] = {0};
+        UCHAR *plain;
+        ULONG plain_len;
+
+        if (!obj) return STATUS_INVALID_HANDLE;
+
+        /* RSA asymmetric decryption using private key */
+        if (obj->magic == MAGIC_KPAIR)
+        {
+            struct key_pair *kp = (struct key_pair *)obj;
+            size_t olen = 0;
+            ULONG key_bytes;
+            int ret;
+
+            if (kp->alg_id != ALG_ID_RSA) return STATUS_NOT_IMPLEMENTED;
+            if (!kp->finalized || !kp->has_private) return STATUS_INVALID_HANDLE;
+            if (!input || !inputlen) return STATUS_INVALID_PARAMETER;
+
+            key_bytes = (ULONG)mbedtls_rsa_get_len( &kp->u.rsa );
+            /* size estimate for query (without output) */
+            if (!output)
+            {
+                if (retlen) *retlen = key_bytes;
+                return STATUS_SUCCESS;
+            }
+
+            if (flags & BCRYPT_PAD_OAEP)
+            {
+                BCRYPT_OAEP_PADDING_INFO *oaep = (BCRYPT_OAEP_PADDING_INFO *)padding;
+                mbedtls_md_type_t md = MBEDTLS_MD_SHA1;
+                const unsigned char *label = NULL;
+                size_t label_len = 0;
+
+                if (oaep && oaep->pszAlgId)
+                {
+                    if      (!strcmpW( oaep->pszAlgId, BCRYPT_SHA256_ALGORITHM )) md = MBEDTLS_MD_SHA256;
+                    else if (!strcmpW( oaep->pszAlgId, BCRYPT_SHA384_ALGORITHM )) md = MBEDTLS_MD_SHA384;
+                    else if (!strcmpW( oaep->pszAlgId, BCRYPT_SHA512_ALGORITHM )) md = MBEDTLS_MD_SHA512;
+                }
+                if (oaep) { label = oaep->pbLabel; label_len = oaep->cbLabel; }
+                mbedtls_rsa_set_padding( &kp->u.rsa, MBEDTLS_RSA_PKCS_V21, md );
+                ret = mbedtls_rsa_rsaes_oaep_decrypt( &kp->u.rsa, rng_cb, NULL,
+                    MBEDTLS_RSA_PRIVATE, label, label_len,
+                    &olen, input, output, outputlen );
+            }
+            else if (flags & BCRYPT_PAD_PKCS1)
+            {
+                mbedtls_rsa_set_padding( &kp->u.rsa, MBEDTLS_RSA_PKCS_V15, MBEDTLS_MD_NONE );
+                ret = mbedtls_rsa_rsaes_pkcs1_v15_decrypt( &kp->u.rsa, rng_cb, NULL,
+                    MBEDTLS_RSA_PRIVATE, &olen, input, output, outputlen );
+            }
+            else
+            {
+                FIXME( "unsupported RSA padding flags %08x\n", flags );
+                return STATUS_NOT_SUPPORTED;
+            }
+
+            if (ret != 0)
+            {
+                WARN( "RSA decrypt failed: -0x%04x\n", -ret );
+                return STATUS_UNSUCCESSFUL;
+            }
+            if (retlen) *retlen = (ULONG)olen;
+            return STATUS_SUCCESS;
+        }
+
+        key = (struct key *)obj;
+        use_padding = (flags & BCRYPT_BLOCK_PADDING) != 0;
+
+        if (key->hdr.magic != MAGIC_KEY) return STATUS_INVALID_HANDLE;
+        if (key->alg_id != ALG_ID_AES && key->alg_id != ALG_ID_3DES)
+        {
+            FIXME( "algorithm %u not supported for decrypt\n", key->alg_id );
+            return STATUS_NOT_IMPLEMENTED;
+        }
+        if (!input || !inputlen) return STATUS_INVALID_PARAMETER;
+
+        {
+            ULONG blk = key->block_size;
+
+            if (inputlen % blk) return STATUS_INVALID_BUFFER_SIZE;
+
+            if (iv && ivlen >= blk) memcpy( iv_buf, iv, blk );
+
+            /* decrypt into a temporary buffer when padding removal is needed */
+            if (use_padding)
+            {
+                plain = HeapAlloc( GetProcessHeap(), 0, inputlen );
+                if (!plain) return STATUS_NO_MEMORY;
+            }
+            else
+            {
+                if (retlen) *retlen = inputlen;
+                if (!output) return STATUS_SUCCESS;
+                if (outputlen < inputlen) return STATUS_BUFFER_TOO_SMALL;
+                plain = output;
+            }
+
+            if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_CBC ))
+            {
+                if (key->alg_id == ALG_ID_AES)
+                    mbedtls_aes_crypt_cbc( &key->aes_dec, MBEDTLS_AES_DECRYPT, inputlen,
+                                           iv_buf, input, plain );
+                else
+                    mbedtls_des3_crypt_cbc( &key->des3_dec, MBEDTLS_DES_DECRYPT, inputlen,
+                                            iv_buf, input, plain );
+            }
+            else if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_ECB ))
+            {
+                ULONG i;
+                if (key->alg_id == ALG_ID_AES)
+                {
+                    for (i = 0; i < inputlen; i += blk)
+                        mbedtls_aes_crypt_ecb( &key->aes_dec, MBEDTLS_AES_DECRYPT, input + i, plain + i );
+                }
+                else
+                {
+                    for (i = 0; i < inputlen; i += blk)
+                        mbedtls_des3_crypt_ecb( &key->des3_dec, input + i, plain + i );
+                }
+            }
+            else if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_GCM ))
+            {
+                BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *auth = (BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *)padding;
+                if (!auth) { if (use_padding) HeapFree( GetProcessHeap(), 0, plain ); return STATUS_INVALID_PARAMETER; }
+                if (key->alg_id != ALG_ID_AES) { if (use_padding) HeapFree( GetProcessHeap(), 0, plain ); return STATUS_NOT_IMPLEMENTED; }
+
+                if (!key->gcm_key_set)
+                {
+                    mbedtls_gcm_free(&key->gcm);
+                    mbedtls_gcm_init(&key->gcm);
+                    if (mbedtls_gcm_setkey(&key->gcm, MBEDTLS_CIPHER_ID_AES,
+                                            key->key_data, key->key_len * 8) != 0)
+                    {
+                        if (use_padding) HeapFree( GetProcessHeap(), 0, plain );
+                        return STATUS_INTERNAL_ERROR;
+                    }
+                    key->gcm_key_set = TRUE;
+                }
+
+                if (retlen) *retlen = inputlen;
+                if (!output) { if (use_padding) HeapFree( GetProcessHeap(), 0, plain ); return STATUS_SUCCESS; }
+                if (outputlen < inputlen) { if (use_padding) HeapFree( GetProcessHeap(), 0, plain ); return STATUS_BUFFER_TOO_SMALL; }
+
+                if (mbedtls_gcm_auth_decrypt(&key->gcm, inputlen,
+                                              auth->pbNonce, auth->cbNonce,
+                                              auth->pbAuthData, auth->cbAuthData,
+                                              auth->pbTag, auth->cbTag,
+                                              input, output) != 0)
+                {
+                    if (use_padding) HeapFree( GetProcessHeap(), 0, plain );
+                    return STATUS_UNSUCCESSFUL;
+                }
+                if (use_padding) HeapFree( GetProcessHeap(), 0, plain );
+                return STATUS_SUCCESS;
+            }
+            else
+            {
+                FIXME( "chaining mode %s not supported\n", debugstr_w(key->chaining_mode) );
+                if (use_padding) HeapFree( GetProcessHeap(), 0, plain );
+                return STATUS_NOT_IMPLEMENTED;
+            }
+
+            if (use_padding)
+            {
+                UCHAR pad_val = plain[inputlen - 1];
+                ULONG i;
+
+                if (pad_val == 0 || pad_val > blk)
+                {
+                    HeapFree( GetProcessHeap(), 0, plain );
+                    return STATUS_UNSUCCESSFUL;
+                }
+                for (i = inputlen - pad_val; i < inputlen; i++)
+                {
+                    if (plain[i] != pad_val)
+                    {
+                        HeapFree( GetProcessHeap(), 0, plain );
+                        return STATUS_UNSUCCESSFUL;
+                    }
+                }
+                plain_len = inputlen - pad_val;
+
+                if (retlen) *retlen = plain_len;
+                if (!output)
+                {
+                    HeapFree( GetProcessHeap(), 0, plain );
+                    return STATUS_SUCCESS;
+                }
+                if (outputlen < plain_len)
+                {
+                    HeapFree( GetProcessHeap(), 0, plain );
+                    return STATUS_BUFFER_TOO_SMALL;
+                }
+                memcpy( output, plain, plain_len );
+                HeapFree( GetProcessHeap(), 0, plain );
+            }
+
+            /* update caller's IV to last ciphertext block */
+            if (iv && ivlen >= blk)
+                memcpy( iv, input + inputlen - blk, blk );
+        }
+
+        return STATUS_SUCCESS;
+    }
+#else
+    FIXME( "BCryptDecrypt not supported without mbedTLS\n" );
+    return STATUS_NOT_IMPLEMENTED;
+#endif
+}
+
+NTSTATUS WINAPI BCryptImportKey( BCRYPT_ALG_HANDLE algorithm, BCRYPT_KEY_HANDLE decrypt_key,
+                                  LPCWSTR type, BCRYPT_KEY_HANDLE *handle,
+                                  UCHAR *object, ULONG objectlen,
+                                  UCHAR *input, ULONG inputlen, ULONG flags )
+{
+    struct algorithm *alg = algorithm;
+
+    TRACE( "%p, %p, %s, %p, %p, %u, %p, %u, %08x\n", algorithm, decrypt_key,
+           debugstr_w(type), handle, object, objectlen, input, inputlen, flags );
+
+    if (!alg || alg->hdr.magic != MAGIC_ALG) return STATUS_INVALID_HANDLE;
+    if (!type || !handle || !input) return STATUS_INVALID_PARAMETER;
+    if (decrypt_key)
+    {
+        FIXME( "decrypt_key not supported\n" );
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    if (!strcmpW( type, BCRYPT_KEY_DATA_BLOB ))
+    {
+#ifdef SONAME_LIBMBEDTLS
+        const BCRYPT_KEY_DATA_BLOB_HEADER *hdr = (const BCRYPT_KEY_DATA_BLOB_HEADER *)input;
+        struct key *key;
+        NTSTATUS status;
+
+        if (inputlen < sizeof(*hdr)) return STATUS_INVALID_PARAMETER;
+        if (hdr->dwMagic   != BCRYPT_KEY_DATA_BLOB_MAGIC)   return STATUS_INVALID_PARAMETER;
+        if (hdr->dwVersion != BCRYPT_KEY_DATA_BLOB_VERSION1) return STATUS_NOT_SUPPORTED;
+        if (inputlen < sizeof(*hdr) + hdr->cbKeyData)        return STATUS_INVALID_PARAMETER;
+
+        if (!(key = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*key) )))
+            return STATUS_NO_MEMORY;
+
+        status = key_init( key, alg->id, (const UCHAR *)(hdr + 1), hdr->cbKeyData );
+        if (status != STATUS_SUCCESS)
+        {
+            HeapFree( GetProcessHeap(), 0, key );
+            return status;
+        }
+        *handle = key;
+        return STATUS_SUCCESS;
+#else
+        FIXME( "BCRYPT_KEY_DATA_BLOB not supported without mbedTLS\n" );
+        return STATUS_NOT_IMPLEMENTED;
+#endif
+    }
+
+    FIXME( "key blob type %s not supported\n", debugstr_w(type) );
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+#ifdef SONAME_LIBMBEDTLS
+static NTSTATUS export_rsa_key( struct key_pair *kp, LPCWSTR type,
+                                  UCHAR *output, ULONG outputlen, ULONG *retlen );
+static NTSTATUS export_ecc_key( struct key_pair *kp, LPCWSTR type,
+                                  UCHAR *output, ULONG outputlen, ULONG *retlen );
+#endif
+
+NTSTATUS WINAPI BCryptExportKey( BCRYPT_KEY_HANDLE handle, BCRYPT_KEY_HANDLE encrypt_key,
+                                  LPCWSTR type, UCHAR *output, ULONG outputlen,
+                                  ULONG *retlen, ULONG flags )
+{
+    TRACE( "%p, %p, %s, %p, %u, %p, %08x\n", handle, encrypt_key,
+           debugstr_w(type), output, outputlen, retlen, flags );
+
+    if (encrypt_key)
+    {
+        FIXME( "encrypt_key not supported\n" );
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+#ifdef SONAME_LIBMBEDTLS
+    {
+        struct object *obj = handle;
+        if (!obj) return STATUS_INVALID_HANDLE;
+
+        /* Dispatch to appropriate export for key pair handles */
+        if (obj->magic == MAGIC_KPAIR)
+        {
+            struct key_pair *kp = (struct key_pair *)obj;
+            if (!strcmpW( type, BCRYPT_RSAPUBLIC_BLOB ) || !strcmpW( type, BCRYPT_RSAPRIVATE_BLOB ))
+                return export_rsa_key( kp, type, output, outputlen, retlen );
+            if (!strcmpW( type, BCRYPT_ECCPUBLIC_BLOB ) || !strcmpW( type, BCRYPT_ECCPRIVATE_BLOB ))
+                return export_ecc_key( kp, type, output, outputlen, retlen );
+            FIXME( "unsupported key pair export type %s\n", debugstr_w(type) );
+            return STATUS_NOT_IMPLEMENTED;
+        }
+
+        {
+            struct key *key = (struct key *)obj;
+            if (!key || key->hdr.magic != MAGIC_KEY) return STATUS_INVALID_HANDLE;
+
+            if (!strcmpW( type, BCRYPT_KEY_DATA_BLOB ))
+            {
+                ULONG required = sizeof(BCRYPT_KEY_DATA_BLOB_HEADER) + key->key_len;
+                BCRYPT_KEY_DATA_BLOB_HEADER *hdr = (BCRYPT_KEY_DATA_BLOB_HEADER *)output;
+
+                if (retlen) *retlen = required;
+                if (!output) return STATUS_SUCCESS;
+                if (outputlen < required) return STATUS_BUFFER_TOO_SMALL;
+
+                hdr->dwMagic   = BCRYPT_KEY_DATA_BLOB_MAGIC;
+                hdr->dwVersion = BCRYPT_KEY_DATA_BLOB_VERSION1;
+                hdr->cbKeyData = key->key_len;
+                memcpy( hdr + 1, key->key_data, key->key_len );
+                return STATUS_SUCCESS;
+            }
+
+            FIXME( "key blob type %s not supported\n", debugstr_w(type) );
+            return STATUS_NOT_IMPLEMENTED;
+        }
+    }
+#else
+    return STATUS_INVALID_HANDLE;
+#endif
+}
+
+/* BCryptExportKey extension for RSA key pairs (called from BCryptExportKey dispatch below) */
+#ifdef SONAME_LIBMBEDTLS
+static NTSTATUS export_rsa_key( struct key_pair *kp, LPCWSTR type,
+                                  UCHAR *output, ULONG outputlen, ULONG *retlen )
+{
+    BCRYPT_RSAKEY_BLOB *hdr;
+    mbedtls_mpi N, E, P, Q;
+    ULONG cbE, cbN, cbP = 0, cbQ = 0, required;
+    BOOL is_public = !strcmpW( type, BCRYPT_RSAPUBLIC_BLOB );
+    UCHAR *p;
+
+    if (!is_public && !kp->has_private) return STATUS_INVALID_PARAMETER;
+
+    mbedtls_mpi_init(&N); mbedtls_mpi_init(&E);
+    mbedtls_mpi_init(&P); mbedtls_mpi_init(&Q);
+
+    mbedtls_rsa_export( &kp->u.rsa, &N, is_public ? NULL : &P,
+                         is_public ? NULL : &Q, NULL, &E );
+
+    cbE = (ULONG)mbedtls_mpi_size(&E);
+    cbN = (ULONG)mbedtls_mpi_size(&N);
+    if (!is_public)
+    {
+        cbP = (ULONG)mbedtls_mpi_size(&P);
+        cbQ = (ULONG)mbedtls_mpi_size(&Q);
+    }
+
+    required = sizeof(*hdr) + cbE + cbN + cbP + cbQ;
+    if (retlen) *retlen = required;
+    if (!output)
+    {
+        mbedtls_mpi_free(&N); mbedtls_mpi_free(&E);
+        mbedtls_mpi_free(&P); mbedtls_mpi_free(&Q);
+        return STATUS_SUCCESS;
+    }
+    if (outputlen < required)
+    {
+        mbedtls_mpi_free(&N); mbedtls_mpi_free(&E);
+        mbedtls_mpi_free(&P); mbedtls_mpi_free(&Q);
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    hdr = (BCRYPT_RSAKEY_BLOB *)output;
+    hdr->Magic       = is_public ? BCRYPT_RSAPUBLIC_MAGIC : BCRYPT_RSAPRIVATE_MAGIC;
+    hdr->BitLength   = kp->bitlen;
+    hdr->cbPublicExp = cbE;
+    hdr->cbModulus   = cbN;
+    hdr->cbPrime1    = cbP;
+    hdr->cbPrime2    = cbQ;
+    p = (UCHAR *)(hdr + 1);
+
+    mbedtls_mpi_write_binary(&E, p, cbE); p += cbE;
+    mbedtls_mpi_write_binary(&N, p, cbN); p += cbN;
+    if (!is_public)
+    {
+        mbedtls_mpi_write_binary(&P, p, cbP); p += cbP;
+        mbedtls_mpi_write_binary(&Q, p, cbQ);
+    }
+
+    mbedtls_mpi_free(&N); mbedtls_mpi_free(&E);
+    mbedtls_mpi_free(&P); mbedtls_mpi_free(&Q);
+    return STATUS_SUCCESS;
+}
+#endif
+
+NTSTATUS WINAPI BCryptSecretAgreement( BCRYPT_KEY_HANDLE priv_handle, BCRYPT_KEY_HANDLE pub_handle,
+                                        BCRYPT_SECRET_HANDLE *secret_handle, ULONG flags )
+{
+    TRACE( "%p, %p, %p, %08x\n", priv_handle, pub_handle, secret_handle, flags );
+
+    if (!secret_handle) return STATUS_INVALID_PARAMETER;
+
+#ifdef SONAME_LIBMBEDTLS
+    {
+        struct key_pair *priv = priv_handle;
+        struct key_pair *pub  = pub_handle;
+        struct secret *sec;
+        mbedtls_mpi z;
+        size_t secret_len;
+        int ret;
+
+        if (!priv || priv->hdr.magic != MAGIC_KPAIR) return STATUS_INVALID_HANDLE;
+        if (!pub  || pub->hdr.magic  != MAGIC_KPAIR) return STATUS_INVALID_HANDLE;
+        if (!priv->has_private) return STATUS_INVALID_PARAMETER;
+        if (priv->alg_id != pub->alg_id) return STATUS_INVALID_PARAMETER;
+
+        if (priv->alg_id != ALG_ID_ECDH_P256 && priv->alg_id != ALG_ID_ECDH_P384)
+        {
+            FIXME( "BCryptSecretAgreement not implemented for algorithm %u\n", priv->alg_id );
+            return STATUS_NOT_IMPLEMENTED;
+        }
+
+        sec = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*sec) );
+        if (!sec) return STATUS_NO_MEMORY;
+
+        sec->hdr.magic = MAGIC_SECRET;
+        sec->alg_id    = priv->alg_id;
+        secret_len     = (priv->alg_id == ALG_ID_ECDH_P256) ? 32 : 48;
+
+        mbedtls_mpi_init( &z );
+        ret = mbedtls_ecdh_compute_shared( &priv->u.ecdh.grp, &z,
+                                            &pub->u.ecdh.Q, &priv->u.ecdh.d,
+                                            rng_cb, NULL );
+        if (ret != 0)
+        {
+            mbedtls_mpi_free( &z );
+            HeapFree( GetProcessHeap(), 0, sec );
+            return STATUS_INTERNAL_ERROR;
+        }
+
+        mbedtls_mpi_write_binary( &z, sec->secret, secret_len );
+        sec->secret_len = (ULONG)secret_len;
+        mbedtls_mpi_free( &z );
+
+        *secret_handle = sec;
+        return STATUS_SUCCESS;
+    }
+#endif
+    FIXME( "BCryptSecretAgreement not supported without mbedTLS\n" );
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS WINAPI BCryptDeriveKey( BCRYPT_SECRET_HANDLE secret_handle, LPCWSTR kdf,
+                                   BCryptBufferDesc *params, UCHAR *derived, ULONG derived_len,
+                                   ULONG *result_len, ULONG flags )
+{
+    TRACE( "%p, %s, %p, %p, %u, %p, %08x\n",
+           secret_handle, wine_dbgstr_w(kdf), params, derived, derived_len, result_len, flags );
+
+#ifdef SONAME_LIBMBEDTLS
+    {
+        struct secret *sec = secret_handle;
+        if (!sec || sec->hdr.magic != MAGIC_SECRET) return STATUS_INVALID_HANDLE;
+        if (!kdf) return STATUS_INVALID_PARAMETER;
+
+        if (!strcmpW( kdf, BCRYPT_KDF_RAW_SECRET ))
+        {
+            /* Return the raw shared secret */
+            if (result_len) *result_len = sec->secret_len;
+            if (!derived) return STATUS_SUCCESS;
+            if (derived_len < sec->secret_len) return STATUS_BUFFER_TOO_SMALL;
+            memcpy( derived, sec->secret, sec->secret_len );
+            return STATUS_SUCCESS;
+        }
+
+        if (!strcmpW( kdf, BCRYPT_KDF_HASH ))
+        {
+            /* Hash-based KDF: hash the shared secret */
+            mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256; /* default */
+            const mbedtls_md_info_t *md_info;
+            mbedtls_md_context_t md_ctx;
+            ULONG hash_len;
+
+            /* Check params for KDF_HASH_ALGORITHM buffer */
+            if (params)
+            {
+                ULONG i;
+                for (i = 0; i < params->cBuffers; i++)
+                {
+                    if (params->pBuffers[i].BufferType == KDF_HASH_ALGORITHM && params->pBuffers[i].pvBuffer)
+                    {
+                        const WCHAR *alg_name = (const WCHAR *)params->pBuffers[i].pvBuffer;
+                        if      (!strcmpW( alg_name, BCRYPT_SHA1_ALGORITHM   )) md_type = MBEDTLS_MD_SHA1;
+                        else if (!strcmpW( alg_name, BCRYPT_SHA256_ALGORITHM )) md_type = MBEDTLS_MD_SHA256;
+                        else if (!strcmpW( alg_name, BCRYPT_SHA384_ALGORITHM )) md_type = MBEDTLS_MD_SHA384;
+                        else if (!strcmpW( alg_name, BCRYPT_SHA512_ALGORITHM )) md_type = MBEDTLS_MD_SHA512;
+                        else if (!strcmpW( alg_name, BCRYPT_MD5_ALGORITHM    )) md_type = MBEDTLS_MD_MD5;
+                    }
+                }
+            }
+
+            md_info = mbedtls_md_info_from_type( md_type );
+            if (!md_info) return STATUS_NOT_IMPLEMENTED;
+
+            hash_len = (ULONG)mbedtls_md_get_size( md_info );
+            if (result_len) *result_len = hash_len;
+            if (!derived) return STATUS_SUCCESS;
+            if (derived_len < hash_len) return STATUS_BUFFER_TOO_SMALL;
+
+            mbedtls_md_init( &md_ctx );
+            if (mbedtls_md_setup( &md_ctx, md_info, 0 ) != 0)
+            {
+                mbedtls_md_free( &md_ctx );
+                return STATUS_INTERNAL_ERROR;
+            }
+            mbedtls_md_starts( &md_ctx );
+            mbedtls_md_update( &md_ctx, sec->secret, sec->secret_len );
+            mbedtls_md_finish( &md_ctx, derived );
+            mbedtls_md_free( &md_ctx );
+
+            return STATUS_SUCCESS;
+        }
+
+        if (!strcmpW( kdf, BCRYPT_KDF_HMAC ))
+        {
+            /* HMAC-based KDF: HMAC(key, secret) */
+            mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
+            const mbedtls_md_info_t *md_info;
+            mbedtls_md_context_t md_ctx;
+            const UCHAR *hmac_key = NULL;
+            ULONG hmac_key_len = 0;
+            ULONG hash_len;
+
+            if (params)
+            {
+                ULONG i;
+                for (i = 0; i < params->cBuffers; i++)
+                {
+                    if (params->pBuffers[i].BufferType == KDF_HASH_ALGORITHM && params->pBuffers[i].pvBuffer)
+                    {
+                        const WCHAR *alg_name = (const WCHAR *)params->pBuffers[i].pvBuffer;
+                        if      (!strcmpW( alg_name, BCRYPT_SHA1_ALGORITHM   )) md_type = MBEDTLS_MD_SHA1;
+                        else if (!strcmpW( alg_name, BCRYPT_SHA256_ALGORITHM )) md_type = MBEDTLS_MD_SHA256;
+                        else if (!strcmpW( alg_name, BCRYPT_SHA384_ALGORITHM )) md_type = MBEDTLS_MD_SHA384;
+                        else if (!strcmpW( alg_name, BCRYPT_SHA512_ALGORITHM )) md_type = MBEDTLS_MD_SHA512;
+                        else if (!strcmpW( alg_name, BCRYPT_MD5_ALGORITHM    )) md_type = MBEDTLS_MD_MD5;
+                    }
+                    else if (params->pBuffers[i].BufferType == KDF_HMAC_KEY && params->pBuffers[i].pvBuffer)
+                    {
+                        hmac_key     = (const UCHAR *)params->pBuffers[i].pvBuffer;
+                        hmac_key_len = params->pBuffers[i].cbBuffer;
+                    }
+                }
+            }
+
+            md_info = mbedtls_md_info_from_type( md_type );
+            if (!md_info) return STATUS_NOT_IMPLEMENTED;
+
+            hash_len = (ULONG)mbedtls_md_get_size( md_info );
+            if (result_len) *result_len = hash_len;
+            if (!derived) return STATUS_SUCCESS;
+            if (derived_len < hash_len) return STATUS_BUFFER_TOO_SMALL;
+
+            /* Use shared secret as HMAC key if no explicit key provided */
+            if (!hmac_key) { hmac_key = sec->secret; hmac_key_len = sec->secret_len; }
+
+            mbedtls_md_init( &md_ctx );
+            if (mbedtls_md_setup( &md_ctx, md_info, 1 /* hmac */ ) != 0)
+            {
+                mbedtls_md_free( &md_ctx );
+                return STATUS_INTERNAL_ERROR;
+            }
+            mbedtls_md_hmac_starts( &md_ctx, hmac_key, hmac_key_len );
+            mbedtls_md_hmac_update( &md_ctx, sec->secret, sec->secret_len );
+            mbedtls_md_hmac_finish( &md_ctx, derived );
+            mbedtls_md_free( &md_ctx );
+
+            return STATUS_SUCCESS;
+        }
+
+        FIXME( "KDF %s not supported\n", wine_dbgstr_w(kdf) );
+        return STATUS_NOT_IMPLEMENTED;
+    }
+#endif
+    FIXME( "BCryptDeriveKey not supported without mbedTLS\n" );
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS WINAPI BCryptDeriveKeyPBKDF2( BCRYPT_ALG_HANDLE algorithm, PUCHAR password, ULONG password_len,
+                                        PUCHAR salt, ULONG salt_len, ULONGLONG iterations,
+                                        PUCHAR key, ULONG key_len, ULONG flags )
+{
+    struct algorithm *alg = algorithm;
+
+    TRACE( "%p, %p, %u, %p, %u, %I64u, %p, %u, %08x\n",
+           algorithm, password, password_len, salt, salt_len, iterations, key, key_len, flags );
+
+    if (!alg || alg->hdr.magic != MAGIC_ALG) return STATUS_INVALID_HANDLE;
+    if (!key || !key_len) return STATUS_INVALID_PARAMETER;
+
+#ifdef SONAME_LIBMBEDTLS
+    {
+        const mbedtls_md_info_t *md_info;
+        mbedtls_md_type_t md_type;
+        ULONG hash_len, block_count, i, j;
+        UCHAR *T = NULL, *U = NULL, *salt_int = NULL;
+        ULONG salt_int_len;
+        NTSTATUS status = STATUS_SUCCESS;
+
+        switch (alg->id)
+        {
+        case ALG_ID_MD5:    md_type = MBEDTLS_MD_MD5;    break;
+        case ALG_ID_SHA1:   md_type = MBEDTLS_MD_SHA1;   break;
+        case ALG_ID_SHA256: md_type = MBEDTLS_MD_SHA256; break;
+        case ALG_ID_SHA384: md_type = MBEDTLS_MD_SHA384; break;
+        case ALG_ID_SHA512: md_type = MBEDTLS_MD_SHA512; break;
+        default:
+            FIXME( "unsupported algorithm %u for PBKDF2\n", alg->id );
+            return STATUS_NOT_IMPLEMENTED;
+        }
+
+        md_info = mbedtls_md_info_from_type( md_type );
+        if (!md_info) return STATUS_NOT_IMPLEMENTED;
+
+        hash_len = (ULONG)mbedtls_md_get_size( md_info );
+        block_count = (key_len + hash_len - 1) / hash_len;
+
+        T = HeapAlloc( GetProcessHeap(), 0, hash_len );
+        U = HeapAlloc( GetProcessHeap(), 0, hash_len );
+        /* salt || INT(i): 4 extra bytes for the block counter */
+        salt_int_len = salt_len + 4;
+        salt_int = HeapAlloc( GetProcessHeap(), 0, salt_int_len );
+
+        if (!T || !U || !salt_int)
+        {
+            status = STATUS_NO_MEMORY;
+            goto pbkdf2_done;
+        }
+
+        if (salt && salt_len) memcpy( salt_int, salt, salt_len );
+
+        for (i = 1; i <= block_count; i++)
+        {
+            ULONGLONG it;
+            ULONG copy_len;
+
+            /* Append big-endian block index */
+            salt_int[salt_len    ] = (UCHAR)((i >> 24) & 0xFF);
+            salt_int[salt_len + 1] = (UCHAR)((i >> 16) & 0xFF);
+            salt_int[salt_len + 2] = (UCHAR)((i >>  8) & 0xFF);
+            salt_int[salt_len + 3] = (UCHAR)( i        & 0xFF);
+
+            /* U_1 = HMAC(password, salt || INT(i)) */
+            if (mbedtls_md_hmac( md_info, password, password_len,
+                                  salt_int, salt_int_len, U ) != 0)
+            {
+                status = STATUS_INTERNAL_ERROR;
+                goto pbkdf2_done;
+            }
+            memcpy( T, U, hash_len );
+
+            /* U_2 .. U_c */
+            for (it = 1; it < iterations; it++)
+            {
+                ULONG k;
+                if (mbedtls_md_hmac( md_info, password, password_len, U, hash_len, U ) != 0)
+                {
+                    status = STATUS_INTERNAL_ERROR;
+                    goto pbkdf2_done;
+                }
+                for (k = 0; k < hash_len; k++)
+                    T[k] ^= U[k];
+            }
+
+            /* Copy T_i into output */
+            copy_len = min( hash_len, key_len - (i - 1) * hash_len );
+            memcpy( key + (i - 1) * hash_len, T, copy_len );
+        }
+
+pbkdf2_done:
+        if (T) HeapFree( GetProcessHeap(), 0, T );
+        if (U) HeapFree( GetProcessHeap(), 0, U );
+        if (salt_int) HeapFree( GetProcessHeap(), 0, salt_int );
+        return status;
+    }
+#else
+    FIXME( "BCryptDeriveKeyPBKDF2 not supported without mbedTLS\n" );
+    return STATUS_NOT_IMPLEMENTED;
+#endif
+}
+
+NTSTATUS WINAPI BCryptDestroySecret( BCRYPT_SECRET_HANDLE handle )
+{
+    struct secret *sec = handle;
+
+    TRACE( "%p\n", handle );
+
+    if (!sec || sec->hdr.magic != MAGIC_SECRET) return STATUS_INVALID_HANDLE;
+    sec->hdr.magic = 0;
+    /* Wipe secret material */
+    SecureZeroMemory( sec->secret, sizeof(sec->secret) );
+    HeapFree( GetProcessHeap(), 0, sec );
+    return STATUS_SUCCESS;
+}
+
+/* ECDH ECC key export helper */
+#ifdef SONAME_LIBMBEDTLS
+static NTSTATUS export_ecc_key( struct key_pair *kp, LPCWSTR type,
+                                  UCHAR *output, ULONG outputlen, ULONG *retlen )
+{
+    BCRYPT_ECCKEY_BLOB *hdr;
+    ULONG coord_size, pub_magic, priv_magic, required;
+    BOOL is_public = !strcmpW( type, BCRYPT_ECCPUBLIC_BLOB );
+    UCHAR point_buf[1 + 2 * 48];
+    size_t point_len = 0;
+    UCHAR *p;
+
+    if (kp->alg_id == ALG_ID_ECDH_P256)
+    {
+        coord_size  = 32;
+        pub_magic   = BCRYPT_ECDH_PUBLIC_P256_MAGIC;
+        priv_magic  = BCRYPT_ECDH_PRIVATE_P256_MAGIC;
+    }
+    else if (kp->alg_id == ALG_ID_ECDH_P384)
+    {
+        coord_size  = 48;
+        pub_magic   = BCRYPT_ECDH_PUBLIC_P384_MAGIC;
+        priv_magic  = BCRYPT_ECDH_PRIVATE_P384_MAGIC;
+    }
+    else if (kp->alg_id == ALG_ID_ECDSA_P256)
+    {
+        coord_size  = 32;
+        pub_magic   = BCRYPT_ECDSA_PUBLIC_P256_MAGIC;
+        priv_magic  = BCRYPT_ECDSA_PRIVATE_P256_MAGIC;
+    }
+    else if (kp->alg_id == ALG_ID_ECDSA_P384)
+    {
+        coord_size  = 48;
+        pub_magic   = BCRYPT_ECDSA_PUBLIC_P384_MAGIC;
+        priv_magic  = BCRYPT_ECDSA_PRIVATE_P384_MAGIC;
+    }
+    else
+    {
+        FIXME( "unsupported ECC algorithm %u for export\n", kp->alg_id );
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    if (!is_public && !kp->has_private) return STATUS_INVALID_PARAMETER;
+
+    /* Export public point as uncompressed — use ecdsa or ecdh field as appropriate */
+    {
+        mbedtls_ecp_group *grp;
+        mbedtls_ecp_point *Q;
+        mbedtls_mpi       *d;
+
+        if (kp->alg_id == ALG_ID_ECDSA_P256 || kp->alg_id == ALG_ID_ECDSA_P384)
+        {
+            grp = &kp->u.ecdsa.grp;
+            Q   = &kp->u.ecdsa.Q;
+            d   = &kp->u.ecdsa.d;
+        }
+        else
+        {
+            grp = &kp->u.ecdh.grp;
+            Q   = &kp->u.ecdh.Q;
+            d   = &kp->u.ecdh.d;
+        }
+
+        if (mbedtls_ecp_point_write_binary( grp, Q,
+                                             MBEDTLS_ECP_PF_UNCOMPRESSED,
+                                             &point_len, point_buf, sizeof(point_buf) ) != 0)
+            return STATUS_INTERNAL_ERROR;
+
+        required = sizeof(*hdr) + 2 * coord_size + (is_public ? 0 : coord_size);
+        if (retlen) *retlen = required;
+        if (!output) return STATUS_SUCCESS;
+        if (outputlen < required) return STATUS_BUFFER_TOO_SMALL;
+
+        hdr = (BCRYPT_ECCKEY_BLOB *)output;
+        hdr->dwMagic = is_public ? pub_magic : priv_magic;
+        hdr->cbKey   = coord_size;
+        p = (UCHAR *)(hdr + 1);
+
+        /* X then Y (skip the 0x04 prefix byte) */
+        memcpy( p,              point_buf + 1,              coord_size );
+        memcpy( p + coord_size, point_buf + 1 + coord_size, coord_size );
+        p += 2 * coord_size;
+
+        if (!is_public)
+        {
+            if (mbedtls_mpi_write_binary( d, p, coord_size ) != 0)
+                return STATUS_INTERNAL_ERROR;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+#endif
 
 BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
 {

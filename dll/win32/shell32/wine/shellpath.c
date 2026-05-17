@@ -3396,3 +3396,84 @@ HRESULT WINAPI SHGetSpecialFolderLocation(
     hr = SHGetFolderLocation(hwndOwner, nFolder, NULL, 0, ppidl);
     return hr;
 }
+
+/*************************************************************************
+ * SHGetKnownFolderIDList    [SHELL32.@]
+ */
+HRESULT WINAPI SHGetKnownFolderIDList(REFKNOWNFOLDERID rfid, DWORD dwFlags,
+                                       HANDLE hToken, PIDLIST_ABSOLUTE *ppidl)
+{
+    UINT i;
+    int ncsidl = -1;
+
+    TRACE("(%s, 0x%08x, %p, %p)\n", debugstr_guid(rfid), dwFlags, hToken, ppidl);
+
+    if (!ppidl)
+        return E_INVALIDARG;
+    *ppidl = NULL;
+
+    for (i = 0; i < ARRAY_SIZE(CSIDL_Data); i++)
+    {
+        if (CSIDL_Data[i].id && IsEqualGUID(CSIDL_Data[i].id, rfid))
+        {
+            ncsidl = (int)i;
+            break;
+        }
+    }
+    if (ncsidl < 0)
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    if (dwFlags & KF_FLAG_CREATE)
+        ncsidl |= CSIDL_FLAG_CREATE;
+    if (dwFlags & KF_FLAG_NO_ALIAS)
+        ncsidl |= CSIDL_FLAG_NO_ALIAS;
+
+    return SHGetFolderLocation(NULL, ncsidl, hToken, 0, ppidl);
+}
+
+/*************************************************************************
+ * SHGetKnownFolderPath    [SHELL32.@]
+ */
+HRESULT WINAPI SHGetKnownFolderPath(REFKNOWNFOLDERID rfid, DWORD dwFlags,
+                                     HANDLE hToken, PWSTR *ppszPath)
+{
+    UINT i;
+    int ncsidl = -1;
+    WCHAR szPath[MAX_PATH];
+    HRESULT hr;
+    DWORD shgfp_flags;
+
+    TRACE("(%s, 0x%08x, %p, %p)\n", debugstr_guid(rfid), dwFlags, hToken, ppszPath);
+
+    if (!ppszPath)
+        return E_INVALIDARG;
+    *ppszPath = NULL;
+
+    for (i = 0; i < ARRAY_SIZE(CSIDL_Data); i++)
+    {
+        if (CSIDL_Data[i].id && IsEqualGUID(CSIDL_Data[i].id, rfid))
+        {
+            ncsidl = (int)i;
+            break;
+        }
+    }
+    if (ncsidl < 0)
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    if (dwFlags & KF_FLAG_CREATE)
+        ncsidl |= CSIDL_FLAG_CREATE;
+    if (dwFlags & KF_FLAG_NO_ALIAS)
+        ncsidl |= CSIDL_FLAG_NO_ALIAS;
+
+    shgfp_flags = (dwFlags & KF_FLAG_DEFAULT_PATH) ? SHGFP_TYPE_DEFAULT : SHGFP_TYPE_CURRENT;
+
+    hr = SHGetFolderPathW(NULL, ncsidl, hToken, shgfp_flags, szPath);
+    if (FAILED(hr))
+        return hr;
+
+    *ppszPath = SHAlloc((lstrlenW(szPath) + 1) * sizeof(WCHAR));
+    if (!*ppszPath)
+        return E_OUTOFMEMORY;
+    lstrcpyW(*ppszPath, szPath);
+    return S_OK;
+}

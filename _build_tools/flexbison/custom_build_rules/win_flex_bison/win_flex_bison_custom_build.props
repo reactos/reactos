@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup
+    Condition="'$(BisonBeforeTargets)' == '' and '$(BisonAfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <BisonBeforeTargets>Midl</BisonBeforeTargets>
+    <BisonAfterTargets>CustomBuild</BisonAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <BisonDependsOn
+      Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(BisonDependsOn)</BisonDependsOn>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Bison>
+      <OutputFile>%(Filename).tab.cpp</OutputFile>
+      <DefinesFile>%(Filename).tab.h</DefinesFile>
+      <CommandLineTemplate>
+start /B /WAIT /D "%(RootDir)%(Directory)" win_bison.exe [AllOptions] [AdditionalOptions] "%(Filename)%(Extension)"
+exit /b %errorlevel%</CommandLineTemplate>
+      <Outputs>%(RootDir)%(Directory)%(OutputFile);%(RootDir)%(Directory)%(DefinesFile);</Outputs>
+      <ExecutionDescription>Process "%(Filename)%(Extension)" bison file</ExecutionDescription>
+    </Bison>
+  </ItemDefinitionGroup>
+  <PropertyGroup
+    Condition="'$(FlexBeforeTargets)' == '' and '$(FlexAfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <FlexBeforeTargets>Midl</FlexBeforeTargets>
+    <FlexAfterTargets>CustomBuild</FlexAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <FlexDependsOn
+      Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(FlexDependsOn)</FlexDependsOn>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Flex>
+      <OutputFile>%(Filename).flex.cpp</OutputFile>
+      <Wincompat>true</Wincompat>
+      <CommandLineTemplate>
+start /B /WAIT /D "%(RootDir)%(Directory)" win_flex.exe [AllOptions] [AdditionalOptions] "%(Filename)%(Extension)"
+exit /b %errorlevel%</CommandLineTemplate>
+      <Outputs>%(RootDir)%(Directory)%(OutputFile);</Outputs>
+      <ExecutionDescription>Process "%(Filename)%(Extension)" flex file</ExecutionDescription>
+    </Flex>
+  </ItemDefinitionGroup>
+</Project>

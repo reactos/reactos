@@ -46,6 +46,7 @@ list(APPEND SOURCE
     utils.cpp
     CShellItem.cpp
     CShellLink.cpp
+    CExplorerBrowser.cpp
     CFolderOptions.cpp
     folders/CDesktopFolder.cpp
     folders/CFSFolder.cpp

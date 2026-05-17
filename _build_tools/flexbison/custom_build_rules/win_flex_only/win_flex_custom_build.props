@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup
+    Condition="'$(FlexBeforeTargets)' == '' and '$(FlexAfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <FlexBeforeTargets>Midl</FlexBeforeTargets>
+    <FlexAfterTargets>CustomBuild</FlexAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <FlexDependsOn
+      Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(FlexDependsOn)</FlexDependsOn>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Flex>
+      <OutputFile>%(Filename).flex.cpp</OutputFile>
+      <Wincompat>true</Wincompat>
+      <CommandLineTemplate>
+start /B /WAIT /D "%(RootDir)%(Directory)" win_flex.exe [AllOptions] [AdditionalOptions] "%(Filename)%(Extension)"
+exit /b %errorlevel%</CommandLineTemplate>
+      <Outputs>%(RootDir)%(Directory)%(OutputFile);</Outputs>
+      <ExecutionDescription>Process "%(Filename)%(Extension)" flex file</ExecutionDescription>
+    </Flex>
+  </ItemDefinitionGroup>
+</Project>
