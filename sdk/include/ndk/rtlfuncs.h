@@ -5111,6 +5111,32 @@ RtlRunOnceComplete(
     _In_ ULONG Flags,
     _In_opt_ PVOID Context);
 
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+#define RTLP_NUMBER_OF_NTUSER_WNDPROCS 24
+#else
+#define RTLP_NUMBER_OF_NTUSER_WNDPROCS 23
+#endif
+#define RTLP_NUMBER_OF_NTUSER_WORKERPROCS 11
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlInitializeNtUserPfn(
+    _In_reads_bytes_(SizeOfProcsA) const VOID* WndProcsA,
+    _In_ SIZE_T SizeOfProcsA,
+    _In_reads_bytes_(SizeOfProcsW) const VOID* WndProcsW,
+    _In_ SIZE_T SizeOfProcsW,
+    _In_reads_bytes_(SizeOfProcsX) const VOID* WorkerProcs,
+    _In_ SIZE_T SizeOfProcsX);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlRetrieveNtUserPfn(
+    _Outptr_ const VOID** NtdllWndProcsA,
+    _Outptr_ const VOID** NtdllWndProcsW,
+    _Outptr_ const VOID** NtdllWorkerProcs);
+
 #endif
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (defined(__REACTOS__) && defined(_NTDLLBUILD_))

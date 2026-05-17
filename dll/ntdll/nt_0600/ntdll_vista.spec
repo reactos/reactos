@@ -23,6 +23,8 @@
 @ stdcall RtlRunOnceComplete(ptr long ptr)
 @ stdcall RtlRunOnceExecuteOnce(ptr ptr ptr ptr)
 @ stdcall RtlWow64GetProcessMachines(ptr ptr ptr)
+@ stdcall RtlInitializeNtUserPfn(wstr long ptr long wstr ptr)
+@ stdcall RtlRetrieveNtUserPfn(ptr ptr ptr)
 
 @ stdcall RtlConnectToSm(ptr ptr long ptr) SmConnectToSm
 @ stdcall RtlSendMsgToSm(ptr ptr) SmSendMsgToSm
