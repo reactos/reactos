@@ -158,7 +158,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX      "&Không thực hiện kiểm tra này khi khởi động", IDC_NOTCHECK, 7, 62, 160, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "Có một tệp hoặc thư mục trên máy tính của bạn tên là %s, điều này có thể khiến một số ứng dụng hoạt động không đúng. Đổi tên nó thành %s sẽ giải quyết được vấn đề. Bạn có muốn đổi tên nó ngay bây giờ không?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "Có một tệp hoặc thư mục trên máy tính của bạn tên là %s, điều này có thể khiến một số ứng dụng gặp lỗi. Đổi tên nó thành %s sẽ giải quyết được vấn đề. Bạn có muốn đổi tên nó ngay bây giờ không?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0

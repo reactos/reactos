@@ -64,7 +64,7 @@ BEGIN
         MENUITEM "&Ngắt dòng", CMD_WRAP
         MENUITEM "&Phông chữ...", CMD_FONT
     END
-    POPUP "&Xem"
+    POPUP "&Hiển thị"
     BEGIN
         MENUITEM "Thanh &trạng thái", CMD_STATUSBAR
     END
