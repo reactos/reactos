@@ -128,8 +128,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Deseja que este computador seja membro de um domínio?\n\
 (Pode obter esta informação no seu administrador de rede.)", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "Não; fazer este computador membro do seguinte grupo de &trabalho.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Sim; fazer este computador membro do seguinte &domínio.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "Não. Fazer este computador membro do seguinte grupo de &trabalho.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Sim. Fazer este computador membro do seguinte &domínio.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "Nome do domínio ou grupo de trabalho:", IDC_STATIC, 33, 72, 152, 20
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "NOTA: Se este computador não fizer parte de uma rede, não terá privilégios suficientes para se juntar a um domínio, ou se simplesmente não sabe que escolher, então seleccione ""Grupo de trabalho"" por agora. Ésta opção pode ser alterada mais tarde.", IDC_STATIC, 33, 107, 263, 50
