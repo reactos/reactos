@@ -950,7 +950,7 @@
 @ stdcall RtlInitializeGenericTable(ptr ptr ptr ptr ptr)
 @ stdcall RtlInitializeGenericTableAvl(ptr ptr ptr ptr ptr)
 @ stdcall RtlInitializeHandleTable(long long ptr)
-@ stdcall -stub -version=0x600+ RtlInitializeNtUserPfn(wstr long ptr long wstr ptr)
+@ stdcall -version=0x600+ RtlInitializeNtUserPfn(wstr long ptr long wstr ptr)
 @ stdcall RtlInitializeRXact(ptr long ptr)
 @ stdcall RtlInitializeResource(ptr)
 @ stdcall RtlInitializeSListHead(ptr)
@@ -1125,7 +1125,7 @@
 @ stdcall RtlResetRtlTranslations(ptr)
 @ stdcall -arch=x86_64 RtlRestoreContext(ptr ptr)
 @ stdcall RtlRestoreLastWin32Error(long) RtlSetLastWin32Error
-@ stdcall -stub -version=0x600+ RtlRetrieveNtUserPfn(ptr ptr ptr)
+@ stdcall -version=0x600+ RtlRetrieveNtUserPfn(ptr ptr ptr)
 @ stdcall RtlRevertMemoryStream(ptr)
 @ stdcall RtlRunDecodeUnicodeString(long ptr)
 @ stdcall RtlRunEncodeUnicodeString(long ptr)

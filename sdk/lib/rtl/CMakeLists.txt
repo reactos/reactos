@@ -1,4 +1,7 @@
 
+remove_definitions(-D_WIN32_WINNT=0x502)
+#add_definitions(-D_WIN32_WINNT=0x600)
+
 add_definitions(
     -D_NTOSKRNL_
     -DNO_RTL_INLINES
@@ -130,14 +133,18 @@ endif()
 
 add_asm_files(rtl_asm ${ASM_SOURCE})
 add_library(rtl ${SOURCE} ${rtl_asm})
+target_compile_definitions(rtl PRIVATE _WIN32_WINNT=0x502)
 target_link_libraries(rtl PRIVATE pseh)
 add_pch(rtl rtl.h SOURCE)
 add_dependencies(rtl psdk asm)
 
+add_asm_files(rtl_vista_asm ntuserdisp.s)
 list(APPEND SOURCE_VISTA
+    ${rtl_vista_asm}
     ${RTL_WINE_SOURCE_VISTA}
     condvar.c
     locale.c
+    ntuserpfn.c
     runonce.c
     srw.c
     threadpool.c
@@ -145,6 +152,7 @@ list(APPEND SOURCE_VISTA
     utf8.c)
 
 add_library(rtl_vista ${SOURCE_VISTA})
+target_compile_definitions(rtl_vista PRIVATE _WIN32_WINNT=0x600)
 add_pch(rtl_vista rtl_vista.h SOURCE_VISTA)
 add_dependencies(rtl_vista psdk)
 target_link_libraries(rtl_vista PRIVATE pseh)

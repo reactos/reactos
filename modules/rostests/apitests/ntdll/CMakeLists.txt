@@ -123,6 +123,7 @@ list(APPEND SOURCE
     RtlHandle.c
     RtlImageDirectoryEntryToData.c
     RtlImageRvaToVa.c
+    RtlInitializeNtUserPfn.c
     RtlIsNameLegalDOS8Dot3.c
     RtlLocale.c
     RtlMemoryStream.c
@@ -135,6 +136,7 @@ list(APPEND SOURCE
     RtlQueryTimeZoneInfo.c
     RtlReAllocateHeap.c
     RtlRemovePrivileges.c
+    RtlRetrieveNtUserPfn.c
     RtlUnhandledExceptionFilter.c
     RtlUnicodeStringToAnsiString.c
     RtlUnicodeStringToCountedOemString.c
