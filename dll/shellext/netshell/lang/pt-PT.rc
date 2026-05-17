@@ -190,7 +190,7 @@ BEGIN
     IDS_NETWORKCOMPONENTTITLE "Componentes de rede"
     IDS_NETWORKCOMPONENTSUBTITLE "Determina quais os componentes de rede a utilizar neste equipamento. Para adicionar novos componentes, clique em ""Instalar""."
     IDS_NETWORKDOMAINTITLE "Grupo de trabalho ou domínio"
-    IDS_NETWORKDOMAINSUBTITLE "Um grupo de trabalho é um grupo de computadores que partilham o mesmo nome. Um domínio é um grupo de computadores gerido por um administrador de rede."
+    IDS_NETWORKDOMAINSUBTITLE "Um grupo de trabalho é um grupo de computadores com o mesmo nome. Um domínio é um grupo de computadores gerido por um administrador de rede."
     IDS_REACTOS_SETUP "Programa de configuração do ReactOS"
     IDS_WZD_DOMAIN_NAME "A instalação não pode continuar\naté que digite o nome do\n domínio ou grupo de trabalho."
 END
