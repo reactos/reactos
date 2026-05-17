@@ -19,9 +19,12 @@ list(APPEND SOURCE
     ftp.c
     gopher.c
     http.c
-    inet_ntop.c
     internet.c
     utility.c)
+
+if(DLL_EXPORT_VERSION LESS 0x600)
+    list(APPEND SOURCE inet_ntop.c)
+endif()
 
 list(APPEND PCH_SKIP_SOURCE
     # Sometimes wine uses nameless structs & unions. Sometimes not... */

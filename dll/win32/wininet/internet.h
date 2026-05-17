@@ -88,6 +88,10 @@ typedef struct
 BOOL is_valid_netconn(netconn_t *);
 void close_netconn(netconn_t *);
 
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+PCSTR WSAAPI wininet_inet_ntop(INT, const VOID *, PSTR, size_t);
+#endif
+
 static inline WCHAR *strndupW(const WCHAR *str, UINT max_len)
 {
     LPWSTR ret;

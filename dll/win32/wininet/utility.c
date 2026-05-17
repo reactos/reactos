@@ -86,8 +86,13 @@ BOOL GetAddress(const WCHAR *name, INTERNET_PORT port, struct sockaddr *psa, int
         break;
     }
 
-    if(addr_str)
+    if(addr_str) {
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+        wininet_inet_ntop(res->ai_family, addr, addr_str, INET6_ADDRSTRLEN);
+#else
         inet_ntop(res->ai_family, addr, addr_str, INET6_ADDRSTRLEN);
+#endif
+    }
     FreeAddrInfoW(res);
     return TRUE;
 }
