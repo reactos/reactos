@@ -710,7 +710,7 @@ SHDialogBox(
 EXTERN_C PSTR WINAPI
 NextPathA(
     _In_ PCSTR pszStart,
-    _Out_writes_(cchDest) LPSTR pszDest,
+    _Out_writes_(cchDest) PSTR pszDest,
     _In_ UINT cchDest)
 {
     if (!pszStart || !cchDest)

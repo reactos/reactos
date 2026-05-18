@@ -84,7 +84,7 @@ BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
 PSTR WINAPI
 NextPathA(
     _In_ PCSTR pszStart,
-    _Out_writes_(cchDest) LPSTR pszDest,
+    _Out_writes_(cchDest) PSTR pszDest,
     _In_ UINT cchDest);
 
 PWSTR WINAPI
