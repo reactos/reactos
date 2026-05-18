@@ -379,6 +379,10 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
                 SHELL32_GetDefaultShellState(gpss);
                 read = 0; // The advanced items we read are no longer valid in gpss
                 g_CachedSSF = SSF_STRUCTONLY;
+                /* HACKFIX: This should not be needed. Defaults should be used
+                 * until an override option is selected. See CORE-20585. */
+                rss.ss = *gpss;
+                SHELL32_WriteRegShellState(&rss);
             }
         }
         SHGSS_GetSetStruct(SHGSS_GetField); // Copy requested items from gpss to output
