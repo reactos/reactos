@@ -1788,7 +1788,7 @@ typedef struct _STACK_TRACE_DATABASE
         PVOID Lock;
 
         /* Padding for ERESOURCE */
-#if defined(_M_AMD64)
+#ifdef _WIN64
         UCHAR Padding[0x68];
 #else
         UCHAR Padding[56];
@@ -1814,9 +1814,7 @@ typedef struct _STACK_TRACE_DATABASE
 
 // Validate that our padding is big enough:
 #ifndef NTOS_MODE_USER
-#if defined(_M_AMD64)
-C_ASSERT(sizeof(ERESOURCE) <= 0x68);
-#elif defined(_M_ARM64)
+#ifdef _WIN64
 C_ASSERT(sizeof(ERESOURCE) <= 0x68);
 #else
 C_ASSERT(sizeof(ERESOURCE) <= 56);
