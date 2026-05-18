@@ -17,33 +17,53 @@ static FN_NextPathW s_pNextPathW = NULL;
 static void TEST_NextPathA(void)
 {
     PCSTR psz1 = "C:\\TEST1;C:\\TEST2;C:\\TEST3";
-    PSTR pch = (PSTR)psz1;
+    PCSTR psz2 = "C:\\TEST1;         ;C:\\TEST3";
+    PSTR pch;
     CHAR sz[MAX_PATH];
 
-    pch = s_pNextPathA(pch, sz, _countof(sz));
+    pch = s_pNextPathA(NULL, sz, _countof(sz));
+    ok(pch == NULL, "pch was %p\n", pch);
+
+    pch = s_pNextPathA(psz1, sz, _countof(sz));
     ok_str(sz, "C:\\TEST1");
     pch = s_pNextPathA(pch, sz, _countof(sz));
     ok_str(sz, "C:\\TEST2");
     pch = s_pNextPathA(pch, sz, _countof(sz));
     ok_str(sz, "C:\\TEST3");
     pch = s_pNextPathA(pch, sz, _countof(sz));
-    ok(pch == NULL, "pch was %s\n", pch);
+    ok(pch == NULL, "pch was %p\n", pch);
+
+    pch = (PSTR)psz2;
+    pch = s_pNextPathA(pch, sz, _countof(sz));
+    ok_str(sz, "C:\\TEST1");
+    pch = s_pNextPathA(pch, sz, _countof(sz));
+    ok(pch == NULL, "pch was %p\n", pch);
 }
 
 static void TEST_NextPathW(void)
 {
     PCWSTR psz1 = L"C:\\TEST1;C:\\TEST2;C:\\TEST3";
-    PWSTR pch = (PWSTR)psz1;
+    PCWSTR psz2 = L"C:\\TEST1;         ;C:\\TEST3";
+    PWSTR pch;
     WCHAR sz[MAX_PATH];
 
-    pch = s_pNextPathW(pch, sz, _countof(sz));
+    pch = s_pNextPathW(NULL, sz, _countof(sz));
+    ok(pch == NULL, "pch was %p\n", pch);
+
+    pch = s_pNextPathW(psz1, sz, _countof(sz));
     ok_wstr(sz, L"C:\\TEST1");
     pch = s_pNextPathW(pch, sz, _countof(sz));
     ok_wstr(sz, L"C:\\TEST2");
     pch = s_pNextPathW(pch, sz, _countof(sz));
     ok_wstr(sz, L"C:\\TEST3");
     pch = s_pNextPathW(pch, sz, _countof(sz));
-    ok(pch == NULL, "pch was %S\n", pch);
+    ok(pch == NULL, "pch was %p\n", pch);
+
+    pch = (PWSTR)psz2;
+    pch = s_pNextPathW(pch, sz, _countof(sz));
+    ok_wstr(sz, L"C:\\TEST1");
+    pch = s_pNextPathW(pch, sz, _countof(sz));
+    ok(pch == NULL, "pch was %p\n", pch);
 }
 
 START_TEST(NextPath)
