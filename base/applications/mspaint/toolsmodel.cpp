@@ -74,7 +74,7 @@ INT ToolsModel::GetBrushWidth() const
 
 void ToolsModel::SendSetCursor()
 {
-    canvasWindow.SendMessage(WM_SETCURSOR, (WPARAM)((HWND)canvasWindow),
+    canvasWindow.SendMessage(WM_SETCURSOR, (WPARAM)(HWND)canvasWindow,
                              MAKELPARAM(HTCLIENT, WM_MOUSEMOVE));
 }
 
