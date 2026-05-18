@@ -337,7 +337,7 @@ typedef struct _CM_NOTIFY_BLOCK
 //
 // Post Block
 //
-typedef struct _CM_POST_BLOCK
+typedef struct _CMP_POST_BLOCK
 {
     LIST_ENTRY NotifyList; /* link to CM_NOTIFY_BLOCK->PostList */
     BOOLEAN IsMasterPostBlock;
@@ -357,13 +357,17 @@ typedef struct _CM_POST_BLOCK
 
             PKPROCESS Process;
             PIO_STATUS_BLOCK IoStatusBlock;
+
+            PVOID Buffer; /* Caller gives us this buffer to receive the name of the changed key */
+            ULONG BufferSize; /* Size of Buffer in bytes */
+            PCM_KEY_CONTROL_BLOCK Kcb; /* KCB of the watched key */
         };
 
         /* Subordinate-specific fields */
         struct
         {
             PCM_NOTIFY_BLOCK MasterNotifyBlock; /* Hold a reference to the master key's notify block */
-            struct _CM_POST_BLOCK* MasterPostBlock; /* Hold a reference to master key's post block for forwarding notifications */
+            struct _CMP_POST_BLOCK* MasterPostBlock; /* Hold a reference to master key's post block for forwarding notifications */
         };
     };
 } CM_POST_BLOCK, *PCM_POST_BLOCK;

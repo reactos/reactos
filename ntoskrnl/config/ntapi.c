@@ -1681,19 +1681,21 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
                 goto Failure;
             }
 
-            /* Check if this is a duplicate object */
-            if (LocalSubObjectsKeyBody[i]->KeyControlBlock == KeyObject->KeyControlBlock)
+            /* Subordinate must be in a different hive from the master */
+            if (LocalSubObjectsKeyBody[i]->KeyControlBlock->KeyHive ==
+               KeyObject->KeyControlBlock->KeyHive)
             {
-                DPRINT1("NtNotifyChangeMultipleKeys: Duplicate subordinate object found.\n");
+                DPRINT1("NtNotifyChangeMultipleKeys: Subordinate object is in the same hive as master.\n");
                 Status = STATUS_INVALID_PARAMETER;
                 goto Failure;
             }
 
             for (int j = 0; j < i; j++)
             {
-                if (LocalSubObjectsKeyBody[i]->KeyControlBlock == LocalSubObjectsKeyBody[j]->KeyControlBlock)
+                if (LocalSubObjectsKeyBody[i]->KeyControlBlock->KeyHive ==
+                    LocalSubObjectsKeyBody[j]->KeyControlBlock->KeyHive)
                 {
-                    DPRINT1("NtNotifyChangeMultipleKeys: Duplicate subordinate object found.\n");
+                    DPRINT1("NtNotifyChangeMultipleKeys: Duplicate subordinate object found in same hive.\n");
                     Status = STATUS_INVALID_PARAMETER;
                     goto Failure;
                 }
@@ -1796,6 +1798,10 @@ NtNotifyChangeMultipleKeys(_In_ HANDLE MasterKeyHandle,
         DPRINT1("NtNotifyChangeMultipleKeys: Failed to allocate and insert master PostBlock. (0x%lx)\n", Status);
         goto Failure2;
     }
+
+    PostBlock->Buffer = Buffer;
+    PostBlock->BufferSize = Length;
+    PostBlock->Kcb = KeyObject->KeyControlBlock;   // master key
 
     /* Windows ignores the IO_STATUS_BLOCK with KernelMode Asynchronous callers */
     if (!Asynchronous || PreviousMode != KernelMode)

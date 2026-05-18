@@ -106,13 +106,62 @@ CmpPostBlockFreeSubordinates(_In_ ULONG Count,
 
 /**
  * @brief
+ * Fills the user buffer with the full name of the changed registry key.
+ */
+static
+NTSTATUS
+CmpFillChangedKeyName(
+    _In_ PCM_KEY_CONTROL_BLOCK Kcb,
+    _In_ PVOID Buffer,
+    _In_ ULONG BufferSize,
+    _Out_ PULONG ReturnLength)
+{
+    PUNICODE_STRING KeyName;
+    ULONG BytesToCopy;
+
+    *ReturnLength = 0;
+
+    if (!Buffer || BufferSize == 0 || !Kcb)
+        return STATUS_SUCCESS;
+
+    KeyName = CmpConstructName(Kcb);
+    if (!KeyName)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    *ReturnLength = KeyName->Length + sizeof(WCHAR);
+
+    if (BufferSize < *ReturnLength)
+    {
+        /* If the buffer is too small, we truncate and null terminate */
+        BytesToCopy = BufferSize - sizeof(WCHAR);
+        RtlCopyMemory(Buffer, KeyName->Buffer, BytesToCopy);
+        ((PWCHAR)Buffer)[BytesToCopy / sizeof(WCHAR)] = UNICODE_NULL;
+
+        ExFreePoolWithTag(KeyName, TAG_CM);
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* Copy the name and write the NUL terminator explicitly */
+    RtlCopyMemory(Buffer, KeyName->Buffer, KeyName->Length);
+    ((PWCHAR)Buffer)[KeyName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    ExFreePoolWithTag(KeyName, TAG_CM);
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
  * Helper function for sending change notification to a PostBlock
  */
 VOID
 NTAPI
-CmpNotifyPostBlock(_In_ PCM_POST_BLOCK PostBlock)
+CmpNotifyPostBlock(_In_ PCM_POST_BLOCK PostBlock,
+                   _In_opt_ PCM_KEY_CONTROL_BLOCK ChangedKcb)
 {
-    if (PostBlock->IoStatusBlock /* && !PostBlock->Buffer */)
+    NTSTATUS Status = STATUS_NOTIFY_ENUM_DIR;
+    ULONG ReturnedLength = 0;
+
+    if (PostBlock->IoStatusBlock)
     {
         KAPC_STATE ApcState;
         BOOLEAN IsSameProcess = PostBlock->Process == &PsGetCurrentProcess()->Pcb;
@@ -122,20 +171,35 @@ CmpNotifyPostBlock(_In_ PCM_POST_BLOCK PostBlock)
 
         _SEH2_TRY
         {
-            PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_ENUM_DIR;
+            if (PostBlock->Buffer && PostBlock->BufferSize > 0)
+            {
+                PCM_KEY_CONTROL_BLOCK FillKcb = ChangedKcb ? ChangedKcb : PostBlock->Kcb;
+                if (FillKcb)
+                {
+                    Status = CmpFillChangedKeyName(FillKcb,
+                                                   PostBlock->Buffer,
+                                                   PostBlock->BufferSize,
+                                                   &ReturnedLength);
+                }
+            }
+
+            PostBlock->IoStatusBlock->Status = Status;
+            PostBlock->IoStatusBlock->Information = ReturnedLength;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            NTSTATUS Status = _SEH2_GetExceptionCode();
-            DPRINT1("CmpNotifyPostBlock: Writing to IO_STATUS_BLOCK failed with %lx. Process=0x%lx, IoStatusBlock=0x%lx\n", Status, PostBlock->Process, PostBlock->IoStatusBlock);
+            NTSTATUS ExceptCode = _SEH2_GetExceptionCode();
+            DPRINT1("CmpNotifyPostBlock: Writing to IO_STATUS_BLOCK failed with 0x%lx. Process=0x%lx, IoStatusBlock=0x%lx\n",
+                    ExceptCode, PostBlock->Process, PostBlock->IoStatusBlock);
+
+            PostBlock->IoStatusBlock->Status = ExceptCode;
+            PostBlock->IoStatusBlock->Information = 0;
         }
         _SEH2_END;
 
         if (!IsSameProcess)
             KeUnstackDetachProcess(&ApcState);
     }
-
-    /* FIXME: Return the name of updated registry key in PostBlock->Buffer */
 
     /* Signal the event */
     if (PostBlock->Event)
@@ -148,7 +212,7 @@ CmpNotifyPostBlock(_In_ PCM_POST_BLOCK PostBlock)
     /* Queue the APC routine */
     if (PostBlock->UserApc)
     {
-        KeInsertQueueApc(PostBlock->UserApc, PostBlock, (PVOID)STATUS_NOTIFY_ENUM_DIR, 0);
+        KeInsertQueueApc(PostBlock->UserApc, PostBlock, (PVOID)Status, 0);
 
         /* We can't free the resource, yet
          * There's an APC routine to be called so we still need them
@@ -193,9 +257,14 @@ CmpApcKernelRoutine(_In_ PKAPC Apc,
                     _Inout_ PVOID *SystemArgument2 OPTIONAL)
 {
     PCM_POST_BLOCK PostBlock = (PCM_POST_BLOCK)*SystemArgument1;
+    NTSTATUS Status = (NTSTATUS)(*SystemArgument2);
 
-    /* TODO: Set IO_STATUS_BLOCK */
-    /* NTSTATUS Status = (NTSTATUS)SystemArgument2; */
+    if (PostBlock && PostBlock->IoStatusBlock)
+    {
+        /* Set the real status we decided in CmpNotifyPostBlock */
+        PostBlock->IoStatusBlock->Status = Status;
+        /* Information already set in CmpNotifyPostBlock */
+    }
 
     /* Cleanup resources */
     if (PostBlock->Event)
@@ -225,13 +294,19 @@ CmpApcRoutineRundown(_In_ PKAPC Apc)
     /* TODO: Set IO_STATUS_BLOCK */
     /* NTSTATUS Status = (NTSTATUS)SystemArgument2; */
 
+    if (PostBlock && PostBlock->IoStatusBlock)
+    {
+        PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_CLEANUP;
+        PostBlock->IoStatusBlock->Information = 0;
+    }
+
     /* Cleanup resources */
     if (PostBlock->Event)
     {
         ObDereferenceObject(PostBlock->Event);
         PostBlock->Event = NULL;
     }
-    
+
     ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
     PostBlock->UserApc = NULL;
 
@@ -275,7 +350,7 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
 
     /* Find the CMHIVE linked to this Hive */
     KeyHive = CONTAINING_RECORD(Hive, CMHIVE, Hive);
-    
+
     /* Get NotifyBlock list on the Hive */
     ListHead = &(KeyHive->NotifyList);
     if (IsListEmpty(ListHead))
@@ -316,7 +391,13 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
 
             if (PostBlock->IsMasterPostBlock)
             {
-                CmpNotifyPostBlock(PostBlock);
+                /*
+                 * Pass the KCB of the key that actually changed so that
+                 * CmpNotifyPostBlock can write the right name into the
+                 * caller's buffer instead of always writing the name of the
+                 * root watched key.
+                 */
+                CmpNotifyPostBlock(PostBlock, Kcb);
             }
             else
             {
@@ -326,9 +407,14 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 PCM_KEY_CONTROL_BLOCK MasterKcb = PostBlock->MasterNotifyBlock->KeyControlBlock;
                 /* Lock the master KCB before we do anything with its NotifyBlock */
                 CmpAcquireKcbLockShared(MasterKcb);
-                
-                CmpNotifyPostBlock(PostBlock->MasterPostBlock);
-                
+
+                /*
+                 * Forward the changed KCB to the master PostBlock as well so
+                 * that subordinate-triggered notifications also report the
+                 * correct key name.
+                 */
+                CmpNotifyPostBlock(PostBlock->MasterPostBlock, Kcb);
+
                 CmpReleaseKcbLock(MasterKcb);
             }
         }
@@ -377,6 +463,7 @@ CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
             {
                 /* We are ending the notification session without signalling the caller for any change */
                 PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_CLEANUP;
+                PostBlock->IoStatusBlock->Information = 0;   // No name returned on cleanup
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -529,6 +616,11 @@ CmpInsertPostBlock(_In_      PCM_NOTIFY_BLOCK NotifyBlock,
     PostBlock->IsMasterPostBlock = TRUE;
     PostBlock->Event = EventObject;
     PostBlock->UserApc = LocalApc;
+    PostBlock->Kcb = NotifyBlock->KeyControlBlock;
+    PostBlock->Process = &PsGetCurrentProcess()->Pcb;
+    PostBlock->Buffer = NULL;
+    PostBlock->BufferSize = 0;
+    PostBlock->IoStatusBlock = NULL;
 
     /* Insert to NotifyBlock */
     InsertHeadList(&(NotifyBlock->PostList), &(PostBlock->NotifyList));

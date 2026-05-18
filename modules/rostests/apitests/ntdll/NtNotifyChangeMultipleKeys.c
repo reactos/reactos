@@ -459,6 +459,328 @@ START_SUBTEST(ApcRoutine)
     FINALIZE_TEST(state);
 }
 
+START_SUBTEST(BufferFullName)
+{
+    NTSTATUS Status;
+ 
+    UNICODE_STRING ValueName;
+    RtlInitUnicodeString(&ValueName, L"BufFullNameValue");
+ 
+    DWORD ValueData = 0xAABBCCDD;
+ 
+    INIT_TEST(state, Status);
+
+    DWORD ValuePreData = 0x11223344;
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValuePreData, sizeof(ValuePreData));
+    CHECK_ERROR(state, Status);
+ 
+    state->EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!state->EventHandle)
+    {
+        CLEANUP(state);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    WCHAR PathBuffer[MAX_PATH];
+    ULONG BufferLength = sizeof(PathBuffer);
+    RtlZeroMemory(PathBuffer, BufferLength);
+ 
+    Status = NtNotifyChangeMultipleKeys(state->KeyHandle,
+                                        0, NULL,
+                                        state->EventHandle,
+                                        NULL, NULL,
+                                        &state->IoStatusBlock,
+                                        REG_NOTIFY_CHANGE_LAST_SET,
+                                        FALSE,
+                                        PathBuffer,
+                                        BufferLength,
+                                        TRUE);
+    TEST_ERROR(state, Status, STATUS_PENDING);
+
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValueData, sizeof(ValueData));
+    CHECK_ERROR(state, Status);
+ 
+    NtTestAlert();
+    Status = WaitForSingleObject(state->EventHandle, 100);
+    TEST_ERROR(state, Status, WAIT_OBJECT_0);
+
+    ok_ntstatus(state->IoStatusBlock.Status, STATUS_SUCCESS);
+ 
+    UNICODE_STRING ExpectedPath;
+    RtlInitUnicodeString(&ExpectedPath, L"\\REGISTRY\\MACHINE\\SOFTWARE\\TestKey");
+ 
+    ULONG ExpectedBytes = ExpectedPath.Length + sizeof(WCHAR); /* include NUL */
+    ok(state->IoStatusBlock.Information == ExpectedBytes,
+       "Information=%lu, expected %lu\n",
+       (ULONG)state->IoStatusBlock.Information, ExpectedBytes);
+ 
+    ok(wcsncmp(PathBuffer, ExpectedPath.Buffer, ExpectedPath.Length / sizeof(WCHAR)) == 0,
+       "Buffer contained wrong path: '%ls'\n", PathBuffer);
+ 
+    ok(PathBuffer[ExpectedPath.Length / sizeof(WCHAR)] == UNICODE_NULL,
+       "Buffer is not NUL-terminated\n");
+ 
+    FINALIZE_TEST(state);
+}
+
+START_SUBTEST(BufferTooSmall)
+{
+    NTSTATUS Status;
+
+    UNICODE_STRING ValueName;
+    RtlInitUnicodeString(&ValueName, L"BufTooSmallValue");
+
+    DWORD ValueData = 0xDEADBEEF;
+
+    INIT_TEST(state, Status);
+
+    DWORD ValuePreData = 0xCAFEBABE;
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValuePreData, sizeof(ValuePreData));
+    CHECK_ERROR(state, Status);
+
+    state->EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!state->EventHandle)
+    {
+        CLEANUP(state);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    WCHAR SmallBuffer[4];
+    ULONG SmallBufferLength = sizeof(SmallBuffer); /* 8 bytes */
+    RtlZeroMemory(SmallBuffer, SmallBufferLength);
+
+    Status = NtNotifyChangeMultipleKeys(state->KeyHandle,
+                                        0, NULL,
+                                        state->EventHandle,
+                                        NULL, NULL,
+                                        &state->IoStatusBlock,
+                                        REG_NOTIFY_CHANGE_LAST_SET,
+                                        FALSE,
+                                        SmallBuffer,
+                                        SmallBufferLength,
+                                        TRUE);
+    TEST_ERROR(state, Status, STATUS_PENDING);
+
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD, &ValueData, sizeof(ValueData));
+    CHECK_ERROR(state, Status);
+
+    NtTestAlert();
+    Status = WaitForSingleObject(state->EventHandle, 100);
+    TEST_ERROR(state, Status, WAIT_OBJECT_0);
+
+    ok_ntstatus(state->IoStatusBlock.Status, STATUS_BUFFER_OVERFLOW);
+
+    UNICODE_STRING ExpectedPath;
+    RtlInitUnicodeString(&ExpectedPath, L"\\REGISTRY\\MACHINE\\SOFTWARE\\TestKey");
+    ULONG ExpectedBytes = ExpectedPath.Length + sizeof(WCHAR);
+
+    ok(state->IoStatusBlock.Information == ExpectedBytes,
+       "Information=%lu, expected full path size %lu\n",
+       (ULONG)state->IoStatusBlock.Information, ExpectedBytes);
+
+    ULONG CharsFit = (SmallBufferLength / sizeof(WCHAR)) - 1;
+    ok(SmallBuffer[CharsFit] == UNICODE_NULL,
+       "Small buffer is not NUL-terminated at position %lu\n", CharsFit);
+
+    FINALIZE_TEST(state);
+}
+
+START_SUBTEST(BufferSubtreeName)
+{
+    NTSTATUS Status;
+ 
+    UNICODE_STRING ValueName;
+    RtlInitUnicodeString(&ValueName, L"BufSubtreeValue");
+ 
+    DWORD ValueData = 0x12345678;
+ 
+    INIT_TEST(state, Status);
+ 
+    DWORD ValuePreData = 0x87654321;
+    Status = NtSetValueKey(state->SubKeyHandle, &ValueName, 0, REG_DWORD, &ValuePreData, sizeof(ValuePreData));
+    CHECK_ERROR(state, Status);
+ 
+    state->EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!state->EventHandle)
+    {
+        CLEANUP(state);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+ 
+    WCHAR PathBuffer[MAX_PATH];
+    ULONG BufferLength = sizeof(PathBuffer);
+    RtlZeroMemory(PathBuffer, BufferLength);
+
+    Status = NtNotifyChangeMultipleKeys(state->KeyHandle,
+                                        0, NULL,
+                                        state->EventHandle,
+                                        NULL, NULL,
+                                        &state->IoStatusBlock,
+                                        REG_NOTIFY_CHANGE_LAST_SET,
+                                        TRUE,
+                                        PathBuffer,
+                                        BufferLength,
+                                        TRUE);
+    TEST_ERROR(state, Status, STATUS_PENDING);
+
+    Status = NtSetValueKey(state->SubKeyHandle, &ValueName, 0, REG_DWORD, &ValueData, sizeof(ValueData));
+    CHECK_ERROR(state, Status);
+ 
+    NtTestAlert();
+    Status = WaitForSingleObject(state->EventHandle, 100);
+    TEST_ERROR(state, Status, WAIT_OBJECT_0);
+ 
+    ok_ntstatus(state->IoStatusBlock.Status, STATUS_SUCCESS);
+
+    UNICODE_STRING ExpectedSubPath;
+    RtlInitUnicodeString(&ExpectedSubPath,
+                         L"\\REGISTRY\\MACHINE\\SOFTWARE\\TestKey\\TestSubKey");
+ 
+    ULONG ExpectedBytes = ExpectedSubPath.Length + sizeof(WCHAR);
+    ok(state->IoStatusBlock.Information == ExpectedBytes,
+       "Information=%lu, expected %lu (subkey path)\n",
+       (ULONG)state->IoStatusBlock.Information, ExpectedBytes);
+ 
+    ok(wcsncmp(PathBuffer, ExpectedSubPath.Buffer,
+               ExpectedSubPath.Length / sizeof(WCHAR)) == 0,
+       "Buffer should contain subkey path but got: '%ls'\n", PathBuffer);
+ 
+    FINALIZE_TEST(state);
+}
+
+START_SUBTEST(BufferSecondaryKeyName)
+{
+    NTSTATUS Status;
+ 
+    UNICODE_STRING ValueName;
+    RtlInitUnicodeString(&ValueName, L"BufSecondaryValue");
+ 
+    DWORD ValueData = 0xFEEDFACE;
+ 
+    HANDLE SecondaryKey;
+ 
+    INIT_TEST(state, Status);
+ 
+    DWORD ValuePreData = 0xACEDBEEF;
+    Status = NtOpenKey(&SecondaryKey, KEY_SET_VALUE | KEY_NOTIFY,
+                       &state->SecondaryObjectAttributes);
+    CHECK_ERROR(state, Status);
+    Status = NtSetValueKey(SecondaryKey, &ValueName, 0, REG_DWORD,
+                           &ValuePreData, sizeof(ValuePreData));
+    CHECK_ERROR(state, Status);
+    CloseHandle(SecondaryKey);
+ 
+    state->EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!state->EventHandle)
+    {
+        CLEANUP(state);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+ 
+    WCHAR PathBuffer[MAX_PATH];
+    ULONG BufferLength = sizeof(PathBuffer);
+    RtlZeroMemory(PathBuffer, BufferLength);
+ 
+    OBJECT_ATTRIBUTES SubordinateObjects[1];
+    InitializeObjectAttributes(&SubordinateObjects[0],
+                                &state->SecondaryKeyName,
+                                OBJ_CASE_INSENSITIVE, NULL, NULL);
+ 
+    Status = NtNotifyChangeMultipleKeys(state->KeyHandle,
+                                        _countof(SubordinateObjects),
+                                        SubordinateObjects,
+                                        state->EventHandle,
+                                        NULL, NULL,
+                                        &state->IoStatusBlock,
+                                        REG_NOTIFY_CHANGE_LAST_SET,
+                                        TRUE,
+                                        PathBuffer,
+                                        BufferLength,
+                                        TRUE);
+    TEST_ERROR(state, Status, STATUS_PENDING);
+ 
+    /* Trigger via the secondary key */
+    Status = NtOpenKey(&SecondaryKey, KEY_SET_VALUE | KEY_NOTIFY,
+                       &state->SecondaryObjectAttributes);
+    CHECK_ERROR(state, Status);
+    Status = NtSetValueKey(SecondaryKey, &ValueName, 0, REG_DWORD,
+                           &ValueData, sizeof(ValueData));
+    CHECK_ERROR(state, Status);
+    CloseHandle(SecondaryKey);
+ 
+    NtTestAlert();
+    Status = WaitForSingleObject(state->EventHandle, 100);
+    TEST_ERROR(state, Status, WAIT_OBJECT_0);
+ 
+    ok_ntstatus(state->IoStatusBlock.Status, STATUS_SUCCESS);
+
+    UNICODE_STRING ExpectedSecondaryPath;
+    RtlInitUnicodeString(&ExpectedSecondaryPath,
+                         L"\\REGISTRY\\USER\\.DEFAULT\\SOFTWARE\\TestKey");
+ 
+    ULONG ExpectedBytes = ExpectedSecondaryPath.Length + sizeof(WCHAR);
+    ok(state->IoStatusBlock.Information == ExpectedBytes,
+       "Information=%lu, expected %lu (secondary key path)\n",
+       (ULONG)state->IoStatusBlock.Information, ExpectedBytes);
+ 
+    ok(wcsncmp(PathBuffer, ExpectedSecondaryPath.Buffer,
+               ExpectedSecondaryPath.Length / sizeof(WCHAR)) == 0,
+       "Buffer should contain secondary key path but got: '%ls'\n", PathBuffer);
+ 
+    FINALIZE_TEST(state);
+}
+
+START_SUBTEST(BufferNullSkipped)
+{
+    NTSTATUS Status;
+ 
+    UNICODE_STRING ValueName;
+    RtlInitUnicodeString(&ValueName, L"BufNullSkipValue");
+ 
+    DWORD ValueData = 0x55AA55AA;
+ 
+    INIT_TEST(state, Status);
+ 
+    DWORD ValuePreData = 0xAA55AA55;
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD,
+                           &ValuePreData, sizeof(ValuePreData));
+    CHECK_ERROR(state, Status);
+ 
+    state->EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!state->EventHandle)
+    {
+        CLEANUP(state);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = NtNotifyChangeMultipleKeys(state->KeyHandle,
+                                        0, NULL,
+                                        state->EventHandle,
+                                        NULL, NULL,
+                                        &state->IoStatusBlock,
+                                        REG_NOTIFY_CHANGE_LAST_SET,
+                                        FALSE,
+                                        NULL,
+                                        0,
+                                        TRUE);
+    TEST_ERROR(state, Status, STATUS_PENDING);
+ 
+    Status = NtSetValueKey(state->KeyHandle, &ValueName, 0, REG_DWORD,
+                           &ValueData, sizeof(ValueData));
+    CHECK_ERROR(state, Status);
+ 
+    NtTestAlert();
+    Status = WaitForSingleObject(state->EventHandle, 100);
+    TEST_ERROR(state, Status, WAIT_OBJECT_0);
+
+    ok_ntstatus(state->IoStatusBlock.Status, STATUS_NOTIFY_ENUM_DIR);
+    ok(state->IoStatusBlock.Information == 0,
+       "Information should be 0 when no buffer supplied, got %lu\n",
+       (ULONG)state->IoStatusBlock.Information);
+ 
+    FINALIZE_TEST(state);
+}
+
 /* Main */
 
 START_TEST(NtNotifyChangeMultipleKeys)
@@ -474,6 +796,11 @@ START_TEST(NtNotifyChangeMultipleKeys)
     RUN_TEST(&State, Status, WatchSubtree);
     RUN_TEST(&State, Status, WatchSecondaryKey);
     RUN_TEST(&State, Status, ApcRoutine);
+    RUN_TEST(&State, Status, BufferFullName);
+    RUN_TEST(&State, Status, BufferTooSmall);
+    RUN_TEST(&State, Status, BufferSubtreeName);
+    RUN_TEST(&State, Status, BufferSecondaryKeyName);
+    RUN_TEST(&State, Status, BufferNullSkipped);
 
     NtNotifyChangeMultipleKeys_CleanupTestKeys(&State);
 }
