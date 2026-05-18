@@ -480,6 +480,12 @@ PWSTR WINAPI CharLowerNoDBCSW(_Inout_ PWSTR lpString);
 PSTR WINAPI CharUpperNoDBCSA(_Inout_ PSTR lpString);
 PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString);
 
+HRESULT WINAPI
+SHWindowsPolicyGetValue(
+    _In_ REFGUID rpolid,
+    _Out_opt_ PVOID pvData,
+    _Out_opt_ PDWORD pcbData);
+
 /*****************************************************************************
  * IAssociationElementOld interface
  *
