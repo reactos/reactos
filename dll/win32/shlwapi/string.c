@@ -2517,6 +2517,30 @@ typedef struct tagSHLWAPI_BYTEFORMATS
  */
 LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
 {
+  HRESULT hr;
+
+  TRACE("(0x%s,%p,%d)\n", wine_dbgstr_longlong(llBytes), lpszDest, cchMax);
+
+  if (!lpszDest || !cchMax)
+    return lpszDest;
+
+  hr = StrFormatByteSizeEx(llBytes, SFBS_FLAGS_TRUNCATE_UNDISPLAYED_DECIMAL_DIGITS,
+                           lpszDest, cchMax);
+
+  if (FAILED(hr))
+    return NULL;
+
+  return lpszDest;
+}
+
+/*************************************************************************
+ * StrFormatByteSizeEx  [SHLWAPI.@]
+ *
+ */
+
+HRESULT WINAPI StrFormatByteSizeEx(LONGLONG llBytes, SFBS_FLAGS flags, LPWSTR lpszDest,
+                                   UINT cchMax)
+{
 #define KB ((ULONGLONG)1024)
 #define MB (KB*KB)
 #define GB (KB*KB*KB)
@@ -2569,17 +2593,17 @@ LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
   double dBytes;
   UINT i = 0;
 
-  TRACE("(0x%s,%p,%d)\n", wine_dbgstr_longlong(llBytes), lpszDest, cchMax);
+  TRACE("(0x%s,%d,%p,%d)\n", wine_dbgstr_longlong(llBytes), flags, lpszDest, cchMax);
 
-  if (!lpszDest || !cchMax)
-    return lpszDest;
+  if (!cchMax)
+    return E_INVALIDARG;
 
   if (llBytes < 1024)  /* 1K */
   {
     WCHAR wszBytesFormat[64];
     LoadStringW(shlwapi_hInstance, IDS_BYTES_FORMAT, wszBytesFormat, 64);
     swprintf(lpszDest, cchMax, wszBytesFormat, (int)llBytes);
-    return lpszDest;
+    return S_OK;
   }
 
   /* Note that if this loop completes without finding a match, i will be
@@ -2602,20 +2626,31 @@ LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
   else
     dBytes = (double)llBytes + 0.00001;
 
-  dBytes = floor(dBytes / bfFormats[i].dDivisor) / bfFormats[i].dNormaliser;
+  switch(flags)
+  {
+  case SFBS_FLAGS_ROUND_TO_NEAREST_DISPLAYED_DIGIT:
+      dBytes = round(dBytes / bfFormats[i].dDivisor) / bfFormats[i].dNormaliser;
+      break;
+  case SFBS_FLAGS_TRUNCATE_UNDISPLAYED_DECIMAL_DIGITS:
+      dBytes = floor(dBytes / bfFormats[i].dDivisor) / bfFormats[i].dNormaliser;
+      break;
+  default:
+      return E_INVALIDARG;
+  }
 
 #ifdef __REACTOS__
   if (!FormatDouble(dBytes, bfFormats[i].nDecimals, szBuff, ARRAYSIZE(szBuff)))
-    return NULL;
+    return E_FAIL;
   LoadStringW(shlwapi_hInstance, bfFormats[i].nFormatID, wszFormat, ARRAYSIZE(wszFormat));
   snprintfW(lpszDest, cchMax, wszFormat, szBuff);
 #else
   if (!FormatDouble(dBytes, bfFormats[i].nDecimals, lpszDest, cchMax))
-    return NULL;
+    return E_FAIL;
+
   wszAdd[1] = bfFormats[i].wPrefix;
   StrCatBuffW(lpszDest, wszAdd, cchMax);
 #endif
-  return lpszDest;
+  return S_OK;
 }
 
 /*************************************************************************
