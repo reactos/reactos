@@ -258,7 +258,7 @@ INT_PTR WINAPI SHMessageBoxCheckA(HWND hWnd, LPCSTR lpszText, LPCSTR lpszTitle,
   if (lpszText)
   {
     iLen = MultiByteToWideChar(CP_ACP, 0, lpszText, -1, NULL, 0);
-    szTextBuff = HeapAlloc(GetProcessHeap(), 0, iLen * sizeof(WCHAR));
+    szTextBuff = malloc(iLen * sizeof(WCHAR));
     MultiByteToWideChar(CP_ACP, 0, lpszText, -1, szTextBuff, iLen);
   }
 
@@ -266,7 +266,7 @@ INT_PTR WINAPI SHMessageBoxCheckA(HWND hWnd, LPCSTR lpszText, LPCSTR lpszTitle,
 
   iRetVal = SHMessageBoxCheckW(hWnd, szTextBuff, lpszTitle ? szTitleBuff : NULL,
                                dwType, iRet, szIdBuff);
-  HeapFree(GetProcessHeap(), 0, szTextBuff);
+  free(szTextBuff);
   return iRetVal;
 }
 
