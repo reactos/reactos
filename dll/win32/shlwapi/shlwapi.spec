@@ -790,6 +790,7 @@
 788 stdcall StrDupW(wstr)
 789 stdcall StrFormatByteSize64A(int64 ptr long)
 790 stdcall StrFormatByteSizeA(long ptr long)
+@ stdcall -version=0x600+ StrFormatByteSizeEx(int64 long ptr long)
 791 stdcall StrFormatByteSizeW(int64 ptr long)
 792 stdcall StrFormatKBSizeA(int64 str long)
 793 stdcall StrFormatKBSizeW(int64 wstr long)
