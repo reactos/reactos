@@ -44,11 +44,11 @@ GetVersionMajorMinor()
 
 static BOOL
 UnExpandEnvironmentStringForUserA(
-    HANDLE hUserToken,
-    PCSTR  lpString,
-    PCSTR  lpSrc,
-    PSTR   pszBuff,
-    UINT   cchBuff)
+    _In_ HANDLE hUserToken,
+    _In_ PCSTR lpString,
+    _In_ PCSTR lpSrc,
+    _Out_ PSTR pszDest,
+    _In_ UINT cchDest)
 {
     CHAR szBuff[MAX_PATH];
     UINT cchExpanded;
@@ -56,7 +56,7 @@ UnExpandEnvironmentStringForUserA(
     if (hUserToken)
     {
         if (ExpandEnvironmentStringsForUserA(hUserToken, lpSrc, szBuff, _countof(szBuff)))
-            cchExpanded = lstrlenA(pszBuff) + 1;
+            cchExpanded = lstrlenA(pszDest) + 1;
         else
             cchExpanded = 0;
     }
@@ -65,7 +65,7 @@ UnExpandEnvironmentStringForUserA(
         cchExpanded = ExpandEnvironmentStringsA(lpSrc, szBuff, _countof(szBuff));
     }
 
-    if (cchExpanded > cchBuff || !cchExpanded)
+    if (cchExpanded > cchDest || !cchExpanded)
         return FALSE;
 
     INT cchEnvPath = cchExpanded - 1;
@@ -76,21 +76,21 @@ UnExpandEnvironmentStringForUserA(
     }
 
     INT cchSuffix = lstrlenA(lpString) - cchEnvPath;
-    if (lstrlenA(lpSrc) + cchSuffix >= (INT)cchBuff)
+    if (lstrlenA(lpSrc) + cchSuffix >= (INT)cchDest)
         return FALSE;
 
-    StringCchCopyA(pszBuff, cchBuff, lpSrc);
-    StringCchCatA(pszBuff, cchBuff, &lpString[cchEnvPath]);
+    StringCchCopyA(pszDest, cchDest, lpSrc);
+    StringCchCatA(pszDest, cchDest, &lpString[cchEnvPath]);
     return TRUE;
 }
 
 static BOOL
 UnExpandEnvironmentStringForUserW(
-    HANDLE hUserToken,
-    PCWSTR lpString,
-    PCWSTR lpSrc,
-    PWSTR  pszBuff,
-    UINT   cchBuff)
+    _In_ HANDLE hUserToken,
+    _In_ PCWSTR lpString,
+    _In_ PCWSTR lpSrc,
+    _Out_ PWSTR pszDest,
+    _In_ UINT cchDest)
 {
     WCHAR szBuff[MAX_PATH];
     UINT cchExpanded;
@@ -98,7 +98,7 @@ UnExpandEnvironmentStringForUserW(
     if (hUserToken)
     {
         if (ExpandEnvironmentStringsForUserW(hUserToken, lpSrc, szBuff, _countof(szBuff)))
-            cchExpanded = lstrlenW(pszBuff) + 1;
+            cchExpanded = lstrlenW(pszDest) + 1;
         else
             cchExpanded = 0;
     }
@@ -107,7 +107,7 @@ UnExpandEnvironmentStringForUserW(
         cchExpanded = ExpandEnvironmentStringsW(lpSrc, szBuff, _countof(szBuff));
     }
 
-    if (cchExpanded > cchBuff || !cchExpanded)
+    if (cchExpanded > cchDest || !cchExpanded)
         return FALSE;
 
     INT cchEnvPath = cchExpanded - 1;
@@ -118,11 +118,11 @@ UnExpandEnvironmentStringForUserW(
     }
 
     INT cchSuffix = lstrlenW(lpString) - cchEnvPath;
-    if (lstrlenW(lpSrc) + cchSuffix >= (INT)cchBuff)
+    if (lstrlenW(lpSrc) + cchSuffix >= (INT)cchDest)
         return FALSE;
 
-    StringCchCopyW(pszBuff, cchBuff, lpSrc);
-    StringCchCatW(pszBuff, cchBuff, &lpString[cchEnvPath]);
+    StringCchCopyW(pszDest, cchDest, lpSrc);
+    StringCchCatW(pszDest, cchDest, &lpString[cchEnvPath]);
     return TRUE;
 }
 
@@ -139,15 +139,6 @@ PathUnExpandEnvStringsForUserA(
     _Out_writes_(cchBuff) PSTR pszBuff,
     _In_ INT cchBuff)
 {
-    if (!pwszPath)
-    {
-        if (pszBuff && cchBuff)
-            *pszBuff = ANSI_NULL;
-        return FALSE;
-    }
-    if (!pszBuff)
-        return FALSE;
-
     static const PCSTR c_varsA[] =
     {
         "%APPDATA%",
@@ -157,6 +148,17 @@ PathUnExpandEnvStringsForUserA(
         "%SystemRoot%",
         "%SystemDrive%",
     };
+
+    if (!pwszPath)
+    {
+        if (pszBuff && cchBuff)
+            *pszBuff = ANSI_NULL;
+
+        return FALSE;
+    }
+
+    if (!pszBuff)
+        return FALSE;
 
     for (size_t iVar = 0; iVar < _countof(c_varsA); ++iVar)
     {
@@ -183,16 +185,6 @@ PathUnExpandEnvStringsForUserW(
     _Out_writes_(cchBuff) PWSTR pszBuff,
     _In_ INT cchBuff)
 {
-    if (!pwszPath)
-    {
-        if (pszBuff && cchBuff)
-            *pszBuff = UNICODE_NULL;
-        return FALSE;
-    }
-
-    if (!pszBuff)
-        return FALSE;
-
     static const PCWSTR c_varsW[] =
     {
         L"%APPDATA%",
@@ -202,6 +194,17 @@ PathUnExpandEnvStringsForUserW(
         L"%SystemRoot%",
         L"%SystemDrive%",
     };
+
+    if (!pwszPath)
+    {
+        if (pszBuff && cchBuff)
+            *pszBuff = UNICODE_NULL;
+
+        return FALSE;
+    }
+
+    if (!pszBuff)
+        return FALSE;
 
     for (size_t iVar = 0; iVar < _countof(c_varsW); ++iVar)
     {
