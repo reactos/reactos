@@ -15,8 +15,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(policy);
 
-#define E_DATATYPE_MISMATCH 0x8007065D
-
 typedef enum tagPOLICY_STATE
 {
     POLICY_STATE_UNCACHED  = 0,  // Uncached
@@ -64,66 +62,6 @@ static const SHPOLICY_ITEM g_PolicyItems[] =
     { POLID_PreXPSP2ShellProtocolBehavior, L"Explorer", L"PreXPSP2ShellProtocolBehavior", &c_spcBool },
     { POLID_CompareJunctionness, L"Explorer", L"CompareJunctionness", &c_spcBool },
 };
-
-static HRESULT
-SHPolicyGetValue(
-    LPCWSTR                    pszBaseKey,
-    LPCWSTR                    pszSubKey,
-    LPCWSTR                    pszValueName,
-    const SHPOLICY_CONSTRAINT* pConstraint,
-    DWORD*                     pdwType,
-    PVOID                      pvData,
-    DWORD*                     pcbData)
-{
-    WCHAR szFullKey[MAX_PATH];
-    HRESULT hr = StringCchPrintfW(szFullKey, _countof(szFullKey), L"%s\\%s", pszBaseKey, pszSubKey);
-    if (FAILED(hr))
-        return hr;
-
-    DWORD cbDataSaved = pcbData ? *pcbData : 0;
-
-    DWORD dwFlags = LOWORD(pConstraint->dwFlags);
-
-    LSTATUS error;
-    error = RegGetValueW(HKEY_LOCAL_MACHINE, szFullKey, pszValueName, dwFlags, pdwType,
-                         pvData, pcbData);
-    if (error == ERROR_FILE_NOT_FOUND)
-    {
-        if (pcbData)
-            *pcbData = cbDataSaved;
-        error = RegGetValueW(HKEY_CURRENT_USER, szFullKey, pszValueName, dwFlags, pdwType,
-                             pvData, pcbData);
-    }
-
-    if (error)
-        return HRESULT_FROM_WIN32(error);
-
-    if (!pvData)
-        return hr;
-
-    DWORD dwValue = *(PDWORD)pvData;
-    if (pConstraint->dwFlags == MAKELONG(SRRF_RT_DWORD, sizeof(DWORD)) &&
-        (dwValue < pConstraint->dwMin || pConstraint->dwMax < dwValue))
-    {
-        return E_DATATYPE_MISMATCH;
-    }
-
-    return hr;
-}
-
-static void
-SHPolicy_CacheResult(
-    const SHPOLICY_CONSTRAINT *pConstraint,
-    PVOID pvValue,
-    PDWORD pcbValue,
-    PSHPOLICY_RESULT pResult)
-{
-    if (LOWORD(pConstraint->dwFlags) == SRRF_RT_DWORD)
-    {
-        pResult->dwValue = *(PDWORD)pvValue;
-        pResult->state = POLICY_STATE_CACHED;
-    }
-}
 
 /**************************************************************************
  * CPolicyCache
@@ -177,6 +115,20 @@ protected:
             ZeroMemory(m_pResults, cbItems);
         }
     }
+
+    HRESULT _GetValue(
+        LPCWSTR                    pszSubKey,
+        LPCWSTR                    pszValueName,
+        const SHPOLICY_CONSTRAINT* pConstraint,
+        PDWORD                     pdwType,
+        PVOID                      pvData,
+        PDWORD                     pcbData);
+
+    static void _CacheResult(
+        const SHPOLICY_CONSTRAINT *pConstraint,
+        PVOID pvValue,
+        PDWORD pcbValue,
+        PSHPOLICY_RESULT pResult);
 };
 
 HRESULT
@@ -211,19 +163,78 @@ CPolicyCache::GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ P
         return S_OK;
     }
 
-    HRESULT hr = SHPolicyGetValue(m_pszRootKey, pItem->key, pItem->value,
-                                  pItem->pConstraint, NULL, pvValue, pcbValue);
+    HRESULT hr = _GetValue(pItem->key, pItem->value, pItem->pConstraint, NULL, pvValue, pcbValue);
     if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
     {
         pResult->state = POLICY_STATE_NOT_FOUND;
     }
     else if (SUCCEEDED(hr) && pvValue)
     {
-        SHPolicy_CacheResult(pItem->pConstraint, pvValue, pcbValue, pResult);
+        _CacheResult(pItem->pConstraint, pvValue, pcbValue, pResult);
     }
 
     return hr;
 }
+
+HRESULT CPolicyCache::_GetValue(
+    LPCWSTR                    pszSubKey,
+    LPCWSTR                    pszValueName,
+    const SHPOLICY_CONSTRAINT* pConstraint,
+    PDWORD                     pdwType,
+    PVOID                      pvData,
+    PDWORD                     pcbData)
+{
+    WCHAR szFullKey[MAX_PATH];
+    HRESULT hr = StringCchPrintfW(szFullKey, _countof(szFullKey), L"%s\\%s", m_pszRootKey, pszSubKey);
+    if (FAILED(hr))
+        return hr;
+
+    DWORD cbDataSaved = pcbData ? *pcbData : 0;
+
+    DWORD dwFlags = LOWORD(pConstraint->dwFlags);
+
+    LSTATUS error;
+    error = RegGetValueW(HKEY_LOCAL_MACHINE, szFullKey, pszValueName, dwFlags, pdwType,
+                         pvData, pcbData);
+    if (error == ERROR_FILE_NOT_FOUND)
+    {
+        if (pcbData)
+            *pcbData = cbDataSaved;
+        error = RegGetValueW(HKEY_CURRENT_USER, szFullKey, pszValueName, dwFlags, pdwType,
+                             pvData, pcbData);
+    }
+
+    if (error)
+        return HRESULT_FROM_WIN32(error);
+
+    if (!pvData)
+        return hr;
+
+    DWORD dwValue = *(PDWORD)pvData;
+    if (pConstraint->dwFlags == MAKELONG(SRRF_RT_DWORD, sizeof(DWORD)) &&
+        (dwValue < pConstraint->dwMin || pConstraint->dwMax < dwValue))
+    {
+        return E_DATATYPE_MISMATCH;
+    }
+
+    return hr;
+}
+
+void
+CPolicyCache::_CacheResult(
+    const SHPOLICY_CONSTRAINT *pConstraint,
+    PVOID pvValue,
+    PDWORD pcbValue,
+    PSHPOLICY_RESULT pResult)
+{
+    if (LOWORD(pConstraint->dwFlags) == SRRF_RT_DWORD)
+    {
+        pResult->dwValue = *(PDWORD)pvValue;
+        pResult->state = POLICY_STATE_CACHED;
+    }
+}
+
+/***************************************************************************/
 
 CPolicyCache* g_pPolicyCache = NULL;
 CRITICAL_SECTION g_csPolicy;

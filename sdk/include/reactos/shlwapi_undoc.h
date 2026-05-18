@@ -486,6 +486,8 @@ SHWindowsPolicyGetValue(
     _Out_opt_ PVOID pvData,
     _Out_opt_ PDWORD pcbData);
 
+#define E_DATATYPE_MISMATCH 0x8007065D
+
 /*****************************************************************************
  * IAssociationElementOld interface
  *
