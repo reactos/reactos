@@ -701,3 +701,92 @@ SHDialogBox(
     SHDIALOG data = { fn, pThis };
     return DialogBoxParamA(hInstance, lpTemplateName, hWndParent, SHDialogProc, (LPARAM)&data);
 }
+
+/*************************************************************************
+ * NextPathA [SHLWAPI.449]
+ *
+ * Extracts the next path from a semicolon-separated path string (ANSI version)
+ *
+ * @param pszStart Parsing start position (semicolon-separated path string)
+ * @param pszDest Buffer to store the extracted path
+ * @param cchDest Buffer size (number of characters)
+ * @return Pointer to the beginning of the next path. NULL if there are no more paths.
+ */
+EXTERN_C PSTR WINAPI
+NextPathA(
+    _In_ PCSTR pszStart,
+    _Out_writes_(cchDest) LPSTR pszDest,
+    _In_ UINT cchDest)
+{
+    if (!pszStart)
+        return NULL;
+
+    PCSTR pchSegStart = pszStart;
+    while (*pchSegStart == ';')
+        ++pchSegStart;
+
+    if (!*pchSegStart)
+        return NULL;
+
+    PSTR pchSegEnd = StrChrA(pchSegStart, ';');
+    if (!pchSegEnd)
+        pchSegEnd = (PSTR)(pchSegStart + strlen(pchSegStart));
+
+    UINT segLen = (UINT)(pchSegEnd - pchSegStart);
+    UINT copyLen = segLen + 1;
+    if (cchDest < copyLen)
+        copyLen = cchDest;
+
+    lstrcpynA(pszDest, pchSegStart, copyLen);
+    pszDest[segLen] = ANSI_NULL;
+    PathRemoveBlanksA(pszDest);
+
+    if (!*pszDest)
+        return NULL;
+
+    return (*pchSegEnd == ';') ? (pchSegEnd + 1) : pchSegEnd;
+}
+
+/*************************************************************************
+ * NextPathW [SHLWAPI.450]
+ *
+ * Extracts the next path from a semicolon-separated path string (Unicode version)
+ *
+ * @param pszStart Parsing start position (semicolon-separated path string)
+ * @param pszDest Buffer to store the extracted path
+ * @param cchDest Buffer size (number of characters)
+ * @return Pointer to the beginning of the next path. NULL if there are no more paths.
+ */
+EXTERN_C PWSTR WINAPI
+NextPathW(
+    _In_ PCWSTR pszStart,
+    _Out_writes_(cchDest) PWSTR pszDest,
+    _In_ UINT cchDest)
+{
+    if (!pszStart)
+        return NULL;
+
+    PCWSTR pchSegStart = pszStart;
+    while (*pchSegStart == L';')
+        ++pchSegStart;
+
+    if (!*pchSegStart)
+        return NULL;
+
+    PWSTR pchSegEnd = StrChrW(pchSegStart, L';');
+    if (!pchSegEnd)
+        pchSegEnd = (PWSTR)(pchSegStart + wcslen(pchSegStart));
+
+    UINT segLen = (UINT)(pchSegEnd - pchSegStart);
+    UINT copyLen = segLen + 1;
+    if (cchDest < copyLen)
+        copyLen = cchDest;
+
+    lstrcpynW(pszDest, pchSegStart, copyLen);
+    pszDest[segLen] = UNICODE_NULL;
+    PathRemoveBlanksW(pszDest);
+
+    if (!*pszDest)
+        return NULL;
+    return (*pchSegEnd == L';') ? (pchSegEnd + 1) : pchSegEnd;
+}

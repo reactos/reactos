@@ -80,10 +80,25 @@ SHRestrictionLookup(
 
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
+
+PSTR WINAPI
+NextPathA(
+    _In_ PCSTR pszStart,
+    _Out_writes_(cchDest) LPSTR pszDest,
+    _In_ UINT cchDest);
+
+PWSTR WINAPI
+NextPathW(
+    _In_ PCWSTR pszStart,
+    _Out_writes_(cchDest) PWSTR pszDest,
+    _In_ UINT cchDest)
+
 #ifdef UNICODE
 #define SHAboutInfo SHAboutInfoW
+#define NextPath NextPathW
 #else
 #define SHAboutInfo SHAboutInfoA
+#define NextPath NextPathA
 #endif
 
 HRESULT WINAPI CLSIDFromStringWrap(_In_ LPCWSTR idstr, _Out_ CLSID *id);
