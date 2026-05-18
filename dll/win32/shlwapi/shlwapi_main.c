@@ -70,12 +70,14 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 	  case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
 	    shlwapi_hInstance = hinstDLL;
+#ifdef __REACTOS__
+	    if (!SHPolicyCache_DllProcessAttach())
+	        return FALSE;
+#endif
 	    SHLWAPI_ThreadRef_index = TlsAlloc();
 #ifdef __REACTOS__
 	    InitializeCriticalSection(&g_csZoneMgrLock);
 	    InitializeCriticalSection(&g_csBagCacheLock);
-	    if (!SHPolicyCache_DllProcessAttach())
-	        return FALSE;
 #endif
 	    break;
 	  case DLL_PROCESS_DETACH:

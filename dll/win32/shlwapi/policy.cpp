@@ -4,10 +4,10 @@
  * PURPOSE:     Implement SHAutoComplete
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
+
 #include <windef.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <browseui_undoc.h>
 #include <shlwapi_undoc.h>
 #include <shlguid_undoc.h>
 #include <strsafe.h>
@@ -125,6 +125,9 @@ SHPolicy_CacheResult(
     }
 }
 
+/**************************************************************************
+ * CPolicyCache
+ */
 class CPolicyCache
 {
 public:
@@ -144,10 +147,7 @@ public:
         CloseHandle(m_hGlobalCounter);
     }
 
-    BOOL Initialize(LPCWSTR pszRootKey,
-                    REFGUID rguid,
-                    const SHPOLICY_ITEM *pItems,
-                    UINT cItems)
+    BOOL Initialize(LPCWSTR pszRootKey, REFGUID rguid, const SHPOLICY_ITEM *pItems, UINT cItems)
     {
         m_pszRootKey = pszRootKey;
         m_pItems = pItems;
@@ -157,49 +157,7 @@ public:
         return m_pResults && m_hGlobalCounter;
     }
 
-    HRESULT GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ PDWORD pcbValue)
-    {
-        _ValidateCachedResults();
-
-        if (m_cItems == 0)
-            return E_UNEXPECTED;
-
-        UINT iItem;
-        for (iItem = 0; iItem < m_cItems; ++iItem)
-        {
-            if (memcmp(&m_pItems[iItem].rpolid, &rpolid, sizeof(GUID)) == 0)
-                break;
-        }
-
-        if (iItem >= m_cItems)
-            return E_UNEXPECTED;
-
-        const SHPOLICY_ITEM *pItem = &m_pItems[iItem];
-        PSHPOLICY_RESULT pResult = &m_pResults[iItem];
-
-        if (pResult->state == POLICY_STATE_NOT_FOUND)
-        {
-            return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-        }
-
-        if (pvValue && *pcbValue == sizeof(DWORD) && pResult->state == POLICY_STATE_CACHED)
-        {
-            *static_cast<PDWORD>(pvValue) = pResult->dwValue;
-            return S_OK;
-        }
-
-        HRESULT hr = SHPolicyGetValue(m_pszRootKey, pItem->key, pItem->value,
-                                      pItem->pConstraint, NULL, pvValue, pcbValue);
-        if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
-        {
-            pResult->state = POLICY_STATE_NOT_FOUND;
-        }
-        else if (SUCCEEDED(hr) && pvValue)
-        {
-            SHPolicy_CacheResult(pItem->pConstraint, pvValue, pcbValue, pResult);
-        }
-        return hr;
-    }
+    HRESULT GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ PDWORD pcbValue);;
 
 protected:
     LPCWSTR m_pszRootKey;
@@ -220,6 +178,52 @@ protected:
         }
     }
 };
+
+HRESULT
+CPolicyCache::GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ PDWORD pcbValue)
+{
+    _ValidateCachedResults();
+
+    if (m_cItems == 0)
+        return E_UNEXPECTED;
+
+    UINT iItem;
+    for (iItem = 0; iItem < m_cItems; ++iItem)
+    {
+        if (memcmp(&m_pItems[iItem].rpolid, &rpolid, sizeof(GUID)) == 0)
+            break;
+    }
+
+    if (iItem >= m_cItems)
+        return E_UNEXPECTED;
+
+    const SHPOLICY_ITEM *pItem = &m_pItems[iItem];
+    PSHPOLICY_RESULT pResult = &m_pResults[iItem];
+
+    if (pResult->state == POLICY_STATE_NOT_FOUND)
+    {
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    }
+
+    if (pvValue && *pcbValue == sizeof(DWORD) && pResult->state == POLICY_STATE_CACHED)
+    {
+        *static_cast<PDWORD>(pvValue) = pResult->dwValue;
+        return S_OK;
+    }
+
+    HRESULT hr = SHPolicyGetValue(m_pszRootKey, pItem->key, pItem->value,
+                                  pItem->pConstraint, NULL, pvValue, pcbValue);
+    if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+    {
+        pResult->state = POLICY_STATE_NOT_FOUND;
+    }
+    else if (SUCCEEDED(hr) && pvValue)
+    {
+        SHPolicy_CacheResult(pItem->pConstraint, pvValue, pcbValue, pResult);
+    }
+
+    return hr;
+}
 
 CPolicyCache* g_pPolicyCache = NULL;
 CRITICAL_SECTION g_csPolicy;
@@ -258,7 +262,10 @@ SHPolicyCacheGetValue(
     PDWORD pcbValue)
 {
     if (!pCache)
+    {
+        ERR("!pCache\n");
         return E_FAIL;
+    }
     return pCache->GetValue(rpolid, pvValue, pcbValue);
 }
 
