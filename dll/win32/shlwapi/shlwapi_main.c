@@ -132,6 +132,6 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
     return S_OK;
  }
 
- WARN("pdvi->cbSize = %d, unhandled\n", pdvi2->info1.cbSize);
+ WARN("pdvi->cbSize = %ld, unhandled\n", pdvi2->info1.cbSize);
  return E_INVALIDARG;
 }

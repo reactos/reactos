@@ -19,15 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-
-#define NONAMELESSUNION
 
 #include "windef.h"
 #include "winbase.h"
@@ -51,6 +46,7 @@ extern HINSTANCE shlwapi_hInstance;
 static HRESULT _SHStrDupAA(LPCSTR,LPSTR*);
 static HRESULT _SHStrDupAW(LPCWSTR,LPSTR*);
 
+DWORD WINAPI SHTruncateString(LPSTR lpStr, DWORD size);
 
 static void FillNumberFmt(NUMBERFMTW *fmt, LPWSTR decimal_buffer, int decimal_bufwlen,
                           LPWSTR thousand_buffer, int thousand_bufwlen)
@@ -71,7 +67,7 @@ static void FillNumberFmt(NUMBERFMTW *fmt, LPWSTR decimal_buffer, int decimal_bu
    * http://blogs.msdn.com/oldnewthing/archive/2006/04/18/578251.aspx
    */
   fmt->Grouping = 0;
-  GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SGROUPING, grouping, sizeof(grouping)/sizeof(WCHAR));
+  GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SGROUPING, grouping, ARRAY_SIZE(grouping));
   for (c = grouping; *c; c++)
     if (*c >= '0' && *c < '9')
     {
@@ -101,8 +97,7 @@ static int FormatInt(LONGLONG qdwValue, LPWSTR pszBuf, int cchBuf)
   WCHAR *c;
   BOOL neg = (qdwValue < 0);
 
-  FillNumberFmt(&fmt, decimal, sizeof decimal / sizeof (WCHAR),
-                thousand, sizeof thousand / sizeof (WCHAR));
+  FillNumberFmt(&fmt, decimal, ARRAY_SIZE(decimal), thousand, ARRAY_SIZE(thousand));
 
   c = &buf[24];
   *(--c) = 0;
@@ -133,10 +128,9 @@ static int FormatDouble(double value, int decimals, LPWSTR pszBuf, int cchBuf)
   NUMBERFMTW fmt;
   WCHAR decimal[8], thousand[8];
   
-  snprintfW(buf, 64, flfmt, value);
+  swprintf(buf, 64, flfmt, value);
 
-  FillNumberFmt(&fmt, decimal, sizeof decimal / sizeof (WCHAR),
-                 thousand, sizeof thousand / sizeof (WCHAR));
+  FillNumberFmt(&fmt, decimal, ARRAY_SIZE(decimal), thousand, ARRAY_SIZE(thousand));
   fmt.NumDigits = decimals;
   return GetNumberFormatW(LOCALE_USER_DEFAULT, 0, buf, &fmt, pszBuf, cchBuf);
 }
@@ -454,7 +448,7 @@ LPWSTR WINAPI StrCatW(LPWSTR lpszStr, LPCWSTR lpszSrc)
   TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSrc));
 
   if (lpszStr && lpszSrc)
-    strcatW(lpszStr, lpszSrc);
+    lstrcatW(lpszStr, lpszSrc);
   return lpszStr;
 }
 
@@ -516,7 +510,7 @@ LPWSTR WINAPI StrCpyW(LPWSTR lpszStr, LPCWSTR lpszSrc)
   TRACE("(%p,%s)\n", lpszStr, debugstr_w(lpszSrc));
 
   if (lpszStr && lpszSrc)
-    strcpyW(lpszStr, lpszSrc);
+    lstrcpyW(lpszStr, lpszSrc);
   return lpszStr;
 }
 
@@ -1633,16 +1627,16 @@ HRESULT WINAPI StrRetToBufA (LPSTRRET src, const ITEMIDLIST *pidl, LPSTR dest, U
 	switch (src->uType)
 	{
 	  case STRRET_WSTR:
-	    WideCharToMultiByte(CP_ACP, 0, src->u.pOleStr, -1, dest, len, NULL, NULL);
-	    CoTaskMemFree(src->u.pOleStr);
+	    WideCharToMultiByte(CP_ACP, 0, src->pOleStr, -1, dest, len, NULL, NULL);
+	    CoTaskMemFree(src->pOleStr);
 	    break;
 
 	  case STRRET_CSTR:
-            lstrcpynA(dest, src->u.cStr, len);
+            lstrcpynA(dest, src->cStr, len);
 	    break;
 
 	  case STRRET_OFFSET:
-	    lstrcpynA((LPSTR)dest, ((LPCSTR)&pidl->mkid)+src->u.uOffset, len);
+            lstrcpynA(dest, ((LPCSTR)&pidl->mkid)+src->uOffset, len);
 	    break;
 
 	  default:
@@ -1677,12 +1671,12 @@ HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, 
     switch (src->uType) {
     case STRRET_WSTR: {
         size_t dst_len;
-        if (!src->u.pOleStr)
+        if (!src->pOleStr)
             return E_FAIL;
-        dst_len = strlenW(src->u.pOleStr);
-        memcpy(dest, src->u.pOleStr, min(dst_len, len-1) * sizeof(WCHAR));
+        dst_len = lstrlenW(src->pOleStr);
+        memcpy(dest, src->pOleStr, min(dst_len, len-1) * sizeof(WCHAR));
         dest[min(dst_len, len-1)] = 0;
-        CoTaskMemFree(src->u.pOleStr);
+        CoTaskMemFree(src->pOleStr);
         if (len <= dst_len)
         {
             dest[0] = 0;
@@ -1692,14 +1686,14 @@ HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, 
     }
 
     case STRRET_CSTR:
-        if (!MultiByteToWideChar( CP_ACP, 0, src->u.cStr, -1, dest, len ))
+        if (!MultiByteToWideChar( CP_ACP, 0, src->cStr, -1, dest, len ))
             dest[len-1] = 0;
         break;
 
     case STRRET_OFFSET:
         if (pidl)
 	{
-            if (!MultiByteToWideChar( CP_ACP, 0, ((LPCSTR)&pidl->mkid)+src->u.uOffset, -1,
+            if (!MultiByteToWideChar( CP_ACP, 0, ((LPCSTR)&pidl->mkid)+src->uOffset, -1,
                                       dest, len ))
                 dest[len-1] = 0;
         }
@@ -1734,16 +1728,16 @@ HRESULT WINAPI StrRetToStrA(LPSTRRET lpStrRet, const ITEMIDLIST *pidl, LPSTR *pp
   switch (lpStrRet->uType)
   {
   case STRRET_WSTR:
-    hRet = _SHStrDupAW(lpStrRet->u.pOleStr, ppszName);
-    CoTaskMemFree(lpStrRet->u.pOleStr);
+    hRet = _SHStrDupAW(lpStrRet->pOleStr, ppszName);
+    CoTaskMemFree(lpStrRet->pOleStr);
     break;
 
   case STRRET_CSTR:
-    hRet = _SHStrDupAA(lpStrRet->u.cStr, ppszName);
+    hRet = _SHStrDupAA(lpStrRet->cStr, ppszName);
     break;
 
   case STRRET_OFFSET:
-    hRet = _SHStrDupAA(((LPCSTR)&pidl->mkid) + lpStrRet->u.uOffset, ppszName);
+    hRet = _SHStrDupAA(((LPCSTR)&pidl->mkid) + lpStrRet->uOffset, ppszName);
     break;
 
   default:
@@ -1766,21 +1760,21 @@ HRESULT WINAPI StrRetToStrW(LPSTRRET lpStrRet, const ITEMIDLIST *pidl, LPWSTR *p
   {
   case STRRET_WSTR:
 #ifdef __REACTOS__
-    hRet = lpStrRet->u.pOleStr ? S_OK : E_FAIL;
-    *ppszName = lpStrRet->u.pOleStr;
-    lpStrRet->u.pOleStr = NULL; /* Windows does this, presumably in case someone calls SHFree */
+    hRet = lpStrRet->pOleStr ? S_OK : E_FAIL;
+    *ppszName = lpStrRet->pOleStr;
+    lpStrRet->pOleStr = NULL; /* Windows does this, presumably in case someone calls SHFree */
 #else
-    hRet = SHStrDupW(lpStrRet->u.pOleStr, ppszName);
-    CoTaskMemFree(lpStrRet->u.pOleStr);
+    hRet = SHStrDupW(lpStrRet->pOleStr, ppszName);
+    CoTaskMemFree(lpStrRet->pOleStr);
 #endif
     break;
 
   case STRRET_CSTR:
-    hRet = SHStrDupA(lpStrRet->u.cStr, ppszName);
+    hRet = SHStrDupA(lpStrRet->cStr, ppszName);
     break;
 
   case STRRET_OFFSET:
-    hRet = SHStrDupA(((LPCSTR)&pidl->mkid) + lpStrRet->u.uOffset, ppszName);
+    hRet = SHStrDupA(((LPCSTR)&pidl->mkid) + lpStrRet->uOffset, ppszName);
     break;
 
   default:
@@ -1790,7 +1784,7 @@ HRESULT WINAPI StrRetToStrW(LPSTRRET lpStrRet, const ITEMIDLIST *pidl, LPWSTR *p
   return hRet;
 }
 
-/* Create an ASCII string copy using SysAllocString() */
+/* Makes a Unicode copy of an ANSI string using SysAllocString() */
 static HRESULT _SHStrDupAToBSTR(LPCSTR src, BSTR *pBstrOut)
 {
     *pBstrOut = NULL;
@@ -1834,18 +1828,18 @@ HRESULT WINAPI StrRetToBSTR(STRRET *lpStrRet, LPCITEMIDLIST pidl, BSTR* pBstrOut
   switch (lpStrRet->uType)
   {
   case STRRET_WSTR:
-    *pBstrOut = SysAllocString(lpStrRet->u.pOleStr);
+    *pBstrOut = SysAllocString(lpStrRet->pOleStr);
     if (*pBstrOut)
       hRet = S_OK;
-    CoTaskMemFree(lpStrRet->u.pOleStr);
+    CoTaskMemFree(lpStrRet->pOleStr);
     break;
 
   case STRRET_CSTR:
-    hRet = _SHStrDupAToBSTR(lpStrRet->u.cStr, pBstrOut);
+    hRet = _SHStrDupAToBSTR(lpStrRet->cStr, pBstrOut);
     break;
 
   case STRRET_OFFSET:
-    hRet = _SHStrDupAToBSTR(((LPCSTR)&pidl->mkid) + lpStrRet->u.uOffset, pBstrOut);
+    hRet = _SHStrDupAToBSTR(((LPCSTR)&pidl->mkid) + lpStrRet->uOffset, pBstrOut);
     break;
 
   default:
@@ -1952,7 +1946,7 @@ LPWSTR WINAPI StrNCatW(LPWSTR lpszStr, LPCWSTR lpszCat, INT cchMax)
     return NULL;
   }
 
-  StrCpyNW(lpszStr + strlenW(lpszStr), lpszCat, cchMax);
+  StrCpyNW(lpszStr + lstrlenW(lpszStr), lpszCat, cchMax);
   return lpszRet;
 }
 
@@ -2048,7 +2042,7 @@ BOOL WINAPI StrTrimW(LPWSTR lpszStr, LPCWSTR lpszTrim)
 /*************************************************************************
  *      _SHStrDupAA	[INTERNAL]
  *
- * Duplicates a ASCII string to ASCII. The destination buffer is allocated.
+ * Duplicates a ANSI string to ANSI. The destination buffer is allocated.
  */
 static HRESULT _SHStrDupAA(LPCSTR src, LPSTR * dest)
 {
@@ -2115,7 +2109,7 @@ HRESULT WINAPI SHStrDupA(LPCSTR lpszStr, LPWSTR * lppszDest)
 /*************************************************************************
  *      _SHStrDupAW	[INTERNAL]
  *
- * Duplicates a UNICODE to a ASCII string. The destination buffer is allocated.
+ * Duplicates a UNICODE to a ANSI string. The destination buffer is allocated.
  */
 static HRESULT _SHStrDupAW(LPCWSTR src, LPSTR * dest)
 {
@@ -2223,7 +2217,7 @@ static int SHLWAPI_WriteTimeClass(LPWSTR lpszOut, DWORD dwValue,
   iDigits = SHLWAPI_FormatSignificant(szOut + 1, iDigits);
   *szOut = ' ';
   LoadStringW(shlwapi_hInstance, uClassStringId, szBuff + 32, 32);
-  strcatW(lpszOut, szOut);
+  lstrcatW(lpszOut, szOut);
   return iDigits;
 }
 
@@ -2263,12 +2257,12 @@ INT WINAPI StrFromTimeIntervalA(LPSTR lpszStr, UINT cchMax, DWORD dwMS,
 {
   INT iRet = 0;
 
-  TRACE("(%p,%d,%d,%d)\n", lpszStr, cchMax, dwMS, iDigits);
+  TRACE("(%p,%d,%ld,%d)\n", lpszStr, cchMax, dwMS, iDigits);
 
   if (lpszStr && cchMax)
   {
     WCHAR szBuff[128];
-    StrFromTimeIntervalW(szBuff, sizeof(szBuff)/sizeof(WCHAR), dwMS, iDigits);
+    StrFromTimeIntervalW(szBuff, ARRAY_SIZE(szBuff), dwMS, iDigits);
     WideCharToMultiByte(CP_ACP,0,szBuff,-1,lpszStr,cchMax,0,0);
   }
   return iRet;
@@ -2285,7 +2279,7 @@ INT WINAPI StrFromTimeIntervalW(LPWSTR lpszStr, UINT cchMax, DWORD dwMS,
 {
   INT iRet = 0;
 
-  TRACE("(%p,%d,%d,%d)\n", lpszStr, cchMax, dwMS, iDigits);
+  TRACE("(%p,%d,%ld,%d)\n", lpszStr, cchMax, dwMS, iDigits);
 
   if (lpszStr && cchMax)
   {
@@ -2317,7 +2311,7 @@ INT WINAPI StrFromTimeIntervalW(LPWSTR lpszStr, UINT cchMax, DWORD dwMS,
       SHLWAPI_WriteTimeClass(szCopy, dwMS, IDS_TIME_INTERVAL_SECONDS, iDigits);
 
     lstrcpynW(lpszStr, szCopy, cchMax);
-    iRet = strlenW(lpszStr);
+    iRet = lstrlenW(lpszStr);
   }
   return iRet;
 }
@@ -2584,14 +2578,14 @@ LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
   {
     WCHAR wszBytesFormat[64];
     LoadStringW(shlwapi_hInstance, IDS_BYTES_FORMAT, wszBytesFormat, 64);
-    snprintfW(lpszDest, cchMax, wszBytesFormat, (int)llBytes);
+    swprintf(lpszDest, cchMax, wszBytesFormat, (int)llBytes);
     return lpszDest;
   }
 
   /* Note that if this loop completes without finding a match, i will be
    * pointing at the last entry, which is a catch all for > 1000 PB
    */
-  while (i < sizeof(bfFormats) / sizeof(SHLWAPI_BYTEFORMATS) - 1)
+  while (i < ARRAY_SIZE(bfFormats) - 1)
   {
     if (llBytes < bfFormats[i].dLimit)
       break;
@@ -2633,7 +2627,7 @@ LPSTR WINAPI StrFormatByteSize64A(LONGLONG llBytes, LPSTR lpszDest, UINT cchMax)
 {
   WCHAR wszBuff[32];
 
-  StrFormatByteSizeW(llBytes, wszBuff, sizeof(wszBuff)/sizeof(WCHAR));
+  StrFormatByteSizeW(llBytes, wszBuff, ARRAY_SIZE(wszBuff));
 
   if (lpszDest)
     WideCharToMultiByte(CP_ACP, 0, wszBuff, -1, lpszDest, cchMax, 0, 0);
@@ -2654,12 +2648,12 @@ LPSTR WINAPI StrFormatByteSize64A(LONGLONG llBytes, LPSTR lpszDest, UINT cchMax)
  *  lpszDest.
  *
  * NOTES
- *  The Ascii and Unicode versions of this function accept a different
+ *  The ANSI and Unicode versions of this function accept a different
  *  integer type for dwBytes. See StrFormatByteSize64A().
  */
 LPSTR WINAPI StrFormatByteSizeA(DWORD dwBytes, LPSTR lpszDest, UINT cchMax)
 {
-  TRACE("(%d,%p,%d)\n", dwBytes, lpszDest, cchMax);
+  TRACE("(%ld,%p,%d)\n", dwBytes, lpszDest, cchMax);
 
   return StrFormatByteSize64A(dwBytes, lpszDest, cchMax);
 }
@@ -2754,7 +2748,7 @@ WCHAR WINAPI SHStripMneumonicW(LPCWSTR lpszStr)
       if (*lpszTmp != '&')
         ch =  *lpszTmp;
 
-      memmove( lpszIter, lpszTmp, (strlenW(lpszTmp) + 1) * sizeof(WCHAR) );
+      memmove( lpszIter, lpszTmp, (lstrlenW(lpszTmp) + 1) * sizeof(WCHAR) );
     }
   }
 
@@ -2764,11 +2758,11 @@ WCHAR WINAPI SHStripMneumonicW(LPCWSTR lpszStr)
 /*************************************************************************
  *      @	[SHLWAPI.216]
  *
- * Convert an Ascii string to Unicode.
+ * Convert an ANSI string to Unicode.
  *
  * PARAMS
  * dwCp     [I] Code page for the conversion
- * lpSrcStr [I] Source Ascii string to convert
+ * lpSrcStr [I] Source ANSI string to convert
  * lpDstStr [O] Destination for converted Unicode string
  * iLen     [I] Length of lpDstStr
  *
@@ -2780,17 +2774,17 @@ DWORD WINAPI SHAnsiToUnicodeCP(DWORD dwCp, LPCSTR lpSrcStr, LPWSTR lpDstStr, int
   DWORD dwRet;
 
   dwRet = MultiByteToWideChar(dwCp, 0, lpSrcStr, -1, lpDstStr, iLen);
-  TRACE("%s->%s,ret=%d\n", debugstr_a(lpSrcStr), debugstr_w(lpDstStr), dwRet);
+  TRACE("%s->%s,ret=%ld\n", debugstr_a(lpSrcStr), debugstr_w(lpDstStr), dwRet);
   return dwRet;
 }
 
 /*************************************************************************
  *      @	[SHLWAPI.215]
  *
- * Convert an Ascii string to Unicode.
+ * Convert an ANSI string to Unicode.
  *
  * PARAMS
- * lpSrcStr [I] Source Ascii string to convert
+ * lpSrcStr [I] Source ANSI string to convert
  * lpDstStr [O] Destination for converted Unicode string
  * iLen     [I] Length of lpDstStr
  *
@@ -2808,12 +2802,12 @@ DWORD WINAPI SHAnsiToUnicode(LPCSTR lpSrcStr, LPWSTR lpDstStr, int iLen)
 /*************************************************************************
  *      @	[SHLWAPI.218]
  *
- * Convert a Unicode string to Ascii.
+ * Convert a Unicode string to ANSI.
  *
  * PARAMS
  *  CodePage [I] Code page to use for the conversion
  *  lpSrcStr [I] Source Unicode string to convert
- *  lpDstStr [O] Destination for converted Ascii string
+ *  lpDstStr [O] Destination for converted ANSI string
  *  dstlen   [I] Length of buffer at lpDstStr
  *
  * RETURNS
@@ -2839,7 +2833,7 @@ DWORD WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr, 
 
   *lpDstStr = '\0';
 
-  len = strlenW(lpSrcStr) + 1;
+  len = lstrlenW(lpSrcStr) + 1;
 
   switch (CodePage)
   {
@@ -2911,11 +2905,11 @@ DWORD WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr, 
 /*************************************************************************
  *      @	[SHLWAPI.217]
  *
- * Convert a Unicode string to Ascii.
+ * Convert a Unicode string to ANSI.
  *
  * PARAMS
  *  lpSrcStr [I] Source Unicode string to convert
- *  lpDstStr [O] Destination for converted Ascii string
+ *  lpDstStr [O] Destination for converted ANSI string
  *  iLen     [O] Length of lpDstStr in characters
  *
  * RETURNS
@@ -2971,15 +2965,15 @@ DWORD WINAPI SHUnicodeToUnicode(LPCWSTR lpszSrc, LPWSTR lpszDst, int iLen)
 /*************************************************************************
  *      @	[SHLWAPI.364]
  *
- * Determine if an Ascii string converts to Unicode and back identically.
+ * Determine if an ANSI string converts to Unicode and back identically.
  *
  * PARAMS
  *  lpSrcStr [I] Source Unicode string to convert
- *  lpDst    [O] Destination for resulting Ascii string
+ *  lpDst    [O] Destination for resulting ANSI string
  *  iLen     [I] Length of lpDst in characters
  *
  * RETURNS
- *  TRUE, since Ascii strings always convert identically.
+ *  TRUE, since ANSI strings always convert identically.
  */
 BOOL WINAPI DoesStringRoundTripA(LPCSTR lpSrcStr, LPSTR lpDst, INT iLen)
 {
@@ -2990,15 +2984,15 @@ BOOL WINAPI DoesStringRoundTripA(LPCSTR lpSrcStr, LPSTR lpDst, INT iLen)
 /*************************************************************************
  *      @	[SHLWAPI.365]
  *
- * Determine if a Unicode string converts to Ascii and back identically.
+ * Determine if a Unicode string converts to ANSI and back identically.
  *
  * PARAMS
  *  lpSrcStr [I] Source Unicode string to convert
- *  lpDst    [O] Destination for resulting Ascii string
+ *  lpDst    [O] Destination for resulting ANSI string
  *  iLen     [I] Length of lpDst in characters
  *
  * RETURNS
- *  TRUE, if lpSrcStr converts to Ascii and back identically,
+ *  TRUE, if lpSrcStr converts to ANSI and back identically,
  *  FALSE otherwise.
  */
 BOOL WINAPI DoesStringRoundTripW(LPCWSTR lpSrcStr, LPSTR lpDst, INT iLen)
@@ -3007,7 +3001,7 @@ BOOL WINAPI DoesStringRoundTripW(LPCWSTR lpSrcStr, LPSTR lpDst, INT iLen)
 
     SHUnicodeToAnsi(lpSrcStr, lpDst, iLen);
     SHAnsiToUnicode(lpDst, szBuff, MAX_PATH);
-    return !strcmpW(lpSrcStr, szBuff);
+    return !wcscmp(lpSrcStr, szBuff);
 }
 
 /*************************************************************************
