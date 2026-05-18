@@ -49,8 +49,8 @@ const struct builtin_class_descr POPUPMENU_builtin_class =
 {
     WC_MENU,                     /* name */
     CS_SAVEBITS | CS_DBLCLKS,                  /* style  */
-    NULL,                                      /* FIXME - procA */
-    PopupMenuWndProcW,                         /* FIXME - procW */
+    &pfnClientA.pfnMenuWndProc,                /* procA */
+    &pfnClientW.pfnMenuWndProc,                /* procW */
     sizeof(MENUINFO *),                        /* extra */
     (LPCWSTR) IDC_ARROW,                       /* cursor */
     (HBRUSH)(COLOR_MENU + 1)                   /* brush */
