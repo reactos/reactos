@@ -21,8 +21,8 @@ CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, 
         return hCursor ? CopyCursor(hCursor) : NULL;
     }
 
-    const INT aim1 = 6, aim2 = aim1 - 2;
-    const INT width = diameter + 2 * aim1, height = diameter + 2 * aim1;
+    const INT crosshair1 = 6, crosshair2 = crosshair1 - 2;
+    const INT width = diameter + 2 * crosshair1, height = diameter + 2 * crosshair1;
     const DWORD hotX = width / 2, hotY = height / 2;
 
     HDC hdcScreen = ::GetDC(NULL);
@@ -49,15 +49,15 @@ CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, 
 
         if (!is_rubber)
         {
-            // Draw aim with white pen
+            // Draw crosshair with white pen
             ::SelectObject(hdcMem, (HPEN)::GetStockObject(WHITE_PEN));
             ::MoveToEx(hdcMem, 0, hotY, NULL);
-            ::LineTo(hdcMem, aim2, hotY);
-            ::MoveToEx(hdcMem, width - aim2, hotY, NULL);
+            ::LineTo(hdcMem, crosshair2, hotY);
+            ::MoveToEx(hdcMem, width - crosshair2, hotY, NULL);
             ::LineTo(hdcMem, width, hotY);
             ::MoveToEx(hdcMem, hotX, 0, NULL);
-            ::LineTo(hdcMem, hotX, aim2);
-            ::MoveToEx(hdcMem, hotX, height - aim2, NULL);
+            ::LineTo(hdcMem, hotX, crosshair2);
+            ::MoveToEx(hdcMem, hotX, height - crosshair2, NULL);
             ::LineTo(hdcMem, hotX, height);
         }
 
@@ -91,15 +91,15 @@ CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, 
         }
         else
         {
-            // Draw aim with white pen
+            // Draw crosshair with white pen
             ::SelectObject(hdcMem, (HPEN)::GetStockObject(WHITE_PEN));
             ::MoveToEx(hdcMem, 0, hotY, NULL);
-            ::LineTo(hdcMem, aim2, hotY);
-            ::MoveToEx(hdcMem, width - aim2, hotY, NULL);
+            ::LineTo(hdcMem, crosshair2, hotY);
+            ::MoveToEx(hdcMem, width - crosshair2, hotY, NULL);
             ::LineTo(hdcMem, width, hotY);
             ::MoveToEx(hdcMem, hotX, 0, NULL);
-            ::LineTo(hdcMem, hotX, aim2);
-            ::MoveToEx(hdcMem, hotX, height - aim2, NULL);
+            ::LineTo(hdcMem, hotX, crosshair2);
+            ::MoveToEx(hdcMem, hotX, height - crosshair2, NULL);
             ::LineTo(hdcMem, hotX, height);
         }
 
@@ -122,21 +122,6 @@ CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, 
     ::DeleteObject(hbmColor);
 
     return hCursor;
-}
-
-CStyledCursor::CStyledCursor()
-    : m_hCursor(NULL)
-    , m_style(BrushStyleRound)
-    , m_radius(0)
-    , m_color(CLR_INVALID)
-    , m_is_rubber(FALSE)
-{
-}
-
-CStyledCursor::~CStyledCursor()
-{
-    if (m_hCursor)
-        ::DestroyCursor(m_hCursor);
 }
 
 void CStyledCursor::SetStyle(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber)
@@ -791,8 +776,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             {
                 m_hRubberCursor.SetStyle(BrushStyleSquare, toolsModel.GetRubberRadius(),
                                          paletteModel.GetBgColor(), TRUE);
-                if (m_hRubberCursor)
-                    ::SetCursor(m_hRubberCursor);
+                m_hRubberCursor.SetCursor();
                 break;
             }
             case TOOL_BRUSH:
@@ -800,8 +784,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
                 m_hBrushCursor.SetStyle(toolsModel.GetBrushStyle(),
                                         toolsModel.GetBrushWidth() / 2,
                                         paletteModel.GetFgColor(), FALSE);
-                if (m_hBrushCursor)
-                    ::SetCursor(m_hBrushCursor);
+                m_hBrushCursor.SetCursor();
                 break;
             }
             default:

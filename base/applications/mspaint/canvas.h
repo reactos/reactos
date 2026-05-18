@@ -7,21 +7,33 @@
 
 #pragma once
 
+enum BrushStyle : int;
+
 class CStyledCursor
 {
 public:
-    CStyledCursor();
-    ~CStyledCursor();
+    ~CStyledCursor()
+    {
+        if (m_hCursor)
+            ::DestroyCursor(m_hCursor);
+    }
 
     void SetStyle(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber);
+
+    void SetCursor()
+    {
+        if (m_hCursor)
+            ::SetCursor(m_hCursor);
+    }
+
     operator HCURSOR() const { return m_hCursor; }
 
 protected:
-    HCURSOR m_hCursor;
+    HCURSOR m_hCursor = NULL;
     BrushStyle m_style;
-    INT m_radius;
-    COLORREF m_color;
-    BOOL m_is_rubber;
+    INT m_radius = -1;
+    COLORREF m_color = CLR_INVALID;
+    BOOL m_is_rubber = FALSE;
 
     static HCURSOR CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber);
 };
