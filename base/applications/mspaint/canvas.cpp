@@ -61,7 +61,7 @@ CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, 
             ::LineTo(hdcMem, hotX, height);
         }
 
-        // Draw brush or erase by black
+        // Draw brush or erase with black color
         if (is_rubber)
             Erase(hdcMem, hotX, hotY, hotX, hotY, RGB(0, 0, 0), radius + 1);
         else
