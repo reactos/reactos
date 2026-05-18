@@ -51,12 +51,12 @@ UnExpandEnvironmentStringForUserA(
     _In_ UINT cchDest)
 {
     CHAR szBuff[MAX_PATH];
-    UINT cchExpanded;
+    UINT cchExpanded = 0;
 
     if (hUserToken)
     {
         if (ExpandEnvironmentStringsForUserA(hUserToken, lpSrc, szBuff, _countof(szBuff)))
-            cchExpanded = lstrlenA(pszDest) + 1;
+            cchExpanded = lstrlenA(szBuff) + 1;
         else
             cchExpanded = 0;
     }
@@ -75,8 +75,8 @@ UnExpandEnvironmentStringForUserA(
         return FALSE;
     }
 
-    INT cchSuffix = lstrlenA(lpString) - cchEnvPath;
-    if (lstrlenA(lpSrc) + cchSuffix >= (INT)cchDest)
+    size_t cchSuffix = lstrlenA(lpString) - cchEnvPath;
+    if (strlen(lpSrc) + cchSuffix >= cchDest)
         return FALSE;
 
     StringCchCopyA(pszDest, cchDest, lpSrc);
@@ -98,7 +98,7 @@ UnExpandEnvironmentStringForUserW(
     if (hUserToken)
     {
         if (ExpandEnvironmentStringsForUserW(hUserToken, lpSrc, szBuff, _countof(szBuff)))
-            cchExpanded = lstrlenW(pszDest) + 1;
+            cchExpanded = lstrlenW(szBuff) + 1;
         else
             cchExpanded = 0;
     }
@@ -117,8 +117,8 @@ UnExpandEnvironmentStringForUserW(
         return FALSE;
     }
 
-    INT cchSuffix = lstrlenW(lpString) - cchEnvPath;
-    if (lstrlenW(lpSrc) + cchSuffix >= (INT)cchDest)
+    size_t cchSuffix = wcslen(lpString) - cchEnvPath;
+    if (lstrlenW(lpSrc) + cchSuffix >= cchDest)
         return FALSE;
 
     StringCchCopyW(pszDest, cchDest, lpSrc);
