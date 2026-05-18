@@ -718,7 +718,7 @@ NextPathA(
     _Out_writes_(cchDest) LPSTR pszDest,
     _In_ UINT cchDest)
 {
-    if (!pszStart)
+    if (!pszStart || !cchDest)
         return NULL;
 
     PCSTR pchSegStart = pszStart;
@@ -733,12 +733,11 @@ NextPathA(
         pchSegEnd = (PSTR)(pchSegStart + strlen(pchSegStart));
 
     UINT segLen = (UINT)(pchSegEnd - pchSegStart);
-    UINT copyLen = segLen + 1;
-    if (cchDest < copyLen)
-        copyLen = cchDest;
+    UINT copyLen = min(segLen + 1, cchDest);
+    HRESULT hr = StringCchCopyA(pszDest, copyLen, pchSegStart);
+    if (FAILED(hr))
+        return NULL;
 
-    lstrcpynA(pszDest, pchSegStart, copyLen);
-    pszDest[segLen] = ANSI_NULL;
     PathRemoveBlanksA(pszDest);
 
     if (!*pszDest)
@@ -763,7 +762,7 @@ NextPathW(
     _Out_writes_(cchDest) PWSTR pszDest,
     _In_ UINT cchDest)
 {
-    if (!pszStart)
+    if (!pszStart || !cchDest)
         return NULL;
 
     PCWSTR pchSegStart = pszStart;
@@ -778,15 +777,15 @@ NextPathW(
         pchSegEnd = (PWSTR)(pchSegStart + wcslen(pchSegStart));
 
     UINT segLen = (UINT)(pchSegEnd - pchSegStart);
-    UINT copyLen = segLen + 1;
-    if (cchDest < copyLen)
-        copyLen = cchDest;
+    UINT copyLen = min(segLen + 1, cchDest);
+    HRESULT hr = StringCchCopyW(pszDest, copyLen, pchSegStart);
+    if (FAILED(hr))
+        return NULL;
 
-    lstrcpynW(pszDest, pchSegStart, copyLen);
-    pszDest[segLen] = UNICODE_NULL;
     PathRemoveBlanksW(pszDest);
 
     if (!*pszDest)
         return NULL;
+
     return (*pchSegEnd == L';') ? (pchSegEnd + 1) : pchSegEnd;
 }
