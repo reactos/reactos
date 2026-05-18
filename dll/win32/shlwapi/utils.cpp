@@ -19,6 +19,7 @@
 #include <shlwapi.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
+#include <userenv.h>
 #include <atlstr.h>
 
 #include <shlwapi_undoc.h>
@@ -39,6 +40,246 @@ GetVersionMajorMinor()
 {
     DWORD version = GetVersion();
     return MAKEWORD(HIBYTE(version), LOBYTE(version));
+}
+
+static UINT SHTruncateString(PSTR pszStr, UINT cchMax)
+{
+    if (!pszStr || cchMax <= 0)
+        return 0;
+
+    INT cchTrunc = cchMax - 1;
+    PSTR pchSafeTail = pszStr;
+
+    for (PSTR pch = pszStr; *pch && (pch - pszStr) < cchTrunc;)
+    {
+        PSTR pchNext = CharNextA(pch);
+        if (pchNext - pszStr > cchTrunc)
+            break;
+        pchSafeTail = pchNext;
+        pch = pchNext;
+    }
+
+    *pchSafeTail = ANSI_NULL;
+    return (UINT)(pchSafeTail - pszStr);
+}
+
+static DWORD
+SHExpandEnvironmentStringsForUserA(
+    HANDLE hUserToken,
+    PCSTR  lpSrc,
+    PSTR   pszBuff,
+    UINT   cchBuff)
+{
+    DWORD cchResult;
+
+    if (hUserToken)
+    {
+        if (ExpandEnvironmentStringsForUserA(hUserToken, lpSrc, pszBuff, cchBuff))
+            cchResult = lstrlenA(pszBuff) + 1;
+        else
+            cchResult = 0;
+    }
+    else
+    {
+        cchResult = ExpandEnvironmentStringsA(lpSrc, pszBuff, cchBuff);
+    }
+
+    if (cchResult > cchBuff)
+    {
+        SHTruncateString(pszBuff, cchBuff);
+        return 0;
+    }
+
+    if (!cchResult)
+    {
+        lstrcpynA(pszBuff, lpSrc, cchBuff);
+    }
+
+    return cchResult;
+}
+
+DWORD SHExpandEnvironmentStringsForUserW(
+    HANDLE hUserToken,
+    PCWSTR lpSrc,
+    PWSTR  pszBuff,
+    UINT   cchBuff)
+{
+    DWORD cchResult;
+
+    if (hUserToken)
+    {
+        if (ExpandEnvironmentStringsForUserW(hUserToken, lpSrc, pszBuff, cchBuff))
+            cchResult = lstrlenW(pszBuff) + 1;
+        else
+            cchResult = 0;
+    }
+    else
+    {
+        cchResult = ExpandEnvironmentStringsW(lpSrc, pszBuff, cchBuff);
+    }
+
+    if (cchResult > cchBuff)
+    {
+        if (cchBuff)
+            pszBuff[cchBuff - 1] = UNICODE_NULL;
+        return 0;
+    }
+
+    if (!cchResult)
+        lstrcpynW(pszBuff, lpSrc, cchBuff);
+
+    return cchResult;
+}
+
+static BOOL
+UnExpandEnvironmentStringForUserA(
+    HANDLE hUserToken,
+    PCSTR  lpString,
+    PCSTR  lpSrc,
+    PSTR   pszBuff,
+    UINT   cchBuff)
+{
+    CHAR szBuff[MAX_PATH];
+
+    DWORD cchExpanded = SHExpandEnvironmentStringsForUserA(hUserToken, lpSrc, szBuff,
+                                                           _countof(szBuff));
+    if (cchExpanded == 0)
+        return FALSE;
+
+    INT cchEnvPath = cchExpanded - 1;
+    if (CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
+                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
+    {
+        return FALSE;
+    }
+
+    INT cchSuffix = lstrlenA(lpString) - cchEnvPath;
+    if (lstrlenA(lpSrc) + cchSuffix >= (INT)cchBuff)
+        return FALSE;
+
+    StringCchCopyA(pszBuff, cchBuff, lpSrc);
+    StringCchCatA(pszBuff, cchBuff, &lpString[cchEnvPath]);
+    return TRUE;
+}
+
+static BOOL
+UnExpandEnvironmentStringForUserW(
+    HANDLE hUserToken,
+    PCWSTR lpString,
+    PCWSTR lpSrc,
+    PWSTR  pszBuff,
+    UINT   cchBuff)
+{
+    WCHAR szBuff[MAX_PATH];
+
+    DWORD cchExpanded = SHExpandEnvironmentStringsForUserW(hUserToken, lpSrc, szBuff,
+                                                           _countof(szBuff));
+    if (cchExpanded == 0)
+        return FALSE;
+
+    INT cchEnvPath = cchExpanded - 1;
+    if (CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
+                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
+    {
+        return FALSE;
+    }
+
+    INT cchSuffix = lstrlenW(lpString) - cchEnvPath;
+    if (lstrlenW(lpSrc) + cchSuffix >= (INT)cchBuff)
+        return FALSE;
+
+    StringCchCopyW(pszBuff, cchBuff, lpSrc);
+    StringCchCatW(pszBuff, cchBuff, &lpString[cchEnvPath]);
+    return TRUE;
+}
+
+/*************************************************************************
+ * PathUnExpandEnvStringsForUserA [SHLWAPI.465]
+ *
+ * See PathUnExpandEnvStringsForUserW.
+ */
+EXTERN_C
+BOOL WINAPI
+PathUnExpandEnvStringsForUserA(
+    _In_ HANDLE hUserToken,
+    _In_ PCSTR pwszPath,
+    _Out_writes_(cchBuff) PSTR pszBuff,
+    _In_ INT cchBuff)
+{
+    if (!pwszPath)
+    {
+        if (pszBuff && cchBuff)
+            *pszBuff = ANSI_NULL;
+        return FALSE;
+    }
+    if (!pszBuff)
+        return FALSE;
+
+    static const PCSTR c_varsA[] =
+    {
+        "%APPDATA%",
+        "%USERPROFILE%",
+        "%ALLUSERSPROFILE%",
+        "%ProgramFiles%",
+        "%SystemRoot%",
+        "%SystemDrive%",
+    };
+
+    for (size_t iVar = 0; iVar < _countof(c_varsA); ++iVar)
+    {
+        if (UnExpandEnvironmentStringForUserA(hUserToken, pwszPath, c_varsA[iVar],
+                                              pszBuff, cchBuff))
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/*************************************************************************
+ * PathUnExpandEnvStringsForUserW [SHLWAPI.466]
+ *
+ * https://undoc.airesoft.co.uk/shlwapi.dll/PathUnExpandEnvStringsForUserW.php
+ */
+EXTERN_C
+BOOL WINAPI
+PathUnExpandEnvStringsForUserW(
+    _In_ HANDLE hUserToken,
+    _In_ PCWSTR pwszPath,
+    _Out_writes_(cchBuff) PWSTR pszBuff,
+    _In_ INT cchBuff)
+{
+    if (!pwszPath)
+    {
+        if (pszBuff && cchBuff)
+            *pszBuff = UNICODE_NULL;
+        return FALSE;
+    }
+
+    if (!pszBuff)
+        return FALSE;
+
+    static const PCWSTR c_varsW[] =
+    {
+        L"%APPDATA%",
+        L"%USERPROFILE%",
+        L"%ALLUSERSPROFILE%",
+        L"%ProgramFiles%",
+        L"%SystemRoot%",
+        L"%SystemDrive%",
+    };
+
+    for (size_t iVar = 0; iVar < _countof(c_varsW); ++iVar)
+    {
+        if (UnExpandEnvironmentStringForUserW(hUserToken, pwszPath, c_varsW[iVar],
+                                              pszBuff, cchBuff))
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 static BOOL CharLowerNoDBCSAWorker(PSTR lpString, INT cchMax, BOOL bUppercase)
