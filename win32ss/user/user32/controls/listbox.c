@@ -127,8 +127,8 @@ const struct builtin_class_descr LISTBOX_builtin_class =
 {
     listboxW,             /* name */
     CS_DBLCLKS /*| CS_PARENTDC*/,  /* style */
-    ListBoxWndProcA,      /* procA */
-    ListBoxWndProcW,      /* procW */
+    &pfnClientA.pfnListBoxWndProc, /* procA */
+    &pfnClientW.pfnListBoxWndProc, /* procW */
     sizeof(LB_DESCR *),   /* extra */
     IDC_ARROW,            /* cursor */
     0                     /* brush */
@@ -143,8 +143,8 @@ const struct builtin_class_descr COMBOLBOX_builtin_class =
 {
     combolboxW,           /* name */
     CS_DBLCLKS | CS_SAVEBITS,  /* style */
-    ListBoxWndProcA,      /* procA */
-    ListBoxWndProcW,      /* procW */
+    &pfnClientA.pfnComboListBoxProc, /* procA */
+    &pfnClientW.pfnComboListBoxProc, /* procW */
     sizeof(LB_DESCR *),   /* extra */
     IDC_ARROW,            /* cursor */
     0                     /* brush */

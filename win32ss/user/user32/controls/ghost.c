@@ -18,8 +18,8 @@ const struct builtin_class_descr GHOST_builtin_class =
 {
     L"Ghost",                   /* name */
     0,                          /* style  */
-    GhostWndProcA,              /* procA */
-    GhostWndProcW,              /* procW */
+    &pfnClientA.pfnGhostWndProc, /* procA */
+    &pfnClientW.pfnGhostWndProc, /* procW */
     0,                          /* extra */
     IDC_WAIT,                   /* cursor */
     NULL                        /* brush */
