@@ -68,7 +68,7 @@ LPSECURITY_ATTRIBUTES WINAPI CreateAllAccessSecurityAttributes(
   /* This function is used within SHLWAPI only to create security attributes
    * for shell semaphores. */
 
-  TRACE("(%p,%p,%08x)\n", lpAttr, lpSec, p3);
+  TRACE("(%p,%p,%08lx)\n", lpAttr, lpSec, p3);
 
   if (!(GetVersion() & 0x80000000))  /* NT */
   {
@@ -491,17 +491,16 @@ HANDLE WINAPI SHGlobalCounterCreateNamedW(LPCWSTR lpszName, DWORD iInitial)
   static const WCHAR szPrefix[] = { 's', 'h', 'e', 'l', 'l', '.', '\0' };
   const int iPrefixLen = 6;
   WCHAR szBuff[MAX_PATH];
-  const int iBuffLen = sizeof(szBuff)/sizeof(WCHAR);
   SECURITY_DESCRIPTOR sd;
   SECURITY_ATTRIBUTES sAttr, *pSecAttr;
   HANDLE hRet;
 
-  TRACE("(%s,%d)\n", debugstr_w(lpszName), iInitial);
+  TRACE("(%s,%ld)\n", debugstr_w(lpszName), iInitial);
 
   /* Create Semaphore name */
   memcpy(szBuff, szPrefix, (iPrefixLen + 1) * sizeof(WCHAR));
   if (lpszName)
-    StrCpyNW(szBuff + iPrefixLen, lpszName, iBuffLen - iPrefixLen);
+    StrCpyNW(szBuff + iPrefixLen, lpszName, ARRAY_SIZE(szBuff) - iPrefixLen);
 
   /* Initialise security attributes */
   pSecAttr = CreateAllAccessSecurityAttributes(&sAttr, &sd, 0);
@@ -527,7 +526,7 @@ HANDLE WINAPI SHGlobalCounterCreateNamedA(LPCSTR lpszName, DWORD iInitial)
 {
   WCHAR szBuff[MAX_PATH];
 
-  TRACE("(%s,%d)\n", debugstr_a(lpszName), iInitial);
+  TRACE("(%s,%ld)\n", debugstr_a(lpszName), iInitial);
 
   if (lpszName)
     MultiByteToWideChar(CP_ACP, 0, lpszName, -1, szBuff, MAX_PATH);

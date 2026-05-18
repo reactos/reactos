@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
@@ -2560,13 +2558,13 @@ HRESULT WINAPI MLBuildResURLA(LPCSTR lpszLibName, HMODULE hMod, DWORD dwFlags,
   HRESULT hRet;
 
   if (lpszLibName)
-    MultiByteToWideChar(CP_ACP, 0, lpszLibName, -1, szLibName, sizeof(szLibName)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, lpszLibName, -1, szLibName, ARRAY_SIZE(szLibName));
 
   if (lpszRes)
-    MultiByteToWideChar(CP_ACP, 0, lpszRes, -1, szRes, sizeof(szRes)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, lpszRes, -1, szRes, ARRAY_SIZE(szRes));
 
-  if (dwDestLen > sizeof(szLibName)/sizeof(WCHAR))
-    dwDestLen = sizeof(szLibName)/sizeof(WCHAR);
+  if (dwDestLen > ARRAY_SIZE(szLibName))
+    dwDestLen = ARRAY_SIZE(szLibName);
 
   hRet = MLBuildResURLW(lpszLibName ? szLibName : NULL, hMod, dwFlags,
                         lpszRes ? szRes : NULL, lpszDest ? szDest : NULL, dwDestLen);
@@ -2585,10 +2583,10 @@ HRESULT WINAPI MLBuildResURLW(LPCWSTR lpszLibName, HMODULE hMod, DWORD dwFlags,
                               LPCWSTR lpszRes, LPWSTR lpszDest, DWORD dwDestLen)
 {
   static const WCHAR szRes[] = { 'r','e','s',':','/','/','\0' };
-#define szResLen ((sizeof(szRes) - sizeof(WCHAR))/sizeof(WCHAR))
+  static const unsigned int szResLen = ARRAY_SIZE(szRes) - 1;
   HRESULT hRet = E_FAIL;
 
-  TRACE("(%s,%p,0x%08x,%s,%p,%d)\n", debugstr_w(lpszLibName), hMod, dwFlags,
+  TRACE("(%s,%p,0x%08lx,%s,%p,%ld)\n", debugstr_w(lpszLibName), hMod, dwFlags,
         debugstr_w(lpszRes), lpszDest, dwDestLen);
 
   if (!lpszLibName || !hMod || hMod == INVALID_HANDLE_VALUE || !lpszRes ||
@@ -2607,10 +2605,10 @@ HRESULT WINAPI MLBuildResURLW(LPCWSTR lpszLibName, HMODULE hMod, DWORD dwFlags,
       WCHAR szBuff[MAX_PATH];
       DWORD len;
 
-      len = GetModuleFileNameW(hMod, szBuff, sizeof(szBuff)/sizeof(WCHAR));
-      if (len && len < sizeof(szBuff)/sizeof(WCHAR))
+      len = GetModuleFileNameW(hMod, szBuff, ARRAY_SIZE(szBuff));
+      if (len && len < ARRAY_SIZE(szBuff))
       {
-        DWORD dwPathLen = strlenW(szBuff) + 1;
+        DWORD dwPathLen = lstrlenW(szBuff) + 1;
 
         if (dwDestLen >= dwPathLen)
         {
@@ -2619,7 +2617,7 @@ HRESULT WINAPI MLBuildResURLW(LPCWSTR lpszLibName, HMODULE hMod, DWORD dwFlags,
           dwDestLen -= dwPathLen;
           memcpy(lpszDest + szResLen, szBuff, dwPathLen * sizeof(WCHAR));
 
-          dwResLen = strlenW(lpszRes) + 1;
+          dwResLen = lstrlenW(lpszRes) + 1;
           if (dwDestLen >= dwResLen + 1)
           {
             lpszDest[szResLen + dwPathLen-1] = '/';
