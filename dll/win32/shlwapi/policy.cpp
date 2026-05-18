@@ -192,7 +192,6 @@ HRESULT CPolicyCache::_GetValue(
         return hr;
 
     DWORD cbDataSaved = pcbData ? *pcbData : 0;
-
     DWORD dwFlags = LOWORD(pConstraint->dwFlags);
 
     LSTATUS error;
@@ -212,11 +211,11 @@ HRESULT CPolicyCache::_GetValue(
     if (!pvData)
         return hr;
 
-    DWORD dwValue = *(PDWORD)pvData;
-    if (pConstraint->dwFlags == MAKELONG(SRRF_RT_DWORD, sizeof(DWORD)) &&
-        (dwValue < pConstraint->dwMin || pConstraint->dwMax < dwValue))
+    if (pConstraint->dwFlags == MAKELONG(SRRF_RT_DWORD, sizeof(DWORD)))
     {
-        return E_DATATYPE_MISMATCH;
+        DWORD dwValue = *(PDWORD)pvData;
+        if (dwValue < pConstraint->dwMin || pConstraint->dwMax < dwValue)
+            return E_DATATYPE_MISMATCH;
     }
 
     return hr;
@@ -239,7 +238,7 @@ CPolicyCache::_CacheResult(
 /***************************************************************************/
 
 CPolicyCache* g_pPolicyCache = NULL;
-CRITICAL_SECTION g_csPolicy;
+CRITICAL_SECTION g_csPolicyLock;
 
 static BOOL SHPolicyCache_Create(VOID)
 {
@@ -263,7 +262,6 @@ static BOOL SHPolicyCache_Create(VOID)
         return FALSE;
     }
 
-    InitializeCriticalSection(&g_csPolicy);
     return TRUE;
 }
 
@@ -272,10 +270,7 @@ EXTERN_C VOID SHPolicyCache_DllProcessDetach(VOID)
     CPolicyCache* pCache =
         (CPolicyCache*)InterlockedExchangePointer((PVOID volatile*)&g_pPolicyCache, NULL);
     if (pCache)
-    {
         delete pCache;
-        DeleteCriticalSection(&g_csPolicy);
-    }
 }
 
 /**************************************************************************
@@ -293,8 +288,8 @@ SHWindowsPolicyGetValue(
     if (!SHPolicyCache_Create())
         return E_FAIL;
 
-    EnterCriticalSection(&g_csPolicy);
+    EnterCriticalSection(&g_csPolicyLock);
     HRESULT hr = g_pPolicyCache->GetValue(rpolid, pvValue, pcbValue);
-    LeaveCriticalSection(&g_csPolicy);
+    LeaveCriticalSection(&g_csPolicyLock);
     return hr;
 }
