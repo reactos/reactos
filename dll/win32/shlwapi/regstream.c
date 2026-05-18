@@ -185,7 +185,7 @@ static HRESULT WINAPI IStream_fnWrite (IStream * iface, const void* pv, ULONG cb
 
 	if (newLen > This->dwLength)
 	{
-	  LPBYTE newBuf = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->pbBuffer, newLen);
+	  BYTE *newBuf = _recalloc(This->pbBuffer, 1, newLen);
 	  if (!newBuf)
 	    return STG_E_INSUFFICIENTMEMORY;
 
@@ -244,7 +244,7 @@ static HRESULT WINAPI IStream_fnSetSize (IStream * iface, ULARGE_INTEGER libNewS
 
 	/* we cut off the high part here */
 	newLen = libNewSize.u.LowPart;
-	newBuf = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->pbBuffer, newLen);
+	newBuf = _recalloc(This->pbBuffer, 1, newLen);
 	if (!newBuf)
 	  return STG_E_INSUFFICIENTMEMORY;
 
@@ -442,7 +442,7 @@ static ISHRegStream *IStream_Create(HKEY hKey, LPBYTE pbBuffer, DWORD dwLength)
 {
  ISHRegStream* regStream;
 
- regStream = HeapAlloc(GetProcessHeap(), 0, sizeof(ISHRegStream));
+ regStream = malloc(sizeof(ISHRegStream));
 
  if (regStream)
  {
