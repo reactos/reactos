@@ -444,7 +444,7 @@
 444 stdcall -noname SHGetSystemWindowsDirectoryW(ptr long) kernel32.GetSystemWindowsDirectoryW
 445 stdcall -noname PathFileExistsAndAttributesA(str ptr)
 446 stdcall -noname PathFileExistsAndAttributesW(wstr ptr)
-447 stub -noname FixSlashesAndColonA
+447 stdcall -noname FixSlashesAndColonA(str)
 448 stdcall -noname FixSlashesAndColonW(wstr)
 449 stub -noname NextPathA
 450 stub -noname NextPathW
