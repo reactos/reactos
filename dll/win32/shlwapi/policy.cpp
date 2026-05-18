@@ -46,9 +46,9 @@ static const SHPOLICY_CONSTRAINT c_Special  =
 // Items
 typedef struct tagSHPOLICY_ITEM
 {
-    REFGUID rpolid;
-    LPCWSTR key;
-    LPCWSTR value;
+    REFGUID rpolid; // POLID (policy descriptor)
+    PCWSTR pszKeyName;
+    PCWSTR pszValueName;
     const SHPOLICY_CONSTRAINT *pConstraint;
 } SHPOLICY_ITEM, *PSHPOLICY_ITEM;
 
@@ -167,7 +167,8 @@ CPolicyCache::GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ P
         return S_OK;
     }
 
-    HRESULT hr = _GetValue(pItem->key, pItem->value, pItem->pConstraint, NULL, pvValue, pcbValue);
+    HRESULT hr = _GetValue(pItem->pszKeyName, pItem->pszValueName, pItem->pConstraint, NULL,
+                           pvValue, pcbValue);
     if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
     {
         pResult->state = POLICY_STATE_NOT_FOUND;
