@@ -91,7 +91,7 @@ PWSTR WINAPI
 NextPathW(
     _In_ PCWSTR pszStart,
     _Out_writes_(cchDest) PWSTR pszDest,
-    _In_ UINT cchDest)
+    _In_ UINT cchDest);
 
 #ifdef UNICODE
 #define SHAboutInfo SHAboutInfoW
