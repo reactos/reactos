@@ -43,24 +43,26 @@ typedef struct tagSHPOLICY_ITEM
     const SHPOLICY_CONSTRAINT *pConstraint;
 } SHPOLICY_ITEM, *PSHPOLICY_ITEM;
 
-static const SHPOLICY_CONSTRAINT c_spcBool     = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0, 1 };
-static const SHPOLICY_CONSTRAINT c_spcString   = { MAKELONG(SRRF_RT_REG_SZ, sizeof(WCHAR)), 0, 0 };
-static const SHPOLICY_CONSTRAINT c_spcTriValue = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 1, 3 };
-static const SHPOLICY_CONSTRAINT c_spcSpecial  = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0x1806, 0x1808 };
+static const SHPOLICY_CONSTRAINT c_Bool     = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0, 1 };
+static const SHPOLICY_CONSTRAINT c_String   = { MAKELONG(SRRF_RT_REG_SZ, sizeof(WCHAR)), 0, 0 };
+static const SHPOLICY_CONSTRAINT c_TriValue = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 1, 3 };
+static const SHPOLICY_CONSTRAINT c_Special  =
+    { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0x1806, 0x1808 };
 
 static const SHPOLICY_ITEM g_PolicyItems[] =
 {
-    { POLID_UsePathEnvVarForCommandTemplates, L"Explorer", L"UsePathEnvVarForCommandTemplates", &c_spcBool },
-    { POLID_ScanWithAntiVirus, L"Attachments", L"ScanWithAntiVirus", &c_spcTriValue },
-    { POLID_SaveZoneInformation, L"Attachments", L"SaveZoneInformation", &c_spcTriValue },
-    { POLID_UseTrustedHandlers, L"Attachments", L"UseTrustedHandlers", &c_spcTriValue },
-    { POLID_HideZoneInfoOnProperties, L"Attachments", L"HideZoneInfoOnProperties", &c_spcBool },
-    { POLID_DefaultFileTypeRisk, L"Associations", L"DefaultFileTypeRisk", &c_spcSpecial },
-    { POLID_HighRiskFileTypes, L"Associations", L"HighRiskFileTypes", &c_spcString },
-    { POLID_ModRiskFileTypes, L"Associations", L"ModRiskFileTypes", &c_spcString },
-    { POLID_LowRiskFileTypes, L"Associations", L"LowRiskFileTypes", &c_spcString },
-    { POLID_PreXPSP2ShellProtocolBehavior, L"Explorer", L"PreXPSP2ShellProtocolBehavior", &c_spcBool },
-    { POLID_CompareJunctionness, L"Explorer", L"CompareJunctionness", &c_spcBool },
+    { POLID_UsePathEnvVarForCommandTemplates, L"Explorer", L"UsePathEnvVarForCommandTemplates",
+      &c_Bool },
+    { POLID_ScanWithAntiVirus, L"Attachments", L"ScanWithAntiVirus", &c_TriValue },
+    { POLID_SaveZoneInformation, L"Attachments", L"SaveZoneInformation", &c_TriValue },
+    { POLID_UseTrustedHandlers, L"Attachments", L"UseTrustedHandlers", &c_TriValue },
+    { POLID_HideZoneInfoOnProperties, L"Attachments", L"HideZoneInfoOnProperties", &c_Bool },
+    { POLID_DefaultFileTypeRisk, L"Associations", L"DefaultFileTypeRisk", &c_Special },
+    { POLID_HighRiskFileTypes, L"Associations", L"HighRiskFileTypes", &c_String },
+    { POLID_ModRiskFileTypes, L"Associations", L"ModRiskFileTypes", &c_String },
+    { POLID_LowRiskFileTypes, L"Associations", L"LowRiskFileTypes", &c_String },
+    { POLID_PreXPSP2ShellProtocolBehavior, L"Explorer", L"PreXPSP2ShellProtocolBehavior", &c_Bool },
+    { POLID_CompareJunctionness, L"Explorer", L"CompareJunctionness", &c_Bool },
 };
 
 /**************************************************************************
@@ -185,7 +187,8 @@ HRESULT CPolicyCache::_GetValue(
     PDWORD                     pcbData)
 {
     WCHAR szFullKey[MAX_PATH];
-    HRESULT hr = StringCchPrintfW(szFullKey, _countof(szFullKey), L"%s\\%s", m_pszRootKey, pszSubKey);
+    HRESULT hr = StringCchPrintfW(szFullKey, _countof(szFullKey), L"%s\\%s",
+                                  m_pszRootKey, pszSubKey);
     if (FAILED(hr))
         return hr;
 
