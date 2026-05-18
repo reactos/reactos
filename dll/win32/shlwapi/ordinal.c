@@ -4729,6 +4729,21 @@ DWORD WINAPI SHMenuIndexFromID(HMENU hMenu, UINT uID)
 }
 
 
+#ifdef __REACTOS__
+/*************************************************************************
+ *      @	[SHLWAPI.447]
+ */
+VOID WINAPI FixSlashesAndColonA(_Inout_ LPSTR lpstr)
+{
+    PCHAR pch;
+    for (pch = lpstr; *pch; pch = CharNextA(pch))
+    {
+        if (*pch == '/')
+            *pch = '\\';
+    }
+}
+#endif
+
 /*************************************************************************
  *      @	[SHLWAPI.448]
  */

@@ -389,7 +389,8 @@ PathFileExistsDefExtAndAttributesW(
     _Out_opt_ LPDWORD pdwFileAttributes);
 
 BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
-VOID WINAPI FixSlashesAndColonW(LPWSTR);
+VOID WINAPI FixSlashesAndColonA(_Inout_ LPSTR lpstr);
+VOID WINAPI FixSlashesAndColonW(_Inout_ LPWSTR lpwstr);
 BOOL WINAPI PathIsValidCharA(char c, DWORD dwClass);
 BOOL WINAPI PathIsValidCharW(WCHAR c, DWORD dwClass);
 BOOL WINAPI SHGetPathFromIDListWrapW(LPCITEMIDLIST pidl, LPWSTR pszPath);
@@ -407,9 +408,11 @@ LPWSTR WINAPI StrCpyNXW(LPWSTR lpszDest, LPCWSTR lpszSrc, int iLen);
 #ifdef UNICODE
     #define PathIsValidChar PathIsValidCharW
     #define StrCpyNX StrCpyNXW
+    #define FixSlashesAndColon FixSlashesAndColonW
 #else
     #define PathIsValidChar PathIsValidCharA
     #define StrCpyNX StrCpyNXA
+    #define FixSlashesAndColon FixSlashesAndColonA
 #endif
 
 BOOL WINAPI
