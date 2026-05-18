@@ -733,8 +733,7 @@ NextPathA(
         pchSegEnd = (PSTR)(pchSegStart + strlen(pchSegStart));
 
     UINT segLen = (UINT)(pchSegEnd - pchSegStart);
-    UINT copyLen = min(segLen + 1, cchDest);
-    HRESULT hr = StringCchCopyA(pszDest, copyLen, pchSegStart);
+    HRESULT hr = StringCchCopyNA(pszDest, cchDest, pchSegStart, segLen);
     if (FAILED(hr))
         return NULL;
 
@@ -777,8 +776,7 @@ NextPathW(
         pchSegEnd = (PWSTR)(pchSegStart + wcslen(pchSegStart));
 
     UINT segLen = (UINT)(pchSegEnd - pchSegStart);
-    UINT copyLen = min(segLen + 1, cchDest);
-    HRESULT hr = StringCchCopyW(pszDest, copyLen, pchSegStart);
+    HRESULT hr = StringCchCopyNW(pszDest, cchDest, pchSegStart, segLen);
     if (FAILED(hr))
         return NULL;
 
