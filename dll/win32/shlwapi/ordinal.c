@@ -58,12 +58,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 extern HINSTANCE shlwapi_hInstance;
 extern DWORD SHLWAPI_ThreadRef_index;
 
+static HRESULT iunknown_query_service(IUnknown*,REFGUID,REFIID,LPVOID*);
 #ifdef __REACTOS__
-HRESULT WINAPI IUnknown_QueryService(IUnknown*,REFGUID,REFIID,LPVOID*);
-#define iunknown_query_service IUnknown_QueryService
 HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, LPCSTR lpVerb);
 #else
-static HRESULT iunknown_query_service(IUnknown*,REFGUID,REFIID,LPVOID*);
 HRESULT WINAPI SHInvokeCommand(HWND,IShellFolder*,LPCITEMIDLIST,DWORD);
 #endif
 BOOL    WINAPI SHAboutInfoW(LPWSTR,DWORD);
@@ -1232,29 +1230,6 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL f
 }
 
 /*************************************************************************
- *	@	[SHLWAPI.169]
- *
- * Release an interface and zero a supplied pointer.
- *
- * PARAMS
- *  lpUnknown [I] Object to release
- *
- * RETURNS
- *  Nothing.
- */
-void WINAPI IUnknown_AtomicRelease(IUnknown ** lpUnknown)
-{
-    TRACE("(%p)\n", lpUnknown);
-
-    if(!lpUnknown || !*lpUnknown) return;
-
-    TRACE("doing Release\n");
-
-    IUnknown_Release(*lpUnknown);
-    *lpUnknown = NULL;
-}
-
-/*************************************************************************
  *      @	[SHLWAPI.170]
  *
  * Skip '//' if present in a string.
@@ -1402,44 +1377,6 @@ HRESULT WINAPI IUnknown_SetOwner(IUnknown *iface, IUnknown *pUnk)
 }
 
 /*************************************************************************
- *      @	[SHLWAPI.174]
- *
- * Call either IObjectWithSite_SetSite() or IInternetSecurityManager_SetSecuritySite() on
- * an object.
- *
- */
-HRESULT WINAPI IUnknown_SetSite(
-        IUnknown *obj,        /* [in]   OLE object     */
-        IUnknown *site)       /* [in]   Site interface */
-{
-    HRESULT hr;
-    IObjectWithSite *iobjwithsite;
-    IInternetSecurityManager *isecmgr;
-
-    if (!obj) return E_FAIL;
-
-    hr = IUnknown_QueryInterface(obj, &IID_IObjectWithSite, (LPVOID *)&iobjwithsite);
-    TRACE("IID_IObjectWithSite QI ret=%08x, %p\n", hr, iobjwithsite);
-    if (SUCCEEDED(hr))
-    {
-	hr = IObjectWithSite_SetSite(iobjwithsite, site);
-	TRACE("done IObjectWithSite_SetSite ret=%08x\n", hr);
-	IObjectWithSite_Release(iobjwithsite);
-    }
-    else
-    {
-	hr = IUnknown_QueryInterface(obj, &IID_IInternetSecurityManager, (LPVOID *)&isecmgr);
-	TRACE("IID_IInternetSecurityManager QI ret=%08x, %p\n", hr, isecmgr);
-	if (FAILED(hr)) return hr;
-
-	hr = IInternetSecurityManager_SetSecuritySite(isecmgr, (IInternetSecurityMgrSite *)site);
-	TRACE("done IInternetSecurityManager_SetSecuritySite ret=%08x\n", hr);
-	IInternetSecurityManager_Release(isecmgr);
-    }
-    return hr;
-}
-
-/*************************************************************************
  *      @	[SHLWAPI.175]
  *
  * Call IPersist_GetClassID() on an object.
@@ -1480,26 +1417,7 @@ HRESULT WINAPI IUnknown_GetClassID(IUnknown *lpUnknown, CLSID *clsid)
     return hr;
 }
 
-/*************************************************************************
- *      @	[SHLWAPI.176]
- *
- * Retrieve a Service Interface from an object.
- *
- * PARAMS
- *  lpUnknown [I] Object to get an IServiceProvider interface from
- *  sid       [I] Service ID for IServiceProvider_QueryService() call
- *  riid      [I] Function requested for QueryService call
- *  lppOut    [O] Destination for the service interface pointer
- *
- * RETURNS
- *  Success: S_OK. lppOut contains an object providing the requested service
- *  Failure: An HRESULT error code
- *
- * NOTES
- *  lpUnknown is expected to support the IServiceProvider interface.
- */
-HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID riid,
-                           LPVOID *lppOut)
+static HRESULT iunknown_query_service(IUnknown* lpUnknown, REFGUID sid, REFIID riid, LPVOID *lppOut)
 {
   IServiceProvider* pService = NULL;
   HRESULT hRet;
@@ -2174,32 +2092,6 @@ int WINAPI SHSearchMapInt(const int *lpKeys, const int *lpValues, int iLen, int 
   return -1; /* Not found */
 }
 
-
-/*************************************************************************
- *      @	[SHLWAPI.199]
- *
- * Copy an interface pointer
- *
- * PARAMS
- *   lppDest   [O] Destination for copy
- *   lpUnknown [I] Source for copy
- *
- * RETURNS
- *  Nothing.
- */
-VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown)
-{
-  TRACE("(%p,%p)\n", lppDest, lpUnknown);
-
-  IUnknown_AtomicRelease(lppDest);
-
-  if (lpUnknown)
-  {
-    IUnknown_AddRef(lpUnknown);
-    *lppDest = lpUnknown;
-  }
-}
-
 /*************************************************************************
  *      @	[SHLWAPI.200]
  *
@@ -2752,29 +2644,6 @@ LRESULT CALLBACK SHDefWindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM
 	if (IsWindowUnicode(hWnd))
 		return DefWindowProcW(hWnd, uMessage, wParam, lParam);
 	return DefWindowProcA(hWnd, uMessage, wParam, lParam);
-}
-
-/*************************************************************************
- *      @       [SHLWAPI.256]
- */
-HRESULT WINAPI IUnknown_GetSite(LPUNKNOWN lpUnknown, REFIID iid, PVOID *lppSite)
-{
-  HRESULT hRet = E_INVALIDARG;
-  LPOBJECTWITHSITE lpSite = NULL;
-
-  TRACE("(%p,%s,%p)\n", lpUnknown, debugstr_guid(iid), lppSite);
-
-  if (lpUnknown && iid && lppSite)
-  {
-    hRet = IUnknown_QueryInterface(lpUnknown, &IID_IObjectWithSite,
-                                   (void**)&lpSite);
-    if (SUCCEEDED(hRet) && lpSite)
-    {
-      hRet = IObjectWithSite_GetSite(lpSite, iid, lppSite);
-      IObjectWithSite_Release(lpSite);
-    }
-  }
-  return hRet;
 }
 
 /*************************************************************************
@@ -4209,171 +4078,6 @@ DWORD WINAPI SHSendMessageBroadcastW(UINT uMsg, WPARAM wParam, LPARAM lParam)
 HRESULT WINAPI CLSIDFromStringWrap(LPCWSTR idstr, CLSID *id)
 {
     return CLSIDFromString((LPCOLESTR)idstr, id);
-}
-
-/*************************************************************************
- *      @	[SHLWAPI.437]
- *
- * Determine if the OS supports a given feature.
- *
- * PARAMS
- *  dwFeature [I] Feature requested (undocumented)
- *
- * RETURNS
- *  TRUE  If the feature is available.
- *  FALSE If the feature is not available.
- */
-BOOL WINAPI IsOS(DWORD feature)
-{
-#ifdef __REACTOS__
-    OSVERSIONINFOEXA osvi;
-    DWORD platform, majorv, minorv;
-
-    osvi.dwOSVersionInfoSize = sizeof(osvi);
-    if (!GetVersionExA((OSVERSIONINFOA*)&osvi))
-    {
-        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
-        if (!GetVersionExA((OSVERSIONINFOA*)&osvi))
-        {
-            ERR("GetVersionEx failed\n");
-            return FALSE;
-        }
-        osvi.wProductType = VER_NT_WORKSTATION;
-        osvi.wSuiteMask = 0;
-    }
-#else
-    OSVERSIONINFOA osvi;
-    DWORD platform, majorv, minorv;
-
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
-    if(!GetVersionExA(&osvi))  {
-        ERR("GetVersionEx failed\n");
-        return FALSE;
-    }
-#endif
-    majorv = osvi.dwMajorVersion;
-    minorv = osvi.dwMinorVersion;
-    platform = osvi.dwPlatformId;
-
-#define ISOS_RETURN(x) \
-    TRACE("(0x%x) ret=%d\n",feature,(x)); \
-    return (x);
-
-    switch(feature)  {
-    case OS_WIN32SORGREATER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32s
-                 || platform == VER_PLATFORM_WIN32_WINDOWS)
-    case OS_NT:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
-    case OS_WIN95ORGREATER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_WINDOWS)
-    case OS_NT4ORGREATER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 4)
-    case OS_WIN2000ORGREATER_ALT:
-    case OS_WIN2000ORGREATER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5)
-    case OS_WIN98ORGREATER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_WINDOWS && minorv >= 10)
-    case OS_WIN98_GOLD:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_WINDOWS && minorv == 10)
-    case OS_WIN2000PRO:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5)
-    case OS_WIN2000SERVER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && (minorv == 0 || minorv == 1))
-    case OS_WIN2000ADVSERVER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && (minorv == 0 || minorv == 1))
-    case OS_WIN2000DATACENTER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && (minorv == 0 || minorv == 1))
-    case OS_WIN2000TERMINAL:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && (minorv == 0 || minorv == 1))
-    case OS_EMBEDDED:
-        FIXME("(OS_EMBEDDED) What should we return here?\n");
-        return FALSE;
-    case OS_TERMINALCLIENT:
-        FIXME("(OS_TERMINALCLIENT) What should we return here?\n");
-        return FALSE;
-    case OS_TERMINALREMOTEADMIN:
-        FIXME("(OS_TERMINALREMOTEADMIN) What should we return here?\n");
-        return FALSE;
-    case OS_WIN95_GOLD:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_WINDOWS && minorv == 0)
-    case OS_MEORGREATER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_WINDOWS && minorv >= 90)
-    case OS_XPORGREATER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5 && minorv >= 1)
-    case OS_HOME:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5 && minorv >= 1)
-    case OS_PROFESSIONAL:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
-    case OS_DATACENTER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
-    case OS_ADVSERVER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5)
-    case OS_SERVER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
-    case OS_TERMINALSERVER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
-    case OS_PERSONALTERMINALSERVER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && minorv >= 1 && majorv >= 5)
-    case OS_FASTUSERSWITCHING:
-        FIXME("(OS_FASTUSERSWITCHING) What should we return here?\n");
-        return TRUE;
-    case OS_WELCOMELOGONUI:
-        FIXME("(OS_WELCOMELOGONUI) What should we return here?\n");
-        return FALSE;
-    case OS_DOMAINMEMBER:
-        FIXME("(OS_DOMAINMEMBER) What should we return here?\n");
-        return TRUE;
-    case OS_ANYSERVER:
-#ifdef __REACTOS__
-        ISOS_RETURN(osvi.wProductType > VER_NT_WORKSTATION)
-#else
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
-#endif
-    case OS_WOW6432:
-        {
-            BOOL is_wow64;
-            IsWow64Process(GetCurrentProcess(), &is_wow64);
-            return is_wow64;
-        }
-    case OS_WEBSERVER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
-    case OS_SMALLBUSINESSSERVER:
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
-    case OS_TABLETPC:
-        FIXME("(OS_TABLETPC) What should we return here?\n");
-        return FALSE;
-    case OS_SERVERADMINUI:
-#ifdef __REACTOS__
-        {
-            DWORD value = FALSE, size = sizeof(value);
-            HKEY hKey = SHGetShellKey(SHKEY_Root_HKCU | SHKEY_Key_Explorer, L"Advanced", FALSE);
-            if (hKey)
-            {
-                SHQueryValueExW(hKey, L"ServerAdminUI", NULL, NULL, &value, &size);
-                RegCloseKey(hKey);
-            }
-            ISOS_RETURN(value);
-        }
-#else
-        FIXME("(OS_SERVERADMINUI) What should we return here?\n");
-        return FALSE;
-#endif
-    case OS_MEDIACENTER:
-        FIXME("(OS_MEDIACENTER) What should we return here?\n");
-        return FALSE;
-    case OS_APPLIANCE:
-        FIXME("(OS_APPLIANCE) What should we return here?\n");
-        return FALSE;
-    case 0x25: /*OS_VISTAORGREATER*/
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 6)
-    }
-
-#undef ISOS_RETURN
-
-    WARN("(0x%x) unknown parameter\n",feature);
-
-    return FALSE;
 }
 
 #ifdef __REACTOS__
