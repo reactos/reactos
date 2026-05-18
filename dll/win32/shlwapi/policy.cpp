@@ -22,12 +22,14 @@ typedef enum tagPOLICY_STATE
     POLICY_STATE_CACHED    = 2,  // Cached
 } POLICY_STATE;
 
+// Result
 typedef struct tagSHPOLICY_RESULT
 {
     POLICY_STATE state;
     DWORD dwValue;
 } SHPOLICY_RESULT, *PSHPOLICY_RESULT;
 
+// Contraints
 typedef struct tagSHPOLICY_CONSTRAINT
 {
     DWORD dwFlags;
@@ -35,6 +37,13 @@ typedef struct tagSHPOLICY_CONSTRAINT
     DWORD dwMax;
 } SHPOLICY_CONSTRAINT, *PSHPOLICY_CONSTRAINT;
 
+static const SHPOLICY_CONSTRAINT c_Bool     = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0, 1 };
+static const SHPOLICY_CONSTRAINT c_String   = { MAKELONG(SRRF_RT_REG_SZ, sizeof(WCHAR)), 0, 0 };
+static const SHPOLICY_CONSTRAINT c_TriValue = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 1, 3 };
+static const SHPOLICY_CONSTRAINT c_Special  =
+    { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0x1806, 0x1808 };
+
+// Items
 typedef struct tagSHPOLICY_ITEM
 {
     REFGUID rpolid;
@@ -42,12 +51,6 @@ typedef struct tagSHPOLICY_ITEM
     LPCWSTR value;
     const SHPOLICY_CONSTRAINT *pConstraint;
 } SHPOLICY_ITEM, *PSHPOLICY_ITEM;
-
-static const SHPOLICY_CONSTRAINT c_Bool     = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0, 1 };
-static const SHPOLICY_CONSTRAINT c_String   = { MAKELONG(SRRF_RT_REG_SZ, sizeof(WCHAR)), 0, 0 };
-static const SHPOLICY_CONSTRAINT c_TriValue = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 1, 3 };
-static const SHPOLICY_CONSTRAINT c_Special  =
-    { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0x1806, 0x1808 };
 
 static const SHPOLICY_ITEM g_PolicyItems[] =
 {
