@@ -12,6 +12,7 @@ add_subdirectory(comsupp)
 add_subdirectory(conutils)
 add_subdirectory(cportlib)
 add_subdirectory(crt)
+add_subdirectory(crtheap)
 add_subdirectory(cryptlib)
 add_subdirectory(cpprt)
 
