@@ -705,12 +705,7 @@ SHDialogBox(
 /*************************************************************************
  * NextPathA [SHLWAPI.449]
  *
- * Extracts the next path from a semicolon-separated path string (ANSI version)
- *
- * @param pszStart Parsing start position (semicolon-separated path string)
- * @param pszDest Buffer to store the extracted path
- * @param cchDest Buffer size (number of characters)
- * @return Pointer to the beginning of the next path. NULL if there are no more paths.
+ * See NextPathW.
  */
 EXTERN_C PSTR WINAPI
 NextPathA(
