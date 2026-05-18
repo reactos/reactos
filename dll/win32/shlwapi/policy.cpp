@@ -148,7 +148,7 @@ CPolicyCache::GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ P
     UINT iItem;
     for (iItem = 0; iItem < m_cItems; ++iItem)
     {
-        if (IsEqualGUID(&m_pItems[iItem].rpolid, &rpolid))
+        if (IsEqualGUID(m_pItems[iItem].rpolid, rpolid))
             break;
     }
 
@@ -243,7 +243,7 @@ CPolicyCache::_CacheResult(
 
 /***************************************************************************/
 
-volatile CPolicyCache* g_pPolicyCache = NULL;
+CPolicyCache* g_pPolicyCache = NULL;
 CRITICAL_SECTION g_csPolicyLock;
 
 static BOOL SHPolicyCache_Create(VOID)
