@@ -195,6 +195,9 @@ INetCfgPnpReconfigCallback_fnSendPnpReconfig(
     PVOID pvData,
     DWORD dwSizeOfData)
 {
+    TRACE("INetCfgPnpReconfigCallback_fnSendPnpReconfig(%lu %S %S %p %lu)\n",
+          Layer, pszwUpper, pszwLower, pvData, dwSizeOfData);
+
     /* FIXME */
     return E_NOTIMPL;
 }
@@ -695,7 +698,8 @@ VOID
 ApplyOrCancelChanges(
     NetCfgComponentItem *pHead,
     const CLSID * lpClassGUID,
-    BOOL bApply)
+    BOOL bApply,
+    INetCfgPnpReconfigCallback *pCallback)
 {
     HKEY hKey;
     WCHAR szName[200];
@@ -727,9 +731,7 @@ ApplyOrCancelChanges(
                 if (bApply)
                 {
                     INetCfgComponentControl_ApplyRegistryChanges(pHead->pControl);
-                    //FIXME
-                    // implement INetCfgPnpReconfigCallback and pass it to
-                    INetCfgComponentControl_ApplyPnpChanges(pHead->pControl, NULL);
+                    INetCfgComponentControl_ApplyPnpChanges(pHead->pControl, pCallback);
                 }
                 else
                 {
@@ -814,10 +816,10 @@ INetCfg_fnApply(
     if (!This->bInitialized)
         return NETCFG_E_NOT_INITIALIZED;
 
-    ApplyOrCancelChanges(This->pNet, &GUID_DEVCLASS_NET, TRUE);
-    ApplyOrCancelChanges(This->pClient, &GUID_DEVCLASS_NETCLIENT, TRUE);
-    ApplyOrCancelChanges(This->pService, &GUID_DEVCLASS_NETSERVICE, TRUE);
-    ApplyOrCancelChanges(This->pProtocol, &GUID_DEVCLASS_NETTRANS, TRUE);
+    ApplyOrCancelChanges(This->pNet, &GUID_DEVCLASS_NET, TRUE, (INetCfgPnpReconfigCallback *)&This->lpVtblPnpReconfigCallback);
+    ApplyOrCancelChanges(This->pClient, &GUID_DEVCLASS_NETCLIENT, TRUE, (INetCfgPnpReconfigCallback *)&This->lpVtblPnpReconfigCallback);
+    ApplyOrCancelChanges(This->pService, &GUID_DEVCLASS_NETSERVICE, TRUE, (INetCfgPnpReconfigCallback *)&This->lpVtblPnpReconfigCallback);
+    ApplyOrCancelChanges(This->pProtocol, &GUID_DEVCLASS_NETTRANS, TRUE, (INetCfgPnpReconfigCallback *)&This->lpVtblPnpReconfigCallback);
 
     return S_OK;
 }
@@ -832,9 +834,9 @@ INetCfg_fnCancel(
     if (!This->bInitialized)
         return NETCFG_E_NOT_INITIALIZED;
 
-    ApplyOrCancelChanges(This->pClient, &GUID_DEVCLASS_NETCLIENT, FALSE);
-    ApplyOrCancelChanges(This->pService, &GUID_DEVCLASS_NETSERVICE, FALSE);
-    ApplyOrCancelChanges(This->pProtocol, &GUID_DEVCLASS_NETTRANS, FALSE);
+    ApplyOrCancelChanges(This->pClient, &GUID_DEVCLASS_NETCLIENT, FALSE, NULL);
+    ApplyOrCancelChanges(This->pService, &GUID_DEVCLASS_NETSERVICE, FALSE, NULL);
+    ApplyOrCancelChanges(This->pProtocol, &GUID_DEVCLASS_NETTRANS, FALSE, NULL);
 
     return S_OK;
 }
