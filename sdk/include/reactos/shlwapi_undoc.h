@@ -483,8 +483,8 @@ PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString);
 HRESULT WINAPI
 SHWindowsPolicyGetValue(
     _In_ REFGUID rpolid,
-    _Out_opt_ PVOID pvData,
-    _Out_opt_ PDWORD pcbData);
+    _Out_opt_ PVOID pvValue,
+    _Out_opt_ PDWORD pcbValue);
 
 #define E_DATATYPE_MISMATCH 0x8007065D
 

@@ -87,13 +87,13 @@ public:
         CloseHandle(m_hGlobalCounter);
     }
 
-    BOOL Initialize(LPCWSTR pszRootKey, REFGUID rguid, const SHPOLICY_ITEM *pItems, UINT cItems)
+    BOOL Initialize(const SHPOLICY_ITEM *pItems, UINT cItems)
     {
-        m_pszRootKey = pszRootKey;
+        m_pszRootKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies";
         m_pItems = pItems;
         m_cItems = cItems;
         m_pResults = (PSHPOLICY_RESULT)LocalAlloc(LPTR, cItems * sizeof(SHPOLICY_RESULT));
-        m_hGlobalCounter = SHGlobalCounterCreate(rguid);
+        m_hGlobalCounter = SHGlobalCounterCreate(GUID_Restrictions);
         return m_pResults && m_hGlobalCounter;
     }
 
@@ -112,9 +112,8 @@ protected:
         LONG Value = SHGlobalCounterGetValue(m_hGlobalCounter);
         if (m_nCounterValue != Value)
         {
-            SIZE_T cbItems = 8 * m_cItems;
             m_nCounterValue = Value;
-            ZeroMemory(m_pResults, cbItems);
+            ZeroMemory(m_pResults, m_cItems * sizeof(SHPOLICY_RESULT));
         }
     }
 
@@ -242,16 +241,25 @@ CPolicyCache::_CacheResult(
 CPolicyCache* g_pPolicyCache = NULL;
 CRITICAL_SECTION g_csPolicy;
 
-EXTERN_C BOOL SHPolicyCache_DllProcessAttach(VOID)
+static BOOL SHPolicyCache_Create(VOID)
 {
-    CPolicyCache *pPolicyCache = new CPolicyCache();
-    if (!pPolicyCache)
+    if (g_pPolicyCache)
+        return TRUE;
+
+    CPolicyCache *pCache = new CPolicyCache();
+    if (!pCache)
         return FALSE;
 
-    if (!pPolicyCache->Initialize(L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies",
-                                  GUID_Restrictions, g_PolicyItems, _countof(g_PolicyItems)))
+    if (!pCache->Initialize(g_PolicyItems, _countof(g_PolicyItems)))
     {
-        delete pPolicyCache;
+        delete pCache;
+        return FALSE;
+    }
+
+    if (InterlockedCompareExchangePointer((PVOID volatile*)&g_pPolicyCache, pCache,
+                                          NULL) == g_pPolicyCache)
+    {
+        delete pCache;
         return FALSE;
     }
 
@@ -261,24 +269,13 @@ EXTERN_C BOOL SHPolicyCache_DllProcessAttach(VOID)
 
 EXTERN_C VOID SHPolicyCache_DllProcessDetach(VOID)
 {
-    delete g_pPolicyCache;
-    g_pPolicyCache = NULL;
-    DeleteCriticalSection(&g_csPolicy);
-}
-
-static HRESULT
-SHPolicyCacheGetValue(
-    CPolicyCache *pCache,
-    REFGUID rpolid,
-    PVOID pvValue,
-    PDWORD pcbValue)
-{
-    if (!pCache)
+    CPolicyCache* pCache =
+        (CPolicyCache*)InterlockedExchangePointer((PVOID volatile*)&g_pPolicyCache, NULL);
+    if (pCache)
     {
-        ERR("!pCache\n");
-        return E_FAIL;
+        delete pCache;
+        DeleteCriticalSection(&g_csPolicy);
     }
-    return pCache->GetValue(rpolid, pvValue, pcbValue);
 }
 
 /**************************************************************************
@@ -290,11 +287,14 @@ EXTERN_C
 HRESULT WINAPI
 SHWindowsPolicyGetValue(
     _In_ REFGUID rpolid,
-    _Out_opt_ PVOID pvData,
-    _Out_opt_ PDWORD pcbData)
+    _Out_opt_ PVOID pvValue,
+    _Out_opt_ PDWORD pcbValue)
 {
+    if (!SHPolicyCache_Create())
+        return E_FAIL;
+
     EnterCriticalSection(&g_csPolicy);
-    HRESULT hr = SHPolicyCacheGetValue(g_pPolicyCache, rpolid, pvData, pcbData);
+    HRESULT hr = g_pPolicyCache->GetValue(rpolid, pvValue, pcbValue);
     LeaveCriticalSection(&g_csPolicy);
     return hr;
 }

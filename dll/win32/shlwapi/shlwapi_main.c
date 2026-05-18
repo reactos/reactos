@@ -38,7 +38,6 @@ extern CRITICAL_SECTION g_csZoneMgrLock;
 extern CRITICAL_SECTION g_csBagCacheLock;
 VOID FreeViewStatePropertyBagCache(VOID);
 VOID SHLWAPI_DeleteCachedZonesManager(VOID);
-BOOL SHPolicyCache_DllProcessAttach(VOID);
 VOID SHPolicyCache_DllProcessDetach(VOID);
 #endif
 
@@ -70,10 +69,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 	  case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
 	    shlwapi_hInstance = hinstDLL;
-#ifdef __REACTOS__
-	    if (!SHPolicyCache_DllProcessAttach())
-	        return FALSE;
-#endif
 	    SHLWAPI_ThreadRef_index = TlsAlloc();
 #ifdef __REACTOS__
 	    InitializeCriticalSection(&g_csZoneMgrLock);
