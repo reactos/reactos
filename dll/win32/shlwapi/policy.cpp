@@ -45,17 +45,17 @@ typedef struct tagSHPOLICY_ITEM
     const SHPOLICY_CONSTRAINT *pConstraint;
 } SHPOLICY_ITEM, *PSHPOLICY_ITEM;
 
-static const SHPOLICY_CONSTRAINT c_spcBool    = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0, 1 };
-static const SHPOLICY_CONSTRAINT c_spcString  = { MAKELONG(SRRF_RT_REG_SZ, sizeof(WCHAR)), 0, 0 };
-static const SHPOLICY_CONSTRAINT c_spcTriBool = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 1, 3 };
-static const SHPOLICY_CONSTRAINT c_spcSpecial = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0x1806, 0x1808 };
+static const SHPOLICY_CONSTRAINT c_spcBool     = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0, 1 };
+static const SHPOLICY_CONSTRAINT c_spcString   = { MAKELONG(SRRF_RT_REG_SZ, sizeof(WCHAR)), 0, 0 };
+static const SHPOLICY_CONSTRAINT c_spcTriValue = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 1, 3 };
+static const SHPOLICY_CONSTRAINT c_spcSpecial  = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0x1806, 0x1808 };
 
 static const SHPOLICY_ITEM g_PolicyItems[] =
 {
     { POLID_UsePathEnvVarForCommandTemplates, L"Explorer", L"UsePathEnvVarForCommandTemplates", &c_spcBool },
-    { POLID_ScanWithAntiVirus, L"Attachments", L"ScanWithAntiVirus", &c_spcTriBool },
-    { POLID_SaveZoneInformation, L"Attachments", L"SaveZoneInformation", &c_spcTriBool },
-    { POLID_UseTrustedHandlers, L"Attachments", L"UseTrustedHandlers", &c_spcTriBool },
+    { POLID_ScanWithAntiVirus, L"Attachments", L"ScanWithAntiVirus", &c_spcTriValue },
+    { POLID_SaveZoneInformation, L"Attachments", L"SaveZoneInformation", &c_spcTriValue },
+    { POLID_UseTrustedHandlers, L"Attachments", L"UseTrustedHandlers", &c_spcTriValue },
     { POLID_HideZoneInfoOnProperties, L"Attachments", L"HideZoneInfoOnProperties", &c_spcBool },
     { POLID_DefaultFileTypeRisk, L"Associations", L"DefaultFileTypeRisk", &c_spcSpecial },
     { POLID_HighRiskFileTypes, L"Associations", L"HighRiskFileTypes", &c_spcString },
@@ -230,14 +230,12 @@ CRITICAL_SECTION g_csPolicy;
 
 EXTERN_C BOOL SHPolicyCache_DllProcessAttach(VOID)
 {
-    LPCWSTR pszRootKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies";
-    const GUID *pguid = &GUID_Restrictions;
-
     CPolicyCache *pPolicyCache = new CPolicyCache();
     if (!pPolicyCache)
         return FALSE;
 
-    if (!pPolicyCache->Initialize(pszRootKey, *pguid, g_PolicyItems, _countof(g_PolicyItems)))
+    if (!pPolicyCache->Initialize(L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies",
+                                  GUID_Restrictions, g_PolicyItems, _countof(g_PolicyItems)))
     {
         delete pPolicyCache;
         return FALSE;
