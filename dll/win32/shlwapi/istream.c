@@ -21,8 +21,6 @@
 #include <string.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -583,10 +581,10 @@ BOOL WINAPI SHIsEmptyStream(IStream *lpStream)
   }
   else
   {
-    DWORD dwDummy;
+    DWORD dummy, read_len;
 
     /* Try to read from the stream */
-    if(SUCCEEDED(SHIStream_Read(lpStream, &dwDummy, sizeof(dwDummy))))
+    if (SUCCEEDED(IStream_Read(lpStream, &dummy, sizeof(dummy), &read_len)) && read_len == sizeof(dummy))
     {
       LARGE_INTEGER zero;
       zero.QuadPart = 0;

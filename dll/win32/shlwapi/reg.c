@@ -1976,7 +1976,7 @@ BOOL WINAPI RegisterMIMETypeForExtensionW(LPCWSTR lpszSubKey, LPCWSTR lpszValue)
   }
 
   return !SHSetValueW(HKEY_CLASSES_ROOT, lpszSubKey, lpszContentTypeW,
-                      REG_SZ, lpszValue, strlenW(lpszValue));
+                      REG_SZ, lpszValue, lstrlenW(lpszValue));
 }
 
 /*************************************************************************
@@ -2025,7 +2025,7 @@ BOOL WINAPI UnregisterMIMETypeForExtensionW(LPCWSTR lpszSubKey)
  */
 BOOL WINAPI GetMIMETypeSubKeyA(LPCSTR lpszType, LPSTR lpszBuffer, DWORD dwLen)
 {
-  TRACE("(%s,%p,%d)\n", debugstr_a(lpszType), lpszBuffer, dwLen);
+  TRACE("(%s,%p,%ld)\n", debugstr_a(lpszType), lpszBuffer, dwLen);
 
   if (dwLen > dwLenMimeDbContent && lpszType && lpszBuffer)
   {
@@ -2048,11 +2048,11 @@ BOOL WINAPI GetMIMETypeSubKeyA(LPCSTR lpszType, LPSTR lpszBuffer, DWORD dwLen)
  */
 BOOL WINAPI GetMIMETypeSubKeyW(LPCWSTR lpszType, LPWSTR lpszBuffer, DWORD dwLen)
 {
-  TRACE("(%s,%p,%d)\n", debugstr_w(lpszType), lpszBuffer, dwLen);
+  TRACE("(%s,%p,%ld)\n", debugstr_w(lpszType), lpszBuffer, dwLen);
 
   if (dwLen > dwLenMimeDbContent && lpszType && lpszBuffer)
   {
-    DWORD dwStrLen = strlenW(lpszType);
+    DWORD dwStrLen = lstrlenW(lpszType);
 
     if (dwStrLen < dwLen - dwLenMimeDbContent)
     {
@@ -2127,7 +2127,7 @@ BOOL WINAPI MIME_GetExtensionW(LPCWSTR lpszType, LPWSTR lpExt, INT iLen)
       lpExt[1])
   {
     if (lpExt[1] == '.')
-      memmove(lpExt, lpExt + 1, (strlenW(lpExt + 1) + 1) * sizeof(WCHAR));
+      memmove(lpExt, lpExt + 1, (lstrlenW(lpExt + 1) + 1) * sizeof(WCHAR));
     else
       *lpExt = '.'; /* Supply a '.' */
     bRet = TRUE;
@@ -2451,7 +2451,7 @@ HRESULT WINAPI SHRegGetCLSIDKeyA(REFGUID guid, LPCSTR lpszValue, BOOL bUseHKCU, 
   WCHAR szValue[MAX_PATH];
 
   if (lpszValue)
-    MultiByteToWideChar(CP_ACP, 0, lpszValue, -1, szValue, sizeof(szValue)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, lpszValue, -1, szValue, ARRAY_SIZE(szValue));
 
   return SHRegGetCLSIDKeyW(guid, lpszValue ? szValue : NULL, bUseHKCU, bCreate, phKey);
 }
@@ -2470,7 +2470,6 @@ HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU,
     'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
     'E','x','p','l','o','r','e','r','\\','C','L','S','I','D','\\' };
 #endif
-#define szClassIdKeyLen (sizeof(szClassIdKey)/sizeof(WCHAR))
   WCHAR szKey[MAX_PATH];
   DWORD dwRet;
   HKEY hkey;
@@ -2491,12 +2490,12 @@ HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU,
   }
 #else
   memcpy(szKey, szClassIdKey, sizeof(szClassIdKey));
-  SHStringFromGUIDW(guid, szKey + szClassIdKeyLen, 39); /* Append guid */
+  SHStringFromGUIDW(guid, szKey + ARRAY_SIZE(szClassIdKey), 39); /* Append guid */
 
   if(lpszValue)
   {
-    szKey[szClassIdKeyLen + 39] = '\\';
-    strcpyW(szKey + szClassIdKeyLen + 40, lpszValue); /* Append value name */
+    szKey[ARRAY_SIZE(szClassIdKey) + 39] = '\\';
+    lstrcpyW(szKey + ARRAY_SIZE(szClassIdKey) + 40, lpszValue); /* Append value name */
   }
 #endif
 

@@ -88,7 +88,7 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 	ISHRegStream *This = impl_from_IStream(iface);
 	ULONG refCount = InterlockedIncrement(&This->ref);
 	
-	TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
+	TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
 
 	return refCount;
 }
@@ -101,7 +101,7 @@ static ULONG WINAPI IStream_fnRelease(IStream *iface)
 	ISHRegStream *This = impl_from_IStream(iface);
 	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->(ref before=%u)\n",This, refCount + 1);
+	TRACE("(%p)->(ref before=%lu)\n",This, refCount + 1);
 
 	if (!refCount)
 	{
@@ -150,7 +150,7 @@ static HRESULT WINAPI IStream_fnRead (IStream * iface, void* pv, ULONG cb, ULONG
 	ISHRegStream *This = impl_from_IStream(iface);
 	DWORD dwBytesToRead;
 
-	TRACE("(%p)->(%p,0x%08x,%p)\n",This, pv, cb, pcbRead);
+	TRACE("(%p)->(%p,0x%08lx,%p)\n",This, pv, cb, pcbRead);
 
 	if (This->dwPos >= This->dwLength)
 	  dwBytesToRead = 0;
@@ -178,7 +178,7 @@ static HRESULT WINAPI IStream_fnWrite (IStream * iface, const void* pv, ULONG cb
 	ISHRegStream *This = impl_from_IStream(iface);
 	DWORD newLen = This->dwPos + cb;
 
-	TRACE("(%p, %p, %d, %p)\n",This, pv, cb, pcbWritten);
+	TRACE("(%p, %p, %ld, %p)\n",This, pv, cb, pcbWritten);
 
 	if (newLen < This->dwPos) /* overflow */
 	  return STG_E_INSUFFICIENTMEMORY;
@@ -208,7 +208,7 @@ static HRESULT WINAPI IStream_fnSeek (IStream * iface, LARGE_INTEGER dlibMove, D
 {
 	ISHRegStream *This = impl_from_IStream(iface);
 	LARGE_INTEGER tmp;
-	TRACE("(%p, %s, %d %p)\n", This,
+	TRACE("(%p, %s, %ld %p)\n", This,
               wine_dbgstr_longlong(dlibMove.QuadPart), dwOrigin, plibNewPosition);
 
 	if (dwOrigin == STREAM_SEEK_SET)
@@ -317,7 +317,7 @@ static HRESULT WINAPI IStream_fnStat (IStream * iface, STATSTG* pstatstg, DWORD 
 {
 	ISHRegStream *This = impl_from_IStream(iface);
 
-	TRACE("(%p, %p, %d)\n",This,pstatstg,grfStatFlag);
+	TRACE("(%p, %p, %ld)\n",This,pstatstg,grfStatFlag);
 
 	pstatstg->pwcsName = NULL;
 	pstatstg->type = STGTY_STREAM;
