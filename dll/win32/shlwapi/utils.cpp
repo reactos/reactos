@@ -51,12 +51,12 @@ UnExpandEnvironmentStringForUserA(
     _In_ UINT cchDest)
 {
     CHAR szBuff[MAX_PATH];
-    UINT cchExpanded = 0;
+    size_t cchExpanded;
 
     if (hUserToken)
     {
         if (ExpandEnvironmentStringsForUserA(hUserToken, lpSrc, szBuff, _countof(szBuff)))
-            cchExpanded = lstrlenA(szBuff) + 1;
+            cchExpanded = strlen(szBuff) + 1;
         else
             cchExpanded = 0;
     }
@@ -65,17 +65,20 @@ UnExpandEnvironmentStringForUserA(
         cchExpanded = ExpandEnvironmentStringsA(lpSrc, szBuff, _countof(szBuff));
     }
 
-    if (cchExpanded > cchDest || !cchExpanded)
+    if (cchExpanded > cchDest || !cchExpanded || cchExpanded >= MAXLONG)
         return FALSE;
 
-    INT cchEnvPath = cchExpanded - 1;
+    INT cchEnvPath = (INT)(cchExpanded - 1);
     if (CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
-                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
+                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL ||
+        // ReactOS only: Check separator or NUL
+        (lpString[cchEnvPath] != ANSI_NULL && lpString[cchEnvPath] != '\\' &&
+         lpString[cchEnvPath] != '/'))
     {
         return FALSE;
     }
 
-    size_t cchSuffix = lstrlenA(lpString) - cchEnvPath;
+    size_t cchSuffix = strlen(lpString) - cchEnvPath;
     if (strlen(lpSrc) + cchSuffix >= cchDest)
         return FALSE;
 
@@ -98,7 +101,7 @@ UnExpandEnvironmentStringForUserW(
     if (hUserToken)
     {
         if (ExpandEnvironmentStringsForUserW(hUserToken, lpSrc, szBuff, _countof(szBuff)))
-            cchExpanded = lstrlenW(szBuff) + 1;
+            cchExpanded = wcslen(szBuff) + 1;
         else
             cchExpanded = 0;
     }
@@ -107,18 +110,21 @@ UnExpandEnvironmentStringForUserW(
         cchExpanded = ExpandEnvironmentStringsW(lpSrc, szBuff, _countof(szBuff));
     }
 
-    if (cchExpanded > cchDest || !cchExpanded)
+    if (cchExpanded > cchDest || !cchExpanded || cchExpanded >= MAXLONG)
         return FALSE;
 
-    INT cchEnvPath = cchExpanded - 1;
+    INT cchEnvPath = (INT)(cchExpanded - 1);
     if (CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
-                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
+                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL ||
+        // ReactOS only: Check separator or NUL
+        (lpString[cchEnvPath] != UNICODE_NULL && lpString[cchEnvPath] != L'\\' &&
+         lpString[cchEnvPath] != L'/'))
     {
         return FALSE;
     }
 
     size_t cchSuffix = wcslen(lpString) - cchEnvPath;
-    if (lstrlenW(lpSrc) + cchSuffix >= cchDest)
+    if (wcslen(lpSrc) + cchSuffix >= cchDest)
         return FALSE;
 
     StringCchCopyW(pszDest, cchDest, lpSrc);
