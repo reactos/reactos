@@ -163,7 +163,7 @@ CPolicyCache::GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ P
 
     if (pvValue && *pcbValue == sizeof(DWORD) && pResult->state == POLICY_STATE_CACHED)
     {
-        *static_cast<PDWORD>(pvValue) = pResult->dwValue;
+        *(PDWORD)pvValue = pResult->dwValue;
         return S_OK;
     }
 
