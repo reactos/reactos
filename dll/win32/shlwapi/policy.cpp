@@ -87,7 +87,9 @@ public:
     virtual ~CPolicyCache()
     {
         LocalFree(m_pResults);
-        CloseHandle(m_hGlobalCounter);
+
+        if (m_hGlobalCounter)
+            CloseHandle(m_hGlobalCounter);
     }
 
     BOOL Initialize(const SHPOLICY_ITEM *pItems, UINT cItems)
@@ -146,7 +148,7 @@ CPolicyCache::GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ P
     UINT iItem;
     for (iItem = 0; iItem < m_cItems; ++iItem)
     {
-        if (memcmp(&m_pItems[iItem].rpolid, &rpolid, sizeof(GUID)) == 0)
+        if (IsEqualGUID(&m_pItems[iItem].rpolid, &rpolid))
             break;
     }
 
@@ -161,7 +163,7 @@ CPolicyCache::GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ P
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
 
-    if (pvValue && *pcbValue == sizeof(DWORD) && pResult->state == POLICY_STATE_CACHED)
+    if (pvValue && pcbValue && *pcbValue == sizeof(DWORD) && pResult->state == POLICY_STATE_CACHED)
     {
         *(PDWORD)pvValue = pResult->dwValue;
         return S_OK;
@@ -213,16 +215,16 @@ HRESULT CPolicyCache::_GetValue(
         return HRESULT_FROM_WIN32(error);
 
     if (!pvData)
-        return hr;
+        return S_OK;
 
-    if (pConstraint->dwFlags == MAKELONG(SRRF_RT_DWORD, sizeof(DWORD)))
+    if (LOWORD(pConstraint->dwFlags) == SRRF_RT_DWORD)
     {
         DWORD dwValue = *(PDWORD)pvData;
         if (dwValue < pConstraint->dwMin || pConstraint->dwMax < dwValue)
             return E_DATATYPE_MISMATCH;
     }
 
-    return hr;
+    return S_OK;
 }
 
 void
@@ -241,7 +243,7 @@ CPolicyCache::_CacheResult(
 
 /***************************************************************************/
 
-CPolicyCache* g_pPolicyCache = NULL;
+volatile CPolicyCache* g_pPolicyCache = NULL;
 CRITICAL_SECTION g_csPolicyLock;
 
 static BOOL SHPolicyCache_Create(VOID)
@@ -259,18 +261,23 @@ static BOOL SHPolicyCache_Create(VOID)
         return FALSE;
     }
 
-    if (InterlockedCompareExchangePointer((PVOID volatile*)&g_pPolicyCache, pCache,
-                                          NULL) == g_pPolicyCache)
-    {
+    PVOID pOldCache =
+        InterlockedCompareExchangePointer((PVOID volatile*)&g_pPolicyCache, pCache, NULL);
+    if (pOldCache)
         delete pCache;
-        return FALSE;
-    }
 
     return TRUE;
 }
 
+EXTERN_C VOID SHPolicyCache_DllProcessAttach(VOID)
+{
+    InitializeCriticalSection(&g_csPolicyLock);
+}
+
 EXTERN_C VOID SHPolicyCache_DllProcessDetach(VOID)
 {
+    DeleteCriticalSection(&g_csPolicyLock);
+
     CPolicyCache* pCache =
         (CPolicyCache*)InterlockedExchangePointer((PVOID volatile*)&g_pPolicyCache, NULL);
     if (pCache)
