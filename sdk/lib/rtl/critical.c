@@ -867,8 +867,6 @@ RtlCheckHeldCriticalSections(
     THREAD_BASIC_INFORMATION ThreadInfo;
     NTSTATUS Status;
     PLIST_ENTRY ListEntry;
-    PRTL_CRITICAL_SECTION_DEBUG DebugInfo;
-    PRTL_CRITICAL_SECTION CriticalSection;
     HANDLE CurrentThreadId;
 
     /* Early exit if verifier is not active */
@@ -905,6 +903,9 @@ RtlCheckHeldCriticalSections(
     ListEntry = RtlCriticalSectionList.Flink;
     while (ListEntry != &RtlCriticalSectionList)
     {
+        PRTL_CRITICAL_SECTION_DEBUG DebugInfo;
+        PRTL_CRITICAL_SECTION CriticalSection;
+        
         /* Get the debug info from the list entry */
         DebugInfo = CONTAINING_RECORD(
             ListEntry,
