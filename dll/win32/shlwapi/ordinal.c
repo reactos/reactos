@@ -398,7 +398,7 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
     dwNumValues = dwCount;
 
     /* Note: dwCount = number of items + 1; The extra item is the end node */
-    format = formatList = HeapAlloc(GetProcessHeap(), 0, dwCount * sizeof(FORMATETC));
+    format = formatList = malloc(dwCount * sizeof(FORMATETC));
     if (!formatList)
     {
       RegCloseKey(hDocs);
@@ -422,7 +422,7 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
                               (PBYTE)szValueBuff, &dwValueSize);
         if (!dwRet)
         {
-          HeapFree(GetProcessHeap(), 0, formatList);
+          free(formatList);
           RegCloseKey(hDocs);
           hr = E_FAIL;
           goto exit;
@@ -450,7 +450,7 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
 
     /* Create a clipboard enumerator */
     hr = CreateFormatEnumerator(dwNumValues, formatList, &pIEnumFormatEtc);
-    HeapFree(GetProcessHeap(), 0, formatList);
+    free(formatList);
     if (FAILED(hr)) goto exit;
 
     /* Set our enumerator as the browsers property */
@@ -2433,7 +2433,7 @@ BOOL WINAPI FDSA_Destroy(FDSA_info *info)
 
     if(info->flags & FDSA_FLAG_INTERNAL_ALLOC)
     {
-        HeapFree(GetProcessHeap(), 0, info->mem);
+        free(info->mem);
         return FALSE;
     }
 
@@ -2455,11 +2455,11 @@ DWORD WINAPI FDSA_InsertItem(FDSA_info *info, DWORD where, const void *block)
     {
         DWORD size = (info->blocks_alloced + info->inc) * info->block_size;
         if(info->flags & 0x1)
-            info->mem = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, info->mem, size);
+            info->mem = _recalloc(info->mem, 1, size);
         else
         {
             void *old_mem = info->mem;
-            info->mem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+            info->mem = calloc(1, size);
             memcpy(info->mem, old_mem, info->blocks_alloced * info->block_size);
         }
         info->blocks_alloced += info->inc;
@@ -4929,7 +4929,7 @@ HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create)
     else
         size_user = 0;
 
-    path = HeapAlloc(GetProcessHeap(), 0, size_key+size_subkey+size_user+sizeof(WCHAR));
+    path = malloc(size_key + size_subkey + size_user + sizeof(WCHAR));
     if(!path) {
         ERR("Out of memory\n");
         return NULL;
@@ -4949,7 +4949,7 @@ HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create)
         RegOpenKeyExW((flags&0xf)==SHKEY_Root_HKLM?HKEY_LOCAL_MACHINE:HKEY_CURRENT_USER,
                 path, 0, MAXIMUM_ALLOWED, &hkey);
 
-    HeapFree(GetProcessHeap(), 0, path);
+    free(path);
     return hkey;
 }
 
@@ -5197,7 +5197,7 @@ INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
 
         if (len)
         {
-            szText = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+            szText = malloc((len + 1) * sizeof(WCHAR));
             if (szText) LoadStringW(hInstance, LOWORD(lpText), szText, len + 1);
         }
         pszText = szText;
@@ -5220,7 +5220,7 @@ INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
 #endif
     ret = MessageBoxW(hWnd, pszTemp, pszTitle, uType);
 
-    HeapFree(GetProcessHeap(), 0, szText);
+    free(szText);
     LocalFree(pszTemp);
     return ret;
 }
@@ -5288,7 +5288,7 @@ PSECURITY_DESCRIPTOR WINAPI GetShellSecurityDescriptor(const PSHELL_USER_PERMISS
     if (apUserPerm == NULL || cUserPerm <= 0)
         return NULL;
 
-    sidlist = HeapAlloc(GetProcessHeap(), 0, cUserPerm * sizeof(PSID));
+    sidlist = malloc(cUserPerm * sizeof(PSID));
     if (!sidlist)
         return NULL;
 
@@ -5385,7 +5385,7 @@ free_sids:
         if (!cur_user || sidlist[i] != cur_user)
             FreeSid(sidlist[i]);
     }
-    HeapFree(GetProcessHeap(), 0, sidlist);
+    free(sidlist);
 
     return psd;
 }
@@ -5537,13 +5537,13 @@ INT WINAPI SHFormatDateTimeA(const FILETIME UNALIGNED *fileTime, DWORD *flags,
     if (!buf || !size)
         return 0;
 
-    bufW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * size);
+    bufW = malloc(sizeof(WCHAR) * size);
     retval = SHFormatDateTimeW(fileTime, flags, bufW, size);
 
     if (retval != 0)
         retval = WideCharToMultiByte(CP_ACP, 0, bufW, -1, buf, size, NULL, NULL);
 
-    HeapFree(GetProcessHeap(), 0, bufW);
+    free(bufW);
     return retval;
 }
 
