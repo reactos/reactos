@@ -143,12 +143,8 @@ const struct builtin_class_descr BUTTON_builtin_class =
 {
     buttonW,             /* name */
     CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style  */
-#ifdef __REACTOS__
-    ButtonWndProcA,      /* procA */
-    ButtonWndProcW,      /* procW */
-#else
-    WINPROC_BUTTON,      /* proc */
-#endif
+    &pfnClientA.pfnButtonWndProc, /* procA */
+    &pfnClientW.pfnButtonWndProc, /* procW */
     NB_EXTRA_BYTES,      /* extra */
     IDC_ARROW,           /* cursor */
     0                    /* brush */
