@@ -90,8 +90,16 @@ public:
         m_pItems = pItems;
         m_cItems = cItems;
         m_pResults = (PSHPOLICY_RESULT)LocalAlloc(LPTR, cItems * sizeof(SHPOLICY_RESULT));
+        if (!m_pResults)
+            return FALSE;
         m_hGlobalCounter = SHGlobalCounterCreate(GUID_Restrictions);
-        return m_pResults && m_hGlobalCounter;
+        if (!m_hGlobalCounter)
+        {
+            LocalFree(m_pResults);
+            m_pResults = NULL;
+            return FALSE;
+        }
+        return TRUE;
     }
 
     HRESULT GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ PDWORD pcbValue);;
@@ -151,9 +159,7 @@ CPolicyCache::GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ P
     PSHPOLICY_RESULT pResult = &m_pResults[iItem];
 
     if (pResult->state == POLICY_STATE_NOT_FOUND)
-    {
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    }
 
     if (pvValue && pcbValue && *pcbValue == sizeof(DWORD) && pResult->state == POLICY_STATE_CACHED)
     {
@@ -164,13 +170,9 @@ CPolicyCache::GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ P
     HRESULT hr = _GetValue(pItem->pszKeyName, pItem->pszValueName, pItem->pConstraint, NULL,
                            pvValue, pcbValue);
     if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
-    {
         pResult->state = POLICY_STATE_NOT_FOUND;
-    }
     else if (SUCCEEDED(hr) && pvValue)
-    {
         _CacheResult(pItem->pConstraint, pvValue, pcbValue, pResult);
-    }
 
     return hr;
 }
@@ -283,11 +285,13 @@ SHWindowsPolicyGetValue(
     _Out_opt_ PVOID pvValue,
     _Out_opt_ PDWORD pcbValue)
 {
+    HRESULT hr;
+
     if (!SHPolicyCache_Create())
         return E_FAIL;
 
     EnterCriticalSection(&g_csPolicyLock);
-    HRESULT hr = g_pPolicyCache->GetValue(rpolid, pvValue, pcbValue);
+    hr = g_pPolicyCache->GetValue(rpolid, pvValue, pcbValue);
     LeaveCriticalSection(&g_csPolicyLock);
     return hr;
 }
