@@ -2919,69 +2919,6 @@ BOOL WINAPI GUIDFromStringW(LPCWSTR idstr, CLSID *id)
 }
 
 /*************************************************************************
- *      @	[SHLWAPI.276]
- *
- * Determine if the browser is integrated into the shell, and set a registry
- * key accordingly.
- *
- * PARAMS
- *  None.
- *
- * RETURNS
- *  1, If the browser is not integrated.
- *  2, If the browser is integrated.
- *
- * NOTES
- *  The key "HKLM\Software\Microsoft\Internet Explorer\IntegratedBrowser" is
- *  either set to TRUE, or removed depending on whether the browser is deemed
- *  to be integrated.
- */
-UINT WINAPI WhichPlatform(void)
-{
-    static const char szIntegratedBrowser[] = "IntegratedBrowser";
-    static DWORD state = PLATFORM_UNKNOWN;
-    DWORD ret, data, size;
-    HMODULE hshell32;
-    HKEY hKey;
-
-    if (state)
-        return state;
-
-    /* If shell32 exports DllGetVersion(), the browser is integrated */
-    state = PLATFORM_BROWSERONLY;
-    hshell32 = LoadLibraryA("shell32.dll");
-    if (hshell32)
-    {
-        FARPROC pDllGetVersion;
-        pDllGetVersion = GetProcAddress(hshell32, "DllGetVersion");
-        state = pDllGetVersion ? PLATFORM_INTEGRATED : PLATFORM_BROWSERONLY;
-        FreeLibrary(hshell32);
-    }
-
-    /* Set or delete the key accordingly */
-    ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Internet Explorer", 0, KEY_ALL_ACCESS, &hKey);
-    if (!ret)
-    {
-        size = sizeof(data);
-        ret = RegQueryValueExA(hKey, szIntegratedBrowser, 0, 0, (BYTE *)&data, &size);
-        if (!ret && state == PLATFORM_BROWSERONLY)
-        {
-            /* Value exists but browser is not integrated */
-            RegDeleteValueA(hKey, szIntegratedBrowser);
-        }
-        else if (ret && state == PLATFORM_INTEGRATED)
-        {
-            /* Browser is integrated but value does not exist */
-            data = TRUE;
-            RegSetValueExA(hKey, szIntegratedBrowser, 0, REG_DWORD, (BYTE *)&data, sizeof(data));
-        }
-        RegCloseKey(hKey);
-    }
-
-    return state;
-}
-
-/*************************************************************************
  *      @	[SHLWAPI.278]
  *
  * Unicode version of SHCreateWorkerWindowA.
@@ -4346,36 +4283,6 @@ HRESULT WINAPI SHGetInverseCMAP(LPDWORD dest, DWORD dwSize)
 }
 
 /*************************************************************************
- *      SHIsLowMemoryMachine	[SHLWAPI.@]
- *
- * Determine if the current computer has low memory.
- *
- * PARAMS
- *  dwType [I] Zero.
- *
- * RETURNS
- *  TRUE if the users machine has 16 Megabytes of memory or less,
- *  FALSE otherwise.
- */
-BOOL WINAPI SHIsLowMemoryMachine(DWORD dwType)
-{
-#ifdef __REACTOS__
-    MEMORYSTATUS status;
-    static int is_low = -1;
-    TRACE("(0x%08x)\n", dwType);
-    if (dwType == 0 && is_low == -1)
-    {
-        GlobalMemoryStatus(&status);
-        is_low = (status.dwTotalPhys <= 0x1000000);
-    }
-    return is_low;
-#else
-  FIXME("(0x%08x) stub\n", dwType);
-  return FALSE;
-#endif
-}
-
-/*************************************************************************
  *      GetMenuPosFromID	[SHLWAPI.@]
  *
  * Return the position of a menu item from its Id.
@@ -5109,35 +5016,6 @@ HRESULT WINAPI SHCreatePropertyBagOnRegKey (HKEY hKey, LPCWSTR subkey,
     DWORD grfMode, REFIID riid, void **ppv)
 {
     FIXME("%p %s %ld %s %p STUB\n", hKey, debugstr_w(subkey), grfMode,
-          debugstr_guid(riid), ppv);
-
-    return E_NOTIMPL;
-}
-#endif
-
-#ifndef __REACTOS__ /* See propbag.cpp */
-/***********************************************************************
- *             SHGetViewStatePropertyBag [SHLWAPI.515]
- *
- * Retrieves a property bag in which the view state information of a folder
- * can be stored.
- *
- * PARAMS
- *  pidl        [I] PIDL of the folder requested
- *  bag_name    [I] Name of the property bag requested
- *  flags       [I] Optional flags
- *  riid        [I] IID of requested property bag interface
- *  ppv         [O] Address to receive pointer to the new interface
- *
- * RETURNS
- *  success: S_OK
- *  failure: error code
- *
- */
-HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST pidl, LPWSTR bag_name,
-    DWORD flags, REFIID riid, void **ppv)
-{
-    FIXME("%p %s %d %s %p STUB\n", pidl, debugstr_w(bag_name), flags,
           debugstr_guid(riid), ppv);
 
     return E_NOTIMPL;

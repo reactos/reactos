@@ -135,3 +135,85 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
  WARN("pdvi->cbSize = %ld, unhandled\n", pdvi2->info1.cbSize);
  return E_INVALIDARG;
 }
+
+/*************************************************************************
+ *      WhichPlatform()        [SHLWAPI.276]
+ */
+UINT WINAPI WhichPlatform(void)
+{
+    static const char szIntegratedBrowser[] = "IntegratedBrowser";
+    static DWORD state = PLATFORM_UNKNOWN;
+    DWORD ret, data, size;
+    HMODULE hshell32;
+    HKEY hKey;
+
+    if (state)
+        return state;
+
+    /* If shell32 exports DllGetVersion(), the browser is integrated */
+    state = PLATFORM_BROWSERONLY;
+    hshell32 = LoadLibraryA("shell32.dll");
+    if (hshell32)
+    {
+        FARPROC pDllGetVersion;
+        pDllGetVersion = GetProcAddress(hshell32, "DllGetVersion");
+        state = pDllGetVersion ? PLATFORM_INTEGRATED : PLATFORM_BROWSERONLY;
+        FreeLibrary(hshell32);
+    }
+
+    /* Set or delete the key accordingly */
+    ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Internet Explorer", 0, KEY_ALL_ACCESS, &hKey);
+    if (!ret)
+    {
+        size = sizeof(data);
+        ret = RegQueryValueExA(hKey, szIntegratedBrowser, 0, 0, (BYTE *)&data, &size);
+        if (!ret && state == PLATFORM_BROWSERONLY)
+        {
+            /* Value exists but browser is not integrated */
+            RegDeleteValueA(hKey, szIntegratedBrowser);
+        }
+        else if (ret && state == PLATFORM_INTEGRATED)
+        {
+            /* Browser is integrated but value does not exist */
+            data = TRUE;
+            RegSetValueExA(hKey, szIntegratedBrowser, 0, REG_DWORD, (BYTE *)&data, sizeof(data));
+        }
+        RegCloseKey(hKey);
+    }
+
+    return state;
+}
+
+#ifndef __REACTOS__ /* See propbag.cpp */
+/***********************************************************************
+ *             SHGetViewStatePropertyBag [SHLWAPI.515]
+ */
+HRESULT WINAPI SHGetViewStatePropertyBag(PCIDLIST_ABSOLUTE pidl, PCWSTR bag_name, DWORD flags, REFIID riid, void **ppv)
+{
+    FIXME("%p, %s, %#lx, %s, %p stub.\n", pidl, debugstr_w(bag_name), flags, debugstr_guid(riid), ppv);
+
+    return E_NOTIMPL;
+}
+#endif
+
+/*************************************************************************
+ *      SHIsLowMemoryMachine    [SHLWAPI.@]
+ */
+BOOL WINAPI SHIsLowMemoryMachine(DWORD type)
+{
+#ifdef __REACTOS__
+    MEMORYSTATUS status;
+    static int is_low = -1;
+    TRACE("(0x%08x)\n", type);
+    if (type == 0 && is_low == -1)
+    {
+        GlobalMemoryStatus(&status);
+        is_low = (status.dwTotalPhys <= 0x1000000);
+    }
+    return is_low;
+#else
+    FIXME("%ld stub\n", type);
+
+    return FALSE;
+#endif
+}
