@@ -31,7 +31,7 @@ typedef struct tagSHPOLICY_RESULT
     DWORD dwValue;
 } SHPOLICY_RESULT, *PSHPOLICY_RESULT;
 
-// Contraints
+// Constraints
 typedef struct tagSHPOLICY_CONSTRAINT
 {
     WORD wFlags;
@@ -76,7 +76,7 @@ static const SHPOLICY_ITEM g_PolicyItems[] =
 class CPolicyCache
 {
 public:
-    virtual ~CPolicyCache()
+    ~CPolicyCache()
     {
         LocalFree(m_pResults);
 
@@ -84,8 +84,20 @@ public:
             CloseHandle(m_hGlobalCounter);
     }
 
+    static void* operator new(size_t size)
+    {
+        // Returns NULL on failure; caller must check before use.
+        // NOTE: C++ UB if constructor runs on NULL, but ReactOS convention.
+        return LocalAlloc(LPTR, size);
+    }
+    static void operator delete(void *ptr)
+    {
+        LocalFree(ptr);
+    }
+
     BOOL Initialize(const SHPOLICY_ITEM *pItems, UINT cItems)
     {
+        m_nCounterValue = MINLONG;
         m_pszRootKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies";
         m_pItems = pItems;
         m_cItems = cItems;
@@ -102,15 +114,15 @@ public:
         return TRUE;
     }
 
-    HRESULT GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ PDWORD pcbValue);;
+    HRESULT GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ PDWORD pcbValue);
 
 protected:
-    LPCWSTR m_pszRootKey = NULL;
-    HANDLE m_hGlobalCounter = NULL;
-    LONG m_nCounterValue = -1;
-    DWORD m_cItems = 0;
-    const SHPOLICY_ITEM *m_pItems = NULL;
-    PSHPOLICY_RESULT m_pResults = NULL;
+    LPCWSTR m_pszRootKey;
+    HANDLE m_hGlobalCounter;
+    LONG m_nCounterValue;
+    DWORD m_cItems;
+    const SHPOLICY_ITEM *m_pItems;
+    PSHPOLICY_RESULT m_pResults;
 
     void _ValidateCachedResults()
     {
@@ -161,6 +173,7 @@ CPolicyCache::GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ P
     if (pResult->state == POLICY_STATE_NOT_FOUND)
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 
+    // Use caching only when dealing with DWORD value
     if (pvValue && pcbValue && *pcbValue == sizeof(DWORD) && pResult->state == POLICY_STATE_CACHED)
     {
         *(PDWORD)pvValue = pResult->dwValue;
@@ -223,6 +236,9 @@ CPolicyCache::_CacheResult(
     PDWORD pcbValue,
     PSHPOLICY_RESULT pResult)
 {
+    UNREFERENCED_PARAMETER(pcbValue); // Reserved for future use
+
+    // Use caching only when dealing with DWORD value
     if (pConstraint->wFlags == SRRF_RT_DWORD)
     {
         pResult->dwValue = *(PDWORD)pvValue;
@@ -235,12 +251,13 @@ CPolicyCache::_CacheResult(
 CPolicyCache* g_pPolicyCache = NULL;
 CRITICAL_SECTION g_csPolicyLock;
 
+// This function must be called under g_csPolicyLock
 static BOOL SHPolicyCache_Create(VOID)
 {
     if (g_pPolicyCache)
         return TRUE;
 
-    CPolicyCache *pCache = new CPolicyCache();
+    CPolicyCache *pCache = new CPolicyCache;
     if (!pCache)
         return FALSE;
 
@@ -250,11 +267,7 @@ static BOOL SHPolicyCache_Create(VOID)
         return FALSE;
     }
 
-    PVOID pOldCache =
-        InterlockedCompareExchangePointer((PVOID volatile*)&g_pPolicyCache, pCache, NULL);
-    if (pOldCache)
-        delete pCache;
-
+    g_pPolicyCache = pCache;
     return TRUE;
 }
 
@@ -265,12 +278,15 @@ EXTERN_C VOID SHPolicyCache_DllProcessAttach(VOID)
 
 EXTERN_C VOID SHPolicyCache_DllProcessDetach(VOID)
 {
-    DeleteCriticalSection(&g_csPolicyLock);
+    CPolicyCache* pCache;
 
-    CPolicyCache* pCache =
-        (CPolicyCache*)InterlockedExchangePointer((PVOID volatile*)&g_pPolicyCache, NULL);
-    if (pCache)
-        delete pCache;
+    EnterCriticalSection(&g_csPolicyLock);
+    pCache = g_pPolicyCache;
+    g_pPolicyCache = NULL;
+    LeaveCriticalSection(&g_csPolicyLock);
+
+    delete pCache;
+    DeleteCriticalSection(&g_csPolicyLock);
 }
 
 /**************************************************************************
@@ -285,13 +301,11 @@ SHWindowsPolicyGetValue(
     _Out_opt_ PVOID pvValue,
     _Out_opt_ PDWORD pcbValue)
 {
-    HRESULT hr;
-
-    if (!SHPolicyCache_Create())
-        return E_FAIL;
+    HRESULT hr = E_FAIL;
 
     EnterCriticalSection(&g_csPolicyLock);
-    hr = g_pPolicyCache->GetValue(rpolid, pvValue, pcbValue);
+    if (SHPolicyCache_Create())
+        hr = g_pPolicyCache->GetValue(rpolid, pvValue, pcbValue);
     LeaveCriticalSection(&g_csPolicyLock);
     return hr;
 }
