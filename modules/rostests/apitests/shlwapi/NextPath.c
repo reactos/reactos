@@ -16,15 +16,15 @@ static FN_NextPathW s_pNextPathW = NULL;
 
 static void TEST_NextPathA(void)
 {
-    PCSTR psz1 = "C:\\TEST1;C:\\TEST2;C:\\TEST3";
-    PCSTR psz2 = "C:\\TEST1;         ;C:\\TEST3";
     PSTR pch;
     CHAR sz[MAX_PATH];
 
+    /* NULL pszStart returns NULL */
     pch = s_pNextPathA(NULL, sz, _countof(sz));
     ok(pch == NULL, "pch was %p\n", pch);
 
-    pch = s_pNextPathA(psz1, sz, _countof(sz));
+    /* Basic semicolon-separated paths */
+    pch = s_pNextPathA("C:\\TEST1;C:\\TEST2;C:\\TEST3", sz, _countof(sz));
     ok_str(sz, "C:\\TEST1");
     pch = s_pNextPathA(pch, sz, _countof(sz));
     ok_str(sz, "C:\\TEST2");
@@ -33,24 +33,62 @@ static void TEST_NextPathA(void)
     pch = s_pNextPathA(pch, sz, _countof(sz));
     ok(pch == NULL, "pch was %p\n", pch);
 
-    pch = (PSTR)psz2;
-    pch = s_pNextPathA(pch, sz, _countof(sz));
+    /* Whitespace-only segment */
+    pch = s_pNextPathA("C:\\TEST1;   ;C:\\TEST3", sz, _countof(sz));
     ok_str(sz, "C:\\TEST1");
     pch = s_pNextPathA(pch, sz, _countof(sz));
     ok(pch == NULL, "pch was %p\n", pch);
+
+    /* Empty string: no paths at all */
+    pch = s_pNextPathA("", sz, _countof(sz));
+    ok(pch == NULL, "empty string: pch was %p\n", pch);
+
+    /* Leading semicolons are skipped */
+    pch = s_pNextPathA(";;;C:\\TEST1", sz, _countof(sz));
+    ok_str(sz, "C:\\TEST1");
+    ok(pch != NULL, "leading semicolons: pch should not be NULL\n");
+
+    /* Trailing semicolon */
+    pch = s_pNextPathA("C:\\TEST1;", sz, _countof(sz));
+    ok_str(sz, "C:\\TEST1");
+    pch = s_pNextPathA(pch, sz, _countof(sz));
+    ok(pch == NULL, "trailing semicolon: pch was %p\n", pch);
+
+    /* Only semicolons */
+    pch = s_pNextPathA(";;;", sz, _countof(sz));
+    ok(pch == NULL, "only semicolons: pch was %p\n", pch);
+
+    /* Path with surrounding spaces */
+    pch = s_pNextPathA("  C:\\TEST1  ;C:\\TEST2", sz, _countof(sz));
+    ok_str(sz, "C:\\TEST1");
+    pch = s_pNextPathA(pch, sz, _countof(sz));
+    ok_str(sz, "C:\\TEST2");
+
+    /* Single path, no semicolon */
+    pch = s_pNextPathA("C:\\SINGLE", sz, _countof(sz));
+    ok_str(sz, "C:\\SINGLE");
+    pch = s_pNextPathA(pch, sz, _countof(sz));
+    ok(pch == NULL, "single path: pch was %p\n", pch);
+
+    /* cchDest = 0 */
+    sz[0] = '*';
+    sz[1] = ANSI_NULL;
+    pch = s_pNextPathA("C:\\TEST1;C:\\TEST2;C:\\TEST3", sz, 0);
+    ok_str(pch, "C:\\TEST2;C:\\TEST3");
+    ok_str(sz, "*");
 }
 
 static void TEST_NextPathW(void)
 {
-    PCWSTR psz1 = L"C:\\TEST1;C:\\TEST2;C:\\TEST3";
-    PCWSTR psz2 = L"C:\\TEST1;         ;C:\\TEST3";
     PWSTR pch;
     WCHAR sz[MAX_PATH];
 
+    /* NULL pszStart returns NULL */
     pch = s_pNextPathW(NULL, sz, _countof(sz));
     ok(pch == NULL, "pch was %p\n", pch);
 
-    pch = s_pNextPathW(psz1, sz, _countof(sz));
+    /* Basic semicolon-separated paths */
+    pch = s_pNextPathW(L"C:\\TEST1;C:\\TEST2;C:\\TEST3", sz, _countof(sz));
     ok_wstr(sz, L"C:\\TEST1");
     pch = s_pNextPathW(pch, sz, _countof(sz));
     ok_wstr(sz, L"C:\\TEST2");
@@ -59,11 +97,49 @@ static void TEST_NextPathW(void)
     pch = s_pNextPathW(pch, sz, _countof(sz));
     ok(pch == NULL, "pch was %p\n", pch);
 
-    pch = (PWSTR)psz2;
-    pch = s_pNextPathW(pch, sz, _countof(sz));
+    /* Whitespace-only segment */
+    pch = s_pNextPathW(L"C:\\TEST1;   ;C:\\TEST3", sz, _countof(sz));
     ok_wstr(sz, L"C:\\TEST1");
     pch = s_pNextPathW(pch, sz, _countof(sz));
     ok(pch == NULL, "pch was %p\n", pch);
+
+    /* Empty string */
+    pch = s_pNextPathW(L"", sz, _countof(sz));
+    ok(pch == NULL, "empty string: pch was %p\n", pch);
+
+    /* Leading semicolons are skipped */
+    pch = s_pNextPathW(L";;;C:\\TEST1", sz, _countof(sz));
+    ok_wstr(sz, L"C:\\TEST1");
+    ok(pch != NULL, "leading semicolons: pch should not be NULL\n");
+
+    /* Trailing semicolon */
+    pch = s_pNextPathW(L"C:\\TEST1;", sz, _countof(sz));
+    ok_wstr(sz, L"C:\\TEST1");
+    pch = s_pNextPathW(pch, sz, _countof(sz));
+    ok(pch == NULL, "trailing semicolon: pch was %p\n", pch);
+
+    /* Only semicolons */
+    pch = s_pNextPathW(L";;;", sz, _countof(sz));
+    ok(pch == NULL, "only semicolons: pch was %p\n", pch);
+
+    /* Path with surrounding spaces */
+    pch = s_pNextPathW(L"  C:\\TEST1  ;C:\\TEST2", sz, _countof(sz));
+    ok_wstr(sz, L"C:\\TEST1");
+    pch = s_pNextPathW(pch, sz, _countof(sz));
+    ok_wstr(sz, L"C:\\TEST2");
+
+    /* Single path, no semicolon */
+    pch = s_pNextPathW(L"C:\\SINGLE", sz, _countof(sz));
+    ok_wstr(sz, L"C:\\SINGLE");
+    pch = s_pNextPathW(pch, sz, _countof(sz));
+    ok(pch == NULL, "single path: pch was %p\n", pch);
+
+    /* cchDest = 0 */
+    sz[0] = L'*';
+    sz[1] = UNICODE_NULL;
+    pch = s_pNextPathW(L"C:\\TEST1;C:\\TEST2;C:\\TEST3", sz, 0);
+    ok_wstr(pch, L"C:\\TEST2;C:\\TEST3");
+    ok_wstr(sz, L"*");
 }
 
 START_TEST(NextPath)
