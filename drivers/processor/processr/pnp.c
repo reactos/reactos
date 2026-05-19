@@ -13,6 +13,7 @@
 #include <stdio.h>
 #define NDEBUG
 #include <debug.h>
+#include "ntstrsafe.h"
 
 /* FUNCTIONS ******************************************************************/
 
@@ -107,19 +108,36 @@ ProcessorSetFriendlyName(
     PWSTR InstanceId = NULL;
     PWSTR pszPrefix = L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum";
 
-    RtlInitUnicodeString(&HardwareKeyName,
-                         L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
+    WCHAR PathBuffer[128];
+    NTSTATUS StringStatus;
+
+    /* Safely build the dynamic processor path using the bounded NT safe string API */
+    StringStatus = RtlStringCchPrintfW(PathBuffer,
+                                    RTL_NUMBER_OF(PathBuffer), // Safe macro for sizeof(A)/sizeof(A[0])
+                                    L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\%lu",
+                                    KeGetCurrentProcessorNumber());
+
+    if (!NT_SUCCESS(StringStatus))
+    {
+        DPRINT1("RtlStringCchPrintfW failed to format path (Status 0x%08lx)\n", StringStatus);
+        return; 
+    }
+
+    RtlInitUnicodeString(&HardwareKeyName, PathBuffer);
+
     InitializeObjectAttributes(&ObjectAttributes,
                                &HardwareKeyName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
+
     Status = ZwOpenKey(&KeyHandle,
                        KEY_READ,
                        &ObjectAttributes);
+
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ZwOpenKey() failed (Status 0x%08lx)\n", Status);
+        DPRINT1("ZwOpenKey() failed for CPU %lu (Status 0x%08lx)\n", KeGetCurrentProcessorNumber(), Status);
         return;
     }
 
@@ -137,8 +155,9 @@ ProcessorSetFriendlyName(
         goto done;
     }
 
-    Buffer = ExAllocatePool(PagedPool,
-                            DataLength + sizeof(KEY_VALUE_PARTIAL_INFORMATION));
+    Buffer = ExAllocatePoolWithTag(PagedPool, 
+                               DataLength + sizeof(KEY_VALUE_PARTIAL_INFORMATION), 
+                               'PnpC');
     if (Buffer == NULL)
     {
         DPRINT1("ExAllocatePool() failed\n");
@@ -186,10 +205,10 @@ ProcessorSetFriendlyName(
 
     BufferLength = wcslen(pszPrefix) + 1 + wcslen(DeviceId) + 1 + wcslen(InstanceId) + 1;
 
-    KeyNameBuffer = ExAllocatePool(PagedPool, BufferLength * sizeof(WCHAR));
+    KeyNameBuffer = ExAllocatePoolWithTag(PagedPool, BufferLength * sizeof(WCHAR), 'KBuf');
     if (KeyNameBuffer == NULL)
     {
-        DPRINT1("ExAllocatePool() failed\n");
+        DPRINT1("ExAllocatePoolWithTag() failed\n");
         goto done;
     }
 
@@ -229,7 +248,7 @@ done:
         ZwClose(KeyHandle);
 
     if (KeyNameBuffer != NULL)
-        ExFreePool(KeyNameBuffer);
+        ExFreePoolWithTag(KeyNameBuffer, 'KBuf');
 
     if (InstanceId != NULL)
         ExFreePool(InstanceId);
@@ -238,7 +257,7 @@ done:
         ExFreePool(DeviceId);
 
     if (Buffer != NULL)
-        ExFreePool(Buffer);
+        ExFreePoolWithTag(Buffer, 'PnpC');
 }
 
 
