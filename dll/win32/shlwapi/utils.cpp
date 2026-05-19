@@ -50,7 +50,7 @@ UnExpandEnvironmentStringForUserA(
     _Out_ PSTR pszDest,
     _In_ INT cchDest)
 {
-    CHAR ch, szBuff[MAX_PATH];
+    CHAR szBuff[MAX_PATH];
     INT cchExpanded;
 
     if (hUserToken)
@@ -75,11 +75,6 @@ UnExpandEnvironmentStringForUserA(
         return FALSE;
     }
 
-    // ReactOS only: Check separator or NUL
-    ch = lpString[cchEnvPath];
-    if (ch != ANSI_NULL && ch != '\\' && ch != '/')
-        return FALSE;
-
     INT cchSuffix = lstrlenA(lpString) - cchEnvPath;
     if (lstrlenA(lpSrc) + cchSuffix >= cchDest)
         return FALSE;
@@ -97,7 +92,7 @@ UnExpandEnvironmentStringForUserW(
     _Out_ PWSTR pszDest,
     _In_ INT cchDest)
 {
-    WCHAR ch, szBuff[MAX_PATH];
+    WCHAR szBuff[MAX_PATH];
     INT cchExpanded;
 
     if (hUserToken)
@@ -121,11 +116,6 @@ UnExpandEnvironmentStringForUserW(
     {
         return FALSE;
     }
-
-    // ReactOS only: Check separator or NUL
-    ch = lpString[cchEnvPath];
-    if (ch != UNICODE_NULL && ch != L'\\' && ch != L'/')
-        return FALSE;
 
     INT cchSuffix = lstrlenW(lpString) - cchEnvPath;
     if (lstrlenW(lpSrc) + cchSuffix >= cchDest)
