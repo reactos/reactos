@@ -2392,11 +2392,28 @@ LONG WINAPI SHQueryInfoKeyW(HKEY hkey, DWORD *subkeys, DWORD *subkey_max, DWORD 
 BOOL WINAPI IsOS(DWORD feature)
 {
     DWORD platform, majorv, minorv;
+#ifdef __REACTOS__
+    OSVERSIONINFOEXA osvi;
+
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    if (!GetVersionExA((OSVERSIONINFOA*)&osvi))
+    {
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
+        if (!GetVersionExA((OSVERSIONINFOA*)&osvi))
+        {
+            ERR("GetVersionEx failed\n");
+            return FALSE;
+        }
+        osvi.wProductType = VER_NT_WORKSTATION;
+        osvi.wSuiteMask = 0;
+    }
+#else
     OSVERSIONINFOA osvi;
 
     osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
     if (!GetVersionExA(&osvi))
         return FALSE;
+#endif
 
     majorv = osvi.dwMajorVersion;
     minorv = osvi.dwMinorVersion;
@@ -2472,7 +2489,11 @@ BOOL WINAPI IsOS(DWORD feature)
         FIXME("(OS_DOMAINMEMBER) What should we return here?\n");
         return TRUE;
     case OS_ANYSERVER:
+#ifdef __REACTOS__
+        ISOS_RETURN(osvi.wProductType > VER_NT_WORKSTATION);
+#else
         ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT);
+#endif
     case OS_WOW6432:
         {
             BOOL is_wow64;
@@ -2487,8 +2508,29 @@ BOOL WINAPI IsOS(DWORD feature)
         FIXME("(OS_TABLETPC) What should we return here?\n");
         return FALSE;
     case OS_SERVERADMINUI:
+#ifdef __REACTOS__
+        {
+            DWORD value = FALSE, size = sizeof(value);
+            HKEY hKey = NULL;
+
+            RegOpenKeyExW(
+                HKEY_CURRENT_USER,
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                0,
+                MAXIMUM_ALLOWED,
+                &hKey);
+
+            if (hKey)
+            {
+                SHQueryValueExW(hKey, L"ServerAdminUI", NULL, NULL, &value, &size);
+                RegCloseKey(hKey);
+            }
+            ISOS_RETURN(value);
+        }
+#else
         FIXME("(OS_SERVERADMINUI) What should we return here?\n");
         return FALSE;
+#endif
     case OS_MEDIACENTER:
         FIXME("(OS_MEDIACENTER) What should we return here?\n");
         return FALSE;
