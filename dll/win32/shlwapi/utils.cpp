@@ -713,7 +713,7 @@ NextPathA(
     _Out_writes_(cchDest) PSTR pszDest,
     _In_ UINT cchDest)
 {
-    if (!pszStart || !cchDest)
+    if (!pszStart)
         return NULL;
 
     PCSTR pchSegStart = pszStart;
@@ -755,7 +755,7 @@ NextPathW(
     _Out_writes_(cchDest) PWSTR pszDest,
     _In_ UINT cchDest)
 {
-    if (!pszStart || !cchDest)
+    if (!pszStart)
         return NULL;
 
     PCWSTR pchSegStart = pszStart;
