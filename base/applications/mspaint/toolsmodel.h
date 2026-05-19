@@ -28,7 +28,7 @@ enum TOOLTYPE
     TOOL_MAX = TOOL_RRECT,
 };
 
-enum BrushStyle
+enum BrushStyle : int
 {
     BrushStyleRound,
     BrushStyleSquare,
@@ -81,6 +81,7 @@ private:
     ToolBase *m_pToolObject;
 
     ToolBase *GetOrCreateTool(TOOLTYPE nTool);
+    void SendSetCursor();
 
 public:
     ToolsModel();
