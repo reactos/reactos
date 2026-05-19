@@ -215,6 +215,8 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
 NTSTATUS
 NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
 {
+    PNTFS_FCB Fcb;
+    PERESOURCE Resource;
     PDEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION Stack;
     PFILE_OBJECT FileObject;
@@ -228,6 +230,13 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
 
     DPRINT("NtfsRead(IrpContext %p)\n", IrpContext);
 
+    // get the File control block
+    Fcb = (PNTFS_FCB)IrpContext->FileObject->FsContext;
+    ASSERT(Fcb);
+
+    DPRINT("About to read %wS\n", Fcb->ObjectName);
+    DPRINT("NTFS Version: %d.%d\n", Fcb->Vcb->NtfsInfo.MajorVersion, Fcb->Vcb->NtfsInfo.MinorVersion);
+
     DeviceObject = IrpContext->DeviceObject;
     Irp = IrpContext->Irp;
     Stack = IrpContext->Stack;
@@ -236,7 +245,29 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
     DeviceExt = DeviceObject->DeviceExtension;
     ReadLength = Stack->Parameters.Read.Length;
     ReadOffset = Stack->Parameters.Read.ByteOffset;
+
+    // get the Resource
+    if (Fcb->Flags & FCB_IS_VOLUME)
+    {
+        Resource = &DeviceExt->DirResource;
+    }
+    else if (Irp->Flags & IRP_PAGING_IO)
+    {
+        Resource = &Fcb->PagingIoResource;
+    }
+    else
+    {
+        Resource = &Fcb->MainResource;
+    }
+
+    // acquire shared access to the Resource
+    if (!ExAcquireResourceSharedLite(Resource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        return STATUS_CANT_WAIT;
+    }
+
     Buffer = NtfsGetUserBuffer(Irp, BooleanFlagOn(Irp->Flags, IRP_PAGING_IO));
+    ASSERT(Buffer);
 
     Status = NtfsReadFile(DeviceExt,
                           FileObject,
@@ -245,6 +276,10 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
                           ReadOffset.u.LowPart,
                           Irp->Flags,
                           &ReturnedReadLength);
+
+    if (Resource)
+        ExReleaseResourceLite(Resource);
+
     if (NT_SUCCESS(Status))
     {
         if (FileObject->Flags & FO_SYNCHRONOUS_IO)
@@ -537,16 +572,16 @@ NTSTATUS
 NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
 {
     PNTFS_FCB Fcb;
-    PERESOURCE Resource = NULL;
+    PERESOURCE Resource;
     LARGE_INTEGER ByteOffset;
     PUCHAR Buffer;
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG Length = 0;
     ULONG ReturnedWriteLength = 0;
-    PDEVICE_OBJECT DeviceObject = NULL;
-    PDEVICE_EXTENSION DeviceExt = NULL;
-    PFILE_OBJECT FileObject = NULL;
-    PIRP Irp = NULL;
+    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_EXTENSION DeviceExt;
+    PFILE_OBJECT FileObject;
+    PIRP Irp;
     ULONG BytesPerSector;
 
     DPRINT("NtfsWrite(IrpContext %p)\n", IrpContext);
@@ -597,7 +632,7 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     }
 
     // Is this a non-cached write? A non-buffered write?
-    if (IrpContext->Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE) || (Fcb->Flags & FCB_IS_VOLUME) ||
+    if (Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE) || (Fcb->Flags & FCB_IS_VOLUME) ||
         IrpContext->FileObject->Flags & FILE_NO_INTERMEDIATE_BUFFERING)
     {
         // non-cached and non-buffered writes must be sector aligned
@@ -612,7 +647,7 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     {
         DPRINT1("Null write!\n");
 
-        IrpContext->Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Information = 0;
 
         // FIXME: Doesn't accurately detect when a user passes NULL to WriteFile() for the buffer
         if (Irp->UserBuffer == NULL && Irp->MdlAddress == NULL)
@@ -629,7 +664,7 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     {
         Resource = &DeviceExt->DirResource;
     }
-    else if (IrpContext->Irp->Flags & IRP_PAGING_IO)
+    else if (Irp->Flags & IRP_PAGING_IO)
     {
         Resource = &Fcb->PagingIoResource;
     }
@@ -645,10 +680,10 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     }
 
     /* From VfatWrite(). Todo: Handle file locks
-    if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
+    if (!(Irp->Flags & IRP_PAGING_IO) &&
     FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
     {
-    if (!FsRtlCheckLockForWriteAccess(&Fcb->FileLock, IrpContext->Irp))
+    if (!FsRtlCheckLockForWriteAccess(&Fcb->FileLock, Irp))
     {
     Status = STATUS_FILE_LOCK_CONFLICT;
     goto ByeBye;
@@ -695,7 +730,10 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
                            BooleanFlagOn(IrpContext->Stack->Flags, SL_CASE_SENSITIVE),
                            &ReturnedWriteLength);
 
-    IrpContext->Irp->IoStatus.Status = Status;
+    if (Resource)
+        ExReleaseResourceLite(Resource);
+
+    Irp->IoStatus.Status = Status;
 
     // was the write successful?
     if (NT_SUCCESS(Status))
@@ -712,14 +750,13 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     }
     else
     {
-        DPRINT1("Write not Succesful!\tReturned length: %lu\n", ReturnedWriteLength);
+        DPRINT1("Write not successful!\tReturned length: %lu\n", ReturnedWriteLength);
     }
 
     Irp->IoStatus.Information = ReturnedWriteLength;
 
-    // Note: We leave the user buffer that we locked alone, it's up to the I/O manager to unlock and free it
-
-    ExReleaseResourceLite(Resource);
+    // Note: We leave the user buffer that we locked alone,
+    // it's up to the I/O manager to unlock and free it.
 
     return Status;
 }

@@ -524,8 +524,8 @@ typedef struct _FCB
     WCHAR *ObjectName;		/* point on filename (250 chars max) in PathName */
     WCHAR PathName[MAX_PATH];	/* path+filename 260 max */
 
-    ERESOURCE PagingIoResource;
     ERESOURCE MainResource;
+    ERESOURCE PagingIoResource;
 
     LIST_ENTRY FcbListEntry;
     struct _FCB* ParentFcb;
