@@ -19,9 +19,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(policy);
 
 typedef enum tagPOLICY_STATE
 {
-    POLICY_STATE_UNCACHED  = 0,  // Uncached
-    POLICY_STATE_NOT_FOUND = 1,  // Not found
-    POLICY_STATE_CACHED    = 2,  // Cached
+    POLICY_STATE_UNCACHED  = 0, // Uncached
+    POLICY_STATE_NOT_FOUND = 1, // Not found
+    POLICY_STATE_CACHED    = 2, // Cached
 } POLICY_STATE;
 
 // Result
@@ -76,16 +76,6 @@ static const SHPOLICY_ITEM g_PolicyItems[] =
 class CPolicyCache
 {
 public:
-    CPolicyCache()
-        : m_pszRootKey(NULL)
-        , m_hGlobalCounter(NULL)
-        , m_nCounterValue(-1)
-        , m_cItems(0)
-        , m_pItems(NULL)
-        , m_pResults(NULL)
-    {
-    }
-
     virtual ~CPolicyCache()
     {
         LocalFree(m_pResults);
@@ -107,12 +97,12 @@ public:
     HRESULT GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ PDWORD pcbValue);;
 
 protected:
-    LPCWSTR m_pszRootKey;
-    HANDLE m_hGlobalCounter;
-    LONG m_nCounterValue;
-    DWORD m_cItems;
-    const SHPOLICY_ITEM *m_pItems;
-    PSHPOLICY_RESULT m_pResults;
+    LPCWSTR m_pszRootKey = NULL;
+    HANDLE m_hGlobalCounter = NULL;
+    LONG m_nCounterValue = -1;
+    DWORD m_cItems = 0;
+    const SHPOLICY_ITEM *m_pItems = NULL;
+    PSHPOLICY_RESULT m_pResults = NULL;
 
     void _ValidateCachedResults()
     {
@@ -125,12 +115,12 @@ protected:
     }
 
     HRESULT _GetValue(
-        LPCWSTR                    pszSubKey,
-        LPCWSTR                    pszValueName,
-        const SHPOLICY_CONSTRAINT* pConstraint,
-        PDWORD                     pdwType,
-        PVOID                      pvData,
-        PDWORD                     pcbData);
+        _In_ LPCWSTR pszSubKey,
+        _In_ LPCWSTR pszValueName,
+        _In_ const SHPOLICY_CONSTRAINT* pConstraint,
+        _Out_opt_ PDWORD pdwType,
+        _Out_opt_ PVOID pvData,
+        _Inout_opt_ PDWORD pcbData);
 
     static void _CacheResult(
         const SHPOLICY_CONSTRAINT *pConstraint,
@@ -186,21 +176,20 @@ CPolicyCache::GetValue(_In_ REFGUID rpolid, _Out_opt_ PVOID pvValue, _Out_opt_ P
 }
 
 HRESULT CPolicyCache::_GetValue(
-    LPCWSTR                    pszSubKey,
-    LPCWSTR                    pszValueName,
-    const SHPOLICY_CONSTRAINT* pConstraint,
-    PDWORD                     pdwType,
-    PVOID                      pvData,
-    PDWORD                     pcbData)
+    _In_ LPCWSTR pszSubKey,
+    _In_ LPCWSTR pszValueName,
+    _In_ const SHPOLICY_CONSTRAINT* pConstraint,
+    _Out_opt_ PDWORD pdwType,
+    _Out_opt_ PVOID pvData,
+    _Inout_opt_ PDWORD pcbData)
 {
     CStringW szFullKey = CStringW(m_pszRootKey) + L"\\" + pszSubKey;
 
     DWORD cbDataSaved = pcbData ? *pcbData : 0;
     WORD wFlags = pConstraint->wFlags;
 
-    LSTATUS error;
-    error = RegGetValueW(HKEY_LOCAL_MACHINE, szFullKey, pszValueName, wFlags, pdwType,
-                         pvData, pcbData);
+    LSTATUS error = RegGetValueW(HKEY_LOCAL_MACHINE, szFullKey, pszValueName, wFlags, pdwType,
+                                 pvData, pcbData);
     if (error == ERROR_FILE_NOT_FOUND)
     {
         if (pcbData)
