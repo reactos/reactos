@@ -48,15 +48,15 @@ UnExpandEnvironmentStringForUserA(
     _In_ PCSTR lpString,
     _In_ PCSTR lpSrc,
     _Out_ PSTR pszDest,
-    _In_ UINT cchDest)
+    _In_ INT cchDest)
 {
-    CHAR szBuff[MAX_PATH];
-    size_t cchExpanded;
+    CHAR ch, szBuff[MAX_PATH];
+    INT cchExpanded;
 
     if (hUserToken)
     {
         if (ExpandEnvironmentStringsForUserA(hUserToken, lpSrc, szBuff, _countof(szBuff)))
-            cchExpanded = strlen(szBuff) + 1;
+            cchExpanded = lstrlenA(szBuff) + 1;
         else
             cchExpanded = 0;
     }
@@ -65,21 +65,23 @@ UnExpandEnvironmentStringForUserA(
         cchExpanded = ExpandEnvironmentStringsA(lpSrc, szBuff, _countof(szBuff));
     }
 
-    if (cchExpanded > cchDest || !cchExpanded || cchExpanded >= MAXLONG)
+    if (!cchExpanded || cchExpanded > cchDest)
         return FALSE;
 
     INT cchEnvPath = (INT)(cchExpanded - 1);
     if (CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
-                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL ||
-        // ReactOS only: Check separator or NUL
-        (lpString[cchEnvPath] != ANSI_NULL && lpString[cchEnvPath] != '\\' &&
-         lpString[cchEnvPath] != '/'))
+                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
     {
         return FALSE;
     }
 
-    size_t cchSuffix = strlen(lpString) - cchEnvPath;
-    if (strlen(lpSrc) + cchSuffix >= cchDest)
+    // ReactOS only: Check separator or NUL
+    ch = lpString[cchEnvPath];
+    if (ch != ANSI_NULL && ch != '\\' && ch != '/')
+        return FALSE;
+
+    INT cchSuffix = lstrlenA(lpString) - cchEnvPath;
+    if (lstrlenA(lpSrc) + cchSuffix >= cchDest)
         return FALSE;
 
     StringCchCopyA(pszDest, cchDest, lpSrc);
@@ -93,15 +95,15 @@ UnExpandEnvironmentStringForUserW(
     _In_ PCWSTR lpString,
     _In_ PCWSTR lpSrc,
     _Out_ PWSTR pszDest,
-    _In_ UINT cchDest)
+    _In_ INT cchDest)
 {
-    WCHAR szBuff[MAX_PATH];
-    UINT cchExpanded;
+    WCHAR ch, szBuff[MAX_PATH];
+    INT cchExpanded;
 
     if (hUserToken)
     {
         if (ExpandEnvironmentStringsForUserW(hUserToken, lpSrc, szBuff, _countof(szBuff)))
-            cchExpanded = wcslen(szBuff) + 1;
+            cchExpanded = lstrlenW(szBuff) + 1;
         else
             cchExpanded = 0;
     }
@@ -110,21 +112,23 @@ UnExpandEnvironmentStringForUserW(
         cchExpanded = ExpandEnvironmentStringsW(lpSrc, szBuff, _countof(szBuff));
     }
 
-    if (cchExpanded > cchDest || !cchExpanded || cchExpanded >= MAXLONG)
+    if (!cchExpanded || cchExpanded > cchDest)
         return FALSE;
 
     INT cchEnvPath = (INT)(cchExpanded - 1);
     if (CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
-                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL ||
-        // ReactOS only: Check separator or NUL
-        (lpString[cchEnvPath] != UNICODE_NULL && lpString[cchEnvPath] != L'\\' &&
-         lpString[cchEnvPath] != L'/'))
+                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
     {
         return FALSE;
     }
 
-    size_t cchSuffix = wcslen(lpString) - cchEnvPath;
-    if (wcslen(lpSrc) + cchSuffix >= cchDest)
+    // ReactOS only: Check separator or NUL
+    ch = lpString[cchEnvPath];
+    if (ch != UNICODE_NULL && ch != L'\\' && ch != L'/')
+        return FALSE;
+
+    INT cchSuffix = lstrlenW(lpString) - cchEnvPath;
+    if (lstrlenW(lpSrc) + cchSuffix >= cchDest)
         return FALSE;
 
     StringCchCopyW(pszDest, cchDest, lpSrc);
@@ -141,7 +145,7 @@ EXTERN_C
 BOOL WINAPI
 PathUnExpandEnvStringsForUserA(
     _In_ HANDLE hUserToken,
-    _In_ PCSTR pwszPath,
+    _In_ PCSTR pszPath,
     _Out_writes_(cchBuff) PSTR pszBuff,
     _In_ INT cchBuff)
 {
@@ -155,7 +159,7 @@ PathUnExpandEnvStringsForUserA(
         "%SystemDrive%",
     };
 
-    if (!pwszPath)
+    if (!pszPath)
     {
         if (pszBuff && cchBuff)
             *pszBuff = ANSI_NULL;
@@ -168,7 +172,7 @@ PathUnExpandEnvStringsForUserA(
 
     for (size_t iVar = 0; iVar < _countof(c_varsA); ++iVar)
     {
-        if (UnExpandEnvironmentStringForUserA(hUserToken, pwszPath, c_varsA[iVar],
+        if (UnExpandEnvironmentStringForUserA(hUserToken, pszPath, c_varsA[iVar],
                                               pszBuff, cchBuff))
         {
             return TRUE;
