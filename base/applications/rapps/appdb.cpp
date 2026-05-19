@@ -50,9 +50,14 @@ public:
                                                         UNINSTALL_SUBKEY, KEY_WOW64_32KEY);
     }
 
-    HKEY GetNext(REGSAM &RegSam)
+    HKEY Get(REGSAM &RegSam)
     {
-        return m_Index < m_Count ? GetRootKeyInfo(m_Index++, RegSam) : NULL;
+        return m_Index < m_Count ? GetRootKeyInfo(m_Index, RegSam) : NULL;
+    }
+
+    void Next()
+    {
+        m_Index++;
     }
 
     UINT GetKeyIndex() const
@@ -235,7 +240,7 @@ CAppDB::EnumerateRegistry(CAtlList<CAppInfo *> *List, LPCWSTR SearchOnly)
     ATLASSERT(List || SearchOnly);
     REGSAM wowsam;
     HKEY hRootKey;
-    for (CEnumInstalledRootKey RootEnum; (hRootKey = RootEnum.GetNext(wowsam)) != NULL;)
+    for (CEnumInstalledRootKey RootEnum; (hRootKey = RootEnum.Get(wowsam)) != NULL; RootEnum.Next())
     {
         CRegKey hKey;
         if (hKey.Open(hRootKey, UNINSTALL_SUBKEY, KEY_READ | wowsam) != ERROR_SUCCESS)
