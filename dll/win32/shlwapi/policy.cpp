@@ -34,16 +34,16 @@ typedef struct tagSHPOLICY_RESULT
 // Contraints
 typedef struct tagSHPOLICY_CONSTRAINT
 {
-    DWORD dwFlags;
+    WORD wFlags;
+    WORD wMinSize;
     DWORD dwMin;
     DWORD dwMax;
 } SHPOLICY_CONSTRAINT, *PSHPOLICY_CONSTRAINT;
 
-static const SHPOLICY_CONSTRAINT c_Bool     = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0, 1 };
-static const SHPOLICY_CONSTRAINT c_String   = { MAKELONG(SRRF_RT_REG_SZ, sizeof(WCHAR)), 0, 0 };
-static const SHPOLICY_CONSTRAINT c_TriValue = { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 1, 3 };
-static const SHPOLICY_CONSTRAINT c_Special  =
-    { MAKELONG(SRRF_RT_DWORD,  sizeof(DWORD)), 0x1806, 0x1808 };
+static const SHPOLICY_CONSTRAINT c_Bool     = { SRRF_RT_DWORD,  sizeof(DWORD), 0, 1 };
+static const SHPOLICY_CONSTRAINT c_String   = { SRRF_RT_REG_SZ, sizeof(WCHAR), 0, 0 };
+static const SHPOLICY_CONSTRAINT c_TriValue = { SRRF_RT_DWORD,  sizeof(DWORD), 1, 3 };
+static const SHPOLICY_CONSTRAINT c_Special  = { SRRF_RT_DWORD,  sizeof(DWORD), 0x1806, 0x1808 };
 
 // Items
 typedef struct tagSHPOLICY_ITEM
@@ -196,16 +196,16 @@ HRESULT CPolicyCache::_GetValue(
     CStringW szFullKey = CStringW(m_pszRootKey) + L"\\" + pszSubKey;
 
     DWORD cbDataSaved = pcbData ? *pcbData : 0;
-    DWORD dwFlags = LOWORD(pConstraint->dwFlags);
+    WORD wFlags = pConstraint->wFlags;
 
     LSTATUS error;
-    error = RegGetValueW(HKEY_LOCAL_MACHINE, szFullKey, pszValueName, dwFlags, pdwType,
+    error = RegGetValueW(HKEY_LOCAL_MACHINE, szFullKey, pszValueName, wFlags, pdwType,
                          pvData, pcbData);
     if (error == ERROR_FILE_NOT_FOUND)
     {
         if (pcbData)
             *pcbData = cbDataSaved;
-        error = RegGetValueW(HKEY_CURRENT_USER, szFullKey, pszValueName, dwFlags, pdwType,
+        error = RegGetValueW(HKEY_CURRENT_USER, szFullKey, pszValueName, wFlags, pdwType,
                              pvData, pcbData);
     }
 
@@ -215,8 +215,7 @@ HRESULT CPolicyCache::_GetValue(
     if (!pvData)
         return S_OK;
 
-    if (LOWORD(pConstraint->dwFlags) == SRRF_RT_DWORD &&
-        HIWORD(pConstraint->dwFlags) == sizeof(DWORD))
+    if (pConstraint->wFlags == SRRF_RT_DWORD && pConstraint->wMinSize == sizeof(DWORD))
     {
         DWORD dwValue = *(PDWORD)pvData;
         if (dwValue < pConstraint->dwMin || pConstraint->dwMax < dwValue)
@@ -233,7 +232,7 @@ CPolicyCache::_CacheResult(
     PDWORD pcbValue,
     PSHPOLICY_RESULT pResult)
 {
-    if (LOWORD(pConstraint->dwFlags) == SRRF_RT_DWORD)
+    if (pConstraint->wFlags == SRRF_RT_DWORD)
     {
         pResult->dwValue = *(PDWORD)pvValue;
         pResult->state = POLICY_STATE_CACHED;
