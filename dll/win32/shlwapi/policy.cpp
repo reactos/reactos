@@ -5,11 +5,13 @@
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
+#define _ATL_NO_EXCEPTIONS
 #include <windef.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
 #include <shlguid_undoc.h>
+#include <atlstr.h>
 #include <strsafe.h>
 #include <wine/debug.h>
 
@@ -191,11 +193,7 @@ HRESULT CPolicyCache::_GetValue(
     PVOID                      pvData,
     PDWORD                     pcbData)
 {
-    WCHAR szFullKey[MAX_PATH];
-    HRESULT hr = StringCchPrintfW(szFullKey, _countof(szFullKey), L"%s\\%s",
-                                  m_pszRootKey, pszSubKey);
-    if (FAILED(hr))
-        return hr;
+    CStringW szFullKey = CStringW(m_pszRootKey) + L"\\" + pszSubKey;
 
     DWORD cbDataSaved = pcbData ? *pcbData : 0;
     DWORD dwFlags = LOWORD(pConstraint->dwFlags);
