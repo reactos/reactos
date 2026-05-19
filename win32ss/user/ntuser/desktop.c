@@ -183,20 +183,49 @@ IntDesktopObjectDelete(
 
     TRACE("Deleting desktop object 0x%p\n", pdesk);
 
-    if (pdesk->pDeskInfo &&
-        pdesk->pDeskInfo->spwnd)
+    if (pdesk->pDeskInfo)
     {
-        ASSERT(pdesk->pDeskInfo->spwnd->spwndChild == NULL);
-        co_UserDestroyWindow(pdesk->pDeskInfo->spwnd);
+        if (pdesk->pDeskInfo->spwnd)
+        {
+            ASSERT(pdesk->pDeskInfo->spwnd->spwndChild == NULL);
+            co_UserDestroyWindow(pdesk->pDeskInfo->spwnd);
+        }
+
+        pdesk->pDeskInfo->hTaskManWindow = NULL;
+        pdesk->pDeskInfo->hProgmanWindow = NULL;
+        /* NOTE: The handles in the window station will be reset in co_UserFreeWindow() */
+        pdesk->pDeskInfo->hShellWindow = NULL;
+        if (pdesk->pDeskInfo->spwndShell)
+            pdesk->pDeskInfo->spwndShell = NULL; // NOTE: Reference already dropped in NtUserSetShellWindowEx()
+        if (pdesk->pDeskInfo->spwndBkGnd)
+            pdesk->pDeskInfo->spwndBkGnd = NULL; // NOTE: Wasn't referenced in NtUserSetShellWindowEx()
+
+        //pdesk->pDeskInfo->ppiShellProcess = NULL;
     }
 
+    // TODO: Once these members become initialized and used,
+    // it's here that they would have to be freed.
+#if 0
+    pdesk->spmenuSys;
+    pdesk->spmenuDialogSys;
+    pdesk->spmenuHScroll;
+    pdesk->spmenuVScroll;
+    pdesk->spwndForeground;
+    pdesk->spwndTray;
+#endif
     if (pdesk->spwndMessage)
         co_UserDestroyWindow(pdesk->spwndMessage);
+#if 0
+    pdesk->spwndTooltip;
+    pdesk->spwndTrack;
+#endif
 
     /* Remove the desktop from the window station's list of associated desktops */
     RemoveEntryList(&pdesk->ListEntry);
 
     /* Free the heap */
+    // FIXME: Added, until IntFreeDesktopHeap() implements destroying the desktop heap as a whole.
+    RtlFreeHeap(pdesk->pheapDesktop, 0, pdesk->pDeskInfo);
     IntFreeDesktopHeap(pdesk);
 
     ObDereferenceObject(pdesk->rpwinstaParent);
