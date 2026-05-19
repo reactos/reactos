@@ -68,7 +68,7 @@ UnExpandEnvironmentStringForUserA(
     if (!cchExpanded || cchExpanded > cchDest)
         return FALSE;
 
-    INT cchEnvPath = (INT)(cchExpanded - 1);
+    INT cchEnvPath = cchExpanded - 1;
     if (CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
                        szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
     {
@@ -110,7 +110,7 @@ UnExpandEnvironmentStringForUserW(
     if (!cchExpanded || cchExpanded > cchDest)
         return FALSE;
 
-    INT cchEnvPath = (INT)(cchExpanded - 1);
+    INT cchEnvPath = cchExpanded - 1;
     if (CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
                        szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
     {
