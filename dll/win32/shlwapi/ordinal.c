@@ -2942,50 +2942,50 @@ UINT WINAPI WhichPlatform(void)
 DWORD WINAPI WhichPlatform(void)
 #endif
 {
-  static const char szIntegratedBrowser[] = "IntegratedBrowser";
-  static DWORD dwState = 0;
-  HKEY hKey;
-  DWORD dwRet, dwData, dwSize;
-  HMODULE hshell32;
+    static const char szIntegratedBrowser[] = "IntegratedBrowser";
+    static DWORD dwState = 0;
+    HKEY hKey;
+    DWORD dwRet, dwData, dwSize;
+    HMODULE hshell32;
 
-  if (dwState)
+    if (dwState)
+        return dwState;
+
+    /* If shell32 exports DllGetVersion(), the browser is integrated */
+    dwState = 1;
+    hshell32 = LoadLibraryA("shell32.dll");
+    if (hshell32)
+    {
+        FARPROC pDllGetVersion;
+        pDllGetVersion = GetProcAddress(hshell32, "DllGetVersion");
+        dwState = pDllGetVersion ? 2 : 1;
+        FreeLibrary(hshell32);
+    }
+
+    /* Set or delete the key accordingly */
+    dwRet = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+                          "Software\\Microsoft\\Internet Explorer", 0,
+                          KEY_ALL_ACCESS, &hKey);
+    if (!dwRet)
+    {
+        dwRet = RegQueryValueExA(hKey, szIntegratedBrowser, 0, 0,
+                                (LPBYTE)&dwData, &dwSize);
+
+        if (!dwRet && dwState == 1)
+        {
+            /* Value exists but browser is not integrated */
+            RegDeleteValueA(hKey, szIntegratedBrowser);
+        }
+        else if (dwRet && dwState == 2)
+        {
+            /* Browser is integrated but value does not exist */
+            dwData = TRUE;
+            RegSetValueExA(hKey, szIntegratedBrowser, 0, REG_DWORD,
+                           (LPBYTE)&dwData, sizeof(dwData));
+        }
+        RegCloseKey(hKey);
+    }
     return dwState;
-
-  /* If shell32 exports DllGetVersion(), the browser is integrated */
-  dwState = 1;
-  hshell32 = LoadLibraryA("shell32.dll");
-  if (hshell32)
-  {
-    FARPROC pDllGetVersion;
-    pDllGetVersion = GetProcAddress(hshell32, "DllGetVersion");
-    dwState = pDllGetVersion ? 2 : 1;
-    FreeLibrary(hshell32);
-  }
-
-  /* Set or delete the key accordingly */
-  dwRet = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
-                        "Software\\Microsoft\\Internet Explorer", 0,
-                         KEY_ALL_ACCESS, &hKey);
-  if (!dwRet)
-  {
-    dwRet = RegQueryValueExA(hKey, szIntegratedBrowser, 0, 0,
-                             (LPBYTE)&dwData, &dwSize);
-
-    if (!dwRet && dwState == 1)
-    {
-      /* Value exists but browser is not integrated */
-      RegDeleteValueA(hKey, szIntegratedBrowser);
-    }
-    else if (dwRet && dwState == 2)
-    {
-      /* Browser is integrated but value does not exist */
-      dwData = TRUE;
-      RegSetValueExA(hKey, szIntegratedBrowser, 0, REG_DWORD,
-                     (LPBYTE)&dwData, sizeof(dwData));
-    }
-    RegCloseKey(hKey);
-  }
-  return dwState;
 }
 
 /*************************************************************************
