@@ -185,7 +185,6 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
         WinExec( "taskman.exe", SW_SHOWNORMAL );
         break;
 
-
       case SC_NEXTWINDOW:
       case SC_PREVWINDOW:
         DoAppSwitch( wParam, lParam);

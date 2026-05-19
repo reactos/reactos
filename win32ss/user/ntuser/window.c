@@ -656,7 +656,8 @@ LRESULT co_UserFreeWindow(PWND Window,
 
    /* don't remove the WINDOWSTATUS_DESTROYING bit */
 
-   /* reset shell window handles */
+   /* Reset shell window handles in the associated window station. The handles
+    * in the desktop information itself were already reset in co_UserDestroyWindow(). */
    if (ThreadData->rpdesk)
    {
       if (UserHMGetHandle(Window) == ThreadData->rpdesk->rpwinstaParent->ShellWindow)
@@ -1637,7 +1638,7 @@ NtUserBuildHwndList(
          goto Quit;
       }
 
-     // Do not use Thread link list due to co_UserFreeWindow!!!
+     // Do not use Thread link list due to co_UserFreeWindow!
      // Current = W32Thread->WindowListHead.Flink;
      // Fixes Api:CreateWindowEx tests!!!
       List = IntWinListChildren(UserGetDesktopWindow());
@@ -2872,19 +2873,20 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
 
    ASSERT_REFS_CO(Window); // FIXME: Temp HACK?
 
+   hWnd = UserHMGetHandle(Window);
+
    /* NtUserDestroyWindow does check if the window has already been destroyed
       but co_UserDestroyWindow can be called from more paths which means
       that it can also be called for a window that has already been destroyed. */
-   if (!IntIsWindow(UserHMGetHandle(Window)))
+   if (!IntIsWindow(hWnd))
    {
       TRACE("Tried to destroy a window twice\n");
       return TRUE;
    }
 
-   hWnd = UserHMGetHandle(Window);
-   ti = PsGetCurrentThreadWin32Thread();
-
    TRACE("co_UserDestroyWindow(Window = 0x%p, hWnd = 0x%p)\n", Window, hWnd);
+
+   ti = PsGetCurrentThreadWin32Thread();
 
    /* Check for owner thread */
    if (Window->head.pti != ti)
@@ -2975,18 +2977,33 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    if (Window->head.pti->MessageQueue->spwndCapture == Window)
       Window->head.pti->MessageQueue->spwndCapture = NULL;
 
-   /*
-    * Check if this window is the Shell's Desktop Window. If so set hShellWindow to NULL
-    */
-
-   if (ti->pDeskInfo != NULL)
-   {
-      if (ti->pDeskInfo->hShellWindow == hWnd)
-      {
-         ERR("Destroying the ShellWindow!\n");
-         ti->pDeskInfo->hShellWindow = NULL;
-      }
-   }
+    /* Check if this window is one of the shell windows, and reset it if so */
+    if (ti->pDeskInfo != NULL)
+    {
+        if (ti->pDeskInfo->hTaskManWindow == hWnd)
+        {
+            ERR("Destroying the TaskManWindow!\n");
+            ti->pDeskInfo->hTaskManWindow = NULL;
+        }
+        if (ti->pDeskInfo->hProgmanWindow == hWnd)
+        {
+            ERR("Destroying the ProgmanWindow!\n");
+            ti->pDeskInfo->hProgmanWindow = NULL;
+        }
+        /* NOTE: The handles in the window station will be reset in co_UserFreeWindow() */
+        if (ti->pDeskInfo->hShellWindow == hWnd)
+        {
+            ERR("Destroying the ShellWindow!\n");
+            ASSERT(ti->pDeskInfo->spwndShell == Window);
+            ti->pDeskInfo->hShellWindow = NULL;
+            ti->pDeskInfo->spwndShell = NULL; // NOTE: Reference already dropped in NtUserSetShellWindowEx()
+        }
+        if (ti->pDeskInfo->spwndBkGnd == Window)
+        {
+            ERR("Destroying the ShellBkGndWindow!\n");
+            ti->pDeskInfo->spwndBkGnd = NULL; // NOTE: Wasn't referenced in NtUserSetShellWindowEx()
+        }
+    }
 
    IntEngWindowChanged(Window, WOC_DELETE);
 

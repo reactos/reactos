@@ -166,6 +166,18 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
         UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 0); // always lParam 0 == not Secure
         break;
 
+#if 0 // TODO: Handle these messages here as well.
+      case SC_TASKLIST:
+        // TODO
+        break;
+
+      case SC_NEXTWINDOW:
+      case SC_PREVWINDOW:
+        // TODO
+        // DoAppSwitch(wParam, lParam);
+        break;
+#endif
+
       case SC_HOTKEY:
         {
            USER_REFERENCE_ENTRY Ref;
