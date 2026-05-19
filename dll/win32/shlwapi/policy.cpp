@@ -215,7 +215,8 @@ HRESULT CPolicyCache::_GetValue(
     if (!pvData)
         return S_OK;
 
-    if (LOWORD(pConstraint->dwFlags) == SRRF_RT_DWORD)
+    if (LOWORD(pConstraint->dwFlags) == SRRF_RT_DWORD &&
+        HIWORD(pConstraint->dwFlags) == sizeof(DWORD))
     {
         DWORD dwValue = *(PDWORD)pvData;
         if (dwValue < pConstraint->dwMin || pConstraint->dwMax < dwValue)
