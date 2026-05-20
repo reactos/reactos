@@ -23,8 +23,6 @@
 #include <string.h>
 #include <wchar.h>
 
-#ifndef STATIC_PATHCCH
-
 #include "windef.h"
 #include "winbase.h"
 #include "pathcch.h"
@@ -39,24 +37,19 @@
 #include "wine/debug.h"
 #include "wine/heap.h"
 
+#ifndef STATIC_PATHCCH
 WINE_DEFAULT_DEBUG_CHANNEL(path);
+#else
+#undef TRACE
+#define TRACE(...)
+#endif /* !STATIC_PATHCCH */
 
-#else // STATIC_PATHCCH
 #ifdef __REACTOS__
-/* This is the static implementation of the PathCch library */
-
-#include <windef.h>
-#include <winbase.h>
 
 /* The PathCch functions use size_t, but Wine's implementation uses SIZE_T,
  * so temporarily change the define'd SIZE_T type to the compatible one... */
 #undef SIZE_T
 #define SIZE_T size_t
-
-#include <pathcch.h>
-#include <strsafe.h>
-
-#define TRACE(...)
 
 #if (_WIN32_WINNT < _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION < _WIN32_WINNT_VISTA)
 /* wcsnlen is an NT6+ function. To cover all cases, use a private implementation */
@@ -68,24 +61,7 @@ static inline size_t compat_wcsnlen(const wchar_t* str, size_t size)
 #define wcsnlen compat_wcsnlen
 #endif /* _WIN32_WINNT || DLL_EXPORT_VERSION */
 
-// Implementation from string.c copied here in order not
-// to depend on the whole file just for the PathCch library.
-WCHAR * WINAPI StrRChrW(const WCHAR *str, const WCHAR *end, WORD ch)
-{
-    WCHAR *ret = NULL;
-
-    if (!str) return NULL;
-    if (!end) end = str + lstrlenW(str);
-    while (str < end)
-    {
-        if (*str == ch) ret = (WCHAR *)str;
-        str++;
-    }
-    return ret;
-}
-
 #endif /* __REACTOS__ */
-#endif // STATIC_PATHCCH
 
 #ifndef STATIC_PATHCCH
 
