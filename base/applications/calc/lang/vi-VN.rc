@@ -631,7 +631,7 @@ END
 /* Velocities */
 STRINGTABLE
 BEGIN
-    IDS_VELOCITY_CMS_SECOND "Xentimét/giờ"
+    IDS_VELOCITY_CMS_SECOND "Xentimét/giây"
     IDS_VELOCITY_FEET_HOUR "Bộ/giờ"
     IDS_VELOCITY_FEET_SECOND "Bộ/giây"
     IDS_VELOCITY_KILOMETERS_HOUR "Kilômét/giờ"
