@@ -1458,7 +1458,7 @@ ApplyOrdinals(EXPORT* pexports, unsigned cExports)
     /* Pass 1: mark the ordinals that are already used */
     for (i = 0; i < cExports; i++)
     {
-        if (pexports[i].uFlags & FL_ORDINAL)
+        if ((pexports[i].uFlags & FL_ORDINAL) && pexports[i].bVersionIncluded)
         {
             if (used[pexports[i].nOrdinal] != 0)
             {
