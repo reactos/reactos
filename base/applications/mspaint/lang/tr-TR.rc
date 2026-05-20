@@ -45,7 +45,7 @@ BEGIN
         MENUITEM "K&opyala\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Y&apıştır\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "%Seçimi Kırp", IDM_CROPSELECTION
         MENUITEM "&Seçimi Sil\tDel", IDM_EDITDELETESELECTION
         MENUITEM "S&eçimi Evir", IDM_EDITINVERTSELECTION
         MENUITEM "&Tümünü Seç\tCtrl+A", IDM_EDITSELECTALL
@@ -105,13 +105,13 @@ END
 
 ID_POPUPMENU MENU
 BEGIN
-    POPUP "Popup #0"
+    POPUP "Kısayol Menüsü"
     BEGIN
         MENUITEM "&Kes\tCtrl+X", IDM_EDITCUT
         MENUITEM "K&opyala\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Y&apıştır\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "&Seçimi Kırp", IDM_CROPSELECTION
         MENUITEM "&Seçimi Sil\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Tümünü Seç\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
@@ -222,7 +222,7 @@ BEGIN
 END
 
 IDD_FONTS DIALOG 0, 0, 225, 25
-CAPTION "Fonts"
+CAPTION "Yazı Tipleri"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_TOOLWINDOW
 FONT 8, "MS Shell Dlg"
@@ -269,7 +269,7 @@ BEGIN
     IDS_ITALIC "İtalik"
     IDS_UNDERLINE "Altı Çizgili"
     IDS_VERTICAL "Düşey"
-    IDS_PRINTRES "%d x %d pixel/cm"
+    IDS_PRINTRES "%d x %d piksel/cm"
     IDS_CANTPASTE "Panodan yapıştırma işlemi başarısız oldu. Veri biçimi ya yanlış ya da desteklenmiyor."
     IDS_SAVEERROR "Bit eşlemi dosyaya kaydedilemedi:\n\n%s"
     IDS_CANTSENDMAIL "Posta gönderilemedi."

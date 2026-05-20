@@ -50,5 +50,5 @@ aşağıdaki komutlar kullanılabilir:\n\
     IDS_CONTINUE_PERCENT " (%%%d)"
     IDS_CONTINUE_LINE_AT " [Satır: %d]"
     IDS_CONTINUE_OPTIONS " [Seçenekler: psfq=<Space><Enter>]"
-    IDS_CONTINUE_LINES   " Satrrlar: "
+    IDS_CONTINUE_LINES   " Satırlar: "
 END
