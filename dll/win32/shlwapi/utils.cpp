@@ -725,7 +725,7 @@ NextPathA(
 
     PSTR pchEnd = StrChrA(pchStart, ';');
     if (!pchEnd)
-        pchEnd = (PSTR)(pchStart + strlen(pchStart));
+        pchEnd = (PSTR)(pchStart + lstrlenA(pchStart));
 
     const UINT cchSegment = (UINT)(pchEnd - pchStart);
     const UINT cchToCopy = min(cchSegment + 1, cchDest);
@@ -767,7 +767,7 @@ NextPathW(
 
     PWSTR pchEnd = StrChrW(pchStart, L';');
     if (!pchEnd)
-        pchEnd = (PWSTR)(pchStart + wcslen(pchStart));
+        pchEnd = (PWSTR)(pchStart + lstrlenW(pchStart));
 
     const UINT cchSegment = (UINT)(pchEnd - pchStart);
     const UINT cchToCopy = min(cchSegment + 1, cchDest);
