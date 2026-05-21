@@ -391,7 +391,7 @@ PathFileExistsDefExtAndAttributesW(
 BOOL WINAPI
 PathUnExpandEnvStringsForUserA(
     _In_ HANDLE hUserToken,
-    _In_ PCSTR pwszPath,
+    _In_ PCSTR pszPath,
     _Out_writes_(cchBuff) PSTR pszBuff,
     _In_ INT cchBuff);
 
