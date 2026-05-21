@@ -961,7 +961,7 @@ LdrpSnapThunk(IN PVOID ExportBase,
     UNICODE_STRING TempUString;
     ANSI_STRING ForwarderName;
     PANSI_STRING ForwardName;
-    PVOID ForwarderHandle;
+    PVOID ForwarderHandle = NULL;
     ULONG ForwardOrdinal;
 
     /* Check if the snap is by ordinal */
@@ -1012,6 +1012,13 @@ LdrpSnapThunk(IN PVOID ExportBase,
     if ((ULONG)Ordinal >= ExportDirectory->NumberOfFunctions)
     {
 FailurePath:
+        /* Check if we loeaded a forwarder DLL */
+        if (ForwarderHandle != NULL)
+        {
+            /* Unload the forwarder DLL */
+            LdrUnloadDll(ForwarderHandle);
+        }
+
         /* Is this a static snap? */
         if (Static)
         {
