@@ -223,6 +223,18 @@ static const ENTRY Entries[] =
     { __LINE__, {0x600,0xA00}, 8, 0xBEAF, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 8, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 9 },
     { __LINE__, {0x000,0x502}, 1, 0xBEAF, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 9, 8, {0, 0x7F7F, 0x7F7F, 0x7F7F, 0x7F7F, 0x7F7F, 0x7F7F, 0x7F7F, 0x7F7F}, 9 },
     { __LINE__, {0x600,0xA00}, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 9, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 9 },
+
+    /* From wine test for UrlUnescapeW: U+1F377 🍷 (WINE GLASS) -> UTF-16 surrogate pair */
+    { __LINE__, {0x000,0xA00}, 2, 0xBEAF, CP_UTF8, MB_ERR_INVALID_CHARS, "\xF0\x9F\x8D\xB7", 4, 0 },
+    { __LINE__, {0x000,0xA00}, 2, 0xBEAF, CP_UTF8, MB_ERR_INVALID_CHARS, "\xF0\x9F\x8D\xB7", 4, 2, {0xD83C, 0xDF77 }, 2 },
+    { __LINE__, {0x000,0x502}, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, MB_ERR_INVALID_CHARS, "\xF0\x9F\x8D\xB7", 4, 1, {0x7F7F}, 1 },
+    { __LINE__, {0x600,0xA00}, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, MB_ERR_INVALID_CHARS, "\xF0\x9F\x8D\xB7", 4, 1, {0xD83C}, 1 },
+
+    /* For good measure without flags: U+1F37A 🍺 (BEER MUG) -> UTF-16 surrogate pair */
+    { __LINE__, {0x000,0xA00}, 2, 0xBEAF, CP_UTF8, 0, "\xF0\x9F\x8D\xBA", 4, 0 },
+    { __LINE__, {0x000,0xA00}, 2, 0xBEAF, CP_UTF8, 0, "\xF0\x9F\x8D\xBA", 4, 2, {0xD83C, 0xDF7A }, 2 },
+    { __LINE__, {0x000,0x502}, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xF0\x9F\x8D\xBA", 4, 1, {0x7F7F}, 1 },
+    { __LINE__, {0x600,0xA00}, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xF0\x9F\x8D\xBA", 4, 1, {0xD83C}, 1 },
 };
 
 static void TestEntry(const ENTRY *pEntry)
