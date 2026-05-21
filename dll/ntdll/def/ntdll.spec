@@ -158,7 +158,7 @@
 @ stdcall -stub -version=0x600+ LdrGetFileNameFromLoadAsDataTable(ptr ptr)
 @ stdcall -stub -version=0x600+ -arch=x86_64 LdrGetKnownDllSectionHandle(wstr long ptr)
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
-@ stdcall -stub -version=0x600+ LdrGetProcedureAddressEx(ptr ptr long ptr long)
+@ stdcall -version=0x600+ LdrGetProcedureAddressEx(ptr ptr long ptr long)
 @ stdcall -stub LdrHotPatchRoutine(ptr)
 @ stdcall LdrInitShimEngineDynamic(ptr)
 @ stdcall LdrInitializeThunk(long long long long)
