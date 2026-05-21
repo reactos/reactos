@@ -156,7 +156,7 @@ BEGIN
     DEFPUSHBUTTON    "&Bỏ qua", IDIGNORE, 215, 60, 50, 14
     PUSHBUTTON       "Đổi &tên", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
-    AUTOCHECKBOX      "&Không thực hiện kiểm tra này khi khởi động", IDC_NOTCHECK, 7, 62, 160, 10
+    AUTOCHECKBOX     "&Không thực hiện kiểm tra này khi khởi động", IDC_NOTCHECK, 7, 62, 160, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
     LTEXT            "Có một tệp hoặc thư mục trên máy tính của bạn tên là %s, điều này có thể khiến một số ứng dụng gặp lỗi. Đổi tên nó thành %s sẽ giải quyết được vấn đề. Bạn có muốn đổi tên nó ngay bây giờ không?", IDC_STATIC, 34, 7, 224, 37
 END
@@ -167,13 +167,13 @@ CAPTION "Nâng cao"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX         "Cài đặt trình đơn Start ", IDC_STATIC, 7, 7, 238, 42
-    AUTOCHECKBOX      "&Mở trình đơn con khi tôi di chuột dừng trên chúng", IDC_AUTOOPEN, 14, 21, 224, 10
-    AUTOCHECKBOX      "Làm nổi bật các chương trình &mới cài đặt", IDC_HIGHLIGHT, 14, 35, 224, 10
+    AUTOCHECKBOX     "&Mở trình đơn con khi tôi di chuột dừng trên chúng", IDC_AUTOOPEN, 14, 21, 224, 10
+    AUTOCHECKBOX     "Làm nổi bật các chương trình &mới cài đặt", IDC_HIGHLIGHT, 14, 35, 224, 10
     LTEXT            "Các mục trên trình đơn &Start:", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "StartMenuSettings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "Tài liệu gần đây ", IDC_STATIC, 7, 133, 238, 56
     LTEXT            "Chọn tùy chọn này để truy cập nhanh vào các tài liệu bạn đã mở gần đây nhất. Việc xóa danh sách này không xóa các tài liệu đó.", IDC_STATIC, 14, 144, 224, 21
-    AUTOCHECKBOX      "Liệt kê các tài liệu đã mở gần &đây nhất", IDC_RECENTLY, 14, 168, 160, 10
+    AUTOCHECKBOX     "Liệt kê các tài liệu đã mở gần &đây nhất", IDC_RECENTLY, 14, 168, 160, 10
     PUSHBUTTON       "Xóa &danh sách", IDC_CLEAR, 182, 168, 55, 14
 END
 
@@ -194,9 +194,9 @@ BEGIN
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
     PUSHBUTTON       "Xóa &danh sách", IDC_CLEARLIST, 182, 98, 57, 14
     GROUPBOX         "Hiển thị trên trình đơn Start ", IDC_STATIC, 7, 126, 238, 63
-    AUTOCHECKBOX      "&Internet:", IDC_SHOWINTERNET, 14, 140, 42, 10
+    AUTOCHECKBOX     "&Internet:", IDC_SHOWINTERNET, 14, 140, 42, 10
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-    AUTOCHECKBOX      "&Thư điện tử:", IDC_SHOWEMAIL, 14, 157, 50, 10
+    AUTOCHECKBOX     "&Thư điện tử:", IDC_SHOWEMAIL, 14, 157, 50, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
 END
 
