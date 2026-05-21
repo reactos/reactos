@@ -716,27 +716,27 @@ NextPathA(
     if (!pszStart)
         return NULL;
 
-    PCSTR pchSegStart = pszStart;
-    while (*pchSegStart == ';')
-        ++pchSegStart;
+    PCSTR pchStart = pszStart;
+    while (*pchStart == ';')
+        ++pchStart;
 
-    if (!*pchSegStart)
+    if (!*pchStart)
         return NULL;
 
-    PSTR pchSegEnd = StrChrA(pchSegStart, ';');
-    if (!pchSegEnd)
-        pchSegEnd = (PSTR)(pchSegStart + strlen(pchSegStart));
+    PSTR pchEnd = StrChrA(pchStart, ';');
+    if (!pchEnd)
+        pchEnd = (PSTR)(pchStart + strlen(pchStart));
 
-    HRESULT hr = StringCchCopyNA(pszDest, cchDest, pchSegStart, pchSegEnd - pchSegStart);
-    if (FAILED(hr))
-        return NULL;
+    const UINT cchSegment = (UINT)(pchEnd - pchStart);
+    const UINT cchToCopy = min(cchSegment + 1, cchDest);
+    lstrcpynA(pszDest, pchStart, cchToCopy);
+    pszDest[cchSegment] = ANSI_NULL;
 
     PathRemoveBlanksA(pszDest);
-
     if (!*pszDest)
         return NULL;
 
-    return (*pchSegEnd == ';') ? (pchSegEnd + 1) : pchSegEnd;
+    return (*pchEnd == ';') ? (pchEnd + 1) : pchEnd;
 }
 
 /*************************************************************************
@@ -758,25 +758,25 @@ NextPathW(
     if (!pszStart)
         return NULL;
 
-    PCWSTR pchSegStart = pszStart;
-    while (*pchSegStart == L';')
-        ++pchSegStart;
+    PCWSTR pchStart = pszStart;
+    while (*pchStart == L';')
+        ++pchStart;
 
-    if (!*pchSegStart)
+    if (!*pchStart)
         return NULL;
 
-    PWSTR pchSegEnd = StrChrW(pchSegStart, L';');
-    if (!pchSegEnd)
-        pchSegEnd = (PWSTR)(pchSegStart + wcslen(pchSegStart));
+    PWSTR pchEnd = StrChrW(pchStart, L';');
+    if (!pchEnd)
+        pchEnd = (PWSTR)(pchStart + wcslen(pchStart));
 
-    HRESULT hr = StringCchCopyNW(pszDest, cchDest, pchSegStart, pchSegEnd - pchSegStart);
-    if (FAILED(hr))
-        return NULL;
+    const UINT cchSegment = (UINT)(pchEnd - pchStart);
+    const UINT cchToCopy = min(cchSegment + 1, cchDest);
+    lstrcpynW(pszDest, pchStart, cchToCopy);
+    pszDest[cchSegment] = UNICODE_NULL;
 
     PathRemoveBlanksW(pszDest);
-
     if (!*pszDest)
         return NULL;
 
-    return (*pchSegEnd == L';') ? (pchSegEnd + 1) : pchSegEnd;
+    return (*pchEnd == L';') ? (pchEnd + 1) : pchEnd;
 }
