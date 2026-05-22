@@ -1304,27 +1304,3 @@ BOOL WINAPI DoesStringRoundTripW(LPCWSTR lpSrcStr, LPSTR lpDst, INT iLen)
     return !wcscmp(lpSrcStr, szBuff);
 }
 
-BOOL WINAPI IsCharSpaceA(CHAR c)
-{
-    WORD CharType;
-    return GetStringTypeA(GetSystemDefaultLCID(), CT_CTYPE1, &c, 1, &CharType) && (CharType & C1_SPACE);
-}
-
-/*************************************************************************
- *      @	[SHLWAPI.29]
- *
- * Determine if a Unicode character is a space.
- *
- * PARAMS
- *  wc [I] Character to check.
- *
- * RETURNS
- *  TRUE, if wc is a space,
- *  FALSE otherwise.
- */
-BOOL WINAPI IsCharSpaceW(WCHAR wc)
-{
-    WORD CharType;
-
-    return GetStringTypeW(CT_CTYPE1, &wc, 1, &CharType) && (CharType & C1_SPACE);
-}
