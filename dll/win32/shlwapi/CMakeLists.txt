@@ -16,6 +16,7 @@ list(APPEND SOURCE
     appcompat.c
     clist.c
     istream.c
+    kernelbase.c
     msgbox.c
     ordinal.c
     path.c
