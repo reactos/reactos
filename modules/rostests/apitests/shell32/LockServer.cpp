@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS API Tests
- * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Tests for SHCreateDefClassObject / IClassFactory::LockServer
- * FILE:        modules/rostests/apitests/shell32/SHCreateDefClassObject.cpp
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Test for LockServer
+ * COPYRIGHT:   Copyright 2026 Alex Mendoza <05alex.mendozaa@gmail.com>
  */
 
 #include "shelltest.h"
