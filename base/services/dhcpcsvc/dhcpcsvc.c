@@ -292,6 +292,17 @@ DhcpAcquireParametersByBroadcast(
     return ret;
 }
 
+DWORD
+APIENTRY
+DhcpDeRegisterParamChange(
+    _In_ DWORD Flags,
+    _In_ LPVOID Reserved,
+    _In_ LPVOID Event)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
 /*!
  * Enumerates the DHCP user classes for the given adapter
  *
@@ -561,6 +572,21 @@ DhcpNotifyConfigChangeEx(
     }
 
     return ret;
+}
+
+DWORD
+APIENTRY
+DhcpRegisterParamChange(
+    _In_ DWORD Flags,
+    _In_ LPVOID Reserved,
+    _In_ LPWSTR AdapterName,
+    _In_ LPDHCPCAPI_CLASSID ClassId,
+    _In_ DHCPCAPI_PARAMS_ARRAY Params,
+    _Inout_ LPVOID Handle)
+{
+    DPRINT1("DhcpRegisterParamChange(%lx %p %S)\n", Flags, Reserved, AdapterName);
+    UNIMPLEMENTED;
+    return 0;
 }
 
 /*!
