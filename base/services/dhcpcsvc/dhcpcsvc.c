@@ -669,9 +669,14 @@ DhcpRequestParams(
 {
     DWORD ret = ERROR_SUCCESS;
 
-    DPRINT1("DhcpRequestParams(%lx %p %S %p %p %p %p %p %S)\n",
-            Flags, Reserved, AdapterName, ClassId, SendParams,
-            RecdParams, Buffer, pSize, RequestIdStr);
+    DPRINT1("DhcpRequestParams(%lx %p %S %p %lu %p %lu %p %p %p %S)\n",
+            Flags, Reserved, AdapterName, ClassId, SendParams.nParams, SendParams.Params,
+            RecdParams.nParams, RecdParams.Params, Buffer, pSize, RequestIdStr);
+
+    if ((Flags != DHCPCAPI_REQUEST_SYNCHRONOUS) &&
+        (Flags != DHCPCAPI_REQUEST_PERSISTENT) &&
+        (Flags != (DHCPCAPI_REQUEST_SYNCHRONOUS | DHCPCAPI_REQUEST_PERSISTENT)))
+        return ERROR_INVALID_PARAMETER;
 
     if ((Reserved != NULL) || (AdapterName == NULL))
         return ERROR_INVALID_PARAMETER;
@@ -684,6 +689,12 @@ DhcpRequestParams(
         if ((ClassId->Data == NULL) || (ClassId->nBytesData == 0))
             return ERROR_INVALID_PARAMETER;
     }
+
+    if ((SendParams.nParams != 0) && (SendParams.Params == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    if (RecdParams.Params == NULL)
+        return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
     {
