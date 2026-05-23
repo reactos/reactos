@@ -213,15 +213,15 @@ HRESULT WINAPI IDefClFImpl::LockServer(BOOL fLock)
 
     if (fLock)
     {
-        if (pcRefDll)
+        if (pcRefDll && *pcRefDll < LONG_MAX)
             InterlockedIncrement(pcRefDll);
         _pAtlModule->Lock();
     }
     else
     {
-        if (pcRefDll)
-            InterlockedDecrement(pcRefDll);
         _pAtlModule->Unlock();
+        if (pcRefDll && *pcRefDll > 0)
+            InterlockedDecrement(pcRefDll);
     }
 
     return S_OK;

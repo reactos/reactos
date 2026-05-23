@@ -27,26 +27,37 @@ static void test_LockServer(void)
                                 IID_IUnknown);
     ok(hr == S_OK, "SHCreateDefClassObject failed: %08lx\n", hr);
     ok(pcf != NULL, "pcf is NULL\n");
-    if (!pcf) return;
+    if (!pcf)
+    {
+        skip("pcf is NULL, skipping LockServer tests\n");
+        return;
+    }
+
+    ok(refDll == 1, "Expected refDll == 1 after init, got %ld\n", refDll);
 
     hr = pcf->LockServer(TRUE);
-    ok(hr == S_OK, "LockServer(TRUE) returned %08lx, expected S_OK\n", hr);
-    ok(refDll > 0, "pcRefDll not incremented after LockServer(TRUE), got %ld\n", refDll);
+    ok(hr == S_OK, "LockServer() failed: %08lx\n", hr);
+    ok(refDll == 2, "Expected refDll == 2 after lock, got %ld\n", refDll);
 
     hr = pcf->LockServer(FALSE);
-    ok(hr == S_OK, "LockServer(FALSE) returned %08lx, expected S_OK\n", hr);
-    ok(refDll >= 0, "pcRefDll went negative: %ld\n", refDll);
+    ok(hr == S_OK, "LockServer() failed: %08lx\n", hr);
+    ok(refDll == 1, "Expected refDll == 1 after unlock, got %ld\n", refDll);
+
+    hr = pcf->LockServer(FALSE);
+    ok(hr == S_OK, "LockServer() failed: %08lx\n", hr);
+    ok(refDll >= 0, "refDll went negative after unlock when not locked: %ld\n", refDll);
 
     hr = pcf->LockServer(TRUE);
-    ok(hr == S_OK, "LockServer(TRUE) cycle 2: %08lx\n", hr);
+    ok(hr == S_OK, "LockServer() failed: %08lx\n", hr);
     hr = pcf->LockServer(TRUE);
-    ok(hr == S_OK, "LockServer(TRUE) cycle 3: %08lx\n", hr);
+    ok(hr == S_OK, "LockServer() failed: %08lx\n", hr);
     hr = pcf->LockServer(FALSE);
-    ok(hr == S_OK, "LockServer(FALSE) cycle 2: %08lx\n", hr);
+    ok(hr == S_OK, "LockServer() failed: %08lx\n", hr);
     hr = pcf->LockServer(FALSE);
-    ok(hr == S_OK, "LockServer(FALSE) cycle 3: %08lx\n", hr);
+    ok(hr == S_OK, "LockServer() failed: %08lx\n", hr);
 
     pcf->Release();
+    ok(refDll == 0, "Expected refDll == 0 after Release, got %ld\n", refDll);
 }
 
 START_TEST(LockServer)
