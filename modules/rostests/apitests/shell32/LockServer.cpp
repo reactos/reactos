@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS API tests
- * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Test for LockServer
  * COPYRIGHT:   Copyright 2026 Alex Mendoza <05alex.mendozaa@gmail.com>
  */
