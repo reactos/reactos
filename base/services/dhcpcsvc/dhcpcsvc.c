@@ -585,6 +585,13 @@ DhcpRegisterParamChange(
     _Inout_ LPVOID Handle)
 {
     DPRINT1("DhcpRegisterParamChange(%lx %p %S)\n", Flags, Reserved, AdapterName);
+
+    if (Flags != DHCPCAPI_REGISTER_HANDLE_EVENT)
+        return ERROR_INVALID_PARAMETER;
+
+    if ((Reserved != NULL) || (AdapterName == NULL) || (Handle == NULL))
+        return ERROR_INVALID_PARAMETER;
+
     UNIMPLEMENTED;
     return 0;
 }
