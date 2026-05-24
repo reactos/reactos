@@ -348,7 +348,6 @@ Server_RemoveDNSRegistrations(
     return ERROR_SUCCESS;
 }
 
-
 /* Function 7 */
 DWORD
 __stdcall
@@ -356,11 +355,17 @@ Server_RequestParams(
     _In_ PDHCP_SERVER_NAME ServerName,
     _In_ LPWSTR AdapterName,
     _In_ DHCPCAPI_CLASSID *ClassId,
-    _In_ DWORD Unknown4,
+    _In_ DHCPCAPI_PARAMS_ARRAY *SendParams,
     _In_ DWORD Unknown5,
     _In_ DWORD Unknown6)
 {
-    DPRINT1("Server_RequestParams(%S %p)\n", AdapterName, ClassId);
-    UNIMPLEMENTED;
+    DPRINT1("Server_RequestParams(%S %p %p %lx %lx)\n",
+            AdapterName, ClassId, SendParams, Unknown5, Unknown6);
+
+    if (SendParams != NULL)
+    {
+        DPRINT1("SendParams nParams %lu  Params %p\n", SendParams->nParams, SendParams->Params);
+    }
+
     return ERROR_SUCCESS;
 }

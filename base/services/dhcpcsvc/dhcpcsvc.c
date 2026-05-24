@@ -701,7 +701,7 @@ DhcpRequestParams(
         ret = Client_RequestParams(NULL,
                                    AdapterName,
                                    ClassId,
-                                   0,
+                                   &SendParams,
                                    0,
                                    0);
     }

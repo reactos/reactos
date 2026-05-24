@@ -7,6 +7,31 @@
 typedef [handle] wchar_t *PDHCP_SERVER_NAME;
 
 cpp_quote("#ifndef _DHCPCSDK_")
+typedef struct _DHCPAPI_PARAMS
+{
+    ULONG  Flags;
+    ULONG  OptionId;
+    BOOL   IsVendor;
+#if defined(__midl) || defined(__WIDL__)
+    [size_is(nBytesData), unique] LPBYTE Data;
+#else
+    LPBYTE Data;
+#endif
+    DWORD  nBytesData;
+} DHCPAPI_PARAMS, *PDHCPAPI_PARAMS, *LPDHCPAPI_PARAMS;
+
+typedef struct _DHCPAPI_PARAMS DHCPCAPI_PARAMS, *PDHCPCAPI_PARAMS, *LPDHCPCAPI_PARAMS;
+
+typedef struct _DHCPCAPI_PARAMS_ARARAY
+{
+    ULONG             nParams;
+#if defined(__midl) || defined(__WIDL__)
+    [size_is(nParams), unique] LPDHCPCAPI_PARAMS Params;
+#else
+    LPDHCPCAPI_PARAMS Params;
+#endif
+} DHCPCAPI_PARAMS_ARRAY, *PDHCPCAPI_PARAMS_ARRAY, *LPDHCPCAPI_PARAMS_ARRAY;
+
 typedef struct _DHCPCAPI_CLASSID
 {
     ULONG  Flags;
@@ -91,7 +116,7 @@ interface dhcpcsvc
         [in, unique, string] PDHCP_SERVER_NAME ServerName,
         [in, string] LPWSTR AdapterName,
         [in, unique] DHCPCAPI_CLASSID *ClassId,
-        [in] DWORD Unknown4,
+        [in, unique] DHCPCAPI_PARAMS_ARRAY *SendParams,
         [in] DWORD Unknown5,
         [in] DWORD Unknown6);
 }
