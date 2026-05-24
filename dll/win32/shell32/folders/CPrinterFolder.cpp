@@ -323,6 +323,21 @@ HRESULT WINAPI CPrinterFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY 
     return hr;
 }
 
+HRESULT CPrinterFolder::_AssocCreate(REFIID riid, PVOID *ppvObj)
+{
+    IQueryAssociations *pAssoc;
+    HRESULT hr = ::AssocCreate(CLSID_QueryAssociations, IID_PPV_ARG(IQueryAssociations, &pAssoc));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pAssoc->Init(NULL, L"Printers", NULL, NULL);
+    if (SUCCEEDED(hr))
+        hr = pAssoc->QueryInterface(riid, ppvObj);
+
+    pAssoc->Release();
+    return hr;
+}
+
 /**************************************************************************
  *    CPrinterFolder::GetUIObjectOf
  *
@@ -351,6 +366,8 @@ HRESULT WINAPI CPrinterFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMI
 
     if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW)) && cidl == 1)
         hr = CPrintersExtractIconW_CreateInstane(apidl[0], riid, &pObj);
+    else if (IsEqualIID(riid, IID_IQueryAssociations))
+        hr = _AssocCreate(riid, &pObj);
     else
         hr = E_NOINTERFACE;
 
