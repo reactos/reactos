@@ -1865,7 +1865,11 @@ USBH_ProcessHubStateChange(IN PUSBHUB_FDO_EXTENSION HubExtension,
         if (HubStatus->HubStatus.OverCurrent)
         {
             DPRINT1("USBH_ProcessHubStateChange: OverCurrent UNIMPLEMENTED. FIXME\n");
+
+#ifndef SARCH_XBOX
+            /* HACK: This triggers on real Xbox hardware. Skip it on Xbox. */
             DbgBreakPoint();
+#endif
         }
     }
 }

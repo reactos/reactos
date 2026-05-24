@@ -2124,6 +2124,13 @@ OHCI_CheckController(IN PVOID ohciExtension)
     ULONG FmNumber;
     USHORT FmDiff;
     POHCI_HCCA HcHCCA;
+#ifdef SARCH_XBOX
+    /* HACK: Xbox interrupt workaround (Part 1) */
+    PULONG InterruptEnableReg = (PULONG)&OhciExtension->OperationalRegs->HcInterruptEnable;
+    PULONG InterruptStatusReg = (PULONG)&OhciExtension->OperationalRegs->HcInterruptStatus;
+    OHCI_REG_INTERRUPT_STATUS IntStatus;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE IntEnable;
+#endif
 
     //DPRINT_OHCI("OHCI_CheckController: ...\n");
 
@@ -2132,6 +2139,16 @@ OHCI_CheckController(IN PVOID ohciExtension)
     if (!OHCI_HardwarePresent(OhciExtension, TRUE))
         return;
 
+#ifdef SARCH_XBOX
+    /* HACK: Xbox interrupt workaround (Part 2) */
+    /* Clear all bits in HcInterruptStatus register */
+    IntStatus.AsULONG = 0xFFFFFFFF;
+    WRITE_REGISTER_ULONG(InterruptStatusReg, IntStatus.AsULONG);
+    /* Setup HcInterruptEnable register */
+    IntEnable.AsULONG = 0xFFFFFFFF;
+    IntEnable.Reserved1 = 0;
+    WRITE_REGISTER_ULONG(InterruptEnableReg, IntEnable.AsULONG);
+#endif
     HcControlReg = (PULONG)&OperationalRegs->HcControl;
     HcControl.AsULONG = READ_REGISTER_ULONG(HcControlReg);
 
