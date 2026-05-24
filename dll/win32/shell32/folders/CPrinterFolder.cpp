@@ -330,7 +330,7 @@ HRESULT CPrinterFolder::_AssocCreate(REFIID riid, PVOID *ppvObj)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = pAssoc->Init(NULL, L"Printers", NULL, NULL);
+    hr = pAssoc->Init(ASSOCF_NONE, L"Printers", NULL, NULL);
     if (SUCCEEDED(hr))
         hr = pAssoc->QueryInterface(riid, ppvObj);
 
