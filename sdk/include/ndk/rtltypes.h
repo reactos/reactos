@@ -2068,6 +2068,22 @@ struct _RTL_MEMORY_STREAM
     HANDLE ProcessHandle;
 };
 
+typedef struct _CONTEXT_CHUNK
+{
+    LONG Offset;
+    ULONG Length;
+} CONTEXT_CHUNK, *PCONTEXT_CHUNK;
+
+typedef struct _CONTEXT_EX
+{
+    CONTEXT_CHUNK All;
+    CONTEXT_CHUNK Legacy;
+    CONTEXT_CHUNK XState;
+#if (NTDDI_VERSION >= NTDDI_WIN11)
+    CONTEXT_CHUNK KernelCet;
+#endif
+} CONTEXT_EX, *PCONTEXT_EX;
+
 #endif /* NTOS_MODE_USER */
 
 #ifdef __cplusplus
