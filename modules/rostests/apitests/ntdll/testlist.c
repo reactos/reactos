@@ -122,6 +122,7 @@ extern void func_RtlQueryEnvironmentVariable(void);
 extern void func_RtlQueryEnvironmentVariable_U(void);
 extern void func_RtlQueryTimeZoneInformation(void);
 extern void func_RtlReAllocateHeap(void);
+extern void func_RtlRemoteCall(void);
 extern void func_RtlRemovePrivileges(void);
 extern void func_RtlUnhandledExceptionFilter(void);
 extern void func_RtlUnicodeStringToAnsiString(void);
@@ -275,6 +276,9 @@ const struct test winetest_testlist[] =
 #endif
 #ifdef _M_AMD64
     { "RtlCaptureContext",              func_RtlCaptureContext },
+#endif
+#if defined(_M_X64) || defined(_M_IX86)
+    { "RtlRemoteCall",                  func_RtlRemoteCall },
 #endif
 
     { 0, 0 }
