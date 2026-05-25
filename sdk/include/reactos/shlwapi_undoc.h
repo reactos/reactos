@@ -388,6 +388,20 @@ PathFileExistsDefExtAndAttributesW(
     _In_ DWORD dwWhich,
     _Out_opt_ LPDWORD pdwFileAttributes);
 
+BOOL WINAPI
+PathUnExpandEnvStringsForUserA(
+    _In_ HANDLE hUserToken,
+    _In_ PCSTR pszPath,
+    _Out_writes_(cchBuff) PSTR pszBuff,
+    _In_ INT cchBuff);
+
+BOOL WINAPI
+PathUnExpandEnvStringsForUserW(
+    _In_ HANDLE hUserToken,
+    _In_ PCWSTR pwszPath,
+    _Out_writes_(cchBuff) PWSTR pszBuff,
+    _In_ INT cchBuff);
+
 BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
 VOID WINAPI FixSlashesAndColonA(_Inout_ LPSTR lpstr);
 VOID WINAPI FixSlashesAndColonW(_Inout_ LPWSTR lpwstr);
@@ -482,6 +496,14 @@ PSTR WINAPI CharLowerNoDBCSA(_Inout_ PSTR lpString);
 PWSTR WINAPI CharLowerNoDBCSW(_Inout_ PWSTR lpString);
 PSTR WINAPI CharUpperNoDBCSA(_Inout_ PSTR lpString);
 PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString);
+
+HRESULT WINAPI
+SHWindowsPolicyGetValue(
+    _In_ REFGUID rpolid,
+    _Out_opt_ PVOID pvValue,
+    _Out_opt_ PDWORD pcbValue);
+
+#define E_DATATYPE_MISMATCH HRESULT_FROM_WIN32(ERROR_DATATYPE_MISMATCH)
 
 /*****************************************************************************
  * IAssociationElementOld interface
