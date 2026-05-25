@@ -1,0 +1,171 @@
+LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+
+IDD_KEYBSPEED DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Nopeus"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Merkin toisto", -1, 5, 5, 236, 135
+    ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 13, 18, 15, 15
+    LTEXT "Toiston &viive:", -1, 40, 18, 100, 10
+    LTEXT "Pitka", -1, 40, 33, 20, 10
+    LTEXT "Lyhyt", -1, 200, 33, 20, 10
+    CONTROL "", IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 33, 130, 17
+    ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 13, 70, 15, 15
+    LTEXT "Toiston &nopeus:", -1, 40, 70, 100, 10
+    LTEXT "Hidas", -1, 40, 85, 20, 10
+    LTEXT "Nopea", -1, 200, 85, 20, 10
+    CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
+    LTEXT "Napsauta tahan ja pida nappainta alhaalla testataksesi toistonopeutta:", -1, 15, 105, 216, 10
+    EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 116, 216, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
+    GROUPBOX "Kohdistimen &vilkkumisnopeus:", -1, 5, 145, 236, 50
+    LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
+    LTEXT "Ei mikaan", -1, 40, 165, 25, 10
+    LTEXT "Nopea", -1, 200, 165, 30, 10
+    CONTROL "", IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
+END
+
+IDD_HARDWARE DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Laitteisto"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_CLICK_LOCK DIALOGEX 0, 0, 240, 78
+STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
+CAPTION "Klikkauslukitus"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Lyhyt", -1, 50, 35, 27, 10
+    LTEXT "Pitka", -1, 157, 35, 27, 10
+    CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 78, 35, 70, 17
+    DEFPUSHBUTTON "OK", IDOK, 110, 59, 60, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 174, 59, 60, 14
+    LTEXT "&Saea, kuinka pitkaan hiiren tai kosketuslevyn painiketta on pidettava alhaalla ennen kuin napsautus lukittuu", -1, 37, 5, 200, 27
+    ICON IDI_LOCK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
+END
+
+IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Painikkeet"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Painikkeiden maaritys", -1, 5, 5, 236, 70
+    CHECKBOX "&Vaihda ensisijainen ja toissijainen painike", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 156, 10
+    CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 171, 14, 65, 57, WS_EX_STATICEDGE
+    LTEXT "Valitse tama, jos haluat kayttaa oikeaa hiiren painiketta ensisijaisiin toimintoihin, kuten valintaan ja vetamiseen.", -1, 10, 36, 156, 30
+    GROUPBOX "Kaksoisnapsautuksen nopeus", -1, 5, 78, 236, 70
+    LTEXT "Kaksoisnapsauta kansiota testataksesi asetuksia. Jos kansio ei avaudu tai sulkeudu, kokeile hitaampaa asetusta.", -1, 10, 90, 156, 28
+    LTEXT "Nopeu&s:   Hidas", -1, 10, 123, 50, 10
+    LTEXT "Nopea", -1, 136, 123, 24, 10
+    CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
+    CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 171, 87, 65, 57, WS_EX_STATICEDGE
+    GROUPBOX "Klikkauslukitus", -1, 5, 150, 236, 70
+    CHECKBOX "&Ota klikkauslukitus kayttoon", IDC_CHECK_CLICK_LOCK, 10, 160, 90, 20
+    PUSHBUTTON "&Asetukset...", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
+    LTEXT "Mahdollistaa korostamisen tai vetamisen ilman, etta hiiren painiketta pidetaan alhaalla. Aseta toiminto painamalla painiketta lyhyesti. Vapauta napsauttamalla painiketta uudelleen.", -1, 10, 180, 224, 30
+END
+
+IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Osoittimet"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Malli", -1, 5, 5, 181, 45
+    COMBOBOX IDC_COMBO_CURSOR_SCHEME, 12, 15, 167, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "Ta&llenna nimella...", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
+    PUSHBUTTON "&Poista", IDC_BUTTON_DELETE_SCHEME, 128, 31, 50, 14
+    CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 196, 9, 45, 41, WS_EX_STATICEDGE
+    LTEXT "&Mukauta", -1, 5, 57, 60, 10
+    LISTBOX IDC_LISTBOX_CURSOR, 5, 68, 236, 124, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
+    CHECKBOX "&Ota osoittimen varjo kayttoon", IDC_CHECK_CURSOR_SHADOW, 5, 198, 105, 10
+    PUSHBUTTON "Kayta &oletusta", IDC_BUTTON_USE_DEFAULT_CURSOR, 117, 196, 65, 14
+    PUSHBUTTON "&Selaa...", IDC_BUTTON_BROWSE_CURSOR, 186, 196, 55, 14
+END
+
+IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 192, 53
+STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
+CAPTION "Tallenna malli"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Tallenna taman kohdistinmallin nimi:", -1, 5, 5, 181, 10
+    EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
+    DEFPUSHBUTTON "OK", IDOK, 63, 35, 60, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 126, 35, 60, 14
+END
+
+IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Osoittimen asetukset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Liike", -1, 5, 5, 236, 60
+    LTEXT "Valit&se osoittimen nopeus:", -1, 52, 15, 110, 10
+    LTEXT "Hidas", -1, 60, 30, 20, 10
+    CONTROL "", IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
+    LTEXT "Nopea", -1, 170, 30, 20, 10
+    ICON IDI_MOUSE_SPEED, IDC_ICON_MOUSE_SPEED, 18, 20, 32, 32
+    CHECKBOX "&Paranna osoittimen tarkkuutta", IDC_CHECK_POINTER_PRECISION, 52, 50, 140, 10
+    GROUPBOX "Siirra kohdistin", -1, 5, 70, 236, 40
+    CHECKBOX "Siirra osoitin a&utomaattisesti valintaikkunan oletuspainikkeeseen",
+             IDC_CHECK_SNAP_TO, 52, 84, 183, 20, BS_MULTILINE | BS_TOP
+    ICON IDI_MOUSE_BUTTON, IDC_ICON_SNAP_TO, 18, 83, 15, 15
+    GROUPBOX "Nakyvyys", -1, 5, 115, 236, 95
+    CHECKBOX "&Nayta osoitinjalki:", IDC_CHECK_POINTER_TRAIL, 52, 128, 125, 10
+    LTEXT "Lyhyt", IDC_TEXT_TRAIL_SHORT, 54, 143, 25, 10
+    LTEXT "Pitka", IDC_TEXT_TRAIL_LONG, 157, 143, 30, 10
+    ICON IDI_MOUSE_TRAILS, IDC_ICON_POINTER_TRAIL, 20, 128, 15, 15
+    CONTROL "", IDC_SLIDER_POINTER_TRAIL, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 80, 143, 70, 17
+    CHECKBOX "&Piilota osoitin kirjoitettaessa", IDC_CHECK_HIDE_POINTER, 52, 163, 130, 10
+    ICON IDI_MOUSE_HIDE, IDC_ICON_HIDE_POINTER, 18, 158, 15, 15
+    CHECKBOX "&Nayta osoittimen sijainti, kun painan CTRL-nappainta",
+             IDC_CHECK_SHOW_POINTER, 52, 188, 183, 20, BS_MULTILINE | BS_TOP
+    ICON IDI_MOUSE_POINTER, IDC_ICON_SHOW_POINTER, 18, 183, 15, 15
+END
+
+IDD_PAGE_WHEEL DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Vieritys"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Vieritys", -1, 5, 5, 236, 80
+    ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
+    LTEXT "Vierita pykala kerrallaan", -1, 60, 15, 150, 10
+    RADIOBUTTON "Seuraava &rivimaara kerrallaan:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    RADIOBUTTON "&Yksi naytto kerrallaan", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
+    EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | ES_NUMBER | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS, 125, 45, 12, 12
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME_1 "Hiiri"
+    IDS_CPLDESCRIPTION_1 "Muuttaa hiiren asetuksia."
+    IDS_CPLNAME_2 "Nappaimisto"
+    IDS_CPLDESCRIPTION_2 "Muuttaa nappaimiston asetuksia."
+    IDS_ARROW "Normaali valinta"
+    IDS_HELP "Ohjevalinta"
+    IDS_APPSTARTING "Toimii taustalla"
+    IDS_WAIT "Varattu"
+    IDS_CROSSHAIR "Tarkka valinta"
+    IDS_IBEAM "Tekstin valinta"
+    IDS_NWPEN "Kasinkirjoitus"
+    IDS_NO "Ei kaytettavissa"
+    IDS_SIZENS "Pystysuuntainen koon muutos"
+    IDS_SIZEWE "Vaakasuuntainen koon muutos"
+    IDS_SIZENWSE "Diagonaalinen koon muutos 1"
+    IDS_SIZENESW "Diagonaalinen koon muutos 2"
+    IDS_SIZEALL "Siirra"
+    IDS_UPARROW "Vaihtoehtoinen valinta"
+    IDS_HAND "Linkkivalinta"
+    IDS_NONE "(Ei mikaan)"
+    IDS_SYSTEM_SCHEME "(jarjestelman malli)"
+    IDS_BROWSE_FILTER "Kohdistimet (*.ani, *.cur)\0*.ani;*.cur\0Animoidut kohdistimet (*.ani)\0*.ani\0Staattiset kohdistimet (*.cur)\0*.cur\0Kaikki tiedostot\0*.*\0\0"
+    IDS_BROWSE_TITLE "Selaa"
+    IDS_REMOVE_TITLE "Vahvista kohdistinmallin poisto"
+    IDS_REMOVE_TEXT "Haluatko varmasti poistaa kohdistinmallin '%s'?"
+    IDS_OVERWRITE_TITLE "Vahvista kohdistinmallin ylikirjoitus"
+    IDS_OVERWRITE_TEXT "Valitsemasi kohdistinmallin nimi on jo kaytossa. Haluatko ylikirjoittaa olemassa olevan kohdistinmallin?"
+    IDS_ANIMATE_CURSOR "Animoitu kohdistin"
+END

@@ -109,7 +109,7 @@ BEGIN
     LTEXT "Valitse, mitkä järjestelmäkuvakkeet näytetään aina.", IDC_STATIC, 13, 113, 223, 8
     AUTOCHECKBOX "Näytä &kello", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
     AUTOCHECKBOX "Näytä &sekunnit", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
-    AUTOCHECKBOX "&Desktop", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
+    AUTOCHECKBOX "&Työpöytä", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
 END
 
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
@@ -118,8 +118,8 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Mukauta ilmoituksia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "ReactOS näyttää kuvakkeet aktiivisille ja kiireellisille ilmoituksille, ja piilottaa ei-aktiiviset. Voit muuttaa tätä käyttäytymistä kohteille allaolevassa listassa.", IDC_STATIC, 6, 6, 220, 30
-    LTEXT            "Valitse kohde, sitten valitse sen ilmoitus käyttäytyminen:", IDC_STATIC, 6, 40, 220, 10
+    LTEXT            "ReactOS näyttää kuvakkeet aktiivisille ja kiireellisille ilmoituksille ja piilottaa ei-aktiiviset. Voit muuttaa tätä käyttäytymistä alla oleville kohteille.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "Valitse kohde ja valitse sitten sen ilmoituskäyttäytyminen:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
     PUSHBUTTON       "Palauta &oletus", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
@@ -143,7 +143,7 @@ BEGIN
     LTEXT            "Poistaaksesi tiedot viimeksi käytetyistä tiedostoista, ohjelmista, nettisivuista, klikkaa Tyhjennä.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "&Tyhjennä", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "K&äynnistä valikko lisäasetukset:", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    CONTROL          "Käynnistä-valikon &asetukset", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", TVS_HASBUTTONS | WS_BORDER, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Peruuta", IDCANCEL, 176, 220, 50, 14
 END
@@ -156,7 +156,7 @@ BEGIN
     DEFPUSHBUTTON    "&Jätä huomiotta", IDIGNORE, 215, 60, 50, 14
     PUSHBUTTON       "&Nimeä uudelleen", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
-    AUTOCHECKBOX     "&Älä suoritä tätä tarkistusta käynnistettäessä", IDC_NOTCHECK, 7, 62, 139, 10
+    AUTOCHECKBOX     "&Älä suorita tätä tarkistusta käynnistettäessä", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
     LTEXT            "On tiedosto tai kansio tietokoneellasi nimeltään %s joka voi aiheuttaa sen että tietyt ohjelmat eivät toimi oikein. Sen uudelleenimeäminen nimelle %s ratkaisisi tämän ongelman. Haluatko nimetä sen uudelleen nyt?", IDC_STATIC, 34, 7, 224, 37
 END
@@ -166,11 +166,11 @@ STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 CAPTION "Lisäasetukset"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX         "Käynnistä Valikko asetukset ", IDC_STATIC, 7, 7, 238, 42
-    AUTOCHECKBOX     "&Avaa alivalikko kun keskeytän ne hiirellä", IDC_AUTOOPEN, 14, 21, 224, 10
+    GROUPBOX         "Käynnistä-valikon asetukset", IDC_STATIC, 7, 7, 238, 42
+    AUTOCHECKBOX     "&Avaa alivalikot, kun osoitan niitä hiirellä", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "Korosta &uudet asennetut ohjelmat", IDC_HIGHLIGHT, 14, 35, 224, 10
     LTEXT            "Käynnistä &valikko kohteet:", IDC_STATIC, 7, 53, 238, 8
-    CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
+    CONTROL          "Käynnistä-valikon &asetukset", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "Viimeisimmät tiedostot ", IDC_STATIC, 7, 133, 238, 56
     LTEXT            "Valitse tämä vaihtoehto saadaksesi nopean pääsyn tiedostoihin jotka olet avannut lähiaikoina.  Tämän listan tyhjentäminen ei poista tiedostoja.", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "Listaa &useimmin avatut tiedostot", IDC_RECENTLY, 14, 168, 147, 10
@@ -182,7 +182,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Yleinen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX         "Valiset kuvakekoko ohjelmille ", IDC_STATIC, 7, 7, 238, 37
+    GROUPBOX         "Valitse ohjelmien kuvakekoko", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
     AUTORADIOBUTTON  "&Suuret kuvakkeet", IDC_CHOOSELARGE, 43, 25, 53, 10

@@ -1,0 +1,28 @@
+LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Yleiset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
+    GROUPBOX "Renderointiasetukset", -1, 5, 25, 230, 90
+    LTEXT "&Renderoija:", -1, 15, 42, 37, 10
+    COMBOBOX IDC_RENDERER, 55, 40, 160, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Tama ohittaa naytonohjaimen oletusasetukset. Valitse \"Oletus\" palataksesi alkuperaisiin asetuksiin.", -1, 15, 60, 210, 40
+    GROUPBOX "Virheenjäljitys", -1, 5, 125, 230, 90
+    LTEXT "DEBUGCHANNEL:", -1, 15, 142, 65, 10
+    COMBOBOX IDC_DEBUG_OUTPUT, 80, 140, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Ottaa kayttoon tai poistaa kaytosta opengl32:n debug-tulosteen.\n\nVAROITUS: \"Aseta\" tai \"Tyhjenna\" ylikirjoittaa DEBUGCHANNEL-ymparistomuuttujan sisallon.", -1, 15, 165, 210, 40
+END
+
+STRINGTABLE
+BEGIN
+    IDS_RENDERER_DEFAULT "Jarjestelman oletus"
+    IDS_RENDERER_RSWR "ReactOS-ohjelmistototeutus"
+    IDS_CPLNAME "OpenGL-asetukset"
+    IDS_CPLDESCRIPTION "Maarittaa OpenGL-renderoijan."
+    IDS_DEBUG_SET "Aseta"
+    IDS_DEBUG_CLEAR "Tyhjenna"
+    IDS_DEBUG_DNM "Ala muuta"
+END

@@ -1,0 +1,397 @@
+LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Yleiset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
+    LTEXT "Jarjestelma:", IDC_STATIC, 4, 116, 100, 9
+    LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
+    LTEXT "Versio", IDC_ROSVERSION, 10, 137, 116, 9
+    LTEXT KERNEL_VERSION_REVISION_RC, IDC_STATIC, 10, 146, 110, 9
+    LTEXT "Kayttoaika:", IDC_STATIC, 4, 161, 100, 9
+    LTEXT "", IDC_UPTIME, 10, 173, 116, 9
+    LTEXT "Tietokone:", IDC_STATIC, 124, 116, 100, 9
+    LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
+    LTEXT "", IDC_MACHINELINE2, 130, 137, 118, 9
+    LTEXT "", IDC_MACHINELINE3, 130, 146, 118, 9
+    LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
+    LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
+    LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
+    CONTROL "Avaa <A HREF=""https://reactos.org/"">ReactOSin kotisivu</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    PUSHBUTTON "Nayta &lisenssi...", IDC_LICENCE, 170, 198, 78, 15
+END
+
+IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Laitteisto"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Laitehallinta", IDC_STATIC, 6, 7, 244, 61
+    ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
+    LTEXT "Laitehallinta listaa kaikki tietokoneeseen asennetut laitteet. Voit muuttaa minkä tahansa laitteen ominaisuuksia Laitehallinnassa.", IDC_STATIC, 42, 18, 204, 24
+    PUSHBUTTON "&Laitehallinta...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
+    GROUPBOX "Ohjattu laiteasennus", IDC_STATIC, 6, 79, 244, 61
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    LTEXT "Ohjattu laiteasennus auttaa asentamaan, poistamaan, korjaamaan, irrottamaan ja maarittamaan laitteita.", IDC_STATIC, 42, 90, 204, 24
+    PUSHBUTTON "&Ohjattu laiteasennus...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
+    GROUPBOX "Laitteistoprofiilit", IDC_STATIC, 6, 149, 244, 61
+    ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
+    LTEXT "Laitteistoprofiilien avulla voit maarittaa ja tallentaa eri laitteistokokoonpanoja.", IDC_STATIC, 42, 160, 204, 24
+    PUSHBUTTON "Laitteisto&profiilit...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
+END
+
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Lisäasetukset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Useimpiin näihin asetuksiin vaaditaan järjestelmänvalvojan oikeudet.", IDC_STATIC, 12, 5, 236, 8
+    GROUPBOX "Suorituskyky", IDC_STATIC, 6, 18, 244, 50
+    LTEXT "Suorituskykyasetukset määrittävät, miten sovellukset käyttävät muistia, mikä vaikuttaa tietokoneen nopeuteen.", IDC_STATIC, 16, 29, 228, 17
+    PUSHBUTTON "&Asetukset", IDC_PERFOR, 194, 48, 50, 15
+    GROUPBOX "Käyttäjäprofiilit", IDC_STATIC, 6, 75, 244, 48
+    LTEXT "Kirjautumiseesi liittyvät työpöytäasetukset", IDC_STATIC, 16, 88, 228, 20
+    PUSHBUTTON "A&setukset", IDC_USERPROFILE, 194, 103, 50, 15
+    GROUPBOX "Käynnistys ja palautuminen", IDC_STATIC, 6, 131, 244, 52
+    LTEXT "Käynnistys- ja palautusasetukset määrittävät, miten tietokone käynnistyy ja mitä tehdään virhetilanteessa.", IDC_STATIC, 16, 144, 228, 19
+    PUSHBUTTON "Ase&tukset", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "J&ärjestelmäasetukset", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Ympäristö&muuttujat", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "V&irheraportointi", IDC_ERRORREPORT, 170, 192, 80, 15
+END
+
+IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Järjestelmäasetukset"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX "Versiotiedot", IDC_STATIC, 6, 3, 210, 73
+    LTEXT "ReactOS on rakennettu palvelinkäyttöjärjestelmäksi ja ilmoittaa itsensä sellaisena. Valitse tämä asetus muuttaaksesi ilmoituksen vain sovelluksille.", IDC_STATIC, 15, 15, 183, 41
+    CONTROL "&Ilmoita työasemana", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
+    PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
+END
+
+IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Laitteistoprofiilit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
+    LTEXT "Voit määrittää laitteistoprofiileja eri laitteistokokoonpanoille. Käynnistyksen yhteydessä voit valita käytettävän profiilin.", IDC_STATIC, 46, 11, 188, 25
+    LTEXT "Käytettävissä olevat laitteistoprofiilit:", IDC_STATIC, 8, 41, 120, 8
+    LISTBOX IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
+    PUSHBUTTON "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON | WS_DISABLED
+    PUSHBUTTON "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON | WS_DISABLED
+    PUSHBUTTON "&Ominaisuudet", IDC_HRDPROFPROP, 8, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Kopioi", IDC_HRDPROFCOPY, 63, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Nimeä uudelleen", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Poista", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
+    GROUPBOX "Laitteistoprofiilin valinta", IDC_STATIC, 7, 130, 240, 75
+    LTEXT "Kun ReactOS käynnistyy:", IDC_STATIC, 14, 142, 210, 8
+    AUTORADIOBUTTON "&Odota, kunnes valitsen laitteistoprofiilin", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
+    AUTORADIOBUTTON "&Valitse ensimmäinen profiili, jos en valitse profiilia ajassa", IDC_HRDPROFSELECT, 14, 173, 190, 8
+    LTEXT "sekuntia", IDC_STATIC, 65, 187, 35, 8
+    EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
+    CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
+    DEFPUSHBUTTON "OK", IDOK, 143, 213, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 197, 213, 50, 14
+END
+
+IDD_HARDWAREPROFILE DIALOGEX 0, 0, 212, 188
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Yleiset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_HARDPROF, IDC_STATIC, 10, 10, 18, 20, SS_ICON
+    LTEXT "", IDC_HWPPROP_PROFILE, 48, 16, 150, 8
+    LTEXT "Telakointitunnus:", IDC_STATIC, 10, 42, 43, 8
+    LTEXT "", IDC_HWPPROP_DOCKID, 64, 42, 135, 8
+    LTEXT "Sarjanumero:", IDC_STATIC, 10, 55, 52, 8
+    LTEXT "", IDC_HWPPROP_SERIAL, 64, 55, 135, 8
+    GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
+    AUTOCHECKBOX "Tämä on &kannettava tietokone", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Telakointitila on &tuntematon", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Tietokone on &telakoitu", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
+    AUTORADIOBUTTON "Tietokone ei ole &telakoitu", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
+    GROUPBOX "Laitteistoprofiilin valinta", IDC_STATIC, 10, 138, 192, 42
+    AUTOCHECKBOX "Sisällytä tämä profiili aina &vaihtoehtona ReactOSin käynnistyessä", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+END
+
+IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Kopioi profiili"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Mistä:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
+    LTEXT "Mihin:", IDC_STATIC, 5, 30, 20, 8
+    EDITTEXT IDC_COPYPROFILETO, 30, 30, 160, 12
+    DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 199, 30, 50, 14
+END
+
+IDD_RENAMEPROFILE DIALOGEX 12, 26, 256, 52
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Nimeä profiili uudelleen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Mistä:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
+    LTEXT "Mihin:", IDC_STATIC, 5, 30, 20, 8
+    EDITTEXT IDC_RENPROFEDITTO, 30, 30, 160, 12
+    DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 199, 30, 50, 14
+END
+
+IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Käyttäjäprofiilit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
+    LTEXT "Käyttäjäprofiilit sisältävät työpöytäasetuksia ja muita kirjautumiseesi liittyviä tietoja. Voit käyttää eri tietokoneilla eri profiilia tai valita verkkovierailuprofiilin, joka on sama kaikilla käyttämilläsi tietokoneilla.", IDC_STATIC, 40, 11, 211, 35
+    LTEXT "Tälle tietokoneelle tallennetut profiilit:", IDC_STATIC, 16, 51, 204, 9
+    CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Vaihda &tyyppi", IDC_USERPROFILE_CHANGE, 90, 155, 50, 15
+    PUSHBUTTON "&Poista", IDC_USERPROFILE_DELETE, 145, 155, 50, 15
+    PUSHBUTTON "Kopioi &kohteeseen", IDC_USERPROFILE_COPY, 200, 155, 50, 15
+    CONTROL "Luo uusia käyttäjätilejä avaamalla ohjauspaneelin <A>Käyttäjätilit</A>.",
+            IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
+    DEFPUSHBUTTON "OK", IDOK, 134, 198, 54, 15
+    PUSHBUTTON "Peruuta", IDCANCEL, 196, 198, 54, 15
+END
+
+IDD_USERPROFILE_TYPE DIALOGEX 6, 18, 225, 103
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Vaihda profiilityyppi"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
+    AUTORADIOBUTTON "&Verkkovierailuprofiili", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
+    AUTORADIOBUTTON "&Paikallinen profiili", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
+    DEFPUSHBUTTON "OK", IDOK, 60, 82, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 122, 82, 50, 14
+END
+
+IDD_USERPROFILE_COPY DIALOGEX 6, 18, 261, 133
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Kopioi kohteeseen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Kopioi &profiili kohteeseen", -1, 8, 9, 185, 52
+    EDITTEXT IDC_USERPROFILE_COPY_PATH, 15, 23, 167, 12, ES_AUTOHSCROLL
+    PUSHBUTTON "&Selaa", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
+    GROUPBOX "Sallittu käyttäjälle", -1, 8, 77, 185, 48
+    LTEXT "", IDC_USERPROFILE_COPY_USER, 15, 91, 167, 8
+    PUSHBUTTON "&Vaihda", IDC_USERPROFILE_COPY_CHANGE, 15, 105, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 204, 13, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 204, 30, 50, 14
+END
+
+IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Käynnistys ja palautuminen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Järjestelmän käynnistys", IDC_STATIC, 7, 12, 238, 95
+    LTEXT "Oletus&käyttöjärjestelmä:", IDC_STATIC, 14, 26, 100, 8
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "&Aika käyttöjärjestelmäluettelon näyttämiseen:", IDC_STRECLIST, 14, 56, 160, 8
+    EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
+    CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
+            UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
+    LTEXT "s", IDC_STATIC, 223, 56, 18, 8
+    AUTOCHECKBOX "Aika palautusvaihtoehtojen näyttämiseen tarvittaessa:", IDC_STRRECREC, 14, 70, 170, 8
+    EDITTEXT IDC_STRRECRECEDIT, 185, 68, 30, 12, ES_NUMBER
+    CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
+            UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
+    LTEXT "s", IDC_STATIC, 223, 70, 18, 8
+    LTEXT "Muokkaa käynnistysasetustiedostoa manuaalisesti napsauttamalla Muokkaa.", IDC_STATIC, 14, 89, 187, 8
+    PUSHBUTTON "&Muokkaa", IDC_STRRECEDIT, 188, 87, 50, 14
+    GROUPBOX "Järjestelmävirhe", IDC_STATIC, 7, 111, 238, 140
+    AUTOCHECKBOX "&Kirjoita tapahtuma järjestelmälokiin", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
+    AUTOCHECKBOX "Lähetä järjestelmänvalvojan h&älytys", IDC_STRRECSENDALERT, 14, 138, 148, 10
+    AUTOCHECKBOX "&Käynnistä automaattisesti uudelleen", IDC_STRRECRESTART, 14, 152, 145, 10
+    GROUPBOX "Kirjoita virheenkorjaustiedot", IDC_STATIC, 12, 167, 227, 76
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT "Vedostie&dosto:", IDC_STATIC, 17, 202, 150, 8
+    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
+    AUTOCHECKBOX "&Ylikirjoita olemassa oleva tiedosto", IDC_STRRECOVERWRITE, 17, 228, 125, 10
+    DEFPUSHBUTTON "OK", IDOK, 141, 258, 50, 15
+    PUSHBUTTON "Peruuta", IDCANCEL, 195, 258, 50, 15
+END
+
+IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Virtuaalimuisti"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Asema [Taltion nimi]", IDC_STATIC, 12, 5, 96, 9
+    LTEXT "Sivutustiedoston koko (Mt)", IDC_STATIC, 115, 5, 96, 9
+    LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
+    GROUPBOX "Valitun aseman sivutustiedoston koko", IDC_DRIVEGROUP, 10, 70, 204, 104
+    LTEXT "Asema:", IDC_STATIC, 20, 80, 20, 8
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
+    LTEXT "Vapaata tilaa:", IDC_STATIC, 20, 92, 56, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "&Alkukoko (Mt):", -1, 22, 118, 75, 9
+    LTEXT "E&nimmäiskoko (Mt):", -1, 22, 131, 75, 9
+    AUTORADIOBUTTON "&Mukautettu koko", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
+    AUTORADIOBUTTON "J&ärjestelmän hallitsema koko", IDC_SYSMANSIZE, 20, 145, 88, 9
+    AUTORADIOBUTTON "&Ei sivutustiedostoa", IDC_NOPAGEFILE, 20, 158, 78, 9
+    EDITTEXT IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    EDITTEXT IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Aseta", IDC_SET, 158, 154, 50, 15
+    GROUPBOX "Kaikkien asemien sivutustiedoston kokonaiskoko", IDC_TOTALGROUP, 10, 177, 204, 46
+    LTEXT "Vähimmäiskoko:", IDC_STATIC, 18, 188, 58, 9
+    LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT "Suositus:", IDC_STATIC, 18, 199, 52, 9
+    LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
+    LTEXT "Tällä hetkellä varattu:", IDC_STATIC, 18, 210, 66, 9
+    LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
+    DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
+    PUSHBUTTON "Peruuta", IDCANCEL, 168, 230, 48, 15
+END
+
+IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
+CAPTION "Ympäristömuuttujat"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    SCROLLBAR IDC_DIALOG_GRIP, 245, 238, 7, 7, SBS_SIZEGRIP
+    GROUPBOX "Käyttäjän muuttujat", IDC_USER_VARIABLE_GROUP, 7, 12, 238, 100
+    CONTROL "", IDC_USER_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+            LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Uusi...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
+    PUSHBUTTON "&Muokkaa...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
+    PUSHBUTTON "&Poista", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
+    GROUPBOX "Järjestelmän muuttujat", IDC_SYSTEM_VARIABLE_GROUP, 7, 116, 238, 100
+    CONTROL "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+            LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
+    PUSHBUTTON "U&usi...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
+    PUSHBUTTON "M&uokkaa...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
+    PUSHBUTTON "P&oista", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 141, 224, 50, 14, WS_GROUP
+    PUSHBUTTON "Peruuta", IDCANCEL, 195, 224, 50, 14
+END
+
+IDD_EDIT_VARIABLE DIALOGEX 10, 15, 372, 71
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
+CAPTION "Muokkaa muuttujaa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
+    LTEXT "Muuttujan &nimi:", IDC_STATIC, 7, 14, 50, 8
+    EDITTEXT IDC_VARIABLE_NAME, 75, 12, 289, 12, ES_AUTOHSCROLL
+    LTEXT "Muuttujan &arvo:", IDC_STATIC, 7, 32, 50, 8
+    EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 260, 50, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 314, 50, 50, 14
+    PUSHBUTTON "Selaa &hakemisto...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 75, 14
+    PUSHBUTTON "Selaa &tiedostoja...", IDC_BUTTON_BROWSE_FILE, 86, 50, 75, 14
+END
+
+IDD_EDIT_VARIABLE_FANCY DIALOGEX 10, 15, 300, 250
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
+CAPTION "Muokkaa muuttujaa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    SCROLLBAR IDC_DIALOG_GRIP, 293, 243, 7, 7, SBS_SIZEGRIP
+    CONTROL "", IDC_LIST_VARIABLE_VALUE, "SysListView32", LVS_NOCOLUMNHEADER | LVS_EDITLABELS | LVS_SHOWSELALWAYS |
+                LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 10, 10, 224, 208, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Uusi", IDC_BUTTON_NEW, 242, 10, 50, 14
+    PUSHBUTTON "&Muokkaa", IDC_BUTTON_EDIT, 242, 30, 50, 14
+    PUSHBUTTON "&Selaa...", IDC_BUTTON_BROWSE_FOLDER, 242, 50, 50, 14
+    PUSHBUTTON "&Poista", IDC_BUTTON_DELETE, 242, 70, 50, 14
+    PUSHBUTTON "Siirrä &ylös", IDC_BUTTON_MOVE_UP, 242, 100, 50, 14
+    PUSHBUTTON "Siirrä &alas", IDC_BUTTON_MOVE_DOWN, 242, 120, 50, 14
+    PUSHBUTTON "Muokkaa &tekstinä...", IDC_BUTTON_EDIT_TEXT, 242, 150, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 188, 228, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 242, 228, 50, 14
+END
+
+IDD_LICENCE DIALOGEX 6, 5, 267, 159
+CAPTION "Lisenssi"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_BORDER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+    EDITTEXT IDC_LICENCEEDIT, 6, 3, 255, 131, WS_VSCROLL | ES_READONLY | ES_MULTILINE
+    DEFPUSHBUTTON "OK", IDOK, 106, 140, 54, 15
+END
+
+IDD_VISUALEFFECTS DIALOGEX 6, 18, 227, 204
+CAPTION "Visuaaliset tehosteet"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+   LTEXT "Valitse asetukset, joita haluat käyttää ReactOSin ulkoasuun ja suorituskykyyn tällä tietokoneella.", IDC_STATIC, 7, 6, 208, 18
+   CONTROL "", IDC_TREE, "SysTreeView32", TVS_LINESATROOT | TVS_DISABLEDRAGDROP | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 32, 213, 168
+END
+
+IDD_ADVANCEDPERF DIALOGEX 6, 18, 227, 128
+CAPTION "Lisäasetukset"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+   GROUPBOX "Suorittimen ajoitus", IDC_STATIC, 7, 8, 213, 46
+   LTEXT "Säädä parasta suorituskykyä varten:", IDC_STATIC, 14, 23, 199, 8
+   AUTORADIOBUTTON "&Ohjelmat", IDC_CPUCLIENT, 14, 36, 75, 12
+   AUTORADIOBUTTON "Tausta&pavelut", IDC_CPUSERVER, 96, 36, 85, 12
+   GROUPBOX "Virtuaalimuisti", IDC_STATIC, 7, 60, 213, 57
+   LTEXT "Sivutustiedosto on kiintolevyn alue, jota ReactOS käyttää kuin keskusmuistia.", IDC_STATIC, 14, 74, 199, 16
+   PUSHBUTTON "&Vaihda...", IDC_CHANGESWAP, 163, 97, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Järjestelmä"
+    IDS_CPLSYSTEMDESCRIPTION "Näytä tietoja tietokoneesta ja muuta järjestelmä- ja laitteistoasetuksia."
+    IDS_PERFORMANCEOPTIONS "Suorituskykyasetukset"
+    IDS_MEGABYTE "Mt RAM-muistia"
+    IDS_GIGABYTE "Gt RAM-muistia"
+    IDS_TERABYTE "Tt RAM-muistia"
+    IDS_PETABYTE "Pt RAM-muistia"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
+    IDS_UPTIME_FORMAT "%lu päivää, %02lu:%02lu:%02lu"
+    IDS_VARIABLE "Muuttuja"
+    IDS_VALUE "Arvo"
+    IDS_NO_DUMP "(Ei mitään)"
+    IDS_MINI_DUMP "Pienoisvedos (64 kt)"
+    IDS_KERNEL_DUMP "Ytimen vedos"
+    IDS_FULL_DUMP "Täydellinen vedos"
+    IDS_USERPROFILE_NAME "Nimi"
+    IDS_USERPROFILE_SIZE "Koko"
+    IDS_USERPROFILE_TYPE "Tyyppi"
+    IDS_USERPROFILE_STATUS "Tila"
+    IDS_USERPROFILE_MODIFIED "Muokattu"
+    IDS_USERPROFILE_LOCAL "Paikallinen"
+    IDS_USERPROFILE_ROAMING "Verkkovierailu"
+    IDS_USERPROFILE_MANDATORY "Pakollinen"
+    IDS_USERPROFILE_CONFIRM_DELETE "Haluatko varmasti poistaa käyttäjän %s profiilin?"
+    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Vahvista poisto"
+    IDS_USERPROFILE_ACCOUNT_UNKNOWN "Tuntematon tili"
+    IDS_USERPROFILE_ACCOUNT_DELETED "Poistettu tili"
+    IDS_USERPROFILE_TYPE_TEXT "Kun käyttäjä %s kirjautuu tähän tietokoneeseen, käytetäänkö verkkovierailuprofiilia vai vain sen paikallista välimuistikopiota."
+    IDS_MESSAGEBOXTITLE "Järjestelmän ohjauspaneelisovelma"
+    IDS_WARNINITIALSIZE "Anna sivutustiedoston alkuarvoksi numeerinen arvo."
+    IDS_WARNMAXIMUMSIZE "Anna sivutustiedoston enimmäisarvoksi numeerinen arvo."
+    IDS_WARNINITIALRANGE "Sivutustiedoston alkukoon on oltava 2 Mt:n ja %lu Mt:n välillä valitulla asemalla."
+    IDS_WARNMAXIMUMRANGE "Sivutustiedoston enimmäiskoon on oltava vähintään alkukoon suuruinen ja pienempi kuin %lu Mt valitulla asemalla."
+    IDS_PAGEFILE_MB "%lu Mt"
+    IDS_PAGEFILE_NONE "Ei mitään"
+    IDS_PAGEFILE_SYSTEM "Järjestelmän hallitsema"
+    IDS_INFOREBOOT "Muutosten käyttöönotto vaatii tietokoneen uudelleenkäynnistyksen."
+    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Vahvista profiilin poisto"
+    IDS_HWPROFILE_CONFIRM_DELETE "Haluatko varmasti poistaa laitteistoprofiilin "%s"?"
+    IDS_HWPROFILE_ALREADY_IN_USE "Profiilin nimi on jo käytössä."
+    IDS_HWPROFILE_PROFILE "Profiili"
+    IDS_HWPROFILE_WARNING "Varoitus"
+    IDS_ENVIRONMENT_WARNING "Kaikki tehdyt muutokset hylätään ja muuttujan arvoa muokataan tekstinä."
+    IDS_ENVIRONMENT_WARNING_TITLE "Järjestelmän ominaisuudet"
+    IDS_FILE_BROWSE_FILTER "Kaikki tiedostot (*.*)\0*.*\0"
+END
