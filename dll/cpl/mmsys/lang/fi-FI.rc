@@ -2,40 +2,40 @@ LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 IDD_VOLUME DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Aanenvoimakkuus"
+CAPTION "Äänenvoimakkuus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLICON, IDI_CPLICON, 8, 5, 32, 32
     LTEXT "", IDC_DEVICE_NAME, 40, 10, 194, 20
-    GROUPBOX "Laitteen aanenvoimakkuus", -1, 7, 30, 230, 100, WS_GROUP
+    GROUPBOX "Laitteen äänenvoimakkuus", -1, 7, 30, 230, 100, WS_GROUP
     CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE, 17, 45, 32, 32
     CONTROL "", IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 20
     LTEXT "Hiljainen", IDC_VOLUME_LOW, 62, 66, 30, 9
     LTEXT "Voimakas", IDC_VOLUME_HIGH, 195, 66, 30, 9
-    AUTOCHECKBOX "&Mykista", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
-    AUTOCHECKBOX "Nayta aanenvoimakkuuden kuvake tehtavapalkissa", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
-    PUSHBUTTON "L&isaasetukset...", IDC_ADVANCED_BTN, 150, 105, 75, 15
+    AUTOCHECKBOX "&Mykistä", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
+    AUTOCHECKBOX "Näytä äänenvoimakkuuden &kuvake tehtäväpalkissa", IDC_ICON_IN_TASKBAR, 50, 92, 190, 10
+    PUSHBUTTON "L&isäasetukset...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Kaiutinasetukset", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 15, 155, 48, 45
-    LTEXT "Muuta alla olevilla asetuksilla yksittaisten kaiuttimien aanenvoimakkuutta ja muita asetuksia.", -1, 70, 155, 150, 36
-    PUSHBUTTON "&Kaiuttimien aanenvoimakkuus...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
-    PUSHBUTTON "&Lisatiedot...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
+    LTEXT "Muuta alla olevilla asetuksilla yksittäisten kaiuttimien äänenvoimakkuutta ja muita asetuksia.", -1, 70, 155, 150, 26
+    PUSHBUTTON "&Kaiuttimien äänenvoimakkuus...", IDC_SPEAKER_VOL_BTN, 70, 185, 155, 15
+    PUSHBUTTON "&Lisäasetukset...", IDC_ADVANCED2_BTN, 150, 202, 75, 15
 END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Aanet"
+CAPTION "Äänet"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aanimalli on tapahtumiin liitetty aanijoukko ReactOSissa ja ohjelmissa. Voit valita olemassa olevan mallin tai tallentaa muokatun mallin.", -1, 8, 7, 230, 30
-    LTEXT "Aani&malli:", -1, 8, 42, 150, 9
+    LTEXT "Äänimalli on tapahtumiin liitetty äänijoukko ReactOSissa ja ohjelmissa. Voit valita olemassa olevan mallin tai tallentaa muokatun mallin.", -1, 8, 7, 230, 30
+    LTEXT "Ääni&malli:", -1, 8, 42, 150, 9
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Tallenna &nimella...", IDC_SAVEAS_BTN, 134, 70, 50, 15
+    PUSHBUTTON "Tallenna &nimellä...", IDC_SAVEAS_BTN, 134, 70, 50, 15
     PUSHBUTTON "&Poista", IDC_DELETE_BTN, 188, 70, 50, 15
-    LTEXT "Muuta aania napsauttamalla ohjelmatapahtumaa alla olevasta luettelosta ja valitsemalla sille aani. Voit tallentaa muutokset uutena aanimallina.", -1, 8, 90, 230, 27
+    LTEXT "Muuta ääniä napsauttamalla ohjelmatapahtumaa alla olevasta luettelosta ja valitsemalla sille ääni. Voit tallentaa muutokset uutena äänimallina.", -1, 8, 90, 230, 27
     LTEXT "&Ohjelmatapahtumat:", -1, 8, 118, 150, 9
-    CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
-    LTEXT "&Aanet:", IDC_TEXT_SOUND, 8, 194, 80, 9, WS_DISABLED
+    CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
+    LTEXT "&Äänet:", IDC_TEXT_SOUND, 8, 194, 80, 9, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "", IDC_PLAY_SOUND, 168, 205, 15, 15, WS_DISABLED | BS_ICON
     PUSHBUTTON "&Selaa...", IDC_BROWSE_SOUND, 188, 205, 50, 15, WS_DISABLED
@@ -43,28 +43,28 @@ END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Aani"
+CAPTION "Ääni"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Aanen toisto", -1, 7, 7, 230, 60, WS_GROUP
+    GROUPBOX "Äänen toisto", -1, 7, 7, 230, 60, WS_GROUP
     ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
     LTEXT "&Oletuslaite:", -1, 50, 20, 80, 9
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
-    PUSHBUTTON "&Aanenvoimakkuus...", IDC_VOLUME1_BTN, 85, 47, 70, 15
-    PUSHBUTTON "Lis&aasetukset...", IDC_ADV2_BTN, 160, 47, 70, 15
-    GROUPBOX "Aanen tallennus", -1, 7, 75, 230, 60, WS_GROUP
+    PUSHBUTTON "&Äänenvoimakkuus...", IDC_VOLUME1_BTN, 85, 47, 70, 15
+    PUSHBUTTON "Lis&äasetukset...", IDC_ADV2_BTN, 160, 47, 70, 15
+    GROUPBOX "Äänen tallennus", -1, 7, 75, 230, 60, WS_GROUP
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
     LTEXT "O&letuslaite:", -1, 50, 88, 80, 9
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
-    PUSHBUTTON "A&anenvoimakkuus...", IDC_VOLUME2_BTN, 85, 115, 70, 15
-    PUSHBUTTON "Lisa&tiedot...", IDC_ADV1_BTN, 160, 115, 70, 15
+    PUSHBUTTON "Ä&änenvoimakkuus...", IDC_VOLUME2_BTN, 85, 115, 70, 15
+    PUSHBUTTON "Lis&äasetukset...", IDC_ADV1_BTN, 160, 115, 70, 15
     GROUPBOX "MIDI-musiikin toisto", -1, 7, 145, 230, 60, WS_GROUP
     ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
     LTEXT "Oletuslai&te:", -1, 50, 158, 80, 9
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
-    PUSHBUTTON "Aanenvoim&akkuus...", IDC_VOLUME3_BTN, 85, 185, 70, 15
+    PUSHBUTTON "Äänenvoim&akkuus...", IDC_VOLUME3_BTN, 85, 185, 70, 15
     PUSHBUTTON "&Tietoja...", IDC_ADV3_BTN, 160, 185, 70, 15
-    AUTOCHECKBOX "Kayta vain oletuslaitteita", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10, WS_GROUP | WS_TABSTOP
+    AUTOCHECKBOX "Käytä vain oletuslaitteita", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10, WS_GROUP | WS_TABSTOP
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
@@ -72,19 +72,19 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Puhe"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Nama asetukset maarittavat valitun puheentoisto- tai puheentallennuslaitteen aanenvoimakkuuden ja lisatiedot.", -1, 8, 7, 230, 40
+    LTEXT "Nämä asetukset määrittävät valitun puheentoisto- tai puheentallennuslaitteen äänenvoimakkuuden ja lisäasetukset.", -1, 8, 7, 230, 30
     GROUPBOX "Puheentoisto", -1, 7, 37, 230, 60, WS_GROUP
     ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
     LTEXT "&Oletuslaite:", -1, 50, 50, 80, 9
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
-    PUSHBUTTON "&Aanenvoimakkuus...", IDC_VOLUME4_BTN, 85, 77, 70, 15
-    PUSHBUTTON "Lis&aasetukset...", IDC_ADV4_BTN, 160, 77, 70, 15
+    PUSHBUTTON "&Äänenvoimakkuus...", IDC_VOLUME4_BTN, 85, 77, 70, 15
+    PUSHBUTTON "Lis&äasetukset...", IDC_ADV4_BTN, 160, 77, 70, 15
     GROUPBOX "Puheentallennus", -1, 7, 105, 230, 60, WS_GROUP
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
     LTEXT "O&letuslaite:", -1, 50, 118, 80, 9
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
-    PUSHBUTTON "A&anenvoimakkuus...", IDC_VOLUME5_BTN, 85, 145, 70, 15
-    PUSHBUTTON "Lisa&tiedot...", IDC_ADV5_BTN, 160, 145, 70, 15
+    PUSHBUTTON "Ä&änenvoimakkuus...", IDC_VOLUME5_BTN, 85, 145, 70, 15
+    PUSHBUTTON "Lis&äasetukset...", IDC_ADV5_BTN, 160, 145, 70, 15
     PUSHBUTTON "&Testaa laitteisto...", IDC_TEST_HARDWARE, 160, 175, 70, 15, WS_GROUP | WS_TABSTOP
 END
 
@@ -97,10 +97,10 @@ END
 
 IDD_SAVE_SCHEME_AS DIALOGEX 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Tallenna malli nimella"
+CAPTION "Tallenna malli nimellä"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Tallenna tama aanimalli nimella:", -1, 7, 7, 212, 9
+    LTEXT "&Tallenna tämä äänimalli nimellä:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 93, 36, 60, 14
     PUSHBUTTON "Peruuta", IDCANCEL, 157, 36, 60, 14
@@ -123,20 +123,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Suorituskyky"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Namat asetukset maarittavat, miten ReactOS toistaa aanta. Ne voivat auttaa aaneen liittyvien ongelmien selvittamisessa.", 8492, 34, 7, 218, 23
-    GROUPBOX "Aanen toisto", 8494, 7, 32, 243, 152
+    LTEXT "Nämä asetukset määrittävät, miten ReactOS toistaa ääntä. Ne voivat auttaa ääneen liittyvien ongelmien selvittämisessä.", 8492, 34, 7, 218, 23
+    GROUPBOX "Äänen toisto", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "&Laitteistokiihdytys:", 8495, 13, 56, 111, 14
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 54, 62, 18
-    LTEXT "Naytteenottotaajuuden muunnoksen laatu:", 8496, 13, 123, 103, 14
+    LTEXT "Näytteenottotaajuuden muunnoksen laatu:", 8496, 13, 123, 103, 14
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
     PUSHBUTTON "&Palauta oletukset", 5400, 7, 191, 110, 14
     LTEXT "Ei", 8497, 128, 56, 21, 10
-    LTEXT "Taysi", 8498, 214, 56, 21, 9
-    LTEXT "Hyva", 8499, 128, 123, 21, 10
+    LTEXT "Täysi", 8498, 214, 56, 21, 9
+    LTEXT "Hyvä", 8499, 128, 123, 21, 10
     LTEXT "Paras", 8500, 214, 123, 23, 9
-    LTEXT "Tama merkkijono kuvaa capture-laitteen laitteistoasetusta", 5399, 13, 145, 227, 21
-    LTEXT "Tama merkkijono kuvaa render-laitteen laitteistoasetusta", 5398, 13, 78, 227, 22
+    LTEXT "Tämä teksti kuvaa tallennuslaitteen laitteistoasetusta.", 5399, 13, 145, 227, 21
+    LTEXT "Tämä teksti kuvaa toistolaitteen laitteistoasetusta.", 5398, 13, 78, 227, 22
 END
 
 IDD_PERFORMANCE2 DIALOGEX 0, 0, 257, 218
@@ -144,20 +144,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Suorituskyky"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Namat asetukset maarittavat, miten ReactOS tallentaa aanta. Ne voivat auttaa aaneen liittyvien ongelmien selvittamisessa.", 8492, 34, 7, 217, 20
-    GROUPBOX "Aanen tallennus", 8494, 7, 29, 242, 122
+    LTEXT "Nämä asetukset määrittävät, miten ReactOS tallentaa ääntä. Ne voivat auttaa ääneen liittyvien ongelmien selvittämisessä.", 8492, 34, 7, 217, 24
+    GROUPBOX "Äänen tallennus", 8494, 7, 33, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
-    LTEXT "&Laitteistokiihdytys:", 8495, 13, 46, 103, 9
-    CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 43, 62, 18
-    LTEXT "Naytteenottotaajuuden muunnoksen laatu:", 8496, 13, 103, 103, 9
-    CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 101, 62, 18
+    LTEXT "&Laitteistokiihdytys:", 8495, 13, 50, 103, 9
+    CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 47, 62, 18
+    LTEXT "Näytteenottotaajuuden muunnoksen laatu:", 8496, 13, 107, 103, 9
+    CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 105, 62, 18
     PUSHBUTTON "&Palauta oletukset", 5400, 9, 158, 110, 14
-    LTEXT "Ei", 8497, 125, 46, 24, 10
-    LTEXT "Taysi", 8498, 217, 46, 19, 9
-    LTEXT "Hyva", 8499, 125, 103, 24, 10
-    LTEXT "Paras", 8500, 217, 103, 19, 9
-    LTEXT "Tama merkkijono kuvaa capture-laitteen laitteistoasetusta", 5399, 13, 125, 222, 21
-    LTEXT "Tama merkkijono kuvaa render-laitteen laitteistoasetusta", 5398, 13, 68, 218, 24
+    LTEXT "Ei", 8497, 125, 50, 24, 10
+    LTEXT "Täysi", 8498, 217, 50, 19, 9
+    LTEXT "Hyvä", 8499, 125, 107, 24, 10
+    LTEXT "Paras", 8500, 217, 107, 19, 9
+    LTEXT "Tämä teksti kuvaa tallennuslaitteen laitteistoasetusta.", 5399, 13, 129, 222, 21
+    LTEXT "Tämä teksti kuvaa toistolaitteen laitteistoasetusta.", 5398, 13, 72, 218, 24
 END
 
 IDD_SETUP1 DIALOGEX 0, 0, 227, 206
@@ -167,11 +167,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Tietokone ei voi toistaa aanta, koska ReactOS Audio -palvelu ei ole kaytossa.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Ota ReactOS Audio kayttoon", 10253, 60, 68, 150, 9
+    LTEXT "Tietokone ei voi toistaa ääntä, koska ReactOS Audio -palvelu ei ole käytössä.", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "&Ota ReactOS Audio käyttöön", 10253, 60, 68, 150, 9
     LTEXT "Huomautukset", 10246, 58, 87, 150, 11
-    LTEXT "1. Sinun on oltava jarjestelmanvalvoja ottaaksesi taman palvelun kayttoon. Jos et ole kirjautunut jarjestelmanvalvojana, sinulta pyydetaan jarjestelmanvalvojan nimi ja salasana.", 10247, 60, 100, 150, 40
-    LTEXT "2. ReactOS Audio -palvelun kayttoonoton jalkeen tietokone on kaynnistettava uudelleen.", 10248, 60, 140, 150, 40
+    LTEXT "1. Sinun on oltava järjestelmänvalvoja ottaaksesi tämän palvelun käyttöön. Jos et ole kirjautunut järjestelmänvalvojana, sinulta pyydetään järjestelmänvalvojan nimi ja salasana.", 10247, 60, 100, 150, 40
+    LTEXT "2. ReactOS Audio -palvelun käyttöönoton jälkeen tietokone on käynnistettävä uudelleen.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -179,7 +179,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Monikanava"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Siirtamalla alla olevia liukusaatimia voit saataa kaikkien tietokoneeseen liitettyjen kaiuttimien aanenvoimakkuutta.", 9506, 8, 4, 212, 24
+    LTEXT "Siirtämällä alla olevia liukusäätimiä voit säätää kaikkien tietokoneeseen liitettyjen kaiuttimien äänenvoimakkuutta.", 9506, 8, 4, 212, 24
     LTEXT "Hiljainen", 9473, 65, 31, 14, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "Slider1", 9475, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 29, 108, 17
@@ -212,7 +212,7 @@ BEGIN
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 162, 108, 17
     LTEXT "Voimakas", 9502, 202, 164, 17, 8
-    AUTOCHECKBOX "Siirra kaikkia liukusaatimia samanaikaisesti", 9504, 5, 185, 216, 9
+    AUTOCHECKBOX "Siirrä kaikkia liukusäätimiä samanaikaisesti", 9504, 5, 185, 216, 9
     PUSHBUTTON "Palauta &oletukset", 9505, 110, 199, 110, 14
 END
 
@@ -223,31 +223,31 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "ReactOS Audio -palvelu on nyt kaytossa. Aani ei kuitenkaan valttamatta toimi oikein ennen kuin kaynnistat ReactOSin uudelleen. Jos haluat kaynnistaa nyt uudelleen, tallenna ensin tyosi ja sulje kaikki ohjelmat.", 10261, 60, 25, 150, 50
-    LTEXT "Kaynnista ReactOS uudelleen napsauttamalla OK.", 10262, 60, 75, 150, 20
-    LTEXT "Jos valitset Peruuta, sinun on kaynnistettava myohemmin uudelleen, jotta ReactOS Audio toimii oikein.", 10263, 60, 100, 150, 40
+    LTEXT "ReactOS Audio -palvelu on nyt käytössä. Ääni ei kuitenkaan välttämättä toimi oikein ennen kuin käynnistät ReactOSin uudelleen. Jos haluat käynnistää nyt uudelleen, tallenna ensin työsi ja sulje kaikki ohjelmat.", 10261, 60, 25, 150, 50
+    LTEXT "Käynnistä ReactOS uudelleen napsauttamalla OK.", 10262, 60, 75, 150, 20
+    LTEXT "Jos valitset Peruuta, sinun on käynnistettävä myöhemmin uudelleen, jotta ReactOS Audio toimii oikein.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Aanet ja aanilaitteet"
-    IDS_CPLDESCRIPTION "Muuta tietokoneen aanimallia tai maarita kaiuttimien ja tallennuslaitteiden asetukset."
-    IDS_NO_SOUND "(Ei mitaan)"
+    IDS_CPLNAME "Äänet ja äänilaitteet"
+    IDS_CPLDESCRIPTION "Muuta tietokoneen äänimallia tai määritä kaiuttimien ja tallennuslaitteiden asetukset."
+    IDS_NO_SOUND "(Ei mitään)"
     IDS_NO_DEVICES "Ei laitteita"
-    IDS_SPEAKER_VOLUME "Kaiuttimien aanenvoimakkuus"
+    IDS_SPEAKER_VOLUME "Kaiuttimien äänenvoimakkuus"
     IDS_SPEAKER_LEFT "&Vasen:"
     IDS_SPEAKER_RIGHT "&Oikea:"
-    IDS_SPEAKER_CENTER "&Keskella:"
+    IDS_SPEAKER_CENTER "&Keskellä:"
     IDS_SPEAKER_BACK_LEFT "&Takavasen:"
     IDS_SPEAKER_BACK_RIGHT "Ta&kaoikea:"
     IDS_SPEAKER_LOW_FREQUENCY "Matalat &taajuudet:"
     5825 "Ohjelmavirhe"
     5826 "Sulje ohjelma"
-    5827 "Akun kriittinen halytys"
-    5828 "Laitteen yhdistaminen"
+    5827 "Akun kriittinen hälytys"
+    5828 "Laitteen yhdistäminen"
     5829 "Laitteen irrottaminen"
-    5830 "Laitteen yhdistaminen epaonnistui"
-    5831 "Tyhjenna roskakori"
+    5830 "Laitteen yhdistäminen epäonnistui"
+    5831 "Tyhjennä roskakori"
     5832 "Akun alhainen varaus"
     5833 "Suurenna"
     5834 "Valikkokomento"
@@ -258,19 +258,19 @@ BEGIN
     5839 "Avaa ohjelma"
     5840 "Tulostus valmis"
     5841 "Palauta alas"
-    5842 "Palauta ylos"
+    5842 "Palauta ylös"
     5843 "Asteriski"
-    5844 "Oletusaani"
+    5844 "Oletusääni"
     5845 "Huomautus"
     5846 "Poistu ReactOSista"
-    5847 "Kriittinen pysaytys"
+    5847 "Kriittinen pysäytys"
     5848 "Järjestelmäilmoitus"
     5849 "Kysymys"
-    5850 "Kaynnista ReactOS"
-    5851 "Kaynnista-valikko"
+    5850 "Käynnistä ReactOS"
+    5851 "Käynnistä-valikko"
     IDS_REACTOS_LOGOFF "ReactOS-uloskirjautuminen"
-    IDS_REACTOS_LOGON "ReactOS-sisaan kirjautuminen"
+    IDS_REACTOS_LOGON "ReactOS-sisäänkirjautuminen"
     5854 "ReactOS Explorer"
-    IDS_BROWSE_FOR_SOUND "Etsi uusia aania"
+    IDS_BROWSE_FOR_SOUND "Etsi uusia ääniä"
     IDS_WAVE_FILES_FILTER "Wave-tiedostot (*.wav)|*.wav|"
 END

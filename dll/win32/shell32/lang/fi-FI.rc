@@ -2,15 +2,15 @@ LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Suuret Kuvakkeet", FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Pienet Kuvakkeet", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Suuret kuvakkeet", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Pienet kuvakkeet", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Tiedot", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
-    POPUP "&Järjestä Kuvakkeet", FCIDM_SHVIEW_ARRANGE
+    POPUP "&Järjestä kuvakkeet", FCIDM_SHVIEW_ARRANGE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Järjestä &Automaattisesti", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Järjestä &automaattisesti", FCIDM_SHVIEW_AUTOARRANGE
         MENUITEM "&Aseta ruudukkoon", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
@@ -22,8 +22,8 @@ BEGIN
     BEGIN
         POPUP "&Näkymä", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "&Pienet kuvakkeet", FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Suuret kuvakkeet", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Suuret kuvakkeet", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Pienet kuvakkeet", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Tiedot", FCIDM_SHVIEW_REPORTVIEW
         END
@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "P&äivitä", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Liitä", FCIDM_SHVIEW_INSERT
-        MENUITEM "Liitä Li&nkiksi", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Liitä &pikakuvakkeena", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
@@ -49,7 +49,7 @@ BEGIN
     MENUITEM "&Leikkaa\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "K&opioi\tCtrl+C", FCIDM_SHVIEW_COPY
     MENUITEM "Liit&ä\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Liitä Li&nkiksi", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "Liitä &pikakuvakkeena", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
     MENUITEM "Ko&pioi kansioon...", FCIDM_SHVIEW_COPYTO
     MENUITEM "&Siirrä kansioon...", FCIDM_SHVIEW_MOVETO
@@ -68,7 +68,7 @@ BEGIN
         MENUITEM "&Kopioi", IDM_COPY
         MENUITEM "L&iitä", IDM_INSERT
         MENUITEM SEPARATOR
-        MENUITEM "Luo lin&kki", IDM_CREATELINK
+        MENUITEM "Luo &pikakuvake", IDM_CREATELINK
         MENUITEM "&Poista", IDM_DELETE
         MENUITEM "&Nimeä uudelleen", IDM_RENAME
         MENUITEM SEPARATOR
@@ -104,8 +104,8 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
-    DEFPUSHBUTTON "OK", IDOK, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Peruuta", IDCANCEL, 134, 176, 50, 12
+    DEFPUSHBUTTON "OK", IDOK, 80, 172, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Peruuta", IDCANCEL, 134, 172, 50, 14
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
@@ -116,7 +116,7 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 56, 194, 105
     PUSHBUTTON "&Luo uusi kansio", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "&OK", IDOK, 102, 174, 50, 14
     PUSHBUTTON "&Peruuta", IDCANCEL, 156, 174, 50, 14
@@ -374,7 +374,7 @@ BEGIN
     AUTOCHECKBOX "&Suojaa tietokoneeni ja tietoni luvattomalta ohjelmatoiminnalta\n\nTämä vaihtoehto voi estää tietokoneviruksia vahingoittamasta tietokonettasi tai henkilökohtaisia tietojasi, mutta sen valitseminen saattaa saada ohjelman toimimaan virheellisesti.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
     AUTORADIOBUTTON "&Seuraava käyttäjä:", IDC_RUNAS_OTHER, 7, 110, 226, 10
     LTEXT "&Käyttäjänimi:", -1, 18, 124, 54, 10
-    COMBOBOX IDC_RUNAS_NAME, 75, 122, 134, 40, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    COMBOBOX IDC_RUNAS_NAME, 75, 122, 134, 40, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "...", IDC_RUNAS_BROWSE, 213, 122, 20, 14, WS_TABSTOP
     LTEXT "&Salasana:", -1, 18, 142, 53, 10
     EDITTEXT IDC_RUNAS_PWD, 75, 140, 134, 14, ES_LEFT | ES_PASSWORD | WS_BORDER | WS_TABSTOP
@@ -392,7 +392,7 @@ BEGIN
     RADIOBUTTON "&Mukautettu koko:", 14001, 20, 90, 80, 10
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "E&nimmäiskoko (Mt):", -1, 20, 105, 70, 10
-    RADIOBUTTON "Älä siirrä tiedostoja &Roskakoriin. Poista tiedostot heti, kun ne poistetaan.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+    RADIOBUTTON "Älä siirrä tiedostoja &roskakoriin. Poista tiedostot heti, kun ne poistetaan.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Näytä poiston vahvistusvalintaikkuna", 14004, 20, 155, 140, 10
 END
 
@@ -529,12 +529,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "Automaattinen toisto"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Valitse sisältö tyyppin, sitten valitse toiminto jonka ReactOS suorittaa automaattisesti kun sitä tyyppiä käytetään tässä laitteessa:", 1000, 7, 7, 215, 20
+    LTEXT "&Valitse sisältötyyppi, ja valitse sitten toiminto, jonka ReactOS suorittaa automaattisesti, kun kyseistä tyyppiä käytetään tässä laitteessa:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "Toiminnot", -1, 7, 45, 212, 146
-    AUTORADIOBUTTON "Valitse toiminto joka &suoritetaan:", 1005, 14, 54, 202, 10, WS_GROUP
+    AUTORADIOBUTTON "Valitse &suoritettava toiminto:", 1005, 14, 54, 202, 10, WS_GROUP
     CONTROL "", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
-    AUTORADIOBUTTON "Kysy minulta joka kerran että vali&tsen toiminnon", 1006, 14, 177, 202, 10
+    AUTORADIOBUTTON "Kysy &joka kerta, mitä tehdään", 1006, 14, 177, 202, 10
     PUSHBUTTON "&Palauta oletusarvot", 1008, 108, 197, 110, 14, WS_DISABLED
 END
 
@@ -544,8 +544,8 @@ CAPTION "Sekasisältö"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "Tämä levy tai laite sisältää enemmän kuin yhden tyyppistä sisältöä.", 1001, 32, 7, 191, 20
-    LTEXT "Mitä haluat että ReactOS tekee?", 1002, 32, 31, 188, 8
+    LTEXT "Tämä levy tai laite sisältää useamman kuin yhden tyyppistä sisältöä.", 1001, 32, 7, 191, 20
+    LTEXT "Mitä haluat ReactOSin tekevän?", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
     PUSHBUTTON "Peruuta", IDCANCEL, 160, 186, 60, 14
@@ -557,10 +557,10 @@ CAPTION "Sekasisältö"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS voi suorittaa saman toiminnon joka kerta kun lisäät levyn tai yhdistät laitteeseen tämän kaltaisella tiedostolla:", 1001, 30, 7, 193, 20
+    LTEXT "ReactOS voi suorittaa saman toiminnon joka kerta, kun lisäät levyn tai yhdistät laitteeseen, jossa on tämän kaltainen tiedosto:", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Mitä haluat että ReactOS tekee?", 1002, 32, 41, 190, 8
+    LTEXT "Mitä haluat ReactOSin tekevän?", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "Suorita aina valittu toiminto.", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
@@ -573,8 +573,8 @@ CAPTION "Automaattinen toisto"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS voi suorittaa saman toiminnon joka kerta kun yhdistät tähän laitteeseen.", 1001, 32, 7, 190, 22
-    LTEXT "&Mitä haluat että ReactOS tekee?", 1002, 32, 31, 190, 8
+    LTEXT "ReactOS voi suorittaa saman toiminnon joka kerta, kun yhdistät tähän laitteeseen.", 1001, 32, 7, 190, 22
+    LTEXT "&Mitä haluat ReactOSin tekevän?", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "&Suorita aina valittu toiminto", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
@@ -587,7 +587,7 @@ CAPTION "Sammuta ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-    LTEXT "Mitä haluat että tietokone tekee?", -1, 39, 7, 167, 10
+    LTEXT "Mitä haluat tietokoneen tekevän?", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "Säilyttää istunnon pitäen tietokoneen käynnissä alhaisella virrankulutuksella ja tiedot edelleen muistissa. Tietokone herää, kun painat näppäintä tai liikutat hiirtä.", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
@@ -611,7 +611,7 @@ BEGIN
     COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "Aseman &nimi", -1, 7, 93, 170, 9
     EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-    GROUPBOX "Alustus a&setukset", 4610, 7, 121, 170, 49
+    GROUPBOX "Alustusasetukset", 4610, 7, 121, 170, 49
     AUTOCHECKBOX "&Pika-alustus", 28674, 16, 135, 155, 10
     AUTOCHECKBOX "&Ota käyttöön pakkaus", 28675, 16, 152, 155, 10
     CONTROL "", 30000, "STATIC", SS_ICON | WS_TABSTOP | SS_CENTERIMAGE | SS_NOTIFY, 7, 198, 15, 14
@@ -623,10 +623,10 @@ CAPTION "Virheentarkistus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Etsi", IDOK, 63, 95, 60, 14
-    GROUPBOX "Tarkista levy asetukset", -1, 7, 6, 179, 40
+    GROUPBOX "Levyn tarkistusasetukset", -1, 7, 6, 179, 40
     PUSHBUTTON "Peruuta", IDCANCEL, 128, 95, 60, 14
-    AUTOCHECKBOX "Automaattisesti korjaa tiedostojärjestelmän virheet", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "&Etsi ja yritä pelastaa viallisilta sektoreilta", 14001, 12, 30, 165, 10
+    AUTOCHECKBOX "Korjaa tiedostojärjestelmän virheet automaattisesti", 14000, 12, 15, 155, 10
+    AUTOCHECKBOX "&Etsi ja yritä korjata vialliset sektorit", 14001, 12, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -640,9 +640,9 @@ BEGIN
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
     PUSHBUTTON "Selaa...", IDC_BUTTON_PATH, 135, 17, 50, 14
     LTEXT "Valitse kuvake alla olevasta luettelosta:", -1, 7, 36, 179, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
-    PUSHBUTTON "Peruuta", IDCANCEL, 135, 179, 50, 14
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 179, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 81, 176, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 135, 176, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
@@ -660,11 +660,11 @@ Haluatko varmasti avata tämän tiedoston?", IDC_STATIC, 35, 5, 230, 60
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Luo uusi laajennos"
+CAPTION "Luo uusi tunniste"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Tiedoston laajennos:", -1, 10, 10, 85, 14
+    LTEXT "&Tiedostotunniste:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
     PUSHBUTTON "<< &Lisäasetukset", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
     LTEXT "&Liitetty tiedostotyyppi:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
@@ -688,7 +688,7 @@ BEGIN
     PUSHBUTTON "&Poista", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
     PUSHBUTTON "Aseta &oletukseksi", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
     AUTOCHECKBOX "Vahvista &avaus lataamisen jälkeen", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
-    AUTOCHECKBOX "Näytä laajennos &aina", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
+    AUTOCHECKBOX "Näytä tunniste &aina", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
     AUTOCHECKBOX "&Selaa samassa ikkunassa", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
     DEFPUSHBUTTON "OK", IDOK, 95, 170, 60, 14
     PUSHBUTTON "Peruuta", IDCANCEL, 160, 170, 60, 14
@@ -731,7 +731,7 @@ BEGIN
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
-    CAPTION "Pikakuvakeongelma"
+CAPTION "Pikakuvakeongelma"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -756,7 +756,7 @@ BEGIN
     IDS_SHV_COLUMN_DISK_AVAILABLE "Tilaa jäljellä"
     IDS_SHV_COLUMN_OWNER "Omistaja"
     IDS_SHV_COLUMN_GROUP "Ryhmä"
-    IDS_SHV_COLUMN_FILENAME "Filename"
+    IDS_SHV_COLUMN_FILENAME "Tiedostonimi"
     IDS_SHV_COLUMN_CATEGORY "Luokka"
     IDS_SHV_COLUMN_DELFROM "Alkuperäinen sijainti"
     IDS_SHV_COLUMN_DELDATE "Poistopäivä"
@@ -771,7 +771,7 @@ BEGIN
 
     /* special folders */
     IDS_DESKTOP "Työpöytä"
-    IDS_MYCOMPUTER "Oma Tietokone"
+    IDS_MYCOMPUTER "Oma tietokone"
     IDS_RECYCLEBIN_FOLDER_NAME "Roskakori"
     IDS_CONTROLPANEL "Ohjauspaneeli"
     IDS_ADMINISTRATIVETOOLS "Järjestelmätyökalut"
@@ -781,18 +781,17 @@ BEGIN
     IDS_FOLDER_OPTIONS_DESCRIPTION "Mukauta tiedostojen ja kansioiden näyttöä sekä muuta tiedostokytköksiä."
     IDS_FONTS_DESCRIPTION "Lisää, vaihda ja hallitse tietokoneen fontteja."
     IDS_PRINTERS_DESCRIPTION "Näyttää asennetut tulostimet ja faksitulostimet sekä auttaa lisäämään uusia."
-
     /* About shell dialog version string */
     IDS_ABOUT_VERSION_STRING "Versio %S (%S)"
 
     /* context menus */
-    IDS_VIEW_LARGE "&Suuret Kuvakkeet"
-    IDS_VIEW_SMALL "&Pienet Kuvakkeet"
+    IDS_VIEW_LARGE "&Suuret kuvakkeet"
+    IDS_VIEW_SMALL "&Pienet kuvakkeet"
     IDS_VIEW_LIST "&Lista"
     IDS_VIEW_DETAILS "&Tiedot"
     IDS_SELECT "Valitse"
     IDS_OPEN "Avaa"
-    IDS_CREATELINK "Lu&o Linkki"
+    IDS_CREATELINK "Luo &pikakuvake"
     IDS_COPY "&Kopioi"
     IDS_DELETE "&Poista"
     IDS_PROPERTIES "&Ominaisuudet"
@@ -821,19 +820,18 @@ BEGIN
     IDS_CREATEFILE_CAPTION "Virhe tiedostoa luotaessa"
     IDS_CREATEFOLDER_DENIED "Kansiota '%1' ei voida luoda"
     IDS_CREATEFOLDER_CAPTION "Kansiota ei voida luoda"
-    IDS_DELETEITEM_CAPTION "Vahvista tiedoston tuhoaminen"
-    IDS_DELETEFOLDER_CAPTION "Vahvista kansion tuhoaminen"
-    IDS_DELETEITEM_TEXT "Haluatko varmasti tuhota '%1':n?"
-    IDS_DELETEMULTIPLE_TEXT "Haluatko varmasti tuhota nämä %1?"
+    IDS_DELETEITEM_CAPTION "Vahvista tiedoston poistaminen"
+    IDS_DELETEFOLDER_CAPTION "Vahvista kansion poistaminen"
+    IDS_DELETEITEM_TEXT "Haluatko varmasti poistaa kohteen '%1'?"
+    IDS_DELETEMULTIPLE_TEXT "Haluatko varmasti poistaa nämä %1 kohdetta?"
     IDS_DELETESELECTED_TEXT "Haluatko varmasti poistaa valitut kohteet?"
     IDS_TRASHITEM_TEXT "Haluatko varmasti siirtää kohteen '%1' roskakoriin?"
     IDS_TRASHFOLDER_TEXT "Haluatko varmasti siirtää kohteen '%1' ja sen koko sisällön roskakoriin?"
     IDS_TRASHMULTIPLE_TEXT "Haluatko varmasti siirtää nämä %1 kohdetta roskakoriin?"
-    IDS_CANTTRASH_TEXT "Kohdetta '%1' ei voi siirtää roskakoriin. Haluatko poistaa sen sen sijaan?"
+    IDS_CANTTRASH_TEXT "Kohdetta '%1' ei voi siirtää roskakoriin. Haluatko poistaa sen lopullisesti?"
     IDS_OVERWRITEFILE_TEXT "Tämä kansio sisältää jo tiedoston nimeltä '%1'.\n\nHaluatko korvata sen?"
-    IDS_OVERWRITEFILE_CAPTION "Vahvista Tiedoston Ylikirjoitus"
+    IDS_OVERWRITEFILE_CAPTION "Vahvista tiedoston ylikirjoitus"
     IDS_OVERWRITEFOLDER_TEXT "Tämä kansio sisältää jo kansion nimeltä '%1'.\n\nJos kohdekansion tiedostoilla on samat nimet kuin valitun kansion\ntiedostoilla, ne korvataan. Haluatko silti siirtää tai kopioida kansion?"
-
     IDS_FILEOOP_COPYING "Kopioidaan..."
     IDS_FILEOOP_MOVING "Siirretään..."
     IDS_FILEOOP_DELETING "Poistetaan..."
@@ -842,11 +840,10 @@ BEGIN
     IDS_FILEOOP_PREFLIGHT "Esitarkistus"
 
     /* message box strings */
-    IDS_RESTART_TITLE "Käynnistä uudestaan"
+    IDS_RESTART_TITLE "Käynnistä uudelleen"
     IDS_RESTART_PROMPT "Haluatko simuloida ReactOS:n uudelleenkäynnistämistä?"
     IDS_SHUTDOWN_TITLE "Sammuta"
-    IDS_SHUTDOWN_PROMPT "Haluatko lopettaa ReactOS:n istunnon?"
-
+    IDS_SHUTDOWN_PROMPT "Haluatko lopettaa ReactOS-istunnon?"
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Alusta levy"
     IDS_FORMAT_WARNING "VAROITUS: Alustus poistaa KAIKKI tiedot tältä levyltä.\nJos haluat alustaa levyn, valitse OK. Jos haluat lopettaa, valitse PERUUTA."
@@ -855,7 +852,6 @@ BEGIN
     /* Warning format system drive dialog strings */
     IDS_NO_FORMAT_TITLE "Tätä asemaa ei voi alustaa"
     IDS_NO_FORMAT "Tätä asemaa ei voi alustaa! Se sisältää tärkeitä järjestelmätiedostoja, joita ReactOS tarvitsee toimiakseen."
-
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Suorita tiedosto -valintaikkunaa ei voida näyttää (sisäinen virhe)"
     IDS_RUNDLG_BROWSE_ERROR "Selaa-valintaikkunaa ei voida näyttää (sisäinen virhe)"
@@ -880,21 +876,21 @@ BEGIN
     IDS_DESKTOPDIRECTORY "Työpöytä"
     IDS_NETHOOD "Verkkoympäristö"
     IDS_TEMPLATES "Mallit"
-    IDS_APPDATA "Ohjelmien Tiedot"
+    IDS_APPDATA "Ohjelmien tiedot"
     IDS_PRINTHOOD "Tulostinympäristö"
-    IDS_LOCAL_APPDATA "Paikalliset Asetukset\\Ohjelmien Tiedot"
-    IDS_INTERNET_CACHE "Paikalliset Asetukset\\Väliaikaiset Internet-tiedostot"
+    IDS_LOCAL_APPDATA "Paikalliset asetukset\\Ohjelmien tiedot"
+    IDS_INTERNET_CACHE "Paikalliset asetukset\\Väliaikaiset Internet-tiedostot"
     IDS_COOKIES "Evästeet"
-    IDS_HISTORY "Paikalliset Asetukset\\Historia"
+    IDS_HISTORY "Paikalliset asetukset\\Historia"
     IDS_PROGRAM_FILES "Ohjelmat"
     IDS_MYPICTURES "Omat kuvatiedostot"
-    IDS_PROGRAM_FILES_COMMON "Ohjelmat\\Yhteiset Tiedostot"
+    IDS_PROGRAM_FILES_COMMON "Ohjelmat\\Yhteiset tiedostot"
     IDS_COMMON_DOCUMENTS "Dokumentit"
     IDS_ADMINTOOLS "Käynnistys\\Ohjauspaneeli\\Järjestelmätyökalut" // "Käynnistä Valikko\\Kaikki Ohjelmat\\Apuohjelmat"
     IDS_COMMON_MUSIC "Dokumentit\\Omat musiikkitiedostot"
     IDS_COMMON_PICTURES "Dokumentit\\Omat kuvatiedostot"
     IDS_COMMON_VIDEO "Dokumentit\\Omat videotiedostot"
-    IDS_CDBURN_AREA "Paikalliset Asetukset\\Ohjelmien Tiedot\\Microsoft\\CD-levyjen poltto"
+    IDS_CDBURN_AREA "Paikalliset asetukset\\Ohjelmien tiedot\\Microsoft\\CD-levyjen poltto"
     IDS_NETWORKPLACE "Verkkoympäristö"
 
     IDS_NEWFOLDER "Uusi kansio"
@@ -915,9 +911,9 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Tekijät"
     IDS_SHELL_ABOUT_BACK "< &Takaisin"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
-    FCIDM_SHVIEW_NEWFOLDER "Uusi &Kansio"
-    FCIDM_SHVIEW_NEWLINK "Uusi &Linkki"
+    FCIDM_SHVIEW_NEW "&Uusi"
+    FCIDM_SHVIEW_NEWFOLDER "Uusi &kansio"
+    FCIDM_SHVIEW_NEWLINK "Uusi &pikakuvake"
     IDS_FOLDER_OPTIONS "Kansion asetukset"
     IDS_TASKBAR_OPTIONS "Tehtäväpalkki ja Käynnistä-valikko"
     IDS_TASKBAR_OPTIONS_INFOTIP "Mukauta Käynnistä-valikkoa ja tehtäväpalkkia, esimerkiksi näytettävien kohteiden tyyppejä ja niiden ulkoasua."
@@ -987,9 +983,8 @@ BEGIN
     IDS_COPY_OF "Kopio kohteesta"
 
     IDS_SHLEXEC_NOASSOC "Tämän tyyppisten tiedostojen avaamiseen ei ole määritetty ReactOS-ohjelmaa."
-
-    IDS_FILE_DETAILS "Tiedot laajennokselle '%s'"
-    IDS_FILE_DETAILSADV "Päätelaajennoksen '%s' tiedostot ovat tyyppiä '%s'. Jos haluat muuttaa kaikkia '%s'-tiedostoja koskevia asetuksia, valitse Lisäasetukset."
+    IDS_FILE_DETAILS "Tiedot tunnisteelle '%s'"
+    IDS_FILE_DETAILSADV "Päätelatunnisteen '%s' tiedostot ovat tyyppiä '%s'. Jos haluat muuttaa kaikkia '%s'-tiedostoja koskevia asetuksia, valitse Lisäasetukset."
     IDS_FILE_TYPES "Tiedostotyypit"
     IDS_COLUMN_EXTENSION "Laajennokset"
 
@@ -1007,7 +1002,7 @@ BEGIN
     IDS_RECYCLE_CLEANER_DESCRIPTION "Roskakori sisältää tietokoneeltasi poistetut tiedostot. Nämä tiedostot poistetaan lopullisesti vasta, kun tyhjennät roskakorin."
     IDS_RECYCLE_CLEANER_BUTTON_TEXT "&Näytä tiedostot"
 
-    IDS_TITLE_MYCOMP "Oma Tietokone"
+    IDS_TITLE_MYCOMP "Oma tietokone"
     IDS_TITLE_MYNET "Verkkoympäristö"
     IDS_TITLE_BIN_1 "Roskakori (täysi)"
     IDS_TITLE_BIN_0 "Roskakori (tyhjä)"
@@ -1049,11 +1044,11 @@ BEGIN
     IDS_NEWEXT_ADVANCED_LEFT "<< &Lisäasetukset"
     IDS_NEWEXT_ADVANCED_RIGHT "&Lisäasetukset >>"
     IDS_NEWEXT_NEW "<Uusi>"
-    IDS_NEWEXT_SPECIFY_EXT "Sinun on annettava päätelaajennos."
-    IDS_NEWEXT_ALREADY_ASSOC "Päätelaajennos %s on jo liitetty tiedostotyyppiin %s. Haluatko poistaa liitoksen %s:n ja %s:n välillä ja luoda sille uuden tiedostotyypin?"
-    IDS_NEWEXT_EXT_IN_USE "Päätelaajennos on käytössä"
+    IDS_NEWEXT_SPECIFY_EXT "Sinun on annettava päätelatunniste."
+    IDS_NEWEXT_ALREADY_ASSOC "Päätelatunniste %s on jo liitetty tiedostotyyppiin %s. Haluatko poistaa liitoksen %s:n ja %s:n välillä ja luoda sille uuden tiedostotyypin?"
+    IDS_NEWEXT_EXT_IN_USE "Päätelatunniste on käytössä"
 
-    IDS_REMOVE_EXT "Jos poistat rekisteröidyn tiedostopäätelaajennoksen, et voi enää avata tämän laajennoksen tiedostoja kaksoisnapsauttamalla niiden kuvakkeita.\n\nHaluatko varmasti poistaa tämän laajennoksen?"
+    IDS_REMOVE_EXT "Jos poistat rekisteröidyn tiedostopäätelatunnisteen, et voi enää avata tämän tunnisteen tiedostoja kaksoisnapsauttamalla niiden kuvakkeita.\n\nHaluatko varmasti poistaa tämän tunnisteen?"
     IDS_SPECIFY_ACTION "Sinun on määritettävä toiminto."
     IDS_INVALID_PROGRAM "Määritettyä ohjelmaa ei löydy. Varmista, että tiedostonimi ja polku ovat oikein."
     IDS_REMOVE_ACTION "Haluatko varmasti poistaa tämän toiminnon?"

@@ -1,29 +1,29 @@
 LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 IDD_SAFE_REMOVE_HARDWARE_DIALOG DIALOGEX 0, 0, 278, 245
-CAPTION ""
+CAPTION "Laitteiston turvallinen poistaminen"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HOTPLUG, IDC_SAFE_REMOVE_ICON, 7, 10, 20, 20
-    LTEXT "Valitse laite, jonka haluat irrottaa tai poistaa turvallisesti, ja napsauta Pysayta. Kun ReactOS ilmoittaa, etta se on turvallista, irrota laite tietokoneesta.", IDC_STATIC, 36, 10, 234, 24, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Valitse laite, jonka haluat irrottaa tai poistaa turvallisesti, ja napsauta Pysäytä. Kun ReactOS ilmoittaa, että se on turvallista, irrota laite tietokoneesta.", IDC_STATIC, 36, 10, 234, 24, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "&Laitteet:", IDC_STATIC, 7, 42, 248, 8, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_SAFE_REMOVE_DEVICE_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 7, 52, 264, 102
     LTEXT "", IDC_SAFE_REMOVE_TEXT, 7, 156, 264, 16, WS_CHILD | WS_VISIBLE | WS_GROUP
     PUSHBUTTON "&Ominaisuudet", IDC_SAFE_REMOVE_PROPERTIES, 158, 178, 55, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Pysayta", IDC_SAFE_REMOVE_STOP, 216, 178, 55, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Pysäytä", IDC_SAFE_REMOVE_STOP, 216, 178, 55, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_STATIC, "static", SS_CENTER | SS_SUNKEN | WS_CHILD | WS_VISIBLE, 7, 200, 264, 1
-    AUTOCHECKBOX "Nayta laitteen &osat", IDC_SAFE_REMOVE_DISPLAY_COMPONENTS, 7, 208, 140, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "Näytä laitteen &osat", IDC_SAFE_REMOVE_DISPLAY_COMPONENTS, 7, 208, 140, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Sulje", IDCLOSE, 216, 224, 55, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_CONFIRM_STOP_HARDWARE_DIALOG DIALOGEX 32, 10, 256, 148
-CAPTION "Pysayta laite"
+CAPTION "Pysäytä laite"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Vahvista pysaytettavat laitteet ja jatka valitsemalla OK.", IDC_STATIC, 7, 8, 241, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "ReactOS yrittaa pysayttaa seuraavat laitteet. Kun laitteet on pysaytetty, ne voi irrottaa turvallisesti.", IDC_STATIC, 7, 22, 240, 18, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Vahvista pysäytettävät laitteet ja jatka valitsemalla OK.", IDC_STATIC, 7, 8, 241, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "ReactOS yrittää pysäyttää seuraavat laitteet. Kun laitteet on pysäytetty, ne voi irrottaa turvallisesti.", IDC_STATIC, 7, 22, 240, 18, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_CONFIRM_STOP_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 8, 45, 240, 78
     DEFPUSHBUTTON "OK", IDOK, 144, 127, 50, 14
     PUSHBUTTON "Peruuta", IDCANCEL, 198, 127, 50, 14
@@ -33,15 +33,15 @@ IDM_POPUP_DEVICE_TREE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Pysayta", IDM_STOP
+        MENUITEM "Pysäytä", IDM_STOP
         MENUITEM "Ominaisuudet", IDM_PROPERTIES
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Laitteen turvallinen poisto"
-    IDS_CPLDESCRIPTION "Irrota tai poista laitteita turvallisesti tietokoneesta."
+    IDS_CPLNAME "Laitteiston turvallinen poistaminen"
+    IDS_CPLDESCRIPTION "Irrottaa tai poistaa laitteita turvallisesti tietokoneesta."
     IDS_UNKNOWN_DEVICE "Tuntematon laite"
-    IDS_EJECT_ERROR_FORMAT "Laitteen poistaminen epaonnistui (0x%x)\0"
+    IDS_EJECT_ERROR_FORMAT "Laitteen poistaminen epäonnistui (0x%x)\0"
 END

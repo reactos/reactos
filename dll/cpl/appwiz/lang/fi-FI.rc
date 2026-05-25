@@ -24,11 +24,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Luo pikakuvake"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Tama ohjattu toiminto auttaa luomaan pikakuvakkeita paikallisiin tai\nverkkokohteisiin: ohjelmiin, tiedostoihin, kansioihin, tietokoneisiin\ntai Internet-osoitteisiin.", -1, 120, 15, 200, 30
+    LTEXT "Tämä ohjattu toiminto auttaa luomaan pikakuvakkeita paikallisiin tai\nverkkokohteisiin: ohjelmiin, tiedostoihin, kansioihin, tietokoneisiin\ntai Internet-osoitteisiin.", -1, 120, 15, 200, 30
     LTEXT "Kirjoita kohteen sijainti:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_LINK_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
-    PUSHBUTTON "Selaa...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-    LTEXT "Napsauta Seuraava jatkaaksesi.", -1, 120, 97, 162, 10
+    EDITTEXT IDC_LINK_LOCATION, 120, 63, 150, 14, ES_LEFT | ES_AUTOHSCROLL
+    PUSHBUTTON "&Selaa...", IDC_SHORTCUT_BROWSE, 275, 63, 55, 14
+    LTEXT "Jatka napsauttamalla Seuraava.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -36,55 +36,54 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Valitse ohjelmalle nimi"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "&Kirjoita nimi tälle pikakuvakkeelle:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
-    LTEXT "Napsauta Valmis luodaksesi pikakuvakkeen.", -1, 118, 97, 178, 17
+    LTEXT "&Kirjoita pikakuvakkeen nimi:", -1, 120, 15, 150, 10
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 14, ES_LEFT | ES_AUTOHSCROLL
+    LTEXT "Luo pikakuvake napsauttamalla Valmis.", -1, 120, 97, 178, 17
 END
 
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Poista pikakuvakkeita/kansioita"
+CAPTION "Poista pikakuvakkeita tai kansioita"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Poista kohde Kaynnista-valikosta valitsemalla kohde ja napsauttamalla Poista.", -1, 10, 10, 192, 16
-    CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
-            LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
+    LTEXT "Poista kohde Käynnistä-valikosta valitsemalla se ja napsauttamalla Poista.", -1, 10, 10, 192, 18
+    CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 134
     PUSHBUTTON "&Poista", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "Sulje", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "&Sulje", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
-ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
+ID_DWL_GECKO_DIALOG DIALOGEX 0, 0, 260, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Wine Gecko -asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS ei loytanyt Wine Gecko -pakettia, jota tarvitaan HTML:aa upottaville sovelluksille. ReactOS voi ladata ja asentaa sen automaattisesti puolestasi.",
-          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
-    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
+    CONTROL "ReactOS ei löytänyt Wine Gecko -pakettia, jota tarvitaan HTML-muotoa käyttäville sovelluksille. ReactOS voi ladata ja asentaa sen automaattisesti puolestasi.",
+          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 40
+    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 55, 240, 12
     DEFPUSHBUTTON "&Asenna", ID_DWL_INSTALL, 144, 76, 50, 14
     PUSHBUTTON "Peruuta", IDCANCEL, 200, 76, 50, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Lisaa tai poista sovelluksia"
+    IDS_CPLSYSTEMNAME "Lisää tai poista sovelluksia"
     IDS_CPLSYSTEMDESCRIPTION "Hallinnoi ohjelmia ja luo pikakuvakkeita."
     IDS_CREATE_SHORTCUT "Luo pikakuvake"
-    IDS_ERROR_NOT_FOUND "Tiedostoa %s ei loytynyt."
+    IDS_ERROR_NOT_FOUND "Tiedostoa %s ei löytynyt."
 END
 
 STRINGTABLE
 BEGIN
     IDS_DOWNLOADING "Ladataan..."
     IDS_INSTALLING "Asennetaan..."
-    IDS_INVALID_SHA "Ladatun tiedoston tarkistussumma on odottamaton. Vioittuneen tiedoston asennus keskeytetaan."
+    IDS_INVALID_SHA "Ladatun tiedoston tarkistussumma on virheellinen. Vioittuneen tiedoston asennus keskeytetään."
     IDS_NEW_INTERNET_SHORTCUT "Uusi Internet-pikakuvake"
-    IDS_DWL_FAILED "Gecko-paketin lataaminen epaonnistui. Varmista, etta Internet-yhteys toimii. Asennus jatkuu ilman Geckoa."
-    IDS_CANTMAKEINETSHORTCUT "Internet-pikakuvakkeen luonti epaonnistui."
-    IDS_CANTMAKESHORTCUT "Pikakuvakkeen luonti epaonnistui."
+    IDS_DWL_FAILED "Gecko-paketin lataaminen epäonnistui. Varmista, että Internet-yhteys toimii. Asennusta jatketaan ilman Geckoa."
+    IDS_CANTMAKEINETSHORTCUT "Internet-pikakuvakkeen luominen epäonnistui."
+    IDS_CANTMAKESHORTCUT "Pikakuvakkeen luominen epäonnistui."
     IDS_NO_MEMORY "Muistia ei voitu varata!"
     IDS_NO_DIRECTORY "Hakemistoa ei annettu!"
     IDS_INVALID_PATH "Annettu polku on virheellinen!"
-    IDS_INVALID_NAME "Antamasi pikakuvakkeen nimi sisalsi tiedostonimelle kelpaamattomia merkkeja tai oli liian pitka."
+    IDS_INVALID_NAME "Antamasi pikakuvakkeen nimi sisälsi tiedostonimelle kelpaamattomia merkkejä tai oli liian pitkä."
     IDS_BROWSE_FOR_TARGET "Valitse pikakuvakkeen kohde alta:"
 END

@@ -6,11 +6,11 @@ CAPTION "Ohjattu laiteasennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tervetuloa ohjattuun laiteasennukseen", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Tama ohjattu toiminto auttaa:", -1, 114, 40, 182, 8
-    LTEXT "1) Asentamaan ohjelmiston, joka tukee tietokoneeseen lisattya laitteistoa.", -1, 121, 56, 184, 16
-    LTEXT "2) Selvittamaan laitteistoon liittyvia ongelmia.", -1, 121, 78, 185, 16
+    LTEXT "Tämä ohjattu toiminto auttaa:", -1, 114, 40, 182, 8
+    LTEXT "1) Asentamaan ohjelmiston, joka tukee tietokoneeseen lisättyä laitteistoa.", -1, 121, 56, 184, 16
+    LTEXT "2) Selvittämään laitteistoon liittyviä ongelmia.", -1, 121, 78, 185, 16
     ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
-    LTEXT "Jos laitteiston mukana tuli asennus-CD, on suositeltavaa valita Peruuta ja kayttaa valmistajan CD:ta taman laitteiston asennukseen.", 503, 150, 106, 155, 50
+    LTEXT "Jos laitteiston mukana tuli asennus-CD-levy, on suositeltavaa valita Peruuta ja käyttää valmistajan levyä laitteiston asentamiseen.", 503, 150, 106, 155, 50
     LTEXT "Jatka valitsemalla Seuraava.", -1, 114, 166, 193, 8
 END
 
@@ -28,9 +28,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Ohjattu laiteasennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Onko tama laitteisto jo liitetty tietokoneeseen?", -1, 20, 11, 275, 8
-    AUTORADIOBUTTON "&Kyla, laitteisto on jo liitetty", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
-    AUTORADIOBUTTON "&Ei, laitteistoa ei ole viela lisatty", IDC_NOTCONNECTED, 29, 35, 266, 8
+    LTEXT "Onko tämä laitteisto jo liitetty tietokoneeseen?", -1, 20, 11, 275, 8
+    AUTORADIOBUTTON "&Kyllä, laitteisto on jo liitetty", IDC_CONNECTED, 29, 23, 266, 10, WS_GROUP
+    AUTORADIOBUTTON "&Ei, laitteistoa ei ole vielä lisätty", IDC_NOTCONNECTED, 29, 36, 266, 10
 END
 
 IDD_PROBELISTPAGE DIALOGEX 0, 0, 317, 143
@@ -38,8 +38,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Ohjattu laiteasennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Valitse alla olevasta luettelosta asennettu laite ja valitse Seuraava, jos haluat tarkistaa ominaisuudet tai selvittaa ongelman.", -1, 21, 8, 275, 22
-    LTEXT "Jos haluat lisata laitteen, jota ei nay luettelossa, valitse \"Lisaa uusi laite\".", -1, 21, 32, 275, 24
+    LTEXT "Valitse alla olevasta luettelosta asennettu laite ja valitse Seuraava, jos haluat tarkistaa sen ominaisuudet tai selvittää ongelman.", -1, 21, 8, 275, 22
+    LTEXT "Jos haluat lisätä laitteen, jota ei näy luettelossa, valitse ""Lisää uusi laite"".", -1, 21, 32, 275, 24
     LTEXT "Asennettu la&itteisto:", -1, 21, 62, 140, 8
     CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
@@ -49,10 +49,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Ohjattu laiteasennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ohjattu toiminto voi etsia muuta laitteistoa ja asentaa sen automaattisesti. Jos tiedat tarkasti asennettavan laitemallin, voit valita sen luettelosta.", -1, 21, 8, 280, 24
-    LTEXT "Mita haluat ohjatun toiminnon tekevän?", -1, 23, 40, 275, 8
-    AUTORADIOBUTTON "&Etsi laitteisto ja asenna se automaattisesti (suositus)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "Asenna laitteisto, jonka valitsen luettelosta &manuaalisesti (lisäasetukset)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+    LTEXT "Ohjattu toiminto voi etsiä muuta laitteistoa ja asentaa sen automaattisesti. Jos tiedät tarkasti asennettavan laitemallin, voit valita sen luettelosta.", -1, 21, 8, 280, 24
+    LTEXT "Mitä haluat ohjatun toiminnon tekevän?", -1, 23, 40, 275, 8
+    AUTORADIOBUTTON "&Etsi laitteisto ja asenna se automaattisesti (suositus)", IDC_AUTOINSTALL, 30, 54, 266, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Asenna laitteisto valitsemalla se luettelosta &manuaalisesti (lisäasetukset)", IDC_MANUALLYINST, 30, 69, 266, 11
 END
 
 IDD_DETECTEDHWPAGE DIALOGEX 0, 0, 317, 143
@@ -70,7 +70,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Ohjattu laiteasennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Jos haluamaasi laiteluokkaa ei nay, valitse Nayta kaikki laitteet.", IDC_STATUSTEXT, 21, 9, 275, 18
+    LTEXT "Jos haluamaasi laiteluokkaa ei näy, valitse Näytä kaikki laitteet.", IDC_STATUSTEXT, 21, 9, 275, 18
     LTEXT "Yleiset laite&tyypit:", IDC_HWTYPESTEXT, 21, 31, 180, 8
     CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
 END
@@ -80,7 +80,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Ohjattu laiteasennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Laitteiston etsiminen voi kestaa useita minuutteja.", -1, 21, 8, 275, 15
+    LTEXT "Laitteiston etsiminen voi kestää useita minuutteja.", -1, 21, 8, 275, 15
     LTEXT "Kokonaisedistyminen:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
     CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
     LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
@@ -95,7 +95,7 @@ BEGIN
     LTEXT "Ohjatun laiteasennuksen viimeistely", IDC_FINISHTITLE, 114, 8, 203, 24
     LTEXT "Ohjattu laiteasennus on suoritettu onnistuneesti.", -1, 114, 32, 193, 19
     LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
-    LTEXT "Sulje tama ohjattu toiminto valitsemalla Valmis.", -1, 114, 166, 132, 8
+    LTEXT "Sulje tämä ohjattu toiminto valitsemalla Valmis.", -1, 114, 166, 132, 8
 END
 
 IDD_ISFOUNDPAGE DIALOGEX 0, 0, 317, 186
@@ -104,8 +104,8 @@ CAPTION "Ohjattu laiteasennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Ohjatun laiteasennuksen viimeistely", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Ohjattu toiminto loysi seuraavan tietokoneeseen liitetyn laitteiston:", -1, 114, 32, 193, 19
-    LTEXT "Sulje tama ohjattu toiminto valitsemalla Valmis.", -1, 114, 166, 132, 8
+    LTEXT "Ohjattu toiminto löysi seuraavan tietokoneeseen liitetyn laitteiston:", -1, 114, 32, 193, 19
+    LTEXT "Sulje tämä ohjattu toiminto valitsemalla Valmis.", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
 
@@ -117,7 +117,7 @@ BEGIN
     LTEXT "Ohjatun laiteasennuksen viimeistely", IDC_FINISHTITLE, 114, 8, 195, 28
     LTEXT "Valitsemasi laitteiston nykyinen tila on seuraava:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Jos haluat kaynnistaa vianmaarityksen mahdollisten ongelmien ratkaisemiseksi, valitse Valmis.", -1, 114, 136, 193, 16
+    LTEXT "Jos haluat käynnistää vianmäärityksen mahdollisten ongelmien ratkaisemiseksi, valitse Valmis.", -1, 114, 136, 193, 16
     LTEXT "Poistu ohjatusta toiminnosta valitsemalla Peruuta.", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
@@ -127,21 +127,21 @@ CAPTION "Ohjattu laiteasennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Ohjattua laiteasennusta ei voi jatkaa", IDC_FINISHTITLE, 114, 8, 203, 28
-    LTEXT "Jatka liittamalla tama laitteisto tietokoneeseen.", -1, 114, 40, 193, 16
-    AUTOCHECKBOX "Sammuta tietokone, kun valitsen Valmis, jotta voin avata tietokoneen ja liittaa laitteiston.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "Useimmissa tapauksissa ReactOS asentaa laitteiston automaattisesti liittamisen jalkeen. Jos ReactOS ei loyda sita, voit avata taman ohjatun toiminnon uudelleen ja asentaa tukiohjelmiston.", -1, 114, 98, 193, 32
-    LTEXT "Sulje tama ohjattu toiminto valitsemalla Valmis.", IDC_STATUSTEXT, 114, 166, 193, 8
+    LTEXT "Jatka liittämällä tämä laitteisto tietokoneeseen.", -1, 114, 40, 193, 16
+    AUTOCHECKBOX "&Sammuta tietokone, kun valitsen Valmis, jotta voin avata tietokoneen ja liittää laitteiston.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+    LTEXT "Useimmissa tapauksissa ReactOS asentaa laitteiston automaattisesti, kun se liitetään. Jos ReactOS ei löydä sitä, voit avata tämän ohjatun toiminnon uudelleen asentaaksesi tukiohjelmiston.", -1, 114, 98, 193, 32
+    LTEXT "Sulje tämä ohjattu toiminto valitsemalla Valmis.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Lisaa laitteisto"
-    IDS_CPLDESCRIPTION "Lisaa laitteisto tietokoneeseen."
-    IDS_SEARCHTITLE "Odota, kun ohjattu toiminto etsii..."
-    IDS_SEARCHTEXT "Tama ohjattu toiminto etsii laitteistoa, joka on liitetty tietokoneeseen hiljattain mutta jota ei ole viela asennettu."
+    IDS_CPLNAME "Lisää laitteisto"
+    IDS_CPLDESCRIPTION "Lisää laitteisto tietokoneeseen."
+    IDS_SEARCHTITLE "Odota, kun ohjattu toiminto etsii laitteistoa..."
+    IDS_SEARCHTEXT "Ohjattu toiminto etsii laitteistoa, joka on äskettäin liitetty tietokoneeseen, mutta jota ei ole vielä asennettu."
     IDS_ISCONNECTED "Onko laitteisto liitetty?"
     IDS_PROBELISTTITLE "Seuraava laitteisto on jo asennettu tietokoneeseen"
-    IDS_ADDNEWDEVICE "Lisaa uusi laite"
-    IDS_SELECTWAYTITLE "Ohjattu toiminto voi auttaa muun laitteiston asennuksessa"
-    IDS_HDTYPESTITLE "Valitse alta asennettavan laitteiston tyyppi"
+    IDS_ADDNEWDEVICE "Lisää uusi laite"
+    IDS_SELECTWAYTITLE "Ohjattu toiminto voi auttaa sinua asentamaan muuta laitteistoa"
+    IDS_HDTYPESTITLE "Valitse alla olevasta luettelosta asennettavan laitteiston tyyppi"
 END

@@ -4,27 +4,22 @@ LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennus"
+CAPTION "ReactOS-asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tervetuloa ReactOS asennusohjelmaan", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Tämä ohjattu toiminto asentaa tai päivittää ReactOSin tietokoneeseesi \
-ja valmistelee asennuksen toisen vaiheen.", IDC_STATIC, 115, 40, 195, 27
+    LTEXT "Tervetuloa ReactOS-asennusohjelmaan", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Tämä ohjattu toiminto asentaa tai päivittää ReactOSin tietokoneeseesi ja valmistelee asennuksen toisen vaiheen.", IDC_STATIC, 115, 40, 195, 27
 ////
     GROUPBOX " TÄRKEÄÄ TIETOA ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
-    LTEXT "ReactOS on alfa-vaiheessa: kaikki ominaisuudet eivät vielä ole käytettävissä ja \
-kehitystyö on voimakasta. Ohjelmaa suositellaan käytettäväksi vain \
-arviointiin ja testaukseen, ei päivittäisenä käyttöjärjestelmänä.\n\
-Se saattaa vioittaa tietojasi tai vahingoittaa laitteistoasi.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
-    LTEXT "Varmuuskopioi tietosi tai kokeile sitä toisella tietokoneella \
-jos aiot käyttää ReactOSia oikealla laitteistolla.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+    LTEXT "ReactOS on alfa-vaiheessa: kaikki ominaisuudet eivät vielä ole käytettävissä ja kehitystyö on voimakasta. Ohjelmaa suositellaan käytettäväksi vain arviointiin ja testaukseen, ei päivittäisenä käyttöjärjestelmänä.\n\nSe saattaa vioittaa tietojasi tai vahingoittaa laitteistoasi.", IDC_WARNTEXT2, 120, 82, 185, 52
+    LTEXT "Varmuuskopioi tietosi tai kokeile järjestelmää toisella tietokoneella, jos aiot käyttää ReactOSia oikealla laitteistolla.", IDC_WARNTEXT3, 120, 134, 185, 24
 ////
     LTEXT "Jatka asennusta valitsemalla Seuraava.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennus"
+CAPTION "ReactOS-asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "&Asenna ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
@@ -35,18 +30,18 @@ END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennus"
+CAPTION "ReactOS-asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "Asennusohjelma voi päivittää jonkin alla luetelluista ReactOS-asennuksista tai yrittää korjata vioittuneen asennuksen.", IDC_STATIC, 6, 6, 303, 18
-    CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
-    PUSHBUTTON  "&Älä päivitä", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Jatka valitun käyttöjärjestelmän päivitystä valitsemalla Seuraava, tai tee uusi asennus valitsemalla 'Älä päivitä'.", IDC_STATIC, 7, 124, 222, 16
+    LTEXT "Asennusohjelma voi päivittää jonkin alla luetelluista ReactOS-asennuksista tai yrittää korjata vioittuneen asennuksen.", IDC_STATIC, 6, 6, 303, 18
+    CONTROL "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
+    PUSHBUTTON "&Älä päivitä", IDC_SKIPUPGRADE, 230, 128, 80, 14
+    LTEXT "Jatka valitun käyttöjärjestelmän päivitystä valitsemalla Seuraava, tai tee uusi asennus valitsemalla 'Älä päivitä'.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennus"
+CAPTION "ReactOS-asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tietokone:", IDC_STATIC, 20, 15, 80, 10
@@ -60,17 +55,18 @@ END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennus"
+CAPTION "ReactOS-asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "&Valmistele", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Valmistele", IDC_INITDISK, 7, 122, 50, 14
     PUSHBUTTON "&Luo", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "&Alusta", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Alusta", IDC_PARTFORMAT, 7, 122, 50, 14
     PUSHBUTTON "&Poista", IDC_PARTDELETE, 63, 122, 50, 14
     PUSHBUTTON "A&juri", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
     PUSHBUTTON "&Lisäasetukset...", IDC_PARTMOREOPTS, 230, 122, 80, 14
     // LTEXT "Click Next to check the summary.", IDC_STATIC, 7, 128, 277, 8
+    LTEXT "Jatka tarkistamalla yhteenveto valitsemalla Seuraava.", IDC_STATIC, 7, 128, 277, 8
 END
 
 IDD_PARTITION DIALOGEX 0, 0, 200, 120
@@ -78,11 +74,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Luo ja alusta osio"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Size:", IDC_STATIC, 7, 9, 70, 9
+    LTEXT "&Koko:", IDC_STATIC, 7, 9, 70, 9
     EDITTEXT IDC_EDIT_PARTSIZE, 82, 7, 47, 13, ES_RIGHT | ES_NUMBER | WS_GROUP
-    CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
-    LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
+    CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 7, 9, 13
+    LTEXT "Mt", IDC_UNIT, 134, 9, 14, 9
     AUTOCHECKBOX "&Laajennettu osio", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
     LTEXT "&Tiedostojärjestelmä:", IDC_FS_STATIC, 7, 46, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
@@ -103,7 +98,7 @@ BEGIN
     PUSHBUTTON "Peruuta", IDCANCEL, 143, 61, 50, 14
 END
 
-IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
+IDD_ADVANCED_INSTALL DIALOGEX 0, 0, 305, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Asennuksen lisäasetukset"
 FONT 8, "MS Shell Dlg"
@@ -111,7 +106,7 @@ BEGIN
     LTEXT "Valitse &hakemisto, johon haluat asentaa ReactOSin:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Käynnistyslatain", IDC_STATIC, 7, 45, 291, 60
-    LTEXT "Valitse sijainti, johon FreeLoader\n-käynnistyslatain asennetaan.\n\nOletusarvoisesti se asennetaan käynnistyslevyn järjestelmäosioon (BIOS-pohjaisissa tietokoneissa joko Master Boot Recordiin tai Volume Boot Recordiin).", IDC_STATIC, 13, 57, 279, 44
+    LTEXT "Valitse sijainti, johon FreeLoader-käynnistyslatain asennetaan.\n\nOletusarvoisesti se asennetaan käynnistyslevyn järjestelmäosioon (BIOS-pohjaisissa tietokoneissa joko Master Boot Recordiin tai Volume Boot Recordiin).", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "OK", IDOK, 193, 113, 50, 14
     PUSHBUTTON "Peruuta", IDCANCEL, 248, 113, 50, 14
@@ -119,7 +114,7 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennus"
+CAPTION "ReactOS-asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Asennustyyppi:", IDC_STATIC, 18, 5, 74, 11
@@ -138,14 +133,13 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Kohdehakemisto:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "Vahvistan, että kaikki asennusasetukset ovat oikein. Hyväksyn myös sen, että\nReactOS on alfa-laatuinen ohjelmisto ja saattaa rikkoutua tietokoneellani tai vioittaa tietojani.",
-        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE | WS_TABSTOP
-    LTEXT "Vahvista, että kaikki asennusasetukset ovat oikein,\nja valitse sitten Asenna käynnistääksesi asennuksen.", IDC_STATIC, 7, 124, 303, 18
+    AUTOCHECKBOX "Vahvistan, että asennusasetukset ovat oikein. Hyväksyn myös sen, että ReactOS on alfa-vaiheen ohjelmisto ja saattaa vioittaa tietojani.", IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE | WS_TABSTOP
+    LTEXT "Vahvista, että kaikki asennusasetukset ovat oikein, ja valitse sitten Asenna käynnistääksesi asennuksen.", IDC_STATIC, 7, 124, 303, 18
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennus"
+CAPTION "ReactOS-asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Asennetaan tiedostoja...", IDC_ACTIVITY, 20, 50, 277, 10
@@ -155,7 +149,7 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennus"
+CAPTION "ReactOS-asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Käynnistetään tietokone uudelleen", IDC_FINISHTITLE, 115, 8, 195, 24
@@ -168,10 +162,10 @@ END
 
 IDD_ABORTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennus"
+CAPTION "ReactOS-asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Asennus päättyi ennenaikaisesti", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS-asennus päättyi ennenaikaisesti", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOSin asennuksen ensimmäinen vaihe päättyi ennenaikaisesti virheen vuoksi tai siksi, että peruit sen.\n\nVoit suorittaa asennusohjelman myöhemmin uudelleen asentaaksesi tai päivittääksesi ReactOSin.", IDC_STATIC, 115, 40, 195, 48
     // The following text can be replaced by IDS_ABORT_NO_REBOOT at runtime;
     // please ensure it can hold in the text control!
@@ -183,7 +177,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTION "ReactOS Asennus"
+    IDS_CAPTION "ReactOS-asennus"
     IDS_TYPETITLE "Asennustyyppi"
     IDS_TYPESUBTITLE "Voit tehdä uuden ReactOS-asennuksen tai päivittää/korjata olemassa olevan asennuksen."
     IDS_UPDATETITLE "Päivitä tai korjaa ReactOS"
@@ -237,23 +231,18 @@ STRINGTABLE
 BEGIN
     IDS_FORMATTING_PROGRESS1 "Alustetaan asemaa %c: (%s) kohteessa %s..."
     IDS_FORMATTING_PROGRESS2 "Alustetaan asemaa %s kohteessa %s..."
-
     IDS_CHECKING_PROGRESS1 "Tarkistetaan asemaa %c: (%s)..."
     IDS_CHECKING_PROGRESS2 "Tarkistetaan asemaa %s..."
-
     IDS_COPYING  "Kopioidaan %s"
     IDS_MOVING   "Siirretään %s kohteeseen %s"
     IDS_RENAMING "Nimetään %s uudelleen muotoon %s"
     IDS_DELETING "Poistetaan %s"
-
     IDS_CONFIG_SYSTEM_PARTITION "Määritetään järjestelmäosiota..."
     IDS_PREPARE_PARTITIONS "Valmistellaan osioita..."
     IDS_PREPARE_FILES "Valmistellaan kopioitavien tiedostojen luetteloa, odota hetki..."
     IDS_COPYING_FILES "Kopioidaan tiedostoja..."
-
     IDS_CREATE_REGISTRY "Luodaan rekisteriä..."
     IDS_UPDATE_REGISTRY "Päivitetään rekisteriä..."
-
     // IDS_INSTALL_FINALIZE "Finalizing the installation..."
     IDS_INSTALL_BOOTLOADER "Asennetaan käynnistyslatain..."
 END
@@ -277,46 +266,24 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Virheellinen merkki"
-    IDS_ERROR_INVALID_INSTALLDIR_CHAR "Ainoat kelvolliset merkit ovat:\n\
-aakkosnumeeriset merkit (a-z, A-Z, 0-9) ja\n . \\ - _\n\
-Välilyöntejä ei sallita."
-
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "Ainoat kelvolliset merkit ovat:\naakkosnumeeriset merkit (a-z, A-Z, 0-9) ja\n . \\ - _\nVälilyöntejä ei sallita."
     IDS_ERROR_DIRECTORY_NAME_TITLE "Virheellinen asennuspolku"
-    IDS_ERROR_DIRECTORY_NAME "ReactOS Asennuspolun on noudatettava DOS 8.3 -nimitystapaa, \
-ja se saa sisältää vain kirjaimia, numeroita, viivoja ja pisteitä. Välilyönnit eivät ole sallittuja."
-
+    IDS_ERROR_DIRECTORY_NAME "ReactOS-asennuspolun on noudatettava DOS 8.3 -nimitystapaa, ja se saa sisältää vain kirjaimia, numeroita, viivoja ja pisteitä. Välilyönnit eivät ole sallittuja."
     IDS_ERROR_CREATE_PARTITION_TITLE "Luo osio"
     IDS_ERROR_CREATE_PARTITION "Uuden osion luominen epäonnistui."
-
     IDS_WARN_DELETE_PARTITION_TITLE "Poistetaanko osio?"
     IDS_WARN_DELETE_PARTITION "Haluatko varmasti poistaa valitun osion?"
     IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Haluatko varmasti poistaa valitun laajennetun osion ja KAIKKI sen sisältämät loogiset osiot?"
-
     IDS_ERROR_WRITE_PTABLE "Asennusohjelma ei voinut kirjoittaa osiotaulua."
-
-    IDS_ERROR_SYSTEM_PARTITION "ReactOS Asennus ei löytänyt järjestelmästäsi tuettua järjestelmäosiota\n\
-eikä voinut luoda uutta. Ilman tällaista osiota asennusohjelma ei voi\n\
-asentaa ReactOSia.\n\
-Valitse OK palataksesi osionvalintaluetteloon."
-
+    IDS_ERROR_SYSTEM_PARTITION "ReactOS-asennus ei löytänyt järjestelmästäsi tuettua järjestelmäosiota eikä voinut luoda uutta. Ilman tällaista osiota asennusohjelma ei voi asentaa ReactOSia.\n\nValitse OK palataksesi osionvalintaluetteloon."
     IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Tunnistamaton levy yritettäessä alustaa osiota."
-
-    IDS_ERROR_COULD_NOT_FORMAT "Asennusohjelma ei voi tällä hetkellä alustaa osiota asemassa %s.\n\
-\nValitse OK jatkaaksesi asennusta.\n\
-Valitse Peruuta lopettaaksesi asennuksen."
-
+    IDS_ERROR_COULD_NOT_FORMAT "Asennusohjelma ei voi tällä hetkellä alustaa osiota asemassa %s.\n\nValitse OK jatkaaksesi asennusta.\n\nValitse Peruuta lopettaaksesi asennuksen."
     IDS_ERROR_FORMATTING_PARTITION "Asennusohjelma ei voi alustaa osiota:\n %s\n"
-
-    IDS_ERROR_COULD_NOT_CHECK "Asennusohjelma ei voi tällä hetkellä tarkistaa asemassa %s olevaa osiota.\n\
-\nValitse OK jatkaaksesi asennusta.\n\
-Valitse Peruuta lopettaaksesi asennuksen."
-
+    IDS_ERROR_COULD_NOT_CHECK "Asennusohjelma ei voi tällä hetkellä tarkistaa asemassa %s olevaa osiota.\n\nValitse OK jatkaaksesi asennusta.\n\nValitse Peruuta lopettaaksesi asennuksen."
     IDS_ERROR_CHECKING_PARTITION "ChkDsk havaitsi levyvirheitä.\n(Tila 0x%08lx)."
-
     IDS_ERROR_WRITE_BOOT "Asennusohjelma ei voinut asentaa %s-käynnistyskoodia järjestelmäosioon."
     IDS_ERROR_INSTALL_BOOTCODE "Asennusohjelma ei voinut asentaa %s-käynnistyskoodia käynnistyslevylle."
     IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Asennusohjelma ei voinut asentaa käynnistyskoodia siirrettävään tietovälineeseen."
-    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Asennusohjelma ei tällä hetkellä tue käynnistyslataimen asentamista käyttämääsi tietokoneeseen.\
-\nNapsauta OK jatkaaksesi joka tapauksessa."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Asennusohjelma ei tällä hetkellä tue käynnistyslataimen asentamista käyttämääsi tietokoneeseen.\n\nNapsauta OK jatkaaksesi joka tapauksessa."
     IDS_ERROR_BOOTLDR_FAILED "Asennusohjelma ei voinut asentaa käynnistyslatainta (Tila 0x%08lx)."
 END

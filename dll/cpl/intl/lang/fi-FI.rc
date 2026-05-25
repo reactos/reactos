@@ -7,20 +7,20 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Standardit ja muodot", -1, 5, 5, 234, 162
     LTEXT "Tämä asetus vaikuttaa siihen, miten jotkin ohjelmat muotoilevat numeroita, valuuttoja, päivämääriä ja kellonaikaa.", -1, 14, 17, 220, 25
-    LTEXT "&Valitse kohde sen ominaisuuksien mukaan tai napsauta Mukauta valitaksesi omat muodot:", -1, 14, 37, 220, 22
-    COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    PUSHBUTTON "M&ukauta...", IDC_SETUP_BUTTON, 178, 56, 52, 13
-    LTEXT "Esimerkit", -1, 14, 73, 70, 10
-    LTEXT "Numero:", -1, 16, 86, 48, 10
-    LTEXT "Valuutta:", -1, 16, 101, 48, 10
-    LTEXT "Kellonaika:", -1, 16, 116, 48, 10
-    LTEXT "Lyhyt päivämäärä:", -1, 16, 131, 48, 10
-    LTEXT "Pitkä päivämäärä:", -1, 16, 146, 48, 10
-    EDITTEXT IDC_NUMSAMPLE_EDIT, 89, 86, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    EDITTEXT IDC_MONEYSAMPLE_EDIT, 89, 101, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "&Valitse kohde sen ominaisuuksien mukaan tai napsauta Mukauta valitaksesi omat muodot:", -1, 14, 42, 220, 22
+    COMBOBOX IDC_LANGUAGELIST, 14, 66, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    PUSHBUTTON "M&ukauta...", IDC_SETUP_BUTTON, 178, 65, 52, 14
+    LTEXT "Esimerkit", -1, 14, 83, 70, 10
+    LTEXT "Numero:", -1, 16, 96, 70, 10
+    LTEXT "Valuutta:", -1, 16, 111, 70, 10
+    LTEXT "Kellonaika:", -1, 16, 126, 70, 10
+    LTEXT "Lyhyt päivämäärä:", -1, 16, 141, 70, 10
+    LTEXT "Pitkä päivämäärä:", -1, 16, 156, 70, 10
+    EDITTEXT IDC_NUMSAMPLE_EDIT, 89, 94, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    EDITTEXT IDC_MONEYSAMPLE_EDIT, 89, 109, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 124, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 139, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 154, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Maantieteellinen sijainti", -1, 5, 172, 234, 55
     LTEXT "Määri&tä sijaintisi, jotta palvelut voivat tarjota paikallisia tietoja, kuten uutisia ja säätiedotuksia.", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
@@ -32,12 +32,12 @@ CAPTION "Kielet"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Tekstinsyöttökielet ja palvelut", -1, 5, 5, 234, 52
-    LTEXT "Näytä tai muuta kieli- tai tekstinsyöttötapoja napsauttamalla ""Lisätiedot...""", -1, 12, 15, 220, 18
-    PUSHBUTTON "Lisä&tiedot...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
+    LTEXT "Näytä tai muuta kieli- tai tekstinsyöttötapoja napsauttamalla ""Asetukset..."".", -1, 12, 18, 155, 24
+    PUSHBUTTON "&Asetukset...", IDC_DETAIL_BUTTON, 172, 24, 60, 14
     GROUPBOX "Kielten lisätuki", -1, 5, 62, 234, 82
-    LTEXT "Useimmat kielet asennetaan oletuksena. Asenna lisäkieliä valitsemalla sopiva valintaruutu alta.", -1, 12, 72, 220, 18
-    AUTOCHECKBOX "A&senna tiedostot monimutkaisille ja oikealta vasemmalle kirjoitettaville kielille", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
-    AUTOCHECKBOX "As&enna tiedostot itäaasialaisille kielille", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
+    LTEXT "Useimmat kielet asennetaan oletuksena. Asenna lisäkieliä valitsemalla sopiva valintaruutu alta.", -1, 12, 74, 220, 18
+    AUTOCHECKBOX "A&senna tiedostot monimutkaisille ja oikealta vasemmalle kirjoitettaville kielille", IDC_INST_FILES_FOR_RTOL_LANG, 12, 94, 215, 22, BS_MULTILINE | BS_TOP
+    AUTOCHECKBOX "As&enna tiedostot itäaasialaisille kielille", IDC_INST_FILES_FOR_ASIAN, 12, 118, 215, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -48,7 +48,7 @@ BEGIN
     GROUPBOX "Ei-Unicode-ohjelmien kieli", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Tämä järjestelmäasetus mahdollistaa ei-Unicode-ohjelmille valikoiden ja valintaikkunoiden näyttämisen omalla kielellään. Se ei vaikuta Unicode-ohjelmiin, mutta koskee kaikkia tämän tietokoneen käyttäjiä.", -1, 14, 18, 223, 33
-    LTEXT "&Valitse kieli, joka vastaa käyttämiesi ei-Unicode-ohjelmien kieliversiota:", -1, 14, 55, 223, 18
+    LTEXT "&Valitse kieli, joka vastaa käyttämiesi ei-Unicode-ohjelmien kieliversiota:", -1, 14, 54, 223, 18
     GROUPBOX "&Koodisivun muunnostaulukot", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Oletuskäyttäjätilin asetukset", -1, 5, 193, 234, 32
@@ -61,27 +61,27 @@ CAPTION "Numerot"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ulkoasun esimerkki", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
-    LTEXT "Positiivinen:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    EDITTEXT IDC_NUMBERSPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Negatiivinen:", -1, 120, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Desimaalimerkki:", -1, 8, 67, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Positiivinen:", -1, 13, 21, 45, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_NUMBERSPOSSAMPLE, 60, 19, 60, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Negatiivinen:", -1, 124, 21, 45, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_NUMBERSNEGSAMPLE, 171, 19, 60, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "&Desimaalimerkki:", -1, 8, 67, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Desimaalin jälkeisten numeroiden m&äärä:", -1, 8, 83, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Desimaalin jälkeisten numeroiden m&äärä:", -1, 8, 83, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNDIGDEC, 137, 81, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Numeroryhmityksen merkki:", -1, 8, 100, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Numeroryhmityksen erotin:", -1, 8, 100, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDIGITGRSYM, 137, 97, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "N&umeroryhmitys:", -1, 8, 117, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "N&umeroryhmitys:", -1, 8, 117, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDGROUPING, 137, 113, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Negatiivisen etumerkin symboli:", -1, 8, 134, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Negatiivisen etumerkin symboli:", -1, 8, 134, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNSIGNSYM, 137, 129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Negatiivisen luvun muoto:", -1, 8, 149, 100, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Negatiivisen luvun muoto:", -1, 8, 149, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNNUMFORMAT, 137, 145, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "N&äytä etunollat:", -1, 8, 166, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "N&äytä etunollat:", -1, 8, 166, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Luettelon erotin:", -1, 8, 181, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Luettelon erotin:", -1, 8, 181, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Mittajärjestelmä:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Mittajärjestelmä:", -1, 8, 197, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -91,19 +91,19 @@ CAPTION "Valuutta"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ulkoasun esimerkki", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-    LTEXT "Positiivinen:", -1, 13, 21, 27, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Negatiivinen:", -1, 120, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Positiivinen:", -1, 13, 21, 45, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_CURRENCYPOSSAMPLE, 60, 19, 60, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Negatiivinen:", -1, 124, 21, 45, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_CURRENCYNEGSAMPLE, 171, 19, 60, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "&Valuuttatunnus:", -1, 10, 51, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Positiivinen arvo:", -1, 10, 68, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Positiivinen muoto:", -1, 10, 68, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Negatiivinen arvo:", -1, 10, 85, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Negatiivinen muoto:", -1, 10, 85, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYNEGVALUE, 134, 83, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Desimaalierotin:", -1, 10, 111, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECSEP, 134, 109, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Murtolukujen numeroiden määrä:", -1, 10, 128, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Dosimaalin jälkeiset numerot:", -1, 10, 128, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECNUM, 134, 126, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Ryhmityksen erotin:", -1, 10, 156, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPSEP, 134, 154, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -117,8 +117,8 @@ CAPTION "Kellonaika"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ulkoasun esimerkki", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-    LTEXT "Kellonaikaesimerkki:", -1, 13, 21, 54, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
-    EDITTEXT IDC_TIMESAMPLE, 68, 19, 84, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Kellonaikaesimerkki:", -1, 13, 21, 65, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_TIMESAMPLE, 82, 19, 70, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Kellonajan muoto:", -1, 13, 52, 130, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEFORMAT, 149, 50, 84, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Kellonajan erotin:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
@@ -144,7 +144,7 @@ BEGIN
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "ja", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 77, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
-    CONTROL "",IDC_SCR_MAX_YEAR, "msctls_updown32", UDS_NOTHOUSANDS | UDS_WRAP | UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 113, 30, 10, 12
+    CONTROL "", IDC_SCR_MAX_YEAR, "msctls_updown32", UDS_NOTHOUSANDS | UDS_WRAP | UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 113, 30, 10, 12
     LTEXT "&Kalenterityyppi:", -1, 13, 48, 56, 10
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     LTEXT "&Muslimikalenteri:", -1, 13, 65, 60, 12
@@ -195,9 +195,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPLY_DEFAULT_TITLE "Vaihda oletusasetuksia"
-    IDS_APPLY_DEFAULT_TEXT "Asetukset otetaan käyttöön oletuskäyttäjätilille.\n\n\
-Nämä muutokset koskevat kirjautumisnäyttöä ja uusia käyttäjätilejä.\n\
-Tietokone on käynnistettävä uudelleen, jotta muutokset tulevat voimaan joissakin järjestelmäpalveluissa."
+    IDS_APPLY_DEFAULT_TEXT "Asetukset otetaan käyttöön oletuskäyttäjätilille.\n\nNämä muutokset koskevat kirjautumisnäyttöä ja uusia käyttäjätilejä.\nTietokone on käynnistettävä uudelleen, jotta muutokset tulevat voimaan joissakin järjestelmäpalveluissa."
 END
 
 STRINGTABLE
