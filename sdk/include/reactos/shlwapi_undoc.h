@@ -388,6 +388,20 @@ PathFileExistsDefExtAndAttributesW(
     _In_ DWORD dwWhich,
     _Out_opt_ LPDWORD pdwFileAttributes);
 
+BOOL WINAPI
+PathUnExpandEnvStringsForUserA(
+    _In_ HANDLE hUserToken,
+    _In_ PCSTR pszPath,
+    _Out_writes_(cchBuff) PSTR pszBuff,
+    _In_ INT cchBuff);
+
+BOOL WINAPI
+PathUnExpandEnvStringsForUserW(
+    _In_ HANDLE hUserToken,
+    _In_ PCWSTR pwszPath,
+    _Out_writes_(cchBuff) PWSTR pszBuff,
+    _In_ INT cchBuff);
+
 BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
 VOID WINAPI FixSlashesAndColonA(_Inout_ LPSTR lpstr);
 VOID WINAPI FixSlashesAndColonW(_Inout_ LPWSTR lpwstr);

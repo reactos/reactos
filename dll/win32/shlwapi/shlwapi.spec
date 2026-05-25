@@ -462,8 +462,8 @@
 462 stdcall -noname UrlFixupW(wstr wstr long)
 463 stdcall -noname SHExpandEnvironmentStringsForUserA(ptr str ptr long) userenv.ExpandEnvironmentStringsForUserA
 464 stdcall -noname SHExpandEnvironmentStringsForUserW(ptr wstr ptr long) userenv.ExpandEnvironmentStringsForUserW
-465 stub -noname PathUnExpandEnvStringsForUserA
-466 stdcall -stub -noname PathUnExpandEnvStringsForUserW(ptr wstr ptr long)
+465 stdcall -noname PathUnExpandEnvStringsForUserA(ptr str ptr long)
+466 stdcall -noname PathUnExpandEnvStringsForUserW(ptr wstr ptr long)
 467 stdcall -ordinal SHRunIndirectRegClientCommand(ptr wstr) # Exported by name in Vista+
 468 stdcall -noname RunIndirectRegCommand(ptr ptr wstr wstr)
 469 stdcall -noname RunRegCommand(ptr ptr wstr)
