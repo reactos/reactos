@@ -734,8 +734,6 @@ public:
 
     VOID ShowFolder(INT csidl, BOOL bExplore)
     {
-        if (SHRestricted(REST_NOSETFOLDERS))
-            return;
         SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_INVOKEIDLIST };
         if (bExplore)
             sei.lpVerb = L"explore";
@@ -865,13 +863,15 @@ public:
                 ExecResourceCmd(IDS_HELP_COMMAND);
                 break;
             case TRAYCMD_CONTROL_PANEL:
-                ShowFolder(CSIDL_CONTROLS, FALSE);
+                if (!SHRestricted(REST_NOSETFOLDERS))
+                    ShowFolder(CSIDL_CONTROLS, FALSE);
                 break;
             case TRAYCMD_SHUTDOWN_DIALOG:
                 DoExitWindows();
                 break;
             case TRAYCMD_PRINTERS_AND_FAXES:
-                ShowFolder(CSIDL_PRINTERS, FALSE);
+                if (!SHRestricted(REST_NOSETFOLDERS))
+                    ShowFolder(CSIDL_PRINTERS, FALSE);
                 break;
             case TRAYCMD_LOCK_DESKTOP:
                 // TODO:
