@@ -497,6 +497,14 @@ PWSTR WINAPI CharLowerNoDBCSW(_Inout_ PWSTR lpString);
 PSTR WINAPI CharUpperNoDBCSA(_Inout_ PSTR lpString);
 PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString);
 
+HRESULT WINAPI
+SHWindowsPolicyGetValue(
+    _In_ REFGUID rpolid,
+    _Out_opt_ PVOID pvValue,
+    _Out_opt_ PDWORD pcbValue);
+
+#define E_DATATYPE_MISMATCH HRESULT_FROM_WIN32(ERROR_DATATYPE_MISMATCH)
+
 /*****************************************************************************
  * IAssociationElementOld interface
  *

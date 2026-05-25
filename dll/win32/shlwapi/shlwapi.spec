@@ -557,7 +557,7 @@
 557 stub -noname SHCoCreateExtension
 558 stub -noname SHCoExtensionCollectStats
 559 stub -noname SHGetSignatureInfo
-560 stdcall -stub -noname SHWindowsPolicyGetValue(ptr ptr ptr)
+560 stdcall -noname SHWindowsPolicyGetValue(ptr ptr ptr)
 561 stub -noname AssocGetUrlAction
 562 stub -noname SHGetPrivateProfileInt
 563 stdcall -stub -noname SHGetPrivateProfileSection(wstr ptr long ptr)
