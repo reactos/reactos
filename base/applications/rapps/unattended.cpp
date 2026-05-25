@@ -166,14 +166,10 @@ HandleUninstallCommand(CAppDB &db, UINT argcLeft, LPWSTR *argvLeft)
         if (!pInfo)
         {
             CAvailableApplicationInfo *p = db.FindAvailableByPackageName(name);
-            if (p)
+            if (p && p->IsInstalled(&buf))
             {
-                CConfigParser *cp = p->GetConfigParser();
-                if (cp && cp->GetString(DB_REGNAME, buf) && !buf.IsEmpty())
-                {
-                    name = buf.GetString();
-                    byregkeyname = TRUE;
-                }
+                name = buf.GetString();
+                byregkeyname = TRUE;
             }
         }
     }
