@@ -36,6 +36,8 @@
 
 @ stdcall RtlIsNameInExpression(ptr ptr long ptr)
 
+@ stdcall RtlCopyContext(ptr long ptr)
+
 @ stdcall TpAllocCleanupGroup(ptr)
 @ stdcall TpAllocIoCompletion(ptr ptr ptr ptr ptr)
 @ stdcall TpAllocPool(ptr ptr)
