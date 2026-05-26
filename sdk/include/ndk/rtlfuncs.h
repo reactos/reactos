@@ -4696,7 +4696,7 @@ BOOLEAN
 NTAPI
 RtlGetNtProductType(_Out_ PNT_PRODUCT_TYPE ProductType);
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
 //
 // Synchronization functions
 //
@@ -4739,35 +4739,6 @@ RtlSleepConditionVariableSRW(
 //
 // Synchronization functions
 //
-NTSYSAPI
-VOID
-NTAPI
-RtlInitializeConditionVariable(OUT PRTL_CONDITION_VARIABLE ConditionVariable);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlWakeConditionVariable(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlWakeAllConditionVariable(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlSleepConditionVariableCS(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
-                            IN OUT PRTL_CRITICAL_SECTION CriticalSection,
-                            IN const PLARGE_INTEGER TimeOut OPTIONAL);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlSleepConditionVariableSRW(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
-                             IN OUT PRTL_SRWLOCK SRWLock,
-                             IN PLARGE_INTEGER TimeOut OPTIONAL,
-                             IN ULONG Flags);
 
 VOID
 NTAPI
