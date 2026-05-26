@@ -92,6 +92,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Warna Modern", IDM_COLORSMODERNPALETTE
         MENUITEM "Warna Tua", IDM_COLORSOLDPALETTE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
+        MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
     END
     POPUP "&Bantuan"
     BEGIN

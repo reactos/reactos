@@ -93,6 +93,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "新調色板", IDM_COLORSMODERNPALETTE
         MENUITEM "舊調色板", IDM_COLORSOLDPALETTE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
+        MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
     END
     POPUP "說明(&H)"
     BEGIN

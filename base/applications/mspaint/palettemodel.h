@@ -13,6 +13,8 @@ enum PAL_TYPE
 {
     PAL_MODERN = 1,
     PAL_OLDTYPE = 2,
+    PAL_GRAYSCALE = 3,
+    PAL_BLACKANDWHITE = 4,
 };
 
 /* CLASSES **********************************************************/
@@ -24,9 +26,12 @@ private:
     PAL_TYPE m_nSelectedPalette;
     COLORREF m_fgColor;
     COLORREF m_bgColor;
+    INT m_iBgColor;
+    INT m_iFgColor;
 
     void NotifyColorChanged();
     void NotifyPaletteChanged();
+    static HBRUSH CreateDitherBrush(COLORREF color);
 
 public:
     PaletteModel();
@@ -38,4 +43,11 @@ public:
     void SetFgColor(COLORREF newColor);
     COLORREF GetBgColor() const;
     void SetBgColor(COLORREF newColor);
+    HBRUSH CreateColorBrush(UINT nIndex);
+    HBRUSH CreateFgBrush() { return CreateColorBrush(m_iFgColor); }
+    HBRUSH CreateBgBrush() { return CreateColorBrush(m_iBgColor); }
+    INT GetFgIndex() const { return m_iFgColor; }
+    INT GetBgIndex() const { return m_iBgColor; }
+    void SetFgIndex(INT nIndex);
+    void SetBgIndex(INT nIndex);
 };

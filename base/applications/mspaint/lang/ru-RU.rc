@@ -96,6 +96,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Современная", IDM_COLORSMODERNPALETTE
         MENUITEM "Старая", IDM_COLORSOLDPALETTE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
+        MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
     END
     POPUP "&Справка"
     BEGIN

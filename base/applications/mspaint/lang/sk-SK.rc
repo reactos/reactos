@@ -92,6 +92,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
+        MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
     END
     POPUP "&Pomocník"
     BEGIN
