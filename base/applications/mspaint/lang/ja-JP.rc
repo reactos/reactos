@@ -94,7 +94,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "モダンなパレット", IDM_COLORSMODERNPALETTE
         MENUITEM "古いパレット", IDM_COLORSOLDPALETTE
-        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
+        MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
         MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
     END
     POPUP "ヘルプ(&H)"

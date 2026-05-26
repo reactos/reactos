@@ -94,7 +94,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çağdaş Renk Paleti", IDM_COLORSMODERNPALETTE
         MENUITEM "&Eski Renk Paleti", IDM_COLORSOLDPALETTE
-        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
+        MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
         MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
     END
     POPUP "&Yardım"

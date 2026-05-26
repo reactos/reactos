@@ -95,7 +95,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "现代调色板", IDM_COLORSMODERNPALETTE
         MENUITEM "传统调色板", IDM_COLORSOLDPALETTE
-        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
+        MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
         MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
     END
     POPUP "帮助(&H)"
