@@ -159,7 +159,7 @@ PaletteModel::CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF mo
         INT index = y * (3 * CHAR_BIT);
         for (INT x = 0; x < 8; ++x)
         {
-            INT threshold = s_bayerMatrix[y][x] * 255 / 63;
+            const INT threshold = s_bayerMatrix[y][x] * 255 / 63;
             if (brightness > threshold)
             {
                 pixels[index++] = b1; // Blue
