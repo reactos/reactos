@@ -102,17 +102,13 @@ public:
 
     virtual BOOL ShowUndockMenuItem(VOID)
     {
-        return !SHRestricted(REST_NOSMEJECTPC) &&
-                SHTestTokenPrivilegeW(NULL, L"SeUndockPrivilege") &&
-                IsEjectAllowed() &&
-                !GetSystemMetrics(SM_REMOTESESSION);
-    }
-
-    BOOL IsEjectAllowed(VOID)
-    {
         BOOL bPresent;
         CM_Is_Dock_Station_Present(&bPresent);
-        return bPresent;
+
+        return bPresent &&
+               !SHRestricted(REST_NOSMEJECTPC) &&
+               SHTestTokenPrivilegeW(NULL, L"SeUndockPrivilege") &&
+               !GetSystemMetrics(SM_REMOTESESSION);
     }
 
     virtual BOOL
