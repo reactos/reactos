@@ -153,10 +153,10 @@ PaletteModel::CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF mo
     BYTE pixels[8 * 8 * 3];
     for (INT y = 0; y < 8; ++y)
     {
+        INT index = y * (3 * CHAR_BIT);
         for (INT x = 0; x < 8; ++x)
         {
             INT threshold = s_bayerMatrix[y][x] * 255 / 63;
-            INT index = (y * 8 + x) * 3;
             if (brightness > threshold)
             {
                 pixels[index + 0] = GetBValue(monoColor1); // Blue
@@ -169,6 +169,7 @@ PaletteModel::CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF mo
                 pixels[index + 1] = GetGValue(monoColor0); // Green
                 pixels[index + 2] = GetRValue(monoColor0); // Red
             }
+            index += 3;
         }
     }
 
