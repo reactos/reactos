@@ -150,6 +150,9 @@ PaletteModel::CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF mo
     bmi.bmiHeader.biPlanes   = 1;
     bmi.bmiHeader.biBitCount = 24;
 
+    const BYTE b0 = GetBValue(monoColor0), g0 = GetGValue(monoColor0), r0 = GetRValue(monoColor0);
+    const BYTE b1 = GetBValue(monoColor1), g1 = GetGValue(monoColor1), r1 = GetRValue(monoColor1);
+
     BYTE pixels[8 * 8 * 3];
     for (INT y = 0; y < 8; ++y)
     {
@@ -159,15 +162,15 @@ PaletteModel::CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF mo
             INT threshold = s_bayerMatrix[y][x] * 255 / 63;
             if (brightness > threshold)
             {
-                pixels[index + 0] = GetBValue(monoColor1); // Blue
-                pixels[index + 1] = GetGValue(monoColor1); // Green
-                pixels[index + 2] = GetRValue(monoColor1); // Red
+                pixels[index + 0] = b1; // Blue
+                pixels[index + 1] = g1; // Green
+                pixels[index + 2] = r1; // Red
             }
             else
             {
-                pixels[index + 0] = GetBValue(monoColor0); // Blue
-                pixels[index + 1] = GetGValue(monoColor0); // Green
-                pixels[index + 2] = GetRValue(monoColor0); // Red
+                pixels[index + 0] = b0; // Blue
+                pixels[index + 1] = g0; // Green
+                pixels[index + 2] = r0; // Red
             }
             index += 3;
         }
