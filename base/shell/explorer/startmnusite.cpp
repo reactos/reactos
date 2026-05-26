@@ -99,12 +99,19 @@ public:
         return E_NOTIMPL;
     }
 
-    virtual BOOL
-        ShowUndockMenuItem(VOID)
+    BOOL IsEjectAllowed(VOID)
     {
-        TRACE("ShowUndockMenuItem() not implemented!\n");
-        /* FIXME: How do we detect this?! */
-        return FALSE;
+        BOOL bPresent;
+        CM_Is_Dock_Station_Present(&bPresent);
+        return bPresent;
+    }
+
+    virtual BOOL ShowUndockMenuItem(VOID)
+    {
+        return !SHRestricted(REST_NOSMEJECTPC) &&
+                SHTestTokenPrivilegeW(NULL, L"SeUndockPrivilege") &&
+                IsEjectAllowed() &&
+                !GetSystemMetrics(SM_REMOTESESSION);
     }
 
     virtual BOOL
