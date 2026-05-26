@@ -42,7 +42,7 @@ LoadOrderGroup = Video Save
 AddReg = xboxvmp_SoftwareDeviceSettings
 
 [xboxvmp_SoftwareDeviceSettings]
-HKR,,InstalledDisplayDrivers,0x00010000,framebuf
+HKR,,InstalledDisplayDrivers,0x00010000,xboxdisp
 
 ;-------------------------------- STRINGS -------------------------------
 

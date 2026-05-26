@@ -430,7 +430,7 @@ extern "C" {
 
 
 /*************************************************************/
-
+#ifndef __WINE_WGL_H
 #ifndef WGL_ARB_pbuffer
 DECLARE_HANDLE(HPBUFFERARB);
 #endif
@@ -446,6 +446,7 @@ DECLARE_HANDLE(HPVIDEODEV);
 #ifndef WGL_NV_gpu_affinity
 DECLARE_HANDLE(HPGPUNV);
 DECLARE_HANDLE(HGPUNV);
+#endif
 
 typedef struct _GPU_DEVICE {
     DWORD  cb;
@@ -455,8 +456,10 @@ typedef struct _GPU_DEVICE {
     RECT   rcVirtualScreen;
 } GPU_DEVICE, *PGPU_DEVICE;
 #endif
+#ifndef __WINE_WGL_H
 #ifndef WGL_NV_video_capture
 DECLARE_HANDLE(HVIDEOINPUTDEVICENV);
+#endif
 #endif
 
 #ifndef WGL_ARB_buffer_region
