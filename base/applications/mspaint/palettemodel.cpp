@@ -162,17 +162,16 @@ PaletteModel::CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF mo
             INT threshold = s_bayerMatrix[y][x] * 255 / 63;
             if (brightness > threshold)
             {
-                pixels[index + 0] = b1; // Blue
-                pixels[index + 1] = g1; // Green
-                pixels[index + 2] = r1; // Red
+                pixels[index++] = b1; // Blue
+                pixels[index++] = g1; // Green
+                pixels[index++] = r1; // Red
             }
             else
             {
-                pixels[index + 0] = b0; // Blue
-                pixels[index + 1] = g0; // Green
-                pixels[index + 2] = r0; // Red
+                pixels[index++] = b0; // Blue
+                pixels[index++] = g0; // Green
+                pixels[index++] = r0; // Red
             }
-            index += 3;
         }
     }
 
