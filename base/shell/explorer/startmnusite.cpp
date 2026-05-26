@@ -19,6 +19,7 @@
  */
 
 #include "precomp.h"
+#include <cfgmgr32.h>
 
 class CStartMenuSite :
     public CComCoClass<CStartMenuSite>,
