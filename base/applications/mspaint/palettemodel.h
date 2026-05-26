@@ -26,8 +26,6 @@ private:
     PAL_TYPE m_nSelectedPalette;
     COLORREF m_fgColor;
     COLORREF m_bgColor;
-    INT m_iBgColor;
-    INT m_iFgColor;
 
     void NotifyColorChanged();
     void NotifyPaletteChanged();
@@ -43,11 +41,7 @@ public:
     void SetFgColor(COLORREF newColor);
     COLORREF GetBgColor() const;
     void SetBgColor(COLORREF newColor);
-    HBRUSH CreateColorBrush(UINT nIndex);
-    HBRUSH CreateFgBrush() { return CreateColorBrush(m_iFgColor); }
-    HBRUSH CreateBgBrush() { return CreateColorBrush(m_iBgColor); }
-    INT GetFgIndex() const { return m_iFgColor; }
-    INT GetBgIndex() const { return m_iBgColor; }
-    void SetFgIndex(INT nIndex);
-    void SetBgIndex(INT nIndex);
+    HBRUSH CreateColorBrush(COLORREF color);
+    HBRUSH CreateFgBrush() { return CreateColorBrush(m_fgColor); }
+    HBRUSH CreateBgBrush() { return CreateColorBrush(m_bgColor); }
 };

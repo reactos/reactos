@@ -126,7 +126,7 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     for (INT i = 0; i < COLOR_COUNT; i++)
     {
         getColorBoxRect(&rc, rcClient, i);
-        HBRUSH hbr = paletteModel.CreateColorBrush(i);
+        HBRUSH hbr = paletteModel.CreateColorBrush(paletteModel.GetColor(i));
         drawColorBox(hMemDC, &rc, hbr, BDR_SUNKENOUTER);
         DeleteObject(hbr);
     }
@@ -144,7 +144,7 @@ LRESULT CPaletteWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     INT iColor = DoHitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     if (iColor != -1)
-        paletteModel.SetFgIndex(iColor);
+        paletteModel.SetFgColor(paletteModel.GetColor(iColor));
     SetCapture();
     return 0;
 }
@@ -153,7 +153,7 @@ LRESULT CPaletteWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     INT iColor = DoHitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     if (iColor != -1)
-        paletteModel.SetBgIndex(iColor);
+        paletteModel.SetBgColor(paletteModel.GetColor(iColor));
     return 0;
 }
 
@@ -164,7 +164,7 @@ LRESULT CPaletteWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
     if (iColor != -1 && mainWindow.ChooseColor(&rgbColor))
     {
         paletteModel.SetColor(iColor, rgbColor);
-        paletteModel.SetFgIndex(iColor);
+        paletteModel.SetFgColor(rgbColor);
     }
     return 0;
 }
@@ -176,7 +176,7 @@ LRESULT CPaletteWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
     if (iColor != -1 && mainWindow.ChooseColor(&rgbColor))
     {
         paletteModel.SetColor(iColor, rgbColor);
-        paletteModel.SetBgIndex(iColor);
+        paletteModel.SetBgColor(rgbColor);
     }
     return 0;
 }

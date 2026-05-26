@@ -17,8 +17,6 @@ PaletteModel::PaletteModel()
     m_fgColor = RGB(0, 0, 0);
     m_bgColor = RGB(255, 255, 255);
     SelectPalette(PAL_MODERN);
-    m_iBgColor = 14;
-    m_iFgColor = 0;
 }
 
 PAL_TYPE PaletteModel::SelectedPalette()
@@ -63,8 +61,8 @@ void PaletteModel::SelectPalette(PAL_TYPE nPalette)
             break;
     }
     m_nSelectedPalette = nPalette;
-    SetBgIndex(14);
-    SetFgIndex(0);
+    m_fgColor = RGB(0, 0, 0);
+    m_bgColor = RGB(255, 255, 255);
     NotifyPaletteChanged();
 }
 
@@ -189,24 +187,10 @@ HBRUSH PaletteModel::CreateDitherBrush(COLORREF color)
     return hBrush;
 }
 
-HBRUSH PaletteModel::CreateColorBrush(UINT nIndex)
+HBRUSH PaletteModel::CreateColorBrush(COLORREF color)
 {
     if (m_nSelectedPalette == PAL_BLACKANDWHITE)
-        return CreateDitherBrush(GetColor(nIndex));
+        return CreateDitherBrush(color);
     else
-        return CreateSolidBrush(GetColor(nIndex));
-}
-
-void PaletteModel::SetFgIndex(INT nIndex)
-{
-    m_iFgColor = nIndex;
-    m_fgColor = GetColor(nIndex);
-    NotifyColorChanged();
-}
-
-void PaletteModel::SetBgIndex(INT nIndex)
-{
-    m_iBgColor = nIndex;
-    m_bgColor = GetColor(nIndex);
-    NotifyColorChanged();
+        return CreateSolidBrush(color);
 }
