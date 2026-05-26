@@ -95,7 +95,7 @@ BEGIN
         MENUITEM "&Çağdaş Renk Paleti", IDM_COLORSMODERNPALETTE
         MENUITEM "&Eski Renk Paleti", IDM_COLORSOLDPALETTE
         MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
-        MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
     END
     POPUP "&Yardım"
     BEGIN

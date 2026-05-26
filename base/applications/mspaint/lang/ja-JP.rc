@@ -95,7 +95,7 @@ BEGIN
         MENUITEM "モダンなパレット", IDM_COLORSMODERNPALETTE
         MENUITEM "古いパレット", IDM_COLORSOLDPALETTE
         MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
-        MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
     END
     POPUP "ヘルプ(&H)"
     BEGIN

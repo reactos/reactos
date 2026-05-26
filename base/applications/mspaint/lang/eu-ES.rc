@@ -94,7 +94,7 @@ BEGIN
         MENUITEM "Paleta modernua", IDM_COLORSMODERNPALETTE
         MENUITEM "Paleta zaharra", IDM_COLORSOLDPALETTE
         MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
-        MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
     END
     POPUP "&Laguntza"
     BEGIN

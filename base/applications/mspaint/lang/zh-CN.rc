@@ -96,7 +96,7 @@ BEGIN
         MENUITEM "现代调色板", IDM_COLORSMODERNPALETTE
         MENUITEM "传统调色板", IDM_COLORSOLDPALETTE
         MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
-        MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
     END
     POPUP "帮助(&H)"
     BEGIN

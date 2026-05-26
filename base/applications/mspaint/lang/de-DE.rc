@@ -93,7 +93,7 @@ BEGIN
         MENUITEM "Moderne Palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Alte Palette", IDM_COLORSOLDPALETTE
         MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
-        MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
     END
     POPUP "&Hilfe"
     BEGIN

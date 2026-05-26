@@ -56,7 +56,7 @@ void PaletteModel::SelectPalette(PAL_TYPE nPalette)
             CopyMemory(m_colors, oldColors, sizeof(m_colors));
             break;
         case PAL_GRAYSCALE:
-        case PAL_BLACKANDWHITE:
+        case PAL_MONOCHROME:
             CopyMemory(m_colors, grayscale, sizeof(m_colors));
             break;
     }
@@ -189,7 +189,7 @@ HBRUSH PaletteModel::CreateDitherBrush(COLORREF color)
 
 HBRUSH PaletteModel::CreateColorBrush(COLORREF color)
 {
-    if (m_nSelectedPalette == PAL_BLACKANDWHITE)
+    if (m_nSelectedPalette == PAL_MONOCHROME)
         return CreateDitherBrush(color);
     else
         return CreateSolidBrush(color);

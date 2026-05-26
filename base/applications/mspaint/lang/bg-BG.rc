@@ -94,7 +94,7 @@ BEGIN
         MENUITEM "Нови палитри", IDM_COLORSMODERNPALETTE
         MENUITEM "Стари палитри", IDM_COLORSOLDPALETTE
         MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
-        MENUITEM "Black and white palette", IDM_COLORSBLACKWHITE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
     END
     POPUP "&Помощ"
     BEGIN

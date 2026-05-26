@@ -14,7 +14,7 @@ enum PAL_TYPE
     PAL_MODERN = 1,
     PAL_OLDTYPE = 2,
     PAL_GRAYSCALE = 3,
-    PAL_BLACKANDWHITE = 4,
+    PAL_MONOCHROME = 4,
 };
 
 /* CLASSES **********************************************************/
