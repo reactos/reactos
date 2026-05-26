@@ -29,7 +29,7 @@ private:
 
     void NotifyColorChanged();
     void NotifyPaletteChanged();
-    static HBRUSH CreateDitherBrush(COLORREF color);
+    static HBRUSH CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF monoColor1);
 
 public:
     PaletteModel();

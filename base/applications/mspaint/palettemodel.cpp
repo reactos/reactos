@@ -121,7 +121,8 @@ void PaletteModel::NotifyPaletteChanged()
         paletteWindow.Invalidate(FALSE);
 }
 
-HBRUSH PaletteModel::CreateDitherBrush(COLORREF color)
+HBRUSH
+PaletteModel::CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF monoColor1)
 {
     // 8x8 Bayer ordered dithering matrix (0 to 63)
     static const BYTE s_bayerMatrix[8][8] =
@@ -135,14 +136,12 @@ HBRUSH PaletteModel::CreateDitherBrush(COLORREF color)
         { 15, 47,  7, 39, 13, 45,  5, 37 },
         { 63, 31, 55, 23, 61, 29, 53, 21 },
     };
-    static const COLORREF rgbBlack = RGB(0, 0, 0);
-    static const COLORREF rgbWhite = RGB(255, 255, 255);
     INT sum = GetRValue(color) + GetGValue(color) + GetBValue(color);
     INT brightness = sum / 3;
     if (brightness < 0)
         brightness = 0;
     if (brightness >= 255)
-        brightness = 256;
+        brightness = 256; // White out
 
     BITMAPINFO bmi = {};
     bmi.bmiHeader.biSize     = sizeof(BITMAPINFOHEADER);
@@ -150,26 +149,25 @@ HBRUSH PaletteModel::CreateDitherBrush(COLORREF color)
     bmi.bmiHeader.biHeight   = -8; // Top-down
     bmi.bmiHeader.biPlanes   = 1;
     bmi.bmiHeader.biBitCount = 24;
-    BYTE pixels[8 * 8 * 3];
 
+    BYTE pixels[8 * 8 * 3];
     for (INT y = 0; y < 8; ++y)
     {
         for (INT x = 0; x < 8; ++x)
         {
             INT threshold = s_bayerMatrix[y][x] * 255 / 63;
-
-            INT idx = (y * 8 + x) * 3;
+            INT index = (y * 8 + x) * 3;
             if (brightness > threshold)
             {
-                pixels[idx + 0] = GetBValue(rgbWhite);  // Blue
-                pixels[idx + 1] = GetGValue(rgbWhite);  // Green
-                pixels[idx + 2] = GetRValue(rgbWhite);  // Red
+                pixels[index + 0] = GetBValue(monoColor1); // Blue
+                pixels[index + 1] = GetGValue(monoColor1); // Green
+                pixels[index + 2] = GetRValue(monoColor1); // Red
             }
             else
             {
-                pixels[idx + 0] = GetBValue(rgbBlack);  // Blue
-                pixels[idx + 1] = GetGValue(rgbBlack);  // Green
-                pixels[idx + 2] = GetRValue(rgbBlack);  // Red
+                pixels[index + 0] = GetBValue(monoColor0); // Blue
+                pixels[index + 1] = GetGValue(monoColor0); // Green
+                pixels[index + 2] = GetRValue(monoColor0); // Red
             }
         }
     }
@@ -190,7 +188,7 @@ HBRUSH PaletteModel::CreateDitherBrush(COLORREF color)
 HBRUSH PaletteModel::CreateColorBrush(COLORREF color)
 {
     if (m_nSelectedPalette == PAL_MONOCHROME)
-        return CreateDitherBrush(color);
+        return CreateDitherBrush(color, RGB(0, 0, 0), RGB(255, 255, 255));
     else
         return CreateSolidBrush(color);
 }
