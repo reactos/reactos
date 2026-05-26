@@ -3,7 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Keep track of palette data, notify listeners
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
- *             Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2021-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
