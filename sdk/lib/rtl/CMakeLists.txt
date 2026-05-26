@@ -137,6 +137,7 @@ add_dependencies(rtl psdk asm)
 list(APPEND SOURCE_VISTA
     ${RTL_WINE_SOURCE_VISTA}
     condvar.c
+    context.c
     locale.c
     runonce.c
     srw.c

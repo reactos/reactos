@@ -24,6 +24,8 @@
 @ stdcall RtlLocaleNameToLcid(wstr ptr long)
 @ stdcall RtlCompareUnicodeStrings(wstr long wstr long long)
 
+@ stdcall RtlCopyContext(ptr long ptr)
+
 @ stdcall TpAllocCleanupGroup(ptr)
 @ stdcall TpAllocIoCompletion(ptr ptr ptr ptr ptr)
 @ stdcall TpAllocPool(ptr ptr)

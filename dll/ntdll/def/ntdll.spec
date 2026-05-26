@@ -703,6 +703,7 @@
 @ stdcall RtlConvertToAutoInheritSecurityObject(ptr ptr ptr ptr long ptr)
 @ stdcall RtlConvertUiListToApiList(ptr ptr long)
 @ stdcall -arch=win32 -ret64 RtlConvertUlongToLargeInteger(long)
+@ stdcall -version=0x601+ RtlCopyContext(ptr long ptr)
 @ stdcall RtlCopyLuid(ptr ptr)
 @ stdcall RtlCopyLuidAndAttributesArray(long ptr ptr)
 @ stdcall RtlCopyMappedMemory(ptr ptr long)
