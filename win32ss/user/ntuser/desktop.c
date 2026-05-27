@@ -1479,29 +1479,26 @@ HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 BOOL FASTCALL
 DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lResult)
 {
-    PAINTSTRUCT Ps;
-    ULONG Value;
-    //ERR("DesktopWindowProc\n");
-
     *lResult = 0;
 
     switch (Msg)
     {
         case WM_NCCREATE:
             if (!Wnd->fnid)
-            {
                 Wnd->fnid = FNID_DESKTOP;
-            }
             *lResult = (LRESULT)TRUE;
             return TRUE;
 
         case WM_CREATE:
+        {
+            /* Save process and thread IDs */
+            ULONG Value;
             Value = HandleToULong(PsGetCurrentProcessId());
-            // Save Process ID
             co_UserSetWindowLong(UserHMGetHandle(Wnd), DT_GWL_PROCESSID, Value, FALSE);
             Value = HandleToULong(PsGetCurrentThreadId());
-            // Save Thread ID
             co_UserSetWindowLong(UserHMGetHandle(Wnd), DT_GWL_THREADID, Value, FALSE);
+            __fallthrough;
+        }
         case WM_CLOSE:
             return TRUE;
 
@@ -1511,17 +1508,17 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
 
         case WM_ERASEBKGND:
             IntPaintDesktop((HDC)wParam);
-            *lResult = 1;
+            *lResult = (LRESULT)TRUE;
             return TRUE;
 
         case WM_PAINT:
         {
+            PAINTSTRUCT Ps;
             if (IntBeginPaint(Wnd, &Ps))
-            {
                 IntEndPaint(Wnd, &Ps);
-            }
             return TRUE;
         }
+
         case WM_SYSCOLORCHANGE:
             co_UserRedrawWindow(Wnd, NULL, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
             return TRUE;
@@ -1531,9 +1528,7 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
             PCURICON_OBJECT pcurOld, pcurNew;
             pcurNew = UserGetCurIconObject(gDesktopCursor);
             if (!pcurNew)
-            {
                 return TRUE;
-            }
 
             pcurNew->CURSORF_flags |= CURSORF_CURRENT;
             pcurOld = UserSetCursor(pcurNew, FALSE);
@@ -1555,10 +1550,12 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
             }
             break;
         }
+
         default:
             TRACE("DWP calling IDWP Msg %d\n",Msg);
             //*lResult = IntDefWindowProc(Wnd, Msg, wParam, lParam, FALSE);
     }
+
     return TRUE; /* We are done. Do not do any callbacks to user mode */
 }
 
