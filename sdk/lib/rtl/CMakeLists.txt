@@ -138,6 +138,7 @@ list(APPEND SOURCE_VISTA
     ${RTL_WINE_SOURCE_VISTA}
     condvar.c
     context.c
+    contextex.c
     locale.c
     runonce.c
     srw.c

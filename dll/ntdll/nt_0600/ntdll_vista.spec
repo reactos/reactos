@@ -25,6 +25,17 @@
 @ stdcall RtlCompareUnicodeStrings(wstr long wstr long long)
 
 @ stdcall RtlCopyContext(ptr long ptr)
+@ stdcall RtlGetEnabledExtendedFeatures(int64)
+@ stdcall RtlGetExtendedContextLength(long ptr)
+@ stdcall RtlGetExtendedContextLength2(long ptr int64)
+@ stdcall RtlInitializeExtendedContext(ptr long ptr)
+@ stdcall RtlInitializeExtendedContext2(ptr long ptr int64)
+@ stdcall RtlLocateLegacyContext(ptr ptr)
+@ stdcall RtlLocateExtendedFeature(ptr long ptr)
+@ stdcall RtlLocateExtendedFeature2(ptr long ptr ptr)
+@ stdcall RtlGetExtendedFeaturesMask(ptr)
+@ stdcall RtlSetExtendedFeaturesMask(ptr int64)
+@ stdcall RtlCopyExtendedContext(ptr long ptr)
 
 @ stdcall TpAllocCleanupGroup(ptr)
 @ stdcall TpAllocIoCompletion(ptr ptr ptr ptr ptr)
