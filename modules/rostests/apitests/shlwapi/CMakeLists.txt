@@ -5,6 +5,7 @@ add_subdirectory(shlwapi_resource_dll)
 include_directories($<TARGET_FILE_DIR:shlwapi_resource_dll>)
 
 list(APPEND SOURCE
+    AssocQueryKey.c
     AssocQueryString.c
     CharUpperNoDBCS.cpp
     IShellFolderHelpers.cpp
