@@ -1336,7 +1336,7 @@ IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
         Status = ObOpenObjectByPointer(DesktopObject,
                                        0,
                                        NULL,
-                                       0,
+                                       DESKTOP_ALL_ACCESS,
                                        ExDesktopObjectType,
                                        UserMode,
                                        (PHANDLE)&hDesk);
@@ -1551,7 +1551,7 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
             PWINDOWPOS pWindowPos = (PWINDOWPOS)lParam;
             if ((pWindowPos->flags & SWP_SHOWWINDOW) != 0)
             {
-                HDESK hdesk = UserOpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
+                HDESK hdesk = IntGetDesktopObjectHandle(gpdeskInputDesktop);
                 IntSetThreadDesktop(hdesk, FALSE);
             }
             break;
