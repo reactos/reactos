@@ -1551,6 +1551,23 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
             break;
         }
 
+        // See: https://jeffpar.github.io/kbarchive/kb/155/Q155098/
+        // "Q155098: Double-Clicking Desktop Does Not Start Task Manager"
+        // and: https://betawiki.net/wiki/Task_Manager#Predecessors
+        // and: https://groups.google.com/g/comp.os.ms-windows.nt.misc/c/X0jqPkmTuAw
+        // > With the 'normal' NT shell I'm used to double clicking on the
+        // > desktop and getting up the 'Task List' dialog. This allows me
+        // > to select a task and use the 'End Task' button to terminate
+        // > that task.
+        //
+        // Note that if you want to reproduce on Windows, you need first to
+        // kill explorer.exe, then, copy taskman.exe from Windows 2000 or XP
+        // to SystemRoot\system32, then start it. Or, do the same with progman.exe.
+        case WM_LBUTTONDBLCLK:
+            Msg = WM_SYSCOMMAND;
+            wParam = SC_TASKLIST;
+            __fallthrough;
+
         default:
             TRACE("DWP calling IDWP Msg %d\n",Msg);
             *lResult = IntDefWindowProc(Wnd, Msg, wParam, lParam, FALSE);
