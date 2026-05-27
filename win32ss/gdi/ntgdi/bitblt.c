@@ -1274,7 +1274,7 @@ IntGdiFillRgn(
     bRet = IntEngPaint(&pdc->dclevel.pSurface->SurfObj,
                        (CLIPOBJ *)&xcoClip,
                        pbo,
-                       &pdc->pdcattr->ptlBrushOrigin,
+                       &pdc->ptlFillOrigin,
                        mix);
 
     DC_vFinishBlit(pdc, NULL);
@@ -1547,10 +1547,10 @@ NtGdiGetPixel(
     ptlSrc.x += pdc->ptlDCOrig.x;
     ptlSrc.y += pdc->ptlDCOrig.y;
 
-    rcDest.left = x;
-    rcDest.top = y;
-    rcDest.right = x + 1;
-    rcDest.bottom = y + 1;
+    rcDest.left = ptlSrc.x;
+    rcDest.top = ptlSrc.y;
+    rcDest.right = ptlSrc.x + 1;
+    rcDest.bottom = ptlSrc.y + 1;
 
     /* Prepare DC for blit */
     DC_vPrepareDCsForBlit(pdc, &rcDest, NULL, NULL);

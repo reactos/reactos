@@ -44,6 +44,7 @@
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#include <wine/exception.h>
 
 #include "wine/crypt.h"
 

@@ -3,6 +3,7 @@
 
 #include <portcls.h>
 #include <mmsystem.h>
+#include <pseh/pseh2.h>
 
 #include "interface.h"
 

@@ -180,7 +180,7 @@ class CAvailableApplicationInfo : public CAppInfo
     bool
     IsCompatible() const;
     bool
-    IsInstalled() const;
+    IsInstalled(CStringW *pOutKeyName = NULL) const;
 
     virtual BOOL
     Valid() const override;

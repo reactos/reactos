@@ -30,11 +30,15 @@ RtlpCopyParameterString(PWCHAR *Ptr,
 {
    Destination->Length = Source->Length;
    Destination->MaximumLength = Size ? Size : Source->MaximumLength;
-   Destination->Buffer = (PWCHAR)(*Ptr);
-   if (Source->Length)
-     memmove (Destination->Buffer, Source->Buffer, Source->Length);
-   Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
+   if (Destination->MaximumLength != 0)
+   {
+      Destination->Buffer = (PWCHAR)(*Ptr);
+      if (Source->Length)
+         memmove (Destination->Buffer, Source->Buffer, Source->Length);
+      Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
+   }
    *Ptr += Destination->MaximumLength/sizeof(WCHAR);
+   *Ptr = ALIGN_UP_POINTER_BY(*Ptr, sizeof(PVOID));
 }
 
 
@@ -55,8 +59,11 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 {
    PRTL_USER_PROCESS_PARAMETERS Param = NULL;
    ULONG Length = 0;
+   SIZE_T EnvironmentSize = 0;
+   ULONG AllocationSize;
    PWCHAR Dest;
-   UNICODE_STRING EmptyString;
+   UNICODE_STRING EmptyString = { .Length = 0, .MaximumLength = sizeof(WCHAR), .Buffer = L"" }; ;
+   UNICODE_STRING NullString = { .Length = 0, .MaximumLength = 0, .Buffer = NULL }; ;
    HANDLE CurrentDirectoryHandle;
    HANDLE ConsoleHandle;
    ULONG ConsoleFlags;
@@ -64,10 +71,6 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    DPRINT ("RtlCreateProcessParameters\n");
 
    RtlAcquirePebLock();
-
-   EmptyString.Length = 0;
-   EmptyString.MaximumLength = sizeof(WCHAR);
-   EmptyString.Buffer = L"";
 
    if (RtlpGetMode() == UserMode)
      {
@@ -93,6 +96,8 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
      }
 
    if (CommandLine == NULL)
+     CommandLine = ImagePathName;
+   if (CommandLine == NULL)
      CommandLine = &EmptyString;
    if (WindowTitle == NULL)
      WindowTitle = &EmptyString;
@@ -101,7 +106,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    if (ShellInfo == NULL)
      ShellInfo = &EmptyString;
    if (RuntimeData == NULL)
-     RuntimeData = &EmptyString;
+     RuntimeData = &NullString;
 
    /* size of process parameter block */
    Length = sizeof(RTL_USER_PROCESS_PARAMETERS);
@@ -110,16 +115,27 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    Length += (MAX_PATH * sizeof(WCHAR));
 
    /* add string lengths */
-   Length += ALIGN(DllPath->MaximumLength, sizeof(ULONG));
-   Length += ALIGN(ImagePathName->Length + sizeof(WCHAR), sizeof(ULONG));
-   Length += ALIGN(CommandLine->Length + sizeof(WCHAR), sizeof(ULONG));
-   Length += ALIGN(WindowTitle->MaximumLength, sizeof(ULONG));
-   Length += ALIGN(DesktopInfo->MaximumLength, sizeof(ULONG));
-   Length += ALIGN(ShellInfo->MaximumLength, sizeof(ULONG));
-   Length += ALIGN(RuntimeData->MaximumLength, sizeof(ULONG));
+   Length += ALIGN(DllPath->MaximumLength, sizeof(PVOID));
+   Length += ALIGN(ImagePathName->Length + sizeof(WCHAR), sizeof(PVOID));
+   Length += ALIGN(CommandLine->Length + sizeof(WCHAR), sizeof(PVOID));
+   Length += ALIGN(WindowTitle->MaximumLength, sizeof(PVOID));
+   Length += ALIGN(DesktopInfo->MaximumLength, sizeof(PVOID));
+   Length += ALIGN(ShellInfo->MaximumLength, sizeof(PVOID));
+   Length += ALIGN(RuntimeData->MaximumLength, sizeof(PVOID));
+
+   /* Vista stores the EnvironmentSize in RTL_PROCESS_PARAMETERS */
+   if (Environment != NULL)
+   {
+       PWCHAR EnvEnd = Environment;
+       while (*EnvEnd)
+           EnvEnd += wcslen(EnvEnd) + 1;
+       EnvironmentSize = (EnvEnd - Environment + 1) * sizeof(WCHAR);
+   }
+
+   AllocationSize = Length + EnvironmentSize;
 
    /* Calculate the required block size */
-   Param = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+   Param = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, AllocationSize);
    if (!Param)
      {
 	RtlReleasePebLock();
@@ -131,7 +147,8 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    Param->MaximumLength = Length;
    Param->Length = Length;
    Param->Flags = RTL_USER_PROCESS_PARAMETERS_NORMALIZED;
-   Param->Environment = Environment;
+   Param->Environment = NULL;
+   Param->EnvironmentSize = 0;
    Param->CurrentDirectory.Handle = CurrentDirectoryHandle;
    Param->ConsoleHandle = ConsoleHandle;
    Param->ConsoleFlags = ConsoleFlags;
@@ -197,6 +214,20 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 			   &Param->RuntimeData,
 			   RuntimeData,
 			   0);
+
+   /* Make sure we didn't go past the end of the buffer */
+   ASSERT(((PUCHAR)Dest - (PUCHAR)Param) <= Param->MaximumLength);
+
+   /* Copy the environment */
+   if (Environment != NULL)
+   {
+      RtlCopyMemory(Dest, Environment, EnvironmentSize);
+      Param->Environment = Dest;
+      Param->EnvironmentSize = EnvironmentSize;
+
+      /* Make sure we didn't go past the end of the buffer */
+      ASSERT((PUCHAR)Dest + EnvironmentSize - (PUCHAR)Param <= AllocationSize);
+   }
 
    RtlDeNormalizeProcessParams(Param);
    *ProcessParameters = Param;

@@ -77,7 +77,7 @@ RtlpHeapIsSpecial(ULONG Flags)
 /* Heap structures */
 struct _HEAP_COMMON_ENTRY
 {
-#ifdef _M_AMD64
+#ifdef _WIN64
     PVOID PreviousBlockPrivateData;
 #endif
     union
@@ -90,7 +90,7 @@ struct _HEAP_COMMON_ENTRY
         };
         struct
         {
-#ifndef _M_AMD64
+#ifndef _WIN64
             PVOID SubSegmentCode;
 #else
             ULONG SubSegmentCodeDummy;
@@ -139,8 +139,16 @@ typedef struct _HEAP_ENTRY
 
 #ifdef _WIN64
 C_ASSERT(sizeof(HEAP_ENTRY) == 16);
+C_ASSERT(FIELD_OFFSET(HEAP_ENTRY, Size) == 8);
+C_ASSERT(FIELD_OFFSET(HEAP_ENTRY, Flags) == 10);
+C_ASSERT(FIELD_OFFSET(HEAP_ENTRY, PreviousSize) == 12);
+C_ASSERT(FIELD_OFFSET(HEAP_ENTRY, UnusedBytes) == 15);
 #else
 C_ASSERT(sizeof(HEAP_ENTRY) == 8);
+C_ASSERT(FIELD_OFFSET(HEAP_ENTRY, Size) == 0);
+C_ASSERT(FIELD_OFFSET(HEAP_ENTRY, Flags) == 2);
+C_ASSERT(FIELD_OFFSET(HEAP_ENTRY, PreviousSize) == sizeof(PVOID));
+C_ASSERT(FIELD_OFFSET(HEAP_ENTRY, UnusedBytes) == sizeof(PVOID) + 3);
 #endif
 C_ASSERT((1 << HEAP_ENTRY_SHIFT) == sizeof(HEAP_ENTRY));
 C_ASSERT((2 << HEAP_ENTRY_SHIFT) == sizeof(HEAP_FREE_ENTRY));

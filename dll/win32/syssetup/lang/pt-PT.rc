@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019-2026 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
@@ -60,10 +67,10 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 147, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "A instalação vai criar uma conta chamada Administrador. Pode usar esta conta se precisar de acesso total ao seu computador.", IDC_STATIC, 54, 57, 241, 25
-    LTEXT "Digite uma senha de administrador com 127 caracteres ou menos.", IDC_STATIC, 54, 87, 241, 8
-    LTEXT "Senha do &Administrador:", IDC_STATIC, 54, 104, 90, 8
+    LTEXT "Digite uma palavra-passe de administrador com 127 caracteres ou menos.", IDC_STATIC, 54, 87, 241, 8
+    LTEXT "Palavra-passe do &Administrador:", IDC_STATIC, 54, 104, 90, 8
     EDITTEXT IDC_ADMINPASSWORD1, 147, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfirme sua senha:", IDC_STATIC, 54, 123, 90, 8
+    LTEXT "C&onfirme sua palavra-passe:", IDC_STATIC, 54, 123, 90, 8
     EDITTEXT IDC_ADMINPASSWORD2, 147, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -258,5 +265,5 @@ BEGIN
     IDS_PRODUCTWORKSTATIONNAME "Estação de trabalho ReactOS"
     IDS_PRODUCTSERVERINFO "O sistema será reconhecido como um servidor. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" serão independentes de ""Meus documentos""."
     IDS_PRODUCTWORKSTATIONINFO "O sistema será reconhecido como uma estação de trabalho. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" ficarão em ""Meus documentos""."
-    IDS_DEFAULT "(Padrão)"
+    IDS_DEFAULT "(Predefinição)"
 END

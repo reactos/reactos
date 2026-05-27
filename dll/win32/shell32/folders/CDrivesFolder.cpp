@@ -186,14 +186,17 @@ bool SHELL_CanInvokeAutoRunOnDrive(PCWSTR DrvPath)
 }
 #endif
 
+/**
+ * @brief
+ * Returns true if the item should be hidden in DefView but not in the Explorer folder tree.
+ **/
 BOOL SHELL32_IsShellFolderNamespaceItemHidden(LPCWSTR SubKey, REFCLSID Clsid)
 {
-    // If this function returns true, the item should be hidden in DefView but not in the Explorer folder tree.
     WCHAR path[MAX_PATH], name[CHARS_IN_GUID];
     wsprintfW(path, L"%s\\%s", REGSTR_PATH_EXPLORER, SubKey);
     SHELL32_GUIDToStringW(Clsid, name);
-    DWORD data = 0, size = sizeof(data);
-    return !RegGetValueW(HKEY_CURRENT_USER, path, name, RRF_RT_DWORD, NULL, &data, &size) && data;
+    // Check the value in both HKEY_CURRENT_USER and HKEY_LOCAL_MACHINE
+    return SHRegGetBoolUSValue(path, name, FALSE, FALSE);
 }
 
 /***********************************************************************

@@ -331,6 +331,8 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -G "Visual Studio 17 2022" -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
+        $GENERATOR = "Visual Studio 17 2022"
+        if ($env:VisualStudioVersion -ge "18") { $GENERATOR = "Visual Studio 18 2026" }
+        cmake -G $GENERATOR -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
     - name: Build
       run: cmake --build ${{github.workspace}}\build --target bootcd

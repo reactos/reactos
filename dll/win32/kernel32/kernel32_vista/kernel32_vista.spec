@@ -65,3 +65,4 @@
 @ stdcall GetSystemTimePreciseAsFileTime(ptr) kernel32.GetSystemTimeAsFileTime
 @ stdcall TrySubmitThreadpoolCallback(ptr ptr ptr)
 @ stdcall FreeLibraryWhenCallbackReturns(ptr ptr) ntdll_vista.TpCallbackUnloadDllOnCompletion
+@ stdcall GetProductInfo(long long long long ptr) ntdll_vista.RtlGetProductInfo

@@ -6,9 +6,10 @@ list(APPEND SOURCE
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/stdole32.def)
 
-set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/std_ole_v1.tlb;xdk")
+set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/std_ole_v1.tlb")
 add_library(stdole32.tlb MODULE ${SOURCE})
 set_module_type(stdole32.tlb module)
+add_dependencies(stdole32.tlb xdk)
 set_target_properties(stdole32.tlb PROPERTIES SUFFIX "")
 add_cd_file(TARGET stdole32.tlb DESTINATION reactos/system32 FOR all)
 set_wine_module(stdole32.tlb)

@@ -19,6 +19,7 @@
 #include <shlwapi.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
+#include <userenv.h>
 #include <atlstr.h>
 
 #include <shlwapi_undoc.h>
@@ -39,6 +40,182 @@ GetVersionMajorMinor()
 {
     DWORD version = GetVersion();
     return MAKEWORD(HIBYTE(version), LOBYTE(version));
+}
+
+static BOOL
+UnExpandEnvironmentStringForUserA(
+    _In_ HANDLE hUserToken,
+    _In_ PCSTR lpString,
+    _In_ PCSTR lpSrc,
+    _Out_ PSTR pszDest,
+    _In_ INT cchDest)
+{
+    CHAR szBuff[MAX_PATH];
+    INT cchExpanded;
+
+    if (hUserToken)
+    {
+        if (ExpandEnvironmentStringsForUserA(hUserToken, lpSrc, szBuff, _countof(szBuff)))
+            cchExpanded = lstrlenA(szBuff) + 1;
+        else
+            cchExpanded = 0;
+    }
+    else
+    {
+        cchExpanded = ExpandEnvironmentStringsA(lpSrc, szBuff, _countof(szBuff));
+    }
+
+    if (!cchExpanded || cchExpanded > cchDest)
+        return FALSE;
+
+    INT cchEnvPath = cchExpanded - 1;
+    if (CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
+                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
+    {
+        return FALSE;
+    }
+
+    INT cchSuffix = lstrlenA(lpString) - cchEnvPath;
+    if (lstrlenA(lpSrc) + cchSuffix >= cchDest)
+        return FALSE;
+
+    StringCchCopyA(pszDest, cchDest, lpSrc);
+    StringCchCatA(pszDest, cchDest, &lpString[cchEnvPath]);
+    return TRUE;
+}
+
+static BOOL
+UnExpandEnvironmentStringForUserW(
+    _In_ HANDLE hUserToken,
+    _In_ PCWSTR lpString,
+    _In_ PCWSTR lpSrc,
+    _Out_ PWSTR pszDest,
+    _In_ INT cchDest)
+{
+    WCHAR szBuff[MAX_PATH];
+    INT cchExpanded;
+
+    if (hUserToken)
+    {
+        if (ExpandEnvironmentStringsForUserW(hUserToken, lpSrc, szBuff, _countof(szBuff)))
+            cchExpanded = lstrlenW(szBuff) + 1;
+        else
+            cchExpanded = 0;
+    }
+    else
+    {
+        cchExpanded = ExpandEnvironmentStringsW(lpSrc, szBuff, _countof(szBuff));
+    }
+
+    if (!cchExpanded || cchExpanded > cchDest)
+        return FALSE;
+
+    INT cchEnvPath = cchExpanded - 1;
+    if (CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
+                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
+    {
+        return FALSE;
+    }
+
+    INT cchSuffix = lstrlenW(lpString) - cchEnvPath;
+    if (lstrlenW(lpSrc) + cchSuffix >= cchDest)
+        return FALSE;
+
+    StringCchCopyW(pszDest, cchDest, lpSrc);
+    StringCchCatW(pszDest, cchDest, &lpString[cchEnvPath]);
+    return TRUE;
+}
+
+/*************************************************************************
+ * PathUnExpandEnvStringsForUserA [SHLWAPI.465]
+ *
+ * See PathUnExpandEnvStringsForUserW.
+ */
+EXTERN_C
+BOOL WINAPI
+PathUnExpandEnvStringsForUserA(
+    _In_ HANDLE hUserToken,
+    _In_ PCSTR pszPath,
+    _Out_writes_(cchBuff) PSTR pszBuff,
+    _In_ INT cchBuff)
+{
+    static const PCSTR c_varsA[] =
+    {
+        "%APPDATA%",
+        "%USERPROFILE%",
+        "%ALLUSERSPROFILE%",
+        "%ProgramFiles%",
+        "%SystemRoot%",
+        "%SystemDrive%",
+    };
+
+    if (!pszPath)
+    {
+        if (pszBuff && cchBuff)
+            *pszBuff = ANSI_NULL;
+
+        return FALSE;
+    }
+
+    if (!pszBuff)
+        return FALSE;
+
+    for (size_t iVar = 0; iVar < _countof(c_varsA); ++iVar)
+    {
+        if (UnExpandEnvironmentStringForUserA(hUserToken, pszPath, c_varsA[iVar],
+                                              pszBuff, cchBuff))
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/*************************************************************************
+ * PathUnExpandEnvStringsForUserW [SHLWAPI.466]
+ *
+ * https://undoc.airesoft.co.uk/shlwapi.dll/PathUnExpandEnvStringsForUserW.php
+ */
+EXTERN_C
+BOOL WINAPI
+PathUnExpandEnvStringsForUserW(
+    _In_ HANDLE hUserToken,
+    _In_ PCWSTR pwszPath,
+    _Out_writes_(cchBuff) PWSTR pszBuff,
+    _In_ INT cchBuff)
+{
+    static const PCWSTR c_varsW[] =
+    {
+        L"%APPDATA%",
+        L"%USERPROFILE%",
+        L"%ALLUSERSPROFILE%",
+        L"%ProgramFiles%",
+        L"%SystemRoot%",
+        L"%SystemDrive%",
+    };
+
+    if (!pwszPath)
+    {
+        if (pszBuff && cchBuff)
+            *pszBuff = UNICODE_NULL;
+
+        return FALSE;
+    }
+
+    if (!pszBuff)
+        return FALSE;
+
+    for (size_t iVar = 0; iVar < _countof(c_varsW); ++iVar)
+    {
+        if (UnExpandEnvironmentStringForUserW(hUserToken, pwszPath, c_varsW[iVar],
+                                              pszBuff, cchBuff))
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 static BOOL CharLowerNoDBCSAWorker(PSTR lpString, INT cchMax, BOOL bUppercase)

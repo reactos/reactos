@@ -609,7 +609,6 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
     if (lpEnvironment)
     {
         /* We should've made it part of the parameters block, enforce this */
-        ASSERT(ProcessParameters->Environment == lpEnvironment);
         lpEnvironment = ProcessParameters->Environment;
     }
     else

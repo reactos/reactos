@@ -25,6 +25,7 @@ list(APPEND SOURCE
 
 list(APPEND PCH_SKIP_SOURCE
     assoc.c
+    policy.cpp
     propbag.cpp
     utils.cpp
     wsprintf.c
