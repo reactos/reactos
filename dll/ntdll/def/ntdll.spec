@@ -969,6 +969,8 @@
 @ stdcall RtlInterlockedPopEntrySList(ptr)
 @ stdcall RtlInterlockedPushEntrySList(ptr ptr)
 @ stdcall -arch=x86_64 RtlInterlockedPushListSList(ptr ptr ptr long)
+@ stdcall -version=0x602+ -arch=i386 RtlInterlockedPushListSListEx(ptr ptr ptr long)
+@ stdcall -version=0x602+ -arch=!i386 RtlInterlockedPushListSListEx(ptr ptr ptr long) RtlInterlockedPushListSList
 @ stdcall -stub -version=0x600+ RtlIoDecodeMemIoResource(ptr ptr ptr ptr)
 @ stdcall -stub -version=0x600+ RtlIoEncodeMemIoResource(ptr long long long long long)
 @ stdcall RtlIpv4AddressToStringA(ptr ptr)

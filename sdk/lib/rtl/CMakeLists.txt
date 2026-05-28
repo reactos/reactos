@@ -139,6 +139,7 @@ list(APPEND SOURCE_VISTA
     condvar.c
     locale.c
     runonce.c
+    slist.c
     srw.c
     threadpool.c
     unicode_vista.c
