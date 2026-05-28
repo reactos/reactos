@@ -70,6 +70,7 @@ list(APPEND SOURCE
     prefix.c
     priv.c
     process.c
+    processor.c
     propvar.c
     random.c
     rangelist.c
@@ -138,6 +139,7 @@ list(APPEND SOURCE_VISTA
     ${RTL_WINE_SOURCE_VISTA}
     condvar.c
     locale.c
+    processor.c
     runonce.c
     slist.c
     srw.c

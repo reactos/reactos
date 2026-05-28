@@ -879,6 +879,7 @@
 @ stdcall RtlGetCurrentDirectory_U(long ptr)
 @ stdcall RtlGetCurrentPeb()
 @ stdcall RtlGetCurrentProcessorNumber() ; 5.2 SP1 and higher
+@ stdcall -version=0x601+ RtlGetCurrentProcessorNumberEx(ptr)
 @ stdcall -stub -version=0x600+ RtlGetCurrentTransaction()
 @ stdcall RtlGetDaclSecurityDescriptor(ptr ptr ptr ptr)
 @ stdcall RtlGetElementGenericTable(ptr long)
@@ -999,6 +1000,7 @@
 @ stdcall RtlIsGenericTableEmptyAvl(ptr)
 @ stdcall RtlIsNameLegalDOS8Dot3(ptr ptr ptr)
 @ stdcall -stub -version=0x600+ RtlIsNormalizedString(long ptr long ptr)
+@ stdcall -version=0xA00+ RtlIsProcessorFeaturePresent(long)
 @ stdcall RtlIsTextUnicode(ptr long ptr)
 @ stdcall RtlIsThreadWithinLoaderCallout()
 @ stdcall RtlIsValidHandle(ptr ptr)
