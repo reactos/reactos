@@ -286,7 +286,7 @@ static void TEST_InvalidArgs(void)
 
 static void TEST_ByExeName(void)
 {
-    WCHAR notepadPath[MAX_PATH] = {};
+    WCHAR notepadPath[MAX_PATH];
     GetSystemDirectoryW(notepadPath, MAX_PATH);
     lstrcatW(notepadPath, L"\\notepad.exe");
 
