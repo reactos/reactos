@@ -11,7 +11,6 @@ list(APPEND SOURCE
     io.c
     po.c
     pofx.c
-    ps.c
     ke.c
     ${REACTOS_SOURCE_DIR}/sdk/lib/rtl/utf8.c)
 

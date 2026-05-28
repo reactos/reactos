@@ -1794,7 +1794,7 @@ typedef struct _WIN32_CALLOUTS_FPNS
 
 /* Function Prototypes *******************************************************/
 
-#if (NTDDI_VERSION >= NTDDI_WIN6) || defined(__REACTOS__)
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) || defined(__REACTOS__)
 #ifndef NTOS_MODE_USER
 
 
@@ -1805,7 +1805,7 @@ PsGetProcessSignatureLevel(
 );
 
 #endif // !NTOS_MODE_USER
-#endif // (NTDDI_VERSION >= NTDDI_WIN6) || defined(__REACTOS__)
+#endif // (NTDDI_VERSION >= NTDDI_WINBLUE) || defined(__REACTOS__)
 
 #ifdef __cplusplus
 }; // extern "C"

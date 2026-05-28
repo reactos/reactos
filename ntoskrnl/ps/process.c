@@ -1178,6 +1178,24 @@ PsGetProcessSessionIdEx(IN PEPROCESS Process)
 /*
  * @implemented
  */
+UCHAR
+NTAPI 
+PsGetProcessSignatureLevel(
+    _In_ PEPROCESS Process)
+{
+    static BOOLEAN Warned = FALSE;
+
+    if (!Warned)
+    {
+        DPRINT1("PsGetProcessSignatureLevel: NT 6.3 stub called!\n");
+        Warned = TRUE;
+    }
+
+    return 0;
+}    
+/*
+ * @implemented
+ */
 PVOID
 NTAPI
 PsGetCurrentProcessWin32Process(VOID)
