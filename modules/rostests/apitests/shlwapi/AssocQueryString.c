@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Test for AssocQueryStringA/W
- * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2024-2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <apitest.h>
@@ -10,24 +10,6 @@
 #include <stdio.h>
 #include <versionhelpers.h>
 
-typedef HRESULT (WINAPI *FN_AssocQueryStringA)(
-    ASSOCF cfFlags,
-    ASSOCSTR str,
-    LPCSTR pszAssoc,
-    LPCSTR pszExtra,
-    LPSTR pszOut,
-    DWORD *pcchOut);
-typedef HRESULT (WINAPI *FN_AssocQueryStringW)(
-    ASSOCF cfFlags,
-    ASSOCSTR str,
-    LPCWSTR pszAssoc,
-    LPCWSTR pszExtra,
-    LPWSTR pszOut,
-    DWORD *pcchOut);
-
-static HINSTANCE s_hSHLWAPI = NULL;
-static FN_AssocQueryStringA s_fnAssocQueryStringA = NULL;
-static FN_AssocQueryStringW s_fnAssocQueryStringW = NULL;
 static CHAR  s_szTextFileA[MAX_PATH] =  "";
 static WCHAR s_szTextFileW[MAX_PATH] = L"";
 #define NON_EXISTENT_FILENAME_A  "C:\\ThisIsNotExistentFile.txt"
@@ -165,22 +147,10 @@ START_TEST(AssocQueryString)
 {
     HRESULT hrCoInit = CoInitialize(NULL);
 
-    s_hSHLWAPI = LoadLibraryW(L"shlwapi.dll");
-    s_fnAssocQueryStringA = (FN_AssocQueryStringA)GetProcAddress(s_hSHLWAPI, "AssocQueryStringA");
-    s_fnAssocQueryStringW = (FN_AssocQueryStringW)GetProcAddress(s_hSHLWAPI, "AssocQueryStringW");
-    if (!s_fnAssocQueryStringA || !s_fnAssocQueryStringW)
-    {
-        skip("AssocQueryStringA or AssocQueryStringW not found: %p, %p\n",
-             s_fnAssocQueryStringA, s_fnAssocQueryStringW);
-        return;
-    }
-
     TEST_Start();
     TEST_AssocQueryStringA();
     TEST_AssocQueryStringW();
     TEST_End();
-
-    FreeLibrary(s_hSHLWAPI);
 
     if (SUCCEEDED(hrCoInit))
         CoUninitialize();
