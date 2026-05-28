@@ -63,6 +63,8 @@ static HRESULT query_interface(REFIID,void**);
 #ifdef __REACTOS__
 #include <commctrl.h>
 
+PCWSTR g_force_engine = NULL;
+
 typedef struct {
     UINT itemsize, count;
     void *mem;
@@ -500,6 +502,17 @@ static BSTR get_script_str(const WCHAR *filename)
     if(!file_map)
         return NULL;
 
+#ifdef __REACTOS__
+    if(size >= 2 && (BYTE)file_map[0] == 0xff && (BYTE)file_map[1] == 0xfe) // UTF-16LE
+    {
+        ret = SysAllocStringLen(NULL, size - 2);
+        if(ret)
+            CopyMemory(ret, file_map + 2, size - 2);
+        UnmapViewOfFile(file_map);
+        return ret;
+    }
+#endif
+
     len = MultiByteToWideChar(CP_ACP, 0, file_map, size, NULL, 0);
     ret = SysAllocStringLen(NULL, len);
     MultiByteToWideChar(CP_ACP, 0, file_map, size, ret, len);
@@ -777,6 +790,10 @@ static BOOL set_host_properties(const WCHAR *prop)
         wshInteractive = VARIANT_FALSE;
     else if(wcsicmp(prop, nologoW) == 0)
         WINE_FIXME("ignored %s switch\n", debugstr_w(nologoW));
+#ifdef __REACTOS__
+    else if((prop[0] | 32) == 'e' && prop[1] == ':')
+        g_force_engine = &prop[2];
+#endif
     else
     {
         WINE_FIXME("unsupported switch %s\n", debugstr_w(prop));
@@ -826,6 +843,11 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int cm
     if (ext && !lstrcmpiW(ext, L".wsf")) {
         return run_wsf(scriptFullName);
     }
+    
+    if(g_force_engine) {
+        CLSIDFromProgID(g_force_engine, &clsid);
+    }
+    else
 #endif
     if(!ext || !get_engine_clsid(ext, &clsid)) {
         WINE_FIXME("Could not find engine for %s\n", wine_dbgstr_w(ext));
