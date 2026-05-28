@@ -2486,11 +2486,12 @@ IntCreateDesktop(
         Status = STATUS_UNSUCCESSFUL;
         goto Quit;
     }
+    pWnd->fnid = FNID_DESKTOP;
 
+    /* Assign the session ID and the desktop window to the desktop */
     pdesk->dwSessionId = PsGetCurrentProcessSessionId();
     pdesk->DesktopWindow = UserHMGetHandle(pWnd);
     pdesk->pDeskInfo->spwnd = pWnd;
-    pWnd->fnid = FNID_DESKTOP;
 
     ClassName.Buffer = MAKEINTATOM(gpsi->atomSysClass[ICLS_HWNDMESSAGE]);
     ClassName.Length = 0;
@@ -2516,9 +2517,10 @@ IntCreateDesktop(
         Status = STATUS_UNSUCCESSFUL;
         goto Quit;
     }
-
-    pdesk->spwndMessage = pWnd;
     pWnd->fnid = FNID_MESSAGEWND;
+
+    /* Assign the message window to the desktop */
+    pdesk->spwndMessage = pWnd;
 
     /* Now...
        if !(WinStaObject->Flags & WSF_NOIO) is (not set) for desktop input output mode (see wiki)
