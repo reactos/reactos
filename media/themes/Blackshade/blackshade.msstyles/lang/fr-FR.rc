@@ -1,0 +1,44 @@
+/*
+ * PROJECT:     Black Shade Theme
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     French resource file
+ * TRANSLATOR:  Copyright 2026 Thomas Anderson <thomasanderson531@hotmail.com>
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+1000, "Black Shade"
+}
+
+STRINGTABLE
+{
+2000, "Black Shade"
+}
+
+STRINGTABLE
+{
+3000, "Normal"
+3001, "Grandes Polices"
+3002, "Très Grandes Polices"
+}
+
+STRINGTABLE
+{
+4000, "Normal"
+4001, "Grandes Polices"
+4002, "Très Grandes Polices"
+}
+
+STRINGTABLE
+{
+5000, "Black Shade"
+5001, "Style Visuel"
+5002, "Projet ReactOS"
+5003, "Images par David Quintana <gigaherz@gmail.com>"
+5004, "Images Distribué sous CC-BY-SA 4.0"
+5005, "https://reactos.org/"
+5006, "1.0"
+5007, "Style Visuel pour ReactOS"
+}
