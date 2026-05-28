@@ -363,10 +363,15 @@ START_TEST(AssocQueryKey)
         return;
     }
 
+    HRESULT hrCoInit = CoInitialize(NULL);
+
     TEST_AssocKeys();
     TEST_AssocF_Flags();
     TEST_PszAssoc();
     TEST_InvalidArgs();
     TEST_ByExeName();
     TEST_ShellExecClass();
+
+    if (SUCCEEDED(hrCoInit))
+        CoUninitialize();
 }
