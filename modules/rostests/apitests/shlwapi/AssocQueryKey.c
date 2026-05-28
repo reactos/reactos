@@ -111,6 +111,20 @@ static void TEST_AssocKeys(void)
            "path was %s\n", wine_dbgstr_w(path));
         LocalFree(path);
     }
+
+    {
+        HKEY hKey = NULL;
+        HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_CLASS, L".exe", NULL, &hKey);
+        ok_hr(hr, S_OK);
+
+        LPWSTR path = GetKeyPath(hKey);
+        if (hKey)
+            RegCloseKey(hKey);
+
+        ok(path && !_wcsicmp(path, L"\\REGISTRY\\MACHINE\\SOFTWARE\\Classes\\exefile"),
+           "path was %s\n", wine_dbgstr_w(path));
+        LocalFree(path);
+    }
 }
 
 // Test ASSOCF flags
@@ -187,6 +201,19 @@ static void TEST_PszAssoc(void)
         ok(path &&
            (StrStrIW(path, L"\\REGISTRY\\MACHINE\\") || StrStrIW(path, L"\\REGISTRY\\USER\\")) &&
            StrStrIW(path, L"regfile"),
+           "path was %s\n", wine_dbgstr_w(path));
+        LocalFree(path);
+    }
+    {
+        HKEY hKey = NULL;
+        HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_CLASS, L"exefile", NULL, &hKey);
+        ok_hr(hr, S_OK);
+
+        LPWSTR path = GetKeyPath(hKey);
+        if (hKey)
+            RegCloseKey(hKey);
+
+        ok(path && !_wcsicmp(path, L"\\REGISTRY\\MACHINE\\SOFTWARE\\Classes\\exefile"),
            "path was %s\n", wine_dbgstr_w(path));
         LocalFree(path);
     }
