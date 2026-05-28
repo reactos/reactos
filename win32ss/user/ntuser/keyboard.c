@@ -1209,13 +1209,61 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
        See user32_apitest:GetKeyState */
     UpdateAsyncKeyState(wFixedVk, bIsDown);
 
-    /* Alt-Tab/Esc Check. Use FocusQueue or RIT Queue */
+    /* Handle Alt-Tab/Esc with the correct input queue */
+    // NOTE: Added in commit d118a53f821c201c236184fa3d80114129cdad03 (r54077)
     if (bIsSimpleDown && !bWasSimpleDown &&
         IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
         !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL) &&
         (wVk == VK_ESCAPE || wVk == VK_TAB))
     {
-       TRACE("Alt-Tab/Esc Pressed wParam %x\n",wVk);
+        /*TRACE*/ERR("Alt-Tab/Esc Pressed wParam %x\n", wVk);
+
+__debugbreak();
+        /* Use FocusQueue or RIT Queue */
+        // NOTE: Windows directly invokes the server-side window-switching routine (== our DoAppSwitch)
+        if (!pFocusQueue)
+            pFocusQueue = ptiRawInput->MessageQueue;
+        bPostMsg = TRUE;
+        /**/
+        PWND Wnd = pFocusQueue->spwndFocus; // SysInit.....
+        pti = pFocusQueue->ptiKeyboard;
+        if (!Wnd && pFocusQueue->spwndActive) // SysInit.....
+        {
+           // Going with Active. WM_SYSKEYXXX last wine Win test_keyboard_input.
+           Wnd = pFocusQueue->spwndActive;
+        }
+        // ReactOS HACK: Use the desktop message queue instead!!
+        if (!Wnd && gpdeskInputDesktop) Wnd = gpdeskInputDesktop->pDeskInfo->spwnd; // gpdeskInputDesktop->spwndMessage;
+        // END HACK
+        if (Wnd) pti = Wnd->head.pti;
+
+        /* Init message */
+        Msg.hwnd = Wnd ? UserHMGetHandle(Wnd) : NULL;
+        Msg.wParam = wFixedVk & 0xFF; /* Note: It's simplified by msg queue */
+        Msg.lParam = MAKELPARAM(1, wScanCode);
+        Msg.time = dwTime;
+        Msg.pt = gpsi->ptCursor;
+        if (bExt)
+            Msg.lParam |= KF_EXTENDED << 16;
+        if (IS_KEY_DOWN(gafAsyncKeyState, VK_MENU))
+            Msg.lParam |= KF_ALTDOWN << 16;
+        if (bWasSimpleDown)
+            Msg.lParam |= KF_REPEAT << 16;
+        if (!bIsDown)
+            Msg.lParam |= KF_UP << 16;
+        /* FIXME: Set KF_DLGMODE and KF_MENUMODE when needed */
+        if (pFocusQueue->QF_flags & QF_DIALOGACTIVE)
+            Msg.lParam |= KF_DLGMODE << 16;
+        if (pFocusQueue->MenuOwner) // pti->pMenuState->fMenuStarted
+            Msg.lParam |= KF_MENUMODE << 16;
+
+        /* Post a keyboard message */
+        TRACE("Posting keyboard msg %u wParam 0x%x lParam 0x%x\n", Msg.message, Msg.wParam, Msg.lParam);
+        if (!Wnd) {ERR("Window is NULL\n");}
+        MsqPostMessage(pti, &Msg, TRUE, QS_KEY, 0, dwExtraInfo);
+        return TRUE;
+        /**/
+        //goto DoSend;
     }
 
     /*
@@ -1267,6 +1315,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     }
     else if (pFocusQueue && bPostMsg)
     {
+//DoSend:
         PWND Wnd = pFocusQueue->spwndFocus; // SysInit.....
 
         pti = pFocusQueue->ptiKeyboard;

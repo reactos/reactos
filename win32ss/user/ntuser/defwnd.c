@@ -978,7 +978,7 @@ IntDefWindowProc(
             if (HIWORD(lParam) & KF_ALTDOWN)
             {   /* Previous state, if the key was down before this message,
                    this is a cheap way to ignore autorepeat keys. */
-                if ( !(HIWORD(lParam) & KF_REPEAT) )
+                if (!(HIWORD(lParam) & KF_REPEAT))
                 {
                    if ( ( wParam == VK_MENU  ||
                           wParam == VK_LMENU ||
@@ -1006,17 +1006,22 @@ IntDefWindowProc(
                    ERR("DefWndScreenshot\n");
                    DefWndScreenshot(pwnd);
                 }
-                else if ( wParam == VK_ESCAPE || wParam == VK_TAB ) // Alt-Tab/ESC Alt-Shift-Tab/ESC
+                else if (wParam == VK_ESCAPE || wParam == VK_TAB) // Alt-Tab/ESC Alt-Shift-Tab/ESC
                 {
-                   WPARAM wParamTmp;
-                   HWND Active = UserGetActiveWindow(); // Noticed MDI problem.
-                   if (!Active)
-                   {
-                      FIXME("WM_SYSKEYDOWN VK_ESCAPE no active\n");
-                      break;
-                   }
-                   wParamTmp = UserGetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
-                   co_IntSendMessage( Active, WM_SYSCOMMAND, wParamTmp, wParam );
+                    WPARAM wParamTmp;
+                    HWND Active = UserGetActiveWindow(); // Noticed MDI problem.
+__debugbreak();
+                    if (!Active)
+                    {
+                        FIXME("WM_SYSKEYDOWN VK_ESCAPE no active\n");
+                        /***/Active = UserHMGetHandle(Wnd);/***/
+                        //break;
+                    }
+// NOTE: Code moved in commit 6dfa71c487dbb193ed7fb1a249a8c964ec3aef0d (r68904)
+// that was previously added in user32 defwnd.c in commit 6c4a25f3865668e57165033bcc1b693f0577ba4b (r51450).
+                    wParamTmp = UserGetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
+                    UserPostMessage(Active, WM_SYSCOMMAND, wParamTmp, wParam);
+                    // hbelusca FIXME: co_IntSendMessage -> UserPostMessage change
                 }
             }
             else if( wParam == VK_F10 )

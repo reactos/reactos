@@ -67,6 +67,7 @@ DesktopWndProcW(HWND Wnd,
           return (LRESULT)SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
 
       default:
+          ERR("DesktopWndProcW(%p, %lu, %lu, %lu)\n", Wnd, Msg, wParam, lParam);
           return DefWindowProcW(Wnd, Msg, wParam, lParam);
    }
    return 0;
