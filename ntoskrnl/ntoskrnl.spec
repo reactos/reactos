@@ -999,7 +999,7 @@
 @ stdcall PsGetProcessSecurityPort(ptr)
 @ stdcall PsGetProcessSessionId(ptr)
 @ stdcall PsGetProcessSessionIdEx(ptr)
-@ stdcall -version=0x600+ PsGetProcessSignatureLevel(ptr)
+@ stdcall -version=0x603+ PsGetProcessSignatureLevel(ptr)
 @ stdcall PsGetProcessWin32Process(ptr)
 @ stdcall PsGetProcessWin32WindowStation(ptr)
 ;@ cdecl -arch=x86_64 PsGetProcessWow64Process()
