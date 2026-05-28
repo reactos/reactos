@@ -254,6 +254,12 @@ Used Version: 0.1.9
 License: BSD-2-Clause (https://spdx.org/licenses/BSD-2-Clause.html)
 URL: http://www.mega-nerd.com/SRC/download.html
 
+Title: resampler
+Path: sdk/lib/3rdparty/resampler
+Used Version: git commit 38c1a2f
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: https://github.com/cpuimage/resampler
+
 Title: win-iconv
 Path: sdk/lib/3rdparty/libwin-iconv
 Used Version: git commit 8765259
