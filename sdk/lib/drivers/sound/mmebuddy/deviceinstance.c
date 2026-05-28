@@ -202,8 +202,7 @@ CreateSoundDeviceInstance(
     (*SoundDeviceInstance)->WinMM.Flags = 0;
 
     /* Initialise the members of the struct used by the sound thread */
-    (*SoundDeviceInstance)->HeadWaveHeader = NULL;
-    (*SoundDeviceInstance)->TailWaveHeader = NULL;
+    (*SoundDeviceInstance)->WaveHeader = NULL;
 
     (*SoundDeviceInstance)->OutstandingBuffers = 0;
 
