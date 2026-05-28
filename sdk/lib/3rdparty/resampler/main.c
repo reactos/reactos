@@ -8,9 +8,13 @@ extern "C" {
 #include <stdint.h>
 
 #define DR_WAV_IMPLEMENTATION
+#ifdef __REACTOS__
+#define DR_WAV_NO_STDIO
+#endif
 
 #include "dr_wav.h"
 
+#ifndef __REACTOS__
 #define DR_MP3_IMPLEMENTATION
 
 
@@ -95,6 +99,7 @@ void splitpath(const char *path, char *drv, char *dir, char *name, char *ext) {
         *dir = '\0';
     }
 }
+#endif
 
 
 uint64_t Resample_f32(const float *input, float *output, int inSampleRate, int outSampleRate, uint64_t inputSize,
@@ -173,6 +178,46 @@ uint64_t Resample_s16(const int16_t *input, int16_t *output, int inSampleRate, i
     return outputSize;
 }
 
+#ifdef __REACTOS__
+uint64_t Resample_u8(const uint8_t *input, uint8_t *output, int inSampleRate, int outSampleRate, uint64_t inputSize,
+                     uint32_t channels) {
+    if (input == NULL)
+        return 0;
+
+    uint64_t outputSize = (uint64_t) (inputSize * (double) outSampleRate / (double) inSampleRate);
+    outputSize -= outputSize % channels;
+
+    if (output == NULL)
+        return outputSize;
+
+    double stepDist = ((double) inSampleRate / (double) outSampleRate);
+    const uint64_t fixedFraction = (1LL << 32);
+    const double normFixed = (1.0 / (1LL << 32));
+    uint64_t step = ((uint64_t) (stepDist * fixedFraction + 0.5));
+    uint64_t curOffset = 0;
+
+    for (uint32_t i = 0; i < outputSize - channels; i += channels) {
+        uint64_t currentPos = curOffset >> 32;
+        uint64_t nextPos = currentPos + 1;
+        for (uint32_t c = 0; c < channels; c++) {
+            uint8_t current = input[currentPos * channels + c];
+            uint8_t next = input[nextPos * channels + c];
+            double frac = (curOffset & (fixedFraction - 1)) * normFixed;
+            *output++ = (uint8_t) (current + (next - current) * frac);
+        }
+        curOffset += step;
+        uint64_t frameSkip = (curOffset >> 32);
+        curOffset &= (fixedFraction - 1);
+        input += frameSkip * channels;
+    }
+    uint64_t lastPos = (curOffset >> 32);
+    for (uint32_t c = 0; c < channels; c++) {
+        *output++ = input[lastPos * channels + c];
+    }
+    return outputSize;
+}
+#else
+
 void printUsage() {
     printf("usage:\n");
     printf("./Resampler input.wav 48000\n");
@@ -236,6 +281,7 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+#endif
 
 #ifdef __cplusplus
 }
