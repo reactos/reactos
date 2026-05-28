@@ -45,7 +45,7 @@ static LPWSTR GetKeyPath(HKEY hKey)
     ULONG needed = 0;
     g_NtQueryKey(hKey, MyKeyNameInformation, NULL, 0, &needed);
 
-    if (needed == 0)
+    if (!needed)
         return NULL;
 
     SIZE_T cb = needed + sizeof(WCHAR);
@@ -302,7 +302,7 @@ static void TEST_ByExeName(void)
         ok_hr(hr, S_OK);
 
         ok(path &&
-           _wcsicmp(path, L"\\REGISTRY\\MACHINE\\SOFTWARE\\Classes\\Applications\\notepad.exe") == 0,
+           !_wcsicmp(path, L"\\REGISTRY\\MACHINE\\SOFTWARE\\Classes\\Applications\\notepad.exe"),
            "path was %s\n", wine_dbgstr_w(path));
         LocalFree(path);
     }
@@ -318,7 +318,7 @@ static void TEST_ByExeName(void)
         ok_hr(hr, S_OK);
 
         ok(path &&
-           _wcsicmp(path, L"\\REGISTRY\\MACHINE\\SOFTWARE\\Classes\\Applications\\regedit.exe") == 0,
+           !_wcsicmp(path, L"\\REGISTRY\\MACHINE\\SOFTWARE\\Classes\\Applications\\regedit.exe"),
            "path was %s\n", wine_dbgstr_w(path));
         LocalFree(path);
     }
