@@ -1875,14 +1875,6 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
 
    TRACE("Created window object with handle %p\n", hWnd);
 
-   if (pdeskCreated && pdeskCreated->DesktopWindow == NULL )
-   {  /* HACK: Helper for win32csr/desktopbg.c */
-      /* If there is no desktop window yet, we must be creating it */
-      TRACE("CreateWindow setting desktop.\n");
-      pdeskCreated->DesktopWindow = hWnd;
-      pdeskCreated->pDeskInfo->spwnd = pWnd;
-   }
-
    /*
     * Fill out the structure describing it.
     */
