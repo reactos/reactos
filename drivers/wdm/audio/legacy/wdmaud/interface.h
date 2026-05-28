@@ -39,6 +39,7 @@ typedef struct
         MIXERLINECONTROLSW MixControls;
         MIXERLINEW MixLine;
         WAVEFORMATEX WaveFormatEx;
+        KSDATARANGE_AUDIO DataRange;
         WAVEOUTCAPSW WaveOutCaps;
         AUXCAPSW     AuxCaps;
         WAVEINCAPSW  WaveInCaps;
