@@ -69,7 +69,7 @@ set_subsystem(ntdll console)
 
 target_link_libraries(ntdll ntdll_vista_static etwtrace csrlib rtl rtl_um rtl_vista ntdllsys libcntpr setjmp uuid ${PSEH_LIB})
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
-    target_link_libraries(ntdll cryptlib)
+    target_link_libraries(ntdll cryptlib ntdllsys_nt6)
 endif()
 
 if (STACK_PROTECTOR)
