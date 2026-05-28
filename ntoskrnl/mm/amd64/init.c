@@ -264,6 +264,9 @@ MiInitializePageTable(VOID)
     /* Setup PPEs for system space view */
     MiMapPPEs(MiSystemViewStart, (PCHAR)MiSystemViewStart + MmSystemViewSize);
 
+    /* Setup PPEs for system cache views */
+    MiMapPPEs((PVOID)MI_SYSTEM_CACHE_START, (PVOID)MI_SYSTEM_CACHE_END);
+
     /* Setup the mapping PDEs */
     MiMapPDEs((PVOID)MI_MAPPING_RANGE_START, (PVOID)MI_MAPPING_RANGE_END);
 
