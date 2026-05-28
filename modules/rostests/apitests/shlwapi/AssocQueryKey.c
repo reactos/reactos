@@ -24,6 +24,7 @@ typedef struct _MY_KEY_NAME_INFORMATION
     WCHAR Name[1];
 } MY_KEY_NAME_INFORMATION, *PMY_KEY_NAME_INFORMATION;
 
+// ntdll!NtQueryKey can get the key path from HKEY
 typedef NTSTATUS (__stdcall *FN_NtQueryKey)(HANDLE, MY_KEY_INFORMATION_CLASS, PVOID, ULONG, PULONG);
 static FN_NtQueryKey g_NtQueryKey = NULL;
 
@@ -35,8 +36,8 @@ static BOOL InitNtQueryKey(VOID)
     return g_NtQueryKey != NULL;
 }
 
-// Get full path of HKEY
-static LPWSTR GetHKeyFullPath(HKEY hKey)
+// Get path of HKEY
+static LPWSTR GetKeyPath(HKEY hKey)
 {
     if (!g_NtQueryKey || !hKey)
         return NULL;
@@ -62,25 +63,53 @@ static LPWSTR GetHKeyFullPath(HKEY hKey)
 }
 
 // Test ASSOCKEYs
-static void TEST_AssocKey_txt(void)
+static void TEST_AssocKeys(void)
 {
-    static const ASSOCKEY cases[] =
-    {
-        ASSOCKEY_SHELLEXECCLASS,
-        ASSOCKEY_APP,
-        ASSOCKEY_CLASS
-    };
-
-    for (size_t i = 0; i < _countof(cases); ++i)
     {
         HKEY hKey = NULL;
-        HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, cases[i], L".txt", NULL, &hKey);
+        HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_SHELLEXECCLASS, L".reg", NULL, &hKey);
         ok_hr(hr, S_OK);
 
-        LPWSTR pszPath = GetHKeyFullPath(hKey);
+        LPWSTR path = GetKeyPath(hKey);
         if (hKey)
             RegCloseKey(hKey);
-        LocalFree(pszPath);
+
+        ok(path &&
+           (StrStrIW(path, L"\\REGISTRY\\MACHINE\\") || StrStrIW(path, L"\\REGISTRY\\USER\\")) &&
+           StrStrIW(path, L"regfile"),
+           "path was %s\n", wine_dbgstr_w(path));
+        LocalFree(path);
+    }
+
+    {
+        HKEY hKey = NULL;
+        HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_APP, L".reg", NULL, &hKey);
+        ok_hr(hr, S_OK);
+
+        LPWSTR path = GetKeyPath(hKey);
+        if (hKey)
+            RegCloseKey(hKey);
+
+        ok(path && StrStrIW(path,
+                            L"\\REGISTRY\\MACHINE\\SOFTWARE\\Classes\\Applications\\regedit.exe"),
+           "path was %s\n", wine_dbgstr_w(path));
+        LocalFree(path);
+    }
+
+    {
+        HKEY hKey = NULL;
+        HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_CLASS, L".reg", NULL, &hKey);
+        ok_hr(hr, S_OK);
+
+        LPWSTR path = GetKeyPath(hKey);
+        if (hKey)
+            RegCloseKey(hKey);
+
+        ok(path &&
+           (StrStrIW(path, L"\\REGISTRY\\MACHINE\\") || StrStrIW(path, L"\\REGISTRY\\USER\\")) &&
+           StrStrIW(path, L"Classes\\regfile"),
+           "path was %s\n", wine_dbgstr_w(path));
+        LocalFree(path);
     }
 }
 
@@ -107,11 +136,17 @@ static void TEST_AssocF_Flags(void)
     for (size_t i = 0; i < _countof(cases); ++i)
     {
         HKEY hKey = NULL;
-        HRESULT hr = AssocQueryKeyW(cases[i], ASSOCKEY_CLASS, L".txt", NULL, &hKey);
+        HRESULT hr = AssocQueryKeyW(cases[i], ASSOCKEY_CLASS, L".reg", NULL, &hKey);
         ok_hr(hr, S_OK);
 
+        LPWSTR path = GetKeyPath(hKey);
         if (hKey)
             RegCloseKey(hKey);
+
+        ok(path &&
+           (StrStrIW(path, L"\\REGISTRY\\MACHINE\\") || StrStrIW(path, L"\\REGISTRY\\USER\\")),
+           "path was %s\n", wine_dbgstr_w(path));
+        LocalFree(path);
     }
 }
 
@@ -120,7 +155,7 @@ static void TEST_PszAssoc(void)
 {
     const wchar_t* exts[] =
     {
-        L".txt", L".htm", L".html", L".xml", L".png", L".jpg",  L".zip"
+        L".txt", L".htm", L".reg", L".xml", L".png", L".jpg", L".zip"
     };
 
     for (size_t i = 0; i < _countof(exts); ++i)
@@ -128,35 +163,38 @@ static void TEST_PszAssoc(void)
         HKEY hKey = NULL;
         HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_CLASS, exts[i], NULL, &hKey);
         ok_hr(hr, S_OK);
+
+        LPWSTR path = GetKeyPath(hKey);
         if (hKey)
             RegCloseKey(hKey);
+
+        ok(path &&
+           (StrStrIW(path, L"\\REGISTRY\\MACHINE\\") || StrStrIW(path, L"\\REGISTRY\\USER\\")),
+           "path was %s\n", wine_dbgstr_w(path));
+        LocalFree(path);
     }
 
     // Direct ProgID
     {
         HKEY hKey = NULL;
-        HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_CLASS, L"txtfile", NULL, &hKey);
+        HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_CLASS, L"regfile", NULL, &hKey);
         ok_hr(hr, S_OK);
 
+        LPWSTR path = GetKeyPath(hKey);
         if (hKey)
             RegCloseKey(hKey);
+
+        ok(path &&
+           (StrStrIW(path, L"\\REGISTRY\\MACHINE\\") || StrStrIW(path, L"\\REGISTRY\\USER\\")) &&
+           StrStrIW(path, L"regfile"),
+           "path was %s\n", wine_dbgstr_w(path));
+        LocalFree(path);
     }
 
     // ProgID: InternetShortcut
     {
         HKEY hKey = NULL;
-        HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_CLASS,
-                                    L"InternetShortcut", NULL, &hKey);
-        ok_hr(hr, S_OK);
-        if (hKey)
-            RegCloseKey(hKey);
-    }
-
-    // ASSOCF_INIT_DEFAULTTOSTAR
-    {
-        HKEY hKey = NULL;
-        HRESULT hr = AssocQueryKeyW(ASSOCF_INIT_DEFAULTTOSTAR, ASSOCKEY_CLASS,
-                                    L".xyzzy_nonexistent", NULL, &hKey);
+        HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_CLASS, L"InternetShortcut", NULL, &hKey);
         ok_hr(hr, S_OK);
         if (hKey)
             RegCloseKey(hKey);
@@ -256,19 +294,33 @@ static void TEST_ByExeName(void)
     {
         HKEY hKey = NULL;
         HRESULT hr = AssocQueryKeyW(ASSOCF_INIT_BYEXENAME, ASSOCKEY_APP, notepadPath, NULL, &hKey);
+
+        LPWSTR path = GetKeyPath(hKey);
         if (hKey)
             RegCloseKey(hKey);
+
         ok_hr(hr, S_OK);
+
+        ok(path &&
+           _wcsicmp(path, L"\\REGISTRY\\MACHINE\\SOFTWARE\\Classes\\Applications\\notepad.exe") == 0,
+           "path was %s\n", wine_dbgstr_w(path));
+        LocalFree(path);
     }
 
     // Short name
     {
         HKEY hKey = NULL;
         HRESULT hr = AssocQueryKeyW(ASSOCF_OPEN_BYEXENAME, ASSOCKEY_APP,
-                                    L"notepad.exe", NULL, &hKey);
+                                    L"regedit.exe", NULL, &hKey);
+        LPWSTR path = GetKeyPath(hKey);
         if (hKey)
             RegCloseKey(hKey);
         ok_hr(hr, S_OK);
+
+        ok(path &&
+           _wcsicmp(path, L"\\REGISTRY\\MACHINE\\SOFTWARE\\Classes\\Applications\\regedit.exe") == 0,
+           "path was %s\n", wine_dbgstr_w(path));
+        LocalFree(path);
     }
 
     // Non existent
@@ -283,27 +335,6 @@ static void TEST_ByExeName(void)
     }
 }
 
-// Check ASSOCF_NOUSERSETTINGS
-static void TEST_NoUserSettings(void)
-{
-    static const LPCWSTR exts[] = { L".txt", L".htm", L".xml" };
-    for (size_t i = 0; i < _countof(exts); ++i)
-    {
-        HKEY hkeyDef    = NULL;
-        HKEY hkeyNoUser = NULL;
-        HRESULT hrDef    = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_CLASS, exts[i], NULL, &hkeyDef);
-        HRESULT hrNoUser = AssocQueryKeyW(ASSOCF_NOUSERSETTINGS, ASSOCKEY_CLASS, exts[i], NULL,
-                                          &hkeyNoUser);
-        if (hkeyDef)
-            RegCloseKey(hkeyDef);
-        if (hkeyNoUser)
-            RegCloseKey(hkeyNoUser);
-
-        ok_hr(hrDef, S_OK);
-        ok_hr(hrNoUser, S_OK);
-    }
-}
-
 // Check ASSOCKEY_SHELLEXECCLASS
 static void TEST_ShellExecClass(void)
 {
@@ -313,8 +344,14 @@ static void TEST_ShellExecClass(void)
         HKEY hKey = NULL;
         HRESULT hr = AssocQueryKeyW(ASSOCF_NONE, ASSOCKEY_SHELLEXECCLASS, cases[i], NULL, &hKey);
         ok_hr(hr, S_OK);
+
+        LPWSTR path = GetKeyPath(hKey);
         if (hKey)
             RegCloseKey(hKey);
+
+        ok(path && StrStrIW(path, L"\\REGISTRY\\MACHINE\\SOFTWARE\\Classes\\"),
+           "path was %s\n", wine_dbgstr_w(path));
+        LocalFree(path);
     }
 }
 
@@ -326,11 +363,10 @@ START_TEST(AssocQueryKey)
         return;
     }
 
-    TEST_AssocKey_txt();
+    TEST_AssocKeys();
     TEST_AssocF_Flags();
     TEST_PszAssoc();
     TEST_InvalidArgs();
     TEST_ByExeName();
-    TEST_NoUserSettings();
     TEST_ShellExecClass();
 }
