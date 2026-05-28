@@ -715,7 +715,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
               IntCoalesceMouseMove(pti);
            }
 
-           TRACE("Posting mouse message to hwnd=%p!\n", UserHMGetHandle(pwnd));
+           TRACE("Posting mouse message to hwnd=%p\n", UserHMGetHandle(pwnd));
            MsqPostMessage(pti, Msg, TRUE, QS_MOUSEBUTTON, 0, dwExtraInfo);
        }
    }
@@ -1779,6 +1779,9 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
     const UINT uMsg = Msg->message;
 
+ERR("co_IntProcessKeyboardMessage(pti %p, msg %lu, hWnd %p, wParam %lu, lParam %lu)\n",
+    pti, uMsg, Msg->hwnd, Msg->wParam, Msg->lParam);
+
     if (uMsg == VK_PACKET)
         pti->wchInjected = HIWORD(Msg->wParam);
 
@@ -1823,8 +1826,11 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
             else if (Msg->wParam >= VK_BROWSER_BACK &&
                      Msg->wParam <= VK_LAUNCH_APP2)
             {
+                // NOTE: Added in commit 4b6fb8acdf94bcb31e91e04b4877cb3c6c679775 (r65815)
+                // for CORE-8819 (and maybe CORE-6734 ??)
                 /* FIXME: Process keystate */
-                co_IntSendMessage(Msg->hwnd, WM_APPCOMMAND, (WPARAM)Msg->hwnd, MAKELPARAM(0, (FAPPCOMMAND_KEY | (Msg->wParam - VK_BROWSER_BACK + 1))));
+                UserPostMessage(Msg->hwnd, WM_APPCOMMAND, (WPARAM)Msg->hwnd, MAKELPARAM(0, (FAPPCOMMAND_KEY | (Msg->wParam - VK_BROWSER_BACK + 1))));
+                // hbelusca FIXME: co_IntSendMessage -> UserPostMessage change
             }
         }
         else if (uMsg == WM_KEYUP)
@@ -1836,17 +1842,21 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     }
 
     //// Key Down!
+    // NOTE: Added in commit 4afd02584739b6f80a5fa6c70dd1bb5b524d8090 (r72197)
     if (*RemoveMessages && uMsg == WM_SYSKEYDOWN)
     {
-        if ( HIWORD(Msg->lParam) & KF_ALTDOWN )
+        ERR("Getting a WM_SYSCOMMAND, wParam %lu, lParam %lu\n", Msg->wParam, Msg->lParam);
+        if (HIWORD(Msg->lParam) & KF_ALTDOWN)
         {
-            if ( Msg->wParam == VK_ESCAPE || Msg->wParam == VK_TAB ) // Alt-Tab/ESC Alt-Shift-Tab/ESC
+            if (Msg->wParam == VK_ESCAPE || Msg->wParam == VK_TAB) // Alt-Tab/ESC Alt-Shift-Tab/ESC
             {
                 WPARAM wParamTmp;
 
+__debugbreak();
                 wParamTmp = UserGetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
-                TRACE("Send WM_SYSCOMMAND Alt-Tab/ESC Alt-Shift-Tab/ESC\n");
-                co_IntSendMessage( Msg->hwnd, WM_SYSCOMMAND, wParamTmp, Msg->wParam );
+                ERR("Send WM_SYSCOMMAND Alt-Tab/ESC Alt-Shift-Tab/ESC\n");
+                UserPostMessage(Msg->hwnd, WM_SYSCOMMAND, wParamTmp, Msg->wParam);
+                // hbelusca FIXME: co_IntSendMessage -> UserPostMessage change
 
                 //// Keep looping.
                 Ret = FALSE;
@@ -1855,6 +1865,8 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
             }
         }
     }
+    // NOTE: Keyboard layout/language toggling handling has been removed from there
+    // and added back into keyboard.c in commit 25b7447818f0fad1116070598bc88730c90c86b0
 
     if (co_HOOK_CallHooks( WH_KEYBOARD,
                           *RemoveMessages ? HC_ACTION : HC_NOREMOVE,

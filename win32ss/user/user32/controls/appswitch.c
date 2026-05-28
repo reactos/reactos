@@ -644,6 +644,7 @@ LRESULT WINAPI DoAppSwitch(WPARAM wParam, LPARAM lParam)
         }
     }
 
+    // NOTE: Introduced in commit 958cc23088 (r63531), and massaged in commit c17a8770a3 (PR #1718)
     /* Capture current active window */
     hwndActive = GetActiveWindow();
     if (hwndActive)
@@ -663,8 +664,14 @@ LRESULT WINAPI DoAppSwitch(WPARAM wParam, LPARAM lParam)
         goto Exit;
     }
 
+// Disabled: If we have visible, possibly minimized, windows, but none active (for some reason...),
+// still allow the Alt+Tab window to show up so as to switch to a window and make it active.
+// Otherwise ReactOS could stay "blocked" without any window being able to become active.
+#if 0 // Well, it _seems_ windows still does something a bit similar...
+    // NOTE: Introduced in commit 958cc23088 (r63531), and massaged in commit c17a8770a3 (PR #1718)
     if (!hwndActive)
         goto Exit;
+#endif
 
     /* Main message loop */
     for (;;)

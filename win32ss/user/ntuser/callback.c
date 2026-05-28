@@ -299,6 +299,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    TRACE("co_IntCallWindowProc(Proc %p, IsAnsiProc: %s, Wnd %p, Message %u, wParam %Iu, lParam %Id, lParamBufferSize %d)\n",
        Proc, IsAnsiProc ? "TRUE" : "FALSE", Wnd, Message, wParam, lParam, lParamBufferSize);
 
+   // NOTE: Such asserts were added in commit 765f09416de3925d9870a8ec2fd03767b3c6c3e7 (r57632)
    /* Do not allow the desktop thread to do callback to user mode */
    ASSERT(PsGetCurrentThreadWin32Thread() != gptiDesktopThread);
 

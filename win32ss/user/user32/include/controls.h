@@ -120,5 +120,5 @@ LRESULT WINAPI ScrollBarWndProcA( HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lPa
 LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode);
-LRESULT WINAPI SwitchWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-LRESULT WINAPI SwitchWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+LRESULT WINAPI SwitchWndProcA(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT WINAPI SwitchWndProcW(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
