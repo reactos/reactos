@@ -858,22 +858,22 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     return FALSE;
 }
 
-/*++
+/**
+ * @brief
  * RtlCheckForOrphanedCriticalSections
- * @implemented NT5
  *
- * Just calls RtlCheckHeldCriticalSections.
+ * Checks if the given thread owns any critical sections at the time
+ * of its exit, and emits a debug message for each orphaned section found.
  *
- * Params:
- *     ThreadHandle - Handle to the thread to check.
+ * @param[in] ThreadHandle
+ * Handle to the thread to check.
  *
- * Returns:
- *     Nothing
+ * @return
+ * Nothing
  *
- * Remarks:
- *     This function is typically called by the loader during thread exit.
- *
- *--*/
+ * @remarks
+ * This function is typically called by the loader during thread exit.
+ **/
 VOID
 NTAPI
 RtlCheckForOrphanedCriticalSections(_In_ HANDLE ThreadHandle)
