@@ -139,7 +139,7 @@ CreateFreeLoaderReactOSEntries(
 #endif
     {
 #if DBG
-        BootOptions.NextBootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
+        BootOptions.NextBootEntryKey = MAKESTRKEY(L"ReactOS"); // HACK: 0.4.16 release
 #else
         BootOptions.NextBootEntryKey = MAKESTRKEY(L"ReactOS");
 #endif
@@ -156,7 +156,7 @@ CreateFreeLoaderReactOSEntries(
     else
     {
         /* Timeout=10 */
-        BootOptions.Timeout = 10;
+        BootOptions.Timeout = 3; // HACK: 0.4.16 release
     }
 #endif
 
