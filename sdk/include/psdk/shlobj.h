@@ -2258,6 +2258,18 @@ SHGetFolderPathW(
 _Check_return_ HRESULT WINAPI SHGetDesktopFolder(_Outptr_ IShellFolder * *);
 
 /****************************************************************************
+ * SHBindToObject API
+ */
+HRESULT
+WINAPI
+SHBindToObject(
+  _In_opt_ IShellFolder *psf,
+  _In_ PCUIDLIST_RELATIVE pidl,
+  _In_opt_ IBindCtx *pbc,
+  _In_ REFIID riid,
+  _Outptr_ void **ppv);
+
+/****************************************************************************
  * SHBindToParent API
  */
 HRESULT
@@ -2862,6 +2874,14 @@ SHGetKnownFolderPath(
   _In_ DWORD dwFlags,
   _In_opt_ HANDLE hToken,
   _Outptr_ PWSTR *ppszPath);
+
+HRESULT
+WINAPI
+SHSetKnownFolderPath(
+  _In_ REFKNOWNFOLDERID rfid,
+  _In_ DWORD dwFlags,
+  _In_opt_ HANDLE hToken,
+  _In_ PCWSTR pszPath);
 
 HRESULT
 WINAPI

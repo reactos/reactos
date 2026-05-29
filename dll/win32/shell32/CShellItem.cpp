@@ -24,6 +24,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+/* FMTID_Storage filesystem property keys — not in ReactOS propkey.h yet */
+static const PROPERTYKEY PKEY_ItemNameDisplay_L = { {0xB725F130,0x47EF,0x101A,{0xA5,0xF1,0x02,0x60,0x8C,0x9E,0xEB,0xAC}}, 10 };
+static const PROPERTYKEY PKEY_Size_L            = { {0xB725F130,0x47EF,0x101A,{0xA5,0xF1,0x02,0x60,0x8C,0x9E,0xEB,0xAC}}, 12 };
+static const PROPERTYKEY PKEY_FileAttributes_L  = { {0xB725F130,0x47EF,0x101A,{0xA5,0xF1,0x02,0x60,0x8C,0x9E,0xEB,0xAC}}, 13 };
+static const PROPERTYKEY PKEY_DateModified_L    = { {0xB725F130,0x47EF,0x101A,{0xA5,0xF1,0x02,0x60,0x8C,0x9E,0xEB,0xAC}}, 14 };
+static const PROPERTYKEY PKEY_DateCreated_L     = { {0xB725F130,0x47EF,0x101A,{0xA5,0xF1,0x02,0x60,0x8C,0x9E,0xEB,0xAC}}, 15 };
+static const PROPERTYKEY PKEY_DateAccessed_L    = { {0xB725F130,0x47EF,0x101A,{0xA5,0xF1,0x02,0x60,0x8C,0x9E,0xEB,0xAC}}, 16 };
+
 EXTERN_C HRESULT WINAPI SHCreateShellItem(PCIDLIST_ABSOLUTE pidlParent,
     IShellFolder *psfParent, PCUITEMID_CHILD pidl, IShellItem **ppsi);
 
@@ -468,14 +476,49 @@ public:
             UINT cidl = m_pCIDA->cidl;
             if (cidl == 0)
                 return SHCreateDataObject(pidlParent, 0, NULL, NULL, riid, ppv);
-            PCUITEMID_CHILD_ARRAY apidl = (PCUITEMID_CHILD_ARRAY)CoTaskMemAlloc(cidl * sizeof(PCUITEMID_CHILD));
+            PCUITEMID_CHILD *apidl = (PCUITEMID_CHILD*)CoTaskMemAlloc(cidl * sizeof(PCUITEMID_CHILD));
             if (!apidl)
                 return E_OUTOFMEMORY;
             for (UINT i = 0; i < cidl; i++)
                 apidl[i] = (PCUITEMID_CHILD)((BYTE*)m_pCIDA + m_pCIDA->aoffset[i + 1]);
             HRESULT hr = SHCreateDataObject(pidlParent, cidl, apidl, NULL, riid, ppv);
-            CoTaskMemFree(apidl);
+            CoTaskMemFree((LPVOID)apidl);
             return hr;
+        }
+
+        if (IsEqualGUID(rbhid, BHID_SFObject) ||
+            IsEqualGUID(rbhid, BHID_SFUIObject) ||
+            IsEqualGUID(rbhid, BHID_SFViewObject))
+        {
+            if (!m_pCIDA || m_pCIDA->cidl == 0)
+                return E_FAIL;
+
+            PCIDLIST_ABSOLUTE pidlParent = (PCIDLIST_ABSOLUTE)((BYTE*)m_pCIDA + m_pCIDA->aoffset[0]);
+            CComPtr<IShellFolder> psfParent;
+            HRESULT hr = SHBindToObject(NULL, pidlParent, NULL, IID_PPV_ARG(IShellFolder, &psfParent));
+            if (FAILED(hr))
+                return hr;
+
+            if (IsEqualGUID(rbhid, BHID_SFObject))
+            {
+                return psfParent->QueryInterface(riid, ppv);
+            }
+            else if (IsEqualGUID(rbhid, BHID_SFUIObject))
+            {
+                UINT cidl = m_pCIDA->cidl;
+                PCUITEMID_CHILD *apidl = (PCUITEMID_CHILD*)CoTaskMemAlloc(cidl * sizeof(PCUITEMID_CHILD));
+                if (!apidl)
+                    return E_OUTOFMEMORY;
+                for (UINT i = 0; i < cidl; i++)
+                    apidl[i] = (PCUITEMID_CHILD)((BYTE*)m_pCIDA + m_pCIDA->aoffset[i + 1]);
+                hr = psfParent->GetUIObjectOf(NULL, cidl, apidl, riid, NULL, ppv);
+                CoTaskMemFree((LPVOID)apidl);
+                return hr;
+            }
+            else /* BHID_SFViewObject */
+            {
+                return psfParent->CreateViewObject(NULL, riid, ppv);
+            }
         }
 
         FIXME("Unhandled BHID %s\n", debugstr_guid(&rbhid));
@@ -601,6 +644,28 @@ public:
         return S_OK;
     }
 
+    HRESULT InitializeAbsolute(UINT cidl, PCIDLIST_ABSOLUTE_ARRAY rgpidl)
+    {
+        m_rgpidl = (LPITEMIDLIST *)CoTaskMemAlloc(cidl * sizeof(LPITEMIDLIST));
+        if (!m_rgpidl)
+            return E_OUTOFMEMORY;
+        m_cidl = 0;
+        for (UINT i = 0; i < cidl; i++)
+        {
+            m_rgpidl[i] = ILClone(rgpidl[i]);
+            if (!m_rgpidl[i])
+            {
+                for (UINT j = 0; j < m_cidl; j++)
+                    ILFree(m_rgpidl[j]);
+                CoTaskMemFree(m_rgpidl);
+                m_rgpidl = NULL;
+                return E_OUTOFMEMORY;
+            }
+            m_cidl++;
+        }
+        return S_OK;
+    }
+
     // IShellItemArray
     STDMETHODIMP BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppv) override
     {
@@ -618,7 +683,7 @@ public:
                 return E_OUTOFMEMORY;
             ILRemoveLastID(pidlParent);
 
-            PCUITEMID_CHILD_ARRAY apidl = (PCUITEMID_CHILD_ARRAY)CoTaskMemAlloc(m_cidl * sizeof(PCUITEMID_CHILD));
+            PCUITEMID_CHILD *apidl = (PCUITEMID_CHILD*)CoTaskMemAlloc(m_cidl * sizeof(PCUITEMID_CHILD));
             if (!apidl)
             {
                 ILFree(pidlParent);
@@ -627,9 +692,49 @@ public:
             for (UINT i = 0; i < m_cidl; i++)
                 apidl[i] = ILFindLastID(m_rgpidl[i]);
             HRESULT hr = SHCreateDataObject(pidlParent, m_cidl, apidl, NULL, riid, ppv);
-            CoTaskMemFree(apidl);
+            CoTaskMemFree((LPVOID)apidl);
             ILFree(pidlParent);
             return hr;
+        }
+
+        if (IsEqualGUID(rbhid, BHID_SFObject) ||
+            IsEqualGUID(rbhid, BHID_SFUIObject) ||
+            IsEqualGUID(rbhid, BHID_SFViewObject))
+        {
+            if (m_cidl == 0)
+                return E_FAIL;
+
+            /* Get the parent folder (all items assumed to share same parent) */
+            LPITEMIDLIST pidlParent = ILClone(m_rgpidl[0]);
+            if (!pidlParent)
+                return E_OUTOFMEMORY;
+            ILRemoveLastID(pidlParent);
+
+            CComPtr<IShellFolder> psfParent;
+            HRESULT hr = SHBindToObject(NULL, pidlParent, NULL, IID_PPV_ARG(IShellFolder, &psfParent));
+            ILFree(pidlParent);
+            if (FAILED(hr))
+                return hr;
+
+            if (IsEqualGUID(rbhid, BHID_SFObject))
+            {
+                return psfParent->QueryInterface(riid, ppv);
+            }
+            else if (IsEqualGUID(rbhid, BHID_SFUIObject))
+            {
+                PCUITEMID_CHILD *apidl = (PCUITEMID_CHILD*)CoTaskMemAlloc(m_cidl * sizeof(PCUITEMID_CHILD));
+                if (!apidl)
+                    return E_OUTOFMEMORY;
+                for (UINT i = 0; i < m_cidl; i++)
+                    apidl[i] = ILFindLastID(m_rgpidl[i]);
+                hr = psfParent->GetUIObjectOf(NULL, m_cidl, apidl, riid, NULL, ppv);
+                CoTaskMemFree((LPVOID)apidl);
+                return hr;
+            }
+            else /* BHID_SFViewObject */
+            {
+                return psfParent->CreateViewObject(NULL, riid, ppv);
+            }
         }
 
         FIXME("Unhandled BHID %s\n", debugstr_guid(&rbhid));
@@ -763,6 +868,53 @@ SHCreateItemWithParent(
 }
 
 EXTERN_C HRESULT WINAPI
+SHCreateItemFromRelativeName(
+    _In_ IShellItem *psiParent,
+    _In_ PCWSTR pszName,
+    _In_opt_ IBindCtx *pbc,
+    _In_ REFIID riid,
+    _Outptr_ void **ppv)
+{
+    HRESULT hr;
+
+    TRACE("(%p, %s, %p, %s, %p)\n", psiParent, debugstr_w(pszName),
+          pbc, debugstr_guid(&riid), ppv);
+
+    if (!ppv)
+        return E_INVALIDARG;
+    *ppv = NULL;
+
+    if (!psiParent || !pszName)
+        return E_INVALIDARG;
+
+    /* Get the parent's IShellFolder */
+    CComPtr<IShellFolder> psfParent;
+    hr = psiParent->BindToHandler(pbc, BHID_SFObject, IID_PPV_ARG(IShellFolder, &psfParent));
+    if (FAILED(hr))
+        return hr;
+
+    /* Parse the relative name to get child PIDL */
+    CComHeapPtr<ITEMIDLIST> pidlChild;
+    hr = psfParent->ParseDisplayName(NULL, pbc, const_cast<LPWSTR>(pszName),
+                                     NULL, &pidlChild, NULL);
+    if (FAILED(hr))
+        return hr;
+
+    /* Get the parent's absolute PIDL */
+    CComHeapPtr<ITEMIDLIST> pidlParent;
+    hr = SHGetIDListFromObject(psiParent, &pidlParent);
+    if (FAILED(hr))
+        return hr;
+
+    /* Combine to get full absolute PIDL and create the shell item */
+    CComHeapPtr<ITEMIDLIST> pidlFull(ILCombine(pidlParent, pidlChild));
+    if (!pidlFull)
+        return E_OUTOFMEMORY;
+
+    return SHCreateItemFromIDList(pidlFull, riid, ppv);
+}
+
+EXTERN_C HRESULT WINAPI
 SHGetKnownFolderItem(
     _In_ REFKNOWNFOLDERID rfid,
     _In_ DWORD dwFlags,
@@ -854,6 +1006,36 @@ SHCreateShellItemArray(
     return hr;
 }
 
+EXTERN_C HRESULT WINAPI
+SHCreateShellItemArrayFromIDLists(
+    _In_ UINT cidl,
+    _In_reads_(cidl) PCIDLIST_ABSOLUTE_ARRAY rgpidl,
+    _Out_ IShellItemArray **ppsiItemArray)
+{
+    HRESULT hr;
+
+    TRACE("(%u, %p, %p)\n", cidl, rgpidl, ppsiItemArray);
+
+    if (!ppsiItemArray)
+        return E_INVALIDARG;
+    *ppsiItemArray = NULL;
+
+    if (cidl == 0 || !rgpidl)
+        return E_INVALIDARG;
+
+    CComObject<CShellItemArrayExplicit> *pObj;
+    hr = CComObject<CShellItemArrayExplicit>::CreateInstance(&pObj);
+    if (FAILED(hr))
+        return hr;
+    pObj->AddRef();
+
+    hr = pObj->InitializeAbsolute(cidl, rgpidl);
+    if (SUCCEEDED(hr))
+        hr = pObj->QueryInterface(IID_PPV_ARG(IShellItemArray, ppsiItemArray));
+    pObj->Release();
+    return hr;
+}
+
 EXTERN_C BOOL WINAPI
 SHGetPathFromIDListEx(
     _In_ PCIDLIST_ABSOLUTE pidl,
@@ -921,4 +1103,231 @@ SHCreateItemInKnownFolder(
     }
 
     return hr;
+}
+
+/* ---- IShellItem2 methods on CShellItem ---- */
+
+HRESULT WINAPI CShellItem::GetPropertyStore(GETPROPERTYSTOREFLAGS flags, REFIID riid, void **ppv)
+{
+    WCHAR szPath[MAX_PATH];
+    WIN32_FILE_ATTRIBUTE_DATA wfad;
+    PROPVARIANT pv;
+    CComPtr<IPropertyStore> pps;
+    HRESULT hr;
+
+    TRACE("(%p, 0x%x, %s, %p)\n", this, flags, debugstr_guid(&riid), ppv);
+
+    if (!ppv) return E_INVALIDARG;
+    *ppv = NULL;
+
+    hr = CoCreateInstance(CLSID_InMemoryPropertyStore, NULL, CLSCTX_INPROC_SERVER,
+                          IID_PPV_ARG(IPropertyStore, &pps));
+    if (FAILED(hr)) return hr;
+
+    if (SHGetPathFromIDListW(m_pidl, szPath))
+    {
+        PropVariantInit(&pv);
+        pv.vt = VT_LPWSTR;
+        if (SUCCEEDED(SHStrDupW(PathFindFileNameW(szPath), &pv.pwszVal)))
+        {
+            pps->SetValue(PKEY_ItemNameDisplay_L, pv);
+            PropVariantClear(&pv);
+        }
+
+        if (GetFileAttributesExW(szPath, GetFileExInfoStandard, &wfad))
+        {
+            pv.vt = VT_UI8;
+            pv.uhVal.QuadPart = ((ULONGLONG)wfad.nFileSizeHigh << 32) | wfad.nFileSizeLow;
+            pps->SetValue(PKEY_Size_L, pv);
+
+            pv.vt = VT_UI4;
+            pv.ulVal = wfad.dwFileAttributes;
+            pps->SetValue(PKEY_FileAttributes_L, pv);
+
+            pv.vt = VT_FILETIME;
+            pv.filetime = wfad.ftLastWriteTime;
+            pps->SetValue(PKEY_DateModified_L, pv);
+
+            pv.filetime = wfad.ftCreationTime;
+            pps->SetValue(PKEY_DateCreated_L, pv);
+
+            pv.filetime = wfad.ftLastAccessTime;
+            pps->SetValue(PKEY_DateAccessed_L, pv);
+        }
+    }
+
+    pps->Commit();
+    return pps->QueryInterface(riid, ppv);
+}
+
+HRESULT WINAPI CShellItem::GetPropertyStoreWithCreateObject(GETPROPERTYSTOREFLAGS flags,
+    IUnknown *punkCreateObject, REFIID riid, void **ppv)
+{
+    TRACE("(%p, 0x%x, %p, %s, %p)\n", this, flags, punkCreateObject, debugstr_guid(&riid), ppv);
+    return GetPropertyStore(flags, riid, ppv);
+}
+
+HRESULT WINAPI CShellItem::GetPropertyStoreForKeys(const PROPERTYKEY *rgKeys, UINT cKeys,
+    GETPROPERTYSTOREFLAGS flags, REFIID riid, void **ppv)
+{
+    TRACE("(%p, %p, %u, 0x%x, %s, %p)\n", this, rgKeys, cKeys, flags, debugstr_guid(&riid), ppv);
+    return GetPropertyStore(flags, riid, ppv);
+}
+
+HRESULT WINAPI CShellItem::GetPropertyDescriptionList(REFPROPERTYKEY keyType, REFIID riid, void **ppv)
+{
+    TRACE("(%p, %p, %s, %p)\n", this, &keyType, debugstr_guid(&riid), ppv);
+    if (ppv) *ppv = NULL;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CShellItem::Update(IBindCtx *pbc)
+{
+    TRACE("(%p, %p)\n", this, pbc);
+    return S_OK;
+}
+
+HRESULT WINAPI CShellItem::GetProperty(REFPROPERTYKEY key, PROPVARIANT *ppropvar)
+{
+    CComPtr<IPropertyStore> pps;
+    HRESULT hr;
+
+    TRACE("(%p, %p, %p)\n", this, &key, ppropvar);
+
+    if (!ppropvar) return E_INVALIDARG;
+    PropVariantInit(ppropvar);
+
+    hr = GetPropertyStore(GPS_FASTPROPERTIESONLY, IID_PPV_ARG(IPropertyStore, &pps));
+    if (FAILED(hr)) return hr;
+    return pps->GetValue(key, ppropvar);
+}
+
+HRESULT WINAPI CShellItem::GetCLSID(REFPROPERTYKEY key, CLSID *pclsid)
+{
+    PROPVARIANT pv;
+    PropVariantInit(&pv);
+    HRESULT hr = GetProperty(key, &pv);
+    if (FAILED(hr)) return hr;
+    if (pv.vt == VT_CLSID)
+    {
+        *pclsid = *pv.puuid;
+        PropVariantClear(&pv);
+        return S_OK;
+    }
+    PropVariantClear(&pv);
+    return DISP_E_TYPEMISMATCH;
+}
+
+HRESULT WINAPI CShellItem::GetFileTime(REFPROPERTYKEY key, FILETIME *pft)
+{
+    PROPVARIANT pv;
+    PropVariantInit(&pv);
+    HRESULT hr = GetProperty(key, &pv);
+    if (FAILED(hr)) return hr;
+    if (pv.vt == VT_FILETIME)
+    {
+        *pft = pv.filetime;
+        return S_OK;
+    }
+    PropVariantClear(&pv);
+    return DISP_E_TYPEMISMATCH;
+}
+
+HRESULT WINAPI CShellItem::GetInt32(REFPROPERTYKEY key, int *pi)
+{
+    PROPVARIANT pv;
+    PropVariantInit(&pv);
+    HRESULT hr = GetProperty(key, &pv);
+    if (FAILED(hr)) return hr;
+    if (pv.vt == VT_I4) { *pi = pv.lVal; return S_OK; }
+    PropVariantClear(&pv);
+    return DISP_E_TYPEMISMATCH;
+}
+
+HRESULT WINAPI CShellItem::GetString(REFPROPERTYKEY key, LPWSTR *ppsz)
+{
+    PROPVARIANT pv;
+    PropVariantInit(&pv);
+    HRESULT hr = GetProperty(key, &pv);
+    if (FAILED(hr)) return hr;
+    if (pv.vt == VT_LPWSTR)
+    {
+        *ppsz = pv.pwszVal;
+        return S_OK;
+    }
+    if (pv.vt == VT_BSTR)
+    {
+        hr = SHStrDupW(pv.bstrVal, ppsz);
+        PropVariantClear(&pv);
+        return hr;
+    }
+    PropVariantClear(&pv);
+    return DISP_E_TYPEMISMATCH;
+}
+
+HRESULT WINAPI CShellItem::GetUInt32(REFPROPERTYKEY key, ULONG *pui)
+{
+    PROPVARIANT pv;
+    PropVariantInit(&pv);
+    HRESULT hr = GetProperty(key, &pv);
+    if (FAILED(hr)) return hr;
+    if (pv.vt == VT_UI4) { *pui = pv.ulVal; return S_OK; }
+    PropVariantClear(&pv);
+    return DISP_E_TYPEMISMATCH;
+}
+
+HRESULT WINAPI CShellItem::GetUInt64(REFPROPERTYKEY key, ULONGLONG *pull)
+{
+    PROPVARIANT pv;
+    PropVariantInit(&pv);
+    HRESULT hr = GetProperty(key, &pv);
+    if (FAILED(hr)) return hr;
+    if (pv.vt == VT_UI8) { *pull = pv.uhVal.QuadPart; return S_OK; }
+    PropVariantClear(&pv);
+    return DISP_E_TYPEMISMATCH;
+}
+
+HRESULT WINAPI CShellItem::GetBool(REFPROPERTYKEY key, BOOL *pf)
+{
+    PROPVARIANT pv;
+    PropVariantInit(&pv);
+    HRESULT hr = GetProperty(key, &pv);
+    if (FAILED(hr)) return hr;
+    if (pv.vt == VT_BOOL) { *pf = (pv.boolVal != VARIANT_FALSE); return S_OK; }
+    PropVariantClear(&pv);
+    return DISP_E_TYPEMISMATCH;
+}
+
+EXTERN_C HRESULT WINAPI
+SHGetPropertyStoreFromIDList(
+    _In_ PCIDLIST_ABSOLUTE pidl,
+    _In_ GETPROPERTYSTOREFLAGS flags,
+    _In_ REFIID riid,
+    _Out_ void **ppv)
+{
+    CComPtr<IShellItem2> psi2;
+    HRESULT hr;
+
+    TRACE("(%p, 0x%x, %s, %p)\n", pidl, flags, debugstr_guid(&riid), ppv);
+
+    if (!ppv) return E_INVALIDARG;
+    *ppv = NULL;
+
+    hr = SHCreateItemFromIDList(pidl, IID_PPV_ARG(IShellItem2, &psi2));
+    if (FAILED(hr)) return hr;
+    return psi2->GetPropertyStore(flags, riid, ppv);
+}
+
+EXTERN_C HRESULT WINAPI
+SHGetPropertyStoreForWindow(
+    _In_ HWND hwnd,
+    _In_ REFIID riid,
+    _Out_ void **ppv)
+{
+    TRACE("(%p, %s, %p)\n", hwnd, debugstr_guid(&riid), ppv);
+
+    if (!ppv) return E_INVALIDARG;
+    *ppv = NULL;
+
+    return CoCreateInstance(CLSID_InMemoryPropertyStore, NULL, CLSCTX_INPROC_SERVER, riid, ppv);
 }

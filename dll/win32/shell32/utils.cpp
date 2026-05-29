@@ -438,14 +438,15 @@ SHBindToObjectEx(
     return hr;
 }
 
-EXTERN_C
-HRESULT SHBindToObject(
+EXTERN_C HRESULT WINAPI
+SHBindToObject(
     _In_opt_ IShellFolder *psf,
     _In_ LPCITEMIDLIST pidl,
+    _In_opt_ IBindCtx *pbc,
     _In_ REFIID riid,
     _Out_ void **ppvObj)
 {
-    return SHBindToObjectEx(psf, pidl, NULL, riid, ppvObj);
+    return SHBindToObjectEx(psf, pidl, pbc, riid, ppvObj);
 }
 
 EXTERN_C HRESULT
@@ -554,7 +555,7 @@ SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAt
 HRESULT SHELL_GetIDListTarget(_In_ LPCITEMIDLIST pidl, _Out_ PIDLIST_ABSOLUTE *ppidl)
 {
     IShellLink *pSL;
-    HRESULT hr = SHBindToObject(NULL, pidl, IID_PPV_ARG(IShellLink, &pSL));
+    HRESULT hr = SHBindToObject(NULL, pidl, NULL, IID_PPV_ARG(IShellLink, &pSL));
     if (SUCCEEDED(hr))
     {
         hr = pSL->GetIDList(ppidl); // Note: Returns S_FALSE if no target pidl

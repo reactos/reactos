@@ -613,6 +613,7 @@ cpp_quote("HRESULT WINAPI SHCreateShellItemArray(PCIDLIST_ABSOLUTE pidlParent, I
 cpp_quote("HRESULT WINAPI SHCreateShellItemArrayFromShellItem(IShellItem *psi, REFIID riid, void **ppv);")
 cpp_quote("HRESULT WINAPI SHCreateShellItemArrayFromIDLists(UINT cidl, PCIDLIST_ABSOLUTE_ARRAY pidl_array, IShellItemArray **psia);")
 cpp_quote("HRESULT WINAPI SHCreateShellItemArrayFromDataObject(IDataObject *pdo, REFIID riid, void **ppv);")
+cpp_quote("HRESULT WINAPI SHCreateItemFromRelativeName(IShellItem *psiParent, PCWSTR pszName, IBindCtx *pbc, REFIID riid, void **ppv);")
 
 /*****************************************************************************
  * IShellItemFilter interface

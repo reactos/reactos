@@ -25,7 +25,7 @@
 class CShellItem :
     public CComCoClass<CShellItem, &CLSID_ShellItem>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellItem,
+    public IShellItem2,
     public IPersistIDList
 {
 private:
@@ -45,6 +45,21 @@ public:
     STDMETHOD(GetAttributes)(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs) override;
     STDMETHOD(Compare)(IShellItem *oth, SICHINTF hint, int *piOrder) override;
 
+    // IShellItem2
+    STDMETHOD(GetPropertyStore)(GETPROPERTYSTOREFLAGS flags, REFIID riid, void **ppv) override;
+    STDMETHOD(GetPropertyStoreWithCreateObject)(GETPROPERTYSTOREFLAGS flags, IUnknown *punkCreateObject, REFIID riid, void **ppv) override;
+    STDMETHOD(GetPropertyStoreForKeys)(const PROPERTYKEY *rgKeys, UINT cKeys, GETPROPERTYSTOREFLAGS flags, REFIID riid, void **ppv) override;
+    STDMETHOD(GetPropertyDescriptionList)(REFPROPERTYKEY keyType, REFIID riid, void **ppv) override;
+    STDMETHOD(Update)(IBindCtx *pbc) override;
+    STDMETHOD(GetProperty)(REFPROPERTYKEY key, PROPVARIANT *ppropvar) override;
+    STDMETHOD(GetCLSID)(REFPROPERTYKEY key, CLSID *pclsid) override;
+    STDMETHOD(GetFileTime)(REFPROPERTYKEY key, FILETIME *pft) override;
+    STDMETHOD(GetInt32)(REFPROPERTYKEY key, int *pi) override;
+    STDMETHOD(GetString)(REFPROPERTYKEY key, LPWSTR *ppsz) override;
+    STDMETHOD(GetUInt32)(REFPROPERTYKEY key, ULONG *pui) override;
+    STDMETHOD(GetUInt64)(REFPROPERTYKEY key, ULONGLONG *pull) override;
+    STDMETHOD(GetBool)(REFPROPERTYKEY key, BOOL *pf) override;
+
     // IPersistIDList
     STDMETHOD(GetClassID)(CLSID *pClassID) override;
     STDMETHOD(SetIDList)(PCIDLIST_ABSOLUTE pidl) override;
@@ -56,6 +71,7 @@ DECLARE_NOT_AGGREGATABLE(CShellItem)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CShellItem)
+    COM_INTERFACE_ENTRY_IID(IID_IShellItem2, IShellItem2)
     COM_INTERFACE_ENTRY_IID(IID_IShellItem, IShellItem)
     COM_INTERFACE_ENTRY_IID(IID_IPersistIDList, IPersistIDList)
 END_COM_MAP()

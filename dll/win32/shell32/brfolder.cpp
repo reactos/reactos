@@ -190,7 +190,7 @@ BrFolder_InitTreeView(BrFolder *info)
     PCIDLIST_RELATIVE pidlChild = ILFindLastID(pidlRoot);
 
     CComPtr<IShellFolder> lpsfParent;
-    hr = SHBindToObject(NULL, pidlParent, /*NULL, */ IID_PPV_ARG(IShellFolder, &lpsfParent));
+    hr = SHBindToObject(NULL, pidlParent, NULL, IID_PPV_ARG(IShellFolder, &lpsfParent));
     if (FAILED_UNEXPECTEDLY(hr))
         return;
 

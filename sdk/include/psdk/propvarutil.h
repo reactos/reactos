@@ -109,6 +109,79 @@ PSSTDAPI PropVariantToStringAlloc(REFPROPVARIANT propvarIn, WCHAR **ret);
 PSSTDAPI PropVariantToVariant(const PROPVARIANT *propvar, VARIANT *var);
 PSSTDAPI VariantToPropVariant(const VARIANT* var, PROPVARIANT* propvar);
 
+typedef enum tagPSTIME_FLAGS {
+    PSTF_UTC   = 0,
+    PSTF_LOCAL = 1
+} PSTIME_FLAGS;
+
+PSSTDAPI PropVariantToFileTime(REFPROPVARIANT propvarIn, PSTIME_FLAGS pstfOut, FILETIME *pftOut);
+PSSTDAPI_(ULONG) PropVariantGetElementCount(REFPROPVARIANT propvar);
+
+PSSTDAPI InitPropVariantFromBooleanVector(const BOOL *prgf, ULONG cElems, PROPVARIANT *ppropvar);
+PSSTDAPI InitPropVariantFromInt16Vector(const SHORT *prgn, ULONG cElems, PROPVARIANT *ppropvar);
+PSSTDAPI InitPropVariantFromUInt16Vector(const USHORT *prgn, ULONG cElems, PROPVARIANT *ppropvar);
+PSSTDAPI InitPropVariantFromInt32Vector(const LONG *prgn, ULONG cElems, PROPVARIANT *ppropvar);
+PSSTDAPI InitPropVariantFromUInt32Vector(const ULONG *prgn, ULONG cElems, PROPVARIANT *ppropvar);
+PSSTDAPI InitPropVariantFromInt64Vector(const LONGLONG *prgn, ULONG cElems, PROPVARIANT *ppropvar);
+PSSTDAPI InitPropVariantFromUInt64Vector(const ULONGLONG *prgn, ULONG cElems, PROPVARIANT *ppropvar);
+PSSTDAPI InitPropVariantFromDoubleVector(const DOUBLE *prgn, ULONG cElems, PROPVARIANT *ppropvar);
+PSSTDAPI InitPropVariantFromPropVariantVectorElem(REFPROPVARIANT propvarIn, ULONG iElem, PROPVARIANT *ppropvar);
+PSSTDAPI InitPropVariantVectorFromPropVariant(REFPROPVARIANT propvarSingle, PROPVARIANT *ppropvar);
+PSSTDAPI InitPropVariantFromResource(HMODULE hinst, UINT id, PROPVARIANT *ppropvar);
+
+PSSTDAPI_(BOOL)      PropVariantToBooleanWithDefault(REFPROPVARIANT propvarIn, BOOL fDefault);
+PSSTDAPI_(LONG)      PropVariantToInt32WithDefault(REFPROPVARIANT propvarIn, LONG lDefault);
+PSSTDAPI_(LONGLONG)  PropVariantToInt64WithDefault(REFPROPVARIANT propvarIn, LONGLONG llDefault);
+PSSTDAPI_(USHORT)    PropVariantToUInt16WithDefault(REFPROPVARIANT propvarIn, USHORT uiDefault);
+PSSTDAPI_(ULONGLONG) PropVariantToUInt64WithDefault(REFPROPVARIANT propvarIn, ULONGLONG ullDefault);
+PSSTDAPI_(DOUBLE)    PropVariantToDoubleWithDefault(REFPROPVARIANT propvarIn, DOUBLE dblDefault);
+
+PSSTDAPI PropVariantGetStringElem(REFPROPVARIANT propvar, ULONG iElem, PWSTR *ppszVal);
+PSSTDAPI PropVariantGetBooleanElem(REFPROPVARIANT propvar, ULONG iElem, BOOL *pfVal);
+PSSTDAPI PropVariantGetInt16Elem(REFPROPVARIANT propvar, ULONG iElem, SHORT *pnVal);
+PSSTDAPI PropVariantGetUInt16Elem(REFPROPVARIANT propvar, ULONG iElem, USHORT *pnVal);
+PSSTDAPI PropVariantGetInt32Elem(REFPROPVARIANT propvar, ULONG iElem, LONG *pnVal);
+PSSTDAPI PropVariantGetUInt32Elem(REFPROPVARIANT propvar, ULONG iElem, ULONG *pnVal);
+PSSTDAPI PropVariantGetInt64Elem(REFPROPVARIANT propvar, ULONG iElem, LONGLONG *pnVal);
+PSSTDAPI PropVariantGetUInt64Elem(REFPROPVARIANT propvar, ULONG iElem, ULONGLONG *pnVal);
+PSSTDAPI PropVariantGetDoubleElem(REFPROPVARIANT propvar, ULONG iElem, DOUBLE *pnVal);
+PSSTDAPI PropVariantGetFileTimeElem(REFPROPVARIANT propvar, ULONG iElem, FILETIME *pftVal);
+
+PSSTDAPI PropVariantToStringVectorAlloc(REFPROPVARIANT propvar, PWSTR **pprgsz, ULONG *pcElem);
+PSSTDAPI PropVariantToStringVector(REFPROPVARIANT propvar, PWSTR *prgsz, ULONG crgsz);
+
+void WINAPI ClearPropVariantArray(PROPVARIANT *rgPropVar, UINT cVars);
+void WINAPI ClearVariantArray(VARIANT *rgVar, UINT cVars);
+PSSTDAPI_(ULONG) VariantGetElementCount(REFVARIANT var);
+
+PSSTDAPI PSFormatForDisplay(REFPROPERTYKEY key, REFPROPVARIANT propvar,
+                            PROPDESC_FORMAT_FLAGS flags, WCHAR *pszDisplay, DWORD cchDisplay);
+PSSTDAPI PSFormatForDisplayAlloc(REFPROPERTYKEY key, REFPROPVARIANT propvar,
+                                 PROPDESC_FORMAT_FLAGS flags, WCHAR **ppszDisplay);
+
+PSSTDAPI InitVariantFromStrRet(STRRET *pstrret, PCUITEMID_CHILD pidl, VARIANT *pvar);
+PSSTDAPI VariantToStrRet(REFVARIANT pvar, STRRET *pstrret);
+PSSTDAPI VariantToStringAlloc(REFVARIANT pvar, WCHAR **ppszBuf);
+PSSTDAPI VariantToFileTime(REFVARIANT pvar, PSTIME_FLAGS stfOut, FILETIME *pftOut);
+
+PSSTDAPI VariantToBoolean(REFVARIANT pvar, BOOL *pfRet);
+PSSTDAPI VariantToDouble(REFVARIANT pvar, double *pdblRet);
+PSSTDAPI VariantToInt16(REFVARIANT pvar, SHORT *piRet);
+PSSTDAPI VariantToInt32(REFVARIANT pvar, LONG *plRet);
+PSSTDAPI VariantToInt64(REFVARIANT pvar, LONGLONG *pllRet);
+PSSTDAPI VariantToUInt16(REFVARIANT pvar, USHORT *puiRet);
+PSSTDAPI VariantToUInt32(REFVARIANT pvar, ULONG *pulRet);
+PSSTDAPI VariantToUInt64(REFVARIANT pvar, ULONGLONG *pullRet);
+
+PSSTDAPI_(BOOL)      VariantToBooleanWithDefault(REFVARIANT pvar, BOOL fDefault);
+PSSTDAPI_(DOUBLE)    VariantToDoubleWithDefault(REFVARIANT pvar, DOUBLE dblDefault);
+PSSTDAPI_(SHORT)     VariantToInt16WithDefault(REFVARIANT pvar, SHORT iDefault);
+PSSTDAPI_(LONG)      VariantToInt32WithDefault(REFVARIANT pvar, LONG lDefault);
+PSSTDAPI_(LONGLONG)  VariantToInt64WithDefault(REFVARIANT pvar, LONGLONG llDefault);
+PSSTDAPI_(USHORT)    VariantToUInt16WithDefault(REFVARIANT pvar, USHORT uiDefault);
+PSSTDAPI_(ULONG)     VariantToUInt32WithDefault(REFVARIANT pvar, ULONG ulDefault);
+PSSTDAPI_(ULONGLONG) VariantToUInt64WithDefault(REFVARIANT pvar, ULONGLONG ullDefault);
+
 #ifdef __cplusplus
 
 HRESULT InitPropVariantFromBoolean(BOOL fVal, PROPVARIANT *ppropvar);
@@ -212,6 +285,9 @@ inline BOOL IsPropVariantString(REFPROPVARIANT propvar)
 
 #endif /* NO_PROPVAR_INLINES */
 #endif /* __cplusplus */
+
+PSSTDAPI InitPropVariantFromStrRet(STRRET *pstrret, PCUITEMID_CHILD pidl, PROPVARIANT *ppropvar);
+PSSTDAPI PropVariantToStrRet(REFPROPVARIANT propvarIn, STRRET *pstrret);
 
 PSSTDAPI StgSerializePropVariant(const PROPVARIANT *ppropvar, SERIALIZEDPROPERTYVALUE **ppprop, ULONG *pcb);
 PSSTDAPI StgDeserializePropVariant(const SERIALIZEDPROPERTYVALUE *pprop, ULONG cbmax, PROPVARIANT *ppropvar);

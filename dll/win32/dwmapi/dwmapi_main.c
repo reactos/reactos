@@ -88,9 +88,14 @@ HRESULT WINAPI DwmExtendFrameIntoClientArea(HWND hwnd, const MARGINS* margins)
  */
 HRESULT WINAPI DwmGetColorizationColor(DWORD *colorization, BOOL *opaque_blend)
 {
-    FIXME("(%p, %p) stub\n", colorization, opaque_blend);
+    TRACE("(%p, %p)\n", colorization, opaque_blend);
 
-    return E_NOTIMPL;
+    if (colorization)
+        *colorization = 0x6B74B8FC; /* default Vista-style blue */
+    if (opaque_blend)
+        *opaque_blend = FALSE;
+
+    return S_OK;
 }
 
 /**********************************************************************
@@ -206,9 +211,37 @@ BOOL WINAPI DwmDefWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, 
  */
 HRESULT WINAPI DwmGetWindowAttribute(HWND hwnd, DWORD attribute, PVOID pv_attribute, DWORD size)
 {
-    FIXME("(%p %ld %p %ld) stub\n", hwnd, attribute, pv_attribute, size);
+    TRACE("(%p %ld %p %ld)\n", hwnd, attribute, pv_attribute, size);
 
-    return E_NOTIMPL;
+    if (!pv_attribute)
+        return E_INVALIDARG;
+
+    switch (attribute)
+    {
+    case DWMWA_EXTENDED_FRAME_BOUNDS:
+        /* No DWM composition: extended frame bounds = window rect */
+        if (size < sizeof(RECT))
+            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        if (!GetWindowRect(hwnd, (RECT *)pv_attribute))
+            return HRESULT_FROM_WIN32(GetLastError());
+        return S_OK;
+
+    case DWMWA_NCRENDERING_ENABLED:
+        if (size < sizeof(BOOL))
+            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        *(BOOL *)pv_attribute = FALSE;
+        return S_OK;
+
+    case DWMWA_CLOAKED:
+        if (size < sizeof(DWORD))
+            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        *(DWORD *)pv_attribute = 0;
+        return S_OK;
+
+    default:
+        FIXME("unsupported attribute %ld\n", attribute);
+        return E_NOTIMPL;
+    }
 }
 
 /**********************************************************************

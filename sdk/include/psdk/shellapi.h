@@ -866,6 +866,20 @@ typedef enum SHSTOCKICONID
   SIID_MAX_ICONS = 175
 } SHSTOCKICONID;
 
+HRESULT WINAPI SHGetStockIconInfo(SHSTOCKICONID siid, UINT uFlags, SHSTOCKICONINFO *psii);
+
+typedef enum QUERY_USER_NOTIFICATION_STATE {
+    QUNS_NOT_PRESENT             = 1,
+    QUNS_BUSY                    = 2,
+    QUNS_RUNNING_D3D_FULL_SCREEN = 3,
+    QUNS_PRESENTATION_MODE       = 4,
+    QUNS_ACCEPTS_NOTIFICATIONS   = 5,
+    QUNS_QUIET_TIME              = 6,
+    QUNS_APP                     = 7
+} QUERY_USER_NOTIFICATION_STATE;
+
+HRESULT WINAPI SHQueryUserNotificationState(QUERY_USER_NOTIFICATION_STATE *pquns);
+
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if !defined(_WIN64)

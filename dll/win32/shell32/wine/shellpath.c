@@ -3232,11 +3232,11 @@ HRESULT SHGetFolderLocationHelper(HWND hwnd, int nFolder, REFCLSID clsid, LPITEM
     HRESULT hr;
     IShellFolder *psf;
     LPITEMIDLIST parent, child;
-    EXTERN_C HRESULT SHBindToObject(IShellFolder *psf, LPCITEMIDLIST pidl, REFIID riid, void **ppvObj);
+    EXTERN_C HRESULT WINAPI SHBindToObject(IShellFolder *psf, LPCITEMIDLIST pidl, IBindCtx *pbc, REFIID riid, void **ppvObj);
     *ppidl = NULL;
     if (FAILED(hr = SHGetFolderLocation(hwnd, nFolder, NULL, 0, &parent)))
         return hr;
-    if (SUCCEEDED(hr = SHBindToObject(NULL, parent, &IID_IShellFolder, (void**)&psf)))
+    if (SUCCEEDED(hr = SHBindToObject(NULL, parent, NULL, &IID_IShellFolder, (void**)&psf)))
     {
         WCHAR clsidstr[2 + 38 + 1];
         clsidstr[0] = clsidstr[1] = L':';
@@ -3429,6 +3429,65 @@ HRESULT WINAPI SHGetKnownFolderIDList(REFKNOWNFOLDERID rfid, DWORD dwFlags,
         ncsidl |= CSIDL_FLAG_NO_ALIAS;
 
     return SHGetFolderLocation(NULL, ncsidl, hToken, 0, ppidl);
+}
+
+/*************************************************************************
+ * SHSetKnownFolderPath    [SHELL32.@]
+ */
+HRESULT WINAPI SHSetKnownFolderPath(REFKNOWNFOLDERID rfid, DWORD dwFlags,
+                                     HANDLE hToken, PCWSTR pszPath)
+{
+    UINT i;
+    int ncsidl = -1;
+    HKEY hKey;
+    LONG lRet;
+
+    TRACE("(%s, 0x%08x, %p, %s)\n", debugstr_guid(rfid), dwFlags, hToken, debugstr_w(pszPath));
+
+    if (!pszPath)
+        return E_INVALIDARG;
+
+    for (i = 0; i < ARRAY_SIZE(CSIDL_Data); i++)
+    {
+        if (CSIDL_Data[i].id && IsEqualGUID(CSIDL_Data[i].id, rfid))
+        {
+            ncsidl = (int)i;
+            break;
+        }
+    }
+    if (ncsidl < 0)
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    if (CSIDL_Data[ncsidl].type != CSIDL_Type_User &&
+        CSIDL_Data[ncsidl].type != CSIDL_Type_InMyDocuments)
+        return E_INVALIDARG;
+
+    if (!CSIDL_Data[ncsidl].szValueName)
+        return E_INVALIDARG;
+
+    lRet = RegCreateKeyW(HKEY_CURRENT_USER, szSHUserFolders, &hKey);
+    if (lRet != ERROR_SUCCESS)
+        return HRESULT_FROM_WIN32(lRet);
+
+    lRet = RegSetValueExW(hKey, CSIDL_Data[ncsidl].szValueName, 0, REG_SZ,
+                          (const BYTE *)pszPath,
+                          (lstrlenW(pszPath) + 1) * sizeof(WCHAR));
+    RegCloseKey(hKey);
+
+    if (lRet != ERROR_SUCCESS)
+        return HRESULT_FROM_WIN32(lRet);
+
+    /* Also update the resolved Shell Folders key */
+    lRet = RegCreateKeyW(HKEY_CURRENT_USER, szSHFolders, &hKey);
+    if (lRet == ERROR_SUCCESS)
+    {
+        RegSetValueExW(hKey, CSIDL_Data[ncsidl].szValueName, 0, REG_SZ,
+                       (const BYTE *)pszPath,
+                       (lstrlenW(pszPath) + 1) * sizeof(WCHAR));
+        RegCloseKey(hKey);
+    }
+
+    return S_OK;
 }
 
 /*************************************************************************

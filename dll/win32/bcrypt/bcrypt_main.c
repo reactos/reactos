@@ -40,6 +40,7 @@
 #include <mbedtls/aes.h>
 #include <mbedtls/des.h>
 #include <mbedtls/gcm.h>
+#include <mbedtls/ccm.h>
 #include <mbedtls/rsa.h>
 #include <mbedtls/bignum.h>
 #include <mbedtls/ecdh.h>
@@ -141,6 +142,7 @@ MAKE_FUNCPTR(mbedtls_md_setup);
 MAKE_FUNCPTR(mbedtls_md_update);
 MAKE_FUNCPTR(mbedtls_md_hmac_starts);
 MAKE_FUNCPTR(mbedtls_md_hmac_finish);
+MAKE_FUNCPTR(mbedtls_md_hmac_reset);
 MAKE_FUNCPTR(mbedtls_md_free);
 MAKE_FUNCPTR(mbedtls_md5_init);
 MAKE_FUNCPTR(mbedtls_md5_starts);
@@ -169,6 +171,7 @@ MAKE_FUNCPTR(mbedtls_sha512_free);
 #define mbedtls_md_update           pmbedtls_md_update
 #define mbedtls_md_hmac_starts      pmbedtls_md_hmac_starts
 #define mbedtls_md_hmac_finish      pmbedtls_md_hmac_finish
+#define mbedtls_md_hmac_reset       pmbedtls_md_hmac_reset
 #define mbedtls_md_free             pmbedtls_md_free
 #define mbedtls_md5_init            pmbedtls_md5_init
 #define mbedtls_md5_starts          pmbedtls_md5_starts
@@ -211,6 +214,7 @@ static BOOL mbedtls_initialize(void)
     LOAD_FUNCPTR(mbedtls_md_update)
     LOAD_FUNCPTR(mbedtls_md_hmac_starts)
     LOAD_FUNCPTR(mbedtls_md_hmac_finish)
+    LOAD_FUNCPTR(mbedtls_md_hmac_reset)
     LOAD_FUNCPTR(mbedtls_md_free);
     LOAD_FUNCPTR(mbedtls_md5_init)
     LOAD_FUNCPTR(mbedtls_md5_starts)
@@ -275,6 +279,7 @@ enum alg_id
     ALG_ID_MD5,
     ALG_ID_RNG,
     ALG_ID_SHA1,
+    ALG_ID_SHA224,
     ALG_ID_SHA256,
     ALG_ID_SHA384,
     ALG_ID_SHA512,
@@ -294,6 +299,7 @@ static const struct {
     /* ALG_ID_MD5        */ { 16, BCRYPT_MD5_ALGORITHM },
     /* ALG_ID_RNG        */ {  0, BCRYPT_RNG_ALGORITHM },
     /* ALG_ID_SHA1       */ { 20, BCRYPT_SHA1_ALGORITHM },
+    /* ALG_ID_SHA224     */ { 28, BCRYPT_SHA224_ALGORITHM },
     /* ALG_ID_SHA256     */ { 32, BCRYPT_SHA256_ALGORITHM },
     /* ALG_ID_SHA384     */ { 48, BCRYPT_SHA384_ALGORITHM },
     /* ALG_ID_SHA512     */ { 64, BCRYPT_SHA512_ALGORITHM },
@@ -373,6 +379,7 @@ NTSTATUS WINAPI BCryptOpenAlgorithmProvider( BCRYPT_ALG_HANDLE *handle, LPCWSTR 
     if (!strcmpW( id, BCRYPT_SHA1_ALGORITHM )) alg_id = ALG_ID_SHA1;
     else if (!strcmpW( id, BCRYPT_MD5_ALGORITHM )) alg_id = ALG_ID_MD5;
     else if (!strcmpW( id, BCRYPT_RNG_ALGORITHM )) alg_id = ALG_ID_RNG;
+    else if (!strcmpW( id, BCRYPT_SHA224_ALGORITHM )) alg_id = ALG_ID_SHA224;
     else if (!strcmpW( id, BCRYPT_SHA256_ALGORITHM )) alg_id = ALG_ID_SHA256;
     else if (!strcmpW( id, BCRYPT_SHA384_ALGORITHM )) alg_id = ALG_ID_SHA384;
     else if (!strcmpW( id, BCRYPT_SHA512_ALGORITHM )) alg_id = ALG_ID_SHA512;
@@ -694,7 +701,10 @@ struct hash
 {
     struct object hdr;
     BOOL hmac;
+    BOOL reusable;
     enum alg_id   alg_id;
+    UCHAR *hmac_key;
+    ULONG  hmac_key_len;
     union
     {
         mbedtls_md5_context    md5_ctx;
@@ -720,6 +730,11 @@ static NTSTATUS hash_init( struct hash *hash )
     case ALG_ID_SHA1:
         mbedtls_sha1_init(&hash->u.sha1_ctx);
         mbedtls_sha1_starts(&hash->u.sha1_ctx);
+        break;
+
+    case ALG_ID_SHA224:
+        mbedtls_sha256_init(&hash->u.sha256_ctx);
+        mbedtls_sha256_starts(&hash->u.sha256_ctx, TRUE);
         break;
 
     case ALG_ID_SHA256:
@@ -760,6 +775,10 @@ static NTSTATUS hmac_init( struct hash *hash, UCHAR *key, ULONG key_size )
         md_type = MBEDTLS_MD_SHA1;
         break;
 
+    case ALG_ID_SHA224:
+        md_type = MBEDTLS_MD_SHA224;
+        break;
+
     case ALG_ID_SHA256:
         md_type = MBEDTLS_MD_SHA256;
         break;
@@ -790,6 +809,18 @@ static NTSTATUS hmac_init( struct hash *hash, UCHAR *key, ULONG key_size )
 
     mbedtls_md_hmac_starts(&hash->u.hmac_ctx, key, key_size);
 
+    if (hash->reusable && key_size > 0)
+    {
+        hash->hmac_key = HeapAlloc(GetProcessHeap(), 0, key_size);
+        if (!hash->hmac_key)
+        {
+            mbedtls_md_free(&hash->u.hmac_ctx);
+            return STATUS_NO_MEMORY;
+        }
+        memcpy(hash->hmac_key, key, key_size);
+        hash->hmac_key_len = key_size;
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -808,6 +839,7 @@ static NTSTATUS hash_update( struct hash *hash, UCHAR *input, ULONG size )
         mbedtls_sha1_update(&hash->u.sha1_ctx, input, size);
         break;
 
+    case ALG_ID_SHA224:
     case ALG_ID_SHA256:
         mbedtls_sha256_update(&hash->u.sha256_ctx, input, size);
         break;
@@ -844,23 +876,33 @@ static NTSTATUS hash_finish( struct hash *hash, UCHAR *output, ULONG size )
     {
     case ALG_ID_MD5:
         mbedtls_md5_finish(&hash->u.md5_ctx, output);
-        mbedtls_md5_free(&hash->u.md5_ctx);
+        if (hash->reusable) mbedtls_md5_starts(&hash->u.md5_ctx);
+        else                mbedtls_md5_free(&hash->u.md5_ctx);
         break;
 
     case ALG_ID_SHA1:
         mbedtls_sha1_finish(&hash->u.sha1_ctx, output);
-        mbedtls_sha1_free(&hash->u.sha1_ctx);
+        if (hash->reusable) mbedtls_sha1_starts(&hash->u.sha1_ctx);
+        else                mbedtls_sha1_free(&hash->u.sha1_ctx);
+        break;
+
+    case ALG_ID_SHA224:
+        mbedtls_sha256_finish(&hash->u.sha256_ctx, output);
+        if (hash->reusable) mbedtls_sha256_starts(&hash->u.sha256_ctx, TRUE);
+        else                mbedtls_sha256_free(&hash->u.sha256_ctx);
         break;
 
     case ALG_ID_SHA256:
         mbedtls_sha256_finish(&hash->u.sha256_ctx, output);
-        mbedtls_sha256_free(&hash->u.sha256_ctx);
+        if (hash->reusable) mbedtls_sha256_starts(&hash->u.sha256_ctx, FALSE);
+        else                mbedtls_sha256_free(&hash->u.sha256_ctx);
         break;
 
     case ALG_ID_SHA384:
     case ALG_ID_SHA512:
         mbedtls_sha512_finish(&hash->u.sha512_ctx, output);
-        mbedtls_sha512_free(&hash->u.sha512_ctx);
+        if (hash->reusable) mbedtls_sha512_starts(&hash->u.sha512_ctx, hash->alg_id == ALG_ID_SHA384);
+        else                mbedtls_sha512_free(&hash->u.sha512_ctx);
         break;
 
     default:
@@ -877,9 +919,38 @@ static NTSTATUS hmac_finish( struct hash *hash, UCHAR *output, ULONG size )
     if (!libmbedtls_handle) return STATUS_INTERNAL_ERROR;
 #endif
     mbedtls_md_hmac_finish(&hash->u.hmac_ctx, output);
-    mbedtls_md_free(&hash->u.hmac_ctx);
+    if (hash->reusable)
+        mbedtls_md_hmac_reset(&hash->u.hmac_ctx);
+    else
+        mbedtls_md_free(&hash->u.hmac_ctx);
 
     return STATUS_SUCCESS;
+}
+
+static void hash_free_contexts( struct hash *hash )
+{
+    if (hash->hmac)
+    {
+        mbedtls_md_free(&hash->u.hmac_ctx);
+    }
+    else
+    {
+        switch (hash->alg_id)
+        {
+        case ALG_ID_MD5:    mbedtls_md5_free(&hash->u.md5_ctx);       break;
+        case ALG_ID_SHA1:   mbedtls_sha1_free(&hash->u.sha1_ctx);     break;
+        case ALG_ID_SHA224:
+        case ALG_ID_SHA256: mbedtls_sha256_free(&hash->u.sha256_ctx); break;
+        case ALG_ID_SHA384:
+        case ALG_ID_SHA512: mbedtls_sha512_free(&hash->u.sha512_ctx); break;
+        default: break;
+        }
+    }
+    if (hash->hmac_key)
+    {
+        HeapFree(GetProcessHeap(), 0, hash->hmac_key);
+        hash->hmac_key = NULL;
+    }
 }
 
 /* ---- AES symmetric key support ---- */
@@ -898,6 +969,8 @@ struct key
     mbedtls_aes_context  aes_dec;
     mbedtls_gcm_context  gcm;
     BOOL                 gcm_key_set;
+    mbedtls_ccm_context  ccm;
+    BOOL                 ccm_key_set;
     mbedtls_des3_context des3_enc;
     mbedtls_des3_context des3_dec;
 };
@@ -950,6 +1023,8 @@ static NTSTATUS key_init( struct key *key, enum alg_id alg_id, const UCHAR *secr
         mbedtls_aes_init(&key->aes_dec);
         mbedtls_gcm_init(&key->gcm);
         key->gcm_key_set = FALSE;
+        mbedtls_ccm_init(&key->ccm);
+        key->ccm_key_set = FALSE;
 
         if (mbedtls_aes_setkey_enc(&key->aes_enc, secret, secretlen * 8) != 0 ||
             mbedtls_aes_setkey_dec(&key->aes_dec, secret, secretlen * 8) != 0)
@@ -957,6 +1032,7 @@ static NTSTATUS key_init( struct key *key, enum alg_id alg_id, const UCHAR *secr
             mbedtls_aes_free(&key->aes_enc);
             mbedtls_aes_free(&key->aes_dec);
             mbedtls_gcm_free(&key->gcm);
+            mbedtls_ccm_free(&key->ccm);
             return STATUS_INTERNAL_ERROR;
         }
         return STATUS_SUCCESS;
@@ -1005,6 +1081,7 @@ static void key_free( struct key *key )
         mbedtls_aes_free(&key->aes_enc);
         mbedtls_aes_free(&key->aes_dec);
         mbedtls_gcm_free(&key->gcm);
+        mbedtls_ccm_free(&key->ccm);
     }
     else if (key->alg_id == ALG_ID_3DES)
     {
@@ -1079,6 +1156,15 @@ static NTSTATUS get_alg_property( enum alg_id id, const WCHAR *prop, UCHAR *buf,
             break;
         }
         FIXME( "unsupported sha1 algorithm property %s\n", debugstr_w(prop) );
+        return STATUS_NOT_IMPLEMENTED;
+
+    case ALG_ID_SHA224:
+        if (!strcmpW( prop, BCRYPT_OBJECT_LENGTH ))
+        {
+            value = OBJECT_LENGTH_SHA256; /* SHA-224 uses same context as SHA-256 */
+            break;
+        }
+        FIXME( "unsupported sha224 algorithm property %s\n", debugstr_w(prop) );
         return STATUS_NOT_IMPLEMENTED;
 
     case ALG_ID_SHA256:
@@ -1319,9 +1405,10 @@ NTSTATUS WINAPI BCryptCreateHash( BCRYPT_ALG_HANDLE algorithm, BCRYPT_HASH_HANDL
     struct hash *hash;
     NTSTATUS status;
 
-    TRACE( "%p, %p, %p, %u, %p, %u, %08x - stub\n", algorithm, handle, object, objectlen,
+    TRACE( "%p, %p, %p, %u, %p, %u, %08x\n", algorithm, handle, object, objectlen,
            secret, secretlen, flags );
-    if (flags)
+
+    if (flags & ~BCRYPT_HASH_REUSABLE_FLAG)
     {
         FIXME( "unimplemented flags %08x\n", flags );
         return STATUS_NOT_IMPLEMENTED;
@@ -1330,10 +1417,13 @@ NTSTATUS WINAPI BCryptCreateHash( BCRYPT_ALG_HANDLE algorithm, BCRYPT_HASH_HANDL
     if (!alg || alg->hdr.magic != MAGIC_ALG) return STATUS_INVALID_HANDLE;
     if (object) FIXME( "ignoring object buffer\n" );
 
-    if (!(hash = HeapAlloc( GetProcessHeap(), 0, sizeof(*hash) ))) return STATUS_NO_MEMORY;
+    if (!(hash = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*hash) ))) return STATUS_NO_MEMORY;
     hash->hdr.magic = MAGIC_HASH;
     hash->alg_id    = alg->id;
     hash->hmac      = alg->hmac;
+#ifdef SONAME_LIBMBEDTLS
+    hash->reusable  = (flags & BCRYPT_HASH_REUSABLE_FLAG) != 0;
+#endif
 
     if (hash->hmac)
     {
@@ -1361,6 +1451,10 @@ NTSTATUS WINAPI BCryptDestroyHash( BCRYPT_HASH_HANDLE handle )
     TRACE( "%p\n", handle );
 
     if (!hash || hash->hdr.magic != MAGIC_HASH) return STATUS_INVALID_HANDLE;
+    hash->hdr.magic = 0;
+#ifdef SONAME_LIBMBEDTLS
+    hash_free_contexts( hash );
+#endif
     HeapFree( GetProcessHeap(), 0, hash );
     return STATUS_SUCCESS;
 }
@@ -1444,6 +1538,7 @@ static const struct
 {
     { BCRYPT_HASH_OPERATION,      BCRYPT_MD5_ALGORITHM    },
     { BCRYPT_HASH_OPERATION,      BCRYPT_SHA1_ALGORITHM   },
+    { BCRYPT_HASH_OPERATION,      BCRYPT_SHA224_ALGORITHM },
     { BCRYPT_HASH_OPERATION,      BCRYPT_SHA256_ALGORITHM },
     { BCRYPT_HASH_OPERATION,      BCRYPT_SHA384_ALGORITHM },
     { BCRYPT_HASH_OPERATION,      BCRYPT_SHA512_ALGORITHM },
@@ -2163,6 +2258,22 @@ NTSTATUS WINAPI BCryptDuplicateHash( BCRYPT_HASH_HANDLE handle, BCRYPT_HASH_HAND
         return STATUS_NO_MEMORY;
 
     memcpy( hash_copy, hash_orig, sizeof(*hash_copy) );
+
+#ifdef SONAME_LIBMBEDTLS
+    /* Deep-copy the HMAC key buffer if present */
+    hash_copy->hmac_key = NULL;
+    if (hash_orig->hmac_key && hash_orig->hmac_key_len > 0)
+    {
+        hash_copy->hmac_key = HeapAlloc(GetProcessHeap(), 0, hash_orig->hmac_key_len);
+        if (!hash_copy->hmac_key)
+        {
+            HeapFree(GetProcessHeap(), 0, hash_copy);
+            return STATUS_NO_MEMORY;
+        }
+        memcpy(hash_copy->hmac_key, hash_orig->hmac_key, hash_orig->hmac_key_len);
+    }
+#endif
+
     *handle_copy = hash_copy;
     return STATUS_SUCCESS;
 }
@@ -2190,15 +2301,25 @@ NTSTATUS WINAPI BCryptSetProperty( BCRYPT_HANDLE handle, LPCWSTR prop, UCHAR *va
             if (!value || size < sizeof(WCHAR)) return STATUS_INVALID_PARAMETER;
             lstrcpynW( key->chaining_mode, (const WCHAR *)value,
                        sizeof(key->chaining_mode) / sizeof(WCHAR) );
-            /* Lazily initialize GCM key when switching to GCM mode (AES only) */
-            if (key->alg_id == ALG_ID_AES &&
-                !strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_GCM ) && !key->gcm_key_set)
+            /* Lazily initialize GCM/CCM key when switching mode (AES only) */
+            if (key->alg_id == ALG_ID_AES)
             {
-                mbedtls_gcm_free(&key->gcm);
-                mbedtls_gcm_init(&key->gcm);
-                if (mbedtls_gcm_setkey(&key->gcm, MBEDTLS_CIPHER_ID_AES,
-                                        key->key_data, key->key_len * 8) == 0)
-                    key->gcm_key_set = TRUE;
+                if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_GCM ) && !key->gcm_key_set)
+                {
+                    mbedtls_gcm_free(&key->gcm);
+                    mbedtls_gcm_init(&key->gcm);
+                    if (mbedtls_gcm_setkey(&key->gcm, MBEDTLS_CIPHER_ID_AES,
+                                            key->key_data, key->key_len * 8) == 0)
+                        key->gcm_key_set = TRUE;
+                }
+                else if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_CCM ) && !key->ccm_key_set)
+                {
+                    mbedtls_ccm_free(&key->ccm);
+                    mbedtls_ccm_init(&key->ccm);
+                    if (mbedtls_ccm_setkey(&key->ccm, MBEDTLS_CIPHER_ID_AES,
+                                            key->key_data, key->key_len * 8) == 0)
+                        key->ccm_key_set = TRUE;
+                }
             }
             return STATUS_SUCCESS;
         }
@@ -2445,6 +2566,22 @@ NTSTATUS WINAPI BCryptEncrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inp
                     }
                 }
             }
+            else if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_CFB ))
+            {
+                size_t iv_offset = 0;
+                if (key->alg_id != ALG_ID_AES) return STATUS_NOT_IMPLEMENTED;
+                if (!iv || ivlen < AES_BLOCK_SIZE) return STATUS_INVALID_PARAMETER;
+                if (retlen) *retlen = inputlen;
+                if (!output) return STATUS_SUCCESS;
+                if (outputlen < inputlen) return STATUS_BUFFER_TOO_SMALL;
+                /* CFB128: uses encryption key context for both directions */
+                mbedtls_aes_crypt_cfb128(&key->aes_enc, MBEDTLS_AES_ENCRYPT, inputlen,
+                                          &iv_offset, iv_buf, input, output);
+                /* update IV with last 16 bytes of ciphertext */
+                if (inputlen >= AES_BLOCK_SIZE)
+                    memcpy(iv, output + inputlen - AES_BLOCK_SIZE, AES_BLOCK_SIZE);
+                return STATUS_SUCCESS;
+            }
             else if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_GCM ))
             {
                 BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *auth = (BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *)padding;
@@ -2470,6 +2607,35 @@ NTSTATUS WINAPI BCryptEncrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inp
                                                auth->pbAuthData, auth->cbAuthData,
                                                input, output,
                                                auth->cbTag, auth->pbTag) != 0)
+                    return STATUS_INTERNAL_ERROR;
+
+                return STATUS_SUCCESS;
+            }
+            else if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_CCM ))
+            {
+                BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *auth = (BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *)padding;
+                if (!auth) return STATUS_INVALID_PARAMETER;
+                if (key->alg_id != ALG_ID_AES) return STATUS_NOT_IMPLEMENTED;
+
+                if (!key->ccm_key_set)
+                {
+                    mbedtls_ccm_free(&key->ccm);
+                    mbedtls_ccm_init(&key->ccm);
+                    if (mbedtls_ccm_setkey(&key->ccm, MBEDTLS_CIPHER_ID_AES,
+                                            key->key_data, key->key_len * 8) != 0)
+                        return STATUS_INTERNAL_ERROR;
+                    key->ccm_key_set = TRUE;
+                }
+
+                if (retlen) *retlen = inputlen;
+                if (!output) return STATUS_SUCCESS;
+                if (outputlen < inputlen) return STATUS_BUFFER_TOO_SMALL;
+
+                if (mbedtls_ccm_encrypt_and_tag(&key->ccm, inputlen,
+                                                 auth->pbNonce, auth->cbNonce,
+                                                 auth->pbAuthData, auth->cbAuthData,
+                                                 input, output,
+                                                 auth->pbTag, auth->cbTag) != 0)
                     return STATUS_INTERNAL_ERROR;
 
                 return STATUS_SUCCESS;
@@ -2626,6 +2792,25 @@ NTSTATUS WINAPI BCryptDecrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inp
                         mbedtls_des3_crypt_ecb( &key->des3_dec, input + i, plain + i );
                 }
             }
+            else if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_CFB ))
+            {
+                size_t iv_offset = 0;
+                if (key->alg_id != ALG_ID_AES) { if (use_padding) HeapFree(GetProcessHeap(), 0, plain); return STATUS_NOT_IMPLEMENTED; }
+                if (!iv || ivlen < AES_BLOCK_SIZE) { if (use_padding) HeapFree(GetProcessHeap(), 0, plain); return STATUS_INVALID_PARAMETER; }
+                if (retlen) *retlen = inputlen;
+                if (!output) { if (use_padding) HeapFree(GetProcessHeap(), 0, plain); return STATUS_SUCCESS; }
+                if (outputlen < inputlen) { if (use_padding) HeapFree(GetProcessHeap(), 0, plain); return STATUS_BUFFER_TOO_SMALL; }
+                /* CFB128 decryption: save last ciphertext block for IV update before decrypting */
+                UCHAR next_iv[AES_BLOCK_SIZE];
+                if (inputlen >= AES_BLOCK_SIZE)
+                    memcpy(next_iv, input + inputlen - AES_BLOCK_SIZE, AES_BLOCK_SIZE);
+                mbedtls_aes_crypt_cfb128(&key->aes_enc, MBEDTLS_AES_DECRYPT, inputlen,
+                                          &iv_offset, iv_buf, input, output);
+                if (inputlen >= AES_BLOCK_SIZE)
+                    memcpy(iv, next_iv, AES_BLOCK_SIZE);
+                if (use_padding) HeapFree(GetProcessHeap(), 0, plain);
+                return STATUS_SUCCESS;
+            }
             else if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_GCM ))
             {
                 BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *auth = (BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *)padding;
@@ -2654,6 +2839,41 @@ NTSTATUS WINAPI BCryptDecrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inp
                                               auth->pbAuthData, auth->cbAuthData,
                                               auth->pbTag, auth->cbTag,
                                               input, output) != 0)
+                {
+                    if (use_padding) HeapFree( GetProcessHeap(), 0, plain );
+                    return STATUS_UNSUCCESSFUL;
+                }
+                if (use_padding) HeapFree( GetProcessHeap(), 0, plain );
+                return STATUS_SUCCESS;
+            }
+            else if (!strcmpW( key->chaining_mode, BCRYPT_CHAIN_MODE_CCM ))
+            {
+                BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *auth = (BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO *)padding;
+                if (!auth) { if (use_padding) HeapFree( GetProcessHeap(), 0, plain ); return STATUS_INVALID_PARAMETER; }
+                if (key->alg_id != ALG_ID_AES) { if (use_padding) HeapFree( GetProcessHeap(), 0, plain ); return STATUS_NOT_IMPLEMENTED; }
+
+                if (!key->ccm_key_set)
+                {
+                    mbedtls_ccm_free(&key->ccm);
+                    mbedtls_ccm_init(&key->ccm);
+                    if (mbedtls_ccm_setkey(&key->ccm, MBEDTLS_CIPHER_ID_AES,
+                                            key->key_data, key->key_len * 8) != 0)
+                    {
+                        if (use_padding) HeapFree( GetProcessHeap(), 0, plain );
+                        return STATUS_INTERNAL_ERROR;
+                    }
+                    key->ccm_key_set = TRUE;
+                }
+
+                if (retlen) *retlen = inputlen;
+                if (!output) { if (use_padding) HeapFree( GetProcessHeap(), 0, plain ); return STATUS_SUCCESS; }
+                if (outputlen < inputlen) { if (use_padding) HeapFree( GetProcessHeap(), 0, plain ); return STATUS_BUFFER_TOO_SMALL; }
+
+                if (mbedtls_ccm_auth_decrypt(&key->ccm, inputlen,
+                                              auth->pbNonce, auth->cbNonce,
+                                              auth->pbAuthData, auth->cbAuthData,
+                                              input, output,
+                                              auth->pbTag, auth->cbTag) != 0)
                 {
                     if (use_padding) HeapFree( GetProcessHeap(), 0, plain );
                     return STATUS_UNSUCCESSFUL;
@@ -2996,6 +3216,7 @@ NTSTATUS WINAPI BCryptDeriveKey( BCRYPT_SECRET_HANDLE secret_handle, LPCWSTR kdf
                     {
                         const WCHAR *alg_name = (const WCHAR *)params->pBuffers[i].pvBuffer;
                         if      (!strcmpW( alg_name, BCRYPT_SHA1_ALGORITHM   )) md_type = MBEDTLS_MD_SHA1;
+                        else if (!strcmpW( alg_name, BCRYPT_SHA224_ALGORITHM )) md_type = MBEDTLS_MD_SHA224;
                         else if (!strcmpW( alg_name, BCRYPT_SHA256_ALGORITHM )) md_type = MBEDTLS_MD_SHA256;
                         else if (!strcmpW( alg_name, BCRYPT_SHA384_ALGORITHM )) md_type = MBEDTLS_MD_SHA384;
                         else if (!strcmpW( alg_name, BCRYPT_SHA512_ALGORITHM )) md_type = MBEDTLS_MD_SHA512;
@@ -3045,6 +3266,7 @@ NTSTATUS WINAPI BCryptDeriveKey( BCRYPT_SECRET_HANDLE secret_handle, LPCWSTR kdf
                     {
                         const WCHAR *alg_name = (const WCHAR *)params->pBuffers[i].pvBuffer;
                         if      (!strcmpW( alg_name, BCRYPT_SHA1_ALGORITHM   )) md_type = MBEDTLS_MD_SHA1;
+                        else if (!strcmpW( alg_name, BCRYPT_SHA224_ALGORITHM )) md_type = MBEDTLS_MD_SHA224;
                         else if (!strcmpW( alg_name, BCRYPT_SHA256_ALGORITHM )) md_type = MBEDTLS_MD_SHA256;
                         else if (!strcmpW( alg_name, BCRYPT_SHA384_ALGORITHM )) md_type = MBEDTLS_MD_SHA384;
                         else if (!strcmpW( alg_name, BCRYPT_SHA512_ALGORITHM )) md_type = MBEDTLS_MD_SHA512;
@@ -3116,6 +3338,7 @@ NTSTATUS WINAPI BCryptDeriveKeyPBKDF2( BCRYPT_ALG_HANDLE algorithm, PUCHAR passw
         {
         case ALG_ID_MD5:    md_type = MBEDTLS_MD_MD5;    break;
         case ALG_ID_SHA1:   md_type = MBEDTLS_MD_SHA1;   break;
+        case ALG_ID_SHA224: md_type = MBEDTLS_MD_SHA224; break;
         case ALG_ID_SHA256: md_type = MBEDTLS_MD_SHA256; break;
         case ALG_ID_SHA384: md_type = MBEDTLS_MD_SHA384; break;
         case ALG_ID_SHA512: md_type = MBEDTLS_MD_SHA512; break;

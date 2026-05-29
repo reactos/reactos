@@ -832,6 +832,186 @@ DWORD_PTR WINAPI SHGetFileInfoA(LPCSTR path,DWORD dwFileAttributes,
 }
 
 /*************************************************************************
+ * SHGetStockIconInfo    [SHELL32.@]
+ */
+HRESULT WINAPI SHGetStockIconInfo(SHSTOCKICONID siid, UINT uFlags, SHSTOCKICONINFO *psii)
+{
+    static const INT s_iconMap[SIID_MAX_ICONS] = {
+        /* 0  SIID_DOCNOASSOC */        IDI_SHELL_DOCUMENT,
+        /* 1  SIID_DOCASSOC */          IDI_SHELL_RICH_TEXT,
+        /* 2  SIID_APPLICATION */       IDI_SHELL_EXE,
+        /* 3  SIID_FOLDER */            IDI_SHELL_FOLDER,
+        /* 4  SIID_FOLDEROPEN */        IDI_SHELL_FOLDER_OPEN,
+        /* 5  SIID_DRIVE525 */          IDI_SHELL_5_12_FLOPPY,
+        /* 6  SIID_DRIVE35 */           IDI_SHELL_3_14_FLOPPY,
+        /* 7  SIID_DRIVERREMOVE */      IDI_SHELL_REMOVEABLE,
+        /* 8  SIID_DRIVERFIXED */       IDI_SHELL_DRIVE,
+        /* 9  SIID_DRIVERNET */         IDI_SHELL_NETDRIVE,
+        /* 10 SIID_DRIVERNETDISABLE */  IDI_SHELL_NETDRIVE_OFF,
+        /* 11 SIID_DRIVERCD */          IDI_SHELL_CDROM,
+        /* 12 SIID_DRIVERRAM */         IDI_SHELL_RAMDISK,
+        /* 13 SIID_WORLD */             IDI_SHELL_ENTIRE_NETWORK,
+        /* 14 */                        0,
+        /* 15 SIID_SERVER */            IDI_SHELL_MY_COMPUTER,
+        /* 16 SIID_PRINTER */           IDI_SHELL_PRINTER,
+        /* 17 SIID_MYNETWORK */         IDI_SHELL_MY_NETWORK_PLACES,
+        /* 18 */ 0, /* 19 */ 0, /* 20 */ 0, /* 21 */ 0,
+        /* 22 SIID_FIND */              IDI_SHELL_SEARCH,
+        /* 23 SIID_HELP */              IDI_SHELL_HELP,
+        /* 24 */ 0, /* 25 */ 0, /* 26 */ 0, /* 27 */ 0,
+        /* 28 SIID_SHARE */             IDI_SHELL_SHARE,
+        /* 29 SIID_LINK */              IDI_SHELL_SHORTCUT,
+        /* 30 SIID_SLOWFILE */          IDI_SHELL_FOLDER_WAIT,
+        /* 31 SIID_RECYCLER */          IDI_SHELL_EMPTY_RECYCLE_BIN,
+        /* 32 SIID_RECYCLERFULL */      IDI_SHELL_FULL_RECYCLE_BIN,
+        /* 33 */ 0, /* 34 */ 0, /* 35 */ 0, /* 36 */ 0,
+        /* 37 */ 0, /* 38 */ 0, /* 39 */ 0,
+        /* 40 SIID_MEDIACDAUDIO */      IDI_SHELL_CD_MUSIC,
+        /* 41 */ 0, /* 42 */ 0, /* 43 */ 0, /* 44 */ 0, /* 45 */ 0, /* 46 */ 0,
+        /* 47 SIID_LOCK */              IDI_SHELL_LOCKED,
+        /* 48 */                        0,
+        /* 49 SIID_AUTOLIST */          0,
+        /* 50 SIID_PRINTERNET */        IDI_SHELL_NET_PRINTER,
+        /* 51 SIID_SERVERSHARE */       IDI_SHELL_SHARED_FOLDER,
+        /* 52 SIID_PRINTERFAX */        IDI_SHELL_FAX,
+        /* 53 SIID_PRINTERFAXNET */     IDI_SHELL_NET_FAX,
+        /* 54 SIID_PRINTERFILE */       IDI_SHELL_FILE_PRINTER,
+        /* 55 SIID_STACK */             IDI_SHELL_MULTIPLE_FILES,
+        /* 56 SIID_MEDIASVCD */         IDI_SHELL_CD_ROM,
+        /* 57 SIID_STUFFEDFOLDER */     IDI_SHELL_SETTINGS_FOLDER,
+        /* 58 SIID_DRIVEUNKNOWN */      IDI_SHELL_NO_DRIVE,
+        /* 59 SIID_DRIVEDVD */          IDI_SHELL_DVD_DRIVE,
+        /* 60 SIID_MEDIADVD */          IDI_SHELL_DVD_ROM,
+        /* 61 SIID_MEDIADVDRAM */       IDI_SHELL_DVD_RAM,
+        /* 62 SIID_MEDIADVDRW */        IDI_SHELL_DVDRW_ROM,
+        /* 63 SIID_MEDIADVDR */         IDI_SHELL_DVDR_ROM,
+        /* 64 SIID_MEDIADVDROM */       IDI_SHELL_DVD_ROM1,
+        /* 65 SIID_MEDIACDAUDIOPLUS */  IDI_SHELL_CD_MUSIC2,
+        /* 66 SIID_MEDIACDRW */         IDI_SHELL_CDRW,
+        /* 67 SIID_MEDIACDR */          IDI_SHELL_CDR,
+        /* 68 SIID_MEDIACDBURN */       IDI_SHELL_CD_EDIT,
+        /* 69 SIID_MEDIABLANKCD */      IDI_SHELL_CD,
+        /* 70 SIID_MEDIACDROM */        IDI_SHELL_CD_ROM,
+        /* 71 SIID_AUDIOFILES */        IDI_SHELL_MUSIC_FILE,
+        /* 72 SIID_IMAGEFILES */        IDI_SHELL_PICTURE_FILE,
+        /* 73 SIID_VIDEOFILES */        IDI_SHELL_MOVIE_FILE,
+        /* 74 SIID_MIXEDFILES */        IDI_SHELL_MULTIMEDIA_FILE,
+        /* 75 SIID_FOLDERBACK */        IDI_SHELL_FOLDER,
+        /* 76 SIID_FOLDERFRONT */       IDI_SHELL_FOLDER_OPEN,
+        /* 77 SIID_SHIELD */            IDI_SHELL_SECURITY,
+        /* 78 SIID_WARNING */           IDI_SHELL_NO,
+        /* 79 SIID_INFO */              IDI_SHELL_IDEA,
+        /* 80 SIID_ERROR */             IDI_SHELL_NO,
+        /* 81 SIID_KEY */               IDI_SHELL_LOCKED,
+        /* 82 SIID_SOFTWARE */          IDI_SHELL_EXE,
+        /* 83 SIID_RENAME */            IDI_SHELL_RENAME,
+        /* 84 SIID_DELETE */            IDI_SHELL_DELETE_PERMANENTLY,
+        /* 85 SIID_MEDIAAUDIODVD */     IDI_SHELL_DVD_ROM,
+        /* 86 SIID_MEDIAMOVIEDVD */     IDI_SHELL_MOVIE_FILE,
+        /* 87 SIID_MEDIAENHANCEDCD */   IDI_SHELL_CD_MUSIC2,
+        /* 88 SIID_MEDIAENHANCEDDVD */  IDI_SHELL_DVD_ROM,
+        /* 89 SIID_MEDIAHDDVD */        IDI_SHELL_DVD_ROM,
+        /* 90 SIID_MEDIABLUERAY */      IDI_SHELL_DVD_ROM,
+        /* 91 SIID_MEDIAVCD */          IDI_SHELL_CD_ROM,
+        /* 92 SIID_MEDIADVDPLUSR */     IDI_SHELL_DVDR_ROM,
+        /* 93 SIID_MEDIADVDPLUSRW */    IDI_SHELL_DVDRW_ROM,
+        /* 94 SIID_DESKTOPPC */         IDI_SHELL_MY_COMPUTER,
+        /* 95 SIID_MOBILEPC */          IDI_SHELL_MY_COMPUTER,
+        /* 96 SIID_USERS */             IDI_SHELL_USERS,
+        /* 97 SIID_MEDIASMARTMEDIA */   IDI_SHELL_SMART_MEDIA,
+        /* 98 SIID_MEDIACOMPACTFLASH */ IDI_SHELL_COMPACT_FLASH,
+        /* 99 SIID_DEVICECELLPHONE */   IDI_SHELL_PHONE,
+        /* 100 SIID_DEVICECAMERA */     IDI_SHELL_CAMERA,
+        /* 101 SIID_DEVICEVIDEOCAMERA */IDI_SHELL_CAMCORDER,
+        /* 102 SIID_DEVICEAUDIOPLAYER */IDI_SHELL_MP3_PLAYER,
+        /* 103 SIID_NETWORKCONNECT */   IDI_SHELL_NETWORK_CONNECTIONS,
+        /* 104 SIID_INTERNET */         IDI_SHELL_WEB_BROWSER,
+        /* 105 SIID_ZIPFILE */          IDI_SHELL_ZIP_DRIVE,
+        /* 106 SIID_SETTINGS */         IDI_SHELL_SYSTEM_GEAR,
+        /* 107-131: not defined */
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        /* 132 SIID_DRIVEHDDVD */       IDI_SHELL_DVD_DRIVE,
+        /* 133 SIID_DRIVEBD */          IDI_SHELL_DVD_DRIVE,
+        /* 134 SIID_MEDIAHDDVDROM */    IDI_SHELL_DVD_ROM1,
+        /* 135 SIID_MEDIAHDDVDR */      IDI_SHELL_DVDR_ROM,
+        /* 136 SIID_MEDIAHDDVDRAM */    IDI_SHELL_DVD_RAM,
+        /* 137 SIID_MEDIABDROM */       IDI_SHELL_DVD_ROM1,
+        /* 138 SIID_MEDIABDR */         IDI_SHELL_DVDR_ROM,
+        /* 139 SIID_MEDIABDRE */        IDI_SHELL_DVDRW_ROM,
+        /* 140 SIID_CLUSTEREDDRIVE */   IDI_SHELL_SERVER,
+        /* 141-174: not defined */
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    };
+    INT iResId, cx, cy;
+    HMODULE hShell32;
+
+    TRACE("(%d, 0x%x, %p)\n", siid, uFlags, psii);
+
+    if (!psii || psii->cbSize != sizeof(*psii))
+        return E_INVALIDARG;
+    if ((INT)siid < 0 || siid >= SIID_MAX_ICONS)
+        return E_INVALIDARG;
+
+    iResId = s_iconMap[siid];
+    if (!iResId)
+        return E_INVALIDARG;
+
+    StringCchCopyW(psii->szPath, MAX_PATH, swShell32Name);
+    psii->iIcon = -iResId;
+    psii->iSysImageIndex = -1;
+    psii->hIcon = NULL;
+
+    if (uFlags & SHGFI_SYSICONINDEX)
+        psii->iSysImageIndex = SIC_GetIconIndex(swShell32Name, -iResId, 0);
+
+    if (uFlags & SHGFI_ICON)
+    {
+        if (uFlags & SHGFI_SMALLICON)
+        {
+            cx = GetSystemMetrics(SM_CXSMICON);
+            cy = GetSystemMetrics(SM_CYSMICON);
+        }
+        else
+        {
+            cx = GetSystemMetrics(SM_CXICON);
+            cy = GetSystemMetrics(SM_CYICON);
+        }
+        hShell32 = GetModuleHandleW(L"shell32.dll");
+        psii->hIcon = (HICON)LoadImageW(hShell32, MAKEINTRESOURCEW(iResId),
+                                        IMAGE_ICON, cx, cy, LR_DEFAULTCOLOR);
+        if (!psii->hIcon)
+            return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+/*************************************************************************
+ * SHQueryUserNotificationState    [SHELL32.@]
+ */
+HRESULT WINAPI SHQueryUserNotificationState(QUERY_USER_NOTIFICATION_STATE *pquns)
+{
+    BOOL bScreenSaver = FALSE;
+
+    TRACE("(%p)\n", pquns);
+
+    if (!pquns)
+        return E_INVALIDARG;
+
+    SystemParametersInfoW(SPI_GETSCREENSAVERRUNNING, 0, &bScreenSaver, 0);
+    if (bScreenSaver)
+    {
+        *pquns = QUNS_NOT_PRESENT;
+        return S_OK;
+    }
+
+    *pquns = QUNS_ACCEPTS_NOTIFICATIONS;
+    return S_OK;
+}
+
+/*************************************************************************
  * DuplicateIcon            [SHELL32.@]
  */
 HICON WINAPI DuplicateIcon( HINSTANCE hInstance, HICON hIcon)

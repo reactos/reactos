@@ -256,10 +256,11 @@ BOOL Shell_FailForceReturn(_In_ HRESULT hr);
 EXTERN_C INT
 Shell_ParseSpecialFolder(_In_ LPCWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ INT *pcch);
 
-EXTERN_C
-HRESULT SHBindToObject(
+EXTERN_C HRESULT WINAPI
+SHBindToObject(
     _In_opt_ IShellFolder *psf,
     _In_ LPCITEMIDLIST pidl,
+    _In_opt_ IBindCtx *pbc,
     _In_ REFIID riid,
     _Out_ void **ppvObj);
 

@@ -22,31 +22,31 @@
 421 stub PROPSYS_421
 422 stub PROPSYS_422
 
-@ stub ClearPropVariantArray
-@ stub ClearVariantArray
+@ stdcall ClearPropVariantArray(ptr long)
+@ stdcall ClearVariantArray(ptr long)
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
-@ stub InitPropVariantFromBooleanVector
+@ stdcall InitPropVariantFromBooleanVector(ptr long ptr)
 @ stdcall InitPropVariantFromBuffer(ptr long ptr)
 @ stdcall InitPropVariantFromCLSID(ptr ptr)
-@ stub InitPropVariantFromDoubleVector
-@ stub InitPropVariantFromFileTime
+@ stdcall InitPropVariantFromDoubleVector(ptr long ptr)
+@ stdcall InitPropVariantFromFileTime(ptr ptr)
 @ stub InitPropVariantFromFileTimeVector
 @ stdcall InitPropVariantFromGUIDAsString(ptr ptr)
-@ stub InitPropVariantFromInt16Vector
-@ stub InitPropVariantFromInt32Vector
-@ stub InitPropVariantFromInt64Vector
-@ stub InitPropVariantFromPropVariantVectorElem
-@ stub InitPropVariantFromResource
-@ stub InitPropVariantFromStrRet
+@ stdcall InitPropVariantFromInt16Vector(ptr long ptr)
+@ stdcall InitPropVariantFromInt32Vector(ptr long ptr)
+@ stdcall InitPropVariantFromInt64Vector(ptr long ptr)
+@ stdcall InitPropVariantFromPropVariantVectorElem(ptr long ptr)
+@ stdcall InitPropVariantFromResource(ptr long ptr)
+@ stdcall InitPropVariantFromStrRet(ptr ptr ptr)
 @ stub InitPropVariantFromStringAsVector
 @ stdcall InitPropVariantFromStringVector(ptr long ptr)
-@ stub InitPropVariantFromUInt16Vector
-@ stub InitPropVariantFromUInt32Vector
-@ stub InitPropVariantFromUInt64Vector
-@ stub InitPropVariantVectorFromPropVariant
+@ stdcall InitPropVariantFromUInt16Vector(ptr long ptr)
+@ stdcall InitPropVariantFromUInt32Vector(ptr long ptr)
+@ stdcall InitPropVariantFromUInt64Vector(ptr long ptr)
+@ stdcall InitPropVariantVectorFromPropVariant(ptr ptr)
 @ stub InitVariantFromBooleanArray
 @ stdcall InitVariantFromBuffer(ptr long ptr)
 @ stub InitVariantFromDoubleArray
@@ -57,7 +57,7 @@
 @ stub InitVariantFromInt32Array
 @ stub InitVariantFromInt64Array
 @ stub InitVariantFromResource
-@ stub InitVariantFromStrRet
+@ stdcall InitVariantFromStrRet(ptr ptr ptr)
 @ stub InitVariantFromStringArray
 @ stub InitVariantFromUInt16Array
 @ stub InitVariantFromUInt32Array
@@ -73,8 +73,8 @@
 @ stub PSCreatePropertyStoreFromPropertySetStorage
 @ stub PSCreateSimplePropertyChange
 @ stub PSEnumeratePropertyDescriptions
-@ stub PSFormatForDisplay
-@ stub PSFormatForDisplayAlloc
+@ stdcall PSFormatForDisplay(ptr ptr long ptr long)
+@ stdcall PSFormatForDisplayAlloc(ptr ptr long ptr)
 @ stub PSFormatPropertyValue
 @ stub PSGetItemPropertyHandler
 @ stub PSGetItemPropertyHandlerWithCreateObject
@@ -96,28 +96,28 @@
 @ stdcall PSUnregisterPropertySchema(wstr)
 @ stdcall PropVariantChangeType(ptr ptr long long)
 @ stdcall PropVariantCompareEx(ptr ptr long long)
-@ stub PropVariantGetBooleanElem
-@ stub PropVariantGetDoubleElem
-@ stub PropVariantGetElementCount
-@ stub PropVariantGetFileTimeElem
-@ stub PropVariantGetInt16Elem
-@ stub PropVariantGetInt32Elem
-@ stub PropVariantGetInt64Elem
-@ stub PropVariantGetStringElem
-@ stub PropVariantGetUInt16Elem
-@ stub PropVariantGetUInt32Elem
-@ stub PropVariantGetUInt64Elem
+@ stdcall PropVariantGetBooleanElem(ptr long ptr)
+@ stdcall PropVariantGetDoubleElem(ptr long ptr)
+@ stdcall PropVariantGetElementCount(ptr)
+@ stdcall PropVariantGetFileTimeElem(ptr long ptr)
+@ stdcall PropVariantGetInt16Elem(ptr long ptr)
+@ stdcall PropVariantGetInt32Elem(ptr long ptr)
+@ stdcall PropVariantGetInt64Elem(ptr long ptr)
+@ stdcall PropVariantGetStringElem(ptr long ptr)
+@ stdcall PropVariantGetUInt16Elem(ptr long ptr)
+@ stdcall PropVariantGetUInt32Elem(ptr long ptr)
+@ stdcall PropVariantGetUInt64Elem(ptr long ptr)
 @ stdcall PropVariantToBSTR(ptr ptr)
 @ stdcall PropVariantToBoolean(ptr ptr)
 @ stub PropVariantToBooleanVector
 @ stub PropVariantToBooleanVectorAlloc
-@ stub PropVariantToBooleanWithDefault
+@ stdcall PropVariantToBooleanWithDefault(ptr long)
 @ stdcall PropVariantToBuffer(ptr ptr long)
 @ stdcall PropVariantToDouble(ptr ptr)
 @ stub PropVariantToDoubleVector
 @ stub PropVariantToDoubleVectorAlloc
-@ stub PropVariantToDoubleWithDefault
-@ stub PropVariantToFileTime
+@ stdcall PropVariantToDoubleWithDefault(ptr double)
+@ stdcall PropVariantToFileTime(ptr long ptr)
 @ stub PropVariantToFileTimeVector
 @ stub PropVariantToFileTimeVectorAlloc
 @ stdcall PropVariantToGUID(ptr ptr)
@@ -128,21 +128,21 @@
 @ stdcall PropVariantToInt32(ptr ptr)
 @ stub PropVariantToInt32Vector
 @ stub PropVariantToInt32VectorAlloc
-@ stub PropVariantToInt32WithDefault
+@ stdcall PropVariantToInt32WithDefault(ptr long)
 @ stdcall PropVariantToInt64(ptr ptr)
 @ stub PropVariantToInt64Vector
 @ stub PropVariantToInt64VectorAlloc
-@ stub PropVariantToInt64WithDefault
-@ stub PropVariantToStrRet
+@ stdcall PropVariantToInt64WithDefault(ptr int64)
+@ stdcall PropVariantToStrRet(ptr ptr)
 @ stdcall PropVariantToString(ptr ptr long)
 @ stdcall PropVariantToStringAlloc(ptr ptr)
-@ stub PropVariantToStringVector
-@ stub PropVariantToStringVectorAlloc
+@ stdcall PropVariantToStringVector(ptr ptr long)
+@ stdcall PropVariantToStringVectorAlloc(ptr ptr ptr)
 @ stdcall PropVariantToStringWithDefault(ptr wstr)
 @ stdcall PropVariantToUInt16(ptr ptr)
 @ stub PropVariantToUInt16Vector
 @ stub PropVariantToUInt16VectorAlloc
-@ stub PropVariantToUInt16WithDefault
+@ stdcall PropVariantToUInt16WithDefault(ptr long)
 @ stdcall PropVariantToUInt32(ptr ptr)
 @ stub PropVariantToUInt32Vector
 @ stub PropVariantToUInt32VectorAlloc
@@ -150,14 +150,14 @@
 @ stdcall PropVariantToUInt64(ptr ptr)
 @ stub PropVariantToUInt64Vector
 @ stub PropVariantToUInt64VectorAlloc
-@ stub PropVariantToUInt64WithDefault
+@ stdcall PropVariantToUInt64WithDefault(ptr int64)
 @ stdcall PropVariantToVariant(ptr ptr)
 @ stub StgDeserializePropVariant
 @ stub StgSerializePropVariant
 @ stub VariantCompare
 @ stub VariantGetBooleanElem
 @ stub VariantGetDoubleElem
-@ stub VariantGetElementCount
+@ stdcall VariantGetElementCount(ptr)
 @ stub VariantGetInt16Elem
 @ stub VariantGetInt32Elem
 @ stub VariantGetInt64Elem
@@ -165,46 +165,46 @@
 @ stub VariantGetUInt16Elem
 @ stub VariantGetUInt32Elem
 @ stub VariantGetUInt64Elem
-@ stub VariantToBoolean
+@ stdcall VariantToBoolean(ptr ptr)
 @ stub VariantToBooleanArray
 @ stub VariantToBooleanArrayAlloc
-@ stub VariantToBooleanWithDefault
+@ stdcall VariantToBooleanWithDefault(ptr long)
 @ stub VariantToBuffer
 @ stub VariantToDosDateTime
-@ stub VariantToDouble
+@ stdcall VariantToDouble(ptr ptr)
 @ stub VariantToDoubleArray
 @ stub VariantToDoubleArrayAlloc
-@ stub VariantToDoubleWithDefault
-@ stub VariantToFileTime
+@ stdcall VariantToDoubleWithDefault(ptr double)
+@ stdcall VariantToFileTime(ptr long ptr)
 @ stdcall VariantToGUID(ptr ptr)
-@ stub VariantToInt16
+@ stdcall VariantToInt16(ptr ptr)
 @ stub VariantToInt16Array
 @ stub VariantToInt16ArrayAlloc
-@ stub VariantToInt16WithDefault
-@ stub VariantToInt32
+@ stdcall VariantToInt16WithDefault(ptr long)
+@ stdcall VariantToInt32(ptr ptr)
 @ stub VariantToInt32Array
 @ stub VariantToInt32ArrayAlloc
-@ stub VariantToInt32WithDefault
-@ stub VariantToInt64
+@ stdcall VariantToInt32WithDefault(ptr long)
+@ stdcall VariantToInt64(ptr ptr)
 @ stub VariantToInt64Array
 @ stub VariantToInt64ArrayAlloc
-@ stub VariantToInt64WithDefault
+@ stdcall VariantToInt64WithDefault(ptr int64)
 @ stdcall VariantToPropVariant(ptr ptr)
-@ stub VariantToStrRet
+@ stdcall VariantToStrRet(ptr ptr)
 @ stdcall VariantToString(ptr ptr long)
-@ stub VariantToStringAlloc
+@ stdcall VariantToStringAlloc(ptr ptr)
 @ stub VariantToStringArray
 @ stub VariantToStringArrayAlloc
 @ stdcall VariantToStringWithDefault(ptr wstr)
-@ stub VariantToUInt16
+@ stdcall VariantToUInt16(ptr ptr)
 @ stub VariantToUInt16Array
 @ stub VariantToUInt16ArrayAlloc
-@ stub VariantToUInt16WithDefault
-@ stub VariantToUInt32
+@ stdcall VariantToUInt16WithDefault(ptr long)
+@ stdcall VariantToUInt32(ptr ptr)
 @ stub VariantToUInt32Array
 @ stub VariantToUInt32ArrayAlloc
-@ stub VariantToUInt32WithDefault
-@ stub VariantToUInt64
+@ stdcall VariantToUInt32WithDefault(ptr long)
+@ stdcall VariantToUInt64(ptr ptr)
 @ stub VariantToUInt64Array
 @ stub VariantToUInt64ArrayAlloc
-@ stub VariantToUInt64WithDefault
+@ stdcall VariantToUInt64WithDefault(ptr int64)
