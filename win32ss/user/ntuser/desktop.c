@@ -1607,10 +1607,6 @@ VOID NTAPI DesktopThreadMain(VOID)
 
     UserEnterExclusive();
 
-    /* Register system classes. This thread does not belong to any desktop so the
-       classes will be allocated from the shared heap */
-    UserRegisterSystemClasses();
-
     KeSetEvent(gpDesktopThreadStartedEvent, IO_NO_INCREMENT, FALSE);
 
     while (TRUE)
@@ -2499,10 +2495,28 @@ IntCreateDesktop(
         goto Quit;
     }
 
-    /* Get the desktop window class. The thread desktop does not belong to any desktop
-     * so the classes created there (including the desktop class) are allocated in the shared heap
-     * It would cause problems if we used a class that belongs to the caller
+    /*
+     * NOTE: Windows temporarily switches here the current thread desktop
+     * to the new one being created, and the current Win32 thread's process
+     * pointer (ptiCurrent->ppi) to that of the input desktop's process (CSR).
+     * This is to ensure that:
+     * - the desktop and message windows belong to the input desktop's process,
+     *   and not to whatever process is currently creating the desktop;
+     * - and the window-creating functions and any sub-routines invoked
+     *   correctly get a suitable "current process";
+     * thus allowing using (the equivalents of) co_UserCreateWindowEx(), etc.
+     * (see comment at the IntCreateWindow() call below).
+     * Once the necessary desktop windows have been created, both current
+     * thread's process pointer and original desktop are restored.
+     *
+     * NOTE: Commit 765f09416d (r57632) tried to do something similar but in
+     * an incomplete way, and this was reverted in commit 3a2e6d102f (r58376).
      */
+
+    /* Get the desktop window class. The desktop thread does not belong to any
+     * desktop, so the classes created there (including the desktop class) are
+     * allocated from the shared heap. It would cause problems if we used a
+     * class that belongs to the caller. */
     ClassName.Buffer = WC_DESKTOP;
     ClassName.Length = 0;
     pcls = IntGetAndReferenceClass(&ClassName, 0, TRUE);
@@ -2539,6 +2553,7 @@ IntCreateDesktop(
     pdesk->DesktopWindow = UserHMGetHandle(pWnd);
     pdesk->pDeskInfo->spwnd = pWnd;
 
+    /* Get the message window class */
     ClassName.Buffer = MAKEINTATOM(gpsi->atomSysClass[ICLS_HWNDMESSAGE]);
     ClassName.Length = 0;
     pcls = IntGetAndReferenceClass(&ClassName, 0, TRUE);
