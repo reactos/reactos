@@ -986,8 +986,10 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
     }
 
     /* Delete the system image mapping and return its system PTEs. */
-    MiDeleteSystemPageableVm(MiAddressToPte(LdrEntry->DllBase),
-                             ROUND_TO_PAGES(LdrEntry->SizeOfImage) >> PAGE_SHIFT,
+    PPTE BasePte = MiAddressToPte(LdrEntry->DllBase);
+    PFN_COUNT NumberOfPages = BYTES_TO_PAGES(LdrEntry->SizeOfImage);
+    MiDeleteSystemPageableVm(BasePte,
+                             NumberOfPages,
                              0,
                              NULL);
     MiReleaseSystemPtes(MiAddressToPte(LdrEntry->DllBase),
