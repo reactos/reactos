@@ -1464,10 +1464,8 @@ IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance, BOOL bDe
    else
        pti = PsGetCurrentThreadWin32Thread();
 
-   if ( !(pti->ppi->W32PF_flags & W32PF_CLASSESREGISTERED ))
-   {
-      UserRegisterSystemClasses();
-   }
+    if (!(pti->ppi->W32PF_flags & W32PF_CLASSESREGISTERED))
+        UserRegisterSystemClasses(pti->ppi);
 
    /* Check the class. */
 
@@ -2335,16 +2333,16 @@ UserGetClassInfo(IN PCLS Class,
     return TRUE;
 }
 
-//
-// Register System Classes....
-//
+/**
+ * @brief   Register system window classes for the given process.
+ **/
 BOOL
 FASTCALL
-UserRegisterSystemClasses(VOID)
+UserRegisterSystemClasses(
+    _In_ PPROCESSINFO ppi)
 {
     UINT i;
     UNICODE_STRING ClassName, MenuName;
-    PPROCESSINFO ppi = GetW32ProcessInfo();
     WNDCLASSEXW wc;
     PCLS Class;
     BOOL Ret = TRUE;
@@ -2418,7 +2416,7 @@ UserRegisterSystemClasses(VOID)
                                &MenuName,
                                DefaultServerClasses[i].fiId,
                                Flags,
-                               NULL,
+                               NULL, // No desktop!
                                ppi);
         if (Class != NULL)
         {
@@ -2478,10 +2476,8 @@ NtUserRegisterClassExWOW(
 
     TRACE("NtUserRegisterClassExWOW ClsN %wZ\n",ClassName);
 
-    if ( !(ppi->W32PF_flags & W32PF_CLASSESREGISTERED ))
-    {
-       UserRegisterSystemClasses();
-    }
+    if (!(ppi->W32PF_flags & W32PF_CLASSESREGISTERED))
+        UserRegisterSystemClasses(ppi);
 
     _SEH2_TRY
     {
@@ -2827,9 +2823,7 @@ NtUserGetClassInfo(
 
     ppi = GetW32ProcessInfo();
     if (!(ppi->W32PF_flags & W32PF_CLASSESREGISTERED))
-    {
-        UserRegisterSystemClasses();
-    }
+        UserRegisterSystemClasses(ppi);
 
     ClassAtom = IntGetClassAtom(&SafeClassName,
                                 hInstance,
