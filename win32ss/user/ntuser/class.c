@@ -2354,7 +2354,7 @@ UserRegisterSystemClasses(VOID)
     if (ppi->W32PF_flags & W32PF_CLASSESREGISTERED)
        return TRUE;
 
-    if ( hModClient == NULL)
+    if (hModClient == NULL)
        return FALSE;
 
     RtlZeroMemory(&ClassName, sizeof(ClassName));
@@ -2364,13 +2364,12 @@ UserRegisterSystemClasses(VOID)
     {
         if (!IS_ATOM(DefaultServerClasses[i].ClassName))
         {
-           RtlInitUnicodeString(&ClassName, DefaultServerClasses[i].ClassName);
+            RtlInitUnicodeString(&ClassName, DefaultServerClasses[i].ClassName);
         }
         else
         {
-           ClassName.Buffer = DefaultServerClasses[i].ClassName;
-           ClassName.Length = 0;
-           ClassName.MaximumLength = 0;
+            ClassName.Buffer = DefaultServerClasses[i].ClassName;
+            ClassName.Length = ClassName.MaximumLength = 0;
         }
 
         wc.cbSize = sizeof(wc);
@@ -2380,31 +2379,27 @@ UserRegisterSystemClasses(VOID)
 
         if (DefaultServerClasses[i].ProcW)
         {
-           wc.lpfnWndProc = DefaultServerClasses[i].ProcW;
-           wc.hInstance = hModuleWin;
+            wc.lpfnWndProc = DefaultServerClasses[i].ProcW;
+            wc.hInstance = hModuleWin;
         }
         else
         {
-           wc.lpfnWndProc = GETPFNSERVER(DefaultServerClasses[i].fiId);
-           wc.hInstance = hModClient;
+            wc.lpfnWndProc = GETPFNSERVER(DefaultServerClasses[i].fiId);
+            wc.hInstance = hModClient;
         }
 
         wc.cbClsExtra = 0;
         wc.cbWndExtra = DefaultServerClasses[i].ExtraBytes;
         wc.hIcon = NULL;
 
-        //// System Cursors should be initilized!!!
+        // System Cursors should be initialized!
         wc.hCursor = NULL;
         if (DefaultServerClasses[i].hCursor == (HICON)OCR_NORMAL)
         {
             if (SYSTEMCUR(ARROW) == NULL)
-            {
                 ERR("SYSTEMCUR(ARROW) == NULL, should not happen!!\n");
-            }
             else
-            {
                 wc.hCursor = UserHMGetHandle(SYSTEMCUR(ARROW));
-            }
         }
 
         hBrush = DefaultServerClasses[i].hBrush;
@@ -2417,14 +2412,14 @@ UserRegisterSystemClasses(VOID)
         wc.lpszClassName = ClassName.Buffer;
         wc.hIconSm = NULL;
 
-        Class = IntCreateClass( &wc,
-                                &ClassName,
-                                &ClassName,
-                                &MenuName,
-                                 DefaultServerClasses[i].fiId,
-                                 Flags,
-                                 NULL,
-                                 ppi);
+        Class = IntCreateClass(&wc,
+                               &ClassName,
+                               &ClassName,
+                               &MenuName,
+                               DefaultServerClasses[i].fiId,
+                               Flags,
+                               NULL,
+                               ppi);
         if (Class != NULL)
         {
             Class->pclsNext = ppi->pclsPublicList;
