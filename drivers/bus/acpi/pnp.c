@@ -293,7 +293,7 @@ Bus_StartFdo (
         DPRINT1("Unable to AcpiInitializeTables: %s (0x%08X)\n",
                 AcpiFormatException(AcpiStatus),
                 AcpiStatus);
-			return STATUS_UNSUCCESSFUL;
+        return STATUS_UNSUCCESSFUL;
     }
 
     AcpiStatus = AcpiLoadTables();
