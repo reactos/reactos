@@ -1293,7 +1293,7 @@ VfFindAdapter(PDMA_ADAPTER Adapter)
          L = L->Flink)
     {
         Track = CONTAINING_RECORD(L, VF_DMA_ADAPTER_TRACK, ListEntry);
-        if (T->Adapter == Adapter)
+        if (Track->Adapter == Adapter)
             return Track;
     }
     return NULL;
