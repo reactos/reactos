@@ -17,6 +17,10 @@ else()
 endif()
 
 ## efisys.bin
+
+#### Hack: Always disable efisys.bin (for release builds until we have UEFI bootvid)
+unset(EFI_PLATFORM_ID)
+
 if(DEFINED EFI_PLATFORM_ID)
     add_custom_target(efisys
         COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 EFIBOOT
