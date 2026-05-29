@@ -1,13 +1,20 @@
+/*
+ * PROJECT:     Lunar Theme
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     French resource file
+ * TRANSLATOR:  Copyright 2026 Thomas Anderson <thomasanderson531@hotmail.com>
+ */
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-1000, "Light"
+1000, "ReactOS"
 }
 
 STRINGTABLE
 {
-2000, "Mizu Light"
+2000, "Lunar ReactOS"
 }
 
 STRINGTABLE
@@ -26,12 +33,13 @@ STRINGTABLE
 
 STRINGTABLE
 {
-5000, "Mizu"
+5000, "Lunar"
 5001, "Style Visuel"
 5002, "Projet ReactOS"
-5003, "Foxlet, basé sur Lautus"
+5003, "Cernodile & Illen, basé sur Lautus"
 5004, "Distribué sous GNU/GPL 2.0, 2019"
 5005, "https://reactos.org/"
-5006, "1.0"
+5006, "1.1"
 5007, "Style Visuel pour ReactOS"
 }
+

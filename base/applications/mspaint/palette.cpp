@@ -31,15 +31,12 @@ CPaletteWindow::~CPaletteWindow()
         ::DeleteObject(m_hbmCached);
 }
 
-static VOID drawColorBox(HDC hDC, LPCRECT prc, COLORREF rgbColor, UINT nBorder)
+static VOID drawColorBox(HDC hDC, LPCRECT prc, HBRUSH hbr, UINT nBorder)
 {
     RECT rc = *prc;
     ::FillRect(hDC, &rc, (HBRUSH)(COLOR_3DFACE + 1));
     ::DrawEdge(hDC, &rc, nBorder, BF_RECT | BF_ADJUST);
-
-    HBRUSH hbr = ::CreateSolidBrush(rgbColor);
     ::FillRect(hDC, &rc, hbr);
-    ::DeleteObject(hbr);
 }
 
 static VOID getColorBoxRect(LPRECT prc, const RECT& rcClient, INT iColor)
@@ -112,20 +109,26 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     rc.top = Y_MARGIN + (CXY_BIGBOX * 5 / 8) - (CXY_SELECTEDBOX / 2);
     rc.right = rc.left + CXY_SELECTEDBOX;
     rc.bottom = rc.top + CXY_SELECTEDBOX;
-    drawColorBox(hMemDC, &rc, paletteModel.GetBgColor(), BDR_RAISEDINNER);
+    HBRUSH hbrBg = paletteModel.CreateBgBrush();
+    drawColorBox(hMemDC, &rc, hbrBg, BDR_RAISEDINNER);
+    DeleteObject(hbrBg);
 
     /* Draw the black box (overlapping the white box), at 3/8 position */
     rc.left = X_MARGIN + (CXY_BIGBOX * 3 / 8) - (CXY_SELECTEDBOX / 2);
     rc.top = Y_MARGIN + (CXY_BIGBOX * 3 / 8) - (CXY_SELECTEDBOX / 2);
     rc.right = rc.left + CXY_SELECTEDBOX;
     rc.bottom = rc.top + CXY_SELECTEDBOX;
-    drawColorBox(hMemDC, &rc, paletteModel.GetFgColor(), BDR_RAISEDINNER);
+    HBRUSH hbrFg = paletteModel.CreateFgBrush();
+    drawColorBox(hMemDC, &rc, hbrFg, BDR_RAISEDINNER);
+    DeleteObject(hbrFg);
 
     /* Draw the normal color boxes */
     for (INT i = 0; i < COLOR_COUNT; i++)
     {
         getColorBoxRect(&rc, rcClient, i);
-        drawColorBox(hMemDC, &rc, paletteModel.GetColor(i), BDR_SUNKENOUTER);
+        HBRUSH hbr = paletteModel.CreateColorBrush(paletteModel.GetColor(i));
+        drawColorBox(hMemDC, &rc, hbr, BDR_SUNKENOUTER);
+        DeleteObject(hbr);
     }
 
     /* Transfer bits (hDC <-- hMemDC) */
