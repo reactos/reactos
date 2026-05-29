@@ -505,7 +505,9 @@ static BSTR get_script_str(const WCHAR *filename)
 #ifdef __REACTOS__
     if(size >= 2 && (BYTE)file_map[0] == 0xFF && (BYTE)file_map[1] == 0xFE) // UTF-16LE
     {
-        ret = SysAllocStringLen((WCHAR*)(file_map + 2), size - 2);
+        ret = SysAllocStringLen(NULL, size - 2);
+        if (ret)
+            CopyMemory(ret, file_map + 2, size - 2);
         UnmapViewOfFile(file_map);
         return ret;
     }
