@@ -301,38 +301,44 @@ IntDestroyClass(IN OUT PCLS Class)
 }
 
 
-/* Clean all process classes. all process windows must cleaned first!! */
-void FASTCALL DestroyProcessClasses(PPROCESSINFO Process )
+/**
+ * @brief   Clean all process classes.
+ * @note    All process windows must be cleaned first!
+ **/
+void FASTCALL
+DestroyProcessClasses(
+    _Inout_ PPROCESSINFO Process)
 {
     PCLS Class;
-    PPROCESSINFO pi = (PPROCESSINFO)Process;
 
-    if (pi != NULL)
+    if (!(Process->W32PF_flags & W32PF_CLASSESREGISTERED))
+       return;
+
+    /* Free all local classes */
+    Class = Process->pclsPrivateList;
+    while (Class != NULL)
     {
-        /* Free all local classes */
-        Class = pi->pclsPrivateList;
-        while (Class != NULL)
-        {
-            pi->pclsPrivateList = Class->pclsNext;
+        Process->pclsPrivateList = Class->pclsNext;
 
-            ASSERT(Class->pclsBase == Class);
-            IntDestroyClass(Class);
+        ASSERT(Class->pclsBase == Class);
+        IntDestroyClass(Class);
 
-            Class = pi->pclsPrivateList;
-        }
-
-        /* Free all global classes */
-        Class = pi->pclsPublicList;
-        while (Class != NULL)
-        {
-            pi->pclsPublicList = Class->pclsNext;
-
-            ASSERT(Class->pclsBase == Class);
-            IntDestroyClass(Class);
-
-            Class = pi->pclsPublicList;
-        }
+        Class = Process->pclsPrivateList;
     }
+
+    /* Free all global classes */
+    Class = Process->pclsPublicList;
+    while (Class != NULL)
+    {
+        Process->pclsPublicList = Class->pclsNext;
+
+        ASSERT(Class->pclsBase == Class);
+        IntDestroyClass(Class);
+
+        Class = Process->pclsPublicList;
+    }
+
+    Process->W32PF_flags &= ~W32PF_CLASSESREGISTERED;
 }
 
 static BOOL

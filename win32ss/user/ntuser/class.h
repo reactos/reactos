@@ -30,7 +30,8 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
                     OUT PWNDPROC_INFO wpInfo);
 
 void FASTCALL
-DestroyProcessClasses(PPROCESSINFO Process );
+DestroyProcessClasses(
+    _Inout_ PPROCESSINFO Process);
 
 VOID
 IntDereferenceClass(IN OUT PCLS Class,
