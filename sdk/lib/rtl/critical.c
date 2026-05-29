@@ -858,29 +858,39 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     return FALSE;
 }
 
+/*++
+ * RtlCheckForOrphanedCriticalSections
+ * @implemented NT5
+ *
+ * Just calls RtlCheckHeldCriticalSections.
+ *
+ * Params:
+ *     ThreadHandle - Handle to the thread to check.
+ *
+ * Returns:
+ *     Nothing
+ *
+ * Remarks:
+ *     This function is typically called by the loader during thread exit.
+ *
+ *--*/
 VOID
 NTAPI
-RtlCheckHeldCriticalSections(
-    _In_ HANDLE ThreadHandle,
-    _In_opt_ PDWORD Reserved)
+RtlCheckForOrphanedCriticalSections(_In_ HANDLE ThreadHandle)
 {
     THREAD_BASIC_INFORMATION ThreadInfo;
     NTSTATUS Status;
     PLIST_ENTRY ListEntry;
-    HANDLE CurrentThreadId;
 
     /* Early exit if verifier is not active */
     if (!RtlpCriticalSectionVerifier)
         return;
 
     /* Get current thread ID first */
-    CurrentThreadId = NtCurrentTeb()->ClientId.UniqueThread;
-
-    /* Handle the pseudo-handle for current thread */
-    if (ThreadHandle == (HANDLE)-1 || ThreadHandle == NULL)
+    if (ThreadHandle == NtCurrentThread())
     {
         /* Using current thread */
-        ThreadInfo.ClientId.UniqueThread = CurrentThreadId;
+        ThreadInfo.ClientId.UniqueThread = NtCurrentTeb()->ClientId.UniqueThread;
     }
     else
     {
@@ -905,7 +915,7 @@ RtlCheckHeldCriticalSections(
     {
         PRTL_CRITICAL_SECTION_DEBUG DebugInfo;
         PRTL_CRITICAL_SECTION CriticalSection;
-        
+
         /* Get the debug info from the list entry */
         DebugInfo = CONTAINING_RECORD(
             ListEntry,
@@ -930,37 +940,14 @@ RtlCheckHeldCriticalSections(
                 "Critical section debug info",
                 NULL,
                 NULL);
+            
+            /* TODO: Add stack trace information here (CORE-16870) */
         }
 
-        /* Move to next entry */
         ListEntry = ListEntry->Flink;
     }
 
-    /* Release the lock */
     RtlLeaveCriticalSection(&RtlCriticalSectionLock);
-}
-
-/*++
- * RtlCheckForOrphanedCriticalSections
- * @implemented NT5
- *
- * Just calls RtlCheckHeldCriticalSections.
- *
- * Params:
- *     ThreadHandle - Handle to the thread to check.
- *
- * Returns:
- *     Nothing
- *
- * Remarks:
- *     This function is typically called by the loader during thread exit.
- *
- *--*/
-VOID
-NTAPI
-RtlCheckForOrphanedCriticalSections(_In_ HANDLE ThreadHandle)
-{
-    RtlCheckHeldCriticalSections(ThreadHandle, NULL);
 }
 
 LOGICAL
