@@ -444,35 +444,35 @@ VfAllocateAdapterChannel(
 )
 {
     KIRQL OldIrql;
-    VF_DMA_ADAPTER_TRACK* T;
+    VF_DMA_ADAPTER_TRACK* Track;
 
     KeAcquireSpinLock(&VfDmaLock, &OldIrql);
 
-    T = VfFindAdapter(Adapter);
-    if (!T)
+    Track = VfFindAdapter(Adapter);
+    if (!Track)
     {
         KeReleaseSpinLock(&VfDmaLock, OldIrql);
         KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, 0, (ULONG_PTR)Adapter, 0, 0);
     }
 
-    if (T->MapRegisterCount != 0)
+    if (Track->MapRegisterCount != 0)
     {
         KeReleaseSpinLock(&VfDmaLock, OldIrql);
         KeBugCheckEx(
             DRIVER_VERIFIER_DETECTED_VIOLATION,
             VfDmaFaultAllocateChannel,
             (ULONG_PTR)Adapter,
-            T->MapRegisterCount,
+            Track->MapRegisterCount,
             0
         );
     }
 
-    T->MapRegisterCount = NumberOfMapRegisters;
-    T->AdapterReleased = FALSE;
+    Track->MapRegisterCount = NumberOfMapRegisters;
+    Track->AdapterReleased = FALSE;
 
     KeReleaseSpinLock(&VfDmaLock, OldIrql);
 
-    T->OriginalOps.AllocateAdapterChannel(
+    Track->OriginalOps.AllocateAdapterChannel(
         Adapter, DeviceObject, NumberOfMapRegisters, ExecutionRoutine, Context
     );
 }
@@ -541,14 +541,14 @@ VfMapTransfer(
     BOOLEAN WriteToDevice
 )
 {
-    VF_DMA_ADAPTER_TRACK* T;
+    VF_DMA_ADAPTER_TRACK* Track;
     PHYSICAL_ADDRESS Pa;
 
-    T = VfLookupDmaAdapter(Adapter);
+    Track = VfLookupDmaAdapter(Adapter);
 
-    if (T)
+    if (Track)
     {
-        if (T->AdapterReleased)
+        if (Track->AdapterReleased)
         {
             KeBugCheckEx(
                 DRIVER_VERIFIER_DETECTED_VIOLATION,
@@ -560,9 +560,9 @@ VfMapTransfer(
         }
 
         /* increment BEFORE map */
-        InterlockedIncrement(&T->MapRegisterCount);
+        InterlockedIncrement(&Track->MapRegisterCount);
 
-        Pa = T->OriginalOps.MapTransfer(
+        Pa = Track->OriginalOps.MapTransfer(
             Adapter,
             Mdl,
             MapRegisterBase,
@@ -597,14 +597,14 @@ VfFlushAdapterBuffers(
     BOOLEAN WriteToDevice
 )
 {
-    VF_DMA_ADAPTER_TRACK* T;
+    VF_DMA_ADAPTER_TRACK* Track;
     LONG Count;
 
-    T = VfLookupDmaAdapter(Adapter);
-    if (!T)
+    Track = VfLookupDmaAdapter(Adapter);
+    if (!Track)
         goto CallOriginal;
 
-    Count = InterlockedDecrement(&T->MapRegisterCount);
+    Count = InterlockedDecrement(&Track->MapRegisterCount);
 
     if (Count < 0)
     {
@@ -618,8 +618,8 @@ VfFlushAdapterBuffers(
     }
 
 CallOriginal:
-    return T
-        ? T->OriginalOps.FlushAdapterBuffers(
+    return Track
+        ? Track->OriginalOps.FlushAdapterBuffers(
               Adapter,
               Mdl,
               MapRegisterBase,
@@ -1286,15 +1286,15 @@ static VF_DMA_ADAPTER_TRACK*
 VfFindAdapter(PDMA_ADAPTER Adapter)
 {
     PLIST_ENTRY L;
-    VF_DMA_ADAPTER_TRACK* T;
+    VF_DMA_ADAPTER_TRACK* Track;
 
     for (L = VfDmaAdapterList.Flink;
          L != &VfDmaAdapterList;
          L = L->Flink)
     {
-        T = CONTAINING_RECORD(L, VF_DMA_ADAPTER_TRACK, ListEntry);
+        Track = CONTAINING_RECORD(L, VF_DMA_ADAPTER_TRACK, ListEntry);
         if (T->Adapter == Adapter)
-            return T;
+            return Track;
     }
     return NULL;
 }
@@ -1313,6 +1313,7 @@ VOID NTAPI VfDriverUnload(PDRIVER_OBJECT DriverObject)
 
     Driver->Unloads++;
 
+    /* check for leaks before removing from tracking */
     if (!IsListEmpty(&Driver->PoolList))
     {
         KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
@@ -1322,7 +1323,7 @@ VOID NTAPI VfDriverUnload(PDRIVER_OBJECT DriverObject)
     }
 
     KeAcquireSpinLock(&VfDriverListLock, &OldIrql);
-    RemoveEntryList(&Driver->ListEntry);
+    RemoveEntryList(&Driver->ListEntry);  /* now safe to remove */
     KeReleaseSpinLock(&VfDriverListLock, OldIrql);
 
     ExFreePool(Driver);

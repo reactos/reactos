@@ -1486,6 +1486,10 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 
         /* Set the unload invoked flag and call the unload routine */
         DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
+
+        if (VfGlobalEnabled)
+            VfDriverUnload(DriverObject);
+
         Status = IopDoLoadUnloadDriver(NULL, &DriverObject);
         ASSERT(Status == STATUS_SUCCESS);
 
