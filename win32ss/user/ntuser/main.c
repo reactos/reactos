@@ -803,13 +803,12 @@ ExitThreadCallback(PETHREAD Thread)
         }
         UserAssignmentUnlock((PVOID*)&ptiCurrent->spDefaultImc);
 
-        if (ppiCurrent && ppiCurrent->ptiList == ptiCurrent && !ptiCurrent->ptiSibling &&
-            ppiCurrent->W32PF_flags & W32PF_CLASSESREGISTERED)
+        if ((ppiCurrent->ptiList == ptiCurrent) && !ptiCurrent->ptiSibling &&
+            (ppiCurrent->W32PF_flags & W32PF_CLASSESREGISTERED))
         {
+            /* No process windows should exist at this point, or the function will assert! */
             TRACE_CH(UserThread, "DestroyProcessClasses\n");
-            /* no process windows should exist at this point, or the function will assert! */
             DestroyProcessClasses(ppiCurrent);
-            ppiCurrent->W32PF_flags &= ~W32PF_CLASSESREGISTERED;
         }
 
         IntBlockInput(ptiCurrent, FALSE);
