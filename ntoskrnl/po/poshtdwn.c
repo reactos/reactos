@@ -178,6 +178,8 @@ PopShutdownSystem(IN POWER_ACTION SystemAction)
 {
     /* Note should notify caller of NtPowerInformation(PowerShutdownNotification) */
 
+    return; // DEBUGGING!!
+
     /* Unload symbols */
     DPRINT("It's the final countdown...%lx\n", SystemAction);
     DbgUnLoadImageSymbols(NULL, (PVOID)-1, 0);

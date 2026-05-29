@@ -377,7 +377,7 @@ SmpTerminate(IN PULONG_PTR Parameters,
 {
     NTSTATUS Status;
     BOOLEAN Old;
-    ULONG Response;
+    //ULONG Response;
 
     /* Give the shutdown privilege to the thread */
     if (RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, TRUE, &Old) ==
@@ -387,6 +387,7 @@ SmpTerminate(IN PULONG_PTR Parameters,
         RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
     }
 
+#if 0
     /* Take down the process/machine with a hard error */
     Status = NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
                               ParameterCount,
@@ -394,6 +395,9 @@ SmpTerminate(IN PULONG_PTR Parameters,
                               Parameters,
                               OptionShutdownSystem,
                               &Response);
+#else
+    Status = 0;
+#endif
 
     /* Terminate the process if the hard error didn't already */
     return NtTerminateProcess(NtCurrentProcess(), Status);
@@ -438,6 +442,7 @@ _main(IN INT argc,
     KPRIORITY SetBasePriority;
     ULONG_PTR Parameters[4];
     HANDLE Handles[2];
+    ULONG HandlesCount;
     PVOID State;
     ULONG Flags;
     PROCESS_BASIC_INFORMATION ProcessInfo;
@@ -515,7 +520,9 @@ _main(IN INT argc,
         SmpReleasePrivilege(State);
 
         /* Wait on either CSRSS or Winlogon to die */
-        Status = NtWaitForMultipleObjects(RTL_NUMBER_OF(Handles),
+        HandlesCount = RTL_NUMBER_OF(Handles);
+rewait:
+        Status = NtWaitForMultipleObjects(HandlesCount,
                                           Handles,
                                           WaitAny,
                                           FALSE,
@@ -530,10 +537,15 @@ _main(IN INT argc,
                                                sizeof(ProcessInfo),
                                                NULL);
             DPRINT1("SMSS: Windows subsystem terminated when it wasn't supposed to.\n");
+            NtClose(Handles[0]);
+            Handles[0] = Handles[1];
+            HandlesCount = 1;
+            goto rewait;
         }
         else
         {
             /* The initial command is dead or we have another failure */
+            NTSTATUS WaitStatus = Status;
             RtlInitUnicodeString(&DbgString, L"Windows Logon Process");
             if (Status == STATUS_WAIT_1)
             {
@@ -552,6 +564,12 @@ _main(IN INT argc,
             }
             DPRINT1("SMSS: Initial command '%wZ' terminated when it wasn't supposed to.\n",
                     &InitialCommand);
+            if (WaitStatus == STATUS_WAIT_1)
+            {
+                NtClose(Handles[1]);
+                HandlesCount = 1;
+                goto rewait;
+            }
         }
 
         /* Check if NtQueryInformationProcess was successful */

@@ -473,9 +473,9 @@ WinMain(
 
     hAppInstance = hInstance;
 
-    /* Make us critical */
-    RtlSetProcessIsCritical(TRUE, NULL, FALSE);
-    RtlSetThreadIsCritical(TRUE, NULL, FALSE);
+    ///* Make us critical */
+    //RtlSetProcessIsCritical(TRUE, NULL, FALSE);
+    //RtlSetThreadIsCritical(TRUE, NULL, FALSE);
 
     /* Update the cached TCP/IP Information in the registry */
     UpdateTcpIpInformation();
@@ -614,6 +614,7 @@ WinMain(
         /* Run setup and reboot when done */
         TRACE("WL: Setup mode detected\n");
         RunSetup();
+__debugbreak();
     }
     else
     {
@@ -635,6 +636,6 @@ WinMain(
 
     /* We never go there */
     // TODO: Shutdown if we are in session 0, otherwise let the process terminate.
-    SleepEx(INFINITE, FALSE);
+    //SleepEx(INFINITE, FALSE);
     return 0;
 }
