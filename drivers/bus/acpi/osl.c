@@ -126,9 +126,9 @@ AcpiBuildLoaderRootPointer(VOID)
         return 0;
     }
 
-    AcpiLoaderRsdp = ExAllocatePoolWithTag(NonPagedPool,
-                                           sizeof(*AcpiLoaderRsdp),
-                                           'dspR');
+    AcpiLoaderRsdp = ExAllocatePoolZero(NonPagedPool,
+                                        sizeof(*AcpiLoaderRsdp),
+                                        'dspR');
     if (!AcpiLoaderRsdp)
     {
         MmUnmapIoSpace(RootTable, sizeof(*RootTable));
@@ -136,7 +136,6 @@ AcpiBuildLoaderRootPointer(VOID)
         return 0;
     }
 
-    RtlZeroMemory(AcpiLoaderRsdp, sizeof(*AcpiLoaderRsdp));
     RtlCopyMemory(AcpiLoaderRsdp->Signature,
                   ACPI_SIG_RSDP,
                   sizeof(AcpiLoaderRsdp->Signature));
@@ -198,6 +197,8 @@ AcpiOsInitialize (void)
     AcpiDbgLayer = 0xFFFFFFFF;
 #endif
 
+    (VOID)AcpiBuildLoaderRootPointer();
+
     return AE_OK;
 }
 
@@ -223,10 +224,6 @@ AcpiOsGetRootPointer (
         PhysicalAddress = MmGetPhysicalAddress(AcpiLoaderRsdp);
         return (ACPI_PHYSICAL_ADDRESS)PhysicalAddress.QuadPart;
     }
-
-    pa = AcpiBuildLoaderRootPointer();
-    if (pa != 0)
-        return pa;
 
     AcpiFindRootPointer(&pa);
     return pa;
