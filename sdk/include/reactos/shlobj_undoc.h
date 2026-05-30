@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <winreg.h> /* REGSAM */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -879,14 +881,14 @@ DECLARE_INTERFACE_(IQuerySourceOld, IUnknown) // {C7478486-7583-49E7-A6C2-FAF8F0
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IQuerySourceOld ***/
-    STDMETHOD(EnumValues)(THIS_ IEnumString **ppEnum);
-    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum);
-    STDMETHOD(QueryValueString)(THIS_ PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue);
-    STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue);
-    STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName);
-    STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob);
-    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, BOOL, IQuerySourceOld **ppSource);
-    STDMETHOD(SetValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD, DWORD, PBYTE);
+    STDMETHOD(EnumValues)(THIS_ IEnumString **ppEnum) PURE;
+    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum) PURE;
+    STDMETHOD(QueryValueString)(THIS_ PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue) PURE;
+    STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue) PURE;
+    STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName) PURE;
+    STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob) PURE;
+    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, BOOL bCreate, IQuerySourceOld **ppSource) PURE;
+    STDMETHOD(SetValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD, DWORD, PBYTE) PURE;
 };
 #undef INTERFACE
 
@@ -918,14 +920,14 @@ DECLARE_INTERFACE_(IQuerySource, IUnknown) // {7BC28AC2-0D9C-4941-BB9A-72BECB184
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IQuerySource ***/
-    STDMETHOD(EnumValues)(THIS_ IEnumString **ppEnum);
-    STDMETHOD(QueryValueString)(THIS_ PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue);
-    STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue);
-    STDMETHOD(QueryValueGuid)(THIS_ PCWSTR keyName, PCWSTR valueName, GUID *guid);
-    STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName);
-    STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob);
-    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum);
-    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, IQuerySource **ppSource);
+    STDMETHOD(EnumValues)(THIS_ IEnumString **ppEnum) PURE;
+    STDMETHOD(QueryValueString)(THIS_ PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue) PURE;
+    STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue) PURE;
+    STDMETHOD(QueryValueGuid)(THIS_ PCWSTR keyName, PCWSTR valueName, GUID *guid) PURE;
+    STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName) PURE;
+    STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob) PURE;
+    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum) PURE;
+    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, IQuerySource **ppSource) PURE;
 };
 #undef INTERFACE
 
@@ -956,8 +958,8 @@ DECLARE_INTERFACE_(IObjectWithQuerySource, IUnknown) // {B3DCB623-4280-4EB1-84B3
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IObjectWithQuerySource ***/
-    STDMETHOD(SetSource)(THIS_ IQuerySource *pSource);
-    STDMETHOD(GetSource)(THIS_ REFIID riid, PVOID *ppSource);
+    STDMETHOD(SetSource)(THIS_ IQuerySource *pSource) PURE;
+    STDMETHOD(GetSource)(THIS_ REFIID riid, PVOID *ppSource) PURE;
 };
 #undef INTERFACE
 
@@ -1150,9 +1152,9 @@ DECLARE_INTERFACE_(IAssociationArrayInitialize, IUnknown) // {EE9165BF-A4D9-474B
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IAssociationArrayInitialize ***/
-    STDMETHOD(InitClassElements)(ULONG flags, PCWSTR pszClass);
-    STDMETHOD(InsertElements)(ULONG flags, IEnumAssociationElements *pEnum);
-    STDMETHOD(FilterElements)(ULONG filter);
+    STDMETHOD(InitClassElements)(ULONG flags, PCWSTR pszClass) PURE;
+    STDMETHOD(InsertElements)(ULONG flags, IEnumAssociationElements *pEnum) PURE;
+    STDMETHOD(FilterElements)(ULONG filter) PURE;
 };
 #undef INTERFACE
 
@@ -1163,6 +1165,89 @@ DECLARE_INTERFACE_(IAssociationArrayInitialize, IUnknown) // {EE9165BF-A4D9-474B
 #define IAssociationArrayInitialize_InitClassElements(T,a,b) (T)->lpVtbl->InitClassElements(T,a,b)
 #define IAssociationArrayInitialize_InsertElements(T,a,b) (T)->lpVtbl->InsertElements(T,a,b)
 #define IAssociationArrayInitialize_FilterElements(T,a) (T)->lpVtbl->FilterElements(T,a)
+#endif
+
+/*****************************************************************************
+ * IPersistString2 interface
+ *
+ * @sse IPersist
+ * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/ipersiststring2.htm
+ */
+#define INTERFACE IPersistString2
+DECLARE_INTERFACE_(IPersistString2, IPersist) // {3C44BA76-DE0E-4049-B6E4-6B31A5262707}
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IPersist ***/
+    STDMETHOD(GetClassID)(THIS_ CLSID *pClassID) PURE;
+    /*** IPersistString2 ***/
+    STDMETHOD(SetString)(THIS_ PCWSTR psz) PURE;
+    STDMETHOD(GetString)(THIS_ PWSTR *ppsz) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IPersistString2_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IPersistString2_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IPersistString2_Release(T) (T)->lpVtbl->Release(T)
+#define IPersistString2_SetString(T,a) (T)->lpVtbl->SetString(T,a)
+#define IPersistString2_GetString(T,a) (T)->lpVtbl->GetString(T,a)
+#endif
+
+/*****************************************************************************
+ * IObjectWithRegistryKeyOld interface
+ *
+ * @see IObjectWithRegistryKey
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iobjectwithregistrykey.htm
+ */
+#define INTERFACE IObjectWithRegistryKeyOld
+DECLARE_INTERFACE_(IObjectWithRegistryKeyOld, IUnknown) // {5747C63F-1DE8-423F-980F-00CB07F4C45B}
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IObjectWithRegistryKeyOld ***/
+    STDMETHOD(SetKey)(THIS_ HKEY hKey) PURE;
+    STDMETHOD(GetKey)(THIS_ HKEY *phKey) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IObjectWithRegistryKeyOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IObjectWithRegistryKeyOld_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IObjectWithRegistryKeyOld_Release(T) (T)->lpVtbl->Release(T)
+#define IObjectWithRegistryKeyOld_SetKey(T,a) (T)->lpVtbl->SetKey(T,a)
+#define IObjectWithRegistryKeyOld_GetKey(T,a) (T)->lpVtbl->GetKey(T,a)
+#endif
+
+/*****************************************************************************
+ * IObjectWithRegistryKey interface (new version)
+ *
+ * @see IObjectWithRegistryKeyOld
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iobjectwithregistrykey.htm
+ */
+#define INTERFACE IObjectWithRegistryKey
+DECLARE_INTERFACE_(IObjectWithRegistryKey, IUnknown) // {D960050C-F4E1-4294-AC4B-598913605923}
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IObjectWithRegistryKey ***/
+    STDMETHOD(SetKey)(THIS_ HKEY hKey) PURE;
+    STDMETHOD(GetKey)(THIS_ REGSAM samDesired, HKEY *phKey) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IObjectWithRegistryKey_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IObjectWithRegistryKey_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IObjectWithRegistryKey_Release(T) (T)->lpVtbl->Release(T)
+#define IObjectWithRegistryKey_SetKey(T,a) (T)->lpVtbl->SetKey(T,a)
+#define IObjectWithRegistryKey_GetKey(T,a) (T)->lpVtbl->GetKey(T,a)
 #endif
 
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray*);
