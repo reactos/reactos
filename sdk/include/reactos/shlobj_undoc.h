@@ -879,14 +879,14 @@ DECLARE_INTERFACE_(IQuerySourceOld, IUnknown) // {C7478486-7583-49E7-A6C2-FAF8F0
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IQuerySourceOld ***/
-    STDMETHOD(EnumValues)(THIS_ IEnumString **ppEnum);
-    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum);
-    STDMETHOD(QueryValueString)(THIS_ PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue);
-    STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue);
-    STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName);
-    STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob);
-    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, BOOL, IQuerySourceOld **ppSource);
-    STDMETHOD(SetValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD, DWORD, PBYTE);
+    STDMETHOD(EnumValues)(THIS_ IEnumString **ppEnum) PURE;
+    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum) PURE;
+    STDMETHOD(QueryValueString)(THIS_ PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue) PURE;
+    STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue) PURE;
+    STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName) PURE;
+    STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob) PURE;
+    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, BOOL, IQuerySourceOld **ppSource) PURE;
+    STDMETHOD(SetValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD, DWORD, PBYTE) PURE;
 };
 #undef INTERFACE
 
@@ -918,14 +918,14 @@ DECLARE_INTERFACE_(IQuerySource, IUnknown) // {7BC28AC2-0D9C-4941-BB9A-72BECB184
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IQuerySource ***/
-    STDMETHOD(EnumValues)(THIS_ IEnumString **ppEnum);
-    STDMETHOD(QueryValueString)(THIS_ PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue);
-    STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue);
-    STDMETHOD(QueryValueGuid)(THIS_ PCWSTR keyName, PCWSTR valueName, GUID *guid);
-    STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName);
-    STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob);
-    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum);
-    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, IQuerySource **ppSource);
+    STDMETHOD(EnumValues)(THIS_ IEnumString **ppEnum) PURE;
+    STDMETHOD(QueryValueString)(THIS_ PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue) PURE;
+    STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue) PURE;
+    STDMETHOD(QueryValueGuid)(THIS_ PCWSTR keyName, PCWSTR valueName, GUID *guid) PURE;
+    STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName) PURE;
+    STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob) PURE;
+    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum) PURE;
+    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, IQuerySource **ppSource) PURE;
 };
 #undef INTERFACE
 
@@ -956,8 +956,8 @@ DECLARE_INTERFACE_(IObjectWithQuerySource, IUnknown) // {B3DCB623-4280-4EB1-84B3
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IObjectWithQuerySource ***/
-    STDMETHOD(SetSource)(THIS_ IQuerySource *pSource);
-    STDMETHOD(GetSource)(THIS_ REFIID riid, PVOID *ppSource);
+    STDMETHOD(SetSource)(THIS_ IQuerySource *pSource) PURE;
+    STDMETHOD(GetSource)(THIS_ REFIID riid, PVOID *ppSource) PURE;
 };
 #undef INTERFACE
 
@@ -1150,9 +1150,9 @@ DECLARE_INTERFACE_(IAssociationArrayInitialize, IUnknown) // {EE9165BF-A4D9-474B
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IAssociationArrayInitialize ***/
-    STDMETHOD(InitClassElements)(ULONG flags, PCWSTR pszClass);
-    STDMETHOD(InsertElements)(ULONG flags, IEnumAssociationElements *pEnum);
-    STDMETHOD(FilterElements)(ULONG filter);
+    STDMETHOD(InitClassElements)(ULONG flags, PCWSTR pszClass) PURE;
+    STDMETHOD(InsertElements)(ULONG flags, IEnumAssociationElements *pEnum) PURE;
+    STDMETHOD(FilterElements)(ULONG filter) PURE;
 };
 #undef INTERFACE
 
@@ -1179,10 +1179,10 @@ DECLARE_INTERFACE_(IPersistString2, IPersist) // {3C44BA76-DE0E-4049-B6E4-6B31A5
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IPersist ***/
-    STDMETHOD(GetClassID)(THIS_ CLSID *pClassID);
+    STDMETHOD(GetClassID)(THIS_ CLSID *pClassID) PURE;
     /*** IPersistString2 ***/
-    STDMETHOD(SetString)(THIS_ PCWSTR psz);
-    STDMETHOD(GetString)(THIS_ PWSTR *ppsz);
+    STDMETHOD(SetString)(THIS_ PCWSTR psz) PURE;
+    STDMETHOD(GetString)(THIS_ PWSTR *ppsz) PURE;
 };
 #undef INTERFACE
 
@@ -1208,8 +1208,8 @@ DECLARE_INTERFACE_(IObjectWithRegistryKeyOld, IUnknown) // {5747C63F-1DE8-423F-9
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IObjectWithRegistryKeyOld ***/
-    STDMETHOD(SetKey)(THIS_ HKEY hKey);
-    STDMETHOD(GetKey)(THIS_ HKEY *phKey);
+    STDMETHOD(SetKey)(THIS_ HKEY hKey) PURE;
+    STDMETHOD(GetKey)(THIS_ HKEY *phKey) PURE;
 };
 #undef INTERFACE
 
@@ -1235,8 +1235,8 @@ DECLARE_INTERFACE_(IObjectWithRegistryKey, IUnknown) // {D960050C-F4E1-4294-AC4B
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IObjectWithRegistryKey ***/
-    STDMETHOD(SetKey)(THIS_ HKEY hKey);
-    STDMETHOD(GetKey)(THIS_ REGSAM samDesired, HKEY *phKey);
+    STDMETHOD(SetKey)(THIS_ HKEY hKey) PURE;
+    STDMETHOD(GetKey)(THIS_ REGSAM samDesired, HKEY *phKey) PURE;
 };
 #undef INTERFACE
 
