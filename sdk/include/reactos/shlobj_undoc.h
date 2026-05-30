@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <winnt.h> /* REGSAM */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -1236,7 +1238,7 @@ DECLARE_INTERFACE_(IObjectWithRegistryKey, IUnknown) // {D960050C-F4E1-4294-AC4B
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IObjectWithRegistryKey ***/
     STDMETHOD(SetKey)(THIS_ HKEY hKey) PURE;
-    STDMETHOD(GetKey)(THIS_ ACCESS_MASK samDesired, HKEY *phKey) PURE;
+    STDMETHOD(GetKey)(THIS_ REGSAM samDesired, HKEY *phKey) PURE;
 };
 #undef INTERFACE
 
