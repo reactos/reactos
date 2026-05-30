@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <winnt.h> /* REGSAM */
+#include <winreg.h> /* REGSAM */
 
 #ifdef __cplusplus
 extern "C" {
