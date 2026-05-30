@@ -1165,6 +1165,89 @@ DECLARE_INTERFACE_(IAssociationArrayInitialize, IUnknown) // {EE9165BF-A4D9-474B
 #define IAssociationArrayInitialize_FilterElements(T,a) (T)->lpVtbl->FilterElements(T,a)
 #endif
 
+/*****************************************************************************
+ * IPersistString2 interface
+ *
+ * @sse IPersist
+ * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/ipersiststring2.htm
+ */
+#undef INTERFACE
+#define INTERFACE IPersistString2
+DECLARE_INTERFACE_(IPersistString2, IPersist) // {3C44BA76-DE0E-4049-B6E4-6B31A5262707}
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IPersist ***/
+    STDMETHOD(GetClassID)(THIS_ CLSID *pClassID);
+    /*** IPersistString2 ***/
+    STDMETHOD(SetString)(THIS_ PCWSTR psz);
+    STDMETHOD(GetString)(THIS_ PWSTR *ppsz);
+};
+
+#ifdef COBJMACROS
+#define IPersistString2_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IPersistString2_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IPersistString2_Release(T) (T)->lpVtbl->Release(T)
+#define IPersistString2_SetString(T,a) (T)->lpVtbl->SetString(T,a)
+#define IPersistString2_GetString(T,a) (T)->lpVtbl->GetString(T,a)
+#endif
+
+/*****************************************************************************
+ * IObjectWithRegistryKeyOld interface
+ *
+ * @see IObjectWithRegistryKey
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iobjectwithregistrykey.htm
+ */
+#undef INTERFACE
+#define INTERFACE IObjectWithRegistryKeyOld
+DECLARE_INTERFACE_(IObjectWithRegistryKeyOld, IUnknown) // {5747C63F-1DE8-423F-980F-00CB07F4C45B}
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IObjectWithRegistryKeyOld ***/
+    STDMETHOD(SetKey)(HKEY hKey);
+    STDMETHOD(GetKey)(HKEY *phKey);
+};
+
+#ifdef COBJMACROS
+#define IObjectWithRegistryKeyOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IObjectWithRegistryKeyOld_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IObjectWithRegistryKeyOld_Release(T) (T)->lpVtbl->Release(T)
+#define IObjectWithRegistryKeyOld_SetKey(T,a) (T)->lpVtbl->SetKey(T,a)
+#define IObjectWithRegistryKeyOld_GetKey(T,a) (T)->lpVtbl->GetKey(T,a)
+#endif
+
+/*****************************************************************************
+ * IObjectWithRegistryKey interface (new version)
+ *
+ * @see IObjectWithRegistryKeyOld
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iobjectwithregistrykey.htm
+ */
+#undef INTERFACE
+#define INTERFACE IObjectWithRegistryKey
+DECLARE_INTERFACE_(IObjectWithRegistryKey, IUnknown) // {D960050C-F4E1-4294-AC4B-598913605923}
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IObjectWithRegistryKey ***/
+    STDMETHOD(SetKey)(HKEY hKey);
+    STDMETHOD(GetKey)(REGSAM samDesired, HKEY *phKey);
+};
+
+#ifdef COBJMACROS
+#define IObjectWithRegistryKey_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IObjectWithRegistryKey_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IObjectWithRegistryKey_Release(T) (T)->lpVtbl->Release(T)
+#define IObjectWithRegistryKey_SetKey(T,a) (T)->lpVtbl->SetKey(T,a)
+#define IObjectWithRegistryKey_GetKey(T,a) (T)->lpVtbl->GetKey(T,a)
+#endif
+
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray*);
 BOOL WINAPI SHDesktopMessageLoop(HANDLE);
 HRESULT WINAPI SHCreateFileDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, IDataObject* pDataInner, IDataObject** ppDataObj);
