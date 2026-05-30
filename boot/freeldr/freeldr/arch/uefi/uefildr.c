@@ -125,9 +125,12 @@ VOID __cdecl Reboot(VOID)
     /* Fallback dead-loop if runtime services are missing or fail to respond */
     for (;;)
     {
-        #if defined(_M_IX86) || defined(_M_AMD64)
+        #if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
         __halt();
+        #elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+        __asm__ __volatile__("hlt");
         #else
+        /* Fallback placeholder loop for non-x86/x64 platforms */
         NOTHING;
         #endif
     }

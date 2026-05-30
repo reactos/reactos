@@ -64,6 +64,13 @@ UefiConsPutChar(int c)
     {
         CurrentCursorX = 0;
         CurrentCursorY++;
+        
+        /* If wrapping onto a line beyond the screen display limits, scroll instantly */
+        if (CurrentCursorY >= Height)
+        {
+            FbConsScrollUp(CurrentAttr);
+            CurrentCursorY = Height - 1;
+        }
     }
 }
 

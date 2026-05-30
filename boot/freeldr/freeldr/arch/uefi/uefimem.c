@@ -239,6 +239,14 @@ UefiMemGetMemoryMap(ULONG *MemoryMapSize)
     /* Windows expects the first page to be reserved, otherwise it asserts.
      * However it can be just a free page on some UEFI systems. */
     UefiSetMemory(FreeldrMem, MaxFreeldrDescriptors, 0x000000, 1, LoaderFirmwarePermanent);
+    
+    /* Clean up the temporary buffer used for gathering the map descriptor snapshot */
+    if (EfiMemoryMap)
+    {
+        GlobalSystemTable->BootServices->FreePool(EfiMemoryMap);
+        EfiMemoryMap = NULL;
+    }
+
     *MemoryMapSize = FreeldrDescCount;
     return FreeldrMem;
 }
