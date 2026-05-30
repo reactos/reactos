@@ -1171,7 +1171,6 @@ DECLARE_INTERFACE_(IAssociationArrayInitialize, IUnknown) // {EE9165BF-A4D9-474B
  * @sse IPersist
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/ipersiststring2.htm
  */
-#undef INTERFACE
 #define INTERFACE IPersistString2
 DECLARE_INTERFACE_(IPersistString2, IPersist) // {3C44BA76-DE0E-4049-B6E4-6B31A5262707}
 {
@@ -1185,6 +1184,7 @@ DECLARE_INTERFACE_(IPersistString2, IPersist) // {3C44BA76-DE0E-4049-B6E4-6B31A5
     STDMETHOD(SetString)(THIS_ PCWSTR psz);
     STDMETHOD(GetString)(THIS_ PWSTR *ppsz);
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IPersistString2_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -1200,7 +1200,6 @@ DECLARE_INTERFACE_(IPersistString2, IPersist) // {3C44BA76-DE0E-4049-B6E4-6B31A5
  * @see IObjectWithRegistryKey
  * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iobjectwithregistrykey.htm
  */
-#undef INTERFACE
 #define INTERFACE IObjectWithRegistryKeyOld
 DECLARE_INTERFACE_(IObjectWithRegistryKeyOld, IUnknown) // {5747C63F-1DE8-423F-980F-00CB07F4C45B}
 {
@@ -1212,6 +1211,7 @@ DECLARE_INTERFACE_(IObjectWithRegistryKeyOld, IUnknown) // {5747C63F-1DE8-423F-9
     STDMETHOD(SetKey)(HKEY hKey);
     STDMETHOD(GetKey)(HKEY *phKey);
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IObjectWithRegistryKeyOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
@@ -1227,7 +1227,6 @@ DECLARE_INTERFACE_(IObjectWithRegistryKeyOld, IUnknown) // {5747C63F-1DE8-423F-9
  * @see IObjectWithRegistryKeyOld
  * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iobjectwithregistrykey.htm
  */
-#undef INTERFACE
 #define INTERFACE IObjectWithRegistryKey
 DECLARE_INTERFACE_(IObjectWithRegistryKey, IUnknown) // {D960050C-F4E1-4294-AC4B-598913605923}
 {
@@ -1239,6 +1238,7 @@ DECLARE_INTERFACE_(IObjectWithRegistryKey, IUnknown) // {D960050C-F4E1-4294-AC4B
     STDMETHOD(SetKey)(HKEY hKey);
     STDMETHOD(GetKey)(REGSAM samDesired, HKEY *phKey);
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IObjectWithRegistryKey_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
