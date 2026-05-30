@@ -27,7 +27,7 @@ typedef INT (CALLBACK *SLOTCOMPARE)(LPCVOID pvData1, LPCVOID pvData2, UINT cbDat
 /*****************************************************************************
  * ASSOCQUERY --- The type flags of association query
  *
- * @see IAssociationElementOld, IAssociationElement, IAssociationArrayOld, IAssociationArray
+ * @see IAssociationElement, IAssociationElementVista, IAssociationArray, IAssociationArrayVista
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/api/assocelem/query.htm
  */
 typedef DWORD ASSOCQUERY;
@@ -868,52 +868,13 @@ DECLARE_INTERFACE_(ITrayPriv, IUnknown)
 #endif
 
 /*****************************************************************************
- * IQuerySourceOld interface
+ * IQuerySource interface (old version)
  *
- * @see IQuerySource
- * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iquerysource.htm
- */
-#define INTERFACE IQuerySourceOld
-DECLARE_INTERFACE_(IQuerySourceOld, IUnknown) // {C7478486-7583-49E7-A6C2-FAF8F02BC30E}
-{
-    /*** IUnknown ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IQuerySourceOld ***/
-    STDMETHOD(EnumValues)(THIS_ IEnumString **ppEnum) PURE;
-    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum) PURE;
-    STDMETHOD(QueryValueString)(THIS_ PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue) PURE;
-    STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue) PURE;
-    STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName) PURE;
-    STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob) PURE;
-    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, BOOL bCreate, IQuerySourceOld **ppSource) PURE;
-    STDMETHOD(SetValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD, DWORD, PBYTE) PURE;
-};
-#undef INTERFACE
-
-#ifdef COBJMACROS
-#define IQuerySourceOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IQuerySourceOld_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IQuerySourceOld_Release(T) (T)->lpVtbl->Release(T)
-#define IQuerySourceOld_EnumValues(T,a) (T)->lpVtbl->EnumValues(T,a)
-#define IQuerySourceOld_EnumSources(T,a) (T)->lpVtbl->EnumSources(T,a)
-#define IQuerySourceOld_QueryValueString(T,a,b,c) (T)->lpVtbl->QueryValueString(T,a,b,c)
-#define IQuerySourceOld_QueryValueDword(T,a,b,c) (T)->lpVtbl->QueryValueDword(T,a,b,c)
-#define IQuerySourceOld_QueryValueExists(T,a,b) (T)->lpVtbl->QueryValueExists(T,a,b)
-#define IQuerySourceOld_QueryValueDirect(T,a,b,c) (T)->lpVtbl->QueryValueDirect(T,a,b,c)
-#define IQuerySourceOld_OpenSource(T,a,b,c) (T)->lpVtbl->OpenSource(T,a,b,c)
-#define IQuerySourceOld_SetValueDirect(T,a,b,c,d,e) (T)->lpVtbl->SetValueDirect(T,a,b,c,d,e)
-#endif
-
-/*****************************************************************************
- * IQuerySource interface (new version)
- *
- * @see IQuerySourceOld
+ * @see IQuerySourceVista
  * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iquerysource.htm
  */
 #define INTERFACE IQuerySource
-DECLARE_INTERFACE_(IQuerySource, IUnknown) // {7BC28AC2-0D9C-4941-BB9A-72BECB184FAC}
+DECLARE_INTERFACE_(IQuerySource, IUnknown) // {C7478486-7583-49E7-A6C2-FAF8F02BC30E}
 {
     /*** IUnknown ***/
     STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
@@ -921,13 +882,13 @@ DECLARE_INTERFACE_(IQuerySource, IUnknown) // {7BC28AC2-0D9C-4941-BB9A-72BECB184
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IQuerySource ***/
     STDMETHOD(EnumValues)(THIS_ IEnumString **ppEnum) PURE;
+    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum) PURE;
     STDMETHOD(QueryValueString)(THIS_ PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue) PURE;
     STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue) PURE;
-    STDMETHOD(QueryValueGuid)(THIS_ PCWSTR keyName, PCWSTR valueName, GUID *guid) PURE;
     STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName) PURE;
     STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob) PURE;
-    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum) PURE;
-    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, IQuerySource **ppSource) PURE;
+    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, BOOL bCreate, IQuerySource **ppSource) PURE;
+    STDMETHOD(SetValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD, DWORD, PBYTE) PURE;
 };
 #undef INTERFACE
 
@@ -936,13 +897,52 @@ DECLARE_INTERFACE_(IQuerySource, IUnknown) // {7BC28AC2-0D9C-4941-BB9A-72BECB184
 #define IQuerySource_AddRef(T) (T)->lpVtbl->AddRef(T)
 #define IQuerySource_Release(T) (T)->lpVtbl->Release(T)
 #define IQuerySource_EnumValues(T,a) (T)->lpVtbl->EnumValues(T,a)
+#define IQuerySource_EnumSources(T,a) (T)->lpVtbl->EnumSources(T,a)
 #define IQuerySource_QueryValueString(T,a,b,c) (T)->lpVtbl->QueryValueString(T,a,b,c)
 #define IQuerySource_QueryValueDword(T,a,b,c) (T)->lpVtbl->QueryValueDword(T,a,b,c)
-#define IQuerySource_QueryValueGuid(T,a,b,c) (T)->lpVtbl->QueryValueGuid(T,a,b,c)
 #define IQuerySource_QueryValueExists(T,a,b) (T)->lpVtbl->QueryValueExists(T,a,b)
 #define IQuerySource_QueryValueDirect(T,a,b,c) (T)->lpVtbl->QueryValueDirect(T,a,b,c)
-#define IQuerySource_EnumSources(T,a) (T)->lpVtbl->EnumSources(T,a)
-#define IQuerySource_OpenSource(T,a,b) (T)->lpVtbl->OpenSource(T,a,b)
+#define IQuerySource_OpenSource(T,a,b,c) (T)->lpVtbl->OpenSource(T,a,b,c)
+#define IQuerySource_SetValueDirect(T,a,b,c,d,e) (T)->lpVtbl->SetValueDirect(T,a,b,c,d,e)
+#endif
+
+/*****************************************************************************
+ * IQuerySourceVista interface (new version)
+ *
+ * @see IQuerySource
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iquerysource.htm
+ */
+#define INTERFACE IQuerySourceVista
+DECLARE_INTERFACE_(IQuerySourceVista, IUnknown) // {7BC28AC2-0D9C-4941-BB9A-72BECB184FAC}
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IQuerySourceVista ***/
+    STDMETHOD(EnumValues)(THIS_ IEnumString **ppEnum) PURE;
+    STDMETHOD(QueryValueString)(THIS_ PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue) PURE;
+    STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue) PURE;
+    STDMETHOD(QueryValueGuid)(THIS_ PCWSTR keyName, PCWSTR valueName, GUID *guid) PURE;
+    STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName) PURE;
+    STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob) PURE;
+    STDMETHOD(EnumSources)(THIS_ IEnumString **ppEnum) PURE;
+    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, IQuerySourceVista **ppSource) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IQuerySourceVista_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IQuerySourceVista_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IQuerySourceVista_Release(T) (T)->lpVtbl->Release(T)
+#define IQuerySourceVista_EnumValues(T,a) (T)->lpVtbl->EnumValues(T,a)
+#define IQuerySourceVista_QueryValueString(T,a,b,c) (T)->lpVtbl->QueryValueString(T,a,b,c)
+#define IQuerySourceVista_QueryValueDword(T,a,b,c) (T)->lpVtbl->QueryValueDword(T,a,b,c)
+#define IQuerySourceVista_QueryValueGuid(T,a,b,c) (T)->lpVtbl->QueryValueGuid(T,a,b,c)
+#define IQuerySourceVista_QueryValueExists(T,a,b) (T)->lpVtbl->QueryValueExists(T,a,b)
+#define IQuerySourceVista_QueryValueDirect(T,a,b,c) (T)->lpVtbl->QueryValueDirect(T,a,b,c)
+#define IQuerySourceVista_EnumSources(T,a) (T)->lpVtbl->EnumSources(T,a)
+#define IQuerySourceVista_OpenSource(T,a,b) (T)->lpVtbl->OpenSource(T,a,b)
 #endif
 
 /*****************************************************************************
@@ -972,46 +972,13 @@ DECLARE_INTERFACE_(IObjectWithQuerySource, IUnknown) // {B3DCB623-4280-4EB1-84B3
 #endif
 
 /*****************************************************************************
- * IAssociationElementOld interface
+ * IAssociationElement interface (old version)
  *
- * @see IAssociationElement
- * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iassociationelement.htm
- */
-#define INTERFACE IAssociationElementOld
-DECLARE_INTERFACE_(IAssociationElementOld, IUnknown) // {E58B1ABF-9596-4DBA-8997-89DCDEF46992}
-{
-    /*** IUnknown ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IAssociationElementOld ***/
-    STDMETHOD(QueryString)(THIS_ ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
-    STDMETHOD(QueryDword)(THIS_ ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
-    STDMETHOD(QueryExists)(THIS_ ASSOCQUERY query, PCWSTR key) PURE;
-    STDMETHOD(QueryDirect)(THIS_ ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) PURE;
-    STDMETHOD(QueryObject)(THIS_ ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) PURE;
-};
-#undef INTERFACE
-
-#ifdef COBJMACROS
-#define IAssociationElementOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IAssociationElementOld_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IAssociationElementOld_Release(T) (T)->lpVtbl->Release(T)
-#define IAssociationElementOld_QueryString(T,a,b,c) (T)->lpVtbl->QueryString(T,a,b,c)
-#define IAssociationElementOld_QueryDword(T,a,b,c) (T)->lpVtbl->QueryDword(T,a,b,c)
-#define IAssociationElementOld_QueryExists(T,a,b) (T)->lpVtbl->QueryExists(T,a,b)
-#define IAssociationElementOld_QueryDirect(T,a,b,c) (T)->lpVtbl->QueryDirect(T,a,b,c)
-#define IAssociationElementOld_QueryObject(T,a,b,c,d) (T)->lpVtbl->QueryObject(T,a,b,c,d)
-#endif
-
-/*****************************************************************************
- * IAssociationElement interface (new version)
- *
- * @see IAssociationElementOld
+ * @see IAssociationElementVista
  * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iassociationelement.htm
  */
 #define INTERFACE IAssociationElement
-DECLARE_INTERFACE_(IAssociationElement, IUnknown) // {D8F6AD5B-B44F-4BCC-88FD-EB3473DB7502}
+DECLARE_INTERFACE_(IAssociationElement, IUnknown) // {E58B1ABF-9596-4DBA-8997-89DCDEF46992}
 {
     /*** IUnknown ***/
     STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
@@ -1020,7 +987,6 @@ DECLARE_INTERFACE_(IAssociationElement, IUnknown) // {D8F6AD5B-B44F-4BCC-88FD-EB
     /*** IAssociationElement ***/
     STDMETHOD(QueryString)(THIS_ ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
     STDMETHOD(QueryDword)(THIS_ ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
-    STDMETHOD(QueryGuid)(THIS_ ASSOCQUERY query, PCWSTR key, GUID *pguid) PURE;
     STDMETHOD(QueryExists)(THIS_ ASSOCQUERY query, PCWSTR key) PURE;
     STDMETHOD(QueryDirect)(THIS_ ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) PURE;
     STDMETHOD(QueryObject)(THIS_ ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) PURE;
@@ -1033,10 +999,44 @@ DECLARE_INTERFACE_(IAssociationElement, IUnknown) // {D8F6AD5B-B44F-4BCC-88FD-EB
 #define IAssociationElement_Release(T) (T)->lpVtbl->Release(T)
 #define IAssociationElement_QueryString(T,a,b,c) (T)->lpVtbl->QueryString(T,a,b,c)
 #define IAssociationElement_QueryDword(T,a,b,c) (T)->lpVtbl->QueryDword(T,a,b,c)
-#define IAssociationElement_QueryGuid(T,a,b,c) (T)->lpVtbl->QueryGuid(T,a,b,c)
 #define IAssociationElement_QueryExists(T,a,b) (T)->lpVtbl->QueryExists(T,a,b)
 #define IAssociationElement_QueryDirect(T,a,b,c) (T)->lpVtbl->QueryDirect(T,a,b,c)
 #define IAssociationElement_QueryObject(T,a,b,c,d) (T)->lpVtbl->QueryObject(T,a,b,c,d)
+#endif
+
+/*****************************************************************************
+ * IAssociationElementVista interface (new version)
+ *
+ * @see IAssociationElement
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iassociationelement.htm
+ */
+#define INTERFACE IAssociationElementVista
+DECLARE_INTERFACE_(IAssociationElementVista, IUnknown) // {D8F6AD5B-B44F-4BCC-88FD-EB3473DB7502}
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IAssociationElementVista ***/
+    STDMETHOD(QueryString)(THIS_ ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
+    STDMETHOD(QueryDword)(THIS_ ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
+    STDMETHOD(QueryGuid)(THIS_ ASSOCQUERY query, PCWSTR key, GUID *pguid) PURE;
+    STDMETHOD(QueryExists)(THIS_ ASSOCQUERY query, PCWSTR key) PURE;
+    STDMETHOD(QueryDirect)(THIS_ ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) PURE;
+    STDMETHOD(QueryObject)(THIS_ ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IAssociationElementVista_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IAssociationElementVista_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IAssociationElementVista_Release(T) (T)->lpVtbl->Release(T)
+#define IAssociationElementVista_QueryString(T,a,b,c) (T)->lpVtbl->QueryString(T,a,b,c)
+#define IAssociationElementVista_QueryDword(T,a,b,c) (T)->lpVtbl->QueryDword(T,a,b,c)
+#define IAssociationElementVista_QueryGuid(T,a,b,c) (T)->lpVtbl->QueryGuid(T,a,b,c)
+#define IAssociationElementVista_QueryExists(T,a,b) (T)->lpVtbl->QueryExists(T,a,b)
+#define IAssociationElementVista_QueryDirect(T,a,b,c) (T)->lpVtbl->QueryDirect(T,a,b,c)
+#define IAssociationElementVista_QueryObject(T,a,b,c,d) (T)->lpVtbl->QueryObject(T,a,b,c,d)
 #endif
 
 /*****************************************************************************
@@ -1070,19 +1070,19 @@ DECLARE_INTERFACE_(IEnumAssociationElements, IUnknown) // {A6B0FB57-7523-4439-94
 #endif
 
 /*****************************************************************************
- * IAssociationArrayOld interface
+ * IAssociationArray interface (old version)
  *
- * @see IAssociationArray
+ * @see IAssociationArrayVista
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/iassociationarray.htm
  */
-#define INTERFACE IAssociationArrayOld
-DECLARE_INTERFACE_(IAssociationArrayOld, IUnknown) // {3B877E3C-67DE-4F9A-B29B-17D0A1521C6A}
+#define INTERFACE IAssociationArray
+DECLARE_INTERFACE_(IAssociationArray, IUnknown) // {3B877E3C-67DE-4F9A-B29B-17D0A1521C6A}
 {
     /*** IUnknown ***/
     STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IAssociationArrayOld ***/
+    /*** IAssociationArray ***/
     STDMETHOD(EnumElements)(THIS_ ULONG flags, IEnumAssociationElements **ppEnum) PURE;
     STDMETHOD(QueryString)(THIS_ ULONG flags, ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
     STDMETHOD(QueryDword)(THIS_ ULONG flags, ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
@@ -1093,31 +1093,31 @@ DECLARE_INTERFACE_(IAssociationArrayOld, IUnknown) // {3B877E3C-67DE-4F9A-B29B-1
 #undef INTERFACE
 
 #ifdef COBJMACROS
-#define IAssociationArrayOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IAssociationArrayOld_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IAssociationArrayOld_Release(T) (T)->lpVtbl->Release(T)
-#define IAssociationArrayOld_EnumElements(T,a,b) (T)->lpVtbl->EnumElements(T,a,b)
-#define IAssociationArrayOld_QueryString(T,a,b,c,d) (T)->lpVtbl->QueryString(T,a,b,c,d)
-#define IAssociationArrayOld_QueryDword(T,a,b,c,d) (T)->lpVtbl->QueryDword(T,a,b,c,d)
-#define IAssociationArrayOld_QueryExists(T,a,b,c) (T)->lpVtbl->QueryExists(T,a,b,c)
-#define IAssociationArrayOld_QueryDirect(T,a,b,c,d) (T)->lpVtbl->QueryDirect(T,a,b,c,d)
-#define IAssociationArrayOld_QueryObject(T,a,b,c,d,e) (T)->lpVtbl->QueryObject(T,a,b,c,d,e)
+#define IAssociationArray_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IAssociationArray_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IAssociationArray_Release(T) (T)->lpVtbl->Release(T)
+#define IAssociationArray_EnumElements(T,a,b) (T)->lpVtbl->EnumElements(T,a,b)
+#define IAssociationArray_QueryString(T,a,b,c,d) (T)->lpVtbl->QueryString(T,a,b,c,d)
+#define IAssociationArray_QueryDword(T,a,b,c,d) (T)->lpVtbl->QueryDword(T,a,b,c,d)
+#define IAssociationArray_QueryExists(T,a,b,c) (T)->lpVtbl->QueryExists(T,a,b,c)
+#define IAssociationArray_QueryDirect(T,a,b,c,d) (T)->lpVtbl->QueryDirect(T,a,b,c,d)
+#define IAssociationArray_QueryObject(T,a,b,c,d,e) (T)->lpVtbl->QueryObject(T,a,b,c,d,e)
 #endif
 
 /*****************************************************************************
- * IAssociationArray interface
+ * IAssociationArrayVista interface (new version)
  *
- * @see IAssociationArrayOld
+ * @see IAssociationArray
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/iassociationarray.htm
  */
-#define INTERFACE IAssociationArray
-DECLARE_INTERFACE_(IAssociationArray, IUnknown) // {19ADBAFD-1C5F-4FC7-94EE-846702DFB58B}
+#define INTERFACE IAssociationArrayVista
+DECLARE_INTERFACE_(IAssociationArrayVista, IUnknown) // {19ADBAFD-1C5F-4FC7-94EE-846702DFB58B}
 {
     /*** IUnknown ***/
     STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IAssociationArray ***/
+    /*** IAssociationArrayVista ***/
     STDMETHOD(QueryString)(THIS_ ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
     STDMETHOD(QueryDword)(THIS_ ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
     STDMETHOD(QueryGuid)(THIS_ ASSOCQUERY query, PCWSTR key, GUID *pguid) PURE;
@@ -1128,15 +1128,15 @@ DECLARE_INTERFACE_(IAssociationArray, IUnknown) // {19ADBAFD-1C5F-4FC7-94EE-8467
 #undef INTERFACE
 
 #ifdef COBJMACROS
-#define IAssociationArray_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IAssociationArray_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IAssociationArray_Release(T) (T)->lpVtbl->Release(T)
-#define IAssociationArray_QueryString(T,a,b,c) (T)->lpVtbl->QueryString(T,a,b,c)
-#define IAssociationArray_QueryDword(T,a,b,c) (T)->lpVtbl->QueryDword(T,a,b,c)
-#define IAssociationArray_QueryGuid(T,a,b,c) (T)->lpVtbl->QueryGuid(T,a,b,c)
-#define IAssociationArray_QueryExists(T,a,b) (T)->lpVtbl->QueryExists(T,a,b)
-#define IAssociationArray_QueryDirect(T,a,b,c) (T)->lpVtbl->QueryDirect(T,a,b,c)
-#define IAssociationArray_QueryObject(T,a,b,c,d) (T)->lpVtbl->QueryObject(T,a,b,c,d)
+#define IAssociationArrayVista_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IAssociationArrayVista_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IAssociationArrayVista_Release(T) (T)->lpVtbl->Release(T)
+#define IAssociationArrayVista_QueryString(T,a,b,c) (T)->lpVtbl->QueryString(T,a,b,c)
+#define IAssociationArrayVista_QueryDword(T,a,b,c) (T)->lpVtbl->QueryDword(T,a,b,c)
+#define IAssociationArrayVista_QueryGuid(T,a,b,c) (T)->lpVtbl->QueryGuid(T,a,b,c)
+#define IAssociationArrayVista_QueryExists(T,a,b) (T)->lpVtbl->QueryExists(T,a,b)
+#define IAssociationArrayVista_QueryDirect(T,a,b,c) (T)->lpVtbl->QueryDirect(T,a,b,c)
+#define IAssociationArrayVista_QueryObject(T,a,b,c,d) (T)->lpVtbl->QueryObject(T,a,b,c,d)
 #endif
 
 /*****************************************************************************
@@ -1197,9 +1197,9 @@ DECLARE_INTERFACE_(IPersistString2, IPersist) // {3C44BA76-DE0E-4049-B6E4-6B31A5
 #endif
 
 /*****************************************************************************
- * IObjectWithRegistryKeyOld interface
+ * IObjectWithRegistryKey interface (old version)
  *
- * @see IObjectWithRegistryKey
+ * @see IObjectWithRegistryKeyVista
  * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iobjectwithregistrykey.htm
  */
 #define INTERFACE IObjectWithRegistryKeyOld
@@ -1209,36 +1209,9 @@ DECLARE_INTERFACE_(IObjectWithRegistryKeyOld, IUnknown) // {5747C63F-1DE8-423F-9
     STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IObjectWithRegistryKeyOld ***/
-    STDMETHOD(SetKey)(THIS_ HKEY hKey) PURE;
-    STDMETHOD(GetKey)(THIS_ HKEY *phKey) PURE;
-};
-#undef INTERFACE
-
-#ifdef COBJMACROS
-#define IObjectWithRegistryKeyOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IObjectWithRegistryKeyOld_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IObjectWithRegistryKeyOld_Release(T) (T)->lpVtbl->Release(T)
-#define IObjectWithRegistryKeyOld_SetKey(T,a) (T)->lpVtbl->SetKey(T,a)
-#define IObjectWithRegistryKeyOld_GetKey(T,a) (T)->lpVtbl->GetKey(T,a)
-#endif
-
-/*****************************************************************************
- * IObjectWithRegistryKey interface (new version)
- *
- * @see IObjectWithRegistryKeyOld
- * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iobjectwithregistrykey.htm
- */
-#define INTERFACE IObjectWithRegistryKey
-DECLARE_INTERFACE_(IObjectWithRegistryKey, IUnknown) // {D960050C-F4E1-4294-AC4B-598913605923}
-{
-    /*** IUnknown ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IObjectWithRegistryKey ***/
     STDMETHOD(SetKey)(THIS_ HKEY hKey) PURE;
-    STDMETHOD(GetKey)(THIS_ REGSAM samDesired, HKEY *phKey) PURE;
+    STDMETHOD(GetKey)(THIS_ HKEY *phKey) PURE;
 };
 #undef INTERFACE
 
@@ -1248,6 +1221,33 @@ DECLARE_INTERFACE_(IObjectWithRegistryKey, IUnknown) // {D960050C-F4E1-4294-AC4B
 #define IObjectWithRegistryKey_Release(T) (T)->lpVtbl->Release(T)
 #define IObjectWithRegistryKey_SetKey(T,a) (T)->lpVtbl->SetKey(T,a)
 #define IObjectWithRegistryKey_GetKey(T,a) (T)->lpVtbl->GetKey(T,a)
+#endif
+
+/*****************************************************************************
+ * IObjectWithRegistryKeyVista interface (new version)
+ *
+ * @see IObjectWithRegistryKey
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iobjectwithregistrykey.htm
+ */
+#define INTERFACE IObjectWithRegistryKeyVista
+DECLARE_INTERFACE_(IObjectWithRegistryKeyVista, IUnknown) // {D960050C-F4E1-4294-AC4B-598913605923}
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IObjectWithRegistryKeyVista ***/
+    STDMETHOD(SetKey)(THIS_ HKEY hKey) PURE;
+    STDMETHOD(GetKey)(THIS_ REGSAM samDesired, HKEY *phKey) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IObjectWithRegistryKeyVista_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IObjectWithRegistryKeyVista_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IObjectWithRegistryKeyVista_Release(T) (T)->lpVtbl->Release(T)
+#define IObjectWithRegistryKeyVista_SetKey(T,a) (T)->lpVtbl->SetKey(T,a)
+#define IObjectWithRegistryKeyVista_GetKey(T,a) (T)->lpVtbl->GetKey(T,a)
 #endif
 
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray*);
