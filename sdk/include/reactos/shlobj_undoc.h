@@ -887,7 +887,7 @@ DECLARE_INTERFACE_(IQuerySourceOld, IUnknown) // {C7478486-7583-49E7-A6C2-FAF8F0
     STDMETHOD(QueryValueDword)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue) PURE;
     STDMETHOD(QueryValueExists)(THIS_ PCWSTR keyName, PCWSTR valueName) PURE;
     STDMETHOD(QueryValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob) PURE;
-    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, BOOL, IQuerySourceOld **ppSource) PURE;
+    STDMETHOD(OpenSource)(THIS_ PCWSTR keyName, BOOL bCreate, IQuerySourceOld **ppSource) PURE;
     STDMETHOD(SetValueDirect)(THIS_ PCWSTR keyName, PCWSTR valueName, DWORD, DWORD, PBYTE) PURE;
 };
 #undef INTERFACE
