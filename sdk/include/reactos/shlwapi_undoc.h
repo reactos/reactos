@@ -126,6 +126,14 @@ EXTERN_C BOOL WINAPI SHBoolSystemParametersInfo(UINT uiAction, PVOID pvParam);
 
 HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU, BOOL bCreate, PHKEY phKey);
 
+HRESULT WINAPI
+QuerySourceCreateFromKey(
+    _In_ HKEY hKey,
+    _In_ LPCWSTR lpSubKey,
+    _In_ BOOL bCreate,
+    _In_ REFIID riid,
+    _Outptr_ PVOID *ppv);
+
 BOOL WINAPI SHAddDataBlock(LPDBLIST* lppList, const DATABLOCK_HEADER *lpNewItem);
 BOOL WINAPI SHRemoveDataBlock(LPDBLIST* lppList, DWORD dwSignature);
 DATABLOCK_HEADER* WINAPI SHFindDataBlock(LPDBLIST lpList, DWORD dwSignature);
