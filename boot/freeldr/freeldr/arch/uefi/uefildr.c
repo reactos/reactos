@@ -38,7 +38,11 @@ EfiEntry(
     /* Debugger pre-initialization */
     DebugInit(BootMgrInfo.DebugString);
 
+    /* Initialize machine-specific architecture helpers */
     MachInit(CmdLine);
+
+    /* Initialize i/o filesystem subsystem before UI dependencies or disk reads */
+    FsInit();
 
     /* UI pre-initialization */
     if (!UiInitialize(FALSE))
@@ -54,9 +58,6 @@ EfiEntry(
         goto Quit;
     }
 
-    /* Initialize I/O subsystem */
-    FsInit();
-
     /* Initialize the module list */
     if (!PeLdrInitializeModuleList())
     {
@@ -70,8 +71,18 @@ EfiEntry(
         goto Quit;
     }
 
-    /* 0x32000 is what UEFI defines, but we can go smaller if we want */
-    BasicStack = (PVOID)((ULONG_PTR)0x32000 + (ULONG_PTR)MmAllocateMemoryWithType(0x32000, LoaderOsloaderStack));
+    /* Define stack size (matched with typical FreeLoader expectations) */
+    SIZE_T StackSize = 0x32000;
+    PVOID AllocatedStackMem = MmAllocateMemoryWithType(StackSize, LoaderOsloaderStack);
+    
+    if (!AllocatedStackMem)
+    {
+        UiMessageBoxCritical("Unable to allocate OS loader stack.");
+        goto Quit;
+    }
+
+    /* Stacks grow downward so set the initial stack pointer to the top of the allocated region */
+    BasicStack = (PVOID)((ULONG_PTR)AllocatedStackMem + StackSize);
     _changestack();
 
 Quit:
@@ -98,11 +109,27 @@ ExecuteLoaderCleanly(PVOID PreviousStack)
 DECLSPEC_NORETURN
 VOID __cdecl Reboot(VOID)
 {
-    //TODO: Replace with a true firmware reboot eventually
-    WARN("Something has gone wrong - halting FreeLoader\n");
+    WARN("Something has gone wrong - resetting system via UEFI Runtime Services\n");
+
+    if (GlobalSystemTable && GlobalSystemTable->RuntimeServices)
+    {
+        /* Attempt a native firmware cold reset */
+        GlobalSystemTable->RuntimeServices->ResetSystem(
+            EfiResetCold,
+            EFI_SUCCESS,
+            0,
+            NULL
+        );
+    }
+
+    /* Fallback dead-loop if runtime services are missing or fail to respond */
     for (;;)
     {
+        #if defined(_M_IX86) || defined(_M_AMD64)
+        __halt();
+        #else
         NOTHING;
+        #endif
     }
 }
 #endif

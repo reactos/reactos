@@ -68,8 +68,15 @@ PUEFI_LoadMemoryMap(
         if (EfiMemoryMap)
             GlobalSystemTable->BootServices->FreePool(EfiMemoryMap);
 
-        /* If MapSize never reports the correct size after the first time, increment */
-        AllocationSize = *LocMapSize + (*LocDescriptorSize * Count);
+        /* Guard against infinite allocation loops on buggy firmware */
+        if (Count > 10)
+        {
+            FrLdrBugCheckWithMessage(EXIT_BOOTSERVICES_FAILURE, __FILE__, __LINE__, 
+                                     "Failed to retrieve stable UEFI memory map.", 0);
+        }
+
+        /* Pad the size with extra descriptors to account for AllocatePool's own overhead */
+        AllocationSize = *LocMapSize + (*LocDescriptorSize * (Count + 4));
         GlobalSystemTable->BootServices->AllocatePool(EfiLoaderData, AllocationSize,
                                                       (VOID**)&EfiMemoryMap);
         Status = GlobalSystemTable->BootServices->GetMemoryMap(LocMapSize,
@@ -85,6 +92,7 @@ static
 VOID
 UefiSetMemory(
     _Inout_ PFREELDR_MEMORY_DESCRIPTOR MemoryMap,
+    _In_ ULONG MaxCount,
     _In_ ULONG_PTR BaseAddress,
     _In_ PFN_COUNT SizeInPages,
     _In_ TYPE_OF_MEMORY MemoryType)
@@ -94,9 +102,8 @@ UefiSetMemory(
     BasePage = BaseAddress / EFI_PAGE_SIZE;
     PageCount = SizeInPages;
 
-    /* Add the memory descriptor */
     FreeldrDescCount = AddMemoryDescriptor(MemoryMap,
-                                           UNUSED_MAX_DESCRIPTOR_COUNT,
+                                           MaxCount,
                                            BasePage,
                                            PageCount,
                                            MemoryType);
@@ -184,8 +191,10 @@ UefiMemGetMemoryMap(ULONG *MemoryMapSize)
     TRACE("Value of DescriptorVersion: %d\n", DescriptorVersion);
 
     EntryCount = (MapSize / DescriptorSize);
+    
+    UINT32 MaxFreeldrDescriptors = EntryCount + 2; 
 
-    FreeldrMemMapSize = (sizeof(FREELDR_MEMORY_DESCRIPTOR) * EntryCount);
+    FreeldrMemMapSize = (sizeof(FREELDR_MEMORY_DESCRIPTOR) * MaxFreeldrDescriptors);
     Status = GlobalSystemTable->BootServices->AllocatePool(EfiLoaderData,
                                                            FreeldrMemMapSize,
                                                            (void**)&FreeldrMem);
@@ -218,6 +227,7 @@ UefiMemGetMemoryMap(ULONG *MemoryMapSize)
         if (MemoryType != LoaderReserve)
         {
             UefiSetMemory(FreeldrMem,
+                          MaxFreeldrDescriptors,
                           MapEntry->PhysicalStart,
                           MapEntry->NumberOfPages,
                           MemoryType);
@@ -228,7 +238,7 @@ UefiMemGetMemoryMap(ULONG *MemoryMapSize)
 
     /* Windows expects the first page to be reserved, otherwise it asserts.
      * However it can be just a free page on some UEFI systems. */
-    UefiSetMemory(FreeldrMem, 0x000000, 1, LoaderFirmwarePermanent);
+    UefiSetMemory(FreeldrMem, MaxFreeldrDescriptors, 0x000000, 1, LoaderFirmwarePermanent);
     *MemoryMapSize = FreeldrDescCount;
     return FreeldrMem;
 }
@@ -249,9 +259,16 @@ UefiExitBootServices(VOID)
                         &DescriptorVersion);
 
     Status = GlobalSystemTable->BootServices->ExitBootServices(GlobalImageHandle, MapKey);
-    /* UEFI spec demands twice! */
+    
+    /* If the first attempt fails, the MapKey might have changed so get a fresh one and retry. */
     if (Status != EFI_SUCCESS)
+    {
+        PUEFI_LoadMemoryMap(&MapKey,
+                            &MapSize,
+                            &DescriptorSize,
+                            &DescriptorVersion);
         Status = GlobalSystemTable->BootServices->ExitBootServices(GlobalImageHandle, MapKey);
+    }
 
     if (Status != EFI_SUCCESS)
     {
