@@ -108,9 +108,11 @@ public:
     STDMETHODIMP QueryValueString(PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue) override;
     STDMETHODIMP QueryValueDword(PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue) override;
     STDMETHODIMP QueryValueExists(PCWSTR keyName, PCWSTR valueName) override;
-    STDMETHODIMP QueryValueDirect(PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob) override;
+    STDMETHODIMP QueryValueDirect(PCWSTR keyName, PCWSTR valueName,
+                                  FLAGGED_BYTE_BLOB **ppBlob) override;
     STDMETHODIMP OpenSource(PCWSTR keyName, BOOL bCreate, IQuerySourceOld **ppSource) override;
-    STDMETHODIMP SetValueDirect(PCWSTR keyName, PCWSTR valueName, DWORD dwType, DWORD cbData, LPCVOID pvData) override;
+    STDMETHODIMP SetValueDirect(PCWSTR keyName, PCWSTR valueName, DWORD dwType, DWORD cbData,
+                                LPCVOID pvData) override;
     // IObjectWithRegistryKeyOld methods
     STDMETHODIMP SetKey(HKEY hKey) override;
     STDMETHODIMP GetKey(HKEY *phKey) override;
@@ -220,7 +222,8 @@ BOOL CRegistryEnumKeys::_RegNext(DWORD dwIndex)
 DWORD CRegistryEnumKeys::_MaxLen()
 {
     DWORD cchKeyNameMax = 0;
-    RegQueryInfoKeyW(m_hKey, NULL, NULL, NULL, NULL, &cchKeyNameMax, NULL, NULL, NULL, NULL, NULL, NULL);
+    RegQueryInfoKeyW(m_hKey, NULL, NULL, NULL, NULL, &cchKeyNameMax, NULL, NULL, NULL, NULL,
+                     NULL, NULL);
     return cchKeyNameMax;
 }
 
@@ -229,13 +232,15 @@ DWORD CRegistryEnumKeys::_MaxLen()
 BOOL CRegistryEnumValues::_RegNext(DWORD dwIndex)
 {
     DWORD cchValueNameMax = m_cchNameMax;
-    return RegEnumValueW(m_hKey, dwIndex, m_pszName, &cchValueNameMax, NULL, NULL, NULL, NULL) == ERROR_SUCCESS;
+    return RegEnumValueW(m_hKey, dwIndex, m_pszName, &cchValueNameMax, NULL,
+                         NULL, NULL, NULL) == ERROR_SUCCESS;
 }
 
 DWORD CRegistryEnumValues::_MaxLen()
 {
     DWORD cchValueNameMax = 0;
-    RegQueryInfoKeyW(m_hKey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &cchValueNameMax, NULL, NULL, NULL);
+    RegQueryInfoKeyW(m_hKey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &cchValueNameMax,
+                     NULL, NULL, NULL);
     return cchValueNameMax;
 }
 
@@ -472,7 +477,7 @@ STDMETHODIMP CRegistrySource::GetKey(HKEY *phKey)
 /**************************************************************************
  *  QuerySourceCreateFromKey (SHLWAPI.544)
  *
- * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/regsrc/createfromkey.htm?tx=116
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/regsrc/createfromkey.htm
  */
 EXTERN_C
 HRESULT WINAPI
