@@ -6315,7 +6315,7 @@ NtUserMenuItemFromPoint(
    int Ret = -1;
 
    TRACE("Enter NtUserMenuItemFromPoint\n");
-   UserEnterExclusive();
+   UserEnterShared();
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {

@@ -1527,7 +1527,7 @@ NtUserBuildHwndList(
    if (pcHwndNeeded == NULL)
        return STATUS_INVALID_PARAMETER;
 
-   UserEnterExclusive();
+   UserEnterShared();
 
    if (hwndParent || !dwThreadId)
    {
