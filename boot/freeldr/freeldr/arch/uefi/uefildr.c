@@ -71,7 +71,17 @@ EfiEntry(
     }
 
     /* 0x32000 is what UEFI defines, but we can go smaller if we want */
-    BasicStack = (PVOID)((ULONG_PTR)0x32000 + (ULONG_PTR)MmAllocateMemoryWithType(0x32000, LoaderOsloaderStack));
+    SIZE_T StackSize = 0x32000;
+    PVOID AllocatedStackMem = MmAllocateMemoryWithType(StackSize, LoaderOsloaderStack);
+
+    if (!AllocatedStackMem)
+    {
+        UiMessageBoxCritical("Unable to allocate OS loader stack.");
+        goto Quit;
+    }
+
+    /* Stacks grow downward so set the initial stack pointer to the top of the allocated region */
+    BasicStack = (PVOID)((ULONG_PTR)AllocatedStackMem + StackSize);
     _changestack();
 
 Quit:
