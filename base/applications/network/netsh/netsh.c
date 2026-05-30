@@ -404,7 +404,7 @@ MatchTagsInCmdLine(
         for (j = 0; j < dwTagCount; j++)
         {
             DPRINT("Test tag %S\n", pttTags[j].pwszTag);
-            if ((wcslen(pttTags[i].pwszTag) == dwTagLength) &&
+            if ((wcslen(pttTags[j].pwszTag) == dwTagLength) &&
                 (_wcsnicmp(ppwcArguments[i], pttTags[j].pwszTag, dwTagLength) == 0))
             {
                 DPRINT("Found tag %S\n", pttTags[j].pwszTag);
