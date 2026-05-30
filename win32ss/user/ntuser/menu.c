@@ -5765,7 +5765,7 @@ NtUserGetTitleBarInfo(
     BOOLEAN retValue = FALSE;
 
     TRACE("Enter NtUserGetTitleBarInfo\n");
-    UserEnterExclusive();
+    UserEnterShared();
 
     /* Validate the window handle */
     if (!(WindowObject = UserGetWindowObject(hwnd)))
