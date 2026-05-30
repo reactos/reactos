@@ -39,11 +39,11 @@ protected:
     DWORD m_dwIndex = 0;
     CRegistrySource *m_pSource = NULL;
     HKEY m_hKey = NULL;
-    LPWSTR m_pszName = NULL;
+    PWSTR m_pszName = NULL;
     WCHAR m_szBuf[64] = {};
     DWORD m_cchNameMax = 0;
 
-    BOOL _Next(LPWSTR *ppwsz);
+    BOOL _Next(PWSTR *ppwsz);
     virtual BOOL _RegNext(DWORD dwIndex) = 0;
     virtual DWORD _MaxLen() = 0;
 
@@ -96,7 +96,7 @@ class CRegistrySource
 public:
     virtual ~CRegistrySource();
 
-    HRESULT Init(HKEY hKey, LPCWSTR pszSubKey, BOOL bCreate);
+    HRESULT Init(HKEY hKey, PCWSTR pszSubKey, BOOL bCreate);
 
     // IUnknown methods
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override;
@@ -136,7 +136,7 @@ HRESULT CRegistryEnumBase::Init(HKEY hKey, CRegistrySource *pSource)
     m_cchNameMax = _MaxLen();
     if (m_cchNameMax > _countof(m_szBuf))
     {
-        m_pszName = (LPWSTR)LocalAlloc(LPTR, m_cchNameMax * sizeof(WCHAR));
+        m_pszName = (PWSTR)LocalAlloc(LPTR, m_cchNameMax * sizeof(WCHAR));
     }
     else
     {
@@ -146,7 +146,7 @@ HRESULT CRegistryEnumBase::Init(HKEY hKey, CRegistrySource *pSource)
     return m_pszName ? S_OK : E_OUTOFMEMORY;
 }
 
-BOOL CRegistryEnumBase::_Next(LPWSTR *ppwsz)
+BOOL CRegistryEnumBase::_Next(PWSTR *ppwsz)
 {
     return _RegNext(m_dwIndex) && SUCCEEDED(SHStrDupW(m_pszName, ppwsz));
 }
@@ -252,7 +252,7 @@ CRegistrySource::~CRegistrySource()
         RegCloseKey(m_hKey);
 }
 
-HRESULT CRegistrySource::Init(HKEY hKey, LPCWSTR pszSubKey, BOOL bCreate)
+HRESULT CRegistrySource::Init(HKEY hKey, PCWSTR pszSubKey, BOOL bCreate)
 {
     LSTATUS error;
     if (bCreate)
@@ -326,9 +326,9 @@ STDMETHODIMP CRegistrySource::EnumSources(IEnumString **ppEnum)
 }
 
 STDMETHODIMP CRegistrySource::QueryValueString(
-    LPCWSTR keyName,
-    LPCWSTR valueName,
-    LPWSTR *ppszValue)
+    PCWSTR keyName,
+    PCWSTR valueName,
+    PWSTR *ppszValue)
 {
     *ppszValue = NULL;
 
@@ -347,7 +347,7 @@ STDMETHODIMP CRegistrySource::QueryValueString(
     if (error != ERROR_MORE_DATA)
         return error ? HRESULT_FROM_WIN32(error) : S_OK;
 
-    *ppszValue = (LPWSTR)SHAlloc(cbData);
+    *ppszValue = (PWSTR)SHAlloc(cbData);
     if (!*ppszValue)
         return E_OUTOFMEMORY;
 
@@ -384,8 +384,8 @@ STDMETHODIMP CRegistrySource::QueryValueExists(PCWSTR keyName, PCWSTR valueName)
 }
 
 STDMETHODIMP CRegistrySource::QueryValueDirect(
-    LPCWSTR keyName,
-    LPCWSTR valueName,
+    PCWSTR keyName,
+    PCWSTR valueName,
     FLAGGED_BYTE_BLOB **ppBlob)
 {
     HRESULT hr = E_FAIL;
@@ -483,7 +483,7 @@ EXTERN_C
 HRESULT WINAPI
 QuerySourceCreateFromKey(
     _In_ HKEY hKey,
-    _In_ LPCWSTR lpSubKey,
+    _In_ PCWSTR lpSubKey,
     _In_ BOOL bCreate,
     _In_ REFIID riid,
     _Outptr_ PVOID *ppv)
@@ -495,7 +495,7 @@ QuerySourceCreateFromKey(
     HRESULT hr = pRS->Init(hKey, lpSubKey, bCreate);
     if (SUCCEEDED(hr))
         hr = pRS->QueryInterface(riid, ppv);
-    pRS->Release();
 
+    pRS->Release();
     return hr;
 }

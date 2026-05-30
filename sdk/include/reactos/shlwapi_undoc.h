@@ -129,7 +129,7 @@ HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU,
 HRESULT WINAPI
 QuerySourceCreateFromKey(
     _In_ HKEY hKey,
-    _In_ LPCWSTR lpSubKey,
+    _In_ PCWSTR lpSubKey,
     _In_ BOOL bCreate,
     _In_ REFIID riid,
     _Outptr_ PVOID *ppv);
