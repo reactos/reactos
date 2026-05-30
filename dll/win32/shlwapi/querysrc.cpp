@@ -468,10 +468,10 @@ STDMETHODIMP CRegistrySource::GetKey(HKEY *phKey)
         return E_UNEXPECTED;
 
     *phKey = SHRegDuplicateHKey(m_hKey);
-    if (*phKey)
-        return S_OK;
+    if (!*phKey)
+        return E_UNEXPECTED;
 
-    return E_UNEXPECTED;
+    return S_OK;
 }
 
 /**************************************************************************
