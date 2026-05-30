@@ -1208,8 +1208,8 @@ DECLARE_INTERFACE_(IObjectWithRegistryKeyOld, IUnknown) // {5747C63F-1DE8-423F-9
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IObjectWithRegistryKeyOld ***/
-    STDMETHOD(SetKey)(HKEY hKey);
-    STDMETHOD(GetKey)(HKEY *phKey);
+    STDMETHOD(SetKey)(THIS_ HKEY hKey);
+    STDMETHOD(GetKey)(THIS_ HKEY *phKey);
 };
 #undef INTERFACE
 
@@ -1235,8 +1235,8 @@ DECLARE_INTERFACE_(IObjectWithRegistryKey, IUnknown) // {D960050C-F4E1-4294-AC4B
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IObjectWithRegistryKey ***/
-    STDMETHOD(SetKey)(HKEY hKey);
-    STDMETHOD(GetKey)(REGSAM samDesired, HKEY *phKey);
+    STDMETHOD(SetKey)(THIS_ HKEY hKey);
+    STDMETHOD(GetKey)(THIS_ REGSAM samDesired, HKEY *phKey);
 };
 #undef INTERFACE
 
