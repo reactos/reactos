@@ -104,15 +104,32 @@ ExecuteLoaderCleanly(PVOID PreviousStack)
     UNREACHABLE;
 }
 
-#ifndef _M_ARM
 DECLSPEC_NORETURN
 VOID __cdecl Reboot(VOID)
 {
-    //TODO: Replace with a true firmware reboot eventually
-    WARN("Something has gone wrong - halting FreeLoader\n");
+    WARN("Performing cold reset\n");
+
+    if (GlobalSystemTable && GlobalSystemTable->RuntimeServices)
+    {
+        /* Attempt a native firmware cold reset */
+        GlobalSystemTable->RuntimeServices->ResetSystem(
+            EfiResetCold,
+            EFI_SUCCESS,
+            0,
+            NULL
+        );
+    }
+
+    /* Fallback dead-loop if runtime services are missing or fail to respond */
     for (;;)
     {
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
+        __halt();
+#elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+        __asm__ __volatile__("hlt");
+#else
+        /* Fallback placeholder loop for other platforms */
         NOTHING;
+#endif
     }
 }
-#endif
