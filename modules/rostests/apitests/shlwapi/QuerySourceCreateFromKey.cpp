@@ -25,8 +25,10 @@ static void SetupRegistry(void)
     HKEY hRoot;
     RegCreateKeyExW(HKEY_CURRENT_USER, k_Root, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hRoot, NULL);
 
-    RegSetValueExW(hRoot, L"ValueA", 0, REG_SZ, (const BYTE*)L"hello", (DWORD)sizeof(valA));
-    RegSetValueExW(hRoot, L"ValueB", 0, REG_SZ, (const BYTE*)L"world", (DWORD)sizeof(valB));
+    static const WCHAR valA[] = L"hello";
+    static const WCHAR valB[] = L"world";
+    RegSetValueExW(hRoot, L"ValueA", 0, REG_SZ, (const BYTE*)valA, (DWORD)sizeof(valA));
+    RegSetValueExW(hRoot, L"ValueB", 0, REG_SZ, (const BYTE*)valB, (DWORD)sizeof(valB));
 
     HKEY hSub;
     RegCreateKeyExW(hRoot, k_SubKeyA, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hSub, NULL);
