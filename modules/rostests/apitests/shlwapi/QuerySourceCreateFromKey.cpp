@@ -44,18 +44,6 @@ static void CleanupRegistry(void)
     SHDeleteKeyW(HKEY_CURRENT_USER, k_Root);
 }
 
-static void Test_CreateFromKey(void)
-{
-    IQuerySourceOld *pSrc = NULL;
-    HRESULT hr = QuerySourceCreateFromKey(HKEY_CURRENT_USER, k_Root, FALSE,
-                                          IID_IQuerySourceOld, (PVOID*)&pSrc);
-    ok_hr(hr, hr);
-    ok(pSrc != NULL, "pSrc was NULL\n");
-
-    if (pSrc)
-        pSrc->Release();
-}
-
 static void Test_EnumValues(void)
 {
     IQuerySourceOld *pSrc = NULL;
@@ -76,7 +64,7 @@ static void Test_EnumValues(void)
 
     if (pEnum)
         hr = pEnum->Next(1, &psz, &fetched);
-    ok(pEnum && hr == S_OK && psz, "Next failed\n");
+    ok_hr(hr, S_OK);
     ok(lstrcmpiW(psz, L"ValueA") == 0, "psz was %s\n", wine_dbgstr_w(psz));
     ok_int(fetched, 1);
     CoTaskMemFree(psz);
@@ -87,7 +75,7 @@ static void Test_EnumValues(void)
 
     if (pEnum)
         hr = pEnum->Next(1, &psz, &fetched);
-    ok(pEnum && hr == S_OK && psz, "Next failed\n");
+    ok_hr(hr, S_OK);
     ok(lstrcmpiW(psz, L"ValueB") == 0, "psz was %s\n", wine_dbgstr_w(psz));
     ok_int(fetched, 1);
     CoTaskMemFree(psz);
@@ -128,7 +116,7 @@ static void Test_EnumSources(void)
 
     if (pEnum)
         hr = pEnum->Next(1, &psz, &fetched);
-    ok(pEnum && hr == S_OK && psz, "Next failed\n");
+    ok_hr(hr, S_OK);
     ok(lstrcmpiW(psz, k_SubKeyA) == 0, "psz was %s\n", wine_dbgstr_w(psz));
     ok_int(fetched, 1);
     CoTaskMemFree(psz);
@@ -139,7 +127,7 @@ static void Test_EnumSources(void)
 
     if (pEnum)
         hr = pEnum->Next(1, &psz, &fetched);
-    ok(pEnum && hr == S_OK && psz, "Next failed\n");
+    ok_hr(hr, S_OK);
     ok(lstrcmpiW(psz, k_SubKeyB) == 0, "psz was %s\n", wine_dbgstr_w(psz));
     ok_int(fetched, 1);
     CoTaskMemFree(psz);
@@ -179,7 +167,6 @@ START_TEST(QuerySourceCreateFromKey)
 
     SetupRegistry();
 
-    Test_CreateFromKey();
     Test_EnumValues();
     Test_EnumSources();
 
