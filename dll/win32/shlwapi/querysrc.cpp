@@ -153,7 +153,7 @@ BOOL CRegistryEnumBase::_Next(PWSTR *ppwsz)
 
 HRESULT CRegistryEnumBase::QueryInterface(REFIID riid, PVOID* ppv)
 {
-    if (!ppvObject)
+    if (!ppv)
         return E_POINTER;
 
     if (riid == IID_IEnumString)
@@ -172,12 +172,10 @@ STDMETHODIMP_(ULONG) CRegistryEnumBase::AddRef()
 
 STDMETHODIMP_(ULONG) CRegistryEnumBase::Release()
 {
-    if (::InterlockedDecrement(&m_cRefs) == 0)
-    {
+    LONG refs = ::InterlockedDecrement(&m_cRefs);
+    if (!refs)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return refs;
 }
 
 STDMETHODIMP CRegistryEnumBase::Next(ULONG celt, LPWSTR* rgelt, ULONG* pceltFetched)
@@ -297,12 +295,10 @@ STDMETHODIMP_(ULONG) CRegistrySource::AddRef()
 
 STDMETHODIMP_(ULONG) CRegistrySource::Release()
 {
-    if (::InterlockedDecrement(&m_cRefs) == 0)
-    {
+    LONG refs = ::InterlockedDecrement(&m_cRefs);
+    if (!refs)
         delete this;
-        return 0;
-    }
-    return m_cRefs;
+    return refs;
 }
 
 STDMETHODIMP CRegistrySource::EnumValues(IEnumString **ppEnum)
