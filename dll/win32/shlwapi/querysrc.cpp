@@ -439,7 +439,7 @@ STDMETHODIMP CRegistrySource::QueryValueDirect(
 
 STDMETHODIMP CRegistrySource::OpenSource(PCWSTR keyName, BOOL bCreate, IQuerySourceOld **ppSource)
 {
-    return QuerySourceCreateFromKey(m_hKey, keyName, bCreate, IID_IQuerySource, (PVOID*)ppSource);
+    return QuerySourceCreateFromKey(m_hKey, keyName, bCreate, IID_IQuerySourceOld, (PVOID*)ppSource);
 }
 
 STDMETHODIMP CRegistrySource::SetValueDirect(
