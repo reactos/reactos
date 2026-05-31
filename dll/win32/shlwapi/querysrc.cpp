@@ -342,7 +342,7 @@ STDMETHODIMP CRegistrySource::QueryValueString(
     if (error == ERROR_SUCCESS)
     {
         if (dwType != REG_SZ)
-            return HRESULT_FROM_WIN32(ERROR_INVALID_DATATYPE);
+            return E_DATATYPE_MISMATCH;
         if (!valueName && !szData[0])
             return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
         return SHStrDupW(szData, ppszValue);
@@ -368,7 +368,7 @@ STDMETHODIMP CRegistrySource::QueryValueString(
     {
         CoTaskMemFree(*ppszValue);
         *ppszValue = NULL;
-        hr = HRESULT_FROM_WIN32(ERROR_INVALID_DATATYPE);
+        hr = E_DATATYPE_MISMATCH;
     }
 
     return hr;
@@ -381,7 +381,7 @@ STDMETHODIMP CRegistrySource::QueryValueDword(PCWSTR keyName, PCWSTR valueName, 
     if (error)
         return HRESULT_FROM_WIN32(error);
     if (dwType != REG_DWORD)
-        return HRESULT_FROM_WIN32(ERROR_INVALID_DATATYPE);
+        return E_DATATYPE_MISMATCH;
     return S_OK;
 }
 
