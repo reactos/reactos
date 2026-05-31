@@ -746,19 +746,6 @@ SHSetUserPicturePathW(LPCWSTR lpPath, int csidl, LPVOID lpUnknown)
 /*
  * Unimplemented
  */
-EXTERN_C BOOL
-WINAPI
-PathIsSlowW(
-    _In_ LPCWSTR pszFile,
-    _In_ DWORD dwAttr)
-{
-    FIXME("PathIsSlowW() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C DWORD
 WINAPI
 SHGetProcessDword(DWORD dwUnknown1, DWORD dwUnknown2)

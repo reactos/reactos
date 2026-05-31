@@ -29,6 +29,7 @@ extern void func_PathMakeUniqueName(void);
 extern void func_PathProcessCommand(void);
 extern void func_PathResolve(void);
 extern void func_PIDL(void);
+extern void func_PathIsSlow(void);
 extern void func_RealShellExecuteEx(void);
 extern void func_SHAppBarMessage(void);
 extern void func_SHChangeNotify(void);
@@ -87,6 +88,7 @@ const struct test winetest_testlist[] =
     { "PathProcessCommand", func_PathProcessCommand },
     { "PathResolve", func_PathResolve },
     { "PIDL", func_PIDL },
+    { "PathIsSlow", func_PathIsSlow },
     { "RealShellExecuteEx", func_RealShellExecuteEx },
     { "SHAppBarMessage", func_SHAppBarMessage },
     { "SHChangeNotify", func_SHChangeNotify },
