@@ -370,10 +370,12 @@ STDMETHODIMP CRegistrySource::QueryValueString(
 
 STDMETHODIMP CRegistrySource::QueryValueDword(PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue)
 {
-    DWORD cbValue = sizeof(*pdwValue);
-    LSTATUS error = SHGetValueW(m_hKey, keyName, valueName, NULL, pdwValue, &cbValue);
+    DWORD dwType, cbValue = sizeof(*pdwValue);
+    LSTATUS error = SHGetValueW(m_hKey, keyName, valueName, &dwType, pdwValue, &cbValue);
     if (error)
         return HRESULT_FROM_WIN32(error);
+    if (dwType != REG_DWORD)
+        return HRESULT_FROM_WIN32(ERROR_INVALID_DATATYPE);
     return S_OK;
 }
 
