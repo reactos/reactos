@@ -190,12 +190,14 @@ static void Test_CheckValues(void)
     if (pSrc)
         hr = pSrc->QueryValueDword(NULL, L"ValueA", &dwValue);
     ok_hr(hr, HRESULT_FROM_WIN32(ERROR_MORE_DATA));
+    ok_long(dwValue, 0xDEADFACE);
 
     dwValue = 0xDEADFACE;
     hr = 0xDEADFACE;
     if (pSrc)
         hr = pSrc->QueryValueDword(NULL, L"ValueB", &dwValue);
     ok_hr(hr, S_OK);
+    ok_long(dwValue, 0xBEEFCAFE);
 
     FLAGGED_BYTE_BLOB *pBlob;
 
