@@ -493,7 +493,7 @@ EXTERN_C
 HRESULT WINAPI
 QuerySourceCreateFromKey(
     _In_ HKEY hKey,
-    _In_ PCWSTR lpSubKey,
+    _In_opt_ PCWSTR lpSubKey,
     _In_ BOOL bCreate,
     _In_ REFIID riid,
     _Outptr_ PVOID *ppv)
