@@ -207,6 +207,7 @@ static void Test_CheckValues(void)
     ok_hr(hr, S_OK);
     ok(pBlob != NULL, "pBlob was %p\n", pBlob);
     ok(pBlob && pBlob->clSize == 12, "pBlob->clSize was %ld\n", pBlob->clSize);
+    ok(pBlob && !memcmp(pBlob->abData, L"hello", 12), "pBlob->abData mismatch\n");
     CoTaskMemFree(pBlob);
 
     hr = 0xDEADFACE;
@@ -216,6 +217,8 @@ static void Test_CheckValues(void)
     ok_hr(hr, S_OK);
     ok(pBlob != NULL, "pBlob was %p\n", pBlob);
     ok(pBlob && pBlob->clSize == 4, "pBlob->clSize was %ld\n", pBlob->clSize);
+    dwValue = 0xBEEFCAFE;
+    ok(pBlob && !memcmp(pBlob->abData, &dwValue, sizeof(dwValue)), "pBlob->abData mismatch\n");
     CoTaskMemFree(pBlob);
 
     if (pSrc)
