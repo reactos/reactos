@@ -6,6 +6,36 @@ BEGIN
     IDS_HLP_INTERFACE_SHOW_INTERFACE "Displays interfaces.\n"
     IDS_HLP_INTERFACE_SHOW_INTERFACE_EX "\nUsage:\n"
 
+    IDS_HLP_IP_SET             "Sets configuration information.\n"
+    IDS_HLP_IP_SET_ADDRESS     "Sets the IP address or default gateway to the specified interface.\n"
+    IDS_HLP_IP_SET_ADDRESS_EX  "\nUsage: %1!s! [name=]<string> \n\
+       [[source=]dhcp | \n\
+        [source=] static [addr=]IP address [mask=]IP subnet mask]\n\
+       [[gateway=]<IP address>|none [gwmetric=]integer]\n\n\
+Parameters:\n\n\
+      Tag            Value\n\
+      name         - The name of the interface.\n\
+      source       - One of the following values:\n\
+                     dhcp: Sets DHCP as the source for configuring IP\n\
+                           addresses for the specific interface.\n\
+                     static: Sets the source for configuring IP addresses\n\
+                             to local static configuration.\n\
+      gateway      - One of the following values:\n\
+                     <IP address>: A specific default gateway for the\n\
+                                   static IP address you are setting.\n\
+                     none: No default gateways are set.\n\
+      gwmetric     - The metric for the default gateway. This field should\n\
+                     not be set if gateway is set to 'none'.\n\
+      The following options are used only if source is 'static':\n\
+      addr         - An IP address for the specified interface.\n\
+      mask         - The subnet mask for the specified IP address.\n\n\
+Remarks: Used to change the IP address configuration mode from either DHCP to\n\
+         static mode or static mode to DHCP. Adds IP addresses on an\n\
+         interface with static IP address or adds default gateways.\n\n\
+Examples:\n\n\
+       %1!s! name=""Local Area Connection"" source=dhcp\n\
+       %1!s! local static 10.0.0.9 255.0.0.0 10.0.0.1 1\n\n"
+
     IDS_HLP_IP_SHOW      "Displays IP information.\n"
     IDS_HLP_ADDRESSES    "Displays IP address configuration.\n"
     IDS_HLP_ADDRESSES_EX "\nUsage: %1!s! [[name=]string]\n\n\

@@ -23,8 +23,8 @@
 #include <netcfgx_undoc.h>
 #include <netcfgn_undoc.h>
 
-
 #include <netsh.h>
+#include <netsh_undoc.h>
 
 extern HINSTANCE hDllInstance;
 

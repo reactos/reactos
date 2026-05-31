@@ -19,10 +19,18 @@
 #define DISPLAY_ADRESSES   0x1
 #define DISPLAY_DNS        0x2
 
-
+static FN_HANDLE_CMD IpSetAddress;
 static FN_HANDLE_CMD IpShowAddresses;
 static FN_HANDLE_CMD IpShowConfig;
 static FN_HANDLE_CMD IpShowDns;
+
+
+static
+CMD_ENTRY
+IpSetCommands[] = 
+{
+    {L"address", IpSetAddress, IDS_HLP_IP_SET_ADDRESS, IDS_HLP_IP_SET_ADDRESS_EX, 0}
+};
 
 
 static
@@ -39,8 +47,98 @@ static
 CMD_GROUP_ENTRY
 IpGroups[] = 
 {
+    {L"set", IDS_HLP_IP_SET, sizeof(IpSetCommands) / sizeof(CMD_ENTRY), 0, IpSetCommands, NULL},
     {L"show", IDS_HLP_IP_SHOW, sizeof(IpShowCommands) / sizeof(CMD_ENTRY), 0, IpShowCommands, NULL},
 };
+
+
+static
+DWORD
+WINAPI
+IpSetAddress(
+    LPCWSTR pwszMachine,
+    LPWSTR *argv,
+    DWORD dwCurrentIndex,
+    DWORD dwArgCount,
+    DWORD dwFlags,
+    LPCVOID pvData,
+    BOOL *pbDone)
+{
+    TAG_TYPE pttTags[] = {{L"name", NS_REQ_ZERO, FALSE},
+                          {L"source", NS_REQ_ZERO, FALSE},
+                          {L"addr", NS_REQ_ZERO, FALSE},
+                          {L"mask", NS_REQ_ZERO, FALSE},
+                          {L"gateway", NS_REQ_ZERO, FALSE},
+                          {L"gwmetric", NS_REQ_ZERO, FALSE}};
+    PDWORD pdwTagType = NULL;
+    DWORD i;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT1("IpSetAddress()\n");
+
+    pdwTagType = HeapAlloc(GetProcessHeap(),
+                           0,
+                           (dwArgCount - dwCurrentIndex) * sizeof(DWORD));
+    if (pdwTagType == NULL)
+    {
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    dwError = MatchTagsInCmdLine(hDllInstance,
+                                 argv,
+                                 dwCurrentIndex,
+                                 dwArgCount,
+                                 pttTags,
+                                 ARRAYSIZE(pttTags),
+                                 pdwTagType);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("MatchTagsInCmdLine() failed (Error %lu)\n", dwError);
+        HeapFree(GetProcessHeap(), 0, pdwTagType);
+        return dwError;
+    }
+
+    for (i = 0; i < (dwArgCount - dwCurrentIndex); i++)
+    {
+        DPRINT1("Tag %lu: %lu\n", i, pdwTagType[i]);
+
+        switch (pdwTagType[i])
+        {
+            case 0: /* name */
+                DPRINT1("Tag: name (%S)\n", argv[i + dwCurrentIndex]);
+                break;
+
+            case 1: /* source */
+                DPRINT1("Tag: source (%S)\n", argv[i + dwCurrentIndex]);
+                break;
+
+            case 2: /* addr */
+                DPRINT1("Tag: addr (%S)\n", argv[i + dwCurrentIndex]);
+                break;
+
+            case 3: /* mask */
+                DPRINT1("Tag: mask (%S)\n", argv[i + dwCurrentIndex]);
+                break;
+
+            case 4: /* gateway */
+                DPRINT1("Tag: gateway (%S)\n", argv[i + dwCurrentIndex]);
+                break;
+
+            case 5: /* gwmetric */
+                DPRINT1("Tag: gwmetric (%S)\n", argv[i + dwCurrentIndex]);
+                break;
+
+            default:
+                DPRINT1("Unknown tag type %lu\n", pdwTagType[i]);
+                break;
+        }
+    }
+
+    if (pdwTagType)
+        HeapFree(GetProcessHeap(), 0, pdwTagType);
+
+    return dwError;
+}
 
 
 static
