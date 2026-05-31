@@ -153,9 +153,13 @@ BOOL CRegistryEnumBase::_Next(PWSTR *ppwsz)
 
 HRESULT CRegistryEnumBase::QueryInterface(REFIID riid, PVOID* ppv)
 {
+    if (!ppvObject)
+        return E_POINTER;
+
     if (riid == IID_IEnumString)
     {
         *ppv = static_cast<IEnumString*>(this);
+        AddRef();
         return S_OK;
     }
     return E_NOINTERFACE;
@@ -271,12 +275,14 @@ STDMETHODIMP CRegistrySource::QueryInterface(REFIID riid, void **ppvObject)
     if (riid == IID_IQuerySourceOld)
     {
         *ppvObject = static_cast<IQuerySourceOld*>(this);
+        AddRef();
         return S_OK;
     }
 
     if (riid == IID_IObjectWithRegistryKeyOld)
     {
         *ppvObject = static_cast<IObjectWithRegistryKeyOld*>(this);
+        AddRef();
         return S_OK;
     }
 
