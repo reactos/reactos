@@ -541,7 +541,7 @@
 541 stdcall -noname SHInvokeCommandsOnContextMenu(ptr ptr ptr long ptr long)
 542 stdcall -noname GetUIVersion()
 543 stdcall -noname CreateColorSpaceWrapW(ptr) gdi32.CreateColorSpaceW
-544 stub -noname QuerySourceCreateFromKey
+544 stdcall -noname QuerySourceCreateFromKey(ptr wstr long ptr ptr)
 545 stdcall -noname SHForwardContextMenuMsg(ptr long long long ptr long)
 546 stub -noname IUnknown_DoContextMenuPopup
 547 stdcall DelayLoadFailureHook(str str) kernel32.DelayLoadFailureHook

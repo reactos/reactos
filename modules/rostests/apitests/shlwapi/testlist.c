@@ -13,6 +13,7 @@ extern void func_PathIsUNCServer(void);
 extern void func_PathIsUNCServerShare(void);
 extern void func_PathUnExpandEnvStrings(void);
 extern void func_PathUnExpandEnvStringsForUser(void);
+extern void func_QuerySourceCreateFromKey(void);
 extern void func_SHAreIconsEqual(void);
 extern void func_SHGetRestriction(void);
 extern void func_SHInvokeCommandsOnContextMenu(void);
@@ -37,6 +38,7 @@ const struct test winetest_testlist[] =
     { "PathIsUNCServerShare", func_PathIsUNCServerShare },
     { "PathUnExpandEnvStrings", func_PathUnExpandEnvStrings },
     { "PathUnExpandEnvStringsForUser", func_PathUnExpandEnvStringsForUser },
+    { "QuerySourceCreateFromKey", func_QuerySourceCreateFromKey },
     { "SHAreIconsEqual", func_SHAreIconsEqual },
     { "SHGetRestriction", func_SHGetRestriction },
     { "SHInvokeCommandsOnContextMenu", func_SHInvokeCommandsOnContextMenu },

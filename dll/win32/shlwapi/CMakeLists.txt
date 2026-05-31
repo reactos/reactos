@@ -27,6 +27,7 @@ list(APPEND PCH_SKIP_SOURCE
     assoc.c
     policy.cpp
     propbag.cpp
+    querysrc.cpp
     utils.cpp
     wsprintf.c
     zonechk.c

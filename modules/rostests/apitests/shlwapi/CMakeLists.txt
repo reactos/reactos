@@ -17,6 +17,7 @@ list(APPEND SOURCE
     PathIsUNCServerShare.c
     PathUnExpandEnvStrings.c
     PathUnExpandEnvStringsForUser.c
+    QuerySourceCreateFromKey.cpp
     SHAreIconsEqual.c
     SHGetRestriction.c
     SHInvokeCommandsOnContextMenu.cpp
