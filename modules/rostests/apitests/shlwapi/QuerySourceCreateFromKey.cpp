@@ -26,9 +26,10 @@ static void SetupRegistry(void)
     RegCreateKeyExW(HKEY_CURRENT_USER, k_Root, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hRoot, NULL);
 
     static const WCHAR valA[] = L"hello";
-    static const WCHAR valB[] = L"world";
     RegSetValueExW(hRoot, L"ValueA", 0, REG_SZ, (const BYTE*)valA, (DWORD)sizeof(valA));
-    RegSetValueExW(hRoot, L"ValueB", 0, REG_SZ, (const BYTE*)valB, (DWORD)sizeof(valB));
+
+    DWORD dwValue = 0xBEEFCAFE;
+    RegSetValueExW(hRoot, L"ValueB", 0, REG_DWORD, (const BYTE*)&dwValue, (DWORD)sizeof(dwValue));
 
     HKEY hSub;
     RegCreateKeyExW(hRoot, k_SubKeyA, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hSub, NULL);
@@ -147,6 +148,80 @@ static void Test_EnumSources(void)
         pSrc->Release();
 }
 
+static void Test_CheckValues(void)
+{
+    IQuerySourceOld *pSrc = NULL;
+    HRESULT hr = g_pQuerySourceCreateFromKey(HKEY_CURRENT_USER, k_Root, FALSE,
+                                             IID_IQuerySourceOld, (PVOID*)&pSrc);
+    ok_hr(hr, S_OK);
+    ok(pSrc != NULL, "pSrc was NULL\n");
+
+    PWSTR pszValue;
+
+    // QueryValueString
+    hr = 0xDEADFACE;
+    pszValue = NULL;
+    if (pSrc)
+        hr = pSrc->QueryValueString(NULL, L"ValueA", &pszValue);
+    ok_hr(hr, S_OK);
+    ok(lstrcmpiW(pszValue, L"hello") == 0, "pszValue was %s\n", wine_dbgstr_w(pszValue));
+
+    hr = 0xDEADFACE;
+    pszValue = NULL;
+    if (pSrc)
+        hr = pSrc->QueryValueString(NULL, L"ValueB", &pszValue);
+    ok_hr(hr, E_DATATYPE_MISMATCH);
+    ok(pszValue == NULL, "pszValue was %s\n", wine_dbgstr_w(pszValue));
+
+    // QueryValueExists
+    hr = 0xDEADFACE;
+    if (pSrc)
+        hr = pSrc->QueryValueExists(NULL, L"ValueA");
+    ok_hr(hr, S_OK);
+    if (pSrc)
+        hr = pSrc->QueryValueExists(NULL, L"ValueB");
+    ok_hr(hr, S_OK);
+
+    DWORD dwValue;
+
+    // QueryValueDword
+    dwValue = 0xDEADFACE;
+    hr = 0xDEADFACE;
+    if (pSrc)
+        hr = pSrc->QueryValueDword(NULL, L"ValueA", &dwValue);
+    ok_hr(hr, HRESULT_FROM_WIN32(ERROR_MORE_DATA));
+
+    dwValue = 0xDEADFACE;
+    hr = 0xDEADFACE;
+    if (pSrc)
+        hr = pSrc->QueryValueDword(NULL, L"ValueB", &dwValue);
+    ok_hr(hr, S_OK);
+
+    FLAGGED_BYTE_BLOB *pBlob;
+
+    // QueryValueDirect
+    hr = 0xDEADFACE;
+    pBlob = NULL;
+    if (pSrc)
+        hr = pSrc->QueryValueDirect(NULL, L"ValueA", &pBlob);
+    ok_hr(hr, S_OK);
+    ok(pBlob != NULL, "pBlob was %p\n", pBlob);
+    ok(pBlob && pBlob->clSize == 12, "pBlob->clSize was %ld\n", pBlob->clSize);
+    CoTaskMemFree(pBlob);
+
+    hr = 0xDEADFACE;
+    pBlob = NULL;
+    if (pSrc)
+        hr = pSrc->QueryValueDirect(NULL, L"ValueB", &pBlob);
+    ok_hr(hr, S_OK);
+    ok(pBlob != NULL, "pBlob was %p\n", pBlob);
+    ok(pBlob && pBlob->clSize == 4, "pBlob->clSize was %ld\n", pBlob->clSize);
+    CoTaskMemFree(pBlob);
+
+    if (pSrc)
+        pSrc->Release();
+}
+
 START_TEST(QuerySourceCreateFromKey)
 {
     if (IsWindowsVistaOrGreater())
@@ -169,6 +244,7 @@ START_TEST(QuerySourceCreateFromKey)
 
     Test_EnumValues();
     Test_EnumSources();
+    Test_CheckValues();
 
     CleanupRegistry();
 
