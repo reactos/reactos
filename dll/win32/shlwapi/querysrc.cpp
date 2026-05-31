@@ -226,7 +226,7 @@ DWORD CRegistryEnumKeys::_MaxLen()
     DWORD cchKeyNameMax = 0;
     RegQueryInfoKeyW(m_hKey, NULL, NULL, NULL, NULL, &cchKeyNameMax, NULL, NULL, NULL, NULL,
                      NULL, NULL);
-    return cchKeyNameMax;
+    return cchKeyNameMax + 1; // Including NUL
 }
 
 /******************************************************************************/
@@ -243,7 +243,7 @@ DWORD CRegistryEnumValues::_MaxLen()
     DWORD cchValueNameMax = 0;
     RegQueryInfoKeyW(m_hKey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &cchValueNameMax,
                      NULL, NULL, NULL);
-    return cchValueNameMax;
+    return cchValueNameMax + 1; // Including NUL
 }
 
 /******************************************************************************/
