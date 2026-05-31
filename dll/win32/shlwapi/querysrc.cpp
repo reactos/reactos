@@ -207,7 +207,8 @@ STDMETHODIMP CRegistryEnumBase::Skip(ULONG celt)
 
 STDMETHODIMP CRegistryEnumBase::Reset()
 {
-    return E_NOTIMPL;
+    m_dwIndex = 0;
+    return S_OK;
 }
 
 STDMETHODIMP CRegistryEnumBase::Clone(IEnumString ** ppenum)
