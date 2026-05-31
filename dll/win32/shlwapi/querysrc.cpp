@@ -364,8 +364,12 @@ STDMETHODIMP CRegistrySource::QueryValueString(
         hr = HRESULT_FROM_WIN32(error);
     }
 
-    if (dwType != REG_SZ && SUCCEEDED(hr))
+    if (SUCCEEDED(hr) && dwType != REG_SZ)
+    {
+        CoTaskMemFree(*ppszValue);
+        *ppszValue = NULL;
         hr = HRESULT_FROM_WIN32(ERROR_INVALID_DATATYPE);
+    }
 
     return hr;
 }
