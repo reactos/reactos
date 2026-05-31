@@ -15,7 +15,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static HRESULT SHAllocBlob(ULONG cbData, const BYTE *pbData, FLAGGED_BYTE_BLOB** ppBlob)
 {
-    FLAGGED_BYTE_BLOB* pBlob = (FLAGGED_BYTE_BLOB*)SHAlloc(sizeof(FLAGGED_BYTE_BLOB) + cbData);
+    FLAGGED_BYTE_BLOB* pBlob =
+        (FLAGGED_BYTE_BLOB*)CoTaskMemAlloc(sizeof(FLAGGED_BYTE_BLOB) + cbData);
     if (!pBlob)
         return E_OUTOFMEMORY;
 
@@ -349,7 +350,7 @@ STDMETHODIMP CRegistrySource::QueryValueString(
     if (error != ERROR_MORE_DATA)
         return error ? HRESULT_FROM_WIN32(error) : S_OK;
 
-    *ppszValue = (PWSTR)SHAlloc(cbData);
+    *ppszValue = (PWSTR)CoTaskMemAlloc(cbData);
     if (!*ppszValue)
         return E_OUTOFMEMORY;
 
