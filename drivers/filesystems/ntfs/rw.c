@@ -225,6 +225,8 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
     NTSTATUS Status = STATUS_SUCCESS;
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
+    PNTFS_FCB Fcb;
+    PERESOURCE Resource;
 
     DPRINT("NtfsRead(IrpContext %p)\n", IrpContext);
 
@@ -238,7 +240,15 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
     ReadOffset = Stack->Parameters.Read.ByteOffset;
     Buffer = NtfsGetUserBuffer(Irp, BooleanFlagOn(Irp->Flags, IRP_PAGING_IO));
 
-    PERESOURCE Resource = (Irp->Flags & IRP_PAGING_IO) ? &Fcb->PagingIoResource : &Fcb->MainResource;
+    Fcb = (PNTFS_FCB)FileObject->FsContext;
+    if (Fcb == NULL)
+    {
+        DPRINT1("Error: FsContext is NULL. Invalid File Object connection.\n");
+        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        Irp->IoStatus.Information = 0;
+        return STATUS_INVALID_PARAMETER;
+    }
+    Resource = (Irp->Flags & IRP_PAGING_IO) ? &Fcb->PagingIoResource : &Fcb->MainResource;
 
     if (!ExAcquireResourceSharedLite(Resource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
