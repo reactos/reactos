@@ -11,9 +11,9 @@
 #include "processr.h"
 
 #include <stdio.h>
+#include "ntstrsafe.h"
 #define NDEBUG
 #include <debug.h>
-#include "ntstrsafe.h"
 
 /* FUNCTIONS ******************************************************************/
 
@@ -111,9 +111,9 @@ ProcessorSetFriendlyName(
     WCHAR PathBuffer[128];
     NTSTATUS StringStatus;
 
-    /* Safely build the dynamic processor path using the bounded NT safe string API */
+    /* Build the dynamic processor path */
     StringStatus = RtlStringCchPrintfW(PathBuffer,
-                                    RTL_NUMBER_OF(PathBuffer), // Safe macro for sizeof(A)/sizeof(A[0])
+                                    RTL_NUMBER_OF(PathBuffer), 
                                     L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\%lu",
                                     KeGetCurrentProcessorNumber());
 
@@ -134,7 +134,6 @@ ProcessorSetFriendlyName(
     Status = ZwOpenKey(&KeyHandle,
                        KEY_READ,
                        &ObjectAttributes);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwOpenKey() failed for CPU %lu (Status 0x%08lx)\n", KeGetCurrentProcessorNumber(), Status);
@@ -157,7 +156,7 @@ ProcessorSetFriendlyName(
 
     Buffer = ExAllocatePoolWithTag(PagedPool, 
                                DataLength + sizeof(KEY_VALUE_PARTIAL_INFORMATION), 
-                               'PnpC');
+                               'CpnP');
     if (Buffer == NULL)
     {
         DPRINT1("ExAllocatePool() failed\n");
@@ -205,7 +204,7 @@ ProcessorSetFriendlyName(
 
     BufferLength = wcslen(pszPrefix) + 1 + wcslen(DeviceId) + 1 + wcslen(InstanceId) + 1;
 
-    KeyNameBuffer = ExAllocatePoolWithTag(PagedPool, BufferLength * sizeof(WCHAR), 'KBuf');
+    KeyNameBuffer = ExAllocatePoolWithTag(PagedPool, BufferLength * sizeof(WCHAR), 'fuBK');
     if (KeyNameBuffer == NULL)
     {
         DPRINT1("ExAllocatePoolWithTag() failed\n");
@@ -248,7 +247,7 @@ done:
         ZwClose(KeyHandle);
 
     if (KeyNameBuffer != NULL)
-        ExFreePoolWithTag(KeyNameBuffer, 'KBuf');
+        ExFreePoolWithTag(KeyNameBuffer, 'fuBK');
 
     if (InstanceId != NULL)
         ExFreePool(InstanceId);
@@ -257,7 +256,7 @@ done:
         ExFreePool(DeviceId);
 
     if (Buffer != NULL)
-        ExFreePoolWithTag(Buffer, 'PnpC');
+        ExFreePoolWithTag(Buffer, 'CpnP');
 }
 
 
