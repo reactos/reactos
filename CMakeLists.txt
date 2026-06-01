@@ -305,6 +305,9 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     # Compiler specific definitions and macros
     if(MSVC)
         include(sdk/cmake/msvc.cmake)
+    elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        # Note: clang+MinGW, clang-cl is covered by msvc.cmake
+        include(sdk/cmake/clang.cmake)
     else()
         include(sdk/cmake/gcc.cmake)
     endif()
