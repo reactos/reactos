@@ -45,4 +45,5 @@
 #define IDS_DUMP_IP_INTERFACE  803
 #define IDS_DUMP_IP_FOOTER     804
 
-
+#define IDS_ERROR_INVALID_INTERFACE         2000
+#define IDS_ERROR_BAD_VALUE                 2001

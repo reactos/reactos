@@ -70,8 +70,12 @@ IpSetAddress(
                           {L"mask", NS_REQ_ZERO, FALSE},
                           {L"gateway", NS_REQ_ZERO, FALSE},
                           {L"gwmetric", NS_REQ_ZERO, FALSE}};
+    TOKEN_VALUE ptvSource[] = {{L"static", 1},
+                               {L"dhcp", 2}};
+    GUID InterfaceGUID;
     PDWORD pdwTagType = NULL;
-    DWORD i;
+    DWORD i, dwSource = 0;
+    BOOL bHaveName = FALSE, bHaveSource = FALSE;
     DWORD dwError = ERROR_SUCCESS;
 
     DPRINT1("IpSetAddress()\n");
@@ -106,10 +110,45 @@ IpSetAddress(
         {
             case 0: /* name */
                 DPRINT1("Tag: name (%S)\n", argv[i + dwCurrentIndex]);
+
+                dwError = NhGetGuidFromInterfaceName(argv[i + dwCurrentIndex],
+                                                     &InterfaceGUID,
+                                                     0, 0);
+                if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT1("NhGetGuidFromInterfaceName() failed (Error %lu)\n", dwError);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_INVALID_INTERFACE,
+                                           argv[i + dwCurrentIndex]);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                DPRINT1("Interface: {%08lx-%04hx-%04hx-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
+                        InterfaceGUID.Data1, InterfaceGUID.Data2, InterfaceGUID.Data3, InterfaceGUID.Data4[0], InterfaceGUID.Data4[1],
+                        InterfaceGUID.Data4[2], InterfaceGUID.Data4[3], InterfaceGUID.Data4[4], InterfaceGUID.Data4[5], InterfaceGUID.Data4[6], InterfaceGUID.Data4[7]);
+                bHaveName = TRUE;
                 break;
 
             case 1: /* source */
                 DPRINT1("Tag: source (%S)\n", argv[i + dwCurrentIndex]);
+
+                dwError = MatchEnumTag(hDllInstance,
+                                       argv[i + dwCurrentIndex],
+                                       ARRAYSIZE(ptvSource),
+                                       ptvSource,
+                                       &dwSource);
+                if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT1("MatchEnumTag() failed (Error %lu)\n", dwError);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_BAD_VALUE,
+                                           argv[i + dwCurrentIndex],
+                                           pttTags[pdwTagType[i]].pwszTag);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                DPRINT1("Source: %lu\n", dwSource);
+                bHaveSource = TRUE;
                 break;
 
             case 2: /* addr */
@@ -137,6 +176,23 @@ IpSetAddress(
     if (pdwTagType)
         HeapFree(GetProcessHeap(), 0, pdwTagType);
 
+
+    /* Check parameters */
+
+    /* The interface name is mandatory */
+    if (bHaveName == FALSE)
+    {
+        DPRINT1("The Name argument is mssing!\n");
+//        return ERROR_INVALID_SYNTAX;
+    }
+
+    if (bHaveSource == FALSE)
+    {
+        DPRINT1("The Source argument is mssing!\n");
+//        return ERROR_INVALID_SYNTAX;
+    }
+
+    DPRINT1("IpSetAddress() done (Error %lu)\n", dwError);
     return dwError;
 }
 
