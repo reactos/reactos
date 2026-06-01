@@ -188,9 +188,10 @@ add_compile_options(
     -Wno-deprecated
     -Wno-unused-result # FIXME To be removed when CORE-17637 is resolved
     -Wno-format
-    -Wno-maybe-uninitialized
-    -Wno-nonnull-compare
 )
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-Wno-maybe-uninitialized)
+endif()
 
 if(ARCH STREQUAL "arm")
     add_compile_options(-Wno-attributes)
@@ -198,13 +199,14 @@ endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(
+        -Wno-nonnull-compare
         -Wno-unknown-pragmas
     )
 elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wno-microsoft>")
     add_compile_options(
+        $<$<COMPILE_LANGUAGE:C>:-Wno-microsoft>
         -Wno-pragma-pack
-        -Wno-unknown-warning-option
+        $<$<COMPILE_LANGUAGE:C,CXX>:-Werror=unknown-warning-option>
     )
 endif()
 
