@@ -190,6 +190,59 @@ ok(testFunc1.arguments === null, "testFunc1.arguments = " + testFunc1.arguments)
 (tmp) = 3;
 ok(tmp === 3, "tmp = " + tmp);
 
+(function() {
+    /* VT_DATE handling */
+    var d, e;
+    ok(getVT(v_date(0)) === "VT_DATE", "vt v_date(0) = " + getVT(v_date(0)));
+    d = v_date(0);
+    e = Date.parse("Sat Dec 30 00:00:00 1899");
+    ok(getVT(d) === "VT_DATE", "vt v_date(0) = " + getVT(d));
+    ok(getVT(+d) === "VT_R8", "vt +v_date(0) = " + getVT(d));
+    ok(getVT(d / d) === "VT_I4", "vt v_date(0) / v_date(0) = " + getVT(d / d));
+    ok((+d) === e, "+v_date(0) = " + (+d) + " expected " + e);
+    ok(("" + d).match(/^Sat Dec 30 00:00:00 .* 1899$/) != null, "+v_date(0) = " + d);
+    ok(d != d, "date d == d");
+
+    d = v_date(2.5);
+    e = Date.parse("Mon Jan 1 12:00:00 1900");
+    ok((+d) === e, "+v_date(2.5) = " + (+d));
+    ok(("" + d).match(/^Mon Jan 1 12:00:00 .* 1900$/) != null, "+v_date(2.5) = " + d);
+
+    d = v_date(42091);
+    e = Date.parse("Sat Mar 28 00:00:00 2015");
+    ok((+d) === e, "+v_date(2015y) = " + (+d) + " expected " + e);
+    ok(("" + d).match(/^Sat Mar 28 00:00:00 .* 2015$/) != null, "+v_date(2015y) = " + d);
+    ok(d != d, "date d == d");
+})();
+
+(function() {
+    /* VT_CY handling */
+    var d;
+    todo_wine_ok(getVT(v_cy(0)) === "VT_R8", "vt v_cy(0) = " + getVT(v_cy(0)));
+    todo_wine_ok(getVT(v_cy(10000)) === "VT_R8", "vt v_cy(10000) = " + getVT(v_cy(0)));
+    d = v_cy(0);
+    todo_wine_ok(getVT(d) === "VT_R8", "vt v_cy(0) = " + getVT(d));
+    todo_wine_ok(getVT(+d) === "VT_R8", "vt +v_cy(0) = " + getVT(d));
+    ok(d == 0, "v_cy(0) != 0\n");
+    ok(d === 0, "v_cy(0) !== 0\n");
+    ok("" + d === "0", "str(v_cy(0)) = " + d);
+    ok(d === d, "date d !== d");
+
+    d = v_cy(1000);
+    ok(getVT(d) === "VT_R8", "vt v_cy(1000) = " + getVT(d));
+    ok(getVT(+d) === "VT_R8", "vt +v_cy(1000) = " + getVT(d));
+    ok(d == 0.1, "v_cy(1000) != 0, d = " + d);
+    ok(d === 0.1, "v_cy(1000) !== 0.1\n");
+    ok("" + d === "0.1", "str(v_cy(1000)) = " + d);
+    ok(d === d, "date d !== d");
+
+    d = v_cy(25000);
+    ok(getVT(d) === "VT_R8", "vt v_cy(25000) = " + getVT(d));
+    ok(getVT(+d) === "VT_R8", "vt +v_cy(25000) = " + getVT(d));
+    ok(d === 2.5, "v_cy(25000) !== 2.5\n");
+    ok("" + d === "2.5", "str(v_cy(25000)) = " + d);
+})();
+
 function testRecFunc(x) {
     ok(testRecFunc.arguments === arguments, "testRecFunc.arguments = " + testRecFunc.arguments);
     if(x) {
@@ -253,9 +306,44 @@ argumentsTest();
     ok(arguments === 1, "arguments = " + arguments);
 })();
 
+// duplicated argument names are shadowed by the last argument with the same name
+(function() {
+    var args, get_a, set_a;
+
+    (function(a, a, b, c) {
+        get_a = function() { return a; }
+        set_a = function(v) { a = v; }
+        ok(get_a() === 2, "function(a, a, b, c) get_a() = " + get_a());
+        ok(a === 2, "function(a, a, b, c) a = " + a);
+        ok(b === 3, "function(a, a, b, c) b = " + b);
+        ok(c === 4, "function(a, a, b, c) c = " + c);
+        a = 42;
+        ok(arguments[0] === 1, "function(a, a, b, c) arguments[0] = " + arguments[0]);
+        ok(arguments[1] === 42, "function(a, a, b, c) arguments[1] = " + arguments[1]);
+        ok(get_a() === 42, "function(a, a, b, c) get_a() = " + get_a() + " expected 42");
+        args = arguments;
+    })(1, 2, 3, 4);
+
+    ok(get_a() === 42, "function(a, a, b, c) get_a() after detach = " + get_a());
+    set_a(100);
+    ok(get_a() === 100, "function(a, a, b, c) get_a() = " + get_a() + " expected 100");
+    ok(args[0] === 1, "function(a, a, b, c) detached args[0] = " + args[0]);
+    ok(args[1] === 42, "function(a, a, b, c) detached args[1] = " + args[1]);
+
+    (function(a, a) {
+        eval("var a = 7;");
+        ok(a === 7, "function(a, a) a = " + a);
+        ok(arguments[0] === 5, "function(a, a) arguments[0] = " + arguments[0]);
+        ok(arguments[1] === 7, "function(a, a) arguments[1] = " + arguments[1]);
+    })(5, 6);
+})();
+
 (function callAsExprTest() {
     ok(callAsExprTest.arguments === null, "callAsExprTest.arguments = " + callAsExprTest.arguments);
 })(1,2);
+
+tmp = ((function() { var f = function() {return this}; return (function() { return f(); }); })())();
+ok(tmp === this, "detached scope function call this != global this");
 
 tmp = (function() {1;})();
 ok(tmp === undefined, "tmp = " + tmp);
@@ -359,6 +447,9 @@ obj1.func = function () {
     ok(arguments.length === 1, "arguments.length is not 1");
     ok(arguments["0"] === true, "arguments[0] is not true");
     ok(typeof(arguments.callee) === "function", "typeof(arguments.calee) = " + typeof(arguments.calee));
+    ok(arguments.caller === null, "arguments.caller = " + arguments.caller);
+    function test_caller() { ok(arguments.caller === foobar.arguments, "nested arguments.caller = " + arguments.caller); }
+    function foobar() { test_caller(); } foobar();
 
     return "test";
 };
@@ -1186,6 +1277,37 @@ case 3:
     expect(ret, "try");
 })();
 
+(function() {
+    var e;
+    var E_FAIL = -2147467259;
+    var JS_E_SUBSCRIPT_OUT_OF_RANGE = -2146828279;
+
+    try {
+        throwInt(E_FAIL);
+    }catch(ex) {
+        e = ex;
+    }
+    ok(e.name === "Error", "e.name = " + e.name);
+    ok(e.message === "", "e.message = " + e.message);
+    ok(e.number === E_FAIL, "e.number = " + e.number);
+
+    try {
+        throwInt(JS_E_SUBSCRIPT_OUT_OF_RANGE);
+    }catch(ex) {
+        e = ex;
+    }
+    ok(e.name === "RangeError", "e.name = " + e.name);
+    ok(e.number === JS_E_SUBSCRIPT_OUT_OF_RANGE, "e.number = " + e.number);
+
+    try {
+        throwEI(JS_E_SUBSCRIPT_OUT_OF_RANGE);
+    }catch(ex) {
+        e = ex;
+    }
+    ok(e.name === "RangeError", "e.name = " + e.name);
+    ok(e.number === JS_E_SUBSCRIPT_OUT_OF_RANGE, "e.number = " + e.number);
+})();
+
 tmp = eval("1");
 ok(tmp === 1, "eval(\"1\") !== 1");
 eval("{ ok(tmp === 1, 'eval: tmp !== 1'); } tmp = 2;");
@@ -1472,6 +1594,7 @@ inobj.test2 = true;
 
 tmp = 0;
 for(iter in inobj) {
+    forinTestObj.prototype.test4 = true;
     arr[iter] = true;
     tmp++;
 }
@@ -1480,6 +1603,14 @@ ok(tmp === 3, "for..in tmp = " + tmp);
 ok(arr["test1"] === true, "arr[test1] !== true");
 ok(arr["test2"] === true, "arr[test2] !== true");
 ok(arr["test3"] === true, "arr[test3] !== true");
+ok(arr["test4"] !== true, "arr[test4] === true");
+
+ok((delete inobj.test1) === true, "delete inobj.test1 returned false");
+ok(!("test1" in inobj), "test1 is still in inobj after delete");
+ok((delete inobj.test3) === true, "delete inobj.test3 returned false");
+ok("test3" in inobj, "test3 is not in inobj after delete");
+ok((delete forinTestObj.prototype.test3) === true, "delete forinTestObj.prototype.test3 returned false");
+ok(!("test3" in inobj), "test3 is still in inobj after delete on prototype");
 
 tmp = new Object();
 tmp.test = false;
@@ -1498,9 +1629,32 @@ ok((delete tmp["test"]) === true, "delete returned false");
 ok(typeof(tmp.test) === "undefined", "tmp.test type = " + typeof(tmp.test));
 ok(!("test" in tmp), "test is still in tmp after delete?");
 
+arr = [1, 2, 3];
+ok(arr.length === 3, "arr.length = " + arr.length);
+ok((delete arr.length) === false, "delete arr.length returned true");
+ok("reverse" in arr, "reverse not in arr");
+ok((delete Array.prototype.reverse) === true, "delete Array.prototype.reverse returned false");
+ok(!("reverse" in arr), "reverse is still in arr after delete from prototype");
+
 tmp.testWith = true;
 with(tmp)
     ok(testWith === true, "testWith !== true");
+
+function withScopeTest()
+{
+    var a = 3;
+    with({a : 2})
+    {
+        ok(a == 2, "withScopeTest: a != 2");
+        function func()
+        {
+            ok(a == 3, "withScopeTest: func: a != 3");
+        }
+        func();
+        eval('ok(a == 2, "withScopeTest: eval: a != 2");');
+    }
+}
+withScopeTest();
 
 if(false) {
     var varTest1 = true;
@@ -1561,6 +1715,18 @@ try {
     }
 })();
 
+(function() {
+    function constr() {}
+    constr.prototype = { prop: 1 };
+    var o = new constr(), r;
+    ok(o.prop === 1, "o.prop = " + o.prop);
+    r = delete constr.prototype.prop;
+    ok(r === true, "delete returned " + r);
+    ok(o.prop === undefined, "o.prop = " + o.prop);
+    r = delete o["prop"];
+    ok(r === true, "delete returned " + r);
+})();
+
 if (false)
     if (true)
         ok(false, "if evaluated");
@@ -1579,14 +1745,28 @@ tmp = new instanceOfTest();
 ok((tmp instanceof instanceOfTest) === true, "tmp is not instance of instanceOfTest");
 ok((tmp instanceof Object) === true, "tmp is not instance of Object");
 ok((tmp instanceof String) === false, "tmp is instance of String");
+ok(instanceOfTest.isPrototypeOf(tmp) === false, "instanceOfTest is prototype of tmp");
+ok(instanceOfTest.prototype.isPrototypeOf(tmp) === true, "instanceOfTest.prototype is not prototype of tmp");
+ok(Object.prototype.isPrototypeOf(tmp) === true, "Object.prototype is not prototype of tmp");
 
 instanceOfTest.prototype = new Object();
 ok((tmp instanceof instanceOfTest) === false, "tmp is instance of instanceOfTest");
 ok((tmp instanceof Object) === true, "tmp is not instance of Object");
+ok(instanceOfTest.prototype.isPrototypeOf(tmp) === false, "instanceOfTest.prototype is prototype of tmp");
 
 ok((1 instanceof Object) === false, "1 is instance of Object");
 ok((false instanceof Boolean) === false, "false is instance of Boolean");
 ok(("" instanceof Object) === false, "'' is instance of Object");
+ok(Number.prototype.isPrototypeOf(1) === false, "Number.prototype is prototype of 1");
+ok(String.prototype.isPrototypeOf("") === false, "String.prototype is prototype of ''");
+
+ok(tmp.isPrototypeOf(null) === false, "tmp is prototype of null");
+ok(tmp.isPrototypeOf(undefined) === false, "tmp is prototype of undefined");
+ok(Object.prototype.isPrototypeOf.call(tmp) === false, "tmp is prototype of no argument");
+ok(Object.prototype.isPrototypeOf.call(test, Object) === false, "test is prototype of Object");
+ok(Object.prototype.isPrototypeOf.call(testObj, Object) === false, "testObj is prototype of Object");
+ok(Object.prototype.isPrototypeOf(test) === false, "Object.prototype is prototype of test");
+ok(Object.prototype.isPrototypeOf(testObj) === false, "Object.prototype is prototype of testObj");
 
 (function () {
     ok((arguments instanceof Object) === true, "argument is not instance of Object");
@@ -1750,6 +1930,12 @@ ok(""+str === "test", "''+str = " + str);
 
 ok((function (){return 1;})() === 1, "(function (){return 1;})() = " + (function (){return 1;})());
 
+(function() {
+    var order = "", o = {};
+    o[order += "1,", { toString: function() { order += "2,"; } }] = (order += "3");
+    ok(order === "1,2,3", "array expression order = " + order);
+})();
+
 var re = /=(\?|%3F)/g;
 ok(re.source === "=(\\?|%3F)", "re.source = " + re.source);
 
@@ -1772,6 +1958,8 @@ ok(getVT(true && nullDisp) === "VT_DISPATCH",
    "getVT(0 && nullDisp) = " + getVT(true && nullDisp));
 ok(!nullDisp === true, "!nullDisp = " + !nullDisp);
 ok(String(nullDisp) === "null", "String(nullDisp) = " + String(nullDisp));
+ok(+nullDisp === 0, "+nullDisp !== 0");
+ok(''+nullDisp === "null", "''+nullDisp !== null");
 ok(nullDisp != new Object(), "nullDisp == new Object()");
 ok(new Object() != nullDisp, "new Object() == nullDisp");
 ok((typeof Object(nullDisp)) === "object", "typeof Object(nullDisp) !== 'object'");
@@ -1779,6 +1967,47 @@ tmp = getVT(Object(nullDisp));
 ok(tmp === "VT_DISPATCH", "getVT(Object(nullDisp) = " + tmp);
 tmp = Object(nullDisp).toString();
 ok(tmp === "[object Object]", "Object(nullDisp).toString() = " + tmp);
+
+function testNullPrototype() {
+    this.x = 13;
+}
+tmp = new testNullPrototype();
+ok(tmp.x === 13, "tmp.x !== 13");
+ok(!("y" in tmp), "tmp has 'y' property");
+testNullPrototype.prototype.y = 10;
+ok("y" in tmp, "tmp does not have 'y' property");
+tmp = new testNullPrototype();
+ok(tmp.y === 10, "tmp.y !== 10");
+testNullPrototype.prototype = nullDisp;
+tmp = new testNullPrototype();
+ok(tmp.x === 13, "tmp.x !== 13");
+ok(!("y" in tmp), "tmp has 'y' property");
+ok(!tmp.hasOwnProperty("y"), "tmp has 'y' property");
+ok(!tmp.propertyIsEnumerable("y"), "tmp has 'y' property enumerable");
+ok(tmp.toString() == "[object Object]", "tmp.toString returned " + tmp.toString());
+testNullPrototype.prototype = null;
+tmp = new testNullPrototype();
+ok(!tmp.hasOwnProperty("y"), "tmp has 'y' property");
+ok(!tmp.propertyIsEnumerable("y"), "tmp has 'y' property enumerable");
+ok(tmp.toString() == "[object Object]", "tmp.toString returned " + tmp.toString());
+
+testNullPrototype.prototype = 42;
+tmp = new testNullPrototype();
+ok(tmp.hasOwnProperty("x"), "tmp does not have 'x' property");
+ok(!tmp.hasOwnProperty("y"), "tmp has 'y' property");
+ok(tmp.toString() == "[object Object]", "tmp.toString returned " + tmp.toString());
+
+testNullPrototype.prototype = true;
+tmp = new testNullPrototype();
+ok(tmp.hasOwnProperty("x"), "tmp does not have 'x' property");
+ok(!tmp.hasOwnProperty("y"), "tmp has 'y' property");
+ok(tmp.toString() == "[object Object]", "tmp.toString returned " + tmp.toString());
+
+testNullPrototype.prototype = "foobar";
+tmp = new testNullPrototype();
+ok(tmp.hasOwnProperty("x"), "tmp does not have 'x' property");
+ok(!tmp.hasOwnProperty("y"), "tmp has 'y' property");
+ok(tmp.toString() == "[object Object]", "tmp.toString returned " + tmp.toString());
 
 function do_test() {}
 function nosemicolon() {} nosemicolon();
@@ -1899,3 +2128,37 @@ Math = 6;
 ok(Math === 6, "NaN !== 6");
 
 reportSuccess();
+
+function test_es5_keywords() {
+    var let = 1
+    var tmp
+    ok(let == 1, "let != 1");
+
+    tmp = false
+    try {
+        eval('var var = 1;');
+    }
+    catch(e) {
+        tmp = true
+    }
+    ok(tmp === true, "Expected exception for 'var var = 1;'");
+
+    tmp = false
+    try {
+        eval('var const = 1;');
+    }
+    catch(e) {
+        tmp = true
+    }
+    ok(tmp === true, "Expected exception for 'var const = 1;'");
+
+    tmp = false
+    try {
+        eval('const c1 = 1;');
+    }
+    catch(e) {
+        tmp = true
+    }
+    ok(tmp === true, "Expected exception for 'const c1 = 1;'");
+}
+test_es5_keywords();
