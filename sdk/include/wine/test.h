@@ -579,6 +579,9 @@ static inline void winetest_add_failures( LONG new_failures )
 
 #include <stdio.h>
 #include <excpt.h>
+#ifdef __REACTOS__
+#include <oleauto.h>
+#endif
 
 struct test
 {
