@@ -271,6 +271,7 @@ CDROM_SCAN_FOR_SPECIAL_INFO CdRomBadItems[] = {                     // Type (HH,
     { "", "PIONEER DVD-RW  DVR-106D"               , NULL  ,   0x10 }, // hh  , ?
     { "", "ASUS DVD-RW DRW-0402P"                  , NULL  ,   0x10 }, // hh  , ?
 
+#ifdef __REACTOS__ 
     { "", "TSSTcorp CDDVDW SH-S203B"               , NULL  ,   0x10 }, // hh  , 2007/06/15
     { "", "TSSTcorp CDDVDW SH-S223F"               , NULL  ,   0x10 }, // hh  , 2008/05/20
     { "", "TSSTcorp DVD-ROM SH-D162C"              , NULL  ,   0x10 }, // hh  , 2005/11/02
@@ -303,7 +304,7 @@ CDROM_SCAN_FOR_SPECIAL_INFO CdRomBadItems[] = {                     // Type (HH,
     { "", "BENQ DVD DD DW1620"                     , NULL  ,   0x10 }, // hh  , 2004/07/19
     { "", "BENQ DVD DD DW1640"                     , NULL  ,   0x10 }, // hh  , 2005/04/28
     { "", "PHILIPS DVDR1640K"                      , NULL  ,   0x10 }, // hh  , 2004/09/12
-
+#endif 
 
     // Sony sourced some drives from LG also....
 
