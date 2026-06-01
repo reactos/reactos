@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#pragma once
-
 #include "ihost.h"
 
 extern IHost host_obj;
@@ -35,3 +33,7 @@ extern WCHAR **argums;
 extern int numOfArgs;
 
 extern VARIANT_BOOL wshInteractive;
+
+extern LONG wshTimeout;
+
+void schedule_timeout(LONG seconds);
