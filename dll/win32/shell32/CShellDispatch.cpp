@@ -216,13 +216,13 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ShutdownWindows()
 HRESULT STDMETHODCALLTYPE CShellDispatch::Suspend()
 {
     TRACE("(%p)\n", this);
-    return E_NOTIMPL;
+    return PostTrayCommand(TRAYCMD_SUSPEND);
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::EjectPC()
 {
     TRACE("(%p)\n", this);
-    return E_NOTIMPL;
+    return PostTrayCommand(TRAYCMD_EJECT);
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::SetTime()
@@ -258,7 +258,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::FindComputer()
 HRESULT STDMETHODCALLTYPE CShellDispatch::RefreshMenu()
 {
     TRACE("(%p)\n", this);
-    return E_NOTIMPL;
+    return PostTrayCommand(TRAYCMD_REFRESH_MENU);
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ControlPanelItem(BSTR szDir)
@@ -266,7 +266,6 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ControlPanelItem(BSTR szDir)
     TRACE("(%p, %ls)\n", this, szDir);
     return SHRunControlPanel(szDir, NULL) ? S_OK : S_FALSE;
 }
-
 
 // *** IShellDispatch2 methods ***
 HRESULT STDMETHODCALLTYPE CShellDispatch::IsRestricted(BSTR group, BSTR restriction, LONG *value)

@@ -1000,6 +1000,7 @@ BOOL WINAPI LinkWindow_UnregisterClass(_In_ DWORD dwUnused);
 #define TRAYCMD_TILE_V              405
 #define TRAYCMD_TOGGLE_DESKTOP      407
 #define TRAYCMD_DATE_AND_TIME       408
+#define TRAYCMD_SUSPEND             409
 #define TRAYCMD_EJECT               410
 #define TRAYCMD_TASKBAR_PROPERTIES  413
 #define TRAYCMD_MINIMIZE_ALL        415
@@ -1016,6 +1017,7 @@ BOOL WINAPI LinkWindow_UnregisterClass(_In_ DWORD dwUnused);
 #define TRAYCMD_SWITCH_USER_DIALOG  5000
 #define TRAYCMD_SEARCH_FILES        41093
 #define TRAYCMD_SEARCH_COMPUTERS    41094
+#define TRAYCMD_REFRESH_MENU        41504
 
 // Explorer Tray Application Bar Data Message Commands
 #define TABDMC_APPBAR     0
