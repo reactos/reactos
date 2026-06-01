@@ -33,9 +33,6 @@
  *
  * In the future more layouts and transformations may be added.
  */
-
-#pragma once
-
 struct _jsstr_t {
     unsigned length_flags;
     unsigned ref;
@@ -82,7 +79,7 @@ static inline BOOL jsstr_is_rope(jsstr_t *str)
 
 typedef struct {
     jsstr_t str;
-    WCHAR buf[1];
+    WCHAR buf[];
 } jsstr_inline_t;
 
 typedef struct {
@@ -97,15 +94,15 @@ typedef struct {
     unsigned depth;
 } jsstr_rope_t;
 
-jsstr_t *jsstr_alloc_len(const WCHAR*,unsigned) DECLSPEC_HIDDEN;
-jsstr_t *jsstr_alloc_buf(unsigned,WCHAR**) DECLSPEC_HIDDEN;
+jsstr_t *jsstr_alloc_len(const WCHAR*,unsigned);
+jsstr_t *jsstr_alloc_buf(unsigned,WCHAR**);
 
 static inline jsstr_t *jsstr_alloc(const WCHAR *str)
 {
     return jsstr_alloc_len(str, lstrlenW(str));
 }
 
-void jsstr_free(jsstr_t*) DECLSPEC_HIDDEN;
+void jsstr_free(jsstr_t*);
 
 static inline void jsstr_release(jsstr_t *str)
 {
@@ -134,7 +131,7 @@ static inline jsstr_rope_t *jsstr_as_rope(jsstr_t *str)
     return CONTAINING_RECORD(str, jsstr_rope_t, str);
 }
 
-const WCHAR *jsstr_rope_flatten(jsstr_rope_t*) DECLSPEC_HIDDEN;
+const WCHAR *jsstr_rope_flatten(jsstr_rope_t*);
 
 static inline const WCHAR *jsstr_flatten(jsstr_t *str)
 {
@@ -143,7 +140,7 @@ static inline const WCHAR *jsstr_flatten(jsstr_t *str)
         : jsstr_rope_flatten(jsstr_as_rope(str));
 }
 
-void jsstr_extract(jsstr_t*,unsigned,unsigned,WCHAR*) DECLSPEC_HIDDEN;
+void jsstr_extract(jsstr_t*,unsigned,unsigned,WCHAR*);
 
 static inline unsigned jsstr_flush(jsstr_t *str, WCHAR *buf)
 {
@@ -171,23 +168,23 @@ static inline jsstr_t *jsstr_substr(jsstr_t *str, unsigned off, unsigned len)
     return ret;
 }
 
-int jsstr_cmp(jsstr_t*,jsstr_t*) DECLSPEC_HIDDEN;
+int jsstr_cmp(jsstr_t*,jsstr_t*);
 
 static inline BOOL jsstr_eq(jsstr_t *left, jsstr_t *right)
 {
     return jsstr_length(left) == jsstr_length(right) && !jsstr_cmp(left, right);
 }
 
-jsstr_t *jsstr_concat(jsstr_t*,jsstr_t*) DECLSPEC_HIDDEN;
+jsstr_t *jsstr_concat(jsstr_t*,jsstr_t*);
 
-jsstr_t *jsstr_nan(void) DECLSPEC_HIDDEN;
-jsstr_t *jsstr_empty(void) DECLSPEC_HIDDEN;
-jsstr_t *jsstr_undefined(void) DECLSPEC_HIDDEN;
+jsstr_t *jsstr_nan(void);
+jsstr_t *jsstr_empty(void);
+jsstr_t *jsstr_undefined(void);
 
-jsstr_t *jsstr_null_bstr(void) DECLSPEC_HIDDEN;
-BOOL is_null_bstr(jsstr_t*) DECLSPEC_HIDDEN;
+jsstr_t *jsstr_null_bstr(void);
+HRESULT jsstr_to_bstr(jsstr_t *str, BSTR *r);
 
-BOOL init_strings(void) DECLSPEC_HIDDEN;
-void free_strings(void) DECLSPEC_HIDDEN;
+BOOL init_strings(void);
+void free_strings(void);
 
-const char *debugstr_jsstr(jsstr_t*) DECLSPEC_HIDDEN;
+const char *debugstr_jsstr(jsstr_t*);
