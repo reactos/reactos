@@ -21,11 +21,6 @@
 /* @makedep: jscript.rgs */
 2 WINE_REGISTRY jscript.rgs
 
-3 WINE_REGISTRY jscript_classes.rgs
-
-/* @makedep: jsglobal.tlb */
-1 TYPELIB jsglobal.tlb
-
 #define WINE_FILEDESCRIPTION_STR "Wine JScript"
 #define WINE_FILENAME_STR "jscript.dll"
 #define WINE_FILEVERSION 5,7,7601,16982

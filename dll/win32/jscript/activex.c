@@ -138,7 +138,7 @@ static IUnknown *create_activex_object(script_ctx_t *ctx, const WCHAR *progid)
     return obj;
 }
 
-static HRESULT ActiveXObject_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT ActiveXObject_value(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     jsstr_t * progid_str;
@@ -156,7 +156,7 @@ static HRESULT ActiveXObject_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
 
     if(ctx->safeopt != (INTERFACESAFE_FOR_UNTRUSTED_DATA|INTERFACE_USES_DISPEX|INTERFACE_USES_SECURITY_MANAGER)
         && ctx->safeopt != INTERFACE_USES_DISPEX) {
-        FIXME("Unsupported safeopt %x\n", ctx->safeopt);
+        FIXME("Unsupported safeopt %lx\n", ctx->safeopt);
         return E_NOTIMPL;
     }
 
@@ -172,7 +172,7 @@ static HRESULT ActiveXObject_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
     obj = create_activex_object(ctx, progid);
     jsstr_release(progid_str);
     if(!obj)
-        return throw_generic_error(ctx, JS_E_CANNOT_CREATE_OBJ, NULL);
+        return JS_E_CANNOT_CREATE_OBJ;
 
     hres = IUnknown_QueryInterface(obj, &IID_IDispatch, (void**)&disp);
     IUnknown_Release(obj);
@@ -181,7 +181,8 @@ static HRESULT ActiveXObject_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
         return E_NOTIMPL;
     }
 
-    *r = jsval_disp(disp);
+    if(r) *r = jsval_disp(disp);
+    else  IDispatch_Release(disp);
     return S_OK;
 }
 
@@ -190,13 +191,11 @@ HRESULT create_activex_constr(script_ctx_t *ctx, jsdisp_t **ret)
     jsdisp_t *prototype;
     HRESULT hres;
 
-    static const WCHAR ActiveXObjectW[] = {'A','c','t','i','v','e','X','O','b','j','e','c','t',0};
-
     hres = create_object(ctx, NULL, &prototype);
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, ActiveXObject_value, ActiveXObjectW, NULL,
+    hres = create_builtin_function(ctx, ActiveXObject_value, L"ActiveXObject", NULL,
             PROPF_CONSTR|1, prototype, ret);
 
     jsdisp_release(prototype);
