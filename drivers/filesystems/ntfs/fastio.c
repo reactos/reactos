@@ -39,19 +39,22 @@ NTAPI
 NtfsAcqLazyWrite(PVOID Context,
                  BOOLEAN Wait)
 {
-    UNREFERENCED_PARAMETER(Context);
-    UNREFERENCED_PARAMETER(Wait);
-    UNIMPLEMENTED;
-    return FALSE;
-}
+    PNTFS_FCB Fcb = (PNTFS_FCB)Context;
+    if (Fcb == NULL) return FALSE;
 
+    return ExAcquireResourceExclusiveLite(&Fcb->MainResource, Wait);
+}
 
 VOID
 NTAPI
 NtfsRelLazyWrite(PVOID Context)
 {
-    UNREFERENCED_PARAMETER(Context);
-    UNIMPLEMENTED;
+    PNTFS_FCB Fcb = (PNTFS_FCB)Context;
+
+    if (Fcb != NULL)
+    {
+        ExReleaseResourceLite(&Fcb->MainResource);
+    }
 }
 
 
@@ -111,14 +114,16 @@ NtfsFastIoRead(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
-    DBG_UNREFERENCED_PARAMETER(FileObject);
-    DBG_UNREFERENCED_PARAMETER(FileOffset);
-    DBG_UNREFERENCED_PARAMETER(Length);
-    DBG_UNREFERENCED_PARAMETER(Wait);
-    DBG_UNREFERENCED_PARAMETER(LockKey);
-    DBG_UNREFERENCED_PARAMETER(Buffer);
-    DBG_UNREFERENCED_PARAMETER(IoStatus);
-    DBG_UNREFERENCED_PARAMETER(DeviceObject);
+    if (FileObject == NULL || FileOffset == NULL || Buffer == NULL || IoStatus == NULL)
+    {
+        if (IoStatus)
+        {
+            IoStatus->Status = STATUS_INVALID_PARAMETER;
+            IoStatus->Information = 0;
+        }
+        return TRUE; 
+    }
+
     return FALSE;
 }
 

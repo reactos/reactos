@@ -58,23 +58,22 @@ NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
 
     FileObject->FsContext2 = NULL;
     FileObject->FsContext = NULL;
-    FileObject->SectionObjectPointer = NULL;
-    DeviceExt->OpenHandleCount--;
-
-    if (FileObject->FileName.Buffer)
+    
+    if (Fcb != NULL && !(Fcb->Flags & FCB_IS_VOLUME) && FileObject->FileName.Buffer != NULL)
     {
-        // This a FO, that was created outside from FSD.
-        // Some FO's are created with IoCreateStreamFileObject() insid from FSD.
-        // This FO's don't have a FileName.
-        NtfsReleaseFCB(DeviceExt, Fcb);
+        InterlockedDecrement((PLONG)&DeviceExt->OpenHandleCount);
     }
 
     if (Ccb->DirectorySearchPattern)
     {
         ExFreePool(Ccb->DirectorySearchPattern);
     }
-
     ExFreePool(Ccb);
+
+    if (Fcb != NULL)
+    {
+        NtfsReleaseFCB(DeviceExt, Fcb);
+    }
 
     return STATUS_SUCCESS;
 }

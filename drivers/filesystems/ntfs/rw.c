@@ -183,7 +183,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         {
             ExFreePoolWithTag(ReadBuffer, TAG_NTFS);
         }
-        return Status;
+        return STATUS_UNSUCCESSFUL;
     }
 
     ReleaseAttributeContext(DataContext);
@@ -238,13 +238,21 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
     ReadOffset = Stack->Parameters.Read.ByteOffset;
     Buffer = NtfsGetUserBuffer(Irp, BooleanFlagOn(Irp->Flags, IRP_PAGING_IO));
 
+    PERESOURCE Resource = (Irp->Flags & IRP_PAGING_IO) ? &Fcb->PagingIoResource : &Fcb->MainResource;
+
+    if (!ExAcquireResourceSharedLite(Resource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        return STATUS_CANT_WAIT;
+    }
     Status = NtfsReadFile(DeviceExt,
                           FileObject,
                           Buffer,
                           ReadLength,
-                          ReadOffset.u.LowPart,
+                          ReadOffset.QuadPart, 
                           Irp->Flags,
                           &ReturnedReadLength);
+
+    ExReleaseResourceLite(Resource);
     if (NT_SUCCESS(Status))
     {
         if (FileObject->Flags & FO_SYNCHRONOUS_IO)
@@ -610,18 +618,11 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
 
     if (Length == 0)
     {
-        DPRINT1("Null write!\n");
-
-        IrpContext->Irp->IoStatus.Information = 0;
-
-        // FIXME: Doesn't accurately detect when a user passes NULL to WriteFile() for the buffer
-        if (Irp->UserBuffer == NULL && Irp->MdlAddress == NULL)
-        {
-            // FIXME: Update last write time
-            return STATUS_SUCCESS;
-        }
-
-        return STATUS_INVALID_PARAMETER;
+        DPRINT("Null write request, satisfying NT I/O compliance parameters.\n");
+    
+        // TODO: Update last write time metadata here
+        Irp->IoStatus.Information = 0;
+        return STATUS_SUCCESS;
     }
 
     // get the Resource

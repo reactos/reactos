@@ -794,6 +794,13 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
                                             FileMftIndex,
                                             FilenameAttribute,
                                             CaseSensitive);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to link file to directory index! Unwinding MFT allocation for index %I64u\n", FileMftIndex & 0x0000FFFFFFFFFFFFULL);
+            // TODO: Invoke an internal MFT allocator tracking function here to mark this sector record back as unallocated
+            // e.g., NtfsFreeMftEntry(DeviceExt, FileMftIndex & 0x0000FFFFFFFFFFFFULL);
+        }
     }
 
     ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);

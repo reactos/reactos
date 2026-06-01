@@ -146,10 +146,16 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
 
     if (IrpContext->Flags & IRPCONTEXT_QUEUE)
     {
-        /* Reset our status flags before queueing the IRP */
+    
         IrpContext->Flags |= IRPCONTEXT_COMPLETE;
         IrpContext->Flags &= ~IRPCONTEXT_QUEUE;
-        Status = NtfsQueueRequest(IrpContext);
+    
+        // Clear out the execution state before assigning it to worker thread pools 
+        // to prevent deep recursive loop conflicts during multi-stage re-entry.
+        IoSetTopLevelIrp(NULL);
+        FsRtlExitFileSystem();
+    
+        return NtfsQueueRequest(IrpContext);
     }
     else
     {
@@ -158,7 +164,6 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
 
     IoSetTopLevelIrp(NULL);
     FsRtlExitFileSystem();
-
     return Status;
 }
 

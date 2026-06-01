@@ -54,12 +54,19 @@ NtfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
 
     if (Fcb->Flags & FCB_IS_VOLUME)
     {
+        if (!ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, CanWait))
+        {
+            return STATUS_PENDING;
+        }
+
         Fcb->OpenHandleCount--;
 
         if (Fcb->OpenHandleCount != 0)
         {
             // Remove share access when handled
         }
+    
+        ExReleaseResourceLite(&DeviceExt->DirResource);
     }
     else
     {
