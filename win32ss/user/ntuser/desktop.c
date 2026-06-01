@@ -1609,6 +1609,9 @@ VOID NTAPI DesktopThreadMain(VOID)
     BOOL Ret;
     MSG Msg;
 
+    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
+                        LOW_REALTIME_PRIORITY - 4);
+
     gptiDesktopThread = PsGetCurrentThreadWin32Thread();
 
     UserEnterExclusive();
