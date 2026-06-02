@@ -11,6 +11,14 @@ extern "C"
 {
 #endif
 
+FORCEINLINE
+PKPROCESS
+KeGetCurrentProcess(VOID)
+{
+    /* Get the current process */
+    return KeGetCurrentThread()->ApcState.Process;
+}
+
 #ifndef _M_ARM
 FORCEINLINE
 KPROCESSOR_MODE

@@ -1146,7 +1146,7 @@ KiI386PentiumLockErrataFixup(VOID)
     PointerPte = MiAddressToPte(NewIdt);
     ASSERT(PointerPte->u.Hard.Write == 1);
     PointerPte->u.Hard.Write = 0;
-    KeInvalidateTlbEntry(NewIdt);
+    KxFlushSingleCurrentTb(NewIdt);
 }
 
 BOOLEAN
@@ -1588,62 +1588,6 @@ KiFlushTargetEntireTb(IN PKIPI_CONTEXT PacketContext,
 
     /* Flush the TB for the Current CPU */
     KeFlushCurrentTb();
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeFlushEntireTb(IN BOOLEAN Invalid,
-                IN BOOLEAN AllProcessors)
-{
-    KIRQL OldIrql;
-#ifdef CONFIG_SMP
-    KAFFINITY TargetAffinity;
-    PKPRCB Prcb = KeGetCurrentPrcb();
-#endif
-
-    /* Raise the IRQL for the TB Flush */
-    OldIrql = KeRaiseIrqlToSynchLevel();
-
-#ifdef CONFIG_SMP
-    /* FIXME: Use KiTbFlushTimeStamp to synchronize TB flush */
-
-    /* Get the current processor affinity, and exclude ourselves */
-    TargetAffinity = KeActiveProcessors;
-    TargetAffinity &= ~Prcb->SetMember;
-
-    /* Make sure this is MP */
-    if (TargetAffinity)
-    {
-        /* Send an IPI TB flush to the other processors */
-        KiIpiSendPacket(TargetAffinity,
-                        KiFlushTargetEntireTb,
-                        NULL,
-                        0,
-                        NULL);
-    }
-#endif
-
-    /* Flush the TB for the Current CPU, and update the flush stamp */
-    KeFlushCurrentTb();
-
-#ifdef CONFIG_SMP
-    /* If this is MP, wait for the other processors to finish */
-    if (TargetAffinity)
-    {
-        /* Sanity check */
-        ASSERT(Prcb == KeGetCurrentPrcb());
-
-        /* FIXME: TODO */
-        ASSERTMSG("Not yet implemented\n", FALSE);
-    }
-#endif
-
-    /* Update the flush stamp and return to original IRQL */
-    InterlockedExchangeAdd(&KiTbFlushTimeStamp, 1);
-    KeLowerIrql(OldIrql);
 }
 
 /*
