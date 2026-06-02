@@ -388,6 +388,7 @@ MatchTagsInCmdLine(
             hModule, ppwcArguments, dwCurrentIndex, dwArgCount,
             pttTags, dwTagCount, pdwTagType);
 
+    /* Identify tagged arguments (tag=value) */
     for (i = dwCurrentIndex; i < dwArgCount; i++)
     {
         DPRINT("Argument %lu: %S\n", i, ppwcArguments[i]);
@@ -413,13 +414,33 @@ MatchTagsInCmdLine(
                 pttTags[j].bPresent = TRUE;
                 pdwTagType[i - dwCurrentIndex] = j;
 
-				/* Remove the tag name from the argument */
+                /* Remove the tag name from the argument */
                 wcscpy(ppwcArguments[i], pszEqual + 1);
+                break;
             }
         }
     }
 
-    return 0;
+    /* Identify un-tagged arguments (value) */
+    for (i = dwCurrentIndex; i < dwArgCount; i++)
+    {
+        if (pdwTagType[i - dwCurrentIndex] != (DWORD)-1)
+            continue;
+
+        for (j = 0; j < dwTagCount; j++)
+        {
+            DPRINT("Test tag %S\n", pttTags[j].pwszTag);
+            if (pttTags[j].bPresent == FALSE)
+            {
+                DPRINT("Found tag %S\n", pttTags[j].pwszTag);
+                pttTags[j].bPresent = TRUE;
+                pdwTagType[i - dwCurrentIndex] = j;
+                break;
+            }
+        }
+    }
+
+    return ERROR_SUCCESS;
 }
 
 BOOL
