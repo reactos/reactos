@@ -258,6 +258,9 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::FindComputer()
 HRESULT STDMETHODCALLTYPE CShellDispatch::RefreshMenu()
 {
     TRACE("(%p)\n", this);
+    C_ASSERT(FCIDM_CABINET_REFRESH == TRAYCMD_REFRESH_MENU);
+    // According to https://learn.microsoft.com/en-us/windows/win32/shell/ishelldispatch-refreshmenu
+    // only systems preceding Windows XP refreshes the contents of the Start menu when this is called.
     return PostTrayCommand(TRAYCMD_REFRESH_MENU);
 }
 
