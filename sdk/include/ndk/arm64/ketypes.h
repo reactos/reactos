@@ -131,8 +131,104 @@ typedef struct _KTRAP_FRAME
 
 typedef struct _KEXCEPTION_FRAME
 {
-    ULONG dummy;
+    ULONG64 P1Home;
+    ULONG64 P2Home;
+    ULONG64 P3Home;
+    ULONG64 P4Home;
+    ULONG64 P5;
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    ULONG64 Spare1;
+#else
+    ULONG64 InitialStack;
+#endif
+    ULONG64 TrapFrame;
+#if (NTDDI_VERSION < NTDDI_WIN8)
+    ULONG64 CallbackStack;
+#endif
+    ULONG64 OutputBuffer;
+    ULONG64 OutputLength;
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    ULONG64 Spare2;
+#endif
+    ULONG64 Fpcr;
+    ULONG64 Fpsr;
+    ULONG64 X19;
+    ULONG64 X20;
+    ULONG64 X21;
+    ULONG64 X22;
+    ULONG64 X23;
+    ULONG64 X24;
+    ULONG64 X25;
+    ULONG64 X26;
+    ULONG64 X27;
+    ULONG64 X28;
+    ULONG64 Fp;
+    ULONG64 Lr;
+    ULONG64 Return;
 } KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
+
+typedef struct _MACHINE_FRAME
+{
+    ULONG64 Sp;
+    ULONG64 Pc;
+} MACHINE_FRAME, *PMACHINE_FRAME;
+
+typedef struct _UAPC_FRAME
+{
+    CONTEXT Context;
+    MACHINE_FRAME MachineFrame;
+} UAPC_FRAME, *PUAPC_FRAME;
+
+typedef struct _KUSER_EXCEPTION_STACK
+{
+    CONTEXT Context;
+    EXCEPTION_RECORD ExceptionRecord;
+    ULONG64 Alignment;
+    MACHINE_FRAME MachineFrame;
+} KUSER_EXCEPTION_STACK, *PKUSER_EXCEPTION_STACK;
+
+typedef KEXCEPTION_FRAME KCALLOUT_FRAME, *PKCALLOUT_FRAME;
+
+typedef struct _UCALLOUT_FRAME
+{
+    ULONG64 P1Home;
+    ULONG64 P2Home;
+    ULONG64 P3Home;
+    ULONG64 P4Home;
+    PVOID Buffer;
+    ULONG Length;
+    ULONG ApiNumber;
+    MACHINE_FRAME MachineFrame;
+} UCALLOUT_FRAME, *PUCALLOUT_FRAME;
+
+typedef struct _KSTART_FRAME
+{
+    ULONG64 StartRoutine;
+    ULONG64 StartContext;
+    ULONG64 SystemRoutine;
+    ULONG64 Parameter;
+    ULONG64 Return;
+    ULONG64 Padding;
+} KSTART_FRAME, *PKSTART_FRAME;
+
+typedef struct _KSWITCH_FRAME
+{
+    ULONG64 X19;
+    ULONG64 X20;
+    ULONG64 X21;
+    ULONG64 X22;
+    ULONG64 X23;
+    ULONG64 X24;
+    ULONG64 X25;
+    ULONG64 X26;
+    ULONG64 X27;
+    ULONG64 X28;
+    ULONG64 Fp;
+    ULONG64 Lr;
+    ULONG64 ReturnAddress;
+    UCHAR ApcBypass;
+    UCHAR Reserved[7];
+} KSWITCH_FRAME, *PKSWITCH_FRAME;
 
 #ifndef NTOS_MODE_USER
 
