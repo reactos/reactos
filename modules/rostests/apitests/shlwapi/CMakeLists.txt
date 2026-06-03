@@ -10,6 +10,7 @@ list(APPEND SOURCE
     IShellFolderHelpers.cpp
     IsQSForward.cpp
     IStreamPidl.cpp
+    NextPath.c
     PathFileExistsDefExtAndAttributesW.c
     PathFindOnPath.c
     PathIsUNC.c

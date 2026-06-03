@@ -446,8 +446,8 @@
 446 stdcall -noname PathFileExistsAndAttributesW(wstr ptr)
 447 stdcall -noname FixSlashesAndColonA(str)
 448 stdcall -noname FixSlashesAndColonW(wstr)
-449 stub -noname NextPathA
-450 stub -noname NextPathW
+449 stdcall -noname NextPathA(str ptr long)
+450 stdcall -noname NextPathW(wstr ptr long)
 451 stdcall -noname CharUpperNoDBCSA(str)
 452 stdcall -noname CharUpperNoDBCSW(wstr)
 453 stdcall -noname CharLowerNoDBCSA(str)

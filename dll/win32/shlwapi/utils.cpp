@@ -878,3 +878,82 @@ SHDialogBox(
     SHDIALOG data = { fn, pThis };
     return DialogBoxParamA(hInstance, lpTemplateName, hWndParent, SHDialogProc, (LPARAM)&data);
 }
+
+/*************************************************************************
+ * NextPathA [SHLWAPI.449]
+ *
+ * See NextPathW.
+ */
+EXTERN_C PSTR WINAPI
+NextPathA(
+    _In_ PCSTR pszStart,
+    _Out_writes_(cchDest) PSTR pszDest,
+    _In_ UINT cchDest)
+{
+    if (!pszStart)
+        return NULL;
+
+    PCSTR pchStart = pszStart;
+    while (*pchStart == ';')
+        ++pchStart;
+
+    if (!*pchStart)
+        return NULL;
+
+    PSTR pchEnd = StrChrA(pchStart, ';');
+    if (!pchEnd)
+        pchEnd = (PSTR)(pchStart + lstrlenA(pchStart));
+
+    const UINT cchSegment = (UINT)(pchEnd - pchStart);
+    const UINT cchToCopy = min(cchSegment + 1, cchDest);
+    lstrcpynA(pszDest, pchStart, cchToCopy);
+    pszDest[cchSegment] = ANSI_NULL;
+
+    PathRemoveBlanksA(pszDest);
+    if (!*pszDest)
+        return NULL;
+
+    return (*pchEnd == ';') ? (pchEnd + 1) : pchEnd;
+}
+
+/*************************************************************************
+ * NextPathW [SHLWAPI.450]
+ *
+ * Extracts the next path from a semicolon-separated path string (Unicode version)
+ *
+ * @param pszStart Parsing start position (semicolon-separated path string)
+ * @param pszDest Buffer to store the extracted path
+ * @param cchDest Buffer size (number of characters)
+ * @return Pointer to the beginning of the next path. NULL if there are no more paths.
+ */
+EXTERN_C PWSTR WINAPI
+NextPathW(
+    _In_ PCWSTR pszStart,
+    _Out_writes_(cchDest) PWSTR pszDest,
+    _In_ UINT cchDest)
+{
+    if (!pszStart)
+        return NULL;
+
+    PCWSTR pchStart = pszStart;
+    while (*pchStart == L';')
+        ++pchStart;
+
+    if (!*pchStart)
+        return NULL;
+
+    PWSTR pchEnd = StrChrW(pchStart, L';');
+    if (!pchEnd)
+        pchEnd = (PWSTR)(pchStart + lstrlenW(pchStart));
+
+    const UINT cchSegment = (UINT)(pchEnd - pchStart);
+    const UINT cchToCopy = min(cchSegment + 1, cchDest);
+    lstrcpynW(pszDest, pchStart, cchToCopy);
+    pszDest[cchSegment] = UNICODE_NULL;
+
+    PathRemoveBlanksW(pszDest);
+    if (!*pszDest)
+        return NULL;
+
+    return (*pchEnd == L';') ? (pchEnd + 1) : pchEnd;
+}
