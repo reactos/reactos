@@ -2167,11 +2167,19 @@ INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
     if (info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
         const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *)info;
+        if (core->bcBitCount == 0)
+        {
+            return sizeof(BITMAPCOREHEADER);
+        }
         colors = (core->bcBitCount <= 8) ? 1 << core->bcBitCount : 0;
         return sizeof(BITMAPCOREHEADER) + colors * colorsize;
     }
     else  /* Assume BITMAPINFOHEADER */
     {
+        if (info->bmiHeader.biBitCount == 0)
+        {
+            return info->bmiHeader.biSize;
+        }
         colors = info->bmiHeader.biClrUsed;
         if (colors > 256) colors = 256;
         if (!colors && (info->bmiHeader.biBitCount <= 8))

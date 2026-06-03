@@ -73,6 +73,10 @@ FASTCALL DIB_BitmapInfoSize(
     {
         const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *) info;
         size = sizeof(BITMAPCOREHEADER);
+        if (core->bcBitCount == 0)
+        {
+            return size;
+        }
         if (core->bcBitCount <= 8)
         {
             colors = 1 << core->bcBitCount;
@@ -85,6 +89,10 @@ FASTCALL DIB_BitmapInfoSize(
     }
     else /* assume BITMAPINFOHEADER */
     {
+        if (info->bmiHeader.biBitCount == 0)
+        {
+            return info->bmiHeader.biSize;
+        }
         colors = max ? (1 << info->bmiHeader.biBitCount) : info->bmiHeader.biClrUsed;
         if (colors > 256)
             colors = 256;
