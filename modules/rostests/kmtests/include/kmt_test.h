@@ -18,6 +18,10 @@
 
 #include <kmt_platform.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define GetNTVersion() ((SharedUserData->NtMajorVersion << 8) | SharedUserData->NtMinorVersion)
 
 typedef VOID KMT_TESTFUNC(VOID);
@@ -213,7 +217,7 @@ extern PKMT_RESULTBUFFER ResultBuffer;
 #define KMT_FORMAT(type, fmt, first)
 #endif /* !defined __GNUC__ */
 
-#define START_TEST(name) VOID Test_##name(VOID)
+#define START_TEST(name) EXTERN_C VOID Test_##name(VOID)
 
 #ifndef KMT_STRINGIZE
 #define KMT_STRINGIZE(x) #x
@@ -526,5 +530,34 @@ VOID KmtFreeGuarded(PVOID Pointer)
 }
 
 #endif /* defined KMT_DEFINE_TEST_FUNCTIONS */
+
+#define is_reactos() \
+    (*(unsigned*)((size_t)0x7FFE0FFC) == 0x8EAC705)
+
+static inline ULONG GetNTDDIVersion(VOID)
+{
+    RTL_OSVERSIONINFOW OSVersion;
+    OSVersion.dwOSVersionInfoSize = sizeof(OSVersion);
+    RtlGetVersion(&OSVersion);
+    switch (OSVersion.dwBuildNumber)
+    {
+        case 3790: return NTDDI_WS03;
+        case 6000: return NTDDI_VISTA;
+        case 6001: return NTDDI_VISTASP1;
+        case 6002: return NTDDI_VISTASP2;
+        case 6003: return NTDDI_VISTASP3;
+        case 7600: return NTDDI_WIN7;
+        case 7601: return NTDDI_WIN7SP1;
+        case 9200: return NTDDI_WIN8;
+
+        default:
+            trace("Unknown build number: %lu\n", OSVersion.dwBuildNumber);
+            return NTDDI_WS03;
+    }
+}
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !defined _KMTEST_TEST_H_ */
