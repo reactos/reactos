@@ -118,21 +118,80 @@ CcShutdownSystem(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
+NTKERNELAPI
 LARGE_INTEGER
 NTAPI
-CcGetFlushedValidData (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN BOOLEAN BcbListHeld
-    )
+CcGetFlushedValidData(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ BOOLEAN BcbListHeld)
 {
-	LARGE_INTEGER i;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+    PROS_VACB Vacb;
+    LARGE_INTEGER Result;
+    LONGLONG LowestDirty;
+    KIRQL OldIrql;
 
-	UNIMPLEMENTED;
+    ASSERT(SectionObjectPointer != NULL);
 
-	i.QuadPart = 0;
-	return i;
+    /* If the file is not cached or no longer cached, return MAXLONGLONG */
+    if (SectionObjectPointer->SharedCacheMap == NULL)
+    {
+        Result.QuadPart = MAXLONGLONG;
+        return Result;
+    }
+
+    SharedCacheMap = (PROS_SHARED_CACHE_MAP)SectionObjectPointer->SharedCacheMap;
+
+    /* Acquire locks: MasterLock first, then CacheMapLock */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
+
+    /* Fast path, if there's no dirty pages, all data up to ValidDataLength is flushed */
+    if (SharedCacheMap->DirtyPages == 0)
+    {
+        Result = SharedCacheMap->ValidDataLength;
+        KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+        return Result;
+    }
+
+    /* Find the lowest file offset of a dirty VACB */
+    LowestDirty = MAXLONGLONG;
+
+    for (PLIST_ENTRY Entry = SharedCacheMap->CacheMapVacbListHead.Flink;
+         Entry != &SharedCacheMap->CacheMapVacbListHead;
+         Entry = Entry->Flink)
+    {
+        Vacb = CONTAINING_RECORD(Entry, ROS_VACB, CacheMapVacbListEntry);
+
+        /*
+         * Don't skip paged out or unmapped VACBs. A VACB can hold dirty
+         * data doesn't matter of whether it currently has a mapped view
+         */
+        if (!Vacb->Dirty)
+            continue;
+
+        if (Vacb->FileOffset.QuadPart < LowestDirty)
+            LowestDirty = Vacb->FileOffset.QuadPart;
+    }
+
+    /* Read ValidDataLength under the lock to avoid a race */
+    Result = SharedCacheMap->ValidDataLength;
+
+    KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
+    /*
+     * If a dirty VACB was found, return its starting offset.
+     * Otherwise all pages were clean despite DirtyPages != 0
+     * so fall back to ValidDataLength.
+     */
+    if (LowestDirty != MAXLONGLONG)
+        Result.QuadPart = LowestDirty;
+
+    return Result;
 }
 
 /*
