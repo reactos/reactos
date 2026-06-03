@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define TAG_ACPI_LOADER_RSDP_TABLE   'RpcA'
+
 static PKINTERRUPT AcpiInterrupt;
 static BOOLEAN AcpiInterruptHandlerRegistered = FALSE;
 static ACPI_OSD_HANDLER AcpiIrqHandler = NULL;
@@ -116,24 +118,23 @@ AcpiBuildLoaderRootPointer(VOID)
 
     NodeData = AcpiGetLoaderAcpiBiosNode();
     if (!NodeData || (NodeData->RsdtAddress.QuadPart == 0))
-        return 0;
+        goto Failure;
 
     RootTable = MmMapIoSpace(NodeData->RsdtAddress, sizeof(*RootTable), MmNonCached);
     if (!RootTable)
     {
         DPRINT1("Unable to map loader ACPI root table at 0x%I64x\n",
                 NodeData->RsdtAddress.QuadPart);
-        return 0;
+        goto Failure;
     }
 
     AcpiLoaderRsdp = ExAllocatePoolZero(NonPagedPool,
                                         sizeof(*AcpiLoaderRsdp),
-                                        'dspR');
+                                        TAG_ACPI_LOADER_RSDP_TABLE);
     if (!AcpiLoaderRsdp)
     {
-        MmUnmapIoSpace(RootTable, sizeof(*RootTable));
         DPRINT1("Unable to allocate synthetic RSDP for loader ACPI tables\n");
-        return 0;
+        goto Failure;
     }
 
     RtlCopyMemory(AcpiLoaderRsdp->Signature,
@@ -153,10 +154,7 @@ AcpiBuildLoaderRootPointer(VOID)
         {
             DPRINT1("Loader RSDT address does not fit in 32 bits: 0x%I64x\n",
                     NodeData->RsdtAddress.QuadPart);
-            ExFreePoolWithTag(AcpiLoaderRsdp, 'dspR');
-            AcpiLoaderRsdp = NULL;
-            MmUnmapIoSpace(RootTable, sizeof(*RootTable));
-            return 0;
+            goto Failure;
         }
 
         AcpiLoaderRsdp->Revision = 0;
@@ -166,10 +164,7 @@ AcpiBuildLoaderRootPointer(VOID)
     {
         DPRINT1("Loader ACPI root table has unexpected signature '%.4s'\n",
                 RootTable->Signature);
-        ExFreePoolWithTag(AcpiLoaderRsdp, 'dspR');
-        AcpiLoaderRsdp = NULL;
-        MmUnmapIoSpace(RootTable, sizeof(*RootTable));
-        return 0;
+        goto Failure;
     }
 
     AcpiLoaderRsdp->Checksum = AcpiChecksumBuffer((const UCHAR *)AcpiLoaderRsdp,
@@ -184,6 +179,16 @@ AcpiBuildLoaderRootPointer(VOID)
     MmUnmapIoSpace(RootTable, sizeof(*RootTable));
     PhysicalAddress = MmGetPhysicalAddress(AcpiLoaderRsdp);
     return (ACPI_PHYSICAL_ADDRESS)PhysicalAddress.QuadPart;
+
+Failure:
+    if (AcpiLoaderRsdp)
+    {
+        ExFreePoolWithTag(AcpiLoaderRsdp, TAG_ACPI_LOADER_RSDP_TABLE);
+        AcpiLoaderRsdp = NULL;
+    }
+    if (RootTable)
+        MmUnmapIoSpace(RootTable, sizeof(*RootTable));
+    return 0;
 }
 
 ACPI_STATUS
