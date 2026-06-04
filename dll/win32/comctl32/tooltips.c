@@ -904,6 +904,8 @@ TOOLTIPS_Hide (TOOLTIPS_INFO *infoPtr)
 
     TRACE("Hide tooltip %d, %p.\n", infoPtr->nCurrentTool, infoPtr->hwndSelf);
 
+    KillTimer(infoPtr->hwndSelf, ID_TIMERSHOW);
+
     if (infoPtr->nCurrentTool == -1)
 	return;
 
