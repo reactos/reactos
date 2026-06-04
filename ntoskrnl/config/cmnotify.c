@@ -212,7 +212,7 @@ CmpNotifyPostBlock(_In_ PCM_POST_BLOCK PostBlock,
     /* Queue the APC routine */
     if (PostBlock->UserApc)
     {
-        KeInsertQueueApc(PostBlock->UserApc, PostBlock, (PVOID)Status, 0);
+        KeInsertQueueApc(PostBlock->UserApc, PostBlock, (PVOID)(ULONG_PTR)Status, 0);
 
         /* We can't free the resource, yet
          * There's an APC routine to be called so we still need them
@@ -257,7 +257,7 @@ CmpApcKernelRoutine(_In_ PKAPC Apc,
                     _Inout_ PVOID *SystemArgument2 OPTIONAL)
 {
     PCM_POST_BLOCK PostBlock = (PCM_POST_BLOCK)*SystemArgument1;
-    NTSTATUS Status = (NTSTATUS)(*SystemArgument2);
+    NTSTATUS Status = (NTSTATUS)(ULONG_PTR)(*SystemArgument2);
 
     if (PostBlock && PostBlock->IoStatusBlock)
     {
