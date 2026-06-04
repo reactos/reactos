@@ -213,15 +213,27 @@ HRESULT WINAPI IDefClFImpl::LockServer(BOOL fLock)
 
     if (fLock)
     {
-        if (pcRefDll && *pcRefDll < LONG_MAX)
-            InterlockedIncrement(pcRefDll);
+        if (pcRefDll)
+        {
+            if (*pcRefDll == LONG_MAX)
+                ERR("pcRefDll is pinned, not incrementing\n");
+            else
+                InterlockedIncrement(pcRefDll);
+        }
         _pAtlModule->Lock();
     }
     else
     {
         _pAtlModule->Unlock();
-        if (pcRefDll && *pcRefDll > 0)
-            InterlockedDecrement(pcRefDll);
+        if (pcRefDll)
+        {
+            if (*pcRefDll == LONG_MAX)
+                ERR("pcRefDll is pinned, not decrementing\n");
+            else if (*pcRefDll > 0)
+                InterlockedDecrement(pcRefDll);
+            else
+                ERR("pcRefDll underflow\n");
+        }
     }
 
     return S_OK;
