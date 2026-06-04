@@ -14,6 +14,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <windows.h>
+#include <ntstatus.h>
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <ip2string.h>

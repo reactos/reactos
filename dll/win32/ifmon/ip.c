@@ -75,7 +75,12 @@ IpSetAddress(
     GUID InterfaceGUID;
     PDWORD pdwTagType = NULL;
     DWORD i, dwSource = 0;
-    BOOL bHaveName = FALSE, bHaveSource = FALSE;
+    BOOL bHaveName = FALSE, bHaveSource = FALSE, bHaveAddress = FALSE,
+         bHaveMask = FALSE, bHaveGateway = FALSE, bHaveMetric = FALSE;
+    IN_ADDR Address, Mask, Gateway;
+    DWORD dwMetric;
+    PCWSTR Term;
+    NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
 
     DPRINT1("IpSetAddress()\n");
@@ -110,7 +115,6 @@ IpSetAddress(
         {
             case 0: /* name */
                 DPRINT1("Tag: name (%S)\n", argv[i + dwCurrentIndex]);
-
                 dwError = NhGetGuidFromInterfaceName(argv[i + dwCurrentIndex],
                                                      &InterfaceGUID,
                                                      0, 0);
@@ -131,7 +135,6 @@ IpSetAddress(
 
             case 1: /* source */
                 DPRINT1("Tag: source (%S)\n", argv[i + dwCurrentIndex]);
-
                 dwError = MatchEnumTag(hDllInstance,
                                        argv[i + dwCurrentIndex],
                                        ARRAYSIZE(ptvSource),
@@ -153,18 +156,79 @@ IpSetAddress(
 
             case 2: /* addr */
                 DPRINT1("Tag: addr (%S)\n", argv[i + dwCurrentIndex]);
+                Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
+                                                 TRUE,
+                                                 &Term,
+                                                 &Address);
+                if (Status != 0 /*STATUS_SUCCESS*/)
+                {
+                    DPRINT1("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_BAD_VALUE,
+                                           argv[i + dwCurrentIndex],
+                                           pttTags[pdwTagType[i]].pwszTag);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                DPRINT1("IP Address: %u.%u.%u.%u\n",
+                        Address.S_un.S_un_b.s_b1, Address.S_un.S_un_b.s_b2, Address.S_un.S_un_b.s_b3, Address.S_un.S_un_b.s_b4);
+                bHaveAddress = TRUE;
                 break;
 
             case 3: /* mask */
                 DPRINT1("Tag: mask (%S)\n", argv[i + dwCurrentIndex]);
+                Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
+                                                 TRUE,
+                                                 &Term,
+                                                 &Mask);
+                if (Status != 0 /*STATUS_SUCCESS*/)
+                {
+                    DPRINT1("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_BAD_VALUE,
+                                           argv[i + dwCurrentIndex],
+                                           pttTags[pdwTagType[i]].pwszTag);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                DPRINT1("Subnet Mask: %u.%u.%u.%u\n",
+                        Mask.S_un.S_un_b.s_b1, Mask.S_un.S_un_b.s_b2, Mask.S_un.S_un_b.s_b3, Mask.S_un.S_un_b.s_b4);
+                bHaveMask = TRUE;
                 break;
 
             case 4: /* gateway */
                 DPRINT1("Tag: gateway (%S)\n", argv[i + dwCurrentIndex]);
+                Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
+                                                 TRUE,
+                                                 &Term,
+                                                 &Gateway);
+                if (Status != 0 /*STATUS_SUCCESS*/)
+                {
+                    DPRINT1("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_BAD_VALUE,
+                                           argv[i + dwCurrentIndex],
+                                           pttTags[pdwTagType[i]].pwszTag);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                DPRINT1("Gateway: %u.%u.%u.%u\n",
+                        Gateway.S_un.S_un_b.s_b1, Gateway.S_un.S_un_b.s_b2, Gateway.S_un.S_un_b.s_b3, Gateway.S_un.S_un_b.s_b4);
+                bHaveGateway = TRUE;
                 break;
 
             case 5: /* gwmetric */
                 DPRINT1("Tag: gwmetric (%S)\n", argv[i + dwCurrentIndex]);
+                dwMetric = wcstoul(argv[i + dwCurrentIndex],
+                                   (wchar_t**)&Term,
+                                   10);
+                if (dwMetric > 9999)
+                {
+                    dwError = ERROR_INVALID_PARAMETER;
+                    break;
+                }
+                DPRINT1("Metric: %lu\n", dwMetric);
+                bHaveMetric = TRUE;
                 break;
 
             default:
@@ -176,21 +240,30 @@ IpSetAddress(
     if (pdwTagType)
         HeapFree(GetProcessHeap(), 0, pdwTagType);
 
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
 
     /* Check parameters */
 
     /* The interface name is mandatory */
     if (bHaveName == FALSE)
+        return ERROR_INVALID_SYNTAX;
+
+    if (bHaveSource)
     {
-        DPRINT1("The Name argument is mssing!\n");
-//        return ERROR_INVALID_SYNTAX;
+        if ((dwSource == 1) &&
+            (!bHaveAddress || !bHaveMask))
+            return ERROR_INVALID_SYNTAX;
+
+        if ((dwSource == 2) &&
+            (bHaveAddress || bHaveMask))
+            return ERROR_INVALID_SYNTAX;
     }
 
-    if (bHaveSource == FALSE)
-    {
-        DPRINT1("The Source argument is mssing!\n");
-//        return ERROR_INVALID_SYNTAX;
-    }
+    if ((bHaveGateway && !bHaveMetric) ||
+        (!bHaveGateway && bHaveMetric))
+        return ERROR_INVALID_SYNTAX;
+
 
     DPRINT1("IpSetAddress() done (Error %lu)\n", dwError);
     return dwError;
