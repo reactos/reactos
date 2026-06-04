@@ -213,7 +213,9 @@ UINT
 MapVerbToDfmCmd(_In_ LPCSTR verba);
 UINT
 GetDfmCmd(_In_ IContextMenu *pCM, _In_ LPCSTR verba);
-#define SHELL_ExecuteControlPanelCPL(hwnd, cpl) SHRunControlPanel((cpl), (hwnd))
+EXTERN_C BOOL WINAPI
+SHELL32_RunControlPanel(_In_ PCWSTR commandLine, _In_ HWND parent);
+#define SHELL_ExecuteControlPanelCPL(hwnd, cpl) SHELL32_RunControlPanel((cpl), (hwnd))
 
 
 // CStubWindow32 --- The owner window of file property sheets.

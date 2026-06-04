@@ -754,8 +754,7 @@ LRESULT CTrayClockWnd::OnLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam
 {
     if (IsWindowVisible())
     {
-        //FIXME: use SHRunControlPanel
-        ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
+        SHELL_ExecuteControlPanelCPL(m_hWnd, L"timedate.cpl");
     }
     return TRUE;
 }

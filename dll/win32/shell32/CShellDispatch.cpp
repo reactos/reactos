@@ -264,7 +264,13 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::RefreshMenu()
 HRESULT STDMETHODCALLTYPE CShellDispatch::ControlPanelItem(BSTR szDir)
 {
     TRACE("(%p, %ls)\n", this, szDir);
-    return SHRunControlPanel(szDir, NULL) ? S_OK : S_FALSE;
+    if (LOBYTE(GetVersion()) < 6)
+        SHELL32_RunControlPanel(szDir, NULL);
+    else if (!szDir)
+        return E_INVALIDARG; // NT5 does not check, just silently fails
+    else
+        ShellExecuteW(NULL, NULL, szDir, NULL, NULL, SW_SHOWNORMAL);
+    return S_OK;
 }
 
 // *** IShellDispatch2 methods ***
