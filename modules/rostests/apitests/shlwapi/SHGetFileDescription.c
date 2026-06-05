@@ -51,7 +51,7 @@ static void TEST_QuerySizeOnly(void)
 
 static void TEST_GetDescriptionNotepad(void)
 {
-    WCHAR buf[256] = {};
+    WCHAR buf[256] = L"";
     UINT cch = _countof(buf);
     BOOL ret = g_fnSHGetFileDescriptionW(g_notepad, NULL, NULL, buf, &cch);
 
@@ -62,7 +62,7 @@ static void TEST_GetDescriptionNotepad(void)
 
 static void TEST_GetDescriptionWinver(void)
 {
-    WCHAR buf[256] = {};
+    WCHAR buf[256] = L"";
     UINT cch = _countof(buf);
     BOOL ret = g_fnSHGetFileDescriptionW(g_winver, NULL, NULL, buf, &cch);
 
@@ -73,7 +73,7 @@ static void TEST_GetDescriptionWinver(void)
 
 static void TEST_NonExistentFile(void)
 {
-    WCHAR buf[256] = {};
+    WCHAR buf[256] = L"";
     UINT  cch = _countof(buf);
     BOOL  ret = g_fnSHGetFileDescriptionW(L"C:\\This\\Does\\Not\\Exist.exe", NULL, NULL,
                                           buf, &cch);
@@ -85,7 +85,7 @@ static void TEST_DirectoryPath(void)
     WCHAR sys[MAX_PATH];
     GetSystemDirectoryW(sys, _countof(sys));
 
-    WCHAR buf[256] = {};
+    WCHAR buf[256] = L"";
     UINT cch = _countof(buf);
     BOOL ret = g_fnSHGetFileDescriptionW(sys, NULL, NULL, buf, &cch);
 
@@ -106,7 +106,7 @@ static void TEST_TinyBuffer(void)
 
 static void TEST_CustomVerKey(void)
 {
-    WCHAR buf[256] = {};
+    WCHAR buf[256] = L"";
     UINT  cch = _countof(buf);
     BOOL  ret = g_fnSHGetFileDescriptionW(g_notepad,
                                           L"\\StringFileInfo\\040904B0\\FileDescription",
@@ -117,10 +117,8 @@ static void TEST_CustomVerKey(void)
 
 static void TEST_InvalidVerKey(void)
 {
-    WCHAR buf[256]  = {};
-    UINT  cch       = _countof(buf);
-    WCHAR bufNorm[256] = {};
-    UINT  cchNorm   = _countof(bufNorm);
+    WCHAR buf[256] = L"", bufNorm[256] = L"";
+    UINT cch = _countof(buf), cchNorm = _countof(bufNorm);
 
     BOOL retInvalid = g_fnSHGetFileDescriptionW(g_notepad,
                                                 L"\\StringFileInfo\\FFFFFFFF\\NoSuchKey",
