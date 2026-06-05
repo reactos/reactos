@@ -12,8 +12,8 @@
 static WCHAR g_notepad[MAX_PATH];
 static WCHAR g_winver[MAX_PATH];
 
-typedef BOOL (WINAPI *PFN_SHGetFileDescriptionW)(PCWSTR, PCWSTR, PCWSTR, PWSTR, PUINT);
-static PFN_SHGetFileDescriptionW g_fnSHGetFileDescriptionW = NULL;
+typedef BOOL (WINAPI *FN_SHGetFileDescriptionW)(PCWSTR, PCWSTR, PCWSTR, PWSTR, PUINT);
+static FN_SHGetFileDescriptionW g_fnSHGetFileDescriptionW = NULL;
 
 static BOOL LoadFunctions(void)
 {
@@ -24,12 +24,12 @@ static BOOL LoadFunctions(void)
         return FALSE;
 
     g_fnSHGetFileDescriptionW =
-        (PFN_SHGetFileDescriptionW)GetProcAddress(hSHLWAPI, MAKEINTRESOURCEA(348));
+        (FN_SHGetFileDescriptionW)GetProcAddress(hSHLWAPI, MAKEINTRESOURCEA(348));
 
     return g_fnSHGetFileDescriptionW != NULL;
 }
 
-static BOOL BuildSystemPaths()
+static BOOL BuildSystemPaths(void)
 {
     WCHAR sys[MAX_PATH];
     if (!GetSystemDirectoryW(sys, _countof(sys)))
@@ -40,7 +40,7 @@ static BOOL BuildSystemPaths()
     return PathFileExistsW(g_notepad) && PathFileExistsW(g_winver);
 }
 
-static void TEST_QuerySizeOnly()
+static void TEST_QuerySizeOnly(void)
 {
     UINT cch = 0;
     BOOL ret = g_fnSHGetFileDescriptionW(g_notepad, NULL, NULL, NULL, &cch);
@@ -49,7 +49,7 @@ static void TEST_QuerySizeOnly()
     ok(cch > 0, "cch was %u\n", cch);
 }
 
-static void TEST_GetDescriptionNotepad()
+static void TEST_GetDescriptionNotepad(void)
 {
     WCHAR buf[256] = {};
     UINT cch = _countof(buf);
@@ -60,7 +60,7 @@ static void TEST_GetDescriptionNotepad()
     ok(0 < cch && cch <= _countof(buf), "cch was %u\n", cch);
 }
 
-static void TEST_GetDescriptionWinver()
+static void TEST_GetDescriptionWinver(void)
 {
     WCHAR buf[256] = {};
     UINT cch = _countof(buf);
@@ -71,7 +71,7 @@ static void TEST_GetDescriptionWinver()
     ok(0 < cch && cch <= _countof(buf), "cch was %u\n", cch);
 }
 
-static void TEST_NonExistentFile()
+static void TEST_NonExistentFile(void)
 {
     WCHAR buf[256] = {};
     UINT  cch = _countof(buf);
@@ -80,7 +80,7 @@ static void TEST_NonExistentFile()
     ok_int(ret, FALSE);
 }
 
-static void TEST_DirectoryPath()
+static void TEST_DirectoryPath(void)
 {
     WCHAR sys[MAX_PATH];
     GetSystemDirectoryW(sys, _countof(sys));
@@ -93,7 +93,7 @@ static void TEST_DirectoryPath()
     ok(_wcsicmp(buf, L"System32") == 0, "buf was %s\n", wine_dbgstr_w(buf));
 }
 
-static void TEST_TinyBuffer()
+static void TEST_TinyBuffer(void)
 {
     WCHAR buf[1] = { L'X' };
     UINT cch = 1;
@@ -104,7 +104,7 @@ static void TEST_TinyBuffer()
     ok_int(cch, 1);
 }
 
-static void TEST_CustomVerKey()
+static void TEST_CustomVerKey(void)
 {
     WCHAR buf[256] = {};
     UINT  cch = _countof(buf);
@@ -115,7 +115,7 @@ static void TEST_CustomVerKey()
     ok(buf[0] != UNICODE_NULL, "buf was empty\n");
 }
 
-static void TEST_InvalidVerKey()
+static void TEST_InvalidVerKey(void)
 {
     WCHAR buf[256]  = {};
     UINT  cch       = _countof(buf);
