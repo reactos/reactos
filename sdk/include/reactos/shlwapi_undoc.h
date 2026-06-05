@@ -419,6 +419,22 @@ BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR lpszPath, DWORD* dwAttr);
 BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR lpszPath, DWORD* dwAttr);
 #endif
 
+VOID WINAPI PrettifyFileDescriptionW(_Inout_ PWSTR pszTarget, _In_opt_ PCWSTR pszCutList);
+
+BOOL WINAPI SHGetFileDescriptionA(
+    _In_ PCSTR pszPath,
+    _In_opt_ PCSTR pszVerKey,
+    _In_opt_ PCSTR pszDisplayName,
+    _Out_opt_ PSTR pszOut,
+    _Inout_ PUINT pcchOut);
+
+BOOL WINAPI SHGetFileDescriptionW(
+    _In_ PCWSTR pszPath,
+    _In_opt_ PCWSTR pszVerKey,
+    _In_opt_ PCWSTR pszDisplayName,
+    _Out_opt_ PWSTR pszOut,
+    _Inout_ PUINT pcchOut);
+
 LPSTR  WINAPI StrCpyNXA(LPSTR lpszDest, LPCSTR lpszSrc, int iLen);
 LPWSTR WINAPI StrCpyNXW(LPWSTR lpszDest, LPCWSTR lpszSrc, int iLen);
 
@@ -426,10 +442,12 @@ LPWSTR WINAPI StrCpyNXW(LPWSTR lpszDest, LPCWSTR lpszSrc, int iLen);
     #define PathIsValidChar PathIsValidCharW
     #define StrCpyNX StrCpyNXW
     #define FixSlashesAndColon FixSlashesAndColonW
+    #define SHGetFileDescription SHGetFileDescriptionW
 #else
     #define PathIsValidChar PathIsValidCharA
     #define StrCpyNX StrCpyNXA
     #define FixSlashesAndColon FixSlashesAndColonA
+    #define SHGetFileDescription SHGetFileDescriptionA
 #endif
 
 BOOL WINAPI
