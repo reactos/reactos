@@ -1127,7 +1127,7 @@ BOOL WINAPI SHGetFileDescriptionW(
     if (pszOut)
     {
         UINT cchCopy = min(cchResult, *pcchOut);
-        StrCpyNW(pszOut, pszDescription, cchCopy);
+        StringCchCopyW(pszOut, cchCopy, pszDescription);
         *pcchOut = cchCopy;
     }
     else
@@ -1153,33 +1153,40 @@ BOOL WINAPI SHGetFileDescriptionA(
     _Out_opt_ PSTR pszOut,
     _Inout_ PUINT pcchOut)
 {
-    WCHAR szPath[MAX_PATH], szVerKey[MAX_PATH], szDisplayName[MAX_PATH];
-    WCHAR szOut[MAX_PATH];
+    WCHAR szPathW[MAX_PATH], szVerKeyW[MAX_PATH], szDisplayNameW[MAX_PATH], szOutW[MAX_PATH];
     CHAR szOutA[MAX_PATH];
     BOOL ret;
-    UINT cchOut;
+    UINT cchOutW;
 
-    SHAnsiToUnicode(pszPath, szPath, _countof(szPath));
+    SHAnsiToUnicode(pszPath, szPathW, _countof(szPathW));
+    szPathW[_countof(szPathW) - 1] = UNICODE_NULL;
+
     if (pszVerKey)
-        SHAnsiToUnicode(pszVerKey, szVerKey, _countof(szVerKey));
-    if (pszDisplayName)
-        SHAnsiToUnicode(pszDisplayName, szDisplayName, _countof(szDisplayName));
+    {
+        SHAnsiToUnicode(pszVerKey, szVerKeyW, _countof(szVerKeyW));
+        szVerKeyW[_countof(szVerKeyW) - 1] = UNICODE_NULL;
+    }
 
-    cchOut = _countof(szOut);
-    ret = SHGetFileDescriptionW(szPath, (pszVerKey ? szVerKey : NULL),
-                                (pszDisplayName ? szDisplayName : NULL), szOut, &cchOut);
+    if (pszDisplayName)
+    {
+        SHAnsiToUnicode(pszDisplayName, szDisplayNameW, _countof(szDisplayNameW));
+        szDisplayNameW[_countof(szDisplayNameW) - 1] = UNICODE_NULL;
+    }
+
+    cchOutW = (UINT)_countof(szOutW);
+    ret = SHGetFileDescriptionW(szPathW, (pszVerKey ? szVerKeyW : NULL),
+                                (pszDisplayName ? szDisplayNameW : NULL), szOutW, &cchOutW);
     if (ret)
     {
-        if (pszOut)
-        {
-            SHUnicodeToAnsi(szOut, pszOut, *pcchOut);
-            *pcchOut = lstrlenA(pszOut) + 1;
-        }
-        else
-        {
-            SHUnicodeToAnsi(szOut, szOutA, _countof(szOutA));
-            *pcchOut = lstrlenA(szOutA) + 1;
-        }
+        szOutW[_countof(szOutW) - 1] = UNICODE_NULL;
+
+        if (!pszOut)
+            pszOut = szOutA;
+
+        SHUnicodeToAnsi(szOutW, pszOut, *pcchOut);
+        if (*pcchOut > 0)
+            pszOut[*pcchOut - 1] = ANSI_NULL;
+        *pcchOut = lstrlenA(pszOut) + 1;
     }
 
     return ret;
