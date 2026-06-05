@@ -21,6 +21,7 @@ list(APPEND SOURCE
     PathUnExpandEnvStringsForUser.c
     QuerySourceCreateFromKey.cpp
     SHAreIconsEqual.c
+    SHGetFileDescription.cpp
     SHGetRestriction.c
     SHInvokeCommandsOnContextMenu.cpp
     SHLoadIndirectString.c

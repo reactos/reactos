@@ -17,6 +17,7 @@ extern void func_PathUnExpandEnvStrings(void);
 extern void func_PathUnExpandEnvStringsForUser(void);
 extern void func_QuerySourceCreateFromKey(void);
 extern void func_SHAreIconsEqual(void);
+extern void func_SHGetFileDescription(void);
 extern void func_SHGetRestriction(void);
 extern void func_SHInvokeCommandsOnContextMenu(void);
 extern void func_SHLoadIndirectString(void);
@@ -44,6 +45,7 @@ const struct test winetest_testlist[] =
     { "PathUnExpandEnvStringsForUser", func_PathUnExpandEnvStringsForUser },
     { "QuerySourceCreateFromKey", func_QuerySourceCreateFromKey },
     { "SHAreIconsEqual", func_SHAreIconsEqual },
+    { "SHGetFileDescription", func_SHGetFileDescription },
     { "SHGetRestriction", func_SHGetRestriction },
     { "SHInvokeCommandsOnContextMenu", func_SHInvokeCommandsOnContextMenu },
     { "SHLoadIndirectString", func_SHLoadIndirectString },
