@@ -550,9 +550,9 @@ NetLocalGroupAddMembers(
 
         case 3:
             ApiStatus = BuildSidListFromDomainAndName(pServerName,
-                                                   (PLOCALGROUP_MEMBERS_INFO_3)buf,
-                                                   totalentries,
-                                                   &MemberList);
+                                                      (PLOCALGROUP_MEMBERS_INFO_3)buf,
+                                                      totalentries,
+                                                      &MemberList);
             if (ApiStatus != NERR_Success)
             {
                 ERR("BuildSidListFromDomainAndName failed (ApiStatus %lu)\n", ApiStatus);
@@ -846,9 +846,9 @@ NetLocalGroupDelMembers(
 
         case 3:
             ApiStatus = BuildSidListFromDomainAndName((servername != NULL) ? &ServerName : NULL,
-                                                   (PLOCALGROUP_MEMBERS_INFO_3)buf,
-                                                   totalentries,
-                                                   &MemberList);
+                                                      (PLOCALGROUP_MEMBERS_INFO_3)buf,
+                                                      totalentries,
+                                                      &MemberList);
             if (ApiStatus)
             {
                 ERR("BuildSidListFromDomainAndName failed (ApiStatus %lu)\n", ApiStatus);
