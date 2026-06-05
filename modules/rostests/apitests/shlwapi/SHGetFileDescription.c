@@ -58,6 +58,7 @@ static void TEST_GetDescriptionNotepad(void)
     ok_int(ret, TRUE);
     ok(buf[0] != UNICODE_NULL, "buf was empty\n");
     ok(0 < cch && cch <= _countof(buf), "cch was %u\n", cch);
+    trace("buf: %s\n", wine_dbgstr_w(buf));
 }
 
 static void TEST_GetDescriptionWinver(void)
@@ -69,6 +70,7 @@ static void TEST_GetDescriptionWinver(void)
     ok_int(ret, TRUE);
     ok(buf[0] != UNICODE_NULL, "buf was empty\n");
     ok(0 < cch && cch <= _countof(buf), "cch was %u\n", cch);
+    trace("buf: %s\n", wine_dbgstr_w(buf));
 }
 
 static void TEST_NonExistentFile(void)
