@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Test for AssocQueryStringA/W
- * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2024-2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <apitest.h>
@@ -10,24 +10,6 @@
 #include <stdio.h>
 #include <versionhelpers.h>
 
-typedef HRESULT (WINAPI *FN_AssocQueryStringA)(
-    ASSOCF cfFlags,
-    ASSOCSTR str,
-    LPCSTR pszAssoc,
-    LPCSTR pszExtra,
-    LPSTR pszOut,
-    DWORD *pcchOut);
-typedef HRESULT (WINAPI *FN_AssocQueryStringW)(
-    ASSOCF cfFlags,
-    ASSOCSTR str,
-    LPCWSTR pszAssoc,
-    LPCWSTR pszExtra,
-    LPWSTR pszOut,
-    DWORD *pcchOut);
-
-static HINSTANCE s_hSHLWAPI = NULL;
-static FN_AssocQueryStringA s_fnAssocQueryStringA = NULL;
-static FN_AssocQueryStringW s_fnAssocQueryStringW = NULL;
 static CHAR  s_szTextFileA[MAX_PATH] =  "";
 static WCHAR s_szTextFileW[MAX_PATH] = L"";
 #define NON_EXISTENT_FILENAME_A  "C:\\ThisIsNotExistentFile.txt"
@@ -62,7 +44,7 @@ static void TEST_AssocQueryStringA(void)
     /* ".txt" */
     lstrcpynA(szPath, ".txt", _countof(szPath));
     cch = _countof(szPath);
-    hr = AssocQueryStringA(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
+    hr = AssocQueryStringA(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
     if (IsWindowsVistaOrGreater())
     {
         ExpandEnvironmentStringsA("%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
@@ -82,7 +64,7 @@ static void TEST_AssocQueryStringA(void)
     /* s_szTextFileA */
     lstrcpynA(szPath, s_szTextFileA, _countof(szPath));
     cch = _countof(szPath);
-    hr = AssocQueryStringA(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
+    hr = AssocQueryStringA(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
     if (IsWindowsVistaOrGreater())
     {
         ExpandEnvironmentStringsA("%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
@@ -102,7 +84,7 @@ static void TEST_AssocQueryStringA(void)
     /* NON_EXISTENT_FILENAME_A */
     lstrcpynA(szPath, NON_EXISTENT_FILENAME_A, _countof(szPath));
     cch = _countof(szPath);
-    hr = AssocQueryStringA(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
+    hr = AssocQueryStringA(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
     if (IsWindowsVistaOrGreater())
     {
         ExpandEnvironmentStringsA("%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
@@ -130,7 +112,7 @@ static void TEST_AssocQueryStringW(void)
     /* ".txt" */
     lstrcpynW(szPath, L".txt", _countof(szPath));
     cch = _countof(szPath);
-    hr = AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
+    hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
     ok_long(hr, S_OK);
     ExpandEnvironmentStringsW(L"%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
     lstrcpynA(szDebug1, wine_dbgstr_w(szPath), _countof(szDebug1));
@@ -141,7 +123,7 @@ static void TEST_AssocQueryStringW(void)
     /* s_szTextFileW */
     lstrcpynW(szPath, s_szTextFileW, _countof(szPath));
     cch = _countof(szPath);
-    hr = AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
+    hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
     ok_long(hr, S_OK);
     ExpandEnvironmentStringsW(L"%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
     lstrcpynA(szDebug1, wine_dbgstr_w(szPath), _countof(szDebug1));
@@ -152,7 +134,7 @@ static void TEST_AssocQueryStringW(void)
     /* NON_EXISTENT_FILENAME_W */
     lstrcpynW(szPath, NON_EXISTENT_FILENAME_W, _countof(szPath));
     cch = _countof(szPath);
-    hr = AssocQueryStringW(0, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
+    hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, szPath, NULL, szPath, &cch);
     ok_long(hr, S_OK);
     ExpandEnvironmentStringsW(L"%WINDIR%\\system32\\notepad.exe", szAnswer, _countof(szAnswer));
     lstrcpynA(szDebug1, wine_dbgstr_w(szPath), _countof(szDebug1));
@@ -161,26 +143,58 @@ static void TEST_AssocQueryStringW(void)
     ok_int(cch, lstrlenW(szAnswer) + 1);
 }
 
+static void TEST_TrickyPointers(void)
+{
+    HRESULT hr;
+    CHAR  szPathA[MAX_PATH], szOutputA[MAX_PATH];
+    WCHAR szPathW[MAX_PATH], szOutputW[MAX_PATH];
+    DWORD cch;
+    BOOL bVistaPlus = IsWindowsVistaOrGreater();
+
+    lstrcpynA(szPathA, s_szTextFileA, _countof(szPathA));
+    cch = _countof(szOutputA);
+    _SEH2_TRY
+    {
+        hr = AssocQueryStringA(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, szPathA, NULL, szOutputA, (PDWORD)UlongToPtr(cch));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        hr = 0xDEADFACE;
+    }
+    _SEH2_END;
+
+    if (bVistaPlus)
+        ok_long(hr, 0xDEADFACE);
+    else
+        ok_long(hr, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND));
+
+    lstrcpynW(szPathW, s_szTextFileW, _countof(szPathW));
+    cch = _countof(szOutputW);
+    _SEH2_TRY
+    {
+        hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, szPathW, NULL, szOutputW, (PDWORD)UlongToPtr(cch));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        hr = 0xDEADFACE;
+    }
+    _SEH2_END;
+
+    if (bVistaPlus)
+        ok_long(hr, 0xDEADFACE);
+    else
+        ok_long(hr, S_OK);
+}
+
 START_TEST(AssocQueryString)
 {
     HRESULT hrCoInit = CoInitialize(NULL);
 
-    s_hSHLWAPI = LoadLibraryW(L"shlwapi.dll");
-    s_fnAssocQueryStringA = (FN_AssocQueryStringA)GetProcAddress(s_hSHLWAPI, "AssocQueryStringA");
-    s_fnAssocQueryStringW = (FN_AssocQueryStringW)GetProcAddress(s_hSHLWAPI, "AssocQueryStringW");
-    if (!s_fnAssocQueryStringA || !s_fnAssocQueryStringW)
-    {
-        skip("AssocQueryStringA or AssocQueryStringW not found: %p, %p\n",
-             s_fnAssocQueryStringA, s_fnAssocQueryStringW);
-        return;
-    }
-
     TEST_Start();
     TEST_AssocQueryStringA();
     TEST_AssocQueryStringW();
+    TEST_TrickyPointers();
     TEST_End();
-
-    FreeLibrary(s_hSHLWAPI);
 
     if (SUCCEEDED(hrCoInit))
         CoUninitialize();
