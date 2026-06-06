@@ -326,7 +326,7 @@ UserSendMouseInput(MOUSEINPUT *pmi, BOOL bInjected)
             SET_KEY_DOWN(gafAsyncKeyState, VK_XBUTTON1, FALSE);
             pCurInfo->ButtonsDown &= ~MK_XBUTTON1;
             Msg.wParam &= ~MK_XBUTTON1;
-            Msg.wParam |= MAKEWPARAM(0, XBUTTON2);
+            Msg.wParam |= MAKEWPARAM(0, XBUTTON1);
             co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
         }
         if (pmi->mouseData & XBUTTON2)
