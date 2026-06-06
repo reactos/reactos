@@ -487,7 +487,7 @@ FstubCreateDiskRaw(IN PDEVICE_OBJECT DeviceObject)
     /* Only zero useful stuff */
     MasterBootRecord = (PMASTER_BOOT_RECORD)Disk->Buffer;
     MasterBootRecord->Signature = 0;
-    RtlZeroMemory(MasterBootRecord->PartitionTable, sizeof(PARTITION_TABLE_ENTRY));
+    RtlZeroMemory(MasterBootRecord->PartitionTable, sizeof(PARTITION_TABLE_ENTRY) * NUM_PARTITION_TABLE_ENTRIES);
     MasterBootRecord->MasterBootRecordMagic = 0;
 
     /* Write back that destroyed MBR */
