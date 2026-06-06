@@ -214,7 +214,7 @@ MapVerbToDfmCmd(_In_ LPCSTR verba);
 UINT
 GetDfmCmd(_In_ IContextMenu *pCM, _In_ LPCSTR verba);
 EXTERN_C BOOL WINAPI
-SHELL32_RunControlPanel(_In_ PCWSTR commandLine, _In_ HWND parent);
+SHELL32_RunControlPanel(_In_ PCWSTR commandLine, _In_opt_ HWND parent);
 #define SHELL_ExecuteControlPanelCPL(hwnd, cpl) SHELL32_RunControlPanel((cpl), (hwnd))
 
 

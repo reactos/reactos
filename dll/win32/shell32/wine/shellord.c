@@ -1665,7 +1665,7 @@ HRESULT WINAPI SHWinHelp(HWND hwnd, LPCWSTR pszHelp, UINT uCommand, ULONG_PTR dw
  */
 #ifdef __REACTOS__
 EXTERN_C BOOL WINAPI
-SHELL32_RunControlPanel(_In_ PCWSTR commandLine, _In_ HWND parent)
+SHELL32_RunControlPanel(_In_ PCWSTR commandLine, _In_opt_ HWND parent)
 {
     /*
      * TODO: Run in-process when possible, using
