@@ -1093,18 +1093,21 @@ BOOL WINAPI SHGetFileDescriptionW(
 
                 if (!ret)
                 {
+                    // 0x0409: English (United States), 0x04B0: UTF-16 codepage
                     StringCchCopyW(szSubBlock, _countof(szSubBlock),
                                    L"\\StringFileInfo\\040904B0\\FileDescription");
                     ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
                 }
                 if (!ret)
                 {
+                    // 0x0409: English (United States), 0x04E4: Latin 1 codepage
                     StringCchCopyW(szSubBlock, _countof(szSubBlock),
                                    L"\\StringFileInfo\\040904E4\\FileDescription");
                     ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
                 }
                 if (!ret)
                 {
+                    // 0x0409: English (United States), 0x0000: Neutral
                     StringCchCopyW(szSubBlock, _countof(szSubBlock),
                                    L"\\StringFileInfo\\04090000\\FileDescription");
                     ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
