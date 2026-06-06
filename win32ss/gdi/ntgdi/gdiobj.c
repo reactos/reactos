@@ -311,7 +311,7 @@ InitGdiHandleTable(void)
     gpaLookasideList = ExAllocatePoolWithTag(NonPagedPool,
                            GDIObjTypeTotal * sizeof(PAGED_LOOKASIDE_LIST),
                            TAG_GDIHNDTBLE);
-    if(!gpaLookasideList)
+    if (!gpaLookasideList)
         return STATUS_NO_MEMORY;
 
     InitLookasideList(GDIObjType_DC_TYPE, sizeof(DC));
@@ -797,7 +797,7 @@ GDIOBJ_TryLockObject(
     {
         /* Disable APCs and try acquiring the push lock */
         KeEnterCriticalRegion();
-        if(!ExTryAcquirePushLockExclusive(&pobj->pushlock))
+        if (!ExTryAcquirePushLockExclusive(&pobj->pushlock))
         {
             ULONG cRefs, ulIndex;
             /* Already owned. Clean up and leave. */

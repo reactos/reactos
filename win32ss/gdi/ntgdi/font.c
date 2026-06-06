@@ -1221,54 +1221,50 @@ NtGdiGetRealizationInfo(
 HFONT
 APIENTRY
 HfontCreate(
-    const ENUMLOGFONTEXDVW *pelfw,
+    _In_ const ENUMLOGFONTEXDVW *pelfw,
     _In_ ULONG cjElfw,
     _In_ LFTYPE lft,
-    _In_ FLONG  fl,
+    _In_ FLONG fl,
     _In_opt_ PVOID pvCliData)
 {
-  HFONT hNewFont;
-  PLFONT plfont;
+    HFONT hNewFont;
+    PLFONT plfont;
 
-  if (!pelfw)
-  {
-      return NULL;
-  }
+    if (!pelfw)
+        return NULL;
 
-  plfont = LFONT_AllocFontWithHandle();
-  if (!plfont)
-  {
-      return NULL;
-  }
-  hNewFont = plfont->BaseObject.hHmgr;
+    plfont = LFONT_AllocFontWithHandle();
+    if (!plfont)
+        return NULL;
+    hNewFont = plfont->BaseObject.hHmgr;
 
-  plfont->lft = lft;
-  plfont->fl  = fl;
-  RtlCopyMemory (&plfont->logfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
-  ExInitializePushLock(&plfont->lock);
+    plfont->lft = lft;
+    plfont->fl  = fl;
+    RtlCopyMemory(&plfont->logfont, pelfw, sizeof(*pelfw));
+    ExInitializePushLock(&plfont->lock);
 
-  if (pelfw->elfEnumLogfontEx.elfLogFont.lfEscapement !=
-      pelfw->elfEnumLogfontEx.elfLogFont.lfOrientation)
-  {
-    /* This should really depend on whether GM_ADVANCED is set */
-    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
-    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
-  }
-  LFONT_UnlockFont(plfont);
-
-  if (pvCliData && hNewFont)
-  {
-    // FIXME: Use GDIOBJ_InsertUserData
-    KeEnterCriticalRegion();
+    if (pelfw->elfEnumLogfontEx.elfLogFont.lfEscapement !=
+        pelfw->elfEnumLogfontEx.elfLogFont.lfOrientation)
     {
-       INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hNewFont);
-       PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-       Entry->UserData = pvCliData;
+        /* This should really depend on whether GM_ADVANCED is set */
+        plfont->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
+        plfont->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
     }
-    KeLeaveCriticalRegion();
-  }
+    LFONT_UnlockFont(plfont);
 
-  return hNewFont;
+    if (pvCliData && hNewFont)
+    {
+        // FIXME: Use GDIOBJ_InsertUserData
+        KeEnterCriticalRegion();
+        {
+            INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hNewFont);
+            PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+            Entry->UserData = pvCliData;
+        }
+        KeLeaveCriticalRegion();
+    }
+
+    return hNewFont;
 }
 
 
@@ -1281,35 +1277,31 @@ NtGdiHfontCreate(
     _In_ FLONG  fl,
     _In_opt_ PVOID pvCliData)
 {
-  ENUMLOGFONTEXDVW SafeLogfont;
-  NTSTATUS Status = STATUS_SUCCESS;
+    ENUMLOGFONTEXDVW SafeLogfont;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-  /* Silence GCC warnings */
-  SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement = 0;
-  SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation = 0;
+    if (!pelfw)
+        return NULL;
 
-  if (!pelfw)
-  {
-      return NULL;
-  }
+    /* Silence GCC warnings */
+    SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement = 0;
+    SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation = 0;
 
-  _SEH2_TRY
-  {
-      ProbeForRead(pelfw, sizeof(ENUMLOGFONTEXDVW), 1);
-      RtlCopyMemory(&SafeLogfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
-  }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
-      Status = _SEH2_GetExceptionCode();
-  }
-  _SEH2_END
+    _SEH2_TRY
+    {
+        ProbeForRead(pelfw, sizeof(*pelfw), 1);
+        RtlCopyMemory(&SafeLogfont, pelfw, sizeof(*pelfw));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
-  if (!NT_SUCCESS(Status))
-  {
-      return NULL;
-  }
+    if (!NT_SUCCESS(Status))
+        return NULL;
 
-  return HfontCreate(&SafeLogfont, cjElfw, lft, fl, pvCliData);
+    return HfontCreate(&SafeLogfont, cjElfw, lft, fl, pvCliData);
 }
 
 
