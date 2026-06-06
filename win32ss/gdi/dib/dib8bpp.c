@@ -384,7 +384,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               {
                 *DestBits = store[Index];
                 /* Go down a line */
-                DestBits += BltInfo->SourceSurface->lDelta;
+                DestBits += BltInfo->DestSurface->lDelta;
                 Index++;
               }
               /* Index to next column */
