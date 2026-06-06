@@ -475,7 +475,7 @@ POLYGONFILL_FillScanLineWinding(
             if ((newx1 >= x1 && newx1 <= x2) ||
                 (newx2 >= x1 && newx2 <= x2) ||
                 (x1 >= newx1 && x1 <= newx2) ||
-                (x2 >= newx2 && x2 <= newx2))
+                (x2 >= newx1 && x2 <= newx2))
             {
                 // Yup, just tack it on to our existing line
                 x1 = min(x1,newx1);
