@@ -502,9 +502,41 @@ NsGetIfNameFromFriendlyName(
     _Inout_ PWSTR pszIfName,
     _Inout_ PDWORD pdwIfName)
 {
-    DPRINT1("NsGetIfNameFromFriendlyName(%lx %S %p %p)\n",
-            dwUnknown1, pszFriendlyName, pszIfName, pdwIfName);
-    return 0;
+    UNICODE_STRING UnicodeIfName;
+    GUID InterfaceGuid;
+    NTSTATUS Status;
+    DWORD ret;
+
+    DPRINT("NsGetIfNameFromFriendlyName(%lx %S %p %p)\n",
+           dwUnknown1, pszFriendlyName, pszIfName, pdwIfName);
+
+    ret = NhGetGuidFromInterfaceName(pszFriendlyName,
+                                     &InterfaceGuid,
+                                     0, 0);
+    if (ret != ERROR_SUCCESS)
+    {
+        DPRINT1("NhGetGuidFromInterfaceName failed %lu\n", ret);
+        return ret;
+    }
+
+    RtlInitUnicodeString(&UnicodeIfName, NULL);
+    Status = RtlStringFromGUID(&InterfaceGuid,
+                               &UnicodeIfName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlStringFromGUID failed 0x%08lx\n", Status);
+        ret = RtlNtStatusToDosError(Status);
+    }
+
+    if (*pdwIfName >= UnicodeIfName.MaximumLength)
+    {
+        CopyMemory(pszIfName, UnicodeIfName.Buffer, UnicodeIfName.MaximumLength);
+        *pdwIfName = UnicodeIfName.MaximumLength;
+    }
+
+    RtlFreeUnicodeString(&UnicodeIfName);
+
+    return ret;
 }
 
 DWORD
