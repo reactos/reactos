@@ -1227,8 +1227,8 @@ HfontCreate(
     _In_ FLONG fl,
     _In_opt_ PVOID pvCliData)
 {
-    HFONT hNewFont;
     PLFONT plfont;
+    HFONT hNewFont;
 
     if (!pelfw)
         return NULL;
@@ -1237,6 +1237,7 @@ HfontCreate(
     if (!plfont)
         return NULL;
     hNewFont = plfont->BaseObject.hHmgr;
+    ASSERT(hNewFont);
 
     plfont->lft = lft;
     plfont->fl  = fl;
@@ -1250,19 +1251,15 @@ HfontCreate(
         plfont->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
         plfont->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
     }
-    LFONT_UnlockFont(plfont);
 
-    if (pvCliData && hNewFont)
+    if (pvCliData)
     {
         // FIXME: Use GDIOBJ_InsertUserData
-        KeEnterCriticalRegion();
-        {
-            INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hNewFont);
-            PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-            Entry->UserData = pvCliData;
-        }
-        KeLeaveCriticalRegion();
+        INT Index = GDI_HANDLE_GET_INDEX(hNewFont);
+        PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+        Entry->UserData = pvCliData;
     }
+    LFONT_UnlockFont(plfont);
 
     return hNewFont;
 }
