@@ -125,19 +125,20 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
 BOOLEAN
 IntRemoveEvent(PVOID Object)
 {
-   PEVENTHOOK pEH = Object;
-   if (pEH)
-   {
-      TRACE("IntRemoveEvent pEH %p\n", pEH);
-      KeEnterCriticalRegion();
-      RemoveEntryList(&pEH->Chain);
-      GlobalEvents->Counts--;
-      if (!GlobalEvents->Counts) gpsi->dwInstalledEventHooks = 0;
-      UserDeleteObject(UserHMGetHandle(pEH), TYPE_WINEVENTHOOK);
-      KeLeaveCriticalRegion();
-      return TRUE;
-   }
-   return FALSE;
+    PEVENTHOOK pEH = Object;
+    if (pEH)
+    {
+        TRACE("IntRemoveEvent pEH %p\n", pEH);
+        KeEnterCriticalRegion();
+        RemoveEntryList(&pEH->Chain);
+        GlobalEvents->Counts--;
+        if (!GlobalEvents->Counts)
+            gpsi->dwInstalledEventHooks = 0;
+        UserDeleteObject(UserHMGetHandle(pEH), TYPE_WINEVENTHOOK);
+        KeLeaveCriticalRegion();
+        return TRUE;
+    }
+    return FALSE;
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -411,21 +412,19 @@ SetEventExit:
 BOOL
 APIENTRY
 NtUserUnhookWinEvent(
-   HWINEVENTHOOK hWinEventHook)
+    HWINEVENTHOOK hWinEventHook)
 {
-   PEVENTHOOK pEH;
-   BOOL Ret = FALSE;
+    PEVENTHOOK pEH;
+    BOOL Ret = FALSE;
 
-   UserEnterExclusive();
+    UserEnterExclusive();
 
-   pEH = (PEVENTHOOK)UserGetObject(gHandleTable, hWinEventHook, TYPE_WINEVENTHOOK);
-   if (pEH)
-   {
-      Ret = IntRemoveEvent(pEH);
-   }
+    pEH = (PEVENTHOOK)UserGetObject(gHandleTable, hWinEventHook, TYPE_WINEVENTHOOK);
+    if (pEH)
+        Ret = IntRemoveEvent(pEH);
 
-   UserLeave();
-   return Ret;
+    UserLeave();
+    return Ret;
 }
 
 /* EOF */
