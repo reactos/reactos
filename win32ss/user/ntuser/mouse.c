@@ -92,7 +92,7 @@ UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
     }
 
     /* If mouseData is used by button 4, send input and clear mi */
-    if (mi.dwFlags & (MOUSE_BUTTON_4_DOWN | MOUSE_BUTTON_4_UP))
+    if (mi.dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP))
     {
         UserSendMouseInput(&mi, FALSE);
         RtlZeroMemory(&mi, sizeof(mi));
@@ -111,7 +111,7 @@ UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
     }
 
     /* If mouseData is used by button 5, send input and clear mi */
-    if (mi.dwFlags & (MOUSE_BUTTON_5_DOWN | MOUSE_BUTTON_5_UP))
+    if (mi.dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP))
     {
         UserSendMouseInput(&mi, FALSE);
         RtlZeroMemory(&mi, sizeof(mi));
