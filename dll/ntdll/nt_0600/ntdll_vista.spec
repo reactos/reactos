@@ -26,6 +26,9 @@
 @ stdcall -arch=i386 RtlInterlockedPushListSListEx(ptr ptr ptr long)
 @ stdcall -arch=!i386 RtlInterlockedPushListSListEx(ptr ptr ptr long) ntdll.RtlInterlockedPushListSList
 
+@ stdcall RtlUnicodeToUTF8N(ptr long ptr wstr long)
+@ stdcall RtlUTF8ToUnicodeN(ptr long ptr str long)
+
 @ stdcall TpAllocCleanupGroup(ptr)
 @ stdcall TpAllocIoCompletion(ptr ptr ptr ptr ptr)
 @ stdcall TpAllocPool(ptr ptr)
