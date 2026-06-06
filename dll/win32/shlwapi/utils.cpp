@@ -15,6 +15,7 @@
 #define IShellFolder_CompareIDs _disabled_IShellFolder_CompareIDs_
 
 #include "precomp.h"
+#include <winver.h>
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <shlobj_undoc.h>
@@ -956,4 +957,240 @@ NextPathW(
         return NULL;
 
     return (*pchEnd == L';') ? (pchEnd + 1) : pchEnd;
+}
+
+static HRESULT
+_AllocValueString(
+    HKEY hkey,
+    PCWSTR pszSubKey,
+    PCWSTR pszValue,
+    PWSTR* ppszOut)
+{
+    *ppszOut = NULL;
+
+    DWORD cbData;
+    LSTATUS error = SHGetValueW(hkey, pszSubKey, pszValue, NULL, NULL, &cbData);
+    if (error)
+        return HRESULT_FROM_WIN32(error);
+
+    PWSTR pszData = (PWSTR)LocalAlloc(LPTR, cbData);
+    if (!pszData)
+        return HRESULT_FROM_WIN32(ERROR_OUTOFMEMORY);
+
+    error = SHGetValueW(hkey, pszSubKey, pszValue, NULL, pszData, &cbData);
+    if (error)
+    {
+        LocalFree(pszData);
+        return HRESULT_FROM_WIN32(error);
+    }
+
+    *ppszOut = pszData;
+    return S_OK;
+}
+
+/*************************************************************************
+ * PrettifyFileDescriptionW [SHLWAPI.492]
+ *
+ * @see SHGetFileDescriptionW
+ */
+VOID WINAPI
+PrettifyFileDescriptionW(_Inout_ PWSTR pszTarget, _In_opt_ PCWSTR pszCutList)
+{
+    if (!pszTarget || !*pszTarget)
+        return;
+
+    PWSTR pszFreeList = NULL;
+    PCWSTR pszList = pszCutList;
+    PCWSTR pszAssoc = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileAssociation";
+    if (_AllocValueString(HKEY_LOCAL_MACHINE, pszAssoc, L"CutList", &pszFreeList) == S_OK)
+        pszList = pszFreeList;
+
+    if (pszList && *pszList)
+    {
+        for (PCWSTR pszEntry = pszList; *pszEntry; pszEntry += lstrlenW(pszEntry) + 1)
+        {
+            PWSTR pszMatch = StrRStrIW(pszTarget, NULL, pszEntry);
+            if (!pszMatch)
+                continue;
+
+            if (pszMatch[lstrlenW(pszEntry)])
+                continue;
+
+            *pszMatch = UNICODE_NULL;
+            while (pszMatch > pszTarget && pszMatch[-1] == L' ')
+            {
+                --pszMatch;
+                *pszMatch = UNICODE_NULL;
+            }
+
+            break;
+        }
+    }
+
+    if (pszFreeList)
+        LocalFree(pszFreeList);
+}
+
+/*************************************************************************
+ * SHGetFileDescriptionW [SHLWAPI.348]
+ *
+ * @see SHGetFileDescriptionA
+ * @see PrettifyFileDescriptionW
+ */
+BOOL WINAPI SHGetFileDescriptionW(
+    _In_ PCWSTR pszPath,
+    _In_opt_ PCWSTR pszVerKey,
+    _In_opt_ PCWSTR pszDisplayName,
+    _Out_opt_ PWSTR pszOut,
+    _Inout_ PUINT pcchOut)
+{
+    DWORD pdwAttrs = 0;
+    if (!PathFileExistsAndAttributesW(pszPath, &pdwAttrs))
+        return FALSE;
+
+    WCHAR szPath[MAX_PATH];
+    StringCchCopyW(szPath, _countof(szPath), pszPath);
+
+    PVOID pvDescription  = NULL;
+    UINT  cchDescription = 0;
+    PVOID pvBlock = NULL;
+
+    BOOL bIsFile = !(pdwAttrs & FILE_ATTRIBUTE_DIRECTORY) &&
+                   !PathIsUNCServerW(pszPath) &&
+                   !PathIsUNCServerShareW(pszPath);
+    if (bIsFile)
+    {
+        DWORD dwHandle = 0;
+        DWORD cbBlock  = GetFileVersionInfoSizeW(szPath, &dwHandle);
+        if (cbBlock)
+        {
+            pvBlock = LocalAlloc(LPTR, cbBlock);
+            if (pvBlock && GetFileVersionInfoW(szPath, dwHandle, cbBlock, pvBlock))
+            {
+                WCHAR szSubBlock[60];
+                BOOL ret = FALSE;
+                if (pszVerKey)
+                {
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock), pszVerKey);
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                }
+
+                if (!ret)
+                {
+                    PVOID pTranslation = NULL;
+                    UINT cbTranslation = 0;
+                    if (VerQueryValueW(pvBlock, L"\\VarFileInfo\\Translation", &pTranslation,
+                                       &cbTranslation) && cbTranslation)
+                    {
+                        UINT langId   = ((PWORD)pTranslation)[0];
+                        UINT codePage = ((PWORD)pTranslation)[1];
+                        StringCchPrintfW(szSubBlock, _countof(szSubBlock),
+                                         L"\\StringFileInfo\\%04X%04X\\FileDescription",
+                                         langId, codePage);
+                        ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                    }
+                }
+
+                if (!ret)
+                {
+                    // 0x0409: English (United States), 0x04B0: UTF-16 codepage
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock),
+                                   L"\\StringFileInfo\\040904B0\\FileDescription");
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                }
+                if (!ret)
+                {
+                    // 0x0409: English (United States), 0x04E4: Latin 1 codepage
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock),
+                                   L"\\StringFileInfo\\040904E4\\FileDescription");
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                }
+                if (!ret)
+                {
+                    // 0x0409: English (United States), 0x0000: Neutral
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock),
+                                   L"\\StringFileInfo\\04090000\\FileDescription");
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                }
+            }
+        }
+    }
+
+    PWSTR pszDescription = (PWSTR)pvDescription;
+    if (!pszDescription || !*pszDescription)
+    {
+        PathRemoveExtensionW(szPath);
+        pszDescription = PathFindFileNameW(szPath);
+        cchDescription = lstrlenW(pszDescription);
+    }
+
+    PrettifyFileDescriptionW(pszDescription, pszDisplayName);
+
+    UINT cchResult = lstrlenW(pszDescription) + 1;
+    if (pszOut)
+    {
+        UINT cchCopy = min(cchResult, *pcchOut);
+        StringCchCopyW(pszOut, cchCopy, pszDescription);
+        *pcchOut = cchCopy;
+    }
+    else
+    {
+        *pcchOut = cchResult;
+    }
+
+    if (pvBlock)
+        LocalFree(pvBlock);
+
+    return TRUE;
+}
+
+/*************************************************************************
+ * SHGetFileDescriptionA [SHLWAPI.349]
+ *
+ * @see SHGetFileDescriptionW
+ */
+BOOL WINAPI SHGetFileDescriptionA(
+    _In_ PCSTR pszPath,
+    _In_opt_ PCSTR pszVerKey,
+    _In_opt_ PCSTR pszDisplayName,
+    _Out_opt_ PSTR pszOut,
+    _Inout_ PUINT pcchOut)
+{
+    WCHAR szPathW[MAX_PATH], szVerKeyW[MAX_PATH], szDisplayNameW[MAX_PATH], szOutW[MAX_PATH];
+    CHAR szOutA[MAX_PATH];
+    BOOL ret;
+    UINT cchOutW;
+
+    SHAnsiToUnicode(pszPath, szPathW, _countof(szPathW));
+    szPathW[_countof(szPathW) - 1] = UNICODE_NULL;
+
+    if (pszVerKey)
+    {
+        SHAnsiToUnicode(pszVerKey, szVerKeyW, _countof(szVerKeyW));
+        szVerKeyW[_countof(szVerKeyW) - 1] = UNICODE_NULL;
+    }
+
+    if (pszDisplayName)
+    {
+        SHAnsiToUnicode(pszDisplayName, szDisplayNameW, _countof(szDisplayNameW));
+        szDisplayNameW[_countof(szDisplayNameW) - 1] = UNICODE_NULL;
+    }
+
+    cchOutW = (UINT)_countof(szOutW);
+    ret = SHGetFileDescriptionW(szPathW, (pszVerKey ? szVerKeyW : NULL),
+                                (pszDisplayName ? szDisplayNameW : NULL), szOutW, &cchOutW);
+    if (ret)
+    {
+        szOutW[_countof(szOutW) - 1] = UNICODE_NULL;
+
+        if (!pszOut)
+            pszOut = szOutA;
+
+        SHUnicodeToAnsi(szOutW, pszOut, *pcchOut);
+        if (*pcchOut > 0)
+            pszOut[*pcchOut - 1] = ANSI_NULL;
+        *pcchOut = lstrlenA(pszOut) + 1;
+    }
+
+    return ret;
 }

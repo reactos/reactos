@@ -345,8 +345,8 @@
 345 stdcall -noname SHAnsiToAnsi(str ptr long)
 346 stdcall -noname SHUnicodeToUnicode(wstr ptr long)
 347 stdcall -noname RegDeleteValueWrapW(long wstr) advapi32.RegDeleteValueW
-348 stub -noname SHGetFileDescriptionW
-349 stub -noname SHGetFileDescriptionA
+348 stdcall -noname SHGetFileDescriptionW(wstr wstr wstr ptr ptr)
+349 stdcall -noname SHGetFileDescriptionA(str str str ptr ptr)
 350 stdcall -noname GetFileVersionInfoSizeWrapW(wstr ptr)
 351 stdcall -noname GetFileVersionInfoWrapW(wstr long long ptr)
 352 stdcall -noname VerQueryValueWrapW(ptr wstr ptr ptr)
@@ -489,7 +489,7 @@
 489 stdcall -noname GlobalAddAtomWrapW(wstr) kernel32.GlobalAddAtomW
 490 stdcall -noname GlobalFindAtomWrapW(wstr) kernel32.GlobalFindAtomW
 491 stdcall -noname SHGetShellKey(long long long)
-492 stub -noname PrettifyFileDescriptionW
+492 stdcall -noname PrettifyFileDescriptionW(wstr wstr)
 493 stdcall -noname SHPropertyBag_ReadType(ptr wstr ptr long)
 494 stdcall -noname SHPropertyBag_ReadStr(ptr wstr ptr long)
 495 stdcall -noname SHPropertyBag_WriteStr(ptr wstr wstr)
