@@ -1,11 +1,12 @@
-add_definitions(-D__WINESRC__ -D_KERNEL32_ -DWINVER=0x601 -D_WIN32_WINNT=0x601)
+add_definitions(-D_WIN32_WINNT=0xA01 -DWINVER=0xA01)
+
 add_definitions(
     -D__WINESRC__
     -D_WINE
     -Dwcsnicmp=_wcsnicmp
     -Dwcsicmp=_wcsicmp
     -Dstrnicmp=_strnicmp
-    -Dswprintf=_swprintf
+    -D_KERNEL32_
     -D_KERNELBASE_)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
@@ -32,19 +33,28 @@ endif()
 #add_dependencies(kernelbase_path psdk)
 
 if(NOT MSVC)
-    target_compile_options(kernelbase_path PRIVATE -Wno-unused-variable)
-    target_compile_options(kernelbase_path PRIVATE -Wno-unused-function)
+    #target_compile_options(kernelbase_path PRIVATE -Wno-unused-variable)
+    #target_compile_options(kernelbase_path PRIVATE -Wno-unused-function)
 endif()
 
 list(APPEND SOURCE_STATIC
     #console.c #looks like ReactOS console.c is nothing like wine.
+    locale.c
+    path.c
+    string.c
     )
 
 add_library(kernelbase_static ${SOURCE_STATIC})
+target_compile_definitions(kernelbase_static PRIVATE WINSHLWAPI= WINPATHCCHAPI= PATHCCH_NO_DEPRECATE=)
 target_link_libraries(kernelbase_static psapi_static ${PSEH_LIB})
 add_dependencies(kernelbase_static psdk)
 
-if(NOT MSVC)
+if(MSVC)
+    target_compile_options(kernelbase_static PRIVATE
+        /wd4267 # warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+        /wd4146 # warning C4146: unary minus operator applied to unsigned type, result still unsigned
+    )
+else()
     target_compile_options(kernelbase_static PRIVATE -Wno-unused-variable)
     target_compile_options(kernelbase_static PRIVATE -Wno-unused-function)
 endif()
