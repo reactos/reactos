@@ -7912,6 +7912,12 @@ static void verify_ipv6_addrinfo(ADDRINFOA *result, const char *expectedIp)
     char ipBuffer[256];
     const char *ret;
 
+    if (!result)
+    {
+        ok(0, "getaddrinfo returned NULL\n");
+        return;
+    }
+
     ok(result->ai_family == AF_INET6, "ai_family == %d\n", result->ai_family);
     ok(result->ai_addrlen >= sizeof(struct sockaddr_in6), "ai_addrlen == %d\n", (int)result->ai_addrlen);
     ok(result->ai_addr != NULL, "ai_addr == NULL\n");
@@ -7923,6 +7929,12 @@ static void verify_ipv6_addrinfo(ADDRINFOA *result, const char *expectedIp)
         ok(sockaddr6->sin6_port == 0, "ai_addr->sin6_port == %d\n", sockaddr6->sin6_port);
 
         ZeroMemory(ipBuffer, sizeof(ipBuffer));
+        if (!p_inet_ntop)
+        {
+            win_skip("inet_ntop is not available\n");
+            return;
+        }
+
         ret = p_inet_ntop(AF_INET6, &sockaddr6->sin6_addr, ipBuffer, sizeof(ipBuffer));
         ok(ret != NULL, "inet_ntop failed (%d)\n", WSAGetLastError());
         ok(strcmp(ipBuffer, expectedIp) == 0, "ai_addr->sin6_addr == '%s' (expected '%s')\n", ipBuffer, expectedIp);
@@ -8104,6 +8116,12 @@ static void test_getaddrinfo(void)
     ok(result == NULL, "expected NULL, got %p\n", result);
 
     /* Test IPv6 address conversion */
+    if (!p_inet_ntop)
+    {
+        win_skip("inet_ntop is not available\n");
+        goto test_hints;
+    }
+
     result = NULL;
     SetLastError(0xdeadbeef);
     ret = pgetaddrinfo("2a00:2039:dead:beef:cafe::6666", NULL, NULL, &result);
@@ -8119,7 +8137,8 @@ static void test_getaddrinfo(void)
         ret = pgetaddrinfo("[beef::cafe]", NULL, NULL, &result);
         ok(!ret, "getaddrinfo failed with %d\n", ret);
         verify_ipv6_addrinfo(result, "beef::cafe");
-        pfreeaddrinfo(result);
+        if (result)
+            pfreeaddrinfo(result);
 
         /* Test IPv6 address conversion with brackets and hints */
         memset(&hint, 0, sizeof(ADDRINFOA));
@@ -8129,7 +8148,8 @@ static void test_getaddrinfo(void)
         ret = pgetaddrinfo("[beef::cafe]", NULL, &hint, &result);
         ok(!ret, "getaddrinfo failed with %d\n", ret);
         verify_ipv6_addrinfo(result, "beef::cafe");
-        pfreeaddrinfo(result);
+        if (result)
+            pfreeaddrinfo(result);
 
         memset(&hint, 0, sizeof(ADDRINFOA));
         hint.ai_flags = AI_NUMERICHOST;
@@ -8143,7 +8163,8 @@ static void test_getaddrinfo(void)
         ret = pgetaddrinfo("[beef::cafe]:10239", NULL, NULL, &result);
         ok(!ret, "getaddrinfo failed with %d\n", ret);
         verify_ipv6_addrinfo(result, "beef::cafe");
-        pfreeaddrinfo(result);
+        if (result)
+            pfreeaddrinfo(result);
 
         /* Test IPv6 address conversion with unmatched brackets */
         result = NULL;
@@ -8162,6 +8183,7 @@ static void test_getaddrinfo(void)
 
     hint.ai_flags = 0;
 
+test_hints:
     for (i = 0;i < (sizeof(hinttests) / sizeof(hinttests[0]));i++)
     {
         hint.ai_family = hinttests[i].family;
