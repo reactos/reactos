@@ -172,7 +172,7 @@ static void TEST_TrickyPointers(void)
     cch = _countof(szOutputW);
     _SEH2_TRY
     {
-        hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, szPathW, NULL, szPathW, (PDWORD)UlongToPtr(cch));
+        hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, szPathW, NULL, szOutputW, (PDWORD)UlongToPtr(cch));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
