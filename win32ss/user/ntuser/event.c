@@ -126,19 +126,16 @@ BOOLEAN
 IntRemoveEvent(PVOID Object)
 {
     PEVENTHOOK pEH = Object;
-    if (pEH)
-    {
-        TRACE("IntRemoveEvent pEH %p\n", pEH);
-        KeEnterCriticalRegion();
-        RemoveEntryList(&pEH->Chain);
-        GlobalEvents->Counts--;
-        if (!GlobalEvents->Counts)
-            gpsi->dwInstalledEventHooks = 0;
-        UserDeleteObject(UserHMGetHandle(pEH), TYPE_WINEVENTHOOK);
-        KeLeaveCriticalRegion();
-        return TRUE;
-    }
-    return FALSE;
+
+    NT_ASSERT(UserIsEnteredExclusive());
+
+    RemoveEntryList(&pEH->Chain);
+    GlobalEvents->Counts--;
+    if (!GlobalEvents->Counts)
+        gpsi->dwInstalledEventHooks = 0;
+
+    UserDeleteObject(UserHMGetHandle(pEH), TYPE_WINEVENTHOOK);
+    return TRUE;
 }
 
 /* FUNCTIONS *****************************************************************/
