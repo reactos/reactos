@@ -96,4 +96,6 @@ Parameters:\n\n\
 
     IDS_ERROR_INVALID_INTERFACE  "\nInvalid interface %s specified.\n"
     IDS_ERROR_BAD_VALUE "\n%s is not an acceptable value for %s.\n"
+    IDS_ERROR_ALREADY_DHCP "\nDhcp is already enabled on this interface.\n"
+    IDS_ERROR_GET_PROPERTIES "\nError obtaining configuration for interface %s.\n"
 END

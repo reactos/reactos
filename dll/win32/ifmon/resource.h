@@ -47,3 +47,5 @@
 
 #define IDS_ERROR_INVALID_INTERFACE         2000
 #define IDS_ERROR_BAD_VALUE                 2001
+#define IDS_ERROR_ALREADY_DHCP              2002
+#define IDS_ERROR_GET_PROPERTIES            2003
