@@ -353,6 +353,8 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    PPROCESSINFO ppi;
    PLIST_ENTRY ListEntry;
 
+    NT_ASSERT(UserIsEnteredExclusive());
+
    if (NULL == Wnd)
    {
       Flags &= ~DCX_USESTYLE;
@@ -453,7 +455,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    { // Scan the cheap wine list for our match.
       DCE* DceEmpty = NULL;
       DCE* DceUnused = NULL;
-      KeEnterCriticalRegion();
+
       ListEntry = LEDce.Flink;
       while (ListEntry != &LEDce)
       {
@@ -479,7 +481,6 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
          }
          Dce = NULL; // Loop issue?
       }
-      KeLeaveCriticalRegion();
 
       Dce = (DceEmpty == NULL) ? DceUnused : DceEmpty;
 
@@ -494,7 +495,6 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    }
    else // If we are here, we are POWNED or having CLASS.
    {
-      KeEnterCriticalRegion();
       ListEntry = LEDce.Flink;
       while (ListEntry != &LEDce)
       {
@@ -514,7 +514,6 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
           }
           Dce = NULL; // Loop issue?
       }
-      KeLeaveCriticalRegion();
 
       if (Dce == NULL)
       {
