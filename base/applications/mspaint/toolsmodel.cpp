@@ -21,7 +21,7 @@ ToolsModel::ToolsModel()
     m_airBrushRadius = 5;
     m_rubberRadius = 4;
     m_transpBg = FALSE;
-    m_zoom = 1000;
+    m_zoom = DEFAULT_ZOOM;
     m_pToolObject = GetOrCreateTool(m_activeTool);
 }
 
@@ -276,6 +276,7 @@ void ToolsModel::SetZoom(int nZoom)
 {
     m_zoom = nZoom;
     NotifyZoomChanged();
+    SendSetCursor();
 }
 
 void ToolsModel::NotifyToolChanged()
