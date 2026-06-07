@@ -538,7 +538,10 @@ NetLocalGroupAddMembers(
           debugstr_w(groupname), level, buf, totalentries);
 
     if (servername != NULL)
-        RtlInitUnicodeString(pServerName = &ServerName, servername);
+    {
+        RtlInitUnicodeString(&ServerName, servername);
+        pServerName = &ServerName;
+    }
 
     RtlInitUnicodeString(&AliasName, groupname);
 
