@@ -150,12 +150,12 @@ extern ToolsModel toolsModel;
 
 static inline int Zoomed(int xy)
 {
-    return xy * toolsModel.GetZoom() / DEFAULT_ZOOM;
+    return MulDiv(xy, toolsModel.GetZoom(), DEFAULT_ZOOM);
 }
 
 static inline int UnZoomed(int xy)
 {
-    return xy * DEFAULT_ZOOM / toolsModel.GetZoom();
+    return MulDiv(xy, DEFAULT_ZOOM, toolsModel.GetZoom());
 }
 
 static inline void Zoomed(POINT& pt)
