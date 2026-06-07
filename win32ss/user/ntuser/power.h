@@ -77,8 +77,7 @@ FORCEINLINE
 VOID
 IntAcquirePowerCalloutLock(VOID)
 {
-    KeEnterCriticalRegion();
-    ExAcquireFastMutexUnsafe(gpPowerCalloutMutexLock);
+    ExEnterCriticalRegionAndAcquireFastMutexUnsafe(gpPowerCalloutMutexLock);
     gpPowerCalloutMutexOwnerThread = KeGetCurrentThread();
 }
 
@@ -86,9 +85,8 @@ FORCEINLINE
 VOID
 IntReleasePowerCalloutLock(VOID)
 {
-    ExReleaseFastMutexUnsafe(gpPowerCalloutMutexLock);
     gpPowerCalloutMutexOwnerThread = NULL;
-    KeLeaveCriticalRegion();
+    ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(gpPowerCalloutMutexLock);
 }
 
 //
