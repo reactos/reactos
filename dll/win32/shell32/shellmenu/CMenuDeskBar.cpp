@@ -125,9 +125,22 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Exec(const GUID *pguidCmdGroup, DWORD nC
             return _AdjustForTheme(nCmdexecopt);
         }
     }
-    if (IsEqualIID(*pguidCmdGroup, CGID_Explorer))
+    else if (IsEqualIID(*pguidCmdGroup, CLSID_MenuBand))
     {
+        switch (nCmdID)
+        {
+            case 0x10000000: // refresh (sent from TRAYCMD_RELOAD_STARTMENUCFG)
+            {
+                CComPtr<IShellMenu2> pSM; // We just want IShellMenu but CMenuBand::QI is broken?
+                if (SUCCEEDED(IUnknown_QueryService(m_Client, SID_SMenuBandBottom, IID_PPV_ARG(IShellMenu2, &pSM))))
+                    pSM->InvalidateItem(NULL, SMINV_REFRESH);
+                return S_OK;
+            }
+        }
     }
+    /*else if (IsEqualIID(*pguidCmdGroup, CGID_Explorer))
+    {
+    }*/
     else if (IsEqualIID(*pguidCmdGroup, IID_IDeskBarClient))
     {
         switch (nCmdID)

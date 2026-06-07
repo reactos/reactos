@@ -9,6 +9,7 @@
 #include "precomp.h"
 #include <commoncontrols.h>
 #include <cfgmgr32.h>
+#include <regstr.h>
 #include "appbar.h"
 
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
@@ -458,10 +459,21 @@ public:
             ClearRecentAndMru();
     }
 
+    void RefreshStartMenuSettings()
+    {
+        IUnknown_Exec(m_StartMenuPopup, CLSID_MenuBand, 0x10000000, 0, NULL, NULL);
+    }
+
     LRESULT DoExitWindows()
     {
         if (SHRestricted(REST_NOCLOSE))
             return 0;
+
+        if (GetAsyncKeyState(VK_SHIFT) < 0 ||
+            !SHGetValueW(HKEY_CURRENT_USER, REGSTR_PATH_EXPLORER L"\\Advanced", L"StartMenuForceRefresh", NULL, NULL, NULL))
+        {
+            RefreshStartMenuSettings();
+        }
 
         SaveState();
 
@@ -881,13 +893,23 @@ public:
                 Sleep(100);
                 //DisconnectWindowsDialog(m_DesktopWnd); // FIXME: shell32
                 break;
+            case TRAYCMD_RELOAD_STARTMENUCFG:
+                C_ASSERT(TRAYCMD_RELOAD_STARTMENUCFG == FCIDM_SHBROWSER_REFRESH);
+                C_ASSERT(TRAYCMD_RELOAD_STARTMENUCFG != FCIDM_CABINET_REFRESH);
+                C_ASSERT(TRAYCMD_RELOAD_STARTMENUCFG != TRAYCMD_REFRESH_MENU);
+                RefreshStartMenuSettings();
+                break;
             case IDM_SEARCH:
             case TRAYCMD_SEARCH_FILES:
+                C_ASSERT(TRAYCMD_SEARCH_FILES == FCIDM_SHBROWSER_FINDFILES);
                 SHFindFiles(NULL, NULL);
                 break;
             case TRAYCMD_SEARCH_COMPUTERS:
+                C_ASSERT(TRAYCMD_SEARCH_COMPUTERS == FCIDM_SHBROWSER_FINDCOMPUTER);
                 SHFindComputer(NULL, NULL);
                 break;
+            //case TRAYCMD_REFRESH_MENU: Does nothing on WinXP+
+            //    break;
             default:
                 break;
         }
@@ -2488,6 +2510,7 @@ ChangePos:
 #else
             // Update the start menu
             UpdateStartMenu(m_StartMenuPopup, hbmBanner, g_TaskbarSettings.sr.SmSmallIcons, TRUE);
+            HandleCommand(TRAYCMD_RELOAD_STARTMENUCFG);
 #endif
         }
 

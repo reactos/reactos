@@ -1172,6 +1172,8 @@ HRESULT CMenuBand::AdjustForTheme(BOOL bFlatStyle)
 HRESULT STDMETHODCALLTYPE CMenuBand::InvalidateItem(LPSMDATA psmd, DWORD dwFlags)
 {
     UNIMPLEMENTED;
+    if (!psmd && (dwFlags & SMINV_REFRESH))
+        _CallCB(SMC_REFRESH, 0, 0);
     return S_OK;
 }
 
