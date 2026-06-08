@@ -1314,7 +1314,7 @@ INT WINAPI GetNumberFormatW(LCID lcid, DWORD dwFlags,
 
       dwCurrentGroupCount = 0;
       if (lpFormat->Grouping > 9)
-        dwGroupCount = lpFormat->Grouping % 10; /*first group 3, then repeat 2 */
+        dwGroupCount = lpFormat->Grouping % 10; /* first group 3, then repeat 2 */
     }
   }
   if (dwState & NF_ROUND)
