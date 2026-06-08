@@ -75,6 +75,7 @@ enum UninstallCommandFlags
     UCF_SILENT      = 0x01,
     UCF_MODIFY      = 0x02,
     UCF_SAMEPROCESS = 0x04,
+    UCF_DEFAULT     = UCF_NONE
 };
 DEFINE_ENUM_FLAG_OPERATORS(UninstallCommandFlags);
 
@@ -176,6 +177,8 @@ class CAvailableApplicationInfo : public CAppInfo
 
     CConfigParser *
     GetConfigParser() const { return m_Parser; }
+    const CStringW
+    GetPackageName() const { return szIdentifier; }
 
     bool
     IsCompatible() const;
