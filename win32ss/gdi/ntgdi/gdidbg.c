@@ -282,6 +282,8 @@ DbgDumpGdiHandleTableWithBT(void)
 
 #if DBG
 
+// hbelusca: NOTE: The KeEnter/LeaveCriticalRegion() have been added in commit
+// https://github.com/reactos/reactos/commit/788d425ef13f22a58d43cc1d528f242232b74cd1 (r33618)
 BOOL
 NTAPI
 DbgGdiHTIntegrityCheck(VOID)
