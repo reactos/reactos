@@ -2199,14 +2199,13 @@ CApplicationView::ItemGetFocus(LPVOID CallbackParam)
     CAppInfo *Info = static_cast<CAppInfo *>(CallbackParam);
     RefreshDetailsPane(*Info);
 
+    bool CanUninstall;
     HMENU hMenu = GetMenu();
     if (ApplicationViewType == AppViewTypeInstalledApps)
     {
         /* ID_INSTALL is left disabled */
 
-        EnableMenuItem(hMenu, ID_UNINSTALL, MF_ENABLED);
-        m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
-
+        CanUninstall = true;
         BOOL CanModify = Info->CanModify();
         EnableMenuItem(hMenu, ID_MODIFY, CanModify ? MF_ENABLED : MF_GRAYED);
         m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, CanModify);
@@ -2215,9 +2214,9 @@ CApplicationView::ItemGetFocus(LPVOID CallbackParam)
     }
     else if (ApplicationViewType == AppViewTypeAvailableApps)
     {
-        // We shouldn't get there in APPWIZ-mode.
-        ATLASSERT(!m_MainWindow->m_bAppwizMode);
+        ATLASSERT(!m_MainWindow->m_bAppwizMode); // We shouldn't get here in APPWIZ-mode.
 
+        CAvailableApplicationInfo *AvailInfo = static_cast<CAvailableApplicationInfo*>(Info);
         EnableMenuItem(hMenu, ID_INSTALL, MF_ENABLED);
         m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, TRUE);
 
@@ -2225,7 +2224,11 @@ CApplicationView::ItemGetFocus(LPVOID CallbackParam)
         // TODO: When we are able to detect whether this selected available
         // application is already installed (could be an older version),
         // do also what's done in the AppViewTypeInstalledApps case above.
+        CanUninstall = AvailInfo->IsInstalled();
     }
+
+    EnableMenuItem(hMenu, ID_UNINSTALL, CanUninstall ? MF_ENABLED : MF_GRAYED);
+    m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, CanUninstall);
 }
 
 // This function is called when a ListView item (an application) is checked/unchecked.

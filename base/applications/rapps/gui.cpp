@@ -302,6 +302,27 @@ CMainWindow::UninstallSelectedApp(BOOL bModify)
 }
 
 VOID
+CMainWindow::UninstallAvailableApp(CAvailableApplicationInfo *pAvail)
+{
+    CStringW ArpKeyName;
+    if (pAvail && pAvail->IsInstalled(&ArpKeyName))
+    {
+        CInstalledApplicationInfo *pInstalled = CAppDB::CreateInstalledAppByRegistryKey(ArpKeyName);
+        if (pInstalled)
+        {
+            BOOL success = pInstalled->UninstallApplication(UCF_DEFAULT);
+            delete pInstalled;
+            if (success)
+            {
+                m_ApplicationView->RefreshAvailableItem(pAvail->GetPackageName());
+                return;
+            }
+        }
+    }
+    PostMessage(WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
+}
+
+VOID
 CMainWindow::CheckAvailable()
 {
     if (m_Db->GetAvailableCount() == 0)
@@ -597,7 +618,9 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                 break;
 
             case ID_UNINSTALL:
-                if (UninstallSelectedApp(FALSE))
+                if (IsAvailableEnum(SelectedEnumType))
+                    UninstallAvailableApp((CAvailableApplicationInfo *)m_ApplicationView->GetFocusedItemData());
+                else if (UninstallSelectedApp(FALSE))
                     UpdateApplicationsList(SelectedEnumType, bReload);
                 break;
 
