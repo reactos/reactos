@@ -269,7 +269,7 @@ static const NLS_FORMAT_NODE *NLS_GetFormats(LCID lcid, DWORD dwFlags)
     new_node->cyfmt.NumDigits = new_node->fmt.NumDigits;
     new_node->cyfmt.LeadingZero = new_node->fmt.LeadingZero;
 
-    GET_LOCALE_NUMBER(new_node->cyfmt.Grouping, LOCALE_SGROUPING);
+    GET_LOCALE_NUMBER(new_node->cyfmt.Grouping, LOCALE_SMONGROUPING);
 
     if (new_node->cyfmt.Grouping > 9)
     {
@@ -1284,7 +1284,7 @@ INT WINAPI GetNumberFormatW(LCID lcid, DWORD dwFlags,
       *szOut-- = *lpszDec--; /* Write decimal separator */
   }
 
-  dwGroupCount = lpFormat->Grouping == 32 ? 3 : lpFormat->Grouping;
+  dwGroupCount = lpFormat->Grouping > 9 ? lpFormat->Grouping / 10 : lpFormat->Grouping;
 
   /* Write the remaining whole number digits, including grouping chars */
   while (szSrc >= lpszValue && *szSrc >= '0' && *szSrc <= '9')
@@ -1313,8 +1313,8 @@ INT WINAPI GetNumberFormatW(LCID lcid, DWORD dwFlags,
         *szOut-- = *lpszGrp--; /* Write grouping char */
 
       dwCurrentGroupCount = 0;
-      if (lpFormat->Grouping == 32)
-        dwGroupCount = 2; /* Indic grouping: 3 then 2 */
+      if (lpFormat->Grouping > 9)
+        dwGroupCount = lpFormat->Grouping % 10; /*first group 3, then repeat 2 */
     }
   }
   if (dwState & NF_ROUND)
