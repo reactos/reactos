@@ -21,7 +21,7 @@
  * PROJECT:     ReactOS Userinit Logon Application
  * FILE:        base/system/userinit/userinit.c
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
- *              Hervé Poussineau (hpoussin@reactos.org)
+ *              HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "userinit.h"
@@ -184,7 +184,9 @@ StartProcess(
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
-    WCHAR ExpandedCmdLine[MAX_PATH];
+    WCHAR ExpandedCmdLine[MAX_PATH], ProfilePath[MAX_PATH];
+    HANDLE hToken;
+    PWCHAR WorkingDir = NULL;
 
     ExpandEnvironmentStringsW(CommandLine, ExpandedCmdLine, ARRAYSIZE(ExpandedCmdLine));
 
@@ -194,6 +196,14 @@ StartProcess(
     si.wShowWindow = SW_SHOWNORMAL;
     ZeroMemory(&pi, sizeof(pi));
 
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+    {
+        DWORD PathSize = _countof(ProfilePath);
+        if (GetUserProfileDirectoryW(hToken, ProfilePath, &PathSize))
+            WorkingDir = ProfilePath;
+        CloseHandle(hToken);
+    }
+
     if (!CreateProcessW(NULL,
                         ExpandedCmdLine,
                         NULL,
@@ -201,7 +211,7 @@ StartProcess(
                         FALSE,
                         NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT,
                         pEnvironment,
-                        NULL,
+                        WorkingDir,
                         &si,
                         &pi))
     {
