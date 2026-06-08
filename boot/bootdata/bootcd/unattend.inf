@@ -52,10 +52,12 @@ DisableGeckoInst = no
 ; See hivesys.inf for available languages.
 LocaleID = 409
 
-; Set product option.
+; Set installation type.
 ; 0 - ReactOS Server
 ; 1 - ReactOS Workstation
-ProductOption = 0
+; 2 - ReactOS Server Core
+; 3 - ReactOS Nano Server (Reserved)
+InstallationType = 0
 
 ; Enable this section to automatically launch programs after 3rd boot.
 ;[GuiRunOnce]

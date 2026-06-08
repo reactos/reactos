@@ -31,18 +31,18 @@ BEGIN
     LTEXT "按［下一步］繼續安裝程式。", IDC_STATIC, 15, 136, 195, 17
 END
 
-IDD_PRODUCT DIALOGEX 0, 0, 317, 143
+IDD_INSTALLATION DIALOGEX 0, 0, 317, 143
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
-    LTEXT "請選擇您要安裝的版本︰", IDC_STATIC, 35, 7, 230, 12
-    LTEXT "版本(&O)︰", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "版本資訊", IDC_STATIC, 5, 50, 305, 85
+    ICON "", IDC_INSTALLATION_ICON, 5, 5, 20, 20
+    LTEXT "Please choose an installation type:", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "Installation &Types:", IDC_STATIC, 5, 32, 85, 10
+    COMBOBOX IDC_INSTALLATION_TYPES, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "Installation Summary", IDC_STATIC, 5, 50, 305, 85
     LTEXT "說明︰", IDC_STATIC, 20, 65, 70, 10
-    EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
+    EDITTEXT IDC_INSTALLATION_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -266,11 +266,17 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PRODUCTTITLE "選擇軟體版本"
-    IDS_PRODUCTSUBTITLE "您可以選擇要安裝的軟體版本。這會對系統的一些功能造成影響。"
-    IDS_PRODUCTSERVERNAME "ReactOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
-    IDS_PRODUCTSERVERINFO "系統將識別為一個伺服器。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會獨立於「我的文件」。"
-    IDS_PRODUCTWORKSTATIONINFO "系統將識別為一個工作站。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會在「我的文件」資料夾內。"
+    IDS_INSTALLATIONTITLE "選擇軟體版本"
+    IDS_INSTALLATIONSUBTITLE "您可以選擇要安裝的軟體版本。這會對系統的一些功能造成影響。"
+    IDS_INSTALLATIONSERVERNAME "ReactOS Server"
+    IDS_INSTALLATIONSERVERINFO "系統將識別為一個伺服器。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會獨立於「我的文件」。"
+    IDS_INSTALLATIONWORKSTATIONNAME "ReactOS Workstation"
+    IDS_INSTALLATIONWORKSTATIONINFO "系統將識別為一個工作站。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會在「我的文件」資料夾內。"
+    IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    /* Reserved for future use
+     * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
+     * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."
+     */
     IDS_DEFAULT "（預設）"
 END

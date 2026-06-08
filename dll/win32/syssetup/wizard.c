@@ -367,7 +367,7 @@ AckPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_PRODUCT);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_INSTALLATION);
                         return TRUE;
                     }
                     break;
@@ -395,6 +395,7 @@ static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\
 static const WCHAR s_szWinlogon[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon";
 static const WCHAR s_szDefaultSoundEvents[] = L"AppEvents\\Schemes\\Apps\\.Default";
 static const WCHAR s_szExplorerSoundEvents[] = L"AppEvents\\Schemes\\Apps\\Explorer";
+static const WCHAR s_szCurrentVersion[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 
 typedef struct _PRODUCT_OPTION_DATA
 {
@@ -405,10 +406,20 @@ typedef struct _PRODUCT_OPTION_DATA
     DWORD LogonType;
 } PRODUCT_OPTION_DATA;
 
-static const PRODUCT_OPTION_DATA s_ProductOptionData[] =
+static const PRODUCT_OPTION_DATA s_ProductOptionData[INSTALLATION_TYPE_MAX] =
 {
     { L"Terminal Server\0", L"ServerNT", 0, 0x200, 0 },
-    { L"\0", L"WinNT", 1, 0x300, 1 }
+    { L"\0", L"WinNT", 1, 0x300, 1 },
+    { L"Terminal Server\0", L"ServerNT", 0, 0x200, 0 }
+    // { L"Terminal Server\0", L"ServerNT", 0, 0x200, 0 }
+};
+
+static const WCHAR* InstallationTypes[INSTALLATION_TYPE_MAX] =
+{
+    L"Server",
+    L"Client",
+    L"Server Core",
+    // L"Nano Server"
 };
 
 static const WCHAR* s_DefaultSoundEvents[][2] = 
@@ -531,14 +542,14 @@ Error:
 }
 
 static BOOL
-DoWriteProductOption(PRODUCT_OPTION nOption)
+DoWriteInstallationType(INSTALLATION_TYPE nOption)
 {
     HKEY hKey;
     LONG error;
     LPCWSTR pszData;
     DWORD dwValue, cbData;
     const PRODUCT_OPTION_DATA *pData = &s_ProductOptionData[nOption];
-    ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
+    ASSERT(0 <= nOption && nOption < INSTALLATION_TYPE_MAX);
 
     /* open ProductOptions key */
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
@@ -628,11 +639,40 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
         goto Error;
     }
 
-    if (nOption == PRODUCT_OPTION_WORKSTATION)
+    if (nOption == INSTALLATION_TYPE_WORKSTATION)
     {
         /* Write system sound events values for Workstation */
         DoWriteSoundEvents(HKEY_CURRENT_USER, s_szDefaultSoundEvents, s_DefaultSoundEvents, _countof(s_DefaultSoundEvents));
         DoWriteSoundEvents(HKEY_CURRENT_USER, s_szExplorerSoundEvents, s_ExplorerSoundEvents, _countof(s_ExplorerSoundEvents));
+    }
+
+    if (nOption == INSTALLATION_TYPE_SERVER_CORE)
+    {
+        /* Set the shell to command prompt */
+        WCHAR szShell[] = L"cmd.exe";
+        cbData = sizeof(szShell);
+        error = RegSetValueExW(hKey, L"Shell", 0, REG_SZ, (const BYTE *)szShell, cbData);
+        if (error)
+        {
+            DPRINT1("RegSetValueExW failed\n");
+            goto Error;
+        }
+    }
+
+    /* Open InstallationType key and write InstallationType value */
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szCurrentVersion, 0, KEY_WRITE, &hKey);
+    if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
+
+    cbData = (DWORD)((wcslen(InstallationTypes[nOption]) + 1) * sizeof(WCHAR));
+    error = RegSetValueExW(hKey, L"InstallationType", 0, REG_SZ, (const BYTE *)InstallationTypes[nOption], cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
     }
 
 Error:
@@ -643,30 +683,38 @@ Error:
 }
 
 static void
-OnChooseOption(HWND hwndDlg, PRODUCT_OPTION nOption)
+OnChooseInstallationType(HWND hwndDlg, INSTALLATION_TYPE nOption)
 {
     WCHAR szText[256];
-    ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
+    ASSERT(0 <= nOption && nOption < INSTALLATION_TYPE_MAX);
 
     switch (nOption)
     {
-        case PRODUCT_OPTION_SERVER:
-            LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
+        case INSTALLATION_TYPE_SERVER:
+            LoadStringW(hDllInstance, IDS_INSTALLATIONSERVERINFO, szText, _countof(szText));
             break;
 
-        case PRODUCT_OPTION_WORKSTATION:
-            LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
+        case INSTALLATION_TYPE_WORKSTATION:
+            LoadStringW(hDllInstance, IDS_INSTALLATIONWORKSTATIONINFO, szText, _countof(szText));
             break;
+
+        case INSTALLATION_TYPE_SERVER_CORE:
+            LoadStringW(hDllInstance, IDS_INSTALLATIONSERVERCOREINFO, szText, _countof(szText));
+            break;
+
+        // case INSTALLATION_TYPE_NANO_SERVER:
+        //     LoadStringW(hDllInstance, IDS_INSTALLATIONSERVERINFO, szText, _countof(szText));
+        //     break;
 
         default:
             return;
     }
 
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
+    SetDlgItemTextW(hwndDlg, IDC_INSTALLATION_DESCRIPTION, szText);
 }
 
 static INT_PTR CALLBACK
-ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+InstallTypePageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LPNMHDR lpnm;
     PSETUPDATA pSetupData;
@@ -685,35 +733,53 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             LoadStringW(hDllInstance, IDS_DEFAULT, szDefault, _countof(szDefault));
 
-            LoadStringW(hDllInstance, IDS_PRODUCTSERVERNAME, szText, _countof(szText));
-            if (PRODUCT_OPTION_DEFAULT == PRODUCT_OPTION_SERVER)
+            LoadStringW(hDllInstance, IDS_INSTALLATIONSERVERNAME, szText, _countof(szText));
+            if (INSTALLATION_TYPE_DEFAULT == INSTALLATION_TYPE_SERVER)
             {
                 StringCchCatW(szText, _countof(szText), L" ");
                 StringCchCatW(szText, _countof(szText), szDefault);
             }
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_ADDSTRING, 0, (LPARAM)szText);
 
-            LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONNAME, szText, _countof(szText));
-            if (PRODUCT_OPTION_DEFAULT == PRODUCT_OPTION_WORKSTATION)
+            LoadStringW(hDllInstance, IDS_INSTALLATIONWORKSTATIONNAME, szText, _countof(szText));
+            if (INSTALLATION_TYPE_DEFAULT == INSTALLATION_TYPE_WORKSTATION)
             {
                 StringCchCatW(szText, _countof(szText), L" ");
                 StringCchCatW(szText, _countof(szText), szDefault);
             }
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_ADDSTRING, 0, (LPARAM)szText);
 
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_DEFAULT, 0);
-            OnChooseOption(hwndDlg, PRODUCT_OPTION_DEFAULT);
+            LoadStringW(hDllInstance, IDS_INSTALLATIONSERVERCORENAME, szText, _countof(szText));
+            if (INSTALLATION_TYPE_DEFAULT == INSTALLATION_TYPE_SERVER_CORE)
+            {
+                StringCchCatW(szText, _countof(szText), L" ");
+                StringCchCatW(szText, _countof(szText), szDefault);
+            }
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_ADDSTRING, 0, (LPARAM)szText);
+
+#if 0
+            LoadStringW(hDllInstance, IDS_INSTALLATIONNANOSERVERNAME, szText, _countof(szText));
+            if (INSTALLATION_TYPE_DEFAULT == INSTALLATION_TYPE_NANO_SERVER)
+            {
+                StringCchCatW(szText, _countof(szText), L" ");
+                StringCchCatW(szText, _countof(szText), szDefault);
+            }
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_ADDSTRING, 0, (LPARAM)szText);
+#endif
+
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_SETCURSEL, INSTALLATION_TYPE_DEFAULT, 0);
+            OnChooseInstallationType(hwndDlg, INSTALLATION_TYPE_DEFAULT);
 
             hIcon = LoadIcon(NULL, IDI_WINLOGO);
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_ICON, STM_SETICON, (WPARAM)hIcon, 0);
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_ICON, STM_SETICON, (WPARAM)hIcon, 0);
             return TRUE;
         }
 
         case WM_COMMAND:
-            if (HIWORD(wParam) == CBN_SELCHANGE && IDC_PRODUCT_OPTIONS == LOWORD(wParam))
+            if (HIWORD(wParam) == CBN_SELCHANGE && IDC_INSTALLATION_TYPES == LOWORD(wParam))
             {
-                iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
-                OnChooseOption(hwndDlg, (PRODUCT_OPTION)iItem);
+                iItem = SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_GETCURSEL, 0, 0);
+                OnChooseInstallationType(hwndDlg, (INSTALLATION_TYPE)iItem);
             }
             break;
 
@@ -728,17 +794,17 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        OnChooseOption(hwndDlg, pSetupData->ProductOption);
-                        DoWriteProductOption(pSetupData->ProductOption);
+                        OnChooseInstallationType(hwndDlg, pSetupData->InstallationType);
+                        DoWriteInstallationType(pSetupData->InstallationType);
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
                     }
                     break;
 
                 case PSN_WIZNEXT:
-                    iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
-                    pSetupData->ProductOption = (PRODUCT_OPTION)iItem;
-                    DoWriteProductOption(pSetupData->ProductOption);
+                    iItem = SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_GETCURSEL, 0, 0);
+                    pSetupData->InstallationType = (INSTALLATION_TYPE)iItem;
+                    DoWriteInstallationType(pSetupData->InstallationType);
                     break;
 
                 case PSN_WIZBACK:
@@ -2972,9 +3038,9 @@ ProcessUnattendSection(
             else
                 pSetupData->DisableGeckoInst = FALSE;
         }
-        else if (!_wcsicmp(szName, L"ProductOption"))
+        else if (!_wcsicmp(szName, L"InstallationType"))
         {
-            pSetupData->ProductOption = (PRODUCT_OPTION)_wtoi(szValue);
+            pSetupData->InstallationType = (INSTALLATION_TYPE)_wtoi(szValue);
         }
     } while (SetupFindNextLine(&InfContext, &InfContext));
 
@@ -3417,7 +3483,7 @@ InstallWizard(VOID)
                     MB_ICONERROR | MB_OK);
         goto done;
     }
-    pSetupData->ProductOption = PRODUCT_OPTION_DEFAULT;
+    pSetupData->InstallationType = INSTALLATION_TYPE_DEFAULT;
 
     hNetShell = LoadLibraryW(L"netshell.dll");
     if (hNetShell != NULL)
@@ -3468,12 +3534,12 @@ InstallWizard(VOID)
     psp.pfnDlgProc = AckPageDlgProc;
     phpage[nPages++] = CreatePropertySheetPage(&psp);
 
-    /* Create the Product page */
+    /* Create the Installation Type page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PRODUCTTITLE);
-    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PRODUCTSUBTITLE);
-    psp.pszTemplate = MAKEINTRESOURCE(IDD_PRODUCT);
-    psp.pfnDlgProc = ProductPageDlgProc;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_INSTALLATIONTITLE);
+    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_INSTALLATIONSUBTITLE);
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_INSTALLATION);
+    psp.pfnDlgProc = InstallTypePageDlgProc;
     phpage[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the Locale page */
