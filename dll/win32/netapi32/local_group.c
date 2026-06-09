@@ -823,7 +823,7 @@ NetLocalGroupDelMembers(
     LPBYTE buf,
     DWORD totalentries)
 {
-    UNICODE_STRING ServerName;
+    UNICODE_STRING ServerName, *pServerName = NULL;
     UNICODE_STRING AliasName;
     SAM_HANDLE ServerHandle = NULL;
     SAM_HANDLE DomainHandle = NULL;
@@ -837,7 +837,10 @@ NetLocalGroupDelMembers(
           debugstr_w(groupname), level, buf, totalentries);
 
     if (servername != NULL)
+    {
         RtlInitUnicodeString(&ServerName, servername);
+        pServerName = &ServerName;
+    }
 
     RtlInitUnicodeString(&AliasName, groupname);
 
@@ -848,7 +851,7 @@ NetLocalGroupDelMembers(
             break;
 
         case 3:
-            ApiStatus = BuildSidListFromDomainAndName((servername != NULL) ? &ServerName : NULL,
+            ApiStatus = BuildSidListFromDomainAndName(pServerName,
                                                       (PLOCALGROUP_MEMBERS_INFO_3)buf,
                                                       totalentries,
                                                       &MemberList);
@@ -865,7 +868,7 @@ NetLocalGroupDelMembers(
     }
 
     /* Connect to the SAM Server */
-    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+    Status = SamConnect(pServerName,
                         &ServerHandle,
                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
                         NULL);
@@ -905,7 +908,7 @@ NetLocalGroupDelMembers(
 
         /* Open the Acount Domain */
         Status = OpenAccountDomain(ServerHandle,
-                                   (servername != NULL) ? &ServerName : NULL,
+                                   pServerName,
                                    DOMAIN_LOOKUP,
                                    &DomainHandle);
         if (!NT_SUCCESS(Status))
