@@ -11,8 +11,8 @@
 #include <dlgs.h>
 #include "resource.h"
 
-HINSTANCE g_hInstance = NULL;
-HWND g_hMainWnd = NULL;
+static HINSTANCE g_hInstance = NULL;
+static HWND g_hMainWnd = NULL;
 
 static void SetEditAlign(HWND hwndEdit, LONG_PTR add_style)
 {
@@ -25,21 +25,21 @@ static void SetEditAlign(HWND hwndEdit, LONG_PTR add_style)
 
 static void SetMultiline(HWND hwnd, HWND hwndEdit, BOOL bMultiline)
 {
-    TCHAR szText[1024];
-    GetWindowText(hwndEdit, szText, ARRAYSIZE(szText));
+    TCHAR text[1024];
+    GetWindowText(hwndEdit, text, ARRAYSIZE(text));
 
     RECT rc;
     GetWindowRect(hwndEdit, &rc);
-    MapWindowPoints(NULL, hwnd, (LPPOINT)&rc, 2);
+    MapWindowPoints(NULL, hwnd, (LPPOINT)&rc, sizeof(RECT) / sizeof(POINT));
 
-    LONG_PTR exstyle = GetWindowLongPtr(hwndEdit, GWL_EXSTYLE);
-    LONG_PTR style = GetWindowLongPtr(hwndEdit, GWL_STYLE);
+    DWORD exstyle = (LONG)GetWindowLongPtr(hwndEdit, GWL_EXSTYLE);
+    DWORD style = (LONG)GetWindowLongPtr(hwndEdit, GWL_STYLE);
     style &= ~ES_MULTILINE;
     if (bMultiline)
         style |= ES_MULTILINE;
 
     DestroyWindow(hwndEdit);
-    CreateWindowEx(exstyle, TEXT("EDIT"), szText, (LONG)style,
+    CreateWindowEx(exstyle, TEXT("EDIT"), text, style,
                    rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
                    hwnd, (HMENU)UlongToHandle(edt1), g_hInstance, NULL);
 
