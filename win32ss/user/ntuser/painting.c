@@ -314,8 +314,8 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
          {
             IntGdiSetRegionOwner(Window->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
             GreDeleteObject(Window->hrgnUpdate);
-            Window->state &= ~WNDS_UPDATEDIRTY;
             Window->hrgnUpdate = NULL;
+            Window->state &= ~WNDS_UPDATEDIRTY;
             if (!(Window->state & WNDS_INTERNALPAINT))
                MsqDecPaintCountQueue(Window->head.pti);
          }
@@ -1198,6 +1198,20 @@ IntGetPaintMessage(
 {
    PWND PaintWnd, StartWnd;
 
+   // TODO: Investigate: Normally we should base ourselves on
+   // Thread->pcti->fsWakeBits for the QS_PAINT (in the caller),
+   // the cPaintsReady is more like an "indicator" used to set
+   // or clear the QS_PAINT bit.
+   // Additionally, THREADINFO::cPaintsReady may need to be changed
+   // to INT (instead of UINT), because it gets systematically
+   // decreased whenever we need to disable potential painting
+   // to be done (without checking for >= 0). And, Windows' symbols
+   // show that it *is* an INT there (contrary to cTimersReady).
+   //
+   // See also commit 7d1736a1a2 (r49929)
+    if (Thread->cPaintsReady == 0)
+        return FALSE;
+
    if ((MsgFilterMin != 0 || MsgFilterMax != 0) &&
          (MsgFilterMin > WM_PAINT || MsgFilterMax < WM_PAINT))
       return FALSE;
@@ -1215,7 +1229,7 @@ IntGetPaintMessage(
    if (Message->hwnd == NULL && Thread->cPaintsReady)
    {
       // Find note in window.c:"PAINTING BUG".
-      ERR("WARNING SOMETHING HAS GONE WRONG: Thread marked as containing dirty windows, but no dirty windows found! Counts %u\n",Thread->cPaintsReady);
+      ERR("WARNING SOMETHING HAS GONE WRONG: Thread marked as containing dirty windows, but no dirty windows found! Counts %u\n", Thread->cPaintsReady);
       /* Hack to stop spamming the debug log ! */
       Thread->cPaintsReady = 0;
       return FALSE;
@@ -1440,6 +1454,7 @@ IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
 HDC FASTCALL
 IntBeginPaint(PWND Window, PPAINTSTRUCT Ps)
 {
+   HRGN hrgnUpdate;
    RECT Rect;
    INT type;
    BOOL Erase = FALSE;
@@ -1478,14 +1493,6 @@ IntBeginPaint(PWND Window, PPAINTSTRUCT Ps)
       ERR("BP: Another thread invalidated this window\n");
    }
 
-   Ps->hdc = UserGetDCEx( Window,
-                          Window->hrgnUpdate,
-                          DCX_INTERSECTRGN | DCX_USESTYLE);
-   if (!Ps->hdc)
-   {
-      return NULL;
-   }
-
    // If set, always clear flags out due to the conditions later on for sending the message.
    if (Window->state & WNDS_SENDERASEBACKGROUND)
    {
@@ -1493,24 +1500,28 @@ IntBeginPaint(PWND Window, PPAINTSTRUCT Ps)
       Erase = TRUE;
    }
 
-   if (Window->hrgnUpdate != NULL)
+   if (Window->hrgnUpdate != NULL || Window->state & WNDS_INTERNALPAINT)
    {
       MsqDecPaintCountQueue(Window->head.pti);
-      IntGdiSetRegionOwner(Window->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
+   }
+   hrgnUpdate = Window->hrgnUpdate;
+   if (hrgnUpdate != NULL)
+   {
       /* The region is part of the dc now and belongs to the process! */
+      IntGdiSetRegionOwner(hrgnUpdate, GDI_OBJ_HMGR_POWNED);
       Window->hrgnUpdate = NULL;
    }
-   else
-   {
-      if (Window->state & WNDS_INTERNALPAINT)
-         MsqDecPaintCountQueue(Window->head.pti);
-   }
+   Window->state &= ~WNDS_INTERNALPAINT;
+
+   Ps->hdc = UserGetDCEx(Window,
+                         hrgnUpdate,
+                         DCX_INTERSECTRGN | DCX_USESTYLE);
+   if (!Ps->hdc)
+      return NULL;
 
    type = GdiGetClipBox(Ps->hdc, &Ps->rcPaint);
 
    IntGetClientRect(Window, &Rect);
-
-   Window->state &= ~WNDS_INTERNALPAINT;
 
    if ( Erase &&               // Set to erase,
         type != NULLREGION &&  // don't erase if the clip box is empty,
@@ -1536,11 +1547,7 @@ IntBeginPaint(PWND Window, PPAINTSTRUCT Ps)
 BOOL FASTCALL
 IntEndPaint(PWND Wnd, PPAINTSTRUCT Ps)
 {
-   HDC hdc = NULL;
-
-   hdc = Ps->hdc;
-
-   UserReleaseDC(Wnd, hdc, TRUE);
+   UserReleaseDC(Wnd, Ps->hdc, TRUE);
 
    if (Wnd->state2 & WNDS2_ENDPAINTINVALIDATE)
    {

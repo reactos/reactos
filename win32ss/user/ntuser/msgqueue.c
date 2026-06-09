@@ -500,7 +500,7 @@ ClearMsgBitsMask(PTHREADINFO pti, UINT MessageBits)
 VOID FASTCALL
 MsqIncPaintCountQueue(PTHREADINFO pti)
 {
-   pti->cPaintsReady++;
+   pti->cPaintsReady++; // if (pti->cPaintsReady++ == 0) // If goes from 0 to 1, wake the queue
    MsqWakeQueue(pti, QS_PAINT, TRUE);
 }
 
