@@ -1,0 +1,32 @@
+/*
+ * PROJECT:     ReactOS Tests
+ * LICENSE:     LGPL-2.0+ (https://spdx.org/licenses/LGPL-2.0+)
+ * PURPOSE:     Tests alignment of EDIT control
+ * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ */
+
+#include <windows.h>
+#include <commctrl.h>
+#include "resource.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS EditAlign test"
+#define REACTOS_STR_INTERNAL_NAME       "editalign"
+#define REACTOS_STR_ORIGINAL_FILENAME   "editalign.exe"
+#include <reactos/version.rc>
+#include <reactos/manifest_exe.rc>
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+IDI_MAIN ICON "editalign.ico"
+
+IDD_MAIN DIALOG 0, 0, 215, 135
+CAPTION "EditAlign"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+FONT 9, "MS Shell Dlg"
+{
+    EDITTEXT edt1, 37, 13, 122, 61, ES_WANTRETURN
+    AUTORADIOBUTTON "ES_LEFT", rad1, 11, 83, 60, 14, WS_TABSTOP
+    AUTORADIOBUTTON "ES_CENTER", rad2, 77, 83, 60, 14, WS_TABSTOP
+    AUTORADIOBUTTON "ES_RIGHT", rad3, 145, 83, 60, 14, WS_TABSTOP
+    AUTOCHECKBOX "Multiline", chx1, 141, 115, 60, 14
+}
