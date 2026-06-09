@@ -88,6 +88,12 @@ RemoveTimer(PTIMER pTmr)
         RtlClearBit(&WindowLessTimersBitMap, ulBitmapIndex);
         IntUnlockWindowlessTimerBitmap();
      }
+
+     /* Decrement the timer count (and clear the QS_TIMER flag if necessary)
+      * for the thread this timer belongs to, as it gets destroyed */
+     if ((pTmr->flags & TMRF_READY) && pTmr->pti)
+        ClearMsgBitsMask(pTmr->pti, QS_TIMER);
+
      UserDereferenceObject(pTmr);
      Ret = UserDeleteObject( UserHMGetHandle(pTmr), TYPE_TIMER);
   }
@@ -221,7 +227,7 @@ IntSetTimer( PWND Window,
 
   pTmr = FindTimer(Window, IDEvent, Type);
 
-  if ((!pTmr) && (Window == NULL) && (!(Type & TMRF_SYSTEM)))
+  if (!pTmr && (Window == NULL) && !(Type & TMRF_SYSTEM))
   {
       IntLockWindowlessTimerBitmap();
 
@@ -257,18 +263,21 @@ IntSetTimer( PWND Window,
            pTmr->pti = PsGetCurrentThreadWin32Thread();
      }
 
-     pTmr->pWnd    = Window;
-     pTmr->cmsCountdown = Elapse;
-     pTmr->cmsRate = Elapse;
-     pTmr->pfn     = TimerFunc;
-     pTmr->nID     = IDEvent;
-     pTmr->flags   = Type|TMRF_INIT;
+     pTmr->pWnd  = Window;
+     pTmr->pfn   = TimerFunc;
+     pTmr->nID   = IDEvent;
+     pTmr->flags = Type | TMRF_INIT;
   }
   else
   {
-     pTmr->cmsCountdown = Elapse;
-     pTmr->cmsRate = Elapse;
+     /* Decrement the timer count (and clear the QS_TIMER flag if necessary)
+      * for the thread this timer belongs to, since we are resetting it */
+     if ((pTmr->flags & TMRF_READY) && pTmr->pti)
+        ClearMsgBitsMask(pTmr->pti, QS_TIMER);
   }
+
+  pTmr->cmsCountdown = Elapse;
+  pTmr->cmsRate = Elapse;
 
   ASSERT(MasterTimer != NULL);
   // Start the timer thread!
@@ -499,8 +508,8 @@ ProcessTimers(VOID)
                 // Set thread message queue for this timer.
                 if (pTmr->pti)
                 {  // Wakeup thread
-                   pTmr->pti->cTimersReady++;
                    ASSERT(pTmr->pti->pEventQueueServer != NULL);
+                   pTmr->pti->cTimersReady++;
                    MsqWakeQueue(pTmr->pti, QS_TIMER, TRUE);
                 }
              }
