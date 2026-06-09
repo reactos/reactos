@@ -310,7 +310,7 @@ CMainWindow::UninstallAvailableApp(CAvailableApplicationInfo *pAvail)
         CInstalledApplicationInfo *pInstalled = CAppDB::CreateInstalledAppByRegistryKey(ArpKeyName);
         if (pInstalled)
         {
-            BOOL success = pInstalled->UninstallApplication(UCF_DEFAULT);
+            BOOL success = pInstalled->UninstallApplication();
             delete pInstalled;
             if (success)
             {
@@ -319,7 +319,7 @@ CMainWindow::UninstallAvailableApp(CAvailableApplicationInfo *pAvail)
             }
         }
     }
-    PostMessage(WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
+    PostMessage(WM_COMMAND, ID_ACTIVATE_APPWIZ, 0); // Switch to AppViewTypeInstalledApps if we could not run the uninstaller
 }
 
 VOID
@@ -757,8 +757,7 @@ CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL 
     }
     else if (IsAvailableEnum(EnumType))
     {
-        // We shouldn't get there in APPWIZ-mode.
-        ATLASSERT(!m_bAppwizMode);
+        ATLASSERT(!m_bAppwizMode); // We shouldn't get here in APPWIZ-mode.
 
         if (bReload)
             m_Db->UpdateAvailable();

@@ -75,7 +75,6 @@ enum UninstallCommandFlags
     UCF_SILENT      = 0x01,
     UCF_MODIFY      = 0x02,
     UCF_SAMEPROCESS = 0x04,
-    UCF_DEFAULT     = UCF_NONE
 };
 DEFINE_ENUM_FLAG_OPERATORS(UninstallCommandFlags);
 
@@ -144,7 +143,7 @@ class CAppInfo
     virtual InstallerType
     GetInstallerInfo(CStringW &SilentParameters) const { return GetInstallerType(); }
     virtual BOOL
-    UninstallApplication(UninstallCommandFlags Flags) = 0;
+    UninstallApplication(UninstallCommandFlags Flags = UCF_NONE) = 0;
 };
 
 class CAvailableApplicationInfo : public CAppInfo
@@ -204,7 +203,7 @@ class CAvailableApplicationInfo : public CAppInfo
     virtual InstallerType
     GetInstallerInfo(CStringW &SilentParameters) const override;
     virtual BOOL
-    UninstallApplication(UninstallCommandFlags Flags) override;
+    UninstallApplication(UninstallCommandFlags Flags = UCF_NONE) override;
 };
 
 class CInstalledApplicationInfo : public CAppInfo
@@ -250,7 +249,7 @@ class CInstalledApplicationInfo : public CAppInfo
     virtual InstallerType
     GetInstallerType(bool NestedType = false) const override;
     virtual BOOL
-    UninstallApplication(UninstallCommandFlags Flags) override;
+    UninstallApplication(UninstallCommandFlags Flags = UCF_NONE) override;
 };
 
 BOOL
