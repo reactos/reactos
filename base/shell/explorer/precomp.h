@@ -66,9 +66,6 @@ extern HANDLE hProcessHeap;
 extern HKEY hkExplorer;
 extern BOOL bExplorerIsShell;
 
-#define SHELL_ExecuteControlPanelCPL(hwnd, cpl) ShellExecuteW((hwnd), NULL, (cpl), NULL, NULL, SW_NORMAL) // Note: Only supports .cpl files with no parameters
-#define SHRunControlPanel(command, hwnd) SHELL_ExecuteControlPanelCPL((hwnd), (command)) // Note: SHRunControlPanel does not work on Vista+
-
 /*
  * explorer.c
  */

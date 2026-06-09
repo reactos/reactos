@@ -754,7 +754,7 @@ LRESULT CTrayClockWnd::OnLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam
 {
     if (IsWindowVisible())
     {
-        SHELL_ExecuteControlPanelCPL(m_hWnd, L"timedate.cpl");
+        ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
     }
     return TRUE;
 }

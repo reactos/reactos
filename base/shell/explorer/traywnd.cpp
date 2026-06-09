@@ -711,7 +711,7 @@ public:
             break;
 
         case ID_SHELL_CMD_ADJUST_DAT:
-            SHELL_ExecuteControlPanelCPL(m_hWnd, L"timedate.cpl");
+            ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
             break;
 
         case ID_SHELL_CMD_RESTORE_ALL:
@@ -766,7 +766,7 @@ public:
             SHFindComputer(NULL, NULL);
             break;
         case IDHK_SYS_PROPERTIES:
-            SHELL_ExecuteControlPanelCPL(m_hWnd, L"sysdm.cpl");
+            ShellExecuteW(m_hWnd, NULL, L"sysdm.cpl", NULL, NULL, SW_NORMAL);
             break;
         case IDHK_NEXT_TASK:
             break;
@@ -828,7 +828,7 @@ public:
                 ToggleDesktop();
                 break;
             case TRAYCMD_DATE_AND_TIME:
-                SHELL_ExecuteControlPanelCPL(m_hWnd, L"timedate.cpl");
+                ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
                 break;
             case TRAYCMD_EJECT:
                 SHCreateThread(EjectThreadProc, NULL, CTF_INSIST, NULL);
