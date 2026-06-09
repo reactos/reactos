@@ -992,7 +992,9 @@ IntDispatchMessage(PMSG pMsg)
     {
         Window->state2 &= ~WNDS2_WMPAINTSENT;
         /* send a WM_ERASEBKGND if the non-client area is still invalid */
-        ERR("Message WM_PAINT count %d Internal Paint Set? %s\n",Window->head.pti->cPaintsReady, Window->state & WNDS_INTERNALPAINT ? "TRUE" : "FALSE");
+        ERR("Message WM_PAINT count %d Internal Paint Set? %s\n",
+            Window->head.pti->cPaintsReady,
+            Window->state & WNDS_INTERNALPAINT ? "TRUE" : "FALSE");
         IntPaintWindow( Window );
     }
 
@@ -1035,7 +1037,7 @@ co_IntPeekMessage( PMSG Msg,
 
     IdlePong();
 
-    do
+    while (TRUE)
     {
         /* Update the last message-queue access time */
         pti->pcti->timeLastRead = EngGetTickCount32();
@@ -1070,6 +1072,7 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         /* Now check for normal messages. */
+        // TODO: Take pti->pcti->fsWakeBits into account?
         if (( (ProcessMask & QS_POSTMESSAGE) ||
               (ProcessMask & QS_HOTKEY) ) &&
             MsqPeekMessage( pti,
@@ -1105,6 +1108,7 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         /* Check for hardware events. */
+        // TODO: Take pti->pcti->fsWakeBits into account?
         if ((ProcessMask & QS_INPUT) &&
             co_MsqPeekHardwareMessage( pti,
                                        RemoveMessages,
@@ -1145,8 +1149,8 @@ co_IntPeekMessage( PMSG Msg,
         if (Hit) return FALSE;
 
         /* Check for paint messages. */
+        // TODO: Take pti->pcti->fsWakeBits into account?
         if ((ProcessMask & QS_PAINT) &&
-            pti->cPaintsReady &&
             IntGetPaintMessage( Window,
                                 MsgFilterMin,
                                 MsgFilterMax,
@@ -1157,9 +1161,9 @@ co_IntPeekMessage( PMSG Msg,
             goto GotMessage;
         }
 
-       /* This is correct, check for the current threads timers waiting to be
-          posted to this threads message queue. If any we loop again.
-        */
+       /* Check for the current threads timers waiting to be posted
+        * to this threads message queue. If any we loop again. */
+        // TODO: Take pti->pcti->fsWakeBits into account?
         if ((ProcessMask & QS_TIMER) &&
             PostTimerMessages(Window))
         {
@@ -1168,7 +1172,6 @@ co_IntPeekMessage( PMSG Msg,
 
         return FALSE;
     }
-    while (TRUE);
 
 GotMessage:
     /* Update the last message-queue access time */
@@ -3174,7 +3177,7 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
      */
     IntReferenceProcessInfo(W32Process);
 
-    do
+    while (TRUE)
     {
         UserLeave();
         Status = KeWaitForMultipleObjects( 3,
@@ -3218,7 +3221,6 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
             goto WaitExit;
         }
     }
-    while (TRUE);
 
 WaitExit:
     KeStackAttachProcess(&Process->Pcb, &ApcState);

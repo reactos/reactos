@@ -690,8 +690,8 @@ LRESULT co_UserFreeWindow(PWND Window,
       IntReleaseCapture();
    }
 
-   //// Now kill those remaining "PAINTING BUG: Thread marked as containing dirty windows" spam!!!
-   if ( Window->hrgnUpdate != NULL || Window->state & WNDS_INTERNALPAINT )
+   // Now kill those remaining "PAINTING BUG: Thread marked as containing dirty windows" spam
+   if (Window->hrgnUpdate != NULL || Window->state & WNDS_INTERNALPAINT)
    {
       MsqDecPaintCountQueue(Window->head.pti);
       if (Window->hrgnUpdate > HRGN_WINDOW && GreIsHandleValid(Window->hrgnUpdate))
