@@ -1071,10 +1071,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             if (!SpiSet(&pmonitor->rcWork, pvParam, sizeof(RECTL), fl))
                 return 0;
 
-            if (fl & SPIF_UPDATEINIFILE)
-            {
-                // FIXME: What to do?
-            }
+            // if (fl & SPIF_UPDATEINIFILE): No registry setting to be changed.
             return (UINT_PTR)KEY_DESKTOP;
         }
 
@@ -1384,12 +1381,9 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.bFontSmoothing, fl);
 
         case SPI_SETFONTSMOOTHING:
-            gspv.bFontSmoothing = !!uiParam;
-            if (fl & SPIF_UPDATEINIFILE)
-            {
-                SpiStoreSzInt(KEY_DESKTOP, VAL_FONTSMOOTHING, gspv.bFontSmoothing ? 2 : 0);
-            }
-            return (UINT_PTR)KEY_DESKTOP;
+            // gspv.bFontSmoothing = !!uiParam; then store: (gspv.bFontSmoothing ? 2 : 0)
+            uiParam = (!!uiParam ? 2 : 0);
+            return SpiSetBool(&gspv.bFontSmoothing, uiParam, KEY_DESKTOP, VAL_FONTSMOOTHING, fl);
 
         case SPI_SETDRAGWIDTH:
             return SpiSetInt(&gspv.iDragWidth, uiParam, KEY_DESKTOP, VAL_DRAGWIDTH, fl);
