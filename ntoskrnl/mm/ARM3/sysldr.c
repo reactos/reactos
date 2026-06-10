@@ -992,9 +992,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
                              NumberOfPages,
                              0,
                              NULL);
-    MiReleaseSystemPtes(MiAddressToPte(LdrEntry->DllBase),
-                        ROUND_TO_PAGES(LdrEntry->SizeOfImage) >> PAGE_SHIFT,
-                        SystemPteSpace);
+    MiReleaseSystemPtes(BasePte, NumberOfPages, SystemPteSpace);
 
     /* Check if we're linked in */
     if (LdrEntry->InLoadOrderLinks.Flink)
