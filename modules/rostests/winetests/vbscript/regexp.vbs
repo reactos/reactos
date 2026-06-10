@@ -18,7 +18,7 @@
 
 Option Explicit
 
-Dim x, matches, match, submatch
+Dim x, matches, match, submatch, r
 
 Set x = CreateObject("vbscript.regexp")
 Call ok(getVT(x.Pattern) = "VT_BSTR", "getVT(RegExp.Pattern) = " & getVT(x.Pattern))
@@ -190,5 +190,38 @@ set match = matches.item(4)
 Call ok(match.Value = "", "match.Value = " & match.Value)
 matches = x.test("test")
 Call ok(matches = true, "matches = " & matches)
+
+dim test_global
+
+sub test_replace(pattern, string, rep, exp)
+    dim x, re
+    set re = new regexp
+    re.pattern = pattern
+    re.global = test_global
+    x = re.replace(string, rep)
+    call ok(x = exp, "replace returned " & x & " expected " & exp)
+end sub
+
+test_global = true
+test_replace "xxx", "xxxx", "y", "yx"
+test_replace "\[([^\[]+)\]", "- [test] -", "success", "- success -"
+test_replace "\[([^\[]+)\]", "[test] [test]", "aa", "aa aa"
+test_replace "(\&(\d))", "abc &1 123", "$'", "abc  123 123"
+test_replace "(\&(\d))", "abc &1 123", "$`", "abc abc  123"
+test_replace "(\&(\d))", "abc &1 123", "$3", "abc $3 123"
+test_replace "\[([^\[]+)\]", "- [test] -", true, "- -1 -"
+test_replace "\[([^\[]+)\]", "- [test] -", 6, "- 6 -"
+test_replace "(\$(\d))", "$1,$2", "$$1-$1$2", "$1-$11,$1-$22"
+test_replace "b", "abc", "x$&z", "axbzc"
+
+test_global = false
+test_replace "\[([^\[]+)\]", "[test] [test]", "aa", "aa [test]"
+
+set r = new regexp
+x = r.replace("xxx", "y")
+call ok(x = "yxxx", "x = " & x)
+r.global = true
+x = r.replace("xxx", "y")
+call ok(x = "yxyxyxy", "x = " & x)
 
 Call reportSuccess()
