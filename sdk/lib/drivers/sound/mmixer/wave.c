@@ -210,16 +210,16 @@ MMixerFindAudioDataRange(
     DataRange = (PKSDATARANGE) (MultipleItem + 1);
     for(Index = 0; Index < MultipleItem->Count; Index++)
     {
-        if (DataRange->FormatSize == sizeof(KSDATARANGE_AUDIO))
+        if (DataRange->FormatSize >= sizeof(KSDATARANGE))
         {
             DataRangeAudio = (PKSDATARANGE_AUDIO)DataRange;
-            if (IsEqualGUIDAligned(&DataRangeAudio->DataRange.MajorFormat, &KSDATAFORMAT_TYPE_AUDIO) &&
-                IsEqualGUIDAligned(&DataRangeAudio->DataRange.SubFormat, &KSDATAFORMAT_SUBTYPE_PCM) &&
-                IsEqualGUIDAligned(&DataRangeAudio->DataRange.Specifier, &KSDATAFORMAT_SPECIFIER_WAVEFORMATEX))
+            if (IsEqualGUIDAligned(&DataRange->MajorFormat, &KSDATAFORMAT_TYPE_AUDIO) &&
+                IsEqualGUIDAligned(&DataRange->SubFormat, &KSDATAFORMAT_SUBTYPE_PCM) &&
+                IsEqualGUIDAligned(&DataRange->Specifier, &KSDATAFORMAT_SPECIFIER_WAVEFORMATEX))
             {
-                DPRINT("Min Sample %u Max Sample %u Min Bits %u Max Bits %u Max Channel %u\n", DataRangeAudio->MinimumSampleFrequency, DataRangeAudio->MaximumSampleFrequency,
+                DPRINT1("Min Sample %u Max Sample %u Min Bits %u Max Bits %u Max Channel %u\n", DataRangeAudio->MinimumSampleFrequency, DataRangeAudio->MaximumSampleFrequency,
                                                          DataRangeAudio->MinimumBitsPerSample, DataRangeAudio->MaximumBitsPerSample, DataRangeAudio->MaximumChannels);
-                *OutDataRangeAudio = DataRangeAudio;
+                *OutDataRangeAudio = (PKSDATARANGE_AUDIO)DataRange;
                 return MM_STATUS_SUCCESS;
             }
         }
