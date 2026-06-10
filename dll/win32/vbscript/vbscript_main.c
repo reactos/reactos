@@ -34,20 +34,13 @@ WINE_DECLARE_DEBUG_CHANNEL(heap);
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 static HINSTANCE vbscript_hinstance;
+static ITypeInfo *dispatch_typeinfo;
 
 BSTR get_vbscript_string(int id)
 {
     WCHAR buf[512];
     if(!LoadStringW(vbscript_hinstance, id, buf, ARRAY_SIZE(buf))) return NULL;
     return SysAllocString(buf);
-}
-
-BSTR get_vbscript_error_string(HRESULT error)
-{
-    BSTR ret;
-    if(HRESULT_FACILITY(error) != FACILITY_VBS || !(ret = get_vbscript_string(HRESULT_CODE(error))))
-        ret = get_vbscript_string(VBS_UNKNOWN_RUNTIME_ERROR);
-    return ret;
 }
 
 #define MIN_BLOCK_SIZE  128
@@ -73,12 +66,12 @@ void *heap_pool_alloc(heap_pool_t *heap, size_t size)
 
     if(!heap->block_cnt) {
         if(!heap->blocks) {
-            heap->blocks = heap_alloc(sizeof(void*));
+            heap->blocks = malloc(sizeof(void*));
             if(!heap->blocks)
                 return NULL;
         }
 
-        tmp = heap_alloc(block_size(0));
+        tmp = malloc(block_size(0));
         if(!tmp)
             return NULL;
 
@@ -94,12 +87,12 @@ void *heap_pool_alloc(heap_pool_t *heap, size_t size)
 
     if(size <= block_size(heap->last_block+1)) {
         if(heap->last_block+1 == heap->block_cnt) {
-            tmp = heap_realloc(heap->blocks, (heap->block_cnt+1)*sizeof(void*));
+            tmp = realloc(heap->blocks, (heap->block_cnt+1)*sizeof(void*));
             if(!tmp)
                 return NULL;
 
             heap->blocks = tmp;
-            heap->blocks[heap->block_cnt] = heap_alloc(block_size(heap->block_cnt));
+            heap->blocks[heap->block_cnt] = malloc(block_size(heap->block_cnt));
             if(!heap->blocks[heap->block_cnt])
                 return NULL;
 
@@ -111,7 +104,7 @@ void *heap_pool_alloc(heap_pool_t *heap, size_t size)
         return heap->blocks[heap->last_block];
     }
 
-    list = heap_alloc(size + sizeof(struct list));
+    list = malloc(size + sizeof(struct list));
     if(!list)
         return NULL;
 
@@ -144,7 +137,7 @@ void heap_pool_clear(heap_pool_t *heap)
 
     while((tmp = list_next(&heap->custom_blocks, &heap->custom_blocks))) {
         list_remove(tmp);
-        heap_free(tmp);
+        free(tmp);
     }
 
     if(WARN_ON(heap)) {
@@ -165,8 +158,8 @@ void heap_pool_free(heap_pool_t *heap)
     heap_pool_clear(heap);
 
     for(i=0; i < heap->block_cnt; i++)
-        heap_free(heap->blocks[i]);
-    heap_free(heap->blocks);
+        free(heap->blocks[i]);
+    free(heap->blocks);
 
     heap_pool_init(heap);
 }
@@ -178,6 +171,29 @@ heap_pool_t *heap_pool_mark(heap_pool_t *heap)
 
     heap->mark = TRUE;
     return heap;
+}
+
+HRESULT get_dispatch_typeinfo(ITypeInfo **out)
+{
+    ITypeInfo *typeinfo;
+    ITypeLib *typelib;
+    HRESULT hr;
+
+    if (!dispatch_typeinfo)
+    {
+        hr = LoadRegTypeLib(&IID_StdOle, STDOLE_MAJORVERNUM, STDOLE_MINORVERNUM, STDOLE_LCID, &typelib);
+        if (FAILED(hr)) return hr;
+
+        hr = ITypeLib_GetTypeInfoOfGuid(typelib, &IID_IDispatch, &typeinfo);
+        ITypeLib_Release(typelib);
+        if (FAILED(hr)) return hr;
+
+        if (InterlockedCompareExchangePointer((void**)&dispatch_typeinfo, typeinfo, NULL))
+            ITypeInfo_Release(typeinfo);
+    }
+
+    *out = dispatch_typeinfo;
+    return S_OK;
 }
 
 static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
@@ -244,20 +260,17 @@ static IClassFactory VBScriptRegExpFactory = { &VBScriptRegExpFactoryVtbl };
  */
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 {
-    TRACE("(%p %d %p)\n", hInstDLL, fdwReason, lpv);
+    TRACE("(%p %ld %p)\n", hInstDLL, fdwReason, lpv);
 
     switch(fdwReason)
     {
-#ifndef __REACTOS__
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
-#endif
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hInstDLL);
         vbscript_hinstance = hInstDLL;
         break;
     case DLL_PROCESS_DETACH:
         if (lpv) break;
+        if (dispatch_typeinfo) ITypeInfo_Release(dispatch_typeinfo);
         release_regexp_typelib();
     }
 
@@ -279,30 +292,4 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
     FIXME("%s %s %p\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
     return CLASS_E_CLASSNOTAVAILABLE;
-}
-
-/***********************************************************************
- *          DllCanUnloadNow (vbscript.@)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return S_FALSE;
-}
-
-/***********************************************************************
- *          DllRegisterServer (vbscript.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    TRACE("()\n");
-    return __wine_register_resources(vbscript_hinstance);
-}
-
-/***********************************************************************
- *          DllUnregisterServer (vbscript.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    TRACE("()\n");
-    return __wine_unregister_resources(vbscript_hinstance);
 }
