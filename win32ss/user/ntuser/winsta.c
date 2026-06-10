@@ -385,23 +385,28 @@ IntGetScreenDC(VOID)
 }
 
 BOOL FASTCALL
-CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
+CheckWinstaAttributeAccess(
+    _In_ ACCESS_MASK DesiredAccess)
 {
-    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
-    if ( gpidLogon != PsGetCurrentProcessId() )
+    PPROCESSINFO ppi;
+
+    /* Allow all access for the logon application */
+    if (PsGetCurrentProcessId() == gpidLogon)
+        return TRUE;
+
+    ppi = PsGetCurrentProcessWin32Process();
+    ASSERT(ppi);
+    if (!(ppi->W32PF_flags & W32PF_IOWINSTA))
     {
-        if (!(ppi->W32PF_flags & W32PF_IOWINSTA))
-        {
-            ERR("Requires Interactive Window Station\n");
-            EngSetLastError(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
-            return FALSE;
-        }
-        if (!RtlAreAllAccessesGranted(ppi->amwinsta, DesiredAccess))
-        {
-            ERR("Access Denied\n");
-            EngSetLastError(ERROR_ACCESS_DENIED);
-            return FALSE;
-        }
+        ERR("Requires Interactive Window Station\n");
+        EngSetLastError(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+        return FALSE;
+    }
+    if (!RtlAreAllAccessesGranted(ppi->amwinsta, DesiredAccess))
+    {
+        ERR("Access denied\n");
+        EngSetLastError(ERROR_ACCESS_DENIED);
+        return FALSE;
     }
     return TRUE;
 }
@@ -1486,7 +1491,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     ppi->prpwinsta = NewWinSta;
     ppi->hwinsta = hWindowStation;
     ppi->amwinsta = hWindowStation != NULL ? ObjectHandleInfo.GrantedAccess : 0;
-    TRACE("WS : Granted Access 0x%08lx\n",ppi->amwinsta);
+    TRACE("WS : Granted Access 0x%08lx\n", ppi->amwinsta);
 
     if (RtlAreAllAccessesGranted(ppi->amwinsta, WINSTA_READSCREEN))
     {
