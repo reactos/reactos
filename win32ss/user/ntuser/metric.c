@@ -91,7 +91,7 @@ InitMetrics(VOID)
     piSysMet[SM_CYEDGE] = 2;
     piSysMet[SM_CXFRAME] = piSysMet[SM_CXDLGFRAME] + gspv.ncm.iBorderWidth; // 4
     piSysMet[SM_CYFRAME] = piSysMet[SM_CYDLGFRAME] + gspv.ncm.iBorderWidth; // 4
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     piSysMet[SM_CXPADDEDBORDER] = 0;
 #endif
 
@@ -155,7 +155,7 @@ InitMetrics(VOID)
     piSysMet[SM_SWAPBUTTON] = gspv.bMouseBtnSwap ? 1 : 0;
     piSysMet[SM_CXDOUBLECLK] = gspv.iDblClickWidth;
     piSysMet[SM_CYDOUBLECLK] = gspv.iDblClickHeight;
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     piSysMet[SM_MOUSEHORIZONTALWHEELPRESENT] = 0;
 #endif
 
@@ -186,7 +186,7 @@ InitMetrics(VOID)
     piSysMet[64] = 0;
     piSysMet[65] = 0;
     piSysMet[66] = 0;
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     piSysMet[90] = 0;
 #endif
 
