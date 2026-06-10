@@ -451,7 +451,9 @@ SpiStoreFont(PCWSTR pwszValue, LOGFONTW* plogfont)
 
 /** Get/Set value *************************************************************/
 
-// FIXME: get rid of the flags and only use this from um. kernel can access data directly.
+#define SPIF_PROTECT 0x80000
+
+// FIXME: get rid of bProtect and only use this from um. kernel can access data directly.
 static
 UINT_PTR
 SpiMemCopy(PVOID pvDst, PVOID pvSrc, ULONG cbSize, BOOL bProtect)
@@ -2100,12 +2102,6 @@ UserSystemParametersInfo(
         //return FALSE;
     }
 
-    if ((fWinIni & SPIF_PROTECT) && !SpiGetSetProbeBuffer(uiAction, uiParam, pvParam))
-    {
-        EngSetLastError(ERROR_NOACCESS);
-        return FALSE;
-    }
-
     /* Do the actual operation */
     ulResult = SpiGetSet(uiAction, uiParam, pvParam, fWinIni);
 
@@ -2141,18 +2137,24 @@ NtUserSystemParametersInfo(
     PVOID pvParam,
     UINT fWinIni)
 {
-    BOOL bResult;
+    BOOL bResult = FALSE;
 
     TRACE("Enter NtUserSystemParametersInfo(0x%x)\n", uiAction);
     UserEnterExclusive();
 
-    // FIXME: Get rid of the flags and only use this from um. kernel can access data directly.
+    if (!SpiGetSetProbeBuffer(uiAction, uiParam, pvParam))
+    {
+        EngSetLastError(ERROR_NOACCESS);
+        goto Quit;
+    }
+    // FIXME: Get rid of this flag and only use this from um. kernel can access data directly.
     /* Set UM memory protection flag */
     fWinIni |= SPIF_PROTECT;
 
     /* Call internal function */
     bResult = UserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
 
+Quit:
     TRACE("Leave NtUserSystemParametersInfo, returning %u\n", bResult);
     UserLeave();
 
