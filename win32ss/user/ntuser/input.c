@@ -150,7 +150,6 @@ RawInputThreadMain(VOID)
     MOUSE_INPUT_DATA MouseInput;
     KEYBOARD_INPUT_DATA KeyInput;
     PVOID ShutdownEvent;
-    HWINSTA hWinSta;
 
     ByteOffset.QuadPart = (LONGLONG)0;
     //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
@@ -164,22 +163,7 @@ RawInputThreadMain(VOID)
     KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                         LOW_REALTIME_PRIORITY - 1);
 
-    Status = ObOpenObjectByPointer(InputWindowStation,
-                                   0,
-                                   NULL,
-                                   MAXIMUM_ALLOWED,
-                                   ExWindowStationObjectType,
-                                   UserMode,
-                                   (PHANDLE)&hWinSta);
-    if (NT_SUCCESS(Status))
-    {
-        UserSetProcessWindowStation(hWinSta);
-    }
-    else
-    {
-        ASSERT(FALSE);
-        /* Failed to open the interactive winsta! What now? */
-    }
+    ASSERT(InputWindowStation);
 
     UserEnterExclusive();
     StartTheTimers();
@@ -311,7 +295,7 @@ RawInputThreadMain(VOID)
             }
         }
 
-        /* Have we successed reading from mouse? */
+        /* Have we succeeded reading from mouse? */
         if (NT_SUCCESS(MouStatus) && MouStatus != STATUS_PENDING)
         {
             TRACE("MouseEvent\n");
@@ -327,7 +311,7 @@ RawInputThreadMain(VOID)
         else if (MouStatus != STATUS_PENDING)
             ERR("Failed to read from mouse: %x.\n", MouStatus);
 
-        /* Have we successed reading from keyboard? */
+        /* Have we succeeded reading from keyboard? */
         if (NT_SUCCESS(KbdStatus) && KbdStatus != STATUS_PENDING)
         {
             TRACE("KeyboardEvent: %s %04x\n",
