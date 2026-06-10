@@ -1,4 +1,0 @@
-101 REGISTRY "atl.rgs"
-1 TYPELIB atl_lib.tlb
-1 WINE_REGISTRY "atl_lib_r.rgs"
-2 WINE_REGISTRY "atl_lib_t.rgs"

@@ -18,7 +18,7 @@
 
 #define COBJMACROS
 
-#include "wine/atlbase.h"
+#include "atlbase.h"
 
 #include "wine/debug.h"
 
@@ -32,27 +32,20 @@ static const struct {
     WCHAR name[22];
     HKEY  key;
 } root_keys[] = {
-    {{'H','K','E','Y','_','C','L','A','S','S','E','S','_','R','O','O','T',0},
-                    HKEY_CLASSES_ROOT},
-    {{'H','K','E','Y','_','C','U','R','R','E','N','T','_','U','S','E','R',0},
-                    HKEY_CURRENT_USER},
-    {{'H','K','E','Y','_','L','O','C','A','L','_','M','A','C','H','I','N','E',0},
-                    HKEY_LOCAL_MACHINE},
-    {{'H','K','E','Y','_','U','S','E','R','S',0},
-                    HKEY_USERS},
-    {{'H','K','E','Y','_','P','E','R','F','O','R','M','A','N','C','E','_','D','A','T','A',0},
-                    HKEY_PERFORMANCE_DATA},
-    {{'H','K','E','Y','_','D','Y','N','_','D','A','T','A',0},
-                    HKEY_DYN_DATA},
-    {{'H','K','E','Y','_','C','U','R','R','E','N','T','_','C','O','N','F','I','G',0},
-                    HKEY_CURRENT_CONFIG},
-    {{'H','K','C','R',0}, HKEY_CLASSES_ROOT},
-    {{'H','K','C','U',0}, HKEY_CURRENT_USER},
-    {{'H','K','L','M',0}, HKEY_LOCAL_MACHINE},
-    {{'H','K','U',0},     HKEY_USERS},
-    {{'H','K','P','D',0}, HKEY_PERFORMANCE_DATA},
-    {{'H','K','D','D',0}, HKEY_DYN_DATA},
-    {{'H','K','C','C',0}, HKEY_CURRENT_CONFIG}
+    {L"HKEY_CLASSES_ROOT",     HKEY_CLASSES_ROOT},
+    {L"HKEY_CURRENT_USER",     HKEY_CURRENT_USER},
+    {L"HKEY_LOCAL_MACHINE",    HKEY_LOCAL_MACHINE},
+    {L"HKEY_USERS",            HKEY_USERS},
+    {L"HKEY_PERFORMANCE_DATA", HKEY_PERFORMANCE_DATA},
+    {L"HKEY_DYN_DATA",         HKEY_DYN_DATA},
+    {L"HKEY_CURRENT_CONFIG",   HKEY_CURRENT_CONFIG},
+    {L"HKCR",                  HKEY_CLASSES_ROOT},
+    {L"HKCU",                  HKEY_CURRENT_USER},
+    {L"HKLM",                  HKEY_LOCAL_MACHINE},
+    {L"HKU",                   HKEY_USERS},
+    {L"HKPD",                  HKEY_PERFORMANCE_DATA},
+    {L"HKDD",                  HKEY_DYN_DATA},
+    {L"HKCC",                  HKEY_CURRENT_CONFIG}
 };
 
 typedef struct rep_list_str {
@@ -81,7 +74,7 @@ static inline Registrar *impl_from_IRegistrar(IRegistrar *iface)
 
 static void strbuf_init(strbuf *buf)
 {
-    buf->str = HeapAlloc(GetProcessHeap(), 0, 128*sizeof(WCHAR));
+    buf->str = malloc(128*sizeof(WCHAR));
     buf->alloc = 128;
     buf->len = 0;
 }
@@ -92,11 +85,19 @@ static void strbuf_write(LPCOLESTR str, strbuf *buf, int len)
         len = lstrlenW(str);
     if(buf->len+len+1 >= buf->alloc) {
         buf->alloc = (buf->len+len)<<1;
-        buf->str = HeapReAlloc(GetProcessHeap(), 0, buf->str, buf->alloc*sizeof(WCHAR));
+        buf->str = realloc(buf->str, buf->alloc*sizeof(WCHAR));
     }
     memcpy(buf->str+buf->len, str, len*sizeof(OLECHAR));
     buf->len += len;
     buf->str[buf->len] = '\0';
+}
+
+static int xdigit_to_int(WCHAR c)
+{
+    if('0' <= c && c <= '9') return c - '0';
+    if('a' <= c && c <= 'f') return c - 'a' + 10;
+    if('A' <= c && c <= 'F') return c - 'A' + 10;
+    return -1;
 }
 
 static HRESULT get_word(LPCOLESTR *str, strbuf *buf)
@@ -117,12 +118,18 @@ static HRESULT get_word(LPCOLESTR *str, strbuf *buf)
     if(*iter == '}' || *iter == '=') {
         strbuf_write(iter++, buf, 1);
     }else if(*iter == '\'') {
-        iter2 = ++iter;
-        iter = wcschr(iter, '\'');
-        if(!iter) {
-            WARN("Unexpected end of script\n");
-            *str = iter;
-            return DISP_E_EXCEPTION;
+        for (;;)
+        {
+            iter2 = ++iter;
+            iter = wcschr(iter, '\'');
+            if(!iter) {
+                WARN("Unexpected end of script\n");
+                *str = iter;
+                return DISP_E_EXCEPTION;
+            }
+            if (iter[1] != '\'') break;
+            iter++;
+            strbuf_write(iter2, buf, iter-iter2);
         }
         strbuf_write(iter2, buf, iter-iter2);
         iter++;
@@ -142,7 +149,6 @@ static HRESULT do_preprocess(const Registrar *This, LPCOLESTR data, strbuf *buf)
 {
     LPCOLESTR iter, iter2 = data;
     rep_list *rep_iter;
-    static const WCHAR wstr[] = {'%',0};
 
     iter = wcschr(data, '%');
     while(iter) {
@@ -156,11 +162,11 @@ static HRESULT do_preprocess(const Registrar *This, LPCOLESTR data, strbuf *buf)
             return DISP_E_EXCEPTION;
 
         if(iter == iter2) {
-            strbuf_write(wstr, buf, 1);
+            strbuf_write(L"%", buf, 1);
         }else {
             for(rep_iter = This->rep; rep_iter; rep_iter = rep_iter->next) {
                 if(rep_iter->key_len == iter-iter2
-                        && !_wcsnicmp(iter2, rep_iter->key, rep_iter->key_len))
+                        && !wcsnicmp(iter2, rep_iter->key, rep_iter->key_len))
                     break;
             }
             if(!rep_iter) {
@@ -197,11 +203,6 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
         DO_DELETE
     } key_type = NORMAL;
 
-    static const WCHAR wstrNoRemove[] = {'N','o','R','e','m','o','v','e',0};
-    static const WCHAR wstrForceRemove[] = {'F','o','r','c','e','R','e','m','o','v','e',0};
-    static const WCHAR wstrDelete[] = {'D','e','l','e','t','e',0};
-    static const WCHAR wstrval[] = {'v','a','l',0};
-
     iter = *pstr;
     hres = get_word(&iter, buf);
     if(FAILED(hres))
@@ -210,13 +211,13 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
 
     while(buf->str[1] || buf->str[0] != '}') {
         key_type = NORMAL;
-        if(!lstrcmpiW(buf->str, wstrNoRemove))
+        if(!lstrcmpiW(buf->str, L"NoRemove"))
             key_type = NO_REMOVE;
-        else if(!lstrcmpiW(buf->str, wstrForceRemove))
+        else if(!lstrcmpiW(buf->str, L"ForceRemove"))
             key_type = FORCE_REMOVE;
-        else if(!lstrcmpiW(buf->str, wstrval))
+        else if(!lstrcmpiW(buf->str, L"val"))
             key_type = IS_VAL;
-        else if(!lstrcmpiW(buf->str, wstrDelete))
+        else if(!lstrcmpiW(buf->str, L"Delete"))
             key_type = DO_DELETE;
 
         if(key_type != NORMAL) {
@@ -238,7 +239,7 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
                     RegDeleteTreeW(parent_key, buf->str);
                 lres = RegCreateKeyW(parent_key, buf->str, &hkey);
                 if(lres != ERROR_SUCCESS) {
-                    WARN("Could not create(open) key: %08x\n", lres);
+                    WARN("Could not create(open) key: %08lx\n", lres);
                     hres = HRESULT_FROM_WIN32(lres);
                     break;
                 }
@@ -247,7 +248,7 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
             strbuf_write(buf->str, &name, -1);
             lres = RegOpenKeyW(parent_key, buf->str, &hkey);
               if(lres != ERROR_SUCCESS)
-                WARN("Could not open key %s: %08x\n", debugstr_w(name.str), lres);
+                WARN("Could not open key %s: %08lx\n", debugstr_w(name.str), lres);
         }
 
         if(key_type != DO_DELETE && *iter == '=') {
@@ -269,7 +270,7 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
                     lres = RegSetValueExW(hkey, name.len ? name.str :  NULL, 0, REG_SZ, (PBYTE)buf->str,
                             (lstrlenW(buf->str)+1)*sizeof(WCHAR));
                     if(lres != ERROR_SUCCESS) {
-                        WARN("Could set value of key: %08x\n", lres);
+                        WARN("Could set value of key: %08lx\n", lres);
                         hres = HRESULT_FROM_WIN32(lres);
                         break;
                     }
@@ -279,11 +280,11 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
                     hres = get_word(&iter, buf);
                     if(FAILED(hres))
                         break;
-                    dw = wcstol(buf->str, NULL, 10);
+                    dw = wcstoul(buf->str, NULL, 10);
                     lres = RegSetValueExW(hkey, name.len ? name.str :  NULL, 0, REG_DWORD,
                             (PBYTE)&dw, sizeof(dw));
                     if(lres != ERROR_SUCCESS) {
-                        WARN("Could set value of key: %08x\n", lres);
+                        WARN("Could set value of key: %08lx\n", lres);
                         hres = HRESULT_FROM_WIN32(lres);
                         break;
                     }
@@ -297,31 +298,28 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
                     if(FAILED(hres))
                         break;
                     count = (lstrlenW(buf->str) + 1) / 2;
-                    bytes = HeapAlloc(GetProcessHeap(), 0, count);
+                    bytes = malloc(count);
                     if(bytes == NULL) {
                         hres = E_OUTOFMEMORY;
                         break;
                     }
                     for(i = 0; i < count && buf->str[2*i]; i++) {
-                        WCHAR digits[3];
-                        if(!iswxdigit(buf->str[2*i]) || !iswxdigit(buf->str[2*i + 1])) {
+                        int d1, d2;
+                        if((d1 = xdigit_to_int(buf->str[2*i])) == -1 || (d2 = xdigit_to_int(buf->str[2*i + 1])) == -1) {
                             hres = E_FAIL;
                             break;
                         }
-                        digits[0] = buf->str[2*i];
-                        digits[1] = buf->str[2*i + 1];
-                        digits[2] = 0;
-                        bytes[i] = (BYTE) wcstoul(digits, NULL, 16);
+                        bytes[i] = (d1 << 4) | d2;
                     }
                     if(SUCCEEDED(hres)) {
                         lres = RegSetValueExW(hkey, name.len ? name.str :  NULL, 0, REG_BINARY,
                             bytes, count);
                         if(lres != ERROR_SUCCESS) {
-                            WARN("Could not set value of key: 0x%08x\n", lres);
+                            WARN("Could not set value of key: 0x%08lx\n", lres);
                             hres = HRESULT_FROM_WIN32(lres);
                         }
                     }
-                    HeapFree(GetProcessHeap(), 0, bytes);
+                    free(bytes);
                     break;
                 }
                 default:
@@ -368,7 +366,7 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
             break;
     }
 
-    HeapFree(GetProcessHeap(), 0, name.str);
+    free(name.str);
     if(hkey && key_type != IS_VAL)
         RegCloseKey(hkey);
     *pstr = iter;
@@ -385,7 +383,7 @@ static HRESULT do_process_root_key(LPCOLESTR data, BOOL do_register)
     strbuf_init(&buf);
     hres = get_word(&iter, &buf);
     if(FAILED(hres))
-        return hres;
+        goto done;
 
     while(*iter) {
         if(!buf.len) {
@@ -412,14 +410,16 @@ static HRESULT do_process_root_key(LPCOLESTR data, BOOL do_register)
         }
         hres = do_process_key(&iter, root_keys[i].key, &buf, do_register);
         if(FAILED(hres)) {
-            WARN("Processing key failed: %08x\n", hres);
+            WARN("Processing key failed: %08lx\n", hres);
             break;
         }
         hres = get_word(&iter, &buf);
         if(FAILED(hres))
             break;
     }
-    HeapFree(GetProcessHeap(), 0, buf.str);
+
+done:
+    free(buf.str);
     return hres;
 }
 
@@ -434,7 +434,7 @@ static HRESULT string_register(Registrar *This, LPCOLESTR data, BOOL do_register
     hres = do_preprocess(This, data, &buf);
     if(FAILED(hres)) {
         WARN("preprocessing failed!\n");
-        HeapFree(GetProcessHeap(), 0, buf.str);
+        free(buf.str);
         return hres;
     }
 
@@ -442,7 +442,7 @@ static HRESULT string_register(Registrar *This, LPCOLESTR data, BOOL do_register
     if(FAILED(hres) && do_register)
         do_process_root_key(buf.str, FALSE);
 
-    HeapFree(GetProcessHeap(), 0, buf.str);
+    free(buf.str);
     return hres;
 }
 
@@ -464,13 +464,13 @@ static HRESULT resource_register(Registrar *This, LPCOLESTR resFileName,
             reslen = SizeofResource(hins, src);
             if(regstra) {
                 len = MultiByteToWideChar(CP_ACP, 0, regstra, reslen, NULL, 0)+1;
-                regstrw = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len*sizeof(WCHAR));
+                regstrw = calloc(len, sizeof(WCHAR));
                 MultiByteToWideChar(CP_ACP, 0, regstra, reslen, regstrw, len);
                 regstrw[len-1] = '\0';
 
                 hres = string_register(This, regstrw, do_register);
 
-                HeapFree(GetProcessHeap(), 0, regstrw);
+                free(regstrw);
             }else {
                 WARN("could not load resource\n");
                 hres = HRESULT_FROM_WIN32(GetLastError());
@@ -499,21 +499,21 @@ static HRESULT file_register(Registrar *This, LPCOLESTR fileName, BOOL do_regist
     file = CreateFileW(fileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if(file != INVALID_HANDLE_VALUE) {
         filelen = GetFileSize(file, NULL);
-        regstra = HeapAlloc(GetProcessHeap(), 0, filelen);
+        regstra = malloc(filelen);
         if(ReadFile(file, regstra, filelen, NULL, NULL)) {
             len = MultiByteToWideChar(CP_ACP, 0, regstra, filelen, NULL, 0)+1;
-            regstrw = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len*sizeof(WCHAR));
+            regstrw = calloc(len, sizeof(WCHAR));
             MultiByteToWideChar(CP_ACP, 0, regstra, filelen, regstrw, len);
             regstrw[len-1] = '\0';
 
             hres = string_register(This, regstrw, do_register);
 
-            HeapFree(GetProcessHeap(), 0, regstrw);
+            free(regstrw);
         }else {
             WARN("Failed to read file %s\n", debugstr_w(fileName));
             hres = HRESULT_FROM_WIN32(GetLastError());
         }
-        HeapFree(GetProcessHeap(), 0, regstra);
+        free(regstra);
         CloseHandle(file);
     }else {
         WARN("Could not open file %s\n", debugstr_w(fileName));
@@ -541,7 +541,7 @@ static ULONG WINAPI Registrar_AddRef(IRegistrar *iface)
 {
     Registrar *This = impl_from_IRegistrar(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) ->%d\n", This, ref);
+    TRACE("(%p) ->%ld\n", This, ref);
     return ref;
 }
 
@@ -550,10 +550,10 @@ static ULONG WINAPI Registrar_Release(IRegistrar *iface)
     Registrar *This = impl_from_IRegistrar(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ->%d\n", This, ref);
+    TRACE("(%p) ->%ld\n", This, ref);
     if(!ref) {
         IRegistrar_ClearReplacements(iface);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This);
     }
     return ref;
 }
@@ -566,14 +566,14 @@ static HRESULT WINAPI Registrar_AddReplacement(IRegistrar *iface, LPCOLESTR Key,
 
     TRACE("(%p)->(%s %s)\n", This, debugstr_w(Key), debugstr_w(item));
 
-    new_rep = HeapAlloc(GetProcessHeap(), 0, sizeof(rep_list));
+    new_rep = malloc(sizeof(*new_rep));
 
     new_rep->key_len  = lstrlenW(Key);
-    new_rep->key = HeapAlloc(GetProcessHeap(), 0, (new_rep->key_len + 1) * sizeof(OLECHAR));
+    new_rep->key = malloc((new_rep->key_len + 1) * sizeof(OLECHAR));
     memcpy(new_rep->key, Key, (new_rep->key_len+1)*sizeof(OLECHAR));
 
     len = lstrlenW(item)+1;
-    new_rep->item = HeapAlloc(GetProcessHeap(), 0, len*sizeof(OLECHAR));
+    new_rep->item = malloc(len*sizeof(OLECHAR));
     memcpy(new_rep->item, item, len*sizeof(OLECHAR));
 
     new_rep->next = This->rep;
@@ -595,9 +595,9 @@ static HRESULT WINAPI Registrar_ClearReplacements(IRegistrar *iface)
     iter = This->rep;
     while(iter) {
         iter2 = iter->next;
-        HeapFree(GetProcessHeap(), 0, iter->key);
-        HeapFree(GetProcessHeap(), 0, iter->item);
-        HeapFree(GetProcessHeap(), 0, iter);
+        free(iter->key);
+        free(iter->item);
+        free(iter);
         iter = iter2;
     }
 
@@ -688,13 +688,12 @@ HRESULT WINAPI AtlCreateRegistrar(IRegistrar **ret)
 {
     Registrar *registrar;
 
-    registrar = HeapAlloc(GetProcessHeap(), 0, sizeof(*registrar));
+    registrar = calloc(1, sizeof(*registrar));
     if(!registrar)
         return E_OUTOFMEMORY;
 
     registrar->IRegistrar_iface.lpVtbl = &RegistrarVtbl;
     registrar->ref = 1;
-    registrar->rep = NULL;
 
     *ret = &registrar->IRegistrar_iface;
     return S_OK;
@@ -710,9 +709,6 @@ HRESULT WINAPI AtlUpdateRegistryFromResourceD(HINSTANCE inst, LPCOLESTR res,
     WCHAR module_name[MAX_PATH];
     IRegistrar *registrar;
     HRESULT hres;
-
-    static const WCHAR moduleW[] = {'M','O','D','U','L','E',0};
-    static const WCHAR registryW[] = {'R','E','G','I','S','T','R','Y',0};
 
     if(!GetModuleFileNameW(inst, module_name, MAX_PATH)) {
         FIXME("hinst %p: did not get module name\n", inst);
@@ -730,15 +726,15 @@ HRESULT WINAPI AtlUpdateRegistryFromResourceD(HINSTANCE inst, LPCOLESTR res,
             return hres;
     }
 
-    IRegistrar_AddReplacement(registrar, moduleW, module_name);
+    IRegistrar_AddReplacement(registrar, L"MODULE", module_name);
 
     for (iter = pMapEntries; iter && iter->szKey; iter++)
         IRegistrar_AddReplacement(registrar, iter->szKey, iter->szData);
 
     if(bRegister)
-        hres = IRegistrar_ResourceRegisterSz(registrar, module_name, res, registryW);
+        hres = IRegistrar_ResourceRegisterSz(registrar, module_name, res, L"REGISTRY");
     else
-        hres = IRegistrar_ResourceUnregisterSz(registrar, module_name, res, registryW);
+        hres = IRegistrar_ResourceUnregisterSz(registrar, module_name, res, L"REGISTRY");
 
     if(registrar != pReg)
         IRegistrar_Release(registrar);

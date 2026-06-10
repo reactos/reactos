@@ -7,4 +7,4 @@
     threading(both),
     uuid(b8da6310-e19b-11d0-933c-00a0c90dcaa9)  /* IActiveScriptStats */
 ]
-coclass PSFactoryBuffer { interface IFactoryBuffer; }
+coclass PSFactoryBuffer { interface IPSFactoryBuffer; }
