@@ -1632,7 +1632,7 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Get total RAM size, in MiB */
     /* Round size up. Assumed to better match actual physical RAM size */
-    Size = ALIGN_UP_BY(MmNumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
+    Size = ALIGN_UP_BY((SIZE_T)MmNumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
 
     /* Create the string */
     StringBuffer = InitBuffer->VersionBuffer;
