@@ -806,10 +806,11 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 * @remarks None.
 *
 *--*/
+static
 NTSTATUS
-NTAPI
 ObpIncrementHandleCount(IN PVOID Object,
                         IN PACCESS_STATE AccessState OPTIONAL,
+                        IN OUT PACCESS_MASK GrantedAccess OPTIONAL,
                         IN KPROCESSOR_MODE AccessMode,
                         IN ULONG HandleAttributes,
                         IN PEPROCESS Process,
@@ -993,15 +994,17 @@ ObpIncrementHandleCount(IN PVOID Object,
     Status = STATUS_SUCCESS;
     if (ObjectType->TypeInfo.OpenProcedure)
     {
+        PACCESS_MASK DesiredAccess = GrantedAccess ? GrantedAccess :
+                                     &AccessState->RemainingDesiredAccess;
+        ASSERT(DesiredAccess != NULL);
+
         /* Call it */
         ObpCalloutStart(&CalloutIrql);
         Status = ObjectType->TypeInfo.OpenProcedure(OpenReason,
+                                                    ProbeMode,
                                                     Process,
                                                     Object,
-                                                    AccessState ?
-                                                    AccessState->
-                                                    PreviouslyGrantedAccess :
-                                                    0,
+                                                    DesiredAccess,
                                                     ProcessHandleCount);
         ObpCalloutEnd(CalloutIrql, "Open", ObjectType, Object);
 
@@ -1223,9 +1226,10 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
         /* Call it */
         ObpCalloutStart(&CalloutIrql);
         Status = ObjectType->TypeInfo.OpenProcedure(ObCreateHandle,
+                                                    AccessMode,
                                                     Process,
                                                     Object,
-                                                    *DesiredAccess,
+                                                    DesiredAccess,
                                                     ProcessHandleCount);
         ObpCalloutEnd(CalloutIrql, "Open", ObjectType, Object);
 
@@ -1505,6 +1509,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
                 OUT PVOID *ReturnedObject,
                 OUT PHANDLE ReturnedHandle)
 {
+    PEPROCESS Process = PsGetCurrentProcess();
     HANDLE_TABLE_ENTRY NewEntry;
     POBJECT_HEADER ObjectHeader;
     HANDLE Handle;
@@ -1547,25 +1552,27 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
         KernelHandle = TRUE;
 
         /* Check if we're not in the system process */
-        if (PsGetCurrentProcess() != PsInitialSystemProcess)
+        if (Process != PsInitialSystemProcess)
         {
             /* Attach to the system process */
             KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
             AttachedToProcess = TRUE;
+            Process = PsInitialSystemProcess;
         }
     }
     else
     {
         /* Get the current handle table */
-        HandleTable = PsGetCurrentProcess()->ObjectTable;
+        HandleTable = Process->ObjectTable;
     }
 
     /* Increment the handle count */
     Status = ObpIncrementHandleCount(Object,
                                      AccessState,
+                                     NULL,
                                      AccessMode,
                                      HandleAttributes,
-                                     PsGetCurrentProcess(),
+                                     Process,
                                      OpenReason);
     if (!NT_SUCCESS(Status))
     {
@@ -1685,7 +1692,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
 
     /* Decrement the handle count and detach */
     ObpDecrementHandleCount(&ObjectHeader->Body,
-                            PsGetCurrentProcess(),
+                            Process,
                             GrantedAccess,
                             ObjectType);
 
@@ -1987,6 +1994,7 @@ ObpDuplicateHandleCallback(IN PEPROCESS Process,
         /* Call the shared routine for incrementing handles */
         Status = ObpIncrementHandleCount(&ObjectHeader->Body,
                                          &AccessState,
+                                         &HandleTableEntry->GrantedAccess,
                                          KernelMode,
                                          HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES,
                                          Process,
@@ -2408,6 +2416,7 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
         /* Add a new handle */
         Status = ObpIncrementHandleCount(SourceObject,
                                          PassedAccessState,
+                                         &NewHandleEntry.GrantedAccess,
                                          PreviousMode,
                                          HandleAttributes,
                                          PsGetCurrentProcess(),

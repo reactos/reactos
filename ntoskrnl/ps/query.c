@@ -3018,7 +3018,7 @@ NtQueryInformationThread(
     }
 
     /* Check what class this is */
-    Access = THREAD_QUERY_INFORMATION;
+    Access = THREAD_QUERY_LIMITED_INFORMATION;
 
     /* Check what kind of information class this is */
     switch (ThreadInformationClass)
@@ -3481,8 +3481,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-            // FIXME: Use THREAD_QUERY_LIMITED_INFORMATION when implemented
-                                               THREAD_QUERY_INFORMATION,
+                                               THREAD_QUERY_LIMITED_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,

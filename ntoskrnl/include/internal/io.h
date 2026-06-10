@@ -1193,7 +1193,8 @@ IopGetSetSecurityObject(
     IN OUT PULONG BufferLength,
     OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
     IN POOL_TYPE PoolType,
-    IN OUT PGENERIC_MAPPING GenericMapping
+    IN OUT PGENERIC_MAPPING GenericMapping,
+    IN KPROCESSOR_MODE AccessMode
 );
 
 NTSTATUS
@@ -1225,8 +1226,8 @@ IopCloseFile(
     IN PEPROCESS Process OPTIONAL,
     IN PVOID Object,
     IN ACCESS_MASK GrantedAccess,
-    IN ULONG ProcessHandleCount,
-    IN ULONG SystemHandleCount
+    IN ULONG_PTR ProcessHandleCount,
+    IN ULONG_PTR SystemHandleCount
 );
 
 NTSTATUS
