@@ -58,7 +58,7 @@ typedef struct _SPIVALUES
     ACCESSTIMEOUT accesstimeout;
     HIGHCONTRASTW highcontrast;
     BOOL bScreenReader;
-#if(WINVER >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     AUDIODESCRIPTION audiodescription;
     BOOL bClientAreaAnimation;
     BOOL bDisableOverlappedContent;
@@ -92,7 +92,7 @@ typedef struct _SPIVALUES
     INT iDragHeight;
     INT iMouseTrails;
     INT iWheelScrollLines;
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     UINT uiWheelScrollChars;
 #endif
 
@@ -110,7 +110,7 @@ typedef struct _SPIVALUES
     INT iScrSaverTimeout;
     BOOL bScrSaverActive;
     BOOL bScrSaverRunning;
-#if(WINVER >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     BOOL bScrSaverSecure;
 #endif
 
@@ -130,7 +130,7 @@ typedef struct _SPIVALUES
     BOOL bMenuDropAlign;
     DWORD dwMenuShowDelay;
     BOOL bBlockSendInputResets;
-#if(_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     BOOL bClearType;
 #endif
 
@@ -189,7 +189,7 @@ typedef union _SPIBUFFER
     ICONMETRICSW iconmetrics;
     HIGHCONTRASTW highcontrast;
     ANIMATIONINFO animationinfo;
-#if(WINVER >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     AUDIODESCRIPTION audiodescription;
 #endif
 } SPIBUFFER;

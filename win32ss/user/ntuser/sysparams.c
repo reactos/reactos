@@ -75,7 +75,7 @@ static const WCHAR* VAL_CLICKLOCKTIME = L"ClickLockTime";
 static const WCHAR* VAL_PAINTDESKVER = L"PaintDesktopVersion";
 static const WCHAR* VAL_CARETRATE = L"CursorBlinkRate";
 static const WCHAR* VAL_CARETWIDTH = L"CaretWidth";
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 static const WCHAR* VAL_SCRLLCHARS = L"WheelScrollChars";
 #endif
 static const WCHAR* VAL_USERPREFMASK = L"UserPreferencesMask";
@@ -270,7 +270,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.ncm.iSmCaptionHeight = SpiLoadMetric(L"SmCaptionHeight", 15);
     gspv.ncm.iMenuWidth = SpiLoadMetric(L"MenuWidth", 18);
     gspv.ncm.iMenuHeight = SpiLoadMetric(L"MenuHeight", 18);
-#if (WINVER >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     gspv.ncm.iPaddedBorderWidth = SpiLoadMetric(L"PaddedBorderWidth", 18);
 #endif
     SpiLoadFont(&gspv.ncm.lfCaptionFont, L"CaptionFont", &lf2);
@@ -307,7 +307,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.uiFontSmoothingType = SpiLoadDWord(KEY_DESKTOP, VAL_FONTSMOOTHINGTYPE, 1);
     gspv.uiFontSmoothingContrast = SpiLoadDWord(KEY_DESKTOP, VAL_FONTSMOOTHINGCONTRAST, 1400);
     gspv.uiFontSmoothingOrientation = SpiLoadDWord(KEY_DESKTOP, VAL_FONTSMOOTHINGORIENTATION, 1);
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     gspv.uiWheelScrollChars = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLCHARS, 3);
 #endif
 
@@ -324,7 +324,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.iScrSaverTimeout = SpiLoadTimeOut();
     gspv.bScrSaverActive = FALSE;
     gspv.bScrSaverRunning = FALSE;
-#if(WINVER >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     gspv.bScrSaverSecure = FALSE;
 #endif
 
@@ -987,7 +987,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 SpiStoreMetric(L"SmCaptionHeight", gspv.ncm.iSmCaptionHeight);
                 SpiStoreMetric(L"MenuWidth", gspv.ncm.iMenuWidth);
                 SpiStoreMetric(L"MenuHeight", gspv.ncm.iMenuHeight);
-#if (WINVER >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
                 SpiStoreMetric(L"PaddedBorderWidth", gspv.ncm.iPaddedBorderWidth);
 #endif
                 SpiStoreFont(L"CaptionFont", &gspv.ncm.lfCaptionFont);
@@ -1536,7 +1536,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         case SPI_SETMENUSHOWDELAY:
             return SpiSetInt(&gspv.dwMenuShowDelay, uiParam, KEY_DESKTOP, L"MenuShowDelay", fl);
 
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
         case SPI_GETWHEELSCROLLCHARS:
             return SpiGetInt(pvParam, &gspv.uiWheelScrollChars, fl);
 
@@ -1568,7 +1568,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             // FIXME: also return value?
             return SpiSetBool(&gspv.bScrSaverRunning, uiParam, KEY_MOUSE, L"", fl);
 
-#if(WINVER >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
         case SPI_GETAUDIODESCRIPTION:
             return SpiGet(pvParam, &gspv.audiodescription, sizeof(AUDIODESCRIPTION), fl);
 
@@ -1715,7 +1715,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         case SPI_SETBLOCKSENDINPUTRESETS:
             return SpiSetBool(&gspv.bBlockSendInputResets, uiParam, KEY_MOUSE, L"", fl);
 
-#if(_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
         case SPI_GETDISABLEOVERLAPPEDCONTENT:
             return SpiGetInt(pvParam, &gspv.bDisableOverlappedContent, fl);
 
@@ -1882,13 +1882,13 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
         case SPI_GETMOUSEHOVERTIME:
         case SPI_GETWHEELSCROLLLINES:
         case SPI_GETMENUSHOWDELAY:
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
         case SPI_GETWHEELSCROLLCHARS:
 #endif
         case SPI_GETSHOWIMEUI:
         case SPI_GETMOUSESPEED:
         case SPI_GETSCREENSAVERRUNNING:
-#if(WINVER >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
         case SPI_GETSCREENSAVESECURE:
 #endif
         case SPI_GETACTIVEWINDOWTRACKING:
@@ -1911,7 +1911,7 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
         case SPI_GETFLATMENU:
         case SPI_GETDROPSHADOW:
         case SPI_GETBLOCKSENDINPUTRESETS:
-#if(_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
         case SPI_GETDISABLEOVERLAPPEDCONTENT:
         case SPI_GETCLIENTAREAANIMATION:
         case SPI_GETCLEARTYPE:
@@ -2003,7 +2003,7 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
             cbSize = sizeof(HKL);
             break;
 
-#if(WINVER >= 0x0600)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
         case SPI_GETAUDIODESCRIPTION:
             cbSize = sizeof(AUDIODESCRIPTION);
             break;
