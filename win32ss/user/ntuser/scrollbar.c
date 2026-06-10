@@ -702,19 +702,19 @@ co_IntGetScrollBarInfo(PWND Window, LONG idObject, PSCROLLBARINFO psbi)
    IntCalculateThumb(Window, Bar, sbi, pSBData);
 
     // Scrollbar state
-    psbi->rgstate[0] = 0;
+    sbi->rgstate[0] = 0;
     if ((Bar == SB_HORZ && !(Window->style & WS_HSCROLL))
         || (Bar == SB_VERT && !(Window->style & WS_VSCROLL)))
-        psbi->rgstate[0] |= STATE_SYSTEM_INVISIBLE;
+        sbi->rgstate[0] |= STATE_SYSTEM_INVISIBLE;
     if (pSBData->posMin >= pSBData->posMax - max(pSBData->page - 1, 0))
     {
-        if (!(psbi->rgstate[0] & STATE_SYSTEM_INVISIBLE))
-            psbi->rgstate[0] |= STATE_SYSTEM_UNAVAILABLE;
+        if (!(sbi->rgstate[0] & STATE_SYSTEM_INVISIBLE))
+            sbi->rgstate[0] |= STATE_SYSTEM_UNAVAILABLE;
         else
-            psbi->rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
+            sbi->rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
     }
-    if (Bar == SB_CTL && !(Window->style & WS_DISABLED))
-        psbi->rgstate[0] |= STATE_SYSTEM_UNAVAILABLE;
+    if (Bar == SB_CTL && (Window->style & WS_DISABLED))
+        sbi->rgstate[0] |= STATE_SYSTEM_UNAVAILABLE;
 
    RtlCopyMemory(psbi, sbi, sizeof(SCROLLBARINFO));
 
