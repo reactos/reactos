@@ -546,7 +546,8 @@ function(spec2def _dllname _spec_file)
 endfunction()
 
 macro(macro_mc FLAG FILE)
-    set(COMMAND_MC ${CMAKE_MC_COMPILER} -u ${FLAG} -b -h ${CMAKE_CURRENT_BINARY_DIR}/ -r ${CMAKE_CURRENT_BINARY_DIR}/ ${FILE})
+    set(COMMAND_MC native-windmc -u ${FLAG} -b -h ${CMAKE_CURRENT_BINARY_DIR}/ -r ${CMAKE_CURRENT_BINARY_DIR}/ ${FILE})
+    set(COMMAND_MC_DEPENDS native-windmc)
 endmacro()
 
 # PSEH lib, needed with mingw
