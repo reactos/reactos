@@ -119,9 +119,7 @@ SpiLoadDWord(PCWSTR pwszKey, PCWSTR pwszValue, INT iValue)
 {
     DWORD Result;
     if (!RegReadUserSetting(pwszKey, pwszValue, REG_DWORD, &Result, sizeof(Result)))
-    {
         return iValue;
-    }
     return Result;
 }
 
@@ -134,9 +132,7 @@ SpiLoadInt(PCWSTR pwszKey, PCWSTR pwszValue, INT iValue)
 
     cbSize = sizeof(awcBuffer);
     if (!RegReadUserSetting(pwszKey, pwszValue, REG_SZ, awcBuffer, cbSize))
-    {
         return iValue;
-    }
     return _wtoi(awcBuffer);
 }
 
@@ -146,23 +142,21 @@ SpiLoadUserPrefMask(DWORD dValue)
 {
     DWORD Result;
     if (!RegReadUserSetting(KEY_DESKTOP, VAL_USERPREFMASK, REG_BINARY, &Result, sizeof(Result)))
-    {
         return dValue;
-    }
     return Result;
 }
 
 static
 DWORD
 SpiLoadTimeOut(VOID)
-{   // Must have the string!
+{
+    // Must have the string!
     WCHAR szApplicationName[MAX_PATH];
     RtlZeroMemory(&szApplicationName, sizeof(szApplicationName));
     if (!RegReadUserSetting(KEY_DESKTOP, VAL_SCRNSV, REG_SZ, &szApplicationName, sizeof(szApplicationName)))
-    {
         return 0;
-    }
-    if (szApplicationName[0] == 0) return 0;
+    if (szApplicationName[0] == 0)
+        return 0;
     return SpiLoadInt(KEY_DESKTOP, VAL_SCRTO, 600);
 }
 
@@ -181,7 +175,7 @@ SpiLoadMetric(PCWSTR pwszValue, INT iValue)
 
     iRegVal = SpiLoadInt(KEY_METRIC, pwszValue, METRIC2REG(iValue));
     TRACE("Loaded metric setting '%S', iValue=%d(reg:%d), ret=%d(reg:%d)\n",
-           pwszValue, iValue, METRIC2REG(iValue), REG2METRIC(iRegVal), iRegVal);
+          pwszValue, iValue, METRIC2REG(iValue), REG2METRIC(iRegVal), iRegVal);
     return REG2METRIC(iRegVal);
 }
 
@@ -213,7 +207,8 @@ SpiFixupValues(VOID)
 //    gspv.ncm.iMenuHeight = max(gspv.ncm.iMenuHeight,
 //                               2 + gspv.tmMenuFont.tmHeight +
 //                               gspv.tmMenuFont.tmExternalLeading);
-    if (gspv.iDblClickTime == 0) gspv.iDblClickTime = 500;
+    if (gspv.iDblClickTime == 0)
+        gspv.iDblClickTime = 500;
 
     // FIXME: Hack!!!
     gspv.tmMenuFont.tmHeight = 11;
@@ -221,7 +216,6 @@ SpiFixupValues(VOID)
 
     gspv.tmCaptionFont.tmHeight = 11;
     gspv.tmCaptionFont.tmExternalLeading = 2;
-
 }
 
 static
@@ -347,10 +341,8 @@ SpiUpdatePerUserSystemParameters(VOID)
     g_bWindowSnapEnabled = SpiLoadInt(KEY_DESKTOP, VAL_SNAP_ENABLED, TRUE);
     gspv.bDockMoving = SpiLoadInt(KEY_DESKTOP, VAL_SNAP_DOCKMOVING, TRUE);
 
-    /* Make sure we don't use broken values */
+    /* Make sure we don't use broken values, and update the system metrics */
     SpiFixupValues();
-
-    /* Update SystemMetrics */
     InitMetrics();
 
     if (gbSpiInitialized && gpsi)
@@ -375,7 +367,6 @@ InitSysParams(VOID)
     return TRUE;
 }
 
-
 BOOL
 APIENTRY
 NtUserUpdatePerUserSystemParameters(
@@ -388,13 +379,13 @@ NtUserUpdatePerUserSystemParameters(
     UserEnterExclusive();
 
     SpiUpdatePerUserSystemParameters();
-    if(bEnable)
+    if (bEnable)
         g_PaintDesktopVersion = SpiLoadDWord(KEY_DESKTOP, VAL_PAINTDESKVER, 0);
     else
         g_PaintDesktopVersion = FALSE;
     bResult = TRUE;
 
-    TRACE("Leave NtUserUpdatePerUserSystemParameters, returning %d\n", bResult);
+    TRACE("Leave NtUserUpdatePerUserSystemParameters, returning %u\n", bResult);
     UserLeave();
 
     return bResult;
@@ -487,9 +478,8 @@ SpiMemCopy(PVOID pvDst, PVOID pvSrc, ULONG cbSize, BOOL bProtect)
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        ERR("SpiMemCopy failed, pvDst=%p, pvSrc=%p, bProtect=%d\n", pvDst, pvSrc, bProtect);
+        ERR("SpiMemCopy failed, pvDst=%p, pvSrc=%p, bProtect=%u\n", pvDst, pvSrc, bProtect);
     }
-
     return NT_SUCCESS(Status);
 }
 
@@ -537,9 +527,7 @@ SpiSetYesNo(BOOL *pbData, BOOL bValue, PCWSTR pwszKey, PCWSTR pwszValue, FLONG f
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
     *pbData = bValue ? TRUE : FALSE;
     if (fl & SPIF_UPDATEINIFILE)
-    {
         SpiStoreSz(pwszKey, pwszValue, bValue ? L"Yes" : L"No");
-    }
     return (UINT_PTR)pwszKey;
 }
 
@@ -550,9 +538,7 @@ SpiSetBool(BOOL *pbData, INT iValue, PCWSTR pwszKey, PCWSTR pwszValue, FLONG fl)
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
     *pbData = iValue ? TRUE : FALSE;
     if (fl & SPIF_UPDATEINIFILE)
-    {
         SpiStoreSzInt(pwszKey, pwszValue, iValue);
-    }
     return (UINT_PTR)pwszKey;
 }
 
@@ -563,9 +549,7 @@ SpiSetDWord(PVOID pvData, INT iValue, PCWSTR pwszKey, PCWSTR pwszValue, FLONG fl
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
     *(INT*)pvData = iValue;
     if (fl & SPIF_UPDATEINIFILE)
-    {
         SpiStoreDWord(pwszKey, pwszValue, iValue);
-    }
     return (UINT_PTR)pwszKey;
 }
 
@@ -576,9 +560,7 @@ SpiSetInt(PVOID pvData, INT iValue, PCWSTR pwszKey, PCWSTR pwszValue, FLONG fl)
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
     *(INT*)pvData = iValue;
     if (fl & SPIF_UPDATEINIFILE)
-    {
         SpiStoreSzInt(pwszKey, pwszValue, iValue);
-    }
     return (UINT_PTR)pwszKey;
 }
 
@@ -589,9 +571,7 @@ SpiSetMetric(PVOID pvData, INT iValue, PCWSTR pwszValue, FLONG fl)
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
     *(INT*)pvData = iValue;
     if (fl & SPIF_UPDATEINIFILE)
-    {
         SpiStoreMetric(pwszValue, iValue);
-    }
     return (UINT_PTR)KEY_METRIC;
 }
 
@@ -639,7 +619,7 @@ static inline
 UINT_PTR
 SpiGetUserPref(DWORD dwMask, PVOID pvParam, FLONG fl)
 {
-    INT iValue = gspv.dwUserPrefMask & dwMask ? 1 : 0;
+    INT iValue = (gspv.dwUserPrefMask & dwMask) ? 1 : 0;
     return SpiGetInt(pvParam, &iValue, fl);
 }
 
@@ -795,19 +775,20 @@ SpiNotifyNCMetricsChanged(VOID)
     ASSERT(pwndDesktop);
 
     ahwnd = IntWinListChildren(pwndDesktop);
-    if(!ahwnd)
+    if (!ahwnd)
         return FALSE;
 
     for (i = 0; ahwnd[i]; i++)
     {
         pwndCurrent = UserGetWindowObject(ahwnd[i]);
-        if(!pwndCurrent)
+        if (!pwndCurrent)
             continue;
 
         UserRefObjectCo(pwndCurrent, &Ref);
-        co_WinPosSetWindowPos(pwndCurrent, 0, pwndCurrent->rcWindow.left,pwndCurrent->rcWindow.top,
-                                              pwndCurrent->rcWindow.right-pwndCurrent->rcWindow.left
-                                              ,pwndCurrent->rcWindow.bottom - pwndCurrent->rcWindow.top,
+        co_WinPosSetWindowPos(pwndCurrent, HWND_TOP,
+                              pwndCurrent->rcWindow.left, pwndCurrent->rcWindow.top,
+                              pwndCurrent->rcWindow.right - pwndCurrent->rcWindow.left,
+                              pwndCurrent->rcWindow.bottom - pwndCurrent->rcWindow.top,
                               SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOCOPYBITS|
                               SWP_NOMOVE|SWP_NOZORDER|SWP_NOREDRAW);
         UserDerefObjectCo(pwndCurrent);
@@ -834,6 +815,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGet(pvParam, &gspv.caiMouse, 3 * sizeof(INT), fl);
 
         case SPI_SETMOUSE:
+        {
             if (!SpiSet(&gspv.caiMouse, pvParam, 3 * sizeof(INT), fl))
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
@@ -843,6 +825,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 SpiStoreSzInt(KEY_MOUSE, VAL_MOUSE3, gspv.caiMouse.Acceleration);
             }
             return (UINT_PTR)KEY_MOUSE;
+        }
 
         case SPI_GETBORDER:
             return SpiGetInt(pvParam, &gspv.ncm.iBorderWidth, fl);
@@ -898,17 +881,13 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_ICONHORIZONTALSPACING:
             if (pvParam)
-            {
                 return SpiGetInt(pvParam, &gspv.im.iHorzSpacing, fl);
-            }
             uiParam = max(uiParam, 32);
             return SpiSetMetric(&gspv.im.iHorzSpacing, uiParam, VAL_ICONSPC, fl);
 
         case SPI_ICONVERTICALSPACING:
             if (pvParam)
-            {
                 return SpiGetInt(pvParam, &gspv.im.iVertSpacing, fl);
-            }
             uiParam = max(uiParam, 32);
             return SpiSetMetric(&gspv.im.iVertSpacing, uiParam, VAL_ICONVSPC, fl);
 
@@ -934,13 +913,13 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGet(pvParam, &gspv.im.lfFont, sizeof(LOGFONTW), fl);
 
         case SPI_SETICONTITLELOGFONT:
+        {
             if (!SpiSet(&gspv.im.lfFont, pvParam, sizeof(LOGFONTW), fl))
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
-            {
                 SpiStoreFont(L"IconFont", &gspv.im.lfFont);
-            }
             return (UINT_PTR)KEY_METRIC;
+        }
 
         case SPI_SETDOUBLECLICKTIME:
             return SpiSetInt(&gspv.iDblClickTime, uiParam, KEY_MOUSE, VAL_DBLCLKTIME, fl);
@@ -962,9 +941,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetInt(&gspv.bDragFullWindows, uiParam, KEY_DESKTOP, VAL_DRAG, fl);
 
         case SPI_GETNONCLIENTMETRICS:
-        {
             return SpiGet(pvParam, &gspv.ncm, sizeof(NONCLIENTMETRICSW), fl);
-        }
 
         case SPI_SETNONCLIENTMETRICS:
         {
@@ -997,16 +974,14 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 SpiStoreFont(L"MessageFont", &gspv.ncm.lfMessageFont);
             }
 
-            if(!SpiNotifyNCMetricsChanged())
+            if (!SpiNotifyNCMetricsChanged())
                 return 0;
 
             return (UINT_PTR)KEY_METRIC;
         }
 
         case SPI_GETMINIMIZEDMETRICS:
-        {
             return SpiGet(pvParam, &gspv.mm, sizeof(MINIMIZEDMETRICS), fl);
-        }
 
         case SPI_SETMINIMIZEDMETRICS:
         {
@@ -1035,9 +1010,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         }
 
         case SPI_GETICONMETRICS:
-        {
             return SpiGet(pvParam, &gspv.im, sizeof(ICONMETRICSW), fl);
-        }
 
         case SPI_SETICONMETRICS:
         {
@@ -1062,10 +1035,8 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         case SPI_GETWORKAREA:
         {
             PMONITOR pmonitor = UserGetPrimaryMonitor();
-
-            if(!pmonitor)
+            if (!pmonitor)
                 return 0;
-
             return SpiGet(pvParam, &pmonitor->rcWork, sizeof(RECTL), fl);
         }
 
@@ -1267,14 +1238,10 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             LPACCESSTIMEOUT AccessTimeout = (LPACCESSTIMEOUT)pvParam;
 
             if (uiParam != 0 && uiParam != sizeof(ACCESSTIMEOUT))
-            {
                 return 0;
-            }
 
             if (!AccessTimeout || AccessTimeout->cbSize != sizeof(ACCESSTIMEOUT))
-            {
                 return 0;
-            }
 
             if (!SpiSet(&gspv.accesstimeout, pvParam, sizeof(ACCESSTIMEOUT), fl))
                 return 0;
@@ -1401,6 +1368,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGet(pvParam, &gspv.animationinfo, sizeof(ANIMATIONINFO), fl);
 
         case SPI_SETANIMATION:
+        {
             if (!SpiSet(&gspv.animationinfo, pvParam, sizeof(ANIMATIONINFO), fl))
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
@@ -1408,6 +1376,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
+        }
 
         case SPI_GETFONTSMOOTHING:
             return SpiGetInt(pvParam, &gspv.bFontSmoothing, fl);
@@ -1464,7 +1433,6 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         case SPI_GETDEFAULTINPUTLANG:
             if (!gspklBaseLayout)
                 return FALSE;
-
             return SpiGet(pvParam, &gspklBaseLayout->hkl, sizeof(HKL), fl);
 
         case SPI_SETDEFAULTINPUTLANG:
@@ -1557,8 +1525,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             /* Allowed range is [1:20] */
             if ((INT_PTR)pvParam < 1 || (INT_PTR)pvParam > 20)
                 return 0;
-            else
-                return SpiSetInt(&gspv.iMouseSpeed, (INT_PTR)pvParam, KEY_MOUSE, VAL_SENSITIVITY, fl);
+            return SpiSetInt(&gspv.iMouseSpeed, (INT_PTR)pvParam, KEY_MOUSE, VAL_SENSITIVITY, fl);
         }
 
         case SPI_GETSCREENSAVERRUNNING:
@@ -1614,10 +1581,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 INT iValue = 0;
                 return SpiGetInt(pvParam, &iValue, fl);
             }
-            else
-            {
-                return SpiGetUserPref(UPM_GRADIENTCAPTIONS, pvParam, fl);
-            }
+            return SpiGetUserPref(UPM_GRADIENTCAPTIONS, pvParam, fl);
         }
 
         case SPI_SETGRADIENTCAPTIONS:
@@ -1803,44 +1767,34 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETWINARRANGING:
             return SpiGetInt(pvParam, &g_bWindowSnapEnabled, fl);
+
         case SPI_SETWINARRANGING:
             return SpiSetInt(&g_bWindowSnapEnabled, uiParam, KEY_DESKTOP, VAL_SNAP_ENABLED, fl);
 
         case SPI_GETDOCKMOVING:
             return SpiGetInt(pvParam, &gspv.bDockMoving, fl);
+
         case SPI_SETDOCKMOVING:
             return SpiSetInt(&gspv.bDockMoving, uiParam, KEY_DESKTOP, VAL_SNAP_DOCKMOVING, fl);
 
         /* The following are undocumented, but valid SPI values */
-        case 0x1010:
-        case 0x1011:
-        case 0x1028:
-        case 0x1029:
-        case 0x102A:
-        case 0x102B:
-        case 0x102C:
-        case 0x102D:
-        case 0x102E:
-        case 0x102F:
-        case 0x1030:
-        case 0x1031:
-        case 0x1032:
-        case 0x1033:
-        case 0x1034:
-        case 0x1035:
-        case 0x1036:
-        case 0x1037:
-        case 0x1038:
-        case 0x1039:
-        case 0x103A:
-        case 0x103B:
-        case 0x103C:
-        case 0x103D:
-            ERR("Undocumented SPI value %x is unimplemented\n", uiAction);
+        case 0x1010: case 0x1011:
+        case 0x1028: case 0x1029:
+        case 0x102A: case 0x102B:
+        case 0x102C: case 0x102D:
+        case 0x102E: case 0x102F:
+        case 0x1030: case 0x1031:
+        case 0x1032: case 0x1033:
+        case 0x1034: case 0x1035:
+        case 0x1036: case 0x1037:
+        case 0x1038: case 0x1039:
+        case 0x103A: case 0x103B:
+        case 0x103C: case 0x103D:
+            ERR("Undocumented SPI value 0x%x is unimplemented\n", uiAction);
             break;
 
         default:
-            ERR("Invalid SPI value: %u\n", uiAction);
+            ERR("Invalid SPI value: 0x%x\n", uiAction);
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
     }
@@ -2158,15 +2112,13 @@ UserSystemParametersInfo(
     /* Did we change something? */
     if (ulResult > 1)
     {
+        /* Make sure we don't use broken values, and update the system metrics */
         SpiFixupValues();
-
-        /* Update system metrics */
         InitMetrics();
 
-        /* Send notification to toplevel windows, if requested */
+        /* Broadcast WM_SETTINGCHANGE to all top-level windows, if requested */
         if (fWinIni & SPIF_SENDCHANGE)
         {
-            /* Send WM_SETTINGCHANGE to all toplevel windows */
             co_IntSendMessageTimeout(HWND_BROADCAST,
                                      WM_SETTINGCHANGE,
                                      (WPARAM)uiAction,
@@ -2191,7 +2143,7 @@ NtUserSystemParametersInfo(
 {
     BOOL bResult;
 
-    TRACE("Enter NtUserSystemParametersInfo(%u)\n", uiAction);
+    TRACE("Enter NtUserSystemParametersInfo(0x%x)\n", uiAction);
     UserEnterExclusive();
 
     // FIXME: Get rid of the flags and only use this from um. kernel can access data directly.
@@ -2201,7 +2153,7 @@ NtUserSystemParametersInfo(
     /* Call internal function */
     bResult = UserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
 
-    TRACE("Leave NtUserSystemParametersInfo, returning %d\n", bResult);
+    TRACE("Leave NtUserSystemParametersInfo, returning %u\n", bResult);
     UserLeave();
 
     return bResult;
