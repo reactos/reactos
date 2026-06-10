@@ -32,15 +32,7 @@
 #include <initguid.h>
 
 #include "wscript.h"
-#ifdef __REACTOS__
-#define IDS_USAGE              1
-#define IDS_NO_SCRIPT_FILE     2
-#define IDS_FILE_NOT_FOUND     3
-#define IDS_SCRIPT_LOAD_ERROR  4
-#define IDS_TIMEOUT_EXCEEDED   5
-#else
 #include "resource.h"
-#endif
 
 #include <wine/debug.h>
 
