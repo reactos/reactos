@@ -690,6 +690,13 @@ SHSetLocalizedName(
     _In_ PCWSTR pszResModule,
     _In_ INT idsRes);
 
+HRESULT WINAPI
+SHEvaluateSystemCommandTemplate(
+    _In_ PCWSTR pszCmdTemplate,
+    _Outptr_ PWSTR *ppszApplication,
+    _Outptr_opt_ PWSTR *ppszCommandLine,
+    _Outptr_opt_ PWSTR *ppszParameters);
+
 #ifdef UNICODE
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAW_V1_SIZE
 #define NOTIFYICONDATA_V2_SIZE NOTIFYICONDATAW_V2_SIZE
