@@ -25,23 +25,36 @@ BOOL g_bWindowSnapEnabled = TRUE;
 #define REG2METRIC(reg) (reg > 0 ? reg : ((-(reg) * dpi + 720) / 1440))
 #define METRIC2REG(met) (-((((met) * 1440)- 0) / dpi))
 
-#define REQ_INTERACTIVE_WINSTA(err) \
+#define REQ_INTERACTIVE_WINSTA(bSet) \
 do { \
-    if (GetW32ProcessInfo()->prpwinsta != InputWindowStation) \
+/* Always allow all access for CSRSS; otherwise, check process' WinSta access */ \
+if (PsGetCurrentProcess() != gpepCSRSS) { \
+    PWINSTATION_OBJECT prpwinsta = GetW32ProcessInfo()->prpwinsta; \
+    BOOL bAccessAllowed; \
+    /* Check whether the current process is attached to an interactive window station */ \
+    if (!prpwinsta || prpwinsta != InputWindowStation) \
     { \
-        if (GetW32ProcessInfo()->prpwinsta == NULL) \
-        { \
-            ERR("NtUserSystemParametersInfo called without active window station, and it requires an interactive one\n"); \
-        } \
+        if (!prpwinsta) \
+            ERR("UserSystemParametersInfo called without active window station; requires an interactive one\n"); \
         else \
-        { \
-            ERR("NtUserSystemParametersInfo requires interactive window station (current is '%wZ')\n", \
-                &(OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(GetW32ProcessInfo()->prpwinsta))->Name)); \
-        } \
-        EngSetLastError(err); \
+            ERR("UserSystemParametersInfo requires an interactive window station (current: 0x%p)\n", prpwinsta); \
+        EngSetLastError(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION); \
         return 0; \
     } \
-} while (0)
+    /*bAccessAllowed = CheckWinstaAttributeAccess(bSet ? WINSTA_WRITEATTRIBUTES : WINSTA_READATTRIBUTES);*/ \
+    if (bSet) \
+        bAccessAllowed = CheckWinstaAttributeAccess(WINSTA_WRITEATTRIBUTES); \
+    else \
+        bAccessAllowed = RtlAreAllAccessesGranted(GetW32ProcessInfo()->amwinsta, WINSTA_READATTRIBUTES); \
+    /* CheckWinstaAttributeAccess() sets the last-error, RtlAreAllAccessesGranted() doesn't */ \
+    if (!bAccessAllowed && !bSet) \
+    { \
+        ERR("Access denied\n"); \
+        EngSetLastError(ERROR_ACCESS_DENIED); \
+    } \
+    if (!bAccessAllowed) \
+        return 0; \
+} } while (0)
 
 static const WCHAR* KEY_MOUSE = L"Control Panel\\Mouse";
 static const WCHAR* VAL_MOUSE1 = L"MouseThreshold1";
@@ -489,7 +502,7 @@ static inline
 UINT_PTR
 SpiGet(PVOID pvParam, PVOID pvData, ULONG cbSize, FLONG fl)
 {
-    REQ_INTERACTIVE_WINSTA(ERROR_ACCESS_DENIED);
+    REQ_INTERACTIVE_WINSTA(FALSE);
     return SpiMemCopy(pvParam, pvData, cbSize, fl & SPIF_PROTECT);
 }
 
@@ -497,7 +510,7 @@ static inline
 UINT_PTR
 SpiSet(PVOID pvData, PVOID pvParam, ULONG cbSize, FLONG fl)
 {
-    REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+    REQ_INTERACTIVE_WINSTA(TRUE);
     return SpiMemCopy(pvData, pvParam, cbSize, fl & SPIF_PROTECT);
 }
 
@@ -526,7 +539,7 @@ static inline
 UINT_PTR
 SpiSetYesNo(BOOL *pbData, BOOL bValue, PCWSTR pwszKey, PCWSTR pwszValue, FLONG fl)
 {
-    REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+    REQ_INTERACTIVE_WINSTA(TRUE);
     *pbData = bValue ? TRUE : FALSE;
     if (fl & SPIF_UPDATEINIFILE)
         SpiStoreSz(pwszKey, pwszValue, bValue ? L"Yes" : L"No");
@@ -537,7 +550,7 @@ static inline
 UINT_PTR
 SpiSetBool(BOOL *pbData, INT iValue, PCWSTR pwszKey, PCWSTR pwszValue, FLONG fl)
 {
-    REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+    REQ_INTERACTIVE_WINSTA(TRUE);
     *pbData = iValue ? TRUE : FALSE;
     if (fl & SPIF_UPDATEINIFILE)
         SpiStoreSzInt(pwszKey, pwszValue, iValue);
@@ -548,7 +561,7 @@ static inline
 UINT_PTR
 SpiSetDWord(PVOID pvData, INT iValue, PCWSTR pwszKey, PCWSTR pwszValue, FLONG fl)
 {
-    REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+    REQ_INTERACTIVE_WINSTA(TRUE);
     *(INT*)pvData = iValue;
     if (fl & SPIF_UPDATEINIFILE)
         SpiStoreDWord(pwszKey, pwszValue, iValue);
@@ -559,7 +572,7 @@ static inline
 UINT_PTR
 SpiSetInt(PVOID pvData, INT iValue, PCWSTR pwszKey, PCWSTR pwszValue, FLONG fl)
 {
-    REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+    REQ_INTERACTIVE_WINSTA(TRUE);
     *(INT*)pvData = iValue;
     if (fl & SPIF_UPDATEINIFILE)
         SpiStoreSzInt(pwszKey, pwszValue, iValue);
@@ -570,7 +583,7 @@ static inline
 UINT_PTR
 SpiSetMetric(PVOID pvData, INT iValue, PCWSTR pwszValue, FLONG fl)
 {
-    REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+    REQ_INTERACTIVE_WINSTA(TRUE);
     *(INT*)pvData = iValue;
     if (fl & SPIF_UPDATEINIFILE)
         SpiStoreMetric(pwszValue, iValue);
@@ -584,7 +597,7 @@ SpiSetUserPref(DWORD dwMask, PVOID pvValue, FLONG fl)
     DWORD dwRegMask;
     BOOL bValue = PtrToUlong(pvValue);
 
-    REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+    REQ_INTERACTIVE_WINSTA(TRUE);
 
     /* Set or clear bit according to bValue */
     gspv.dwUserPrefMask = bValue ? gspv.dwUserPrefMask | dwMask :
@@ -636,7 +649,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     SURFACE *psurfBmp;
     ULONG ulTile, ulStyle;
 
-    REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+    REQ_INTERACTIVE_WINSTA(TRUE);
 
     if (!pvParam)
     {
@@ -2086,14 +2099,6 @@ UserSystemParametersInfo(
         KeRosDumpStackFrames(NULL, 20);
         //ASSERT(FALSE);
         return FALSE;
-    }
-
-    /* Get a pointer to the current Windowstation */
-    if (!ppi->prpwinsta)
-    {
-        ERR("UserSystemParametersInfo called without active window station.\n");
-        //ASSERT(FALSE);
-        //return FALSE;
     }
 
     /* Do the actual operation */

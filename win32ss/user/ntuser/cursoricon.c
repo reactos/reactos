@@ -705,7 +705,9 @@ UserClipCursor(
     PSYSTEM_CURSORINFO CurInfo;
     PWND DesktopWindow = NULL;
 
-    if (!CheckWinstaAttributeAccess(WINSTA_WRITEATTRIBUTES))
+    /* Always allow all access for CSRSS; otherwise, check process' WinSta access */
+    if ((PsGetCurrentProcess() != gpepCSRSS) &&
+        !CheckWinstaAttributeAccess(WINSTA_WRITEATTRIBUTES))
     {
         return FALSE;
     }
@@ -1007,9 +1009,7 @@ NtUserGetClipCursor(
     UserEnterShared();
 
     if (!CheckWinstaAttributeAccess(WINSTA_READATTRIBUTES))
-    {
         goto Exit; // Return FALSE
-    }
 
     if (!lpRect)
         goto Exit; // Return FALSE
@@ -2208,12 +2208,11 @@ NtUserSetSystemCursor(
     int i;
     PPROCESSINFO ppi;
     BOOL Ret = FALSE;
+
     UserEnterExclusive();
 
     if (!CheckWinstaAttributeAccess(WINSTA_WRITEATTRIBUTES))
-    {
         goto Exit;
-    }
 
     if (hcur)
     {
