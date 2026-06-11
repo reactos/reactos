@@ -17,6 +17,7 @@ list(APPEND SOURCE
     FindExecutable.cpp
     GetDisplayNameOf.cpp
     GUIDFromString.cpp
+    LockServer.cpp
     Int64ToString.cpp
     IShellFolderViewCB.cpp
     ItemIDList.cpp
