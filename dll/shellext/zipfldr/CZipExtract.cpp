@@ -46,7 +46,7 @@ public:
     }
 
     // *** IZip methods ***
-    STDMETHODIMP QueryInterface(REFIID riid, void  **ppvObject)
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override
     {
         if (riid == IID_IUnknown)
         {
@@ -56,17 +56,17 @@ public:
         }
         return E_NOINTERFACE;
     }
-    STDMETHODIMP_(ULONG) AddRef(void)
+    STDMETHODIMP_(ULONG) AddRef() override
     {
         return 2;
     }
-    STDMETHODIMP_(ULONG) Release(void)
+    STDMETHODIMP_(ULONG) Release() override
     {
         return 1;
     }
-    STDMETHODIMP_(unzFile) getZip()
+    STDMETHODIMP_(PCWSTR) getZipFileName() override
     {
-        return uf;
+        return m_Filename;
     }
 
     class CExtractSettingsPage : public CPropertyPageImpl<CExtractSettingsPage>
@@ -714,10 +714,8 @@ public:
     }
 };
 
-
 void _CZipExtract_runWizard(PCWSTR Filename)
 {
     CZipExtract extractor(Filename);
     extractor.runWizard();
 }
-

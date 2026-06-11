@@ -11,6 +11,7 @@
 struct CZipEnumerator
 {
     CComPtr<IZip> m_Zip;
+    unzFile m_uf = NULL;
     BOOL m_First = TRUE;
     CAtlList<CStringW> m_Returned; // for unique checking
     UINT m_nCodePage = GetZipCodePage(TRUE);
@@ -18,8 +19,11 @@ struct CZipEnumerator
     static DWORD CalculateCRC32(PCSTR filename);
     static CStringA GetUtf8Name(PCSTR originalName, const BYTE* extraField, DWORD extraFieldLen);
 
+    void Close();
+
 public:
     CZipEnumerator();
+    ~CZipEnumerator();
 
     BOOL Initialize(IZip* zip);
     BOOL Reset();

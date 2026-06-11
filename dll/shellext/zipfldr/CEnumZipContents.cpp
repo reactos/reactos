@@ -101,9 +101,7 @@ public:
     END_COM_MAP()
 };
 
-
 HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, PCWSTR prefix, REFIID riid, LPVOID * ppvOut)
 {
     return ShellObjectCreatorInit<CEnumZipContents>(zip, flags, prefix, riid, ppvOut);
 }
-

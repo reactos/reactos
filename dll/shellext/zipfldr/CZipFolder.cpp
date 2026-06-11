@@ -25,21 +25,11 @@ CZipFolder::CZipFolder()
 
 CZipFolder::~CZipFolder()
 {
-    Close();
 }
 
-void CZipFolder::Close()
+STDMETHODIMP_(PCWSTR) CZipFolder::getZipFileName()
 {
-    if (m_UnzipFile)
-        unzClose(m_UnzipFile);
-    m_UnzipFile = NULL;
-}
-
-STDMETHODIMP_(unzFile) CZipFolder::getZip()
-{
-    if (!m_UnzipFile)
-        m_UnzipFile = unzOpen2_64(m_ZipFile, &g_FFunc);
-    return m_UnzipFile;
+    return m_ZipFile;
 }
 
 HRESULT CZipFolder::Initialize(PCWSTR zipFile, PCWSTR zipDir, PCUIDLIST_ABSOLUTE curDir, PCUIDLIST_RELATIVE pidl)
@@ -110,7 +100,6 @@ HRESULT CZipFolder::DoDeleteItems(CComPtr<IDataObject> pDataObj)
 
 HRESULT CZipFolder::DeleteItems(CComPtr<IDataObject> pDataObj)
 {
-
     CDataObjectHIDA cida(pDataObj);
     if (!cida || cida->cidl <= 0)
         return E_FAIL;
@@ -135,9 +124,6 @@ HRESULT CZipFolder::DeleteItems(CComPtr<IDataObject> pDataObj)
     WCHAR szTempPath[MAX_PATH], szTempFile[MAX_PATH];
     GetTempPathW(MAX_PATH, szTempPath);
     GetTempFileNameW(szTempPath, L"ZIP", 0, szTempFile);
-
-    // Close the current handle to work with the ZIP file
-    Close();
 
     zlib_filefunc64_def ffunc = {};
     fill_win32_filefunc64W(&ffunc);
@@ -835,10 +821,6 @@ STDMETHODIMP CZipFolder::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL p
     HDROP hDrop = (HDROP)GlobalLock(sm.hGlobal);
     if (hDrop)
     {
-        // Close the ZIP file before appending (it will be automatically
-        // reopened next time getZip() is called)
-        Close();
-
         // Create creator
         CZipCreator* pCreator = CZipCreator::DoCreate(m_ZipFile, m_ZipDir);
 

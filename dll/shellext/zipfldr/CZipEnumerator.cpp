@@ -15,6 +15,11 @@ CZipEnumerator::CZipEnumerator()
 {
 }
 
+CZipEnumerator::~CZipEnumerator()
+{
+    Close();
+}
+
 BOOL CZipEnumerator::Initialize(IZip* zip)
 {
     ATLASSERT(zip);
@@ -22,12 +27,26 @@ BOOL CZipEnumerator::Initialize(IZip* zip)
     return Reset();
 }
 
+void CZipEnumerator::Close()
+{
+    if (m_uf)
+    {
+        unzClose(m_uf);
+        m_uf = NULL;
+    }
+}
+
 BOOL CZipEnumerator::Reset()
 {
-    unzFile uf = m_Zip->getZip();
-    m_First = TRUE;
-    if (unzGoToFirstFile(uf) != UNZ_OK)
+    Close();
+    m_uf = unzOpen2_64(m_Zip->getZipFileName(), &g_FFunc);
+    if (!m_uf)
         return FALSE;
+
+    m_First = TRUE;
+    if (unzGoToFirstFile(m_uf) != UNZ_OK)
+        return FALSE;
+
     m_Returned.RemoveAll();
     return TRUE;
 }
@@ -94,17 +113,20 @@ CZipEnumerator::GetUtf8Name(
 BOOL CZipEnumerator::Next(CStringW& name, unz_file_info64& info)
 {
     INT err;
-    unzFile uf = m_Zip->getZip();
 
     if (!m_First)
     {
-        err = unzGoToNextFile(uf);
+        err = unzGoToNextFile(m_uf);
         if (err == UNZ_END_OF_LIST_OF_FILE)
+        {
+            unzClose(m_uf);
+            m_uf = NULL;
             return FALSE;
+        }
     }
     m_First = FALSE;
 
-    err = unzGetCurrentFileInfo64(uf, &info, NULL, 0, NULL, 0, NULL, 0);
+    err = unzGetCurrentFileInfo64(m_uf, &info, NULL, 0, NULL, 0, NULL, 0);
     if (err != UNZ_OK)
         return FALSE;
 
@@ -113,7 +135,7 @@ BOOL CZipEnumerator::Next(CStringW& name, unz_file_info64& info)
 
     CStringA nameA;
     PSTR buf = nameA.GetBuffer(info.size_filename);
-    err = unzGetCurrentFileInfo64(uf, NULL, buf, nameA.GetAllocLength(),
+    err = unzGetCurrentFileInfo64(m_uf, NULL, buf, nameA.GetAllocLength(),
         (info.size_file_extra > 0) ? extra.GetData() : NULL, info.size_file_extra,
         NULL, 0);
     nameA.ReleaseBuffer(info.size_filename);
