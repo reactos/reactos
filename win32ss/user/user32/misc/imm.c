@@ -1184,8 +1184,8 @@ const struct builtin_class_descr IME_builtin_class =
 {
     L"IME",                       /* name */
     CS_GLOBALCLASS,               /* style */
-    ImeWndProcA,                  /* procA */
-    ImeWndProcW,                  /* procW */
+    &pfnClientA.pfnImeWndProc,    /* procA */
+    &pfnClientW.pfnImeWndProc,    /* procW */
     sizeof(IMEWND) - sizeof(WND), /* extra */
     IDC_ARROW,                    /* cursor */
     NULL                          /* brush */

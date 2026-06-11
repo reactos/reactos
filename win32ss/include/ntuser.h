@@ -816,6 +816,9 @@ typedef struct _PFNCLIENT
     WNDPROC pfnDispatchDefWindowProc;
     WNDPROC pfnDispatchMessage;
     WNDPROC pfnMDIActivateDlgProc;
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+    WNDPROC pfnFilteredProcessRedirectingWndProc;
+#endif
 } PFNCLIENT, *PPFNCLIENT;
 
 /*
