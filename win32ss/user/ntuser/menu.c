@@ -321,7 +321,7 @@ IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
    {
       PWND Window;
 
-      if (PsGetCurrentProcessSessionId() == Menu->head.rpdesk->rpwinstaParent->dwSessionId)
+      if (PsGetCurrentProcessSessionId() == Menu->head.rpdesk->dwSessionId)
       {
          BOOL ret;
          if (Menu->hWnd)
