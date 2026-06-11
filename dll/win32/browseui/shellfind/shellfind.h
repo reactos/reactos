@@ -69,20 +69,4 @@ static INT_PTR FindItemInComboEx(HWND hCombo, T &FindItem, F CompareFunc, R RetM
     return -1;
 }
 
-static inline bool PathIsOnDrive(PCWSTR Path)
-{
-    return PathGetDriveNumberW(Path) >= 0 && (Path[2] == '\\' || !Path[2]);
-}
-
-static inline BOOL PathIsOnUnc(PCWSTR Path)
-{
-    return PathIsUNCW(Path); // FIXME: Verify the path starts with <\\Server\Share>[\]
-}
-
-static inline bool PathIsAbsolute(PCWSTR Path)
-{
-    // Note: PathIsRelativeW is too forgiving
-    return PathIsOnDrive(Path) || PathIsOnUnc(Path);
-}
-
 #endif /* _SHELLFIND_PCH_ */
