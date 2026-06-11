@@ -509,12 +509,13 @@ IntCreateWindowStation(
         SetLastNtError(Status);
         return Status;
     }
-
-    /* Initialize the window station */
     RtlZeroMemory(WindowStation, sizeof(WINSTATION_OBJECT));
 
+    /* Assign the session ID to the window station */
+    WindowStation->dwSessionId = PsGetCurrentProcessSessionId(); // gSessionId
+
+    /* Initialize the window station */
     InitializeListHead(&WindowStation->DesktopListHead);
-    WindowStation->dwSessionId = NtCurrentPeb()->SessionId;
     Status = RtlCreateAtomTable(37, &WindowStation->AtomTable);
     if (!NT_SUCCESS(Status))
     {

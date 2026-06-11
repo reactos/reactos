@@ -143,7 +143,13 @@ IntDesktopObjectParse(IN PVOID ParseObject,
                             0,
                             0,
                             (PVOID*)&Desktop);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
+    RtlZeroMemory(Desktop, sizeof(DESKTOP));
+
+    /* Assign the session ID to the desktop */
+    Desktop->dwSessionId = PsGetCurrentProcessSessionId(); // gSessionId
+    ASSERT(Desktop->dwSessionId == WinStaObject->dwSessionId);
 
     /* Assign security to the desktop we have created */
     Status = IntAssignDesktopSecurityOnParse(WinStaObject, Desktop, AccessState);
@@ -2323,8 +2329,6 @@ UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_O
 
     TRACE("UserInitializeDesktop desktop 0x%p with name %wZ\n", pdesk, DesktopName);
 
-    RtlZeroMemory(pdesk, sizeof(DESKTOP));
-
     /* Set desktop size, based on whether the WinSta is interactive or not */
     if (pwinsta == InputWindowStation)
     {
@@ -2551,8 +2555,7 @@ IntCreateDesktop(
     }
     pWnd->fnid = FNID_DESKTOP;
 
-    /* Assign the session ID and the desktop window to the desktop */
-    pdesk->dwSessionId = PsGetCurrentProcessSessionId();
+    /* Assign the desktop window to the desktop */
     pdesk->DesktopWindow = UserHMGetHandle(pWnd);
     pdesk->pDeskInfo->spwnd = pWnd;
 
@@ -3046,7 +3049,7 @@ NtUserSwitchDesktop(HDESK hdesk)
         goto Exit; // Return FALSE
     }
 
-    if (PsGetCurrentProcessSessionId() != pdesk->rpwinstaParent->dwSessionId)
+    if (PsGetCurrentProcessSessionId() != pdesk->dwSessionId)
     {
         ObDereferenceObject(pdesk);
         ERR("NtUserSwitchDesktop called for a desktop of a different session\n");
