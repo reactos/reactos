@@ -1238,7 +1238,7 @@ static void test_CopyFileEx(void)
     ok(GetLastError() == ERROR_PATH_NOT_FOUND, "expected ERROR_PATH_NOT_FOUND, got %ld\n", GetLastError());
 
 #ifdef __REACTOS__
-    /* Cover ReactOS bug in CORE-20647 */
+    /* Cover ReactOS bug in CORE-10271 */
     retok = CopyFileExA(source, dest, NULL, NULL, FALSE, 0);
     ok(retok, "CopyFileExA unexpectedly failed\n");
     ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
