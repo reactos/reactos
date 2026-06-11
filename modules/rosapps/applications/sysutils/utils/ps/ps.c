@@ -112,7 +112,7 @@ struct status {
 struct waitres {
     DWORD state;
     char  desc[17];
-}   waitreason[35 + 1] = {
+}   waitreason[44 + 1] = {
     {0, "Executive        "},
     {1, "FreePage         "},
     {2, "PageIn           "},
