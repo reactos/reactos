@@ -1237,6 +1237,52 @@ static void test_CopyFileEx(void)
     ok(!retok, "CopyFileExA unexpectedly succeeded\n");
     ok(GetLastError() == ERROR_PATH_NOT_FOUND, "expected ERROR_PATH_NOT_FOUND, got %ld\n", GetLastError());
 
+#ifdef __REACTOS__
+    /* Cover ReactOS bug in CORE-20647 */
+    retok = CopyFileExA(source, dest, NULL, NULL, FALSE, 0);
+    ok(retok, "CopyFileExA unexpectedly failed\n");
+    ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+
+    retok = CopyFileExA(source, dest, NULL, NULL, FALSE, 0);
+    ok(retok, "CopyFileExA unexpectedly failed\n");
+    ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+
+    DeleteFileA(dest);
+
+    retok = CopyFileExA(source, dest, NULL, NULL, FALSE, COPY_FILE_FAIL_IF_EXISTS);
+    ok(retok, "CopyFileExA unexpectedly failed\n");
+    ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+
+    retok = CopyFileExA(source, dest, NULL, NULL, FALSE, COPY_FILE_FAIL_IF_EXISTS);
+    ok(!retok, "CopyFileExA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_EXISTS, "expected ERROR_FILE_EXISTS, got %ld\n", GetLastError());
+
+    retok = CopyFileExA(source, dest, NULL, NULL, FALSE, COPY_FILE_RESTARTABLE);
+    ok(retok, "CopyFileExA unexpectedly failed\n");
+    ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+
+    retok = CopyFileExA(source, dest, NULL, NULL, FALSE, COPY_FILE_ALLOW_DECRYPTED_DESTINATION);
+    ok(retok, "CopyFileExA unexpectedly failed\n");
+    ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+
+    retok = CopyFileExA(source, dest, NULL, NULL, FALSE, COPY_FILE_RESTARTABLE | COPY_FILE_ALLOW_DECRYPTED_DESTINATION);
+    ok(retok, "CopyFileExA unexpectedly failed\n");
+    ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+
+    retok = CopyFileExA(source, dest, NULL, NULL, FALSE, COPY_FILE_FAIL_IF_EXISTS | COPY_FILE_RESTARTABLE);
+    ok(!retok, "CopyFileExA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_EXISTS, "expected ERROR_FILE_EXISTS, got %ld\n", GetLastError());
+
+    retok = CopyFileExA(source, dest, NULL, NULL, FALSE, COPY_FILE_FAIL_IF_EXISTS | COPY_FILE_ALLOW_DECRYPTED_DESTINATION);
+    ok(!retok, "CopyFileExA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_EXISTS, "expected ERROR_FILE_EXISTS, got %ld\n", GetLastError());
+
+    retok = CopyFileExA(source, dest, NULL, NULL, FALSE, COPY_FILE_FAIL_IF_EXISTS | COPY_FILE_RESTARTABLE | COPY_FILE_ALLOW_DECRYPTED_DESTINATION);
+    ok(!retok, "CopyFileExA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_EXISTS, "expected ERROR_FILE_EXISTS, got %ld\n", GetLastError());
+
+    DeleteFileA(dest);
+#endif
     ret = DeleteFileA(source);
     ok(ret, "DeleteFileA failed with error %ld\n", GetLastError());
     ret = DeleteFileA(dest);
