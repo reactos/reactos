@@ -476,8 +476,8 @@ IntCreateWindowStation(
     PWINSTATION_OBJECT WindowStation;
 
     TRACE("IntCreateWindowStation called\n");
+    ASSERT(UserIsEnteredExclusive());
 
-    ASSERT(phWinSta);
     *phWinSta = NULL;
 
     Status = ObOpenObjectByName(ObjectAttributes,
@@ -547,6 +547,7 @@ IntCreateWindowStation(
 
     // FIXME! TODO: Add this new window station to a linked list
 
+    /* The very first created window station is the interactive WinSta0 */
     if (InputWindowStation == NULL)
     {
         ERR("Initializing input window station\n");
@@ -558,22 +559,27 @@ IntCreateWindowStation(
         WindowStation->Flags &= ~WSS_NOIO;
 
         InitCursorImpl();
-
-        UserCreateSystemThread(ST_DESKTOP_THREAD);
         UserCreateSystemThread(ST_RIT);
+    }
+    else
+    {
+        WindowStation->Flags |= WSS_NOIO;
+    }
+
+    /* Create the desktop thread if needed */
+    if (!gptiDesktopThread)
+    {
+        UserCreateSystemThread(ST_DESKTOP_THREAD);
 
         /* Desktop functions require the desktop thread running so wait for it to initialize */
         UserLeaveCo();
         KeWaitForSingleObject(gpDesktopThreadStartedEvent,
                               UserRequest,
-                              UserMode,
+                              KernelMode,
                               FALSE,
                               NULL);
         UserEnterCo();
-    }
-    else
-    {
-        WindowStation->Flags |= WSS_NOIO;
+        ASSERT(gptiDesktopThread);
     }
 
     TRACE("IntCreateWindowStation created window station '%wZ' object 0x%p handle 0x%p\n",
@@ -581,7 +587,6 @@ IntCreateWindowStation(
 
     *phWinSta = hWinSta;
     EngSetLastError(ERROR_SUCCESS);
-
     return STATUS_SUCCESS;
 }
 
