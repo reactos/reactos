@@ -27,7 +27,7 @@ HWND hwndSAS = NULL;
 UNICODE_STRING gustrWindowStationsDir;
 HANDLE ghWinStaDir;
 
-/* INITIALIZATION FUNCTIONS ****************************************************/
+/* INITIALIZATION FUNCTIONS **************************************************/
 
 CODE_SEG("INIT")
 NTSTATUS
@@ -92,7 +92,7 @@ UserCreateWinstaDirectory(VOID)
     return Status;
 }
 
-/* OBJECT CALLBACKS ***********************************************************/
+/* OBJECT CALLBACKS **********************************************************/
 
 NTSTATUS
 NTAPI
@@ -209,7 +209,7 @@ IntWinStaOkToClose(
     return STATUS_SUCCESS;
 }
 
-/* PRIVATE FUNCTIONS **********************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
 /*
  * IntValidateWindowStationHandle
@@ -416,7 +416,7 @@ IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL)
     return pWinSta;
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * NtUserCreateWindowStation
