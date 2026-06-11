@@ -416,7 +416,7 @@ static UINT read_table_from_storage( MSIDATABASE *db, MSITABLE *t, IStorage *stg
 
     if ((t->row_count = rawsize / row_size))
     {
-        if (!(t->data = calloc( t->row_count, sizeof(USHORT *) ))) goto err;
+        if (!(t->data = calloc( t->row_count, sizeof(*t->data) ))) goto err;
         if (!(t->data_persistent = calloc( t->row_count, sizeof(BOOL) ))) goto err;
     }
 
@@ -1680,11 +1680,28 @@ static int compare_record( struct table_view *tv, UINT row, MSIRECORD *rec )
     return 1;
 }
 
-static int find_insert_index( struct table_view *tv, MSIRECORD *rec )
+static int find_insert_index( struct table_view *tv, MSIRECORD *rec, BOOL temporary )
 {
     int idx, c, low = 0, high = tv->table->row_count - 1;
 
     TRACE("%p %p\n", tv, rec);
+
+    for (c = 0; c < tv->num_cols; c++)
+    {
+        UINT ival;
+
+        if (!(tv->columns[c].type & MSITYPE_KEY)) continue;
+
+        /* Add primary key string - its index affects row index. */
+        if (tv->columns[c].type & MSITYPE_STRING &&
+                (get_table_value_from_record( tv, rec, c + 1, &ival ) == ERROR_NOT_FOUND))
+        {
+            int len;
+            const WCHAR *sval = msi_record_get_string( rec, c + 1, &len );
+            msi_add_string( tv->db->strings, sval, len, !temporary );
+        }
+        break;
+    }
 
     while (low <= high)
     {
@@ -1718,7 +1735,7 @@ static UINT TABLE_insert_row( struct tagMSIVIEW *view, MSIRECORD *rec, UINT row,
         return ERROR_FUNCTION_FAILED;
 
     if (row == -1)
-        row = find_insert_index( tv, rec );
+        row = find_insert_index( tv, rec, temporary );
 
     r = table_create_new_row( view, &row, temporary );
     TRACE("insert_row returned %08x\n", r);
