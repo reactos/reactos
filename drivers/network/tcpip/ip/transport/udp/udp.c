@@ -253,7 +253,8 @@ VOID UDPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
   PADDRESS_FILE AddrFile;
   PUDP_HEADER UDPHeader;
   PIP_ADDRESS DstAddress, SrcAddress;
-  UINT DataSize, i;
+  UINT Checksum, DataSize, Length;
+  UINT PayloadSize;
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -278,25 +279,37 @@ VOID UDPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
 
   UDPHeader = (PUDP_HEADER)IPPacket->Data;
 
-  /* Calculate and validate UDP checksum */
-  i = UDPv4ChecksumCalculate(IPv4Header,
-                             (PUCHAR)UDPHeader,
-                             WH2N(UDPHeader->Length));
-  if (i != DH2N(0x0000FFFF) && UDPHeader->Checksum != 0)
+  if (IPPacket->TotalSize < IPPacket->HeaderSize)
   {
-      TI_DbgPrint(MIN_TRACE, ("Bad checksum on packet received.\n"));
+      TI_DbgPrint(MIN_TRACE, ("Incorrect or damaged UDP packet received.\n"));
       return;
   }
 
-  /* Sanity checks */
-  i = WH2N(UDPHeader->Length);
-  if ((i < sizeof(UDP_HEADER)) || (i > IPPacket->TotalSize - IPPacket->Position)) {
+  PayloadSize = IPPacket->TotalSize - IPPacket->HeaderSize;
+  if (PayloadSize < sizeof(UDP_HEADER))
+  {
     /* Incorrect or damaged packet received, discard it */
     TI_DbgPrint(MIN_TRACE, ("Incorrect or damaged UDP packet received.\n"));
     return;
   }
 
-  DataSize = i - sizeof(UDP_HEADER);
+  /* Sanity checks */
+  Length = WH2N(UDPHeader->Length);
+  if ((Length < sizeof(UDP_HEADER)) || (Length > PayloadSize))
+  {
+    /* Incorrect or damaged packet received, discard it */
+    TI_DbgPrint(MIN_TRACE, ("Incorrect or damaged UDP packet received.\n"));
+    return;
+  }
+  DataSize = Length - sizeof(UDP_HEADER);
+
+  /* Calculate and validate UDP checksum */
+  Checksum = UDPv4ChecksumCalculate(IPv4Header, (PUCHAR)UDPHeader, Length);
+  if (Checksum != DH2N(0x0000FFFF) && UDPHeader->Checksum != 0)
+  {
+      TI_DbgPrint(MIN_TRACE, ("Bad checksum on packet received.\n"));
+      return;
+  }
 
   /* Go to UDP data area */
   IPPacket->Data = (PVOID)((ULONG_PTR)IPPacket->Data + sizeof(UDP_HEADER));
