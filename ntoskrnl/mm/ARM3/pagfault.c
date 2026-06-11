@@ -769,6 +769,53 @@ MiResolveDemandZeroFault(IN PVOID Address,
     return STATUS_PAGE_FAULT_DEMAND_ZERO;
 }
 
+VOID
+NTAPI
+MiMakeKernelPageTableValid(
+    _In_ PVOID Address)
+{
+    PEPROCESS CurrentProcess = PsGetCurrentProcess();
+    PMMPTE PointerPte = MiAddressToPte(Address);
+    PMMPDE PointerPde = MiAddressToPde(Address);
+
+#if (_MI_PAGING_LEVELS >= 3)
+    /* Check if the PPE is valid */
+    PMMPPE PointerPpe = MiAddressToPpe(Address);
+    if (PointerPpe->u.Hard.Valid == 0)
+    {
+        /* Right now, we only handle scenarios where the PPE is totally empty */
+        ASSERT(PointerPpe->u.Long == 0);
+
+        /* Resolve a demand zero fault */
+        MiResolveDemandZeroFault(PointerPde,
+                                 PointerPpe,
+                                 MM_EXECUTE_READWRITE,
+                                 CurrentProcess,
+                                 MM_NOIRQL);
+
+        /* We should come back with a valid PPE */
+        ASSERT(PointerPpe->u.Hard.Valid == 1);
+    }
+#endif
+
+    /* Check if the PDE is valid */
+    if (PointerPde->u.Hard.Valid == 0)
+    {
+        /* Right now, we only handle scenarios where the PPE is totally empty */
+        ASSERT(PointerPde->u.Long == 0);
+
+        /* Resolve a demand zero fault */
+        MiResolveDemandZeroFault(PointerPte,
+                                 PointerPde,
+                                 MM_EXECUTE_READWRITE,
+                                 CurrentProcess,
+                                 MM_NOIRQL);
+
+        /* We should come back with a valid PPE */
+        ASSERT(PointerPde->u.Hard.Valid == 1);
+    }
+}
+
 static
 NTSTATUS
 NTAPI

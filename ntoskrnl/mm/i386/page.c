@@ -665,6 +665,12 @@ MmCreateVirtualMappingUnsafeEx(
         if (!MiSynchronizeSystemPde(MiAddressToPde(Address)))
             MiFillSystemPageDirectory(Address, PAGE_SIZE);
 #endif
+
+        /* Lock the system cache WS */
+        MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+
+        /* Make the page table valid */
+        MiMakeKernelPageTableValid(Address);
     }
     else
     {
@@ -714,6 +720,10 @@ MmCreateVirtualMappingUnsafeEx(
         /* Add PDE reference */
         MiIncrementPageTableReferences(Address);
         MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
+    }
+    else
+    {
+        MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
     }
 
     return(STATUS_SUCCESS);
