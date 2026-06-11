@@ -6348,7 +6348,7 @@ NtUserMenuItemFromPoint(
       }
    }
 
-   Ret = (mi ? i : NO_SELECTED_ITEM);
+   Ret = (i < Menu->cItems ? i : NO_SELECTED_ITEM);
 
 Exit:
    UserLeave();
