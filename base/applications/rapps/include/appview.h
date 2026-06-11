@@ -398,6 +398,7 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
         FocusSelectAll = MAKELONG(0, 0x7fff),
         FocusSelectNoneCaretEnd = MAKELONG(0x7fff, 0x7fff),
     };
+    void
     SetFocusOnSearchBar(FocusSelectionMode SetSel = FocusSelectUnchanged);
     void
     SetSearchText(LPCWSTR Str);

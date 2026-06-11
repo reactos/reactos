@@ -1830,6 +1830,7 @@ CApplicationView::RefreshAvailableItem(PCWSTR PackageName)
     }
 }
 
+void
 CApplicationView::SetFocusOnSearchBar(FocusSelectionMode SetSel)
 {
     m_SearchBar->SetFocus();
