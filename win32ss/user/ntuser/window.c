@@ -2804,7 +2804,7 @@ NtUserCreateWindowEx(
 
     if(!pwnd)
     {
-        ERR("co_UserCreateWindowEx failed!\n");
+        TRACE("co_UserCreateWindowEx failed!\n");
     }
     hwnd = pwnd ? UserHMGetHandle(pwnd) : NULL;
 
