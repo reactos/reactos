@@ -311,6 +311,8 @@ HRESULT DataObject_GetHIDACount(IDataObject *pdo);
 PIDLIST_ABSOLUTE SHELL_CIDA_ILCloneFull(_In_ const CIDA *pCIDA, _In_ UINT Index);
 PIDLIST_ABSOLUTE SHELL_DataObject_ILCloneFullItem(_In_ IDataObject *pDO, _In_ UINT Index);
 HRESULT SHELL_CloneDataObject(_In_ IDataObject *pDO, _Out_ IDataObject **ppDO);
+DWORD DataObj_GetDWORD(IDataObject *pdtobj, UINT cf, DWORD dwDefault);
+HRESULT DataObj_SetDWORD(IDataObject *pdtobj, UINT cf, DWORD dwValue);
 
 EXTERN_C HRESULT
 IUnknown_InitializeCommand(

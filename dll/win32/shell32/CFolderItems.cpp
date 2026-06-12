@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include "prop.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -18,11 +19,65 @@ CFolderItem::~CFolderItem()
 {
 }
 
-HRESULT CFolderItem::Initialize(Folder* folder, LPITEMIDLIST idlist)
+HRESULT CFolderItem::Initialize(Folder* folder, LPCITEMIDLIST idlist)
 {
     m_idlist.Attach(ILClone(idlist));
+    if (!m_idlist)
+        return E_OUTOFMEMORY;
     m_Folder = folder;
     return S_OK;
+}
+
+inline HRESULT CFolderItem::GetParentShellFolderAndItem(REFIID riid, void**ppv, PCUITEMID_CHILD &pidlLast)
+{
+    return SHBindToParent(GetAbsoluteIDList(), riid, ppv, &pidlLast);
+}
+
+LPCITEMIDLIST CFolderItem::GetInternalPidlRef(IUnknown *pUnk)
+{
+    LPCITEMIDLIST pidl = NULL;
+    FolderItem2 *pFI2;
+    if (pUnk && SUCCEEDED(pUnk->QueryInterface(IID_PPV_ARG(FolderItem2, &pFI2))))
+    {
+        // This assumes we are the only implementer of CFolderItem (probably true)
+        // but when we get IParentAndItem we can do this in a safer way
+        pidl = static_cast<CFolderItem*>(pFI2)->m_idlist;
+        pFI2->Release();
+    }
+    return pidl;
+}
+
+LPCITEMIDLIST CFolderItem::GetInternalPidlRef(const VARIANT *pV)
+{
+    if (!pV)
+        return NULL;
+
+    if (V_VT(pV) == (VT_VARIANT | VT_BYREF) && V_VARIANTREF(pV))
+        pV = V_VARIANTREF(pV);
+
+    switch (V_VT(pV))
+    {
+        case VT_DISPATCH | VT_BYREF:
+            return V_DISPATCHREF(pV) ? GetInternalPidlRef(*V_DISPATCHREF(pV)) : NULL;
+        case VT_DISPATCH:
+            return GetInternalPidlRef(V_DISPATCH(pV));
+    }
+    return NULL;
+}
+
+PCUITEMID_CHILD CFolderItem::GetLeafPidlRef(const VARIANT *pV)
+{
+    return (PCUITEMID_CHILD)ILFindLastID(GetInternalPidlRef(pV));
+}
+
+HRESULT CFolderItem::GetFindDataFromIDList(WIN32_FIND_DATA &wfd)
+{
+    CComPtr<IShellFolder2> psf;
+    PCUITEMID_CHILD pidlLeaf;
+    HRESULT hr = GetParentShellFolderAndItem(IID_PPV_ARG(IShellFolder2, &psf), pidlLeaf);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return SHGetDataFromIDListW(psf, pidlLeaf, SHGDFIL_FINDDATA, &wfd, sizeof(wfd));
 }
 
 // *** FolderItem methods ***
@@ -35,12 +90,8 @@ HRESULT STDMETHODCALLTYPE CFolderItem::get_Application(IDispatch **ppid)
 HRESULT STDMETHODCALLTYPE CFolderItem::get_Parent(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
-    if (ppid)
-    {
-        *ppid = m_Folder;
-        (*ppid)->AddRef();
-    }
-    return E_NOTIMPL;
+
+    return ppid ? m_Folder->QueryInterface(IID_PPV_ARG(IDispatch, ppid)) : E_INVALIDARG;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::get_Name(BSTR *pbs)
@@ -49,9 +100,9 @@ HRESULT STDMETHODCALLTYPE CFolderItem::get_Name(BSTR *pbs)
 
     *pbs = NULL;
 
-    CComPtr<IShellFolder2> Parent;
-    LPCITEMIDLIST last_part;
-    HRESULT hr = SHBindToParent(m_idlist, IID_PPV_ARG(IShellFolder2, &Parent), &last_part);
+    CComPtr<IShellFolder> Parent;
+    PCUITEMID_CHILD last_part;
+    HRESULT hr = GetParentShellFolderAndItem(IID_PPV_ARG(IShellFolder, &Parent), last_part);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -66,7 +117,25 @@ HRESULT STDMETHODCALLTYPE CFolderItem::get_Name(BSTR *pbs)
 HRESULT STDMETHODCALLTYPE CFolderItem::put_Name(BSTR bs)
 {
     TRACE("(%p, %s)\n", this, wine_dbgstr_w(bs));
-    return E_NOTIMPL;
+
+    CComPtr<IShellFolder> psf;
+    PCUITEMID_CHILD pidlLeaf;
+    HRESULT hr = GetParentShellFolderAndItem(IID_PPV_ARG(IShellFolder, &psf), pidlLeaf);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    LPITEMIDLIST pidlNew;
+    if (SUCCEEDED(hr = psf->SetNameOf(GetHwnd(), pidlLeaf, bs, SHGDN_INFOLDER, &pidlNew)) && pidlNew)
+    {
+        LPITEMIDLIST pidlClone = ILClone(m_idlist);
+        ILRemoveLastID(pidlClone);
+        if (pidlClone && SUCCEEDED(SHILAppend(pidlNew, &pidlClone)))
+        {
+            m_idlist.Free();
+            m_idlist.Attach(pidlClone);
+        }
+    }
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::get_Path(BSTR *pbs)
@@ -93,38 +162,54 @@ HRESULT STDMETHODCALLTYPE CFolderItem::get_GetLink(IDispatch **ppid)
 
 HRESULT STDMETHODCALLTYPE CFolderItem::get_GetFolder(IDispatch **ppid)
 {
-    TRACE("(%p, %p)\n", this, ppid);
-    return E_NOTIMPL;
+    return ShellObjectCreatorInit<CFolder>(const_cast<LPITEMIDLIST>(GetFullPidlRef()), IID_PPV_ARG(IDispatch, ppid));
+}
+
+HRESULT CFolderItem::HasAttribute(DWORD sfgaof, VARIANT_BOOL *pB)
+{
+    *pB = SHGetAttributes(NULL, GetFullPidlRef(), sfgaof) ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::get_IsLink(VARIANT_BOOL *pb)
 {
     TRACE("(%p, %p)\n", this, pb);
-    return E_NOTIMPL;
+    return HasAttribute(SFGAO_LINK, pb);
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::get_IsFolder(VARIANT_BOOL *pb)
 {
     TRACE("(%p, %p)\n", this, pb);
-    return E_NOTIMPL;
+    return HasAttribute(SFGAO_FOLDER, pb);
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::get_IsFileSystem(VARIANT_BOOL *pb)
 {
     TRACE("(%p, %p)\n", this, pb);
-    return E_NOTIMPL;
+    return HasAttribute(SFGAO_FILESYSTEM, pb);
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::get_IsBrowsable(VARIANT_BOOL *pb)
 {
     TRACE("(%p, %p)\n", this, pb);
-    return E_NOTIMPL;
+    return HasAttribute(SFGAO_BROWSABLE, pb);
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::get_ModifyDate(DATE *pdt)
 {
     TRACE("(%p, %p)\n", this, pdt);
-    return E_NOTIMPL;
+
+    WIN32_FIND_DATA wfd;
+    if (SUCCEEDED(GetFindDataFromIDList(wfd)))
+    {
+        FILETIME ft;
+        FileTimeToLocalFileTime(&wfd.ftLastWriteTime, &ft);
+        WORD dd, dt;
+        if (FileTimeToDosDateTime(&ft, &dd, &dt) && DosDateTimeToVariantTime(dd, dt, pdt))
+            return S_OK;
+    }
+    *pdt = 0;
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::put_ModifyDate(DATE dt)
@@ -136,37 +221,98 @@ HRESULT STDMETHODCALLTYPE CFolderItem::put_ModifyDate(DATE dt)
 HRESULT STDMETHODCALLTYPE CFolderItem::get_Size(LONG *pul)
 {
     TRACE("(%p, %p)\n", this, pul);
-    return E_NOTIMPL;
+
+    WIN32_FIND_DATA wfd;
+    if (SUCCEEDED(GetFindDataFromIDList(wfd)))
+    {
+        *pul = wfd.nFileSizeLow;
+        return S_OK;
+    }
+    *pul = 0;
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::get_Type(BSTR *pbs)
 {
     TRACE("(%p, %p)\n", this, pbs);
-    return E_NOTIMPL;
+
+    VARIANT v;
+    V_VT(&v) = VT_EMPTY;
+    if (SUCCEEDED(GetExtendedProperty(PKEY_ItemTypeText, &v)))
+    {
+        if (SUCCEEDED(VariantChangeType(&v, &v, 0, VT_BSTR)))
+        {
+            *pbs = V_BSTR(&v);
+            return S_OK;
+        }
+        VariantClear(&v);
+    }
+    HRESULT hr = SHELL_SysAllocString(L"", pbs);
+    return hr == S_OK ? S_FALSE : hr;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::Verbs(FolderItemVerbs **ppfic)
 {
     if (!ppfic)
         return E_POINTER;
-    CFolderItemVerbs* verbs = new CComObject<CFolderItemVerbs>();
-    HRESULT hr = verbs->Init(m_idlist);
+
+    CComPtr<CFolderItemVerbs> pVerbs;
+    HRESULT hr = CFolderItemVerbs::CreateInstance(pVerbs);
+    if (SUCCEEDED(hr))
+        hr = pVerbs->Init(GetAbsoluteIDList());
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        delete verbs;
         return hr;
-    }
-    verbs->AddRef();
-    *ppfic = verbs;
+
+    *ppfic = pVerbs.Detach();
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::InvokeVerb(VARIANT vVerb)
 {
-    TRACE("(%p, %s)\n", this, wine_dbgstr_variant(&vVerb));
-    return E_NOTIMPL;
+    VARIANT empty;
+    V_VT(&empty) = VT_EMPTY;
+    return InvokeVerbEx(vVerb, empty);
 }
 
+HRESULT STDMETHODCALLTYPE CFolderItem::InvokeVerbEx(VARIANT vVerb, VARIANT vArgs)
+{
+    TRACE("(%p, %s)\n", this, wine_dbgstr_variant(&vVerb));
+
+    SHELLEXECUTEINFOW sei;
+    sei.cbSize = sizeof(sei);
+    sei.fMask = SEE_MASK_INVOKEIDLIST | SEE_MASK_FLAG_NO_UI;
+    sei.hwnd = GetHwnd();
+    sei.lpVerb = V_VT(&vVerb) == VT_BSTR ? V_BSTR(&vVerb) : NULL;
+    sei.lpFile = NULL;
+    sei.lpParameters = V_VT(&vArgs) == VT_BSTR ? V_BSTR(&vArgs) : NULL;
+    sei.lpDirectory = NULL;
+    sei.nShow = SW_SHOW;
+    sei.lpIDList = const_cast<LPITEMIDLIST>(GetAbsoluteIDList());
+    ShellExecuteExW(&sei);
+    return S_OK;
+}
+
+HRESULT CFolderItem::GetExtendedProperty(REFPROPERTYKEY pkey, VARIANT *pv)
+{
+    CComPtr<IShellFolder2> psf;
+    PCUITEMID_CHILD pidlLeaf;
+    HRESULT hr = GetParentShellFolderAndItem(IID_PPV_ARG(IShellFolder2, &psf), pidlLeaf);
+    return FAILED(hr) ? hr : psf->GetDetailsEx(pidlLeaf, reinterpret_cast<const SHCOLUMNID*>(&pkey), pv);
+}
+
+HRESULT STDMETHODCALLTYPE CFolderItem::ExtendedProperty(BSTR bsPropName, VARIANT *pv)
+{
+    if (!pv)
+        return E_INVALIDARG;
+
+    PROPERTYKEY pkeybuf;
+    const PROPERTYKEY *pPK = SHELL_GetPropertyKeyFromString(bsPropName, &pkeybuf);
+    if (pPK && GetExtendedProperty(*pPK, pv) == S_OK)
+        return S_OK;
+
+    V_VT(pv) = VT_EMPTY;
+    return S_FALSE;
+}
 
 
 CFolderItems::CFolderItems()
@@ -178,11 +324,13 @@ CFolderItems::~CFolderItems()
 {
 }
 
-HRESULT CFolderItems::Initialize(LPITEMIDLIST idlist, Folder* parent)
+HRESULT CFolderItems::Initialize(LPCITEMIDLIST idlist, Folder* parent)
 {
     CComPtr<IShellFolder> psfDesktop, psfTarget;
 
     m_idlist.Attach(ILClone(idlist));
+    if (!m_idlist)
+        return E_OUTOFMEMORY;
 
     HRESULT hr = SHGetDesktopFolder(&psfDesktop);
     if (FAILED_UNEXPECTEDLY(hr))

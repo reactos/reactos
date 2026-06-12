@@ -256,6 +256,11 @@ HRESULT WINAPI DoUnregisterServer(void);
 
 /* Property system */
 static inline HRESULT
+SHELL_SysAllocString(PCWSTR in, BSTR *out)
+{
+    return out ? ((*out = SysAllocString(in ? in : L"")) ? S_OK : E_OUTOFMEMORY) : E_INVALIDARG;
+}
+static inline HRESULT
 SHELL_CreateVariantBufferEx(VARIANT *pVar, UINT cb, VARTYPE vt)
 {
     SAFEARRAY *pSA = SafeArrayCreateVector(vt, 0, cb);

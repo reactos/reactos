@@ -10,6 +10,7 @@ extern void func_CIDLData(void);
 extern void func_CMyComputer(void);
 extern void func_CommandLineToArgvW(void);
 extern void func_CShellDesktop(void);
+extern void func_CShellDispatch(void);
 extern void func_CShellLink(void);
 extern void func_CUserNotification(void);
 extern void func_DragDrop(void);
@@ -68,6 +69,7 @@ const struct test winetest_testlist[] =
     { "CMyComputer", func_CMyComputer },
     { "CommandLineToArgvW", func_CommandLineToArgvW },
     { "CShellDesktop", func_CShellDesktop },
+    { "CShellDispatch", func_CShellDispatch },
     { "CShellLink", func_CShellLink },
     //{ "CUserNotification", func_CUserNotification }, // Test is broken on Win 2003
     { "DragDrop", func_DragDrop },
