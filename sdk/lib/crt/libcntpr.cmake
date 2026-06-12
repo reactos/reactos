@@ -31,4 +31,7 @@ target_compile_definitions(libcntpr
     _LIBCNT_
     __CRT__NO_INLINE
     CRTDLL)
+if(MSVC)
+    target_compile_definitions(libcntpr PRIVATE /Oi-)
+endif()
 add_dependencies(libcntpr psdk asm)
