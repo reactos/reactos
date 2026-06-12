@@ -1,8 +1,4 @@
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/crt/include
-    ${REACTOS_SOURCE_DIR}/sdk/include/c++)
-
 # We need different things, depending on the compiler
 if(MSVC)
     list(APPEND SOURCE
@@ -24,6 +20,9 @@ endif()
 
 add_library(cpprt ${SOURCE} ${cpprt_asm})
 set_target_cpp_properties(cpprt WITH_EXCEPTIONS)
+target_include_directories(cpprt INTERFACE
+    ${REACTOS_SOURCE_DIR}/sdk/lib/crt/include
+    ${REACTOS_SOURCE_DIR}/sdk/include/c++)
 add_dependencies(cpprt xdk)
 
 # On GCC builds, we need to link against libsupc++
