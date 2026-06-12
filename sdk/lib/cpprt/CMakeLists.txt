@@ -24,7 +24,9 @@ endif()
 
 add_library(cpprt ${SOURCE} ${cpprt_asm})
 set_target_cpp_properties(cpprt WITH_EXCEPTIONS)
-target_include_directories(cpprt INTERFACE ${REACTOS_SOURCE_DIR}/sdk/include/c++)
+target_include_directories(cpprt INTERFACE
+    ${REACTOS_SOURCE_DIR}/sdk/include/c++
+    ${REACTOS_SOURCE_DIR}/sdk/include/c++/stlport)
 add_dependencies(cpprt xdk)
 
 # On GCC builds, we need to link against libsupc++
