@@ -20,6 +20,7 @@ list(APPEND SOURCE
     PathUnExpandEnvStrings.c
     PathUnExpandEnvStringsForUser.c
     QuerySourceCreateFromKey.cpp
+    RawAccelerators.c
     SHAreIconsEqual.c
     SHGetFileDescription.c
     SHGetRestriction.c
