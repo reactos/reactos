@@ -334,7 +334,7 @@ SHQueryRawAccelerator(
         if (vKey == pAccel->key && (pAccel->fVirt & fVirtMask) == fVirtValue)
         {
             if (pCmd)
-                *pCmd = pRawAccels->Items[iItem].cmd;
+                *pCmd = pAccel->cmd;
             return TRUE;
         }
     }
