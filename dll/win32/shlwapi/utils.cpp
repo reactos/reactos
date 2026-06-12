@@ -320,8 +320,8 @@ EXTERN_C
 BOOL WINAPI
 SHQueryRawAccelerator(
     _In_ const RAWACCEL *pRawAccels,
-    _In_ BYTE fVirt1,
-    _In_ BYTE fVirt2,
+    _In_ BYTE fVirtMask,
+    _In_ BYTE fVirtValue,
     _In_ UINT vKey,
     _Out_opt_ PUINT pCmd)
 {
@@ -331,7 +331,7 @@ SHQueryRawAccelerator(
     for (INT iItem = 0; iItem < pRawAccels->cItems; ++iItem)
     {
         const ACCEL *pAccel = &pRawAccels->Items[iItem];
-        if (vKey == pAccel->key && (pAccel->fVirt & fVirt1) == fVirt2)
+        if (vKey == pAccel->key && (pAccel->fVirt & fVirtMask) == fVirtValue)
         {
             if (pCmd)
                 *pCmd = pRawAccels->Items[iItem].cmd;

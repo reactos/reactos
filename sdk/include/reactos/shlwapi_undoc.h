@@ -474,8 +474,8 @@ PRAWACCEL WINAPI SHLoadRawAccelerators(_In_ HINSTANCE hInstance, _In_ PCSTR lpTa
 BOOL WINAPI
 SHQueryRawAccelerator(
     _In_ const RAWACCEL *pRawAccels,
-    _In_ BYTE fVirt1,
-    _In_ BYTE fVirt2,
+    _In_ BYTE fVirtMask,
+    _In_ BYTE fVirtValue,
     _In_ UINT vKey,
     _Out_opt_ PUINT pCmd);
 
