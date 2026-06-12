@@ -90,13 +90,13 @@ jobs:
         arch: [i386, amd64]
         config: [Debug, Release]
         dllver: ['0x502', '0x600']
-        exclude: # Build NT6 ISOs only with the latest toolset when compiled as a debug build
-          - dllver: 0x600
+        exclude:
+          - dllver: 0x502 # VS2026 fails to build with error C2169: 'wcsncmp': intrinsic function, cannot be defined
+            toolset: 14
+            config: Release
+          - dllver: 0x600 # Build NT6 ISOs only with the latest toolset when compiled as a debug build
             toolset: 14.2
           - dllver: 0x600
-            config: Release
-          - dllver: 0x502
-            toolset: 14
             config: Release
       fail-fast: false
     runs-on: ${{matrix.os}}
