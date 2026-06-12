@@ -291,22 +291,20 @@ SHLoadRawAccelerators(_In_ HINSTANCE hInstance, _In_ PCSTR lpTableName)
 
     INT cItems = CopyAcceleratorTableA(hAccel, NULL, 0);
     if (cItems <= 0)
-    {
-        DestroyAcceleratorTable(hAccel);
-        return NULL;
-    }
+        goto Cleanup;
 
     pRawAccels = (PRAWACCEL)LocalAlloc(LPTR, sizeof(RAWACCEL) + (cItems - 1) * sizeof(ACCEL));
-    if (pRawAccels)
+    if (!pRawAccels)
+        goto Cleanup;
+
+    pRawAccels->cItems = cItems;
+    if (cItems != CopyAcceleratorTableA(hAccel, pRawAccels->Items, cItems))
     {
-        pRawAccels->cItems = cItems;
-        if (cItems != CopyAcceleratorTableA(hAccel, pRawAccels->Items, cItems))
-        {
-            LocalFree(pRawAccels);
-            pRawAccels = NULL;
-        }
+        LocalFree(pRawAccels);
+        pRawAccels = NULL;
     }
 
+Cleanup:
     DestroyAcceleratorTable(hAccel);
     return pRawAccels;
 }
@@ -323,15 +321,13 @@ SHQueryRawAccelerator(
     _In_ UINT vKey,
     _Out_opt_ PUINT pCmd)
 {
-    INT iItem;
-
     if (pCmd)
         *pCmd = 0;
 
-    for (iItem = 0; iItem < pRawAccels->cItems; ++iItem)
+    for (INT iItem = 0; iItem < pRawAccels->cItems; ++iItem)
     {
         const ACCEL *pAccel = &pRawAccels->Items[iItem];
-        if (vKey == pAccel->key && fVirt2 == (fVirt1 & pAccel->fVirt))
+        if (vKey == pAccel->key && (pAccel->fVirt & fVirt1) == fVirt2)
         {
             if (pCmd)
                 *pCmd = pRawAccels->Items[iItem].cmd;
