@@ -1239,7 +1239,8 @@ static void test_CopyFileEx(void)
 
 #ifdef __REACTOS__
     /* Cover ReactOS bug in CORE-10271:
-     * CopyFileEx was handling any set flags as COPY_FILE_FAIL_IF_EXISTS. */
+     * BasepCopyFileExW was handling any set flags as COPY_FILE_FAIL_IF_EXISTS.
+     * This affected CopyFileEx, PrivCopyFileEx, and MoveFileWithProgress */
     retok = CopyFileExA(source, dest, NULL, NULL, FALSE, 0);
     ok(retok, "CopyFileExA unexpectedly failed\n");
     ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
