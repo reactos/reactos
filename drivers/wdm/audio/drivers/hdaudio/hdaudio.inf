@@ -1,0 +1,1395 @@
+[SourceDisksNames]
+3426=windows cd
+
+[SourceDisksFiles]
+hdaudio.sys         = 3426
+
+[Version]
+Signature="$Windows NT$"
+Class=MEDIA
+ClassGuid={4d36e96c-e325-11ce-bfc1-08002be10318}
+Provider=ReactOS
+
+DriverVer=06/21/2006,6.0.6002.18005
+pnplockdown=1
+
+[DestinationDirs]
+DefaultDestDir      =10
+HdAudModel.CopyList =10,system32\drivers
+
+HdAudShortCut.CopyList =10,system^32
+
+[Manufacturer]
+ReactOS = ReactOS, ntx86
+
+[SignatureAttributes]
+drmk.sys=SignatureAttributes.DRM
+hdaudio.sys=SignatureAttributes.DRM
+portcls.sys=SignatureAttributes.DRM
+
+[SignatureAttributes.DRM]
+DRMLevel=1200
+
+[ControlFlags]
+ExcludeFromSelect = *
+
+[ReactOS.ntx86]
+%HdAudioFunctionDriver.Generic.DeviceDesc%  = HdAudModel, ,HDAUDIO\FUNC_01
+
+
+[HdAudModel]
+Include=ks.inf,wdmaudio.inf
+Needs=KS.Registration,WDMAUDIO.Registration,mssysfx.CopyFilesAndRegister
+CopyFiles = HdAudModel.CopyList
+AddReg    = HdAudModel.AddReg
+AddProperty = HdAudBranding.AddProperty, HdAudModel.AddProperty
+
+ExcludeID = HDAUDIO\FUNC_01&VEN_8384&DEV_7661&SUBSYS_104D0800&REV_1042
+
+ExcludeID = HDAUDIO\FUNC_01&VEN_8384&DEV_7661&SUBSYS_104D0B00&REV_1042
+
+[HdAudModel.AddProperty]
+{F3E80BEF-1723-4FF2-BCC4-7F83DC5E46D4},2,7,,1
+
+
+[HdAudOEM.CopyFiles]
+CopyFiles=HdAudModel.CopyList
+
+[HdAudOEM.AddReg]
+AddReg=HdAudModel.AddReg
+
+[HdAudModel.HW]
+AddReg = HdAudSecurity.AddReg
+
+[HdAudModel.Services]
+AddService=HdAudAddService, 0x00000002, HdAud_Service_Install
+
+[HdAud_Service_Install]
+DisplayName   = %UAAFunctionDriverForHdAudio.SvcDesc%
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 1
+ServiceBinary = %10%\system32\drivers\HdAudio.sys
+
+[HdAudModel.CopyList]
+HdAudio.sys,,,0x0100
+
+[HdAudModel.AddReg]
+HKR,,Driver,,HdAudio.sys
+
+HKR,Drivers,SubClasses,,"wave,midi,mixer,aux"
+
+HKR,Drivers\wave\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\midi\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\mixer\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\aux\wdmaud.drv,Driver,,wdmaud.drv
+
+HKR,Drivers\wave\wdmaud.drv,Description,,%HdAudioDeviceDescription%
+HKR,Drivers\midi\wdmaud.drv,Description,,%HdAudioDeviceDescription%
+HKR,Drivers\mixer\wdmaud.drv,Description,,%HdAudioDeviceDescription%
+HKR,Drivers\aux\wdmaud.drv,Description,,%HdAudioDeviceDescription%
+
+HKR,,DisableSetupDiChangeState,1,00,00,00,00 
+
+HKR,GlobalSettings,DcOffsetWorkaround,1,01,00,00,00 
+HKR,GlobalSettings,ResetAudioFgOnStart,1,01,00,00,00 
+HKR,GlobalSettings,SysAudioTopoMiniportWorkaround,1,01,00,00,00 
+
+HKR,GlobalSettings,ValidateCodecWrites,1,00,00,00,00 
+HKR,GlobalSettings,SendFakePcxCfgDefVerbs,1,00,00,00,00 
+HKR,GlobalSettings,SpdifOutputEchosRearRenderWhenNoAc3,1,01,00,00,00 
+HKR,GlobalSettings,HpShutsOffRearSpeaker,1,00,00,00,00 
+HKR,GlobalSettings,HpMode,1,01,00,00,00 
+HKR,GlobalSettings,EnableDynamicDevices,1,01,00,00,00 
+HKR,GlobalSettings,SetSpdifVCfg,1,01,00,00,00 
+
+HKR,GlobalSettings,EnableWaveRT,1,01,00,00,00
+
+HKR,GlobalSettings\\SpdifOut,ExternalSpdifReceiverSupportedSampleRates44100,1,00,00,00,00 
+HKR,GlobalSettings\\SpdifOut,ExternalSpdifReceiverSupportedSampleRates48000,1,01,00,00,00 
+HKR,GlobalSettings\\SpdifOut,ExternalSpdifReceiverSupportedSampleRates96000,1,00,00,00,00 
+
+HKR,GlobalSettings\\SpdifOut,ExternalSpdifReceiverSupportedBitDepths16,1,01,00,00,00 
+HKR,GlobalSettings\\SpdifOut,ExternalSpdifReceiverSupportedBitDepths20,1,00,00,00,00 
+HKR,GlobalSettings\\SpdifOut,ExternalSpdifReceiverSupportedBitDepths24,1,00,00,00,00 
+HKR,GlobalSettings\\SpdifOut,ExternalSpdifReceiverSupportedBitDepths32,1,00,00,00,00 
+
+HKR,GlobalSettings\\SpdifIn,SpdifInputBitDepth,1,00,00,00,00 
+HKR,GlobalSettings\\SpdifIn,SpdifInputSampleRate,1,01,00,00,00
+
+HKR,PowerSettings,ConservationIdleTime,1,1e,00,00,0     
+HKR,PowerSettings,PerformanceIdleTime,1,00,00,00,00     
+HKR,PowerSettings,IdlePowerState,1,03,00,00,00          
+
+HKLM,SYSTEM\CurrentControlSet\Control\MediaCategories\%HdAudGuidPrimaryLineOutDac%,Name,,%PrimaryLineOutDacName%
+HKLM,SYSTEM\CurrentControlSet\Control\MediaCategories\%HdAudGuidPrimaryLineOutDac%,Display,1,00,00,00,00
+HKLM,SYSTEM\CurrentControlSet\Control\MediaCategories\%HdAudGuidDisableDigitalOutput%,Name,,%DisableDigitalOutputName%
+HKLM,SYSTEM\CurrentControlSet\Control\MediaCategories\%HdAudGuidDisableDigitalOutput%,Display,1,00,00,00,00
+HKLM,SYSTEM\CurrentControlSet\Control\MediaCategories\%HdAudGuidFrontHPOutDac%,Name,,%FrontHPOutDacName%
+HKLM,SYSTEM\CurrentControlSet\Control\MediaCategories\%HdAudGuidFrontHPOutDac%,Display,1,00,00,00,00
+
+HKLM,SYSTEM\CurrentControlSet\Control\MediaCategories\%GUID.REDIRECTED_HEADPHONE_PIN%,Name,,%REDIRECTED_HEADPHONE.PinName%
+HKLM,SYSTEM\CurrentControlSet\Control\MediaCategories\%GUID.REDIRECTED_HEADPHONE_PIN%,Display,1,00,00,00,00
+
+HKLM,SYSTEM\CurrentControlSet\Control\MediaCategories\%GUID.REDIRECTED_INTERNAL_SPEAKER_PIN%,Name,,%REDIRECTED_INTERNAL_SPEAKER.PinName%
+HKLM,SYSTEM\CurrentControlSet\Control\MediaCategories\%GUID.REDIRECTED_INTERNAL_SPEAKER_PIN%,Display,1,00,00,00,00
+
+
+[HdAudBranding.AddProperty]
+DeviceBrandingIcon,,,,"%1%\HDAudio.sys,-203"
+DeviceVendorWebSite,,,,"http://www.ReactOS.com"
+
+
+[HdAudModel.Interfaces]
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpeakerWave%, HdAudModel.PrimarySpeakerWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSpeakerWave%, HdAudModel.PrimarySpeakerWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSpeakerWave%, HdAudModel.PrimarySpeakerWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpeakerTopo%, HdAudModel.PrimarySpeakerTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSpeakerTopo%, HdAudModel.PrimarySpeakerTopo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpeaker2Wave%, HdAudModel.PrimarySpeaker2Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSpeaker2Wave%, HdAudModel.PrimarySpeaker2Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSpeaker2Wave%, HdAudModel.PrimarySpeaker2Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpeaker2Topo%, HdAudModel.PrimarySpeaker2Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSpeaker2Topo%, HdAudModel.PrimarySpeaker2Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpeaker3Wave%, HdAudModel.PrimarySpeaker3Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSpeaker3Wave%, HdAudModel.PrimarySpeaker3Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSpeaker3Wave%, HdAudModel.PrimarySpeaker3Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpeaker3Topo%, HdAudModel.PrimarySpeaker3Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSpeaker3Topo%, HdAudModel.PrimarySpeaker3Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpeaker4Wave%, HdAudModel.PrimarySpeaker4Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSpeaker4Wave%, HdAudModel.PrimarySpeaker4Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSpeaker4Wave%, HdAudModel.PrimarySpeaker4Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpeaker4Topo%, HdAudModel.PrimarySpeaker4Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSpeaker4Topo%, HdAudModel.PrimarySpeaker4Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpeaker5Wave%, HdAudModel.PrimarySpeaker5Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSpeaker5Wave%, HdAudModel.PrimarySpeaker5Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSpeaker5Wave%, HdAudModel.PrimarySpeaker5Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpeaker5Topo%, HdAudModel.PrimarySpeaker5Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSpeaker5Topo%, HdAudModel.PrimarySpeaker5Topo
+
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineOutWave%, HdAudModel.PrimaryLineOutWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eLineOutWave%, HdAudModel.PrimaryLineOutWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineOutWave%, HdAudModel.PrimaryLineOutWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineOutTopo%, HdAudModel.PrimaryLineOutTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineOutTopo%, HdAudModel.PrimaryLineOutTopo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineOut2Wave%, HdAudModel.PrimaryLineOut2Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eLineOut2Wave%, HdAudModel.PrimaryLineOut2Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineOut2Wave%, HdAudModel.PrimaryLineOut2Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineOut2Topo%, HdAudModel.PrimaryLineOut2Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineOut2Topo%, HdAudModel.PrimaryLineOut2Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineOut3Wave%, HdAudModel.PrimaryLineOut3Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eLineOut3Wave%, HdAudModel.PrimaryLineOut3Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineOut3Wave%, HdAudModel.PrimaryLineOut3Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineOut3Topo%, HdAudModel.PrimaryLineOut3Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineOut3Topo%, HdAudModel.PrimaryLineOut3Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineOut4Wave%, HdAudModel.PrimaryLineOut4Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eLineOut4Wave%, HdAudModel.PrimaryLineOut4Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineOut4Wave%, HdAudModel.PrimaryLineOut4Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineOut4Topo%, HdAudModel.PrimaryLineOut4Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineOut4Topo%, HdAudModel.PrimaryLineOut4Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineOut5Wave%, HdAudModel.PrimaryLineOut5Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eLineOut5Wave%, HdAudModel.PrimaryLineOut5Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineOut5Wave%, HdAudModel.PrimaryLineOut5Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineOut5Topo%, HdAudModel.PrimaryLineOut5Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineOut5Topo%, HdAudModel.PrimaryLineOut5Topo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineConnectorWave%, HdAudModel.PrimaryLineConnectorWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eLineConnectorWave%, HdAudModel.PrimaryLineConnectorWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineConnectorWave%, HdAudModel.PrimaryLineConnectorWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineConnectorTopo%, HdAudModel.PrimaryLineConnectorTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineConnectorTopo%, HdAudModel.PrimaryLineConnectorTopo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineConnector2Wave%, HdAudModel.PrimaryLineConnector2Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eLineConnector2Wave%, HdAudModel.PrimaryLineConnector2Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineConnector2Wave%, HdAudModel.PrimaryLineConnector2Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineConnector2Topo%, HdAudModel.PrimaryLineConnector2Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineConnector2Topo%, HdAudModel.PrimaryLineConnector2Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineConnector3Wave%, HdAudModel.PrimaryLineConnector3Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eLineConnector3Wave%, HdAudModel.PrimaryLineConnector3Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineConnector3Wave%, HdAudModel.PrimaryLineConnector3Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineConnector3Topo%, HdAudModel.PrimaryLineConnector3Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineConnector3Topo%, HdAudModel.PrimaryLineConnector3Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineConnector4Wave%, HdAudModel.PrimaryLineConnector4Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eLineConnector4Wave%, HdAudModel.PrimaryLineConnector4Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineConnector4Wave%, HdAudModel.PrimaryLineConnector4Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineConnector4Topo%, HdAudModel.PrimaryLineConnector4Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineConnector4Topo%, HdAudModel.PrimaryLineConnector4Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineConnector5Wave%, HdAudModel.PrimaryLineConnector5Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eLineConnector5Wave%, HdAudModel.PrimaryLineConnector5Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineConnector5Wave%, HdAudModel.PrimaryLineConnector5Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineConnector5Topo%, HdAudModel.PrimaryLineConnector5Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineConnector5Topo%, HdAudModel.PrimaryLineConnector5Topo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHeadphoneWave%, HdAudModel.IndependentHeadphoneWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eHeadphoneWave%, HdAudModel.IndependentHeadphoneWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eHeadphoneWave%, HdAudModel.IndependentHeadphoneWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHeadphoneTopo%, HdAudModel.IndependentHeadphoneTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eHeadphoneTopo%, HdAudModel.IndependentHeadphoneTopo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHeadphone2Wave%, HdAudModel.IndependentHeadphone2Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eHeadphone2Wave%, HdAudModel.IndependentHeadphone2Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eHeadphone2Wave%, HdAudModel.IndependentHeadphone2Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHeadphone2Topo%, HdAudModel.IndependentHeadphone2Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eHeadphone2Topo%, HdAudModel.IndependentHeadphone2Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHeadphone3Wave%, HdAudModel.IndependentHeadphone3Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eHeadphone3Wave%, HdAudModel.IndependentHeadphone3Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eHeadphone3Wave%, HdAudModel.IndependentHeadphone3Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHeadphone3Topo%, HdAudModel.IndependentHeadphone3Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eHeadphone3Topo%, HdAudModel.IndependentHeadphone3Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHeadphone4Wave%, HdAudModel.IndependentHeadphone4Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eHeadphone4Wave%, HdAudModel.IndependentHeadphone4Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eHeadphone4Wave%, HdAudModel.IndependentHeadphone4Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHeadphone4Topo%, HdAudModel.IndependentHeadphone4Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eHeadphone4Topo%, HdAudModel.IndependentHeadphone4Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHeadphone5Wave%, HdAudModel.IndependentHeadphone5Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eHeadphone5Wave%, HdAudModel.IndependentHeadphone5Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eHeadphone5Wave%, HdAudModel.IndependentHeadphone5Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHeadphone5Topo%, HdAudModel.IndependentHeadphone5Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eHeadphone5Topo%, HdAudModel.IndependentHeadphone5Topo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpdifOutSpeakerWave%, HdAudModel.SpdifOutSpeakerWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSpdifOutSpeakerWave%, HdAudModel.SpdifOutSpeakerWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSpdifOutSpeakerWave%, HdAudModel.SpdifOutSpeakerWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpdifOutSpeakerTopo%, HdAudModel.SpdifOutSpeakerTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSpdifOutSpeakerTopo%, HdAudModel.SpdifOutSpeakerTopo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpdifOutLineOutWave%, HdAudModel.SpdifOutLineOutWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSpdifOutLineOutWave%, HdAudModel.SpdifOutLineOutWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSpdifOutLineOutWave%, HdAudModel.SpdifOutLineOutWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpdifOutLineOutTopo%, HdAudModel.SpdifOutLineOutTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSpdifOutLineOutTopo%, HdAudModel.SpdifOutLineOutTopo
+
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpdifOutWave%, HdAudModel.DigitalOutputWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSpdifOutWave%, HdAudModel.DigitalOutputWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSpdifOutWave%, HdAudModel.DigitalOutputWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpdifOutTopo%, HdAudModel.DigitalOutputTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSpdifOutTopo%, HdAudModel.DigitalOutputTopo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHDMIOutWave%, HdAudModel.HDMIOutputWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eHDMIOutWave%, HdAudModel.HDMIOutputWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eHDMIOutWave%, HdAudModel.HDMIOutputWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eHDMIOutTopo%, HdAudModel.HDMIOutputTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eHDMIOutTopo%, HdAudModel.HDMIOutputTopo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpSpeakerWave%, HdAudModel.SlavedHpSpeakerWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedHpSpeakerWave%, HdAudModel.SlavedHpSpeakerWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedHpSpeakerWave%, HdAudModel.SlavedHpSpeakerWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpSpeakerTopo%, HdAudModel.SlavedHpSpeakerTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedHpSpeakerTopo%, HdAudModel.SlavedHpSpeakerTopo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpSpeaker2Wave%, HdAudModel.SlavedHpSpeaker2Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedHpSpeaker2Wave%, HdAudModel.SlavedHpSpeaker2Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedHpSpeaker2Wave%, HdAudModel.SlavedHpSpeaker2Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpSpeaker2Topo%, HdAudModel.SlavedHpSpeaker2Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedHpSpeaker2Topo%, HdAudModel.SlavedHpSpeaker2Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpSpeaker3Wave%, HdAudModel.SlavedHpSpeaker3Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedHpSpeaker3Wave%, HdAudModel.SlavedHpSpeaker3Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedHpSpeaker3Wave%, HdAudModel.SlavedHpSpeaker3Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpSpeaker3Topo%, HdAudModel.SlavedHpSpeaker3Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedHpSpeaker3Topo%, HdAudModel.SlavedHpSpeaker3Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpSpeaker4Wave%, HdAudModel.SlavedHpSpeaker4Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedHpSpeaker4Wave%, HdAudModel.SlavedHpSpeaker4Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedHpSpeaker4Wave%, HdAudModel.SlavedHpSpeaker4Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpSpeaker4Topo%, HdAudModel.SlavedHpSpeaker4Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedHpSpeaker4Topo%, HdAudModel.SlavedHpSpeaker4Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpSpeaker5Wave%, HdAudModel.SlavedHpSpeaker5Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedHpSpeaker5Wave%, HdAudModel.SlavedHpSpeaker5Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedHpSpeaker5Wave%, HdAudModel.SlavedHpSpeaker5Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpSpeaker5Topo%, HdAudModel.SlavedHpSpeaker5Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedHpSpeaker5Topo%, HdAudModel.SlavedHpSpeaker5Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpLineOutWave%, HdAudModel.SlavedHpLineOutWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedHpLineOutWave%, HdAudModel.SlavedHpLineOutWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedHpLineOutWave%, HdAudModel.SlavedHpLineOutWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpLineOutTopo%, HdAudModel.SlavedHpLineOutTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedHpLineOutTopo%, HdAudModel.SlavedHpLineOutTopo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpLineOut2Wave%, HdAudModel.SlavedHpLineOut2Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedHpLineOut2Wave%, HdAudModel.SlavedHpLineOut2Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedHpLineOut2Wave%, HdAudModel.SlavedHpLineOut2Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpLineOut2Topo%, HdAudModel.SlavedHpLineOut2Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedHpLineOut2Topo%, HdAudModel.SlavedHpLineOut2Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpLineOut3Wave%, HdAudModel.SlavedHpLineOut3Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedHpLineOut3Wave%, HdAudModel.SlavedHpLineOut3Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedHpLineOut3Wave%, HdAudModel.SlavedHpLineOut3Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpLineOut3Topo%, HdAudModel.SlavedHpLineOut3Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedHpLineOut3Topo%, HdAudModel.SlavedHpLineOut3Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpLineOut4Wave%, HdAudModel.SlavedHpLineOut4Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedHpLineOut4Wave%, HdAudModel.SlavedHpLineOut4Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedHpLineOut4Wave%, HdAudModel.SlavedHpLineOut4Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpLineOut4Topo%, HdAudModel.SlavedHpLineOut4Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedHpLineOut4Topo%, HdAudModel.SlavedHpLineOut4Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpLineOut5Wave%, HdAudModel.SlavedHpLineOut5Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedHpLineOut5Wave%, HdAudModel.SlavedHpLineOut5Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedHpLineOut5Wave%, HdAudModel.SlavedHpLineOut5Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedHpLineOut5Topo%, HdAudModel.SlavedHpLineOut5Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedHpLineOut5Topo%, HdAudModel.SlavedHpLineOut5Topo
+
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedLineOutSpeakerWave%, HdAudModel.PrimaryRedirLineOutWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedLineOutSpeakerWave%, HdAudModel.PrimaryRedirLineOutWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedLineOutSpeakerWave%, HdAudModel.PrimaryRedirLineOutWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedLineOutSpeakerTopo%, HdAudModel.PrimaryRedirLineOutTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedLineOutSpeakerTopo%, HdAudModel.PrimaryRedirLineOutTopo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedSpeakerSpeakerWave%, HdAudModel.PrimaryRedirSpeakerWave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_eSlavedSpeakerSpeakerWave%, HdAudModel.PrimaryRedirSpeakerWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSlavedSpeakerSpeakerWave%, HdAudModel.PrimaryRedirSpeakerWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSlavedSpeakerSpeakerTopo%, HdAudModel.PrimaryRedirSpeakerTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSlavedSpeakerSpeakerTopo%, HdAudModel.PrimaryRedirSpeakerTopo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicInWave%, HdAudModel.IndependentMicWave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eMicInWave%, HdAudModel.IndependentMicWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eMicInWave%, HdAudModel.IndependentMicWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicInTopo%, HdAudModel.IndependentMicTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eMicInTopo%, HdAudModel.IndependentMicTopo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicIn2Wave%, HdAudModel.IndependentMic2Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eMicIn2Wave%, HdAudModel.IndependentMic2Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eMicIn2Wave%, HdAudModel.IndependentMic2Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicIn2Topo%, HdAudModel.IndependentMic2Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eMicIn2Topo%, HdAudModel.IndependentMic2Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicIn3Wave%, HdAudModel.IndependentMic3Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eMicIn3Wave%, HdAudModel.IndependentMic3Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eMicIn3Wave%, HdAudModel.IndependentMic3Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicIn3Topo%, HdAudModel.IndependentMic3Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eMicIn3Topo%, HdAudModel.IndependentMic3Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicIn4Wave%, HdAudModel.IndependentMic4Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eMicIn4Wave%, HdAudModel.IndependentMic4Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eMicIn4Wave%, HdAudModel.IndependentMic4Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicIn4Topo%, HdAudModel.IndependentMic4Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eMicIn4Topo%, HdAudModel.IndependentMic4Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicIn5Wave%, HdAudModel.IndependentMic5Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eMicIn5Wave%, HdAudModel.IndependentMic5Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eMicIn5Wave%, HdAudModel.IndependentMic5Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicIn5Topo%, HdAudModel.IndependentMic5Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eMicIn5Topo%, HdAudModel.IndependentMic5Topo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eCDInWave%, HdAudModel.CDInWave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eCDInWave%, HdAudModel.CDInWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eCDInWave%, HdAudModel.CDInWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eCDInTopo%, HdAudModel.CDInTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eCDInTopo%, HdAudModel.CDInTopo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineInWave%, HdAudModel.PrimaryLineInWave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eLineInWave%, HdAudModel.PrimaryLineInWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineInWave%, HdAudModel.PrimaryLineInWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineInTopo%, HdAudModel.PrimaryLineInTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineInTopo%, HdAudModel.PrimaryLineInTopo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineIn2Wave%, HdAudModel.PrimaryLineIn2Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eLineIn2Wave%, HdAudModel.PrimaryLineIn2Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineIn2Wave%, HdAudModel.PrimaryLineIn2Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineIn2Topo%, HdAudModel.PrimaryLineIn2Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineIn2Topo%, HdAudModel.PrimaryLineIn2Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineIn3Wave%, HdAudModel.PrimaryLineIn3Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eLineIn3Wave%, HdAudModel.PrimaryLineIn3Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineIn3Wave%, HdAudModel.PrimaryLineIn3Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineIn3Topo%, HdAudModel.PrimaryLineIn3Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineIn3Topo%, HdAudModel.PrimaryLineIn3Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineIn4Wave%, HdAudModel.PrimaryLineIn4Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eLineIn4Wave%, HdAudModel.PrimaryLineIn4Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineIn4Wave%, HdAudModel.PrimaryLineIn4Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineIn4Topo%, HdAudModel.PrimaryLineIn4Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineIn4Topo%, HdAudModel.PrimaryLineIn4Topo
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineIn5Wave%, HdAudModel.PrimaryLineIn5Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eLineIn5Wave%, HdAudModel.PrimaryLineIn5Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eLineIn5Wave%, HdAudModel.PrimaryLineIn5Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eLineIn5Topo%, HdAudModel.PrimaryLineIn5Topo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eLineIn5Topo%, HdAudModel.PrimaryLineIn5Topo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpdifInWave%, HdAudModel.DigitalInputWave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eSpdifInWave%, HdAudModel.DigitalInputWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eSpdifInWave%, HdAudModel.DigitalInputWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eSpdifInTopo%, HdAudModel.DigitalInputTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eSpdifInTopo%, HdAudModel.DigitalInputTopo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eAuxInWave%, AzAudModel.AuxInWave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eAuxInWave%, AzAudModel.AuxInWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eAuxInWave%, AzAudModel.AuxInWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eAuxInTopo%, AzAudModel.AuxInTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eAuxInTopo%, AzAudModel.AuxInTopo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMuxedCaptureWave%, HdAudModel.MuxedCaptureWave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eMuxedCaptureWave%, HdAudModel.MuxedCaptureWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eMuxedCaptureWave%, HdAudModel.MuxedCaptureWave 
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMuxedCaptureTopo%, HdAudModel.MuxedCaptureTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eMuxedCaptureTopo%, HdAudModel.MuxedCaptureTopo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMixedCaptureWave%, HdAudModel.MixedCaptureWave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eMixedCaptureWave%, HdAudModel.MixedCaptureWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eMixedCaptureWave%, HdAudModel.MixedCaptureWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMixedCaptureTopo%, HdAudModel.MixedCaptureTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eMixedCaptureTopo%, HdAudModel.MixedCaptureTopo
+
+
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicArrayWave%, HdAudModel.MicArrayWave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_eMicArrayWave%, HdAudModel.MicArrayWave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_eMicArrayWave%, HdAudModel.MicArrayWave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_eMicArrayTopo%, HdAudModel.MicArrayTopo
+AddInterface=%KSCATEGORY_TOPOLOGY%,%KSNAME_eMicArrayTopo%, HdAudModel.MicArrayTopo
+
+[HDAudio.SysFx.Render]
+HKR,"FX\\0",%PKEY_ItemNameDisplay%,,%FX_FriendlyName%
+HKR,"FX\\0",%PKEY_FX_PreMixClsid%,,%FX_PREMIX_CLSID%
+HKR,"FX\\0",%PKEY_FX_PostMixClsid%,,%FX_POSTMIX_CLSID%
+HKR,"FX\\0",%PKEY_FX_UiClsid%,,%FX_UI_CLSID%
+HKR,"FX\\0",%PKEY_FX_Association%,,%KSNODETYPE_ANY%
+
+
+
+
+[HdAudModel.PrimarySpeakerWave]
+AddReg = HdAudModel.PrimarySpeakerWave.AddReg
+[HdAudModel.PrimarySpeakerWave.AddReg]
+HKR,,FriendlyName,,%PrimarySpeakerWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimarySpeakerTopo]
+AddReg = HdAudModel.PrimarySpeakerTopo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimarySpeakerTopo.AddReg]
+HKR,,FriendlyName,,%PrimarySpeakerTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimarySpeaker2Wave]
+AddReg = HdAudModel.PrimarySpeaker2Wave.AddReg
+[HdAudModel.PrimarySpeaker2Wave.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker2WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimarySpeaker2Topo]
+AddReg = HdAudModel.PrimarySpeaker2Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimarySpeaker2Topo.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker2TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimarySpeaker3Wave]
+AddReg = HdAudModel.PrimarySpeaker3Wave.AddReg
+[HdAudModel.PrimarySpeaker3Wave.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker3WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimarySpeaker3Topo]
+AddReg = HdAudModel.PrimarySpeaker3Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimarySpeaker3Topo.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker3TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimarySpeaker4Wave]
+AddReg = HdAudModel.PrimarySpeaker4Wave.AddReg
+[HdAudModel.PrimarySpeaker4Wave.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker4WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimarySpeaker4Topo]
+AddReg = HdAudModel.PrimarySpeaker4Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimarySpeaker4Topo.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker4TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimarySpeaker5Wave]
+AddReg = HdAudModel.PrimarySpeaker5Wave.AddReg
+[HdAudModel.PrimarySpeaker5Wave.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker5WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimarySpeaker5Topo]
+AddReg = HdAudModel.PrimarySpeaker5Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimarySpeaker5Topo.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker5TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+
+[HdAudModel.PrimaryLineOutWave]
+AddReg = HdAudModel.PrimaryLineOutWave.AddReg
+[HdAudModel.PrimaryLineOutWave.AddReg]
+HKR,,FriendlyName,,%PrimarySpeakerWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineOutTopo]
+AddReg = HdAudModel.PrimaryLineOutTopo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimaryLineOutTopo.AddReg]
+HKR,,FriendlyName,,%PrimarySpeakerTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineOut2Wave]
+AddReg = HdAudModel.PrimaryLineOut2Wave.AddReg
+[HdAudModel.PrimaryLineOut2Wave.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker2WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineOut2Topo]
+AddReg = HdAudModel.PrimaryLineOut2Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimaryLineOut2Topo.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker2TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineOut3Wave]
+AddReg = HdAudModel.PrimaryLineOut3Wave.AddReg
+[HdAudModel.PrimaryLineOut3Wave.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker3WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineOut3Topo]
+AddReg = HdAudModel.PrimaryLineOut3Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimaryLineOut3Topo.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker3TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineOut4Wave]
+AddReg = HdAudModel.PrimaryLineOut4Wave.AddReg
+[HdAudModel.PrimaryLineOut4Wave.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker4WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineOut4Topo]
+AddReg = HdAudModel.PrimaryLineOut4Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimaryLineOut4Topo.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker4TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineOut5Wave]
+AddReg = HdAudModel.PrimaryLineOut5Wave.AddReg
+[HdAudModel.PrimaryLineOut5Wave.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker5WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineOut5Topo]
+AddReg = HdAudModel.PrimaryLineOut5Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimaryLineOut5Topo.AddReg]
+HKR,,FriendlyName,,%PrimarySpeaker5TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+
+[HdAudModel.PrimaryLineConnectorWave]
+AddReg = HdAudModel.PrimaryLineConnectorWave.AddReg
+[HdAudModel.PrimaryLineConnectorWave.AddReg]
+HKR,,FriendlyName,,%PrimaryLineConnectorWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineConnectorTopo]
+AddReg = HdAudModel.PrimaryLineConnectorTopo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimaryLineConnectorTopo.AddReg]
+HKR,,FriendlyName,,%PrimaryLineConnectorTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineConnector2Wave]
+AddReg = HdAudModel.PrimaryLineConnector2Wave.AddReg
+[HdAudModel.PrimaryLineConnector2Wave.AddReg]
+HKR,,FriendlyName,,%PrimaryLineConnector2WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineConnector2Topo]
+AddReg = HdAudModel.PrimaryLineConnector2Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimaryLineConnector2Topo.AddReg]
+HKR,,FriendlyName,,%PrimaryLineConnector2TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineConnector3Wave]
+AddReg = HdAudModel.PrimaryLineConnector3Wave.AddReg
+[HdAudModel.PrimaryLineConnector3Wave.AddReg]
+HKR,,FriendlyName,,%PrimaryLineConnector3WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineConnector3Topo]
+AddReg = HdAudModel.PrimaryLineConnector3Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimaryLineConnector3Topo.AddReg]
+HKR,,FriendlyName,,%PrimaryLineConnector3TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineConnector4Wave]
+AddReg = HdAudModel.PrimaryLineConnector4Wave.AddReg
+[HdAudModel.PrimaryLineConnector4Wave.AddReg]
+HKR,,FriendlyName,,%PrimaryLineConnector4WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineConnector4Topo]
+AddReg = HdAudModel.PrimaryLineConnector4Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimaryLineConnector4Topo.AddReg]
+HKR,,FriendlyName,,%PrimaryLineConnector4TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineConnector5Wave]
+AddReg = HdAudModel.PrimaryLineConnector5Wave.AddReg
+[HdAudModel.PrimaryLineConnector5Wave.AddReg]
+HKR,,FriendlyName,,%PrimaryLineConnector5WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineConnector5Topo]
+AddReg = HdAudModel.PrimaryLineConnector5Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.PrimaryLineConnector5Topo.AddReg]
+HKR,,FriendlyName,,%PrimaryLineConnector5TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[HdAudModel.IndependentHeadphoneWave]
+AddReg = HdAudModel.IndependentHeadphoneWave.AddReg
+[HdAudModel.IndependentHeadphoneWave.AddReg]
+HKR,,FriendlyName,,%IndependentHeadphoneWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.IndependentHeadphoneTopo]
+AddReg = HdAudModel.IndependentHeadphoneTopo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.IndependentHeadphoneTopo.AddReg]
+HKR,,FriendlyName,,%IndependentHeadphoneTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.IndependentHeadphone2Wave]
+AddReg = HdAudModel.IndependentHeadphone2Wave.AddReg
+[HdAudModel.IndependentHeadphone2Wave.AddReg]
+HKR,,FriendlyName,,%IndependentHeadphone2WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.IndependentHeadphone2Topo]
+AddReg = HdAudModel.IndependentHeadphone2Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.IndependentHeadphone2Topo.AddReg]
+HKR,,FriendlyName,,%IndependentHeadphone2TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.IndependentHeadphone3Wave]
+AddReg = HdAudModel.IndependentHeadphone3Wave.AddReg
+[HdAudModel.IndependentHeadphone3Wave.AddReg]
+HKR,,FriendlyName,,%IndependentHeadphone3WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.IndependentHeadphone3Topo]
+AddReg = HdAudModel.IndependentHeadphone3Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.IndependentHeadphone3Topo.AddReg]
+HKR,,FriendlyName,,%IndependentHeadphone3TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.IndependentHeadphone4Wave]
+AddReg = HdAudModel.IndependentHeadphone4Wave.AddReg
+[HdAudModel.IndependentHeadphone4Wave.AddReg]
+HKR,,FriendlyName,,%IndependentHeadphone4WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.IndependentHeadphone4Topo]
+AddReg = HdAudModel.IndependentHeadphone4Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.IndependentHeadphone4Topo.AddReg]
+HKR,,FriendlyName,,%IndependentHeadphone4TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.IndependentHeadphone5Wave]
+AddReg = HdAudModel.IndependentHeadphone5Wave.AddReg
+[HdAudModel.IndependentHeadphone5Wave.AddReg]
+HKR,,FriendlyName,,%IndependentHeadphone5WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.IndependentHeadphone5Topo]
+AddReg = HdAudModel.IndependentHeadphone5Topo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.IndependentHeadphone5Topo.AddReg]
+HKR,,FriendlyName,,%IndependentHeadphone5TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+
+[HdAudModel.SpdifOutSpeakerWave]
+AddReg = HdAudModel.SpdifOutSpeakerWave.AddReg
+[HdAudModel.SpdifOutSpeakerWave.AddReg]
+HKR,,FriendlyName,,%SpdifOutSpeakerWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SpdifOutSpeakerTopo]
+AddReg = HdAudModel.SpdifOutSpeakerTopo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.SpdifOutSpeakerTopo.AddReg]
+HKR,,FriendlyName,,%SpdifOutSpeakerTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[HdAudModel.SpdifOutLineOutWave]
+AddReg = HdAudModel.SpdifOutLineOutWave.AddReg
+[HdAudModel.SpdifOutLineOutWave.AddReg]
+HKR,,FriendlyName,,%SpdifOutLineOutWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SpdifOutLineOutTopo]
+AddReg = HdAudModel.SpdifOutLineOutTopo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.SpdifOutLineOutTopo.AddReg]
+HKR,,FriendlyName,,%SpdifOutLineOutTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+
+[HdAudModel.DigitalOutputWave]
+AddReg = HdAudModel.DigitalOutputWave.AddReg
+[HdAudModel.DigitalOutputWave.AddReg]
+HKR,,FriendlyName,,%DigitalOutputWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.DigitalOutputTopo]
+AddReg = HdAudModel.DigitalOutputTopo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.DigitalOutputTopo.AddReg]
+HKR,,FriendlyName,,%DigitalOutputTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[HdAudModel.HDMIOutputWave]
+AddReg = HdAudModel.HDMIOutputWave.AddReg
+[HdAudModel.HDMIOutputWave.AddReg]
+HKR,,FriendlyName,,%HDMIOutputWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.HDMIOutputTopo]
+AddReg = HdAudModel.HDMIOutputTopo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.HDMIOutputTopo.AddReg]
+HKR,,FriendlyName,,%HDMIOutputTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[HdAudModel.SlavedHpSpeakerWave]
+AddReg = HdAudModel.SlavedHpSpeakerWave.AddReg
+[HdAudModel.SlavedHpSpeakerWave.AddReg]
+HKR,,FriendlyName,,%SlavedHpSpeakerWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SlavedHpSpeakerTopo]
+AddReg = HdAudModel.SlavedHpSpeakerTopo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.SlavedHpSpeakerTopo.AddReg]
+HKR,,FriendlyName,,%SlavedHpSpeakerTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.SlavedHpSpeaker2Wave]
+AddReg = HdAudModel.SlavedHpSpeaker2Wave.AddReg
+[HdAudModel.SlavedHpSpeaker2Wave.AddReg]
+HKR,,FriendlyName,,%SlavedHpSpeakerWave2DeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SlavedHpSpeaker2Topo]
+AddReg = HdAudModel.SlavedHpSpeaker2Topo.AddReg
+[HdAudModel.SlavedHpSpeaker2Topo.AddReg]
+HKR,,FriendlyName,,%SlavedHpSpeaker2TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.SlavedHpSpeaker3Wave]
+AddReg = HdAudModel.SlavedHpSpeaker3Wave.AddReg
+[HdAudModel.SlavedHpSpeaker3Wave.AddReg]
+HKR,,FriendlyName,,%SlavedHpSpeakerWave3DeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SlavedHpSpeaker3Topo]
+AddReg = HdAudModel.SlavedHpSpeaker3Topo.AddReg
+[HdAudModel.SlavedHpSpeaker3Topo.AddReg]
+HKR,,FriendlyName,,%SlavedHpSpeaker3TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.SlavedHpSpeaker4Wave]
+AddReg = HdAudModel.SlavedHpSpeaker4Wave.AddReg
+[HdAudModel.SlavedHpSpeaker4Wave.AddReg]
+HKR,,FriendlyName,,%SlavedHpSpeakerWave4DeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SlavedHpSpeaker4Topo]
+AddReg = HdAudModel.SlavedHpSpeaker4Topo.AddReg
+[HdAudModel.SlavedHpSpeaker4Topo.AddReg]
+HKR,,FriendlyName,,%SlavedHpSpeaker4TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.SlavedHpSpeaker5Wave]
+AddReg = HdAudModel.SlavedHpSpeaker5Wave.AddReg
+[HdAudModel.SlavedHpSpeaker5Wave.AddReg]
+HKR,,FriendlyName,,%SlavedHpSpeakerWave5DeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SlavedHpSpeaker5Topo]
+AddReg = HdAudModel.SlavedHpSpeaker5Topo.AddReg
+[HdAudModel.SlavedHpSpeaker5Topo.AddReg]
+HKR,,FriendlyName,,%SlavedHpSpeaker5TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+
+[HdAudModel.SlavedHpLineOutWave]
+AddReg = HdAudModel.SlavedHpLineOutWave.AddReg
+[HdAudModel.SlavedHpLineOutWave.AddReg]
+HKR,,FriendlyName,,%SlavedHpLineOutWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SlavedHpLineOutTopo]
+AddReg = HdAudModel.SlavedHpLineOutTopo.AddReg, HDAudio.SysFx.Render
+[HdAudModel.SlavedHpLineOutTopo.AddReg]
+HKR,,FriendlyName,,%SlavedHpLineOutTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.SlavedHpLineOut2Wave]
+AddReg = HdAudModel.SlavedHpLineOut2Wave.AddReg
+[HdAudModel.SlavedHpLineOut2Wave.AddReg]
+HKR,,FriendlyName,,%SlavedHpLineOut2WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SlavedHpLineOut2Topo]
+AddReg = HdAudModel.SlavedHpLineOut2Topo.AddReg
+[HdAudModel.SlavedHpLineOut2Topo.AddReg]
+HKR,,FriendlyName,,%SlavedHpLineOut2TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.SlavedHpLineOut3Wave]
+AddReg = HdAudModel.SlavedHpLineOut3Wave.AddReg
+[HdAudModel.SlavedHpLineOut3Wave.AddReg]
+HKR,,FriendlyName,,%SlavedHpLineOut3WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SlavedHpLineOut3Topo]
+AddReg = HdAudModel.SlavedHpLineOut3Topo.AddReg
+[HdAudModel.SlavedHpLineOut3Topo.AddReg]
+HKR,,FriendlyName,,%SlavedHpLineOut3TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.SlavedHpLineOut4Wave]
+AddReg = HdAudModel.SlavedHpLineOut4Wave.AddReg
+[HdAudModel.SlavedHpLineOut4Wave.AddReg]
+HKR,,FriendlyName,,%SlavedHpLineOut4WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SlavedHpLineOut4Topo]
+AddReg = HdAudModel.SlavedHpLineOut4Topo.AddReg
+[HdAudModel.SlavedHpLineOut4Topo.AddReg]
+HKR,,FriendlyName,,%SlavedHpLineOut4TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.SlavedHpLineOut5Wave]
+AddReg = HdAudModel.SlavedHpLineOut5Wave.AddReg
+[HdAudModel.SlavedHpLineOut5Wave.AddReg]
+HKR,,FriendlyName,,%SlavedHpLineOut5WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.SlavedHpLineOut5Topo]
+AddReg = HdAudModel.SlavedHpLineOut5Topo.AddReg
+[HdAudModel.SlavedHpLineOut5Topo.AddReg]
+HKR,,FriendlyName,,%SlavedHpLineOut5TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+
+[HdAudModel.PrimaryRedirLineOutWave]
+AddReg = HdAudModel.PrimaryRedirLineOutWave.AddReg
+[HdAudModel.PrimaryRedirLineOutWave.AddReg]
+HKR,,FriendlyName,,%SlavedIntSpeakerExtLineOutWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryRedirLineOutTopo]
+AddReg = HdAudModel.PrimaryRedirLineOutTopo.AddReg
+[HdAudModel.PrimaryRedirLineOutTopo.AddReg]
+HKR,,FriendlyName,,%SlavedIntSpeakerExtLineOutTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[HdAudModel.PrimaryRedirSpeakerWave]
+AddReg = HdAudModel.PrimaryRedirSpeakerWave.AddReg
+[HdAudModel.PrimaryRedirSpeakerWave.AddReg]
+HKR,,FriendlyName,,%SlavedIntSpeakerExtSpeakerWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryRedirSpeakerTopo]
+AddReg = HdAudModel.PrimaryRedirSpeakerTopo.AddReg
+[HdAudModel.PrimaryRedirSpeakerTopo.AddReg]
+HKR,,FriendlyName,,%SlavedIntSpeakerExtSpeakerTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[HdAudModel.IndependentMicWave]
+AddReg = HdAudModel.IndependentMicWave.AddReg
+[HdAudModel.IndependentMicWave.AddReg]
+HKR,,FriendlyName,,%IndependentMicWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.IndependentMicTopo]
+AddReg = HdAudModel.IndependentMicTopo.AddReg
+[HdAudModel.IndependentMicTopo.AddReg]
+HKR,,FriendlyName,,%IndependentMicTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.IndependentMic2Wave]
+AddReg = HdAudModel.IndependentMic2Wave.AddReg
+[HdAudModel.IndependentMic2Wave.AddReg]
+HKR,,FriendlyName,,%IndependentMic2WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.IndependentMic2Topo]
+AddReg = HdAudModel.IndependentMic2Topo.AddReg
+[HdAudModel.IndependentMic2Topo.AddReg]
+HKR,,FriendlyName,,%IndependentMic2TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.IndependentMic3Wave]
+AddReg = HdAudModel.IndependentMic3Wave.AddReg
+[HdAudModel.IndependentMic3Wave.AddReg]
+HKR,,FriendlyName,,%IndependentMic3WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.IndependentMic3Topo]
+AddReg = HdAudModel.IndependentMic3Topo.AddReg
+[HdAudModel.IndependentMic3Topo.AddReg]
+HKR,,FriendlyName,,%IndependentMic3TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.IndependentMic4Wave]
+AddReg = HdAudModel.IndependentMic4Wave.AddReg
+[HdAudModel.IndependentMic4Wave.AddReg]
+HKR,,FriendlyName,,%IndependentMic4WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.IndependentMic4Topo]
+AddReg = HdAudModel.IndependentMic4Topo.AddReg
+[HdAudModel.IndependentMic4Topo.AddReg]
+HKR,,FriendlyName,,%IndependentMic4TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.IndependentMic5Wave]
+AddReg = HdAudModel.IndependentMic5Wave.AddReg
+[HdAudModel.IndependentMic5Wave.AddReg]
+HKR,,FriendlyName,,%IndependentMic5WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.IndependentMic5Topo]
+AddReg = HdAudModel.IndependentMic5Topo.AddReg
+[HdAudModel.IndependentMic5Topo.AddReg]
+HKR,,FriendlyName,,%IndependentMic5TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[HdAudModel.CDInWave]
+AddReg = HdAudModel.CDInWave.AddReg
+[HdAudModel.CDInWave.AddReg]
+HKR,,FriendlyName,,%CDInWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.CDInTopo]
+AddReg = HdAudModel.CDInTopo.AddReg
+[HdAudModel.CDInTopo.AddReg]
+HKR,,FriendlyName,,%CDInTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[HdAudModel.PrimaryLineInWave]
+AddReg = HdAudModel.PrimaryLineInWave.AddReg
+[HdAudModel.PrimaryLineInWave.AddReg]
+HKR,,FriendlyName,,%PrimaryLineInWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineInTopo]
+AddReg = HdAudModel.PrimaryLineInTopo.AddReg
+[HdAudModel.PrimaryLineInTopo.AddReg]
+HKR,,FriendlyName,,%PrimaryLineInTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineIn2Wave]
+AddReg = HdAudModel.PrimaryLineIn2Wave.AddReg
+[HdAudModel.PrimaryLineIn2Wave.AddReg]
+HKR,,FriendlyName,,%PrimaryLineIn2WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineIn2Topo]
+AddReg = HdAudModel.PrimaryLineIn2Topo.AddReg
+[HdAudModel.PrimaryLineIn2Topo.AddReg]
+HKR,,FriendlyName,,%PrimaryLineIn2TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineIn3Wave]
+AddReg = HdAudModel.PrimaryLineIn3Wave.AddReg
+[HdAudModel.PrimaryLineIn3Wave.AddReg]
+HKR,,FriendlyName,,%PrimaryLineIn3WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineIn3Topo]
+AddReg = HdAudModel.PrimaryLineIn3Topo.AddReg
+[HdAudModel.PrimaryLineIn3Topo.AddReg]
+HKR,,FriendlyName,,%PrimaryLineIn3TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineIn4Wave]
+AddReg = HdAudModel.PrimaryLineIn4Wave.AddReg
+[HdAudModel.PrimaryLineIn4Wave.AddReg]
+HKR,,FriendlyName,,%PrimaryLineIn4WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineIn4Topo]
+AddReg = HdAudModel.PrimaryLineIn4Topo.AddReg
+[HdAudModel.PrimaryLineIn4Topo.AddReg]
+HKR,,FriendlyName,,%PrimaryLineIn4TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.PrimaryLineIn5Wave]
+AddReg = HdAudModel.PrimaryLineIn5Wave.AddReg
+[HdAudModel.PrimaryLineIn5Wave.AddReg]
+HKR,,FriendlyName,,%PrimaryLineIn5WaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.PrimaryLineIn5Topo]
+AddReg = HdAudModel.PrimaryLineIn5Topo.AddReg
+[HdAudModel.PrimaryLineIn5Topo.AddReg]
+HKR,,FriendlyName,,%PrimaryLineIn5TopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[HdAudModel.DigitalInputWave]
+AddReg = HdAudModel.DigitalInputWave.AddReg
+[HdAudModel.DigitalInputWave.AddReg]
+HKR,,FriendlyName,,%DigitalInputWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.DigitalInputTopo]
+AddReg = HdAudModel.DigitalInputTopo.AddReg
+[HdAudModel.DigitalInputTopo.AddReg]
+HKR,,FriendlyName,,%DigitalInputTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[AzAudModel.AuxInWave]
+AddReg = AzAudModel.AuxInWave.AddReg
+[AzAudModel.AuxInWave.AddReg]
+HKR,,FriendlyName,,%AuxInWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[AzAudModel.AuxInTopo]
+AddReg = AzAudModel.AuxInTopo.AddReg
+[AzAudModel.AuxInTopo.AddReg]
+HKR,,FriendlyName,,%AuxInTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[HdAudModel.MuxedCaptureWave]
+AddReg = HdAudModel.MuxedCaptureWave.AddReg
+[HdAudModel.MuxedCaptureWave.AddReg]
+HKR,,FriendlyName,,%MuxedCaptureWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.MuxedCaptureTopo]
+AddReg = HdAudModel.MuxedCaptureTopo.AddReg
+[HdAudModel.MuxedCaptureTopo.AddReg]
+HKR,,FriendlyName,,%MuxedCaptureTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudModel.MixedCaptureWave]
+AddReg = HdAudModel.MixedCaptureWave.AddReg
+[HdAudModel.MixedCaptureWave.AddReg]
+HKR,,FriendlyName,,%MixedCaptureWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.MixedCaptureTopo]
+AddReg = HdAudModel.MixedCaptureTopo.AddReg
+[HdAudModel.MixedCaptureTopo.AddReg]
+HKR,,FriendlyName,,%MixedCaptureTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+
+[HdAudModel.MicArrayWave]
+AddReg = HdAudModel.MicArrayWave.AddReg
+[HdAudModel.MicArrayWave.AddReg]
+HKR,,FriendlyName,,%MicArrayWaveDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+[HdAudModel.MicArrayTopo]
+AddReg = HdAudModel.MicArrayTopo.AddReg
+[HdAudModel.MicArrayTopo.AddReg]
+HKR,,FriendlyName,,%MicArrayTopoDeviceName%
+HKR,,CLSID,,%Proxy.CLSID%
+
+[HdAudSecurity.AddReg]
+
+HKR,,DeviceType,0x10001,0x0000001D
+
+HKR,,Security,,"D:P(A
+
+
+[Strings]
+DiskId1 = "UAA Function Driver for High Definition Audio. Installation Disk" 
+HdAudioFunctionDriver.CMedia9880.DeviceDesc = "ReactOS 1.1 UAA Function Driver for High Definition Audio - CMedia 9880" 
+HdAudioFunctionDriver.Realtek880.DeviceDesc = "ReactOS 1.1 UAA Function Driver for High Definition Audio - Realtek 880" 
+HdAudioFunctionDriver.Realtek860.DeviceDesc = "ReactOS 1.1 UAA Function Driver for High Definition Audio - Realtek 860" 
+HdAudioFunctionDriver.Realtek280.DeviceDesc = "ReactOS 1.1 UAA Function Driver for High Definition Audio - Realtek 280" 
+HdAudioFunctionDriver.Realtek260.DeviceDesc = "ReactOS 1.1 UAA Function Driver for High Definition Audio - Realtek 260" 
+HdAudioFunctionDriver.Realtek261.DeviceDesc = "ReactOS 1.1 UAA Function Driver for High Definition Audio - Realtek 261" 
+HdAudioFunctionDriver.DDKCodec.DeviceDesc = "ReactOS 1.1 UAA Function Driver for High Definition Audio - DDKCodec" 
+HdAudioFunctionDriver.Generic.DeviceDesc = "High Definition Audio Device" 
+
+HdAudioFunctionDriver.Sigma9770.DeviceDesc= "ReactOS 1.1 UAA Function Driver for High Definition Audio - Sigmatel 9770" 
+HdAudioFunctionDriver.Sigma9772.DeviceDesc= "ReactOS 1.1 UAA Function Driver for High Definition Audio - Sigmatel 9772" 
+HdAudioFunctionDriver.ConexantWaikiki.DeviceDesc= "ReactOS 1.1 UAA Function Driver for High Definition Audio - Conexant Waikiki" 
+HdAudioFunctionDriver.Adi1986.DeviceDesc= "ReactOS 1.1 UAA Function Driver for High Definition Audio - Adi 1986" 
+HdAudioFunctionDriver.Adi1983.DeviceDesc= "ReactOS 1.1 UAA Function Driver for High Definition Audio - Adi 1983" 
+UAAFunctionDriverForHdAudio.SvcDesc = "ReactOS 1.1 UAA Function Driver for High Definition Audio Service" 
+
+PrimarySpeakerWaveDeviceName  =        "HD Audio Speaker"         
+PrimarySpeakerTopoDeviceName  =        "HD Audio Speaker mixer"   
+PrimarySpeaker2WaveDeviceName =        "HD Audio Speaker 2"       
+PrimarySpeaker2TopoDeviceName =        "HD Audio Speaker mixer 2" 
+PrimarySpeaker3WaveDeviceName =        "HD Audio Speaker 3"       
+PrimarySpeaker3TopoDeviceName =        "HD Audio Speaker mixer 3" 
+PrimarySpeaker4WaveDeviceName =        "HD Audio Speaker 4"       
+PrimarySpeaker4TopoDeviceName =        "HD Audio Speaker mixer 4" 
+PrimarySpeaker5WaveDeviceName =        "HD Audio Speaker 5"       
+PrimarySpeaker5TopoDeviceName =        "HD Audio Speaker mixer 5" 
+
+PrimaryLineConnectorWaveDeviceName  =  "HD Audio Line connector"         
+PrimaryLineConnectorTopoDeviceName  =  "HD Audio Line connector mixer"   
+PrimaryLineConnector2WaveDeviceName =  "HD Audio Line connector 2"       
+PrimaryLineConnector2TopoDeviceName =  "HD Audio Line connector mixer 2" 
+PrimaryLineConnector3WaveDeviceName =  "HD Audio Line connector 3"       
+PrimaryLineConnector3TopoDeviceName =  "HD Audio Line connector mixer 3" 
+PrimaryLineConnector4WaveDeviceName =  "HD Audio Line connector 4"       
+PrimaryLineConnector4TopoDeviceName =  "HD Audio Line connector mixer 4" 
+PrimaryLineConnector5WaveDeviceName =  "HD Audio Line connector 5"       
+PrimaryLineConnector5TopoDeviceName =  "HD Audio Line connector mixer 5" 
+
+IndependentHeadphoneWaveDeviceName  =  "HD Audio Headphone"          
+IndependentHeadphoneTopoDeviceName  =  "HD Audio Headphone mixer"    
+IndependentHeadphone2WaveDeviceName =  "HD Audio Headphone 2"        
+IndependentHeadphone2TopoDeviceName =  "HD Audio Headphone 2 mixer"  
+IndependentHeadphone3WaveDeviceName =  "HD Audio Headphone 3"        
+IndependentHeadphone3TopoDeviceName =  "HD Audio Headphone 3 mixer " 
+IndependentHeadphone4WaveDeviceName =  "HD Audio Headphone 4"        
+IndependentHeadphone4TopoDeviceName =  "HD Audio Headphone 4 mixer"  
+IndependentHeadphone5WaveDeviceName =  "HD Audio Headphone 5"        
+IndependentHeadphone5TopoDeviceName =  "HD Audio Headphone 5 mixer"  
+
+SpdifOutSpeakerWaveDeviceName = "HD Audio Spdif Speaker"       
+SpdifOutSpeakerTopoDeviceName = "HD Audio Spdif Speaker mixer" 
+
+
+
+
+
+SpdifOutLineOutWaveDeviceName = "HD Audio Spdif Speaker"       
+SpdifOutLineOutTopoDeviceName = "HD Audio Spdif Speaker mixer" 
+
+
+DigitalOutputWaveDeviceName =   "HD Audio SPDIF out"       
+DigitalOutputTopoDeviceName =   "HD Audio SPDIF out mixer" 
+
+
+HDMIOutputWaveDeviceName =   "HD Audio HDMI out"       
+HDMIOutputTopoDeviceName =   "HD Audio HDMI out mixer" 
+
+
+SlavedHpSpeakerWaveDeviceName = "HD Audio Headphone/Speakers"       
+SlavedHpSpeakerTopoDeviceName = "HD Audio Headphone/Speakers mixer" 
+SlavedHpSpeaker2WaveDeviceName = "HD Audio Headphone/Speakers 2"       
+SlavedHpSpeaker2TopoDeviceName = "HD Audio Headphone/Speakers mixer 2" 
+SlavedHpSpeaker3WaveDeviceName = "HD Audio Headphone/Speakers 3"       
+SlavedHpSpeaker3TopoDeviceName = "HD Audio Headphone/Speakers mixer 3" 
+SlavedHpSpeaker4WaveDeviceName = "HD Audio Headphone/Speakers 4"       
+SlavedHpSpeaker4TopoDeviceName = "HD Audio Headphone/Speakers mixer 4" 
+SlavedHpSpeaker5WaveDeviceName = "HD Audio Headphone/Speakers 5"       
+SlavedHpSpeaker5TopoDeviceName = "HD Audio Headphone/Speakers mixer 5" 
+
+
+SlavedHpLineOutWaveDeviceName = "HD Audio Headphone/Speakers"       
+SlavedHpLineOutTopoDeviceName = "HD Audio Headphone/Speakers mixer" 
+SlavedHpLineOut2WaveDeviceName = "HD Audio Headphone/Speakers 2"       
+SlavedHpLineOut2TopoDeviceName = "HD Audio Headphone/Speakers mixer 2" 
+SlavedHpLineOut3WaveDeviceName = "HD Audio Headphone/Speakers 3"       
+SlavedHpLineOut3TopoDeviceName = "HD Audio Headphone/Speakers mixer 3" 
+SlavedHpLineOut4WaveDeviceName = "HD Audio Headphone/Speakers 4"       
+SlavedHpLineOut4TopoDeviceName = "HD Audio Headphone/Speakers mixer 4" 
+SlavedHpLineOut5WaveDeviceName = "HD Audio Headphone/Speakers 5"       
+SlavedHpLineOut5TopoDeviceName = "HD Audio Headphone/Speakers mixer 5" 
+
+
+SlavedIntSpeakerExtLineOutWaveDeviceName = "HD Audio Int Spkr/Ext LineOut"       
+SlavedIntSpeakerExtLineOutTopoDeviceName = "HD Audio Int Spkr/Ext LineOut Mixer" 
+
+SlavedIntSpeakerExtSpeakerWaveDeviceName = "HD Audio Internal/External Spkr"       
+SlavedIntSpeakerExtSpeakerTopoDeviceName = "HD Audio Internal/External Spkr Mixer" 
+
+IndependentMicWaveDeviceName  = "HD Audio Microphone"         
+IndependentMicTopoDeviceName  = "HD Audio Microphone mixer"   
+IndependentMic2WaveDeviceName = "HD Audio Microphone 2"       
+IndependentMic2TopoDeviceName = "HD Audio Microphone 2 mixer" 
+IndependentMic3WaveDeviceName = "HD Audio Microphone 3"       
+IndependentMic3TopoDeviceName = "HD Audio Microphone 3 mixer" 
+IndependentMic4WaveDeviceName = "HD Audio Microphone 4"       
+IndependentMic4TopoDeviceName = "HD Audio Microphone 4 mixer" 
+IndependentMic5WaveDeviceName = "HD Audio Microphone 5"       
+IndependentMic5TopoDeviceName = "HD Audio Microphone 5 mixer" 
+
+CDInWaveDeviceName            = "HD Audio CD in capture"       
+CDinTopoDeviceName            = "HD Audio CD in capture mixer" 
+
+PrimaryLineInWaveDeviceName  =  "HD Audio Line in"           
+PrimaryLineInTopoDeviceName  =  "HD Audio Line in mixer"     
+PrimaryLineIn2WaveDeviceName =  "HD Audio Line in 2"         
+PrimaryLineIn2TopoDeviceName =  "HD Audio Line in mixer 2"   
+PrimaryLineIn3WaveDeviceName =  "HD Audio Line in 3"         
+PrimaryLineIn3TopoDeviceName =  "HD Audio Line in mixer 3"   
+PrimaryLineIn4WaveDeviceName =  "HD Audio Line in 4"         
+PrimaryLineIn4TopoDeviceName =  "HD Audio Line in mixer 4"   
+PrimaryLineIn5WaveDeviceName =  "HD Audio Line in 5"         
+PrimaryLineIn5TopoDeviceName =  "HD Audio Line in mixer 5"   
+
+DigitalInputWaveDeviceName =    "HD Audio Digital in"       
+DigitalInputTopoDeviceName =    "HD Audio Digital in mixer" 
+
+AuxInWaveDeviceName =           "HD Audio Aux in"       
+AuxInTopoDeviceName =           "HD Audio Aux in mixer" 
+
+MuxedCaptureWaveDeviceName =    "HD Audio Muxed capture"       
+MuxedCaptureTopoDeviceName =    "HD Audio Muxed capture mixer" 
+
+MixedCaptureWaveDeviceName =    "HD Audio Mixed capture"       
+MixedCaptureTopoDeviceName =    "HD Audio Mixed capture mixer" 
+
+MicArrayWaveDeviceName =        "HD Audio Microphone array"        
+MicArrayTopoDeviceName =        "HD Audio Microphone array mixer"  
+
+
+
+KSNAME_eSpeakerWave = "eSpeakerWave"   
+KSNAME_eSpeaker2Wave = "eSpeaker2Wave" 
+KSNAME_eSpeaker3Wave = "eSpeaker3Wave" 
+KSNAME_eSpeaker4Wave = "eSpeaker4Wave" 
+KSNAME_eSpeaker5Wave = "eSpeaker5Wave" 
+KSNAME_eSpeakerTopo = "eSpeakerTopo"   
+KSNAME_eSpeaker2Topo = "eSpeaker2Topo" 
+KSNAME_eSpeaker3Topo = "eSpeaker3Topo" 
+KSNAME_eSpeaker4Topo = "eSpeaker4Topo" 
+KSNAME_eSpeaker5Topo = "eSpeaker5Topo" 
+
+KSNAME_eLineOutWave = "eLineOutWave"   
+KSNAME_eLineOut2Wave = "eLineOut2Wave" 
+KSNAME_eLineOut3Wave = "eLineOut3Wave" 
+KSNAME_eLineOut4Wave = "eLineOut4Wave" 
+KSNAME_eLineOut5Wave = "eLineOut5Wave" 
+KSNAME_eLineOutTopo = "eLineOutTopo"   
+KSNAME_eLineOut2Topo = "eLineOut2Topo" 
+KSNAME_eLineOut3Topo = "eLineOut3Topo" 
+KSNAME_eLineOut4Topo = "eLineOut4Topo" 
+KSNAME_eLineOut5Topo = "eLineOut5Topo" 
+KSNAME_eLineConnectorWave = "eLineConnectorWave"   
+KSNAME_eLineConnector2Wave = "eLineConnector2Wave" 
+KSNAME_eLineConnector3Wave = "eLineConnector3Wave" 
+KSNAME_eLineConnector4Wave = "eLineConnector4Wave" 
+KSNAME_eLineConnector5Wave = "eLineConnector5Wave" 
+KSNAME_eLineConnectorTopo = "eLineConnectorTopo"   
+KSNAME_eLineConnector2Topo = "eLineConnector2Topo" 
+KSNAME_eLineConnector3Topo = "eLineConnector3Topo" 
+KSNAME_eLineConnector4Topo = "eLineConnector4Topo" 
+KSNAME_eLineConnector5Topo = "eLineConnector5Topo" 
+
+KSNAME_eHeadphoneWave ="eHeadphoneWave"    
+KSNAME_eHeadphone2Wave ="eHeadphone2Wave"  
+KSNAME_eHeadphone3Wave ="eHeadphone3Wave"  
+KSNAME_eHeadphone4Wave ="eHeadphone4Wave"  
+KSNAME_eHeadphone5Wave ="eHeadphone5Wave"  
+KSNAME_eHeadphoneTopo = "eHeadphoneTopo"   
+KSNAME_eHeadphone2Topo = "eHeadphone2Topo" 
+KSNAME_eHeadphone3Topo = "eHeadphone3Topo" 
+KSNAME_eHeadphone4Topo = "eHeadphone4Topo" 
+KSNAME_eHeadphone5Topo = "eHeadphone5Topo" 
+
+KSNAME_eSpdifOutWave = "eSpdifOutWave" 
+KSNAME_eSpdifOutTopo = "eSpdifOutTopo" 
+
+KSNAME_eHDMIOutWave = "eHDMIOutWave" 
+KSNAME_eHDMIOutTopo = "eHDMIOutTopo" 
+
+KSNAME_eSpdifOutSpeakerWave = "eSpdifOutSpeakerWave" 
+KSNAME_eSpdifOutSpeakerTopo = "eSpdifOutSpeakerTopo" 
+
+KSNAME_eSpdifOutLineOutWave = "eSpdifOutLineOutWave" 
+KSNAME_eSpdifOutLineOutTopo = "eSpdifOutLineOutTopo" 
+
+KSNAME_eSlavedHpSpeakerWave= "eSlavedHpSpeakerWave"  
+KSNAME_eSlavedHpSpeakerTopo = "eSlavedHpSpeakerTopo" 
+KSNAME_eSlavedHpSpeaker2Wave= "eSlavedHpSpeaker2Wave"  
+KSNAME_eSlavedHpSpeaker2Topo = "eSlavedHpSpeaker2Topo" 
+KSNAME_eSlavedHpSpeaker3Wave= "eSlavedHpSpeaker3Wave"  
+KSNAME_eSlavedHpSpeaker3Topo = "eSlavedHpSpeaker3Topo" 
+KSNAME_eSlavedHpSpeaker4Wave= "eSlavedHpSpeaker4Wave"  
+KSNAME_eSlavedHpSpeaker4Topo = "eSlavedHpSpeaker4Topo" 
+KSNAME_eSlavedHpSpeaker5Wave= "eSlavedHpSpeaker5Wave"  
+KSNAME_eSlavedHpSpeaker5Topo = "eSlavedHpSpeaker5Topo" 
+
+KSNAME_eSlavedHpLineOutWave = "eSlavedHpLineOutWave" 
+KSNAME_eSlavedHpLineOutTopo = "eSlavedHpLineOutTopo" 
+KSNAME_eSlavedHpLineOut2Wave = "eSlavedHpLineOut2Wave" 
+KSNAME_eSlavedHpLineOut2Topo = "eSlavedHpLineOut2Topo" 
+KSNAME_eSlavedHpLineOut3Wave = "eSlavedHpLineOut3Wave" 
+KSNAME_eSlavedHpLineOut3Topo = "eSlavedHpLineOut3Topo" 
+KSNAME_eSlavedHpLineOut4Wave = "eSlavedHpLineOut4Wave" 
+KSNAME_eSlavedHpLineOut4Topo = "eSlavedHpLineOut4Topo" 
+KSNAME_eSlavedHpLineOut5Wave = "eSlavedHpLineOut5Wave" 
+KSNAME_eSlavedHpLineOut5Topo = "eSlavedHpLineOut5Topo" 
+
+
+KSNAME_eSlavedLineOutSpeakerWave = "eSlavedLineOutSpeakerWave"   
+KSNAME_eSlavedLineOutSpeakerTopo = "eSlavedLineOutSpeakerTopo"   
+KSNAME_eSlavedSpeakerSpeakerWave = "eSlavedSpeakerSpeakerWave"   
+KSNAME_eSlavedSpeakerSpeakerTopo = "eSlavedSpeakerSpeakerTopo"   
+
+KSNAME_eMicInWave = "eMicInWave"   
+KSNAME_eMicIn2Wave = "eMicIn2Wave" 
+KSNAME_eMicIn3Wave = "eMicIn3Wave" 
+KSNAME_eMicIn4Wave = "eMicIn4Wave" 
+KSNAME_eMicIn5Wave = "eMicIn5Wave" 
+KSNAME_eMicInTopo = "eMicInTopo"   
+KSNAME_eMicIn2Topo = "eMicIn2Topo" 
+KSNAME_eMicIn3Topo = "eMicIn3Topo" 
+KSNAME_eMicIn4Topo = "eMicIn4Topo" 
+KSNAME_eMicIn5Topo = "eMicIn5Topo" 
+
+KSNAME_eCDInWave = "eCDInWave" 
+KSNAME_eCDInTopo = "eCDInTopo" 
+
+KSNAME_eLineInWave = "eLineInWave"   
+KSNAME_eLineIn2Wave = "eLineIn2Wave" 
+KSNAME_eLineIn3Wave = "eLineIn3Wave" 
+KSNAME_eLineIn4Wave = "eLineIn4Wave" 
+KSNAME_eLineIn5Wave = "eLineIn5Wave" 
+KSNAME_eLineInTopo = "eLineInTopo"   
+KSNAME_eLineIn2Topo = "eLineIn2Topo" 
+KSNAME_eLineIn3Topo = "eLineIn3Topo" 
+KSNAME_eLineIn4Topo = "eLineIn4Topo" 
+KSNAME_eLineIn5Topo = "eLineIn5Topo" 
+
+KSNAME_eSpdifInWave = "eSpdifInWave" 
+KSNAME_eSpdifInTopo = "eSpdifInTopo" 
+
+KSNAME_eAuxInWave = "eAuxInWave" 
+KSNAME_eAuxInTopo = "eAuxInTopo" 
+
+KSNAME_eMuxedCaptureWave = "eMuxedCaptureWave" 
+KSNAME_eMuxedCaptureTopo = "eMuxedCaptureTopo" 
+
+KSNAME_eMixedCaptureWave = "eMixedCaptureWave" 
+KSNAME_eMixedCaptureTopo = "eMixedCaptureTopo" 
+ 
+KSNAME_eMicArrayWave = "eMicArrayWave" 
+KSNAME_eMicArrayTopo = "eMicArrayTopo" 
+
+
+KSCATEGORY_AUDIO = "{6994AD04-93EF-11D0-A3CC-00A0C9223196}"    
+KSCATEGORY_RENDER = "{65E8773E-8F56-11D0-A3B9-00A0C9223196}"   
+KSCATEGORY_CAPTURE = "{65E8773D-8F56-11D0-A3B9-00A0C9223196}"  
+KSCATEGORY_TOPOLOGY = "{DDA54A40-1E4C-11D1-A050-405705C10000}" 
+KSCATEGORY_REALTIME = "{EB115FFC-10C8-4964-831D-6DCB02E6F23F}" 
+Proxy.CLSID = "{17CCA71B-ECD7-11D0-B908-00A0C9223196}"         
+
+
+HdAudGuidPrimaryLineOutDac = "{EEF86A90-3742-4974-B8D2-5370E1C540F6}"    
+HdAudGuidFrontHPOutDac = "{497B34AD-D67F-411c-8076-80D5B4250D67}"        
+HdAudGuidDisableDigitalOutput = "{F06BB67D-5C2F-48ad-A307-B449E3B217D6}" 
+
+
+GUID.REDIRECTED_HEADPHONE_PIN = {025B7F24-DAFB-4612-9FA0-C5B060850FC8} 
+GUID.REDIRECTED_INTERNAL_SPEAKER_PIN = {947FCC8F-33C8-4896-9B84-F9466BB75CF6} 
+
+REDIRECTED_HEADPHONE.PinName = "Speakers/Headphone" 
+REDIRECTED_INTERNAL_SPEAKER.PinName = "Internal Speaker/Headphone"
+
+PrimaryLineOutDacName =               "HD Audio line out"  
+FrontHPOutDacName =                   "HD Audio headphone" 
+
+
+DisableDigitalOutputName = "Disable Digital Output"
+HdAudioDeviceDescription = "ReactOS 1.1 UAA Function Driver for High Definition Audio" 
+
+PKEY_FX_Association  = "{D04E05A6-594B-4fb6-A80D-01AF5EED7D1D},0"
+PKEY_FX_PreMixClsid  = "{D04E05A6-594B-4fb6-A80D-01AF5EED7D1D},1"
+PKEY_FX_PostMixClsid = "{D04E05A6-594B-4fb6-A80D-01AF5EED7D1D},2"
+PKEY_FX_UiClsid      = "{D04E05A6-594B-4fb6-A80D-01AF5EED7D1D},3"
+PKEY_ItemNameDisplay = "{B725F130-47EF-101A-A5F1-02608C9EEBAC},10"
+
+FX_UI_CLSID      = "{5860E1C5-F95C-4a7a-8EC8-8AEF24F379A1}"
+KSNODETYPE_ANY   = "{00000000-0000-0000-0000-000000000000}"
+FX_PREMIX_CLSID  = "{62dc1a93-ae24-464c-a43e-452f824c4250}"
+FX_POSTMIX_CLSID = "{637c490d-eee3-4c0a-973f-371958802da2}"
+FX_FriendlyName  = "ReactOS Audio Home Theater Effects"
+
+
