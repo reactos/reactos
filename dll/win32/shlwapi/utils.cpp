@@ -279,6 +279,8 @@ EXTERN_C PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString)
 
 /*************************************************************************
  * SHLoadRawAccelerators [SHLWAPI.385]
+ *
+ * Retired in 6.1 and higher.
  */
 EXTERN_C
 PRAWACCEL WINAPI
@@ -311,6 +313,8 @@ Cleanup:
 
 /*************************************************************************
  * SHQueryRawAccelerator [SHLWAPI.386]
+ *
+ * Retired in 6.1 and higher.
  */
 EXTERN_C
 BOOL WINAPI
@@ -340,6 +344,8 @@ SHQueryRawAccelerator(
 
 /*************************************************************************
  * SHQueryRawAcceleratorMsg [SHLWAPI.387]
+ *
+ * Retired in 6.1 and higher.
  */
 EXTERN_C
 BOOL WINAPI
