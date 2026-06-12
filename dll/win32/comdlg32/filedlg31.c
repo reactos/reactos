@@ -43,9 +43,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 #define BUFFILE 512
 #define BUFFILEALLOC 512 * sizeof(WCHAR)
 
-static const WCHAR FILE_star[] = {'*','.','*', 0};
-static const WCHAR FILE_bslash[] = {'\\', 0};
-static const WCHAR FILE_specc[] = {'%','c',':', 0};
 static const int fldrHeight = 16;
 static const int fldrWidth = 20;
 
@@ -128,18 +125,18 @@ static BOOL FD31_CallWindowProc(const FD31_DATA *lfs, UINT wMsg, WPARAM wParam, 
 
     if (lfs->ofnA)
     {
-        TRACE("Call hookA %p (%p, %04x, %08lx, %08lx)\n",
+        TRACE("Call hookA %p (%p, %04x, %08Ix, %08Ix)\n",
                lfs->ofnA->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
         ret = lfs->ofnA->lpfnHook(lfs->hwnd, wMsg, wParam, lParam);
-        TRACE("ret hookA %p (%p, %04x, %08lx, %08lx)\n",
+        TRACE("ret hookA %p (%p, %04x, %08Ix, %08Ix)\n",
                lfs->ofnA->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
         return ret;
     }
 
-    TRACE("Call hookW %p (%p, %04x, %08lx, %08lx)\n",
+    TRACE("Call hookW %p (%p, %04x, %08Ix, %08Ix)\n",
            lfs->ofnW->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
     ret = lfs->ofnW->lpfnHook(lfs->hwnd, wMsg, wParam, lParam);
-    TRACE("Ret hookW %p (%p, %04x, %08lx, %08lx)\n",
+    TRACE("Ret hookW %p (%p, %04x, %08Ix, %08Ix)\n",
            lfs->ofnW->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
     return ret;
 }
@@ -167,7 +164,7 @@ static LPCWSTR FD31_GetFileType(LPCWSTR cfptr, LPCWSTR fptr, const WORD index)
 	  return fptr;
 	fptr += lstrlenW(fptr) + 1;
     }
-  return FILE_star; /* FIXME */
+  return L"*.*"; /* FIXME */
 }
 
 /***********************************************************************
@@ -210,7 +207,7 @@ static BOOL FD31_ScanDir(const OPENFILENAMEW *ofn, HWND hWnd, LPCWSTR newPath)
     }
 
     /* list of directories */
-    lstrcpyW(buffer, FILE_star);
+    lstrcpyW(buffer, L"*.*");
 
     if (GetDlgItem(hWnd, lst2) != 0) {
         lRet = DlgDirListW(hWnd, buffer, lst2, stc1, DDL_EXCLUSIVE | DDL_DIRECTORY);
@@ -429,7 +426,7 @@ static LRESULT FD31_DirListDblClick( const FD31_DATA *lfs )
       tmpstr[lstrlenW(tmpstr) - 1] = 0;
       lstrcpyW(tmpstr,tmpstr+1);
     }
-  lstrcatW(tmpstr, FILE_bslash);
+  lstrcatW(tmpstr, L"\\");
 
   FD31_ScanDir(lfs->ofnW, hWnd, tmpstr);
   /* notify the app */
@@ -515,7 +512,7 @@ static LRESULT FD31_TestPath( const FD31_DATA *lfs, LPWSTR path )
 
     pstr2 = path + lstrlenW(path);
     if (pBeginFileName == NULL || *(pBeginFileName + 1) != 0)
-        lstrcatW(path, FILE_bslash);
+        lstrcatW(path, L"\\");
 
     /* if ScanDir succeeds, we have changed the directory */
     if (FD31_ScanDir(lfs->ofnW, hWnd, path))
@@ -627,7 +624,7 @@ static LRESULT FD31_DiskChange( const FD31_DATA *lfs )
     pstr = heap_alloc(BUFFILEALLOC);
     SendDlgItemMessageW(hWnd, cmb2, CB_GETLBTEXT, lRet,
                          (LPARAM)pstr);
-    wsprintfW(diskname, FILE_specc, pstr[2]);
+    wsprintfW(diskname, L"%c:", pstr[2]);
     heap_free(pstr);
 
     return FD31_Validate( lfs, diskname, cmb2, lRet, TRUE );
@@ -971,7 +968,7 @@ static LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam)
   lfs->hwnd = hWnd;
   ofn = lfs->ofnW;
 
-  TRACE("flags=%x initialdir=%s\n", ofn->Flags, debugstr_w(ofn->lpstrInitialDir));
+  TRACE("flags=%lx initialdir=%s\n", ofn->Flags, debugstr_w(ofn->lpstrInitialDir));
 
   SetWindowTextW( hWnd, ofn->lpstrTitle );
   /* read custom filter information */
@@ -1024,7 +1021,7 @@ static LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam)
   {
     lstrcpynW(tmpstr, FD31_GetFileType(ofn->lpstrCustomFilter,
 	     ofn->lpstrFilter, ofn->nFilterIndex - 1),BUFFILE);
-    TRACE("nFilterIndex = %d, SetText of edt1 to %s\n",
+    TRACE("nFilterIndex = %ld, SetText of edt1 to %s\n",
   			ofn->nFilterIndex, debugstr_w(tmpstr));
     SetDlgItemTextW( hWnd, edt1, tmpstr );
   }
@@ -1102,7 +1099,7 @@ static INT_PTR CALLBACK FD31_FileOpenDlgProc(HWND hWnd, UINT wMsg,
 {
     PFD31_DATA lfs = (PFD31_DATA)GetPropA( hWnd, FD31_OFN_PROP );
 
-    TRACE("msg=%x wparam=%lx lParam=%lx\n", wMsg, wParam, lParam);
+    TRACE("msg=%x wparam=%Ix lParam=%Ix\n", wMsg, wParam, lParam);
     if ((wMsg != WM_INITDIALOG) && lfs && lfs->hook)
     {
         INT_PTR lRet;
@@ -1152,7 +1149,7 @@ BOOL GetFileName31A( OPENFILENAMEA *lpofn, UINT dlgType )
 
     if (!lpofn || !FD31_Init()) return FALSE;
 
-    TRACE("ofn flags %08x\n", lpofn->Flags);
+    TRACE("ofn flags %08lx\n", lpofn->Flags);
     lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, FALSE);
     if (lfs)
     {
