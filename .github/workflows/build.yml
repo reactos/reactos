@@ -95,6 +95,9 @@ jobs:
             toolset: 14.2
           - dllver: 0x600
             config: Release
+          - dllver: 0x502
+            toolset: 14
+            config: Release
       fail-fast: false
     runs-on: ${{matrix.os}}
     steps:
