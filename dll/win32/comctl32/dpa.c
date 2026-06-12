@@ -110,7 +110,7 @@ HRESULT WINAPI DPA_LoadStream (HDPA *phDpa, PFNDPASTREAM loadProc,
     if (errCode != S_OK)
         return errCode;
 
-    TRACE ("dwSize=%u dwData2=%u dwItems=%u\n",
+    TRACE ("dwSize=%lu dwData2=%lu dwItems=%lu\n",
            streamData.dwSize, streamData.dwData2, streamData.dwItems);
 
     if (ulRead < sizeof(STREAMDATA) ||
@@ -152,7 +152,7 @@ HRESULT WINAPI DPA_LoadStream (HDPA *phDpa, PFNDPASTREAM loadProc,
 
     /* store the handle to the dpa */
     *phDpa = hDpa;
-    TRACE ("new hDpa=%p, errorcode=%x\n", hDpa, errCode);
+    TRACE ("new hDpa=%p, errorcode %lx\n", hDpa, errCode);
 
     return errCode;
 }
@@ -271,8 +271,7 @@ BOOL WINAPI DPA_Merge (HDPA hdpa1, HDPA hdpa2, DWORD dwFlags,
     INT nResult, i;
     INT nIndex;
 
-    TRACE("(%p %p %08x %p %p %08lx)\n",
-           hdpa1, hdpa2, dwFlags, pfnCompare, pfnMerge, lParam);
+    TRACE("%p, %p, %#lx, %p, %p, %#Ix\n", hdpa1, hdpa2, dwFlags, pfnCompare, pfnMerge, lParam);
 
     if (IsBadWritePtr (hdpa1, sizeof(*hdpa1)))
         return FALSE;
@@ -524,9 +523,9 @@ HDPA WINAPI DPA_Clone (const HDPA hdpa, HDPA hdpaNew)
  *     Success: pointer
  *     Failure: NULL
  */
-LPVOID WINAPI DPA_GetPtr (HDPA hdpa, INT nIndex)
+LPVOID WINAPI DPA_GetPtr (HDPA hdpa, INT_PTR nIndex)
 {
-    TRACE("(%p %d)\n", hdpa, nIndex);
+    TRACE("%p, %Id\n", hdpa, nIndex);
 
     if (!hdpa)
         return NULL;
@@ -535,7 +534,7 @@ LPVOID WINAPI DPA_GetPtr (HDPA hdpa, INT nIndex)
         return NULL;
     }
     if ((nIndex < 0) || (nIndex >= hdpa->nItemCount)) {
-        WARN("not enough pointers in array (%d vs %d).\n",nIndex,hdpa->nItemCount);
+        WARN("not enough pointers in array (%Id vs %d).\n",nIndex,hdpa->nItemCount);
         return NULL;
     }
 
@@ -815,7 +814,7 @@ BOOL WINAPI DPA_Sort (HDPA hdpa, PFNDPACOMPARE pfnCompare, LPARAM lParam)
     if (!hdpa || !pfnCompare)
         return FALSE;
 
-    TRACE("(%p %p 0x%lx)\n", hdpa, pfnCompare, lParam);
+    TRACE("%p, %p, %#Ix\n", hdpa, pfnCompare, lParam);
 
     if ((hdpa->nItemCount > 1) && (hdpa->ptrs))
         DPA_QuickSort (hdpa->ptrs, 0, hdpa->nItemCount - 1,
@@ -848,8 +847,7 @@ INT WINAPI DPA_Search (HDPA hdpa, LPVOID pFind, INT nStart,
     if (!hdpa || !pfnCompare || !pFind)
         return -1;
 
-    TRACE("(%p %p %d %p 0x%08lx 0x%08x)\n",
-           hdpa, pFind, nStart, pfnCompare, lParam, uOptions);
+    TRACE("%p, %p, %d, %p, %#Ix, %#x\n", hdpa, pFind, nStart, pfnCompare, lParam, uOptions);
 
     if (uOptions & DPAS_SORTED) {
         /* array is sorted --> use binary search */
@@ -861,7 +859,7 @@ INT WINAPI DPA_Search (HDPA hdpa, LPVOID pFind, INT nStart,
         r = hdpa->nItemCount - 1;
         lpPtr = hdpa->ptrs;
         while (r >= l) {
-            x = (l + r) / 2;
+            x = l + (r - l) / 2;
             n = (pfnCompare)(pFind, lpPtr[x], lParam);
             if (n == 0)
                 return x;
@@ -912,14 +910,12 @@ HDPA WINAPI DPA_CreateEx (INT nGrow, HANDLE hHeap)
 
     TRACE("(%d %p)\n", nGrow, hHeap);
 
-    if (hHeap)
-        hdpa = HeapAlloc (hHeap, HEAP_ZERO_MEMORY, sizeof(*hdpa));
-    else
-        hdpa = Alloc (sizeof(*hdpa));
+    if (!hHeap) hHeap = GetProcessHeap();
+    hdpa = HeapAlloc (hHeap, HEAP_ZERO_MEMORY, sizeof(*hdpa));
 
     if (hdpa) {
         hdpa->nGrow = max(8, nGrow);
-        hdpa->hHeap = hHeap ? hHeap : GetProcessHeap();
+        hdpa->hHeap = hHeap;
         hdpa->nMaxCount = hdpa->nGrow * 2;
         hdpa->ptrs = HeapAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY,
                                 hdpa->nMaxCount * sizeof(LPVOID));
@@ -1009,6 +1005,7 @@ void WINAPI DPA_DestroyCallback (HDPA hdpa, PFNDPAENUMCALLBACK enumProc,
     DPA_Destroy (hdpa);
 }
 
+#if __WINE_COMCTL32_VERSION == 6
 /**************************************************************************
  * DPA_GetSize [COMCTL32.@]
  *
@@ -1028,3 +1025,4 @@ ULONGLONG WINAPI DPA_GetSize(HDPA hdpa)
 
     return sizeof(DPA) + hdpa->nMaxCount*sizeof(PVOID);
 }
+#endif /* __WINE_COMCTL32_VERSION == 6 */
