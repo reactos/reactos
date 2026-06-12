@@ -513,6 +513,8 @@ SHDialogBox(
     _In_opt_ SHDIALOGPROC fn,
     _In_opt_ PVOID pThis);
 
+HRESULT WINAPI MapWin32ErrorToSTG(_In_ HRESULT hr);
+
 PSTR WINAPI CharLowerNoDBCSA(_Inout_ PSTR lpString);
 PWSTR WINAPI CharLowerNoDBCSW(_Inout_ PWSTR lpString);
 PSTR WINAPI CharUpperNoDBCSA(_Inout_ PSTR lpString);

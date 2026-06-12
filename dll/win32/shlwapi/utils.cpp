@@ -219,6 +219,28 @@ PathUnExpandEnvStringsForUserW(
     return FALSE;
 }
 
+/*************************************************************************
+ *      MapWin32ErrorToSTG [SHLWAPI.485]
+ *
+ * https://undoc.airesoft.co.uk/shlwapi.dll/MapWin32ErrorToSTG.php
+ */
+HRESULT WINAPI MapWin32ErrorToSTG(_In_ HRESULT hr)
+{
+    switch (hr)
+    {
+        case HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED):
+            return STG_E_ACCESSDENIED;
+        case HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND):
+        case HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND):
+            return STG_E_FILENOTFOUND;
+        case HRESULT_FROM_WIN32(ERROR_FILE_EXISTS):
+        case HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS):
+            return STG_E_FILEALREADYEXISTS;
+        default:
+            return hr;
+    }
+}
+
 static BOOL CharLowerNoDBCSAWorker(PSTR lpString, INT cchMax, BOOL bUppercase)
 {
     CHAR szBuff[MAX_PATH];
