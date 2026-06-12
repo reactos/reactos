@@ -81,7 +81,13 @@ SHELL32_ReadRegShellState(PREGSHELLSTATE prss)
     DWORD dwSize = sizeof(REGSHELLSTATE);
     LSTATUS err = SHGetValueW(HKEY_CURRENT_USER, s_pszExplorerKey,
                               L"ShellState", NULL, prss, &dwSize);
-    return err == ERROR_SUCCESS && prss->dwSize >= REGSHELLSTATE_SIZE;
+    if (err == ERROR_SUCCESS && prss->dwSize >= REGSHELLSTATE_SIZE)
+        return TRUE;
+
+    ZeroMemory(prss, sizeof(*prss));
+    SHELL32_GetDefaultShellState(&prss->ss);
+    SHELL32_WriteRegShellState(prss);
+    return TRUE;
 }
 
 // bUnderlineHover is TRUE if "Underline icon titles only when I point at them".
