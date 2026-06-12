@@ -112,9 +112,7 @@ BOOL WINAPI SmoothScrollWindow( const SMOOTHSCROLLSTRUCT *smooth ) {
 	   );
    }
 
-   FIXME("(hwnd=%p,flags=%x,x2=%x): should smooth scroll here.\n",
-	   smooth->hwnd,flags,smooth->x2
-   );
+   FIXME("(hwnd=%p,flags=%lx,x2=%lx): should smooth scroll here.\n", smooth->hwnd, flags, smooth->x2);
    /* FIXME: do timer based smooth scrolling */
    if ((smooth->x2 & 1) && smooth->scrollfun)
        return smooth->scrollfun(
