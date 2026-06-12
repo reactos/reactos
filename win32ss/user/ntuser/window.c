@@ -2214,7 +2214,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    if(!Class)
    {
        EngSetLastError(ERROR_CANNOT_FIND_WND_CLASS);
-       ERR("Failed to find class %wZ\n", ClassName);
+       TRACE("Failed to find class %wZ\n", ClassName);
        goto cleanup;
    }
 
