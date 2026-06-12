@@ -1,4 +1,8 @@
 
+include_directories(
+    ${REACTOS_SOURCE_DIR}/sdk/lib/crt/include
+    ${REACTOS_SOURCE_DIR}/sdk/include/c++)
+
 # We need different things, depending on the compiler
 if(MSVC)
     list(APPEND SOURCE
