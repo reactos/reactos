@@ -224,7 +224,8 @@ PathUnExpandEnvStringsForUserW(
  *
  * https://undoc.airesoft.co.uk/shlwapi.dll/MapWin32ErrorToSTG.php
  */
-HRESULT WINAPI MapWin32ErrorToSTG(_In_ HRESULT hr)
+EXTERN_C HRESULT WINAPI
+MapWin32ErrorToSTG(_In_ HRESULT hr)
 {
     switch (hr)
     {
