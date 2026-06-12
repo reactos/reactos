@@ -1,7 +1,5 @@
 /*
- * Resource file for tmarshaltest
- *
- * Copyright 2005 Robert Shearman
+ * Copyright 2020 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,11 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
+#pragma makedep ident
+#pragma makedep typelib
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+import "oaidl.idl"; /* needed by widl */
 
-#include "wine/wine_common_ver.rc"
+[
+    uuid(8b05fe77-4a6c-4133-b9cd-8f00007af786),
+    id(4)
+]
+library base
+{
+    importlib("stdole2.tlb");
+
+    [uuid(b14b6bb5-904e-4ff9-b247-bd361f7a0004)]
+    interface IBaseIface : IDispatch
+    {
+        HRESULT simple_test();
+    }
+}
