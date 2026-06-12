@@ -61,6 +61,8 @@
 340 stdcall -ordinal DPA_CreateEx(long long)
 341 stdcall -noname SendNotify(long long long ptr)
 342 stdcall -noname SendNotifyEx(long long long ptr long)
+344 stdcall -ordinal TaskDialog(long long wstr wstr wstr long wstr ptr)
+345 stdcall -ordinal TaskDialogIndirect(ptr ptr ptr ptr)
 350 stdcall -noname -private StrChrA(str long) kernelbase_ros.StrChrA
 351 stdcall -noname -private StrRChrA(str str long) kernelbase_ros.StrRChrA
 352 stdcall -noname -private StrCmpNA(str str long) kernelbase_ros.StrCmpNA
@@ -87,6 +89,8 @@
 375 stdcall -noname -private StrCSpnIW(wstr wstr) kernelbase_ros.StrCSpnIW
 376 stdcall -noname -private IntlStrEqWorkerA(long str str long)
 377 stdcall -noname -private IntlStrEqWorkerW(long wstr wstr long)
+380 stdcall -ordinal LoadIconMetric(ptr wstr long ptr)
+381 stdcall -ordinal LoadIconWithScaleDown(ptr wstr long long ptr)
 382 stdcall -noname SmoothScrollWindow(ptr)
 383 stdcall -noname DoReaderMode(ptr)
 384 stdcall -noname SetPathWordBreakProc(ptr long)
@@ -102,7 +106,7 @@
 403 stdcall -ordinal EnumMRUListW(long long ptr long)
 404 stdcall -noname CreateMRUListLazyW(ptr long long long)
 410 stdcall -ordinal SetWindowSubclass(long ptr long long)
-411 stdcall -noname GetWindowSubclass(long ptr long ptr)
+411 stdcall -ordinal GetWindowSubclass(long ptr long ptr)
 412 stdcall -ordinal RemoveWindowSubclass(long ptr long)
 413 stdcall -ordinal DefSubclassProc(long long long long)
 414 stdcall -noname MirrorIcon(ptr ptr)
@@ -124,8 +128,13 @@
 @ stdcall CreateToolbarEx(long long long long long long ptr long long long long long long)
 @ stdcall DestroyPropertySheetPage(long)
 @ stdcall -private DllGetVersion(ptr)
+@ stdcall -private DllInstall(long wstr)
+@ stdcall -ret64 DPA_GetSize(ptr)
+@ stdcall DrawShadowText(long wstr long ptr long long long long long)
 @ stdcall DrawStatusText(long ptr ptr long) DrawStatusTextA
 @ stdcall DrawStatusTextW(long ptr wstr long)
+@ stdcall DSA_Clone(ptr)
+@ stdcall -ret64 DSA_GetSize(ptr)
 @ stdcall FlatSB_EnableScrollBar (long long long)
 @ stdcall FlatSB_GetScrollInfo (long long ptr)
 @ stdcall FlatSB_GetScrollPos (long long)
@@ -142,6 +151,7 @@
 @ stdcall ImageList_AddIcon(ptr long)
 @ stdcall ImageList_AddMasked(ptr long long)
 @ stdcall ImageList_BeginDrag(ptr long long long)
+@ stdcall ImageList_CoCreateInstance(ptr ptr ptr ptr)
 @ stdcall ImageList_Copy(ptr long ptr long long)
 @ stdcall ImageList_Create(long long long long long)
 @ stdcall ImageList_Destroy(ptr)
@@ -178,6 +188,7 @@
 @ stdcall ImageList_SetImageCount(ptr long)
 @ stdcall ImageList_SetOverlayImage(ptr long long)
 @ stdcall ImageList_Write(ptr ptr)
+@ stdcall ImageList_WriteEx(ptr long ptr)
 @ stdcall InitCommonControlsEx(ptr)
 @ stdcall InitMUILanguage(long)
 @ stdcall InitializeFlatSB(long)
@@ -187,6 +198,3 @@
 @ stdcall RegisterClassNameW(wstr)
 @ stdcall UninitializeFlatSB(long)
 @ stdcall _TrackMouseEvent(ptr)
-
-# Hack for reactos app manager
-@ stdcall DrawShadowText(long wstr long ptr long long long long long)
