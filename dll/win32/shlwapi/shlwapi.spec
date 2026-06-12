@@ -382,9 +382,9 @@
 382 stdcall -noname ZoneComputePaneSize(ptr)
 383 stub -noname ZoneConfigureW
 384 stub -noname SHRestrictedMessageBox
-385 stub -noname SHLoadRawAccelerators
-386 stub -noname SHQueryRawAccelerator
-387 stub -noname SHQueryRawAcceleratorMsg
+385 stdcall -noname SHLoadRawAccelerators(ptr str)
+386 stdcall -noname SHQueryRawAccelerator(ptr long long long ptr)
+387 stdcall -noname SHQueryRawAcceleratorMsg(ptr ptr ptr)
 388 varargs -noname ShellMessageBoxWrapW(ptr ptr wstr wstr long)
 389 stdcall -noname GetSaveFileNameWrapW(ptr)
 390 stdcall -noname WNetRestoreConnectionWrapW(long wstr)
