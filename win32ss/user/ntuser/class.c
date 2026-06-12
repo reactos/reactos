@@ -1477,11 +1477,11 @@ IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance, BOOL bDe
    {
       if (IS_ATOM(ClassName->Buffer))
       {
-         ERR("Class 0x%p not found\n", ClassName->Buffer);
+         TRACE("Class 0x%p not found\n", ClassName->Buffer);
       }
       else
       {
-         ERR("Class \"%wZ\" not found\n", ClassName);
+         TRACE("Class \"%wZ\" not found\n", ClassName);
       }
 
       return NULL;
