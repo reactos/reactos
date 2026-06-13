@@ -27,6 +27,7 @@ list(APPEND SOURCE
     PathProcessCommand.cpp
     PathResolve.cpp
     RealShellExecuteEx.cpp
+    RegenerateUserEnvironment.cpp
     SHAppBarMessage.cpp
     SHChangeNotify.cpp
     SHCreateDataObject.cpp
@@ -72,7 +73,7 @@ set_target_properties(shell32_apitest
 target_link_libraries(shell32_apitest wine uuid ${PSEH_LIB} cpprt atl_classes)
 set_module_type(shell32_apitest win32cui)
 target_compile_definitions(shell32_apitest PRIVATE UNICODE _UNICODE)
-add_importlibs(shell32_apitest user32 gdi32 shell32 shlwapi ole32 oleaut32 advapi32 shlwapi msvcrt kernel32 ntdll)
+add_importlibs(shell32_apitest user32 gdi32 shell32 shlwapi ole32 oleaut32 advapi32 shlwapi msvcrt kernel32 ntdll userenv)
 add_pch(shell32_apitest shelltest.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET shell32_apitest)
 
@@ -80,6 +81,6 @@ add_rostests_file(TARGET shell32_apitest)
 add_executable(shell32_apitest_sub shell32_apitest_sub.cpp)
 target_link_libraries(shell32_apitest_sub cpprt atl_classes)
 set_module_type(shell32_apitest_sub win32gui UNICODE)
-add_importlibs(shell32_apitest_sub msvcrt kernel32 user32 shell32 shlwapi ole32)
+add_importlibs(shell32_apitest_sub msvcrt kernel32 user32 shell32 shlwapi ole32 userenv)
 add_rostests_file(TARGET shell32_apitest_sub SUBDIR testdata)
 add_dependencies(shell32_apitest shell32_apitest_sub)
