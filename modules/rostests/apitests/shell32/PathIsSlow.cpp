@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS API Tests
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Tests for PathIsSlowA/W
- * COPYRIGHT:   Copyright 2026 Alex Mendoza
+ * COPYRIGHT:   Copyright 2026 Alex Mendoza <05alex.mendozaa@gmail.com>
  */
 
 #include "shelltest.h"
