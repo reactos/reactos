@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Jacek Caban for CodeWeavers
+ * Copyright 2025 Francis De Brabandere
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,24 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "ihost.h"
-
-extern IHost host_obj;
-
-extern IArguments2 arguments_obj;
-
-extern ITypeInfo *host_ti;
-
-extern ITypeInfo *arguments_ti;
-
-extern WCHAR scriptFullName[];
-
-extern WCHAR **argums;
-
-extern int numOfArgs;
-
-extern VARIANT_BOOL wshInteractive;
-
-extern LONG wshTimeout;
-
-void schedule_timeout(LONG seconds);
+#define IDS_USAGE              1
+#define IDS_NO_SCRIPT_FILE     2
+#define IDS_FILE_NOT_FOUND     3
+#define IDS_SCRIPT_LOAD_ERROR  4
+#define IDS_TIMEOUT_EXCEEDED   5
