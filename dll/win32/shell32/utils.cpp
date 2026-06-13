@@ -751,8 +751,7 @@ PathIsSlowW(
 
     /* Query connection speed with MPR */
     NETRESOURCEW nr = {0};
-    NETCONNECTINFOSTRUCT nci = {0};
-    nci.cbStructure = sizeof(nci);
+    NETCONNECTINFOSTRUCT nci = { sizeof(nci) };
 
     WCHAR szRoot[MAX_PATH];
     if (FAILED(StringCchCopyW(szRoot, _countof(szRoot), pszFile)))
