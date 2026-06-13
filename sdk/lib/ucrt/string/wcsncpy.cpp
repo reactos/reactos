@@ -12,7 +12,7 @@
 #pragma warning(disable:__WARNING_POSTCONDITION_NULLTERMINATION_VIOLATION) // 26036
 
 
-#ifdef _M_ARM
+#if defined(_MSC_VER) && _MSC_VER >= 1932 // VS2022 version 17.2 and later
     #pragma function(wcsncpy)
 #endif
 
