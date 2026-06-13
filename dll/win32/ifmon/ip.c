@@ -16,6 +16,8 @@
 #include "guid.h"
 #include "resource.h"
 
+#define BUFFER_SIZE        128
+
 #define DISPLAY_ADRESSES   0x1
 #define DISPLAY_DNS        0x2
 
@@ -208,16 +210,145 @@ SetInterfaceProperties(
     GUID *InterfaceGuid,
     PTCPIP_PROPERTIES pProperties)
 {
-    DPRINT1("SetInterfaceProperties()\n");
+    INetCfg *pNetCfg = NULL;
+    INetCfgLock *pNetCfgLock = NULL;
+    INetCfgClass *pNetCfgClass = NULL;
+    INetCfgComponent *pTcpipComponent = NULL;
+    INetCfgComponentPrivate *pTcpipComponentPrivate = NULL;
+    ITcpipProperties *pTcpipProperties = NULL;
 
-    DPRINT1("dwDhcp: %lx\n", pProperties->dwDhcp);
-    DPRINT1("IpAddress: %S\n", pProperties->pszIpAddress);
-    DPRINT1("SubnetMask: %S\n", pProperties->pszSubnetMask);
-    DPRINT1("Parameters: %S\n", pProperties->pszParameters);
+    BOOL fWriteLocked = FALSE, fInitialized = FALSE;
+    HRESULT hr;
 
-    DPRINT1("SetInterfaceProperties() done!\n");
+    DPRINT("SetInterfaceProperties()\n");
 
-    return S_OK;
+    DPRINT("dwDhcp: %lx\n", pProperties->dwDhcp);
+    DPRINT("IpAddress: %S\n", pProperties->pszIpAddress);
+    DPRINT("SubnetMask: %S\n", pProperties->pszSubnetMask);
+    DPRINT("Parameters: %S\n", pProperties->pszParameters);
+
+    hr = CoInitialize(NULL);
+    if (hr != S_OK)
+    {
+        DPRINT1("CoInitialize failed\n");
+        goto exit;
+    }
+
+    hr = CoCreateInstance(&CLSID_CNetCfg,
+                          NULL,
+                          CLSCTX_INPROC_SERVER,
+                          &IID_INetCfg,
+                          (PVOID*)&pNetCfg);
+    if (hr != S_OK)
+    {
+        DPRINT1("CoCreateInstance failed\n");
+        goto exit;
+    }
+
+    /* Acquire the write-lock */
+    hr = INetCfg_QueryInterface(pNetCfg,
+                                &IID_INetCfgLock,
+                                (PVOID*)&pNetCfgLock);
+    if (hr != S_OK)
+    {
+        DPRINT1("QueryInterface failed\n");
+        goto exit;
+    }
+
+    hr = INetCfgLock_AcquireWriteLock(pNetCfgLock, 5000,
+                                      L"NetSh",
+                                      NULL);
+    if (hr != S_OK)
+    {
+        DPRINT1("AcquireWriteLock failed\n");
+        goto exit;
+    }
+
+    fWriteLocked = TRUE;
+
+    /* Initialize the network configuration */
+    hr = INetCfg_Initialize(pNetCfg, NULL);
+    if (hr != S_OK)
+    {
+        DPRINT1("Initialize failed\n");
+        goto exit;
+    }
+
+    fInitialized = TRUE;
+
+    GUID ClassGuid = GUID_DEVCLASS_NETTRANS;
+    hr = INetCfg_QueryNetCfgClass(pNetCfg, &ClassGuid, &IID_INetCfgClass, (PVOID*)&pNetCfgClass);
+    if (hr != S_OK)
+    {
+        DPRINT1("INetCfg_QueryNetCfgClass failed!\n");
+        goto exit;
+    }
+
+    hr = INetCfgClass_FindComponent(pNetCfgClass, L"MS_TCPIP", &pTcpipComponent);
+    if (hr != S_OK)
+    {
+        DPRINT1("INetCfgClass_FindComponent failed\n");
+        goto exit;
+    }
+
+    hr = INetCfgComponent_QueryInterface(pTcpipComponent, &IID_INetCfgComponentPrivate, (PVOID*)&pTcpipComponentPrivate);
+    if (hr != S_OK)
+    {
+        DPRINT1("INetCfgComponent_QueryInterface failed\n");
+        goto exit;
+    }
+
+    hr = INetCfgComponentPrivate_Unknown1(pTcpipComponentPrivate, &IID_ITcpipProperties, (PVOID*)&pTcpipProperties);
+    if (hr != S_OK)
+    {
+        DPRINT1("INetCfgComponentPrivate_Unknown1 failed\n");
+        goto exit;
+    }
+
+    hr = ITcpipProperties_Unknown2(pTcpipProperties, InterfaceGuid, pProperties);
+    if (hr != S_OK)
+    {
+        DPRINT1("ITcpipProperties_Unknown2 failed\n");
+        goto exit;
+    }
+
+    hr = INetCfg_Apply(pNetCfg);
+    if (hr != S_OK)
+    {
+        DPRINT1("INetCfg_Apply failed\n");
+    }
+
+    DPRINT("Done!\n");
+exit:
+    if (pTcpipProperties)
+        ITcpipProperties_Release(pTcpipProperties);
+
+    if (pTcpipComponentPrivate)
+        INetCfgComponentPrivate_Release(pTcpipComponentPrivate);
+
+    if (pTcpipComponent != NULL)
+        INetCfgComponent_Release(pTcpipComponent);
+
+    if (pNetCfgClass != NULL)
+        INetCfgClass_Release(pNetCfgClass);
+
+    if (fInitialized)
+        INetCfg_Uninitialize(pNetCfg);
+
+    if (fWriteLocked)
+        INetCfgLock_ReleaseWriteLock(pNetCfgLock);
+
+    if (pNetCfgLock != NULL)
+        INetCfgLock_Release(pNetCfgLock);
+
+    if (pNetCfg != NULL)
+        INetCfg_Release(pNetCfg);
+
+    CoUninitialize();
+
+    DPRINT("SetInterfaceProperties() done!\n");
+
+    return hr;
 }
 
 
@@ -284,7 +415,8 @@ IpSetAddress(
     BOOL bHaveName = FALSE, bHaveSource = FALSE, bHaveAddress = FALSE,
          bHaveMask = FALSE, bHaveGateway = FALSE, bHaveMetric = FALSE;
     IN_ADDR Address, Mask, Gateway;
-    PWSTR pszName = NULL, pszAddress = NULL, pszMask = NULL;
+    PWSTR pszName = NULL, pszAddress = NULL, pszMask = NULL, pszGateway = NULL, pszGwMetric = NULL;
+    PWSTR pszParameterBuffer = NULL;
     DWORD dwMetric;
     PCWSTR Term;
     PTCPIP_PROPERTIES pProperties = NULL;
@@ -293,7 +425,7 @@ IpSetAddress(
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
 
-    DPRINT1("IpSetAddress()\n");
+    DPRINT("IpSetAddress()\n");
 
     pdwTagType = HeapAlloc(GetProcessHeap(),
                            0,
@@ -319,18 +451,18 @@ IpSetAddress(
 
     for (i = 0; i < (dwArgCount - dwCurrentIndex); i++)
     {
-        DPRINT1("Tag %lu: %lu\n", i, pdwTagType[i]);
+        DPRINT("Tag %lu: %lu\n", i, pdwTagType[i]);
 
         switch (pdwTagType[i])
         {
             case 0: /* name */
-                DPRINT1("Tag: name (%S)\n", argv[i + dwCurrentIndex]);
+                DPRINT("Tag: name (%S)\n", argv[i + dwCurrentIndex]);
                 dwError = NhGetGuidFromInterfaceName(argv[i + dwCurrentIndex],
                                                      &InterfaceGUID,
                                                      0, 0);
                 if (dwError != ERROR_SUCCESS)
                 {
-                    DPRINT1("NhGetGuidFromInterfaceName() failed (Error %lu)\n", dwError);
+                    DPRINT("NhGetGuidFromInterfaceName() failed (Error %lu)\n", dwError);
                     PrintMessageFromModule(hDllInstance,
                                            IDS_ERROR_INVALID_INTERFACE,
                                            argv[i + dwCurrentIndex]);
@@ -338,14 +470,14 @@ IpSetAddress(
                     break;
                 }
                 pszName = argv[i + dwCurrentIndex];
-                DPRINT1("Interface: {%08lx-%04hx-%04hx-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
-                        InterfaceGUID.Data1, InterfaceGUID.Data2, InterfaceGUID.Data3, InterfaceGUID.Data4[0], InterfaceGUID.Data4[1],
-                        InterfaceGUID.Data4[2], InterfaceGUID.Data4[3], InterfaceGUID.Data4[4], InterfaceGUID.Data4[5], InterfaceGUID.Data4[6], InterfaceGUID.Data4[7]);
+                DPRINT("Interface: {%08lx-%04hx-%04hx-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
+                       InterfaceGUID.Data1, InterfaceGUID.Data2, InterfaceGUID.Data3, InterfaceGUID.Data4[0], InterfaceGUID.Data4[1],
+                       InterfaceGUID.Data4[2], InterfaceGUID.Data4[3], InterfaceGUID.Data4[4], InterfaceGUID.Data4[5], InterfaceGUID.Data4[6], InterfaceGUID.Data4[7]);
                 bHaveName = TRUE;
                 break;
 
             case 1: /* source */
-                DPRINT1("Tag: source (%S)\n", argv[i + dwCurrentIndex]);
+                DPRINT("Tag: source (%S)\n", argv[i + dwCurrentIndex]);
                 dwError = MatchEnumTag(hDllInstance,
                                        argv[i + dwCurrentIndex],
                                        ARRAYSIZE(ptvSource),
@@ -353,7 +485,7 @@ IpSetAddress(
                                        &dwSource);
                 if (dwError != ERROR_SUCCESS)
                 {
-                    DPRINT1("MatchEnumTag() failed (Error %lu)\n", dwError);
+                    DPRINT("MatchEnumTag() failed (Error %lu)\n", dwError);
                     PrintMessageFromModule(hDllInstance,
                                            IDS_ERROR_BAD_VALUE,
                                            argv[i + dwCurrentIndex],
@@ -361,19 +493,19 @@ IpSetAddress(
                     dwError = ERROR_SUPPRESS_OUTPUT;
                     break;
                 }
-                DPRINT1("Source: %lu\n", dwSource);
+                DPRINT("Source: %lu\n", dwSource);
                 bHaveSource = TRUE;
                 break;
 
             case 2: /* addr */
-                DPRINT1("Tag: addr (%S)\n", argv[i + dwCurrentIndex]);
+                DPRINT("Tag: addr (%S)\n", argv[i + dwCurrentIndex]);
                 Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
                                                  TRUE,
                                                  &Term,
                                                  &Address);
                 if (Status != 0 /*STATUS_SUCCESS*/)
                 {
-                    DPRINT1("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
+                    DPRINT("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
                     PrintMessageFromModule(hDllInstance,
                                            IDS_ERROR_BAD_VALUE,
                                            argv[i + dwCurrentIndex],
@@ -381,22 +513,22 @@ IpSetAddress(
                     dwError = ERROR_SUPPRESS_OUTPUT;
                     break;
                 }
-                DPRINT1("IP Address: %u.%u.%u.%u\n",
-                        Address.S_un.S_un_b.s_b1, Address.S_un.S_un_b.s_b2, Address.S_un.S_un_b.s_b3, Address.S_un.S_un_b.s_b4);
+                DPRINT("IP Address: %u.%u.%u.%u\n",
+                       Address.S_un.S_un_b.s_b1, Address.S_un.S_un_b.s_b2, Address.S_un.S_un_b.s_b3, Address.S_un.S_un_b.s_b4);
                 pszAddress = argv[i + dwCurrentIndex];
-                DPRINT1("IP Address: %S\n", pszAddress);
+                DPRINT("IP Address: %S\n", pszAddress);
                 bHaveAddress = TRUE;
                 break;
 
             case 3: /* mask */
-                DPRINT1("Tag: mask (%S)\n", argv[i + dwCurrentIndex]);
+                DPRINT("Tag: mask (%S)\n", argv[i + dwCurrentIndex]);
                 Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
                                                  TRUE,
                                                  &Term,
                                                  &Mask);
                 if (Status != 0 /*STATUS_SUCCESS*/)
                 {
-                    DPRINT1("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
+                    DPRINT("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
                     PrintMessageFromModule(hDllInstance,
                                            IDS_ERROR_BAD_VALUE,
                                            argv[i + dwCurrentIndex],
@@ -404,22 +536,22 @@ IpSetAddress(
                     dwError = ERROR_SUPPRESS_OUTPUT;
                     break;
                 }
-                DPRINT1("Subnet Mask: %u.%u.%u.%u\n",
-                        Mask.S_un.S_un_b.s_b1, Mask.S_un.S_un_b.s_b2, Mask.S_un.S_un_b.s_b3, Mask.S_un.S_un_b.s_b4);
+                DPRINT("Subnet Mask: %u.%u.%u.%u\n",
+                       Mask.S_un.S_un_b.s_b1, Mask.S_un.S_un_b.s_b2, Mask.S_un.S_un_b.s_b3, Mask.S_un.S_un_b.s_b4);
                 pszMask = argv[i + dwCurrentIndex];
-                DPRINT1("Subnat Mask: %S\n", pszMask);
+                DPRINT("Subnat Mask: %S\n", pszMask);
                 bHaveMask = TRUE;
                 break;
 
             case 4: /* gateway */
-                DPRINT1("Tag: gateway (%S)\n", argv[i + dwCurrentIndex]);
+                DPRINT("Tag: gateway (%S)\n", argv[i + dwCurrentIndex]);
                 Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
                                                  TRUE,
                                                  &Term,
                                                  &Gateway);
                 if (Status != 0 /*STATUS_SUCCESS*/)
                 {
-                    DPRINT1("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
+                    DPRINT("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
                     PrintMessageFromModule(hDllInstance,
                                            IDS_ERROR_BAD_VALUE,
                                            argv[i + dwCurrentIndex],
@@ -427,13 +559,14 @@ IpSetAddress(
                     dwError = ERROR_SUPPRESS_OUTPUT;
                     break;
                 }
-                DPRINT1("Gateway: %u.%u.%u.%u\n",
-                        Gateway.S_un.S_un_b.s_b1, Gateway.S_un.S_un_b.s_b2, Gateway.S_un.S_un_b.s_b3, Gateway.S_un.S_un_b.s_b4);
+                pszGateway = argv[i + dwCurrentIndex];
+                DPRINT("Gateway: %u.%u.%u.%u\n",
+                       Gateway.S_un.S_un_b.s_b1, Gateway.S_un.S_un_b.s_b2, Gateway.S_un.S_un_b.s_b3, Gateway.S_un.S_un_b.s_b4);
                 bHaveGateway = TRUE;
                 break;
 
             case 5: /* gwmetric */
-                DPRINT1("Tag: gwmetric (%S)\n", argv[i + dwCurrentIndex]);
+                DPRINT("Tag: gwmetric (%S)\n", argv[i + dwCurrentIndex]);
                 dwMetric = wcstoul(argv[i + dwCurrentIndex],
                                    (wchar_t**)&Term,
                                    10);
@@ -442,7 +575,8 @@ IpSetAddress(
                     dwError = ERROR_INVALID_PARAMETER;
                     break;
                 }
-                DPRINT1("Metric: %lu\n", dwMetric);
+                pszGwMetric = argv[i + dwCurrentIndex];
+                DPRINT("Metric: %lu\n", dwMetric);
                 bHaveMetric = TRUE;
                 break;
 
@@ -488,13 +622,33 @@ IpSetAddress(
         return ERROR_SUPPRESS_OUTPUT;
     }
 
+    pszParameterBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, BUFFER_SIZE * sizeof(WCHAR));
+    if (pszParameterBuffer == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
     if (dwSource == 1)
     {
         /* STATIC */
         NewProperties.dwDhcp = 0;
         NewProperties.pszIpAddress = pszAddress;
         NewProperties.pszSubnetMask = pszMask;
-//        NewProperties.pszParameters = 
+        NewProperties.pszParameters = pszParameterBuffer;
+
+        if (bHaveGateway)
+        {
+            StringCchPrintfW(pszParameterBuffer, BUFFER_SIZE,
+                             L"DefGw=%s;GwMetric=%s;",
+                             pszGateway, pszGwMetric);
+        }
+        else
+        {
+            StringCchPrintfW(pszParameterBuffer, BUFFER_SIZE,
+                             L"DefGw=%s;GwMetric=%s;",
+                             L"0.0.0.0", L"0");
+        }
     }
     else if (dwSource == 2)
     {
@@ -510,16 +664,23 @@ IpSetAddress(
         NewProperties.dwDhcp = 1;
         NewProperties.pszIpAddress = NULL;
         NewProperties.pszSubnetMask = NULL;
-//        NewProperties.pszParameters = 
+        NewProperties.pszParameters = pszParameterBuffer;
+
+        StringCchPrintfW(pszParameterBuffer, BUFFER_SIZE,
+                         L"DefGw=%s;GwMetric=%s;",
+                         L"", L"");
     }
 
     SetInterfaceProperties(&InterfaceGUID, &NewProperties);
 
 done:
+    if (pszParameterBuffer)
+        HeapFree(GetProcessHeap(), 0, pszParameterBuffer);
+
     CoTaskMemFree(pProperties);
     pProperties = NULL;
 
-    DPRINT1("IpSetAddress() done (Error %lu)\n", dwError);
+    DPRINT("IpSetAddress() done (Error %lu)\n", dwError);
     return dwError;
 }
 
