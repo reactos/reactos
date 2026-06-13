@@ -55,7 +55,7 @@ Author:
 #define KdMapPhysicalMemory64                               HALPRIVATEDISPATCH->KdMapPhysicalMemory64
 #define KdUnmapVirtualAddress                               HALPRIVATEDISPATCH->KdUnmapVirtualAddress
 #endif
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if defined(__REACTOS__) // (NTDDI_VERSION >= NTDDI_LONGHORN)
 #define KdGetPciDataByOffset                                HALPRIVATEDISPATCH->KdGetPciDataByOffset
 #define KdSetPciDataByOffset                                HALPRIVATEDISPATCH->KdSetPciDataByOffset
 #define HalGetInterruptVectorOverride                       HALPRIVATEDISPATCH->HalGetInterruptVectorOverride
