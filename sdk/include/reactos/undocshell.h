@@ -132,6 +132,22 @@ BOOL WINAPI IContextMenu_Invoke(
     _In_ LPCSTR lpVerb,
     _In_ UINT uFlags);
 
+EXTERN_C BOOL
+WINAPI
+SHInvokePrinterCommandW(HWND hwnd,
+                        UINT uAction,
+                        LPCWSTR lpBuf1,
+                        LPCWSTR lpBuf2,
+                        BOOL fModal);
+
+EXTERN_C BOOL
+WINAPI
+SHInvokePrinterCommandA(HWND hwnd,
+                        UINT uAction,
+                        LPCSTR lpBuf1,
+                        LPCSTR lpBuf2,
+                        BOOL fModal);
+
 /*
     string functions
 */
