@@ -21,12 +21,12 @@ list(APPEND LIBCNTPR_ASM_SOURCE
 )
 
 set_source_files_properties(${LIBCNTPR_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "NO_RTL_INLINES;_NTSYSTEM_;_NTDLLBUILD_;_LIBCNT_;__CRT__NO_INLINE;CRTDLL")
+if(MSVC)
+    set_source_files_properties(${LIBCNTPR_STRING_SOURCE} PROPERTIES COMPILE_OPTIONS "/Oi-") # Disable intrinsic functions for string
+endif()
 add_asm_files(libcntpr_asm ${LIBCNTPR_ASM_SOURCE})
 
 add_library(libcntpr STATIC ${LIBCNTPR_SOURCE} ${libcntpr_asm})
-if(MSVC)
-    target_compile_options(libcntpr PRIVATE /Oi-) # Disable intrinsic functions
-endif()
 target_compile_definitions(libcntpr
  PRIVATE    NO_RTL_INLINES
     _NTSYSTEM_
