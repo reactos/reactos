@@ -647,11 +647,10 @@ struct CShellWndThread
 class CUTBLangBarDlg
 {
 protected:
-    LPTSTR m_pszDialogName;
-    LONG m_cRefs;
+    LPTSTR m_pszDialogName = NULL;
+    LONG m_cRefs = 1;
 
 public:
-    CUTBLangBarDlg() { }
     virtual ~CUTBLangBarDlg() { }
 
     static CUTBLangBarDlg *GetThis(HWND hDlg);
@@ -710,10 +709,9 @@ class CCicLibMenu : public ITfMenu
 {
 protected:
     CicArray<CCicLibMenuItem*> m_MenuItems;
-    LONG m_cRefs;
+    LONG m_cRefs = 1;
 
 public:
-    CCicLibMenu();
     virtual ~CCicLibMenu();
 
     STDMETHOD(QueryInterface)(REFIID riid, LPVOID *ppvObj) override;
@@ -736,15 +734,14 @@ public:
 class CCicLibMenuItem
 {
 protected:
-    DWORD m_uId;
-    DWORD m_dwFlags;
-    HBITMAP m_hbmp;
-    HBITMAP m_hbmpMask;
-    BSTR m_bstrText;
-    ITfMenu *m_pMenu;
+    DWORD m_uId = 0;
+    DWORD m_dwFlags = 0;
+    HBITMAP m_hbmp = NULL;
+    HBITMAP m_hbmpMask = NULL;
+    BSTR m_bstrText = NULL;
+    ITfMenu* m_pMenu = NULL;
 
 public:
-    CCicLibMenuItem();
     virtual ~CCicLibMenuItem();
 
     BOOL Init(
@@ -763,13 +760,13 @@ public:
 class CTipbarAccessible : public IAccessible
 {
 protected:
-    LONG m_cRefs;
-    HWND m_hWnd;
-    IAccessible *m_pStdAccessible;
-    ITypeInfo *m_pTypeInfo;
-    BOOL m_bInitialized;
+    LONG m_cRefs = 1;
+    HWND m_hWnd = NULL;
+    IAccessible* m_pStdAccessible = NULL;
+    ITypeInfo* m_pTypeInfo = NULL;
+    BOOL m_bInitialized = FALSE;
     CicArray<CTipbarAccItem*> m_AccItems;
-    LONG m_cSelection;
+    LONG m_cSelection = 1;
     friend class CUTBMenuWnd;
     friend class CTipbarWnd;
 
@@ -893,9 +890,8 @@ public:
 class CTipbarCoInitialize
 {
 public:
-    BOOL m_bCoInit;
+    BOOL m_bCoInit = FALSE;
 
-    CTipbarCoInitialize() : m_bCoInit(FALSE) { }
     ~CTipbarCoInitialize() { CoUninit(); }
 
     HRESULT EnsureCoInit()
@@ -925,8 +921,8 @@ class CUTBMenuWnd : public CTipbarAccItem, public CUIFMenu
 {
 protected:
     CTipbarCoInitialize m_coInit;
-    CTipbarAccessible *m_pAccessible;
-    UINT m_nMenuWndID;
+    CTipbarAccessible* m_pAccessible = NULL;
+    UINT m_nMenuWndID = 0;
     friend class CUTBMenuItem;
 
 public:
@@ -958,7 +954,7 @@ public:
 class CUTBMenuItem : public CTipbarAccItem, public CUIFMenuItem
 {
 protected:
-    CUTBMenuWnd *m_pMenuUI;
+    CUTBMenuWnd* m_pMenuUI = NULL;
     friend class CUTBMenuWnd;
 
 public:
@@ -983,11 +979,10 @@ public:
 class CModalMenu
 {
 public:
-    DWORD m_dwUnknown26;
-    CUTBMenuWnd *m_pMenuUI;
+    DWORD m_dwUnknown26 = 0;
+    CUTBMenuWnd* m_pMenuUI = NULL;
 
 public:
-    CModalMenu() { }
     virtual ~CModalMenu() { }
 
     CUTBMenuItem *InsertItem(CUTBMenuWnd *pMenuUI, INT nCommandId, INT nStringID);
@@ -1002,8 +997,8 @@ class CTipbarThread;
 class CUTBContextMenu : public CModalMenu
 {
 public:
-    CTipbarWnd *m_pTipbarWnd;
-    CTipbarThread *m_pTipbarThread;
+    CTipbarWnd* m_pTipbarWnd = NULL;
+    CTipbarThread* m_pTipbarThread = NULL;
 
 public:
     CUTBContextMenu(CTipbarWnd *pTipbarWnd);
@@ -1027,12 +1022,11 @@ class CUTBLBarMenuItem;
 class CUTBLBarMenu : public CCicLibMenu
 {
 protected:
-    CUTBMenuWnd *m_pMenuUI;
-    HINSTANCE m_hInst;
+    CUTBMenuWnd* m_pMenuUI = NULL;
+    HINSTANCE m_hInst = NULL;
 
 public:
     CUTBLBarMenu(HINSTANCE hInst);
-    ~CUTBLBarMenu() override;
 
     CUTBMenuWnd *CreateMenuUI();
     INT ShowPopup(CUIFWindow *pWindow, POINT pt, LPCRECT prcExclude);
@@ -1046,10 +1040,9 @@ public:
 class CUTBLBarMenuItem : public CCicLibMenuItem
 {
 public:
-    CUTBLBarMenu *m_pLBarMenu;
+    CUTBLBarMenu* m_pLBarMenu = NULL;
 
 public:
-    CUTBLBarMenuItem() { m_pLBarMenu = NULL; }
     BOOL InsertToUI(CUTBMenuWnd *pMenuUI);
 };
 
@@ -1058,8 +1051,8 @@ public:
 class CTipbarGripper : public CUIFGripper
 {
 protected:
-    CTipbarWnd *m_pTipbarWnd;
-    BOOL m_bInDebugMenu;
+    CTipbarWnd* m_pTipbarWnd = NULL;
+    BOOL m_bInDebugMenu = FALSE;
     friend class CTipbarWnd;
 
 public:
@@ -1096,29 +1089,28 @@ public:
 class CTrayIconWnd
 {
 protected:
-    DWORD m_dwUnknown20;
-    BOOL m_bBusy;
-    UINT m_uCallbackMessage;
-    UINT m_uMsg;
-    HWND m_hWnd;
-    DWORD m_dwUnknown21[2];
-    HWND m_hTrayWnd;
-    HWND m_hNotifyWnd;
-    DWORD m_dwTrayWndThreadId;
-    DWORD m_dwUnknown22;
-    HWND m_hwndProgman;
-    DWORD m_dwProgmanThreadId;
-    CMainIconItem *m_pMainIconItem;
+    DWORD m_dwUnknown20 = 0;
+    BOOL m_bBusy = FALSE;
+    UINT m_uCallbackMessage = 0;
+    UINT m_uMsg = 0;
+    HWND m_hWnd = NULL;
+    DWORD m_dwUnknown21[2] = { 0 };
+    HWND m_hTrayWnd = NULL;
+    HWND m_hNotifyWnd = NULL;
+    DWORD m_dwTrayWndThreadId = 0;
+    DWORD m_dwUnknown22 = 0;
+    HWND m_hwndProgman = NULL;
+    DWORD m_dwProgmanThreadId = 0;
+    CMainIconItem* m_pMainIconItem = NULL;
     CicArray<CButtonIconItem*> m_Items;
-    UINT m_uCallbackMsg;
-    UINT m_uNotifyIconID;
+    UINT m_uCallbackMsg = WM_USER + 0x1000;
+    UINT m_uNotifyIconID = 0x1000;
     friend class CTipbarWnd;
 
     static BOOL CALLBACK EnumChildWndProc(HWND hWnd, LPARAM lParam);
     static LRESULT CALLBACK _WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
-    CTrayIconWnd();
     ~CTrayIconWnd();
 
     static BOOL RegisterClass();
@@ -1147,16 +1139,16 @@ public:
 class CTrayIconItem
 {
 protected:
-    HWND m_hWnd;
-    UINT m_uCallbackMessage;
-    UINT m_uNotifyIconID;
-    DWORD m_dwIconAddOrModify;
-    BOOL m_bIconAdded;
-    CTrayIconWnd *m_pTrayIconWnd;
-    DWORD m_dwUnknown25;
-    GUID m_guid;
-    RECT m_rcMenu;
-    POINT m_ptCursor;
+    HWND m_hWnd = NULL;
+    UINT m_uCallbackMessage = 0;
+    UINT m_uNotifyIconID = 0;
+    DWORD m_dwIconAddOrModify = 0;
+    BOOL m_bIconAdded = FALSE;
+    CTrayIconWnd* m_pTrayIconWnd = NULL;
+    DWORD m_dwUnknown25 = 0;
+    GUID m_guid = {};
+    RECT m_rcMenu = {};
+    POINT m_ptCursor = {};
     friend class CTrayIconWnd;
 
 public:
@@ -1177,8 +1169,8 @@ public:
 class CButtonIconItem : public CTrayIconItem
 {
 protected:
-    DWORD m_dwUnknown24;
-    HKL m_hKL;
+    DWORD m_dwUnknown24 = 0;
+    HKL m_hKL = NULL;
     friend class CTrayIconWnd;
 
 public:
@@ -1204,14 +1196,13 @@ public:
 class CLBarItemBase
 {
 protected:
-    DWORD m_dwItemStatus;
-    TF_LANGBARITEMINFO m_NewUIInfo;
-    WCHAR m_szToolTipText[256];
-    LONG m_cRefs;
-    ITfLangBarItemSink *m_pLangBarItemSink;
+    DWORD m_dwItemStatus = { 0 };
+    TF_LANGBARITEMINFO m_NewUIInfo = {};
+    WCHAR m_szToolTipText[256] = { 0 };
+    LONG m_cRefs = 1;
+    ITfLangBarItemSink* m_pLangBarItemSink = NULL;
 
 public:
-    CLBarItemBase();
     virtual ~CLBarItemBase();
 
     HRESULT ShowInternal(BOOL bShow, BOOL bUpdate);
@@ -1241,10 +1232,9 @@ class CLBarItemButtonBase
     , public ITfSource
 {
 public:
-    HICON m_hIcon;
+    HICON m_hIcon = NULL;
 
 public:
-    CLBarItemButtonBase() { m_hIcon = NULL; }
     ~CLBarItemButtonBase() override;
 
     // IUnknown methods
@@ -1276,8 +1266,8 @@ public:
 class CLBarInatItem : public CLBarItemButtonBase
 {
 protected:
-    HKL m_hKL;
-    DWORD m_dwThreadId;
+    HKL m_hKL = NULL;
+    DWORD m_dwThreadId = 0;
 
 public:
     CLBarInatItem(DWORD dwThreadId);
@@ -1297,19 +1287,19 @@ class CTipbarBalloonItem;
 class CTipbarThread
 {
 protected:
-    CTipbarWnd *m_pTipbarWnd;
-    ITfLangBarItemMgr *m_pLangBarItemMgr;
+    CTipbarWnd* m_pTipbarWnd = NULL;
+    ITfLangBarItemMgr* m_pLangBarItemMgr = NULL;
     CicArray<CTipbarItem*> m_UIObjects;
     CicArray<CUIFObject*> m_Separators;
-    DWORD m_dwUnknown32;
-    DWORD m_dwThreadId;
-    DWORD m_dwFlags1;
-    DWORD m_dwFlags2;
-    INT m_cxGrip;
-    INT m_cyGrip;
-    DWORD m_dwFlags3;
-    DWORD m_dwUnknown34;
-    LONG m_cRefs;
+    DWORD m_dwUnknown32 = 0;
+    DWORD m_dwThreadId = 0;
+    DWORD m_dwFlags1 = 0;
+    DWORD m_dwFlags2 = 0;
+    INT m_cxGrip = 0;
+    INT m_cyGrip = 0;
+    DWORD m_dwFlags3 = 0;
+    DWORD m_dwUnknown34 = 0;
+    LONG m_cRefs = 1;
     friend class CTipbarWnd;
     friend class CTipbarItem;
 
@@ -1361,16 +1351,16 @@ public:
 class CTipbarItem : public CTipbarAccItem
 {
 protected:
-    DWORD m_dwCookie;
-    TF_LANGBARITEMINFO m_ItemInfo;
-    DWORD m_dwUnknown16;
-    DWORD m_dwUnknown17;
-    CTipbarThread *m_pTipbarThread;
-    ITfLangBarItem *m_pLangBarItem;
-    DWORD m_dwUnknown18[2];
-    DWORD m_dwItemFlags;
-    DWORD m_dwDirty;
-    DWORD m_dwUnknown19[4];
+    DWORD m_dwCookie = 0;
+    TF_LANGBARITEMINFO m_ItemInfo = {};
+    DWORD m_dwUnknown16 = 0;
+    DWORD m_dwUnknown17 = 0;
+    CTipbarThread* m_pTipbarThread = NULL;
+    ITfLangBarItem* m_pLangBarItem = NULL;
+    DWORD m_dwUnknown18[2] = { 0 };
+    DWORD m_dwItemFlags = 0;
+    DWORD m_dwDirty = 0;
+    DWORD m_dwUnknown19[4] = { 0 };
     friend class CTipbarThread;
     friend class CTipbarWnd;
 
@@ -1455,46 +1445,46 @@ class CTipbarWnd
     , public CUIFWindow
 {
     CTipbarCoInitialize m_coInit;
-    DWORD m_dwSinkCookie;
-    CModalMenu *m_pModalMenu;
-    CTipbarThread *m_pThread;
+    DWORD m_dwSinkCookie = 0;
+    CModalMenu* m_pModalMenu = NULL;
+    CTipbarThread* m_pThread = NULL;
     CLangBarItemList m_LangBarItemList;
-    DWORD m_dwUnknown20;
-    CUIFWndFrame *m_pWndFrame;
-    CTipbarGripper *m_pTipbarGripper;
-    CTipbarThread *m_pFocusThread;
+    DWORD m_dwUnknown20 = 0;
+    CUIFWndFrame* m_pWndFrame = NULL;
+    CTipbarGripper* m_pTipbarGripper = NULL;
+    CTipbarThread* m_pFocusThread= NULL;
     CicArray<CTipbarThread*> m_Threads;
     CicArray<CTipbarThread*> m_ThreadCreatingList;
-    DWORD m_dwAlphaValue;
-    DWORD m_dwTipbarWndFlags;
-    LONG m_ButtonWidth;
-    DWORD m_dwShowType;
-    DWORD m_dwUnknown21;
-    INT m_cxSmallIcon;
-    INT m_cySmallIcon;
-    INT m_cxDlgFrameX2;
-    INT m_cyDlgFrameX2;
-    HFONT m_hMarlettFont;
-    HFONT m_hTextFont;
-    ITfLangBarMgr_P *m_pLangBarMgr;
-    DWORD m_dwUnknown23;
-    CTipbarCtrlButtonHolder *m_pTipbarCtrlButtonHolder;
-    DWORD m_dwUnknown23_1[8];
-    CUIFWindow *m_pBalloon;
-    DWORD m_dwChangingThreadId;
-    LONG m_bInCallOn;
-    LONG m_X;
-    LONG m_Y;
-    LONG m_CX;
-    LONG m_CY;
-    CTipbarAccessible *m_pTipbarAccessible;
-    INT m_nID;
-    MARGINS m_Margins;
-    DWORD m_dwUnknown23_5[4];
-    CTipbarThread *m_pUnknownThread;
-    CDeskBand *m_pDeskBand;
+    DWORD m_dwAlphaValue = 0;
+    DWORD m_dwTipbarWndFlags = 0;
+    LONG m_ButtonWidth = 0;
+    DWORD m_dwShowType = 0;
+    DWORD m_dwUnknown21 = 0;
+    INT m_cxSmallIcon = 0;
+    INT m_cySmallIcon = 0;
+    INT m_cxDlgFrameX2 = 0;
+    INT m_cyDlgFrameX2 = 0;
+    HFONT m_hMarlettFont = NULL;
+    HFONT m_hTextFont = NULL;
+    ITfLangBarMgr_P* m_pLangBarMgr = NULL;
+    DWORD m_dwUnknown23 = 0;
+    CTipbarCtrlButtonHolder* m_pTipbarCtrlButtonHolder = NULL;
+    DWORD m_dwUnknown23_1[8] = { 0 };
+    CUIFWindow* m_pBalloon = NULL;
+    DWORD m_dwChangingThreadId = 0;
+    LONG m_bInCallOn = 0;
+    LONG m_X = 0;
+    LONG m_Y = 0;
+    LONG m_CX = 0;
+    LONG m_CY = 0;
+    CTipbarAccessible* m_pTipbarAccessible = NULL;
+    INT m_nID = 0;
+    MARGINS m_Margins = {};
+    DWORD m_dwUnknown23_5[4] = { 0 };
+    CTipbarThread* m_pUnknownThread = NULL;
+    CDeskBand* m_pDeskBand = NULL;
     CShellWndThread m_ShellWndThread;
-    LONG m_cRefs;
+    LONG m_cRefs = 1;
     friend class CUTBContextMenu;
     friend class CTipbarGripper;
     friend class CTipbarThread;
@@ -1733,8 +1723,6 @@ CUTBLangBarDlg::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 CUTBCloseLangBarDlg::CUTBCloseLangBarDlg()
 {
-    m_cRefs = 1;
-
     if (!(g_dwOSInfo & CIC_OSINFO_XPPLUS))
         m_pszDialogName = MAKEINTRESOURCE(IDD_CLOSELANGBARNOBAND);
     else
@@ -1800,7 +1788,6 @@ STDMETHODIMP_(void) CUTBCloseLangBarDlg::SetDlgShown(BOOL bShown)
 
 CUTBMinimizeLangBarDlg::CUTBMinimizeLangBarDlg()
 {
-    m_cRefs = 1;
     if (!(g_dwOSInfo & CIC_OSINFO_XPPLUS))
         m_pszDialogName = MAKEINTRESOURCE(IDD_MINIMIZELANGBARNOBAND);
     else
@@ -1867,10 +1854,6 @@ STDMETHODIMP_(BOOL) CUTBMinimizeLangBarDlg::ThreadProc()
 /***********************************************************************
  * CCicLibMenu
  */
-
-CCicLibMenu::CCicLibMenu() : m_cRefs(1)
-{
-}
 
 CCicLibMenu::~CCicLibMenu()
 {
@@ -1957,38 +1940,18 @@ STDMETHODIMP CCicLibMenu::AddMenuItem(
  * CCicLibMenuItem
  */
 
-CCicLibMenuItem::CCicLibMenuItem()
-{
-    m_uId = 0;
-    m_dwFlags = 0;
-    m_hbmp = NULL;
-    m_hbmpMask = NULL;
-    m_bstrText = NULL;
-    m_pMenu = NULL;
-}
-
 CCicLibMenuItem::~CCicLibMenuItem()
 {
     if (m_pMenu)
-    {
         m_pMenu->Release();
-        m_pMenu = NULL;
-    }
-
+ 
     if (m_hbmp)
-    {
         ::DeleteObject(m_hbmp);
-        m_hbmp = NULL;
-    }
-
+ 
     if (m_hbmpMask)
-    {
         ::DeleteObject(m_hbmpMask);
-        m_hbmpMask = NULL;
-    }
-
+ 
     ::SysFreeString(m_bstrText);
-    m_bstrText = NULL;
 }
 
 BOOL CCicLibMenuItem::Init(
@@ -2066,29 +2029,16 @@ HBITMAP CCicLibMenuItem::CreateBitmap(HANDLE hBitmap)
 
 CTipbarAccessible::CTipbarAccessible(CTipbarAccItem *pItem)
 {
-    m_cRefs = 1;
-    m_hWnd = NULL;
-    m_pTypeInfo = NULL;
-    m_pStdAccessible = NULL;
-    m_bInitialized = FALSE;
-    m_cSelection = 1;
     m_AccItems.Add(pItem);
     ++g_DllRefCount;
 }
 
 CTipbarAccessible::~CTipbarAccessible()
 {
-    m_pTypeInfo = m_pTypeInfo;
     if (m_pTypeInfo)
-    {
         m_pTypeInfo->Release();
-        m_pTypeInfo = NULL;
-    }
     if (m_pStdAccessible)
-    {
         m_pStdAccessible->Release();
-        m_pStdAccessible = NULL;
-    }
     --g_DllRefCount;
 }
 
@@ -2716,15 +2666,9 @@ CUTBMenuItem::CUTBMenuItem(CUTBMenuWnd *pMenuUI)
 CUTBMenuItem::~CUTBMenuItem()
 {
     if (m_hbmColor)
-    {
         ::DeleteObject(m_hbmColor);
-        m_hbmColor = NULL;
-    }
     if (m_hbmMask)
-    {
         ::DeleteObject(m_hbmMask);
-        m_hbmMask = NULL;
-    }
 }
 
 STDMETHODIMP_(BOOL) CUTBMenuItem::DoAccDefaultAction()
@@ -3186,12 +3130,6 @@ STDMETHODIMP_(BOOL) CMainIconItem::OnDelayMsg(UINT uMsg)
  * CTrayIconWnd
  */
 
-CTrayIconWnd::CTrayIconWnd()
-{
-    m_uCallbackMsg = WM_USER + 0x1000;
-    m_uNotifyIconID = 0x1000;
-}
-
 CTrayIconWnd::~CTrayIconWnd()
 {
     for (size_t iItem = 0; iItem < m_Items.size(); ++iItem)
@@ -3457,14 +3395,6 @@ CTrayIconWnd::_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
  * CLBarItemBase
  */
 
-CLBarItemBase::CLBarItemBase()
-{
-    m_dwItemStatus = 0;
-    m_szToolTipText[0] = 0;
-    m_cRefs = 1;
-    m_pLangBarItemSink = NULL;
-}
-
 CLBarItemBase::~CLBarItemBase()
 {
     if (m_pLangBarItemSink)
@@ -3568,10 +3498,6 @@ CUTBLBarMenu::CUTBLBarMenu(HINSTANCE hInst) : CCicLibMenu()
     m_hInst = hInst;
 }
 
-CUTBLBarMenu::~CUTBLBarMenu()
-{
-}
-
 STDMETHODIMP_(CCicLibMenuItem*) CUTBLBarMenu::CreateMenuItem()
 {
     CUTBLBarMenuItem *pItem = new(cicNoThrow) CUTBLBarMenuItem();
@@ -3652,10 +3578,7 @@ BOOL CUTBLBarMenuItem::InsertToUI(CUTBMenuWnd *pMenuUI)
 CLBarItemButtonBase::~CLBarItemButtonBase()
 {
     if (m_hIcon)
-    {
         ::DestroyIcon(m_hIcon);
-        m_hIcon = NULL;
-    }
 }
 
 STDMETHODIMP CLBarItemButtonBase::QueryInterface(REFIID riid, void **ppvObject)
@@ -3867,7 +3790,6 @@ STDMETHODIMP CLBarInatItem::OnMenuSelect(INT nCommandId)
 CTipbarGripper::CTipbarGripper(CTipbarWnd *pTipbarWnd, LPCRECT prc, DWORD style)
     : CUIFGripper((pTipbarWnd ? pTipbarWnd->GetWindow() : NULL), prc, style)
 {
-    m_bInDebugMenu = FALSE;
     m_pTipbarWnd = pTipbarWnd;
 }
 
@@ -4183,8 +4105,6 @@ CTipbarWnd::CTipbarWnd(DWORD style)
     }
 
     SetVertical(g_fVertical);
-
-    m_cRefs = 1;
 }
 
 CTipbarWnd::~CTipbarWnd()
@@ -5731,9 +5651,6 @@ STDMETHODIMP_(void) CTipbarWnd::HandleMouseMsg(UINT uMsg, LONG x, LONG y)
 CTipbarThread::CTipbarThread(CTipbarWnd *pTipbarWnd)
 {
     m_pTipbarWnd = pTipbarWnd;
-    m_dwThreadId = 0;
-    m_pLangBarItemMgr = NULL;
-    m_cRefs = 1;
 }
 
 CTipbarThread::~CTipbarThread()
@@ -5747,10 +5664,7 @@ CTipbarThread::~CTipbarThread()
     _UninitItemList(1);
 
     if (m_pLangBarItemMgr)
-    {
         m_pLangBarItemMgr->Release();
-        m_pLangBarItemMgr = NULL;
-    }
 }
 
 HRESULT CTipbarThread::Init(DWORD dwThreadId)
@@ -6058,14 +5972,10 @@ CTipbarItem::CTipbarItem(
     TF_LANGBARITEMINFO *pItemInfo,
     DWORD dwUnknown16)
 {
-    m_dwUnknown19[1] = 0;
-    m_dwUnknown19[2] = 0;
-    m_dwUnknown19[3] = 0;
     m_pTipbarThread = pThread;
     m_ItemInfo = *pItemInfo;
     m_pLangBarItem = pLangBarItem;
     m_pLangBarItem->AddRef();
-    m_dwItemFlags = 0;
     m_dwUnknown16 = dwUnknown16;
     m_dwDirty = 0x1001F;
 }

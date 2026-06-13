@@ -12,8 +12,10 @@
 class CicArrayBase
 {
 protected:
-    LPBYTE m_pb;
-    size_t m_cItems, m_cbItem, m_cCapacity;
+    LPBYTE m_pb = NULL;
+    size_t m_cItems = 0;
+    size_t m_cbItem = 0;
+    size_t m_cCapacity = 0;
 
 public:
     CicArrayBase(size_t cbItem);

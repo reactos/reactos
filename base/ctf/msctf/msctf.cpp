@@ -78,13 +78,12 @@ public:
     STDMETHODIMP LockServer(_In_ BOOL fLock) override;
 
 protected:
-    LONG m_cRefs;
-    LPFNCONSTRUCTOR m_ctor;
+    LONG m_cRefs = 1;
+    LPFNCONSTRUCTOR m_ctor = NULL;
 };
 
 CClassFactory::CClassFactory(LPFNCONSTRUCTOR ctor)
-    : m_cRefs(1)
-    , m_ctor(ctor)
+    : m_ctor(ctor)
 {
 }
 

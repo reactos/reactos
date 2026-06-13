@@ -11,13 +11,10 @@
 
 class CicEvent
 {
-    HANDLE m_hEvent;
-    LPCTSTR m_pszName;
+    HANDLE m_hEvent = NULL;
+    LPCTSTR m_pszName = NULL;
 
 public:
-    CicEvent() : m_hEvent(NULL), m_pszName(NULL)
-    {
-    }
     ~CicEvent()
     {
         Close();

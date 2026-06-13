@@ -50,11 +50,10 @@ class CUIFSystemInfo : OSVERSIONINFO
 {
 public:
     static CUIFSystemInfo *s_pSystemInfo;
-    DWORD m_cBitsPixels;
-    BOOL m_bHighContrast1;
-    BOOL m_bHighContrast2;
+    DWORD m_cBitsPixels = 0;
+    BOOL m_bHighContrast1 = FALSE;
+    BOOL m_bHighContrast2 = FALSE;
 
-    CUIFSystemInfo() { }
     void GetSystemMetrics();
     void Initialize();
 };
@@ -87,10 +86,10 @@ using FN_GetThemeSysSize = decltype(&GetThemeSysSize);
 class CUIFTheme
 {
 public:
-    LPCWSTR m_pszClassList;
-    INT m_iPartId;
-    INT m_iStateId;
-    HTHEME m_hTheme;
+    LPCWSTR m_pszClassList = NULL;
+    INT m_iPartId = 0;
+    INT m_iStateId = 0;
+    HTHEME m_hTheme = NULL;
     static HINSTANCE s_hUXTHEME;
     static FN_OpenThemeData s_fnOpenThemeData;
     static FN_CloseThemeData s_fnCloseThemeData;
@@ -135,8 +134,6 @@ public:
 class CUIFObjectArray : public CicArray<CUIFObject*>
 {
 public:
-    CUIFObjectArray() { }
-
     BOOL Add(CUIFObject *pObject)
     {
         if (!pObject || Find(pObject) >= 0)
@@ -180,19 +177,19 @@ public:
 class CUIFObject : public CUIFTheme
 {
 protected:
-    CUIFObject *m_pParent;
-    CUIFWindow *m_pWindow;
-    CUIFScheme *m_pScheme;
-    CUIFObjectArray m_ObjectArray;
-    DWORD m_nObjectID;
-    DWORD m_style;
-    RECT m_rc;
-    BOOL m_bEnable;
-    BOOL m_bVisible;
-    HFONT m_hFont;
-    BOOL m_bHasCustomFont;
-    LPWSTR m_pszToolTip;
-    DWORD m_dwUnknown4[2]; //FIXME: name and type
+    CUIFObject* m_pParent = NULL;
+    CUIFWindow* m_pWindow = NULL;
+    CUIFScheme* m_pScheme = NULL;
+    CUIFObjectArray m_ObjectArray = {};
+    DWORD m_nObjectID = 0;
+    DWORD m_style = 0;
+    RECT m_rc = { 0 };
+    BOOL m_bEnable = FALSE;
+    BOOL m_bVisible = FALSE;
+    HFONT m_hFont = NULL;
+    BOOL m_bHasCustomFont = FALSE;
+    LPWSTR m_pszToolTip = NULL;
+    DWORD m_dwUnknown4[2] = { (DWORD)-1, (DWORD)-1 }; //FIXME: name and type
     friend class CUIFWindow;
     friend class CUIFToolTip;
     friend class CUIFBalloonWindow;
@@ -253,7 +250,6 @@ public:
 class CUIFColorTable
 {
 public:
-    CUIFColorTable() { }
     virtual ~CUIFColorTable() { }
 
     STDMETHOD_(void, InitColor)() = 0;
@@ -273,12 +269,10 @@ public:
 class CUIFColorTableSys : public CUIFColorTable
 {
 protected:
-    COLORREF m_rgbColors[16];
-    HBRUSH m_hBrushes[16];
+    COLORREF m_rgbColors[16] = { 0 };
+    HBRUSH m_hBrushes[16] = { NULL };
 
 public:
-    CUIFColorTableSys() { }
-
     COLORREF GetColor(INT iColor) const { return m_rgbColors[iColor]; }
     HBRUSH GetBrush(INT iColor);
 
@@ -290,12 +284,10 @@ public:
 class CUIFColorTableOff10 : public CUIFColorTable
 {
 protected:
-    COLORREF m_rgbColors[32];
-    HBRUSH m_hBrushes[32];
+    COLORREF m_rgbColors[32] = { 0 };
+    HBRUSH m_hBrushes[32] = { NULL };
 
 public:
-    CUIFColorTableOff10() { }
-
     COLORREF GetColor(INT iColor) const { return m_rgbColors[iColor]; }
     HBRUSH GetBrush(INT iColor);
 
@@ -309,7 +301,7 @@ public:
 class CUIFSolidBrush
 {
 public:
-    HBRUSH m_hBrush;
+    HBRUSH m_hBrush = NULL;
 
     operator HBRUSH() const { return m_hBrush; }
 
@@ -332,8 +324,8 @@ public:
 class CUIFIcon
 {
 public:
-    HICON m_hIcon;
-    HIMAGELIST m_hImageList;
+    HICON m_hIcon = NULL;
+    HIMAGELIST m_hImageList = NULL;
 
     CUIFIcon& operator=(HICON hIcon)
     {
@@ -354,10 +346,10 @@ public:
 class CUIFBitmapDC
 {
 protected:
-    HBITMAP m_hBitmap;
-    HGDIOBJ m_hOldBitmap;
-    HGDIOBJ m_hOldObject;
-    HDC m_hDC;
+    HBITMAP m_hBitmap = NULL;
+    HGDIOBJ m_hOldBitmap = NULL;
+    HGDIOBJ m_hOldObject = NULL;
+    HDC m_hDC = NULL;
 
 public:
     static BOOL s_fInitBitmapDCs;
@@ -417,9 +409,8 @@ class CUIFScheme
 public:
     static CUIFColorTableSys *s_pColorTableSys;
     static CUIFColorTableOff10 *s_pColorTableOff10;
-    BOOL m_bMirroring;
+    BOOL m_bMirroring = FALSE;
 
-    CUIFScheme() : m_bMirroring(FALSE) { }
     virtual ~CUIFScheme() { }
 
     STDMETHOD_(DWORD, GetType)() = 0;
@@ -453,7 +444,7 @@ public:
 class CUIFSchemeDef : public CUIFScheme
 {
 protected:
-    DWORD m_dwType;
+    DWORD m_dwType = 0;
 
 public:
     CUIFSchemeDef(DWORD dwType) : m_dwType(dwType) { }
@@ -510,20 +501,20 @@ enum
 class CUIFWindow : public CUIFObject
 {
 protected:
-    INT m_nLeft;
-    INT m_nTop;
-    INT m_nHeight;
-    INT m_nWidth;
-    HINSTANCE m_hInst;
-    HWND m_hWnd;
-    CUIFObject *m_pTimerObject;
-    CUIFObject *m_pCaptured;
-    CUIFObject *m_pPointed;
-    BOOL m_bPointing;
-    CUIFWindow *m_pBehindModal;
-    CUIFToolTip *m_pToolTip;
-    CUIFShadow *m_pShadow;
-    BOOL m_bShowShadow;
+    INT m_nLeft = 200;
+    INT m_nTop = 200;
+    INT m_nHeight = 200;
+    INT m_nWidth = 200;
+    HINSTANCE m_hInst = NULL;
+    HWND m_hWnd = NULL;
+    CUIFObject* m_pTimerObject = NULL;
+    CUIFObject* m_pCaptured = NULL;
+    CUIFObject* m_pPointed = NULL;
+    BOOL m_bPointing = FALSE;
+    CUIFWindow* m_pBehindModal = NULL;
+    CUIFToolTip* m_pToolTip = NULL;
+    CUIFShadow* m_pShadow = NULL;
+    BOOL m_bShowShadow = FALSE;
     friend class CUIFObject;
     friend class CUIFShadow;
     friend class CUIFToolTip;
@@ -610,20 +601,20 @@ public:
 class CUIFToolTip : public CUIFWindow
 {
 protected:
-    CUIFWindow *m_pToolTipOwner;
-    CUIFObject *m_pToolTipTarget;
-    LPWSTR m_pszToolTipText;
-    BOOL m_bShowToolTip;
-    DWORD m_dwUnknown10; //FIXME: name and type
-    LONG m_nDelayTimeType2;
-    LONG m_nDelayTimeType3;
-    LONG m_nDelayTimeType1;
-    RECT m_rcToolTipMargin;
-    LONG m_cxToolTipWidth;
-    BOOL m_bToolTipHasBkColor;
-    BOOL m_bToolTipHasTextColor;
-    COLORREF m_rgbToolTipBkColor;
-    COLORREF m_rgbToolTipTextColor;
+    CUIFWindow* m_pToolTipOwner = NULL;
+    CUIFObject* m_pToolTipTarget = NULL;
+    LPWSTR m_pszToolTipText = NULL;
+    BOOL m_bShowToolTip = FALSE;
+    DWORD m_dwUnknown10 = 0; //FIXME: name and type
+    LONG m_nDelayTimeType2 = -1;
+    LONG m_nDelayTimeType3 = -1;
+    LONG m_nDelayTimeType1 = -1;
+    RECT m_rcToolTipMargin = { 2, 2, 2, 2 };
+    LONG m_cxToolTipWidth = -1;
+    BOOL m_bToolTipHasBkColor = FALSE;
+    BOOL m_bToolTipHasTextColor = FALSE;
+    COLORREF m_rgbToolTipBkColor = 0;
+    COLORREF m_rgbToolTipTextColor = 0;
     friend class CUIFObject;
     friend class CTipbarWnd;
 
@@ -654,15 +645,15 @@ public:
 class CUIFShadow : public CUIFWindow
 {
 protected:
-    CUIFWindow *m_pShadowOwner;
-    COLORREF m_rgbShadowColor;
-    DWORD m_dwUnknown11[2];
-    INT m_xShadowDelta;
-    INT m_yShadowDelta;
-    BOOL m_bLayerAvailable;
+    CUIFWindow* m_pShadowOwner = NULL;
+    COLORREF m_rgbShadowColor = 0;
+    DWORD m_dwUnknown11[2] = { 0 };
+    INT m_xShadowDelta = 0;
+    INT m_yShadowDelta = 0;
+    BOOL m_bLayerAvailable = FALSE;
 
 public:
-    CUIFShadow(HINSTANCE hInst, DWORD style, CUIFWindow *pShadowOwner);
+    CUIFShadow(HINSTANCE hInst, DWORD style, CUIFWindow* pShadowOwner);
     ~CUIFShadow() override;
 
     void InitSettings();
@@ -689,17 +680,17 @@ enum
 class CUIFMenu : public CUIFWindow
 {
 public:
-    CUIFMenu *m_pVisibleSubMenu;
-    CUIFMenu *m_pParentMenu;
-    CUIFMenuItem *m_pSelectedItem;
-    UINT m_nSelectedID;
+    CUIFMenu* m_pVisibleSubMenu = NULL;
+    CUIFMenu* m_pParentMenu = NULL;
+    CUIFMenuItem* m_pSelectedItem = NULL;
+    UINT m_nSelectedID = (UINT)-1;
     CicArray<CUIFMenuItem*> m_MenuItems;
-    HFONT m_hMenuFont;
-    BOOL m_bModal;
-    BOOL m_bHasMargin;
-    DWORD m_dwUnknown14;
-    LONG m_cxyMargin;
-    LONG m_cxMenuExtent;
+    HFONT m_hMenuFont = NULL;
+    BOOL m_bModal = FALSE;
+    BOOL m_bHasMargin = FALSE;
+    DWORD m_dwUnknown14 = 0;
+    LONG m_cxyMargin = 0;
+    LONG m_cxMenuExtent = 0;
     friend class CUIFMenuItem;
 
 public:
@@ -734,23 +725,23 @@ public:
 class CUIFMenuItem : public CUIFObject
 {
 protected:
-    UINT m_nMenuItemID;
-    LPWSTR m_pszMenuItemLeft;
-    UINT m_cchMenuItemLeft;
-    LPWSTR m_pszMenuItemRight;
-    UINT m_cchMenuItemRight;
-    UINT m_nMenuItemVKey;
-    UINT m_ichMenuItemPrefix;
-    HBITMAP m_hbmColor;
-    HBITMAP m_hbmMask;
-    BOOL m_bMenuItemChecked;
-    BOOL m_bMenuItemForceChecked;
-    BOOL m_bMenuItemGrayed;
-    BOOL m_bMenuItemDisabled;
-    CUIFMenu *m_pMenu;
-    CUIFMenu *m_pSubMenu;
-    SIZE m_MenuLeftExtent;
-    SIZE m_MenuRightExtent;
+    UINT m_nMenuItemID = 0;
+    LPWSTR m_pszMenuItemLeft = NULL;
+    UINT m_cchMenuItemLeft = 0;
+    LPWSTR m_pszMenuItemRight = NULL;
+    UINT m_cchMenuItemRight = 0;
+    UINT m_nMenuItemVKey = 0;
+    UINT m_ichMenuItemPrefix = (UINT)-1;
+    HBITMAP m_hbmColor = NULL;
+    HBITMAP m_hbmMask = NULL;
+    BOOL m_bMenuItemChecked = FALSE;
+    BOOL m_bMenuItemForceChecked = FALSE;
+    BOOL m_bMenuItemGrayed = FALSE;
+    BOOL m_bMenuItemDisabled = FALSE;
+    CUIFMenu* m_pMenu = NULL;
+    CUIFMenu* m_pSubMenu = NULL;
+    SIZE m_MenuLeftExtent = {};
+    SIZE m_MenuRightExtent = {};
     friend class CUIFMenu;
 
     void DrawArrow(HDC hDC, INT x, INT y);
@@ -817,15 +808,15 @@ enum
 class CUIFButton : public CUIFObject
 {
 protected:
-    UINT m_uButtonStatus;
-    LPWSTR m_pszButtonText;
-    CUIFIcon m_ButtonIcon;
-    DWORD m_dwUnknown9;
-    HBITMAP m_hbmButton1;
-    HBITMAP m_hbmButton2;
-    BOOL m_bPressed;
-    SIZE m_IconSize;
-    SIZE m_TextSize;
+    UINT m_uButtonStatus = 0;
+    LPWSTR m_pszButtonText = NULL;
+    CUIFIcon m_ButtonIcon = {};
+    DWORD m_dwUnknown9 = 0;
+    HBITMAP m_hbmButton1 = NULL;
+    HBITMAP m_hbmButton2 = NULL;
+    BOOL m_bPressed = FALSE;
+    SIZE m_IconSize = {};
+    SIZE m_TextSize = {};
     friend class CUIFToolbarButton;
 
     void DrawBitmapProc(HDC hDC, LPCRECT prc, BOOL bPressed);
@@ -857,7 +848,7 @@ public:
 class CUIFButton2 : public CUIFButton
 {
 protected:
-    SIZE m_BitmapSize;
+    SIZE m_BitmapSize = {};
 
 public:
     CUIFButton2(CUIFObject *pParent, DWORD nObjectID, LPCRECT prc, DWORD style);
@@ -873,7 +864,7 @@ public:
 class CUIFToolbarMenuButton : public CUIFButton2
 {
 public:
-    CUIFToolbarButton *m_pToolbarButton;
+    CUIFToolbarButton* m_pToolbarButton = NULL;
 
     CUIFToolbarMenuButton(CUIFToolbarButton *pParent, DWORD nObjectID, LPCRECT prc, DWORD style);
     ~CUIFToolbarMenuButton() override;
@@ -887,7 +878,7 @@ public:
 class CUIFToolbarButtonElement : public CUIFButton2
 {
 public:
-    CUIFToolbarButton *m_pToolbarButton;
+    CUIFToolbarButton* m_pToolbarButton = NULL;
 
     CUIFToolbarButtonElement(CUIFToolbarButton *pParent, DWORD nObjectID, LPCRECT prc, DWORD style);
 
@@ -901,10 +892,10 @@ public:
 class CUIFToolbarButton : public CUIFObject
 {
 public:
-    CUIFToolbarButtonElement *m_pToolbarButtonElement;
-    CUIFToolbarMenuButton *m_pToolbarMenuButton;
-    DWORD m_dwToolbarButtonFlags;
-    LPCWSTR m_pszUnknownText;
+    CUIFToolbarButtonElement* m_pToolbarButtonElement = NULL;
+    CUIFToolbarMenuButton* m_pToolbarMenuButton = NULL;
+    DWORD m_dwToolbarButtonFlags = 0;
+    LPCWSTR m_pszUnknownText = NULL;
 
     CUIFToolbarButton(
         CUIFObject *pParent,
@@ -944,11 +935,10 @@ enum
 class CUIFGripper : public CUIFObject
 {
 protected:
-    POINT m_ptGripper;
+    POINT m_ptGripper = {};
 
 public:
     CUIFGripper(CUIFObject *pParent, LPCRECT prc, DWORD style);
-    ~CUIFGripper() override;
 
     STDMETHOD_(void, OnMouseMove)(LONG x, LONG y) override;
     STDMETHOD_(void, OnLButtonDown)(LONG x, LONG y) override;
@@ -964,13 +954,13 @@ public:
 class CUIFWndFrame : public CUIFObject
 {
 protected:
-    DWORD m_dwHitTest;
-    POINT m_ptHit;
-    RECT m_rcWnd;
-    INT m_cxFrame;
-    INT m_cyFrame;
-    INT m_cxMin;
-    INT m_cyMin;
+    DWORD m_dwHitTest = 0;
+    POINT m_ptHit = {};
+    RECT m_rcWnd = {};
+    INT m_cxFrame = 0;
+    INT m_cyFrame = 0;
+    INT m_cxMin = 0;
+    INT m_cyMin = 0;
 
 public:
     CUIFWndFrame(CUIFObject *pParent, LPCRECT prc, DWORD style);
@@ -991,7 +981,7 @@ public:
 class CUIFBalloonButton : public CUIFButton
 {
 protected:
-    UINT m_nCommandID;
+    UINT m_nCommandID = 0;
     friend class CUIFBalloonWindow;
 
 public:
@@ -1014,24 +1004,24 @@ enum
 class CUIFBalloonWindow : public CUIFWindow
 {
 protected:
-    LPWSTR m_pszBalloonText;
-    HRGN m_hRgn;
-    RECT m_rcMargin;
-    DWORD m_dwUnknown6;
-    BOOL m_bHasBkColor;
-    BOOL m_bHasTextColor;
-    COLORREF m_rgbBkColor;
-    COLORREF m_rgbTextColor;
-    POINT m_ptTarget;
-    RECT m_rcExclude;
-    POINT m_ptBalloon;
-    DWORD m_dwUnknown7;
-    UINT m_nBalloonType;
-    DWORD m_dwUnknown8[2];
-    UINT m_cButtons;
-    WPARAM m_nActionID;
-    HWND m_hwndNotif;
-    UINT m_uNotifMsg;
+    LPWSTR m_pszBalloonText = NULL;
+    HRGN m_hRgn = NULL;
+    RECT m_rcMargin = { 8, 8, 8, 8 };
+    DWORD m_dwUnknown6 = -1;
+    BOOL m_bHasBkColor = FALSE;
+    BOOL m_bHasTextColor = FALSE;
+    COLORREF m_rgbBkColor = 0;
+    COLORREF m_rgbTextColor = 0;
+    POINT m_ptTarget = {};
+    RECT m_rcExclude = {};
+    POINT m_ptBalloon = {};
+    DWORD m_dwUnknown7 = 0;
+    UINT m_nBalloonType = 0;
+    DWORD m_dwUnknown8[2] = { 0 };
+    UINT m_cButtons = 0;
+    WPARAM m_nActionID = -1;
+    HWND m_hwndNotif = NULL;
+    UINT m_uNotifMsg = 0;
 
 public:
     CUIFBalloonWindow(HINSTANCE hInst, DWORD style);

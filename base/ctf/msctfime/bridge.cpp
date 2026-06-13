@@ -10,20 +10,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 
 /// @implemented
-CicBridge::CicBridge()
-{
-    m_bImmxInited = FALSE;
-    m_bUnknown1 = FALSE;
-    m_bDeactivating = FALSE;
-    m_bUnknown2 = FALSE;
-    m_pKeystrokeMgr = NULL;
-    m_pDocMgr = NULL;
-    m_pThreadMgrEventSink = NULL;
-    m_cliendId = 0;
-    m_cRefs = 1;
-}
-
-/// @implemented
 STDMETHODIMP CicBridge::QueryInterface(REFIID riid, LPVOID* ppvObj)
 {
     static const QITAB c_tab[] =
@@ -250,8 +236,8 @@ CicBridge::SelectEx(
 /// CicBridge::EnumDestroyInputContextCallback.
 typedef struct ENUM_CREATE_DESTROY_IC
 {
-    TLS *m_pTLS;
-    CicBridge *m_pBridge;
+    TLS* m_pTLS;
+    CicBridge* m_pBridge;
 } ENUM_CREATE_DESTROY_IC, *PENUM_CREATE_DESTROY_IC;
 
 /// Creates input context for the current thread.

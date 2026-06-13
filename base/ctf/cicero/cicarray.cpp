@@ -11,8 +11,6 @@
 CicArrayBase::CicArrayBase(size_t cbItem)
 {
     m_cbItem = cbItem;
-    m_pb = NULL;
-    m_cItems = m_cCapacity = 0;
 }
 
 CicArrayBase::~CicArrayBase()

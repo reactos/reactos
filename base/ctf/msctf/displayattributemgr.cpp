@@ -14,11 +14,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 ////////////////////////////////////////////////////////////////////////////
 
-CDisplayAttributeMgr::CDisplayAttributeMgr()
-    : m_cRefs(1)
-{
-}
-
 CDisplayAttributeMgr::~CDisplayAttributeMgr()
 {
     TRACE("destroying %p\n", this);

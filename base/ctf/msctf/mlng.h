@@ -31,8 +31,6 @@ public:
     static INT s_cx;
     static INT s_cy;
 
-    CStaticIconList() { }
-
     void Init(INT cxIcon, INT cyIcon);
     INT AddIcon(HICON hIcon);
     HICON ExtractIcon(INT iIcon);
