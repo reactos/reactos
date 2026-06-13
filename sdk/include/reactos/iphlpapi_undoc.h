@@ -3,6 +3,14 @@
 
 DWORD
 WINAPI
+NhGetGuidFromInterfaceName(
+    _In_ PWCHAR pInterfaceName,
+    _Out_ GUID *pInterfaceGUID,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
+
+DWORD
+WINAPI
 NhGetInterfaceNameFromDeviceGuid(
     _In_ const GUID * pInterfaceGUID,
     _Out_writes_bytes_to_(*pOutBufLen, *pOutBufLen) PWCHAR pInterfaceName,

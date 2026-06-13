@@ -2378,6 +2378,15 @@ LdrpGetProcedureAddress(
                     Status = _SEH2_GetExceptionCode();
                 }
                 _SEH2_END;
+
+                /* Check if it succeeded */
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Failed, unload the entry */
+                    DPRINT1("Initialization routine failed with 0x%08x\n", Status);
+                    LdrUnloadDll(LdrEntry->DllBase);
+                    LdrEntry = NULL;
+                }
             }
         }
 

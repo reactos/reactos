@@ -524,7 +524,7 @@ NetLocalGroupAddMembers(
     LPBYTE buf,
     DWORD totalentries)
 {
-    UNICODE_STRING ServerName;
+    UNICODE_STRING ServerName, *pServerName = NULL;
     UNICODE_STRING AliasName;
     SAM_HANDLE ServerHandle = NULL;
     SAM_HANDLE DomainHandle = NULL;
@@ -538,7 +538,10 @@ NetLocalGroupAddMembers(
           debugstr_w(groupname), level, buf, totalentries);
 
     if (servername != NULL)
+    {
         RtlInitUnicodeString(&ServerName, servername);
+        pServerName = &ServerName;
+    }
 
     RtlInitUnicodeString(&AliasName, groupname);
 
@@ -549,14 +552,13 @@ NetLocalGroupAddMembers(
             break;
 
         case 3:
-            Status = BuildSidListFromDomainAndName((servername != NULL) ? &ServerName : NULL,
-                                                   (PLOCALGROUP_MEMBERS_INFO_3)buf,
-                                                   totalentries,
-                                                   &MemberList);
-            if (!NT_SUCCESS(Status))
+            ApiStatus = BuildSidListFromDomainAndName(pServerName,
+                                                      (PLOCALGROUP_MEMBERS_INFO_3)buf,
+                                                      totalentries,
+                                                      &MemberList);
+            if (ApiStatus != NERR_Success)
             {
-                ERR("BuildSidListFromDomainAndName failed (Status %08lx)\n", Status);
-                ApiStatus = NetpNtStatusToApiStatus(Status);
+                ERR("BuildSidListFromDomainAndName failed (ApiStatus %lu)\n", ApiStatus);
                 goto done;
             }
             break;
@@ -567,7 +569,7 @@ NetLocalGroupAddMembers(
     }
 
     /* Connect to the SAM Server */
-    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+    Status = SamConnect(pServerName,
                         &ServerHandle,
                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
                         NULL);
@@ -607,7 +609,7 @@ NetLocalGroupAddMembers(
 
         /* Open the Acount Domain */
         Status = OpenAccountDomain(ServerHandle,
-                                   (servername != NULL) ? &ServerName : NULL,
+                                   pServerName,
                                    DOMAIN_LOOKUP,
                                    &DomainHandle);
         if (!NT_SUCCESS(Status))
@@ -821,7 +823,7 @@ NetLocalGroupDelMembers(
     LPBYTE buf,
     DWORD totalentries)
 {
-    UNICODE_STRING ServerName;
+    UNICODE_STRING ServerName, *pServerName = NULL;
     UNICODE_STRING AliasName;
     SAM_HANDLE ServerHandle = NULL;
     SAM_HANDLE DomainHandle = NULL;
@@ -835,7 +837,10 @@ NetLocalGroupDelMembers(
           debugstr_w(groupname), level, buf, totalentries);
 
     if (servername != NULL)
+    {
         RtlInitUnicodeString(&ServerName, servername);
+        pServerName = &ServerName;
+    }
 
     RtlInitUnicodeString(&AliasName, groupname);
 
@@ -846,14 +851,13 @@ NetLocalGroupDelMembers(
             break;
 
         case 3:
-            Status = BuildSidListFromDomainAndName((servername != NULL) ? &ServerName : NULL,
-                                                   (PLOCALGROUP_MEMBERS_INFO_3)buf,
-                                                   totalentries,
-                                                   &MemberList);
-            if (!NT_SUCCESS(Status))
+            ApiStatus = BuildSidListFromDomainAndName(pServerName,
+                                                      (PLOCALGROUP_MEMBERS_INFO_3)buf,
+                                                      totalentries,
+                                                      &MemberList);
+            if (ApiStatus)
             {
-                ERR("BuildSidListFromDomainAndName failed (Status %08lx)\n", Status);
-                ApiStatus = NetpNtStatusToApiStatus(Status);
+                ERR("BuildSidListFromDomainAndName failed (ApiStatus %lu)\n", ApiStatus);
                 goto done;
             }
             break;
@@ -864,7 +868,7 @@ NetLocalGroupDelMembers(
     }
 
     /* Connect to the SAM Server */
-    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+    Status = SamConnect(pServerName,
                         &ServerHandle,
                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
                         NULL);
@@ -904,7 +908,7 @@ NetLocalGroupDelMembers(
 
         /* Open the Acount Domain */
         Status = OpenAccountDomain(ServerHandle,
-                                   (servername != NULL) ? &ServerName : NULL,
+                                   pServerName,
                                    DOMAIN_LOOKUP,
                                    &DomainHandle);
         if (!NT_SUCCESS(Status))

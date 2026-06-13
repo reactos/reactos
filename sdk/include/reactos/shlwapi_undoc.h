@@ -14,26 +14,6 @@
 extern "C" {
 #endif
 
-/*****************************************************************************
- * ASSOCQUERY --- The type flags of association query
- *
- * @see IAssociationElementOld, IAssociationElement, IAssociationArrayOld, IAssociationArray
- * @see https://www.geoffchappell.com/studies/windows/shell/shell32/api/assocelem/query.htm
- */
-typedef DWORD ASSOCQUERY;
-#define ASSOCQUERY_LOWORD_MASK     0x0000FFFF // The low-order word of flags
-#define ASSOCQUERY_STRING          0x00010000 // Responds to QueryString method
-#define ASSOCQUERY_EXISTS          0x00020000 // Responds to QueryExists method
-#define ASSOCQUERY_DIRECT          0x00040000 // Responds to QueryDirect method
-#define ASSOCQUERY_DWORD           0x00080000 // Responds to QueryDword method
-#define ASSOCQUERY_INDIRECT        0x00100000 // Obtains resource string from QueryString
-#define ASSOCQUERY_OBJECT          0x00200000 // Responds to QueryObject method
-#define ASSOCQUERY_GUID            0x00400000 // Responds to QueryGuid method
-#define ASSOCQUERY_EXTRA_NON_VERB  0x01000000 // Expects pszExtra for path or value
-#define ASSOCQUERY_EXTRA_VERB      0x02000000 // Expects pszExtra for verb
-#define ASSOCQUERY_SIGNIFICANCE    0x04000000 // Significance unknown
-#define ASSOCQUERY_FALLBACK        0x80000000 // Fallback to secondary query source
-
 #define SHELL_NO_POLICY ((DWORD)-1)
 
 typedef struct tagPOLICYDATA
@@ -80,10 +60,25 @@ SHRestrictionLookup(
 
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
+
+PSTR WINAPI
+NextPathA(
+    _In_ PCSTR pszStart,
+    _Out_writes_(cchDest) PSTR pszDest,
+    _In_ UINT cchDest);
+
+PWSTR WINAPI
+NextPathW(
+    _In_ PCWSTR pszStart,
+    _Out_writes_(cchDest) PWSTR pszDest,
+    _In_ UINT cchDest);
+
 #ifdef UNICODE
 #define SHAboutInfo SHAboutInfoW
+#define NextPath NextPathW
 #else
 #define SHAboutInfo SHAboutInfoA
+#define NextPath NextPathA
 #endif
 
 HRESULT WINAPI CLSIDFromStringWrap(_In_ LPCWSTR idstr, _Out_ CLSID *id);
@@ -145,6 +140,14 @@ VOID WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id);
 EXTERN_C BOOL WINAPI SHBoolSystemParametersInfo(UINT uiAction, PVOID pvParam);
 
 HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU, BOOL bCreate, PHKEY phKey);
+
+HRESULT WINAPI
+QuerySourceCreateFromKey(
+    _In_ HKEY hKey,
+    _In_opt_ PCWSTR lpSubKey,
+    _In_ BOOL bCreate,
+    _In_ REFIID riid,
+    _Outptr_ PVOID *ppv);
 
 BOOL WINAPI SHAddDataBlock(LPDBLIST* lppList, const DATABLOCK_HEADER *lpNewItem);
 BOOL WINAPI SHRemoveDataBlock(LPDBLIST* lppList, DWORD dwSignature);
@@ -388,8 +391,23 @@ PathFileExistsDefExtAndAttributesW(
     _In_ DWORD dwWhich,
     _Out_opt_ LPDWORD pdwFileAttributes);
 
+BOOL WINAPI
+PathUnExpandEnvStringsForUserA(
+    _In_ HANDLE hUserToken,
+    _In_ PCSTR pszPath,
+    _Out_writes_(cchBuff) PSTR pszBuff,
+    _In_ INT cchBuff);
+
+BOOL WINAPI
+PathUnExpandEnvStringsForUserW(
+    _In_ HANDLE hUserToken,
+    _In_ PCWSTR pwszPath,
+    _Out_writes_(cchBuff) PWSTR pszBuff,
+    _In_ INT cchBuff);
+
 BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
-VOID WINAPI FixSlashesAndColonW(LPWSTR);
+VOID WINAPI FixSlashesAndColonA(_Inout_ LPSTR lpstr);
+VOID WINAPI FixSlashesAndColonW(_Inout_ LPWSTR lpwstr);
 BOOL WINAPI PathIsValidCharA(char c, DWORD dwClass);
 BOOL WINAPI PathIsValidCharW(WCHAR c, DWORD dwClass);
 BOOL WINAPI SHGetPathFromIDListWrapW(LPCITEMIDLIST pidl, LPWSTR pszPath);
@@ -401,15 +419,35 @@ BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR lpszPath, DWORD* dwAttr);
 BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR lpszPath, DWORD* dwAttr);
 #endif
 
+VOID WINAPI PrettifyFileDescriptionW(_Inout_ PWSTR pszTarget, _In_opt_ PCWSTR pszCutList);
+
+BOOL WINAPI SHGetFileDescriptionA(
+    _In_ PCSTR pszPath,
+    _In_opt_ PCSTR pszVerKey,
+    _In_opt_ PCSTR pszDisplayName,
+    _Out_opt_ PSTR pszOut,
+    _Inout_ PUINT pcchOut);
+
+BOOL WINAPI SHGetFileDescriptionW(
+    _In_ PCWSTR pszPath,
+    _In_opt_ PCWSTR pszVerKey,
+    _In_opt_ PCWSTR pszDisplayName,
+    _Out_opt_ PWSTR pszOut,
+    _Inout_ PUINT pcchOut);
+
 LPSTR  WINAPI StrCpyNXA(LPSTR lpszDest, LPCSTR lpszSrc, int iLen);
 LPWSTR WINAPI StrCpyNXW(LPWSTR lpszDest, LPCWSTR lpszSrc, int iLen);
 
 #ifdef UNICODE
     #define PathIsValidChar PathIsValidCharW
     #define StrCpyNX StrCpyNXW
+    #define FixSlashesAndColon FixSlashesAndColonW
+    #define SHGetFileDescription SHGetFileDescriptionW
 #else
     #define PathIsValidChar PathIsValidCharA
     #define StrCpyNX StrCpyNXA
+    #define FixSlashesAndColon FixSlashesAndColonA
+    #define SHGetFileDescription SHGetFileDescriptionA
 #endif
 
 BOOL WINAPI
@@ -480,38 +518,13 @@ PWSTR WINAPI CharLowerNoDBCSW(_Inout_ PWSTR lpString);
 PSTR WINAPI CharUpperNoDBCSA(_Inout_ PSTR lpString);
 PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString);
 
-/*****************************************************************************
- * IAssociationElementOld interface
- *
- * @see IAssociationElement
- * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iassociationelement.htm
- */
-#define INTERFACE IAssociationElementOld
-DECLARE_INTERFACE_(IAssociationElementOld, IUnknown) // {E58B1ABF-9596-4DBA-8997-89DCDEF46992}
-{
-    /*** IUnknown ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IAssociationElementOld ***/
-    STDMETHOD(QueryString)(THIS_ ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
-    STDMETHOD(QueryDword)(THIS_ ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
-    STDMETHOD(QueryExists)(THIS_ ASSOCQUERY query, PCWSTR key) PURE;
-    STDMETHOD(QueryDirect)(THIS_ ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) PURE;
-    STDMETHOD(QueryObject)(THIS_ ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) PURE;
-};
-#undef INTERFACE
+HRESULT WINAPI
+SHWindowsPolicyGetValue(
+    _In_ REFGUID rpolid,
+    _Out_opt_ PVOID pvValue,
+    _Out_opt_ PDWORD pcbValue);
 
-#ifdef COBJMACROS
-#define IAssociationElementOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IAssociationElementOld_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IAssociationElementOld_Release(T) (T)->lpVtbl->Release(T)
-#define IAssociationElementOld_QueryString(T,a,b,c) (T)->lpVtbl->QueryString(T,a,b,c)
-#define IAssociationElementOld_QueryDword(T,a,b,c) (T)->lpVtbl->QueryDword(T,a,b,c)
-#define IAssociationElementOld_QueryExists(T,a,b) (T)->lpVtbl->QueryExists(T,a,b)
-#define IAssociationElementOld_QueryDirect(T,a,b,c) (T)->lpVtbl->QueryDirect(T,a,b,c)
-#define IAssociationElementOld_QueryObject(T,a,b,c,d) (T)->lpVtbl->QueryObject(T,a,b,c,d)
-#endif
+#define E_DATATYPE_MISMATCH HRESULT_FROM_WIN32(ERROR_DATATYPE_MISMATCH)
 
 /*****************************************************************************
  * ZoneCheck*

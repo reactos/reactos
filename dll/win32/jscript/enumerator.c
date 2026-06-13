@@ -33,27 +33,18 @@ typedef struct {
     BOOL atend;
 } EnumeratorInstance;
 
-static const WCHAR atEndW[] = {'a','t','E','n','d',0};
-static const WCHAR itemW[] = {'i','t','e','m',0};
-static const WCHAR moveFirstW[] = {'m','o','v','e','F','i','r','s','t',0};
-static const WCHAR moveNextW[] = {'m','o','v','e','N','e','x','t',0};
-
 static inline EnumeratorInstance *enumerator_from_jsdisp(jsdisp_t *jsdisp)
 {
     return CONTAINING_RECORD(jsdisp, EnumeratorInstance, dispex);
 }
 
-static inline EnumeratorInstance *enumerator_from_vdisp(vdisp_t *vdisp)
+static inline EnumeratorInstance *enumerator_this(jsval_t vthis)
 {
-    return enumerator_from_jsdisp(vdisp->u.jsdisp);
+    jsdisp_t *jsdisp = is_object_instance(vthis) ? to_jsdisp(get_object(vthis)) : NULL;
+    return (jsdisp && is_class(jsdisp, JSCLASS_ENUMERATOR)) ? enumerator_from_jsdisp(jsdisp) : NULL;
 }
 
-static inline EnumeratorInstance *enumerator_this(vdisp_t *jsthis)
-{
-    return is_vclass(jsthis, JSCLASS_ENUMERATOR) ? enumerator_from_vdisp(jsthis) : NULL;
-}
-
-static inline HRESULT enumvar_get_next_item(EnumeratorInstance *This)
+static inline HRESULT enumvar_get_next_item(EnumeratorInstance *This, script_ctx_t *ctx)
 {
     HRESULT hres;
     VARIANT nextitem;
@@ -69,7 +60,7 @@ static inline HRESULT enumvar_get_next_item(EnumeratorInstance *This)
     hres = IEnumVARIANT_Next(This->enumvar, 1, &nextitem, NULL);
     if (hres == S_OK)
     {
-        hres = variant_to_jsval(&nextitem, &This->item);
+        hres = variant_to_jsval(ctx, &nextitem, &This->item);
         VariantClear(&nextitem);
         if (FAILED(hres))
         {
@@ -93,17 +84,23 @@ static void Enumerator_destructor(jsdisp_t *dispex)
 
     TRACE("\n");
 
+    if(This->enumvar)
+        IEnumVARIANT_Release(This->enumvar);
     jsval_release(This->item);
-    heap_free(dispex);
 }
 
-static HRESULT Enumerator_atEnd(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Enumerator_gc_traverse(struct gc_ctx *gc_ctx, enum gc_traverse_op op, jsdisp_t *dispex)
+{
+    return gc_process_linked_val(gc_ctx, op, dispex, &enumerator_from_jsdisp(dispex)->item);
+}
+
+static HRESULT Enumerator_atEnd(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     EnumeratorInstance *This;
 
-    if (!(This = enumerator_this(jsthis)))
-        return throw_type_error(ctx, JS_E_ENUMERATOR_EXPECTED, NULL);
+    if (!(This = enumerator_this(vthis)))
+        return JS_E_ENUMERATOR_EXPECTED;
 
     TRACE("%d\n", This->atend);
 
@@ -112,20 +109,20 @@ static HRESULT Enumerator_atEnd(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, 
     return S_OK;
 }
 
-static HRESULT Enumerator_item(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Enumerator_item(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     EnumeratorInstance *This;
 
     TRACE("\n");
 
-    if (!(This = enumerator_this(jsthis)))
-        return throw_type_error(ctx, JS_E_ENUMERATOR_EXPECTED, NULL);
+    if (!(This = enumerator_this(vthis)))
+        return JS_E_ENUMERATOR_EXPECTED;
 
     return r ? jsval_copy(This->item, r) : S_OK;
 }
 
-static HRESULT Enumerator_moveFirst(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Enumerator_moveFirst(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     EnumeratorInstance *This;
@@ -133,8 +130,8 @@ static HRESULT Enumerator_moveFirst(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
 
     TRACE("\n");
 
-    if (!(This = enumerator_this(jsthis)))
-        return throw_type_error(ctx, JS_E_ENUMERATOR_EXPECTED, NULL);
+    if (!(This = enumerator_this(vthis)))
+        return JS_E_ENUMERATOR_EXPECTED;
 
     if (This->enumvar)
     {
@@ -143,7 +140,7 @@ static HRESULT Enumerator_moveFirst(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
             return hres;
 
         This->atend = FALSE;
-        hres = enumvar_get_next_item(This);
+        hres = enumvar_get_next_item(This, ctx);
         if(FAILED(hres))
             return hres;
     }
@@ -153,7 +150,7 @@ static HRESULT Enumerator_moveFirst(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
     return S_OK;
 }
 
-static HRESULT Enumerator_moveNext(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Enumerator_moveNext(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     EnumeratorInstance *This;
@@ -161,12 +158,12 @@ static HRESULT Enumerator_moveNext(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
 
     TRACE("\n");
 
-    if (!(This = enumerator_this(jsthis)))
-        return throw_type_error(ctx, JS_E_ENUMERATOR_EXPECTED, NULL);
+    if (!(This = enumerator_this(vthis)))
+        return JS_E_ENUMERATOR_EXPECTED;
 
     if (This->enumvar)
     {
-        hres = enumvar_get_next_item(This);
+        hres = enumvar_get_next_item(This, ctx);
         if (FAILED(hres))
             return hres;
     }
@@ -177,28 +174,22 @@ static HRESULT Enumerator_moveNext(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
 }
 
 static const builtin_prop_t Enumerator_props[] = {
-    {atEndW,     Enumerator_atEnd,     PROPF_METHOD},
-    {itemW,      Enumerator_item,      PROPF_METHOD},
-    {moveFirstW, Enumerator_moveFirst, PROPF_METHOD},
-    {moveNextW,  Enumerator_moveNext,  PROPF_METHOD},
+    {L"atEnd",     Enumerator_atEnd,     PROPF_METHOD},
+    {L"item",      Enumerator_item,      PROPF_METHOD},
+    {L"moveFirst", Enumerator_moveFirst, PROPF_METHOD},
+    {L"moveNext",  Enumerator_moveNext,  PROPF_METHOD},
 };
 
 static const builtin_info_t Enumerator_info = {
-    JSCLASS_ENUMERATOR,
-    {NULL, NULL, 0},
-    ARRAY_SIZE(Enumerator_props),
-    Enumerator_props,
-    NULL,
-    NULL
+    .class     = JSCLASS_ENUMERATOR,
+    .props_cnt = ARRAY_SIZE(Enumerator_props),
+    .props     = Enumerator_props,
 };
 
 static const builtin_info_t EnumeratorInst_info = {
-    JSCLASS_ENUMERATOR,
-    {NULL, NULL, 0, NULL},
-    0,
-    NULL,
-    Enumerator_destructor,
-    NULL
+    .class       = JSCLASS_ENUMERATOR,
+    .destructor  = Enumerator_destructor,
+    .gc_traverse = Enumerator_gc_traverse
 };
 
 static HRESULT alloc_enumerator(script_ctx_t *ctx, jsdisp_t *object_prototype, EnumeratorInstance **ret)
@@ -206,7 +197,7 @@ static HRESULT alloc_enumerator(script_ctx_t *ctx, jsdisp_t *object_prototype, E
     EnumeratorInstance *enumerator;
     HRESULT hres;
 
-    enumerator = heap_alloc_zero(sizeof(EnumeratorInstance));
+    enumerator = calloc(1, sizeof(EnumeratorInstance));
     if(!enumerator)
         return E_OUTOFMEMORY;
 
@@ -218,7 +209,7 @@ static HRESULT alloc_enumerator(script_ctx_t *ctx, jsdisp_t *object_prototype, E
 
     if(FAILED(hres))
     {
-        heap_free(enumerator);
+        free(enumerator);
         return hres;
     }
 
@@ -249,11 +240,11 @@ static HRESULT create_enumerator(script_ctx_t *ctx, jsval_t *argv, jsdisp_t **re
         /* Try to get a IEnumVARIANT by _NewEnum */
         VariantInit(&varresult);
         hres = IDispatch_Invoke(obj, DISPID_NEWENUM, &IID_NULL, LOCALE_NEUTRAL,
-                DISPATCH_METHOD, &dispparams, &varresult, NULL, NULL);
+                DISPATCH_METHOD | DISPATCH_PROPERTYGET, &dispparams, &varresult, NULL, NULL);
         if (FAILED(hres))
         {
             WARN("Enumerator: no DISPID_NEWENUM.\n");
-            return E_INVALIDARG;
+            return JS_E_OBJECT_NOT_COLLECTION;
         }
 
         if ((V_VT(&varresult) == VT_DISPATCH) || (V_VT(&varresult) == VT_UNKNOWN))
@@ -264,7 +255,7 @@ static HRESULT create_enumerator(script_ctx_t *ctx, jsval_t *argv, jsdisp_t **re
         else
         {
             FIXME("Enumerator: NewEnum unexpected type of varresult (%d).\n", V_VT(&varresult));
-            hres = E_INVALIDARG;
+            hres = JS_E_OBJECT_NOT_COLLECTION;
         }
         VariantClear(&varresult);
         if (FAILED(hres))
@@ -281,7 +272,7 @@ static HRESULT create_enumerator(script_ctx_t *ctx, jsval_t *argv, jsdisp_t **re
 
     enumerator->enumvar = enumvar;
     enumerator->atend = !enumvar;
-    hres = enumvar_get_next_item(enumerator);
+    hres = enumvar_get_next_item(enumerator, ctx);
     if (FAILED(hres))
     {
         jsdisp_release(&enumerator->dispex);
@@ -292,7 +283,7 @@ static HRESULT create_enumerator(script_ctx_t *ctx, jsval_t *argv, jsdisp_t **re
     return S_OK;
 }
 
-static HRESULT EnumeratorConstr_value(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT EnumeratorConstr_value(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     jsdisp_t *obj;
@@ -303,13 +294,14 @@ static HRESULT EnumeratorConstr_value(script_ctx_t *ctx, vdisp_t *vthis, WORD fl
     switch(flags) {
     case DISPATCH_CONSTRUCT: {
         if (argc > 1)
-            return throw_syntax_error(ctx, JS_E_INVALIDARG, NULL);
+            return JS_E_INVALIDARG;
 
         hres = create_enumerator(ctx, (argc == 1) ? &argv[0] : 0, &obj);
         if(FAILED(hres))
             return hres;
 
-        *r = jsval_obj(obj);
+        if(r) *r = jsval_obj(obj);
+        else  jsdisp_release(obj);
         break;
     }
     default:
@@ -321,27 +313,21 @@ static HRESULT EnumeratorConstr_value(script_ctx_t *ctx, vdisp_t *vthis, WORD fl
 }
 
 static const builtin_info_t EnumeratorConstr_info = {
-    JSCLASS_FUNCTION,
-    DEFAULT_FUNCTION_VALUE,
-    0,
-    NULL,
-    NULL,
-    NULL
+    .class = JSCLASS_FUNCTION,
+    .call  = Function_value,
 };
 
 HRESULT create_enumerator_constr(script_ctx_t *ctx, jsdisp_t *object_prototype, jsdisp_t **ret)
 {
     EnumeratorInstance *enumerator;
     HRESULT hres;
-    static const WCHAR EnumeratorW[] = {'E','n','u','m','e','r','a','t','o','r',0};
 
     hres = alloc_enumerator(ctx, object_prototype, &enumerator);
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_constructor(ctx, EnumeratorConstr_value,
-                                     EnumeratorW, &EnumeratorConstr_info,
-                                     PROPF_CONSTR|7, &enumerator->dispex, ret);
+    hres = create_builtin_constructor(ctx, EnumeratorConstr_value, L"Enumerator",
+            &EnumeratorConstr_info, PROPF_CONSTR|7, &enumerator->dispex, ret);
     jsdisp_release(&enumerator->dispex);
 
     return hres;

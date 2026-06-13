@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:     ReactOS Disk Checking Utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
@@ -30,10 +30,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_VOLUME_IN_USE "磁碟區正被使用，無法鎖定。\n"
-    IDS_CHKDSK_FAIL "Chkdsk 沒有成功完成。\n\n"
+    IDS_CHKDSK_FAIL "Chkdsk 沒有成功完成。 Error: 0x%08X.\n"
     IDS_NO_ENTRY_POINT "無法找到 FMIFS 進入點。\n\n"
     IDS_BAD_ARGUMENT "未知參數: %s\n"
     IDS_NO_CURRENT_DIR "無法獲得目前的目錄。錯誤碼: "
     IDS_NO_QUERY_VOL "無法查詢磁碟區。錯誤碼: "
     IDS_VOLUME_IN_USE_PROC "Chkdsk 無法執行，因為該磁碟區正被另一個處理程序所使用。\n\n"
+    IDS_RUN_AGAIN "It may be possible to fix this by running chkdsk again.\n\n"
 END

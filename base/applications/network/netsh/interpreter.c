@@ -334,17 +334,21 @@ InterpretLine(
     _In_ LPWSTR pszInputLine)
 {
     LPWSTR args_vector[MAX_ARGS_COUNT];
-    DWORD dwArgCount = 0;
+    DWORD dwArgCount = 0, i, len;
     BOOL bWhiteSpace = TRUE;
     BOOL bDone = FALSE;
-    LPWSTR ptr;
+    BOOL bInQuotes = FALSE;
+    LPWSTR ptr, pStartQuote, pEndQuote;
 
     memset(args_vector, 0, sizeof(args_vector));
 
     ptr = pszInputLine;
     while (*ptr != 0)
     {
-        if (iswspace(*ptr) || *ptr == L'\n')
+        if (*ptr == L'\"')
+            bInQuotes = (bInQuotes) ? FALSE : TRUE;
+
+        if ((iswspace(*ptr) && (bInQuotes == FALSE)) || *ptr == L'\n')
         {
             *ptr = 0;
             bWhiteSpace = TRUE;
@@ -361,6 +365,22 @@ InterpretLine(
         }
 
         ptr++;
+    }
+
+    /* Remove quotation marks */
+    for (i = 0; i < dwArgCount; i++)
+    {
+        pStartQuote = wcschr(args_vector[i], L'\"');
+        if (pStartQuote)
+        {
+            pEndQuote = wcschr(pStartQuote + 1, L'\"');
+            if (pEndQuote)
+            {
+                len = pEndQuote - pStartQuote;
+                memmove(pStartQuote, pStartQuote + 1, (len - 1) * sizeof(WCHAR));
+                *(pEndQuote - 1) = UNICODE_NULL;
+            }
+        }
     }
 
     return InterpretCommand(args_vector, dwArgCount, &bDone);
@@ -386,10 +406,11 @@ InterpretInteractive(VOID)
 {
     WCHAR input_line[MAX_STRING_SIZE];
     LPWSTR args_vector[MAX_ARGS_COUNT];
-    DWORD dwArgCount = 0;
+    DWORD dwArgCount = 0, i, len;
     BOOL bWhiteSpace = TRUE;
     BOOL bDone = FALSE;
-    LPWSTR ptr;
+    BOOL bInQuotes = FALSE;
+    LPWSTR ptr, pStartQuote, pEndQuote;
     DWORD dwError = ERROR_SUCCESS;
 
     for (;;)
@@ -409,9 +430,12 @@ InterpretInteractive(VOID)
         ptr = input_line;
         while (*ptr != 0)
         {
-            if (iswspace(*ptr) || *ptr == L'\n')
+            if (*ptr == L'\"')
+                bInQuotes = (bInQuotes) ? FALSE : TRUE;
+
+            if ((iswspace(*ptr) && (bInQuotes == FALSE)) || *ptr == L'\n')
             {
-                *ptr = 0;
+                *ptr = UNICODE_NULL;
                 bWhiteSpace = TRUE;
             }
             else
@@ -424,6 +448,22 @@ InterpretInteractive(VOID)
                 bWhiteSpace = FALSE;
             }
             ptr++;
+        }
+
+        /* Remove quotation marks */
+        for (i = 0; i < dwArgCount; i++)
+        {
+            pStartQuote = wcschr(args_vector[i], L'\"');
+            if (pStartQuote)
+            {
+                pEndQuote = wcschr(pStartQuote + 1, L'\"');
+                if (pEndQuote)
+                {
+                    len = pEndQuote - pStartQuote;
+                    memmove(pStartQuote, pStartQuote + 1, (len - 1) * sizeof(WCHAR));
+                    *(pEndQuote - 1) = UNICODE_NULL;
+                }
+            }
         }
 
         dwError = InterpretCommand(args_vector, dwArgCount, &bDone);

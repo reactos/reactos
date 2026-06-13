@@ -8,6 +8,7 @@ extern void func_CreateProcess(void);
 extern void func_DefaultActCtx(void);
 extern void func_DeviceIoControl(void);
 extern void func_dosdev(void);
+extern void func_EnumSystemCodePages(void);
 extern void func_FindActCtxSectionStringW(void);
 extern void func_FindFiles(void);
 extern void func_FLS(void);
@@ -30,7 +31,7 @@ extern void func_LoadLibraryExW(void);
 extern void func_LocaleNameToLCID(void);
 extern void func_lstrcpynW(void);
 extern void func_lstrlen(void);
-extern void func_Mailslot(void);
+extern void func_MailslotRead(void);
 extern void func_MultiByteToWideChar(void);
 extern void func_Pipes(void);
 extern void func_PrivMoveFileIdentityW(void);
@@ -53,6 +54,7 @@ const struct test winetest_testlist[] =
     { "DefaultActCtx",               func_DefaultActCtx },
     { "DeviceIoControl",             func_DeviceIoControl },
     { "dosdev",                      func_dosdev },
+    { "EnumSystemCodePages",         func_EnumSystemCodePages },
     { "FindActCtxSectionStringW",    func_FindActCtxSectionStringW },
     { "FindFiles",                   func_FindFiles },
     { "FLS",                         func_FLS },
@@ -75,7 +77,7 @@ const struct test winetest_testlist[] =
     { "LocaleNameToLCID",            func_LocaleNameToLCID },
     { "lstrcpynW",                   func_lstrcpynW },
     { "lstrlen",                     func_lstrlen },
-    { "MailslotRead",                func_Mailslot },
+    { "MailslotRead",                func_MailslotRead },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },
     { "Pipes",                       func_Pipes },
     { "PrivMoveFileIdentityW",       func_PrivMoveFileIdentityW },

@@ -113,14 +113,14 @@ HRESULT decode_source(WCHAR *code)
     const WCHAR *src = code;
     WCHAR *dst = code;
 
-    static const WCHAR decode_beginW[] = {'#','@','~','^'};
-    static const WCHAR decode_endW[] = {'^','#','~','@'};
+    static const WCHAR decode_beginW[] = L"#@~^";
+    static const WCHAR decode_endW[] = L"^#~@";
 
     while(*src) {
-        if(!wcsncmp(src, decode_beginW, ARRAY_SIZE(decode_beginW))) {
+        if(!wcsncmp(src, decode_beginW, ARRAY_SIZE(decode_beginW)-1)) {
             DWORD len, i, j=0, csum, s=0;
 
-            src += ARRAY_SIZE(decode_beginW);
+            src += ARRAY_SIZE(decode_beginW) - 1;
 
             if(!decode_dword(src, &len))
                 return JS_E_INVALID_CHAR;
@@ -165,9 +165,9 @@ HRESULT decode_source(WCHAR *code)
                 return JS_E_INVALID_CHAR;
             src += 8;
 
-            if(wcsncmp(src, decode_endW, ARRAY_SIZE(decode_endW)))
+            if(wcsncmp(src, decode_endW, ARRAY_SIZE(decode_endW)-1))
                 return JS_E_INVALID_CHAR;
-            src += ARRAY_SIZE(decode_endW);
+            src += ARRAY_SIZE(decode_endW) - 1;
         }else {
             *dst++ = *src++;
         }

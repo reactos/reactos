@@ -1,4 +1,11 @@
-/* TRANSLATOR: 2013, 2014, 2016, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/*
+ * PROJECT:     ReactOS Software Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2020 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2026 Hasan Eliküçük <hasanelk101@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -88,5 +95,5 @@ BEGIN
     IDS_NO_DIRECTORY "Hiç dizin verilmedi!"
     IDS_INVALID_PATH "Verilen yol geçersiz!"
     IDS_INVALID_NAME "Girdiğiniz kısayol adı, ya geçersiz karakterler içeriyor ya dosya adları için geçersiz ya da çok uzun."
-    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
+    IDS_BROWSE_FOR_TARGET "Lütfen aşağıdaki kısayolun hedefi seçin:"
 END

@@ -24,10 +24,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_VOLUME_IN_USE "Bölüm kullanımda ve kilitlenmiyor.\n"
-    IDS_CHKDSK_FAIL "Chkdsk, başarıyla tamamlanamadı.\n\n"
+    IDS_CHKDSK_FAIL "Chkdsk, başarıyla tamamlanamadı. Error: 0x%08X.\n"
     IDS_NO_ENTRY_POINT "FMIFS giriş noktaların yerleri saptanamıyor.\n\n"
     IDS_BAD_ARGUMENT "Bilinmeyen argüman: %s\n"
     IDS_NO_CURRENT_DIR "Gerçerli dizin alınamıyor. Hata kodu: "
     IDS_NO_QUERY_VOL "Bölüm sorgulanamıyor. Hata kodu: "
     IDS_VOLUME_IN_USE_PROC "Chkdsk çalıştırılamıyor; çünkü, bölüm, bir başka işlem tarafından kullanılıyor.\n\n"
+    IDS_RUN_AGAIN "It may be possible to fix this by running chkdsk again.\n\n"
 END

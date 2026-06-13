@@ -123,6 +123,7 @@ ExpReleaseOrWaitForKeyedEvent(
     NTSTATUS Status;
     ULONG_PTR HashIndex;
     PVOID PreviousKeyedWaitValue;
+    KPROCESSOR_MODE PreviousMode;
 
     /* Get the current process */
     CurrentProcess = PsGetCurrentProcess();
@@ -203,9 +204,10 @@ ExpReleaseOrWaitForKeyedEvent(
     KeLeaveCriticalRegion();
 
     /* Wait for the keyed wait semaphore */
+    PreviousMode = KeGetPreviousMode();
     Status = KeWaitForSingleObject(&CurrentThread->KeyedWaitSemaphore,
                                    WrKeyedEvent,
-                                   KernelMode,
+                                   PreviousMode,
                                    Alertable,
                                    Timeout);
 

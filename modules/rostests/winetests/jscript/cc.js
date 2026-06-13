@@ -180,6 +180,23 @@ expect(@test, true);
 @set @test = (1 >= true-1)
 expect(@test, true);
 
+@set @test = (true && true)
+expect(@test, true);
+
+@set @test = (false && true)
+expect(@test, false);
+
+@set @test = (true && false)
+expect(@test, false);
+
+@set @test = (false && false)
+expect(@test, false);
+
+if(!isWin64) {
+@set @test = (@_win32&&@_jscript_version>=5)
+expect(@test, true);
+}
+
 @if (false)
     this wouldn not parse
 "@end

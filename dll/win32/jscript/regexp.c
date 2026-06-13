@@ -41,13 +41,11 @@
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 /* FIXME: Better error handling */
-#define ReportRegExpError(a,b,c)
-#define ReportRegExpErrorHelper(a,b,c,d)
-#define JS_ReportErrorNumber(a,b,c,d)
-#define JS_ReportErrorFlagsAndNumber(a,b,c,d,e,f)
-#define js_ReportOutOfScriptQuota(a)
-#define JS_ReportOutOfMemory(a)
-#define JS_COUNT_OPERATION(a,b)
+#define ReportRegExpError(a,b,c) throw_error((a)->context, E_FAIL, L"")
+#define ReportRegExpErrorHelper(a,b,c,d) throw_error((a)->context, E_FAIL, L"")
+#define JS_ReportErrorNumber(a,b,c,d) throw_error((a), E_FAIL, L"")
+#define JS_ReportErrorFlagsAndNumber(a,b,c,d,e,f) throw_error((a), E_FAIL, L"")
+#define JS_COUNT_OPERATION(a,b) do { } while(0)
 
 
 typedef BYTE JSPackedBool;
@@ -292,7 +290,7 @@ struct RENode {
 #define CLASS_CACHE_SIZE    4
 
 typedef struct CompilerState {
-    void            *context;
+    script_ctx_t    *context;
     const WCHAR     *cpbegin;
     const WCHAR     *cpend;
     const WCHAR     *cp;
@@ -412,7 +410,7 @@ NewRENode(CompilerState *state, REOp op)
 
     ren = heap_pool_alloc(state->pool, sizeof(*ren));
     if (!ren) {
-        /* js_ReportOutOfScriptQuota(cx); */
+        throw_error(state->context, E_OUTOFMEMORY, L"");
         return NULL;
     }
     ren->op = op;
@@ -482,7 +480,7 @@ EmitREBytecode(CompilerState *state, regexp_t *re, size_t treeDepth,
     if (treeDepth == 0) {
         emitStateStack = NULL;
     } else {
-        emitStateStack = heap_alloc(sizeof(EmitStateStackEntry) * treeDepth);
+        emitStateStack = malloc(sizeof(EmitStateStackEntry) * treeDepth);
         if (!emitStateStack)
             return NULL;
     }
@@ -788,7 +786,7 @@ EmitREBytecode(CompilerState *state, regexp_t *re, size_t treeDepth,
     }
 
   cleanup:
-    heap_free(emitStateStack);
+    free(emitStateStack);
     return pc;
 
   jump_too_big:
@@ -1622,8 +1620,7 @@ doSimple:
       case '*':
       case '+':
       case '?':
-        ReportRegExpErrorHelper(state, JSREPORT_ERROR,
-                                JSMSG_BAD_QUANTIFIER, state->cp - 1);
+        throw_error(state->context, state->context->version < SCRIPTLANGUAGEVERSION_ES5 ? JS_E_REGEXP_SYNTAX : JS_E_UNEXPECTED_QUANTIFIER, L"");
         return FALSE;
       default:
 asFlat:
@@ -1667,11 +1664,11 @@ ParseRegExp(CompilerState *state)
         return (state->result != NULL);
     }
 
-    operatorStack = heap_alloc(sizeof(REOpData) * operatorStackSize);
+    operatorStack = malloc(sizeof(REOpData) * operatorStackSize);
     if (!operatorStack)
         return FALSE;
 
-    operandStack = heap_alloc(sizeof(RENode *) * operandStackSize);
+    operandStack = malloc(sizeof(RENode *) * operandStackSize);
     if (!operandStack)
         goto out;
 
@@ -1762,7 +1759,7 @@ pushOperand:
                 if (operandSP == operandStackSize) {
                     RENode **tmp;
                     operandStackSize += operandStackSize;
-                    tmp = heap_realloc(operandStack, sizeof(RENode *) * operandStackSize);
+                    tmp = realloc(operandStack, sizeof(RENode *) * operandStackSize);
                     if (!tmp)
                         goto out;
                     operandStack = tmp;
@@ -1895,7 +1892,7 @@ pushOperator:
             if (operatorSP == operatorStackSize) {
                 REOpData *tmp;
                 operatorStackSize += operatorStackSize;
-                tmp = heap_realloc(operatorStack, sizeof(REOpData) * operatorStackSize);
+                tmp = realloc(operatorStack, sizeof(REOpData) * operatorStackSize);
                 if (!tmp)
                     goto out;
                 operatorStack = tmp;
@@ -1907,8 +1904,8 @@ pushOperator:
         }
     }
 out:
-    heap_free(operatorStack);
-    heap_free(operandStack);
+    free(operatorStack);
+    free(operandStack);
     return result;
 }
 
@@ -1935,7 +1932,7 @@ PushBackTrackState(REGlobalData *gData, REOp op,
     ptrdiff_t btincr = ((char *)result + sz) -
                        ((char *)gData->backTrackStack + btsize);
 
-    TRACE("\tBT_Push: %lu,%lu\n", (ULONG_PTR)parenIndex, (ULONG_PTR)parenCount);
+    TRACE("\tBT_Push: %Iu,%Iu\n", (ULONG_PTR)parenIndex, (ULONG_PTR)parenCount);
 
     JS_COUNT_OPERATION(gData->cx, JSOW_JUMP * (1 + parenCount));
     if (btincr > 0) {
@@ -1945,7 +1942,7 @@ PushBackTrackState(REGlobalData *gData, REOp op,
         btincr = ((btincr+btsize-1)/btsize)*btsize;
         gData->backTrackStack = heap_pool_grow(gData->pool, gData->backTrackStack, btsize, btincr);
         if (!gData->backTrackStack) {
-            js_ReportOutOfScriptQuota(gData->cx);
+            throw_error(gData->cx, E_OUTOFMEMORY, L"");
             gData->ok = FALSE;
             return NULL;
         }
@@ -2111,9 +2108,9 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
     assert(src[-1] == '[' && end[0] == ']');
 
     byteLength = (charSet->length >> 3) + 1;
-    charSet->u.bits = heap_alloc(byteLength);
+    charSet->u.bits = malloc(byteLength);
     if (!charSet->u.bits) {
-        JS_ReportOutOfMemory(gData->cx);
+        throw_error(gData->cx, E_OUTOFMEMORY, L"");
         gData->ok = FALSE;
         return FALSE;
     }
@@ -2301,7 +2298,7 @@ ReallocStateStack(REGlobalData *gData)
 
     gData->stateStack = heap_pool_grow(gData->pool, gData->stateStack, sz, sz);
     if (!gData->stateStack) {
-        js_ReportOutOfScriptQuota(gData->cx);
+        throw_error(gData->cx, E_OUTOFMEMORY, L"");
         gData->ok = FALSE;
         return FALSE;
     }
@@ -2684,7 +2681,7 @@ ExecuteREBytecode(REGlobalData *gData, match_state_t *x)
 
               case REOP_LPAREN:
                 pc = ReadCompactIndex(pc, &parenIndex);
-                TRACE("[ %lu ]\n", (ULONG_PTR)parenIndex);
+                TRACE("[ %Iu ]\n", (ULONG_PTR)parenIndex);
                 assert(parenIndex < gData->regexp->parenCount);
                 if (parenIndex + 1 > parenSoFar)
                     parenSoFar = parenIndex + 1;
@@ -3047,7 +3044,7 @@ ExecuteREBytecode(REGlobalData *gData, match_state_t *x)
                 parenSoFar = curState->parenSoFar;
             }
 
-            TRACE("\tBT_Pop: %ld,%ld\n",
+            TRACE("\tBT_Pop: %Id,%Id\n",
                      (ULONG_PTR)backTrackData->parenIndex,
                      (ULONG_PTR)backTrackData->parenCount);
             continue;
@@ -3132,7 +3129,6 @@ static HRESULT InitMatch(regexp_t *re, void *cx, heap_pool_t *pool, REGlobalData
     return S_OK;
 
 bad:
-    js_ReportOutOfScriptQuota(cx);
     gData->ok = FALSE;
     return E_OUTOFMEMORY;
 }
@@ -3184,12 +3180,12 @@ void regexp_destroy(regexp_t *re)
         UINT i;
         for (i = 0; i < re->classCount; i++) {
             if (re->classList[i].converted)
-                heap_free(re->classList[i].u.bits);
+                free(re->classList[i].u.bits);
             re->classList[i].u.bits = NULL;
         }
-        heap_free(re->classList);
+        free(re->classList);
     }
-    heap_free(re);
+    free(re);
 }
 
 regexp_t* regexp_new(void *cx, heap_pool_t *pool, const WCHAR *str,
@@ -3238,14 +3234,14 @@ regexp_t* regexp_new(void *cx, heap_pool_t *pool, const WCHAR *str,
             goto out;
     }
     resize = offsetof(regexp_t, program) + state.progLength + 1;
-    re = heap_alloc(resize);
+    re = malloc(resize);
     if (!re)
         goto out;
 
     assert(state.classBitmapsMem <= CLASS_BITMAPS_MEM_LIMIT);
     re->classCount = state.classCount;
     if (re->classCount) {
-        re->classList = heap_alloc(re->classCount * sizeof(RECharSet));
+        re->classList = malloc(re->classCount * sizeof(RECharSet));
         if (!re->classList) {
             regexp_destroy(re);
             re = NULL;
@@ -3272,7 +3268,7 @@ regexp_t* regexp_new(void *cx, heap_pool_t *pool, const WCHAR *str,
         regexp_t *tmp;
         assert((size_t)(endPC - re->program) < state.progLength + 1);
         resize = offsetof(regexp_t, program) + (endPC - re->program);
-        tmp = heap_realloc(re, resize);
+        tmp = realloc(re, resize);
         if (tmp)
             re = tmp;
     }

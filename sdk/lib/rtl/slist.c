@@ -207,6 +207,19 @@ RtlInterlockedPushListSList(
 #endif /* _WIN64 */
 }
 
+#ifdef _M_IX86
+PSLIST_ENTRY
+NTAPI
+RtlInterlockedPushListSListEx(
+    _Inout_ PSLIST_HEADER SListHead,
+    _Inout_ __drv_aliasesMem PSLIST_ENTRY List,
+    _Inout_ PSLIST_ENTRY ListEnd,
+    _In_ ULONG Count)
+{
+    /* Same function, different calling convention */
+    return RtlInterlockedPushListSList(SListHead, List, ListEnd, Count);
+}
+#endif
 
 #if !defined(_M_IX86) && !defined(_M_AMD64)
 

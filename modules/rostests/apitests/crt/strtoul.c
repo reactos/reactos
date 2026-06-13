@@ -1,2 +1,6 @@
-#define func_tcstoul func_strtoul
 #include "tcstoul.h"
+
+START_TEST(strtoul)
+{
+    Test_tcstoul();
+}

@@ -1546,7 +1546,6 @@ typedef struct _EPROCESS
 //
 // Job Token Filter Data
 //
-#include <pshpack1.h>
 typedef struct _PS_JOB_TOKEN_FILTER
 {
     ULONG CapturedSidCount;
@@ -1617,7 +1616,6 @@ typedef struct _EJOB
     ULONG MemberLevel;
     ULONG JobFlags;
 } EJOB, *PEJOB;
-#include <poppack.h>
 
 //
 // Job Information Structures for NtQueryInformationJobObject

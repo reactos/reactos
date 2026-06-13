@@ -36,7 +36,9 @@
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 static const REAL mm_per_inch = 25.4;
+static const REAL inch_per_mm = 1.0 / 25.4;
 static const REAL point_per_inch = 72.0;
+static const REAL inch_per_point = 1.0 / 72.0;
 
 static Status WINAPI NotificationHook(ULONG_PTR *token)
 {
@@ -49,7 +51,7 @@ static Status WINAPI NotificationHook(ULONG_PTR *token)
 
 static void WINAPI NotificationUnhook(ULONG_PTR token)
 {
-    TRACE("%ld\n", token);
+    TRACE("%Id\n", token);
 }
 
 /*****************************************************
@@ -57,7 +59,7 @@ static void WINAPI NotificationUnhook(ULONG_PTR token)
  */
 BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID reserved)
 {
-    TRACE("(%p, %d, %p)\n", hinst, reason, reserved);
+    TRACE("(%p, %ld, %p)\n", hinst, reason, reserved);
 
     switch(reason)
     {
@@ -115,7 +117,7 @@ GpStatus WINAPI GdiplusNotificationHook(ULONG_PTR *token)
 
 void WINAPI GdiplusNotificationUnhook(ULONG_PTR token)
 {
-    FIXME("%ld\n", token);
+    FIXME("%Id\n", token);
     NotificationUnhook(token);
 }
 
@@ -141,7 +143,7 @@ ULONG WINAPI GdiplusShutdown_wrapper(ULONG_PTR token)
  */
 void* WINGDIPAPI GdipAlloc(SIZE_T size)
 {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+    return calloc(1, size);
 }
 
 /*****************************************************
@@ -149,7 +151,7 @@ void* WINGDIPAPI GdipAlloc(SIZE_T size)
  */
 void WINGDIPAPI GdipFree(void* ptr)
 {
-    HeapFree(GetProcessHeap(), 0, ptr);
+    free(ptr);
 }
 
 /* Calculates the bezier points needed to fill in the arc portion starting at
@@ -202,54 +204,54 @@ static void add_arc_part(GpPointF * pt, REAL x1, REAL y1, REAL x2, REAL y2,
  * adjusts the angles so that when we stretch the points they will end in the
  * right place. This is only complicated because atan and atan2 do not behave
  * conveniently. */
-static void unstretch_angle(REAL * angle, REAL rad_x, REAL rad_y)
+static REAL unstretch_angle(REAL angle, REAL dia_x, REAL dia_y)
 {
     REAL stretched;
     INT revs_off;
 
-    *angle = deg2rad(*angle);
+    if(fabs(cos(angle)) < 0.00001 || fabs(sin(angle)) < 0.00001)
+        return angle;
 
-    if(fabs(cos(*angle)) < 0.00001 || fabs(sin(*angle)) < 0.00001)
-        return;
-
-    stretched = gdiplus_atan2(sin(*angle) / fabs(rad_y), cos(*angle) / fabs(rad_x));
-    revs_off = gdip_round(*angle / (2.0 * M_PI)) - gdip_round(stretched / (2.0 * M_PI));
+    stretched = gdiplus_atan2(sin(angle) / fabs(dia_y), cos(angle) / fabs(dia_x));
+    revs_off = gdip_round(angle / (2.0 * M_PI)) - gdip_round(stretched / (2.0 * M_PI));
     stretched += ((REAL)revs_off) * M_PI * 2.0;
-    *angle = stretched;
+    return stretched;
 }
 
 /* Stores the bezier points that correspond to the arc in points.  If points is
  * null, just return the number of points needed to represent the arc. */
-INT arc2polybezier(GpPointF * points, REAL x1, REAL y1, REAL x2, REAL y2,
-    REAL startAngle, REAL sweepAngle)
+INT arc2polybezier(GpPointF * points, REAL left, REAL top, REAL width, REAL height,
+    REAL start_angle, REAL sweep_angle)
 {
     INT i;
-    REAL end_angle, start_angle, endAngle;
+    REAL partial_end_angle, end_angle;
 
-    endAngle = startAngle + sweepAngle;
-    unstretch_angle(&startAngle, x2 / 2.0, y2 / 2.0);
-    unstretch_angle(&endAngle, x2 / 2.0, y2 / 2.0);
+    end_angle = deg2rad(start_angle + sweep_angle);
+    start_angle = deg2rad(start_angle);
 
-    /* start_angle and end_angle are the iterative variables */
-    start_angle = startAngle;
+    if (width != height)
+    {
+        start_angle = unstretch_angle(start_angle, width, height);
+        end_angle = unstretch_angle(end_angle, width, height);
+    }
 
     for(i = 0; i < MAX_ARC_PTS - 1; i += 3){
         /* check if we've overshot the end angle */
-        if( sweepAngle > 0.0 )
+        if( sweep_angle > 0.0 )
         {
-            if (start_angle >= endAngle) break;
-            end_angle = min(start_angle + M_PI_2, endAngle);
+            if (start_angle >= end_angle) break;
+            partial_end_angle = min(start_angle + M_PI_2, end_angle);
         }
         else
         {
-            if (start_angle <= endAngle) break;
-            end_angle = max(start_angle - M_PI_2, endAngle);
+            if (start_angle <= end_angle) break;
+            partial_end_angle = max(start_angle - M_PI_2, end_angle);
         }
 
         if (points)
-            add_arc_part(&points[i], x1, y1, x2, y2, start_angle, end_angle, i == 0);
+            add_arc_part(&points[i], left, top, width, height, start_angle, partial_end_angle, i == 0);
 
-        start_angle += M_PI_2 * (sweepAngle < 0.0 ? -1.0 : 1.0);
+        start_angle = partial_end_angle;
     }
 
     if (i == 0) return 0;
@@ -324,22 +326,26 @@ GpStatus hresult_to_status(HRESULT res)
 }
 
 /* converts a given unit to its value in pixels */
-REAL units_to_pixels(REAL units, GpUnit unit, REAL dpi)
+REAL units_to_pixels(REAL units, GpUnit unit, REAL dpi, BOOL printer_display)
 {
     switch (unit)
     {
     case UnitPixel:
     case UnitWorld:
-    case UnitDisplay:
         return units;
+    case UnitDisplay:
+        if (printer_display)
+            return units * dpi * 0.01f;
+        else
+            return units;
     case UnitPoint:
-        return units * dpi / point_per_inch;
+        return units * dpi * inch_per_point;
     case UnitInch:
         return units * dpi;
     case UnitDocument:
-        return units * dpi / 300.0; /* Per MSDN */
+        return units * dpi * (1.0f / 300.0f); /* Per MSDN */
     case UnitMillimeter:
-        return units * dpi / mm_per_inch;
+        return units * dpi * inch_per_mm;
     default:
         FIXME("Unhandled unit type: %d\n", unit);
         return 0;
@@ -347,14 +353,18 @@ REAL units_to_pixels(REAL units, GpUnit unit, REAL dpi)
 }
 
 /* converts value in pixels to a given unit */
-REAL pixels_to_units(REAL pixels, GpUnit unit, REAL dpi)
+REAL pixels_to_units(REAL pixels, GpUnit unit, REAL dpi, BOOL printer_display)
 {
     switch (unit)
     {
     case UnitPixel:
     case UnitWorld:
-    case UnitDisplay:
         return pixels;
+    case UnitDisplay:
+        if (printer_display)
+            return pixels * 100.0 / dpi;
+        else
+            return pixels;
     case UnitPoint:
         return pixels * point_per_inch / dpi;
     case UnitInch:
@@ -369,10 +379,10 @@ REAL pixels_to_units(REAL pixels, GpUnit unit, REAL dpi)
     }
 }
 
-REAL units_scale(GpUnit from, GpUnit to, REAL dpi)
+REAL units_scale(GpUnit from, GpUnit to, REAL dpi, BOOL printer_display)
 {
-    REAL pixels = units_to_pixels(1.0, from, dpi);
-    return pixels_to_units(pixels, to, dpi);
+    REAL pixels = units_to_pixels(1.0, from, dpi, printer_display);
+    return pixels_to_units(pixels, to, dpi, printer_display);
 }
 
 /* Calculates Bezier points from cardinal spline points. */
@@ -408,12 +418,12 @@ BOOL lengthen_path(GpPath *path, INT len)
     if(path->datalen == 0){
         path->datalen = len * 2;
 
-        path->pathdata.Points = heap_alloc_zero(path->datalen * sizeof(PointF));
-        if(!path->pathdata.Points)   return FALSE;
+        path->pathdata.Points = calloc(path->datalen, sizeof(PointF));
+        if(!path->pathdata.Points) return FALSE;
 
-        path->pathdata.Types = heap_alloc_zero(path->datalen);
+        path->pathdata.Types = calloc(1, path->datalen);
         if(!path->pathdata.Types){
-            heap_free(path->pathdata.Points);
+            free(path->pathdata.Points);
             return FALSE;
         }
     }
@@ -422,11 +432,11 @@ BOOL lengthen_path(GpPath *path, INT len)
         while(path->datalen - path->pathdata.Count < len)
             path->datalen *= 2;
 
-        path->pathdata.Points = heap_realloc(path->pathdata.Points, path->datalen * sizeof(PointF));
-        if(!path->pathdata.Points)  return FALSE;
+        path->pathdata.Points = realloc(path->pathdata.Points, path->datalen * sizeof(PointF));
+        if(!path->pathdata.Points) return FALSE;
 
-        path->pathdata.Types = heap_realloc(path->pathdata.Types, path->datalen);
-        if(!path->pathdata.Types)   return FALSE;
+        path->pathdata.Types = realloc(path->pathdata.Types, path->datalen);
+        if(!path->pathdata.Types) return FALSE;
     }
 
     return TRUE;
@@ -467,8 +477,8 @@ void delete_element(region_element* element)
         default:
             delete_element(element->elementdata.combine.left);
             delete_element(element->elementdata.combine.right);
-            heap_free(element->elementdata.combine.left);
-            heap_free(element->elementdata.combine.right);
+            free(element->elementdata.combine.left);
+            free(element->elementdata.combine.right);
             break;
     }
 }
@@ -483,4 +493,11 @@ const char *debugstr_pointf(const PointF* pt)
 {
     if (!pt) return "(null)";
     return wine_dbg_sprintf("(%0.2f,%0.2f)", pt->X, pt->Y);
+}
+
+const char *debugstr_matrix(const GpMatrix *matrix)
+{
+    if (!matrix) return "(null)";
+    return wine_dbg_sprintf("%p(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)",matrix, matrix->matrix[0], matrix->matrix[1],
+                            matrix->matrix[2], matrix->matrix[3], matrix->matrix[4], matrix->matrix[5]);
 }

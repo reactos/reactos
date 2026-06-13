@@ -1,4 +1,5 @@
 add_subdirectory(biditext)
+add_subdirectory(editalign)
 add_subdirectory(messagebox)
 add_subdirectory(paintdesktop)
 add_subdirectory(psmtest)

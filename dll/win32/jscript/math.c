@@ -18,6 +18,7 @@
  */
 
 #ifdef __REACTOS__
+#define _USE_MATH_DEFINES
 #include <wine/config.h>
 #include <wine/port.h>
 #endif
@@ -32,35 +33,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
-static const WCHAR EW[] = {'E',0};
-static const WCHAR LOG2EW[] = {'L','O','G','2','E',0};
-static const WCHAR LOG10EW[] = {'L','O','G','1','0','E',0};
-static const WCHAR LN2W[] = {'L','N','2',0};
-static const WCHAR LN10W[] = {'L','N','1','0',0};
-static const WCHAR PIW[] = {'P','I',0};
-static const WCHAR SQRT2W[] = {'S','Q','R','T','2',0};
-static const WCHAR SQRT1_2W[] = {'S','Q','R','T','1','_','2',0};
-static const WCHAR absW[] = {'a','b','s',0};
-static const WCHAR acosW[] = {'a','c','o','s',0};
-static const WCHAR asinW[] = {'a','s','i','n',0};
-static const WCHAR atanW[] = {'a','t','a','n',0};
-static const WCHAR atan2W[] = {'a','t','a','n','2',0};
-static const WCHAR ceilW[] = {'c','e','i','l',0};
-static const WCHAR cosW[] = {'c','o','s',0};
-static const WCHAR expW[] = {'e','x','p',0};
-static const WCHAR floorW[] = {'f','l','o','o','r',0};
-static const WCHAR logW[] = {'l','o','g',0};
-static const WCHAR maxW[] = {'m','a','x',0};
-static const WCHAR minW[] = {'m','i','n',0};
-static const WCHAR powW[] = {'p','o','w',0};
-static const WCHAR randomW[] = {'r','a','n','d','o','m',0};
-static const WCHAR roundW[] = {'r','o','u','n','d',0};
-static const WCHAR sinW[] = {'s','i','n',0};
-static const WCHAR sqrtW[] = {'s','q','r','t',0};
-static const WCHAR tanW[] = {'t','a','n',0};
-
 /* ECMA-262 3rd Edition    15.8.2.12 */
-static HRESULT Math_abs(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_abs(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double d;
@@ -83,7 +57,7 @@ static HRESULT Math_abs(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned
     return S_OK;
 }
 
-static HRESULT Math_acos(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_acos(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -106,7 +80,7 @@ static HRESULT Math_acos(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigne
     return S_OK;
 }
 
-static HRESULT Math_asin(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_asin(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -129,7 +103,7 @@ static HRESULT Math_asin(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigne
     return S_OK;
 }
 
-static HRESULT Math_atan(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_atan(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -152,7 +126,7 @@ static HRESULT Math_atan(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigne
     return S_OK;
 }
 
-static HRESULT Math_atan2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_atan2(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x, y;
@@ -180,7 +154,7 @@ static HRESULT Math_atan2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsign
 }
 
 /* ECMA-262 3rd Edition    15.8.2.6 */
-static HRESULT Math_ceil(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_ceil(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -203,7 +177,7 @@ static HRESULT Math_ceil(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigne
     return S_OK;
 }
 
-static HRESULT Math_cos(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_cos(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -226,7 +200,7 @@ static HRESULT Math_cos(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned
     return S_OK;
 }
 
-static HRESULT Math_exp(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_exp(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -249,7 +223,7 @@ static HRESULT Math_exp(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned
     return S_OK;
 }
 
-static HRESULT Math_floor(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_floor(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -272,7 +246,7 @@ static HRESULT Math_floor(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsign
     return S_OK;
 }
 
-static HRESULT Math_log(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_log(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -296,7 +270,7 @@ static HRESULT Math_log(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned
 }
 
 /* ECMA-262 3rd Edition    15.8.2.11 */
-static HRESULT Math_max(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_max(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     DOUBLE max, d;
@@ -330,7 +304,7 @@ static HRESULT Math_max(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned
 }
 
 /* ECMA-262 3rd Edition    15.8.2.12 */
-static HRESULT Math_min(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_min(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     DOUBLE min, d;
@@ -364,7 +338,7 @@ static HRESULT Math_min(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned
 }
 
 /* ECMA-262 3rd Edition    15.8.2.13 */
-static HRESULT Math_pow(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_pow(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x, y;
@@ -392,7 +366,7 @@ static HRESULT Math_pow(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned
 }
 
 /* ECMA-262 3rd Edition    15.8.2.14 */
-static HRESULT Math_random(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_random(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     UINT x;
@@ -408,7 +382,7 @@ static HRESULT Math_random(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsig
 }
 
 /* ECMA-262 3rd Edition    15.8.2.15 */
-static HRESULT Math_round(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_round(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -431,7 +405,7 @@ static HRESULT Math_round(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsign
     return S_OK;
 }
 
-static HRESULT Math_sin(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_sin(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -454,7 +428,7 @@ static HRESULT Math_sin(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned
     return S_OK;
 }
 
-static HRESULT Math_sqrt(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_sqrt(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -477,7 +451,7 @@ static HRESULT Math_sqrt(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigne
     return S_OK;
 }
 
-static HRESULT Math_tan(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Math_tan(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double x;
@@ -501,33 +475,29 @@ static HRESULT Math_tan(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned
 }
 
 static const builtin_prop_t Math_props[] = {
-    {absW,      Math_abs,      PROPF_METHOD|1},
-    {acosW,     Math_acos,     PROPF_METHOD|1},
-    {asinW,     Math_asin,     PROPF_METHOD|1},
-    {atanW,     Math_atan,     PROPF_METHOD|1},
-    {atan2W,    Math_atan2,    PROPF_METHOD|2},
-    {ceilW,     Math_ceil,     PROPF_METHOD|1},
-    {cosW,      Math_cos,      PROPF_METHOD|1},
-    {expW,      Math_exp,      PROPF_METHOD|1},
-    {floorW,    Math_floor,    PROPF_METHOD|1},
-    {logW,      Math_log,      PROPF_METHOD|1},
-    {maxW,      Math_max,      PROPF_METHOD|2},
-    {minW,      Math_min,      PROPF_METHOD|2},
-    {powW,      Math_pow,      PROPF_METHOD|2},
-    {randomW,   Math_random,   PROPF_METHOD},
-    {roundW,    Math_round,    PROPF_METHOD|1},
-    {sinW,      Math_sin,      PROPF_METHOD|1},
-    {sqrtW,     Math_sqrt,     PROPF_METHOD|1},
-    {tanW,      Math_tan,      PROPF_METHOD|1}
+    {L"abs",      Math_abs,      PROPF_METHOD|1},
+    {L"acos",     Math_acos,     PROPF_METHOD|1},
+    {L"asin",     Math_asin,     PROPF_METHOD|1},
+    {L"atan",     Math_atan,     PROPF_METHOD|1},
+    {L"atan2",    Math_atan2,    PROPF_METHOD|2},
+    {L"ceil",     Math_ceil,     PROPF_METHOD|1},
+    {L"cos",      Math_cos,      PROPF_METHOD|1},
+    {L"exp",      Math_exp,      PROPF_METHOD|1},
+    {L"floor",    Math_floor,    PROPF_METHOD|1},
+    {L"log",      Math_log,      PROPF_METHOD|1},
+    {L"max",      Math_max,      PROPF_METHOD|2},
+    {L"min",      Math_min,      PROPF_METHOD|2},
+    {L"pow",      Math_pow,      PROPF_METHOD|2},
+    {L"random",   Math_random,   PROPF_METHOD},
+    {L"round",    Math_round,    PROPF_METHOD|1},
+    {L"sin",      Math_sin,      PROPF_METHOD|1},
+    {L"sqrt",     Math_sqrt,     PROPF_METHOD|1},
+    {L"tan",      Math_tan,      PROPF_METHOD|1}
 };
 
 static const builtin_info_t Math_info = {
-    JSCLASS_MATH,
-    {NULL, NULL, 0},
-    ARRAY_SIZE(Math_props),
-    Math_props,
-    NULL,
-    NULL
+    .class = JSCLASS_MATH,    .props_cnt = ARRAY_SIZE(Math_props),
+    .props = Math_props,
 };
 
 HRESULT create_math(script_ctx_t *ctx, jsdisp_t **ret)
@@ -540,23 +510,23 @@ HRESULT create_math(script_ctx_t *ctx, jsdisp_t **ret)
         const WCHAR *name;
         DOUBLE val;
     }constants[] = {
-        {EW,        M_E},        /* ECMA-262 3rd Edition    15.8.1.1 */
-        {LN10W,     M_LN10},     /* ECMA-262 3rd Edition    15.8.1.2 */
-        {LN2W,      M_LN2},      /* ECMA-262 3rd Edition    15.8.1.3 */
-        {LOG2EW,    M_LOG2E},    /* ECMA-262 3rd Edition    15.8.1.4 */
-        {LOG10EW,   M_LOG10E},   /* ECMA-262 3rd Edition    15.8.1.5 */
-        {PIW,       M_PI},       /* ECMA-262 3rd Edition    15.8.1.6 */
-        {SQRT1_2W,  M_SQRT1_2},  /* ECMA-262 3rd Edition    15.8.1.7 */
-        {SQRT2W,    M_SQRT2},    /* ECMA-262 3rd Edition    15.8.1.8 */
+        {L"E",        M_E},        /* ECMA-262 3rd Edition    15.8.1.1 */
+        {L"LN10",     M_LN10},     /* ECMA-262 3rd Edition    15.8.1.2 */
+        {L"LN2",      M_LN2},      /* ECMA-262 3rd Edition    15.8.1.3 */
+        {L"LOG2E",    M_LOG2E},    /* ECMA-262 3rd Edition    15.8.1.4 */
+        {L"LOG10E",   M_LOG10E},   /* ECMA-262 3rd Edition    15.8.1.5 */
+        {L"PI",       M_PI},       /* ECMA-262 3rd Edition    15.8.1.6 */
+        {L"SQRT1_2",  M_SQRT1_2},  /* ECMA-262 3rd Edition    15.8.1.7 */
+        {L"SQRT2",    M_SQRT2},    /* ECMA-262 3rd Edition    15.8.1.8 */
     };
 
-    math = heap_alloc_zero(sizeof(jsdisp_t));
+    math = calloc(1, sizeof(jsdisp_t));
     if(!math)
         return E_OUTOFMEMORY;
 
     hres = init_dispex_from_constr(math, ctx, &Math_info, ctx->object_constr);
     if(FAILED(hres)) {
-        heap_free(math);
+        free(math);
         return hres;
     }
 

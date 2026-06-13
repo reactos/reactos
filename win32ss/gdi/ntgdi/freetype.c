@@ -934,8 +934,8 @@ static NTSTATUS FontLink_PopulateEntries(VOID)
         szzFontLink[_countof(szzFontLink) - 1] = UNICODE_NULL;
         szzFontLink[_countof(szzFontLink) - 2] = UNICODE_NULL;
 
-        DPRINT1("szName: %S\n", szName);
-        DPRINT1("szzFontLink: %S\n", szzFontLink);
+        DPRINT("szName: %S\n", szName);
+        DPRINT("szzFontLink: %S\n", szzFontLink);
 
         FontLink_AddEntry(szName, szzFontLink);
     }
@@ -3956,7 +3956,7 @@ static unsigned int get_bezier_glyph_outline(FT_Outline *outline, unsigned int b
 }
 
 static FT_Error
-IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
+IntRequestFontSize(PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
 {
     FT_Error error;
     FT_Size_RequestRec  req;
@@ -4209,8 +4209,7 @@ IntRequestFontSizeEx(FT_Face face, const LOGFONTW *plf)
 }
 
 BOOL FASTCALL
-TextIntUpdateSize(PDC dc,
-                  PTEXTOBJ TextObj,
+TextIntUpdateSize(PTEXTOBJ TextObj,
                   PFONTGDI FontGDI,
                   BOOL bDoLock)
 {
@@ -4285,7 +4284,7 @@ TextIntUpdateSize(PDC dc,
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
 
-    error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
+    error = IntRequestFontSize(FontGDI, plf->lfWidth, plf->lfHeight);
 
     if (bDoLock)
         IntUnLockFreeType();
@@ -4525,7 +4524,7 @@ ftGdiGetGlyphOutline(
     }
 
     IntLockFreeType();
-    TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
+    TextIntUpdateSize(TextObj, FontGDI, FALSE);
     IntMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
     FT_Set_Transform(ft_face, &mat, NULL);
 
@@ -5016,7 +5015,7 @@ TextIntGetTextExtentPoint(
 
     // NOTE: GetTextExtentPoint32 simply ignores lfEscapement and XFORM.
     IntLockFreeType();
-    TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
+    TextIntUpdateSize(TextObj, FontGDI, FALSE);
     Cache.Hashed.matTransform = identityMat;
     FT_Set_Transform(Cache.Hashed.Face, NULL, NULL);
 
@@ -5315,7 +5314,7 @@ ftGdiGetTextMetricsW(
 
         // NOTE: GetTextMetrics simply ignores lfEscapement and XFORM.
         IntLockFreeType();
-        Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
+        Error = IntRequestFontSize(FontGDI, plf->lfWidth, plf->lfHeight);
         FT_Set_Transform(Face, NULL, NULL);
 
         IntUnLockFreeType();
@@ -5806,7 +5805,7 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
         if (Otm)
         {
             ASSERT_FREETYPE_LOCK_HELD();
-            IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
+            IntRequestFontSize(FontGDI, LogFont->lfWidth, LogFont->lfHeight);
 
             ASSERT_FREETYPE_LOCK_HELD();
             OtmSize = IntGetOutlineTextMetrics(FontGDI, OtmSize, Otm, TRUE);
@@ -6822,7 +6821,7 @@ IntExtTextOutW(
     else
         Cache.Hashed.Aspect.RenderMode = (BYTE)FT_RENDER_MODE_MONO;
 
-    if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
+    if (!TextIntUpdateSize(TextObj, FontGDI, FALSE))
     {
         IntUnLockFreeType();
         bResult = FALSE;
@@ -7465,7 +7464,7 @@ GreGetCharABCWidthsW(
 
     // NOTE: GetCharABCWidths simply ignores lfEscapement and XFORM.
     IntLockFreeType();
-    IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
+    IntRequestFontSize(FontGDI, plf->lfWidth, plf->lfHeight);
     FT_Set_Transform(face, NULL, NULL);
 
     if (!fl)
@@ -7571,7 +7570,7 @@ GreGetCharWidthW(
 
     // NOTE: GetCharWidth simply ignores lfEscapement and XFORM.
     IntLockFreeType();
-    IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
+    IntRequestFontSize(FontGDI, plf->lfWidth, plf->lfHeight);
     FT_Set_Transform(face, NULL, NULL);
 
     if (!fl)

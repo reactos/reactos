@@ -93,6 +93,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Нови палитри", IDM_COLORSMODERNPALETTE
         MENUITEM "Стари палитри", IDM_COLORSOLDPALETTE
+        MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
     END
     POPUP "&Помощ"
     BEGIN

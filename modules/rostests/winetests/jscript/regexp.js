@@ -174,6 +174,42 @@ ok(m.length === 2, "m.length is not 2");
 ok(m["0"] === "aaab", "m[0] is not \"ab\"");
 ok(m["1"] === "ab", "m[1] is not \"ab\"");
 
+m = "".match(/a*/g);
+ok(typeof(m) === "object", "typeof m is not object");
+ok(m.length === 1, "m.length is not 1");
+ok(m["0"] === "", "m[0] is not \"\"");
+
+m = "aaa".match(/a*/g);
+ok(typeof(m) === "object", "typeof m is not object");
+ok(m.length === 2, "m.length is not 2");
+ok(m["0"] === "aaa", "m[0] is not \"aaa\"");
+ok(m["1"] === "", "m[1] is not \"\"");
+
+m = "b".match(/a*/g);
+ok(typeof(m) === "object", "typeof m is not object");
+ok(m.length === 2, "m.length is not 2");
+ok(m["0"] === "", "m[0] is not \"\"");
+ok(m["1"] === "", "m[1] is not \"\"");
+
+m = "".match(/a?/g);
+ok(typeof(m) === "object", "typeof m is not object");
+ok(m.length === 1, "m.length is not 1");
+ok(m["0"] === "", "m[0] is not \"\"");
+
+m = "aaa".match(/a?/g);
+ok(typeof(m) === "object", "typeof m is not object");
+ok(m.length === 4, "m.length is not 4");
+ok(m["0"] === "a", "m[0] is not \"a\"");
+ok(m["1"] === "a", "m[1] is not \"a\"");
+ok(m["2"] === "a", "m[2] is not \"a\"");
+ok(m["3"] === "", "m[3] is not \"\"");
+
+m = "b".match(/a?/g);
+ok(typeof(m) === "object", "typeof m is not object");
+ok(m.length === 2, "m.length is not 2");
+ok(m["0"] === "", "m[0] is not \"\"");
+ok(m["1"] === "", "m[1] is not \"\"");
+
 m = "aaa\\\\cabc".match(/\\/g);
 ok(typeof(m) === "object", "typeof m is not object");
 ok(m.length === 2, "m.length is not 2");
@@ -625,6 +661,25 @@ ok(tmp === "x*y", '"x/y".replace(/[/]/, "*") = ' + tmp);
 tmp = "x/y".replace(/[xy/]/g, "*");
 ok(tmp === "***", '"x/y".replace(/[xy/]/, "*") = ' + tmp);
 
+tmp = /()/.exec("")[1];
+ok(tmp === "", "/()/ captured: " + tmp);
+tmp = /()?/.exec("")[1];
+ok(tmp === "", "/()?/ captured: " + tmp);
+tmp = /()??/.exec("")[1];
+ok(tmp === "", "/()??/ captured: " + tmp);
+tmp = /()*/.exec("")[1];
+ok(tmp === "", "/()*/ captured: " + tmp);
+tmp = /()??()/.exec("");
+ok(tmp[1] === "", "/()??()/ [1] captured: " + tmp);
+ok(tmp[2] === "", "/()??()/ [2] captured: " + tmp);
+
+try {
+    tmp = new RegExp("(?<a>b)", "g");
+    ok(false, "expected exception with /(?<a>b)/ regex");
+}catch(e) {
+    ok(e.number === 0xa1399 - 0x80000000, "/(?<a>b)/ regex threw " + e.number);
+}
+
 /(b)/.exec("abc");
 ok(RegExp.$1 === "b", "RegExp.$1 = " + RegExp.$1);
 ok("$2" in RegExp, "RegExp.$2 doesn't exist");
@@ -673,6 +728,42 @@ ok(re.ignoreCase === true, "re.ignoreCase = " + re.ignoreCase);
 ok(re.multiline === false, "re.multiline = " + re.multiline);
 ok(re.global === true, "re.global = " + re.global);
 re = /x/mg;
+ok(re.ignoreCase === false, "re.ignoreCase = " + re.ignoreCase);
+ok(re.multiline === true, "re.multiline = " + re.multiline);
+ok(re.global === true, "re.global = " + re.global);
+
+re = new RegExp(undefined);
+ok(re.source === "", "re.source = " + re.source);
+ok(re.ignoreCase === false, "re.ignoreCase = " + re.ignoreCase);
+ok(re.multiline === false, "re.multiline = " + re.multiline);
+ok(re.global === false, "re.global = " + re.global);
+
+re = new RegExp();
+ok(re.source === "", "re.source = " + re.source);
+ok(re.ignoreCase === false, "re.ignoreCase = " + re.ignoreCase);
+ok(re.multiline === false, "re.multiline = " + re.multiline);
+ok(re.global === false, "re.global = " + re.global);
+
+re = new RegExp(true);
+ok(re.source === "true", "re.source = " + re.source);
+ok(re.ignoreCase === false, "re.ignoreCase = " + re.ignoreCase);
+ok(re.multiline === false, "re.multiline = " + re.multiline);
+ok(re.global === false, "re.global = " + re.global);
+
+re = new RegExp({ toString: function() { return "test"; } });
+ok(re.source === "test", "re.source = " + re.source);
+ok(re.ignoreCase === false, "re.ignoreCase = " + re.ignoreCase);
+ok(re.multiline === false, "re.multiline = " + re.multiline);
+ok(re.global === false, "re.global = " + re.global);
+
+re = new RegExp("test", undefined);
+ok(re.source === "test", "re.source = " + re.source);
+ok(re.ignoreCase === false, "re.ignoreCase = " + re.ignoreCase);
+ok(re.multiline === false, "re.multiline = " + re.multiline);
+ok(re.global === false, "re.global = " + re.global);
+
+re = new RegExp("test", { toString: function() { return "mg"; } });
+ok(re.source === "test", "re.source = " + re.source);
 ok(re.ignoreCase === false, "re.ignoreCase = " + re.ignoreCase);
 ok(re.multiline === true, "re.multiline = " + re.multiline);
 ok(re.global === true, "re.global = " + re.global);

@@ -600,7 +600,7 @@ Test_RtlFindLongestRunClear(void)
 }
 
 
-START_TEST(RtlBitmap)
+START_TEST(RtlBitmapApi)
 {
     /* Windows 2003 has broken bitmap code that modifies the buffer */
     if (!IsWindowsVistaOrGreater() && !IsReactOS())

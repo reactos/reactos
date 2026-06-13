@@ -41,6 +41,7 @@ static const struct {
     {L"break",       kBREAK,       TRUE},
     {L"case",        kCASE},
     {L"catch",       kCATCH},
+    {L"const",       kCONST},
     {L"continue",    kCONTINUE,    TRUE},
     {L"default",     kDEFAULT},
     {L"delete",      kDELETE},
@@ -54,6 +55,7 @@ static const struct {
     {L"if",          kIF},
     {L"in",          kIN},
     {L"instanceof",  kINSTANCEOF},
+    {L"let",         kLET,         FALSE, SCRIPTLANGUAGEVERSION_ES5},
     {L"new",         kNEW},
     {L"null",        kNULL},
     {L"return",      kRETURN,      TRUE},
@@ -115,7 +117,7 @@ static BOOL is_endline(WCHAR c)
     return c == '\n' || c == '\r' || c == 0x2028 || c == 0x2029;
 }
 
-static int hex_to_int(WCHAR c)
+int hex_to_int(WCHAR c)
 {
     if('0' <= c && c <= '9')
         return c-'0';
@@ -159,10 +161,8 @@ static int check_keywords(parser_ctx_t *ctx, const WCHAR **lval)
 
 static BOOL skip_html_comment(parser_ctx_t *ctx)
 {
-    const WCHAR html_commentW[] = {'<','!','-','-',0};
-
     if(!ctx->is_html || ctx->ptr+3 >= ctx->end ||
-        memcmp(ctx->ptr, html_commentW, sizeof(WCHAR)*4))
+        memcmp(ctx->ptr, L"<!--", sizeof(WCHAR)*4))
         return FALSE;
 
     ctx->nl = TRUE;
@@ -297,11 +297,11 @@ BOOL unescape(WCHAR *str, size_t *len)
             c += i;
             break;
         default:
-            if(iswdigit(*p)) {
+            if(is_digit(*p)) {
                 c = *p++ - '0';
-                if(p < end && iswdigit(*p)) {
+                if(p < end && is_digit(*p)) {
                     c = c*8 + (*p++ - '0');
-                    if(p < end && iswdigit(*p))
+                    if(p < end && is_digit(*p))
                         c = c*8 + (*p++ - '0');
                 }
                 p--;
@@ -400,7 +400,7 @@ HRESULT parse_decimal(const WCHAR **iter, const WCHAR *end, double *ret)
     LONGLONG d = 0, hlp;
     int exp = 0;
 
-    while(ptr < end && iswdigit(*ptr)) {
+    while(ptr < end && is_digit(*ptr)) {
         hlp = d*10 + *(ptr++) - '0';
         if(d>MAXLONGLONG/10 || hlp<0) {
             exp++;
@@ -409,7 +409,7 @@ HRESULT parse_decimal(const WCHAR **iter, const WCHAR *end, double *ret)
         else
             d = hlp;
     }
-    while(ptr < end && iswdigit(*ptr)) {
+    while(ptr < end && is_digit(*ptr)) {
         exp++;
         ptr++;
     }
@@ -417,7 +417,7 @@ HRESULT parse_decimal(const WCHAR **iter, const WCHAR *end, double *ret)
     if(*ptr == '.') {
         ptr++;
 
-        while(ptr < end && iswdigit(*ptr)) {
+        while(ptr < end && is_digit(*ptr)) {
             hlp = d*10 + *(ptr++) - '0';
             if(d>MAXLONGLONG/10 || hlp<0)
                 break;
@@ -425,7 +425,7 @@ HRESULT parse_decimal(const WCHAR **iter, const WCHAR *end, double *ret)
             d = hlp;
             exp--;
         }
-        while(ptr < end && iswdigit(*ptr))
+        while(ptr < end && is_digit(*ptr))
             ptr++;
     }
 
@@ -438,7 +438,7 @@ HRESULT parse_decimal(const WCHAR **iter, const WCHAR *end, double *ret)
             }else if(*ptr == '-') {
                 sign = -1;
                 ptr++;
-            }else if(!iswdigit(*ptr)) {
+            }else if(!is_digit(*ptr)) {
                 WARN("Expected exponent part\n");
                 return E_FAIL;
             }
@@ -449,7 +449,7 @@ HRESULT parse_decimal(const WCHAR **iter, const WCHAR *end, double *ret)
             return E_FAIL;
         }
 
-        while(ptr < end && iswdigit(*ptr)) {
+        while(ptr < end && is_digit(*ptr)) {
             if(e > INT_MAX/10 || (e = e*10 + *ptr++ - '0')<0)
                 e = INT_MAX;
         }
@@ -500,12 +500,12 @@ static BOOL parse_numeric_literal(parser_ctx_t *ctx, double *ret)
             return TRUE;
         }
 
-        if(iswdigit(*ctx->ptr)) {
+        if(is_digit(*ctx->ptr)) {
             unsigned base = 8;
             const WCHAR *ptr;
             double val = 0;
 
-            for(ptr = ctx->ptr; ptr < ctx->end && iswdigit(*ptr); ptr++) {
+            for(ptr = ctx->ptr; ptr < ctx->end && is_digit(*ptr); ptr++) {
                 if(*ptr > '7') {
                     base = 10;
                     break;
@@ -514,7 +514,7 @@ static BOOL parse_numeric_literal(parser_ctx_t *ctx, double *ret)
 
             do {
                 val = val*base + *ctx->ptr-'0';
-            }while(++ctx->ptr < ctx->end && iswdigit(*ctx->ptr));
+            }while(++ctx->ptr < ctx->end && is_digit(*ctx->ptr));
 
             /* FIXME: Do we need it here? */
             if(ctx->ptr < ctx->end && (is_identifier_char(*ctx->ptr) || *ctx->ptr == '.')) {
@@ -543,12 +543,15 @@ static BOOL parse_numeric_literal(parser_ctx_t *ctx, double *ret)
     return TRUE;
 }
 
-static int next_token(parser_ctx_t *ctx, void *lval)
+static int next_token(parser_ctx_t *ctx, unsigned *loc, void *lval)
 {
     do {
-        if(!skip_spaces(ctx))
-            return tEOF;
+        if(!skip_spaces(ctx)) {
+            *loc  = ctx->ptr - ctx->begin;
+            return 0;
+        }
     }while(skip_comment(ctx) || skip_html_comment(ctx));
+    *loc  = ctx->ptr - ctx->begin;
 
     if(ctx->implicit_nl_semicolon) {
         if(ctx->nl)
@@ -564,7 +567,7 @@ static int next_token(parser_ctx_t *ctx, void *lval)
         return parse_identifier(ctx, lval);
     }
 
-    if(iswdigit(*ctx->ptr)) {
+    if(is_digit(*ctx->ptr)) {
         double n;
 
         if(!parse_numeric_literal(ctx, &n))
@@ -576,6 +579,7 @@ static int next_token(parser_ctx_t *ctx, void *lval)
 
     switch(*ctx->ptr) {
     case '{':
+    case '}':
     case '(':
     case ')':
     case '[':
@@ -586,12 +590,8 @@ static int next_token(parser_ctx_t *ctx, void *lval)
     case '?':
         return *ctx->ptr++;
 
-    case '}':
-        *(const WCHAR**)lval = ctx->ptr++;
-        return '}';
-
     case '.':
-        if(ctx->ptr+1 < ctx->end && iswdigit(ctx->ptr[1])) {
+        if(ctx->ptr+1 < ctx->end && is_digit(ctx->ptr[1])) {
             double n;
             HRESULT hres;
             hres = parse_decimal(&ctx->ptr, ctx->end, &n);
@@ -820,10 +820,10 @@ void release_cc(cc_ctx_t *cc)
 
     for(iter = cc->vars; iter; iter = next) {
         next = iter->next;
-        heap_free(iter);
+        free(iter);
     }
 
-    heap_free(cc);
+    free(cc);
 }
 
 static BOOL new_cc_var(cc_ctx_t *cc, const WCHAR *name, int len, ccval_t v)
@@ -833,7 +833,7 @@ static BOOL new_cc_var(cc_ctx_t *cc, const WCHAR *name, int len, ccval_t v)
     if(len == -1)
         len = lstrlenW(name);
 
-    new_v = heap_alloc(sizeof(cc_var_t) + (len+1)*sizeof(WCHAR));
+    new_v = malloc(sizeof(cc_var_t) + (len+1)*sizeof(WCHAR));
     if(!new_v)
         return FALSE;
 
@@ -864,7 +864,7 @@ static BOOL init_cc(parser_ctx_t *ctx)
     if(ctx->script->cc)
         return TRUE;
 
-    cc = heap_alloc(sizeof(cc_ctx_t));
+    cc = malloc(sizeof(cc_ctx_t));
     if(!cc) {
         lex_error(ctx, E_OUTOFMEMORY);
         return FALSE;
@@ -909,7 +909,7 @@ int try_parse_ccval(parser_ctx_t *ctx, ccval_t *r)
     if(!skip_spaces(ctx))
         return -1;
 
-    if(iswdigit(*ctx->ptr)) {
+    if(is_digit(*ctx->ptr)) {
         double n;
 
         if(!parse_numeric_literal(ctx, &n))
@@ -1099,14 +1099,14 @@ static int cc_token(parser_ctx_t *ctx, void *lval)
     return tBooleanLiteral;
 }
 
-int parser_lex(void *lval, parser_ctx_t *ctx)
+int parser_lex(void *lval, unsigned *loc, parser_ctx_t *ctx)
 {
     int ret;
 
     ctx->nl = ctx->ptr == ctx->begin;
 
     do {
-        ret = next_token(ctx, lval);
+        ret = next_token(ctx, loc, lval);
     } while(ret == '@' && !(ret = cc_token(ctx, lval)));
 
     return ret;
@@ -1118,7 +1118,6 @@ literal_t *parse_regexp(parser_ctx_t *ctx)
     BOOL in_class = FALSE;
     DWORD re_len, flags;
     literal_t *ret;
-    HRESULT hres;
 
     TRACE("\n");
 
@@ -1147,6 +1146,7 @@ literal_t *parse_regexp(parser_ctx_t *ctx)
 
     if(ctx->ptr == ctx->end || *ctx->ptr != '/') {
         WARN("pre-parsing failed\n");
+        ctx->hres = JS_E_SYNTAX;
         return NULL;
     }
 
@@ -1156,8 +1156,8 @@ literal_t *parse_regexp(parser_ctx_t *ctx)
     while(ctx->ptr < ctx->end && iswalnum(*ctx->ptr))
         ctx->ptr++;
 
-    hres = parse_regexp_flags(flags_ptr, ctx->ptr-flags_ptr, &flags);
-    if(FAILED(hres))
+    ctx->hres = parse_regexp_flags(flags_ptr, ctx->ptr-flags_ptr, &flags);
+    if(FAILED(ctx->hres))
         return NULL;
 
     ret = parser_alloc(ctx, sizeof(literal_t));

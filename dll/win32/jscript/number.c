@@ -16,7 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
+#include <wine/config.h>
+#include <wine/port.h>
+#endif
+
 #include <math.h>
+#include <locale.h>
 #include <assert.h>
 
 #include "jscript.h"
@@ -31,13 +37,6 @@ typedef struct {
     double value;
 } NumberInstance;
 
-static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
-static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
-static const WCHAR toFixedW[] = {'t','o','F','i','x','e','d',0};
-static const WCHAR toExponentialW[] = {'t','o','E','x','p','o','n','e','n','t','i','a','l',0};
-static const WCHAR toPrecisionW[] = {'t','o','P','r','e','c','i','s','i','o','n',0};
-static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
-
 #define NUMBER_TOSTRING_BUF_SIZE 64
 #define NUMBER_DTOA_SIZE 18
 
@@ -46,14 +45,16 @@ static inline NumberInstance *number_from_jsdisp(jsdisp_t *jsdisp)
     return CONTAINING_RECORD(jsdisp, NumberInstance, dispex);
 }
 
-static inline NumberInstance *number_from_vdisp(vdisp_t *vdisp)
+static inline HRESULT numberval_this(jsval_t vthis, DOUBLE *ret)
 {
-    return number_from_jsdisp(vdisp->u.jsdisp);
-}
-
-static inline NumberInstance *number_this(vdisp_t *jsthis)
-{
-    return is_vclass(jsthis, JSCLASS_NUMBER) ? number_from_vdisp(jsthis) : NULL;
+    jsdisp_t *jsdisp;
+    if(is_number(vthis))
+        *ret = get_number(vthis);
+    else if(is_object_instance(vthis) && (jsdisp = to_jsdisp(get_object(vthis))) && is_class(jsdisp, JSCLASS_NUMBER))
+        *ret = number_from_jsdisp(jsdisp)->value;
+    else
+        return JS_E_NUMBER_EXPECTED;
+    return S_OK;
 }
 
 static inline void number_to_str(double d, WCHAR *buf, int size, int *dec_point)
@@ -229,10 +230,9 @@ static inline jsstr_t *number_to_exponential(double val, int prec)
 }
 
 /* ECMA-262 3rd Edition    15.7.4.2 */
-static HRESULT Number_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Number_toString(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
-    NumberInstance *number;
     INT radix = 10;
     DOUBLE val;
     jsstr_t *str;
@@ -240,21 +240,20 @@ static HRESULT Number_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
 
     TRACE("\n");
 
-    if(!(number = number_this(jsthis)))
-        return throw_type_error(ctx, JS_E_NUMBER_EXPECTED, NULL);
+    hres = numberval_this(vthis, &val);
+    if(FAILED(hres))
+        return hres;
 
-    if(argc) {
+    if(argc && (ctx->version < SCRIPTLANGUAGEVERSION_ES5 || !is_undefined(argv[0]))) {
         hres = to_int32(ctx, argv[0], &radix);
         if(FAILED(hres))
             return hres;
 
-        if(radix<2 || radix>36)
-            return throw_type_error(ctx, JS_E_INVALIDARG, NULL);
+        if(radix < 2 || radix > 36)
+            return JS_E_INVALIDARG;
     }
 
-    val = number->value;
-
-    if(radix==10 || !is_finite(val)) {
+    if(radix==10 || !isfinite(val)) {
         hres = to_string(ctx, jsval_number(val), &str);
         if(FAILED(hres))
             return hres;
@@ -324,7 +323,6 @@ static HRESULT Number_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
             if(log_radix==0)
                 buf[idx] = 0;
             else {
-                static const WCHAR formatW[] = {'(','e','%','c','%','d',')',0};
                 WCHAR ch;
 
                 if(log_radix<0) {
@@ -332,7 +330,7 @@ static HRESULT Number_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
                     ch = '-';
                 }
                 else ch = '+';
-                swprintf(&buf[idx], formatW, ch, (int)log_radix);
+                swprintf(&buf[idx], ARRAY_SIZE(buf) - idx, L"(e%c%d)", ch, (int)log_radix);
             }
         }
         else buf[idx] = '\0';
@@ -349,17 +347,104 @@ static HRESULT Number_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
     return S_OK;
 }
 
-static HRESULT Number_toLocaleString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+HRESULT localize_number(script_ctx_t *ctx, DOUBLE val, BOOL new_format, jsstr_t **ret)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    WCHAR buf[316], decimal[8], thousands[8], *numstr;
+    NUMBERFMTW *format = NULL, format_buf;
+    LCID lcid = ctx->lcid;
+#ifndef __REACTOS__
+    _locale_t locale;
+#endif
+    unsigned convlen;
+    jsstr_t *str;
+    int len;
+
+    /* FIXME: Localize this */
+    if(!isfinite(val))
+        return to_string(ctx, jsval_number(val), ret);
+
+    /* Native never uses an exponent, even if the number is very large, it will in fact
+       return all the digits (with thousands separators). jscript.dll uses two digits for
+       fraction even if they are zero (likely default numDigits) and always returns them,
+       while mshtml's jscript uses 3 digits and trims trailing zeros (on same locale).
+       This is even for very small numbers, such as 0.0000999, which will simply be 0. */
+#ifdef __REACTOS__ /* FIXME: Inspect */
+    len = swprintf(buf, ARRAY_SIZE(buf), L"%.3f", val);
+#else
+    if(!(locale = _create_locale(LC_ALL, "C")))
+        return E_OUTOFMEMORY;
+    len = _swprintf_l(buf, ARRAY_SIZE(buf), L"%.3f", locale, val);
+    _free_locale(locale);
+#endif
+
+    if(new_format) {
+        WCHAR grouping[10];
+
+        format = &format_buf;
+        format->NumDigits = 3;
+        while(buf[--len] == '0')
+            format->NumDigits--;
+
+        /* same logic as VarFormatNumber */
+        grouping[2] = '\0';
+        if(!GetLocaleInfoW(lcid, LOCALE_SGROUPING, grouping, ARRAY_SIZE(grouping)))
+            format->Grouping = 3;
+        else
+            format->Grouping = (grouping[2] == '2' ? 32 : grouping[0] - '0');
+
+        if(!GetLocaleInfoW(lcid, LOCALE_ILZERO | LOCALE_RETURN_NUMBER, (WCHAR*)&format->LeadingZero, 2))
+            format->LeadingZero = 0;
+        if(!GetLocaleInfoW(lcid, LOCALE_INEGNUMBER | LOCALE_RETURN_NUMBER, (WCHAR*)&format->NegativeOrder, 2))
+            format->NegativeOrder = 1;
+        format->lpDecimalSep = decimal;
+        if(!GetLocaleInfoW(lcid, LOCALE_SDECIMAL, decimal, ARRAY_SIZE(decimal)))
+            wcscpy(decimal, L".");
+        format->lpThousandSep = thousands;
+        if(!GetLocaleInfoW(lcid, LOCALE_STHOUSAND, thousands, ARRAY_SIZE(thousands)))
+            wcscpy(thousands, L",");
+    }
+
+    if(!(convlen = GetNumberFormatW(lcid, 0, buf, format, NULL, 0)) ||
+       !(str = jsstr_alloc_buf(convlen - 1, &numstr)))
+        return E_OUTOFMEMORY;
+
+    if(!GetNumberFormatW(lcid, 0, buf, format, numstr, convlen)) {
+        jsstr_release(str);
+        return E_OUTOFMEMORY;
+    }
+
+    *ret = str;
+    return S_OK;
 }
 
-static HRESULT Number_toFixed(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Number_toLocaleString(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
-    NumberInstance *number;
+    jsstr_t *str;
+    HRESULT hres;
+    DOUBLE val;
+
+    TRACE("\n");
+
+    hres = numberval_this(vthis, &val);
+    if(FAILED(hres)) {
+        if(hres == JS_E_NUMBER_EXPECTED && ctx->version >= SCRIPTLANGUAGEVERSION_ES5)
+            return throw_error(ctx, JS_E_WRONG_THIS, L"Number");
+        return hres;
+    }
+
+    if(r) {
+        hres = localize_number(ctx, val, ctx->version >= SCRIPTLANGUAGEVERSION_ES5, &str);
+        if(FAILED(hres))
+            return hres;
+        *r = jsval_string(str);
+    }
+    return S_OK;
+}
+
+static HRESULT Number_toFixed(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
+{
     DOUBLE val;
     INT prec = 0;
     jsstr_t *str;
@@ -367,20 +452,20 @@ static HRESULT Number_toFixed(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
 
     TRACE("\n");
 
-    if(!(number = number_this(jsthis)))
-        return throw_type_error(ctx, JS_E_NUMBER_EXPECTED, NULL);
+    hres = numberval_this(vthis, &val);
+    if(FAILED(hres))
+        return hres;
 
     if(argc) {
         hres = to_int32(ctx, argv[0], &prec);
         if(FAILED(hres))
             return hres;
 
-        if(prec<0 || prec>20)
-            return throw_range_error(ctx, JS_E_FRACTION_DIGITS_OUT_OF_RANGE, NULL);
+        if(prec < 0 || prec > 20)
+            return JS_E_FRACTION_DIGITS_OUT_OF_RANGE;
     }
 
-    val = number->value;
-    if(!is_finite(val)) {
+    if(!isfinite(val)) {
         hres = to_string(ctx, jsval_number(val), &str);
         if(FAILED(hres))
             return hres;
@@ -397,10 +482,9 @@ static HRESULT Number_toFixed(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
     return S_OK;
 }
 
-static HRESULT Number_toExponential(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Number_toExponential(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
-    NumberInstance *number;
     DOUBLE val;
     INT prec = 0;
     jsstr_t *str;
@@ -408,20 +492,20 @@ static HRESULT Number_toExponential(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
 
     TRACE("\n");
 
-    if(!(number = number_this(jsthis)))
-        return throw_type_error(ctx, JS_E_NUMBER_EXPECTED, NULL);
+    hres = numberval_this(vthis, &val);
+    if(FAILED(hres))
+        return hres;
 
     if(argc) {
         hres = to_int32(ctx, argv[0], &prec);
         if(FAILED(hres))
             return hres;
 
-        if(prec<0 || prec>20)
-            return throw_range_error(ctx, JS_E_FRACTION_DIGITS_OUT_OF_RANGE, NULL);
+        if(prec < 0 || prec > 20)
+            return JS_E_FRACTION_DIGITS_OUT_OF_RANGE;
     }
 
-    val = number->value;
-    if(!is_finite(val)) {
+    if(!isfinite(val)) {
         hres = to_string(ctx, jsval_number(val), &str);
         if(FAILED(hres))
             return hres;
@@ -440,29 +524,28 @@ static HRESULT Number_toExponential(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
     return S_OK;
 }
 
-static HRESULT Number_toPrecision(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Number_toPrecision(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
-    NumberInstance *number;
     INT prec = 0, size;
     jsstr_t *str;
     DOUBLE val;
     HRESULT hres;
 
-    if(!(number = number_this(jsthis)))
-        return throw_type_error(ctx, JS_E_NUMBER_EXPECTED, NULL);
+    hres = numberval_this(vthis, &val);
+    if(FAILED(hres))
+        return hres;
 
-    if(argc) {
+    if(argc && (ctx->version < 2 || !is_undefined(argv[0]))) {
         hres = to_int32(ctx, argv[0], &prec);
         if(FAILED(hres))
             return hres;
 
         if(prec<1 || prec>21)
-            return throw_range_error(ctx, JS_E_PRECISION_OUT_OF_RANGE, NULL);
+            return JS_E_PRECISION_OUT_OF_RANGE;
     }
 
-    val = number->value;
-    if(!is_finite(val) || !prec) {
+    if(!isfinite(val) || !prec) {
         hres = to_string(ctx, jsval_number(val), &str);
         if(FAILED(hres))
             return hres;
@@ -487,58 +570,43 @@ static HRESULT Number_toPrecision(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
     return S_OK;
 }
 
-static HRESULT Number_valueOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Number_valueOf(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
-    NumberInstance *number;
+    HRESULT hres;
+    DOUBLE val;
 
     TRACE("\n");
 
-    if(!(number = number_this(jsthis)))
-        return throw_type_error(ctx, JS_E_NUMBER_EXPECTED, NULL);
+    hres = numberval_this(vthis, &val);
+    if(FAILED(hres))
+        return hres;
 
     if(r)
-        *r = jsval_number(number->value);
-    return S_OK;
-}
-
-static HRESULT Number_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
-{
-    NumberInstance *number = number_from_jsdisp(jsthis);
-
-    TRACE("(%p)\n", number);
-
-    *r = jsval_number(number->value);
+        *r = jsval_number(val);
     return S_OK;
 }
 
 static const builtin_prop_t Number_props[] = {
-    {toExponentialW,         Number_toExponential,         PROPF_METHOD|1},
-    {toFixedW,               Number_toFixed,               PROPF_METHOD},
-    {toLocaleStringW,        Number_toLocaleString,        PROPF_METHOD},
-    {toPrecisionW,           Number_toPrecision,           PROPF_METHOD|1},
-    {toStringW,              Number_toString,              PROPF_METHOD|1},
-    {valueOfW,               Number_valueOf,               PROPF_METHOD}
+    {L"toExponential",       Number_toExponential,         PROPF_METHOD|1},
+    {L"toFixed",             Number_toFixed,               PROPF_METHOD},
+    {L"toLocaleString",      Number_toLocaleString,        PROPF_METHOD},
+    {L"toPrecision",         Number_toPrecision,           PROPF_METHOD|1},
+    {L"toString",            Number_toString,              PROPF_METHOD|1},
+    {L"valueOf",             Number_valueOf,               PROPF_METHOD}
 };
 
 static const builtin_info_t Number_info = {
-    JSCLASS_NUMBER,
-    {NULL, NULL,0, Number_get_value},
-    ARRAY_SIZE(Number_props),
-    Number_props,
-    NULL,
-    NULL
+    .class     = JSCLASS_NUMBER,
+    .props_cnt = ARRAY_SIZE(Number_props),
+    .props     = Number_props,
 };
 
 static const builtin_info_t NumberInst_info = {
-    JSCLASS_NUMBER,
-    {NULL, NULL,0, Number_get_value},
-    0, NULL,
-    NULL,
-    NULL
+    .class = JSCLASS_NUMBER,
 };
 
-static HRESULT NumberConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT NumberConstr_value(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     double n;
@@ -573,11 +641,12 @@ static HRESULT NumberConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
             n = 0;
         }
 
-        hres = create_number(ctx, n, &obj);
-        if(FAILED(hres))
-            return hres;
-
-        *r = jsval_obj(obj);
+        if(r) {
+            hres = create_number(ctx, n, &obj);
+            if(FAILED(hres))
+                return hres;
+            *r = jsval_obj(obj);
+        }
         break;
     }
     default:
@@ -593,7 +662,7 @@ static HRESULT alloc_number(script_ctx_t *ctx, jsdisp_t *object_prototype, Numbe
     NumberInstance *number;
     HRESULT hres;
 
-    number = heap_alloc_zero(sizeof(NumberInstance));
+    number = calloc(1, sizeof(NumberInstance));
     if(!number)
         return E_OUTOFMEMORY;
 
@@ -602,7 +671,7 @@ static HRESULT alloc_number(script_ctx_t *ctx, jsdisp_t *object_prototype, Numbe
     else
         hres = init_dispex_from_constr(&number->dispex, ctx, &NumberInst_info, ctx->number_constr);
     if(FAILED(hres)) {
-        heap_free(number);
+        free(number);
         return hres;
     }
 
@@ -615,14 +684,12 @@ HRESULT create_number_constr(script_ctx_t *ctx, jsdisp_t *object_prototype, jsdi
     NumberInstance *number;
     HRESULT hres;
 
-    static const WCHAR NumberW[] = {'N','u','m','b','e','r',0};
-
     hres = alloc_number(ctx, object_prototype, &number);
     if(FAILED(hres))
         return hres;
 
     number->value = 0;
-    hres = create_builtin_constructor(ctx, NumberConstr_value, NumberW, NULL,
+    hres = create_builtin_constructor(ctx, NumberConstr_value, L"Number", NULL,
             PROPF_CONSTR|1, &number->dispex, ret);
 
     jsdisp_release(&number->dispex);

@@ -35,8 +35,8 @@
 #endif
 
 #ifdef JSVAL_DOUBLE_LAYOUT_PTR32
-/* NaN exponent and our 0x80000 marker */
-#define JSV_VAL(x) (0x7ff80000|x)
+/* NaN exponent, quiet bit 0x80000 and our 0x10000 marker */
+#define JSV_VAL(x) (0x7ff90000|x)
 #else
 #define JSV_VAL(x) x
 #endif
@@ -131,6 +131,15 @@ static inline jsval_t jsval_null(void)
 {
     jsval_t ret;
     __JSVAL_TYPE(ret) = JSV_NULL;
+    __JSVAL_BOOL(ret) = FALSE;
+    return ret;
+}
+
+static inline jsval_t jsval_null_disp(void)
+{
+    jsval_t ret;
+    __JSVAL_TYPE(ret) = JSV_NULL;
+    __JSVAL_BOOL(ret) = TRUE;
     return ret;
 }
 
@@ -150,10 +159,10 @@ static inline jsval_t jsval_number(double n)
     if((ret.u.s.tag & 0x7ff00000) == 0x7ff00000) {
         /* isinf */
         if(ret.u.s.tag & 0xfffff) {
-            ret.u.s.tag = 0x7ff00000;
+            ret.u.s.tag = 0x7ff80000;
             ret.u.s.u.as_uintptr = ~0;
         }else if(ret.u.s.u.as_uintptr) {
-            ret.u.s.tag = 0x7ff00000;
+            ret.u.s.tag = 0x7ff80000;
         }
     }
 #else
@@ -178,9 +187,9 @@ static inline BOOL is_null(jsval_t v)
     return __JSVAL_TYPE(v) == JSV_NULL;
 }
 
-static inline BOOL is_null_instance(jsval_t v)
+static inline BOOL is_null_disp(jsval_t v)
 {
-    return is_null(v) || (is_object_instance(v) && !__JSVAL_OBJ(v));
+    return is_null(v) && __JSVAL_BOOL(v);
 }
 
 static inline BOOL is_string(jsval_t v)
@@ -191,7 +200,7 @@ static inline BOOL is_string(jsval_t v)
 static inline BOOL is_number(jsval_t v)
 {
 #ifdef JSVAL_DOUBLE_LAYOUT_PTR32
-    return (v.u.s.tag & 0x7ff80000) != 0x7ff80000;
+    return (v.u.s.tag & 0x7ff10000) != 0x7ff10000;
 #else
     return v.type == JSV_NUMBER;
 #endif
@@ -241,9 +250,9 @@ static inline BOOL get_bool(jsval_t v)
     return __JSVAL_BOOL(v);
 }
 
-HRESULT variant_to_jsval(VARIANT*,jsval_t*) DECLSPEC_HIDDEN;
-HRESULT jsval_to_variant(jsval_t,VARIANT*) DECLSPEC_HIDDEN;
-void jsval_release(jsval_t) DECLSPEC_HIDDEN;
-HRESULT jsval_copy(jsval_t,jsval_t*) DECLSPEC_HIDDEN;
+HRESULT variant_to_jsval(script_ctx_t*,VARIANT*,jsval_t*);
+HRESULT jsval_to_variant(jsval_t,VARIANT*);
+void jsval_release(jsval_t);
+HRESULT jsval_copy(jsval_t,jsval_t*);
 
 #endif

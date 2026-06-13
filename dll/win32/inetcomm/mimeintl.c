@@ -19,7 +19,6 @@
  */
 
 #define COBJMACROS
-#define NONAMELESSUNION
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -166,7 +165,7 @@ static HRESULT WINAPI MimeInternat_GetCodePageCharset(IMimeInternational *iface,
     HRESULT hr;
     MIMECPINFO mlang_cp_info;
 
-    TRACE("(%p)->(%d, %d, %p)\n", iface, cpiCodePage, ctCsetType, phCharset);
+    TRACE("(%p)->(%ld, %d, %p)\n", iface, cpiCodePage, ctCsetType, phCharset);
 
     *phCharset = NULL;
 
@@ -315,7 +314,7 @@ static HRESULT WINAPI MimeInternat_CanConvertCodePages(IMimeInternational *iface
     HRESULT hr;
     IMultiLanguage *ml;
 
-    TRACE("(%p)->(%d, %d)\n", iface, cpiSource, cpiDest);
+    TRACE("(%p)->(%ld, %ld)\n", iface, cpiSource, cpiDest);
 
     /* Could call mlang.IsConvertINetStringAvailable() to avoid the COM overhead if need be. */
 
@@ -354,7 +353,7 @@ static HRESULT WINAPI MimeInternat_ConvertBuffer(IMimeInternational *iface, CODE
     HRESULT hr;
     IMultiLanguage *ml;
 
-    TRACE("(%p)->(%d, %d, %p, %p, %p)\n", iface, cpiSource, cpiDest, pIn, pOut, pcbRead);
+    TRACE("(%p)->(%ld, %ld, %p, %p, %p)\n", iface, cpiSource, cpiDest, pIn, pOut, pcbRead);
 
     *pcbRead = 0;
     pOut->cbSize = 0;
@@ -404,17 +403,17 @@ static HRESULT WINAPI MimeInternat_ConvertString(IMimeInternational *iface, CODE
     int src_len;
     IMultiLanguage *ml;
 
-    TRACE("(%p)->(%d, %d, %p %p)\n", iface, cpiSource, cpiDest, pIn, pOut);
+    TRACE("(%p)->(%ld, %ld, %p %p)\n", iface, cpiSource, cpiDest, pIn, pOut);
 
     switch(pIn->vt)
     {
     case VT_LPSTR:
         if(cpiSource == CP_UNICODE) cpiSource = GetACP();
-        src_len = strlen(pIn->u.pszVal);
+        src_len = strlen(pIn->pszVal);
         break;
     case VT_LPWSTR:
         cpiSource = CP_UNICODE;
-        src_len = lstrlenW(pIn->u.pwszVal) * sizeof(WCHAR);
+        src_len = lstrlenW(pIn->pwszVal) * sizeof(WCHAR);
         break;
     default:
         return E_INVALIDARG;
@@ -426,37 +425,37 @@ static HRESULT WINAPI MimeInternat_ConvertString(IMimeInternational *iface, CODE
         DWORD mode = 0;
         UINT in_size = src_len, out_size;
 
-        hr = IMultiLanguage_ConvertString(ml, &mode, cpiSource, cpiDest, (BYTE*)pIn->u.pszVal, &in_size,
+        hr = IMultiLanguage_ConvertString(ml, &mode, cpiSource, cpiDest, (BYTE*)pIn->pszVal, &in_size,
                                           NULL, &out_size);
         if(hr == S_OK) /* S_FALSE means the conversion could not be performed */
         {
             out_size += (cpiDest == CP_UNICODE) ? sizeof(WCHAR) : sizeof(char);
 
-            pOut->u.pszVal = CoTaskMemAlloc(out_size);
-            if(!pOut->u.pszVal)
+            pOut->pszVal = CoTaskMemAlloc(out_size);
+            if(!pOut->pszVal)
                 hr = E_OUTOFMEMORY;
             else
             {
                 mode = 0;
                 in_size = src_len;
-                hr = IMultiLanguage_ConvertString(ml, &mode, cpiSource, cpiDest, (BYTE*)pIn->u.pszVal, &in_size,
-                                                  (BYTE*)pOut->u.pszVal, &out_size);
+                hr = IMultiLanguage_ConvertString(ml, &mode, cpiSource, cpiDest, (BYTE*)pIn->pszVal, &in_size,
+                                                  (BYTE*)pOut->pszVal, &out_size);
 
                 if(hr == S_OK)
                 {
                     if(cpiDest == CP_UNICODE)
                     {
-                        pOut->u.pwszVal[out_size / sizeof(WCHAR)] = 0;
+                        pOut->pwszVal[out_size / sizeof(WCHAR)] = 0;
                         pOut->vt = VT_LPWSTR;
                     }
                     else
                     {
-                        pOut->u.pszVal[out_size] = '\0';
+                        pOut->pszVal[out_size] = '\0';
                         pOut->vt = VT_LPSTR;
                     }
                 }
                 else
-                    CoTaskMemFree(pOut->u.pszVal);
+                    CoTaskMemFree(pOut->pszVal);
             }
         }
         IMultiLanguage_Release(ml);
@@ -527,7 +526,7 @@ HRESULT MimeInternational_Construct(IMimeInternational **internat)
     global_internat = HeapAlloc(GetProcessHeap(), 0, sizeof(*global_internat));
     global_internat->IMimeInternational_iface.lpVtbl = &mime_internat_vtbl;
     global_internat->refs = 0;
-    InitializeCriticalSection(&global_internat->cs);
+    InitializeCriticalSectionEx(&global_internat->cs, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
     global_internat->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": global_internat.cs");
 
     list_init(&global_internat->charsets);

@@ -27,6 +27,7 @@
 #include "mshtmhst.h"
 #include "rpcproxy.h"
 #include "jscript_classes.h"
+#include "jsdisp.h"
 
 #include "wine/debug.h"
 
@@ -37,6 +38,65 @@ LONG module_ref = 0;
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 HINSTANCE jscript_hinstance;
+static DWORD jscript_tls;
+static ITypeInfo *dispatch_typeinfo;
+
+static int weak_refs_compare(const void *key, const struct rb_entry *entry)
+{
+    const struct weak_refs_entry *weak_refs_entry = RB_ENTRY_VALUE(entry, const struct weak_refs_entry, entry);
+    ULONG_PTR a = (ULONG_PTR)key, b = (ULONG_PTR)LIST_ENTRY(weak_refs_entry->list.next, struct weakmap_entry, weak_refs_entry)->key;
+    return (a > b) - (a < b);
+}
+
+struct thread_data *get_thread_data(void)
+{
+    struct thread_data *thread_data = TlsGetValue(jscript_tls);
+
+    if(!thread_data) {
+        thread_data = calloc(1, sizeof(struct thread_data));
+        if(!thread_data)
+            return NULL;
+        thread_data->thread_id = GetCurrentThreadId();
+        list_init(&thread_data->objects);
+        rb_init(&thread_data->weak_refs, weak_refs_compare);
+        TlsSetValue(jscript_tls, thread_data);
+    }
+
+    thread_data->ref++;
+    return thread_data;
+}
+
+void release_thread_data(struct thread_data *thread_data)
+{
+    if(--thread_data->ref)
+        return;
+
+    free(thread_data);
+    TlsSetValue(jscript_tls, NULL);
+}
+
+HRESULT get_dispatch_typeinfo(ITypeInfo **out)
+{
+    ITypeInfo *typeinfo;
+    ITypeLib *typelib;
+    HRESULT hr;
+
+    if (!dispatch_typeinfo)
+    {
+        hr = LoadRegTypeLib(&IID_StdOle, STDOLE_MAJORVERNUM, STDOLE_MINORVERNUM, STDOLE_LCID, &typelib);
+        if (FAILED(hr)) return hr;
+
+        hr = ITypeLib_GetTypeInfoOfGuid(typelib, &IID_IDispatch, &typeinfo);
+        ITypeLib_Release(typelib);
+        if (FAILED(hr)) return hr;
+
+        if (InterlockedCompareExchangePointer((void**)&dispatch_typeinfo, typeinfo, NULL))
+            ITypeInfo_Release(typeinfo);
+    }
+
+    *out = dispatch_typeinfo;
+    return S_OK;
+}
 
 static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
 {
@@ -134,18 +194,22 @@ static IClassFactory JScriptEncodeFactory = { &JScriptEncodeFactoryVtbl };
  */
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 {
-    TRACE("(%p %d %p)\n", hInstDLL, fdwReason, lpv);
+    TRACE("(%p %ld %p)\n", hInstDLL, fdwReason, lpv);
 
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hInstDLL);
         jscript_hinstance = hInstDLL;
-        if(!init_strings())
+        jscript_tls = TlsAlloc();
+        if(jscript_tls == TLS_OUT_OF_INDEXES || !init_strings())
             return FALSE;
         break;
     case DLL_PROCESS_DETACH:
         if (lpv) break;
+        if (dispatch_typeinfo) ITypeInfo_Release(dispatch_typeinfo);
+        if(jscript_tls != TLS_OUT_OF_INDEXES) TlsFree(jscript_tls);
         free_strings();
+        break;
     }
 
     return TRUE;
@@ -175,25 +239,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    TRACE("() ref=%d\n", module_ref);
+    TRACE("() ref=%ld\n", module_ref);
 
     return module_ref ? S_FALSE : S_OK;
-}
-
-/***********************************************************************
- *          DllRegisterServer (jscript.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    TRACE("()\n");
-    return __wine_register_resources(jscript_hinstance);
-}
-
-/***********************************************************************
- *          DllUnregisterServer (jscript.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    TRACE("()\n");
-    return __wine_unregister_resources(jscript_hinstance);
 }

@@ -1442,7 +1442,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetInt(&gspv.iPwrOffTimeout, uiParam, KEY_DESKTOP, L"PowerOffTimeOut", fl);
 
         case SPI_GETLOWPOWERACTIVE:
-            return SpiGetInt(pvParam, &gspv.iPwrOffTimeout, fl);
+            return SpiGetInt(pvParam, &gspv.bLowPwrActive, fl);
 
         case SPI_GETPOWEROFFACTIVE:
             return SpiGetInt(pvParam, &gspv.bPwrOffActive, fl);

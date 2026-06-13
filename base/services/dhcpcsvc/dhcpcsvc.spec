@@ -11,7 +11,7 @@
 @ stdcall DhcpCApiInitialize(ptr)
 @ stub DhcpDelPersistentRequestParams
 @ stub DhcpDeRegisterOptions
-@ stub DhcpDeRegisterParamChange
+@ stdcall DhcpDeRegisterParamChange(long ptr ptr)
 @ stdcall DhcpEnumClasses(long wstr long long)
 @ stdcall DhcpFallbackRefreshParams(wstr)
 @ stdcall DhcpHandlePnPEvent(long long wstr long long)
@@ -24,7 +24,7 @@
 @ stub DhcpPersistentRequestParams
 @ stub DhcpQueryHWInfo
 @ stub DhcpRegisterOptions
-@ stub DhcpRegisterParamChange
+@ stdcall DhcpRegisterParamChange(long ptr wstr ptr long ptr ptr)
 @ stub DhcpReleaseIpAddressLease
 @ stub DhcpReleaseIpAddressLeaseEx
 @ stdcall DhcpReleaseParameters(wstr)
@@ -34,7 +34,7 @@
 @ stub DhcpRequestOptions
 @ stdcall DhcpRequestParams(long ptr ptr ptr long ptr long ptr ptr ptr ptr)
 @ stdcall DhcpStaticRefreshParams(long long long)
-@ stub DhcpUndoRequestParams
+@ stdcall DhcpUndoRequestParams(long ptr wstr wstr)
 @ stub McastApiCleanup
 @ stub McastApiStartup
 @ stub McastEnumerateScopes

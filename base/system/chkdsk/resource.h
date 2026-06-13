@@ -14,5 +14,6 @@
 #define IDS_NO_CURRENT_DIR      204
 #define IDS_NO_QUERY_VOL        205
 #define IDS_VOLUME_IN_USE_PROC  206
+#define IDS_RUN_AGAIN           207
 
 /* EOF */

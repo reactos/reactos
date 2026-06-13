@@ -377,7 +377,7 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
 {
     ULONG Count, i;
     PCOFF_SYMENT CoffEntry;
-    char FuncName[256], FileName[1024];
+    char FuncName[512], FileName[1024];
     char *p;
     PROSSYM_ENTRY Current;
     struct StringHashTable StringHash;

@@ -174,6 +174,7 @@ RtlCreateAtomTable(
     }
 
     /* initialize atom table */
+    Table->Signature = 'motA';
     Table->NumberOfBuckets = TableSize;
 
     Status = RtlpInitAtomTableLock(Table);
