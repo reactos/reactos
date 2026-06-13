@@ -227,32 +227,19 @@ CUIFObject::CUIFObject(CUIFObject *pParent, DWORD nObjectID, LPCRECT prc, DWORD 
 
     if (prc)
         m_rc = *prc;
-    else
-        m_rc = { 0, 0, 0, 0 };
 
     if (m_pParent)
     {
         m_pWindow = m_pParent->m_pWindow;
         m_pScheme = m_pParent->m_pScheme;
     }
-    else
-    {
-        m_pWindow = NULL;
-        m_pScheme = NULL;
-    }
-
-    m_bEnable = m_bVisible = TRUE;
-    m_hFont = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
-
-    m_dwUnknown4[0] = -1; //FIXME: name
-    m_dwUnknown4[1] = -1; //FIXME: name
 }
 
 CUIFObject::~CUIFObject()
 {
     if (m_pWindow)
     {
-        CUIFToolTip *pToolTip = m_pWindow->m_pToolTip;
+        CUIFToolTip* pToolTip = m_pWindow->m_pToolTip;
         if (pToolTip && pToolTip->m_pToolTipTarget == this)
             pToolTip->m_pToolTipTarget = NULL;
     }

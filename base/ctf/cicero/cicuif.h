@@ -184,9 +184,9 @@ protected:
     DWORD m_nObjectID = 0;
     DWORD m_style = 0;
     RECT m_rc = { 0 };
-    BOOL m_bEnable = FALSE;
-    BOOL m_bVisible = FALSE;
-    HFONT m_hFont = NULL;
+    BOOL m_bEnable = TRUE;
+    BOOL m_bVisible = TRUE;
+    HFONT m_hFont = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
     BOOL m_bHasCustomFont = FALSE;
     LPWSTR m_pszToolTip = NULL;
     DWORD m_dwUnknown4[2] = { (DWORD)-1, (DWORD)-1 }; //FIXME: name and type
