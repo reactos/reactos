@@ -256,7 +256,7 @@ streamout_astring(FILE *stream, const char *string, size_t count)
 
 #if !defined(_USER32_WSPRINTF)
      if ((stream->_flag & _IOSTRG) && (stream->_base == NULL))
-        return count;
+        return (int)count;
 #endif
 
     while (count--)
@@ -284,7 +284,7 @@ streamout_wstring(FILE *stream, const wchar_t *string, size_t count)
 
 #if defined(_UNICODE) && !defined(_USER32_WSPRINTF)
      if ((stream->_flag & _IOSTRG) && (stream->_base == NULL))
-        return count;
+        return (int)count;
 #endif
 
     while (count--)
@@ -438,9 +438,16 @@ streamout(FILE *stream, const _TCHAR *format, va_list argptr)
             }
             else if (chr == _T('l'))
             {
-                /* Check if this is the 2nd 'l' in a row */
-                if (format[-2] == 'l') flags |= FLAG_INT64;
-                else flags |= FLAG_LONG;
+                /* Check for "ll" */
+                if (format[0] == 'l')
+                {
+                    flags |= FLAG_INT64;
+                    chr = *format++;
+                }
+                else
+                {
+                    flags |= FLAG_LONG;
+                }
             }
             else if (chr == _T('I'))
             {
@@ -483,14 +490,20 @@ streamout(FILE *stream, const _TCHAR *format, va_list argptr)
                 continue;
 
             case _T('C'):
-#ifndef _UNICODE
-                if (!(flags & FLAG_SHORT)) flags |= FLAG_WIDECHAR;
+#ifdef _UNICODE
+                if (flags & FLAG_SHORT)
+                    flags &= ~FLAG_WIDECHAR;
+#else
+                flags |= FLAG_WIDECHAR;
 #endif
                 goto case_char;
 
             case _T('c'):
 #ifdef _UNICODE
-                if (!(flags & FLAG_SHORT)) flags |= FLAG_WIDECHAR;
+                if ((flags & FLAG_SHORT))
+                    flags &= ~FLAG_WIDECHAR;
+                else
+                    flags |= FLAG_WIDECHAR;
 #endif
             case_char:
                 string = buffer;
@@ -520,15 +533,20 @@ streamout(FILE *stream, const _TCHAR *format, va_list argptr)
 
             case _T('S'):
                 string = va_arg(argptr, void*);
-#ifndef _UNICODE
-                if (!(flags & FLAG_SHORT)) flags |= FLAG_WIDECHAR;
+#ifdef _UNICODE
+                flags &= ~FLAG_WIDECHAR;
+#else
+                flags |= FLAG_WIDECHAR;
 #endif
                 goto case_string;
 
             case _T('s'):
                 string = va_arg(argptr, void*);
 #ifdef _UNICODE
-                if (!(flags & FLAG_SHORT)) flags |= FLAG_WIDECHAR;
+                if ((flags & FLAG_SHORT))
+                    flags &= ~FLAG_WIDECHAR;
+                else
+                    flags |= FLAG_WIDECHAR;
 #endif
 
             case_string:
@@ -635,7 +653,8 @@ streamout(FILE *stream, const _TCHAR *format, va_list argptr)
 
             default:
                 /* Treat anything else as a new character */
-                format--;
+                if ((written = streamout_char(stream, chr)) == 0) return -1;
+                written_all += written;
                 continue;
         }
 
