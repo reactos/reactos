@@ -1,0 +1,85 @@
+<Project ToolsVersion="14.0" InitialTargets="GenerateShaderAssemblies;CopyResourceFile" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <BuildDependsOn>
+      $(BuildDependsOn);
+      GenerateShaderAssemblies;
+      CopyResourceFile
+    </BuildDependsOn>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <ShaderSourcePath>ShaderAssemblies\Source</ShaderSourcePath>
+    <ShaderBinOutputPath>$(IntermediateOutputPath)\hw\ShaderAssemblies\Binary</ShaderBinOutputPath>
+    
+    <ResourceFileSourcePath>ShaderAssemblies\ResourceFileTemplate\EmbeddedShaders.RC</ResourceFileSourcePath>
+
+    <!-- EmbeddedShaders.RC is included as <shaderassemblies\embeddedshaders.rc> -->
+    <ResourceFileIncludePath>$(IntermediateOutputPath)\hw</ResourceFileIncludePath>
+    <ResourceFileOutputPath>$(ResourceFileIncludePath)\ShaderAssemblies</ResourceFileOutputPath>
+  </PropertyGroup>
+  
+  <!-- To support building ARM64 on x86/x64, this must use x64 for ARM64 -->
+  <PropertyGroup>
+    <FXCTOOLArchitecture Condition="'$(Architecture)'=='ARM64'">x64</FXCTOOLArchitecture>
+    <FXCTOOLArchitecture Condition="'$(Architecture)'!='ARM64'">$(Architecture)</FXCTOOLArchitecture>
+    <FXCTOOL>$(Windows10SdkPath)bin\$(WindowsTargetPlatformVersion)\$(FXCTOOLArchitecture)\fxc.exe</FXCTOOL>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Shader Include="$(ShaderSourcePath)\ShaderEffectsVS.fx">
+      <Type>vs_2_0</Type>
+      <EntryPoint>VS</EntryPoint>
+      <OutputFileName>ShaderEffectVS.vsbin</OutputFileName>
+    </Shader>
+    <Shader Include="$(ShaderSourcePath)\ShaderEffectsVS.fx">
+      <Type>vs_3_0</Type>
+      <EntryPoint>VS</EntryPoint>
+      <OutputFileName>ShaderEffectVS30.vsbin</OutputFileName>
+    </Shader>
+    
+    <!-- Blur Shaders-->
+    <Shader Include="$(ShaderSourcePath)\PassThroughShaderEffectPS.fx">
+      <Type>ps_2_0</Type>
+      <EntryPoint>PS</EntryPoint>
+      <OutputFileName>PassThroughShaderEffectPS.psbin</OutputFileName>
+    </Shader>
+    <Shader Include="$(ShaderSourcePath)\HorizontalBlur.fx">
+      <Type>ps_2_0</Type>
+      <EntryPoint>PS</EntryPoint>
+      <OutputFileName>HorizontalBlur.psbin</OutputFileName>
+    </Shader>
+    <Shader Include="$(ShaderSourcePath)\VerticalBlur.fx">
+      <Type>ps_2_0</Type>
+      <EntryPoint>PS</EntryPoint>
+      <OutputFileName>VerticalBlur.psbin</OutputFileName>
+    </Shader>
+    <Shader Include="$(ShaderSourcePath)\HorizontalBlurMulti.fx">
+      <Type>ps_2_0</Type>
+      <EntryPoint>PS</EntryPoint>
+      <OutputFileName>HorizontalBlurMulti.psbin</OutputFileName>
+    </Shader>
+    <Shader Include="$(ShaderSourcePath)\VerticalBlurMulti.fx">
+      <Type>ps_2_0</Type>
+      <EntryPoint>PS</EntryPoint>
+      <OutputFileName>VerticalBlurMulti.psbin</OutputFileName>
+    </Shader>
+
+    <!-- Drop Shadow Shader -->
+    <Shader Include="$(ShaderSourcePath)\DropShadow.fx">
+      <Type>ps_2_0</Type>
+      <EntryPoint>PS</EntryPoint>
+      <OutputFileName>DropShadow.psbin</OutputFileName>
+    </Shader>
+  </ItemGroup>
+  
+  <Target Name="GenerateShaderAssemblies" BeforeTargets="Build" AfterTargets="CopyResourceFile" Inputs="@(Shader)" Outputs="$(ShaderBinOutputPath)\%(Shader.OutputFileName)">
+    <Error Condition="!Exists('$(FXCTOOL)')" Text="fxc.exe ($(FXCTOOL)) not found" />
+    <MakeDir Condition="!Exists('$(ShaderBinOutputPath)')" Directories="$(ShaderBinOutputPath)" />
+    <Exec Command="&quot;$(FXCTOOL)&quot; /T %(Shader.Type) %(Shader.Identity) /E %(Shader.EntryPoint) /Fo$(ShaderBinOutputPath)\%(Shader.OutputFileName)" StandardOutputImportance="normal" />
+  </Target>
+
+  <Target Name="CopyResourceFile" DependsOnTargets="GenerateShaderAssemblies">
+    <Copy SourceFiles="$(ResourceFileSourcePath)" DestinationFolder="$(ResourceFileOutputPath)" />
+  </Target>
+</Project>

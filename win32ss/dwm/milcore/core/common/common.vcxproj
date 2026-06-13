@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(WpfCppProps)" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{19f853cb-c936-40be-8f9d-e6bed3cf8a3d}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <TargetName>common</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>precomp.hpp</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MsBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="precomp.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>precomp.hpp</PrecompiledHeaderFile>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AssertDllInUse.cpp" />
+    <ClCompile Include="BaseMatrix.cpp" />
+    <ClCompile Include="BufferDispenser.cpp" />
+    <ClCompile Include="D3DLoader.cpp" />
+    <ClCompile Include="DWMInterop.cpp" />
+    <ClCompile Include="Gamma.cpp" />
+    <ClCompile Include="Display.cpp" />
+    <ClCompile Include="engine.cpp" />
+    <ClCompile Include="GradientTexture.cpp" />
+    <ClCompile Include="matrix.cpp" />
+    <ClCompile Include="matrix3x2.cpp" />
+    <ClCompile Include="MatrixStack.cpp" />
+    <ClCompile Include="memblock.cpp" />
+    <ClCompile Include="MILMatrix.cpp" />
+    <ClCompile Include="lazymem.cpp" />
+    <ClCompile Include="RectUtils.cpp" />
+    <ClCompile Include="ResourcePool.cpp" />
+    <ClCompile Include="GuidelineCollection.cpp" />
+    <ClCompile Include="rtutils.cpp" />
+    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="WatermarkStack.cpp" />
+    <ClCompile Include="milcoredllentry.cpp" />
+    <ClCompile Include="MILDC.cpp" />
+    <ClCompile Include="milboxf.cpp" />
+    <ClCompile Include="d3dutils.cpp" />
+    <ClCompile Include="3dutils.cpp" />
+    <ClCompile Include="memreader.cpp" />
+    <ClCompile Include="memblockreader.cpp" />
+    <ClCompile Include="memwriter.cpp" />
+    <ClCompile Include="slistutil.cpp" />
+    <ClCompile Include="dump.cpp" />
+    <ClCompile Include="OSCompat.cpp" />
+    <ClCompile Include="Tier.cpp" />
+    <ClCompile Include="log.cpp" />
+    <ClCompile Include="ptrarray.cpp" />
+    <ClCompile Include="ptrset.cpp" />
+    <ClCompile Include="enhancedcontrasttable.cpp" />
+    <ClCompile Include="exports.cpp" />
+    <ClCompile Include="dwritefactory.cpp" />
+    <ClCompile Include="renderoptions.cpp" />
+    <ClCompile Include="$(WpfSharedDir)cpp\dwriteloader.cpp">
+      <PreCompiledHeader>NotUsing</PreCompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
