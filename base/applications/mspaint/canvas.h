@@ -19,7 +19,7 @@ public:
             ::DestroyCursor(m_hCursor);
     }
 
-    void SetStyle(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber);
+    void SetStyle(BrushStyle style, INT zoom, INT radius, COLORREF color, BOOL is_rubber);
 
     void SetCursor()
     {
@@ -32,11 +32,12 @@ public:
 protected:
     HCURSOR m_hCursor = NULL;
     BrushStyle m_style;
+    INT m_zoom = -1;
     INT m_radius = -1;
     COLORREF m_color = CLR_INVALID;
     BOOL m_is_rubber = FALSE;
 
-    static HCURSOR CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber);
+    static HCURSOR CreateStyledCursor(BrushStyle style, INT zoom, INT radius, COLORREF color, BOOL is_rubber);
 };
 
 class CCanvasWindow : public CWindowImpl<CCanvasWindow>
