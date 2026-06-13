@@ -14,11 +14,11 @@ BEGIN
         MENUITEM "&Uusi\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Merkitse", IDM_MARKQ
-        MENUITEM "Sound", IDM_SOUND
+        MENUITEM "Ääni", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&Aloittelija", IDM_BEGINNER
         MENUITEM "&Kehittynyt", IDM_ADVANCED
-        MENUITEM "&Expertti", IDM_EXPERT
+        MENUITEM "&Ekspertti", IDM_EXPERT
         MENUITEM "Mukau&ta", IDM_CUSTOM
         MENUITEM SEPARATOR
         MENUITEM "&Poistu\tAlt+X", IDM_EXIT
@@ -32,12 +32,12 @@ END
 
 DLG_TIMES DIALOGEX 0, 0, 160, 80
 STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "Nopeimmat Ajat"
+CAPTION "Nopeimmat ajat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Nopeimmat Ajat", -1, 10, 10, 140, 45
+    GROUPBOX "Nopeimmat ajat", -1, 10, 10, 140, 45
     LTEXT "Aloittelija", -1, 20, 20, 40, 8
-    LTEXT "Kehittynyt", -1, 20, 30, 40, 8
+    LTEXT "Keskitaso", -1, 20, 30, 40, 8
     LTEXT "Expertti", -1, 20, 40, 40, 8
     LTEXT "999", IDC_TIME1, 70, 20, 15, 8
     LTEXT "999", IDC_TIME2, 70, 30, 15, 8
