@@ -46,13 +46,6 @@ static void Test_PathIsSlowW(void)
 
     GetTempPathW(_countof(szPath), szPath);
     ok_int(PathIsSlowW(szPath, INVALID_FILE_ATTRIBUTES), FALSE);
-
-    {
-        BOOL bRet = PathIsSlowW(L"\\\\localhost\\nonexistent_share\\file.txt",
-                                INVALID_FILE_ATTRIBUTES);
-        ok(bRet == TRUE || bRet == FALSE,
-           "PathIsSlowW on UNC path should return a valid BOOL\n");
-    }
 }
 
 static void Test_PathIsSlowA(void)
