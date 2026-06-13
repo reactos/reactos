@@ -1,4 +1,10 @@
-/* Translation by Gabriel Aguiar <fgygh5804@gmail.com,fgsoftwarestudio@gmail.com> (August, 2021) */
+/*
+ * PROJECT:     ReactOS DiskPart
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATORS: Copyright 2021 Gabriel Aguiar <fgygh5804@gmail.com,fgsoftwarestudio@gmail.com>
+                Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -336,7 +342,7 @@ BEGIN
     IDS_BUSTYPE_SCM     "SCM"
     IDS_BUSTYPE_UFS     "UFS"
     IDS_BUSTYPE_NVMEOF  "NVMEOF"
-    IDS_BUSTYPE_OTHER   "Other"
+    IDS_BUSTYPE_OTHER   "Outro"
 END
 
 STRINGTABLE
