@@ -15,6 +15,7 @@
 #include <wmistr.h>
 #define NDEBUG
 #include <debug.h>
+#include "../vf/vf.h"
 
 /* The maximum size of an environment value (in bytes) */
 #define MAX_ENVVAL_SIZE 1024
@@ -2332,14 +2333,111 @@ QSI_DEF(SystemRangeStartInformation)
 /* Class 51 - Driver verifier information */
 QSI_DEF(SystemVerifierInformation)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemVerifierInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PLIST_ENTRY Link;
+    VF_DRIVER_ENTRY* Entry;
+    KIRQL OldIrql;
+    ULONG Required = 0;
+    ULONG Offset = 0;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    ULONG EntrySize;
+    PUCHAR TempBuffer;
+    PSYSTEM_VERIFIER_INFORMATION Info;
+
+    if (!VfGlobal.Enabled)
+        return STATUS_NOT_IMPLEMENTED;
+
+    KeAcquireSpinLock(&VfDriverListLock, &OldIrql);
+    for (Link = VfDriverList.Flink; Link != &VfDriverList; Link = Link->Flink)
+    {
+        Entry = CONTAINING_RECORD(Link, VF_DRIVER_ENTRY, ListEntry);
+        LdrEntry = (PLDR_DATA_TABLE_ENTRY)Entry->DriverObject->DriverSection;
+        Required += sizeof(SYSTEM_VERIFIER_INFORMATION);
+        if (LdrEntry && LdrEntry->BaseDllName.Buffer)
+            Required += LdrEntry->BaseDllName.Length + sizeof(WCHAR);
+    }
+    KeReleaseSpinLock(&VfDriverListLock, OldIrql);
+
+    *ReqSize = Required;
+    if (Size < Required)
+        return STATUS_INFO_LENGTH_MISMATCH;
+
+    if (Required == 0)
+        return STATUS_SUCCESS;
+
+    /* Allocate a kernel-mode temp buffer to fill at PASSIVE_LEVEL */
+    TempBuffer = ExAllocatePoolWithTag(NonPagedPool, Required, TAG_VFDRV);
+    if (!TempBuffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+    RtlZeroMemory(TempBuffer, Required);
+
+    KeAcquireSpinLock(&VfDriverListLock, &OldIrql);
+    for (Link = VfDriverList.Flink; Link != &VfDriverList; Link = Link->Flink)
+    {
+        Entry = CONTAINING_RECORD(Link, VF_DRIVER_ENTRY, ListEntry);
+        LdrEntry = (PLDR_DATA_TABLE_ENTRY)Entry->DriverObject->DriverSection;
+
+        Info = (PSYSTEM_VERIFIER_INFORMATION)(TempBuffer + Offset);
+
+        Info->Level                           = Entry->VerifierFlags;
+        Info->RaiseIrqls                      = 0;
+        Info->AcquireSpinLocks                = 0;
+        Info->SynchronizeExecutions           = 0;
+        Info->AllocationsAttempted            = Entry->AllocationsAttempted;
+        Info->AllocationsSucceeded            = Entry->AllocationsSucceeded;
+        Info->AllocationsSucceededSpecialPool = Entry->AllocationsSucceededSpecialPool;
+        Info->AllocationsWithNoTag            = Entry->AllocationsWithNoTag;
+        Info->TrimRequests                    = 0;
+        Info->Trims                           = 0;
+        Info->AllocationsFailed               = Entry->AllocationsFailed;
+        Info->AllocationsFailedDeliberately   = Entry->AllocationsFailedDeliberately;
+        Info->Loads                           = Entry->Loads;
+        Info->Unloads                         = Entry->Unloads;
+        Info->UnTrackedPool                   = 0;
+        Info->CurrentPagedPoolAllocations     = Entry->CurrentPagedPoolAllocations;
+        Info->CurrentNonPagedPoolAllocations  = Entry->CurrentNonPagedPoolAllocations;
+        Info->PeakPagedPoolAllocations        = Entry->PeakPagedPoolAllocations;
+        Info->PeakNonPagedPoolAllocations     = Entry->PeakNonPagedPoolAllocations;
+        Info->PagedPoolUsageInBytes           = Entry->PagedPoolUsageInBytes;
+        Info->NonPagedPoolUsageInBytes        = Entry->NonPagedPoolUsageInBytes;
+        Info->PeakPagedPoolUsageInBytes       = Entry->PeakPagedPoolUsageInBytes;
+        Info->PeakNonPagedPoolUsageInBytes    = Entry->PeakNonPagedPoolUsageInBytes;
+
+        if (LdrEntry && LdrEntry->BaseDllName.Buffer)
+        {
+            PWCHAR NameBuf = (PWCHAR)((PUCHAR)Info + sizeof(SYSTEM_VERIFIER_INFORMATION));
+            ULONG NameLen = LdrEntry->BaseDllName.Length;
+            RtlCopyMemory(NameBuf, LdrEntry->BaseDllName.Buffer, NameLen);
+            NameBuf[NameLen / sizeof(WCHAR)] = UNICODE_NULL;
+            Info->DriverName.Buffer = NULL;
+            Info->DriverName.Length = (USHORT)NameLen;
+            Info->DriverName.MaximumLength = (USHORT)(NameLen + sizeof(WCHAR));
+            EntrySize = sizeof(SYSTEM_VERIFIER_INFORMATION) + NameLen + sizeof(WCHAR);
+        }
+        else
+        {
+            Info->DriverName.Buffer = NULL;
+            Info->DriverName.Length = 0;
+            Info->DriverName.MaximumLength = 0;
+            EntrySize = sizeof(SYSTEM_VERIFIER_INFORMATION);
+        }
+
+        Info->NextEntryOffset = (Link->Flink != &VfDriverList) ? EntrySize : 0;
+        Offset += EntrySize;
+    }
+    KeReleaseSpinLock(&VfDriverListLock, OldIrql);
+
+    /* Now copy from kernel buffer to user buffer at PASSIVE_LEVEL */
+    RtlCopyMemory(Buffer, TempBuffer, Required);
+    ExFreePoolWithTag(TempBuffer, TAG_VFDRV);
+
+    return STATUS_SUCCESS;
 }
 
 SSI_DEF(SystemVerifierInformation)
 {
-    /* FIXME */
+    /* verifier.exe uses this to enable/disable verifier and set flags.
+     * not yet implemented -- requires NtSetSystemInformation verifier classes
+     * to be wired up to VfInitialize/VfGlobal. */
     DPRINT1("NtSetSystemInformation - SystemVerifierInformation not implemented\n");
     return STATUS_NOT_IMPLEMENTED;
 }
