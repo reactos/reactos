@@ -4411,7 +4411,7 @@ CUIFMenu::InitShow(CUIFWindow *pWindow, LPCRECT prc, BOOL bFlag, BOOL bDoAnimati
         INT cxItem = m_cxyMargin + pItem->m_MenuLeftExtent.cx;
         if (cxMax < cxItem)
             cxMax = cxItem;
-        m_cxMenuExtent = std::max(m_cxMenuExtent, pItem->m_MenuRightExtent.cx);
+        m_cxMenuExtent = (std::max)(m_cxMenuExtent, pItem->m_MenuRightExtent.cx);
         if (!m_bHasMargin && pItem->m_hbmColor && pItem->IsCheck())
             m_bHasMargin = TRUE;
     }
@@ -4694,7 +4694,7 @@ void CUIFMenu::SetMenuFont()
     m_hMenuFont = ::CreateFontW(height, 0, 0, 0, FW_NORMAL, 0, 0, 0, SYMBOL_CHARSET,
                                 0, 0, 0, 0, L"Marlett");
     LONG cxSmallIcon = ::GetSystemMetrics(SM_CXSMICON);
-    m_cxyMargin = std::max(height, cxSmallIcon) + 2;
+    m_cxyMargin = (std::max)(height, cxSmallIcon) + 2;
 }
 
 void CUIFMenu::SetSelectedId(UINT nSelectID)
