@@ -3,66 +3,96 @@
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Provide the types needed to communicate with Kernel Debugger extensions
  * COPYRIGHT:   Copyright 2022 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #pragma once
 
-typedef NTSTATUS
-(NTAPI *KD_GET_RX_PACKET)(
-    _In_ PVOID Adapter,
-    _Out_ PULONG Handle,
-    _Out_ PVOID *Packet,
-    _Out_ PULONG Length);
+#include <reactos/kdnetshareddata.h>
 
-typedef VOID
-(NTAPI *KD_RELEASE_RX_PACKET)(
-    _In_ PVOID Adapter,
-    _In_ ULONG Handle);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-typedef NTSTATUS
-(NTAPI *KD_GET_TX_PACKET)(
-    _In_ PVOID Adapter,
-    _Out_ PULONG Handle);
+struct _DEBUG_DEVICE_DESCRIPTOR;
 
-typedef NTSTATUS
-(NTAPI *KD_SEND_TX_PACKET)(
-    _In_ PVOID Adapter,
-    _In_ ULONG Handle,
-    _In_ ULONG Length);
+typedef NTSTATUS (NTAPI *KD_INITIALIZE_CONTROLLER)(_In_ PKDNET_SHARED_DATA KdNet);
+typedef VOID     (NTAPI *KD_SHUTDOWN_CONTROLLER)(_In_ PVOID Adapter);
+typedef VOID     (NTAPI *KD_SET_HIBERNATE_RANGE)(VOID);
+typedef NTSTATUS (NTAPI *KD_DEVICE_CONTROL)(_In_ PVOID Adapter, _In_ ULONG RequestCode,
+    _In_reads_bytes_(InputBufferLength) PVOID InputBuffer, _In_ ULONG InputBufferLength,
+    _Out_writes_bytes_(OutputBufferLength) PVOID OutputBuffer, _In_ ULONG OutputBufferLength);
+typedef NTSTATUS (NTAPI *KD_GET_RX_PACKET)(_In_ PVOID Adapter, _Out_ PULONG Handle,
+    _Out_ PVOID *Packet, _Out_ PULONG Length);
+typedef VOID     (NTAPI *KD_RELEASE_RX_PACKET)(_In_ PVOID Adapter, _In_ ULONG Handle);
+typedef NTSTATUS (NTAPI *KD_GET_TX_PACKET)(_In_ PVOID Adapter, _Out_ PULONG Handle);
+typedef NTSTATUS (NTAPI *KD_SEND_TX_PACKET)(_In_ PVOID Adapter, _In_ ULONG Handle, _In_ ULONG Length);
+typedef PVOID    (NTAPI *KD_GET_PACKET_ADDRESS)(_In_ PVOID Adapter, _In_ ULONG Handle);
+typedef ULONG    (NTAPI *KD_GET_PACKET_LENGTH)(_In_ PVOID Adapter, _In_ ULONG Handle);
+typedef ULONG    (NTAPI *KD_GET_HARDWARE_CONTEXT_SIZE)(_In_ struct _DEBUG_DEVICE_DESCRIPTOR *Device);
+typedef NTSTATUS (NTAPI *KD_READ_SERIAL_BYTE)(_In_ PVOID Adapter, _Out_ PUCHAR Byte);
+typedef NTSTATUS (NTAPI *KD_WRITE_SERIAL_BYTE)(_In_ PVOID Adapter, _In_ UCHAR Byte);
+typedef NTSTATUS (NTAPI *DEBUG_SERIAL_OUTPUT_INIT)(_In_opt_ struct _DEBUG_DEVICE_DESCRIPTOR *pDevice,
+    _Out_opt_ PPHYSICAL_ADDRESS PAddress);
+typedef VOID     (NTAPI *DEBUG_SERIAL_OUTPUT_BYTE)(_In_ UCHAR byte);
 
-typedef PVOID
-(NTAPI *KD_GET_PACKET_ADDRESS)(
-    _In_ PVOID Adapter,
-    _In_ ULONG Handle);
-
-typedef ULONG
-(NTAPI *KD_GET_PACKET_LENGTH)(
-    _In_ PVOID Adapter,
-    _In_ ULONG Handle);
-
-#define KDNET_EXT_EXPORTS 13
+#define KDNET_EXT_EXPORTS 15
 
 typedef struct _KDNET_EXTENSIBILITY_EXPORTS
 {
     ULONG FunctionCount;
-    PVOID KdInitializeController;
-    PVOID KdShutdownController;
-    PVOID KdSetHibernateRange;
-    KD_GET_RX_PACKET KdGetRxPacket;
-    KD_RELEASE_RX_PACKET KdReleaseRxPacket;
-    KD_GET_TX_PACKET KdGetTxPacket;
-    KD_SEND_TX_PACKET KdSendTxPacket;
-    KD_GET_PACKET_ADDRESS KdGetPacketAddress;
-    KD_GET_PACKET_LENGTH KdGetPacketLength;
-    PVOID KdGetHardwareContextSize;
-    PVOID KdDeviceControl;
-    PVOID KdReadSerialByte;
-    PVOID KdWriteSerialByte;
-    PVOID DebugSerialOutputInit;
-    PVOID DebugSerialOutputByte;
+    KD_INITIALIZE_CONTROLLER KdInitializeController;
+    KD_SHUTDOWN_CONTROLLER   KdShutdownController;
+    KD_SET_HIBERNATE_RANGE   KdSetHibernateRange;
+    KD_GET_RX_PACKET         KdGetRxPacket;
+    KD_RELEASE_RX_PACKET     KdReleaseRxPacket;
+    KD_GET_TX_PACKET         KdGetTxPacket;
+    KD_SEND_TX_PACKET        KdSendTxPacket;
+    KD_GET_PACKET_ADDRESS    KdGetPacketAddress;
+    KD_GET_PACKET_LENGTH     KdGetPacketLength;
+    KD_GET_HARDWARE_CONTEXT_SIZE KdGetHardwareContextSize;
+    KD_DEVICE_CONTROL       KdDeviceControl;
+    KD_READ_SERIAL_BYTE     KdReadSerialByte;
+    KD_WRITE_SERIAL_BYTE     KdWriteSerialByte;
+    DEBUG_SERIAL_OUTPUT_INIT DebugSerialOutputInit;
+    DEBUG_SERIAL_OUTPUT_BYTE DebugSerialOutputByte;
 } KDNET_EXTENSIBILITY_EXPORTS, *PKDNET_EXTENSIBILITY_EXPORTS;
 
-#define KDNET_EXT_IMPORTS 30
+typedef PHYSICAL_ADDRESS (NTAPI *KDNET_GET_PHYSICAL_ADDRESS)(_In_ PVOID Va);
+typedef VOID (NTAPI *KDNET_STALL_EXECUTION_PROCESSOR)(ULONG Microseconds);
+typedef UCHAR (NTAPI *KDNET_READ_REGISTER_UCHAR)(_In_ PUCHAR Register);
+typedef USHORT (NTAPI *KDNET_READ_REGISTER_USHORT)(_In_ PUSHORT Register);
+typedef ULONG (NTAPI *KDNET_READ_REGISTER_ULONG)(_In_ PULONG Register);
+typedef ULONG64 (NTAPI *KDNET_READ_REGISTER_ULONG64)(_In_ ULONG64 *Register);
+typedef VOID (NTAPI *KDNET_WRITE_REGISTER_UCHAR)(_In_ PUCHAR Register, _In_ UCHAR Value);
+typedef VOID (NTAPI *KDNET_WRITE_REGISTER_USHORT)(_In_ PUSHORT Register, _In_ USHORT Value);
+typedef VOID (NTAPI *KDNET_WRITE_REGISTER_ULONG)(_In_ PULONG Register, _In_ ULONG Value);
+typedef VOID (NTAPI *KDNET_WRITE_REGISTER_ULONG64)(_In_ ULONG64 *Register, _In_ ULONG64 Value);
+typedef UCHAR (NTAPI *KDNET_READ_PORT_UCHAR)(_In_ PUCHAR Port);
+typedef USHORT (NTAPI *KDNET_READ_PORT_USHORT)(_In_ PUSHORT Port);
+typedef ULONG (NTAPI *KDNET_READ_PORT_ULONG)(_In_ PULONG Port);
+typedef ULONG64 (NTAPI *KDNET_READ_PORT_ULONG64)(_In_ ULONG64 *Port);
+typedef VOID (NTAPI *KDNET_WRITE_PORT_UCHAR)(_In_ PUCHAR Port, _In_ UCHAR Value);
+typedef VOID (NTAPI *KDNET_WRITE_PORT_USHORT)(_In_ PUSHORT Port, _In_ USHORT Value);
+typedef VOID (NTAPI *KDNET_WRITE_PORT_ULONG)(_In_ PULONG Port, _In_ ULONG Value);
+typedef VOID (NTAPI *KDNET_WRITE_PORT_ULONG64)(_In_ PULONG Port, _In_ ULONG64 Value);
+typedef ULONG (NTAPI *KDNET_GET_PCI_DATA_BY_OFFSET)(_In_ ULONG BusNumber, _In_ ULONG SlotNumber,
+    _Out_writes_bytes_(Length) PVOID Buffer, _In_ ULONG Offset, _In_ ULONG Length);
+typedef ULONG (NTAPI *KDNET_SET_PCI_DATA_BY_OFFSET)(_In_ ULONG BusNumber, _In_ ULONG SlotNumber,
+    _In_reads_bytes_(Length) PVOID Buffer, _In_ ULONG Offset, _In_ ULONG Length);
+typedef VOID (NTAPI *KDNET_SET_HIBER_RANGE)(_In_opt_ PVOID MemoryMap, _In_ ULONG Flags,
+    _In_ PVOID Address, _In_ ULONG_PTR Length, _In_ ULONG Tag);
+typedef VOID (NTAPI *KDNET_BUGCHECK_EX)(_In_ ULONG BugCheckCode,
+    _In_ ULONG_PTR BugCheckParameter1, _In_ ULONG_PTR BugCheckParameter2,
+    _In_ ULONG_PTR BugCheckParameter3, _In_ ULONG_PTR BugCheckParameter4);
+typedef PVOID (NTAPI *KDNET_MAP_PHYSICAL_MEMORY_64)(_In_ PHYSICAL_ADDRESS PhysicalAddress,
+    _In_ ULONG NumberPages, _In_ BOOLEAN FlushCurrentTLB);
+typedef VOID (NTAPI *KDNET_UNMAP_VIRTUAL_ADDRESS)(_In_ PVOID VirtualAddress,
+    _In_ ULONG NumberPages, _In_ BOOLEAN FlushCurrentTLB);
+typedef ULONG64 (NTAPI *KDNET_READ_CYCLE_COUNTER)(_Out_opt_ ULONG64 *Frequency);
+typedef VOID (NTAPI *KDNET_DBGPRINT)(_In_ PCHAR pFmt, ...);
+
+#define KDNET_EXT_IMPORTS 33
 
 typedef struct _KDNET_EXTENSIBILITY_IMPORTS
 {
@@ -102,18 +132,11 @@ typedef struct _KDNET_EXTENSIBILITY_IMPORTS
     PULONG KdNetHardwareID;
 } KDNET_EXTENSIBILITY_IMPORTS, *PKDNET_EXTENSIBILITY_IMPORTS;
 
-extern PKDNET_EXTENSIBILITY_EXPORTS KdNetExtensibilityExports;
-
-#define KdGetRxPacket KdNetExtensibilityExports->KdGetRxPacket
-#define KdReleaseRxPacket KdNetExtensibilityExports->KdReleaseRxPacket
-#define KdGetTxPacket KdNetExtensibilityExports->KdGetTxPacket
-#define KdSendTxPacket KdNetExtensibilityExports->KdSendTxPacket
-#define KdGetPacketAddress KdNetExtensibilityExports->KdGetPacketAddress
-#define KdGetPacketLength KdNetExtensibilityExports->KdGetPacketLength
-
-NTSTATUS
-NTAPI
-KdInitializeLibrary(
+NTSTATUS NTAPI KdInitializeLibrary(
     _In_ PKDNET_EXTENSIBILITY_IMPORTS ImportTable,
     _In_opt_ PCHAR LoaderOptions,
-    _Inout_ PDEBUG_DEVICE_DESCRIPTOR Device);
+    _Inout_ struct _DEBUG_DEVICE_DESCRIPTOR *Device);
+
+#ifdef __cplusplus
+}
+#endif
