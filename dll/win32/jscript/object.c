@@ -24,110 +24,141 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
-static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
-static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
-static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
-static const WCHAR hasOwnPropertyW[] = {'h','a','s','O','w','n','P','r','o','p','e','r','t','y',0};
-static const WCHAR propertyIsEnumerableW[] =
-    {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
-
-static const WCHAR createW[] = {'c','r','e','a','t','e',0};
-static const WCHAR getOwnPropertyDescriptorW[] =
-    {'g','e','t','O','w','n','P','r','o','p','e','r','t','y','D','e','s','c','r','i','p','t','o','r',0};
-static const WCHAR getPrototypeOfW[] =
-    {'g','e','t','P','r','o','t','o','t','y','p','e','O','f',0};
-static const WCHAR definePropertyW[] = {'d','e','f','i','n','e','P','r','o','p','e','r','t','y',0};
-
-static const WCHAR definePropertiesW[] = {'d','e','f','i','n','e','P','r','o','p','e','r','t','i','e','s',0};
-
-static const WCHAR default_valueW[] = {'[','o','b','j','e','c','t',' ','O','b','j','e','c','t',']',0};
-
-static const WCHAR configurableW[] = {'c','o','n','f','i','g','u','r','a','b','l','e',0};
-static const WCHAR enumerableW[] = {'e','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR valueW[] = {'v','a','l','u','e',0};
-static const WCHAR writableW[] = {'w','r','i','t','a','b','l','e',0};
-static const WCHAR getW[] = {'g','e','t',0};
-static const WCHAR setW[] = {'s','e','t',0};
-
-static HRESULT Object_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Object_toString(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
+    const WCHAR *str = NULL;
+    jsstr_t *ret = NULL;
     jsdisp_t *jsdisp;
-    const WCHAR *str;
+    IDispatch *disp;
+    HRESULT hres;
 
-    static const WCHAR formatW[] = {'[','o','b','j','e','c','t',' ','%','s',']',0};
-
-    static const WCHAR arrayW[] = {'A','r','r','a','y',0};
-    static const WCHAR booleanW[] = {'B','o','o','l','e','a','n',0};
-    static const WCHAR dateW[] = {'D','a','t','e',0};
-    static const WCHAR errorW[] = {'E','r','r','o','r',0};
-    static const WCHAR functionW[] = {'F','u','n','c','t','i','o','n',0};
-    static const WCHAR mathW[] = {'M','a','t','h',0};
-    static const WCHAR numberW[] = {'N','u','m','b','e','r',0};
-    static const WCHAR objectW[] = {'O','b','j','e','c','t',0};
-    static const WCHAR regexpW[] = {'R','e','g','E','x','p',0};
-    static const WCHAR stringW[] = {'S','t','r','i','n','g',0};
     /* Keep in sync with jsclass_t enum */
-    static const WCHAR *names[] = {NULL, arrayW, booleanW, dateW, objectW, errorW,
-        functionW, NULL, mathW, numberW, objectW, regexpW, stringW, objectW, objectW, objectW};
+    static const WCHAR *names[] = {
+        NULL,
+        L"[object Array]",
+        L"[object Boolean]",
+        L"[object Date]",
+        L"[object Object]",
+        L"[object Error]",
+        L"[object Function]",
+        NULL,
+        L"[object Math]",
+        L"[object Number]",
+        L"[object Object]",
+        L"[object RegExp]",
+        L"[object String]",
+        L"[object Object]",
+        L"[object Object]",
+        L"[object Object]",
+        L"[object ArrayBuffer]",
+        L"[object Object]",
+        L"[object Object]",
+        L"[object Object]",
+        L"[object Object]",
+        NULL
+    };
 
     TRACE("\n");
 
-    jsdisp = get_jsdisp(jsthis);
+    if(is_undefined(vthis) || is_null(vthis)) {
+        if(ctx->version < SCRIPTLANGUAGEVERSION_ES5)
+            str = L"[object Object]";
+        else
+            str = is_null(vthis) ? L"[object Null]" : L"[object Undefined]";
+        goto set_output;
+    }
+
+    hres = to_object(ctx, vthis, &disp);
+    if(FAILED(hres))
+        return hres;
+
+    jsdisp = to_jsdisp(disp);
     if(!jsdisp) {
-        str = objectW;
+        str = L"[object Object]";
+    }else if(jsdisp->builtin_info->to_string) {
+        hres = jsdisp->builtin_info->to_string(jsdisp, &ret);
     }else if(names[jsdisp->builtin_info->class]) {
         str = names[jsdisp->builtin_info->class];
     }else {
         assert(jsdisp->builtin_info->class != JSCLASS_NONE);
-        FIXME("jdisp->builtin_info->class = %d\n", jsdisp->builtin_info->class);
-        return E_FAIL;
+        FIXME("jsdisp->builtin_info->class = %d\n", jsdisp->builtin_info->class);
+        hres = E_FAIL;
     }
+    IDispatch_Release(disp);
+    if(FAILED(hres))
+        return hres;
 
+set_output:
     if(r) {
-        jsstr_t *ret;
-        WCHAR *ptr;
-
-        ret = jsstr_alloc_buf(9+lstrlenW(str), &ptr);
-        if(!ret)
-            return E_OUTOFMEMORY;
-
-        swprintf(ptr, formatW, str);
+        if(!ret) {
+            ret = jsstr_alloc(str);
+            if(!ret)
+                return E_OUTOFMEMORY;
+        }
         *r = jsval_string(ret);
+    }else if(ret) {
+        jsstr_release(ret);
     }
 
     return S_OK;
 }
 
-static HRESULT Object_toLocaleString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Object_toLocaleString(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
+    jsdisp_t *jsdisp;
+    IDispatch *disp;
+    HRESULT hres;
+
     TRACE("\n");
 
-    if(!is_jsdisp(jsthis)) {
+    hres = to_object(ctx, vthis, &disp);
+    if(FAILED(hres))
+        return hres;
+
+    if(!(jsdisp = to_jsdisp(disp))) {
         FIXME("Host object this\n");
-        return E_FAIL;
+        hres = E_FAIL;
+        goto done;
     }
 
-    return jsdisp_call_name(jsthis->u.jsdisp, toStringW, DISPATCH_METHOD, 0, NULL, r);
+    hres = jsdisp_call_name(jsdisp, L"toString", DISPATCH_METHOD, 0, NULL, r);
+done:
+    IDispatch_Release(disp);
+    return hres;
 }
 
-static HRESULT Object_valueOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Object_valueOf(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
+    IDispatch *disp;
+    HRESULT hres;
+
     TRACE("\n");
 
-    if(r) {
-        IDispatch_AddRef(jsthis->u.disp);
-        *r = jsval_disp(jsthis->u.disp);
+    if(is_null_disp(vthis)) {
+        if(r) *r = jsval_null_disp();
+        return S_OK;
     }
+
+    hres = to_object(ctx, vthis, &disp);
+    if(FAILED(hres))
+        return hres;
+
+    if(r)
+        *r = jsval_disp(disp);
+    else
+        IDispatch_Release(disp);
     return S_OK;
 }
 
-static HRESULT Object_hasOwnProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Object_hasOwnProperty(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
+    IDispatchEx *dispex;
+    jsdisp_t *jsdisp;
+    IDispatch *disp;
     jsstr_t *name;
     DISPID id;
     BSTR bstr;
@@ -135,33 +166,39 @@ static HRESULT Object_hasOwnProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD fl
 
     TRACE("\n");
 
+    hres = to_object(ctx, vthis, &disp);
+    if(FAILED(hres))
+        return hres;
+
     if(!argc) {
         if(r)
             *r = jsval_bool(FALSE);
-        return S_OK;
+        goto done;
     }
 
     hres = to_string(ctx, argv[0], &name);
     if(FAILED(hres))
-        return hres;
+        goto done;
 
-    if(is_jsdisp(jsthis)) {
+    if((jsdisp = to_jsdisp(disp))) {
         property_desc_t prop_desc;
         const WCHAR *name_str;
 
         name_str = jsstr_flatten(name);
         if(!name_str) {
             jsstr_release(name);
-            return E_OUTOFMEMORY;
+            hres = E_OUTOFMEMORY;
+            goto done;
         }
 
-        hres = jsdisp_get_own_property(jsthis->u.jsdisp, name_str, TRUE, &prop_desc);
+        hres = jsdisp_get_own_property(jsdisp, name_str, TRUE, &prop_desc);
         jsstr_release(name);
         if(FAILED(hres) && hres != DISP_E_UNKNOWNNAME)
-            return hres;
+            goto done;
 
         if(r) *r = jsval_bool(hres == S_OK);
-        return S_OK;
+        hres = S_OK;
+        goto done;
     }
 
 
@@ -169,104 +206,274 @@ static HRESULT Object_hasOwnProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD fl
     if(bstr)
         jsstr_flush(name, bstr);
     jsstr_release(name);
-    if(!bstr)
-        return E_OUTOFMEMORY;
+    if(!bstr) {
+        hres = E_OUTOFMEMORY;
+        goto done;
+    }
 
-    if(is_dispex(jsthis))
-        hres = IDispatchEx_GetDispID(jsthis->u.dispex, bstr, make_grfdex(ctx, fdexNameCaseSensitive), &id);
-    else
-        hres = IDispatch_GetIDsOfNames(jsthis->u.disp, &IID_NULL, &bstr, 1, ctx->lcid, &id);
-
+    hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
+    if(SUCCEEDED(hres)) {
+        hres = IDispatchEx_GetDispID(dispex, bstr, make_grfdex(ctx, fdexNameCaseSensitive), &id);
+        IDispatchEx_Release(dispex);
+    }else {
+        hres = IDispatch_GetIDsOfNames(disp, &IID_NULL, &bstr, 1, ctx->lcid, &id);
+    }
     SysFreeString(bstr);
     if(r)
         *r = jsval_bool(SUCCEEDED(hres));
-    return S_OK;
+    hres = S_OK;
+done:
+    IDispatch_Release(disp);
+    return hres;
 }
 
-static HRESULT Object_propertyIsEnumerable(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT Object_propertyIsEnumerable(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     property_desc_t prop_desc;
     const WCHAR *name;
     jsstr_t *name_str;
+    jsdisp_t *jsdisp;
+    IDispatch *disp;
     HRESULT hres;
 
     TRACE("\n");
 
+    hres = to_object(ctx, vthis, &disp);
+    if(FAILED(hres))
+        return hres;
+
     if(argc != 1) {
         FIXME("argc %d not supported\n", argc);
-        return E_NOTIMPL;
+        hres = E_NOTIMPL;
+        goto done;
     }
 
-    if(!is_jsdisp(jsthis)) {
+    if(!(jsdisp = to_jsdisp(disp))) {
         FIXME("Host object this\n");
-        return E_FAIL;
+        hres = E_FAIL;
+        goto done;
     }
+
+    hres = to_flat_string(ctx, argv[0], &name_str, &name);
+    if(FAILED(hres))
+        goto done;
+
+    hres = jsdisp_get_own_property(jsdisp, name, TRUE, &prop_desc);
+    jsstr_release(name_str);
+    if(FAILED(hres) && hres != DISP_E_UNKNOWNNAME)
+        goto done;
+
+    if(r)
+        *r = jsval_bool(hres == S_OK && (prop_desc.flags & PROPF_ENUMERABLE) != 0);
+    hres = S_OK;
+done:
+    IDispatch_Release(disp);
+    return hres;
+}
+
+static HRESULT Object_isPrototypeOf(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
+{
+    jsdisp_t *jsthis, *jsdisp;
+    IDispatch *disp;
+    BOOL ret = FALSE;
+    HRESULT hres;
+
+    hres = to_object(ctx, vthis, &disp);
+    if(FAILED(hres))
+        return hres;
+
+    if(!r)
+        goto done;
+
+    if(argc && (jsthis = to_jsdisp(disp)) && is_object_instance(argv[0]) &&
+       (jsdisp = to_jsdisp(get_object(argv[0])))) {
+        while(jsdisp->prototype) {
+            if(jsdisp->prototype == jsthis) {
+                ret = TRUE;
+                break;
+            }
+            jsdisp = jsdisp->prototype;
+        }
+    }
+
+    *r = jsval_bool(ret);
+done:
+    IDispatch_Release(disp);
+    return hres;
+}
+
+static HRESULT Object_defineGetter(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    property_desc_t desc;
+    const WCHAR *name;
+    jsstr_t *name_str;
+    jsdisp_t *jsthis;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    if(!is_object_instance(vthis) || !(jsthis = to_jsdisp(get_object(vthis))))
+        goto done;
+
+    if(argc < 2 || !is_object_instance(argv[1]))
+        return JS_E_FUNCTION_EXPECTED;
+
+    desc.getter = to_jsdisp(get_object(argv[1]));
+    if(!desc.getter) {
+        FIXME("getter is not JS object\n");
+        return E_NOTIMPL;
+    }
+    /* FIXME: Check IsCallable */
 
     hres = to_flat_string(ctx, argv[0], &name_str, &name);
     if(FAILED(hres))
         return hres;
 
-    hres = jsdisp_get_own_property(jsthis->u.jsdisp, name, TRUE, &prop_desc);
-    jsstr_release(name_str);
-    if(FAILED(hres) && hres != DISP_E_UNKNOWNNAME)
-        return hres;
+    desc.flags = desc.mask = PROPF_CONFIGURABLE | PROPF_ENUMERABLE;
+    desc.explicit_getter = TRUE;
+    desc.explicit_setter = FALSE;
+    desc.explicit_value  = FALSE;
+    desc.setter = NULL;
+    hres = jsdisp_define_property(jsthis, name, &desc);
 
+    jsstr_release(name_str);
+    if(FAILED(hres))
+        return hres;
+done:
     if(r)
-        *r = jsval_bool(hres == S_OK && (prop_desc.flags & PROPF_ENUMERABLE) != 0);
+        *r = jsval_undefined();
     return S_OK;
 }
 
-static HRESULT Object_isPrototypeOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT Object_defineSetter(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Object_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
-{
-    jsstr_t *ret;
+    property_desc_t desc;
+    const WCHAR *name;
+    jsstr_t *name_str;
+    jsdisp_t *jsthis;
+    HRESULT hres;
 
     TRACE("\n");
 
-    ret = jsstr_alloc(default_valueW);
-    if(!ret)
-        return E_OUTOFMEMORY;
+    if(!is_object_instance(vthis) || !(jsthis = to_jsdisp(get_object(vthis))))
+        goto done;
 
-    *r = jsval_string(ret);
+    if(argc < 2 || !is_object_instance(argv[1]))
+        return JS_E_FUNCTION_EXPECTED;
+
+    desc.setter = to_jsdisp(get_object(argv[1]));
+    if(!desc.setter) {
+        FIXME("setter is not JS object\n");
+        return E_NOTIMPL;
+    }
+    /* FIXME: Check IsCallable */
+
+    hres = to_flat_string(ctx, argv[0], &name_str, &name);
+    if(FAILED(hres))
+        return hres;
+
+    desc.flags = desc.mask = PROPF_CONFIGURABLE | PROPF_ENUMERABLE;
+    desc.explicit_getter = FALSE;
+    desc.explicit_setter = TRUE;
+    desc.explicit_value  = FALSE;
+    desc.getter = NULL;
+    hres = jsdisp_define_property(jsthis, name, &desc);
+
+    jsstr_release(name_str);
+    if(FAILED(hres))
+        return hres;
+done:
+    if(r)
+        *r = jsval_undefined();
     return S_OK;
 }
 
-static void Object_destructor(jsdisp_t *dispex)
+HRESULT Object_get_proto_(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
 {
-    heap_free(dispex);
+    jsdisp_t *jsthis;
+    IDispatch *disp;
+    HRESULT hres;
+
+    TRACE("%s\n", debugstr_jsval(vthis));
+
+    hres = to_object(ctx, vthis, &disp);
+    if(FAILED(hres))
+        return hres;
+
+    if(!r)
+        goto done;
+
+    if(!(jsthis = to_jsdisp(disp))) {
+        FIXME("Host object this\n");
+        hres = E_FAIL;
+        goto done;
+    }
+
+    *r = jsthis->prototype
+        ? jsval_obj(jsdisp_addref(jsthis->prototype))
+        : jsval_null();
+done:
+    IDispatch_Release(disp);
+    return hres;
+}
+
+HRESULT Object_set_proto_(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    jsdisp_t *jsthis, *proto;
+    HRESULT hres;
+
+    TRACE("%s\n", debugstr_jsval(vthis));
+
+    if(is_undefined(vthis) || is_null(vthis))
+        return JS_E_OBJECT_EXPECTED;
+    if(!argc) {
+        if(r)
+            *r = jsval_undefined();
+        return S_OK;
+    }
+    if(!is_object_instance(vthis) || !(jsthis = to_jsdisp(get_object(vthis))))
+        goto done;
+
+    if(is_null(argv[0])) {
+        proto = NULL;
+    }else if(is_object_instance(argv[0])) {
+        proto = to_jsdisp(get_object(argv[0]));
+        if(!proto) {
+            FIXME("Host object value\n");
+            return E_FAIL;
+        }
+    }else
+        goto done;
+
+    hres = jsdisp_change_prototype(jsthis, proto);
+    if(FAILED(hres))
+        return hres;
+
+done:
+    return r ? jsval_copy(argv[0], r) : S_OK;
 }
 
 static const builtin_prop_t Object_props[] = {
-    {hasOwnPropertyW,        Object_hasOwnProperty,        PROPF_METHOD|1},
-    {isPrototypeOfW,         Object_isPrototypeOf,         PROPF_METHOD|1},
-    {propertyIsEnumerableW,  Object_propertyIsEnumerable,  PROPF_METHOD|1},
-    {toLocaleStringW,        Object_toLocaleString,        PROPF_METHOD},
-    {toStringW,              Object_toString,              PROPF_METHOD},
-    {valueOfW,               Object_valueOf,               PROPF_METHOD}
+    {L"__defineGetter__",      Object_defineGetter,          PROPF_METHOD|PROPF_ES6|2},
+    {L"__defineSetter__",      Object_defineSetter,          PROPF_METHOD|PROPF_ES6|2},
+    {L"hasOwnProperty",        Object_hasOwnProperty,        PROPF_METHOD|1},
+    {L"isPrototypeOf",         Object_isPrototypeOf,         PROPF_METHOD|1},
+    {L"propertyIsEnumerable",  Object_propertyIsEnumerable,  PROPF_METHOD|1},
+    {L"toLocaleString",        Object_toLocaleString,        PROPF_METHOD},
+    {L"toString",              Object_toString,              PROPF_METHOD},
+    {L"valueOf",               Object_valueOf,               PROPF_METHOD}
 };
 
 static const builtin_info_t Object_info = {
-    JSCLASS_OBJECT,
-    {NULL, NULL,0, Object_get_value},
-    ARRAY_SIZE(Object_props),
-    Object_props,
-    Object_destructor,
-    NULL
+    .class      = JSCLASS_OBJECT,
+    .props_cnt  = ARRAY_SIZE(Object_props),
+    .props      = Object_props,
 };
 
 static const builtin_info_t ObjectInst_info = {
-    JSCLASS_OBJECT,
-    {NULL, NULL,0, Object_get_value},
-    0, NULL,
-    Object_destructor,
-    NULL
+    .class = JSCLASS_OBJECT,
 };
 
 static void release_property_descriptor(property_desc_t *desc)
@@ -289,7 +496,7 @@ static HRESULT to_property_descriptor(script_ctx_t *ctx, jsdisp_t *attr_obj, pro
     memset(desc, 0, sizeof(*desc));
     desc->value = jsval_undefined();
 
-    hres = jsdisp_get_id(attr_obj, enumerableW, 0, &id);
+    hres = jsdisp_get_id(attr_obj, L"enumerable", 0, &id);
     if(SUCCEEDED(hres)) {
         desc->mask |= PROPF_ENUMERABLE;
         hres = jsdisp_propget(attr_obj, id, &v);
@@ -305,7 +512,7 @@ static HRESULT to_property_descriptor(script_ctx_t *ctx, jsdisp_t *attr_obj, pro
         return hres;
     }
 
-    hres = jsdisp_get_id(attr_obj, configurableW, 0, &id);
+    hres = jsdisp_get_id(attr_obj, L"configurable", 0, &id);
     if(SUCCEEDED(hres)) {
         desc->mask |= PROPF_CONFIGURABLE;
         hres = jsdisp_propget(attr_obj, id, &v);
@@ -321,7 +528,7 @@ static HRESULT to_property_descriptor(script_ctx_t *ctx, jsdisp_t *attr_obj, pro
         return hres;
     }
 
-    hres = jsdisp_get_id(attr_obj, valueW, 0, &id);
+    hres = jsdisp_get_id(attr_obj, L"value", 0, &id);
     if(SUCCEEDED(hres)) {
         hres = jsdisp_propget(attr_obj, id, &desc->value);
         if(FAILED(hres))
@@ -331,7 +538,7 @@ static HRESULT to_property_descriptor(script_ctx_t *ctx, jsdisp_t *attr_obj, pro
         return hres;
     }
 
-    hres = jsdisp_get_id(attr_obj, writableW, 0, &id);
+    hres = jsdisp_get_id(attr_obj, L"writable", 0, &id);
     if(SUCCEEDED(hres)) {
         desc->mask |= PROPF_WRITABLE;
         hres = jsdisp_propget(attr_obj, id, &v);
@@ -349,7 +556,7 @@ static HRESULT to_property_descriptor(script_ctx_t *ctx, jsdisp_t *attr_obj, pro
         return hres;
     }
 
-    hres = jsdisp_get_id(attr_obj, getW, 0, &id);
+    hres = jsdisp_get_id(attr_obj, L"get", 0, &id);
     if(SUCCEEDED(hres)) {
         desc->explicit_getter = TRUE;
         hres = jsdisp_propget(attr_obj, id, &v);
@@ -373,7 +580,7 @@ static HRESULT to_property_descriptor(script_ctx_t *ctx, jsdisp_t *attr_obj, pro
         return hres;
     }
 
-    hres = jsdisp_get_id(attr_obj, setW, 0, &id);
+    hres = jsdisp_get_id(attr_obj, L"set", 0, &id);
     if(SUCCEEDED(hres)) {
         desc->explicit_setter = TRUE;
         hres = jsdisp_propget(attr_obj, id, &v);
@@ -399,9 +606,9 @@ static HRESULT to_property_descriptor(script_ctx_t *ctx, jsdisp_t *attr_obj, pro
 
     if(desc->explicit_getter || desc->explicit_setter) {
         if(desc->explicit_value)
-            hres = throw_type_error(ctx, JS_E_PROP_DESC_MISMATCH, NULL);
+            hres = JS_E_PROP_DESC_MISMATCH;
         else if(desc->mask & PROPF_WRITABLE)
-            hres = throw_type_error(ctx, JS_E_INVALID_WRITABLE_PROP_DESC, NULL);
+            hres = JS_E_INVALID_WRITABLE_PROP_DESC;
     }
 
     if(FAILED(hres))
@@ -430,7 +637,7 @@ static HRESULT jsdisp_define_properties(script_ctx_t *ctx, jsdisp_t *obj, jsval_
     }
 
     while(1) {
-        hres = jsdisp_next_prop(list_obj, id, TRUE, &id);
+        hres = jsdisp_next_prop(list_obj, id, JSDISP_ENUM_OWN_ENUMERABLE, &id);
         if(hres != S_OK)
             break;
 
@@ -438,7 +645,7 @@ static HRESULT jsdisp_define_properties(script_ctx_t *ctx, jsdisp_t *obj, jsval_
         if(FAILED(hres))
             break;
 
-        if(!is_object_instance(desc_val) || !get_object(desc_val) || !(desc_obj = to_jsdisp(get_object(desc_val)))) {
+        if(!is_object_instance(desc_val) || !(desc_obj = to_jsdisp(get_object(desc_val)))) {
             jsval_release(desc_val);
             break;
         }
@@ -448,7 +655,7 @@ static HRESULT jsdisp_define_properties(script_ctx_t *ctx, jsdisp_t *obj, jsval_
         if(FAILED(hres))
             break;
 
-        hres = IDispatchEx_GetMemberName(&list_obj->IDispatchEx_iface, id, &name);
+        hres = IDispatchEx_GetMemberName(to_dispex(list_obj), id, &name);
         if(SUCCEEDED(hres))
             hres = jsdisp_define_property(obj, name, &prop_desc);
         release_property_descriptor(&prop_desc);
@@ -460,7 +667,7 @@ static HRESULT jsdisp_define_properties(script_ctx_t *ctx, jsdisp_t *obj, jsval_
     return FAILED(hres) ? hres : S_OK;
 }
 
-static HRESULT Object_defineProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
+static HRESULT Object_defineProperty(script_ctx_t *ctx, jsval_t vthis, WORD flags,
                                      unsigned argc, jsval_t *argv, jsval_t *r)
 {
     property_desc_t prop_desc;
@@ -472,7 +679,7 @@ static HRESULT Object_defineProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD fl
     TRACE("\n");
 
     if(argc < 1 || !is_object_instance(argv[0]))
-        return throw_type_error(ctx, JS_E_OBJECT_EXPECTED, NULL);
+        return JS_E_OBJECT_EXPECTED;
     obj = to_jsdisp(get_object(argv[0]));
     if(!obj) {
         FIXME("not implemented non-JS object\n");
@@ -492,26 +699,30 @@ static HRESULT Object_defineProperty(script_ctx_t *ctx, vdisp_t *jsthis, WORD fl
             hres = E_NOTIMPL;
         }
     }else {
-        hres = throw_type_error(ctx, JS_E_OBJECT_EXPECTED, NULL);
+        hres = JS_E_OBJECT_EXPECTED;
     }
-    jsstr_release(name_str);
+
     if(FAILED(hres))
+    {
+        jsstr_release(name_str);
         return hres;
+    }
 
     hres = jsdisp_define_property(obj, name, &prop_desc);
+    jsstr_release(name_str);
     release_property_descriptor(&prop_desc);
     if(SUCCEEDED(hres) && r)
         *r = jsval_obj(jsdisp_addref(obj));
     return hres;
 }
 
-static HRESULT Object_defineProperties(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
+static HRESULT Object_defineProperties(script_ctx_t *ctx, jsval_t vthis, WORD flags,
                                      unsigned argc, jsval_t *argv, jsval_t *r)
 {
     jsdisp_t *obj;
     HRESULT hres;
 
-    if(argc < 1 || !is_object_instance(argv[0]) || !get_object(argv[0]) || !(obj = to_jsdisp(get_object(argv[0])))) {
+    if(argc < 1 || !is_object_instance(argv[0]) || !(obj = to_jsdisp(get_object(argv[0])))) {
         FIXME("not an object\n");
         return E_NOTIMPL;
     }
@@ -524,7 +735,7 @@ static HRESULT Object_defineProperties(script_ctx_t *ctx, vdisp_t *jsthis, WORD 
     return hres;
 }
 
-static HRESULT Object_getOwnPropertyDescriptor(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
+static HRESULT Object_getOwnPropertyDescriptor(script_ctx_t *ctx, jsval_t vthis, WORD flags,
                                                unsigned argc, jsval_t *argv, jsval_t *r)
 {
     property_desc_t prop_desc;
@@ -536,7 +747,7 @@ static HRESULT Object_getOwnPropertyDescriptor(script_ctx_t *ctx, vdisp_t *jsthi
     TRACE("\n");
 
     if(argc < 1 || !is_object_instance(argv[0]))
-        return throw_type_error(ctx, JS_E_OBJECT_EXPECTED, NULL);
+        return JS_E_OBJECT_EXPECTED;
     obj = to_jsdisp(get_object(argv[0]));
     if(!obj) {
         FIXME("not implemented non-JS object\n");
@@ -561,22 +772,22 @@ static HRESULT Object_getOwnPropertyDescriptor(script_ctx_t *ctx, vdisp_t *jsthi
         return hres;
 
     if(prop_desc.explicit_getter || prop_desc.explicit_setter) {
-        hres = jsdisp_define_data_property(desc_obj, getW, PROPF_ALL,
+        hres = jsdisp_define_data_property(desc_obj, L"get", PROPF_ALL,
                 prop_desc.getter ? jsval_obj(prop_desc.getter) : jsval_undefined());
         if(SUCCEEDED(hres))
-            hres = jsdisp_define_data_property(desc_obj, setW, PROPF_ALL,
+            hres = jsdisp_define_data_property(desc_obj, L"set", PROPF_ALL,
                     prop_desc.setter ? jsval_obj(prop_desc.setter) : jsval_undefined());
     }else {
-        hres = jsdisp_propput_name(desc_obj, valueW, prop_desc.value);
+        hres = jsdisp_propput_name(desc_obj, L"value", prop_desc.value);
         if(SUCCEEDED(hres))
-            hres = jsdisp_define_data_property(desc_obj, writableW, PROPF_ALL,
+            hres = jsdisp_define_data_property(desc_obj, L"writable", PROPF_ALL,
                     jsval_bool(!!(prop_desc.flags & PROPF_WRITABLE)));
     }
     if(SUCCEEDED(hres))
-        hres = jsdisp_define_data_property(desc_obj, enumerableW, PROPF_ALL,
+        hres = jsdisp_define_data_property(desc_obj, L"enumerable", PROPF_ALL,
                 jsval_bool(!!(prop_desc.flags & PROPF_ENUMERABLE)));
     if(SUCCEEDED(hres))
-        hres = jsdisp_define_data_property(desc_obj, configurableW, PROPF_ALL,
+        hres = jsdisp_define_data_property(desc_obj, L"configurable", PROPF_ALL,
                 jsval_bool(!!(prop_desc.flags & PROPF_CONFIGURABLE)));
 
     release_property_descriptor(&prop_desc);
@@ -587,7 +798,7 @@ static HRESULT Object_getOwnPropertyDescriptor(script_ctx_t *ctx, vdisp_t *jsthi
     return hres;
 }
 
-static HRESULT Object_create(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
+static HRESULT Object_create(script_ctx_t *ctx, jsval_t vthis, WORD flags,
                              unsigned argc, jsval_t *argv, jsval_t *r)
 {
     jsdisp_t *proto = NULL, *obj;
@@ -612,7 +823,7 @@ static HRESULT Object_create(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
         return E_INVALIDARG;
     }
 
-    hres = create_dispex(ctx, NULL, proto, &obj);
+    hres = create_dispex(ctx, &ObjectInst_info, proto, &obj);
     if(FAILED(hres))
         return hres;
 
@@ -626,17 +837,93 @@ static HRESULT Object_create(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
     return hres;
 }
 
-static HRESULT Object_getPrototypeOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
+static HRESULT Object_getPrototypeOf(script_ctx_t *ctx, jsval_t vthis, WORD flags,
                                      unsigned argc, jsval_t *argv, jsval_t *r)
 {
     jsdisp_t *obj;
 
-    if(!argc || !is_object_instance(argv[0])) {
-        FIXME("invalid arguments\n");
+    if(!argc || !is_object_instance(argv[0]))
+        return JS_E_OBJECT_EXPECTED;
+
+    TRACE("(%s)\n", debugstr_jsval(argv[0]));
+
+    obj = to_jsdisp(get_object(argv[0]));
+    if(r)
+        *r = obj && obj->prototype
+            ? jsval_obj(jsdisp_addref(obj->prototype))
+            : jsval_null();
+    return S_OK;
+}
+
+static HRESULT object_keys(script_ctx_t *ctx, jsval_t arg, enum jsdisp_enum_type enum_type, jsval_t *r)
+{
+    DISPID id = DISPID_STARTENUM;
+    jsdisp_t *obj, *array;
+    unsigned i = 0;
+    jsstr_t *key;
+    HRESULT hres;
+
+    if(!is_object_instance(arg))
+        return JS_E_OBJECT_EXPECTED;
+
+    obj = to_jsdisp(get_object(arg));
+    if(!obj) {
+        FIXME("Non-JS object\n");
         return E_NOTIMPL;
     }
 
-    TRACE("(%s)\n", debugstr_jsval(argv[1]));
+    hres = create_array(ctx, 0, &array);
+    if(FAILED(hres))
+        return hres;
+
+    do {
+        hres = jsdisp_next_prop(obj, id, enum_type, &id);
+        if(hres != S_OK)
+            break;
+
+        hres = jsdisp_get_prop_name(obj, id, &key);
+        if(FAILED(hres))
+            break;
+
+        hres = jsdisp_propput_idx(array, i++, jsval_string(key));
+        jsstr_release(key);
+    } while(hres == S_OK);
+
+    if(SUCCEEDED(hres) && r)
+        *r = jsval_obj(array);
+    else
+        jsdisp_release(array);
+    return hres;
+}
+
+static HRESULT Object_keys(script_ctx_t *ctx, jsval_t vthis, WORD flags,
+                           unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    jsval_t arg = argc ? argv[0] : jsval_undefined();
+
+    TRACE("(%s)\n", debugstr_jsval(arg));
+
+    return object_keys(ctx, arg, JSDISP_ENUM_OWN_ENUMERABLE, r);
+}
+
+static HRESULT Object_getOwnPropertyNames(script_ctx_t *ctx, jsval_t vthis, WORD flags,
+                                          unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    jsval_t arg = argc ? argv[0] : jsval_undefined();
+
+    TRACE("(%s)\n", debugstr_jsval(arg));
+
+    return object_keys(ctx, arg, JSDISP_ENUM_OWN, r);
+}
+
+static HRESULT Object_preventExtensions(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    jsdisp_t *obj;
+
+    if(!argc || !is_object_instance(argv[0]))
+        return JS_E_OBJECT_EXPECTED;
+
+    TRACE("(%s)\n", debugstr_jsval(argv[0]));
 
     obj = to_jsdisp(get_object(argv[0]));
     if(!obj) {
@@ -644,31 +931,146 @@ static HRESULT Object_getPrototypeOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD fl
         return E_NOTIMPL;
     }
 
-    if(r)
-        *r = obj->prototype
-            ? jsval_obj(jsdisp_addref(obj->prototype))
-            : jsval_null();
+    obj->extensible = FALSE;
+    if(r) *r = jsval_obj(jsdisp_addref(obj));
+    return S_OK;
+}
+
+static HRESULT Object_freeze(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc,
+                             jsval_t *argv, jsval_t *r)
+{
+    jsdisp_t *obj;
+
+    if(!argc || !is_object_instance(argv[0])) {
+        WARN("argument is not an object\n");
+        return JS_E_OBJECT_EXPECTED;
+    }
+
+    TRACE("(%s)\n", debugstr_jsval(argv[0]));
+
+    obj = to_jsdisp(get_object(argv[0]));
+    if(!obj) {
+        FIXME("Non-JS object\n");
+        return E_NOTIMPL;
+    }
+
+    jsdisp_freeze(obj, FALSE);
+    if(r) *r = jsval_obj(jsdisp_addref(obj));
+    return S_OK;
+}
+
+static HRESULT Object_seal(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc,
+                           jsval_t *argv, jsval_t *r)
+{
+    jsdisp_t *obj;
+
+    if(!argc || !is_object_instance(argv[0])) {
+        WARN("argument is not an object\n");
+        return JS_E_OBJECT_EXPECTED;
+    }
+
+    TRACE("(%s)\n", debugstr_jsval(argv[0]));
+
+    obj = to_jsdisp(get_object(argv[0]));
+    if(!obj) {
+        FIXME("Non-JS object\n");
+        return E_NOTIMPL;
+    }
+
+    jsdisp_freeze(obj, TRUE);
+    if(r) *r = jsval_obj(jsdisp_addref(obj));
+    return S_OK;
+}
+
+static HRESULT Object_isExtensible(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    jsdisp_t *obj;
+
+    if(!argc || !is_object_instance(argv[0])) {
+        WARN("argument is not an object\n");
+        return JS_E_OBJECT_EXPECTED;
+    }
+
+    TRACE("(%s)\n", debugstr_jsval(argv[0]));
+
+    obj = to_jsdisp(get_object(argv[0]));
+    if(!obj) {
+        FIXME("Non-JS object\n");
+        return E_NOTIMPL;
+    }
+
+    if(r) *r = jsval_bool(obj->extensible);
+    return S_OK;
+}
+
+static HRESULT Object_isFrozen(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc,
+                               jsval_t *argv, jsval_t *r)
+{
+    jsdisp_t *obj;
+
+    if(!argc || !is_object_instance(argv[0])) {
+        WARN("argument is not an object\n");
+        return JS_E_OBJECT_EXPECTED;
+    }
+
+    TRACE("(%s)\n", debugstr_jsval(argv[0]));
+
+    obj = to_jsdisp(get_object(argv[0]));
+    if(!obj) {
+        FIXME("Non-JS object\n");
+        return E_NOTIMPL;
+    }
+
+    if(r) *r = jsval_bool(jsdisp_is_frozen(obj, FALSE));
+    return S_OK;
+}
+
+static HRESULT Object_isSealed(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc,
+                               jsval_t *argv, jsval_t *r)
+{
+    jsdisp_t *obj;
+
+    if(!argc || !is_object_instance(argv[0])) {
+        WARN("argument is not an object\n");
+        return JS_E_OBJECT_EXPECTED;
+    }
+
+    TRACE("(%s)\n", debugstr_jsval(argv[0]));
+
+    obj = to_jsdisp(get_object(argv[0]));
+    if(!obj) {
+        FIXME("Non-JS object\n");
+        return E_NOTIMPL;
+    }
+
+    if(r) *r = jsval_bool(jsdisp_is_frozen(obj, TRUE));
     return S_OK;
 }
 
 static const builtin_prop_t ObjectConstr_props[] = {
-    {createW,                   Object_create,                      PROPF_ES5|PROPF_METHOD|2},
-    {definePropertiesW,         Object_defineProperties,            PROPF_ES5|PROPF_METHOD|2},
-    {definePropertyW,           Object_defineProperty,              PROPF_ES5|PROPF_METHOD|2},
-    {getOwnPropertyDescriptorW, Object_getOwnPropertyDescriptor,    PROPF_ES5|PROPF_METHOD|2},
-    {getPrototypeOfW,           Object_getPrototypeOf,              PROPF_ES5|PROPF_METHOD|1}
+    {L"create",                   Object_create,                      PROPF_ES5|PROPF_METHOD|2},
+    {L"defineProperties",         Object_defineProperties,            PROPF_ES5|PROPF_METHOD|2},
+    {L"defineProperty",           Object_defineProperty,              PROPF_ES5|PROPF_METHOD|2},
+    {L"freeze",                   Object_freeze,                      PROPF_ES5|PROPF_METHOD|1},
+    {L"getOwnPropertyDescriptor", Object_getOwnPropertyDescriptor,    PROPF_ES5|PROPF_METHOD|2},
+    {L"getOwnPropertyNames",      Object_getOwnPropertyNames,         PROPF_ES5|PROPF_METHOD|1},
+    {L"getPrototypeOf",           Object_getPrototypeOf,              PROPF_ES5|PROPF_METHOD|1},
+    {L"isExtensible",             Object_isExtensible,                PROPF_ES5|PROPF_METHOD|1},
+    {L"isFrozen",                 Object_isFrozen,                    PROPF_ES5|PROPF_METHOD|1},
+    {L"isSealed",                 Object_isSealed,                    PROPF_ES5|PROPF_METHOD|1},
+    {L"keys",                     Object_keys,                        PROPF_ES5|PROPF_METHOD|1},
+    {L"preventExtensions",        Object_preventExtensions,           PROPF_ES5|PROPF_METHOD|1},
+    {L"seal",                     Object_seal,                        PROPF_ES5|PROPF_METHOD|1},
 };
 
 static const builtin_info_t ObjectConstr_info = {
-    JSCLASS_FUNCTION,
-    DEFAULT_FUNCTION_VALUE,
-    ARRAY_SIZE(ObjectConstr_props),
-    ObjectConstr_props,
-    NULL,
-    NULL
+    .class     = JSCLASS_FUNCTION,
+    .call      = Function_value,
+    .props_cnt = ARRAY_SIZE(ObjectConstr_props),
+    .props     = ObjectConstr_props,
 };
 
-static HRESULT ObjectConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT ObjectConstr_value(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     HRESULT hres;
@@ -681,7 +1083,7 @@ static HRESULT ObjectConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
         jsdisp_t *obj;
 
         if(argc) {
-            if(!is_undefined(argv[0]) && !is_null(argv[0]) && (!is_object_instance(argv[0]) || get_object(argv[0]))) {
+            if(!is_undefined(argv[0]) && !is_null(argv[0])) {
                 IDispatch *disp;
 
                 hres = to_object(ctx, argv[0], &disp);
@@ -717,9 +1119,7 @@ static HRESULT ObjectConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
 
 HRESULT create_object_constr(script_ctx_t *ctx, jsdisp_t *object_prototype, jsdisp_t **ret)
 {
-    static const WCHAR ObjectW[] = {'O','b','j','e','c','t',0};
-
-    return create_builtin_constructor(ctx, ObjectConstr_value, ObjectW, &ObjectConstr_info, PROPF_CONSTR,
+    return create_builtin_constructor(ctx, ObjectConstr_value, L"Object", &ObjectConstr_info, PROPF_CONSTR,
             object_prototype, ret);
 }
 
@@ -733,13 +1133,13 @@ HRESULT create_object(script_ctx_t *ctx, jsdisp_t *constr, jsdisp_t **ret)
     jsdisp_t *object;
     HRESULT hres;
 
-    object = heap_alloc_zero(sizeof(jsdisp_t));
+    object = calloc(1, sizeof(jsdisp_t));
     if(!object)
         return E_OUTOFMEMORY;
 
     hres = init_dispex_from_constr(object, ctx, &ObjectInst_info, constr ? constr : ctx->object_constr);
     if(FAILED(hres)) {
-        heap_free(object);
+        free(object);
         return hres;
     }
 

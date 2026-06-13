@@ -22,10 +22,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_VOLUME_IN_USE "Wolumin jest w użyciu i nie może być zablokowany.\n"
-    IDS_CHKDSK_FAIL "Program Chkdsk nie mógł zakończyć się pomyślnie.\n\n"
+    IDS_CHKDSK_FAIL "Program Chkdsk nie mógł zakończyć się pomyślnie. Error: 0x%08X.\n"
     IDS_NO_ENTRY_POINT "Nie znaleziono punktów wejścia FMIFS.\n\n"
     IDS_BAD_ARGUMENT "Nieznany argument: %s\n"
     IDS_NO_CURRENT_DIR "Aktualna ścieżka jest nieosiągalna. Kod błedu: "
     IDS_NO_QUERY_VOL "Nie można wysłać kwerendy do woluminu. Kod błedu: "
     IDS_VOLUME_IN_USE_PROC "Program Chkdsk nie może działać, ponieważ wolumin jest używany przez inny proces.\n\n"
+    IDS_RUN_AGAIN "It may be possible to fix this by running chkdsk again.\n\n"
 END

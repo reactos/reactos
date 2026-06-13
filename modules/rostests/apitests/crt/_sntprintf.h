@@ -34,7 +34,7 @@ static BOOL Init(void)
 #undef broken
 #define broken(x) 0
 
-START_TEST(_sntprintf)
+static void Test__sntprintf(void)
 {
     _TCHAR Buffer[128];
     size_t BufferSize = sizeof(Buffer) / sizeof(Buffer[0]);

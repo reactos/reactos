@@ -285,7 +285,7 @@ BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
       pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo.hWnd);
       if (!ThreadQueue->CaretInfo.Showing && pWnd)
       {
-         IntNotifyWinEvent(EVENT_OBJECT_SHOW, pWnd, OBJID_CARET, OBJID_CARET, 0);
+         IntNotifyWinEvent(EVENT_OBJECT_SHOW, pWnd, OBJID_CARET, CHILDID_SELF, 0);
       }
       if ((INT)gpsi->dtCaretBlink > 0)
       {

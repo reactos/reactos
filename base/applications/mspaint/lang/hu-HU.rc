@@ -93,6 +93,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Modern paletta", IDM_COLORSMODERNPALETTE
         MENUITEM "Régi paletta", IDM_COLORSOLDPALETTE
+        MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
+        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
     END
     POPUP "&Súgó"
     BEGIN

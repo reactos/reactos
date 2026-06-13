@@ -499,7 +499,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
 {
     LPCSTR MbsEnd, MbsPtrSave;
     UCHAR Char, TrailLength;
-    WCHAR WideChar;
+    UINT WideChar;
     LONG Count;
     BOOL CharIsValid, StringIsValid = TRUE;
     const WCHAR InvalidChar = 0xFFFD;
@@ -556,6 +556,12 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
             if (!CharIsValid || WideChar < UTF8LBound[UTF8Length[Char - 0x80]])
             {
                 MultiByteString = MbsPtrSave;
+            }
+
+            if (WideChar > 0xFFFF)
+            {
+                /* UTF-16 surrogate pair */
+                WideCharCount++;
             }
         }
 
@@ -619,7 +625,26 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
 
         if (CharIsValid && UTF8LBound[UTF8Length[Char - 0x80]] <= WideChar)
         {
-            *WideCharString++ = WideChar;
+            /* Check for UTF-16 surrogate pair */
+            if (WideChar > 0xFFFF)
+            {
+                WideChar -= 0x10000;
+                *WideCharString++ = 0xD800 | (WideChar >> 10);
+                Count++;
+
+                /* Check if we have space for the second surrogate */
+                if (Count >= WideCharCount)
+                {
+                    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                    return 0;
+                }
+
+                *WideCharString++ = 0xDC00 | (WideChar & 0x3FF);
+            }
+            else
+            {
+                *WideCharString++ = WideChar;
+            }
         }
         else
         {

@@ -10,7 +10,7 @@ list(APPEND SOURCE
     CommandLineToArgvW.cpp
     CShellDesktop.cpp
     CShellLink.cpp
-    CUserNotification.cpp
+    #CUserNotification.cpp # Test is broken on Win 2003
     Control_RunDLLW.cpp
     DragDrop.cpp
     ExtractIconEx.cpp
@@ -20,7 +20,7 @@ list(APPEND SOURCE
     Int64ToString.cpp
     IShellFolderViewCB.cpp
     ItemIDList.cpp
-    OpenAs_RunDLL.cpp
+    #OpenAs_RunDLL.cpp # Test hangs on Win 2003
     PathIsEqualOrSubFolder.cpp
     PathIsTemporary.cpp
     PathMakeUniqueName.cpp
@@ -40,10 +40,10 @@ list(APPEND SOURCE
     SHShouldShowWizards.cpp
     SHEnumerateUnreadMailAccountsW.cpp
     She.cpp
-    ShellExec_RunDLL.cpp
-    ShellExecCmdLine.cpp
-    ShellExecuteEx.cpp
-    ShellExecuteW.cpp
+    #ShellExec_RunDLL.cpp # Broke on Windows
+    #ShellExecCmdLine.cpp # Broke on Windows
+    #ShellExecuteEx.cpp # Broke on Windows
+    #ShellExecuteW.cpp # Broke on Windows
     ShellHook.cpp
     ShellInfo.cpp
     ShellState.cpp

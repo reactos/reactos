@@ -48,7 +48,11 @@ static BOOL Init(void)
 
 /* NOTE: This test is not only used for all the CRT apitests, but also for
  *       user32's wsprintf. Make sure to test them all */
+#ifdef TEST_USER32
+START_TEST(wsprintfApi)
+#else
 START_TEST(sprintf)
+#endif
 {
     int Length;
     CHAR Buffer[128];

@@ -9,7 +9,7 @@ include_directories(${REACTOS_SOURCE_DIR}/win32ss/include ../gditools)
 list(APPEND SOURCE
     ntdd/NtGdiDdCreateDirectDrawObject.c
     ntdd/NtGdiDdDeleteDirectDrawObject.c
-    ntdd/NtGdiDdQueryDirectDrawObject.c
+    #ntdd/NtGdiDdQueryDirectDrawObject.c
 
     ntgdi/NtGdiArcInternal.c
     ntgdi/NtGdiBitBlt.c

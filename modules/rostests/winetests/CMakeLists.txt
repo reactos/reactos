@@ -13,6 +13,7 @@ if(MSVC)
     endif()
 endif()
 
+add_subdirectory(activeds)
 add_subdirectory(advapi32)
 add_subdirectory(advpack)
 add_subdirectory(amstream)

@@ -16,6 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+var JS_E_NUMBER_EXPECTED = 0x800a1389;
+var JS_E_FUNCTION_EXPECTED = 0x800a138a;
+var JS_E_DATE_EXPECTED = 0x800a138e;
+var JS_E_OBJECT_EXPECTED = 0x800a138f;
+var JS_E_BOOLEAN_EXPECTED = 0x800a1392;
+var JS_E_VBARRAY_EXPECTED = 0x800a1395;
+var JS_E_ENUMERATOR_EXPECTED = 0x800a1397;
+var JS_E_REGEXP_EXPECTED = 0x800a1398;
+
 var tmp, i;
 
 var bigInt = Math.pow(2,40);
@@ -277,7 +286,11 @@ ok(unescape(escape(tmp)) === tmp, "unescape(escape('" + tmp + "')) = " + unescap
 ok(Object.prototype.hasOwnProperty('toString'), "Object.prototype.hasOwnProperty('toString') is false");
 ok(Object.prototype.hasOwnProperty('isPrototypeOf'), "Object.prototype.hasOwnProperty('isPrototypeOf') is false");
 ok(Function.prototype.hasOwnProperty('call'), "Function.prototype.hasOwnProperty('call') is false");
+ok(!Function.prototype.hasOwnProperty('caller'), "Function.prototype.hasOwnProperty('caller') is true");
+ok(!Function.prototype.hasOwnProperty('arguments'), "Function.prototype.hasOwnProperty('arguments') is true");
 
+Object();
+new Object();
 obj = new Object();
 
 ok(!obj.hasOwnProperty('toString'), "obj.hasOwnProperty('toString') is true");
@@ -287,35 +300,48 @@ ok(!Object.hasOwnProperty('isPrototypeOf'), "Object.hasOwnProperty('isPrototypeO
 ok(!parseFloat.hasOwnProperty('call'), "parseFloat.hasOwnProperty('call') is true");
 ok(!Function.hasOwnProperty('call'), "Function.hasOwnProperty('call') is true");
 
+Array();
+new Array();
 obj = new Array();
 ok(Array.prototype.hasOwnProperty('sort'), "Array.prototype.hasOwnProperty('sort') is false");
 ok(Array.prototype.hasOwnProperty('length'), "Array.prototype.hasOwnProperty('length') is false");
 ok(!obj.hasOwnProperty('sort'), "obj.hasOwnProperty('sort') is true");
 ok(obj.hasOwnProperty('length'), "obj.hasOwnProperty('length') is true");
 
+Boolean();
+new Boolean();
 obj = new Boolean(false);
 ok(!obj.hasOwnProperty('toString'), "obj.hasOwnProperty('toString') is true");
 ok(!Boolean.hasOwnProperty('toString'), "Boolean.hasOwnProperty('toString') is true");
 ok(Boolean.prototype.hasOwnProperty('toString'), "Boolean.prototype.hasOwnProperty('toString') is false");
 
+Date();
+new Date();
 obj = new Date();
 ok(!obj.hasOwnProperty('getTime'), "obj.hasOwnProperty('getTime') is true");
 ok(!Date.hasOwnProperty('getTime'), "Date.hasOwnProperty('getTime') is true");
 ok(Date.prototype.hasOwnProperty('getTime'), "Date.prototype.hasOwnProperty('getTime') is false");
 ok(!("now" in Date), "now found in Date");
 
+Number();
+new Number();
 obj = new Number();
 ok(!obj.hasOwnProperty('toFixed'), "obj.hasOwnProperty('toFixed') is true");
 ok(!Number.hasOwnProperty('toFixed'), "Number.hasOwnProperty('toFixed') is true");
 ok(Number.prototype.hasOwnProperty('toFixed'), "Number.prototype.hasOwnProperty('toFixed') is false");
 
+/x/;
 obj = /x/;
 ok(!obj.hasOwnProperty('exec'), "obj.hasOwnProperty('exec') is true");
 ok(obj.hasOwnProperty('source'), "obj.hasOwnProperty('source') is false");
 ok(!RegExp.hasOwnProperty('exec'), "RegExp.hasOwnProperty('exec') is true");
 ok(!RegExp.hasOwnProperty('source'), "RegExp.hasOwnProperty('source') is true");
 ok(RegExp.prototype.hasOwnProperty('source'), "RegExp.prototype.hasOwnProperty('source') is false");
+ok(RegExp.prototype.source === "", "RegExp.prototype.source = " + RegExp.prototype.source);
+ok(RegExp.prototype.lastIndex === 0, "RegExp.prototype.lastIndex = " + RegExp.prototype.lastIndex);
 
+String();
+new String();
 obj = new String();
 ok(!obj.hasOwnProperty('charAt'), "obj.hasOwnProperty('charAt') is true");
 ok(obj.hasOwnProperty('length'), "obj.hasOwnProperty('length') is false");
@@ -351,6 +377,12 @@ tmp = Object.prototype.toString.call(new VBArray(createArray()));
 ok(tmp === "[object Object]", "toString.call(new VBArray()) = " + tmp);
 (tmp = new Enumerator()).f = Object.prototype.toString;
 ok(tmp.f() === "[object Object]", "tmp.f() = " + tmp.f());
+tmp = Object.prototype.toString.call(null);
+ok(tmp === "[object Object]", "toString.call(null) = " + tmp);
+tmp = Object.prototype.toString.call(undefined);
+ok(tmp === "[object Object]", "toString.call(undefined) = " + tmp);
+tmp = Object.prototype.toString.call();
+ok(tmp === "[object Object]", "toString.call() = " + tmp);
 
 function TSTestConstr() {}
 TSTestConstr.prototype = { toString: function() { return "test"; } };
@@ -747,10 +779,14 @@ tmp = "test".toLowerCase(3);
 ok(tmp === "test", "''.toLowerCase(3) = " + tmp);
 tmp = "tEsT".toLowerCase();
 ok(tmp === "test", "''.toLowerCase() = " + tmp);
+tmp = "tEsT".toLocaleLowerCase();
+ok(tmp === "test", "''.toLocaleLowerCase() = " + tmp);
 tmp = "tEsT".toLowerCase(3);
 ok(tmp === "test", "''.toLowerCase(3) = " + tmp);
 tmp = ("tE" + String.fromCharCode(0) + "sT").toLowerCase();
 ok(tmp === "te" + String.fromCharCode(0) + "st", "''.toLowerCase() = " + tmp);
+ok(String.prototype.toLocaleLowerCase != String.prototype.toLowerCase,
+   "String.prototype.toLocaleLowerCase == String.prototype.toLowerCase");
 
 tmp = "".toUpperCase();
 ok(tmp === "", "''.toUpperCase() = " + tmp);
@@ -762,8 +798,12 @@ tmp = "tEsT".toUpperCase();
 ok(tmp === "TEST", "''.toUpperCase() = " + tmp);
 tmp = "tEsT".toUpperCase(3);
 ok(tmp === "TEST", "''.toUpperCase(3) = " + tmp);
+tmp = "tEsT".toLocaleUpperCase(3);
+ok(tmp === "TEST", "''.toLocaleUpperCase(3) = " + tmp);
 tmp = ("tE" + String.fromCharCode(0) + "sT").toUpperCase();
 ok(tmp === "TE" + String.fromCharCode(0) + "ST", "''.toUpperCase() = " + tmp);
+ok(String.prototype.toLocaleUpperCase != String.prototype.toUpperCase,
+   "String.prototype.toLocaleUpperCase == String.prototype.toUpperCase");
 
 tmp = "".anchor();
 ok(tmp === "<A NAME=\"undefined\"></A>", "''.anchor() = " + tmp);
@@ -1033,6 +1073,19 @@ tmp = [5,3,"2.5",2,true,false,-1];
 for(var i=0; i < arr.length; i++)
     ok(arr[i] === tmp[i], "arr[" + i + "] = " + arr[i] + " expected " + tmp[i]);
 
+tmp = [3,1,2].sort(function(x,y) { return y-x; }).join();
+ok(tmp === "3,2,1", "reverse sorted [3,1,2] = " + tmp);
+
+tmp = [3,1,2].sort(null).join();
+ok(tmp === "1,2,3", "null sorted [3,1,2] = " + tmp);
+
+try {
+    tmp = [3,1,2].sort(function(x,y) { return y-x; }, 1, 2, 3);
+    ok(false, "expected sort(undefined) exception");
+} catch(e) {
+    ok(e.name === "TypeError", "got exception " + e.name);
+}
+
 arr = [5,false,2,0,"abc",3,"a",-1];
 tmp = arr.sort();
 ok(tmp === arr, "tmp !== arr");
@@ -1257,8 +1310,8 @@ ok(arr.toString() == "1,2,3,4,5", "arr.splice(2,-1) is " + arr.toString());
 
 arr = [1,2,3,4,5];
 tmp = arr.splice(2);
-ok(tmp.toString() == "", "arr.splice(2,-1) returned " + tmp.toString());
-ok(arr.toString() == "1,2,3,4,5", "arr.splice(2,-1) is " + arr.toString());
+ok(tmp.toString() == "", "arr.splice(2) returned " + tmp.toString());
+ok(arr.toString() == "1,2,3,4,5", "arr.splice(2) is " + arr.toString());
 
 arr = [1,2,3,4,5];
 tmp = arr.splice();
@@ -1315,6 +1368,11 @@ tmp = (new Number()).toString();
 ok(tmp === "0", "num().toString = " + tmp);
 tmp = (new Number(5.5)).toString(2);
 ok(tmp === "101.1", "num(5.5).toString(2) = " + tmp);
+
+tmp = (new Number(12)).toLocaleString();
+ok(tmp.indexOf(String.fromCharCode(0)) == -1, "invalid null byte");
+tmp = Number.prototype.toLocaleString.call(NaN);
+ok(tmp.indexOf(String.fromCharCode(0)) == -1, "invalid null byte");
 
 tmp = (new Number(3)).toFixed(3);
 ok(tmp === "3.000", "num(3).toFixed(3) = " + tmp);
@@ -1374,6 +1432,10 @@ tmp = (new Number(1.182e30)).toPrecision(5);
 ok(tmp == "1.1820e+30", "num(1.182e30)).toPrecision(5) = " + tmp);
 tmp = (new Number(1.123)).toPrecision();
 ok(tmp == "1.123", "num(1.123).toPrecision() = " + tmp);
+if(invokeVersion >= 2) {
+    tmp = (new Number(1.123)).toPrecision(undefined);
+    ok(tmp == "1.123", "num(1.123).toPrecision(undefined) = " + tmp);
+}
 
 ok(Number() === 0, "Number() = " + Number());
 ok(Number(false) === 0, "Number(false) = " + Number(false));
@@ -1442,6 +1504,7 @@ ok(isNaN(parseFloat('not a number')), "parseFloat('not a number') is not NaN");
 ok(parseFloat('+13.2e-3') === 13.2e-3, "parseFloat('+13.2e-3') = " + parseFloat('+13.2e-3'));
 ok(parseFloat('.12') === 0.12, "parseFloat('.12') = " + parseFloat('.12'));
 ok(parseFloat('1e') === 1, "parseFloat('1e') = " + parseFloat('1e'));
+ok(isNaN(parseFloat('\uff16')), "parseFloat('\\uD835') is not NaN");
 
 tmp = Math.min(1);
 ok(tmp === 1, "Math.min(1) = " + tmp);
@@ -1889,13 +1952,14 @@ ok(isNaN(tmp), "Math.tan(-Infinity) is not NaN");
         [[true], "true"],
         [[false], "false"],
         [[null], "null"],
+        [[nullDisp], undefined],
         [[1], "1"],
         [["test"], "\"test\""],
         [["test\"\\\b\f\n\r\t\u0002 !"], "\"test\\\"\\\\\\b\\f\\n\\r\\t\\u0002 !\""],
         [[NaN], "null"],
         [[Infinity], "null"],
         [[-Infinity], "null"],
-        [[{prop1: true, prop2: "string"}], "{\"prop1\":true,\"prop2\":\"string\"}"],
+        [[{prop1: true, prop2: "string", func1: function() {}}], "{\"prop1\":true,\"prop2\":\"string\"}"],
         [[{prop1: true, prop2: testObj, prop3: undefined}], "{\"prop1\":true}"],
         [[{prop1: true, prop2: {prop: "string"}},undefined,"  "],
                 "{\n  \"prop1\": true,\n  \"prop2\": {\n    \"prop\": \"string\"\n  }\n}"],
@@ -1904,7 +1968,7 @@ ok(isNaN(tmp), "Math.tan(-Infinity) is not NaN");
         [[[,2,undefined,3,{prop:0},],undefined,"  "],"[\n  null,\n  2,\n  null,\n  3,\n  {\n    \"prop\": 0\n  },\n  null\n]"]
     ];
 
-    var i, s, v;
+    var i, s, v, t;
 
     for(i=0; i < stringify_tests.length; i++) {
         s = JSON.stringify.apply(null, stringify_tests[i][0]);
@@ -1923,11 +1987,30 @@ ok(isNaN(tmp), "Math.tan(-Infinity) is not NaN");
     ok(s === undefined || s === "undefined" /* broken on some old versions */,
        "stringify(undefined) returned " + s + " expected undefined");
 
+    s = JSON.stringify(1, function(name, value) {
+        ok(name === "", "name = " + name);
+        ok(value === 1, "value = " + value);
+        ok(this[name] === value, "this[" + name + "] = " + this[name] + " expected " + value);
+        return 2;
+    });
+    ok(s == "2", "s = " + s);
+
+    var o = { prop: 1 };
+        s = JSON.stringify(1, function(name, value) {
+        ok(name === "" || name === "prop", "name = " + name);
+        ok(value === 1 || value === true, "value = " + value);
+        ok(this[name] === value, "this[" + name + "] = " + this[name] + " expected " + value);
+        if(name === "") return o;
+        ok(this === o, "this != o");
+        return value;
+    });
+    ok(s == "{\"prop\":1}", "s = " + s);
+
     var parse_tests = [
         ["true", true],
         ["   \nnull  ", null],
         ["{}", {}],
-        ["\"\\r\\n test\\u1111\"", "\r\n test\u1111"],
+        ["\"\\r\\n test\\u1111\\/\\x20\\45\\'\"", "\r\n test\u1111/ %'"],
         ["{\"x\" :\n true}", {x:true}],
         ["{\"x y\": {}, \"z\": {\"x\":null}}", {"x y":{}, z:{x:null}}],
         ["[]", []],
@@ -1950,7 +2033,7 @@ ok(isNaN(tmp), "Math.tan(-Infinity) is not NaN");
         for(var prop in x) {
             if(!x.hasOwnProperty(prop))
                 continue;
-            if(!x.hasOwnProperty(prop))
+            if(!y.hasOwnProperty(prop))
                 return false;
             if(!json_cmp(x[prop], y[prop]))
                 return false;
@@ -1968,6 +2051,61 @@ ok(isNaN(tmp), "Math.tan(-Infinity) is not NaN");
         v = JSON.parse(parse_tests[i][0]);
         ok(json_cmp(v, parse_tests[i][1]), "parse[" + i + "] returned " + v + ", expected " + parse_tests[i][1]);
     }
+
+    v = [ [-1, "b"], {"length": -2, "0": -4, "1": -5}, [{}], [{"x": [null]}] ];
+    s =
+    '{' +
+        '"foo": true,' +
+        '"bar": [],' +
+        '"baz": "remove_me",' +
+        '"obj": {' +
+        '    "arr": [ [1, "b"], {"length": 2, "0": 4, "1": 5}, [{}], [{"x": [null]}] ],' +
+        '    "": "empty"' +
+        '},' +
+        '"last": false' +
+    '}';
+    o = JSON.parse(s), t = JSON.parse(s), i = new Object();
+    i[""] = t;
+    delete t.baz;   /* baz gets removed */
+    t.obj.arr = v;  /* has negative values */
+
+    var walk_expect = [
+        [ o, "foo", true ],
+        [ o, "bar", [] ],
+        [ o, "baz", "remove_me" ],
+        [ [1, "b"], "0", 1 ],
+        [ [-1, "b"], "1", "b" ],
+        [ [ [-1, "b"], {"length": 2, "0": 4, "1": 5}, [{}], [{"x": [null]}] ], "0", [-1, "b"] ],
+        [ {"length": 2, "0": 4, "1": 5}, "length", 2 ],
+        [ {"length": -2, "0": 4, "1": 5}, "0", 4 ],
+        [ {"length": -2, "0": -4, "1": 5}, "1", 5 ],
+        [ v, "1", {"length": -2, "0": -4, "1": -5} ],
+        [ [{}], "0", {} ],
+        [ v, "2", [{}] ],
+        [ [null], "0", null ],
+        [ {"x": [null]}, "x", [null] ],
+        [ [{"x": [null]}], "0", {"x": [null]} ],
+        [ v, "3", [{"x": [null]}] ],
+        [ { "arr": v, "": "empty" }, "arr", v ],
+        [ { "arr": v, "": "empty" }, "", "empty" ],
+        [ t, "obj", { "arr": v, "": "empty" } ],
+        [ t, "last", false ],
+        [ i, "", t ]
+    ];
+    i = 0;
+    v = JSON.parse(s, function(prop, value) {
+        var a = [this, prop, value];
+        ok(json_cmp(a, walk_expect[i]), "[walk step " + i + "] got [" + a + "], expected [" + walk_expect[i] + "]");
+        i++;
+        return (typeof value === 'number') ? -value : (value === "remove_me" ? undefined : value);
+    });
+    ok(i === walk_expect.length, "parse with reviver walked " + i + " steps, expected " + walk_expect.length);
+    ok(json_cmp(v, t), "parse with reviver returned wrong object");
+
+    v = JSON.parse('true', function(prop, value) { return prop === "" ? undefined : value; });
+    ok(v === undefined, "parse with reviver removing last prop returned " + v);
+    v = JSON.parse('true', function(prop, value) { return prop === "" ? false : value; });
+    ok(v === false, "parse with reviver setting last prop to false returned " + v);
 })();
 
 var func = function  (a) {
@@ -2296,11 +2434,11 @@ ok(Math.floor(Math.SQRT1_2*100) === 70, "modified Math.SQRT1_2 = " + Math.SQRT1_
 ok(isNaN.toString() === "\nfunction isNaN() {\n    [native code]\n}\n",
    "isNaN.toString = '" + isNaN.toString() + "'");
 ok(Array.toString() === "\nfunction Array() {\n    [native code]\n}\n",
-   "isNaN.toString = '" + Array.toString() + "'");
+   "Array.toString = '" + Array.toString() + "'");
 ok(Function.toString() === "\nfunction Function() {\n    [native code]\n}\n",
-   "isNaN.toString = '" + Function.toString() + "'");
+   "Function.toString = '" + Function.toString() + "'");
 ok(Function.prototype.toString() === "\nfunction prototype() {\n    [native code]\n}\n",
-   "isNaN.toString = '" + Function.prototype.toString() + "'");
+   "Function.prototype.toString = '" + Function.prototype.toString() + "'");
 ok("".substr.toString() === "\nfunction substr() {\n    [native code]\n}\n",
    "''.substr.toString = '" + "".substr.toString() + "'");
 
@@ -2310,6 +2448,52 @@ var bool = new Boolean("false");
 ok(bool.toString() === "true", "bool.toString() = " + bool.toString());
 ok(bool.valueOf() === Boolean(1), "bool.valueOf() = " + bool.valueOf());
 ok(bool.toLocaleString() === bool.toString(), "bool.toLocaleString() = " + bool.toLocaleString());
+
+tmp = Object.prototype.valueOf.call(nullDisp);
+ok(tmp === nullDisp, "nullDisp.valueOf != nullDisp");
+
+(function(global) {
+    var i, context, code = "this.foobar = 1234";
+
+    var direct = [
+        function() { eval(code); },
+        function() { (eval)(code); },
+        function() { (function(eval) { eval(code); }).call(this, eval); },
+        function() { eval("eval(" + code + ")"); }
+    ];
+
+    for(i = 0; i < direct.length; i++) {
+        context = {};
+        direct[i].call(context);
+        ok(context.foobar === 1234, "direct[" + i + "] context foobar = " + context.foobar);
+    }
+
+    var indirect = [
+        function() { (true, eval)(code); },
+        function() { (eval, eval)(code); },
+        function() { (true ? eval : false)(code); },
+        function() { [eval][0](code); },
+        function() { eval.call(this, code); },
+        function() { var f; (f = eval)(code); },
+        function() { var f = eval; f(code); },
+        function() { (function(f) { f(code); }).call(this, eval); },
+        function() { (function(f) { return f; }).call(this, eval)(code); },
+        function() { (function() { arguments[0](code) }).call(this, eval); },
+        function() { eval("eval")(code); }
+    ];
+
+    for(i = 0; i < indirect.length; i++) {
+        context = {};
+        ok(!("foobar" in global), "indirect[" + i + "] has global foobar before call");
+        indirect[i].call(context);
+        ok(context.foobar === 1234, "indirect[" + i + "] context foobar = " + context.foobar);
+        ok(!("foobar" in global), "indirect[" + i + "] has global foobar");
+    }
+
+    context = {};
+    (function(eval) { eval(code); })(function() { context.barfoo = 4321; });
+    ok(context.barfoo === 4321, "context.barfoo = " + context.barfoo);
+})(this);
 
 ok(ActiveXObject instanceof Function, "ActiveXObject is not instance of Function");
 ok(ActiveXObject.prototype instanceof Object, "ActiveXObject.prototype is not instance of Object");
@@ -2458,6 +2642,7 @@ var exception_array = {
     E_OBJECT_EXPECTED:     { type: "TypeError", number: -2146823281 },
     E_OBJECT_REQUIRED:     { type: "TypeError", number: -2146827864 },
     E_UNSUPPORTED_ACTION:  { type: "TypeError", number: -2146827843 },
+    E_REGEXP_EXPECTED:     { type: "TypeError", number: -2146823272 },
     E_NOT_ENUMERATOR:      { type: "TypeError", number: -2146823273 },
     E_NOT_VBARRAY:         { type: "TypeError", number: -2146823275 },
     E_INVALID_DELETE:      { type: "TypeError", number: -2146823276 },
@@ -2486,7 +2671,9 @@ var exception_array = {
     E_REGEXP_SYNTAX_ERROR:  { type: "RegExpError", number: -2146823271 },
 
     E_URI_INVALID_CHAR:     { type: "URIError", number: -2146823264 },
-    E_URI_INVALID_CODING:   { type: "URIError", number: -2146823263 }
+    E_URI_INVALID_CODING:   { type: "URIError", number: -2146823263 },
+
+    E_STACK_OVERFLOW:       { type: "Error", number: -2146828260 }
 };
 
 function testException(func, id) {
@@ -2501,7 +2688,8 @@ function testException(func, id) {
     }
 
     ok(ret === ex.type, "Exception test, ret = " + ret + ", expected " + ex.type +". Executed function: " + func.toString());
-    ok(num === ex.number, "Exception test, num = " + num + ", expected " + ex.number + ". Executed function: " + func.toString());
+    ok(num === ex.number, "Exception test, num = " + num + " (" + (num + 0x80000000).toString(16) + "), expected " + ex.number
+       + ". Executed function: " + func.toString());
 }
 
 // RangeError tests
@@ -2514,11 +2702,18 @@ testException(function() {createArray().getItem(3);}, "E_SUBSCRIPT_OUT_OF_RANGE"
 testException(function() {date.setTime();}, "E_ARG_NOT_OPT");
 testException(function() {date.setYear();}, "E_ARG_NOT_OPT");
 testException(function() {arr.test();}, "E_NO_PROPERTY");
+testException(function() {[1,2,3].sort(nullDisp);}, "E_JSCRIPT_EXPECTED");
+testException(function() {var o = new Object(); o.length = 1; o[0] = "a"; Array.prototype.toLocaleString.call(o);}, "E_NOT_ARRAY");
 testException(function() {Number.prototype.toString.call(arr);}, "E_NOT_NUM");
 testException(function() {Number.prototype.toFixed.call(arr);}, "E_NOT_NUM");
+testException(function() {Number.prototype.toLocaleString.call(arr);}, "E_NOT_NUM");
+testException(function() {Number.prototype.toLocaleString.call(null);}, "E_NOT_NUM");
 testException(function() {(new Number(3)).toString(1);}, "E_INVALID_CALL_ARG");
+testException(function() {(new Number(3)).toString(undefined);}, "E_INVALID_CALL_ARG");
 testException(function() {(new Number(3)).toFixed(21);}, "E_FRACTION_DIGITS_OUT_OF_RANGE");
 testException(function() {(new Number(1)).toPrecision(0);}, "E_PRECISION_OUT_OF_RANGE");
+if(invokeVersion < 2)
+    testException(function() {(new Number(1)).toPrecision(undefined);}, "E_PRECISION_OUT_OF_RANGE");
 testException(function() {not_existing_variable.something();}, "E_UNDEFINED");
 testException(function() {date();}, "E_NOT_FUNC");
 testException(function() {arr();}, "E_NOT_FUNC");
@@ -2527,12 +2722,16 @@ testException(function() {eval("nonexistingfunc()")}, "E_OBJECT_EXPECTED");
 testException(function() {(new Object()) instanceof 3;}, "E_NOT_FUNC");
 testException(function() {(new Object()) instanceof null;}, "E_NOT_FUNC");
 testException(function() {(new Object()) instanceof nullDisp;}, "E_NOT_FUNC");
+testException(function() {nullDisp instanceof Object;}, "E_OBJECT_EXPECTED");
+testException(function() {Function.prototype.apply.call(nullDisp, Object, []);}, "E_OBJECT_REQUIRED");
+testException(function() {Function.prototype.call.call(nullDisp, Object);}, "E_OBJECT_REQUIRED");
 testException(function() {"test" in 3;}, "E_OBJECT_EXPECTED");
 testException(function() {"test" in null;}, "E_OBJECT_EXPECTED");
 testException(function() {"test" in nullDisp;}, "E_OBJECT_EXPECTED");
 testException(function() {new 3;}, "E_UNSUPPORTED_ACTION");
 testException(function() {new null;}, "E_OBJECT_EXPECTED");
 testException(function() {new nullDisp;}, "E_NO_PROPERTY");
+testException(function() {new Math.max(5);}, "E_UNSUPPORTED_ACTION");
 testException(function() {new VBArray();}, "E_NOT_VBARRAY");
 testException(function() {new VBArray(new VBArray(createArray()));}, "E_NOT_VBARRAY");
 testException(function() {VBArray.prototype.lbound.call(new Object());}, "E_NOT_VBARRAY");
@@ -2542,6 +2741,14 @@ testException(function() {delete (new Object());}, "E_INVALID_DELETE");
 testException(function() {delete false;}, "E_INVALID_DELETE");
 testException(function() {undefined.toString();}, "E_OBJECT_EXPECTED");
 testException(function() {null.toString();}, "E_OBJECT_EXPECTED");
+testException(function() {RegExp.prototype.toString.call(new Object());}, "E_REGEXP_EXPECTED");
+testException(function() {/a/.lastIndex();}, "E_NOT_FUNC");
+testException(function() {"a".length();}, "E_NOT_FUNC");
+testException(function() {var o = {f: {}}; o.f();}, "E_NOT_FUNC");
+testException(function() {((function() { var f = Number.prototype.toString; return (function() { return f(); }); })())();}, "E_NOT_NUM");
+testException(function() {((function() { var f = Object.prototype.hasOwnProperty; return (function() { return f("f"); }); })())();}, "E_OBJECT_EXPECTED");
+
+testException(function() { return arguments.callee(); }, "E_STACK_OVERFLOW");
 
 obj = new Object();
 obj.prop = 1;
@@ -3007,9 +3214,55 @@ ok(unescape.length == 1, "unescape.length = " + unescape.length);
 String.length = 3;
 ok(String.length == 1, "String.length = " + String.length);
 
+(function() {
+    var tests = [
+        [ "Array.sort",             JS_E_OBJECT_EXPECTED,        function(ctx) { Array.prototype.sort.call(ctx); } ],
+        [ "Boolean.valueOf",        JS_E_BOOLEAN_EXPECTED,       function(ctx) { Boolean.prototype.valueOf.call(ctx); } ],
+        [ "Date.getYear",           JS_E_DATE_EXPECTED,          function(ctx) { Date.prototype.getYear.call(ctx); } ],
+        [ "Enumerator.atEnd",       JS_E_ENUMERATOR_EXPECTED,    function(ctx) { Enumerator.prototype.atEnd.call(ctx); } ],
+        [ "Function.apply",         JS_E_FUNCTION_EXPECTED,      function(ctx) { Function.prototype.apply.call(ctx, [ function() {} ]); } ],
+        [ "Number.toExponential",   JS_E_NUMBER_EXPECTED,        function(ctx) { Number.prototype.toExponential.call(ctx); } ],
+        [ "Object.hasOwnProperty",  JS_E_OBJECT_EXPECTED,        function(ctx) { Object.prototype.hasOwnProperty.call(ctx, "toString"); } ],
+        [ "RegExp.test",            JS_E_REGEXP_EXPECTED,        function(ctx) { RegExp.prototype.test.call(ctx, "foobar"); } ],
+        [ "VBArray.lbound",         JS_E_VBARRAY_EXPECTED,       function(ctx) { VBArray.prototype.lbound.call(ctx); } ]
+    ];
+
+    for(var i = 0; i < tests.length; i++) {
+        try {
+            tests[i][2](null);
+            ok(false, "expected exception calling " + tests[i][0] + " with null context");
+        }catch(ex) {
+            var n = ex.number >>> 0; /* make it unsigned like HRESULT */
+            ok(n === tests[i][1], tests[i][0] + " with null context exception code = " + n);
+        }
+        try {
+            tests[i][2](undefined);
+            ok(false, "expected exception calling " + tests[i][0] + " with undefined context");
+        }catch(ex) {
+            var n = ex.number >>> 0;
+            ok(n === tests[i][1], tests[i][0] + " with undefined context exception code = " + n);
+        }
+    }
+
+    var r = Error.prototype.toString.call(undefined);
+    ok(r === "[object Error]", "Error.toString with undefined context returned " + r);
+    r = String.prototype.slice.call(null, 1, 3);
+    ok(r === "ul", "String.slice with null context returned " + r);
+    r = String.prototype.slice.call(undefined, 2, 5);
+    ok(r === "def", "String.slice with undefined context returned " + r);
+    r = (function() { return this; }).call(null);
+    ok(r === test, "wrong 'this' of function with null context");
+    r = (function() { return this; }).call(undefined);
+    ok(r === test, "wrong 'this' of function with undefined context");
+    r = (function() { return this; }).call(42);
+    ok(r.valueOf() === 42, "'this' of function with 42 context = " + r);
+})();
+
 var tmp = createArray();
 ok(getVT(tmp) == "VT_ARRAY|VT_VARIANT", "getVT(createArray()) = " + getVT(tmp));
 ok(getVT(VBArray(tmp)) == "VT_ARRAY|VT_VARIANT", "getVT(VBArray(tmp)) = " + getVT(VBArray(tmp)));
+VBArray(tmp);
+new VBArray(tmp);
 tmp = new VBArray(tmp);
 tmp = new VBArray(VBArray(createArray()));
 ok(tmp.dimensions() == 2, "tmp.dimensions() = " + tmp.dimensions());

@@ -196,12 +196,12 @@ RtlpInitializeHeap(OUT PHEAP Heap,
     /* Initialise the Heap alignment info */
     if (Flags & HEAP_CREATE_ALIGN_16)
     {
-        Heap->AlignMask = (ULONG) ~15;
+        Heap->AlignMask = ~(ULONG_PTR)15;
         Heap->AlignRound = 15 + sizeof(HEAP_ENTRY);
     }
     else
     {
-        Heap->AlignMask = (ULONG) ~(sizeof(HEAP_ENTRY) - 1);
+        Heap->AlignMask = ~(ULONG_PTR)(sizeof(HEAP_ENTRY) - 1);
         Heap->AlignRound = 2 * sizeof(HEAP_ENTRY) - 1;
     }
 

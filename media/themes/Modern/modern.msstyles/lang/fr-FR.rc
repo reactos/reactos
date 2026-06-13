@@ -2,14 +2,14 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-1000, "Blanc"
-1001, "Noir"
+1000, "Clair"
+1001, "Sombre"
 }
 
 STRINGTABLE
 {
-2000, "Modern Blanc"
-2001, "Modern Noir"
+2000, "Modern Clair"
+2001, "Modern Sombre"
 }
 
 STRINGTABLE
@@ -30,7 +30,7 @@ STRINGTABLE
 {
 5000, "Modern"
 5001, "Style Visuel"
-5002, "Fondation ReactOS"
+5002, "Projet ReactOS"
 5003, "Polar, basé sur win10"
 5004, "Distribué sous GNU/GPL 3.0, 2018"
 5005, "https://reactos.org/"

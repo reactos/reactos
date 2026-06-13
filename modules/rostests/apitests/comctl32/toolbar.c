@@ -235,7 +235,7 @@ void TestV5VersionMessage()
     DestroyWindow(hwnd);
 }
 
-START_TEST(toolbar)
+START_TEST(toolbarv6)
 {
     HANDLE hV5ActCtx;
 

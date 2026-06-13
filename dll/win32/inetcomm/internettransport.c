@@ -35,7 +35,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
-static const WCHAR wszClassName[] = {'T','h','o','r','C','o','n','n','W','n','d','C','l','a','s','s',0};
+static const WCHAR wszClassName[] = L"ThorConnWndClass";
 
 #define IX_READ     (WM_USER + 0)
 #define IX_READLINE (WM_USER + 1)

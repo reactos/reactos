@@ -3,6 +3,11 @@
 #define IDS_HLP_INTERFACE_SHOW_INTERFACE    201
 #define IDS_HLP_INTERFACE_SHOW_INTERFACE_EX 202
 
+#define IDS_HLP_IP_SET                      205
+#define IDS_HLP_IP_SET_ADDRESS              206
+#define IDS_HLP_IP_SET_ADDRESS_EX           207
+
+
 #define IDS_HLP_IP_SHOW      210
 #define IDS_HLP_ADDRESSES    211
 #define IDS_HLP_ADDRESSES_EX 212
@@ -40,4 +45,7 @@
 #define IDS_DUMP_IP_INTERFACE  803
 #define IDS_DUMP_IP_FOOTER     804
 
-
+#define IDS_ERROR_INVALID_INTERFACE         2000
+#define IDS_ERROR_BAD_VALUE                 2001
+#define IDS_ERROR_ALREADY_DHCP              2002
+#define IDS_ERROR_GET_PROPERTIES            2003

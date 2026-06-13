@@ -45,6 +45,7 @@ RegisterDlls = OleControlDlls
 AddReg=Classes
 
 [OleControlDlls]
+11,,activeds.dll,1
 11,,atl.dll,1
 11,,actxprxy.dll,1
 11,,acppage.dll,1
@@ -127,6 +128,7 @@ AddReg=Classes
 11,,zipfldr.dll,1
 
 [TypeLibraries]
+activeds.tlb
 riched20.dll
 stdole2.tlb
 stdole32.tlb

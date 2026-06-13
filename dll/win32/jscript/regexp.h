@@ -63,10 +63,10 @@ typedef struct regexp_t {
     jsbytecode          program[1];    /* regular expression bytecode */
 } regexp_t;
 
-regexp_t* regexp_new(void*, heap_pool_t*, const WCHAR*, DWORD, WORD, BOOL) DECLSPEC_HIDDEN;
-void regexp_destroy(regexp_t*) DECLSPEC_HIDDEN;
+regexp_t* regexp_new(void*, heap_pool_t*, const WCHAR*, DWORD, WORD, BOOL);
+void regexp_destroy(regexp_t*);
 HRESULT regexp_execute(regexp_t*, void*, heap_pool_t*, const WCHAR*,
-        DWORD, match_state_t*) DECLSPEC_HIDDEN;
+        DWORD, match_state_t*);
 
 static inline match_state_t* alloc_match_state(regexp_t *regexp,
         heap_pool_t *pool, const WCHAR *pos)
@@ -74,7 +74,7 @@ static inline match_state_t* alloc_match_state(regexp_t *regexp,
     size_t size = offsetof(match_state_t, parens) + regexp->parenCount*sizeof(RECapture);
     match_state_t *ret;
 
-    ret = pool ? heap_pool_alloc(pool, size) : heap_alloc(size);
+    ret = pool ? heap_pool_alloc(pool, size) : malloc(size);
     if(!ret)
         return NULL;
 

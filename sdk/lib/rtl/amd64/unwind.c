@@ -574,6 +574,8 @@ RepeatChainedInfo:
             case UWOP_SAVE_NONVOL:
                 Reg = UnwindCode.OpInfo;
                 Offset = UnwindInfo->UnwindCode[i + 1].FrameOffset;
+                /* The slot stores offset / 8; adding it to a DWORD64* scales it back to bytes.
+                 * See https://github.com/dotnet/runtime/blob/421be955e4b70cddf583b10f5ad99814b713fb87/src/coreclr/unwinder/amd64/unwinder.cpp#L831 */
                 SetRegFromStackValue(Context, ContextPointers, Reg, (DWORD64*)Context->Rsp + Offset);
                 i += 2;
                 break;
@@ -581,22 +583,24 @@ RepeatChainedInfo:
             case UWOP_SAVE_NONVOL_FAR:
                 Reg = UnwindCode.OpInfo;
                 Offset = *(ULONG*)(&UnwindInfo->UnwindCode[i + 1]);
-                SetRegFromStackValue(Context, ContextPointers, Reg, (DWORD64*)Context->Rsp + Offset);
+                SetRegFromStackValue(Context, ContextPointers, Reg, (PDWORD64)(Context->Rsp + Offset));
                 i += 3;
                 break;
 
             case UWOP_EPILOG:
-                i += 1;
+                i += 2;
                 break;
 
             case UWOP_SPARE_CODE:
                 ASSERT(FALSE);
-                i += 2;
+                i += 3;
                 break;
 
             case UWOP_SAVE_XMM128:
                 Reg = UnwindCode.OpInfo;
                 Offset = UnwindInfo->UnwindCode[i + 1].FrameOffset;
+                /* The slot stores offset / 16; adding it to an M128A* scales it back to bytes.
+                 * See https://github.com/dotnet/runtime/blob/421be955e4b70cddf583b10f5ad99814b713fb87/src/coreclr/unwinder/amd64/unwinder.cpp#L890 */
                 SetXmmRegFromStackValue(Context, ContextPointers, Reg, (M128A*)Context->Rsp + Offset);
                 i += 2;
                 break;
@@ -604,7 +608,7 @@ RepeatChainedInfo:
             case UWOP_SAVE_XMM128_FAR:
                 Reg = UnwindCode.OpInfo;
                 Offset = *(ULONG*)(&UnwindInfo->UnwindCode[i + 1]);
-                SetXmmRegFromStackValue(Context, ContextPointers, Reg, (M128A*)Context->Rsp + Offset);
+                SetXmmRegFromStackValue(Context, ContextPointers, Reg, (M128A*)(Context->Rsp + Offset));
                 i += 3;
                 break;
 

@@ -53,34 +53,45 @@ function(add_message_headers _type)
     endforeach()
 endfunction()
 
-function(add_link)
-    cmake_parse_arguments(_LINK "MINIMIZE" "NAME;PATH;CMD_LINE_ARGS;ICON;GUID" "" ${ARGN})
-    if(NOT _LINK_NAME OR NOT _LINK_PATH)
-        message(FATAL_ERROR "You must provide name and path")
+function(add_link name path)
+    cmake_parse_arguments(_LINK "MINIMIZE" "WORKDIR;CMDLINE_ARGS;ICON;ICON_INDEX;GUID" "" ${ARGN})
+
+    if(DEFINED _LINK_WORKDIR)
+        set(_LINK_WORKDIR -w "${_LINK_WORKDIR}")
+    endif()
+    if(DEFINED _LINK_CMDLINE_ARGS)
+        set(_LINK_CMDLINE_ARGS -c "${_LINK_CMDLINE_ARGS}")
     endif()
 
-    if(_LINK_CMD_LINE_ARGS)
-        set(_LINK_CMD_LINE_ARGS -c ${_LINK_CMD_LINE_ARGS})
+    if(DEFINED _LINK_ICON)
+        #set(_LINK_ICON -i "${_LINK_ICON}")
+        #if(DEFINED _LINK_ICON_INDEX)
+        #    set(_LINK_ICON "${_LINK_ICON},${_LINK_ICON_INDEX}")
+        #endif()
+        if(DEFINED _LINK_ICON_INDEX)
+            set(_LINK_ICON -i "${_LINK_ICON},${_LINK_ICON_INDEX}")
+        else()
+            set(_LINK_ICON -i "${_LINK_ICON}")
+        endif()
+    elseif(DEFINED _LINK_ICON_INDEX)
+        set(_LINK_ICON -i ${_LINK_ICON_INDEX})
     endif()
 
-    if(_LINK_ICON)
-        set(_LINK_ICON -i ${_LINK_ICON})
-    endif()
-
-    if(_LINK_GUID)
-        set(_LINK_GUID -g ${_LINK_GUID})
+    if(DEFINED _LINK_GUID)
+        set(_LINK_GUID -g "${_LINK_GUID}")
     endif()
 
     if(_LINK_MINIMIZE)
-        set(_LINK_MINIMIZE "-m")
+        set(_LINK_MINIMIZE -m)
+    else()
+        set(_LINK_MINIMIZE)
     endif()
 
     add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk
-        COMMAND native-mkshelllink -o ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk ${_LINK_CMD_LINE_ARGS} ${_LINK_ICON} ${_LINK_GUID} ${_LINK_MINIMIZE} ${_LINK_PATH}
-        DEPENDS native-mkshelllink)
-    set_source_files_properties(
-        ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk PROPERTIES GENERATED TRUE)
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk
+        COMMAND native-mkshelllink -o ${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk ${_LINK_WORKDIR} ${_LINK_CMDLINE_ARGS} ${_LINK_ICON} ${_LINK_GUID} ${_LINK_MINIMIZE} ${path}
+        DEPENDS native-mkshelllink
+        VERBATIM)
 endfunction()
 
 #
@@ -245,7 +256,6 @@ macro(dir_to_num dir var)
         set(${var} 79)
     elseif(${dir} STREQUAL reactos/winsxs/arm64_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef)
         set(${var} 81)
-
 
     else()
         message(FATAL_ERROR "Wrong destination: ${dir}")

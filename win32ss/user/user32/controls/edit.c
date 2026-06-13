@@ -4158,8 +4158,13 @@ static LRESULT  EDIT_WM_StyleChanged ( EDITSTATE *es, WPARAM which, const STYLES
                 /* Only a subset of changes can be applied after the control
                  * has been created.
                  */
+#ifdef __REACTOS__
+                style_change_mask = ES_UPPERCASE | ES_LOWERCASE |
+                                    ES_NUMBER | ES_LEFT | ES_RIGHT | ES_CENTER;
+#else
                 style_change_mask = ES_UPPERCASE | ES_LOWERCASE |
                                     ES_NUMBER;
+#endif
                 if (es->style & ES_MULTILINE)
                         style_change_mask |= ES_WANTRETURN;
 

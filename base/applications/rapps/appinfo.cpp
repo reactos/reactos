@@ -120,6 +120,22 @@ CompareVersion(const CStringW &left, const CStringW &right)
     }
 }
 
+bool
+CAvailableApplicationInfo::IsInstalled(CStringW *pOutKeyName) const
+{
+    LPCWSTR pszKeyName = NULL;
+    CStringW szRegName;
+    m_Parser->GetString(DB_REGNAME, szRegName);
+    if (::GetInstalledVersion(NULL, szRegName))
+        pszKeyName = szRegName.GetString();
+    else if (::GetInstalledVersion(NULL, szDisplayName))
+        pszKeyName = szDisplayName.GetString();
+
+    if (pszKeyName && pOutKeyName)
+        *pOutKeyName = pszKeyName;
+    return pszKeyName != NULL;
+}
+
 VOID
 CAvailableApplicationInfo::InsertVersionInfo(CAppRichEdit *RichEdit)
 {

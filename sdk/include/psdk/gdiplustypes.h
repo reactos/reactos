@@ -21,47 +21,47 @@
 
 typedef float REAL;
 
-enum Status
-{
-    Ok = 0,
-    GenericError = 1,
-    InvalidParameter = 2,
-    OutOfMemory = 3,
-    ObjectBusy = 4,
-    InsufficientBuffer = 5,
-    NotImplemented = 6,
-    Win32Error = 7,
-    WrongState = 8,
-    Aborted = 9,
-    FileNotFound = 10,
-    ValueOverflow = 11,
-    AccessDenied = 12,
-    UnknownImageFormat = 13,
-    FontFamilyNotFound = 14,
-    FontStyleNotFound = 15,
-    NotTrueTypeFont = 16,
-    UnsupportedGdiplusVersion = 17,
-    GdiplusNotInitialized = 18,
-    PropertyNotFound = 19,
-    PropertyNotSupported = 20,
-    ProfileNotFound = 21
+enum Status{
+    Ok                          = 0,
+    GenericError                = 1,
+    InvalidParameter            = 2,
+    OutOfMemory                 = 3,
+    ObjectBusy                  = 4,
+    InsufficientBuffer          = 5,
+    NotImplemented              = 6,
+    Win32Error                  = 7,
+    WrongState                  = 8,
+    Aborted                     = 9,
+    FileNotFound                = 10,
+    ValueOverflow               = 11,
+    AccessDenied                = 12,
+    UnknownImageFormat          = 13,
+    FontFamilyNotFound          = 14,
+    FontStyleNotFound           = 15,
+    NotTrueTypeFont             = 16,
+    UnsupportedGdiplusVersion   = 17,
+    GdiplusNotInitialized       = 18,
+    PropertyNotFound            = 19,
+    PropertyNotSupported        = 20,
+    ProfileNotFound             = 21
 };
 
+
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-    typedef BOOL(CALLBACK *ImageAbort)(VOID *);
-    typedef ImageAbort DrawImageAbort;
-    typedef ImageAbort GetThumbnailImageAbort;
-    typedef struct GdiplusAbort GdiplusAbort;
+typedef BOOL (CALLBACK * ImageAbort)(VOID *);
+typedef ImageAbort DrawImageAbort;
+typedef ImageAbort GetThumbnailImageAbort;
+typedef struct GdiplusAbort GdiplusAbort;
 
-    typedef BOOL(CALLBACK *EnumerateMetafileProc)(EmfPlusRecordType, UINT, UINT, const BYTE *, VOID *);
+typedef BOOL (CALLBACK * EnumerateMetafileProc)(EmfPlusRecordType,UINT,UINT,const BYTE*,VOID*);
 
 #ifdef __cplusplus
 }
 #endif
+
 
 #ifdef __cplusplus
 
@@ -69,45 +69,42 @@ class Size;
 
 class Point
 {
-  public:
-    Point()
-    {
-        X = Y = 0;
-    }
+public:
+   Point()
+   {
+       X = Y = 0;
+   }
 
-    Point(IN const Point &pt)
-    {
-        X = pt.X;
-        Y = pt.Y;
-    }
+   Point(IN const Point &pt)
+   {
+       X = pt.X;
+       Y = pt.Y;
+   }
 
     Point(const Size &size);
 
-    Point(IN INT x, IN INT y)
-    {
-        X = x;
-        Y = y;
-    }
+   Point(IN INT x, IN INT y)
+   {
+       X = x;
+       Y = y;
+   }
 
-    Point
-    operator+(IN const Point &pt) const
-    {
-        return Point(X + pt.X, Y + pt.Y);
-    }
+   Point operator+(IN const Point& pt) const
+   {
+       return Point(X + pt.X, Y + pt.Y);
+   }
 
-    Point
-    operator-(IN const Point &pt) const
-    {
-        return Point(X - pt.X, Y - pt.Y);
-    }
+   Point operator-(IN const Point& pt) const
+   {
+       return Point(X - pt.X, Y - pt.Y);
+   }
 
-    BOOL
-    Equals(IN const Point &pt) const
-    {
-        return (X == pt.X) && (Y == pt.Y);
-    }
+   BOOL Equals(IN const Point& pt)
+   {
+       return (X == pt.X) && (Y == pt.Y);
+   }
 
-  public:
+public:
     INT X;
     INT Y;
 };
@@ -116,52 +113,49 @@ class SizeF;
 
 class PointF
 {
-  public:
-    PointF()
-    {
-        X = Y = 0.0f;
-    }
+public:
+   PointF()
+   {
+       X = Y = 0.0f;
+   }
 
-    PointF(IN const PointF &pt)
-    {
-        X = pt.X;
-        Y = pt.Y;
-    }
+   PointF(IN const PointF &pt)
+   {
+       X = pt.X;
+       Y = pt.Y;
+   }
 
     PointF(const SizeF &size);
 
-    PointF(IN REAL x, IN REAL y)
-    {
-        X = x;
-        Y = y;
-    }
+   PointF(IN REAL x, IN REAL y)
+   {
+       X = x;
+       Y = y;
+   }
 
-    PointF
-    operator+(IN const PointF &pt) const
-    {
-        return PointF(X + pt.X, Y + pt.Y);
-    }
+   PointF operator+(IN const PointF& pt) const
+   {
+       return PointF(X + pt.X, Y + pt.Y);
+   }
 
-    PointF
-    operator-(IN const PointF &pt) const
-    {
-        return PointF(X - pt.X, Y - pt.Y);
-    }
+   PointF operator-(IN const PointF& pt) const
+   {
+       return PointF(X - pt.X, Y - pt.Y);
+   }
 
-    BOOL
-    Equals(IN const PointF &pt) const
-    {
-        return (X == pt.X) && (Y == pt.Y);
-    }
+   BOOL Equals(IN const PointF& pt)
+   {
+       return (X == pt.X) && (Y == pt.Y);
+   }
 
-  public:
+public:
     REAL X;
     REAL Y;
 };
 
 class PathData
 {
-  public:
+public:
     PathData()
     {
         Count = 0;
@@ -182,15 +176,14 @@ class PathData
         }
     }
 
-  private:
+private:
     PathData(const PathData &);
-    PathData &
-    operator=(const PathData &);
+    PathData& operator=(const PathData &);
 
-  public:
+public:
     INT Count;
-    PointF *Points;
-    BYTE *Types;
+    PointF* Points;
+    BYTE* Types;
 };
 
 class SizeF
@@ -240,13 +233,14 @@ class SizeF
 
 class RectF
 {
-  public:
+public:
     REAL X;
     REAL Y;
     REAL Width;
     REAL Height;
 
-    RectF() : X(0), Y(0), Width(0), Height(0)
+    RectF()
+       : X(0), Y(0), Width(0), Height(0)
     {
     }
 
@@ -255,7 +249,8 @@ class RectF
     {
     }
 
-    RectF(REAL x, REAL y, REAL width, REAL height) : X(x), Y(y), Width(width), Height(height)
+    RectF(REAL x, REAL y, REAL width, REAL height)
+       : X(x), Y(y), Width(width), Height(height)
     {
     }
 
@@ -443,13 +438,14 @@ class Size
 
 class Rect
 {
-  public:
+public:
     INT X;
     INT Y;
     INT Width;
     INT Height;
 
-    Rect() : X(0), Y(0), Width(0), Height(0)
+    Rect()
+       : X(0), Y(0), Width(0), Height(0)
     {
     }
 
@@ -457,7 +453,8 @@ class Rect
     {
     }
 
-    Rect(INT x, INT y, INT width, INT height) : X(x), Y(y), Width(width), Height(height)
+    Rect(INT x, INT y, INT width, INT height)
+       : X(x), Y(y), Width(width), Height(height)
     {
     }
 
@@ -602,7 +599,7 @@ class Rect
 
 class CharacterRange
 {
-  public:
+public:
     CharacterRange()
     {
         First = Length = 0;
@@ -614,15 +611,13 @@ class CharacterRange
         Length = length;
     }
 
-    CharacterRange &
-    operator=(const CharacterRange &rhs)
+    CharacterRange& operator=(const CharacterRange& rhs)
     {
         First = rhs.First;
         Length = rhs.Length;
         return *this;
     }
-
-  public:
+public:
     INT First;
     INT Length;
 };
@@ -652,8 +647,8 @@ typedef struct PointF
 typedef struct PathData
 {
     INT Count;
-    PointF *Points;
-    BYTE *Types;
+    PointF* Points;
+    BYTE* Types;
 } PathData;
 
 typedef struct RectF

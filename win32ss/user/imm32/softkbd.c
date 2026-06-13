@@ -21,6 +21,12 @@ static UINT guScanCode[256]; /* Mapping: virtual key --> scan code */
 static POINT gptRaiseEdge; /* Border + Edge metrics */
 static BOOL g_bWantSoftKBDMetrics = TRUE;
 
+typedef struct tagSOFTKBDDATAEX
+{
+    UINT uCount;
+    WORD wCode[2][256];
+} SOFTKBDDATAEX, *PSOFTKBDDATAEX;
+
 static inline BOOL
 Imm32PtInRect(
     _In_ const POINT *ppt,
@@ -600,7 +606,6 @@ T1_InvertButton(
                 cxWidth = pT1->cxWidth48;
                 break;
             case T1K_ENTER:
-                pT1 = pT1;
                 cxWidth = pT1->cxWidth50;
                 cyHeight = pT1->cyHeight50;
                 break;
@@ -1459,9 +1464,12 @@ C1_SetData(
     HFONT hFont;
     RECT rc;
     LOGFONTW lf;
+    const SOFTKBDDATAEX *pDataEx;
 
     if (pData->uCount != 2)
         return 0;
+
+    pDataEx = (const SOFTKBDDATAEX *)pData;
 
     hGlobal = (HGLOBAL)GetWindowLongPtrW(hWnd, 0);
     pC1 = (PC1WINDOW)GlobalLock(hGlobal);
@@ -1483,8 +1491,8 @@ C1_SetData(
     hFontOld = SelectObject(hMemDC, hFont);
     for (iKey = C1K_OEM_3; iKey < C1K_BACKSPACE; ++iKey)
     {
-        pC1->Data[1][iKey] = pData->wCode[0][(BYTE)gC1K2VK[iKey]];
-        pC1->Data[0][iKey] = pData->wCode[1][(BYTE)gC1K2VK[iKey]];
+        pC1->Data[1][iKey] = pDataEx->wCode[0][(BYTE)gC1K2VK[iKey]];
+        pC1->Data[0][iKey] = pDataEx->wCode[1][(BYTE)gC1K2VK[iKey]];
     }
 
     SetBkColor(hMemDC, RGB(191, 191, 191));

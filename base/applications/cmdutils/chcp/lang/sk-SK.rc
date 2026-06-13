@@ -1,18 +1,19 @@
-/* Slovak translation for CMD
- * TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR: 21-03-2009
- * LastChange: 10-08-2010
+/*
+ * PROJECT:     ReactOS Change CodePage Command
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATOR:  Copyright 2026 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_CHCP_HELP "Displays or sets the active code page number.\n\n\
+    STRING_CHCP_HELP "Zobrazí alebo nastaví kód aktívnej znakovej stránky.\n\n\
 CHCP [nnn]\n\n\
-  nnn   Specifies the active code page number.\n\n\
-Type CHCP without a parameter to display the active code page number.\n"
-    STRING_CHCP_ERROR1 "Active code page: %u\n"
-    STRING_CHCP_ERROR4 "Invalid code page\n"
-    STRING_ERROR_INVALID_PARAM_FORMAT "Invalid parameter format - %s\n"
+  nnn   Špecifikuje kód aktívnej znakovej stránky.\n\n\
+Použite CHCP bez parametra na zobrazenie kódu aktívnej znakovej stránky.\n"
+    STRING_CHCP_ERROR1 "Aktívna znaková stránka: %u\n"
+    STRING_CHCP_ERROR4 "Neplatná znaková stránka\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Neplatný formát parametra - %s\n"
 END

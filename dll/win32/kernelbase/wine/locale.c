@@ -40,6 +40,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(nls);
 
+#ifndef __REACTOS__
+
 #define CALINFO_MAX_YEAR 2029
 
 static HMODULE kernelbase_handle;
@@ -5247,6 +5249,7 @@ INT WINAPI DECLSPEC_HOTPATCH FindNLSStringEx( const WCHAR *locale, DWORD flags, 
     return find_substring( sortid, flags, src, srclen, value, valuelen, found );
 }
 
+#endif /* __REACTOS__ */
 
 /******************************************************************************
  *	FindStringOrdinal   (kernelbase.@)
@@ -5290,6 +5293,7 @@ INT WINAPI DECLSPEC_HOTPATCH FindStringOrdinal( DWORD flag, const WCHAR *src, IN
     return -1;
 }
 
+#ifndef __REACTOS__
 
 /******************************************************************************
  *	FoldStringW   (kernelbase.@)
@@ -8374,3 +8378,4 @@ int WINAPI GetTimeFormatEx( const WCHAR *name, DWORD flags, const SYSTEMTIME *sy
     TRACE( "(%s,%lx,%p,%s,%p,%d)\n", debugstr_w(name), flags, systime, debugstr_w(format), buffer, len );
     return get_time_format( locale, flags, systime, format, buffer, len );
 }
+#endif /* __REACTOS__ */

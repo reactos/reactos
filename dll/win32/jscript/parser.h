@@ -18,9 +18,10 @@
 
 #pragma once
 
-typedef struct _source_elements_t source_elements_t;
 typedef struct _expression_t expression_t;
 typedef struct _statement_t statement_t;
+
+struct _bytecode_t;
 
 typedef struct {
     BOOL is_num;
@@ -37,12 +38,13 @@ typedef struct _parser_ctx_t {
 
     script_ctx_t *script;
     struct _compiler_ctx_t *compiler;
-    source_elements_t *source;
+    statement_t *source;
     BOOL nl;
     BOOL implicit_nl_semicolon;
     BOOL is_html;
     BOOL lexer_error;
     HRESULT hres;
+    unsigned error_loc;
 
     ccval_t ccval;
     unsigned cc_if_depth;
@@ -50,10 +52,10 @@ typedef struct _parser_ctx_t {
     heap_pool_t heap;
 } parser_ctx_t;
 
-HRESULT script_parse(script_ctx_t*,struct _compiler_ctx_t*,const WCHAR*,const WCHAR*,BOOL,parser_ctx_t**) DECLSPEC_HIDDEN;
-void parser_release(parser_ctx_t*) DECLSPEC_HIDDEN;
+HRESULT script_parse(script_ctx_t*,struct _compiler_ctx_t*,struct _bytecode_t*,const WCHAR*,BOOL,parser_ctx_t**);
+void parser_release(parser_ctx_t*);
 
-int parser_lex(void*,parser_ctx_t*) DECLSPEC_HIDDEN;
+int parser_lex(void*,unsigned*,parser_ctx_t*);
 
 static inline void *parser_alloc(parser_ctx_t *ctx, DWORD size)
 {
@@ -65,9 +67,10 @@ static inline void *parser_alloc_tmp(parser_ctx_t *ctx, DWORD size)
     return heap_pool_alloc(&ctx->script->tmp_heap, size);
 }
 
-BOOL is_identifier_char(WCHAR) DECLSPEC_HIDDEN;
-BOOL unescape(WCHAR*,size_t*) DECLSPEC_HIDDEN;
-HRESULT parse_decimal(const WCHAR**,const WCHAR*,double*) DECLSPEC_HIDDEN;
+int hex_to_int(WCHAR);
+BOOL is_identifier_char(WCHAR);
+BOOL unescape(WCHAR*,size_t*);
+HRESULT parse_decimal(const WCHAR**,const WCHAR*,double*);
 
 typedef enum {
     LT_DOUBLE,
@@ -90,11 +93,12 @@ typedef struct {
     } u;
 } literal_t;
 
-literal_t *parse_regexp(parser_ctx_t*) DECLSPEC_HIDDEN;
-literal_t *new_boolean_literal(parser_ctx_t*,BOOL) DECLSPEC_HIDDEN;
+literal_t *parse_regexp(parser_ctx_t*);
+literal_t *new_boolean_literal(parser_ctx_t*,BOOL);
 
 typedef struct _variable_declaration_t {
     const WCHAR *identifier;
+    BOOL block_scope, constant;
     expression_t *expr;
 
     struct _variable_declaration_t *next;
@@ -123,10 +127,12 @@ typedef enum {
 struct _statement_t {
     statement_type_t type;
     statement_t *next;
+    unsigned loc;
 };
 
 typedef struct {
     statement_t stat;
+    unsigned int scope_index;
     statement_t *stat_list;
 } block_statement_t;
 
@@ -159,8 +165,11 @@ typedef struct {
     variable_declaration_t *variable_list;
     expression_t *begin_expr;
     expression_t *expr;
+    unsigned expr_loc;
     expression_t *end_expr;
+    unsigned end_loc;
     statement_t *statement;
+    unsigned int scope_index;
 } for_statement_t;
 
 typedef struct {
@@ -190,6 +199,7 @@ typedef struct {
 
 typedef struct _case_clausule_t {
     expression_t *expr;
+    unsigned loc;
     statement_t *stat;
 
     struct _case_clausule_t *next;
@@ -211,6 +221,7 @@ typedef struct {
     statement_t *try_statement;
     catch_block_t *catch_block;
     statement_t *finally_statement;
+    unsigned finally_loc;
 } try_statement_t;
 
 typedef enum {
@@ -283,20 +294,17 @@ typedef struct _parameter_t {
     struct _parameter_t *next;
 } parameter_t;
 
-struct _source_elements_t {
-    statement_t *statement;
-    statement_t *statement_tail;
-};
-
 typedef struct _function_expression_t {
     expression_t expr;
     const WCHAR *identifier;
     const WCHAR *event_target;
     parameter_t *parameter_list;
-    source_elements_t *source_elements;
+    statement_t *statement_list;
     const WCHAR *src_str;
     DWORD src_len;
     unsigned func_id;
+    BOOL is_statement;
+    unsigned int scope_index;
 
     struct _function_expression_t *next; /* for compiler */
 } function_expression_t;
@@ -373,8 +381,8 @@ typedef struct {
     property_definition_t *property_list;
 } property_value_expression_t;
 
-BOOL try_parse_ccval(parser_ctx_t*,ccval_t*) DECLSPEC_HIDDEN;
-BOOL parse_cc_expr(parser_ctx_t*) DECLSPEC_HIDDEN;
+BOOL try_parse_ccval(parser_ctx_t*,ccval_t*);
+BOOL parse_cc_expr(parser_ctx_t*);
 
 static inline ccval_t ccval_num(double n)
 {
@@ -402,4 +410,4 @@ static inline double get_ccnum(ccval_t v)
     return v.is_num ? v.u.n : v.u.b;
 }
 
-jsstr_t *compiler_alloc_string_len(struct _compiler_ctx_t*,const WCHAR *,unsigned) DECLSPEC_HIDDEN;
+jsstr_t *compiler_alloc_string_len(struct _compiler_ctx_t*,const WCHAR *,unsigned);

@@ -147,7 +147,7 @@ static void test_ApplyButtonDisabled()
 }
 
 
-START_TEST(propsheet)
+START_TEST(propsheetv6)
 {
     HMODULE hComCtl32;
 

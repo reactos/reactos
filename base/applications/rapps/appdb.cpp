@@ -17,6 +17,7 @@
 static HKEY g_RootKeyEnum[3] = {HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, HKEY_LOCAL_MACHINE};
 static REGSAM g_RegSamEnum[3] = {0, KEY_WOW64_32KEY, KEY_WOW64_64KEY};
 #define UNINSTALL_SUBKEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
+#define MANIFEST_DOTEXT L".txt"
 
 static inline HKEY
 GetRootKeyInfo(UINT Index, REGSAM &RegSam)
@@ -49,9 +50,14 @@ public:
                                                         UNINSTALL_SUBKEY, KEY_WOW64_32KEY);
     }
 
-    HKEY GetNext(REGSAM &RegSam)
+    HKEY Get(REGSAM &RegSam)
     {
-        return m_Index < m_Count ? GetRootKeyInfo(m_Index++, RegSam) : NULL;
+        return m_Index < m_Count ? GetRootKeyInfo(m_Index, RegSam) : NULL;
+    }
+
+    void Next()
+    {
+        m_Index++;
     }
 
     UINT GetKeyIndex() const
@@ -100,6 +106,24 @@ CAppDB::FindAvailableByPackageName(const CStringW &name)
     return NULL;
 }
 
+CAvailableApplicationInfo *
+CAppDB::CreateAvailableAppInstance(const CStringW &PkgName, PCWSTR DBPath)
+{
+    CAvailableApplicationInfo *pAppInfo;
+    CPathW AppsPath = DBPath ? CPathW(DBPath) : (CPathW(GetDefaultPath()) += RAPPS_DATABASE_SUBDIR);
+    CPathW ManifestPath = CPathW(AppsPath) += PkgName + MANIFEST_DOTEXT;
+    CConfigParser *Parser = new CConfigParser(ManifestPath);
+    int Cat;
+    if (!Parser->GetInt(DB_CATEGORY, Cat))
+        Cat = ENUM_INVALID;
+
+    pAppInfo = new CAvailableApplicationInfo(Parser, PkgName, static_cast<AppsCategories>(Cat), AppsPath);
+    if (pAppInfo->Valid())
+        return pAppInfo;
+    delete pAppInfo;
+    return NULL;
+}
+
 void
 CAppDB::GetApps(CAtlList<CAppInfo *> &List, AppsCategories Type) const
 {
@@ -127,7 +151,7 @@ CAppDB::EnumerateFiles()
     CPathW AppsPath = m_BasePath;
     AppsPath += RAPPS_DATABASE_SUBDIR;
     CPathW WildcardPath = AppsPath;
-    WildcardPath += L"*.txt";
+    WildcardPath += L"*" MANIFEST_DOTEXT;
 
     WIN32_FIND_DATAW FindFileData;
     HANDLE hFind = FindFirstFileW(WildcardPath, &FindFileData);
@@ -142,24 +166,13 @@ CAppDB::EnumerateFiles()
         PathRemoveExtensionW(szPkgName.GetBuffer(MAX_PATH));
         szPkgName.ReleaseBuffer();
 
-        CAppInfo *Info = FindByPackageName(szPkgName);
+        CAppInfo *Info = FindAvailableByPackageName(szPkgName);
         ATLASSERT(Info == NULL);
         if (!Info)
         {
-            CConfigParser *Parser = new CConfigParser(CPathW(AppsPath) += FindFileData.cFileName);
-            int Cat;
-            if (!Parser->GetInt(DB_CATEGORY, Cat))
-                Cat = ENUM_INVALID;
-
-            Info = new CAvailableApplicationInfo(Parser, szPkgName, static_cast<AppsCategories>(Cat), AppsPath);
-            if (Info->Valid())
-            {
+            Info = CreateAvailableAppInstance(szPkgName, AppsPath);
+            if (Info)
                 m_Available.AddTail(Info);
-            }
-            else
-            {
-                delete Info;
-            }
         }
 
     } while (FindNextFileW(hFind, &FindFileData));
@@ -227,7 +240,7 @@ CAppDB::EnumerateRegistry(CAtlList<CAppInfo *> *List, LPCWSTR SearchOnly)
     ATLASSERT(List || SearchOnly);
     REGSAM wowsam;
     HKEY hRootKey;
-    for (CEnumInstalledRootKey RootEnum; (hRootKey = RootEnum.GetNext(wowsam)) != NULL;)
+    for (CEnumInstalledRootKey RootEnum; (hRootKey = RootEnum.Get(wowsam)) != NULL; RootEnum.Next())
     {
         CRegKey hKey;
         if (hKey.Open(hRootKey, UNINSTALL_SUBKEY, KEY_READ | wowsam) != ERROR_SUCCESS)
@@ -330,7 +343,7 @@ CAppDB::RemoveCached()
     DeleteWithWildcard(ScrnshotFolder, L"*.tmp");
 
     // Delete data base files (*.txt)
-    DeleteWithWildcard(AppsPath, L"*.txt");
+    DeleteWithWildcard(AppsPath, L"*" MANIFEST_DOTEXT);
 
     RemoveDirectoryW(IconPath);
     RemoveDirectoryW(ScrnshotFolder);

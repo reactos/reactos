@@ -1,0 +1,23 @@
+/*
+ * PROJECT:     ReactOS msctfime.ime
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     French resource file
+ * TRANSLATOR:  Copyright 2026 Thomas Anderson <thomasanderson531@hotmail.com>
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_OK               "OK"
+    IDS_CANCEL           "Annuler"
+    IDS_ABORT            "&Interrompre"
+    IDS_RETRY            "&Réessayer"
+    IDS_IGNORE           "&Ignorer"
+    IDS_YES              "&Oui"
+    IDS_NO               "&Non"
+
+    IDS_ENTER            "Entrer"
+    IDS_FINALIZE_STRING  "Finaliser la ligne"
+    IDS_CONVERSION       "Convertir"
+END

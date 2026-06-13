@@ -165,7 +165,7 @@ DbgPrintEarly(const char *fmt, ...)
     PCHAR String = Buffer;
 
     va_start(args, fmt);
-    i = vsprintf(Buffer, fmt, args);
+    i = vsnprintf(Buffer, sizeof(Buffer), fmt, args);
     va_end(args);
 
     /* Output the message */

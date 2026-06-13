@@ -111,6 +111,13 @@ DEFINE_EXPECT(testobj_onlydispid_d);
 DEFINE_EXPECT(testobj_onlydispid_i);
 DEFINE_EXPECT(testobj_notexists_d);
 DEFINE_EXPECT(testobj_newenum);
+DEFINE_EXPECT(testobj_getidfail_d);
+DEFINE_EXPECT(testobj_tolocalestr_d);
+DEFINE_EXPECT(testobj_tolocalestr_i);
+DEFINE_EXPECT(test_caller_get);
+DEFINE_EXPECT(test_caller_null);
+DEFINE_EXPECT(test_caller_obj);
+DEFINE_EXPECT(testdestrobj);
 DEFINE_EXPECT(enumvariant_next_0);
 DEFINE_EXPECT(enumvariant_next_1);
 DEFINE_EXPECT(enumvariant_reset);
@@ -121,6 +128,15 @@ DEFINE_EXPECT(DeleteMemberByDispID);
 DEFINE_EXPECT(DeleteMemberByDispID_false);
 DEFINE_EXPECT(DeleteMemberByDispID_error);
 DEFINE_EXPECT(BindHandler);
+
+#define JS_E_SUBSCRIPT_OUT_OF_RANGE  0x800a0009
+#define JS_E_INVALID_ACTION          0x800a01bd
+#define JS_E_OBJECT_EXPECTED         0x800a138f
+#define JS_E_UNDEFINED_VARIABLE      0x800a1391
+#define JS_E_EXCEPTION_THROWN        0x800a139e
+#define JS_E_SYNTAX                  0x800a03ea
+#define JS_E_MISSING_RBRACKET        0x800a03ee
+#define JS_E_MISPLACED_RETURN        0x800a03fa
 
 #define DISPID_GLOBAL_TESTPROPGET   0x1000
 #define DISPID_GLOBAL_TESTPROPPUT   0x1001
@@ -155,6 +171,12 @@ DEFINE_EXPECT(BindHandler);
 #define DISPID_GLOBAL_TESTENUMOBJ   0x101e
 #define DISPID_GLOBAL_CALLEVAL      0x101f
 #define DISPID_GLOBAL_PROPARGPUTOP  0x1020
+#define DISPID_GLOBAL_THROWINT      0x1021
+#define DISPID_GLOBAL_THROWEI       0x1022
+#define DISPID_GLOBAL_VDATE         0x1023
+#define DISPID_GLOBAL_VCY           0x1024
+#define DISPID_GLOBAL_TODOWINE      0x1025
+#define DISPID_GLOBAL_TESTDESTROBJ  0x1026
 
 #define DISPID_GLOBAL_TESTPROPDELETE      0x2000
 #define DISPID_GLOBAL_TESTNOPROPDELETE    0x2001
@@ -163,20 +185,16 @@ DEFINE_EXPECT(BindHandler);
 #define DISPID_TESTOBJ_PROP         0x2000
 #define DISPID_TESTOBJ_ONLYDISPID   0x2001
 #define DISPID_TESTOBJ_WITHPROP     0x2002
+#define DISPID_TESTOBJ_TOLOCALESTR  0x2003
 
 #define JS_E_OUT_OF_MEMORY 0x800a03ec
 #define JS_E_INVALID_CHAR 0x800a03f6
-
-static const WCHAR testW[] = {'t','e','s','t',0};
-static const CHAR testA[] = "test";
-static const WCHAR test_valW[] = {'t','e','s','t','V','a','l',0};
-static const CHAR test_valA[] = "testVal";
-static const WCHAR emptyW[] = {0};
 
 static BOOL strict_dispid_check, testing_expr;
 static const char *test_name = "(null)";
 static IDispatch *script_disp;
 static int invoke_version;
+static BOOL use_english;
 static IActiveScriptError *script_error;
 static IActiveScript *script_engine;
 static const CLSID *engine_clsid = &CLSID_JScript;
@@ -204,30 +222,23 @@ static BOOL is_lang_english(void)
     return PRIMARYLANGID(GetUserDefaultLangID()) == LANG_ENGLISH;
 }
 
-static BSTR a2bstr(const char *str)
-{
-    BSTR ret;
-    int len;
-
-    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-    ret = SysAllocStringLen(NULL, len-1);
-    MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
-
-    return ret;
-}
-
-static int strcmp_wa(LPCWSTR strw, const char *stra)
-{
-    CHAR buf[512];
-    WideCharToMultiByte(CP_ACP, 0, strw, -1, buf, sizeof(buf), 0, 0);
-    return lstrcmpA(buf, stra);
-}
-
 #define test_grfdex(a,b) _test_grfdex(__LINE__,a,b)
 static void _test_grfdex(unsigned line, DWORD grfdex, DWORD expect)
 {
     expect |= invoke_version << 28;
-    ok_(__FILE__,line)(grfdex == expect, "grfdex = %x, expected %x\n", grfdex, expect);
+    ok_(__FILE__,line)(grfdex == expect, "grfdex = %lx, expected %lx\n", grfdex, expect);
+}
+
+static void close_script(IActiveScript *script)
+{
+    HRESULT hres;
+    ULONG ref;
+
+    hres = IActiveScript_Close(script);
+    ok(hres == S_OK, "Close failed: %08lx\n", hres);
+
+    ref = IActiveScript_Release(script);
+    ok(!ref, "ref=%lu\n", ref);
 }
 
 static HRESULT WINAPI EnumVARIANT_QueryInterface(IEnumVARIANT *iface, REFIID riid, void **ppv)
@@ -261,7 +272,7 @@ static HRESULT WINAPI EnumVARIANT_Next(
     ULONG *pCeltFetched)
 {
     ok(rgVar != NULL, "rgVar is NULL\n");
-    ok(celt == 1, "celt = %d\n", celt);
+    ok(celt == 1, "celt = %ld\n", celt);
     ok(pCeltFetched == NULL, "pCeltFetched is not NULL\n");
 
     if (!rgVar)
@@ -325,6 +336,44 @@ static IEnumVARIANTVtbl testEnumVARIANTVtbl = {
 
 static IEnumVARIANT testEnumVARIANT = { &testEnumVARIANTVtbl };
 
+static HRESULT WINAPI sp_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppv)
+{
+    if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IServiceProvider, riid)) {
+        *ppv = iface;
+        return S_OK;
+    }
+
+    ok(0, "unexpected call %s\n", wine_dbgstr_guid(riid));
+    *ppv = NULL;
+    return E_NOTIMPL;
+}
+
+static ULONG WINAPI sp_AddRef(IServiceProvider *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI sp_Release(IServiceProvider *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI sp_QueryService(IServiceProvider *iface, REFGUID guidService, REFIID riid, void **ppv)
+{
+    ok(0, "unexpected call %s\n", wine_dbgstr_guid(guidService));
+    *ppv = NULL;
+    return E_NOTIMPL;
+}
+
+static const IServiceProviderVtbl sp_vtbl = {
+    sp_QueryInterface,
+    sp_AddRef,
+    sp_Release,
+    sp_QueryService
+};
+
+static IServiceProvider sp_obj = { &sp_vtbl };
+
 static HRESULT WINAPI DispatchEx_QueryInterface(IDispatchEx *iface, REFIID riid, void **ppv)
 {
     *ppv = NULL;
@@ -336,6 +385,7 @@ static HRESULT WINAPI DispatchEx_QueryInterface(IDispatchEx *iface, REFIID riid,
     else
         return E_NOINTERFACE;
 
+    IUnknown_AddRef((IUnknown *)*ppv);
     return S_OK;
 }
 
@@ -392,7 +442,7 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
 
 static HRESULT WINAPI DispatchEx_DeleteMemberByName(IDispatchEx *iface, BSTR bstrName, DWORD grfdex)
 {
-    ok(0, "unexpected call %s %x\n", wine_dbgstr_w(bstrName), grfdex);
+    ok(0, "unexpected call %s %lx\n", wine_dbgstr_w(bstrName), grfdex);
     return E_NOTIMPL;
 }
 
@@ -432,6 +482,7 @@ static HRESULT WINAPI testObj_Invoke(IDispatchEx *iface, DISPID id,
 {
     switch(id) {
     case DISPID_NEWENUM:
+        ok(wFlags == (DISPATCH_METHOD | DISPATCH_PROPERTYGET), "wFlags = %x\n", wFlags);
         ok(pdp != NULL, "pdp == NULL\n");
         ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
         ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
@@ -444,40 +495,50 @@ static HRESULT WINAPI testObj_Invoke(IDispatchEx *iface, DISPID id,
         return S_OK;
     }
 
-    ok(0, "unexpected call %x\n", id);
+    ok(0, "unexpected call %lx\n", id);
     return DISP_E_MEMBERNOTFOUND;
 }
 
 static HRESULT WINAPI testObj_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD grfdex, DISPID *pid)
 {
-    if(!strcmp_wa(bstrName, "prop")) {
+    if(!lstrcmpW(bstrName, L"prop")) {
         CHECK_EXPECT(testobj_prop_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_TESTOBJ_PROP;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "withProp")) {
+    if(!lstrcmpW(bstrName, L"withProp")) {
         CHECK_EXPECT(testobj_withprop_d);
         test_grfdex(grfdex, fdexNameCaseSensitive|fdexNameImplicit);
         *pid = DISPID_TESTOBJ_WITHPROP;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "noprop")) {
+    if(!lstrcmpW(bstrName, L"noprop")) {
         CHECK_EXPECT(testobj_noprop_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         return DISP_E_UNKNOWNNAME;
     }
-    if(!strcmp_wa(bstrName, "onlyDispID")) {
+    if(!lstrcmpW(bstrName, L"onlyDispID")) {
         if(strict_dispid_check)
             CHECK_EXPECT(testobj_onlydispid_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_TESTOBJ_ONLYDISPID;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "notExists")) {
+    if(!lstrcmpW(bstrName, L"toLocaleString")) {
+        CHECK_EXPECT(testobj_tolocalestr_d);
+        test_grfdex(grfdex, fdexNameCaseSensitive);
+        *pid = DISPID_TESTOBJ_TOLOCALESTR;
+        return S_OK;
+    }
+    if(!lstrcmpW(bstrName, L"notExists")) {
         CHECK_EXPECT(testobj_notexists_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         return DISP_E_UNKNOWNNAME;
+    }
+    if(!lstrcmpW(bstrName, L"getIDFail")) {
+        CHECK_EXPECT(testobj_getidfail_d);
+        return E_FAIL;
     }
 
     ok(0, "unexpected name %s\n", wine_dbgstr_w(bstrName));
@@ -551,20 +612,36 @@ static HRESULT WINAPI testObj_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid,
         V_I4(pvarRes) = 1;
 
         return S_OK;
+     case DISPID_TESTOBJ_TOLOCALESTR:
+        CHECK_EXPECT(testobj_tolocalestr_i);
+
+        ok(wFlags == DISPATCH_METHOD, "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(!pdp->cArgs, "cArgs = %d\n", pdp->cArgs);
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pvarRes != NULL, "pvarRes == NULL\n");
+        ok(V_VT(pvarRes) == VT_EMPTY, "V_VT(pvarRes) = %d\n", V_VT(pvarRes));
+        ok(pei != NULL, "pei == NULL\n");
+
+        V_VT(pvarRes) = VT_I4;
+        V_I4(pvarRes) = 1234;
+
+        return S_OK;
     }
 
-    ok(0, "unexpected call %x\n", id);
+    ok(0, "unexpected call %lx\n", id);
     return DISP_E_MEMBERNOTFOUND;
 }
 
 static HRESULT WINAPI testObj_DeleteMemberByName(IDispatchEx *iface, BSTR bstrName, DWORD grfdex)
 {
-    if(!strcmp_wa(bstrName, "deleteTest")) {
+    if(!lstrcmpW(bstrName, L"deleteTest")) {
         CHECK_EXPECT(testobj_delete_test);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "noDeleteTest")) {
+    if(!lstrcmpW(bstrName, L"noDeleteTest")) {
         CHECK_EXPECT(testobj_delete_nodelete);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         return S_FALSE;
@@ -594,6 +671,95 @@ static IDispatchExVtbl testObjVtbl = {
 
 static IDispatchEx testObj = { &testObjVtbl };
 
+static HRESULT WINAPI testcallerobj_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
+        VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
+{
+    ok(id == DISPID_VALUE, "id = %ld\n", id);
+    ok(pdp != NULL, "pdp == NULL\n");
+    ok(pvarRes != NULL, "pvarRes == NULL\n");
+    ok(V_VT(pvarRes) == VT_EMPTY, "V_VT(pvarRes) = %d\n", V_VT(pvarRes));
+    if(wFlags == DISPATCH_PROPERTYGET) {
+        CHECK_EXPECT(test_caller_get);
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pei != NULL, "pei == NULL\n");
+        ok(pspCaller != NULL, "pspCaller == NULL\n");
+        ok(pspCaller != &sp_obj, "pspCaller == sp_obj\n");
+        V_VT(pvarRes) = VT_DISPATCH;
+        V_DISPATCH(pvarRes) = (IDispatch*)iface;
+    }else if(pspCaller) {
+        CHECK_EXPECT(test_caller_obj);
+        ok(wFlags == DISPATCH_METHOD, "wFlags = %04x\n", wFlags);
+        ok(pdp->rgdispidNamedArgs != NULL, "rgdispidNamedArgs == NULL\n");
+        ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pspCaller == &sp_obj, "pspCaller != sp_obj\n");
+        V_VT(pvarRes) = VT_I4;
+        V_I4(pvarRes) = 137;
+    }else {
+        CHECK_EXPECT(test_caller_null);
+        ok(wFlags == DISPATCH_METHOD, "wFlags = %04x\n", wFlags);
+        ok(pdp->rgdispidNamedArgs != NULL, "rgdispidNamedArgs == NULL\n");
+        ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        V_VT(pvarRes) = VT_I4;
+        V_I4(pvarRes) = 42;
+    }
+    return S_OK;
+}
+
+static IDispatchExVtbl testcallerobj_vtbl = {
+    DispatchEx_QueryInterface,
+    DispatchEx_AddRef,
+    DispatchEx_Release,
+    DispatchEx_GetTypeInfoCount,
+    DispatchEx_GetTypeInfo,
+    DispatchEx_GetIDsOfNames,
+    DispatchEx_Invoke,
+    DispatchEx_GetDispID,
+    testcallerobj_InvokeEx,
+    DispatchEx_DeleteMemberByName,
+    DispatchEx_DeleteMemberByDispID,
+    DispatchEx_GetMemberProperties,
+    DispatchEx_GetMemberName,
+    DispatchEx_GetNextDispID,
+    DispatchEx_GetNameSpaceParent
+};
+
+static IDispatchEx testcallerobj = { &testcallerobj_vtbl };
+
+static LONG test_destr_ref;
+
+static ULONG WINAPI testDestrObj_AddRef(IDispatchEx *iface)
+{
+    return ++test_destr_ref;
+}
+
+static ULONG WINAPI testDestrObj_Release(IDispatchEx *iface)
+{
+    if (!--test_destr_ref)
+        CHECK_EXPECT(testdestrobj);
+    return test_destr_ref;
+}
+
+static IDispatchExVtbl testDestrObjVtbl = {
+    DispatchEx_QueryInterface,
+    testDestrObj_AddRef,
+    testDestrObj_Release,
+    DispatchEx_GetTypeInfoCount,
+    DispatchEx_GetTypeInfo,
+    DispatchEx_GetIDsOfNames,
+    DispatchEx_Invoke,
+    DispatchEx_GetDispID,
+    DispatchEx_InvokeEx,
+    DispatchEx_DeleteMemberByName,
+    DispatchEx_DeleteMemberByDispID,
+    DispatchEx_GetMemberProperties,
+    DispatchEx_GetMemberName,
+    DispatchEx_GetNextDispID,
+    DispatchEx_GetNameSpaceParent
+};
+
+static IDispatchEx testDestrObj = { &testDestrObjVtbl };
+
 static HRESULT WINAPI dispexFunc_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
         VARIANT *res, EXCEPINFO *pei, IServiceProvider *pspCaller)
 {
@@ -606,7 +772,7 @@ static HRESULT WINAPI dispexFunc_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
         ok(pdp != NULL, "pdp == NULL\n");
         ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
         ok(pdp->rgdispidNamedArgs != NULL, "rgdispidNamedArgs != NULL\n");
-        ok(*pdp->rgdispidNamedArgs == DISPID_THIS, "*rgdispidNamedArgs = %d\n", *pdp->rgdispidNamedArgs);
+        ok(*pdp->rgdispidNamedArgs == DISPID_THIS, "*rgdispidNamedArgs = %ld\n", *pdp->rgdispidNamedArgs);
         ok(pdp->cArgs == 2, "cArgs = %d\n", pdp->cArgs);
         ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
         ok(res != NULL, "res == NULL\n");
@@ -627,7 +793,7 @@ static HRESULT WINAPI dispexFunc_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
             V_VT(res) = VT_NULL;
         return S_OK;
     default:
-        ok(0, "unexpected call %x\n", id);
+        ok(0, "unexpected call %lx\n", id);
         return DISP_E_MEMBERNOTFOUND;
     }
 }
@@ -670,11 +836,11 @@ static HRESULT WINAPI pureDisp_GetIDsOfNames(IDispatchEx *iface, REFIID riid,
     ok(IsEqualGUID(riid, &IID_NULL), "Expected IID_NULL\n");
     ok(cNames==1, "cNames = %d\n", cNames);
 
-    if(!strcmp_wa(*rgszNames, "prop")) {
+    if(!lstrcmpW(*rgszNames, L"prop")) {
         CHECK_EXPECT(puredisp_prop_d);
         *rgDispId = DISPID_TESTOBJ_PROP;
         return S_OK;
-    } else if(!strcmp_wa(*rgszNames, "noprop")) {
+    } else if(!lstrcmpW(*rgszNames, L"noprop")) {
         CHECK_EXPECT(puredisp_noprop_d);
         return DISP_E_UNKNOWNNAME;
     }
@@ -748,7 +914,7 @@ static ULONG WINAPI BindEventHandler_Release(IBindEventHandler *iface)
 static HRESULT WINAPI BindEventHandler_BindHandler(IBindEventHandler *iface, const WCHAR *event, IDispatch *disp)
 {
     CHECK_EXPECT(BindHandler);
-    ok(!strcmp_wa(event, "eventName"), "event = %s\n", wine_dbgstr_w(event));
+    ok(!lstrcmpW(event, L"eventName"), "event = %s\n", wine_dbgstr_w(event));
     ok(disp != NULL, "disp = NULL\n");
     return S_OK;
 }
@@ -798,215 +964,267 @@ static IDispatchExVtbl bindEventHandlerDispVtbl = {
 
 static IDispatchEx bindEventHandlerDisp = { &bindEventHandlerDispVtbl };
 
+static HRESULT CALLBACK test_deferred_fill_in(struct tagEXCEPINFO *ei)
+{
+    ok(ei->pfnDeferredFillIn == test_deferred_fill_in, "pfnDeferredFillIn != test_deferred_fill_in\n");
+    ok(!wcscmp(ei->bstrSource, L"source before defer"), "bstrSource = %s\n", wine_dbgstr_w(ei->bstrSource));
+    ok(!wcscmp(ei->bstrDescription, L"desc before defer"), "bstrDescription = %s\n", wine_dbgstr_w(ei->bstrDescription));
+    ok(!wcscmp(ei->bstrHelpFile, L"help before defer"), "bstrHelpFile = %s\n", wine_dbgstr_w(ei->bstrHelpFile));
+    ok(ei->dwHelpContext == 1337, "dwHelpContext = %lu\n", ei->dwHelpContext);
+
+    SysFreeString(ei->bstrSource);
+    SysFreeString(ei->bstrDescription);
+    SysFreeString(ei->bstrHelpFile);
+    ei->pfnDeferredFillIn = NULL;
+    ei->bstrSource = SysAllocString(L"source after defer");
+    ei->bstrDescription = SysAllocString(L"desc after defer");
+    ei->bstrHelpFile = SysAllocString(L"help after defer");
+    ei->dwHelpContext = 1234567890;
+
+    return E_FAIL;  /* return code ignored */
+}
+
 static HRESULT WINAPI Global_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD grfdex, DISPID *pid)
 {
-    if(!strcmp_wa(bstrName, "ok")) {
+    if(!lstrcmpW(bstrName, L"ok")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_OK;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "trace")) {
+    if(!lstrcmpW(bstrName, L"trace")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_TRACE;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "reportSuccess")) {
+    if(!lstrcmpW(bstrName, L"todo_wine_ok")) {
+        test_grfdex(grfdex, fdexNameCaseSensitive);
+        *pid = DISPID_GLOBAL_TODOWINE;
+        return S_OK;
+    }
+    if(!lstrcmpW(bstrName, L"reportSuccess")) {
         CHECK_EXPECT(global_success_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_REPORTSUCCESS;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "testPropGet")) {
+    if(!lstrcmpW(bstrName, L"testPropGet")) {
         CHECK_EXPECT(global_propget_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_TESTPROPGET;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "testPropPut")) {
+    if(!lstrcmpW(bstrName, L"testPropPut")) {
         CHECK_EXPECT(global_propput_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_TESTPROPPUT;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "testPropPutRef")) {
+    if(!lstrcmpW(bstrName, L"testPropPutRef")) {
         CHECK_EXPECT(global_propputref_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_TESTPROPPUTREF;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "testPropDelete")) {
+    if(!lstrcmpW(bstrName, L"testPropDelete")) {
         CHECK_EXPECT(global_propdelete_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_TESTPROPDELETE;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "testNoPropDelete")) {
+    if(!lstrcmpW(bstrName, L"testNoPropDelete")) {
         CHECK_EXPECT(global_nopropdelete_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_TESTNOPROPDELETE;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "testPropDeleteError")) {
+    if(!lstrcmpW(bstrName, L"testPropDeleteError")) {
         CHECK_EXPECT(global_propdeleteerror_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_TESTPROPDELETEERROR;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "getVT")) {
+    if(!lstrcmpW(bstrName, L"getVT")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_GETVT;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "testObj")) {
+    if(!lstrcmpW(bstrName, L"testObj")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_TESTOBJ;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "getNullBSTR")) {
+    if(!lstrcmpW(bstrName, L"getNullBSTR")) {
         *pid = DISPID_GLOBAL_GETNULLBSTR;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "isNullBSTR")) {
+    if(!lstrcmpW(bstrName, L"isNullBSTR")) {
         *pid = DISPID_GLOBAL_ISNULLBSTR;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "nullDisp")) {
+    if(!lstrcmpW(bstrName, L"nullDisp")) {
         *pid = DISPID_GLOBAL_NULL_DISP;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "notExists")) {
+    if(!lstrcmpW(bstrName, L"notExists")) {
         CHECK_EXPECT(global_notexists_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         return DISP_E_UNKNOWNNAME;
     }
 
-    if(!strcmp_wa(bstrName, "testThis")) {
+    if(!lstrcmpW(bstrName, L"testThis")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_TESTTHIS;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "testThis2")) {
+    if(!lstrcmpW(bstrName, L"testThis2")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_TESTTHIS2;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "invokeVersion")) {
+    if(!lstrcmpW(bstrName, L"invokeVersion")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_INVOKEVERSION;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "createArray")) {
+    if(!lstrcmpW(bstrName, L"createArray")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_CREATEARRAY;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "propGetFunc")) {
+    if(!lstrcmpW(bstrName, L"propGetFunc")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_PROPGETFUNC;
         return S_OK;
     }
-    if(!strcmp_wa(bstrName, "objectFlag")) {
+    if(!lstrcmpW(bstrName, L"objectFlag")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_OBJECT_FLAG;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "isWin64")) {
+    if(!lstrcmpW(bstrName, L"isWin64")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_ISWIN64;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "pureDisp")) {
+    if(!lstrcmpW(bstrName, L"pureDisp")) {
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_PUREDISP;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "propArgPutG")) {
+    if(!lstrcmpW(bstrName, L"propArgPutG")) {
         CHECK_EXPECT(global_propargput_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_PROPARGPUT;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "propArgPutOp")) {
+    if(!lstrcmpW(bstrName, L"propArgPutOp")) {
         CHECK_EXPECT(global_propargputop_d);
         test_grfdex(grfdex, fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_PROPARGPUTOP;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "propArgPutO")) {
+    if(!lstrcmpW(bstrName, L"throwInt")) {
+        test_grfdex(grfdex, fdexNameCaseSensitive);
+        *pid = DISPID_GLOBAL_THROWINT;
+        return S_OK;
+    }
+
+    if(!lstrcmpW(bstrName, L"throwEI")) {
+        test_grfdex(grfdex, fdexNameCaseSensitive);
+        *pid = DISPID_GLOBAL_THROWEI;
+        return S_OK;
+    }
+
+    if(!lstrcmpW(bstrName, L"propArgPutO")) {
         CHECK_EXPECT(global_propargput_d);
         test_grfdex(grfdex, fdexNameEnsure|fdexNameCaseSensitive);
         *pid = DISPID_GLOBAL_PROPARGPUT;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "shortProp")) {
+    if(!lstrcmpW(bstrName, L"shortProp")) {
         *pid = DISPID_GLOBAL_SHORTPROP;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "getShort")) {
+    if(!lstrcmpW(bstrName, L"getShort")) {
         *pid = DISPID_GLOBAL_GETSHORT;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "testArgTypes")) {
+    if(!lstrcmpW(bstrName, L"v_date")) {
+        *pid = DISPID_GLOBAL_VDATE;
+        return S_OK;
+    }
+
+    if(!lstrcmpW(bstrName, L"v_cy")) {
+        *pid = DISPID_GLOBAL_VCY;
+        return S_OK;
+    }
+
+    if(!lstrcmpW(bstrName, L"testArgTypes")) {
         *pid = DISPID_GLOBAL_TESTARGTYPES;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "intProp")) {
+    if(!lstrcmpW(bstrName, L"intProp")) {
         *pid = DISPID_GLOBAL_INTPROP;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "dispUnk")) {
+    if(!lstrcmpW(bstrName, L"dispUnk")) {
         *pid = DISPID_GLOBAL_DISPUNK;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "testRes")) {
+    if(!lstrcmpW(bstrName, L"testRes")) {
         *pid = DISPID_GLOBAL_TESTRES;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "testNoRes")) {
+    if(!lstrcmpW(bstrName, L"testNoRes")) {
         *pid = DISPID_GLOBAL_TESTNORES;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "dispexFunc")) {
+    if(!lstrcmpW(bstrName, L"dispexFunc")) {
         *pid = DISPID_GLOBAL_DISPEXFUNC;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "getScriptState")) {
+    if(!lstrcmpW(bstrName, L"getScriptState")) {
         *pid = DISPID_GLOBAL_GETSCRIPTSTATE;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "bindEventHandler")) {
+    if(!lstrcmpW(bstrName, L"bindEventHandler")) {
         *pid = DISPID_GLOBAL_BINDEVENTHANDLER;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "testEnumObj")) {
+    if(!lstrcmpW(bstrName, L"testEnumObj")) {
         *pid = DISPID_GLOBAL_TESTENUMOBJ;
         return S_OK;
     }
 
-    if(!strcmp_wa(bstrName, "callEval")) {
+    if(!lstrcmpW(bstrName, L"callEval")) {
         *pid = DISPID_GLOBAL_CALLEVAL;
         return S_OK;
     }
 
-    if(strict_dispid_check && strcmp_wa(bstrName, "t"))
+    if(!lstrcmpW(bstrName, L"testDestrObj")) {
+        *pid = DISPID_GLOBAL_TESTDESTROBJ;
+        return S_OK;
+    }
+
+    if(strict_dispid_check && lstrcmpW(bstrName, L"t"))
         ok(0, "unexpected call %s\n", wine_dbgstr_w(bstrName));
     return DISP_E_UNKNOWNNAME;
 }
@@ -1035,6 +1253,25 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
 #ifndef __REACTOS__ // Fails on Windows 2003
         ok(V_BOOL(pdp->rgvarg+1), "%s: %s\n", test_name, wine_dbgstr_w(V_BSTR(pdp->rgvarg)));
 #endif
+
+        return S_OK;
+
+    case DISPID_GLOBAL_TODOWINE:
+        ok(wFlags == INVOKE_FUNC || wFlags == (INVOKE_FUNC|INVOKE_PROPERTYGET), "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(pdp->cArgs == 2, "cArgs = %d\n", pdp->cArgs);
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        if(wFlags & INVOKE_PROPERTYGET)
+            ok(pvarRes != NULL, "pvarRes == NULL\n");
+        else
+            ok(!pvarRes, "pvarRes != NULL\n");
+        ok(pei != NULL, "pei == NULL\n");
+
+        ok(V_VT(pdp->rgvarg) == VT_BSTR, "V_VT(pdp->rgvarg) = %d\n", V_VT(pdp->rgvarg));
+        ok(V_VT(pdp->rgvarg+1) == VT_BOOL, "V_VT(pdp->rgvarg+1) = %d\n", V_VT(pdp->rgvarg+1));
+        todo_wine ok(V_BOOL(pdp->rgvarg+1), "%s: %s\n", test_name, wine_dbgstr_w(V_BSTR(pdp->rgvarg)));
 
         return S_OK;
 
@@ -1095,11 +1332,11 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         ok(pdp->rgdispidNamedArgs != NULL, "rgdispidNamedArgs == NULL\n");
         ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
         ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
-        ok(pdp->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT, "pdp->rgdispidNamedArgs[0] = %d\n", pdp->rgdispidNamedArgs[0]);
+        ok(pdp->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT, "pdp->rgdispidNamedArgs[0] = %ld\n", pdp->rgdispidNamedArgs[0]);
         ok(!pvarRes, "pvarRes != NULL\n");
 
         ok(V_VT(pdp->rgvarg) == VT_I4, "V_VT(pdp->rgvarg)=%d\n", V_VT(pdp->rgvarg));
-        ok(V_I4(pdp->rgvarg) == 1, "V_I4(pdp->rgvarg)=%d\n", V_I4(pdp->rgvarg));
+        ok(V_I4(pdp->rgvarg) == 1, "V_I4(pdp->rgvarg)=%ld\n", V_I4(pdp->rgvarg));
         return S_OK;
 
     case DISPID_GLOBAL_TESTPROPPUTREF:
@@ -1111,7 +1348,7 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         ok(pdp->rgdispidNamedArgs != NULL, "rgdispidNamedArgs == NULL\n");
         ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
         ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
-        ok(pdp->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT, "pdp->rgdispidNamedArgs[0] = %d\n", pdp->rgdispidNamedArgs[0]);
+        ok(pdp->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT, "pdp->rgdispidNamedArgs[0] = %ld\n", pdp->rgdispidNamedArgs[0]);
         ok(!pvarRes, "pvarRes != NULL\n");
 
         ok(V_VT(pdp->rgvarg) == VT_DISPATCH, "V_VT(pdp->rgvarg)=%d\n", V_VT(pdp->rgvarg));
@@ -1130,28 +1367,31 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         V_VT(pvarRes) = VT_BSTR;
         switch(V_VT(pdp->rgvarg)) {
         case VT_EMPTY:
-            V_BSTR(pvarRes) = a2bstr("VT_EMPTY");
+            V_BSTR(pvarRes) = SysAllocString(L"VT_EMPTY");
             break;
         case VT_NULL:
-            V_BSTR(pvarRes) = a2bstr("VT_NULL");
+            V_BSTR(pvarRes) = SysAllocString(L"VT_NULL");
             break;
         case VT_I4:
-            V_BSTR(pvarRes) = a2bstr("VT_I4");
+            V_BSTR(pvarRes) = SysAllocString(L"VT_I4");
             break;
         case VT_R8:
-            V_BSTR(pvarRes) = a2bstr("VT_R8");
+            V_BSTR(pvarRes) = SysAllocString(L"VT_R8");
             break;
         case VT_BSTR:
-            V_BSTR(pvarRes) = a2bstr("VT_BSTR");
+            V_BSTR(pvarRes) = SysAllocString(L"VT_BSTR");
             break;
         case VT_DISPATCH:
-            V_BSTR(pvarRes) = a2bstr("VT_DISPATCH");
+            V_BSTR(pvarRes) = SysAllocString(L"VT_DISPATCH");
             break;
         case VT_BOOL:
-            V_BSTR(pvarRes) = a2bstr("VT_BOOL");
+            V_BSTR(pvarRes) = SysAllocString(L"VT_BOOL");
             break;
         case VT_ARRAY|VT_VARIANT:
-            V_BSTR(pvarRes) = a2bstr("VT_ARRAY|VT_VARIANT");
+            V_BSTR(pvarRes) = SysAllocString(L"VT_ARRAY|VT_VARIANT");
+            break;
+        case VT_DATE:
+            V_BSTR(pvarRes) = SysAllocString(L"VT_DATE");
             break;
         default:
             ok(0, "unknown vt %d\n", V_VT(pdp->rgvarg));
@@ -1187,6 +1427,22 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
 
         V_VT(pvarRes) = VT_DISPATCH;
         V_DISPATCH(pvarRes) = (IDispatch*)&testObj;
+        return S_OK;
+
+    case DISPID_GLOBAL_TESTDESTROBJ:
+        ok(wFlags == INVOKE_PROPERTYGET, "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(!pdp->rgvarg, "rgvarg != NULL\n");
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(!pdp->cArgs, "cArgs = %d\n", pdp->cArgs);
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pvarRes != NULL, "pvarRes == NULL\n");
+        ok(V_VT(pvarRes) ==  VT_EMPTY, "V_VT(pvarRes) = %d\n", V_VT(pvarRes));
+        ok(pei != NULL, "pei == NULL\n");
+
+        V_VT(pvarRes) = VT_DISPATCH;
+        V_DISPATCH(pvarRes) = (IDispatch*)&testDestrObj;
+        IDispatch_AddRef(V_DISPATCH(pvarRes));
         return S_OK;
 
     case DISPID_GLOBAL_PUREDISP:
@@ -1365,7 +1621,7 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         HRESULT hres;
 
         hres = IActiveScript_GetScriptState(script_engine, &state);
-        ok(hres == S_OK, "GetScriptState failed: %08x\n", hres);
+        ok(hres == S_OK, "GetScriptState failed: %08lx\n", hres);
 
         V_VT(pvarRes) = VT_I4;
         V_I4(pvarRes) = state;
@@ -1385,18 +1641,18 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         ok(pdp->rgdispidNamedArgs != NULL, "rgdispidNamedArgs == NULL\n");
         ok(pdp->cArgs == 3, "cArgs = %d\n", pdp->cArgs);
         ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
-        ok(pdp->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT, "pdp->rgdispidNamedArgs[0] = %d\n", pdp->rgdispidNamedArgs[0]);
+        ok(pdp->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT, "pdp->rgdispidNamedArgs[0] = %ld\n", pdp->rgdispidNamedArgs[0]);
         ok(!pvarRes, "pvarRes != NULL\n");
         ok(pei != NULL, "pei == NULL\n");
 
         ok(V_VT(pdp->rgvarg) == VT_I4, "V_VT(pdp->rgvarg) = %d\n", V_VT(pdp->rgvarg));
-        ok(V_I4(pdp->rgvarg) == 2, "V_I4(pdp->rgvarg) = %d\n", V_I4(pdp->rgvarg));
+        ok(V_I4(pdp->rgvarg) == 2, "V_I4(pdp->rgvarg) = %ld\n", V_I4(pdp->rgvarg));
 
         ok(V_VT(pdp->rgvarg+1) == VT_I4, "V_VT(pdp->rgvarg+1) = %d\n", V_VT(pdp->rgvarg+1));
-        ok(V_I4(pdp->rgvarg+1) == 1, "V_I4(pdp->rgvarg+1) = %d\n", V_I4(pdp->rgvarg+1));
+        ok(V_I4(pdp->rgvarg+1) == 1, "V_I4(pdp->rgvarg+1) = %ld\n", V_I4(pdp->rgvarg+1));
 
         ok(V_VT(pdp->rgvarg+2) == VT_I4, "V_VT(pdp->rgvarg+2) = %d\n", V_VT(pdp->rgvarg+2));
-        ok(V_I4(pdp->rgvarg+2) == 0, "V_I4(pdp->rgvarg+2) = %d\n", V_I4(pdp->rgvarg+2));
+        ok(V_I4(pdp->rgvarg+2) == 0, "V_I4(pdp->rgvarg+2) = %ld\n", V_I4(pdp->rgvarg+2));
         return S_OK;
 
     case DISPID_GLOBAL_PROPARGPUTOP:
@@ -1415,10 +1671,10 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
             ok(pvarRes != NULL, "pvarRes = NULL\n");
 
             ok(V_VT(pdp->rgvarg) == VT_I4, "V_VT(pdp->rgvarg) = %d\n", V_VT(pdp->rgvarg));
-            ok(V_I4(pdp->rgvarg) == 1, "V_I4(pdp->rgvarg) = %d\n", V_I4(pdp->rgvarg));
+            ok(V_I4(pdp->rgvarg) == 1, "V_I4(pdp->rgvarg) = %ld\n", V_I4(pdp->rgvarg));
 
             ok(V_VT(pdp->rgvarg+1) == VT_I4, "V_VT(pdp->rgvarg+1) = %d\n", V_VT(pdp->rgvarg+1));
-            ok(V_I4(pdp->rgvarg+1) == 0, "V_I4(pdp->rgvarg+1) = %d\n", V_I4(pdp->rgvarg+1));
+            ok(V_I4(pdp->rgvarg+1) == 0, "V_I4(pdp->rgvarg+1) = %ld\n", V_I4(pdp->rgvarg+1));
 
             V_VT(pvarRes) = VT_I4;
             V_I4(pvarRes) = 6;
@@ -1427,20 +1683,20 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
             CHECK_EXPECT(global_propargputop_put_i);
 
             ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
-            ok(pdp->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT, "pdp->rgdispidNamedArgs[0] = %d\n", pdp->rgdispidNamedArgs[0]);
+            ok(pdp->rgdispidNamedArgs[0] == DISPID_PROPERTYPUT, "pdp->rgdispidNamedArgs[0] = %ld\n", pdp->rgdispidNamedArgs[0]);
             ok(pdp->rgdispidNamedArgs != NULL, "rgdispidNamedArgs == NULL\n");
             ok(pdp->cArgs == 3, "cArgs = %d\n", pdp->cArgs);
             ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
             ok(!pvarRes, "pvarRes != NULL\n");
 
             ok(V_VT(pdp->rgvarg) == VT_I4, "V_VT(pdp->rgvarg) = %d\n", V_VT(pdp->rgvarg));
-            ok(V_I4(pdp->rgvarg) == 8, "V_I4(pdp->rgvarg) = %d\n", V_I4(pdp->rgvarg));
+            ok(V_I4(pdp->rgvarg) == 8, "V_I4(pdp->rgvarg) = %ld\n", V_I4(pdp->rgvarg));
 
             ok(V_VT(pdp->rgvarg+1) == VT_I4, "V_VT(pdp->rgvarg+1) = %d\n", V_VT(pdp->rgvarg+1));
-            ok(V_I4(pdp->rgvarg+1) == 1, "V_I4(pdp->rgvarg+1) = %d\n", V_I4(pdp->rgvarg+1));
+            ok(V_I4(pdp->rgvarg+1) == 1, "V_I4(pdp->rgvarg+1) = %ld\n", V_I4(pdp->rgvarg+1));
 
             ok(V_VT(pdp->rgvarg+2) == VT_I4, "V_VT(pdp->rgvarg+2) = %d\n", V_VT(pdp->rgvarg+2));
-            ok(V_I4(pdp->rgvarg+2) == 0, "V_I4(pdp->rgvarg+2) = %d\n", V_I4(pdp->rgvarg+2));
+            ok(V_I4(pdp->rgvarg+2) == 0, "V_I4(pdp->rgvarg+2) = %ld\n", V_I4(pdp->rgvarg+2));
             break;
         default:
             ok(0, "wFlags = %x\n", wFlags);
@@ -1454,41 +1710,41 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         HRESULT hres;
 
         hres = IDispatch_QueryInterface(script_disp, &IID_IDispatchEx, (void**)&dispex);
-        ok(hres == S_OK, "hres = %x\n", hres);
+        ok(hres == S_OK, "hres = %lx\n", hres);
 
-        str = a2bstr("Object");
+        str = SysAllocString(L"Object");
         hres = IDispatchEx_GetDispID(dispex, str, fdexNameCaseSensitive, &id);
         SysFreeString(str);
-        ok(hres == S_OK, "hres = %x\n", hres);
+        ok(hres == S_OK, "hres = %lx\n", hres);
 
         hres = IDispatchEx_InvokeEx(dispex, id, lcid, DISPATCH_METHOD, pdp, NULL, pei, pspCaller);
-        ok(hres == S_OK, "hres = %x\n", hres);
+        ok(hres == S_OK, "hres = %lx\n", hres);
 
         V_VT(pvarRes) = VT_EMPTY;
         hres = IDispatchEx_InvokeEx(dispex, id, lcid, DISPATCH_METHOD, pdp, pvarRes, pei, pspCaller);
-        ok(hres == S_OK, "hres = %x\n", hres);
+        ok(hres == S_OK, "hres = %lx\n", hres);
         ok(V_VT(pvarRes) == VT_DISPATCH, "V_VT(pvarRes) = %d\n", V_VT(pvarRes));
         VariantClear(pvarRes);
 
         hres = IDispatchEx_InvokeEx(dispex, id, lcid, DISPATCH_METHOD|DISPATCH_PROPERTYGET, pdp, NULL, pei, pspCaller);
-        ok(hres == S_OK, "hres = %x\n", hres);
+        ok(hres == S_OK, "hres = %lx\n", hres);
 
         V_VT(pvarRes) = VT_EMPTY;
         hres = IDispatchEx_InvokeEx(dispex, id, lcid, DISPATCH_CONSTRUCT, pdp, pvarRes, pei, pspCaller);
-        ok(hres == S_OK, "hres = %x\n", hres);
+        ok(hres == S_OK, "hres = %lx\n", hres);
         ok(V_VT(pvarRes) == VT_DISPATCH, "V_VT(pvarRes) = %d\n", V_VT(pvarRes));
         VariantClear(pvarRes);
 
         hres = IDispatchEx_InvokeEx(dispex, id, lcid, DISPATCH_CONSTRUCT, pdp, NULL, pei, pspCaller);
-        ok(hres == S_OK, "hres = %x\n", hres);
+        ok(hres == S_OK, "hres = %lx\n", hres);
 
         V_VT(pvarRes) = VT_EMPTY;
         hres = IDispatchEx_InvokeEx(dispex, id, lcid, DISPATCH_CONSTRUCT|DISPATCH_PROPERTYGET, pdp, pvarRes, pei, pspCaller);
-        ok(hres == E_INVALIDARG, "hres = %x\n", hres);
+        ok(hres == E_INVALIDARG, "hres = %lx\n", hres);
 
         V_VT(pvarRes) = VT_EMPTY;
         hres = IDispatchEx_InvokeEx(dispex, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
-        ok(hres == S_OK, "hres = %x\n", hres);
+        ok(hres == S_OK, "hres = %lx\n", hres);
         ok(V_VT(pvarRes) == VT_DISPATCH, "V_VT(pvarRes) = %d\n", V_VT(pvarRes));
         IDispatchEx_Release(dispex);
         return S_OK;
@@ -1497,6 +1753,46 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
     case DISPID_GLOBAL_GETSHORT:
         V_VT(pvarRes) = VT_I2;
         V_I2(pvarRes) = 10;
+        return S_OK;
+
+    case DISPID_GLOBAL_VDATE:
+        ok(wFlags == (DISPATCH_METHOD|DISPATCH_PROPERTYGET), "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
+        ok(pvarRes != NULL, "pvarRes != NULL\n");
+        V_VT(pvarRes) = VT_DATE;
+        switch(V_VT(pdp->rgvarg))
+        {
+        case VT_I4:
+            V_DATE(pvarRes) = V_I4(pdp->rgvarg);
+            break;
+        case VT_R8:
+            V_DATE(pvarRes) = V_R8(pdp->rgvarg);
+            break;
+        default:
+            ok(0, "vt = %u\n", V_VT(pdp->rgvarg));
+            return E_INVALIDARG;
+        }
+        return S_OK;
+
+    case DISPID_GLOBAL_VCY:
+        ok(wFlags == (DISPATCH_METHOD|DISPATCH_PROPERTYGET), "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
+        ok(pvarRes != NULL, "pvarRes != NULL\n");
+        V_VT(pvarRes) = VT_CY;
+        switch(V_VT(pdp->rgvarg))
+        {
+        case VT_I4:
+            V_CY(pvarRes).int64 = V_I4(pdp->rgvarg);
+            break;
+        case VT_R8:
+            V_CY(pvarRes).int64 = V_R8(pdp->rgvarg);
+            break;
+        default:
+            ok(0, "vt = %u\n", V_VT(pdp->rgvarg));
+            return E_INVALIDARG;
+        }
         return S_OK;
 
     case DISPID_GLOBAL_INTPROP:
@@ -1522,16 +1818,16 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         ok(!pvarRes, "pvarRes != NULL\n");
 
         ok(V_VT(pdp->rgvarg+1) == VT_I4, "V_VT(pdp->rgvarg+1) = %d\n", V_VT(pdp->rgvarg+1));
-        ok(V_I4(pdp->rgvarg+1) == 10, "V_I4(pdp->rgvarg+1) = %d\n", V_I4(pdp->rgvarg+1));
+        ok(V_I4(pdp->rgvarg+1) == 10, "V_I4(pdp->rgvarg+1) = %ld\n", V_I4(pdp->rgvarg+1));
 
         ok(V_VT(pdp->rgvarg+2) == VT_I4, "V_VT(pdp->rgvarg+2) = %d\n", V_VT(pdp->rgvarg+2));
-        ok(V_I4(pdp->rgvarg+2) == 10, "V_I4(pdp->rgvarg+2) = %d\n", V_I4(pdp->rgvarg+2));
+        ok(V_I4(pdp->rgvarg+2) == 10, "V_I4(pdp->rgvarg+2) = %ld\n", V_I4(pdp->rgvarg+2));
 
         ok(V_VT(pdp->rgvarg+3) == VT_I4, "V_VT(pdp->rgvarg+3) = %d\n", V_VT(pdp->rgvarg+3));
-        ok(V_I4(pdp->rgvarg+3) == 22, "V_I4(pdp->rgvarg+3) = %d\n", V_I4(pdp->rgvarg+3));
+        ok(V_I4(pdp->rgvarg+3) == 22, "V_I4(pdp->rgvarg+3) = %ld\n", V_I4(pdp->rgvarg+3));
 
         ok(V_VT(pdp->rgvarg+4) == VT_I4, "V_VT(pdp->rgvarg+4) = %d\n", V_VT(pdp->rgvarg+4));
-        ok(V_I4(pdp->rgvarg+4) == 22, "V_I4(pdp->rgvarg+4) = %d\n", V_I4(pdp->rgvarg+4));
+        ok(V_I4(pdp->rgvarg+4) == 22, "V_I4(pdp->rgvarg+4) = %ld\n", V_I4(pdp->rgvarg+4));
 
         ok(V_VT(pdp->rgvarg+5) == VT_DISPATCH, "V_VT(pdp->rgvarg+5) = %d\n", V_VT(pdp->rgvarg+5));
         ok(V_DISPATCH(pdp->rgvarg+5) == (IDispatch*)&testObj, "V_DISPATCH(pdp->rgvarg+5) != testObj\n");
@@ -1561,7 +1857,7 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         V_VT(&v) = VT_I4;
         V_I4(&v) = 2;
         hres = IDispatch_Invoke(V_DISPATCH(pdp->rgvarg), DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dp, NULL, NULL, NULL);
-        ok(hres == S_OK, "Invoke failed: %08x\n", hres);
+        ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
 
         return S_OK;
     }
@@ -1584,7 +1880,7 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
 
         ok(V_VT(pdp->rgvarg) == VT_DISPATCH, "V_VT(arg) = %d\n", V_VT(pdp->rgvarg));
         hres = IDispatch_QueryInterface(V_DISPATCH(pdp->rgvarg), &IID_IDispatchEx, (void**)&eval_func);
-        ok(hres == S_OK, "Could not get IDispatchEx iface: %08x\n", hres);
+        ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
 
         params.rgvarg = &arg;
         params.rgdispidNamedArgs = NULL;
@@ -1592,19 +1888,92 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         params.cNamedArgs = 0;
         V_VT(&arg) = VT_BSTR;
 
-        V_BSTR(&arg) = a2bstr("var x = 5; v");
+        V_BSTR(&arg) = SysAllocString(L"var x = 5; v");
         V_VT(&res) = VT_ERROR;
         hres = IDispatchEx_InvokeEx(eval_func, DISPID_VALUE, 0, DISPATCH_METHOD, &params, &res, NULL, NULL);
-        ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+        ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
         ok(V_VT(&res) == VT_I4, "eval returned type %u\n", V_VT(&res));
-        ok(V_I4(&res) == 2, "eval returned %d\n", V_I4(&res));
+        ok(V_I4(&res) == 2, "eval returned %ld\n", V_I4(&res));
         SysFreeString(V_BSTR(&arg));
         IDispatchEx_Release(eval_func);
         return S_OK;
     }
+    case DISPID_GLOBAL_THROWINT: {
+        VARIANT *v = pdp->rgvarg;
+        HRESULT hres;
+
+        ok(wFlags == INVOKE_FUNC, "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pei != NULL, "pei == NULL\n");
+        if(pvarRes) {
+            ok(V_VT(pvarRes) == VT_EMPTY, "V_VT(pvarRes) = %d\n", V_VT(pvarRes));
+            V_VT(pvarRes) = VT_BOOL;
+            V_BOOL(pvarRes) = VARIANT_FALSE;
+        }
+
+        switch(V_VT(v)) {
+        case VT_I4:
+            hres = V_I4(v);
+            break;
+        case VT_R8:
+            hres = (HRESULT)V_R8(v);
+            break;
+        default:
+            ok(0, "unexpected vt %d\n", V_VT(v));
+            return E_INVALIDARG;
+        }
+        return hres;
     }
 
-    ok(0, "unexpected call %x\n", id);
+    case DISPID_GLOBAL_THROWEI: {
+        VARIANT *v = pdp->rgvarg + pdp->cArgs - 1;
+        HRESULT hres;
+
+        ok(wFlags == INVOKE_FUNC, "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(pdp->cArgs == 1 || pdp->cArgs == 2, "cArgs = %d\n", pdp->cArgs);
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pei != NULL, "pei == NULL\n");
+        if(pvarRes) {
+            ok(V_VT(pvarRes) == VT_EMPTY, "V_VT(pvarRes) = %d\n", V_VT(pvarRes));
+            V_VT(pvarRes) = VT_BOOL;
+            V_BOOL(pvarRes) = VARIANT_FALSE;
+        }
+
+        switch(V_VT(v)) {
+        case VT_I4:
+            hres = V_I4(v);
+            break;
+        case VT_R8:
+            hres = (HRESULT)V_R8(v);
+            break;
+        default:
+            ok(0, "unexpected vt %d\n", V_VT(v));
+            return E_INVALIDARG;
+        }
+
+        pei->scode = hres;
+        if(pdp->cArgs == 1) {
+            pei->bstrSource = SysAllocString(L"test source");
+            pei->bstrDescription = SysAllocString(L"test description");
+        }else if(V_VT(pdp->rgvarg) == VT_BOOL && V_BOOL(pdp->rgvarg)) {
+            pei->pfnDeferredFillIn = test_deferred_fill_in;
+            pei->bstrSource = SysAllocString(L"source before defer");
+            pei->bstrDescription = SysAllocString(L"desc before defer");
+            pei->bstrHelpFile = SysAllocString(L"help before defer");
+            pei->dwHelpContext = 1337;
+        }
+        return DISP_E_EXCEPTION;
+    }
+    }
+
+    ok(0, "unexpected call %lx\n", id);
     return DISP_E_MEMBERNOTFOUND;
 }
 
@@ -1621,7 +1990,7 @@ static HRESULT WINAPI Global_DeleteMemberByDispID(IDispatchEx *iface, DISPID id)
         CHECK_EXPECT(DeleteMemberByDispID_error);
         return E_FAIL;
     default:
-        ok(0, "id = %d\n", id);
+        ok(0, "id = %ld\n", id);
     }
 
     return E_FAIL;
@@ -1674,19 +2043,19 @@ static ULONG WINAPI ActiveScriptSite_Release(IActiveScriptSite *iface)
 
 static HRESULT WINAPI ActiveScriptSite_GetLCID(IActiveScriptSite *iface, LCID *plcid)
 {
-    *plcid = GetUserDefaultLCID();
+    *plcid = use_english ? MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT) : GetUserDefaultLCID();
     return S_OK;
 }
 
 static HRESULT WINAPI ActiveScriptSite_GetItemInfo(IActiveScriptSite *iface, LPCOLESTR pstrName,
         DWORD dwReturnMask, IUnknown **ppiunkItem, ITypeInfo **ppti)
 {
-    ok(dwReturnMask == SCRIPTINFO_IUNKNOWN, "unexpected dwReturnMask %x\n", dwReturnMask);
+    ok(dwReturnMask == SCRIPTINFO_IUNKNOWN, "unexpected dwReturnMask %lx\n", dwReturnMask);
     ok(!ppti, "ppti != NULL\n");
 
-    if(!strcmp_wa(pstrName, test_valA))
+    if(!lstrcmpW(pstrName, L"testVal"))
         CHECK_EXPECT(GetItemInfo_testVal);
-    else if(strcmp_wa(pstrName, testA))
+    else if(lstrcmpW(pstrName, L"test"))
         ok(0, "unexpected pstrName %s\n", wine_dbgstr_w(pstrName));
 
     *ppiunkItem = (IUnknown*)&Global;
@@ -1723,8 +2092,6 @@ static HRESULT WINAPI ActiveScriptSite_OnLeaveScript(IActiveScriptSite *iface)
 {
     return E_NOTIMPL;
 }
-
-#undef ACTSCPSITE_THIS
 
 static const IActiveScriptSiteVtbl ActiveScriptSiteVtbl = {
     ActiveScriptSite_QueryInterface,
@@ -1777,7 +2144,7 @@ static HRESULT set_script_prop(IActiveScript *engine, DWORD property, VARIANT *v
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptProperty,
             (void**)&script_prop);
-    ok(hres == S_OK, "Could not get IActiveScriptProperty iface: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptProperty iface: %08lx\n", hres);
 
     hres = IActiveScriptProperty_SetProperty(script_prop, property, NULL, val);
     IActiveScriptProperty_Release(script_prop);
@@ -1793,12 +2160,12 @@ static IActiveScript *create_script(void)
 
     hres = CoCreateInstance(engine_clsid, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
             &IID_IActiveScript, (void**)&script);
-    ok(hres == S_OK, "CoCreateInstance failed: %08x\n", hres);
+    ok(hres == S_OK, "CoCreateInstance failed: %08lx\n", hres);
 
     V_VT(&v) = VT_I4;
     V_I4(&v) = invoke_version;
     hres = set_script_prop(script, SCRIPTPROP_INVOKEVERSIONING, &v);
-    ok(hres == S_OK || broken(hres == E_NOTIMPL), "SetProperty(SCRIPTPROP_INVOKEVERSIONING) failed: %08x\n", hres);
+    ok(hres == S_OK || broken(hres == E_NOTIMPL), "SetProperty(SCRIPTPROP_INVOKEVERSIONING) failed: %08lx\n", hres);
     if(invoke_version && FAILED(hres)) {
         IActiveScript_Release(script);
         return NULL;
@@ -1807,7 +2174,7 @@ static IActiveScript *create_script(void)
     return script;
 }
 
-static HRESULT parse_script(DWORD flags, BSTR script_str)
+static HRESULT parse_script(DWORD flags, const WCHAR *script_str)
 {
     IActiveScriptParse *parser;
     IActiveScript *engine;
@@ -1818,7 +2185,7 @@ static HRESULT parse_script(DWORD flags, BSTR script_str)
         return S_OK;
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
     if (FAILED(hres))
     {
         IActiveScript_Release(engine);
@@ -1826,20 +2193,20 @@ static HRESULT parse_script(DWORD flags, BSTR script_str)
     }
 
     hres = IActiveScriptParse_InitNew(parser);
-    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+    ok(hres == S_OK, "InitNew failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
-    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptSite failed: %08lx\n", hres);
 
-    hres = IActiveScript_AddNamedItem(engine, testW,
+    hres = IActiveScript_AddNamedItem(engine, L"test",
             SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|flags);
-    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+    ok(hres == S_OK, "AddNamedItem failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
 
     hres = IActiveScript_GetScriptDispatch(engine, NULL, &script_disp);
-    ok(hres == S_OK, "GetScriptDispatch failed: %08x\n", hres);
+    ok(hres == S_OK, "GetScriptDispatch failed: %08lx\n", hres);
     ok(script_disp != NULL, "script_disp == NULL\n");
     ok(script_disp != (IDispatch*)&Global, "script_disp == Global\n");
 
@@ -1852,14 +2219,13 @@ static HRESULT parse_script(DWORD flags, BSTR script_str)
     return hres;
 }
 
-static HRESULT invoke_procedure(const char *argsa, const char *sourcea, DISPPARAMS *dp)
+static HRESULT invoke_procedure(const WCHAR *args, const WCHAR *source, DISPPARAMS *dp)
 {
     IActiveScriptParseProcedure2 *parse_proc;
     IActiveScriptParse *parser;
     IActiveScript *engine;
     IDispatchEx *dispex;
     EXCEPINFO ei = {0};
-    BSTR source, args;
     IDispatch *disp;
     VARIANT res;
     HRESULT hres;
@@ -1869,36 +2235,32 @@ static HRESULT invoke_procedure(const char *argsa, const char *sourcea, DISPPARA
         return S_OK;
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
 
     hres = IActiveScriptParse_InitNew(parser);
-    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+    ok(hres == S_OK, "InitNew failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
-    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptSite failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParseProcedure2, (void**)&parse_proc);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
 
-    source = a2bstr(sourcea);
-    args = argsa ? a2bstr(argsa) : NULL;
-    hres = IActiveScriptParseProcedure2_ParseProcedureText(parse_proc, source, args, emptyW, NULL, NULL, NULL, 0, 0,
+    hres = IActiveScriptParseProcedure2_ParseProcedureText(parse_proc, source, args, L"", NULL, NULL, NULL, 0, 0,
         SCRIPTPROC_HOSTMANAGESSOURCE|SCRIPTPROC_IMPLICIT_THIS|SCRIPTPROC_IMPLICIT_PARENTS, &disp);
-    ok(hres == S_OK, "ParseProcedureText failed: %08x\n", hres);
-    SysFreeString(source);
-    SysFreeString(args);
+    ok(hres == S_OK, "ParseProcedureText failed: %08lx\n", hres);
 
     hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
-    ok(hres == S_OK, "Could not get IDispatchEx iface: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
     IDispatch_Release(disp);
 
     V_VT(&res) = VT_EMPTY;
     hres = IDispatchEx_InvokeEx(dispex, DISPID_VALUE, 0, DISPATCH_METHOD, dp, &res, &ei, NULL);
-    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
-    ok(V_VT(&res) == VT_BOOL && V_BOOL(&res), "InvokeEx returned vt %d (%x)\n", V_VT(&res), V_I4(&res));
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    ok(V_VT(&res) == VT_BOOL && V_BOOL(&res), "InvokeEx returned vt %d (%lx)\n", V_VT(&res), V_I4(&res));
     IDispatchEx_Release(dispex);
 
     IActiveScriptParseProcedure2_Release(parse_proc);
@@ -1908,19 +2270,18 @@ static HRESULT invoke_procedure(const char *argsa, const char *sourcea, DISPPARA
     return hres;
 }
 
-static HRESULT parse_htmlscript(BSTR script_str)
+static HRESULT parse_htmlscript(const WCHAR *script_str)
 {
     IActiveScriptParse *parser;
     IActiveScript *engine;
     HRESULT hres;
-    BSTR tmp = a2bstr("</SCRIPT>");
 
     engine = create_script();
     if(!engine)
         return E_FAIL;
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
     if (FAILED(hres))
     {
         IActiveScript_Release(engine);
@@ -1928,221 +2289,420 @@ static HRESULT parse_htmlscript(BSTR script_str)
     }
 
     hres = IActiveScriptParse_InitNew(parser);
-    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+    ok(hres == S_OK, "InitNew failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
-    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptSite failed: %08lx\n", hres);
 
-    hres = IActiveScript_AddNamedItem(engine, testW,
+    hres = IActiveScript_AddNamedItem(engine, L"test",
             SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|SCRIPTITEM_GLOBALMEMBERS);
-    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+    ok(hres == S_OK, "AddNamedItem failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
 
-    hres = IActiveScriptParse_ParseScriptText(parser, script_str, NULL, NULL, tmp, 0, 0, 0, NULL, NULL);
+    hres = IActiveScriptParse_ParseScriptText(parser, script_str, NULL, NULL, L"</SCRIPT>", 0, 0, 0, NULL, NULL);
 
     IActiveScript_Release(engine);
     IActiveScriptParse_Release(parser);
-    SysFreeString(tmp);
-
     return hres;
 }
 
-static void test_IActiveScriptError(IActiveScriptError *error, SCODE errorcode, ULONG line, LONG pos, BSTR script_source, BSTR description, BSTR line_text)
-{
-    HRESULT hres;
-    DWORD source_context;
-    ULONG line_number;
-    LONG char_position;
-    BSTR linetext;
-    EXCEPINFO excep;
+#define ERROR_TODO_PARSE        0x0001
+#define ERROR_TODO_SCODE        0x0002
+#define ERROR_TODO_DESCRIPTION  0x0004
+#define ERROR_TODO_HELPFILE     0x0008
 
-    /* IActiveScriptError_GetSourcePosition */
-
-    hres = IActiveScriptError_GetSourcePosition(error, NULL, NULL, NULL);
-    ok(hres == S_OK, "IActiveScriptError_GetSourcePosition -- hres: expected S_OK, got 0x%08x\n", hres);
-
-    source_context = 0xdeadbeef;
-    hres = IActiveScriptError_GetSourcePosition(error, &source_context, NULL, NULL);
-    ok(hres == S_OK, "IActiveScriptError_GetSourcePosition -- hres: expected S_OK, got 0x%08x\n", hres);
-    ok(source_context == 0, "IActiveScriptError_GetSourcePosition -- source_context: expected 0, got 0x%08x\n", source_context);
-
-    line_number = 0xdeadbeef;
-    hres = IActiveScriptError_GetSourcePosition(error, NULL, &line_number, NULL);
-    ok(hres == S_OK, "IActiveScriptError_GetSourcePosition -- hres: expected S_OK, got 0x%08x\n", hres);
-    ok(line_number == line, "IActiveScriptError_GetSourcePosition -- line_number: expected %d, got %d\n", line, line_number);
-
-    char_position = 0xdeadbeef;
-    hres = IActiveScriptError_GetSourcePosition(error, NULL, NULL, &char_position);
-    ok(hres == S_OK, "IActiveScriptError_GetSourcePosition -- hres: expected S_OK, got 0x%08x\n", hres);
-    ok(char_position == pos, "IActiveScriptError_GetSourcePosition -- char_position: expected %d, got %d\n", pos, char_position);
-
-    /* IActiveScriptError_GetSourceLineText */
-
-    hres = IActiveScriptError_GetSourceLineText(error, NULL);
-    ok(hres == E_POINTER, "IActiveScriptError_GetSourceLineText -- hres: expected E_POINTER, got 0x%08x\n", hres);
-
-    linetext = NULL;
-    hres = IActiveScriptError_GetSourceLineText(error, &linetext);
-    if (line_text) {
-        ok(hres == S_OK, "IActiveScriptError_GetSourceLineText -- hres: expected S_OK, got 0x%08x\n", hres);
-        ok(linetext != NULL && !lstrcmpW(linetext, line_text),
-           "IActiveScriptError_GetSourceLineText -- expected %s, got %s\n", wine_dbgstr_w(line_text), wine_dbgstr_w(linetext));
-    } else {
-        ok(hres == E_FAIL, "IActiveScriptError_GetSourceLineText -- hres: expected S_OK, got 0x%08x\n", hres);
-        ok(linetext == NULL,
-           "IActiveScriptError_GetSourceLineText -- expected NULL, got %s\n", wine_dbgstr_w(linetext));
-    }
-    SysFreeString(linetext);
-
-    /* IActiveScriptError_GetExceptionInfo */
-
-    hres = IActiveScriptError_GetExceptionInfo(error, NULL);
-    ok(hres == E_POINTER, "IActiveScriptError_GetExceptionInfo -- hres: expected E_POINTER, got 0x%08x\n", hres);
-
-    excep.wCode = 0xdead;
-    excep.wReserved = 0xdead;
-    excep.bstrSource = (BSTR)0xdeadbeef;
-    excep.bstrDescription = (BSTR)0xdeadbeef;
-    excep.bstrHelpFile = (BSTR)0xdeadbeef;
-    excep.dwHelpContext = 0xdeadbeef;
-    excep.pvReserved = (void *)0xdeadbeef;
-    excep.pfnDeferredFillIn = (void *)0xdeadbeef;
-    excep.scode = 0xdeadbeef;
-
-    hres = IActiveScriptError_GetExceptionInfo(error, &excep);
-    ok(hres == S_OK, "IActiveScriptError_GetExceptionInfo -- hres: expected S_OK, got 0x%08x\n", hres);
-
-    ok(excep.wCode == 0, "IActiveScriptError_GetExceptionInfo -- excep.wCode: expected 0, got 0x%08x\n", excep.wCode);
-    ok(excep.wReserved == 0, "IActiveScriptError_GetExceptionInfo -- excep.wReserved: expected 0, got %d\n", excep.wReserved);
-    if (!is_lang_english())
-        skip("Non-english UI (test with hardcoded strings)\n");
-    else {
-        ok(excep.bstrSource != NULL && !lstrcmpW(excep.bstrSource, script_source),
-           "IActiveScriptError_GetExceptionInfo -- excep.bstrSource is not valid: expected %s, got %s\n",
-           wine_dbgstr_w(script_source), wine_dbgstr_w(excep.bstrSource));
-        ok(excep.bstrDescription != NULL && !lstrcmpW(excep.bstrDescription, description),
-           "IActiveScriptError_GetExceptionInfo -- excep.bstrDescription is not valid: got %s\n", wine_dbgstr_w(excep.bstrDescription));
-    }
-    ok(excep.bstrHelpFile == NULL,
-       "IActiveScriptError_GetExceptionInfo -- excep.bstrHelpFile: expected NULL, got %s\n", wine_dbgstr_w(excep.bstrHelpFile));
-    ok(excep.dwHelpContext == 0, "IActiveScriptError_GetExceptionInfo -- excep.dwHelpContext: expected 0, got %d\n", excep.dwHelpContext);
-    ok(excep.pvReserved == NULL, "IActiveScriptError_GetExceptionInfo -- excep.pvReserved: expected NULL, got %p\n", excep.pvReserved);
-    ok(excep.pfnDeferredFillIn == NULL, "IActiveScriptError_GetExceptionInfo -- excep.pfnDeferredFillIn: expected NULL, got %p\n", excep.pfnDeferredFillIn);
-    ok(excep.scode == errorcode, "IActiveScriptError_GetExceptionInfo -- excep.scode: expected 0x%08x, got 0x%08x\n", errorcode, excep.scode);
-
-    SysFreeString(excep.bstrSource);
-    SysFreeString(excep.bstrDescription);
-    SysFreeString(excep.bstrHelpFile);
-}
-
-static void parse_script_with_error(DWORD flags, BSTR script_str, SCODE errorcode, ULONG line, LONG pos, BSTR script_source, BSTR description, BSTR line_text)
+static void test_error_reports(void)
 {
     IActiveScriptParse *parser;
     IActiveScript *engine;
+    unsigned i;
     HRESULT hres;
 
-    engine = create_script();
-    if(!engine)
-        return;
+    static const struct {
+        const WCHAR *script;
+        HRESULT error;
+        unsigned line;
+        unsigned character;
+        const WCHAR *error_source;
+        const WCHAR *description;
+        const WCHAR *help_file;
+        DWORD help_context;
+        const WCHAR *line_text;
+        BOOL todo_flags;
+        BOOL reserved_lcid;
+    } tests[] = {
+        {
+            L"?",
+            JS_E_SYNTAX, 0, 0,
+            L"Microsoft JScript compilation error",
+            L"Syntax error",
+            NULL, 0,
+            L"?"
+        },
+        {
+            L"var a=1;\nif(a\n-->0) a=5;\n",
+            JS_E_MISSING_RBRACKET, 2, 0,
+            L"Microsoft JScript compilation error",
+            L"Expected ')'",
+            NULL, 0,
+            L"-->0) a=5;",
+            ERROR_TODO_PARSE
+        },
+        {
+            L"new 3;",
+            JS_E_INVALID_ACTION, 0, 0,
+            L"Microsoft JScript runtime error",
+            L"Object doesn't support this action"
+        },
+        {
+            L"new null;",
+            JS_E_OBJECT_EXPECTED, 0, 0,
+            L"Microsoft JScript runtime error",
+            L"Object expected"
+        },
+        {
+            L"var a;\nnew null;",
+            JS_E_OBJECT_EXPECTED, 1, 0,
+            L"Microsoft JScript runtime error",
+            L"Object expected"
+        },
+        {
+            L"var a; new null;",
+            JS_E_OBJECT_EXPECTED, 0, 7,
+            L"Microsoft JScript runtime error",
+            L"Object expected"
+        },
+        {
+            L"var a;\na=\n  new null;",
+            JS_E_OBJECT_EXPECTED, 1, 0,
+            L"Microsoft JScript runtime error",
+            L"Object expected"
+        },
+        {
+            L"var a;\nif(na=\n  new null) {}",
+            JS_E_OBJECT_EXPECTED, 1, 0,
+            L"Microsoft JScript runtime error",
+            L"Object expected"
+        },
+        {
+            L"not_existing_variable.something();",
+            JS_E_UNDEFINED_VARIABLE, 0, 0,
+            L"Microsoft JScript runtime error",
+            L"'not_existing_variable' is undefined"
+        },
+        {
+            L" throw 1;",
+            JS_E_EXCEPTION_THROWN, 0, 1,
+            L"Microsoft JScript runtime error",
+            L"Exception thrown and not caught"
+        },
+        {
+            L"var f = function() { throw 1; };\n"
+            L"f();\n",
+            JS_E_EXCEPTION_THROWN, 0, 21,
+            L"Microsoft JScript runtime error",
+            L"Exception thrown and not caught"
+        },
+        {
+            L"var f = function() { throw 1; };\n"
+            L"try { f(); } finally { 2; }\n",
+            JS_E_EXCEPTION_THROWN, 1, 21,
+            L"Microsoft JScript runtime error",
+            L"Exception thrown and not caught"
+        },
+        {
+            L" throwInt(-2146827270);",
+            JS_E_MISPLACED_RETURN, 0, 1,
+            L"Microsoft JScript runtime error",
+            L"'return' statement outside of function"
+        },
+        {
+            L" throwEI(-2146827270);",
+            JS_E_MISPLACED_RETURN, 0, 1,
+            L"test source",
+            L"test description"
+        },
+        {
+            L" throwEI(-2146827270, false);",
+            JS_E_MISPLACED_RETURN, 0, 1,
+            L"Microsoft JScript runtime error",
+            L"'return' statement outside of function"
+        },
+        {
+            L" throwEI(-2147467259 /* E_FAIL */, false);",
+            E_FAIL, 0, 1
+        },
+        {
+            L" throwInt(-2147467259 /* E_FAIL */);",
+            E_FAIL, 0, 1,
+            NULL,
+            NULL,
+            NULL, 0,
+            NULL,
+            FALSE,
+            0x409
+        },
+        {
+            L" throwEI(-2147467259 /* E_FAIL */);",
+            E_FAIL, 0, 1,
+            L"test source",
+            L"test description"
+        },
+        {
+            L" throwEI(-2147467259 /* E_FAIL */, true);",
+            E_FAIL, 0, 1,
+            L"source after defer",
+            L"desc after defer",
+            L"help after defer", 1234567890,
+            NULL,
+            ERROR_TODO_HELPFILE
+        },
+        {
+            L"switch(2) {\n"
+            L"    case 1: break;\n"
+            L"    case 0: break;\n"
+            L"    case new null: break;\n"
+            L"    default: throw 1;\n"
+            L"}\n",
+            JS_E_OBJECT_EXPECTED, 3, 4,
+            L"Microsoft JScript runtime error",
+            L"Object expected"
+        },
+        {
+            L"do {\n"
+            L"    1;\n"
+            L"} while ( new null );\n",
+            JS_E_OBJECT_EXPECTED, 2, 2,
+            L"Microsoft JScript runtime error",
+            L"Object expected"
+        },
+        {
+            L"for (var i = 0; i < 100; new null) { i++ }",
+            JS_E_OBJECT_EXPECTED, 0, 25,
+            L"Microsoft JScript runtime error",
+            L"Object expected"
+        },
+        {
+            L"for (var i = 0; new null; i++) { i++ }",
+            JS_E_OBJECT_EXPECTED, 0, 16,
+            L"Microsoft JScript runtime error",
+            L"Object expected"
+        },
+        {
+            L"for (new null; i < 100; i++) { i++ }",
+            JS_E_OBJECT_EXPECTED, 0, 5,
+            L"Microsoft JScript runtime error",
+            L"Object expected"
+        },
+        {
+            L"var e = new Error();\n"
+            L"e.number = -2146828279;\n"
+            L"e.description = 'test';\n"
+            L"throw e;",
+            JS_E_SUBSCRIPT_OUT_OF_RANGE, 3, 0,
+            L"Microsoft JScript runtime error",
+            L"test",
+            NULL, 0,
+            NULL,
+            FALSE,
+            TRUE
+        },
+        {
+            L"var e = new Error();\n"
+            L"e.number = -2146828279;\n"
+            L"e.message = 'test';\n"
+            L"throw e;",
+            JS_E_SUBSCRIPT_OUT_OF_RANGE, 3, 0,
+            L"Microsoft JScript runtime error",
+            L"",
+            NULL, 0,
+            NULL,
+            FALSE,
+            TRUE
+        },
+        {
+            L"var e = new Error();\n"
+            L"throw e;",
+            E_FAIL, 1, 0,
+            NULL,
+            L"",
+            NULL, 0,
+            NULL,
+            FALSE,
+            TRUE
+        },
+        {
+            L"var e = new Object();\n"
+            L"e.number = -2146828279;\n"
+            L"e.description = 'test';\n"
+            L"throw e;",
+            JS_E_EXCEPTION_THROWN, 3, 0,
+            L"Microsoft JScript runtime error",
+            L"Exception thrown and not caught",
+            NULL, 0,
+            NULL,
+            ERROR_TODO_SCODE | ERROR_TODO_DESCRIPTION
+        },
+        {
+            L"f(1\n,\n2,\n ,,3\n);\n",
+            JS_E_SYNTAX, 3, 1,
+            L"Microsoft JScript compilation error",
+            L"Syntax error",
+            NULL, 0,
+            L" ,,3"
+        },
+    };
 
-    hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
-    if (FAILED(hres))
+    if (!is_lang_english())
+        skip("Non-english UI (test with hardcoded strings)\n");
+
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
+        engine = create_script();
+
+        hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
+        ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
+
+        hres = IActiveScriptParse_InitNew(parser);
+        ok(hres == S_OK, "InitNew failed: %08lx\n", hres);
+
+        hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite_CheckError);
+        ok(hres == S_OK, "SetScriptSite failed: %08lx\n", hres);
+
+        hres = IActiveScript_AddNamedItem(engine, L"test",
+                SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|SCRIPTITEM_GLOBALMEMBERS);
+        ok(hres == S_OK, "AddNamedItem failed: %08lx\n", hres);
+
+        hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
+        ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
+
+        hres = IActiveScript_GetScriptDispatch(engine, NULL, &script_disp);
+        ok(hres == S_OK, "GetScriptDispatch failed: %08lx\n", hres);
+        ok(script_disp != NULL, "script_disp == NULL\n");
+        ok(script_disp != (IDispatch*)&Global, "script_disp == Global\n");
+
+        script_error = NULL;
+        SET_EXPECT(ActiveScriptSite_OnScriptError);
+        hres = IActiveScriptParse_ParseScriptText(parser, tests[i].script, NULL, NULL, NULL, 10, 0, 0, NULL, NULL);
+        todo_wine_if(tests[i].todo_flags & ERROR_TODO_PARSE)
+        ok(hres == SCRIPT_E_REPORTED || (tests[i].error == JS_E_EXCEPTION_THROWN && hres == SCRIPT_E_PROPAGATE),
+           "[%u] got: 0x%08lx for %s\n", i, hres, wine_dbgstr_w(tests[i].script));
+        todo_wine_if(tests[i].todo_flags & ERROR_TODO_PARSE)
+        CHECK_CALLED(ActiveScriptSite_OnScriptError);
+
+        if (script_error)
+        {
+            DWORD source_context;
+            ULONG line_number;
+            LONG character;
+            BSTR line_text;
+            EXCEPINFO ei;
+
+            hres = IActiveScriptError_GetSourcePosition(script_error, NULL, NULL, NULL);
+            ok(hres == S_OK, "GetSourcePosition failed %08lx\n", hres);
+
+            source_context = 0xdeadbeef;
+            hres = IActiveScriptError_GetSourcePosition(script_error, &source_context, NULL, NULL);
+            ok(hres == S_OK, "GetSourcePosition failed0x%08lx\n", hres);
+            ok(source_context == 10, "source_context = %lx\n", source_context);
+
+            line_number = 0xdeadbeef;
+            hres = IActiveScriptError_GetSourcePosition(script_error, NULL, &line_number, NULL);
+            ok(hres == S_OK, "GetSourcePosition failed%08lx\n", hres);
+            ok(line_number == tests[i].line, "[%u] line = %lu expected %u\n", i, line_number, tests[i].line);
+
+            character = 0xdeadbeef;
+            hres = IActiveScriptError_GetSourcePosition(script_error, NULL, NULL, &character);
+            ok(hres == S_OK, "GetSourcePosition failed: %08lx\n", hres);
+            ok(character == tests[i].character, "[%u] character = %lu expected %u\n", i, character, tests[i].character);
+
+            hres = IActiveScriptError_GetSourceLineText(script_error, NULL);
+            ok(hres == E_POINTER, "GetSourceLineText returned %08lx\n", hres);
+
+            line_text = (BSTR)0xdeadbeef;
+            hres = IActiveScriptError_GetSourceLineText(script_error, &line_text);
+            if (tests[i].line_text)
+            {
+                ok(hres == S_OK, "GetSourceLineText failed: %08lx\n", hres);
+                ok(line_text != NULL && !lstrcmpW(line_text, tests[i].line_text), "[%u] GetSourceLineText returned %s expected %s\n",
+                   i, wine_dbgstr_w(line_text), wine_dbgstr_w(tests[i].line_text));
+            }
+            else
+            {
+                ok(hres == E_FAIL, "GetSourceLineText failed: %08lx\n", hres);
+            }
+            if (SUCCEEDED(hres))
+                SysFreeString(line_text);
+
+            hres = IActiveScriptError_GetExceptionInfo(script_error, NULL);
+            ok(hres == E_POINTER, "GetExceptionInfo failed: %08lx\n", hres);
+
+            ei.wCode = 0xdead;
+            ei.wReserved = 0xdead;
+            ei.bstrSource = (BSTR)0xdeadbeef;
+            ei.bstrDescription = (BSTR)0xdeadbeef;
+            ei.bstrHelpFile = (BSTR)0xdeadbeef;
+            ei.dwHelpContext = 0xdeadbeef;
+            ei.pvReserved = (void *)0xdeadbeef;
+            ei.pfnDeferredFillIn = (void *)0xdeadbeef;
+            ei.scode = 0xdeadbeef;
+
+            hres = IActiveScriptError_GetExceptionInfo(script_error, &ei);
+            ok(hres == S_OK, "GetExceptionInfo failed: %08lx\n", hres);
+
+            todo_wine_if(tests[i].todo_flags & ERROR_TODO_SCODE)
+            ok(ei.scode == tests[i].error, "[%u] scode = %08lx, expected %08lx\n", i, ei.scode, tests[i].error);
+            ok(ei.wCode == 0, "wCode = %x\n", ei.wCode);
+            todo_wine_if(tests[i].reserved_lcid)
+            ok(ei.wReserved == (tests[i].reserved_lcid ? GetUserDefaultLCID() : 0), "[%u] wReserved = %x expected %lx\n",
+               i, ei.wReserved, (tests[i].reserved_lcid ? GetUserDefaultLCID() : 0));
+            if (is_lang_english())
+            {
+                if(tests[i].error_source)
+                    ok(ei.bstrSource && !lstrcmpW(ei.bstrSource, tests[i].error_source), "[%u] bstrSource = %s expected %s\n",
+                       i, wine_dbgstr_w(ei.bstrSource), wine_dbgstr_w(tests[i].error_source));
+                else
+                    ok(!ei.bstrSource, "[%u] bstrSource = %s expected NULL\n", i, wine_dbgstr_w(ei.bstrSource));
+                if(tests[i].description)
+                    todo_wine_if(tests[i].todo_flags & ERROR_TODO_DESCRIPTION)
+                    ok(ei.bstrDescription && !lstrcmpW(ei.bstrDescription, tests[i].description),
+                       "[%u] bstrDescription = %s expected %s\n", i, wine_dbgstr_w(ei.bstrDescription), wine_dbgstr_w(tests[i].description));
+                else
+                    ok(!ei.bstrDescription, "[%u] bstrDescription = %s expected NULL\n", i, wine_dbgstr_w(ei.bstrDescription));
+            }
+            if(tests[i].help_file)
+                todo_wine_if(tests[i].todo_flags & ERROR_TODO_HELPFILE)
+                ok(ei.bstrHelpFile && !lstrcmpW(ei.bstrHelpFile, tests[i].help_file),
+                   "[%u] bstrHelpFile = %s expected %s\n", i, wine_dbgstr_w(ei.bstrHelpFile), wine_dbgstr_w(tests[i].help_file));
+            else
+                ok(!ei.bstrHelpFile, "[%u] bstrHelpFile = %s expected NULL\n", i, wine_dbgstr_w(ei.bstrHelpFile));
+            todo_wine_if(tests[i].todo_flags & ERROR_TODO_HELPFILE)
+            ok(ei.dwHelpContext == tests[i].help_context, "dwHelpContext = %lu, expected %lu\n", ei.dwHelpContext, tests[i].help_context);
+            ok(!ei.pvReserved, "pvReserved = %p\n", ei.pvReserved);
+            ok(!ei.pfnDeferredFillIn, "pfnDeferredFillIn = %p\n", ei.pfnDeferredFillIn);
+
+            SysFreeString(ei.bstrSource);
+            SysFreeString(ei.bstrDescription);
+            SysFreeString(ei.bstrHelpFile);
+
+            IActiveScriptError_Release(script_error);
+        }
+
+        IDispatch_Release(script_disp);
         IActiveScript_Release(engine);
-        return;
+        IActiveScriptParse_Release(parser);
     }
-
-    hres = IActiveScriptParse_InitNew(parser);
-    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
-
-    hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite_CheckError);
-    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
-
-    hres = IActiveScript_AddNamedItem(engine, testW,
-            SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|flags);
-    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
-
-    hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
-
-    hres = IActiveScript_GetScriptDispatch(engine, NULL, &script_disp);
-    ok(hres == S_OK, "GetScriptDispatch failed: %08x\n", hres);
-    ok(script_disp != NULL, "script_disp == NULL\n");
-    ok(script_disp != (IDispatch*)&Global, "script_disp == Global\n");
-
-    script_error = NULL;
-    SET_EXPECT(ActiveScriptSite_OnScriptError);
-    hres = IActiveScriptParse_ParseScriptText(parser, script_str, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
-    todo_wine ok(hres == 0x80020101, "parse_script_with_error should have returned 0x80020101, got: 0x%08x\n", hres);
-    todo_wine CHECK_CALLED(ActiveScriptSite_OnScriptError);
-
-    if (script_error)
-    {
-        test_IActiveScriptError(script_error, errorcode, line, pos, script_source, description, line_text);
-
-        IActiveScriptError_Release(script_error);
-    }
-
-    IDispatch_Release(script_disp);
-    IActiveScript_Release(engine);
-    IActiveScriptParse_Release(parser);
 }
 
-static void parse_script_af(DWORD flags, const char *src)
-{
-    BSTR tmp;
-    HRESULT hres;
-
-    tmp = a2bstr(src);
-    hres = parse_script(flags, tmp);
-    SysFreeString(tmp);
-    ok(hres == S_OK, "parse_script failed: %08x\n", hres);
-}
-
-static void parse_script_a(const char *src)
-{
-    parse_script_af(SCRIPTITEM_GLOBALMEMBERS, src);
-}
-
-static void parse_script_ae(const char *src, HRESULT exhres)
-{
-    BSTR tmp;
-    HRESULT hres;
-
-    tmp = a2bstr(src);
-    hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, tmp);
-    SysFreeString(tmp);
-    ok(hres == exhres, "parse_script failed: %08x, expected %08x\n", hres, exhres);
-}
-
-static void parse_script_with_error_a(const char *src, SCODE errorcode, ULONG line, LONG pos, LPCSTR source, LPCSTR desc, LPCSTR linetext)
-{
-    BSTR tmp, script_source, description, line_text;
-
-    tmp = a2bstr(src);
-    script_source = a2bstr(source);
-    description = a2bstr(desc);
-    line_text = a2bstr(linetext);
-
-    parse_script_with_error(SCRIPTITEM_GLOBALMEMBERS, tmp, errorcode, line, pos, script_source, description, line_text);
-
-    SysFreeString(line_text);
-    SysFreeString(description);
-    SysFreeString(script_source);
-    SysFreeString(tmp);
-}
-
-static HRESULT parse_htmlscript_a(const char *src)
+#define run_script(a) _run_script(__LINE__,a)
+static void _run_script(unsigned line, const WCHAR *src)
 {
     HRESULT hres;
-    BSTR tmp = a2bstr(src);
-    hres = parse_htmlscript(tmp);
-    SysFreeString(tmp);
 
-    return hres;
+    hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, src);
+    ok_(__FILE__,line)(hres == S_OK, "script %s failed: %08lx\n", wine_dbgstr_w(src), hres);
 }
 
 static BSTR get_script_from_file(const char *filename)
@@ -2154,7 +2714,7 @@ static BSTR get_script_from_file(const char *filename)
 
     file = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
     if(file == INVALID_HANDLE_VALUE) {
-        trace("Could not open file: %u\n", GetLastError());
+        trace("Could not open file: %lu\n", GetLastError());
         return NULL;
     }
 
@@ -2163,14 +2723,14 @@ static BSTR get_script_from_file(const char *filename)
     map = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL);
     CloseHandle(file);
     if(map == INVALID_HANDLE_VALUE) {
-        trace("Could not create file mapping: %u\n", GetLastError());
+        trace("Could not create file mapping: %lu\n", GetLastError());
         return NULL;
     }
 
     file_map = MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0);
     CloseHandle(map);
     if(!file_map) {
-        trace("MapViewOfFile failed: %u\n", GetLastError());
+        trace("MapViewOfFile failed: %lu\n", GetLastError());
         return NULL;
     }
 
@@ -2195,7 +2755,7 @@ static void run_from_file(const char *filename)
     strict_dispid_check = FALSE;
     hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, script_str);
     SysFreeString(script_str);
-    ok(hres == S_OK, "parse_script failed: %08x\n", hres);
+    ok(hres == S_OK, "parse_script failed: %08lx\n", hres);
 }
 
 static BSTR load_res(const char *name)
@@ -2234,7 +2794,7 @@ static void run_from_res(const char *name)
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
 
-    ok(hres == S_OK, "parse_script failed: %08x\n", hres);
+    ok(hres == S_OK, "parse_script failed: %08lx\n", hres);
     SysFreeString(str);
 }
 
@@ -2244,15 +2804,12 @@ static void test_isvisible(BOOL global_members)
     IActiveScript *engine;
     HRESULT hres;
 
-    static const WCHAR script_textW[] =
-        {'v','a','r',' ','v',' ','=',' ','t','e','s','t','V','a','l',';',0};
-
     engine = create_script();
     if(!engine)
         return;
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
     if (FAILED(hres))
     {
         IActiveScript_Release(engine);
@@ -2260,32 +2817,32 @@ static void test_isvisible(BOOL global_members)
     }
 
     hres = IActiveScriptParse_InitNew(parser);
-    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+    ok(hres == S_OK, "InitNew failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
-    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptSite failed: %08lx\n", hres);
 
     if(global_members)
         SET_EXPECT(GetItemInfo_testVal);
-    hres = IActiveScript_AddNamedItem(engine, test_valW,
+    hres = IActiveScript_AddNamedItem(engine, L"testVal",
             SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|
             (global_members ? SCRIPTITEM_GLOBALMEMBERS : 0));
-    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+    ok(hres == S_OK, "AddNamedItem failed: %08lx\n", hres);
     if(global_members)
         CHECK_CALLED(GetItemInfo_testVal);
 
     hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
 
     if(!global_members)
         SET_EXPECT(GetItemInfo_testVal);
-    hres = IActiveScriptParse_ParseScriptText(parser, script_textW, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
-    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+    hres = IActiveScriptParse_ParseScriptText(parser, L"var v = testVal;", NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
     if(!global_members)
         CHECK_CALLED(GetItemInfo_testVal);
 
-    hres = IActiveScriptParse_ParseScriptText(parser, script_textW, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
-    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+    hres = IActiveScriptParse_ParseScriptText(parser, L"var v = testVal;", NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
 
     IActiveScript_Release(engine);
     IActiveScriptParse_Release(parser);
@@ -2303,27 +2860,27 @@ static void test_start(void)
         return;
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
 
     hres = IActiveScriptParse_InitNew(parser);
-    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+    ok(hres == S_OK, "InitNew failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
-    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptSite failed: %08lx\n", hres);
 
-    hres = IActiveScript_AddNamedItem(engine, testW, SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|SCRIPTITEM_GLOBALMEMBERS);
-    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+    hres = IActiveScript_AddNamedItem(engine, L"test", SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|SCRIPTITEM_GLOBALMEMBERS);
+    ok(hres == S_OK, "AddNamedItem failed: %08lx\n", hres);
 
-    str = a2bstr("ok(getScriptState() === 5, \"getScriptState = \" + getScriptState());\n"
-                 "reportSuccess();");
+    str = SysAllocString(L"ok(getScriptState() === 5, \"getScriptState = \" + getScriptState());\n"
+                         L"reportSuccess();");
     hres = IActiveScriptParse_ParseScriptText(parser, str, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
-    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
     SysFreeString(str);
 
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
     hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
 
@@ -2344,28 +2901,28 @@ static void test_automagic(void)
         return;
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
 
     hres = IActiveScriptParse_InitNew(parser);
-    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+    ok(hres == S_OK, "InitNew failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
-    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptSite failed: %08lx\n", hres);
 
-    hres = IActiveScript_AddNamedItem(engine, testW, SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|SCRIPTITEM_GLOBALMEMBERS);
-    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+    hres = IActiveScript_AddNamedItem(engine, L"test", SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|SCRIPTITEM_GLOBALMEMBERS);
+    ok(hres == S_OK, "AddNamedItem failed: %08lx\n", hres);
 
-    str = a2bstr("function bindEventHandler::eventName() {}\n"
-                 "reportSuccess();");
+    str = SysAllocString(L"function bindEventHandler::eventName() {}\n"
+                         L"reportSuccess();");
     hres = IActiveScriptParse_ParseScriptText(parser, str, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
-    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
     SysFreeString(str);
 
     SET_EXPECT(BindHandler);
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
     hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
     CHECK_CALLED(BindHandler);
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
@@ -2375,11 +2932,10 @@ static void test_automagic(void)
     script_engine = NULL;
 }
 
-static HRESULT parse_script_expr(const char *expr, VARIANT *res, IActiveScript **engine_ret)
+static HRESULT parse_script_expr(const WCHAR *expr, VARIANT *res, IActiveScript **engine_ret)
 {
     IActiveScriptParse *parser;
     IActiveScript *engine;
-    BSTR str;
     HRESULT hres;
 
     engine = create_script();
@@ -2387,158 +2943,422 @@ static HRESULT parse_script_expr(const char *expr, VARIANT *res, IActiveScript *
         return E_FAIL;
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
 
     hres = IActiveScriptParse_InitNew(parser);
-    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+    ok(hres == S_OK, "InitNew failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
-    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptSite failed: %08lx\n", hres);
 
     SET_EXPECT(GetItemInfo_testVal);
-    hres = IActiveScript_AddNamedItem(engine, test_valW,
+    hres = IActiveScript_AddNamedItem(engine, L"testVal",
             SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|SCRIPTITEM_GLOBALMEMBERS);
-    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+    ok(hres == S_OK, "AddNamedItem failed: %08lx\n", hres);
     CHECK_CALLED(GetItemInfo_testVal);
 
     hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
 
-    str = a2bstr(expr);
-    hres = IActiveScriptParse_ParseScriptText(parser, str, NULL, NULL, NULL, 0, 0, SCRIPTTEXT_ISEXPRESSION, res, NULL);
-    SysFreeString(str);
-
+    hres = IActiveScriptParse_ParseScriptText(parser, expr, NULL, NULL, NULL, 0, 0, SCRIPTTEXT_ISEXPRESSION, res, NULL);
     IActiveScriptParse_Release(parser);
 
-    if(engine_ret) {
+    if(engine_ret)
         *engine_ret = engine;
-    }else {
-        IActiveScript_Close(engine);
-        IActiveScript_Release(engine);
-    }
+    else
+        close_script(engine);
+
     return hres;
 }
 
 static void test_retval(void)
 {
-    BSTR str = a2bstr("reportSuccess(), true");
     IActiveScriptParse *parser;
     IActiveScript *engine;
     SCRIPTSTATE state;
     VARIANT res;
     HRESULT hres;
+    BSTR str;
 
     engine = create_script();
     if(!engine)
         return;
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
 
     hres = IActiveScriptParse_InitNew(parser);
-    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+    ok(hres == S_OK, "InitNew failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
-    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptSite failed: %08lx\n", hres);
 
     SET_EXPECT(GetItemInfo_testVal);
-    hres = IActiveScript_AddNamedItem(engine, test_valW,
+    hres = IActiveScript_AddNamedItem(engine, L"testVal",
             SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|SCRIPTITEM_GLOBALMEMBERS);
-    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+    ok(hres == S_OK, "AddNamedItem failed: %08lx\n", hres);
     CHECK_CALLED(GetItemInfo_testVal);
 
+    str = SysAllocString(L"reportSuccess(), true");
     V_VT(&res) = VT_NULL;
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
     hres = IActiveScriptParse_ParseScriptText(parser, str, NULL, NULL, NULL, 0, 0, 0, &res, NULL);
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
-    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
     ok(V_VT(&res) == VT_EMPTY, "V_VT(&res) = %d\n", V_VT(&res));
+    SysFreeString(str);
 
     hres = IActiveScript_GetScriptState(engine, &state);
-    ok(hres == S_OK, "GetScriptState failed: %08x\n", hres);
+    ok(hres == S_OK, "GetScriptState failed: %08lx\n", hres);
     ok(state == SCRIPTSTATE_INITIALIZED, "state = %d\n", state);
 
     hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
-
-    hres = IActiveScript_Close(engine);
-    ok(hres == S_OK, "Close failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
 
     IActiveScriptParse_Release(parser);
-    IActiveScript_Release(engine);
+
+    close_script(engine);
+}
+
+static void test_propputref(void)
+{
+    static DISPID propput_dispid = DISPID_PROPERTYPUT;
+    DISPPARAMS dp = {0}, dp_get = {0};
+    IActiveScript *script, *script2;
+    IDispatch *disp, *obj;
+    HRESULT hres;
+    VARIANT v;
+    DISPID id;
+    BSTR str;
+
+    hres = parse_script_expr(L"new Object()", &v, &script2);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    obj = V_DISPATCH(&v);
+
+    hres = parse_script_expr(L"var disp = new Object(); disp.a = disp; disp", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    disp = V_DISPATCH(&v);
+
+    str = SysAllocString(L"a");
+    hres = IDispatch_GetIDsOfNames(disp, &IID_NULL, &str, 1, 0, &id);
+    ok(hres == S_OK, "GetIDsOfNames failed: %08lx\n", hres);
     SysFreeString(str);
+
+    dp.cArgs = dp.cNamedArgs = 1;
+    dp.rgdispidNamedArgs = &propput_dispid;
+    dp.rgvarg = &v;
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = obj;
+    hres = IDispatch_Invoke(disp, id, &IID_NULL, 0, DISPATCH_PROPERTYPUTREF, &dp, NULL, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, id, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp_get, &v, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) == obj, "V_DISPATCH(v) = %p\n", V_DISPATCH(&v));
+    VariantClear(&v);
+
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = obj;
+    hres = IDispatch_Invoke(disp, id, &IID_NULL, 0, DISPATCH_PROPERTYPUTREF | DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, id, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp_get, &v, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) == obj, "V_DISPATCH(v) = %p\n", V_DISPATCH(&v));
+    IDispatch_Release(obj);
+    close_script(script2);
+    VariantClear(&v);
+
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = NULL;
+    hres = IDispatch_Invoke(disp, id, &IID_NULL, 0, DISPATCH_PROPERTYPUTREF, &dp, NULL, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, id, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp_get, &v, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!V_DISPATCH(&v), "V_DISPATCH(v) = %p\n", V_DISPATCH(&v));
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, id, &IID_NULL, 0, DISPATCH_PROPERTYPUTREF, &dp, NULL, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, id, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp_get, &v, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_EMPTY, "V_VT(v) = %d\n", V_VT(&v));
+
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = 42;
+    hres = IDispatch_Invoke(disp, id, &IID_NULL, 0, DISPATCH_PROPERTYPUTREF, &dp, NULL, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, id, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp_get, &v, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I4(&v) == 42, "V_I4(v) = %ld\n", V_I4(&v));
+
+    IDispatch_Release(disp);
+    close_script(script);
 }
 
 static void test_default_value(void)
 {
+    static DISPID propput_dispid = DISPID_PROPERTYPUT;
+    IActiveScript *script;
     DISPPARAMS dp = {0};
     IDispatch *disp;
     VARIANT v;
     HRESULT hres;
 
-    hres = parse_script_expr("new Date()", &v, NULL);
-    ok(hres == S_OK, "parse_script_expr failed: %08x\n", hres);
+    hres = parse_script_expr(L"new Date()", &v, NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
     ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
     disp = V_DISPATCH(&v);
 
     V_VT(&v) = VT_EMPTY;
     hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
-    ok(hres == S_OK || broken(hres == 0x8000ffff), "Invoke failed: %08x\n", hres);
-    if(hres == S_OK)
-    {
-        ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
-    }
+    ok(hres == E_UNEXPECTED, "Invoke failed: %08lx\n", hres);
+    IDispatch_Release(disp);
 
+    hres = parse_script_expr(L"new Date()", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    disp = V_DISPATCH(&v);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
     VariantClear(&v);
     IDispatch_Release(disp);
+    close_script(script);
+
+    hres = parse_script_expr(L"var arr = [5]; arr.toString = function() {return \"foo\";}; arr.valueOf = function() {return 42;}; arr", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    disp = V_DISPATCH(&v);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I4(&v) == 42, "V_I4(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    IDispatch_Release(disp);
+    close_script(script);
+
+    hres = parse_script_expr(L"var arr = [5]; arr.toString = function() {return \"foo\";}; arr", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    disp = V_DISPATCH(&v);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!lstrcmpW(V_BSTR(&v), L"foo"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+    IDispatch_Release(disp);
+    close_script(script);
+
+    hres = parse_script_expr(L"var arr = [5]; arr", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    disp = V_DISPATCH(&v);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!lstrcmpW(V_BSTR(&v), L"5"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+    IDispatch_Release(disp);
+    close_script(script);
+
+    hres = parse_script_expr(L"var obj = Object.prototype; delete obj.valueOf; obj", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    disp = V_DISPATCH(&v);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!lstrcmpW(V_BSTR(&v), L"[object Object]"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+    IDispatch_Release(disp);
+    close_script(script);
+
+    hres = parse_script_expr(L"var obj = Object.prototype; delete obj.toString; obj", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    disp = V_DISPATCH(&v);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
+    ok(hres == DISP_E_MEMBERNOTFOUND, "Invoke failed: %08lx\n", hres);
+    IDispatch_Release(disp);
+    close_script(script);
+
+    hres = parse_script_expr(L"Object.prototype", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    disp = V_DISPATCH(&v);
+
+    dp.cArgs = dp.cNamedArgs = 1;
+    dp.rgdispidNamedArgs = &propput_dispid;
+    dp.rgvarg = &v;
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
+    ok(hres == DISP_E_MEMBERNOTFOUND, "Invoke failed: %08lx\n", hres);
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYPUTREF, &dp, NULL, NULL, NULL);
+    ok(hres == DISP_E_MEMBERNOTFOUND, "Invoke failed: %08lx\n", hres);
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYPUTREF | DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
+    ok(hres == DISP_E_MEMBERNOTFOUND, "Invoke failed: %08lx\n", hres);
+    IDispatch_Release(disp);
+    close_script(script);
+
+    hres = parse_script_expr(L"var f = function() {return 42;}; f", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    disp = V_DISPATCH(&v);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
+    ok(hres == DISP_E_MEMBERNOTFOUND, "Invoke failed: %08lx\n", hres);
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYPUTREF, &dp, NULL, NULL, NULL);
+    ok(hres == DISP_E_MEMBERNOTFOUND, "Invoke failed: %08lx\n", hres);
+    hres = IDispatch_Invoke(disp, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYPUTREF | DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
+    ok(hres == DISP_E_MEMBERNOTFOUND, "Invoke failed: %08lx\n", hres);
+    IDispatch_Release(disp);
+    close_script(script);
+}
+
+static void test_number_localization(void)
+{
+    static struct {
+        const WCHAR *num;
+        const WCHAR *expect;
+    } tests[] = {
+        { L"0",                 L"0.00" },
+        { L"+1234.5",           L"1,234.50" },
+        { L"-1337.7331",        L"-1,337.73" },
+        { L"-0.0123",           L"-0.01" },
+        { L"-0.0198",           L"-0.02" },
+        { L"0.004",             L"0.00" },
+        { L"65536.5",           L"65,536.50" },
+        { L"NaN",               L"NaN" }
+    };
+    static const WCHAR fmt[] = L"Number.prototype.toLocaleString.call(%s)";
+    WCHAR script_buf[ARRAY_SIZE(fmt) + 32];
+    HRESULT hres;
+    unsigned i;
+    VARIANT v;
+
+    use_english = TRUE;
+    for(i = 0; i < ARRAY_SIZE(tests); i++) {
+        swprintf(script_buf, ARRAY_SIZE(script_buf), fmt, tests[i].num);
+        hres = parse_script_expr(script_buf, &v, NULL);
+        ok(hres == S_OK, "[%u] parse_script_expr failed: %08lx\n", i, hres);
+        ok(V_VT(&v) == VT_BSTR, "[%u] V_VT(v) = %d\n", i, V_VT(&v));
+        ok(!lstrcmpW(V_BSTR(&v), tests[i].expect), "[%u] got %s\n", i, wine_dbgstr_w(V_BSTR(&v)));
+        VariantClear(&v);
+    }
+    use_english = FALSE;
 }
 
 static void test_script_exprs(void)
 {
+    WCHAR buf[64], sep[4];
     VARIANT v;
     HRESULT hres;
 
     testing_expr = TRUE;
 
-    hres = parse_script_expr("true", &v, NULL);
-    ok(hres == S_OK, "parse_script_expr failed: %08x\n", hres);
+    hres = parse_script_expr(L"true", &v, NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
     ok(V_VT(&v) == VT_BOOL, "V_VT(v) = %d\n", V_VT(&v));
     ok(V_BOOL(&v) == VARIANT_TRUE, "V_BOOL(v) = %x\n", V_BOOL(&v));
 
-    hres = parse_script_expr("false, true", &v, NULL);
-    ok(hres == S_OK, "parse_script_expr failed: %08x\n", hres);
+    hres = parse_script_expr(L"false, true", &v, NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
     ok(V_VT(&v) == VT_BOOL, "V_VT(v) = %d\n", V_VT(&v));
     ok(V_BOOL(&v) == VARIANT_TRUE, "V_BOOL(v) = %x\n", V_BOOL(&v));
 
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
-    hres = parse_script_expr("reportSuccess(); true", &v, NULL);
-    ok(hres == S_OK, "parse_script_expr failed: %08x\n", hres);
+    hres = parse_script_expr(L"reportSuccess(); true", &v, NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
     ok(V_VT(&v) == VT_BOOL, "V_VT(v) = %d\n", V_VT(&v));
     ok(V_BOOL(&v) == VARIANT_TRUE, "V_BOOL(v) = %x\n", V_BOOL(&v));
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
 
-    hres = parse_script_expr("if(false) true", &v, NULL);
-    ok(hres == S_OK, "parse_script_expr failed: %08x\n", hres);
+    hres = parse_script_expr(L"if(false) true", &v, NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
     ok(V_VT(&v) == VT_EMPTY, "V_VT(v) = %d\n", V_VT(&v));
 
-    hres = parse_script_expr("return testPropGet", &v, NULL);
-    ok(hres == 0x800a03fa, "parse_script_expr failed: %08x\n", hres);
+    hres = parse_script_expr(L"return testPropGet", &v, NULL);
+    ok(hres == 0x800a03fa, "parse_script_expr failed: %08lx\n", hres);
 
-    hres = parse_script_expr("reportSuccess(); return true", &v, NULL);
-    ok(hres == 0x800a03fa, "parse_script_expr failed: %08x\n", hres);
+    hres = parse_script_expr(L"reportSuccess(); return true", &v, NULL);
+    ok(hres == 0x800a03fa, "parse_script_expr failed: %08lx\n", hres);
 
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
-    hres = parse_script_expr("reportSuccess(); true", NULL, NULL);
-    ok(hres == S_OK, "parse_script_expr failed: %08x\n", hres);
+    hres = parse_script_expr(L"reportSuccess(); true", NULL, NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
 
+    hres = parse_script_expr(L"var o=new Object(); Object.prototype.toLocaleString.call(o)", &v, NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!lstrcmpW(V_BSTR(&v), L"[object Object]"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    hres = parse_script_expr(L"var o=new Object(); Object.prototype.toString = function() {return \"wine\";}; Object.prototype.toLocaleString.call(o)", &v, NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!lstrcmpW(V_BSTR(&v), L"wine"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    hres = parse_script_expr(L"var o=new Object(); delete Object.prototype.toString; Object.prototype.toLocaleString.call(o)", &v, NULL);
+    ok(hres == 0x800a01b6, "parse_script_expr failed: %08lx\n", hres);
+
+    hres = parse_script_expr(L"var o=new Object(); o.toString = function() {return \"wine\";}; Object.prototype.toLocaleString.call(o)", &v, NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!lstrcmpW(V_BSTR(&v), L"wine"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    if(!GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_SLIST, sep, ARRAY_SIZE(sep))) wcscpy(sep, L",");
+    swprintf(buf, ARRAY_SIZE(buf), L"12%s 12%s undefined undefined undefined%s 12", sep, sep, sep);
+    hres = parse_script_expr(L"var arr = [5]; arr.toLocaleString = function(a,b,c) {return a+' '+b+' '+c;};"
+                             L"Number.prototype.toLocaleString = function() {return 12;};"
+                             L"[1,2,arr,3].toLocaleString('foo','bar','baz')", &v, NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!lstrcmpW(V_BSTR(&v), buf), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    hres = parse_script_expr(L"delete Object.prototype.toLocaleString; Array.prototype.toLocaleString.call([])", &v, NULL);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!lstrcmpW(V_BSTR(&v), L""), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    hres = parse_script_expr(L"delete Object.prototype.toLocaleString; Array.prototype.toLocaleString.call(['a'])", &v, NULL);
+    ok(hres == 0x800a01b6, "parse_script_expr failed: %08lx\n", hres);
+
+    test_number_localization();
     test_default_value();
+    test_propputref();
     test_retval();
 
     testing_expr = FALSE;
@@ -2546,59 +3366,489 @@ static void test_script_exprs(void)
 
 static void test_invokeex(void)
 {
-    DISPID func_id, prop_id;
-    DISPPARAMS dp = {NULL};
+    static DISPID propput_dispid = DISPID_PROPERTYPUT;
+    DISPPARAMS dp = {NULL}, dp_max = {NULL};
+    DISPID func_id, max_id, prop_id;
     IActiveScript *script;
     IDispatchEx *dispex;
-    VARIANT v;
+    VARIANT v, arg;
     BSTR str;
     HRESULT hres;
 
-    hres = parse_script_expr("var o = {func: function() {return 3;}, prop: 6}; o", &v, &script);
-    ok(hres == S_OK, "parse_script_expr failed: %08x\n", hres);
+    hres = parse_script_expr(L"var o = {func: function() {return 3;}, max: Math.max, prop: 6}; o", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
     ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
 
     hres = IDispatch_QueryInterface(V_DISPATCH(&v), &IID_IDispatchEx, (void**)&dispex);
-    ok(hres == S_OK, "Could not get IDispatchEx iface: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
     VariantClear(&v);
 
-    str = a2bstr("func");
+    str = SysAllocString(L"func");
     hres = IDispatchEx_GetDispID(dispex, str, 0, &func_id);
     SysFreeString(str);
-    ok(hres == S_OK, "GetDispID failed: %08x\n", hres);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
 
-    str = a2bstr("prop");
+    str = SysAllocString(L"max");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &max_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    str = SysAllocString(L"prop");
     hres = IDispatchEx_GetDispID(dispex, str, 0, &prop_id);
     SysFreeString(str);
-    ok(hres == S_OK, "GetDispID failed: %08x\n", hres);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    dp_max.rgvarg = &arg;
+    dp_max.cArgs = 1;
+    V_VT(&arg) = VT_I4;
+    V_I4(&arg) = 42;
 
     hres = IDispatchEx_InvokeEx(dispex, func_id, 0, DISPATCH_METHOD, &dp, &v, NULL, NULL);
-    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
     ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
-    ok(V_I4(&v) == 3, "V_I4(v) = %d\n", V_I4(&v));
+    ok(V_I4(&v) == 3, "V_I4(v) = %ld\n", V_I4(&v));
+
+    hres = IDispatchEx_InvokeEx(dispex, max_id, 0, DISPATCH_METHOD, &dp_max, &v, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I4(&v) == 42, "V_I4(v) = %ld\n", V_I4(&v));
 
     hres = IDispatchEx_InvokeEx(dispex, prop_id, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
-    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
     ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
-    ok(V_I4(&v) == 6, "V_I4(v) = %d\n", V_I4(&v));
+    ok(V_I4(&v) == 6, "V_I4(v) = %ld\n", V_I4(&v));
 
     hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_UNINITIALIZED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
 
-    str = a2bstr("func");
+    str = SysAllocString(L"func");
     hres = IDispatchEx_GetDispID(dispex, str, 0, &func_id);
     SysFreeString(str);
-    ok(hres == S_OK, "GetDispID failed: %08x\n", hres);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
 
+    V_VT(&v) = VT_EMPTY;
     hres = IDispatchEx_InvokeEx(dispex, func_id, 0, DISPATCH_METHOD, &dp, &v, NULL, NULL);
-    ok(hres == E_UNEXPECTED || broken(hres == 0x800a1393), "InvokeEx failed: %08x\n", hres);
+    ok(hres == E_UNEXPECTED || broken(hres == 0x800a1393), "InvokeEx failed: %08lx\n", hres);
 
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatchEx_InvokeEx(dispex, max_id, 0, DISPATCH_METHOD, &dp_max, &v, NULL, NULL);
+    ok(hres == E_UNEXPECTED || broken(hres == 0x800a1393), "InvokeEx failed: %08lx\n", hres);
+
+    V_VT(&v) = VT_EMPTY;
     hres = IDispatchEx_InvokeEx(dispex, prop_id, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
-    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
     ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
-    ok(V_I4(&v) == 6, "V_I4(v) = %d\n", V_I4(&v));
+    ok(V_I4(&v) == 6, "V_I4(v) = %ld\n", V_I4(&v));
+
+    IActiveScript_Close(script);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IDispatchEx_InvokeEx(dispex, prop_id, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I4(&v) == 6, "V_I4(v) = %ld\n", V_I4(&v));
 
     IDispatchEx_Release(dispex);
+    IActiveScript_Release(script);
+
+    hres = parse_script_expr(L"Math.max", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+
+    hres = IDispatch_QueryInterface(V_DISPATCH(&v), &IID_IDispatchEx, (void**)&dispex);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
+    VariantClear(&v);
+
+    str = SysAllocString(L"call");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &func_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_UNINITIALIZED);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
+
+    str = SysAllocString(L"call");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &func_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    str = SysAllocString(L"length");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &prop_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    hres = IDispatchEx_InvokeEx(dispex, func_id, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    VariantClear(&v);
+
+    hres = IDispatchEx_InvokeEx(dispex, prop_id, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I4(&v) == 2, "V_I4(v) = %ld\n", V_I4(&v));
+
+    IDispatchEx_Release(dispex);
+    IActiveScript_Release(script);
+
+    hres = parse_script_expr(L"Math.max", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+
+    hres = IDispatch_QueryInterface(V_DISPATCH(&v), &IID_IDispatchEx, (void**)&dispex);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
+    VariantClear(&v);
+
+    hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_UNINITIALIZED);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
+
+    str = SysAllocString(L"call");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &func_id);
+    SysFreeString(str);
+    ok(hres == E_UNEXPECTED, "GetDispID failed: %08lx\n", hres);
+
+    IDispatchEx_Release(dispex);
+    IActiveScript_Release(script);
+
+    /* test InvokeEx following prototype chain of builtin object (PROP_PROTREF) */
+    hres = parse_script_expr(L"o = new Array(); o.push(\"foo\"); o", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+
+    hres = IDispatch_QueryInterface(V_DISPATCH(&v), &IID_IDispatchEx, (void**)&dispex);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
+    VariantClear(&v);
+
+    str = SysAllocString(L"push");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &func_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    dp.rgvarg = &arg;
+    dp.cArgs = 1;
+    V_VT(&arg) = VT_BSTR;
+    V_BSTR(&arg) = SysAllocString(L"bar");
+
+    hres = IDispatchEx_InvokeEx(dispex, func_id, 0, DISPATCH_METHOD, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    SysFreeString(V_BSTR(&arg));
+
+    str = SysAllocString(L"join");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &func_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    V_BSTR(&arg) = SysAllocString(L";");
+    hres = IDispatchEx_InvokeEx(dispex, func_id, 0, DISPATCH_METHOD, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    SysFreeString(V_BSTR(&arg));
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!lstrcmpW(V_BSTR(&v), L"foo;bar"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+
+    VariantClear(&v);
+
+    dp.rgvarg = NULL;
+    dp.cArgs = 0;
+
+    IDispatchEx_Release(dispex);
+    IActiveScript_Release(script);
+
+    /* test InvokeEx following prototype chain of JScript objects (PROP_JSVAL) */
+    hres = parse_script_expr(L"function c() { this.func = function() { return this.prop1 * this.prop2 };"
+                             L"this.prop1 = 6; this.prop2 = 9; }; var o = new c(); o.prop2 = 7; o",
+                             &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+
+    hres = IDispatch_QueryInterface(V_DISPATCH(&v), &IID_IDispatchEx, (void**)&dispex);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
+    VariantClear(&v);
+
+    str = SysAllocString(L"prop1");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &prop_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    hres = IDispatchEx_InvokeEx(dispex, prop_id, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I4(&v) == 6, "V_I4(v) = %ld\n", V_I4(&v));
+
+    str = SysAllocString(L"prop2");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &prop_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    hres = IDispatchEx_InvokeEx(dispex, prop_id, 0, DISPATCH_PROPERTYGET, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I4(&v) == 7, "V_I4(v) = %ld\n", V_I4(&v));
+
+    str = SysAllocString(L"func");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &func_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    hres = IDispatchEx_InvokeEx(dispex, func_id, 0, DISPATCH_METHOD, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I4(&v) == 42, "V_I4(v) = %s\n", wine_dbgstr_variant(&v));
+
+    IDispatchEx_Release(dispex);
+    IActiveScript_Release(script);
+
+    /* test InvokeEx with host prop and custom caller */
+    hres = parse_script_expr(L"var o = {}; o", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+
+    hres = IDispatch_QueryInterface(V_DISPATCH(&v), &IID_IDispatchEx, (void**)&dispex);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
+    VariantClear(&v);
+
+    str = SysAllocString(L"caller");
+    hres = IDispatchEx_GetDispID(dispex, str, fdexNameEnsure, &func_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    SET_EXPECT(test_caller_get);
+    dp.cArgs = dp.cNamedArgs = 1;
+    dp.rgvarg = &arg;
+    dp.rgdispidNamedArgs = &propput_dispid;
+    V_VT(&arg) = VT_DISPATCH;
+    V_DISPATCH(&arg) = (IDispatch*)&testcallerobj;
+    hres = IDispatchEx_InvokeEx(dispex, func_id, 0, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    todo_wine
+    CHECK_CALLED(test_caller_get);
+
+    SET_EXPECT(test_caller_null);
+    dp.cArgs = dp.cNamedArgs = 0;
+    dp.rgvarg = NULL;
+    dp.rgdispidNamedArgs = NULL;
+    hres = IDispatchEx_InvokeEx(dispex, func_id, 0, DISPATCH_METHOD, &dp, &v, NULL, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I4(&v) == 42, "V_I4(v) = %s\n", wine_dbgstr_variant(&v));
+    CHECK_CALLED(test_caller_null);
+    V_VT(&v) = VT_EMPTY;
+
+    SET_EXPECT(test_caller_obj);
+    hres = IDispatchEx_InvokeEx(dispex, func_id, 0, DISPATCH_METHOD, &dp, &v, NULL, &sp_obj);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I4(&v) == 137, "V_I4(v) = %s\n", wine_dbgstr_variant(&v));
+    CHECK_CALLED(test_caller_obj);
+
+    IDispatchEx_Release(dispex);
+    IActiveScript_Release(script);
+}
+
+static void test_members(void)
+{
+    DISPID func_id, prop_id;
+    IActiveScript *script;
+    IDispatchEx *dispex;
+    DWORD propflags;
+    HRESULT hres;
+    VARIANT v;
+    BSTR str;
+
+    hres = parse_script_expr(L"var o = { func: function() {}, prop: 1 }; o", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+
+    hres = IDispatch_QueryInterface(V_DISPATCH(&v), &IID_IDispatchEx, (void**)&dispex);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
+    VariantClear(&v);
+
+    str = SysAllocString(L"func");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &func_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    str = SysAllocString(L"prop");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &prop_id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+
+    hres = IDispatchEx_GetMemberName(dispex, func_id, &str);
+    ok(hres == S_OK, "GetMemberName failed: %08lx\n", hres);
+    ok(!wcscmp(str, L"func"), "GetMemberName returned %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IDispatchEx_GetMemberName(dispex, prop_id, &str);
+    ok(hres == S_OK, "GetMemberName failed: %08lx\n", hres);
+    ok(!wcscmp(str, L"prop"), "GetMemberName returned %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    propflags = 0xdeadbeef;
+    hres = IDispatchEx_GetMemberProperties(dispex, func_id, 0, &propflags);
+    ok(hres == S_OK, "GetMemberProperties failed: %08lx\n", hres);
+    ok(propflags == 0, "propflags = %08lx", propflags);
+
+    propflags = 0xdeadbeef;
+    hres = IDispatchEx_GetMemberProperties(dispex, prop_id, 0, &propflags);
+    ok(hres == S_OK, "GetMemberProperties failed: %08lx\n", hres);
+    ok(propflags == 0, "propflags = %08lx", propflags);
+
+    hres = IDispatchEx_DeleteMemberByDispID(dispex, func_id);
+    ok(hres == S_OK, "DeleteMemberByDispID failed: %08lx\n", hres);
+
+    hres = IDispatchEx_GetMemberName(dispex, func_id, &str);
+    ok(hres == DISP_E_MEMBERNOTFOUND, "GetMemberName failed: %08lx\n", hres);
+    hres = IDispatchEx_GetMemberProperties(dispex, func_id, 0, &propflags);
+    ok(hres == DISP_E_MEMBERNOTFOUND, "GetMemberProperties failed: %08lx\n", hres);
+
+    hres = IDispatchEx_GetMemberName(dispex, prop_id, &str);
+    ok(hres == S_OK, "GetMemberName failed: %08lx\n", hres);
+    ok(!wcscmp(str, L"prop"), "GetMemberName returned %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+    propflags = 0xdeadbeef;
+    hres = IDispatchEx_GetMemberProperties(dispex, prop_id, 0, &propflags);
+    ok(hres == S_OK, "GetMemberProperties failed: %08lx\n", hres);
+    ok(propflags == 0, "propflags = %08lx", propflags);
+
+    str = SysAllocString(L"prop");
+    hres = IDispatchEx_DeleteMemberByName(dispex, str, 0);
+    ok(hres == S_OK, "DeleteMemberByName failed: %08lx\n", hres);
+    SysFreeString(str);
+
+    hres = IDispatchEx_GetMemberName(dispex, prop_id, &str);
+    ok(hres == DISP_E_MEMBERNOTFOUND, "GetMemberName failed: %08lx\n", hres);
+    hres = IDispatchEx_GetMemberProperties(dispex, prop_id, 0, &propflags);
+    ok(hres == DISP_E_MEMBERNOTFOUND, "GetMemberProperties failed: %08lx\n", hres);
+
+    IDispatchEx_Release(dispex);
+    IActiveScript_Release(script);
+}
+
+static void test_destructors(void)
+{
+    static const WCHAR cyclic_refs[] = L"(function() {\n"
+        "var a = function() {}, c = { 'a': a, 'ref': Math }, b = { 'a': a, 'c': c };\n"
+        "Math.ref = { 'obj': testDestrObj, 'ref': Math, 'a': a, 'b': b };\n"
+        "a.ref = { 'ref': Math, 'a': a }; b.ref = Math.ref;\n"
+        "a.self = a; b.self = b; c.self = c;\n"
+    "})(), true";
+    static DISPID propput_dispid = DISPID_PROPERTYPUT;
+    IActiveScript *script, *script2;
+    IDispatchEx *dispex, *dispex2;
+    IActiveScriptParse *parser;
+    DISPPARAMS dp = { 0 };
+    VARIANT v;
+    DISPID id;
+    BSTR str;
+    HRESULT hres;
+
+    V_VT(&v) = VT_EMPTY;
+    hres = parse_script_expr(L"Math.ref = testDestrObj, isNaN.ref = testDestrObj, true", &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BOOL, "V_VT(v) = %d\n", V_VT(&v));
+
+    SET_EXPECT(testdestrobj);
+    hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_UNINITIALIZED);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_UNINITIALIZED) failed: %08lx\n", hres);
+    CHECK_CALLED(testdestrobj);
+
+    IActiveScript_Release(script);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = parse_script_expr(cyclic_refs, &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BOOL, "V_VT(v) = %d\n", V_VT(&v));
+
+    SET_EXPECT(testdestrobj);
+    hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_UNINITIALIZED);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_UNINITIALIZED) failed: %08lx\n", hres);
+    CHECK_CALLED(testdestrobj);
+
+    IActiveScript_Release(script);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = parse_script_expr(cyclic_refs, &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BOOL, "V_VT(v) = %d\n", V_VT(&v));
+
+    hres = IActiveScript_QueryInterface(script, &IID_IActiveScriptParse, (void**)&parser);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
+
+    SET_EXPECT(testdestrobj);
+    V_VT(&v) = VT_EMPTY;
+    hres = IActiveScriptParse_ParseScriptText(parser, L"Math.ref = undefined, CollectGarbage(), true",
+                                              NULL, NULL, NULL, 0, 0, SCRIPTTEXT_ISEXPRESSION, &v, NULL);
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BOOL, "V_VT(v) = %d\n", V_VT(&v));
+    IActiveScriptParse_Release(parser);
+    CHECK_CALLED(testdestrobj);
+
+    IActiveScript_Release(script);
+
+    /* Create a cyclic ref across two jscript engines */
+    V_VT(&v) = VT_EMPTY;
+    hres = parse_script_expr(cyclic_refs, &v, &script);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BOOL, "V_VT(v) = %d\n", V_VT(&v));
+
+    hres = IActiveScript_QueryInterface(script, &IID_IActiveScriptParse, (void**)&parser);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IActiveScriptParse_ParseScriptText(parser, L"Math.ref", NULL, NULL, NULL, 0, 0, SCRIPTTEXT_ISEXPRESSION, &v, NULL);
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) != NULL, "V_DISPATCH(v) = NULL\n");
+
+    hres = IDispatch_QueryInterface(V_DISPATCH(&v), &IID_IDispatchEx, (void**)&dispex);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
+    VariantClear(&v);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = parse_script_expr(L"new Object()", &v, &script2);
+    ok(hres == S_OK, "parse_script_expr failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) != NULL, "V_DISPATCH(v) = NULL\n");
+
+    hres = IDispatch_QueryInterface(V_DISPATCH(&v), &IID_IDispatchEx, (void**)&dispex2);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
+    VariantClear(&v);
+
+    dp.cArgs = dp.cNamedArgs = 1;
+    dp.rgdispidNamedArgs = &propput_dispid;
+    dp.rgvarg = &v;
+
+    str = SysAllocString(L"diff_ctx");
+    hres = IDispatchEx_GetDispID(dispex, str, fdexNameEnsure, &id);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+    SysFreeString(str);
+
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = (IDispatch*)dispex2;
+    hres = IDispatchEx_Invoke(dispex, id, &IID_NULL, 0, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+
+    str = SysAllocString(L"ref");
+    hres = IDispatchEx_GetDispID(dispex2, str, fdexNameEnsure, &id);
+    ok(hres == S_OK, "GetDispID failed: %08lx\n", hres);
+    SysFreeString(str);
+
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = (IDispatch*)dispex;
+    hres = IDispatchEx_Invoke(dispex2, id, &IID_NULL, 0, DISPATCH_PROPERTYPUT, &dp, NULL, NULL, NULL);
+    ok(hres == S_OK, "Invoke failed: %08lx\n", hres);
+
+    IDispatchEx_Release(dispex2);
+    IDispatchEx_Release(dispex);
+
+    SET_EXPECT(testdestrobj);
+    V_VT(&v) = VT_EMPTY;
+    hres = IActiveScriptParse_ParseScriptText(parser, L"Math.ref = undefined, CollectGarbage(), true",
+                                              NULL, NULL, NULL, 0, 0, SCRIPTTEXT_ISEXPRESSION, &v, NULL);
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
+    ok(V_VT(&v) == VT_BOOL, "V_VT(v) = %d\n", V_VT(&v));
+    IActiveScriptParse_Release(parser);
+    CHECK_CALLED(testdestrobj);
+
+    IActiveScript_Release(script2);
     IActiveScript_Release(script);
 }
 
@@ -2617,34 +3867,34 @@ static void test_eval(void)
     engine = create_script();
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
 
     hres = IActiveScriptParse_InitNew(parser);
-    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+    ok(hres == S_OK, "InitNew failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
-    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptSite failed: %08lx\n", hres);
 
     SET_EXPECT(GetItemInfo_testVal);
-    hres = IActiveScript_AddNamedItem(engine, test_valW,
+    hres = IActiveScript_AddNamedItem(engine, L"testVal",
             SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE|SCRIPTITEM_GLOBALMEMBERS);
-    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+    ok(hres == S_OK, "AddNamedItem failed: %08lx\n", hres);
     CHECK_CALLED(GetItemInfo_testVal);
 
     hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
 
     hres = IActiveScript_GetScriptDispatch(engine, NULL, &script_disp);
-    ok(hres == S_OK, "GetScriptDispatch failed: %08x\n", hres);
+    ok(hres == S_OK, "GetScriptDispatch failed: %08lx\n", hres);
     ok(script_disp != NULL, "script_disp == NULL\n");
 
     hres = IDispatch_QueryInterface(script_disp, &IID_IDispatchEx, (void**)&script_dispex);
-    ok(hres == S_OK, "Could not get IDispatchEx iface: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08lx\n", hres);
     IDispatch_Release(script_disp);
 
-    str = a2bstr("eval");
+    str = SysAllocString(L"eval");
     hres = IDispatchEx_GetDispID(script_dispex, str, 0, &id);
-    ok(hres == S_OK, "Could not get eval dispid: %08x\n", hres);
+    ok(hres == S_OK, "Could not get eval dispid: %08lx\n", hres);
     SysFreeString(str);
 
     params.rgvarg = &arg;
@@ -2653,54 +3903,53 @@ static void test_eval(void)
     params.cNamedArgs = 0;
     V_VT(&arg) = VT_BSTR;
 
-    V_BSTR(&arg) = a2bstr("var v = 1;");
+    V_BSTR(&arg) = SysAllocString(L"var v = 1;");
     V_VT(&res) = VT_ERROR;
     hres = IDispatchEx_InvokeEx(script_dispex, id, 0, DISPATCH_METHOD, &params, &res, NULL, NULL);
-    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
     ok(V_VT(&res) == VT_EMPTY, "eval returned type %u\n", V_VT(&res));
     SysFreeString(V_BSTR(&arg));
 
-    V_BSTR(&arg) = a2bstr("v");
+    V_BSTR(&arg) = SysAllocString(L"v");
     V_VT(&res) = VT_ERROR;
     hres = IDispatchEx_InvokeEx(script_dispex, id, 0, DISPATCH_METHOD, &params, &res, NULL, NULL);
-    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
     ok(V_VT(&res) == VT_I4, "eval returned type %u\n", V_VT(&res));
-    ok(V_I4(&res) == 1, "eval returned %d\n", V_I4(&res));
+    ok(V_I4(&res) == 1, "eval returned %ld\n", V_I4(&res));
     SysFreeString(V_BSTR(&arg));
 
-    str = a2bstr("v");
+    str = SysAllocString(L"v");
     hres = IDispatchEx_GetDispID(script_dispex, str, 0, &v_id);
-    ok(hres == S_OK, "Could not get v dispid: %08x\n", hres);
+    ok(hres == S_OK, "Could not get v dispid: %08lx\n", hres);
     SysFreeString(str);
 
     params.rgvarg = NULL;
     params.cArgs = 0;
     V_VT(&res) = VT_ERROR;
     hres = IDispatchEx_InvokeEx(script_dispex, v_id, 0, DISPATCH_PROPERTYGET, &params, &res, NULL, NULL);
-    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(hres == S_OK, "InvokeEx failed: %08lx\n", hres);
     ok(V_VT(&res) == VT_I4, "eval returned type %u\n", V_VT(&res));
-    ok(V_I4(&res) == 1, "eval returned %d\n", V_I4(&res));
+    ok(V_I4(&res) == 1, "eval returned %ld\n", V_I4(&res));
 
     SET_EXPECT(global_calleval_i);
-    str = a2bstr("(function(){"
-                 "    var v = 2;"
-                 "    callEval(eval);"
-                 "    ok(x === 5, 'x = ' + x);"
-                 "})();");
-    hres = IActiveScriptParse_ParseScriptText(parser, str, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
-    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
-    SysFreeString(str);
+    hres = IActiveScriptParse_ParseScriptText(parser,
+                                              L"(function(){"
+                                              L"    var v = 2;"
+                                              L"    callEval(eval);"
+                                              L"    ok(x === 5, 'x = ' + x);"
+                                              L"})();",
+                                              NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
     CHECK_CALLED(global_calleval_i);
 
-    str = a2bstr("x");
+    str = SysAllocString(L"x");
     hres = IDispatchEx_GetDispID(script_dispex, str, 0, &id);
-    ok(hres == DISP_E_UNKNOWNNAME, "GetDispID(x) returned %08x\n", hres);
+    ok(hres == DISP_E_UNKNOWNNAME, "GetDispID(x) returned %08lx\n", hres);
     SysFreeString(str);
 
     IDispatchEx_Release(script_dispex);
     IActiveScriptParse_Release(parser);
-    IActiveScript_Close(engine);
-    IActiveScript_Release(engine);
+    close_script(engine);
 }
 
 struct bom_test
@@ -2715,17 +3964,17 @@ static void run_bom_tests(void)
     int i;
     HRESULT hres;
     struct bom_test bom_tests[] = {
-        {{'v','a','r',' ','a',' ','=',' ','1',';',' ','r','e','p','o','r','t','S','u','c','c','e','s','s','(',')',';','\0'}, S_OK},
-        {{0xFEFF,'v','a','r',' ','a',' ','=',' ','1',';',' ','r','e','p','o','r','t','S','u','c','c','e','s','s','(',')',';','\0'}, S_OK},
-        {{'v',0xFEFF,'a','r',' ','a',' ','=',' ','1',';',' ','r','e','p','o','r','t','S','u','c','c','e','s','s','(',')',';','\0'}, JS_E_OUT_OF_MEMORY},
-        {{'v','a','r',0xFEFF,' ','a',' ','=',' ','1',';',' ','r','e','p','o','r','t','S','u','c','c','e','s','s','(',')',';','\0'}, S_OK},
-        {{'v','a','r',' ','a',' ','=',' ','1',';',' ',0xFEFF,'r','e','p','o','r','t','S','u','c','c','e','s','s','(',')',';','\0'}, S_OK},
-        {{'v','a','r',' ','a',' ','=',' ','1',';',' ','r','e','p','o','r','t',0xFEFF,'S','u','c','c','e','s','s','(',')',';','\0'}, JS_E_OUT_OF_MEMORY},
-        {{'v','a','r',' ','a',' ','=',' ','1',';',' ','r','e','p','o','r','t','S','u','c','c','e','s','s',0xFEFF,'(',')',';','\0'}, S_OK},
-        {{'v','a','r',' ','a',' ','=',' ','1',';',' ','r','e','p','o','r','t','S','u','c','c','e','s','s','(',0xFEFF,')',';','\0'}, S_OK},
-        {{'v','a','r',' ','a',' ','=',0xFEFF,' ','1',';',' ','r','e','p','o','r','t','S','u','c','c','e','s','s','(',0xFEFF,')',';','\0'}, S_OK},
-        {{0xFEFF,'v','a','r',' ','a',' ','=',0xFEFF,0xFEFF,' ','1',';',' ','r','e','p','o','r','t','S','u','c','c','e','s','s','(',0xFEFF,')',';','\0'}, S_OK},
-        {{0}}
+        {L"var a = 1; reportSuccess();", S_OK},
+        {L"\xfeffvar a = 1; reportSuccess();", S_OK},
+        {L"v\xfeff" "ar a = 1; reportSuccess();", JS_E_OUT_OF_MEMORY},
+        {L"var\xfeff a = 1; reportSuccess();", S_OK},
+        {L"var a = 1; \xfeffreportSuccess();", S_OK},
+        {L"var a = 1; report\xfeffSuccess();", JS_E_OUT_OF_MEMORY},
+        {L"var a = 1; reportSuccess\xfeff();", S_OK},
+        {L"var a = 1; reportSuccess(\xfeff);", S_OK},
+        {L"var a =\xfeff 1; reportSuccess(\xfeff);", S_OK},
+        {L"\xfeffvar a =\xfeff\xfeff 1; reportSuccess(\xfeff);", S_OK},
+        {L""}
     };
 
     engine_clsid = &CLSID_JScript;
@@ -2738,7 +3987,7 @@ static void run_bom_tests(void)
              SET_EXPECT(global_success_i);
              src = SysAllocString(bom_tests[i].str);
              hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, src);
-             ok(hres == S_OK, "test %s failed with %08x\n", wine_dbgstr_w(src), hres);
+             ok(hres == S_OK, "test %s failed with %08lx\n", wine_dbgstr_w(src), hres);
              SysFreeString(src);
              CHECK_CALLED(global_success_d);
              CHECK_CALLED(global_success_i);
@@ -2747,7 +3996,7 @@ static void run_bom_tests(void)
         {
              src = SysAllocString(bom_tests[i].str);
              hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, src);
-             todo_wine ok(hres == bom_tests[i].hres, "test %s returned with %08x\n", wine_dbgstr_w(src), hres);
+             todo_wine ok(hres == bom_tests[i].hres, "test %s returned with %08lx\n", wine_dbgstr_w(src), hres);
              SysFreeString(src);
         }
     }
@@ -2770,228 +4019,243 @@ static BOOL run_tests(void)
 
     strict_dispid_check = TRUE;
 
-    parse_script_a("");
-    parse_script_a("/* empty */ ;");
+    run_script(L"");
+    run_script(L"/* empty */ ;");
 
     SET_EXPECT(global_propget_d);
     SET_EXPECT(global_propget_i);
-    parse_script_a("testPropGet;");
+    run_script(L"testPropGet;");
     CHECK_CALLED(global_propget_d);
     CHECK_CALLED(global_propget_i);
 
     SET_EXPECT(global_propput_d);
     SET_EXPECT(global_propput_i);
-    parse_script_a("testPropPut = 1;");
+    run_script(L"testPropPut = 1;");
     CHECK_CALLED(global_propput_d);
     CHECK_CALLED(global_propput_i);
 
     SET_EXPECT(global_propputref_d);
     SET_EXPECT(global_propputref_i);
-    parse_script_a("testPropPutRef = new Object();");
+    run_script(L"testPropPutRef = new Object();");
     CHECK_CALLED(global_propputref_d);
     CHECK_CALLED(global_propputref_i);
 
     SET_EXPECT(global_propputref_d);
     SET_EXPECT(global_propputref_i);
-    parse_script_a("testPropPutRef = testObj;");
+    run_script(L"testPropPutRef = testObj;");
     CHECK_CALLED(global_propputref_d);
     CHECK_CALLED(global_propputref_i);
 
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
-    parse_script_a("reportSuccess();");
+    run_script(L"reportSuccess();");
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
 
     SET_EXPECT(testobj_delete_test);
-    parse_script_a("ok((delete testObj.deleteTest) === true, 'delete testObj.deleteTest did not return true');");
+    run_script(L"ok((delete testObj.deleteTest) === true, 'delete testObj.deleteTest did not return true');");
     CHECK_CALLED(testobj_delete_test);
 
     SET_EXPECT(testobj_delete_nodelete);
-    parse_script_a("ok((delete testObj.noDeleteTest) === false, 'delete testObj.noDeleteTest did not return false');");
+    run_script(L"ok((delete testObj.noDeleteTest) === false, 'delete testObj.noDeleteTest did not return false');");
     CHECK_CALLED(testobj_delete_nodelete);
 
     SET_EXPECT(global_propdelete_d);
     SET_EXPECT(DeleteMemberByDispID);
-    parse_script_a("ok((delete testPropDelete) === true, 'delete testPropDelete did not return true');");
+    run_script(L"ok((delete testPropDelete) === true, 'delete testPropDelete did not return true');");
     CHECK_CALLED(global_propdelete_d);
     CHECK_CALLED(DeleteMemberByDispID);
 
     SET_EXPECT(global_nopropdelete_d);
     SET_EXPECT(DeleteMemberByDispID_false);
-    parse_script_a("ok((delete testNoPropDelete) === false, 'delete testPropDelete did not return false');");
+    run_script(L"ok((delete testNoPropDelete) === false, 'delete testPropDelete did not return false');");
     CHECK_CALLED(global_nopropdelete_d);
     CHECK_CALLED(DeleteMemberByDispID_false);
 
     SET_EXPECT(global_propdeleteerror_d);
     SET_EXPECT(DeleteMemberByDispID_error);
-    parse_script_ae("delete testPropDeleteError;", E_FAIL);
+    hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, L"delete testPropDeleteError;");
+    ok(hres == E_FAIL, "unexpected result %08lx\n", hres);
     CHECK_CALLED(global_propdeleteerror_d);
     CHECK_CALLED(DeleteMemberByDispID_error);
 
     SET_EXPECT(puredisp_prop_d);
-    parse_script_a("ok((delete pureDisp.prop) === false, 'delete pureDisp.prop did not return true');");
+    run_script(L"ok((delete pureDisp.prop) === false, 'delete pureDisp.prop did not return true');");
     CHECK_CALLED(puredisp_prop_d);
 
     SET_EXPECT(puredisp_noprop_d);
-    parse_script_a("ok((delete pureDisp.noprop) === true, 'delete pureDisp.noprop did not return false');");
+    run_script(L"ok((delete pureDisp.noprop) === true, 'delete pureDisp.noprop did not return false');");
     CHECK_CALLED(puredisp_noprop_d);
 
     SET_EXPECT(puredisp_value);
-    parse_script_a("var t=pureDisp; t=t(false);");
+    run_script(L"var t=pureDisp; t=t(false);");
     CHECK_CALLED(puredisp_value);
 
     SET_EXPECT(puredisp_value);
-    parse_script_a("var t = {func: pureDisp}; t = t.func(false);");
+    run_script(L"var t = {func: pureDisp}; t = t.func(false);");
     CHECK_CALLED(puredisp_value);
 
     SET_EXPECT(dispexfunc_value);
-    parse_script_a("var t = dispexFunc; t = t(false);");
+    run_script(L"var t = dispexFunc; t = t(false);");
     CHECK_CALLED(dispexfunc_value);
 
     SET_EXPECT(dispexfunc_value);
-    parse_script_a("var t = {func: dispexFunc}; t = t.func(false);");
+    run_script(L"var t = {func: dispexFunc}; t = t.func(false);");
     CHECK_CALLED(dispexfunc_value);
 
     SET_EXPECT(dispexfunc_value);
-    parse_script_a("Function.prototype.apply.call(dispexFunc, testObj, [true]);");
+    run_script(L"Function.prototype.apply.call(dispexFunc, testObj, [true]);");
     CHECK_CALLED(dispexfunc_value);
 
     SET_EXPECT(puredisp_value);
-    parse_script_a("Function.prototype.apply.call(pureDisp, testObj, [true]);");
+    run_script(L"Function.prototype.apply.call(pureDisp, testObj, [true]);");
     CHECK_CALLED(puredisp_value);
 
-    parse_script_a("(function reportSuccess() {})()");
+    run_script(L"(function reportSuccess() {})()");
 
-    parse_script_a("ok(typeof(test) === 'object', \"typeof(test) != 'object'\");");
+    run_script(L"ok(typeof(test) === 'object', \"typeof(test) != 'object'\");");
 
-    parse_script_a("function reportSuccess() {}; reportSuccess();");
+    run_script(L"function reportSuccess() {}; reportSuccess();");
 
     SET_EXPECT(global_propget_d);
-    parse_script_a("var testPropGet");
+    run_script(L"var testPropGet");
     CHECK_CALLED(global_propget_d);
 
     SET_EXPECT(global_propget_d);
-    parse_script_a("eval('var testPropGet;');");
+    run_script(L"eval('var testPropGet;');");
     CHECK_CALLED(global_propget_d);
 
-    parse_script_a("var testPropGet; function testPropGet() {}");
+    run_script(L"var testPropGet; function testPropGet() {}");
 
     SET_EXPECT(global_notexists_d);
-    parse_script_a("var notExists; notExists = 1;");
+    run_script(L"var notExists; notExists = 1;");
     CHECK_CALLED(global_notexists_d);
 
     SET_EXPECT(testobj_notexists_d);
-    parse_script_a("testObj.notExists;");
+    run_script(L"testObj.notExists;");
     CHECK_CALLED(testobj_notexists_d);
 
-    parse_script_a("function f() { var testPropGet; }");
-    parse_script_a("(function () { var testPropGet; })();");
-    parse_script_a("(function () { eval('var testPropGet;'); })();");
+    run_script(L"function f() { var testPropGet; }");
+    run_script(L"(function () { var testPropGet; })();");
+    run_script(L"(function () { eval('var testPropGet;'); })();");
 
     SET_EXPECT(invoke_func);
-    parse_script_a("ok(propGetFunc() == 0, \"Incorrect propGetFunc value\");");
+    run_script(L"ok(propGetFunc() == 0, \"Incorrect propGetFunc value\");");
     CHECK_CALLED(invoke_func);
-    parse_script_a("ok(propGetFunc(1) == 1, \"Incorrect propGetFunc value\");");
-    parse_script_a("ok(propGetFunc(1, 2) == 2, \"Incorrect propGetFunc value\");");
+    run_script(L"ok(propGetFunc(1) == 1, \"Incorrect propGetFunc value\");");
+    run_script(L"ok(propGetFunc(1, 2) == 2, \"Incorrect propGetFunc value\");");
     SET_EXPECT(invoke_func);
-    parse_script_a("ok(propGetFunc().toString() == 0, \"Incorrect propGetFunc value\");");
+    run_script(L"ok(propGetFunc().toString() == 0, \"Incorrect propGetFunc value\");");
     CHECK_CALLED(invoke_func);
-    parse_script_a("ok(propGetFunc(1).toString() == 1, \"Incorrect propGetFunc value\");");
+    run_script(L"ok(propGetFunc(1).toString() == 1, \"Incorrect propGetFunc value\");");
     SET_EXPECT(invoke_func);
-    parse_script_a("propGetFunc(1);");
+    run_script(L"propGetFunc(1);");
     CHECK_CALLED(invoke_func);
 
-    parse_script_a("objectFlag(1).toString();");
+    run_script(L"objectFlag(1).toString();");
 
-    parse_script_a("(function() { var tmp = (function () { return testObj; })()(1);})();");
-    parse_script_a("(function() { var tmp = (function () { return testObj; })()();})();");
+    run_script(L"(function() { var tmp = (function () { return testObj; })()(1);})();");
+    run_script(L"(function() { var tmp = (function () { return testObj; })()();})();");
 
-    parse_script_a("ok((testObj instanceof Object) === false, 'testObj is instance of Object');");
+    run_script(L"ok((testObj instanceof Object) === false, 'testObj is instance of Object');");
 
     SET_EXPECT(testobj_prop_d);
-    parse_script_a("ok(('prop' in testObj) === true, 'prop is not in testObj');");
+    run_script(L"ok(('prop' in testObj) === true, 'prop is not in testObj');");
     CHECK_CALLED(testobj_prop_d);
 
     SET_EXPECT(testobj_noprop_d);
-    parse_script_a("ok(('noprop' in testObj) === false, 'noprop is in testObj');");
+    run_script(L"ok(('noprop' in testObj) === false, 'noprop is in testObj');");
     CHECK_CALLED(testobj_noprop_d);
 
     SET_EXPECT(testobj_prop_d);
-    parse_script_a("ok(Object.prototype.hasOwnProperty.call(testObj, 'prop') === true, 'hasOwnProperty(\\\"prop\\\") returned false');");
+    run_script(L"ok(Object.prototype.hasOwnProperty.call(testObj, 'prop') === true, 'hasOwnProperty(\\\"prop\\\") returned false');");
     CHECK_CALLED(testobj_prop_d);
 
     SET_EXPECT(testobj_noprop_d);
-    parse_script_a("ok(Object.prototype.hasOwnProperty.call(testObj, 'noprop') === false, 'hasOwnProperty(\\\"noprop\\\") returned true');");
+    run_script(L"ok(Object.prototype.hasOwnProperty.call(testObj, 'noprop') === false, 'hasOwnProperty(\\\"noprop\\\") returned true');");
     CHECK_CALLED(testobj_noprop_d);
 
     SET_EXPECT(puredisp_prop_d);
-    parse_script_a("ok(Object.prototype.hasOwnProperty.call(pureDisp, 'prop') === true, 'hasOwnProperty(\\\"noprop\\\") returned false');");
+    run_script(L"ok(Object.prototype.hasOwnProperty.call(pureDisp, 'prop') === true, 'hasOwnProperty(\\\"noprop\\\") returned false');");
     CHECK_CALLED(puredisp_prop_d);
 
     SET_EXPECT(puredisp_noprop_d);
-    parse_script_a("ok(Object.prototype.hasOwnProperty.call(pureDisp, 'noprop') === false, 'hasOwnProperty(\\\"noprop\\\") returned true');");
+    run_script(L"ok(Object.prototype.hasOwnProperty.call(pureDisp, 'noprop') === false, 'hasOwnProperty(\\\"noprop\\\") returned true');");
     CHECK_CALLED(puredisp_noprop_d);
 
     SET_EXPECT(testobj_value);
-    parse_script_a("ok(String(testObj) === '1', 'wrong testObj value');");
+    run_script(L"ok(String(testObj) === '1', 'wrong testObj value');");
     CHECK_CALLED(testobj_value);
 
     SET_EXPECT(testobj_value);
-    parse_script_a("ok(String.prototype.concat.call(testObj, ' OK') === '1 OK', 'wrong concat result');");
+    run_script(L"ok(String.prototype.concat.call(testObj, ' OK') === '1 OK', 'wrong concat result');");
     CHECK_CALLED(testobj_value);
 
     SET_EXPECT(testobj_construct);
-    parse_script_a("var t = new testObj(1);");
+    run_script(L"var t = new testObj(1);");
     CHECK_CALLED(testobj_construct);
 
     SET_EXPECT(global_propget_d);
     SET_EXPECT(global_propget_i);
-    parse_script_a("this.testPropGet;");
+    run_script(L"this.testPropGet;");
     CHECK_CALLED(global_propget_d);
     CHECK_CALLED(global_propget_i);
 
     SET_EXPECT(global_propputref_d);
     SET_EXPECT(global_propputref_i);
-    parse_script_a("testPropPutRef = nullDisp;");
+    run_script(L"testPropPutRef = nullDisp;");
     CHECK_CALLED(global_propputref_d);
     CHECK_CALLED(global_propputref_i);
 
     SET_EXPECT(global_propget_d);
     SET_EXPECT(global_propget_i);
-    parse_script_a("(function () { this.testPropGet; })();");
+    run_script(L"(function () { this.testPropGet; })();");
     CHECK_CALLED(global_propget_d);
     CHECK_CALLED(global_propget_i);
 
-    parse_script_a("testThis(this);");
-    parse_script_a("(function () { testThis(this); })();");
-    parse_script_a("function x() { testThis(this); }; x();");
-    parse_script_a("var t = {func: function () { ok(this === t, 'this !== t'); }}; with(t) { func(); }");
-    parse_script_a("function x() { testThis(this); }; with({y: 1}) { x(); }");
-    parse_script_a("(function () { function x() { testThis(this);} x(); })();");
+    run_script(L"testThis(this);");
+    run_script(L"(function () { testThis(this); })();");
+    run_script(L"function x() { testThis(this); }; x();");
+    run_script(L"var t = {func: function () { ok(this === t, 'this !== t'); }}; with(t) { func(); }");
+    run_script(L"function x() { testThis(this); }; with({y: 1}) { x(); }");
+    run_script(L"(function () { function x() { testThis(this);} x(); })();");
 
     SET_EXPECT(testobj_onlydispid_d);
     SET_EXPECT(testobj_onlydispid_i);
-    parse_script_a("ok(typeof(testObj.onlyDispID) === 'unknown', 'unexpected typeof(testObj.onlyDispID)');");
+    run_script(L"ok(typeof(testObj.onlyDispID) === 'unknown', 'unexpected typeof(testObj.onlyDispID)');");
     CHECK_CALLED(testobj_onlydispid_d);
     CHECK_CALLED(testobj_onlydispid_i);
 
+    SET_EXPECT(testobj_getidfail_d);
+    hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, L"testObj.notExists = testObj.getIDFail;");
+    ok(hres == E_FAIL, "parse_script returned %08lx\n", hres);
+    CHECK_CALLED(testobj_getidfail_d);
+
+    SET_EXPECT(global_propget_d);
+    SET_EXPECT(global_propget_i);
+    SET_EXPECT(testobj_getidfail_d);
+    hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, L"testObj.getIDFail = testPropGet;");
+    ok(hres == E_FAIL, "parse_script returned %08lx\n", hres);
+    CHECK_CALLED(global_propget_d);
+    CHECK_CALLED(global_propget_i);
+    CHECK_CALLED(testobj_getidfail_d);
+
     SET_EXPECT(global_propargput_d);
     SET_EXPECT(global_propargput_i);
-    parse_script_a("var t=0; propArgPutG(t++, t++) = t++;");
+    run_script(L"var t=0; propArgPutG(t++, t++) = t++;");
     CHECK_CALLED(global_propargput_d);
     CHECK_CALLED(global_propargput_i);
 
     SET_EXPECT(global_propargput_d);
     SET_EXPECT(global_propargput_i);
-    parse_script_a("var t=0; test.propArgPutO(t++, t++) = t++;");
+    run_script(L"var t=0; test.propArgPutO(t++, t++) = t++;");
     CHECK_CALLED(global_propargput_d);
     CHECK_CALLED(global_propargput_i);
 
     SET_EXPECT(global_propargputop_d);
     SET_EXPECT(global_propargputop_get_i);
     SET_EXPECT(global_propargputop_put_i);
-    parse_script_a("var t=0; propArgPutOp(t++, t++) += t++;");
+    run_script(L"var t=0; propArgPutOp(t++, t++) += t++;");
     CHECK_CALLED(global_propargputop_d);
     CHECK_CALLED(global_propargputop_get_i);
     CHECK_CALLED(global_propargputop_put_i);
@@ -2999,44 +4263,50 @@ static BOOL run_tests(void)
     SET_EXPECT(global_propargputop_d);
     SET_EXPECT(global_propargputop_get_i);
     SET_EXPECT(global_propargputop_put_i);
-    parse_script_a("var t=0; propArgPutOp(t++, t++) ^= 14;");
+    run_script(L"var t=0; propArgPutOp(t++, t++) ^= 14;");
     CHECK_CALLED(global_propargputop_d);
     CHECK_CALLED(global_propargputop_get_i);
     CHECK_CALLED(global_propargputop_put_i);
 
     SET_EXPECT(global_testargtypes_i);
-    parse_script_a("testArgTypes(dispUnk, intProp(), intProp, getShort(), shortProp,"
-                   "function(i1,ui1,ui2,r4,i4ref,ui4,nullunk,d,i,s) {"
-                   "    ok(getVT(i) === 'VT_I4', 'getVT(i) = ' + getVT(i));"
-                   "    ok(getVT(s) === 'VT_I4', 'getVT(s) = ' + getVT(s));"
-                   "    ok(getVT(d) === 'VT_DISPATCH', 'getVT(d) = ' + getVT(d));"
-                   "    ok(getVT(nullunk) === 'VT_DISPATCH', 'getVT(nullunk) = ' + getVT(nullunk));"
-                   "    ok(nullunk === null, 'nullunk !== null');"
-                   "    ok(getVT(ui4) === 'VT_R8', 'getVT(ui4) = ' + getVT(ui4));"
-                   "    ok(ui4 > 0, 'ui4 = ' + ui4);"
-                   "    ok(getVT(i4ref) === 'VT_I4', 'getVT(i4ref) = ' + getVT(i4ref));"
-                   "    ok(i4ref === 2, 'i4ref = ' + i4ref);"
-                   "    ok(r4 === 0.5, 'r4 = ' + r4);"
-                   "    ok(getVT(r4) === 'VT_R8', 'getVT(r4) = ' + getVT(r4));"
-                   "    ok(getVT(ui2) === 'VT_I4', 'getVT(ui2) = ' + getVT(ui2));"
-                   "    ok(getVT(ui1) === 'VT_I4', 'getVT(ui1) = ' + getVT(ui1));"
-                   "    ok(ui1 === 4, 'ui1 = ' + ui1);"
-                   "    ok(getVT(i1) === 'VT_I4', 'getVT(i1) = ' + getVT(i1));"
-                   "    ok(i1 === 5, 'i1 = ' + i1);"
-                   "});");
+    run_script(L"testArgTypes(dispUnk, intProp(), intProp, getShort(), shortProp,"
+               L"function(i1,ui1,ui2,r4,i4ref,ui4,nullunk,d,i,s) {"
+               L"    ok(getVT(i) === 'VT_I4', 'getVT(i) = ' + getVT(i));"
+               L"    ok(getVT(s) === 'VT_I4', 'getVT(s) = ' + getVT(s));"
+               L"    ok(getVT(d) === 'VT_DISPATCH', 'getVT(d) = ' + getVT(d));"
+               L"    ok(getVT(nullunk) === 'VT_DISPATCH', 'getVT(nullunk) = ' + getVT(nullunk));"
+               L"    ok(nullunk === null, 'nullunk !== null');"
+               L"    ok(getVT(ui4) === 'VT_R8', 'getVT(ui4) = ' + getVT(ui4));"
+               L"    ok(ui4 > 0, 'ui4 = ' + ui4);"
+               L"    ok(getVT(i4ref) === 'VT_I4', 'getVT(i4ref) = ' + getVT(i4ref));"
+               L"    ok(i4ref === 2, 'i4ref = ' + i4ref);"
+               L"    ok(r4 === 0.5, 'r4 = ' + r4);"
+               L"    ok(getVT(r4) === 'VT_R8', 'getVT(r4) = ' + getVT(r4));"
+               L"    ok(getVT(ui2) === 'VT_I4', 'getVT(ui2) = ' + getVT(ui2));"
+               L"    ok(getVT(ui1) === 'VT_I4', 'getVT(ui1) = ' + getVT(ui1));"
+               L"    ok(ui1 === 4, 'ui1 = ' + ui1);"
+               L"    ok(getVT(i1) === 'VT_I4', 'getVT(i1) = ' + getVT(i1));"
+               L"    ok(i1 === 5, 'i1 = ' + i1);"
+               L"});");
     CHECK_CALLED(global_testargtypes_i);
 
     SET_EXPECT(testobj_withprop_d);
     SET_EXPECT(testobj_withprop_i);
-    parse_script_a("var t = (function () { with(testObj) { return withProp; }})(); ok(t === 1, 't = ' + t);");
+    run_script(L"var t = (function () { with(testObj) { return withProp; }})(); ok(t === 1, 't = ' + t);");
     CHECK_CALLED(testobj_withprop_d);
     CHECK_CALLED(testobj_withprop_i);
 
-    parse_script_a("@set @t=2\nok(@t === 2, '@t = ' + @t);");
+    SET_EXPECT(testobj_tolocalestr_d);
+    SET_EXPECT(testobj_tolocalestr_i);
+    run_script(L"var t = [testObj].toLocaleString(); ok(t === '1234', 't = ' + t);");
+    CHECK_CALLED(testobj_tolocalestr_d);
+    CHECK_CALLED(testobj_tolocalestr_i);
+
+    run_script(L"@set @t=2\nok(@t === 2, '@t = ' + @t);");
 
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
-    parse_script_a("@if(true)\nif(@_jscript) reportSuccess();\n@end");
+    run_script(L"@if(true)\nif(@_jscript) reportSuccess();\n@end");
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
 
@@ -3044,7 +4314,7 @@ static BOOL run_tests(void)
     EnumVARIANT_next_0_count = 1;
     SET_EXPECT(testobj_newenum);
     SET_EXPECT(enumvariant_next_0);
-    parse_script_a("new Enumerator(testObj);");
+    run_script(L"new Enumerator(testObj);");
     CHECK_CALLED(testobj_newenum);
     CHECK_CALLED(enumvariant_next_0);
 
@@ -3053,11 +4323,11 @@ static BOOL run_tests(void)
     SET_EXPECT(testobj_newenum);
     SET_EXPECT(enumvariant_next_0);
     SET_EXPECT(enumvariant_reset);
-    parse_script_a("(function () {"
-                   "    var testEnumObj = new Enumerator(testObj);"
-                   "    var tmp = testEnumObj.moveFirst();"
-                   "    ok(tmp == undefined, \"testEnumObj.moveFirst() = \" + tmp);"
-                   "})()");
+    run_script(L"(function () {"
+               L"    var testEnumObj = new Enumerator(testObj);"
+               L"    var tmp = testEnumObj.moveFirst();"
+               L"    ok(tmp == undefined, \"testEnumObj.moveFirst() = \" + tmp);"
+               L"})()");
     CHECK_CALLED(testobj_newenum);
     CHECK_CALLED(enumvariant_next_0);
     CHECK_CALLED(enumvariant_reset);
@@ -3067,15 +4337,15 @@ static BOOL run_tests(void)
     SET_EXPECT(testobj_newenum);
     SET_EXPECT(enumvariant_next_0);
     SET_EXPECT(enumvariant_next_1);
-    parse_script_a("(function () {"
-                   "    var testEnumObj = new Enumerator(testObj);"
-                   "    while (!testEnumObj.atEnd())"
-                   "    {"
-                   "        ok(testEnumObj.item() == 123, "
-                   "         \"testEnumObj.item() = \"+testEnumObj.item());"
-                   "        testEnumObj.moveNext();"
-                   "    }"
-                   "})()");
+    run_script(L"(function () {"
+               L"    var testEnumObj = new Enumerator(testObj);"
+               L"    while (!testEnumObj.atEnd())"
+               L"    {"
+               L"        ok(testEnumObj.item() == 123, "
+               L"         \"testEnumObj.item() = \"+testEnumObj.item());"
+               L"        testEnumObj.moveNext();"
+               L"    }"
+               L"})()");
     CHECK_CALLED(testobj_newenum);
     CHECK_CALLED(enumvariant_next_0);
     CHECK_CALLED(enumvariant_next_1);
@@ -3090,67 +4360,30 @@ static BOOL run_tests(void)
     test_start();
     test_automagic();
 
-    parse_script_af(0, "test.testThis2(this);");
-    parse_script_af(0, "(function () { test.testThis2(this); })();");
+    hres = parse_script(0, L"test.testThis2(this);");
+    ok(hres == S_OK, "unexpected result %08lx\n", hres);
+    hres = parse_script(0, L"(function () { test.testThis2(this); })();");
+    ok(hres == S_OK, "unexpected result %08lx\n", hres);
 
-    hres = parse_htmlscript_a("<!--");
-    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
-    hres = parse_htmlscript_a("-->");
-    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
-    hres = parse_htmlscript_a("<!--\nvar a=1;\n-->\n");
-    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
-    hres = parse_htmlscript_a("<!--\n<!-- ignore this\n-->\n");
-    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
-    hres = parse_htmlscript_a("var a=1;\nif(a-->0) a=5;\n");
-    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
-    hres = parse_htmlscript_a("var a=1;\nif(a\n-->0) a=5;\n");
+    hres = parse_htmlscript(L"<!--");
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
+    hres = parse_htmlscript(L"-->");
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
+    hres = parse_htmlscript(L"<!--\nvar a=1;\n-->\n");
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
+    hres = parse_htmlscript(L"<!--\n<!-- ignore this\n-->\n");
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
+    hres = parse_htmlscript(L"var a=1;\nif(a-->0) a=5;\n");
+    ok(hres == S_OK, "ParseScriptText failed: %08lx\n", hres);
+    hres = parse_htmlscript(L"var a=1;\nif(a\n-->0) a=5;\n");
     ok(hres != S_OK, "ParseScriptText have not failed\n");
 
     test_script_exprs();
     test_invokeex();
+    test_members();
+    test_destructors();
     test_eval();
-
-    parse_script_with_error_a(
-        "?",
-        0x800a03ea, 0, 0,
-        "Microsoft JScript compilation error",
-        "Syntax error",
-        "?");
-
-    parse_script_with_error_a(
-        "var a=1;\nif(a\n-->0) a=5;\n",
-        0x800a03ee, 2, 0,
-        "Microsoft JScript compilation error",
-        "Expected ')'",
-        "-->0) a=5;");
-
-    parse_script_with_error_a(
-        "new 3;",
-        0x800a01bd, 0, 0,
-        "Microsoft JScript runtime error",
-        "Object doesn't support this action",
-        NULL);
-
-    parse_script_with_error_a(
-        "new null;",
-        0x800a138f, 0, 0,
-        "Microsoft JScript runtime error",
-        "Object expected",
-        NULL);
-
-    parse_script_with_error_a(
-        "var a;\nnew null;",
-        0x800a138f, 1, 0,
-        "Microsoft JScript runtime error",
-        "Object expected",
-        NULL);
-
-    parse_script_with_error_a(
-        "var a; new null;",
-        0x800a138f, 0, 7,
-        "Microsoft JScript runtime error",
-        "Object expected",
-        NULL);
+    test_error_reports();
 
     run_bom_tests();
 
@@ -3163,22 +4396,22 @@ static void test_parse_proc(void)
     DISPPARAMS dp = {args};
 
     dp.cArgs = 0;
-    invoke_procedure(NULL, "return true;", &dp);
+    invoke_procedure(NULL, L"return true;", &dp);
 
     dp.cArgs = 1;
     V_VT(args) = VT_EMPTY;
-    invoke_procedure(NULL, "return arguments.length == 1;", &dp);
+    invoke_procedure(NULL, L"return arguments.length == 1;", &dp);
 
     V_VT(args) = VT_BOOL;
     V_BOOL(args) = VARIANT_TRUE;
-    invoke_procedure(" x ", "return x;", &dp);
+    invoke_procedure(L" x ", L"return x;", &dp);
 
     dp.cArgs = 2;
     V_VT(args) = VT_I4;
     V_I4(args) = 2;
     V_VT(args+1) = VT_I4;
     V_I4(args+1) = 1;
-    invoke_procedure(" _x1 , y_2", "return _x1 === 1 && y_2 === 2;", &dp);
+    invoke_procedure(L" _x1 , y_2", L"return _x1 === 1 && y_2 === 2;", &dp);
 }
 
 static void run_encoded_tests(void)
@@ -3191,59 +4424,59 @@ static void run_encoded_tests(void)
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
     /*             |reportSuccess();                           | */
-    parse_script_a("#@~^EAAAAA==.\x7fwGMYUEm1+kd`*iAQYAAA==^#~@");
+    run_script(L"#@~^EAAAAA==.\x7fwGMYUEm1+kd`*iAQYAAA==^#~@");
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
 
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
-    parse_script_a("reportSuccess();");
+    run_script(L"reportSuccess();");
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
 
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
     /*                   |Success                         | */
-    parse_script_a("report#@~^BwAAAA==j!m^\x7f/k2QIAAA==^#~@();");
+    run_script(L"report#@~^BwAAAA==j!m^\x7f/k2QIAAA==^#~@();");
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
 
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
     /*             |\r\n\treportSuccess();\r\n                        | */
-    parse_script_a("#@~^GQAAAA==@#@&d.\x7fwKDYUE1^+k/c#p@#@&OAYAAA==^#~@");
+    run_script(L"#@~^GQAAAA==@#@&d.\x7fwKDYUE1^+k/c#p@#@&OAYAAA==^#~@");
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
 
     /*                   v                                   */
-    src = a2bstr("#@~^EAA*AA==.\x7fwGMYUEm1+kd`*iAQYAAA==^#~@");
+    src = SysAllocString(L"#@~^EAA*AA==.\x7fwGMYUEm1+kd`*iAQYAAA==^#~@");
     hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, src);
     SysFreeString(src);
-    ok(hres == JS_E_INVALID_CHAR, "parse_script failed %08x\n", hres);
+    ok(hres == JS_E_INVALID_CHAR, "parse_script failed %08lx\n", hres);
 
     /*                      vv                                 */
-    src = a2bstr("#@~^EAAAAAAA==.\x7fwGMYUEm1+kd`*iAQYAAA==^#~@");
+    src = SysAllocString(L"#@~^EAAAAAAA==.\x7fwGMYUEm1+kd`*iAQYAAA==^#~@");
     hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, src);
     SysFreeString(src);
-    ok(hres == JS_E_INVALID_CHAR, "parse_script failed %08x\n", hres);
+    ok(hres == JS_E_INVALID_CHAR, "parse_script failed %08lx\n", hres);
 
     /*                      v                                */
-    src = a2bstr("#@~^EAAAAA^=.\x7fwGMYUEm1+kd`*iAQYAAA==^#~@");
+    src = SysAllocString(L"#@~^EAAAAA^=.\x7fwGMYUEm1+kd`*iAQYAAA==^#~@");
     hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, src);
     SysFreeString(src);
-    ok(hres == JS_E_INVALID_CHAR, "parse_script failed %08x\n", hres);
+    ok(hres == JS_E_INVALID_CHAR, "parse_script failed %08lx\n", hres);
 
     /*                                     v                 */
-    src = a2bstr("#@~^EAAAAA==.\x7fwGMYUEm1ekd`*iAQYAAA==^#~@");
+    src = SysAllocString(L"#@~^EAAAAA==.\x7fwGMYUEm1ekd`*iAQYAAA==^#~@");
     hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, src);
     SysFreeString(src);
-    ok(hres == JS_E_INVALID_CHAR, "parse_script failed %08x\n", hres);
+    ok(hres == JS_E_INVALID_CHAR, "parse_script failed %08lx\n", hres);
 
     /*                                                    vv  */
-    src = a2bstr("#@~^EAAAAA==.\x7fwGMYUEm1+kd`*iAQYAAA==^~#@");
+    src = SysAllocString(L"#@~^EAAAAA==.\x7fwGMYUEm1+kd`*iAQYAAA==^~#@");
     hres = parse_script(SCRIPTITEM_GLOBALMEMBERS, src);
     SysFreeString(src);
-    ok(hres == JS_E_INVALID_CHAR, "parse_script failed %08x\n", hres);
+    ok(hres == JS_E_INVALID_CHAR, "parse_script failed %08lx\n", hres);
 }
 
 static void run_benchmark(const char *script_name)
@@ -3259,33 +4492,33 @@ static void run_benchmark(const char *script_name)
         return;
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
-    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08lx\n", hres);
     if (FAILED(hres)) {
         IActiveScript_Release(engine);
         return;
     }
 
     hres = IActiveScriptParse_InitNew(parser);
-    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+    ok(hres == S_OK, "InitNew failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
-    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptSite failed: %08lx\n", hres);
 
-    hres = IActiveScript_AddNamedItem(engine, testW,
+    hres = IActiveScript_AddNamedItem(engine, L"test",
             SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE);
-    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+    ok(hres == S_OK, "AddNamedItem failed: %08lx\n", hres);
 
     hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
-    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08lx\n", hres);
 
     src = load_res(script_name);
 
     start = GetTickCount();
     hres = IActiveScriptParse_ParseScriptText(parser, src, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
     end = GetTickCount();
-    ok(hres == S_OK, "%s: ParseScriptText failed: %08x\n", script_name, hres);
+    ok(hres == S_OK, "%s: ParseScriptText failed: %08lx\n", script_name, hres);
 
-    trace("%s ran in %u ms\n", script_name, end-start);
+    trace("%s ran in %lu ms\n", script_name, end-start);
 
     IActiveScript_Release(engine);
     IActiveScriptParse_Release(parser);
@@ -3304,7 +4537,6 @@ static void run_benchmarks(void)
 static BOOL check_jscript(void)
 {
     IActiveScriptProperty *script_prop;
-    BSTR str;
     HRESULT hres;
 
     hres = CoCreateInstance(&CLSID_JScript, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
@@ -3313,11 +4545,7 @@ static BOOL check_jscript(void)
         return FALSE;
     IActiveScriptProperty_Release(script_prop);
 
-    str = a2bstr("if(!('localeCompare' in String.prototype)) throw 1;");
-    hres = parse_script(0, str);
-    SysFreeString(str);
-
-    return hres == S_OK;
+    return parse_script(0, L"if(!('localeCompare' in String.prototype)) throw 1;") == S_OK;
 }
 
 START_TEST(run)
