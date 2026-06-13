@@ -34,7 +34,10 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 #ifdef _MSC_VER
-#pragma function(_wcsset,wcscat,wcscmp,wcscpy,wcslen,wcsncmp,wcsncpy)
+#pragma function(_wcsset,wcscat,wcscmp,wcscpy,wcslen)
+#if _MSC_VER >= 1932 // VS2022 Version 17.2 and later
+#pragma function(wcsncmp,wcsncpy)
+#endif
 #endif
 
 typedef struct

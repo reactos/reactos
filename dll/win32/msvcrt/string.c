@@ -37,7 +37,10 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 #ifdef _MSC_VER
-#pragma function(_strset,memchr,memcmp,memcpy,memset,strcat,strcmp,strcpy,strlen,strncpy,strncmp)
+#pragma function(_strset,memchr,memcmp,memcpy,memset,strcat,strcmp,strcpy,strlen)
+#if _MSC_VER >= 1932 // VS2022 Version 17.2 and later
+#pragma function(strncpy,strncmp)
+#endif
 #endif
 
 /*********************************************************************
