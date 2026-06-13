@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <tchar.h>
 
-#if defined(_MSC_VER) && defined(_M_ARM)
+#if defined(_MSC_VER)
 #pragma function(_tcsncmp)
 #endif /* _MSC_VER */
 

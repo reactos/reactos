@@ -37,7 +37,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 #ifdef _MSC_VER
-#pragma function(_strset,memchr,memcmp,memcpy,memset,strcat,strcmp,strcpy,strlen)
+#pragma function(_strset,memchr,memcmp,memcpy,memset,strcat,strcmp,strcpy,strlen,strncpy,strncmp)
 #endif
 
 /*********************************************************************

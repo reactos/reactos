@@ -34,7 +34,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 #ifdef _MSC_VER
-#pragma function(_wcsset,wcscat,wcscmp,wcscpy,wcslen)
+#pragma function(_wcsset,wcscat,wcscmp,wcscpy,wcslen,wcsncmp,wcsncpy)
 #endif
 
 typedef struct
