@@ -26,12 +26,12 @@
 
 #ifdef __i386__
 #define ARCH "x86"
+#elif defined __aarch64__ || defined__arm64ec__
+#define ARCH "arm64"
 #elif defined __x86_64__
 #define ARCH "amd64"
 #elif defined __arm__
 #define ARCH "arm"
-#elif defined __aarch64__
-#define ARCH "arm64"
 #else
 #define ARCH "none"
 #endif
@@ -111,7 +111,7 @@ static BOOL load_v6_module(ULONG_PTR *pcookie, HANDLE *hCtx)
     hmod = GetModuleHandleA("comctl32.dll");
 
     ret = ActivateActCtx(*hCtx, pcookie);
-    ok(ret, "Failed to activate context, error %d.\n", GetLastError());
+    ok(ret, "Failed to activate context, error %ld.\n", GetLastError());
 
     if (!ret)
     {
@@ -122,7 +122,7 @@ static BOOL load_v6_module(ULONG_PTR *pcookie, HANDLE *hCtx)
     data.cbSize = sizeof(data);
     ret = FindActCtxSectionStringA(0, NULL, ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION,
         "comctl32.dll", &data);
-    ok(ret, "failed to find comctl32.dll in active context, %u\n", GetLastError());
+    ok(ret, "failed to find comctl32.dll in active context, %lu\n", GetLastError());
     if (ret)
     {
         FreeLibrary(hmod);
