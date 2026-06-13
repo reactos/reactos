@@ -18,8 +18,8 @@ protected:
     size_t m_cCapacity = 0;
 
 public:
-    CicArrayBase(size_t cbItem);
-    virtual ~CicArrayBase();
+    CicArrayBase(size_t cbItem) : m_cbItem(cbItem) { }
+    virtual ~CicArrayBase() { cicMemFree(m_pb); }
 
     BOOL Insert(size_t iItem, size_t cGrow);
     LPVOID Append(size_t cGrow);

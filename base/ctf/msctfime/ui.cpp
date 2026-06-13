@@ -465,10 +465,8 @@ UIComposition::~UIComposition()
 
     if (m_hFont1)
         ::DeleteObject(m_hFont1);
-
     if (m_hFont2)
         ::DeleteObject(m_hFont2);
-
     if (m_strCompStr)
         cicMemFree(m_strCompStr);
 }

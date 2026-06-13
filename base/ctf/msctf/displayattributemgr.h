@@ -7,7 +7,7 @@ class CDisplayAttributeMgr
     , public ITfDisplayAttributeCollectionMgr
 {
 public:
-    virtual ~CDisplayAttributeMgr();
+    virtual ~CDisplayAttributeMgr() { }
 
     // ** IUnknown methods **
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObj) override;

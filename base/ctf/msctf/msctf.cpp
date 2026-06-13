@@ -62,8 +62,8 @@ class CClassFactory
     : public IClassFactory
 {
 public:
-    CClassFactory(LPFNCONSTRUCTOR ctor);
-    virtual ~CClassFactory();
+    CClassFactory(LPFNCONSTRUCTOR ctor) : m_ctor(ctor) { }
+    virtual ~CClassFactory() { }
 
     // ** IUnknown methods **
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObj) override;
@@ -81,16 +81,6 @@ protected:
     LONG m_cRefs = 1;
     LPFNCONSTRUCTOR m_ctor = NULL;
 };
-
-CClassFactory::CClassFactory(LPFNCONSTRUCTOR ctor)
-    : m_ctor(ctor)
-{
-}
-
-CClassFactory::~CClassFactory()
-{
-    TRACE("Destroying class factory %p\n", this);
-}
 
 STDMETHODIMP CClassFactory::QueryInterface(REFIID riid, void **ppvObj)
 {

@@ -2,21 +2,11 @@
  * PROJECT:     ReactOS Cicero
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Cicero dynamic array
- * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2023-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
 #include "cicarray.h"
-
-CicArrayBase::CicArrayBase(size_t cbItem)
-{
-    m_cbItem = cbItem;
-}
-
-CicArrayBase::~CicArrayBase()
-{
-    cicMemFree(m_pb);
-}
 
 LPVOID CicArrayBase::Append(size_t cGrow)
 {

@@ -54,7 +54,7 @@ class CCompartmentEnumGuid
     : public IEnumGUID
 {
 public:
-    virtual ~CCompartmentEnumGuid();
+    virtual ~CCompartmentEnumGuid() { }
 
     static HRESULT CreateInstance(struct list *values, IEnumGUID **ppOut);
     static HRESULT CreateInstance(struct list *values, IEnumGUID **ppOut, struct list *cursor);
@@ -277,11 +277,6 @@ HRESULT CCompartmentMgr::EnumCompartments(_Out_ IEnumGUID **ppEnum)
 
 ////////////////////////////////////////////////////////////////////////////
 
-CCompartmentEnumGuid::~CCompartmentEnumGuid()
-{
-    TRACE("destroying %p\n", this);
-}
-
 HRESULT
 CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **ppOut)
 {
@@ -408,7 +403,6 @@ CCompartment::CCompartment(CompartmentValue *valueData)
 
 CCompartment::~CCompartment()
 {
-    TRACE("destroying %p\n", this);
     VariantClear(&m_variant);
     free_sinks(&m_CompartmentEventSink);
 }

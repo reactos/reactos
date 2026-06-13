@@ -28,7 +28,6 @@ CRange::CRange(
 
 CRange::~CRange()
 {
-    TRACE("destroying %p\n", this);
     if (m_context)
         m_context->Release();
 }

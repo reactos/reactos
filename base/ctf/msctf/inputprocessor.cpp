@@ -168,7 +168,10 @@ class CProfilesEnumGuid
     : public IEnumGUID
 {
 public:
-    virtual ~CProfilesEnumGuid();
+    virtual ~CProfilesEnumGuid()
+    {
+        RegCloseKey(m_key);
+    }
 
     static HRESULT CreateInstance(CProfilesEnumGuid **ppOut);
 
@@ -198,7 +201,7 @@ class CEnumTfLanguageProfiles
     : public IEnumTfLanguageProfiles
 {
 public:
-    CEnumTfLanguageProfiles(LANGID langid);
+    CEnumTfLanguageProfiles(LANGID langid) : m_langid(langid) { }
     virtual ~CEnumTfLanguageProfiles();
 
     static HRESULT CreateInstance(LANGID langid, CEnumTfLanguageProfiles **out);
@@ -296,7 +299,6 @@ CInputProcessorProfiles::CInputProcessorProfiles()
 
 CInputProcessorProfiles::~CInputProcessorProfiles()
 {
-    TRACE("destroying %p\n", this);
     free_sinks(&m_LanguageProfileNotifySink);
 }
 
@@ -894,12 +896,6 @@ HRESULT CInputProcessorProfiles::CreateInstance(IUnknown *pUnkOuter, CInputProce
 
 ////////////////////////////////////////////////////////////////////////////
 
-CProfilesEnumGuid::~CProfilesEnumGuid()
-{
-    TRACE("destroying %p\n", this);
-    RegCloseKey(m_key);
-}
-
 STDMETHODIMP CProfilesEnumGuid::QueryInterface(REFIID iid, LPVOID *ppvObj)
 {
     *ppvObj = NULL;
@@ -1024,11 +1020,6 @@ HRESULT CProfilesEnumGuid::CreateInstance(CProfilesEnumGuid **ppOut)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-
-CEnumTfLanguageProfiles::CEnumTfLanguageProfiles(LANGID langid)
-    : m_langid(langid)
-{
-}
 
 CEnumTfLanguageProfiles::~CEnumTfLanguageProfiles()
 {

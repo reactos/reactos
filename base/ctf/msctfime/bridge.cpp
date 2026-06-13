@@ -40,7 +40,7 @@ STDMETHODIMP_(ULONG) CicBridge::Release()
 /// @implemented
 CicBridge::~CicBridge()
 {
-    TLS *pTLS = TLS::PeekTLS();
+    TLS* pTLS = TLS::PeekTLS();
     if (!pTLS || !pTLS->m_pThreadMgr)
         return;
 
@@ -52,7 +52,7 @@ CicBridge::~CicBridge()
 ITfDocumentMgr*
 CicBridge::GetDocumentManager(_Inout_ CicIMCCLock<CTFIMECONTEXT>& imeContext)
 {
-    CicInputContext *pCicIC = imeContext.get().m_pCicIC;
+    CicInputContext* pCicIC = imeContext.get().m_pCicIC;
     if (!pCicIC)
         return NULL;
 

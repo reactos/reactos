@@ -218,8 +218,7 @@ CContext::CContext()
 
 CContext::~CContext()
 {
-    EditCookie *cookie;
-    TRACE("destroying %p\n", this);
+    EditCookie* cookie;
 
     if (m_pITextStoreACP)
         m_pITextStoreACP->Release();

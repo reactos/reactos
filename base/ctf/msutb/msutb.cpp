@@ -1944,13 +1944,10 @@ CCicLibMenuItem::~CCicLibMenuItem()
 {
     if (m_pMenu)
         m_pMenu->Release();
- 
     if (m_hbmp)
         ::DeleteObject(m_hbmp);
- 
     if (m_hbmpMask)
         ::DeleteObject(m_hbmpMask);
- 
     ::SysFreeString(m_bstrText);
 }
 
