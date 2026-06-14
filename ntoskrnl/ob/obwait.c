@@ -115,7 +115,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         if (PreviousMode == KernelMode)
         {
             /* But don't fail silently */
-            DbgPrint("Mon dieu! Covering up for BAD driver passing invalid pointer (0x%p)! Hon hon hon!\n", HandleArray);
+            DPRINT1("Kernel-mode caller passed an invalid HandleArray pointer (0x%p)\n", HandleArray);
         }
 
         /* Return the exception code */
