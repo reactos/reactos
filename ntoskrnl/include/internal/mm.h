@@ -28,9 +28,6 @@ extern KMUTANT MmSystemLoadLock;
 
 extern ULONG MmNumberOfPagingFiles;
 
-extern SIZE_T MmTotalNonPagedPoolQuota;
-extern SIZE_T MmTotalPagedPoolQuota;
-
 extern PVOID MmUnloadedDrivers;
 extern PVOID MmLastUnloadedDrivers;
 extern PVOID MmTriageActionTaken;
@@ -51,7 +48,7 @@ extern PMMPTE MmDebugPte; // internal
 
 extern KSPIN_LOCK MmPfnLock;
 
-struct _KTRAP_FRAME;
+//struct _KTRAP_FRAME;
 struct _EPROCESS;
 struct _MM_RMAP_ENTRY;
 typedef ULONG_PTR SWAPENTRY;
@@ -107,7 +104,6 @@ typedef ULONG_PTR SWAPENTRY;
  * Additional flags for protection attributes
  */
 #define PAGE_WRITETHROUGH                   (1024)
-#define PAGE_SYSTEM                         (2048)
 
 #define MC_USER                             (0)
 #define MC_SYSTEM                           (1)
@@ -1239,23 +1235,9 @@ MmGetSavedSwapEntryPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmSetCleanPage(
-    struct _EPROCESS *Process,
-    PVOID Address
-);
-
-VOID
-NTAPI
 MmSetDirtyBit(PEPROCESS Process, PVOID Address, BOOLEAN Bit);
 #define MmSetCleanPage(__P, __A) MmSetDirtyBit(__P, __A, FALSE)
 #define MmSetDirtyPage(__P, __A) MmSetDirtyBit(__P, __A, TRUE)
-
-VOID
-NTAPI
-MmDeletePageTable(
-    struct _EPROCESS *Process,
-    PVOID Address
-);
 
 PFN_NUMBER
 NTAPI
