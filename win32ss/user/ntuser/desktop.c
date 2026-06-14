@@ -1316,6 +1316,7 @@ IntGetActiveDesktop(VOID)
     return gpdeskInputDesktop;
 }
 
+#if 0 // FIXME: Now unused!
 /*
  * Returns or creates a handle to the desktop object
  */
@@ -1354,6 +1355,7 @@ IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
 
     return hDesk;
 }
+#endif
 
 PUSER_MESSAGE_QUEUE FASTCALL
 IntGetFocusMessageQueue(VOID)
@@ -1546,13 +1548,13 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
             return TRUE;
         }
 
+        // NOTE: Added in commit af3e90418595bc826541e61e64960752c7f9375b (r58386)
         case WM_WINDOWPOSCHANGING:
         {
             PWINDOWPOS pWindowPos = (PWINDOWPOS)lParam;
             if ((pWindowPos->flags & SWP_SHOWWINDOW) != 0)
             {
-                HDESK hdesk = IntGetDesktopObjectHandle(gpdeskInputDesktop);
-                IntSetThreadDesktop(hdesk, FALSE);
+                IntSetThreadDesktop(gpdeskInputDesktop, NULL, FALSE);
             }
             break;
         }
@@ -3133,6 +3135,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, HDESK hConsoleDesktop)
 {
     HDESK hDesk;
     NTSTATUS Status;
+    KAPC_STATE ApcState;
     PTHREADINFO pti;
     PEPROCESS Process;
     PDESKTOP DesktopObject;
@@ -3183,7 +3186,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, HDESK hConsoleDesktop)
     {
         /*
          * Just return the handle, since we queried the desktop handle
-         * of a thread running in the same context.
+         * of a thread running in the same process.
          */
         goto Quit;
     }
@@ -3195,28 +3198,47 @@ NtUserGetThreadDesktop(DWORD dwThreadId, HDESK hConsoleDesktop)
      * desktop is being destroyed) during the operation.
      */
     /*
-     * Switch into the context of the thread we are trying to get
+     * Attach to the process of the thread we are trying to get
      * the desktop from, so we can use the handle.
      */
-    KeAttachProcess(&Process->Pcb);
+    KeStackAttachProcess(&Process->Pcb, &ApcState);
     Status = ObReferenceObjectByHandle(hDesk,
                                        0,
                                        ExDesktopObjectType,
                                        UserMode,
                                        (PVOID*)&DesktopObject,
                                        &HandleInformation);
-    KeDetachProcess();
+    KeUnstackDetachProcess(&ApcState);
 
     if (NT_SUCCESS(Status))
     {
         /*
          * Lookup our handle table if we can find a handle to the desktop object.
-         * If not, create one.
-         * QUESTION: Do we really need to create a handle in case it doesn't exist??
+         // Not anymore! * If not, create one.
+         // Not anymore! * QUESTION: Do we really need to create a handle in case it doesn't exist??
          */
-        hDesk = IntGetDesktopObjectHandle(DesktopObject);
+        //hDesk = IntGetDesktopObjectHandle(DesktopObject);
+        HDESK hOrgDesk = hDesk;
+        ASSERT(DesktopObject);
 
-        /* All done, we got a valid handle to the desktop */
+__debugbreak();
+        if (!ObFindHandleForObject(PsGetCurrentProcess(), // Why not using Process?
+                                   DesktopObject,
+                                   ExDesktopObjectType,
+                                   NULL,
+                                   (PHANDLE)&hDesk))
+        {
+            /* Unable to create a handle */
+            ERR("Unable to find a target desktop handle for desktop 0x%p, handle 0x%p\n",
+                DesktopObject, hOrgDesk);
+            hDesk = NULL;
+        }
+        else
+        {
+            TRACE("Got desktop handle: 0x%p\n", hDesk);
+        }
+
+        /* All done, we've got a valid handle to the desktop, or none */
         ObDereferenceObject(DesktopObject);
     }
     else
@@ -3356,8 +3378,10 @@ IntMapDesktopView(IN PDESKTOP pdesk)
 }
 
 BOOL
-IntSetThreadDesktop(IN HDESK hDesktop,
-                    IN BOOL FreeOnFailure)
+IntSetThreadDesktop(
+    _In_opt_ PDESKTOP pDesktop,
+    _In_opt_ HDESK hDesktop,
+    _In_ BOOL FreeOnFailure)
 {
     PDESKTOP pdesk = NULL, pdeskOld;
     PTHREADINFO pti;
@@ -3367,32 +3391,48 @@ IntSetThreadDesktop(IN HDESK hDesktop,
 
     ASSERT(NtCurrentTeb());
 
-    TRACE("IntSetThreadDesktop hDesktop:0x%p, FOF:%i\n",hDesktop, FreeOnFailure);
+    TRACE("IntSetThreadDesktop(pDesktop:0x%p, hDesktop:0x%p, FOF:%u)\n",
+          pDesktop, hDesktop, FreeOnFailure);
 
     pti = PsGetCurrentThreadWin32Thread();
     pci = pti->pClientInfo;
 
-    /* If the caller gave us a desktop, ensure it is valid */
+    /* If the caller gave a desktop handle, ensure it is valid */
     if (hDesktop != NULL)
     {
-        /* Validate the new desktop. */
+        /* Validate the new desktop */
         Status = IntValidateDesktopHandle(hDesktop, UserMode, 0, &pdesk);
         if (!NT_SUCCESS(Status))
         {
             ERR("Validation of desktop handle 0x%p failed\n", hDesktop);
             return FALSE;
         }
+        /* If the caller also gave an explicit DESKTOP object,
+         * it must match with the one from the handle */
+        ASSERT(!pDesktop || (pdesk == pDesktop));
 
+        /* If the thread is already assigned to this desktop, there is nothing to do */
         if (pti->rpdesk == pdesk)
         {
-            /* Nothing to do */
             ObDereferenceObject(pdesk);
             return TRUE;
         }
     }
+    else
+    {
+        /* Otherwise, use the explicit DESKTOP object and take a reference */
+        pdesk = pDesktop;
+        if (pdesk)
+        {
+            /* If the thread is already assigned to this desktop, there is nothing to do */
+            if (pti->rpdesk == pdesk)
+                return TRUE;
+            ObReferenceObject(pdesk);
+        }
+    }
 
     /* Make sure that we don't own any window in the current desktop */
-    if (!IsListEmpty(&pti->WindowListHead))
+    if (!IsListEmpty(&pti->WindowListHead)) // TODO: Check also if it has hooks.
     {
         if (pdesk)
             ObDereferenceObject(pdesk);
@@ -3401,7 +3441,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         return FALSE;
     }
 
-    /* Desktop is being re-set so clear out foreground. */
+    /* Desktop is being re-set so clear out foreground */
     if (pti->rpdesk != pdesk && pti->MessageQueue == gpqForeground)
     {
         // Like above, there shouldn't be any windows, hooks or anything active on this threads desktop!
@@ -3420,7 +3460,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
             return FALSE;
         }
 
-        pctiNew = DesktopHeapAlloc(pdesk, sizeof(CLIENTTHREADINFO));
+        pctiNew = DesktopHeapAlloc(pdesk, sizeof(*pctiNew));
         if (pctiNew == NULL)
         {
             ERR("Failed to allocate new pcti\n");
@@ -3464,7 +3504,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         pti->ppi->rpdeskStartup = pdesk;
     }
 
-    /* free all classes or move them to the shared heap */
+    /* Free all classes or move them to the shared heap */
     if (pti->rpdesk != NULL)
     {
         if (!IntCheckProcessDesktopClasses(pti->rpdesk, FreeOnFailure))
@@ -3486,7 +3526,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     else
         pctiOld = NULL;
 
-    /* do the switch */
+    /* Do the switch */
     if (pdesk != NULL)
     {
         pti->rpdesk = pdesk;
@@ -3498,14 +3538,14 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         pci->pDeskInfo = (PVOID)((ULONG_PTR)pti->pDeskInfo - pci->ulClientDelta);
         pci->pClientThreadInfo = (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta);
 
-        /* initialize the new pcti */
+        /* Initialize the new pcti */
         if (pctiOld != NULL)
         {
-            RtlCopyMemory(pctiNew, pctiOld, sizeof(CLIENTTHREADINFO));
+            RtlCopyMemory(pctiNew, pctiOld, sizeof(*pctiNew));
         }
         else
         {
-            RtlZeroMemory(pctiNew, sizeof(CLIENTTHREADINFO));
+            RtlZeroMemory(pctiNew, sizeof(*pctiNew));
             pci->fsHooks = pti->fsHooks;
             pci->dwTIFlags = pti->TIF_flags;
         }
@@ -3521,21 +3561,21 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         pci->pClientThreadInfo = NULL;
     }
 
-    /* clean up the old desktop */
+    /* Clean up the old desktop */
     if (pdeskOld != NULL)
     {
         RemoveEntryList(&pti->PtiLink);
-        if (pctiOld) DesktopHeapFree(pdeskOld, pctiOld);
+        if (pctiOld)
+            DesktopHeapFree(pdeskOld, pctiOld);
         IntUnmapDesktopView(pdeskOld);
         ObDereferenceObject(pdeskOld);
     }
 
     if (pdesk)
-    {
         InsertTailList(&pdesk->PtiList, &pti->PtiLink);
-    }
 
-    TRACE("IntSetThreadDesktop: pti 0x%p ppi 0x%p switched from object 0x%p to 0x%p\n", pti, pti->ppi, pdeskOld, pdesk);
+    TRACE("IntSetThreadDesktop: pti 0x%p ppi 0x%p switched from object 0x%p to 0x%p\n",
+          pti, pti->ppi, pdeskOld, pdesk);
 
     return TRUE;
 }
@@ -3558,7 +3598,7 @@ NtUserSetThreadDesktop(HDESK hDesktop)
     // here too and set the NT error level. Q. Is it necessary to have the validation
     // in IntSetThreadDesktop? Is it needed there too?
     if (hDesktop || (!hDesktop && PsGetCurrentProcess() == gpepCSRSS))
-        ret = IntSetThreadDesktop(hDesktop, FALSE);
+        ret = IntSetThreadDesktop(NULL, hDesktop, FALSE);
 
     UserLeave();
 

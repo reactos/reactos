@@ -669,7 +669,8 @@ InitThreadCallback(PETHREAD Thread)
 
     if (ptiCurrent->ppi->hdeskStartup != NULL)
     {
-        if (!IntSetThreadDesktop(ptiCurrent->ppi->hdeskStartup, FALSE))
+        if (!IntSetThreadDesktop(ptiCurrent->ppi->rpdeskStartup,
+                                 ptiCurrent->ppi->hdeskStartup, FALSE))
         {
             ERR_CH(UserThread, "Failed to set thread desktop\n");
             Status = STATUS_UNSUCCESSFUL;
@@ -886,7 +887,7 @@ ExitThreadCallback(PETHREAD Thread)
 */
     TRACE_CH(UserThread, "Freeing pti 0x%p\n", ptiCurrent);
 
-    IntSetThreadDesktop(NULL, TRUE);
+    IntSetThreadDesktop(NULL, NULL, TRUE);
 
     if (ptiCurrent->hEventQueueClient != NULL)
     {

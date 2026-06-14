@@ -665,9 +665,6 @@ NtUserSetInformationProcess(
     return 0;
 }
 
-HDESK FASTCALL
-IntGetDesktopObjectHandle(PDESKTOP DesktopObject);
-
 NTSTATUS
 APIENTRY
 NtUserSetInformationThread(IN HANDLE ThreadHandle,
@@ -700,7 +697,6 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             ULONG CapturedFlags = 0;
 
             TRACE("Shutdown initiated\n");
-
             if (ThreadInformationLength != sizeof(CapturedFlags))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
@@ -742,7 +738,6 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             NTSTATUS ShutdownStatus;
 
             TRACE("Shutdown ended\n");
-
             if (ThreadInformationLength != sizeof(ShutdownStatus))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
@@ -771,7 +766,6 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
         {
             HANDLE CsrPortHandle;
 
-
             TRACE("Set CSR API Port for Win32k\n");
             if (ThreadInformationLength != sizeof(CsrPortHandle))
             {
@@ -799,19 +793,16 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
 
         case UserThreadUseActiveDesktop:
         {
-            HDESK hdesk;
-
             if (Thread != PsGetCurrentThread())
             {
                 Status = STATUS_NOT_IMPLEMENTED;
                 break;
             }
 
-            hdesk = IntGetDesktopObjectHandle(gpdeskInputDesktop);
-            IntSetThreadDesktop(hdesk, FALSE);
-
+            IntSetThreadDesktop(gpdeskInputDesktop, NULL, FALSE);
             break;
         }
+
         case UserThreadRestoreDesktop:
         {
             if (Thread != PsGetCurrentThread())
@@ -820,9 +811,10 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
                 break;
             }
 
-            IntSetThreadDesktop(NULL, FALSE);
+            IntSetThreadDesktop(NULL, NULL, FALSE);
             break;
         }
+
         default:
         {
             STUB;

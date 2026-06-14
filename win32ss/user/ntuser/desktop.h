@@ -133,8 +133,11 @@ co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height, BOOL Redraw);
 NTSTATUS FASTCALL
 IntHideDesktop(PDESKTOP Desktop);
 
-BOOL IntSetThreadDesktop(IN HDESK hDesktop,
-                         IN BOOL FreeOnFailure);
+BOOL
+IntSetThreadDesktop(
+    _In_opt_ PDESKTOP pDesktop,
+    _In_opt_ HDESK hDesktop,
+    _In_ BOOL FreeOnFailure);
 
 NTSTATUS
 FASTCALL
