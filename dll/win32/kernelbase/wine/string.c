@@ -296,6 +296,10 @@ char * WINAPI StrDupA(const char *str)
 
     TRACE("%s\n", wine_dbgstr_a(str));
 
+#ifdef __REACTOS__
+    if (!str)
+        return NULL;
+#endif
     len = str ? strlen(str) + 1 : 1;
     ret = LocalAlloc(LMEM_FIXED, len);
 
@@ -317,6 +321,10 @@ WCHAR * WINAPI StrDupW(const WCHAR *str)
 
     TRACE("%s\n", wine_dbgstr_w(str));
 
+#ifdef __REACTOS__
+    if (!str)
+        return NULL;
+#endif
     len = (str ? lstrlenW(str) + 1 : 1) * sizeof(WCHAR);
     ret = LocalAlloc(LMEM_FIXED, len);
 
@@ -861,7 +869,14 @@ BOOL WINAPI StrToInt64ExA(const char *str, DWORD flags, LONGLONG *ret)
         str += 2;
 
         if (!isxdigit(*str))
+#ifdef __REACTOS__
+        {
+            *ret = 0;
             return FALSE;
+        }
+#else
+            return FALSE;
+#endif
 
         while (isxdigit(*str))
         {
@@ -881,7 +896,14 @@ BOOL WINAPI StrToInt64ExA(const char *str, DWORD flags, LONGLONG *ret)
 
     /* Read decimal number */
     if (*str < '0' || *str > '9')
+#ifdef __REACTOS__
+    {
+        *ret = 0;
         return FALSE;
+    }
+#else
+        return FALSE;
+#endif
 
     while (*str >= '0' && *str <= '9')
     {
@@ -924,7 +946,14 @@ BOOL WINAPI StrToInt64ExW(const WCHAR *str, DWORD flags, LONGLONG *ret)
         str += 2;
 
         if (!isxdigit(*str))
+#ifdef __REACTOS__
+        {
+            *ret = 0;
             return FALSE;
+        }
+#else
+            return FALSE;
+#endif
 
         while (isxdigit(*str))
         {
@@ -944,7 +973,14 @@ BOOL WINAPI StrToInt64ExW(const WCHAR *str, DWORD flags, LONGLONG *ret)
 
     /* Read decimal number */
     if (*str < '0' || *str > '9')
+#ifdef __REACTOS__
+    {
+        *ret = 0;
         return FALSE;
+    }
+#else
+        return FALSE;
+#endif
 
     while (*str >= '0' && *str <= '9')
     {
@@ -965,7 +1001,11 @@ BOOL WINAPI StrToIntExA(const char *str, DWORD flags, INT *ret)
     TRACE("%s, %#lx, %p\n", wine_dbgstr_a(str), flags, ret);
 
     res = StrToInt64ExA(str, flags, &value);
+#ifdef __REACTOS__
+    if (ret) *ret = res ? (INT)value : 0;
+#else
     if (res) *ret = value;
+#endif
     return res;
 }
 
@@ -977,7 +1017,11 @@ BOOL WINAPI StrToIntExW(const WCHAR *str, DWORD flags, INT *ret)
     TRACE("%s, %#lx, %p\n", wine_dbgstr_w(str), flags, ret);
 
     res = StrToInt64ExW(str, flags, &value);
+#ifdef __REACTOS__
+    if (ret) *ret = res ? (INT)value : 0;
+#else
     if (res) *ret = value;
+#endif
     return res;
 }
 
