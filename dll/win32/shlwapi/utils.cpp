@@ -277,6 +277,98 @@ EXTERN_C PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString)
     return CharLowerNoDBCSWWorker(lpString, 0, TRUE) ? lpString : NULL;
 }
 
+/*************************************************************************
+ * SHLoadRawAccelerators [SHLWAPI.385]
+ *
+ * Retired in 6.1 and higher.
+ */
+EXTERN_C
+PRAWACCEL WINAPI
+SHLoadRawAccelerators(_In_ HINSTANCE hInstance, _In_ PCSTR lpTableName)
+{
+    PRAWACCEL pRawAccels = NULL;
+    HACCEL hAccel = LoadAcceleratorsA(hInstance, lpTableName);
+    if (!hAccel)
+        return NULL;
+
+    INT cItems = CopyAcceleratorTableA(hAccel, NULL, 0);
+    if (cItems <= 0)
+        goto Cleanup;
+
+    pRawAccels = (PRAWACCEL)LocalAlloc(LPTR, sizeof(RAWACCEL) + (cItems - 1) * sizeof(ACCEL));
+    if (!pRawAccels)
+        goto Cleanup;
+
+    pRawAccels->cItems = cItems;
+    if (cItems != CopyAcceleratorTableA(hAccel, pRawAccels->Items, cItems))
+    {
+        LocalFree(pRawAccels);
+        pRawAccels = NULL;
+    }
+
+Cleanup:
+    DestroyAcceleratorTable(hAccel);
+    return pRawAccels;
+}
+
+/*************************************************************************
+ * SHQueryRawAccelerator [SHLWAPI.386]
+ *
+ * Retired in 6.1 and higher.
+ */
+EXTERN_C
+BOOL WINAPI
+SHQueryRawAccelerator(
+    _In_ const RAWACCEL *pRawAccels,
+    _In_ BYTE fVirtMask,
+    _In_ BYTE fVirtValue,
+    _In_ UINT vKey,
+    _Out_opt_ PUINT pCmd)
+{
+    if (pCmd)
+        *pCmd = 0;
+
+    for (INT iItem = 0; iItem < pRawAccels->cItems; ++iItem)
+    {
+        const ACCEL *pAccel = &pRawAccels->Items[iItem];
+        if (vKey == pAccel->key && (pAccel->fVirt & fVirtMask) == fVirtValue)
+        {
+            if (pCmd)
+                *pCmd = pAccel->cmd;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/*************************************************************************
+ * SHQueryRawAcceleratorMsg [SHLWAPI.387]
+ *
+ * Retired in 6.1 and higher.
+ */
+EXTERN_C
+BOOL WINAPI
+SHQueryRawAcceleratorMsg(
+    _In_ const RAWACCEL *pRawAccels,
+    _In_ const MSG *pMsg,
+    _Out_opt_ PUINT pCmd)
+{
+    UINT uMsg = pMsg->message;
+    if (uMsg != WM_KEYDOWN && uMsg != WM_KEYUP)
+        return FALSE;
+
+    BYTE fVert = FVIRTKEY;
+    if (GetKeyState(VK_CONTROL) < 0)
+        fVert |= FCONTROL;
+    else if (GetKeyState(VK_SHIFT) < 0)
+        fVert |= FSHIFT;
+    else if (GetKeyState(VK_MENU) < 0)
+        fVert |= FALT;
+
+    return SHQueryRawAccelerator(pRawAccels, fVert, fVert, (UINT)pMsg->wParam, pCmd);
+}
+
 static HRESULT
 SHInvokeCommandOnContextMenuInternal(
     _In_opt_ HWND hWnd,

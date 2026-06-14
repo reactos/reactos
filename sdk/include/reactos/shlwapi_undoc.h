@@ -463,6 +463,28 @@ HRESULT WINAPI SHRunIndirectRegClientCommand(_In_ HWND hWnd, _In_ PCWSTR pszClie
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
+typedef struct tagRAWACCEL
+{
+    INT cItems;
+    ACCEL Items[ANYSIZE_ARRAY];
+} RAWACCEL, *PRAWACCEL;
+
+PRAWACCEL WINAPI SHLoadRawAccelerators(_In_ HINSTANCE hInstance, _In_ PCSTR lpTableName);
+
+BOOL WINAPI
+SHQueryRawAccelerator(
+    _In_ const RAWACCEL *pRawAccels,
+    _In_ BYTE fVirtMask,
+    _In_ BYTE fVirtValue,
+    _In_ UINT vKey,
+    _Out_opt_ PUINT pCmd);
+
+BOOL WINAPI
+SHQueryRawAcceleratorMsg(
+    _In_ const RAWACCEL *pRawAccels,
+    _In_ const MSG *pMsg,
+    _Out_opt_ PUINT pCmd);
+
 /* Flags for SHGetAppCompatFlags */
 #define SHACF_CONTEXTMENU           0x00000001
 #define SHACF_FLUSHNOWAITALWAYS     SHACF_CONTEXTMENU

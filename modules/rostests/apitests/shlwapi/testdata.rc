@@ -1,4 +1,5 @@
 
+#include <windows.h>
 #include "resource.h"
 
 ICON_16_8_BLACK     ICON "16_8_black.ico"
@@ -8,6 +9,11 @@ ICON_16_32_RED      ICON "16_32_red.ico"
 ICON_32_8           ICON "32_8.ico"
 ICON_32_32          ICON "32_32.ico"
 
+1 ACCELERATORS
+BEGIN
+    "A", 100, VIRTKEY
+    VK_RETURN, 101, VIRTKEY, SHIFT
+    VK_SPACE, 102, VIRTKEY, CONTROL
+END
 
 101 10 "shlwapi_resource_dll.dll"
-
