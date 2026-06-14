@@ -22,6 +22,7 @@
 #include <shlguid_undoc.h>
 #include <userenv.h>
 #include <atlstr.h>
+#include "resource.h"
 
 #include <shlwapi_undoc.h>
 #include <ishellfolder_helpers.h>
@@ -1193,4 +1194,16 @@ BOOL WINAPI SHGetFileDescriptionA(
     }
 
     return ret;
+}
+
+/*************************************************************************
+ * SHRestrictedMessageBox [SHLWAPI.384]
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/util/restrictions/messagebox.htm
+ * @see ShellMessageBoxW
+ */
+EXTERN_C INT WINAPI SHRestrictedMessageBox(_In_ HWND hWnd)
+{
+    return ShellMessageBoxW(shlwapi_hInstance, hWnd, MAKEINTRESOURCEW(IDS_RESTRICTED),
+                            MAKEINTRESOURCEW(IDS_RESTRICTIONS), MB_ICONERROR);
 }

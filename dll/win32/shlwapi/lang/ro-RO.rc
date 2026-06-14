@@ -36,6 +36,8 @@ STRINGTABLE
     IDS_TB_FORMAT "%s TO"
     IDS_PB_FORMAT "%s PO"
     IDS_EB_FORMAT "%s EO"
+    IDS_RESTRICTED "This operation has been cancelled due to restrictions in effect on this computer. Please contact your system administrator."
+    IDS_RESTRICTIONS "Restrictions"
 #endif
 }
 
