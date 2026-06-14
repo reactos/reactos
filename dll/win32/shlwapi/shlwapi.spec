@@ -536,7 +536,7 @@
 536 stdcall -noname IUnknown_QueryServicePropertyBag(ptr long ptr ptr)
 537 stdcall -noname SHBoolSystemParametersInfo(long ptr)
 538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)
-539 stub -noname IUnknown_ShowBrowserBar
+539 stdcall -noname IUnknown_ShowBrowserBar(ptr ptr long)
 540 stdcall -noname SHInvokeCommandOnContextMenu(ptr ptr ptr long str)
 541 stdcall -noname SHInvokeCommandsOnContextMenu(ptr ptr ptr long ptr long)
 542 stdcall -noname GetUIVersion()
