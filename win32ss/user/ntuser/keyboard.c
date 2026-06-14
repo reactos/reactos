@@ -35,6 +35,9 @@ static enum _ALTNUM_STATE
 static ULONG gAltNumPadValue = 0;
 BOOL gbEnableHexNumpad = FALSE;
 
+extern BOOLEAN RawInputEnabled;
+extern HANDLE ghKeyboardDevice;
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -1405,6 +1408,66 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
     return ProcessKeyEvent(wVk, wScanCode, pKbdInput->dwFlags, bInjected, dwTime, pKbdInput->dwExtraInfo);
 }
 
+VOID
+WINAPI
+UserRawInputProcessKeyboardInput(
+    PKEYBOARD_INPUT_DATA pKbdInputData,
+    WORD wScanCode, WORD wVk)
+{
+    PTHREADINFO pti;
+    POINT ptCursor;
+    WPARAM wParam;
+
+    RAWKEYBOARD kb = {0};
+
+    if (!UserGetRawInputTarget(RIM_TYPEKEYBOARD, &pti, &wParam))
+        return;
+
+    ptCursor = gpsi->ptCursor;
+    MSG Msg;
+    BOOL bIsDown = (pKbdInputData->Flags & KEY_BREAK) ? FALSE : TRUE;
+
+    kb.MakeCode = wScanCode & 0x7F;
+
+    if (bIsDown)
+        kb.Flags = RI_KEY_MAKE;
+    else
+        kb.Flags = RI_KEY_BREAK;
+    kb.VKey = wVk & 0xFF; // Note: wVk is simplified by msg queue
+
+    if (bIsDown)
+        kb.Message = WM_KEYDOWN;
+    else
+        kb.Message = WM_KEYUP;
+    if (pKbdInputData->Flags & KEY_E1)
+    {
+        kb.Flags |= RI_KEY_E1;
+    }
+    if (pKbdInputData->Flags & KEY_E0)
+    {
+        kb.Flags |= RI_KEY_E0;
+    }
+
+    kb.ExtraInformation = pKbdInputData->ExtraInformation;
+    HRAWINPUT hRawInput = UserCreateRawInput(pti,
+                                             RIM_TYPEKEYBOARD,
+                                             ghKeyboardDevice,
+                                             wParam,
+                                             &kb,
+                                             sizeof(kb));
+    if (!hRawInput)
+        return;
+
+    Msg.wParam = wParam;
+    Msg.lParam = (LPARAM)hRawInput;
+    Msg.pt = ptCursor;
+    //Msg.time = mid->time;
+    Msg.message = WM_INPUT;
+
+    //MessageQueue = pti->MessageQueue;
+    if (!MsqPostMessage(pti, &Msg, TRUE, QS_RAWINPUT, 0, 0))
+        UserFreeRawInput(pti->MessageQueue, hRawInput);
+}
 /*
  * UserProcessKeyboardInput
  *
@@ -1447,6 +1510,9 @@ UserProcessKeyboardInput(
     wVk = IntVscToVk(wScanCode, pKbdTbl);
     TRACE("UserProcessKeyboardInput: %x (break: %u) -> %x\n",
           wScanCode, (pKbdInputData->Flags & KEY_BREAK) ? 1u : 0, wVk);
+
+    if (RawInputEnabled == TRUE)
+        UserRawInputProcessKeyboardInput(pKbdInputData, wScanCode, wVk);
 
     if (wVk)
     {
