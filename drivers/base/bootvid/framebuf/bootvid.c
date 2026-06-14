@@ -53,12 +53,42 @@ static RGBQUAD CachedPalette[BV_MAX_COLORS];
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static VOID
+FlushBackBufferRect(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Width,
+    _In_ ULONG Height)
+{
+    ULONG y;
+
+    if (!Width || !Height)
+        return;
+
+    for (y = Top; y < Top + Height; ++y)
+    {
+        PUCHAR Back = BB_PIXEL(Left, y);
+
+        for (ULONG i = 0; i < VidpYScale; ++i)
+        {
+            PULONG Pixel = (PULONG)((ULONG_PTR)FB_PIXEL(Left, y) +
+                                     i * BytesPerScanLine);
+
+            for (ULONG x = 0; x < Width; ++x)
+            {
+                for (ULONG j = VidpXScale; j > 0; --j)
+                    *Pixel++ = CachedPalette[Back[x]];
+            }
+        }
+    }
+}
+
+static VOID
 ApplyPalette(VOID)
 {
+#ifdef COLORED_BORDERS
     PULONG Frame = (PULONG)FrameBufferStart;
     ULONG x, y;
 
-#ifdef COLORED_BORDERS
     /* Top border */
     for (x = 0; x < PanV * ScreenWidth; ++x)
     {
@@ -78,24 +108,7 @@ ApplyPalette(VOID)
 #endif // COLORED_BORDERS
 
     /* Screen redraw */
-    PUCHAR Back = BackBuffer;
-    for (y = 0; y < SCREEN_HEIGHT; ++y)
-    {
-        Frame = (PULONG)FB_PIXEL(0, y);
-        PULONG Pixel = Frame;
-        for (x = 0; x < SCREEN_WIDTH; ++x)
-        {
-            for (ULONG j = VidpXScale; j > 0; --j)
-                *Pixel++ = CachedPalette[*Back];
-            Back++;
-        }
-        Pixel = Frame;
-        for (ULONG i = VidpYScale-1; i > 0; --i)
-        {
-            Pixel = (PULONG)((ULONG_PTR)Pixel + BytesPerScanLine);
-            RtlCopyMemory(Pixel, Frame, VidpXScale * SCREEN_WIDTH * BytesPerPixel);
-        }
-    }
+    FlushBackBufferRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 #ifdef COLORED_BORDERS
     /* Right border */
@@ -242,30 +255,34 @@ VidInitialize(
      */
     BackBufferSize = SCREEN_WIDTH * (SCREEN_HEIGHT + (BOOTCHAR_HEIGHT + 1));
 
-    /* If there is enough video memory in the physical framebuffer,
-     * place the backbuffer in the hidden part of the framebuffer,
-     * otherwise allocate a zone for the backbuffer. */
-    if (VideoConfigData.FrameBufferOffset + FrameBufferSize + BackBufferSize
+    /*
+     * Keep the backbuffer in cached system RAM. Reading from the GOP
+     * framebuffer is often extremely slow, even when writes are combined.
+     */
+    {
+        PHYSICAL_ADDRESS NullAddress = {{0, 0}};
+        PHYSICAL_ADDRESS HighestAddress = {{-1, -1}};
+        BackBuffer = MmAllocateContiguousMemorySpecifyCache(
+                        BackBufferSize, NullAddress, HighestAddress,
+                        NullAddress, MmCached);
+    }
+
+    if (!BackBuffer &&
+        VideoConfigData.FrameBufferOffset + FrameBufferSize + BackBufferSize
             <= ((AddressSpace == 0) ? MappedSize : VramSize))
     {
         /* Backbuffer placed following the framebuffer in the hidden part */
         BackBuffer = (PUCHAR)(FrameBufferStart + FrameBufferSize);
         // BackBuffer = (PUCHAR)(VramAddress + VramSize - BackBufferSize); // Or at the end of VRAM.
     }
-    else
+
+    if (!BackBuffer)
     {
-        /* Allocate the backbuffer */
-        PHYSICAL_ADDRESS NullAddress = {{0, 0}};
-        PHYSICAL_ADDRESS HighestAddress = {{-1, -1}};
-        BackBuffer = MmAllocateContiguousMemorySpecifyCache(
-                        BackBufferSize, NullAddress, HighestAddress,
-                        NullAddress, MmNonCached);
-        if (!BackBuffer)
-        {
-            DPRINT1("Could not allocate backbuffer (size: %lu)\n", (ULONG)BackBufferSize);
-            goto Failure;
-        }
+        DPRINT1("Could not allocate backbuffer (size: %lu)\n", (ULONG)BackBufferSize);
+        goto Failure;
     }
+
+    RtlZeroMemory(BackBuffer, BackBufferSize);
 
 #ifdef SCALING_SUPPORT
     /* Compute autoscaling; only integer (not fractional) scaling is supported */
@@ -388,24 +405,7 @@ PreserveRow(
     /* On restore, mirror the backbuffer changes to the framebuffer */
     if (Restore)
     {
-        NewPosition = BB_PIXEL(0, CurrentTop);
-        for (ULONG y = 0; y < Height; ++y)
-        {
-            PULONG Frame = (PULONG)FB_PIXEL(0, CurrentTop + y);
-            PULONG Pixel = Frame;
-            for (Count = 0; Count < SCREEN_WIDTH; ++Count)
-            {
-                for (ULONG j = VidpXScale; j > 0; --j)
-                    *Pixel++ = CachedPalette[*NewPosition];
-                NewPosition++;
-            }
-            Pixel = Frame;
-            for (ULONG i = VidpYScale-1; i > 0; --i)
-            {
-                Pixel = (PULONG)((ULONG_PTR)Pixel + BytesPerScanLine);
-                RtlCopyMemory(Pixel, Frame, VidpXScale * SCREEN_WIDTH * BytesPerPixel);
-            }
-        }
+        FlushBackBufferRect(0, CurrentTop, SCREEN_WIDTH, Height);
     }
 }
 
@@ -414,6 +414,10 @@ DoScroll(
     _In_ ULONG Scroll)
 {
     ULONG RowSize = VidpScrollRegion.Right - VidpScrollRegion.Left + 1;
+    ULONG Height = VidpScrollRegion.Bottom - VidpScrollRegion.Top + 1;
+
+    if (!Scroll || Scroll >= Height)
+        return;
 
     /* Calculate the position in memory for the row */
     PUCHAR OldPosition = BB_PIXEL(VidpScrollRegion.Left, VidpScrollRegion.Top + Scroll);
@@ -425,23 +429,14 @@ DoScroll(
         /* Scroll the row */
         RtlCopyMemory(NewPosition, OldPosition, RowSize);
 
-        PULONG Frame = (PULONG)FB_PIXEL(VidpScrollRegion.Left, Top);
-        PULONG Pixel = Frame;
-        for (ULONG Count = 0; Count < RowSize; ++Count)
-        {
-            for (ULONG j = VidpXScale; j > 0; --j)
-                *Pixel++ = CachedPalette[NewPosition[Count]];
-        }
-        Pixel = Frame;
-        for (ULONG i = VidpYScale-1; i > 0; --i)
-        {
-            Pixel = (PULONG)((ULONG_PTR)Pixel + BytesPerScanLine);
-            RtlCopyMemory(Pixel, Frame, VidpXScale * RowSize * BytesPerPixel);
-        }
-
         OldPosition += SCREEN_WIDTH;
         NewPosition += SCREEN_WIDTH;
     }
+
+    FlushBackBufferRect(VidpScrollRegion.Left,
+                        VidpScrollRegion.Top,
+                        RowSize,
+                        Height);
 }
 
 VOID
@@ -454,20 +449,61 @@ DisplayCharacter(
 {
     /* Get the font line for this character */
     const UCHAR* FontChar = GetFontPtr(Character);
+    const BOOLEAN Opaque = (BackColor < BV_COLOR_NONE);
 
     /* Loop each pixel height */
     for (ULONG y = Top; y < Top + BOOTCHAR_HEIGHT; ++y, FontChar += FONT_PTR_DELTA)
     {
-        /* Loop each pixel width */
-        ULONG x = Left;
-        for (UCHAR bit = 1 << (BOOTCHAR_WIDTH - 1); bit > 0; bit >>= 1, ++x)
+        PUCHAR Back = BB_PIXEL(Left, y);
+
+        if (Opaque)
         {
-            /* If we should draw this pixel, use the text color. Otherwise
-             * this is a background pixel, draw it unless it's transparent. */
-            if (*FontChar & bit)
-                SetPixel(x, y, (UCHAR)TextColor);
-            else if (BackColor < BV_COLOR_NONE)
-                SetPixel(x, y, (UCHAR)BackColor);
+            /* Loop each pixel width */
+            for (UCHAR bit = 1 << (BOOTCHAR_WIDTH - 1); bit > 0; bit >>= 1)
+            {
+                UCHAR Color = (*FontChar & bit) ? (UCHAR)TextColor : (UCHAR)BackColor;
+
+                *Back++ = Color;
+            }
+
+            for (ULONG i = 0; i < VidpYScale; ++i)
+            {
+                PULONG Pixel = (PULONG)((ULONG_PTR)FB_PIXEL(Left, y) +
+                                         i * BytesPerScanLine);
+
+                for (UCHAR bit = 1 << (BOOTCHAR_WIDTH - 1); bit > 0; bit >>= 1)
+                {
+                    UCHAR Color = (*FontChar & bit) ? (UCHAR)TextColor : (UCHAR)BackColor;
+
+                    for (ULONG j = VidpXScale; j > 0; --j)
+                        *Pixel++ = CachedPalette[Color];
+                }
+            }
+        }
+        else
+        {
+            ULONG x = Left;
+
+            /* Loop each pixel width */
+            for (UCHAR bit = 1 << (BOOTCHAR_WIDTH - 1); bit > 0; bit >>= 1, ++x)
+            {
+                if (!(*FontChar & bit))
+                {
+                    ++Back;
+                    continue;
+                }
+
+                *Back++ = (UCHAR)TextColor;
+
+                PULONG Frame = (PULONG)FB_PIXEL(x, y);
+                for (ULONG i = VidpYScale; i > 0; --i)
+                {
+                    PULONG Pixel = Frame;
+                    for (ULONG j = VidpXScale; j > 0; --j)
+                        *Pixel++ = CachedPalette[(UCHAR)TextColor];
+                    Frame = (PULONG)((ULONG_PTR)Frame + BytesPerScanLine);
+                }
+            }
         }
     }
 }
@@ -481,23 +517,21 @@ VidSolidColorFill(
     _In_ ULONG Bottom,
     _In_ UCHAR Color)
 {
+    ULONG Width = Right - Left + 1;
+    ULONG NativeWidth = Width * VidpXScale * BytesPerPixel;
+    ULONG NativeColor = CachedPalette[Color];
+
     for (; Top <= Bottom; ++Top)
     {
         PUCHAR Back = BB_PIXEL(Left, Top);
-        // NOTE: Assumes 32bpp
-        PULONG Frame = (PULONG)FB_PIXEL(Left, Top);
-        PULONG Pixel = Frame;
-        for (ULONG L = Left; L <= Right; ++L)
+
+        RtlFillMemory(Back, Width, Color);
+
+        for (ULONG i = 0; i < VidpYScale; ++i)
         {
-            *Back++ = Color;
-            for (ULONG j = VidpXScale; j > 0; --j)
-                *Pixel++ = CachedPalette[Color];
-        }
-        Pixel = Frame;
-        for (ULONG i = VidpYScale-1; i > 0; --i)
-        {
-            Pixel = (PULONG)((ULONG_PTR)Pixel + BytesPerScanLine);
-            RtlCopyMemory(Pixel, Frame, VidpXScale * (Right - Left + 1) * BytesPerPixel);
+            PULONG Frame = (PULONG)((ULONG_PTR)FB_PIXEL(Left, Top) +
+                                     i * BytesPerScanLine);
+            RtlFillMemoryUlong(Frame, NativeWidth, NativeColor);
         }
     }
 }
