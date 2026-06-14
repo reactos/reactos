@@ -280,7 +280,6 @@
 281 stdcall SHCreateProcessAsUserW(ptr)
 282 stdcall SHCreateQueryCancelAutoPlayMoniker(ptr)
 283 stdcall SHCreateShellItem(ptr ptr ptr ptr)
-@ stdcall -version=0x600+ SHCreateShellItemArrayFromDataObject(ptr ptr ptr)
 284 stdcall SHEmptyRecycleBinA(long str long)
 285 stdcall SHEmptyRecycleBinW(long wstr long)
 286 stub SHEnableServiceObject
@@ -467,5 +466,60 @@
 755 stdcall -noname PathIsEqualOrSubFolder(wstr wstr)
 756 stub -noname DeleteFileThumbnail
 757 stdcall -noname -version=0x600+ DisplayNameOfW(ptr ptr long ptr long)
+758 stdcall -stub -version=0x600+ SHGetStockIconInfo(long long ptr)
+760 stub -noname -version=0x600+ SHConfirmOperation
+781 stub -noname -version=0x600+ SHApplyPropertiesToItem
+787 stub -version=0x600+ SHMapIDListToSystemImageListIndexAsync
+790 stub -version=0x600+ SHMapIDListToSystemImageListIndex
+814 stub -noname -version=0x600+ SHCreateLeafConditionEx
+815 stub -noname -version=0x600+ SHCreateAndOrConditionEx
+817 stub -noname -version=0x600+ SHCreateLeafCondition
+818 stdcall -stub -noname -version=0x600+ SHCreateFilter(wstr wstr ptr long ptr ptr ptr)
+819 stdcall -stub -noname -version=0x600+ SHLoadFilterFromStream(ptr ptr ptr)
+820 stub -noname -version=0x600+ SHCreateAutoList
+821 stub -noname -version=0x600+ SHCreateSearchIDListFromAutoList
+822 stub -noname -version=0x600+ SHCreateSearchIDList
+823 stub -noname -version=0x600+ SHGetFolderTypeDescription
+824 stub -noname -version=0x600+ SHGetFolderTypeFromCanonicalName
+825 stdcall -stub -noname -version=0x600+ SHCombineMultipleConditions(ptr ptr long ptr ptr)
+826 stub -noname -version=0x600+ SHCreateAutoListWithID
+829 stub -noname -version=0x600+ MeasureMenuItem
+830 stub -noname -version=0x600+ SHCreateNotConditionEx
+833 stub -noname -version=0x600+ SHKnownFolderFromCSIDL
+834 stub -noname -version=0x600+ SHCreateScopeFromIDLists
+835 stub -noname -version=0x600+ SHCreateScopeItemFromIDList
+836 stub -noname -version=0x600+ SHCreateScopeFromShellItemArray
+839 stub -noname -version=0x600+ CreateSingleVisibleInList
+840 stub -noname -version=0x600+ PathGetPathDisplayName
+846 stdcall -stub -noname -version=0x600+ SHCombineMultipleConditionsEx(ptr ptr long ptr ptr ptr)
+849 stub -noname -version=0x600+ SHCreateConditionFactory
+850 stub -noname -version=0x600+ PathComparePaths
+851 stub -noname -version=0x601+ SHGetTopViewDescription
+852 stdcall -stub -noname -version=0x600+ SHInitializeControlPanelRegkeys()
+861 stub -noname -version=0x601+ SHDisplayNameFromScopeAndSubQueries
+862 stub -noname -version=0x600+ SHCompareIDsFull
+863 stub -noname -version=0x600+ GetTryHarderIDList
 866 stdcall -noname -version=0x600+ SHExtCoCreateInstance(wstr ptr ptr ptr ptr)
+867 stub -noname -version=0x600+ CreateVisibleInDescription
+868 stub -noname -version=0x600+ CreateVisibleInList
+870 stub -noname -version=0x600+ DUI_Shell32_StartDeferUninitialization
+871 stub -noname -version=0x600+ DUI_Shell32_EndDeferUninitialization
+872 stub -noname -version=0x600+ SHCreateKindFilter
+873 stub -noname -version=0x600+ SHIconIndexFromPIDL
+885 stdcall -noname -version=0x601+ RunInstallUninstallStubs()
+886 stub -noname -version=0x601+ SHLaunchSearch
 887 stub -noname -version=0x601+ SHExtCoCreateInstanceCheckCategory
+888 stub -noname -version=0x601+ SHLimitInputEndSubclass
+892 stub -noname -version=0x601+ GetSqmableFileName
+893 stub -noname -version=0x601+ SetWindowRelaunchProperties
+894 stub -noname -version=0x601+ MakeDestinationItem
+895 stdcall -noname -version=0x601+ GetAppPathFromLink(ptr wstr long)
+896 stub -noname -version=0x601+ ClearDestinationsForAllApps
+897 stub -noname -version=0x601+ SaveTopViewSettings
+899 stdcall -stub -noname -version=0x601+ SetExplorerServerMode(long)
+900 stub -noname -version=0x601+ GetAppIDRoot
+902 stub -noname -version=0x601+ IsSearchEnabled
+
+@   stdcall -stub -version=0x600+ AssocCreateForClasses(ptr long ptr ptr)
+@   stdcall -stub -version=0x600+ SHAssocEnumHandlers(wstr ptr ptr)
+@   stub -version=0x601+ SHAssocEnumHandlersForProtocolByApplication

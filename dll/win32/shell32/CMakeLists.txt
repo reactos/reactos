@@ -4,8 +4,11 @@ add_subdirectory(shelldesktop)
 add_subdirectory(shellmenu)
 add_subdirectory(shellrecyclebin)
 
-spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
-
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    spec2def(shell32.dll shell32_vista.spec ADD_IMPORTLIB)
+else()
+    spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
+endif()
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
@@ -45,6 +48,8 @@ list(APPEND SOURCE
     shell32.cpp
     utils.cpp
     CShellItem.cpp
+    CShellItemArray.cpp
+    shellitem_vista.cpp
     CShellLink.cpp
     CFolderOptions.cpp
     folders/CDesktopFolder.cpp
@@ -73,6 +78,8 @@ list(APPEND SOURCE
     CDefViewBckgrndMenu.cpp
     stubs.cpp
     systray.cpp
+    CUserEventTimer.cpp
+    CUserEventTimer.h
     CUserNotification.cpp
     CDefaultContextMenu.cpp
     COpenWithMenu.cpp
@@ -81,6 +88,8 @@ list(APPEND SOURCE
     CCopyMoveToMenu.cpp
     CCopyAsPathMenu.cpp
     CShellDispatch.cpp
+    CShellLibrary.cpp
+    CShellLibrary.h
     CFolder.cpp
     CFolderItems.cpp
     CFolderItemVerbs.cpp)
