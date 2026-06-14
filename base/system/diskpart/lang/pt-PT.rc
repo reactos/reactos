@@ -61,7 +61,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CONVERT_GPT_ALREADY "\nO disco seleccionado não pode ser convertido porque já está formatado em GPT.\n"
-    IDS_CONVERT_GPT_NOT_EMPTY "\nO disco seleccionado não pode ser convertido para o formato GPT. Seleccione um disco MBR vazio para conversão.\n"
+    IDS_CONVERT_GPT_NOT_EMPTY "\nO disco seleccionado não pode ser convertido para o formato GPT.\nSeleccione um disco MBR vazio para conversão.\n"
     IDS_CONVERT_GPT_SUCCESS "\nO disco seleccionado foi convertido com sucesso para o formato GPT.\n"
     IDS_CONVERT_MBR_ALREADY "\nO disco seleccionado não pode ser convertido porque já foi formatado em MBR.\n"
     IDS_CONVERT_MBR_NOT_EMPTY "\nO disco seleccionado não pode ser convertido para o formato MBR.\nSeleccione um disco GPT vazio para conversão.\n"
