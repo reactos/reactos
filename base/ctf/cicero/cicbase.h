@@ -7,8 +7,11 @@
 
 #pragma once
 
-#include <assert.h>
+#include <new>
+#include <cassert>
+
 #define cicAssert assert
+#define cicNoThrow std::nothrow
 
 static inline LPVOID cicMemAlloc(SIZE_T size)
 {
@@ -44,16 +47,6 @@ static inline bool cicIsNullPtr(LPCVOID ptr)
 {
     return !ptr;
 }
-
-struct CicNoThrow { };
-#define cicNoThrow CicNoThrow{}
-
-void* operator new(size_t size, const CicNoThrow&) noexcept;
-void* operator new[](size_t size, const CicNoThrow&) noexcept;
-void operator delete(void* ptr) noexcept;
-void operator delete[](void* ptr) noexcept;
-void operator delete(void* ptr, size_t size) noexcept;
-void operator delete[](void* ptr, size_t size) noexcept;
 
 /* The flags of cicGetOSInfo() */
 #define CIC_OSINFO_NT     0x01

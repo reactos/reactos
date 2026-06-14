@@ -11,7 +11,7 @@
 
 typedef struct CESMAP
 {
-    ITfCompartment *m_pComp;
+    ITfCompartment* m_pComp;
     DWORD m_dwCookie;
 } CESMAP, *PCESMAP;
 
@@ -20,13 +20,13 @@ typedef INT (CALLBACK *FN_EVENTSINK)(LPVOID, REFGUID);
 class CCompartmentEventSink : public ITfCompartmentEventSink
 {
     CicArray<CESMAP> m_array;
-    LONG m_cRefs;
-    FN_EVENTSINK m_fnEventSink;
-    LPVOID m_pUserData;
+    LONG m_cRefs = 1;
+    FN_EVENTSINK m_fnEventSink = NULL;
+    LPVOID m_pUserData = NULL;
 
 public:
     CCompartmentEventSink(FN_EVENTSINK fnEventSink, LPVOID pUserData);
-    virtual ~CCompartmentEventSink();
+    virtual ~CCompartmentEventSink() { }
 
     HRESULT _Advise(IUnknown *pUnknown, REFGUID rguid, BOOL bThread);
     HRESULT _Unadvise();
@@ -48,21 +48,21 @@ typedef INT (CALLBACK *FN_LAYOUTCHANGE)(UINT nType, FN_ENDEDIT fnEndEdit, ITfCon
 class CTextEventSink : public ITfTextEditSink, ITfTextLayoutSink
 {
 protected:
-    LONG m_cRefs;
-    IUnknown *m_pUnknown;
-    DWORD m_dwEditSinkCookie;
-    DWORD m_dwLayoutSinkCookie;
+    LONG m_cRefs = 1;
+    IUnknown* m_pUnknown = NULL;
+    DWORD m_dwEditSinkCookie = (DWORD)-1;
+    DWORD m_dwLayoutSinkCookie = (DWORD)-1;
     union
     {
+        FN_LAYOUTCHANGE m_fnLayoutChange = NULL;
         UINT m_uFlags;
-        FN_LAYOUTCHANGE m_fnLayoutChange;
     };
-    FN_ENDEDIT m_fnEndEdit;
-    LPVOID m_pCallbackPV;
+    FN_ENDEDIT m_fnEndEdit = NULL;
+    LPVOID m_pCallbackPV = NULL;
 
 public:
     CTextEventSink(FN_ENDEDIT fnEndEdit, LPVOID pCallbackPV);
-    virtual ~CTextEventSink();
+    virtual ~CTextEventSink() { }
 
     HRESULT _Advise(IUnknown *pUnknown, UINT uFlags);
     HRESULT _Unadvise();
@@ -94,13 +94,13 @@ typedef INT (CALLBACK *FN_PUSHPOP)(UINT, ITfContext *, LPVOID);
 class CThreadMgrEventSink : public ITfThreadMgrEventSink
 {
 protected:
-    ITfThreadMgr *m_pThreadMgr;
-    DWORD m_dwCookie;
-    FN_INITDOCMGR m_fnInit;
-    FN_PUSHPOP m_fnPushPop;
-    DWORD m_dw;
-    LPVOID m_pCallbackPV;
-    LONG m_cRefs;
+    ITfThreadMgr* m_pThreadMgr = NULL;
+    DWORD m_dwCookie = 0;
+    FN_INITDOCMGR m_fnInit = NULL;
+    FN_PUSHPOP m_fnPushPop = NULL;
+    DWORD m_dw = 0;
+    LPVOID m_pCallbackPV = NULL;
+    LONG m_cRefs = 1;
 
 public:
     CThreadMgrEventSink(
@@ -139,15 +139,15 @@ class CActiveLanguageProfileNotifySink : public ITfActiveLanguageProfileNotifySi
 protected:
     typedef INT (CALLBACK *FN_COMPARE)(REFGUID rguid1, REFGUID rguid2, BOOL fActivated,
                                        LPVOID pUserData);
-    LONG m_cRefs;
-    ITfThreadMgr *m_pThreadMgr;
-    DWORD m_dwConnection;
-    FN_COMPARE m_fnCompare;
-    LPVOID m_pUserData;
+    LONG m_cRefs = 1;
+    ITfThreadMgr* m_pThreadMgr = NULL;
+    DWORD m_dwConnection = 0;
+    FN_COMPARE m_fnCompare = NULL;
+    LPVOID m_pUserData = NULL;
 
 public:
     CActiveLanguageProfileNotifySink(_In_ FN_COMPARE fnCompare, _Inout_opt_ void *pUserData);
-    virtual ~CActiveLanguageProfileNotifySink();
+    virtual ~CActiveLanguageProfileNotifySink() { }
 
     HRESULT _Advise(ITfThreadMgr *pThreadMgr);
     HRESULT _Unadvise();

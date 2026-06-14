@@ -10,9 +10,8 @@
 class CicRegKey
 {
 public:
-    HKEY m_hKey;
+    HKEY m_hKey = NULL;
 
-    CicRegKey() : m_hKey(NULL) { }
     ~CicRegKey() { Close(); }
 
     operator HKEY() { return m_hKey; }

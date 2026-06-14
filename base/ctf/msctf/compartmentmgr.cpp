@@ -43,9 +43,9 @@ public:
     STDMETHODIMP EnumCompartments(_Out_ IEnumGUID **ppEnum) override;
 
 protected:
-    LONG m_cRefs;
-    IUnknown *m_pUnkOuter;
-    struct list m_values;
+    LONG m_cRefs = 1;
+    IUnknown* m_pUnkOuter = NULL;
+    struct list m_values = {};
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -54,8 +54,7 @@ class CCompartmentEnumGuid
     : public IEnumGUID
 {
 public:
-    CCompartmentEnumGuid();
-    virtual ~CCompartmentEnumGuid();
+    virtual ~CCompartmentEnumGuid() { }
 
     static HRESULT CreateInstance(struct list *values, IEnumGUID **ppOut);
     static HRESULT CreateInstance(struct list *values, IEnumGUID **ppOut, struct list *cursor);
@@ -75,9 +74,9 @@ public:
     STDMETHODIMP Clone(_Out_ IEnumGUID **ppenum) override;
 
 protected:
-    LONG m_cRefs;
-    struct list *m_values;
-    struct list *m_cursor;
+    LONG m_cRefs = 1;
+    struct list* m_values = NULL;
+    struct list* m_cursor = NULL;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -109,17 +108,16 @@ public:
     STDMETHODIMP UnadviseSink(_In_ DWORD dwCookie) override;
 
 protected:
-    LONG m_cRefs;
-    VARIANT m_variant; // Only VT_I4, VT_UNKNOWN and VT_BSTR data types are allowed
-    CompartmentValue *m_valueData;
-    struct list m_CompartmentEventSink;
+    LONG m_cRefs = 1;
+    VARIANT m_variant = {}; // Only VT_I4, VT_UNKNOWN and VT_BSTR data types are allowed
+    CompartmentValue* m_valueData = NULL;
+    struct list m_CompartmentEventSink = {};
 };
 
 ////////////////////////////////////////////////////////////////////////////
 
 CCompartmentMgr::CCompartmentMgr(IUnknown *pUnkOuter)
-    : m_cRefs(1)
-    , m_pUnkOuter(pUnkOuter)
+    : m_pUnkOuter(pUnkOuter)
 {
     list_init(&m_values);
 }
@@ -279,18 +277,6 @@ HRESULT CCompartmentMgr::EnumCompartments(_Out_ IEnumGUID **ppEnum)
 
 ////////////////////////////////////////////////////////////////////////////
 
-CCompartmentEnumGuid::CCompartmentEnumGuid()
-    : m_cRefs(1)
-    , m_values(NULL)
-    , m_cursor(NULL)
-{
-}
-
-CCompartmentEnumGuid::~CCompartmentEnumGuid()
-{
-    TRACE("destroying %p\n", this);
-}
-
 HRESULT
 CCompartmentEnumGuid::CreateInstance(struct list *values, IEnumGUID **ppOut)
 {
@@ -417,7 +403,6 @@ CCompartment::CCompartment(CompartmentValue *valueData)
 
 CCompartment::~CCompartment()
 {
-    TRACE("destroying %p\n", this);
     VariantClear(&m_variant);
     free_sinks(&m_CompartmentEventSink);
 }
