@@ -115,9 +115,9 @@ STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Sistema de ficheiros actual\n"
     IDS_FILESYSTEMS_FORMATTING "Sistemas de ficheiros disponíveis para formatação\n"
-    IDS_FILESYSTEMS_TYPE "  Tipo         : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "  Tamanho de Cluster : %s\n"
-    IDS_FILESYSTEMS_SERIAL_NUMBER "  Número de série: %08lx\n"
+    IDS_FILESYSTEMS_TYPE "  Tipo              : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "  Tamanho de Cluster: %s\n"
+    IDS_FILESYSTEMS_SERIAL_NUMBER "  Número de série   : %08lx\n"
     IDS_FILESYSTEMS_DEFAULT " (Predefinição)"
 END
 
