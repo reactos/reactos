@@ -90,6 +90,7 @@ KMT_TESTFUNC Test_ZwAllocateVirtualMemory;
 KMT_TESTFUNC Test_ZwCreateSection;
 KMT_TESTFUNC Test_ZwMapViewOfSection;
 KMT_TESTFUNC Test_ZwWaitForMultipleObjects;
+KMT_TESTFUNC Test_ZwNotifyChangeKey;
 
 const KMT_TEST TestList[] =
 {
@@ -179,5 +180,6 @@ const KMT_TEST TestList[] =
 #ifdef _M_AMD64
     { "RtlCaptureContextKM",                Test_RtlCaptureContext },
 #endif
+    { "ZwNotifyChangeKey",                  Test_ZwNotifyChangeKey },
     { NULL,                                 NULL }
 };

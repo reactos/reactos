@@ -105,8 +105,6 @@ CmpInitializeHive(
     Hive->UseCountLog.Next = 0;
     Hive->LockHiveLog.Next = 0;
     Hive->FileObject = NULL;
-    Hive->NotifyList.Flink = NULL;
-    Hive->NotifyList.Blink = NULL;
 
     /* Set the loading flag */
     Hive->HiveIsLoading = TRUE;
@@ -118,6 +116,7 @@ CmpInitializeHive(
     InitializeListHead(&Hive->KcbConvertListHead);
     InitializeListHead(&Hive->KnodeConvertListHead);
     InitializeListHead(&Hive->TrustClassEntry);
+    InitializeListHead(&Hive->NotifyList);
 
     /* Allocate the view log */
     Hive->ViewLock = ExAllocatePoolWithTag(NonPagedPool,
