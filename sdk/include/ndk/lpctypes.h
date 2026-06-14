@@ -25,6 +25,10 @@ Author:
 #include <umtypes.h>
 //#include <pstypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -292,5 +296,9 @@ typedef struct _CLIENT_DIED_MSG
     (LPC_MAX_MESSAGE_LENGTH - \
     sizeof(PORT_MESSAGE) - \
     sizeof(LPCP_CONNECTION_MESSAGE))
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _LPCTYPES_H
