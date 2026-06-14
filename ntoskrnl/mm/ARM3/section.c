@@ -1177,6 +1177,9 @@ MiMapViewOfDataSection(
 
     DPRINT("Mapping ARM3 data section\n");
 
+    /* Check for invalid inherit disposition */
+    ASSERT((InheritDisposition >= ViewShare) && (InheritDisposition <= ViewUnmap));
+
     /* Get the segment for this section */
     Segment = ControlArea->Segment;
 
@@ -2553,7 +2556,11 @@ MmMapViewOfArm3Section(
     ULONG ProtectionMask;
     NTSTATUS Status;
     ULONG64 CalculatedViewSize;
+
     PAGED_CODE();
+
+    /* Check for invalid inherit disposition */
+    // Let MiMapViewOfDataSection() check InheritDisposition value.
 
     /* Get the segment and control area */
     Section = (PSECTION)SectionObject;
@@ -3291,9 +3298,9 @@ NtMapViewOfSection(
 #endif
 
     /* Check for invalid inherit disposition */
-    if ((InheritDisposition > ViewUnmap) || (InheritDisposition < ViewShare))
+    if ((InheritDisposition < ViewShare) || (InheritDisposition > ViewUnmap))
     {
-        DPRINT1("Invalid inherit disposition\n");
+        DPRINT1("Invalid inherit disposition: %d\n", InheritDisposition);
         return STATUS_INVALID_PARAMETER_8;
     }
 
