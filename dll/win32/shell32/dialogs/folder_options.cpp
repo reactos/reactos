@@ -158,6 +158,13 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
         return 0;
     }
 
+    if (SHRestricted(REST_NOFOLDEROPTIONS))
+    {
+        SHRestrictedMessageBox(stub);
+        stub.DestroyWindow();
+        return 0;
+    }
+
     memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
     pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_USEICONID | PSH_USECALLBACK;
@@ -190,7 +197,7 @@ ShowFolderOptionsDialog(UINT Page, BOOL Async = FALSE)
         SetForegroundWindow(hPop);
         return;
     }
-    
+
     LPVOID param = UlongToPtr(Page);
     if (Async)
         SHCreateThread(ShowFolderOptionsDialogThreadProc, param, 0, 0);
