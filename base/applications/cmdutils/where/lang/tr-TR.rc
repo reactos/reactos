@@ -9,7 +9,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Kullanım: WHERE [secenekler] kalip...\n\
+    IDS_USAGE "Kullanım: WHERE [seçenekler] kalıp...\n\
 \n\
 Açıklama:\n\
     Kalıp(lar) tarafından belirtilen dosyaların konumunu\n\
@@ -23,7 +23,7 @@ Seçenekler:\n\
             aramayı gerçekleştirir.\n\
   /T        Eşleşen tüm dosyaların dosya boyutunu ve son değiştirilme\n\
             tarihini gösterir.\n\
-  kalip     Dosyaları aramak için kalıbı belirtir. Joker karakterler\n\
+  kalıp     Dosyaları aramak için kalıbı belirtir. Joker karakterler\n\
             * ve ? kullanılabilir. ""$env:pattern"" ve ""path:pattern""\n\
             formatları da kullanılabilir, burada ""env"" bir ortam\n\
             değişkenidir ve arama ""env"" ortam değişkeninin yollarında\n\
