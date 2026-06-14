@@ -22,6 +22,7 @@ list(APPEND SOURCE
     ItemIDList.cpp
     #OpenAs_RunDLL.cpp # Test hangs on Win 2003
     PathIsEqualOrSubFolder.cpp
+    PathIsSlow.cpp
     PathIsTemporary.cpp
     PathMakeUniqueName.cpp
     PathProcessCommand.cpp
