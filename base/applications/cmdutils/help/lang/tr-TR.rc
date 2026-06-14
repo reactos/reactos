@@ -1,4 +1,10 @@
-/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/*
+ * PROJECT:     ReactOS Help Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish Resource File
+ * TRANSLATORS: Copyright 2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2026 Hasan Eliküçük (Random Developer 31) <hasanelk101@gmail.com>
+*/
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
