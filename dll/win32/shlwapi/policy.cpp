@@ -13,6 +13,7 @@
 #include <shlguid_undoc.h>
 #include <atlstr.h>
 #include <strsafe.h>
+#include <new>
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(policy);
@@ -82,17 +83,6 @@ public:
 
         if (m_hGlobalCounter)
             CloseHandle(m_hGlobalCounter);
-    }
-
-    static void* operator new(size_t size)
-    {
-        // Returns NULL on failure; caller must check before use.
-        // NOTE: C++ UB if constructor runs on NULL, but ReactOS convention.
-        return LocalAlloc(LPTR, size);
-    }
-    static void operator delete(void *ptr)
-    {
-        LocalFree(ptr);
     }
 
     BOOL Initialize(const SHPOLICY_ITEM *pItems, UINT cItems)
@@ -257,7 +247,7 @@ static BOOL SHPolicyCache_Create(VOID)
     if (g_pPolicyCache)
         return TRUE;
 
-    CPolicyCache *pCache = new CPolicyCache;
+    CPolicyCache* pCache = new(std::nothrow) CPolicyCache;
     if (!pCache)
         return FALSE;
 
