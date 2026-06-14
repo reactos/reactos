@@ -482,7 +482,7 @@
 482 stub -noname SHMessageBoxHelpA
 483 stub -noname SHMessageBoxHelpW
 484 stdcall -noname IUnknown_QueryServiceExec(ptr ptr ptr long long long ptr)
-485 stub -noname MapWin32ErrorToSTG
+485 stdcall -noname MapWin32ErrorToSTG(long)
 486 stub -noname ModeToCreateFileFlags
 487 stdcall -ordinal SHLoadIndirectString(wstr ptr long ptr)
 488 stub -noname SHConvertGraphicsFile
