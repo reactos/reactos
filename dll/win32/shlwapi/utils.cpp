@@ -1217,3 +1217,9 @@ BOOL WINAPI SHGetFileDescriptionA(
 
     return ret;
 }
+
+EXTERN_C ULONG WINAPI GetProcessOsVersion(void)
+{
+    PPEB Peb = NtCurrentTeb()->Peb;
+    return (Peb->OSMajorVersion << 8) | Peb->OSMinorVersion;
+}
