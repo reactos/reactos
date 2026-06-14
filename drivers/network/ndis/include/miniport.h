@@ -96,6 +96,8 @@ typedef struct _LOGICAL_ADAPTER
     HARDWARE_ADDRESS            Address;                /* Hardware address of adapter */
     ULONG                       AddressLength;          /* Length of hardware address */
     PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext;        /* Adapter's shutdown handler */
+    BUS_INTERFACE_STANDARD     BusInterface;
+    BOOLEAN                    BusInterfaceQueried;
 } LOGICAL_ADAPTER, *PLOGICAL_ADAPTER;
 
 #define GET_LOGICAL_ADAPTER(Handle)((PLOGICAL_ADAPTER)Handle)
