@@ -34,6 +34,8 @@
 #define IDS_TB_FORMAT 71
 #define IDS_PB_FORMAT 72
 #define IDS_EB_FORMAT 73
+#define IDS_RESTRICTED 283
+#define IDS_RESTRICTIONS 284
 #endif
 
 /* These numbers match native IDs and shouldn't be arbitrarily changed */
