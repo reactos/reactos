@@ -70,7 +70,7 @@ typedef struct _FREELDR_MEMORY_DESCRIPTOR
 #define MM_PAGE_SHIFT    12
 //HACK: ReactOS AMD64 can't handle the full memory range yet CORE-20265
 //#define MM_MAX_PAGE        0xFFFFFFFFF /* 36 bits for the PFN */
-#define MM_MAX_PAGE        0x1FFFFF
+#define MM_MAX_PAGE        0xFFFFFF /* 64 GB */
 #define MM_MAX_PAGE_LOADER 0x3FFFF /* on x64 freeldr only maps 1 GB */
 
 #define MM_SIZE_TO_PAGES(a)  \

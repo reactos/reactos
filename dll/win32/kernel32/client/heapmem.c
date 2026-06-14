@@ -1300,12 +1300,12 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
                                       BaseStaticServerData->SysInfo.NumberOfPhysicalPages;
 
     /* Save physical memory */
-    PhysicalMemory = BaseStaticServerData->SysInfo.NumberOfPhysicalPages *
+    PhysicalMemory = (ULONGLONG)BaseStaticServerData->SysInfo.NumberOfPhysicalPages *
                      BaseStaticServerData->SysInfo.PageSize;
     lpBuffer->ullTotalPhys = PhysicalMemory;
 
     /* Now save available physical memory */
-    PhysicalMemory = PerformanceInfo.AvailablePages *
+    PhysicalMemory = (ULONGLONG)PerformanceInfo.AvailablePages *
                      BaseStaticServerData->SysInfo.PageSize;
     lpBuffer->ullAvailPhys = PhysicalMemory;
 
