@@ -13,6 +13,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <reactos/verifier.h>
 
 #define MAX_STATIC_CS_DEBUG_OBJECTS 64
 
@@ -24,6 +25,7 @@ static BOOLEAN RtlpDebugInfoFreeList[MAX_STATIC_CS_DEBUG_OBJECTS];
 
 LARGE_INTEGER RtlpTimeout;
 BOOLEAN RtlpTimeoutDisable;
+BOOLEAN RtlpCriticalSectionVerifier = FALSE;
 
 extern BOOLEAN LdrpShutdownInProgress;
 extern HANDLE LdrpShutdownThreadId;
@@ -856,11 +858,96 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     return FALSE;
 }
 
+/**
+ * @brief
+ * RtlCheckForOrphanedCriticalSections
+ *
+ * Checks if the given thread owns any critical sections at the time
+ * of its exit, and emits a debug message for each orphaned section found.
+ *
+ * @param[in] ThreadHandle
+ * Handle to the thread to check.
+ *
+ * @return
+ * Nothing
+ *
+ * @remarks
+ * This function is typically called by the loader during thread exit.
+ **/
 VOID
 NTAPI
-RtlCheckForOrphanedCriticalSections(HANDLE ThreadHandle)
+RtlCheckForOrphanedCriticalSections(_In_ HANDLE ThreadHandle)
 {
-    UNIMPLEMENTED;
+    THREAD_BASIC_INFORMATION ThreadInfo;
+    NTSTATUS Status;
+    PLIST_ENTRY ListEntry;
+
+    /* Early exit if verifier is not active */
+    if (!RtlpCriticalSectionVerifier)
+        return;
+
+    /* Get current thread ID first */
+    if (ThreadHandle == NtCurrentThread())
+    {
+        /* Using current thread */
+        ThreadInfo.ClientId.UniqueThread = NtCurrentTeb()->ClientId.UniqueThread;
+    }
+    else
+    {
+        /* Query thread info from the handle */
+        Status = NtQueryInformationThread(
+            ThreadHandle,
+            ThreadBasicInformation,
+            &ThreadInfo,
+            sizeof(ThreadInfo),
+            NULL);
+        
+        if (!NT_SUCCESS(Status))
+            return;
+    }
+
+    /* Lock the critical section list */
+    RtlEnterCriticalSection(&RtlCriticalSectionLock);
+
+    /* Walk the global critical section list */
+    ListEntry = RtlCriticalSectionList.Flink;
+    while (ListEntry != &RtlCriticalSectionList)
+    {
+        PRTL_CRITICAL_SECTION_DEBUG DebugInfo;
+        PRTL_CRITICAL_SECTION CriticalSection;
+
+        /* Get the debug info from the list entry */
+        DebugInfo = CONTAINING_RECORD(
+            ListEntry,
+            RTL_CRITICAL_SECTION_DEBUG,
+            ProcessLocksList);
+
+        CriticalSection = DebugInfo->CriticalSection;
+
+        /* Check if this critical section is owned by the target thread */
+        if (CriticalSection &&
+            CriticalSection->OwningThread == ThreadInfo.ClientId.UniqueThread)
+        {
+            /* Thread is exiting while owning a critical section! */
+            VERIFIER_STOP(
+                APPLICATION_VERIFIER_EXIT_THREAD_OWNS_LOCK,
+                "Thread is exiting while owning a critical section",
+                CriticalSection,
+                "Critical section object",
+                ThreadInfo.ClientId.UniqueThread,
+                "Thread ID",
+                DebugInfo,
+                "Critical section debug info",
+                NULL,
+                NULL);
+            
+            /* TODO: Add stack trace information here (CORE-16870) */
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    RtlLeaveCriticalSection(&RtlCriticalSectionLock);
 }
 
 LOGICAL
