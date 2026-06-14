@@ -343,8 +343,7 @@ WSCGetProviderPath(IN LPGUID lpProviderId,
          */
 
         /* Leave now */
-        *lpErrno = ErrorCode;
-        return SOCKET_ERROR;
+        goto abort;
     }
 
     /* Get the catalog */
@@ -405,10 +404,12 @@ WSCGetProviderPath(IN LPGUID lpProviderId,
     }
     _SEH2_END;
 
+abort:
     /* Do we have to return failure? */
     if (ErrorCode != ERROR_SUCCESS)
     {
-        *lpErrno = ErrorCode;
+        if (lpErrno)
+            *lpErrno = ErrorCode;
         return SOCKET_ERROR;
     }
 
