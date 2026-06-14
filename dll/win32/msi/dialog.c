@@ -1397,7 +1397,7 @@ static UINT combobox_add_item( MSIRECORD *rec, void *param )
 
     info->items[info->addpos_items] = wcsdup( value );
 
-    pos = SendMessageW( info->hwnd, CB_ADDSTRING, 0, (LPARAM)text );
+    pos = SendMessageW( info->hwnd, CB_ADDSTRING, 0, (LPARAM)(text ? text : value) );
     SendMessageW( info->hwnd, CB_SETITEMDATA, pos, (LPARAM)info->items[info->addpos_items] );
     info->addpos_items++;
 
