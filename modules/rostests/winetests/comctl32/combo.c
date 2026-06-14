@@ -31,13 +31,15 @@
 #define WM_CTLCOLOR 0x0019
 #endif
 
-#define EDITBOX_SEQ_INDEX  0
-#define NUM_MSG_SEQUENCES  1
+enum message_seq_index
+{
+    EDITBOX_SEQ_INDEX = 0,
+    PARENT_SEQ_INDEX,
+    NUM_MSG_SEQUENCES,
+};
 
 #define EDITBOX_ID         0
 #define COMBO_ID           1995
-
-#define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
 
 #define expect_rect(r, _left, _top, _right, _bottom) ok(r.left == _left && r.top == _top && \
     r.bottom == _bottom && r.right == _right, "Invalid rect %s vs (%d,%d)-(%d,%d)\n", \
@@ -59,13 +61,29 @@ static char *textBuffer = NULL;
 
 static BOOL received_end_edit = FALSE;
 
+/* try to make sure pending X events have been processed before continuing */
+static void flush_events(void)
+{
+    MSG msg;
+    int diff = 200;
+    int min_timeout = 100;
+    DWORD time = GetTickCount() + diff;
+
+    while (diff > 0)
+    {
+        if (MsgWaitForMultipleObjects( 0, NULL, FALSE, min_timeout, QS_ALLINPUT ) == WAIT_TIMEOUT) break;
+        while (PeekMessageA( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageA( &msg );
+        diff = time - GetTickCount();
+    }
+}
+
 static void get_combobox_info(HWND hwnd, COMBOBOXINFO *info)
 {
     BOOL ret;
 
     info->cbSize = sizeof(*info);
     ret = GetComboBoxInfo(hwnd, info);
-    ok(ret, "Failed to get combobox info structure, error %d\n", GetLastError());
+    ok(ret, "Failed to get combobox info structure, error %ld\n", GetLastError());
 }
 
 static HWND createComboEx(DWORD style) {
@@ -163,26 +181,26 @@ static void test_comboex(void)
                 *out_of_range_item = "Out of Range Item";
 
     /* Allocate space for result */
-    textBuffer = heap_alloc(MAX_CHARS);
+    textBuffer = malloc(MAX_CHARS);
 
     /* Basic comboboxex test */
     myHwnd = createComboEx(WS_BORDER | WS_VISIBLE | WS_CHILD | CBS_DROPDOWN);
 
     /* Add items onto the end of the combobox */
     res = addItem(myHwnd, -1, first_item);
-    ok(res == 0, "Adding simple item failed (%d)\n", res);
+    ok(res == 0, "Adding simple item failed (%ld)\n", res);
     res = addItem(myHwnd, -1, second_item);
-    ok(res == 1, "Adding simple item failed (%d)\n", res);
+    ok(res == 1, "Adding simple item failed (%ld)\n", res);
     res = addItem(myHwnd, 2, third_item);
-    ok(res == 2, "Adding simple item failed (%d)\n", res);
+    ok(res == 2, "Adding simple item failed (%ld)\n", res);
     res = addItem(myHwnd, 1, middle_item);
-    ok(res == 1, "Inserting simple item failed (%d)\n", res);
+    ok(res == 1, "Inserting simple item failed (%ld)\n", res);
 
     /* Add an item completely out of range */
     res = addItem(myHwnd, 99, out_of_range_item);
-    ok(res == -1, "Adding using out of range index worked unexpectedly (%d)\n", res);
+    ok(res == -1, "Adding using out of range index worked unexpectedly (%ld)\n", res);
     res = addItem(myHwnd, 5, out_of_range_item);
-    ok(res == -1, "Adding using out of range index worked unexpectedly (%d)\n", res);
+    ok(res == -1, "Adding using out of range index worked unexpectedly (%ld)\n", res);
     /* Removed: Causes traps on Windows XP
        res = addItem(myHwnd, -2, "Out Of Range Item");
        ok(res == -1, "Adding out of range worked unexpectedly (%ld)\n", res);
@@ -190,66 +208,66 @@ static void test_comboex(void)
 
     /* Get an item completely out of range */ 
     res = getItem(myHwnd, 99, &cbexItem); 
-    ok(res == 0, "Getting item using out of range index worked unexpectedly (%d, %s)\n", res, cbexItem.pszText);
+    ok(res == 0, "Getting item using out of range index worked unexpectedly (%ld, %s)\n", res, cbexItem.pszText);
     res = getItem(myHwnd, 4, &cbexItem); 
-    ok(res == 0, "Getting item using out of range index worked unexpectedly (%d, %s)\n", res, cbexItem.pszText);
+    ok(res == 0, "Getting item using out of range index worked unexpectedly (%ld, %s)\n", res, cbexItem.pszText);
     res = getItem(myHwnd, -2, &cbexItem); 
-    ok(res == 0, "Getting item using out of range index worked unexpectedly (%d, %s)\n", res, cbexItem.pszText);
+    ok(res == 0, "Getting item using out of range index worked unexpectedly (%ld, %s)\n", res, cbexItem.pszText);
 
     /* Get an item in range */ 
     res = getItem(myHwnd, 0, &cbexItem); 
-    ok(res != 0, "Getting item using valid index failed unexpectedly (%d)\n", res);
+    ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
     ok(strcmp(first_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
     res = getItem(myHwnd, 1, &cbexItem); 
-    ok(res != 0, "Getting item using valid index failed unexpectedly (%d)\n", res);
+    ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
     ok(strcmp(middle_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
     res = getItem(myHwnd, 2, &cbexItem); 
-    ok(res != 0, "Getting item using valid index failed unexpectedly (%d)\n", res);
+    ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
     ok(strcmp(second_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
     res = getItem(myHwnd, 3, &cbexItem); 
-    ok(res != 0, "Getting item using valid index failed unexpectedly (%d)\n", res);
+    ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
     ok(strcmp(third_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
     /* Set an item completely out of range */ 
     res = setItem(myHwnd, 99, replacement_item); 
-    ok(res == 0, "Setting item using out of range index worked unexpectedly (%d)\n", res);
+    ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
     res = setItem(myHwnd, 4, replacement_item); 
-    ok(res == 0, "Setting item using out of range index worked unexpectedly (%d)\n", res);
+    ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
     res = setItem(myHwnd, -2, replacement_item); 
-    ok(res == 0, "Setting item using out of range index worked unexpectedly (%d)\n", res);
+    ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
 
     /* Set an item in range */ 
     res = setItem(myHwnd, 0, replacement_item);
-    ok(res != 0, "Setting first item failed (%d)\n", res);
+    ok(res != 0, "Setting first item failed (%ld)\n", res);
     res = setItem(myHwnd, 3, replacement_item);
-    ok(res != 0, "Setting last item failed (%d)\n", res);
+    ok(res != 0, "Setting last item failed (%ld)\n", res);
 
     /* Remove items completely out of range (4 items in control at this point) */
     res = delItem(myHwnd, -1);
-    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%d)\n", res);
+    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%ld)\n", res);
     res = delItem(myHwnd, 4);
-    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%d)\n", res);
+    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%ld)\n", res);
 
     /* Remove items in range (4 items in control at this point) */
     res = delItem(myHwnd, 3);
-    ok(res == 3, "Deleting using out of range index failed (%d)\n", res);
+    ok(res == 3, "Deleting using out of range index failed (%ld)\n", res);
     res = delItem(myHwnd, 0);
-    ok(res == 2, "Deleting using out of range index failed (%d)\n", res);
+    ok(res == 2, "Deleting using out of range index failed (%ld)\n", res);
     res = delItem(myHwnd, 0);
-    ok(res == 1, "Deleting using out of range index failed (%d)\n", res);
+    ok(res == 1, "Deleting using out of range index failed (%ld)\n", res);
     res = delItem(myHwnd, 0);
-    ok(res == 0, "Deleting using out of range index failed (%d)\n", res);
+    ok(res == 0, "Deleting using out of range index failed (%ld)\n", res);
 
     /* Remove from an empty box */
     res = delItem(myHwnd, 0);
-    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%d)\n", res);
+    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%ld)\n", res);
 
 
     /* Cleanup */
-    heap_free(textBuffer);
+    free(textBuffer);
     DestroyWindow(myHwnd);
 }
 
@@ -264,15 +282,15 @@ static void test_comboex_WM_LBUTTONDOWN(void)
     RECT rect;
     WCHAR buffer[3];
     static const UINT choices[] = {8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72};
-    static const WCHAR stringFormat[] = {'%','2','d','\0'};
 
     hComboEx = CreateWindowExA(0, WC_COMBOBOXEXA, NULL,
             WS_VISIBLE|WS_CHILD|CBS_DROPDOWN, 0, 0, 200, 150,
             hComboExParentWnd, NULL, hMainHinst, NULL);
 
-    for (i = 0; i < ARRAY_SIZE(choices); i++){
+    for (i = 0; i < ARRAY_SIZE(choices); i++)
+    {
         COMBOBOXEXITEMW cbexItem;
-        wsprintfW(buffer, stringFormat, choices[i]);
+        wsprintfW(buffer, L"%2d", choices[i]);
 
         memset(&cbexItem, 0x00, sizeof(cbexItem));
         cbexItem.mask = CBEIF_TEXT;
@@ -296,7 +314,7 @@ static void test_comboex_WM_LBUTTONDOWN(void)
     x = cbInfo.rcButton.left + (cbInfo.rcButton.right-cbInfo.rcButton.left)/2;
     y = cbInfo.rcButton.top + (cbInfo.rcButton.bottom-cbInfo.rcButton.top)/2;
     result = SendMessageA(hCombo, WM_LBUTTONDOWN, 0, MAKELPARAM(x, y));
-    ok(result, "WM_LBUTTONDOWN was not processed. LastError=%d\n",
+    ok(result, "WM_LBUTTONDOWN was not processed. LastError=%ld\n",
        GetLastError());
     ok(GetFocus() == hCombo ||
        broken(GetFocus() != hCombo), /* win98 */
@@ -308,7 +326,7 @@ static void test_comboex_WM_LBUTTONDOWN(void)
     ok(idx == 0, "For TopIndex expected %d, got %d\n", 0, idx);
 
     result = SendMessageA(hCombo, WM_LBUTTONUP, 0, MAKELPARAM(x, y));
-    ok(result, "WM_LBUTTONUP was not processed. LastError=%d\n",
+    ok(result, "WM_LBUTTONUP was not processed. LastError=%ld\n",
        GetLastError());
     ok(GetFocus() == hCombo ||
        broken(GetFocus() != hCombo), /* win98 */
@@ -321,7 +339,7 @@ static void test_comboex_WM_LBUTTONDOWN(void)
     x = rect.left + (rect.right-rect.left)/2;
     y = item_height/2 + item_height*4;
     result = SendMessageA(hList, WM_MOUSEMOVE, 0, MAKELPARAM(x, y));
-    ok(!result, "WM_MOUSEMOVE was not processed. LastError=%d\n",
+    ok(!result, "WM_MOUSEMOVE was not processed. LastError=%ld\n",
        GetLastError());
     ok(GetFocus() == hCombo ||
        broken(GetFocus() != hCombo), /* win98 */
@@ -329,7 +347,7 @@ static void test_comboex_WM_LBUTTONDOWN(void)
        GetFocus());
 
     result = SendMessageA(hList, WM_LBUTTONDOWN, 0, MAKELPARAM(x, y));
-    ok(!result, "WM_LBUTTONDOWN was not processed. LastError=%d\n",
+    ok(!result, "WM_LBUTTONDOWN was not processed. LastError=%ld\n",
        GetLastError());
     ok(GetFocus() == hCombo ||
        broken(GetFocus() != hCombo), /* win98 */
@@ -339,7 +357,7 @@ static void test_comboex_WM_LBUTTONDOWN(void)
        "The dropdown list should still be visible.\n");
 
     result = SendMessageA(hList, WM_LBUTTONUP, 0, MAKELPARAM(x, y));
-    ok(!result, "WM_LBUTTONUP was not processed. LastError=%d\n",
+    ok(!result, "WM_LBUTTONUP was not processed. LastError=%ld\n",
        GetLastError());
     todo_wine ok(GetFocus() == hEdit ||
        broken(GetFocus() == hCombo), /* win98 */
@@ -446,10 +464,29 @@ static void test_comboex_WM_WINDOWPOSCHANGING(void)
     ok(ret, "DestroyWindow failed\n");
 }
 
-static LRESULT ComboExTestOnNotify(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+struct di_context
 {
+    unsigned int mask;
+    BOOL set_CBEIF_DI_SETITEM;
+};
+
+static struct di_context di_context;
+
+static LRESULT ComboExTestOnNotify(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    struct message msg;
     NMHDR *hdr = (NMHDR*)lParam;
-    switch(hdr->code){
+
+    msg.message = message;
+    msg.flags = sent|wparam|lparam;
+    msg.wParam = wParam;
+    msg.lParam = lParam;
+    if (hdr) msg.id = hdr->code;
+
+    add_message(sequences, PARENT_SEQ_INDEX, &msg);
+
+    switch (hdr->code)
+    {
     case CBEN_ENDEDITA:
         {
             NMCBEENDEDITA *edit_info = (NMCBEENDEDITA*)hdr;
@@ -464,6 +501,42 @@ static LRESULT ComboExTestOnNotify(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
             if(edit_info->iWhy==CBENF_DROPDOWN){
                 received_end_edit = TRUE;
             }
+            break;
+        }
+    case CBEN_GETDISPINFOA:
+    case CBEN_GETDISPINFOW:
+        {
+            NMCOMBOBOXEXA *item = (NMCOMBOBOXEXA *)hdr;
+
+            di_context.mask = item->ceItem.mask;
+
+            if (item->ceItem.mask & CBEIF_IMAGE)
+            {
+                ok(item->ceItem.iImage == I_IMAGECALLBACK, "Unexpected iImage %d.\n", item->ceItem.iImage);
+                item->ceItem.iImage = 123;
+            }
+
+            if (item->ceItem.mask & CBEIF_TEXT)
+            {
+                ok(item->ceItem.pszText && item->ceItem.pszText != LPSTR_TEXTCALLBACKA,
+                        "Unexpected pszText %p.\n", item->ceItem.pszText);
+                ok(item->ceItem.cchTextMax == 0, "Unexpected cchTextMax %d.\n", item->ceItem.cchTextMax);
+            }
+
+            if (item->ceItem.mask & CBEIF_SELECTEDIMAGE)
+                ok(item->ceItem.iSelectedImage == I_IMAGECALLBACK, "Unexpected iSelectedImage %d.\n",
+                        item->ceItem.iSelectedImage);
+
+            if (item->ceItem.mask & CBEIF_OVERLAY)
+                ok(item->ceItem.iOverlay == I_IMAGECALLBACK, "Unexpected iOverlay %d.\n",
+                        item->ceItem.iOverlay);
+
+            if (item->ceItem.mask & CBEIF_INDENT)
+                ok(item->ceItem.iIndent == 0, "Unexpected iIndent %d.\n", item->ceItem.iIndent);
+
+            if (di_context.set_CBEIF_DI_SETITEM)
+                item->ceItem.mask |= CBEIF_DI_SETITEM;
+
             break;
         }
     }
@@ -576,7 +649,7 @@ static void test_comboex_get_set_item(void)
     char textA[] = "test";
     HWND hComboEx;
     COMBOBOXEXITEMA item;
-    BOOL ret;
+    DWORD ret;
 
     hComboEx = createComboEx(WS_BORDER | WS_VISIBLE | WS_CHILD | CBS_DROPDOWN);
 
@@ -589,7 +662,7 @@ static void test_comboex_get_set_item(void)
     item.pszText = textA;
     item.iItem = -1;
     ret = SendMessageA(hComboEx, CBEM_SETITEMA, 0, (LPARAM)&item);
-    expect(TRUE, ret);
+    ok(ret == 1, "Unexpected return value %ld.\n", ret);
 
     ok_sequence(sequences, EDITBOX_SEQ_INDEX, test_setitem_edit_seq, "set item data for edit", FALSE);
 
@@ -598,17 +671,17 @@ static void test_comboex_get_set_item(void)
     item.iItem = -1;
     item.lParam = 0xdeadbeef;
     ret = SendMessageA(hComboEx, CBEM_GETITEMA, 0, (LPARAM)&item);
-    expect(TRUE, ret);
-    ok(item.lParam == 0, "Expected zero, got %lx\n", item.lParam);
+    ok(ret == 1, "Unexpected return value %ld.\n", ret);
+    ok(item.lParam == 0, "Expected zero, got %Ix\n", item.lParam);
 
     item.lParam = 0x1abe11ed;
     ret = SendMessageA(hComboEx, CBEM_SETITEMA, 0, (LPARAM)&item);
-    expect(TRUE, ret);
+    ok(ret == 1, "Unexpected return value %ld.\n", ret);
 
     item.lParam = 0;
     ret = SendMessageA(hComboEx, CBEM_GETITEMA, 0, (LPARAM)&item);
-    expect(TRUE, ret);
-    ok(item.lParam == 0x1abe11ed, "Expected 0x1abe11ed, got %lx\n", item.lParam);
+    ok(ret == 1, "Unexpected return value %ld.\n", ret);
+    ok(item.lParam == 0x1abe11ed, "Expected 0x1abe11ed, got %Ix\n", item.lParam);
 
     DestroyWindow(hComboEx);
 }
@@ -662,7 +735,7 @@ static void test_combo_setitemheight(DWORD style)
     font_height = get_font_height(hFont);
     SendMessageA(hCombo, CB_SETITEMHEIGHT, -1, font_height / 2);
     height = SendMessageA(hCombo, CB_GETITEMHEIGHT, -1, 0);
-todo_wine
+    todo_wine
     ok(height == font_height / 2, "Unexpected item height %d, expected %d.\n", height, font_height / 2);
 
     SetWindowPos(hCombo, NULL, 10, 10, 150, 5 * font_height, SWP_SHOWWINDOW);
@@ -674,17 +747,20 @@ todo_wine
 
 static void test_combo_setfont(DWORD style)
 {
+    unsigned int expected_height, initial_height;
     HFONT hFont1, hFont2;
     HWND hCombo;
     RECT r;
     int i;
 
+    winetest_push_context("style %#lx", style);
     hCombo = create_combobox(style);
     hFont1 = CreateFontA(10, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH|FF_DONTCARE, "Marlett");
     hFont2 = CreateFontA(8, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH|FF_DONTCARE, "Marlett");
 
     GetClientRect(hCombo, &r);
-    expect_rect(r, 0, 0, 100, get_font_height(GetStockObject(SYSTEM_FONT)) + 8);
+    initial_height = get_font_height(GetStockObject(SYSTEM_FONT)) + 8;
+    expect_rect(r, 0, 0, 100, initial_height);
     SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&r);
     MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2);
     todo_wine expect_rect(r, 5, 5, 105, 105);
@@ -697,24 +773,50 @@ static void test_combo_setfont(DWORD style)
     {
         SendMessageA(hCombo, WM_SETFONT, (WPARAM)hFont1, FALSE);
         GetClientRect(hCombo, &r);
-        expect_rect(r, 0, 0, 100, 18);
+        expected_height = style & CBS_OWNERDRAWFIXED ? initial_height : 18;
+        expect_rect(r, 0, 0, 100, expected_height);
         SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&r);
         MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2);
-        todo_wine expect_rect(r, 5, 5, 105, 105 - (get_font_height(GetStockObject(SYSTEM_FONT)) - get_font_height(hFont1)));
+
+        if (style & CBS_OWNERDRAWFIXED)
+        {
+            todo_wine expect_rect(r, 5, 5, 105, 105);
+        }
+        else
+        {
+            todo_wine expect_rect(r, 5, 5, 105, 105 - (get_font_height(GetStockObject(SYSTEM_FONT)) - get_font_height(hFont1)));
+        }
 
         SendMessageA(hCombo, WM_SETFONT, (WPARAM)hFont2, FALSE);
         GetClientRect(hCombo, &r);
-        expect_rect(r, 0, 0, 100, 16);
+        expected_height = style & CBS_OWNERDRAWFIXED ? initial_height : 16;
+        expect_rect(r, 0, 0, 100, expected_height);
         SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&r);
         MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2);
-        todo_wine expect_rect(r, 5, 5, 105, 105 - (get_font_height(GetStockObject(SYSTEM_FONT)) - get_font_height(hFont2)));
+
+        if (style & CBS_OWNERDRAWFIXED)
+        {
+            todo_wine expect_rect(r, 5, 5, 105, 105);
+        }
+        else
+        {
+            todo_wine expect_rect(r, 5, 5, 105, 105 - (get_font_height(GetStockObject(SYSTEM_FONT)) - get_font_height(hFont2)));
+        }
 
         SendMessageA(hCombo, WM_SETFONT, (WPARAM)hFont1, FALSE);
         GetClientRect(hCombo, &r);
-        expect_rect(r, 0, 0, 100, 18);
+        expected_height = style & CBS_OWNERDRAWFIXED ? initial_height : 18;
+        expect_rect(r, 0, 0, 100, expected_height);
         SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&r);
         MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2);
-        todo_wine expect_rect(r, 5, 5, 105, 105 - (get_font_height(GetStockObject(SYSTEM_FONT)) - get_font_height(hFont1)));
+        if (style & CBS_OWNERDRAWFIXED)
+        {
+            todo_wine expect_rect(r, 5, 5, 105, 105);
+        }
+        else
+        {
+            todo_wine expect_rect(r, 5, 5, 105, 105 - (get_font_height(GetStockObject(SYSTEM_FONT)) - get_font_height(hFont1)));
+        }
     }
     else
     {
@@ -729,7 +831,12 @@ static void test_combo_setfont(DWORD style)
 
         SendMessageA(hCombo, WM_SETFONT, (WPARAM)hFont, FALSE);
         GetClientRect(hCombo, &r);
-        ok((r.bottom - r.top) == (height + 8), "Unexpected client rect height.\n");
+        if (style & CBS_OWNERDRAWFIXED)
+            expected_height = initial_height;
+        else
+            expected_height = (height + 8);
+        ok((r.bottom - r.top) == expected_height, "Unexpected client rect height %ld, expected %d.\n", r.bottom - r.top,
+                expected_height);
         SendMessageA(hCombo, WM_SETFONT, 0, FALSE);
         DeleteObject(hFont);
     }
@@ -737,6 +844,7 @@ static void test_combo_setfont(DWORD style)
     DestroyWindow(hCombo);
     DeleteObject(hFont1);
     DeleteObject(hFont2);
+    winetest_pop_context();
 }
 
 static LRESULT (CALLBACK *old_parent_proc)(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -878,29 +986,29 @@ static void test_combo_changesize(DWORD style)
     /* first make it slightly smaller */
     MoveWindow( hCombo, 10, 10, clwidth - 2, clheight - 2, TRUE);
     GetClientRect( hCombo, &rc);
-    ok( rc.right - rc.left == clwidth - 2, "clientrect width is %d vs %d\n",
+    ok( rc.right - rc.left == clwidth - 2, "clientrect width is %ld vs %d\n",
             rc.right - rc.left, clwidth - 2);
-    ok( rc.bottom - rc.top == clheight, "clientrect height is %d vs %d\n",
+    ok( rc.bottom - rc.top == clheight, "clientrect height is %ld vs %d\n",
                 rc.bottom - rc.top, clheight);
     SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&rc);
-    ok( rc.right - rc.left == clwidth - 2, "drop-down rect width is %d vs %d\n",
+    ok( rc.right - rc.left == clwidth - 2, "drop-down rect width is %ld vs %d\n",
             rc.right - rc.left, clwidth - 2);
-    ok( rc.bottom - rc.top == ddheight, "drop-down rect height is %d vs %d\n",
+    ok( rc.bottom - rc.top == ddheight, "drop-down rect height is %ld vs %d\n",
             rc.bottom - rc.top, ddheight);
-    ok( rc.right - rc.left == ddwidth -2, "drop-down rect width is %d vs %d\n",
+    ok( rc.right - rc.left == ddwidth -2, "drop-down rect width is %ld vs %d\n",
             rc.right - rc.left, ddwidth - 2);
     /* new cx, cy is slightly bigger than the initial values */
     MoveWindow( hCombo, 10, 10, clwidth + 2, clheight + 2, TRUE);
     GetClientRect( hCombo, &rc);
-    ok( rc.right - rc.left == clwidth + 2, "clientrect width is %d vs %d\n",
+    ok( rc.right - rc.left == clwidth + 2, "clientrect width is %ld vs %d\n",
             rc.right - rc.left, clwidth + 2);
-    ok( rc.bottom - rc.top == clheight, "clientrect height is %d vs %d\n",
+    ok( rc.bottom - rc.top == clheight, "clientrect height is %ld vs %d\n",
             rc.bottom - rc.top, clheight);
     SendMessageA(hCombo, CB_GETDROPPEDCONTROLRECT, 0, (LPARAM)&rc);
-    ok( rc.right - rc.left == clwidth + 2, "drop-down rect width is %d vs %d\n",
+    ok( rc.right - rc.left == clwidth + 2, "drop-down rect width is %ld vs %d\n",
             rc.right - rc.left, clwidth + 2);
     todo_wine {
-        ok( rc.bottom - rc.top == clheight + 2, "drop-down rect height is %d vs %d\n",
+        ok( rc.bottom - rc.top == clheight + 2, "drop-down rect height is %ld vs %d\n",
                 rc.bottom - rc.top, clheight + 2);
     }
 
@@ -1140,8 +1248,8 @@ static void test_combo_listbox_styles(DWORD cb_style)
 
     style = GetWindowLongW( info.hwndList, GWL_STYLE );
     exstyle = GetWindowLongW( info.hwndList, GWL_EXSTYLE );
-    ok(style == expect_style, "%08x: got %08x\n", cb_style, style);
-    ok(exstyle == expect_exstyle, "%08x: got %08x\n", cb_style, exstyle);
+    ok(style == expect_style, "%08lx: got %08lx\n", cb_style, style);
+    ok(exstyle == expect_exstyle, "%08lx: got %08lx\n", cb_style, exstyle);
 
     if (cb_style != CBS_SIMPLE)
         expect_exstyle |= WS_EX_TOPMOST;
@@ -1149,14 +1257,14 @@ static void test_combo_listbox_styles(DWORD cb_style)
     SendMessageW(combo, CB_SHOWDROPDOWN, TRUE, 0 );
     style = GetWindowLongW( info.hwndList, GWL_STYLE );
     exstyle = GetWindowLongW( info.hwndList, GWL_EXSTYLE );
-    ok(style == (expect_style | WS_VISIBLE), "%08x: got %08x\n", cb_style, style);
-    ok(exstyle == expect_exstyle, "%08x: got %08x\n", cb_style, exstyle);
+    ok(style == (expect_style | WS_VISIBLE), "%08lx: got %08lx\n", cb_style, style);
+    ok(exstyle == expect_exstyle, "%08lx: got %08lx\n", cb_style, exstyle);
 
     SendMessageW(combo, CB_SHOWDROPDOWN, FALSE, 0 );
     style = GetWindowLongW( info.hwndList, GWL_STYLE );
     exstyle = GetWindowLongW( info.hwndList, GWL_EXSTYLE );
-    ok(style == expect_style, "%08x: got %08x\n", cb_style, style);
-    ok(exstyle == expect_exstyle, "%08x: got %08x\n", cb_style, exstyle);
+    ok(style == expect_style, "%08lx: got %08lx\n", cb_style, style);
+    ok(exstyle == expect_exstyle, "%08lx: got %08lx\n", cb_style, exstyle);
 
     DestroyWindow(combo);
 }
@@ -1208,6 +1316,8 @@ static void test_combo_dropdown_size(DWORD style)
         {33, 50, -1},
         {35, 100, 40},
         {15, 50, 3},
+        {1, 650, 40},
+        {7, 650, 3},
     };
 
     for (test = 0; test < ARRAY_SIZE(info_height); test++)
@@ -1219,6 +1329,7 @@ static void test_combo_dropdown_size(DWORD style)
         RECT rect_list_client;
         int min_visible_expected;
 
+        winetest_push_context("Test %d", test);
         hCombo = CreateWindowA(WC_COMBOBOXA, "Combo", CBS_DROPDOWN | WS_VISIBLE | WS_CHILD | style, 5, 5, 100,
                 info_test->height_combo, hMainWnd, (HMENU)COMBO_ID, NULL, 0);
 
@@ -1244,8 +1355,8 @@ static void test_combo_dropdown_size(DWORD style)
             ret = SendMessageA(hCombo, CB_SETMINVISIBLE, min_visible_expected, 0);
             ok(ret, "Failed to set visible limit.\n");
             min_visible_actual = SendMessageA(hCombo, CB_GETMINVISIBLE, 0, 0);
-            ok(min_visible_expected == min_visible_actual, "test %d: unexpected number of items %d.\n",
-                    test, min_visible_actual);
+            ok(min_visible_expected == min_visible_actual, "unexpected number of items %d.\n",
+                    min_visible_actual);
         }
 
         ret = SendMessageA(hCombo, CB_SHOWDROPDOWN, TRUE,0);
@@ -1280,18 +1391,19 @@ static void test_combo_dropdown_size(DWORD style)
             if (expected_height_list < 0)
                 expected_height_list = 0;
 
-            ok(expected_height_list == height_list, "Test %d, expected list height to be %d, got %d\n",
-                    test, expected_height_list, height_list);
+            ok(expected_height_list == height_list, "expected list height to be %d, got %d\n",
+                    expected_height_list, height_list);
         }
         else
         {
             expected_height_list = min(info_test->num_items, min_visible_expected) * height_item;
 
-            ok(expected_height_list == height_list, "Test %d, expected list height to be %d, got %d\n",
-                    test, expected_height_list, height_list);
+            ok(expected_height_list == height_list, "expected list height to be %d, got %d\n",
+                    expected_height_list, height_list);
         }
 
         DestroyWindow(hCombo);
+        winetest_pop_context();
     }
 }
 
@@ -1369,6 +1481,282 @@ static void test_combo_ctlcolor(void)
     DestroyWindow(combo);
 }
 
+static const struct message getdisp_parent_seq[] =
+{
+    { WM_NOTIFY, sent|id, 0, 0, CBEN_GETDISPINFOA },
+    { 0 }
+};
+
+static const struct message empty_seq[] =
+{
+    { 0 }
+};
+
+static void test_comboex_CBEN_GETDISPINFO(void)
+{
+    static const unsigned int test_masks[] =
+    {
+        CBEIF_TEXT,
+        CBEIF_IMAGE,
+        CBEIF_INDENT,
+        CBEIF_OVERLAY,
+        CBEIF_SELECTEDIMAGE,
+        CBEIF_IMAGE | CBEIF_INDENT,
+    };
+    COMBOBOXEXITEMA item;
+    unsigned int i;
+    HWND combo;
+    DWORD res;
+
+    combo = createComboEx(WS_BORDER | WS_VISIBLE | WS_CHILD | CBS_DROPDOWN);
+    ok(!!combo, "Failed to create control window.\n");
+
+    /* All possible callback fields. */
+    memset(&item, 0, sizeof(item));
+    item.mask = CBEIF_TEXT | CBEIF_IMAGE | CBEIF_INDENT | CBEIF_OVERLAY | CBEIF_SELECTEDIMAGE;
+    item.pszText = LPSTR_TEXTCALLBACKA;
+    item.iImage = I_IMAGECALLBACK;
+    item.iSelectedImage = I_IMAGECALLBACK;
+    item.iOverlay = I_IMAGECALLBACK;
+    item.iIndent = I_INDENTCALLBACK;
+
+    res = SendMessageA(combo, CBEM_INSERTITEMA, 0, (LPARAM)&item);
+    ok(!res, "Unexpected return value %lu.\n", res);
+
+    for (i = 0; i < ARRAY_SIZE(test_masks); ++i)
+    {
+        flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+        memset(&item, 0, sizeof(item));
+        item.mask = test_masks[i];
+        res = SendMessageA(combo, CBEM_GETITEMA, 0, (LPARAM)&item);
+        ok(res == 1, "Unexpected return value %lu.\n", res);
+
+        ok_sequence(sequences, PARENT_SEQ_INDEX, getdisp_parent_seq, "Get disp mask seq", TRUE);
+    }
+
+    di_context.set_CBEIF_DI_SETITEM = TRUE;
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    memset(&item, 0, sizeof(item));
+    item.mask = CBEIF_IMAGE;
+    di_context.mask = 0;
+    res = SendMessageA(combo, CBEM_GETITEMA, 0, (LPARAM)&item);
+    ok(res == 1, "Unexpected return value %lu.\n", res);
+    todo_wine
+    ok(di_context.mask == CBEIF_IMAGE, "Unexpected mask %#x.\n", di_context.mask);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, getdisp_parent_seq, "Get disp DI_SETITEM seq", TRUE);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    memset(&item, 0, sizeof(item));
+    item.mask = CBEIF_IMAGE;
+    res = SendMessageA(combo, CBEM_GETITEMA, 0, (LPARAM)&item);
+    ok(res == 1, "Unexpected return value %lu.\n", res);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq, "Get disp after DI_SETITEM seq", FALSE);
+
+    /* Request two fields, one was set. */
+    memset(&item, 0, sizeof(item));
+    item.mask = CBEIF_IMAGE | CBEIF_INDENT;
+    di_context.mask = 0;
+    res = SendMessageA(combo, CBEM_GETITEMA, 0, (LPARAM)&item);
+    ok(res == 1, "Unexpected return value %lu.\n", res);
+    todo_wine
+    ok(di_context.mask == CBEIF_INDENT, "Unexpected mask %#x.\n", di_context.mask);
+
+    di_context.set_CBEIF_DI_SETITEM = FALSE;
+
+    DestroyWindow(combo);
+}
+
+#define ok_selected_value(list, selected) \
+        _ok_selected_value(list, selected, __LINE__)
+static void _ok_selected_value(HWND combo, const char *selected, int line)
+{
+    char buffer[20] = {0};
+    int index = SendMessageA(combo, CB_GETCURSEL, 0, 0);
+    SendMessageA(combo, CB_GETLBTEXT, index, (LPARAM)buffer);
+    ok_(__FILE__, line)(!strcmp(buffer, selected), "Got %s\n", buffer);
+}
+
+static void test_combo_keypresses(void)
+{
+    HWND combo;
+    BOOL dropped;
+    int i;
+    const char *strings_to_add[] = {
+        "b_eta", "a_lpha", "be_ta", "al_pha", "beta", "alpha", "gamma", "epsilon", "le"
+    };
+
+    /* Test with an unsorted combo box */
+
+    combo = create_combobox(CBS_DROPDOWNLIST);
+
+    for (i = 0; i < ARRAY_SIZE(strings_to_add); i++)
+    {
+        SendMessageA(combo, CB_ADDSTRING, 0, (LPARAM)strings_to_add[i]);
+    }
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'a', 0);
+    ok_selected_value(combo, "a_lpha");
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'l', 0);
+    ok_selected_value(combo, "le");
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'p', 0);
+    ok_selected_value(combo, "le");
+
+    SendMessageA(combo, CB_SHOWDROPDOWN, TRUE, 0);
+    dropped = SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0);
+    ok(dropped, "Expected combo box to be dropped\n");
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'b', 0);
+    ok_selected_value(combo, "b_eta");
+    dropped = SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0);
+    todo_wine
+    ok(dropped, "Expected combo box to be dropped\n");
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'e', 0);
+    ok_selected_value(combo, "epsilon");
+    dropped = SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0);
+    todo_wine
+    ok(dropped, "Expected combo box to be dropped\n");
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'t', 0);
+    ok_selected_value(combo, "epsilon");
+    dropped = SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0);
+    todo_wine
+    ok(dropped, "Expected combo box to be dropped\n");
+
+    DestroyWindow(combo);
+
+    /* Test with a sorted combo box */
+
+    combo = create_combobox(CBS_DROPDOWNLIST | CBS_SORT);
+
+    for (i = 0; i < ARRAY_SIZE(strings_to_add); i++)
+    {
+        SendMessageA(combo, CB_ADDSTRING, 0, (LPARAM)strings_to_add[i]);
+    }
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'a', 0);
+    todo_wine
+    ok_selected_value(combo, "a_lpha");
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'l', 0);
+    todo_wine
+    ok_selected_value(combo, "al_pha");
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'p', 0);
+    todo_wine
+    ok_selected_value(combo, "alpha");
+
+    SendMessageA(combo, CB_SHOWDROPDOWN, TRUE, 0);
+    dropped = SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0);
+    ok(dropped, "Expected combo box to be dropped\n");
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'b', 0);
+    ok_selected_value(combo, "b_eta");
+    dropped = SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0);
+    todo_wine
+    ok(dropped, "Expected combo box to be dropped\n");
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'e', 0);
+    todo_wine
+    ok_selected_value(combo, "be_ta");
+    dropped = SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0);
+    todo_wine
+    ok(dropped, "Expected combo box to be dropped\n");
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'t', 0);
+    todo_wine
+    ok_selected_value(combo, "beta");
+    dropped = SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0);
+    todo_wine
+    ok(dropped, "Expected combo box to be dropped\n");
+
+    /* Windows needs a certain time to pass until it starts a new search */
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'a', 0);
+    todo_wine
+    ok_selected_value(combo, "beta");
+
+    Sleep(2100);
+    flush_events();
+
+    SendMessageA(combo, WM_CHAR, (WPARAM)'a', 0);
+    todo_wine
+    ok_selected_value(combo, "a_lpha");
+
+    DestroyWindow(combo);
+}
+
+static int test_wm_measureitem_count;
+
+static LRESULT CALLBACK test_measure_item_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    if (msg == WM_MEASUREITEM)
+    {
+        MEASUREITEMSTRUCT *m = (MEASUREITEMSTRUCT *)lparam;
+        unsigned int expected;
+
+        ++test_wm_measureitem_count;
+        ok(m->CtlType == ODT_COMBOBOX, "got %#x.\n", m->CtlType);
+        ok(m->CtlID == COMBO_ID, "got %u.\n", m->CtlID);
+        if (m->itemID == -1)
+        {
+            expected = get_font_height(GetStockObject(SYSTEM_FONT)) + 2;
+            ok(m->itemHeight == expected, "got %u, expected %u.\n", m->itemHeight, expected);
+            m->itemHeight = expected + 4;
+        }
+        return TRUE;
+    }
+    return DefWindowProcW(hwnd, msg, wparam, lparam);
+}
+
+static void test_combo_measureitem(DWORD style)
+{
+    unsigned int expected;
+    HWND parent, combo;
+    WNDCLASSW wc;
+    RECT r;
+
+    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hInstance = GetModuleHandleA(NULL);
+    wc.hIcon = NULL;
+    wc.hCursor = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
+    wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
+    wc.lpszMenuName = NULL;
+    wc.lpszClassName = L"test_measure_item";
+    wc.lpfnWndProc = test_measure_item_wnd_proc;
+    RegisterClassW(&wc);
+
+    winetest_push_context("style %#lx", style);
+    parent = CreateWindowA("test_measure_item", "Test measure", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 10, 10, 300, 300, NULL, NULL, NULL, 0);
+    test_wm_measureitem_count = 0;
+    combo = CreateWindowA(WC_COMBOBOXA, "Combo", WS_VISIBLE | WS_CHILD | style, 5, 5, 100, 100, parent, (HMENU)COMBO_ID, NULL, 0);
+    if (style & CBS_OWNERDRAWFIXED)
+        ok(test_wm_measureitem_count == 2, "got %d.\n", test_wm_measureitem_count);
+    else if (style & CBS_OWNERDRAWVARIABLE)
+        ok(test_wm_measureitem_count == 1, "got %d.\n", test_wm_measureitem_count);
+    else
+        ok(!test_wm_measureitem_count, "got %d.\n", test_wm_measureitem_count);
+    GetClientRect(combo, &r);
+    expected = get_font_height(GetStockObject(SYSTEM_FONT)) + 8;
+    if (style & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE))
+        expected += 4;
+    expect_rect(r, 0, 0, 100, expected);
+
+    DestroyWindow(combo);
+    DestroyWindow(parent);
+    UnregisterClassW(L"test_measure_item", GetModuleHandleA(NULL));
+    winetest_pop_context();
+}
+
 START_TEST(combo)
 {
     ULONG_PTR ctx_cookie;
@@ -1388,6 +1776,7 @@ START_TEST(combo)
     test_comboex_WM_WINDOWPOSCHANGING();
     test_comboex_subclass();
     test_comboex_get_set_item();
+    test_comboex_CBEN_GETDISPINFO();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {
@@ -1395,10 +1784,17 @@ START_TEST(combo)
         return;
     }
 
+    test_comboex();
+    test_comboex_CB_GETLBTEXT();
+    test_comboex_WM_WINDOWPOSCHANGING();
+    test_comboex_get_set_item();
+    test_comboex_CBEN_GETDISPINFO();
+
     /* ComboBox control tests. */
     test_combo_WS_VSCROLL();
     test_combo_setfont(CBS_DROPDOWN);
     test_combo_setfont(CBS_DROPDOWNLIST);
+    test_combo_setfont(CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED);
     test_combo_setitemheight(CBS_DROPDOWN);
     test_combo_setitemheight(CBS_DROPDOWNLIST);
     test_combo_CBN_SELCHANGE();
@@ -1413,6 +1809,11 @@ START_TEST(combo)
     test_combo_dropdown_size(0);
     test_combo_dropdown_size(CBS_NOINTEGRALHEIGHT);
     test_combo_ctlcolor();
+    test_combo_keypresses();
+    test_combo_measureitem(CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED);
+    test_combo_measureitem(CBS_DROPDOWNLIST | CBS_OWNERDRAWVARIABLE);
+    test_combo_measureitem(CBS_DROPDOWNLIST);
+    test_combo_measureitem(CBS_DROPDOWN | CBS_OWNERDRAWFIXED);
 
     cleanup();
     unload_v6_module(ctx_cookie, hCtx);

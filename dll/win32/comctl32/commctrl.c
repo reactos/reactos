@@ -2,8 +2,9 @@
  * Common controls functions
  *
  * Copyright 1997 Dimitrie O. Paun
+ *           1998 Juergen Schmied <j.schmied@metronet.de>
  * Copyright 1998,2000 Eric Kohl
- * Copyright 2014-2015 Michael Müller
+ * Copyright 2014-2015 Michael MÃ¼ller
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,6 +58,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define COBJMACROS
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -65,8 +67,6 @@
 #include "commctrl.h"
 #include "winerror.h"
 #include "winreg.h"
-#define NO_SHLWAPI_STREAM
-#include "shlwapi.h"
 #include "comctl32.h"
 #include "wine/debug.h"
 
@@ -89,239 +89,99 @@ static const WORD wPattern55AA[] =
     0x5555, 0xaaaa, 0x5555, 0xaaaa
 };
 
-static const WCHAR strCC32SubclassInfo[] = {
-    'C','C','3','2','S','u','b','c','l','a','s','s','I','n','f','o',0
+static const WCHAR strCC32SubclassInfo[] = L"CC32SubclassInfo";
+
+static const struct
+{
+    const WCHAR *nameW;
+    void (*fn_register)(void);
+}
+classes[] =
+{
+#if __WINE_COMCTL32_VERSION == 6
+    {L"Button", BUTTON_Register},
+    {L"ComboBox", COMBO_Register},
+    {L"ComboBoxEx32", COMBOEX_Register},
+    {L"ComboLBox", COMBOLBOX_Register},
+    {L"Edit", EDIT_Register},
+    {L"ListBox", LISTBOX_Register},
+    {L"msctls_hotkey32", HOTKEY_Register},
+    {L"msctls_progress32", PROGRESS_Register},
+    {L"msctls_statusbar32", STATUS_Register},
+    {L"msctls_trackbar32", TRACKBAR_Register},
+    {L"msctls_updown32", UPDOWN_Register},
+    {L"NativeFontCtl", NATIVEFONT_Register},
+    {L"ReBarWindow32", REBAR_Register},
+    {L"Static", STATIC_Register},
+    {L"SysAnimate32", ANIMATE_Register},
+    {L"SysDateTimePick32", DATETIME_Register},
+    {L"SysHeader32", HEADER_Register},
+    {L"SysIPAddress32", IPADDRESS_Register},
+    {L"SysLink", SYSLINK_Register},
+    {L"SysListView32", LISTVIEW_Register},
+    {L"SysMonthCal32", MONTHCAL_Register},
+    {L"SysPager", PAGER_Register},
+    {L"SysTabControl32", TAB_Register},
+    {L"SysTreeView32", TREEVIEW_Register},
+    {L"ToolbarWindow32", TOOLBAR_Register},
+    {L"tooltips_class32", TOOLTIPS_Register},
+#else
+    {L"ComboBoxEx32", COMBOEX_Register},
+    {L"msctls_hotkey32", HOTKEY_Register},
+    {L"msctls_progress32", PROGRESS_Register},
+    {L"msctls_statusbar32", STATUS_Register},
+    {L"msctls_trackbar32", TRACKBAR_Register},
+    {L"msctls_updown32", UPDOWN_Register},
+    {L"NativeFontCtl", NATIVEFONT_Register},
+    {L"ReBarWindow32", REBAR_Register},
+    {L"SysAnimate32", ANIMATE_Register},
+    {L"SysDateTimePick32", DATETIME_Register},
+    {L"SysHeader32", HEADER_Register},
+    {L"SysIPAddress32", IPADDRESS_Register},
+    {L"SysListView32", LISTVIEW_Register},
+    {L"SysMonthCal32", MONTHCAL_Register},
+    {L"SysPager", PAGER_Register},
+    {L"SysTabControl32", TAB_Register},
+    {L"SysTreeView32", TREEVIEW_Register},
+    {L"ToolbarWindow32", TOOLBAR_Register},
+    {L"tooltips_class32", TOOLTIPS_Register},
+#endif /* __WINE_COMCTL32_VERSION == 6 */
 };
 
-#ifdef __REACTOS__
+static void unregister_classes(void)
+{
+    for (unsigned int i = 0; i < ARRAY_SIZE(classes); i++)
+    {
+#if __WINE_COMCTL32_VERSION == 6
+        WCHAR versioned_class[40];
 
-#include <strsafe.h>
-
-#define NAME       L"microsoft.windows.common-controls"
-#define VERSION_V5 L"5.82.2600.2982"
-#define VERSION    L"6.0.2600.2982"
-#define PUBLIC_KEY L"6595b64144ccf1df"
-
-#ifdef __i386__
-#define ARCH L"x86"
-#elif defined __x86_64__
-#define ARCH L"amd64"
+        wcscpy(versioned_class, L"6.0.2600.2982!");
+        wcscat(versioned_class, classes[i].nameW);
+        UnregisterClassW(versioned_class, NULL);
 #else
-#define ARCH L"none"
+        UnregisterClassW(classes[i].nameW, NULL);
 #endif
-
-static const WCHAR manifest_filename[] = ARCH L"_" NAME L"_" PUBLIC_KEY L"_" VERSION L"_none_deadbeef.manifest";
-static const WCHAR manifest_filename_v5[] = ARCH L"_" NAME L"_" PUBLIC_KEY L"_" VERSION_V5 L"_none_deadbeef.manifest";
-
-static WCHAR* GetManifestPath(BOOL create, BOOL bV6)
-{
-    WCHAR *pwszBuf;
-    HRESULT hres;
-
-    pwszBuf = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-    if (!pwszBuf)
-        return NULL;
-
-    GetWindowsDirectoryW(pwszBuf, MAX_PATH);
-    hres = StringCchCatW(pwszBuf, MAX_PATH, L"\\winsxs");
-    if (FAILED(hres))
-        return NULL;
-    if (create)
-        CreateDirectoryW(pwszBuf, NULL);
-    hres = StringCchCatW(pwszBuf, MAX_PATH, L"\\manifests\\");
-    if (FAILED(hres))
-        return NULL;
-    if (create)
-        CreateDirectoryW(pwszBuf, NULL);
-
-    hres = StringCchCatW(pwszBuf, MAX_PATH, bV6 ? manifest_filename : manifest_filename_v5);
-    if (FAILED(hres))
-        return NULL;
-
-    return pwszBuf;
-}
-
-static HANDLE CreateComctl32ActCtx(BOOL bV6)
-{
-    HANDLE ret;
-    WCHAR* pwstrSource;
-    ACTCTXW ActCtx = {sizeof(ACTCTX)};
-
-    pwstrSource = GetManifestPath(FALSE, bV6);
-    if (!pwstrSource)
-    {
-        ERR("GetManifestPath failed! bV6=%d\n", bV6);
-        return INVALID_HANDLE_VALUE;
-    }
-    ActCtx.lpSource = pwstrSource;
-    ret = CreateActCtxW(&ActCtx);
-    HeapFree(GetProcessHeap(), 0, pwstrSource);
-    if (ret == INVALID_HANDLE_VALUE)
-        ERR("CreateActCtxW failed! bV6=%d\n", bV6);
-    return ret;
-}
-
-static void RegisterControls(BOOL bV6)
-{
-    ANIMATE_Register ();
-    COMBOEX_Register ();
-    DATETIME_Register ();
-    FLATSB_Register ();
-    HEADER_Register ();
-    HOTKEY_Register ();
-    IPADDRESS_Register ();
-    LISTVIEW_Register ();
-    MONTHCAL_Register ();
-    NATIVEFONT_Register ();
-    PAGER_Register ();
-    PROGRESS_Register ();
-    REBAR_Register ();
-    STATUS_Register ();
-    SYSLINK_Register ();
-    TAB_Register ();
-    TOOLTIPS_Register ();
-    TRACKBAR_Register ();
-    TREEVIEW_Register ();
-    UPDOWN_Register ();
-
-    if (!bV6)
-    {
-        TOOLBAR_Register ();
-    }
-    else
-    {
-        BUTTON_Register ();
-        COMBO_Register ();
-        COMBOLBOX_Register ();
-        EDIT_Register ();
-        LISTBOX_Register ();
-        STATIC_Register ();
-
-        TOOLBARv6_Register();
     }
 }
 
-static void UnregisterControls(BOOL bV6)
+BOOLEAN WINAPI RegisterClassNameW(const WCHAR *class)
 {
-    ANIMATE_Unregister ();
-    COMBOEX_Unregister ();
-    DATETIME_Unregister ();
-    FLATSB_Unregister ();
-    HEADER_Unregister ();
-    HOTKEY_Unregister ();
-    IPADDRESS_Unregister ();
-    LISTVIEW_Unregister ();
-    MONTHCAL_Unregister ();
-    NATIVEFONT_Unregister ();
-    PAGER_Unregister ();
-    PROGRESS_Unregister ();
-    REBAR_Unregister ();
-    STATUS_Unregister ();
-    SYSLINK_Unregister ();
-    TAB_Unregister ();
-    TOOLTIPS_Unregister ();
-    TRACKBAR_Unregister ();
-    TREEVIEW_Unregister ();
-    UPDOWN_Unregister ();
+    int min = 0, max = ARRAY_SIZE(classes) - 1;
 
-    if (!bV6)
+    while (min <= max)
     {
-        TOOLBAR_Unregister ();
-    }
-    else
-    {
-        BUTTON_Unregister();
-        COMBO_Unregister ();
-        COMBOLBOX_Unregister ();
-        EDIT_Unregister ();
-        LISTBOX_Unregister ();
-        STATIC_Unregister ();
-
-        TOOLBARv6_Unregister ();
+        int res, pos = (min + max) / 2;
+        if (!(res = wcsicmp(class, classes[pos].nameW)))
+        {
+            classes[pos].fn_register();
+            return TRUE;
+        }
+        if (res < 0) max = pos - 1;
+        else min = pos + 1;
     }
 
+    return FALSE;
 }
-
-static void InitializeClasses()
-{
-    HANDLE hActCtx5, hActCtx6;
-    BOOL activated;
-    ULONG_PTR ulCookie;
-
-    /* like comctl32 5.82+ register all the common control classes */
-    /* Register the classes once no matter what */
-    hActCtx5 = CreateComctl32ActCtx(FALSE);
-    activated = (hActCtx5 != INVALID_HANDLE_VALUE ? ActivateActCtx(hActCtx5, &ulCookie) : FALSE);
-    RegisterControls(FALSE);      /* Register the classes pretending to be v5 */
-    if (activated) DeactivateActCtx(0, ulCookie);
-
-    hActCtx6 = CreateComctl32ActCtx(TRUE);
-    if (hActCtx6 != INVALID_HANDLE_VALUE)
-    {
-        activated = ActivateActCtx(hActCtx6, &ulCookie);
-        RegisterControls(TRUE);      /* Register the classes pretending to be v6 */
-        if (activated) DeactivateActCtx(0, ulCookie);
-
-        /* Initialize the themed controls only when the v6 manifest is present */
-        THEMING_Initialize (hActCtx5, hActCtx6);
-    }
-}
-
-static void UninitializeClasses()
-{
-    HANDLE hActCtx5, hActCtx6;
-    BOOL activated;
-    ULONG_PTR ulCookie;
-
-    hActCtx5 = CreateComctl32ActCtx(FALSE);
-    activated = (hActCtx5 != INVALID_HANDLE_VALUE ? ActivateActCtx(hActCtx5, &ulCookie) : FALSE);
-    UnregisterControls(FALSE);
-    if (activated) DeactivateActCtx(0, ulCookie);
-
-    hActCtx6 = CreateComctl32ActCtx(TRUE);
-    if (hActCtx6 != INVALID_HANDLE_VALUE)
-    {
-        activated = ActivateActCtx(hActCtx6, &ulCookie);
-        THEMING_Uninitialize();
-        UnregisterControls(TRUE);
-        if (activated) DeactivateActCtx(0, ulCookie);
-    }
-}
-
-/***********************************************************************
- * RegisterClassNameW [COMCTL32.@]
- *
- * Register window class again while using as SxS module.
- */
-BOOLEAN WINAPI RegisterClassNameW(LPCWSTR className)
-{
-    InitializeClasses();
-    return TRUE;
-}
-
-#endif /* __REACTOS__ */
-
-#ifndef __REACTOS__
-static void unregister_versioned_classes(void)
-{
-#define VERSION "6.0.2600.2982!"
-    static const char *classes[] =
-    {
-        VERSION WC_BUTTONA,
-        VERSION WC_COMBOBOXA,
-        VERSION "ComboLBox",
-        VERSION WC_EDITA,
-        VERSION WC_LISTBOXA,
-        VERSION WC_STATICA,
-    };
-    int i;
-
-    for (i = 0; i < ARRAY_SIZE(classes); i++)
-        UnregisterClassA(classes[i], NULL);
-
-#undef VERSION
-}
-#endif
 
 /***********************************************************************
  * DllMain [Internal]
@@ -340,7 +200,7 @@ static void unregister_versioned_classes(void)
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    TRACE("%p,%x,%p\n", hinstDLL, fdwReason, lpvReserved);
+    TRACE("%p, %#lx, %p\n", hinstDLL, fdwReason, lpvReserved);
 
     switch (fdwReason) {
 	case DLL_PROCESS_ATTACH:
@@ -358,80 +218,14 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 	    /* Get all the colors at DLL load */
 	    COMCTL32_RefreshSysColors();
-
-#ifndef __REACTOS__
-            /* like comctl32 5.82+ register all the common control classes */
-            ANIMATE_Register ();
-            COMBOEX_Register ();
-            DATETIME_Register ();
-            FLATSB_Register ();
-            HEADER_Register ();
-            HOTKEY_Register ();
-            IPADDRESS_Register ();
-            LISTVIEW_Register ();
-            MONTHCAL_Register ();
-            NATIVEFONT_Register ();
-            PAGER_Register ();
-            PROGRESS_Register ();
-            REBAR_Register ();
-            STATUS_Register ();
-            SYSLINK_Register ();
-            TAB_Register ();
-            TOOLBAR_Register ();
-            TOOLTIPS_Register ();
-            TRACKBAR_Register ();
-            TREEVIEW_Register ();
-            UPDOWN_Register ();
-
-            BUTTON_Register ();
-            COMBO_Register ();
-            COMBOLBOX_Register ();
-            EDIT_Register ();
-            LISTBOX_Register ();
-            STATIC_Register ();
-
-            /* subclass user32 controls */
-            THEMING_Initialize ();
-#else
-            InitializeClasses();
-#endif
-
             break;
 
 	case DLL_PROCESS_DETACH:
             if (lpvReserved) break;
-#ifndef __REACTOS__
-            /* clean up subclassing */
-            THEMING_Uninitialize();
 
             /* unregister all common control classes */
-            ANIMATE_Unregister ();
-            COMBOEX_Unregister ();
-            DATETIME_Unregister ();
-            FLATSB_Unregister ();
-            HEADER_Unregister ();
-            HOTKEY_Unregister ();
-            IPADDRESS_Unregister ();
-            LISTVIEW_Unregister ();
-            MONTHCAL_Unregister ();
-            NATIVEFONT_Unregister ();
-            PAGER_Unregister ();
-            PROGRESS_Unregister ();
-            REBAR_Unregister ();
-            STATUS_Unregister ();
-            SYSLINK_Unregister ();
-            TAB_Unregister ();
-            TOOLBAR_Unregister ();
-            TOOLTIPS_Unregister ();
-            TRACKBAR_Unregister ();
-            TREEVIEW_Unregister ();
-            UPDOWN_Unregister ();
+            unregister_classes ();
 
-            unregister_versioned_classes ();
-
-#else
-            UninitializeClasses();
-#endif
             /* delete local pattern brush */
             DeleteObject (COMCTL32_hPattern55AABrush);
             DeleteObject (COMCTL32_hPattern55AABitmap);
@@ -487,8 +281,7 @@ MenuHelp (UINT uMsg, WPARAM wParam, LPARAM lParam, HMENU hMainMenu,
 
     switch (uMsg) {
 	case WM_MENUSELECT:
-	    TRACE("WM_MENUSELECT wParam=0x%lX lParam=0x%lX\n",
-		   wParam, lParam);
+	    TRACE("WM_MENUSELECT wParam %#Ix, lParam %#Ix\n", wParam, lParam);
 
             if ((HIWORD(wParam) == 0xFFFF) && (lParam == 0)) {
                 /* menu was closed */
@@ -517,8 +310,7 @@ MenuHelp (UINT uMsg, WPARAM wParam, LPARAM lParam, HMENU hMainMenu,
 	    break;
 
         case WM_COMMAND :
-	    TRACE("WM_COMMAND wParam=0x%lX lParam=0x%lX\n",
-		   wParam, lParam);
+	    TRACE("WM_COMMAND wParam %#Ix, lParam %#Ix\n", wParam, lParam);
 	    /* WM_COMMAND is not invalid since it is documented
 	     * in the windows api reference. So don't output
              * any FIXME for WM_COMMAND
@@ -568,7 +360,7 @@ ShowHideMenuCtl (HWND hwnd, UINT_PTR uFlags, LPINT lpInfo)
 {
     LPINT lpMenuId;
 
-    TRACE("%p, %lx, %p\n", hwnd, uFlags, lpInfo);
+    TRACE("%p, %Ix, %p\n", hwnd, uFlags, lpInfo);
 
     if (lpInfo == NULL)
 	return FALSE;
@@ -654,43 +446,25 @@ GetEffectiveClientRect (HWND hwnd, LPRECT lpRect, const INT *lpInfo)
     } while (*lpRun);
 }
 
-
-/***********************************************************************
- * DrawStatusTextW [COMCTL32.@]
- *
- * Draws text with borders, like in a status bar.
- *
- * PARAMS
- *     hdc   [I] handle to the window's display context
- *     lprc  [I] pointer to a rectangle
- *     text  [I] pointer to the text
- *     style [I] drawing style
- *
- * RETURNS
- *     No return value.
- *
- * NOTES
- *     The style variable can have one of the following values:
- *     (will be written ...)
- */
-
-void WINAPI DrawStatusTextW (HDC hdc, LPCRECT lprc, LPCWSTR text, UINT style)
+void COMCTL32_DrawStatusText(HDC hdc, LPCRECT lprc, LPCWSTR text, UINT style, BOOL draw_background)
 {
     RECT r = *lprc;
-    UINT border = BDR_SUNKENOUTER;
+    UINT border;
     COLORREF oldbkcolor;
 
-    if (style & SBT_POPOUT)
-        border = BDR_RAISEDOUTER;
-    else if (style & SBT_NOBORDERS)
-        border = 0;
+    if (draw_background)
+    {
+        if (style & SBT_POPOUT)
+            border = BDR_RAISEDOUTER;
+        else if (style & SBT_NOBORDERS)
+            border = 0;
+        else
+            border = BDR_SUNKENOUTER;
 
-    oldbkcolor = SetBkColor (hdc, comctl32_color.clrBtnFace);
-#ifdef __REACTOS__ // HACK for CORE-19854.
-    DrawEdge (hdc, &r, border, BF_RECT|BF_ADJUST);
-#else
-    DrawEdge (hdc, &r, border, BF_MIDDLE|BF_RECT|BF_ADJUST);
-#endif
+        oldbkcolor = SetBkColor (hdc, comctl32_color.clrBtnFace);
+        DrawEdge (hdc, &r, border, BF_MIDDLE|BF_RECT|BF_ADJUST);
+        SetBkColor (hdc, oldbkcolor);
+    }
 
     /* now draw text */
     if (text) {
@@ -722,10 +496,31 @@ void WINAPI DrawStatusTextW (HDC hdc, LPCRECT lprc, LPCWSTR text, UINT style)
         SetBkMode (hdc, oldbkmode);
         SetTextColor (hdc, oldtextcolor);
     }
-
-    SetBkColor (hdc, oldbkcolor);
 }
 
+/***********************************************************************
+ * DrawStatusTextW [COMCTL32.@]
+ *
+ * Draws text with borders, like in a status bar.
+ *
+ * PARAMS
+ *     hdc   [I] handle to the window's display context
+ *     lprc  [I] pointer to a rectangle
+ *     text  [I] pointer to the text
+ *     style [I] drawing style
+ *
+ * RETURNS
+ *     No return value.
+ *
+ * NOTES
+ *     The style variable can have one of the following values:
+ *     (will be written ...)
+ */
+
+void WINAPI DrawStatusTextW(HDC hdc, LPCRECT lprc, LPCWSTR text, UINT style)
+{
+    COMCTL32_DrawStatusText(hdc, lprc, text, style, TRUE);
+}
 
 /***********************************************************************
  * DrawStatusText  [COMCTL32.@]
@@ -906,7 +701,7 @@ InitCommonControlsEx (const INITCOMMONCONTROLSEX *lpInitCtrls)
     if (!lpInitCtrls || lpInitCtrls->dwSize != sizeof(INITCOMMONCONTROLSEX))
         return FALSE;
 
-    TRACE("(0x%08x)\n", lpInitCtrls->dwICC);
+    TRACE("%#lx\n", lpInitCtrls->dwICC);
     return TRUE;
 }
 
@@ -1140,41 +935,7 @@ CreateToolbar (HWND hwnd, DWORD style, UINT wID, INT nBitmaps,
 }
 
 
-/***********************************************************************
- * DllGetVersion [COMCTL32.@]
- *
- * Retrieves version information of the 'COMCTL32.DLL'
- *
- * PARAMS
- *     pdvi [O] pointer to version information structure.
- *
- * RETURNS
- *     Success: S_OK
- *     Failure: E_INVALIDARG
- *
- * NOTES
- *     Returns version of a comctl32.dll from IE4.01 SP1.
- */
-
-HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
-{
-    if (pdvi->cbSize != sizeof(DLLVERSIONINFO)) {
-        WARN("wrong DLLVERSIONINFO size from app\n");
-	return E_INVALIDARG;
-    }
-
-    pdvi->dwMajorVersion = COMCTL32_VERSION;
-    pdvi->dwMinorVersion = COMCTL32_VERSION_MINOR;
-    pdvi->dwBuildNumber = 2919;
-    pdvi->dwPlatformID = 6304;
-
-    TRACE("%u.%u.%u.%u\n",
-	   pdvi->dwMajorVersion, pdvi->dwMinorVersion,
-	   pdvi->dwBuildNumber, pdvi->dwPlatformID);
-
-    return S_OK;
-}
-
+#if __WINE_COMCTL32_VERSION == 6
 /***********************************************************************
  *		DllInstall (COMCTL32.@)
  *
@@ -1189,6 +950,7 @@ HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
     TRACE("(%u, %s): stub\n", bInstall, debugstr_w(cmdline));
     return S_OK;
 }
+#endif /* __WINE_COMCTL32_VERSION == 6 */
 
 /***********************************************************************
  * _TrackMouseEvent [COMCTL32.@]
@@ -1275,10 +1037,10 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
    LPSUBCLASS_INFO stack;
    LPSUBCLASSPROCS proc;
 
-   TRACE ("(%p, %p, %lx, %lx)\n", hWnd, pfnSubclass, uIDSubclass, dwRef);
+   TRACE("%p, %p, %Ix, %Ix\n", hWnd, pfnSubclass, uIDSubclass, dwRef);
 
-    if (!hWnd || !pfnSubclass)
-        return FALSE;
+   if (!hWnd || !pfnSubclass)
+       return FALSE;
 
    /* Since the window procedure that we set here has two additional arguments,
     * we can't simply set it as the new window procedure of the window. So we
@@ -1297,12 +1059,9 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
       SetPropW (hWnd, COMCTL32_wSubclass, stack);
 
       /* set window procedure to our own and save the current one */
-      if (IsWindowUnicode (hWnd))
-         stack->origproc = (WNDPROC)SetWindowLongPtrW (hWnd, GWLP_WNDPROC,
-                                                   (DWORD_PTR)COMCTL32_SubclassProc);
-      else
-         stack->origproc = (WNDPROC)SetWindowLongPtrA (hWnd, GWLP_WNDPROC,
-                                                   (DWORD_PTR)COMCTL32_SubclassProc);
+      stack->is_unicode = IsWindowUnicode (hWnd);
+      stack->origproc = (WNDPROC)SetWindowLongPtrW (hWnd, GWLP_WNDPROC,
+                                                (DWORD_PTR)COMCTL32_SubclassProc);
    }
    else {
       /* Check to see if we have called this function with the same uIDSubClass
@@ -1321,7 +1080,7 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
    proc = Alloc(sizeof(SUBCLASSPROCS));
    if (!proc) {
       ERR ("Failed to allocate subclass entry in stack\n");
-      if (IsWindowUnicode (hWnd))
+      if (stack->is_unicode)
          SetWindowLongPtrW (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
       else
          SetWindowLongPtrA (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
@@ -1362,23 +1121,27 @@ BOOL WINAPI GetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
    const SUBCLASS_INFO *stack;
    const SUBCLASSPROCS *proc;
 
-   TRACE ("(%p, %p, %lx, %p)\n", hWnd, pfnSubclass, uID, pdwRef);
+   TRACE("%p, %p, %Ix, %p\n", hWnd, pfnSubclass, uID, pdwRef);
 
    /* See if we have been called for this window */
    stack = GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack)
-      return FALSE;
+      goto done;
 
    proc = stack->SubclassProcs;
    while (proc) {
       if ((proc->id == uID) &&
          (proc->subproc == pfnSubclass)) {
-         *pdwRef = proc->ref;
+         if (pdwRef)
+            *pdwRef = proc->ref;
          return TRUE;
       }
       proc = proc->next;
    }
 
+done:
+   if (pdwRef)
+      *pdwRef = 0;
    return FALSE;
 }
 
@@ -1405,7 +1168,7 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
    LPSUBCLASSPROCS proc;
    BOOL ret = FALSE;
 
-   TRACE ("(%p, %p, %lx)\n", hWnd, pfnSubclass, uID);
+   TRACE("%p, %p, %Ix.\n", hWnd, pfnSubclass, uID);
 
    /* Find the Subclass to remove */
    stack = GetPropW (hWnd, COMCTL32_wSubclass);
@@ -1436,7 +1199,9 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
    if (!stack->SubclassProcs && !stack->running) {
       TRACE("Last Subclass removed, cleaning up\n");
       /* clean up our heap and reset the original window procedure */
-      if (IsWindowUnicode (hWnd))
+      if ((WNDPROC)GetWindowLongPtrW (hWnd, GWLP_WNDPROC) != COMCTL32_SubclassProc)
+         WARN("Window procedure has been modified, skipping restore\n");
+      else if (stack->is_unicode)
          SetWindowLongPtrW (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
       else
          SetWindowLongPtrA (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
@@ -1458,8 +1223,8 @@ static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam
    LPSUBCLASS_INFO stack;
    LPSUBCLASSPROCS proc;
    LRESULT ret;
-    
-   TRACE ("(%p, 0x%08x, 0x%08lx, 0x%08lx)\n", hWnd, uMsg, wParam, lParam);
+
+   TRACE("%p, %#x, %#Ix, %#Ix\n", hWnd, uMsg, wParam, lParam);
 
    stack = GetPropW (hWnd, COMCTL32_wSubclass);
    if (!stack) {
@@ -1478,7 +1243,7 @@ static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam
    if (!stack->SubclassProcs && !stack->running) {
       TRACE("Last Subclass removed, cleaning up\n");
       /* clean up our heap and reset the original window procedure */
-      if (IsWindowUnicode (hWnd))
+      if (stack->is_unicode)
          SetWindowLongPtrW (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
       else
          SetWindowLongPtrA (hWnd, GWLP_WNDPROC, (DWORD_PTR)stack->origproc);
@@ -1508,8 +1273,8 @@ LRESULT WINAPI DefSubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 {
    LPSUBCLASS_INFO stack;
    LRESULT ret;
-   
-   TRACE ("(%p, 0x%08x, 0x%08lx, 0x%08lx)\n", hWnd, uMsg, wParam, lParam);
+
+   TRACE("%p, %#x, %#Ix, %#Ix\n", hWnd, uMsg, wParam, lParam);
 
    /* retrieve our little stack from the Properties */
    stack = GetPropW (hWnd, COMCTL32_wSubclass);
@@ -1521,10 +1286,7 @@ LRESULT WINAPI DefSubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
    /* If we are at the end of stack then we have to call the original
     * window procedure */
    if (!stack->stackpos) {
-      if (IsWindowUnicode (hWnd))
-         ret = CallWindowProcW (stack->origproc, hWnd, uMsg, wParam, lParam);
-      else
-         ret = CallWindowProcA (stack->origproc, hWnd, uMsg, wParam, lParam);
+      ret = CallWindowProcW (stack->origproc, hWnd, uMsg, wParam, lParam);
    } else {
       const SUBCLASSPROCS *proc = stack->stackpos;
       stack->stackpos = stack->stackpos->next; 
@@ -1848,14 +1610,16 @@ LRESULT WINAPI SetPathWordBreakProc(HWND hwnd, BOOL bSet)
         (LPARAM)(bSet ? PathWordBreakProc : NULL));
 }
 
+#if __WINE_COMCTL32_VERSION == 6 || defined(__REACTOS__)
 /***********************************************************************
  * DrawShadowText [COMCTL32.@]
  *
  * Draw text with shadow.
  */
-int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *prc, DWORD dwFlags,
-                          COLORREF crText, COLORREF crShadow, int ixOffset, int iyOffset)
+int WINAPI DrawShadowText(HDC hdc, LPCWSTR text, UINT length, RECT *rect, DWORD flags,
+                          COLORREF crText, COLORREF crShadow, int offset_x, int offset_y)
 {
+#ifdef __REACTOS__
     COLORREF crOldText;
     RECT rcText;
     INT iRet, x, y, x2, y2;
@@ -1869,8 +1633,8 @@ int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *prc, DWORD d
     /* Create 32 bit DIB section for the shadow */
     ZeroMemory(&bi, sizeof(bi));
     bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
-    bi.bmiHeader.biWidth = prc->right - prc->left + 4;
-    bi.bmiHeader.biHeight = prc->bottom - prc->top + 5; // bottom-up DIB
+    bi.bmiHeader.biWidth = rect->right - rect->left + 4;
+    bi.bmiHeader.biHeight = rect->bottom - rect->top + 5; // bottom-up DIB
     bi.bmiHeader.biPlanes = 1;
     bi.bmiHeader.biBitCount = 32;
     bi.bmiHeader.biCompression = BI_RGB;
@@ -1897,8 +1661,8 @@ int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *prc, DWORD d
     SetTextColor(hdcMem, RGB(16, 16, 16));
     SetBkColor(hdcMem, RGB(0, 0, 0));
     SetBkMode(hdcMem, TRANSPARENT);
-    SetRect(&rcText, 0, 0, prc->right - prc->left, prc->bottom - prc->top);
-    DrawTextW(hdcMem, pszText, cch, &rcText, dwFlags);
+    SetRect(&rcText, 0, 0, rect->right - rect->left, rect->bottom - rect->top);
+    DrawTextW(hdcMem, text, length, &rcText, flags);
     SelectObject(hdcMem, hOldFont);
 
     /* Flush GDI so data pointed by pBits is valid */
@@ -1938,15 +1702,15 @@ int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *prc, DWORD d
         }
 
     /* Fix ixOffset of the shadow (tested on Win) */
-    ixOffset -= 3;
-    iyOffset -= 3;
+    offset_x -= 3;
+    offset_y -= 3;
 
     /* Alpha blend helper image to destination DC */
     bf.BlendOp = AC_SRC_OVER;
     bf.BlendFlags = 0;
     bf.SourceConstantAlpha = 255;
     bf.AlphaFormat = AC_SRC_ALPHA;
-    GdiAlphaBlend(hdc, prc->left + ixOffset, prc->top + iyOffset, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, hdcMem, 0, 0, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, bf);
+    GdiAlphaBlend(hdc, rect->left + offset_x, rect->top + offset_y, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, hdcMem, 0, 0, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, bf);
 
     /* Delete the helper bitmap */
     SelectObject(hdcMem, hbmOld);
@@ -1956,10 +1720,36 @@ int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *prc, DWORD d
     /* Finally draw the text over shadow */
     crOldText = SetTextColor(hdc, crText);
     SetBkMode(hdc, TRANSPARENT);
-    iRet = DrawTextW(hdc, pszText, cch, prc, dwFlags);
+    iRet = DrawTextW(hdc, text, length, rect, flags);
     SetTextColor(hdc, crOldText);
 
     return iRet;
+#else
+    int bkmode, ret;
+    COLORREF clr;
+    RECT r;
+
+    FIXME("%p, %s, %d, %p, %#lx, %#lx, %#lx, %d, %d: semi-stub\n", hdc, debugstr_w(text),
+        length, rect, flags, crText, crShadow, offset_x, offset_y);
+
+    bkmode = SetBkMode(hdc, TRANSPARENT);
+    clr = SetTextColor(hdc, crShadow);
+
+    /* FIXME: for shadow we need to render normally, blur it, and blend with current background. */
+    r = *rect;
+    OffsetRect(&r, 1, 1);
+    DrawTextW(hdc, text, length, &r, flags);
+
+    SetTextColor(hdc, crText);
+
+    /* with text color on top of a shadow */
+    ret = DrawTextW(hdc, text, length, rect, flags);
+
+    SetTextColor(hdc, clr);
+    SetBkMode(hdc, bkmode);
+
+    return ret;
+#endif
 }
 
 /***********************************************************************
@@ -2008,4 +1798,1538 @@ HRESULT WINAPI LoadIconMetric(HINSTANCE hinst, const WCHAR *name, int size, HICO
     }
 
     return LoadIconWithScaleDown(hinst, name, cx, cy, icon);
+}
+#endif /* __WINE_COMCTL32_VERSION == 6 */
+
+static const WCHAR strMRUList[] = L"MRUList";
+
+/**************************************************************************
+ * Alloc [COMCTL32.71]
+ *
+ * Allocates memory block from the dll's private heap
+ */
+void * WINAPI Alloc(DWORD size)
+{
+    return LocalAlloc(LMEM_ZEROINIT, size);
+}
+
+/**************************************************************************
+ * ReAlloc [COMCTL32.72]
+ *
+ * Changes the size of an allocated memory block or allocates a memory
+ * block using the dll's private heap.
+ *
+ */
+void * WINAPI ReAlloc(void *src, DWORD size)
+{
+    if (src)
+        return LocalReAlloc(src, size, LMEM_ZEROINIT | LMEM_MOVEABLE);
+    else
+        return LocalAlloc(LMEM_ZEROINIT, size);
+}
+
+/**************************************************************************
+ * Free [COMCTL32.73]
+ *
+ * Frees an allocated memory block from the dll's private heap.
+ */
+BOOL WINAPI Free(void *mem)
+{
+    return !LocalFree(mem);
+}
+
+/**************************************************************************
+ * GetSize [COMCTL32.74]
+ */
+DWORD WINAPI GetSize(void *mem)
+{
+    return LocalSize(mem);
+}
+
+/**************************************************************************
+ * MRU-Functions  {COMCTL32}
+ *
+ * NOTES
+ * The MRU-API is a set of functions to manipulate lists of M.R.U. (Most Recently
+ * Used) items. It is an undocumented API that is used (at least) by the shell
+ * and explorer to implement their recent documents feature.
+ *
+ * Since these functions are undocumented, they are unsupported by MS and
+ * may change at any time.
+ *
+ * Internally, the list is implemented as a last in, last out list of items
+ * persisted into the system registry under a caller chosen key. Each list
+ * item is given a one character identifier in the Ascii range from 'a' to
+ * '}'. A list of the identifiers in order from newest to oldest is stored
+ * under the same key in a value named "MRUList".
+ *
+ * Items are re-ordered by changing the order of the values in the MRUList
+ * value. When a new item is added, it becomes the new value of the oldest
+ * identifier, and that identifier is moved to the front of the MRUList value.
+ *
+ * Wine stores MRU-lists in the same registry format as Windows, so when
+ * switching between the builtin and native comctl32.dll no problems or
+ * incompatibilities should occur.
+ *
+ * The following undocumented structure is used to create an MRU-list:
+ *|typedef INT (CALLBACK *MRUStringCmpFn)(LPCTSTR lhs, LPCTSTR rhs);
+ *|typedef INT (CALLBACK *MRUBinaryCmpFn)(LPCVOID lhs, LPCVOID rhs, DWORD length);
+ *|
+ *|typedef struct tagMRUINFO
+ *|{
+ *|    DWORD   cbSize;
+ *|    UINT    uMax;
+ *|    UINT    fFlags;
+ *|    HKEY    hKey;
+ *|    LPTSTR  lpszSubKey;
+ *|    PROC    lpfnCompare;
+ *|} MRUINFO, *LPMRUINFO;
+ *
+ * MEMBERS
+ *  cbSize      [I] The size of the MRUINFO structure. This must be set
+ *                  to sizeof(MRUINFO) by the caller.
+ *  uMax        [I] The maximum number of items allowed in the list. Because
+ *                  of the limited number of identifiers, this should be set to
+ *                  a value from 1 to 30 by the caller.
+ *  fFlags      [I] If bit 0 is set, the list will be used to store binary
+ *                  data, otherwise it is assumed to store strings. If bit 1
+ *                  is set, every change made to the list will be reflected in
+ *                  the registry immediately, otherwise changes will only be
+ *                  written when the list is closed.
+ *  hKey        [I] The registry key that the list should be written under.
+ *                  This must be supplied by the caller.
+ *  lpszSubKey  [I] A caller supplied name of a subkey under hKey to write
+ *                  the list to. This may not be blank.
+ *  lpfnCompare [I] A caller supplied comparison function, which may be either
+ *                  an MRUStringCmpFn if dwFlags does not have bit 0 set, or a
+ *                  MRUBinaryCmpFn otherwise.
+ *
+ * FUNCTIONS
+ *  - Create an MRU-list with CreateMRUList() or CreateMRUListLazy().
+ *  - Add items to an MRU-list with AddMRUString() or AddMRUData().
+ *  - Remove items from an MRU-list with DelMRUString().
+ *  - Find data in an MRU-list with FindMRUString() or FindMRUData().
+ *  - Iterate through an MRU-list with EnumMRUList().
+ *  - Free an MRU-list with FreeMRUList().
+ */
+
+typedef INT (CALLBACK *MRUStringCmpFnA)(LPCSTR lhs, LPCSTR rhs);
+typedef INT (CALLBACK *MRUStringCmpFnW)(LPCWSTR lhs, LPCWSTR rhs);
+typedef INT (CALLBACK *MRUBinaryCmpFn)(LPCVOID lhs, LPCVOID rhs, DWORD length);
+
+struct MRUINFOA
+{
+    DWORD  cbSize;
+    UINT   uMax;
+    UINT   fFlags;
+    HKEY   hKey;
+    LPSTR  lpszSubKey;
+    union
+    {
+        MRUStringCmpFnA string_cmpfn;
+        MRUBinaryCmpFn  binary_cmpfn;
+    } u;
+};
+
+struct MRUINFOW
+{
+    DWORD   cbSize;
+    UINT    uMax;
+    UINT    fFlags;
+    HKEY    hKey;
+    LPWSTR  lpszSubKey;
+    union
+    {
+        MRUStringCmpFnW string_cmpfn;
+        MRUBinaryCmpFn  binary_cmpfn;
+    } u;
+};
+
+/* MRUINFO.fFlags */
+#define MRU_STRING     0 /* list will contain strings */
+#define MRU_BINARY     1 /* list will contain binary data */
+#define MRU_CACHEWRITE 2 /* only save list order to reg. is FreeMRUList */
+
+/* If list is a string list lpfnCompare has the following prototype
+ * int CALLBACK MRUCompareString(LPCSTR s1, LPCSTR s2)
+ * for binary lists the prototype is
+ * int CALLBACK MRUCompareBinary(LPCVOID data1, LPCVOID data2, DWORD cbData)
+ * where cbData is the no. of bytes to compare.
+ * Need to check what return value means identical - 0?
+ */
+
+typedef struct tagWINEMRUITEM
+{
+    DWORD          size;        /* size of data stored               */
+    DWORD          itemFlag;    /* flags                             */
+    BYTE           datastart;
+} WINEMRUITEM, *LPWINEMRUITEM;
+
+/* itemFlag */
+#define WMRUIF_CHANGED   0x0001 /* this dataitem changed             */
+
+typedef struct tagWINEMRULIST
+{
+    struct MRUINFOW extview;    /* original create information       */
+    BOOL           isUnicode;   /* is compare fn Unicode */
+    DWORD          wineFlags;   /* internal flags                    */
+    DWORD          cursize;     /* current size of realMRU           */
+    LPWSTR         realMRU;     /* pointer to string of index names  */
+    LPWINEMRUITEM  *array;      /* array of pointers to data         */
+                                /* in 'a' to 'z' order               */
+} WINEMRULIST, *LPWINEMRULIST;
+
+/* wineFlags */
+#define WMRUF_CHANGED  0x0001   /* MRU list has changed              */
+
+/**************************************************************************
+ *              MRU_SaveChanged (internal)
+ *
+ * Local MRU saving code
+ */
+static void MRU_SaveChanged(WINEMRULIST *mp)
+{
+    UINT i, err;
+    HKEY newkey;
+    WCHAR realname[2];
+    WINEMRUITEM *witem;
+
+    /* or should we do the following instead of RegOpenKeyEx:
+     */
+
+    /* open the sub key */
+    if ((err = RegOpenKeyExW(mp->extview.hKey, mp->extview.lpszSubKey, 0, KEY_WRITE, &newkey)))
+    {
+        /* not present - what to do ??? */
+        ERR("Could not open key, error=%d, attempting to create\n", err);
+        if ((err = RegCreateKeyExW( mp->extview.hKey, mp->extview.lpszSubKey, 0, NULL, REG_OPTION_NON_VOLATILE,
+                KEY_READ | KEY_WRITE, 0, &newkey, 0)))
+        {
+            ERR("failed to create key /%s/, err=%d\n", debugstr_w(mp->extview.lpszSubKey), err);
+            return;
+        }
+    }
+
+    if (mp->wineFlags & WMRUF_CHANGED)
+    {
+        mp->wineFlags &= ~WMRUF_CHANGED;
+        if ((err = RegSetValueExW(newkey, strMRUList, 0, REG_SZ, (BYTE *)mp->realMRU,
+                (lstrlenW(mp->realMRU) + 1)*sizeof(WCHAR))))
+        {
+            ERR("error saving MRUList, err=%d\n", err);
+        }
+        TRACE("saving MRUList=/%s/\n", debugstr_w(mp->realMRU));
+    }
+
+    realname[1] = 0;
+    for (i = 0; i < mp->cursize; ++i)
+    {
+        witem = mp->array[i];
+        if (witem->itemFlag & WMRUIF_CHANGED)
+        {
+            witem->itemFlag &= ~WMRUIF_CHANGED;
+            realname[0] = 'a' + i;
+            if ((err = RegSetValueExW(newkey, realname, 0, (mp->extview.fFlags & MRU_BINARY) ?
+                    REG_BINARY : REG_SZ, &witem->datastart, witem->size)))
+            {
+                ERR("error saving /%s/, err=%d\n", debugstr_w(realname), err);
+            }
+            TRACE("saving value for name /%s/ size %ld\n", debugstr_w(realname), witem->size);
+        }
+    }
+    RegCloseKey(newkey);
+}
+
+/**************************************************************************
+ *              FreeMRUList [COMCTL32.152]
+ *
+ * Frees a most-recently-used items list.
+ */
+void WINAPI FreeMRUList(HANDLE hMRUList)
+{
+    WINEMRULIST *mp = hMRUList;
+    unsigned int i;
+
+    TRACE("%p.\n", hMRUList);
+
+    if (!hMRUList)
+        return;
+
+    if (mp->wineFlags & WMRUF_CHANGED)
+    {
+        /* need to open key and then save the info */
+        MRU_SaveChanged(mp);
+    }
+
+    for (i = 0; i < mp->extview.uMax; ++i)
+        Free(mp->array[i]);
+
+    Free(mp->realMRU);
+    Free(mp->array);
+    Free(mp->extview.lpszSubKey);
+    Free(mp);
+}
+
+/**************************************************************************
+ *                  FindMRUData [COMCTL32.169]
+ *
+ * Searches binary list for item that matches data of given length.
+ * Returns position in list order 0 -> MRU and value corresponding to item's reg.
+ * name will be stored in it ('a' -> 0).
+ *
+ */
+INT WINAPI FindMRUData(HANDLE hList, const void *data, DWORD cbData, int *pos)
+{
+    const WINEMRULIST *mp = hList;
+    INT ret;
+    UINT i;
+    LPSTR dataA = NULL;
+
+    if (!mp || !mp->extview.u.string_cmpfn)
+        return -1;
+
+    if (!(mp->extview.fFlags & MRU_BINARY) && !mp->isUnicode)
+    {
+        DWORD len = WideCharToMultiByte(CP_ACP, 0, data, -1, NULL, 0, NULL, NULL);
+        dataA = Alloc(len);
+        WideCharToMultiByte(CP_ACP, 0, data, -1, dataA, len, NULL, NULL);
+    }
+
+    for (i = 0; i < mp->cursize; ++i)
+    {
+        if (mp->extview.fFlags & MRU_BINARY)
+        {
+            if (!mp->extview.u.binary_cmpfn(data, &mp->array[i]->datastart, cbData))
+                break;
+        }
+        else
+        {
+            if (mp->isUnicode)
+            {
+                if (!mp->extview.u.string_cmpfn(data, (LPWSTR)&mp->array[i]->datastart))
+                    break;
+            }
+            else
+            {
+                DWORD len = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)&mp->array[i]->datastart, -1,
+                        NULL, 0, NULL, NULL);
+                LPSTR itemA = Alloc(len);
+                INT cmp;
+                WideCharToMultiByte(CP_ACP, 0, (LPWSTR)&mp->array[i]->datastart, -1, itemA, len, NULL, NULL);
+
+                cmp = mp->extview.u.string_cmpfn((LPWSTR)dataA, (LPWSTR)itemA);
+                Free(itemA);
+                if (!cmp)
+                    break;
+            }
+        }
+    }
+
+    Free(dataA);
+    if (i < mp->cursize)
+        ret = i;
+    else
+        ret = -1;
+    if (pos && (ret != -1))
+        *pos = 'a' + i;
+
+    TRACE("%p, %p, %ld, %p, returning %d.\n", hList, data, cbData, pos, ret);
+
+    return ret;
+}
+
+/**************************************************************************
+ *              AddMRUData [COMCTL32.167]
+ *
+ * Add item to MRU binary list.  If item already exists in list then it is
+ * simply moved up to the top of the list and not added again.  If list is
+ * full then the least recently used item is removed to make room.
+ *
+ */
+INT WINAPI AddMRUData(HANDLE hList, const void *data, DWORD cbData)
+{
+    WINEMRULIST *mp = hList;
+    WINEMRUITEM *witem;
+    INT i, replace;
+
+    if ((replace = FindMRUData(hList, data, cbData, NULL)) >= 0)
+    {
+        /* Item exists, just move it to the front */
+        LPWSTR pos = wcschr(mp->realMRU, replace + 'a');
+        while (pos > mp->realMRU)
+        {
+            pos[0] = pos[-1];
+            pos--;
+        }
+    }
+    else
+    {
+        /* either add a new entry or replace oldest */
+        if (mp->cursize < mp->extview.uMax)
+        {
+            /* Add in a new item */
+            replace = mp->cursize;
+            mp->cursize++;
+        }
+        else
+        {
+            /* get the oldest entry and replace data */
+            replace = mp->realMRU[mp->cursize - 1] - 'a';
+            Free(mp->array[replace]);
+        }
+
+        /* Allocate space for new item and move in the data */
+        mp->array[replace] = witem = Alloc(cbData + sizeof(WINEMRUITEM));
+        witem->itemFlag |= WMRUIF_CHANGED;
+        witem->size = cbData;
+        memcpy( &witem->datastart, data, cbData);
+
+        /* now rotate MRU list */
+        for (i = mp->cursize - 1; i >= 1; --i)
+            mp->realMRU[i] = mp->realMRU[i-1];
+    }
+
+    /* The new item gets the front spot */
+    mp->wineFlags |= WMRUF_CHANGED;
+    mp->realMRU[0] = replace + 'a';
+
+    TRACE("%p, %p, %ld adding data, /%c/ now most current\n", hList, data, cbData, replace+'a');
+
+    if (!(mp->extview.fFlags & MRU_CACHEWRITE))
+    {
+        /* save changed stuff right now */
+        MRU_SaveChanged(mp);
+    }
+
+    return replace;
+}
+
+/**************************************************************************
+ *              AddMRUStringW [COMCTL32.401]
+ *
+ * Add an item to an MRU string list.
+ *
+ */
+INT WINAPI AddMRUStringW(HANDLE hList, const WCHAR *str)
+{
+    TRACE("%p, %s.\n", hList, debugstr_w(str));
+
+    if (!hList)
+        return -1;
+
+    if (!str || IsBadStringPtrW(str, -1))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    return AddMRUData(hList, str, (lstrlenW(str) + 1) * sizeof(WCHAR));
+}
+
+/**************************************************************************
+ *              AddMRUStringA [COMCTL32.153]
+ */
+INT WINAPI AddMRUStringA(HANDLE hList, const char *str)
+{
+    WCHAR *strW;
+    DWORD len;
+    INT ret;
+
+    TRACE("%p, %s.\n", hList, debugstr_a(str));
+
+    if (!hList)
+        return -1;
+
+    if (IsBadStringPtrA(str, -1))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0) * sizeof(WCHAR);
+    strW = Alloc(len);
+    if (!strW)
+        return -1;
+
+    MultiByteToWideChar(CP_ACP, 0, str, -1, strW, len/sizeof(WCHAR));
+    ret = AddMRUData(hList, strW, len);
+    Free(strW);
+    return ret;
+}
+
+/**************************************************************************
+ *              DelMRUString [COMCTL32.156]
+ *
+ * Removes item from either string or binary list (despite its name)
+ *
+ * PARAMS
+ *    hList [I] list handle
+ *    nItemPos [I] item position to remove 0 -> MRU
+ *
+ * RETURNS
+ *    TRUE if successful, FALSE if nItemPos is out of range.
+ */
+BOOL WINAPI DelMRUString(HANDLE hList, INT nItemPos)
+{
+    FIXME("(%p, %d): stub\n", hList, nItemPos);
+    return TRUE;
+}
+
+/**************************************************************************
+ *                  FindMRUStringW [COMCTL32.402]
+ */
+INT WINAPI FindMRUStringW(HANDLE hList, const WCHAR *str, int *pos)
+{
+    return FindMRUData(hList, str, (lstrlenW(str) + 1) * sizeof(WCHAR), pos);
+}
+
+/**************************************************************************
+ *                  FindMRUStringA [COMCTL32.155]
+ *
+ * Searches string list for item that matches given string.
+ *
+ * RETURNS
+ *    Position in list 0 -> MRU.  -1 if item not found.
+ */
+INT WINAPI FindMRUStringA(HANDLE hList, const char *str, int *pos)
+{
+    DWORD len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+    WCHAR *strW = Alloc(len * sizeof(*strW));
+    INT ret;
+
+    MultiByteToWideChar(CP_ACP, 0, str, -1, strW, len);
+    ret = FindMRUData(hList, strW, len * sizeof(WCHAR), pos);
+    Free(strW);
+    return ret;
+}
+
+/*************************************************************************
+ *                 create_mru_list (internal)
+ */
+static HANDLE create_mru_list(WINEMRULIST *mp)
+{
+    UINT i, err;
+    HKEY newkey;
+    DWORD datasize, dwdisp;
+    WCHAR realname[2];
+    WINEMRUITEM *witem;
+    DWORD type;
+
+    /* get space to save indices that will turn into names
+     * but in order of most to least recently used
+     */
+    mp->realMRU = Alloc((mp->extview.uMax + 2) * sizeof(WCHAR));
+
+    /* get space to save pointers to actual data in order of
+     * 'a' to 'z' (0 to n).
+     */
+    mp->array = Alloc(mp->extview.uMax * sizeof(LPVOID));
+
+    /* open the sub key */
+    if ((err = RegCreateKeyExW(mp->extview.hKey, mp->extview.lpszSubKey, 0, NULL, REG_OPTION_NON_VOLATILE,
+            KEY_READ | KEY_WRITE, 0, &newkey, &dwdisp)))
+    {
+        /* error - what to do ??? */
+        ERR("%lu, %u, %x, %p, %s, %p: Could not open key, error=%d\n", mp->extview.cbSize, mp->extview.uMax, mp->extview.fFlags,
+                mp->extview.hKey, debugstr_w(mp->extview.lpszSubKey), mp->extview.u.string_cmpfn, err);
+        return 0;
+    }
+
+    /* get values from key 'MRUList' */
+    if (newkey)
+    {
+        datasize = (mp->extview.uMax + 1) * sizeof(WCHAR);
+        if (RegQueryValueExW( newkey, strMRUList, 0, &type, (BYTE *)mp->realMRU, &datasize))
+        {
+            /* not present - set size to 1 (will become 0 later) */
+            datasize = 1;
+            *mp->realMRU = 0;
+        }
+        else
+            datasize /= sizeof(WCHAR);
+
+        TRACE("MRU list = %s, datasize = %ld\n", debugstr_w(mp->realMRU), datasize);
+
+        mp->cursize = datasize - 1;
+        /* datasize now has number of items in the MRUList */
+
+        /* get actual values for each entry */
+        realname[1] = 0;
+        for (i = 0; i < mp->cursize; ++i)
+        {
+            realname[0] = 'a' + i;
+            if (RegQueryValueExW(newkey, realname, 0, &type, 0, &datasize))
+            {
+                /* not present - what to do ??? */
+                ERR("Key %s not found 1\n", debugstr_w(realname));
+            }
+            mp->array[i] = witem = Alloc(datasize + sizeof(WINEMRUITEM));
+            witem->size = datasize;
+            if (RegQueryValueExW(newkey, realname, 0, &type, &witem->datastart, &datasize))
+            {
+                /* not present - what to do ??? */
+                ERR("Key %s not found 2\n", debugstr_w(realname));
+            }
+        }
+        RegCloseKey( newkey );
+    }
+    else
+        mp->cursize = 0;
+
+    TRACE("%lu, %u, %x, %p, %s, %p: Current Size = %ld\n", mp->extview.cbSize, mp->extview.uMax, mp->extview.fFlags,
+            mp->extview.hKey, debugstr_w(mp->extview.lpszSubKey), mp->extview.u.string_cmpfn, mp->cursize);
+    return mp;
+}
+
+/**************************************************************************
+ *                  CreateMRUListLazyW [COMCTL32.404]
+ */
+HANDLE WINAPI CreateMRUListLazyW(const struct MRUINFOW *info, DWORD dwParam2, DWORD dwParam3, DWORD dwParam4)
+{
+    WINEMRULIST *mp;
+
+    /* Native does not check for a NULL. */
+    if (!info->hKey || IsBadStringPtrW(info->lpszSubKey, -1))
+        return NULL;
+
+    mp = Alloc(sizeof(*mp));
+    memcpy(&mp->extview, info, sizeof(*info));
+    mp->extview.lpszSubKey = Alloc((lstrlenW(info->lpszSubKey) + 1) * sizeof(WCHAR));
+    lstrcpyW(mp->extview.lpszSubKey, info->lpszSubKey);
+    mp->isUnicode = TRUE;
+
+    return create_mru_list(mp);
+}
+
+/**************************************************************************
+ *                  CreateMRUListLazyA [COMCTL32.157]
+ *
+ * Creates a most-recently-used list.
+ */
+HANDLE WINAPI CreateMRUListLazyA(const struct MRUINFOA *info, DWORD dwParam2, DWORD dwParam3, DWORD dwParam4)
+{
+    WINEMRULIST *mp;
+    DWORD len;
+
+    /* Native does not check for a NULL lpcml */
+
+    if (!info->hKey || IsBadStringPtrA(info->lpszSubKey, -1))
+        return 0;
+
+    mp = Alloc(sizeof(*mp));
+    memcpy(&mp->extview, info, sizeof(*info));
+    len = MultiByteToWideChar(CP_ACP, 0, info->lpszSubKey, -1, NULL, 0);
+    mp->extview.lpszSubKey = Alloc(len * sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, info->lpszSubKey, -1, mp->extview.lpszSubKey, len);
+    mp->isUnicode = FALSE;
+    return create_mru_list(mp);
+}
+
+/**************************************************************************
+ *              CreateMRUListW [COMCTL32.400]
+ */
+HANDLE WINAPI CreateMRUListW(const struct MRUINFOW *info)
+{
+    return CreateMRUListLazyW(info, 0, 0, 0);
+}
+
+/**************************************************************************
+ *              CreateMRUListA [COMCTL32.151]
+ */
+HANDLE WINAPI CreateMRUListA(const struct MRUINFOA *info)
+{
+     return CreateMRUListLazyA(info, 0, 0, 0);
+}
+
+/**************************************************************************
+ *                EnumMRUListW [COMCTL32.403]
+ *
+ * Enumerate item in a most-recently-used list
+ *
+ * PARAMS
+ *    hList [I] list handle
+ *    nItemPos [I] item position to enumerate
+ *    lpBuffer [O] buffer to receive item
+ *    nBufferSize [I] size of buffer
+ *
+ * RETURNS
+ *    For binary lists specifies how many bytes were copied to buffer, for
+ *    string lists specifies full length of string.  Enumerating past the end
+ *    of list returns -1.
+ *    If lpBuffer == NULL or nItemPos is -ve return value is no. of items in
+ *    the list.
+ */
+INT WINAPI EnumMRUListW(HANDLE hList, INT nItemPos, void *buffer, DWORD nBufferSize)
+{
+    const WINEMRULIST *mp = hList;
+    const WINEMRUITEM *witem;
+    INT desired, datasize;
+
+    if (!mp) return -1;
+    if ((nItemPos < 0) || !buffer) return mp->cursize;
+    if (nItemPos >= mp->cursize) return -1;
+    desired = mp->realMRU[nItemPos];
+    desired -= 'a';
+    TRACE("nItemPos=%d, desired=%d\n", nItemPos, desired);
+    witem = mp->array[desired];
+    datasize = min(witem->size, nBufferSize);
+    memcpy(buffer, &witem->datastart, datasize);
+    TRACE("(%p, %d, %p, %ld): returning len %d\n", hList, nItemPos, buffer, nBufferSize, datasize);
+    return datasize;
+}
+
+/**************************************************************************
+ *                EnumMRUListA [COMCTL32.154]
+ */
+INT WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, void *buffer, DWORD nBufferSize)
+{
+    const WINEMRULIST *mp = hList;
+    WINEMRUITEM *witem;
+    INT desired, datasize;
+    DWORD lenA;
+
+    if (!mp) return -1;
+    if ((nItemPos < 0) || !buffer) return mp->cursize;
+    if (nItemPos >= mp->cursize) return -1;
+    desired = mp->realMRU[nItemPos];
+    desired -= 'a';
+    TRACE("nItemPos=%d, desired=%d\n", nItemPos, desired);
+    witem = mp->array[desired];
+    if (mp->extview.fFlags & MRU_BINARY)
+    {
+        datasize = min(witem->size, nBufferSize);
+        memcpy(buffer, &witem->datastart, datasize);
+    }
+    else
+    {
+        lenA = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)&witem->datastart, -1, NULL, 0, NULL, NULL);
+        datasize = min(lenA, nBufferSize);
+        WideCharToMultiByte(CP_ACP, 0, (LPWSTR)&witem->datastart, -1, buffer, datasize, NULL, NULL);
+        ((char *)buffer)[ datasize - 1 ] = '\0';
+        datasize = lenA - 1;
+    }
+    TRACE("(%p, %d, %p, %ld): returning len=%d\n", hList, nItemPos, buffer, nBufferSize, datasize);
+    return datasize;
+}
+
+/**************************************************************************
+ * Str_GetPtrWtoA [internal]
+ *
+ * Converts a unicode string into a multi byte string
+ *
+ */
+
+INT Str_GetPtrWtoA(const WCHAR *src, char *dst, INT nMaxLen)
+{
+    INT len;
+
+    TRACE("%s, %p, %d.\n", debugstr_w(src), dst, nMaxLen);
+
+    if (!dst && src)
+        return WideCharToMultiByte(CP_ACP, 0, src, -1, 0, 0, NULL, NULL);
+
+    if (!nMaxLen)
+        return 0;
+
+    if (!src)
+    {
+        dst[0] = 0;
+        return 0;
+    }
+
+    len = WideCharToMultiByte(CP_ACP, 0, src, -1, 0, 0, NULL, NULL);
+    if (len >= nMaxLen)
+        len = nMaxLen - 1;
+
+    WideCharToMultiByte(CP_ACP, 0, src, -1, dst, len, NULL, NULL);
+    dst[len] = '\0';
+
+    return len;
+}
+
+/**************************************************************************
+ * Str_GetPtrAtoW [internal]
+ *
+ * Converts a multibyte string into a unicode string
+ */
+
+INT Str_GetPtrAtoW(const char *src, WCHAR *dst, INT nMaxLen)
+{
+    INT len;
+
+    TRACE("%s, %p, %d.\n", debugstr_a(src), dst, nMaxLen);
+
+    if (!dst && src)
+        return MultiByteToWideChar(CP_ACP, 0, src, -1, 0, 0);
+
+    if (!nMaxLen)
+        return 0;
+
+    if (!src)
+    {
+        *dst = 0;
+        return 0;
+    }
+
+    len = MultiByteToWideChar(CP_ACP, 0, src, -1, 0, 0);
+    if (len >= nMaxLen)
+        len = nMaxLen - 1;
+
+    MultiByteToWideChar(CP_ACP, 0, src, -1, dst, len);
+    dst[len] = 0;
+
+    return len;
+}
+
+/**************************************************************************
+ * Str_SetPtrAtoW [internal]
+ *
+ * Converts a multi byte string to a unicode string.
+ * If the pointer to the destination buffer is NULL a buffer is allocated.
+ * If the destination buffer is too small to keep the converted multi byte
+ * string the destination buffer is reallocated. If the source pointer is
+ */
+BOOL Str_SetPtrAtoW(WCHAR **dst, const char *src)
+{
+    TRACE("%p, %s.\n", dst, debugstr_a(src));
+
+    if (src)
+    {
+        INT len = MultiByteToWideChar(CP_ACP, 0, src, -1, NULL, 0);
+        LPWSTR ptr = ReAlloc(*dst, len * sizeof(**dst));
+
+        if (!ptr)
+            return FALSE;
+        MultiByteToWideChar(CP_ACP, 0, src, -1, ptr, len);
+        *dst = ptr;
+    }
+    else
+    {
+        Free(*dst);
+        *dst = NULL;
+    }
+
+    return TRUE;
+}
+
+/**************************************************************************
+ * Str_SetPtrWtoA [internal]
+ *
+ * Converts a unicode string to a multi byte string.
+ * If the pointer to the destination buffer is NULL a buffer is allocated.
+ * If the destination buffer is too small to keep the converted wide
+ * string the destination buffer is reallocated. If the source pointer is
+ * NULL, the destination buffer is freed.
+ */
+BOOL Str_SetPtrWtoA(char **dst, const WCHAR *src)
+{
+    TRACE("%p, %s.\n", dst, debugstr_w(src));
+
+    if (src)
+    {
+        INT len = WideCharToMultiByte(CP_ACP, 0, src, -1, NULL, 0, NULL, FALSE);
+        LPSTR ptr = ReAlloc(*dst, len * sizeof(**dst));
+
+        if (!ptr)
+            return FALSE;
+        WideCharToMultiByte(CP_ACP, 0, src, -1, ptr, len, NULL, FALSE);
+        *dst = ptr;
+    }
+    else
+    {
+        Free(*dst);
+        *dst = NULL;
+    }
+
+    return TRUE;
+}
+
+/**************************************************************************
+ * Notification functions
+ */
+
+struct NOTIFYDATA
+{
+    HWND hwndFrom;
+    HWND hwndTo;
+    DWORD  dwParam3;
+    DWORD  dwParam4;
+    DWORD  dwParam5;
+    DWORD  dwParam6;
+};
+
+/**************************************************************************
+ * DoNotify [Internal]
+ */
+
+static LRESULT DoNotify(const struct NOTIFYDATA *notify, UINT code, NMHDR *hdr)
+{
+    NMHDR nmhdr;
+    NMHDR *lpNmh = NULL;
+    UINT idFrom = 0;
+
+    TRACE("%p, %p, %d, %p, %#lx.\n", notify->hwndFrom, notify->hwndTo, code, hdr, notify->dwParam5);
+
+    if (!notify->hwndTo)
+        return 0;
+
+    if (notify->hwndFrom == (HWND)-1)
+    {
+        lpNmh = hdr;
+        idFrom = hdr->idFrom;
+    }
+    else
+    {
+        if (notify->hwndFrom)
+            idFrom = GetDlgCtrlID(notify->hwndFrom);
+
+        lpNmh = hdr ? hdr : &nmhdr;
+        lpNmh->hwndFrom = notify->hwndFrom;
+        lpNmh->idFrom = idFrom;
+        lpNmh->code = code;
+    }
+
+    return SendMessageW(notify->hwndTo, WM_NOTIFY, idFrom, (LPARAM)lpNmh);
+}
+
+/**************************************************************************
+ * SendNotify [COMCTL32.341]
+ *
+ * Sends a WM_NOTIFY message to the specified window.
+ *
+ */
+LRESULT WINAPI SendNotify(HWND hwndTo, HWND hwndFrom, UINT code, NMHDR *hdr)
+{
+    struct NOTIFYDATA notify;
+
+    TRACE("%p, %p, %d, %p.\n", hwndTo, hwndFrom, code, hdr);
+
+    notify.hwndFrom = hwndFrom;
+    notify.hwndTo   = hwndTo;
+    notify.dwParam5 = 0;
+    notify.dwParam6 = 0;
+
+    return DoNotify(&notify, code, hdr);
+}
+
+/**************************************************************************
+ * SendNotifyEx [COMCTL32.342]
+ *
+ * Sends a WM_NOTIFY message to the specified window.
+ *
+ * PARAMS
+ *     hwndFrom [I] Window to receive the message
+ *     hwndTo   [I] Window that the message is from
+ *     code     [I] Notification code
+ *     hdr      [I] The NMHDR and any additional information to send or NULL
+ *     dwParam5 [I] Unknown
+ *
+ * RETURNS
+ *     Success: return value from notification
+ *     Failure: 0
+ *
+ * NOTES
+ *     If hwndFrom is -1 then the identifier of the control sending the
+ *     message is taken from the NMHDR structure.
+ *     If hwndFrom is not -1 then lpHdr can be NULL.
+ */
+LRESULT WINAPI SendNotifyEx(HWND hwndTo, HWND hwndFrom, UINT code, NMHDR *hdr, DWORD dwParam5)
+{
+    struct NOTIFYDATA notify;
+    HWND hwndNotify;
+
+    TRACE("%p, %p, %d, %p, %#lx\n", hwndFrom, hwndTo, code, hdr, dwParam5);
+
+    hwndNotify = hwndTo;
+    if (!hwndTo)
+    {
+        if (IsWindow(hwndFrom))
+        {
+            hwndNotify = GetParent(hwndFrom);
+            if (!hwndNotify)
+                return 0;
+        }
+    }
+
+    notify.hwndFrom = hwndFrom;
+    notify.hwndTo   = hwndNotify;
+    notify.dwParam5 = dwParam5;
+    notify.dwParam6 = 0;
+
+    return DoNotify(&notify, code, hdr);
+}
+
+/* reallocate *array if needed so it can hold at least count items */
+/* *size measured in bytes, count measured in items */
+/* return FALSE means failed (*array still valid but too small) */
+/* return TRUE means successful */
+static BOOL COMCTL32_array_reserve(void **array, DWORD *size, DWORD count, DWORD item_size)
+{
+    void *new_array;
+    DWORD needed_size;
+
+    if (count > (DWORD)-1 / item_size)
+        return FALSE;
+    needed_size = count * item_size;
+    if (*size >= needed_size)
+        return TRUE;
+    new_array = *array ? ReAlloc(*array, needed_size) : Alloc(needed_size);
+    if (!new_array)
+        return FALSE;
+    *array = new_array;
+    *size = needed_size;
+    return TRUE;
+}
+
+/* Text field conversion behavior flags for COMCTL32_SendConvertedNotify() */
+enum conversion_flags
+{
+    /* Convert Unicode text to ANSI for parent before sending. If not set, do nothing */
+    CONVERT_SEND = 0x01,
+    /* Convert ANSI text from parent back to Unicode for children */
+    CONVERT_RECEIVE = 0x02,
+    /* Send empty text to parent if text is NULL. Original text pointer still remains NULL */
+    SEND_EMPTY_IF_NULL = 0x04,
+    /* Set text to null after parent received the notification if the required mask is not set before sending notification */
+    SET_NULL_IF_NO_MASK = 0x08,
+    /* Zero out the text buffer before sending it to parent */
+    ZERO_SEND = 0x10
+};
+
+static UINT COMCTL32_GetAnsiNtfCode(UINT code)
+{
+    switch (code)
+    {
+    /* ComboxBoxEx */
+    case CBEN_DRAGBEGINW: return CBEN_DRAGBEGINA;
+    case CBEN_ENDEDITW: return CBEN_ENDEDITA;
+    case CBEN_GETDISPINFOW: return CBEN_GETDISPINFOA;
+    /* Date and Time Picker */
+    case DTN_FORMATW: return DTN_FORMATA;
+    case DTN_FORMATQUERYW: return DTN_FORMATQUERYA;
+    case DTN_USERSTRINGW: return DTN_USERSTRINGA;
+    case DTN_WMKEYDOWNW: return DTN_WMKEYDOWNA;
+    /* Header */
+    case HDN_BEGINTRACKW: return HDN_BEGINTRACKA;
+    case HDN_DIVIDERDBLCLICKW: return HDN_DIVIDERDBLCLICKA;
+    case HDN_ENDTRACKW: return HDN_ENDTRACKA;
+    case HDN_GETDISPINFOW: return HDN_GETDISPINFOA;
+    case HDN_ITEMCHANGEDW: return HDN_ITEMCHANGEDA;
+    case HDN_ITEMCHANGINGW: return HDN_ITEMCHANGINGA;
+    case HDN_ITEMCLICKW: return HDN_ITEMCLICKA;
+    case HDN_ITEMDBLCLICKW: return HDN_ITEMDBLCLICKA;
+    case HDN_TRACKW: return HDN_TRACKA;
+    /* List View */
+    case LVN_BEGINLABELEDITW: return LVN_BEGINLABELEDITA;
+    case LVN_ENDLABELEDITW: return LVN_ENDLABELEDITA;
+    case LVN_GETDISPINFOW: return LVN_GETDISPINFOA;
+    case LVN_GETINFOTIPW: return LVN_GETINFOTIPA;
+    case LVN_INCREMENTALSEARCHW: return LVN_INCREMENTALSEARCHA;
+    case LVN_ODFINDITEMW: return LVN_ODFINDITEMA;
+    case LVN_SETDISPINFOW: return LVN_SETDISPINFOA;
+    /* Toolbar */
+    case TBN_GETBUTTONINFOW: return TBN_GETBUTTONINFOA;
+    case TBN_GETINFOTIPW: return TBN_GETINFOTIPA;
+    /* Tooltip */
+    case TTN_GETDISPINFOW: return TTN_GETDISPINFOA;
+    /* Tree View */
+    case TVN_BEGINDRAGW: return TVN_BEGINDRAGA;
+    case TVN_BEGINLABELEDITW: return TVN_BEGINLABELEDITA;
+    case TVN_BEGINRDRAGW: return TVN_BEGINRDRAGA;
+    case TVN_DELETEITEMW: return TVN_DELETEITEMA;
+    case TVN_ENDLABELEDITW: return TVN_ENDLABELEDITA;
+    case TVN_GETDISPINFOW: return TVN_GETDISPINFOA;
+    case TVN_GETINFOTIPW: return TVN_GETINFOTIPA;
+    case TVN_ITEMEXPANDEDW: return TVN_ITEMEXPANDEDA;
+    case TVN_ITEMEXPANDINGW: return TVN_ITEMEXPANDINGA;
+    case TVN_SELCHANGEDW: return TVN_SELCHANGEDA;
+    case TVN_SELCHANGINGW: return TVN_SELCHANGINGA;
+    case TVN_SETDISPINFOW: return TVN_SETDISPINFOA;
+    }
+    return code;
+}
+
+/* Convert text to Unicode and return the original text address */
+static WCHAR *COMCTL32_ConvertText(WCHAR **text)
+{
+    WCHAR *oldText = *text;
+    *text = NULL;
+    Str_SetPtrWtoA((CHAR **)text, oldText);
+    return oldText;
+}
+
+static void COMCTL32_RestoreText(WCHAR **text, WCHAR *oldText)
+{
+    if (!oldText) return;
+
+    Free(*text);
+    *text = oldText;
+}
+
+static LRESULT COMCTL32_SendConvertedNotify(HWND hwndNotify, NMHDR *hdr, UINT *mask, UINT requiredMask, WCHAR **text,
+                                            INT *textMax, DWORD flags)
+{
+    CHAR *sendBuffer = NULL;
+    CHAR *receiveBuffer;
+    INT bufferSize;
+    WCHAR *oldText;
+    INT oldTextMax;
+    LRESULT ret = NO_ERROR;
+
+    oldText = *text;
+    oldTextMax = textMax ? *textMax : 0;
+
+    hdr->code = COMCTL32_GetAnsiNtfCode(hdr->code);
+
+    if (mask && !(*mask & requiredMask))
+    {
+        ret = SendMessageW(hwndNotify, WM_NOTIFY, hdr->idFrom, (LPARAM)hdr);
+        if (flags & SET_NULL_IF_NO_MASK) oldText = NULL;
+        goto done;
+    }
+
+    if (oldTextMax < 0) goto done;
+
+    if ((*text && flags & (CONVERT_SEND | ZERO_SEND)) || (!*text && flags & SEND_EMPTY_IF_NULL))
+    {
+        bufferSize = textMax ? *textMax : lstrlenW(*text) + 1;
+        sendBuffer = Alloc(bufferSize);
+        if (!sendBuffer) goto done;
+        if (!(flags & ZERO_SEND)) WideCharToMultiByte(CP_ACP, 0, *text, -1, sendBuffer, bufferSize, NULL, FALSE);
+        *text = (WCHAR *)sendBuffer;
+    }
+
+    ret = SendMessageW(hwndNotify, WM_NOTIFY, hdr->idFrom, (LPARAM)hdr);
+
+    if (*text && oldText && (flags & CONVERT_RECEIVE))
+    {
+        /* MultiByteToWideChar requires that source and destination are not the same buffer */
+        if (*text == oldText)
+        {
+            bufferSize = lstrlenA((CHAR *)*text)  + 1;
+            receiveBuffer = Alloc(bufferSize);
+            if (!receiveBuffer) goto done;
+            memcpy(receiveBuffer, *text, bufferSize);
+            MultiByteToWideChar(CP_ACP, 0, receiveBuffer, bufferSize, oldText, oldTextMax);
+            Free(receiveBuffer);
+        }
+        else
+            MultiByteToWideChar(CP_ACP, 0, (CHAR *)*text, -1, oldText, oldTextMax);
+    }
+
+done:
+    Free(sendBuffer);
+    *text = oldText;
+    return ret;
+}
+
+LRESULT COMCTL32_forward_notify_to_ansi_window(HWND hwnd_notify, NMHDR *hdr, WCHAR **unicode_buffer, DWORD *unicode_buffer_size)
+{
+    LRESULT ret;
+
+    switch (hdr->code)
+    {
+    /* ComboBoxEx */
+    case CBEN_GETDISPINFOW:
+    {
+        NMCOMBOBOXEXW *nmcbe = (NMCOMBOBOXEXW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, &nmcbe->ceItem.mask, CBEIF_TEXT, &nmcbe->ceItem.pszText,
+                                            &nmcbe->ceItem.cchTextMax, ZERO_SEND | SET_NULL_IF_NO_MASK | CONVERT_RECEIVE);
+    }
+    case CBEN_DRAGBEGINW:
+    {
+        NMCBEDRAGBEGINW *nmdbW = (NMCBEDRAGBEGINW *)hdr;
+        NMCBEDRAGBEGINA nmdbA = {{0}};
+        nmdbA.hdr.code = COMCTL32_GetAnsiNtfCode(nmdbW->hdr.code);
+        nmdbA.hdr.hwndFrom = nmdbW->hdr.hwndFrom;
+        nmdbA.hdr.idFrom = nmdbW->hdr.idFrom;
+        nmdbA.iItemid = nmdbW->iItemid;
+        WideCharToMultiByte(CP_ACP, 0, nmdbW->szText, ARRAY_SIZE(nmdbW->szText), nmdbA.szText, ARRAY_SIZE(nmdbA.szText),
+                            NULL, FALSE);
+        return SendMessageW(hwnd_notify, WM_NOTIFY, hdr->idFrom, (LPARAM)&nmdbA);
+    }
+    case CBEN_ENDEDITW:
+    {
+        NMCBEENDEDITW *nmedW = (NMCBEENDEDITW *)hdr;
+        NMCBEENDEDITA nmedA = {{0}};
+        nmedA.hdr.code = COMCTL32_GetAnsiNtfCode(nmedW->hdr.code);
+        nmedA.hdr.hwndFrom = nmedW->hdr.hwndFrom;
+        nmedA.hdr.idFrom = nmedW->hdr.idFrom;
+        nmedA.fChanged = nmedW->fChanged;
+        nmedA.iNewSelection = nmedW->iNewSelection;
+        nmedA.iWhy = nmedW->iWhy;
+        WideCharToMultiByte(CP_ACP, 0, nmedW->szText, ARRAY_SIZE(nmedW->szText), nmedA.szText, ARRAY_SIZE(nmedA.szText),
+                            NULL, FALSE);
+        return SendMessageW(hwnd_notify, WM_NOTIFY, hdr->idFrom, (LPARAM)&nmedA);
+    }
+    /* Date and Time Picker */
+    case DTN_FORMATW:
+    {
+        NMDATETIMEFORMATW *nmdtf = (NMDATETIMEFORMATW *)hdr;
+        WCHAR *oldFormat;
+        DWORD textLength;
+
+        hdr->code = COMCTL32_GetAnsiNtfCode(hdr->code);
+        oldFormat = COMCTL32_ConvertText((WCHAR **)&nmdtf->pszFormat);
+        ret = SendMessageW(hwnd_notify, WM_NOTIFY, hdr->idFrom, (LPARAM)nmdtf);
+        COMCTL32_RestoreText((WCHAR **)&nmdtf->pszFormat, oldFormat);
+
+        if (nmdtf->pszDisplay)
+        {
+            textLength = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)nmdtf->pszDisplay, -1, 0, 0);
+            if (!COMCTL32_array_reserve((void **)unicode_buffer, unicode_buffer_size, textLength, sizeof(WCHAR))) return ret;
+            MultiByteToWideChar(CP_ACP, 0, (LPCSTR)nmdtf->pszDisplay, -1, *unicode_buffer, textLength);
+            if (nmdtf->pszDisplay != nmdtf->szDisplay)
+                nmdtf->pszDisplay = *unicode_buffer;
+            else
+            {
+                textLength = min(textLength, ARRAY_SIZE(nmdtf->szDisplay));
+                memcpy(nmdtf->szDisplay, *unicode_buffer, textLength * sizeof(WCHAR));
+            }
+        }
+
+        return ret;
+    }
+    case DTN_FORMATQUERYW:
+    {
+        NMDATETIMEFORMATQUERYW *nmdtfq = (NMDATETIMEFORMATQUERYW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, NULL, 0, (WCHAR **)&nmdtfq->pszFormat, NULL, CONVERT_SEND);
+    }
+    case DTN_WMKEYDOWNW:
+    {
+        NMDATETIMEWMKEYDOWNW *nmdtkd = (NMDATETIMEWMKEYDOWNW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, NULL, 0, (WCHAR **)&nmdtkd->pszFormat, NULL, CONVERT_SEND);
+    }
+    case DTN_USERSTRINGW:
+    {
+        NMDATETIMESTRINGW *nmdts = (NMDATETIMESTRINGW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, NULL, 0, (WCHAR **)&nmdts->pszUserString, NULL, CONVERT_SEND);
+    }
+    /* Header */
+    case HDN_BEGINTRACKW:
+    case HDN_DIVIDERDBLCLICKW:
+    case HDN_ENDTRACKW:
+    case HDN_ITEMCHANGEDW:
+    case HDN_ITEMCHANGINGW:
+    case HDN_ITEMCLICKW:
+    case HDN_ITEMDBLCLICKW:
+    case HDN_TRACKW:
+    {
+        NMHEADERW *nmh = (NMHEADERW *)hdr;
+        WCHAR *oldText = NULL, *oldFilterText = NULL;
+        HD_TEXTFILTERW *tf = NULL;
+
+        hdr->code = COMCTL32_GetAnsiNtfCode(hdr->code);
+
+        if (!nmh->pitem) return SendMessageW(hwnd_notify, WM_NOTIFY, hdr->idFrom, (LPARAM)hdr);
+        if (nmh->pitem->mask & HDI_TEXT) oldText = COMCTL32_ConvertText(&nmh->pitem->pszText);
+        if ((nmh->pitem->mask & HDI_FILTER) && (nmh->pitem->type == HDFT_ISSTRING) && nmh->pitem->pvFilter)
+        {
+            tf = (HD_TEXTFILTERW *)nmh->pitem->pvFilter;
+            oldFilterText = COMCTL32_ConvertText(&tf->pszText);
+        }
+        ret = SendMessageW(hwnd_notify, WM_NOTIFY, hdr->idFrom, (LPARAM)hdr);
+        COMCTL32_RestoreText(&nmh->pitem->pszText, oldText);
+        if (tf) COMCTL32_RestoreText(&tf->pszText, oldFilterText);
+        return ret;
+    }
+    case HDN_GETDISPINFOW:
+    {
+        NMHDDISPINFOW *nmhddi = (NMHDDISPINFOW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, &nmhddi->mask, HDI_TEXT, &nmhddi->pszText, &nmhddi->cchTextMax,
+                                            SEND_EMPTY_IF_NULL | CONVERT_SEND | CONVERT_RECEIVE);
+    }
+    /* List View */
+    case LVN_BEGINLABELEDITW:
+    case LVN_ENDLABELEDITW:
+    case LVN_SETDISPINFOW:
+    {
+        NMLVDISPINFOW *nmlvdi = (NMLVDISPINFOW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, &nmlvdi->item.mask, LVIF_TEXT, &nmlvdi->item.pszText,
+                                            &nmlvdi->item.cchTextMax, SET_NULL_IF_NO_MASK | CONVERT_SEND | CONVERT_RECEIVE);
+    }
+    case LVN_GETDISPINFOW:
+    {
+        NMLVDISPINFOW *nmlvdi = (NMLVDISPINFOW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, &nmlvdi->item.mask, LVIF_TEXT, &nmlvdi->item.pszText,
+                                            &nmlvdi->item.cchTextMax, CONVERT_RECEIVE);
+    }
+    case LVN_GETINFOTIPW:
+    {
+        NMLVGETINFOTIPW *nmlvgit = (NMLVGETINFOTIPW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, NULL, 0, &nmlvgit->pszText, &nmlvgit->cchTextMax,
+                                            CONVERT_SEND | CONVERT_RECEIVE);
+    }
+    case LVN_INCREMENTALSEARCHW:
+    case LVN_ODFINDITEMW:
+    {
+        NMLVFINDITEMW *nmlvfi = (NMLVFINDITEMW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, &nmlvfi->lvfi.flags, LVFI_STRING | LVFI_SUBSTRING,
+                                            (WCHAR **)&nmlvfi->lvfi.psz, NULL, CONVERT_SEND);
+    }
+    /* Toolbar */
+    case TBN_GETBUTTONINFOW:
+    {
+        NMTOOLBARW *nmtb = (NMTOOLBARW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, NULL, 0, &nmtb->pszText, &nmtb->cchText,
+                                            SEND_EMPTY_IF_NULL | CONVERT_SEND | CONVERT_RECEIVE);
+    }
+    case TBN_GETINFOTIPW:
+    {
+        NMTBGETINFOTIPW *nmtbgit = (NMTBGETINFOTIPW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, NULL, 0, &nmtbgit->pszText, &nmtbgit->cchTextMax, CONVERT_RECEIVE);
+    }
+    /* Tooltip */
+    case TTN_GETDISPINFOW:
+    {
+        NMTTDISPINFOW *nmttdiW = (NMTTDISPINFOW *)hdr;
+        NMTTDISPINFOA nmttdiA = {{0}};
+        DWORD size;
+
+        nmttdiA.hdr.code = COMCTL32_GetAnsiNtfCode(nmttdiW->hdr.code);
+        nmttdiA.hdr.hwndFrom = nmttdiW->hdr.hwndFrom;
+        nmttdiA.hdr.idFrom = nmttdiW->hdr.idFrom;
+        nmttdiA.hinst = nmttdiW->hinst;
+        nmttdiA.uFlags = nmttdiW->uFlags;
+        nmttdiA.lParam = nmttdiW->lParam;
+        nmttdiA.lpszText = nmttdiA.szText;
+        WideCharToMultiByte(CP_ACP, 0, nmttdiW->szText, ARRAY_SIZE(nmttdiW->szText), nmttdiA.szText,
+                            ARRAY_SIZE(nmttdiA.szText), NULL, FALSE);
+
+        ret = SendMessageW(hwnd_notify, WM_NOTIFY, hdr->idFrom, (LPARAM)&nmttdiA);
+
+        nmttdiW->hinst = nmttdiA.hinst;
+        nmttdiW->uFlags = nmttdiA.uFlags;
+        nmttdiW->lParam = nmttdiA.lParam;
+
+        MultiByteToWideChar(CP_ACP, 0, nmttdiA.szText, ARRAY_SIZE(nmttdiA.szText), nmttdiW->szText,
+                            ARRAY_SIZE(nmttdiW->szText));
+        if (!nmttdiA.lpszText)
+            nmttdiW->lpszText = nmttdiW->szText;
+        else if (!IS_INTRESOURCE(nmttdiA.lpszText))
+        {
+            size = MultiByteToWideChar(CP_ACP, 0, nmttdiA.lpszText, -1, 0, 0);
+            if (size > ARRAY_SIZE(nmttdiW->szText))
+            {
+                if (!COMCTL32_array_reserve((void **)unicode_buffer, unicode_buffer_size, size, sizeof(WCHAR))) return ret;
+                MultiByteToWideChar(CP_ACP, 0, nmttdiA.lpszText, -1, *unicode_buffer, size);
+                nmttdiW->lpszText = *unicode_buffer;
+                /* Override content in szText */
+                memcpy(nmttdiW->szText, nmttdiW->lpszText, min(sizeof(nmttdiW->szText), size * sizeof(WCHAR)));
+            }
+            else
+            {
+                MultiByteToWideChar(CP_ACP, 0, nmttdiA.lpszText, -1, nmttdiW->szText, ARRAY_SIZE(nmttdiW->szText));
+                nmttdiW->lpszText = nmttdiW->szText;
+            }
+        }
+        else
+        {
+            nmttdiW->szText[0] = 0;
+            nmttdiW->lpszText = (WCHAR *)nmttdiA.lpszText;
+        }
+
+        return ret;
+    }
+    /* Tree View */
+    case TVN_BEGINDRAGW:
+    case TVN_BEGINRDRAGW:
+    case TVN_ITEMEXPANDEDW:
+    case TVN_ITEMEXPANDINGW:
+    {
+        NMTREEVIEWW *nmtv = (NMTREEVIEWW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, &nmtv->itemNew.mask, TVIF_TEXT, &nmtv->itemNew.pszText, NULL,
+                                            CONVERT_SEND);
+    }
+    case TVN_DELETEITEMW:
+    {
+        NMTREEVIEWW *nmtv = (NMTREEVIEWW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, &nmtv->itemOld.mask, TVIF_TEXT, &nmtv->itemOld.pszText, NULL,
+                                            CONVERT_SEND);
+    }
+    case TVN_BEGINLABELEDITW:
+    case TVN_ENDLABELEDITW:
+    {
+        NMTVDISPINFOW *nmtvdi = (NMTVDISPINFOW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, &nmtvdi->item.mask, TVIF_TEXT, &nmtvdi->item.pszText,
+                                            &nmtvdi->item.cchTextMax, SET_NULL_IF_NO_MASK | CONVERT_SEND | CONVERT_RECEIVE);
+    }
+    case TVN_SELCHANGINGW:
+    case TVN_SELCHANGEDW:
+    {
+        NMTREEVIEWW *nmtv = (NMTREEVIEWW *)hdr;
+        WCHAR *oldItemOldText = NULL;
+        WCHAR *oldItemNewText = NULL;
+
+        hdr->code = COMCTL32_GetAnsiNtfCode(hdr->code);
+
+        if (!((nmtv->itemNew.mask | nmtv->itemOld.mask) & TVIF_TEXT))
+            return SendMessageW(hwnd_notify, WM_NOTIFY, hdr->idFrom, (LPARAM)hdr);
+
+        if (nmtv->itemOld.mask & TVIF_TEXT) oldItemOldText = COMCTL32_ConvertText(&nmtv->itemOld.pszText);
+        if (nmtv->itemNew.mask & TVIF_TEXT) oldItemNewText = COMCTL32_ConvertText(&nmtv->itemNew.pszText);
+
+        ret = SendMessageW(hwnd_notify, WM_NOTIFY, hdr->idFrom, (LPARAM)hdr);
+        COMCTL32_RestoreText(&nmtv->itemOld.pszText, oldItemOldText);
+        COMCTL32_RestoreText(&nmtv->itemNew.pszText, oldItemNewText);
+        return ret;
+    }
+    case TVN_GETDISPINFOW:
+    {
+        NMTVDISPINFOW *nmtvdi = (NMTVDISPINFOW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, &nmtvdi->item.mask, TVIF_TEXT, &nmtvdi->item.pszText,
+                                            &nmtvdi->item.cchTextMax, ZERO_SEND | CONVERT_RECEIVE);
+    }
+    case TVN_SETDISPINFOW:
+    {
+        NMTVDISPINFOW *nmtvdi = (NMTVDISPINFOW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, &nmtvdi->item.mask, TVIF_TEXT, &nmtvdi->item.pszText,
+                                            &nmtvdi->item.cchTextMax, SET_NULL_IF_NO_MASK | CONVERT_SEND | CONVERT_RECEIVE);
+    }
+    case TVN_GETINFOTIPW:
+    {
+        NMTVGETINFOTIPW *nmtvgit = (NMTVGETINFOTIPW *)hdr;
+        return COMCTL32_SendConvertedNotify(hwnd_notify, hdr, NULL, 0, &nmtvgit->pszText, &nmtvgit->cchTextMax, CONVERT_RECEIVE);
+    }
+    }
+    /* Other notifications, no need to convert */
+    return SendMessageW(hwnd_notify, WM_NOTIFY, hdr->idFrom, (LPARAM)hdr);
+}
+
+void COMCTL32_OpenThemeForWindow(HWND hwnd, const WCHAR *theme_class)
+{
+#if __WINE_COMCTL32_VERSION == 6
+    OpenThemeData(hwnd, theme_class);
+#endif
+}
+
+void COMCTL32_CloseThemeForWindow(HWND hwnd)
+{
+#if __WINE_COMCTL32_VERSION == 6
+    CloseThemeData(GetWindowTheme(hwnd));
+#endif
+}
+
+/* A helper to handle CCM_SETVERSION messages */
+LRESULT COMCTL32_SetVersion(INT *current_version, INT new_version)
+{
+#if __WINE_COMCTL32_VERSION == 6
+    return *current_version;
+#else
+    INT old_version;
+
+    if (new_version > 5)
+        return -1;
+
+    old_version = *current_version;
+    *current_version = new_version;
+    return old_version;
+#endif
+}
+
+/* A helper to handle WM_THEMECHANGED messages */
+LRESULT COMCTL32_ThemeChanged(HWND hwnd, const WCHAR *theme_class, BOOL invalidate, BOOL erase)
+{
+#if __WINE_COMCTL32_VERSION == 6
+    if (theme_class)
+    {
+        COMCTL32_CloseThemeForWindow(hwnd);
+        COMCTL32_OpenThemeForWindow(hwnd, theme_class);
+    }
+
+    if (invalidate)
+        InvalidateRect(hwnd, NULL, erase);
+    return 0;
+#else
+    return DefWindowProcW(hwnd, WM_THEMECHANGED, 0, 0);
+#endif
+}
+
+/* A helper to handle WM_NCPAINT messages
+ *
+ * If theme_class is specified, open the specified theme class. Otherwise, get the theme class from
+ * the window.
+ */
+LRESULT COMCTL32_NCPaint(HWND hwnd, WPARAM wp, LPARAM lp, const WCHAR *theme_class)
+{
+#if __WINE_COMCTL32_VERSION == 6
+    HRGN region = (HRGN)wp, clipRgn;
+    INT cxEdge, cyEdge;
+    HTHEME theme;
+    LONG exStyle;
+    HDC dc;
+    RECT r;
+
+    exStyle = GetWindowLongW(hwnd, GWL_EXSTYLE);
+    if (!(exStyle & WS_EX_CLIENTEDGE))
+        return DefWindowProcW(hwnd, WM_NCPAINT, wp, lp);
+
+    if (theme_class)
+        theme = OpenThemeDataForDpi(NULL, theme_class, GetDpiForWindow(hwnd));
+    else
+        theme = GetWindowTheme(hwnd);
+    if (!theme)
+        return DefWindowProcW(hwnd, WM_NCPAINT, wp, lp);
+
+    cxEdge = GetSystemMetrics(SM_CXEDGE);
+    cyEdge = GetSystemMetrics(SM_CYEDGE);
+    GetWindowRect(hwnd, &r);
+
+    /* New clipping region passed to default proc to exclude border */
+    clipRgn = CreateRectRgn(r.left + cxEdge, r.top + cyEdge, r.right - cxEdge, r.bottom - cyEdge);
+    if (region != (HRGN)1)
+        CombineRgn(clipRgn, clipRgn, region, RGN_AND);
+    OffsetRect(&r, -r.left, -r.top);
+
+#ifdef __REACTOS__ /* r73789 */
+    dc = GetWindowDC(hwnd);
+    /* Exclude client part */
+    ExcludeClipRect(dc, r.left + cxEdge, r.top + cyEdge,
+        r.right - cxEdge, r.bottom -cyEdge);
+#else
+    dc = GetDCEx(hwnd, region, DCX_WINDOW | DCX_INTERSECTRGN);
+#endif
+    if (IsThemeBackgroundPartiallyTransparent(theme, 0, 0))
+        DrawThemeParentBackground(hwnd, dc, &r);
+    DrawThemeBackground(theme, dc, 0, 0, &r, 0);
+    ReleaseDC(hwnd, dc);
+    if (theme_class)
+        CloseThemeData(theme);
+
+    /* Call default proc to get the scrollbars etc. also painted */
+    DefWindowProcW(hwnd, WM_NCPAINT, (WPARAM)clipRgn, 0);
+    DeleteObject(clipRgn);
+    return 0;
+#else
+    return DefWindowProcW(hwnd, WM_NCPAINT, wp, lp);
+#endif
+}
+
+BOOL COMCTL32_IsThemed(HWND hwnd)
+{
+#if __WINE_COMCTL32_VERSION == 6
+    return !!GetWindowTheme(hwnd);
+#else
+    return FALSE;
+#endif
+}
+
+HRGN set_control_clipping( HDC hdc, const RECT *rect )
+{
+    RECT rc = *rect;
+    HRGN hrgn = CreateRectRgn( 0, 0, 0, 0 );
+
+    if (GetClipRgn( hdc, hrgn ) != 1)
+    {
+        DeleteObject( hrgn );
+        hrgn = 0;
+    }
+    DPtoLP( hdc, (POINT *)&rc, 2 );
+    if (GetLayout( hdc ) & LAYOUT_RTL)  /* compensate for the shifting done by IntersectClipRect */
+    {
+        rc.left++;
+        rc.right++;
+    }
+    IntersectClipRect( hdc, rc.left, rc.top, rc.right, rc.bottom );
+    return hrgn;
 }

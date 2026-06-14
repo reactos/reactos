@@ -63,7 +63,8 @@ cpp_quote("#endif")
 
 cpp_quote("HRESULT WINAPI ImageList_CoCreateInstance(REFCLSID,const IUnknown *, REFIID,void **);")
 
-const UINT ILIF_ALPHA = 1;
+cpp_quote("#define ILIF_ALPHA      0x00000001")
+cpp_quote("#define ILIF_LOWQUALITY 0x00000002")
 
 [
     uuid(46eb5926-582e-4017-9fdf-e8998daa0950),
