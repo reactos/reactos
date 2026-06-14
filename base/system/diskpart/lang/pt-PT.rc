@@ -206,7 +206,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UNIQUID_DISK_INVALID_STYLE "\nO disco seleccionado não é um disco GPT nem um disco MBR. \nSeleccione um disco GPT ou um disco MBR.\n"
+    IDS_UNIQUID_DISK_INVALID_STYLE "\nO disco seleccionado não é um disco GPT nem um disco MBR.\nSeleccione um disco GPT ou um disco MBR.\n"
 END
 
 /* Disk Status */
