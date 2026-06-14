@@ -136,18 +136,6 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
     HPROPSHEETPAGE hpage;
     UINT num_pages = 0;
 
-    hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg, 0, NULL);
-    if (hpage)
-        hppages[num_pages++] = hpage;
-
-    hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_VIEW, FolderOptionsViewDlg, 0, NULL);
-    if (hpage)
-        hppages[num_pages++] = hpage;
-
-    hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_FILETYPES, FolderOptionsFileTypesDlg, 0, NULL);
-    if (hpage)
-        hppages[num_pages++] = hpage;
-
     // the stub window to hide taskbar button
     DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
     DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW;
@@ -164,6 +152,18 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
         stub.DestroyWindow();
         return 0;
     }
+
+    hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg, 0, NULL);
+    if (hpage)
+        hppages[num_pages++] = hpage;
+
+    hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_VIEW, FolderOptionsViewDlg, 0, NULL);
+    if (hpage)
+        hppages[num_pages++] = hpage;
+
+    hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_FILETYPES, FolderOptionsFileTypesDlg, 0, NULL);
+    if (hpage)
+        hppages[num_pages++] = hpage;
 
     memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
