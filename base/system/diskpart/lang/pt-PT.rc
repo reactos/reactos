@@ -104,7 +104,7 @@ BEGIN
     IDS_DETAIL_PARTITION_TYPE   "Tipo          : %s\n"
     IDS_DETAIL_PARTITION_HIDDEN "Oculto        : %s\n"
     IDS_DETAIL_PARTITION_ACTIVE "Activo        : %s\n"
-    IDS_DETAIL_PARTITION_OFFSET "deslocamento  : %I64u\n"
+    IDS_DETAIL_PARTITION_OFFSET "Deslocamento  : %I64u\n"
     IDS_DETAIL_PARTITION_REQUIRED "Requerido   : %s\n"
     IDS_DETAIL_PARTITION_ATTRIBUTE "Atributos  : %016I64x\n"
     IDS_DETAIL_NO_DISKS "\nNão existem discos associados a este volume.\n"
