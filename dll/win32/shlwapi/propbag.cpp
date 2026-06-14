@@ -16,8 +16,8 @@
 #include <atlcomcli.h>      // for CComVariant
 #include <atlconv.h>        // for CA2W and CW2A
 #include <strsafe.h>        // for StringC... functions
-#include <new>
-#include <algorithm>        // for std::min
+#include <cstdlib>          // __min
+#include <new>              // std::nothrow
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -842,7 +842,7 @@ CIniPropertyBag::_GetSectionAndName(
     if (pchSep)
     {
         UINT cchSep = (UINT)(pchSep - pszStart + 1);
-        StrCpyNW(pszSection, pszStart, (std::min)(cchSep, cchSectionMax));
+        StrCpyNW(pszSection, pszStart, __min(cchSep, cchSectionMax));
         StrCpyNW(pszName, pchSep + 1, cchNameMax);
         return S_OK;
     }
