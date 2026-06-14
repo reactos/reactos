@@ -49,6 +49,7 @@
 #include "mshtmhst.h"
 #ifdef __REACTOS__
     #include <shlwapi_undoc.h>
+    ULONG WINAPI GetProcessOsVersion(void);
 #endif
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -2325,11 +2326,10 @@ IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCm
     {
         if (!IsEqualGUID(&CGID_Explorer, pguidCmdGroup))
         {
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-            return OLECMDERR_E_UNKNOWNGROUP;
-#else
-            return OLECMDERR_E_NOTSUPPORTED;
-#endif
+            if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
+                return OLECMDERR_E_UNKNOWNGROUP;
+            else
+                return OLECMDERR_E_NOTSUPPORTED;
         }
 
         for (iCmd = 0; iCmd < cCmds; ++iCmd)
@@ -6097,12 +6097,10 @@ HRESULT WINAPI SHPropertyBag_ReadGUID(IPropertyBag *ppb, LPCWSTR pszPropName, GU
         bRet = VariantArrayToBuffer(&vari, pguid, sizeof(*pguid));
     else if (V_VT(&vari) == VT_BSTR)
         bRet = GUIDFromStringW(V_BSTR(&vari), pguid);
-    else
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+    else if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
         bRet = FALSE;
-#else
+    else
         bRet = TRUE; /* This is by design in WinXP/Win2k3. */
-#endif
 
     if (!bRet)
         ERR("%p %s %p\n", ppb, debugstr_w(pszPropName), pguid);
