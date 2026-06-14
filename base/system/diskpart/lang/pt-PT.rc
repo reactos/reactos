@@ -175,7 +175,7 @@ END
 /* RESCAN command strings */
 STRINGTABLE
 BEGIN
-    IDS_RESCAN_START "\nPor favor espere enquando o particionamento de disco faz uma varredura à sua configuração...\n"
+    IDS_RESCAN_START "\nPor favor aguarde enquando o particionamento de disco faz uma varredura à sua configuração...\n"
     IDS_RESCAN_END "\nO particionamento de disco acabou de fazer a varredura à sua configuração.\n\n"
 END
 
