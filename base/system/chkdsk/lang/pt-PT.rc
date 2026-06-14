@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Disk Checking Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -12,8 +19,8 @@ Uso: %s [unidade:] [-F] [-V] [-R] [-C]\n\n\
             ultima verificação.\n\
 \n"
 
-    IDS_PERCENT_COMPL "%d percento completo.\r"
-    IDS_FILE_SYSTEM "O sistema de ficheiros é %s for volume %s.\n"
+    IDS_PERCENT_COMPL "%d por cento completo.\r"
+    IDS_FILE_SYSTEM "O sistema de ficheiros é %s para o volume %s.\n"
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 by Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\
@@ -23,11 +30,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_VOLUME_IN_USE "O volume está em uso e não pode ser bloqueado\n"
-    IDS_CHKDSK_FAIL "O chkdsk não consegui terminar com sucesso. Error: 0x%08X.\n"
+    IDS_CHKDSK_FAIL "O chkdsk não conseguiu terminar com sucesso. Erro: 0x%08X.\n"
     IDS_NO_ENTRY_POINT "O ponto de entrada FMIFS não foi encontrado.\n\n"
     IDS_BAD_ARGUMENT "Argumento desconhecido: %s\n"
     IDS_NO_CURRENT_DIR "Não foi possível obter o directório actual. Código de erro: "
     IDS_NO_QUERY_VOL "Não foi possível consultar o volume. Código de erro: "
     IDS_VOLUME_IN_USE_PROC "Chkdsk não pode ser executado porque o volume está em uso por outro processo.\n\n"
-    IDS_RUN_AGAIN "It may be possible to fix this by running chkdsk again.\n\n"
+    IDS_RUN_AGAIN "Pode ser possível corrigir isto executando o chkdsk novamente.\n\n"
 END
