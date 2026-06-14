@@ -396,6 +396,7 @@
 395 stdcall StrStrIW(wstr wstr) shlwapi.StrStrIW
 396 stdcall StrStrW(wstr wstr) shlwapi.StrStrW
 397 stdcall WOWShellExecute(ptr str str str str long ptr)
+482 stdcall -version=0x600+ SHEvaluateSystemCommandTemplate(wstr ptr ptr ptr)
 520 stdcall SHAllocShared(ptr long long) shlwapi.SHAllocShared
 521 stdcall SHLockShared(long long) shlwapi.SHLockShared
 522 stdcall SHUnlockShared(ptr) shlwapi.SHUnlockShared

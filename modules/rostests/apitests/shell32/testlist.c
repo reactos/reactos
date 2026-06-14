@@ -37,6 +37,7 @@ extern void func_SHCreateFileDataObject(void);
 extern void func_SHCreateFileExtractIconW(void);
 extern void func_SHDefExtractIcon(void);
 extern void func_SHEnumerateUnreadMailAccountsW(void);
+extern void func_SHEvaluateSystemCommandTemplate(void);
 extern void func_She(void);
 extern void func_ShellExec_RunDLL(void);
 extern void func_ShellExecCmdLine(void);
@@ -95,6 +96,7 @@ const struct test winetest_testlist[] =
     { "SHCreateFileExtractIconW", func_SHCreateFileExtractIconW },
     { "SHDefExtractIcon", func_SHDefExtractIcon },
     { "SHEnumerateUnreadMailAccountsW", func_SHEnumerateUnreadMailAccountsW },
+    { "SHEvaluateSystemCommandTemplate", func_SHEvaluateSystemCommandTemplate },
     { "She", func_She },
     //{ "ShellExec_RunDLL", func_ShellExec_RunDLL }, Broke on Windows
     //{ "ShellExecCmdLine", func_ShellExecCmdLine }, Broke on Windows

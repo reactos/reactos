@@ -9,6 +9,7 @@
 #pragma once
 
 #include <winreg.h> // For REGSAM
+#include <shlwapi.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -527,6 +528,29 @@ SHWindowsPolicyGetValue(
     _Out_opt_ PDWORD pcbValue);
 
 #define E_DATATYPE_MISMATCH HRESULT_FROM_WIN32(ERROR_DATATYPE_MISMATCH)
+
+static inline BOOL
+PathIsAbsolute(_In_ PCWSTR pszPath)
+{
+    return PathIsUNCW(pszPath) || (PathGetDriveNumberW(pszPath) != -1 && pszPath[2] == L'\\');
+}
+
+static inline HRESULT
+SHCoAlloc(_In_ SIZE_T cb, _Outptr_ PVOID* ppData)
+{
+    *ppData = CoTaskMemAlloc(cb);
+    return *ppData ? S_OK : E_OUTOFMEMORY;
+}
+
+static inline DWORD
+SHWindowsPolicyEx(_In_ REFGUID rpolid, _In_ DWORD dwDefaultValue)
+{
+    DWORD dwData, cbData = sizeof(dwData);
+    HRESULT hr = SHWindowsPolicyGetValue(rpolid, &dwData, &cbData);
+    if (FAILED(hr))
+        return dwDefaultValue;
+    return dwData;
+}
 
 /*****************************************************************************
  * ZoneCheck*
