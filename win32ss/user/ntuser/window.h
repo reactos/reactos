@@ -149,6 +149,7 @@ static inline
 VOID
 WndSetOwner(_Inout_ PWND pwnd, _In_opt_ PWND pwndOwner)
 {
+    ASSERT(pwndOwner != pwnd);
     ReplaceWndPtr(&pwnd->spwndOwner, pwndOwner);
 }
 
@@ -156,6 +157,7 @@ static inline
 VOID
 WndSetParent(_Inout_ PWND pwnd, _In_opt_ PWND pwndParent)
 {
+    ASSERT(pwndParent != pwnd);
     ReplaceWndPtr(&pwnd->spwndParent, pwndParent);
 }
 
@@ -163,6 +165,7 @@ static inline
 VOID
 WndSetChild(_Inout_ PWND pwnd, _In_opt_ PWND pwndChild)
 {
+    ASSERT(pwndChild != pwnd);
     ReplaceWndPtr(&pwnd->spwndChild, pwndChild);
 }
 
@@ -170,6 +173,7 @@ static inline
 VOID
 WndSetNext(_Inout_ PWND pwnd, _In_opt_ PWND pwndNext)
 {
+    ASSERT(pwndNext != pwnd);
     ReplaceWndPtr(&pwnd->spwndNext, pwndNext);
 }
 
@@ -177,6 +181,7 @@ static inline
 VOID
 WndSetPrev(_Inout_ PWND pwnd, _In_opt_ PWND pwndPrev)
 {
+    ASSERT(pwndPrev != pwnd);
     ReplaceWndPtr(&pwnd->spwndPrev, pwndPrev);
 }
 
@@ -184,6 +189,7 @@ static inline
 VOID
 WndSetLastActive(_Inout_ PWND pwnd, _In_opt_ PWND pwndLastActive)
 {
+    //ASSERT(pwndLastActive != pwnd);
     ReplaceWndPtr(&pwnd->spwndLastActive, pwndLastActive);
 }
 

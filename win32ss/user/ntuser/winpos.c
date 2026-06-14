@@ -293,10 +293,11 @@ BOOL FASTCALL ActivateOtherWindowMin(PWND Wnd)
     ActivePrev = (pti->MessageQueue->spwndActivePrev != NULL);
     FindTopWnd = TRUE;
 
-    if ((pWndTopMost = IntGetLastTopMostWindow()))
+    pWndTopMost = IntGetLastTopMostWindow();
+    if (pWndTopMost)
        pWndChild = pWndTopMost->spwndNext;
     else
-       pWndChild = Wnd->spwndParent->spwndChild;
+       pWndChild = (Wnd->spwndParent ? Wnd->spwndParent->spwndChild : NULL);
 
     for (;;)
     {
@@ -2434,7 +2435,7 @@ co_WinPosSendSizeMove(PWND Wnd)
 
     co_IntSendMessageNoWait(UserHMGetHandle(Wnd), WM_SIZE, wParam, lParam);
 
-    if (UserIsDesktopWindow(Wnd->spwndParent))
+    if (!Wnd->spwndParent || UserIsDesktopWindow(Wnd->spwndParent))
        lParam = MAKELONG(Wnd->rcClient.left, Wnd->rcClient.top);
     else
        lParam = MAKELONG(Wnd->rcClient.left-Wnd->spwndParent->rcClient.left, Wnd->rcClient.top-Wnd->spwndParent->rcClient.top);

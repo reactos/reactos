@@ -942,12 +942,21 @@ IntIsChildWindow(PWND Parent, PWND BaseWindow)
 }
 ////
 
-/* Link the window into siblings list. Children and parent are kept in place. */
-VOID FASTCALL
+/**
+ * @brief
+ * Link the window into siblings list. Children and parent are kept in place.
+ *
+ * @param[in]   Wnd
+ * The window to link after @p WndInsertAfter. It *MUST* be unlinked first!
+ *
+ * @param[in]   WndInsertAfter
+ * The window after which @p Wnd is to be linked. Set to NULL if top sibling.
+ **/
+static VOID
+FASTCALL
 IntLinkWindow(
-    PWND Wnd,
-    PWND WndInsertAfter /* Set to NULL if top sibling */
-)
+    _In_ PWND Wnd,
+    _In_opt_ PWND WndInsertAfter)
 {
     if (Wnd == WndInsertAfter)
     {
@@ -957,7 +966,7 @@ IntLinkWindow(
     }
 
     WndSetPrev(Wnd, WndInsertAfter);
-    if (Wnd->spwndPrev)
+    if (WndInsertAfter) // Same as Wnd->spwndPrev
     {
         /* Link after WndInsertAfter */
         ASSERT(Wnd != WndInsertAfter->spwndNext);
@@ -966,9 +975,9 @@ IntLinkWindow(
             WndSetPrev(Wnd->spwndNext, Wnd);
 
         ASSERT(Wnd != Wnd->spwndPrev);
-        WndSetNext(Wnd->spwndPrev, Wnd);
+        WndSetNext(Wnd->spwndPrev, Wnd); // i.e. WndInsertAfter->spwndNext = Wnd;
     }
-    else
+    else if (Wnd->spwndParent) // If no parent, this is the root window (desktop)!
     {
         /* Link at the top */
         ASSERT(Wnd != Wnd->spwndParent->spwndChild);
@@ -988,19 +997,21 @@ VOID FASTCALL IntLinkHwnd(PWND Wnd, HWND hWndPrev)
     if (hWndPrev == HWND_NOTOPMOST)
     {
         if (!(Wnd->ExStyle & WS_EX_TOPMOST) && (Wnd->ExStyle2 & WS_EX2_LINKED))
-            return;  /* nothing to do */
+            return; /* Nothing to do */
         Wnd->ExStyle &= ~WS_EX_TOPMOST;
-        hWndPrev = HWND_TOP;  /* fallback to the HWND_TOP case */
+        hWndPrev = HWND_TOP; /* Fallback to the HWND_TOP case */
     }
 
-    IntUnlinkWindow(Wnd);  /* unlink it from the previous location */
+    /* Unlink it from the previous location */
+    IntUnlinkWindow(Wnd);
 
     if (hWndPrev == HWND_BOTTOM)
     {
-        /* Link in the bottom of the list */
+        /* Link at the bottom of the list */
         PWND WndInsertAfter;
 
-        WndInsertAfter = Wnd->spwndParent->spwndChild;
+        WndInsertAfter = (Wnd->spwndParent ? Wnd->spwndParent->spwndChild : NULL);
+
         while (WndInsertAfter && WndInsertAfter->spwndNext)
         {
             WndInsertAfter = WndInsertAfter->spwndNext;
@@ -1011,7 +1022,7 @@ VOID FASTCALL IntLinkHwnd(PWND Wnd, HWND hWndPrev)
     }
     else if (hWndPrev == HWND_TOPMOST)
     {
-        /* Link in the top of the list */
+        /* Link at the top of the list */
         IntLinkWindow(Wnd, NULL);
         Wnd->ExStyle |= WS_EX_TOPMOST;
     }
@@ -1020,16 +1031,17 @@ VOID FASTCALL IntLinkHwnd(PWND Wnd, HWND hWndPrev)
         /* Link it after the last topmost window */
         PWND WndInsertBefore;
 
-        WndInsertBefore = Wnd->spwndParent->spwndChild;
+        WndInsertBefore = (Wnd->spwndParent ? Wnd->spwndParent->spwndChild : NULL);
 
-        if (!(Wnd->ExStyle & WS_EX_TOPMOST))  /* put it above the first non-topmost window */
+        if (!(Wnd->ExStyle & WS_EX_TOPMOST))
         {
-            while (WndInsertBefore != NULL && WndInsertBefore->spwndNext != NULL)
+            /* Put it above the first non-topmost window */
+            while (WndInsertBefore && WndInsertBefore->spwndNext)
             {
                 if (!(WndInsertBefore->ExStyle & WS_EX_TOPMOST))
                     break;
 
-                if (WndInsertBefore == Wnd->spwndOwner)  /* keep it above owner */
+                if (WndInsertBefore == Wnd->spwndOwner) /* keep it above owner */
                 {
                     Wnd->ExStyle |= WS_EX_TOPMOST;
                     break;
@@ -1351,7 +1363,10 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
    return hWndOldParent;
 }
 
-/* Unlink the window from siblings. Children and parent are kept in place. */
+/**
+ * @brief
+ * Unlink the window from siblings. Children and parent are kept in place.
+ **/
 VOID FASTCALL
 IntUnlinkWindow(PWND Wnd)
 {
@@ -1909,7 +1924,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    pWnd->InternalPos.MaxPos.x  = pWnd->InternalPos.MaxPos.y  = -1;
    pWnd->InternalPos.IconPos.x = pWnd->InternalPos.IconPos.y = -1;
 
-   if (pWnd->spwndParent != NULL && Cs->hwndParent != 0)
+   if (pWnd->spwndParent != NULL && Cs->hwndParent != NULL)
    {
        pWnd->HideFocus = pWnd->spwndParent->HideFocus;
        pWnd->HideAccel = pWnd->spwndParent->HideAccel;

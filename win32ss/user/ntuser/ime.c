@@ -2256,6 +2256,7 @@ IntCheckImeShowStatus(
         return FALSE;
 
     // Build a window list
+    ASSERT(pwndIme->spwndParent);
     pwl = IntBuildHwndList(pwndIme->spwndParent->spwndChild, IACE_LIST, NULL);
     if (!pwl)
         return FALSE;

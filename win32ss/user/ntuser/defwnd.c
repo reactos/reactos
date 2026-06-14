@@ -517,6 +517,7 @@ DWP_GetEnabledPopup(PWND pWnd)
                 return NULL;
             bFoundNullNode = TRUE;
             /* Retry with parent's first child (once only) */
+            ASSERT(pWnd->spwndParent);
             pwndNode1 = pWnd->spwndParent->spwndChild;
             continue;
         }
