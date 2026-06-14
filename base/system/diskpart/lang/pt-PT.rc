@@ -266,7 +266,7 @@ BEGIN
 
     IDS_HELP_DETAIL                    "Fornece detalhes sobre um objecto.\n"
     IDS_HELP_DETAIL_DISK               "Imprime detalhes do disco.\n"
-    IDS_HELP_DETAIL_PARTITION          "Imprime detalhes da partição..\n"
+    IDS_HELP_DETAIL_PARTITION          "Imprime detalhes da partição.\n"
     IDS_HELP_DETAIL_VOLUME             "Imprime detalhes do volume.\n"
 
     IDS_HELP_EXIT                      "Sair do particionamento de disco.\n"
