@@ -1007,7 +1007,7 @@ IUnknown_ShowBrowserBar(
     WCHAR szGUID[40];
     StringFromGUID2(rguid, szGUID, _countof(szGUID));
 
-    CComVariant varClsid(szGUID), varShow((bool)bShow), varSize;
+    CComVariant varClsid(szGUID), varShow((bool)!!bShow), varSize;
     return pWB2->ShowBrowserBar(&varClsid, &varShow, &varSize);
 }
 
