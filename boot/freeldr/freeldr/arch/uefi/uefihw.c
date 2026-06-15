@@ -11,13 +11,12 @@
 #include "../vidfb.h"
 
 #include <debug.h>
-DBG_DEFAULT_CHANNEL(WARNING);
+DBG_DEFAULT_CHANNEL(HWDETECT);
 
 /* GLOBALS *******************************************************************/
 
 extern EFI_SYSTEM_TABLE * GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
-extern UCHAR PcBiosDiskCount;
 
 /* From uefivid.c */
 extern ULONG_PTR VramAddress;
@@ -25,8 +24,45 @@ extern ULONG VramSize;
 extern PCM_FRAMEBUF_DEVICE_DATA FrameBufferData;
 
 BOOLEAN AcpiPresent = FALSE;
+static EFI_EVENT IdleTimerEvent = NULL;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+StallExecutionProcessor(ULONG Microseconds)
+{
+    GlobalSystemTable->BootServices->Stall(Microseconds);
+}
+
+VOID
+UefiHwIdle(VOID)
+{
+    UINTN Index;
+    EFI_STATUS Status;
+    EFI_BOOT_SERVICES *BootServices = GlobalSystemTable->BootServices;
+
+    /* Keep one timer event around and arm it each idle tick */
+    if (IdleTimerEvent == NULL)
+    {
+        Status = BootServices->CreateEvent(EVT_TIMER,
+                                           TPL_APPLICATION,
+                                           NULL,
+                                           NULL,
+                                           &IdleTimerEvent);
+        if (EFI_ERROR(Status))
+        {
+            StallExecutionProcessor(10000); /* 10 ms fallback */
+            return;
+        }
+    }
+
+    /* Set a 10ms (100,000 * 100ns) relative timer */
+    Status = BootServices->SetTimer(IdleTimerEvent, TimerRelative, 100000);
+    if (!EFI_ERROR(Status))
+        Status = BootServices->WaitForEvent(1, &IdleTimerEvent, &Index);
+    if (EFI_ERROR(Status))
+        StallExecutionProcessor(10000); /* 10 ms fallback */
+}
 
 BOOLEAN IsAcpiPresent(VOID)
 {
@@ -52,6 +88,56 @@ FindAcpiBios(VOID)
     }
 
     return rsdp;
+}
+
+PDESCRIPTION_HEADER
+UefiFindAcpiTable(
+    _In_ ULONG Signature)
+{
+    UINTN Index, Count;
+    PRSDP_DESCRIPTOR Rsdp;
+
+    Rsdp = FindAcpiBios();
+    if (Rsdp == NULL)
+        return NULL;
+
+    if ((Rsdp->revision > 0) && (Rsdp->xsdt_physical_address != 0))
+    {
+        PXSDT Xsdt = (PXSDT)(ULONG_PTR)Rsdp->xsdt_physical_address;
+
+        if ((Xsdt != NULL) && (Xsdt->Header.Length >= sizeof(Xsdt->Header)))
+        {
+            Count = (Xsdt->Header.Length - sizeof(Xsdt->Header)) / sizeof(Xsdt->Tables[0]);
+            for (Index = 0; Index < Count; ++Index)
+            {
+                PDESCRIPTION_HEADER Header =
+                    (PDESCRIPTION_HEADER)(ULONG_PTR)Xsdt->Tables[Index].QuadPart;
+
+                if ((Header != NULL) && (Header->Signature == Signature))
+                    return Header;
+            }
+        }
+    }
+
+    if (Rsdp->rsdt_physical_address != 0)
+    {
+        PRSDT Rsdt = (PRSDT)(ULONG_PTR)Rsdp->rsdt_physical_address;
+
+        if ((Rsdt != NULL) && (Rsdt->Header.Length >= sizeof(Rsdt->Header)))
+        {
+            Count = (Rsdt->Header.Length - sizeof(Rsdt->Header)) / sizeof(Rsdt->Tables[0]);
+            for (Index = 0; Index < Count; ++Index)
+            {
+                PDESCRIPTION_HEADER Header =
+                    (PDESCRIPTION_HEADER)(ULONG_PTR)Rsdt->Tables[Index];
+
+                if ((Header != NULL) && (Header->Signature == Signature))
+                    return Header;
+            }
+        }
+    }
+
+    return NULL;
 }
 
 VOID

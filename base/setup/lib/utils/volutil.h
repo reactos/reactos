@@ -7,13 +7,18 @@
 
 #pragma once
 
+/* The maximum volume label length is 32 characters */
+#ifndef MAXIMUM_VOLUME_LABEL_LENGTH // Defined in wdm.h only
+#define MAXIMUM_VOLUME_LABEL_LENGTH (32 * sizeof(WCHAR))
+#endif
+
 typedef struct _VOLINFO
 {
     // WCHAR VolumeName[MAX_PATH]; ///< Name in the DOS/Win32 namespace: "\??\Volume{GUID}\"
     WCHAR DeviceName[MAX_PATH]; ///< NT device name: "\Device\HarddiskVolumeN"
 
     WCHAR DriveLetter;
-    WCHAR VolumeLabel[20];
+    WCHAR VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR) + 1]; ///< Volume label, NUL-terminated
     WCHAR FileSystem[MAX_PATH+1];
 
     // VOLUME_TYPE VolumeType;

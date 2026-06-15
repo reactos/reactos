@@ -16,12 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "ws2tcpip.h"
 #include <stdarg.h>
+#include <wchar.h>
 
 #include "windef.h"
 #include "winbase.h"
+#include "ws2tcpip.h"
 #include "winhttp.h"
 
 #include "wine/debug.h"
@@ -49,12 +49,12 @@ static struct domain *add_domain( struct session *session, WCHAR *name )
 {
     struct domain *domain;
 
-    if (!(domain = heap_alloc_zero( sizeof(struct domain) ))) return NULL;
+    if (!(domain = calloc( 1, sizeof(*domain) ))) return NULL;
 
     list_init( &domain->entry );
     list_init( &domain->cookies );
 
-    domain->name = strdupW( name );
+    domain->name = wcsdup( name );
     list_add_tail( &session->cookie_cache, &domain->entry );
 
     TRACE("%s\n", debugstr_w(domain->name));
@@ -69,7 +69,7 @@ static struct cookie *find_cookie( struct domain *domain, const WCHAR *path, con
     LIST_FOR_EACH( item, &domain->cookies )
     {
         cookie = LIST_ENTRY( item, struct cookie, entry );
-        if (!strcmpW( cookie->path, path ) && !strcmpW( cookie->name, name ))
+        if (!wcscmp( cookie->path, path ) && !wcscmp( cookie->name, name ))
         {
             TRACE("found %s=%s\n", debugstr_w(cookie->name), debugstr_w(cookie->value));
             return cookie;
@@ -82,17 +82,17 @@ static BOOL domain_match( const WCHAR *name, struct domain *domain, BOOL partial
 {
     TRACE("comparing %s with %s\n", debugstr_w(name), debugstr_w(domain->name));
 
-    if (partial && !strstrW( name, domain->name )) return FALSE;
-    else if (!partial && strcmpW( name, domain->name )) return FALSE;
+    if (partial && !wcsstr( name, domain->name )) return FALSE;
+    else if (!partial && wcscmp( name, domain->name )) return FALSE;
     return TRUE;
 }
 
 static void free_cookie( struct cookie *cookie )
 {
-    heap_free( cookie->name );
-    heap_free( cookie->value );
-    heap_free( cookie->path );
-    heap_free( cookie );
+    free( cookie->name );
+    free( cookie->value );
+    free( cookie->path );
+    free( cookie );
 }
 
 static void delete_cookie( struct cookie *cookie )
@@ -113,8 +113,8 @@ static void delete_domain( struct domain *domain )
     }
 
     list_remove( &domain->entry );
-    heap_free( domain->name );
-    heap_free( domain );
+    free( domain->name );
+    free( domain );
 }
 
 void destroy_cookies( struct session *session )
@@ -135,7 +135,7 @@ static BOOL add_cookie( struct session *session, struct cookie *cookie, WCHAR *d
     struct cookie *old_cookie;
     struct list *item;
 
-    if (!(cookie->path = strdupW( path ))) return FALSE;
+    if (!(cookie->path = wcsdup( path ))) return FALSE;
 
     EnterCriticalSection( &session->cs );
 
@@ -165,17 +165,17 @@ static struct cookie *parse_cookie( const WCHAR *string )
     const WCHAR *p;
     int len;
 
-    if (!(p = strchrW( string, '=' ))) p = string + strlenW( string );
+    if (!(p = wcschr( string, '=' ))) p = string + lstrlenW( string );
     len = p - string;
     while (len && string[len - 1] == ' ') len--;
     if (!len) return NULL;
 
-    if (!(cookie = heap_alloc_zero( sizeof(struct cookie) ))) return NULL;
+    if (!(cookie = calloc( 1, sizeof(*cookie) ))) return NULL;
     list_init( &cookie->entry );
 
-    if (!(cookie->name = heap_alloc( (len + 1) * sizeof(WCHAR) )))
+    if (!(cookie->name = malloc( (len + 1) * sizeof(WCHAR) )))
     {
-        heap_free( cookie );
+        free( cookie );
         return NULL;
     }
     memcpy( cookie->name, string, len * sizeof(WCHAR) );
@@ -184,10 +184,10 @@ static struct cookie *parse_cookie( const WCHAR *string )
     if (*p++ == '=')
     {
         while (*p == ' ') p++;
-        len = strlenW( p );
+        len = lstrlenW( p );
         while (len && p[len - 1] == ' ') len--;
 
-        if (!(cookie->value = heap_alloc( (len + 1) * sizeof(WCHAR) )))
+        if (!(cookie->value = malloc( (len + 1) * sizeof(WCHAR) )))
         {
             free_cookie( cookie );
             return NULL;
@@ -207,9 +207,9 @@ struct attr
 static void free_attr( struct attr *attr )
 {
     if (!attr) return;
-    heap_free( attr->name );
-    heap_free( attr->value );
-    heap_free( attr );
+    free( attr->name );
+    free( attr->value );
+    free( attr );
 }
 
 static struct attr *parse_attr( const WCHAR *str, int *used )
@@ -224,10 +224,10 @@ static struct attr *parse_attr( const WCHAR *str, int *used )
     len = q - p;
     if (!len) return NULL;
 
-    if (!(attr = heap_alloc( sizeof(struct attr) ))) return NULL;
-    if (!(attr->name = heap_alloc( (len + 1) * sizeof(WCHAR) )))
+    if (!(attr = malloc( sizeof(*attr) ))) return NULL;
+    if (!(attr->name = malloc( (len + 1) * sizeof(WCHAR) )))
     {
-        heap_free( attr );
+        free( attr );
         return NULL;
     }
     memcpy( attr->name, p, len * sizeof(WCHAR) );
@@ -244,7 +244,7 @@ static struct attr *parse_attr( const WCHAR *str, int *used )
         len = q - p;
         while (len && p[len - 1] == ' ') len--;
 
-        if (!(attr->value = heap_alloc( (len + 1) * sizeof(WCHAR) )))
+        if (!(attr->value = malloc( (len + 1) * sizeof(WCHAR) )))
         {
             free_attr( attr );
             return NULL;
@@ -262,8 +262,6 @@ static struct attr *parse_attr( const WCHAR *str, int *used )
 
 BOOL set_cookies( struct request *request, const WCHAR *cookies )
 {
-    static const WCHAR pathW[] = {'p','a','t','h',0};
-    static const WCHAR domainW[] = {'d','o','m','a','i','n',0};
     BOOL ret = FALSE;
     WCHAR *buffer, *p;
     WCHAR *cookie_domain = NULL, *cookie_path = NULL;
@@ -272,27 +270,27 @@ BOOL set_cookies( struct request *request, const WCHAR *cookies )
     struct cookie *cookie;
     int len, used;
 
-    len = strlenW( cookies );
-    if (!(buffer = heap_alloc( (len + 1) * sizeof(WCHAR) ))) return FALSE;
-    strcpyW( buffer, cookies );
+    len = lstrlenW( cookies );
+    if (!(buffer = malloc( (len + 1) * sizeof(WCHAR) ))) return FALSE;
+    lstrcpyW( buffer, cookies );
 
     p = buffer;
     while (*p && *p != ';') p++;
     if (*p == ';') *p++ = 0;
     if (!(cookie = parse_cookie( buffer )))
     {
-        heap_free( buffer );
+        free( buffer );
         return FALSE;
     }
-    len = strlenW( p );
+    len = lstrlenW( p );
     while (len && (attr = parse_attr( p, &used )))
     {
-        if (!strcmpiW( attr->name, domainW ))
+        if (!wcsicmp( attr->name, L"domain" ))
         {
             domain = attr;
             cookie_domain = attr->value;
         }
-        else if (!strcmpiW( attr->name, pathW ))
+        else if (!wcsicmp( attr->name, L"path" ))
         {
             path = attr;
             cookie_path = attr->value;
@@ -305,26 +303,27 @@ BOOL set_cookies( struct request *request, const WCHAR *cookies )
         len -= used;
         p += used;
     }
-    if (!cookie_domain && !(cookie_domain = strdupW( request->connect->servername ))) goto end;
-    if (!cookie_path && !(cookie_path = strdupW( request->path ))) goto end;
+    if (!cookie_domain && !(cookie_domain = wcsdup( request->connect->servername ))) goto end;
+    if (!cookie_path && !(cookie_path = wcsdup( request->path ))) goto end;
 
-    if ((p = strrchrW( cookie_path, '/' )) && p != cookie_path) *p = 0;
+    if ((p = wcsrchr( cookie_path, '/' )) && p != cookie_path) *p = 0;
     ret = add_cookie( session, cookie, cookie_domain, cookie_path );
 
 end:
     if (!ret) free_cookie( cookie );
     if (domain) free_attr( domain );
-    else heap_free( cookie_domain );
+    else free( cookie_domain );
     if (path) free_attr( path );
-    else heap_free( cookie_path );
-    heap_free( buffer );
+    else free( cookie_path );
+    free( buffer );
     return ret;
 }
 
-BOOL add_cookie_headers( struct request *request )
+DWORD add_cookie_headers( struct request *request )
 {
     struct list *domain_cursor;
     struct session *session = request->connect->session;
+    DWORD ret = ERROR_SUCCESS;
 
     EnterCriticalSection( &session->cs );
 
@@ -342,37 +341,37 @@ BOOL add_cookie_headers( struct request *request )
 
                 TRACE("comparing path %s with %s\n", debugstr_w(request->path), debugstr_w(cookie->path));
 
-                if (strstrW( request->path, cookie->path ) == request->path)
+                if (wcsstr( request->path, cookie->path ) == request->path)
                 {
                     static const WCHAR cookieW[] = {'C','o','o','k','i','e',':',' '};
-                    int len, len_cookie = ARRAY_SIZE( cookieW ), len_name = strlenW( cookie->name );
+                    int len, len_cookie = ARRAY_SIZE( cookieW ), len_name = lstrlenW( cookie->name );
                     WCHAR *header;
 
                     len = len_cookie + len_name;
-                    if (cookie->value) len += strlenW( cookie->value ) + 1;
-                    if (!(header = heap_alloc( (len + 1) * sizeof(WCHAR) )))
+                    if (cookie->value) len += lstrlenW( cookie->value ) + 1;
+                    if (!(header = malloc( (len + 1) * sizeof(WCHAR) )))
                     {
                         LeaveCriticalSection( &session->cs );
-                        return FALSE;
+                        return ERROR_OUTOFMEMORY;
                     }
 
                     memcpy( header, cookieW, len_cookie * sizeof(WCHAR) );
-                    strcpyW( header + len_cookie, cookie->name );
+                    lstrcpyW( header + len_cookie, cookie->name );
                     if (cookie->value)
                     {
                         header[len_cookie + len_name] = '=';
-                        strcpyW( header + len_cookie + len_name + 1, cookie->value );
+                        lstrcpyW( header + len_cookie + len_name + 1, cookie->value );
                     }
 
                     TRACE("%s\n", debugstr_w(header));
-                    add_request_headers( request, header, len,
-                                         WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_COALESCE_WITH_SEMICOLON );
-                    heap_free( header );
+                    ret = add_request_headers( request, header, len,
+                                               WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_COALESCE_WITH_SEMICOLON );
+                    free( header );
                 }
             }
         }
     }
 
     LeaveCriticalSection( &session->cs );
-    return TRUE;
+    return ret;
 }

@@ -77,13 +77,13 @@ CBindStatusCallback_UpdateProgress(CBindStatusCallback *This)
         if ((Percentage > 99) && (This->Progress != This->Size))
             Percentage = 99;
 
-        LoadStringW(NULL, IDS_BYTES_DOWNLOADED_FULL, szMessage, ARRAYSIZE(szMessage));
+        LoadStringW(NULL, IDS_BYTES_DOWNLOADED_FULL, szMessage, _countof(szMessage));
 
         write_status(szMessage, Percentage, This->Progress);
     }
     else
     {
-        LoadStringW(NULL, IDS_BYTES_DOWNLOADED, szMessage, ARRAYSIZE(szMessage));
+        LoadStringW(NULL, IDS_BYTES_DOWNLOADED, szMessage, _countof(szMessage));
 
         /* Unknown size */
         write_status(szMessage, This->Progress);
@@ -357,7 +357,7 @@ download_file(IN LPCWSTR pszUrl,
     WCHAR szScheme[INTERNET_MAX_SCHEME_LENGTH + 1];
     WCHAR szHostName[INTERNET_MAX_HOST_NAME_LENGTH + 1];
     WCHAR szUserName[INTERNET_MAX_USER_NAME_LENGTH + 1];
-    WCHAR szPassWord[INTERNET_MAX_PASSWORD_LENGTH + 1];
+    WCHAR szPassword[INTERNET_MAX_PASSWORD_LENGTH + 1];
     WCHAR szUrlPath[INTERNET_MAX_PATH_LENGTH + 1];
     WCHAR szExtraInfo[INTERNET_MAX_PATH_LENGTH + 1];
     WCHAR szUrl[INTERNET_MAX_URL_LENGTH + 1];
@@ -373,18 +373,18 @@ download_file(IN LPCWSTR pszUrl,
 
     urlc.dwStructSize = sizeof(urlc);
     urlc.lpszScheme = szScheme;
-    urlc.dwSchemeLength = sizeof(szScheme) / sizeof(szScheme[0]);
+    urlc.dwSchemeLength = _countof(szScheme);
     urlc.lpszHostName = szHostName;
-    urlc.dwHostNameLength = sizeof(szHostName) / sizeof(szHostName[0]);
+    urlc.dwHostNameLength = _countof(szHostName);
     urlc.lpszUserName = szUserName;
-    urlc.dwUserNameLength = sizeof(szUserName) / sizeof(szUserName[0]);
-    urlc.lpszPassword = szPassWord;
-    urlc.dwPasswordLength = sizeof(szPassWord) / sizeof(szPassWord[0]);
+    urlc.dwUserNameLength = _countof(szUserName);
+    urlc.lpszPassword = szPassword;
+    urlc.dwPasswordLength = _countof(szPassword);
     urlc.lpszUrlPath = szUrlPath;
-    urlc.dwUrlPathLength = sizeof(szUrlPath) / sizeof(szUrlPath[0]);
+    urlc.dwUrlPathLength = _countof(szUrlPath);
     urlc.lpszExtraInfo = szExtraInfo;
-    urlc.dwExtraInfoLength = sizeof(szExtraInfo) / sizeof(szExtraInfo[0]);
-    if (!InternetCrackUrl(pszUrl, wcslen(pszUrl), ICU_ESCAPE, &urlc))
+    urlc.dwExtraInfoLength = _countof(szExtraInfo);
+    if (!InternetCrackUrl(pszUrl, (DWORD)wcslen(pszUrl), ICU_ESCAPE, &urlc))
         return DWNL_E_LASTERROR;
 
     if (urlc.nScheme != INTERNET_SCHEME_FTP &&
@@ -398,7 +398,7 @@ download_file(IN LPCWSTR pszUrl,
     if (urlc.nScheme == INTERNET_SCHEME_FTP && urlc.dwUserNameLength == 0 && urlc.dwPasswordLength == 0)
     {
         wcscpy(szUserName, L"anonymous");
-        urlc.dwUserNameLength = wcslen(szUserName);
+        urlc.dwUserNameLength = (DWORD)wcslen(szUserName);
     }
 
     /* FIXME: Get file name from server */
@@ -422,7 +422,7 @@ download_file(IN LPCWSTR pszUrl,
         urlc.lpszPassword = NULL;
 
     /* Generate the URL to be displayed (without a password) */
-    dwUrlLen = sizeof(szUrl) / sizeof(szUrl[0]);
+    dwUrlLen = _countof(szUrl);
     iRet = get_display_url(&urlc, szUrl, &dwUrlLen);
     if (iRet <= 0)
         return iRet;
@@ -435,7 +435,7 @@ download_file(IN LPCWSTR pszUrl,
           szUrl, pszFile);
 
     /* Generate the URL to download */
-    dwUrlLen = sizeof(szUrl) / sizeof(szUrl[0]);
+    dwUrlLen = _countof(szUrl);
     if (!InternetCreateUrl(&urlc, ICU_ESCAPE, szUrl, &dwUrlLen))
         return DWNL_E_LASTERROR;
 

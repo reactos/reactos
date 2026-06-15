@@ -4,8 +4,7 @@
  * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org)
  */
 
-#ifndef _NET_PCH_
-#define _NET_PCH_
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,12 +32,12 @@ extern HMODULE hModuleNetMsg;
 VOID
 PrintPaddedResourceString(
     UINT uID,
-    INT nPaddedLength);
+    DWORD nPaddedLength);
 
 VOID
 PrintPadding(
     WCHAR chr,
-    INT nPaddedLength);
+    DWORD nPaddedLength);
 
 DWORD
 TranslateAppMessage(
@@ -56,7 +55,7 @@ PrintMessageStringV(
 VOID
 PrintPaddedMessageString(
     DWORD dwMessage,
-    INT nPaddedLength);
+    DWORD nPaddedLength);
 
 VOID
 PrintErrorMessage(
@@ -92,5 +91,3 @@ INT cmdStop(INT argc, WCHAR **argv);
 INT cmdSyntax(INT argc, WCHAR **argv);
 INT cmdUse(INT argc, WCHAR **argv);
 INT cmdUser(INT argc, WCHAR **argv);
-
-#endif /* _NET_PCH_ */

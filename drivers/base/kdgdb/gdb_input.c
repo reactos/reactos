@@ -110,7 +110,7 @@ handle_gdb_set_thread(void)
         Status = send_gdb_packet("OK");
         break;
     default:
-        KDDBGPRINT("KDGBD: Unknown 'H' command: %s\n", gdb_input);
+        KDDBGPRINT("KDGDB: Unknown 'H' command: %s\n", gdb_input);
         Status = send_gdb_packet("");
     }
 
@@ -187,10 +187,10 @@ handle_gdb_query(void)
     {
         char gdb_out[64];
 #if MONOPROCESS
-        sprintf(gdb_out, "QC:%"PRIxPTR";",
+        sprintf(gdb_out, "QC:%" PRIxPTR ";",
             handle_to_gdb_tid(PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)));
 #else
-        sprintf(gdb_out, "QC:p%"PRIxPTR".%"PRIxPTR";",
+        sprintf(gdb_out, "QC:p%" PRIxPTR ".%" PRIxPTR ";",
             handle_to_gdb_pid(PsGetThreadProcessId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)),
             handle_to_gdb_tid(PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)));
 #endif
@@ -240,9 +240,9 @@ handle_gdb_query(void)
                 PETHREAD Thread = CONTAINING_RECORD(CurrentThreadEntry, ETHREAD, ThreadListEntry);
 
 #if MONOPROCESS
-                _snprintf(gdb_out, 40, ",%p", handle_to_gdb_tid(Thread->Cid.UniqueThread));
+                _snprintf(gdb_out, 40, ",%" PRIxPTR, handle_to_gdb_tid(Thread->Cid.UniqueThread));
 #else
-                _snprintf(gdb_out, 40, ",p%p.%p",
+                _snprintf(gdb_out, 40, ",p%" PRIxPTR ".%" PRIxPTR,
                     handle_to_gdb_pid(Process->UniqueProcessId),
                     handle_to_gdb_tid(Thread->Cid.UniqueThread));
 #endif
@@ -347,7 +347,7 @@ handle_gdb_query(void)
         ULONG Sent = 0;
         static BOOLEAN allDone = FALSE;
 
-        KDDBGPRINT("KDGDB: qXfer:libraries:read !\n");
+        KDDBGPRINT("KDGDB: qXfer:libraries:read\n");
 
         /* Start the packet */
         start_gdb_packet();
@@ -874,7 +874,7 @@ handle_gdb_remove_breakpoint(
 
             if (Handle == 0)
             {
-                KDDBGPRINT("Received %s, but breakpoint was never inserted ?!\n", gdb_input);
+                KDDBGPRINT("Received %s, but breakpoint was never inserted?!\n", gdb_input);
                 return LOOP_IF_SUCCESS(send_gdb_packet("E01"));
             }
 
@@ -906,7 +906,6 @@ handle_gdb_c(
     Status = send_gdb_packet("OK");
     if (Status != KdPacketReceived)
         return Status;
-
 
     if (CurrentStateChange.NewState == DbgKdExceptionStateChange)
     {
@@ -981,7 +980,6 @@ handle_gdb_v(
 
         if (strncmp(gdb_input, "vCont;s", 7) == 0)
         {
-
             return handle_gdb_s(State, MessageData, MessageLength, KdContext);
         }
     }
@@ -1001,9 +999,9 @@ gdb_receive_and_interpret_packet(
 
     do
     {
-        KDDBGPRINT("KDGBD: Receiving packet.\n");
+        KDDBGPRINT("KDGDB: Receiving packet.\n");
         Status = gdb_receive_packet(KdContext);
-        KDDBGPRINT("KDGBD: Packet \"%s\" received with status %u\n", gdb_input, Status);
+        KDDBGPRINT("KDGDB: Packet \"%s\" received with status %u\n", gdb_input, Status);
 
         if (Status != KdPacketReceived)
             return Status;
@@ -1065,4 +1063,3 @@ gdb_receive_and_interpret_packet(
 
     return Status;
 }
-

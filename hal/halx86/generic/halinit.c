@@ -18,6 +18,7 @@
 BOOLEAN HalpOnlyBootProcessor;
 //#endif
 BOOLEAN HalpPciLockSettings;
+BOOLEAN HalBootViaEfi;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -95,6 +96,17 @@ HalInitSystem(
 
         /* Get command-line parameters */
         HalpGetParameters(LoaderBlock);
+
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+        HalBootViaEfi = LoaderBlock->FirmwareInformation.FirmwareTypeEfi;
+#else
+        HalBootViaEfi = FALSE;
+#ifdef __REACTOS__
+        ASSERT(LoaderBlock->Extension != NULL);
+        if (LoaderBlock->Extension->Size >= FIELD_OFFSET(LOADER_PARAMETER_EXTENSION, LoaderPerformanceData))
+            HalBootViaEfi = LoaderBlock->Extension->BootViaEFI;
+#endif
+#endif
 
         /* Check for PRCB version mismatch */
         if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)

@@ -11,6 +11,8 @@
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4717) // disable warning about recursive function
+#elif defined(__GNUC__) && (__GNUC__ >= 12)
+#pragma GCC diagnostic ignored "-Winfinite-recursion"
 #endif
 
 static int iteration = 0;

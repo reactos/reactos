@@ -2,7 +2,7 @@
  * jcinit.c
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 2003-2017 by Guido Vollbeding.
+ * Modified 2003-2025 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -196,7 +196,7 @@ jinit_compress_master (j_compress_ptr cinfo)
   JDIMENSION jd_samplesperrow;
 
   /* For now, precision must match compiled-in value... */
-  if (cinfo->data_precision != BITS_IN_JSAMPLE)
+  if (cinfo->data_precision != JPEG_DATA_PRECISION)
     ERREXIT1(cinfo, JERR_BAD_PRECISION, cinfo->data_precision);
 
   /* Sanity check on input image dimensions */

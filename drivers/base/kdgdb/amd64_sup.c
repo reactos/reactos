@@ -30,7 +30,7 @@ static const unsigned char reg_size[] =
 };
 
 static
-void*
+const void*
 ctx_to_reg(CONTEXT* ctx, enum reg_name name)
 {
     switch (name)
@@ -60,12 +60,11 @@ ctx_to_reg(CONTEXT* ctx, enum reg_name name)
         case GS: return &ctx->SegGs;
         case SS: return &ctx->SegSs;
     }
-#undef return_reg
-    return 0;
+    return NULL;
 }
 
 static
-void*
+const void*
 thread_to_reg(PETHREAD Thread, enum reg_name reg_name)
 {
     static const void* NullValue = NULL;
@@ -105,7 +104,7 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name)
 #endif
     if (!Thread->Tcb.InitialStack)
     {
-        /* Terminated thread ? */
+        /* Terminated thread? */
         switch (reg_name)
         {
             case RSP:
@@ -119,7 +118,7 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name)
     }
     else
     {
-        switch(reg_name)
+        switch (reg_name)
         {
             case RSP: return &Thread->Tcb.KernelStack;
             case RIP:
@@ -144,7 +143,7 @@ KDSTATUS
 gdb_send_registers(void)
 {
     CHAR RegisterStr[17];
-    UCHAR* RegisterPtr;
+    const UCHAR* RegisterPtr;
     unsigned short i;
     unsigned short size;
 
@@ -189,7 +188,6 @@ gdb_send_registers(void)
             RegisterPtr = thread_to_reg(DbgThread, i);
             size = reg_size[i] * 2;
             RegisterStr[size] = 0;
-
             while (size)
             {
                 if (RegisterPtr)
@@ -219,7 +217,7 @@ KDSTATUS
 gdb_send_register(void)
 {
     enum reg_name reg_name;
-    void *ptr;
+    const void* ptr;
 
     /* Get the GDB register name (gdb_input = "pXX") */
     reg_name = (hex_value(gdb_input[1]) << 4) | hex_value(gdb_input[2]);
@@ -255,9 +253,7 @@ gdb_send_register(void)
     }
     else
     {
-        KDDBGPRINT("KDDBG : Sending registers as memory.\n");
+        KDDBGPRINT("KDGDB: Sending registers as memory.\n");
         return send_gdb_memory(ptr, reg_size[reg_name]);
     }
 }
-
-

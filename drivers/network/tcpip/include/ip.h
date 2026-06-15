@@ -156,6 +156,7 @@ typedef struct _IP_INTERFACE {
     UINT  MinFrameSize;           /* Minimum frame size in bytes */
     UINT  MTU;                    /* Maximum transmission unit */
     UINT  Speed;                  /* Link speed */
+    UINT  Metric;                 /* Interface metric */
     IP_ADDRESS Unicast;           /* Unicast address */
     IP_ADDRESS PointToPoint;      /* Point to point address */
     IP_ADDRESS Netmask;           /* Netmask */

@@ -10,6 +10,7 @@
 #include <ntoskrnl.h>
 #include "kd.h"
 #include "kdterminal.h"
+#include <cportlib/uartinfo.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -21,12 +22,12 @@
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
+#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
+
 static VOID
 KdpGetTerminalSettings(
     _In_ PCSTR p1)
 {
-#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
-
     while (p1 && *p1)
     {
         /* Skip leading whitespace */
@@ -49,34 +50,32 @@ KdpGetTerminalSettings(
     }
 }
 
-static PCHAR
+static PSTR
 KdpGetDebugMode(
-    _In_ PCHAR Currentp2)
+    _In_ PCSTR DebugPort)
 {
-    PCHAR p1, p2 = Currentp2;
+    PCSTR p2 = DebugPort;
     ULONG Value;
 
     /* Check for Screen Debugging */
-    if (!_strnicmp(p2, "SCREEN", 6))
+    if (!_strnicmp(p2, "SCREEN", CONST_STR_LEN("SCREEN")))
     {
-        /* Enable It */
-        p2 += 6;
+        /* Enable it */
+        p2 += CONST_STR_LEN("SCREEN");
         KdpDebugMode.Screen = TRUE;
     }
     /* Check for Serial Debugging */
-    else if (!_strnicmp(p2, "COM", 3))
+    else if (!_strnicmp(p2, "COM", CONST_STR_LEN("COM")))
     {
-        /* Check for a valid Serial Port */
-        p2 += 3;
+        /* Check for a valid serial port */
+        p2 += CONST_STR_LEN("COM");
         if (*p2 != ':')
         {
             Value = (ULONG)atol(p2);
-            if (Value > 0 && Value < 5)
+            if (Value > 0 && Value <= MAX_COM_PORTS)
             {
-                /* Valid port found, enable Serial Debugging */
+                /* Valid port found, enable it and set the port to use */
                 KdpDebugMode.Serial = TRUE;
-
-                /* Set the port to use */
                 SerialPortNumber = Value;
             }
         }
@@ -85,29 +84,29 @@ KdpGetDebugMode(
             Value = strtoul(p2 + 1, NULL, 0);
             if (Value)
             {
+                /* Valid port found, enable it and set its address */
                 KdpDebugMode.Serial = TRUE;
-                SerialPortInfo.Address = UlongToPtr(Value);
                 SerialPortNumber = 0;
+                SerialPortInfo.Address = UlongToPtr(Value);
             }
         }
     }
     /* Check for Debug Log Debugging */
-    else if (!_strnicmp(p2, "FILE", 4))
+    else if (!_strnicmp(p2, "FILE", CONST_STR_LEN("FILE")))
     {
-        /* Enable It */
-        p2 += 4;
+        /* Enable it */
+        p2 += CONST_STR_LEN("FILE");
         KdpDebugMode.File = TRUE;
         if (*p2 == ':')
         {
-            p2++;
-            p1 = p2;
-            while (*p2 != '\0' && *p2 != ' ') p2++;
+            PCSTR p1 = ++p2;
+            while (*p2 && *p2 != ' ') ++p2;
             KdpLogFileName.MaximumLength = KdpLogFileName.Length = p2 - p1;
-            KdpLogFileName.Buffer = p1;
+            KdpLogFileName.Buffer = (PSTR)p1;
         }
     }
 
-    return p2;
+    return (PSTR)p2;
 }
 
 NTSTATUS
@@ -115,7 +114,7 @@ NTAPI
 KdDebuggerInitialize0(
     _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PCHAR CommandLine, Port = NULL;
+    PSTR CommandLine, Port = NULL, BaudRate = NULL;
     ULONG i;
     BOOLEAN Success = FALSE;
 
@@ -131,29 +130,45 @@ KdDebuggerInitialize0(
             /* Get terminal settings */
             KdpGetTerminalSettings(CommandLine);
 
-            /* Get the port */
+            /* Get the port and baud rate */
             Port = strstr(CommandLine, "DEBUGPORT");
+            BaudRate = strstr(CommandLine, "BAUDRATE");
         }
     }
 
-    /* Check if we got the /DEBUGPORT parameter(s) */
+    /* Check if we got DEBUGPORT parameters */
     while (Port)
     {
-        /* Move past the actual string, to reach the port*/
-        Port += sizeof("DEBUGPORT") - 1;
-
-        /* Now get past any spaces and skip the equal sign */
-        while (*Port == ' ') Port++;
-        Port++;
+        /* Move past the actual string and any spaces */
+        Port += CONST_STR_LEN("DEBUGPORT");
+        while (*Port == ' ') ++Port;
+        /* Skip the equals sign */
+        if (*Port) ++Port;
 
         /* Get the debug mode and wrapper */
         Port = KdpGetDebugMode(Port);
         Port = strstr(Port, "DEBUGPORT");
     }
 
-    /* Use serial port then */
+    /* If no debug port was set, fall back to serial port debugging */
     if (KdpDebugMode.Value == 0)
         KdpDebugMode.Serial = TRUE;
+
+    /* Check if we got a baud rate */
+    if (BaudRate)
+    {
+        /* Move past the actual string and any spaces */
+        BaudRate += CONST_STR_LEN("BAUDRATE");
+        while (*BaudRate == ' ') ++BaudRate;
+
+        /* Make sure we have a rate */
+        if (*BaudRate)
+        {
+            /* Read and set it */
+            ULONG Value = (ULONG)atol(BaudRate + 1);
+            if (Value) SerialPortInfo.BaudRate = Value;
+        }
+    }
 
     /* Call the providers at Phase 0 */
     for (i = 0; i < RTL_NUMBER_OF(DispatchTable); i++)

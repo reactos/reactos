@@ -1,5 +1,10 @@
-#ifndef __SHUTDOWN_PRECOMP_H
-#define __SHUTDOWN_PRECOMP_H
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS shutdown/logoff utility
+ * PURPOSE:         Precompiled header
+ */
+
+#pragma once
 
 /* INCLUDES ******************************************************************/
 
@@ -57,5 +62,3 @@ VOID DisplayError(DWORD dwError);
 
 /* gui.c */
 BOOL ShutdownGuiMain(struct CommandLineOptions opts);
-
-#endif /* __SHUTDOWN_PRECOMP_H */

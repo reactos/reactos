@@ -1977,9 +1977,9 @@ KdbpCmdThread(
 #endif
             );
 
-            /* Release our reference if we had one */
-            if (ReferencedThread)
-                ObDereferenceObject(Thread);
+        /* Release our reference if we had one */
+        if (ReferencedThread)
+            ObDereferenceObject(Thread);
     }
 
     return TRUE;

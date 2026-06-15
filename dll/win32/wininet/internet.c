@@ -2880,9 +2880,10 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
         } else if(dwBufferLength != sizeof(ULONG)) {
             SetLastError(ERROR_INTERNET_BAD_OPTION_LENGTH);
             ret = FALSE;
-        } else
+        } else {
             TRACE("INTERNET_OPTION_ERROR_MASK: %x\n", *(ULONG*)lpBuffer);
             lpwhh->ErrorMask = *(ULONG*)lpBuffer;
+        }
       }
       break;
     case INTERNET_OPTION_PROXY:

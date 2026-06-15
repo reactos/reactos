@@ -24,10 +24,25 @@ __asm__(
     "__seh2_global_filter_func:\n"
     /* r8 is rbp - frame-offset. Calculate the negative frame-offset */
     "\tsub %rbp, %rax\n"
+    /* Save all callee-saved registers that the funclet may clobber */
     "\tpush %rbp\n"
     "\t.seh_pushreg %rbp\n"
-    "\tsub $32, %rsp\n"
-    "\t.seh_stackalloc 32\n"
+    "\tpush %rbx\n"
+    "\t.seh_pushreg %rbx\n"
+    "\tpush %rdi\n"
+    "\t.seh_pushreg %rdi\n"
+    "\tpush %rsi\n"
+    "\t.seh_pushreg %rsi\n"
+    "\tpush %r12\n"
+    "\t.seh_pushreg %r12\n"
+    "\tpush %r13\n"
+    "\t.seh_pushreg %r13\n"
+    "\tpush %r14\n"
+    "\t.seh_pushreg %r14\n"
+    "\tpush %r15\n"
+    "\t.seh_pushreg %r15\n"
+    "\tsub $40, %rsp\n"
+    "\t.seh_stackalloc 40\n"
     "\t.seh_endprologue\n"
     /* rdx is the original stack pointer, fix it up to be the frame pointer */
     "\tsub %rax, %rdx\n"
@@ -37,7 +52,14 @@ __asm__(
     "\tjmp *%r8\n"
     "__seh2_global_filter_func_exit:\n"
     "\t.p2align 4\n"
-    "\tadd $32, %rsp\n"
+    "\tadd $40, %rsp\n"
+    "\tpop %r15\n"
+    "\tpop %r14\n"
+    "\tpop %r13\n"
+    "\tpop %r12\n"
+    "\tpop %rsi\n"
+    "\tpop %rdi\n"
+    "\tpop %rbx\n"
     "\tpop %rbp\n"
     "\tret\n"
     "\t.seh_endproc");
@@ -120,11 +142,12 @@ __seh2$$end_try__:(void)0;                                                      
                 "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15");                  \
             /* Save exception code */                                                           \
             __seh2$$exception_code__ = __seh2$$exception_ptr__->ExceptionRecord->ExceptionCode; \
-            /* Actually evaluate our filter */                                                  \
-            register long __MINGW_ATTRIB_UNUSED __seh2$$filter_funclet_ret __asm__("eax") =     \
-                ((__VA_ARGS__));                                                                \
-            /* Go back to the global filter function */                                         \
-            __asm__("jmp __seh2_global_filter_func_exit");                                      \
+            /* Actually evaluate our filter and return via eax */                               \
+            long __seh2$$filter_funclet_ret = ((__VA_ARGS__));                                  \
+            /* Go back to the global filter function with result in eax */                      \
+            __asm__ __volatile__("jmp __seh2_global_filter_func_exit"                           \
+                : /* No output */                                                               \
+                : "a"(__seh2$$filter_funclet_ret));                                             \
         }                                                                                       \
         /* Protect us from emitting instructions to jump back to the filter function */         \
         enum                                                                                    \

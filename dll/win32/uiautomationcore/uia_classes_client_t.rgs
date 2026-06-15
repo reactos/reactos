@@ -1,0 +1,92 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}'
+        {
+            '1.0' = s 'UIAutomationClient'
+            {
+                '0' { win64 = s '%MODULE%\2' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{146C3C17-F12E-4E22-8C27-F894B9B79C69}' = s 'IUIAutomationEventHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}' { val Version = s '1.0' }
+        }
+        '{40CD37D4-C756-4B0C-8C6F-BDDFEEB13B50}' = s 'IUIAutomationPropertyChangedEventHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}' { val Version = s '1.0' }
+        }
+        '{E81D1B4E-11C5-42F8-9754-E7036C79F054}' = s 'IUIAutomationStructureChangedEventHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}' { val Version = s '1.0' }
+        }
+        '{C270F6B5-5C69-4290-9745-7A7F97169468}' = s 'IUIAutomationFocusChangedEventHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}' { val Version = s '1.0' }
+        }
+        '{92FAA680-E704-4156-931A-E32D5BB38F3F}' = s 'IUIAutomationTextEditTextChangedEventHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}' { val Version = s '1.0' }
+        }
+        '{58EDCA55-2C3E-4980-B1B9-56C17F27A2A0}' = s 'IUIAutomationChangesEventHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}' { val Version = s '1.0' }
+        }
+        '{C7CB2637-E6C2-4D0C-85DE-4948C02175C7}' = s 'IUIAutomationNotificationEventHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}' { val Version = s '1.0' }
+        }
+        '{F97933B0-8DAE-4496-8997-5BA015FE0D82}' = s 'IUIAutomationActiveTextPositionChangedEventHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}' { val Version = s '1.0' }
+        }
+        '{618736E0-3C3D-11CF-810C-00AA00389B71}' = s 'IAccessible'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}' { val Version = s '1.0' }
+        }
+        '{D6DD68D1-86FD-4332-8666-9ABEDEA2D24C}' = s 'IRawElementProviderSimple'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}' { val Version = s '1.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+        '{FF48DBA4-60EF-4201-AA87-54103EEF594E}' = s 'CUIAutomation'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}'
+            Version = s '1.0'
+        }
+        '{E22AD333-B25F-460C-83D0-0581107395C9}' = s 'CUIAutomation8'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            TypeLib = s '{944DE083-8FB8-45CF-BCB7-C477ACB2F897}'
+            Version = s '1.0'
+        }
+    }
+}

@@ -2,7 +2,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Wyświetla obecną nazwę komputera.\n\nhostname"
-    IDS_NOSET "Opcja hostname -s nie jest wspierana."
-    IDS_ERROR "Błąd Win32"
+    IDS_USAGE "\nWyświetla obecną nazwę komputera.\n\nhostname\n"
+    IDS_NOSET "sethostname: Open the ""Computer Name"" tab in the ""System"" Control Panel applet\nto change the host name.\nOpcja hostname -s nie jest wspierana.\n"
+    IDS_ERROR "Błąd: "
 END

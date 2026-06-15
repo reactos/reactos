@@ -56,7 +56,7 @@ typedef struct _REGISTRATIONNOTIFY
 
 #define PM_ITEM_END   (WM_APP + 3)
 /* End of a new Item
-   wParam = unused
+   wParam = item number
    lParam = Error Code */
 
 #define PM_STEP_START (WM_APP + 4)
@@ -89,7 +89,14 @@ InstallNetworkComponent(
 
 /* security.c */
 
-VOID InstallSecurity(VOID);
+LONG
+CountSecuritySteps(VOID);
+
+DWORD
+InstallSecurity(
+    _In_ PITEMSDATA pItemsData,
+    _In_ PREGISTRATIONNOTIFY pNotify);
+
 NTSTATUS
 SetAdministratorPassword(LPCWSTR Password);
 

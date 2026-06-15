@@ -21,9 +21,8 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winnls.h>
-#include <winuser.h> // MAKEINTRESOURCEW, RT_STRING
-#include <wincon.h>  // Console APIs (only if kernel32 support included)
+#include <wincon.h>     // Console APIs (only if kernel32 support included)
+//#include <winnls.h>
 #include <strsafe.h>
 
 /* PSEH for SEH Support */
@@ -31,6 +30,18 @@
 
 // #include "conutils.h"
 #include "utils.h"
+
+/* Predefined Resource Types */
+#ifndef MAKEINTRESOURCE
+#define MAKEINTRESOURCE(i)  ((ULONG_PTR)((WORD)(i)))
+#endif
+#ifndef RT_STRING
+#define RT_STRING       MAKEINTRESOURCE(6)
+#endif
+#ifndef RT_MESSAGETABLE
+#define RT_MESSAGETABLE MAKEINTRESOURCE(11)
+#endif
+
 
 #if 0 // The following function may be useful in the future...
 
@@ -131,9 +142,8 @@ K32LoadStringExW(
         p += *p + 1;
 
     /*
-     * If nBufferMax == 0, then return a read-only pointer
-     * to the resource itself in lpBuffer it is assumed that
-     * lpBuffer is actually a (LPWSTR*).
+     * If nBufferMax == 0, then return a read-only pointer to the resource
+     * itself in lpBuffer. It is assumed that lpBuffer is actually a (LPWSTR*).
      */
     if (nBufferMax == 0)
     {

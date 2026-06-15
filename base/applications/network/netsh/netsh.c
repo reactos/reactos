@@ -14,7 +14,7 @@
 
 /* GLOBALS ********************************************************************/
 
-HMODULE hModule = NULL;
+HMODULE g_hModule = NULL;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -52,10 +52,11 @@ RunScript(
 LPWSTR
 MergeStrings(
     _In_ LPWSTR pszStringArray[],
-    _In_ INT nCount)
+    _In_ UINT nCount)
 {
     LPWSTR pszOutString = NULL;
-    INT i, nLength;
+    size_t nLength;
+    UINT i;
 
     if ((pszStringArray == NULL) || (nCount == 0))
         return NULL;
@@ -100,7 +101,7 @@ wmain(
 
     DPRINT("wmain(%S)\n", GetCommandLineW());
 
-    hModule = GetModuleHandle(NULL);
+    g_hModule = GetModuleHandle(NULL);
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
@@ -183,7 +184,7 @@ wmain(
                 if (pszMachine == NULL)
                 {
                     dwError = ERROR_NOT_ENOUGH_MEMORY;
-                    PrintError(hModule, dwError);
+                    PrintError(g_hModule, dwError);
                     goto done;
                 }
 
@@ -210,7 +211,7 @@ wmain(
                 if (pszCommand == NULL)
                 {
                     dwError = ERROR_NOT_ENOUGH_MEMORY;
-                    PrintError(hModule, dwError);
+                    PrintError(g_hModule, dwError);
                     goto done;
                 }
 
@@ -307,22 +308,25 @@ MakeString(
     _In_ DWORD dwMsgId,
     ...)
 {
+    LPCWSTR pszStr;
     LPWSTR pszInBuffer, pszOutBuffer = NULL;
     DWORD dwLength;
     va_list ap;
 
     DPRINT("MakeString(%p %lu ...)\n", hModule, dwMsgId);
 
-    va_start(ap, dwMsgId);
-
-    pszInBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
-    if (pszInBuffer == NULL)
+    dwLength = LoadStringW(hModule, dwMsgId, (LPWSTR)&pszStr, 0);
+    if (dwLength == 0)
         return NULL;
 
-    dwLength = LoadStringW(hModule, dwMsgId, pszInBuffer, HUGE_BUFFER_SIZE);
-    if (dwLength > 0)
-        goto done;
+    /* Allocate and copy the resource string, NUL-terminated */
+    pszInBuffer = HeapAlloc(GetProcessHeap(), 0, (dwLength + 1) * sizeof(WCHAR));
+    if (pszInBuffer == NULL)
+        return NULL;
+    CopyMemory(pszInBuffer, pszStr, dwLength * sizeof(WCHAR));
+    pszInBuffer[dwLength] = UNICODE_NULL;
 
+    va_start(ap, dwMsgId);
     FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
                    pszInBuffer,
                    0,
@@ -330,10 +334,9 @@ MakeString(
                    (LPWSTR)&pszOutBuffer,
                    0,
                    &ap);
+    va_end(ap);
 
-done:
-    if (pszInBuffer)
-        HeapFree(GetProcessHeap(), 0, pszInBuffer);
+    HeapFree(GetProcessHeap(), 0, pszInBuffer);
 
     return pszOutBuffer;
 }
@@ -441,81 +444,34 @@ PrintError(
     _In_ DWORD dwErrId,
     ...)
 {
-    PWSTR pszInBuffer = NULL, pszOutBuffer = NULL;
-    DWORD dwLength = 0;
+    INT Length;
     va_list ap;
-
-    DPRINT("PrintError(%p %lu ...)\n", hModule, dwErrId);
 
     va_start(ap, dwErrId);
 
-    pszOutBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
-    if (pszOutBuffer == NULL)
-        goto done;
-
     if (hModule)
     {
-        pszInBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
-        if (pszInBuffer == NULL)
-            goto done;
-
-        dwLength = LoadStringW(hModule, dwErrId, pszInBuffer, HUGE_BUFFER_SIZE);
-        if (dwLength == 0)
-            goto done;
-
-        dwLength = FormatMessageW(FORMAT_MESSAGE_FROM_STRING,
-                                  pszInBuffer,
-                                  0,
-                                  0,
-                                  pszOutBuffer,
-                                  HUGE_BUFFER_SIZE,
-                                  &ap);
+        Length = ConResMsgPrintfExV(StdErr, hModule, 0, dwErrId,
+                                    LANG_USER_DEFAULT, &ap);
     }
     else
     {
         if ((dwErrId > NETSH_ERROR_BASE) && (dwErrId < NETSH_ERROR_END))
         {
-            pszInBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
-            if (pszInBuffer == NULL)
-                goto done;
-
-            dwLength = LoadStringW(GetModuleHandle(NULL), dwErrId, pszInBuffer, HUGE_BUFFER_SIZE);
-            if (dwLength == 0)
-                goto done;
-
-            dwLength = FormatMessageW(FORMAT_MESSAGE_FROM_STRING,
-                                      pszInBuffer,
-                                      0,
-                                      0L,
-                                      pszOutBuffer,
-                                      HUGE_BUFFER_SIZE,
-                                      &ap);
+            Length = ConResMsgPrintfExV(StdErr, g_hModule, 0, dwErrId,
+                                        LANG_USER_DEFAULT, &ap);
         }
         else
         {
-            dwLength = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM,
-                                      NULL,
-                                      dwErrId,
-                                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                      pszOutBuffer,
-                                      HUGE_BUFFER_SIZE,
-                                      &ap);
+            Length = ConMsgPrintfV(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+                                   NULL, dwErrId,
+                                   LANG_USER_DEFAULT, &ap);
         }
     }
 
     va_end(ap);
 
-    if (dwLength > 0)
-        ConPuts(StdOut, pszOutBuffer);
-
-done:
-    if (pszOutBuffer)
-        HeapFree(GetProcessHeap(), 0, pszOutBuffer);
-
-    if (pszInBuffer)
-        HeapFree(GetProcessHeap(), 0, pszInBuffer);
-
-    return dwLength;
+    return (DWORD)Length;
 }
 
 DWORD
@@ -530,11 +486,10 @@ PrintMessageFromModule(
 
     va_start(ap, dwMsgId);
     Length = ConResPrintfExV(StdOut, hModule, dwMsgId,
-                             MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-                             ap);
+                             LANG_USER_DEFAULT, ap);
     va_end(ap);
 
-    return Length;
+    return (DWORD)Length;
 }
 
 DWORD
@@ -550,5 +505,5 @@ PrintMessage(
     Length = ConPrintfV(StdOut, pwszFormat, ap);
     va_end(ap);
 
-    return Length;
+    return (DWORD)Length;
 }

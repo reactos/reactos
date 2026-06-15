@@ -20,7 +20,7 @@ Usage: %s [磁碟機:] [-F] [-V] [-R] [-C]\n\n\
 \n"
 
     IDS_PERCENT_COMPL "已完成百分之 %d。\r"
-    IDS_FILE_SYSTEM "檔案系統類型為 %s。\n"
+    IDS_FILE_SYSTEM "檔案系統類型為 %s for volume %s。\n"
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 by Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\

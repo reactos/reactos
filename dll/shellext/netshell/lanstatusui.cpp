@@ -70,12 +70,12 @@ UpdateLanStatusUiDlg(
         }
     }
 
-    if (StrFormatByteSizeW(IfEntry->dwInOctets, szBuffer, sizeof(szFormat)/sizeof(WCHAR)))
+    if (StrFormatByteSizeW(IfEntry->dwInOctets, szBuffer, _countof(szBuffer)))
     {
         SendDlgItemMessageW(hwndDlg, IDC_RECEIVED, WM_SETTEXT, 0, (LPARAM)szBuffer);
     }
 
-    if (StrFormatByteSizeW(IfEntry->dwOutOctets, szBuffer, sizeof(szFormat)/sizeof(WCHAR)))
+    if (StrFormatByteSizeW(IfEntry->dwOutOctets, szBuffer, _countof(szBuffer)))
     {
         SendDlgItemMessageW(hwndDlg, IDC_SEND, WM_SETTEXT, 0, (LPARAM)szBuffer);
     }

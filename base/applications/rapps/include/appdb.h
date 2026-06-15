@@ -47,8 +47,6 @@ class CAppDB
     CreateInstalledAppByRegistryKey(LPCWSTR Name);
     static CInstalledApplicationInfo *
     CreateInstalledAppInstance(LPCWSTR KeyName, BOOL User, REGSAM WowSam);
-    static HKEY
-    EnumInstalledRootKey(UINT Index, REGSAM &RegSam);
 
     size_t GetAvailableCount() const
     {

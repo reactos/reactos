@@ -2,7 +2,7 @@
  * jddctmgr.c
  *
  * Copyright (C) 1994-1996, Thomas G. Lane.
- * Modified 2002-2013 by Guido Vollbeding.
+ * Modified 2002-2025 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -46,8 +46,8 @@ typedef struct {
 
   /* This array contains the IDCT method code that each multiplier table
    * is currently set up for, or -1 if it's not yet set up.
-   * The actual multiplier tables are pointed to by dct_table in the
-   * per-component comp_info structures.
+   * The actual multiplier tables are pointed to by dct_table
+   * in the per-component comp_info structures.
    */
   int cur_method[MAX_COMPONENTS];
 } my_idct_controller;
@@ -66,18 +66,6 @@ typedef union {
   FLOAT_MULT_TYPE float_array[DCTSIZE2];
 #endif
 } multiplier_table;
-
-
-/* The current scaled-IDCT routines require ISLOW-style multiplier tables,
- * so be sure to compile that code if either ISLOW or SCALING is requested.
- */
-#ifdef DCT_ISLOW_SUPPORTED
-#define PROVIDE_ISLOW_TABLES
-#else
-#ifdef IDCT_SCALING_SUPPORTED
-#define PROVIDE_ISLOW_TABLES
-#endif
-#endif
 
 
 /*
@@ -101,6 +89,13 @@ start_pass (j_decompress_ptr cinfo)
     /* Select the proper IDCT routine for this component's scaling */
     switch ((compptr->DCT_h_scaled_size << 8) + compptr->DCT_v_scaled_size) {
 #ifdef IDCT_SCALING_SUPPORTED
+/*
+ * The current scaled-IDCT routines require ISLOW-style multiplier tables,
+ * so be sure to compile that code if either ISLOW or SCALING is requested.
+ */
+#ifndef PROVIDE_ISLOW_TABLES
+#define PROVIDE_ISLOW_TABLES
+#endif
     case ((1 << 8) + 1):
       method_ptr = jpeg_idct_1x1;
       method = JDCT_ISLOW;	/* jidctint uses islow-style table */
@@ -230,6 +225,9 @@ start_pass (j_decompress_ptr cinfo)
       switch (cinfo->dct_method) {
 #ifdef DCT_ISLOW_SUPPORTED
       case JDCT_ISLOW:
+#ifndef PROVIDE_ISLOW_TABLES
+#define PROVIDE_ISLOW_TABLES
+#endif
 	method_ptr = jpeg_idct_islow;
 	method = JDCT_ISLOW;
 	break;
@@ -248,21 +246,19 @@ start_pass (j_decompress_ptr cinfo)
 #endif
       default:
 	ERREXIT(cinfo, JERR_NOT_COMPILED);
-	break;
       }
       break;
     default:
       ERREXIT2(cinfo, JERR_BAD_DCTSIZE,
 	       compptr->DCT_h_scaled_size, compptr->DCT_v_scaled_size);
-      break;
     }
     idct->pub.inverse_DCT[ci] = method_ptr;
     /* Create multiplier table from quant table.
      * However, we can skip this if the component is uninteresting
      * or if we already built the table.  Also, if no quant table
      * has yet been saved for the component, we leave the
-     * multiplier table all-zero; we'll be reading zeroes from the
-     * coefficient controller's buffer anyway.
+     * multiplier table all-zero; we'll be reading zeroes
+     * from the coefficient controller's buffer anyway.
      */
     if (! compptr->component_needed || idct->cur_method[ci] == method)
       continue;
@@ -325,7 +321,8 @@ start_pass (j_decompress_ptr cinfo)
 	 * coefficients scaled by scalefactor[row]*scalefactor[col], where
 	 *   scalefactor[0] = 1
 	 *   scalefactor[k] = cos(k*PI/16) * sqrt(2)    for k=1..7
-	 * We apply a further scale factor of 1/8.
+	 * We apply a further scale factor of 1/8
+	 * with adjustment if necessary.
 	 */
 	FLOAT_MULT_TYPE * fmtbl = (FLOAT_MULT_TYPE *) compptr->dct_table;
 	int row, col;
@@ -333,13 +330,31 @@ start_pass (j_decompress_ptr cinfo)
 	  1.0, 1.387039845, 1.306562965, 1.175875602,
 	  1.0, 0.785694958, 0.541196100, 0.275899379
 	};
+#if JPEG_DATA_PRECISION == BITS_IN_JSAMPLE
 
 	i = 0;
 	for (row = 0; row < DCTSIZE; row++) {
 	  for (col = 0; col < DCTSIZE; col++) {
-	    fmtbl[i] = (FLOAT_MULT_TYPE)
-	      ((double) qtbl->quantval[i] *
-	       aanscalefactor[row] * aanscalefactor[col] * 0.125);
+	    fmtbl[i] = (FLOAT_MULT_TYPE) ((double) qtbl->quantval[i] *
+	      aanscalefactor[row] * aanscalefactor[col] * 0.125);
+#else
+	double extrafactor = 0.125;
+
+	/* Adjust extra factor */
+#if JPEG_DATA_PRECISION < BITS_IN_JSAMPLE
+	i = BITS_IN_JSAMPLE - JPEG_DATA_PRECISION;
+	do { extrafactor *= 2.0; } while (--i);
+#else
+	i = JPEG_DATA_PRECISION - BITS_IN_JSAMPLE;
+	do { extrafactor *= 0.5; } while (--i);
+#endif
+
+	i = 0;
+	for (row = 0; row < DCTSIZE; row++) {
+	  for (col = 0; col < DCTSIZE; col++) {
+	    fmtbl[i] = (FLOAT_MULT_TYPE) ((double) qtbl->quantval[i] *
+	      aanscalefactor[row] * aanscalefactor[col] * extrafactor);
+#endif
 	    i++;
 	  }
 	}
@@ -348,7 +363,6 @@ start_pass (j_decompress_ptr cinfo)
 #endif
     default:
       ERREXIT(cinfo, JERR_NOT_COMPILED);
-      break;
     }
   }
 }
@@ -365,18 +379,16 @@ jinit_inverse_dct (j_decompress_ptr cinfo)
   int ci;
   jpeg_component_info *compptr;
 
-  idct = (my_idct_ptr)
-    (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-				SIZEOF(my_idct_controller));
+  idct = (my_idct_ptr) (*cinfo->mem->alloc_small)
+    ((j_common_ptr) cinfo, JPOOL_IMAGE, SIZEOF(my_idct_controller));
   cinfo->idct = &idct->pub;
   idct->pub.start_pass = start_pass;
 
   for (ci = 0, compptr = cinfo->comp_info; ci < cinfo->num_components;
        ci++, compptr++) {
     /* Allocate and pre-zero a multiplier table for each component */
-    compptr->dct_table =
-      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-				  SIZEOF(multiplier_table));
+    compptr->dct_table = (*cinfo->mem->alloc_small)
+      ((j_common_ptr) cinfo, JPOOL_IMAGE, SIZEOF(multiplier_table));
     MEMZERO(compptr->dct_table, SIZEOF(multiplier_table));
     /* Mark multiplier table not yet set up for any method */
     idct->cur_method[ci] = -1;

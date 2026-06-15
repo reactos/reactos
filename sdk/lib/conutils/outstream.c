@@ -36,9 +36,8 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <wincon.h>     // Console APIs (only if kernel32 support included)
 #include <winnls.h>
-#include <winuser.h> // MAKEINTRESOURCEW, RT_STRING
-#include <wincon.h>  // Console APIs (only if kernel32 support included)
 #include <strsafe.h>
 
 /* PSEH for SEH Support */
@@ -176,7 +175,7 @@ ConWrite(
             }
 
             /* Write everything up to \n */
-            dwNumBytes = ((PCWCH)p - (PCWCH)szStr) * sizeof(WCHAR);
+            dwNumBytes = (DWORD)(((PCWCH)p - (PCWCH)szStr) * sizeof(WCHAR));
             WriteFile(Stream->hHandle, szStr, dwNumBytes, &dwNumBytes, NULL);
 
             /*
@@ -260,7 +259,7 @@ ConWrite(
             }
 
             /* Write everything up to \n */
-            dwNumBytes = ((PCCH)p - (PCCH)szStr) * sizeof(CHAR);
+            dwNumBytes = (DWORD)(((PCCH)p - (PCCH)szStr) * sizeof(CHAR));
             WriteFile(Stream->hHandle, szStr, dwNumBytes, &dwNumBytes, NULL);
 
             /*
@@ -430,8 +429,8 @@ ConPuts(
 {
     INT Len;
 
-    Len = wcslen(szStr);
-    CON_STREAM_WRITE2(Stream, szStr, Len, Len);
+    Len = (INT)wcslen(szStr);
+    CON_STREAM_WRITE2(Stream, szStr, (DWORD)Len, Len);
 
     /* Fixup returned length in case of errors */
     if (Len < 0)
@@ -611,8 +610,8 @@ ConResPuts(
     IN PCON_STREAM Stream,
     IN UINT uID)
 {
-    return ConResPutsEx(Stream, NULL /*GetModuleHandleW(NULL)*/,
-                        uID, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
+    return ConResPutsEx(Stream, NULL, uID,
+                        MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
 }
 
 /**
@@ -697,9 +696,8 @@ ConResPrintfV(
     IN UINT    uID,
     IN va_list args)
 {
-    return ConResPrintfExV(Stream, NULL /*GetModuleHandleW(NULL)*/,
-                           uID, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-                           args);
+    return ConResPrintfExV(Stream, NULL, uID,
+                           MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), args);
 }
 
 /**
@@ -1332,8 +1330,7 @@ ConResMsgPrintfV(
     IN UINT    uID,
     IN va_list *Arguments OPTIONAL)
 {
-    return ConResMsgPrintfExV(Stream, NULL /*GetModuleHandleW(NULL)*/,
-                              dwFlags, uID,
+    return ConResMsgPrintfExV(Stream, NULL, dwFlags, uID,
                               MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                               Arguments);
 }

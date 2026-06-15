@@ -6,11 +6,14 @@
  */
 
 #include <freeldr.h>
+#include <ndk/kefuncs.h> // For KeFindConfiguration*Entry()
 #include <ndk/ldrtypes.h>
 #include "winldr.h"
 #include "ntldropts.h"
 #include "registry.h"
 #include <internal/cmboot.h>
+
+#include <drivers/bootvid/framebuf.h> // For CM_FRAMEBUF_DEVICE_DATA
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
@@ -22,7 +25,7 @@ BOOLEAN IsAcpiPresent(VOID);
 
 extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
 extern BOOLEAN WinLdrTerminalConnected;
-extern VOID WinLdrSetupEms(IN PCSTR BootOptions);
+extern VOID WinLdrSetupEms(_In_ PCSTR BootOptions);
 
 PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
 /**/PCWSTR BootFileSystem = NULL;/**/
@@ -101,6 +104,13 @@ AllocateAndInitLPB(
     Extension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
     Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
     Extension->MinorVersion = (VersionToBoot & 0xFF);
+
+#ifdef UEFIBOOT
+    Extension->BootViaEFI = 1;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    LoaderBlock->FirmwareInformation.FirmwareTypeEfi = 1;
+#endif
+#endif
 
     /* Init three critical lists, used right away */
     InitializeListHead(&LoaderBlock->LoadOrderListHead);
@@ -514,13 +524,13 @@ WinLdrDetectVersion(VOID)
 static
 PVOID
 LoadModule(
-    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN PCCH Path,
-    IN PCCH File,
-    IN PCCH ImportName, // BaseDllName
-    IN TYPE_OF_MEMORY MemoryType,
-    OUT PLDR_DATA_TABLE_ENTRY *Dte,
-    IN ULONG Percentage)
+    _Inout_ PLIST_ENTRY LoadOrderListHead,
+    _In_ PCSTR Path,
+    _In_ PCSTR File,
+    _In_ PCSTR ImportName, // BaseDllName
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PLDR_DATA_TABLE_ENTRY* Dte,
+    _In_ ULONG Percentage)
 {
     BOOLEAN Success;
     CHAR FullFileName[MAX_PATH];
@@ -542,7 +552,7 @@ LoadModule(
     }
     TRACE("%s loaded successfully at %p\n", File, BaseAddress);
 
-    Success = PeLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
+    Success = PeLdrAllocateDataTableEntry(LoadOrderListHead,
                                           ImportName,
                                           FullFileName,
                                           PaToVa(BaseAddress),
@@ -616,6 +626,112 @@ WinLdrIsPaeSupported(
 }
 #endif /* _M_IX86 */
 
+static VOID
+NtLdrDetectBootVid(
+    _In_ PCONFIGURATION_COMPONENT_DATA ConfigTree,
+    _Out_writes_bytes_(BootVidNameSize) _Always_(_Post_z_)
+         PSTR BootVidName,
+    _In_ SIZE_T BootVidNameSize)
+{
+    /* NOTE: The following array should instead be read from txtsetup.sif */
+    static const struct
+    {
+        PCSTR SystemSubId;
+        PCSTR ModuleName;
+    } BootVidNames[] =
+    {
+#if defined(_M_IX86) && !defined(UEFIBOOT)
+        {"PC-98", "pc98bvid.dll"},
+        {"Xbox", "xboxbvid.dll"},
+#endif
+        {"EFI", "lfbbvid.dll"},
+    };
+
+    /* Default BootVid file name */
+    RtlStringCbCopyA(BootVidName, BootVidNameSize, "bootvid.dll");
+
+    /* Attempt auto-detection by System ID */
+    PCONFIGURATION_COMPONENT_DATA Entry;
+    Entry = KeFindConfigurationEntry(ConfigTree,
+                                     SystemClass,
+                                     ArcSystem,
+                                     NULL);
+    if (!Entry)
+    {
+        /* No SystemClass ArcSystem entry, retry with hack */
+        Entry = KeFindConfigurationEntry(ConfigTree,
+                                         SystemClass,
+                                         MaximumType, // HACK for non-ARC machines
+                                         NULL);
+    }
+    if (Entry)
+    {
+        // Entry->ComponentEntry.IdentifierLength;
+        TRACE("ARC System ID: '%s'\n", Entry->ComponentEntry.Identifier);
+
+        /* Look up the name */
+        for (ULONG i = 0; i < RTL_NUMBER_OF(BootVidNames); ++i)
+        {
+            if (strstr(Entry->ComponentEntry.Identifier, BootVidNames[i].SystemSubId))
+            {
+                RtlStringCbCopyA(BootVidName, BootVidNameSize, BootVidNames[i].ModuleName);
+                break;
+            }
+        }
+    }
+    /* Special-case detection if the display controller contains
+     * a DeviceSpecific CM_FRAMEBUF_DEVICE_DATA resource */
+    Entry = KeFindConfigurationEntry(ConfigTree,
+                                     ControllerClass,
+                                     DisplayController,
+                                     NULL);
+    if (Entry)
+    {
+        /* Cast to PCM_PARTIAL_RESOURCE_LIST to access
+         * the common Version and Revision fields */
+        PCM_PARTIAL_RESOURCE_LIST ResourceList =
+            (PCM_PARTIAL_RESOURCE_LIST)Entry->ConfigurationData;
+        ULONG ConfigurationDataLength =
+            Entry->ComponentEntry.ConfigurationDataLength;
+
+        // Entry->ComponentEntry.IdentifierLength;
+        TRACE("Display: '%s'\n", Entry->ComponentEntry.Identifier);
+
+        /* The configuration data length must be valid.
+         * The Version/Revision must be greater than or equal to 1.2
+         * in order to describe a valid new configuration data. */
+        if (Entry->ConfigurationData &&
+            (ConfigurationDataLength >= sizeof(CM_PARTIAL_RESOURCE_LIST)) &&
+            ( (ResourceList->Version >  1) ||
+             ((ResourceList->Version == 1) && (ResourceList->Revision > 1)) ))
+        {
+            /* Try to find the DeviceSpecific resource */
+            PCM_PARTIAL_RESOURCE_DESCRIPTOR DeviceSpecific = NULL;
+            for (ULONG i = 0; i < ResourceList->Count; ++i)
+            {
+                PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor =
+                    &ResourceList->PartialDescriptors[i];
+                if (Descriptor->Type == CmResourceTypeDeviceSpecific)
+                {
+                    /* NOTE: This descriptor *MUST* be the last one.
+                     * The actual device data follows the descriptor. */
+                    ASSERT(i == ResourceList->Count - 1);
+                    DeviceSpecific = Descriptor;
+                    break;
+                }
+            }
+
+            /* Check whether the resource describes framebuffer information */
+            if (DeviceSpecific &&
+                (DeviceSpecific->u.DeviceSpecificData.DataSize >= sizeof(CM_FRAMEBUF_DEVICE_DATA)))
+            {
+                /* It does, use the Linear FrameBuffer Boot Video Driver instead */
+                RtlStringCbCopyA(BootVidName, BootVidNameSize, "lfbbvid.dll");
+            }
+        }
+    }
+}
+
 static
 BOOLEAN
 LoadWindowsCore(IN USHORT OperatingSystemVersion,
@@ -627,14 +743,14 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     BOOLEAN Success;
     PCSTR Option;
     ULONG OptionLength;
-    PVOID KernelBase, HalBase, KdDllBase = NULL;
-    PLDR_DATA_TABLE_ENTRY HalDTE, KdDllDTE = NULL;
+    PVOID KernelBase, HalBase, KdDllBase = NULL, BootVidBase = NULL;
+    PLDR_DATA_TABLE_ENTRY HalDTE, KdDllDTE = NULL, BootVidDTE = NULL;
+    PCSTR ModuleName;
     CHAR DirPath[MAX_PATH];
     CHAR HalFileName[MAX_PATH];
     CHAR KernelFileName[MAX_PATH];
     CHAR KdDllName[MAX_PATH];
-
-    if (!KernelDTE) return FALSE;
+    CHAR BootVidName[MAX_PATH];
 
     /* Initialize SystemRoot\System32 path */
     RtlStringCbCopyA(DirPath, sizeof(DirPath), BootPath);
@@ -761,8 +877,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
      */
 
     /* Load the Kernel */
-    KernelBase = LoadModule(LoaderBlock, DirPath, KernelFileName,
-                            "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30);
+    KernelBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                            DirPath, KernelFileName,
+                            "ntoskrnl.exe", LoaderSystemCode,
+                            KernelDTE, 30);
     if (!KernelBase)
     {
         ERR("LoadModule('%s') failed\n", KernelFileName);
@@ -771,8 +889,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     }
 
     /* Load the HAL */
-    HalBase = LoadModule(LoaderBlock, DirPath, HalFileName,
-                         "hal.dll", LoaderHalCode, &HalDTE, 35);
+    HalBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                         DirPath, HalFileName,
+                         "hal.dll", LoaderHalCode,
+                         &HalDTE, 35);
     if (!HalBase)
     {
         ERR("LoadModule('%s') failed\n", HalFileName);
@@ -846,8 +966,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         _strlwr(KdDllName);
 
         /* Load the KD DLL. Override its base DLL name to the default "KDCOM.DLL". */
-        KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
-                               "kdcom.dll", LoaderSystemCode, &KdDllDTE, 40);
+        KdDllBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                               DirPath, KdDllName,
+                               "kdcom.dll", LoaderSystemCode,
+                               &KdDllDTE, 40);
         if (!KdDllBase)
         {
             /* If we failed to load a custom KD DLL, fall back to the standard one */
@@ -859,8 +981,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 IsCustomKdDll = FALSE;
                 RtlStringCbCopyA(KdDllName, sizeof(KdDllName), "kdcom.dll");
 
-                KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
-                                       "kdcom.dll", LoaderSystemCode, &KdDllDTE, 40);
+                KdDllBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                                       DirPath, KdDllName,
+                                       "kdcom.dll", LoaderSystemCode,
+                                       &KdDllDTE, 40);
             }
 
             if (!KdDllBase)
@@ -872,33 +996,76 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         }
     }
 
-    /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
+    /* Load the correct Boot Video Driver */
+    if (OperatingSystemVersion >= _WIN32_WINNT_WIN2K)
+    {
+        /* Check whether there is a BOOTVID option */
+        Option = NtLdrGetOptionEx(BootOptions, "BOOTVID=", &OptionLength);
+        if (Option && (OptionLength > 8))
+        {
+            /* Retrieve the BootVid file name */
+            Option += 8; OptionLength -= 8;
+            RtlStringCbCopyNA(BootVidName, sizeof(BootVidName), Option, OptionLength);
+            _strlwr(BootVidName);
+            TRACE("User-specified BootVid file: '%s'\n", BootVidName);
+        }
+        else
+        {
+            /* No option given, attempt auto-detection */
+            NtLdrDetectBootVid(LoaderBlock->ConfigurationRoot,
+                               BootVidName, sizeof(BootVidName));
+            TRACE("Auto-detected BootVid file: '%s'\n", BootVidName);
+        }
+
+        /* Load the BootVid */
+        BootVidBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                                 DirPath, BootVidName,
+                                 "bootvid.dll", LoaderSystemCode,
+                                 &BootVidDTE, 45);
+        if (!BootVidBase)
+        {
+            /* Ignore the failure; we will fail later when scanning the
+             * kernel import tables, if it really needs the BootVid. */
+            ERR("LoadModule('%s') failed\n", BootVidName);
+        }
+    }
+
+    /* Load all referenced DLLs for Kernel, HAL, Kernel Debugger Transport and BootVid */
+    ModuleName = KernelFileName;
     Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
     if (!Success)
-    {
-        UiMessageBox("Could not load %s", KernelFileName);
         goto Quit;
-    }
+    ModuleName = HalFileName;
     Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
     if (!Success)
-    {
-        UiMessageBox("Could not load %s", HalFileName);
         goto Quit;
-    }
     if (KdDllDTE)
     {
+        ModuleName = KdDllName;
         Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, KdDllDTE);
         if (!Success)
-        {
-            UiMessageBox("Could not load %s", KdDllName);
             goto Quit;
-        }
+    }
+    if (BootVidDTE)
+    {
+        ModuleName = BootVidName;
+        Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, BootVidDTE);
+        if (!Success)
+            goto Quit;
     }
 
 Quit:
     if (!Success)
     {
+        ERR("PeLdrScanImportDescriptorTable('%s') failed\n", ModuleName);
+        UiMessageBox("Could not load %s", ModuleName);
+
         /* Cleanup and bail out */
+        if (BootVidDTE)
+            PeLdrFreeDataTableEntry(BootVidDTE);
+        if (BootVidBase) // Optional
+            MmFreeMemory(BootVidBase);
+
         if (KdDllDTE)
             PeLdrFreeDataTableEntry(KdDllDTE);
         if (KdDllBase) // Optional
@@ -1185,10 +1352,8 @@ LoadAndBootWindowsCommon(
 
     ASSERT(OperatingSystemVersion != 0);
 
-#ifdef _M_IX86
     /* Setup redirection support */
     WinLdrSetupEms(BootOptions);
-#endif
 
     /* Convert BootPath to SystemRoot */
     SystemRoot = strstr(BootPath, "\\");

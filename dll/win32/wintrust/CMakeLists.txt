@@ -1,4 +1,6 @@
 
+remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
+
 spec2def(wintrust.dll wintrust.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -21,7 +23,7 @@ if(MSVC)
 endif()
 
 set_module_type(wintrust win32dll)
-target_link_libraries(wintrust wine ${PSEH_LIB})
+target_link_libraries(wintrust wine oldnames ${PSEH_LIB})
 # FIXME: imagehlp should be delay-imported. See CORE-6504
 #add_delay_importlibs(wintrust cryptui imagehlp)
 add_delay_importlibs(wintrust cryptui)

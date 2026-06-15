@@ -76,12 +76,6 @@ KdpDebugLogInit(
 
 /* KD GLOBALS ****************************************************************/
 
-/* Serial debug connection */
-#define DEFAULT_DEBUG_PORT      2 /* COM2 */
-#define DEFAULT_DEBUG_COM1_IRQ  4 /* COM1 IRQ */
-#define DEFAULT_DEBUG_COM2_IRQ  3 /* COM2 IRQ */
-#define DEFAULT_DEBUG_BAUD_RATE 115200 /* 115200 Baud */
-
 /* KD Native Modes */
 // #define KdScreen    0
 // #define KdSerial    1

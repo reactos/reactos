@@ -420,7 +420,7 @@ typedef BOOL (*PFN_PROVUI_CALL)(HWND hWndSecurityDialog,
 
 typedef struct _CRYPT_PROVUI_FUNCS {
     DWORD cbStruct;
-    CRYPT_PROVUI_DATA psUIData;
+    CRYPT_PROVUI_DATA *psUIData;
     PFN_PROVUI_CALL pfnOnMoreInfoClick;
     PFN_PROVUI_CALL pfnOnMoreInfoClickDefault;
     PFN_PROVUI_CALL pfnOnAdvancedClick;
@@ -429,7 +429,7 @@ typedef struct _CRYPT_PROVUI_FUNCS {
 
 #include <poppack.h>
 
-#define WVT_OFFSETOF(t,f)     ((ULONG)((ULONG_PTR)(&((t*)0)->f)))
+#define WVT_OFFSETOF(t,f)     ((ULONG)(offsetof(t, f)))
 #define WVT_ISINSTRUCT(t,s,f) (WVT_OFFSETOF(t,f) + sizeof(((t*)0)->f) <= (s))
 #define WVT_IS_CBSTRUCT_GT_MEMBEROFFSET(t,s,f) WVT_ISINSTRUCT(t,s,f)
 
@@ -451,10 +451,7 @@ typedef struct _CRYPT_PROVUI_FUNCS {
 extern "C" {
 #endif
 
-#if defined(__GNUC__)
-#define WT_PROVIDER_CERTTRUST_FUNCTION (const WCHAR []) \
-    {'W','i','n','t','r','u','s','t','C','e','r','t','i','f','i','c','a','t','e','T','r','u','s','t', 0}
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define WT_PROVIDER_CERTTRUST_FUNCTION L"WintrustCertificateTrust"
 #else
 static const WCHAR WT_PROVIDER_CERTTRUST_FUNCTION[] =
@@ -477,6 +474,8 @@ CRYPT_PROVIDER_SGNR * WINAPI WTHelperGetProvSignerFromChain(
  DWORD idxCounterSigner);
 CRYPT_PROVIDER_DATA * WINAPI WTHelperProvDataFromStateData(HANDLE hStateData);
 CRYPT_PROVIDER_PRIVDATA * WINAPI WTHelperGetProvPrivateDataFromChain(CRYPT_PROVIDER_DATA *,GUID *);
+
+#define szOID_NESTED_SIGNATURE       "1.3.6.1.4.1.311.2.4.1"
 
 #define SPC_INDIRECT_DATA_OBJID      "1.3.6.1.4.1.311.2.1.4"
 #define SPC_SP_AGENCY_INFO_OBJID     "1.3.6.1.4.1.311.2.1.10"

@@ -73,7 +73,9 @@ PrintError(DWORD Status)
     swprintf(szStatusBuffer, L"%lu", Status);
     PrintMessageStringV(3502, szStatusBuffer);
 
-    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Status, 0, (LPWSTR)&Buffer, 0, NULL))
+    if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                       FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
+                       Status, LANG_USER_DEFAULT, (LPWSTR)&Buffer, 0, NULL))
     {
         ConPrintf(StdErr, L"\n%s", Buffer);
         LocalFree(Buffer);
@@ -84,20 +86,8 @@ static
 BOOL
 ValidateDeviceName(PWSTR DevName)
 {
-    DWORD Len;
-
-    Len = wcslen(DevName);
-    if (Len != 2)
-    {
-        return FALSE;
-    }
-
-    if (!iswalpha(DevName[0]) || DevName[1] != L':')
-    {
-        return FALSE;
-    }
-
-    return TRUE;
+    /* Check for "X:" format */
+    return (DevName[0] && iswalpha(DevName[0]) && DevName[1] == L':' && !DevName[2]);
 }
 
 INT
@@ -105,7 +95,7 @@ cmdUse(
     INT argc,
     WCHAR **argv)
 {
-    DWORD Status, Len, Delete;
+    DWORD Status, Delete;
 
     if (argc == 2)
     {
@@ -174,6 +164,7 @@ cmdUse(
         NETRESOURCE lpNet = { 0 };
         WCHAR Access[256];
         DWORD OutFlags = 0, Size = ARRAYSIZE(Access);
+        size_t Len;
 
         Len = wcslen(argv[3]);
         if (Len < 4)
@@ -197,7 +188,7 @@ cmdUse(
                 Cpy = HeapAlloc(GetProcessHeap(), 0, (Len + 1) * sizeof(WCHAR));
                 if (Cpy)
                 {
-                    INT i;
+                    size_t i;
                     for (i = 0; i < Len; ++i)
                         Cpy[i] = towupper(argv[4][i]);
 

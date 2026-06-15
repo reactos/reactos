@@ -2,7 +2,7 @@
  * jdmarker.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modified 2009-2019 by Guido Vollbeding.
+ * Modified 2009-2025 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -664,7 +664,7 @@ get_lse (j_decompress_ptr cinfo)
   if (tmp != 0x0D)	/* ID inverse transform specification */
     ERREXIT1(cinfo, JERR_UNKNOWN_MARKER, cinfo->unread_marker);
   INPUT_2BYTES(cinfo, tmp, return FALSE);
-  if (tmp != MAXJSAMPLE) goto bad;		/* MAXTRANS */
+  cinfo->LSE_maxtrans = (UINT16) tmp;		/* MAXTRANS */
   INPUT_BYTE(cinfo, tmp, return FALSE);
   if (tmp != 3) goto bad;			/* Nt=3 */
   INPUT_BYTE(cinfo, cid, return FALSE);

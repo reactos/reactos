@@ -39,6 +39,13 @@ typedef enum {
 } KD_NAMESPACE_ENUM, *PKD_NAMESPACE_ENUM;
 #endif
 
+typedef enum {
+    KdConfigureDeviceAndContinue,
+    KdSkipDeviceAndContinue,
+    KdConfigureDeviceAndStop,
+    KdSkipDeviceAndStop,
+} KD_CALLBACK_ACTION, *PKD_CALLBACK_ACTION;
+
 #if (NTDDI_VERSION >= NTDDI_WIN10)
 typedef struct _DEBUG_TRANSPORT_DATA {
   ULONG HwContextSize;
@@ -116,6 +123,10 @@ typedef struct _DEBUG_DEVICE_DESCRIPTOR {
 #endif
 } DEBUG_DEVICE_DESCRIPTOR, *PDEBUG_DEVICE_DESCRIPTOR;
 
+typedef KD_CALLBACK_ACTION
+(NTAPI *PDEBUG_DEVICE_FOUND_FUNCTION)(
+  _Inout_ PDEBUG_DEVICE_DESCRIPTOR Device);
+
 typedef NTSTATUS
 (NTAPI *pKdSetupPciDeviceForDebugging)(
   _In_opt_ PVOID LoaderBlock,
@@ -133,7 +144,7 @@ typedef PVOID
 typedef VOID
 (NTAPI *pKdCheckPowerButton)(VOID);
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
 typedef PVOID
 (NTAPI *pKdMapPhysicalMemory64)(
   _In_ PHYSICAL_ADDRESS PhysicalAddress,
@@ -172,4 +183,19 @@ typedef ULONG
   _In_reads_bytes_(Length) PVOID Buffer,
   _In_ ULONG Offset,
   _In_ ULONG Length);
+
+typedef NTSTATUS
+(NTAPI *pKdEnumerateDebuggingDevices)(
+  _In_ PVOID LoaderBlock,
+  _Inout_ PDEBUG_DEVICE_DESCRIPTOR Device,
+  _In_ PDEBUG_DEVICE_FOUND_FUNCTION Callback);
+
+typedef NTSTATUS
+(NTAPI *pKdSetupIntegratedDeviceForDebugging)(
+  _In_opt_ PVOID LoaderBlock,
+  _Inout_ PDEBUG_DEVICE_DESCRIPTOR IntegratedDevice);
+
+typedef NTSTATUS
+(NTAPI *pKdReleaseIntegratedDeviceForDebugging)(
+  _Inout_ PDEBUG_DEVICE_DESCRIPTOR IntegratedDevice);
 $endif (_NTDDK_)

@@ -81,7 +81,7 @@ RegisterHelperDll(
                        0,
                        REG_SZ,
                        (PBYTE)pEntry->pszDllName,
-                       (wcslen(pEntry->pszDllName) + 1) * sizeof(WCHAR));
+                       (DWORD)((wcslen(pEntry->pszDllName) + 1) * sizeof(WCHAR)));
 
         RegCloseKey(hKey);
     }

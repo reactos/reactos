@@ -7,48 +7,16 @@
 
 #include "kdgdb.h"
 
-#include <cportlib/cportlib.h>
 #include <arc/arc.h>
 #include <stdlib.h>
 #include <ndk/halfuncs.h>
 
-/* Serial debug connection */
-#if defined(SARCH_PC98)
-#define DEFAULT_DEBUG_PORT      2 /* COM2 */
-#define DEFAULT_DEBUG_COM1_IRQ  4
-#define DEFAULT_DEBUG_COM2_IRQ  5
-#define DEFAULT_DEBUG_BAUD_RATE 9600
-#define DEFAULT_BAUD_RATE       9600
-#else
-#define DEFAULT_DEBUG_PORT      2 /* COM2 */
-#define DEFAULT_DEBUG_COM1_IRQ  4
-#define DEFAULT_DEBUG_COM2_IRQ  3
-#define DEFAULT_DEBUG_BAUD_RATE 115200
-#define DEFAULT_BAUD_RATE       19200
-#endif
-
-#if defined(_M_IX86) || defined(_M_AMD64)
-#if defined(SARCH_PC98)
-const ULONG BaseArray[] = {0, 0x30, 0x238};
-#else
-const ULONG BaseArray[] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
-#endif
-#elif defined(_M_PPC)
-const ULONG BaseArray[] = {0, 0x800003F8};
-#elif defined(_M_MIPS)
-const ULONG BaseArray[] = {0, 0x80006000, 0x80007000};
-#elif defined(_M_ARM)
-const ULONG BaseArray[] = {0, 0xF1012000};
-#else
-#error Unknown architecture
-#endif
-
-#define MAX_COM_PORTS   (sizeof(BaseArray) / sizeof(BaseArray[0]) - 1)
+#include <cportlib/cportlib.h>
+#include <cportlib/uartinfo.h>
 
 /* GLOBALS ********************************************************************/
 
 CPPORT KdComPort;
-ULONG  KdComPortIrq = 0; // Not used at the moment.
 #ifdef KDDEBUG
 CPPORT KdDebugComPort;
 #endif
@@ -124,18 +92,15 @@ KdRestore(IN BOOLEAN SleepTransition)
 
 NTSTATUS
 NTAPI
-KdpPortInitialize(IN ULONG ComPortNumber,
-                  IN ULONG ComPortBaudRate)
+KdpPortInitialize(
+    _In_ PUCHAR PortAddress,
+    _In_ ULONG BaudRate)
 {
     NTSTATUS Status;
 
-    Status = CpInitialize(&KdComPort,
-                          UlongToPtr(BaseArray[ComPortNumber]),
-                          ComPortBaudRate);
+    Status = CpInitialize(&KdComPort, PortAddress, BaudRate);
     if (!NT_SUCCESS(Status))
-    {
         return STATUS_INVALID_PARAMETER;
-    }
 
     KdComPortInUse = KdComPort.Address;
     return STATUS_SUCCESS;
@@ -151,10 +116,13 @@ NTSTATUS
 NTAPI
 KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
+#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
+
     ULONG ComPortNumber   = DEFAULT_DEBUG_PORT;
     ULONG ComPortBaudRate = DEFAULT_DEBUG_BAUD_RATE;
+    PUCHAR ComPortAddress = NULL;
 
-    PCHAR CommandLine, PortString, BaudString, IrqString;
+    PSTR CommandLine, PortString, BaudString;
     ULONG Value;
 
     /* Check if we have a LoaderBlock */
@@ -169,99 +137,94 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
         /* Get the port and baud rate */
         PortString = strstr(CommandLine, "DEBUGPORT");
         BaudString = strstr(CommandLine, "BAUDRATE");
-        IrqString  = strstr(CommandLine, "IRQ");
 
-        /* Check if we got the /DEBUGPORT parameter */
+        /* Check if we got the DEBUGPORT parameter */
         if (PortString)
         {
-            /* Move past the actual string, to reach the port*/
-            PortString += strlen("DEBUGPORT");
+            /* Move past the actual string and any spaces */
+            PortString += CONST_STR_LEN("DEBUGPORT");
+            while (*PortString == ' ') ++PortString;
+            /* Skip the equals sign */
+            if (*PortString) ++PortString;
 
-            /* Now get past any spaces and skip the equal sign */
-            while (*PortString == ' ') PortString++;
-            PortString++;
-
-            /* Do we have a serial port? */
-            if (strncmp(PortString, "COM", 3) != 0)
+            /* Do we have a serial port? Recognize both
+             * 'DEBUGPORT=GDB' and 'DEBUGPORT=COM' syntaxes. */
+            if (_strnicmp(PortString, "GDB", CONST_STR_LEN("GDB")) != 0 &&
+                _strnicmp(PortString, "COM", CONST_STR_LEN("COM")) != 0)
             {
                 return STATUS_INVALID_PARAMETER;
             }
 
-            /* Check for a valid Serial Port */
-            PortString += 3;
-            Value = atol(PortString);
-            if (Value >= sizeof(BaseArray) / sizeof(BaseArray[0]))
+            /* Check for a valid serial port */
+            PortString += CONST_STR_LEN("COM"); // Same as len("GDB")
+            if (*PortString != ':')
             {
-                return STATUS_INVALID_PARAMETER;
+                Value = (ULONG)atol(PortString);
+                if (Value > MAX_COM_PORTS)
+                    return STATUS_INVALID_PARAMETER;
+                // if (Value > 0 && Value <= MAX_COM_PORTS)
+                /* Set the port to use */
+                ComPortNumber = Value;
             }
-
-            /* Set the port to use */
-            ComPortNumber = Value;
-       }
+            else
+            {
+                /* Retrieve and set its address */
+                Value = strtoul(PortString + 1, NULL, 0);
+                if (Value)
+                {
+                    ComPortNumber = 0;
+                    ComPortAddress = UlongToPtr(Value);
+                }
+            }
+        }
 
         /* Check if we got a baud rate */
         if (BaudString)
         {
-            /* Move past the actual string, to reach the rate */
-            BaudString += strlen("BAUDRATE");
+            /* Move past the actual string and any spaces */
+            BaudString += CONST_STR_LEN("BAUDRATE");
+            while (*BaudString == ' ') ++BaudString;
 
-            /* Now get past any spaces */
-            while (*BaudString == ' ') BaudString++;
-
-            /* And make sure we have a rate */
+            /* Make sure we have a rate */
             if (*BaudString)
             {
                 /* Read and set it */
-                Value = atol(BaudString + 1);
+                Value = (ULONG)atol(BaudString + 1);
                 if (Value) ComPortBaudRate = Value;
             }
         }
-
-        /* Check Serial Port Settings [IRQ] */
-        if (IrqString)
-        {
-            /* Move past the actual string, to reach the rate */
-            IrqString += strlen("IRQ");
-
-            /* Now get past any spaces */
-            while (*IrqString == ' ') IrqString++;
-
-            /* And make sure we have an IRQ */
-            if (*IrqString)
-            {
-                /* Read and set it */
-                Value = atol(IrqString + 1);
-                if (Value) KdComPortIrq = Value;
-            }
-        }
     }
+
+    if (!ComPortAddress)
+        ComPortAddress = UlongToPtr(BaseArray[ComPortNumber]);
 
 #ifdef KDDEBUG
     /*
      * Try to find a free COM port and use it as the KD debugging port.
-     * NOTE: Inspired by reactos/boot/freeldr/freeldr/comm/rs232.c, Rs232PortInitialize(...)
+     * NOTE: Inspired by freeldr/comm/rs232.c, Rs232PortInitialize(...)
      */
     {
     /*
-     * Start enumerating COM ports from the last one to the first one,
-     * and break when we find a valid port.
-     * If we reach the first element of the list, the invalid COM port,
-     * then it means that no valid port was found.
+     * Enumerate COM ports from the last to the first one, and stop
+     * when we find a valid port. If we reach the first list element
+     * (the undefined COM port), no valid port was found.
      */
+    PUCHAR Address = NULL;
     ULONG ComPort;
     for (ComPort = MAX_COM_PORTS; ComPort > 0; ComPort--)
     {
         /* Check if the port exist; skip the KD port */
-        if ((ComPort != ComPortNumber) && CpDoesPortExist(UlongToPtr(BaseArray[ComPort])))
+        Address = UlongToPtr(BaseArray[ComPort]);
+        if ((Address != ComPortAddress) && CpDoesPortExist(Address))
             break;
     }
-    if (ComPort != 0)
-        CpInitialize(&KdDebugComPort, UlongToPtr(BaseArray[ComPort]), DEFAULT_BAUD_RATE);
+    if (ComPort != 0 && Address != NULL)
+        CpInitialize(&KdDebugComPort, Address, DEFAULT_BAUD_RATE);
     }
 #endif
 
     /* Initialize the port */
-    return KdpPortInitialize(ComPortNumber, ComPortBaudRate);
+    return KdpPortInitialize(ComPortAddress, ComPortBaudRate);
 }
 
 /******************************************************************************
@@ -280,7 +243,7 @@ KdDebuggerInitialize1(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 
 VOID
 NTAPI
-KdpSendByte(_In_ UCHAR Byte)
+KdpSendByte(IN UCHAR Byte)
 {
     /* Send the byte */
     CpPutByte(&KdComPort, Byte);
@@ -303,7 +266,7 @@ KdpPollByte(OUT PUCHAR OutByte)
 
 KDSTATUS
 NTAPI
-KdpReceiveByte(_Out_ PUCHAR OutByte)
+KdpReceiveByte(OUT PUCHAR OutByte)
 {
     USHORT CpStatus;
 

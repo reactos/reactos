@@ -13,7 +13,6 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
-#include <winuser.h>
 
 #include <conutils.h>
 #include <strsafe.h>
@@ -57,12 +56,13 @@ StrStrCase(
     if (bIgnoreCase)
     {
         LCID LocaleId;
-        INT i, cch1, cch2;
+        UINT cch1, cch2;
+        INT i;
 
         LocaleId = GetThreadLocale();
 
-        cch1 = wcslen(pszStr);
-        cch2 = wcslen(pszSearch);
+        cch1 = (UINT)wcslen(pszStr);
+        cch2 = (UINT)wcslen(pszSearch);
 
         if (cch2 == 0)
             return (PWSTR)pszStr;

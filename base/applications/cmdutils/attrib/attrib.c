@@ -13,7 +13,6 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wincon.h>
-#include <winuser.h>
 #include <strsafe.h>
 
 #include <conutils.h>
@@ -150,7 +149,7 @@ typedef struct _ENUMFILES_CTX
 static BOOL
 EnumFilesWorker(
     _Inout_ PENUMFILES_CTX EnumCtx,
-    _Inout_ _off_t offFilePart) // Offset to the file name inside FullPathBuffer
+    _Inout_ size_t offFilePart) // Offset to the file name inside FullPathBuffer
 {
     BOOL bFound = FALSE;
     HRESULT hRes;

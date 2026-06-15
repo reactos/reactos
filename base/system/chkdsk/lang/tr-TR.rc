@@ -14,7 +14,7 @@ Kullanım: %s [sürücü:] [-F] [-V] [-R] [-C]\n\n\
 \n"
 
     IDS_PERCENT_COMPL "Yüzde %d tamamlandı.\r"
-    IDS_FILE_SYSTEM "Dosya sistemin türü %s'tır.\n"
+    IDS_FILE_SYSTEM "Dosya sistemin türü %s'tır for volume %s.\n"
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 Mark Russinovich tarafından yazılmıştır\n\
 Systems Internals - http://www.sysinternals.com\n\

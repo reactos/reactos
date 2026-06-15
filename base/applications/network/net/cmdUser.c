@@ -257,7 +257,7 @@ VOID
 PrintLogonHours(
     DWORD dwUnitsPerWeek,
     PBYTE pLogonHours,
-    INT nPaddedLength)
+    DWORD nPaddedLength)
 {
     DWORD dwUnitsPerDay, dwBitNumber, dwSecondsPerUnit;
     DWORD dwStartTime, dwEndTime, dwStartDay, dwEndDay, dwBias;
@@ -352,7 +352,7 @@ DisplayUser(LPWSTR lpUserName)
     DWORD dwLastSet;
     DWORD i;
     WCHAR szCountry[40];
-    INT nPaddedLength = 36;
+    const DWORD nPaddedLength = 36;
     NET_API_STATUS Status;
 
     /* Modify the user */
@@ -584,7 +584,7 @@ GenerateRandomPassword(
     LPBOOL lpAllocated)
 {
     LPWSTR pPassword = NULL;
-    INT nCharsLen, i, nLength = 8;
+    size_t nCharsLen, i, nLength = 8;
 
     srand(GetTickCount());
 
@@ -613,11 +613,11 @@ BuildWorkstationsList(
     _In_ PWSTR pRaw)
 {
     BOOL isLastSep, isSep;
-    INT i, j;
     WCHAR c;
-    INT nLength = 0;
-    INT nArgs = 0;
-    INT nRawLength;
+    size_t i, j;
+    size_t nLength = 0;
+    size_t nRawLength;
+    UINT nArgs = 0;
     PWSTR pList;
 
     /* Check for invalid characters in the raw string */

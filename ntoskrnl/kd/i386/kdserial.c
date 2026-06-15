@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/kd/i386/kdbg.c
  * PURPOSE:         Serial i/o functions for the kernel debugger.
  * PROGRAMMER:      Alex Ionescu
- *                  Hervé Poussineau
+ *                  HervÃ© Poussineau
  */
 
 /* INCLUDES *****************************************************************/
@@ -13,29 +13,8 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined(SARCH_PC98)
-#define DEFAULT_BAUD_RATE   9600
-#else
-#define DEFAULT_BAUD_RATE   19200
-#endif
-
-#if defined(_M_IX86) || defined(_M_AMD64)
-#if defined(SARCH_PC98)
-const ULONG BaseArray[] = {0, 0x30, 0x238};
-#else
-const ULONG BaseArray[] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
-#endif
-#elif defined(_M_PPC)
-const ULONG BaseArray[] = {0, 0x800003F8};
-#elif defined(_M_MIPS)
-const ULONG BaseArray[] = {0, 0x80006000, 0x80007000};
-#elif defined(_M_ARM)
-const ULONG BaseArray[] = {0, 0xF1012000};
-#else
-#error Unknown architecture
-#endif
-
-#define MAX_COM_PORTS   (sizeof(BaseArray) / sizeof(BaseArray[0]) - 1)
+//#include <cportlib/cportlib.h>
+#include <cportlib/uartinfo.h>
 
 /* STATIC VARIABLES ***********************************************************/
 
@@ -66,10 +45,9 @@ KdPortInitializeEx(
         if (ComPortNumber == 0)
         {
             /*
-             * Start enumerating COM ports from the last one to the first one,
-             * and break when we find a valid port.
-             * If we reach the first element of the list, the invalid COM port,
-             * then it means that no valid port was found.
+             * Enumerate COM ports from the last to the first one, and stop
+             * when we find a valid port. If we reach the first list element
+             * (the undefined COM port), no valid port was found.
              */
             for (ComPortNumber = MAX_COM_PORTS; ComPortNumber > 0; ComPortNumber--)
             {
@@ -81,7 +59,7 @@ KdPortInitializeEx(
             }
             if (ComPortNumber == 0)
             {
-                HalDisplayString("\r\nKernel Debugger: No COM port found!\r\n\r\n");
+                HalDisplayString("\r\nKernel Debugger: No serial port found\r\n\r\n");
                 return FALSE;
             }
         }
@@ -96,11 +74,11 @@ KdPortInitializeEx(
     Status = CpInitialize(PortInformation,
                           (ComPortNumber == 0 ? PortInformation->Address
                                               : UlongToPtr(BaseArray[ComPortNumber])),
-                          (PortInformation->BaudRate == 0 ? DEFAULT_BAUD_RATE
+                          (PortInformation->BaudRate == 0 ? DEFAULT_DEBUG_BAUD_RATE
                                                           : PortInformation->BaudRate));
     if (!NT_SUCCESS(Status))
     {
-        HalDisplayString("\r\nKernel Debugger: Serial port not found!\r\n\r\n");
+        HalDisplayString("\r\nKernel Debugger: Serial port not available\r\n\r\n");
         return FALSE;
     }
     else
@@ -111,7 +89,7 @@ KdPortInitializeEx(
 
         /* Print message to blue screen */
         Length = snprintf(Buffer, sizeof(Buffer),
-                          "\r\nKernel Debugger: Serial port found: COM%ld (Port 0x%p) BaudRate %ld\r\n\r\n",
+                          "\r\nKernel Debugger: Using COM%lu (Port 0x%p) BaudRate %lu\r\n\r\n",
                           ComPortNumber,
                           PortInformation->Address,
                           PortInformation->BaudRate);

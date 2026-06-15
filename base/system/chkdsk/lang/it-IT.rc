@@ -20,7 +20,7 @@ Uso: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
 \n"
 
     IDS_PERCENT_COMPL "%d percentuale completato.\r"
-    IDS_FILE_SYSTEM "Il tipo del file di sistema è %s.\n"
+    IDS_FILE_SYSTEM "Il tipo del file di sistema è %s per l'unità %s.\n"
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 di Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\

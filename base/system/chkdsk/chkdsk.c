@@ -88,7 +88,7 @@ PCHKDSK Chkdsk;
 // Takes the win32 error code and prints the text version.
 //
 //----------------------------------------------------------------------
-static VOID PrintWin32Error(int Message, DWORD ErrorCode)
+static VOID PrintWin32Error(UINT Message, DWORD ErrorCode)
 {
     ConResPuts(StdErr, Message);
     ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
@@ -456,7 +456,7 @@ wmain(int argc, WCHAR *argv[])
     //
     // Just do it
     //
-    ConResPrintf(StdOut, IDS_FILE_SYSTEM, fileSystem);
+    ConResPrintf(StdOut, IDS_FILE_SYSTEM, fileSystem, Drive);
     Chkdsk(Drive,
            fileSystem,
            FixErrors,

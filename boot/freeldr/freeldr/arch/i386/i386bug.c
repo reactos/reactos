@@ -203,7 +203,7 @@ FrLdrBugCheckWithMessage(
     ULONG BugCode,
     PCHAR File,
     ULONG Line,
-    PSTR Format,
+    PCSTR Format,
     ...)
 {
     va_list argptr;

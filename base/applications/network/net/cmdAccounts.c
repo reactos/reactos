@@ -27,7 +27,7 @@ cmdAccounts(
 #if 0
     BOOL Domain = FALSE;
 #endif
-    INT nPaddedLength = 58;
+    const DWORD nPaddedLength = 58;
     NET_API_STATUS Status;
     INT result = 0;
 

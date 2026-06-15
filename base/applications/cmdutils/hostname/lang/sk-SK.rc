@@ -1,0 +1,15 @@
+/*
+ * PROJECT:     ReactOS Hostname Command
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATOR:  Copyright 2026 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nVypíše súčasný názov hostiteľa.\n\nhostname\n"
+    IDS_NOSET "sethostname: Pre zmenu názvu počítača otvorte kartu ""Názov počítača""\nv nastaveniach ""Systém"" v Ovládacom paneli.\nhostname -s nie je podporovaný.\n"
+    IDS_ERROR "Chyba: "
+END

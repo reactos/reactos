@@ -690,9 +690,9 @@ Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         goto Finish;
     }
 
-    if ((pClientImc->dwFlags & CLIENTIMC_UNKNOWN2) && !bKeep)
+    if ((pClientImc->dwFlags & CLIENTIMC_LOCKED) && !bKeep)
     {
-        ERR("Can't destroy for CLIENTIMC_UNKNOWN2\n");
+        ERR("Can't destroy for CLIENTIMC_LOCKED\n");
         return FALSE;
     }
 
@@ -810,6 +810,7 @@ Imm32CreateInputContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HK
             pClientImc->dwFlags |= CLIENTIMC_WIDE;
 
         cbPrivate = pImeDpi->ImeInfo.dwPrivateDataSize;
+        cbPrivate = max(cbPrivate, sizeof(DWORD)); /* ensure minimum size, like Imm32SelectInputContext does */
     }
 
     /* Create private data */
@@ -987,7 +988,7 @@ ImmLockClientImc(_In_ HIMC hImc)
         return NULL;
     }
 
-    pClientImc->dwFlags |= CLIENTIMC_UNKNOWN2;
+    pClientImc->dwFlags |= CLIENTIMC_LOCKED;
 
 Finish:
     InterlockedIncrement(&pClientImc->cLockObj);
@@ -1131,6 +1132,12 @@ ImmEnumInputContext(
     HIMC hIMC;
 
     TRACE("(%lu, %p, %p)\n", dwThreadId, lpfn, lParam);
+    
+    if (!IS_IMM_MODE())
+    {
+        TRACE("\n");
+        return FALSE;
+    }
 
     dwCount = Imm32BuildHimcList(dwThreadId, &phList);
     if (IS_ZERO_UNEXPECTEDLY(dwCount))
@@ -1139,9 +1146,12 @@ ImmEnumInputContext(
     for (dwIndex = 0; dwIndex < dwCount; ++dwIndex)
     {
         hIMC = phList[dwIndex];
-        ret = (*lpfn)(hIMC, lParam);
-        if (!ret)
-            break;
+        if (hIMC && gpsi && ValidateHandle(hIMC, TYPE_INPUTCONTEXT))
+        {
+            ret = (*lpfn)(hIMC, lParam);
+            if (!ret)
+                break;
+        }
     }
 
     ImmLocalFree(phList);

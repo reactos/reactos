@@ -3,29 +3,24 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Trace network paths through networks
  * COPYRIGHT:   Copyright 2018 Ged Murphy <gedmurphy@reactos.org>
-                Copyright 2025 Curtis Wilson <LiquidFox1776@gmail.com>
+ *              Copyright 2025 Curtis Wilson <LiquidFox1776@gmail.com>
  */
 
-#ifdef __REACTOS__
-#define USE_CONUTILS
-#define WIN32_NO_STATUS
 #include <stdarg.h>
+#include <stdlib.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
-#define _INC_WINDOWS
-#include <stdlib.h>
-#include <winsock2.h>
-#include <conutils.h>
-#else
-#include <winsock2.h>
-#include <Windows.h>
-#endif
+
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
 #include <icmpapi.h>
+#include <winsock2.h>
+#include <conutils.h>
+
 #include <strsafe.h>
-#include <errno.h>
+
 #include "resource.h"
 
 #define SIZEOF_ICMP_ERROR       8
@@ -53,104 +48,25 @@ struct TraceInfo
 } Info = { 0 };
 
 
-
-#ifndef USE_CONUTILS
-static
-INT
-LengthOfStrResource(
-    _In_ HINSTANCE hInst,
-    _In_ UINT uID
-)
-{
-    HRSRC hrSrc;
-    HGLOBAL hRes;
-    LPWSTR lpName, lpStr;
-
-    if (hInst == NULL) return -1;
-
-    lpName = (LPWSTR)MAKEINTRESOURCE((uID >> 4) + 1);
-
-    if ((hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING)) &&
-        (hRes = LoadResource(hInst, hrSrc)) &&
-        (lpStr = (WCHAR*)LockResource(hRes)))
-    {
-        UINT x;
-        uID &= 0xF;
-        for (x = 0; x < uID; x++)
-        {
-            lpStr += (*lpStr) + 1;
-        }
-        return (int)(*lpStr);
-    }
-    return -1;
-}
-
-static
-INT
-AllocAndLoadString(
-    _In_ UINT uID,
-    _Out_ LPWSTR *lpTarget
-)
-{
-    HMODULE hInst;
-    INT Length;
-
-    hInst = GetModuleHandleW(NULL);
-    Length = LengthOfStrResource(hInst, uID);
-    if (Length++ > 0)
-    {
-        (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED,
-                                         Length * sizeof(WCHAR));
-        if ((*lpTarget) != NULL)
-        {
-            INT Ret;
-            if (!(Ret = LoadStringW(hInst, uID, *lpTarget, Length)))
-            {
-                LocalFree((HLOCAL)(*lpTarget));
-            }
-            return Ret;
-        }
-    }
-    return 0;
-}
-
+#if 0
 static
 INT
 OutputText(
     _In_ UINT uID,
     ...)
 {
-    LPWSTR Format;
-    DWORD Ret = 0;
-    va_list lArgs;
+    INT Len;
+    va_list args;
 
-    if (AllocAndLoadString(uID, &Format) > 0)
-    {
-        va_start(lArgs, uID);
+    va_start(args, uID);
+    Len = ConResMsgPrintfV(StdOut, 0, uID, &args);
+    va_end(args);
 
-        LPWSTR Buffer;
-        Ret = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
-                             Format,
-                             0,
-                             0,
-                             (LPWSTR)&Buffer,
-                             0,
-                             &lArgs);
-        va_end(lArgs);
-
-        if (Ret)
-        {
-            wprintf(Buffer);
-            LocalFree(Buffer);
-        }
-        LocalFree((HLOCAL)Format);
-    }
-
-    return Ret;
+    return Len;
 }
 #else
-#define OutputText(Id, ...) ConResMsgPrintfEx(StdOut, NULL, 0, Id, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), ##__VA_ARGS__)
-#endif //USE_CONUTILS
+#define OutputText(uID, ...) ConResMsgPrintf(StdOut, 0, (uID), ##__VA_ARGS__)
+#endif
 
 static
 VOID
@@ -196,23 +112,16 @@ ResolveTarget()
                           &Hints,
                           &Info.Target);
     if (Status != 0)
-    {
         return false;
-    }
 
     Status = GetNameInfoW(Info.Target->ai_addr,
-                          Info.Target->ai_addrlen,
+                          (socklen_t)Info.Target->ai_addrlen,
                           Info.TargetIP,
                           MAX_IPADDRESS,
                           NULL,
                           0,
                           NI_NUMERICHOST);
-    if (Status != 0)
-    {
-        return false;
-    }
-
-    return true;
+    return (Status == 0);
 }
 
 static bool
@@ -230,7 +139,7 @@ PrintHopInfo(_In_ PVOID Buffer)
         CopyMemory(SockAddrIn6.sin6_addr.u.Word, Ipv6Addr->sin6_addr, sizeof(SockAddrIn6.sin6_addr));
         //SockAddrIn6.sin6_addr = Ipv6Addr->sin6_addr;
         SockAddr = (PSOCKADDR)&SockAddrIn6;
-        Size = sizeof(SOCKADDR_IN6);
+        Size = sizeof(SockAddrIn6);
 
     }
     else
@@ -239,7 +148,7 @@ PrintHopInfo(_In_ PVOID Buffer)
         SockAddrIn.sin_family = AF_INET;
         SockAddrIn.sin_addr.S_un.S_addr = *Address;
         SockAddr = (PSOCKADDR)&SockAddrIn;
-        Size = sizeof(SOCKADDR_IN);
+        Size = sizeof(SockAddrIn);
     }
 
     INT Status;
@@ -617,19 +526,19 @@ ParseCmdline(int argc, wchar_t *argv[])
             switch (argv[i][1])
             {
             case 'd':
-                Info.ResolveAddresses = FALSE;
+                Info.ResolveAddresses = false;
                 break;
 
             case 'h':
-               if (!GetUlongOptionInRange(argc,
-                                          argv,
-                                          &i,
-                                          &Info.MaxHops,
-                                          MIN_HOP_COUNT,
-                                          MAX_HOP_COUNT))
-               {
+                if (!GetUlongOptionInRange(argc,
+                                           argv,
+                                           &i,
+                                           &Info.MaxHops,
+                                           MIN_HOP_COUNT,
+                                           MAX_HOP_COUNT))
+                {
                     return false;
-               }
+                }
                 break;
 
             case 'j':
@@ -691,10 +600,8 @@ ParseCmdline(int argc, wchar_t *argv[])
 EXTERN_C
 int wmain(int argc, wchar_t *argv[])
 {
-#ifdef USE_CONUTILS
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
-#endif
 
     Info.ResolveAddresses = true;
     Info.MaxHops = 30;

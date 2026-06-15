@@ -19,7 +19,7 @@ DisplayServerStatistics(VOID)
     FILETIME FileTime, LocalFileTime;
     SYSTEMTIME SystemTime;
     WCHAR DateBuffer[32], TimeBuffer[32];
-    INT nPaddedLength = 35;
+    const DWORD nPaddedLength = 35;
     NET_API_STATUS Status;
 
     Status = NetServerGetInfo(NULL, 100, (PBYTE*)&ServerInfo);
@@ -133,7 +133,7 @@ DisplayWorkstationStatistics(VOID)
     FILETIME FileTime, LocalFileTime;
     SYSTEMTIME SystemTime;
     WCHAR DateBuffer[32], TimeBuffer[32];
-    INT nPaddedLength = 47;
+    const DWORD nPaddedLength = 47;
     NET_API_STATUS Status;
 
     Status = NetWkstaGetInfo(NULL,

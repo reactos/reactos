@@ -258,7 +258,7 @@ IopWriteAsyncUserIosb(PIRP Irp)
                  * from the IRP then. The process mode still should be checked.
                  */
                 IoIs32bitProcess(NULL) &&
-                Iosb32 != NULL && (PVOID)Iosb32 <= (PVOID)MAXULONG)
+                Iosb32 != NULL && (ULONG_PTR)Iosb32 <= MAXULONG)
             {
                 InterlockedExchangePointer(&Irp->UserIosb->Pointer, NULL);
 

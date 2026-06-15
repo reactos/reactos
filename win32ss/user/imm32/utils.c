@@ -74,7 +74,7 @@ BOOL Imm32IsSystemJapaneseOrKorean(VOID)
     LCID lcid = GetSystemDefaultLCID();
     LANGID LangID = LANGIDFROMLCID(lcid);
     WORD wPrimary = PRIMARYLANGID(LangID);
-    if (wPrimary != LANG_JAPANESE || wPrimary != LANG_KOREAN)
+    if (wPrimary != LANG_JAPANESE && wPrimary != LANG_KOREAN)
     {
         TRACE("The country has no special IME support\n");
         return FALSE;
@@ -446,7 +446,6 @@ Imm32SaveImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
  * dwStrLen, dwCompStrLen, and dwTargetStrLen are the TCHAR count. dwStrOffset,
  * dwCompStrOffset, and dwTargetStrOffset are the byte offset.
  */
-
 DWORD
 Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc, UINT uCodePage)
 {
@@ -460,8 +459,7 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
         return 0;
     }
 
-    cchDest = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pchSrc, pSrc->dwStrLen,
-                                  NULL, 0);
+    cchDest = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pchSrc, pSrc->dwStrLen, NULL, 0);
     cbDest = sizeof(RECONVERTSTRING) + (cchDest + 1) * sizeof(WCHAR);
     if (!pDest)
         return cbDest;
@@ -495,7 +493,7 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
 
     /* dwTargetStrLen */
     cch0 = IchWideFromAnsi(pSrc->dwTargetStrOffset + pSrc->dwTargetStrLen, pchSrc, uCodePage);
-    pDest->dwTargetStrLen = (cch0 * sizeof(WCHAR) - pSrc->dwTargetStrOffset) / sizeof(WCHAR);
+    pDest->dwTargetStrLen = (cch0 * sizeof(WCHAR) - pDest->dwTargetStrOffset) / sizeof(WCHAR);
 
     /* dwStrLen */
     pDest->dwStrLen = cchDest;

@@ -67,20 +67,8 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename, UINT nCodePag
 }
 
 static BOOL
-DoReadAllOfFile(PCWSTR filename, CSimpleArray<BYTE>& contents,
-                zip_fileinfo *pzi)
+DoGetFileTimeInfo(HANDLE hFile, zip_fileinfo* pzi)
 {
-    contents.RemoveAll();
-
-    HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ,
-                               NULL, OPEN_EXISTING,
-                               FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
-    {
-        DPRINT1("%S: cannot open\n", filename);
-        return FALSE;
-    }
-
     FILETIME ft, ftLocal;
     ZeroMemory(pzi, sizeof(*pzi));
     if (GetFileTime(hFile, NULL, NULL, &ft))
@@ -94,31 +82,9 @@ DoReadAllOfFile(PCWSTR filename, CSimpleArray<BYTE>& contents,
         pzi->tmz_date.tm_mday = st.wDay;
         pzi->tmz_date.tm_mon = st.wMonth - 1;
         pzi->tmz_date.tm_year = st.wYear;
+        return TRUE;
     }
-
-    const DWORD cbBuff = 0x7FFF;
-    LPBYTE pbBuff = reinterpret_cast<LPBYTE>(CoTaskMemAlloc(cbBuff));
-    if (!pbBuff)
-    {
-        DPRINT1("Out of memory\n");
-        CloseHandle(hFile);
-        return FALSE;
-    }
-
-    for (;;)
-    {
-        DWORD cbRead;
-        if (!ReadFile(hFile, pbBuff, cbBuff, &cbRead, NULL) || !cbRead)
-            break;
-
-        for (DWORD i = 0; i < cbRead; ++i)
-            contents.Add(pbBuff[i]);
-    }
-
-    CoTaskMemFree(pbBuff);
-    CloseHandle(hFile);
-
-    return TRUE;
+    return FALSE;
 }
 
 static void
@@ -302,22 +268,41 @@ unsigned CZipCreatorImpl::JustDoIt()
 
     // TODO: password
     const char *password = NULL;
-    int zip64 = 1; // always zip64
-    zip_fileinfo zi;
 
-    int err = 0;
+    // Use dwAllocationGranularity for file mapping
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    const ULONGLONG dwChunkSize = si.dwAllocationGranularity * 256;
+
+    // The loop for creating a ZIP file
     CStringW strTarget, strBaseName = DoGetBaseName(m_items[0]);
     UINT nCodePage = GetZipCodePage(FALSE);
-    for (INT iFile = 0; iFile < files.GetSize(); ++iFile)
+    INT err = ZIP_OK;
+    for (INT iFile = 0; iFile < files.GetSize() && err == ZIP_OK; ++iFile)
     {
         const CStringW& strFile = files[iFile];
+        zip_fileinfo zi;
 
-        CSimpleArray<BYTE> contents;
-        if (!DoReadAllOfFile(strFile, contents, &zi))
+        // Open the file for storing it into a ZIP file
+        HANDLE hFile = CreateFileW(strFile, GENERIC_READ, FILE_SHARE_READ, NULL,
+                                   OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
         {
-            DPRINT1("DoReadAllOfFile failed\n");
+            DPRINT1("Cannot open file '%S'\n", (PCWSTR)strFile);
             err = CZCERR_READ;
-            strTarget = strFile;
+            break;
+        }
+
+        // Load the file time info
+        DoGetFileTimeInfo(hFile, &zi);
+
+        // Get the file size
+        LARGE_INTEGER fileSize;
+        if (!GetFileSizeEx(hFile, &fileSize))
+        {
+            DPRINT1("Cannot get file size '%S'\n", (PCWSTR)strFile);
+            CloseHandle(hFile);
+            err = CZCERR_READ;
             break;
         }
 
@@ -327,6 +312,7 @@ unsigned CZipCreatorImpl::JustDoIt()
             // TODO: crc = ...;
         }
 
+        // Get filename info
         CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, nCodePage);
         CStringA strNameInZipUTF8 = DoGetNameInZip(strBaseName, strFile, CP_UTF8);
         if (!m_TargetDir.IsEmpty())
@@ -338,6 +324,7 @@ unsigned CZipCreatorImpl::JustDoIt()
             strNameInZipUTF8 = strTargetDirUTF8 + strNameInZipUTF8;
         }
 
+        // Prepare additional field (UTF-8 name)
         CSimpleArray<BYTE> extraField;
         if (nCodePage != CP_UTF8 && strNameInZip != strNameInZipUTF8)
         {
@@ -361,44 +348,59 @@ unsigned CZipCreatorImpl::JustDoIt()
                 extraField.Add(strNameInZipUTF8[ich]);
         }
 
-        err = zipOpenNewFileInZip4_64(zf,
-                                      strNameInZip,
-                                      &zi,
-                                      (extraField.GetSize() > 0 ? extraField.GetData() : NULL),
-                                      extraField.GetSize(),
-                                      NULL,
-                                      0,
-                                      NULL,
-                                      Z_DEFLATED,
-                                      Z_DEFAULT_COMPRESSION,
-                                      0,
-                                      -MAX_WBITS,
-                                      DEF_MEM_LEVEL,
-                                      Z_DEFAULT_STRATEGY,
-                                      password,
-                                      crc,
+        // Add a new file entry into a ZIP file
+        err = zipOpenNewFileInZip4_64(zf, strNameInZip, &zi,
+                                      (extraField.GetSize() ? extraField.GetData() : NULL),
+                                      extraField.GetSize(), NULL, 0, NULL, Z_DEFLATED,
+                                      Z_DEFAULT_COMPRESSION, 0, -MAX_WBITS, DEF_MEM_LEVEL,
+                                      Z_DEFAULT_STRATEGY, password, crc,
                                       MINIZIP_COMPATIBLE_VERSION,
-                                      (nCodePage == CP_UTF8 ? MINIZIP_UTF8_FLAG : 0),
-                                      zip64);
+                                      (nCodePage == CP_UTF8 ? MINIZIP_UTF8_FLAG : 0), 1);
         if (err)
         {
             DPRINT1("zipOpenNewFileInZip3_64\n");
             break;
         }
 
-        err = zipWriteInFileInZip(zf, contents.GetData(), contents.GetSize());
-        if (err)
+        if (fileSize.QuadPart > 0) // Not an empty file?
         {
-            DPRINT1("zipWriteInFileInZip\n");
-            break;
+            // Use a file mapping for quick file access and large file support
+            HANDLE hMapping = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+            if (!hMapping)
+            {
+                DPRINT1("Cannot create file mapping\n");
+                err = CZCERR_READ;
+                CloseHandle(hFile);
+                break;
+            }
+
+            // The loop for reading and storing file contents
+            DWORD dwMapSize;
+            for (ULONGLONG offset = 0; offset < (ULONGLONG)fileSize.QuadPart && err == ZIP_OK;
+                 offset += dwMapSize)
+            {
+                ULONGLONG dwDelta = fileSize.QuadPart - offset;
+                dwMapSize = (DWORD)min(dwChunkSize, dwDelta);
+                DWORD offsetLow = (DWORD)offset, offsetHigh = (DWORD)(offset >> 32);
+                PVOID pData = MapViewOfFile(hMapping, FILE_MAP_READ, offsetHigh, offsetLow,
+                                            dwMapSize);
+                if (!pData)
+                {
+                    DPRINT1("Cannot map the view\n");
+                    err = CZCERR_READ;
+                    break;
+                }
+
+                err = zipWriteInFileInZip(zf, pData, dwMapSize);
+                UnmapViewOfFile(pData);
+            }
+
+            CloseHandle(hMapping);
         }
 
-        err = zipCloseFileInZip(zf);
-        if (err)
-        {
-            DPRINT1("zipCloseFileInZip\n");
-            break;
-        }
+        CloseHandle(hFile);
+
+        zipCloseFileInZip(zf);
     }
 
     zipClose(zf, NULL);

@@ -10,11 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
-#include <assert.h>
 
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <ntndk.h>
+#include <ndk/exfuncs.h>
 #include <strsafe.h>
 
 #include <conutils.h>

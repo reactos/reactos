@@ -2,20 +2,20 @@
  * PROJECT:     ReactOS FC Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Comparing files
- * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
+
 #pragma once
+
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#ifdef __REACTOS__
-    #include <windef.h>
-    #include <winbase.h>
-    #include <winuser.h>
-    #include <winnls.h>
-#else
-    #include <windows.h>
-#endif
+
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winnls.h>
+
 #include <wine/list.h>
 #include "resource.h"
 

@@ -53,6 +53,10 @@ if(MSVC)
     target_compile_options(oleaut32 PRIVATE /wd4146 /wd4267)
 endif()
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(oleaut32 PRIVATE -Wno-misleading-indentation)
+endif()
+
 add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
 add_dependencies(oleaut32 oleaut32_idlheader)
 set_module_type(oleaut32 win32dll)

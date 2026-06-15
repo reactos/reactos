@@ -29,9 +29,9 @@ void invalid_switch(LPTSTR is)
 void getPath(TCHAR* out, LPTSTR in)
 {
     if (_tcslen(in) == 2 && in[1] == _T(':'))
-        GetRootPath(in,out,MAX_PATH);
+        GetRootPath(in, out, MAX_PATH);
     else
-        GetFullPathName (in, MAX_PATH, out, NULL);
+        GetFullPathName(in, MAX_PATH, out, NULL);
 }
 
 /* makes the replace */
@@ -55,7 +55,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
     // ConOutPrintf(_T("dest: %s\n"), dest);
 
     /* Open up the sourcefile */
-    hFileSrc = CreateFile (source, GENERIC_READ, FILE_SHARE_READ,NULL, OPEN_EXISTING, 0, NULL);
+    hFileSrc = CreateFile(source, GENERIC_READ, FILE_SHARE_READ,NULL, OPEN_EXISTING, 0, NULL);
     if (hFileSrc == INVALID_HANDLE_VALUE)
     {
         ConOutResPrintf(STRING_COPY_ERROR1, source);
@@ -66,15 +66,15 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
      * Get the time from source file to be used in the comparison
      * with dest time if update switch is set.
      */
-    GetFileTime (hFileSrc, &srcCreationTime, &srcLastAccessTime, &srcLastWriteTime);
+    GetFileTime(hFileSrc, &srcCreationTime, &srcLastAccessTime, &srcLastWriteTime);
 
     /*
      * Retrieve the source attributes so that they later on
      * can be inserted in to the destination.
      */
-    dwAttrib = GetFileAttributes (source);
+    dwAttrib = GetFileAttributes(source);
 
-    if (IsExistingFile (dest))
+    if (IsExistingFile(dest))
     {
         /*
          * Resets the attributes to avoid problems with read only files,
@@ -94,24 +94,24 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
             if (hFileDest == INVALID_HANDLE_VALUE)
             {
                 ConOutResPrintf(STRING_COPY_ERROR1, dest);
-                CloseHandle (hFileSrc);
+                CloseHandle(hFileSrc);
                 return 0;
             }
 
             /* Compare time */
-            GetFileTime (hFileDest, &destCreationTime, &destLastAccessTime, &destLastWriteTime);
+            GetFileTime(hFileDest, &destCreationTime, &destLastAccessTime, &destLastWriteTime);
             if (!((srcLastWriteTime.dwHighDateTime > destLastWriteTime.dwHighDateTime) ||
                     (srcLastWriteTime.dwHighDateTime == destLastWriteTime.dwHighDateTime &&
                      srcLastWriteTime.dwLowDateTime > destLastWriteTime.dwLowDateTime)))
             {
-                CloseHandle (hFileSrc);
-                CloseHandle (hFileDest);
+                CloseHandle(hFileSrc);
+                CloseHandle(hFileDest);
                 return 0;
             }
-            CloseHandle (hFileDest);
+            CloseHandle(hFileDest);
         }
         /* Delete the old file */
-        DeleteFile (dest);
+        DeleteFile(dest);
     }
 
     /* Check confirm flag, and take appropriate action */
@@ -122,9 +122,9 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
             ConOutResPrintf(STRING_REPLACE_HELP9, dest);
         else
             ConOutResPrintf(STRING_REPLACE_HELP10, dest);
-        if ( !FilePromptYNA (0))
+        if (!FilePromptYNA(0))
         {
-            CloseHandle (hFileSrc);
+            CloseHandle(hFileSrc);
             return 0;
         }
     }
@@ -139,16 +139,16 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
     if (!_tcscmp(s, d))
     {
         ConOutResPrintf(STRING_REPLACE_ERROR7);
-        CloseHandle (hFileSrc);
+        CloseHandle(hFileSrc);
         *doMore = FALSE;
         return 0;
     }
 
     /* Open destination file to write to */
-    hFileDest = CreateFile (dest, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    hFileDest = CreateFile(dest, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
     if (hFileDest == INVALID_HANDLE_VALUE)
     {
-        CloseHandle (hFileSrc);
+        CloseHandle(hFileSrc);
         ConOutResPrintf(STRING_REPLACE_ERROR7);
         *doMore = FALSE;
         return 0;
@@ -158,43 +158,43 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
     buffer = VirtualAlloc(NULL, BUFF_SIZE, MEM_COMMIT, PAGE_READWRITE);
     if (buffer == NULL)
     {
-        CloseHandle (hFileDest);
-        CloseHandle (hFileSrc);
+        CloseHandle(hFileDest);
+        CloseHandle(hFileSrc);
         ConOutResPrintf(STRING_ERROR_OUT_OF_MEMORY);
         return 0;
     }
 
     /* Put attribute and time to the new destination file */
-    SetFileAttributes (dest, dwAttrib);
-    SetFileTime (hFileDest, &srcCreationTime, &srcLastAccessTime, &srcLastWriteTime);
+    SetFileAttributes(dest, dwAttrib);
+    SetFileTime(hFileDest, &srcCreationTime, &srcLastAccessTime, &srcLastWriteTime);
     do
     {
         /* Read data from source */
-        ReadFile (hFileSrc, buffer, BUFF_SIZE, &dwRead, NULL);
+        ReadFile(hFileSrc, buffer, BUFF_SIZE, &dwRead, NULL);
 
         /* Done? */
         if (dwRead == 0)
             break;
 
         /* Write to destination file */
-        WriteFile (hFileDest, buffer, dwRead, &dwWritten, NULL);
+        WriteFile(hFileDest, buffer, dwRead, &dwWritten, NULL);
 
         /* Done! or ctrl break! */
         if (dwWritten != dwRead || bCtrlBreak)
         {
             ConOutResPuts(STRING_COPY_ERROR3);
-            VirtualFree (buffer, 0, MEM_RELEASE);
-            CloseHandle (hFileDest);
-            CloseHandle (hFileSrc);
+            VirtualFree(buffer, 0, MEM_RELEASE);
+            CloseHandle(hFileDest);
+            CloseHandle(hFileSrc);
             return 0;
         }
     }
     while (!bEof);
 
     /* Return memory and close files */
-    VirtualFree (buffer, 0, MEM_RELEASE);
-    CloseHandle (hFileDest);
-    CloseHandle (hFileSrc);
+    VirtualFree(buffer, 0, MEM_RELEASE);
+    CloseHandle(hFileDest);
+    CloseHandle(hFileSrc);
 
     /* Return one file replaced */
     return 1;
@@ -215,13 +215,13 @@ INT recReplace(DWORD dwFlags,
     WIN32_FIND_DATA findBuffer;
 
     /* Get file handle to the sourcefile(s) */
-    hFile = FindFirstFile (szSrcPath, &findBuffer);
+    hFile = FindFirstFile(szSrcPath, &findBuffer);
 
     /*
      * Strip the paths back to the folder they are in, so that
      * the different filenames can be added if more than one.
      */
-    for(i = (_tcslen(szSrcPath) -  1); i > -1; i--)
+    for (i = (_tcslen(szSrcPath) -  1); i > -1; i--)
     {
         if (szSrcPath[i] != _T('\\'))
             szSrcPath[i] = _T('\0');
@@ -240,14 +240,16 @@ INT recReplace(DWORD dwFlags,
             return filesReplaced;
 
         /* We do not want to replace any .. . ocr directory */
-        if (!_tcscmp (findBuffer.cFileName, _T("."))  ||
-                !_tcscmp (findBuffer.cFileName, _T(".."))||
-                findBuffer.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                continue;
+        if (!_tcscmp(findBuffer.cFileName, _T("."))  ||
+            !_tcscmp(findBuffer.cFileName, _T("..")) ||
+            (findBuffer.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            continue;
+        }
 
         /* Add filename to destpath */
         _tcscpy(tmpDestPath,szDestPath);
-        _tcscat (tmpDestPath, findBuffer.cFileName);
+        _tcscat(tmpDestPath, findBuffer.cFileName);
 
         dwAttrib = GetFileAttributes(tmpDestPath);
         /* Check add flag */
@@ -277,7 +279,7 @@ INT recReplace(DWORD dwFlags,
 
         /* Add filename to sourcepath, insted of wildcards */
         _tcscpy(tmpSrcPath,szSrcPath);
-        _tcscat (tmpSrcPath, findBuffer.cFileName);
+        _tcscat(tmpSrcPath, findBuffer.cFileName);
 
         /* Make the replace */
         if (replace(tmpSrcPath,tmpDestPath, dwFlags, doMore))
@@ -292,7 +294,7 @@ INT recReplace(DWORD dwFlags,
         }
 
     /* Take next sourcefile if any */
-    } while(FindNextFile (hFile, &findBuffer));
+    } while (FindNextFile(hFile, &findBuffer));
 
     FindClose(hFile);
 
@@ -318,10 +320,10 @@ INT recFindSubDirs(DWORD dwFlags,
     _tcscat(szDestPath, _T("*"));
 
     /* Get the first file in the directory */
-    hFile = FindFirstFile (szDestPath, &findBuffer);
+    hFile = FindFirstFile(szDestPath, &findBuffer);
 
     /* Remove the star added earlier to dest path */
-    for(i = (_tcslen(szDestPath) -  1); i > -1; i--)
+    for (i = (_tcslen(szDestPath) -  1); i > -1; i--)
     {
         if (szDestPath[i] != _T('\\'))
             szDestPath[i] = _T('\0');
@@ -337,7 +339,7 @@ INT recFindSubDirs(DWORD dwFlags,
         /* Check for reading problems */
         if (hFile == INVALID_HANDLE_VALUE)
         {
-            ConOutFormatMessage (GetLastError(), tmpSrcPath);
+            ConOutFormatMessage(GetLastError(), tmpSrcPath);
             return filesReplaced;
         }
 
@@ -345,13 +347,13 @@ INT recFindSubDirs(DWORD dwFlags,
          * Check if the we should enter the dir or if it is a file
          * or . or .. if so thake the next object to process.
          */
-        if (!_tcscmp (findBuffer.cFileName, _T("."))  ||
-            !_tcscmp (findBuffer.cFileName, _T(".."))||
+        if (!_tcscmp(findBuffer.cFileName, _T("."))  ||
+            !_tcscmp(findBuffer.cFileName, _T(".."))||
             IsExistingFile(findBuffer.cFileName))
             continue;
         /* Add the destpath and the new dir path to tempDestPath */
         _tcscpy(tmpDestPath,szDestPath);
-        _tcscat (tmpDestPath, findBuffer.cFileName);
+        _tcscat(tmpDestPath, findBuffer.cFileName);
         /* Make sure that we have a directory */
         if (IsExistingDirectory(tmpDestPath))
         {
@@ -370,7 +372,7 @@ INT recFindSubDirs(DWORD dwFlags,
                 break;
         }
         /* Get the next handle */
-    } while(FindNextFile (hFile, &findBuffer));
+    } while (FindNextFile(hFile, &findBuffer));
 
     FindClose(hFile);
 
@@ -480,8 +482,8 @@ INT cmd_replace(INT argc, WCHAR **argv)
         else
         {
             /* Check for wildcards in destination directory */
-            if (_tcschr (arg[destIndex], _T('*')) != NULL ||
-                _tcschr (arg[destIndex], _T('?')) != NULL)
+            if (_tcschr(arg[destIndex], _T('*')) != NULL ||
+                _tcschr(arg[destIndex], _T('?')) != NULL)
             {
                 ConOutResPrintf(STRING_REPLACE_ERROR2,arg[destIndex]);
                 ConOutResPrintf(STRING_REPLACE_HELP3);
@@ -510,8 +512,8 @@ INT cmd_replace(INT argc, WCHAR **argv)
         _tcscpy(szSrcPath,arg[srcIndex]);
 
     /* Source does not have wildcards */
-    if (_tcschr (arg[srcIndex], _T('*')) == NULL &&
-        _tcschr (arg[srcIndex], _T('?')) == NULL)
+    if (_tcschr(arg[srcIndex], _T('*')) == NULL &&
+        _tcschr(arg[srcIndex], _T('?')) == NULL)
     {
         /* Check so that source is not a directory, because that is not allowed */
         if (IsExistingDirectory(szSrcPath))
@@ -553,7 +555,7 @@ INT cmd_replace(INT argc, WCHAR **argv)
     if (filesReplaced != -1)
     {
         /* No files replaced */
-        if (filesReplaced==0)
+        if (filesReplaced == 0)
         {
             /* Add switch dependent output */
             if (dwFlags & REPLACE_ADD)

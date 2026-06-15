@@ -5,6 +5,7 @@ EXPORTS	TIFFAccessTagMethods
 	TIFFCheckpointDirectory
 	TIFFCleanup
 	TIFFClientOpen
+	TIFFClientOpenExt
 	TIFFClientdata
 	TIFFClose
 	TIFFComputeStrip
@@ -12,6 +13,7 @@ EXPORTS	TIFFAccessTagMethods
 	TIFFCreateCustomDirectory
 	TIFFCreateDirectory
 	TIFFCreateEXIFDirectory
+	TIFFCreateGPSDirectory
 	TIFFCurrentDirOffset
 	TIFFCurrentDirectory
 	TIFFCurrentRow
@@ -20,23 +22,30 @@ EXPORTS	TIFFAccessTagMethods
 	TIFFDataWidth
 	TIFFDefaultStripSize
 	TIFFDefaultTileSize
+	TIFFDeferStrileArrayWriting
 	TIFFError
 	TIFFErrorExt
+	TIFFErrorExtR
 	TIFFFdOpen
+	TIFFFdOpenExt
 	TIFFFieldDataType
 	TIFFFieldName
 	TIFFFieldPassCount
 	TIFFFieldReadCount
+	TIFFFieldIsAnonymous
 	TIFFFieldTag
 	TIFFFieldWithName
 	TIFFFieldWithTag
 	TIFFFieldWriteCount
+	TIFFFieldSetGetSize
+	TIFFFieldSetGetCountSize
 	TIFFFileName
 	TIFFFileno
 	TIFFFindCODEC
 	TIFFFindField
 	TIFFFlush
 	TIFFFlushData
+	TIFFForceStrileArrayWriting
 	TIFFFreeDirectory
 	TIFFGetBitRevTable
 	TIFFGetClientInfo
@@ -49,12 +58,17 @@ EXPORTS	TIFFAccessTagMethods
 	TIFFGetReadProc
 	TIFFGetSeekProc
 	TIFFGetSizeProc
+	TIFFGetStrileByteCount
+	TIFFGetStrileByteCountWithErr
+	TIFFGetStrileOffset
+	TIFFGetStrileOffsetWithErr
 	TIFFGetTagListCount
 	TIFFGetTagListEntry
 	TIFFGetUnmapFileProc
 	TIFFGetVersion
 	TIFFGetWriteProc
 	TIFFIsBigEndian
+	TIFFIsBigTIFF
 	TIFFIsByteSwapped
 	TIFFIsCODECConfigured
 	TIFFIsMSB2LSB
@@ -66,7 +80,16 @@ EXPORTS	TIFFAccessTagMethods
 	TIFFNumberOfStrips
 	TIFFNumberOfTiles
 	TIFFOpen
+	TIFFOpenExt
 	TIFFOpenW
+	TIFFOpenWExt
+	TIFFOpenOptionsAlloc
+	TIFFOpenOptionsFree
+	TIFFOpenOptionsSetMaxCumulatedMemAlloc
+	TIFFOpenOptionsSetMaxSingleMemAlloc
+	TIFFOpenOptionsSetErrorHandlerExtR
+	TIFFOpenOptionsSetWarnAboutUnknownTags
+	TIFFOpenOptionsSetWarningHandlerExtR
 	TIFFPrintDirectory
 	TIFFRGBAImageBegin
 	TIFFRGBAImageEnd
@@ -80,8 +103,10 @@ EXPORTS	TIFFAccessTagMethods
 	TIFFReadCustomDirectory
 	TIFFReadDirectory
 	TIFFReadEXIFDirectory
+	TIFFReadGPSDirectory
 	TIFFReadEncodedStrip
 	TIFFReadEncodedTile
+	TIFFReadFromUserBuffer
 	TIFFReadRGBAImage
 	TIFFReadRGBAImageOriented
 	TIFFReadRGBAStrip
@@ -142,6 +167,7 @@ EXPORTS	TIFFAccessTagMethods
 	TIFFVTileSize64
 	TIFFWarning
 	TIFFWarningExt
+	TIFFWarningExtR
 	TIFFWriteBufferSetup
 	TIFFWriteCheck
 	TIFFWriteCustomDirectory
@@ -157,6 +183,7 @@ EXPORTS	TIFFAccessTagMethods
 	TIFFYCbCrtoRGB
 	_TIFFCheckMalloc
 	_TIFFCheckRealloc
+	_TIFFClampDoubleToUInt32
 	_TIFFRewriteField
 	_TIFFfree
 	_TIFFmalloc
@@ -164,5 +191,7 @@ EXPORTS	TIFFAccessTagMethods
 	_TIFFmemcpy
 	_TIFFmemset
 	_TIFFrealloc
-        _TIFFMultiply32
-        _TIFFMultiply64
+	_TIFFMultiply32
+	_TIFFMultiply64
+	_TIFFGetExifFields
+	_TIFFGetGpsFields

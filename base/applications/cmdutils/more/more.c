@@ -26,10 +26,9 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winnt.h>
 #include <winnls.h>
 #include <winreg.h>
-#include <winuser.h>
+#include <winuser.rh>
 
 #include <conutils.h>
 #include <strsafe.h>
@@ -74,9 +73,9 @@ static BOOL s_bPrevLineIsBlank = FALSE;
 static WORD s_fPrompt = 0;
 static BOOL s_bDoNextFile = FALSE;
 
-static BOOL IsBlankLine(IN PCWCH line, IN DWORD cch)
+static BOOL IsBlankLine(IN PCWCH line, IN SIZE_T cch)
 {
-    DWORD ich;
+    SIZE_T ich;
     WORD wType;
     for (ich = 0; ich < cch; ++ich)
     {
@@ -106,7 +105,7 @@ __stdcall
 MorePagerLine(
     IN OUT PCON_PAGER Pager,
     IN PCWCH line,
-    IN DWORD cch)
+    IN SIZE_T cch)
 {
     if (s_dwFlags & FLAG_PLUSn) /* Skip lines */
     {
@@ -184,10 +183,10 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     /* Load the prompt strings */
     if (!AreStrLoaded)
     {
-        K32LoadStringW(NULL, IDS_CONTINUE_PERCENT, StrPercent, ARRAYSIZE(StrPercent));
-        K32LoadStringW(NULL, IDS_CONTINUE_LINE_AT, StrLineAt, ARRAYSIZE(StrLineAt));
-        K32LoadStringW(NULL, IDS_CONTINUE_OPTIONS, StrOptions, ARRAYSIZE(StrOptions));
-        K32LoadStringW(NULL, IDS_CONTINUE_LINES, StrLines, ARRAYSIZE(StrLines));
+        LoadStringW(NULL, IDS_CONTINUE_PERCENT, StrPercent, ARRAYSIZE(StrPercent));
+        LoadStringW(NULL, IDS_CONTINUE_LINE_AT, StrLineAt, ARRAYSIZE(StrLineAt));
+        LoadStringW(NULL, IDS_CONTINUE_OPTIONS, StrOptions, ARRAYSIZE(StrOptions));
+        LoadStringW(NULL, IDS_CONTINUE_LINES, StrLines, ARRAYSIZE(StrLines));
         AreStrLoaded = TRUE;
     }
 
@@ -219,7 +218,7 @@ Restart:
          * the bytes read to the character string for a given encoding.
          * Therefore the number of characters displayed on screen is equal to:
          *   dwSumReadChars - Total + Done ,
-         * but the best corresponding approximed number of bytes would be:
+         * but the best corresponding approximated number of bytes would be:
          *   dwSumReadBytes - (Total - Done) * (dwSumReadBytes / dwSumReadChars) ,
          * where the ratio is the average number of bytes per character.
          * The percentage is then computed relative to the total file size.

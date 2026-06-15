@@ -1640,8 +1640,6 @@ InstallReactOS(VOID)
 
     InstallWizard();
 
-    InstallSecurity();
-
     SetAutoAdminLogon();
 
     SetupCloseInfFile(hSysSetupInf);

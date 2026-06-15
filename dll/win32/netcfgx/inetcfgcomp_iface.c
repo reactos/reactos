@@ -627,6 +627,7 @@ CreateNotificationObject(
     hr = INetCfgComponentPropertyUi_QueryPropertyUi(pNCCPU, pUnk);
     if (FAILED(hr))
     {
+        INetCfgComponentControl_Release(pNCCC);
         INetCfgComponentPropertyUi_Release(pNCCPU);
         return hr;
     }
@@ -642,6 +643,7 @@ CreateNotificationObject(
     hr = INetCfgComponentPropertyUi_SetContext(pNCCPU, pUnk);
     if (FAILED(hr))
     {
+        INetCfgComponentControl_Release(pNCCC);
         INetCfgComponentPropertyUi_Release(pNCCPU);
         return hr;
     }

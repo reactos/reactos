@@ -50,7 +50,8 @@ ULONG NumOfVgaRanges = 0;
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static BOOLEAN
-IntIsVgaSaveDriverName(_In_ PDRIVER_OBJECT DriverObject)
+IntIsVgaSaveDriver(
+    _In_ PDRIVER_OBJECT DriverObject)
 {
     static const UNICODE_STRING VgaSave = RTL_CONSTANT_STRING(L"\\Driver\\VgaSave");
     return RtlEqualUnicodeString(&VgaSave, &DriverObject->DriverName, TRUE);
@@ -245,12 +246,13 @@ IntVideoPortCreateAdapterDeviceObject(
     DeviceExtension->SessionId = -1;
     DeviceExtension->AdapterNumber = AdapterNumber;
     DeviceExtension->DisplayNumber = DisplayNumber;
+    DeviceExtension->IsVgaDriver = IntIsVgaSaveDriver(DriverObject);
 
     InitializeListHead(&DeviceExtension->ChildDeviceList);
 
     /* 
      * Miniport owns this blob; many miniports assume it's initially zeroed.
-     * Removing this crashes the NVIDIA gpu driver
+     * Removing this crashes the NVIDIA GPU driver.
      */
     RtlZeroMemory(DeviceExtension->MiniPortDeviceExtension,
                   DriverExtension->InitializationData.HwDeviceExtensionSize);
@@ -444,12 +446,11 @@ IntVideoPortFindAdapter(
     BOOLEAN VgaResourcesReleased = FALSE;
 
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    DeviceExtension->IsVgaDriver = IntIsVgaSaveDriverName(DriverObject);
     DeviceExtension->IsVgaDetect = DeviceExtension->IsVgaDriver;
     DeviceExtension->IsLegacyDetect = FALSE;
     DeviceExtension->ReportDevice = FALSE;
 
-    /* Setup a ConfigInfo structure that we will pass to HwFindAdapter. */
+    /* Setup a ConfigInfo structure that we will pass to HwFindAdapter */
     RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO));
     ConfigInfo.Length = sizeof(VIDEO_PORT_CONFIG_INFO);
     ConfigInfo.AdapterInterfaceType = DeviceExtension->AdapterInterfaceType;
@@ -940,7 +941,7 @@ VideoPortInitialize(
     NTSTATUS Status;
     PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
     BOOLEAN PnpDriver = FALSE, LegacyDetection = FALSE;
-    static BOOLEAN FirstInitialization;
+    static BOOLEAN FirstInitialization = FALSE;
 
     TRACE_(VIDEOPRT, "VideoPortInitialize\n");
 
@@ -951,6 +952,13 @@ VideoPortInitialize(
         KeInitializeMutex(&VgaSyncLock, 0);
         KeInitializeSpinLock(&HwResetAdaptersLock);
         IntLoadRegistryParameters();
+
+        Status = IntInitializeInt10();
+        if (!NT_SUCCESS(Status))
+        {
+            ERR_(VIDEOPRT, "IntInitializeInt10(FirstInit) failed: 0x%lx\n", Status);
+            // return Status; // Let's continue and hope for the best...
+        }
     }
 
     /* As a first thing do parameter checks. */
@@ -1144,10 +1152,11 @@ VideoPortInitialize(
  * @implemented
  */
 VOID
+__cdecl
 VideoPortDebugPrint(
-    IN VIDEO_DEBUG_LEVEL DebugPrintLevel,
-    IN PCHAR DebugMessage,
-    ...)
+    _In_ VIDEO_DEBUG_LEVEL DebugPrintLevel,
+    _In_ PSTR DebugMessage,
+    _In_ ...)
 {
     va_list ap;
 
@@ -1155,7 +1164,7 @@ VideoPortDebugPrint(
         DebugPrintLevel = Error;
 
     va_start(ap, DebugMessage);
-    vDbgPrintEx(DPFLTR_IHVVIDEO_ID, DebugPrintLevel, DebugMessage, ap);
+    vDbgPrintEx(DPFLTR_VIDEO_ID, DebugPrintLevel, DebugMessage, ap);
     va_end(ap);
 }
 

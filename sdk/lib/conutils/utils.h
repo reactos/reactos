@@ -28,6 +28,18 @@
 extern "C" {
 #endif
 
+/* Avoid including winuser.h for these definitions */
+#ifndef IS_INTRESOURCE
+#define IS_INTRESOURCE(i)   (((ULONG_PTR)(i) >> 16) == 0)
+#endif
+#ifndef MAKEINTRESOURCEA
+#define MAKEINTRESOURCEA(i) ((LPSTR)(ULONG_PTR)LOWORD(i))
+#endif
+#ifndef MAKEINTRESOURCEW
+#define MAKEINTRESOURCEW(i) ((LPWSTR)(ULONG_PTR)LOWORD(i))
+#endif
+// #define MAKEINTRESOURCE(i)  ((ULONG_PTR)((WORD)(i)))
+
 INT
 WINAPI
 K32LoadStringExW(
@@ -44,6 +56,17 @@ K32LoadStringW(
     IN  UINT   uID,
     OUT LPWSTR lpBuffer,
     IN  INT    nBufferMax);
+
+/* Override LoadString */
+#ifdef LoadString
+#undef LoadString
+#endif
+#define LoadStringW K32LoadStringW
+#if defined(UNICODE) || defined(_UNICODE)
+#define LoadString  LoadStringW
+#else
+#error The ConUtils library only supports UNICODE at the moment!
+#endif // UNICODE
 
 DWORD
 WINAPI

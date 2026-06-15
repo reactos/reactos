@@ -2,7 +2,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Affiche le nom de l'hôte actuel.\n\nhostname"
-    IDS_NOSET "hostname -s n'est pas pris en charge."
-    IDS_ERROR "Erreur Win32"
+    IDS_USAGE "\nAffiche le nom de l'hôte actuel.\n\nhostname\n"
+    IDS_NOSET "sethostname: Ouvrez l'onglet ""Nom de l'ordinateur"" de l'élément ""Système""\ndu Panneau de configuration pour modifier le nom de l'hôte.\nhostname -s n'est pas pris en charge.\n"
+    IDS_ERROR "Erreur : "
 END

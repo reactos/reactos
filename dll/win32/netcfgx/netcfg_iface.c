@@ -662,7 +662,7 @@ ApplyOrCancelChanges(
                     INetCfgComponentControl_ApplyRegistryChanges(pHead->pNCCC);
                     //FIXME
                     // implement INetCfgPnpReconfigCallback and pass it to
-                    //INetCfgComponentControl_ApplyPnpChanges(pHead->pNCCC, NULL);
+                    INetCfgComponentControl_ApplyPnpChanges(pHead->pNCCC, NULL);
                 }
                 else
                 {

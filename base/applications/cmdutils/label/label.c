@@ -18,13 +18,11 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include <windef.h>
 #include <winbase.h>
 #include <wincon.h>
 #include <winnls.h>
-#include <winuser.h>
 
 #include <conutils.h>
 
@@ -32,7 +30,6 @@
 
 #define MAX_LABEL_LENGTH 32
 #define MAX_DRIVE_LENGTH  2
-
 
 static
 VOID
@@ -49,7 +46,6 @@ ConFormatMessage(PCON_STREAM Stream, DWORD MessageId, ...)
                   &arg_ptr);
     va_end(arg_ptr);
 }
-
 
 static
 VOID
@@ -85,7 +81,6 @@ ConInString(LPWSTR lpInput, DWORD dwLength)
     SetConsoleMode(hFile, dwOldMode);
 }
 
-
 static
 BOOL
 IsValidPathName(LPCWSTR pszPath)
@@ -101,7 +96,6 @@ IsValidPathName(LPCWSTR pszPath)
     return bResult;
 }
 
-
 static
 BOOL
 PromptYesNo(VOID)
@@ -110,7 +104,7 @@ PromptYesNo(VOID)
     WCHAR szInput[16];
     BOOL bResult = FALSE;
 
-    LoadString(GetModuleHandle(NULL), STRING_LABEL_OPTIONS, szOptions, ARRAYSIZE(szOptions));
+    LoadStringW(NULL, STRING_LABEL_OPTIONS, szOptions, ARRAYSIZE(szOptions));
 
     for (;;)
     {
@@ -138,7 +132,6 @@ PromptYesNo(VOID)
     return bResult;
 }
 
-
 int wmain(int argc, WCHAR *argv[])
 {
     WCHAR szRootPath[] = L" :\\";
@@ -146,7 +139,7 @@ int wmain(int argc, WCHAR *argv[])
     WCHAR szLabel[80] = L"";
     WCHAR szOldLabel[80];
     DWORD dwSerialNr;
-    INT len, i;
+    INT i;
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
@@ -160,7 +153,7 @@ int wmain(int argc, WCHAR *argv[])
 
     if (argc > 1)
     {
-        len = 0;
+        size_t len = 0;
         for (i = 1; i < argc; i++)
         {
             if (i > 1)

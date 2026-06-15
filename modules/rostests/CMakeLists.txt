@@ -7,6 +7,10 @@ if(MSVC_IDE)
     add_definitions(-DWINETEST_MSVC_IDE_FORMATTING)
 endif()
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    add_compile_options("-Wno-misleading-indentation") # Cause by todo_wine, etc.
+endif()
+
 add_subdirectory(apitests)
 #add_subdirectory(dibtests)
 add_subdirectory(drivers)

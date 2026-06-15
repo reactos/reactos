@@ -930,7 +930,9 @@ extern "C" {
 #define QUERYROPSUPPORT 40
 #define SELECTDIB 41
 #define DIBINDEX(n) MAKELONG((n),0x10FF)
+#ifndef SC_SCREENSAVE
 #define SC_SCREENSAVE 0xF140
+#endif
 #define CAPS1 94
 #define C1_TRANSPARENT 1
 #ifndef SEEK_SET

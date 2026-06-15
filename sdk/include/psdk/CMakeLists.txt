@@ -131,6 +131,8 @@ list(APPEND SOURCE
     tuner.idl
     txcoord.idl
     txdtc.idl
+    uiautomationclient.idl
+    uiautomationcore.idl
     unknwn.idl
     urlhist.idl
     urlmon.idl

@@ -1678,7 +1678,7 @@ APIENTRY
 NtGdiGetCharABCWidthsW(
     _In_ HDC hdc,
     _In_ UINT wchFirst,
-    _In_ ULONG cwch,
+    _In_ UINT cwch,
     _In_reads_opt_(cwch) PCWCH pwch,
     _In_ FLONG fl,
     _Out_writes_bytes_(cwch * sizeof(ABC)) PVOID pvBuf);

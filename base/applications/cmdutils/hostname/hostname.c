@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Hostname Command
- * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Retrieves the current DNS host name of the computer.
- * COPYRIGHT:   Copyright 2005-2019 Emanuele Aliberti (ea@reactos.com)
- *              Copyright 2019 Hermes Belusca-Maito
+ * COPYRIGHT:   Copyright 2005 Emanuele Aliberti <ea@reactos.com>
+ *              Copyright 2019-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #include <stdlib.h>
@@ -11,13 +11,35 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
+
+#include <conutils.h>
 
 #include "resource.h"
 
+static VOID
+PrintError(
+    _In_opt_ PCWSTR Message,
+    _In_ DWORD dwError)
+{
+    INT Len;
+
+    if (dwError == ERROR_SUCCESS)
+        return;
+
+    if (IS_INTRESOURCE(Message))
+        ConResPuts(StdErr, PtrToUlong(Message));
+    else // if (Message)
+        ConPuts(StdErr, Message);
+    Len = ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+                     NULL, dwError, LANG_USER_DEFAULT);
+    if (Len <= 0) /* Fall back in case the error is not defined */
+        ConPrintf(StdErr, L"%lu\n", dwError);
+}
+
 int wmain(int argc, WCHAR* argv[])
 {
-    WCHAR Msg[100];
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
 
     if (argc == 1)
     {
@@ -36,11 +58,9 @@ int wmain(int argc, WCHAR* argv[])
                 bSuccess = GetComputerNameExW(ComputerNameDnsHostname, HostName, &HostNameSize);
         }
 
+        /* Print out the host name */
         if (bSuccess)
-        {
-            /* Print out the host name */
-            wprintf(L"%s\n", HostName);
-        }
+            ConPrintf(StdOut, L"%s\n", HostName);
 
         /* If a larger buffer has been allocated, free it */
         if (HostName && (HostName != LocalHostName))
@@ -49,8 +69,7 @@ int wmain(int argc, WCHAR* argv[])
         if (!bSuccess)
         {
             /* Fail in case of error */
-            LoadStringW(GetModuleHandle(NULL), IDS_ERROR, Msg, _countof(Msg));
-            wprintf(L"%s %lu.\n", Msg, GetLastError());
+            PrintError(MAKEINTRESOURCEW(IDS_ERROR), GetLastError());
             return 1;
         }
     }
@@ -59,15 +78,13 @@ int wmain(int argc, WCHAR* argv[])
         if ((_wcsicmp(argv[1], L"-s") == 0) || (_wcsicmp(argv[1], L"/s") == 0))
         {
             /* The program doesn't allow the user to set the host name */
-            LoadStringW(GetModuleHandle(NULL), IDS_NOSET, Msg, _countof(Msg));
-            wprintf(L"%s\n", Msg);
+            ConResPuts(StdErr, IDS_NOSET);
             return 1;
         }
         else
         {
             /* Let the user know what the program does */
-            LoadStringW(GetModuleHandle(NULL), IDS_USAGE, Msg, _countof(Msg));
-            wprintf(L"\n%s\n\n", Msg);
+            ConResPuts(StdOut, IDS_USAGE);
         }
     }
 

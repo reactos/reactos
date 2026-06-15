@@ -576,6 +576,7 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
     UNICODE_STRING Netmask = RTL_CONSTANT_STRING(L"SubnetMask");
     UNICODE_STRING Gateway = RTL_CONSTANT_STRING(L"DefaultGateway");
     UNICODE_STRING EnableDhcp = RTL_CONSTANT_STRING(L"EnableDHCP");
+    UNICODE_STRING InterfaceMetric = RTL_CONSTANT_STRING(L"InterfaceMetric");
     UNICODE_STRING Prefix = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\");
     UNICODE_STRING TcpipRegistryPath;
     UNICODE_STRING RegistryDataU;
@@ -617,6 +618,21 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
         {
             ZwClose(ParameterHandle);
             return FALSE;
+        }
+
+        /* Read the InterfaceMetric value */
+        Interface->Metric = 0;
+        Status = ZwQueryValueKey(ParameterHandle,
+                                 &InterfaceMetric,
+                                 KeyValuePartialInformation,
+                                 KeyValueInfo,
+                                 KeyValueInfoLength,
+                                 &Unused);
+        if (NT_SUCCESS(Status) && KeyValueInfo->DataLength == sizeof(ULONG))
+        {
+            Interface->Metric = (UINT)*(PULONG)KeyValueInfo->Data;
+            if (Interface->Metric > 9999)
+                Interface->Metric = 9999;
         }
 
         /* Read the EnableDHCP entry */
@@ -700,7 +716,7 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
                     AddrInitIPv4(&Router, inet_addr(RegistryDataA.Buffer));
 
                     if (!AddrIsUnspecified(&Router))
-                        RouterCreateRoute(&DefaultMask, &DefaultMask, &Router, Interface, 1);
+                        RouterCreateRoute(&DefaultMask, &DefaultMask, &Router, Interface);
 
                     RtlFreeAnsiString(&RegistryDataA);
                 }

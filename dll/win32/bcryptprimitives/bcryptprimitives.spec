@@ -1,0 +1,1 @@
+@ stdcall ProcessPrng(ptr long)
