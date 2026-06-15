@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS 'Layers' Shim library
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Shim entrypoint
- * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2016,2017 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #define WIN32_NO_STATUS
