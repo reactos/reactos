@@ -944,7 +944,7 @@ typedef enum _APPCOMPAT_USERFLAGS_HIGHPART
 #define PS_GET_TEB32_FROM_TEB(Teb) ((PTEB32)(ROUND_TO_PAGES((Teb) + 1)))
 #define PS_GET_PEB32_FROM_PEB(Peb) ((PPEB32)(ROUND_TO_PAGES((Peb) + 1)))
 
-#define IS_WOW64_PROCESS_INITIALIZING(Process) ((Process)->Wow64Process == (PVOID)TRUE)
+#define IS_WOW64_PROCESS_INITIALIZING(Process) ((Process)->Wow64Process == UlongToPtr(1))
 #endif
 
 #endif
