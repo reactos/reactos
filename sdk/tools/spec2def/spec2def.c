@@ -1206,6 +1206,10 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
             {
                 exp.uFlags |= FL_REGISTER;
             }
+            else if (CompareToken(pc, "-import"))
+            {
+                /* The export is imported from an import library. Ignored. */
+            }
             else
             {
                 fprintf(stdout,
