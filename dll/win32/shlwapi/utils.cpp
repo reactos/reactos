@@ -1012,6 +1012,29 @@ _AllocValueString(
 }
 
 /*************************************************************************
+ * IUnknown_ShowBrowserBar [SHLWAPI.539]
+ *
+ * @see IWebBrowser2
+ */
+EXTERN_C HRESULT WINAPI
+IUnknown_ShowBrowserBar(
+    _In_ IUnknown* punk,
+    _In_ REFGUID rguid,
+    _In_ BOOL bShow)
+{
+    CComPtr<IWebBrowser2> pWB2;
+    HRESULT hr = IUnknown_QueryServiceForWebBrowserApp(punk, IID_IWebBrowser2, (PVOID*)&pWB2);
+    if (FAILED(hr))
+        return hr;
+
+    WCHAR szGUID[40];
+    StringFromGUID2(rguid, szGUID, _countof(szGUID));
+
+    CComVariant varClsid(szGUID), varShow((bool)!!bShow), varSize;
+    return pWB2->ShowBrowserBar(&varClsid, &varShow, &varSize);
+}
+
+/*************************************************************************
  * PrettifyFileDescriptionW [SHLWAPI.492]
  *
  * @see SHGetFileDescriptionW
