@@ -1285,7 +1285,7 @@ NtQueryInformationProcess(
                         PsReturnProcessNonPagedPoolQuota(Process, sizeof(WOW64_PROCESS));
 
                         Status = STATUS_NO_MEMORY;
-                        Process->Wow64Process = (PVOID)TRUE;
+                        Process->Wow64Process = UlongToPtr(1);
                     }
                     else
                     {

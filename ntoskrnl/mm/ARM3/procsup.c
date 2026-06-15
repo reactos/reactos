@@ -152,7 +152,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     if (IsPeb && IsWow64)
     {
-        Process->Wow64Process = (PVOID)TRUE;
+        Process->Wow64Process = UlongToPtr(1);
     }
 #endif
 
