@@ -1,0 +1,14 @@
+/*
+ * PROJECT:      ReactOS Version Program
+ * LICENSE:      MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:      Korean (South Korea) resource file
+ * TRANSLATOR:   Copyright 2026 Jiho Kim
+*/
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_OSINFO_COMPAT_FORMAT "NT %s (빌드 %s%s)"
+    IDS_OSINFO_SPK_FORMAT ": %s"
+END
