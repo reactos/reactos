@@ -999,7 +999,7 @@ IUnknown_ShowBrowserBar(
     _In_ REFGUID rguid,
     _In_ BOOL bShow)
 {
-    IWebBrowser2* pWB2;
+    CComPtr<IWebBrowser2> pWB2;
     HRESULT hr = IUnknown_QueryServiceForWebBrowserApp(punk, IID_IWebBrowser2, (PVOID*)&pWB2);
     if (FAILED(hr))
         return hr;
@@ -1007,18 +1007,8 @@ IUnknown_ShowBrowserBar(
     WCHAR szGUID[40];
     StringFromGUID2(rguid, szGUID, _countof(szGUID));
 
-    VARIANT varClsid = {}, varShow = {}, varSize = {};
-
-    V_VT(&varClsid) = VT_BSTR;
-    V_BSTR(&varClsid) = szGUID;
-
-    V_VT(&varShow) = VT_BOOL;
-    V_BOOL(&varShow) = bShow ? VARIANT_TRUE : VARIANT_FALSE;
-
-    hr = pWB2->ShowBrowserBar(&varClsid, &varShow, &varSize);
-
-    pWB2->Release();
-    return hr;
+    CComVariant varClsid(szGUID), varShow((bool)bShow), varSize;
+    return pWB2->ShowBrowserBar(&varClsid, &varShow, &varSize);
 }
 
 /*************************************************************************
