@@ -1237,10 +1237,24 @@ static void test_CopyFileEx(void)
     ok(!retok, "CopyFileExA unexpectedly succeeded\n");
     ok(GetLastError() == ERROR_PATH_NOT_FOUND, "expected ERROR_PATH_NOT_FOUND, got %ld\n", GetLastError());
 
+    ret = DeleteFileA(source);
+    ok(ret, "DeleteFileA failed with error %ld\n", GetLastError());
+    ret = DeleteFileA(dest);
+    ok(!ret, "DeleteFileA unexpectedly succeeded\n");
 #ifdef __REACTOS__
     /* Cover ReactOS bug in CORE-10271:
      * BasepCopyFileExW was handling any set flags as COPY_FILE_FAIL_IF_EXISTS.
      * This affected CopyFileEx, PrivCopyFileEx, and MoveFileWithProgress */
+    ret = GetTempFileNameA(temp_path, prefix, 0, source);
+    ok(ret != 0, "GetTempFileNameA error %ld\n", GetLastError());
+
+    ret = GetTempFileNameA(temp_path, prefix, 0, dest);
+    ok(ret != 0, "GetTempFileNameA error %ld\n", GetLastError());
+
+    /* Only use the file name as target */
+    ret = DeleteFileA(dest);
+    ok(ret, "DeleteFileA unexpectedly failed\n");
+
     retok = CopyFileExA(source, dest, NULL, NULL, FALSE, 0);
     ok(retok, "CopyFileExA unexpectedly failed\n");
     ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
@@ -1284,12 +1298,9 @@ static void test_CopyFileEx(void)
     ok(!retok, "CopyFileExA unexpectedly succeeded\n");
     ok(GetLastError() == ERROR_FILE_EXISTS, "expected ERROR_FILE_EXISTS, got %ld\n", GetLastError());
 
+    DeleteFileA(source);
     DeleteFileA(dest);
 #endif
-    ret = DeleteFileA(source);
-    ok(ret, "DeleteFileA failed with error %ld\n", GetLastError());
-    ret = DeleteFileA(dest);
-    ok(!ret, "DeleteFileA unexpectedly succeeded\n");
 }
 
 /*
