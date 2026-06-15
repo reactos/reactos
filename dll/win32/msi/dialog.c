@@ -1399,7 +1399,7 @@ static UINT combobox_add_item( MSIRECORD *rec, void *param )
 
 #ifdef __REACTOS__ /* Import fix from Wine-11.6 */
     pos = SendMessageW( info->hwnd, CB_ADDSTRING, 0, (LPARAM)(text ? text : value) );
-else
+#else
     pos = SendMessageW( info->hwnd, CB_ADDSTRING, 0, (LPARAM)text );
 #endif
     SendMessageW( info->hwnd, CB_SETITEMDATA, pos, (LPARAM)info->items[info->addpos_items] );
