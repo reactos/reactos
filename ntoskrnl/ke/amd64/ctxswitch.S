@@ -198,10 +198,6 @@ PUBLIC KiUserThreadStartupExit
 
     call KiSwapContextResume
 
-    /* Force reloading of FS */
-    push fs
-    pop fs
-
     /* Cleanup and return */
     add rsp, 6 * 8
     pop rbp
@@ -252,6 +248,28 @@ PUBLIC KiSwapContext
     RESTORE_EXCEPTION_STATE
 
     /* Return */
+    ret
+.ENDP
+
+
+/*!
+ * KiReloadWow64Fs
+ *
+ * \brief
+ *     The KiReloadWow64Fs routine forces the reloading of the cached FS segment data.
+ *
+ * VOID
+ * KiReloadWow64Fs(VOID);
+ *
+ *--*/
+PUBLIC KiReloadWow64Fs
+.PROC KiReloadWow64Fs
+    .endprolog
+
+    /* Force reloading of FS */
+    push fs
+    pop fs
+
     ret
 .ENDP
 

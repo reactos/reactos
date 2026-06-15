@@ -16,6 +16,9 @@
 extern void KiInvalidSystemThreadStartupExit(void);
 extern void KiUserThreadStartupExit(void);
 extern void KiServiceExit3(void);
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
+extern void KiReloadWow64Fs();
+#endif
 
 typedef struct _KUINIT_FRAME
 {
@@ -225,6 +228,8 @@ KiSwapContextResume(
           CmTebEntry->BaseLow = Base & 0xFFFF;
           CmTebEntry->Bits.BaseMiddle = (Base & 0xFF0000) >> 16;
           CmTebEntry->Bits.BaseHigh = (Base & 0xFF000000) >> 24;
+
+          KiReloadWow64Fs();
        }
 #endif
     }
