@@ -69,21 +69,7 @@ Author:
 //
 #define OBJ_NAME_PATH_SEPARATOR                 L'\\'
 
-//
-// Object Information Classes for NtQueryInformationObject
-//
-typedef enum _OBJECT_INFORMATION_CLASS
-{
-    ObjectBasicInformation,
-    ObjectNameInformation,
-    ObjectTypeInformation,
-    ObjectTypesInformation,
-    ObjectHandleFlagInformation,
-    ObjectSessionInformation,
-    MaxObjectInfoClass
-} OBJECT_INFORMATION_CLASS;
-
-#else
+#else // !NTOS_MODE_USER
 
 //
 // Undocumented Attribute for Kernel-Only Access
@@ -133,19 +119,7 @@ typedef enum _OBJECT_INFORMATION_CLASS
         NULL: (((POBJECT_HEADER_QUOTA_INFO)((PCHAR)(h) -    \
         (h)->QuotaInfoOffset))->ExclusiveProcess))
 
-//
-// Reasons for Open Callback
-//
-typedef enum _OB_OPEN_REASON
-{
-    ObCreateHandle,
-    ObOpenHandle,
-    ObDuplicateHandle,
-    ObInheritHandle,
-    ObMaxOpenReason
-} OB_OPEN_REASON;
-
-#endif
+#endif // NTOS_MODE_USER
 
 //
 // Object Duplication Flags
@@ -168,6 +142,8 @@ typedef enum _OB_OPEN_REASON
 #define DOSDEVICE_DRIVE_CDROM                   5
 #define DOSDEVICE_DRIVE_RAMDISK                 6
 
+#ifndef NTOS_MODE_USER
+
 //
 // Dump Control Structure for Object Debugging
 //
@@ -177,7 +153,17 @@ typedef struct _OB_DUMP_CONTROL
     ULONG Detail;
 } OB_DUMP_CONTROL, *POB_DUMP_CONTROL;
 
-#ifndef NTOS_MODE_USER
+//
+// Reasons for Open Callback
+//
+typedef enum _OB_OPEN_REASON
+{
+    ObCreateHandle,
+    ObOpenHandle,
+    ObDuplicateHandle,
+    ObInheritHandle,
+    ObMaxOpenReason
+} OB_OPEN_REASON;
 
 //
 // Object Type Callbacks
@@ -255,29 +241,66 @@ typedef BOOLEAN
     _In_ KPROCESSOR_MODE AccessMode
 );
 
-#else
+#endif // !NTOS_MODE_USER
 
 //
-// Object Information Types for NtQueryInformationObject
+// Object Directory Information for NtQueryDirectoryObject
 //
-typedef struct _OBJECT_NAME_INFORMATION
-{
-    UNICODE_STRING Name;
-} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
-
-#endif
-
-typedef struct _OBJECT_HANDLE_ATTRIBUTE_INFORMATION
-{
-    BOOLEAN Inherit;
-    BOOLEAN ProtectFromClose;
-} OBJECT_HANDLE_ATTRIBUTE_INFORMATION, *POBJECT_HANDLE_ATTRIBUTE_INFORMATION;
-
 typedef struct _OBJECT_DIRECTORY_INFORMATION
 {
     UNICODE_STRING Name;
     UNICODE_STRING TypeName;
 } OBJECT_DIRECTORY_INFORMATION, *POBJECT_DIRECTORY_INFORMATION;
+
+//
+// Object Information Classes for NtQueryInformationObject
+//
+#ifndef _NTIFS_INCLUDED_ // FIXME
+typedef enum _OBJECT_INFORMATION_CLASS
+{
+    ObjectBasicInformation = 0,
+    ObjectNameInformation,
+    ObjectTypeInformation,
+    ObjectTypesInformation,
+    ObjectHandleFlagInformation,
+#if (NTDDI_VERSION >= NTDDI_WS03)
+    ObjectSessionInformation,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS2)
+    ObjectSessionObjectInformation,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11_SE)
+    ObjectSetRefTraceInformation,
+#endif
+    MaxObjectInfoClass
+} OBJECT_INFORMATION_CLASS;
+#endif // !_NTIFS_INCLUDED_ // FIXME
+
+//
+// Object Information Types for NtQueryInformationObject
+//
+typedef struct _OBJECT_BASIC_INFORMATION
+{
+    ULONG Attributes;
+    ACCESS_MASK GrantedAccess;
+    ULONG HandleCount;
+    ULONG PointerCount;
+    ULONG PagedPoolCharge;
+    ULONG NonPagedPoolCharge;
+    ULONG Reserved[3];
+    ULONG NameInfoSize;
+    ULONG TypeInfoSize;
+    ULONG SecurityDescriptorSize;
+    LARGE_INTEGER CreationTime;
+} OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
+
+#ifdef NTOS_MODE_USER
+typedef struct _OBJECT_NAME_INFORMATION
+{
+    UNICODE_STRING Name;
+    // WCHAR NameBuffer[1];
+} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
+#endif
 
 //
 // Object Type Information
@@ -305,32 +328,22 @@ typedef struct _OBJECT_TYPE_INFORMATION
     ULONG PoolType;
     ULONG DefaultPagedPoolCharge;
     ULONG DefaultNonPagedPoolCharge;
+    // WCHAR TypeNameBuffer[1];
 } OBJECT_TYPE_INFORMATION, *POBJECT_TYPE_INFORMATION;
 
 typedef struct _OBJECT_ALL_TYPES_INFORMATION
 {
     ULONG NumberOfTypes;
-    //OBJECT_TYPE_INFORMATION TypeInformation[1];
+    // OBJECT_TYPE_INFORMATION TypeInformation[1];
 } OBJECT_ALL_TYPES_INFORMATION, *POBJECT_ALL_TYPES_INFORMATION;
 
-#ifdef NTOS_MODE_USER
-
-typedef struct _OBJECT_BASIC_INFORMATION
+typedef struct _OBJECT_HANDLE_ATTRIBUTE_INFORMATION
 {
-    ULONG Attributes;
-    ACCESS_MASK GrantedAccess;
-    ULONG HandleCount;
-    ULONG PointerCount;
-    ULONG PagedPoolUsage;
-    ULONG NonPagedPoolUsage;
-    ULONG Reserved[3];
-    ULONG NameInformationLength;
-    ULONG TypeInformationLength;
-    ULONG SecurityDescriptorLength;
-    LARGE_INTEGER CreateTime;
-} OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
+    BOOLEAN Inherit;
+    BOOLEAN ProtectFromClose;
+} OBJECT_HANDLE_ATTRIBUTE_INFORMATION, *POBJECT_HANDLE_ATTRIBUTE_INFORMATION;
 
-#else
+#ifndef NTOS_MODE_USER
 
 typedef struct _OBJECT_CREATE_INFORMATION
 {

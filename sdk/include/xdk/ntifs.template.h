@@ -23,8 +23,11 @@
 
 #pragma once
 
+#ifndef _NTIFS_
+#define _NTIFS_
+
 #define _NTIFS_INCLUDED_
-#define _GNU_NTIFS_
+#define _GNU_NTIFS_ // FIXME: Only for ext2fs
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,21 +69,8 @@ typedef STRING LSA_STRING, *PLSA_STRING;
 typedef OBJECT_ATTRIBUTES LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
 
 $include (setypes.h)
-$include (obtypes.h)
 $include (rtltypes.h)
 $include (rtlfuncs.h)
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-__kernel_entry
-NTSYSCALLAPI
-NTSTATUS
-NTAPI
-NtQueryObject(
-  _In_opt_ HANDLE Handle,
-  _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
-  _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,
-  _In_ ULONG ObjectInformationLength,
-  _Out_opt_ PULONG ReturnLength);
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -1066,6 +1056,29 @@ typedef struct _MSV1_0_GETUSERINFO_RESPONSE {
 
 $include (iotypes.h)
 
+$include (obtypes.h)
+
+typedef enum _OBJECT_INFORMATION_CLASS {
+  ObjectBasicInformation = 0,
+  ObjectTypeInformation = 2,
+#if 1 // FIXME: we should remove these, but the kernel needs them :-/
+  /* Not for public use */
+  ObjectNameInformation = 1,
+  ObjectTypesInformation = 3,
+  ObjectHandleFlagInformation = 4,
+#if (NTDDI_VERSION >= NTDDI_WS03)
+  ObjectSessionInformation = 5,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS2)
+  ObjectSessionObjectInformation = 6,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11_SE)
+  ObjectSetRefTraceInformation = 7,
+#endif
+  MaxObjectInfoClass
+#endif // FIXME
+} OBJECT_INFORMATION_CLASS;
+
 typedef struct _PUBLIC_OBJECT_BASIC_INFORMATION {
   ULONG Attributes;
   ACCESS_MASK GrantedAccess;
@@ -1076,8 +1089,21 @@ typedef struct _PUBLIC_OBJECT_BASIC_INFORMATION {
 
 typedef struct _PUBLIC_OBJECT_TYPE_INFORMATION {
   UNICODE_STRING TypeName;
-  ULONG Reserved [22];
+  ULONG Reserved[22];
 } PUBLIC_OBJECT_TYPE_INFORMATION, *PPUBLIC_OBJECT_TYPE_INFORMATION;
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__kernel_entry
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryObject(
+  _In_opt_ HANDLE Handle,
+  _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
+  _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,
+  _In_ ULONG ObjectInformationLength,
+  _Out_opt_ PULONG ReturnLength);
+
 
 #define SYSTEM_PAGE_PRIORITY_BITS       3
 #define SYSTEM_PAGE_PRIORITY_LEVELS     (1 << SYSTEM_PAGE_PRIORITY_BITS)
@@ -1395,21 +1421,6 @@ typedef enum _FILE_STORAGE_TYPE {
     StorageTypeStream
 } FILE_STORAGE_TYPE;
 
-typedef struct _OBJECT_BASIC_INFORMATION
-{
-    ULONG Attributes;
-    ACCESS_MASK GrantedAccess;
-    ULONG HandleCount;
-    ULONG PointerCount;
-    ULONG PagedPoolCharge;
-    ULONG NonPagedPoolCharge;
-    ULONG Reserved[ 3 ];
-    ULONG NameInfoSize;
-    ULONG TypeInfoSize;
-    ULONG SecurityDescriptorSize;
-    LARGE_INTEGER CreationTime;
-} OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
-
 typedef struct _FILE_COPY_ON_WRITE_INFORMATION {
     BOOLEAN ReplaceIfExists;
     HANDLE  RootDirectory;
@@ -1535,46 +1546,6 @@ typedef struct _MOVEFILE_DESCRIPTOR {
      ULONG          NumVcns;
      ULONG          Reserved1;
 } MOVEFILE_DESCRIPTOR, *PMOVEFILE_DESCRIPTOR;
-
-typedef struct _OBJECT_BASIC_INFO {
-    ULONG           Attributes;
-    ACCESS_MASK     GrantedAccess;
-    ULONG           HandleCount;
-    ULONG           ReferenceCount;
-    ULONG           PagedPoolUsage;
-    ULONG           NonPagedPoolUsage;
-    ULONG           Reserved[3];
-    ULONG           NameInformationLength;
-    ULONG           TypeInformationLength;
-    ULONG           SecurityDescriptorLength;
-    LARGE_INTEGER   CreateTime;
-} OBJECT_BASIC_INFO, *POBJECT_BASIC_INFO;
-
-typedef struct _OBJECT_HANDLE_ATTRIBUTE_INFO {
-    BOOLEAN Inherit;
-    BOOLEAN ProtectFromClose;
-} OBJECT_HANDLE_ATTRIBUTE_INFO, *POBJECT_HANDLE_ATTRIBUTE_INFO;
-
-typedef struct _OBJECT_NAME_INFO {
-    UNICODE_STRING  ObjectName;
-    WCHAR           ObjectNameBuffer[1];
-} OBJECT_NAME_INFO, *POBJECT_NAME_INFO;
-
-typedef struct _OBJECT_PROTECTION_INFO {
-    BOOLEAN Inherit;
-    BOOLEAN ProtectHandle;
-} OBJECT_PROTECTION_INFO, *POBJECT_PROTECTION_INFO;
-
-typedef struct _OBJECT_TYPE_INFO {
-    UNICODE_STRING  ObjectTypeName;
-    UCHAR           Unknown[0x58];
-    WCHAR           ObjectTypeNameBuffer[1];
-} OBJECT_TYPE_INFO, *POBJECT_TYPE_INFO;
-
-typedef struct _OBJECT_ALL_TYPES_INFO {
-    ULONG               NumberOfObjectTypes;
-    OBJECT_TYPE_INFO    ObjectsTypeInfo[1];
-} OBJECT_ALL_TYPES_INFO, *POBJECT_ALL_TYPES_INFO;
 
 #if defined(USE_LPC6432)
 #define LPC_CLIENT_ID CLIENT_ID64
@@ -1790,3 +1761,5 @@ RtlSetSaclSecurityDescriptor (
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* _NTIFS_ */

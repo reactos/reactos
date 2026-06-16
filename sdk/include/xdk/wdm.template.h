@@ -274,4 +274,4 @@ $include (zwfuncs.h)
 }
 #endif
 
-#endif /* !_WDMDDK_ */
+#endif /* _WDMDDK_ */
