@@ -1,0 +1,100 @@
+/*
+ * PROJECT:     ReactOS Font Substitution Utility
+ * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0.html)
+ * PURPOSE:     French resource file
+ * TRANSLATOR:  Copyright 2026 Thomas Anderson <thomasanderson531@hotmail.com>
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+1 MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Importer Depuis...\tCtrl+O", ID_IMPORT
+        MENUITEM "&Exporter Depuis...\tCtrl+S", ID_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "Re&charger Depuis le Registre\tCtrl+L", ID_RELOAD
+        MENUITEM "Mettre a jour le &Registre\tCtrl+U", ID_UPDATE_REGISTRY
+        MENUITEM SEPARATOR
+        MENUITEM "Ouvrir dans Reg&edit", ID_OPEN_REGKEY
+        MENUITEM SEPARATOR
+        MENUITEM "Q&uitter\tAlt+F4", ID_EXIT
+    END
+    POPUP "&Modifier"
+    BEGIN
+        MENUITEM "&Nouvelle Objet\tCtrl+N", ID_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Modifier l'Objet\tEnter", ID_EDIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Supprimer l'Objet\tDel", ID_DELETE
+    END
+    POPUP "&Aide"
+    BEGIN
+        MENUITEM "&A Propos...", ID_ABOUT
+    END
+END
+
+2 MENU
+BEGIN
+    POPUP "Popup"
+    BEGIN
+        MENUITEM "&Nouvelle Objet\tCtrl+N", ID_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Modifier l'Objet\tEnter", ID_EDIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Supprimer l'Objet\tDel", ID_DELETE
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TITLE,          "Font Substitute Editor"
+    IDS_FONTNAME,       "Nom de Police"
+    IDS_SUBSTITUTE,     "Substituts"
+    IDS_ENTERNAME,      "(Veuillez saisir un nom de police...)"
+    IDS_IMPORT,         "Importer"
+    IDS_EXPORT,         "Exporter"
+    IDS_CANTIMPORT,     "Impossible d'Importer."
+    IDS_CANTEXPORT,     "Impossible d'Exporter."
+    IDS_INPFILTER,      "Fichier de Registre (*.reg)|*.reg|Tous les Fichier (*.*)|*.*|"
+    IDS_OUTFILTER,      "Fichier de Registre (*.reg)|*.reg|"
+    IDS_QUERYUPDATE,    "Les infos de substituts ont été modifiées. Mettre à jour le registre maintenant?"
+    IDS_ALREADYEXISTS,  "Le même nom existe déjà."
+    IDS_ENTERNAME2,     "Insère le nom de police."
+    IDS_QUERYDELETE,    "Voulez-vous vraiment supprimer cet objet?"
+    IDS_CANTOPENKEY,    "Impossible d'ouvrir la clé de registre."
+    IDS_REBOOTNOW,      "Le registre a été mis à jour. Redémarre maintenant?"
+    IDS_ABOUT,          "FontSub (Font Substitute Editor) Version 0.5\r\npar Katayama Hirofumi MZ et La Team ReactOS \r\n\r\nCe programme est distribué sous licence CC0 1.0."
+END
+
+IDD_ADD DIALOGEX 0, 0, 315, 65
+STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "Ajouter l'Object de Substituts"
+FONT 10, "MS Shell Dlg"
+BEGIN
+    CONTROL "Nom de &Police:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
+    CONTROL "", cmb1, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 6, 120, 120
+    CONTROL "", cmb3, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 6, 115, 120
+    CONTROL "&Substituts:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 25, 55, 15
+    CONTROL "", cmb2, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 26, 120, 120
+    CONTROL "", cmb4, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 26, 115, 120
+    CONTROL "OK", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
+    CONTROL "Annuler", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
+END
+
+IDD_EDIT DIALOGEX 0, 0, 315, 65
+STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "Modifier l'Object de Substituts"
+FONT 10, "MS Shell Dlg"
+BEGIN
+    CONTROL "Nom de &Police:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
+    CONTROL "", edt1, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_BORDER | WS_TABSTOP, 70, 6, 120, 14
+    CONTROL "", cmb3, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 6, 115, 120
+    CONTROL "&Substituts:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 25, 55, 15
+    CONTROL "", cmb2, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 26, 120, 120
+    CONTROL "", cmb4, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 26, 115, 120
+    CONTROL "OK", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
+    CONTROL "Annuler", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
+    CONTROL "&Supprimer", psh1, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 45, 60, 14
+END
