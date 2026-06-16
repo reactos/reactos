@@ -23,6 +23,7 @@ extern "C" {
 #include <sysinfoapi.h>
 #include <threadpoolapiset.h>
 #include <libloaderapi.h>
+#include <timezoneapi.h>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -307,7 +308,6 @@ extern "C" {
 #define TIME_ZONE_ID_UNKNOWN 0
 #define TIME_ZONE_ID_STANDARD 1
 #define TIME_ZONE_ID_DAYLIGHT 2
-#define TIME_ZONE_ID_INVALID 0xFFFFFFFF
 #define FS_CASE_IS_PRESERVED 2
 #define FS_CASE_SENSITIVE 1
 #define FS_UNICODE_STORED_ON_DISK 4
@@ -914,28 +914,6 @@ typedef struct _SYSTEM_POWER_STATUS {
 	DWORD BatteryLifeTime;
 	DWORD BatteryFullLifeTime;
 } SYSTEM_POWER_STATUS,*LPSYSTEM_POWER_STATUS;
-
-typedef struct _TIME_DYNAMIC_ZONE_INFORMATION {
-  LONG Bias;
-  WCHAR StandardName[32];
-  SYSTEMTIME StandardDate;
-  LONG StandardBias;
-  WCHAR DaylightName[32];
-  SYSTEMTIME DaylightDate;
-  LONG DaylightBias;
-  WCHAR TimeZoneKeyName[128];
-  BOOLEAN DynamicDaylightTimeDisabled;
-} DYNAMIC_TIME_ZONE_INFORMATION, *PDYNAMIC_TIME_ZONE_INFORMATION;
-
-typedef struct _TIME_ZONE_INFORMATION {
-	LONG Bias;
-	WCHAR StandardName[32];
-	SYSTEMTIME StandardDate;
-	LONG StandardBias;
-	WCHAR DaylightName[32];
-	SYSTEMTIME DaylightDate;
-	LONG DaylightBias;
-} TIME_ZONE_INFORMATION,*PTIME_ZONE_INFORMATION,*LPTIME_ZONE_INFORMATION;
 
 typedef struct _MEMORYSTATUS {
 	DWORD dwLength;
@@ -1678,7 +1656,6 @@ BOOL WINAPI FileEncryptionStatusA(_In_ LPCSTR, _Out_ LPDWORD);
 BOOL WINAPI FileEncryptionStatusW(_In_ LPCWSTR, _Out_ LPDWORD);
 BOOL WINAPI FileTimeToDosDateTime(_In_ CONST FILETIME *, _Out_ LPWORD, _Out_ LPWORD);
 BOOL WINAPI FileTimeToLocalFileTime(CONST FILETIME *,LPFILETIME);
-BOOL WINAPI FileTimeToSystemTime(CONST FILETIME *,LPSYSTEMTIME);
 #if (_WIN32_WINNT >= 0x0501)
 BOOL WINAPI FindActCtxSectionGuid(_In_ DWORD, _Reserved_ const GUID*, _In_ ULONG, _In_opt_ const GUID*, _Out_ PACTCTX_SECTION_KEYED_DATA);
 BOOL WINAPI FindActCtxSectionStringA(_In_ DWORD, _Reserved_ const GUID*, _In_ ULONG, _In_ LPCSTR, _Out_ PACTCTX_SECTION_KEYED_DATA);
@@ -2252,7 +2229,6 @@ DWORD WINAPI GetTickCount(VOID);
 ULONGLONG WINAPI GetTickCount64(VOID);
 #endif
 DWORD WINAPI GetThreadId(HANDLE);
-DWORD WINAPI GetTimeZoneInformation(LPTIME_ZONE_INFORMATION);
 BOOL WINAPI GetTokenInformation(HANDLE,TOKEN_INFORMATION_CLASS,PVOID,DWORD,PDWORD);
 
 BOOL
@@ -3085,7 +3061,6 @@ DWORD WINAPI SetThreadIdealProcessor(_In_ HANDLE, _In_ DWORD);
 BOOL WINAPI SetThreadPriority(HANDLE,int);
 BOOL WINAPI SetThreadPriorityBoost(HANDLE,BOOL);
 BOOL WINAPI SetThreadToken (PHANDLE,HANDLE);
-BOOL WINAPI SetTimeZoneInformation(const TIME_ZONE_INFORMATION *);
 BOOL WINAPI SetTokenInformation(HANDLE,TOKEN_INFORMATION_CLASS,PVOID,DWORD);
 LPTOP_LEVEL_EXCEPTION_FILTER WINAPI SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER);
 BOOL WINAPI SetupComm(_In_ HANDLE, _In_ DWORD, _In_ DWORD);
@@ -3107,8 +3082,6 @@ DWORD WINAPI SleepEx(DWORD,BOOL);
 DWORD WINAPI SuspendThread(HANDLE);
 void WINAPI SwitchToFiber(_In_ PVOID);
 BOOL WINAPI SwitchToThread(void);
-BOOL WINAPI SystemTimeToFileTime(const SYSTEMTIME*,LPFILETIME);
-BOOL WINAPI SystemTimeToTzSpecificLocalTime(CONST TIME_ZONE_INFORMATION*,CONST SYSTEMTIME*,LPSYSTEMTIME);
 BOOL WINAPI TerminateProcess(HANDLE hProcess, UINT uExitCode);
 BOOL WINAPI TerminateThread(HANDLE hThread,DWORD dwExitCode);
 DWORD WINAPI TlsAlloc(VOID);
@@ -3118,7 +3091,6 @@ BOOL WINAPI TlsSetValue(DWORD,PVOID);
 BOOL WINAPI TransactNamedPipe(HANDLE,PVOID,DWORD,PVOID,DWORD,PDWORD,LPOVERLAPPED);
 BOOL WINAPI TransmitCommChar(_In_ HANDLE, _In_ char);
 BOOL WINAPI TryEnterCriticalSection(LPCRITICAL_SECTION);
-BOOL WINAPI TzSpecificLocalTimeToSystemTime(LPTIME_ZONE_INFORMATION,LPSYSTEMTIME,LPSYSTEMTIME);
 LONG WINAPI UnhandledExceptionFilter(LPEXCEPTION_POINTERS);
 BOOL WINAPI UnlockFile(HANDLE,DWORD,DWORD,DWORD,DWORD);
 BOOL WINAPI UnlockFileEx(HANDLE,DWORD,DWORD,DWORD,LPOVERLAPPED);

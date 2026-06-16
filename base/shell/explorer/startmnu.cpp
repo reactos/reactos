@@ -41,6 +41,7 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
     if (bRefresh)
     {
         FIXME("Refresh the Start menu with communicating with SHELL32\n");
+        // TODO: TRAYCMD_RELOAD_STARTMENUCFG
     }
 
     return hRet;

@@ -303,11 +303,11 @@ typedef enum _KWAIT_REASON
     WrVirtualMemory,
     WrPageOut,
     WrRendezvous,
-    Spare2,
-    WrGuardedMutex,
-    Spare4,
-    Spare5,
-    Spare6,
+    WrKeyedEvent,
+    WrTerminated,
+    WrProcessInSwap,
+    WrCpuRateControl,
+    WrCalloutStack,
     WrKernel,
     WrResource,
     WrPushLock,
@@ -316,6 +316,25 @@ typedef enum _KWAIT_REASON
     WrDispatchInt,
     WrPreempted,
     WrYieldExecution,
+    WrFastMutex,
+    WrGuardedMutex,
+    WrRundown,
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    WrAlertByThreadId,
+    WrDeferredPreempt,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS3)
+    WrPhysicalFault,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11)
+    WrIoRing,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11_NI)
+    WrMdlCache,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE)
+    WrRcu,
+#endif
     MaximumWaitReason
 } KWAIT_REASON;
 

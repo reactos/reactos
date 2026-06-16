@@ -37,6 +37,7 @@ namespace Gdiplus
 #include "gdipluscolor.h"
 #include "gdipluscolormatrix.h"
 #include "gdiplusgpstubs.h"
+#include "gdipluseffects.h"
 
     namespace DllExports
     {
@@ -69,6 +70,7 @@ namespace Gdiplus
 #include "gdipluscolor.h"
 #include "gdipluscolormatrix.h"
 #include "gdiplusgpstubs.h"
+#include "gdipluseffects.h"
 
 #include "gdiplusflat.h"
 

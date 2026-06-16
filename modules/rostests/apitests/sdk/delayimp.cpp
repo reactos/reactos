@@ -489,7 +489,16 @@ START_TEST(delayimp_runtimehook)
     SetExpectedDli(g_winmm_midi_out_close);
     g_ExpectedDll = WINMM_DLLNAME;
     g_ExpectedName = "midiOutClose";
-    DWORD err = midiOutClose((HMIDIOUT)(ULONG_PTR)0xdeadbeef);
+    DWORD err;
+    _SEH2_TRY
+    {
+        err = midiOutClose((HMIDIOUT)INVALID_HANDLE_VALUE);
+    }
+    _SEH2_EXCEPT(ExceptionFilter(_SEH2_GetExceptionInformation(), _SEH2_GetExceptionCode()))
+    {
+        err = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
     ok(err == MMSYSERR_INVALHANDLE, "Expected err to be MMSYSERR_INVALHANDLE, was 0x%lx\n", err);
     CheckDliDone();
 
@@ -500,7 +509,7 @@ START_TEST(delayimp_runtimehook)
     g_BreakFunctionName = true;
     _SEH2_TRY
     {
-        err = mixerClose((HMIXER)(ULONG_PTR)0xdeadbeef);
+        err = mixerClose((HMIXER)INVALID_HANDLE_VALUE);
     }
     _SEH2_EXCEPT(ExceptionFilter(_SEH2_GetExceptionInformation(), _SEH2_GetExceptionCode()))
     {

@@ -17,6 +17,42 @@ UINT DriveType;
 #define ok_type(condition, format, ...) ok(condition, "(%d): " format, DriveType,  ##__VA_ARGS__)
 #define skip_type(format, ...) skip("(%d): " format, DriveType, ##__VA_ARGS__)
 
+#define IOCTL_KSEC_RANDOM_FILL_BUFFER \
+    CTL_CODE(FILE_DEVICE_KSEC, 0x02, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+static void Test_DeviceIoControl_Parameters(void)
+{
+    static const PWSTR KsecDevicePath = L"\\\\.\\Global\\GLOBALROOT\\Device\\KsecDD";
+    UCHAR Buffer[16];
+    HANDLE hDevice;
+    BOOL ret;
+
+    /* Open ksecdd device */
+    hDevice = CreateFileW(KsecDevicePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hDevice == INVALID_HANDLE_VALUE)
+    {
+        skip("CreateFile failed: %lu\n", GetLastError());
+        return;
+    }
+
+    /* Test NULL lpBytesReturned (used by wine's wbemprox) */
+    SetLastError(0xDEADBEEF);
+    StartSeh()
+        ret = DeviceIoControl(hDevice,
+                              IOCTL_KSEC_RANDOM_FILL_BUFFER,
+                              NULL,
+                              0,
+                              Buffer,
+                              sizeof(Buffer),
+                              NULL, /* lpBytesReturned */
+                              NULL);
+        ok_eq_bool(ret, TRUE);
+        ok_eq_ulong(GetLastError(), 0xDEADBEEF);
+    EndSeh(is_reactos() || (GetNTVersion() >= _WIN32_WINNT_WIN8) ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER);
+
+    CloseHandle(hDevice);
+}
+
 static
 BOOL
 GetDiskGeometry(VOID)
@@ -224,6 +260,8 @@ START_TEST(DeviceIoControl)
     WCHAR Path[MAX_PATH];
     DWORD DriveMap, Current;
     BOOL DiskDone, CdRomDone;
+
+    Test_DeviceIoControl_Parameters();
 
     DiskDone = FALSE;
     CdRomDone = FALSE;

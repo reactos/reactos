@@ -359,6 +359,7 @@ MatchEnumTag(
 
     for (i = 0; i < dwNumArg; i++)
     {
+        DPRINT("%S -- %S\n", pwcArg, pEnumTable[i].pwszToken);
         if (MatchToken(pwcArg, pEnumTable[i].pwszToken))
         {
             *pdwValue = pEnumTable[i].dwValue;
@@ -367,6 +368,79 @@ MatchEnumTag(
     }
 
     return ERROR_NOT_FOUND;
+}
+
+DWORD
+WINAPI
+MatchTagsInCmdLine(
+    _In_ HANDLE hModule,
+    _Inout_ LPWSTR *ppwcArguments,
+    _In_ DWORD dwCurrentIndex,
+    _In_ DWORD dwArgCount,
+    _In_ TAG_TYPE *pttTags,
+    _In_ DWORD dwTagCount,
+    _Out_ DWORD *pdwTagType)
+{
+    PWSTR pszEqual;
+    DWORD i, j, dwTagLength;
+
+    DPRINT1("MatchTagsInCmdLine(%p %p %lu %lu %p %lu %p)\n",
+            hModule, ppwcArguments, dwCurrentIndex, dwArgCount,
+            pttTags, dwTagCount, pdwTagType);
+
+    /* Identify tagged arguments (tag=value) */
+    for (i = dwCurrentIndex; i < dwArgCount; i++)
+    {
+        DPRINT("Argument %lu: %S\n", i, ppwcArguments[i]);
+        pdwTagType[i - dwCurrentIndex] = (DWORD)-1;
+
+        /* Skip arguments that do not have a tag */
+        pszEqual = wcschr(ppwcArguments[i], L'=');
+        if (pszEqual == NULL)
+            continue;
+
+        dwTagLength = pszEqual - ppwcArguments[i];
+        DPRINT("Tag length %lu\n", dwTagLength);
+        DPRINT("Value length %lu\n", wcslen(pszEqual + 1));
+
+        pdwTagType[i - dwCurrentIndex] = (DWORD)-1;
+        for (j = 0; j < dwTagCount; j++)
+        {
+            DPRINT("Test tag %S -- %S\n", pttTags[j].pwszTag, ppwcArguments[i]);
+            if ((wcslen(pttTags[j].pwszTag) == dwTagLength) &&
+                (_wcsnicmp(ppwcArguments[i], pttTags[j].pwszTag, dwTagLength) == 0))
+            {
+                DPRINT("Found tag %S\n", pttTags[j].pwszTag);
+                pttTags[j].bPresent = TRUE;
+                pdwTagType[i - dwCurrentIndex] = j;
+
+                /* Remove the tag name from the argument */
+                wcscpy(ppwcArguments[i], pszEqual + 1);
+                break;
+            }
+        }
+    }
+
+    /* Identify un-tagged arguments (value) */
+    for (i = dwCurrentIndex; i < dwArgCount; i++)
+    {
+        if (pdwTagType[i - dwCurrentIndex] != (DWORD)-1)
+            continue;
+
+        for (j = 0; j < dwTagCount; j++)
+        {
+            DPRINT("Test tag %S\n", pttTags[j].pwszTag);
+            if (pttTags[j].bPresent == FALSE)
+            {
+                DPRINT("Found tag %S\n", pttTags[j].pwszTag);
+                pttTags[j].bPresent = TRUE;
+                pdwTagType[i - dwCurrentIndex] = j;
+                break;
+            }
+        }
+    }
+
+    return ERROR_SUCCESS;
 }
 
 BOOL
@@ -416,6 +490,51 @@ NsGetFriendlyNameFromIfName(
     {
         DPRINT1("NhGetInterfaceNameFromDeviceGuid() failed %lu\n", ret);
     }
+
+    return ret;
+}
+
+DWORD
+WINAPI
+NsGetIfNameFromFriendlyName(
+    _In_ DWORD dwUnknown1,
+    _In_ PWSTR pszFriendlyName, 
+    _Inout_ PWSTR pszIfName,
+    _Inout_ PDWORD pdwIfName)
+{
+    UNICODE_STRING UnicodeIfName;
+    GUID InterfaceGuid;
+    NTSTATUS Status;
+    DWORD ret;
+
+    DPRINT("NsGetIfNameFromFriendlyName(%lx %S %p %p)\n",
+           dwUnknown1, pszFriendlyName, pszIfName, pdwIfName);
+
+    ret = NhGetGuidFromInterfaceName(pszFriendlyName,
+                                     &InterfaceGuid,
+                                     0, 0);
+    if (ret != ERROR_SUCCESS)
+    {
+        DPRINT1("NhGetGuidFromInterfaceName failed %lu\n", ret);
+        return ret;
+    }
+
+    RtlInitUnicodeString(&UnicodeIfName, NULL);
+    Status = RtlStringFromGUID(&InterfaceGuid,
+                               &UnicodeIfName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlStringFromGUID failed 0x%08lx\n", Status);
+        ret = RtlNtStatusToDosError(Status);
+    }
+
+    if (*pdwIfName >= UnicodeIfName.MaximumLength)
+    {
+        CopyMemory(pszIfName, UnicodeIfName.Buffer, UnicodeIfName.MaximumLength);
+        *pdwIfName = UnicodeIfName.MaximumLength;
+    }
+
+    RtlFreeUnicodeString(&UnicodeIfName);
 
     return ret;
 }

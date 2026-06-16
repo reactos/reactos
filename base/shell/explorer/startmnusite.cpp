@@ -19,6 +19,7 @@
  */
 
 #include "precomp.h"
+#include <cfgmgr32.h>
 
 class CStartMenuSite :
     public CComCoClass<CStartMenuSite>,
@@ -99,12 +100,15 @@ public:
         return E_NOTIMPL;
     }
 
-    virtual BOOL
-        ShowUndockMenuItem(VOID)
+    virtual BOOL ShowUndockMenuItem(VOID)
     {
-        TRACE("ShowUndockMenuItem() not implemented!\n");
-        /* FIXME: How do we detect this?! */
-        return FALSE;
+        BOOL bPresent;
+        CM_Is_Dock_Station_Present(&bPresent);
+
+        return bPresent &&
+               !SHRestricted(REST_NOSMEJECTPC) &&
+               SHTestTokenPrivilegeW(NULL, L"SeUndockPrivilege") &&
+               !GetSystemMetrics(SM_REMOTESESSION);
     }
 
     virtual BOOL

@@ -1,7 +1,16 @@
 
+remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
+add_definitions(-D_WIN32_WINNT=0x601)
+
 add_definitions(
     -D__ROS_LONG64__
-    -D_USE_MATH_DEFINES)
+    -D_USE_MATH_DEFINES
+    -Dwcsicmp=_wcsicmp
+    -Dfmin=min
+    -Dfmax=max
+    -Dfminf=min
+    -Dfmaxf=max
+)
 
 spec2def(gdiplus.dll gdiplus.spec ADD_IMPORTLIB)
 
@@ -32,17 +41,21 @@ add_library(gdiplus MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
 
 if(MSVC)
-    # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
-    # Disable warning C4305: '=': truncation from 'double' to 'REAL'
-    # Disable warning C5286: implicit conversion from enum type 'x' to enum type 'y';
-    target_compile_options(gdiplus PRIVATE /wd4146 /wd4305 /wd5286)
+    target_compile_options(gdiplus PRIVATE
+        /wd4146 # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
+        /wd4267 # Disable warning C4267: 'return': conversion from 'size_t' to 'UINT', possible loss of data
+        /wd4305 # Disable warning C4305: '=': truncation from 'double' to 'REAL'
+        /wd4334 # Disable warning C4334: '<<': result of 32-bit shift implicitly converted to 64 bits (was 64-bit shift intended?)
+    )
+else()
+    target_compile_options(gdiplus PRIVATE -Wno-incompatible-pointer-types)
 endif()
 
 set_module_type(gdiplus win32dll)
 target_link_libraries(gdiplus wine)
 add_delay_importlibs(gdiplus windowscodecs)
-add_importlibs(gdiplus msvcrt shlwapi oleaut32 ole32 user32 gdi32 kernel32 ntdll)
-add_pch(gdiplus precomp.h "${PCH_SKIP_SOURCE}")
+add_importlibs(gdiplus mlang msvcrt shlwapi oleaut32 ole32 user32 gdi32 kernel32 kernel32_vista ntdll ntdll_vista)
+
 add_cd_file(TARGET gdiplus DESTINATION reactos/system32 FOR all)
 
 add_cd_file(TARGET gdiplus DESTINATION reactos/winsxs/${WINARCH}_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef FOR all)

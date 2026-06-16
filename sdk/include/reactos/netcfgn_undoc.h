@@ -17,6 +17,7 @@ DECLARE_INTERFACE_(ITcpipProperties, IUnknown)
     STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
     STDMETHOD_(ULONG,Release) (THIS) PURE;
     STDMETHOD_(HRESULT,Unknown1)(THIS_ GUID *pAdapterName, PTCPIP_PROPERTIES *ppProperties) PURE;
+    STDMETHOD_(HRESULT,Unknown2)(THIS_ GUID *pAdapterName, PTCPIP_PROPERTIES pProperties) PURE;
     /* ??? */
 };
 #undef INTERFACE
@@ -29,6 +30,7 @@ EXTERN_C const IID IID_ITcpipProperties;
 #define ITcpipProperties_AddRef(p)             (p)->lpVtbl->AddRef(p)
 #define ITcpipProperties_Release(p)            (p)->lpVtbl->Release(p)
 #define ITcpipProperties_Unknown1(p,a,b)       (p)->lpVtbl->Unknown1(p,a,b)
+#define ITcpipProperties_Unknown2(p,a,b)       (p)->lpVtbl->Unknown2(p,a,b)
 /* ??? */
 #endif
 

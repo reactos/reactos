@@ -16,6 +16,8 @@
 #include <atlcomcli.h>      // for CComVariant
 #include <atlconv.h>        // for CA2W and CW2A
 #include <strsafe.h>        // for StringC... functions
+#include <cstdlib>          // __min
+#include <new>              // std::nothrow
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -257,7 +259,9 @@ SHCreatePropertyBagOnMemory(_In_ DWORD dwMode, _In_ REFIID riid, _Out_ void **pp
 
     *ppvObj = NULL;
 
-    CComPtr<CMemPropertyBag> pMemBag(new CMemPropertyBag(dwMode));
+    CComPtr<CMemPropertyBag> pMemBag(new(std::nothrow) CMemPropertyBag(dwMode));
+    if (!pMemBag)
+        return E_OUTOFMEMORY;
 
     return pMemBag->QueryInterface(riid, ppvObj);
 }
@@ -584,7 +588,9 @@ SHCreatePropertyBagOnRegKey(
 
     *ppvObj = NULL;
 
-    CComPtr<CRegPropertyBag> pRegBag(new CRegPropertyBag(dwMode));
+    CComPtr<CRegPropertyBag> pRegBag(new(std::nothrow) CRegPropertyBag(dwMode));
+    if (!pRegBag)
+        return E_OUTOFMEMORY;
 
     HRESULT hr = pRegBag->Init(hKey, pszSubKey);
     if (FAILED(hr))
@@ -836,7 +842,7 @@ CIniPropertyBag::_GetSectionAndName(
     if (pchSep)
     {
         UINT cchSep = (UINT)(pchSep - pszStart + 1);
-        StrCpyNW(pszSection, pszStart, min(cchSep, cchSectionMax));
+        StrCpyNW(pszSection, pszStart, __min(cchSep, cchSectionMax));
         StrCpyNW(pszName, pchSep + 1, cchNameMax);
         return S_OK;
     }
@@ -995,7 +1001,9 @@ SHCreatePropertyBagOnProfileSection(
     if (!PathFileExistsW(lpFileName))
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 
-    CComPtr<CIniPropertyBag> pIniPB(new CIniPropertyBag(dwMode));
+    CComPtr<CIniPropertyBag> pIniPB(new(std::nothrow) CIniPropertyBag(dwMode));
+    if (!pIniPB)
+        return E_OUTOFMEMORY;
 
     HRESULT hr = pIniPB->Init(lpFileName, pszSection);
     if (FAILED(hr))
@@ -1197,7 +1205,9 @@ CDesktopUpgradePropertyBag::Read(
 HRESULT SHGetDesktopUpgradePropertyBag(REFIID riid, void **ppvObj)
 {
     *ppvObj = NULL;
-    CComPtr<CDesktopUpgradePropertyBag> pPropBag(new CDesktopUpgradePropertyBag());
+    CComPtr<CDesktopUpgradePropertyBag> pPropBag(new(std::nothrow) CDesktopUpgradePropertyBag());
+    if (!pPropBag)
+        return E_OUTOFMEMORY;
     return pPropBag->QueryInterface(riid, ppvObj);
 }
 
@@ -1908,7 +1918,12 @@ SHGetViewStatePropertyBag(
         return E_FAIL;
     }
 
-    CComPtr<CViewStatePropertyBag> pBag(new CViewStatePropertyBag());
+    CComPtr<CViewStatePropertyBag> pBag(new(std::nothrow) CViewStatePropertyBag());
+    if (!pBag)
+    {
+        ::LeaveCriticalSection(&g_csBagCacheLock);
+        return E_OUTOFMEMORY;
+    }
 
     hr = pBag->Init(pidl, bag_name, flags);
     if (FAILED(hr))

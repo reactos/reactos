@@ -805,7 +805,7 @@ UninstallThread(LPVOID Parameter)
                     if (!DeleteFile(str))
                     {
                         err = GetLastError();
-                        if (err != ERROR_FILE_NOT_FOUND)
+                        if (err != ERROR_FILE_NOT_FOUND && err != ERROR_PATH_NOT_FOUND)
                         {
                             return ErrorBox(err);
                         }
@@ -850,13 +850,11 @@ HRESULT
 ExtractArchiveForExecution(PCWSTR pszArchive, const CStringW &PackageName, CStringW &TempDir, CStringW &App)
 {
     WCHAR TempDirBuf[MAX_PATH], UniqueDir[MAX_PATH];
-    CAppDB db(CAppDB::GetDefaultPath());
-    db.UpdateAvailable();
-    CAvailableApplicationInfo *pAppInfo = db.FindAvailableByPackageName(PackageName);
+    CAvailableApplicationInfo *pAppInfo = CAppDB::CreateAvailableAppInstance(PackageName);
+    Deleter <CAvailableApplicationInfo*>del(pAppInfo);
     if (!pAppInfo)
         return HResultFromWin32(ERROR_NOT_FOUND);
     CConfigParser *pCfg = pAppInfo->GetConfigParser();
-
     if (!GetTempPathW(_countof(TempDirBuf), TempDirBuf))
         return E_FAIL;
     wsprintfW(UniqueDir, L"~%s-%u", RAPPS_NAME, GetCurrentProcessId());

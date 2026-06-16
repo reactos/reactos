@@ -19,6 +19,7 @@ list(APPEND RTL_WINE_SOURCE
     threadpool.c
 )
 list(APPEND RTL_WINE_SOURCE_VISTA
+    product.c
     threadpool.c
 )
 set_source_files_properties(threadpool.c PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
@@ -138,6 +139,7 @@ list(APPEND SOURCE_VISTA
     condvar.c
     locale.c
     runonce.c
+    slist.c
     srw.c
     threadpool.c
     unicode_vista.c

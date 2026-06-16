@@ -345,8 +345,8 @@
 345 stdcall -noname SHAnsiToAnsi(str ptr long)
 346 stdcall -noname SHUnicodeToUnicode(wstr ptr long)
 347 stdcall -noname RegDeleteValueWrapW(long wstr) advapi32.RegDeleteValueW
-348 stub -noname SHGetFileDescriptionW
-349 stub -noname SHGetFileDescriptionA
+348 stdcall -noname SHGetFileDescriptionW(wstr wstr wstr ptr ptr)
+349 stdcall -noname SHGetFileDescriptionA(str str str ptr ptr)
 350 stdcall -noname GetFileVersionInfoSizeWrapW(wstr ptr)
 351 stdcall -noname GetFileVersionInfoWrapW(wstr long long ptr)
 352 stdcall -noname VerQueryValueWrapW(ptr wstr ptr ptr)
@@ -444,10 +444,10 @@
 444 stdcall -noname SHGetSystemWindowsDirectoryW(ptr long) kernel32.GetSystemWindowsDirectoryW
 445 stdcall -noname PathFileExistsAndAttributesA(str ptr)
 446 stdcall -noname PathFileExistsAndAttributesW(wstr ptr)
-447 stub -noname FixSlashesAndColonA
+447 stdcall -noname FixSlashesAndColonA(str)
 448 stdcall -noname FixSlashesAndColonW(wstr)
-449 stub -noname NextPathA
-450 stub -noname NextPathW
+449 stdcall -noname NextPathA(str ptr long)
+450 stdcall -noname NextPathW(wstr ptr long)
 451 stdcall -noname CharUpperNoDBCSA(str)
 452 stdcall -noname CharUpperNoDBCSW(wstr)
 453 stdcall -noname CharLowerNoDBCSA(str)
@@ -462,8 +462,8 @@
 462 stdcall -noname UrlFixupW(wstr wstr long)
 463 stdcall -noname SHExpandEnvironmentStringsForUserA(ptr str ptr long) userenv.ExpandEnvironmentStringsForUserA
 464 stdcall -noname SHExpandEnvironmentStringsForUserW(ptr wstr ptr long) userenv.ExpandEnvironmentStringsForUserW
-465 stub -noname PathUnExpandEnvStringsForUserA
-466 stdcall -stub -noname PathUnExpandEnvStringsForUserW(ptr wstr ptr long)
+465 stdcall -noname PathUnExpandEnvStringsForUserA(ptr str ptr long)
+466 stdcall -noname PathUnExpandEnvStringsForUserW(ptr wstr ptr long)
 467 stdcall -ordinal SHRunIndirectRegClientCommand(ptr wstr) # Exported by name in Vista+
 468 stdcall -noname RunIndirectRegCommand(ptr ptr wstr wstr)
 469 stdcall -noname RunRegCommand(ptr ptr wstr)
@@ -482,14 +482,14 @@
 482 stub -noname SHMessageBoxHelpA
 483 stub -noname SHMessageBoxHelpW
 484 stdcall -noname IUnknown_QueryServiceExec(ptr ptr ptr long long long ptr)
-485 stub -noname MapWin32ErrorToSTG
+485 stdcall -noname MapWin32ErrorToSTG(long)
 486 stub -noname ModeToCreateFileFlags
 487 stdcall -ordinal SHLoadIndirectString(wstr ptr long ptr)
 488 stub -noname SHConvertGraphicsFile
 489 stdcall -noname GlobalAddAtomWrapW(wstr) kernel32.GlobalAddAtomW
 490 stdcall -noname GlobalFindAtomWrapW(wstr) kernel32.GlobalFindAtomW
 491 stdcall -noname SHGetShellKey(long long long)
-492 stub -noname PrettifyFileDescriptionW
+492 stdcall -noname PrettifyFileDescriptionW(wstr wstr)
 493 stdcall -noname SHPropertyBag_ReadType(ptr wstr ptr long)
 494 stdcall -noname SHPropertyBag_ReadStr(ptr wstr ptr long)
 495 stdcall -noname SHPropertyBag_WriteStr(ptr wstr wstr)
@@ -536,12 +536,12 @@
 536 stdcall -noname IUnknown_QueryServicePropertyBag(ptr long ptr ptr)
 537 stdcall -noname SHBoolSystemParametersInfo(long ptr)
 538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)
-539 stub -noname IUnknown_ShowBrowserBar
+539 stdcall -noname IUnknown_ShowBrowserBar(ptr ptr long)
 540 stdcall -noname SHInvokeCommandOnContextMenu(ptr ptr ptr long str)
 541 stdcall -noname SHInvokeCommandsOnContextMenu(ptr ptr ptr long ptr long)
 542 stdcall -noname GetUIVersion()
 543 stdcall -noname CreateColorSpaceWrapW(ptr) gdi32.CreateColorSpaceW
-544 stub -noname QuerySourceCreateFromKey
+544 stdcall -noname QuerySourceCreateFromKey(ptr wstr long ptr ptr)
 545 stdcall -noname SHForwardContextMenuMsg(ptr long long long ptr long)
 546 stub -noname IUnknown_DoContextMenuPopup
 547 stdcall DelayLoadFailureHook(str str) kernel32.DelayLoadFailureHook
@@ -557,7 +557,7 @@
 557 stub -noname SHCoCreateExtension
 558 stub -noname SHCoExtensionCollectStats
 559 stub -noname SHGetSignatureInfo
-560 stdcall -stub -noname SHWindowsPolicyGetValue(ptr ptr ptr)
+560 stdcall -noname SHWindowsPolicyGetValue(ptr ptr ptr)
 561 stub -noname AssocGetUrlAction
 562 stub -noname SHGetPrivateProfileInt
 563 stdcall -stub -noname SHGetPrivateProfileSection(wstr ptr long ptr)

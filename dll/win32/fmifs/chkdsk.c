@@ -89,7 +89,7 @@ Chkdsk(
 
 Quit:
     /* Report result */
-    Callback(DONE, 0, &Success);
+    Callback(DONE, Status, &Success);
 }
 
 /* EOF */

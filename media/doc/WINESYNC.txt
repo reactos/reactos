@@ -49,7 +49,8 @@ dll/directx/wine/qedit          # Synced to WineStaging-3.17
 dll/directx/wine/quartz         # Synced to WineStaging-3.9
 dll/directx/wine/wined3d        # Synced to WineStaging-3.3
 
-dll/win32/activeds            # Synced to WineStaging-4.18
+dll/win32/activeds            # Synced to Wine-10.0
+dll/win32/activeds.tlb        # Synced to Wine-10.0
 dll/win32/actxprxy            # Synced to WineStaging-3.3
 dll/win32/advpack             # Synced to WineStaging-4.18
 dll/win32/atl                 # Synced to WineStaging-4.18
@@ -72,8 +73,8 @@ dll/win32/credui              # Synced to WineStaging-4.18
 dll/win32/crypt32             # Synced to WineStaging-4.0
 dll/win32/cryptdlg            # Synced to WineStaging-4.18
 dll/win32/cryptdll            # Synced to WineStaging-4.18
-dll/win32/cryptnet            # Synced to WineStaging-4.18
-dll/win32/cryptui             # Synced to WineStaging-4.18
+dll/win32/cryptnet            # Synced to Wine-10.0
+dll/win32/cryptui             # Synced to Wine-10.0
 dll/win32/dbgeng              # Synced to WineStaging-4.18
 dll/win32/dbghelp             # Synced to WineStaging-5.16
 dll/win32/dciman32            # Synced to WineStaging-3.3
@@ -90,14 +91,14 @@ dll/win32/iccvid              # Synced to WineStaging-4.0
 dll/win32/ieframe             # Synced to WineStaging-4.18
 dll/win32/imaadp32.acm        # Synced to WineStaging-4.0
 dll/win32/imagehlp            # Synced to WineStaging-4.18
-dll/win32/inetcomm            # Synced to WineStaging-4.18
+dll/win32/inetcomm            # Synced to Wine-10.0
 dll/win32/inetmib1            # Synced to WineStaging-4.18
 dll/win32/initpki             # Synced to WineStaging-4.18
 dll/win32/inseng              # Synced to WineStaging-4.18
 dll/win32/iphlpapi            # Out of sync
 dll/win32/itircl              # Synced to WineStaging-4.18
 dll/win32/itss                # Synced to WineStaging-4.18
-dll/win32/jscript             # Synced to WineStaging-4.18
+dll/win32/jscript             # Synced to Wine-10.0
 dll/win32/jsproxy             # Synced to WineStaging-4.18
 dll/win32/loadperf            # Synced to WineStaging-4.18
 dll/win32/lz32                # Synced to WineStaging-3.3
@@ -254,7 +255,7 @@ base/applications/cmdutils/reg      # Synced to WineStaging-6.23
 base/applications/cmdutils/schtasks # Synced to WineStaging-3.3
 base/applications/cmdutils/taskkill # Synced to WineStaging-3.17
 base/applications/cmdutils/wmic     # Synced to WineStaging-4.0
-base/applications/cmdutils/wscript  # Synced to WineStaging-4.18
+base/applications/cmdutils/wscript  # Synced to Wine-11.10
 base/applications/cmdutils/xcopy    # Synced to WineStaging-3.17
 base/applications/games/winmine     # Synced to WineStaging-2.16 with our own resources.
 base/applications/extrac32          # Synced to WineStaging-4.0
@@ -278,9 +279,9 @@ sdk/lib/rtl/threadpool.c            # Synced to Wine-9.7
 
 advapi32 -
   dll/win32/advapi32/wine/cred.c         # Synced to WineStaging-3.3
-  dll/win32/advapi32/wine/crypt.c        # Synced to WineStaging-3.3
-  dll/win32/advapi32/wine/crypt_des.c    # Synced to WineStaging-3.3
-  dll/win32/advapi32/wine/crypt_lmhash.c # Synced to WineStaging-3.3
+  dll/win32/advapi32/wine/crypt.c        # Synced to Wine-10.0
+  dll/win32/advapi32/wine/crypt_des.c    # Synced to Wine-10.0
+  dll/win32/advapi32/wine/crypt_lmhash.c # Synced to Wine-10.0
   dll/win32/advapi32/wine/security.c     # Out of Sync
 
 gdi32 -

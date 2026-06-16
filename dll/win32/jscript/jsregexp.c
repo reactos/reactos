@@ -34,38 +34,15 @@ typedef struct {
     jsval_t last_index_val;
 } RegExpInstance;
 
-static const WCHAR sourceW[] = {'s','o','u','r','c','e',0};
-static const WCHAR globalW[] = {'g','l','o','b','a','l',0};
-static const WCHAR ignoreCaseW[] = {'i','g','n','o','r','e','C','a','s','e',0};
-static const WCHAR multilineW[] = {'m','u','l','t','i','l','i','n','e',0};
-static const WCHAR lastIndexW[] = {'l','a','s','t','I','n','d','e','x',0};
-static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
-static const WCHAR execW[] = {'e','x','e','c',0};
-static const WCHAR testW[] = {'t','e','s','t',0};
-
-static const WCHAR leftContextW[] =
-    {'l','e','f','t','C','o','n','t','e','x','t',0};
-static const WCHAR rightContextW[] =
-    {'r','i','g','h','t','C','o','n','t','e','x','t',0};
-
-static const WCHAR idx1W[] = {'$','1',0};
-static const WCHAR idx2W[] = {'$','2',0};
-static const WCHAR idx3W[] = {'$','3',0};
-static const WCHAR idx4W[] = {'$','4',0};
-static const WCHAR idx5W[] = {'$','5',0};
-static const WCHAR idx6W[] = {'$','6',0};
-static const WCHAR idx7W[] = {'$','7',0};
-static const WCHAR idx8W[] = {'$','8',0};
-static const WCHAR idx9W[] = {'$','9',0};
-
 static inline RegExpInstance *regexp_from_jsdisp(jsdisp_t *jsdisp)
 {
     return CONTAINING_RECORD(jsdisp, RegExpInstance, dispex);
 }
 
-static inline RegExpInstance *regexp_from_vdisp(vdisp_t *vdisp)
+static inline RegExpInstance *regexp_this(jsval_t vthis)
 {
-    return regexp_from_jsdisp(vdisp->u.jsdisp);
+    jsdisp_t *jsdisp = is_object_instance(vthis) ? to_jsdisp(get_object(vthis)) : NULL;
+    return (jsdisp && is_class(jsdisp, JSCLASS_REGEXP)) ? regexp_from_jsdisp(jsdisp) : NULL;
 }
 
 static void set_last_index(RegExpInstance *This, DWORD last_index)
@@ -172,7 +149,7 @@ HRESULT regexp_match_next(script_ctx_t *ctx, jsdisp_t *dispex,
     heap_pool_clear(mark);
 
     if(hres != S_OK && (rem_flags & REM_ALLOC_RESULT)) {
-        heap_free(match);
+        free(match);
         *ret = NULL;
     }
 
@@ -216,11 +193,11 @@ static HRESULT regexp_match(script_ctx_t *ctx, jsdisp_t *dispex, jsstr_t *jsstr,
             if(ret) {
                 match_result_t *old_ret = ret;
 
-                ret = heap_realloc(old_ret, (ret_size <<= 1) * sizeof(match_result_t));
+                ret = realloc(old_ret, (ret_size <<= 1) * sizeof(match_result_t));
                 if(!ret)
-                    heap_free(old_ret);
+                    free(old_ret);
             }else {
-                ret = heap_alloc((ret_size=4) * sizeof(match_result_t));
+                ret = malloc((ret_size=4) * sizeof(match_result_t));
             }
             if(!ret) {
                 hres = E_OUTOFMEMORY;
@@ -231,6 +208,9 @@ static HRESULT regexp_match(script_ctx_t *ctx, jsdisp_t *dispex, jsstr_t *jsstr,
         ret[i].index = result->cp - str - result->match_len;
         ret[i++].length = result->match_len;
 
+        if (result->match_len == 0)
+	    result->cp++;
+
         if(!gflag && !(This->jsregexp->flags & REG_GLOB)) {
             hres = S_OK;
             break;
@@ -239,7 +219,7 @@ static HRESULT regexp_match(script_ctx_t *ctx, jsdisp_t *dispex, jsstr_t *jsstr,
 
     heap_pool_clear(mark);
     if(FAILED(hres)) {
-        heap_free(ret);
+        free(ret);
         return hres;
     }
 
@@ -286,10 +266,8 @@ static INT index_from_val(script_ctx_t *ctx, jsval_t v)
     HRESULT hres;
 
     hres = to_number(ctx, v, &n);
-    if(FAILED(hres)) {
-        clear_ei(ctx); /* FIXME: Move ignoring exceptions to to_primitive */
+    if(FAILED(hres))
         return 0;
-    }
 
     n = floor(n);
     return is_int32(n) ? n : 0;
@@ -320,7 +298,7 @@ static HRESULT RegExp_set_lastIndex(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t
     return S_OK;
 }
 
-static HRESULT RegExp_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT RegExp_toString(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     RegExpInstance *regexp;
@@ -330,12 +308,11 @@ static HRESULT RegExp_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
 
     TRACE("\n");
 
-    if(!is_vclass(jsthis, JSCLASS_REGEXP)) {
-        FIXME("Not a RegExp\n");
-        return E_NOTIMPL;
+    if(!(regexp = regexp_this(vthis))) {
+        WARN("Not a RegExp\n");
+        return JS_E_REGEXP_EXPECTED;
     }
 
-    regexp = regexp_from_vdisp(jsthis);
 
     if(!r)
         return S_OK;
@@ -378,11 +355,6 @@ static HRESULT create_match_array(script_ctx_t *ctx, jsstr_t *input_str,
     DWORD i;
     HRESULT hres = S_OK;
 
-    static const WCHAR indexW[] = {'i','n','d','e','x',0};
-    static const WCHAR inputW[] = {'i','n','p','u','t',0};
-    static const WCHAR lastIndexW[] = {'l','a','s','t','I','n','d','e','x',0};
-    static const WCHAR zeroW[] = {'0',0};
-
     input = jsstr_flatten(input_str);
     if(!input)
         return E_OUTOFMEMORY;
@@ -392,31 +364,36 @@ static HRESULT create_match_array(script_ctx_t *ctx, jsstr_t *input_str,
         return hres;
 
     for(i=0; i < result->paren_count; i++) {
-        if(result->parens[i].index != -1)
-            str = jsstr_substr(input_str, result->parens[i].index, result->parens[i].length);
-        else
-            str = jsstr_empty();
-        if(!str) {
-            hres = E_OUTOFMEMORY;
-            break;
+        jsval_t val;
+
+        if(result->parens[i].index != -1) {
+            if(!(str = jsstr_substr(input_str, result->parens[i].index, result->parens[i].length))) {
+                hres = E_OUTOFMEMORY;
+                break;
+            }
+            val = jsval_string(str);
+        }else if(ctx->version < SCRIPTLANGUAGEVERSION_ES5) {
+            val = jsval_string(jsstr_empty());
+        }else {
+            val = jsval_undefined();
         }
 
-        hres = jsdisp_propput_idx(array, i+1, jsval_string(str));
-        jsstr_release(str);
+        hres = jsdisp_propput_idx(array, i+1, val);
+        jsval_release(val);
         if(FAILED(hres))
             break;
     }
 
     while(SUCCEEDED(hres)) {
-        hres = jsdisp_propput_name(array, indexW, jsval_number(result->cp-input-result->match_len));
+        hres = jsdisp_propput_name(array, L"index", jsval_number(result->cp-input-result->match_len));
         if(FAILED(hres))
             break;
 
-        hres = jsdisp_propput_name(array, lastIndexW, jsval_number(result->cp-input));
+        hres = jsdisp_propput_name(array, L"lastIndex", jsval_number(result->cp-input));
         if(FAILED(hres))
             break;
 
-        hres = jsdisp_propput_name(array, inputW, jsval_string(jsstr_addref(input_str)));
+        hres = jsdisp_propput_name(array, L"input", jsval_string(input_str));
         if(FAILED(hres))
             break;
 
@@ -425,7 +402,7 @@ static HRESULT create_match_array(script_ctx_t *ctx, jsstr_t *input_str,
             hres = E_OUTOFMEMORY;
             break;
         }
-        hres = jsdisp_propput_name(array, zeroW, jsval_string(str));
+        hres = jsdisp_propput_name(array, L"0", jsval_string(str));
         jsstr_release(str);
         break;
     }
@@ -439,7 +416,7 @@ static HRESULT create_match_array(script_ctx_t *ctx, jsstr_t *input_str,
     return S_OK;
 }
 
-static HRESULT run_exec(script_ctx_t *ctx, vdisp_t *jsthis, jsval_t arg,
+static HRESULT run_exec(script_ctx_t *ctx, jsval_t vthis, jsval_t arg,
         jsstr_t **input, match_state_t **result, BOOL *ret)
 {
     RegExpInstance *regexp;
@@ -449,12 +426,10 @@ static HRESULT run_exec(script_ctx_t *ctx, vdisp_t *jsthis, jsval_t arg,
     jsstr_t *jsstr;
     HRESULT hres;
 
-    if(!is_vclass(jsthis, JSCLASS_REGEXP)) {
-        FIXME("Not a RegExp\n");
-        return E_NOTIMPL;
+    if(!(regexp = regexp_this(vthis))) {
+        WARN("Not a RegExp\n");
+        return JS_E_REGEXP_EXPECTED;
     }
-
-    regexp = regexp_from_vdisp(jsthis);
 
     hres = to_flat_string(ctx, arg, &jsstr, &string);
     if(FAILED(hres))
@@ -494,7 +469,7 @@ static HRESULT run_exec(script_ctx_t *ctx, vdisp_t *jsthis, jsval_t arg,
     return S_OK;
 }
 
-static HRESULT RegExp_exec(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT RegExp_exec(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     match_state_t *match;
@@ -507,7 +482,7 @@ static HRESULT RegExp_exec(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsig
 
     mark = heap_pool_mark(&ctx->tmp_heap);
 
-    hres = run_exec(ctx, jsthis, argc ? argv[0] : jsval_string(jsstr_empty()), &string, &match, &b);
+    hres = run_exec(ctx, vthis, argc ? argv[0] : jsval_string(jsstr_empty()), &string, &match, &b);
     if(FAILED(hres)) {
         heap_pool_clear(mark);
         return hres;
@@ -530,7 +505,7 @@ static HRESULT RegExp_exec(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsig
     return hres;
 }
 
-static HRESULT RegExp_test(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT RegExp_test(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     match_state_t *match;
@@ -542,7 +517,7 @@ static HRESULT RegExp_test(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsig
     TRACE("\n");
 
     mark = heap_pool_mark(&ctx->tmp_heap);
-    hres = run_exec(ctx, jsthis, argc ? argv[0] : jsval_string(undef_str = jsstr_undefined()), NULL, &match, &b);
+    hres = run_exec(ctx, vthis, argc ? argv[0] : jsval_string(undef_str = jsstr_undefined()), NULL, &match, &b);
     heap_pool_clear(mark);
     if(!argc)
         jsstr_release(undef_str);
@@ -554,14 +529,14 @@ static HRESULT RegExp_test(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsig
     return S_OK;
 }
 
-static HRESULT RegExp_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT RegExp_value(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     TRACE("\n");
 
     switch(flags) {
     case INVOKE_FUNC:
-        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
+        return JS_E_FUNCTION_EXPECTED;
     default:
         FIXME("unimplemented flags %x\n", flags);
         return E_NOTIMPL;
@@ -578,52 +553,56 @@ static void RegExp_destructor(jsdisp_t *dispex)
         regexp_destroy(This->jsregexp);
     jsval_release(This->last_index_val);
     jsstr_release(This->str);
-    heap_free(This);
+}
+
+static HRESULT RegExp_gc_traverse(struct gc_ctx *gc_ctx, enum gc_traverse_op op, jsdisp_t *dispex)
+{
+    return gc_process_linked_val(gc_ctx, op, dispex, &regexp_from_jsdisp(dispex)->last_index_val);
 }
 
 static const builtin_prop_t RegExp_props[] = {
-    {execW,                  RegExp_exec,                  PROPF_METHOD|1},
-    {globalW,                NULL,0,                       RegExp_get_global},
-    {ignoreCaseW,            NULL,0,                       RegExp_get_ignoreCase},
-    {lastIndexW,             NULL,0,                       RegExp_get_lastIndex,  RegExp_set_lastIndex},
-    {multilineW,             NULL,0,                       RegExp_get_multiline},
-    {sourceW,                NULL,0,                       RegExp_get_source},
-    {testW,                  RegExp_test,                  PROPF_METHOD|1},
-    {toStringW,              RegExp_toString,              PROPF_METHOD}
+    {L"exec",                RegExp_exec,                  PROPF_METHOD|1},
+    {L"global",              NULL,0,                       RegExp_get_global},
+    {L"ignoreCase",          NULL,0,                       RegExp_get_ignoreCase},
+    {L"lastIndex",           NULL,0,                       RegExp_get_lastIndex,  RegExp_set_lastIndex},
+    {L"multiline",           NULL,0,                       RegExp_get_multiline},
+    {L"source",              NULL,0,                       RegExp_get_source},
+    {L"test",                RegExp_test,                  PROPF_METHOD|1},
+    {L"toString",            RegExp_toString,              PROPF_METHOD}
 };
 
 static const builtin_info_t RegExp_info = {
-    JSCLASS_REGEXP,
-    {NULL, RegExp_value, 0},
-    ARRAY_SIZE(RegExp_props),
-    RegExp_props,
-    RegExp_destructor,
-    NULL
+    .class       = JSCLASS_REGEXP,
+    .call        = RegExp_value,
+    .props_cnt   = ARRAY_SIZE(RegExp_props),
+    .props       = RegExp_props,
+    .destructor  = RegExp_destructor,
+    .gc_traverse = RegExp_gc_traverse
 };
 
 static const builtin_prop_t RegExpInst_props[] = {
-    {globalW,                NULL,0,                       RegExp_get_global},
-    {ignoreCaseW,            NULL,0,                       RegExp_get_ignoreCase},
-    {lastIndexW,             NULL,0,                       RegExp_get_lastIndex,  RegExp_set_lastIndex},
-    {multilineW,             NULL,0,                       RegExp_get_multiline},
-    {sourceW,                NULL,0,                       RegExp_get_source}
+    {L"global",              NULL,0,                       RegExp_get_global},
+    {L"ignoreCase",          NULL,0,                       RegExp_get_ignoreCase},
+    {L"lastIndex",           NULL,0,                       RegExp_get_lastIndex,  RegExp_set_lastIndex},
+    {L"multiline",           NULL,0,                       RegExp_get_multiline},
+    {L"source",              NULL,0,                       RegExp_get_source}
 };
 
 static const builtin_info_t RegExpInst_info = {
-    JSCLASS_REGEXP,
-    {NULL, RegExp_value, 0},
-    ARRAY_SIZE(RegExpInst_props),
-    RegExpInst_props,
-    RegExp_destructor,
-    NULL
+    .class       = JSCLASS_REGEXP,
+    .call        = RegExp_value,
+    .props_cnt   = ARRAY_SIZE(RegExpInst_props),
+    .props       = RegExpInst_props,
+    .destructor  = RegExp_destructor,
+    .gc_traverse = RegExp_gc_traverse
 };
 
-static HRESULT alloc_regexp(script_ctx_t *ctx, jsdisp_t *object_prototype, RegExpInstance **ret)
+static HRESULT alloc_regexp(script_ctx_t *ctx, jsstr_t *str, jsdisp_t *object_prototype, RegExpInstance **ret)
 {
     RegExpInstance *regexp;
     HRESULT hres;
 
-    regexp = heap_alloc_zero(sizeof(RegExpInstance));
+    regexp = calloc(1, sizeof(RegExpInstance));
     if(!regexp)
         return E_OUTOFMEMORY;
 
@@ -633,9 +612,12 @@ static HRESULT alloc_regexp(script_ctx_t *ctx, jsdisp_t *object_prototype, RegEx
         hres = init_dispex_from_constr(&regexp->dispex, ctx, &RegExpInst_info, ctx->regexp_constr);
 
     if(FAILED(hres)) {
-        heap_free(regexp);
+        free(regexp);
         return hres;
     }
+
+    regexp->str = jsstr_addref(str);
+    regexp->last_index_val = jsval_number(0);
 
     *ret = regexp;
     return S_OK;
@@ -651,20 +633,17 @@ HRESULT create_regexp(script_ctx_t *ctx, jsstr_t *src, DWORD flags, jsdisp_t **r
     if(!str)
         return E_OUTOFMEMORY;
 
-    TRACE("%s %x\n", debugstr_wn(str, jsstr_length(src)), flags);
+    TRACE("%s %lx\n", debugstr_wn(str, jsstr_length(src)), flags);
 
-    hres = alloc_regexp(ctx, NULL, &regexp);
+    hres = alloc_regexp(ctx, src, NULL, &regexp);
     if(FAILED(hres))
         return hres;
-
-    regexp->str = jsstr_addref(src);
-    regexp->last_index_val = jsval_number(0);
 
     regexp->jsregexp = regexp_new(ctx, &ctx->tmp_heap, str, jsstr_length(regexp->str), flags, FALSE);
     if(!regexp->jsregexp) {
         WARN("regexp_new failed\n");
         jsdisp_release(&regexp->dispex);
-        return E_FAIL;
+        return DISP_E_EXCEPTION;
     }
 
     *ret = &regexp->dispex;
@@ -673,66 +652,57 @@ HRESULT create_regexp(script_ctx_t *ctx, jsstr_t *src, DWORD flags, jsdisp_t **r
 
 HRESULT create_regexp_var(script_ctx_t *ctx, jsval_t src_arg, jsval_t *flags_arg, jsdisp_t **ret)
 {
-    unsigned flags, opt_len = 0;
+    DWORD flags = 0;
     const WCHAR *opt = NULL;
     jsstr_t *src;
-    HRESULT hres;
+    HRESULT hres = S_OK;
 
     if(is_object_instance(src_arg)) {
         jsdisp_t *obj;
 
-        obj = iface_to_jsdisp(get_object(src_arg));
+        obj = to_jsdisp(get_object(src_arg));
         if(obj) {
             if(is_class(obj, JSCLASS_REGEXP)) {
                 RegExpInstance *regexp = regexp_from_jsdisp(obj);
 
                 hres = create_regexp(ctx, regexp->str, regexp->jsregexp->flags, ret);
-                jsdisp_release(obj);
                 return hres;
             }
-
-            jsdisp_release(obj);
         }
     }
 
-    if(!is_string(src_arg)) {
-        FIXME("src_arg = %s\n", debugstr_jsval(src_arg));
-        return E_NOTIMPL;
-    }
-
-    src = get_string(src_arg);
-
-    if(flags_arg) {
-        jsstr_t *opt_str;
-
-        if(!is_string(*flags_arg)) {
-            FIXME("unimplemented for %s\n", debugstr_jsval(*flags_arg));
-            return E_NOTIMPL;
-        }
-
-        opt_str = get_string(*flags_arg);
-        opt = jsstr_flatten(opt_str);
-        if(!opt)
-            return E_OUTOFMEMORY;
-        opt_len = jsstr_length(opt_str);
-    }
-
-    hres = parse_regexp_flags(opt, opt_len, &flags);
+    if(is_undefined(src_arg))
+        src = jsstr_empty();
+    else
+        hres = to_string(ctx, src_arg, &src);
     if(FAILED(hres))
         return hres;
 
-    return create_regexp(ctx, src, flags, ret);
+    if(flags_arg && !is_undefined(*flags_arg)) {
+        jsstr_t *opt_str;
+
+        hres = to_string(ctx, *flags_arg, &opt_str);
+        if(SUCCEEDED(hres)) {
+            opt = jsstr_flatten(opt_str);
+            if(opt)
+                hres = parse_regexp_flags(opt, jsstr_length(opt_str), &flags);
+            else
+                hres = E_OUTOFMEMORY;
+            jsstr_release(opt_str);
+        }
+    }
+
+    if(SUCCEEDED(hres))
+        hres = create_regexp(ctx, src, flags, ret);
+    jsstr_release(src);
+    return hres;
 }
 
 HRESULT regexp_string_match(script_ctx_t *ctx, jsdisp_t *re, jsstr_t *jsstr, jsval_t *r)
 {
-    static const WCHAR indexW[] = {'i','n','d','e','x',0};
-    static const WCHAR inputW[] = {'i','n','p','u','t',0};
-    static const WCHAR lastIndexW[] = {'l','a','s','t','I','n','d','e','x',0};
-
     RegExpInstance *regexp = regexp_from_jsdisp(re);
     match_result_t *match_result;
-    unsigned match_cnt, i;
+    DWORD match_cnt, i;
     const WCHAR *str;
     jsdisp_t *array;
     HRESULT hres;
@@ -787,8 +757,10 @@ HRESULT regexp_string_match(script_ctx_t *ctx, jsdisp_t *re, jsstr_t *jsstr, jsv
     }
 
     hres = create_array(ctx, match_cnt, &array);
-    if(FAILED(hres))
+    if(FAILED(hres)) {
+        free(match_result);
         return hres;
+    }
 
     for(i=0; i < match_cnt; i++) {
         jsstr_t *tmp_str;
@@ -806,20 +778,20 @@ HRESULT regexp_string_match(script_ctx_t *ctx, jsdisp_t *re, jsstr_t *jsstr, jsv
     }
 
     while(SUCCEEDED(hres)) {
-        hres = jsdisp_propput_name(array, indexW, jsval_number(match_result[match_cnt-1].index));
+        hres = jsdisp_propput_name(array, L"index", jsval_number(match_result[match_cnt-1].index));
         if(FAILED(hres))
             break;
 
-        hres = jsdisp_propput_name(array, lastIndexW,
+        hres = jsdisp_propput_name(array, L"lastIndex",
                 jsval_number(match_result[match_cnt-1].index + match_result[match_cnt-1].length));
         if(FAILED(hres))
             break;
 
-        hres = jsdisp_propput_name(array, inputW, jsval_string(jsstr));
+        hres = jsdisp_propput_name(array, L"input", jsval_string(jsstr));
         break;
     }
 
-    heap_free(match_result);
+    free(match_result);
 
     if(SUCCEEDED(hres) && r)
         *r = jsval_obj(array);
@@ -923,7 +895,7 @@ static HRESULT RegExpConstr_get_rightContext(script_ctx_t *ctx, jsdisp_t *jsthis
     return S_OK;
 }
 
-static HRESULT RegExpConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+static HRESULT RegExpConstr_value(script_ctx_t *ctx, jsval_t vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
     TRACE("\n");
@@ -932,21 +904,16 @@ static HRESULT RegExpConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
     case DISPATCH_METHOD:
         if(argc) {
             if(is_object_instance(argv[0])) {
-                jsdisp_t *jsdisp = iface_to_jsdisp(get_object(argv[0]));
+                jsdisp_t *jsdisp = to_jsdisp(get_object(argv[0]));
                 if(jsdisp) {
                     if(is_class(jsdisp, JSCLASS_REGEXP)) {
-                        if(argc > 1 && !is_undefined(argv[1])) {
-                            jsdisp_release(jsdisp);
-                            return throw_regexp_error(ctx, JS_E_REGEXP_SYNTAX, NULL);
-                        }
+                        if(argc > 1 && !is_undefined(argv[1]))
+                            return JS_E_REGEXP_SYNTAX;
 
                         if(r)
-                            *r = jsval_obj(jsdisp);
-                        else
-                            jsdisp_release(jsdisp);
+                            *r = jsval_obj(jsdisp_addref(jsdisp));
                         return S_OK;
                     }
-                    jsdisp_release(jsdisp);
                 }
             }
         }
@@ -955,12 +922,7 @@ static HRESULT RegExpConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
         jsdisp_t *ret;
         HRESULT hres;
 
-        if(!argc) {
-            FIXME("no args\n");
-            return E_NOTIMPL;
-        }
-
-        hres = create_regexp_var(ctx, argv[0], argc > 1 ? argv+1 : NULL, &ret);
+        hres = create_regexp_var(ctx, argc ? argv[0] : jsval_undefined(), argc > 1 ? argv+1 : NULL, &ret);
         if(FAILED(hres))
             return hres;
 
@@ -979,40 +941,38 @@ static HRESULT RegExpConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
 }
 
 static const builtin_prop_t RegExpConstr_props[] = {
-    {idx1W,           NULL,0,  RegExpConstr_get_idx1,         builtin_set_const},
-    {idx2W,           NULL,0,  RegExpConstr_get_idx2,         builtin_set_const},
-    {idx3W,           NULL,0,  RegExpConstr_get_idx3,         builtin_set_const},
-    {idx4W,           NULL,0,  RegExpConstr_get_idx4,         builtin_set_const},
-    {idx5W,           NULL,0,  RegExpConstr_get_idx5,         builtin_set_const},
-    {idx6W,           NULL,0,  RegExpConstr_get_idx6,         builtin_set_const},
-    {idx7W,           NULL,0,  RegExpConstr_get_idx7,         builtin_set_const},
-    {idx8W,           NULL,0,  RegExpConstr_get_idx8,         builtin_set_const},
-    {idx9W,           NULL,0,  RegExpConstr_get_idx9,         builtin_set_const},
-    {leftContextW,    NULL,0,  RegExpConstr_get_leftContext,  builtin_set_const},
-    {rightContextW,   NULL,0,  RegExpConstr_get_rightContext, builtin_set_const}
+    {L"$1",           NULL,0,  RegExpConstr_get_idx1,         builtin_set_const},
+    {L"$2",           NULL,0,  RegExpConstr_get_idx2,         builtin_set_const},
+    {L"$3",           NULL,0,  RegExpConstr_get_idx3,         builtin_set_const},
+    {L"$4",           NULL,0,  RegExpConstr_get_idx4,         builtin_set_const},
+    {L"$5",           NULL,0,  RegExpConstr_get_idx5,         builtin_set_const},
+    {L"$6",           NULL,0,  RegExpConstr_get_idx6,         builtin_set_const},
+    {L"$7",           NULL,0,  RegExpConstr_get_idx7,         builtin_set_const},
+    {L"$8",           NULL,0,  RegExpConstr_get_idx8,         builtin_set_const},
+    {L"$9",           NULL,0,  RegExpConstr_get_idx9,         builtin_set_const},
+    {L"leftContext",  NULL,0,  RegExpConstr_get_leftContext,  builtin_set_const},
+    {L"rightContext", NULL,0,  RegExpConstr_get_rightContext, builtin_set_const}
 };
 
 static const builtin_info_t RegExpConstr_info = {
-    JSCLASS_FUNCTION,
-    DEFAULT_FUNCTION_VALUE,
-    ARRAY_SIZE(RegExpConstr_props),
-    RegExpConstr_props,
-    NULL,
-    NULL
+    .class     = JSCLASS_FUNCTION,
+    .call      = Function_value,
+    .props_cnt = ARRAY_SIZE(RegExpConstr_props),
+    .props     = RegExpConstr_props,
 };
 
 HRESULT create_regexp_constr(script_ctx_t *ctx, jsdisp_t *object_prototype, jsdisp_t **ret)
 {
+    jsstr_t *str = jsstr_empty();
     RegExpInstance *regexp;
     HRESULT hres;
 
-    static const WCHAR RegExpW[] = {'R','e','g','E','x','p',0};
-
-    hres = alloc_regexp(ctx, object_prototype, &regexp);
+    hres = alloc_regexp(ctx, str, object_prototype, &regexp);
+    jsstr_release(str);
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_constructor(ctx, RegExpConstr_value, RegExpW, &RegExpConstr_info,
+    hres = create_builtin_constructor(ctx, RegExpConstr_value, L"RegExp", &RegExpConstr_info,
             PROPF_CONSTR|2, &regexp->dispex, ret);
 
     jsdisp_release(&regexp->dispex);

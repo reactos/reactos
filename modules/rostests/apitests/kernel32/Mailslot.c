@@ -74,7 +74,7 @@ StartTestCORE10188(VOID)
     ok(dInMsg == dOutMsg, "Transfer data failed\n");
 }
 
-START_TEST(Mailslot)
+START_TEST(MailslotRead)
 {
     StartTestCORE10188();
 }

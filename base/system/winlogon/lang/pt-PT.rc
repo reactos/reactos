@@ -1,6 +1,12 @@
-/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (May, 2012) */
+/*
+ * PROJECT:     ReactOS Winlogon
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATORS: Copyright 2012 Matheus Macabu <mkbu95@gmail.com>
+ *              Copyright 2019-2026 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX 45, 22, 164, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -39,11 +45,11 @@ STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "A preparar ligações de rede..."
     IDS_APPLYINGCOMPUTERSETTINGS "A guardar as configurações do computador..."
-    IDS_RUNNINGSTARTUPSCRIPTS "A executar scripts de inicialização..."
-    IDS_RUNNINGSHUTDOWNSCRIPTS "A executar scripts de desligamento..."
+    IDS_RUNNINGSTARTUPSCRIPTS "A executar roteiros de inicialização..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "A executar roteiros de desligamento..."
     IDS_APPLYINGYOURPERSONALSETTINGS "A aplicar as suas configurações pessoais..."
-    IDS_RUNNINGLOGOFFSCRIPTS "A executar scripts de fim de sessão..."
-    IDS_RUNNINGLOGONSCRIPTS "A executar scripts de início de sessão..."
+    IDS_RUNNINGLOGOFFSCRIPTS "A executar roteiros de fim de sessão..."
+    IDS_RUNNINGLOGONSCRIPTS "A executar roteiros de início de sessão..."
     IDS_LOADINGYOURPERSONALSETTINGS "A carregar configurações pessoais..."
     IDS_CLOSINGNETWORKCONNECTIONS "A terminar as ligações de rede..."
     IDS_REACTOSISRESTARTING "A reiniciar..."
@@ -52,9 +58,9 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Preparando para Hibernar..."
     IDS_SAVEYOURSETTINGS "A guardar as suas configurações..."
     IDS_REACTOSISSTARTINGUP "ReactOS está a iniciar..."
-    IDS_LOGGINGOFF "Logging off..."
+    IDS_LOGGINGOFF "Terminar sessão..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
-    IDS_TIMEOUTLONGFORMAT "%d days"
+    IDS_TIMEOUTLONGFORMAT "%d dias"
 END
 
 STRINGTABLE

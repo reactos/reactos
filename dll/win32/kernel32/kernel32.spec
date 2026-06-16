@@ -574,7 +574,7 @@
 @ stdcall GetProcessVersion(long)
 @ stdcall GetProcessWorkingSetSize(long ptr ptr)
 @ stdcall GetProcessWorkingSetSizeEx(long ptr ptr long)
-@ stub -version=0x600+ GetProductInfo
+@ stdcall -version=0x600+ GetProductInfo(long long long long ptr) ntdll.RtlGetProductInfo
 @ stdcall GetProfileIntA(str str long)
 @ stdcall GetProfileIntW(wstr wstr long)
 @ stdcall GetProfileSectionA(str ptr long)

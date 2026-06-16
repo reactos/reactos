@@ -86,7 +86,7 @@ static void test_BadLetters(void)
     }
 }
 
-START_TEST(isvalidname)
+START_TEST(NcIsValidConnectionName)
 {
     HMODULE hDll = LoadLibraryA("netshell.dll");
 

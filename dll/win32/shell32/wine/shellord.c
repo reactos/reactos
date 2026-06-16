@@ -379,6 +379,10 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
                 SHELL32_GetDefaultShellState(gpss);
                 read = 0; // The advanced items we read are no longer valid in gpss
                 g_CachedSSF = SSF_STRUCTONLY;
+                /* HACKFIX: This should not be needed. Defaults should be used
+                 * until an override option is selected. See CORE-20585. */
+                rss.ss = *gpss;
+                SHELL32_WriteRegShellState(&rss);
             }
         }
         SHGSS_GetSetStruct(SHGSS_GetField); // Copy requested items from gpss to output
@@ -1659,9 +1663,10 @@ HRESULT WINAPI SHWinHelp(HWND hwnd, LPCWSTR pszHelp, UINT uCommand, ULONG_PTR dw
  *  SHRunControlPanel [SHELL32.161]
  *
  */
-BOOL WINAPI SHRunControlPanel (_In_ LPCWSTR commandLine, _In_opt_ HWND parent)
-{
 #ifdef __REACTOS__
+EXTERN_C BOOL WINAPI
+SHELL32_RunControlPanel(_In_ PCWSTR commandLine, _In_opt_ HWND parent)
+{
     /*
      * TODO: Run in-process when possible, using
      * HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\ControlPanel\InProcCPLs
@@ -1674,10 +1679,22 @@ BOOL WINAPI SHRunControlPanel (_In_ LPCWSTR commandLine, _In_opt_ HWND parent)
      * in order to keep control panel elements launch commands.
      */
     WCHAR parameters[MAX_PATH] = L"shell32.dll,Control_RunDLL ";
-    TRACE("(%s, %p)n", debugstr_w(commandLine), parent);
+    if (!commandLine)
+        return FALSE;
     wcscat(parameters, commandLine);
-
     return ((INT_PTR)ShellExecuteW(parent, L"open", L"rundll32.exe", parameters, NULL, SW_SHOWNORMAL) > 32);
+}
+#endif
+
+BOOL WINAPI SHRunControlPanel(_In_ LPCWSTR commandLine, _In_opt_ HWND parent)
+{
+#ifdef __REACTOS__
+    TRACE("(%s, %p)n", debugstr_w(commandLine), parent);
+    /* MSDN indicates that ROS should have a version check here but Vista+ just forwards to SHUNIMPL
+    if (LOBYTE(GetVersion()) >= 6)
+        return FALSE;
+    */
+    return SHELL32_RunControlPanel(commandLine, parent);
 #else
 	FIXME("(%s, %p): stub\n", debugstr_w(commandLine), parent);
 	return FALSE;

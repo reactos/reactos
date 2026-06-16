@@ -133,7 +133,7 @@
 @ stub IsLocalAddress
 @ stub NTPTimeToNTFileTime
 @ stub NTTimeToNTPTime
-@ stub NhGetGuidFromInterfaceName
+@ stdcall NhGetGuidFromInterfaceName(wstr ptr long long)
 @ stdcall NhGetInterfaceNameFromDeviceGuid(ptr ptr ptr long long)
 @ stdcall NhGetInterfaceNameFromGuid(ptr ptr ptr long long)
 @ stdcall NhpAllocateAndGetInterfaceInfoFromStack(ptr ptr long ptr long)

@@ -3020,7 +3020,11 @@ void Test_nested_from_except(void)
 #endif
 }
 
+#ifdef __cplusplus
+START_TEST(pseh_cpp)
+#else
 START_TEST(pseh)
+#endif
 {
 #ifdef _M_IX86
     Test_structs_no_seh();

@@ -4635,12 +4635,35 @@ done:
     return hr;
 }
 
+HRESULT
+WINAPI
+ITcpipProperties_fnUnknown2(
+    ITcpipProperties *iface,
+    GUID *pAdapterName,
+    PTCPIP_PROPERTIES pProperties)
+{
+    HRESULT hr = S_OK;
+
+    ERR("ITcpipProperties_fnUnknown2(%s %p)\n", wine_dbgstr_guid(pAdapterName), pProperties);
+
+    if (pProperties)
+    {
+        ERR("pProperties->dwDhcp %lu\n", pProperties->dwDhcp);
+        ERR("pProperties->pszIpAddress %S\n", pProperties->pszIpAddress);
+        ERR("pProperties->pszSubnetMask %S\n", pProperties->pszSubnetMask);
+        ERR("pProperties->pszParameters %S\n", pProperties->pszParameters);
+    }
+
+    return hr;
+}
+
 static const ITcpipPropertiesVtbl vt_TcpipProperties =
 {
     ITcpipProperties_fnQueryInterface,
     ITcpipProperties_fnAddRef,
     ITcpipProperties_fnRelease,
     ITcpipProperties_fnUnknown1,
+    ITcpipProperties_fnUnknown2,
 };
 
 HRESULT

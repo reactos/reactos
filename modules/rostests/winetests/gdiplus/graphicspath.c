@@ -75,7 +75,10 @@ typedef struct
     int todo;
 } path_test_t;
 
-static void ok_path(GpPath* path, const path_test_t *expected, INT expected_size, BOOL todo_size)
+#define ok_path(a,b,c,d) _ok_path_fudge(a,b,c,d,1.0,__LINE__)
+#define ok_path_fudge(a,b,c,d,e) _ok_path_fudge(a,b,c,d,e,__LINE__)
+static void _ok_path_fudge(GpPath* path, const path_test_t *expected, INT expected_size,
+        BOOL todo_size, REAL fudge, int line)
 {
     BYTE * types;
     INT size, idx = 0, eidx = 0, numskip;
@@ -88,11 +91,11 @@ static void ok_path(GpPath* path, const path_test_t *expected, INT expected_size
     }
 
     todo_wine_if (todo_size)
-        ok(size == expected_size, "Path size %d does not match expected size %d\n",
+        ok_(__FILE__,line)(size == expected_size, "Path size %d does not match expected size %d\n",
             size, expected_size);
 
-    points = HeapAlloc(GetProcessHeap(), 0, size * sizeof(GpPointF));
-    types = HeapAlloc(GetProcessHeap(), 0, size);
+    points = malloc(size * sizeof(GpPointF));
+    types = malloc(size);
 
     if(GdipGetPathPoints(path, points, size) != Ok || GdipGetPathTypes(path, types, size) != Ok){
         skip("Cannot perform path comparisons due to failure to retrieve path.\n");
@@ -104,14 +107,14 @@ static void ok_path(GpPath* path, const path_test_t *expected, INT expected_size
         /* We allow a few pixels fudge in matching X and Y coordinates to account for imprecision in
          * floating point to integer conversion */
         BOOL match = (types[idx] == expected[eidx].type) &&
-            fabs(points[idx].X - expected[eidx].X) <= 2.0 &&
-            fabs(points[idx].Y - expected[eidx].Y) <= 2.0;
+            fabs(points[idx].X - expected[eidx].X) <= fudge &&
+            fabs(points[idx].Y - expected[eidx].Y) <= fudge;
 
         stringify_point_type(expected[eidx].type, ename);
         stringify_point_type(types[idx], name);
 
         todo_wine_if (expected[eidx].todo || numskip)
-            ok(match, "Expected #%d: %s (%.1f,%.1f) but got %s (%.1f,%.1f)\n", eidx,
+            ok_(__FILE__,line)(match, "Expected #%d: %s (%.6f,%.6f) but got %s (%.6f,%.6f)\n", eidx,
                ename, expected[eidx].X, expected[eidx].Y,
                name, points[idx].X, points[idx].Y);
 
@@ -122,8 +125,8 @@ static void ok_path(GpPath* path, const path_test_t *expected, INT expected_size
     }
 
 end:
-    HeapFree(GetProcessHeap(), 0, types);
-    HeapFree(GetProcessHeap(), 0, points);
+    free(types);
+    free(points);
 }
 
 static void test_constructor_destructor(void)
@@ -173,6 +176,115 @@ static void test_getpathdata(void)
     GdipDeletePath(path);
 }
 
+static void test_createpath2(void)
+{
+    GpStatus status;
+    GpPath* path = NULL;
+    GpPathData data;
+    INT i, count, expect_count;
+
+    PointF test_line_points[] = {{1.0,1.0}, {2.0,1.0}, {2.0,2.0}};
+    BYTE test_line_types[] = {PathPointTypeStart, PathPointTypeLine, PathPointTypeStart};
+
+    PointF test_bez_points[] = {{1.0,1.0}, {2.0,1.0}, {3.0,1.0}, {4.0,1.0},
+            {5.0,1.0}, {6.0,1.0}, {7.0,1.0}};
+    BYTE test_bez_types[] = {PathPointTypeStart, PathPointTypeBezier,
+            PathPointTypeBezier, PathPointTypeBezier, PathPointTypeBezier,
+            PathPointTypeBezier, PathPointTypeBezier};
+
+    status = GdipCreatePath2(test_line_points, test_line_types, 2, FillModeAlternate, &path);
+    expect(Ok, status);
+    status = GdipGetPointCount(path, &count);
+    expect(Ok, status);
+    expect(2, count);
+    GdipDeletePath(path);
+
+    status = GdipCreatePath2(test_line_points, test_line_types, 1, FillModeAlternate, &path);
+    expect(Ok, status);
+    status = GdipGetPointCount(path, &count);
+    expect(Ok, status);
+    expect(1, count);
+    GdipDeletePath(path);
+
+    path = (void *)0xdeadbeef;
+    status = GdipCreatePath2(test_line_points, test_line_types, 0, FillModeAlternate, &path);
+    expect(OutOfMemory, status);
+    ok(!path, "Expected NULL, got %p\n", path);
+    if(path && path != (void *)0xdeadbeef)
+        GdipDeletePath(path);
+
+    path = (void *)0xdeadbeef;
+    status = GdipCreatePath2(test_line_points, test_line_types, -1, FillModeAlternate, &path);
+    expect(OutOfMemory, status);
+    ok(!path, "Expected NULL, got %p\n", path);
+    if(path && path != (void *)0xdeadbeef)
+        GdipDeletePath(path);
+
+    path = (void *)0xdeadbeef;
+    status = GdipCreatePath2(NULL, test_line_types, 2, FillModeAlternate, &path);
+    expect(InvalidParameter, status);
+    ok(path == (void *)0xdeadbeef, "Expected %p, got %p\n", (void *)0xdeadbeef, path);
+    if(path && path != (void *)0xdeadbeef)
+        GdipDeletePath(path);
+
+    path = (void *)0xdeadbeef;
+    status = GdipCreatePath2(test_line_points, NULL, 2, FillModeAlternate, &path);
+    expect(InvalidParameter, status);
+    ok(path == (void *)0xdeadbeef, "Expected %p, got %p\n", (void *)0xdeadbeef, path);
+    if(path && path != (void *)0xdeadbeef)
+        GdipDeletePath(path);
+
+    status = GdipCreatePath2(test_line_points, test_line_types, 2, FillModeAlternate, NULL);
+    expect(InvalidParameter, status);
+
+    /* Multi-point paths should not end with Start */
+    status = GdipCreatePath2(test_line_points, test_line_types, 3, FillModeAlternate, &path);
+    expect(Ok, status);
+    status = GdipGetPointCount(path, &count);
+    expect(Ok, status);
+    expect(0, count);
+    GdipDeletePath(path);
+
+    /* Zero-length line points do not get altered */
+    test_line_points[1].X = test_line_points[0].X;
+    test_line_points[1].Y = test_line_points[0].Y;
+    status = GdipCreatePath2(test_line_points, test_line_types, 2, FillModeAlternate, &path);
+    expect(Ok, status);
+    status = GdipGetPointCount(path, &count);
+    expect(Ok, status);
+    expect(2, count);
+    GdipDeletePath(path);
+
+    /* The type of the first point is always converted to PathPointTypeStart */
+    test_line_types[0] = PathPointTypeLine;
+    status = GdipCreatePath2(test_line_points, test_line_types, 1, FillModeAlternate, &path);
+    expect(Ok, status);
+    status = GdipGetPointCount(path, &count);
+    expect(Ok, status);
+    expect(1, count);
+    data.Count  = count;
+    data.Types  = GdipAlloc(sizeof(BYTE) * count);
+    data.Points = GdipAlloc(sizeof(PointF) * count);
+    status = GdipGetPathData(path, &data);
+    expect(Ok, status);
+    expect((data.Points[0].X == 1.0) && (data.Points[0].Y == 1.0), TRUE);
+    expect(data.Types[0], PathPointTypeStart);
+    GdipFree(data.Points);
+    GdipFree(data.Types);
+    GdipDeletePath(path);
+
+    /* Bezier points must come in groups of three */
+    for(i = 2; i <= 7; i++) {
+        expect_count = (i % 3 == 1) ? i : 0;
+        status = GdipCreatePath2(test_bez_points, test_bez_types, i, FillModeAlternate, &path);
+        expect(Ok, status);
+        status = GdipGetPointCount(path, &count);
+        expect(Ok, status);
+        expect(expect_count, count);
+        GdipDeletePath(path);
+    }
+}
+
 static path_test_t line2_path[] = {
     {0.0, 50.0, PathPointTypeStart, 0, 0}, /*0*/
     {5.0, 45.0, PathPointTypeLine, 0, 0}, /*1*/
@@ -198,6 +310,16 @@ static void test_line2(void)
     }
 
     GdipCreatePath(FillModeAlternate, &path);
+
+    status = GdipAddPathLine2(NULL, line2_points, 2);
+    expect(InvalidParameter, status);
+    status = GdipAddPathLine2(path, NULL, 2);
+    expect(InvalidParameter, status);
+    status = GdipAddPathLine2(path, line2_points, 0);
+    expect(InvalidParameter, status);
+    status = GdipAddPathLine2(path, line2_points, -1);
+    expect(InvalidParameter, status);
+
     status = GdipAddPathLine2(path, line2_points, 3);
     expect(Ok, status);
     status = GdipAddPathLine2(path, &(line2_points[3]), 3);
@@ -208,6 +330,69 @@ static void test_line2(void)
     expect(Ok, status);
 
     ok_path(path, line2_path, ARRAY_SIZE(line2_path), FALSE);
+
+    GdipResetPath(path);
+    status = GdipAddPathLine2(path, line2_points, 3);
+    expect(Ok, status);
+    status = GdipAddPathLine2(path, &(line2_points[2]), 3);
+    expect(Ok, status);
+
+    ok_path(path, line2_path, 5, FALSE);
+
+    GdipDeletePath(path);
+}
+
+static path_test_t bezier_path[] = {
+    {10.0, 10.0, PathPointTypeStart, 0, 0}, /*0*/
+    {20.0, 10.0, PathPointTypeBezier, 0, 0}, /*1*/
+    {20.0, 20.0, PathPointTypeBezier, 0, 0}, /*2*/
+    {30.0, 20.0, PathPointTypeBezier, 0, 0}, /*3*/
+    {40.0, 20.0, PathPointTypeBezier, 0, 0}, /*4*/
+    {40.0, 30.0, PathPointTypeBezier, 0, 0}, /*5*/
+    {50.0, 30.0, PathPointTypeBezier, 0, 0}, /*6*/
+    {50.0, 10.0, PathPointTypeLine, 0, 0}, /*7*/
+    {60.0, 10.0, PathPointTypeBezier, 0, 0}, /*8*/
+    {60.0, 20.0, PathPointTypeBezier, 0, 0}, /*9*/
+    {70.0, 20.0, PathPointTypeBezier, 0, 0} /*10*/
+    };
+
+static void test_bezier(void)
+{
+    GpStatus status;
+    GpPath* path;
+
+    GdipCreatePath(FillModeAlternate, &path);
+
+    status = GdipAddPathBezier(path, 10.0, 10.0, 20.0, 10.0, 20.0, 20.0, 30.0, 20.0);
+    expect(Ok, status);
+    status = GdipAddPathBezier(path, 30.0, 20.0, 40.0, 20.0, 40.0, 30.0, 50.0, 30.0);
+    expect(Ok, status);
+    status = GdipAddPathBezier(path, 50.0, 10.0, 60.0, 10.0, 60.0, 20.0, 70.0, 20.0);
+    expect(Ok, status);
+
+    ok_path(path, bezier_path, ARRAY_SIZE(bezier_path), FALSE);
+
+    GdipDeletePath(path);
+}
+
+static void test_beziers(void)
+{
+    GpStatus status;
+    GpPath* path;
+    PointF bezier_points1[] = {{10.0,10.0}, {20.0,10.0}, {20.0,20.0}, {30.0,20.0}};
+    PointF bezier_points2[] = {{30.0,20.0}, {40.0,20.0}, {40.0,30.0}, {50.0,30.0}};
+    PointF bezier_points3[] = {{50.0,10.0}, {60.0,10.0}, {60.0,20.0}, {70.0,20.0}};
+
+    GdipCreatePath(FillModeAlternate, &path);
+
+    status = GdipAddPathBeziers(path, bezier_points1, 4);
+    expect(Ok, status);
+    status = GdipAddPathBeziers(path, bezier_points2, 4);
+    expect(Ok, status);
+    status = GdipAddPathBeziers(path, bezier_points3, 4);
+    expect(Ok, status);
+
+    ok_path(path, bezier_path, ARRAY_SIZE(bezier_path), FALSE);
 
     GdipDeletePath(path);
 }
@@ -252,6 +437,13 @@ static path_test_t arc_path[] = {
     {450.9, 824.1, PathPointTypeBezier, 0, 0}, /*36*/
     {540.4, 676.9, PathPointTypeBezier | PathPointTypeCloseSubpath, 0, 1} /*37*/
     };
+static path_test_t arc_path2[] = {
+    {1.0, 0.0, PathPointTypeStart, 0, 0}, /*0*/
+    {1.0, 0.5, PathPointTypeLine, 0, 0}, /*1*/
+    {1.0, 0.776142, PathPointTypeBezier, 0, 0}, /*2*/
+    {0.776142, 1.0, PathPointTypeBezier, 0, 0}, /*3*/
+    {0.5, 1.0, PathPointTypeBezier, 0, 0} /*4*/
+    };
 
 static void test_arc(void)
 {
@@ -259,6 +451,20 @@ static void test_arc(void)
     GpPath* path;
 
     GdipCreatePath(FillModeAlternate, &path);
+
+    status = GdipAddPathArc(path, 100.0, 100.0, 1.0, 0.0, 0.0, 90.0);
+    expect(InvalidParameter, status);
+
+    status = GdipAddPathArc(path, 100.0, 100.0, 0.0, 1.0, 0.0, 90.0);
+    expect(InvalidParameter, status);
+
+    status = GdipAddPathArc(path, 100.0, 100.0, -40, 1.0, 0.0, 90.0);
+    expect(InvalidParameter, status);
+
+    status = GdipAddPathArc(path, 100.0, 100.0, 1.0, -50.0, 0.0, 90.0);
+    expect(InvalidParameter, status);
+
+    GdipResetPath(path);
     /* Exactly 90 degrees */
     status = GdipAddPathArc(path, 100.0, 100.0, 500.0, 700.0, 0.0, 90.0);
     expect(Ok, status);
@@ -279,6 +485,13 @@ static void test_arc(void)
     expect(Ok, status);
 
     ok_path(path, arc_path, ARRAY_SIZE(arc_path), FALSE);
+
+    GdipResetPath(path);
+    GdipAddPathLine(path, 1.0, 0.0, 1.0, 0.5);
+    status = GdipAddPathArc(path, 0.0, 0.0, 1.0, 1.0, 0.0, 90.0);
+    expect(Ok, status);
+
+    ok_path_fudge(path, arc_path2, ARRAY_SIZE(arc_path2), FALSE, 0.000005);
 
     GdipDeletePath(path);
 }
@@ -547,7 +760,8 @@ static path_test_t linei_path[] = {
     {15.00, 15.00, PathPointTypeLine, 0, 0}, /*9*/
     {26.00, 28.00, PathPointTypeLine | PathPointTypeCloseSubpath, 0, 0}, /*10*/
     {35.00, 35.00, PathPointTypeStart, 0, 0}, /*11*/
-    {36.00, 38.00, PathPointTypeLine, 0, 0} /*12*/
+    {36.00, 38.00, PathPointTypeLine, 0, 0}, /*12*/
+    {39.00, 40.00, PathPointTypeLine, 0, 0} /*13*/
     };
 
 static void test_linei(void)
@@ -563,6 +777,8 @@ static void test_linei(void)
     expect(Ok, status);
     GdipClosePathFigure(path);
     status = GdipAddPathLineI(path, 35.0, 35.0, 36.0, 38.0);
+    expect(Ok, status);
+    status = GdipAddPathLineI(path, 36, 38, 39, 40);
     expect(Ok, status);
 
     ok_path(path, linei_path, ARRAY_SIZE(linei_path), FALSE);
@@ -703,6 +919,18 @@ static path_test_t addcurve_path[] = {
     {23.3, 13.3, PathPointTypeBezier, 0, 0}, /*8*/
     {30.0, 10.0, PathPointTypeBezier, 0, 0}  /*9*/
     };
+static path_test_t addcurve_path_default_tension[] = {
+    {0.0, 0.0,   PathPointTypeStart,  0, 0}, /*0*/
+    {1.66, 1.66, PathPointTypeBezier, 0, 0}, /*1*/
+    {8.33, 6.66, PathPointTypeBezier, 0, 0}, /*2*/
+    {10.0, 10.0, PathPointTypeBezier, 0, 0}, /*3*/
+    {11.6, 13.3, PathPointTypeBezier, 0, 0}, /*4*/
+    {6.66, 20.0, PathPointTypeBezier, 0, 0}, /*5*/
+    {10.0, 20.0, PathPointTypeBezier, 0, 0}, /*6*/
+    {13.3, 20.0, PathPointTypeBezier, 0, 0}, /*7*/
+    {26.6, 11.6, PathPointTypeBezier, 0, 0}, /*8*/
+    {30.0, 10.0, PathPointTypeBezier, 0, 0}  /*9*/
+    };
 static path_test_t addcurve_path2[] = {
     {100.0,120.0,PathPointTypeStart,  0, 0}, /*0*/
     {123.0,10.0, PathPointTypeLine,   0, 0}, /*1*/
@@ -719,13 +947,26 @@ static path_test_t addcurve_path2[] = {
     };
 static path_test_t addcurve_path3[] = {
     {10.0, 10.0, PathPointTypeStart,  0, 0}, /*0*/
-    {13.3, 16.7, PathPointTypeBezier, 0, 1}, /*1*/
+    {13.3, 16.7, PathPointTypeBezier, 0, 0}, /*1*/
     {3.3,  20.0, PathPointTypeBezier, 0, 0}, /*2*/
     {10.0, 20.0, PathPointTypeBezier, 0, 0}, /*3*/
     {16.7, 20.0, PathPointTypeBezier, 0, 0}, /*4*/
     {23.3, 13.3, PathPointTypeBezier, 0, 0}, /*5*/
     {30.0, 10.0, PathPointTypeBezier, 0, 0}  /*6*/
     };
+static path_test_t addcurve_path4[] = {
+    {0.0,  0.0,  PathPointTypeStart,  0, 0}, /*0*/
+    {3.33, 3.33, PathPointTypeBezier, 0, 0}, /*1*/
+    {6.66, 3.33, PathPointTypeBezier, 0, 0}, /*2*/
+    {10.0, 10.0, PathPointTypeBezier, 0, 0}, /*3*/
+    };
+static path_test_t addcurve_path5[] = {
+    {10.0, 10.0, PathPointTypeStart,  0, 0}, /*0*/
+    {13.3, 16.6, PathPointTypeBezier, 0, 0}, /*1*/
+    {3.33, 20.0, PathPointTypeBezier, 0, 0}, /*2*/
+    {10.0, 20.0, PathPointTypeBezier, 0, 0}  /*3*/
+    };
+
 static void test_addcurve(void)
 {
     GpStatus status;
@@ -757,6 +998,13 @@ static void test_addcurve(void)
     status = GdipAddPathCurve2(path, points, 4, 1.0);
     expect(Ok, status);
     ok_path(path, addcurve_path, ARRAY_SIZE(addcurve_path), FALSE);
+    GdipDeletePath(path);
+
+    /* add to empty path with default tension */
+    GdipCreatePath(FillModeAlternate, &path);
+    status = GdipAddPathCurve(path, points, 4);
+    expect(Ok, status);
+    ok_path(path, addcurve_path_default_tension, ARRAY_SIZE(addcurve_path_default_tension), FALSE);
     GdipDeletePath(path);
 
     /* add to notempty path and opened figure */
@@ -792,9 +1040,23 @@ static void test_addcurve(void)
     ok_path(path, addcurve_path, ARRAY_SIZE(addcurve_path), FALSE);
     GdipResetPath(path);
 
+    /* Skip first point */
     status = GdipAddPathCurve3(path, points, 4, 1, 2, 1.0);
     expect(Ok, status);
     ok_path(path, addcurve_path3, ARRAY_SIZE(addcurve_path3), FALSE);
+    GdipResetPath(path);
+
+    /* Skip two last points */
+    status = GdipAddPathCurve3(path, points, 4, 0, 1, 1.0);
+    expect(Ok, status);
+    ok_path(path, addcurve_path4, ARRAY_SIZE(addcurve_path4), FALSE);
+    GdipResetPath(path);
+
+    /* Skip first and last points */
+    status = GdipAddPathCurve3(path, points, 4, 1, 1, 1.0);
+    expect(Ok, status);
+    ok_path(path, addcurve_path5, ARRAY_SIZE(addcurve_path5), FALSE);
+    GdipResetPath(path);
 
     GdipDeletePath(path);
 }
@@ -812,6 +1074,21 @@ static path_test_t addclosedcurve_path[] = {
     {30.0, 10.0, PathPointTypeBezier, 0, 0}, /*9*/
     {26.7, 3.3,  PathPointTypeBezier, 0, 0}, /*10*/
     {6.7,  0.0,  PathPointTypeBezier, 0, 0}, /*11*/
+    {0.0,  0.0,  PathPointTypeBezier | PathPointTypeCloseSubpath, 0, 0}  /*12*/
+    };
+static path_test_t addclosedcurve_path_default_tension[] = {
+    {0.0, 0.0,   PathPointTypeStart,  0, 0}, /*0*/
+    {-3.33, 0.0, PathPointTypeBezier, 0, 0}, /*1*/
+    {8.33, 6.66, PathPointTypeBezier, 0, 0}, /*2*/
+    {10.0, 10.0, PathPointTypeBezier, 0, 0}, /*3*/
+    {11.6, 13.3, PathPointTypeBezier, 0, 0}, /*4*/
+    {6.66, 20.0, PathPointTypeBezier, 0, 0}, /*5*/
+    {10.0, 20.0, PathPointTypeBezier, 0, 0}, /*6*/
+    {13.3, 20.0, PathPointTypeBezier, 0, 0}, /*7*/
+    {31.6, 13.3, PathPointTypeBezier, 0, 0}, /*8*/
+    {30.0, 10.0, PathPointTypeBezier, 0, 0}, /*9*/
+    {28.3, 6.66, PathPointTypeBezier, 0, 0}, /*10*/
+    {3.33, 0.0,  PathPointTypeBezier, 0, 0}, /*11*/
     {0.0,  0.0,  PathPointTypeBezier | PathPointTypeCloseSubpath, 0, 0}  /*12*/
     };
 static void test_addclosedcurve(void)
@@ -845,6 +1122,13 @@ static void test_addclosedcurve(void)
     status = GdipAddPathClosedCurve2(path, points, 4, 1.0);
     expect(Ok, status);
     ok_path(path, addclosedcurve_path, ARRAY_SIZE(addclosedcurve_path), FALSE);
+    GdipDeletePath(path);
+
+     /* add to empty path with default tension */
+    GdipCreatePath(FillModeAlternate, &path);
+    status = GdipAddPathClosedCurve(path, points, 4);
+    expect(Ok, status);
+    ok_path(path, addclosedcurve_path_default_tension, ARRAY_SIZE(addclosedcurve_path_default_tension), FALSE);
     GdipDeletePath(path);
 }
 
@@ -1047,6 +1331,22 @@ static void test_flatten(void)
     expect(Ok, status);
     ok_path(path, flattenquater_path, ARRAY_SIZE(flattenquater_path), FALSE);
 
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipStartPathFigure(path);
+    expect(Ok, status);
+
+    /* path seen in the wild that caused a stack overflow */
+    /* same path but redo with the manual points that caused a crash */
+    status = GdipAddPathBezier(path, 154.950806, 33.391144, 221.586075, 15.536285, 291.747314, 15.536285, 358.382568, 33.391144);
+    expect(Ok, status);
+    status = GdipAddPathBezier(path, 256.666809, 412.999512, 256.666718, 412.999481, 256.666656, 412.999481, 256.666565, 412.999512);
+    expect(Ok, status);
+    status = GdipClosePathFigure(path);
+    expect(Ok, status);
+    status = GdipFlattenPath(path, NULL, 1.0);
+    expect(Ok, status);
+
     GdipDeleteMatrix(m);
     GdipDeletePath(path);
 }
@@ -1074,6 +1374,24 @@ static path_test_t widenline_dash_path[] = {
     {50.0, 0.0,  PathPointTypeLine,  0, 0}, /*5*/
     {50.0, 10.0, PathPointTypeLine,  0, 0}, /*6*/
     {45.0, 10.0,  PathPointTypeLine|PathPointTypeCloseSubpath,  0, 0}, /*7*/
+    };
+
+static path_test_t widenline_thin_dash_path[] = {
+    {5.0, 4.75, PathPointTypeStart, 0, 0}, /*0*/
+    {8.0, 4.75, PathPointTypeLine,  0, 0}, /*1*/
+    {8.0, 5.25, PathPointTypeLine,  0, 0}, /*2*/
+    {5.0, 5.25, PathPointTypeLine|PathPointTypeCloseSubpath,  0, 0}, /*3*/
+    {9.0, 4.75, PathPointTypeStart, 0, 0}, /*4*/
+    {9.5, 4.75, PathPointTypeLine,  0, 0}, /*5*/
+    {9.5, 5.25, PathPointTypeLine,  0, 0}, /*6*/
+    {9.0, 5.25, PathPointTypeLine|PathPointTypeCloseSubpath,  0, 0}, /*7*/
+    };
+
+static path_test_t widenline_unit_path[] = {
+    {5.0, 9.5,   PathPointTypeStart, 0, 0}, /*0*/
+    {50.0, 9.5,  PathPointTypeLine,  0, 0}, /*1*/
+    {50.0, 10.5, PathPointTypeLine,  0, 0}, /*2*/
+    {5.0, 10.5,  PathPointTypeLine|PathPointTypeCloseSubpath,  0, 0} /*3*/
     };
 
 static void test_widen(void)
@@ -1166,6 +1484,18 @@ static void test_widen(void)
     status = GdipSetPenDashStyle(pen, DashStyleSolid);
     expect(Ok, status);
 
+    /* dashed line less than 1 pixel wide */
+    GdipDeletePen(pen);
+    GdipCreatePen1(0xffffffff, 0.5, UnitPixel, &pen);
+    GdipSetPenDashStyle(pen, DashStyleDash);
+
+    GdipResetPath(path);
+    GdipAddPathLine(path, 5.0, 5.0, 9.5, 5.0);
+
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(Ok, status);
+    ok_path_fudge(path, widenline_thin_dash_path, ARRAY_SIZE(widenline_thin_dash_path), FALSE, 0.000005);
+
     /* pen width in UnitWorld */
     GdipDeletePen(pen);
     status = GdipCreatePen1(0xffffffff, 10.0, UnitWorld, &pen);
@@ -1238,10 +1568,363 @@ static void test_widen(void)
 
     status = GdipGetPointCount(path, &count);
     expect(Ok, status);
-    todo_wine expect(0, count);
+    ok(count == 0 || broken(count == 4), "expected 0, got %i\n", count);
+
+    /* pen width = 0 pixels, UnitWorld - result is a path 1 unit wide */
+    GdipDeletePen(pen);
+    status = GdipCreatePen1(0xffffffff, 0.0, UnitWorld, &pen);
+    expect(Ok, status);
+
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 5.0, 10.0, 50.0, 10.0);
+    expect(Ok, status);
+
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(Ok, status);
+
+    status = GdipGetPointCount(path, &count);
+    expect(Ok, status);
+    ok_path_fudge(path, widenline_unit_path, ARRAY_SIZE(widenline_unit_path), FALSE, 0.000005);
 
     GdipDeleteMatrix(m);
     GdipDeletePen(pen);
+    GdipDeletePath(path);
+}
+
+static path_test_t widenline_capflat_path[] = {
+    {5.0, 5.0,   PathPointTypeStart, 0, 0}, /*0*/
+    {50.0, 5.0,  PathPointTypeLine,  0, 0}, /*1*/
+    {50.0, 15.0, PathPointTypeLine,  0, 0}, /*2*/
+    {5.0, 15.0,  PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0} /*3*/
+    };
+
+static path_test_t widenline_capsquare_path[] = {
+    {0.0, 5.0,   PathPointTypeStart, 0, 0}, /*0*/
+    {55.0, 5.0,  PathPointTypeLine,  0, 0}, /*1*/
+    {55.0, 15.0, PathPointTypeLine,  0, 0}, /*2*/
+    {0.0, 15.0,  PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0} /*3*/
+    };
+
+static path_test_t widenline_capround_path[] = {
+    {5.0, 5.0,        PathPointTypeStart,  0, 0}, /*0*/
+    {50.0, 5.0,       PathPointTypeLine,   0, 0}, /*1*/
+    {52.761421, 5.0,  PathPointTypeBezier, 0, 0}, /*2*/
+    {55.0, 7.238576,  PathPointTypeBezier, 0, 0}, /*3*/
+    {55.0, 10.0,      PathPointTypeBezier, 0, 0}, /*4*/
+    {55.0, 12.761423, PathPointTypeBezier, 0, 0}, /*5*/
+    {52.761421, 15.0, PathPointTypeBezier, 0, 0}, /*6*/
+    {50.0, 15.0,      PathPointTypeBezier, 0, 0}, /*7*/
+    {5.0, 15.0,       PathPointTypeLine,   0, 0}, /*8*/
+    {2.238576, 15.0,  PathPointTypeBezier, 0, 0}, /*9*/
+    {0.0, 12.761423,  PathPointTypeBezier, 0, 0}, /*10*/
+    {0.0, 10.0,       PathPointTypeBezier, 0, 0}, /*11*/
+    {0.0, 7.238576,   PathPointTypeBezier, 0, 0}, /*12*/
+    {2.238576, 5.0,   PathPointTypeBezier, 0, 0}, /*13*/
+    {5.0, 5.0,        PathPointTypeBezier|PathPointTypeCloseSubpath, 0, 0}, /*14*/
+    };
+
+static path_test_t widenline_captriangle_path[] = {
+    {5.0, 5.0,   PathPointTypeStart, 0, 0}, /*0*/
+    {50.0, 5.0,  PathPointTypeLine,  0, 0}, /*1*/
+    {55.0, 10.0, PathPointTypeLine,  0, 0}, /*2*/
+    {50.0, 15.0, PathPointTypeLine,  0, 0}, /*3*/
+    {5.0, 15.0,  PathPointTypeLine,  0, 0}, /*4*/
+    {0.0, 10.0,  PathPointTypeLine,  0, 0}, /*5*/
+    {5.0, 5.0,   PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0} /*6*/
+    };
+
+static path_test_t widenline_capsquareanchor_path[] = {
+    {5.0, 5.0,             PathPointTypeStart, 0, 0}, /*0*/
+    {50.0, 5.0,            PathPointTypeLine,  0, 0}, /*1*/
+    {50.0, 15.0,           PathPointTypeLine,  0, 0}, /*2*/
+    {5.0, 15.0,            PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*3*/
+    {12.071068, 2.928932,  PathPointTypeStart, 0, 0}, /*4*/
+    {12.071068, 17.071066, PathPointTypeLine,  0, 0}, /*5*/
+    {-2.071068, 17.071066, PathPointTypeLine,  0, 0}, /*6*/
+    {-2.071068, 2.928932,  PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*7*/
+    {42.928928, 17.071068, PathPointTypeStart, 0, 0}, /*8*/
+    {42.928928, 2.928932,  PathPointTypeLine,  0, 0}, /*9*/
+    {57.071068, 2.928932,  PathPointTypeLine,  0, 0}, /*10*/
+    {57.071068, 17.071068, PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*11*/
+    };
+
+static path_test_t widenline_caproundanchor_path[] = {
+    {5.0, 5.0,        PathPointTypeStart,  0, 0}, /*0*/
+    {50.0, 5.0,       PathPointTypeLine,   0, 0}, /*1*/
+    {50.0, 15.0,      PathPointTypeLine,   0, 0}, /*2*/
+    {5.0, 15.0,       PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*3*/
+    {5.0, 20.0,       PathPointTypeStart,  0, 0}, /*4*/
+    {-0.522847, 20.0, PathPointTypeBezier, 0, 0}, /*5*/
+    {-5.0, 15.522846, PathPointTypeBezier, 0, 0}, /*6*/
+    {-5.0, 10.0,      PathPointTypeBezier, 0, 0}, /*7*/
+    {-5.0, 4.477152,  PathPointTypeBezier, 0, 0}, /*8*/
+    {-0.522847, 0.0,  PathPointTypeBezier, 0, 0}, /*9*/
+    {5.0, 0.0,        PathPointTypeBezier, 0, 0}, /*10*/
+    {10.522847, 0.0,  PathPointTypeBezier, 0, 0}, /*11*/
+    {15.0, 4.477152,  PathPointTypeBezier, 0, 0}, /*12*/
+    {15.0, 10.0,      PathPointTypeBezier, 0, 0}, /*13*/
+    {15.0, 15.522846, PathPointTypeBezier, 0, 0}, /*14*/
+    {10.522847, 20.0, PathPointTypeBezier, 0, 0}, /*15*/
+    {5.0, 20.0,       PathPointTypeBezier|PathPointTypeCloseSubpath, 0, 0}, /*16*/
+    {50.0, 0.0,       PathPointTypeStart,  0, 0}, /*17*/
+    {55.522846, 0.0,  PathPointTypeBezier, 0, 0}, /*18*/
+    {60.0, 4.477153,  PathPointTypeBezier, 0, 0}, /*19*/
+    {60.0, 10.0,      PathPointTypeBezier, 0, 0}, /*20*/
+    {60.0, 15.522847, PathPointTypeBezier, 0, 0}, /*21*/
+    {55.522846, 20.0, PathPointTypeBezier, 0, 0}, /*22*/
+    {50.0, 20.0,      PathPointTypeBezier, 0, 0}, /*23*/
+    {44.477150, 20.0, PathPointTypeBezier, 0, 0}, /*24*/
+    {40.0, 15.522847, PathPointTypeBezier, 0, 0}, /*25*/
+    {40.0, 10.0,      PathPointTypeBezier, 0, 0}, /*26*/
+    {40.0, 4.477153,  PathPointTypeBezier, 0, 0}, /*27*/
+    {44.477150, 0.0,  PathPointTypeBezier, 0, 0}, /*28*/
+    {50.0, 0.0,       PathPointTypeBezier|PathPointTypeCloseSubpath, 0, 0}, /*29*/
+    };
+
+static path_test_t widenline_capdiamondanchor_path[] = {
+    {5.0, 5.0,   PathPointTypeStart, 0, 0}, /*0*/
+    {50.0, 5.0,  PathPointTypeLine,  0, 0}, /*1*/
+    {50.0, 15.0, PathPointTypeLine,  0, 0}, /*2*/
+    {5.0, 15.0,  PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*3*/
+    {-5.0, 10.0, PathPointTypeStart, 0, 0}, /*4*/
+    {5.0, 0.0,   PathPointTypeLine,  0, 0}, /*5*/
+    {15.0, 10.0, PathPointTypeLine,  0, 0}, /*6*/
+    {5.0, 20.0,  PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*7*/
+    {60.0, 10.0, PathPointTypeStart, 0, 0}, /*8*/
+    {50.0, 20.0, PathPointTypeLine,  0, 0}, /*9*/
+    {40.0, 10.0, PathPointTypeLine,  0, 0}, /*10*/
+    {50.0, 0.0,  PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*11*/
+    };
+
+static path_test_t widenline_caparrowanchor_path[] = {
+    {15.0, 5.0,       PathPointTypeStart, 0, 1}, /*0*/
+    {40.0, 5.0,       PathPointTypeLine,  0, 1}, /*1*/
+    {40.0, 15.0,      PathPointTypeLine,  0, 1}, /*2*/
+    {15.0, 15.0,      PathPointTypeLine|PathPointTypeCloseSubpath, 0, 1}, /*3*/
+    {5.0, 10.0,       PathPointTypeStart, 0, 0}, /*4*/
+    {22.320507, 0.0,  PathPointTypeLine,  0, 0}, /*5*/
+    {22.320507, 20.0, PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*6*/
+    {50.0, 10.0,      PathPointTypeStart, 0, 0}, /*7*/
+    {32.679489, 20.0, PathPointTypeLine,  0, 0}, /*8*/
+    {32.679489, 0.0,  PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*9*/
+    };
+
+static path_test_t widenline_capsquareanchor_thin_path[] = {
+    {6.414213, 8.585786,   PathPointTypeStart, 0, 0}, /*0*/
+    {6.414213, 11.414213,  PathPointTypeLine,  0, 0}, /*1*/
+    {3.585786, 11.414213,  PathPointTypeLine,  0, 0}, /*2*/
+    {3.585786, 8.585786,   PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*3*/
+    {48.585785, 11.414213, PathPointTypeStart, 0, 0}, /*4*/
+    {48.585785, 8.585786,  PathPointTypeLine,  0, 0}, /*5*/
+    {51.414211, 8.585786,  PathPointTypeLine,  0, 0}, /*6*/
+    {51.414211, 11.414213, PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*7*/
+    };
+
+static path_test_t widenline_capsquareanchor_dashed_path[] = {
+    {5.0, 5.0,             PathPointTypeStart, 0, 0}, /*0*/
+    {35.0, 5.0,            PathPointTypeLine,  0, 0}, /*1*/
+    {35.0, 15.0,           PathPointTypeLine,  0, 0}, /*2*/
+    {5.0, 15.0,            PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*3*/
+    {45.0, 5.0,            PathPointTypeStart, 0, 0}, /*4*/
+    {50.0, 5.0,            PathPointTypeLine,  0, 0}, /*5*/
+    {50.0, 15.0,           PathPointTypeLine,  0, 0}, /*6*/
+    {45.0, 15.0,           PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*7*/
+    {12.071068, 2.928932,  PathPointTypeStart, 0, 0}, /*8*/
+    {12.071068, 17.071066, PathPointTypeLine,  0, 0}, /*9*/
+    {-2.071068, 17.071066, PathPointTypeLine,  0, 0}, /*10*/
+    {-2.071068, 2.928932,  PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*11*/
+    {42.928928, 17.071068, PathPointTypeStart, 0, 0}, /*12*/
+    {42.928928, 2.928932,  PathPointTypeLine,  0, 0}, /*13*/
+    {57.071068, 2.928932,  PathPointTypeLine,  0, 0}, /*14*/
+    {57.071068, 17.071068, PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*15*/
+    };
+
+static path_test_t widenline_capsquareanchor_multifigure_path[] = {
+    {5.0, 5.0,             PathPointTypeStart, 0, 0}, /*0*/
+    {25.0, 5.0,            PathPointTypeLine,  0, 0}, /*1*/
+    {25.0, 15.0,           PathPointTypeLine,  0, 0}, /*2*/
+    {5.0, 15.0,            PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*3*/
+    {30.0, 5.0,            PathPointTypeStart, 0, 0}, /*4*/
+    {50.0, 5.0,            PathPointTypeLine,  0, 0}, /*5*/
+    {50.0, 15.0,           PathPointTypeLine,  0, 0}, /*6*/
+    {30.0, 15.0,           PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*7*/
+    {12.071068, 2.928932,  PathPointTypeStart, 0, 0}, /*8*/
+    {12.071068, 17.071066, PathPointTypeLine,  0, 0}, /*9*/
+    {-2.071068, 17.071066, PathPointTypeLine,  0, 0}, /*10*/
+    {-2.071068, 2.928932,  PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*11*/
+    {17.928930, 17.071068, PathPointTypeStart, 0, 0}, /*12*/
+    {17.928930, 2.928932,  PathPointTypeLine,  0, 0}, /*13*/
+    {32.071068, 2.928932,  PathPointTypeLine,  0, 0}, /*14*/
+    {32.071068, 17.071068, PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*15*/
+    {37.071068, 2.928932,  PathPointTypeStart, 0, 0}, /*16*/
+    {37.071068, 17.071066, PathPointTypeLine,  0, 0}, /*17*/
+    {22.928930, 17.071066, PathPointTypeLine,  0, 0}, /*18*/
+    {22.928930, 2.928932,  PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*19*/
+    {42.928928, 17.071068, PathPointTypeStart, 0, 0}, /*20*/
+    {42.928928, 2.928932,  PathPointTypeLine,  0, 0}, /*21*/
+    {57.071068, 2.928932,  PathPointTypeLine,  0, 0}, /*22*/
+    {57.071068, 17.071068, PathPointTypeLine|PathPointTypeCloseSubpath, 0, 0}, /*23*/
+    };
+
+static path_test_t widenline_customarrow_multifigure_path[] = {
+    {6.0, 9.5,          PathPointTypeStart}, /*0*/
+    {24.0, 9.5,         PathPointTypeLine}, /*1*/
+    {24.0, 10.5,        PathPointTypeLine}, /*2*/
+    {6.0, 10.5,         PathPointTypeLine|PathPointTypeCloseSubpath}, /*3*/
+    {30.5, 11.0,        PathPointTypeStart}, /*4*/
+    {30.5, 29.0,        PathPointTypeLine}, /*5*/
+    {29.5, 29.0,        PathPointTypeLine}, /*6*/
+    {29.5, 11.0,        PathPointTypeLine|PathPointTypeCloseSubpath}, /*7*/
+    {13.0, 14.0,        PathPointTypeStart}, /*8*/
+    {5.0, 10.0,         PathPointTypeLine}, /*9*/
+    {13.0, 6.0,         PathPointTypeLine}, /*10*/
+    {11.0, 10.0,        PathPointTypeLine|PathPointTypeCloseSubpath}, /*11*/
+    {17.0, 6.0,         PathPointTypeStart}, /*12*/
+    {25.0, 10.0,        PathPointTypeLine}, /*13*/
+    {17.0, 14.0,        PathPointTypeLine}, /*14*/
+    {19.0, 10.0,        PathPointTypeLine|PathPointTypeCloseSubpath}, /*15*/
+    {26.0, 18.0,        PathPointTypeStart}, /*16*/
+    {30.0, 10.0,        PathPointTypeLine}, /*17*/
+    {34.0, 18.0,        PathPointTypeLine}, /*18*/
+    {30.0, 16.0,        PathPointTypeLine|PathPointTypeCloseSubpath}, /*19*/
+    {34.0, 22.0,        PathPointTypeStart}, /*20*/
+    {30.0, 30.0,        PathPointTypeLine}, /*21*/
+    {26.0, 22.0,        PathPointTypeLine}, /*22*/
+    {30.0, 24.0,        PathPointTypeLine|PathPointTypeCloseSubpath}, /*23*/
+    };
+
+static void test_widen_cap(void)
+{
+    struct
+    {
+        LineCap type;
+        REAL line_width;
+        const path_test_t *expected;
+        INT expected_size;
+        BOOL dashed;
+    }
+    caps[] =
+    {
+        { LineCapFlat, 10.0, widenline_capflat_path,
+                ARRAY_SIZE(widenline_capflat_path) },
+        { LineCapSquare, 10.0, widenline_capsquare_path,
+                ARRAY_SIZE(widenline_capsquare_path) },
+        { LineCapRound, 10.0, widenline_capround_path,
+                ARRAY_SIZE(widenline_capround_path) },
+        { LineCapTriangle, 10.0, widenline_captriangle_path,
+                ARRAY_SIZE(widenline_captriangle_path) },
+        { LineCapNoAnchor, 10.0, widenline_capflat_path,
+                ARRAY_SIZE(widenline_capflat_path) },
+        { LineCapSquareAnchor, 10.0, widenline_capsquareanchor_path,
+                ARRAY_SIZE(widenline_capsquareanchor_path) },
+        { LineCapRoundAnchor, 10.0, widenline_caproundanchor_path,
+                ARRAY_SIZE(widenline_caproundanchor_path) },
+        { LineCapDiamondAnchor, 10.0, widenline_capdiamondanchor_path,
+                ARRAY_SIZE(widenline_capdiamondanchor_path) },
+        { LineCapArrowAnchor, 10.0, widenline_caparrowanchor_path,
+                ARRAY_SIZE(widenline_caparrowanchor_path) },
+        { LineCapSquareAnchor, 0.0, widenline_capsquareanchor_thin_path,
+                ARRAY_SIZE(widenline_capsquareanchor_thin_path) },
+        { LineCapSquareAnchor, 10.0, widenline_capsquareanchor_dashed_path,
+                ARRAY_SIZE(widenline_capsquareanchor_dashed_path), TRUE },
+    };
+
+    GpAdjustableArrowCap *arrowcap;
+    GpStatus status;
+    GpPath *path;
+    GpPen *pen;
+
+    int i;
+
+    status = GdipCreatePath(FillModeAlternate, &path);
+    expect(Ok, status);
+
+    for (i = 0; i < ARRAY_SIZE(caps); i++)
+    {
+        status = GdipCreatePen1(0xffffffff, caps[i].line_width, UnitPixel, &pen);
+        expect(Ok, status);
+        if (caps[i].dashed)
+        {
+            status = GdipSetPenDashStyle(pen, DashStyleDash);
+            expect(Ok, status);
+        }
+
+        status = GdipResetPath(path);
+        expect(Ok, status);
+        status = GdipAddPathLine(path, 5.0, 10.0, 50.0, 10.0);
+        expect(Ok, status);
+        status = GdipSetPenStartCap(pen, caps[i].type);
+        expect(Ok, status);
+        status = GdipSetPenEndCap(pen, caps[i].type);
+        expect(Ok, status);
+
+        status = GdipWidenPath(path, pen, NULL, FlatnessDefault);
+        expect(Ok, status);
+
+        if (i == 9)
+        {
+            INT size;
+            status = GdipGetPointCount(path, &size);
+            expect(Ok, status);
+            ok(size == caps[i].expected_size || broken(size == 12), "unexpected path size %i\n", size);
+
+            if (size == 12)
+            {
+                GdipDeletePen(pen);
+                continue;
+            }
+        }
+
+        ok_path_fudge(path, caps[i].expected, caps[i].expected_size, FALSE, 0.000005);
+
+        GdipDeletePen(pen);
+    }
+
+    status = GdipCreatePen1(0xffffffff, 10.0, UnitPixel, &pen);
+    expect(Ok, status);
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 5.0, 10.0, 25.0, 10.0);
+    expect(Ok, status);
+    status = GdipStartPathFigure(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 30.0, 10.0, 50.0, 10.0);
+    expect(Ok, status);
+    status = GdipSetPenStartCap(pen, LineCapSquareAnchor);
+    expect(Ok, status);
+    status = GdipSetPenEndCap(pen, LineCapSquareAnchor);
+    expect(Ok, status);
+    status = GdipWidenPath(path, pen, NULL, FlatnessDefault);
+    expect(Ok, status);
+    ok_path_fudge(path, widenline_capsquareanchor_multifigure_path,
+        ARRAY_SIZE(widenline_capsquareanchor_multifigure_path), FALSE, 0.000005);
+
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 5.0, 10.0, 25.0, 10.0);
+    expect(Ok, status);
+    status = GdipStartPathFigure(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 30.0, 10.0, 30.0, 30.0);
+    expect(Ok, status);
+    status = GdipCreateAdjustableArrowCap(4.0, 4.0, TRUE, &arrowcap);
+    ok(status == Ok, "Failed to create adjustable cap, %d\n", status);
+    status = GdipSetAdjustableArrowCapMiddleInset(arrowcap, 1.0);
+    ok(status == Ok, "Failed to set middle inset inadjustable cap, %d\n", status);
+    status = GdipSetPenCustomStartCap(pen, (GpCustomLineCap*)arrowcap);
+    ok(status == Ok, "Failed to create custom end cap, %d\n", status);
+    status = GdipSetPenCustomEndCap(pen, (GpCustomLineCap*)arrowcap);
+    ok(status == Ok, "Failed to create custom end cap, %d\n", status);
+    status = GdipSetPenWidth(pen, 1.0);
+    expect(Ok, status);
+    status = GdipWidenPath(path, pen, NULL, FlatnessDefault);
+    expect(Ok, status);
+    ok_path_fudge(path, widenline_customarrow_multifigure_path,
+        ARRAY_SIZE(widenline_customarrow_multifigure_path), FALSE, 0.000005);
+
+    GdipDeletePen(pen);
+
     GdipDeletePath(path);
 }
 
@@ -1291,10 +1974,163 @@ static void test_isvisible(void)
     status = GdipIsVisiblePathPoint(path, 0.0, 0.0, graphics, &result);
     expect(Ok, status);
     expect(TRUE, result);
+    /* not affected by world transform */
+    status = GdipScaleWorldTransform(graphics, 2.0, 2.0, MatrixOrderPrepend);
+    expect(Ok, status);
+    result = FALSE;
+    status = GdipIsVisiblePathPoint(path, 9.0, 9.0, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    result = TRUE;
+    status = GdipIsVisiblePathPoint(path, 11.0, 11.0, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    GdipResetWorldTransform(graphics);
 
     GdipDeletePath(path);
     GdipDeleteGraphics(graphics);
     ReleaseDC(0, hdc);
+}
+
+static void test_is_outline_visible_path_point(void)
+{
+    BOOL result;
+    GpBitmap *bitmap;
+    GpGraphics *graphics = NULL;
+    GpPath *path;
+    GpPen *pen = NULL;
+    GpStatus status;
+    static const int width = 20, height = 20;
+
+    /* Graphics associated with an Image object.*/
+    status = GdipCreateBitmapFromScan0(width, height, 0, PixelFormat32bppRGB, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage *)bitmap, &graphics);
+    expect(Ok, status);
+    ok(graphics != NULL, "Expected the graphics context to be initialized.\n");
+
+    status = GdipCreatePath(FillModeAlternate, &path);
+    expect(Ok, status);
+
+    status = GdipAddPathRectangle(path, 2.0, 0.0, 13.0, 15.0);
+    expect(Ok, status);
+
+    status = GdipCreatePen1((ARGB)0xffff00ff, 3.0f, UnitPixel, &pen);
+    expect(Ok, status);
+    ok(pen != NULL, "Expected pen to be initialized\n");
+
+    /* With NULL pen */
+    result = 9;
+    status = GdipIsOutlineVisiblePathPoint(path, 0.0, 1.0, NULL, graphics, &result);
+    expect(InvalidParameter, status);
+    expect(9, result);
+
+    /* Without transformation */
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 0.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    result = FALSE;
+    status = GdipIsOutlineVisiblePathPoint(path, 1.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    result = FALSE;
+    status = GdipIsOutlineVisiblePathPoint(path, 10.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    result = FALSE;
+    status = GdipIsOutlineVisiblePathPoint(path, 16.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 17.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+
+    /* Translating */
+    status = GdipTranslateWorldTransform(graphics, 50.0, 50.0, MatrixOrderPrepend);
+    expect(Ok, status);
+    result = FALSE;
+    status = GdipIsOutlineVisiblePathPoint(path, 10.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    result = FALSE;
+    status = GdipIsOutlineVisiblePathPoint(path, 15.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    result = FALSE;
+    status = GdipIsOutlineVisiblePathPoint(path, 16.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+
+    /* Scaling */
+    status = GdipScaleWorldTransform(graphics, 2.0, 2.0, MatrixOrderPrepend);
+    expect(Ok, status);
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 0.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 1.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    result = FALSE;
+    status = GdipIsOutlineVisiblePathPoint(path, 2.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 3.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 14.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    result = FALSE;
+    status = GdipIsOutlineVisiblePathPoint(path, 15.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 16.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+
+    /* Page Unit */
+    GdipResetWorldTransform(graphics);
+    status = GdipSetPageUnit(graphics, UnitMillimeter);
+    expect(Ok, status);
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 0.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 1.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    result = FALSE;
+    status = GdipIsOutlineVisiblePathPoint(path, 2.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 3.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 14.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+    result = FALSE;
+    status = GdipIsOutlineVisiblePathPoint(path, 15.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(TRUE, result);
+    result = TRUE;
+    status = GdipIsOutlineVisiblePathPoint(path, 16.0, 1.0, pen, graphics, &result);
+    expect(Ok, status);
+    expect(FALSE, result);
+
+    GdipResetWorldTransform(graphics);
+    GdipDeletePath(path);
+    GdipDeleteGraphics(graphics);
 }
 
 static void test_empty_rect(void)
@@ -1349,6 +2185,33 @@ static void test_empty_rect(void)
     GdipDeletePath(path);
 }
 
+static path_test_t rect_line_path[] = {
+    {1.0, 4.0, PathPointTypeStart, 0, 0}, /*0*/
+    {17.0, 4.0, PathPointTypeLine, 0, 0}, /*1*/
+    {17.0, 68.0, PathPointTypeLine, 0, 0}, /*2*/
+    {1.0, 68.0, PathPointTypeLine | PathPointTypeCloseSubpath, 0, 0}, /*3*/
+    {1.0, 8.0, PathPointTypeStart, 0, 0}, /*4*/
+    {17.0, 8.0, PathPointTypeLine, 0, 0} /*5*/
+    };
+
+static void test_rect_line(void)
+{
+    GpStatus status;
+    GpPath* path;
+
+    GdipCreatePath(FillModeAlternate, &path);
+
+    status = GdipAddPathRectangleI(path, 1, 4, 16, 64);
+    expect(Ok, status);
+
+    status = GdipAddPathLineI(path, 1, 8, 17, 8);
+    expect(Ok, status);
+
+    ok_path(path, rect_line_path, ARRAY_SIZE(rect_line_path), FALSE);
+
+    GdipDeletePath(path);
+}
+
 START_TEST(graphicspath)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -1370,7 +2233,10 @@ START_TEST(graphicspath)
 
     test_constructor_destructor();
     test_getpathdata();
+    test_createpath2();
     test_line2();
+    test_bezier();
+    test_beziers();
     test_arc();
     test_worldbounds();
     test_pathpath();
@@ -1385,8 +2251,11 @@ START_TEST(graphicspath)
     test_addpie();
     test_flatten();
     test_widen();
+    test_widen_cap();
     test_isvisible();
+    test_is_outline_visible_path_point();
     test_empty_rect();
+    test_rect_line();
 
     GdiplusShutdown(gdiplusToken);
 }

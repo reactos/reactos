@@ -3342,3 +3342,80 @@ NhGetInterfaceNameFromGuid(_In_ const GUID * pInterfaceGUID,
 
     return result;
 }
+
+DWORD WINAPI
+NhGetGuidFromInterfaceName(_In_ PWCHAR pInterfaceName,
+                           _Out_ GUID *pInterfaceGUID,
+                           DWORD dwUnknown3,
+                           DWORD dwUnknown4)
+{
+    WCHAR szGuidBuffer[45];
+    UNICODE_STRING GuidString;
+    HKEY hAdaptersKey = NULL, hAdapterKey = NULL, hConnectionKey = NULL;
+    PWSTR pszNameBuffer = NULL;
+    DWORD i, dwNameSize, dwValueSize;
+    BOOL bFound = FALSE;
+    DWORD result = ERROR_SUCCESS;
+
+    result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}", 0, KEY_READ, &hAdaptersKey);
+    if (result != ERROR_SUCCESS)
+    {
+        // failed to find adapter entry
+        return ERROR_NOT_FOUND;
+    }
+
+    for (i = 0; ; i++)
+    {
+        dwNameSize = ARRAYSIZE(szGuidBuffer);
+        result = RegEnumKeyExW(hAdaptersKey,
+                               i,
+                               szGuidBuffer,
+                               &dwNameSize,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
+        if (result != ERROR_SUCCESS)
+            break;
+
+        TRACE("Guid %S\n", szGuidBuffer);
+
+        result = RegOpenKeyExW(hAdaptersKey, szGuidBuffer, 0, KEY_READ, &hAdapterKey);
+        if (result == ERROR_SUCCESS)
+        {
+            result = RegOpenKeyExW(hAdapterKey, L"Connection", 0, KEY_READ, &hConnectionKey);
+            if (result == ERROR_SUCCESS)
+            {
+                RegQueryValueExW(hConnectionKey, L"Name", NULL, NULL, NULL, &dwValueSize);
+                pszNameBuffer = HeapAlloc(GetProcessHeap(), 0, dwValueSize);
+                if (pszNameBuffer)
+                {
+                    RegQueryValueExW(hConnectionKey, L"Name", NULL, NULL, (PBYTE)pszNameBuffer, &dwValueSize);
+
+                    TRACE("%S -- %S\n", pInterfaceName, pszNameBuffer);
+                    if (_wcsnicmp(pInterfaceName, pszNameBuffer, wcslen(pszNameBuffer)) == 0)
+                    {
+                        TRACE("Found it!\n");
+                        RtlInitUnicodeString(&GuidString, szGuidBuffer);
+                        RtlGUIDFromString(&GuidString, pInterfaceGUID);
+
+                        bFound = TRUE;
+                    }
+
+                    HeapFree(GetProcessHeap(), 0, pszNameBuffer);
+                }
+
+                RegCloseKey(hConnectionKey);
+            }
+
+            RegCloseKey(hAdapterKey);
+        }
+
+        if (bFound == TRUE)
+            break;
+    }
+
+    RegCloseKey(hAdaptersKey);
+
+    return bFound ? ERROR_SUCCESS : ERROR_NOT_FOUND;
+}

@@ -25,7 +25,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(CStartMenu);
 
 //#define TEST_TRACKPOPUPMENU_SUBMENUS
 
-
+#define IDM_STARTMENUROOT ( (UINT)-1 )
 /* NOTE: The following constants *MUST NOT* be changed because
          they're hardcoded and need to be the exact values
          in order to get the start menu to work! */
@@ -474,6 +474,13 @@ public:
         case SMC_SFEXEC:
             m_pTrayPriv->Execute(psmd->psf, psmd->pidlItem);
             break;
+        case SMC_REFRESH:
+            if (psmd->uIdParent == IDM_STARTMENUROOT)
+            {
+                // TODO: Update CascadeMyDocuments etc.
+                return S_OK;
+            }
+            break;
         case 0x10000000: // _FilterPIDL from CMenuSFToolbar
             if (psmd->psf->CompareIDs(0, psmd->pidlItem, m_pidlPrograms) == 0)
                 return S_OK;
@@ -619,7 +626,7 @@ RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv)
     pCallback->AddRef(); // CreateInstance returns object with 0 ref count */
     pCallback->Initialize(pShellMenu, pBandSite, pDeskBar);
 
-    hr = pShellMenu->Initialize(pCallback, (UINT) -1, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
+    hr = pShellMenu->Initialize(pCallback, IDM_STARTMENUROOT, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

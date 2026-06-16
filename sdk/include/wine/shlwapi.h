@@ -39,6 +39,16 @@ extern "C" {
 #endif
 #endif
 
+#ifdef __REACTOS__
+#if defined(__GNUC__) && !defined(_SHLWAPI_)
+#  undef WINSHLWAPI
+#  define WINSHLWAPI /* FIXME: HACK: CORE-6504 */
+#endif
+#ifndef __MSABI_LONG
+#  define __MSABI_LONG(x)  x ## l
+#endif
+#endif // __REACTOS__
+
 #ifndef NO_SHLWAPI_HTTP
 
 WINSHLWAPI HRESULT WINAPI GetAcceptLanguagesA(char *buffer, DWORD *buff_len);
@@ -47,11 +57,6 @@ WINSHLWAPI HRESULT WINAPI GetAcceptLanguagesW(WCHAR *buffer, DWORD *buff_len);
 
 #endif /* NO_SHLWAPI_HTTP */
 
-#ifdef __REACTOS__
-#ifndef __MSABI_LONG
-#  define __MSABI_LONG(x)  x ## l
-#endif
-#endif // __REACTOS__
 #ifndef NO_SHLWAPI_REG
 
 /* Registry functions */

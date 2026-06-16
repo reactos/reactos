@@ -464,18 +464,38 @@ static void test_nextsubpath(void)
     GpPath *path;
     GpPathIterator *iter;
     GpStatus stat;
-    INT start, end, result;
+    INT result, start, end;
     BOOL closed;
 
     /* empty path */
     GdipCreatePath(FillModeAlternate, &path);
     GdipCreatePathIter(&iter, path);
 
-    result = -2;
-    closed = TRUE;
+    result = start = end = closed = (INT)0xdeadbeef;
     stat = GdipPathIterNextSubpath(iter, &result, &start, &end, &closed);
     expect(Ok, stat);
     expect(0, result);
+    expect((INT)0xdeadbeef, start);
+    expect((INT)0xdeadbeef, end);
+    expect((INT)0xdeadbeef, closed);
+
+    /* four points figure */
+    GdipAddPathLine(path, 0.0, 0.0, 10.0, 30.0);
+    GdipAddPathLine(path, -10.0, 5.0, 15.0, 8.0);
+    GdipCreatePathIter(&iter, path);
+    stat = GdipPathIterNextSubpath(iter, &result, &start, &end, &closed);
+    expect(Ok, stat);
+    expect(4, result);
+    expect(0, start);
+    expect(3, end);
+    expect(FALSE, closed);
+
+    /* No more subpaths*/
+    stat = GdipPathIterNextSubpath(iter, &result, &start, &end, &closed);
+    expect(Ok, stat);
+    expect(0, result);
+    expect(0, start);
+    expect(0, end);
     expect(TRUE, closed);
 
     GdipDeletePathIter(iter);
@@ -487,8 +507,10 @@ static void test_nextpathtype(void)
     GpPath *path;
     GpPathIterator *iter;
     GpStatus stat;
-    INT start, end, result;
+    INT count, result, start, end;
     BYTE type;
+    BOOL closed;
+    GpPointF point;
 
     GdipCreatePath(FillModeAlternate, &path);
     GdipCreatePathIter(&iter, path);
@@ -510,53 +532,257 @@ static void test_nextpathtype(void)
     expect(InvalidParameter, stat);
 
     /* empty path */
-    start = end = result = (INT)0xdeadbeef;
-    stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
-    todo_wine expect(Ok, stat);
-    expect((INT)0xdeadbeef, start);
-    expect((INT)0xdeadbeef, end);
-    todo_wine expect(0, result);
-    GdipDeletePathIter(iter);
-
-    /* single figure */
-    GdipAddPathLine(path, 0.0, 0.0, 10.0, 30.0);
-    GdipCreatePathIter(&iter, path);
-    start = end = result = (INT)0xdeadbeef;
+    result = start = end = (INT)0xdeadbeef;
     type = 255; /* out of range */
     stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
-    todo_wine expect(Ok, stat);
+    expect(Ok, stat);
+    expect(0, result);
+    expect(255, type);
     expect((INT)0xdeadbeef, start);
     expect((INT)0xdeadbeef, end);
-    expect(255, type);
-    todo_wine expect(0, result);
     GdipDeletePathIter(iter);
 
+
+    /* Single PathPointTypeStart point */
+    point.X = 1.0;
+    point.Y = 2.0;
+    stat = GdipAddPathLine2(path, &point, 1);
+    expect(Ok, stat);
+    stat = GdipCreatePathIter(&iter, path);
+    expect(Ok, stat);
+
+    result = start = end = closed = (INT)0xdeadbeef;
+    stat = GdipPathIterNextSubpath(iter, &result, &start, &end, &closed);
+    expect(Ok, stat);
+    expect(1, result);
+    expect(0, start);
+    expect(0, end);
+    expect(FALSE, closed);
+
+    result = start = end = (INT)0xdeadbeef;
+    type = 255; /* out of range */
+    stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
+    expect(Ok, stat);
+    expect(1, result);
+    expect(255, type);
+    expect(0, start);
+    expect(0, end);
+
+    GdipDeletePathIter(iter);
+    GdipDeletePath(path);
+
+
+    /* Figure with three subpaths */
+    GdipCreatePath(FillModeAlternate, &path);
+    stat = GdipAddPathLine(path, 0.0, 0.0, 10.0, 30.0);
+    expect(Ok, stat);
+    stat = GdipAddPathRectangle(path, 1.0, 2.0, 3.0, 4.0);
+    expect(Ok, stat);
     stat = GdipAddPathEllipse(path, 0.0, 0.0, 35.0, 70.0);
     expect(Ok, stat);
-    GdipCreatePathIter(&iter, path);
+    stat = GdipCreatePathIter(&iter, path);
+    expect(Ok, stat);
+
+    /* When subPath is not set,
+       it is not possible to get Path Type */
+    result = start = end = (INT)0xdeadbeef;
+    type = 255; /* out of range */
+    stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
+    expect(Ok, stat);
+    expect(0, result);
+    expect(255, type);
+    expect((INT)0xdeadbeef, start);
+    expect((INT)0xdeadbeef, end);
+
+    /* When subPath is not set,
+       it is possible to get number of path points */
+    stat = GdipPathIterGetCount(iter, &count);
+    expect(Ok, stat);
+    expect(19, count);
+
+    /* Set subPath (Line) */
+    result = start = end = closed = (INT)0xdeadbeef;
+    stat = GdipPathIterNextSubpath(iter, &result, &start, &end, &closed);
+    expect(Ok, stat);
+    expect(2, result);
+    expect(0, start);
+    expect(1, end);
+    expect(FALSE, closed);
+
+    /* When subPath is set (Line), return position of points with the same type */
+    result = start = end = (INT)0xdeadbeef;
+    type = 255; /* out of range */
+    stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
+    expect(Ok, stat);
+    expect(2, result);
+    expect(PathPointTypeLine, type);
+    expect(0, start);
+    expect(1, end);
+
+    /* When NextSubpath is running twice, without invocation NextPathType
+       (skipping Rectangle figure), make sure that PathType index is updated */
+    result = start = end = closed = (INT)0xdeadbeef;
+    stat = GdipPathIterNextSubpath(iter, &result, &start, &end, &closed);
+    expect(Ok, stat);
+    expect(4, result);
+    expect(2, start);
+    expect(5, end);
+    expect(TRUE, closed);
+
+    /* Increment subPath (to Ellipse figure) */
+    result = start = end = closed = (INT)0xdeadbeef;
+    stat = GdipPathIterNextSubpath(iter, &result, &start, &end, &closed);
+    expect(Ok, stat);
+    expect(13, result);
+    expect(6, start);
+    expect(18, end);
+    expect(TRUE, closed);
+
+    /* When subPath is set to Ellipse figure, the type is PathPointTypeBezier */
+    result = start = end = (INT)0xdeadbeef;
+    type = 255; /* out of range */
+    stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
+    expect(Ok, stat);
+    expect(13, result);
+    expect(PathPointTypeBezier, type);
+    expect(6, start);
+    expect(18, end);
+
+    /* As there is no more subpaths, when subPath is incremented,
+       it returns zeros */
+    result = start = end = closed = (INT)0xdeadbeef;
+    stat = GdipPathIterNextSubpath(iter, &result, &start, &end, &closed);
+    expect(Ok, stat);
+    expect(0, result);
+    expect(0, start);
+    expect(0, end);
+    expect(TRUE, closed);
+
+    /* When no more elements, after invoking NextPathType
+       the output numbers are not changed */
     start = end = result = (INT)0xdeadbeef;
     type = 255; /* out of range */
     stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
-    todo_wine expect(Ok, stat);
+    expect(Ok, stat);
+    expect(0, result);
+    expect(255, type);
     expect((INT)0xdeadbeef, start);
     expect((INT)0xdeadbeef, end);
-    expect(255, type);
-    todo_wine expect(0, result);
-    GdipDeletePathIter(iter);
 
-    /* closed */
-    GdipClosePathFigure(path);
-    GdipCreatePathIter(&iter, path);
-    start = end = result = (INT)0xdeadbeef;
+    GdipDeletePathIter(iter);
+    GdipDeletePath(path);
+
+
+    /* Single PathPointTypeStart point */
+    GdipCreatePath(FillModeAlternate, &path);
+    point.X = 1.0;
+    point.Y = 2.0;
+    stat = GdipAddPathLine2(path, &point, 1);
+    expect(Ok, stat);
+    stat = GdipCreatePathIter(&iter, path);
+    expect(Ok, stat);
+
+    result = start = end = closed = (INT)0xdeadbeef;
+    stat = GdipPathIterNextSubpath(iter, &result, &start, &end, &closed);
+    expect(Ok, stat);
+    expect(1, result);
+    expect(0, start);
+    expect(0, end);
+    expect(FALSE, closed);
+
+    result = start = end = (INT)0xdeadbeef;
     type = 255; /* out of range */
     stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
-    todo_wine expect(Ok, stat);
+    expect(Ok, stat);
+    expect(1, result);
+    expect(255, type);
+    expect(0, start);
+    expect(0, end);
+
+    GdipDeletePathIter(iter);
+    GdipDeletePath(path);
+
+
+    /* Mixed PathPointTypeLine and PathPointTypeBezier points */
+    GdipCreatePath(FillModeAlternate, &path);
+    stat = GdipAddPathLine(path, -1.0, 1.0, 10.0, 15.0);
+    expect(Ok, stat);
+    /* Starting point of Bezier figure, is the same
+       as ending point of previous figure (10.0, 15.0) */
+    stat = GdipAddPathBezier(path, 10.0, 15.0, 9.0, 9.0, 6.0, 7.0, 9.0, 0.0);
+    expect(Ok, stat);
+    /* Starting point of figure, is different that ending point of previous figure */
+    stat = GdipAddPathLine(path, -1.0, -1.0, 7.5, 12.0);
+    expect(Ok, stat);
+    stat = GdipStartPathFigure(path);
+    expect(Ok, stat);
+    stat = GdipAddPathLine(path, 50.0, 50.0, 110.0, 40.0);
+    expect(Ok, stat);
+    stat = GdipCreatePathIter(&iter, path);
+    expect(Ok, stat);
+
+    result = start = end = closed = (INT)0xdeadbeef;
+    stat = GdipPathIterNextSubpath(iter, &result, &start, &end, &closed);
+    expect(Ok, stat);
+    expect(7, result);
+    expect(0, start);
+    expect(6, end);
+    expect(FALSE, closed);
+
+    result = start = end = (INT)0xdeadbeef;
+    type = 255; /* out of range */
+    stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
+    expect(Ok, stat);
+    expect(2, result);
+    expect(PathPointTypeLine, type);
+    expect(0, start);
+    expect(1, end);
+
+    result = start = end = (INT)0xdeadbeef;
+    type = 255; /* out of range */
+    stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
+    expect(Ok, stat);
+    expect(4, result);
+    expect(PathPointTypeBezier, type);
+    expect(1, start);
+    expect(4, end);
+
+    result = start = end = (INT)0xdeadbeef;
+    type = 255; /* out of range */
+    stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
+    expect(Ok, stat);
+    expect(3, result);
+    expect(PathPointTypeLine, type);
+    expect(4, start);
+    expect(6, end);
+
+    result = start = end = (INT)0xdeadbeef;
+    type = 255; /* out of range */
+    stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
+    expect(Ok, stat);
+    expect(0, result);
+    expect(255, type);
     expect((INT)0xdeadbeef, start);
     expect((INT)0xdeadbeef, end);
-    expect(255, type);
-    todo_wine expect(0, result);
-    GdipDeletePathIter(iter);
 
+    result = start = end = closed = (INT)0xdeadbeef;
+    stat = GdipPathIterNextSubpath(iter, &result, &start, &end, &closed);
+    expect(Ok, stat);
+    expect(2, result);
+    expect(7, start);
+    expect(8, end);
+    expect(FALSE, closed);
+
+    result = start = end = (INT)0xdeadbeef;
+    type = 255; /* out of range */
+    stat = GdipPathIterNextPathType(iter, &result, &type, &start, &end);
+    expect(Ok, stat);
+    expect(2, result);
+    expect(PathPointTypeLine, type);
+    expect(7, start);
+    expect(8, end);
+
+    GdipDeletePathIter(iter);
     GdipDeletePath(path);
 }
 

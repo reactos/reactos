@@ -50,36 +50,6 @@ static inline const char* wine_dbg_sprintf(const char* format, ...)
 }
 #endif
 
-struct debug_info
-{
-    unsigned int str_pos;       /* current position in strings buffer */
-    unsigned int out_pos;       /* current position in output buffer */
-    char         strings[1020]; /* buffer for temporary strings */
-    char         output[1020];  /* current output line */
-};
-
-C_ASSERT( sizeof(struct debug_info) == 0x800 );
-
-static inline struct debug_info *get_info(void)
-{
-#ifdef _WIN64
-    return (struct debug_info *)((TEB32 *)((char *)NtCurrentTeb() + 0x2000) + 1);
-#else
-    return (struct debug_info *)(NtCurrentTeb() + 1);
-#endif
-}
-
-const char * __cdecl __wine_dbg_strdup( const char *str )
-{
-    struct debug_info *info = get_info();
-    unsigned int pos = info->str_pos;
-    size_t n = strlen( str ) + 1;
-
-    if (pos + n > sizeof(info->strings)) pos = 0;
-    info->str_pos = pos + n;
-    return memcpy( info->strings + pos, str, n );
-}
-
 BOOL WINAPI GetWindowsAccountDomainSid(_In_ PSID  pSid, _Out_opt_ PSID  pDomainSid, _Inout_ DWORD *cbDomainSid);
 BOOL WINAPI AddAuditAccessAceEx(_Inout_ PACL pAcl, _In_ DWORD dwAceRevision, _In_ DWORD AceFlags, _In_ DWORD dwAccessMask, _In_ PSID pSid, _In_ BOOL bAuditSuccess, _In_ BOOL bAuditFailure);
 BOOL WINAPI EqualDomainSid(_In_ PSID pSid1, _In_ PSID pSid2, _Out_ BOOL* pfEqual);

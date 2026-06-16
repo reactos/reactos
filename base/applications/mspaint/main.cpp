@@ -761,6 +761,8 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     //
     CheckMenuItem(menu, IDM_COLORSMODERNPALETTE, CHECKED_IF(paletteModel.SelectedPalette() == PAL_MODERN));
     CheckMenuItem(menu, IDM_COLORSOLDPALETTE,    CHECKED_IF(paletteModel.SelectedPalette() == PAL_OLDTYPE));
+    CheckMenuItem(menu, IDM_COLORSGRAYSCALE,     CHECKED_IF(paletteModel.SelectedPalette() == PAL_GRAYSCALE));
+    CheckMenuItem(menu, IDM_COLORSMONOCHROME,    CHECKED_IF(paletteModel.SelectedPalette() == PAL_MONOCHROME));
     return 0;
 }
 
@@ -1129,6 +1131,12 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_COLORSOLDPALETTE:
             paletteModel.SelectPalette(PAL_OLDTYPE);
+            break;
+        case IDM_COLORSGRAYSCALE:
+            paletteModel.SelectPalette(PAL_GRAYSCALE);
+            break;
+        case IDM_COLORSMONOCHROME:
+            paletteModel.SelectPalette(PAL_MONOCHROME);
             break;
         case IDM_IMAGEINVERTCOLORS:
         {

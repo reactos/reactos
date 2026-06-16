@@ -46,10 +46,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT       "ReactOS 安裝程式可以升級下列的其中一個可用的 ReactOS 安裝。如果某個 ReactOS 安裝損毀，安裝程式可以嘗試修復它。", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "安裝程式可以升級下列的其中一個可用的 ReactOS 安裝。如果某個 ReactOS 安裝損毀，安裝程式可以嘗試修復它。", IDC_STATIC, 6, 6, 303, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "不要升級(&D)", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "按［下一步］升級已選擇的 ReactOS 安裝，或按［不要升級］進行全新的 ReactOS 安裝。", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "Click Next to upgrade the selected OS installation, or on 'Do not upgrade' to perform a new installation.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -147,7 +147,7 @@ BEGIN
     LTEXT "目的地路徑：", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     AUTOCHECKBOX "我確定所有的安裝設定是正確的。\n我亦明白 ReactOS 目前處於 Alpha 測試階段，有可能損壞電腦或導致我的資料損毀。",
-        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
+        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE | WS_TABSTOP
     LTEXT "請確定所有的安裝設定是正確的，\n然後按［安裝］，開始安裝程序。", IDC_STATIC, 7, 124, 303, 18
 END
 
@@ -161,16 +161,30 @@ BEGIN
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
-IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "正在完成 ReactOS 安裝程式"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "正在完成 ReactOS 安裝程式", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS 的第一階段安裝已順利完成。", IDC_STATIC, 115, 50, 195, 17
-    LTEXT "按下［完成］後，您的電腦將會重新啟動。", IDC_STATIC, 115, 80, 195, 17
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
-    LTEXT "如果光碟機裡還有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Restarting your Computer", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS 的第一階段安裝已順利完成。", IDC_STATIC, 115, 40, 195, 24
+    // The following text can be replaced by IDS_FINISH_NO_REBOOT at runtime;
+    // please ensure it can hold in the text control!
+    LTEXT "Setup will now restart your computer to continue with the second installation step.\n\nYour computer will automatically restart in 15 seconds or when you click on Restart.", IDC_FINISHTEXT, 115, 78, 195, 56
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+END
+
+IDD_ABORTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "The ReactOS Setup Wizard ended prematurely", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "The first ReactOS installation step prematurely ended because of an error or because you have canceled it.\n\nYou will be able to run the Setup Wizard at a later time to install or upgrade ReactOS.", IDC_STATIC, 115, 40, 195, 48
+    // The following text can be replaced by IDS_ABORT_NO_REBOOT at runtime;
+    // please ensure it can hold in the text control!
+    LTEXT "Your computer will automatically restart in 15 seconds or when you click on Restart.", IDC_FINISHTEXT, 115, 110, 195, 24
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
 /* Strings */
@@ -190,12 +204,14 @@ BEGIN
     IDS_SUMMARYSUBTITLE "正是安裝前列出安裝屬性以供檢查。"
     IDS_PROCESSTITLE "設定磁碟分割，複製檔案並安裝系統"
     IDS_PROCESSSUBTITLE "建立並格式化磁碟分割，複製檔案，安裝並設定載入程式。"
-    IDS_RESTARTTITLE "第一階段安裝完成"
-    IDS_RESTARTSUBTITLE "第一階段安裝已經完成，重新啟動進行第二階段安裝。"
     IDS_ABORTSETUP "ReactOS 尚未完全安裝在您的電腦上。如果現在結束安裝程式，您將需要重新執行安裝程式來安裝 ReactOS。您確定要結束嗎？"
     IDS_ABORTSETUP2 "終止安裝？"
     IDS_NO_TXTSETUP_SIF "無法找到「txtsetup.sif」。\n安裝程式無法繼續。"
+    IDS_FINISH_NO_REBOOT "Setup needs to restart your computer to continue with the second installation step.\n\nClick on Restart to immediately restart your computer.\nClick on Postpone to quit the installer and restart your computer at a later time."
+    IDS_ABORT_NO_REBOOT "Click on Restart to immediately restart your computer.\nClick on Close to quit the installer."
     IDS_INSTALLBTN "安裝(&I)"
+    IDS_RESTARTBTN "&Restart"
+    IDS_POSTPONEBTN "&Postpone"
     IDS_VOLUME_NOFORMAT "未格式化"
 END
 

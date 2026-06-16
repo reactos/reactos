@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-START_TEST(eventlog)
+START_TEST(eventlog_supp)
 {
     static struct
     {

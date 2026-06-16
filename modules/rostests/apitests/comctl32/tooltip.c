@@ -61,7 +61,7 @@ Cleanup:
     HeapFree(hAppHeap, 0, lpData);
 }
 
-START_TEST(tooltip)
+START_TEST(tooltipv6)
 {
     TestDllProductVersion();
 }

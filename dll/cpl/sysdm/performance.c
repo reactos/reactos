@@ -10,6 +10,7 @@
 #include "precomp.h"
 #include <shlguid_undoc.h> // CLSID_CRegTreeOptions
 #include <shlobj_undoc.h> // IRegTreeOptions
+#include <shlwapi_undoc.h> // SHSendMessageBroadcastW
 
 static VOID
 RegTreeOpt_OnDestroy(IRegTreeOptions *pRTO)

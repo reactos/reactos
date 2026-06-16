@@ -1,6 +1,7 @@
 @ stdcall LdrRegisterDllNotification(long ptr ptr ptr)
 @ stdcall LdrUnregisterDllNotification(ptr)
 
+@ stdcall RtlGetProductInfo(long long long long ptr)
 @ stdcall RtlInitializeConditionVariable(ptr)
 @ stdcall RtlWakeConditionVariable(ptr)
 @ stdcall RtlWakeAllConditionVariable(ptr)
@@ -11,6 +12,7 @@
 @ stdcall RtlReleaseSRWLockShared(ptr)
 @ stdcall RtlAcquireSRWLockExclusive(ptr)
 @ stdcall RtlReleaseSRWLockExclusive(ptr)
+@ stdcall RtlTryAcquireSRWLockExclusive(ptr)
 @ stdcall RtlRunOnceInitialize(ptr)
 @ stdcall RtlRunOnceBeginInitialize(ptr long ptr)
 @ stdcall RtlRunOnceComplete(ptr long ptr)
@@ -21,6 +23,11 @@
 @ stdcall RtlLcidToLocaleName(long ptr long long)
 @ stdcall RtlLocaleNameToLcid(wstr ptr long)
 @ stdcall RtlCompareUnicodeStrings(wstr long wstr long long)
+@ stdcall -arch=i386 RtlInterlockedPushListSListEx(ptr ptr ptr long)
+@ stdcall -arch=!i386 RtlInterlockedPushListSListEx(ptr ptr ptr long) ntdll.RtlInterlockedPushListSList
+
+@ stdcall RtlUnicodeToUTF8N(ptr long ptr wstr long)
+@ stdcall RtlUTF8ToUnicodeN(ptr long ptr str long)
 
 @ stdcall TpAllocCleanupGroup(ptr)
 @ stdcall TpAllocIoCompletion(ptr ptr ptr ptr ptr)

@@ -24,7 +24,11 @@
 #include "gdiplus.h"
 #include "wine/test.h"
 
-#define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
+#define expect(expected,got) expect_(__LINE__, expected, got)
+static inline void expect_(unsigned line, DWORD expected, DWORD got)
+{
+    ok_(__FILE__, line)(expected == got, "Expected %.8ld, got %.8ld\n", expected, got);
+}
 #define expectf(expected, got) ok(fabs(got - expected) < 0.1, "Expected %.2f, got %.2f\n", expected, got)
 
 static void test_startup(void)
@@ -175,7 +179,7 @@ static void test_dasharray(void)
     dashes[4] = 14.0;
     dashes[5] = -100.0;
     dashes[6] = -100.0;
-    dashes[7] = dashes[8] = dashes[9] = dashes[10] = dashes[11] = 0.0;
+    dashes[7] = dashes[8] = dashes[9] = dashes[10] = dashes[11] = 1.0;
 
     /* setting the array sets the type to custom */
     GdipGetPenDashStyle(pen, &style);
@@ -218,8 +222,11 @@ static void test_dasharray(void)
 
     /* Some invalid array values. */
     status = GdipSetPenDashArray(pen, &dashes[7], 5);
-    expect(InvalidParameter, status);
+    expect(Ok, status);
     dashes[9] = -1.0;
+    status = GdipSetPenDashArray(pen, &dashes[7], 5);
+    expect(InvalidParameter, status);
+    dashes[9] = 0.0;
     status = GdipSetPenDashArray(pen, &dashes[7], 5);
     expect(InvalidParameter, status);
 
@@ -343,7 +350,11 @@ static void test_compoundarray(void)
 {
     GpStatus status;
     GpPen *pen;
+    REAL *returnvalues;
     static const REAL testvalues[] = {0.2, 0.4, 0.6, 0.8};
+    static const REAL notSortedValues[] = {0.2, 0.6, 0.4, 0.8};
+    static const REAL negativeValues[] = {-1.2, 0.4, 0.6, 0.8};
+    static const REAL tooLargeValues[] = {0.2, 0.4, 0.6, 2.8};
     INT count;
 
     status = GdipSetPenCompoundArray(NULL, testvalues, 4);
@@ -360,10 +371,9 @@ static void test_compoundarray(void)
 
     count = 10;
     status = GdipGetPenCompoundCount(pen, &count);
-todo_wine {
     expect(Ok, status);
     ok(count == 0, "Unexpected compound count %d\n", count);
-}
+
     status = GdipSetPenCompoundArray(pen, NULL, 0);
     expect(InvalidParameter, status);
     status = GdipSetPenCompoundArray(pen, NULL, 4);
@@ -375,17 +385,43 @@ todo_wine {
     status = GdipSetPenCompoundArray(pen, testvalues, -2);
     expect(InvalidParameter, status);
 
+    status = GdipSetPenCompoundArray(pen, notSortedValues, 4);
+    expect(InvalidParameter, status);
+    status = GdipSetPenCompoundArray(pen, negativeValues, 4);
+    expect(InvalidParameter, status);
+    status = GdipSetPenCompoundArray(pen, tooLargeValues, 4);
+    expect(InvalidParameter, status);
+
     status = GdipSetPenCompoundArray(pen, testvalues, 4);
-    todo_wine expect(Ok, status);
+    expect(Ok, status);
     status = GdipSetPenCompoundArray(pen, NULL, 0);
     expect(InvalidParameter, status);
 
     count = 0;
     status = GdipGetPenCompoundCount(pen, &count);
-todo_wine {
     expect(Ok, status);
     ok(count == 4, "Unexpected compound count %d\n", count);
-}
+
+    returnvalues = calloc(5, sizeof(REAL));
+    /* When count larger than stored array return error */
+    status = GdipGetPenCompoundArray(pen, returnvalues, 40);
+    expect(InvalidParameter, status);
+    status = GdipGetPenCompoundArray(NULL, returnvalues, 4);
+    expect(InvalidParameter, status);
+    /* When count is zero, it should do nothing */
+    status = GdipGetPenCompoundArray(pen, returnvalues, 0);
+    expect(Ok, status);
+    ok(returnvalues[0] == 0.0, "Unexpected compound array %f\n", returnvalues[0]);
+
+    status = GdipGetPenCompoundArray(pen, returnvalues, 4);
+    expect(Ok, status);
+    ok(memcmp(returnvalues, testvalues, 4 * sizeof(REAL)) == 0, "Unexpected compound array\n");
+
+    status = GdipGetPenCompoundArray(pen, returnvalues, -10);
+    expect(Ok, status);
+    ok(memcmp(returnvalues, testvalues, 4 * sizeof(REAL)) == 0, "Unexpected compound array\n");
+
+    free(returnvalues);
     GdipDeletePen(pen);
 }
 
@@ -409,9 +445,10 @@ static void test_transform(void)
 {
     GpStatus status;
     GpPen *pen;
-    GpMatrix *matrix, *matrix2;
+    GpMatrix *matrix, *matrix2, *not_invertible_matrix;
     REAL values[6];
 
+    /* Check default Pen Transformation */
     status = GdipCreatePen1((ARGB)0xffff00ff, 10.0f, UnitPixel, &pen);
     expect(Ok, status);
 
@@ -431,6 +468,26 @@ static void test_transform(void)
     expectf(0.0, values[4]);
     expectf(0.0, values[5]);
 
+    /* Setting Pen Tranformation to Not invertible matrix, should return InvalidParameter */
+    GdipCreateMatrix2(3.0, 3.0, 2.0, 2.0, 6.0, 3.0, &not_invertible_matrix);
+
+    status = GdipSetPenTransform(pen, not_invertible_matrix);
+    expect(InvalidParameter, status);
+    GdipDeleteMatrix(not_invertible_matrix);
+
+    status = GdipGetPenTransform(pen, matrix);
+    expect(Ok, status);
+    status = GdipGetMatrixElements(matrix, values);
+    expect(Ok, status);
+
+    expectf(1.0, values[0]);
+    expectf(0.0, values[1]);
+    expectf(0.0, values[2]);
+    expectf(1.0, values[3]);
+    expectf(0.0, values[4]);
+    expectf(0.0, values[5]);
+
+    /* Setting Pen Tranformation to invertible matrix, should be successfull */
     GdipCreateMatrix2(3.0, -2.0, 5.0, 2.0, 6.0, 3.0, &matrix2);
     status = GdipSetPenTransform(pen, matrix2);
     expect(Ok, status);

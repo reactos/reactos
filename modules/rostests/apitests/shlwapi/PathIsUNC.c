@@ -27,7 +27,7 @@ do { \
     ok(ret == (exp), "Expected %s to be %d, was %d\n", wine_dbgstr_w((str)), (exp), ret); \
 } while (0)
 
-START_TEST(isuncpath)
+START_TEST(PathIsUNC)
 {
     DO_TEST(TRUE, L"\\\\path1\\path2");
     DO_TEST(TRUE, L"\\\\path1");

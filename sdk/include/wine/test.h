@@ -579,6 +579,9 @@ static inline void winetest_add_failures( LONG new_failures )
 
 #include <stdio.h>
 #include <excpt.h>
+#ifdef __REACTOS__
+#include <oleauto.h>
+#endif
 
 struct test
 {
@@ -586,7 +589,12 @@ struct test
     void (*func)(void);
 };
 
+#ifdef __REACTOS__
+extern const struct test winetest_testlist_start[];
+const struct test* winetest_testlist = &winetest_testlist_start[1];
+#else
 extern const struct test winetest_testlist[];
+#endif
 
 /* debug level */
 int winetest_debug = 1;
@@ -920,6 +928,7 @@ static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_w
 extern const char *wine_dbgstr_variant(const VARIANT *var);
 static inline const char *debugstr_variant( const VARIANT *v ) { return wine_dbgstr_variant( v ); }
 #endif
+extern const char * __cdecl __wine_dbg_strdup( const char *str );
 
 /* strcmpW is available for tests compiled under Wine, but not in standalone
  * builds under Windows, so we reimplement it under a different name. */
@@ -1018,7 +1027,40 @@ extern void winetest_end_nocount(void);
 #define GetNTVersion() ((GetMajorNTVersion() << 8) | GetMinorNTVersion())
 #define __REACTOS__WinVer_lt(Ver) ((GetNTVersion() < (Ver)))
 
+#ifndef STANDALONE
+struct test
+{
+    const char *name;
+    void (*func)(void);
+};
+#endif
+
+/* Section allocation helper for automatic test registration */
+#if defined(_MSC_VER)
+  #pragma section(".test$A",long,read)
+  #define _TESTALLOC(x) __declspec(allocate(x))
+  #define _PRAGMA_SECTION(x, y, z) __pragma(section(x, y, z))
+  #define _TESTKEEP(x) const void* keep_##x = &x;
+#elif defined(__GNUC__)
+  #define _TESTALLOC(x) __attribute__((used, section(x)))
+  #define _PRAGMA_SECTION(x, y, z)
+  #define _TESTKEEP(x)
+#else
+  #error Your compiler is not supported.
+#endif
+
+#undef START_TEST
+#define START_TEST(name) \
+  EXTERN_C void func_##name(void); \
+  _PRAGMA_SECTION(_CRT_STRINGIZE(.test$B##name), long, read); \
+  _TESTALLOC(_CRT_STRINGIZE(.test$B##name)) const struct test winetest_testentry_##name = { #name, func_##name }; \
+  _TESTKEEP(winetest_testentry_##name) \
+  EXTERN_C void func_##name(void)
+
 #ifdef STANDALONE
+
+_TESTALLOC(".test$A") const struct test winetest_testlist_start[] = { { "", 0 } };
+#define winetest_testlist winetest_testlist_dummy
 
 LONG winetest_get_successes(void)
 {
@@ -1292,6 +1334,19 @@ const char *wine_dbgstr_variant(const VARIANT *var)
     return buf;
 }
 #endif
+
+/* FIXME: this is not 100% thread-safe */
+const char * __cdecl __wine_dbg_strdup( const char *str )
+{
+    static char *list[32];
+    static LONG pos;
+    char *ret = _strdup( str );
+    int idx;
+
+    idx = InterlockedIncrement( &pos ) % ARRAY_SIZE(list);
+    free( InterlockedExchangePointer( (void **)&list[idx], ret ));
+    return ret;
+}
 
 #endif
 
