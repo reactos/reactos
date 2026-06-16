@@ -302,14 +302,6 @@ ObpSetHandleAttributes(
     IN ULONG_PTR Context
 );
 
-NTSTATUS
-NTAPI
-ObQueryDeviceMapInformation(
-    _In_opt_ PEPROCESS Process,
-    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
-    _In_ ULONG Flags
-);
-
 //
 // Object Lifetime Functions
 //
@@ -408,6 +400,14 @@ ObReferenceFileObjectForWrite(
 //
 // DOS Devices Functions
 //
+NTSTATUS
+NTAPI
+ObQueryDeviceMapInformation(
+    _In_opt_ PEPROCESS Process,
+    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
+    _In_ ULONG Flags
+);
+
 NTSTATUS
 NTAPI
 ObSetDeviceMap(

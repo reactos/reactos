@@ -81,9 +81,27 @@ ObCreateObjectType(
 NTKERNELAPI
 VOID
 NTAPI
+ObDereferenceObjectDeferDelete(
+    _In_ PVOID Object
+);
+
+NTKERNELAPI
+VOID
+NTAPI
 ObDereferenceSecurityDescriptor(
     _Inout_ PSECURITY_DESCRIPTOR SecurityDescriptor,
     _In_ ULONG Count
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+ObFindHandleForObject(
+    _In_ PEPROCESS Process,
+    _In_ PVOID Object,
+    _In_ POBJECT_TYPE ObjectType,
+    _In_opt_ POBJECT_HANDLE_INFORMATION HandleInformation,
+    _Out_opt_ PHANDLE Handle
 );
 
 NTKERNELAPI
@@ -144,24 +162,6 @@ ObSetSecurityObjectByPointer(
     _In_ PVOID Object,
     _In_ SECURITY_INFORMATION SecurityInformation,
     _In_ PSECURITY_DESCRIPTOR SecurityDescriptor
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-ObFindHandleForObject(
-    _In_ PEPROCESS Process,
-    _In_ PVOID Object,
-    _In_ POBJECT_TYPE ObjectType,
-    _In_opt_ POBJECT_HANDLE_INFORMATION HandleInformation,
-    _Out_opt_ PHANDLE Handle
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-ObDereferenceObjectDeferDelete(
-    _In_ PVOID Object
 );
 
 #endif
