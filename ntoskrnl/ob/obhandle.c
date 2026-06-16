@@ -3295,9 +3295,8 @@ ObInsertObject(IN PVOID Object,
  * Handle whose attributes are to be modified.
  *
  * @param[in]   HandleFlags
- * Pointer to an @p OBJECT_HANDLE_ATTRIBUTE_INFORMATION structure
- * specifying the new values for the handle's inherit and
- * protect-from-close attributes.
+ * Pointer to an @p OBJECT_HANDLE_FLAG_INFORMATION structure specifying
+ * the new values for the handle's inherit and protect-from-close attributes.
  *
  * @param[in]   PreviousMode
  * Processor mode of the original caller. This is used to determine
@@ -3317,7 +3316,7 @@ NTSTATUS
 NTAPI
 ObSetHandleAttributes(
     _In_ HANDLE Handle,
-    _In_ POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags,
+    _In_ POBJECT_HANDLE_FLAG_INFORMATION HandleFlags,
     _In_ KPROCESSOR_MODE PreviousMode)
 {
     OBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleAttributesContext;
