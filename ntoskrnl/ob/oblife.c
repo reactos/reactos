@@ -1572,7 +1572,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
 {
     OBJECT_HANDLE_INFORMATION HandleInfo;
     POBJECT_HEADER ObjectHeader = NULL;
-    POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags;
+    POBJECT_HANDLE_FLAG_INFORMATION HandleFlags;
     POBJECT_BASIC_INFORMATION BasicInfo;
     ULONG InfoLength = 0;
     PVOID Object = NULL;
@@ -1748,16 +1748,15 @@ NtQueryObject(IN HANDLE ObjectHandle,
             case ObjectHandleFlagInformation:
 
                 /* Validate length */
-                InfoLength = sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION);
-                if (Length != sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
+                InfoLength = sizeof(OBJECT_HANDLE_FLAG_INFORMATION);
+                if (Length != sizeof(OBJECT_HANDLE_FLAG_INFORMATION))
                 {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
                     break;
                 }
 
                 /* Get the structure */
-                HandleFlags = (POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
-                               ObjectInformation;
+                HandleFlags = (POBJECT_HANDLE_FLAG_INFORMATION)ObjectInformation;
 
                 /* Set the flags */
                 HandleFlags->Inherit = HandleInfo.HandleAttributes & OBJ_INHERIT;
@@ -1818,14 +1817,14 @@ NtQueryObject(IN HANDLE ObjectHandle,
  * @param[in]   ObjectInformation
  * Pointer to a caller-supplied buffer containing the information to set.
  * For the @p ObjectHandleFlagInformation class, this buffer must point
- * to an @p OBJECT_HANDLE_ATTRIBUTE_INFORMATION structure describing the
+ * to an @p OBJECT_HANDLE_FLAG_INFORMATION structure describing the
  * desired handle attributes (inherit and protect-from-close).
  * For the @p ObjectSessionInformation class, this parameter is ignored.
  *
  * @param[in]   Length
  * The size in bytes, of the buffer pointed to by @p ObjectInformation.
  * For the @p ObjectHandleFlagInformation class, this must be
- * sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION).
+ * sizeof(OBJECT_HANDLE_FLAG_INFORMATION).
  * For the @p ObjectSessionInformation class, this parameter is ignored.
  *
  * @return
@@ -1859,7 +1858,7 @@ NtSetInformationObject(
     {
         case ObjectHandleFlagInformation:
         {
-            OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags;
+            OBJECT_HANDLE_FLAG_INFORMATION HandleFlags;
 
             /* Validate the length */
             if (Length != sizeof(HandleFlags))
@@ -1875,7 +1874,7 @@ NtSetInformationObject(
                 _SEH2_TRY
                 {
                     ProbeForRead(ObjectInformation, sizeof(HandleFlags), sizeof(BOOLEAN));
-                    HandleFlags = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)ObjectInformation;
+                    HandleFlags = *(POBJECT_HANDLE_FLAG_INFORMATION)ObjectInformation;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -1886,7 +1885,7 @@ NtSetInformationObject(
             }
             else
             {
-                HandleFlags = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)ObjectInformation;
+                HandleFlags = *(POBJECT_HANDLE_FLAG_INFORMATION)ObjectInformation;
             }
 
             Status = ObSetHandleAttributes(ObjectHandle, &HandleFlags, PreviousMode);
