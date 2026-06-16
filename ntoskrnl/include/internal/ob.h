@@ -293,16 +293,6 @@ ObpLookupObjectName(
 );
 
 //
-// Object Attribute Functions
-//
-BOOLEAN
-NTAPI
-ObpSetHandleAttributes(
-    IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
-    IN ULONG_PTR Context
-);
-
-//
 // Object Lifetime Functions
 //
 VOID
