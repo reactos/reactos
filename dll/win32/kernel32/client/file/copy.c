@@ -259,6 +259,8 @@ BasepCopyFileExW(IN LPCWSTR lpExistingFileName,
                                              NULL);
                 if (INVALID_HANDLE_VALUE != FileHandleDest)
                 {
+                    if (!(dwCopyFlags & COPY_FILE_FAIL_IF_EXISTS) && GetLastError() == ERROR_ALREADY_EXISTS)
+                        SetLastError(ERROR_SUCCESS);
                     errCode = CopyLoop(FileHandleSource,
                                        FileHandleDest,
                                        FileStandard.EndOfFile,
