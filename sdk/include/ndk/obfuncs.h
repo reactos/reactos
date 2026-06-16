@@ -323,7 +323,7 @@ NTAPI
 NtSetInformationObject(
     _In_ HANDLE ObjectHandle,
     _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
-    _In_ PVOID ObjectInformation,
+    _In_reads_bytes_(Length) PVOID ObjectInformation,
     _In_ ULONG Length
 );
 
