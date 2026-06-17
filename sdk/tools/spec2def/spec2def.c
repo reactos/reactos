@@ -1467,6 +1467,7 @@ ApplyOrdinals(EXPORT* pexports, unsigned cExports)
             if (used[pexports[i].nOrdinal] != 0)
             {
                 fprintf(stderr, "Found duplicate ordinal: %u\n", pexports[i].nOrdinal);
+                free(used);
                 return -1;
             }
             used[pexports[i].nOrdinal] = 1;
