@@ -959,7 +959,7 @@ UpgradeRepairDlgProc(
                     pSetupData->RepairUpdateFlag = TRUE;
                     InstallPartition = pSetupData->CurrentInstallation->Volume->PartEntry;
                     /* Skip to summary page during repair/upgrade */
-                    PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_SUMMARYPAGE);
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
                     return TRUE;
                 }
 
