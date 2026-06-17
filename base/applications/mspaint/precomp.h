@@ -43,6 +43,7 @@
 #define GRIP_SIZE   3
 #define MIN_ZOOM    125
 #define MAX_ZOOM    8000
+#define DEFAULT_ZOOM 1000
 
 #define MAX_LONG_PATH 512
 

@@ -13,10 +13,10 @@ CCanvasWindow canvasWindow;
 /* FUNCTIONS ********************************************************/
 
 HCURSOR
-CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber)
+CStyledCursor::CreateStyledCursor(BrushStyle style, INT zoom, INT radius, COLORREF color, BOOL is_rubber)
 {
     const INT diameter = 2 * radius;
-    if (diameter <= 2)
+    if (diameter * zoom / DEFAULT_ZOOM <= 2)
     {
         HCURSOR hCursor = ::LoadCursor(NULL, IDC_CROSS);
         return hCursor ? CopyCursor(hCursor) : NULL;
@@ -24,7 +24,7 @@ CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, 
 
     const INT crosshair1 = 6, crosshair2 = crosshair1 - 2;
     const INT width = diameter + 2 * crosshair1, height = diameter + 2 * crosshair1;
-    const DWORD hotX = width / 2, hotY = height / 2;
+    DWORD hotX = width / 2, hotY = height / 2;
 
     HDC hdcScreen = ::GetDC(NULL);
     if (!hdcScreen)
@@ -116,6 +116,20 @@ CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, 
     ::ReleaseDC(NULL, hdcScreen);
     ::DeleteDC(hdcMem);
 
+    if (zoom != DEFAULT_ZOOM)
+    {
+        INT newWidth = width * zoom / DEFAULT_ZOOM;
+        INT newHeight = height * zoom / DEFAULT_ZOOM;
+        HBITMAP hbmMaskNew = CopyMonoImage(hbmMask, newWidth, newHeight, STRETCH_DELETESCANS);
+        HBITMAP hbmColorNew = CopyDIBImage(hbmColor, newWidth, newHeight, STRETCH_DELETESCANS);
+        ::DeleteObject(hbmMask);
+        ::DeleteObject(hbmColor);
+        hbmMask = hbmMaskNew;
+        hbmColor = hbmColorNew;
+        hotX = width * zoom / (2 * DEFAULT_ZOOM);
+        hotY = height * zoom / (2 * DEFAULT_ZOOM);
+    }
+
     ICONINFO ii = { FALSE, hotX, hotY, hbmMask, hbmColor };
     HCURSOR hCursor = (HCURSOR)::CreateIconIndirect(&ii);
 
@@ -125,9 +139,13 @@ CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, 
     return hCursor;
 }
 
-void CStyledCursor::SetStyle(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber)
+void CStyledCursor::SetStyle(BrushStyle style, INT zoom, INT radius, COLORREF color, BOOL is_rubber)
 {
-    if (m_hCursor && m_style == style && m_radius == radius && m_color == color &&
+    if (m_hCursor &&
+        m_style == style &&
+        m_zoom == zoom &&
+        m_radius == radius &&
+        m_color == color &&
         m_is_rubber == is_rubber)
     {
         return;
@@ -136,8 +154,9 @@ void CStyledCursor::SetStyle(BrushStyle style, INT radius, COLORREF color, BOOL 
     if (m_hCursor)
         DestroyCursor(m_hCursor);
 
-    m_hCursor = CreateStyledCursor(style, radius, color, is_rubber);
+    m_hCursor = CreateStyledCursor(style, zoom, radius, color, is_rubber);
     m_style = style;
+    m_zoom = zoom;
     m_radius = radius;
     m_color = color;
     m_is_rubber = is_rubber;
@@ -775,7 +794,9 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
                 break;
             case TOOL_RUBBER:
             {
-                m_hRubberCursor.SetStyle(BrushStyleSquare, toolsModel.GetRubberRadius(),
+                m_hRubberCursor.SetStyle(BrushStyleSquare,
+                                         toolsModel.GetZoom(),
+                                         toolsModel.GetRubberRadius(),
                                          paletteModel.GetBgColor(), TRUE);
                 m_hRubberCursor.SetCursor();
                 break;
@@ -783,6 +804,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             case TOOL_BRUSH:
             {
                 m_hBrushCursor.SetStyle(toolsModel.GetBrushStyle(),
+                                        toolsModel.GetZoom(),
                                         toolsModel.GetBrushWidth() / 2,
                                         paletteModel.GetFgColor(), FALSE);
                 m_hBrushCursor.SetCursor();
