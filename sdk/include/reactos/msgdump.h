@@ -6103,7 +6103,8 @@ MD_msgresult_def_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESUL
         MSGDUMP_PRINTF("%sWM_APP+%u(hwnd:%p, lResult:%p)\n",
                        MSGDUMP_PREFIX, uMsg - WM_APP, (void *)hwnd, (void *)lResult);
     }
-    if (0xC000 <= uMsg && uMsg <= 0xFFFF && GlobalGetAtomNameA(uMsg, szName, _countof(szName)))
+    else if (0xC000 <= uMsg && uMsg <= 0xFFFF &&
+             GlobalGetAtomNameA(uMsg, szName, _countof(szName)))
     {
         /* RegisterWindowMessage'd message */
         MSGDUMP_PRINTF("%s'%s'(%u)(hwnd:%p, wParam:%p, lParam:%p)\n",
