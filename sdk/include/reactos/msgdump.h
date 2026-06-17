@@ -18,7 +18,7 @@
 #include <strsafe.h>
 
 #ifndef MSGDUMP_PRINTF
-    #error Please define MSGDUMP_PRINTF macro before #include "msgdump.h".
+    #define MSGDUMP_PRINTF printf
 #endif
 
 #ifndef MSGDUMP_API
