@@ -91,7 +91,9 @@ HRESULT STDMETHODCALLTYPE CFolderItem::get_Parent(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
 
-    return ppid ? m_Folder->QueryInterface(IID_PPV_ARG(IDispatch, ppid)) : E_INVALIDARG;
+    if (!ppid)
+        return E_INVALIDARG;
+    return m_Folder->QueryInterface(IID_PPV_ARG(IDispatch, ppid));
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItem::get_Name(BSTR *pbs)
@@ -162,12 +164,12 @@ HRESULT STDMETHODCALLTYPE CFolderItem::get_GetLink(IDispatch **ppid)
 
 HRESULT STDMETHODCALLTYPE CFolderItem::get_GetFolder(IDispatch **ppid)
 {
-    return ShellObjectCreatorInit<CFolder>(const_cast<LPITEMIDLIST>(GetFullPidlRef()), IID_PPV_ARG(IDispatch, ppid));
+    return ShellObjectCreatorInit<CFolder>(const_cast<LPITEMIDLIST>(GetAbsoluteIDList()), IID_PPV_ARG(IDispatch, ppid));
 }
 
 HRESULT CFolderItem::HasAttribute(DWORD sfgaof, VARIANT_BOOL *pB)
 {
-    *pB = SHGetAttributes(NULL, GetFullPidlRef(), sfgaof) ? VARIANT_TRUE : VARIANT_FALSE;
+    *pB = SHGetAttributes(NULL, GetAbsoluteIDList(), sfgaof) ? VARIANT_TRUE : VARIANT_FALSE;
     return S_OK;
 }
 

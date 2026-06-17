@@ -9,7 +9,7 @@
 #include "precomp.h"
 #include "prop.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
+WINE_DEFAULT_DEBUG_CHANNEL(shell_prop);
 
 static const struct SHELL32PKEYMAP
 {

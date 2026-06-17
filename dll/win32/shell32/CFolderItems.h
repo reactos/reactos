@@ -18,7 +18,6 @@ private:
     CComHeapPtr<ITEMIDLIST> m_idlist;
     CComPtr<Folder> m_Folder;
 
-    inline LPCITEMIDLIST GetFullPidlRef() { return m_idlist; }
     inline HRESULT GetParentShellFolderAndItem(REFIID riid, void**ppv, PCUITEMID_CHILD &pidlLast);
 
     static LPCITEMIDLIST GetInternalPidlRef(IUnknown *pUnk);
