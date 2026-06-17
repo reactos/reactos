@@ -29,7 +29,8 @@
     #define MSGDUMP_PREFIX ""
 #endif
 
-typedef LRESULT (CALLBACK *MD_MSGRESULT_PROC)(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult);
+typedef LRESULT (CALLBACK *MD_MSGRESULT_PROC)(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                              LRESULT lResult);
 
 /* MD_msgdump function */
 static __inline LRESULT MSGDUMP_API
@@ -41,7 +42,8 @@ MD_msgdump_ex(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, WNDPROC fnDefP
 static __inline LRESULT MSGDUMP_API
 MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult);
 static __inline LRESULT MSGDUMP_API
-MD_msgresult_ex(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult, MD_MSGRESULT_PROC fnDefProc);
+MD_msgresult_ex(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult,
+                MD_MSGRESULT_PROC fnDefProc);
 
 static __inline LRESULT CALLBACK
 MD_msgdump_def_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -651,7 +653,8 @@ MD_GetNotifyCode(HWND hwndFrom, UINT code)
 static __inline LRESULT MSGDUMP_API
 MD_OnNotify(HWND hwnd, int idFrom, LPNMHDR pnmhdr)
 {
-    MSGDUMP_PRINTF("%sWM_NOTIFY(hwnd:%p, idFrom:%d, pnmhdr:%p, hwndFrom:%p, pnmhdr->idFrom:%d, code:%s)\n",
+    MSGDUMP_PRINTF("%sWM_NOTIFY(hwnd:%p, idFrom:%d, pnmhdr:%p, "
+                   "hwndFrom:%p, pnmhdr->idFrom:%d, code:%s)\n",
                    MSGDUMP_PREFIX, (void *)hwnd, idFrom, (void *)pnmhdr,
                    pnmhdr->hwndFrom, pnmhdr->idFrom,
                    MD_GetNotifyCode(pnmhdr->hwndFrom, pnmhdr->code));
@@ -1058,7 +1061,8 @@ static __inline void MSGDUMP_API
 MD_MDIActivate(HWND hwnd, BOOL fActive, HWND hwndActivate, HWND hwndDeactivate)
 {
     MSGDUMP_PRINTF("%sWM_MDIACTIVATE(hwnd:%p, fActive:%d, hwndActivate:%p, hwndDeactivate:%p)\n",
-                   MSGDUMP_PREFIX, (void *)hwnd, fActive, (void *)hwndActivate, (void *)hwndDeactivate);
+                   MSGDUMP_PREFIX, (void *)hwnd, fActive, (void *)hwndActivate,
+                   (void *)hwndDeactivate);
 }
 
 static __inline void MSGDUMP_API
@@ -1168,7 +1172,8 @@ static __inline HMENU MSGDUMP_API
 MD_MDISetMenu(HWND hwnd, BOOL fRefresh, HMENU hmenuFrame, HMENU hmenuWindow)
 {
     MSGDUMP_PRINTF("%sWM_MDISETMENU(hwnd:%p, fRefresh:%d, hmenuFrame:%p, hmenuWindow:%p)\n",
-                   MSGDUMP_PREFIX, (void *)hwnd, fRefresh, (void *)hmenuFrame, (void *)hmenuWindow);
+                   MSGDUMP_PREFIX, (void *)hwnd, fRefresh, (void *)hmenuFrame,
+                   (void *)hmenuWindow);
     return NULL;
 }
 
@@ -1440,8 +1445,9 @@ MD_OnNCXButtonDown(HWND hwnd, BOOL fDoubleClick, UINT nHitTest, WORD fwButton,
 {
     if (fDoubleClick)
     {
-        MSGDUMP_PRINTF("%sWM_NCXBUTTONDBLCLK(hwnd:%p, nHitTest:%u, fwButton:%u, xPos:%d, yPos:%d)\n",
-                      MSGDUMP_PREFIX, (void *)hwnd, nHitTest, fwButton, xPos, yPos);
+        MSGDUMP_PRINTF("%sWM_NCXBUTTONDBLCLK(hwnd:%p, nHitTest:%u, fwButton:%u, "
+                       "xPos:%d, yPos:%d)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, nHitTest, fwButton, xPos, yPos);
     }
     else
     {
@@ -5371,10 +5377,12 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 static __inline LRESULT MSGDUMP_API
-MD_msgresult_ex(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult, MD_MSGRESULT_PROC fnDefProc)
+MD_msgresult_ex(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult,
+                MD_MSGRESULT_PROC fnDefProc)
 {
-#define DEFINE_RESULT(WM_) case WM_: MSGDUMP_PRINTF("%s" #WM_ ": hwnd:%p, lResult:%p\n", \
-                                                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lResult); break
+#define DEFINE_RESULT(WM_) \
+    case WM_: MSGDUMP_PRINTF("%s" #WM_ ": hwnd:%p, lResult:%p\n", \
+                             MSGDUMP_PREFIX, (void *)hwnd, (void *)lResult); break
     char szClass[64], sz[2];
     szClass[0] = 0;
     GetClassNameA(hwnd, szClass, _countof(szClass));
