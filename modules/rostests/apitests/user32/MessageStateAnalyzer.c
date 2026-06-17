@@ -25,7 +25,7 @@ static WNDPROC s_fnOldEditWndProc = NULL;
 static WNDPROC s_fnOldImeWndProc = NULL;
 
 #ifdef VERBOSE
-    #define MSGDUMP_PRINTF trace
+    #define MSGDUMP_PRINTF printf
     #define MSGDUMP_PREFIX s_prefix
     #include "msgdump.h" /* msgdump.h needs MSGDUMP_PRINTF and MSGDUMP_PREFIX */
 #else
