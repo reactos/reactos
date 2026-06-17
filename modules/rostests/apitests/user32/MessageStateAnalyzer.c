@@ -11,6 +11,8 @@
 #include <imm.h>
 #include <strsafe.h>
 
+/* #define VERBOSE */
+
 #define MAX_MSGS 512
 
 static MSG s_Msgs[MAX_MSGS];
@@ -22,9 +24,14 @@ static HWND s_hImeWnd = NULL;
 static WNDPROC s_fnOldEditWndProc = NULL;
 static WNDPROC s_fnOldImeWndProc = NULL;
 
-#define MSGDUMP_PRINTF trace
-#define MSGDUMP_PREFIX s_prefix
-#include "msgdump.h" /* msgdump.h needs MSGDUMP_PRINTF and MSGDUMP_PREFIX */
+#ifdef VERBOSE
+    #define MSGDUMP_PRINTF trace
+    #define MSGDUMP_PREFIX s_prefix
+    #include "msgdump.h" /* msgdump.h needs MSGDUMP_PRINTF and MSGDUMP_PREFIX */
+#else
+    #define MD_msgdump(hwnd, uMsg, wParam, lParam)
+    #define MD_msgresult(hwnd, uMsg, wParam, lParam, lResult)
+#endif
 
 static void MD_build_prefix(void)
 {
