@@ -2,16 +2,11 @@
  * PROJECT:     ReactOS header files
  * LICENSE:     CC-BY-4.0 (https://spdx.org/licenses/CC-BY-4.0)
  * PURPOSE:     Win32API message dumping
- * COPYRIGHT:   Copyright 2018-2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2018-2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #ifndef _INC_MSGDUMP
-#define _INC_MSGDUMP    19   /* Version 19 */
+#define _INC_MSGDUMP    21   /* Version 21 */
 
-/*
- * NOTE: MD_msgdump function in this file provides Win32API message dump feature.
- * NOTE: This header file takes time to compile.
- *       You might indirectly use MD_msgdump function.
- */
 #pragma once
 
 #ifndef _INC_WINXX
@@ -23,7 +18,7 @@
 #include <strsafe.h>
 
 #ifndef MSGDUMP_PRINTF
-    #error Please define MSGDUMP_PRINTF macro before #include "msgdump.h".
+    #define MSGDUMP_PRINTF printf
 #endif
 
 #ifndef MSGDUMP_API
@@ -34,13 +29,26 @@
     #define MSGDUMP_PREFIX ""
 #endif
 
+typedef LRESULT (CALLBACK *MD_MSGRESULT_PROC)(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                              LRESULT lResult);
+
 /* MD_msgdump function */
 static __inline LRESULT MSGDUMP_API
 MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static __inline LRESULT MSGDUMP_API
+MD_msgdump_ex(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, WNDPROC fnDefProc);
 
 /* MD_msgresult function */
 static __inline LRESULT MSGDUMP_API
 MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult);
+static __inline LRESULT MSGDUMP_API
+MD_msgresult_ex(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult,
+                MD_MSGRESULT_PROC fnDefProc);
+
+static __inline LRESULT CALLBACK
+MD_msgdump_def_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static __inline LRESULT CALLBACK
+MD_msgresult_def_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult);
 
 /*---- The below codes are boring details of MD_msgdump and MD_msgresult implementation. ----*/
 
@@ -65,8 +73,7 @@ static __inline LRESULT MSGDUMP_API
 MD_OnUnknown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     char szName[64];
-    if (0xC000 <= uMsg && uMsg <= 0xFFFF &&
-        GlobalGetAtomNameA(uMsg, szName, _countof(szName)))
+    if (0xC000 <= uMsg && uMsg <= 0xFFFF && GlobalGetAtomNameA(uMsg, szName, _countof(szName)))
     {
         /* RegisterWindowMessage'd message */
         MSGDUMP_PRINTF("%s'%s'(%u)(hwnd:%p, wParam:%p, lParam:%p)\n",
@@ -169,18 +176,18 @@ MD_OnSetRedraw(HWND hwnd, BOOL fRedraw)
 }
 
 static __inline void MSGDUMP_API
-MD_OnSetText(HWND hwnd, PCSTR lpszText)
+MD_OnSetText(HWND hwnd, LPCVOID lpszText)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sWM_SETTEXT(hwnd:%p, lpszText:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, (PCWSTR)lpszText);
     else
-        MSGDUMP_PRINTF("%sWM_SETTEXT(hwnd:%p, lpszText:%s)\n",
+        MSGDUMP_PRINTF("%sWM_SETTEXT(hwnd:%p, lpszText:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, (PCSTR)lpszText);
 }
 
 static __inline INT MSGDUMP_API
-MD_OnGetText(HWND hwnd, int cchTextMax, LPTSTR lpszText)
+MD_OnGetText(HWND hwnd, int cchTextMax, PVOID lpszText)
 {
     MSGDUMP_PRINTF("%sWM_GETTEXT(hwnd:%p, cchTextMax:%d, lpszText:%p)\n",
                    MSGDUMP_PREFIX, (void *)hwnd, cchTextMax, (void *)lpszText);
@@ -262,21 +269,25 @@ MD_OnShowWindow(HWND hwnd, BOOL fShow, UINT status)
 }
 
 static __inline LRESULT MSGDUMP_API
-MD_OnSettingChange(HWND hwnd, UINT_PTR wFlag, PCSTR pszSection)
+MD_OnSettingChange(HWND hwnd, UINT_PTR wFlag, LPCVOID pszSection)
 {
-    MSGDUMP_PRINTF("%sWM_SETTINGCHANGE(hwnd:%p, wFlag:%p, pszSection:%s)\n",
-                   MSGDUMP_PREFIX, (void *)hwnd, (void *)wFlag, pszSection);
+    if (IsWindowUnicode(hwnd))
+        MSGDUMP_PRINTF("%sWM_SETTINGCHANGE(hwnd:%p, wFlag:%p, pszSection:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)wFlag, (PCWSTR)pszSection);
+    else
+        MSGDUMP_PRINTF("%sWM_SETTINGCHANGE(hwnd:%p, wFlag:%p, pszSection:%hs)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)wFlag, (PCSTR)pszSection);
     return 0;
 }
 
 static __inline void MSGDUMP_API
-MD_OnDevModeChange(HWND hwnd, PCSTR lpszDeviceName)
+MD_OnDevModeChange(HWND hwnd, LPCVOID lpszDeviceName)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sWM_DEVMODECHANGE(hwnd:%p, lpszDeviceName:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, (PCWSTR)lpszDeviceName);
     else
-        MSGDUMP_PRINTF("%sWM_DEVMODECHANGE(hwnd:%p, lpszDeviceName:%s)\n",
+        MSGDUMP_PRINTF("%sWM_DEVMODECHANGE(hwnd:%p, lpszDeviceName:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, (PCSTR)lpszDeviceName);
 }
 
@@ -483,7 +494,7 @@ MD_OnCopyData(HWND hwnd, HWND hwndFrom, PCOPYDATASTRUCT pcds)
 static __inline LPCSTR MSGDUMP_API
 MD_GetNotifyCode(HWND hwndFrom, UINT code)
 {
-    char szClass[24], sz[2];
+    char szClass[64], sz[2];
     static char s_szText[64];
 
     switch (code)
@@ -642,7 +653,8 @@ MD_GetNotifyCode(HWND hwndFrom, UINT code)
 static __inline LRESULT MSGDUMP_API
 MD_OnNotify(HWND hwnd, int idFrom, LPNMHDR pnmhdr)
 {
-    MSGDUMP_PRINTF("%sWM_NOTIFY(hwnd:%p, idFrom:%d, pnmhdr:%p, hwndFrom:%p, pnmhdr->idFrom:%d, code:%s)\n",
+    MSGDUMP_PRINTF("%sWM_NOTIFY(hwnd:%p, idFrom:%d, pnmhdr:%p, "
+                   "hwndFrom:%p, pnmhdr->idFrom:%d, code:%s)\n",
                    MSGDUMP_PREFIX, (void *)hwnd, idFrom, (void *)pnmhdr,
                    pnmhdr->hwndFrom, pnmhdr->idFrom,
                    MD_GetNotifyCode(pnmhdr->hwndFrom, pnmhdr->code));
@@ -1049,7 +1061,8 @@ static __inline void MSGDUMP_API
 MD_MDIActivate(HWND hwnd, BOOL fActive, HWND hwndActivate, HWND hwndDeactivate)
 {
     MSGDUMP_PRINTF("%sWM_MDIACTIVATE(hwnd:%p, fActive:%d, hwndActivate:%p, hwndDeactivate:%p)\n",
-                   MSGDUMP_PREFIX, (void *)hwnd, fActive, (void *)hwndActivate, (void *)hwndDeactivate);
+                   MSGDUMP_PREFIX, (void *)hwnd, fActive, (void *)hwndActivate,
+                   (void *)hwndDeactivate);
 }
 
 static __inline void MSGDUMP_API
@@ -1159,7 +1172,8 @@ static __inline HMENU MSGDUMP_API
 MD_MDISetMenu(HWND hwnd, BOOL fRefresh, HMENU hmenuFrame, HMENU hmenuWindow)
 {
     MSGDUMP_PRINTF("%sWM_MDISETMENU(hwnd:%p, fRefresh:%d, hmenuFrame:%p, hmenuWindow:%p)\n",
-                   MSGDUMP_PREFIX, (void *)hwnd, fRefresh, (void *)hmenuFrame, (void *)hmenuWindow);
+                   MSGDUMP_PREFIX, (void *)hwnd, fRefresh, (void *)hmenuFrame,
+                   (void *)hmenuWindow);
     return NULL;
 }
 
@@ -1258,7 +1272,7 @@ MD_OnSizeClipboard(HWND hwnd, HWND hwndCBViewer, const LPRECT lprc)
 }
 
 static __inline void MSGDUMP_API
-MD_OnAskCBFormatName(HWND hwnd, int cchMax, LPTSTR rgchName)
+MD_OnAskCBFormatName(HWND hwnd, int cchMax, PVOID rgchName)
 {
     MSGDUMP_PRINTF("%sWM_ASKCBFORMATNAME(hwnd:%p, cchMax:%d, rgchName:%p)\n",
                    MSGDUMP_PREFIX, (void *)hwnd, cchMax, (void *)rgchName);
@@ -1431,8 +1445,9 @@ MD_OnNCXButtonDown(HWND hwnd, BOOL fDoubleClick, UINT nHitTest, WORD fwButton,
 {
     if (fDoubleClick)
     {
-        MSGDUMP_PRINTF("%sWM_NCXBUTTONDBLCLK(hwnd:%p, nHitTest:%u, fwButton:%u, xPos:%d, yPos:%d)\n",
-                      MSGDUMP_PREFIX, (void *)hwnd, nHitTest, fwButton, xPos, yPos);
+        MSGDUMP_PRINTF("%sWM_NCXBUTTONDBLCLK(hwnd:%p, nHitTest:%u, fwButton:%u, "
+                       "xPos:%d, yPos:%d)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, nHitTest, fwButton, xPos, yPos);
     }
     else
     {
@@ -1867,7 +1882,7 @@ MD_Edit_OnLineLength(HWND hwnd, INT ich)
 }
 
 static __inline void MSGDUMP_API
-MD_Edit_OnReplaceSel(HWND hwnd, BOOL fCanUndo, PCSTR lpszReplace)
+MD_Edit_OnReplaceSel(HWND hwnd, BOOL fCanUndo, LPCVOID lpszReplace)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sEM_REPLACESEL(hwnd:%p, fCanUndo:%d, %ls)\n",
@@ -1878,13 +1893,13 @@ MD_Edit_OnReplaceSel(HWND hwnd, BOOL fCanUndo, PCSTR lpszReplace)
 }
 
 static __inline INT MSGDUMP_API
-MD_Edit_OnGetLine(HWND hwnd, INT line, PCSTR lpch)
+MD_Edit_OnGetLine(HWND hwnd, INT line, LPCVOID lpch)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sEM_GETLINE(hwnd:%p, line:%d, lpch:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, line, (PCWSTR)lpch);
     else
-        MSGDUMP_PRINTF("%sEM_GETLINE(hwnd:%p, line:%d, lpch:%s)\n",
+        MSGDUMP_PRINTF("%sEM_GETLINE(hwnd:%p, line:%d, lpch:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, line, (PCSTR)lpch);
     return 0;
 }
@@ -2077,25 +2092,25 @@ MD_Static_OnGetImage(HWND hwnd, UINT fImageType)
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnAddString(HWND hwnd, PCSTR lpsz)
+MD_ListBox_OnAddString(HWND hwnd, LPCVOID lpsz)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sLB_ADDSTRING(hwnd:%p, lpsz:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, (PCWSTR)lpsz);
     else
-        MSGDUMP_PRINTF("%sLB_ADDSTRING(hwnd:%p, lpsz:%s)\n",
+        MSGDUMP_PRINTF("%sLB_ADDSTRING(hwnd:%p, lpsz:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, (PCSTR)lpsz);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnInsertString(HWND hwnd, INT index, PCSTR lpsz)
+MD_ListBox_OnInsertString(HWND hwnd, INT index, LPCVOID lpsz)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sLB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, index, (PCWSTR)lpsz);
     else
-        MSGDUMP_PRINTF("%sLB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%s)\n",
+        MSGDUMP_PRINTF("%sLB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, index, (PCSTR)lpsz);
     return 0;
 }
@@ -2156,7 +2171,7 @@ MD_ListBox_OnGetCurSel(HWND hwnd)
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnGetText(HWND hwnd, INT index, LPTSTR lpszBuffer)
+MD_ListBox_OnGetText(HWND hwnd, INT index, PVOID lpszBuffer)
 {
     MSGDUMP_PRINTF("%sLB_GETTEXT(hwnd:%p, lpszBuffer:%p)\n",
                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpszBuffer);
@@ -2180,25 +2195,25 @@ MD_ListBox_OnGetCount(HWND hwnd)
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnSelectString(HWND hwnd, INT indexStart, PCSTR lpszFind)
+MD_ListBox_OnSelectString(HWND hwnd, INT indexStart, LPCVOID lpszFind)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sLB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszFind:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszFind);
     else
-        MSGDUMP_PRINTF("%sLB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszFind:%s)\n",
+        MSGDUMP_PRINTF("%sLB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszFind:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszFind);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnDir(HWND hwnd, UINT uAttrs, PCSTR lpszFileSpec)
+MD_ListBox_OnDir(HWND hwnd, UINT uAttrs, LPCVOID lpszFileSpec)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sLB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (PCWSTR)lpszFileSpec);
     else
-        MSGDUMP_PRINTF("%sLB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%s)\n",
+        MSGDUMP_PRINTF("%sLB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (PCSTR)lpszFileSpec);
     return 0;
 }
@@ -2212,13 +2227,13 @@ MD_ListBox_OnGetTopIndex(HWND hwnd)
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnFindString(HWND hwnd, INT indexStart, PCSTR lpszFind)
+MD_ListBox_OnFindString(HWND hwnd, INT indexStart, LPCVOID lpszFind)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sLB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszFind);
     else
-        MSGDUMP_PRINTF("%sLB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%s)\n",
+        MSGDUMP_PRINTF("%sLB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszFind);
     return 0;
 }
@@ -2270,13 +2285,13 @@ MD_ListBox_OnSetColumnWidth(HWND hwnd, INT cxColumn)
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnAddFile(HWND hwnd, PCSTR lpszFilename)
+MD_ListBox_OnAddFile(HWND hwnd, LPCVOID lpszFilename)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sLB_ADDFILE(hwnd:%p, lpszFilename:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, (PCWSTR)lpszFilename);
     else
-        MSGDUMP_PRINTF("%sLB_ADDFILE(hwnd:%p, lpszFilename:%s)\n",
+        MSGDUMP_PRINTF("%sLB_ADDFILE(hwnd:%p, lpszFilename:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, (PCSTR)lpszFilename);
     return 0;
 }
@@ -2370,13 +2385,13 @@ MD_ListBox_OnGetItemHeight(HWND hwnd, INT index)
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnFindStringExact(HWND hwnd, INT indexStart, PCSTR lpszFind)
+MD_ListBox_OnFindStringExact(HWND hwnd, INT indexStart, LPCVOID lpszFind)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sLB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszFind);
     else
-        MSGDUMP_PRINTF("%sLB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%s)\n",
+        MSGDUMP_PRINTF("%sLB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszFind);
     return 0;
 }
@@ -2445,13 +2460,13 @@ MD_ComboBox_OnSetEditSel(HWND hwnd, INT ichStart, INT ichEnd)
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnAddString(HWND hwnd, PCSTR lpsz)
+MD_ComboBox_OnAddString(HWND hwnd, LPCVOID lpsz)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sCB_ADDSTRING(hwnd:%p, lpsz:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, (PCWSTR)lpsz);
     else
-        MSGDUMP_PRINTF("%sCB_ADDSTRING(hwnd:%p, lpsz:%s)\n",
+        MSGDUMP_PRINTF("%sCB_ADDSTRING(hwnd:%p, lpsz:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, (PCSTR)lpsz);
     return 0;
 }
@@ -2465,13 +2480,13 @@ MD_ComboBox_OnDeleteString(HWND hwnd, INT index)
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnDir(HWND hwnd, UINT uAttrs, PCSTR lpszFileSpec)
+MD_ComboBox_OnDir(HWND hwnd, UINT uAttrs, LPCVOID lpszFileSpec)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sCB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (PCWSTR)lpszFileSpec);
     else
-        MSGDUMP_PRINTF("%sCB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%s)\n",
+        MSGDUMP_PRINTF("%sCB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (PCSTR)lpszFileSpec);
     return 0;
 }
@@ -2509,13 +2524,13 @@ MD_ComboBox_OnGetLBTextLen(HWND hwnd, INT index)
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnInsertString(HWND hwnd, INT index, PCSTR lpsz)
+MD_ComboBox_OnInsertString(HWND hwnd, INT index, LPCVOID lpsz)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sCB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, index, (PCWSTR)lpsz);
     else
-        MSGDUMP_PRINTF("%sCB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%s)\n",
+        MSGDUMP_PRINTF("%sCB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, index, (PCSTR)lpsz);
     return 0;
 }
@@ -2528,25 +2543,25 @@ MD_ComboBox_OnResetContent(HWND hwnd)
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnFindString(HWND hwnd, INT indexStart, PCSTR lpszFind)
+MD_ComboBox_OnFindString(HWND hwnd, INT indexStart, LPCVOID lpszFind)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sCB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszFind);
     else
-        MSGDUMP_PRINTF("%sCB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%s)\n",
+        MSGDUMP_PRINTF("%sCB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszFind);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnSelectString(HWND hwnd, INT indexStart, PCSTR lpszSelect)
+MD_ComboBox_OnSelectString(HWND hwnd, INT indexStart, LPCVOID lpszSelect)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sCB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszSelect:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszSelect);
     else
-        MSGDUMP_PRINTF("%sCB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszSelect:%s)\n",
+        MSGDUMP_PRINTF("%sCB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszSelect:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszSelect);
     return 0;
 }
@@ -2631,13 +2646,13 @@ MD_ComboBox_OnGetDroppedState(HWND hwnd)
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnFindStringExact(HWND hwnd, INT indexStart, PCSTR lpszFind)
+MD_ComboBox_OnFindStringExact(HWND hwnd, INT indexStart, LPCVOID lpszFind)
 {
     if (IsWindowUnicode(hwnd))
         MSGDUMP_PRINTF("%sCB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%ls)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszFind);
     else
-        MSGDUMP_PRINTF("%sCB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%s)\n",
+        MSGDUMP_PRINTF("%sCB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%hs)\n",
                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszFind);
     return 0;
 }
@@ -4652,9 +4667,9 @@ MD_RichEdit_OnGetTextMode(HWND hwnd)
 }
 
 static __inline LRESULT MSGDUMP_API
-MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+MD_msgdump_ex(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, WNDPROC fnDefProc)
 {
-    char szClass[24], sz[2], szMsg[64];
+    char szClass[64], sz[2];
     szClass[0] = 0;
     GetClassNameA(hwnd, szClass, _countof(szClass));
     sz[0] = szClass[0];
@@ -5340,36 +5355,35 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_APPCOMMAND, MD_OnAppCommand);
 #endif
         default:
-        {
-            if (WM_USER <= uMsg && uMsg < WM_APP)
-            {
-                return MD_OnUser(hwnd, uMsg, wParam, lParam);
-            }
-            if (WM_APP <= uMsg && uMsg < MAXINTATOM)
-            {
-                return MD_OnApp(hwnd, uMsg, wParam, lParam);
-            }
-            else if (MAXINTATOM <= uMsg && uMsg <= MAXWORD &&
-                     GetClipboardFormatNameA(uMsg, szMsg, _countof(szMsg)))
-            {
-                MSGDUMP_PRINTF("%sWM_%u[\"%s\"](hwnd:%p, wParam:%p, lParam:%p)\n",
-                               MSGDUMP_PREFIX, uMsg, szMsg, (void *)hwnd, (void *)wParam, (void *)lParam);
-            }
-            else
-            {
-                return MD_OnUnknown(hwnd, uMsg, wParam, lParam);
-            }
-        }
+            return fnDefProc(hwnd, uMsg, wParam, lParam);
     }
     return 0;
 }
 
-static __inline LRESULT MSGDUMP_API
-MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult)
+static __inline LRESULT CALLBACK
+MD_msgdump_def_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-#define DEFINE_RESULT(WM_) case WM_: MSGDUMP_PRINTF("%s" #WM_ ": hwnd:%p, lResult:%p\n", \
-                                                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lResult); break
-    char szClass[24], sz[2], szMsg[64];
+    if (WM_USER <= uMsg && uMsg < WM_APP)
+        return MD_OnUser(hwnd, uMsg, wParam, lParam);
+    if (WM_APP <= uMsg && uMsg < MAXINTATOM)
+        return MD_OnApp(hwnd, uMsg, wParam, lParam);
+    return MD_OnUnknown(hwnd, uMsg, wParam, lParam);
+}
+
+static __inline LRESULT MSGDUMP_API
+MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return MD_msgdump_ex(hwnd, uMsg, wParam, lParam, MD_msgdump_def_proc);
+}
+
+static __inline LRESULT MSGDUMP_API
+MD_msgresult_ex(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult,
+                MD_MSGRESULT_PROC fnDefProc)
+{
+#define DEFINE_RESULT(WM_) \
+    case WM_: MSGDUMP_PRINTF("%s" #WM_ ": hwnd:%p, lResult:%p\n", \
+                             MSGDUMP_PREFIX, (void *)hwnd, (void *)lResult); break
+    char szClass[64], sz[2];
     szClass[0] = 0;
     GetClassNameA(hwnd, szClass, _countof(szClass));
     sz[0] = szClass[0];
@@ -6069,30 +6083,46 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
     DEFINE_RESULT(WM_GETTITLEBARINFOEX);
 #endif
     default:
-        if (WM_USER <= uMsg && uMsg < WM_APP)
-        {
-            MSGDUMP_PRINTF("%sWM_USER+%u(hwnd:%p, lResult:%p)\n",
-                           MSGDUMP_PREFIX, uMsg - WM_USER, (void *)hwnd, (void *)lResult);
-        }
-        else if (WM_APP <= uMsg && uMsg < MAXINTATOM)
-        {
-            MSGDUMP_PRINTF("%sWM_APP+%u(hwnd:%p, lResult:%p)\n",
-                           MSGDUMP_PREFIX, uMsg - WM_APP, (void *)hwnd, (void *)lResult);
-        }
-        else if (MAXINTATOM <= uMsg && uMsg <= MAXWORD &&
-                 GetClipboardFormatNameA(uMsg, szMsg, _countof(szMsg)))
-        {
-            MSGDUMP_PRINTF("%sWM_%u[\"%s\"](hwnd:%p, lResult:%p)\n",
-                           MSGDUMP_PREFIX, uMsg, szMsg, (void *)hwnd, (void *)lResult);
-        }
-        else
-        {
-            MSGDUMP_PRINTF("%sWM_%u(hwnd:%p, lResult:%p)\n",
-                           MSGDUMP_PREFIX, uMsg, (void *)hwnd, (void *)lResult);
-        }
+        return fnDefProc(hwnd, uMsg, wParam, lParam, lResult);
 #undef DEFINE_RESULT
     }
     return 0;
+}
+
+static __inline LRESULT CALLBACK
+MD_msgresult_def_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult)
+{
+    CHAR szName[64];
+    if (WM_USER <= uMsg && uMsg < WM_APP)
+    {
+        MSGDUMP_PRINTF("%sWM_USER+%u(hwnd:%p, lResult:%p)\n",
+                       MSGDUMP_PREFIX, uMsg - WM_USER, (void *)hwnd, (void *)lResult);
+    }
+    else if (WM_APP <= uMsg && uMsg < MAXINTATOM)
+    {
+        MSGDUMP_PRINTF("%sWM_APP+%u(hwnd:%p, lResult:%p)\n",
+                       MSGDUMP_PREFIX, uMsg - WM_APP, (void *)hwnd, (void *)lResult);
+    }
+    else if (0xC000 <= uMsg && uMsg <= 0xFFFF &&
+             GlobalGetAtomNameA(uMsg, szName, _countof(szName)))
+    {
+        /* RegisterWindowMessage'd message */
+        MSGDUMP_PRINTF("%s'%s'(%u)(hwnd:%p, wParam:%p, lParam:%p)\n",
+                       MSGDUMP_PREFIX, szName, uMsg, (void *)hwnd, (void *)wParam,
+                       (void *)lParam);
+    }
+    else
+    {
+        MSGDUMP_PRINTF("%sWM_%u(hwnd:%p, lResult:%p)\n",
+                       MSGDUMP_PREFIX, uMsg, (void *)hwnd, (void *)lResult);
+    }
+    return 0;
+}
+
+static __inline LRESULT MSGDUMP_API
+MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult)
+{
+    return MD_msgresult_ex(hwnd, uMsg, wParam, lParam, lResult, MD_msgresult_def_proc);
 }
 
 #endif

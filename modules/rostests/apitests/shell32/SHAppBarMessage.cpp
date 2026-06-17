@@ -74,21 +74,7 @@ SHAppBarMessageWrap(DWORD dwMessage, PAPPBARDATA pData)
 #undef ARRAYSIZE
 #define ARRAYSIZE _countof
 
-void appbar_tprintf(const TCHAR *fmt, ...)
-{
-    TCHAR szText[512];
-    va_list va;
-    va_start(va, fmt);
-    wvsprintf(szText, fmt, va);
-#ifdef UNICODE
-    printf("%ls", szText);
-#else
-    printf("%s", szText);
-#endif
-    va_end(va);
-}
-
-#define MSGDUMP_TPRINTF appbar_tprintf
+#define MSGDUMP_PRINTF printf
 #include "msgdump.h"
 
 #endif  // def VERBOSE
