@@ -325,17 +325,23 @@ typedef struct _OBJECT_TYPE_INFORMATION
     ULONG ValidAccessMask;
     BOOLEAN SecurityRequired;
     BOOLEAN MaintainHandleCount;
+#if (NTDDI_VERSION >= NTDDI_WINBLUE)
+    UCHAR TypeIndex;
+    CHAR ReservedByte;
+#else
+    CHAR Reserved[2];
+#endif
     ULONG PoolType;
     ULONG DefaultPagedPoolCharge;
     ULONG DefaultNonPagedPoolCharge;
     // WCHAR TypeNameBuffer[1];
 } OBJECT_TYPE_INFORMATION, *POBJECT_TYPE_INFORMATION;
 
-typedef struct _OBJECT_ALL_TYPES_INFORMATION
+typedef struct _OBJECT_TYPES_INFORMATION
 {
     ULONG NumberOfTypes;
     // OBJECT_TYPE_INFORMATION TypeInformation[1];
-} OBJECT_ALL_TYPES_INFORMATION, *POBJECT_ALL_TYPES_INFORMATION;
+} OBJECT_TYPES_INFORMATION, *POBJECT_TYPES_INFORMATION;
 
 typedef struct _OBJECT_HANDLE_ATTRIBUTE_INFORMATION
 {
