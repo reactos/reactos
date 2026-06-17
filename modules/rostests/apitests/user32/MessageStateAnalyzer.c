@@ -11,7 +11,7 @@
 #include <imm.h>
 #include <strsafe.h>
 
-/* #define VERBOSE */
+//#define VERBOSE
 
 #define MAX_MSGS 512
 

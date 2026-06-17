@@ -12,7 +12,7 @@
 
 /* Based on https://github.com/katahiromz/AppBarSample */
 
-/* #define VERBOSE */
+//#define VERBOSE
 
 #define IDT_AUTOHIDE 1
 #define IDT_AUTOUNHIDE 2
