@@ -24,7 +24,7 @@ static WNDPROC s_fnOldImeWndProc = NULL;
 
 #define MSGDUMP_PRINTF trace
 #define MSGDUMP_PREFIX s_prefix
-#include "msgdump.h"    /* msgdump.h needs MSGDUMP_TPRINTF and MSGDUMP_PREFIX */
+#include "msgdump.h" /* msgdump.h needs MSGDUMP_PRINTF and MSGDUMP_PREFIX */
 
 static void MD_build_prefix(void)
 {
