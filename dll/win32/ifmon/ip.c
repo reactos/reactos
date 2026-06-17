@@ -21,7 +21,18 @@
 #define DISPLAY_ADRESSES   0x1
 #define DISPLAY_DNS        0x2
 
+#define SOURCE_UNCHANGED   0
+#define SOURCE_STATIC      1
+#define SOURCE_DHCP        2
+
+#define GATEWAY_NONE       1
+
+#define REGISTER_NONE      1
+#define REGISTER_PRIMARY   2
+#define REGISTER_BOTH      3
+
 static FN_HANDLE_CMD IpSetAddress;
+static FN_HANDLE_CMD IpSetDns;
 static FN_HANDLE_CMD IpShowAddresses;
 static FN_HANDLE_CMD IpShowConfig;
 static FN_HANDLE_CMD IpShowDns;
@@ -31,7 +42,8 @@ static
 CMD_ENTRY
 IpSetCommands[] = 
 {
-    {L"address", IpSetAddress, IDS_HLP_IP_SET_ADDRESS, IDS_HLP_IP_SET_ADDRESS_EX, 0}
+    {L"address", IpSetAddress, IDS_HLP_IP_SET_ADDRESS, IDS_HLP_IP_SET_ADDRESS_EX, 0},
+    {L"dns", IpSetDns, IDS_HLP_IP_SET_DNS, IDS_HLP_IP_SET_DNS_EX, 0}
 };
 
 
@@ -407,11 +419,12 @@ IpSetAddress(
                           {L"mask", NS_REQ_ZERO, FALSE},
                           {L"gateway", NS_REQ_ZERO, FALSE},
                           {L"gwmetric", NS_REQ_ZERO, FALSE}};
-    TOKEN_VALUE ptvSource[] = {{L"static", 1},
-                               {L"dhcp", 2}};
+    TOKEN_VALUE ptvSource[] = {{L"static", SOURCE_STATIC},
+                               {L"dhcp", SOURCE_DHCP}};
+    TOKEN_VALUE ptvGateway[] = {{L"none", GATEWAY_NONE}};
     GUID InterfaceGUID;
     PDWORD pdwTagType = NULL;
-    DWORD i, dwSource = 0;
+    DWORD i, dwSource = SOURCE_UNCHANGED, dwGateway = 0;
     BOOL bHaveName = FALSE, bHaveSource = FALSE, bHaveAddress = FALSE,
          bHaveMask = FALSE, bHaveGateway = FALSE, bHaveMetric = FALSE;
     IN_ADDR Address, Mask, Gateway;
@@ -545,23 +558,36 @@ IpSetAddress(
 
             case 4: /* gateway */
                 DPRINT("Tag: gateway (%S)\n", argv[i + dwCurrentIndex]);
-                Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
-                                                 TRUE,
-                                                 &Term,
-                                                 &Gateway);
-                if (Status != 0 /*STATUS_SUCCESS*/)
+                dwError = MatchEnumTag(hDllInstance,
+                                       argv[i + dwCurrentIndex],
+                                       ARRAYSIZE(ptvGateway),
+                                       ptvGateway,
+                                       &dwGateway);
+                if (dwError == ERROR_SUCCESS)
                 {
-                    DPRINT("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
-                    PrintMessageFromModule(hDllInstance,
-                                           IDS_ERROR_BAD_VALUE,
-                                           argv[i + dwCurrentIndex],
-                                           pttTags[pdwTagType[i]].pwszTag);
-                    dwError = ERROR_SUPPRESS_OUTPUT;
-                    break;
+                    pszGateway = NULL;
+                    pszGwMetric = NULL;
                 }
-                pszGateway = argv[i + dwCurrentIndex];
-                DPRINT("Gateway: %u.%u.%u.%u\n",
-                       Gateway.S_un.S_un_b.s_b1, Gateway.S_un.S_un_b.s_b2, Gateway.S_un.S_un_b.s_b3, Gateway.S_un.S_un_b.s_b4);
+                else
+                {
+                    Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
+                                                    TRUE,
+                                                    &Term,
+                                                    &Gateway);
+                    if (Status != 0 /*STATUS_SUCCESS*/)
+                    {
+                        DPRINT("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
+                        PrintMessageFromModule(hDllInstance,
+                                            IDS_ERROR_BAD_VALUE,
+                                            argv[i + dwCurrentIndex],
+                                            pttTags[pdwTagType[i]].pwszTag);
+                        dwError = ERROR_SUPPRESS_OUTPUT;
+                        break;
+                    }
+                    pszGateway = argv[i + dwCurrentIndex];
+                    DPRINT("Gateway: %u.%u.%u.%u\n",
+                        Gateway.S_un.S_un_b.s_b1, Gateway.S_un.S_un_b.s_b2, Gateway.S_un.S_un_b.s_b3, Gateway.S_un.S_un_b.s_b4);
+                }
                 bHaveGateway = TRUE;
                 break;
 
@@ -598,19 +624,22 @@ IpSetAddress(
     if (bHaveName == FALSE)
         return ERROR_INVALID_SYNTAX;
 
-    if (bHaveSource)
-    {
-        if ((dwSource == 1) &&
-            (!bHaveAddress || !bHaveMask))
-            return ERROR_INVALID_SYNTAX;
+    /* We need address and mask, or none of them */
+    if ((bHaveAddress && !bHaveMask) ||
+        (!bHaveAddress && bHaveMask))
+        return ERROR_INVALID_SYNTAX;
 
-        if ((dwSource == 2) &&
-            (bHaveAddress || bHaveMask))
-            return ERROR_INVALID_SYNTAX;
-    }
+    /* If we have an address, we need a source */
+    if (bHaveAddress && !bHaveSource)
+        return ERROR_INVALID_SYNTAX;
 
+    /* We need gateway and metric, or none of them */
     if ((bHaveGateway && !bHaveMetric) ||
         (!bHaveGateway && bHaveMetric))
+        return ERROR_INVALID_SYNTAX;
+
+    /* If we have a static source, we need an address or a gateway */
+    if ((dwSource == SOURCE_STATIC) && !bHaveAddress && !bHaveGateway)
         return ERROR_INVALID_SYNTAX;
 
     hr = GetInterfaceProperties(&InterfaceGUID, &pProperties);
@@ -629,7 +658,7 @@ IpSetAddress(
         goto done;
     }
 
-    if (dwSource == 1)
+    if (dwSource == SOURCE_STATIC)
     {
         /* STATIC */
         NewProperties.dwDhcp = 0;
@@ -650,7 +679,7 @@ IpSetAddress(
                              L"0.0.0.0", L"0");
         }
     }
-    else if (dwSource == 2)
+    else if (dwSource == SOURCE_DHCP)
     {
         /* DHCP */
         if (pProperties->dwDhcp)
@@ -684,6 +713,223 @@ done:
     return dwError;
 }
 
+static
+DWORD
+WINAPI
+IpSetDns(
+    LPCWSTR pwszMachine,
+    LPWSTR *argv,
+    DWORD dwCurrentIndex,
+    DWORD dwArgCount,
+    DWORD dwFlags,
+    LPCVOID pvData,
+    BOOL *pbDone)
+{
+    TAG_TYPE pttTags[] = {{L"name", NS_REQ_ZERO, FALSE},
+                          {L"source", NS_REQ_ZERO, FALSE},
+                          {L"addr", NS_REQ_ZERO, FALSE},
+                          {L"register", NS_REQ_ZERO, FALSE}};
+    TOKEN_VALUE ptvSource[] = {{L"static", SOURCE_STATIC},
+                               {L"dhcp", SOURCE_DHCP}};
+    TOKEN_VALUE ptvRegister[] = {{L"none", REGISTER_NONE},
+                                 {L"primary", REGISTER_PRIMARY},
+                                 {L"both", REGISTER_BOTH}};
+    GUID InterfaceGUID;
+    PDWORD pdwTagType = NULL;
+    DWORD i, dwSource = SOURCE_UNCHANGED;
+    BOOL bHaveName = FALSE, bHaveSource = FALSE, bHaveAddress = FALSE /*,
+         bHaveRegister = FALSE */;
+    IN_ADDR Address;
+    PWSTR pszName = NULL, pszAddress = NULL;
+    PWSTR pszParameterBuffer = NULL;
+    PCWSTR Term;
+    DWORD dwRegister = REGISTER_NONE;
+    PTCPIP_PROPERTIES pProperties = NULL;
+    TCPIP_PROPERTIES NewProperties;
+    HRESULT hr;
+    NTSTATUS Status;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("IpSetDns()\n");
+
+    pdwTagType = HeapAlloc(GetProcessHeap(),
+                           0,
+                           (dwArgCount - dwCurrentIndex) * sizeof(DWORD));
+    if (pdwTagType == NULL)
+    {
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    dwError = MatchTagsInCmdLine(hDllInstance,
+                                 argv,
+                                 dwCurrentIndex,
+                                 dwArgCount,
+                                 pttTags,
+                                 ARRAYSIZE(pttTags),
+                                 pdwTagType);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("MatchTagsInCmdLine() failed (Error %lu)\n", dwError);
+        HeapFree(GetProcessHeap(), 0, pdwTagType);
+        return dwError;
+    }
+
+    for (i = 0; i < (dwArgCount - dwCurrentIndex); i++)
+    {
+        DPRINT("Tag %lu: %lu\n", i, pdwTagType[i]);
+
+        switch (pdwTagType[i])
+        {
+            case 0: /* name */
+                DPRINT("Tag: name (%S)\n", argv[i + dwCurrentIndex]);
+                dwError = NhGetGuidFromInterfaceName(argv[i + dwCurrentIndex],
+                                                     &InterfaceGUID,
+                                                     0, 0);
+                if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT("NhGetGuidFromInterfaceName() failed (Error %lu)\n", dwError);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_INVALID_INTERFACE,
+                                           argv[i + dwCurrentIndex]);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                pszName = argv[i + dwCurrentIndex];
+                DPRINT("Interface: {%08lx-%04hx-%04hx-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
+                       InterfaceGUID.Data1, InterfaceGUID.Data2, InterfaceGUID.Data3, InterfaceGUID.Data4[0], InterfaceGUID.Data4[1],
+                       InterfaceGUID.Data4[2], InterfaceGUID.Data4[3], InterfaceGUID.Data4[4], InterfaceGUID.Data4[5], InterfaceGUID.Data4[6], InterfaceGUID.Data4[7]);
+                bHaveName = TRUE;
+                break;
+
+            case 1: /* source */
+                DPRINT("Tag: source (%S)\n", argv[i + dwCurrentIndex]);
+                dwError = MatchEnumTag(hDllInstance,
+                                       argv[i + dwCurrentIndex],
+                                       ARRAYSIZE(ptvSource),
+                                       ptvSource,
+                                       &dwSource);
+                if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT("MatchEnumTag() failed (Error %lu)\n", dwError);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_BAD_VALUE,
+                                           argv[i + dwCurrentIndex],
+                                           pttTags[pdwTagType[i]].pwszTag);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                DPRINT("Source: %lu\n", dwSource);
+                bHaveSource = TRUE;
+                break;
+
+            case 2: /* addr */
+                DPRINT("Tag: addr (%S)\n", argv[i + dwCurrentIndex]);
+                Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
+                                                 TRUE,
+                                                 &Term,
+                                                 &Address);
+                if (Status != 0 /*STATUS_SUCCESS*/)
+                {
+                    DPRINT("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_BAD_VALUE,
+                                           argv[i + dwCurrentIndex],
+                                           pttTags[pdwTagType[i]].pwszTag);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                DPRINT("IP Address: %u.%u.%u.%u\n",
+                       Address.S_un.S_un_b.s_b1, Address.S_un.S_un_b.s_b2, Address.S_un.S_un_b.s_b3, Address.S_un.S_un_b.s_b4);
+                pszAddress = argv[i + dwCurrentIndex];
+                DPRINT("IP Address: %S\n", pszAddress);
+                bHaveAddress = TRUE;
+                break;
+
+            case 3: /* register */
+                DPRINT("Tag: register (%S)\n", argv[i + dwCurrentIndex]);
+                dwError = MatchEnumTag(hDllInstance,
+                                       argv[i + dwCurrentIndex],
+                                       ARRAYSIZE(ptvRegister),
+                                       ptvRegister,
+                                       &dwRegister);
+                if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT("MatchEnumTag() failed (Error %lu)\n", dwError);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_BAD_VALUE,
+                                           argv[i + dwCurrentIndex],
+                                           pttTags[pdwTagType[i]].pwszTag);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                DPRINT("Register: %lu\n", dwRegister);
+//                bHaveRegister = TRUE;
+                break;
+
+            default:
+                DPRINT1("Unknown tag type %lu\n", pdwTagType[i]);
+                break;
+        }
+    }
+
+    if (pdwTagType)
+        HeapFree(GetProcessHeap(), 0, pdwTagType);
+
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* Check parameters */
+
+    /* The name and source arguments are mandatory */
+    if (!bHaveName || !bHaveSource)
+        return ERROR_INVALID_SYNTAX;
+
+    /* If we have a static source, we need to have an address */
+    if ((dwSource == SOURCE_STATIC) && (!bHaveAddress))
+        return ERROR_INVALID_SYNTAX;
+
+    /* If we have a dhcp source, we must not have an address */
+    if ((dwSource == SOURCE_DHCP) && (bHaveAddress))
+        return ERROR_INVALID_SYNTAX;
+
+    hr = GetInterfaceProperties(&InterfaceGUID, &pProperties);
+    if (FAILED(hr))
+    {
+        PrintMessageFromModule(hDllInstance,
+                               IDS_ERROR_GET_PROPERTIES,
+                               pszName);
+        return ERROR_SUPPRESS_OUTPUT;
+    }
+
+    pszParameterBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, BUFFER_SIZE * sizeof(WCHAR));
+    if (pszParameterBuffer == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    StringCchPrintfW(pszParameterBuffer, BUFFER_SIZE,
+                     L"DNS=%s;DynamicUpdate=%s;NameRegistration=%s;",
+                     (pszAddress) ? pszAddress : L"",
+                     ((dwRegister == REGISTER_BOTH) || (dwRegister == REGISTER_PRIMARY)) ? L"1" : L"0",
+                     (dwRegister == REGISTER_BOTH) ? L"1" : L"0");
+
+    NewProperties.dwDhcp = pProperties->dwDhcp;
+    NewProperties.pszIpAddress = pProperties->pszIpAddress;
+    NewProperties.pszSubnetMask = pProperties->pszSubnetMask;
+    NewProperties.pszParameters = pszParameterBuffer;
+
+    SetInterfaceProperties(&InterfaceGUID, &NewProperties);
+
+done:
+    if (pszParameterBuffer)
+        HeapFree(GetProcessHeap(), 0, pszParameterBuffer);
+
+    CoTaskMemFree(pProperties);
+    pProperties = NULL;
+
+    return dwError;
+}
 
 static
 DWORD

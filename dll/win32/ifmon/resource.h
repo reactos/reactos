@@ -6,7 +6,8 @@
 #define IDS_HLP_IP_SET                      205
 #define IDS_HLP_IP_SET_ADDRESS              206
 #define IDS_HLP_IP_SET_ADDRESS_EX           207
-
+#define IDS_HLP_IP_SET_DNS                  208
+#define IDS_HLP_IP_SET_DNS_EX               209
 
 #define IDS_HLP_IP_SHOW      210
 #define IDS_HLP_ADDRESSES    211

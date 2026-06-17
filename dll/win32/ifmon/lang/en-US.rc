@@ -36,6 +36,33 @@ Examples:\n\n\
        %1!s! name=""Local Area Connection"" source=dhcp\n\
        %1!s! local static 10.0.0.9 255.0.0.0 10.0.0.1 1\n\n"
 
+    IDS_HLP_IP_SET_DNS         "Sets DNS server mode and addresses.\n"
+    IDS_HLP_IP_SET_DNS_EX      "\nUsage: %1!s! [name=]<string> [source=]dhcp|static [addr=]<IP address>|none\n\
+             [[register=]none|primary|both]\n\n\
+Parameters:\n\n\
+      Tag            Value\n\
+      name         - The name of the interface.\n\
+      source       - One of the following values:\n\
+                     dhcp: Sets DHCP as the source for configuring DNS\n\
+                           servers for the specific interface.\n\
+                     static: Sets the source for configuring DNS servers\n\
+                             to local static configuration.\n\
+      addr         - One of the following values:\n\
+                     <IP address>: An IP address for a DNS server.\n\
+                     none: Clears the list of DNS servers.\n\
+      register     - One of the following values:\n\
+                     none: Disables Dynamic DNS registration.\n\
+                     primary: Register under the primary DNS suffix only.\n\
+                     both: Register under both the primary DNS suffix, as\n\
+                           well as under the connection-specific suffix.\n\n\
+Remarks: Sets DNS server configuration to either DHCP or static mode. Only\n\
+         when source is 'static', is the 'addr' option also available for\n\
+         configuring a static list of DNS server IP addresses for the\n\
+         specified interface.\n\n\
+Examples:\n\n\
+       %1!s! name=""Local Area Connection"" source=dhcp\n\
+       %1!s! ""Local Area Connection"" static 10.0.0.1 primary\n\n"
+
     IDS_HLP_IP_SHOW      "Displays IP information.\n"
     IDS_HLP_ADDRESSES    "Displays IP address configuration.\n"
     IDS_HLP_ADDRESSES_EX "\nUsage: %1!s! [[name=]string]\n\n\
