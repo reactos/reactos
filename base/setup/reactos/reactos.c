@@ -1245,6 +1245,31 @@ SummaryDlgProc(
                     return TRUE;
                 }
 
+                case PSN_WIZBACK:
+                {
+                    if (pSetupData->RepairUpdateFlag)
+                    {
+                        if (pSetupData->NtOsInstallsList->NumOfEntries > 1)
+                        {
+                            /* Return to installations list page
+                             * when user was upgrading and there was more than one installation available
+                             */
+                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
+                        }
+                        else
+                        {
+                            /* Return to installation type page
+                             * when user was upgrading and there was less than one installation available
+                             */
+
+                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_TYPEPAGE);
+                        }
+                        
+                        return TRUE;
+                    }
+
+                }
+
                 default:
                     break;
             }
