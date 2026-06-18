@@ -10,6 +10,7 @@
 
 /* FUNCTIONS ********************************************************/
 
+// WidenPath requires a geometric pen
 HPEN CreateGeometricPen(COLORREF rgbColor, INT thickness)
 {
     LOGBRUSH logbrush;
@@ -285,9 +286,9 @@ Fill(HDC hdc, LONG x, LONG y, COLORREF color)
 void
 Fill(HDC hdc, LONG x, LONG y, HBRUSH hBrush)
 {
-    HBRUSH oldBrush = (HBRUSH) SelectObject(hdc, hBrush);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, hBrush);
     ExtFloodFill(hdc, x, y, GetPixel(hdc, x, y), FLOODFILLSURFACE);
-    DeleteObject(SelectObject(hdc, oldBrush));
+    SelectObject(hdc, oldBrush);
 }
 
 void
