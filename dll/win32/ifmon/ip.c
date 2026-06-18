@@ -455,7 +455,7 @@ IpAddAddress(
                           {L"gwmetric", NS_REQ_ZERO, FALSE}};
     GUID InterfaceGUID;
     PDWORD pdwTagType = NULL;
-    DWORD i, dwGateway = 0;
+    DWORD i;
     BOOL bHaveName = FALSE, bHaveAddress = FALSE, bHaveMask = FALSE,
          bHaveGateway = FALSE, bHaveMetric = FALSE;
     IN_ADDR Address, Mask, Gateway;
