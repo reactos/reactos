@@ -27,7 +27,6 @@ HANDLE WINAPI SHGlobalCounterCreate(REFGUID guid);
 PVOID WINAPI SHInterlockedCompareExchange(PVOID *dest, PVOID xchg, PVOID compare);
 LONG WINAPI SHGlobalCounterGetValue(HANDLE hGlobalCounter);
 LONG WINAPI SHGlobalCounterIncrement(HANDLE hGlobalCounter);
-INT WINAPI SHRestrictedMessageBox(_In_ HWND hWnd);
 
 #if FALSE && ((DLL_EXPORT_VERSION) >= _WIN32_WINNT_VISTA)
 #define SHELL_GCOUNTER_DEFINE_GUID(name, a, b, c, d, e, f, g, h, i, j, k) enum { SHELLUNUSEDCOUNTERGUID_##name }
@@ -58,6 +57,8 @@ SHRestrictionLookup(
     _In_ LPCWSTR key,
     _In_ const POLICYDATA *polTable,
     _Inout_ LPDWORD polArr);
+
+INT WINAPI SHRestrictedMessageBox(_In_ HWND hWnd);
 
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
