@@ -181,8 +181,10 @@ HRESULT CFolder::CopyMoveOperation(VARIANT &vItem, VARIANT vOptions, BOOL bCopy)
         UINT flags = V_I4(&vOptions) & ~(FOF_MULTIDESTFILES | FOF_WANTMAPPINGHANDLE);
         if (flags)
         {
-            UINT cfFOF = RegisterClipboardFormatW(L"FileOpFlags");
-            DataObj_SetDWORD(pDO, cfFOF, flags);
+            extern UINT g_cf_FileOpFlags;
+            if (!g_cf_FileOpFlags)
+                g_cf_FileOpFlags = RegisterClipboardFormatW(L"FileOpFlags");
+            DataObj_SetDWORD(pDO, g_cf_FileOpFlags, flags);
         }
     }
     hr = SH32_SimulateDropWithSite(pDT, pDO, MK_LBUTTON | (bCopy ? MK_CONTROL : MK_SHIFT), NULL, NULL, GetSite());

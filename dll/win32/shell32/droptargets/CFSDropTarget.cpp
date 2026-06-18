@@ -70,10 +70,13 @@ static void GetDefaultCopyMoveEffect()
     // FIXME: When the source is on a different volume than the target, change default from move to copy
 }
 
+UINT g_cf_FileOpFlags = 0;
+
 static inline DWORD GetDefaultFileOpFlags(IDataObject *pDO, DWORD fDefault = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR)
 {
-	UINT cfFOF = RegisterClipboardFormatW(L"FileOpFlags"); // github.com/dotnet/winforms/issues/5884?timeline_page=1
-	return DataObj_GetDWORD(pDO, cfFOF, fDefault);
+	if (!g_cf_FileOpFlags)
+		g_cf_FileOpFlags = RegisterClipboardFormatW(L"FileOpFlags"); // github.com/dotnet/winforms/issues/5884?timeline_page=1
+	return DataObj_GetDWORD(pDO, g_cf_FileOpFlags, fDefault);
 }
 
 /****************************************************************************
