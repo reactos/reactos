@@ -958,7 +958,7 @@ UpgradeRepairDlgProc(
                     /* We perform an upgrade */
                     pSetupData->RepairUpdateFlag = TRUE;
                     InstallPartition = pSetupData->CurrentInstallation->Volume->PartEntry;
-                    /* Skip to summary page during repair/upgrade */
+                    /* Skip to the Summary page during repair/upgrade */
                     SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
                     return TRUE;
                 }
@@ -1068,7 +1068,7 @@ DeviceDlgProc(
 
                 case PSN_WIZBACK:
                 {
-                    /* Return to installation type page instead of Repair/Upgrade page */
+                    /* Return to the Install type selection page instead of the Repair/Upgrade page */
                     SetWindowLongW(hwndDlg, DWLP_MSGRESULT, IDD_TYPEPAGE);
                     return TRUE;
                 }
@@ -1254,27 +1254,23 @@ SummaryDlgProc(
 
                 case PSN_WIZBACK:
                 {
-                    if (pSetupData->RepairUpdateFlag)
+                    /* When the user performs a regular installation, go back to the previous page */
+                    if (!pSetupData->RepairUpdateFlag)
+                        break;
+
+                    if (GetNumberOfListEntries(pSetupData->NtOsInstallsList) > 1)
                     {
-                        if (pSetupData->NtOsInstallsList->NumOfEntries > 1)
-                        {
-                            /* Return to installations list page
-                             * when user was upgrading and there was more than one installation available
-                             */
-                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
-                        }
-                        else
-                        {
-                            /* Return to installation type page
-                             * when user was upgrading and there was less than one installation available
-                             */
-
-                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_TYPEPAGE);
-                        }
-                        
-                        return TRUE;
+                        /* Return to the Upgrade/Repair selection page, when the user is
+                         * upgrading and there are more than one installation available */
+                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
                     }
-
+                    else
+                    {
+                        /* Return to the Install type selection page, when the user is
+                         * upgrading and there is at most one installation available */
+                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_TYPEPAGE);
+                    }
+                    return TRUE;
                 }
 
                 default:
