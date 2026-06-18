@@ -79,6 +79,8 @@ private:
     BOOL m_transpBg;
     int m_zoom;
     ToolBase *m_pToolObject;
+    ColorBrush m_fgBrush;
+    ColorBrush m_bgBrush;
 
     ToolBase *GetOrCreateTool(TOOLTYPE nTool);
     void SendSetCursor();
@@ -144,6 +146,10 @@ public:
     void SpecialTweak(BOOL bMinus);
 
     void DrawWithMouseTool(POINT pt, WPARAM wParam);
+
+    HBRUSH GetFgBrush();
+    HBRUSH GetBgBrush();
+    HBRUSH CreateColorBrush(COLORREF color);
 };
 
 extern ToolsModel toolsModel;

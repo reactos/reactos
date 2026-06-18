@@ -9,7 +9,7 @@
 
 #define NUM_COLORS 28
 
-enum PAL_TYPE
+enum PAL_TYPE : int
 {
     PAL_MODERN = 1,
     PAL_OLDTYPE = 2,
@@ -18,6 +18,19 @@ enum PAL_TYPE
 };
 
 /* CLASSES **********************************************************/
+
+class ColorBrush
+{
+protected:
+    COLORREF m_rgbColor = RGB(0, 0, 0);
+    PAL_TYPE m_palette = PAL_MODERN;
+    HBRUSH m_hBrush = NULL;
+
+public:
+    ~ColorBrush();
+
+    HBRUSH GetColorBrush(PAL_TYPE palette, COLORREF rgbColor);
+};
 
 class PaletteModel
 {
@@ -29,7 +42,6 @@ private:
 
     void NotifyColorChanged();
     void NotifyPaletteChanged();
-    static HBRUSH CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF monoColor1);
 
 public:
     PaletteModel();
@@ -41,7 +53,4 @@ public:
     void SetFgColor(COLORREF newColor);
     COLORREF GetBgColor() const;
     void SetBgColor(COLORREF newColor);
-    HBRUSH CreateColorBrush(COLORREF color);
-    HBRUSH CreateFgBrush() { return CreateColorBrush(m_fgColor); }
-    HBRUSH CreateBgBrush() { return CreateColorBrush(m_bgColor); }
 };

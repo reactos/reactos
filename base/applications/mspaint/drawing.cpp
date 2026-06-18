@@ -3,11 +3,21 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    The drawing functions used by the tools
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
+
+HPEN CreateGeometricPen(COLORREF rgbColor, INT thickness)
+{
+    LOGBRUSH logbrush;
+    logbrush.lbStyle = BS_SOLID;
+    logbrush.lbColor = rgbColor;
+    logbrush.lbHatch = 0;
+    return ExtCreatePen(PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_ROUND | PS_JOIN_ROUND, thickness, &logbrush, 0, NULL);
+}
 
 void
 Line(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, int thickness)
@@ -17,6 +27,25 @@ Line(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, int thickness)
     LineTo(hdc, x2, y2);
     SetPixelV(hdc, x2, y2, color);
     DeleteObject(SelectObject(hdc, oldPen));
+}
+
+void
+Line(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hBrush, INT thickness)
+{
+    HGDIOBJ oldPen = SelectObject(hdc, CreateGeometricPen(0, thickness));
+    BeginPath(hdc);
+    MoveToEx(hdc, x1, y1, NULL);
+    LineTo(hdc, x2, y2);
+    EndPath(hdc);
+    WidenPath(hdc);
+    DeleteObject(SelectObject(hdc, oldPen));
+
+    HRGN hRgn = PathToRegion(hdc);
+    FillRgn(hdc, hRgn, hBrush);
+    DeleteObject(hRgn);
+
+    RECT rc = { x2, y2, x2 + 1, y2 + 1 };
+    FillRect(hdc, &rc, hBrush);
 }
 
 void
@@ -35,6 +64,33 @@ Rect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int
 }
 
 void
+Rect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hFgBrush, HBRUSH hBgBrush, INT thickness, INT style)
+{
+    HGDIOBJ hPenOld;
+    if (style != 0)
+    {
+        HGDIOBJ hBrushOld = SelectObject(hdc, (style == 2) ? hFgBrush : hBgBrush);
+        hPenOld = SelectObject(hdc, GetStockObject(NULL_PEN));
+        Rectangle(hdc, x1, y1, x2, y2);
+        SelectObject(hdc, hBrushOld);
+        SelectObject(hdc, hPenOld);
+    }
+
+    HPEN hPen = CreateGeometricPen(0, thickness);
+    hPenOld = SelectObject(hdc, hPen);
+    BeginPath(hdc);
+    Rectangle(hdc, x1, y1, x2, y2);
+    EndPath(hdc);
+    WidenPath(hdc);
+    SelectObject(hdc, hPenOld);
+    DeleteObject(hPen);
+
+    HRGN hRgn = PathToRegion(hdc);
+    FillRgn(hdc, hRgn, hFgBrush);
+    DeleteObject(hRgn);
+}
+
+void
 Ellp(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int thickness, int style)
 {
     HBRUSH oldBrush;
@@ -50,6 +106,33 @@ Ellp(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int
 }
 
 void
+Ellp(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hFgBrush, HBRUSH hBgBrush, INT thickness, INT style)
+{
+    HGDIOBJ hPenOld;
+    if (style != 0)
+    {
+        HGDIOBJ hBrushOld = SelectObject(hdc, (style == 2) ? hFgBrush : hBgBrush);
+        hPenOld = SelectObject(hdc, GetStockObject(NULL_PEN));
+        Ellipse(hdc, x1, y1, x2, y2);
+        SelectObject(hdc, hBrushOld);
+        SelectObject(hdc, hPenOld);
+    }
+
+    HPEN hPen = CreateGeometricPen(0, thickness);
+    hPenOld = SelectObject(hdc, hPen);
+    BeginPath(hdc);
+    Ellipse(hdc, x1, y1, x2, y2);
+    EndPath(hdc);
+    WidenPath(hdc);
+    SelectObject(hdc, hPenOld);
+    DeleteObject(hPen);
+
+    HRGN hRgn = PathToRegion(hdc);
+    FillRgn(hdc, hRgn, hFgBrush);
+    DeleteObject(hRgn);
+}
+
+void
 RRect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, int thickness, int style)
 {
     LOGBRUSH logbrush;
@@ -62,6 +145,33 @@ RRect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg,  COLORREF bg, in
     RoundRect(hdc, x1, y1, x2, y2, 16, 16);
     DeleteObject(SelectObject(hdc, oldBrush));
     DeleteObject(SelectObject(hdc, oldPen));
+}
+
+void
+RRect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hFgBrush, HBRUSH hBgBrush, INT thickness, INT style)
+{
+    HGDIOBJ hPenOld;
+    if (style != 0)
+    {
+        HGDIOBJ hBrushOld = SelectObject(hdc, (style == 2) ? hFgBrush : hBgBrush);
+        hPenOld = SelectObject(hdc, GetStockObject(NULL_PEN));
+        RoundRect(hdc, x1, y1, x2, y2, 16, 16);
+        SelectObject(hdc, hBrushOld);
+        SelectObject(hdc, hPenOld);
+    }
+
+    HPEN hPen = CreateGeometricPen(0, thickness);
+    hPenOld = SelectObject(hdc, hPen);
+    BeginPath(hdc);
+    RoundRect(hdc, x1, y1, x2, y2, 16, 16);
+    EndPath(hdc);
+    WidenPath(hdc);
+    SelectObject(hdc, hPenOld);
+    DeleteObject(hPen);
+
+    HRGN hRgn = PathToRegion(hdc);
+    FillRgn(hdc, hRgn, hFgBrush);
+    DeleteObject(hRgn);
 }
 
 void
@@ -90,6 +200,45 @@ Poly(HDC hdc, POINT * lpPoints, int nCount,  COLORREF fg,  COLORREF bg, int thic
 }
 
 void
+Poly(HDC hdc, HBRUSH hFgBrush, HBRUSH hBgBrush, POINT *lpPoints, INT nCount, INT thickness, INT style, BOOL closed, BOOL inverted)
+{
+    UINT oldRop = GetROP2(hdc);
+    if (inverted)
+        SetROP2(hdc, R2_NOTXORPEN);
+
+    HGDIOBJ hPenOld;
+    if (style != 0)
+    {
+        HGDIOBJ hBrushOld = SelectObject(hdc, (style == 2) ? hFgBrush : hBgBrush);
+        hPenOld = SelectObject(hdc, GetStockObject(NULL_PEN));
+        if (closed)
+            Polygon(hdc, lpPoints, nCount);
+        else
+            Polyline(hdc, lpPoints, nCount);
+        SelectObject(hdc, hBrushOld);
+        SelectObject(hdc, hPenOld);
+    }
+
+    HPEN hPen = CreateGeometricPen(0, thickness);
+    hPenOld = SelectObject(hdc, hPen);
+    BeginPath(hdc);
+    if (closed)
+        Polygon(hdc, lpPoints, nCount);
+    else
+        Polyline(hdc, lpPoints, nCount);
+    EndPath(hdc);
+    WidenPath(hdc);
+    SelectObject(hdc, hPenOld);
+    DeleteObject(hPen);
+
+    HRGN hRgn = PathToRegion(hdc);
+    FillRgn(hdc, hRgn, hFgBrush);
+    DeleteObject(hRgn);
+
+    SetROP2(hdc, oldRop);
+}
+
+void
 Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, COLORREF color, int thickness)
 {
     HPEN oldPen;
@@ -104,9 +253,39 @@ Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, COLORREF color, int thic
 }
 
 void
+Bezier(HDC hdc, HBRUSH hBrush, POINT p1, POINT p2, POINT p3, POINT p4, INT thickness)
+{
+    HPEN oldPen;
+    POINT fourPoints[4];
+    fourPoints[0] = p1;
+    fourPoints[1] = p2;
+    fourPoints[2] = p3;
+    fourPoints[3] = p4;
+    oldPen = (HPEN) SelectObject(hdc, CreateGeometricPen(0, thickness));
+    BeginPath(hdc);
+    PolyBezier(hdc, fourPoints, 4);
+    EndPath(hdc);
+    WidenPath(hdc);
+
+    HRGN hRgn = PathToRegion(hdc);
+    FillRgn(hdc, hRgn, hBrush);
+    DeleteObject(hRgn);
+
+    DeleteObject(SelectObject(hdc, oldPen));
+}
+
+void
 Fill(HDC hdc, LONG x, LONG y, COLORREF color)
 {
     HBRUSH oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(color));
+    ExtFloodFill(hdc, x, y, GetPixel(hdc, x, y), FLOODFILLSURFACE);
+    DeleteObject(SelectObject(hdc, oldBrush));
+}
+
+void
+Fill(HDC hdc, LONG x, LONG y, HBRUSH hBrush)
+{
+    HBRUSH oldBrush = (HBRUSH) SelectObject(hdc, hBrush);
     ExtFloodFill(hdc, x, y, GetPixel(hdc, x, y), FLOODFILLSURFACE);
     DeleteObject(SelectObject(hdc, oldBrush));
 }
@@ -126,6 +305,20 @@ Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
     }
 
     ::DeleteObject(hbr);
+}
+
+void
+Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hBrush, LONG radius)
+{
+    LONG b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
+
+    for (LONG a = 0; a <= b; a++)
+    {
+        LONG cx = (x1 * (b - a) + x2 * a) / b;
+        LONG cy = (y1 * (b - a) + y2 * a) / b;
+        RECT rc = { cx - radius, cy - radius, cx + radius, cy + radius };
+        ::FillRect(hdc, &rc, hBrush);
+    }
 }
 
 void
@@ -150,6 +343,30 @@ Replace(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, L
 }
 
 void
+Replace(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, HBRUSH hBgBrush, LONG radius)
+{
+    LONG b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
+
+    for (LONG a = 0; a <= b; a++)
+    {
+        LONG cx = (x1 * (b - a) + x2 * a) / b;
+        LONG cy = (y1 * (b - a) + y2 * a) / b;
+        RECT rc = { cx - radius, cy - radius, cx + radius, cy + radius };
+        for (LONG y = rc.top; y < rc.bottom; ++y)
+        {
+            for (LONG x = rc.left; x < rc.right; ++x)
+            {
+                if (::GetPixel(hdc, x, y) == fg)
+                {
+                    RECT rc = { x, y, x + 1, y + 1 };
+                    FillRect(hdc, &rc, hBgBrush);
+                }
+            }
+        }
+    }
+}
+
+void
 Airbrush(HDC hdc, LONG x, LONG y, COLORREF color, LONG r)
 {
     for (LONG dy = -r; dy <= r; dy++)
@@ -158,6 +375,22 @@ Airbrush(HDC hdc, LONG x, LONG y, COLORREF color, LONG r)
         {
             if ((dx * dx + dy * dy <= r * r) && (rand() % r == 0))
                 ::SetPixelV(hdc, x + dx, y + dy, color);
+        }
+    }
+}
+
+void
+Airbrush(HDC hdc, LONG x, LONG y, HBRUSH hBrush, LONG r)
+{
+    for (LONG dy = -r; dy <= r; dy++)
+    {
+        for (LONG dx = -r; dx <= r; dx++)
+        {
+            if ((dx * dx + dy * dy <= r * r) && (rand() % r == 0))
+            {
+                RECT rc = { x + dx, y + dy, x + dx + 1, y + dy + 1 };
+                FillRect(hdc, &rc, hBrush);
+            }
         }
     }
 }
@@ -230,6 +463,73 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style, I
 }
 
 void
+Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hBrush, LONG style, INT thickness)
+{
+    HPEN oldPen = (HPEN) SelectObject(hdc, GetStockObject(NULL_PEN));
+    HBRUSH oldBrush = (HBRUSH) SelectObject(hdc, hBrush);
+
+    if (thickness <= 1)
+    {
+        Line(hdc, x1, y1, x2, y2, hBrush, thickness);
+    }
+    else
+    {
+        LONG a, b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
+        switch ((BrushStyle)style)
+        {
+            case BrushStyleRound:
+                for (a = 0; a <= b; a++)
+                {
+                    Ellipse(hdc,
+                            (x1 * (b - a) + x2 * a) / b - (thickness / 2),
+                            (y1 * (b - a) + y2 * a) / b - (thickness / 2),
+                            (x1 * (b - a) + x2 * a) / b + (thickness / 2),
+                            (y1 * (b - a) + y2 * a) / b + (thickness / 2));
+                }
+                break;
+
+            case BrushStyleSquare:
+                for (a = 0; a <= b; a++)
+                {
+                    Rectangle(hdc,
+                              (x1 * (b - a) + x2 * a) / b - (thickness / 2),
+                              (y1 * (b - a) + y2 * a) / b - (thickness / 2),
+                              (x1 * (b - a) + x2 * a) / b + (thickness / 2),
+                              (y1 * (b - a) + y2 * a) / b + (thickness / 2));
+                }
+                break;
+
+            case BrushStyleForeSlash:
+            case BrushStyleBackSlash:
+            {
+                POINT offsetTop, offsetBottom;
+                if ((BrushStyle)style == BrushStyleForeSlash)
+                {
+                    offsetTop    = { (thickness - 1) / 2, -(thickness - 1) / 2 };
+                    offsetBottom = { -thickness      / 2,   thickness      / 2 };
+                }
+                else
+                {
+                    offsetTop =    { -thickness      / 2, -thickness      / 2 };
+                    offsetBottom = { (thickness - 1) / 2, (thickness - 1) / 2 };
+                }
+                POINT points[4] =
+                {
+                    { x1 + offsetTop.x,    y1 + offsetTop.y    },
+                    { x1 + offsetBottom.x, y1 + offsetBottom.y },
+                    { x2 + offsetBottom.x, y2 + offsetBottom.y },
+                    { x2 + offsetTop.x,    y2 + offsetTop.y    },
+                };
+                Polygon(hdc, points, _countof(points));
+                break;
+            }
+        }
+    }
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+}
+
+void
 RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
 {
     HBRUSH oldBrush;
@@ -278,6 +578,35 @@ Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCW
     const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
                          DT_EXPANDTABS | DT_WORDBREAK;
     ::DrawTextW(hdc, lpchText, -1, &rc, uFormat);
+    ::SelectObject(hdc, hFontOld);
+
+    ::RestoreDC(hdc, iSaveDC); // Restore
+}
+
+void
+Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hFgBrush, HBRUSH hBgBrush, LPCWSTR lpchText, HFONT font, LONG style)
+{
+    INT iSaveDC = ::SaveDC(hdc); // We will modify the clipping region. Save now.
+
+    CRect rc = { x1, y1, x2, y2 };
+
+    ::SetBkMode(hdc, TRANSPARENT);
+    if (style != 0) // Not Transparent
+        ::FillRect(hdc, &rc, hBgBrush); // Fill the background
+
+    IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
+
+    HGDIOBJ hFontOld = ::SelectObject(hdc, font);
+    const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
+                         DT_EXPANDTABS | DT_WORDBREAK;
+    ::BeginPath(hdc);
+    ::DrawTextW(hdc, lpchText, -1, &rc, uFormat);
+    ::EndPath(hdc);
+
+    HRGN hRgn = PathToRegion(hdc);
+    FillRgn(hdc, hRgn, hFgBrush);
+    DeleteObject(hRgn);
+
     ::SelectObject(hdc, hFontOld);
 
     ::RestoreDC(hdc, iSaveDC); // Restore
@@ -368,4 +697,70 @@ void DrawXorRect(HDC hdc, const RECT *prc)
     ::SetROP2(hdc, oldRop2);
     ::SelectObject(hdc, oldBrush);
     ::DeleteObject(::SelectObject(hdc, oldPen));
+}
+
+HBRUSH CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF monoColor1)
+{
+    // 8x8 Bayer ordered dithering matrix (0 to 63)
+    static const BYTE s_bayerMatrix[8][8] =
+    {
+        {  0, 32,  8, 40,  2, 34, 10, 42 },
+        { 48, 16, 56, 24, 50, 18, 58, 26 },
+        { 12, 44,  4, 36, 14, 46,  6, 38 },
+        { 60, 28, 52, 20, 62, 30, 54, 22 },
+        {  3, 35, 11, 43,  1, 33,  9, 41 },
+        { 51, 19, 59, 27, 49, 17, 57, 25 },
+        { 15, 47,  7, 39, 13, 45,  5, 37 },
+        { 63, 31, 55, 23, 61, 29, 53, 21 },
+    };
+    INT sum = GetRValue(color) + GetGValue(color) + GetBValue(color);
+    INT brightness = sum / 3;
+    if (brightness < 0)
+        brightness = 0;
+    if (brightness >= 255)
+        brightness = 256; // White out
+
+    BITMAPINFO bmi = {};
+    bmi.bmiHeader.biSize     = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth    = 8;
+    bmi.bmiHeader.biHeight   = -8; // Top-down
+    bmi.bmiHeader.biPlanes   = 1;
+    bmi.bmiHeader.biBitCount = 24;
+
+    const BYTE b0 = GetBValue(monoColor0), g0 = GetGValue(monoColor0), r0 = GetRValue(monoColor0);
+    const BYTE b1 = GetBValue(monoColor1), g1 = GetGValue(monoColor1), r1 = GetRValue(monoColor1);
+
+    BYTE pixels[8 * 8 * 3];
+    for (INT y = 0; y < 8; ++y)
+    {
+        INT index = y * (3 * CHAR_BIT);
+        for (INT x = 0; x < 8; ++x)
+        {
+            const INT threshold = s_bayerMatrix[y][x] * 255 / 63;
+            if (brightness > threshold)
+            {
+                pixels[index++] = b1; // Blue
+                pixels[index++] = g1; // Green
+                pixels[index++] = r1; // Red
+            }
+            else
+            {
+                pixels[index++] = b0; // Blue
+                pixels[index++] = g0; // Green
+                pixels[index++] = r0; // Red
+            }
+        }
+    }
+
+    HDC hdc = GetDC(NULL);
+    HBITMAP hBitmap = CreateDIBitmap(hdc, &bmi.bmiHeader, CBM_INIT, pixels, &bmi, DIB_RGB_COLORS);
+    ReleaseDC(NULL, hdc);
+
+    if (!hBitmap)
+        return NULL;
+
+    HBRUSH hBrush = CreatePatternBrush(hBitmap);
+    DeleteObject(hBitmap);
+
+    return hBrush;
 }
