@@ -38,6 +38,7 @@ Line(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hBrush, INT thickness)
     MoveToEx(hdc, x1, y1, NULL);
     LineTo(hdc, x2, y2);
     EndPath(hdc);
+    SetPolyFillMode(hdc, WINDING);
     WidenPath(hdc);
     DeleteObject(SelectObject(hdc, oldPen));
 
@@ -82,6 +83,7 @@ Rect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hFgBrush, HBRUSH hBgBru
     BeginPath(hdc);
     Rectangle(hdc, x1, y1, x2, y2);
     EndPath(hdc);
+    SetPolyFillMode(hdc, WINDING);
     WidenPath(hdc);
     SelectObject(hdc, hPenOld);
     DeleteObject(hPen);
@@ -124,6 +126,7 @@ Ellp(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hFgBrush, HBRUSH hBgBru
     BeginPath(hdc);
     Ellipse(hdc, x1, y1, x2, y2);
     EndPath(hdc);
+    SetPolyFillMode(hdc, WINDING);
     WidenPath(hdc);
     SelectObject(hdc, hPenOld);
     DeleteObject(hPen);
@@ -166,6 +169,7 @@ RRect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hFgBrush, HBRUSH hBgBr
     BeginPath(hdc);
     RoundRect(hdc, x1, y1, x2, y2, 16, 16);
     EndPath(hdc);
+    SetPolyFillMode(hdc, WINDING);
     WidenPath(hdc);
     SelectObject(hdc, hPenOld);
     DeleteObject(hPen);
@@ -228,6 +232,7 @@ Poly(HDC hdc, HBRUSH hFgBrush, HBRUSH hBgBrush, POINT *lpPoints, INT nCount, INT
     else
         Polyline(hdc, lpPoints, nCount);
     EndPath(hdc);
+    SetPolyFillMode(hdc, WINDING);
     WidenPath(hdc);
     SelectObject(hdc, hPenOld);
     DeleteObject(hPen);
@@ -266,6 +271,7 @@ Bezier(HDC hdc, HBRUSH hBrush, POINT p1, POINT p2, POINT p3, POINT p4, INT thick
     BeginPath(hdc);
     PolyBezier(hdc, fourPoints, 4);
     EndPath(hdc);
+    SetPolyFillMode(hdc, WINDING);
     WidenPath(hdc);
 
     HRGN hRgn = PathToRegion(hdc);
