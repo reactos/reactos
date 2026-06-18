@@ -6,6 +6,26 @@ BEGIN
     IDS_HLP_INTERFACE_SHOW_INTERFACE "Displays interfaces.\n"
     IDS_HLP_INTERFACE_SHOW_INTERFACE_EX "\nUsage:\n"
 
+    IDS_HLP_IP_ADD "Adds a configuration entry to a table.\n"
+    IDS_HLP_IP_ADD_ADDRESS     "Adds an IP address to the specified interface.\n"
+    IDS_HLP_IP_ADD_ADDRESS_EX  "\nUsage: %1!s! [name=]<string> [[addr=]IP address [mask=]IP subnet mask]\n\
+       [[gateway=]IP address [gwmetric=]integer]\n\n\
+Parameters:\n\n\
+      name         - The name of the IP interface.\n\
+      addr         - The IP address to be added for the interface.\n\
+      mask         - The IP subnet mask for the specified IP address.\n\
+      gateway      - The default gateway for the specified IP address.\n\
+      gwmetric     - The metric to the default gateway.\n\n\
+Remarks: Adds IP addresses and default gateways to an interface. If DHCP\n\
+         is enabled on the interface, it will be disabled.\n\n\
+Examples:\n\n\
+       %1!s! ""Local Area Connection"" 10.0.0.2  255.0.0.0\n\
+       %1!s! ""Local Area Connection"" gateway=10.0.0.3 gwmetric=2\n\n\
+       The first command adds a static IP address of 10.0.0.2 with a subnet\n\
+       mask of 255.0.0.0 to the Local Area Connection interface. The second\n\
+       command adds the IP address of 10.0.0.3 as a second default gateway\n\
+       for this interface with a gateway metric of 2.\n\n"
+
     IDS_HLP_IP_SET             "Sets configuration information.\n"
     IDS_HLP_IP_SET_ADDRESS     "Sets the IP address or default gateway to the specified interface.\n"
     IDS_HLP_IP_SET_ADDRESS_EX  "\nUsage: %1!s! [name=]<string> \n\

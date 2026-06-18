@@ -31,6 +31,7 @@
 #define REGISTER_PRIMARY   2
 #define REGISTER_BOTH      3
 
+static FN_HANDLE_CMD IpAddAddress;
 static FN_HANDLE_CMD IpSetAddress;
 static FN_HANDLE_CMD IpSetDns;
 static FN_HANDLE_CMD IpShowAddresses;
@@ -40,12 +41,18 @@ static FN_HANDLE_CMD IpShowDns;
 
 static
 CMD_ENTRY
+IpAddCommands[] = 
+{
+    {L"address", IpAddAddress, IDS_HLP_IP_ADD_ADDRESS, IDS_HLP_IP_ADD_ADDRESS_EX, 0}
+};
+
+static
+CMD_ENTRY
 IpSetCommands[] = 
 {
     {L"address", IpSetAddress, IDS_HLP_IP_SET_ADDRESS, IDS_HLP_IP_SET_ADDRESS_EX, 0},
     {L"dns", IpSetDns, IDS_HLP_IP_SET_DNS, IDS_HLP_IP_SET_DNS_EX, 0}
 };
-
 
 static
 CMD_ENTRY
@@ -56,11 +63,11 @@ IpShowCommands[] =
     {L"dns", IpShowDns, IDS_HLP_DNS, IDS_HLP_DNS_EX, 0}
 };
 
-
 static
 CMD_GROUP_ENTRY
 IpGroups[] = 
 {
+    {L"add", IDS_HLP_IP_ADD, sizeof(IpAddCommands) / sizeof(CMD_ENTRY), 0, IpAddCommands, NULL},
     {L"set", IDS_HLP_IP_SET, sizeof(IpSetCommands) / sizeof(CMD_ENTRY), 0, IpSetCommands, NULL},
     {L"show", IDS_HLP_IP_SHOW, sizeof(IpShowCommands) / sizeof(CMD_ENTRY), 0, IpShowCommands, NULL},
 };
@@ -371,7 +378,7 @@ ExtractParameterValue(
     PWSTR pszParameter)
 {
     PWSTR pToken, pStart, pEnd, pBuffer;
-    INT length;
+    SIZE_T length;
 
     pToken = wcsstr(pszParameters, pszParameter);
     if (pToken == NULL)
@@ -398,6 +405,307 @@ ExtractParameterValue(
     }
 
     return pBuffer;
+}
+
+
+static
+BOOL
+AppendParameterValue(
+    PWSTR pszParameters,
+    PWSTR pszParameter,
+    PWSTR pszValue)
+{
+    PWSTR pToken, pStart, pEnd;
+
+    pToken = wcsstr(pszParameters, pszParameter);
+    if (pToken == NULL)
+        return FALSE;
+
+    pStart = wcschr(pToken, L';');
+    if (pStart == NULL)
+        return FALSE;
+
+    pEnd = pStart + wcslen(pszValue) + 1;
+    MoveMemory(pEnd, pStart, wcslen(pStart) * sizeof(WCHAR));
+
+    *pStart = L',';
+    pStart++;
+    CopyMemory(pStart, pszValue, wcslen(pszValue) * sizeof(WCHAR));
+
+    return TRUE;
+}
+
+
+static
+DWORD
+WINAPI
+IpAddAddress(
+    LPCWSTR pwszMachine,
+    LPWSTR *argv,
+    DWORD dwCurrentIndex,
+    DWORD dwArgCount,
+    DWORD dwFlags,
+    LPCVOID pvData,
+    BOOL *pbDone)
+{
+    TAG_TYPE pttTags[] = {{L"name", NS_REQ_ZERO, FALSE},
+                          {L"addr", NS_REQ_ZERO, FALSE},
+                          {L"mask", NS_REQ_ZERO, FALSE},
+                          {L"gateway", NS_REQ_ZERO, FALSE},
+                          {L"gwmetric", NS_REQ_ZERO, FALSE}};
+    GUID InterfaceGUID;
+    PDWORD pdwTagType = NULL;
+    DWORD i, dwGateway = 0;
+    BOOL bHaveName = FALSE, bHaveAddress = FALSE, bHaveMask = FALSE,
+         bHaveGateway = FALSE, bHaveMetric = FALSE;
+    IN_ADDR Address, Mask, Gateway;
+    PWSTR pszName = NULL, pszAddress = NULL, pszMask = NULL, pszGateway = NULL, pszGwMetric = NULL;
+    PWSTR pszNewIpAddress = NULL, pszNewSubnetMask = NULL, pszNewParameters = NULL;
+    DWORD dwMetric, dwLength;
+    PCWSTR Term;
+    PTCPIP_PROPERTIES pProperties = NULL;
+    TCPIP_PROPERTIES NewProperties;
+    HRESULT hr;
+    NTSTATUS Status;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("IpAddAddress()\n");
+
+    pdwTagType = HeapAlloc(GetProcessHeap(),
+                           0,
+                           (dwArgCount - dwCurrentIndex) * sizeof(DWORD));
+    if (pdwTagType == NULL)
+    {
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    dwError = MatchTagsInCmdLine(hDllInstance,
+                                 argv,
+                                 dwCurrentIndex,
+                                 dwArgCount,
+                                 pttTags,
+                                 ARRAYSIZE(pttTags),
+                                 pdwTagType);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("MatchTagsInCmdLine() failed (Error %lu)\n", dwError);
+        HeapFree(GetProcessHeap(), 0, pdwTagType);
+        return dwError;
+    }
+
+    for (i = 0; i < (dwArgCount - dwCurrentIndex); i++)
+    {
+        DPRINT("Tag %lu: %lu\n", i, pdwTagType[i]);
+
+        switch (pdwTagType[i])
+        {
+            case 0: /* name */
+                DPRINT("Tag: name (%S)\n", argv[i + dwCurrentIndex]);
+                dwError = NhGetGuidFromInterfaceName(argv[i + dwCurrentIndex],
+                                                     &InterfaceGUID,
+                                                     0, 0);
+                if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT1("NhGetGuidFromInterfaceName() failed (Error %lu)\n", dwError);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_INVALID_INTERFACE,
+                                           argv[i + dwCurrentIndex]);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                pszName = argv[i + dwCurrentIndex];
+                DPRINT("Interface: {%08lx-%04hx-%04hx-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
+                       InterfaceGUID.Data1, InterfaceGUID.Data2, InterfaceGUID.Data3, InterfaceGUID.Data4[0], InterfaceGUID.Data4[1],
+                       InterfaceGUID.Data4[2], InterfaceGUID.Data4[3], InterfaceGUID.Data4[4], InterfaceGUID.Data4[5], InterfaceGUID.Data4[6], InterfaceGUID.Data4[7]);
+                bHaveName = TRUE;
+                break;
+
+            case 1: /* addr */
+                DPRINT("Tag: addr (%S)\n", argv[i + dwCurrentIndex]);
+                Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
+                                                 TRUE,
+                                                 &Term,
+                                                 &Address);
+                if (Status != 0 /*STATUS_SUCCESS*/)
+                {
+                    DPRINT("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_BAD_VALUE,
+                                           argv[i + dwCurrentIndex],
+                                           pttTags[pdwTagType[i]].pwszTag);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                DPRINT("IP Address: %u.%u.%u.%u\n",
+                       Address.S_un.S_un_b.s_b1, Address.S_un.S_un_b.s_b2, Address.S_un.S_un_b.s_b3, Address.S_un.S_un_b.s_b4);
+                pszAddress = argv[i + dwCurrentIndex];
+                DPRINT("IP Address: %S\n", pszAddress);
+                bHaveAddress = TRUE;
+                break;
+
+            case 2: /* mask */
+                DPRINT("Tag: mask (%S)\n", argv[i + dwCurrentIndex]);
+                Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
+                                                 TRUE,
+                                                 &Term,
+                                                 &Mask);
+                if (Status != 0 /*STATUS_SUCCESS*/)
+                {
+                    DPRINT("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_BAD_VALUE,
+                                           argv[i + dwCurrentIndex],
+                                           pttTags[pdwTagType[i]].pwszTag);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                DPRINT("Subnet Mask: %u.%u.%u.%u\n",
+                       Mask.S_un.S_un_b.s_b1, Mask.S_un.S_un_b.s_b2, Mask.S_un.S_un_b.s_b3, Mask.S_un.S_un_b.s_b4);
+                pszMask = argv[i + dwCurrentIndex];
+                DPRINT("Subnat Mask: %S\n", pszMask);
+                bHaveMask = TRUE;
+                break;
+
+            case 3: /* gateway */
+                DPRINT("Tag: gateway (%S)\n", argv[i + dwCurrentIndex]);
+                Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
+                                                 TRUE,
+                                                 &Term,
+                                                 &Gateway);
+                if (Status != 0 /*STATUS_SUCCESS*/)
+                {
+                    DPRINT("RtlIpv4StringToAddressW() failed (Status 0x%08lx)\n", Status);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_BAD_VALUE,
+                                           argv[i + dwCurrentIndex],
+                                           pttTags[pdwTagType[i]].pwszTag);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                pszGateway = argv[i + dwCurrentIndex];
+                DPRINT("Gateway: %u.%u.%u.%u\n",
+                       Gateway.S_un.S_un_b.s_b1, Gateway.S_un.S_un_b.s_b2, Gateway.S_un.S_un_b.s_b3, Gateway.S_un.S_un_b.s_b4);
+                bHaveGateway = TRUE;
+                break;
+
+            case 4: /* gwmetric */
+                DPRINT("Tag: gwmetric (%S)\n", argv[i + dwCurrentIndex]);
+                dwMetric = wcstoul(argv[i + dwCurrentIndex],
+                                   (wchar_t**)&Term,
+                                   10);
+                if (dwMetric > 9999)
+                {
+                    dwError = ERROR_INVALID_PARAMETER;
+                    break;
+                }
+                pszGwMetric = argv[i + dwCurrentIndex];
+                DPRINT("Metric: %lu\n", dwMetric);
+                bHaveMetric = TRUE;
+                break;
+
+            default:
+                DPRINT1("Unknown tag type %lu\n", pdwTagType[i]);
+                break;
+        }
+    }
+
+    if (pdwTagType)
+        HeapFree(GetProcessHeap(), 0, pdwTagType);
+
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* Check parameters */
+
+    /* The interface name is mandatory */
+    if (bHaveName == FALSE)
+        return ERROR_INVALID_SYNTAX;
+
+    /* We need address and mask, or none of them */
+    if ((bHaveAddress && !bHaveMask) ||
+        (!bHaveAddress && bHaveMask))
+        return ERROR_INVALID_SYNTAX;
+
+    /* We need gateway and metric, or none of them */
+    if ((bHaveGateway && !bHaveMetric) ||
+        (!bHaveGateway && bHaveMetric))
+        return ERROR_INVALID_SYNTAX;
+
+    hr = GetInterfaceProperties(&InterfaceGUID, &pProperties);
+    if (FAILED(hr))
+    {
+        PrintMessageFromModule(hDllInstance,
+                               IDS_ERROR_GET_PROPERTIES,
+                               pszName);
+        return ERROR_SUPPRESS_OUTPUT;
+    }
+
+    if (pszAddress && pszMask)
+    {
+        dwLength = wcslen(pProperties->pszIpAddress) + wcslen(pszAddress) + 2;
+        pszNewIpAddress = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength * sizeof(WCHAR));
+        if (pszNewIpAddress == NULL)
+        {
+            dwError = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+
+        wcscpy(pszNewIpAddress, pProperties->pszIpAddress);
+        wcscat(pszNewIpAddress, L",");
+        wcscat(pszNewIpAddress, pszAddress);
+
+        dwLength = wcslen(pProperties->pszSubnetMask) + wcslen(pszAddress) + 2;
+        pszNewSubnetMask = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength * sizeof(WCHAR));
+        if (pszNewSubnetMask == NULL)
+        {
+            dwError = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+
+        wcscpy(pszNewSubnetMask, pProperties->pszSubnetMask);
+        wcscat(pszNewSubnetMask, L",");
+        wcscat(pszNewSubnetMask, pszMask);
+    }
+
+    if (pszGateway && pszGwMetric)
+    {
+        dwLength = wcslen(pProperties->pszParameters) +
+                   wcslen(pszGateway) + wcslen(pszGwMetric) + 3;
+
+        pszNewParameters = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength * sizeof(WCHAR));
+        if (pszNewParameters == NULL)
+        {
+            dwError = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+
+        wcscpy(pszNewParameters, pProperties->pszParameters);
+        AppendParameterValue(pszNewParameters, L"DefGw", pszGateway);
+        AppendParameterValue(pszNewParameters, L"GwMetric", pszGwMetric);
+    }
+
+    NewProperties.dwDhcp = 0;
+    NewProperties.pszIpAddress = pszNewIpAddress ? pszNewIpAddress : pProperties->pszIpAddress;
+    NewProperties.pszSubnetMask = pszNewSubnetMask ? pszNewSubnetMask : pProperties->pszSubnetMask;
+    NewProperties.pszParameters = pszNewParameters ? pszNewParameters : pProperties->pszParameters;
+
+    SetInterfaceProperties(&InterfaceGUID, &NewProperties);
+
+done:
+    if (pszNewIpAddress)
+        HeapFree(GetProcessHeap(), 0, pszNewIpAddress);
+
+    if (pszNewSubnetMask)
+        HeapFree(GetProcessHeap(), 0, pszNewSubnetMask);
+
+    if (pszNewParameters)
+        HeapFree(GetProcessHeap(), 0, pszNewParameters);
+
+    CoTaskMemFree(pProperties);
+    pProperties = NULL;
+
+    DPRINT("IpAddAddress() done (Error %lu)\n", dwError);
+    return dwError;
 }
 
 
@@ -570,6 +878,7 @@ IpSetAddress(
                 }
                 else
                 {
+                    dwError = ERROR_SUCCESS;
                     Status = RtlIpv4StringToAddressW(argv[i + dwCurrentIndex],
                                                     TRUE,
                                                     &Term,
@@ -712,6 +1021,7 @@ done:
     DPRINT("IpSetAddress() done (Error %lu)\n", dwError);
     return dwError;
 }
+
 
 static
 DWORD
@@ -930,6 +1240,7 @@ done:
 
     return dwError;
 }
+
 
 static
 DWORD
@@ -1227,7 +1538,7 @@ IpDumpFn(
             }
             else
             {
-                PrintMessage(L"set address name=\"%s\" source=static address=%s mask=%s\n",
+                PrintMessage(L"set address name=\"%s\" source=static addr=%s mask=%s\n",
                              szFriendlyName, pProperties->pszIpAddress, pProperties->pszSubnetMask);
             }
 
@@ -1241,7 +1552,7 @@ IpDumpFn(
                 pBuffer = ExtractParameterValue(pProperties->pszParameters, L"DNS");
                 if (pBuffer)
                 {
-                    PrintMessage(L"set dns name=\"%s\" source=static address=%s\n",
+                    PrintMessage(L"set dns name=\"%s\" source=static addr=%s\n",
                                  szFriendlyName, pBuffer);
                     HeapFree(GetProcessHeap(), 0, pBuffer);
                 }
