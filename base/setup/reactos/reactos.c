@@ -526,8 +526,13 @@ TypeDlgProc(
                             /* Retrieve the current installation */
                             pSetupData->CurrentInstallation =
                                 (PNTOS_INSTALLATION)GetListEntryData(GetCurrentListEntry(pSetupData->NtOsInstallsList));
+                            InstallPartition = pSetupData->CurrentInstallation->Volume->PartEntry;
+                            StringCchCopyW(pSetupData->USetupData.InstallationDirectory,
+                                           _countof(pSetupData->USetupData.InstallationDirectory),
+                                           pSetupData->CurrentInstallation->PathComponent);
 
-                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_DEVICEPAGE);
+                            /* Jump to the Summary page during repair/upgrade */
+                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
                         }
                     }
                     else
@@ -953,9 +958,15 @@ UpgradeRepairDlgProc(
                     /* Retrieve the current installation */
                     pSetupData->CurrentInstallation =
                         (PNTOS_INSTALLATION)GetListEntryData(GetCurrentListEntry(pSetupData->NtOsInstallsList));
+                    InstallPartition = pSetupData->CurrentInstallation->Volume->PartEntry;
+                    StringCchCopyW(pSetupData->USetupData.InstallationDirectory,
+                                   _countof(pSetupData->USetupData.InstallationDirectory),
+                                   pSetupData->CurrentInstallation->PathComponent);
 
                     /* We perform an upgrade */
                     pSetupData->RepairUpdateFlag = TRUE;
+                    /* Jump to the Summary page during repair/upgrade */
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
                     return TRUE;
                 }
 
@@ -1059,6 +1070,13 @@ DeviceDlgProc(
                     // SetCurrentListEntry(pSetupData->USetupData.LayoutList,
                     //                     GetSelectedComboListItem(hList));
 
+                    return TRUE;
+                }
+
+                case PSN_WIZBACK:
+                {
+                    /* Return to the Install type selection page instead of the Repair/Upgrade page */
+                    SetWindowLongW(hwndDlg, DWLP_MSGRESULT, IDD_TYPEPAGE);
                     return TRUE;
                 }
 
@@ -1238,6 +1256,27 @@ SummaryDlgProc(
 
                     /* Do not close the wizard too soon */
                     SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
+                    return TRUE;
+                }
+
+                case PSN_WIZBACK:
+                {
+                    /* When the user performs a regular installation, go back to the previous page */
+                    if (!pSetupData->RepairUpdateFlag)
+                        break;
+
+                    if (GetNumberOfListEntries(pSetupData->NtOsInstallsList) > 1)
+                    {
+                        /* Return to the Upgrade/Repair selection page, when the user is
+                         * upgrading and there are more than one installation available */
+                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
+                    }
+                    else
+                    {
+                        /* Return to the Install type selection page, when the user is
+                         * upgrading and there is at most one installation available */
+                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_TYPEPAGE);
+                    }
                     return TRUE;
                 }
 
