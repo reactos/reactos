@@ -528,6 +528,7 @@ TypeDlgProc(
                                 (PNTOS_INSTALLATION)GetListEntryData(GetCurrentListEntry(pSetupData->NtOsInstallsList));
                             InstallPartition = pSetupData->CurrentInstallation->Volume->PartEntry;
 
+                            /* Jump to the Summary page during repair/upgrade */
                             SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
                         }
                     }
@@ -958,7 +959,7 @@ UpgradeRepairDlgProc(
                     /* We perform an upgrade */
                     pSetupData->RepairUpdateFlag = TRUE;
                     InstallPartition = pSetupData->CurrentInstallation->Volume->PartEntry;
-                    /* Skip to the Summary page during repair/upgrade */
+                    /* Jump to the Summary page during repair/upgrade */
                     SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
                     return TRUE;
                 }
