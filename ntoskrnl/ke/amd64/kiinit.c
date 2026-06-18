@@ -556,7 +556,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     if (Cpu == 0)
     {
-         /* Initialize debugging system */
+        /* Initialize debugging system */
         KdInitSystem(0, KeLoaderBlock);
 
         /* Check for break-in */
