@@ -262,6 +262,7 @@ SHELL_SysAllocString(PCWSTR in, BSTR *out)
         return E_INVALIDARG;
     return (*out = SysAllocString(in ? in : L"")) ? S_OK : E_OUTOFMEMORY;
 }
+
 static inline HRESULT
 SHELL_CreateVariantBufferEx(VARIANT *pVar, UINT cb, VARTYPE vt)
 {

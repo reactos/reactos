@@ -465,6 +465,14 @@ template<class P, class R> static HRESULT SHILClone(P pidl, R *ppOut)
     return r ? S_OK : E_OUTOFMEMORY;
 }
 
+template<class P, class R> static HRESULT SHILCloneParent(P pidl, R *ppOut)
+{
+    R r = *ppOut = (R)ILClone((PIDLIST_RELATIVE)pidl);
+    if (r)
+        ILRemoveLastID(r);
+    return r ? S_OK : E_OUTOFMEMORY;
+}
+
 template<class B, class R> static HRESULT SHILCombine(B base, PCUIDLIST_RELATIVE sub, R *ppOut)
 {
     R r = *ppOut = (R)ILCombine((PCIDLIST_ABSOLUTE)base, sub);

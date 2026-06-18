@@ -329,7 +329,9 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::GetSystemInformation(BSTR name, VARIAN
         V_VT(ret) = VT_EMPTY;
         if (RegGetValueW(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\CentralProcessor\\0",
                          L"~Mhz", RRF_RT_REG_DWORD, NULL, &V_UI4(ret), &cb))
+        {
             return S_FALSE;
+        }
         V_VT(ret) = VT_I4;
         return S_OK;
     }

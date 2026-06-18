@@ -44,7 +44,6 @@ HRESULT STDMETHODCALLTYPE CFolder::get_Title(BSTR *pbs)
 
     WCHAR path[MAX_PATH];
     HRESULT hr = ILGetDisplayNameExW(NULL, m_idlist, path, ILGDN_INFOLDER) ? S_OK : E_FAIL;
-    path[_countof(path) - 1] = UNICODE_NULL;
     *pbs = SysAllocString(SUCCEEDED(hr) ? path : L"");
     return S_OK;
 }
@@ -81,10 +80,9 @@ HRESULT STDMETHODCALLTYPE CFolder::get_ParentFolder(Folder **ppsf)
     if (ILIsEmpty(pidlAbsSelf))
         return S_FALSE;
 
-    CComHeapPtr<ITEMIDLIST> pidlParent(ILClone(pidlAbsSelf));
-    if (!pidlParent)
+    CComHeapPtr<ITEMIDLIST> pidlParent;
+    if (FAILED(SHILCloneParent(pidlAbsSelf, &pidlParent)))
         return E_OUTOFMEMORY;
-    ILRemoveLastID(pidlParent);
     return ShellObjectCreatorInit<CFolder>(static_cast<LPITEMIDLIST>(pidlParent), IID_PPV_ARG(Folder, ppsf));
 }
 
@@ -101,7 +99,6 @@ HRESULT STDMETHODCALLTYPE CFolder::ParseName(BSTR bName, FolderItem **ppid)
         return E_POINTER;
     *ppid = NULL;
 
-    LPCITEMIDLIST pidlAbsSelf = GetAbsoluteIDList();
     CComPtr<IShellFolder> psfCurrent;
     HRESULT hr = GetShellFolder(psfCurrent);
     if (FAILED(hr))
@@ -111,10 +108,20 @@ HRESULT STDMETHODCALLTYPE CFolder::ParseName(BSTR bName, FolderItem **ppid)
     hr = psfCurrent->ParseDisplayName(NULL, NULL, bName, NULL, &relativePidl, NULL);
     if (!SUCCEEDED(hr))
         return S_FALSE;
-
     CComHeapPtr<ITEMIDLIST> combined;
-    combined.Attach(ILCombine(pidlAbsSelf, relativePidl));
-    return ShellObjectCreatorInit<CFolderItem>(this, static_cast<LPITEMIDLIST>(combined), IID_PPV_ARG(FolderItem, ppid));
+    combined.Attach(ILCombine(GetAbsoluteIDList(), relativePidl));
+    if (!combined)
+        return E_OUTOFMEMORY;
+
+    CComHeapPtr<ITEMIDLIST> parentPidl;
+    if (FAILED(hr = SHILCloneParent((LPCITEMIDLIST)combined, &parentPidl)))
+        return hr;
+    CComPtr<Folder> pParent; // The parent Folder of the thing we just parsed
+    hr = ShellObjectCreatorInit<CFolder>(parentPidl, IID_PPV_ARG(Folder, &pParent));
+    if (FAILED(hr))
+        return hr;
+
+    return ShellObjectCreatorInit<CFolderItem>(pParent, static_cast<LPITEMIDLIST>(combined), IID_PPV_ARG(FolderItem, ppid));
 }
 
 HRESULT STDMETHODCALLTYPE CFolder::NewFolder(BSTR bName, VARIANT vOptions)
