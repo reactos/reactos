@@ -7,17 +7,40 @@
  */
 
 #include "precomp.h"
+#include <ntquery.h> // PID_STG_*
 
-static FolderViewColumns g_ColumnDefs[] =
+static const FolderViewColumn g_ColumnDefs[] =
 {
-    { IDS_COL_NAME,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   25, LVCFMT_LEFT },
-    { IDS_COL_TYPE,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   20, LVCFMT_LEFT },
-    { IDS_COL_COMPRSIZE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_RIGHT },
+    { IDS_COL_NAME,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   25, LVCFMT_LEFT,  &FMTID_Storage, PID_STG_NAME },
+    { IDS_COL_TYPE,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   20, LVCFMT_LEFT,  &FMTID_Storage, PID_STG_STORAGETYPE },
+    { IDS_COL_COMPRSIZE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_RIGHT, },
     { IDS_COL_PASSWORD,  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_LEFT },
-    { IDS_COL_SIZE,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_RIGHT },
+    { IDS_COL_SIZE,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_RIGHT, &FMTID_Storage, PID_STG_SIZE },
     { IDS_COL_RATIO,     SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_LEFT },
-    { IDS_COL_DATE_MOD,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT,  15, LVCFMT_LEFT },
+    { IDS_COL_DATE_MOD,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT,  15, LVCFMT_LEFT,  &FMTID_Storage, PID_STG_WRITETIME },
 };
+
+static int MapScidToColumn(const SHCOLUMNID &scid)
+{
+    for (UINT i = 0; i < _countof(g_ColumnDefs); ++i)
+    {
+        if (IsEqual(scid, g_ColumnDefs[i]))
+            return i;
+    }
+    return -1;
+}
+
+static PIDLIST_RELATIVE FindItem(IEnumIDList &List, PCWSTR Path)
+{
+    for (PITEMID_CHILD pidl; List.Next(1, &pidl, NULL) == S_OK;)
+    {
+        ZipPidlEntry *p = (ZipPidlEntry*)pidl;
+        if (!lstrcmpiW(p->Name, Path))
+            return pidl;
+        CoTaskMemFree(pidl);
+    }
+    return NULL;
+}
 
 CZipFolder::CZipFolder()
 {
@@ -280,8 +303,61 @@ STDMETHODIMP CZipFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
     if (!pcsFlags || iColumn >= _countof(g_ColumnDefs))
         return E_INVALIDARG;
-    *pcsFlags = g_ColumnDefs[iColumn].dwDefaultState;
+    *pcsFlags = g_ColumnDefs[iColumn].ColumnFlags;
     return S_OK;
+}
+
+STDMETHODIMP CZipFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
+{
+    if (!pidl || !pscid || !pv)
+        return E_INVALIDARG;
+
+    V_VT(pv) = VT_EMPTY;
+
+    PCUIDLIST_RELATIVE curpidl = ILGetNext(pidl);
+    if (curpidl->mkid.cb != 0)
+    {
+        DPRINT1("ERROR, unhandled PIDL!\n");
+        return E_FAIL;
+    }
+    const ZipPidlEntry* zipEntry = _ZipFromIL(pidl);
+    if (!zipEntry)
+        return E_INVALIDARG;
+    bool isDir = zipEntry->IsDirectory();
+
+    // Handle the non-string columns here so the caller gets the correct variant type
+    if (!isDir && IsEqual(*pscid, g_ColumnDefs[COL_SIZE]))
+    {
+        V_VT(pv) = VT_UI8;
+        V_UI8(pv) = zipEntry->UncompressedSize;
+        return S_OK;
+    }
+    else if (!isDir && IsEqual(*pscid, g_ColumnDefs[COL_DATE_MOD]))
+    {
+        if (DosDateTimeToVariantTime(HIWORD(zipEntry->DosDate), LOWORD(zipEntry->DosDate), &V_DATE(pv)))
+        {
+            V_VT(pv) = VT_DATE;
+            return S_OK;
+        }
+    }
+
+    HRESULT hr = E_FAIL;
+    int col = MapScidToColumn(*pscid);
+    if (col >= 0)
+    {
+        SHELLDETAILS sd;
+        if (SUCCEEDED(hr = GetDetailsOf(pidl, col, &sd)))
+        {
+            CComHeapPtr<WCHAR> str;
+            if (SUCCEEDED(hr = StrRetToStrW(&sd.str, pidl, &str)))
+            {
+                hr = (V_BSTR(pv) = SysAllocString(str)) != NULL ? S_OK : E_OUTOFMEMORY;
+                if (SUCCEEDED(hr))
+                    V_VT(pv) = VT_BSTR;
+            }
+        }
+    }
+    return hr;
 }
 
 STDMETHODIMP CZipFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
@@ -313,7 +389,7 @@ STDMETHODIMP CZipFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLD
     switch (iColumn)
     {
         case COL_NAME:
-            return GetDisplayNameOf(pidl, 0, &psd->str);
+            return GetDisplayNameOf(pidl, SHGDN_INFOLDER, &psd->str);
         case COL_TYPE:
         {
             SHFILEINFOW shfi;
@@ -363,6 +439,40 @@ STDMETHODIMP CZipFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLD
 
     UNIMPLEMENTED;
     return E_NOTIMPL;
+}
+
+STDMETHODIMP CZipFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
+{
+    if (column < _countof(g_ColumnDefs) && g_ColumnDefs[column].pkg)
+    {
+        pscid->fmtid = *g_ColumnDefs[column].pkg;
+        pscid->pid = g_ColumnDefs[column].pki;
+        return S_OK;
+    }
+    return E_FAIL;
+}
+
+STDMETHODIMP CZipFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes)
+{
+    if (pchEaten)
+        *pchEaten = 0;
+
+    DWORD dwFlags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN | SHCONTF_INCLUDESUPERHIDDEN;
+    CComPtr<IEnumIDList> pEnum;
+    HRESULT hr = EnumObjects(hwndOwner, dwFlags, &pEnum);
+    if (FAILED(hr))
+        return hr;
+
+    PIDLIST_RELATIVE pidl = FindItem(*pEnum, lpszDisplayName);
+    if (!pidl)
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    *ppidl = pidl;
+    if (pchEaten)
+        *pchEaten = lstrlenW(lpszDisplayName);
+    if (pdwAttributes)
+        GetAttributesOf(1, ppidl, (SFGAOF*)pdwAttributes);
+    return S_OK;
 }
 
 STDMETHODIMP CZipFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
@@ -624,6 +734,28 @@ STDMETHODIMP CZipFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, L
     if (!zipEntry)
         return E_FAIL;
 
+    if (dwFlags & SHGDN_FORPARSING)
+    {
+        if (dwFlags & SHGDN_INFOLDER)
+            return SHSetStrRet(strRet, zipEntry->Name);
+
+        WCHAR parent[MAX_PATH];
+        if (!SHGetPathFromIDListW(m_CurDir, parent))
+            return E_FAIL;
+        UINT cch = lstrlenW(parent) + 1 + lstrlenW(zipEntry->Name) + 1;
+        strRet->uType = STRRET_WSTR;
+        strRet->pOleStr = (LPWSTR)SHAlloc(cch * sizeof(WCHAR));
+        if (!strRet->pOleStr)
+            return E_OUTOFMEMORY;
+        lstrcpyW(strRet->pOleStr, parent);
+        PathAppendW(strRet->pOleStr, zipEntry->Name);
+        return S_OK;
+    }
+
+    SHFILEINFOW fi;
+    DWORD attr = zipEntry->IsDirectory() ? FILE_ATTRIBUTE_DIRECTORY : 0;
+    if (SHGetFileInfoW(zipEntry->Name, attr, &fi, sizeof(fi), SHGFI_DISPLAYNAME | SHGFI_USEFILEATTRIBUTES))
+        return SHSetStrRet(strRet, fi.szDisplayName);
     return SHSetStrRet(strRet, zipEntry->Name);
 }
 
