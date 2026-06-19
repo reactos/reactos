@@ -1,0 +1,37 @@
+/*
+ * PROJECT:     ReactOS RUNAS command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATOR:  Copyright 2026 Karol Gocłowski <cyberwordixx@gazeta.pl>
+ */
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE01 "SPOSÓB UŻYCIA RUNAS\n\n"
+    IDS_USAGE02 "RUNAS [ [/noprofile | /profile] [/env] [/savecred | /netonly] ]\n"
+    IDS_USAGE03 "      /user:<NazwaUżytkownika> program\n\n"
+    IDS_USAGE04 "RUNAS [ [/noprofile | /profile] [/env] [/savecred | /netonly] ]\n"
+    IDS_USAGE05 "      /smartcard [/user:<NazwaUżytkownika>] program\n\n"
+    IDS_USAGE06 "   /noprofile      określa że profil użytkownika nie powinien być załadowany.\n"
+    IDS_USAGE07 "                   Powoduje szybsze ładowanie aplikacji, ale\n"
+    IDS_USAGE08 "                   może spowodować problemy w niektórych aplikacjach.\n"
+    IDS_USAGE09 "   /profile        określa że profil użytkownika powinien być załadowany.\n"
+    IDS_USAGE10 "                   Jest to opcja domyślna.\n" 
+    IDS_USAGE11 "   /env            aby użyć tego środowiska zamiast środowiska użytkownika.\n"
+    IDS_USAGE12 "   /netonly        użyj jeżeli określone poświadczenia są przeznaczone tylko dla\n"
+    IDS_USAGE13 "                   zdalnego dostępu.\n"
+    IDS_USAGE14 "   /savecred       Nie zaimplementowano.\n"
+    IDS_USAGE15 "   /smartcard      Nie zaimplementowano.\n"
+    IDS_USAGE16 "   /user           <NazwaUżytkownika> should be in form UŻYTKOWNIK@DOMENA or DOMENA\\UŻYTKOWNIK\n"
+    IDS_USAGE17 "   program         linia komend dla EXE. Patrz niżej aby zobaczyć przykłady.\n\n"
+    IDS_USAGE18 "Przykład:\n"
+    IDS_USAGE19 "> runas /noprofile /user:mojamaszyna\\administrator cmd\n\n"
+    IDS_USAGE20 "NOTATKA:  /profile nie jest kompatybilna z /netonly.\n"
+
+    IDS_START     "Próba uruchomienia %s jako użytkownika ""%s\\%s""...\n"
+    IDS_RUN_ERROR "BŁĄD RUNAS: Nie można uruchomić %s\n"
+    IDS_INTERNAL_ERROR "BŁĄD RUNAS: Błąd wewnętrzny %ld\n"
+
+    IDS_PASSWORD  "Wprowadź hasło dla ""%s\\%s"": "
+END
