@@ -706,10 +706,8 @@ struct PenTool : SmoothDrawTool
 {
     void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
     {
-        if (bLeftButton)
-            Line(hdc, pt0.x, pt0.y, pt1.x, pt1.y, toolsModel.GetFgBrush(), toolsModel.GetPenWidth());
-        else
-            Line(hdc, pt0.x, pt0.y, pt1.x, pt1.y, toolsModel.GetBgBrush(), toolsModel.GetPenWidth());
+        HBRUSH hBrush = (bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
+        Line(hdc, pt0.x, pt0.y, pt1.x, pt1.y, hBrush, toolsModel.GetPenWidth());
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -723,12 +721,9 @@ struct BrushTool : SmoothDrawTool
 {
     void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
     {
-        if (bLeftButton)
-            Brush(hdc, pt0.x, pt0.y, pt1.x, pt1.y, toolsModel.GetFgBrush(), toolsModel.GetBrushStyle(),
-                  toolsModel.GetBrushWidth());
-        else
-            Brush(hdc, pt0.x, pt0.y, pt1.x, pt1.y, toolsModel.GetBgBrush(), toolsModel.GetBrushStyle(),
-                  toolsModel.GetBrushWidth());
+        HBRUSH hBrush = (bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
+        Brush(hdc, pt0.x, pt0.y, pt1.x, pt1.y, hBrush, toolsModel.GetBrushStyle(),
+              toolsModel.GetBrushWidth());
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -756,10 +751,8 @@ struct AirBrushTool : SmoothDrawTool
 
     void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
     {
-        if (bLeftButton)
-            Airbrush(hdc, pt1.x, pt1.y, toolsModel.GetFgBrush(), toolsModel.GetAirBrushRadius());
-        else
-            Airbrush(hdc, pt1.x, pt1.y, toolsModel.GetBgBrush(), toolsModel.GetAirBrushRadius());
+        HBRUSH hBrush = (bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
+        Airbrush(hdc, pt1.x, pt1.y, hBrush, toolsModel.GetAirBrushRadius());
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -906,10 +899,8 @@ struct LineTool : TwoPointDrawTool
             return;
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             roundTo8Directions(g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y);
-        if (m_bLeftButton)
-            Line(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, toolsModel.GetFgBrush(), toolsModel.GetLineWidth());
-        else
-            Line(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, toolsModel.GetBgBrush(), toolsModel.GetLineWidth());
+        HBRUSH hBrush = (m_bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
+        Line(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, hBrush, toolsModel.GetLineWidth());
     }
 };
 
@@ -920,27 +911,17 @@ struct BezierTool : ToolBase
 
     void OnDrawOverlayOnImage(HDC hdc)
     {
+        HBRUSH hBrush = (m_bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
         switch (s_cPoints)
         {
             case 2:
-                if (m_bLeftButton)
-                    Line(hdc, s_pPoints[0].x, s_pPoints[0].y, s_pPoints[1].x, s_pPoints[1].y, toolsModel.GetFgBrush(),
-                         toolsModel.GetLineWidth());
-                else
-                    Line(hdc, s_pPoints[0].x, s_pPoints[0].y, s_pPoints[1].x, s_pPoints[1].y, toolsModel.GetBgBrush(),
-                         toolsModel.GetLineWidth());
+                Line(hdc, s_pPoints[0].x, s_pPoints[0].y, s_pPoints[1].x, s_pPoints[1].y, hBrush, toolsModel.GetLineWidth());
                 break;
             case 3:
-                if (m_bLeftButton)
-                    Bezier(hdc, toolsModel.GetFgBrush(), s_pPoints[0], s_pPoints[2], s_pPoints[2], s_pPoints[1], toolsModel.GetLineWidth());
-                else
-                    Bezier(hdc, toolsModel.GetBgBrush(), s_pPoints[0], s_pPoints[2], s_pPoints[2], s_pPoints[1], toolsModel.GetLineWidth());
+                Bezier(hdc, hBrush, s_pPoints[0], s_pPoints[2], s_pPoints[2], s_pPoints[1], toolsModel.GetLineWidth());
                 break;
             case 4:
-                if (m_bLeftButton)
-                    Bezier(hdc, toolsModel.GetFgBrush(), s_pPoints[0], s_pPoints[2], s_pPoints[3], s_pPoints[1], toolsModel.GetLineWidth());
-                else
-                    Bezier(hdc, toolsModel.GetBgBrush(), s_pPoints[0], s_pPoints[2], s_pPoints[3], s_pPoints[1], toolsModel.GetLineWidth());
+                Bezier(hdc, hBrush, s_pPoints[0], s_pPoints[2], s_pPoints[3], s_pPoints[1], toolsModel.GetLineWidth());
                 break;
         }
     }
