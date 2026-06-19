@@ -2002,6 +2002,17 @@ BOOL WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer,
     field = &file->fields[line->first_field + index];
     for (i = index; i < line->nb_fields; i++, field++)
     {
+#if __REACTOS__ /* The HEX parser from Wine is broken */
+        errno = 0;
+        ULONG value = wcstoul(field->text, NULL, 16);
+        if (value > 255 || errno != 0)
+        {
+            SetLastError( ERROR_INVALID_DATA );
+            return FALSE;
+        }
+
+        buffer[i - index] = (BYTE)value;
+#else
         const WCHAR *p;
         DWORD value = 0;
         for (p = field->text; *p && isxdigitW(*p); p++)
@@ -2015,6 +2026,7 @@ BOOL WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer,
             else value |= (tolowerW(*p) - 'a' + 10);
         }
         buffer[i - index] = value;
+#endif
     }
     if (TRACE_ON(setupapi))
     {
