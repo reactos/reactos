@@ -421,7 +421,7 @@ VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
     GetScrollInfo(fnBar, &si);
 
     INT nCount;
-#define CHAR_WIDTH 8
+    const INT CHAR_WIDTH = 8;
     switch (LOWORD(wParam))
     {
         case SB_THUMBTRACK:
