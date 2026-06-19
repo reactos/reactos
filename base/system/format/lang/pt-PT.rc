@@ -14,8 +14,8 @@ BEGIN
   -FS:file-system  Especifica o tipo de sistema de ficheiros. (%s).\n\
   -V:label         Especifica o rótulo do volume.\n\
   -Q               Executa uma formatação rápida.\n\
-  -A:size          Substitui o tamanho da unidade de alocação predefinido.\nConfigurações predefinidas\n\
-                   são fortemente recomendadas para uso geral.\n\
+  -A:size          Substitui o tamanho da unidade de alocação predefinido.\n\
+                   Configurações predefinidas são fortemente recomendadas para uso geral.\n\
                    NTFS suporta 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                    FAT suporta 8192, 16K, 32K, 64K, 128K, 256K.\n\
                    NTFS compressão não é suportada para os tamanhos de unidades de alocação.\n\
@@ -36,7 +36,7 @@ BEGIN
     STRING_LABEL_NAME_EDIT "Introduza o nome para o volume actual na unidade %C:"
     STRING_ERROR_LABEL "Foi introduzido um nome de volume incorrecto para esta unidade.\n"
     STRING_YN_FORMAT "\nAVISO: TODOS OS DADOS NO DISCO NÃO REMOVÍVEL\n\
-NA UNIDADE %C: SERÃO PERDIDOS!\nProsseguir com a formatação(S/N)?"
+NA UNIDADE %C: SERÃO PERDIDOS!\nProsseguir com a formatação (S/N)?"
     STRING_YES_NO_FAQ "SN"
     STRING_VERIFYING "A verificar"
     STRING_FAST_FMT "Formatação rápida"
