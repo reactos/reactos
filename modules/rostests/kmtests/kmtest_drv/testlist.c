@@ -88,6 +88,7 @@ KMT_TESTFUNC Test_RtlStrSafe;
 KMT_TESTFUNC Test_RtlUnicodeString;
 KMT_TESTFUNC Test_ZwAllocateVirtualMemory;
 KMT_TESTFUNC Test_ZwCreateSection;
+KMT_TESTFUNC Test_ZwNotifyChangeKey;
 KMT_TESTFUNC Test_ZwMapViewOfSection;
 KMT_TESTFUNC Test_ZwWaitForMultipleObjects;
 
@@ -175,6 +176,7 @@ const KMT_TEST TestList[] =
     { "ZwAllocateVirtualMemory",            Test_ZwAllocateVirtualMemory },
     { "ZwCreateSection",                    Test_ZwCreateSection },
     { "ZwMapViewOfSection",                 Test_ZwMapViewOfSection },
+    { "ZwNotifyChangeKey",                  Test_ZwNotifyChangeKey },
     { "ZwWaitForMultipleObjects",           Test_ZwWaitForMultipleObjects},
 #ifdef _M_AMD64
     { "RtlCaptureContextKM",                Test_RtlCaptureContext },
