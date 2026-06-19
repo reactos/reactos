@@ -19,13 +19,13 @@
 #define IDS_HLP_IP_SET_DNS                  215
 #define IDS_HLP_IP_SET_DNS_EX               216
 
-#define IDS_HLP_IP_SHOW      220
-#define IDS_HLP_ADDRESSES    221
-#define IDS_HLP_ADDRESSES_EX 222
-#define IDS_HLP_CONFIG       223
-#define IDS_HLP_CONFIG_EX    224
-#define IDS_HLP_DNS          225
-#define IDS_HLP_DNS_EX       226
+#define IDS_HLP_IP_SHOW                     220
+#define IDS_HLP_IP_SHOW_ADDRESSES           221
+#define IDS_HLP_IP_SHOW_ADDRESSES_EX        222
+#define IDS_HLP_IP_SHOW_CONFIG              223
+#define IDS_HLP_IP_SHOW_CONFIG_EX           224
+#define IDS_HLP_IP_SHOW_DNS                 225
+#define IDS_HLP_IP_SHOW_DNS_EX              226
 
 #define IDS_HLP_WINSOCK_RESET               250
 #define IDS_HLP_WINSOCK_RESET_EX            251

@@ -68,9 +68,9 @@ static
 CMD_ENTRY
 IpShowCommands[] = 
 {
-    {L"addresses", IpShowAddresses, IDS_HLP_ADDRESSES, IDS_HLP_ADDRESSES_EX, 0},
-    {L"config", IpShowConfig, IDS_HLP_CONFIG, IDS_HLP_CONFIG_EX, 0},
-    {L"dns", IpShowDns, IDS_HLP_DNS, IDS_HLP_DNS_EX, 0}
+    {L"addresses", IpShowAddresses, IDS_HLP_IP_SHOW_ADDRESSES, IDS_HLP_IP_SHOW_ADDRESSES_EX, 0},
+    {L"config", IpShowConfig, IDS_HLP_IP_SHOW_CONFIG, IDS_HLP_IP_SHOW_CONFIG_EX, 0},
+    {L"dns", IpShowDns, IDS_HLP_IP_SHOW_DNS, IDS_HLP_IP_SHOW_DNS_EX, 0}
 };
 
 static

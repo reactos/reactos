@@ -116,25 +116,25 @@ Examples:\n\n\
        %1!s! name=""Local Area Connection"" source=dhcp\n\
        %1!s! ""Local Area Connection"" static 10.0.0.1 primary\n"
 
-    IDS_HLP_IP_SHOW      "Displays IP information.\n"
-    IDS_HLP_ADDRESSES    "Displays IP address configuration.\n"
-    IDS_HLP_ADDRESSES_EX "\nUsage: %1!s! [[name=]string]\n\n\
+    IDS_HLP_IP_SHOW              "Displays IP information.\n"
+    IDS_HLP_IP_SHOW_ADDRESSES    "Displays IP address configuration.\n"
+    IDS_HLP_IP_SHOW_ADDRESSES_EX "\nUsage: %1!s! [[name=]string]\n\n\
 Parameters:\n\n\
       Tag             Value\n\
       name            The name of a specific interface.\n\n\
 Remarks: Displays the IP address configuration for a specific interface or interfaces.\n\n\
 Examples:\n\n\
       %1!s! ""Local Area network""\n"
-    IDS_HLP_CONFIG       "Displays IP address and additional information.\n"
-    IDS_HLP_CONFIG_EX    "\nUsage: %1!s! [[name=]string]\n\n\
+    IDS_HLP_IP_SHOW_CONFIG       "Displays IP address and additional information.\n"
+    IDS_HLP_IP_SHOW_CONFIG_EX    "\nUsage: %1!s! [[name=]string]\n\n\
 Parameters:\n\n\
       Tag             Value\n\
       name            The name of a specific interface.\n\n\
 Remarks: Displays the IP address and DNS server configuration for a specific interface\nor interfaces.\n\n\
 Examples:\n\n\
       %1!s! ""Local Area Network""\n"
-    IDS_HLP_DNS          "Displays the DNS server addresses.\n"
-    IDS_HLP_DNS_EX       "\nUsage: %1!s! [[name=]string]\n\n\
+    IDS_HLP_IP_SHOW_DNS          "Displays the DNS server addresses.\n"
+    IDS_HLP_IP_SHOW_DNS_EX       "\nUsage: %1!s! [[name=]string]\n\n\
 Parameters:\n\n\
       Tag             Value\n\
       name            The name of a specific interface.\n\n\
