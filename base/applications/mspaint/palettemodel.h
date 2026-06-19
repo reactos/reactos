@@ -9,7 +9,7 @@
 
 #define NUM_COLORS 28
 
-enum PAL_TYPE : int
+enum PAL_TYPE
 {
     PAL_MODERN = 1,
     PAL_OLDTYPE = 2,
