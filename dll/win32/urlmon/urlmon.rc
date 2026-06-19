@@ -22,10 +22,12 @@
 
 #include "resource.h"
 
+#pragma makedep po
+
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
-ID_AXINSTALL_WARNING_DLG DIALOGEX  0, 0, 260, 115
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+ID_AXINSTALL_WARNING_DLG DIALOG  0, 0, 260, 115
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Security Warning"
 FONT 8, "MS Shell Dlg"
 {
@@ -37,8 +39,15 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON "", ID_AXINSTALL_INSTALL_BTN, 144, 48, 50, 14, WS_GROUP | WS_TABSTOP | WS_DISABLED
     CONTROL "", 102, "static", SS_ETCHEDHORZ, 10, 70, 240, 1
     ICON    "", ID_AXINSTALL_ICON, 10, 82, 32, 32, WS_CHILD | WS_VISIBLE
+#if defined(__REACTOS__) && defined(RC_INVOKED)
     CONTROL "When installed, an ActiveX component has full access to your computer. Do not click install unless you have absolute trust in the above source.",
             22002, "static", SS_LEFT | WS_CHILD | WS_VISIBLE, 46, 80, 194, 23
+#else
+    CONTROL "When installed, an ActiveX component has full access to your " \
+            "computer. Do not click install unless you have absolute trust " \
+            "in the above source.",
+            22002, "static", SS_LEFT | WS_CHILD | WS_VISIBLE, 46, 80, 194, 23
+#endif
 }
 
 STRINGTABLE
@@ -53,10 +62,12 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 /* @makedep: urlmon.rgs */
 1 WINE_REGISTRY urlmon.rgs
 
-2 WINE_REGISTRY "urlmon_urlmon.rgs"
-
 /* @makedep: urlmon.inf */
+#ifdef __REACTOS__
 REGINST REGINST urlmon_utf16.inf
+#else
+REGINST REGINST urlmon.inf
+#endif
 
 #define WINE_FILENAME_STR "urlmon.dll"
 #define WINE_FILEVERSION 6,0,2800,1485
