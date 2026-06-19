@@ -205,7 +205,7 @@ Poly(HDC hdc, POINT * lpPoints, int nCount,  COLORREF fg,  COLORREF bg, int thic
 }
 
 void
-Poly(HDC hdc, HBRUSH hFgBrush, HBRUSH hBgBrush, POINT *lpPoints, INT nCount, INT thickness, INT style, BOOL closed, BOOL inverted)
+Poly(HDC hdc, POINT *lpPoints, INT nCount, HBRUSH hFgBrush, HBRUSH hBgBrush, INT thickness, INT style, BOOL closed, BOOL inverted)
 {
     UINT oldRop = GetROP2(hdc);
     if (inverted)
@@ -259,7 +259,7 @@ Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, COLORREF color, int thic
 }
 
 void
-Bezier(HDC hdc, HBRUSH hBrush, POINT p1, POINT p2, POINT p3, POINT p4, INT thickness)
+Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, HBRUSH hBrush, INT thickness)
 {
     HPEN oldPen;
     POINT fourPoints[4];

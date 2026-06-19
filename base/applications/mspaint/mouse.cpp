@@ -560,7 +560,7 @@ struct FreeSelTool : SelectionBaseTool
         if (!selectionModel.m_bShow && m_bDrawing)
         {
             /* Draw the freehand selection inverted/xored */
-            Poly(hdc, s_pPoints, (INT)s_cPoints, 0, 0, 2, 0, FALSE, TRUE);
+            Poly(hdc, s_pPoints, (INT)s_cPoints, (int)0, 0, 2, 0, FALSE, TRUE);
         }
     }
 };
@@ -918,10 +918,10 @@ struct BezierTool : ToolBase
                 Line(hdc, s_pPoints[0].x, s_pPoints[0].y, s_pPoints[1].x, s_pPoints[1].y, hBrush, toolsModel.GetLineWidth());
                 break;
             case 3:
-                Bezier(hdc, hBrush, s_pPoints[0], s_pPoints[2], s_pPoints[2], s_pPoints[1], toolsModel.GetLineWidth());
+                Bezier(hdc, s_pPoints[0], s_pPoints[2], s_pPoints[2], s_pPoints[1], hBrush, toolsModel.GetLineWidth());
                 break;
             case 4:
-                Bezier(hdc, hBrush, s_pPoints[0], s_pPoints[2], s_pPoints[3], s_pPoints[1], toolsModel.GetLineWidth());
+                Bezier(hdc, s_pPoints[0], s_pPoints[2], s_pPoints[3], s_pPoints[1], hBrush, toolsModel.GetLineWidth());
                 break;
         }
     }
@@ -1008,9 +1008,9 @@ struct ShapeTool : ToolBase
             return;
 
         if (m_bLeftButton)
-            Poly(hdc, toolsModel.GetFgBrush(), toolsModel.GetBgBrush(), s_pPoints, (INT)s_cPoints, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
+            Poly(hdc, s_pPoints, (INT)s_cPoints, toolsModel.GetFgBrush(), toolsModel.GetBgBrush(), toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
         else
-            Poly(hdc, toolsModel.GetBgBrush(), toolsModel.GetFgBrush(), s_pPoints, (INT)s_cPoints, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
+            Poly(hdc, s_pPoints, (INT)s_cPoints, toolsModel.GetBgBrush(), toolsModel.GetFgBrush(), toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override

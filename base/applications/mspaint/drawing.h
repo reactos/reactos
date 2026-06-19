@@ -21,10 +21,10 @@ void RRect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg
 void RRect(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hFgBrush, HBRUSH hBgBrush, INT thickness, INT style);
 
 void Poly(HDC hdc, POINT *lpPoints, int nCount, COLORREF fg, COLORREF bg, int thickness, int style, BOOL closed, BOOL inverted);
-void Poly(HDC hdc, HBRUSH hFgBrush, HBRUSH hBgBrush, POINT *lpPoints, INT nCount, INT thickness, INT style, BOOL closed, BOOL inverted);
+void Poly(HDC hdc, POINT *lpPoints, INT nCount, HBRUSH hFgBrush, HBRUSH hBgBrush, INT thickness, INT style, BOOL closed, BOOL inverted);
 
 void Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, COLORREF color, int thickness);
-void Bezier(HDC hdc, HBRUSH hBrush, POINT p1, POINT p2, POINT p3, POINT p4, INT thickness);
+void Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, HBRUSH hBrush, INT thickness);
 
 void Fill(HDC hdc, LONG x, LONG y, COLORREF color);
 void Fill(HDC hdc, LONG x, LONG y, HBRUSH hBrush);
