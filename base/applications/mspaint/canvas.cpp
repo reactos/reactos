@@ -421,7 +421,7 @@ VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
     GetScrollInfo(fnBar, &si);
 
     INT nCount;
-    const INT CHAR_WIDTH = 8;
+    const INT CHAR_WIDTH = 8, LINE_HEIGHT = 8;
     switch (LOWORD(wParam))
     {
         case SB_THUMBTRACK:
@@ -429,12 +429,28 @@ VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
             si.nPos = (SHORT)HIWORD(wParam);
             break;
         case SB_LINELEFT:
-            SystemParametersInfoW(SPI_GETWHEELSCROLLCHARS, 0, &nCount, 0);
-            si.nPos -= nCount * CHAR_WIDTH;
+            if (fnBar == SB_HORZ)
+            {
+                SystemParametersInfoW(SPI_GETWHEELSCROLLCHARS, 0, &nCount, 0);
+                si.nPos -= nCount * CHAR_WIDTH;
+            }
+            else
+            {
+                SystemParametersInfoW(SPI_GETWHEELSCROLLLINES, 0, &nCount, 0);
+                si.nPos -= nCount * LINE_HEIGHT;
+            }
             break;
         case SB_LINERIGHT:
-            SystemParametersInfoW(SPI_GETWHEELSCROLLCHARS, 0, &nCount, 0);
-            si.nPos += nCount * CHAR_WIDTH;
+            if (fnBar == SB_HORZ)
+            {
+                SystemParametersInfoW(SPI_GETWHEELSCROLLCHARS, 0, &nCount, 0);
+                si.nPos += nCount * CHAR_WIDTH;
+            }
+            else
+            {
+                SystemParametersInfoW(SPI_GETWHEELSCROLLLINES, 0, &nCount, 0);
+                si.nPos += nCount * LINE_HEIGHT;
+            }
             break;
         case SB_PAGELEFT:
             si.nPos -= si.nPage;
