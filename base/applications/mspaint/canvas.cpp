@@ -419,6 +419,9 @@ VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
     si.cbSize = sizeof(SCROLLINFO);
     si.fMask = SIF_ALL;
     GetScrollInfo(fnBar, &si);
+
+    INT nCount;
+#define CHAR_WIDTH 8
     switch (LOWORD(wParam))
     {
         case SB_THUMBTRACK:
@@ -426,10 +429,12 @@ VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
             si.nPos = (SHORT)HIWORD(wParam);
             break;
         case SB_LINELEFT:
-            si.nPos -= 15;
+            SystemParametersInfoW(SPI_GETWHEELSCROLLCHARS, 0, &nCount, 0);
+            si.nPos -= nCount * CHAR_WIDTH;
             break;
         case SB_LINERIGHT:
-            si.nPos += 15;
+            SystemParametersInfoW(SPI_GETWHEELSCROLLCHARS, 0, &nCount, 0);
+            si.nPos += nCount * CHAR_WIDTH;
             break;
         case SB_PAGELEFT:
             si.nPos -= si.nPage;

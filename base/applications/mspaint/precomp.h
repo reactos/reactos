@@ -52,6 +52,10 @@
 #define WM_TOOLSMODELZOOMCHANGED         (WM_APP + 2)
 #define WM_PALETTEMODELCOLORCHANGED      (WM_APP + 3)
 
+#ifndef SPI_GETWHEELSCROLLCHARS
+    #define SPI_GETWHEELSCROLLCHARS 0x006C  // Needed for pre-NT6 PSDK
+#endif
+
 enum HITTEST // hit
 {
     HIT_NONE = 0, // Nothing hit or outside
