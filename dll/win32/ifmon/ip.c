@@ -33,6 +33,7 @@
 
 static FN_HANDLE_CMD IpAddAddress;
 static FN_HANDLE_CMD IpAddDns;
+static FN_HANDLE_CMD IpDeleteArpCache;
 static FN_HANDLE_CMD IpSetAddress;
 static FN_HANDLE_CMD IpSetDns;
 static FN_HANDLE_CMD IpShowAddresses;
@@ -46,6 +47,13 @@ IpAddCommands[] =
 {
     {L"address", IpAddAddress, IDS_HLP_IP_ADD_ADDRESS, IDS_HLP_IP_ADD_ADDRESS_EX, 0},
     {L"dns", IpAddDns, IDS_HLP_IP_ADD_DNS, IDS_HLP_IP_ADD_DNS_EX, 0}
+};
+
+static
+CMD_ENTRY
+IpDeleteCommands[] = 
+{
+    {L"arpcache", IpDeleteArpCache, IDS_HLP_IP_DELETE_ARPCACHE, IDS_HLP_IP_DELETE_ARPCACHE_EX, 0}
 };
 
 static
@@ -70,6 +78,7 @@ CMD_GROUP_ENTRY
 IpGroups[] = 
 {
     {L"add", IDS_HLP_IP_ADD, sizeof(IpAddCommands) / sizeof(CMD_ENTRY), 0, IpAddCommands, NULL},
+    {L"delete", IDS_HLP_IP_DELETE, sizeof(IpDeleteCommands) / sizeof(CMD_ENTRY), 0, IpDeleteCommands, NULL},
     {L"set", IDS_HLP_IP_SET, sizeof(IpSetCommands) / sizeof(CMD_ENTRY), 0, IpSetCommands, NULL},
     {L"show", IDS_HLP_IP_SHOW, sizeof(IpShowCommands) / sizeof(CMD_ENTRY), 0, IpShowCommands, NULL},
 };
@@ -887,6 +896,126 @@ done:
     pProperties = NULL;
 
     DPRINT("IpAddDns() done (Error %lu)\n", dwError);
+    return dwError;
+}
+
+
+static
+DWORD
+WINAPI
+IpDeleteArpCache(
+    LPCWSTR pwszMachine,
+    LPWSTR *argv,
+    DWORD dwCurrentIndex,
+    DWORD dwArgCount,
+    DWORD dwFlags,
+    LPCVOID pvData,
+    BOOL *pbDone)
+{
+    TAG_TYPE pttTags[] = {{L"name", NS_REQ_ZERO, FALSE}};
+    GUID InterfaceGUID;
+    PDWORD pdwTagType = NULL;
+    DWORD dwCount = 0, i;
+    PWSTR pszName = NULL;
+    IP_INTERFACE_NAME_INFO *pTable = NULL;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("IpDeleteArpCache()\n");
+
+    pdwTagType = HeapAlloc(GetProcessHeap(),
+                           0,
+                           (dwArgCount - dwCurrentIndex) * sizeof(DWORD));
+    if (pdwTagType == NULL)
+    {
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    dwError = MatchTagsInCmdLine(hDllInstance,
+                                 argv,
+                                 dwCurrentIndex,
+                                 dwArgCount,
+                                 pttTags,
+                                 ARRAYSIZE(pttTags),
+                                 pdwTagType);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("MatchTagsInCmdLine() failed (Error %lu)\n", dwError);
+        HeapFree(GetProcessHeap(), 0, pdwTagType);
+        return dwError;
+    }
+
+    for (i = 0; i < (dwArgCount - dwCurrentIndex); i++)
+    {
+        DPRINT("Tag %lu: %lu\n", i, pdwTagType[i]);
+
+        switch (pdwTagType[i])
+        {
+            case 0: /* name */
+                DPRINT("Tag: name (%S)\n", argv[i + dwCurrentIndex]);
+                dwError = NhGetGuidFromInterfaceName(argv[i + dwCurrentIndex],
+                                                     &InterfaceGUID,
+                                                     0, 0);
+                if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT("NhGetGuidFromInterfaceName() failed (Error %lu)\n", dwError);
+                    PrintMessageFromModule(hDllInstance,
+                                           IDS_ERROR_INVALID_INTERFACE,
+                                           argv[i + dwCurrentIndex]);
+                    dwError = ERROR_SUPPRESS_OUTPUT;
+                    break;
+                }
+                pszName = argv[i + dwCurrentIndex];
+                DPRINT("Interface: {%08lx-%04hx-%04hx-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
+                       InterfaceGUID.Data1, InterfaceGUID.Data2, InterfaceGUID.Data3, InterfaceGUID.Data4[0], InterfaceGUID.Data4[1],
+                       InterfaceGUID.Data4[2], InterfaceGUID.Data4[3], InterfaceGUID.Data4[4], InterfaceGUID.Data4[5], InterfaceGUID.Data4[6], InterfaceGUID.Data4[7]);
+                break;
+
+            default:
+                DPRINT1("Unknown tag type %lu\n", pdwTagType[i]);
+                break;
+        }
+    }
+
+    if (pdwTagType)
+        HeapFree(GetProcessHeap(), 0, pdwTagType);
+
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    dwError = NhpAllocateAndGetInterfaceInfoFromStack(&pTable,
+                                                      &dwCount,
+                                                      FALSE,
+                                                      GetProcessHeap(),
+                                                      0);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("NhpAllocateAndGetInterfaceInfoFromStack() failed (Error %lu)\n", dwError);
+        return dwError;
+    }
+
+    DPRINT("\nEntries: %lu\n", dwCount);
+
+    for (i = 0; i < dwCount; i++)
+    {
+        DPRINT("\nEntry %lu\n", i);
+        DPRINT("Index: %lu\n", pTable[i].Index);
+        DPRINT("MediaType: %lu\n", pTable[i].MediaType);
+        DPRINT("ConnectionType: %u\n", pTable[i].ConnectionType);
+        DPRINT("AccessType: %u\n", pTable[i].AccessType);
+        DPRINT("DeviceGuid: %08lx\n", pTable[i].DeviceGuid.Data1);
+        DPRINT("InterfaceGuid: %08lx\n", pTable[i].InterfaceGuid.Data1);
+
+        if ((pszName == NULL) || (memcmp(&pTable[i].DeviceGuid, &InterfaceGUID, sizeof(GUID)) == 0))
+        {
+            DPRINT("Delete ARP cache for %S (Index: %u)\n", pszName, pTable[i].Index);
+            FlushIpNetTable(pTable[i].Index); /* Windows XP uses FlushIpNetTableFromStack() */
+        }
+    }
+
+    if (pTable)
+        HeapFree(GetProcessHeap(), 0, pTable);
+
+    DPRINT("IpDeleteArpCache() done (Error %lu)\n", dwError);
     return dwError;
 }
 

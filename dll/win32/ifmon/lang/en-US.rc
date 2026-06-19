@@ -44,6 +44,21 @@ Examples:\n\n\
        %1!s! ""Local Area Connection"" 10.0.0.1\n\
        %1!s! ""Local Area Connection"" 10.0.0.3 index=2\n"
 
+    IDS_HLP_IP_DELETE             "Deletes a configuration entry from a table.\n"
+
+    IDS_HLP_IP_DELETE_ARPCACHE    "Flushes the ARP cache for one or all interfaces.\n"
+    IDS_HLP_IP_DELETE_ARPCACHE_EX "\nUsage: %1!s! [name=]<string>\n\n\
+Parameters:\n\n\
+      Tag            Value\n\
+      name         - The friendly name of a specific interface. If a name\n\
+                     is not specified, the ARP caches for all interfaces\n\
+                     are flushed.\n\n\
+Remarks: Flushes the Address Resolution Protocol (ARP) cache on a specific\n\
+         interface or all interfaces.\n\n\
+Examples:\n\n\
+       %1!s!\n\
+       %1!s! name=""Local Area Connection""\n"
+
     IDS_HLP_IP_SET             "Sets configuration information.\n"
     IDS_HLP_IP_SET_ADDRESS     "Sets the IP address or default gateway to the specified interface.\n"
     IDS_HLP_IP_SET_ADDRESS_EX  "\nUsage: %1!s! [name=]<string> \n\

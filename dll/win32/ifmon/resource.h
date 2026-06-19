@@ -9,25 +9,29 @@
 #define IDS_HLP_IP_ADD_DNS                  203
 #define IDS_HLP_IP_ADD_DNS_EX               204
 
-#define IDS_HLP_IP_SET                      205
-#define IDS_HLP_IP_SET_ADDRESS              206
-#define IDS_HLP_IP_SET_ADDRESS_EX           207
-#define IDS_HLP_IP_SET_DNS                  208
-#define IDS_HLP_IP_SET_DNS_EX               209
+#define IDS_HLP_IP_DELETE                   205
+#define IDS_HLP_IP_DELETE_ARPCACHE          208
+#define IDS_HLP_IP_DELETE_ARPCACHE_EX       209
 
-#define IDS_HLP_IP_SHOW      210
-#define IDS_HLP_ADDRESSES    211
-#define IDS_HLP_ADDRESSES_EX 212
-#define IDS_HLP_CONFIG       213
-#define IDS_HLP_CONFIG_EX    214
-#define IDS_HLP_DNS          215
-#define IDS_HLP_DNS_EX       216
+#define IDS_HLP_IP_SET                      212
+#define IDS_HLP_IP_SET_ADDRESS              213
+#define IDS_HLP_IP_SET_ADDRESS_EX           214
+#define IDS_HLP_IP_SET_DNS                  215
+#define IDS_HLP_IP_SET_DNS_EX               216
 
-#define IDS_HLP_WINSOCK_RESET               230
-#define IDS_HLP_WINSOCK_RESET_EX            231
-#define IDS_HLP_WINSOCK_SHOW                232
-#define IDS_HLP_WINSOCK_SHOW_CATALOG        233
-#define IDS_HLP_WINSOCK_SHOW_CATALOG_EX     234
+#define IDS_HLP_IP_SHOW      220
+#define IDS_HLP_ADDRESSES    221
+#define IDS_HLP_ADDRESSES_EX 222
+#define IDS_HLP_CONFIG       223
+#define IDS_HLP_CONFIG_EX    224
+#define IDS_HLP_DNS          225
+#define IDS_HLP_DNS_EX       226
+
+#define IDS_HLP_WINSOCK_RESET               250
+#define IDS_HLP_WINSOCK_RESET_EX            251
+#define IDS_HLP_WINSOCK_SHOW                252
+#define IDS_HLP_WINSOCK_SHOW_CATALOG        253
+#define IDS_HLP_WINSOCK_SHOW_CATALOG_EX     254
 
 #define IDS_IP_HEADER        300
 #define IDS_DHCP_ON          301
