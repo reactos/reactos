@@ -65,7 +65,7 @@ static ULONG WINAPI MimeFilterProtocol_AddRef(IInternetProtocol *iface)
 {
     MimeFilter *This = impl_from_IInternetProtocol(iface);
     LONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
     return ref;
 }
 
@@ -74,10 +74,10 @@ static ULONG WINAPI MimeFilterProtocol_Release(IInternetProtocol *iface)
     MimeFilter *This = impl_from_IInternetProtocol(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
-        heap_free(This);
+        free(This);
 
         URLMON_UnlockModule();
     }
@@ -90,7 +90,7 @@ static HRESULT WINAPI MimeFilterProtocol_Start(IInternetProtocol *iface, LPCWSTR
         DWORD grfPI, HANDLE_PTR dwReserved)
 {
     MimeFilter *This = impl_from_IInternetProtocol(iface);
-    FIXME("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
+    FIXME("(%p)->(%s %p %p %08lx %Ix)\n", This, debugstr_w(szUrl), pOIProtSink,
           pOIBindInfo, grfPI, dwReserved);
     return E_NOTIMPL;
 }
@@ -106,14 +106,14 @@ static HRESULT WINAPI MimeFilterProtocol_Abort(IInternetProtocol *iface, HRESULT
         DWORD dwOptions)
 {
     MimeFilter *This = impl_from_IInternetProtocol(iface);
-    FIXME("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
+    FIXME("(%p)->(%08lx %08lx)\n", This, hrReason, dwOptions);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI MimeFilterProtocol_Terminate(IInternetProtocol *iface, DWORD dwOptions)
 {
     MimeFilter *This = impl_from_IInternetProtocol(iface);
-    FIXME("(%p)->(%08x)\n", This, dwOptions);
+    FIXME("(%p)->(%08lx)\n", This, dwOptions);
     return E_NOTIMPL;
 }
 
@@ -135,7 +135,7 @@ static HRESULT WINAPI MimeFilterProtocol_Read(IInternetProtocol *iface, void *pv
         ULONG cb, ULONG *pcbRead)
 {
     MimeFilter *This = impl_from_IInternetProtocol(iface);
-    FIXME("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
+    FIXME("(%p)->(%p %lu %p)\n", This, pv, cb, pcbRead);
     return E_NOTIMPL;
 }
 
@@ -143,14 +143,14 @@ static HRESULT WINAPI MimeFilterProtocol_Seek(IInternetProtocol *iface, LARGE_IN
         DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
     MimeFilter *This = impl_from_IInternetProtocol(iface);
-    FIXME("(%p)->(%d %d %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
+    FIXME("(%p)->(%ld %ld %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI MimeFilterProtocol_LockRequest(IInternetProtocol *iface, DWORD dwOptions)
 {
     MimeFilter *This = impl_from_IInternetProtocol(iface);
-    FIXME("(%p)->(%08x)\n", This, dwOptions);
+    FIXME("(%p)->(%08lx)\n", This, dwOptions);
     return E_NOTIMPL;
 }
 
@@ -213,7 +213,7 @@ static HRESULT WINAPI MimeFilterSink_ReportProgress(IInternetProtocolSink *iface
         ULONG ulStatusCode, LPCWSTR szStatusText)
 {
     MimeFilter *This = impl_from_IInternetProtocolSink(iface);
-    FIXME("(%p)->(%u %s)\n", This, ulStatusCode, debugstr_w(szStatusText));
+    FIXME("(%p)->(%lu %s)\n", This, ulStatusCode, debugstr_w(szStatusText));
     return E_NOTIMPL;
 }
 
@@ -221,7 +221,7 @@ static HRESULT WINAPI MimeFilterSink_ReportData(IInternetProtocolSink *iface,
         DWORD grfBSCF, ULONG ulProgress, ULONG ulProgressMax)
 {
     MimeFilter *This = impl_from_IInternetProtocolSink(iface);
-    FIXME("(%p)->(%d %u %u)\n", This, grfBSCF, ulProgress, ulProgressMax);
+    FIXME("(%p)->(%ld %lu %lu)\n", This, grfBSCF, ulProgress, ulProgressMax);
     return E_NOTIMPL;
 }
 
@@ -229,7 +229,7 @@ static HRESULT WINAPI MimeFilterSink_ReportResult(IInternetProtocolSink *iface,
         HRESULT hrResult, DWORD dwError, LPCWSTR szResult)
 {
     MimeFilter *This = impl_from_IInternetProtocolSink(iface);
-    FIXME("(%p)->(%08x %d %s)\n", This, hrResult, dwError, debugstr_w(szResult));
+    FIXME("(%p)->(%08lx %ld %s)\n", This, hrResult, dwError, debugstr_w(szResult));
     return E_NOTIMPL;
 }
 
@@ -251,7 +251,7 @@ HRESULT MimeFilter_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 
     URLMON_LockModule();
 
-    ret = heap_alloc_zero(sizeof(MimeFilter));
+    ret = calloc(1, sizeof(MimeFilter));
 
     ret->IInternetProtocol_iface.lpVtbl = &MimeFilterProtocolVtbl;
     ret->IInternetProtocolSink_iface.lpVtbl = &InternetProtocolSinkVtbl;
@@ -428,14 +428,12 @@ HRESULT find_mime_from_ext(const WCHAR *ext, WCHAR **ret)
     WCHAR mime[64];
     HKEY hkey;
 
-    static const WCHAR content_typeW[] = {'C','o','n','t','e','n','t',' ','T','y','p','e','\0'};
-
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, ext, &hkey);
     if(res != ERROR_SUCCESS)
         return HRESULT_FROM_WIN32(res);
 
     size = sizeof(mime);
-    res = RegQueryValueExW(hkey, content_typeW, NULL, NULL, (LPBYTE)mime, &size);
+    res = RegQueryValueExW(hkey, L"Content Type", NULL, NULL, (BYTE*)mime, &size);
     RegCloseKey(hkey);
     if(res != ERROR_SUCCESS)
         return HRESULT_FROM_WIN32(res);
@@ -469,7 +467,7 @@ static HRESULT find_mime_from_url(const WCHAR *url, WCHAR **ret)
     if(*end_ptr) {
         unsigned len = end_ptr-ptr;
 
-        ext = heap_alloc((len+1)*sizeof(WCHAR));
+        ext = malloc((len + 1) * sizeof(WCHAR));
         if(!ext)
             return E_OUTOFMEMORY;
 
@@ -478,67 +476,44 @@ static HRESULT find_mime_from_url(const WCHAR *url, WCHAR **ret)
     }
 
     hres = find_mime_from_ext(ext ? ext : ptr, ret);
-    heap_free(ext);
+    free(ext);
     return hres;
 }
 
-static const WCHAR text_htmlW[] = {'t','e','x','t','/','h','t','m','l',0};
-static const WCHAR text_richtextW[] = {'t','e','x','t','/','r','i','c','h','t','e','x','t',0};
-static const WCHAR text_xmlW[] = {'t','e','x','t','/','x','m','l',0};
-static const WCHAR audio_basicW[] = {'a','u','d','i','o','/','b','a','s','i','c',0};
-static const WCHAR audio_wavW[] = {'a','u','d','i','o','/','w','a','v',0};
-static const WCHAR image_gifW[] = {'i','m','a','g','e','/','g','i','f',0};
-static const WCHAR image_pjpegW[] = {'i','m','a','g','e','/','p','j','p','e','g',0};
-static const WCHAR image_tiffW[] = {'i','m','a','g','e','/','t','i','f','f',0};
-static const WCHAR image_xpngW[] = {'i','m','a','g','e','/','x','-','p','n','g',0};
-static const WCHAR image_bmpW[] = {'i','m','a','g','e','/','b','m','p',0};
-static const WCHAR video_aviW[] = {'v','i','d','e','o','/','a','v','i',0};
-static const WCHAR video_mpegW[] = {'v','i','d','e','o','/','m','p','e','g',0};
-static const WCHAR app_postscriptW[] =
-        {'a','p','p','l','i','c','a','t','i','o','n','/','p','o','s','t','s','c','r','i','p','t',0};
-static const WCHAR app_pdfW[] = {'a','p','p','l','i','c','a','t','i','o','n','/','p','d','f',0};
-static const WCHAR app_xzipW[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-        'x','-','z','i','p','-','c','o','m','p','r','e','s','s','e','d',0};
-static const WCHAR app_xgzipW[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-        'x','-','g','z','i','p','-','c','o','m','p','r','e','s','s','e','d',0};
-static const WCHAR app_javaW[] = {'a','p','p','l','i','c','a','t','i','o','n','/','j','a','v','a',0};
-static const WCHAR app_xmsdownloadW[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-        'x','-','m','s','d','o','w','n','l','o','a','d',0};
-static const WCHAR text_plainW[] = {'t','e','x','t','/','p','l','a','i','n','\0'};
-static const WCHAR app_octetstreamW[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-        'o','c','t','e','t','-','s','t','r','e','a','m','\0'};
+static const WCHAR text_plainW[] = L"text/plain";
+static const WCHAR app_octetstreamW[] = L"application/octet-stream";
 
 static const struct {
     const WCHAR *mime;
     BOOL (*filter)(const BYTE *,DWORD);
 } mime_filters_any_pos[] = {
-    {text_htmlW,       text_html_filter},
-    {text_xmlW,        text_xml_filter}
+    {L"text/html",       text_html_filter},
+    {L"text/xml",        text_xml_filter}
 }, mime_filters[] = {
-    {text_richtextW,   text_richtext_filter},
- /* {audio_xaiffW,     audio_xaiff_filter}, */
-    {audio_basicW,     audio_basic_filter},
-    {audio_wavW,       audio_wav_filter},
-    {image_gifW,       image_gif_filter},
-    {image_pjpegW,     image_pjpeg_filter},
-    {image_tiffW,      image_tiff_filter},
-    {image_xpngW,      image_xpng_filter},
- /* {image_xbitmapW,   image_xbitmap_filter}, */
-    {image_bmpW,       image_bmp_filter},
- /* {image_xjgW,       image_xjg_filter}, */
- /* {image_xemfW,      image_xemf_filter}, */
- /* {image_xwmfW,      image_xwmf_filter}, */
-    {video_aviW,       video_avi_filter},
-    {video_mpegW,      video_mpeg_filter},
-    {app_postscriptW,  application_postscript_filter},
- /* {app_base64W,      application_base64_filter}, */
- /* {app_macbinhex40W, application_macbinhex40_filter}, */
-    {app_pdfW,         application_pdf_filter},
- /* {app_zcompressedW, application_xcompressed_filter}, */
-    {app_xzipW,        application_xzip_filter},
-    {app_xgzipW,       application_xgzip_filter},
-    {app_javaW,        application_java_filter},
-    {app_xmsdownloadW, application_xmsdownload},
+    {L"text/richtext",   text_richtext_filter},
+ /* {L"audio/x-aiff",    audio_xaiff_filter}, */
+    {L"audio/basic",     audio_basic_filter},
+    {L"audio/wav",       audio_wav_filter},
+    {L"image/gif",       image_gif_filter},
+    {L"image/pjpeg",     image_pjpeg_filter},
+    {L"image/tiff",      image_tiff_filter},
+    {L"image/x-png",     image_xpng_filter},
+ /* {L"image/x-bitmap",  image_xbitmap_filter}, */
+    {L"image/bmp",       image_bmp_filter},
+ /* {L"image/x-jg",      image_xjg_filter}, */
+ /* {L"image/x-emf",     image_xemf_filter}, */
+ /* {L"image/x-wmf",     image_xwmf_filter}, */
+    {L"video/avi",       video_avi_filter},
+    {L"video/mpeg",      video_mpeg_filter},
+    {L"application/postscript",         application_postscript_filter},
+ /* {L"application/base64",             application_base64_filter}, */
+ /* {L"application/mac-binhex40",       application_macbinhex40_filter}, */
+    {L"application/pdf",                application_pdf_filter},
+ /* {L"application/x-compressed",       application_xcompressed_filter}, */
+    {L"application/x-zip-compressed",   application_xzip_filter},
+    {L"application/x-gzip-compressed",  application_xgzip_filter},
+    {L"application/java",               application_java_filter},
+    {L"application/x-msdownload",       application_xmsdownload},
     {text_plainW,      text_plain_filter},
     {app_octetstreamW, application_octet_stream_filter}
 };
@@ -681,13 +656,13 @@ HRESULT WINAPI FindMimeFromData(LPBC pBC, LPCWSTR pwzUrl, LPVOID pBuffer,
         DWORD cbSize, LPCWSTR pwzMimeProposed, DWORD dwMimeFlags,
         LPWSTR* ppwzMimeOut, DWORD dwReserved)
 {
-    TRACE("(%p,%s,%p,%d,%s,0x%x,%p,0x%x)\n", pBC, debugstr_w(pwzUrl), pBuffer, cbSize,
+    TRACE("(%p,%s,%p,%ld,%s,0x%lx,%p,0x%lx)\n", pBC, debugstr_w(pwzUrl), pBuffer, cbSize,
             debugstr_w(pwzMimeProposed), dwMimeFlags, ppwzMimeOut, dwReserved);
 
     if(dwMimeFlags)
-        WARN("dwMimeFlags=%08x\n", dwMimeFlags);
+        WARN("dwMimeFlags=%08lx\n", dwMimeFlags);
     if(dwReserved)
-        WARN("dwReserved=%d\n", dwReserved);
+        WARN("dwReserved=%ld\n", dwReserved);
 
     /* pBC seems to not be used */
 

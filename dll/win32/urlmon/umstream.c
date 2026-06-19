@@ -22,7 +22,7 @@
 #include "urlmon_main.h"
 
 #include "winreg.h"
-#include "wine/winternl.h"
+#include "winternl.h"
 #include "wininet.h"
 #include "shlwapi.h"
 
@@ -263,13 +263,13 @@ HRESULT WINAPI URLOpenBlockingStreamA(LPUNKNOWN pCaller, LPCSTR szURL,
     int len;
     HRESULT hr;
 
-    TRACE("(%p, %s, %p, 0x%x, %p)\n", pCaller, szURL, ppStream, dwReserved, lpfnCB);
+    TRACE("(%p, %s, %p, 0x%lx, %p)\n", pCaller, szURL, ppStream, dwReserved, lpfnCB);
 
     if (!szURL || !ppStream)
         return E_INVALIDARG;
 
     len = MultiByteToWideChar(CP_ACP, 0, szURL, -1, NULL, 0);
-    szURLW = heap_alloc(len * sizeof(WCHAR));
+    szURLW = malloc(len * sizeof(WCHAR));
     if (!szURLW)
     {
         *ppStream = NULL;
@@ -279,7 +279,7 @@ HRESULT WINAPI URLOpenBlockingStreamA(LPUNKNOWN pCaller, LPCSTR szURL,
 
     hr = URLOpenBlockingStreamW(pCaller, szURLW, ppStream, dwReserved, lpfnCB);
 
-    heap_free(szURLW);
+    free(szURLW);
 
     return hr;
 }
@@ -293,7 +293,7 @@ HRESULT WINAPI URLOpenBlockingStreamW(LPUNKNOWN pCaller, LPCWSTR szURL,
 {
     ProxyBindStatusCallback blocking_bsc;
 
-    TRACE("(%p, %s, %p, 0x%x, %p)\n", pCaller, debugstr_w(szURL), ppStream,
+    TRACE("(%p, %s, %p, 0x%lx, %p)\n", pCaller, debugstr_w(szURL), ppStream,
           dwReserved, lpfnCB);
 
     if (!szURL || !ppStream)
@@ -315,20 +315,20 @@ HRESULT WINAPI URLOpenStreamA(LPUNKNOWN pCaller, LPCSTR szURL, DWORD dwReserved,
     int len;
     HRESULT hr;
 
-    TRACE("(%p, %s, 0x%x, %p)\n", pCaller, szURL, dwReserved, lpfnCB);
+    TRACE("(%p, %s, 0x%lx, %p)\n", pCaller, szURL, dwReserved, lpfnCB);
 
     if (!szURL)
         return E_INVALIDARG;
 
     len = MultiByteToWideChar(CP_ACP, 0, szURL, -1, NULL, 0);
-    szURLW = heap_alloc(len * sizeof(WCHAR));
+    szURLW = malloc(len * sizeof(WCHAR));
     if (!szURLW)
         return E_OUTOFMEMORY;
     MultiByteToWideChar(CP_ACP, 0, szURL, -1, szURLW, len);
 
     hr = URLOpenStreamW(pCaller, szURLW, dwReserved, lpfnCB);
 
-    heap_free(szURLW);
+    free(szURLW);
 
     return hr;
 }
@@ -343,7 +343,7 @@ HRESULT WINAPI URLOpenStreamW(LPUNKNOWN pCaller, LPCWSTR szURL, DWORD dwReserved
     ProxyBindStatusCallback async_bsc;
     IStream *pStream;
 
-    TRACE("(%p, %s, 0x%x, %p)\n", pCaller, debugstr_w(szURL), dwReserved,
+    TRACE("(%p, %s, 0x%lx, %p)\n", pCaller, debugstr_w(szURL), dwReserved,
           lpfnCB);
 
     if (!szURL)
@@ -357,4 +357,14 @@ HRESULT WINAPI URLOpenStreamW(LPUNKNOWN pCaller, LPCWSTR szURL, DWORD dwReserved
         IStream_Release(pStream);
 
     return hr;
+}
+
+/***********************************************************************
+ *		URLOpenPullStreamW (URLMON.@)
+ */
+HRESULT WINAPI URLOpenPullStreamW(IUnknown *caller, const WCHAR *url, DWORD reserved,
+                                  IBindStatusCallback *callback)
+{
+    FIXME("%p %s %lu %p, stub!\n", caller, debugstr_w(url), reserved, callback);
+    return E_NOTIMPL;
 }
