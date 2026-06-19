@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         See COPYING in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite, Registry change notification
- * PROGRAMMER:      Mohammad Amin Mollazadeh <madamin@pm.me>
+ * LICENSE:         MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:         Kernel-Mode Test Suite Registry change notification
+ * COPYRIGHT:       Copyright 2026 Mohammad Amin Mollazadeh <madamin@pm.me>
  */
 
 #include <kmt_test.h>
