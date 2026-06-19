@@ -490,7 +490,7 @@ LRESULT CToolSettingsWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wPara
 
 LRESULT CToolSettingsWindow::OnToolsModelColorPicked(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    m_rgbPickColor = (toolsModel.GetActiveTool() == TOOL_COLOR) ? (COLORREF)wParam : CLR_INVALID;
+    m_rgbPickColor = (COLORREF)wParam;
     Invalidate();
     return 0;
 }
