@@ -1,7 +1,7 @@
 /*
- * PROJECT:     ReactOS kernel-mode tests
+ * PROJECT:     ReactOS Kernel-Mode tests
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     Registry change notification
+ * PURPOSE:     Tests for registry change notification
  * COPYRIGHT:   Copyright 2026 Mohammad Amin Mollazadeh <madamin@pm.me>
  */
 
