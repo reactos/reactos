@@ -416,7 +416,7 @@ LRESULT CCanvasWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
 {
     SCROLLINFO si;
-    si.cbSize = sizeof(SCROLLINFO);
+    si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
     GetScrollInfo(fnBar, &si);
 
