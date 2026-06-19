@@ -728,7 +728,7 @@ HBRUSH CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF monoColor
         brightness = 256; // White out
 
     BITMAPINFO bmi = {};
-    bmi.bmiHeader.biSize     = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biSize     = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth    = 8;
     bmi.bmiHeader.biHeight   = -8; // Top-down
     bmi.bmiHeader.biPlanes   = 1;
