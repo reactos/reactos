@@ -1842,6 +1842,121 @@ WSPAccept(
     return AcceptSocket;
 }
 
+BOOL
+WSPAPI
+WSPAcceptEx(
+    IN SOCKET sListenSocket,
+    IN SOCKET sAcceptSocket,
+    OUT PVOID lpOutputBuffer,
+    IN DWORD dwReceiveDataLength,
+    IN DWORD dwLocalAddressLength,
+    IN DWORD dwRemoteAddressLength,
+    OUT LPDWORD lpdwBytesReceived,
+    IN OUT LPOVERLAPPED lpOverlapped)
+{
+    PSOCKET_INFORMATION   ListenSocket = NULL;
+    PSOCKET_INFORMATION   AcceptSocket = NULL;
+    AFD_SUPER_ACCEPT_INFO AcceptInfo;
+    NTSTATUS              Status;
+    PIO_STATUS_BLOCK      IoStatusBlock = (PIO_STATUS_BLOCK)lpOverlapped;
+
+    /* Validate sockets */
+    ListenSocket = GetSocketStructure(sListenSocket);
+    AcceptSocket = GetSocketStructure(sAcceptSocket);
+    if (!ListenSocket || !AcceptSocket)
+    {
+       SetLastError(WSAENOTSOCK);
+       return FALSE;
+    }
+
+    if (!lpOverlapped)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Check if this socket is listening and that AcceptEx hasn't already been invoked */
+    if (!ListenSocket->SharedData->Listening)
+    {
+       SetLastError(WSAEINVAL);
+       return FALSE;
+    }
+
+    /* Make sure that the accept socket is not already opened or connected */
+    if (AcceptSocket->SharedData->State != SocketOpen)
+    {
+        SetLastError(WSAEINVAL);
+        return FALSE;
+    }
+
+    if (!lpOutputBuffer || !dwRemoteAddressLength)
+    {
+        SetLastError(WSAEFAULT);
+        return FALSE;
+    }
+
+    /* Populate IOCTL super accept structure */
+    AcceptInfo.SanActive = FALSE;
+    AcceptInfo.FixAddressAlignment = TRUE;
+    AcceptInfo.AcceptHandle = (HANDLE)AcceptSocket->Handle;
+    AcceptInfo.ReceiveDataLength = dwReceiveDataLength;
+    AcceptInfo.LocalAddressLength = dwLocalAddressLength;
+    AcceptInfo.RemoteAddressLength = dwRemoteAddressLength;
+
+    IoStatusBlock->Information = 0;
+    IoStatusBlock->Status = STATUS_PENDING;
+    
+    Status = NtDeviceIoControlFile((HANDLE)ListenSocket->Handle,
+                                   lpOverlapped->hEvent,
+                                   NULL,
+                                   lpOverlapped->hEvent ? NULL : lpOverlapped,
+                                   IoStatusBlock,
+                                   IOCTL_AFD_SUPER_ACCEPT,
+                                   &AcceptInfo,
+                                   sizeof(AcceptInfo),
+                                   lpOutputBuffer,
+                                   dwReceiveDataLength + dwLocalAddressLength + dwRemoteAddressLength);
+
+    if (Status == STATUS_PENDING)
+    {
+        SetLastError(ERROR_IO_PENDING);
+        return FALSE;
+    }
+
+    if (NT_SUCCESS(Status) && lpdwBytesReceived)
+        *lpdwBytesReceived = IoStatusBlock->Information;
+
+    SetLastError(TranslateNtStatusError(Status));
+
+    return NT_SUCCESS(Status);
+}
+
+VOID
+WSPAPI
+WSPGetAcceptExSockaddrs(
+    IN PVOID lpOutputBuffer,
+    IN DWORD dwReceiveDataLength,
+    IN DWORD dwLocalAddressLength,
+    IN DWORD dwRemoteAddressLength,
+    OUT struct sockaddr **LocalSockaddr,
+    OUT LPINT LocalSockaddrLength,
+    OUT struct sockaddr **RemoteSockaddr,
+    OUT LPINT RemoteSockaddrLength)
+{
+    /* AFD_SUPER_ACCEPT outputs receive data + local address + local address length + remote address + remote address length */
+    if (dwLocalAddressLength)
+    {
+        *LocalSockaddr = (struct sockaddr*)((BYTE*)lpOutputBuffer + dwReceiveDataLength);
+        *LocalSockaddrLength = *(UINT*)((BYTE*)LocalSockaddr + dwLocalAddressLength - 2);
+    }
+
+    if (dwRemoteAddressLength)
+    {
+        *RemoteSockaddr = (struct sockaddr*)((BYTE*)lpOutputBuffer + dwReceiveDataLength + dwLocalAddressLength);
+        *RemoteSockaddrLength = *(UINT*)((BYTE*)RemoteSockaddr + dwRemoteAddressLength - 2);
+    }
+}
+
 static
 VOID
 NTAPI
@@ -2722,12 +2837,7 @@ WSPIoctl(IN  SOCKET Handle,
                     *((PVOID *)lpvOutBuffer) = WSPGetAcceptExSockaddrs;
                     cbRet = sizeof(PVOID);
                     Errno = NO_ERROR;
-                    /* See CORE-14966 and associated commits.
-                     * Original line below was 'Ret = NO_ERROR:'.
-                     * This caused winetest ws2_32:sock to hang.
-                     * This new Ret value allows the test to complete. */
-                    ERR("SIO_GET_EXTENSION_FUNCTION_POINTER UNIMPLEMENTED\n");
-                    Ret = SOCKET_ERROR;
+                    Ret = NO_ERROR;
                 }
                 else
                 {
@@ -2929,7 +3039,10 @@ WSPGetSockOpt(IN SOCKET Handle,
                     break;
 
                 case SO_CONNECT_TIME:
-                    DwordBuffer = GetCurrentTimeInSeconds() - Socket->SharedData->ConnectTime;
+                    if (Socket->SharedData->ConnectTime)
+                        DwordBuffer = GetCurrentTimeInSeconds() - Socket->SharedData->ConnectTime;
+                    else
+                        DwordBuffer = -1;
                     Buffer = &DwordBuffer;
                     BufferSize = sizeof(DWORD);
                     break;
@@ -3236,6 +3349,7 @@ WSPSetSockOpt(
               return NO_ERROR;
 
            case SO_UPDATE_CONNECT_CONTEXT:
+           case SO_UPDATE_ACCEPT_CONTEXT:
               return MsafdUpdateConnectionContext(s, lpErrno);
 
            case SO_ERROR:

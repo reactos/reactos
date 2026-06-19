@@ -256,8 +256,8 @@ WarmSocketForConnection(PAFD_FCB FCB) {
 }
 
 NTSTATUS
-MakeSocketIntoConnection(PAFD_FCB FCB) {
-    NTSTATUS Status;
+MakeSocketIntoConnection(PAFD_FCB FCB, BOOL Receive) {
+    NTSTATUS Status = STATUS_SUCCESS;
 
     ASSERT(!FCB->Recv.Window);
     ASSERT(!FCB->Send.Window);
@@ -300,15 +300,18 @@ MakeSocketIntoConnection(PAFD_FCB FCB) {
     FCB->SharedData.State = SOCKET_STATE_CONNECTED;
     FCB->SharedData.ConnectTime = 0; // Not used
 
-    Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-                         FCB->Connection.Object,
-                         TDI_RECEIVE_NORMAL,
-                         FCB->Recv.Window,
-                         FCB->Recv.Size,
-                         ReceiveComplete,
-                         FCB );
+    if (Receive)
+    {
+        Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+                            FCB->Connection.Object,
+                            TDI_RECEIVE_NORMAL,
+                            FCB->Recv.Window,
+                            FCB->Recv.Size,
+                            ReceiveComplete,
+                            FCB );
 
-   if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
+        if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
+    }
 
    FCB->PollState |= AFD_EVENT_CONNECT | AFD_EVENT_SEND;
    FCB->PollStatus[FD_CONNECT_BIT] = STATUS_SUCCESS;
@@ -436,7 +439,7 @@ StreamSocketConnectComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     if( NT_SUCCESS(Status) ) {
-        Status = MakeSocketIntoConnection( FCB );
+        Status = MakeSocketIntoConnection(FCB, TRUE);
 
         if( !NT_SUCCESS(Status) ) {
             goto end;
@@ -560,7 +563,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     switch(FCB->SharedData.State)
     {
     case SOCKET_STATE_CONNECTED:
-        Status = STATUS_SUCCESS;
+        Status = STATUS_INVALID_PARAMETER;
         break;
 
     case SOCKET_STATE_CONNECTING:
