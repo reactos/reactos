@@ -426,10 +426,10 @@ VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
             si.nPos = (SHORT)HIWORD(wParam);
             break;
         case SB_LINELEFT:
-            si.nPos -= 5;
+            si.nPos -= 15;
             break;
         case SB_LINERIGHT:
-            si.nPos += 5;
+            si.nPos += 15;
             break;
         case SB_PAGELEFT:
             si.nPos -= si.nPage;
