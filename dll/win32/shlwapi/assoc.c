@@ -373,8 +373,12 @@ HRESULT WINAPI AssocQueryKeyW(ASSOCF cfFlags, ASSOCKEY assockey, LPCWSTR pszAsso
   hRet = AssocCreate( CLSID_QueryAssociations, &IID_IQueryAssociations, (void **)&lpAssoc );
   if (FAILED(hRet)) return hRet;
 
+#ifdef __REACTOS__
+  hRet = IQueryAssociations_Init(lpAssoc, cfFlags & SHLWAPI_DEF_ASSOCF, pszAssoc, NULL, NULL);
+#else
   cfFlags &= SHLWAPI_DEF_ASSOCF;
   hRet = IQueryAssociations_Init(lpAssoc, cfFlags, pszAssoc, NULL, NULL);
+#endif
 
   if (SUCCEEDED(hRet))
     hRet = IQueryAssociations_GetKey(lpAssoc, cfFlags, assockey, pszExtra, phkeyOut);
@@ -537,8 +541,12 @@ HRESULT WINAPI AssocQueryStringByKeyW(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
   hRet = AssocCreate( CLSID_QueryAssociations, &IID_IQueryAssociations, (void **)&lpAssoc );
   if (FAILED(hRet)) return hRet;
 
+#ifdef __REACTOS__
+  hRet = IQueryAssociations_Init(lpAssoc, cfFlags & SHLWAPI_DEF_ASSOCF, 0, hkAssoc, NULL);
+#else
   cfFlags &= SHLWAPI_DEF_ASSOCF;
   hRet = IQueryAssociations_Init(lpAssoc, cfFlags, 0, hkAssoc, NULL);
+#endif
 
   if (SUCCEEDED(hRet))
     hRet = IQueryAssociations_GetString(lpAssoc, cfFlags, str, pszExtra,
