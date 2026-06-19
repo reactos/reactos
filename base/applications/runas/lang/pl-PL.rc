@@ -1,9 +1,10 @@
 /*
- * PROJECT:     ReactOS RUNAS command
+ * PROJECT:     Run As Utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Polish resource file
  * TRANSLATOR:  Copyright 2026 Karol Gocłowski <cyberwordixx@gazeta.pl>
  */
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
