@@ -619,6 +619,12 @@ struct ColorTool : ToolBase
         return RGB(255, 255, 255); // Outside is white
     }
 
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
+    {
+        COLORREF rgbColor = fetchColor(x, y);
+        toolSettingsWindow.SendMessage(WM_TOOLSMODELCOLORPICKED, rgbColor, 0);
+    }
+
     BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
         COLORREF rgbColor = fetchColor(x, y);
