@@ -281,19 +281,22 @@ PrintCommandHelp(
 {
     LPWSTR pszCommandBuffer;
     DWORD_PTR Args[2];
+    DWORD dwLength = 1;
 
     DPRINT("PrintCommandHelp(%p %p %p)\n", pContext, pGroup, pCommand);
 
-    pszCommandBuffer = HeapAlloc(GetProcessHeap(), 0, TINY_HELP_BUFFER_SIZE * sizeof(WCHAR));
+    dwLength += wcslen(pCommand->pwszCmdToken);
+    if (pGroup)
+        dwLength += (wcslen(pGroup->pwszCmdGroupToken) + 1);
+
+    pszCommandBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
     if (pszCommandBuffer == NULL)
         return;
 
-    wcscpy(pszCommandBuffer, pCommand->pwszCmdToken);
-    if (pGroup)
-    {
-        wcscat(pszCommandBuffer, L" ");
-        wcscat(pszCommandBuffer, pGroup->pwszCmdGroupToken);
-    }
+    _swprintf(pszCommandBuffer, L"%s%s%s",
+              (pGroup) ? pGroup->pwszCmdGroupToken : L"",
+              (pGroup) ? L" " : L"",
+              pCommand->pwszCmdToken);
 
     Args[0] = (DWORD_PTR)pszCommandBuffer;
     Args[1] = (DWORD_PTR)NULL;

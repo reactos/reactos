@@ -1,12 +1,17 @@
 
-#define IDS_HLP_INTERFACE_SHOW              200
-#define IDS_HLP_INTERFACE_SHOW_INTERFACE    201
-#define IDS_HLP_INTERFACE_SHOW_INTERFACE_EX 202
+#define IDS_HLP_INTERFACE_SHOW              100
+#define IDS_HLP_INTERFACE_SHOW_INTERFACE    101
+#define IDS_HLP_INTERFACE_SHOW_INTERFACE_EX 102
+
+#define IDS_HLP_IP_ADD                      200
+#define IDS_HLP_IP_ADD_ADDRESS              201
+#define IDS_HLP_IP_ADD_ADDRESS_EX           202
 
 #define IDS_HLP_IP_SET                      205
 #define IDS_HLP_IP_SET_ADDRESS              206
 #define IDS_HLP_IP_SET_ADDRESS_EX           207
-
+#define IDS_HLP_IP_SET_DNS                  208
+#define IDS_HLP_IP_SET_DNS_EX               209
 
 #define IDS_HLP_IP_SHOW      210
 #define IDS_HLP_ADDRESSES    211

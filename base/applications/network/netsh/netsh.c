@@ -604,8 +604,8 @@ PrintMessageFromModule(
     va_list ap;
 
     va_start(ap, dwMsgId);
-    Length = ConResPrintfExV(StdOut, hModule, dwMsgId,
-                             LANG_USER_DEFAULT, ap);
+    Length = ConResMsgPrintfExV(StdOut, hModule, 0, dwMsgId,
+                                LANG_USER_DEFAULT, &ap);
     va_end(ap);
 
     return (DWORD)Length;
