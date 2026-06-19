@@ -52,13 +52,6 @@ static CRITICAL_SECTION_DEBUG session_cs_dbg =
 };
 static CRITICAL_SECTION session_cs = { &session_cs_dbg, -1, 0, 0, 0, 0 };
 
-static const WCHAR internet_settings_keyW[] =
-    {'S','O','F','T','W','A','R','E',
-     '\\','M','i','c','r','o','s','o','f','t',
-     '\\','W','i','n','d','o','w','s',
-     '\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n',
-     '\\','I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s',0};
-
 static name_space *find_name_space(LPCWSTR protocol)
 {
     name_space *iter;
@@ -82,30 +75,29 @@ static HRESULT get_protocol_cf(LPCWSTR schema, DWORD schema_len, CLSID *pclsid, 
 
     static const WCHAR wszProtocolsKey[] =
         {'P','R','O','T','O','C','O','L','S','\\','H','a','n','d','l','e','r','\\'};
-    static const WCHAR wszCLSID[] = {'C','L','S','I','D',0};
 
-    wszKey = heap_alloc(sizeof(wszProtocolsKey)+(schema_len+1)*sizeof(WCHAR));
+    wszKey = malloc(sizeof(wszProtocolsKey) + (schema_len + 1) * sizeof(WCHAR));
     memcpy(wszKey, wszProtocolsKey, sizeof(wszProtocolsKey));
     memcpy(wszKey + ARRAY_SIZE(wszProtocolsKey), schema, (schema_len+1)*sizeof(WCHAR));
 
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, wszKey, &hkey);
-    heap_free(wszKey);
+    free(wszKey);
     if(res != ERROR_SUCCESS) {
         TRACE("Could not open protocol handler key\n");
         return MK_E_SYNTAX;
     }
     
     size = sizeof(str_clsid);
-    res = RegQueryValueExW(hkey, wszCLSID, NULL, &type, (LPBYTE)str_clsid, &size);
+    res = RegQueryValueExW(hkey, L"CLSID", NULL, &type, (BYTE*)str_clsid, &size);
     RegCloseKey(hkey);
     if(res != ERROR_SUCCESS || type != REG_SZ) {
-        WARN("Could not get protocol CLSID res=%d\n", res);
+        WARN("Could not get protocol CLSID res=%ld\n", res);
         return MK_E_SYNTAX;
     }
 
     hres = CLSIDFromString(str_clsid, &clsid);
     if(FAILED(hres)) {
-        WARN("CLSIDFromString failed: %08x\n", hres);
+        WARN("CLSIDFromString failed: %08lx\n", hres);
         return hres;
     }
 
@@ -123,14 +115,14 @@ HRESULT register_namespace(IClassFactory *cf, REFIID clsid, LPCWSTR protocol, BO
 {
     name_space *new_name_space;
 
-    new_name_space = heap_alloc(sizeof(name_space));
+    new_name_space = malloc(sizeof(name_space));
 
     if(!urlmon_protocol)
         IClassFactory_AddRef(cf);
     new_name_space->cf = cf;
     new_name_space->clsid = *clsid;
     new_name_space->urlmon = urlmon_protocol;
-    new_name_space->protocol = heap_strdupW(protocol);
+    new_name_space->protocol = wcsdup(protocol);
 
     EnterCriticalSection(&session_cs);
 
@@ -155,8 +147,8 @@ static HRESULT unregister_namespace(IClassFactory *cf, LPCWSTR protocol)
 
             if(!iter->urlmon)
                 IClassFactory_Release(iter->cf);
-            heap_free(iter->protocol);
-            heap_free(iter);
+            free(iter->protocol);
+            free(iter);
             return S_OK;
         }
     }
@@ -249,10 +241,6 @@ HRESULT get_protocol_handler(IUri *uri, CLSID *clsid, IClassFactory **ret)
 
 IInternetProtocol *get_mime_filter(LPCWSTR mime)
 {
-    static const WCHAR filtersW[] = {'P','r','o','t','o','c','o','l','s',
-        '\\','F','i','l','t','e','r',0 };
-    static const WCHAR CLSIDW[] = {'C','L','S','I','D',0};
-
     IClassFactory *cf = NULL;
     IInternetProtocol *ret;
     mime_filter *iter;
@@ -276,14 +264,14 @@ IInternetProtocol *get_mime_filter(LPCWSTR mime)
     if(cf) {
         hres = IClassFactory_CreateInstance(cf, NULL, &IID_IInternetProtocol, (void**)&ret);
         if(FAILED(hres)) {
-            WARN("CreateInstance failed: %08x\n", hres);
+            WARN("CreateInstance failed: %08lx\n", hres);
             return NULL;
         }
 
         return ret;
     }
 
-    res = RegOpenKeyW(HKEY_CLASSES_ROOT, filtersW, &hlist);
+    res = RegOpenKeyW(HKEY_CLASSES_ROOT, L"Protocols\\Filter", &hlist);
     if(res != ERROR_SUCCESS) {
         TRACE("Could not open MIME filters key\n");
         return NULL;
@@ -295,7 +283,7 @@ IInternetProtocol *get_mime_filter(LPCWSTR mime)
         return NULL;
 
     size = sizeof(clsidw);
-    res = RegQueryValueExW(hfilter, CLSIDW, NULL, &type, (LPBYTE)clsidw, &size);
+    res = RegQueryValueExW(hfilter, L"CLSID", NULL, &type, (BYTE*)clsidw, &size);
     CloseHandle(hfilter);
     if(res!=ERROR_SUCCESS || type!=REG_SZ) {
         WARN("Could not get filter CLSID for %s\n", debugstr_w(mime));
@@ -304,13 +292,13 @@ IInternetProtocol *get_mime_filter(LPCWSTR mime)
 
     hres = CLSIDFromString(clsidw, &clsid);
     if(FAILED(hres)) {
-        WARN("CLSIDFromString failed for %s (%x)\n", debugstr_w(mime), hres);
+        WARN("CLSIDFromString failed for %s (%lx)\n", debugstr_w(mime), hres);
         return NULL;
     }
 
     hres = CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IInternetProtocol, (void**)&ret);
     if(FAILED(hres)) {
-        WARN("CoCreateInstance failed: %08x\n", hres);
+        WARN("CoCreateInstance failed: %08lx\n", hres);
         return NULL;
     }
 
@@ -350,13 +338,13 @@ static HRESULT WINAPI InternetSession_RegisterNameSpace(IInternetSession *iface,
         IClassFactory *pCF, REFCLSID rclsid, LPCWSTR pwzProtocol, ULONG cPatterns,
         const LPCWSTR *ppwzPatterns, DWORD dwReserved)
 {
-    TRACE("(%p %s %s %d %p %d)\n", pCF, debugstr_guid(rclsid), debugstr_w(pwzProtocol),
+    TRACE("(%p %s %s %ld %p %ld)\n", pCF, debugstr_guid(rclsid), debugstr_w(pwzProtocol),
           cPatterns, ppwzPatterns, dwReserved);
 
     if(cPatterns || ppwzPatterns)
         FIXME("patterns not supported\n");
     if(dwReserved)
-        WARN("dwReserved = %d\n", dwReserved);
+        WARN("dwReserved = %ld\n", dwReserved);
 
     if(!pCF || !pwzProtocol)
         return E_INVALIDARG;
@@ -382,12 +370,12 @@ static HRESULT WINAPI InternetSession_RegisterMimeFilter(IInternetSession *iface
 
     TRACE("(%p %s %s)\n", pCF, debugstr_guid(rclsid), debugstr_w(pwzType));
 
-    filter = heap_alloc(sizeof(mime_filter));
+    filter = malloc(sizeof(mime_filter));
 
     IClassFactory_AddRef(pCF);
     filter->cf = pCF;
     filter->clsid = *rclsid;
-    filter->mime = heap_strdupW(pwzType);
+    filter->mime = wcsdup(pwzType);
 
     EnterCriticalSection(&session_cs);
 
@@ -414,8 +402,8 @@ static HRESULT WINAPI InternetSession_UnregisterMimeFilter(IInternetSession *ifa
             LeaveCriticalSection(&session_cs);
 
             IClassFactory_Release(iter->cf);
-            heap_free(iter->mime);
-            heap_free(iter);
+            free(iter->mime);
+            free(iter);
             return S_OK;
         }
     }
@@ -431,7 +419,7 @@ static HRESULT WINAPI InternetSession_CreateBinding(IInternetSession *iface,
     BindProtocol *protocol;
     HRESULT hres;
 
-    TRACE("(%p %s %p %p %p %08x)\n", pBC, debugstr_w(szUrl), pUnkOuter, ppUnk,
+    TRACE("(%p %s %p %p %p %08lx)\n", pBC, debugstr_w(szUrl), pUnkOuter, ppUnk,
             ppOInetProt, dwOption);
 
     if(pBC || pUnkOuter || ppUnk || dwOption)
@@ -448,7 +436,7 @@ static HRESULT WINAPI InternetSession_CreateBinding(IInternetSession *iface,
 static HRESULT WINAPI InternetSession_SetSessionOption(IInternetSession *iface,
         DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength, DWORD dwReserved)
 {
-    FIXME("(%08x %p %d %d)\n", dwOption, pBuffer, dwBufferLength, dwReserved);
+    FIXME("(%08lx %p %ld %ld)\n", dwOption, pBuffer, dwBufferLength, dwReserved);
     return E_NOTIMPL;
 }
 
@@ -485,12 +473,12 @@ static IInternetSession InternetSession = { &InternetSessionVtbl };
 HRESULT WINAPI CoInternetGetSession(DWORD dwSessionMode, IInternetSession **ppIInternetSession,
         DWORD dwReserved)
 {
-    TRACE("(%d %p %d)\n", dwSessionMode, ppIInternetSession, dwReserved);
+    TRACE("(%ld %p %ld)\n", dwSessionMode, ppIInternetSession, dwReserved);
 
     if(dwSessionMode)
-        ERR("dwSessionMode=%d\n", dwSessionMode);
+        ERR("dwSessionMode=%ld\n", dwSessionMode);
     if(dwReserved)
-        ERR("dwReserved=%d\n", dwReserved);
+        ERR("dwReserved=%ld\n", dwReserved);
 
     IInternetSession_AddRef(&InternetSession);
     *ppIInternetSession = &InternetSession;
@@ -505,115 +493,136 @@ static BOOL get_url_encoding(HKEY root, DWORD *encoding)
     DWORD size = sizeof(DWORD), res, type;
     HKEY hkey;
 
-    static const WCHAR wszUrlEncoding[] = {'U','r','l','E','n','c','o','d','i','n','g',0};
-
-    res = RegOpenKeyW(root, internet_settings_keyW, &hkey);
+    res = RegOpenKeyW(root, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", &hkey);
     if(res != ERROR_SUCCESS)
         return FALSE;
 
-    res = RegQueryValueExW(hkey, wszUrlEncoding, NULL, &type, (LPBYTE)encoding, &size);
+    res = RegQueryValueExW(hkey, L"UrlEncoding", NULL, &type, (BYTE*)encoding, &size);
     RegCloseKey(hkey);
 
     return res == ERROR_SUCCESS;
 }
 
 static LPWSTR user_agent;
+static BOOL user_agent_set;
 
-static void ensure_useragent(void)
+static size_t obtain_user_agent(unsigned int version, WCHAR *ret, size_t size)
 {
+    BOOL is_wow, quirks = FALSE, use_current = FALSE;
     OSVERSIONINFOW info = {sizeof(info)};
     const WCHAR *os_type, *is_nt;
-    WCHAR buf[512], *ret, *tmp;
-    DWORD res, idx=0;
-    size_t len, size;
-    BOOL is_wow;
+    DWORD res;
+    size_t len = 0;
     HKEY key;
 
-    static const WCHAR formatW[] =
-        {'M','o','z','i','l','l','a','/','4','.','0',
-         ' ','(','c','o','m','p','a','t','i','b','l','e',';',
-         ' ','M','S','I','E',' ','8','.','0',';',
-         ' ','W','i','n','d','o','w','s',' ','%','s','%','d','.','%','d',';',
-         ' ','%','s','T','r','i','d','e','n','t','/','5','.','0',0};
-    static const WCHAR post_platform_keyW[] =
-        {'S','O','F','T','W','A','R','E',
-         '\\','M','i','c','r','o','s','o','f','t',
-         '\\','W','i','n','d','o','w','s',
-         '\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n',
-         '\\','I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s',
-         '\\','5','.','0','\\','U','s','e','r',' ','A','g','e','n','t',
-         '\\','P','o','s','t',' ','P','l','a','t','f','o','r','m',0};
-    static const WCHAR ntW[] = {'N','T',' ',0};
-    static const WCHAR win64W[] = {'W','i','n','6','4',';',' ','x','6','4',';',' ',0};
-    static const WCHAR wow64W[] = {'W','O','W','6','4',';',' ',0};
-    static const WCHAR emptyW[] = {0};
-
-    if(user_agent)
-        return;
-
-    GetVersionExW(&info);
-    is_nt = info.dwPlatformId == VER_PLATFORM_WIN32_NT ? ntW : emptyW;
-
-    if(sizeof(void*) == 8)
-        os_type = win64W;
-    else if(IsWow64Process(GetCurrentProcess(), &is_wow) && is_wow)
-        os_type = wow64W;
-    else
-        os_type = emptyW;
-
-    swprintf(buf, formatW, is_nt, info.dwMajorVersion, info.dwMinorVersion, os_type);
-    len = lstrlenW(buf);
-
-    size = len+40;
-    ret = heap_alloc(size * sizeof(WCHAR));
-    if(!ret)
-        return;
-
-    memcpy(ret, buf, len*sizeof(WCHAR));
-
-    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, post_platform_keyW, &key);
-    if(res == ERROR_SUCCESS) {
-        DWORD value_len;
-
-        while(1) {
-            value_len = ARRAY_SIZE(buf);
-            res = RegEnumValueW(key, idx, buf, &value_len, NULL, NULL, NULL, NULL);
-            if(res != ERROR_SUCCESS)
-                break;
-            idx++;
-
-            if(len + value_len + 2 /* strlen("; ") */ + 1 /* trailing ')' */ >= size) {
-                tmp = heap_realloc(ret, (size*2+value_len)*sizeof(WCHAR));
-                if(!tmp)
-                    break;
-                ret = tmp;
-                size = size*2+value_len;
-            }
-
-            ret[len++] = ';';
-            ret[len++] = ' ';
-            memcpy(ret+len, buf, value_len*sizeof(WCHAR));
-            len += value_len;
+    if(version & UAS_EXACTLEGACY) {
+        version &= ~UAS_EXACTLEGACY;
+        if(version == 7)
+            quirks = TRUE;
+        else {
+            use_current = TRUE;
+            version = 7;
         }
-
-        RegCloseKey(key);
     }
 
-    ret[len++] = ')';
-    ret[len++] = 0;
+    if(version > 11) {
+        FIXME("Unsupported version %u\n", version);
+        version = 11;
+    }
 
-    user_agent = ret;
-    TRACE("Using user agent %s\n", debugstr_w(user_agent));
+    if(version < 7 || use_current) {
+        EnterCriticalSection(&session_cs);
+        if(user_agent) {
+            len = wcslen(user_agent) + 1;
+            memcpy(ret, user_agent, min(size, len) * sizeof(WCHAR));
+        }
+        LeaveCriticalSection(&session_cs);
+        if(len) return len;
+    }
+
+    if(version < 7)
+        version = 7;
+
+    swprintf(ret, size, L"Mozilla/%s (", version < 9 ? L"4.0" : L"5.0");
+    len = lstrlenW(ret);
+    if(version < 11) {
+        swprintf(ret + len, size - len, L"compatible; MSIE %u.0; ", version);
+        len += wcslen(ret + len);
+    }
+
+    GetVersionExW(&info);
+    is_nt = info.dwPlatformId == VER_PLATFORM_WIN32_NT ? L"NT " : L"";
+
+    if(sizeof(void*) == 8)
+#ifdef __x86_64__
+        os_type = L"; Win64; x64";
+#else
+        os_type = L"; Win64";
+#endif
+    else if(IsWow64Process(GetCurrentProcess(), &is_wow) && is_wow)
+        os_type = L"; WOW64";
+    else
+        os_type = L"";
+
+    swprintf(ret + len, size - len, L"Windows %s%d.%d%s", is_nt, info.dwMajorVersion,
+             info.dwMinorVersion, os_type);
+    len = lstrlenW(ret);
+
+    if(!quirks) {
+        wcscpy(ret + len, L"; Trident/7.0");
+        len += ARRAY_SIZE(L"; Trident/7.0") - 1;
+    }
+
+    if(version < 9) {
+        res = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\"
+                          "Internet Settings\\5.0\\User Agent\\Post Platform", &key);
+        if(res == ERROR_SUCCESS) {
+            DWORD value_len, idx;
+
+            for(idx = 0;; idx++) {
+                ret[len++] = ';';
+                ret[len++] = ' ';
+
+                value_len = size - len - 2;
+                res = RegEnumValueW(key, idx, ret + len, &value_len, NULL, NULL, NULL, NULL);
+                if(res != ERROR_SUCCESS)
+                    break;
+
+                len += value_len;
+            }
+
+            RegCloseKey(key);
+            if(idx) len -= 2;
+        }
+    }
+    wcscpy(ret + len, version >= 11 ? L"; rv:11.0) like Gecko" : L")");
+    len += wcslen(ret + len) + 1;
+
+    TRACE("Using user agent %s\n", debugstr_w(ret));
+    return len;
+}
+
+static void ensure_user_agent(void)
+{
+    EnterCriticalSection(&session_cs);
+
+    if(!user_agent) {
+        WCHAR buf[1024];
+        obtain_user_agent(0, buf, ARRAY_SIZE(buf));
+        user_agent = wcsdup(buf);
+    }
+
+    LeaveCriticalSection(&session_cs);
 }
 
 LPWSTR get_useragent(void)
 {
     LPWSTR ret;
 
-    ensure_useragent();
+    ensure_user_agent();
 
     EnterCriticalSection(&session_cs);
-    ret = heap_strdupW(user_agent);
+    ret = wcsdup(user_agent);
     LeaveCriticalSection(&session_cs);
 
     return ret;
@@ -622,10 +631,10 @@ LPWSTR get_useragent(void)
 HRESULT WINAPI UrlMkGetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength,
                                      DWORD* pdwBufferLength, DWORD dwReserved)
 {
-    TRACE("(%x, %p, %d, %p)\n", dwOption, pBuffer, dwBufferLength, pdwBufferLength);
+    TRACE("(%lx, %p, %ld, %p)\n", dwOption, pBuffer, dwBufferLength, pdwBufferLength);
 
     if(dwReserved)
-        WARN("dwReserved = %d\n", dwReserved);
+        WARN("dwReserved = %ld\n", dwReserved);
 
     switch(dwOption) {
     case URLMON_OPTION_USERAGENT: {
@@ -637,7 +646,7 @@ HRESULT WINAPI UrlMkGetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBuf
 
         EnterCriticalSection(&session_cs);
 
-        ensure_useragent();
+        ensure_user_agent();
         if(user_agent) {
             size = WideCharToMultiByte(CP_ACP, 0, user_agent, -1, NULL, 0, NULL, NULL);
             *pdwBufferLength = size;
@@ -668,7 +677,7 @@ HRESULT WINAPI UrlMkGetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBuf
         return S_OK;
     }
     default:
-        FIXME("unsupported option %x\n", dwOption);
+        FIXME("unsupported option %lx\n", dwOption);
     }
 
     return E_INVALIDARG;
@@ -680,7 +689,7 @@ HRESULT WINAPI UrlMkGetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBuf
 HRESULT WINAPI UrlMkSetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength,
         DWORD Reserved)
 {
-    TRACE("(%x %p %x)\n", dwOption, pBuffer, dwBufferLength);
+    TRACE("(%lx %p %lx)\n", dwOption, pBuffer, dwBufferLength);
 
     switch(dwOption) {
     case URLMON_OPTION_USERAGENT: {
@@ -696,7 +705,7 @@ HRESULT WINAPI UrlMkSetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBuf
         TRACE("Setting user agent %s\n", debugstr_an(buf, len));
 
         size = MultiByteToWideChar(CP_ACP, 0, buf, len, NULL, 0);
-        new_user_agent = heap_alloc((size+1)*sizeof(WCHAR));
+        new_user_agent = malloc((size + 1) * sizeof(WCHAR));
         if(!new_user_agent)
             return E_OUTOFMEMORY;
         MultiByteToWideChar(CP_ACP, 0, buf, len, new_user_agent, size);
@@ -704,15 +713,16 @@ HRESULT WINAPI UrlMkSetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBuf
 
         EnterCriticalSection(&session_cs);
 
-        heap_free(user_agent);
+        free(user_agent);
         user_agent = new_user_agent;
+        user_agent_set = TRUE;
         update_user_agent(user_agent);
 
         LeaveCriticalSection(&session_cs);
         break;
     }
     default:
-        FIXME("Unknown option %x\n", dwOption);
+        FIXME("Unknown option %lx\n", dwOption);
         return E_INVALIDARG;
     }
 
@@ -722,34 +732,64 @@ HRESULT WINAPI UrlMkSetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBuf
 /**************************************************************************
  *                 ObtainUserAgentString (URLMON.@)
  */
-HRESULT WINAPI ObtainUserAgentString(DWORD dwOption, LPSTR pcszUAOut, DWORD *cbSize)
+HRESULT WINAPI ObtainUserAgentString(DWORD option, char *ret, DWORD *ret_size)
 {
-    DWORD size;
-    HRESULT hres = E_FAIL;
+    DWORD size, len;
+    WCHAR buf[1024];
+    HRESULT hres = S_OK;
 
-    TRACE("(%d %p %p)\n", dwOption, pcszUAOut, cbSize);
+    TRACE("(%ld %p %p)\n", option, ret, ret_size);
 
-    if(!pcszUAOut || !cbSize)
+    if(!ret || !ret_size)
         return E_INVALIDARG;
 
-    EnterCriticalSection(&session_cs);
+    len = obtain_user_agent(option, buf, ARRAY_SIZE(buf));
+    size = WideCharToMultiByte(CP_ACP, 0, buf, len, NULL, 0, NULL, NULL);
+    if(size <= *ret_size)
+        WideCharToMultiByte(CP_ACP, 0, buf, len, ret, *ret_size+1, NULL, NULL);
+    else
+        hres = E_OUTOFMEMORY;
 
-    ensure_useragent();
-    if(user_agent) {
-        size = WideCharToMultiByte(CP_ACP, 0, user_agent, -1, NULL, 0, NULL, NULL);
+    *ret_size = size;
+    return hres;
+}
 
-        if(size <= *cbSize) {
-            WideCharToMultiByte(CP_ACP, 0, user_agent, -1, pcszUAOut, *cbSize, NULL, NULL);
-            hres = S_OK;
-        }else {
-            hres = E_OUTOFMEMORY;
-        }
+/***********************************************************************
+ *                 MapBrowserEmulationModeToUserAgent (URLMON.445)
+ *    Undocumented, added in IE8
+ */
+HRESULT WINAPI MapBrowserEmulationModeToUserAgent(const void *arg, WCHAR **ret)
+{
+    DWORD size, version;
+    const WCHAR *ua;
+    WCHAR buf[1024];
 
-        *cbSize = size;
+    TRACE("%p %p: semi-stub\n", arg, ret);
+
+    if(user_agent_set) {
+        /* Native ignores first arg if custom user agent has been set, doesn't crash even if NULL */
+        size = (wcslen(user_agent) + 1) * sizeof(WCHAR);
+        ua = user_agent;
+    }else {
+        *ret = NULL;
+
+        /* First arg seems to be a pointer to a structure of unknown size, and crashes
+           if it's too small (or filled with arbitrary values from the stack). For our
+           purposes, we only check first field which seems to be the requested version. */
+        version = *(DWORD*)arg;
+        if(version == 5)
+            version = 7;
+        if(version < 7 || version > 11)
+            return E_FAIL;
+
+        size = obtain_user_agent(version, buf, ARRAY_SIZE(buf)) * sizeof(WCHAR);
+        ua = buf;
     }
 
-    LeaveCriticalSection(&session_cs);
-    return hres;
+    if(!(*ret = CoTaskMemAlloc(size)))
+        return E_OUTOFMEMORY;
+    memcpy(*ret, ua, size);
+    return S_OK;
 }
 
 void free_session(void)
@@ -760,15 +800,15 @@ void free_session(void)
     LIST_FOR_EACH_ENTRY_SAFE(ns_iter, ns_last, &name_space_list, name_space, entry) {
             if(!ns_iter->urlmon)
                 IClassFactory_Release(ns_iter->cf);
-            heap_free(ns_iter->protocol);
-            heap_free(ns_iter);
+            free(ns_iter->protocol);
+            free(ns_iter);
     }
 
     LIST_FOR_EACH_ENTRY_SAFE(mf_iter, mf_last, &mime_filter_list, mime_filter, entry) {
             IClassFactory_Release(mf_iter->cf);
-            heap_free(mf_iter->mime);
-            heap_free(mf_iter);
+            free(mf_iter->mime);
+            free(mf_iter);
     }
 
-    heap_free(user_agent);
+    free(user_agent);
 }
