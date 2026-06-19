@@ -420,7 +420,7 @@ VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
     si.fMask = SIF_ALL;
     GetScrollInfo(fnBar, &si);
 
-    INT nCount;
+    INT nCount = 3;
     const INT CHAR_WIDTH = 8, LINE_HEIGHT = 8;
     switch (LOWORD(wParam))
     {
