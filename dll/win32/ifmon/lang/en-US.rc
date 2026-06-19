@@ -24,7 +24,25 @@ Examples:\n\n\
        The first command adds a static IP address of 10.0.0.2 with a subnet\n\
        mask of 255.0.0.0 to the Local Area Connection interface. The second\n\
        command adds the IP address of 10.0.0.3 as a second default gateway\n\
-       for this interface with a gateway metric of 2.\n\n"
+       for this interface with a gateway metric of 2.\n"
+
+    IDS_HLP_IP_ADD_DNS    "Adds a static DNS server address.\n"
+    IDS_HLP_IP_ADD_DNS_EX "\nUsage: %1!s! [name=]<string> [addr=]<IP address> [[index=]<integer>]\n\n\
+Parameters:\n\n\
+      Tag            Value\n\
+      name         - The name of the interface where DNS servers are added.\n\
+      addr         - The IP address for the DNS server you are adding.\n\
+      index        - Specifies the index (preference) for the specified\n\
+                     DNS server address.\n\n\
+Remarks: Adds a new DNS server IP address to the statically-configured list.\n\
+         By default, the DNS server is added to the end of the list.  If an\n\
+         index is specified, the DNS server will be placed in that position\n\
+         in the list, with other servers being moved down to make room.\n\
+         If DNS servers were previously obtained through DHCP, the new\n\
+         address will replace the old list.\n\n\
+Examples:\n\n\
+       %1!s! ""Local Area Connection"" 10.0.0.1\n\
+       %1!s! ""Local Area Connection"" 10.0.0.3 index=2\n"
 
     IDS_HLP_IP_SET             "Sets configuration information.\n"
     IDS_HLP_IP_SET_ADDRESS     "Sets the IP address or default gateway to the specified interface.\n"
@@ -54,7 +72,7 @@ Remarks: Used to change the IP address configuration mode from either DHCP to\n\
          interface with static IP address or adds default gateways.\n\n\
 Examples:\n\n\
        %1!s! name=""Local Area Connection"" source=dhcp\n\
-       %1!s! local static 10.0.0.9 255.0.0.0 10.0.0.1 1\n\n"
+       %1!s! local static 10.0.0.9 255.0.0.0 10.0.0.1 1\n"
 
     IDS_HLP_IP_SET_DNS         "Sets DNS server mode and addresses.\n"
     IDS_HLP_IP_SET_DNS_EX      "\nUsage: %1!s! [name=]<string> [source=]dhcp|static [addr=]<IP address>|none\n\
@@ -81,7 +99,7 @@ Remarks: Sets DNS server configuration to either DHCP or static mode. Only\n\
          specified interface.\n\n\
 Examples:\n\n\
        %1!s! name=""Local Area Connection"" source=dhcp\n\
-       %1!s! ""Local Area Connection"" static 10.0.0.1 primary\n\n"
+       %1!s! ""Local Area Connection"" static 10.0.0.1 primary\n"
 
     IDS_HLP_IP_SHOW      "Displays IP information.\n"
     IDS_HLP_ADDRESSES    "Displays IP address configuration.\n"
