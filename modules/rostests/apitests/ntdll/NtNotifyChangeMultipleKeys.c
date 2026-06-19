@@ -1,8 +1,8 @@
 /*
- * PROJECT:          ReactOS api tests
- * LICENSE:          See COPYING in the top level directory
- * PURPOSE:          Test for NtNotifyChangeMultipleKeys
- * PROGRAMMER:       Mohammad Amin Mollazadeh <madamin@pm.me>
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Test for NtNotifyChangeMultipleKeys
+ * COPYRIGHT:   Copyright 2026 Mohammad Amin Mollazadeh <madamin@pm.me>
  */
 
 #include "precomp.h"
