@@ -2,7 +2,7 @@
  * INF file parsing
  *
  * Copyright 2002 Alexandre Julliard for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -2002,7 +2002,7 @@ BOOL WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer,
     field = &file->fields[line->first_field + index];
     for (i = index; i < line->nb_fields; i++, field++)
     {
-#if __REACTOS__ /* The HEX parser from Wine is broken */
+#ifdef __REACTOS__ /* The HEX parser from Wine is broken */
         errno = 0;
         ULONG value = wcstoul(field->text, NULL, 16);
         if (value > 255 || errno != 0)
@@ -2010,7 +2010,6 @@ BOOL WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer,
             SetLastError( ERROR_INVALID_DATA );
             return FALSE;
         }
-
         buffer[i - index] = (BYTE)value;
 #else
         const WCHAR *p;
