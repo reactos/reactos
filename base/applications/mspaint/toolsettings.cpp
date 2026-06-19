@@ -484,10 +484,13 @@ LRESULT CToolSettingsWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, L
 
 LRESULT CToolSettingsWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (toolsModel.GetActiveTool() == TOOL_COLOR)
-        m_rgbPickColor = (COLORREF)wParam;
-    else
-        m_rgbPickColor = CLR_INVALID;
+    Invalidate();
+    return 0;
+}
+
+LRESULT CToolSettingsWindow::OnToolsModelColorPicked(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    m_rgbPickColor = (toolsModel.GetActiveTool() == TOOL_COLOR) ? (COLORREF)wParam : CLR_INVALID;
     Invalidate();
     return 0;
 }

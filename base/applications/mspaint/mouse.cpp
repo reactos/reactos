@@ -625,7 +625,7 @@ struct ColorTool : ToolBase
         else
             paletteModel.SetBgColor(rgbColor);
 
-        toolSettingsWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED, rgbColor, 0);
+        toolSettingsWindow.SendMessage(WM_TOOLSMODELCOLORPICKED, rgbColor, 0);
     }
 
     BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
