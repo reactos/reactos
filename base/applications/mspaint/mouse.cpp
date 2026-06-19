@@ -604,10 +604,8 @@ struct FillTool : ToolBase
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
         imageModel.PushImageForUndo();
-        if (bLeftButton)
-            Fill(m_hdc, x, y, toolsModel.GetFgBrush());
-        else
-            Fill(m_hdc, x, y, toolsModel.GetBgBrush());
+        HBRUSH hBrush = (bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
+        Fill(m_hdc, x, y, hBrush);
     }
 };
 
