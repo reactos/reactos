@@ -23,7 +23,7 @@ BEGIN
     IDS_USAGE13 "                   zdalnego dostępu.\n"
     IDS_USAGE14 "   /savecred       Nie zaimplementowano.\n"
     IDS_USAGE15 "   /smartcard      Nie zaimplementowano.\n"
-    IDS_USAGE16 "   /user           <NazwaUżytkownika> should be in form UŻYTKOWNIK@DOMENA or DOMENA\\UŻYTKOWNIK\n"
+    IDS_USAGE16 "   /user           <NazwaUżytkownika> powinna być w formie UŻYTKOWNIK@DOMENA lub DOMENA\\UŻYTKOWNIK\n"
     IDS_USAGE17 "   program         linia komend dla EXE. Patrz niżej aby zobaczyć przykłady.\n\n"
     IDS_USAGE18 "Przykład:\n"
     IDS_USAGE19 "> runas /noprofile /user:mojamaszyna\\administrator cmd\n\n"
