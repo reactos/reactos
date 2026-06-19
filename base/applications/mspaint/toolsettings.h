@@ -30,6 +30,7 @@ private:
     CWindow trackbarZoom;
     HICON m_hNontranspIcon;
     HICON m_hTranspIcon;
+    COLORREF m_rgbPickColor = CLR_INVALID;
 
     VOID drawTrans(HDC hdc, LPCRECT prc);
     VOID drawRubber(HDC hdc, LPCRECT prc);

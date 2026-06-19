@@ -391,8 +391,15 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             drawBox(hdc, &rect1);
             drawLine(hdc, &rect2);
             break;
-        case TOOL_FILL:
         case TOOL_COLOR:
+            if (m_rgbPickColor != CLR_INVALID)
+            {
+                HBRUSH hbr = CreateSolidBrush(m_rgbPickColor);
+                FillRect(hdc, &rect1, hbr);
+                DeleteObject(hbr);
+            }
+            break;
+        case TOOL_FILL:
         case TOOL_ZOOM:
         case TOOL_PEN:
             break;
@@ -469,6 +476,7 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
 
 LRESULT CToolSettingsWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    m_rgbPickColor = CLR_INVALID;
     Invalidate();
     trackbarZoom.ShowWindow((wParam == TOOL_ZOOM) ? SW_SHOW : SW_HIDE);
     return 0;
@@ -476,6 +484,10 @@ LRESULT CToolSettingsWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, L
 
 LRESULT CToolSettingsWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    if (toolsModel.GetActiveTool() == TOOL_COLOR)
+        m_rgbPickColor = (COLORREF)wParam;
+    else
+        m_rgbPickColor = CLR_INVALID;
     Invalidate();
     return 0;
 }
