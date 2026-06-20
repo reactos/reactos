@@ -263,7 +263,6 @@ START_SUBTEST(AsynchronousWqi)
 
 
 /* Main */
-
 START_TEST(ZwNotifyChangeKey)
 {
     NTSTATUS Status;
