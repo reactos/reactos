@@ -429,7 +429,7 @@ VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
         case SB_LINELEFT: // SB_LINEUP
             si.nPos -= 15;
             break;
-        case SB_LINERIGHT: // SB_LINEUP
+        case SB_LINERIGHT: // SB_LINEDOWN
             si.nPos += 15;
             break;
         case SB_PAGELEFT: // SB_PAGEUP
