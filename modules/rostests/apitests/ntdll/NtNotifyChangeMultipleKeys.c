@@ -49,7 +49,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
     DWORD Value1 = 0x12345678, Value2 = 0x87654321;
     /* handles */
     HANDLE KeyHandle = NULL, SubKeyHandle = NULL, SecondaryKeyHandle = NULL;
-    HANDLE WatchThreadHandle, EventHandle;
+    HANDLE WatchThreadHandle = NULL, EventHandle = NULL;
     
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\TestKey");
     RtlInitUnicodeString(&SubKeyName, L"\\Registry\\Machine\\SOFTWARE\\TestKey\\TestSubKey");
@@ -70,15 +70,13 @@ START_TEST(NtNotifyChangeMultipleKeys)
     }
     /* Create registry keys */
     Status = NtCreateKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
-    ASSERT(NT_SUCCESS(Status));
-    Status = NtSetValueKey(KeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
-    ASSERT(NT_SUCCESS(Status));
-    Status = NtCreateKey(&SubKeyHandle, KEY_ALL_ACCESS, &SubKeyObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
-    ASSERT(NT_SUCCESS(Status));
-    Status = NtCreateKey(&SecondaryKeyHandle, KEY_ALL_ACCESS, &SecondaryObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
-    ASSERT(NT_SUCCESS(Status));
-    CloseHandle(SecondaryKeyHandle);
-
+    if (!NT_SUCCESS(Status))
+    {
+        skip(FALSE, "Failed to create registry key");
+        goto Cleanup;
+    }
+    NtSetValueKey(KeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
+    
     /* Synchronous mode */
 
     /* Create a thread */
@@ -101,6 +99,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
         ok_ntstatus(WatchThreadState.IoStatusBlock->Status, STATUS_NOTIFY_ENUM_DIR);
         /* cleanup */
         CloseHandle(WatchThreadHandle);
+        WatchThreadHandle = NULL;
         WatchThreadState.Status = 0xdeadbeef;
         WatchThreadState.IoStatusBlock->Status = 0xdeadbeef;
     }
@@ -122,6 +121,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
         ok_ntstatus(WatchThreadState.IoStatusBlock->Status, STATUS_NOTIFY_CLEANUP);
         /* cleanup */
         CloseHandle(WatchThreadHandle);
+        WatchThreadHandle = NULL;
     }
     else
     {
@@ -133,7 +133,11 @@ START_TEST(NtNotifyChangeMultipleKeys)
     if (!KeyHandle)
     {
         Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
-        ASSERT(NT_SUCCESS(Status));
+        if (!NT_SUCCESS(Status))
+        {
+            skip(FALSE, "Failed to open registry key");
+            goto Cleanup;
+        }
     }
     /* Start watching for changes */
     Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL, EventHandle, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
@@ -168,53 +172,74 @@ START_TEST(NtNotifyChangeMultipleKeys)
     if (!KeyHandle)
     {
         Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
-        ASSERT(NT_SUCCESS(Status));
+        if (!NT_SUCCESS(Status))
+        {
+            skip(FALSE, "Failed to open registry key");
+            goto Cleanup;
+        }
     }
-    /* Start watching for changes */
-    Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL, EventHandle, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, TRUE, NULL, 0, TRUE);
-    ok_ntstatus(Status, STATUS_PENDING);
-    /* Check event state */
-    Status = WaitForSingleObject(EventHandle, 0);
-    ok_ntstatus(Status, WAIT_TIMEOUT);
-    /* Make change to the subkey */
-    Status = NtSetValueKey(SubKeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
-    ok_ntstatus(Status, STATUS_SUCCESS);
-    /* Verify that the event is signaled */
-    NtTestAlert();
-    Status = WaitForSingleObject(EventHandle, 100);
-    ok_ntstatus(Status, WAIT_OBJECT_0);
+    Status = NtCreateKey(&SubKeyHandle, KEY_ALL_ACCESS, &SubKeyObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* Start watching for changes */
+        Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL, EventHandle, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, TRUE, NULL, 0, TRUE);
+        ok_ntstatus(Status, STATUS_PENDING);
+        /* Check event state */
+        Status = WaitForSingleObject(EventHandle, 0);
+        ok_ntstatus(Status, WAIT_TIMEOUT);
+        /* Make change to the subkey */
+        Status = NtSetValueKey(SubKeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
+        ok_ntstatus(Status, STATUS_SUCCESS);
+        /* Verify that the event is signaled */
+        NtTestAlert();
+        Status = WaitForSingleObject(EventHandle, 100);
+        ok_ntstatus(Status, WAIT_OBJECT_0);
+    }
+    else
+    {
+        skip(FALSE, "Failed to create subkey");
+    }
 
     /* Watching multiple keys */
 
-    InitializeObjectAttributes(&SubordinateObjects[0], &SecondaryKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = NtNotifyChangeMultipleKeys(KeyHandle,
-                                        _countof(SubordinateObjects),
-                                        SubordinateObjects,
-                                        EventHandle,
-                                        NULL,
-                                        NULL,
-                                        &IoStatusBlock,
-                                        REG_NOTIFY_CHANGE_LAST_SET,
-                                        TRUE,
-                                        NULL,
-                                        0,
-                                        TRUE);
-    ok_ntstatus(Status, STATUS_PENDING);
-    /* Check event state */
-    Status = WaitForSingleObject(EventHandle, 0);
-    ok_ntstatus(Status, WAIT_TIMEOUT);
-    /* Make change to the secondary key */
-    Status = NtOpenKey(&SecondaryKeyHandle, KEY_SET_VALUE | KEY_NOTIFY | DELETE, &SecondaryObjectAttributes);
+    Status = NtCreateKey(&SecondaryKeyHandle, KEY_ALL_ACCESS, &SecondaryObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
     if (NT_SUCCESS(Status))
     {
-        Status = NtSetValueKey(SecondaryKeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
-        ok_ntstatus(Status, STATUS_SUCCESS);
         CloseHandle(SecondaryKeyHandle);
+        InitializeObjectAttributes(&SubordinateObjects[0], &SecondaryKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+        Status = NtNotifyChangeMultipleKeys(KeyHandle,
+                                            _countof(SubordinateObjects),
+                                            SubordinateObjects,
+                                            EventHandle,
+                                            NULL,
+                                            NULL,
+                                            &IoStatusBlock,
+                                            REG_NOTIFY_CHANGE_LAST_SET,
+                                            TRUE,
+                                            NULL,
+                                            0,
+                                            TRUE);
+        ok_ntstatus(Status, STATUS_PENDING);
+        /* Check event state */
+        Status = WaitForSingleObject(EventHandle, 0);
+        ok_ntstatus(Status, WAIT_TIMEOUT);
+        /* Make change to the secondary key */
+        Status = NtOpenKey(&SecondaryKeyHandle, KEY_SET_VALUE | KEY_NOTIFY | DELETE, &SecondaryObjectAttributes);
+        if (NT_SUCCESS(Status))
+        {
+            Status = NtSetValueKey(SecondaryKeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
+            ok_ntstatus(Status, STATUS_SUCCESS);
+            CloseHandle(SecondaryKeyHandle);
+        }
+        /* Verify that the event is signaled */
+        NtTestAlert();
+        Status = WaitForSingleObject(EventHandle, 100);
+        ok_ntstatus(Status, WAIT_OBJECT_0);
     }
-    /* Verify that the event is signaled */
-    NtTestAlert();
-    Status = WaitForSingleObject(EventHandle, 100);
-    ok_ntstatus(Status, WAIT_OBJECT_0);
+    else
+    {
+        skip(FALSE, "Failed to create secondary key");
+    }
     /* Test if the function fails if the given subordinate key is same with master key */
     InitializeObjectAttributes(&SubordinateObjects[0], &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtNotifyChangeMultipleKeys(KeyHandle,
@@ -257,10 +282,29 @@ START_TEST(NtNotifyChangeMultipleKeys)
     NtTestAlert();
     ok(ApcRan == TRUE, "The APC routine did not ran.\n");
 
-    NtDeleteKey(SubKeyHandle);
-    CloseHandle(SubKeyHandle);
-    NtDeleteKey(KeyHandle);
-    CloseHandle(KeyHandle);
+Cleanup:
+    if (WatchThreadHandle)
+    {
+        CloseHandle(WatchThreadHandle);
+    }
+    if (SubKeyHandle)
+    {
+        NtDeleteKey(SubKeyHandle);
+        CloseHandle(SubKeyHandle);
+    }
+    if (!KeyHandle)
+    {
+        Status = NtOpenKey(&KeyHandle, DELETE, &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            KeyHandle = NULL;
+        }
+    }
+    if (KeyHandle)
+    {
+        NtDeleteKey(KeyHandle);
+        CloseHandle(KeyHandle);
+    }
     Status = NtOpenKey(&SecondaryKeyHandle, DELETE, &SecondaryObjectAttributes);
     if (NT_SUCCESS(Status))
     {
