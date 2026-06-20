@@ -343,7 +343,7 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
         }
         else
         {
-            FillRect(hdc, &rc1, (HBRUSH)(COLOR_3DFACE + 1));
+            FillRect(hdc, &rc1, (HBRUSH)(COLOR_WINDOW + 1));
             SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
             hBrush = (HBRUSH)(COLOR_WINDOWTEXT + 1);
         }
