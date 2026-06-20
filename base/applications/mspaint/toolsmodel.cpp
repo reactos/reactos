@@ -322,7 +322,7 @@ void ToolsModel::selectAll()
     OnButtonUp(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
 }
 
-HBRUSH ToolsModel::CreateColorBrush(COLORREF color)
+HBRUSH ToolsModel::CreateVirtualBrush(COLORREF color)
 {
     if (paletteModel.SelectedPalette() == PAL_MONOCHROME)
         return CreateDitherBrush(color, RGB(0, 0, 0), RGB(255, 255, 255));
@@ -332,10 +332,10 @@ HBRUSH ToolsModel::CreateColorBrush(COLORREF color)
 
 HBRUSH ToolsModel::GetFgBrush()
 {
-    return m_fgBrush.GetColorBrush(paletteModel.SelectedPalette(), paletteModel.GetFgColor());
+    return m_fgBrush.GetVirtualBrush(paletteModel.SelectedPalette(), paletteModel.GetFgColor());
 }
 
 HBRUSH ToolsModel::GetBgBrush()
 {
-    return m_bgBrush.GetColorBrush(paletteModel.SelectedPalette(), paletteModel.GetBgColor());
+    return m_bgBrush.GetVirtualBrush(paletteModel.SelectedPalette(), paletteModel.GetBgColor());
 }

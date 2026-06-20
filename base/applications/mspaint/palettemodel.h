@@ -19,7 +19,7 @@ enum PAL_TYPE
 
 /* CLASSES **********************************************************/
 
-class ColorBrush
+class VirtualBrush
 {
 protected:
     COLORREF m_rgbColor = RGB(0, 0, 0);
@@ -27,9 +27,9 @@ protected:
     HBRUSH m_hBrush = NULL;
 
 public:
-    ~ColorBrush();
+    ~VirtualBrush();
 
-    HBRUSH GetColorBrush(PAL_TYPE palette, COLORREF rgbColor);
+    HBRUSH GetVirtualBrush(PAL_TYPE palette, COLORREF rgbColor);
 };
 
 class PaletteModel

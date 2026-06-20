@@ -124,7 +124,7 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     for (INT i = 0; i < COLOR_COUNT; i++)
     {
         getColorBoxRect(&rc, rcClient, i);
-        HBRUSH hbr = toolsModel.CreateColorBrush(paletteModel.GetColor(i));
+        HBRUSH hbr = toolsModel.CreateVirtualBrush(paletteModel.GetColor(i));
         drawColorBox(hMemDC, &rc, hbr, BDR_SUNKENOUTER);
         DeleteObject(hbr);
     }

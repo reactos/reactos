@@ -79,8 +79,8 @@ private:
     BOOL m_transpBg;
     int m_zoom;
     ToolBase *m_pToolObject;
-    ColorBrush m_fgBrush;
-    ColorBrush m_bgBrush;
+    VirtualBrush m_fgBrush;
+    VirtualBrush m_bgBrush;
 
     ToolBase *GetOrCreateTool(TOOLTYPE nTool);
     void SendSetCursor();
@@ -149,7 +149,7 @@ public:
 
     HBRUSH GetFgBrush();
     HBRUSH GetBgBrush();
-    HBRUSH CreateColorBrush(COLORREF color);
+    HBRUSH CreateVirtualBrush(COLORREF color);
 };
 
 extern ToolsModel toolsModel;

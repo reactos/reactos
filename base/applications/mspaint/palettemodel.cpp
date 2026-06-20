@@ -12,13 +12,13 @@ PaletteModel paletteModel;
 
 /* FUNCTIONS ********************************************************/
 
-ColorBrush::~ColorBrush()
+VirtualBrush::~VirtualBrush()
 {
     if (m_hBrush)
         DeleteObject(m_hBrush);
 }
 
-HBRUSH ColorBrush::GetColorBrush(PAL_TYPE palette, COLORREF rgbColor)
+HBRUSH VirtualBrush::GetVirtualBrush(PAL_TYPE palette, COLORREF rgbColor)
 {
     if (m_hBrush &&
         m_palette == palette &&
