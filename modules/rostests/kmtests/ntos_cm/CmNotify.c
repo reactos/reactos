@@ -12,7 +12,7 @@
 #define ok_ntstatus(svar, sexpected) ok_eq_hex(svar, sexpected)
 #define CLEANUP(state) ZwNotifyChangeKey_Cleanup(state)
 #define CHECK_ERROR(state, Status) if (!NT_SUCCESS(Status)) { ok(FALSE, "Internal error, Status=0x%lx\n", Status); CLEANUP(state); return Status; }
-#define TEST_ERROR(state, Status, Expected)  ok_ntstatus(Status, Expected); if (Status != Expected) { CLEANUP(state); return Status; }
+#define TEST_ERROR(state, Status, Expected) ok_ntstatus(Status, Expected); if (Status != Expected) { CLEANUP(state); return Status; }
 #define INIT_TEST(state, Status) Status = ZwNotifyChangeKey_InitializePerTest(state); CHECK_ERROR(state, Status)
 #define FINALIZE_TEST(state) CLEANUP(state); return STATUS_SUCCESS
 #define RUN_TEST(state, Status, TestName) Status = ZwNotifyChangeKey_TEST_##TestName(state); ok(Status == STATUS_SUCCESS, "Subtest " #TestName " failed.\n")
