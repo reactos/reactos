@@ -344,12 +344,12 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
             hBrush = (HBRUSH)(COLOR_WINDOWTEXT + 1);
         }
 
-        // Draw "x1", "x2" etc. on left side
+        // Draw "1x", "2x" etc. on left side
         SetBkMode(hdc, TRANSPARENT);
         rc1.left = prc->left + cxMargin;
         rc1.right = (prc->left + prc->right) / 2;
-        WCHAR text[8];
-        StringCchPrintfW(text, _countof(text), L"x%d", g_zoomPresets[iItem]);
+        WCHAR text[16];
+        StringCchPrintfW(text, _countof(text), L"%dx", g_zoomPresets[iItem]);
         DrawTextW(hdc, text, -1, &rc1, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
 
         // Draw dots on right side
