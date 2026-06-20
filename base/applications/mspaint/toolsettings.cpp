@@ -502,8 +502,16 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
             iItem = getZoomRects(rects, &rect1, &pt);
             if (0 <= iItem && iItem < (INT)_countof(g_zoomPresets))
             {
-                toolsModel.SetZoom(g_zoomPresets[iItem] * DEFAULT_ZOOM);
+                INT zoomRatio = g_zoomPresets[iItem] * DEFAULT_ZOOM;
+                toolsModel.SetZoom(zoomRatio);
                 toolsModel.SetActiveTool(toolsModel.GetOldActiveTool());
+
+                CStringW strZoom;
+                if (zoomRatio % 10 == 0)
+                    strZoom.Format(L"%d%%", zoomRatio / 10);
+                else
+                    strZoom.Format(L"%d.%d%%", zoomRatio / 10, zoomRatio % 10);
+                ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(PCWSTR)strZoom);
             }
             break;
         case TOOL_FILL:
