@@ -132,7 +132,6 @@ VOID NTAPI ZwNotifyChangeKey_WatchThread(_In_ PVOID lpParameter)
 }
 
 /* Async test queue worker item */
-
 _Function_class_(WORKER_THREAD_ROUTINE)
 VOID NTAPI ZwNotifyChangeKey_ItemWorker(_In_ PVOID pParameter)
 {
