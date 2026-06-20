@@ -299,19 +299,20 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
 
     RECT rects[_countof(g_zoomPresets)];
     getZoomRects(rects, prc);
-    LONG cx = (rects[0].right - rects[0].left);
-    LONG dy = (rects[0].bottom - rects[0].top);
+    LONG cx = rects[0].right - rects[0].left;
+    LONG cyItem = rects[0].bottom - rects[0].top;
+    const LONG cxMargin = 3;
 
     // Create and select font
     LOGFONTW lf;
     ZeroMemory(&lf, sizeof(lf));
-    lf.lfHeight = dy * 9 / 10;
+    lf.lfHeight = -(cyItem - 2);
     lf.lfQuality = NONANTIALIASED_QUALITY;
     lstrcpynW(lf.lfFaceName, L"MS Shell Dlg", _countof(lf.lfFaceName));
     HFONT hFont = CreateFontIndirectW(&lf);
     HGDIOBJ hFontOld = SelectObject(hdc, hFont);
 
-    for (LONG iItem = 0, y = 0; iItem < nCount; (y += dy), ++iItem)
+    for (LONG iItem = 0, y = 0; iItem < nCount; (y += cyItem), ++iItem)
     {
         // Fill background
         RECT rc1 = rects[iItem];
@@ -331,12 +332,13 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
 
         // Draw "x1", "x2" etc. on left side
         SetBkMode(hdc, TRANSPARENT);
+        rc1.left += cxMargin;
         rc1.right = rc1.left + cx / 2;
         DrawTextW(hdc, g_zoomStrings[iItem], -1, &rc1, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
 
         // Draw dots on right side
         rc1.left = prc->left + cx / 2;
-        rc1.right = prc->left + cx;
+        rc1.right = prc->left + cx - cxMargin;
         POINT ptCenter = { (rc1.left + rc1.right) / 2, (rc1.top + rc1.bottom) / 2 };
         RECT rc2 = { ptCenter.x - g_zoomPresets[iItem] / 2, ptCenter.y - g_zoomPresets[iItem] / 2 };
         rc2.right = rc2.left + g_zoomPresets[iItem];
