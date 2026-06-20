@@ -20,6 +20,7 @@
 PMMPTE MmFirstReservedMappingPte, MmLastReservedMappingPte;
 PMMPTE MiFirstReservedZeroingPte;
 MMPTE HyperTemplatePte;
+extern PKTHREAD MiZeroPageThread;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -118,6 +119,7 @@ MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
     //
     // Sanity checks
     //
+    ASSERT(KeGetCurrentThread() == MiZeroPageThread);
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT(NumberOfPages != 0);
     ASSERT(NumberOfPages <= MI_ZERO_PTES);
@@ -138,7 +140,7 @@ MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
         //
         Offset = MI_ZERO_PTES;
         PointerPte->u.Hard.PageFrameNumber = Offset;
-        KeFlushProcessTb();
+        KeFlushRangeTb(MiPteToAddress(PointerPte + 1), MI_ZERO_PTES, TRUE);
     }
 
     //
@@ -192,6 +194,7 @@ MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
     //
     // Sanity checks
     //
+    ASSERT(KeGetCurrentThread() == MiZeroPageThread);
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT (NumberOfPages != 0);
     ASSERT(NumberOfPages <= MI_ZERO_PTES);
@@ -202,7 +205,8 @@ MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
     PointerPte = MiAddressToPte(VirtualAddress);
 
     //
-    // Blow away the mapped zero PTEs
+    // Blow away the mapped zero PTEs.
+    // Note: TLB flush happens in MiMapPagesInZeroSpace, when a new range is started
     //
     RtlZeroMemory(PointerPte, NumberOfPages * sizeof(MMPTE));
 }

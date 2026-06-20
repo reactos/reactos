@@ -551,6 +551,9 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Set processor as active */
     KeActiveProcessors |= 1ULL << Cpu;
 
+    /* We are running the initial system process now */
+    InterlockedOr64(&KiInitialProcess.Pcb.ActiveProcessors, 1ULL << Cpu);
+
     /* Release lock */
     InterlockedAnd64((PLONG64)&KiFreezeExecutionLock, 0);
 
