@@ -560,7 +560,7 @@ struct FreeSelTool : SelectionBaseTool
         if (!selectionModel.m_bShow && m_bDrawing)
         {
             /* Draw the freehand selection inverted/xored */
-            Poly(hdc, s_pPoints, (INT)s_cPoints, (int)0, 0, 2, 0, FALSE, TRUE);
+            Poly(hdc, s_pPoints, (INT)s_cPoints, (COLORREF)0, (COLORREF)0, 2, 0, FALSE, TRUE);
         }
     }
 };
