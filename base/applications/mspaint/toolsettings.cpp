@@ -498,7 +498,7 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
             break;
         case TOOL_ZOOM:
             iItem = getZoomRects(rects, &rect1, &pt);
-            if (0 <= iItem && iItem < _countof(g_zoomPresets))
+            if (0 <= iItem && iItem < (INT)_countof(g_zoomPresets))
             {
                 toolsModel.SetZoom(g_zoomPresets[iItem] * DEFAULT_ZOOM);
                 toolsModel.SetActiveTool(toolsModel.GetOldActiveTool());
