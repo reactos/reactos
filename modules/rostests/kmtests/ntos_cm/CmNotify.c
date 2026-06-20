@@ -15,7 +15,7 @@
 #define TEST_ERROR(state, Status, Expected)  ok_ntstatus(Status, Expected); if (Status != Expected) { CLEANUP(state); return Status; }
 #define INIT_TEST(state, Status) Status = ZwNotifyChangeKey_InitializePerTest(state); CHECK_ERROR(state, Status)
 #define FINALIZE_TEST(state) CLEANUP(state); return STATUS_SUCCESS
-#define RUN_TEST(state, Status, TestName) Status = ZwNotifyChangeKey_TEST_##TestName(state); ok(Status == STATUS_SUCCESS, "Subtest "#TestName" failed.\n")
+#define RUN_TEST(state, Status, TestName) Status = ZwNotifyChangeKey_TEST_##TestName(state); ok(Status == STATUS_SUCCESS, "Subtest " #TestName " failed.\n")
 #define START_SUBTEST(TestName) NTSTATUS NTAPI ZwNotifyChangeKey_TEST_##TestName(PWATCH_REG_TEST_STATE state)
 
 typedef struct _WATCH_REG_TEST_STATE
