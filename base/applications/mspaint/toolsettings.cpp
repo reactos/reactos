@@ -21,8 +21,6 @@
 
 static const BYTE s_AirRadius[4] = { 5, 8, 3, 12 };
 static const INT g_zoomPresets[] = { 1, 2, 6, 8 };
-static const PCWSTR g_zoomStrings[] = { L"1x", L"2x", L"6x", L"8x" };
-C_ASSERT(_countof(g_zoomPresets) == _countof(g_zoomStrings));
 
 CToolSettingsWindow toolSettingsWindow;
 
@@ -348,12 +346,14 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
 
         // Draw "x1", "x2" etc. on left side
         SetBkMode(hdc, TRANSPARENT);
-        rc1.left += cxMargin;
-        rc1.right = (rc1.left + rc1.right) / 2;
-        DrawTextW(hdc, g_zoomStrings[iItem], -1, &rc1, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+        rc1.left = prc->left + cxMargin;
+        rc1.right = (prc->left + prc->right) / 2;
+        WCHAR text[8];
+        StringCchPrintfW(text, _countof(text), L"x%d", g_zoomPresets[iItem]);
+        DrawTextW(hdc, text, -1, &rc1, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
 
         // Draw dots on right side
-        rc1.left = (rc1.left + rc1.right) / 2;
+        rc1.left = (prc->left + prc->right) / 2;
         rc1.right = prc->right - cxMargin;
         POINT ptCenter = { (rc1.left + rc1.right) / 2, (rc1.top + rc1.bottom) / 2 };
         const LONG nZoom = g_zoomPresets[iItem];
