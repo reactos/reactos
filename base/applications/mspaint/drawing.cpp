@@ -284,9 +284,9 @@ Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, HBRUSH hBrush, INT thick
 void
 Fill(HDC hdc, LONG x, LONG y, COLORREF color)
 {
-    HBRUSH oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(color));
-    ExtFloodFill(hdc, x, y, GetPixel(hdc, x, y), FLOODFILLSURFACE);
-    DeleteObject(SelectObject(hdc, oldBrush));
+    HBRUSH hBrush = CreateSolidBrush(color);
+    Fill(hdc, x, y, hBrush);
+    DeleteObject(hBrush);
 }
 
 void
