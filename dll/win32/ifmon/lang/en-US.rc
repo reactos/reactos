@@ -44,7 +44,22 @@ Examples:\n\n\
        %1!s! ""Local Area Connection"" 10.0.0.1\n\
        %1!s! ""Local Area Connection"" 10.0.0.3 index=2\n"
 
-    IDS_HLP_IP_DELETE             "Deletes a configuration entry from a table.\n"
+    IDS_HLP_IP_DELETE            "Deletes a configuration entry from a table.\n"
+    IDS_HLP_IP_DELETE_ADDRESS    "Deletes an IP address or default gateway from the specified interface.\n"
+    IDS_HLP_IP_DELETE_ADDRESS_EX "\nUsage: %1!s! [name=]<string> [[addr=]IP address] [[gateway=]IP address|ALL]\n\n\
+Parameters:\n\n\
+      Tag            Value\n\
+      name         - The name of the interface.\n\
+      addr         - A static IP address for the interface specified by name.\n\
+      gateway      - One of the following values:\n\
+                     <IP address>: A specific default gateway IP address for\n\
+                                   the static IP address you are deleting.\n\
+                     ALL: Deletes all default gateway IP addresses for\n\
+                          the static IP address you are deleting.\n\n\
+Remarks: Deletes an IP address from an interface with multiple static IP\n\
+         addresses, or deletes a default gateway from a specified interface.\n\n\
+Examples:\n\n\
+       %1!s! ""Local Area Connection"" addr=10.0.0.1 gateway=all\n"
 
     IDS_HLP_IP_DELETE_ARPCACHE    "Flushes the ARP cache for one or all interfaces.\n"
     IDS_HLP_IP_DELETE_ARPCACHE_EX "\nUsage: %1!s! [name=]<string>\n\n\
@@ -58,6 +73,21 @@ Remarks: Flushes the Address Resolution Protocol (ARP) cache on a specific\n\
 Examples:\n\n\
        %1!s!\n\
        %1!s! name=""Local Area Connection""\n"
+
+    IDS_HLP_IP_DELETE_DNS    "Deletes the DNS server from the specified interface.\n"
+    IDS_HLP_IP_DELETE_DNS_EX "\nUsage: %1!s! [name=]<string> [[addr=]<IP address>|ALL ]\n\n\
+Parameters:\n\n\
+      Tag            Value\n\
+      name         - The name of the interface where DNS servers are deleted.\n\
+      addr         - One of the following values:\n\
+                     <IP address>: A specific IP address of a DNS server\n\
+                                   you are deleting.\n\
+                     ALL: Deletes all configured IP addresses for DNS. servers.\n\n\
+Remarks: Deletes statically configured DNS server IP addresses for a\n\
+         specific interface.\n\n\
+Examples:\n\n\
+       %1!s! ""Local Area Connection"" 10.0.0.1\n\
+       %1!s! ""Local Area Connection"" all\n"
 
     IDS_HLP_IP_SET             "Sets configuration information.\n"
     IDS_HLP_IP_SET_ADDRESS     "Sets the IP address or default gateway to the specified interface.\n"
@@ -141,6 +171,16 @@ Parameters:\n\n\
 Remarks: Displays the DNS server configuration for a specific interface\nor interfaces.\n\n\
 Examples:\n\n\
       %1!s! ""Local Area Network""\n"
+
+    IDS_HLP_IP_RESET    "Resets TCP/IP and related components to a clean state.\n"
+    IDS_HLP_IP_RESET_EX "\nUsage: %1!s! [name=]<string>\n\n\
+Parameters:\n\n\
+      Tag            Value\n\
+      name         - The name of a file to which to append information\n\
+                     regarding what settings were reset.\n\n\
+Remarks: Resets TCP/IP and related components to a clean state.\n\n\
+Examples:\n\n\
+       %1!s! resetlog.txt\n"
 
     IDS_HLP_WINSOCK_RESET "Resets the Winsock Catalog to a clean state.\n"
     IDS_HLP_WINSOCK_RESET_EX "\nUsage: %1!s!\n\n\
