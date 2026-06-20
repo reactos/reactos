@@ -395,10 +395,8 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (LoaderBlock->ConfigurationRoot)
     {
 #ifdef _M_IX86
-        /* Set the alternative system architecture information */
-        const CHAR SystemId_PC98[] = "NEC PC-98";
-
         PCONFIGURATION_COMPONENT_DATA ConfigData;
+        
         ConfigData = KeFindConfigurationEntry(LoaderBlock->ConfigurationRoot,
                                               SystemClass,
                                               MaximumType,
@@ -407,9 +405,9 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         {
             /* Check if the system identifier starts with a known string.
              * Set kernel flags and initialize variables accordingly. */
-            if (RtlCompareMemory(ConfigData->ComponentEntry.Identifier,
-                                 SystemId_PC98,
-                                 sizeof(SystemId_PC98) - 1) == sizeof(SystemId_PC98) - 1)
+            if (!strncmp(ConfigData->ComponentEntry.Identifier,
+                         "NEC PC-98",
+                         sizeof("NEC PC-98") - 1))
             {
                 /* Running on a NEC PC-9800 or compatible */
                 KeI386MachineType |= 0x100; /* Should probably be one of MACHINE_TYPE_* consts */
