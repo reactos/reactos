@@ -356,9 +356,10 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
         rc1.left = (rc1.left + rc1.right) / 2;
         rc1.right = prc->right - cxMargin;
         POINT ptCenter = { (rc1.left + rc1.right) / 2, (rc1.top + rc1.bottom) / 2 };
-        RECT rc2 = { ptCenter.x - g_zoomPresets[iItem] / 2, ptCenter.y - g_zoomPresets[iItem] / 2 };
-        rc2.right = rc2.left + g_zoomPresets[iItem];
-        rc2.bottom = rc2.top + g_zoomPresets[iItem];
+        const LONG nZoom = g_zoomPresets[iItem];
+        RECT rc2 = { ptCenter.x - nZoom / 2, ptCenter.y - nZoom / 2 };
+        rc2.right = rc2.left + nZoom;
+        rc2.bottom = rc2.top + nZoom;
         FillRect(hdc, &rc2, hBrush);
     }
 
