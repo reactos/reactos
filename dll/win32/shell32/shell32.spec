@@ -167,7 +167,7 @@
 173 stdcall SHValidateUNC(ptr wstr long)
 174 stdcall SHCreateShellFolderViewEx(ptr ptr)
 175 stdcall -noname SHGetSpecialFolderPath(long long long long) SHGetSpecialFolderPathW
-176 stdcall SHSetInstanceExplorer(long)
+176 stdcall SHSetInstanceExplorer(long) shcore.SetProcessReference
 177 stdcall -noname DAD_SetDragImageFromListView(ptr long long)
 178 stdcall SHObjectProperties(long long wstr wstr)
 179 stdcall SHGetNewLinkInfoA(str str ptr long long)
