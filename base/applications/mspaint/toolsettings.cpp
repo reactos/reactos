@@ -320,7 +320,7 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
     LONG cyItem = rects[0].bottom - rects[0].top;
     lf.lfHeight = -(cyItem - 2);
     lf.lfQuality = NONANTIALIASED_QUALITY;
-    lstrcpynW(lf.lfFaceName, L"MS Shell Dlg", _countof(lf.lfFaceName));
+    StringCchCopyW(lf.lfFaceName, _countof(lf.lfFaceName), L"MS Shell Dlg");
     HFONT hFont = CreateFontIndirectW(&lf);
     HGDIOBJ hFontOld = SelectObject(hdc, hFont);
 
