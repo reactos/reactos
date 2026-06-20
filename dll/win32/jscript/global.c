@@ -424,11 +424,15 @@ static HRESULT JSGlobal_parseFloat(script_ctx_t *ctx, jsval_t vthis, WORD flags,
     return S_OK;
 }
 
-#if defined(__REACTOS__) && defined(__clang__)
+#ifdef __REACTOS__
+#ifdef __clang__
 static inline __attribute__((always_inline)) int hex_to_int(WCHAR wch) {
 #else
+static inline int hex_to_int(WCHAR wch) {
+#endif /* __clang__ */
+#else
 static inline int hex_to_int(const WCHAR wch) {
-#endif
+#endif /* __REACTOS__ */
     if(towupper(wch)>='A' && towupper(wch)<='F') return towupper(wch)-'A'+10;
     if(is_digit(wch)) return wch-'0';
     return -1;

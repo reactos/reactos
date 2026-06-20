@@ -84,7 +84,7 @@ CreateColorDIB(int width, int height, COLORREF rgb)
     return ret;
 }
 
-HBITMAP CopyMonoImage(HBITMAP hbm, INT cx, INT cy)
+HBITMAP CopyMonoImage(HBITMAP hbm, INT cx, INT cy, INT stretchMode)
 {
     BITMAP bm;
     if (!::GetObjectW(hbm, sizeof(bm), &bm))
@@ -96,14 +96,41 @@ HBITMAP CopyMonoImage(HBITMAP hbm, INT cx, INT cy)
         cy = bm.bmHeight;
     }
 
+    HDC hdc1 = ::CreateCompatibleDC(NULL);
+    HDC hdc2 = ::CreateCompatibleDC(NULL);
     HBITMAP hbmNew = ::CreateBitmap(cx, cy, 1, 1, NULL);
-    if (!hbmNew)
+    HGDIOBJ hbm1Old = ::SelectObject(hdc1, hbm);
+    HGDIOBJ hbm2Old = ::SelectObject(hdc2, hbmNew);
+    ::SetStretchBltMode(hdc2, stretchMode);
+    ::StretchBlt(hdc2, 0, 0, cx, cy, hdc1, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+    ::SelectObject(hdc1, hbm1Old);
+    ::SelectObject(hdc2, hbm2Old);
+    ::DeleteDC(hdc1);
+    ::DeleteDC(hdc2);
+    return hbmNew;
+}
+
+HBITMAP CopyDIBImage(HBITMAP hbm, INT cx, INT cy, INT stretchMode)
+{
+    if (stretchMode == STRETCH_HALFTONE)
+        return (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, cx, cy, LR_CREATEDIBSECTION);
+
+    BITMAP bm;
+    if (!::GetObjectW(hbm, sizeof(bm), &bm))
         return NULL;
+
+    if (cx == 0 || cy == 0)
+    {
+        cx = bm.bmWidth;
+        cy = bm.bmHeight;
+    }
 
     HDC hdc1 = ::CreateCompatibleDC(NULL);
     HDC hdc2 = ::CreateCompatibleDC(NULL);
+    HBITMAP hbmNew = CreateDIBWithProperties(cx, cy);
     HGDIOBJ hbm1Old = ::SelectObject(hdc1, hbm);
     HGDIOBJ hbm2Old = ::SelectObject(hdc2, hbmNew);
+    ::SetStretchBltMode(hdc2, stretchMode);
     ::StretchBlt(hdc2, 0, 0, cx, cy, hdc1, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
     ::SelectObject(hdc1, hbm1Old);
     ::SelectObject(hdc2, hbm2Old);

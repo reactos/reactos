@@ -254,11 +254,13 @@ BasepCopyFileExW(IN LPCWSTR lpExistingFileName,
                                              GENERIC_WRITE,
                                              FILE_SHARE_WRITE,
                                              NULL,
-                                             dwCopyFlags ? CREATE_NEW : CREATE_ALWAYS,
+                                             (dwCopyFlags & COPY_FILE_FAIL_IF_EXISTS) ? CREATE_NEW : CREATE_ALWAYS,
                                              FileBasic.FileAttributes,
                                              NULL);
                 if (INVALID_HANDLE_VALUE != FileHandleDest)
                 {
+                    if (!(dwCopyFlags & COPY_FILE_FAIL_IF_EXISTS) && GetLastError() == ERROR_ALREADY_EXISTS)
+                        SetLastError(ERROR_SUCCESS);
                     errCode = CopyLoop(FileHandleSource,
                                        FileHandleDest,
                                        FileStandard.EndOfFile,

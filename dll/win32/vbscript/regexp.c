@@ -482,7 +482,7 @@ EmitREBytecode(CompilerState *state, regexp_t *re, size_t treeDepth,
     if (treeDepth == 0) {
         emitStateStack = NULL;
     } else {
-        emitStateStack = heap_alloc(sizeof(EmitStateStackEntry) * treeDepth);
+        emitStateStack = malloc(sizeof(EmitStateStackEntry) * treeDepth);
         if (!emitStateStack)
             return NULL;
     }
@@ -788,7 +788,7 @@ EmitREBytecode(CompilerState *state, regexp_t *re, size_t treeDepth,
     }
 
   cleanup:
-    heap_free(emitStateStack);
+    free(emitStateStack);
     return pc;
 
   jump_too_big:
@@ -1667,11 +1667,11 @@ ParseRegExp(CompilerState *state)
         return (state->result != NULL);
     }
 
-    operatorStack = heap_alloc(sizeof(REOpData) * operatorStackSize);
+    operatorStack = malloc(sizeof(REOpData) * operatorStackSize);
     if (!operatorStack)
         return FALSE;
 
-    operandStack = heap_alloc(sizeof(RENode *) * operandStackSize);
+    operandStack = malloc(sizeof(RENode *) * operandStackSize);
     if (!operandStack)
         goto out;
 
@@ -1762,7 +1762,7 @@ pushOperand:
                 if (operandSP == operandStackSize) {
                     RENode **tmp;
                     operandStackSize += operandStackSize;
-                    tmp = heap_realloc(operandStack, sizeof(RENode *) * operandStackSize);
+                    tmp = realloc(operandStack, sizeof(RENode *) * operandStackSize);
                     if (!tmp)
                         goto out;
                     operandStack = tmp;
@@ -1895,7 +1895,7 @@ pushOperator:
             if (operatorSP == operatorStackSize) {
                 REOpData *tmp;
                 operatorStackSize += operatorStackSize;
-                tmp = heap_realloc(operatorStack, sizeof(REOpData) * operatorStackSize);
+                tmp = realloc(operatorStack, sizeof(REOpData) * operatorStackSize);
                 if (!tmp)
                     goto out;
                 operatorStack = tmp;
@@ -1907,8 +1907,8 @@ pushOperator:
         }
     }
 out:
-    heap_free(operatorStack);
-    heap_free(operandStack);
+    free(operatorStack);
+    free(operandStack);
     return result;
 }
 
@@ -1935,7 +1935,7 @@ PushBackTrackState(REGlobalData *gData, REOp op,
     ptrdiff_t btincr = ((char *)result + sz) -
                        ((char *)gData->backTrackStack + btsize);
 
-    TRACE("\tBT_Push: %lu,%lu\n", (ULONG_PTR)parenIndex, (ULONG_PTR)parenCount);
+    TRACE("\tBT_Push: %Iu,%Iu\n", (ULONG_PTR)parenIndex, (ULONG_PTR)parenCount);
 
     JS_COUNT_OPERATION(gData->cx, JSOW_JUMP * (1 + parenCount));
     if (btincr > 0) {
@@ -2111,7 +2111,7 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
     assert(src[-1] == '[' && end[0] == ']');
 
     byteLength = (charSet->length >> 3) + 1;
-    charSet->u.bits = heap_alloc(byteLength);
+    charSet->u.bits = malloc(byteLength);
     if (!charSet->u.bits) {
         JS_ReportOutOfMemory(gData->cx);
         gData->ok = FALSE;
@@ -2684,7 +2684,7 @@ ExecuteREBytecode(REGlobalData *gData, match_state_t *x)
 
               case REOP_LPAREN:
                 pc = ReadCompactIndex(pc, &parenIndex);
-                TRACE("[ %lu ]\n", (ULONG_PTR)parenIndex);
+                TRACE("[ %Iu ]\n", (ULONG_PTR)parenIndex);
                 assert(parenIndex < gData->regexp->parenCount);
                 if (parenIndex + 1 > parenSoFar)
                     parenSoFar = parenIndex + 1;
@@ -3047,7 +3047,7 @@ ExecuteREBytecode(REGlobalData *gData, match_state_t *x)
                 parenSoFar = curState->parenSoFar;
             }
 
-            TRACE("\tBT_Pop: %ld,%ld\n",
+            TRACE("\tBT_Pop: %Id,%Id\n",
                      (ULONG_PTR)backTrackData->parenIndex,
                      (ULONG_PTR)backTrackData->parenCount);
             continue;
@@ -3184,12 +3184,12 @@ void regexp_destroy(regexp_t *re)
         UINT i;
         for (i = 0; i < re->classCount; i++) {
             if (re->classList[i].converted)
-                heap_free(re->classList[i].u.bits);
+                free(re->classList[i].u.bits);
             re->classList[i].u.bits = NULL;
         }
-        heap_free(re->classList);
+        free(re->classList);
     }
-    heap_free(re);
+    free(re);
 }
 
 regexp_t* regexp_new(void *cx, heap_pool_t *pool, const WCHAR *str,
@@ -3238,14 +3238,14 @@ regexp_t* regexp_new(void *cx, heap_pool_t *pool, const WCHAR *str,
             goto out;
     }
     resize = offsetof(regexp_t, program) + state.progLength + 1;
-    re = heap_alloc(resize);
+    re = malloc(resize);
     if (!re)
         goto out;
 
     assert(state.classBitmapsMem <= CLASS_BITMAPS_MEM_LIMIT);
     re->classCount = state.classCount;
     if (re->classCount) {
-        re->classList = heap_alloc(re->classCount * sizeof(RECharSet));
+        re->classList = malloc(re->classCount * sizeof(RECharSet));
         if (!re->classList) {
             regexp_destroy(re);
             re = NULL;
@@ -3272,7 +3272,7 @@ regexp_t* regexp_new(void *cx, heap_pool_t *pool, const WCHAR *str,
         regexp_t *tmp;
         assert((size_t)(endPC - re->program) < state.progLength + 1);
         resize = offsetof(regexp_t, program) + (endPC - re->program);
-        tmp = heap_realloc(re, resize);
+        tmp = realloc(re, resize);
         if (tmp)
             re = tmp;
     }

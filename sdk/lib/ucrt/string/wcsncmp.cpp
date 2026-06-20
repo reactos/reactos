@@ -19,7 +19,7 @@
 
 
 
-#ifdef _M_ARM
+#if defined(_MSC_VER) && (defined(_M_ARM) || _MSC_VER >= 1932) // VS2022 version 17.2 and later
     #pragma function(wcsncmp)
 #endif
 

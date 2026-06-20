@@ -723,7 +723,6 @@ public:
             break;
 
         case ID_SHELL_CMD_ADJUST_DAT:
-            //FIXME: Use SHRunControlPanel
             ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
             break;
 
@@ -779,7 +778,6 @@ public:
             SHFindComputer(NULL, NULL);
             break;
         case IDHK_SYS_PROPERTIES:
-            //FIXME: Use SHRunControlPanel
             ShellExecuteW(m_hWnd, NULL, L"sysdm.cpl", NULL, NULL, SW_NORMAL);
             break;
         case IDHK_NEXT_TASK:

@@ -58,6 +58,7 @@ enum IWidget_dispids
     DISPID_TM_IFACE_IN,
     DISPID_TM_IFACE_OUT,
     DISPID_TM_IFACE_PTR,
+    DISPID_TM_IFACE_NOPTR,
     DISPID_TM_BSTR,
     DISPID_TM_VARIANT,
     DISPID_TM_SAFEARRAY,
@@ -72,6 +73,8 @@ enum IWidget_dispids
     DISPID_TM_TYPEDEF,
     DISPID_TM_COCLASS,
     DISPID_TM_COCLASS_PTR,
+    DISPID_TM_COCLASS_NOPTR,
+    DISPID_TM_NOINOUT
 };
 
 static const int DISPID_TM_NEG_RESTRICTED = -26;
@@ -168,6 +171,10 @@ library TestTypelib
     {
         HRESULT test();
     }
+
+cpp_quote("struct Coclass1 { ICoclass1 *iface; };")
+cpp_quote("struct Coclass2 { ICoclass2 *iface; };")
+cpp_quote("struct Coclass3 { ICoclass1 *iface; };")
 
     [
         uuid(3f7e06fe-0bce-46f0-8b7d-3a68393c796c)
@@ -284,23 +291,23 @@ library TestTypelib
         HRESULT VarArg_Ref_Run([in] BSTR name, [in] SAFEARRAY(VARIANT) *params, [out, retval] VARIANT *result);
 
         [id(DISPID_TM_BASETYPES_IN)]
-        HRESULT basetypes_in([in] signed char c, [in] short s, [in] int i, [in] hyper h,
-                [in] unsigned char uc, [in] unsigned short us, [in] unsigned int ui,
+        HRESULT basetypes_in([in] signed char c, [in] short s, [in] long l, [in] hyper h,
+                [in] unsigned char uc, [in] unsigned short us, [in] unsigned long ul,
                 [in] unsigned hyper uh, [in] float f, [in] double d, [in] STATE st);
 
         [id(DISPID_TM_BASETYPES_OUT)]
-        HRESULT basetypes_out([out] signed char *c, [out] short *s, [out] int *i, [out] hyper *h,
-                [out] unsigned char *uc, [out] unsigned short *us, [out] unsigned int *ui,
+        HRESULT basetypes_out([out] signed char *c, [out] short *s, [out] long *l, [out] hyper *h,
+                [out] unsigned char *uc, [out] unsigned short *us, [out] unsigned long *ul,
                 [out] unsigned hyper *uh, [out] float *f, [out] double *d, [out] STATE *st);
 
         [id(DISPID_TM_FLOAT_ABI)]
         HRESULT float_abi([in] float f, [in] double d, [in] int i, [in] float f2, [in] double d2);
 
         [id(DISPID_TM_INT_PTR)]
-        HRESULT int_ptr([in] int *in, [out] int *out, [in, out] int *in_out);
+        HRESULT long_ptr([in] long *in, [out] long *out, [in, out] long *in_out);
 
         [id(DISPID_TM_INT_PTR_PTR)]
-        HRESULT int_ptr_ptr([in] int **in, [out] int **out, [in, out] int **in_out);
+        HRESULT long_ptr_ptr([in] long **in, [out] long **out, [in, out] long **in_out);
 
         [id(DISPID_TM_IFACE_IN)]
         HRESULT iface_in([in] IUnknown *unk, [in] IDispatch *disp, [in] ISomethingFromDispatch *sfd);
@@ -310,6 +317,9 @@ library TestTypelib
 
         [id(DISPID_TM_IFACE_PTR)]
         HRESULT iface_ptr([in] ISomethingFromDispatch **in, [out] ISomethingFromDispatch **out, [in, out] ISomethingFromDispatch **in_out);
+
+        [id(DISPID_TM_IFACE_NOPTR)]
+        HRESULT iface_noptr([in] IUnknown unk, [in] IDispatch disp, [in] ISomethingFromDispatch sfd);
 
         [id(DISPID_TM_BSTR)]
         HRESULT bstr([in] BSTR in, [out] BSTR *out, [in] BSTR *in_ptr, [in, out] BSTR *in_out);
@@ -373,6 +383,12 @@ library TestTypelib
 
         [id(DISPID_TM_COCLASS_PTR)]
         HRESULT Coclass_ptr([in] Coclass1 **in, [out] Coclass1 **out, [in, out] Coclass1 **in_out);
+
+        [id(DISPID_TM_COCLASS_NOPTR)]
+        HRESULT Coclass_noptr([in] Coclass1 class1, [in] Coclass2 class2, [in] Coclass3 class3);
+
+        [id(DISPID_TM_NOINOUT)]
+        HRESULT no_in_out(BSTR str, int i);
     }
 
     [
@@ -564,6 +580,29 @@ library TestTypelib
     dispinterface ItestIF11
     {
         interface ItestIF7;
+    }
+
+    [
+        object,
+        uuid(ec236d8e-2cc7-44f2-b394-46c86ff3da74),
+        dual,
+        oleautomation
+    ]
+    interface ItestIF12 : IDispatch
+    {
+        [id(0x1234)] HRESULT fn4([in] int a);
+        [id(0x1235)] HRESULT fn5([in] int a);
+    }
+
+    [
+        object,
+        uuid(f711b105-554d-4751-818c-56fcc5d7c0d5),
+        dual,
+        oleautomation
+    ]
+    interface ItestIF13 : ItestIF12
+    {
+        [id(0x1236)] HRESULT fn6([in] GUID a);
     }
 
 };

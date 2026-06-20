@@ -6,6 +6,59 @@ BEGIN
     IDS_HLP_INTERFACE_SHOW_INTERFACE "Displays interfaces.\n"
     IDS_HLP_INTERFACE_SHOW_INTERFACE_EX "\nUsage:\n"
 
+    IDS_HLP_IP_ADD "Adds a configuration entry to a table.\n"
+    IDS_HLP_IP_ADD_ADDRESS     "Adds an IP address to the specified interface.\n"
+    IDS_HLP_IP_ADD_ADDRESS_EX  "\nUsage: %1!s! [name=]<string> [[addr=]IP address [mask=]IP subnet mask]\n\
+       [[gateway=]IP address [gwmetric=]integer]\n\n\
+Parameters:\n\n\
+      name         - The name of the IP interface.\n\
+      addr         - The IP address to be added for the interface.\n\
+      mask         - The IP subnet mask for the specified IP address.\n\
+      gateway      - The default gateway for the specified IP address.\n\
+      gwmetric     - The metric to the default gateway.\n\n\
+Remarks: Adds IP addresses and default gateways to an interface. If DHCP\n\
+         is enabled on the interface, it will be disabled.\n\n\
+Examples:\n\n\
+       %1!s! ""Local Area Connection"" 10.0.0.2  255.0.0.0\n\
+       %1!s! ""Local Area Connection"" gateway=10.0.0.3 gwmetric=2\n\n\
+       The first command adds a static IP address of 10.0.0.2 with a subnet\n\
+       mask of 255.0.0.0 to the Local Area Connection interface. The second\n\
+       command adds the IP address of 10.0.0.3 as a second default gateway\n\
+       for this interface with a gateway metric of 2.\n"
+
+    IDS_HLP_IP_ADD_DNS    "Adds a static DNS server address.\n"
+    IDS_HLP_IP_ADD_DNS_EX "\nUsage: %1!s! [name=]<string> [addr=]<IP address> [[index=]<integer>]\n\n\
+Parameters:\n\n\
+      Tag            Value\n\
+      name         - The name of the interface where DNS servers are added.\n\
+      addr         - The IP address for the DNS server you are adding.\n\
+      index        - Specifies the index (preference) for the specified\n\
+                     DNS server address.\n\n\
+Remarks: Adds a new DNS server IP address to the statically-configured list.\n\
+         By default, the DNS server is added to the end of the list.  If an\n\
+         index is specified, the DNS server will be placed in that position\n\
+         in the list, with other servers being moved down to make room.\n\
+         If DNS servers were previously obtained through DHCP, the new\n\
+         address will replace the old list.\n\n\
+Examples:\n\n\
+       %1!s! ""Local Area Connection"" 10.0.0.1\n\
+       %1!s! ""Local Area Connection"" 10.0.0.3 index=2\n"
+
+    IDS_HLP_IP_DELETE             "Deletes a configuration entry from a table.\n"
+
+    IDS_HLP_IP_DELETE_ARPCACHE    "Flushes the ARP cache for one or all interfaces.\n"
+    IDS_HLP_IP_DELETE_ARPCACHE_EX "\nUsage: %1!s! [name=]<string>\n\n\
+Parameters:\n\n\
+      Tag            Value\n\
+      name         - The friendly name of a specific interface. If a name\n\
+                     is not specified, the ARP caches for all interfaces\n\
+                     are flushed.\n\n\
+Remarks: Flushes the Address Resolution Protocol (ARP) cache on a specific\n\
+         interface or all interfaces.\n\n\
+Examples:\n\n\
+       %1!s!\n\
+       %1!s! name=""Local Area Connection""\n"
+
     IDS_HLP_IP_SET             "Sets configuration information.\n"
     IDS_HLP_IP_SET_ADDRESS     "Sets the IP address or default gateway to the specified interface.\n"
     IDS_HLP_IP_SET_ADDRESS_EX  "\nUsage: %1!s! [name=]<string> \n\
@@ -34,27 +87,54 @@ Remarks: Used to change the IP address configuration mode from either DHCP to\n\
          interface with static IP address or adds default gateways.\n\n\
 Examples:\n\n\
        %1!s! name=""Local Area Connection"" source=dhcp\n\
-       %1!s! local static 10.0.0.9 255.0.0.0 10.0.0.1 1\n\n"
+       %1!s! local static 10.0.0.9 255.0.0.0 10.0.0.1 1\n"
 
-    IDS_HLP_IP_SHOW      "Displays IP information.\n"
-    IDS_HLP_ADDRESSES    "Displays IP address configuration.\n"
-    IDS_HLP_ADDRESSES_EX "\nUsage: %1!s! [[name=]string]\n\n\
+    IDS_HLP_IP_SET_DNS         "Sets DNS server mode and addresses.\n"
+    IDS_HLP_IP_SET_DNS_EX      "\nUsage: %1!s! [name=]<string> [source=]dhcp|static [addr=]<IP address>|none\n\
+             [[register=]none|primary|both]\n\n\
+Parameters:\n\n\
+      Tag            Value\n\
+      name         - The name of the interface.\n\
+      source       - One of the following values:\n\
+                     dhcp: Sets DHCP as the source for configuring DNS\n\
+                           servers for the specific interface.\n\
+                     static: Sets the source for configuring DNS servers\n\
+                             to local static configuration.\n\
+      addr         - One of the following values:\n\
+                     <IP address>: An IP address for a DNS server.\n\
+                     none: Clears the list of DNS servers.\n\
+      register     - One of the following values:\n\
+                     none: Disables Dynamic DNS registration.\n\
+                     primary: Register under the primary DNS suffix only.\n\
+                     both: Register under both the primary DNS suffix, as\n\
+                           well as under the connection-specific suffix.\n\n\
+Remarks: Sets DNS server configuration to either DHCP or static mode. Only\n\
+         when source is 'static', is the 'addr' option also available for\n\
+         configuring a static list of DNS server IP addresses for the\n\
+         specified interface.\n\n\
+Examples:\n\n\
+       %1!s! name=""Local Area Connection"" source=dhcp\n\
+       %1!s! ""Local Area Connection"" static 10.0.0.1 primary\n"
+
+    IDS_HLP_IP_SHOW              "Displays IP information.\n"
+    IDS_HLP_IP_SHOW_ADDRESSES    "Displays IP address configuration.\n"
+    IDS_HLP_IP_SHOW_ADDRESSES_EX "\nUsage: %1!s! [[name=]string]\n\n\
 Parameters:\n\n\
       Tag             Value\n\
       name            The name of a specific interface.\n\n\
 Remarks: Displays the IP address configuration for a specific interface or interfaces.\n\n\
 Examples:\n\n\
       %1!s! ""Local Area network""\n"
-    IDS_HLP_CONFIG       "Displays IP address and additional information.\n"
-    IDS_HLP_CONFIG_EX    "\nUsage: %1!s! [[name=]string]\n\n\
+    IDS_HLP_IP_SHOW_CONFIG       "Displays IP address and additional information.\n"
+    IDS_HLP_IP_SHOW_CONFIG_EX    "\nUsage: %1!s! [[name=]string]\n\n\
 Parameters:\n\n\
       Tag             Value\n\
       name            The name of a specific interface.\n\n\
 Remarks: Displays the IP address and DNS server configuration for a specific interface\nor interfaces.\n\n\
 Examples:\n\n\
       %1!s! ""Local Area Network""\n"
-    IDS_HLP_DNS          "Displays the DNS server addresses.\n"
-    IDS_HLP_DNS_EX       "\nUsage: %1!s! [[name=]string]\n\n\
+    IDS_HLP_IP_SHOW_DNS          "Displays the DNS server addresses.\n"
+    IDS_HLP_IP_SHOW_DNS_EX       "\nUsage: %1!s! [[name=]string]\n\n\
 Parameters:\n\n\
       Tag             Value\n\
       name            The name of a specific interface.\n\n\
@@ -71,31 +151,31 @@ Remarks: Resets the Winsock Catalog to a clean state.\n"
 Parameters:\n\n\
     \n"
 
-    IDS_IP_HEADER        "\nConfiguration for interface ""%s""\n"
+    IDS_IP_HEADER        "\nConfiguration for interface ""%1!s!""\n"
     IDS_DHCP_ON          "    DHCP enabled:                         Yes\n"
     IDS_DHCP_OFF         "    DHCP enabled:                         No\n"
     IDS_NOIPADDRESS      "    IP Address:                           None\n"
-    IDS_IPADDRESS        "    IP Address:                           %s\n"
-    IDS_IPADDRESSES      "    IP Addresses:                         %s\n"
+    IDS_IPADDRESS        "    IP Address:                           %1!s!\n"
+    IDS_IPADDRESSES      "    IP Addresses:                         %1!s!\n"
     IDS_NOSUBNETMASK     "    Subnet Mask:                          None\n"
-    IDS_SUBNETMASK       "    Subnet Mask:                          %s\n"
-    IDS_SUBNETMASKS      "    Subnet Masks:                         %s\n"
-    IDS_DEFAULTGATEWAY   "    Default Gateway:                      %s\n"
-    IDS_GATEWAYMETRIC    "    Gateway Metric:                       %s\n"
-    IDS_INTERFACEMETRIC  "    Interface Metric:                     %s\n"
-    IDS_STATICNAMESERVER "    Statically configured DNS Servers:    %s\n"
-    IDS_DHCPNAMESERVER   "    DNS servers configured through DHCP:  %s\n"
-    IDS_EMPTYLINE        "                                          %s\n"
+    IDS_SUBNETMASK       "    Subnet Mask:                          %1!s!\n"
+    IDS_SUBNETMASKS      "    Subnet Masks:                         %1!s!\n"
+    IDS_DEFAULTGATEWAY   "    Default Gateway:                      %1!s!\n"
+    IDS_GATEWAYMETRIC    "    Gateway Metric:                       %1!s!\n"
+    IDS_INTERFACEMETRIC  "    Interface Metric:                     %1!s!\n"
+    IDS_STATICNAMESERVER "    Statically configured DNS Servers:    %1!s!\n"
+    IDS_DHCPNAMESERVER   "    DNS servers configured through DHCP:  %1!s!\n"
+    IDS_EMPTYLINE        "                                          %1!s!\n"
 
     IDS_DUMP_NEWLINE     "\n"
     IDS_DUMP_HEADERLINE  "# ----------------------------------\n"
 
     IDS_DUMP_IP_HEADER    "# Interface IP Configuration\n"
-    IDS_DUMP_IP_INTERFACE "# Interface IP Configuration for ""%s""\n"
+    IDS_DUMP_IP_INTERFACE "# Interface IP Configuration for ""%1!s!""\n"
     IDS_DUMP_IP_FOOTER    "# End of Interface IP Configuration\n"
 
-    IDS_ERROR_INVALID_INTERFACE  "\nInvalid interface %s specified.\n"
-    IDS_ERROR_BAD_VALUE "\n%s is not an acceptable value for %s.\n"
+    IDS_ERROR_INVALID_INTERFACE  "\nInvalid interface %1!s! specified.\n"
+    IDS_ERROR_BAD_VALUE "\n%1!s! is not an acceptable value for %1!s!.\n"
     IDS_ERROR_ALREADY_DHCP "\nDhcp is already enabled on this interface.\n"
-    IDS_ERROR_GET_PROPERTIES "\nError obtaining configuration for interface %s.\n"
+    IDS_ERROR_GET_PROPERTIES "\nError obtaining configuration for interface %1!s!.\n"
 END

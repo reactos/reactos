@@ -501,6 +501,22 @@ typedef enum _KWAIT_REASON {
   WrFastMutex,
   WrGuardedMutex,
   WrRundown,
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  WrAlertByThreadId,
+  WrDeferredPreempt,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS3)
+  WrPhysicalFault,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11)
+  WrIoRing,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11_NI)
+  WrMdlCache,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE)
+  WrRcu,
+#endif
   MaximumWaitReason
 } KWAIT_REASON;
 
