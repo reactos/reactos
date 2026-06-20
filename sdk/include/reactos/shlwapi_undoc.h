@@ -58,6 +58,8 @@ SHRestrictionLookup(
     _In_ const POLICYDATA *polTable,
     _Inout_ LPDWORD polArr);
 
+INT WINAPI SHRestrictedMessageBox(_In_ HWND hWnd);
+
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
 

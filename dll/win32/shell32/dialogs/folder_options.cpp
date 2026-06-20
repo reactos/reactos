@@ -136,6 +136,23 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
     HPROPSHEETPAGE hpage;
     UINT num_pages = 0;
 
+    // the stub window to hide taskbar button
+    DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
+    DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW;
+    CMSGlobalFolderOptionsStub stub;
+    if (!stub.Create(NULL, NULL, NULL, style, exstyle))
+    {
+        ERR("stub.Create failed\n");
+        return 0;
+    }
+
+    if (SHRestricted(REST_NOFOLDEROPTIONS))
+    {
+        SHRestrictedMessageBox(stub);
+        stub.DestroyWindow();
+        return 0;
+    }
+
     hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg, 0, NULL);
     if (hpage)
         hppages[num_pages++] = hpage;
@@ -147,16 +164,6 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
     hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_FILETYPES, FolderOptionsFileTypesDlg, 0, NULL);
     if (hpage)
         hppages[num_pages++] = hpage;
-
-    // the stub window to hide taskbar button
-    DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
-    DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW;
-    CMSGlobalFolderOptionsStub stub;
-    if (!stub.Create(NULL, NULL, NULL, style, exstyle))
-    {
-        ERR("stub.Create failed\n");
-        return 0;
-    }
 
     memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
@@ -190,7 +197,7 @@ ShowFolderOptionsDialog(UINT Page, BOOL Async = FALSE)
         SetForegroundWindow(hPop);
         return;
     }
-    
+
     LPVOID param = UlongToPtr(Page);
     if (Async)
         SHCreateThread(ShowFolderOptionsDialogThreadProc, param, 0, 0);
