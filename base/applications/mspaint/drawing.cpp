@@ -300,18 +300,9 @@ Fill(HDC hdc, LONG x, LONG y, HBRUSH hBrush)
 void
 Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
 {
-    LONG b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
-    HBRUSH hbr = ::CreateSolidBrush(color);
-
-    for (LONG a = 0; a <= b; a++)
-    {
-        LONG cx = (x1 * (b - a) + x2 * a) / b;
-        LONG cy = (y1 * (b - a) + y2 * a) / b;
-        RECT rc = { cx - radius, cy - radius, cx + radius, cy + radius };
-        ::FillRect(hdc, &rc, hbr);
-    }
-
-    ::DeleteObject(hbr);
+    HBRUSH hBrush = ::CreateSolidBrush(color);
+    Erase(hdc, x1, y1, x2, y2, hBrush, radius);
+    ::DeleteObject(hBrush);
 }
 
 void
