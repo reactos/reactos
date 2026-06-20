@@ -313,7 +313,7 @@ LRESULT CToolSettingsWindow::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 
 VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
 {
-    INT nCount = (LONG)_countof(g_zoomPresets);
+    const LONG cItems = (LONG)_countof(g_zoomPresets);
 
     RECT rects[_countof(g_zoomPresets)];
     getZoomRects(rects, prc);
@@ -330,7 +330,7 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
     HFONT hFont = CreateFontIndirectW(&lf);
     HGDIOBJ hFontOld = SelectObject(hdc, hFont);
 
-    for (LONG iItem = 0, y = 0; iItem < nCount; (y += cyItem), ++iItem)
+    for (LONG iItem = 0, y = 0; iItem < cItems; (y += cyItem), ++iItem)
     {
         // Fill background
         RECT rc1 = rects[iItem];
