@@ -237,6 +237,11 @@ static inline INT getBoxRects(RECT rects[3], LPCRECT prc, LPPOINT ppt = NULL)
     return getSplitRects(rects, 1, 3, prc, ppt);
 }
 
+static inline INT getZoomRects(RECT *rects, LPCRECT prc, LPPOINT ppt = NULL)
+{
+    return getSplitRects(rects, 1, (INT)_countof(g_zoomPresets), prc, ppt);
+}
+
 VOID CToolSettingsWindow::drawBox(HDC hdc, LPCRECT prc)
 {
     CRect rects[3];
@@ -286,11 +291,6 @@ LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     m_hTranspIcon = (HICON)LoadImageW(g_hinstExe, MAKEINTRESOURCEW(IDI_TRANSPARENT),
                                       IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
     return 0;
-}
-
-static inline INT getZoomRects(RECT *rects, LPCRECT prc, LPPOINT ppt = NULL)
-{
-    return getSplitRects(rects, 1, (INT)_countof(g_zoomPresets), prc, ppt);
 }
 
 LRESULT CToolSettingsWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
