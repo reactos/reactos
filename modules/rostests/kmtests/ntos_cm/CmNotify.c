@@ -9,10 +9,9 @@
 
 /* Helper functions */
 
-#define ok_ntstatus(svar, sexpected) ok_eq_hex(svar, sexpected)
 #define CLEANUP(state) ZwNotifyChangeKey_Cleanup(state)
 #define CHECK_ERROR(state, Status) if (!NT_SUCCESS(Status)) { ok(FALSE, "Internal error, Status=0x%lx\n", Status); CLEANUP(state); return Status; }
-#define TEST_ERROR(state, Status, Expected) ok_ntstatus(Status, Expected); if (Status != Expected) { CLEANUP(state); return Status; }
+#define TEST_ERROR(state, Status, Expected) ok_eq_hex(Status, Expected); if (Status != Expected) { CLEANUP(state); return Status; }
 #define INIT_TEST(state, Status) Status = ZwNotifyChangeKey_InitializePerTest(state); CHECK_ERROR(state, Status)
 #define FINALIZE_TEST(state) CLEANUP(state); return STATUS_SUCCESS
 #define RUN_TEST(state, Status, TestName) Status = ZwNotifyChangeKey_TEST_##TestName(state); ok(Status == STATUS_SUCCESS, "Subtest " #TestName " failed.\n")
@@ -172,11 +171,11 @@ START_SUBTEST(Synchronous)
     KeDelayExecutionThread(KernelMode, FALSE, &state->WaitTimeout);
     /* Verify that the thread is notified */
     Status = KeWaitForSingleObject(state->WatchThreadObject, Executive, KernelMode, FALSE, &state->WaitTimeout);
-    ok_ntstatus(Status, STATUS_WAIT_0);
+    ok_eq_hex(Status, STATUS_WAIT_0);
 
     /* Verify thread's return value */
-    ok_ntstatus(state->Status, STATUS_NOTIFY_ENUM_DIR);
-    ok_ntstatus(state->IoStatusBlock.Status, STATUS_NOTIFY_ENUM_DIR);
+    ok_eq_hex(state->Status, STATUS_NOTIFY_ENUM_DIR);
+    ok_eq_hex(state->IoStatusBlock.Status, STATUS_NOTIFY_ENUM_DIR);
 
     FINALIZE_TEST(state);
 }
@@ -196,7 +195,7 @@ START_SUBTEST(AsynchronousEvent)
 
     /* Listen for notification */
     Status = ZwNotifyChangeKey(state->KeyHandle, state->EventHandle, NULL, NULL, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
-    ok_ntstatus(Status, STATUS_PENDING);
+    ok_eq_hex(Status, STATUS_PENDING);
 
     /* Check event state */
     Status = KeWaitForSingleObject(state->EventObject, Executive, KernelMode, FALSE, &state->WaitTimeout);
@@ -212,7 +211,7 @@ START_SUBTEST(AsynchronousEvent)
 
     /* Verify that the event is signaled */
     Status = KeWaitForSingleObject(state->EventObject, Executive, KernelMode, FALSE, &state->WaitTimeout);
-    ok_ntstatus(Status, STATUS_WAIT_0);
+    ok_eq_hex(Status, STATUS_WAIT_0);
     
     /* Windows ignores IO_STATUS_BLOCK on Aynchronous kernel-mode calls */
 
@@ -237,7 +236,7 @@ START_SUBTEST(AsynchronousWqi)
 
     /* Listen for notification */
     Status = ZwNotifyChangeKey(state->KeyHandle, NULL, (PVOID)&state->WorkQueueItem, (PVOID)DelayedWorkQueue, &state->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
-    ok_ntstatus(Status, STATUS_PENDING);
+    ok_eq_hex(Status, STATUS_PENDING);
 
     /* Check event state */
     Status = KeWaitForSingleObject(state->EventObject, Executive, KernelMode, FALSE, &state->WaitTimeout);
@@ -253,7 +252,7 @@ START_SUBTEST(AsynchronousWqi)
 
     /* Verify that the event is signaled */
     Status = KeWaitForSingleObject(state->EventObject, Executive, KernelMode, FALSE, &state->WaitTimeout);
-    ok_ntstatus(Status, STATUS_WAIT_0);
+    ok_eq_hex(Status, STATUS_WAIT_0);
 
     /* Windows ignores IO_STATUS_BLOCK on Aynchronous kernel-mode calls */
 
