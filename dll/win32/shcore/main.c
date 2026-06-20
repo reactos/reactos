@@ -2465,9 +2465,9 @@ BOOL WINAPI IsOS(DWORD feature)
         ISOS_RETURN(platform == VER_PLATFORM_WIN32_WINDOWS && minorv >= 90);
     case OS_XPORGREATER:
 #ifdef __REACTOS__
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && ((majorv >= 5 && minorv >= 1) || majorv >= 6))
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && ((majorv >= 5 && minorv >= 1) || majorv >= 6));
 #else
-        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5 && minorv >= 1)
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5 && minorv >= 1);
 #endif /* __REACTOS__ */
     case OS_HOME:
         ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 5 && minorv >= 1);
