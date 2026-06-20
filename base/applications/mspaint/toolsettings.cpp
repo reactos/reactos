@@ -328,9 +328,10 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
     const INT cItems = (INT)_countof(g_zoomPresets);
     for (INT iItem = 0; iItem < cItems; ++iItem)
     {
-        // Fill background
         RECT rc1 = rects[iItem];
         const INT nItemZoom = g_zoomPresets[iItem];
+
+        // Fill background
         HBRUSH hBrush;
         if (nZoom == nItemZoom * DEFAULT_ZOOM)
         {
