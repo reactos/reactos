@@ -293,6 +293,13 @@ static inline INT getZoomRects(RECT *rects, LPCRECT prc, LPPOINT ppt = NULL)
     return getSplitRects(rects, 1, (INT)_countof(g_zoomPresets), prc, ppt);
 }
 
+LRESULT CToolSettingsWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    ::DestroyIcon(m_hNontranspIcon);
+    ::DestroyIcon(m_hTranspIcon);
+    return 0;
+}
+
 VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
 {
     INT nCount = (LONG)_countof(g_zoomPresets);
@@ -348,13 +355,6 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
 
     SelectObject(hdc, hFontOld);
     DeleteObject(hFont);
-}
-
-LRESULT CToolSettingsWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    ::DestroyIcon(m_hNontranspIcon);
-    ::DestroyIcon(m_hTranspIcon);
-    return 0;
 }
 
 LRESULT CToolSettingsWindow::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
