@@ -275,7 +275,6 @@ int ToolsModel::GetZoom() const
 void ToolsModel::SetZoom(int nZoom)
 {
     m_zoom = nZoom;
-
     NotifyZoomChanged();
     SendSetCursor();
 }
