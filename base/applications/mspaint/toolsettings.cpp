@@ -4,7 +4,7 @@
  * PURPOSE:    Window procedure of the tool settings window
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
  *             Copyright 2018 Stanislav Motylkov <x86corez@gmail.com>
- *             Copyright 2021-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2021-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -19,11 +19,10 @@
 #define MARGIN1 3
 #define MARGIN2 2
 
-#define MAX_ZOOM_TRACK 6
-#define MIN_ZOOM_TRACK 0
-#define DEFAULT_ZOOM_TRACK 3
-
 static const BYTE s_AirRadius[4] = { 5, 8, 3, 12 };
+static const INT g_zoomPresets[] = { 1, 2, 6, 8 };
+static const PCWSTR g_zoomStrings[] = { L"1x", L"2x", L"6x", L"8x" };
+C_ASSERT(_countof(g_zoomPresets) == _countof(g_zoomStrings));
 
 CToolSettingsWindow toolSettingsWindow;
 
@@ -286,40 +285,73 @@ LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, B
                                          IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
     m_hTranspIcon = (HICON)LoadImageW(g_hinstExe, MAKEINTRESOURCEW(IDI_TRANSPARENT),
                                       IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
-
-    CRect trackbarZoomPos, rect2;
-    calculateTwoBoxes(trackbarZoomPos, rect2);
-    trackbarZoomPos.InflateRect(-1, -1);
-
-    trackbarZoom.Create(TRACKBAR_CLASS, m_hWnd, trackbarZoomPos, NULL, WS_CHILD | TBS_VERT | TBS_AUTOTICKS);
-    trackbarZoom.SendMessage(TBM_SETRANGE, TRUE, MAKELPARAM(MIN_ZOOM_TRACK, MAX_ZOOM_TRACK));
-    trackbarZoom.SendMessage(TBM_SETPOS, TRUE, DEFAULT_ZOOM_TRACK);
     return 0;
+}
+
+static inline INT getZoomRects(RECT *rects, LPCRECT prc, LPPOINT ppt = NULL)
+{
+    return getSplitRects(rects, 1, (INT)_countof(g_zoomPresets), prc, ppt);
+}
+
+VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
+{
+    INT nCount = (LONG)_countof(g_zoomPresets);
+
+    RECT rects[_countof(g_zoomPresets)];
+    getZoomRects(rects, prc);
+    LONG cx = (rects[0].right - rects[0].left);
+    LONG dy = (rects[0].bottom - rects[0].top);
+
+    // Create and select font
+    LOGFONTW lf;
+    ZeroMemory(&lf, sizeof(lf));
+    lf.lfHeight = dy * 9 / 10;
+    lf.lfQuality = NONANTIALIASED_QUALITY;
+    lstrcpynW(lf.lfFaceName, L"MS Shell Dlg", _countof(lf.lfFaceName));
+    HFONT hFont = CreateFontIndirectW(&lf);
+    HGDIOBJ hFontOld = SelectObject(hdc, hFont);
+
+    for (LONG iItem = 0, y = 0; iItem < nCount; (y += dy), ++iItem)
+    {
+        // Fill background
+        RECT rc1 = rects[iItem];
+        HBRUSH hBrush;
+        if (nZoom == g_zoomPresets[iItem] * DEFAULT_ZOOM)
+        {
+            FillRect(hdc, &rc1, (HBRUSH)(COLOR_HIGHLIGHT + 1));
+            SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+            hBrush = (HBRUSH)(COLOR_HIGHLIGHTTEXT + 1);
+        }
+        else
+        {
+            FillRect(hdc, &rc1, (HBRUSH)(COLOR_3DFACE + 1));
+            SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
+            hBrush = (HBRUSH)(COLOR_WINDOWTEXT + 1);
+        }
+
+        // Draw "x1", "x2" etc. on left side
+        SetBkMode(hdc, TRANSPARENT);
+        rc1.right = rc1.left + cx / 2;
+        DrawTextW(hdc, g_zoomStrings[iItem], -1, &rc1, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+
+        // Draw dots on right side
+        rc1.left = prc->left + cx / 2;
+        rc1.right = prc->left + cx;
+        POINT ptCenter = { (rc1.left + rc1.right) / 2, (rc1.top + rc1.bottom) / 2 };
+        RECT rc2 = { ptCenter.x - g_zoomPresets[iItem] / 2, ptCenter.y - g_zoomPresets[iItem] / 2 };
+        rc2.right = rc2.left + g_zoomPresets[iItem];
+        rc2.bottom = rc2.top + g_zoomPresets[iItem];
+        FillRect(hdc, &rc2, hBrush);
+    }
+
+    SelectObject(hdc, hFontOld);
+    DeleteObject(hFont);
 }
 
 LRESULT CToolSettingsWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     ::DestroyIcon(m_hNontranspIcon);
     ::DestroyIcon(m_hTranspIcon);
-    return 0;
-}
-
-LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    INT trackPos = MAX_ZOOM_TRACK - (INT)trackbarZoom.SendMessage(TBM_GETPOS, 0, 0);
-    canvasWindow.zoomTo(MIN_ZOOM << trackPos);
-
-    INT zoomRate = toolsModel.GetZoom();
-
-    CStringW strZoom;
-    if (zoomRate % 10 == 0)
-        strZoom.Format(L"%d%%", zoomRate / 10);
-    else
-        strZoom.Format(L"%d.%d%%", zoomRate / 10, zoomRate % 10);
-
-    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCWSTR)strZoom);
-
-    OnToolsModelZoomChanged(nMsg, wParam, lParam, bHandled);
     return 0;
 }
 
@@ -356,8 +388,7 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(&ps);
 
-    if (toolsModel.GetActiveTool() != TOOL_ZOOM)
-        ::DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
+    ::DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
 
     if (toolsModel.GetActiveTool() >= TOOL_RECT)
         ::DrawEdge(hdc, &rect2, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
@@ -399,8 +430,10 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
                 DeleteObject(hbr);
             }
             break;
-        case TOOL_FILL:
         case TOOL_ZOOM:
+            drawZoom(hdc, &rect1, toolsModel.GetZoom());
+            break;
+        case TOOL_FILL:
         case TOOL_PEN:
             break;
     }
@@ -463,9 +496,16 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
             if (iItem != -1)
                 toolsModel.SetLineWidth(iItem + 1);
             break;
+        case TOOL_ZOOM:
+            iItem = getZoomRects(rects, &rect1, &pt);
+            if (0 <= iItem && iItem < _countof(g_zoomPresets))
+            {
+                toolsModel.SetZoom(g_zoomPresets[iItem] * DEFAULT_ZOOM);
+                toolsModel.SetActiveTool(toolsModel.GetOldActiveTool());
+            }
+            break;
         case TOOL_FILL:
         case TOOL_COLOR:
-        case TOOL_ZOOM:
         case TOOL_PEN:
             break;
     }
@@ -478,7 +518,6 @@ LRESULT CToolSettingsWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, L
 {
     m_rgbPickColor = CLR_INVALID;
     Invalidate();
-    trackbarZoom.ShowWindow((wParam == TOOL_ZOOM) ? SW_SHOW : SW_HIDE);
     return 0;
 }
 
@@ -497,15 +536,6 @@ LRESULT CToolSettingsWindow::OnToolsModelColorPicked(UINT nMsg, WPARAM wParam, L
 
 LRESULT CToolSettingsWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    int tbPos = MIN_ZOOM_TRACK;
-    int tempZoom = toolsModel.GetZoom();
-
-    while (tempZoom > MIN_ZOOM)
-    {
-        tbPos++;
-        tempZoom = tempZoom >> 1;
-    }
-
-    trackbarZoom.SendMessage(TBM_SETPOS, TRUE, MAX_ZOOM_TRACK - tbPos);
+    Invalidate();
     return 0;
 }
