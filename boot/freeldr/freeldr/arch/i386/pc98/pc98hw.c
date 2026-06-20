@@ -1161,6 +1161,76 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     (*BusNumber)++;
 }
 
+static
+PCSTR
+GetPc9821SystemIdentifier(
+    _In_ UCHAR Id)
+{
+    switch (Id)
+    {
+        case 0x27: return "Lt2";
+        case 0x30: return "Cx3";
+        case 0x40: return "Ct16";
+        case 0x59: return "V166";
+        case 0x5F: return "Nr166";
+        case 0x73: return "Ra333";
+
+        default:
+            break;
+    }
+
+    return NULL;
+}
+
+static
+VOID
+CreateSystemIdentifier(
+    _In_ PCONFIGURATION_COMPONENT_DATA* SystemKey)
+{
+    const ULONG IdentifierSize = 256;
+    PCHAR Identifier;
+
+    /* The kernel expects the PC-98 identifier string to begin with 'NEC PC-98' */
+#define PC98_DEFAULT_ID  "NEC PC-98"
+
+    Identifier = FrLdrHeapAlloc(IdentifierSize, TAG_HW_RESOURCE_LIST);
+    if (!Identifier)
+        return;
+
+    /* Check if this machine is NEC PC-9821 */
+    if (*(PUSHORT)MEM_EXTENDED_NORMAL == 0x2198)
+    {
+        UCHAR Id = *((PUCHAR)MEM_EXTENDED_NORMAL + 0x3F);
+        PCSTR IdString;
+
+        IdString = GetPc9821SystemIdentifier(Id);
+        if (!IdString)
+        {
+            /* Unknown values should be visible in sysdm control panel for bug reports */
+            ERR("Unknown PC-9821 model %02X\n", Id);
+            RtlStringCbPrintfA(Identifier,
+                               IdentifierSize,
+                               PC98_DEFAULT_ID " %02X",
+                               Id);
+        }
+        else
+        {
+            RtlStringCbPrintfA(Identifier,
+                               IdentifierSize,
+                               PC98_DEFAULT_ID "21 %s",
+                               IdString);
+        }
+    }
+    else
+    {
+        RtlStringCbPrintfA(Identifier, IdentifierSize, PC98_DEFAULT_ID);
+    }
+    TRACE("System identifier '%s'\n", Identifier);
+
+    FldrCreateSystemKey(SystemKey, Identifier);
+    FrLdrHeapFree(Identifier, TAG_HW_RESOURCE_LIST);
+}
+
 PCONFIGURATION_COMPONENT_DATA
 Pc98HwDetect(
     _In_opt_ PCSTR Options)
@@ -1171,7 +1241,7 @@ Pc98HwDetect(
     TRACE("DetectHardware()\n");
 
     /* Create the 'System' key */
-    FldrCreateSystemKey(&SystemKey, "NEC PC-98");
+    CreateSystemIdentifier(&SystemKey);
 
     GetHarddiskConfigurationData = Pc98GetHarddiskConfigurationData;
 
