@@ -330,8 +330,9 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
     {
         // Fill background
         RECT rc1 = rects[iItem];
+        const INT nItemZoom = g_zoomPresets[iItem];
         HBRUSH hBrush;
-        if (nZoom == g_zoomPresets[iItem] * DEFAULT_ZOOM)
+        if (nZoom == nItemZoom * DEFAULT_ZOOM)
         {
             FillRect(hdc, &rc1, (HBRUSH)(COLOR_HIGHLIGHT + 1));
             SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
@@ -349,17 +350,16 @@ VOID CToolSettingsWindow::drawZoom(HDC hdc, LPCRECT prc, INT nZoom)
         rc1.left = prc->left + cxMargin;
         rc1.right = (prc->left + prc->right) / 2;
         WCHAR text[16];
-        StringCchPrintfW(text, _countof(text), L"%dx", g_zoomPresets[iItem]);
+        StringCchPrintfW(text, _countof(text), L"%dx", nItemZoom);
         DrawTextW(hdc, text, -1, &rc1, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
 
         // Draw dots on right side
         rc1.left = (prc->left + prc->right) / 2;
         rc1.right = prc->right - cxMargin;
         POINT ptCenter = { (rc1.left + rc1.right) / 2, (rc1.top + rc1.bottom) / 2 };
-        const LONG nZoom = g_zoomPresets[iItem];
-        RECT rc2 = { ptCenter.x - nZoom / 2, ptCenter.y - nZoom / 2 };
-        rc2.right = rc2.left + nZoom;
-        rc2.bottom = rc2.top + nZoom;
+        RECT rc2 = { ptCenter.x - nItemZoom / 2, ptCenter.y - nItemZoom / 2 };
+        rc2.right = rc2.left + nItemZoom;
+        rc2.bottom = rc2.top + nItemZoom;
         FillRect(hdc, &rc2, hBrush);
     }
 
