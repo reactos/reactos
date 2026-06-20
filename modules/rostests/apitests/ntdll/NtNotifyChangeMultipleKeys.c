@@ -168,9 +168,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
     if (!KeyHandle)
     {
         Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
-        if (!NT_SUCCESS(Status))
-        {
-        }
+        ASSERT(NT_SUCCESS(Status));
     }
     /* Start watching for changes */
     Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL, EventHandle, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, TRUE, NULL, 0, TRUE);
