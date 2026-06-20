@@ -17,6 +17,12 @@
 #define RUN_TEST(state, Status, TestName) Status = ZwNotifyChangeKey_TEST_##TestName(state); ok(Status == STATUS_SUCCESS, "Subtest " #TestName " failed.\n")
 #define START_SUBTEST(TestName) NTSTATUS NTAPI ZwNotifyChangeKey_TEST_##TestName(PWATCH_REG_TEST_STATE state)
 
+/* Timeout definition for use with KeDelayExecutionThread function */
+#define TIMEOUT_MICROSECONDS 10 /* The unit used by KeDelayExecutionThread is 100 nanoseconds, multiplying by 10 makes it 1 microsecond */
+#define RELATIVE_TIMEOUT(x) ((x) * -1) /* KeDelayExecutionThread uses negative values to indicate relative time */
+
+#define SYNC_THREAD_WAIT_TIMEOUT RELATIVE_TIMEOUT(100 * TIMEOUT_MICROSECONDS)
+
 typedef struct _WATCH_REG_TEST_STATE
 {
     NTSTATUS Status;
@@ -70,7 +76,7 @@ NTSTATUS NTAPI ZwNotifyChangeKey_Initialize(PWATCH_REG_TEST_STATE state)
 {
     NTSTATUS Status;
 
-    state->WaitTimeout.QuadPart = -1 * 100 * 1000 * 10;
+    state->WaitTimeout.QuadPart = SYNC_THREAD_WAIT_TIMEOUT;
 
     state->KeyHandle = NULL;
     state->WatchThreadHandle = NULL;
