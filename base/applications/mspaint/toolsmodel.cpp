@@ -275,6 +275,7 @@ int ToolsModel::GetZoom() const
 void ToolsModel::SetZoom(int nZoom)
 {
     m_zoom = nZoom;
+
     NotifyZoomChanged();
     SendSetCursor();
 }
@@ -307,6 +308,13 @@ void ToolsModel::NotifyZoomChanged()
         textEditWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
     if (canvasWindow.IsWindow())
         canvasWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
+
+    CStringW strZoom;
+    if (m_zoom % 10 == 0)
+        strZoom.Format(L"%d%%", m_zoom / 10);
+    else
+        strZoom.Format(L"%d.%d%%", m_zoom / 10, m_zoom % 10);
+    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 2, (LPARAM)(PCWSTR)strZoom);
 }
 
 void ToolsModel::resetTool()
