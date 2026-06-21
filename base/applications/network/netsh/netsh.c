@@ -377,7 +377,7 @@ MatchTagsInCmdLine(
     _Inout_ LPWSTR *ppwcArguments,
     _In_ DWORD dwCurrentIndex,
     _In_ DWORD dwArgCount,
-    _In_ TAG_TYPE *pttTags,
+    _Inout_ TAG_TYPE *pttTags,
     _In_ DWORD dwTagCount,
     _Out_ DWORD *pdwTagType)
 {
@@ -546,13 +546,50 @@ PreprocessCommand(
     _Inout_ LPWSTR *ppwcArguments,
     _In_ DWORD dwCurrentIndex,
     _In_ DWORD dwArgCount,
-    _In_ TAG_TYPE *pttTags,
+    _Inout_ TAG_TYPE *pttTags,
     _In_ DWORD dwTagCount,
     _In_ DWORD dwMinArgs,
     _In_ DWORD dwMaxArgs,
     _Out_ DWORD *pdwTagType)
 {
-    DPRINT1("PreprocessCommand()\n");
+    DWORD i;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("PreprocessCommand()\n");
+
+    if ((ppwcArguments == NULL) || (pttTags == NULL) || (pdwTagType == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    if (((dwArgCount - dwCurrentIndex) < dwMinArgs) || ((dwArgCount - dwCurrentIndex) > dwMaxArgs))
+        return ERROR_INVALID_SYNTAX;
+
+    for (i = 0; i < dwTagCount; i++)
+    {
+        pttTags[i].bPresent = FALSE;
+    }
+
+    if ((dwArgCount - dwCurrentIndex) > 0)
+    {
+        dwError = MatchTagsInCmdLine(hModule,
+                                     ppwcArguments,
+                                     dwCurrentIndex,
+                                     dwArgCount,
+                                     pttTags,
+                                     dwTagCount,
+                                     pdwTagType);
+        if (dwError != ERROR_SUCCESS)
+        {
+            return dwError;
+        }
+    }
+
+    /* Fail, if a required tag is missing */
+    for (i = 0; i < dwTagCount; i++)
+    {
+        if ((pttTags[i].dwRequired & NS_REQ_PRESENT) && (pttTags[i].bPresent == FALSE))
+            return ERROR_INVALID_SYNTAX;
+    }
+
     return 0;
 }
 
@@ -604,8 +641,8 @@ PrintMessageFromModule(
     va_list ap;
 
     va_start(ap, dwMsgId);
-    Length = ConResPrintfExV(StdOut, hModule, dwMsgId,
-                             LANG_USER_DEFAULT, ap);
+    Length = ConResMsgPrintfExV(StdOut, hModule, 0, dwMsgId,
+                                LANG_USER_DEFAULT, &ap);
     va_end(ap);
 
     return (DWORD)Length;

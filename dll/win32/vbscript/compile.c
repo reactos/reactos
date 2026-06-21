@@ -32,6 +32,7 @@ typedef struct _statement_ctx_t {
 
     unsigned while_end_label;
     unsigned for_end_label;
+    unsigned with_stack_offset;
 
     struct _statement_ctx_t *next;
 } statement_ctx_t;
@@ -43,6 +44,7 @@ typedef struct {
     unsigned instr_size;
     vbscode_t *code;
 
+    unsigned loc;
     statement_ctx_t *stat_ctx;
 
     unsigned *labels;
@@ -55,16 +57,12 @@ typedef struct {
 
     dim_decl_t *dim_decls;
     dim_decl_t *dim_decls_tail;
-    dynamic_var_t *global_vars;
 
     const_decl_t *const_decls;
     const_decl_t *global_consts;
 
     function_t *func;
-    function_t *funcs;
     function_decl_t *func_decls;
-
-    class_desc_t *classes;
 } compile_ctx_t;
 
 static HRESULT compile_expression(compile_ctx_t*,expression_t*);
@@ -94,6 +92,7 @@ static void dump_instr_arg(instr_arg_type_t type, instr_arg_t *arg)
     case ARG_ADDR:
         TRACE_(vbscript_disas)("\t%u", arg->uint);
         break;
+    case ARG_DATE:
     case ARG_DOUBLE:
         TRACE_(vbscript_disas)("\t%lf", *arg->dbl);
         break;
@@ -156,7 +155,7 @@ static unsigned push_instr(compile_ctx_t *ctx, vbsop_t op)
     if(ctx->instr_size == ctx->instr_cnt) {
         instr_t *new_instr;
 
-        new_instr = heap_realloc(ctx->code->instrs, ctx->instr_size*2*sizeof(instr_t));
+        new_instr = realloc(ctx->code->instrs, ctx->instr_size*2*sizeof(instr_t));
         if(!new_instr)
             return 0;
 
@@ -165,6 +164,7 @@ static unsigned push_instr(compile_ctx_t *ctx, vbsop_t op)
     }
 
     ctx->code->instrs[ctx->instr_cnt].op = op;
+    ctx->code->instrs[ctx->instr_cnt].loc = ctx->loc;
     return ctx->instr_cnt++;
 }
 
@@ -239,17 +239,35 @@ static HRESULT push_instr_double(compile_ctx_t *ctx, vbsop_t op, double arg)
     return S_OK;
 }
 
+static HRESULT push_instr_date(compile_ctx_t *ctx, vbsop_t op, DATE arg)
+{
+    unsigned instr;
+    DATE *d;
+
+    d = compiler_alloc(ctx->code, sizeof(DATE));
+    if(!d)
+        return E_OUTOFMEMORY;
+
+    instr = push_instr(ctx, op);
+    if(!instr)
+        return E_OUTOFMEMORY;
+
+    *d = arg;
+    instr_ptr(ctx, instr)->arg1.date = d;
+    return S_OK;
+}
+
 static BSTR alloc_bstr_arg(compile_ctx_t *ctx, const WCHAR *str)
 {
     if(!ctx->code->bstr_pool_size) {
-        ctx->code->bstr_pool = heap_alloc(8 * sizeof(BSTR));
+        ctx->code->bstr_pool = malloc(8 * sizeof(BSTR));
         if(!ctx->code->bstr_pool)
             return NULL;
         ctx->code->bstr_pool_size = 8;
     }else if(ctx->code->bstr_pool_size == ctx->code->bstr_cnt) {
         BSTR *new_pool;
 
-        new_pool = heap_realloc(ctx->code->bstr_pool, ctx->code->bstr_pool_size*2*sizeof(BSTR));
+        new_pool = realloc(ctx->code->bstr_pool, ctx->code->bstr_pool_size*2*sizeof(BSTR));
         if(!new_pool)
             return NULL;
 
@@ -322,14 +340,14 @@ static HRESULT push_instr_uint_bstr(compile_ctx_t *ctx, vbsop_t op, unsigned arg
 static unsigned alloc_label(compile_ctx_t *ctx)
 {
     if(!ctx->labels_size) {
-        ctx->labels = heap_alloc(8 * sizeof(*ctx->labels));
+        ctx->labels = malloc(8 * sizeof(*ctx->labels));
         if(!ctx->labels)
             return 0;
         ctx->labels_size = 8;
     }else if(ctx->labels_size == ctx->labels_cnt) {
         unsigned *new_labels;
 
-        new_labels = heap_realloc(ctx->labels, 2*ctx->labels_size*sizeof(*ctx->labels));
+        new_labels = realloc(ctx->labels, 2*ctx->labels_size*sizeof(*ctx->labels));
         if(!new_labels)
             return 0;
 
@@ -375,16 +393,16 @@ static inline BOOL emit_catch(compile_ctx_t *ctx, unsigned off)
     return emit_catch_jmp(ctx, off, ctx->instr_cnt);
 }
 
-static HRESULT compile_error(script_ctx_t *ctx, HRESULT error)
+static HRESULT compile_error(script_ctx_t *ctx, compile_ctx_t *compiler, HRESULT error)
 {
     if(error == SCRIPT_E_REPORTED)
         return error;
 
     clear_ei(&ctx->ei);
-    ctx->ei.scode = error = map_hres(error);
+    ctx->ei.scode = error;
     ctx->ei.bstrSource = get_vbscript_string(VBS_COMPILE_ERROR);
-    ctx->ei.bstrDescription = get_vbscript_error_string(error);
-    return report_script_error(ctx);
+    map_vbs_exception(&ctx->ei);
+    return report_script_error(ctx, compiler->code, compiler->loc);
 }
 
 static expression_t *lookup_const_decls(compile_ctx_t *ctx, const WCHAR *name, BOOL lookup_global)
@@ -407,6 +425,30 @@ static expression_t *lookup_const_decls(compile_ctx_t *ctx, const WCHAR *name, B
     return NULL;
 }
 
+static BOOL lookup_args_name(compile_ctx_t *ctx, const WCHAR *name)
+{
+    unsigned i;
+
+    for(i = 0; i < ctx->func->arg_cnt; i++) {
+        if(!wcsicmp(ctx->func->args[i].name, name))
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+static BOOL lookup_dim_decls(compile_ctx_t *ctx, const WCHAR *name)
+{
+    dim_decl_t *dim_decl;
+
+    for(dim_decl = ctx->dim_decls; dim_decl; dim_decl = dim_decl->next) {
+        if(!wcsicmp(dim_decl->name, name))
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
 static HRESULT compile_args(compile_ctx_t *ctx, expression_t *args, unsigned *ret)
 {
     unsigned arg_cnt = 0;
@@ -417,6 +459,9 @@ static HRESULT compile_args(compile_ctx_t *ctx, expression_t *args, unsigned *re
         if(FAILED(hres))
             return hres;
 
+        if(args->type == EXPR_BRACKETS && !push_instr(ctx, OP_deref))
+            return E_OUTOFMEMORY;
+
         arg_cnt++;
         args = args->next;
     }
@@ -425,22 +470,18 @@ static HRESULT compile_args(compile_ctx_t *ctx, expression_t *args, unsigned *re
     return S_OK;
 }
 
-static HRESULT compile_member_expression(compile_ctx_t *ctx, member_expression_t *expr, BOOL ret_val)
+static HRESULT compile_member_call_expression(compile_ctx_t *ctx, member_expression_t *expr,
+                                              unsigned arg_cnt, BOOL ret_val)
 {
-    unsigned arg_cnt = 0;
     HRESULT hres;
 
-    if(ret_val && !expr->args) {
+    if(ret_val && !arg_cnt) {
         expression_t *const_expr;
 
         const_expr = lookup_const_decls(ctx, expr->identifier, TRUE);
         if(const_expr)
             return compile_expression(ctx, const_expr);
     }
-
-    hres = compile_args(ctx, expr->args, &arg_cnt);
-    if(FAILED(hres))
-        return hres;
 
     if(expr->obj_expr) {
         hres = compile_expression(ctx, expr->obj_expr);
@@ -453,6 +494,58 @@ static HRESULT compile_member_expression(compile_ctx_t *ctx, member_expression_t
     }
 
     return hres;
+}
+
+static HRESULT compile_member_expression(compile_ctx_t *ctx, member_expression_t *expr)
+{
+    expression_t *const_expr;
+
+    if (expr->obj_expr) /* FIXME: we should probably have a dedicated opcode as well */
+        return compile_member_call_expression(ctx, expr, 0, TRUE);
+
+    if (!lookup_dim_decls(ctx, expr->identifier) && !lookup_args_name(ctx, expr->identifier)) {
+        const_expr = lookup_const_decls(ctx, expr->identifier, TRUE);
+        if(const_expr)
+            return compile_expression(ctx, const_expr);
+    }
+    return push_instr_bstr(ctx, OP_ident, expr->identifier);
+}
+
+static HRESULT compile_call_expression(compile_ctx_t *ctx, call_expression_t *expr, BOOL ret_val)
+{
+    unsigned arg_cnt = 0;
+    expression_t *call;
+    HRESULT hres;
+
+    hres = compile_args(ctx, expr->args, &arg_cnt);
+    if(FAILED(hres))
+        return hres;
+
+    for(call = expr->call_expr; call->type == EXPR_BRACKETS; call = ((unary_expression_t*)call)->subexpr);
+
+    if(call->type == EXPR_MEMBER)
+        return compile_member_call_expression(ctx, (member_expression_t*)call, arg_cnt, ret_val);
+
+    hres = compile_expression(ctx, call);
+    if(FAILED(hres))
+        return hres;
+
+    return push_instr_uint(ctx, ret_val ? OP_vcall : OP_vcallv, arg_cnt);
+}
+
+static HRESULT compile_dot_expression(compile_ctx_t *ctx)
+{
+    statement_ctx_t *stat_ctx;
+
+    for(stat_ctx = ctx->stat_ctx; stat_ctx; stat_ctx = stat_ctx->next) {
+        if(!stat_ctx->with_stack_offset)
+            continue;
+
+        return push_instr_uint(ctx, OP_stack, stat_ctx->with_stack_offset - 1);
+    }
+
+    WARN("dot expression outside with statement\n");
+    return push_instr_uint(ctx, OP_stack, ~0);
 }
 
 static HRESULT compile_unary_expression(compile_ctx_t *ctx, unary_expression_t *expr, vbsop_t op)
@@ -492,10 +585,16 @@ static HRESULT compile_expression(compile_ctx_t *ctx, expression_t *expr)
         return push_instr_int(ctx, OP_bool, ((bool_expression_t*)expr)->value);
     case EXPR_BRACKETS:
         return compile_expression(ctx, ((unary_expression_t*)expr)->subexpr);
+    case EXPR_CALL:
+        return compile_call_expression(ctx, (call_expression_t*)expr, TRUE);
     case EXPR_CONCAT:
         return compile_binary_expression(ctx, (binary_expression_t*)expr, OP_concat);
+    case EXPR_DATE:
+        return push_instr_date(ctx, OP_date, ((date_expression_t*)expr)->value);
     case EXPR_DIV:
         return compile_binary_expression(ctx, (binary_expression_t*)expr, OP_div);
+    case EXPR_DOT:
+        return compile_dot_expression(ctx);
     case EXPR_DOUBLE:
         return push_instr_double(ctx, OP_double, ((double_expression_t*)expr)->value);
     case EXPR_EMPTY:
@@ -523,7 +622,7 @@ static HRESULT compile_expression(compile_ctx_t *ctx, expression_t *expr)
     case EXPR_ME:
         return push_instr(ctx, OP_me) ? S_OK : E_OUTOFMEMORY;
     case EXPR_MEMBER:
-        return compile_member_expression(ctx, (member_expression_t*)expr, TRUE);
+        return compile_member_expression(ctx, (member_expression_t*)expr);
     case EXPR_MOD:
         return compile_binary_expression(ctx, (binary_expression_t*)expr, OP_mod);
     case EXPR_MUL:
@@ -593,6 +692,8 @@ static HRESULT compile_if_statement(compile_ctx_t *ctx, if_statement_t *stat)
 
     for(elseif_decl = stat->elseifs; elseif_decl; elseif_decl = elseif_decl->next) {
         instr_ptr(ctx, cnd_jmp)->arg1.uint = ctx->instr_cnt;
+
+        ctx->loc = elseif_decl->loc;
 
         hres = compile_expression(ctx, elseif_decl->expr);
         if(FAILED(hres))
@@ -687,6 +788,7 @@ static HRESULT compile_dowhile_statement(compile_ctx_t *ctx, while_statement_t *
     if(FAILED(hres))
         return hres;
 
+    ctx->loc = stat->stat.loc;
     if(stat->expr) {
         hres = compile_expression(ctx, stat->expr);
         if(FAILED(hres))
@@ -742,6 +844,7 @@ static HRESULT compile_foreach_statement(compile_ctx_t *ctx, foreach_statement_t
         return hres;
 
     /* We need a separated enumnext here, because we need to jump out of the loop on exception. */
+    ctx->loc = stat->stat.loc;
     hres = push_instr_uint_bstr(ctx, OP_enumnext, loop_ctx.for_end_label, stat->identifier);
     if(FAILED(hres))
         return hres;
@@ -751,6 +854,10 @@ static HRESULT compile_foreach_statement(compile_ctx_t *ctx, foreach_statement_t
         return hres;
 
     label_set_addr(ctx, loop_ctx.for_end_label);
+
+    if(!emit_catch(ctx, 0))
+        return E_OUTOFMEMORY;
+
     return S_OK;
 }
 
@@ -768,6 +875,8 @@ static HRESULT compile_forto_statement(compile_ctx_t *ctx, forto_statement_t *st
     hres = compile_expression(ctx, stat->from_expr);
     if(FAILED(hres))
         return hres;
+    if(!push_instr(ctx, OP_numval))
+        return E_OUTOFMEMORY;
 
     /* FIXME: Assign should happen after both expressions evaluation. */
     instr = push_instr(ctx, OP_assign_ident);
@@ -780,7 +889,7 @@ static HRESULT compile_forto_statement(compile_ctx_t *ctx, forto_statement_t *st
     if(FAILED(hres))
         return hres;
 
-    if(!push_instr(ctx, OP_val))
+    if(!push_instr(ctx, OP_numval))
         return E_OUTOFMEMORY;
 
     if(stat->step_expr) {
@@ -788,7 +897,7 @@ static HRESULT compile_forto_statement(compile_ctx_t *ctx, forto_statement_t *st
         if(FAILED(hres))
             return hres;
 
-        if(!push_instr(ctx, OP_val))
+        if(!push_instr(ctx, OP_numval))
             return E_OUTOFMEMORY;
     }else {
         hres = push_instr_int(ctx, OP_int, 1);
@@ -836,6 +945,26 @@ static HRESULT compile_forto_statement(compile_ctx_t *ctx, forto_statement_t *st
     return S_OK;
 }
 
+static HRESULT compile_with_statement(compile_ctx_t *ctx, with_statement_t *stat)
+{
+    statement_ctx_t with_ctx = { 1 };
+    HRESULT hres;
+
+    hres = compile_expression(ctx, stat->expr);
+    if(FAILED(hres))
+        return hres;
+
+    if(!emit_catch(ctx, 1))
+        return E_OUTOFMEMORY;
+
+    with_ctx.with_stack_offset = stack_offset(ctx) + 1;
+    hres = compile_statement(ctx, &with_ctx, stat->body);
+    if(FAILED(hres))
+        return hres;
+
+    return push_instr_uint(ctx, OP_pop, 1);
+}
+
 static HRESULT compile_select_statement(compile_ctx_t *ctx, select_statement_t *stat)
 {
     unsigned end_label, case_cnt = 0, *case_labels = NULL, i;
@@ -861,7 +990,7 @@ static HRESULT compile_select_statement(compile_ctx_t *ctx, select_statement_t *
         case_cnt++;
 
     if(case_cnt) {
-        case_labels = heap_alloc(case_cnt*sizeof(*case_labels));
+        case_labels = malloc(case_cnt*sizeof(*case_labels));
         if(!case_labels)
             return E_OUTOFMEMORY;
     }
@@ -893,19 +1022,19 @@ static HRESULT compile_select_statement(compile_ctx_t *ctx, select_statement_t *
     }
 
     if(FAILED(hres)) {
-        heap_free(case_labels);
+        free(case_labels);
         return hres;
     }
 
     hres = push_instr_uint(ctx, OP_pop, 1);
     if(FAILED(hres)) {
-        heap_free(case_labels);
+        free(case_labels);
         return hres;
     }
 
     hres = push_instr_addr(ctx, OP_jmp, case_iter ? case_labels[i] : end_label);
     if(FAILED(hres)) {
-        heap_free(case_labels);
+        free(case_labels);
         return hres;
     }
 
@@ -923,7 +1052,7 @@ static HRESULT compile_select_statement(compile_ctx_t *ctx, select_statement_t *
             break;
     }
 
-    heap_free(case_labels);
+    free(case_labels);
     if(FAILED(hres))
         return hres;
 
@@ -931,11 +1060,27 @@ static HRESULT compile_select_statement(compile_ctx_t *ctx, select_statement_t *
     return S_OK;
 }
 
-static HRESULT compile_assignment(compile_ctx_t *ctx, member_expression_t *member_expr, expression_t *value_expr, BOOL is_set)
+static HRESULT compile_assignment(compile_ctx_t *ctx, expression_t *left, expression_t *value_expr, BOOL is_set)
 {
-    unsigned args_cnt;
+    call_expression_t *call_expr = NULL;
+    member_expression_t *member_expr;
+    unsigned args_cnt = 0;
     vbsop_t op;
     HRESULT hres;
+
+    switch(left->type) {
+    case EXPR_MEMBER:
+        member_expr = (member_expression_t*)left;
+        break;
+    case EXPR_CALL:
+        call_expr = (call_expression_t*)left;
+        assert(call_expr->call_expr->type == EXPR_MEMBER);
+        member_expr = (member_expression_t*)call_expr->call_expr;
+        break;
+    default:
+        assert(0);
+        return E_FAIL;
+    }
 
     if(member_expr->obj_expr) {
         hres = compile_expression(ctx, member_expr->obj_expr);
@@ -951,9 +1096,11 @@ static HRESULT compile_assignment(compile_ctx_t *ctx, member_expression_t *membe
     if(FAILED(hres))
         return hres;
 
-    hres = compile_args(ctx, member_expr->args, &args_cnt);
-    if(FAILED(hres))
-        return hres;
+    if(call_expr) {
+        hres = compile_args(ctx, call_expr->args, &args_cnt);
+        if(FAILED(hres))
+            return hres;
+    }
 
     hres = push_instr_bstr_uint(ctx, op, member_expr->identifier, args_cnt);
     if(FAILED(hres))
@@ -967,29 +1114,14 @@ static HRESULT compile_assignment(compile_ctx_t *ctx, member_expression_t *membe
 
 static HRESULT compile_assign_statement(compile_ctx_t *ctx, assign_statement_t *stat, BOOL is_set)
 {
-    return compile_assignment(ctx, stat->member_expr, stat->value_expr, is_set);
+    return compile_assignment(ctx, stat->left_expr, stat->value_expr, is_set);
 }
 
 static HRESULT compile_call_statement(compile_ctx_t *ctx, call_statement_t *stat)
 {
     HRESULT hres;
 
-    /* It's challenging for parser to distinguish parameterized assignment with one argument from call
-     * with equality expression argument, so we do it in compiler. */
-    if(!stat->is_strict && stat->expr->args && !stat->expr->args->next && stat->expr->args->type == EXPR_EQUAL) {
-        binary_expression_t *eqexpr = (binary_expression_t*)stat->expr->args;
-
-        if(eqexpr->left->type == EXPR_BRACKETS) {
-            member_expression_t new_member = *stat->expr;
-
-            WARN("converting call expr to assign expr\n");
-
-            new_member.args = ((unary_expression_t*)eqexpr->left)->subexpr;
-            return compile_assignment(ctx, &new_member, eqexpr->right, FALSE);
-        }
-    }
-
-    hres = compile_member_expression(ctx, stat->expr, FALSE);
+    hres = compile_call_expression(ctx, stat->expr, FALSE);
     if(FAILED(hres))
         return hres;
 
@@ -997,30 +1129,6 @@ static HRESULT compile_call_statement(compile_ctx_t *ctx, call_statement_t *stat
         return E_OUTOFMEMORY;
 
     return S_OK;
-}
-
-static BOOL lookup_dim_decls(compile_ctx_t *ctx, const WCHAR *name)
-{
-    dim_decl_t *dim_decl;
-
-    for(dim_decl = ctx->dim_decls; dim_decl; dim_decl = dim_decl->next) {
-        if(!wcsicmp(dim_decl->name, name))
-            return TRUE;
-    }
-
-    return FALSE;
-}
-
-static BOOL lookup_args_name(compile_ctx_t *ctx, const WCHAR *name)
-{
-    unsigned i;
-
-    for(i = 0; i < ctx->func->arg_cnt; i++) {
-        if(!wcsicmp(ctx->func->args[i].name, name))
-            return TRUE;
-    }
-
-    return FALSE;
 }
 
 static HRESULT compile_dim_statement(compile_ctx_t *ctx, dim_statement_t *stat)
@@ -1055,6 +1163,32 @@ static HRESULT compile_dim_statement(compile_ctx_t *ctx, dim_statement_t *stat)
     else
         ctx->dim_decls = stat->dim_decls;
     ctx->dim_decls_tail = dim_decl;
+    return S_OK;
+}
+
+static HRESULT compile_redim_statement(compile_ctx_t *ctx, redim_statement_t *stat)
+{
+    redim_decl_t *decl = stat->redim_decls;
+    unsigned arg_cnt;
+    HRESULT hres;
+
+    while(1) {
+        hres = compile_args(ctx, decl->dims, &arg_cnt);
+        if(FAILED(hres))
+            return hres;
+
+        hres = push_instr_bstr_uint(ctx, stat->preserve ? OP_redim_preserve : OP_redim, decl->identifier, arg_cnt);
+        if(FAILED(hres))
+            return hres;
+
+        if(!emit_catch(ctx, 0))
+            return E_OUTOFMEMORY;
+
+        if(!decl->next)
+            break;
+        decl = decl->next;
+    }
+
     return S_OK;
 }
 
@@ -1233,6 +1367,8 @@ static HRESULT compile_statement(compile_ctx_t *ctx, statement_ctx_t *stat_ctx, 
     }
 
     while(stat) {
+        ctx->loc = stat->loc;
+
         switch(stat->type) {
         case STAT_ASSIGN:
             hres = compile_assign_statement(ctx, (assign_statement_t*)stat, FALSE);
@@ -1280,6 +1416,9 @@ static HRESULT compile_statement(compile_ctx_t *ctx, statement_ctx_t *stat_ctx, 
         case STAT_ONERROR:
             hres = compile_onerror_statement(ctx, (onerror_statement_t*)stat);
             break;
+        case STAT_REDIM:
+            hres = compile_redim_statement(ctx, (redim_statement_t*)stat);
+            break;
         case STAT_SELECT:
             hres = compile_select_statement(ctx, (select_statement_t*)stat);
             break;
@@ -1293,6 +1432,9 @@ static HRESULT compile_statement(compile_ctx_t *ctx, statement_ctx_t *stat_ctx, 
         case STAT_WHILE:
         case STAT_WHILELOOP:
             hres = compile_while_statement(ctx, (while_statement_t*)stat);
+            break;
+        case STAT_WITH:
+            hres = compile_with_statement(ctx, (with_statement_t*)stat);
             break;
         case STAT_RETVAL:
             hres = compile_retval_statement(ctx, (retval_statement_t*)stat);
@@ -1376,7 +1518,6 @@ static HRESULT compile_func(compile_ctx_t *ctx, statement_t *stat, function_t *f
     case FUNC_PROPGET:
     case FUNC_PROPLET:
     case FUNC_PROPSET:
-    case FUNC_DEFGET:
         ctx->prop_end_label = alloc_label(ctx);
         if(!ctx->prop_end_label)
             return E_OUTOFMEMORY;
@@ -1407,42 +1548,19 @@ static HRESULT compile_func(compile_ctx_t *ctx, statement_t *stat, function_t *f
 
     if(func->var_cnt) {
         dim_decl_t *dim_decl;
+        unsigned i;
 
-        if(func->type == FUNC_GLOBAL) {
-            dynamic_var_t *new_var;
+        func->vars = compiler_alloc(ctx->code, func->var_cnt * sizeof(var_desc_t));
+        if(!func->vars)
+            return E_OUTOFMEMORY;
 
-            func->var_cnt = 0;
-
-            for(dim_decl = ctx->dim_decls; dim_decl; dim_decl = dim_decl->next) {
-                new_var = compiler_alloc(ctx->code, sizeof(*new_var));
-                if(!new_var)
-                    return E_OUTOFMEMORY;
-
-                new_var->name = compiler_alloc_string(ctx->code, dim_decl->name);
-                if(!new_var->name)
-                    return E_OUTOFMEMORY;
-
-                V_VT(&new_var->v) = VT_EMPTY;
-                new_var->is_const = FALSE;
-
-                new_var->next = ctx->global_vars;
-                ctx->global_vars = new_var;
-            }
-        }else {
-            unsigned i;
-
-            func->vars = compiler_alloc(ctx->code, func->var_cnt * sizeof(var_desc_t));
-            if(!func->vars)
+        for(dim_decl = ctx->dim_decls, i=0; dim_decl; dim_decl = dim_decl->next, i++) {
+            func->vars[i].name = compiler_alloc_string(ctx->code, dim_decl->name);
+            if(!func->vars[i].name)
                 return E_OUTOFMEMORY;
-
-            for(dim_decl = ctx->dim_decls, i=0; dim_decl; dim_decl = dim_decl->next, i++) {
-                func->vars[i].name = compiler_alloc_string(ctx->code, dim_decl->name);
-                if(!func->vars[i].name)
-                    return E_OUTOFMEMORY;
-            }
-
-            assert(i == func->var_cnt);
         }
+
+        assert(i == func->var_cnt);
     }
 
     if(func->array_cnt) {
@@ -1471,7 +1589,7 @@ static BOOL lookup_funcs_name(compile_ctx_t *ctx, const WCHAR *name)
 {
     function_t *iter;
 
-    for(iter = ctx->funcs; iter; iter = iter->next) {
+    for(iter = ctx->code->funcs; iter; iter = iter->next) {
         if(!wcsicmp(iter->name, name))
             return TRUE;
     }
@@ -1484,7 +1602,7 @@ static HRESULT create_function(compile_ctx_t *ctx, function_decl_t *decl, functi
     function_t *func;
     HRESULT hres;
 
-    if(lookup_dim_decls(ctx, decl->name) || lookup_funcs_name(ctx, decl->name) || lookup_const_decls(ctx, decl->name, FALSE)) {
+    if(lookup_dim_decls(ctx, decl->name) || lookup_const_decls(ctx, decl->name, FALSE)) {
         FIXME("%s: redefinition\n", debugstr_w(decl->name));
         return E_FAIL;
     }
@@ -1538,7 +1656,7 @@ static BOOL lookup_class_name(compile_ctx_t *ctx, const WCHAR *name)
 {
     class_desc_t *iter;
 
-    for(iter = ctx->classes; iter; iter = iter->next) {
+    for(iter = ctx->code->classes; iter; iter = iter->next) {
         if(!wcsicmp(iter->name, name))
             return TRUE;
     }
@@ -1561,7 +1679,6 @@ static HRESULT create_class_funcprop(compile_ctx_t *ctx, function_decl_t *func_d
         case FUNC_FUNCTION:
         case FUNC_SUB:
         case FUNC_PROPGET:
-        case FUNC_DEFGET:
             invoke_type = VBDISP_CALLGET;
             break;
         case FUNC_PROPLET:
@@ -1601,13 +1718,11 @@ static BOOL lookup_class_funcs(class_desc_t *class_desc, const WCHAR *name)
 static HRESULT compile_class(compile_ctx_t *ctx, class_decl_t *class_decl)
 {
     function_decl_t *func_decl, *func_prop_decl;
+    BOOL is_default, have_default = FALSE;
     class_desc_t *class_desc;
     dim_decl_t *prop_decl;
     unsigned i;
     HRESULT hres;
-
-    static const WCHAR class_initializeW[] = {'c','l','a','s','s','_','i','n','i','t','i','a','l','i','z','e',0};
-    static const WCHAR class_terminateW[] = {'c','l','a','s','s','_','t','e','r','m','i','n','a','t','e',0};
 
     if(lookup_dim_decls(ctx, class_decl->name) || lookup_funcs_name(ctx, class_decl->name)
             || lookup_const_decls(ctx, class_decl->name, FALSE) || lookup_class_name(ctx, class_decl->name)) {
@@ -1623,14 +1738,21 @@ static HRESULT compile_class(compile_ctx_t *ctx, class_decl_t *class_decl)
     if(!class_desc->name)
         return E_OUTOFMEMORY;
 
-    class_desc->func_cnt = 1; /* always allocate slot for default getter */
+    class_desc->func_cnt = 1; /* always allocate slot for default getter or method */
 
     for(func_decl = class_decl->funcs; func_decl; func_decl = func_decl->next) {
+        is_default = FALSE;
         for(func_prop_decl = func_decl; func_prop_decl; func_prop_decl = func_prop_decl->next_prop_func) {
-            if(func_prop_decl->type == FUNC_DEFGET)
+            if(func_prop_decl->is_default) {
+                if(have_default) {
+                    FIXME("multiple default getters or methods\n");
+                    return E_FAIL;
+                }
+                is_default = have_default = TRUE;
                 break;
+            }
         }
-        if(!func_prop_decl)
+        if(!is_default)
             class_desc->func_cnt++;
     }
 
@@ -1641,20 +1763,20 @@ static HRESULT compile_class(compile_ctx_t *ctx, class_decl_t *class_decl)
 
     for(func_decl = class_decl->funcs, i=1; func_decl; func_decl = func_decl->next, i++) {
         for(func_prop_decl = func_decl; func_prop_decl; func_prop_decl = func_prop_decl->next_prop_func) {
-            if(func_prop_decl->type == FUNC_DEFGET) {
+            if(func_prop_decl->is_default) {
                 i--;
                 break;
             }
         }
 
-        if(!wcsicmp(class_initializeW, func_decl->name)) {
+        if(!wcsicmp(L"class_initialize", func_decl->name)) {
             if(func_decl->type != FUNC_SUB) {
                 FIXME("class initializer is not sub\n");
                 return E_FAIL;
             }
 
             class_desc->class_initialize_id = i;
-        }else  if(!wcsicmp(class_terminateW, func_decl->name)) {
+        }else  if(!wcsicmp(L"class_terminate", func_decl->name)) {
             if(func_decl->type != FUNC_SUB) {
                 FIXME("class terminator is not sub\n");
                 return E_FAIL;
@@ -1706,30 +1828,62 @@ static HRESULT compile_class(compile_ctx_t *ctx, class_decl_t *class_decl)
         }
     }
 
-    class_desc->next = ctx->classes;
-    ctx->classes = class_desc;
+    class_desc->next = ctx->code->classes;
+    ctx->code->classes = class_desc;
     return S_OK;
 }
 
-static BOOL lookup_script_identifier(script_ctx_t *script, const WCHAR *identifier)
+static BOOL lookup_script_identifier(compile_ctx_t *ctx, script_ctx_t *script, const WCHAR *identifier)
 {
+    ScriptDisp *contexts[] = {
+        ctx->code->named_item ? ctx->code->named_item->script_obj : NULL,
+        script->script_obj
+    };
     class_desc_t *class;
-    dynamic_var_t *var;
-    function_t *func;
+    vbscode_t *code;
+    unsigned c, i;
 
-    for(var = script->global_vars; var; var = var->next) {
-        if(!wcsicmp(var->name, identifier))
-            return TRUE;
+    for(c = 0; c < ARRAY_SIZE(contexts); c++) {
+        if(!contexts[c]) continue;
+
+        for(i = 0; i < contexts[c]->global_vars_cnt; i++) {
+            if(!wcsicmp(contexts[c]->global_vars[i]->name, identifier))
+                return TRUE;
+        }
+
+        for(i = 0; i < contexts[c]->global_funcs_cnt; i++) {
+            if(!wcsicmp(contexts[c]->global_funcs[i]->name, identifier))
+                return TRUE;
+        }
+
+        for(class = contexts[c]->classes; class; class = class->next) {
+            if(!wcsicmp(class->name, identifier))
+                return TRUE;
+        }
     }
 
-    for(func = script->global_funcs; func; func = func->next) {
-        if(!wcsicmp(func->name, identifier))
-            return TRUE;
-    }
+    LIST_FOR_EACH_ENTRY(code, &script->code_list, vbscode_t, entry) {
+        unsigned var_cnt = code->main_code.var_cnt;
+        var_desc_t *vars = code->main_code.vars;
+        function_t *func;
 
-    for(class = script->classes; class; class = class->next) {
-        if(!wcsicmp(class->name, identifier))
-            return TRUE;
+        if(!code->pending_exec || (code->named_item && code->named_item != ctx->code->named_item))
+            continue;
+
+        for(i = 0; i < var_cnt; i++) {
+            if(!wcsicmp(vars[i].name, identifier))
+                return TRUE;
+        }
+
+        for(func = code->funcs; func; func = func->next) {
+            if(!wcsicmp(func->name, identifier))
+                return TRUE;
+        }
+
+        for(class = code->classes; class; class = class->next) {
+            if(!wcsicmp(class->name, identifier))
+                return TRUE;
+        }
     }
 
     return FALSE;
@@ -1737,26 +1891,19 @@ static BOOL lookup_script_identifier(script_ctx_t *script, const WCHAR *identifi
 
 static HRESULT check_script_collisions(compile_ctx_t *ctx, script_ctx_t *script)
 {
+    unsigned i, var_cnt = ctx->code->main_code.var_cnt;
+    var_desc_t *vars = ctx->code->main_code.vars;
     class_desc_t *class;
-    dynamic_var_t *var;
-    function_t *func;
 
-    for(var = ctx->global_vars; var; var = var->next) {
-        if(lookup_script_identifier(script, var->name)) {
-            FIXME("%s: redefined\n", debugstr_w(var->name));
+    for(i = 0; i < var_cnt; i++) {
+        if(lookup_script_identifier(ctx, script, vars[i].name)) {
+            FIXME("%s: redefined\n", debugstr_w(vars[i].name));
             return E_FAIL;
         }
     }
 
-    for(func = ctx->funcs; func; func = func->next) {
-        if(lookup_script_identifier(script, func->name)) {
-            FIXME("%s: redefined\n", debugstr_w(func->name));
-            return E_FAIL;
-        }
-    }
-
-    for(class = ctx->classes; class; class = class->next) {
-        if(lookup_script_identifier(script, class->name)) {
+    for(class = ctx->code->classes; class; class = class->next) {
+        if(lookup_script_identifier(ctx, script, class->name)) {
             FIXME("%s: redefined\n", debugstr_w(class->name));
             return E_FAIL;
         }
@@ -1769,36 +1916,49 @@ void release_vbscode(vbscode_t *code)
 {
     unsigned i;
 
-    list_remove(&code->entry);
+    if(--code->ref)
+        return;
 
     for(i=0; i < code->bstr_cnt; i++)
         SysFreeString(code->bstr_pool[i]);
 
-    if(code->context)
-        IDispatch_Release(code->context);
+    if(code->named_item)
+        release_named_item(code->named_item);
     heap_pool_free(&code->heap);
 
-    heap_free(code->bstr_pool);
-    heap_free(code->source);
-    heap_free(code->instrs);
-    heap_free(code);
+    free(code->bstr_pool);
+    free(code->source);
+    free(code->instrs);
+    free(code);
 }
 
-static vbscode_t *alloc_vbscode(compile_ctx_t *ctx, const WCHAR *source)
+static vbscode_t *alloc_vbscode(compile_ctx_t *ctx, const WCHAR *source, DWORD_PTR cookie, unsigned start_line)
 {
     vbscode_t *ret;
+    size_t len;
 
-    ret = heap_alloc_zero(sizeof(*ret));
+    len = source ? lstrlenW(source) : 0;
+    if(len > INT32_MAX)
+        return NULL;
+
+    ret = calloc(1, sizeof(*ret));
     if(!ret)
         return NULL;
 
-    ret->source = heap_strdupW(source);
+    ret->source = malloc((len + 1) * sizeof(WCHAR));
     if(!ret->source) {
-        heap_free(ret);
+        free(ret);
         return NULL;
     }
+    if(len)
+        memcpy(ret->source, source, len * sizeof(WCHAR));
+    ret->source[len] = 0;
 
-    ret->instrs = heap_alloc(32*sizeof(instr_t));
+    ret->ref = 1;
+    ret->cookie = cookie;
+    ret->start_line = start_line;
+
+    ret->instrs = malloc(32*sizeof(instr_t));
     if(!ret->instrs) {
         release_vbscode(ret);
         return NULL;
@@ -1807,8 +1967,6 @@ static vbscode_t *alloc_vbscode(compile_ctx_t *ctx, const WCHAR *source)
     ctx->instr_cnt = 1;
     ctx->instr_size = 32;
     heap_pool_init(&ret->heap);
-
-    ret->option_explicit = ctx->parser.option_explicit;
 
     ret->main_code.type = FUNC_GLOBAL;
     ret->main_code.code_ctx = ret;
@@ -1820,101 +1978,91 @@ static vbscode_t *alloc_vbscode(compile_ctx_t *ctx, const WCHAR *source)
 static void release_compiler(compile_ctx_t *ctx)
 {
     parser_release(&ctx->parser);
-    heap_free(ctx->labels);
+    free(ctx->labels);
     if(ctx->code)
         release_vbscode(ctx->code);
 }
 
-HRESULT compile_script(script_ctx_t *script, const WCHAR *src, const WCHAR *delimiter, DWORD flags, vbscode_t **ret)
+HRESULT compile_script(script_ctx_t *script, const WCHAR *src, const WCHAR *item_name, const WCHAR *delimiter,
+                       DWORD_PTR cookie, unsigned start_line, DWORD flags, vbscode_t **ret)
 {
-    function_t *new_func;
     function_decl_t *func_decl;
+    named_item_t *item = NULL;
     class_decl_t *class_decl;
+    function_t *new_func;
     compile_ctx_t ctx;
     vbscode_t *code;
     HRESULT hres;
 
-    if (!src) src = L"";
+    if(item_name) {
+        item = lookup_named_item(script, item_name, 0);
+        if(!item) {
+            WARN("Unknown context %s\n", debugstr_w(item_name));
+            return E_INVALIDARG;
+        }
+        if(!item->script_obj) item = NULL;
+    }
 
-    hres = parse_script(&ctx.parser, src, delimiter, flags);
-    if(FAILED(hres))
-        return compile_error(script, hres);
-
-    code = ctx.code = alloc_vbscode(&ctx, src);
+    memset(&ctx, 0, sizeof(ctx));
+    code = ctx.code = alloc_vbscode(&ctx, src, cookie, start_line);
     if(!ctx.code)
-        return compile_error(script, E_OUTOFMEMORY);
+        return E_OUTOFMEMORY;
+    if(item) {
+        code->named_item = item;
+        item->ref++;
+    }
 
-    ctx.funcs = NULL;
-    ctx.func_decls = NULL;
-    ctx.global_vars = NULL;
-    ctx.classes = NULL;
-    ctx.labels = NULL;
-    ctx.global_consts = NULL;
-    ctx.stat_ctx = NULL;
-    ctx.labels_cnt = ctx.labels_size = 0;
+    ctx.parser.lcid = script->lcid;
+    hres = parse_script(&ctx.parser, code->source, delimiter, flags);
+    if(FAILED(hres)) {
+        if(ctx.parser.error_loc != -1)
+            ctx.loc = ctx.parser.error_loc;
+        hres = compile_error(script, &ctx, hres);
+        release_vbscode(code);
+        return hres;
+    }
 
     hres = compile_func(&ctx, ctx.parser.stats, &ctx.code->main_code);
     if(FAILED(hres)) {
+        hres = compile_error(script, &ctx, hres);
         release_compiler(&ctx);
-        return compile_error(script, hres);
+        return hres;
     }
 
+    code->option_explicit = ctx.parser.option_explicit;
     ctx.global_consts = ctx.const_decls;
+    code->option_explicit = ctx.parser.option_explicit;
+
 
     for(func_decl = ctx.func_decls; func_decl; func_decl = func_decl->next) {
         hres = create_function(&ctx, func_decl, &new_func);
         if(FAILED(hres)) {
+            hres = compile_error(script, &ctx, hres);
             release_compiler(&ctx);
-            return compile_error(script, hres);
+            return hres;
         }
 
-        new_func->next = ctx.funcs;
-        ctx.funcs = new_func;
+        new_func->next = ctx.code->funcs;
+        ctx.code->funcs = new_func;
     }
 
     for(class_decl = ctx.parser.class_decls; class_decl; class_decl = class_decl->next) {
         hres = compile_class(&ctx, class_decl);
         if(FAILED(hres)) {
+            hres = compile_error(script, &ctx, hres);
             release_compiler(&ctx);
-            return compile_error(script, hres);
+            return hres;
         }
     }
 
     hres = check_script_collisions(&ctx, script);
     if(FAILED(hres)) {
+        hres = compile_error(script, &ctx, hres);
         release_compiler(&ctx);
-        return compile_error(script, hres);
+        return hres;
     }
 
-    if(ctx.global_vars) {
-        dynamic_var_t *var;
-
-        for(var = ctx.global_vars; var->next; var = var->next);
-
-        var->next = script->global_vars;
-        script->global_vars = ctx.global_vars;
-    }
-
-    if(ctx.funcs) {
-        for(new_func = ctx.funcs; new_func->next; new_func = new_func->next);
-
-        new_func->next = script->global_funcs;
-        script->global_funcs = ctx.funcs;
-    }
-
-    if(ctx.classes) {
-        class_desc_t *class = ctx.classes;
-
-        while(1) {
-            class->ctx = script;
-            if(!class->next)
-                break;
-            class = class->next;
-        }
-
-        class->next = script->classes;
-        script->classes = ctx.classes;
-    }
+    code->is_persistent = (flags & SCRIPTTEXT_ISPERSISTENT) != 0;
 
     if(TRACE_ON(vbscript_disas))
         dump_code(&ctx);
@@ -1927,13 +2075,15 @@ HRESULT compile_script(script_ctx_t *script, const WCHAR *src, const WCHAR *deli
     return S_OK;
 }
 
-HRESULT compile_procedure(script_ctx_t *script, const WCHAR *src, const WCHAR *delimiter, DWORD flags, class_desc_t **ret)
+HRESULT compile_procedure(script_ctx_t *script, const WCHAR *src, const WCHAR *item_name, const WCHAR *delimiter,
+                          DWORD_PTR cookie, unsigned start_line, DWORD flags, class_desc_t **ret)
 {
     class_desc_t *desc;
     vbscode_t *code;
     HRESULT hres;
 
-    hres = compile_script(script, src, delimiter, flags, &code);
+    hres = compile_script(script, src, item_name, delimiter, cookie, start_line,
+                          flags & ~SCRIPTTEXT_ISPERSISTENT, &code);
     if(FAILED(hres))
         return hres;
 
@@ -1945,9 +2095,6 @@ HRESULT compile_procedure(script_ctx_t *script, const WCHAR *src, const WCHAR *d
     desc->ctx = script;
     desc->func_cnt = 1;
     desc->funcs->entries[VBDISP_CALLGET] = &code->main_code;
-
-    desc->next = script->procs;
-    script->procs = desc;
 
     *ret = desc;
     return S_OK;

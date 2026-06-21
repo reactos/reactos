@@ -58,6 +58,8 @@ SHRestrictionLookup(
     _In_ const POLICYDATA *polTable,
     _Inout_ LPDWORD polArr);
 
+INT WINAPI SHRestrictedMessageBox(_In_ HWND hWnd);
+
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
 
@@ -80,6 +82,12 @@ NextPathW(
 #define SHAboutInfo SHAboutInfoA
 #define NextPath NextPathA
 #endif
+
+HRESULT WINAPI
+IUnknown_ShowBrowserBar(
+    _In_ IUnknown* punk,
+    _In_ REFGUID rguid,
+    _In_ BOOL bShow);
 
 HRESULT WINAPI CLSIDFromStringWrap(_In_ LPCWSTR idstr, _Out_ CLSID *id);
 HMODULE WINAPI SHPinDllOfCLSID(REFIID refiid);
@@ -534,6 +542,8 @@ SHDialogBox(
     _In_opt_ HWND hWndParent,
     _In_opt_ SHDIALOGPROC fn,
     _In_opt_ PVOID pThis);
+
+HRESULT WINAPI MapWin32ErrorToSTG(_In_ HRESULT hr);
 
 PSTR WINAPI CharLowerNoDBCSA(_Inout_ PSTR lpString);
 PWSTR WINAPI CharLowerNoDBCSW(_Inout_ PWSTR lpString);

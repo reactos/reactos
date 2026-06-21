@@ -9,6 +9,7 @@ extern void func_PathFindOnPath(void);
 extern void func_IShellFolderHelpers(void);
 extern void func_IsQSForward(void);
 extern void func_IStreamPidl(void);
+extern void func_MapWin32ErrorToSTG(void); 
 extern void func_NextPath(void);
 extern void func_PathIsUNC(void);
 extern void func_PathIsUNCServer(void);
@@ -38,6 +39,7 @@ const struct test winetest_testlist[] =
     { "IShellFolderHelpers", func_IShellFolderHelpers },
     { "IsQSForward", func_IsQSForward },
     { "IStreamPidl", func_IStreamPidl },
+    { "MapWin32ErrorToSTG", func_MapWin32ErrorToSTG },
     { "NextPath", func_NextPath },
     { "PathIsUNC", func_PathIsUNC },
     { "PathIsUNCServer", func_PathIsUNCServer },

@@ -11,6 +11,7 @@ list(APPEND SOURCE
     IShellFolderHelpers.cpp
     IsQSForward.cpp
     IStreamPidl.cpp
+    MapWin32ErrorToSTG.c
     NextPath.c
     PathFileExistsDefExtAndAttributesW.c
     PathFindOnPath.c

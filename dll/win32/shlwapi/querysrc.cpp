@@ -10,6 +10,7 @@
 #include <shlwapi_undoc.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
+#include <new>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -305,7 +306,9 @@ STDMETHODIMP_(ULONG) CRegistrySource::Release()
 
 STDMETHODIMP CRegistrySource::EnumValues(IEnumString **ppEnum)
 {
-    CRegistryEnumValues* pEnum = new CRegistryEnumValues();
+    CRegistryEnumValues* pEnum = new(std::nothrow) CRegistryEnumValues();
+    if (!pEnum)
+        return E_OUTOFMEMORY;
     HRESULT hr = pEnum->Init(m_hKey, this);
     if (FAILED(hr))
     {
@@ -318,7 +321,9 @@ STDMETHODIMP CRegistrySource::EnumValues(IEnumString **ppEnum)
 
 STDMETHODIMP CRegistrySource::EnumSources(IEnumString **ppEnum)
 {
-    CRegistryEnumKeys* pEnum = new CRegistryEnumKeys();
+    CRegistryEnumKeys* pEnum = new(std::nothrow) CRegistryEnumKeys();
+    if (!pEnum)
+        return E_OUTOFMEMORY;
     HRESULT hr = pEnum->Init(m_hKey, this);
     if (FAILED(hr))
     {
@@ -500,7 +505,9 @@ QuerySourceCreateFromKey(
 {
     *ppv = NULL;
 
-    CRegistrySource* pRS = new CRegistrySource();
+    CRegistrySource* pRS = new(std::nothrow) CRegistrySource();
+    if (!pRS)
+        return E_OUTOFMEMORY;
 
     HRESULT hr = pRS->Init(hKey, lpSubKey, bCreate);
     if (SUCCEEDED(hr))

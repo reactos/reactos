@@ -1,9 +1,9 @@
 /*
-* PROJECT:     appshim_apitest
-* LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
-* PURPOSE:     Tests for IgnoreLoadLibrary shim
-* COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
-*/
+ * PROJECT:     appshim_apitest
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Tests for IgnoreLoadLibrary shim
+ * COPYRIGHT:   Copyright 2019 Mark Jansen <mark.jansen@reactos.org>
+ */
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS

@@ -20,6 +20,7 @@ if /I "%1" == "/?" (
 
 REM Get the source root directory
 set REACTOS_SOURCE_DIR=%~dp0
+set REACTOS_SOURCE_DIR=%REACTOS_SOURCE_DIR:\=/%
 
 REM Ensure there's no spaces in the source path
 echo %REACTOS_SOURCE_DIR%| find " " > NUL
@@ -169,7 +170,7 @@ if "%VS_SOLUTION%" == "1" (
     set REACTOS_OUTPUT_PATH=%REACTOS_OUTPUT_PATH%-sln
 )
 
-if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
+if "%REACTOS_SOURCE_DIR%" == "%CD:\=/%/" (
     set CD_SAME_AS_SOURCE=1
     echo Creating directories in %REACTOS_OUTPUT_PATH%
 

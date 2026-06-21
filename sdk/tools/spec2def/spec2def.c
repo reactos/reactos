@@ -1206,6 +1206,10 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
             {
                 exp.uFlags |= FL_REGISTER;
             }
+            else if (CompareToken(pc, "-import"))
+            {
+                /* The export is imported from an import library. Ignored. */
+            }
             else
             {
                 fprintf(stdout,
@@ -1458,11 +1462,12 @@ ApplyOrdinals(EXPORT* pexports, unsigned cExports)
     /* Pass 1: mark the ordinals that are already used */
     for (i = 0; i < cExports; i++)
     {
-        if (pexports[i].uFlags & FL_ORDINAL)
+        if ((pexports[i].uFlags & FL_ORDINAL) && pexports[i].bVersionIncluded)
         {
             if (used[pexports[i].nOrdinal] != 0)
             {
                 fprintf(stderr, "Found duplicate ordinal: %u\n", pexports[i].nOrdinal);
+                free(used);
                 return -1;
             }
             used[pexports[i].nOrdinal] = 1;

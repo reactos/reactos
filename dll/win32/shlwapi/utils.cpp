@@ -22,6 +22,7 @@
 #include <shlguid_undoc.h>
 #include <userenv.h>
 #include <atlstr.h>
+#include "resource.h"
 
 #include <shlwapi_undoc.h>
 #include <ishellfolder_helpers.h>
@@ -217,6 +218,29 @@ PathUnExpandEnvStringsForUserW(
     }
 
     return FALSE;
+}
+
+/*************************************************************************
+ *      MapWin32ErrorToSTG [SHLWAPI.485]
+ *
+ * https://undoc.airesoft.co.uk/shlwapi.dll/MapWin32ErrorToSTG.php
+ */
+EXTERN_C HRESULT WINAPI
+MapWin32ErrorToSTG(_In_ HRESULT hr)
+{
+    switch (hr)
+    {
+        case HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED):
+            return STG_E_ACCESSDENIED;
+        case HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND):
+        case HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND):
+            return STG_E_FILENOTFOUND;
+        case HRESULT_FROM_WIN32(ERROR_FILE_EXISTS):
+        case HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS):
+            return STG_E_FILEALREADYEXISTS;
+        default:
+            return hr;
+    }
 }
 
 static BOOL CharLowerNoDBCSAWorker(PSTR lpString, INT cchMax, BOOL bUppercase)
@@ -1081,6 +1105,29 @@ _AllocValueString(
 }
 
 /*************************************************************************
+ * IUnknown_ShowBrowserBar [SHLWAPI.539]
+ *
+ * @see IWebBrowser2
+ */
+EXTERN_C HRESULT WINAPI
+IUnknown_ShowBrowserBar(
+    _In_ IUnknown* punk,
+    _In_ REFGUID rguid,
+    _In_ BOOL bShow)
+{
+    CComPtr<IWebBrowser2> pWB2;
+    HRESULT hr = IUnknown_QueryServiceForWebBrowserApp(punk, IID_IWebBrowser2, (PVOID*)&pWB2);
+    if (FAILED(hr))
+        return hr;
+
+    WCHAR szGUID[40];
+    StringFromGUID2(rguid, szGUID, _countof(szGUID));
+
+    CComVariant varClsid(szGUID), varShow((bool)!!bShow), varSize;
+    return pWB2->ShowBrowserBar(&varClsid, &varShow, &varSize);
+}
+
+/*************************************************************************
  * PrettifyFileDescriptionW [SHLWAPI.492]
  *
  * @see SHGetFileDescriptionW
@@ -1285,4 +1332,22 @@ BOOL WINAPI SHGetFileDescriptionA(
     }
 
     return ret;
+}
+
+/*************************************************************************
+ * SHRestrictedMessageBox [SHLWAPI.384]
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/util/restrictions/messagebox.htm
+ * @see ShellMessageBoxW
+ */
+EXTERN_C INT WINAPI SHRestrictedMessageBox(_In_ HWND hWnd)
+{
+    return ShellMessageBoxW(shlwapi_hInstance, hWnd, MAKEINTRESOURCEW(IDS_RESTRICTED),
+                            MAKEINTRESOURCEW(IDS_RESTRICTIONS), MB_ICONERROR);
+}
+
+EXTERN_C ULONG WINAPI GetProcessOsVersion(void)
+{
+    PPEB Peb = NtCurrentTeb()->Peb;
+    return (Peb->OSMajorVersion << 8) | Peb->OSMinorVersion;
 }
