@@ -1174,18 +1174,14 @@ GetPc9821SystemIdentifier(
         case 0x59: return "V166";
         case 0x5F: return "Nr166";
         case 0x73: return "Ra333";
-
-        default:
-            break;
+        default:   return NULL;
     }
-
-    return NULL;
 }
 
 static
 VOID
-CreateSystemIdentifier(
-    _In_ PCONFIGURATION_COMPONENT_DATA* SystemKey)
+CreateSystemKey(
+    _Inout_ PCONFIGURATION_COMPONENT_DATA* SystemKey)
 {
     const ULONG IdentifierSize = 256;
     PCHAR Identifier;
@@ -1223,7 +1219,7 @@ CreateSystemIdentifier(
     }
     else
     {
-        RtlStringCbPrintfA(Identifier, IdentifierSize, PC98_DEFAULT_ID);
+        RtlStringCbCopyA(Identifier, IdentifierSize, PC98_DEFAULT_ID);
     }
     TRACE("System identifier '%s'\n", Identifier);
 
@@ -1241,7 +1237,7 @@ Pc98HwDetect(
     TRACE("DetectHardware()\n");
 
     /* Create the 'System' key */
-    CreateSystemIdentifier(&SystemKey);
+    CreateSystemKey(&SystemKey);
 
     GetHarddiskConfigurationData = Pc98GetHarddiskConfigurationData;
 
