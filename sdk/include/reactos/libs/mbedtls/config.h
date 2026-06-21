@@ -2367,6 +2367,21 @@
 #define MBEDTLS_ECDSA_C
 
 /**
+ * \def MBEDTLS_DSA_C
+ *
+ * Enable the DSA library.
+ *
+ * Module:  library/dsa.c
+ * Caller:
+ *
+ * This module is used by the following key exchanges:
+ *      DSA
+ *
+ * Requires: MBEDTLS_ASN1_WRITE_C, MBEDTLS_ASN1_PARSE_C
+ */
+#define MBEDTLS_DSA_C
+
+/**
  * \def MBEDTLS_ECJPAKE_C
  *
  * Enable the elliptic curve J-PAKE library.
@@ -2531,7 +2546,7 @@
  *            it, and considering stronger message digests instead.
  *
  */
-//#define MBEDTLS_MD2_C
+#define MBEDTLS_MD2_C
 
 /**
  * \def MBEDTLS_MD4_C
@@ -2548,7 +2563,7 @@
  *            it, and considering stronger message digests instead.
  *
  */
-//#define MBEDTLS_MD4_C
+#define MBEDTLS_MD4_C
 
 /**
  * \def MBEDTLS_MD5_C
