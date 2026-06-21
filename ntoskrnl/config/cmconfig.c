@@ -411,7 +411,7 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             {
                 /* Running on a NEC PC-9800 or compatible */
                 KeI386MachineType |= 0x100; /* Should probably be one of MACHINE_TYPE_* consts */
-                SharedUserData->AlternativeArchitecture = NEC98x86;
+                SetNEC_98;
             }
         }
 #endif
