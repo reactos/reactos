@@ -65,10 +65,10 @@ CmpReportNotifyToPostBlock(_In_ PCMP_POST_BLOCK PostBlock)
     {
         SecondaryPostBlock = CONTAINING_RECORD(PostBlock->SecondaryBlock->PostList.Flink, CMP_POST_BLOCK, NotifyList);
         RemoveEntryList(&SecondaryPostBlock->NotifyList);
-        ExFreePoolWithTag(SecondaryPostBlock, TAG_CM);
-        ExFreePoolWithTag(PostBlock->SecondaryBlock, TAG_CM);
+        ExFreePoolWithTag(SecondaryPostBlock, TAG_CM_NOTIFY);
+        ExFreePoolWithTag(PostBlock->SecondaryBlock, TAG_CM_NOTIFY);
     }
-    ExFreePoolWithTag(PostBlock, TAG_CM);
+    ExFreePoolWithTag(PostBlock, TAG_CM_NOTIFY);
 }
 
 BOOLEAN
@@ -203,23 +203,23 @@ CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
         }
 
         if (PostBlock->UserApc)
-            ExFreePoolWithTag(PostBlock->UserApc, TAG_CM);
+            ExFreePoolWithTag(PostBlock->UserApc, TAG_CM_NOTIFY);
 
         if (PostBlock->SecondaryBlock)
         {
             SecondaryPostBlock = CONTAINING_RECORD(PostBlock->SecondaryBlock->PostList.Flink, CMP_POST_BLOCK, NotifyList);
             RemoveEntryList(&SecondaryPostBlock->NotifyList);
-            ExFreePoolWithTag(SecondaryPostBlock, TAG_CM);
-            ExFreePoolWithTag(PostBlock->SecondaryBlock, TAG_CM);
+            ExFreePoolWithTag(SecondaryPostBlock, TAG_CM_NOTIFY);
+            ExFreePoolWithTag(PostBlock->SecondaryBlock, TAG_CM_NOTIFY);
         }
 
         RemoveEntryList(&(PostBlock->NotifyList));
-        ExFreePoolWithTag(PostBlock, TAG_CM);
+        ExFreePoolWithTag(PostBlock, TAG_CM_NOTIFY);
     }
 
     /* Free the NotifyBlock */
     RemoveEntryList(&(KeyBody->NotifyBlock->HiveList));
-    ExFreePoolWithTag(KeyBody->NotifyBlock, TAG_CM);
+    ExFreePoolWithTag(KeyBody->NotifyBlock, TAG_CM_NOTIFY);
     KeyBody->NotifyBlock = NULL;
 
     /* Unlock the Kcb if we locked it previously */
