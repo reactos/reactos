@@ -711,6 +711,14 @@ IpAddAddress(
 
     if (pszAddress && pszMask)
     {
+        if (pProperties->dwDhcp)
+        {
+            PrintMessageFromModule(hDllInstance,
+                                   IDS_ERROR_ADD_DHCP_ADDRESS);
+            dwError = ERROR_SUPPRESS_OUTPUT;
+            goto done;
+        }
+
         dwLength = wcslen(pProperties->pszIpAddress) + wcslen(pszAddress) + 2;
         pszNewIpAddress = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength * sizeof(WCHAR));
         if (pszNewIpAddress == NULL)
@@ -1113,6 +1121,12 @@ IpDeleteAddress(
 
     if (bHaveAddress && pszAddress)
     {
+        if (pProperties->dwDhcp)
+        {
+            PrintMessageFromModule(hDllInstance,
+                                   IDS_ERROR_DELETE_DHCP_ADDRESS);
+            return ERROR_SUPPRESS_OUTPUT;
+        }
 #if 0
         dwLength = wcslen(pProperties->pszIpAddress) + 1;
         pszNewIpAddress = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength * sizeof(WCHAR));

@@ -218,4 +218,7 @@ Parameters:\n\n\
     IDS_ERROR_BAD_VALUE "\n%1!s! is not an acceptable value for %1!s!.\n"
     IDS_ERROR_ALREADY_DHCP "\nDhcp is already enabled on this interface.\n"
     IDS_ERROR_GET_PROPERTIES "\nError obtaining configuration for interface %1!s!.\n"
+
+    IDS_ERROR_ADD_DHCP_ADDRESS "\nCannot add a static IP address to an interface configured for DHCP.\n"
+    IDS_ERROR_DELETE_DHCP_ADDRESS "\nCannot delete Dhcp configured IP Address.\n"
 END
