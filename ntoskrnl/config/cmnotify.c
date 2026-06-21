@@ -20,14 +20,16 @@ CmpReportNotifyToPostBlock(_In_ PCMP_POST_BLOCK PostBlock)
 {
     PCMP_POST_BLOCK SecondaryPostBlock;
 
+    /* Report the operation result using caller-allocated IO_STATUS_BLOCK buffer  */
     if (PostBlock->IoStatusBlock)
     {
+        /* Attach to caller's context if necessary */
         KAPC_STATE ApcState;
         BOOLEAN IsSameProcess = PostBlock->OwnerProcess == &PsGetCurrentProcess()->Pcb;
-
         if (!IsSameProcess)
             KeStackAttachProcess(PostBlock->OwnerProcess, &ApcState);
 
+        /* Try to write status to buffer */
         _SEH2_TRY
         {
             PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_ENUM_DIR;
@@ -44,6 +46,7 @@ CmpReportNotifyToPostBlock(_In_ PCMP_POST_BLOCK PostBlock)
             KeUnstackDetachProcess(&ApcState);
     }
 
+    /* Signal the event object provided by the user-mode or kernel-mode callers */
     if (PostBlock->Event)
     {
         KeSetEvent(PostBlock->Event, 1, FALSE);
@@ -51,20 +54,24 @@ CmpReportNotifyToPostBlock(_In_ PCMP_POST_BLOCK PostBlock)
         PostBlock->Event = NULL;
     }
 
+    /* Queue the WorkQueueItem for asynchronous kernel-mode callers */
     if (PostBlock->WorkQueueItem)
+    {
         ExQueueWorkItem(PostBlock->WorkQueueItem, PostBlock->WorkQueueType);
-
-    if (PostBlock->UserApc)
+    }
+    else if (PostBlock->UserApc)
     {
         /* FIXME: TODO */
-        return;
     }
 
+    /* Detach the PostBlock from its NotifyBlock as the wait is complete */
     RemoveEntryList(&(PostBlock->NotifyList));
     if (PostBlock->SecondaryBlock)
     {
+        /* Also detach the PostBlock for the Subordinate key if one was provided */
         SecondaryPostBlock = CONTAINING_RECORD(PostBlock->SecondaryBlock->PostList.Flink, CMP_POST_BLOCK, NotifyList);
         RemoveEntryList(&SecondaryPostBlock->NotifyList);
+        /* Free the memory allocated for the SecondaryPostBlock as we don't need it anymore */
         ExFreePoolWithTag(SecondaryPostBlock, TAG_CM_NOTIFY);
         ExFreePoolWithTag(PostBlock->SecondaryBlock, TAG_CM_NOTIFY);
     }
