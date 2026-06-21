@@ -1206,7 +1206,7 @@ CreateSystemKey(
             ERR("Unknown PC-9821 model %02X\n", Id);
             RtlStringCbPrintfA(Identifier,
                                IdentifierSize,
-                               PC98_DEFAULT_ID " Unknown model %02X",
+                               PC98_DEFAULT_ID "21 Unknown model %02X",
                                Id);
         }
         else
