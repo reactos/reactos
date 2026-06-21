@@ -1457,6 +1457,11 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
         WCHAR *text = (WCHAR *)lparam;
         int len;
 
+#ifdef __REACTOS__
+        if (!lparam || !*text || !*textA)
+            return 0;
+#endif
+
         if (!unicode && textA && strncmp( textA, "{\\rtf", 5 ) && strncmp( textA, "{\\urtf", 6 ))
             text = ME_ToUnicode( CP_ACP, textA, &len );
         hr = ITextServices_TxSendMessage( host->text_srv, msg, wparam, (LPARAM)text, &res );
