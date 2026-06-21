@@ -44,6 +44,8 @@ static void PrintHelp(PCWSTR ExtraLine = NULL)
     wprintf(L"shlextdbg /shellexec=path [/see] [verb] [class]\n");
     wprintf(L"\n");
     wprintf(L"shlextdbg /dumpmenu=[{clsid}]path [/cmf]\n");
+    wprintf(L"shlextdbg /dumpfoldercolumns=folder\n");
+    wprintf(L"shlextdbg /dumppidl=path\n");
 }
 
 /*
@@ -58,6 +60,8 @@ Examples:
 /openwindows /shellexec=c: /invoke properties
 /dumpmenu=%windir%\explorer.exe /extended
 /dumpmenu {D969A300-E7FF-11d0-A93B-00A0C90F2719}c:
+/dumpfoldercolumns=%windir%
+/dumppidl=%windir%
 
 */
 
@@ -143,14 +147,17 @@ static HRESULT GetUIObjectOfAbsolute(LPCITEMIDLIST pidl, REFIID riid, void** ppv
     return hr;
 }
 
-static HRESULT CreateShellItemFromParse(PCWSTR Path, IShellItem** ppSI)
+static HRESULT CreateShellItemFromParse(PCWSTR Path, IShellItem** ppSI, PIDLIST_ABSOLUTE *ppidl = NULL)
 {
     PIDLIST_ABSOLUTE pidl = NULL;
     HRESULT hr = SHParseDisplayName(Path, NULL, &pidl, 0, NULL);
     if (SUCCEEDED(hr))
     {
         hr = SHCreateShellItem(NULL, NULL, pidl, ppSI);
-        SHFree(pidl);
+        if (ppidl)
+            *ppidl = pidl;
+        else
+            SHFree(pidl);
     }
     return hr;
 }
@@ -202,6 +209,25 @@ static void DumpBytes(const void *Data, SIZE_T cb)
         wprintf(L"%s%.2X", i ? L" " : L"", ((LPCBYTE)Data)[i]);
     }
     wprintf(L"\n");
+}
+
+static inline CHAR SafeDumpChar(UINT Ch)
+{
+    return Ch >= ' ' && Ch < 127 ? Ch : '.';
+}
+
+static void DumpHexBytes(LPCVOID Buffer, SIZE_T cb)
+{
+	UINT cbPerLine = 16, cbLine;
+	for (SIZE_T i = 0, j; i < cb; i += cbLine)
+	{
+		cbLine = min(cbPerLine, cb - i);
+		for (j = 0; j < cbLine; ++j) wprintf(L" %.2X", ((BYTE*)Buffer)[i + j]);
+		for (j = 0; j < cbPerLine - cbLine; ++j) wprintf(L" __");
+		for (j = 0; j < cbLine; ++j) wprintf(L"%s%c", !j ? L" " : L"", SafeDumpChar(((BYTE*)Buffer)[i + j]));
+		for (j = 0; j < cbPerLine - cbLine; ++j) wprintf(L"_");
+		wprintf(L"\n");
+	}
 }
 
 static HRESULT GetCommandString(IContextMenu& CM, UINT Id, UINT Type, LPWSTR buf, UINT cchMax)
@@ -308,6 +334,127 @@ static int SHGFI(PCWSTR Path)
     wprintf(L"Index: %d\n", info.iIcon);
     SHFree(pidl);
     return ret;
+}
+
+static HRESULT DumpPidl(PCWSTR Path)
+{
+    PIDLIST_ABSOLUTE pidl;
+    CComPtr<IShellItem> si;
+    HRESULT hr = CreateShellItemFromParse(Path, &si, &pidl);
+    if (FAILED(hr))
+    {
+        wprintf(L"Can't parse %s\n", Path);
+        return hr;
+    }
+
+    UINT lvl = 0;
+    for (PUITEMID_CHILD p = pidl; p; ++lvl)
+    {
+        if (!p->mkid.cb && p > pidl)
+            break;
+        PUITEMID_CHILD pNext = ILGetNext(p);
+        const WORD save = pNext ? pNext->mkid.cb : 0;
+        if (pNext)
+            pNext->mkid.cb = 0;
+        wprintf(L"#%u %ub", lvl, p->mkid.cb);
+
+        WCHAR buf[100];
+        VARIANT v;
+        V_VT(&v) = VT_EMPTY;
+        static const SHCOLUMNID pkey_descriptionid = { FMTID_ShellDetails, PID_DESCRIPTIONID };
+        CComPtr<IShellFolder2> pParentFolder;
+        PCUITEMID_CHILD pidlChildSelf;
+        hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder2, &pParentFolder), &pidlChildSelf);
+        if (SUCCEEDED(hr) && SUCCEEDED(hr = pParentFolder->GetDetailsEx(pidlChildSelf, &pkey_descriptionid, &v)))
+        {
+            if (V_VT(&v) == (VT_UI1 | VT_ARRAY))
+            {
+                const SHDESCRIPTIONID &shdid = *(SHDESCRIPTIONID*)V_ARRAY(&v)->pvData;
+                StringFromGUID2(shdid.clsid, buf, _countof(buf));
+                PCWSTR did = L"?";
+                switch (shdid.dwDescriptionId)
+                {
+                    case SHDID_ROOT_REGITEM: did = L"ROOT_REGITEM"; break;
+                    case SHDID_FS_FILE: did = L"FS_FILE"; break;
+                    case SHDID_FS_DIRECTORY: did = L"FS_DIRECTORY"; break;
+                    case SHDID_FS_OTHER: did = L"FS_OTHER"; break;
+                    case SHDID_COMPUTER_FIXED: did = L"COMPUTER_FIXED"; break;
+                }
+                wprintf(L" %s %s(%#.2x)", buf, did, shdid.dwDescriptionId);
+            }
+            PropVariantClear((PROPVARIANT*)&v); // No need to drag in oleaut32, ole32 knows how to handle this
+        }
+        wprintf(L"\n");
+        DumpHexBytes(p->mkid.abID, p->mkid.cb > 2 ? p->mkid.cb - 2 : 0);
+
+        if (pNext)
+            pNext->mkid.cb = save;
+        p = pNext;
+    }
+    SHFree(pidl);
+    return S_OK;
+}
+
+static HRESULT DumpFolderColumns(PCWSTR Path)
+{
+    CComPtr<IShellItem> si;
+    HRESULT hr = CreateShellItemFromParse(Path, &si);
+    if (FAILED(hr))
+    {
+        wprintf(L"Can't parse %s\n", Path);
+        return hr;
+    }
+    CComPtr<IShellFolder2> sf;
+    if (FAILED(hr = si->BindToHandler(NULL, BHID_SFObject, IID_PPV_ARG(IShellFolder2, &sf))))
+    {
+        wprintf(L"Could not bind to IShellFolder2\n");
+        return hr;
+    }
+
+    ULONG columns, defSort, defDisp;
+    for (columns = 0; ; ++columns)
+    {
+        SHELLDETAILS sd = {};
+        if (FAILED(sf->GetDetailsOf(NULL, columns, &sd)))
+            break;
+        PWSTR str;
+        if (FAILED(StrRetToStrW(&sd.str, NULL, &str)))
+            str = NULL;
+        SHCOLSTATEF flags;
+        if (FAILED(sf->GetDefaultColumnState(columns, &flags)))
+            flags = 0;
+        wprintf(L"%d:%s 0x%.4x %d 0x%.8x\n", columns, str ? str : L"", sd.fmt, sd.cxChar, flags);
+        SHFree(str);
+    }
+
+    if (SUCCEEDED(sf->GetDefaultColumn(0, &defSort, &defDisp)))
+        wprintf(L"%d is the default sort column and %d is the default display column.\n", defSort, defDisp);
+
+    HRESULT (WINAPI*PSGNFPK)(SHCOLUMNID*, PWSTR*) = NULL;
+    if (HMODULE hPS = LoadLibraryW(L"propsys.dll"))
+    {
+        HRESULT (WINAPI*PSGPD)(SHCOLUMNID*, REFIID, void**);
+        (FARPROC&)PSGPD = GetProcAddress(hPS, "PSGetPropertyDescription");
+        // HACKFIX: PSGetNameFromPropertyKey is a stub in ROS, we will crash if we call it
+        CComPtr<IShellFolder2> dummy;
+        SHCOLUMNID scid = {};
+        if (PSGPD && PSGPD(&scid, IID_PPV_ARG(IShellFolder2, &dummy)) != E_NOTIMPL)
+            (FARPROC&)PSGNFPK = GetProcAddress(hPS, "PSGetNameFromPropertyKey");
+    }
+    for (ULONG i = 0; i < max(columns, 999); ++i)
+    {
+        SHCOLUMNID scid = {};
+        if (FAILED(sf->MapColumnToSCID(i, &scid)))
+            continue;
+        WCHAR Buffer[100];
+        StringFromGUID2(scid.fmtid, Buffer, _countof(Buffer));
+        wprintf(L"%d:%s,%-3d", i, Buffer, scid.pid);
+        CComHeapPtr<WCHAR> str;
+        if (PSGNFPK && SUCCEEDED(PSGNFPK(&scid, &str)) && str)
+            wprintf(L" %s", (PWSTR)str);
+        wprintf(L"\n");
+    }
+    return columns ? S_OK : S_FALSE;
 }
 
 static HRESULT AssocQ(int argc, WCHAR **argv)
@@ -818,6 +965,14 @@ int wmain(int argc, WCHAR **argv)
                 if (FAILED(hr))
                     return ErrMsg(hr);
                 return 0;
+            }
+            else if (isCmdWithArg(argc, argv, n, L"dumpfoldercolumns", arg))
+            {
+                return DumpFolderColumns(arg);
+            }
+            else if (isCmdWithArg(argc, argv, n, L"dumppidl", arg))
+            {
+                return DumpPidl(arg);
             }
             else if (isCmdWithArg(argc, argv, n, L"clsid", arg))
             {
