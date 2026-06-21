@@ -52,12 +52,6 @@ KdNetInitializeExtensibility(
     RtlZeroMemory(&Imports, sizeof(Imports));
     Imports.FunctionCount = KDNET_EXT_IMPORTS;
     Imports.Exports = ExtensibilityExports;
-    Imports.GetPciDataByOffset = (KDNET_GET_PCI_DATA_BY_OFFSET)KdGetPciDataByOffset;
-    Imports.SetPciDataByOffset = (KDNET_SET_PCI_DATA_BY_OFFSET)KdSetPciDataByOffset;
-    Imports.MapPhysicalMemory64 = (KDNET_MAP_PHYSICAL_MEMORY_64)KdMapPhysicalMemory64;
-    Imports.UnmapVirtualAddress = (KDNET_UNMAP_VIRTUAL_ADDRESS)KdUnmapVirtualAddress;
-
-    Imports.GetPhysicalAddress = (KDNET_GET_PHYSICAL_ADDRESS)MmGetPhysicalAddress;
     Imports.StallExecutionProcessor = KdNetStall;
 
     Imports.ReadRegisterUChar = KdNetRrUchar;
@@ -84,9 +78,6 @@ KdNetInitializeExtensibility(
     Imports.WritePortULong64 = NULL;
     Imports.ReadCycleCounter = NULL;
     Imports.KdNetDbgPrintf = (KDNET_DBGPRINT)FrLdrDbgPrint; //HACK-ish: 
-    Imports.VmbusInitialize = NULL;
-    Imports.GetHypervisorVendorId = NULL;
-    Imports.ExecutionEnvironment = 0;
 
     Imports.KdNetErrorStatus = &g_KdNetErrorStatus;
     Imports.KdNetErrorString = &g_KdNetErrorString;
