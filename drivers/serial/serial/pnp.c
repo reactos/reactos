@@ -391,6 +391,13 @@ SerialPnp(
 			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_QUERY_REMOVE_DEVICE\n");
 
 			DeviceExtension = DeviceObject->DeviceExtension;
+
+			if (DeviceExtension->IsOpened)
+			{
+				Status = STATUS_UNSUCCESSFUL;
+				break;
+			}
+
 			DeviceExtension->OldPnpState = DeviceExtension->PnpState;
 			DeviceExtension->PnpState = dsRemovePending;
 			Status = STATUS_SUCCESS;
