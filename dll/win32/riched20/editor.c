@@ -3634,7 +3634,7 @@ LRESULT editor_handle_message( ME_TextEditor *editor, UINT msg, WPARAM wParam,
   case WM_SETTEXT:
   {
     ME_Cursor cursor;
-#if __REACTOS__
+#ifdef __REACTOS__
     int oldEventMask = editor->nEventMask;
     editor->nEventMask &= ~ENM_CHANGE;
 #endif
