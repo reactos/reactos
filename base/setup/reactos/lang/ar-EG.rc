@@ -4,7 +4,7 @@ LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_EG
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS تثبيت"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Welcome to the ReactOS Setup Wizard", IDC_STARTTITLE, 115, 8, 195, 24
@@ -19,7 +19,7 @@ It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185,
     LTEXT "Backup your data or test on a secondary computer \
 if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
 ////
-    LTEXT "Click Next to continue with Setup.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "اضغط على التالي لمتابعة عملية الإعداد.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
@@ -28,79 +28,79 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "&Install ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
-    AUTORADIOBUTTON "&Update or repair ReactOS", IDC_UPDATE, 7, 80, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
+    LTEXT "قم بتثبيت نسخة جديدة من ReactOS. لا يحافظ هذا الخيار على ملفاتك وإعداداتك وبرامجك. يمكنك إجراء تغييرات على الأقراص والأقسام.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "&تحديث أو إصلاح ReactOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "تحديث أو إصلاح نسخة مثبتة من ReactOS. يحافظ هذا الخيار على ملفاتك وإعداداتك وبرامجك. لا يتوفر هذا الخيار إلا إذا كان ReactOS مثبتًا بالفعل على هذا الكمبيوتر.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS تثبيت"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "The Setup program can upgrade one of the available ReactOS installations listed below, or, if a ReactOS installation is damaged, the Setup program can attempt to repair it.", IDC_STATIC, 6, 6, 303, 18
+    LTEXT       "يمكن لبرنامج الإعداد ترقية أحد تثبيتات ReactOS المتاحة المذكورة أدناه، أو، في حالة تلف أحد تثبيتات ReactOS، يمكن لبرنامج الإعداد محاولة إصلاحه.", IDC_STATIC, 6, 6, 303, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
-    PUSHBUTTON  "&Do not upgrade", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Click Next to upgrade the selected OS installation, or on 'Do not upgrade' to perform a new installation.", IDC_STATIC, 7, 124, 222, 16
+    PUSHBUTTON  "&لا تقم بالترقية", IDC_SKIPUPGRADE, 230, 128, 80, 14
+    LTEXT       "انقر فوق التالي لترقية تثبيت نظام التشغيل المحدد، أو انقر فوق لا تقم بالترقية لإجراء تثبيت جديد.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS تثبيت"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Computer:", IDC_STATIC, 20, 15, 80, 10
+    LTEXT "الكمبيوتر:", IDC_STATIC, 20, 15, 80, 10
     COMBOBOX IDC_COMPUTER, 100, 15, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Display:", IDC_STATIC, 20, 35, 80, 10
+    LTEXT "العرض:", IDC_STATIC, 20, 35, 80, 10
     COMBOBOX IDC_DISPLAY, 100, 35, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Keyboard:", IDC_STATIC, 20, 55, 80, 10
+    LTEXT "لوحة المفاتيح:", IDC_STATIC, 20, 55, 80, 10
     COMBOBOX IDC_KEYBOARD, 100, 55, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Click Next to continue setup on the installation device.", IDC_STATIC, 7, 128, 297, 8
+    LTEXT "أضغط التالي لمواصلة اعداد التثبيت.", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS تثبيت"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "&Initialize", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
-    PUSHBUTTON "&Create", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "&Format", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
-    PUSHBUTTON "&Delete", IDC_PARTDELETE, 63, 122, 50, 14
-    PUSHBUTTON "D&river", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
-    PUSHBUTTON "&Advanced Options...", IDC_PARTMOREOPTS, 230, 122, 80, 14
-    // LTEXT "Click Next to check the summary.", IDC_STATIC, 7, 128, 277, 8
+    PUSHBUTTON "&بدء التهيئة", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&أنشاء", IDC_PARTCREATE, 7, 122, 50, 14
+    PUSHBUTTON "&تهيئة", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&حذف", IDC_PARTDELETE, 63, 122, 50, 14
+    PUSHBUTTON "&برنامج التشغيل", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
+    PUSHBUTTON "&خيارات متقدمة...", IDC_PARTMOREOPTS, 230, 122, 80, 14
+    // LTEXT "اضغط على التالي لعرض الملخص.", IDC_STATIC, 7, 128, 277, 8
 END
 
 IDD_PARTITION DIALOGEX 0, 0, 200, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Create and Format Partition"
+CAPTION "أنشاء وتهيئة القسم"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Size:", IDC_STATIC, 7, 9, 70, 9
+    LTEXT "&الحجم:", IDC_STATIC, 7, 9, 70, 9
     EDITTEXT IDC_EDIT_PARTSIZE, 82, 7, 47, 13, ES_RIGHT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
     LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
-    AUTOCHECKBOX "&Extended partition", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
-    LTEXT "&File System:", IDC_FS_STATIC, 7, 46, 70, 9
+    AUTOCHECKBOX "&قسم ممتد", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    LTEXT "&نظام الملفات:", IDC_FS_STATIC, 7, 46, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
-    PUSHBUTTON "OK", IDOK, 88, 98, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 143, 98, 50, 14
+    AUTOCHECKBOX "&تهية سريعة", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    PUSHBUTTON "موافق", IDOK, 88, 98, 50, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 143, 98, 50, 14
 END
 
 IDD_FORMAT DIALOGEX 0, 0, 200, 83
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Format Partition"
+CAPTION "تهئية القسم"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&File System:", IDC_FS_STATIC, 7, 9, 70, 9
+    LTEXT "&نظام الملفات:", IDC_FS_STATIC, 7, 9, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
-    PUSHBUTTON "OK", IDOK, 88, 61, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 143, 61, 50, 14
+    AUTOCHECKBOX "&تهية سريعة", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    PUSHBUTTON "موافق", IDOK, 88, 61, 50, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 143, 61, 50, 14
 END
 
 IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
@@ -113,8 +113,8 @@ BEGIN
     GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
     LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
-    DEFPUSHBUTTON "OK", IDOK, 193, 113, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 248, 113, 50, 14
+    DEFPUSHBUTTON "موافق", IDOK, 193, 113, 50, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 248, 113, 50, 14
 END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
@@ -188,30 +188,30 @@ BEGIN
     IDS_TYPESUBTITLE "يمكنك إعداد تثبيت جديد لنظام ReactOS، أو تحديث تثبيت موجود أو إصلاحه."
     IDS_UPDATETITLE "تحديث أو إصلاح ReactOS"
     IDS_UPDATESUBTITLE "اختر ReactOS الحالي الذي تريد تحديثه أو إصلاحه."
-    IDS_DEVICETITLE "Setup the basic devices"
-    IDS_DEVICESUBTITLE "Set the settings of display and keyboard."
-    IDS_DRIVETITLE "Setup the installation partition and system folder"
-    IDS_DRIVESUBTITLE "Prepare installation partition, system folder and bootloader."
-    IDS_SUMMARYTITLE "Installation Summary"
-    IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device."
-    IDS_PROCESSTITLE "Setup partition, copy files and setup system"
-    IDS_PROCESSSUBTITLE "Create and format partition, copy files, install and setup bootloader."
-    IDS_ABORTSETUP "ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install ReactOS. Really quit?"
+    IDS_DEVICETITLE "إعداد الأجهزة الأساسية"
+    IDS_DEVICESUBTITLE "اضبط إعدادات الشاشة ولوحة المفاتيح."
+    IDS_DRIVETITLE "إعداد القرص المخصص للتثبيت ومجلد النظام"
+    IDS_DRIVESUBTITLE "قم بإعداد قسم التثبيت ومجلد النظام ومحمل الإقلاع."
+    IDS_SUMMARYTITLE "ملخص التثبيت"
+    IDS_SUMMARYSUBTITLE "قائمة خصائص التثبيت التي يجب التحقق منها قبل تطبيقها على الجهاز"
+    IDS_PROCESSTITLE "تهيئة القسم، نسخ الملفات، وتهيئة النظام"
+    IDS_PROCESSSUBTITLE "إنشاء القسم وتهيئته، ونسخ الملفات، وتثبيت برنامج تحميل التشغيل وإعداده."
+    IDS_ABORTSETUP "لم يتم تثبيت ReactOS بالكامل على جهاز الكمبيوتر الخاص بك. إذا قمت بإنهاء برنامج التثبيت الآن، فستحتاج إلى تشغيله مرة أخرى لتثبيت ReactOS. هل تريد الإنهاء حقًا؟"
     IDS_ABORTSETUP2 "الغاء التثبيت؟"
-    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'.\nSetup is unable to continue."
-    IDS_FINISH_NO_REBOOT "Setup needs to restart your computer to continue with the second installation step.\n\nClick on Restart to immediately restart your computer.\nClick on Postpone to quit the installer and restart your computer at a later time."
-    IDS_ABORT_NO_REBOOT "Click on Restart to immediately restart your computer.\nClick on Close to quit the installer."
+    IDS_NO_TXTSETUP_SIF "تعذر العثور على الملف 'txtsetup.sif'.\nيتعذر على برنامج الإعداد متابعة العملية."
+    IDS_FINISH_NO_REBOOT "يتطلب برنامج التثبيت إعادة تشغيل جهاز الكمبيوتر الخاص بك لمتابعة الخطوة الثانية من عملية التثبيت.\n\nانقر فوق إعادة التشغيل لإعادة تشغيل جهاز الكمبيوتر على الفور.\nانقر فوق تأجيل لإنهاء برنامج التثبيت وإعادة تشغيل الجهاز في وقت لاحق."
+    IDS_ABORT_NO_REBOOT "انقر فوق إعادة التشغيل لإعادة تشغيل الجهاز على الفور.\nانقر فوق إغلاق لإنهاء عمل برنامج التثبيت."
     IDS_INSTALLBTN "&تثبيت"
     IDS_RESTARTBTN "&اعادة التشغيل"
-    IDS_POSTPONEBTN "&Postpone"
-    IDS_VOLUME_NOFORMAT "Not formatted"
+    IDS_POSTPONEBTN "&تأجيل"
+    IDS_VOLUME_NOFORMAT "غير منسق"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLATION_NAME "Name"
-    IDS_INSTALLATION_PATH "Installation Path"
-    IDS_INSTALLATION_VENDOR "Vendor Name"
+    IDS_INSTALLATION_NAME "الاسم"
+    IDS_INSTALLATION_PATH "مسار التثبيت"
+    IDS_INSTALLATION_VENDOR "اسم المورد"
 END
 
 STRINGTABLE
@@ -224,44 +224,44 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BOOTLOADER_NOINST "No installation"
-    IDS_BOOTLOADER_REMOVABLE "Removable media"
-    IDS_BOOTLOADER_SYSTEM "System partition (Default)"
-    IDS_BOOTLOADER_MBRVBR "MBR and VBR (Default)"
-    IDS_BOOTLOADER_VBRONLY "VBR only"
+    IDS_BOOTLOADER_NOINST "لا يوجد تثبيت"
+    IDS_BOOTLOADER_REMOVABLE "وسائط قابلة للإزالة"
+    IDS_BOOTLOADER_SYSTEM "قسم النظام (افتراضي)"
+    IDS_BOOTLOADER_MBRVBR "MBR و VBR (افتراضي)"
+    IDS_BOOTLOADER_VBRONLY "VBR فقط"
 END
 
 /* Progress Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_FORMATTING_PROGRESS1 "Formatting volume %c: (%s) in %s..."
-    IDS_FORMATTING_PROGRESS2 "Formatting volume %s in %s..."
+    IDS_FORMATTING_PROGRESS1 "جارٍ تهيئة القسم %c: (%s) إلى %s..."
+    IDS_FORMATTING_PROGRESS2 "جارٍ تهيئة القسم %s إلى %s..."
 
-    IDS_CHECKING_PROGRESS1 "Checking volume %c: (%s)..."
-    IDS_CHECKING_PROGRESS2 "Checking volume %s..."
+    IDS_CHECKING_PROGRESS1 "جارٍ فحص الحجم %c: (%s)..."
+    IDS_CHECKING_PROGRESS2 "جارٍ فحص الحجم %s..."
 
-    IDS_COPYING  "Copying %s"
-    IDS_MOVING   "Moving %s to %s"
-    IDS_RENAMING "Renaming %s to %s"
-    IDS_DELETING "Deleting %s"
+    IDS_COPYING  "جارٍ نسخ %s"
+    IDS_MOVING   "جارٍ نقل %s إلى %s"
+    IDS_RENAMING "جارٍ إعادة تسمية %s إلى %s"
+    IDS_DELETING "جارٍ حذف %s"
 
-    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
-    IDS_PREPARE_PARTITIONS "Preparing partitions..."
-    IDS_PREPARE_FILES "جاري إعداد قائمة الملفات التي سيتم نسخها، يرجى الانتظار..."
+    IDS_CONFIG_SYSTEM_PARTITION "تهيئة قسم النظام..."
+    IDS_PREPARE_PARTITIONS "جارٍ إعداد الأقسام..."
+    IDS_PREPARE_FILES "جارٍ إعداد قائمة الملفات التي سيتم نسخها، يرجى الانتظار..."
     IDS_COPYING_FILES "Copying the files..."
 
-    IDS_CREATE_REGISTRY "Creating the registry..."
-    IDS_UPDATE_REGISTRY "Updating the registry..."
+    IDS_CREATE_REGISTRY "إنشاء سجل النظام..."
+    IDS_UPDATE_REGISTRY "تحديث سجل النظام..."
 
-    // IDS_INSTALL_FINALIZE "جاري إتمام التثبيت..."
-    IDS_INSTALL_BOOTLOADER "جاري تثبيت الأقلاع..."
+    // IDS_INSTALL_FINALIZE "جارٍ إتمام التثبيت..."
+    IDS_INSTALL_BOOTLOADER "جارٍ تثبيت الأقلاع..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
 STRINGTABLE
 BEGIN
-    IDS_REG_DONE "Done"
+    IDS_REG_DONE "تم"
     IDS_REG_REGHIVEUPDATE "Updating registry hives"
     IDS_REG_IMPORTFILE "Importing %s"
     IDS_REG_DISPLAYSETTINGSUPDATE "Updating display registry settings"
