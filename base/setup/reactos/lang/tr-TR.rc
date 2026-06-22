@@ -1,9 +1,14 @@
-/* TRANSLATORS:
-2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com),
-2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
-2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net),
-2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
-*/
+/*
+ * PROJECT:     ReactOS Setup
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/setup/reactos/lang/tr-TR.rc
+ * PURPOSE:     Turkish Setup Resource File
+ * TRANSLATORS: 2012 Arda Tanrıkulu <ardatanrikulu@gmail.com>
+ *              2013-2016 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              2018 Ercan Ersoy <ercanersoy@ercanersoy.net>
+ *              2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              2026 Hasan Eliküçük <hasanelk101@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -15,8 +20,8 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS Kurulum Sihirbazı'na hoşgeldiniz", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
-and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+    LTEXT "Bu sihirbaz, bilgisayarınıza ReactOS'u kuracak veya yükseltecektir, \
+ve kurulumun ikinci bölümünü hazırlayacaktır.", IDC_STATIC, 115, 40, 195, 27
 ////
     GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
     LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
@@ -71,7 +76,7 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "&Initialize", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Başlat", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Oluştur...", IDC_PARTCREATE, 7, 122, 50, 14
     PUSHBUTTON "&Format", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Sil", IDC_PARTDELETE, 63, 122, 50, 14
@@ -90,10 +95,10 @@ BEGIN
     CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
     LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
-    AUTOCHECKBOX "&Extended partition", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    AUTOCHECKBOX "&Genişletilmiş bölüm", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
     LTEXT "&Dosya sistemi:", IDC_FS_STATIC, 7, 46, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    AUTOCHECKBOX "&Hızlı Biçimlendirme", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
     PUSHBUTTON "Tamam", IDOK, 88, 98, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 143, 98, 50, 14
 END
@@ -105,20 +110,20 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Dosya sistemi:", IDC_FS_STATIC, 7, 9, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    AUTOCHECKBOX "&Hızlı Biçimlendirme", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
     PUSHBUTTON "Tamam", IDOK, 88, 61, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 143, 61, 50, 14
 END
 
 IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced Installation Options"
+CAPTION "Gelişmiş Kurulum Seçenekleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    LTEXT "ReactOS'u kurmak istediğiniz &dizini seçin:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
-    LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
+    LTEXT "FreeLoader önyükleyicisinin kurulacağı konumu seçin\nÖnyükleyici yüklenmelidir.\n\nVarsayılan olarak,önyükleme diskinin sistem bölümüne (ve BIOS tabanlı bilgisayarlar için Ana Disk veya Birim Önyükleme Kaydı'na) yüklenir.", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "Tamam", IDOK, 193, 113, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 248, 113, 50, 14
@@ -165,24 +170,24 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Restarting your Computer", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "The first ReactOS installation step has completed successfully.", IDC_STATIC, 115, 40, 195, 24
+    LTEXT "Bilgisayarınız Yeniden Başlatılacak", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS kurulumunun ilk adımı başarıyla tamamlandı.", IDC_STATIC, 115, 40, 195, 24
     // The following text can be replaced by IDS_FINISH_NO_REBOOT at runtime;
     // please ensure it can hold in the text control!
-    LTEXT "Setup will now restart your computer to continue with the second installation step.\n\nYour computer will automatically restart in 15 seconds or when you click on Restart.", IDC_FINISHTEXT, 115, 78, 195, 56
+    LTEXT "Kurulum, ikinci kurulum adımına devam etmek için bilgisayarınızı yeniden başlatacaktır.\n\nBilgisayarınız 15 saniye sonra veya Yeniden Başlat'ı tıkladığınızda otomatik olarak yeniden başlatılacaktır.", IDC_FINISHTEXT, 115, 78, 195, 56
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
 IDD_ABORTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "The ReactOS Setup Wizard ended prematurely", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "The first ReactOS installation step prematurely ended because of an error or because you have canceled it.\n\nYou will be able to run the Setup Wizard at a later time to install or upgrade ReactOS.", IDC_STATIC, 115, 40, 195, 48
+    LTEXT "ReactOS Kurulum Sihirbazı beklenenden önce sona erdi.", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "İlk ReactOS kurulum adımı bir hata nedeniyle veya sizin iptal etmeniz nedeniyle beklenenden önce sona erdi.\n\nReactOS'u kurmak veya yükseltmek için Kurulum Sihirbazını daha sonra çalıştırabilirsiniz.", IDC_STATIC, 115, 40, 195, 48
     // The following text can be replaced by IDS_ABORT_NO_REBOOT at runtime;
     // please ensure it can hold in the text control!
-    LTEXT "Your computer will automatically restart in 15 seconds or when you click on Restart.", IDC_FINISHTEXT, 115, 110, 195, 24
+    LTEXT "Bilgisayarınız 15 saniye sonra veya Yeniden Başlat'a tıkladığınızda otomatik olarak yeniden başlatılacaktır.", IDC_FINISHTEXT, 115, 110, 195, 24
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
@@ -191,10 +196,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "ReactOS Kur"
-    IDS_TYPETITLE "Installation Type"
-    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
-    IDS_UPDATETITLE "Update or Repair ReactOS"
-    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_TYPETITLE "Kurulum Türü"
+    IDS_TYPESUBTITLE "Yeni bir ReactOS kurulumu yapabilir veya mevcut bir kurulumu güncelleyebilir/onarabilirsiniz."
+    IDS_UPDATETITLE "ReactOS'u Güncelleme veya Onarma"
+    IDS_UPDATESUBTITLE "Güncellemek veya onarmak istediğiniz mevcut ReactOS kurulumunu seçin."
     IDS_DEVICETITLE "Ana Aygıtların Kurulumu"
     IDS_DEVICESUBTITLE "Ekran ve Klavye ayarlarını yapınız."
     IDS_DRIVETITLE "Kurulum Bölümünün ve Sistem Dizininin Hazırlanması"
@@ -206,12 +211,12 @@ BEGIN
     IDS_ABORTSETUP "ReactOS, bilgisayarınıza tümüyle kurulamadı. Eğer şimdi Kurulum Yöneticisinden çıkarsanız, ReactOS'u kurmak için Kurulum Yöneticisini yeniden çalıştırmayı isteybilirsiniz. Gerçekten çıkılsın mı?"
     IDS_ABORTSETUP2 "Kurulum iptal edilsin mi?"
     IDS_NO_TXTSETUP_SIF """txtsetup.sif"" bulunamıyor.\nKurulum Yöneticisi sürdüremiyor."
-    IDS_FINISH_NO_REBOOT "Setup needs to restart your computer to continue with the second installation step.\n\nClick on Restart to immediately restart your computer.\nClick on Postpone to quit the installer and restart your computer at a later time."
-    IDS_ABORT_NO_REBOOT "Click on Restart to immediately restart your computer.\nClick on Close to quit the installer."
-    IDS_INSTALLBTN "&Install"
-    IDS_RESTARTBTN "&Restart"
-    IDS_POSTPONEBTN "&Postpone"
-    IDS_VOLUME_NOFORMAT "Not formatted"
+    IDS_FINISH_NO_REBOOT "Kurulumun ikinci adımına devam etmek için bilgisayarınızı yeniden başlatmanız gerekiyor.\n\nBilgisayarınızı hemen yeniden başlatmak için Yeniden Başlat'a tıklayın.\nYükleyiciyi kapatmak ve bilgisayarınızı daha sonra yeniden başlatmak için Ertele'ye tıklayın."
+    IDS_ABORT_NO_REBOOT "Bilgisayarınızı hemen yeniden başlatmak için Yeniden Başlat'a tıklayın.\nYükleyiciyi kapatmak için Kapat'a tıklayın."
+    IDS_INSTALLBTN "&Kur"
+    IDS_RESTARTBTN "&Yeniden Başlat"
+    IDS_POSTPONEBTN "&Ertele"
+    IDS_VOLUME_NOFORMAT "Biçimlendirilmemiş"
 END
 
 STRINGTABLE
