@@ -15,29 +15,29 @@ END
 
 IDPROMPTFORDISK DIALOG 0, 0, 260, 120
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Files Needed"
+CAPTION "Tarvittavat tiedostot"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Insert the manufacturer's installation disk, and then\nmake sure the correct drive is selected below", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Aseta valmistajan asennuslevyke ja varmista sitten, että oikea asema on valittuna alla", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Copy manufacturer's files from:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_PATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 10, 100, 175, 14
     DEFPUSHBUTTON "OK", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Cancel", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Browse...", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Peruuta", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Selaa...", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROMPTDISK   "The file '%1' on %2 is needed"
-    IDS_UNKNOWN      "Unknown"
-    IDS_COPYFROM     "Copy files from:"
-    IDS_INFO         "Type the path where the file is located, and then click OK."
+    IDS_PROMPTDISK   "Tiedosto '%1' lähteestä %2 tarvitaan"
+    IDS_UNKNOWN      "Tuntematon"
+    IDS_COPYFROM     "Kopioi tiedostot kohteesta:"
+    IDS_INFO         "Kirjoita polku, jossa tiedosto sijaitsee, ja valitse sitten OK."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Your computer needs to be rebooted to finish installation. Do you want to proceed?"
-    IDS_QUERY_REBOOT_CAPTION "Reboot"
-    IDS_INF_FILE "Setup Information"
+    IDS_QUERY_REBOOT_TEXT "Tietokone on käynnistettävä uudelleen asennuksen viimeistelemiseksi. Haluatko jatkaa?"
+    IDS_QUERY_REBOOT_CAPTION "Käynnistä uudelleen"
+    IDS_INF_FILE "Asennustiedot"
 END

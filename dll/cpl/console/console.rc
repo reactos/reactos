@@ -33,6 +33,9 @@ IDC_CPLICON ICON "res/terminal.ico"
 #ifdef LANGUAGE_CS_CZ
     #include "lang/cs-CZ.rc"
 #endif
+#ifdef LANGUAGE_FI_FI
+    #include "lang/fi-FI.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
