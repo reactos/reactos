@@ -47,6 +47,7 @@ PKWIN32_SESSION_CALLOUT ExpDesktopObjectClose = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
+static
 NTSTATUS
 NTAPI
 ExpWin32SessionCallout(
@@ -108,6 +109,7 @@ ExpWin32SessionCallout(
     return Status;
 }
 
+static
 BOOLEAN
 NTAPI
 ExpDesktopOkToClose( IN PEPROCESS Process OPTIONAL,
@@ -130,6 +132,7 @@ ExpDesktopOkToClose( IN PEPROCESS Process OPTIONAL,
     return NT_SUCCESS(Status);
 }
 
+static
 BOOLEAN
 NTAPI
 ExpWindowStationOkToClose( IN PEPROCESS Process OPTIONAL,
@@ -152,6 +155,7 @@ ExpWindowStationOkToClose( IN PEPROCESS Process OPTIONAL,
     return NT_SUCCESS(Status);
 }
 
+static
 VOID
 NTAPI
 ExpWinStaObjectDelete(PVOID DeletedObject)
@@ -166,6 +170,7 @@ ExpWinStaObjectDelete(PVOID DeletedObject)
                            &Parameters);
 }
 
+static
 NTSTATUS
 NTAPI
 ExpWinStaObjectParse(IN PVOID ParseObject,
@@ -197,6 +202,8 @@ ExpWinStaObjectParse(IN PVOID ParseObject,
                                   ExpWindowStationObjectParse,
                                   &Parameters);
 }
+
+static
 VOID
 NTAPI
 ExpDesktopDelete(PVOID DeletedObject)
@@ -211,12 +218,14 @@ ExpDesktopDelete(PVOID DeletedObject)
                            &Parameters);
 }
 
+static
 NTSTATUS
 NTAPI
 ExpDesktopOpen(IN OB_OPEN_REASON Reason,
+               IN KPROCESSOR_MODE AccessMode,
                IN PEPROCESS Process OPTIONAL,
                IN PVOID ObjectBody,
-               IN ACCESS_MASK GrantedAccess,
+               IN PACCESS_MASK GrantedAccess,
                IN ULONG HandleCount)
 {
     WIN32_OPENMETHOD_PARAMETERS Parameters;
@@ -224,7 +233,7 @@ ExpDesktopOpen(IN OB_OPEN_REASON Reason,
     Parameters.OpenReason = Reason;
     Parameters.Process = Process;
     Parameters.Object = ObjectBody;
-    Parameters.GrantedAccess = GrantedAccess;
+    Parameters.GrantedAccess = *GrantedAccess;
     Parameters.HandleCount = HandleCount;
 
     return ExpWin32SessionCallout(ObjectBody,
@@ -232,13 +241,14 @@ ExpDesktopOpen(IN OB_OPEN_REASON Reason,
                                   &Parameters);
 }
 
+static
 VOID
 NTAPI
 ExpDesktopClose(IN PEPROCESS Process OPTIONAL,
                 IN PVOID Object,
                 IN ACCESS_MASK GrantedAccess,
-                IN ULONG ProcessHandleCount,
-                IN ULONG SystemHandleCount)
+                IN ULONG_PTR ProcessHandleCount,
+                IN ULONG_PTR SystemHandleCount)
 {
     WIN32_CLOSEMETHOD_PARAMETERS Parameters;
 
