@@ -183,11 +183,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTION "ReactOS Setup"
-    IDS_TYPETITLE "Installation Type"
-    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
-    IDS_UPDATETITLE "Update or Repair ReactOS"
-    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_CAPTION "ReactOS تثبيت"
+    IDS_TYPETITLE "نوع التثبيت"
+    IDS_TYPESUBTITLE "يمكنك إعداد تثبيت جديد لنظام ReactOS، أو تحديث تثبيت موجود أو إصلاحه."
+    IDS_UPDATETITLE "تحديث أو إصلاح ReactOS"
+    IDS_UPDATESUBTITLE "اختر ReactOS الحالي الذي تريد تحديثه أو إصلاحه."
     IDS_DEVICETITLE "Setup the basic devices"
     IDS_DEVICESUBTITLE "Set the settings of display and keyboard."
     IDS_DRIVETITLE "Setup the installation partition and system folder"
@@ -197,12 +197,12 @@ BEGIN
     IDS_PROCESSTITLE "Setup partition, copy files and setup system"
     IDS_PROCESSSUBTITLE "Create and format partition, copy files, install and setup bootloader."
     IDS_ABORTSETUP "ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install ReactOS. Really quit?"
-    IDS_ABORTSETUP2 "Abort installation?"
+    IDS_ABORTSETUP2 "الغاء التثبيت؟"
     IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'.\nSetup is unable to continue."
     IDS_FINISH_NO_REBOOT "Setup needs to restart your computer to continue with the second installation step.\n\nClick on Restart to immediately restart your computer.\nClick on Postpone to quit the installer and restart your computer at a later time."
     IDS_ABORT_NO_REBOOT "Click on Restart to immediately restart your computer.\nClick on Close to quit the installer."
-    IDS_INSTALLBTN "&Install"
-    IDS_RESTARTBTN "&Restart"
+    IDS_INSTALLBTN "&تثبيت"
+    IDS_RESTARTBTN "&اعادة التشغيل"
     IDS_POSTPONEBTN "&Postpone"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
@@ -216,10 +216,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARTITION_NAME "Name"
-    IDS_PARTITION_TYPE "Type"
-    IDS_PARTITION_SIZE "Size"
-    IDS_PARTITION_STATUS "Status"
+    IDS_PARTITION_NAME "الأسم"
+    IDS_PARTITION_TYPE "النوع"
+    IDS_PARTITION_SIZE "الحجم"
+    IDS_PARTITION_STATUS "الحالة"
 END
 
 STRINGTABLE
@@ -254,8 +254,8 @@ BEGIN
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
 
-    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
-    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
+    // IDS_INSTALL_FINALIZE "جاري إتمام التثبيت..."
+    IDS_INSTALL_BOOTLOADER "جاري تثبيت الأقلاع..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
@@ -269,7 +269,7 @@ BEGIN
     IDS_REG_ADDKBLAYOUTS "Adding keyboard layouts"
     IDS_REG_KEYBOARDSETTINGSUPDATE "Updating keyboard layout settings"
     IDS_REG_CODEPAGEINFOUPDATE "Adding codepage information"
-    IDS_REG_UNKNOWN "Unknown status %d"
+    IDS_REG_UNKNOWN "حالة غير معروفة %d"
 END
 
 /* Error Strings */
