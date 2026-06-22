@@ -33,8 +33,8 @@ STRINGTABLE
     IDS_TB_FORMAT "%s ТБ"
     IDS_PB_FORMAT "%s ПБ"
     IDS_EB_FORMAT "%s ЭБ"
-    IDS_RESTRICTED "This operation has been cancelled due to restrictions on this computer. Please contact your system administrator."
-    IDS_RESTRICTIONS "Restrictions"
+    IDS_RESTRICTED "Операция отменена из-за ограничений, действующих на этом компьютере. Обратитесь к системному администратору."
+    IDS_RESTRICTIONS "Ограничения"
 #endif
 }
 

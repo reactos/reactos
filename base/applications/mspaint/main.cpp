@@ -507,9 +507,9 @@ LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
             for (UINT i = 0; i < nCount; ++i)
             {
                 if (zDelta < 0)
-                    ::PostMessageW(canvasWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
+                    ::PostMessageW(canvasWindow, WM_HSCROLL, MAKEWPARAM(SB_LINERIGHT, 0), 0);
                 else if (zDelta > 0)
-                    ::PostMessageW(canvasWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
+                    ::PostMessageW(canvasWindow, WM_HSCROLL, MAKEWPARAM(SB_LINELEFT, 0), 0);
             }
         }
         else

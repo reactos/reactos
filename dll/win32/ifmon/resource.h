@@ -10,8 +10,12 @@
 #define IDS_HLP_IP_ADD_DNS_EX               204
 
 #define IDS_HLP_IP_DELETE                   205
+#define IDS_HLP_IP_DELETE_ADDRESS           206
+#define IDS_HLP_IP_DELETE_ADDRESS_EX        207
 #define IDS_HLP_IP_DELETE_ARPCACHE          208
 #define IDS_HLP_IP_DELETE_ARPCACHE_EX       209
+#define IDS_HLP_IP_DELETE_DNS               210
+#define IDS_HLP_IP_DELETE_DNS_EX            211
 
 #define IDS_HLP_IP_SET                      212
 #define IDS_HLP_IP_SET_ADDRESS              213
@@ -26,6 +30,9 @@
 #define IDS_HLP_IP_SHOW_CONFIG_EX           224
 #define IDS_HLP_IP_SHOW_DNS                 225
 #define IDS_HLP_IP_SHOW_DNS_EX              226
+
+#define IDS_HLP_IP_RESET                    227
+#define IDS_HLP_IP_RESET_EX                 228
 
 #define IDS_HLP_WINSOCK_RESET               250
 #define IDS_HLP_WINSOCK_RESET_EX            251
@@ -60,3 +67,5 @@
 #define IDS_ERROR_BAD_VALUE                 2001
 #define IDS_ERROR_ALREADY_DHCP              2002
 #define IDS_ERROR_GET_PROPERTIES            2003
+#define IDS_ERROR_ADD_DHCP_ADDRESS          2004
+#define IDS_ERROR_DELETE_DHCP_ADDRESS       2005
