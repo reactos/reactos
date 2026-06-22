@@ -31,6 +31,7 @@ list(APPEND SOURCE
     StrDup.c
     StrFormatByteSizeW.c
     StrToInt.c
+    IsOS.c
     testdata.rc
     testlist.c)
 

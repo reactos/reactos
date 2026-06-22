@@ -27,6 +27,7 @@ extern void func_SHPropertyBag(void);
 extern void func_StrDup(void);
 extern void func_StrFormatByteSizeW(void);
 extern void func_StrToInt(void);
+extern void func_IsOS(void);
 
 const struct test winetest_testlist[] =
 {
@@ -56,5 +57,6 @@ const struct test winetest_testlist[] =
     { "StrDup", func_StrDup },
     { "StrFormatByteSizeW", func_StrFormatByteSizeW },
     { "StrToInt", func_StrToInt },
+    { "IsOS", func_IsOS },
     { 0, 0 }
 };
