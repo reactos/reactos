@@ -433,7 +433,7 @@ SerialPnp(
 
 				_swprintf(LinkNameBuffer, L"\\DosDevices\\COM%lu", DeviceExtension->ComPort);
 				RtlInitUnicodeString(&LinkName, LinkNameBuffer);
-				IoDeleteSymbolicLink(%LinkName);
+				IoDeleteSymbolicLink(&LinkName);
 
 				Status = STATUS_SUCCESS;
 				return ForwardIrpAndForget(DeviceObject, Irp);
