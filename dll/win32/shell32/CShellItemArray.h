@@ -7,8 +7,7 @@ class CShellItemArray :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellItemArray
 {
-    CIDA *m_pCIDA;
-    STGMEDIUM m_Medium;
+    CDataObjectHIDA *m_pHIDA;
 
 public:
     CShellItemArray();

@@ -62,7 +62,7 @@ SHCreateItemFromParsingName(
     _In_ REFIID riid,
     _Out_ void **ppv)
 {
-    LPITEMIDLIST pidl = NULL;
+    CComHeapPtr<ITEMIDLIST> pidl;
     HRESULT hr;
 
     TRACE("(%s,%p,%s,%p)\n", debugstr_w(pszPath), pbc, debugstr_guid(&riid), ppv);
@@ -73,10 +73,8 @@ SHCreateItemFromParsingName(
 
     hr = SHParseDisplayName(pszPath, pbc, &pidl, 0, NULL);
     if (SUCCEEDED(hr))
-    {
         hr = SHCreateItemFromIDList(pidl, riid, ppv);
-        ILFree(pidl);
-    }
+
     return hr;
 }
 
@@ -94,8 +92,8 @@ SHCreateItemFromRelativeName(
 {
     CComPtr<IShellFolder> desktop;
     CComPtr<IShellFolder> folder;
-    LPITEMIDLIST pidlFolder = NULL;
-    LPITEMIDLIST pidlChild = NULL;
+    CComHeapPtr<ITEMIDLIST> pidlFolder;
+    CComHeapPtr<ITEMIDLIST> pidlChild;
     HRESULT hr;
 
     TRACE("(%p,%s,%p,%s,%p)\n", parent, debugstr_w(pszName), pbc, debugstr_guid(&riid), ppv);
@@ -113,13 +111,13 @@ SHCreateItemFromRelativeName(
 
     hr = SHGetDesktopFolder(&desktop);
     if (FAILED_UNEXPECTEDLY(hr))
-        goto cleanup;
+        return hr;
 
     if (!_ILIsDesktop(pidlFolder))
     {
         hr = desktop->BindToObject(pidlFolder, NULL, IID_PPV_ARG(IShellFolder, &folder));
         if (FAILED_UNEXPECTEDLY(hr))
-            goto cleanup;
+            return hr;
     }
 
     {
@@ -127,14 +125,9 @@ SHCreateItemFromRelativeName(
         hr = psfBind->ParseDisplayName(NULL, pbc, const_cast<LPWSTR>(pszName), NULL, &pidlChild, NULL);
     }
     if (FAILED_UNEXPECTEDLY(hr))
-        goto cleanup;
+        return hr;
 
-    hr = SHCreateItemFromIDList(pidlChild, riid, ppv);
-
-cleanup:
-    ILFree(pidlFolder);
-    ILFree(pidlChild);
-    return hr;
+    return SHCreateItemFromIDList(pidlChild, riid, ppv);
 }
 
 /***********************************************************************
@@ -155,7 +148,7 @@ SHCreateItemInKnownFolder(
     //TODO: Import SHGetKnownFolderIDList from wine 
 #if 0
     CComPtr<IShellItem> parent;
-    LPITEMIDLIST pidl = NULL;
+    CComHeapPtr<ITEMIDLIST> pidl;
     HRESULT hr;
 
     TRACE("(%s,%lx,%s,%s,%p)\n", debugstr_guid(&kfid), dwFlags, debugstr_w(pszFileName),
@@ -170,8 +163,6 @@ SHCreateItemInKnownFolder(
         return hr;
 
     hr = SHCreateItemFromIDList(pidl, IID_PPV_ARG(IShellItem, &parent));
-    ILFree(pidl);
-    pidl = NULL;
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -228,23 +219,12 @@ SHCreateShellItemArray(
     if (SUCCEEDED(hr))
     {
         hr = CreateShellItemArrayFromItems(array, cidl, IID_PPV_ARG(IShellItemArray, ppsiItemArray));
-        if (SUCCEEDED(hr))
-        {
-            for (UINT i = 0; i < cidl; ++i)
-            {
-                if (array[i])
-                    array[i]->Release();
-            }
-        }
     }
 
-    if (FAILED_UNEXPECTEDLY(hr))
+    for (UINT i = 0; i < cidl; ++i)
     {
-        for (UINT i = 0; i < cidl; ++i)
-        {
-            if (array[i])
-                array[i]->Release();
-        }
+        if (array[i])
+            array[i]->Release();
     }
 
     return hr;
@@ -289,23 +269,12 @@ SHCreateShellItemArrayFromIDLists(
     if (SUCCEEDED(hr))
     {
         hr = CreateShellItemArrayFromItems(array, cidl, IID_PPV_ARG(IShellItemArray, ppsiItemArray));
-        if (SUCCEEDED(hr))
-        {
-            for (UINT i = 0; i < cidl; ++i)
-            {
-                if (array[i])
-                    array[i]->Release();
-            }
-        }
     }
 
-    if (FAILED_UNEXPECTEDLY(hr))
+    for (UINT i = 0; i < cidl; ++i)
     {
-        for (UINT i = 0; i < cidl; ++i)
-        {
-            if (array[i])
-                array[i]->Release();
-        }
+        if (array[i])
+            array[i]->Release();
     }
 
     return hr;
@@ -349,17 +318,14 @@ SHCreateShellItemArrayFromDataObject(_In_ IDataObject *pdo, _In_ REFIID riid, _O
 EXTERN_C HRESULT WINAPI
 SHGetItemFromObject(_In_ IUnknown *punk, _In_ REFIID riid, _Out_ void **ppv)
 {
-    LPITEMIDLIST pidl = NULL;
+    CComHeapPtr<ITEMIDLIST> pidl;
     HRESULT hr;
 
     TRACE("(%p,%s,%p)\n", punk, debugstr_guid(&riid), ppv);
 
     hr = SHGetIDListFromObject(punk, &pidl);
     if (SUCCEEDED(hr))
-    {
         hr = SHCreateItemFromIDList(pidl, riid, ppv);
-        ILFree(pidl);
-    }
     return hr;
 }
 
@@ -396,9 +362,8 @@ SHGetItemFromDataObject(
         if (pida && pida->cidl >= 1 &&
             ((pida->cidl > 1 && !(dwFlags & DOGIF_ONLY_IF_ONE)) || pida->cidl == 1))
         {
-            LPITEMIDLIST pidl = ILCombine(
-                (LPCITEMIDLIST)((LPBYTE)pida + pida->aoffset[0]),
-                (LPCITEMIDLIST)((LPBYTE)pida + pida->aoffset[1]));
+            LPITEMIDLIST pidl = ILCombine(HIDA_GetPIDLFolder(pida),
+                                          HIDA_GetPIDLItem(pida, 0));
             if (pidl)
             {
                 hr = SHCreateItemFromIDList(pidl, riid, ppv);
@@ -411,6 +376,7 @@ SHGetItemFromDataObject(
         }
         else
         {
+            TRACE("Failed to create item, cidl=%u, dwFlags=%#x\n", pida ? pida->cidl : 0, dwFlags);
             hr = E_FAIL;
         }
 

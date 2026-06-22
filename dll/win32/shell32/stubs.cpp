@@ -796,8 +796,7 @@ EXTERN_C HRESULT
 WINAPI
 GetCurrentProcessExplicitAppUserModelID(PWSTR *AppID)
 {
-    FIXME("GetCurrentProcessExplicitAppUserModelID() stub\n");
-    return S_OK;
+    return SHStrDupW(L"ROS FixMe", AppID);
 }
 
 /*
@@ -814,21 +813,13 @@ RunInstallUninstallStubs(VOID)
 /*
  * Unimplemented
  */
-EXTERN_C DWORD
-WINAPI
-SHGetAppCompatFlags(DWORD dwMask)
-{
-    FIXME("SHGetAppCompatFlags() stub\n");
-    return 0;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C HRESULT
 WINAPI
-SHQueryUserNotificationState(PVOID *pquns)
+SHQueryUserNotificationState(QUERY_USER_NOTIFICATION_STATE *pquns)
 {
-    FIXME("SHGetPropertyStoreFromParsingName() stub\n");
+    FIXME("SHQueryUserNotificationState() stub\n");
+    if (!pquns)
+        return E_INVALIDARG;
+    *pquns = QUNS_ACCEPTS_NOTIFICATIONS;
     return S_OK;
 }
