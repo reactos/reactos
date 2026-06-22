@@ -3634,6 +3634,13 @@ LRESULT editor_handle_message( ME_TextEditor *editor, UINT msg, WPARAM wParam,
   case WM_SETTEXT:
   {
     ME_Cursor cursor;
+#if __REACTOS__
+    int oldEventMask = editor->nEventMask;
+    if (editor->nEventMask & ENM_CHANGE)
+    {
+      editor->nEventMask &= ~ENM_CHANGE;
+    }
+#endif
     ME_SetCursorToStart(editor, &cursor);
     ME_InternalDeleteText(editor, &cursor, ME_GetTextLength(editor), FALSE);
     if (lParam)
@@ -3657,6 +3664,9 @@ LRESULT editor_handle_message( ME_TextEditor *editor, UINT msg, WPARAM wParam,
     ME_CommitUndo(editor);
     ME_EmptyUndoStack(editor);
     ME_UpdateRepaint(editor, FALSE);
+#ifdef __REACTOS__
+    editor->nEventMask = oldEventMask;
+#endif
     return 1;
   }
   case EM_CANPASTE:
