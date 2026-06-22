@@ -56,9 +56,11 @@ PNP_MAPPER_DEVICE_ID KeyboardMap[] =
     { L"OLI_A101_102KEY", L"*PNP0309\0" },
     { L"ATT_302", L"*PNP030a\0" },
     { L"PCAT_ENHANCED", L"*PNP030b\0" },
+#ifdef _M_IX86
     { L"PC98_106KEY", L"*nEC1300\0" },
     { L"PC98_LaptopKEY", L"*nEC1300\0" },
     { L"PC98_N106KEY", L"*PNP0303\0" },
+#endif
     { NULL, NULL }
 };
 
@@ -75,7 +77,9 @@ PNP_MAPPER_DEVICE_ID PointerMap[] =
     { L"MICROSOFT BALLPOINT SERIAL MOUSE", L"*PNP0F09\0" },
     { L"LOGITECH SERIAL MOUSE", L"*PNP0F08\0" },
     { L"MICROSOFT BUS MOUSE", L"*PNP0F00\0" },
+#ifdef _M_IX86
     { L"NEC PC-9800 BUS MOUSE", L"*nEC1F00\0" },
+#endif
     { NULL, NULL }
 };
 
