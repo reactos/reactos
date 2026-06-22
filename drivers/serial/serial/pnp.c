@@ -362,7 +362,6 @@ SerialPnp(
 		IRP_MN_FILTER_RESOURCE_REQUIREMENTS (optional) 0xd
 		IRP_MN_QUERY_PNP_DEVICE_STATE (optional) 0x14
 		IRP_MN_DEVICE_USAGE_NOTIFICATION (required or optional) 0x16
-		IRP_MN_SURPRISE_REMOVAL 0x17
 		*/
 		case IRP_MN_START_DEVICE: /* 0x0 */
 		{
@@ -413,6 +412,31 @@ SerialPnp(
 		{
 			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
 			return ForwardIrpAndForget(DeviceObject, Irp);
+		}
+		case IRP_MN_SURPRISE_REMOVAL: /* 0x17 */
+		{
+				WCHAR LinkNameBuffer[32];
+				UNICODE_STRING LinkName;
+
+				TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_SURPRISE_REMOVAL\n");
+
+				DeviceExtension = DeviceObject->DeviceExtension;
+				DeviceExtension->PnpState = dsSurpriseRemoved;
+
+				IoSetDeviceInterfaceState(&DeviceExtension->SerialInterfaceName, FALSE);
+
+				if (DeviceExtension->Interrupt)
+				{
+						IoDisconnectInterrupt(DeviceExtension->Interrupt);
+						DeviceExtension->Interrupt = NULL;
+				}
+
+				_swprintf(LinkNameBuffer, L"\\DosDevices\\COM%lu", DeviceExtension->ComPort);
+				RtlInitUnicodeString(&LinkName, LinkNameBuffer);
+				IoDeleteSymbolicLink(%LinkName);
+
+				Status = STATUS_SUCCESS;
+				return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 		default:
 		{
