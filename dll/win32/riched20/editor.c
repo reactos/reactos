@@ -3636,10 +3636,7 @@ LRESULT editor_handle_message( ME_TextEditor *editor, UINT msg, WPARAM wParam,
     ME_Cursor cursor;
 #if __REACTOS__
     int oldEventMask = editor->nEventMask;
-    if (editor->nEventMask & ENM_CHANGE)
-    {
-      editor->nEventMask &= ~ENM_CHANGE;
-    }
+    editor->nEventMask &= ~ENM_CHANGE;
 #endif
     ME_SetCursorToStart(editor, &cursor);
     ME_InternalDeleteText(editor, &cursor, ME_GetTextLength(editor), FALSE);
