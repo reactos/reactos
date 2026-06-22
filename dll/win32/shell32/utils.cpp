@@ -438,19 +438,6 @@ SHBindToObject(
     return hr;
 }
 
-<<<<<<< HEAD
-=======
-EXTERN_C
-HRESULT WINAPI SHBindToObject(
-    _In_opt_ IShellFolder *psf,
-    _In_ LPCITEMIDLIST pidl,
-    _In_ REFIID riid,
-    _Out_ void **ppvObj)
-{
-    return SHBindToObjectEx(psf, pidl, NULL, riid, ppvObj);
-}
-
->>>>>>> 5be800440b8 ([SDK][SHELL32] shell32)
 EXTERN_C HRESULT
 SHELL_GetUIObjectOfAbsoluteItem(
     _In_opt_ HWND hWnd,

@@ -13,7 +13,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 *   IUserEventTimerCallback implementation
 */
 
-HRESULT WINAPI CUserEventTimer::UserEventTimerProc(ULONG uUserEventTimerID, UINT uTimerElapse)
+STDMETHODIMP
+CUserEventTimer::UserEventTimerProc(ULONG uUserEventTimerID, UINT uTimerElapse)
 {
     UNIMPLEMENTED;
     return S_OK;
@@ -23,27 +24,31 @@ HRESULT WINAPI CUserEventTimer::UserEventTimerProc(ULONG uUserEventTimerID, UINT
 *   IUserEventTimer implementation
 */
 
-HRESULT WINAPI CUserEventTimer::SetUserEventTimer(HWND hWnd, UINT uCallbackMsg, UINT uTimerElapse,
-                                                  IUserEventTimerCallback *pUserEventTimerCallback,
-                                                  ULONG *puUserEventTimerID)
+STDMETHODIMP
+CUserEventTimer::SetUserEventTimer(HWND hWnd, UINT uCallbackMsg, UINT uTimerElapse,
+                                   IUserEventTimerCallback *pUserEventTimerCallback,
+                                   ULONG *puUserEventTimerID)
 {
     UNIMPLEMENTED;
     return S_OK;
 }
 
-HRESULT WINAPI CUserEventTimer::KillUserEventTimer(HWND hWnd, ULONG uUserEventTimerID)
+STDMETHODIMP
+CUserEventTimer::KillUserEventTimer(HWND hWnd, ULONG uUserEventTimerID)
 {
     UNIMPLEMENTED;
     return S_OK;
 }
 
-HRESULT WINAPI CUserEventTimer::GetUserEventTimerElapsed(HWND hWnd, ULONG uUserEventTimerID, UINT *puTimerElapsed)
+STDMETHODIMP
+CUserEventTimer::GetUserEventTimerElapsed(HWND hWnd, ULONG uUserEventTimerID, UINT *puTimerElapsed)
 {
     UNIMPLEMENTED;
     return S_OK;
 }
 
-HRESULT WINAPI CUserEventTimer::InitTimerTickInterval(UINT uTimerTickIntervalMs)
+STDMETHODIMP
+CUserEventTimer::InitTimerTickInterval(UINT uTimerTickIntervalMs)
 {
     UNIMPLEMENTED;
     return S_OK;

@@ -16,15 +16,15 @@ class CUserEventTimer :
 public:
 
     /*** IUserEventTimerCallback methods ***/
-    virtual HRESULT WINAPI UserEventTimerProc(ULONG uUserEventTimerID, UINT uTimerElapse);
+    virtual STDMETHODIMP UserEventTimerProc(ULONG uUserEventTimerID, UINT uTimerElapse) override;
 
     /*** IUserEventTimer methods ***/
-    virtual HRESULT WINAPI SetUserEventTimer(HWND hWnd, UINT uCallbackMsg, UINT uTimerElapse,
+    virtual STDMETHODIMP SetUserEventTimer(HWND hWnd, UINT uCallbackMsg, UINT uTimerElapse,
                                              IUserEventTimerCallback *pUserEventTimerCallback,
-                                             ULONG *puUserEventTimerID);
-    virtual HRESULT WINAPI KillUserEventTimer(HWND hWnd, ULONG uUserEventTimerID);
-    virtual HRESULT WINAPI GetUserEventTimerElapsed(HWND hWnd, ULONG uUserEventTimerID, UINT *puTimerElapsed);
-    virtual HRESULT WINAPI InitTimerTickInterval(UINT uTimerTickIntervalMs);
+                                             ULONG *puUserEventTimerID) override;
+    virtual STDMETHODIMP KillUserEventTimer(HWND hWnd, ULONG uUserEventTimerID) override;
+    virtual STDMETHODIMP GetUserEventTimerElapsed(HWND hWnd, ULONG uUserEventTimerID, UINT *puTimerElapsed) override;
+    virtual STDMETHODIMP InitTimerTickInterval(UINT uTimerTickIntervalMs) override;
 
 
 DECLARE_REGISTRY_RESOURCEID(IDR_USEREVENTTIMER)

@@ -4799,7 +4799,6 @@ interface IFolderBandPriv : IUnknown
 }
 
 
-//#ifdef __REACTOS__
 /*****************************************************************************
  * IQueryContinue interface
  */
@@ -5116,4 +5115,3 @@ interface IUserAssist : IUnknown
         BOOL bEnable);
 };
 
-//#endif // __REACTOS__

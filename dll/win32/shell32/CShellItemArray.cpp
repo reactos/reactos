@@ -14,26 +14,35 @@ EXTERN_C HRESULT WINAPI SHCreateShellItem(
  *   CShellItemArray
  */
 
-CShellItemArray::CShellItemArray() : m_pCIDA(NULL)
+CShellItemArray::CShellItemArray() : m_pHIDA(NULL)
 {
-    m_Medium.tymed = TYMED_NULL;
 }
 
 CShellItemArray::~CShellItemArray()
 {
-    CDataObjectHIDA::DestroyCIDA(m_pCIDA, m_Medium);
+    delete m_pHIDA;
 }
 
 HRESULT
 CShellItemArray::Initialize(_In_ IDataObject *pdo)
 {
-    return CDataObjectHIDA::CreateCIDA(pdo, &m_pCIDA, m_Medium);
+    m_pHIDA = new CDataObjectHIDA(pdo);
+    if (!m_pHIDA)
+        return E_OUTOFMEMORY;
+
+    HRESULT hr = m_pHIDA->hr();
+    if (FAILED(hr))
+    {
+        delete m_pHIDA;
+        m_pHIDA = NULL;
+    }
+    return hr;
 }
 
 UINT
 CShellItemArray::ItemCount() const
 {
-    return m_pCIDA ? m_pCIDA->cidl : 0;
+    return m_pHIDA ? (*m_pHIDA)->cidl : 0;
 }
 
 STDMETHODIMP
@@ -83,12 +92,12 @@ CShellItemArray::GetItemAt(_In_ DWORD nIndex, _Out_ IShellItem **ppItem)
     if (!ppItem)
         return E_INVALIDARG;
     *ppItem = NULL;
-    if (!m_pCIDA)
+    if (!m_pHIDA)
         return E_UNEXPECTED;
     if (nIndex >= ItemCount())
         return E_FAIL;
-    return SHCreateShellItem(HIDA_GetPIDLFolder(m_pCIDA), NULL,
-                             HIDA_GetPIDLItem(m_pCIDA, nIndex), ppItem);
+    return SHCreateShellItem(HIDA_GetPIDLFolder(*m_pHIDA), NULL,
+                             HIDA_GetPIDLItem(*m_pHIDA, nIndex), ppItem);
 }
 
 STDMETHODIMP

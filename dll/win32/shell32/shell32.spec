@@ -398,8 +398,22 @@
 871 stub -version=0x600+ -noname DUI_Shell32_EndDeferUninitialization
 872 stub -version=0x600+ -noname SHCreateKindFilter
 873 stub -version=0x600+ -noname SHIconIndexFromPIDL
-874 stub -version=0x600+ -noname SHLaunchSearch
+874 stub -version=0x600+ -noname SHLaunchSearch # Vista:874, Win7:886
+881 stub -noname -version=0x601+ SHEnumClassesOfCategories
+882 stub -noname -version=0x601+ SHWriteClassesOfCategories
+884 stub -noname -version=0x601+ SHDoDragDropWithPreferredEffect
+885 stdcall -noname -version=0x601+ RunInstallUninstallStubs()
 887 stub -noname -version=0x601+ SHExtCoCreateInstanceCheckCategory
+888 stub -noname -version=0x601+ SHLimitInputEndSubclass
+892 stub -noname -version=0x601+ GetSqmableFileName
+893 stub -noname -version=0x601+ SetWindowRelaunchProperties
+894 stub -noname -version=0x601+ MakeDestinationItem
+895 stdcall -noname -version=0x601+ GetAppPathFromLink(ptr wstr long)
+896 stub -noname -version=0x601+ ClearDestinationsForAllApps
+897 stub -noname -version=0x601+ SaveTopViewSettings
+899 stdcall -stub -noname -version=0x601+ SetExplorerServerMode(long)
+900 stub -noname -version=0x601+ GetAppIDRoot
+902 stub -noname -version=0x601+ IsSearchEnabled
 
 # Automatically assigned ordinals:
 @ stdcall OpenAs_RunDLLA(long long str long) # 2k3:101, Vista:125
@@ -489,19 +503,19 @@
 @ stub -version=0x600+ SHCreateDefaultPropertiesOp # Vista:327
 @ stdcall SHCreateDirectoryExA(long str ptr) # 2k3:278, Vista:328
 @ stdcall SHCreateDirectoryExW(long wstr ptr) # 2k3:279, Vista:329
-@ stub -version=0x600+ SHCreateItemFromIDList # Vista:330
-@ stub -version=0x600+ SHCreateItemFromParsingName # Vista:331
-@ stub -version=0x600+ SHCreateItemFromRelativeName # Vista:332
-@ stub -version=0x600+ SHCreateItemInKnownFolder # Vista:333
-@ stub -version=0x600+ SHCreateItemWithParent # Vista:334
+@ stdcall -version=0x600+ SHCreateItemFromIDList(ptr ptr ptr) # Vista:330
+@ stdcall -version=0x600+ SHCreateItemFromParsingName(wstr ptr ptr ptr) # Vista:331
+@ stdcall -version=0x600+ SHCreateItemFromRelativeName(ptr wstr ptr ptr ptr) # Vista:332
+@ stdcall -version=0x600+ SHCreateItemInKnownFolder(ptr long wstr ptr ptr) # Vista:333
+@ stdcall -stub -version=0x600+ SHCreateItemWithParent(ptr ptr ptr ptr ptr) # Vista:334
 @ stub SHCreateLocalServerRunDll # 2k3:280, Vista:335
 @ stdcall SHCreateProcessAsUserW(ptr) # 2k3:281, Vista:336
 @ stdcall SHCreateQueryCancelAutoPlayMoniker(ptr) # 2k3:282, Vista:337
 @ stdcall SHCreateShellItem(ptr ptr ptr ptr) # 2k3:283, Vista:338
-@ stub -version=0x600+ SHCreateShellItemArray # Vista:339
+@ stdcall -version=0x600+ SHCreateShellItemArray(ptr ptr long ptr ptr) # Vista:339
 @ stdcall -version=0x600+ SHCreateShellItemArrayFromDataObject(ptr ptr ptr) # Vista:340
-@ stub -version=0x600+ SHCreateShellItemArrayFromIDLists # Vista:341
-@ stub -version=0x600+ SHCreateShellItemArrayFromShellItem # Vista:342
+@ stdcall -version=0x600+ SHCreateShellItemArrayFromIDLists(long ptr ptr) # Vista:341
+@ stdcall -version=0x600+ SHCreateShellItemArrayFromShellItem(ptr ptr ptr) # Vista:342
 @ stdcall SHEmptyRecycleBinA(long str long) # 2k3:284, Vista:343
 @ stdcall SHEmptyRecycleBinW(long wstr long) # 2k3:285, Vista:344
 @ stub SHEnableServiceObject # 2k3:286, Vista:345
@@ -544,7 +558,7 @@
 @ stub -version=0x600+ SHGetPathFromIDListEx # Vista:382
 @ stdcall SHGetPathFromIDListW(ptr ptr) # 2k3:315, Vista:383
 @ stub -version=0x600+ SHGetPropertyStoreFromIDList # Vista:384
-@ stub -version=0x600+ SHGetPropertyStoreFromParsingName # Vista:385
+@ stdcall -version=0x600+ SHGetPropertyStoreFromParsingName(wstr ptr ptr ptr ptr) # Vista:385
 @ stdcall SHGetSettings(ptr long) # 2k3:316, Vista:386
 @ stdcall SHGetSpecialFolderLocation(long long ptr) # 2k3:317, Vista:387
 @ stdcall SHGetSpecialFolderPathA(long ptr long long) # 2k3:318, Vista:388
@@ -567,7 +581,7 @@
 @ stdcall SHPathPrepareForWriteW(long ptr wstr long) # 2k3:332, Vista:402
 @ stdcall SHQueryRecycleBinA(str ptr) # 2k3:333, Vista:403
 @ stdcall SHQueryRecycleBinW(wstr ptr) # 2k3:334, Vista:404
-@ stub -version=0x600+ SHQueryUserNotificationState # Vista:405
+@ stdcall -version=0x600+ SHQueryUserNotificationState(ptr) # Vista:405
 @ stub -version=0x600+ SHRemoveLocalizedName # Vista:406
 @ stub -version=0x600+ SHSetDefaultProperties # Vista:407
 @ stub -version=0x600+ SHSetKnownFolderPath # Vista:408
@@ -638,3 +652,10 @@
 @ stdcall StrStrW(wstr wstr) shlwapi.StrStrW # 2k3:396, Vista:456
 @ stdcall WOWShellExecute(ptr str str str str long ptr) # 2k3:397, Vista:457
 @ stub -version=0x600+ WaitForExplorerRestartW # Vista:458
+
+; Win7+ - These ordinals are higher than any of the ones in win vista
+@ stdcall -stub -version=0x601+ Shell_NotifyIconGetRect(ptr ptr)
+@ stdcall -stub -version=0x601+ SHGetKnownFolderItem(ptr ptr ptr ptr ptr)
+@ stdcall -stub -version=0x601+ SHAssocEnumHandlersForProtocolByApplication(wstr ptr ptr)
+@ stdcall -version=0x601+ GetCurrentProcessExplicitAppUserModelID(wstr)
+@ stdcall -version=0x601+ SetCurrentProcessExplicitAppUserModelID(wstr)
