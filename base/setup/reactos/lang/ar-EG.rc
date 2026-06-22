@@ -122,11 +122,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS تثبيت"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Installation type:", IDC_STATIC, 18, 5, 74, 11
+    LTEXT "نوع التثبيت:", IDC_STATIC, 18, 5, 74, 11
     EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Installation source:", IDC_STATIC, 18, 17, 74, 11
+    LTEXT "مصدر التثبيت:", IDC_STATIC, 18, 17, 74, 11
     EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Architecture:", IDC_STATIC, 18, 29, 74, 11
+    LTEXT "المعمارية:", IDC_STATIC, 18, 29, 74, 11
     EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "الكمبيوتر:", IDC_STATIC, 18, 41, 74, 11
     EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
@@ -134,9 +134,9 @@ BEGIN
     EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "لوحة المفاتيح:", IDC_STATIC, 18, 65, 74, 11
     EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Destination volume:", IDC_STATIC, 18, 77, 74, 11
+    LTEXT "القرص المحدد:", IDC_STATIC, 18, 77, 74, 11
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Destination directory:", IDC_STATIC, 18, 89, 74, 11
+    LTEXT "المجلد المحدد:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     AUTOCHECKBOX "أؤكد أن جميع إعدادات التثبيت صحيحة. كما أقرّ بأن\nReactOS هو برنامج في مرحلة ألفا وقد يتعطل جهازي أو يتسبب في تلف بياناتي.",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE | WS_TABSTOP
@@ -276,47 +276,47 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Invalid character"
-    IDS_ERROR_INVALID_INSTALLDIR_CHAR "The only valid characters are:\n\
-alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
-Spaces are not allowed."
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "حرف غير صحيح"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "الأحرف المسموح بها هي:\n\
+الأحرف الأبجدية الرقمية (a-z، A-Z، 0-9)، و\n . \\ - _\n\
+لا يُسمح باستخدام المسافات."
 
-    IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
-    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
-and only contain letters, digits, dashes and periods. Spaces are not allowed."
+    IDS_ERROR_DIRECTORY_NAME_TITLE "مسار التثبيت غير صحيح."
+    IDS_ERROR_DIRECTORY_NAME "يجب أن يتبع مسار تثبيت ReactOS نظام التسمية DOS 8.3، \
+وأن يحتوي فقط على أحرف وأرقام وشرطات ونقاط. ولا يُسمح باستخدام المسافات."
 
-    IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
-    IDS_ERROR_CREATE_PARTITION "Failed to create a new partition."
+    IDS_ERROR_CREATE_PARTITION_TITLE "إنشاء قسم جديد"
+    IDS_ERROR_CREATE_PARTITION "فشل إنشاء قسم جديد."
 
-    IDS_WARN_DELETE_PARTITION_TITLE "Delete partition?"
-    IDS_WARN_DELETE_PARTITION "Are you sure you want to delete the selected partition?"
-    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Are you sure you want to delete the selected extended partition and ALL the logical partitions it contains?"
+    IDS_WARN_DELETE_PARTITION_TITLE "حذف القسم؟"
+    IDS_WARN_DELETE_PARTITION "هل أنت متأكد من حذف هذا القسم؟"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "هل أنت متأكد من حذف القسم الممتد المُحدد، بما يحتويه من أقسام منطقية بالكامل؟"
 
-    IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
+    IDS_ERROR_WRITE_PTABLE "فشل الإعداد في كتابة جداول الأقسام."
 
-    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
-on your system or could not create a new one. Without such a partition\n\
-the Setup program cannot install ReactOS.\
-\nClick on OK to return to the partition selection list."
+    IDS_ERROR_SYSTEM_PARTITION "لم يتمكن برنامج تثبيت ReactOS من العثور على قسم نظام مدعوم\n\
+على جهازك أو لم يتمكن من إنشاء قسم جديد. وبدون وجود مثل هذا القسم\n\
+لا يمكن لبرنامج التثبيت تثبيت ReactOS.\
+\nانقر على موافق للعودة إلى قائمة اختيار الأقسام."
 
-    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."
+    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "وحدة تخزين غير معترف بها أثناء محاولة تهيئة القسم."
 
-    IDS_ERROR_COULD_NOT_FORMAT "Setup is currently unable to format a partition in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_FORMAT "لا يستطيع برنامج التثبيت حاليًا تهيئة قسم في %s.\n\
+\nانقر فوق موافق لمتابعة عملية التثبيت.\
+\nانقر فوق إلغاء لإنهاء عملية التثبيت."
 
     IDS_ERROR_FORMATTING_PARTITION "Setup is unable to format the partition:\n %s\n"
 
-    IDS_ERROR_COULD_NOT_CHECK "Setup is currently unable to check a partition formatted in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_CHECK "لا يستطيع برنامج التثبيت حاليًا التحقق من قسم تم تهيئته بتنسيق %s.\n\
+\nانقر فوق موافق لمتابعة عملية التثبيت.\
+\nانقر فوق إلغاء لإنهاء عملية التثبيت."
 
-    IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+    IDS_ERROR_CHECKING_PARTITION "اكتشف برنامج ChkDsk بعض الأخطاء في القرص.\n(الحالة 0x%08lx)."
 
-    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
-    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
-    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
-    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
-\nClick on OK to continue anyway."
-    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
+    IDS_ERROR_WRITE_BOOT "فشل برنامج الإعداد في تثبيت رمز التمهيد %s على قسم النظام."
+    IDS_ERROR_INSTALL_BOOTCODE "فشل برنامج الإعداد في تثبيت رمز التمهيد %s على قرص التمهيد."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "فشل برنامج الإعداد في تثبيت رمز التمهيد على الوسائط القابلة للإزالة."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "لا يدعم برنامج الإعداد حاليًا تثبيت محمل الأقلاع التشغيل على الكمبيوتر الذي تستخدمه.\
+\nانقر فوق موافق للمتابعة على أي حال."
+    IDS_ERROR_BOOTLDR_FAILED "تعذر على برنامج الإعداد تثبيت محمل الإقلاع (الحالة 0x%08lx)."
 END
