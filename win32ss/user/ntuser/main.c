@@ -201,6 +201,19 @@ UserProcessDestroy(PEPROCESS Process)
     }
 #endif
 
+    /* Notify the logon application to restart the shell if needed */
+    if (ppiCurrent->rpdeskStartup &&
+        (ASSERT(ppiCurrent->rpdeskStartup->pDeskInfo),
+        (ppiCurrent->rpdeskStartup->pDeskInfo->ppiShellProcess == ppiCurrent)))
+    {
+        DWORD ExitCode = PsGetProcessExitStatus(Process);
+
+        TRACE_CH(UserProcess, "Shell process is exiting (%lu)\n", ExitCode);
+        ppiCurrent->rpdeskStartup->pDeskInfo->ppiShellProcess = NULL;
+
+        UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_SHELL_EXITED, ExitCode);
+    }
+
     /* Remove it from the list of GUI apps */
     co_IntGraphicsCheck(FALSE);
 
@@ -730,9 +743,6 @@ ExitThreadCallback(PETHREAD Thread)
 {
     PTHREADINFO ptiCurrent, *ppti;
     PPROCESSINFO ppiCurrent;
-    PEPROCESS Process;
-
-    Process = Thread->ThreadsProcess;
 
     /* Get the Win32 Thread */
     ptiCurrent = PsGetThreadWin32Thread(Thread);
@@ -772,32 +782,11 @@ ExitThreadCallback(PETHREAD Thread)
         PSINGLE_LIST_ENTRY psle;
 
         /* Do now some process cleanup that requires a valid win32 thread */
-        if (ptiCurrent->ppi->cThreads == 0)
+        if (ppiCurrent->cThreads == 0)
         {
-            /* Check if we have registered the user api hook */
-            if (ptiCurrent->ppi == ppiUahServer)
-            {
-                /* Unregister the api hook */
+            /* Unregister the user api hook if it was registered */
+            if (ppiCurrent == ppiUahServer)
                 UserUnregisterUserApiHook();
-            }
-
-            /* Notify logon application to restart shell if needed */
-            if (ptiCurrent->pDeskInfo)
-            {
-                if (ptiCurrent->pDeskInfo->ppiShellProcess == ppiCurrent)
-                {
-                    DWORD ExitCode = PsGetProcessExitStatus(Process);
-
-                   TRACE_CH(UserProcess, "Shell process is exiting (%lu)\n", ExitCode);
-
-                    UserPostMessage(hwndSAS,
-                                    WM_LOGONNOTIFY,
-                                    LN_SHELL_EXITED,
-                                    ExitCode);
-
-                    ptiCurrent->pDeskInfo->ppiShellProcess = NULL;
-                }
-            }
         }
 
         DceFreeThreadDCE(ptiCurrent);
