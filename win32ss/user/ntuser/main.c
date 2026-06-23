@@ -204,16 +204,15 @@ UserProcessDestroy(PEPROCESS Process)
     /* Remove it from the list of GUI apps */
     co_IntGraphicsCheck(FALSE);
 
-    /*
-     * Deregister logon application automatically
-     */
+    /* Deregister the logon application automatically */
     if (gpidLogon == ppiCurrent->peProcess->UniqueProcessId)
         gpidLogon = 0;
 
     /* Close the current window station */
     UserSetProcessWindowStation(NULL);
 
-    if (gppiInputProvider == ppiCurrent) gppiInputProvider = NULL;
+    if (gppiInputProvider == ppiCurrent)
+        gppiInputProvider = NULL;
 
     if (ppiCurrent->hdeskStartup)
     {
@@ -729,12 +728,9 @@ NTSTATUS
 NTAPI
 ExitThreadCallback(PETHREAD Thread)
 {
-    PTHREADINFO *ppti;
-    PSINGLE_LIST_ENTRY psle;
+    PTHREADINFO ptiCurrent, *ppti;
     PPROCESSINFO ppiCurrent;
     PEPROCESS Process;
-    PTHREADINFO ptiCurrent;
-    PWINDOWLIST pwl, pwlNext;
 
     Process = Thread->ThreadsProcess;
 
@@ -754,6 +750,7 @@ ExitThreadCallback(PETHREAD Thread)
 
     if (gpwlList)
     {
+        PWINDOWLIST pwl, pwlNext;
         for (pwl = gpwlList; pwl; pwl = pwlNext)
         {
             pwlNext = pwl->pNextList;
@@ -772,6 +769,8 @@ ExitThreadCallback(PETHREAD Thread)
 
     if (ptiCurrent->TIF_flags & TIF_GUITHREADINITIALIZED)
     {
+        PSINGLE_LIST_ENTRY psle;
+
         /* Do now some process cleanup that requires a valid win32 thread */
         if (ptiCurrent->ppi->cThreads == 0)
         {
@@ -899,7 +898,8 @@ ExitThreadCallback(PETHREAD Thread)
     ASSERT(ptiCurrent->cRefObjectCo == 0);
 
     /* The thread is dying */
-    PsSetThreadWin32Thread(Thread /*ptiCurrent->pEThread*/, NULL, ptiCurrent);
+    ASSERT(ptiCurrent->pEThread == Thread);
+    PsSetThreadWin32Thread(Thread, NULL, ptiCurrent);
 
     /* Dereference the THREADINFO */
     IntDereferenceThreadInfo(ptiCurrent);
