@@ -19,6 +19,10 @@
 #include <sstream>
 #include <ctime>
 
+#ifndef _WIN32
+#define _stricmp strcasecmp
+#endif
+
 #define PROFILING_ENABLED 0
 
 using namespace std;
@@ -45,6 +49,7 @@ enum TOKEN_TYPE
     StringDef,
 
     KW_include,
+    KW_model,
     KW_const,
     KW_code,
     KW_endprolog,
@@ -245,6 +250,7 @@ vector<TOKEN_DEF> g_TokenList =
     { TOKEN_TYPE::StringDef, R"((<.+>))" },
 
     { TOKEN_TYPE::KW_include, R"((include))" FOLLOWED_BY(R"([\s])") },
+    { TOKEN_TYPE::KW_model, R"((\.model))" FOLLOWED_BY(R"([\s])") },
     { TOKEN_TYPE::KW_const, R"((\.const))" FOLLOWED_BY(R"([\s])") },
     { TOKEN_TYPE::KW_code, R"((\.code))" FOLLOWED_BY(R"([\s])") },
     { TOKEN_TYPE::KW_endprolog, R"((\.endprolog))" FOLLOWED_BY(R"([\s])") },
@@ -1238,6 +1244,37 @@ translate_construct(TokenList& tokens, size_t index, const vector<string> &macro
             printf("#include \"%s.h\"", tok2.str().c_str());
             index += 3;
             break;
+        }
+
+        case TOKEN_TYPE::KW_model:
+        {
+            // The next token should be white space, followed by an identifier
+            Token tok1 = get_ws(tokens[index + 1]);
+            Token tok2 = get_expected_token(tokens[index + 2], TOKEN_TYPE::Identifier);
+
+            // Check if the model is valid (we only support flat)
+            if (_stricmp(tok2.str().c_str(), "FLAT") != 0)
+            {
+                throw "Invalid model";
+            }
+
+            index += 3;
+
+            // Skip optional white space
+            if (tokens[index].type() == TOKEN_TYPE::WhiteSpace)
+            {
+                index++;
+            }
+
+            // Check if it is followed by a comma and another identifier
+            if (tokens[index].type() == TOKEN_TYPE::Operator &&
+                tokens[index].str() == ",")
+            {
+                // This could be "C" or "STDCALL", but we don't handle those yet
+                throw "Invalid model";
+            }
+
+            return complete_line(tokens, index, macro_params);
         }
 
         case TOKEN_TYPE::KW_PUBLIC:
