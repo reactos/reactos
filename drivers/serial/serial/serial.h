@@ -4,7 +4,7 @@
  * FILE:            drivers/dd/serial/serial.h
  * PURPOSE:         Serial driver header
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #ifndef _SERIAL_PCH_
@@ -22,7 +22,9 @@ typedef enum
   dsStopped,
   dsStarted,
   dsPaused,
+	dsRemovePending,
   dsRemoved,
+	dsStopPending,
   dsSurpriseRemoved
 } SERIAL_DEVICE_STATE;
 
@@ -76,6 +78,7 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	KSPIN_LOCK InputBufferLock;
 	CIRCULAR_BUFFER OutputBuffer;
 	KSPIN_LOCK OutputBufferLock;
+	SERIAL_DEVICE_STATE OldPnpState;
 
 	UNICODE_STRING SerialInterfaceName;
 
