@@ -400,7 +400,7 @@ SerialPnp(
 			{
 				IoDisconnectInterrupt(DeviceExtension->Interrupt);
 				DeviceExtension->Interrupt = NULL;
-		  }
+		    }
 
 			_swprintf(LinkNameBuffer, L"\\DosDevices\\COM%lu", DeviceExtension->ComPort);
 			RtlInitUnicodeString(&LinkName, LinkNameBuffer);
