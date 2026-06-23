@@ -18,6 +18,7 @@
 #include <cstdio>
 #include <sstream>
 #include <ctime>
+#include <cstring>
 
 #ifndef _WIN32
 #define _stricmp strcasecmp
@@ -49,6 +50,7 @@ enum TOKEN_TYPE
     StringDef,
 
     KW_include,
+    KW_option,
     KW_model,
     KW_const,
     KW_code,
@@ -250,6 +252,7 @@ vector<TOKEN_DEF> g_TokenList =
     { TOKEN_TYPE::StringDef, R"((<.+>))" },
 
     { TOKEN_TYPE::KW_include, R"((include))" FOLLOWED_BY(R"([\s])") },
+    { TOKEN_TYPE::KW_option, R"((\option))" FOLLOWED_BY(R"([\s])") },
     { TOKEN_TYPE::KW_model, R"((\.model))" FOLLOWED_BY(R"([\s])") },
     { TOKEN_TYPE::KW_const, R"((\.const))" FOLLOWED_BY(R"([\s])") },
     { TOKEN_TYPE::KW_code, R"((\.code))" FOLLOWED_BY(R"([\s])") },
@@ -1265,6 +1268,17 @@ translate_construct(TokenList& tokens, size_t index, const vector<string> &macro
             printf("#include \"%s.h\"", tok2.str().c_str());
             index += 3;
             break;
+        }
+
+        case TOKEN_TYPE::KW_option:
+        {
+            // The next token should be white space, followed by an identifier
+            Token tok1 = get_ws(tokens[index + 1]);
+            Token tok2 = get_expected_token(tokens[index + 2], TOKEN_TYPE::Identifier);
+
+            // We just ignore this for now and just print it as a comment
+            printf("//");
+            return complete_line(tokens, index, macro_params);
         }
 
         case TOKEN_TYPE::KW_model:
