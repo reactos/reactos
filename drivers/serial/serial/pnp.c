@@ -341,16 +341,6 @@ SerialPnp(
 	{
 		/* FIXME: do all these minor functions
 		IRP_MN_QUERY_REMOVE_DEVICE 0x1
-		IRP_MN_REMOVE_DEVICE 0x2
-		{
-			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
-			IoAcquireRemoveLock
-			IoReleaseRemoveLockAndWait
-			pass request to DeviceExtension-LowerDriver
-			disable interface
-			IoDeleteDevice(Fdo) and/or IoDetachDevice
-			break;
-		}
 		IRP_MN_CANCEL_REMOVE_DEVICE 0x3
 		IRP_MN_STOP_DEVICE 0x4
 		IRP_MN_QUERY_STOP_DEVICE 0x5
