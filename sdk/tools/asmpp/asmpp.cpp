@@ -895,8 +895,17 @@ translate_data_def(TokenList& tokens, size_t index, const vector<string>& macro_
 
         have = need;
 
-        // The item itself
-        index = translate_item(tokens, index, macro_params);
+        // Check if this is an identifier
+        if ((tokens[index].type() == TOKEN_TYPE::Identifier))
+        {
+            // Assume this is a memory reference or a constant
+            index = translate_token(tokens, index, macro_params);
+        }
+        else
+        {
+            // The item itself
+            index = translate_item(tokens, index, macro_params);
+        }
 
         // Optional white space
         if (tokens[index].type() == TOKEN_TYPE::WhiteSpace)
@@ -924,6 +933,18 @@ translate_data_def(TokenList& tokens, size_t index, const vector<string>& macro_
         {
             index++;
         }
+
+        // Check if the list continues after a line break
+        if ((tokens[index].type() == TOKEN_TYPE::NewLine) ||
+            (tokens[index].type() == TOKEN_TYPE::Comment))
+        {
+            index++;
+            if (tokens[index].type() == TOKEN_TYPE::WhiteSpace)
+            {
+                index++;
+            }
+        }
+
     }
 
     throw "Failed to translate list";
