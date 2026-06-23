@@ -1316,47 +1316,6 @@ IntGetActiveDesktop(VOID)
     return gpdeskInputDesktop;
 }
 
-#if 0 // FIXME: Now unused!
-/*
- * Returns or creates a handle to the desktop object
- */
-HDESK FASTCALL
-IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
-{
-    NTSTATUS Status;
-    HDESK hDesk;
-
-    ASSERT(DesktopObject);
-
-    if (!ObFindHandleForObject(PsGetCurrentProcess(),
-                               DesktopObject,
-                               ExDesktopObjectType,
-                               NULL,
-                               (PHANDLE)&hDesk))
-    {
-        Status = ObOpenObjectByPointer(DesktopObject,
-                                       0,
-                                       NULL,
-                                       DESKTOP_ALL_ACCESS,
-                                       ExDesktopObjectType,
-                                       UserMode,
-                                       (PHANDLE)&hDesk);
-        if (!NT_SUCCESS(Status))
-        {
-            /* Unable to create a handle */
-            ERR("Unable to create a desktop handle\n");
-            return NULL;
-        }
-    }
-    else
-    {
-        TRACE("Got handle: 0x%p\n", hDesk);
-    }
-
-    return hDesk;
-}
-#endif
-
 PUSER_MESSAGE_QUEUE FASTCALL
 IntGetFocusMessageQueue(VOID)
 {
@@ -3178,18 +3137,19 @@ NtUserGetThreadDesktop(DWORD dwThreadId, HDESK hConsoleDesktop)
 
     if (!hDesk)
     {
-        ERR("Desktop information of thread 0x%x broken!?\n", dwThreadId);
+        ERR("Desktop information of threadId %lu broken!\n", dwThreadId);
         goto Quit;
     }
 
     if (Process == PsGetCurrentProcess())
     {
-        /*
-         * Just return the handle, since we queried the desktop handle
-         * of a thread running in the same process.
-         */
+        /* Just return the handle, since we queried the desktop handle
+         * of a thread running in the same process. */
         goto Quit;
     }
+
+    TRACE("[%x.%x] Getting thread desktop for target thread 0x%p",
+          PsGetCurrentProcessId(), PsGetCurrentThreadId(), pti);
 
     /*
      * We could just use the cached rpdesk instead of looking up the handle,
@@ -3197,10 +3157,8 @@ NtUserGetThreadDesktop(DWORD dwThreadId, HDESK hConsoleDesktop)
      * reference to it so that it does not disappear under us (e.g. when the
      * desktop is being destroyed) during the operation.
      */
-    /*
-     * Attach to the process of the thread we are trying to get
-     * the desktop from, so we can use the handle.
-     */
+    /* Attach to the target thread's process, so as to use the handle
+     * to retrieve the desktop from */
     KeStackAttachProcess(&Process->Pcb, &ApcState);
     Status = ObReferenceObjectByHandle(hDesk,
                                        0,
@@ -3212,24 +3170,20 @@ NtUserGetThreadDesktop(DWORD dwThreadId, HDESK hConsoleDesktop)
 
     if (NT_SUCCESS(Status))
     {
-        /*
-         * Lookup our handle table if we can find a handle to the desktop object.
-         // Not anymore! * If not, create one.
-         // Not anymore! * QUESTION: Do we really need to create a handle in case it doesn't exist??
-         */
-        //hDesk = IntGetDesktopObjectHandle(DesktopObject);
         HDESK hOrgDesk = hDesk;
         ASSERT(DesktopObject);
 
-__debugbreak();
-        if (!ObFindHandleForObject(PsGetCurrentProcess(), // Why not using Process?
+        /* Lookup the current process' handle table to find an existing handle
+         * to the desktop object, with the exact same attributes and access
+         * rights (HandleInformation Attributes and GrantedAccess) */
+        if (!ObFindHandleForObject(PsGetCurrentProcess(),
                                    DesktopObject,
                                    ExDesktopObjectType,
-                                   NULL,
+                                   &HandleInformation,
                                    (PHANDLE)&hDesk))
         {
-            /* Unable to create a handle */
-            ERR("Unable to find a target desktop handle for desktop 0x%p, handle 0x%p\n",
+            /* Unable to find a desktop handle */
+            ERR("Unable to find a target handle for desktop 0x%p (handle 0x%p) in current process\n",
                 DesktopObject, hOrgDesk);
             hDesk = NULL;
         }
@@ -3249,7 +3203,7 @@ __debugbreak();
 
     if (!hDesk)
     {
-        ERR("Could not retrieve or access desktop for thread 0x%x\n", dwThreadId);
+        ERR("Could not retrieve or access desktop for threadId %lu\n", dwThreadId);
         EngSetLastError(ERROR_ACCESS_DENIED);
     }
 
