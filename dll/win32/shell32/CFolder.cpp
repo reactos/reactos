@@ -31,7 +31,7 @@ HRESULT CFolder::Initialize(LPCITEMIDLIST idlist)
 
 HRESULT CFolder::GetShellFolder(CComPtr<IShellFolder>& psfCurrent)
 {
-    HRESULT hr = SHBindToObjectEx(NULL, GetAbsoluteIDList(), NULL, IID_PPV_ARG(IShellFolder, &psfCurrent));
+    HRESULT hr = SHBindToObject(NULL, GetAbsoluteIDList(), NULL, IID_PPV_ARG(IShellFolder, &psfCurrent));
     FAILED_UNEXPECTEDLY(hr);
     return hr;
 }
@@ -130,7 +130,7 @@ HRESULT STDMETHODCALLTYPE CFolder::NewFolder(BSTR bName, VARIANT vOptions)
 
     // Note: MSDN says vOptions "is not currently used"
     CComPtr<IStorage> pStg, pStgNew;
-    HRESULT hr = SHBindToObjectEx(NULL, GetAbsoluteIDList(), NULL, IID_PPV_ARG(IStorage, &pStg));
+    HRESULT hr = SHBindToObject(NULL, GetAbsoluteIDList(), NULL, IID_PPV_ARG(IStorage, &pStg));
     if (FAILED(hr))
         goto tryfs;//return hr;
     hr = pStg->CreateStorage(bName, STGM_FAILIFTHERE, 0, 0, &pStgNew);
