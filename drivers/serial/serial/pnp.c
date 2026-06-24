@@ -436,52 +436,6 @@ SerialPnp(
 
 			break;
 		}
-		case IRP_MN_DEVICE_USAGE_NOTIFICATION: /* (required or optional) 0x16 */
-		{
-			BOOLEAN InPath = Stack->Parameters.UsageNotification.InPath;
-
-			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_DEVICE_USAGE_NOTIFICATION\n");
-
-			DeviceExtension = DeviceObject->DeviceExtension;
-
-			if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
-			{
-				Status = Irp->IoStatus.Status;
-			}
-			else
-			{
-				Status = STATUS_UNSUCCESSFUL;
-			}
-
-			if (NT_SUCCESS(Status))
-			{
-				switch (Stack->Parameters.UsageNotification.Type)
-				{
-					case DeviceUsageTypePaging:
-						InPath ? DeviceExtension->PagingCount++ : DeviceExtension->PagingCount--;
-						break;
-					case DeviceUsageTypeHibernation:
-						InPath ? DeviceExtension->HibernateCount++ : DeviceExtension->HibernateCount--;
-						break;
-					case DeviceUsageTypeDumpFile:
-						InPath ? DeviceExtension->DumpCount++ : DeviceExtension->DumpCount--;
-						break;
-					default:
-						break;
-				}
-
-				if (DeviceExtension->PagingCount + DeviceExtension->HibernateCount + DeviceExtension->DumpCount > 0)
-				{
-					DeviceObject->Flags &= ~DO_POWER_PAGABLE;
-				}
-				else
-				{
-					DeviceObject->Flags |= DO_POWER_PAGABLE;
-				}
-			}
-
-			break;
-		}
 		default:
 		{
 			TRACE_(SERIAL, "Unknown minor function 0x%x\n", MinorFunction);
