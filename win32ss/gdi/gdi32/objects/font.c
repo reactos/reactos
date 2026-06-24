@@ -1128,7 +1128,7 @@ GetGlyphIndicesA(
     return Ret;
 }
 
-static DWORD APIENTRY
+static __inline DWORD APIENTRY
 IntGetGlyphOutlineW(
     HDC hdc,
     UINT uChar,
