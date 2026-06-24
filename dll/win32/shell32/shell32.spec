@@ -505,7 +505,7 @@
 @ stdcall SHEmptyRecycleBinW(long wstr long) # 2k3:285, Vista:344
 @ stub SHEnableServiceObject # 2k3:286, Vista:345
 @ stdcall SHEnumerateUnreadMailAccountsW(ptr long ptr long) # 2k3:287, Vista:346
-@ stub -version=0x600+ SHEvaluateSystemCommandTemplate # Vista:347
+@ stdcall -version=0x600+ SHEvaluateSystemCommandTemplate(wstr ptr ptr ptr) # Vista:347
 @ stdcall SHExtractIconsW(wstr long long long ptr ptr long long) user32.PrivateExtractIconsW # 2k3:288, Vista:348
 @ stdcall SHFileOperation(ptr) SHFileOperationA # 2k3:289, Vista:349
 @ stdcall SHFileOperationA(ptr) # 2k3:290, Vista:350
