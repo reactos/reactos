@@ -57,7 +57,7 @@ GetGlyphOutlineWow(
     _Out_ LPGLYPHMETRICS lpgm,
     _In_ DWORD cbBuffer,
     _Out_writes_bytes_opt_(cbBuffer) LPVOID lpvBuffer,
-    _In_opt_ CONST MAT2 *lpmat2);
+    _In_ CONST MAT2 *lpmat2);
 
 #ifdef __cplusplus
 } // extern "C"
