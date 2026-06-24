@@ -79,10 +79,6 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 
 	UNICODE_STRING SerialInterfaceName;
 
-	ULONG PagingCount;
-	ULONG HibernateCount;
-	ULONG DumpCount;
-
 	/* Current values */
 	UCHAR MCR; /* Base+4, Modem Control Register */
 	UCHAR MSR; /* Base+6, Modem Status Register */
