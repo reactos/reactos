@@ -5552,12 +5552,8 @@ const struct builtin_class_descr EDIT_builtin_class =
 {
     editW,                /* name */
     CS_DBLCLKS | CS_PARENTDC,   /* style */
-#ifdef __REACTOS__
-    EditWndProcA,         /* procA */
-    EditWndProcW,         /* procW */
-#else
-    WINPROC_EDIT,         /* proc */
-#endif
+    &pfnClientA.pfnEditWndProc, /* procA */
+    &pfnClientW.pfnEditWndProc, /* procW */
 #ifndef _WIN64
     sizeof(EDITSTATE *) + sizeof(WORD), /* extra */
 #else
