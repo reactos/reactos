@@ -477,11 +477,13 @@ BuildParametersString(
     TRACE("Name Servers %S\n", pszNameServers);
 
     /* Get the Parameters string length */
-    nLength = _scwprintf(L"DefGw=%s;GwMetric=%s;IfMetric=%lu;DNS=%s;",
+    nLength = _scwprintf(L"DefGw=%s;GwMetric=%s;IfMetric=%lu;DNS=%s;DynamicUpdate=%lu;NameRegistration=%lu;",
                          pszDefGateway ? pszDefGateway : L"",
                          pszGatewayMetric ? pszGatewayMetric : L"",
                          pAdapter->NewMetric,
-                         pszNameServers ? pszNameServers : L"");
+                         pszNameServers ? pszNameServers : L"",
+                         pAdapter->NewRegisterAdapterName ? 1 : 0,
+                         pAdapter->NewRegistrationEnabled ? 1 : 0);
 
     TRACE("Param string length %d\n", nLength);
     if (nLength == -1)
@@ -499,11 +501,13 @@ BuildParametersString(
 
     /* Fill the Parameters buffer */
     _swprintf(pszParameters,
-              L"DefGw=%s;GwMetric=%s;IfMetric=%lu;DNS=%s;",
+              L"DefGw=%s;GwMetric=%s;IfMetric=%lu;DNS=%s;DynamicUpdate=%lu;NameRegistration=%lu;",
               pszDefGateway ? pszDefGateway : L"",
               pszGatewayMetric ? pszGatewayMetric : L"",
               pAdapter->NewMetric,
-              pszNameServers ? pszNameServers : L"");
+              pszNameServers ? pszNameServers : L"",
+              pAdapter->NewRegisterAdapterName ? 1 : 0,
+              pAdapter->NewRegistrationEnabled ? 1 : 0);
 
     TRACE("Parameters %S\n", pszParameters);
 
@@ -4623,7 +4627,7 @@ ITcpipProperties_fnUnknown1(
     DWORD dwSize;
     HRESULT hr = S_OK;
 
-    ERR("ITcpipProperties_fnUnknown1(%s %p)\n", wine_dbgstr_guid(pAdapterName), ppProperties);
+    TRACE("ITcpipProperties_fnUnknown1(%s %p)\n", wine_dbgstr_guid(pAdapterName), ppProperties);
     TcpipConfNotifyImpl *This = impl_from_ITcpipProperties(iface);
 
     pAdapter = GetAdapterByGuid(This, pAdapterName);
@@ -4635,6 +4639,7 @@ ITcpipProperties_fnUnknown1(
     if (FAILED(hr))
         goto done;
 
+    TRACE("DHCP: %lu\n", pAdapter->NewDhcpEnabled);
     TRACE("IpAddress string: %S\n", pszIpAddress);
 
     /* Build the Parameters string */
