@@ -815,9 +815,9 @@ MsqRemoveWindowMessagesFromQueue(PWND Window)
 
       if (PostedMessage->Msg.hwnd == UserHMGetHandle(Window))
       {
-         if (PostedMessage->Msg.message == WM_QUIT && pti->QuitPosted == 0)
+         if (PostedMessage->Msg.message == WM_QUIT && !pti->QuitPosted)
          {
-            pti->QuitPosted = 1;
+            pti->QuitPosted = TRUE;
             pti->exitCode = PostedMessage->Msg.wParam;
          }
          ClearMsgBitsMask(pti, PostedMessage->QS_Flags);
@@ -905,6 +905,7 @@ co_MsqDispatchOneSentMessage(
    /* Now insert it to the global list of messages that can be removed Justin Case there's Trouble */
    InsertTailList(&usmList, &Message->ListEntry);
 
+ASSERT(Message->QS_Flags & QS_SENDMESSAGE);//////////////////
    ClearMsgBitsMask(pti, Message->QS_Flags);
 
    if (Message->HookMessage == MSQ_ISHOOK)
