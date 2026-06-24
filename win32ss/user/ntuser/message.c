@@ -1085,23 +1085,45 @@ co_IntPeekMessage( PMSG Msg,
             goto GotMessage;
         }
 
-        /* Only check for quit messages if not posted messages pending. */
-        if (ProcessMask & QS_POSTMESSAGE && pti->QuitPosted)
+        // NOTE: Addendum to commit 56ed054411fd4013aec65e296f8fbf6b65503961 (r66238)
+        /* Check for posted messages */
+        // TODO: Take pti->pcti->fsWakeBits into account?
+        if (ProcessMask & QS_POSTMESSAGE)
         {
-            /* According to the PSDK, WM_QUIT messages are always returned, regardless
-               of the filter specified */
-            Msg->hwnd = NULL;
-            Msg->message = WM_QUIT;
-            Msg->wParam = pti->exitCode;
-            Msg->lParam = 0;
-            if (RemoveMessages)
+            /* Only check for quit messages if no posted messages are pending */
+if (pti->QuitPosted && !IsListEmpty(&pti->PostedMessagesListHead))
+{
+    if (!(pti->QuitPosted & 0x80))
+    {
+        pti->QuitPosted |= 0x80;
+        ERR("pti 0x%p : QuitPosted but postmessage list not yet empty: the quit message won't be emitted yet!\n", pti);
+        __debugbreak();
+    }
+}
+            if (pti->QuitPosted && IsListEmpty(&pti->PostedMessagesListHead))
             {
-                pti->QuitPosted = FALSE;
-                ClearMsgBitsMask(pti, QS_POSTMESSAGE);
-                pti->pcti->fsWakeBits &= ~QS_ALLPOSTMESSAGE;
+                /* According to the PSDK, WM_QUIT messages are always returned,
+                 * regardless of the filter specified */
+                Msg->hwnd = NULL;
+                Msg->message = WM_QUIT;
+                Msg->wParam = pti->exitCode;
+                Msg->lParam = 0;
+                if (RemoveMessages)
+                {
+                    /* When removing the message, clear the flag
+                     * so that no other quit message is generated */
+                    pti->QuitPosted = FALSE;
+                }
+                goto GotMessage;
+            }
+            /* If no posted messages are pending and no quit messages posted,
+             * clear the post message bits so we don't look for them again */
+            if (!pti->QuitPosted && IsListEmpty(&pti->PostedMessagesListHead))
+            {
+                ClearMsgBitsMask(pti, QS_POSTMESSAGE); // Needed for ReactOS-specific processing
+                pti->pcti->fsWakeBits &= ~(QS_POSTMESSAGE | QS_ALLPOSTMESSAGE);
                 pti->pcti->fsChangeBits &= ~QS_ALLPOSTMESSAGE;
             }
-            goto GotMessage;
         }
 
         /* Check for hardware events. */
