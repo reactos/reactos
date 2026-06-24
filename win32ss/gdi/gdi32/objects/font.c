@@ -1140,7 +1140,7 @@ IntGetGlyphOutlineW(
     BOOL bIgnoreRotation)
 {
     if (!lpmat2 || !lpgm)
-        return -1;
+        return GDI_ERROR;
     if (!lpvBuffer)
         cbBuffer = 0;
     return NtGdiGetGlyphOutline(hdc, uChar, fuFormat, lpgm, cbBuffer, lpvBuffer, lpmat2,
