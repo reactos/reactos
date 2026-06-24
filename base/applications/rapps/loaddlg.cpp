@@ -42,6 +42,7 @@
 
 #include <ui/rosctrls.h>
 #include <windowsx.h>
+#include <shlwapi.h>
 #include <shlwapi_undoc.h>
 #include <process.h>
 #undef SubclassWindow
