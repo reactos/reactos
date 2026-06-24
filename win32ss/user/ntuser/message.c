@@ -1097,7 +1097,7 @@ if (pti->QuitPosted && !IsListEmpty(&pti->PostedMessagesListHead))
     {
         pti->QuitPosted |= 0x80;
         ERR("pti 0x%p : QuitPosted but postmessage list not yet empty: the quit message won't be emitted yet!\n", pti);
-        __debugbreak();
+        //__debugbreak();
     }
 }
             if (pti->QuitPosted && IsListEmpty(&pti->PostedMessagesListHead))
