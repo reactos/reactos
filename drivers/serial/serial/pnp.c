@@ -356,7 +356,6 @@ SerialPnp(
 		IRP_MN_QUERY_STOP_DEVICE 0x5
 		IRP_MN_CANCEL_STOP_DEVICE 0x6
 		IRP_MN_FILTER_RESOURCE_REQUIREMENTS (optional) 0xd
-		IRP_MN_QUERY_PNP_DEVICE_STATE (optional) 0x14
 		IRP_MN_DEVICE_USAGE_NOTIFICATION (required or optional) 0x16
 		*/
 		case IRP_MN_START_DEVICE: /* 0x0 */
@@ -463,6 +462,31 @@ SerialPnp(
 			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
+		case IRP_MN_QUERY_PNP_DEVICE_STATE: /* (optional) 0x14 */
+		{
+			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_QUERY_PNP_DEVICE_STATE\n");
+
+			DeviceExtension = DeviceObject->DeviceExtension;
+
+			if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
+			{
+				Status = Irp->IoStatus.Status;
+			}
+			else
+			{
+				Status = STATUS_UNSUCCESSFUL;
+			}
+
+			if (NT_SUCCESS(Status))
+			{
+				if (KdComPortInUse == ULongToPtr(DeviceExtension->BaseAddress))
+				{
+					Information |= PNP_DEVICE_NOT_DISABLEABLE;
+				}
+			}
+
+			break;
+    }
 		case IRP_MN_SURPRISE_REMOVAL: /* 0x17 */
 		{
 			WCHAR LinkNameBuffer[32];
