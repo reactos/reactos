@@ -53,6 +53,7 @@
 
 #ifdef USE_CERT_PINNING
 #define CERT_ISSUER_INFO_PREFIX "US\r\nLet's Encrypt\r\nR"
+#define CERT_ISSUER_INFO_PREFIX2 "US\r\nLet's Encrypt\r\nYR"
 #define CERT_ISSUER_INFO_OLD "US\r\nLet's Encrypt\r\nR3"
 #define CERT_ISSUER_INFO_NEW "US\r\nLet's Encrypt\r\nR11"
 #define CERT_SUBJECT_INFO "rapps.reactos.org"
@@ -63,7 +64,7 @@ IsTrustedPinnedCert(LPCSTR Subject, LPCSTR Issuer)
     if (strcmp(Subject, CERT_SUBJECT_INFO))
         return false;
 #ifdef CERT_ISSUER_INFO_PREFIX
-    return Issuer == StrStrA(Issuer, CERT_ISSUER_INFO_PREFIX);
+    return Issuer == StrStrA(Issuer, CERT_ISSUER_INFO_PREFIX) || Issuer == StrStrA(Issuer, CERT_ISSUER_INFO_PREFIX2);
 #else
     return !strcmp(Issuer, CERT_ISSUER_INFO_OLD) || !strcmp(Issuer, CERT_ISSUER_INFO_NEW);
 #endif
