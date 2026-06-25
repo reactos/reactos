@@ -218,6 +218,7 @@ static inline COLORREF GetViewColor(COLORREF Clr, UINT SysFallback)
 #define VID_Default ( *(const SHELLVIEWID*)&IID_CDefView )
 extern HRESULT ShellViewIdToFolderViewMode(const SHELLVIEWID *pVid);
 extern const SHELLVIEWID* FolderViewModeToShellViewId(UINT FVM);
+extern BOOL ShellCanPaste(const CComPtr<IShellFolder> &pSF);
 
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
@@ -1900,9 +1901,30 @@ HRESULT CDefView::FillEditMenu()
     if (!hEditMenu)
         return E_FAIL;
 
+    // Cleanup the items added previously
+    for (int i = GetMenuItemCount(hEditMenu) - 1; i >= 0; i--)
+    {
+        UINT id = GetMenuItemID(hEditMenu, i);
+        if (id < FCIDM_BROWSERFIRST || id > FCIDM_BROWSERLAST)
+            DeleteMenu(hEditMenu, i, MF_BYPOSITION);
+    }
+
+    // In case we still have this left over, clean it up
+    if (m_pFileMenu)
+    {
+        IUnknown_SetSite(m_pFileMenu, NULL);
+        m_pFileMenu.Release();
+    }
+
     HMENU hmenuContents = ::LoadMenuW(shell32_hInstance, L"MENU_003");
     if (!hmenuContents)
         return E_FAIL;
+
+    if (!ShellCanPaste(m_pSFParent))
+    {
+        SHEnableMenuItem(hmenuContents, FCIDM_SHVIEW_INSERT, FALSE);
+        SHEnableMenuItem(hmenuContents, FCIDM_SHVIEW_INSERTLINK, FALSE);
+    }
 
     Shell_MergeMenus(hEditMenu, hmenuContents, 0, 0, 0xFFFF, 0);
 
@@ -3102,6 +3124,9 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     {
     case FCIDM_MENU_FILE:
         FillFileMenu();
+        break;
+    case FCIDM_MENU_EDIT:
+        FillEditMenu();
         break;
     case FCIDM_MENU_VIEW:
     case FCIDM_SHVIEW_VIEW:
