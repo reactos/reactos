@@ -458,6 +458,6 @@ ImmSetCandidateWindow(
     ImmUnlockIMC(hIMC);
 
     Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCANDIDATEPOS,
-                       IMN_SETCANDIDATEPOS, (1 << (BYTE)lpCandidate->dwIndex));
+                       IMN_SETCANDIDATEPOS, (DWORD)(1 << (BYTE)lpCandidate->dwIndex));
     return TRUE;
 }
