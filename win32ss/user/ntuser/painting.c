@@ -288,22 +288,8 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
       NcType = IntGdiGetRgnBox(Window->hrgnUpdate, &update);
 
       RgnType = NtGdiCombineRgn(hRgnNonClient, hRgnNonClient, hRgnWindow, RGN_DIFF);
-
-      if (RgnType == ERROR)
-      {
-         GreDeleteObject(hRgnWindow);
-         GreDeleteObject(hRgnNonClient);
-         return HRGN_WINDOW;
-      }
-      else if (RgnType == NULLREGION)
-      {
-         GreDeleteObject(hRgnWindow);
-         GreDeleteObject(hRgnNonClient);
-         Window->state &= ~WNDS_UPDATEDIRTY;
-         return NULL;
-      }
-
-      RgnType = NtGdiCombineRgn(hRgnNonClient, hRgnNonClient, Window->hrgnUpdate, RGN_AND);
+      if ((RgnType != ERROR) && (RgnType != NULLREGION))
+         RgnType = NtGdiCombineRgn(hRgnNonClient, hRgnNonClient, Window->hrgnUpdate, RGN_AND);
 
       if (RgnType == ERROR)
       {
