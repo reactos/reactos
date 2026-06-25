@@ -533,6 +533,7 @@ static VOID Test_SpareCode(VOID)
 
 START_TEST(RtlVirtualUnwind)
 {
+    RtlpInitialize();
     Test_PushNonvol();
     Test_AllocSmall();
     Test_AllocLargeScaled();
