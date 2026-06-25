@@ -49,12 +49,12 @@ public:
     friend class CEnumTfContext;
 
 protected:
-    LONG m_cRefs;
-    ITfCompartmentMgr *m_pCompartmentMgr;
-    ITfContext *m_initialContext;
-    ITfContext *m_contextStack[2]; // limit of 2 contexts
-    ITfThreadMgrEventSink *m_pThreadMgrSink;
-    struct list m_transitoryExtensionSink;
+    LONG m_cRefs = 1;
+    ITfCompartmentMgr* m_pCompartmentMgr = NULL;
+    ITfContext* m_initialContext = NULL;
+    ITfContext* m_contextStack[2] = { NULL }; // limit of 2 contexts
+    ITfThreadMgrEventSink* m_pThreadMgrSink = NULL;
+    struct list m_transitoryExtensionSink = {};
 };
 
 EXTERN_C
@@ -84,7 +84,7 @@ public:
     STDMETHODIMP Clone(IEnumTfContexts **ppenum) override;
 
 protected:
-    LONG m_cRefs;
-    DWORD m_index;
-    CDocumentMgr *m_pDocMgr;
+    LONG m_cRefs = 1;
+    DWORD m_index = 0;
+    CDocumentMgr* m_pDocMgr = NULL;
 };

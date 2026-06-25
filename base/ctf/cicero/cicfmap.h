@@ -15,17 +15,16 @@
 class CicFileMappingStatic
 {
 protected:
-    LPCTSTR m_pszName;
-    LPVOID m_pView;
-    HANDLE m_hMapping;
-    BOOL m_bCreated;
-    BOOL m_bHasMutex;
-    CicMutex *m_pMutex;
+    LPCTSTR m_pszName = NULL;
+    LPVOID m_pView = NULL;
+    HANDLE m_hMapping = NULL;
+    BOOL m_bCreated = FALSE;
+    BOOL m_bHasMutex = FALSE;
+    CicMutex* m_pMutex = NULL;
 
     LPVOID _Map();
 
 public:
-    CicFileMappingStatic() { }
     ~CicFileMappingStatic() { }
 
     void Init(LPCTSTR pszName, CicMutex *pMutex);

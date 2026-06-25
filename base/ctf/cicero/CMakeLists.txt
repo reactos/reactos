@@ -10,6 +10,7 @@ list(APPEND SOURCE
 
 add_library(cicero STATIC ${SOURCE})
 target_compile_definitions(cicero PRIVATE UNICODE _UNICODE)
-add_dependencies(cicero psdk reactos_idls)
+target_link_libraries(cicero PRIVATE cppstl)
+add_dependencies(cicero psdk reactos_idls cppstl)
 target_include_directories(cicero INTERFACE
     $<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}>)

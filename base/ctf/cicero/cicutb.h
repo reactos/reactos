@@ -22,8 +22,8 @@ DEFINE_GUID(
 
 typedef struct CIC_LIBTHREAD
 {
-    ITfCategoryMgr *m_pCategoryMgr;
-    ITfDisplayAttributeMgr *m_pDisplayAttrMgr;
+    ITfCategoryMgr* m_pCategoryMgr;
+    ITfDisplayAttributeMgr* m_pDisplayAttrMgr;
 } CIC_LIBTHREAD, *PCIC_LIBTHREAD;
 
 EXTERN_C PCIC_LIBTHREAD WINAPI GetLibTls(VOID);
