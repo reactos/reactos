@@ -46,6 +46,10 @@ endif()
 add_subdirectory(txt2nls)
 add_subdirectory(unicode)
 add_subdirectory(widl)
+if(NOT TARGET_COMPILER_ID STREQUAL "MSVC")
+    # MSVC builds compile .mc files with the mc.exe from the Windows SDK
+    add_subdirectory(windmc)
+endif()
 add_subdirectory(wpp)
 add_subdirectory(xml2sdb)
 
