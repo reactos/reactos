@@ -41,7 +41,9 @@ KeStartAllProcessors(VOID)
     PVOID KernelStack, DPCStack;
     PAPINFO APInfo;
     ULONG ProcessorCount;
+    ULONG StartedProcessors;
     ULONG MaximumProcessors;
+    ULONG WaitCount;
 
     /* NOTE: NT6+ HAL exports HalEnumerateProcessors() and
      * HalQueryMaximumProcessorCount() that help determining
@@ -58,11 +60,14 @@ KeStartAllProcessors(VOID)
 
     // TODO: Support processor nodes
 
+    StartedProcessors = 1;
+
     /* Start ProcessorCount at 1 because we already have the boot CPU */
     for (ProcessorCount = 1; ProcessorCount < MaximumProcessors; ++ProcessorCount)
     {
         KernelStack = NULL;
         DPCStack = NULL;
+        APInfo = NULL;
 
         // Allocate structures for a new CPU.
         APInfo = ExAllocatePoolZero(NonPagedPool, sizeof(*APInfo), TAG_KERNEL);
@@ -72,11 +77,18 @@ KeStartAllProcessors(VOID)
 
         KernelStack = MmCreateKernelStack(FALSE, 0);
         if (!KernelStack)
+        {
+            ExFreePoolWithTag(APInfo, TAG_KERNEL);
             break;
+        }
 
         DPCStack = MmCreateKernelStack(FALSE, 0);
         if (!DPCStack)
+        {
+            MmDeleteKernelStack(KernelStack, FALSE);
+            ExFreePoolWithTag(APInfo, TAG_KERNEL);
             break;
+        }
 
         // Initalize a new PCR for the specific AP
         KiInitializePcr(ProcessorCount,
@@ -140,34 +152,40 @@ KeStartAllProcessors(VOID)
 
         // Update the LOADER_PARAMETER_BLOCK structure for the new processor
         KeLoaderBlock->KernelStack = (ULONG_PTR)KernelStack;
-        KeLoaderBlock->Prcb = (ULONG_PTR)&APInfo->Pcr.Prcb;
-        KeLoaderBlock->Thread = (ULONG_PTR)&APInfo->Pcr.Prcb->IdleThread;
+        KeLoaderBlock->Prcb = (ULONG_PTR)APInfo->Pcr.Prcb;
+        KeLoaderBlock->Thread = (ULONG_PTR)&APInfo->Thread;
 
         // Start the CPU
         DPRINT("Attempting to Start a CPU with number: %lu\n", ProcessorCount);
         if (!HalStartNextProcessor(KeLoaderBlock, ProcessorState))
         {
+            ExFreePoolWithTag(APInfo, TAG_KERNEL);
+            MmDeleteKernelStack(KernelStack, FALSE);
+            MmDeleteKernelStack(DPCStack, FALSE);
             break;
         }
 
         // And wait for it to start
-        while (KeLoaderBlock->Prcb != 0)
+        for (WaitCount = 0; WaitCount < 50000; WaitCount++)
         {
-            //TODO: Add a time out so we don't wait forever
+            if (KeLoaderBlock->Prcb == 0)
+                break;
+
             KeMemoryBarrier();
             YieldProcessor();
+            KeStallExecutionProcessor(100);
         }
+
+        if (KeLoaderBlock->Prcb != 0)
+        {
+            DPRINT1("KeStartAllProcessors: Processor %lu did not finish startup\n",
+                    ProcessorCount);
+            break;
+        }
+
+        StartedProcessors++;
     }
 
-    // The last CPU didn't start - clean the data
-    ProcessorCount--;
-
-    if (APInfo)
-        ExFreePoolWithTag(APInfo, TAG_KERNEL);
-    if (KernelStack)
-        MmDeleteKernelStack(KernelStack, FALSE);
-    if (DPCStack)
-        MmDeleteKernelStack(DPCStack, FALSE);
-
-    DPRINT1("KeStartAllProcessors: Successful AP startup count is %lu\n", ProcessorCount);
+    DPRINT1("KeStartAllProcessors: Successful AP startup count is %lu\n",
+            StartedProcessors - 1);
 }

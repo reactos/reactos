@@ -28,8 +28,7 @@ extern PVOID HalpAPEntryData;
 extern PVOID HalpAPEntry32;
 extern PVOID HalpAPEntry16End;
 extern HALP_APIC_INFO_TABLE HalpApicInfoTable;
-
-ULONG HalpStartedProcessorCount = 1;
+extern ULONG HalpStartedProcessorCount;
 
 #ifndef Add2Ptr
 #define Add2Ptr(P,I) ((PVOID)((PUCHAR)(P) + (I)))

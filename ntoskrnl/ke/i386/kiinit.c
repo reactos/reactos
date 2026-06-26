@@ -685,14 +685,30 @@ NTAPI
 KiSystemStartupBootStack(VOID)
 {
     PKTHREAD Thread;
+    PLOADER_PARAMETER_BLOCK LoaderBlock;
+    PKPRCB Prcb;
+    ULONG Cpu;
+    PVOID KernelStack;
+
+    LoaderBlock = KeLoaderBlock;
+    Prcb = (PKPRCB)__readfsdword(KPCR_PRCB);
+    Cpu = Prcb->Number;
+    Thread = (PKTHREAD)LoaderBlock->Thread;
+    KernelStack = (PVOID)(LoaderBlock->KernelStack & ~3);
+
+    if (Cpu)
+    {
+        KeMemoryBarrier();
+        LoaderBlock->Prcb = 0;
+    }
 
     /* Initialize the kernel for the current CPU */
     KiInitializeKernel(&KiInitialProcess.Pcb,
-                       (PKTHREAD)KeLoaderBlock->Thread,
-                       (PVOID)(KeLoaderBlock->KernelStack & ~3),
-                       (PKPRCB)__readfsdword(KPCR_PRCB),
-                       KeNumberProcessors - 1,
-                       KeLoaderBlock);
+                       Thread,
+                       KernelStack,
+                       Prcb,
+                       Cpu,
+                       LoaderBlock);
 
     /* Set the priority of this thread to 0 */
     Thread = KeGetCurrentThread();
@@ -822,18 +838,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlCopyMemory(&Idt[8], &DoubleFaultEntry, sizeof(KIDTENTRY));
 
 AppCpuInit:
-    //TODO: We don't setup IPIs yet so freeze other processors here.
-    if (Cpu)
-    {
-        KeMemoryBarrier();
-        LoaderBlock->Prcb = 0;
-
-        for (;;)
-        {
-            YieldProcessor();
-        }
-    }
-
     /* Loop until we can release the freeze lock */
     do
     {

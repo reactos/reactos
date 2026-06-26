@@ -13,6 +13,7 @@
 
 KAFFINITY HalpActiveProcessors;
 KAFFINITY HalpDefaultInterruptAffinity;
+ULONG HalpStartedProcessorCount = 1;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -34,7 +35,15 @@ BOOLEAN
 NTAPI
 HalAllProcessorsStarted(VOID)
 {
-    /* Do nothing */
+    if (!(HalpBuildType & PRCB_BUILD_UNIPROCESSOR) &&
+        (KeNumberProcessors != HalpStartedProcessorCount))
+    {
+        DPRINT1("Only %u of %lu started processors reached the kernel\n",
+                KeNumberProcessors,
+                HalpStartedProcessorCount);
+        return FALSE;
+    }
+
     return TRUE;
 }
 

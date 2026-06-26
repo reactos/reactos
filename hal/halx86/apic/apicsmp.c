@@ -68,6 +68,7 @@ ApicRequestGlobalInterrupt(
     _In_ APIC_DSH DestinationShortHand)
 {
     ULONG Flags;
+    ULONG WaitCount;
     APIC_INTERRUPT_COMMAND_REGISTER Icr;
 
     /* Disable interrupts so that we can change IRR without being interrupted */
@@ -75,10 +76,24 @@ ApicRequestGlobalInterrupt(
     _disable();
 
     /* Wait for the APIC to be idle */
-    do
+    for (WaitCount = 0; WaitCount < 10000; WaitCount++)
     {
         Icr.Long0 = ApicRead(APIC_ICR0);
-    } while (Icr.DeliveryStatus);
+        if (!Icr.DeliveryStatus)
+            break;
+
+        KeStallExecutionProcessor(10);
+    }
+
+    if (Icr.DeliveryStatus)
+    {
+        DPRINT1("APIC ICR was busy before vector 0x%02x\n", Vector);
+        if (Flags & EFLAGS_INTERRUPT_MASK)
+        {
+            _enable();
+        }
+        return;
+    }
 
     /* Setup the command register */
     Icr.LongLong = 0;
@@ -95,6 +110,20 @@ ApicRequestGlobalInterrupt(
     /* Write the low dword last to send the interrupt */
     ApicWrite(APIC_ICR1, Icr.Long1);
     ApicWrite(APIC_ICR0, Icr.Long0);
+
+    for (WaitCount = 0; WaitCount < 10000; WaitCount++)
+    {
+        Icr.Long0 = ApicRead(APIC_ICR0);
+        if (!Icr.DeliveryStatus)
+            break;
+
+        KeStallExecutionProcessor(10);
+    }
+
+    if (Icr.DeliveryStatus)
+    {
+        DPRINT1("APIC ICR stayed busy after vector 0x%02x\n", Vector);
+    }
 
     /* Finally, restore the original interrupt state */
     if (Flags & EFLAGS_INTERRUPT_MASK)
@@ -127,6 +156,11 @@ ApicStartApplicationProcessor(
     KeStallExecutionProcessor(200);
 
     /* Startup IPI */
+    ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, (StartupLoc.LowPart) >> 12,
+        APIC_MT_Startup, APIC_TGM_Edge, APIC_DSH_Destination);
+
+    KeStallExecutionProcessor(200);
+
     ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, (StartupLoc.LowPart) >> 12,
         APIC_MT_Startup, APIC_TGM_Edge, APIC_DSH_Destination);
 }
@@ -171,9 +205,8 @@ HalRequestIpiSpecifyVector(
     _In_ UCHAR Vector)
 {
     KAFFINITY ActiveProcessors = HalpActiveProcessors;
-    KAFFINITY RemainingSet, SetMember;
+    KAFFINITY RemainingSet;
     ULONG ProcessorIndex;
-    ULONG LApicId;
 
     /* Sanitize the target set */
     TargetSet &= ActiveProcessors;
@@ -198,6 +231,9 @@ HalRequestIpiSpecifyVector(
     RemainingSet = TargetSet;
     while (RemainingSet != 0)
     {
+        KAFFINITY SetMember;
+        ULONG LApicId;
+
         NT_VERIFY(BitScanForwardAffinity(&ProcessorIndex, RemainingSet) != 0);
         ASSERT(ProcessorIndex < KeNumberProcessors);
         SetMember = AFFINITY_MASK(ProcessorIndex);
@@ -272,9 +308,8 @@ NTAPI
 HalpSendNMI(
     _In_ KAFFINITY TargetSet)
 {
-    KAFFINITY RemainingSet, SetMember;
+    KAFFINITY RemainingSet;
     ULONG ProcessorIndex;
-    ULONG LApicId;
 
     /* Make sure we do not send an NMI to ourselves */
     ASSERT((TargetSet & KeGetCurrentPrcb()->SetMember) == 0);
@@ -283,6 +318,9 @@ HalpSendNMI(
     RemainingSet = TargetSet;
     while (RemainingSet != 0)
     {
+        KAFFINITY SetMember;
+        ULONG LApicId;
+
         NT_VERIFY(BitScanForwardAffinity(&ProcessorIndex, RemainingSet) != 0);
         ASSERT(ProcessorIndex < KeNumberProcessors);
         SetMember = AFFINITY_MASK(ProcessorIndex);
