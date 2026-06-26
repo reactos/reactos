@@ -15,6 +15,7 @@ list(APPEND SOURCE
     CreateDIBPatternBrush.c
     CreateFont.c
     CreateFontIndirect.c
+    CreateHalftonePalette.c
     CreateIconIndirect.c
     CreatePen.c
     CreateRectRgn.c
