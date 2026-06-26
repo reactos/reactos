@@ -116,7 +116,7 @@ SHELL_CreateFallbackExtractIconForFolder(REFIID riid, LPVOID *ppvOut)
 static inline HRESULT
 SHELL_CreateFallbackExtractIconForNoAssocFile(REFIID riid, LPVOID *ppvOut)
 {
-    const int id = IDI_SHELL_DOCUMENT;
+    const int id = IDI_SHELL_FILE;
     return SHELL_CreateShell32DefaultExtractIcon(id > 1 ? -id : 0, riid, ppvOut);
 }
 

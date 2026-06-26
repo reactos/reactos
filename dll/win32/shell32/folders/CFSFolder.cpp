@@ -381,7 +381,7 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
                     if (lstrcmpiW(pExtension, L".exe") == 0 || lstrcmpiW(pExtension, L".scr") == 0)
                         icon_idx = -IDI_SHELL_EXE;
                     else
-                        icon_idx = -IDI_SHELL_DOCUMENT;
+                        icon_idx = -IDI_SHELL_FILE;
                 }
             }
 

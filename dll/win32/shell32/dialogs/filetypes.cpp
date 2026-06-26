@@ -31,7 +31,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
 #define FTA_MODIFYMASK (FTA_OpenIsSafe) // Bits modified by EditTypeDlg
-#define NOASSOCRESID IDI_SHELL_DOCUMENT
+#define NOASSOCRESID IDI_SHELL_FILE
 #define SUPPORT_EXTENSIONWITHOUTPROGID 1 // NT5 does not support these but NT6 does
 
 #define ASSOC_CCHMAX (32 + 1) // Extension or protocol (INTERNET_MAX_SCHEME_LENGTH)

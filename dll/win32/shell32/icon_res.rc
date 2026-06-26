@@ -1,4 +1,4 @@
-IDI_SHELL_DOCUMENT ICON "res/icons/1.ico"
+IDI_SHELL_FILE ICON "res/icons/1.ico"
 IDI_SHELL_RICH_TEXT ICON "res/icons/2.ico"
 IDI_SHELL_EXE ICON "res/icons/3.ico"
 IDI_SHELL_FOLDER ICON "res/icons/4.ico"
