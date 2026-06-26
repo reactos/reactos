@@ -9,10 +9,6 @@
 
 #include "resource.h"
 
-#define RUN_APPS_PAGE
-#define RUN_PROC_PAGE
-#define RUN_PERF_PAGE
-
 #define STATUS_WINDOW	2001
 #define STATUS_SIZE1	85
 #define STATUS_SIZE2	157 // he-IL.rc determines minimum width: 72 == 157 - 85
@@ -55,16 +51,17 @@ typedef struct
 	BOOL	ShowKernelTimes;
 } TASKMANAGER_SETTINGS, *LPTASKMANAGER_SETTINGS;
 
-/* Global Variables: */
-extern	HINSTANCE	hInst;						/* current instance */
-extern	HWND		hMainWnd;					/* Main Window */
-extern	HWND		hStatusWnd;					/* Status Bar Window */
-extern	HWND		hTabWnd;					/* Tab Control Window */
-extern	int			nMinimumWidth;				/* Minimum width of the dialog (OnSize()'s cx) */
-extern	int			nMinimumHeight;				/* Minimum height of the dialog (OnSize()'s cy) */
-extern	int			nOldWidth;					/* Holds the previous client area width */
-extern	int			nOldHeight;					/* Holds the previous client area height */
-extern	TASKMANAGER_SETTINGS	TaskManagerSettings;
+/* Global Variables */
+extern HINSTANCE hInst;     /* Current instance */
+extern HWND hMainWnd;       /* Main Window */
+extern HWND hStatusWnd;     /* Status Bar Window */
+extern HWND hTabWnd;        /* Tab Control Window */
+extern HWND g_hPages[];     /* Pages */
+extern int nMinimumWidth;   /* Minimum width of the dialog (OnSize()'s cx) */
+extern int nMinimumHeight;  /* Minimum height of the dialog (OnSize()'s cy) */
+extern int nOldWidth;       /* Holds the previous client area width */
+extern int nOldHeight;      /* Holds the previous client area height */
+extern TASKMANAGER_SETTINGS TaskManagerSettings;
 
 /* Forward declarations of functions included in this code module: */
 INT_PTR CALLBACK TaskManagerWndProc(HWND, UINT, WPARAM, LPARAM);
