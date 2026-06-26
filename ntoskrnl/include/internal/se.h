@@ -696,6 +696,8 @@ SepPropagateAcl(
     _In_ PSID Group,
     _In_ BOOLEAN IsInherited,
     _In_ BOOLEAN IsDirectoryObject,
+    _In_z_ PCSTR AclRole,
+    _In_z_ PCSTR AclOperation,
     _In_ PGENERIC_MAPPING GenericMapping);
 
 PACL
@@ -711,6 +713,7 @@ SepSelectAcl(
     _Out_ PBOOLEAN AclPresent,
     _Out_ PBOOLEAN IsInherited,
     _In_ BOOLEAN IsDirectoryObject,
+    _In_z_ PCSTR AclRole,
     _In_ PGENERIC_MAPPING GenericMapping);
 
 //

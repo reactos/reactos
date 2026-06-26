@@ -592,6 +592,8 @@ SepPropagateAcl(
     _In_ PSID Group,
     _In_ BOOLEAN IsInherited,
     _In_ BOOLEAN IsDirectoryObject,
+    _In_z_ PCSTR AclRole,
+    _In_z_ PCSTR AclOperation,
     _In_ PGENERIC_MAPPING GenericMapping)
 {
     ACCESS_MASK Mask;
@@ -606,6 +608,22 @@ SepPropagateAcl(
     USHORT AceCount = 0;
     PSID Sid;
     BOOLEAN WriteTwoAces;
+
+    if (!RtlValidAcl(AclSource))
+    {
+        DPRINT1("SepPropagateAcl invalid source ACL %p: role %s operation %s process %p thread %p aclLength %lu revision %u size %u aceCount %u inherited %u directory %u\n",
+                AclSource,
+                AclRole,
+                AclOperation,
+                PsGetCurrentProcessId(),
+                PsGetCurrentThreadId(),
+                *AclLength,
+                AclSource->AclRevision,
+                AclSource->AclSize,
+                AclSource->AceCount,
+                IsInherited,
+                IsDirectoryObject);
+    }
 
     ASSERT(RtlValidAcl(AclSource));
     ASSERT(AclSource->AclSize % sizeof(ULONG) == 0);
@@ -813,15 +831,18 @@ SepSelectAcl(
     _Out_ PBOOLEAN AclPresent,
     _Out_ PBOOLEAN IsInherited,
     _In_ BOOLEAN IsDirectoryObject,
+    _In_z_ PCSTR AclRole,
     _In_ PGENERIC_MAPPING GenericMapping)
 {
     PACL Acl;
     NTSTATUS Status;
+    PCSTR AclOperation;
 
     *AclPresent = TRUE;
     if (ExplicitPresent && !ExplicitDefaulted)
     {
         Acl = ExplicitAcl;
+        AclOperation = "explicit-length";
     }
     else
     {
@@ -836,6 +857,8 @@ SepSelectAcl(
                                      Group,
                                      *IsInherited,
                                      IsDirectoryObject,
+                                     AclRole,
+                                     "parent-length",
                                      GenericMapping);
             ASSERT(Status == STATUS_BUFFER_TOO_SMALL);
 
@@ -847,15 +870,18 @@ SepSelectAcl(
         if (ExplicitPresent)
         {
             Acl = ExplicitAcl;
+            AclOperation = "explicit-defaulted-length";
         }
         else if (DefaultAcl)
         {
             Acl = DefaultAcl;
+            AclOperation = "default-length";
         }
         else
         {
             *AclPresent = FALSE;
             Acl = NULL;
+            AclOperation = "absent-length";
         }
     }
 
@@ -871,6 +897,8 @@ SepSelectAcl(
                                  Group,
                                  *IsInherited,
                                  IsDirectoryObject,
+                                 AclRole,
+                                 AclOperation,
                                  GenericMapping);
         ASSERT(Status == STATUS_BUFFER_TOO_SMALL);
     }
