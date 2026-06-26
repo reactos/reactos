@@ -31,9 +31,18 @@ PKTHREAD
 FASTCALL
 KiIdleSchedule(IN PKPRCB Prcb)
 {
-    /* FIXME: TODO */
-    ASSERTMSG("SMP: Not yet implemented\n", FALSE);
-    return NULL;
+    ASSERT(Prcb != NULL);
+
+    {
+        PKTHREAD Thread;
+
+        KiAcquirePrcbLock(Prcb);
+        Thread = KiSelectNextThread(Prcb);
+        Prcb->IdleSchedule = (Thread == Prcb->IdleThread);
+        KiReleasePrcbLock(Prcb);
+
+        return Thread;
+    }
 }
 
 VOID
@@ -41,7 +50,6 @@ FASTCALL
 KiProcessDeferredReadyList(IN PKPRCB Prcb)
 {
     PSINGLE_LIST_ENTRY ListEntry;
-    PKTHREAD Thread;
 
     /* Make sure there is something on the ready list */
     ASSERT(Prcb->DeferredReadyListHead.Next != NULL);
@@ -53,6 +61,8 @@ KiProcessDeferredReadyList(IN PKPRCB Prcb)
     /* Start processing loop */
     do
     {
+        PKTHREAD Thread;
+
         /* Get the thread and advance to the next entry */
         Thread = CONTAINING_RECORD(ListEntry, KTHREAD, SwapListEntry);
         ListEntry = ListEntry->Next;
@@ -412,9 +422,6 @@ KiSelectNextThread(IN PKPRCB Prcb)
         /* Enable idle scheduling */
         InterlockedOrSetMember(&KiIdleSummary, Prcb->SetMember);
         Prcb->IdleSchedule = TRUE;
-
-        /* FIXME: SMT support */
-        //ASSERTMSG("SMP: Not yet implemented\n", FALSE);
     }
 
     /* Sanity checks and return the thread */
@@ -534,7 +541,6 @@ NTAPI
 KiAdjustQuantumThread(IN PKTHREAD Thread)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
-    PKTHREAD NextThread;
 
     /* Acquire thread and PRCB lock */
     KiAcquireThreadLock(Thread);
@@ -556,6 +562,8 @@ KiAdjustQuantumThread(IN PKTHREAD Thread)
             /* Check if there's no next thread scheduled */
             if (!Prcb->NextThread)
             {
+                PKTHREAD NextThread;
+
                 /* Select a ready thread and check if we found one */
                 NextThread = KiSelectReadyThread(Thread->Priority, Prcb);
                 if (NextThread)
@@ -584,11 +592,7 @@ FASTCALL
 KiSetPriorityThread(IN PKTHREAD Thread,
                     IN KPRIORITY Priority)
 {
-    PKPRCB Prcb;
-    ULONG Processor;
     BOOLEAN RequestInterrupt = FALSE;
-    KPRIORITY OldPriority;
-    PKTHREAD NewThread;
     ASSERT((Priority >= 0) && (Priority <= HIGH_PRIORITY));
 
     /* Check if priority changed */
@@ -603,6 +607,9 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                 /* Make sure we're not on the ready queue */
                 if (!Thread->ProcessReadyQueue)
                 {
+                    PKPRCB Prcb;
+                    ULONG Processor;
+
                     /* Get the PRCB for the thread and lock it */
                     Processor = Thread->NextProcessor;
                     Prcb = KiProcessorBlock[Processor];
@@ -648,6 +655,9 @@ KiSetPriorityThread(IN PKTHREAD Thread,
             }
             else if (Thread->State == Standby)
             {
+                PKPRCB Prcb;
+                ULONG Processor;
+
                 /* Get the PRCB for the thread and lock it */
                 Processor = Thread->NextProcessor;
                 Prcb = KiProcessorBlock[Processor];
@@ -656,6 +666,8 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                 /* Check if we're still the next thread to run */
                 if (Thread == Prcb->NextThread)
                 {
+                    KPRIORITY OldPriority;
+
                     /* Get the old priority and update ours */
                     OldPriority = Thread->Priority;
                     Thread->Priority = (SCHAR)Priority;
@@ -663,6 +675,8 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                     /* Check if there was a change */
                     if (Priority < OldPriority)
                     {
+                        PKTHREAD NewThread;
+
                         /* Find a new thread */
                         NewThread = KiSelectReadyThread(Priority + 1, Prcb);
                         if (NewThread)
@@ -688,6 +702,9 @@ KiSetPriorityThread(IN PKTHREAD Thread,
             }
             else if (Thread->State == Running)
             {
+                PKPRCB Prcb;
+                ULONG Processor;
+
                 /* Get the PRCB for the thread and lock it */
                 Processor = Thread->NextProcessor;
                 Prcb = KiProcessorBlock[Processor];
@@ -696,6 +713,8 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                 /* Check if we're still the current thread running */
                 if (Thread == Prcb->CurrentThread)
                 {
+                    KPRIORITY OldPriority;
+
                     /* Get the old priority and update ours */
                     OldPriority = Thread->Priority;
                     Thread->Priority = (SCHAR)Priority;
@@ -703,6 +722,8 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                     /* Check if there was a change and there's no new thread */
                     if ((Priority < OldPriority) && !(Prcb->NextThread))
                     {
+                        PKTHREAD NewThread;
+
                         /* Find a new thread */
                         NewThread = KiSelectReadyThread(Priority + 1, Prcb);
                         if (NewThread)
@@ -889,7 +910,7 @@ NtYieldExecution(VOID)
     NTSTATUS Status;
     KIRQL OldIrql;
     PKPRCB Prcb;
-    PKTHREAD Thread, NextThread;
+    PKTHREAD Thread;
 
     /* NB: No instructions (other than entry code) should preceed this line */
 
@@ -907,6 +928,8 @@ NtYieldExecution(VOID)
     /* Now check if there's still a ready summary */
     if (Prcb->ReadySummary)
     {
+        PKTHREAD NextThread;
+
         /* Acquire thread and PRCB lock */
         KiAcquireThreadLock(Thread);
         KiAcquirePrcbLock(Prcb);

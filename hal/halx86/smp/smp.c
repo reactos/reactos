@@ -32,6 +32,8 @@ HalpSetupProcessorsTable(
      */
     CurrentPrcb = KeGetCurrentPrcb();
     HalpProcessorIdentity[NTProcessorNumber].ProcessorPrcb = CurrentPrcb;
+    HalpProcessorIdentity[NTProcessorNumber].ProcessorStarted = TRUE;
+    HalpProcessorIdentity[NTProcessorNumber].BSPCheck = (NTProcessorNumber == 0);
 }
 
 VOID
