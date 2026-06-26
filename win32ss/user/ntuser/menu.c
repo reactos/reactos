@@ -5765,7 +5765,7 @@ NtUserGetTitleBarInfo(
     BOOLEAN retValue = FALSE;
 
     TRACE("Enter NtUserGetTitleBarInfo\n");
-    UserEnterExclusive();
+    UserEnterShared();
 
     /* Validate the window handle */
     if (!(WindowObject = UserGetWindowObject(hwnd)))
@@ -6315,7 +6315,7 @@ NtUserMenuItemFromPoint(
    int Ret = -1;
 
    TRACE("Enter NtUserMenuItemFromPoint\n");
-   UserEnterExclusive();
+   UserEnterShared();
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
