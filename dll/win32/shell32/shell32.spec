@@ -563,7 +563,7 @@
 @ stdcall SHGetSpecialFolderLocation(long long ptr) # 2k3:317, Vista:387
 @ stdcall SHGetSpecialFolderPathA(long ptr long long) # 2k3:318, Vista:388
 @ stdcall SHGetSpecialFolderPathW(long ptr long long) # 2k3:319, Vista:389
-@ stub -version=0x600+ SHGetStockIconInfo # Vista:390
+@ stdcall -version=0x600+ SHGetStockIconInfo(long long ptr) # Vista:390
 @ stub -version=0x600+ SHGetTemporaryPropertyForItem # Vista:391
 @ stdcall SHGetUnreadMailCountW(ptr wstr ptr ptr ptr long) # 2k3:320, Vista:392
 @ stdcall -version=0x502 SHHelpShortcuts_RunDLL(long long long long) SHHelpShortcuts_RunDLLA # 2k3:321

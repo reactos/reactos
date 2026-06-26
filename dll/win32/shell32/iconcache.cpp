@@ -1081,3 +1081,45 @@ EXTERN_C INT WINAPI SHGetIconOverlayIndexW(LPCWSTR pszIconPath, INT iIconIndex)
 
   return -1;
 }
+
+/****************************************************************************
+ * SHGetStockIconInfo [SHELL32.@]
+ *
+ * Receive information for builtin icons
+ *
+ * PARAMS
+ *  id      [I]  selected icon-id to get information for
+ *  flags   [I]  selects the information to receive
+ *  sii     [IO] SHSTOCKICONINFO structure to fill
+ *
+ * RETURNS
+ *  Success: S_OK
+ *  Failure: A HRESULT failure code
+ *
+ */
+EXTERN_C HRESULT WINAPI SHGetStockIconInfo(SHSTOCKICONID id, UINT flags, SHSTOCKICONINFO *sii)
+{
+    FIXME("(%d, 0x%x, %p) semi-stub\n", id, flags, sii);
+    if ((id < 0) || (id >= SIID_MAX_ICONS) || !sii || (sii->cbSize != sizeof(SHSTOCKICONINFO))) {
+        return E_INVALIDARG;
+    }
+
+    GetSystemDirectoryW(sii->szPath, MAX_PATH);
+
+    /* no icons defined: use default */
+    sii->iIcon = -IDI_SHELL_FILE;
+    lstrcatW(sii->szPath, L"\\shell32.dll");
+
+    const UINT implementedflags = SHGSI_ICON;
+    if (flags & ~implementedflags)
+        FIXME("flags 0x%x not implemented\n", flags);
+
+    sii->hIcon = NULL;
+    if (flags & SHGSI_ICON)
+        sii->hIcon = LoadIconW(GetModuleHandleW(sii->szPath), MAKEINTRESOURCEW(sii->iIcon));
+    sii->iSysImageIndex = -1;
+
+    TRACE("%3d: returning %s (%d)\n", id, debugstr_w(sii->szPath), sii->iIcon);
+
+    return S_OK;
+}
