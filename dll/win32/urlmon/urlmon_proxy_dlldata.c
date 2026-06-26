@@ -1,0 +1,9 @@
+/*
+ * PROJECT:     ReactOS URLMON
+ * LICENSE:     GPL-2.0-or-later
+ * PURPOSE:     RPC proxy dlldata wrapper
+ */
+
+#define PROXY_CLSID_IS {0x79EAC9F1, 0xBAF9, 0x11CE, {0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B}}
+
+#include "proxy.dlldata.c"

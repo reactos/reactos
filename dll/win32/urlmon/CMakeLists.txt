@@ -4,8 +4,7 @@ add_definitions(
     -DENTRY_PREFIX=URLMON_
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL
-    -D_CRT_NON_CONFORMING_SWPRINTFS
-    -DPROXY_CLSID_IS={0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}})
+    -D_CRT_NON_CONFORMING_SWPRINTFS)
 
 spec2def(urlmon.dll urlmon.spec ADD_IMPORTLIB)
 add_rpcproxy_files(urlmon_urlmon.idl)
@@ -34,14 +33,18 @@ list(APPEND SOURCE
     session.c
     umon.c
     umstream.c
+    urlmon_proxy_dlldata.c
     uri.c
     urlmon_main.c
     usrmarshal.c)
 
 list(APPEND PCH_SKIP_SOURCE
-    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+    urlmon_proxy_dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/urlmon_urlmon_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/urlmon_stubs.c)
+
+set_source_files_properties(urlmon_proxy_dlldata.c PROPERTIES
+    OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c")
 
 add_library(urlmon MODULE
     ${SOURCE}
