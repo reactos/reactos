@@ -217,7 +217,7 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
     {
         /* Everything has failed, set blank paper icon */
         WARN("Failed to load an icon for the item, setting blank icon\n");
-        initIcon->SetNormalIcon(swShell32Name, IDI_SHELL_DOCUMENT - 1);
+        initIcon->SetNormalIcon(swShell32Name, IDI_SHELL_FILE - 1);
     }
 
     return initIcon->QueryInterface(iid, ppvOut);
