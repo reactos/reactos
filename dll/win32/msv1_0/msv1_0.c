@@ -37,12 +37,13 @@ PLOGON_LIST_ENTRY
 GetLogonByLogonId(
     _In_ PLUID LogonId)
 {
-    PLOGON_LIST_ENTRY LogonEntry;
     PLIST_ENTRY CurrentEntry;
 
     CurrentEntry = LogonListHead.Flink;
     while (CurrentEntry != &LogonListHead)
     {
+        PLOGON_LIST_ENTRY LogonEntry;
+
         LogonEntry = CONTAINING_RECORD(CurrentEntry,
                                        LOGON_LIST_ENTRY,
                                        ListEntry);
@@ -1441,14 +1442,14 @@ LsaApLogonTerminated(
 
     TRACE("LsaApLogonTerminated()\n");
 
-    /* Remove the given logon entry from the list */
+    RtlAcquireResourceExclusive(&LogonListResource, TRUE);
     LogonEntry = GetLogonByLogonId(LogonId);
     if (LogonEntry != NULL)
-    {
-        RtlAcquireResourceExclusive(&LogonListResource, TRUE);
         RemoveEntryList(&LogonEntry->ListEntry);
-        RtlReleaseResource(&LogonListResource);
+    RtlReleaseResource(&LogonListResource);
 
+    if (LogonEntry != NULL)
+    {
         if (LogonEntry->UserName.Buffer)
             RtlFreeHeap(RtlGetProcessHeap(), 0, LogonEntry->UserName.Buffer);
 
@@ -1789,8 +1790,6 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     if (LogonEntry)
     {
         RtlCopyMemory(&LogonEntry->LogonId, LogonId, sizeof(LUID));
-        LogonEntry->EnumHandle = EnumCounter;
-        EnumCounter++;
 
         TRACE("Logon User: %wZ %wZ %lx\n", LogonUserName, LogonDomain, LogonId->LowPart);
         LogonEntry->UserName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, LogonUserName->MaximumLength);
@@ -1817,6 +1816,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         LogonEntry->LogonType = LogonType;
 
         RtlAcquireResourceExclusive(&LogonListResource, TRUE);
+        LogonEntry->EnumHandle = EnumCounter++;
         InsertTailList(&LogonListHead, &LogonEntry->ListEntry);
         RtlReleaseResource(&LogonListResource);
     }

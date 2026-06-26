@@ -914,14 +914,28 @@ RtlValidAcl(IN PACL Acl)
                 Sid = (PISID)&((PKNOWN_ACE)Ace)->SidStart;
                 if (Sid->Revision != SID_REVISION)
                 {
-                    DPRINT1("Invalid SID\n");
+                    DPRINT1("Invalid SID revision in ACL %p ACE %lu: type %u flags 0x%x size %u revision %u subauth %u\n",
+                            Acl,
+                            i,
+                            Ace->AceType,
+                            Ace->AceFlags,
+                            Ace->AceSize,
+                            Sid->Revision,
+                            Sid->SubAuthorityCount);
                     _SEH2_YIELD(return FALSE);
                 }
 
                 /* Check if the SID is out of bounds */
                 if (Sid->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES)
                 {
-                    DPRINT1("Invalid SID\n");
+                    DPRINT1("Invalid SID subauthority count in ACL %p ACE %lu: type %u flags 0x%x size %u revision %u subauth %u\n",
+                            Acl,
+                            i,
+                            Ace->AceType,
+                            Ace->AceFlags,
+                            Ace->AceSize,
+                            Sid->Revision,
+                            Sid->SubAuthorityCount);
                     _SEH2_YIELD(return FALSE);
                 }
 

@@ -1439,6 +1439,7 @@ SeAssignSecurityEx(
                         &DaclPresent,
                         &DaclIsInherited,
                         IsDirectoryObject,
+                        "dacl",
                         GenericMapping);
     if (DaclPresent)
         Control |= SE_DACL_PRESENT;
@@ -1474,6 +1475,7 @@ SeAssignSecurityEx(
                         &SaclPresent,
                         &SaclIsInherited,
                         IsDirectoryObject,
+                        "sacl",
                         GenericMapping);
     if (SaclPresent)
         Control |= SE_SACL_PRESENT;
@@ -1514,6 +1516,8 @@ SeAssignSecurityEx(
                                  Group,
                                  SaclIsInherited,
                                  IsDirectoryObject,
+                                 "sacl",
+                                 "copy",
                                  GenericMapping);
         ASSERT(Status == STATUS_SUCCESS);
         Descriptor->Sacl = Current;
@@ -1529,6 +1533,8 @@ SeAssignSecurityEx(
                                  Group,
                                  DaclIsInherited,
                                  IsDirectoryObject,
+                                 "dacl",
+                                 "copy",
                                  GenericMapping);
         ASSERT(Status == STATUS_SUCCESS);
         Descriptor->Dacl = Current;

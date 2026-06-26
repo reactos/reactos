@@ -24,7 +24,7 @@ LsapDeregisterLogonProcess(PLSA_API_MSG RequestMsg,
 {
     TRACE("LsapDeregisterLogonProcess(%p %p)\n", RequestMsg, LogonContext);
 
-    RemoveHeadList(&LogonContext->Entry);
+    RemoveEntryList(&LogonContext->Entry);
 
     NtClose(LogonContext->ClientProcessHandle);
     NtClose(LogonContext->ConnectionHandle);
@@ -232,15 +232,14 @@ AuthPortThreadRoutine(PVOID Param)
 {
     PLSAP_LOGON_CONTEXT LogonContext;
     PLSA_API_MSG ReplyMsg = NULL;
-    LSA_API_MSG RequestMsg;
-    NTSTATUS Status;
+    LSA_API_MSG RequestMsg = {0};
 
     TRACE("AuthPortThreadRoutine() called\n");
 
-    Status = STATUS_SUCCESS;
-
     for (;;)
     {
+        NTSTATUS Status;
+
         TRACE("Reply: %p\n", ReplyMsg);
         Status = NtReplyWaitReceivePort(AuthPortHandle,
                                         (PVOID*)&LogonContext,
@@ -259,6 +258,9 @@ AuthPortThreadRoutine(PVOID Param)
             case LPC_CONNECTION_REQUEST:
                 TRACE("Port connection request\n");
                 Status = LsapHandlePortConnection(&RequestMsg);
+                if (!NT_SUCCESS(Status))
+                    TRACE("LsapHandlePortConnection() failed (Status %lx)\n", Status);
+
                 ReplyMsg = NULL;
                 break;
 
