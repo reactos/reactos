@@ -61,7 +61,19 @@ NtUserCallNoParam(DWORD Routine)
     DWORD_PTR Result = 0;
 
     TRACE("Enter NtUserCallNoParam\n");
-    UserEnterExclusive();
+
+    /* Read-only routines only need a shared lock; the rest stay exclusive */
+    switch (Routine)
+    {
+        case NOPARAM_ROUTINE_GETMSESSAGEPOS:
+        case NOPARAM_ROUTINE_GETIMESHOWSTATUS:
+        case NOPARAM_ROUTINE_ISCONSOLEMODE:
+            UserEnterShared();
+            break;
+        default:
+            UserEnterExclusive();
+            break;
+    }
 
     switch (Routine)
     {
@@ -158,7 +170,22 @@ NtUserCallOneParam(
 
     TRACE("Enter NtUserCallOneParam\n");
 
-    UserEnterExclusive();
+    /* Read-only routines only need a shared lock; the rest stay exclusive */
+    switch (Routine)
+    {
+        case ONEPARAM_ROUTINE_GETDESKTOPMAPPING:
+        case ONEPARAM_ROUTINE_WINDOWFROMDC:
+        case ONEPARAM_ROUTINE_GETKEYBOARDTYPE:
+        case ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT:
+        case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
+        case ONEPARAM_ROUTINE_GETCURSORPOS:
+        case ONEPARAM_ROUTINE_GETPROCDEFLAYOUT:
+            UserEnterShared();
+            break;
+        default:
+            UserEnterExclusive();
+            break;
+    }
 
     switch (Routine)
     {
@@ -319,7 +346,6 @@ NtUserCallOneParam(
         }
 
         case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
-            /* FIXME: Should use UserEnterShared */
             Result = UserEnumClipboardFormats(Param);
             break;
 

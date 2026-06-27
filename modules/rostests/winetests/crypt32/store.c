@@ -3231,6 +3231,10 @@ static void test_PFXImportCertStore(void)
     pfx.cbData = sizeof(pfxdata);
     store = PFXImportCertStore( &pfx, NULL, CRYPT_EXPORTABLE|CRYPT_USER_KEYSET|PKCS12_NO_PERSIST_KEY );
     ok( store != NULL, "got %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    if (store == NULL)
+        return;
+#endif
     count = countCertsInStore( store );
     ok( count == 1, "got %lu\n", count );
 
