@@ -1,0 +1,24 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        '{4E14FBA2-2E22-11D1-9964-00C04FBBB345}' = s 'CEventSystem'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'EventSystem.EventSystem'
+        }
+        '{7542E960-79C7-11D1-88F9-0080C7D771BF}' = s 'CEventSubscription'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'EventSystem.EventSubscription'
+        }
+    }
+    'EventSystem.EventSystem' = s 'EventSystem.EventSystem'
+    {
+        CLSID = s '{4E14FBA2-2E22-11D1-9964-00C04FBBB345}'
+    }
+    'EventSystem.EventSubscription' = s 'EventSystem.EventSubscription'
+    {
+        CLSID = s '{7542E960-79C7-11D1-88F9-0080C7D771BF}'
+    }
+}
