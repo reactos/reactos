@@ -185,8 +185,8 @@
 #define IDR_GPL 4000
 
 /* Strings for install addons consent dialog */
-#define IDS_INSTALLADDONSMESSAGE        4010
-#define IDS_INSTALLADDONSCAPTION        4011
+#define IDS_INSTALLADDONSCAPTION        4010
+#define IDS_INSTALLADDONSMESSAGE        4011
 #define IDS_INSTALLADDONSFAILEDMESSAGE  4012
 
 /* Timer ID for the animated dialog bar. */

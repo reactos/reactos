@@ -269,7 +269,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLADDONSMESSAGE "Les composants optionnels sont disponibles pour améliorer la compatibilité des applications.\n\nVoulez-vous les télécharger et les installer?"
     IDS_INSTALLADDONSCAPTION "Composants optionnels"
+    IDS_INSTALLADDONSMESSAGE "Les composants optionnels sont disponibles pour améliorer la compatibilité des applications.\n\nVoulez-vous les télécharger et les installer?"
     IDS_INSTALLADDONSFAILEDMESSAGE "L'installation de l'un ou plusieurs composants optionnels a échoué"
 END
