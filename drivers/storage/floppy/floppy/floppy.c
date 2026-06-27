@@ -1019,6 +1019,7 @@ AddControllers(PDRIVER_OBJECT DriverObject)
         {
             WARN_(FLOPPY, "AddControllers: unable to allocate an adapter object\n");
             IoDisconnectInterrupt(gControllerInfo[i].InterruptObject);
+            gControllerInfo[i].InterruptObject = NULL;
             continue;
         }
 
@@ -1027,6 +1028,7 @@ AddControllers(PDRIVER_OBJECT DriverObject)
         {
             WARN_(FLOPPY, "AddControllers(): Unable to set up controller %d - initialization failed\n", i);
             IoDisconnectInterrupt(gControllerInfo[i].InterruptObject);
+            gControllerInfo[i].InterruptObject = NULL;
             continue;
         }
 
@@ -1067,6 +1069,7 @@ AddControllers(PDRIVER_OBJECT DriverObject)
             {
                 WARN_(FLOPPY, "AddControllers: unable to register a Device object\n");
                 IoDisconnectInterrupt(gControllerInfo[i].InterruptObject);
+                gControllerInfo[i].InterruptObject = NULL;
                 continue; /* continue on to next drive */
             }
 
