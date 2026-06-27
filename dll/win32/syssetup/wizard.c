@@ -2760,6 +2760,99 @@ SetInstallationCompleted(VOID)
     }
 }
 
+typedef enum _RappsConsent {
+    NOT_ASKED,
+    APPROVED,
+    DENIED
+} RappsConsent;
+
+static HRESULT
+RunCommandAndWait(PWCHAR Command)
+{
+    STARTUPINFOW si = { sizeof(si) };
+    PROCESS_INFORMATION pi = { 0 };
+    DWORD ExitCode = 0;
+
+    if (CreateProcessW(NULL, Command, NULL, NULL, FALSE,
+                       0, NULL, NULL, &si, &pi))
+    {
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        GetExitCodeProcess(pi.hProcess, &ExitCode);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        if (ExitCode == 0)
+            return S_OK;
+    }
+
+    return HRESULT_FROM_WIN32(GetLastError());
+}
+
+BOOL DoesFileExist(PCWSTR path)
+{
+    DWORD attr = GetFileAttributesW(path);
+    return (attr != INVALID_FILE_ATTRIBUTES &&
+            !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+static HRESULT
+InstallAddon(PCADDON_INSTALL_DATA pInstallData,
+             RappsConsent* Consent)
+{
+    HRESULT hr;
+    WCHAR Command[MAX_PATH], ExpandedAddonPath[MAX_PATH];
+    WCHAR szMessage[256], szCaption[64];
+
+    ExpandEnvironmentStringsW(pInstallData->AddonPath,
+                              ExpandedAddonPath,
+                              ARRAYSIZE(ExpandedAddonPath));
+
+    /* Attempt to install addon from local installer. */
+    if (!DoesFileExist(ExpandedAddonPath))
+        goto rapps_install;
+
+    hr = StringCchPrintfW(Command, ARRAYSIZE(Command),
+                          pInstallData->CreateProcessFormatString, ExpandedAddonPath);
+    if (!SUCCEEDED(hr))
+        return hr;
+
+    hr = RunCommandAndWait(Command);
+    if (SUCCEEDED(hr))
+    {
+        /* We successfully installed the addon locally! Try removing it from disk and return. */
+        DeleteFileW(ExpandedAddonPath);
+        return hr;
+    }
+
+rapps_install:
+    /* Local installer doesn't exist or failed. Try installing through Rapps. */
+    if (*Consent == NOT_ASKED)
+    {
+        LoadStringW(hDllInstance, IDS_INSTALLADDONSMESSAGE, szMessage, _countof(szMessage));
+        LoadStringW(hDllInstance, IDS_INSTALLADDONSCAPTION, szCaption, _countof(szCaption));
+        int MsgBox = MessageBoxW(NULL,
+                                 szMessage,
+                                 szCaption,
+                                 MB_YESNO | MB_ICONINFORMATION);
+
+        *Consent = (MsgBox == IDYES) ? APPROVED : DENIED;
+    }
+
+    if (*Consent == DENIED)
+    {
+        return HRESULT_FROM_WIN32(ERROR_CANCELLED);
+    }
+
+    hr = StringCchPrintfW(Command, ARRAYSIZE(Command), L"rapps.exe /install /S %s", pInstallData->RappsId);
+    if (!SUCCEEDED(hr))
+        return hr;
+
+    hr = RunCommandAndWait(Command);
+    if (!SUCCEEDED(hr))
+        return hr;
+
+    return S_OK;
+}
+
 static INT_PTR CALLBACK
 FinishDlgProc(HWND hwndDlg,
               UINT uMsg,
@@ -2773,10 +2866,31 @@ FinishDlgProc(HWND hwndDlg,
             /* Get pointer to the global setup data */
             PSETUPDATA SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
 
-            if (!SetupData->UnattendSetup || !SetupData->DisableGeckoInst)
+            if (!SetupData->UnattendSetup || !SetupData->DisableAddonsInst)
             {
-                /* Run the Wine Gecko prompt */
-                Control_RunDLLW(hwndDlg, 0, L"appwiz.cpl,,install_gecko", SW_SHOW);
+                HRESULT hr;
+                BOOL Failed = FALSE;
+                RappsConsent Consent = NOT_ASKED;
+                WCHAR szMessage[256], szCaption[64];
+
+                for (DWORD i = 0; i < _countof(Addons); i++)
+                {
+                    hr = InstallAddon(&Addons[i], &Consent);
+
+                    if (!SUCCEEDED(hr) && hr != HRESULT_FROM_WIN32(ERROR_CANCELLED))
+                        Failed = TRUE;
+                }
+
+                if (Failed)
+                {
+                    LoadStringW(hDllInstance, IDS_INSTALLADDONSFAILEDMESSAGE, szMessage, _countof(szMessage));
+                    LoadStringW(hDllInstance, IDS_INSTALLADDONSFAILEDCAPTION, szCaption, _countof(szCaption));
+
+                    MessageBoxW(NULL,
+                                szMessage,
+                                szCaption,
+                                MB_OK | MB_ICONWARNING | MB_TOPMOST);
+                }
             }
 
             /* Set title font */
@@ -3031,12 +3145,12 @@ ProcessUnattendSection(
         {
             pSetupData->DisableAutoDaylightTimeSet = _wtoi(szValue);
         }
-        else if (!_wcsicmp(szName, L"DisableGeckoInst"))
+        else if (!_wcsicmp(szName, L"DisableAddonsInst"))
         {
             if (!_wcsicmp(szValue, L"yes"))
-                pSetupData->DisableGeckoInst = TRUE;
+                pSetupData->DisableAddonsInst = TRUE;
             else
-                pSetupData->DisableGeckoInst = FALSE;
+                pSetupData->DisableAddonsInst = FALSE;
         }
         else if (!_wcsicmp(szName, L"InstallationType"))
         {

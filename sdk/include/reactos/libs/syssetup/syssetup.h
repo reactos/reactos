@@ -48,7 +48,7 @@ typedef struct _SETUPDATA
     WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];  /* max. 15 characters */
     WCHAR AdminPassword[128];                         /* max. 127 characters */
     BOOL  UnattendSetup;
-    BOOL  DisableGeckoInst;
+    BOOL  DisableAddonsInst;
 
     SYSTEMTIME SystemTime;
     struct _TIMEZONE_ENTRY* TimeZoneListHead;
@@ -65,6 +65,18 @@ typedef struct _SETUPDATA
     INSTALLATION_TYPE InstallationType;
 } SETUPDATA, *PSETUPDATA;
 
+typedef struct _ADDON_INSTALL_DATA
+{
+    PCWSTR AddonPath;
+    PCWSTR CreateProcessFormatString;
+    PCWSTR RappsId;
+} ADDON_INSTALL_DATA, *PADDON_INSTALL_DATA;
+typedef const ADDON_INSTALL_DATA* PCADDON_INSTALL_DATA;
+
+static const ADDON_INSTALL_DATA Addons[] = {
+    {L"%SystemRoot%\\wine_gecko-2.40-x86.msi", L"msiexec.exe /i \"%s\" /qn /norestart", L"gecko"},
+    {L"%SystemRoot%\\winevdm_setup.exe", L"\"%s\" /VERYSILENT", L"winevdm"}
+};
 
 /* System setup APIs */
 

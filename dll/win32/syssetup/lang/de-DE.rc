@@ -266,3 +266,11 @@ BEGIN
      */
     IDS_DEFAULT "(Standard)"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALLADDONSMESSAGE "Optional components are available to improve application compatibility.\n\nWould you like to download and install them?"
+    IDS_INSTALLADDONSCAPTION "Optional Components"
+    IDS_INSTALLADDONSFAILEDMESSAGE "One or more optional components failed to install."
+    IDS_INSTALLADDONSFAILEDCAPTION "Optional Components Failed to Install"
+END
