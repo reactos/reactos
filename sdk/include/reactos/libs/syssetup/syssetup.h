@@ -67,6 +67,7 @@ typedef struct _SETUPDATA
 
 typedef struct _ADDON_INSTALL_DATA
 {
+    PCWSTR Title;
     PCWSTR AddonPath;
     PCWSTR CreateProcessFormatString;
     PCWSTR RappsId;
@@ -75,8 +76,8 @@ typedef const ADDON_INSTALL_DATA* PCADDON_INSTALL_DATA;
 
 static const ADDON_INSTALL_DATA Addons[] = {
 #ifdef _M_IX86
-    {L"%SystemRoot%\\wine_gecko-2.40-x86.msi", L"msiexec.exe /i \"%s\" /qn /norestart", L"gecko"},
-    {L"%SystemRoot%\\winevdm_setup.exe", L"\"%s\" /VERYSILENT", L"winevdm"},
+    {L"Wine Gecko", L"%SystemRoot%\\wine_gecko-2.40-x86.msi", L"msiexec.exe /i \"%s\" /qn /norestart", L"gecko"},
+    {L"WineVDM", L"%SystemRoot%\\winevdm_setup.exe", L"\"%s\" /VERYSILENT", L"winevdm"},
 #endif
     {NULL, NULL, NULL}
 };
