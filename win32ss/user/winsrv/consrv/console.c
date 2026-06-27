@@ -20,6 +20,7 @@
 #include <alias.h>
 #include <history.h>
 #include "procinit.h"
+#include "frontends/gui/guiterm.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -353,6 +354,7 @@ ConSrvInitConsoleSupport(VOID)
     ConsoleList = NULL;
     // InitializeListHead(&ConDrvConsoleList);
     RtlInitializeResource(&ListLock);
+    GuiInitConsoleSupport();
 
     /* Should call LoadKeyboardLayout */
 }

@@ -43,6 +43,7 @@ typedef struct _GUI_INIT_INFO
 } GUI_INIT_INFO, *PGUI_INIT_INFO;
 
 static BOOL ConsInitialized = FALSE;
+static RTL_CRITICAL_SECTION GuiInitLock;
 
 extern HICON   ghDefaultIcon;
 extern HICON   ghDefaultIconSm;
@@ -56,6 +57,12 @@ BOOLEAN
 UnRegisterConWndClass(HINSTANCE hInstance);
 
 /* FUNCTIONS ******************************************************************/
+
+VOID NTAPI
+GuiInitConsoleSupport(VOID)
+{
+    RtlInitializeCriticalSection(&GuiInitLock);
+}
 
 VOID
 GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData)
@@ -296,16 +303,22 @@ GuiInit(IN PCONSOLE_INIT_INFO ConsoleInitInfo,
     CLIENT_ID ClientId;
 
     /* Perform one-time initialization */
+    RtlEnterCriticalSection(&GuiInitLock);
     if (!ConsInitialized)
     {
         /* Initialize and register the console window class */
-        if (!RegisterConWndClass(ConSrvDllInstance)) return FALSE;
+        if (!RegisterConWndClass(ConSrvDllInstance))
+        {
+            RtlLeaveCriticalSection(&GuiInitLock);
+            return FALSE;
+        }
 
         /* Initialize the font support -- additional TrueType font cache */
         InitTTFontCache();
 
         ConsInitialized = TRUE;
     }
+    RtlLeaveCriticalSection(&GuiInitLock);
 
     /*
      * Set-up the console input thread. We have

@@ -168,7 +168,7 @@ RegisterConWndClass(IN HINSTANCE hInstance)
     WndClassAtom = RegisterClassExW(&WndClass);
     if (WndClassAtom == 0)
     {
-        DPRINT1("Failed to register GUI console class\n");
+        DPRINT1("Failed to register GUI console class, error %lu\n", GetLastError());
     }
     else
     {

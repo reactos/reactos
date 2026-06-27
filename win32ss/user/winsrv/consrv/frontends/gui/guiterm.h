@@ -58,6 +58,9 @@ SmallRectToRect(PGUI_CONSOLE_DATA GuiData, PRECT Rect, PSMALL_RECT SmallRect)
 
 /* guiterm.c */
 
+VOID NTAPI
+GuiInitConsoleSupport(VOID);
+
 VOID
 GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData);
 
