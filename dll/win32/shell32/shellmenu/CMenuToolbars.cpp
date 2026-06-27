@@ -1192,7 +1192,6 @@ HRESULT CMenuStaticToolbar::FillToolbar(BOOL clearFirst)
         ClearToolbar();
     }
 
-    int count = 0;
     for (i = 0; i < ic; i++)
     {
         BOOL last = i + 1 == ic;
@@ -1208,8 +1207,6 @@ HRESULT CMenuStaticToolbar::FillToolbar(BOOL clearFirst)
             TRACE("Error obtaining info for menu item at pos=%d\n", i);
             continue;
         }
-
-        count++;
 
         if (info.fType & MFT_SEPARATOR)
         {

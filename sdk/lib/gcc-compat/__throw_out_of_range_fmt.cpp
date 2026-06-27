@@ -5,10 +5,11 @@
  * COPYRIGHT:   Copyright 2024 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
-#include <stdexcept>
+#include <exception>
 #include <cstdarg>
 #include <cstring>
 #include <malloc.h>
+#include <stdio.h>
 
 namespace std {
 
