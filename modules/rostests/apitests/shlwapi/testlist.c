@@ -37,6 +37,7 @@ const struct test winetest_testlist[] =
     { "PathFileExistsDefExtAndAttributesW", func_PathFileExistsDefExtAndAttributesW },
     { "PathFindOnPath", func_PathFindOnPath },
     { "IShellFolderHelpers", func_IShellFolderHelpers },
+    { "IsOS", func_IsOS },
     { "IsQSForward", func_IsQSForward },
     { "IStreamPidl", func_IStreamPidl },
     { "MapWin32ErrorToSTG", func_MapWin32ErrorToSTG },
@@ -57,6 +58,5 @@ const struct test winetest_testlist[] =
     { "StrDup", func_StrDup },
     { "StrFormatByteSizeW", func_StrFormatByteSizeW },
     { "StrToInt", func_StrToInt },
-    { "IsOS", func_IsOS },
     { 0, 0 }
 };
