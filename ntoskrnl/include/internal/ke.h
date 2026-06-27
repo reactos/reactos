@@ -1068,6 +1068,11 @@ KxThawExecution(
     VOID);
 
 #if defined(_M_IX86)
+BOOLEAN
+NTAPI
+KxHandleFreezeNmi(
+    VOID);
+
 VOID
 NTAPI
 KxHandleFreezeIpi(

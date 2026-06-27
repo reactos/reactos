@@ -1198,8 +1198,11 @@ KiTrap02Handler(VOID)
     /* Store the trap frame in the KPRCB */
     KiSaveProcessorState(&TrapFrame, NULL);
 
-    /* Call any registered NMI handlers and see if they handled it or not */
-    if (!KiHandleNmi())
+    /*
+     * Debugger freezes use APIC NMI delivery so CPUs at HIGH_LEVEL cannot mask
+     * the stop request behind an ordinary IPI vector.
+     */
+    if (!KxHandleFreezeNmi() && !KiHandleNmi())
     {
         /*
          * They did not, so call the platform HAL routine to bugcheck the system

@@ -23,8 +23,6 @@ HalRequestIpi(
     HalpRequestIpi(TargetProcessors);
 }
 
-#ifdef _M_AMD64
-
 VOID
 NTAPI
 HalSendNMI(
@@ -32,6 +30,8 @@ HalSendNMI(
 {
     HalpSendNMI(TargetSet);
 }
+
+#ifdef _M_AMD64
 
 // See:
 // - https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Runtime/r0drv/nt/internal-r0drv-nt.h#L53

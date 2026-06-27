@@ -48,8 +48,6 @@ HalpBroadcastClockIpi(
     NOTHING;
 }
 
-#ifdef _M_AMD64
-
 VOID
 NTAPI
 HalSendNMI(
@@ -57,6 +55,8 @@ HalSendNMI(
 {
     NOTHING;
 }
+
+#ifdef _M_AMD64
 
 VOID
 NTAPI

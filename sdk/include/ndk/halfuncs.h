@@ -337,13 +337,17 @@ HalRequestSoftwareInterrupt(
     _In_ KIRQL SoftwareInterruptRequested
 );
 
-#ifdef _M_AMD64
+#if defined(_M_IX86) || defined(_M_AMD64)
 
 NTHALAPI
 VOID
 NTAPI
 HalSendNMI(
     _In_ KAFFINITY TargetSet);
+
+#endif
+
+#ifdef _M_AMD64
 
 NTHALAPI
 VOID

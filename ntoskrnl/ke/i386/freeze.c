@@ -19,6 +19,15 @@ static volatile KAFFINITY KiI386FrozenSet;
 static volatile KAFFINITY KiI386ThawSet;
 static volatile KAFFINITY KiI386FreezeReadySet;
 
+/*
+ * Virtual SMP hosts can deschedule a target vCPU while the debugger owner is
+ * spinning at HIGH_LEVEL.  Keep the wait finite for genuinely wedged targets,
+ * but scale it with the processor count and reassert the freeze request for
+ * CPUs that still have not entered the frozen set.
+ */
+#define KX_FREEZE_WAIT_SPINS_PER_PROCESSOR 25000000UL
+#define KX_FREEZE_RESEND_SPINS 1000000UL
+
 #if DBG && defined(_M_IX86)
 extern ULONG KeBugCheckCount;
 extern ULONG KeBugCheckOwner;
@@ -108,6 +117,7 @@ KxRawCom1DumpFreeze(
     KxRawCom1WriteField("owner", (ULONG_PTR)KiI386FreezeOwner);
     KxRawCom1WriteField("target", KiI386FreezeTargetSet);
     KxRawCom1WriteField("frozen", KiI386FrozenSet);
+    KxRawCom1WriteField("missing", KiI386FreezeTargetSet & ~KiI386FrozenSet);
     KxRawCom1WriteField("thaw", KiI386ThawSet);
     KxRawCom1WriteField("ready", KiI386FreezeReadySet);
     KxRawCom1WriteField("set", CurrentPrcb->SetMember);
@@ -142,16 +152,40 @@ KxMarkProcessorFreezeReady(
 }
 
 static
+ULONG
+KxFreezeWaitSpinLimit(
+    VOID)
+{
+    ULONG ProcessorCount = KeNumberProcessors;
+
+    if (ProcessorCount == 0)
+        ProcessorCount = 1;
+
+    return ProcessorCount * KX_FREEZE_WAIT_SPINS_PER_PROCESSOR;
+}
+
+static
 BOOLEAN
 KxWaitForFrozenProcessors(
     _In_ KAFFINITY TargetSet)
 {
-    ULONG SpinCount = 10000000;
+    ULONG SpinCount = KxFreezeWaitSpinLimit();
+    ULONG ResendCount = KX_FREEZE_RESEND_SPINS;
 
     while ((KiI386FrozenSet & TargetSet) != TargetSet)
     {
         if (--SpinCount == 0)
             return FALSE;
+
+        if (--ResendCount == 0)
+        {
+            KAFFINITY MissingSet = TargetSet & ~KiI386FrozenSet;
+
+            if (MissingSet != 0)
+                KiIpiSend(MissingSet, IPI_FREEZE);
+
+            ResendCount = KX_FREEZE_RESEND_SPINS;
+        }
 
         YieldProcessor();
         KeMemoryBarrier();
@@ -189,7 +223,7 @@ KxWaitAndJoinExistingFreeze(
     _In_ PKPRCB CurrentPrcb)
 {
     KAFFINITY SetMember = CurrentPrcb->SetMember;
-    ULONG SpinCount = 10000000;
+    ULONG SpinCount = KxFreezeWaitSpinLimit();
 
     while ((KiI386FreezeTargetSet & SetMember) == 0)
     {
@@ -212,6 +246,17 @@ KxHandleFreezeIpi(
     VOID)
 {
     KxJoinFreezeTarget(KeGetCurrentPrcb());
+}
+
+BOOLEAN
+NTAPI
+KxHandleFreezeNmi(
+    VOID)
+{
+    if (KiI386FreezeOwner == NULL)
+        return FALSE;
+
+    return KxJoinFreezeTarget(KeGetCurrentPrcb());
 }
 
 BOOLEAN

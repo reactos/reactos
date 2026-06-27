@@ -298,6 +298,8 @@ HalpSendSoftwareInterrupt(
     HalRequestIpiSpecifyVector(TargetSet, Vector);
 }
 
+#endif /* _M_AMD64 */
+
 /*!
  *  \brief Requests an NMI interrupt on the specified processors.
  *
@@ -335,5 +337,3 @@ HalpSendNMI(
                                    APIC_DSH_Destination);
     }
 }
-
-#endif // _M_AMD64

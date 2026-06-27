@@ -41,6 +41,7 @@
 @ stdcall HalRequestIpi(long)
 @ fastcall HalRequestSoftwareInterrupt(long)
 @ stdcall HalReturnToFirmware(long)
+@ stdcall -arch=i386 HalSendNMI(long)
 @ stdcall -arch=x86_64 HalSendNMI(int64)
 @ stdcall -arch=x86_64 HalSendSoftwareInterrupt(int64 long)
 @ stdcall HalSetBusData(long long long ptr long)

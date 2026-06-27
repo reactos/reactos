@@ -80,7 +80,14 @@ KiIpiSend(IN KAFFINITY TargetProcessors,
     }
 
     if (RemoteProcessors != 0)
-        HalRequestIpi(RemoteProcessors);
+    {
+#if defined(_M_IX86)
+        if (IpiRequest == IPI_FREEZE)
+            HalSendNMI(RemoteProcessors);
+        else
+#endif
+            HalRequestIpi(RemoteProcessors);
+    }
 
     if (RequestSelf)
     {
