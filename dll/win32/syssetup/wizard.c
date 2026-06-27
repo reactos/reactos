@@ -2770,7 +2770,7 @@ static HRESULT
 RunCommandAndWait(PWCHAR Command)
 {
     STARTUPINFOW si = { sizeof(si) };
-    PROCESS_INFORMATION pi = { 0 };
+    PROCESS_INFORMATION pi;
     DWORD ExitCode = 0;
 
     if (CreateProcessW(NULL, Command, NULL, NULL, FALSE,
