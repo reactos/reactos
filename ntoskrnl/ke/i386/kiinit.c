@@ -972,12 +972,6 @@ KiSystemStartupBootStack(VOID)
                       (ULONG_PTR)Thread,
                       (ULONG_PTR)KernelStack);
 
-    if (Cpu)
-    {
-        KeMemoryBarrier();
-        LoaderBlock->Prcb = 0;
-    }
-
     /* Initialize the kernel for the current CPU */
     KiRecordBootProbe(13,
                       0,
@@ -1158,6 +1152,7 @@ AppCpuInit:
     /* Set active processors */
     KeActiveProcessors |= __readfsdword(KPCR_SET_MEMBER);
     KeNumberProcessors++;
+    InterlockedAnd((PLONG)&KiFreezeExecutionLock, 0);
     KiRecordBootProbe(1, 0, Cpu, InitialStack, (ULONG_PTR)InitialThread, 0);
 
     /* Check if this is the boot CPU */

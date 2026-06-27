@@ -113,6 +113,8 @@ KeStartAllProcessors(VOID)
                         &APInfo->Tss,
                         (PKTHREAD)&APInfo->Thread,
                         DPCStack);
+        APInfo->Thread.Tcb.ApcState.Process = &KiInitialProcess.Pcb;
+        APInfo->Thread.ThreadsProcess = &KiInitialProcess;
 
         // Prepare descriptor tables
         KDESCRIPTOR bspGdt, bspIdt;
