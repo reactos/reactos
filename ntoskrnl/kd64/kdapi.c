@@ -1452,6 +1452,9 @@ KdpSendWaitContinue(IN ULONG PacketType,
     }
 #endif
 
+    if (!KdpDebuggerPortReady())
+        return ContinueError;
+
     /* Setup the Manipulate State structure */
     Header.MaximumLength = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)&ManipulateState;
@@ -2299,22 +2302,15 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
     KdSave(FALSE);
     KdEnteredDebugger = TRUE;
 
-    /* Check freeze flag */
-    if (KiFreezeFlag & 1)
+    if (KdpPortLocked && (KiFreezeFlag & 1))
     {
-        /* Print out errror */
         KdpDprintf("FreezeLock was jammed!  Backup SpinLock was used!\n");
     }
 
-    /* Check processor state */
-    if (KiFreezeFlag & 2)
+    if (KdpPortLocked && (KiFreezeFlag & 2))
     {
-        /* Print out errror */
         KdpDprintf("Some processors not frozen in debugger!\n");
     }
-
-    /* Make sure we acquired the port */
-    if (!KdpPortLocked) KdpDprintf("Port lock was not acquired!\n");
 
     /* Return if interrupts needs to be re-enabled */
     return Enable;

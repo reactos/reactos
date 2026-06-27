@@ -36,6 +36,9 @@ KdpPollBreakInWithPortLock(VOID)
 {
     BOOLEAN DoBreak = FALSE;
 
+    if (!KdpDebuggerPortReady())
+        return FALSE;
+
     /* First make sure that KD is enabled */
     if (KdDebuggerEnabled)
     {

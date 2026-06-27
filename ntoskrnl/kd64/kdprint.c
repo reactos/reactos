@@ -308,6 +308,9 @@ KdpPrintString(
     DBGKD_DEBUG_IO DebugIo;
     USHORT Length;
 
+    if (!KdpDebuggerPortReady())
+        return FALSE;
+
     /* Copy the string */
     KdpMoveMemory(KdpMessageBuffer,
                   Output->Buffer,
@@ -350,6 +353,9 @@ KdpPromptString(
     DBGKD_DEBUG_IO DebugIo;
     ULONG Length;
     KDSTATUS Status;
+
+    if (!KdpDebuggerPortReady())
+        return FALSE;
 
     /* Copy the string to the message buffer */
     KdpMoveMemory(KdpMessageBuffer,

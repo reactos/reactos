@@ -540,6 +540,13 @@ extern BOOLEAN KdpContextSent;
 extern KSPIN_LOCK KdpDebuggerLock;
 extern LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 
+FORCEINLINE
+BOOLEAN
+KdpDebuggerPortReady(VOID)
+{
+    return !KdEnteredDebugger || KdpPortLocked;
+}
+
 extern CHAR KdpMessageBuffer[KDP_MSG_BUFFER_SIZE];
 extern CHAR KdpPathBuffer[KDP_MSG_BUFFER_SIZE];
 
