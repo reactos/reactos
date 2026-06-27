@@ -1340,9 +1340,9 @@ KiCoprocessorError(VOID)
     /* Get the FPU area */
     NpxArea = KiGetThreadNpxArea(KeGetCurrentThread());
 
-    /* Set CR0_TS */
-    NpxArea->Cr0NpxState = CR0_TS;
-    __writecr0(__readcr0() | CR0_TS);
+    /* Set CR0.TS and keep CR0.MP coherent with the delayed NPX fault. */
+    NpxArea->Cr0NpxState = CR0_TS | CR0_MP;
+    __writecr0(__readcr0() | CR0_TS | CR0_MP);
 }
 
 /**

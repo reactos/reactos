@@ -915,7 +915,7 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
     if (!KiUserTrap(TrapFrame))
     {
         /* Kernel might've tripped a delayed error */
-        SaveArea->Cr0NpxState |= CR0_TS;
+        SaveArea->Cr0NpxState |= CR0_TS | CR0_MP;
 
         /* Only valid if it happened during a restore */
         if ((PVOID)TrapFrame->Eip == FrRestore)
@@ -2270,7 +2270,7 @@ KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
     {
         /* It isn't, enable interrupts and set delayed error */
         _enable();
-        SaveArea->Cr0NpxState |= CR0_TS;
+        SaveArea->Cr0NpxState |= CR0_TS | CR0_MP;
 
         /* End trap */
         KiEoiHelper(TrapFrame);
