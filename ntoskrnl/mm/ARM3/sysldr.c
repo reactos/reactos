@@ -985,9 +985,11 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
         }
     }
 
-    /* FIXME: Free the driver */
-    DPRINT1("Leaking driver: %wZ\n", &LdrEntry->BaseDllName);
-    //MmFreeSection(LdrEntry->DllBase);
+    /* Delete the system image mapping and return its system PTEs. */
+    PMMPTE BasePte = MiAddressToPte(LdrEntry->DllBase);
+    PFN_COUNT NumberOfPages = BYTES_TO_PAGES(LdrEntry->SizeOfImage);
+    MiDeleteSystemPageableVm(BasePte, NumberOfPages, 0, NULL);
+    MiReleaseSystemPtes(BasePte, NumberOfPages, SystemPteSpace);
 
     /* Check if we're linked in */
     if (LdrEntry->InLoadOrderLinks.Flink)
