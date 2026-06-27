@@ -25,6 +25,7 @@ HWND hwndSAS = NULL;
 
 /* Full path to WindowStations directory */
 UNICODE_STRING gustrWindowStationsDir;
+HANDLE ghWinStaDir;
 
 /* INITIALIZATION FUNCTIONS ****************************************************/
 
@@ -51,19 +52,16 @@ NTAPI
 UserCreateWinstaDirectory(VOID)
 {
     NTSTATUS Status;
-    PPEB Peb;
+    ULONG SessionId;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE hWinstaDir;
     WCHAR wstrWindowStationsDir[MAX_PATH];
 
     /* Create the WindowStations directory and cache its path for later use */
-    Peb = NtCurrentPeb();
-    if(Peb->SessionId == 0)
+    SessionId = PsGetCurrentProcessSessionId(); // gSessionId
+    if (SessionId == 0)
     {
         if (!RtlCreateUnicodeString(&gustrWindowStationsDir, WINSTA_OBJ_DIR))
-        {
             return STATUS_INSUFFICIENT_RESOURCES;
-        }
     }
     else
     {
@@ -71,15 +69,13 @@ UserCreateWinstaDirectory(VOID)
                                     sizeof(wstrWindowStationsDir),
                                     L"%ws\\%lu%ws",
                                     SESSION_DIR,
-                                    Peb->SessionId,
+                                    SessionId,
                                     WINSTA_OBJ_DIR);
         if (!NT_SUCCESS(Status))
             return Status;
 
         if (!RtlCreateUnicodeString(&gustrWindowStationsDir, wstrWindowStationsDir))
-        {
             return STATUS_INSUFFICIENT_RESOURCES;
-        }
     }
 
     InitializeObjectAttributes(&ObjectAttributes,
@@ -87,14 +83,11 @@ UserCreateWinstaDirectory(VOID)
                                OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
-    Status = ZwCreateDirectoryObject(&hWinstaDir, DIRECTORY_CREATE_OBJECT, &ObjectAttributes);
+    Status = ZwCreateDirectoryObject(&ghWinStaDir, DIRECTORY_CREATE_OBJECT, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
-    {
-        ERR("Could not create %wZ directory (Status 0x%X)\n", &gustrWindowStationsDir,  Status);
-        return Status;
-    }
-
-    TRACE("Created directory %wZ for session %lu\n", &gustrWindowStationsDir, Peb->SessionId);
+        ERR("Could not create %wZ directory (Status 0x%X)\n", &gustrWindowStationsDir, Status);
+    else
+        TRACE("Created directory %wZ for session %lu\n", &gustrWindowStationsDir, SessionId);
 
     return Status;
 }
@@ -511,12 +504,13 @@ IntCreateWindowStation(
         SetLastNtError(Status);
         return Status;
     }
-
-    /* Initialize the window station */
     RtlZeroMemory(WindowStation, sizeof(WINSTATION_OBJECT));
 
+    /* Assign the session ID to the window station */
+    WindowStation->dwSessionId = PsGetCurrentProcessSessionId(); // gSessionId
+
+    /* Initialize the window station */
     InitializeListHead(&WindowStation->DesktopListHead);
-    WindowStation->dwSessionId = NtCurrentPeb()->SessionId;
     Status = RtlCreateAtomTable(37, &WindowStation->AtomTable);
     if (!NT_SUCCESS(Status))
     {

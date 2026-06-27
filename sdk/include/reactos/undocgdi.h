@@ -49,6 +49,16 @@ GetFontResourceInfoW(
     _Out_writes_to_opt_(*pdwBufSize, 1) PVOID lpBuffer,
     _In_ DWORD dwType);
 
+DWORD WINAPI
+GetGlyphOutlineWow(
+    _In_ HDC hdc,
+    _In_ UINT uChar,
+    _In_ UINT fuFormat,
+    _Out_ LPGLYPHMETRICS lpgm,
+    _In_ DWORD cbBuffer,
+    _Out_writes_bytes_opt_(cbBuffer) LPVOID lpvBuffer,
+    _In_ CONST MAT2 *lpmat2);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

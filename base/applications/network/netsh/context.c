@@ -913,6 +913,7 @@ RegisterContext(
     PCONTEXT_ENTRY pContext, pParentContext;
     PCOMMAND_GROUP pGroup;
     DWORD i, j;
+    DWORD dwError = ERROR_SUCCESS;
 
     DPRINT1("RegisterContext(%p)\n", pChildContext);
     if (pChildContext == NULL)
@@ -989,9 +990,15 @@ RegisterContext(
                 }
             }
         }
+
+        if (pContext->pfnConnectFn)
+        {
+            dwError = pContext->pfnConnectFn(pszMachine);
+            DPRINT("pfnConnectFn(%S) returned %lu\n", pszMachine, dwError);
+        }
     }
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
 
 
