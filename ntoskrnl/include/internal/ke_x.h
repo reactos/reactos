@@ -1380,6 +1380,15 @@ KxQueueReadyThread(IN PKTHREAD Thread,
 #ifdef CONFIG_SMP
     ASSERT(Prcb->PrcbLock != 0);
 #endif
+#if DBG && defined(_M_IX86) && !defined(_NTHAL_)
+    KiI386BootTraceRecord(0xE268,
+                          (ULONG_PTR)Thread,
+                          (ULONG_PTR)Prcb,
+                          Thread->State,
+                          Thread->NextProcessor,
+                          Prcb->Number,
+                          (ULONG_PTR)_ReturnAddress());
+#endif
     ASSERT(Thread->State == Running);
     ASSERT(Thread->NextProcessor == Prcb->Number);
 
