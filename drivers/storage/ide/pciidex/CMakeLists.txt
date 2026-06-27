@@ -8,6 +8,7 @@ list(APPEND SOURCE
     chipset/amd.c
     chipset/ati.c
     chipset/cmd.c
+    chipset/hpt.c
     chipset/intel.c
     chipset/pata_generic.c
     chipset/pata_hw.c
