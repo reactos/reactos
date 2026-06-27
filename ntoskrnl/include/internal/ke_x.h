@@ -1437,18 +1437,44 @@ KxQueueReadyThread(IN PKTHREAD Thread,
         Thread->State = DeferredReady;
         Thread->DeferredProcessor = Prcb->Number;
 
-        /* Release the lock and defer scheduling */
-        KiReleasePrcbLock(Prcb);
-        KiDeferredReadyThread(Thread);
+        /*
+         * During a context switch, CurrentThread already names the incoming
+         * thread while the processor still runs on the outgoing thread stack.
+         * Cross-CPU ready selection can fault or enter the debugger, so leave
+         * swap-busy threads on this PRCB's deferred-ready list and process
+         * them after the switch reaches a coherent thread and stack owner.
+         */
+        if (Thread->SwapBusy)
+        {
+            PushEntryList(&Prcb->DeferredReadyListHead,
+                          &Thread->SwapListEntry);
+            KiReleasePrcbLock(Prcb);
+            HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
 #if DBG && defined(_M_IX86) && !defined(_NTHAL_)
-        KiI386BootTraceRecord(0xE263,
-                              (ULONG_PTR)Thread,
-                              (ULONG_PTR)Prcb,
-                              Thread->Affinity,
-                              Prcb->SetMember,
-                              Thread->NextProcessor,
-                              Thread->State);
+            KiI386BootTraceRecord(0xE264,
+                                  (ULONG_PTR)Thread,
+                                  (ULONG_PTR)Prcb,
+                                  Thread->Affinity,
+                                  Prcb->SetMember,
+                                  Thread->NextProcessor,
+                                  Thread->State);
 #endif
+        }
+        else
+        {
+            /* Release the lock and defer scheduling */
+            KiReleasePrcbLock(Prcb);
+            KiDeferredReadyThread(Thread);
+#if DBG && defined(_M_IX86) && !defined(_NTHAL_)
+            KiI386BootTraceRecord(0xE263,
+                                  (ULONG_PTR)Thread,
+                                  (ULONG_PTR)Prcb,
+                                  Thread->Affinity,
+                                  Prcb->SetMember,
+                                  Thread->NextProcessor,
+                                  Thread->State);
+#endif
+        }
     }
 }
 

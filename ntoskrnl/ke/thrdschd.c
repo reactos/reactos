@@ -67,6 +67,20 @@ KiProcessDeferredReadyList(IN PKPRCB Prcb)
         Thread = CONTAINING_RECORD(ListEntry, KTHREAD, SwapListEntry);
         ListEntry = ListEntry->Next;
 
+        if (Thread->State != DeferredReady)
+        {
+#if DBG && defined(_M_IX86)
+            KiI386BootTraceRecord(0xE27A,
+                                  (ULONG_PTR)Thread,
+                                  Thread->State,
+                                  Thread->NextProcessor,
+                                  Thread->DeferredProcessor,
+                                  (ULONG_PTR)Prcb,
+                                  Prcb->Number);
+#endif
+            continue;
+        }
+
         /* Make the thread ready */
         KiDeferredReadyThread(Thread);
     } while (ListEntry != NULL);
