@@ -328,8 +328,8 @@ ElfpInitNewFile(
      * Windows keeps the file size in 64 kB chunks. The used log area is tracked
      * by the header offsets and the EOF record, not by the physical file EOF.
      */
-    InitialSize = ROUND_UP(sizeof(EVENTLOGHEADER) + sizeof(EVENTLOGEOF),
-                           EVENTLOG_FILE_GRANULARITY);
+    InitialSize = sizeof(EVENTLOGHEADER) + sizeof(EVENTLOGEOF); // TODO: Consider FileSize as well.
+    InitialSize = ROUND_UP(InitialSize, EVENTLOG_FILE_GRANULARITY);
 
     LogFile->Header.MaxSize = ROUND_UP(max(MaxSize, InitialSize),
                                        EVENTLOG_FILE_GRANULARITY);
