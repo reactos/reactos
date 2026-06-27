@@ -2875,6 +2875,11 @@ FinishDlgProc(HWND hwndDlg,
 
                 for (DWORD i = 0; i < _countof(Addons); i++)
                 {
+                    if (Addons[i].AddonPath == NULL
+                        || Addons[i].CreateProcessFormatString == NULL
+                        || Addons[i].RappsId == NULL)
+                        continue;
+
                     hr = InstallAddon(&Addons[i], &Consent);
 
                     if (!SUCCEEDED(hr) && hr != HRESULT_FROM_WIN32(ERROR_CANCELLED))
