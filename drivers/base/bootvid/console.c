@@ -79,6 +79,8 @@ VidDisplayStringXY(
 {
     ULONG BackColor;
 
+    PrepareForSetPixel();
+
     /*
      * If the caller wanted transparent, then send the special value (16),
      * else use our default and call the helper routine.
@@ -98,6 +100,8 @@ NTAPI
 VidDisplayString(
     _In_ PCSTR String)
 {
+    BOOLEAN HwStateChanged = TRUE;
+
     /* Start looping the string */
     for (; *String; ++String)
     {
@@ -118,6 +122,7 @@ VidDisplayString(
                 /* Preserve the current row */
                 PreserveRow(VidpCurrentY, BOOTCHAR_HEIGHT + 1, FALSE);
             }
+            HwStateChanged = TRUE;
 
             /* Update current X */
             VidpCurrentX = VidpScrollRegion.Left;
@@ -141,9 +146,16 @@ VidDisplayString(
             {
                 PreserveRow(VidpCurrentY, BOOTCHAR_HEIGHT + 1, TRUE);
                 ClearRow = FALSE;
+
+                HwStateChanged = TRUE;
             }
 
             /* Display this character */
+            if (HwStateChanged)
+            {
+                HwStateChanged = FALSE;
+                PrepareForSetPixel();
+            }
             DisplayCharacter(*String, VidpCurrentX, VidpCurrentY, VidpTextColor, BV_COLOR_NONE);
             VidpCurrentX += BOOTCHAR_WIDTH;
 
@@ -164,6 +176,7 @@ VidDisplayString(
                     /* Preserve the current row */
                     PreserveRow(VidpCurrentY, BOOTCHAR_HEIGHT + 1, FALSE);
                 }
+                HwStateChanged = TRUE;
 
                 /* Update current X */
                 VidpCurrentX = VidpScrollRegion.Left;
