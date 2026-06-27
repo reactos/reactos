@@ -174,6 +174,16 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     /* Get the old ESP */
     Previous = KiEspFromTrapFrame(TrapFrame);
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE185,
+                          (ULONG_PTR)TrapFrame,
+                          Esp,
+                          Previous,
+                          TrapFrame->SegCs,
+                          TrapFrame->EFlags,
+                          (ULONG_PTR)KeGetCurrentPrcb());
+#endif
+
     /* Check if this is user-mode or V86 */
     if (KiUserTrap(TrapFrame) ||
         (TrapFrame->EFlags & EFLAGS_V86_MASK))
@@ -184,11 +194,23 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     else
     {
         /* Don't allow ESP to be lowered, this is illegal */
-        if (Esp < Previous) KeBugCheckEx(SET_OF_INVALID_CONTEXT,
-                                         Esp,
-                                         Previous,
-                                         (ULONG_PTR)TrapFrame,
-                                         0);
+        if (Esp < Previous)
+        {
+#if DBG && defined(_M_IX86)
+            KiI386BootTraceRecord(0xE186,
+                                  (ULONG_PTR)TrapFrame,
+                                  Esp,
+                                  Previous,
+                                  (ULONG_PTR)&TrapFrame->HardwareEsp,
+                                  (ULONG_PTR)KeGetCurrentPrcb(),
+                                  (ULONG_PTR)KeGetCurrentThread());
+#endif
+            KeBugCheckEx(SET_OF_INVALID_CONTEXT,
+                         Esp,
+                         Previous,
+                         (ULONG_PTR)TrapFrame,
+                         0);
+        }
 
         /* Create an edit frame, check if it was alrady */
         if (!(TrapFrame->SegCs & FRAME_EDITED))
@@ -210,6 +232,16 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
             }
         }
     }
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE187,
+                          (ULONG_PTR)TrapFrame,
+                          Esp,
+                          Previous,
+                          TrapFrame->TempEsp,
+                          TrapFrame->HardwareEsp,
+                          TrapFrame->SegCs);
+#endif
 
     /* Restore IRQL */
     if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
@@ -800,9 +832,30 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 {
     CONTEXT Context;
     EXCEPTION_RECORD LocalExceptRecord;
+#if DBG && defined(_M_IX86)
+    PKTHREAD CurrentThread;
+#endif
 
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
+
+#if DBG && defined(_M_IX86)
+    CurrentThread = KeGetCurrentThread();
+    KiI386BootTraceRecord(0xE181,
+                          (ULONG_PTR)TrapFrame,
+                          (ULONG_PTR)ExceptionFrame,
+                          ExceptionRecord->ExceptionCode,
+                          PreviousMode,
+                          FirstChance,
+                          (ULONG_PTR)KeGetCurrentPrcb());
+    KiI386BootTraceRecord(0xE182,
+                          (ULONG_PTR)TrapFrame,
+                          (ULONG_PTR)CurrentThread,
+                          (ULONG_PTR)CurrentThread->TrapFrame,
+                          (ULONG_PTR)CurrentThread->KernelStack,
+                          (ULONG_PTR)CurrentThread->InitialStack,
+                          (ULONG_PTR)CurrentThread->StackLimit);
+#endif
 
     /* Set the context flags */
     Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
@@ -823,6 +876,16 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 
     /* Get a Context */
     KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE183,
+                          (ULONG_PTR)TrapFrame,
+                          Context.Eip,
+                          Context.SegCs,
+                          Context.EFlags,
+                          Context.Esp,
+                          Context.ContextFlags);
+#endif
 
     /* Look at our exception code */
     switch (ExceptionRecord->ExceptionCode)
@@ -967,6 +1030,15 @@ DispatchToUser:
                 *(PULONG_PTR)(NewStack - 2 * sizeof(ULONG_PTR)) = NewStack;
 
                 /* Set new Stack Pointer */
+#if DBG && defined(_M_IX86)
+                KiI386BootTraceRecord(0xE184,
+                                      (ULONG_PTR)TrapFrame,
+                                      Stack,
+                                      NewStack,
+                                      NewStack - 2 * sizeof(ULONG_PTR),
+                                      TrapFrame->Eip,
+                                      TrapFrame->HardwareEsp);
+#endif
                 KiSsToTrapFrame(TrapFrame, KGDT_R3_DATA);
                 KiEspToTrapFrame(TrapFrame, NewStack - 2 * sizeof(ULONG_PTR));
 
@@ -1041,6 +1113,15 @@ DispatchToUser:
 
 Handled:
     /* Convert the context back into Trap/Exception Frames */
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE188,
+                          (ULONG_PTR)TrapFrame,
+                          Context.Eip,
+                          Context.SegCs,
+                          Context.EFlags,
+                          Context.Esp,
+                          PreviousMode);
+#endif
     KeContextToTrapFrame(&Context,
                          ExceptionFrame,
                          TrapFrame,
@@ -1062,6 +1143,16 @@ KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
                                  IN PKTRAP_FRAME TrapFrame)
 {
     EXCEPTION_RECORD ExceptionRecord;
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE180,
+                          (ULONG_PTR)TrapFrame,
+                          Code,
+                          (ULONG_PTR)Address,
+                          TrapFrame->Eip,
+                          TrapFrame->SegCs,
+                          TrapFrame->EFlags);
+#endif
 
     /* Build the exception record */
     ExceptionRecord.ExceptionCode = Code;
