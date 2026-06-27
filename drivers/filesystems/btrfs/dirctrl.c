@@ -744,7 +744,9 @@ static NTSTATUS query_directory(PIRP Irp) {
     void* buf;
     uint8_t *curitem, *lastitem;
     LONG length;
+#ifdef _DEBUG
     ULONG count;
+#endif
     bool has_wildcard = false, specific_file = false, initial;
     dir_entry de;
     uint64_t newoffset;
@@ -998,7 +1000,9 @@ static NTSTATUS query_directory(PIRP Irp) {
 
     Status = query_dir_item(fcb, ccb, buf, &length, Irp, &de, fcb->subvol);
 
+#ifdef _DEBUG
     count = 0;
+#endif
     if (NT_SUCCESS(Status) && !(IrpSp->Flags & SL_RETURN_SINGLE_ENTRY) && !specific_file) {
         lastitem = (uint8_t*)buf;
 
@@ -1036,9 +1040,11 @@ static NTSTATUS query_directory(PIRP Irp) {
                 if (NT_SUCCESS(Status)) {
                     if (!has_wildcard || FsRtlIsNameInExpression(&ccb->query_string, &de.name, !ccb->case_sensitive, NULL)) {
                         curitem = (uint8_t*)buf + IrpSp->Parameters.QueryDirectory.Length - length;
+#ifdef _DEBUG
                         count++;
 
                         TRACE("file(%lu) %Iu = %.*S\n", count, curitem - (uint8_t*)buf, (int)(de.name.Length / sizeof(WCHAR)), de.name.Buffer);
+#endif
                         TRACE("offset = %I64u\n", ccb->query_dir_offset - 1);
 
                         status2 = query_dir_item(fcb, ccb, curitem, &length, Irp, &de, fcb->subvol);

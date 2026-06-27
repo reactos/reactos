@@ -946,12 +946,10 @@ VBEQueryAvailModes(
 {
    ULONG CurrentModeId;
    PVIDEO_MODE_INFORMATION CurrentMode;
-   PVBE_MODEINFO CurrentVBEMode;
 
-   for (CurrentModeId = 0, CurrentMode = ReturnedModes,
-        CurrentVBEMode = DeviceExtension->ModeInfo;
+   for (CurrentModeId = 0, CurrentMode = ReturnedModes;
         CurrentModeId < DeviceExtension->ModeCount;
-        CurrentModeId++, CurrentMode++, CurrentVBEMode++)
+        CurrentModeId++, CurrentMode++)
    {
       VBEQueryMode(DeviceExtension, CurrentMode, CurrentModeId);
    }

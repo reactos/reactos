@@ -37,6 +37,8 @@ struct FxUsbDeviceControlContext : public FxUsbRequestContext {
         VOID
         );
 
+    using FxUsbRequestContext::StoreAndReferenceMemory;
+
     __checkReturn
     NTSTATUS
     AllocateUrb(

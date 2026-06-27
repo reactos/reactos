@@ -190,6 +190,7 @@ out:
 static int parse_symlink(unsigned char *buffer, uint32_t length, nfs41_upcall *upcall)
 {
     symlink_upcall_args *args = &upcall->args.symlink;
+    const char *target_set;
     int status;
 
     status = get_name(&buffer, &length, &args->path);
@@ -198,7 +199,11 @@ static int parse_symlink(unsigned char *buffer, uint32_t length, nfs41_upcall *u
     if (status) goto out;
 
     if (args->set)
-        status = get_name(&buffer, &length, &args->target_set);
+    {
+        status = get_name(&buffer, &length, &target_set);
+        if (status) goto out;
+        args->target_set = (char *)target_set;
+    }
     else
         args->target_set = NULL;
 

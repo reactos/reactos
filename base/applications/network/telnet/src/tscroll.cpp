@@ -276,13 +276,12 @@ void TScroller::ScrollBack(){
             }
             break;
 		case TEXTB: {
-			int ch, lines, x;
+			int ch, lines;
 			// Find the starting position
-			for(ch = 0, lines = 0, x = 1; ch < iScrollSize &&
-				lines < current; ch++, x++) {
+			for(ch = 0, lines = 0; ch < iScrollSize &&
+				lines < current; ch++) {
 
 				if(stripped[ch] == '\n') lines++;
-				if(stripped[ch] == '\r') x = 1;
 			}
 
 			for (r = 0; r < CON_HEIGHT; r++) {

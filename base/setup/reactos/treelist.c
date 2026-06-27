@@ -5256,6 +5256,7 @@ static int TreeListDeleteColumn(TreeListData *pData, unsigned uCol) {
 	}
 
 	pData->iFixSize   = iFix;
+	pData->iVarSize   = iVar;
 	pData->iAllWeight = iAll;
 	pData->aColumn[pData->uColumnCount].bWeight = 0;
 

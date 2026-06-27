@@ -1095,7 +1095,6 @@ UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
     USHORT DeviceAddress;
     ULONG TransferType;
     SIZE_T TransferLength = 0;
-    SIZE_T LengthMapped = 0;
     SIZE_T BytesRemaining;
     SIZE_T LengthThisTD;
     ULONG ix;
@@ -1212,7 +1211,6 @@ UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
                 ASSERT(FALSE);
 
             PhysicalAddress += LengthThisTD;
-            LengthMapped += LengthThisTD;
 
             if (LastTD)
             {

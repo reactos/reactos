@@ -930,7 +930,7 @@ NextPathA(
         pchEnd = (PSTR)(pchStart + lstrlenA(pchStart));
 
     const UINT cchSegment = (UINT)(pchEnd - pchStart);
-    const UINT cchToCopy = min(cchSegment + 1, cchDest);
+    const UINT cchToCopy = (cchSegment + 1 < cchDest) ? (cchSegment + 1) : cchDest;
     lstrcpynA(pszDest, pchStart, cchToCopy);
     pszDest[cchSegment] = ANSI_NULL;
 
@@ -972,7 +972,7 @@ NextPathW(
         pchEnd = (PWSTR)(pchStart + lstrlenW(pchStart));
 
     const UINT cchSegment = (UINT)(pchEnd - pchStart);
-    const UINT cchToCopy = min(cchSegment + 1, cchDest);
+    const UINT cchToCopy = (cchSegment + 1 < cchDest) ? (cchSegment + 1) : cchDest;
     lstrcpynW(pszDest, pchStart, cchToCopy);
     pszDest[cchSegment] = UNICODE_NULL;
 
@@ -1176,7 +1176,7 @@ BOOL WINAPI SHGetFileDescriptionW(
     UINT cchResult = lstrlenW(pszDescription) + 1;
     if (pszOut)
     {
-        UINT cchCopy = min(cchResult, *pcchOut);
+        UINT cchCopy = (cchResult < *pcchOut) ? cchResult : *pcchOut;
         StringCchCopyW(pszOut, cchCopy, pszDescription);
         *pcchOut = cchCopy;
     }

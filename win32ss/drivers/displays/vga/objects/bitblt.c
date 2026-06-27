@@ -286,14 +286,8 @@ VGADDI_BltBrush(
         Video = (PUCHAR)vidmem + i * 80 + (Left >> 3);
         for (j = 0; j < Length; j++, Video++)
         {
-#if 0
             (VOID)READ_REGISTER_UCHAR(Video);
             WRITE_REGISTER_UCHAR(Video, 0xFF);
-#else
-            char volatile Temp = *Video;
-            Temp |= 0;
-            *Video = 0xFF;
-#endif
         }
     }
 

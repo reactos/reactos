@@ -74,7 +74,7 @@ void format_size(uint64_t size, wstring& s, bool show_bytes) {
 #endif
 
 #ifndef __REACTOS__
-    nb = to_wstring(size);
+    nb = btrfs_to_wstring(size);
 #else
     swprintf(buffer, L"%I64d", size);
     nb = wstring(buffer);

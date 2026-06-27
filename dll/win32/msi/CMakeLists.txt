@@ -49,6 +49,10 @@ list(APPEND SOURCE
 BISON_TARGET(cond cond.y ${CMAKE_CURRENT_BINARY_DIR}/cond.tab.c)
 BISON_TARGET(sql sql.y ${CMAKE_CURRENT_BINARY_DIR}/sql.tab.c)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set_source_files_properties(${BISON_cond_OUTPUTS} ${BISON_sql_OUTPUTS} PROPERTIES COMPILE_OPTIONS "-Wno-unused-but-set-variable")
+endif()
+
 set(OLD_IDL_FLAGS ${IDL_FLAGS})
 set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
 add_rpc_files(client winemsi.idl)

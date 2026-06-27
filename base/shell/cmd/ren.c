@@ -54,7 +54,6 @@ INT cmd_rename (LPTSTR param)
 {
     LPTSTR *arg = NULL;
     INT args = 0;
-    INT nSlash = 0;
     INT nEvalArgs = 0; /* number of evaluated arguments */
     DWORD dwFlags = 0;
     DWORD dwFiles = 0; /* number of renamed files */
@@ -167,11 +166,9 @@ INT cmd_rename (LPTSTR param)
         //Splitting srcPath and srcFile.
 
         srcFILE = _tcschr(srcPattern, _T('\\'));
-        nSlash++;
         while(_tcschr(srcFILE, _T('\\')))
         {
             srcFILE++;
-            if (*srcFILE==_T('\\')) nSlash++ ;
             if (!_tcschr(srcFILE, _T('\\'))) break;
         }
         _tcsncpy(srcPath,srcPattern,_tcslen(srcPattern)-_tcslen(srcFILE));
@@ -179,11 +176,9 @@ INT cmd_rename (LPTSTR param)
         if (_tcschr(dstPattern, _T('\\'))) //Checking if the Destiny (dstPattern)is also a Path.And splitting dstPattern in dstPath and srcPath.
         {
             dstFILE = _tcschr(dstPattern, _T('\\'));
-            nSlash=0;
             while(_tcschr(dstFILE, _T('\\')))
             {
                 dstFILE++;
-                if (*dstFILE==_T('\\')) nSlash++ ;
                 if (!_tcschr(dstFILE, _T('\\'))) break;
             }
             _tcsncpy(dstPath,dstPattern,_tcslen(dstPattern)-_tcslen(dstFILE));

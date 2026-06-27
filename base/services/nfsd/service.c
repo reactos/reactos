@@ -290,7 +290,7 @@ VOID AddToMessageLog(LPTSTR lpszMsg)
 {
    TCHAR szMsg [(sizeof(SZSERVICENAME) / sizeof(TCHAR)) + 100 ];
    HANDLE  hEventSource;
-   LPTSTR  lpszStrings[2];
+   LPCTSTR lpszStrings[2];
 
    if ( !bDebug )
    {

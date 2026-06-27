@@ -870,7 +870,7 @@ FxDmaScatterGatherTransaction::InitializeResources(
     PMDL  nextMdl;
     size_t nextOffset;
     ULONG mapRegistersRequired;
-    size_t remLength, transferLength, transferred, possibleLength=0;
+    size_t remLength, transferLength, possibleLength=0;
     PFX_DRIVER_GLOBALS pFxDriverGlobals = GetDriverGlobals();
 
     status = STATUS_SUCCESS;
@@ -886,7 +886,6 @@ FxDmaScatterGatherTransaction::InitializeResources(
     // dma execution.
     //
     remLength = m_TransactionLength;
-    transferred = 0;
     nextMdl = m_StartMdl;
     nextOffset = m_StartOffset;
     transferLength = 0;
@@ -928,7 +927,6 @@ FxDmaScatterGatherTransaction::InitializeResources(
             return status;
         }
 
-        transferred += transferLength;
         remLength -= transferLength;
     }
 

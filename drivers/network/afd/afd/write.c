@@ -22,7 +22,7 @@ static NTSTATUS NTAPI SendComplete
     PIO_STACK_LOCATION NextIrpSp;
     PAFD_SEND_INFO SendReq = NULL;
     PAFD_MAPBUF Map;
-    SIZE_T TotalBytesCopied = 0, TotalBytesProcessed = 0, SpaceAvail, i;
+    SIZE_T TotalBytesCopied = 0, SpaceAvail, i;
     UINT SendLength, BytesCopied;
     BOOLEAN HaltSendQueue;
 
@@ -103,7 +103,6 @@ static NTSTATUS NTAPI SendComplete
                    FCB->Send.Window + Irp->IoStatus.Information,
                    FCB->Send.BytesUsed - Irp->IoStatus.Information );
 
-    TotalBytesProcessed = 0;
     SendLength = Irp->IoStatus.Information;
     HaltSendQueue = FALSE;
     while (!IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]) && SendLength > 0) {
@@ -125,7 +124,6 @@ static NTSTATUS NTAPI SendComplete
 
             /* Update the state variables */
             FCB->Send.BytesUsed -= SendLength;
-            TotalBytesProcessed += SendLength;
             SendLength = 0;
 
             /* Pend the IRP */
@@ -140,7 +138,6 @@ static NTSTATUS NTAPI SendComplete
         NextIrp->IoStatus.Status = Irp->IoStatus.Status;
 
         FCB->Send.BytesUsed -= TotalBytesCopied;
-        TotalBytesProcessed += TotalBytesCopied;
         SendLength -= TotalBytesCopied;
 
         (void)IoSetCancelRoutine(NextIrp, NULL);

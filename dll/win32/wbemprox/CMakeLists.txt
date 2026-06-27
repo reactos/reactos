@@ -22,6 +22,10 @@ list(APPEND SOURCE
 
 BISON_TARGET(wql wql.y ${CMAKE_CURRENT_BINARY_DIR}/wql.tab.c COMPILE_FLAGS "-p wql_")
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set_source_files_properties(${BISON_wql_OUTPUTS} PROPERTIES COMPILE_OPTIONS "-Wno-unused-but-set-variable")
+endif()
+
 list(APPEND PCH_SKIP_SOURCE
     guid.c
     ${BISON_wql_OUTPUTS})

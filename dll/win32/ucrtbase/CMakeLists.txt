@@ -46,9 +46,6 @@ target_link_libraries(libucrtbase INTERFACE vcstartup)
 
 if(MSVC)
     target_link_libraries(ucrtbase runtmchk)
-else()
-    # For __cxa_guard_acquire / __cxa_guard_release
-    target_link_libraries(ucrtbase libsupc++)
 endif()
 
 add_importlibs(ucrtbase kernel32 ntdll)

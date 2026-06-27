@@ -644,8 +644,9 @@ if(LIBWINPTHREAD_LOCATION MATCHES "mingw32")
     string(STRIP ${LIBWINPTHREAD_LOCATION} LIBWINPTHREAD_LOCATION)
     message(STATUS "Using libwinpthread from ${LIBWINPTHREAD_LOCATION}")
     set_target_properties(libwinpthread PROPERTIES IMPORTED_LOCATION ${LIBWINPTHREAD_LOCATION})
-    # libwinpthread needs kernel32 imports, a CRT and msvcrtex
-    target_link_libraries(libwinpthread INTERFACE libkernel32 libmsvcrt msvcrtex)
+    # libwinpthread needs kernel32 imports, a CRT, msvcrtex, and
+    # msvcrt-family support thunks on NT5-era CRTs.
+    target_link_libraries(libwinpthread INTERFACE libkernel32 libmsvcrt msvcrtex gcc_msvcrt_support)
 else()
     add_library(libwinpthread INTERFACE)
 endif()
@@ -669,7 +670,7 @@ add_library(libsupc++ STATIC IMPORTED GLOBAL)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
 string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
 set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
-target_link_libraries(libsupc++ INTERFACE libgcc_eh libgcc stdc++compat)
+target_link_libraries(libsupc++ INTERFACE libgcc_eh libgcc)
 
 add_library(libmingwex STATIC IMPORTED)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
@@ -682,11 +683,13 @@ add_library(libstdc++ STATIC IMPORTED GLOBAL)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libstdc++.a OUTPUT_VARIABLE LIBSTDCCXX_LOCATION)
 string(STRIP ${LIBSTDCCXX_LOCATION} LIBSTDCCXX_LOCATION)
 set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${LIBSTDCCXX_LOCATION})
-# libstdc++ requires libsupc++ and mingwex provided by GCC
-target_link_libraries(libstdc++ INTERFACE libsupc++ libmingwex oldnames)
+# libstdc++ requires libsupc++, mingwex provided by GCC, and ReactOS CRT shims
+target_link_libraries(libstdc++ INTERFACE libsupc++ stdc++compat libmingwex oldnames)
 # this is for our SAL annotations
 target_compile_definitions(libstdc++ INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:PAL_STDCPP_COMPAT>")
+target_compile_options(libstdc++ INTERFACE
+    "$<$<COMPILE_LANGUAGE:CXX>:-include>"
+    "$<$<COMPILE_LANGUAGE:CXX>:${REACTOS_SOURCE_DIR}/sdk/include/reactos/libstdcxx-msvcrt-cstdlib.h>")
 
 # Create our alias libraries
 add_library(cppstl ALIAS libstdc++)
-

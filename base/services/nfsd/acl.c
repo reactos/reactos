@@ -647,12 +647,15 @@ static int map_dacl_2_nfs4acl(PACL acl, PSID sid, PSID gsid, nfsacl41 *nfs4_acl,
         }
         nfs4_acl->flag = 0;
         for (i = 0; i < acl->AceCount; i++) {
-            status = GetAce(acl, i, &ace);
+            LPVOID ace_pointer;
+
+            status = GetAce(acl, i, &ace_pointer);
             if (!status) {
                 status = GetLastError();
                 eprintf("map_dacl_2_nfs4acl: GetAce failed with %d\n", status);
                 goto out_free;
             }
+            ace = (PACE_HEADER)ace_pointer;
             tmp_pointer = (PBYTE)ace;
             print_hexbuf_no_asci(3, (unsigned char *)"ACE\n", 
                                     (unsigned char *)ace, ace->AceSize); 
