@@ -2889,7 +2889,7 @@ FinishDlgProc(HWND hwndDlg,
                 if (Failed)
                 {
                     LoadStringW(hDllInstance, IDS_INSTALLADDONSFAILEDMESSAGE, szMessage, _countof(szMessage));
-                    LoadStringW(hDllInstance, IDS_INSTALLADDONSFAILEDCAPTION, szCaption, _countof(szCaption));
+                    LoadStringW(hDllInstance, IDS_INSTALLADDONSCAPTION, szCaption, _countof(szCaption));
 
                     MessageBoxW(NULL,
                                 szMessage,
