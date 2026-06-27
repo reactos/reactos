@@ -770,6 +770,22 @@ KiGetThreadNpxArea(IN PKTHREAD Thread)
     return (PFX_SAVE_AREA)((ULONG_PTR)Thread->InitialStack - sizeof(FX_SAVE_AREA));
 }
 
+FORCEINLINE
+ULONG
+KiNormalizeNpxCr0State(IN ULONG Cr0)
+{
+    /*
+     * KiTrap07Handler treats CR0.TS without CR0.MP as invalid lazy-NPX state.
+     * Normalize saved NPX-state merges before they reach hardware CR0.
+     */
+    if (Cr0 & CR0_TS)
+    {
+        Cr0 |= CR0_MP;
+    }
+
+    return Cr0;
+}
+
 //
 // Sanitizes a selector
 //

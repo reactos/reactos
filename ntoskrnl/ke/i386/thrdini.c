@@ -689,6 +689,7 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     NewCr0 = NewThread->NpxState |
              (Cr0 & ~(CR0_MP | CR0_EM | CR0_TS)) |
              KiGetThreadNpxArea(NewThread)->Cr0NpxState;
+    NewCr0 = KiNormalizeNpxCr0State(NewCr0);
     if (Cr0 != NewCr0)  __writecr0(NewCr0);
 
     /* Now enable interrupts and do the switch */

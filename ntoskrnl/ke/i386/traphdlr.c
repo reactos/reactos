@@ -940,6 +940,7 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
         /* Mark CR0 state dirty */
         Cr0 |= NPX_STATE_NOT_LOADED;
         Cr0 |= SaveArea->Cr0NpxState;
+        Cr0 = KiNormalizeNpxCr0State(Cr0);
         __writecr0(Cr0);
 
         /* Update NPX state */
@@ -1448,7 +1449,9 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
 
             /* Reload CR0 */
             Cr0 = __readcr0();
+            SaveArea->Cr0NpxState = KiNormalizeNpxCr0State(SaveArea->Cr0NpxState);
             Cr0 |= SaveArea->Cr0NpxState;
+            Cr0 = KiNormalizeNpxCr0State(Cr0);
             __writecr0(Cr0);
 
             /* Now restore interrupts and check for TS */
@@ -2337,6 +2340,7 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
     /* Mark CR0 state dirty */
     Cr0 |= NPX_STATE_NOT_LOADED;
     Cr0 |= SaveArea->Cr0NpxState;
+    Cr0 = KiNormalizeNpxCr0State(Cr0);
      __writecr0(Cr0);
 
     /* Update NPX state */

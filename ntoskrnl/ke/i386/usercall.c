@@ -316,7 +316,7 @@ KiUserModeCallout(PKCALLOUT_FRAME CalloutFrame)
     FxSaveArea->U.FnArea.StatusWord = OldFxSaveArea->U.FnArea.StatusWord;
     FxSaveArea->U.FnArea.TagWord = OldFxSaveArea->U.FnArea.TagWord;
     FxSaveArea->U.FnArea.DataSelector = OldFxSaveArea->U.FnArea.DataSelector;
-    FxSaveArea->Cr0NpxState = OldFxSaveArea->Cr0NpxState;
+    FxSaveArea->Cr0NpxState = KiNormalizeNpxCr0State(OldFxSaveArea->Cr0NpxState);
 
     /* Set the stack address */
     CurrentThread->InitialStack = (PVOID)InitialStack;
@@ -427,7 +427,7 @@ NtCallbackReturn(
     FxSaveArea->U.FnArea.StatusWord = CbFxSaveArea->U.FnArea.StatusWord;
     FxSaveArea->U.FnArea.TagWord = CbFxSaveArea->U.FnArea.TagWord;
     FxSaveArea->U.FnArea.DataSelector = CbFxSaveArea->U.FnArea.DataSelector;
-    FxSaveArea->Cr0NpxState = CbFxSaveArea->Cr0NpxState;
+    FxSaveArea->Cr0NpxState = KiNormalizeNpxCr0State(CbFxSaveArea->Cr0NpxState);
 
     /* Get the previous trap frame */
     TrapFrame = (PKTRAP_FRAME)CalloutFrame->TrapFrame;

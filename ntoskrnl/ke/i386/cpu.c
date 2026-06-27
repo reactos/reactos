@@ -1320,6 +1320,7 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
     /* Add the CR0 from the NPX frame */
     Cr0 |= NPX_STATE_NOT_LOADED;
     Cr0 |= FxSaveArea->Cr0NpxState;
+    Cr0 = KiNormalizeNpxCr0State(Cr0);
     __writecr0(Cr0);
 
     /* Restore interrupt state */

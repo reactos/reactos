@@ -478,6 +478,7 @@ KiApplyCurrentThreadNpxCr0State(PKTHREAD Thread)
     Cr0 |= CR0_NE;
     Cr0 |= Thread->NpxState;
     Cr0 |= KiGetThreadNpxArea(Thread)->Cr0NpxState;
+    Cr0 = KiNormalizeNpxCr0State(Cr0);
     __writecr0(Cr0);
 }
 
@@ -551,7 +552,7 @@ KiVerifyCpuFeatures(PKPRCB Prcb)
     // Set up FPU-related CR0 flags for the probe.
     ULONG Cr0 = __readcr0();
     // Disable emulation and monitoring.
-    Cr0 &= ~(CR0_EM | CR0_MP);
+    Cr0 &= ~(CR0_EM | CR0_MP | CR0_TS);
     // Enable FPU exceptions.
     Cr0 |= CR0_NE;
 
@@ -565,7 +566,7 @@ KiVerifyCpuFeatures(PKPRCB Prcb)
 
     // Keep the early probe relaxed until the current thread exists.
     Cr0 = __readcr0();
-    Cr0 &= ~(CR0_EM | CR0_MP);
+    Cr0 &= ~(CR0_EM | CR0_MP | CR0_TS);
     Cr0 |= CR0_NE;
     __writecr0(Cr0);
 
