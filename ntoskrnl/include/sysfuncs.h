@@ -94,6 +94,7 @@
     SVC_(ImpersonateAnonymousToken, 1)
     SVC_(ImpersonateClientOfPort, 2)
     SVC_(ImpersonateThread, 3)
+    SVC_(InitializeNlsFiles, 3)
     SVC_(InitializeRegistry, 1)
     SVC_(InitiatePowerAction, 4)
     SVC_(IsProcessInJob, 2)
@@ -293,4 +294,5 @@
     SVC_(WaitForKeyedEvent, 4)
     SVC_(QueryPortInformationProcess, 0)
     SVC_(GetCurrentProcessorNumber, 0)
+    SVC_(GetNlsSectionPtr, 5)
     SVC_(WaitForMultipleObjects32, 5)

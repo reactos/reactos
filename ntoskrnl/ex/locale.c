@@ -389,6 +389,28 @@ ExpSetCurrentUserUILanguage(IN PCWSTR MuiName,
 
 NTSTATUS
 NTAPI
+NtGetNlsSectionPtr(_In_  ULONG SectionType,
+                   _In_  ULONG SectionData,
+                   _In_  PVOID ContextData,
+                   _Out_ PVOID *SectionPointer,
+                   _Out_ PULONG SectionSize)
+{
+    UNIMPLEMENTED_ONCE;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtInitializeNlsFiles(_Out_ PVOID *BaseAddress,
+                     _Out_ PLCID DefaultLocaleId,
+                     _Out_ PLARGE_INTEGER DefaultCastingTableSize)
+{
+    UNIMPLEMENTED_ONCE;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
 NtQueryDefaultLocale(IN BOOLEAN UserProfile,
                      OUT PLCID DefaultLocaleId)
 {

@@ -254,6 +254,26 @@ NtFindAtom(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtGetNlsSectionPtr(
+    _In_  ULONG SectionType,
+    _In_  ULONG SectionData,
+    _In_  PVOID ContextData,
+    _Out_ PVOID *SectionPointer,
+    _Out_ PULONG SectionSize
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtInitializeNlsFiles(
+    _Out_ PVOID *BaseAddress,
+    _Out_ PLCID DefaultLocaleId,
+    _Out_ PLARGE_INTEGER DefaultCastingTableSize
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtOpenEvent(
     _Out_ PHANDLE EventHandle,
     _In_ ACCESS_MASK DesiredAccess,
