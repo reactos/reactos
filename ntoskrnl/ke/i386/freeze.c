@@ -160,17 +160,17 @@ KxWaitForFrozenProcessors(
     return TRUE;
 }
 
-VOID
-NTAPI
-KxHandleFreezeIpi(
-    VOID)
+static
+BOOLEAN
+KxJoinFreezeTarget(
+    _In_ PKPRCB CurrentPrcb)
 {
-    PKPRCB CurrentPrcb = KeGetCurrentPrcb();
     KAFFINITY SetMember = CurrentPrcb->SetMember;
 
     if ((KiI386FreezeTargetSet & SetMember) == 0)
-        return;
+        return FALSE;
 
+    InterlockedBitTestAndReset((PLONG)&CurrentPrcb->IpiFrozen, IPI_FREEZE);
     InterlockedBitTestAndSetAffinity(&KiI386FrozenSet, CurrentPrcb->Number);
 
     while ((KiI386ThawSet & SetMember) == 0)
@@ -180,6 +180,38 @@ KxHandleFreezeIpi(
     }
 
     InterlockedBitTestAndResetAffinity(&KiI386FrozenSet, CurrentPrcb->Number);
+    return TRUE;
+}
+
+static
+BOOLEAN
+KxWaitAndJoinExistingFreeze(
+    _In_ PKPRCB CurrentPrcb)
+{
+    KAFFINITY SetMember = CurrentPrcb->SetMember;
+    ULONG SpinCount = 10000000;
+
+    while ((KiI386FreezeTargetSet & SetMember) == 0)
+    {
+        if (KiI386FreezeOwner == NULL)
+            return TRUE;
+
+        if (--SpinCount == 0)
+            return FALSE;
+
+        YieldProcessor();
+        KeMemoryBarrier();
+    }
+
+    return KxJoinFreezeTarget(CurrentPrcb);
+}
+
+VOID
+NTAPI
+KxHandleFreezeIpi(
+    VOID)
+{
+    KxJoinFreezeTarget(KeGetCurrentPrcb());
 }
 
 BOOLEAN
@@ -201,10 +233,16 @@ KxFreezeExecution(
         return FALSE;
     }
 
-    if (InterlockedCompareExchangePointer((PVOID *)&KiI386FreezeOwner,
-                                          CurrentPrcb,
-                                          NULL) != NULL)
+    for (;;)
     {
+        if (InterlockedCompareExchangePointer((PVOID *)&KiI386FreezeOwner,
+                                              CurrentPrcb,
+                                              NULL) == NULL)
+            break;
+
+        if (KxWaitAndJoinExistingFreeze(CurrentPrcb))
+            continue;
+
         KiFreezeFlag |= 2;
 #if DBG && defined(_M_IX86)
         KxRawCom1DumpFreeze(0x81, Caller);
