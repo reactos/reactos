@@ -22,6 +22,158 @@ VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+#if DBG && defined(_M_IX86)
+#define KDPAPI_RAW_COM1_BASE 0x3F8
+#define KDPAPI_RAW_COM1_LINE_STATUS 5
+#define KDPAPI_RAW_COM1_TRANSMIT_EMPTY 0x20
+
+static volatile BOOLEAN KdpApiRawLoadSymbolsActive;
+
+static
+VOID
+NTAPI
+KdpApiRawCom1WriteByte(
+    _In_ UCHAR Character)
+{
+    ULONG SpinCount = 100000;
+
+    while (SpinCount-- != 0)
+    {
+        if (READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)(KDPAPI_RAW_COM1_BASE +
+                                                KDPAPI_RAW_COM1_LINE_STATUS)) &
+            KDPAPI_RAW_COM1_TRANSMIT_EMPTY)
+            break;
+    }
+
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)KDPAPI_RAW_COM1_BASE, Character);
+}
+
+static
+VOID
+NTAPI
+KdpApiRawCom1WriteString(
+    _In_z_ const CHAR *String)
+{
+    while (*String != ANSI_NULL)
+    {
+        if (*String == '\n')
+            KdpApiRawCom1WriteByte('\r');
+
+        KdpApiRawCom1WriteByte(*String++);
+    }
+}
+
+static
+VOID
+NTAPI
+KdpApiRawCom1WriteAnsiString(
+    _In_opt_ PSTRING String)
+{
+    USHORT Index;
+
+    if ((String == NULL) || (String->Buffer == NULL))
+        return;
+
+    for (Index = 0; Index < String->Length; Index++)
+    {
+        CHAR Character = String->Buffer[Index];
+        KdpApiRawCom1WriteByte((Character >= 0x20 && Character < 0x7f) ?
+                               (UCHAR)Character : (UCHAR)'?');
+    }
+}
+
+static
+VOID
+NTAPI
+KdpApiRawCom1WriteHex(
+    _In_ ULONG_PTR Value)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < 8; Index++)
+    {
+        ULONG Nibble = (Value >> (28 - Index * 4)) & 0xF;
+
+        KdpApiRawCom1WriteByte((UCHAR)(Nibble < 10 ? ('0' + Nibble) :
+                                                   ('A' + Nibble - 10)));
+    }
+}
+
+static
+VOID
+NTAPI
+KdpApiRawCom1WriteField(
+    _In_z_ const CHAR *Name,
+    _In_ ULONG_PTR Value)
+{
+    KdpApiRawCom1WriteByte(' ');
+    KdpApiRawCom1WriteString(Name);
+    KdpApiRawCom1WriteByte('=');
+    KdpApiRawCom1WriteHex(Value);
+}
+
+static
+VOID
+NTAPI
+KdpApiRawCom1DumpLoadSymbolStage(
+    _In_ ULONG Stage,
+    _In_opt_ PSTRING PathName,
+    _In_opt_ PKD_SYMBOLS_INFO SymbolInfo,
+    _In_ ULONG_PTR Detail,
+    _In_ ULONG_PTR Extra)
+{
+    if (!KdpApiRawLoadSymbolsActive)
+        return;
+
+    KdpApiRawCom1WriteString("\nKdpLoadSym");
+    KdpApiRawCom1WriteField("stage", Stage);
+    KdpApiRawCom1WriteField("cpu", KeGetCurrentProcessorNumber());
+    KdpApiRawCom1WriteField("irql", KeGetCurrentIrql());
+    KdpApiRawCom1WriteField("active", KdpApiRawLoadSymbolsActive);
+    KdpApiRawCom1WriteField("info", (ULONG_PTR)SymbolInfo);
+    KdpApiRawCom1WriteField("detail", Detail);
+    KdpApiRawCom1WriteField("extra", Extra);
+    KdpApiRawCom1WriteString(" name=");
+    KdpApiRawCom1WriteAnsiString(PathName);
+    KdpApiRawCom1WriteByte('\n');
+}
+
+static
+BOOLEAN
+NTAPI
+KdpApiRawPathContainsCdrom(
+    _In_opt_ PSTRING PathName)
+{
+    static const CHAR Needle[] = "cdrom.sys";
+    ULONG Index, NeedleIndex;
+
+    if ((PathName == NULL) || (PathName->Buffer == NULL))
+        return FALSE;
+
+    if (PathName->Length < sizeof(Needle) - 1)
+        return FALSE;
+
+    for (Index = 0; Index <= PathName->Length - (sizeof(Needle) - 1); Index++)
+    {
+        for (NeedleIndex = 0; NeedleIndex < sizeof(Needle) - 1; NeedleIndex++)
+        {
+            CHAR Character = PathName->Buffer[Index + NeedleIndex];
+
+            if ((Character >= 'A') && (Character <= 'Z'))
+                Character = (CHAR)(Character - 'A' + 'a');
+
+            if (Character != Needle[NeedleIndex])
+                break;
+        }
+
+        if (NeedleIndex == sizeof(Needle) - 1)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+#endif
+
 VOID
 NTAPI
 KdpMoveMemory(
@@ -1289,6 +1441,17 @@ KdpSendWaitContinue(IN ULONG PacketType,
     ULONG Length;
     KDSTATUS RecvCode;
 
+#if DBG && defined(_M_IX86)
+    if (KdpApiRawLoadSymbolsActive)
+    {
+        KdpApiRawCom1DumpLoadSymbolStage(0xB501,
+                                         NULL,
+                                         NULL,
+                                         PacketType,
+                                         (ULONG_PTR)Context);
+    }
+#endif
+
     /* Setup the Manipulate State structure */
     Header.MaximumLength = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)&ManipulateState;
@@ -1301,12 +1464,56 @@ KdpSendWaitContinue(IN ULONG PacketType,
      */
     KdpContextSent = FALSE;
 
+#if DBG && defined(_M_IX86)
+    if (KdpApiRawLoadSymbolsActive)
+    {
+        KdpApiRawCom1DumpLoadSymbolStage(0xB502,
+                                         NULL,
+                                         NULL,
+                                         SendHeader->Length,
+                                         SendData ? SendData->Length : 0);
+    }
+#endif
+
 SendPacket:
     /* Send the Packet */
+#if DBG && defined(_M_IX86)
+    if (KdpApiRawLoadSymbolsActive)
+    {
+        KdpApiRawCom1DumpLoadSymbolStage(0xB503,
+                                         NULL,
+                                         NULL,
+                                         PacketType,
+                                         SendData ? SendData->Length : 0);
+    }
+#endif
     KdSendPacket(PacketType, SendHeader, SendData, &KdpContext);
+#if DBG && defined(_M_IX86)
+    if (KdpApiRawLoadSymbolsActive)
+    {
+        KdpApiRawCom1DumpLoadSymbolStage(0xB504,
+                                         NULL,
+                                         NULL,
+                                         PacketType,
+                                         KdDebuggerNotPresent);
+    }
+#endif
 
     /* If the debugger isn't present anymore, just return success */
-    if (KdDebuggerNotPresent) return ContinueSuccess;
+    if (KdDebuggerNotPresent)
+    {
+#if DBG && defined(_M_IX86)
+        if (KdpApiRawLoadSymbolsActive)
+        {
+            KdpApiRawCom1DumpLoadSymbolStage(0xB505,
+                                             NULL,
+                                             NULL,
+                                             PacketType,
+                                             KdDebuggerNotPresent);
+        }
+#endif
+        return ContinueSuccess;
+    }
 
     /* Main processing Loop */
     for (;;)
@@ -1315,15 +1522,59 @@ SendPacket:
         do
         {
             /* Wait to get a reply to our packet */
+#if DBG && defined(_M_IX86)
+            if (KdpApiRawLoadSymbolsActive)
+            {
+                KdpApiRawCom1DumpLoadSymbolStage(0xB506,
+                                                 NULL,
+                                                 NULL,
+                                                 PacketType,
+                                                 Data.MaximumLength);
+            }
+#endif
             RecvCode = KdReceivePacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                                        &Header,
                                        &Data,
                                        &Length,
                                        &KdpContext);
+#if DBG && defined(_M_IX86)
+            if (KdpApiRawLoadSymbolsActive)
+            {
+                KdpApiRawCom1DumpLoadSymbolStage(0xB507,
+                                                 NULL,
+                                                 NULL,
+                                                 RecvCode,
+                                                 Length);
+            }
+#endif
 
             /* If we got a resend request, do it */
-            if (RecvCode == KdPacketNeedsResend) goto SendPacket;
+            if (RecvCode == KdPacketNeedsResend)
+            {
+#if DBG && defined(_M_IX86)
+                if (KdpApiRawLoadSymbolsActive)
+                {
+                    KdpApiRawCom1DumpLoadSymbolStage(0xB508,
+                                                     NULL,
+                                                     NULL,
+                                                     RecvCode,
+                                                     Length);
+                }
+#endif
+                goto SendPacket;
+            }
         } while (RecvCode == KdPacketTimedOut);
+
+#if DBG && defined(_M_IX86)
+        if (KdpApiRawLoadSymbolsActive)
+        {
+            KdpApiRawCom1DumpLoadSymbolStage(0xB509,
+                                             NULL,
+                                             NULL,
+                                             ManipulateState.ApiNumber,
+                                             Length);
+        }
+#endif
 
         /* Now check what API we got */
         switch (ManipulateState.ApiNumber)
@@ -1367,6 +1618,16 @@ SendPacket:
             case DbgKdContinueApi:
 
                 /* Simply continue */
+#if DBG && defined(_M_IX86)
+                if (KdpApiRawLoadSymbolsActive)
+                {
+                    KdpApiRawCom1DumpLoadSymbolStage(0xB50A,
+                                                     NULL,
+                                                     NULL,
+                                                     ManipulateState.ApiNumber,
+                                                     ManipulateState.u.Continue.ContinueStatus);
+                }
+#endif
                 return NT_SUCCESS(ManipulateState.u.Continue.ContinueStatus);
 
             case DbgKdReadControlSpaceApi:
@@ -1406,11 +1667,31 @@ SendPacket:
                 {
                     /* Update the state */
                     KdpGetStateChange(&ManipulateState, Context);
+#if DBG && defined(_M_IX86)
+                    if (KdpApiRawLoadSymbolsActive)
+                    {
+                        KdpApiRawCom1DumpLoadSymbolStage(0xB50B,
+                                                         NULL,
+                                                         NULL,
+                                                         ManipulateState.ApiNumber,
+                                                         ManipulateState.u.Continue2.ContinueStatus);
+                    }
+#endif
                     return ContinueSuccess;
                 }
                 else
                 {
                     /* Return an error */
+#if DBG && defined(_M_IX86)
+                    if (KdpApiRawLoadSymbolsActive)
+                    {
+                        KdpApiRawCom1DumpLoadSymbolStage(0xB50C,
+                                                         NULL,
+                                                         NULL,
+                                                         ManipulateState.ApiNumber,
+                                                         ManipulateState.u.Continue2.ContinueStatus);
+                    }
+#endif
                     return ContinueError;
                 }
 
@@ -1610,16 +1891,58 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
     ULONG PathNameLength;
     KCONTINUE_STATUS Status;
 
+#if DBG && defined(_M_IX86)
+    KdpApiRawLoadSymbolsActive = KdpApiRawPathContainsCdrom(PathName);
+    KdpApiRawCom1DumpLoadSymbolStage(0xA401,
+                                     PathName,
+                                     SymbolInfo,
+                                     PathName ? PathName->Length : 0,
+                                     (ULONG_PTR)Context);
+    if (KeGetCurrentIrql() == HIGH_LEVEL)
+    {
+        KdpApiRawCom1DumpLoadSymbolStage(0xA4F0,
+                                         PathName,
+                                         SymbolInfo,
+                                         PathName ? PathName->Length : 0,
+                                         (ULONG_PTR)Context);
+        KdpApiRawLoadSymbolsActive = FALSE;
+        return;
+    }
+#endif
+
     /* Start wait loop */
     do
     {
+#if DBG && defined(_M_IX86)
+        KdpApiRawLoadSymbolsActive = KdpApiRawPathContainsCdrom(PathName);
+        KdpApiRawCom1DumpLoadSymbolStage(0xA402,
+                                         PathName,
+                                         SymbolInfo,
+                                         Unload,
+                                         (ULONG_PTR)Context);
+#endif
+
         /* Build the architecture common parts of the message */
         KdpSetCommonState(DbgKdLoadSymbolsStateChange,
                           Context,
                           &WaitStateChange);
+#if DBG && defined(_M_IX86)
+        KdpApiRawCom1DumpLoadSymbolStage(0xA403,
+                                         PathName,
+                                         SymbolInfo,
+                                         (ULONG_PTR)WaitStateChange.ProgramCounter,
+                                         WaitStateChange.NumberProcessors);
+#endif
 
         /* Now finish creating the structure */
         KdpSetContextState(&WaitStateChange, Context);
+#if DBG && defined(_M_IX86)
+        KdpApiRawCom1DumpLoadSymbolStage(0xA404,
+                                         PathName,
+                                         SymbolInfo,
+                                         (ULONG_PTR)WaitStateChange.Thread,
+                                         WaitStateChange.Processor);
+#endif
 
         /* Fill out load data */
         WaitStateChange.u.LoadSymbols.UnloadSymbols = Unload;
@@ -1627,10 +1950,25 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
         WaitStateChange.u.LoadSymbols.ProcessId = SymbolInfo->ProcessId;
         WaitStateChange.u.LoadSymbols.CheckSum = SymbolInfo->CheckSum;
         WaitStateChange.u.LoadSymbols.SizeOfImage = SymbolInfo->SizeOfImage;
+#if DBG && defined(_M_IX86)
+        KdpApiRawCom1DumpLoadSymbolStage(0xA405,
+                                         PathName,
+                                         SymbolInfo,
+                                         SymbolInfo->SizeOfImage,
+                                         SymbolInfo->ProcessId);
+#endif
 
         /* Check if we have a path name */
         if (PathName)
         {
+#if DBG && defined(_M_IX86)
+            KdpApiRawCom1DumpLoadSymbolStage(0xA406,
+                                             PathName,
+                                             SymbolInfo,
+                                             PathName->Length,
+                                             (ULONG_PTR)PathName->Buffer);
+#endif
+
             /* Copy it to the path buffer */
             KdpCopyMemoryChunks((ULONG_PTR)PathName->Buffer,
                                 KdpPathBuffer,
@@ -1638,6 +1976,13 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
                                 0,
                                 MMDBG_COPY_UNSAFE,
                                 &PathNameLength);
+#if DBG && defined(_M_IX86)
+            KdpApiRawCom1DumpLoadSymbolStage(0xA407,
+                                             PathName,
+                                             SymbolInfo,
+                                             PathNameLength,
+                                             (ULONG_PTR)KdpPathBuffer);
+#endif
 
             /* Null terminate */
             KdpPathBuffer[PathNameLength++] = ANSI_NULL;
@@ -1649,12 +1994,26 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
             Data.Buffer = KdpPathBuffer;
             Data.Length = (USHORT)PathNameLength;
             ExtraData = &Data;
+#if DBG && defined(_M_IX86)
+            KdpApiRawCom1DumpLoadSymbolStage(0xA408,
+                                             PathName,
+                                             SymbolInfo,
+                                             Data.Length,
+                                             WaitStateChange.u.LoadSymbols.PathNameLength);
+#endif
         }
         else
         {
             /* No name */
             WaitStateChange.u.LoadSymbols.PathNameLength = 0;
             ExtraData = NULL;
+#if DBG && defined(_M_IX86)
+            KdpApiRawCom1DumpLoadSymbolStage(0xA409,
+                                             PathName,
+                                             SymbolInfo,
+                                             0,
+                                             0);
+#endif
         }
 
         /* Setup the header */
@@ -1662,10 +2021,25 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
         Header.Buffer = (PCHAR)&WaitStateChange;
 
         /* Send the packet */
+#if DBG && defined(_M_IX86)
+        KdpApiRawCom1DumpLoadSymbolStage(0xA40A,
+                                         PathName,
+                                         SymbolInfo,
+                                         Header.Length,
+                                         ExtraData ? ExtraData->Length : 0);
+#endif
         Status = KdpSendWaitContinue(PACKET_TYPE_KD_STATE_CHANGE64,
                                      &Header,
                                      ExtraData,
                                      Context);
+#if DBG && defined(_M_IX86)
+        KdpApiRawCom1DumpLoadSymbolStage(0xA40B,
+                                         PathName,
+                                         SymbolInfo,
+                                         Status,
+                                         0);
+        KdpApiRawLoadSymbolsActive = FALSE;
+#endif
     } while (Status == ContinueProcessorReselected);
 }
 

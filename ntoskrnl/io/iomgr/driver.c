@@ -40,6 +40,117 @@ extern KEVENT PiEnumerationFinished;
 USHORT IopGroupIndex;
 PLIST_ENTRY IopGroupTable;
 
+#if DBG && defined(_M_IX86)
+#define IOP_RAW_COM1_BASE 0x3F8
+#define IOP_RAW_COM1_LINE_STATUS 5
+#define IOP_RAW_COM1_TRANSMIT_EMPTY 0x20
+
+static
+VOID
+NTAPI
+IopRawCom1WriteByte(
+    _In_ UCHAR Character)
+{
+    ULONG SpinCount = 100000;
+
+    while (SpinCount-- != 0)
+    {
+        if (READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)(IOP_RAW_COM1_BASE +
+                                                IOP_RAW_COM1_LINE_STATUS)) &
+            IOP_RAW_COM1_TRANSMIT_EMPTY)
+            break;
+    }
+
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)IOP_RAW_COM1_BASE, Character);
+}
+
+static
+VOID
+NTAPI
+IopRawCom1WriteString(
+    _In_z_ const CHAR *String)
+{
+    while (*String != ANSI_NULL)
+    {
+        if (*String == '\n')
+            IopRawCom1WriteByte('\r');
+
+        IopRawCom1WriteByte(*String++);
+    }
+}
+
+static
+VOID
+NTAPI
+IopRawCom1WriteUnicodeString(
+    _In_opt_ PUNICODE_STRING String)
+{
+    USHORT Index;
+
+    if ((String == NULL) || (String->Buffer == NULL))
+        return;
+
+    for (Index = 0; Index < String->Length / sizeof(WCHAR); Index++)
+    {
+        WCHAR Character = String->Buffer[Index];
+        IopRawCom1WriteByte((Character >= 0x20 && Character < 0x7f) ?
+                            (UCHAR)Character : (UCHAR)'?');
+    }
+}
+
+static
+VOID
+NTAPI
+IopRawCom1WriteHex(
+    _In_ ULONG_PTR Value)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < 8; Index++)
+    {
+        ULONG Nibble = (Value >> (28 - Index * 4)) & 0xF;
+
+        IopRawCom1WriteByte((UCHAR)(Nibble < 10 ? ('0' + Nibble) :
+                                                ('A' + Nibble - 10)));
+    }
+}
+
+static
+VOID
+NTAPI
+IopRawCom1WriteField(
+    _In_z_ const CHAR *Name,
+    _In_ ULONG_PTR Value)
+{
+    IopRawCom1WriteByte(' ');
+    IopRawCom1WriteString(Name);
+    IopRawCom1WriteByte('=');
+    IopRawCom1WriteHex(Value);
+}
+
+static
+VOID
+NTAPI
+IopRawCom1DumpDriverStage(
+    _In_ ULONG Stage,
+    _In_opt_ PUNICODE_STRING Name,
+    _In_opt_ PVOID BaseAddress,
+    _In_ ULONG_PTR Detail,
+    _In_ NTSTATUS Status)
+{
+    IopRawCom1WriteString("\nIopRawDriver");
+    IopRawCom1WriteField("stage", Stage);
+    IopRawCom1WriteField("cpu", KeGetCurrentProcessorNumber());
+    IopRawCom1WriteField("irql", KeGetCurrentIrql());
+    IopRawCom1WriteField("base", (ULONG_PTR)BaseAddress);
+    IopRawCom1WriteField("detail", Detail);
+    IopRawCom1WriteField("status", Status);
+    IopRawCom1WriteString(" name=");
+    IopRawCom1WriteUnicodeString(Name);
+    IopRawCom1WriteByte('\n');
+}
+#endif
+
 /* TYPES *********************************************************************/
 
 // Parameters packet for Load/Unload work item's context
@@ -648,8 +759,22 @@ IopInitializeDriverModule(
     driverObject->DriverName = driverNamePaged;
 
     /* Finally, call its init function */
+#if DBG && defined(_M_IX86)
+    IopRawCom1DumpDriverStage(0x301,
+                              &DriverName,
+                              ModuleObject->DllBase,
+                              (ULONG_PTR)ModuleObject->EntryPoint,
+                              STATUS_SUCCESS);
+#endif
     Status = driverObject->DriverInit(driverObject, &RegistryPath);
     *DriverEntryStatus = Status;
+#if DBG && defined(_M_IX86)
+    IopRawCom1DumpDriverStage(0x302,
+                              &DriverName,
+                              ModuleObject->DllBase,
+                              (ULONG_PTR)ModuleObject->EntryPoint,
+                              Status);
+#endif
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("'%wZ' initialization failed, status (0x%08lx)\n", &DriverName, Status);
@@ -1953,8 +2078,8 @@ IopLoadDriver(
 {
     UNICODE_STRING ImagePath;
     NTSTATUS Status;
-    PLDR_DATA_TABLE_ENTRY ModuleObject;
-    PVOID BaseAddress;
+    PLDR_DATA_TABLE_ENTRY ModuleObject = NULL;
+    PVOID BaseAddress = NULL;
 
     PKEY_VALUE_FULL_INFORMATION kvInfo;
     Status = IopGetRegistryValue(ServiceHandle, L"ImagePath", &kvInfo);
@@ -2011,7 +2136,13 @@ IopLoadDriver(
      * Load the driver module
      */
     DPRINT("Loading module from %wZ\n", &ImagePath);
+#if DBG && defined(_M_IX86)
+    IopRawCom1DumpDriverStage(0x401, &ImagePath, NULL, 0, STATUS_SUCCESS);
+#endif
     Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
+#if DBG && defined(_M_IX86)
+    IopRawCom1DumpDriverStage(0x402, &ImagePath, BaseAddress, (ULONG_PTR)ModuleObject, Status);
+#endif
     RtlFreeUnicodeString(&ImagePath);
 
     if (!NT_SUCCESS(Status))

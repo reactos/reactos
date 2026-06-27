@@ -18,7 +18,157 @@
 
 extern MM_AVL_TABLE MiRosKernelVadRoot;
 
+/* GLOBALS ********************************************************************/
+
+volatile MM_ACCESS_FAULT_WS_PROBE_SNAPSHOT MmpAccessFaultWsProbeSnapshot;
+volatile MM_ACCESS_FAULT_WS_PROBE_SNAPSHOT MmpAccessFaultWsProbeSnapshotByCpu
+    [MM_ACCESS_FAULT_WS_PROBE_MAXIMUM_PROCESSORS];
+volatile MM_WORKING_SET_LOCK_PROBE_SNAPSHOT MmpWorkingSetLockProbeSnapshot;
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+static
+VOID
+MmpStoreAccessFaultWsProbe(
+    _Out_ volatile MM_ACCESS_FAULT_WS_PROBE_SNAPSHOT *Snapshot,
+    _In_ ULONG FaultCode,
+    _In_ PVOID Address,
+    _In_ KPROCESSOR_MODE Mode,
+    _In_opt_ PVOID TrapInformation,
+    _In_ PETHREAD Thread,
+    _In_opt_ PMMVAD Vad,
+    _In_ ULONG Stage,
+    _In_ ULONG Cpu,
+    _In_ KIRQL Irql,
+    _In_ ULONG Count)
+{
+#ifdef _M_IX86
+    PKTRAP_FRAME TrapFrame = (PKTRAP_FRAME)TrapInformation;
+#endif
+
+    Snapshot->Magic = MM_ACCESS_FAULT_WS_PROBE_MAGIC;
+    Snapshot->Version = 1;
+    Snapshot->Count = Count;
+    Snapshot->Stage = Stage;
+    Snapshot->FaultCode = FaultCode;
+    Snapshot->Mode = Mode;
+    Snapshot->Cpu = Cpu;
+    Snapshot->Irql = Irql;
+    Snapshot->Address = (ULONG_PTR)Address;
+    Snapshot->TrapInformation = (ULONG_PTR)TrapInformation;
+    Snapshot->Thread = (ULONG_PTR)Thread;
+    Snapshot->Vad = (ULONG_PTR)Vad;
+    Snapshot->KernelAddressSpace = (ULONG_PTR)MmGetKernelAddressSpace();
+#ifdef _M_IX86
+    Snapshot->TrapEip = TrapFrame ? TrapFrame->Eip : 0;
+    Snapshot->TrapSegCs = TrapFrame ? TrapFrame->SegCs : 0;
+    Snapshot->TrapEFlags = TrapFrame ? TrapFrame->EFlags : 0;
+    Snapshot->TrapErrCode = TrapFrame ? TrapFrame->ErrCode : 0;
+    Snapshot->TrapEsp = TrapFrame ? KeGetTrapFrameStackRegister(TrapFrame) : 0;
+    Snapshot->TrapTempEsp = TrapFrame ? TrapFrame->TempEsp : 0;
+    Snapshot->TrapHardwareEsp = TrapFrame ? TrapFrame->HardwareEsp : 0;
+    Snapshot->TrapEbp = TrapFrame ? TrapFrame->Ebp : 0;
+    Snapshot->TrapEax = TrapFrame ? TrapFrame->Eax : 0;
+    Snapshot->TrapEbx = TrapFrame ? TrapFrame->Ebx : 0;
+    Snapshot->TrapEcx = TrapFrame ? TrapFrame->Ecx : 0;
+    Snapshot->TrapEdx = TrapFrame ? TrapFrame->Edx : 0;
+    Snapshot->TrapEsi = TrapFrame ? TrapFrame->Esi : 0;
+    Snapshot->TrapEdi = TrapFrame ? TrapFrame->Edi : 0;
+#else
+    Snapshot->TrapEip = 0;
+    Snapshot->TrapSegCs = 0;
+    Snapshot->TrapEFlags = 0;
+    Snapshot->TrapErrCode = 0;
+    Snapshot->TrapEsp = 0;
+    Snapshot->TrapTempEsp = 0;
+    Snapshot->TrapHardwareEsp = 0;
+    Snapshot->TrapEbp = 0;
+    Snapshot->TrapEax = 0;
+    Snapshot->TrapEbx = 0;
+    Snapshot->TrapEcx = 0;
+    Snapshot->TrapEdx = 0;
+    Snapshot->TrapEsi = 0;
+    Snapshot->TrapEdi = 0;
+#endif
+
+    if (Thread != NULL)
+    {
+        Snapshot->ThreadKernelStack = (ULONG_PTR)Thread->Tcb.KernelStack;
+        Snapshot->ThreadInitialStack = (ULONG_PTR)Thread->Tcb.InitialStack;
+        Snapshot->ThreadStackLimit = (ULONG_PTR)Thread->Tcb.StackLimit;
+        Snapshot->OwnsProcessWorkingSetExclusive =
+            Thread->OwnsProcessWorkingSetExclusive;
+        Snapshot->OwnsProcessWorkingSetShared =
+            Thread->OwnsProcessWorkingSetShared;
+        Snapshot->OwnsSystemWorkingSetExclusive =
+            Thread->OwnsSystemWorkingSetExclusive;
+        Snapshot->OwnsSystemWorkingSetShared =
+            Thread->OwnsSystemWorkingSetShared;
+        Snapshot->OwnsSessionWorkingSetExclusive =
+            Thread->OwnsSessionWorkingSetExclusive;
+        Snapshot->OwnsSessionWorkingSetShared =
+            Thread->OwnsSessionWorkingSetShared;
+    }
+    else
+    {
+        Snapshot->ThreadKernelStack = 0;
+        Snapshot->ThreadInitialStack = 0;
+        Snapshot->ThreadStackLimit = 0;
+        Snapshot->OwnsProcessWorkingSetExclusive = 0;
+        Snapshot->OwnsProcessWorkingSetShared = 0;
+        Snapshot->OwnsSystemWorkingSetExclusive = 0;
+        Snapshot->OwnsSystemWorkingSetShared = 0;
+        Snapshot->OwnsSessionWorkingSetExclusive = 0;
+        Snapshot->OwnsSessionWorkingSetShared = 0;
+    }
+}
+
+static
+VOID
+MmpRecordAccessFaultWsProbe(
+    _In_ ULONG FaultCode,
+    _In_ PVOID Address,
+    _In_ KPROCESSOR_MODE Mode,
+    _In_opt_ PVOID TrapInformation,
+    _In_ PETHREAD Thread,
+    _In_opt_ PMMVAD Vad,
+    _In_ ULONG Stage)
+{
+    ULONG Cpu;
+    KIRQL Irql;
+    volatile MM_ACCESS_FAULT_WS_PROBE_SNAPSHOT *Snapshot;
+
+    Cpu = KeGetCurrentProcessorNumber();
+    Irql = KeGetCurrentIrql();
+
+    MmpStoreAccessFaultWsProbe(&MmpAccessFaultWsProbeSnapshot,
+                               FaultCode,
+                               Address,
+                               Mode,
+                               TrapInformation,
+                               Thread,
+                               Vad,
+                               Stage,
+                               Cpu,
+                               Irql,
+                               MmpAccessFaultWsProbeSnapshot.Count + 1);
+
+    if (Cpu < MM_ACCESS_FAULT_WS_PROBE_MAXIMUM_PROCESSORS)
+    {
+        Snapshot = &MmpAccessFaultWsProbeSnapshotByCpu[Cpu];
+        MmpStoreAccessFaultWsProbe(Snapshot,
+                                   FaultCode,
+                                   Address,
+                                   Mode,
+                                   TrapInformation,
+                                   Thread,
+                                   Vad,
+                                   Stage,
+                                   Cpu,
+                                   Irql,
+                                   Snapshot->Count + 1);
+    }
+}
 
 NTSTATUS
 NTAPI
@@ -225,6 +375,8 @@ MmAccessFault(IN ULONG FaultCode,
     PMMVAD Vad = NULL;
     NTSTATUS Status;
     BOOLEAN IsArm3Fault = FALSE;
+    PETHREAD CurrentThread;
+    BOOLEAN SystemWorkingSetLocked;
 
     /* Cute little hack for ROS */
     if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)
@@ -254,19 +406,84 @@ MmAccessFault(IN ULONG FaultCode,
         if (Address > MM_HIGHEST_USER_ADDRESS)
         {
             /* Check if this is an ARM3 memory area */
-            MiLockWorkingSetShared(PsGetCurrentThread(), &MmSystemCacheWs);
+            CurrentThread = PsGetCurrentThread();
+            MmpRecordAccessFaultWsProbe(FaultCode,
+                                        Address,
+                                        Mode,
+                                        TrapInformation,
+                                        CurrentThread,
+                                        NULL,
+                                        1);
+            SystemWorkingSetLocked = FALSE;
+            if (!CurrentThread->OwnsSystemWorkingSetExclusive &&
+                !CurrentThread->OwnsSystemWorkingSetShared)
+            {
+#if DBG && defined(_M_IX86)
+                if (KeGetCurrentIrql() > APC_LEVEL)
+                {
+                    PKTRAP_FRAME TrapFrame = (PKTRAP_FRAME)TrapInformation;
+
+                    KeBugCheckEx(IRQL_NOT_LESS_OR_EQUAL,
+                                 (ULONG_PTR)Address,
+                                 KeGetCurrentIrql(),
+                                 FaultCode,
+                                 TrapFrame ? TrapFrame->Eip : 0);
+                }
+#endif
+                MiLockWorkingSetShared(CurrentThread, &MmSystemCacheWs);
+                SystemWorkingSetLocked = TRUE;
+            }
+
             Vad = MiLocateVad(&MiRosKernelVadRoot, Address);
+            MmpRecordAccessFaultWsProbe(FaultCode,
+                                        Address,
+                                        Mode,
+                                        TrapInformation,
+                                        CurrentThread,
+                                        Vad,
+                                        2);
 
             if ((Vad != NULL) && !MI_IS_ROSMM_VAD(Vad))
             {
                 IsArm3Fault = TRUE;
             }
 
-            MiUnlockWorkingSetShared(PsGetCurrentThread(), &MmSystemCacheWs);
+            if (SystemWorkingSetLocked)
+            {
+                MiUnlockWorkingSetShared(CurrentThread, &MmSystemCacheWs);
+            }
+
+            MmpRecordAccessFaultWsProbe(FaultCode,
+                                        Address,
+                                        Mode,
+                                        TrapInformation,
+                                        CurrentThread,
+                                        Vad,
+                                        3);
         }
         else
         {
             /* Could this be a VAD fault from user-mode? */
+            CurrentThread = PsGetCurrentThread();
+            MmpRecordAccessFaultWsProbe(FaultCode,
+                                        Address,
+                                        Mode,
+                                        TrapInformation,
+                                        CurrentThread,
+                                        NULL,
+                                        4);
+#if DBG && defined(_M_IX86)
+            if (KeGetCurrentIrql() > APC_LEVEL)
+            {
+                PKTRAP_FRAME TrapFrame = (PKTRAP_FRAME)TrapInformation;
+
+                KeBugCheckEx(IRQL_NOT_LESS_OR_EQUAL,
+                             (ULONG_PTR)Address,
+                             KeGetCurrentIrql(),
+                             FaultCode,
+                             TrapFrame ? TrapFrame->Eip : 0);
+            }
+#endif
             MiLockProcessWorkingSetShared(PsGetCurrentProcess(), PsGetCurrentThread());
             Vad = MiLocateVad(&PsGetCurrentProcess()->VadRoot, Address);
 
@@ -312,4 +529,3 @@ Retry:
 
     return Status;
 }
-

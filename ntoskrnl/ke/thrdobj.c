@@ -484,9 +484,11 @@ KeRundownThread(VOID)
     KiReleaseDispatcherLock(OldIrql);
 }
 
+static
 VOID
 NTAPI
-KeStartThread(IN OUT PKTHREAD Thread)
+KiStartThread(IN OUT PKTHREAD Thread,
+              IN BOOLEAN PreserveCurrentIrql)
 {
     KLOCK_QUEUE_HANDLE LockHandle;
 #ifdef CONFIG_SMP
@@ -507,7 +509,16 @@ KeStartThread(IN OUT PKTHREAD Thread)
     Thread->SystemAffinityActive = FALSE;
 
     /* Lock the process */
-    KiAcquireProcessLockRaiseToSynch(Process, &LockHandle);
+    if (PreserveCurrentIrql)
+    {
+        ASSERT(KeGetCurrentIrql() >= SYNCH_LEVEL);
+        KeAcquireInStackQueuedSpinLockAtDpcLevel(&Process->ProcessLock,
+                                                 &LockHandle);
+    }
+    else
+    {
+        KiAcquireProcessLockRaiseToSynch(Process, &LockHandle);
+    }
 
     /* Setup volatile data */
     Thread->Priority = Process->BasePriority;
@@ -555,7 +566,28 @@ KeStartThread(IN OUT PKTHREAD Thread)
 
     /* Release locks and return */
     KiReleaseDispatcherLockFromSynchLevel();
-    KiReleaseProcessLock(&LockHandle);
+    if (PreserveCurrentIrql)
+    {
+        KiReleaseProcessLockFromSynchLevel(&LockHandle);
+    }
+    else
+    {
+        KiReleaseProcessLock(&LockHandle);
+    }
+}
+
+VOID
+NTAPI
+KeStartThread(IN OUT PKTHREAD Thread)
+{
+    KiStartThread(Thread, FALSE);
+}
+
+VOID
+NTAPI
+KiStartThreadAtCurrentIrql(IN OUT PKTHREAD Thread)
+{
+    KiStartThread(Thread, TRUE);
 }
 
 VOID
@@ -1026,18 +1058,59 @@ KeRevertToUserAffinityThread(VOID)
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
     ASSERT(CurrentThread->SystemAffinityActive != FALSE);
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE221,
+                          (ULONG_PTR)CurrentThread,
+                          CurrentThread->Affinity,
+                          CurrentThread->UserAffinity,
+                          CurrentThread->SystemAffinityActive,
+                          CurrentThread->IdealProcessor,
+                          CurrentThread->UserIdealProcessor);
+#endif
+
     /* Lock the Dispatcher Database */
     OldIrql = KiAcquireDispatcherLock();
+
+    Prcb = KeGetCurrentPrcb();
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE224,
+                          (ULONG_PTR)CurrentThread,
+                          OldIrql,
+                          CurrentThread->Affinity,
+                          CurrentThread->UserAffinity,
+                          (ULONG_PTR)Prcb,
+                          (ULONG_PTR)Prcb->NextThread);
+#endif
 
     /* Set the user affinity and processor and disable system affinity */
     CurrentThread->Affinity = CurrentThread->UserAffinity;
     CurrentThread->IdealProcessor = CurrentThread->UserIdealProcessor;
     CurrentThread->SystemAffinityActive = FALSE;
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE225,
+                          (ULONG_PTR)CurrentThread,
+                          OldIrql,
+                          CurrentThread->Affinity,
+                          CurrentThread->IdealProcessor,
+                          CurrentThread->SystemAffinityActive,
+                          Prcb->SetMember);
+#endif
+
     /* Get the current PRCB and check if it doesn't match this affinity */
-    Prcb = KeGetCurrentPrcb();
     if (!(Prcb->SetMember & CurrentThread->Affinity))
     {
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE226,
+                              (ULONG_PTR)CurrentThread,
+                              (ULONG_PTR)Prcb,
+                              Prcb->SetMember,
+                              CurrentThread->Affinity,
+                              (ULONG_PTR)Prcb->NextThread,
+                              (ULONG_PTR)Prcb->CurrentThread);
+#endif
+
         /* Lock the PRCB */
         KiAcquirePrcbLock(Prcb);
 
@@ -1050,12 +1123,44 @@ KeRevertToUserAffinityThread(VOID)
             Prcb->NextThread = NextThread;
         }
 
+        NextThread = Prcb->NextThread;
+
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE227,
+                              (ULONG_PTR)CurrentThread,
+                              (ULONG_PTR)Prcb,
+                              (ULONG_PTR)NextThread,
+                              NextThread != NULL ? NextThread->State : 0,
+                              (ULONG_PTR)Prcb->NextThread,
+                              (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+#endif
+
         /* Release the PRCB lock */
         KiReleasePrcbLock(Prcb);
     }
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE228,
+                          (ULONG_PTR)CurrentThread,
+                          OldIrql,
+                          CurrentThread->Affinity,
+                          (ULONG_PTR)Prcb,
+                          (ULONG_PTR)Prcb->NextThread,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+#endif
+
     /* Unlock dispatcher database */
     KiReleaseDispatcherLock(OldIrql);
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE222,
+                          (ULONG_PTR)CurrentThread,
+                          CurrentThread->Affinity,
+                          CurrentThread->UserAffinity,
+                          CurrentThread->SystemAffinityActive,
+                          CurrentThread->IdealProcessor,
+                          CurrentThread->UserIdealProcessor);
+#endif
 }
 
 /*
@@ -1112,6 +1217,16 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
     ASSERT((Affinity & KeActiveProcessors) != 0);
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE220,
+                          (ULONG_PTR)CurrentThread,
+                          Affinity,
+                          CurrentThread->Affinity,
+                          CurrentThread->SystemAffinityActive,
+                          CurrentThread->IdealProcessor,
+                          CurrentThread->UserIdealProcessor);
+#endif
+
     /* Lock the Dispatcher Database */
     OldIrql = KiAcquireDispatcherLock();
 
@@ -1147,6 +1262,16 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
 
     /* Unlock dispatcher database */
     KiReleaseDispatcherLock(OldIrql);
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE223,
+                          (ULONG_PTR)CurrentThread,
+                          Affinity,
+                          CurrentThread->Affinity,
+                          CurrentThread->SystemAffinityActive,
+                          CurrentThread->IdealProcessor,
+                          CurrentThread->UserIdealProcessor);
+#endif
 }
 
 /*

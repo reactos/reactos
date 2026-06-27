@@ -58,6 +58,13 @@ KeStartAllProcessors(VOID)
     if (KeBootprocSpecified)
         MaximumProcessors = min(MaximumProcessors, KeBootprocSpecified);
 
+    DPRINT1("KeStartAllProcessors: maximum=%lu numproc=%lu bootproc=%lu limit=%lu current=%u\n",
+            KeMaximumProcessors,
+            KeNumprocSpecified,
+            KeBootprocSpecified,
+            MaximumProcessors,
+            KeNumberProcessors);
+
     // TODO: Support processor nodes
 
     StartedProcessors = 1;
@@ -72,12 +79,18 @@ KeStartAllProcessors(VOID)
         // Allocate structures for a new CPU.
         APInfo = ExAllocatePoolZero(NonPagedPool, sizeof(*APInfo), TAG_KERNEL);
         if (!APInfo)
+        {
+            DPRINT1("KeStartAllProcessors: failed to allocate APINFO for processor %lu\n",
+                    ProcessorCount);
             break;
+        }
         ASSERT(ALIGN_DOWN_POINTER_BY(APInfo, PAGE_SIZE) == APInfo);
 
         KernelStack = MmCreateKernelStack(FALSE, 0);
         if (!KernelStack)
         {
+            DPRINT1("KeStartAllProcessors: failed to allocate kernel stack for processor %lu\n",
+                    ProcessorCount);
             ExFreePoolWithTag(APInfo, TAG_KERNEL);
             break;
         }
@@ -85,6 +98,8 @@ KeStartAllProcessors(VOID)
         DPCStack = MmCreateKernelStack(FALSE, 0);
         if (!DPCStack)
         {
+            DPRINT1("KeStartAllProcessors: failed to allocate DPC stack for processor %lu\n",
+                    ProcessorCount);
             MmDeleteKernelStack(KernelStack, FALSE);
             ExFreePoolWithTag(APInfo, TAG_KERNEL);
             break;
@@ -114,11 +129,29 @@ KeStartAllProcessors(VOID)
         // Clear TSS Busy flag (aka set the type to "TSS (Available)")
         KiGetGdtEntry(&APInfo->Gdt, KGDT_TSS)->HighWord.Bits.Type = I386_TSS;
 
+        KiInitializeTSS(&APInfo->Tss);
+
+        KiInitializeTSS(&APInfo->TssDoubleFault);
+        APInfo->TssDoubleFault.CR3 = __readcr3();
         APInfo->TssDoubleFault.Esp0 = (ULONG_PTR)&APInfo->NMIStackData;
         APInfo->TssDoubleFault.Esp = (ULONG_PTR)&APInfo->NMIStackData;
+        APInfo->TssDoubleFault.Eip = PtrToUlong(KiTrap08);
+        APInfo->TssDoubleFault.Cs = KGDT_R0_CODE;
+        APInfo->TssDoubleFault.Fs = KGDT_R0_PCR;
+        APInfo->TssDoubleFault.Ss = Ke386GetSs();
+        APInfo->TssDoubleFault.Es = KGDT_R3_DATA | RPL_MASK;
+        APInfo->TssDoubleFault.Ds = KGDT_R3_DATA | RPL_MASK;
 
+        KiInitializeTSS(&APInfo->TssNMI);
+        APInfo->TssNMI.CR3 = __readcr3();
         APInfo->TssNMI.Esp0 = (ULONG_PTR)&APInfo->NMIStackData;
         APInfo->TssNMI.Esp = (ULONG_PTR)&APInfo->NMIStackData;
+        APInfo->TssNMI.Eip = PtrToUlong(KiTrap02);
+        APInfo->TssNMI.Cs = KGDT_R0_CODE;
+        APInfo->TssNMI.Fs = KGDT_R0_PCR;
+        APInfo->TssNMI.Ss = Ke386GetSs();
+        APInfo->TssNMI.Es = KGDT_R3_DATA | RPL_MASK;
+        APInfo->TssNMI.Ds = KGDT_R3_DATA | RPL_MASK;
 
         // Fill the processor state
         PKPROCESSOR_STATE ProcessorState = &APInfo->Pcr.Prcb->ProcessorState;
@@ -159,6 +192,8 @@ KeStartAllProcessors(VOID)
         DPRINT("Attempting to Start a CPU with number: %lu\n", ProcessorCount);
         if (!HalStartNextProcessor(KeLoaderBlock, ProcessorState))
         {
+            DPRINT1("KeStartAllProcessors: HAL refused processor %lu startup\n",
+                    ProcessorCount);
             ExFreePoolWithTag(APInfo, TAG_KERNEL);
             MmDeleteKernelStack(KernelStack, FALSE);
             MmDeleteKernelStack(DPCStack, FALSE);

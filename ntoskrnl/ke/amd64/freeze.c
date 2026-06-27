@@ -95,7 +95,7 @@ KiProcessorFreezeHandler(
     return TRUE;
 }
 
-VOID
+BOOLEAN
 NTAPI
 KxFreezeExecution(
     VOID)
@@ -105,7 +105,7 @@ KxFreezeExecution(
     /* Avoid blocking on recursive debug action */
     if (KiFreezeOwner == CurrentPrcb)
     {
-        return;
+        return FALSE;
     }
 
     /* Try to acquire the freeze owner */
@@ -156,6 +156,7 @@ KxFreezeExecution(
     }
 
     /* All targets are frozen, we can continue */
+    return TRUE;
 }
 
 VOID

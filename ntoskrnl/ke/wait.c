@@ -15,6 +15,115 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+#if DBG && defined(_M_IX86)
+static
+BOOLEAN
+NTAPI
+KiIsThreadTrapFrameReadable(
+    _In_opt_ PKTHREAD Thread,
+    _In_opt_ PKTRAP_FRAME TrapFrame)
+{
+    ULONG_PTR Frame;
+    ULONG_PTR InitialStack;
+
+    if ((Thread == NULL) || (TrapFrame == NULL))
+        return FALSE;
+
+    Frame = (ULONG_PTR)TrapFrame;
+    InitialStack = (ULONG_PTR)Thread->InitialStack;
+
+    if (InitialStack < sizeof(KTRAP_FRAME))
+        return FALSE;
+
+    return (((ULONG_PTR)Thread->StackLimit <= Frame) &&
+            (Frame <= (InitialStack - sizeof(KTRAP_FRAME))));
+}
+
+static
+VOID
+NTAPI
+KiTraceDispatcherTrapFrame(
+    _In_ ULONG Event,
+    _In_ PKPRCB Prcb,
+    _In_ KIRQL OldIrql)
+{
+    PKTHREAD Thread;
+    PKTRAP_FRAME TrapFrame;
+    ULONG_PTR TrapEip;
+    ULONG_PTR TrapSegCs;
+    ULONG_PTR TrapEFlags;
+    ULONG_PTR TrapStack;
+    ULONG_PTR LinkedTrapFrame;
+
+    Thread = Prcb->CurrentThread;
+    TrapFrame = Thread != NULL ? Thread->TrapFrame : NULL;
+    TrapEip = 0;
+    TrapSegCs = 0;
+    TrapEFlags = 0;
+    TrapStack = 0;
+    LinkedTrapFrame = 0;
+
+    if (KiIsThreadTrapFrameReadable(Thread, TrapFrame))
+    {
+        TrapEip = TrapFrame->Eip;
+        TrapSegCs = TrapFrame->SegCs;
+        TrapEFlags = TrapFrame->EFlags;
+        TrapStack = TrapFrame->PreviousPreviousMode == KernelMode ?
+                    TrapFrame->TempEsp :
+                    TrapFrame->HardwareEsp;
+        LinkedTrapFrame = TrapFrame->Edx;
+    }
+
+    KiI386BootTraceRecord(Event,
+                          OldIrql,
+                          (ULONG_PTR)Thread,
+                          (ULONG_PTR)TrapFrame,
+                          TrapEip,
+                          TrapSegCs,
+                          TrapEFlags);
+    KiI386BootTraceRecord(Event + 1,
+                          (ULONG_PTR)Thread,
+                          Thread != NULL ? (ULONG_PTR)Thread->KernelStack : 0,
+                          Thread != NULL ? (ULONG_PTR)Thread->InitialStack : 0,
+                          Thread != NULL ? (ULONG_PTR)Thread->StackLimit : 0,
+                          LinkedTrapFrame,
+                          TrapStack);
+}
+
+static
+VOID
+NTAPI
+KiTraceDispatcherSwitchOwnership(
+    _In_ ULONG Event,
+    _In_ PKPRCB Prcb,
+    _In_ PKTHREAD Thread,
+    _In_ PKTHREAD NextThread,
+    _In_ KIRQL OldIrql)
+{
+    KiI386BootTraceRecord(Event,
+                          OldIrql,
+                          (ULONG_PTR)Prcb,
+                          (ULONG_PTR)Prcb->CurrentThread,
+                          (ULONG_PTR)Prcb->NextThread,
+                          (ULONG_PTR)Thread,
+                          (ULONG_PTR)NextThread);
+    KiI386BootTraceRecord(Event + 1,
+                          (ULONG_PTR)Thread,
+                          Thread != NULL ? (ULONG_PTR)Thread->KernelStack : 0,
+                          Thread != NULL ? (ULONG_PTR)Thread->InitialStack : 0,
+                          Thread != NULL ? (ULONG_PTR)Thread->StackLimit : 0,
+                          Thread != NULL ? (ULONG_PTR)Thread->TrapFrame : 0,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+    KiI386BootTraceRecord(Event + 2,
+                          (ULONG_PTR)NextThread,
+                          NextThread != NULL ? (ULONG_PTR)NextThread->KernelStack : 0,
+                          NextThread != NULL ? (ULONG_PTR)NextThread->InitialStack : 0,
+                          NextThread != NULL ? (ULONG_PTR)NextThread->StackLimit : 0,
+                          NextThread != NULL ? (ULONG_PTR)NextThread->TrapFrame : 0,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+}
+#endif
+
 VOID
 FASTCALL
 KiWaitTest(IN PVOID ObjectPointer,
@@ -202,15 +311,63 @@ KiExitDispatcher(IN KIRQL OldIrql)
     PKTHREAD Thread, NextThread;
     BOOLEAN PendingApc;
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE240,
+                          OldIrql,
+                          (ULONG_PTR)Prcb->CurrentThread,
+                          (ULONG_PTR)Prcb->NextThread,
+                          Prcb->DpcRoutineActive,
+                          (ULONG_PTR)Prcb,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+#endif
+
     /* Make sure we're at synchronization level */
     ASSERT(KeGetCurrentIrql() == SYNCH_LEVEL);
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE246,
+                          OldIrql,
+                          (ULONG_PTR)Prcb->CurrentThread,
+                          (ULONG_PTR)Prcb->NextThread,
+                          Prcb->DpcRoutineActive,
+                          (ULONG_PTR)Prcb,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+    KiI386BootTraceRecord(0xE247,
+                          OldIrql,
+                          (ULONG_PTR)Prcb->CurrentThread,
+                          (ULONG_PTR)Prcb->NextThread,
+                          (ULONG_PTR)Prcb->DeferredReadyListHead.Next,
+                          Prcb->ReadySummary,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+#endif
 
     /* Check if we have deferred threads */
     KiCheckDeferredReadyList(Prcb);
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE248,
+                          OldIrql,
+                          (ULONG_PTR)Prcb->CurrentThread,
+                          (ULONG_PTR)Prcb->NextThread,
+                          (ULONG_PTR)Prcb->DeferredReadyListHead.Next,
+                          Prcb->ReadySummary,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+    KiTraceDispatcherTrapFrame(0xE249, Prcb, OldIrql);
+#endif
+
     /* Check if we were called at dispatcher level or higher */
     if (OldIrql >= DISPATCH_LEVEL)
     {
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE241,
+                              OldIrql,
+                              (ULONG_PTR)Prcb->CurrentThread,
+                              (ULONG_PTR)Prcb->NextThread,
+                              Prcb->DpcRoutineActive,
+                              Prcb->ReadySummary,
+                              (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+#endif
+
         /* Check if we have a thread to schedule, and that no DPC is active */
         if ((Prcb->NextThread) && !(Prcb->DpcRoutineActive))
         {
@@ -223,7 +380,19 @@ KiExitDispatcher(IN KIRQL OldIrql)
     }
 
     /* Make sure there's a new thread scheduled */
-    if (!Prcb->NextThread) goto Quickie;
+    if (!Prcb->NextThread)
+    {
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE242,
+                              OldIrql,
+                              (ULONG_PTR)Prcb->CurrentThread,
+                              0,
+                              Prcb->DpcRoutineActive,
+                              Prcb->ReadySummary,
+                              (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+#endif
+        goto Quickie;
+    }
 
     /* Lock the PRCB */
     KiAcquirePrcbLock(Prcb);
@@ -232,6 +401,14 @@ KiExitDispatcher(IN KIRQL OldIrql)
     NextThread = Prcb->NextThread;
     Thread = Prcb->CurrentThread;
 
+#if DBG && defined(_M_IX86)
+    KiTraceDispatcherSwitchOwnership(0xE24B,
+                                     Prcb,
+                                     Thread,
+                                     NextThread,
+                                     OldIrql);
+#endif
+
     /* Set current thread's swap busy to true */
     KiSetThreadSwapBusy(Thread);
 
@@ -239,17 +416,56 @@ KiExitDispatcher(IN KIRQL OldIrql)
     Prcb->NextThread = NULL;
     Prcb->CurrentThread = NextThread;
 
+#if DBG && defined(_M_IX86)
+    KiTraceDispatcherSwitchOwnership(0xE24E,
+                                     Prcb,
+                                     Thread,
+                                     NextThread,
+                                     OldIrql);
+#endif
+
     /* Set thread to running */
     NextThread->State = Running;
 
     /* Queue it on the ready lists */
     KxQueueReadyThread(Thread, Prcb);
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE251,
+                          OldIrql,
+                          (ULONG_PTR)Thread,
+                          Thread->State,
+                          Thread->Affinity,
+                          Thread->NextProcessor,
+                          (ULONG_PTR)Prcb->CurrentThread);
+#endif
+
     /* Set wait IRQL */
     Thread->WaitIrql = OldIrql;
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE243,
+                          OldIrql,
+                          (ULONG_PTR)Thread,
+                          (ULONG_PTR)NextThread,
+                          (ULONG_PTR)Prcb->CurrentThread,
+                          (ULONG_PTR)Prcb->NextThread,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+#endif
+
     /* Swap threads and check if APCs were pending */
     PendingApc = KiSwapContext(OldIrql, Thread);
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE244,
+                          OldIrql,
+                          (ULONG_PTR)Thread,
+                          (ULONG_PTR)NextThread,
+                          PendingApc,
+                          (ULONG_PTR)Prcb->CurrentThread,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+#endif
+
     if (PendingApc)
     {
         /* Lower only to APC */
@@ -262,6 +478,15 @@ KiExitDispatcher(IN KIRQL OldIrql)
 
     /* Lower IRQl back */
 Quickie:
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE245,
+                          OldIrql,
+                          (ULONG_PTR)Prcb->CurrentThread,
+                          (ULONG_PTR)Prcb->NextThread,
+                          Prcb->DpcRoutineActive,
+                          KeGetCurrentIrql(),
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+#endif
     KeLowerIrql(OldIrql);
 }
 

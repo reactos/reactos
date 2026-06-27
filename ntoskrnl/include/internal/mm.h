@@ -51,6 +51,55 @@ extern PMMPTE MmDebugPte; // internal
 
 extern KSPIN_LOCK MmPfnLock;
 
+#if defined(_M_IX86) && DBG
+#define MM_ACCESS_FAULT_WS_PROBE_MAGIC 0x5046574D
+#define MM_ACCESS_FAULT_WS_PROBE_MAXIMUM_PROCESSORS 32
+
+typedef struct _MM_ACCESS_FAULT_WS_PROBE_SNAPSHOT
+{
+    ULONG Magic;
+    ULONG Version;
+    ULONG Count;
+    ULONG Stage;
+    ULONG FaultCode;
+    ULONG Mode;
+    ULONG Cpu;
+    ULONG Irql;
+    ULONG OwnsProcessWorkingSetExclusive;
+    ULONG OwnsProcessWorkingSetShared;
+    ULONG OwnsSystemWorkingSetExclusive;
+    ULONG OwnsSystemWorkingSetShared;
+    ULONG OwnsSessionWorkingSetExclusive;
+    ULONG OwnsSessionWorkingSetShared;
+    ULONG_PTR Address;
+    ULONG_PTR TrapInformation;
+    ULONG_PTR TrapEip;
+    ULONG_PTR TrapSegCs;
+    ULONG_PTR TrapEFlags;
+    ULONG_PTR TrapErrCode;
+    ULONG_PTR TrapEsp;
+    ULONG_PTR TrapTempEsp;
+    ULONG_PTR TrapHardwareEsp;
+    ULONG_PTR TrapEbp;
+    ULONG_PTR TrapEax;
+    ULONG_PTR TrapEbx;
+    ULONG_PTR TrapEcx;
+    ULONG_PTR TrapEdx;
+    ULONG_PTR TrapEsi;
+    ULONG_PTR TrapEdi;
+    ULONG_PTR Thread;
+    ULONG_PTR ThreadKernelStack;
+    ULONG_PTR ThreadInitialStack;
+    ULONG_PTR ThreadStackLimit;
+    ULONG_PTR Vad;
+    ULONG_PTR KernelAddressSpace;
+} MM_ACCESS_FAULT_WS_PROBE_SNAPSHOT, *PMM_ACCESS_FAULT_WS_PROBE_SNAPSHOT;
+
+extern volatile MM_ACCESS_FAULT_WS_PROBE_SNAPSHOT MmpAccessFaultWsProbeSnapshot;
+extern volatile MM_ACCESS_FAULT_WS_PROBE_SNAPSHOT MmpAccessFaultWsProbeSnapshotByCpu
+    [MM_ACCESS_FAULT_WS_PROBE_MAXIMUM_PROCESSORS];
+#endif
+
 struct _KTRAP_FRAME;
 struct _EPROCESS;
 struct _MM_RMAP_ENTRY;

@@ -310,6 +310,250 @@ ENDM
 #define KI_EXIT_RET8          HEX(0400)
 #define KI_RESTORE_VOLATILES  (KI_RESTORE_EAX OR KI_RESTORE_ECX_EDX)
 
+#if DBG
+#define KI_TRAP_EXIT_FINAL_SNAPSHOT_MAGIC              HEX(4658544B)
+#define KI_TRAP_EXIT_FINAL_SNAPSHOT_MAXIMUM_PROCESSORS HEX(20)
+#define KI_TRAP_EXIT_FINAL_SNAPSHOT_SIZE               HEX(9C)
+#define KI_TRAP_EXIT_FINAL_MAGIC                       HEX(00)
+#define KI_TRAP_EXIT_FINAL_VERSION                     HEX(04)
+#define KI_TRAP_EXIT_FINAL_SEQUENCE                    HEX(08)
+#define KI_TRAP_EXIT_FINAL_STAGE                       HEX(0C)
+#define KI_TRAP_EXIT_FINAL_CPU                         HEX(10)
+#define KI_TRAP_EXIT_FINAL_FLAGS                       HEX(14)
+#define KI_TRAP_EXIT_FINAL_OFFSET_ESP                  HEX(18)
+#define KI_TRAP_EXIT_FINAL_TRAP_FRAME                  HEX(1C)
+#define KI_TRAP_EXIT_FINAL_EIP                         HEX(20)
+#define KI_TRAP_EXIT_FINAL_CS                          HEX(24)
+#define KI_TRAP_EXIT_FINAL_EFLAGS                      HEX(28)
+#define KI_TRAP_EXIT_FINAL_ESP                         HEX(2C)
+#define KI_TRAP_EXIT_FINAL_SS                          HEX(30)
+#define KI_TRAP_EXIT_FINAL_DS                          HEX(34)
+#define KI_TRAP_EXIT_FINAL_ES                          HEX(38)
+#define KI_TRAP_EXIT_FINAL_FS                          HEX(3C)
+#define KI_TRAP_EXIT_FINAL_GS                          HEX(40)
+#define KI_TRAP_EXIT_FINAL_EAX                         HEX(44)
+#define KI_TRAP_EXIT_FINAL_ECX                         HEX(48)
+#define KI_TRAP_EXIT_FINAL_EDX                         HEX(4C)
+#define KI_TRAP_EXIT_FINAL_LIVE_ESP                    HEX(50)
+#define KI_TRAP_EXIT_FINAL_GDTR                        HEX(54)
+#define KI_TRAP_EXIT_FINAL_IDTR                        HEX(5A)
+#define KI_TRAP_EXIT_FINAL_CR0                         HEX(60)
+#define KI_TRAP_EXIT_FINAL_CR2                         HEX(64)
+#define KI_TRAP_EXIT_FINAL_CR3                         HEX(68)
+#define KI_TRAP_EXIT_FINAL_CR4                         HEX(6C)
+#define KI_TRAP_EXIT_FINAL_TR                          HEX(70)
+#define KI_TRAP_EXIT_FINAL_GDT_CS_LOW                  HEX(74)
+#define KI_TRAP_EXIT_FINAL_GDT_CS_HIGH                 HEX(78)
+#define KI_TRAP_EXIT_FINAL_GDT_SS_LOW                  HEX(7C)
+#define KI_TRAP_EXIT_FINAL_GDT_SS_HIGH                 HEX(80)
+#define KI_TRAP_EXIT_FINAL_GDT_FS_LOW                  HEX(84)
+#define KI_TRAP_EXIT_FINAL_GDT_FS_HIGH                 HEX(88)
+#define KI_TRAP_EXIT_FINAL_GDT_TR_LOW                  HEX(8C)
+#define KI_TRAP_EXIT_FINAL_GDT_TR_HIGH                 HEX(90)
+#define KI_TRAP_EXIT_FINAL_TSS_BASE                    HEX(94)
+#define KI_TRAP_EXIT_FINAL_TSS_ESP0                    HEX(98)
+
+MACRO(KiTracePageFaultAsmEntry, EventCode)
+    pushfd
+    pushad
+
+    xor eax, eax
+    mov ax, fs
+    push eax
+
+    mov ax, KGDT_R0_PCR
+    mov fs, ax
+
+    mov esi, [esp + HEX(10)]
+    add esi, HEX(4)
+
+    push dword ptr [esi + HEX(10)]
+    push dword ptr [esi + HEX(0C)]
+    push dword ptr [esi + HEX(08)]
+    push dword ptr [esi + HEX(04)]
+    push dword ptr [esi]
+    mov eax, cr2
+    push eax
+    push EventCode
+    call _KiI386BootTraceRecord@28
+
+    pop eax
+    mov fs, ax
+
+    popad
+    popfd
+ENDM
+
+MACRO(KiTraceTrapExitFrame, EventCode)
+    push ecx
+    push dword ptr [ecx + KTRAP_FRAME_GS]
+    push dword ptr [ecx + KTRAP_FRAME_FS]
+    push dword ptr [ecx + KTRAP_FRAME_ES]
+    push dword ptr [ecx + KTRAP_FRAME_DS]
+    push dword ptr [ecx + KTRAP_FRAME_EIP]
+    push ecx
+    push EventCode
+    call _KiI386BootTraceRecord@28
+    pop ecx
+ENDM
+
+MACRO(KiTraceTrapExitFinalBegin)
+    LOCAL cpu_ready
+
+    movzx edx, byte ptr fs:[PcNumber]
+    cmp edx, KI_TRAP_EXIT_FINAL_SNAPSHOT_MAXIMUM_PROCESSORS
+    jb cpu_ready
+    xor edx, edx
+cpu_ready:
+    mov eax, edx
+    imul edx, edx, KI_TRAP_EXIT_FINAL_SNAPSHOT_SIZE
+    add edx, offset _KiTrapExitFinalSnapshotByCpu
+    mov [edx + KI_TRAP_EXIT_FINAL_CPU], eax
+ENDM
+
+MACRO(KiTraceTrapExitFinalStage, StageValue, FlagsValue, OffsetValue)
+    mov dword ptr [edx + KI_TRAP_EXIT_FINAL_MAGIC], KI_TRAP_EXIT_FINAL_SNAPSHOT_MAGIC
+    mov dword ptr [edx + KI_TRAP_EXIT_FINAL_VERSION], HEX(1)
+    mov dword ptr [edx + KI_TRAP_EXIT_FINAL_STAGE], StageValue
+    mov dword ptr [edx + KI_TRAP_EXIT_FINAL_FLAGS], FlagsValue
+    mov dword ptr [edx + KI_TRAP_EXIT_FINAL_OFFSET_ESP], OffsetValue
+
+    mov eax, [_KiTrapExitFinalSnapshotCount]
+    inc eax
+    mov [_KiTrapExitFinalSnapshotCount], eax
+    mov [edx + KI_TRAP_EXIT_FINAL_SEQUENCE], eax
+
+    lea eax, [esp - OffsetValue]
+    mov [edx + KI_TRAP_EXIT_FINAL_TRAP_FRAME], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_EIP]
+    mov [edx + KI_TRAP_EXIT_FINAL_EIP], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_CS]
+    mov [edx + KI_TRAP_EXIT_FINAL_CS], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_EFLAGS]
+    mov [edx + KI_TRAP_EXIT_FINAL_EFLAGS], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_ESP]
+    mov [edx + KI_TRAP_EXIT_FINAL_ESP], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_SS]
+    mov [edx + KI_TRAP_EXIT_FINAL_SS], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_DS]
+    mov [edx + KI_TRAP_EXIT_FINAL_DS], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_ES]
+    mov [edx + KI_TRAP_EXIT_FINAL_ES], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_FS]
+    mov [edx + KI_TRAP_EXIT_FINAL_FS], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_GS]
+    mov [edx + KI_TRAP_EXIT_FINAL_GS], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_EAX]
+    mov [edx + KI_TRAP_EXIT_FINAL_EAX], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_ECX]
+    mov [edx + KI_TRAP_EXIT_FINAL_ECX], eax
+    mov eax, [esp - OffsetValue + KTRAP_FRAME_EDX]
+    mov [edx + KI_TRAP_EXIT_FINAL_EDX], eax
+    mov dword ptr [edx + KI_TRAP_EXIT_FINAL_LIVE_ESP], esp
+ENDM
+
+MACRO(KiTraceTrapExitFinalDescriptor, SelectorOffset, LowOffset, HighOffset, OffsetValue)
+    movzx ecx, word ptr [esp - OffsetValue + SelectorOffset]
+    and ecx, NOT HEX(7)
+    mov eax, [edx + KI_TRAP_EXIT_FINAL_GDTR + HEX(2)]
+    mov eax, [eax + ecx]
+    mov [edx + LowOffset], eax
+    movzx ecx, word ptr [esp - OffsetValue + SelectorOffset]
+    and ecx, NOT HEX(7)
+    mov eax, [edx + KI_TRAP_EXIT_FINAL_GDTR + HEX(2)]
+    mov eax, [eax + ecx + HEX(4)]
+    mov [edx + HighOffset], eax
+ENDM
+
+MACRO(KiTraceTrapExitFinalContract, OffsetValue)
+    sgdt [edx + KI_TRAP_EXIT_FINAL_GDTR]
+    sidt [edx + KI_TRAP_EXIT_FINAL_IDTR]
+
+    mov eax, cr0
+    mov [edx + KI_TRAP_EXIT_FINAL_CR0], eax
+    mov eax, cr2
+    mov [edx + KI_TRAP_EXIT_FINAL_CR2], eax
+    mov eax, cr3
+    mov [edx + KI_TRAP_EXIT_FINAL_CR3], eax
+    mov eax, cr4
+    mov [edx + KI_TRAP_EXIT_FINAL_CR4], eax
+
+    mov dword ptr [edx + KI_TRAP_EXIT_FINAL_TR], HEX(0)
+    str word ptr [edx + KI_TRAP_EXIT_FINAL_TR]
+
+    KiTraceTrapExitFinalDescriptor KTRAP_FRAME_CS, KI_TRAP_EXIT_FINAL_GDT_CS_LOW, KI_TRAP_EXIT_FINAL_GDT_CS_HIGH, OffsetValue
+    KiTraceTrapExitFinalDescriptor KTRAP_FRAME_SS, KI_TRAP_EXIT_FINAL_GDT_SS_LOW, KI_TRAP_EXIT_FINAL_GDT_SS_HIGH, OffsetValue
+    KiTraceTrapExitFinalDescriptor KTRAP_FRAME_FS, KI_TRAP_EXIT_FINAL_GDT_FS_LOW, KI_TRAP_EXIT_FINAL_GDT_FS_HIGH, OffsetValue
+
+    movzx ecx, word ptr [edx + KI_TRAP_EXIT_FINAL_TR]
+    and ecx, NOT HEX(7)
+    mov eax, [edx + KI_TRAP_EXIT_FINAL_GDTR + HEX(2)]
+    mov eax, [eax + ecx]
+    mov [edx + KI_TRAP_EXIT_FINAL_GDT_TR_LOW], eax
+    movzx ecx, word ptr [edx + KI_TRAP_EXIT_FINAL_TR]
+    and ecx, NOT HEX(7)
+    mov eax, [edx + KI_TRAP_EXIT_FINAL_GDTR + HEX(2)]
+    mov eax, [eax + ecx + HEX(4)]
+    mov [edx + KI_TRAP_EXIT_FINAL_GDT_TR_HIGH], eax
+
+    mov eax, [edx + KI_TRAP_EXIT_FINAL_GDT_TR_LOW]
+    shr eax, HEX(10)
+    and eax, HEX(0000FFFF)
+    mov ecx, [edx + KI_TRAP_EXIT_FINAL_GDT_TR_HIGH]
+    shl ecx, HEX(10)
+    and ecx, HEX(00FF0000)
+    or eax, ecx
+    mov ecx, [edx + KI_TRAP_EXIT_FINAL_GDT_TR_HIGH]
+    and ecx, HEX(FF000000)
+    or eax, ecx
+    mov [edx + KI_TRAP_EXIT_FINAL_TSS_BASE], eax
+    mov eax, [eax + HEX(4)]
+    mov [edx + KI_TRAP_EXIT_FINAL_TSS_ESP0], eax
+    mov dword ptr [edx + KI_TRAP_EXIT_FINAL_VERSION], HEX(2)
+ENDM
+
+MACRO(KiTraceTrapExitSelectorPreflight)
+    pushfd
+    pushad
+
+    xor eax, eax
+    mov ax, ds
+    push eax
+    xor eax, eax
+    mov ax, es
+    push eax
+    xor eax, eax
+    mov ax, fs
+    push eax
+    xor eax, eax
+    mov ax, gs
+    push eax
+
+    mov ds, [ecx + KTRAP_FRAME_DS]
+    KiTraceTrapExitFrame HEX(E15C)
+    mov es, [ecx + KTRAP_FRAME_ES]
+    KiTraceTrapExitFrame HEX(E15D)
+    mov gs, [ecx + KTRAP_FRAME_GS]
+    KiTraceTrapExitFrame HEX(E15E)
+    mov fs, [ecx + KTRAP_FRAME_FS]
+    mov ax, KGDT_R0_PCR
+    mov fs, ax
+    KiTraceTrapExitFrame HEX(E15F)
+
+    pop eax
+    mov gs, ax
+    pop eax
+    mov fs, ax
+    pop eax
+    mov es, ax
+    pop eax
+    mov ds, ax
+
+    popad
+    popfd
+ENDM
+#endif
+
 MACRO(KiTrapExitStub, Name, Flags)
     LOCAL ret8_instruction
     LOCAL not_nested_int
@@ -332,6 +576,39 @@ PUBLIC @&Name&@4
         OffsetEsp = 0
 
     endif
+
+#if DBG
+    if (Flags AND KI_EXIT_IRET)
+
+        /* Record the IRET source frame before the stub repoints ESP. */
+        push ecx
+        push dword ptr [ecx + KTRAP_FRAME_SS]
+        push dword ptr [ecx + KTRAP_FRAME_ESP]
+        push dword ptr [ecx + KTRAP_FRAME_EFLAGS]
+        push dword ptr [ecx + KTRAP_FRAME_CS]
+        push dword ptr [ecx + KTRAP_FRAME_EIP]
+        push ecx
+        push HEX(E15A)
+        call _KiI386BootTraceRecord@28
+        pop ecx
+
+        push ecx
+        push Flags
+        push dword ptr [ecx + KTRAP_FRAME_GS]
+        push dword ptr [ecx + KTRAP_FRAME_FS]
+        push dword ptr [ecx + KTRAP_FRAME_ES]
+        push dword ptr [ecx + KTRAP_FRAME_DS]
+        push ecx
+        push HEX(E15B)
+        call _KiI386BootTraceRecord@28
+        pop ecx
+
+        if (Flags AND KI_RESTORE_SEGMENTS)
+            KiTraceTrapExitSelectorPreflight
+        endif
+
+    endif
+#endif
 
     if (Flags AND KI_EDITED_FRAME)
 
@@ -389,9 +666,14 @@ PUBLIC @&Name&@4
     if (Flags AND KI_RESTORE_SEGMENTS)
 
         /* Restore segments for user mode */
+        KiTraceTrapExitFinalBegin
+        KiTraceTrapExitFinalStage HEX(E160), Flags, OffsetEsp
         mov ds, [esp - OffsetEsp + KTRAP_FRAME_DS]
+        KiTraceTrapExitFinalStage HEX(E161), Flags, OffsetEsp
         mov es, [esp - OffsetEsp + KTRAP_FRAME_ES]
+        KiTraceTrapExitFinalStage HEX(E162), Flags, OffsetEsp
         mov gs, [esp - OffsetEsp + KTRAP_FRAME_GS]
+        KiTraceTrapExitFinalStage HEX(E163), Flags, OffsetEsp
 
     endif
 
@@ -399,6 +681,20 @@ PUBLIC @&Name&@4
 
         /* Restore user mode FS */
         mov fs, [esp - OffsetEsp + KTRAP_FRAME_FS]
+
+        if (Flags AND KI_RESTORE_SEGMENTS)
+            KiTraceTrapExitFinalStage HEX(E164), Flags, OffsetEsp
+            KiTraceTrapExitFinalContract OffsetEsp
+
+            if (Flags AND KI_RESTORE_EAX)
+                mov eax, [esp - OffsetEsp + KTRAP_FRAME_EAX]
+            endif
+
+            if (Flags AND KI_RESTORE_ECX_EDX)
+                mov edx, [esp - OffsetEsp + KTRAP_FRAME_EDX]
+                mov ecx, [esp - OffsetEsp + KTRAP_FRAME_ECX]
+            endif
+        endif
 
     endif
 
@@ -459,4 +755,3 @@ ret8_instruction:
     endif
 
 ENDM
-

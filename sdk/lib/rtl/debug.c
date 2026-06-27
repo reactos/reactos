@@ -18,6 +18,127 @@
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
+#if DBG && defined(_M_IX86) && defined(__GNUC__)
+#define RTL_RAW_COM1_BASE 0x3F8
+#define RTL_RAW_COM1_LINE_STATUS 5
+#define RTL_RAW_COM1_TRANSMIT_EMPTY 0x20
+
+static
+UCHAR
+RtlRawCom1ReadPortUchar(
+    _In_ USHORT Port)
+{
+    UCHAR Value;
+
+    __asm__ __volatile__("inb %w1, %0" : "=a"(Value) : "Nd"(Port));
+    return Value;
+}
+
+static
+VOID
+RtlRawCom1WritePortUchar(
+    _In_ USHORT Port,
+    _In_ UCHAR Value)
+{
+    __asm__ __volatile__("outb %0, %w1" : : "a"(Value), "Nd"(Port));
+}
+
+static
+VOID
+RtlRawCom1WriteByte(
+    _In_ UCHAR Character)
+{
+    ULONG SpinCount = 100000;
+
+    while (SpinCount-- != 0)
+    {
+        if (RtlRawCom1ReadPortUchar(RTL_RAW_COM1_BASE +
+                                    RTL_RAW_COM1_LINE_STATUS) &
+            RTL_RAW_COM1_TRANSMIT_EMPTY)
+            break;
+    }
+
+    RtlRawCom1WritePortUchar(RTL_RAW_COM1_BASE, Character);
+}
+
+static
+VOID
+RtlRawCom1WriteString(
+    _In_z_ const CHAR *String)
+{
+    while (*String != ANSI_NULL)
+    {
+        if (*String == '\n')
+            RtlRawCom1WriteByte('\r');
+
+        RtlRawCom1WriteByte(*String++);
+    }
+}
+
+static
+VOID
+RtlRawCom1WriteAnsiString(
+    _In_opt_ PSTRING String)
+{
+    USHORT Index;
+
+    if ((String == NULL) || (String->Buffer == NULL))
+        return;
+
+    for (Index = 0; Index < String->Length; Index++)
+    {
+        CHAR Character = String->Buffer[Index];
+        RtlRawCom1WriteByte((Character >= 0x20 && Character < 0x7f) ?
+                            (UCHAR)Character : (UCHAR)'?');
+    }
+}
+
+static
+VOID
+RtlRawCom1WriteHex(
+    _In_ ULONG_PTR Value)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < 8; Index++)
+    {
+        ULONG Nibble = (Value >> (28 - Index * 4)) & 0xF;
+
+        RtlRawCom1WriteByte((UCHAR)(Nibble < 10 ? ('0' + Nibble) :
+                                               ('A' + Nibble - 10)));
+    }
+}
+
+static
+VOID
+RtlRawCom1WriteField(
+    _In_z_ const CHAR *Name,
+    _In_ ULONG_PTR Value)
+{
+    RtlRawCom1WriteByte(' ');
+    RtlRawCom1WriteString(Name);
+    RtlRawCom1WriteByte('=');
+    RtlRawCom1WriteHex(Value);
+}
+
+static
+VOID
+RtlRawCom1DumpSymbolStage(
+    _In_ ULONG Stage,
+    _In_opt_ PSTRING Name,
+    _In_opt_ PVOID Base,
+    _In_ ULONG_PTR Detail)
+{
+    RtlRawCom1WriteString("\nDbgSym");
+    RtlRawCom1WriteField("stage", Stage);
+    RtlRawCom1WriteField("base", (ULONG_PTR)Base);
+    RtlRawCom1WriteField("detail", Detail);
+    RtlRawCom1WriteString(" name=");
+    RtlRawCom1WriteAnsiString(Name);
+    RtlRawCom1WriteByte('\n');
+}
+#endif
+
 ULONG
 NTAPI
 DebugPrint(IN PSTRING DebugString,
@@ -330,27 +451,52 @@ DbgLoadImageSymbols(IN PSTRING Name,
     PIMAGE_NT_HEADERS NtHeader;
     KD_SYMBOLS_INFO SymbolInfo;
 
+#if DBG && defined(_M_IX86) && defined(__GNUC__)
+    RtlRawCom1DumpSymbolStage(0xD201, Name, Base, ProcessId);
+#endif
+
     /* Setup the symbol data */
     SymbolInfo.BaseOfDll = Base;
     SymbolInfo.ProcessId = ProcessId;
+#if DBG && defined(_M_IX86) && defined(__GNUC__)
+    RtlRawCom1DumpSymbolStage(0xD202, Name, SymbolInfo.BaseOfDll, SymbolInfo.ProcessId);
+#endif
 
     /* Get NT Headers */
+#if DBG && defined(_M_IX86) && defined(__GNUC__)
+    RtlRawCom1DumpSymbolStage(0xD203, Name, Base, 0);
+#endif
     NtHeader = RtlImageNtHeader(Base);
+#if DBG && defined(_M_IX86) && defined(__GNUC__)
+    RtlRawCom1DumpSymbolStage(0xD204, Name, Base, (ULONG_PTR)NtHeader);
+#endif
     if (NtHeader)
     {
         /* Get the rest of the data */
         SymbolInfo.CheckSum = NtHeader->OptionalHeader.CheckSum;
         SymbolInfo.SizeOfImage = NtHeader->OptionalHeader.SizeOfImage;
+#if DBG && defined(_M_IX86) && defined(__GNUC__)
+        RtlRawCom1DumpSymbolStage(0xD205, Name, Base, SymbolInfo.SizeOfImage);
+#endif
     }
     else
     {
         /* No data available */
         SymbolInfo.CheckSum =
         SymbolInfo.SizeOfImage = 0;
+#if DBG && defined(_M_IX86) && defined(__GNUC__)
+        RtlRawCom1DumpSymbolStage(0xD206, Name, Base, 0);
+#endif
     }
 
     /* Load the symbols */
+#if DBG && defined(_M_IX86) && defined(__GNUC__)
+    RtlRawCom1DumpSymbolStage(0xD207, Name, Base, (ULONG_PTR)&SymbolInfo);
+#endif
     DebugService2(Name, &SymbolInfo, BREAKPOINT_LOAD_SYMBOLS);
+#if DBG && defined(_M_IX86) && defined(__GNUC__)
+    RtlRawCom1DumpSymbolStage(0xD208, Name, Base, SymbolInfo.SizeOfImage);
+#endif
 }
 
 /*

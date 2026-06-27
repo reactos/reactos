@@ -81,6 +81,58 @@ ReturnSize:
     return ALIGN_UP_BY(NumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
 }
 
+static
+BOOLEAN
+KdpShouldLoadBootSymbols(
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PSTR CommandLine;
+    SHORT Found;
+    CHAR YesNo;
+
+    BOOLEAN LoadSymbols = FALSE;
+
+    if (!LoaderBlock || !LoaderBlock->LoadOptions)
+        return LoadSymbols;
+
+    CommandLine = LoaderBlock->LoadOptions;
+    while (*CommandLine)
+    {
+        while (isspace(*CommandLine))
+            ++CommandLine;
+
+        Found = 0;
+        if (_strnicmp(CommandLine, "LOADSYMBOLS", 11) == 0)
+        {
+            Found = +1;
+            CommandLine += 11;
+        }
+        else if (_strnicmp(CommandLine, "NOLOADSYMBOLS", 13) == 0)
+        {
+            Found = -1;
+            CommandLine += 13;
+        }
+
+        if (Found != 0)
+        {
+            if (*CommandLine == '=')
+            {
+                ++CommandLine;
+                YesNo = toupper(*CommandLine);
+                if ((YesNo == 'N') || (YesNo == '0'))
+                    Found = -Found;
+            }
+
+            LoadSymbols = (Found > 0);
+        }
+
+        while (*CommandLine && !isspace(*CommandLine))
+            ++CommandLine;
+    }
+
+    return LoadSymbols;
+}
+
 /**
  * @brief
  * Displays the kernel debugger initialization banner.
@@ -405,6 +457,9 @@ KdInitSystem(
 
         /* Display separator + ReactOS version at the start of the debug log */
         KdpPrintBanner();
+        DPRINT1("KdInitSystem: banner complete, loader=%p disableAfterInit=%u\n",
+                LoaderBlock,
+                DisableKdAfterInit);
 
         /* Check if the debugger should be disabled initially */
         if (DisableKdAfterInit)
@@ -420,14 +475,21 @@ KdInitSystem(
             return TRUE;
         }
 
-        /* Check if we have a loader block */
-        if (LoaderBlock)
+        /*
+         * KdbSymInit defers BootPhase 0 symbol work because early
+         * BREAKPOINT_LOAD_SYMBOLS dispatch can stall before the phase-1
+         * symbol worker exists. KD64 keeps the same boundary for kernel and
+         * HAL symbol packets unless the boot line explicitly requests them.
+         */
+        if (LoaderBlock && KdpShouldLoadBootSymbols(LoaderBlock))
         {
             PLIST_ENTRY NextEntry;
             ULONG j, Length;
             PWCHAR Name;
             STRING ImageName;
             CHAR NameBuffer[256];
+
+            DPRINT1("KdInitSystem: loading boot image symbols\n");
 
             /* Loop over the first two boot images: HAL and kernel */
             for (NextEntry = LoaderBlock->LoadOrderListHead.Flink, i = 0;
@@ -442,26 +504,40 @@ KdInitSystem(
                 /* Generate the image name */
                 Name = LdrEntry->FullDllName.Buffer;
                 Length = LdrEntry->FullDllName.Length / sizeof(WCHAR);
+                if (Length >= sizeof(NameBuffer))
+                {
+                    DPRINT1("KdInitSystem: truncating boot image %lu symbol name length %lu\n",
+                            i,
+                            Length);
+                    Length = sizeof(NameBuffer) - 1;
+                }
                 j = 0;
-                do
+                while (j < Length)
                 {
                     /* Do cheap Unicode to ANSI conversion */
                     NameBuffer[j++] = (CHAR)*Name++;
-                } while (j < Length);
+                }
 
                 /* Null-terminate */
                 NameBuffer[j] = ANSI_NULL;
 
                 /* Load the symbols */
                 RtlInitString(&ImageName, NameBuffer);
+                DPRINT1("KdInitSystem: loading symbols image=%lu base=%p name=%s\n",
+                        i,
+                        LdrEntry->DllBase,
+                        NameBuffer);
                 DbgLoadImageSymbols(&ImageName,
                                     LdrEntry->DllBase,
                                     (ULONG_PTR)PsGetCurrentProcessId());
+                DPRINT1("KdInitSystem: loaded symbols image=%lu\n", i);
             }
 
             /* Check for incoming break-in and break on symbol load
              * if requested, see ex/init.c!ExpLoadBootSymbols() */
+            DPRINT1("KdInitSystem: polling break-in after boot symbols\n");
             KdBreakAfterSymbolLoad = KdPollBreakIn();
+            DPRINT1("KdInitSystem: break-in poll after boot symbols complete\n");
         }
     }
     else

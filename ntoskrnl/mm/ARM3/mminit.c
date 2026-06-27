@@ -467,6 +467,13 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Save original values of the free descriptor, since it'll be
      * altered by early allocations */
     MxOldFreeDescriptor = *MxFreeDescriptor;
+
+    DPRINT1("MiScanMemoryDescriptors: descriptors=%lu physical=%Iu free=%Iu lowest=0x%Ix highest=0x%Ix\n",
+            MiNumberDescriptors,
+            (ULONG_PTR)MmNumberOfPhysicalPages,
+            (ULONG_PTR)MiNumberOfFreePages,
+            (ULONG_PTR)MmLowestPhysicalPage,
+            (ULONG_PTR)MmHighestPhysicalPage);
 }
 
 CODE_SEG("INIT")
@@ -663,7 +670,7 @@ VOID
 NTAPI
 MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PFN_NUMBER FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
+    PFN_NUMBER FreePage, FreePageCount, BasePage, PageCount;
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     PMMPTE PointerPte, LastPte;
@@ -672,7 +679,6 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Get current page data, since we won't be using MxGetNextPage as it would corrupt our state */
     FreePage = MxFreeDescriptor->BasePage;
     FreePageCount = MxFreeDescriptor->PageCount;
-    PagesLeft = 0;
 
     /* Loop the memory descriptors */
     NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
@@ -734,7 +740,6 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 }
 
                 /* Write out this PTE */
-                PagesLeft++;
                 MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
                 /* Zero this page */
@@ -2347,6 +2352,20 @@ MmArmInitSystem(IN ULONG Phase,
         //
         MmPhysicalMemoryBlock = MmInitializeMemoryLimits(LoaderBlock,
                                                          IncludeType);
+        if (!MmPhysicalMemoryBlock)
+        {
+            DPRINT1("MmArmInitSystem: MmInitializeMemoryLimits failed, descriptors=%lu physical=%Iu highest=0x%Ix\n",
+                    MiNumberDescriptors,
+                    (ULONG_PTR)MmNumberOfPhysicalPages,
+                    (ULONG_PTR)MmHighestPhysicalPage);
+        }
+        else
+        {
+            DPRINT1("MmArmInitSystem: physical runs=%lu pages=%Iu highest=0x%Ix\n",
+                    MmPhysicalMemoryBlock->NumberOfRuns,
+                    (ULONG_PTR)MmPhysicalMemoryBlock->NumberOfPages,
+                    (ULONG_PTR)MmHighestPhysicalPage);
+        }
 
         //
         // Allocate enough buffer for the PFN bitmap
@@ -2384,9 +2403,9 @@ MmArmInitSystem(IN ULONG Phase,
             // Get the run
             //
             Run = &MmPhysicalMemoryBlock->Run[i];
-            DPRINT("PHYSICAL RAM [0x%08p to 0x%08p]\n",
-                   Run->BasePage << PAGE_SHIFT,
-                   (Run->BasePage + Run->PageCount) << PAGE_SHIFT);
+            DPRINT1("PHYSICAL RAM [0x%I64x to 0x%I64x]\n",
+                    (ULONGLONG)Run->BasePage << PAGE_SHIFT,
+                    (ULONGLONG)(Run->BasePage + Run->PageCount) << PAGE_SHIFT);
 
             //
             // Make sure it has pages inside it

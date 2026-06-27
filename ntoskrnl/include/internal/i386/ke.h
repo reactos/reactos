@@ -459,6 +459,12 @@ Ki386InitializeTss(
     IN PKGDTENTRY Gdt
 );
 
+VOID
+NTAPI
+KiInitializeTSS(
+    IN PKTSS Tss
+);
+
 CODE_SEG("INIT")
 VOID
 NTAPI

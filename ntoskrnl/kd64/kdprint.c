@@ -15,6 +15,117 @@
 
 #define KD_PRINT_MAX_BYTES 512
 
+/* PRIVATE FUNCTIONS ********************************************************/
+
+#if DBG && defined(_M_IX86)
+#define KDP_RAW_COM1_BASE 0x3F8
+#define KDP_RAW_COM1_LINE_STATUS 5
+#define KDP_RAW_COM1_TRANSMIT_EMPTY 0x20
+
+static
+VOID
+NTAPI
+KdpRawCom1WriteByte(
+    _In_ UCHAR Character)
+{
+    ULONG SpinCount = 100000;
+
+    while (SpinCount-- != 0)
+    {
+        if (READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)(KDP_RAW_COM1_BASE +
+                                                KDP_RAW_COM1_LINE_STATUS)) &
+            KDP_RAW_COM1_TRANSMIT_EMPTY)
+            break;
+    }
+
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)KDP_RAW_COM1_BASE, Character);
+}
+
+static
+VOID
+NTAPI
+KdpRawCom1WriteString(
+    _In_z_ const CHAR *String)
+{
+    while (*String != ANSI_NULL)
+    {
+        if (*String == '\n')
+            KdpRawCom1WriteByte('\r');
+
+        KdpRawCom1WriteByte(*String++);
+    }
+}
+
+static
+VOID
+NTAPI
+KdpRawCom1WriteAnsiString(
+    _In_opt_ PSTRING String)
+{
+    USHORT Index;
+
+    if ((String == NULL) || (String->Buffer == NULL))
+        return;
+
+    for (Index = 0; Index < String->Length; Index++)
+    {
+        CHAR Character = String->Buffer[Index];
+        KdpRawCom1WriteByte((Character >= 0x20 && Character < 0x7f) ?
+                            (UCHAR)Character : (UCHAR)'?');
+    }
+}
+
+static
+VOID
+NTAPI
+KdpRawCom1WriteHex(
+    _In_ ULONG_PTR Value)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < 8; Index++)
+    {
+        ULONG Nibble = (Value >> (28 - Index * 4)) & 0xF;
+
+        KdpRawCom1WriteByte((UCHAR)(Nibble < 10 ? ('0' + Nibble) :
+                                                ('A' + Nibble - 10)));
+    }
+}
+
+static
+VOID
+NTAPI
+KdpRawCom1WriteField(
+    _In_z_ const CHAR *Name,
+    _In_ ULONG_PTR Value)
+{
+    KdpRawCom1WriteByte(' ');
+    KdpRawCom1WriteString(Name);
+    KdpRawCom1WriteByte('=');
+    KdpRawCom1WriteHex(Value);
+}
+
+static
+VOID
+NTAPI
+KdpRawCom1DumpSymbolStage(
+    _In_ ULONG Stage,
+    _In_opt_ PSTRING DllPath,
+    _In_opt_ PKD_SYMBOLS_INFO SymbolInfo,
+    _In_ ULONG_PTR Detail)
+{
+    KdpRawCom1WriteString("\nKdpSym");
+    KdpRawCom1WriteField("stage", Stage);
+    KdpRawCom1WriteField("cpu", KeGetCurrentProcessorNumber());
+    KdpRawCom1WriteField("irql", KeGetCurrentIrql());
+    KdpRawCom1WriteField("info", (ULONG_PTR)SymbolInfo);
+    KdpRawCom1WriteField("detail", Detail);
+    KdpRawCom1WriteString(" name=");
+    KdpRawCom1WriteAnsiString(DllPath);
+    KdpRawCom1WriteByte('\n');
+}
+#endif
+
 /* FUNCTIONS *****************************************************************/
 
 KIRQL
@@ -43,6 +154,60 @@ KdpAcquireLock(
 
     return OldIrql;
 }
+
+#if DBG && defined(_M_IX86)
+static
+BOOLEAN
+NTAPI
+KdpTryAcquirePrintLock(
+    _In_ PKSPIN_LOCK SpinLock,
+    _Out_ PKIRQL OldIrql)
+{
+    KiI386BootTraceRecord(0xD401,
+                          (ULONG_PTR)SpinLock,
+                          *SpinLock,
+                          0,
+                          0,
+                          0,
+                          0);
+
+    if (!KeTestSpinLock(SpinLock))
+    {
+        KiI386BootTraceRecord(0xD402,
+                              (ULONG_PTR)SpinLock,
+                              *SpinLock,
+                              0,
+                              0,
+                              0,
+                              0);
+        return FALSE;
+    }
+
+    KeRaiseIrql(HIGH_LEVEL, OldIrql);
+
+    if (KeTryToAcquireSpinLockAtDpcLevel(SpinLock))
+    {
+        KiI386BootTraceRecord(0xD403,
+                              (ULONG_PTR)SpinLock,
+                              *SpinLock,
+                              *OldIrql,
+                              0,
+                              0,
+                              0);
+        return TRUE;
+    }
+
+    KiI386BootTraceRecord(0xD404,
+                          (ULONG_PTR)SpinLock,
+                          *SpinLock,
+                          *OldIrql,
+                          0,
+                          0,
+                          0);
+    KeLowerIrql(*OldIrql);
+    return FALSE;
+}
+#endif
 
 VOID
 NTAPI
@@ -74,8 +239,29 @@ KdLogDbgPrint(
     if (!KdPrintCircularBuffer /*|| (KdPrintBufferSize == 0)*/)
         return;
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xD410,
+                          (ULONG_PTR)String,
+                          String->Length,
+                          (ULONG_PTR)String->Buffer,
+                          KdPrintBufferSize,
+                          (ULONG_PTR)KdPrintWritePointer,
+                          (ULONG_PTR)KdPrintCircularBuffer);
+    if (!KdpTryAcquirePrintLock(&KdpPrintSpinLock, &OldIrql))
+    {
+        KiI386BootTraceRecord(0xD411,
+                              (ULONG_PTR)&KdpPrintSpinLock,
+                              KdpPrintSpinLock,
+                              String->Length,
+                              (ULONG_PTR)String->Buffer,
+                              0,
+                              0);
+        return;
+    }
+#else
     /* Acquire the log spinlock without waiting at raised IRQL */
     OldIrql = KdpAcquireLock(&KdpPrintSpinLock);
+#endif
 
     Length = min(String->Length, KdPrintBufferSize);
     Remaining = KdPrintCircularBuffer + KdPrintBufferSize - KdPrintWritePointer;
@@ -102,6 +288,15 @@ KdLogDbgPrint(
 
     /* Release the spinlock */
     KdpReleaseLock(&KdpPrintSpinLock, OldIrql);
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xD412,
+                          (ULONG_PTR)&KdpPrintSpinLock,
+                          KdpPrintSpinLock,
+                          String->Length,
+                          (ULONG_PTR)String->Buffer,
+                          0,
+                          0);
+#endif
 }
 
 BOOLEAN
@@ -271,32 +466,90 @@ KdpSymbol(IN PSTRING DllPath,
     BOOLEAN Enable;
     PKPRCB Prcb = KeGetCurrentPrcb();
 
+#if DBG && defined(_M_IX86)
+    KdpRawCom1DumpSymbolStage(0xD301,
+                              DllPath,
+                              SymbolInfo,
+                              (ULONG_PTR)PreviousMode);
+#endif
+
     /* Check if we need to do anything */
-    if ((PreviousMode != KernelMode) || (KdDebuggerNotPresent)) return;
+    if ((PreviousMode != KernelMode) || (KdDebuggerNotPresent))
+    {
+#if DBG && defined(_M_IX86)
+        KdpRawCom1DumpSymbolStage(0xD302,
+                                  DllPath,
+                                  SymbolInfo,
+                                  KdDebuggerNotPresent);
+#endif
+        return;
+    }
 
     /* Enter the debugger */
+#if DBG && defined(_M_IX86)
+    KdpRawCom1DumpSymbolStage(0xD303,
+                              DllPath,
+                              SymbolInfo,
+                              (ULONG_PTR)TrapFrame);
+#endif
     Enable = KdEnterDebugger(TrapFrame, ExceptionFrame);
+#if DBG && defined(_M_IX86)
+    KdpRawCom1DumpSymbolStage(0xD304,
+                              DllPath,
+                              SymbolInfo,
+                              Enable);
+#endif
 
     /* Save the CPU Control State and save the context */
     KiSaveProcessorControlState(&Prcb->ProcessorState);
+#if DBG && defined(_M_IX86)
+    KdpRawCom1DumpSymbolStage(0xD305,
+                              DllPath,
+                              SymbolInfo,
+                              (ULONG_PTR)&Prcb->ProcessorState);
+#endif
     KdpMoveMemory(&Prcb->ProcessorState.ContextFrame,
                   ContextRecord,
                   sizeof(CONTEXT));
 
     /* Report the new state */
+#if DBG && defined(_M_IX86)
+    KdpRawCom1DumpSymbolStage(0xD306,
+                              DllPath,
+                              SymbolInfo,
+                              Unload);
+#endif
     KdpReportLoadSymbolsStateChange(DllPath,
                                     SymbolInfo,
                                     Unload,
                                     &Prcb->ProcessorState.ContextFrame);
+#if DBG && defined(_M_IX86)
+    KdpRawCom1DumpSymbolStage(0xD307,
+                              DllPath,
+                              SymbolInfo,
+                              Unload);
+#endif
 
     /* Restore the processor state */
     KdpMoveMemory(ContextRecord,
                   &Prcb->ProcessorState.ContextFrame,
                   sizeof(CONTEXT));
     KiRestoreProcessorControlState(&Prcb->ProcessorState);
+#if DBG && defined(_M_IX86)
+    KdpRawCom1DumpSymbolStage(0xD308,
+                              DllPath,
+                              SymbolInfo,
+                              (ULONG_PTR)ContextRecord);
+#endif
 
     /* Exit the debugger and return */
     KdExitDebugger(Enable);
+#if DBG && defined(_M_IX86)
+    KdpRawCom1DumpSymbolStage(0xD309,
+                              DllPath,
+                              SymbolInfo,
+                              Enable);
+#endif
 }
 
 USHORT

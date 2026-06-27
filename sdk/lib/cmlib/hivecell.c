@@ -306,7 +306,6 @@ NTSTATUS CMAPI
 HvpCreateHiveFreeCellList(
     PHHIVE Hive)
 {
-    HCELL_INDEX BlockOffset;
     PHCELL FreeBlock;
     ULONG BlockIndex;
     ULONG FreeOffset;
@@ -321,7 +320,6 @@ HvpCreateHiveFreeCellList(
         Hive->Storage[Volatile].FreeDisplay[Index] = HCELL_NIL;
     }
 
-    BlockOffset = 0;
     BlockIndex = 0;
     while (BlockIndex < Hive->Storage[Stable].Length)
     {
@@ -347,7 +345,6 @@ HvpCreateHiveFreeCellList(
         }
 
         BlockIndex += Bin->Size / HBLOCK_SIZE;
-        BlockOffset += Bin->Size;
     }
 
     return STATUS_SUCCESS;

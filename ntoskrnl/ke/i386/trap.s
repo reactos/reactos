@@ -109,7 +109,20 @@ TRAP_ENTRY KiTrap0A, 0
 TRAP_ENTRY KiTrap0B, 0
 TRAP_ENTRY KiTrap0C, 0
 TRAP_ENTRY KiTrap0D, 0
+#if DBG
+EXTERN @KiTrap0EHandler@4 :PROC
+PUBLIC _KiTrap0E
+.PROC _KiTrap0E
+    FPO 0, 0, 0, 0, 1, FRAME_TRAP
+
+    KiTracePageFaultAsmEntry HEX(E12E)
+    KiEnterTrap 0
+    KiTraceTrapExitFrame HEX(E12F)
+    KiCallHandler @KiTrap0EHandler@4
+.ENDP
+#else
 TRAP_ENTRY KiTrap0E, 0
+#endif
 TRAP_ENTRY KiTrap0F, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap10, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap11, KI_PUSH_FAKE_ERROR_CODE
@@ -139,6 +152,11 @@ _KiInterruptTemplateDispatch:
     CFI_ENDPROC
 
 EXTERN @KiSystemServiceHandler@8:PROC
+#if DBG
+EXTERN _KiI386BootTraceRecord@28:PROC
+EXTERN _KiTrapExitFinalSnapshotCount:DWORD
+EXTERN _KiTrapExitFinalSnapshotByCpu:DWORD
+#endif
 PUBLIC _KiSystemService
 .PROC _KiSystemService
     FPO 0, 0, 0, 0, 1, FRAME_TRAP

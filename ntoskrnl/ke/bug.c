@@ -33,6 +33,259 @@ ULONG_PTR KiBugCheckData[5];
 PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead = NULL;
 KSPIN_LOCK KiNmiCallbackListLock;
 
+#if defined(_M_IX86) && DBG
+#define KI_BOOT_PROBE_MAGIC 0x5042544B
+
+typedef struct _KI_BOOT_PROBE_SNAPSHOT
+{
+    ULONG Magic;
+    ULONG Version;
+    ULONG Stage;
+    ULONG PollResult;
+    ULONG Cpu;
+    ULONG EFlags;
+    ULONG FsSelector;
+    ULONG Irql;
+    ULONG Dr6;
+    ULONG Dr7;
+    ULONG PcrSelf;
+    ULONG PcrPrcb;
+    ULONG ActiveProcessors;
+    ULONG NumberProcessors;
+    ULONG StackPointer;
+    ULONG Context0;
+    ULONG Context1;
+    ULONG Context2;
+} KI_BOOT_PROBE_SNAPSHOT;
+
+extern volatile KI_BOOT_PROBE_SNAPSHOT KiBootProbeSnapshot;
+
+static
+VOID
+KiPrintPageFaultProbeSnapshot(
+    _In_ PCSTR Label,
+    _In_ volatile KI_PAGE_FAULT_PROBE_SNAPSHOT *Snapshot)
+{
+    if (Snapshot->Magic != KI_PAGE_FAULT_PROBE_MAGIC)
+    {
+        return;
+    }
+
+    DbgPrint("%s: stage=%lu count=%lu cpu=%lu irql=%lu pcrIrql=%lu "
+             "irr=%lu idr=%lu cr2=%lx eip=%lx cs=%lx eflags=%lx "
+             "live=%lx err=%lx fs=%lx esp=%lx ebp=%lx eax=%lx edx=%lx "
+             "tf=%lx prevTf=%lx thread=%lx kstack=%lx istack=%lx pcr=%lx "
+             "prcb=%lx ex=%lx pcrEx=%lx\n",
+             Label,
+             Snapshot->Stage,
+             Snapshot->Count,
+             Snapshot->Cpu,
+             Snapshot->Irql,
+             Snapshot->PcrIrql,
+             Snapshot->PcrIrr,
+             Snapshot->PcrIdr,
+             Snapshot->Cr2,
+             Snapshot->Eip,
+             Snapshot->SegCs,
+             Snapshot->EFlags,
+             Snapshot->CurrentEFlags,
+             Snapshot->ErrCode,
+             Snapshot->SegFs,
+             Snapshot->HardwareEsp,
+             Snapshot->Ebp,
+             Snapshot->Eax,
+             Snapshot->Edx,
+             Snapshot->TrapFrame,
+             Snapshot->PreviousTrapFrame,
+             Snapshot->Thread,
+             Snapshot->KernelStack,
+             Snapshot->InitialStack,
+             Snapshot->PcrSelf,
+             Snapshot->PcrPrcb,
+             Snapshot->ExceptionList,
+	             Snapshot->PcrExceptionList);
+}
+
+static
+VOID
+KiPrintTrapExitProbeSnapshot(
+    _In_ PCSTR Label,
+    _In_ volatile KI_TRAP_EXIT_PROBE_SNAPSHOT *Snapshot)
+{
+    if (Snapshot->Magic != KI_TRAP_EXIT_PROBE_MAGIC)
+    {
+        return;
+    }
+
+    DbgPrint("%s: reason=%lu count=%lu cpu=%lu irql=%lu pcrIrql=%lu "
+             "irr=%lu idr=%lu skip=%lu eip=%lx cs=%lx eflags=%lx "
+             "live=%lx err=%lx fs=%lx dr7=%lx dbg=%lx prev=%lx tf=%lx "
+             "thread=%lx pcrEx=%lx tfEx=%lx fsEx=%lx linkedTf=%lx "
+             "esp=%lx tempesp=%lx hwesp=%lx ebp=%lx eax=%lx ebx=%lx "
+             "ecx=%lx edx=%lx esi=%lx edi=%lx kstack=%lx istack=%lx "
+             "slimit=%lx\n",
+             Label,
+             Snapshot->Reason,
+             Snapshot->Count,
+             Snapshot->Cpu,
+             Snapshot->Irql,
+             Snapshot->PcrIrql,
+             Snapshot->PcrIrr,
+             Snapshot->PcrIdr,
+             Snapshot->SkipPreviousMode,
+             Snapshot->Eip,
+             Snapshot->SegCs,
+             Snapshot->EFlags,
+             Snapshot->CurrentEFlags,
+             Snapshot->ErrCode,
+             Snapshot->SegFs,
+             Snapshot->Dr7,
+             Snapshot->DbgArgMark,
+             Snapshot->PreviousPreviousMode,
+             Snapshot->TrapFrame,
+             Snapshot->Thread,
+             Snapshot->PcrExceptionList,
+             Snapshot->TrapExceptionList,
+             Snapshot->FsExceptionList,
+             Snapshot->LinkedTrapFrame,
+             Snapshot->StackPointer,
+             Snapshot->TempEsp,
+             Snapshot->HardwareEsp,
+             Snapshot->Ebp,
+             Snapshot->Eax,
+             Snapshot->Ebx,
+             Snapshot->Ecx,
+             Snapshot->Edx,
+             Snapshot->Esi,
+             Snapshot->Edi,
+             Snapshot->KernelStack,
+             Snapshot->InitialStack,
+             Snapshot->StackLimit);
+}
+
+static
+VOID
+KiPrintTrapExitFinalSnapshot(
+    _In_ PCSTR Label,
+    _In_ volatile KI_TRAP_EXIT_FINAL_SNAPSHOT *Snapshot)
+{
+    if (Snapshot->Magic != KI_TRAP_EXIT_FINAL_SNAPSHOT_MAGIC)
+    {
+        return;
+    }
+
+    DbgPrint("%s: stage=%lx seq=%lu cpu=%lu flags=%lx offset=%lx "
+             "tf=%lx eip=%lx cs=%lx eflags=%lx esp=%lx ss=%lx "
+             "ds=%lx es=%lx fs=%lx gs=%lx eax=%lx ecx=%lx edx=%lx "
+             "liveEsp=%lx gdtr=%02x%02x%02x%02x%02x%02x "
+             "idtr=%02x%02x%02x%02x%02x%02x cr0=%lx cr2=%lx "
+             "cr3=%lx cr4=%lx tr=%lx gdtCs=%lx:%lx gdtSs=%lx:%lx "
+             "gdtFs=%lx:%lx gdtTr=%lx:%lx tssBase=%lx tssEsp0=%lx\n",
+             Label,
+             Snapshot->Stage,
+             Snapshot->Sequence,
+             Snapshot->Cpu,
+             Snapshot->Flags,
+             Snapshot->OffsetEsp,
+             Snapshot->TrapFrame,
+             Snapshot->Eip,
+             Snapshot->SegCs,
+             Snapshot->EFlags,
+             Snapshot->HardwareEsp,
+             Snapshot->HardwareSegSs,
+             Snapshot->SegDs,
+             Snapshot->SegEs,
+             Snapshot->SegFs,
+             Snapshot->SegGs,
+             Snapshot->Eax,
+             Snapshot->Ecx,
+             Snapshot->Edx,
+             Snapshot->LiveEsp,
+             Snapshot->Gdtr[5],
+             Snapshot->Gdtr[4],
+             Snapshot->Gdtr[3],
+             Snapshot->Gdtr[2],
+             Snapshot->Gdtr[1],
+             Snapshot->Gdtr[0],
+             Snapshot->Idtr[5],
+             Snapshot->Idtr[4],
+             Snapshot->Idtr[3],
+             Snapshot->Idtr[2],
+             Snapshot->Idtr[1],
+             Snapshot->Idtr[0],
+             Snapshot->Cr0,
+             Snapshot->Cr2,
+             Snapshot->Cr3,
+             Snapshot->Cr4,
+             Snapshot->Tr,
+             Snapshot->GdtCsHigh,
+             Snapshot->GdtCsLow,
+             Snapshot->GdtSsHigh,
+             Snapshot->GdtSsLow,
+             Snapshot->GdtFsHigh,
+             Snapshot->GdtFsLow,
+             Snapshot->GdtTrHigh,
+             Snapshot->GdtTrLow,
+             Snapshot->TssBase,
+             Snapshot->TssEsp0);
+}
+
+static
+VOID
+KiPrintAccessFaultWsProbeSnapshot(
+    _In_ PCSTR Label,
+    _In_ volatile MM_ACCESS_FAULT_WS_PROBE_SNAPSHOT *Snapshot)
+{
+    if (Snapshot->Magic != MM_ACCESS_FAULT_WS_PROBE_MAGIC)
+    {
+        return;
+    }
+
+    DbgPrint("%s: stage=%lu count=%lu cpu=%lu irql=%lu fault=%lu "
+             "mode=%lu address=%lx tf=%lx eip=%lx cs=%lx eflags=%lx "
+             "err=%lx esp=%lx tempesp=%lx hwdsp=%lx ebp=%lx eax=%lx "
+             "ebx=%lx ecx=%lx edx=%lx esi=%lx edi=%lx thread=%lx "
+             "kstack=%lx istack=%lx slimit=%lx vad=%lx kas=%lx "
+             "ownsPxe=%lu ownsPxs=%lu "
+             "ownsSxe=%lu ownsSxs=%lu ownsSessE=%lu ownsSessS=%lu\n",
+             Label,
+             Snapshot->Stage,
+             Snapshot->Count,
+             Snapshot->Cpu,
+             Snapshot->Irql,
+             Snapshot->FaultCode,
+             Snapshot->Mode,
+             Snapshot->Address,
+             Snapshot->TrapInformation,
+             Snapshot->TrapEip,
+             Snapshot->TrapSegCs,
+             Snapshot->TrapEFlags,
+             Snapshot->TrapErrCode,
+             Snapshot->TrapEsp,
+             Snapshot->TrapTempEsp,
+             Snapshot->TrapHardwareEsp,
+             Snapshot->TrapEbp,
+             Snapshot->TrapEax,
+             Snapshot->TrapEbx,
+             Snapshot->TrapEcx,
+             Snapshot->TrapEdx,
+             Snapshot->TrapEsi,
+             Snapshot->TrapEdi,
+             Snapshot->Thread,
+             Snapshot->ThreadKernelStack,
+             Snapshot->ThreadInitialStack,
+             Snapshot->ThreadStackLimit,
+             Snapshot->Vad,
+             Snapshot->KernelAddressSpace,
+             Snapshot->OwnsProcessWorkingSetExclusive,
+             Snapshot->OwnsProcessWorkingSetShared,
+             Snapshot->OwnsSystemWorkingSetExclusive,
+             Snapshot->OwnsSystemWorkingSetShared,
+             Snapshot->OwnsSessionWorkingSetExclusive,
+             Snapshot->OwnsSessionWorkingSetShared);
+}
+#endif
+
 /* Jira Reporting */
 UNICODE_STRING KeRosProcessorName, KeRosBiosDate, KeRosBiosVersion;
 UNICODE_STRING KeRosVideoBiosDate, KeRosVideoBiosVersion;
@@ -1056,6 +1309,130 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
                  KiBugCheckData[2],
                  KiBugCheckData[3],
                  KiBugCheckData[4]);
+
+#if defined(_M_IX86) && DBG
+        if (KiBootProbeSnapshot.Magic == KI_BOOT_PROBE_MAGIC)
+        {
+            DbgPrint("KiBootProbeSnapshot: stage=%lu cpu=%lu irql=%lu fs=%lx "
+                     "pcr=%lx prcb=%lx active=%lx processors=%lu sp=%lx "
+                     "ctx0=%lx ctx1=%lx ctx2=%lx\n",
+                     KiBootProbeSnapshot.Stage,
+                     KiBootProbeSnapshot.Cpu,
+                     KiBootProbeSnapshot.Irql,
+                     KiBootProbeSnapshot.FsSelector,
+                     KiBootProbeSnapshot.PcrSelf,
+                     KiBootProbeSnapshot.PcrPrcb,
+                     KiBootProbeSnapshot.ActiveProcessors,
+                     KiBootProbeSnapshot.NumberProcessors,
+                     KiBootProbeSnapshot.StackPointer,
+                     KiBootProbeSnapshot.Context0,
+                     KiBootProbeSnapshot.Context1,
+                     KiBootProbeSnapshot.Context2);
+        }
+
+	        if (KiPageFaultProbeSnapshot.Magic == KI_PAGE_FAULT_PROBE_MAGIC)
+	        {
+	            DbgPrint("KiPageFaultProbeSnapshot: stage=%lu count=%lu cpu=%lu "
+                     "irql=%lu pcrIrql=%lu irr=%lu idr=%lu cr2=%lx eip=%lx "
+                     "cs=%lx eflags=%lx live=%lx err=%lx fs=%lx esp=%lx "
+                     "ebp=%lx eax=%lx edx=%lx tf=%lx prevTf=%lx thread=%lx "
+                     "kstack=%lx istack=%lx pcr=%lx prcb=%lx ex=%lx pcrEx=%lx\n",
+                     KiPageFaultProbeSnapshot.Stage,
+                     KiPageFaultProbeSnapshot.Count,
+                     KiPageFaultProbeSnapshot.Cpu,
+                     KiPageFaultProbeSnapshot.Irql,
+                     KiPageFaultProbeSnapshot.PcrIrql,
+                     KiPageFaultProbeSnapshot.PcrIrr,
+                     KiPageFaultProbeSnapshot.PcrIdr,
+                     KiPageFaultProbeSnapshot.Cr2,
+                     KiPageFaultProbeSnapshot.Eip,
+                     KiPageFaultProbeSnapshot.SegCs,
+                     KiPageFaultProbeSnapshot.EFlags,
+                     KiPageFaultProbeSnapshot.CurrentEFlags,
+                     KiPageFaultProbeSnapshot.ErrCode,
+                     KiPageFaultProbeSnapshot.SegFs,
+                     KiPageFaultProbeSnapshot.HardwareEsp,
+                     KiPageFaultProbeSnapshot.Ebp,
+                     KiPageFaultProbeSnapshot.Eax,
+                     KiPageFaultProbeSnapshot.Edx,
+                     KiPageFaultProbeSnapshot.TrapFrame,
+                     KiPageFaultProbeSnapshot.PreviousTrapFrame,
+                     KiPageFaultProbeSnapshot.Thread,
+                     KiPageFaultProbeSnapshot.KernelStack,
+                     KiPageFaultProbeSnapshot.InitialStack,
+                     KiPageFaultProbeSnapshot.PcrSelf,
+                     KiPageFaultProbeSnapshot.PcrPrcb,
+                     KiPageFaultProbeSnapshot.ExceptionList,
+	                     KiPageFaultProbeSnapshot.PcrExceptionList);
+	        }
+
+	        KiPrintTrapExitProbeSnapshot("KiTrapExitProbeSnapshot",
+	                                     &KiTrapExitProbeSnapshot);
+
+	        if (MmpAccessFaultWsProbeSnapshot.Magic ==
+	            MM_ACCESS_FAULT_WS_PROBE_MAGIC)
+	        {
+            DbgPrint("MmpAccessFaultWsProbeSnapshot: stage=%lu count=%lu "
+                     "cpu=%lu irql=%lu fault=%lu mode=%lu address=%lx tf=%lx "
+                     "eip=%lx cs=%lx eflags=%lx err=%lx esp=%lx tempesp=%lx "
+                     "hwdsp=%lx ebp=%lx eax=%lx ebx=%lx ecx=%lx edx=%lx "
+                     "esi=%lx edi=%lx thread=%lx kstack=%lx istack=%lx "
+                     "slimit=%lx vad=%lx kas=%lx ownsPxe=%lu ownsPxs=%lu "
+                     "ownsSxe=%lu ownsSxs=%lu "
+                     "ownsSessE=%lu ownsSessS=%lu\n",
+                     MmpAccessFaultWsProbeSnapshot.Stage,
+                     MmpAccessFaultWsProbeSnapshot.Count,
+                     MmpAccessFaultWsProbeSnapshot.Cpu,
+                     MmpAccessFaultWsProbeSnapshot.Irql,
+                     MmpAccessFaultWsProbeSnapshot.FaultCode,
+                     MmpAccessFaultWsProbeSnapshot.Mode,
+                     MmpAccessFaultWsProbeSnapshot.Address,
+                     MmpAccessFaultWsProbeSnapshot.TrapInformation,
+                     MmpAccessFaultWsProbeSnapshot.TrapEip,
+                     MmpAccessFaultWsProbeSnapshot.TrapSegCs,
+                     MmpAccessFaultWsProbeSnapshot.TrapEFlags,
+                     MmpAccessFaultWsProbeSnapshot.TrapErrCode,
+                     MmpAccessFaultWsProbeSnapshot.TrapEsp,
+                     MmpAccessFaultWsProbeSnapshot.TrapTempEsp,
+                     MmpAccessFaultWsProbeSnapshot.TrapHardwareEsp,
+                     MmpAccessFaultWsProbeSnapshot.TrapEbp,
+                     MmpAccessFaultWsProbeSnapshot.TrapEax,
+                     MmpAccessFaultWsProbeSnapshot.TrapEbx,
+                     MmpAccessFaultWsProbeSnapshot.TrapEcx,
+                     MmpAccessFaultWsProbeSnapshot.TrapEdx,
+                     MmpAccessFaultWsProbeSnapshot.TrapEsi,
+                     MmpAccessFaultWsProbeSnapshot.TrapEdi,
+                     MmpAccessFaultWsProbeSnapshot.Thread,
+                     MmpAccessFaultWsProbeSnapshot.ThreadKernelStack,
+                     MmpAccessFaultWsProbeSnapshot.ThreadInitialStack,
+                     MmpAccessFaultWsProbeSnapshot.ThreadStackLimit,
+                     MmpAccessFaultWsProbeSnapshot.Vad,
+                     MmpAccessFaultWsProbeSnapshot.KernelAddressSpace,
+                     MmpAccessFaultWsProbeSnapshot.OwnsProcessWorkingSetExclusive,
+                     MmpAccessFaultWsProbeSnapshot.OwnsProcessWorkingSetShared,
+                     MmpAccessFaultWsProbeSnapshot.OwnsSystemWorkingSetExclusive,
+                     MmpAccessFaultWsProbeSnapshot.OwnsSystemWorkingSetShared,
+                     MmpAccessFaultWsProbeSnapshot.OwnsSessionWorkingSetExclusive,
+                     MmpAccessFaultWsProbeSnapshot.OwnsSessionWorkingSetShared);
+        }
+
+        KiPrintPageFaultProbeSnapshot("KiPageFaultProbeSnapshotByCpu[0]",
+                                      &KiPageFaultProbeSnapshotByCpu[0]);
+	        KiPrintPageFaultProbeSnapshot("KiPageFaultProbeSnapshotByCpu[1]",
+	                                      &KiPageFaultProbeSnapshotByCpu[1]);
+	        KiPrintTrapExitProbeSnapshot("KiTrapExitProbeSnapshotByCpu[0]",
+	                                     &KiTrapExitProbeSnapshotByCpu[0]);
+	        KiPrintTrapExitProbeSnapshot("KiTrapExitProbeSnapshotByCpu[1]",
+	                                     &KiTrapExitProbeSnapshotByCpu[1]);
+	        KiPrintTrapExitFinalSnapshot("KiTrapExitFinalSnapshotByCpu[0]",
+	                                     &KiTrapExitFinalSnapshotByCpu[0]);
+	        KiPrintTrapExitFinalSnapshot("KiTrapExitFinalSnapshotByCpu[1]",
+	                                     &KiTrapExitFinalSnapshotByCpu[1]);
+	        KiPrintAccessFaultWsProbeSnapshot("MmpAccessFaultWsProbeSnapshotByCpu[0]",
+	                                          &MmpAccessFaultWsProbeSnapshotByCpu[0]);
+        KiPrintAccessFaultWsProbeSnapshot("MmpAccessFaultWsProbeSnapshotByCpu[1]",
+                                          &MmpAccessFaultWsProbeSnapshotByCpu[1]);
+#endif
 
         /* Check if the debugger isn't currently connected */
         if (!KdDebuggerNotPresent)

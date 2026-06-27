@@ -1076,6 +1076,104 @@ MM_ANY_WS_LOCK_HELD_EXCLUSIVE(_In_ PETHREAD Thread)
             (Thread->OwnsSessionWorkingSetExclusive));
 }
 
+#define MM_WORKING_SET_LOCK_PROBE_MAGIC 0x504C5357
+
+typedef struct _MM_WORKING_SET_LOCK_PROBE_SNAPSHOT
+{
+    ULONG Magic;
+    ULONG Version;
+    ULONG Count;
+    ULONG Operation;
+    ULONG Stage;
+    ULONG Line;
+    ULONG AnyLockHeld;
+    ULONG OwnsProcessWorkingSetExclusive;
+    ULONG OwnsProcessWorkingSetShared;
+    ULONG OwnsSystemWorkingSetExclusive;
+    ULONG OwnsSystemWorkingSetShared;
+    ULONG OwnsSessionWorkingSetExclusive;
+    ULONG OwnsSessionWorkingSetShared;
+    ULONG_PTR Thread;
+    ULONG_PTR Process;
+    ULONG_PTR WorkingSet;
+    ULONG_PTR ReturnAddress;
+    ULONG_PTR TrapFrame;
+    ULONG_PTR TrapEip;
+    ULONG_PTR TrapSegCs;
+    ULONG_PTR TrapEFlags;
+    ULONG_PTR TrapErrCode;
+    ULONG_PTR TrapEsp;
+    ULONG_PTR TrapEbp;
+    ULONG CurrentIrql;
+    ULONG ApcsDisabled;
+    ULONG_PTR StackMarker;
+} MM_WORKING_SET_LOCK_PROBE_SNAPSHOT;
+
+extern volatile MM_WORKING_SET_LOCK_PROBE_SNAPSHOT MmpWorkingSetLockProbeSnapshot;
+
+FORCEINLINE
+VOID
+MiRecordWorkingSetLockProbe(
+    _In_ PETHREAD Thread,
+    _In_opt_ PMMSUPPORT WorkingSet,
+    _In_opt_ PEPROCESS Process,
+    _In_ ULONG Operation,
+    _In_ ULONG Stage,
+    _In_ ULONG Line)
+{
+    ULONG StackMarker;
+#ifdef _M_IX86
+    PKTRAP_FRAME TrapFrame;
+#endif
+
+    MmpWorkingSetLockProbeSnapshot.Magic = MM_WORKING_SET_LOCK_PROBE_MAGIC;
+    MmpWorkingSetLockProbeSnapshot.Version = 1;
+    MmpWorkingSetLockProbeSnapshot.Count++;
+    MmpWorkingSetLockProbeSnapshot.Operation = Operation;
+    MmpWorkingSetLockProbeSnapshot.Stage = Stage;
+    MmpWorkingSetLockProbeSnapshot.Line = Line;
+    MmpWorkingSetLockProbeSnapshot.Thread = (ULONG_PTR)Thread;
+    MmpWorkingSetLockProbeSnapshot.Process = (ULONG_PTR)Process;
+    MmpWorkingSetLockProbeSnapshot.WorkingSet = (ULONG_PTR)WorkingSet;
+    MmpWorkingSetLockProbeSnapshot.ReturnAddress = (ULONG_PTR)_ReturnAddress();
+    MmpWorkingSetLockProbeSnapshot.CurrentIrql = KeGetCurrentIrql();
+    MmpWorkingSetLockProbeSnapshot.ApcsDisabled = KeAreAllApcsDisabled();
+    MmpWorkingSetLockProbeSnapshot.StackMarker = (ULONG_PTR)&StackMarker;
+
+    MmpWorkingSetLockProbeSnapshot.AnyLockHeld = MM_ANY_WS_LOCK_HELD(Thread);
+    MmpWorkingSetLockProbeSnapshot.OwnsProcessWorkingSetExclusive =
+        Thread->OwnsProcessWorkingSetExclusive;
+    MmpWorkingSetLockProbeSnapshot.OwnsProcessWorkingSetShared =
+        Thread->OwnsProcessWorkingSetShared;
+    MmpWorkingSetLockProbeSnapshot.OwnsSystemWorkingSetExclusive =
+        Thread->OwnsSystemWorkingSetExclusive;
+    MmpWorkingSetLockProbeSnapshot.OwnsSystemWorkingSetShared =
+        Thread->OwnsSystemWorkingSetShared;
+    MmpWorkingSetLockProbeSnapshot.OwnsSessionWorkingSetExclusive =
+        Thread->OwnsSessionWorkingSetExclusive;
+    MmpWorkingSetLockProbeSnapshot.OwnsSessionWorkingSetShared =
+        Thread->OwnsSessionWorkingSetShared;
+
+#ifdef _M_IX86
+    TrapFrame = KeGetTrapFrame(&Thread->Tcb);
+    MmpWorkingSetLockProbeSnapshot.TrapFrame = (ULONG_PTR)TrapFrame;
+    MmpWorkingSetLockProbeSnapshot.TrapEip = TrapFrame->Eip;
+    MmpWorkingSetLockProbeSnapshot.TrapSegCs = TrapFrame->SegCs;
+    MmpWorkingSetLockProbeSnapshot.TrapEFlags = TrapFrame->EFlags;
+    MmpWorkingSetLockProbeSnapshot.TrapErrCode = TrapFrame->ErrCode;
+    MmpWorkingSetLockProbeSnapshot.TrapEsp = TrapFrame->HardwareEsp;
+    MmpWorkingSetLockProbeSnapshot.TrapEbp = TrapFrame->Ebp;
+#else
+    MmpWorkingSetLockProbeSnapshot.TrapFrame = 0;
+    MmpWorkingSetLockProbeSnapshot.TrapEip = 0;
+    MmpWorkingSetLockProbeSnapshot.TrapSegCs = 0;
+    MmpWorkingSetLockProbeSnapshot.TrapEFlags = 0;
+    MmpWorkingSetLockProbeSnapshot.TrapErrCode = 0;
+    MmpWorkingSetLockProbeSnapshot.TrapEsp = 0;
+    MmpWorkingSetLockProbeSnapshot.TrapEbp = 0;
+#endif
+}
+
 //
 // Checks if the process owns the working set lock
 //
@@ -1136,6 +1234,7 @@ MiLockProcessWorkingSet(IN PEPROCESS Process,
     ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
 
     /* Block APCs, make sure that still nothing is already held */
+    MiRecordWorkingSetLockProbe(Thread, &Process->Vm, Process, 1, 1, __LINE__);
     KeEnterGuardedRegion();
     ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
 
@@ -1158,6 +1257,7 @@ MiLockProcessWorkingSetShared(IN PEPROCESS Process,
     ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
 
     /* Block APCs, make sure that still nothing is already held */
+    MiRecordWorkingSetLockProbe(Thread, &Process->Vm, Process, 2, 1, __LINE__);
     KeEnterGuardedRegion();
     ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
 
@@ -1180,6 +1280,7 @@ MiLockProcessWorkingSetUnsafe(IN PEPROCESS Process,
     ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
 
     /* APCs must be blocked, make sure that still nothing is already held */
+    MiRecordWorkingSetLockProbe(Thread, &Process->Vm, Process, 3, 1, __LINE__);
     ASSERT(KeAreAllApcsDisabled() == TRUE);
     ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
 
@@ -1273,6 +1374,7 @@ MiLockWorkingSet(IN PETHREAD Thread,
                  IN PMMSUPPORT WorkingSet)
 {
     /* Block APCs */
+    MiRecordWorkingSetLockProbe(Thread, WorkingSet, NULL, 4, 1, __LINE__);
     KeEnterGuardedRegion();
 
     /* Working set should be in global memory */
@@ -1315,6 +1417,7 @@ MiLockWorkingSetShared(
     _In_ PMMSUPPORT WorkingSet)
 {
     /* Block APCs */
+    MiRecordWorkingSetLockProbe(Thread, WorkingSet, NULL, 5, 1, __LINE__);
     KeEnterGuardedRegion();
 
     /* Working set should be in global memory */

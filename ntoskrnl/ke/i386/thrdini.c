@@ -42,6 +42,91 @@ typedef struct _KKINIT_FRAME
     FX_SAVE_AREA FxSaveArea;
 } KKINIT_FRAME, *PKKINIT_FRAME;
 
+#if DBG && defined(_M_IX86)
+static
+ULONG
+NTAPI
+KiPackThreadProcessImageNamePart(
+    _In_opt_ PEPROCESS Process,
+    _In_ ULONG Offset)
+{
+    ULONG Index;
+    ULONG Part = 0;
+    PUCHAR PartBytes = (PUCHAR)&Part;
+    PUCHAR ImageName;
+
+    if ((Process == NULL) || (Offset >= sizeof(Process->ImageFileName)))
+        return 0;
+
+    ImageName = (PUCHAR)Process->ImageFileName;
+    for (Index = 0; Index < sizeof(Part); Index++)
+    {
+        if ((Offset + Index) >= sizeof(Process->ImageFileName))
+            break;
+
+        PartBytes[Index] = ImageName[Offset + Index];
+    }
+
+    return Part;
+}
+
+static
+BOOLEAN
+NTAPI
+KiIsThreadTrapFrameReadable(
+    _In_opt_ PKTHREAD Thread,
+    _In_opt_ PKTRAP_FRAME TrapFrame)
+{
+    ULONG_PTR Frame;
+    ULONG_PTR InitialStack;
+
+    if ((Thread == NULL) || (TrapFrame == NULL))
+        return FALSE;
+
+    Frame = (ULONG_PTR)TrapFrame;
+    InitialStack = (ULONG_PTR)Thread->InitialStack;
+
+    if (InitialStack < sizeof(KTRAP_FRAME))
+        return FALSE;
+
+    return (((ULONG_PTR)Thread->StackLimit <= Frame) &&
+            (Frame <= (InitialStack - sizeof(KTRAP_FRAME))));
+}
+
+static
+VOID
+NTAPI
+KiTraceSwapContextEntryOwnership(
+    _In_ PKSWITCHFRAME SwitchFrame,
+    _In_ ULONG_PTR OldThreadAndApcFlag,
+    _In_ PKTHREAD OldThread,
+    _In_ PKTHREAD NewThread,
+    _In_ PKIPCR Pcr)
+{
+    KiI386BootTraceRecord(0xE219,
+                          (ULONG_PTR)SwitchFrame,
+                          OldThreadAndApcFlag,
+                          (ULONG_PTR)SwitchFrame->ExceptionList,
+                          (ULONG_PTR)Pcr->NtTib.ExceptionList,
+                          (ULONG_PTR)Pcr->PrcbData.CurrentThread,
+                          (ULONG_PTR)Pcr->PrcbData.NextThread);
+    KiI386BootTraceRecord(0xE21A,
+                          (ULONG_PTR)OldThread,
+                          OldThread != NULL ? (ULONG_PTR)OldThread->KernelStack : 0,
+                          OldThread != NULL ? (ULONG_PTR)OldThread->InitialStack : 0,
+                          OldThread != NULL ? (ULONG_PTR)OldThread->StackLimit : 0,
+                          OldThread != NULL ? (ULONG_PTR)OldThread->TrapFrame : 0,
+                          (ULONG_PTR)SwitchFrame->RetAddr);
+    KiI386BootTraceRecord(0xE21B,
+                          (ULONG_PTR)NewThread,
+                          NewThread != NULL ? (ULONG_PTR)NewThread->KernelStack : 0,
+                          NewThread != NULL ? (ULONG_PTR)NewThread->InitialStack : 0,
+                          NewThread != NULL ? (ULONG_PTR)NewThread->StackLimit : 0,
+                          NewThread != NULL ? (ULONG_PTR)NewThread->TrapFrame : 0,
+                          (ULONG_PTR)SwitchFrame->RetAddr);
+}
+#endif
+
 VOID
 FASTCALL
 KiSwitchThreads(
@@ -177,10 +262,11 @@ KiInitializeContextThread(IN PKTHREAD Thread,
                              Context->ContextFlags | ContextFlags,
                              UserMode);
 
-        /* Set SS, DS, ES's RPL Mask properly */
+        /* Set user selectors' RPL mask. */
         TrapFrame->HardwareSegSs |= RPL_MASK;
         TrapFrame->SegDs |= RPL_MASK;
         TrapFrame->SegEs |= RPL_MASK;
+        TrapFrame->SegFs |= RPL_MASK;
         TrapFrame->Dr7 = 0;
 
         /* Set the debug mark */
@@ -329,9 +415,115 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     PKPROCESS OldProcess, NewProcess;
     PKTHREAD NewThread;
+#if DBG && defined(_M_IX86)
+    PETHREAD NewEthread;
+    PEPROCESS NewProcessProbe;
+    PKTRAP_FRAME NewTrapFrame;
+    ULONG_PTR NewKernelStack;
+    ULONG_PTR NewTrapEip;
+    ULONG_PTR NewTrapSegCs;
+    ULONG_PTR NewTrapEFlags;
+    ULONG_PTR NewTrapExceptionList;
+    PKTRAP_FRAME NewActiveTrapFrame;
+    ULONG_PTR NewActiveTrapEip;
+    ULONG_PTR NewActiveTrapSegCs;
+    ULONG_PTR NewActiveTrapEFlags;
+    ULONG_PTR NewActiveTrapStack;
+    ULONG_PTR NewActiveLinkedTrapFrame;
+    ULONG_PTR NewInitialStack;
+    ULONG_PTR NewStackLimit;
+    ULONG_PTR NewUniqueThread;
+    ULONG_PTR NewUniqueProcess;
+#endif
 
     /* We are on the new thread stack now */
     NewThread = Pcr->PrcbData.CurrentThread;
+
+#if DBG && defined(_M_IX86)
+    NewEthread = NULL;
+    NewProcessProbe = NULL;
+    NewTrapFrame = NULL;
+    NewKernelStack = 0;
+    NewTrapEip = 0;
+    NewTrapSegCs = 0;
+    NewTrapEFlags = 0;
+    NewTrapExceptionList = 0;
+    NewActiveTrapFrame = NULL;
+    NewActiveTrapEip = 0;
+    NewActiveTrapSegCs = 0;
+    NewActiveTrapEFlags = 0;
+    NewActiveTrapStack = 0;
+    NewActiveLinkedTrapFrame = 0;
+    NewInitialStack = 0;
+    NewStackLimit = 0;
+    NewUniqueThread = 0;
+    NewUniqueProcess = 0;
+
+    if (NewThread != NULL)
+    {
+        NewEthread = (PETHREAD)NewThread;
+        NewTrapFrame = KeGetTrapFrame(NewThread);
+        NewKernelStack = (ULONG_PTR)NewThread->KernelStack;
+        NewActiveTrapFrame = NewThread->TrapFrame;
+        NewInitialStack = (ULONG_PTR)NewThread->InitialStack;
+        NewStackLimit = (ULONG_PTR)NewThread->StackLimit;
+    }
+
+    if (NewEthread != NULL)
+    {
+        NewProcessProbe = NewEthread->ThreadsProcess;
+        NewUniqueThread = (ULONG_PTR)NewEthread->Cid.UniqueThread;
+        NewUniqueProcess = (ULONG_PTR)NewEthread->Cid.UniqueProcess;
+    }
+
+    if (NewTrapFrame != NULL)
+    {
+        NewTrapEip = NewTrapFrame->Eip;
+        NewTrapSegCs = NewTrapFrame->SegCs;
+        NewTrapEFlags = NewTrapFrame->EFlags;
+        NewTrapExceptionList = (ULONG_PTR)NewTrapFrame->ExceptionList;
+    }
+
+    if (KiIsThreadTrapFrameReadable(NewThread, NewActiveTrapFrame))
+    {
+        NewActiveTrapEip = NewActiveTrapFrame->Eip;
+        NewActiveTrapSegCs = NewActiveTrapFrame->SegCs;
+        NewActiveTrapEFlags = NewActiveTrapFrame->EFlags;
+        NewActiveTrapStack = NewActiveTrapFrame->PreviousPreviousMode == KernelMode ?
+                             NewActiveTrapFrame->TempEsp :
+                             NewActiveTrapFrame->HardwareEsp;
+        NewActiveLinkedTrapFrame = NewActiveTrapFrame->Edx;
+    }
+
+    KiI386BootTraceRecord(0xE211,
+                          (ULONG_PTR)SwitchFrame,
+                          (ULONG_PTR)OldThread,
+                          (ULONG_PTR)NewThread,
+                          (ULONG_PTR)SwitchFrame->ExceptionList,
+                          (ULONG_PTR)Pcr->NtTib.ExceptionList,
+                          NewKernelStack);
+    KiI386BootTraceRecord(0xE213,
+                          (ULONG_PTR)NewThread,
+                          (ULONG_PTR)NewTrapFrame,
+                          NewTrapEip,
+                          NewTrapSegCs,
+                          NewTrapEFlags,
+                          NewTrapExceptionList);
+    KiI386BootTraceRecord(0xE214,
+                          (ULONG_PTR)NewThread,
+                          (ULONG_PTR)NewProcessProbe,
+                          NewUniqueThread,
+                          NewUniqueProcess,
+                          (ULONG_PTR)OldThread,
+                          (ULONG_PTR)SwitchFrame);
+    KiI386BootTraceRecord(0xE215,
+                          (ULONG_PTR)NewThread,
+                          NewTrapEip,
+                          KiPackThreadProcessImageNamePart(NewProcessProbe, 0),
+                          KiPackThreadProcessImageNamePart(NewProcessProbe, 4),
+                          KiPackThreadProcessImageNamePart(NewProcessProbe, 8),
+                          KiPackThreadProcessImageNamePart(NewProcessProbe, 12));
+#endif
 
     /* Now we are the new thread. Check if it's in a new process */
     OldProcess = OldThread->ApcState.Process;
@@ -379,6 +571,37 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     /* Load data from switch frame */
     Pcr->NtTib.ExceptionList = SwitchFrame->ExceptionList;
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE212,
+                          (ULONG_PTR)SwitchFrame,
+                          (ULONG_PTR)OldThread,
+                          (ULONG_PTR)NewThread,
+                          (ULONG_PTR)SwitchFrame->ExceptionList,
+                          (ULONG_PTR)Pcr->NtTib.ExceptionList,
+                          NewKernelStack);
+    KiI386BootTraceRecord(0xE216,
+                          (ULONG_PTR)NewThread,
+                          (ULONG_PTR)NewTrapFrame,
+                          NewTrapEip,
+                          NewTrapExceptionList,
+                          (ULONG_PTR)Pcr->NtTib.ExceptionList,
+                          NewKernelStack);
+    KiI386BootTraceRecord(0xE217,
+                          (ULONG_PTR)NewThread,
+                          (ULONG_PTR)NewActiveTrapFrame,
+                          NewActiveTrapEip,
+                          NewActiveTrapSegCs,
+                          NewActiveTrapEFlags,
+                          NewActiveTrapStack);
+    KiI386BootTraceRecord(0xE218,
+                          (ULONG_PTR)NewThread,
+                          NewKernelStack,
+                          NewInitialStack,
+                          NewStackLimit,
+                          NewActiveLinkedTrapFrame,
+                          (ULONG_PTR)Pcr->NtTib.ExceptionList);
+#endif
+
     /* DPCs shouldn't be active */
     if (Pcr->PrcbData.DpcRoutineActive)
     {
@@ -421,6 +644,16 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     SwitchFrame->ApcBypassDisable = OldThreadAndApcFlag & 3;
     SwitchFrame->ExceptionList = Pcr->NtTib.ExceptionList;
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE210,
+                          (ULONG_PTR)SwitchFrame,
+                          OldThreadAndApcFlag,
+                          (ULONG_PTR)SwitchFrame->ExceptionList,
+                          (ULONG_PTR)Pcr->NtTib.ExceptionList,
+                          (ULONG_PTR)Pcr->PrcbData.CurrentThread,
+                          (ULONG_PTR)Pcr->PrcbData.NextThread);
+#endif
+
     /* Increase context switch count and check if tracing is enabled */
     Pcr->ContextSwitches++;
     if (Pcr->PerfGlobalGroupMask)
@@ -433,6 +666,14 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     /* Get thread pointers */
     OldThread = (PKTHREAD)(OldThreadAndApcFlag & ~3);
     NewThread = Pcr->PrcbData.CurrentThread;
+
+#if DBG && defined(_M_IX86)
+    KiTraceSwapContextEntryOwnership(SwitchFrame,
+                                     OldThreadAndApcFlag,
+                                     OldThread,
+                                     NewThread,
+                                     Pcr);
+#endif
 
     /* Get the old thread and set its kernel stack */
     OldThread->KernelStack = SwitchFrame;
@@ -467,6 +708,16 @@ KiDispatchInterrupt(VOID)
     /* Disable interrupts */
     _disable();
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE200,
+                          (ULONG_PTR)Prcb->CurrentThread,
+                          (ULONG_PTR)Prcb->NextThread,
+                          Prcb->DpcData[0].DpcQueueDepth,
+                          Prcb->TimerRequest,
+                          (ULONG_PTR)Prcb->DeferredReadyListHead.Next,
+                          (ULONG_PTR)Pcr->NtTib.ExceptionList);
+#endif
+
     /* Check for pending timers, pending DPCs, or pending ready threads */
     if ((Prcb->DpcData[0].DpcQueueDepth) ||
         (Prcb->TimerRequest) ||
@@ -476,11 +727,31 @@ KiDispatchInterrupt(VOID)
         OldHandler = Pcr->NtTib.ExceptionList;
         Pcr->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
 
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE201,
+                              (ULONG_PTR)Prcb->CurrentThread,
+                              (ULONG_PTR)Prcb->NextThread,
+                              (ULONG_PTR)OldHandler,
+                              (ULONG_PTR)Pcr->NtTib.ExceptionList,
+                              (ULONG_PTR)Prcb->DpcStack,
+                              Prcb->DpcData[0].DpcQueueDepth);
+#endif
+
         /* Retire DPCs while under the DPC stack */
         KiRetireDpcListInDpcStack(Prcb, Prcb->DpcStack);
 
         /* Restore context */
         Pcr->NtTib.ExceptionList = OldHandler;
+
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE202,
+                              (ULONG_PTR)Prcb->CurrentThread,
+                              (ULONG_PTR)Prcb->NextThread,
+                              (ULONG_PTR)OldHandler,
+                              (ULONG_PTR)Pcr->NtTib.ExceptionList,
+                              (ULONG_PTR)Prcb->DpcStack,
+                              Prcb->DpcData[0].DpcQueueDepth);
+#endif
     }
 
     /* Re-enable interrupts */
@@ -495,6 +766,16 @@ KiDispatchInterrupt(VOID)
     }
     else if (Prcb->NextThread)
     {
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE203,
+                              (ULONG_PTR)Prcb->CurrentThread,
+                              (ULONG_PTR)Prcb->NextThread,
+                              (ULONG_PTR)Pcr->NtTib.ExceptionList,
+                              Prcb->ReadySummary,
+                              Prcb->DeferredReadyListHead.Next != NULL,
+                              Prcb->QuantumEnd);
+#endif
+
         /* Acquire the PRCB lock */
         KiAcquirePrcbLock(Prcb);
 

@@ -459,17 +459,30 @@ VOID
 NTAPI
 RtlpInitializeKeyedEvent(VOID)
 {
-    ASSERT(CondVarKeyedEventHandle == NULL);
-    NtCreateKeyedEvent(&CondVarKeyedEventHandle, EVENT_ALL_ACCESS, NULL, 0);
+    HANDLE KeyedEventHandle = NULL;
+    NTSTATUS Status;
+
+    if (CondVarKeyedEventHandle != NULL)
+    {
+        return;
+    }
+
+    Status = NtCreateKeyedEvent(&KeyedEventHandle, EVENT_ALL_ACCESS, NULL, 0);
+    if (NT_SUCCESS(Status))
+    {
+        CondVarKeyedEventHandle = KeyedEventHandle;
+    }
 }
 
 VOID
 NTAPI
 RtlpCloseKeyedEvent(VOID)
 {
-    ASSERT(CondVarKeyedEventHandle != NULL);
-    NtClose(CondVarKeyedEventHandle);
-    CondVarKeyedEventHandle = NULL;
+    if (CondVarKeyedEventHandle != NULL)
+    {
+        NtClose(CondVarKeyedEventHandle);
+        CondVarKeyedEventHandle = NULL;
+    }
 }
 
 /* EXPORTED FUNCTIONS ********************************************************/

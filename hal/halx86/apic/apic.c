@@ -217,6 +217,112 @@ ApicGetCurrentIrql(VOID)
 #endif
 }
 
+#if DBG && !defined(_M_AMD64) && defined(HALP_ENABLE_RAW_IPI_PROBE)
+#define HALP_RAW_COM1_BASE 0x3F8
+#define HALP_RAW_COM1_LINE_STATUS 5
+#define HALP_RAW_COM1_TRANSMIT_EMPTY 0x20
+
+static
+VOID
+NTAPI
+HalpRawCom1WriteByte(
+    _In_ UCHAR Character)
+{
+    ULONG SpinCount = 100000;
+
+    while (SpinCount-- != 0)
+    {
+        if (READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)(HALP_RAW_COM1_BASE +
+                                                HALP_RAW_COM1_LINE_STATUS)) &
+            HALP_RAW_COM1_TRANSMIT_EMPTY)
+            break;
+    }
+
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)HALP_RAW_COM1_BASE, Character);
+}
+
+static
+VOID
+NTAPI
+HalpRawCom1WriteString(
+    _In_z_ const CHAR *String)
+{
+    while (*String != '\0')
+    {
+        if (*String == '\n')
+            HalpRawCom1WriteByte('\r');
+
+        HalpRawCom1WriteByte(*String++);
+    }
+}
+
+static
+VOID
+NTAPI
+HalpRawCom1WriteHex(
+    _In_ ULONG_PTR Value)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < 8; Index++)
+    {
+        ULONG Nibble = (Value >> (28 - Index * 4)) & 0xF;
+
+        HalpRawCom1WriteByte((UCHAR)(Nibble < 10 ? ('0' + Nibble) :
+                                                  ('A' + Nibble - 10)));
+    }
+}
+
+static
+VOID
+NTAPI
+HalpRawCom1WriteField(
+    _In_z_ const CHAR *Name,
+    _In_ ULONG_PTR Value)
+{
+    HalpRawCom1WriteByte(' ');
+    HalpRawCom1WriteString(Name);
+    HalpRawCom1WriteByte('=');
+    HalpRawCom1WriteHex(Value);
+}
+
+static
+VOID
+NTAPI
+HalpRawCom1DumpIpiTrap(
+    _In_ ULONG Stage,
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ KIRQL OldIrql)
+{
+    PKPCR Pcr = KeGetPcr();
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    HalpRawCom1WriteString("\nHalpRawIpi");
+    HalpRawCom1WriteField("stage", Stage);
+    HalpRawCom1WriteField("cpu", KeGetCurrentProcessorNumber());
+    HalpRawCom1WriteField("cur", KeGetCurrentIrql());
+    HalpRawCom1WriteField("old", OldIrql);
+    HalpRawCom1WriteField("pcrirql", Pcr->Irql);
+    HalpRawCom1WriteField("irr", Pcr->IRR);
+    HalpRawCom1WriteField("idr", Pcr->IDR);
+    HalpRawCom1WriteField("ppr", ApicGetProcessorIrql());
+    HalpRawCom1WriteField("tpr", ApicGetCurrentIrql());
+    HalpRawCom1WriteField("ipi", Prcb->IpiFrozen);
+    HalpRawCom1WriteField("signal", (ULONG_PTR)Prcb->SignalDone);
+    HalpRawCom1WriteField("target", Prcb->TargetSet);
+    HalpRawCom1WriteField("tf", (ULONG_PTR)TrapFrame);
+    HalpRawCom1WriteField("eip", TrapFrame->Eip);
+    HalpRawCom1WriteField("cs", TrapFrame->SegCs);
+    HalpRawCom1WriteField("eflags", TrapFrame->EFlags);
+    HalpRawCom1WriteField("live", __readeflags());
+    HalpRawCom1WriteField("esp", TrapFrame->TempEsp != 0 ?
+                                  TrapFrame->TempEsp :
+                                  TrapFrame->HardwareEsp);
+    HalpRawCom1WriteField("ebp", TrapFrame->Ebp);
+    HalpRawCom1WriteByte('\n');
+}
+#endif
+
 FORCEINLINE
 VOID
 ApicSetIrql(KIRQL Irql)
@@ -224,7 +330,14 @@ ApicSetIrql(KIRQL Irql)
 #ifdef _M_AMD64
     __writecr8(Irql);
 #elif defined(APIC_LAZY_IRQL)
+    KIRQL HardIrql = KeGetPcr()->IRR;
+
     __writefsbyte(FIELD_OFFSET(KPCR, Irql), Irql);
+    if (Irql > HardIrql)
+    {
+        KeGetPcr()->IRR = Irql;
+        ApicWrite(APIC_TPR, IrqlToTpr(Irql));
+    }
 #else
     /* Convert IRQL and write the TPR */
     ApicWrite(APIC_TPR, IrqlToTpr(Irql));
@@ -530,6 +643,7 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     HalpVectorToIndex[DISPATCH_VECTOR] = APIC_RESERVED_VECTOR;
     HalpVectorToIndex[APIC_CLOCK_VECTOR] = 8;
     HalpVectorToIndex[CLOCK_IPI_VECTOR] = APIC_RESERVED_VECTOR;
+    HalpVectorToIndex[APIC_IPI_VECTOR] = APIC_RESERVED_VECTOR;
     HalpVectorToIndex[APIC_SPURIOUS_VECTOR] = APIC_RESERVED_VECTOR;
 
     /* Set interrupt handlers in the IDT */
@@ -538,11 +652,13 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
 #ifndef _M_AMD64
     KeRegisterInterruptHandler(APC_VECTOR, HalpApcInterrupt);
     KeRegisterInterruptHandler(DISPATCH_VECTOR, HalpDispatchInterrupt);
+    KeRegisterInterruptHandler(APIC_IPI_VECTOR, HalpIpiInterrupt);
 #endif
 
-    /* Register the vectors for APC and dispatch interrupts */
+    /* Register the vectors for internal APIC interrupts */
     HalpRegisterVector(IDT_INTERNAL, 0, APC_VECTOR, APC_LEVEL);
     HalpRegisterVector(IDT_INTERNAL, 0, DISPATCH_VECTOR, DISPATCH_LEVEL);
+    HalpRegisterVector(IDT_INTERNAL, 0, APIC_IPI_VECTOR, IPI_LEVEL);
 
     /* Restore interrupt state */
     if (EnableInterrupts) EFlags |= EFLAGS_INTERRUPT_MASK;
@@ -635,6 +751,63 @@ HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     _enable();
     KiDispatchInterrupt();
     _disable();
+
+    /* Restore the old IRQL */
+    ApicLowerIrql(OldIrql);
+
+    /* Exit the interrupt */
+    KiEoiHelper(TrapFrame);
+}
+
+VOID
+DECLSPEC_NORETURN
+FASTCALL
+HalpIpiInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    KIRQL OldIrql;
+
+   /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+#if DBG && !defined(_M_AMD64) && defined(HALP_ENABLE_RAW_IPI_PROBE)
+    HalpRawCom1DumpIpiTrap(1, TrapFrame, (KIRQL)0xFF);
+#endif
+    ASSERT(ApicGetProcessorIrql() == IPI_LEVEL);
+
+#ifdef APIC_LAZY_IRQL
+    if (!HalBeginSystemInterrupt(IPI_LEVEL, APIC_IPI_VECTOR, &OldIrql))
+    {
+#if DBG && !defined(_M_AMD64) && defined(HALP_ENABLE_RAW_IPI_PROBE)
+        HalpRawCom1DumpIpiTrap(0xEE, TrapFrame, OldIrql);
+#endif
+        /* "Spurious" interrupt, exit the interrupt */
+        KiEoiHelper(TrapFrame);
+    }
+#else
+    /* Get the current IRQL */
+    OldIrql = ApicGetCurrentIrql();
+    ASSERT(OldIrql < IPI_LEVEL);
+#endif
+#if DBG && !defined(_M_AMD64) && defined(HALP_ENABLE_RAW_IPI_PROBE)
+    HalpRawCom1DumpIpiTrap(2, TrapFrame, OldIrql);
+#endif
+
+    /* Finish the IPI packet before another maskable interrupt can stack. */
+    _disable();
+
+    /* Raise to IPI_LEVEL */
+    ApicRaiseIrql(IPI_LEVEL);
+
+    /* End the interrupt */
+    ApicSendEOI();
+#if DBG && !defined(_M_AMD64) && defined(HALP_ENABLE_RAW_IPI_PROBE)
+    HalpRawCom1DumpIpiTrap(3, TrapFrame, OldIrql);
+#endif
+
+    /* Call the kernel's IPI handler */
+    KiIpiServiceRoutine(TrapFrame, NULL);
+#if DBG && !defined(_M_AMD64) && defined(HALP_ENABLE_RAW_IPI_PROBE)
+    HalpRawCom1DumpIpiTrap(4, TrapFrame, OldIrql);
+#endif
 
     /* Restore the old IRQL */
     ApicLowerIrql(OldIrql);
@@ -859,8 +1032,20 @@ KfRaiseIrql(
     /* Validate correct raise */
     if (OldIrql > NewIrql)
     {
+        DPRINT1("KfRaiseIrql: cpu=%u old=%u new=%u tpr=%lx ppr=%lx irr=%u\n",
+                KeGetCurrentProcessorNumber(),
+                OldIrql,
+                NewIrql,
+                ApicRead(APIC_TPR),
+                ApicRead(APIC_PPR),
+                KeGetPcr()->IRR);
+
         /* Crash system */
-        KeBugCheck(IRQL_NOT_GREATER_OR_EQUAL);
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     OldIrql,
+                     NewIrql,
+                     ApicRead(APIC_TPR),
+                     ApicRead(APIC_PPR));
     }
 #endif
     /* Convert the new IRQL to a TPR value and write the register */
@@ -885,4 +1070,3 @@ KeRaiseIrqlToSynchLevel(VOID)
 }
 
 #endif /* !_M_AMD64 */
-

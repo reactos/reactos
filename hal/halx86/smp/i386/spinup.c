@@ -89,19 +89,41 @@ HalStartNextProcessor(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock,
     _In_ PKPROCESSOR_STATE ProcessorState)
 {
+    DPRINT1("HalStartNextProcessor: onlyBoot=%u started=%lu detected=%lu lowStubPA=%I64x\n",
+            HalpOnlyBootProcessor,
+            HalpStartedProcessorCount,
+            HalpApicInfoTable.ProcessorCount,
+            HalpLowStubPhysicalAddress.QuadPart);
+
     /* Bail out if we only use the boot CPU */
     if (HalpOnlyBootProcessor)
+    {
+        DPRINT1("HalStartNextProcessor: ONECPU boot option prevents AP startup\n");
         return FALSE;
+    }
 
     /* Bail out if we have started all available CPUs */
     if (HalpStartedProcessorCount == HalpApicInfoTable.ProcessorCount)
+    {
+        DPRINT1("HalStartNextProcessor: no AP left to start, started=%lu detected=%lu\n",
+                HalpStartedProcessorCount,
+                HalpApicInfoTable.ProcessorCount);
         return FALSE;
+    }
 
     // Initalize the temporary page table
     // TODO: clean it up after an AP boots successfully
     ULONG initialCr3 = HalpSetupTemporaryMappings(ProcessorState);
     if (!initialCr3)
+    {
+        DPRINT1("HalStartNextProcessor: temporary AP mappings failed\n");
         return FALSE;
+    }
+
+    DPRINT1("HalStartNextProcessor: starting AP index=%lu initialCr3=%lx entry=%p\n",
+            HalpStartedProcessorCount,
+            initialCr3,
+            ProcessorState->ContextFrame.Eip);
 
     // Put the bootstrap code into low memory
     RtlCopyMemory(HalpLowStub, &HalpAPEntry16, (ULONG_PTR)&HalpAPEntry16End - (ULONG_PTR)&HalpAPEntry16);
@@ -122,6 +144,8 @@ HalStartNextProcessor(
     ApicStartApplicationProcessor(HalpStartedProcessorCount, HalpLowStubPhysicalAddress);
 
     HalpStartedProcessorCount++;
+    DPRINT1("HalStartNextProcessor: startup IPI sent, started counter is now %lu\n",
+            HalpStartedProcessorCount);
 
     return TRUE;
 }

@@ -29,6 +29,132 @@ KSPIN_LOCK Ki486CompatibilityLock;
 ULONG ProcessCount;
 ULONGLONG BootCycles, BootCyclesEnd;
 
+#define KI_BOOT_PROBE_MAGIC 0x5042544B
+
+typedef struct _KI_BOOT_PROBE_SNAPSHOT
+{
+    ULONG Magic;
+    ULONG Version;
+    ULONG Stage;
+    ULONG PollResult;
+    ULONG Cpu;
+    ULONG EFlags;
+    ULONG FsSelector;
+    ULONG Irql;
+    ULONG Dr6;
+    ULONG Dr7;
+    ULONG PcrSelf;
+    ULONG PcrPrcb;
+    ULONG ActiveProcessors;
+    ULONG NumberProcessors;
+    ULONG StackPointer;
+    ULONG Context0;
+    ULONG Context1;
+    ULONG Context2;
+} KI_BOOT_PROBE_SNAPSHOT;
+
+volatile KI_BOOT_PROBE_SNAPSHOT KiBootProbeSnapshot;
+
+FORCEINLINE
+ULONG_PTR
+KiReadStackPointer(VOID)
+{
+#ifdef __GNUC__
+    ULONG_PTR StackPointer;
+
+    __asm__ __volatile__("movl %%esp, %0" : "=r"(StackPointer));
+    return StackPointer;
+#elif defined(_MSC_VER)
+    __asm mov eax, esp;
+#endif
+}
+
+#if DBG && defined(_M_IX86)
+volatile ULONG KiI386BootTraceIndex[KI_I386_BOOT_TRACE_MAXIMUM_PROCESSORS];
+volatile KI_I386_BOOT_TRACE_RECORD KiI386BootTraceRecords
+    [KI_I386_BOOT_TRACE_MAXIMUM_PROCESSORS]
+    [KI_I386_BOOT_TRACE_RECORDS];
+
+VOID
+NTAPI
+KiI386BootTraceRecord(
+    _In_ ULONG Event,
+    _In_ ULONG_PTR Arg0,
+    _In_ ULONG_PTR Arg1,
+    _In_ ULONG_PTR Arg2,
+    _In_ ULONG_PTR Arg3,
+    _In_ ULONG_PTR Arg4,
+    _In_ ULONG_PTR Arg5)
+{
+    ULONG Cpu;
+    ULONG Index;
+    volatile KI_I386_BOOT_TRACE_RECORD *Record;
+
+    Cpu = KeGetCurrentProcessorNumber();
+    if (Cpu >= KI_I386_BOOT_TRACE_MAXIMUM_PROCESSORS)
+        Cpu = 0;
+
+    Index = KiI386BootTraceIndex[Cpu]++;
+    Record = &KiI386BootTraceRecords[Cpu]
+                                     [Index & (KI_I386_BOOT_TRACE_RECORDS - 1)];
+
+    Record->Magic = KI_I386_BOOT_TRACE_MAGIC;
+    Record->Version = 1;
+    Record->Sequence = Index + 1;
+    Record->Event = Event;
+    Record->Cpu = Cpu;
+    Record->Irql = KeGetCurrentIrql();
+    Record->PcrIrql = __readfsbyte(KPCR_IRQL);
+    Record->EFlags = __readeflags();
+    Record->ReturnAddress = (ULONG_PTR)_ReturnAddress();
+    Record->StackPointer = KiReadStackPointer();
+    Record->Arg0 = Arg0;
+    Record->Arg1 = Arg1;
+    Record->Arg2 = Arg2;
+    Record->Arg3 = Arg3;
+    Record->Arg4 = Arg4;
+    Record->Arg5 = Arg5;
+}
+#endif
+
+static
+VOID
+KiRecordBootProbe(IN ULONG Stage,
+                  IN ULONG PollResult,
+                  IN ULONG Cpu,
+                  IN ULONG_PTR Context0,
+                  IN ULONG_PTR Context1,
+                  IN ULONG_PTR Context2)
+{
+    KiBootProbeSnapshot.Magic = KI_BOOT_PROBE_MAGIC;
+    KiBootProbeSnapshot.Version = 2;
+    KiBootProbeSnapshot.Stage = Stage;
+    KiBootProbeSnapshot.PollResult = PollResult;
+    KiBootProbeSnapshot.Cpu = Cpu;
+    KiBootProbeSnapshot.EFlags = __readeflags();
+    KiBootProbeSnapshot.FsSelector = Ke386GetFs();
+    KiBootProbeSnapshot.Irql = __readfsbyte(KPCR_IRQL);
+    KiBootProbeSnapshot.Dr6 = __readdr(6);
+    KiBootProbeSnapshot.Dr7 = __readdr(7);
+    KiBootProbeSnapshot.PcrSelf = __readfsdword(KPCR_SELF);
+    KiBootProbeSnapshot.PcrPrcb = __readfsdword(KPCR_PRCB);
+    KiBootProbeSnapshot.ActiveProcessors = (ULONG)KeActiveProcessors;
+    KiBootProbeSnapshot.NumberProcessors = KeNumberProcessors;
+    KiBootProbeSnapshot.StackPointer = (ULONG)KiReadStackPointer();
+    KiBootProbeSnapshot.Context0 = (ULONG)Context0;
+    KiBootProbeSnapshot.Context1 = (ULONG)Context1;
+    KiBootProbeSnapshot.Context2 = (ULONG)Context2;
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xB000 | Stage,
+                           PollResult,
+                           Cpu,
+                           Context0,
+                           Context1,
+                           Context2,
+                           KiBootProbeSnapshot.StackPointer);
+#endif
+}
+
 /* FUNCTIONS *****************************************************************/
 
 CODE_SEG("INIT")
@@ -440,9 +566,23 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ULONG PageDirectory[2];
     PVOID DpcStack;
     KIRQL DummyIrql;
+    NTSTATUS Status;
+
+    KiRecordBootProbe(20,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)IdleStack);
 
     /* Initialize the Power Management Support for this PRCB */
     PoInitializePrcb(Prcb);
+    KiRecordBootProbe(201,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)IdleStack);
 
     /* Set boot-level flags */
     if (Number == 0)
@@ -477,25 +617,68 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSOFF;
         KeFeatureBits |= KF_NX_DISABLED;
     }
+    KiRecordBootProbe(202,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)IdleStack);
 
     /* Save CPU state */
     KiSaveProcessorControlState(&Prcb->ProcessorState);
+    KiRecordBootProbe(203,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)IdleStack);
 
 #if DBG
     /* Print applied kernel features/policies and boot CPU features */
     if (Number == 0)
-        KiReportCpuFeatures();
+    {
+        KiRecordBootProbe(204,
+                          0,
+                          Number,
+                          (ULONG_PTR)LoaderBlock,
+                          (ULONG_PTR)Prcb,
+                          (ULONG_PTR)IdleStack);
+        KiRecordBootProbe(205,
+                          0,
+                          Number,
+                          (ULONG_PTR)LoaderBlock,
+                          (ULONG_PTR)Prcb,
+                          (ULONG_PTR)IdleStack);
+    }
 #endif
 
     /* Get cache line information for this CPU */
     KiGetCacheInformation();
+    KiRecordBootProbe(206,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)IdleStack);
 
     /* Initialize spinlocks and DPC data */
     KiInitSpinLocks(Prcb, Number);
+    KiRecordBootProbe(207,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)IdleStack);
 
     /* Set Node Data */
     Prcb->ParentNode = KeNodeBlock[0];
     Prcb->ParentNode->ProcessorMask |= Prcb->SetMember;
+    KiRecordBootProbe(208,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)IdleStack);
 
     /* Check if this is the Boot CPU */
     if (!Number)
@@ -535,19 +718,42 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     }
     else
     {
-        /* FIXME */
-        DPRINT1("Starting CPU#%u - you are brave\n", Number);
+        DPRINT1("Starting CPU#%u at IRQL %u\n", Number, KeGetCurrentIrql());
     }
 
     /* Setup the Idle Thread */
-    KeInitializeThread(InitProcess,
-                       InitThread,
-                       NULL,
-                       NULL,
-                       NULL,
-                       NULL,
-                       NULL,
-                       IdleStack);
+    Status = KeInitThread(InitThread,
+                          IdleStack,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          InitProcess);
+    KiRecordBootProbe(212,
+                      Status,
+                      Number,
+                      (ULONG_PTR)InitThread,
+                      (ULONG_PTR)InitProcess,
+                      (ULONG_PTR)IdleStack);
+    if (NT_SUCCESS(Status))
+    {
+        if (KeGetCurrentIrql() > SYNCH_LEVEL)
+        {
+            KiStartThreadAtCurrentIrql(InitThread);
+        }
+        else
+        {
+            KeStartThread(InitThread);
+        }
+
+        KiRecordBootProbe(214,
+                          0,
+                          Number,
+                          (ULONG_PTR)InitThread,
+                          (ULONG_PTR)InitProcess,
+                          (ULONG_PTR)IdleStack);
+    }
     InitThread->NextProcessor = Number;
     InitThread->Priority = HIGH_PRIORITY;
     InitThread->State = Running;
@@ -589,8 +795,30 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     Prcb->NextThread = NULL;
     Prcb->IdleThread = InitThread;
 
+    /*
+     * Per-processor executive initialization can fault on pageable mappings and
+     * enter guarded regions, so application processors leave HIGH_LEVEL before
+     * calling it.
+     */
+    if ((Number != 0) && (KeGetCurrentIrql() > APC_LEVEL))
+    {
+        KeLowerIrql(APC_LEVEL);
+    }
+
     /* Initialize the Kernel Executive */
+    KiRecordBootProbe(21,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)InitThread);
     ExpInitializeExecutive(Number, LoaderBlock);
+    KiRecordBootProbe(22,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)InitThread);
 
     /* Only do this on the boot CPU */
     if (!Number)
@@ -621,20 +849,51 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         }
     }
 
-    /* Raise to Dispatch */
-    KeRaiseIrql(DISPATCH_LEVEL, &DummyIrql);
+    /* Idle-thread scheduling starts at DISPATCH_LEVEL on every processor. */
+    if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+    {
+        KeLowerIrql(DISPATCH_LEVEL);
+    }
+    else if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        KeRaiseIrql(DISPATCH_LEVEL, &DummyIrql);
+    }
 
     /* Set the Idle Priority to 0. This will jump into Phase 1 */
+    KiRecordBootProbe(23,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)InitThread);
     KeSetPriorityThread(InitThread, 0);
+    KiRecordBootProbe(24,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)InitThread);
 
     /* If there's no thread scheduled, put this CPU in the Idle summary */
     KiAcquirePrcbLock(Prcb);
     if (!Prcb->NextThread) KiIdleSummary |= 1 << Number;
     KiReleasePrcbLock(Prcb);
 
-    /* Raise back to HIGH_LEVEL and clear the PRCB for the loader block */
-    KeRaiseIrql(HIGH_LEVEL, &DummyIrql);
+    /*
+     * The boot processor switches stacks from HIGH_LEVEL. Application
+     * processors keep the boot-stack handoff page-faultable at DISPATCH_LEVEL.
+     */
+    if (Number == 0)
+    {
+        KeRaiseIrql(HIGH_LEVEL, &DummyIrql);
+    }
     LoaderBlock->Prcb = 0;
+    KiRecordBootProbe(25,
+                      0,
+                      Number,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Prcb,
+                      (ULONG_PTR)InitThread);
 }
 
 CODE_SEG("INIT")
@@ -690,11 +949,28 @@ KiSystemStartupBootStack(VOID)
     ULONG Cpu;
     PVOID KernelStack;
 
+    KiBootProbeSnapshot.Magic = KI_BOOT_PROBE_MAGIC;
+    KiBootProbeSnapshot.Version = 2;
+    KiBootProbeSnapshot.Stage = 10;
+    KiBootProbeSnapshot.StackPointer = (ULONG)KiReadStackPointer();
+
     LoaderBlock = KeLoaderBlock;
     Prcb = (PKPRCB)__readfsdword(KPCR_PRCB);
     Cpu = Prcb->Number;
     Thread = (PKTHREAD)LoaderBlock->Thread;
     KernelStack = (PVOID)(LoaderBlock->KernelStack & ~3);
+    KiRecordBootProbe(11,
+                      0,
+                      Cpu,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Thread,
+                      (ULONG_PTR)KernelStack);
+    KiRecordBootProbe(12,
+                      0,
+                      Cpu,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Thread,
+                      (ULONG_PTR)KernelStack);
 
     if (Cpu)
     {
@@ -703,6 +979,12 @@ KiSystemStartupBootStack(VOID)
     }
 
     /* Initialize the kernel for the current CPU */
+    KiRecordBootProbe(13,
+                      0,
+                      Cpu,
+                      (ULONG_PTR)LoaderBlock,
+                      (ULONG_PTR)Thread,
+                      (ULONG_PTR)KernelStack);
     KiInitializeKernel(&KiInitialProcess.Pcb,
                        Thread,
                        KernelStack,
@@ -717,6 +999,7 @@ KiSystemStartupBootStack(VOID)
     /* Force interrupts enabled and lower IRQL back to DISPATCH_LEVEL */
     _enable();
     KeLowerIrql(DISPATCH_LEVEL);
+    KxMarkProcessorFreezeReady();
 
     /* Set the right wait IRQL */
     Thread->WaitIrql = DISPATCH_LEVEL;
@@ -790,8 +1073,24 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize the machine type */
     KiInitializeMachineType();
 
-    /* Skip initial setup if this isn't the Boot CPU */
-    if (Cpu) goto AppCpuInit;
+    /* AP startup receives the PRCB through the loader block. */
+    if (Cpu)
+    {
+        Pcr = CONTAINING_RECORD((PKPRCB)LoaderBlock->Prcb, KIPCR, PrcbData);
+        Pcr->SelfPcr = (PKPCR)Pcr;
+        Pcr->Prcb = &Pcr->PrcbData;
+        Ke386SetFs(KGDT_R0_PCR);
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xB221,
+                               Cpu,
+                               (ULONG_PTR)Pcr,
+                               __readfsdword(KPCR_SELF),
+                               __readfsdword(KPCR_EXCEPTION_LIST),
+                               (ULONG_PTR)Pcr->NtTib.ExceptionList,
+                               Ke386GetFs());
+#endif
+        goto AppCpuInit;
+    }
 
     /* Get GDT, IDT, PCR and TSS pointers */
     KiGetMachineBootPointers(&Gdt, &Idt, &Pcr, &Tss);
@@ -859,24 +1158,39 @@ AppCpuInit:
     /* Set active processors */
     KeActiveProcessors |= __readfsdword(KPCR_SET_MEMBER);
     KeNumberProcessors++;
+    KiRecordBootProbe(1, 0, Cpu, InitialStack, (ULONG_PTR)InitialThread, 0);
 
     /* Check if this is the boot CPU */
     if (!Cpu)
     {
+        BOOLEAN PollBreakIn;
+
         /* Initialize debugging system */
         KdInitSystem(0, KeLoaderBlock);
+        KiRecordBootProbe(2, 0, Cpu, InitialStack, (ULONG_PTR)InitialThread, 0);
 
         /* Check for break-in */
-        if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+        KiRecordBootProbe(3, 0, Cpu, InitialStack, (ULONG_PTR)InitialThread, 0);
+        PollBreakIn = KdPollBreakIn();
+        KiRecordBootProbe(4, PollBreakIn, Cpu, InitialStack, (ULONG_PTR)InitialThread, 0);
+        if (PollBreakIn)
+        {
+            KiRecordBootProbe(5, PollBreakIn, Cpu, InitialStack, (ULONG_PTR)InitialThread, 0);
+            DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+        }
 
         /* Make the lowest page of the boot and double fault stack read-only */
+        KiRecordBootProbe(6, 0, Cpu, InitialStack, (ULONG_PTR)InitialThread, 0);
         KiMarkPageAsReadOnly(P0BootStackData);
+        KiRecordBootProbe(7, 0, Cpu, InitialStack, (ULONG_PTR)InitialThread, 0);
         KiMarkPageAsReadOnly(KiDoubleFaultStackData);
+        KiRecordBootProbe(8, 0, Cpu, InitialStack, (ULONG_PTR)InitialThread, 0);
     }
 
     /* Raise to HIGH_LEVEL */
     KeRaiseIrql(HIGH_LEVEL, &DummyIrql);
 
     /* Switch to new kernel stack and start kernel bootstrapping */
+    KiRecordBootProbe(9, 0, Cpu, InitialStack, (ULONG_PTR)InitialThread, 0);
     KiSwitchToBootStack(InitialStack & ~3);
 }

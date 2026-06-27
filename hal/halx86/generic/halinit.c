@@ -88,6 +88,16 @@ HalInitSystem(
     PKPRCB Prcb = KeGetCurrentPrcb();
     NTSTATUS Status;
 
+    /*
+     * Application processors complete local APIC setup through
+     * HalInitializeProcessor. System-wide HAL phases are owned by the boot
+     * processor.
+     */
+    if (Prcb->Number != 0)
+    {
+        return TRUE;
+    }
+
     /* Check the boot phase */
     if (BootPhase == 0)
     {

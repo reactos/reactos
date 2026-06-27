@@ -1226,6 +1226,13 @@ KiIsNpxErrataPresent(VOID)
     };
 #endif
 
+    /*
+     * The probe runs before normal per-thread NPX ownership exists on an AP.
+     * Leave x87 state initialized so no deferred status bit is reported after
+     * CR0 is restored.
+     */
+    Ke386FnInit();
+
     /* Restore CR0 */
     __writecr0(Cr0);
 

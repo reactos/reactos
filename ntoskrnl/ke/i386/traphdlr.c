@@ -61,9 +61,413 @@ PKDBG_POSTSERVICEHOOK KeWin32PostServiceHook = NULL;
 #if DBG
 BOOLEAN StopChecking = FALSE;
 #endif
+volatile KI_PAGE_FAULT_PROBE_SNAPSHOT KiPageFaultProbeSnapshot;
+volatile KI_PAGE_FAULT_PROBE_SNAPSHOT KiPageFaultProbeSnapshotByCpu
+    [KI_PAGE_FAULT_PROBE_MAXIMUM_PROCESSORS];
+volatile KI_TRAP_EXIT_PROBE_SNAPSHOT KiTrapExitProbeSnapshot;
+volatile KI_TRAP_EXIT_PROBE_SNAPSHOT KiTrapExitProbeSnapshotByCpu
+    [KI_TRAP_EXIT_PROBE_MAXIMUM_PROCESSORS];
+volatile ULONG KiTrapExitFinalSnapshotCount;
+volatile KI_TRAP_EXIT_FINAL_SNAPSHOT KiTrapExitFinalSnapshotByCpu
+    [KI_TRAP_EXIT_FINAL_SNAPSHOT_MAXIMUM_PROCESSORS];
+
+#if DBG && defined(_M_IX86)
+#define KI_RAW_COM1_BASE 0x3F8
+#define KI_RAW_COM1_LINE_STATUS 5
+#define KI_RAW_COM1_TRANSMIT_EMPTY 0x20
+
+static
+VOID
+NTAPI
+KiRawCom1WriteByte(
+    _In_ UCHAR Character)
+{
+    ULONG SpinCount = 100000;
+
+    while (SpinCount-- != 0)
+    {
+        if (READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)(KI_RAW_COM1_BASE +
+                                                KI_RAW_COM1_LINE_STATUS)) &
+            KI_RAW_COM1_TRANSMIT_EMPTY)
+            break;
+    }
+
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)KI_RAW_COM1_BASE, Character);
+}
+
+static
+VOID
+NTAPI
+KiRawCom1WriteString(
+    _In_z_ const CHAR *String)
+{
+    while (*String != ANSI_NULL)
+    {
+        if (*String == '\n')
+            KiRawCom1WriteByte('\r');
+
+        KiRawCom1WriteByte(*String++);
+    }
+}
+
+static
+ULONG
+NTAPI
+KiPackProcessImageNamePart(
+    _In_opt_ PEPROCESS Process,
+    _In_ ULONG Offset)
+{
+    ULONG Index;
+    ULONG Part = 0;
+    PUCHAR PartBytes = (PUCHAR)&Part;
+    PUCHAR ImageName;
+
+    if ((Process == NULL) || (Offset >= sizeof(Process->ImageFileName)))
+        return 0;
+
+    ImageName = (PUCHAR)Process->ImageFileName;
+    for (Index = 0; Index < sizeof(Part); Index++)
+    {
+        if ((Offset + Index) >= sizeof(Process->ImageFileName))
+            break;
+
+        PartBytes[Index] = ImageName[Offset + Index];
+    }
+
+    return Part;
+}
+
+static
+VOID
+NTAPI
+KiRawCom1WriteHex(
+    _In_ ULONG_PTR Value)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < 8; Index++)
+    {
+        ULONG Nibble = (Value >> (28 - Index * 4)) & 0xF;
+
+        KiRawCom1WriteByte((UCHAR)(Nibble < 10 ? ('0' + Nibble) :
+                                               ('A' + Nibble - 10)));
+    }
+}
+
+static
+VOID
+NTAPI
+KiRawCom1WriteField(
+    _In_z_ const CHAR *Name,
+    _In_ ULONG_PTR Value)
+{
+    KiRawCom1WriteByte(' ');
+    KiRawCom1WriteString(Name);
+    KiRawCom1WriteByte('=');
+    KiRawCom1WriteHex(Value);
+}
+
+static
+VOID
+NTAPI
+KiRawCom1DumpFastFail(
+    _In_ PKTRAP_FRAME TrapFrame)
+{
+    PKPCR Pcr = KeGetPcr();
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    PKTHREAD Thread = KeGetCurrentThread();
+
+    KiRawCom1WriteString("\nKiRawFastFail");
+    KiRawCom1WriteField("cpu", KeGetCurrentProcessorNumber());
+    KiRawCom1WriteField("irql", KeGetCurrentIrql());
+    KiRawCom1WriteField("pcrirql", Pcr->Irql);
+    KiRawCom1WriteField("code", TrapFrame->Ecx);
+    KiRawCom1WriteField("tf", (ULONG_PTR)TrapFrame);
+    KiRawCom1WriteField("eip", TrapFrame->Eip);
+    KiRawCom1WriteField("cs", TrapFrame->SegCs);
+    KiRawCom1WriteField("eflags", TrapFrame->EFlags);
+    KiRawCom1WriteField("esp", TrapFrame->TempEsp != 0 ?
+                               TrapFrame->TempEsp :
+                               TrapFrame->HardwareEsp);
+    KiRawCom1WriteField("tempesp", TrapFrame->TempEsp);
+    KiRawCom1WriteField("hwdsp", TrapFrame->HardwareEsp);
+    KiRawCom1WriteField("ebp", TrapFrame->Ebp);
+    KiRawCom1WriteField("eax", TrapFrame->Eax);
+    KiRawCom1WriteField("ebx", TrapFrame->Ebx);
+    KiRawCom1WriteField("ecx", TrapFrame->Ecx);
+    KiRawCom1WriteField("edx", TrapFrame->Edx);
+    KiRawCom1WriteField("esi", TrapFrame->Esi);
+    KiRawCom1WriteField("edi", TrapFrame->Edi);
+    KiRawCom1WriteField("thread", (ULONG_PTR)Thread);
+    KiRawCom1WriteField("state", Thread != NULL ? Thread->State : MAXULONG);
+    KiRawCom1WriteField("next", Thread != NULL ? Thread->NextProcessor : MAXULONG);
+    KiRawCom1WriteField("defer", Thread != NULL ? Thread->DeferredProcessor : MAXULONG);
+    KiRawCom1WriteField("prio", Thread != NULL ? Thread->Priority : MAXULONG);
+    KiRawCom1WriteField("aff", Thread != NULL ? Thread->Affinity : 0);
+    KiRawCom1WriteField("wflink", Thread != NULL ? (ULONG_PTR)Thread->WaitListEntry.Flink : 0);
+    KiRawCom1WriteField("wblink", Thread != NULL ? (ULONG_PTR)Thread->WaitListEntry.Blink : 0);
+    KiRawCom1WriteField("preempt", Thread != NULL ? Thread->Preempted : 0);
+    KiRawCom1WriteField("prq", Thread != NULL ? Thread->ProcessReadyQueue : 0);
+    KiRawCom1WriteField("waitirql", Thread != NULL ? Thread->WaitIrql : MAXULONG);
+    KiRawCom1WriteField("prcb", (ULONG_PTR)Prcb);
+    KiRawCom1WriteField("pnum", Prcb != NULL ? Prcb->Number : MAXULONG);
+    KiRawCom1WriteField("set", Prcb != NULL ? Prcb->SetMember : 0);
+    KiRawCom1WriteField("ready", Prcb != NULL ? Prcb->ReadySummary : 0);
+    KiRawCom1WriteField("cur", Prcb != NULL ? (ULONG_PTR)Prcb->CurrentThread : 0);
+    KiRawCom1WriteField("nxt", Prcb != NULL ? (ULONG_PTR)Prcb->NextThread : 0);
+    KiRawCom1WriteField("idle", Prcb != NULL ? (ULONG_PTR)Prcb->IdleThread : 0);
+    KiRawCom1WriteByte('\n');
+}
+
+static
+VOID
+NTAPI
+KiRawCom1DumpDebugService(
+    _In_ ULONG Stage,
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ ULONG_PTR Parameter1,
+    _In_ ULONG_PTR Parameter2,
+    _In_ ULONG_PTR Parameter3)
+{
+    KiRawCom1WriteString("\nKiDbgSvc");
+    KiRawCom1WriteField("stage", Stage);
+    KiRawCom1WriteField("cpu", KeGetCurrentProcessorNumber());
+    KiRawCom1WriteField("irql", KeGetCurrentIrql());
+    KiRawCom1WriteField("tf", (ULONG_PTR)TrapFrame);
+    KiRawCom1WriteField("eip", TrapFrame->Eip);
+    KiRawCom1WriteField("eflags", TrapFrame->EFlags);
+    KiRawCom1WriteField("eax", TrapFrame->Eax);
+    KiRawCom1WriteField("ecx", TrapFrame->Ecx);
+    KiRawCom1WriteField("edx", TrapFrame->Edx);
+    KiRawCom1WriteField("p1", Parameter1);
+    KiRawCom1WriteField("p2", Parameter2);
+    KiRawCom1WriteField("p3", Parameter3);
+    KiRawCom1WriteByte('\n');
+}
+
+static
+VOID
+NTAPI
+KiRawCom1DumpTrap0E(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ ULONG_PTR Cr2,
+    _In_ ULONG_PTR PreviousTrapFrame)
+{
+    PKPCR Pcr = KeGetPcr();
+    PKTHREAD Thread = KeGetCurrentThread();
+    ULONG_PTR KernelStack = 0;
+    ULONG_PTR InitialStack = 0;
+
+    if (Thread != NULL)
+    {
+        KernelStack = (ULONG_PTR)Thread->KernelStack;
+        InitialStack = (ULONG_PTR)Thread->InitialStack;
+    }
+
+    KiRawCom1WriteString("\nKiRawTrap0E");
+    KiRawCom1WriteField("cpu", KeGetCurrentProcessorNumber());
+    KiRawCom1WriteField("irql", KeGetCurrentIrql());
+    KiRawCom1WriteField("pcrirql", Pcr->Irql);
+    KiRawCom1WriteField("irr", Pcr->IRR);
+    KiRawCom1WriteField("idr", Pcr->IDR);
+    KiRawCom1WriteField("cr2", Cr2);
+    KiRawCom1WriteField("tf", (ULONG_PTR)TrapFrame);
+    KiRawCom1WriteField("prevtf", PreviousTrapFrame);
+    KiRawCom1WriteField("thread", (ULONG_PTR)Thread);
+    KiRawCom1WriteField("eip", TrapFrame->Eip);
+    KiRawCom1WriteField("cs", TrapFrame->SegCs);
+    KiRawCom1WriteField("eflags", TrapFrame->EFlags);
+    KiRawCom1WriteField("live", __readeflags());
+    KiRawCom1WriteField("err", TrapFrame->ErrCode);
+    KiRawCom1WriteField("esp", TrapFrame->TempEsp != 0 ?
+                               TrapFrame->TempEsp :
+                               TrapFrame->HardwareEsp);
+    KiRawCom1WriteField("tempesp", TrapFrame->TempEsp);
+    KiRawCom1WriteField("hwdsp", TrapFrame->HardwareEsp);
+    KiRawCom1WriteField("ebp", TrapFrame->Ebp);
+    KiRawCom1WriteField("eax", TrapFrame->Eax);
+    KiRawCom1WriteField("ebx", TrapFrame->Ebx);
+    KiRawCom1WriteField("ecx", TrapFrame->Ecx);
+    KiRawCom1WriteField("edx", TrapFrame->Edx);
+    KiRawCom1WriteField("esi", TrapFrame->Esi);
+    KiRawCom1WriteField("edi", TrapFrame->Edi);
+    KiRawCom1WriteField("kstack", KernelStack);
+    KiRawCom1WriteField("istack", InitialStack);
+    KiRawCom1WriteField("pcr", (ULONG_PTR)Pcr->SelfPcr);
+    KiRawCom1WriteField("prcb", (ULONG_PTR)Pcr->Prcb);
+    KiRawCom1WriteByte('\n');
+}
+#endif
 
 
 /* TRAP EXIT CODE *************************************************************/
+
+static
+VOID
+NTAPI
+KiStorePageFaultProbe(
+    _Out_ volatile KI_PAGE_FAULT_PROBE_SNAPSHOT *Snapshot,
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ ULONG_PTR Cr2,
+    _In_ ULONG Stage,
+    _In_ ULONG_PTR PreviousTrapFrame,
+    _In_ ULONG Count)
+{
+    PKPCR Pcr = KeGetPcr();
+    PKTHREAD Thread = KeGetCurrentThread();
+    ULONG_PTR KernelStack = 0;
+    ULONG_PTR InitialStack = 0;
+
+    if (Thread != NULL)
+    {
+        KernelStack = (ULONG_PTR)Thread->KernelStack;
+        InitialStack = (ULONG_PTR)Thread->InitialStack;
+    }
+
+    Snapshot->Magic = KI_PAGE_FAULT_PROBE_MAGIC;
+    Snapshot->Version = 1;
+    Snapshot->Count = Count;
+    Snapshot->Stage = Stage;
+    Snapshot->Cpu = KeGetCurrentProcessorNumber();
+    Snapshot->Irql = KeGetCurrentIrql();
+    Snapshot->PcrIrql = Pcr->Irql;
+    Snapshot->PcrIrr = Pcr->IRR;
+    Snapshot->PcrIdr = Pcr->IDR;
+    Snapshot->EFlags = TrapFrame->EFlags;
+    Snapshot->CurrentEFlags = __readeflags();
+    Snapshot->SegCs = TrapFrame->SegCs;
+    Snapshot->SegFs = TrapFrame->SegFs;
+    Snapshot->ErrCode = TrapFrame->ErrCode;
+    Snapshot->Cr2 = Cr2;
+    Snapshot->Eip = TrapFrame->Eip;
+    Snapshot->HardwareEsp = TrapFrame->HardwareEsp;
+    Snapshot->Ebp = TrapFrame->Ebp;
+    Snapshot->Eax = TrapFrame->Eax;
+    Snapshot->Edx = TrapFrame->Edx;
+    Snapshot->TrapFrame = (ULONG_PTR)TrapFrame;
+    Snapshot->PreviousTrapFrame = PreviousTrapFrame;
+    Snapshot->Thread = (ULONG_PTR)Thread;
+    Snapshot->KernelStack = KernelStack;
+    Snapshot->InitialStack = InitialStack;
+    Snapshot->PcrSelf = (ULONG_PTR)Pcr->SelfPcr;
+    Snapshot->PcrPrcb = (ULONG_PTR)Pcr->Prcb;
+    Snapshot->ExceptionList = (ULONG_PTR)TrapFrame->ExceptionList;
+    Snapshot->PcrExceptionList = (ULONG_PTR)Pcr->NtTib.ExceptionList;
+}
+
+static
+VOID
+NTAPI
+KiRecordPageFaultProbe(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ ULONG_PTR Cr2,
+    _In_ ULONG Stage,
+    _In_ ULONG_PTR PreviousTrapFrame)
+{
+    ULONG Cpu = KeGetCurrentProcessorNumber();
+    ULONG Count = KiPageFaultProbeSnapshot.Count + 1;
+
+    KiStorePageFaultProbe(&KiPageFaultProbeSnapshot,
+                          TrapFrame,
+                          Cr2,
+                          Stage,
+                          PreviousTrapFrame,
+                          Count);
+    if (Cpu < KI_PAGE_FAULT_PROBE_MAXIMUM_PROCESSORS)
+    {
+        KiStorePageFaultProbe(&KiPageFaultProbeSnapshotByCpu[Cpu],
+                              TrapFrame,
+                              Cr2,
+                              Stage,
+                              PreviousTrapFrame,
+                              Count);
+    }
+}
+
+#if DBG && defined(_M_IX86)
+static
+VOID
+NTAPI
+KiTracePageFaultProbe(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ ULONG_PTR Cr2,
+    _In_ ULONG Stage,
+    _In_ ULONG Event,
+    _In_ ULONG_PTR Detail,
+    _In_ ULONG_PTR PreviousTrapFrame)
+{
+    KiRecordPageFaultProbe(TrapFrame, Cr2, Stage, PreviousTrapFrame);
+    KiI386BootTraceRecord(Event,
+                          (ULONG_PTR)TrapFrame,
+                          Cr2,
+                          TrapFrame->Eip,
+                          TrapFrame->ErrCode,
+                          Detail,
+                          PreviousTrapFrame);
+}
+
+static
+VOID
+NTAPI
+KiTraceKernelTrapReturnProvenance(
+    _In_ PKTRAP_FRAME TrapFrame)
+{
+    PKPCR Pcr;
+    PKPRCB Prcb;
+    PKTHREAD Thread;
+    PKTRAP_FRAME FixedTrapFrame;
+    ULONG_PTR KernelStack;
+    ULONG_PTR InitialStack;
+    ULONG_PTR StackLimit;
+    ULONG_PTR TrapStack;
+
+    if ((KeGetCurrentIrql() < DISPATCH_LEVEL) ||
+        KiUserTrap(TrapFrame) ||
+        (TrapFrame->EFlags & EFLAGS_V86_MASK))
+    {
+        return;
+    }
+
+    Pcr = KeGetPcr();
+    Prcb = KeGetCurrentPrcb();
+    Thread = KeGetCurrentThread();
+    FixedTrapFrame = NULL;
+    KernelStack = 0;
+    InitialStack = 0;
+    StackLimit = 0;
+    TrapStack = KeGetTrapFrameStackRegister(TrapFrame);
+
+    if (Thread != NULL)
+    {
+        FixedTrapFrame = KeGetTrapFrame(Thread);
+        KernelStack = (ULONG_PTR)Thread->KernelStack;
+        InitialStack = (ULONG_PTR)Thread->InitialStack;
+        StackLimit = (ULONG_PTR)Thread->StackLimit;
+    }
+
+    KiI386BootTraceRecord(0xE170,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          TrapFrame->SegCs,
+                          TrapFrame->EFlags,
+                          TrapFrame->HardwareEsp,
+                          TrapStack);
+    KiI386BootTraceRecord(0xE171,
+                          (ULONG_PTR)Thread,
+                          Thread != NULL ? (ULONG_PTR)Thread->TrapFrame : 0,
+                          (ULONG_PTR)FixedTrapFrame,
+                          KernelStack,
+                          InitialStack,
+                          StackLimit);
+    KiI386BootTraceRecord(0xE172,
+                          (ULONG_PTR)Prcb,
+                          (ULONG_PTR)Prcb->CurrentThread,
+                          (ULONG_PTR)Prcb->NextThread,
+                          Prcb->SetMember,
+                          Prcb->ReadySummary,
+                          (ULONG_PTR)Pcr->NtTib.ExceptionList);
+}
+#endif
 
 FORCEINLINE
 BOOLEAN
@@ -98,11 +502,31 @@ KiCommonExit(IN PKTRAP_FRAME TrapFrame, BOOLEAN SkipPreviousMode)
     /* Disable interrupts until we return */
     _disable();
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE120,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          (ULONG_PTR)TrapFrame->ExceptionList,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList,
+                          SkipPreviousMode,
+                          KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+
     /* Check for APC delivery */
     KiCheckForApcDelivery(TrapFrame);
 
     /* Restore the SEH handler chain */
     KeGetPcr()->NtTib.ExceptionList = TrapFrame->ExceptionList;
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE121,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          (ULONG_PTR)TrapFrame->ExceptionList,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList,
+                          SkipPreviousMode,
+                          KeGetTrapFrameStackRegister(TrapFrame));
+#endif
 
     /* Check if there are active debug registers */
     if (__builtin_expect(TrapFrame->Dr7 & ~DR7_RESERVED_MASK, 0))
@@ -128,17 +552,93 @@ KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
     /* Common trap exit code */
     KiCommonExit(TrapFrame, TRUE);
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE123,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          TrapFrame->SegCs,
+                          TrapFrame->EFlags,
+                          (ULONG_PTR)TrapFrame->ExceptionList,
+                          KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+
     /* Check if this was a V8086 trap */
-    if (TrapFrame->EFlags & EFLAGS_V86_MASK) KiTrapReturnNoSegments(TrapFrame);
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK)
+    {
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE124,
+                              (ULONG_PTR)TrapFrame,
+                              TrapFrame->Eip,
+                              TrapFrame->SegCs,
+                              TrapFrame->EFlags,
+                              (ULONG_PTR)TrapFrame->ExceptionList,
+                              KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+        KiTrapReturnNoSegments(TrapFrame);
+    }
 
     /* Check for user mode exit */
-    if (KiUserTrap(TrapFrame)) KiTrapReturn(TrapFrame);
+    if (KiUserTrap(TrapFrame))
+    {
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE125,
+                              (ULONG_PTR)TrapFrame,
+                              TrapFrame->Eip,
+                              TrapFrame->SegCs,
+                              TrapFrame->EFlags,
+                              (ULONG_PTR)TrapFrame->ExceptionList,
+                              KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+        KiTrapReturn(TrapFrame);
+    }
 
     /* Check for edited frame */
-    if (KiIsFrameEdited(TrapFrame)) KiEditedTrapReturn(TrapFrame);
+    if (KiIsFrameEdited(TrapFrame))
+    {
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE126,
+                              (ULONG_PTR)TrapFrame,
+                              TrapFrame->Eip,
+                              TrapFrame->SegCs,
+                              TrapFrame->EFlags,
+                              (ULONG_PTR)TrapFrame->ExceptionList,
+                              KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+        KiEditedTrapReturn(TrapFrame);
+    }
 
     /* Check if we have single stepping enabled */
-    if (TrapFrame->EFlags & EFLAGS_TF) KiTrapReturnNoSegments(TrapFrame);
+    if (TrapFrame->EFlags & EFLAGS_TF)
+    {
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE127,
+                              (ULONG_PTR)TrapFrame,
+                              TrapFrame->Eip,
+                              TrapFrame->SegCs,
+                              TrapFrame->EFlags,
+                              (ULONG_PTR)TrapFrame->ExceptionList,
+                              KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+        KiTrapReturnNoSegments(TrapFrame);
+    }
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE122,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          (ULONG_PTR)TrapFrame->ExceptionList,
+                          (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList,
+                          TrapFrame->EFlags,
+                          KeGetTrapFrameStackRegister(TrapFrame));
+    KiTraceKernelTrapReturnProvenance(TrapFrame);
+    KiI386BootTraceRecord(0xE128,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          TrapFrame->SegCs,
+                          TrapFrame->EFlags,
+                          (ULONG_PTR)TrapFrame->ExceptionList,
+                          KeGetTrapFrameStackRegister(TrapFrame));
+#endif
 
     /* Exit the trap to kernel mode */
     KiTrapReturnNoSegmentsRet8(TrapFrame);
@@ -159,8 +659,28 @@ KiServiceExit(IN PKTRAP_FRAME TrapFrame,
     /* Common trap exit code */
     KiCommonExit(TrapFrame, FALSE);
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE140,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          Status,
+                          TrapFrame->PreviousPreviousMode,
+                          TrapFrame->EFlags,
+                          KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+
     /* Restore previous mode */
     KeGetCurrentThread()->PreviousMode = (CCHAR)TrapFrame->PreviousPreviousMode;
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE141,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          TrapFrame->PreviousPreviousMode,
+                          KeGetCurrentThread()->PreviousMode,
+                          TrapFrame->EFlags,
+                          KeGetTrapFrameStackRegister(TrapFrame));
+#endif
 
     /* Check for user mode exit */
     if (KiUserTrap(TrapFrame))
@@ -168,16 +688,44 @@ KiServiceExit(IN PKTRAP_FRAME TrapFrame,
         /* Check if we were single stepping */
         if (TrapFrame->EFlags & EFLAGS_TF)
         {
+#if DBG && defined(_M_IX86)
+            KiI386BootTraceRecord(0xE142,
+                                  (ULONG_PTR)TrapFrame,
+                                  TrapFrame->Eip,
+                                  TrapFrame->SegCs,
+                                  TrapFrame->EFlags,
+                                  KiFastCallExitHandler == KiSystemCallTrapReturn,
+                                  KeGetTrapFrameStackRegister(TrapFrame));
+#endif
             /* Must use the IRET handler */
             KiSystemCallTrapReturn(TrapFrame);
         }
         else
         {
+#if DBG && defined(_M_IX86)
+            KiI386BootTraceRecord(0xE143,
+                                  (ULONG_PTR)TrapFrame,
+                                  TrapFrame->Eip,
+                                  TrapFrame->SegCs,
+                                  TrapFrame->EFlags,
+                                  (ULONG_PTR)KiFastCallExitHandler,
+                                  KeGetTrapFrameStackRegister(TrapFrame));
+#endif
             /* We can use the sysexit handler */
             KiFastCallExitHandler(TrapFrame);
             UNREACHABLE;
         }
     }
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE144,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          TrapFrame->SegCs,
+                          TrapFrame->EFlags,
+                          (ULONG_PTR)TrapFrame->ExceptionList,
+                          KeGetTrapFrameStackRegister(TrapFrame));
+#endif
 
     /* Exit to kernel mode */
     KiSystemCallReturn(TrapFrame);
@@ -191,20 +739,122 @@ KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
     /* Common trap exit code */
     KiCommonExit(TrapFrame, FALSE);
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE150,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          TrapFrame->SegCs,
+                          TrapFrame->PreviousPreviousMode,
+                          TrapFrame->EFlags,
+                          KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+
     /* Restore previous mode */
     KeGetCurrentThread()->PreviousMode = (CCHAR)TrapFrame->PreviousPreviousMode;
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE151,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          TrapFrame->PreviousPreviousMode,
+                          KeGetCurrentThread()->PreviousMode,
+                          TrapFrame->EFlags,
+                          KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+
     /* Check if this was a V8086 trap */
-    if (TrapFrame->EFlags & EFLAGS_V86_MASK) KiTrapReturnNoSegments(TrapFrame);
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK)
+    {
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE152,
+                              (ULONG_PTR)TrapFrame,
+                              TrapFrame->Eip,
+                              TrapFrame->SegCs,
+                              TrapFrame->EFlags,
+                              (ULONG_PTR)TrapFrame->ExceptionList,
+                              KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+        KiTrapReturnNoSegments(TrapFrame);
+    }
 
     /* Check for user mode exit */
-    if (KiUserTrap(TrapFrame)) KiTrapReturn(TrapFrame);
+    if (KiUserTrap(TrapFrame))
+    {
+#if DBG && defined(_M_IX86)
+        PETHREAD CurrentThread = PsGetCurrentThread();
+        PEPROCESS CurrentProcess = PsGetCurrentProcess();
+
+        KiI386BootTraceRecord(0xE157,
+                              (ULONG_PTR)TrapFrame,
+                              (ULONG_PTR)CurrentThread,
+                              (ULONG_PTR)CurrentProcess,
+                              (ULONG_PTR)CurrentThread->Cid.UniqueThread,
+                              (ULONG_PTR)CurrentThread->Cid.UniqueProcess,
+                              (ULONG_PTR)CurrentThread->Tcb.ApcState.Process);
+        KiI386BootTraceRecord(0xE158,
+                              (ULONG_PTR)TrapFrame,
+                              TrapFrame->Eip,
+                              KiPackProcessImageNamePart(CurrentProcess, 0),
+                              KiPackProcessImageNamePart(CurrentProcess, 4),
+                              KiPackProcessImageNamePart(CurrentProcess, 8),
+                              KiPackProcessImageNamePart(CurrentProcess, 12));
+        KiI386BootTraceRecord(0xE153,
+                              (ULONG_PTR)TrapFrame,
+                              TrapFrame->Eip,
+                              TrapFrame->SegCs,
+                              TrapFrame->EFlags,
+                              (ULONG_PTR)TrapFrame->ExceptionList,
+                              KeGetTrapFrameStackRegister(TrapFrame));
+        KiI386BootTraceRecord(0xE159,
+                              (ULONG_PTR)TrapFrame,
+                              TrapFrame->HardwareEsp,
+                              TrapFrame->HardwareSegSs,
+                              TrapFrame->SegDs,
+                              TrapFrame->SegEs,
+                              TrapFrame->SegFs);
+#endif
+        KiTrapReturn(TrapFrame);
+    }
 
     /* Check for edited frame */
-    if (KiIsFrameEdited(TrapFrame)) KiEditedTrapReturn(TrapFrame);
+    if (KiIsFrameEdited(TrapFrame))
+    {
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE154,
+                              (ULONG_PTR)TrapFrame,
+                              TrapFrame->Eip,
+                              TrapFrame->SegCs,
+                              TrapFrame->EFlags,
+                              (ULONG_PTR)TrapFrame->ExceptionList,
+                              KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+        KiEditedTrapReturn(TrapFrame);
+    }
 
     /* Check if we have single stepping enabled */
-    if (TrapFrame->EFlags & EFLAGS_TF) KiTrapReturnNoSegments(TrapFrame);
+    if (TrapFrame->EFlags & EFLAGS_TF)
+    {
+#if DBG && defined(_M_IX86)
+        KiI386BootTraceRecord(0xE155,
+                              (ULONG_PTR)TrapFrame,
+                              TrapFrame->Eip,
+                              TrapFrame->SegCs,
+                              TrapFrame->EFlags,
+                              (ULONG_PTR)TrapFrame->ExceptionList,
+                              KeGetTrapFrameStackRegister(TrapFrame));
+#endif
+        KiTrapReturnNoSegments(TrapFrame);
+    }
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE156,
+                          (ULONG_PTR)TrapFrame,
+                          TrapFrame->Eip,
+                          TrapFrame->SegCs,
+                          TrapFrame->EFlags,
+                          (ULONG_PTR)TrapFrame->ExceptionList,
+                          KeGetTrapFrameStackRegister(TrapFrame));
+#endif
 
     /* Exit the trap to kernel mode */
     KiTrapReturnNoSegmentsRet8(TrapFrame);
@@ -226,6 +876,17 @@ KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
 
     /* Enable interrupts if the trap came from user-mode */
     if (KiUserTrap(TrapFrame)) _enable();
+
+#if DBG && defined(_M_IX86)
+    if (Parameter1 == BREAKPOINT_LOAD_SYMBOLS)
+    {
+        KiRawCom1DumpDebugService(0x2D10,
+                                  TrapFrame,
+                                  Parameter1,
+                                  Parameter2,
+                                  Parameter3);
+    }
+#endif
 
     /* Dispatch the exception. Fix EIP in case its a break breakpoint (sic) */
     KiDispatchExceptionFromTrapFrame(STATUS_BREAKPOINT,
@@ -884,6 +1545,14 @@ KiTrap09Handler(IN PKTRAP_FRAME TrapFrame)
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
+    DPRINT1("KiTrap09Handler: cpu=%u eip=%p esp=%p eflags=%lx cr0=%lx cr4=%lx\n",
+            KeGetCurrentProcessorNumber(),
+            (PVOID)TrapFrame->Eip,
+            (PVOID)KeGetTrapFrameStackRegister(TrapFrame),
+            TrapFrame->EFlags,
+            __readcr0(),
+            __readcr4());
+
     /* Enable interrupts and kill the system */
     _enable();
     KiSystemFatalException(EXCEPTION_NPX_OVERRUN, TrapFrame);
@@ -1259,15 +1928,28 @@ KiCheckForSListFault(PKTRAP_FRAME TrapFrame)
         ULARGE_INTEGER SListHeader;
         PVOID ResumeAddress;
 
+        PUCHAR Instruction = (PUCHAR)TrapFrame->Eip;
+
         /* Sanity check that the assembly is correct:
-           This must be mov ebx, [eax]
-           Followed by cmpxchg8b [ebp] */
-        ASSERT((((UCHAR*)TrapFrame->Eip)[0] == 0x8B) &&
-               (((UCHAR*)TrapFrame->Eip)[1] == 0x18) &&
-               (((UCHAR*)TrapFrame->Eip)[2] == 0x0F) &&
-               (((UCHAR*)TrapFrame->Eip)[3] == 0xC7) &&
-               (((UCHAR*)TrapFrame->Eip)[4] == 0x4D) &&
-               (((UCHAR*)TrapFrame->Eip)[5] == 0x00));
+           mov ebx, [eax], followed by cmpxchg8b [ebp].
+           SMP builds lock-prefix the cmpxchg8b instruction. */
+        ASSERT((Instruction[0] == 0x8B) &&
+               (Instruction[1] == 0x18));
+
+        if (Instruction[2] == 0xF0)
+        {
+            ASSERT((Instruction[3] == 0x0F) &&
+                   (Instruction[4] == 0xC7) &&
+                   (Instruction[5] == 0x4D) &&
+                   (Instruction[6] == 0x00));
+        }
+        else
+        {
+            ASSERT((Instruction[2] == 0x0F) &&
+                   (Instruction[3] == 0xC7) &&
+                   (Instruction[4] == 0x4D) &&
+                   (Instruction[5] == 0x00));
+        }
 
         /* Check if this is a user fault */
         if (TrapFrame->Eip == (ULONG_PTR)KeUserPopEntrySListFault)
@@ -1321,18 +2003,23 @@ FASTCALL
 KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
+    PKTRAP_FRAME CurrentTrapFrame;
     ULONG_PTR Cr2;
+    ULONG_PTR PreviousTrapFrame;
     NTSTATUS Status;
+
+    Thread = KeGetCurrentThread();
+    CurrentTrapFrame = Thread != NULL ? KeGetTrapFrame(Thread) : NULL;
+    PreviousTrapFrame = (ULONG_PTR)CurrentTrapFrame;
 
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
     /* Check if this is the base frame */
-    Thread = KeGetCurrentThread();
-    if (KeGetTrapFrame(Thread) != TrapFrame)
+    if ((CurrentTrapFrame != NULL) && (CurrentTrapFrame != TrapFrame))
     {
         /* It isn't, check if this is a second nested frame */
-        if (((ULONG_PTR)KeGetTrapFrame(Thread) - (ULONG_PTR)TrapFrame) <=
+        if (((ULONG_PTR)CurrentTrapFrame - (ULONG_PTR)TrapFrame) <=
             FIELD_OFFSET(KTRAP_FRAME, EFlags))
         {
             /* The stack is somewhere in between frames, we need to fix it */
@@ -1343,12 +2030,57 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     /* Save CR2 */
     Cr2 = __readcr2();
 
+#if DBG && defined(_M_IX86)
+    KiTracePageFaultProbe(TrapFrame,
+                          Cr2,
+                          2,
+                          0xE133,
+                          TrapFrame->EFlags,
+                          PreviousTrapFrame);
+#endif
+
     /* Enable interrupts */
     _enable();
 
     /* Check if we came in with interrupts disabled */
     if (!(TrapFrame->EFlags & EFLAGS_INTERRUPT_MASK))
     {
+#if DBG && defined(_M_IX86)
+        PETHREAD CurrentThread = PsGetCurrentThread();
+        PEPROCESS CurrentProcess = CurrentThread != NULL ?
+                                   CurrentThread->ThreadsProcess : NULL;
+
+        KiI386BootTraceRecord(0xE130,
+                              (ULONG_PTR)TrapFrame,
+                              Cr2,
+                              TrapFrame->Eip,
+                              (ULONG_PTR)TrapFrame->ExceptionList,
+                              PreviousTrapFrame,
+                              TrapFrame->EFlags);
+        KiI386BootTraceRecord(0xE131,
+                              (ULONG_PTR)TrapFrame,
+                              (ULONG_PTR)CurrentThread,
+                              (ULONG_PTR)CurrentProcess,
+                              CurrentThread != NULL ?
+                                  (ULONG_PTR)CurrentThread->Cid.UniqueThread :
+                                  0,
+                              CurrentThread != NULL ?
+                                  (ULONG_PTR)CurrentThread->Cid.UniqueProcess :
+                                  0,
+                              (ULONG_PTR)Thread);
+        KiI386BootTraceRecord(0xE132,
+                              (ULONG_PTR)TrapFrame,
+                              TrapFrame->Eip,
+                              KiPackProcessImageNamePart(CurrentProcess, 0),
+                              KiPackProcessImageNamePart(CurrentProcess, 4),
+                              KiPackProcessImageNamePart(CurrentProcess, 8),
+                              KiPackProcessImageNamePart(CurrentProcess, 12));
+#endif
+        KiRecordPageFaultProbe(TrapFrame, Cr2, 1, PreviousTrapFrame);
+#if DBG && defined(_M_IX86)
+        KiRawCom1DumpTrap0E(TrapFrame, Cr2, PreviousTrapFrame);
+#endif
+
         /* This is completely illegal, bugcheck the system */
         KeBugCheckWithTf(IRQL_NOT_LESS_OR_EQUAL,
                          Cr2,
@@ -1366,12 +2098,58 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     }
 
     /* Call the access fault handler */
+#if DBG && defined(_M_IX86)
+    KiTracePageFaultProbe(TrapFrame,
+                          Cr2,
+                          3,
+                          0xE134,
+                          KiUserTrap(TrapFrame),
+                          PreviousTrapFrame);
+#endif
     Status = MmAccessFault(TrapFrame->ErrCode,
                            (PVOID)Cr2,
                            KiUserTrap(TrapFrame),
                            TrapFrame);
+#if DBG && defined(_M_IX86)
+    KiTracePageFaultProbe(TrapFrame,
+                          Cr2,
+                          4,
+                          0xE135,
+                          Status,
+                          PreviousTrapFrame);
+    {
+        PKPRCB CurrentPrcbProbe = KeGetCurrentPrcb();
+
+        KiI386BootTraceRecord(0xE13A,
+                              (ULONG_PTR)TrapFrame,
+                              (ULONG_PTR)Thread,
+                              (ULONG_PTR)KeGetCurrentThread(),
+                              (ULONG_PTR)CurrentPrcbProbe->CurrentThread,
+                              (ULONG_PTR)CurrentPrcbProbe->NextThread,
+                              (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+    }
+#endif
     if (NT_SUCCESS(Status))
     {
+#if DBG && defined(_M_IX86)
+        KiTracePageFaultProbe(TrapFrame,
+                              Cr2,
+                              5,
+                              0xE136,
+                              Status,
+                              PreviousTrapFrame);
+        {
+            PKPRCB CurrentPrcbProbe = KeGetCurrentPrcb();
+
+            KiI386BootTraceRecord(0xE13B,
+                                  (ULONG_PTR)TrapFrame,
+                                  (ULONG_PTR)Thread,
+                                  (ULONG_PTR)KeGetCurrentThread(),
+                                  (ULONG_PTR)CurrentPrcbProbe->CurrentThread,
+                                  (ULONG_PTR)CurrentPrcbProbe->NextThread,
+                                  (ULONG_PTR)KeGetPcr()->NtTib.ExceptionList);
+        }
+#endif
         /* Check whether the kernel debugger has owed breakpoints to be inserted */
         KdSetOwedBreakpoints();
         /* We succeeded, return */
@@ -1405,6 +2183,14 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     /* Either kernel or user trap (non VDM) so dispatch exception */
     if (Status == STATUS_ACCESS_VIOLATION)
     {
+#if DBG && defined(_M_IX86)
+        KiTracePageFaultProbe(TrapFrame,
+                              Cr2,
+                              6,
+                              0xE137,
+                              Status,
+                              PreviousTrapFrame);
+#endif
         /* This status code is repurposed so we can recognize it later */
         KiDispatchException2Args(KI_EXCEPTION_ACCESS_VIOLATION,
                                  TrapFrame->Eip,
@@ -1415,6 +2201,14 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     else if ((Status == STATUS_GUARD_PAGE_VIOLATION) ||
              (Status == STATUS_STACK_OVERFLOW))
     {
+#if DBG && defined(_M_IX86)
+        KiTracePageFaultProbe(TrapFrame,
+                              Cr2,
+                              7,
+                              0xE138,
+                              Status,
+                              PreviousTrapFrame);
+#endif
         /* These faults only have two parameters */
         KiDispatchException2Args(Status,
                                  TrapFrame->Eip,
@@ -1424,6 +2218,14 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     }
 
     /* Only other choice is an in-page error, with 3 parameters */
+#if DBG && defined(_M_IX86)
+    KiTracePageFaultProbe(TrapFrame,
+                          Cr2,
+                          8,
+                          0xE139,
+                          Status,
+                          PreviousTrapFrame);
+#endif
     KiDispatchExceptionFromTrapFrame(STATUS_IN_PAGE_ERROR,
                                      0,
                                      TrapFrame->Eip,
@@ -1585,6 +2387,10 @@ KiRaiseSecurityCheckFailureHandler(IN PKTRAP_FRAME TrapFrame)
     /* Decrement EIP to point to the INT29 instruction (2 bytes, not 1 like INT3) */
     TrapFrame->Eip -= 2;
 
+#if DBG && defined(_M_IX86)
+    KiRawCom1DumpFastFail(TrapFrame);
+#endif
+
     /* Check if this is a user trap */
     if (KiUserTrap(TrapFrame))
     {
@@ -1684,11 +2490,44 @@ VOID
 FASTCALL
 KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
 {
+#if DBG && defined(_M_IX86)
+    if (TrapFrame->Eax == BREAKPOINT_LOAD_SYMBOLS)
+    {
+        KiRawCom1DumpDebugService(0x2D01,
+                                  TrapFrame,
+                                  TrapFrame->Eax,
+                                  TrapFrame->Ecx,
+                                  TrapFrame->Edx);
+    }
+#endif
+
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
+#if DBG && defined(_M_IX86)
+    if (TrapFrame->Eax == BREAKPOINT_LOAD_SYMBOLS)
+    {
+        KiRawCom1DumpDebugService(0x2D02,
+                                  TrapFrame,
+                                  TrapFrame->Eax,
+                                  TrapFrame->Ecx,
+                                  TrapFrame->Edx);
+    }
+#endif
+
     /* Increment EIP to skip the INT3 instruction */
     TrapFrame->Eip++;
+
+#if DBG && defined(_M_IX86)
+    if (TrapFrame->Eax == BREAKPOINT_LOAD_SYMBOLS)
+    {
+        KiRawCom1DumpDebugService(0x2D03,
+                                  TrapFrame,
+                                  TrapFrame->Eax,
+                                  TrapFrame->Ecx,
+                                  TrapFrame->Edx);
+    }
+#endif
 
     /* Continue with the common handler */
     KiDebugHandler(TrapFrame, TrapFrame->Eax, TrapFrame->Ecx, TrapFrame->Edx);

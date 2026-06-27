@@ -13,6 +13,106 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+
+#define RTL_ASSERT_PROBE_MAGIC 0x50415452
+#define RTL_ASSERT_PROBE_TEXT_LENGTH 128
+#define RTL_ASSERT_PROBE_FILE_LENGTH 192
+
+typedef struct _RTL_ASSERT_PROBE_SNAPSHOT
+{
+    ULONG Magic;
+    ULONG Version;
+    ULONG Count;
+    ULONG LineNumber;
+    ULONG_PTR FailedAssertion;
+    ULONG_PTR FileName;
+    ULONG_PTR Message;
+    ULONG_PTR ContextRecord;
+    ULONG_PTR ProgramCounter;
+    CHAR FailedAssertionText[RTL_ASSERT_PROBE_TEXT_LENGTH];
+    CHAR FileNameText[RTL_ASSERT_PROBE_FILE_LENGTH];
+    CHAR MessageText[RTL_ASSERT_PROBE_TEXT_LENGTH];
+} RTL_ASSERT_PROBE_SNAPSHOT;
+
+volatile RTL_ASSERT_PROBE_SNAPSHOT RtlpAssertProbeSnapshot;
+
+/* PRIVATE FUNCTIONS *********************************************************/
+
+static
+VOID
+RtlpCopyAssertProbeString(
+    _Out_writes_(DestLength) volatile CHAR *Dest,
+    _In_ ULONG DestLength,
+    _In_opt_ PCSTR Source)
+{
+    ULONG Index;
+
+    if (DestLength == 0)
+        return;
+
+    if (Source == NULL)
+    {
+        Dest[0] = ANSI_NULL;
+        return;
+    }
+
+    for (Index = 0; Index < DestLength - 1; ++Index)
+    {
+        Dest[Index] = Source[Index];
+        if (Dest[Index] == ANSI_NULL)
+            return;
+    }
+
+    Dest[Index] = ANSI_NULL;
+}
+
+static
+ULONG_PTR
+RtlpGetAssertProbeProgramCounter(
+    _In_ PCONTEXT Context)
+{
+#if defined(_M_IX86)
+    return Context->Eip;
+#elif defined(_M_AMD64)
+    return Context->Rip;
+#elif defined(_M_ARM)
+    return Context->Pc;
+#else
+    UNREFERENCED_PARAMETER(Context);
+    return 0;
+#endif
+}
+
+static
+VOID
+RtlpRecordAssertProbe(
+    _In_ PVOID FailedAssertion,
+    _In_ PVOID FileName,
+    _In_ ULONG LineNumber,
+    _In_opt_ PCHAR Message,
+    _In_ PCONTEXT Context)
+{
+    RtlpAssertProbeSnapshot.Magic = RTL_ASSERT_PROBE_MAGIC;
+    RtlpAssertProbeSnapshot.Version = 1;
+    RtlpAssertProbeSnapshot.Count++;
+    RtlpAssertProbeSnapshot.LineNumber = LineNumber;
+    RtlpAssertProbeSnapshot.FailedAssertion = (ULONG_PTR)FailedAssertion;
+    RtlpAssertProbeSnapshot.FileName = (ULONG_PTR)FileName;
+    RtlpAssertProbeSnapshot.Message = (ULONG_PTR)Message;
+    RtlpAssertProbeSnapshot.ContextRecord = (ULONG_PTR)Context;
+    RtlpAssertProbeSnapshot.ProgramCounter = RtlpGetAssertProbeProgramCounter(Context);
+    RtlpCopyAssertProbeString(RtlpAssertProbeSnapshot.FailedAssertionText,
+                              RTL_ASSERT_PROBE_TEXT_LENGTH,
+                              (PCSTR)FailedAssertion);
+    RtlpCopyAssertProbeString(RtlpAssertProbeSnapshot.FileNameText,
+                              RTL_ASSERT_PROBE_FILE_LENGTH,
+                              (PCSTR)FileName);
+    RtlpCopyAssertProbeString(RtlpAssertProbeSnapshot.MessageText,
+                              RTL_ASSERT_PROBE_TEXT_LENGTH,
+                              Message);
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -30,6 +130,11 @@ RtlAssert(IN PVOID FailedAssertion,
 
     /* Capture caller's context for the debugger */
     RtlCaptureContext(&Context);
+    RtlpRecordAssertProbe(FailedAssertion,
+                          FileName,
+                          LineNumber,
+                          Message,
+                          &Context);
 
     /* Enter prompt loop */
     for (;;)

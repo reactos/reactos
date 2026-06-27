@@ -37,6 +37,117 @@ PMMPTE MiKernelResourceStartPte, MiKernelResourceEndPte;
 ULONG_PTR ExPoolCodeStart, ExPoolCodeEnd, MmPoolCodeStart, MmPoolCodeEnd;
 ULONG_PTR MmPteCodeStart, MmPteCodeEnd;
 
+#if DBG && defined(_M_IX86)
+#define MI_RAW_COM1_BASE 0x3F8
+#define MI_RAW_COM1_LINE_STATUS 5
+#define MI_RAW_COM1_TRANSMIT_EMPTY 0x20
+
+static
+VOID
+NTAPI
+MiRawCom1WriteByte(
+    _In_ UCHAR Character)
+{
+    ULONG SpinCount = 100000;
+
+    while (SpinCount-- != 0)
+    {
+        if (READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)(MI_RAW_COM1_BASE +
+                                                MI_RAW_COM1_LINE_STATUS)) &
+            MI_RAW_COM1_TRANSMIT_EMPTY)
+            break;
+    }
+
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)MI_RAW_COM1_BASE, Character);
+}
+
+static
+VOID
+NTAPI
+MiRawCom1WriteString(
+    _In_z_ const CHAR *String)
+{
+    while (*String != ANSI_NULL)
+    {
+        if (*String == '\n')
+            MiRawCom1WriteByte('\r');
+
+        MiRawCom1WriteByte(*String++);
+    }
+}
+
+static
+VOID
+NTAPI
+MiRawCom1WriteUnicodeString(
+    _In_opt_ PUNICODE_STRING String)
+{
+    USHORT Index;
+
+    if ((String == NULL) || (String->Buffer == NULL))
+        return;
+
+    for (Index = 0; Index < String->Length / sizeof(WCHAR); Index++)
+    {
+        WCHAR Character = String->Buffer[Index];
+        MiRawCom1WriteByte((Character >= 0x20 && Character < 0x7f) ?
+                           (UCHAR)Character : (UCHAR)'?');
+    }
+}
+
+static
+VOID
+NTAPI
+MiRawCom1WriteHex(
+    _In_ ULONG_PTR Value)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < 8; Index++)
+    {
+        ULONG Nibble = (Value >> (28 - Index * 4)) & 0xF;
+
+        MiRawCom1WriteByte((UCHAR)(Nibble < 10 ? ('0' + Nibble) :
+                                               ('A' + Nibble - 10)));
+    }
+}
+
+static
+VOID
+NTAPI
+MiRawCom1WriteField(
+    _In_z_ const CHAR *Name,
+    _In_ ULONG_PTR Value)
+{
+    MiRawCom1WriteByte(' ');
+    MiRawCom1WriteString(Name);
+    MiRawCom1WriteByte('=');
+    MiRawCom1WriteHex(Value);
+}
+
+static
+VOID
+NTAPI
+MiRawCom1DumpLoadStage(
+    _In_ ULONG Stage,
+    _In_opt_ PUNICODE_STRING FileName,
+    _In_opt_ PVOID BaseAddress,
+    _In_ ULONG_PTR Detail,
+    _In_ NTSTATUS Status)
+{
+    MiRawCom1WriteString("\nMiRawLoad");
+    MiRawCom1WriteField("stage", Stage);
+    MiRawCom1WriteField("cpu", KeGetCurrentProcessorNumber());
+    MiRawCom1WriteField("irql", KeGetCurrentIrql());
+    MiRawCom1WriteField("base", (ULONG_PTR)BaseAddress);
+    MiRawCom1WriteField("detail", Detail);
+    MiRawCom1WriteField("status", Status);
+    MiRawCom1WriteString(" name=");
+    MiRawCom1WriteUnicodeString(FileName);
+    MiRawCom1WriteByte('\n');
+}
+#endif
+
 #ifdef _WIN64
 #define COOKIE_MAX 0x0000FFFFFFFFFFFFll
 #define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
@@ -157,6 +268,9 @@ MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
     if (!PointerPte)
     {
         DPRINT1("MiReserveSystemPtes failed\n");
+#if DBG && defined(_M_IX86)
+        MiRawCom1DumpLoadStage(0x1F2, FileName, NULL, PteCount, STATUS_INSUFFICIENT_RESOURCES);
+#endif
         KeUnstackDetachProcess(&ApcState);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -168,6 +282,9 @@ MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
     /* The driver is here */
     *ImageBase = DriverBase;
     DPRINT1("Loading: %wZ at %p with %lx pages\n", FileName, DriverBase, PteCount);
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x101, FileName, DriverBase, PteCount, STATUS_SUCCESS);
+#endif
 
     /* Lock the PFN database */
     OldIrql = MiAcquirePfnLock();
@@ -201,13 +318,22 @@ MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
 
     /* Release the PFN lock */
     MiReleasePfnLock(OldIrql);
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x102, FileName, DriverBase, PteCount, STATUS_SUCCESS);
+#endif
 
     /* Copy the image */
     RtlCopyMemory(DriverBase, Base, PteCount << PAGE_SHIFT);
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x103, FileName, DriverBase, PteCount << PAGE_SHIFT, STATUS_SUCCESS);
+#endif
 
     /* Now unmap the view */
     Status = MmUnmapViewOfSection(Process, Base);
     ASSERT(NT_SUCCESS(Status));
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x104, FileName, DriverBase, ViewSize, Status);
+#endif
 
     /* Detach and return status */
     KeUnstackDetachProcess(&ApcState);
@@ -3252,11 +3378,17 @@ LoaderScan:
     }
 
     /* Load the image */
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x201, FileName, NULL, 0, STATUS_SUCCESS);
+#endif
     Status = MiLoadImageSection(&Section,
                                 &ModuleLoadBase,
                                 FileName,
                                 FALSE,
                                 NULL);
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x202, FileName, ModuleLoadBase, 0, Status);
+#endif
     ASSERT(Status != STATUS_ALREADY_COMMITTED);
 
     /* Get the size of the driver */
@@ -3294,6 +3426,9 @@ LoaderScan:
                                       STATUS_SUCCESS,
                                       STATUS_CONFLICTING_ADDRESSES,
                                       STATUS_INVALID_IMAGE_FORMAT);
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x203, FileName, ModuleLoadBase, DriverSize, Status);
+#endif
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("LdrRelocateImageWithBias failed with status 0x%x\n", Status);
@@ -3380,12 +3515,18 @@ LoaderScan:
     /* Resolve imports */
     MissingApiName = Buffer;
     MissingDriverName = NULL;
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x204, FileName, ModuleLoadBase, (ULONG_PTR)LdrEntry->EntryPoint, STATUS_SUCCESS);
+#endif
     Status = MiResolveImageReferences(ModuleLoadBase,
                                       &BaseDirectory,
                                       NULL,
                                       &MissingApiName,
                                       &MissingDriverName,
                                       &LoadedImports);
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x205, FileName, ModuleLoadBase, (ULONG_PTR)LoadedImports, Status);
+#endif
     if (!NT_SUCCESS(Status))
     {
         BOOLEAN NeedToFreeString = FALSE;
@@ -3428,14 +3569,29 @@ LoaderScan:
                         LDRP_MM_LOADED);
     LdrEntry->Flags &= ~LDRP_LOAD_IN_PROGRESS;
     LdrEntry->LoadedImports = LoadedImports;
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x251, FileName, LdrEntry->DllBase, LdrEntry->Flags, STATUS_SUCCESS);
+#endif
 
     /* FIXME: Call driver verifier's loader function */
 
     /* Write-protect the system image */
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x252, FileName, LdrEntry->DllBase, LdrEntry->SizeOfImage, STATUS_SUCCESS);
+#endif
     MiWriteProtectSystemImage(LdrEntry->DllBase);
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x253, FileName, LdrEntry->DllBase, LdrEntry->SizeOfImage, STATUS_SUCCESS);
+#endif
 
     /* Initialize the security cookie (Win7 is not doing this yet!) */
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x254, FileName, LdrEntry->DllBase, (ULONG_PTR)LdrEntry->EntryPoint, STATUS_SUCCESS);
+#endif
     LdrpInitSecurityCookie(LdrEntry);
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x255, FileName, LdrEntry->DllBase, (ULONG_PTR)LdrEntry->EntryPoint, STATUS_SUCCESS);
+#endif
 
     /* Check if notifications are enabled */
     if (PsImageNotifyEnabled)
@@ -3449,19 +3605,35 @@ LoaderScan:
         ImageInfo.ImageSectionNumber = ImageInfo.ImageSelector = 0;
 
         /* Send the notification */
+#if DBG && defined(_M_IX86)
+        MiRawCom1DumpLoadStage(0x256, FileName, LdrEntry->DllBase, ImageInfo.ImageSize, STATUS_SUCCESS);
+#endif
         PspRunLoadImageNotifyRoutines(FileName, NULL, &ImageInfo);
+#if DBG && defined(_M_IX86)
+        MiRawCom1DumpLoadStage(0x257, FileName, LdrEntry->DllBase, ImageInfo.ImageSize, STATUS_SUCCESS);
+#endif
     }
 
 #ifdef __ROS_ROSSYM__
     /* MiCacheImageSymbols doesn't detect rossym */
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x258, FileName, LdrEntry->DllBase, 1, STATUS_SUCCESS);
+#endif
     if (TRUE)
 #else
     /* Check if there's symbols */
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x258, FileName, LdrEntry->DllBase, 0, STATUS_SUCCESS);
+#endif
     if (MiCacheImageSymbols(LdrEntry->DllBase))
 #endif
     {
         UNICODE_STRING UnicodeTemp;
         STRING AnsiTemp;
+
+#if DBG && defined(_M_IX86)
+        MiRawCom1DumpLoadStage(0x2581, FileName, LdrEntry->DllBase, (ULONG_PTR)Buffer, STATUS_SUCCESS);
+#endif
 
         /* Check if the system root is present */
         if ((PrefixName.Length > (11 * sizeof(WCHAR))) &&
@@ -3471,36 +3643,72 @@ LoaderScan:
             UnicodeTemp = PrefixName;
             UnicodeTemp.Buffer += 11;
             UnicodeTemp.Length -= (11 * sizeof(WCHAR));
+#if DBG && defined(_M_IX86)
+            MiRawCom1DumpLoadStage(0x2582, FileName, LdrEntry->DllBase, UnicodeTemp.Length, STATUS_SUCCESS);
+#endif
             RtlStringCbPrintfA(Buffer,
                                MAXIMUM_FILENAME_LENGTH,
                                "%ws%wZ",
                                &SharedUserData->NtSystemRoot[2],
                                &UnicodeTemp);
+#if DBG && defined(_M_IX86)
+            MiRawCom1DumpLoadStage(0x2583, FileName, LdrEntry->DllBase, (ULONG_PTR)Buffer, STATUS_SUCCESS);
+#endif
         }
         else
         {
             /* Build the name */
+#if DBG && defined(_M_IX86)
+            MiRawCom1DumpLoadStage(0x2584, FileName, LdrEntry->DllBase, BaseName.Length, STATUS_SUCCESS);
+#endif
             RtlStringCbPrintfA(Buffer, MAXIMUM_FILENAME_LENGTH,
                                "%wZ", &BaseName);
+#if DBG && defined(_M_IX86)
+            MiRawCom1DumpLoadStage(0x2585, FileName, LdrEntry->DllBase, (ULONG_PTR)Buffer, STATUS_SUCCESS);
+#endif
         }
 
         /* Setup the ANSI string */
         RtlInitString(&AnsiTemp, Buffer);
+#if DBG && defined(_M_IX86)
+        MiRawCom1DumpLoadStage(0x2586, FileName, LdrEntry->DllBase, AnsiTemp.Length, STATUS_SUCCESS);
+#endif
 
         /* Notify the debugger */
+#if DBG && defined(_M_IX86)
+        MiRawCom1DumpLoadStage(0x2587, FileName, LdrEntry->DllBase, (ULONG_PTR)PsGetCurrentProcessId(), STATUS_SUCCESS);
+#endif
         DbgLoadImageSymbols(&AnsiTemp,
                             LdrEntry->DllBase,
                             (ULONG_PTR)PsGetCurrentProcessId());
+#if DBG && defined(_M_IX86)
+        MiRawCom1DumpLoadStage(0x2588, FileName, LdrEntry->DllBase, (ULONG_PTR)PsGetCurrentProcessId(), STATUS_SUCCESS);
+#endif
         LdrEntry->Flags |= LDRP_DEBUG_SYMBOLS_LOADED;
+#if DBG && defined(_M_IX86)
+        MiRawCom1DumpLoadStage(0x2589, FileName, LdrEntry->DllBase, LdrEntry->Flags, STATUS_SUCCESS);
+#endif
     }
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x259, FileName, LdrEntry->DllBase, LdrEntry->Flags, STATUS_SUCCESS);
+#endif
 
     /* Page the driver */
     ASSERT(Section == NULL);
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x25A, FileName, LdrEntry->DllBase, MmDisablePagingExecutive, STATUS_SUCCESS);
+#endif
     MiEnablePagingOfDriver(LdrEntry);
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x25B, FileName, LdrEntry->DllBase, MmDisablePagingExecutive, STATUS_SUCCESS);
+#endif
 
     /* Return pointers */
     *ModuleObject = LdrEntry;
     *ImageBaseAddress = LdrEntry->DllBase;
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x206, FileName, LdrEntry->DllBase, (ULONG_PTR)LdrEntry->EntryPoint, STATUS_SUCCESS);
+#endif
 
 Quickie:
     /* Check if we have the lock acquired */
@@ -3520,6 +3728,9 @@ Quickie:
 
     /* Free the name buffer and return status */
     ExFreePoolWithTag(Buffer, TAG_LDR_WSTR);
+#if DBG && defined(_M_IX86)
+    MiRawCom1DumpLoadStage(0x2FF, FileName, ModuleLoadBase, (ULONG_PTR)LdrEntry, Status);
+#endif
     return Status;
 }
 

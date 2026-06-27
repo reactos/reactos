@@ -1365,6 +1365,16 @@ KxQueueReadyThread(IN PKTHREAD Thread,
     ASSERT(Thread->State == Running);
     ASSERT(Thread->NextProcessor == Prcb->Number);
 
+#if DBG && defined(_M_IX86) && !defined(_NTHAL_)
+    KiI386BootTraceRecord(0xE260,
+                          (ULONG_PTR)Thread,
+                          (ULONG_PTR)Prcb,
+                          Thread->Affinity,
+                          Prcb->SetMember,
+                          Thread->NextProcessor,
+                          Thread->State);
+#endif
+
     /* Check if this thread is allowed to run in this CPU */
 #ifdef CONFIG_SMP
     if ((Thread->Affinity) & (Prcb->SetMember))
@@ -1372,6 +1382,16 @@ KxQueueReadyThread(IN PKTHREAD Thread,
     if (TRUE)
 #endif
     {
+#if DBG && defined(_M_IX86) && !defined(_NTHAL_)
+        KiI386BootTraceRecord(0xE261,
+                              (ULONG_PTR)Thread,
+                              (ULONG_PTR)Prcb,
+                              Thread->Affinity,
+                              Prcb->SetMember,
+                              Thread->NextProcessor,
+                              Thread->Priority);
+#endif
+
         /* Set thread ready for execution */
         Thread->State = Ready;
 
@@ -1403,6 +1423,16 @@ KxQueueReadyThread(IN PKTHREAD Thread,
     }
     else
     {
+#if DBG && defined(_M_IX86) && !defined(_NTHAL_)
+        KiI386BootTraceRecord(0xE262,
+                              (ULONG_PTR)Thread,
+                              (ULONG_PTR)Prcb,
+                              Thread->Affinity,
+                              Prcb->SetMember,
+                              Thread->NextProcessor,
+                              Thread->State);
+#endif
+
         /* Otherwise, prepare this thread to be deferred */
         Thread->State = DeferredReady;
         Thread->DeferredProcessor = Prcb->Number;
@@ -1410,6 +1440,15 @@ KxQueueReadyThread(IN PKTHREAD Thread,
         /* Release the lock and defer scheduling */
         KiReleasePrcbLock(Prcb);
         KiDeferredReadyThread(Thread);
+#if DBG && defined(_M_IX86) && !defined(_NTHAL_)
+        KiI386BootTraceRecord(0xE263,
+                              (ULONG_PTR)Thread,
+                              (ULONG_PTR)Prcb,
+                              Thread->Affinity,
+                              Prcb->SetMember,
+                              Thread->NextProcessor,
+                              Thread->State);
+#endif
     }
 }
 

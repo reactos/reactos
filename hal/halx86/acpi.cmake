@@ -16,3 +16,8 @@ endif()
 add_library(lib_hal_acpi OBJECT ${HAL_ACPI_SOURCE})
 add_pch(lib_hal_acpi include/hal.h ${HAL_ACPI_SOURCE})
 add_dependencies(lib_hal_acpi bugcodes xdk)
+
+add_library(lib_hal_acpi_smp OBJECT ${HAL_ACPI_SOURCE})
+target_compile_definitions(lib_hal_acpi_smp PRIVATE CONFIG_SMP)
+add_pch(lib_hal_acpi_smp include/hal.h ${HAL_ACPI_SOURCE})
+add_dependencies(lib_hal_acpi_smp bugcodes xdk)

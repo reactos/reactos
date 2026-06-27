@@ -23,7 +23,6 @@ PspDumpThreads(BOOLEAN IncludeSystem)
     PLIST_ENTRY CurrentThread, CurrentProcess;
     PEPROCESS Process;
     PETHREAD Thread;
-    ULONG nThreads = 0;
 
     /* Loop all Active Processes */
     CurrentProcess = PsActiveProcessHead.Flink;
@@ -43,7 +42,6 @@ PspDumpThreads(BOOLEAN IncludeSystem)
 
                 /* Get teh Thread */
                 Thread = CONTAINING_RECORD(CurrentThread, ETHREAD, ThreadListEntry);
-                nThreads++;
 
                 /* Print the Info */
                 DbgPrint("State %u Affinity %08x Priority %d PID.TID %d.%d Name %.8s Stack:\n",

@@ -66,6 +66,89 @@ typedef struct _KI_SAMPLE_MAP
     ULONG MHz;
 } KI_SAMPLE_MAP, *PKI_SAMPLE_MAP;
 
+#if defined(_M_IX86) && DBG
+#define KI_I386_BOOT_TRACE_MAGIC 0x5454424B
+#define KI_I386_BOOT_TRACE_MAXIMUM_PROCESSORS 32
+#define KI_I386_BOOT_TRACE_RECORDS 2048
+
+typedef struct _KI_I386_BOOT_TRACE_RECORD
+{
+    ULONG Magic;
+    ULONG Version;
+    ULONG Sequence;
+    ULONG Event;
+    ULONG Cpu;
+    ULONG Irql;
+    ULONG PcrIrql;
+    ULONG EFlags;
+    ULONG_PTR ReturnAddress;
+    ULONG_PTR StackPointer;
+    ULONG_PTR Arg0;
+    ULONG_PTR Arg1;
+    ULONG_PTR Arg2;
+    ULONG_PTR Arg3;
+    ULONG_PTR Arg4;
+    ULONG_PTR Arg5;
+} KI_I386_BOOT_TRACE_RECORD, *PKI_I386_BOOT_TRACE_RECORD;
+
+extern volatile ULONG KiI386BootTraceIndex
+    [KI_I386_BOOT_TRACE_MAXIMUM_PROCESSORS];
+extern volatile KI_I386_BOOT_TRACE_RECORD KiI386BootTraceRecords
+    [KI_I386_BOOT_TRACE_MAXIMUM_PROCESSORS]
+    [KI_I386_BOOT_TRACE_RECORDS];
+
+VOID
+NTAPI
+KiI386BootTraceRecord(
+    _In_ ULONG Event,
+    _In_ ULONG_PTR Arg0,
+    _In_ ULONG_PTR Arg1,
+    _In_ ULONG_PTR Arg2,
+    _In_ ULONG_PTR Arg3,
+    _In_ ULONG_PTR Arg4,
+    _In_ ULONG_PTR Arg5);
+
+#define KI_PAGE_FAULT_PROBE_MAGIC 0x5046504B
+#define KI_PAGE_FAULT_PROBE_MAXIMUM_PROCESSORS 32
+
+typedef struct _KI_PAGE_FAULT_PROBE_SNAPSHOT
+{
+    ULONG Magic;
+    ULONG Version;
+    ULONG Count;
+    ULONG Stage;
+    ULONG Cpu;
+    ULONG Irql;
+    ULONG PcrIrql;
+    ULONG PcrIrr;
+    ULONG PcrIdr;
+    ULONG EFlags;
+    ULONG CurrentEFlags;
+    ULONG SegCs;
+    ULONG SegFs;
+    ULONG ErrCode;
+    ULONG_PTR Cr2;
+    ULONG_PTR Eip;
+    ULONG_PTR HardwareEsp;
+    ULONG_PTR Ebp;
+    ULONG_PTR Eax;
+    ULONG_PTR Edx;
+    ULONG_PTR TrapFrame;
+    ULONG_PTR PreviousTrapFrame;
+    ULONG_PTR Thread;
+    ULONG_PTR KernelStack;
+    ULONG_PTR InitialStack;
+    ULONG_PTR PcrSelf;
+    ULONG_PTR PcrPrcb;
+    ULONG_PTR ExceptionList;
+    ULONG_PTR PcrExceptionList;
+} KI_PAGE_FAULT_PROBE_SNAPSHOT, *PKI_PAGE_FAULT_PROBE_SNAPSHOT;
+
+extern volatile KI_PAGE_FAULT_PROBE_SNAPSHOT KiPageFaultProbeSnapshot;
+extern volatile KI_PAGE_FAULT_PROBE_SNAPSHOT KiPageFaultProbeSnapshotByCpu
+    [KI_PAGE_FAULT_PROBE_MAXIMUM_PROCESSORS];
+#endif
+
 #define MAX_TIMER_DPCS                      16
 
 typedef struct _DPC_QUEUE_ENTRY
@@ -482,6 +565,12 @@ KiInitializeContextThread(
 VOID
 NTAPI
 KeStartThread(
+    IN OUT PKTHREAD Thread
+);
+
+VOID
+NTAPI
+KiStartThreadAtCurrentIrql(
     IN OUT PKTHREAD Thread
 );
 
@@ -968,7 +1057,7 @@ VOID
 NTAPI
 KiInitMachineDependent(VOID);
 
-VOID
+BOOLEAN
 NTAPI
 KxFreezeExecution(
     VOID);
@@ -977,6 +1066,18 @@ VOID
 NTAPI
 KxThawExecution(
     VOID);
+
+#if defined(_M_IX86)
+VOID
+NTAPI
+KxHandleFreezeIpi(
+    VOID);
+
+VOID
+NTAPI
+KxMarkProcessorFreezeReady(
+    VOID);
+#endif
 
 BOOLEAN
 NTAPI

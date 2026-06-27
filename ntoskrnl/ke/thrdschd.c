@@ -169,6 +169,16 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
     ASSERT(Thread->State == DeferredReady);
     ASSERT((Thread->Priority >= 0) && (Thread->Priority <= HIGH_PRIORITY));
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE270,
+                          (ULONG_PTR)Thread,
+                          Thread->Affinity,
+                          Thread->NextProcessor,
+                          Thread->DeferredProcessor,
+                          Thread->State,
+                          KeGetCurrentProcessorNumber());
+#endif
+
     /* Check if we have any adjusts to do */
     if (Thread->AdjustReason == AdjustBoost)
     {
@@ -304,6 +314,16 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
         Thread->AdjustReason = AdjustNone;
     }
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE271,
+                          (ULONG_PTR)Thread,
+                          Thread->Affinity,
+                          Thread->Priority,
+                          Thread->AdjustReason,
+                          Thread->Preempted,
+                          Thread->State);
+#endif
+
     /* Clear thread preemption status and save current values */
     Preempted = Thread->Preempted;
     OldPriority = Thread->Priority;
@@ -313,9 +333,29 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
     Processor = KiSelectNextProcessor(Thread);
     Thread->NextProcessor = Processor;
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE272,
+                          (ULONG_PTR)Thread,
+                          Thread->Affinity,
+                          Thread->IdealProcessor,
+                          Processor,
+                          KeGetCurrentProcessorNumber(),
+                          (ULONG_PTR)KiProcessorBlock[Processor]);
+#endif
+
     /* Get the PRCB and lock it */
     Prcb = KiProcessorBlock[Processor];
     KiAcquirePrcbLock(Prcb);
+
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE273,
+                          (ULONG_PTR)Thread,
+                          (ULONG_PTR)Prcb,
+                          (ULONG_PTR)Prcb->CurrentThread,
+                          (ULONG_PTR)Prcb->NextThread,
+                          Prcb->SetMember,
+                          Prcb->ReadySummary);
+#endif
 
 #ifndef CONFIG_SMP
     /* Check if we have an idle summary */
@@ -349,11 +389,30 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
             Thread->State = Standby;
             Prcb->NextThread = Thread;
 
+#if DBG && defined(_M_IX86)
+            KiI386BootTraceRecord(0xE274,
+                                  (ULONG_PTR)Thread,
+                                  (ULONG_PTR)NextThread,
+                                  (ULONG_PTR)Prcb,
+                                  OldPriority,
+                                  NextThread->Priority,
+                                  Processor);
+#endif
+
             /* Set it in deferred ready mode */
             NextThread->State = DeferredReady;
             NextThread->DeferredProcessor = Prcb->Number;
             KiReleasePrcbLock(Prcb);
             KiDeferredReadyThread(NextThread);
+#if DBG && defined(_M_IX86)
+            KiI386BootTraceRecord(0xE278,
+                                  (ULONG_PTR)Thread,
+                                  (ULONG_PTR)NextThread,
+                                  (ULONG_PTR)Prcb,
+                                  Thread->State,
+                                  NextThread->State,
+                                  Processor);
+#endif
             return;
         }
     }
@@ -370,6 +429,16 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
             Thread->State = Standby;
             Prcb->NextThread = Thread;
 
+#if DBG && defined(_M_IX86)
+            KiI386BootTraceRecord(0xE275,
+                                  (ULONG_PTR)Thread,
+                                  (ULONG_PTR)NextThread,
+                                  (ULONG_PTR)Prcb,
+                                  OldPriority,
+                                  NextThread->Priority,
+                                  Processor);
+#endif
+
             /* Release the lock */
             KiReleasePrcbLock(Prcb);
 
@@ -379,6 +448,15 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
                 /* We are, send an IPI */
                 KiIpiSend(AFFINITY_MASK(Thread->NextProcessor), IPI_DPC);
             }
+#if DBG && defined(_M_IX86)
+            KiI386BootTraceRecord(0xE279,
+                                  (ULONG_PTR)Thread,
+                                  (ULONG_PTR)NextThread,
+                                  (ULONG_PTR)Prcb,
+                                  Thread->State,
+                                  Thread->NextProcessor,
+                                  KeGetCurrentProcessorNumber());
+#endif
             return;
         }
     }
@@ -399,11 +477,30 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
     /* Update the ready summary */
     Prcb->ReadySummary |= PRIORITY_MASK(OldPriority);
 
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE276,
+                          (ULONG_PTR)Thread,
+                          (ULONG_PTR)Prcb,
+                          Thread->Affinity,
+                          Thread->NextProcessor,
+                          OldPriority,
+                          Prcb->ReadySummary);
+#endif
+
     /* Sanity check */
     ASSERT(OldPriority == Thread->Priority);
 
     /* Release the lock */
     KiReleasePrcbLock(Prcb);
+#if DBG && defined(_M_IX86)
+    KiI386BootTraceRecord(0xE277,
+                          (ULONG_PTR)Thread,
+                          (ULONG_PTR)Prcb,
+                          Thread->Affinity,
+                          Thread->NextProcessor,
+                          Thread->State,
+                          KeGetCurrentProcessorNumber());
+#endif
 }
 
 PKTHREAD

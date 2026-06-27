@@ -64,6 +64,122 @@ ULONGLONG MiLastPoolDumpTime;
 #define POOL_NEXT_BLOCK(x)  POOL_BLOCK((x), (x)->BlockSize)
 #define POOL_PREV_BLOCK(x)  POOL_BLOCK((x), -((x)->PreviousSize))
 
+#if DBG && defined(_M_IX86)
+#define EXP_RAW_COM1_BASE 0x3F8
+#define EXP_RAW_COM1_LINE_STATUS 5
+#define EXP_RAW_COM1_TRANSMIT_EMPTY 0x20
+
+static
+VOID
+NTAPI
+ExpRawCom1WriteByte(
+    _In_ UCHAR Character)
+{
+    ULONG SpinCount = 100000;
+
+    while (SpinCount-- != 0)
+    {
+        if (READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)(EXP_RAW_COM1_BASE +
+                                                EXP_RAW_COM1_LINE_STATUS)) &
+            EXP_RAW_COM1_TRANSMIT_EMPTY)
+            break;
+    }
+
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)EXP_RAW_COM1_BASE, Character);
+}
+
+static
+VOID
+NTAPI
+ExpRawCom1WriteString(
+    _In_z_ const CHAR *String)
+{
+    while (*String != ANSI_NULL)
+    {
+        if (*String == '\n')
+            ExpRawCom1WriteByte('\r');
+
+        ExpRawCom1WriteByte(*String++);
+    }
+}
+
+static
+VOID
+NTAPI
+ExpRawCom1WriteHex(
+    _In_ ULONG_PTR Value)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < 8; Index++)
+    {
+        ULONG Nibble = (Value >> (28 - Index * 4)) & 0xF;
+
+        ExpRawCom1WriteByte((UCHAR)(Nibble < 10 ? ('0' + Nibble) :
+                                                 ('A' + Nibble - 10)));
+    }
+}
+
+static
+VOID
+NTAPI
+ExpRawCom1WriteField(
+    _In_z_ const CHAR *Name,
+    _In_ ULONG_PTR Value)
+{
+    ExpRawCom1WriteByte(' ');
+    ExpRawCom1WriteString(Name);
+    ExpRawCom1WriteByte('=');
+    ExpRawCom1WriteHex(Value);
+}
+
+static
+VOID
+NTAPI
+ExpRawCom1DumpPoolPage(
+    _In_ ULONG Stage,
+    _In_ POOL_TYPE OriginalType,
+    _In_ SIZE_T NumberOfBytes,
+    _In_ USHORT BlockSize,
+    _In_opt_ PVOID Entry)
+{
+    PMMPDE PointerPde = NULL;
+    PMMPTE PointerPte = NULL;
+    ULONG_PTR PdeValue = 0;
+    ULONG_PTR PteValue = 0;
+
+    if ((OriginalType & BASE_POOL_TYPE_MASK) != PagedPool)
+        return;
+
+    if (Entry != NULL)
+    {
+        PointerPde = MiAddressToPde(Entry);
+        PdeValue = PointerPde->u.Long;
+        if (PointerPde->u.Hard.Valid)
+        {
+            PointerPte = MiAddressToPte(Entry);
+            PteValue = PointerPte->u.Long;
+        }
+    }
+
+    ExpRawCom1WriteString("\nExpRawPoolPage");
+    ExpRawCom1WriteField("stage", Stage);
+    ExpRawCom1WriteField("cpu", KeGetCurrentProcessorNumber());
+    ExpRawCom1WriteField("irql", KeGetCurrentIrql());
+    ExpRawCom1WriteField("type", OriginalType);
+    ExpRawCom1WriteField("bytes", NumberOfBytes);
+    ExpRawCom1WriteField("block", BlockSize);
+    ExpRawCom1WriteField("entry", (ULONG_PTR)Entry);
+    ExpRawCom1WriteField("pde", (ULONG_PTR)PointerPde);
+    ExpRawCom1WriteField("pdeval", PdeValue);
+    ExpRawCom1WriteField("pte", (ULONG_PTR)PointerPte);
+    ExpRawCom1WriteField("pteval", PteValue);
+    ExpRawCom1WriteField("poollo", (ULONG_PTR)MmPagedPoolStart);
+    ExpRawCom1WriteField("poolhi", (ULONG_PTR)MmPagedPoolEnd);
+    ExpRawCom1WriteByte('\n');
+}
+#endif
+
 /*
  * Pool list access debug macros, similar to Arthur's pfnlist.c work.
  * Microsoft actually implements similar checks in the Windows Server 2003 SP1
@@ -2318,7 +2434,13 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     // There were no free entries left, so we have to allocate a new fresh page
     //
+#if DBG && defined(_M_IX86)
+    ExpRawCom1DumpPoolPage(0xE101, OriginalType, NumberOfBytes, i, NULL);
+#endif
     Entry = MiAllocatePoolPages(OriginalType, PAGE_SIZE);
+#if DBG && defined(_M_IX86)
+    ExpRawCom1DumpPoolPage(0xE102, OriginalType, NumberOfBytes, i, Entry);
+#endif
     if (!Entry)
     {
 #if DBG
@@ -2385,7 +2507,13 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     // Setup the entry data
     //
+#if DBG && defined(_M_IX86)
+    ExpRawCom1DumpPoolPage(0xE103, OriginalType, NumberOfBytes, i, Entry);
+#endif
     Entry->Ulong1 = 0;
+#if DBG && defined(_M_IX86)
+    ExpRawCom1DumpPoolPage(0xE104, OriginalType, NumberOfBytes, i, Entry);
+#endif
     Entry->BlockSize = i;
     Entry->PoolType = OriginalType + 1;
 
@@ -2400,6 +2528,9 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     FragmentEntry->Ulong1 = 0;
     FragmentEntry->BlockSize = BlockSize;
     FragmentEntry->PreviousSize = i;
+#if DBG && defined(_M_IX86)
+    ExpRawCom1DumpPoolPage(0xE105, OriginalType, NumberOfBytes, i, Entry);
+#endif
 
     //
     // Increment required counters

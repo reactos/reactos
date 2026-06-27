@@ -210,6 +210,13 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
         HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
     }
 
+#if defined(_M_IX86)
+    if (InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_FREEZE))
+    {
+        KxHandleFreezeIpi();
+    }
+#endif
+
     if (InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_SYNCH_REQUEST))
     {
         PKPRCB SourcePrcb = (PKPRCB)Prcb->SignalDone;

@@ -26,6 +26,133 @@ MmRebalanceMemoryConsumersAndWait(VOID);
 BOOLEAN UserPdeFault = FALSE;
 #endif
 
+#if DBG && defined(_M_IX86)
+#define MMP_ARM3_RAW_COM1_BASE 0x3F8
+#define MMP_ARM3_RAW_COM1_LINE_STATUS 5
+#define MMP_ARM3_RAW_COM1_TRANSMIT_EMPTY 0x20
+
+static
+VOID
+NTAPI
+MmpArm3RawCom1WriteByte(
+    _In_ UCHAR Character)
+{
+    ULONG SpinCount = 100000;
+
+    while (SpinCount-- != 0)
+    {
+        if (READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)(MMP_ARM3_RAW_COM1_BASE +
+                                                MMP_ARM3_RAW_COM1_LINE_STATUS)) &
+            MMP_ARM3_RAW_COM1_TRANSMIT_EMPTY)
+            break;
+    }
+
+    WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)MMP_ARM3_RAW_COM1_BASE, Character);
+}
+
+static
+VOID
+NTAPI
+MmpArm3RawCom1WriteString(
+    _In_z_ const CHAR *String)
+{
+    while (*String != ANSI_NULL)
+    {
+        if (*String == '\n')
+            MmpArm3RawCom1WriteByte('\r');
+
+        MmpArm3RawCom1WriteByte(*String++);
+    }
+}
+
+static
+VOID
+NTAPI
+MmpArm3RawCom1WriteHex(
+    _In_ ULONG_PTR Value)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < 8; Index++)
+    {
+        ULONG Nibble = (Value >> (28 - Index * 4)) & 0xF;
+
+        MmpArm3RawCom1WriteByte((UCHAR)(Nibble < 10 ? ('0' + Nibble) :
+                                                     ('A' + Nibble - 10)));
+    }
+}
+
+static
+VOID
+NTAPI
+MmpArm3RawCom1WriteField(
+    _In_z_ const CHAR *Name,
+    _In_ ULONG_PTR Value)
+{
+    MmpArm3RawCom1WriteByte(' ');
+    MmpArm3RawCom1WriteString(Name);
+    MmpArm3RawCom1WriteByte('=');
+    MmpArm3RawCom1WriteHex(Value);
+}
+
+static
+BOOLEAN
+NTAPI
+MmpArm3RawShouldTrace(
+    _In_ PVOID Address)
+{
+    return (Address >= MmPagedPoolStart) && (Address < MmPagedPoolEnd);
+}
+
+static
+VOID
+NTAPI
+MmpArm3RawCom1DumpFault(
+    _In_ ULONG Stage,
+    _In_ ULONG FaultCode,
+    _In_ PVOID Address,
+    _In_ KPROCESSOR_MODE Mode,
+    _In_opt_ PVOID TrapInformation,
+    _In_opt_ PMMPTE PointerPte,
+    _In_ ULONG_PTR Detail,
+    _In_ NTSTATUS Status)
+{
+    PMMPDE PointerPde;
+    ULONG_PTR PdeValue;
+    ULONG_PTR PteValue = 0;
+    PKTRAP_FRAME TrapFrame = (PKTRAP_FRAME)TrapInformation;
+    PETHREAD Thread = PsGetCurrentThread();
+
+    if (!MmpArm3RawShouldTrace(Address))
+        return;
+
+    PointerPde = MiAddressToPde(Address);
+    PdeValue = PointerPde->u.Long;
+    if ((PointerPte != NULL) && PointerPde->u.Hard.Valid)
+        PteValue = PointerPte->u.Long;
+
+    MmpArm3RawCom1WriteString("\nMmpArm3RawFault");
+    MmpArm3RawCom1WriteField("stage", Stage);
+    MmpArm3RawCom1WriteField("cpu", KeGetCurrentProcessorNumber());
+    MmpArm3RawCom1WriteField("irql", KeGetCurrentIrql());
+    MmpArm3RawCom1WriteField("fault", FaultCode);
+    MmpArm3RawCom1WriteField("mode", Mode);
+    MmpArm3RawCom1WriteField("addr", (ULONG_PTR)Address);
+    MmpArm3RawCom1WriteField("tf", (ULONG_PTR)TrapInformation);
+    MmpArm3RawCom1WriteField("eip", TrapFrame ? TrapFrame->Eip : 0);
+    MmpArm3RawCom1WriteField("err", TrapFrame ? TrapFrame->ErrCode : 0);
+    MmpArm3RawCom1WriteField("pde", (ULONG_PTR)PointerPde);
+    MmpArm3RawCom1WriteField("pdeval", PdeValue);
+    MmpArm3RawCom1WriteField("pte", (ULONG_PTR)PointerPte);
+    MmpArm3RawCom1WriteField("pteval", PteValue);
+    MmpArm3RawCom1WriteField("thread", (ULONG_PTR)Thread);
+    MmpArm3RawCom1WriteField("proc", (ULONG_PTR)PsGetCurrentProcess());
+    MmpArm3RawCom1WriteField("detail", Detail);
+    MmpArm3RawCom1WriteField("status", Status);
+    MmpArm3RawCom1WriteByte('\n');
+}
+#endif
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static
@@ -610,6 +737,16 @@ MiResolveDemandZeroFault(IN PVOID Address,
     DPRINT("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
             Address,
             Process);
+#if DBG && defined(_M_IX86)
+    MmpArm3RawCom1DumpFault(0xD001,
+                            0,
+                            Address,
+                            KernelMode,
+                            NULL,
+                            PointerPte,
+                            (ULONG_PTR)Process,
+                            STATUS_SUCCESS);
+#endif
 
     /* Must currently only be called by paging path */
     if ((Process > HYDRA_PROCESS) && (OldIrql == MM_NOIRQL))
@@ -705,8 +842,28 @@ MiResolveDemandZeroFault(IN PVOID Address,
     if (PageFrameNumber == 0)
     {
         MiReleasePfnLock(OldIrql);
+#if DBG && defined(_M_IX86)
+        MmpArm3RawCom1DumpFault(0xD0FE,
+                                0,
+                                Address,
+                                KernelMode,
+                                NULL,
+                                PointerPte,
+                                (ULONG_PTR)Process,
+                                STATUS_NO_MEMORY);
+#endif
         return STATUS_NO_MEMORY;
     }
+#if DBG && defined(_M_IX86)
+    MmpArm3RawCom1DumpFault(0xD002,
+                            0,
+                            Address,
+                            KernelMode,
+                            NULL,
+                            PointerPte,
+                            PageFrameNumber,
+                            STATUS_SUCCESS);
+#endif
 
     /* Initialize it */
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
@@ -750,6 +907,16 @@ MiResolveDemandZeroFault(IN PVOID Address,
 
     /* Write it */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
+#if DBG && defined(_M_IX86)
+    MmpArm3RawCom1DumpFault(0xD003,
+                            0,
+                            Address,
+                            KernelMode,
+                            NULL,
+                            PointerPte,
+                            PageFrameNumber,
+                            STATUS_PAGE_FAULT_DEMAND_ZERO);
+#endif
 
     /* Did we manually acquire the lock */
     if (HaveLock)
@@ -1722,6 +1889,16 @@ MmArmAccessFault(IN ULONG FaultCode,
     BOOLEAN IsSessionAddress;
     PMMPFN Pfn1;
     DPRINT("ARM3 FAULT AT: %p\n", Address);
+#if DBG && defined(_M_IX86)
+    MmpArm3RawCom1DumpFault(0xA001,
+                            FaultCode,
+                            Address,
+                            Mode,
+                            TrapInformation,
+                            PointerPte,
+                            (ULONG_PTR)OldIrql,
+                            STATUS_SUCCESS);
+#endif
 
     /* Check for page fault on high IRQL */
     if (OldIrql > APC_LEVEL)
@@ -1803,6 +1980,16 @@ MmArmAccessFault(IN ULONG FaultCode,
 #if (_MI_PAGING_LEVELS == 2)
         if (MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(Address)) MiSynchronizeSystemPde((PMMPDE)PointerPte);
         MiCheckPdeForPagedPool(Address);
+#if DBG && defined(_M_IX86)
+        MmpArm3RawCom1DumpFault(0xA002,
+                                FaultCode,
+                                Address,
+                                Mode,
+                                TrapInformation,
+                                PointerPte,
+                                0,
+                                STATUS_SUCCESS);
+#endif
 #endif
 
         /* Check if the higher page table entries are invalid */
@@ -1944,13 +2131,33 @@ _WARN("Session space stuff is not implemented yet!")
                 return STATUS_IN_PAGE_ERROR | 0x10000000;
             }
         }
-RetryKernel:
+    RetryKernel:
         /* Acquire the working set lock */
+#if DBG && defined(_M_IX86)
+        MmpArm3RawCom1DumpFault(0xA003,
+                                FaultCode,
+                                Address,
+                                Mode,
+                                TrapInformation,
+                                PointerPte,
+                                (ULONG_PTR)WorkingSet,
+                                STATUS_SUCCESS);
+#endif
         KeRaiseIrql(APC_LEVEL, &LockIrql);
         MiLockWorkingSet(CurrentThread, WorkingSet);
 
         /* Re-read PTE now that we own the lock */
         TempPte = *PointerPte;
+#if DBG && defined(_M_IX86)
+        MmpArm3RawCom1DumpFault(0xA004,
+                                FaultCode,
+                                Address,
+                                Mode,
+                                TrapInformation,
+                                PointerPte,
+                                TempPte.u.Long,
+                                STATUS_SUCCESS);
+#endif
         if (TempPte.u.Hard.Valid == 1)
         {
             /* Check if this was a write */
@@ -2097,6 +2304,16 @@ RetryKernel:
         }
 
         /* Now do the real fault handling */
+#if DBG && defined(_M_IX86)
+        MmpArm3RawCom1DumpFault(0xA005,
+                                FaultCode,
+                                Address,
+                                Mode,
+                                TrapInformation,
+                                PointerPte,
+                                (ULONG_PTR)ProtoPte,
+                                STATUS_SUCCESS);
+#endif
         Status = MiDispatchFault(FaultCode,
                                  Address,
                                  PointerPte,
@@ -2105,6 +2322,16 @@ RetryKernel:
                                  CurrentProcess,
                                  TrapInformation,
                                  NULL);
+#if DBG && defined(_M_IX86)
+        MmpArm3RawCom1DumpFault(0xA006,
+                                FaultCode,
+                                Address,
+                                Mode,
+                                TrapInformation,
+                                PointerPte,
+                                (ULONG_PTR)ProtoPte,
+                                Status);
+#endif
 
         /* Release the working set */
         ASSERT(KeAreAllApcsDisabled() == TRUE);

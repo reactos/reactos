@@ -28,3 +28,8 @@ endif()
 add_asm_files(lib_hal_generic_asm ${HAL_GENERIC_ASM_SOURCE})
 add_library(lib_hal_generic OBJECT ${HAL_GENERIC_SOURCE} ${lib_hal_generic_asm})
 add_dependencies(lib_hal_generic asm)
+
+add_asm_files(lib_hal_generic_smp_asm ${HAL_GENERIC_ASM_SOURCE})
+add_library(lib_hal_generic_smp OBJECT ${HAL_GENERIC_SOURCE} ${lib_hal_generic_smp_asm})
+target_compile_definitions(lib_hal_generic_smp PRIVATE CONFIG_SMP)
+add_dependencies(lib_hal_generic_smp asm)

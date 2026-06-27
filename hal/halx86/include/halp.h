@@ -247,6 +247,9 @@ CODE_SEG("INIT") VOID NTAPI HalpInitializeClock(VOID);
 VOID __cdecl HalpClockInterrupt(VOID);
 VOID __cdecl HalpClockIpi(VOID);
 VOID __cdecl HalpProfileInterrupt(VOID);
+#ifndef _M_AMD64
+VOID __cdecl HalpIpiInterrupt(VOID);
+#endif
 
 typedef struct _HALP_ROLLOVER
 {
