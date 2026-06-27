@@ -469,6 +469,21 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 static
 CODE_SEG("INIT")
 VOID
+KiApplyCurrentThreadNpxCr0State(PKTHREAD Thread)
+{
+    ULONG Cr0;
+
+    Cr0 = __readcr0();
+    Cr0 &= ~(CR0_EM | CR0_MP | CR0_TS);
+    Cr0 |= CR0_NE;
+    Cr0 |= Thread->NpxState;
+    Cr0 |= KiGetThreadNpxArea(Thread)->Cr0NpxState;
+    __writecr0(Cr0);
+}
+
+static
+CODE_SEG("INIT")
+VOID
 KiVerifyCpuFeatures(PKPRCB Prcb)
 {
     CPU_INFO CpuInfo;
@@ -533,7 +548,7 @@ KiVerifyCpuFeatures(PKPRCB Prcb)
         KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x2, 0x00000001, 0, 0);
     }
 
-    // Set up FPU-related CR0 flags.
+    // Set up FPU-related CR0 flags for the probe.
     ULONG Cr0 = __readcr0();
     // Disable emulation and monitoring.
     Cr0 &= ~(CR0_EM | CR0_MP);
@@ -547,6 +562,12 @@ KiVerifyCpuFeatures(PKPRCB Prcb)
     {
         KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x2, 0x00000001, 0, 0);
     }
+
+    // Keep the early probe relaxed until the current thread exists.
+    Cr0 = __readcr0();
+    Cr0 &= ~(CR0_EM | CR0_MP);
+    Cr0 |= CR0_NE;
+    __writecr0(Cr0);
 
     // 5. Save feature bits.
     Prcb->FeatureBits = (ULONG)FeatureBits;
@@ -794,6 +815,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     Prcb->CurrentThread = InitThread;
     Prcb->NextThread = NULL;
     Prcb->IdleThread = InitThread;
+    KiApplyCurrentThreadNpxCr0State(InitThread);
 
     /*
      * Per-processor executive initialization can fault on pageable mappings and
