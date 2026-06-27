@@ -103,7 +103,11 @@ KiInsertQueue(IN PKQUEUE Queue,
 
         /* Remove the queue from the thread's wait list */
         Thread->WaitStatus = (LONG_PTR)Entry;
-        if (Thread->WaitListEntry.Flink) RemoveEntryList(&Thread->WaitListEntry);
+        if (Thread->WaitListEntry.Flink)
+        {
+            RemoveEntryList(&Thread->WaitListEntry);
+            KiClearThreadWaitListEntry(Thread);
+        }
 
         /* Increase the active threads and remove any wait reason */
         Queue->CurrentCount++;

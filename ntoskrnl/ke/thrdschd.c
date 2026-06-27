@@ -738,9 +738,10 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                         if (RemoveEntryList(&Thread->WaitListEntry))
                         {
                             /* Update the ready summary */
-                            Prcb->ReadySummary ^= PRIORITY_MASK(Thread->
-                                                                Priority);
+                            Prcb->ReadySummary &= ~PRIORITY_MASK(Thread->
+                                                                 Priority);
                         }
+                        KiClearThreadWaitListEntry(Thread);
 
                         /* Update priority */
                         Thread->Priority = (SCHAR)Priority;
@@ -941,6 +942,7 @@ KiUpdateEffectiveAffinityThread(
                 /* The list is empty now, reset the ready summary */
                 Prcb->ReadySummary &= ~PRIORITY_MASK(Thread->Priority);
             }
+            KiClearThreadWaitListEntry(Thread);
 
             /* Insert the thread back into the ready list */
             KiInsertDeferredReadyList(Thread);

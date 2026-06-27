@@ -34,7 +34,7 @@ KiScanReadyQueues(IN PKDPC Dpc,
     ULONG WaitLimit = KeTickCount.LowPart - 300;
     ULONG Summary;
     KIRQL OldIrql;
-    PLIST_ENTRY ListHead, NextEntry;
+    PLIST_ENTRY ListHead, NextEntry, RemoveEntry;
     PKTHREAD Thread;
 
     /* Lock the dispatcher and PRCB */
@@ -74,11 +74,13 @@ KiScanReadyQueues(IN PKDPC Dpc,
                         /* Remove the thread from the queue */
                         NextEntry = NextEntry->Blink;
                         ASSERT((Prcb->ReadySummary & PRIORITY_MASK(Index)));
-                        if (RemoveEntryList(NextEntry->Flink))
+                        RemoveEntry = NextEntry->Flink;
+                        if (RemoveEntryList(RemoveEntry))
                         {
                             /* The list is empty now */
-                            Prcb->ReadySummary ^= PRIORITY_MASK(Index);
+                            Prcb->ReadySummary &= ~PRIORITY_MASK(Index);
                         }
+                        KiClearThreadWaitListEntry(Thread);
 
                         /* Verify priority decrement and set the new one */
                         ASSERT((Thread->PriorityDecrement >= 0) &&

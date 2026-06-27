@@ -182,7 +182,11 @@ KiUnlinkThread(IN PKTHREAD Thread,
     } while (WaitBlock != Thread->WaitBlockList);
 
     /* Remove the thread from the wait list! */
-    if (Thread->WaitListEntry.Flink) RemoveEntryList(&Thread->WaitListEntry);
+    if (Thread->WaitListEntry.Flink)
+    {
+        RemoveEntryList(&Thread->WaitListEntry);
+        KiClearThreadWaitListEntry(Thread);
+    }
 
     /* Check if there's a Thread Timer */
     Timer = &Thread->Timer;

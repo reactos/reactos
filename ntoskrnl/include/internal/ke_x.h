@@ -122,6 +122,14 @@ KeGetPreviousMode(VOID)
     KeLeaveCriticalRegionThread(_Thread);                                   \
 }
 
+FORCEINLINE
+VOID
+KiClearThreadWaitListEntry(IN PKTHREAD Thread)
+{
+    Thread->WaitListEntry.Flink = NULL;
+    Thread->WaitListEntry.Blink = NULL;
+}
+
 #ifndef CONFIG_SMP
 
 //
@@ -391,6 +399,16 @@ VOID
 KiInsertDeferredReadyList(IN PKTHREAD Thread)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
+
+#if DBG && defined(_M_IX86) && !defined(_NTHAL_)
+    KiI386BootTraceRecord(0xE265,
+                          (ULONG_PTR)Thread,
+                          Thread->State,
+                          (ULONG_PTR)Thread->WaitListEntry.Flink,
+                          (ULONG_PTR)Thread->WaitListEntry.Blink,
+                          (ULONG_PTR)Prcb,
+                          Prcb->Number);
+#endif
 
     /* Set the thread to deferred state and CPU */
     Thread->State = DeferredReady;
@@ -1098,7 +1116,7 @@ KxSetTimerForThreadWait(IN PKTIMER Timer,
     Thread->WaitMode = WaitMode;                                            \
                                                                             \
     /* Check if we can swap the thread's stack */                           \
-    Thread->WaitListEntry.Flink = NULL;                                     \
+    KiClearThreadWaitListEntry(Thread);                                      \
     Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
                                                                             \
     /* Set the wait time */                                                 \
@@ -1154,7 +1172,7 @@ KxSetTimerForThreadWait(IN PKTIMER Timer,
     Thread->WaitReason = WaitReason;                                        \
                                                                             \
     /* Check if we can swap the thread's stack */                           \
-    Thread->WaitListEntry.Flink = NULL;                                     \
+    KiClearThreadWaitListEntry(Thread);                                      \
     Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
                                                                             \
     /* Set the wait time */                                                 \
@@ -1199,7 +1217,7 @@ KxSetTimerForThreadWait(IN PKTIMER Timer,
     Thread->WaitReason = WaitReason;                                        \
                                                                             \
     /* Check if we can swap the thread's stack */                           \
-    Thread->WaitListEntry.Flink = NULL;                                     \
+    KiClearThreadWaitListEntry(Thread);                                      \
     Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
                                                                             \
     /* Set the wait time */                                                 \
@@ -1245,7 +1263,7 @@ KxSetTimerForThreadWait(IN PKTIMER Timer,
     Thread->WaitReason = WrQueue;                                           \
                                                                             \
     /* Check if we can swap the thread's stack */                           \
-    Thread->WaitListEntry.Flink = NULL;                                     \
+    KiClearThreadWaitListEntry(Thread);                                      \
     Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
                                                                             \
     /* Set the wait time */                                                 \
@@ -1489,6 +1507,7 @@ KiSelectReadyThread(IN KPRIORITY Priority,
 {
     ULONG PrioritySet;
     LONG HighPriority;
+    PLIST_ENTRY ListHead;
     PLIST_ENTRY ListEntry;
     PKTHREAD Thread = NULL;
 
@@ -1502,10 +1521,37 @@ KiSelectReadyThread(IN KPRIORITY Priority,
     HighPriority += Priority;
 
     /* Make sure the list isn't empty at the highest priority */
-    ASSERT(IsListEmpty(&Prcb->DispatcherReadyListHead[HighPriority]) == FALSE);
+    ListHead = &Prcb->DispatcherReadyListHead[HighPriority];
+    ASSERT(IsListEmpty(ListHead) == FALSE);
 
     /* Get the first thread on the list */
-    ListEntry = Prcb->DispatcherReadyListHead[HighPriority].Flink;
+    ListEntry = ListHead->Flink;
+    if ((ListEntry == NULL) ||
+        (ListEntry == ListHead) ||
+        (ListEntry->Flink == NULL) ||
+        (ListEntry->Blink != ListHead))
+    {
+#if DBG && defined(_M_IX86) && !defined(_NTHAL_)
+        KiI386BootTraceRecord(0xE266,
+                              (ULONG_PTR)Prcb,
+                              HighPriority,
+                              Prcb->ReadySummary,
+                              (ULONG_PTR)ListHead,
+                              (ULONG_PTR)ListEntry,
+                              ListEntry != NULL ? (ULONG_PTR)ListEntry->Flink : 0);
+        KiI386BootTraceRecord(0xE267,
+                              (ULONG_PTR)Prcb,
+                              HighPriority,
+                              Prcb->ReadySummary,
+                              (ULONG_PTR)ListHead,
+                              (ULONG_PTR)ListEntry,
+                              ListEntry != NULL ? (ULONG_PTR)ListEntry->Blink : 0);
+#endif
+        InitializeListHead(ListHead);
+        Prcb->ReadySummary &= ~PRIORITY_MASK(HighPriority);
+        goto Quickie;
+    }
+
     Thread = CONTAINING_RECORD(ListEntry, KTHREAD, WaitListEntry);
 
     /* Make sure this thread is here for a reason */
@@ -1517,8 +1563,9 @@ KiSelectReadyThread(IN KPRIORITY Priority,
     if (RemoveEntryList(&Thread->WaitListEntry))
     {
         /* The list is empty now, reset the ready summary */
-        Prcb->ReadySummary ^= PRIORITY_MASK(HighPriority);
+        Prcb->ReadySummary &= ~PRIORITY_MASK(HighPriority);
     }
+    KiClearThreadWaitListEntry(Thread);
 
     /* Sanity check and return the thread */
 Quickie:
