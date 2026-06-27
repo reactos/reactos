@@ -65,6 +65,9 @@ ULONGLONG MiLastPoolDumpTime;
 #define POOL_PREV_BLOCK(x)  POOL_BLOCK((x), -((x)->PreviousSize))
 
 #if DBG && defined(_M_IX86)
+#define EXP_RAW_COM1_PAGED_POOL_TRACE 0
+
+#if EXP_RAW_COM1_PAGED_POOL_TRACE
 #define EXP_RAW_COM1_BASE 0x3F8
 #define EXP_RAW_COM1_LINE_STATUS 5
 #define EXP_RAW_COM1_TRANSMIT_EMPTY 0x20
@@ -178,6 +181,24 @@ ExpRawCom1DumpPoolPage(
     ExpRawCom1WriteField("poolhi", (ULONG_PTR)MmPagedPoolEnd);
     ExpRawCom1WriteByte('\n');
 }
+#else
+static
+VOID
+NTAPI
+ExpRawCom1DumpPoolPage(
+    _In_ ULONG Stage,
+    _In_ POOL_TYPE OriginalType,
+    _In_ SIZE_T NumberOfBytes,
+    _In_ USHORT BlockSize,
+    _In_opt_ PVOID Entry)
+{
+    UNREFERENCED_PARAMETER(Stage);
+    UNREFERENCED_PARAMETER(OriginalType);
+    UNREFERENCED_PARAMETER(NumberOfBytes);
+    UNREFERENCED_PARAMETER(BlockSize);
+    UNREFERENCED_PARAMETER(Entry);
+}
+#endif
 #endif
 
 /*

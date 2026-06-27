@@ -27,6 +27,9 @@ BOOLEAN UserPdeFault = FALSE;
 #endif
 
 #if DBG && defined(_M_IX86)
+#define MMP_ARM3_RAW_COM1_PAGED_POOL_TRACE 0
+
+#if MMP_ARM3_RAW_COM1_PAGED_POOL_TRACE
 #define MMP_ARM3_RAW_COM1_BASE 0x3F8
 #define MMP_ARM3_RAW_COM1_LINE_STATUS 5
 #define MMP_ARM3_RAW_COM1_TRANSMIT_EMPTY 0x20
@@ -151,6 +154,30 @@ MmpArm3RawCom1DumpFault(
     MmpArm3RawCom1WriteField("status", Status);
     MmpArm3RawCom1WriteByte('\n');
 }
+#else
+static
+VOID
+NTAPI
+MmpArm3RawCom1DumpFault(
+    _In_ ULONG Stage,
+    _In_ ULONG FaultCode,
+    _In_ PVOID Address,
+    _In_ KPROCESSOR_MODE Mode,
+    _In_opt_ PVOID TrapInformation,
+    _In_opt_ PMMPTE PointerPte,
+    _In_ ULONG_PTR Detail,
+    _In_ NTSTATUS Status)
+{
+    UNREFERENCED_PARAMETER(Stage);
+    UNREFERENCED_PARAMETER(FaultCode);
+    UNREFERENCED_PARAMETER(Address);
+    UNREFERENCED_PARAMETER(Mode);
+    UNREFERENCED_PARAMETER(TrapInformation);
+    UNREFERENCED_PARAMETER(PointerPte);
+    UNREFERENCED_PARAMETER(Detail);
+    UNREFERENCED_PARAMETER(Status);
+}
+#endif
 #endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
