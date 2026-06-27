@@ -494,6 +494,31 @@ typedef enum tagNWMF {
 } NWMF;
 
 [
+    object,
+    uuid(b3a4b685-b685-4805-99d9-5dead2873236),
+    pointer_default(unique)
+]
+interface IParentAndItem : IUnknown
+{
+    HRESULT SetParentAndItem(
+        [in, unique] PCIDLIST_ABSOLUTE parent,
+        [in, unique] IShellFolder *folder,
+        [in] PCUITEMID_CHILD child);
+
+    [local]
+    HRESULT GetParentAndItem(
+        [out] PIDLIST_ABSOLUTE *parent,
+        [out] IShellFolder **folder,
+        [out] PITEMID_CHILD *child);
+
+    [call_as(GetParentAndItem)]
+    HRESULT RemoteGetParentAndItem(
+        [out] PIDLIST_ABSOLUTE *parent,
+        [out] IShellFolder **folder,
+        [out] PITEMID_CHILD *child);
+}
+
+[
     uuid(d2bc4c84-3f72-4a52-a604-7bcbf3982cbb),
     object,
     pointer_default(unique)

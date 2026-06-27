@@ -59,20 +59,6 @@ typedef struct _ADVInfo
 
 typedef HRESULT (*iterate_fields_func)(HINF hinf, PCWSTR field, const void *arg);
 
-/* Advanced INF commands */
-static const WCHAR CheckAdminRights[] = {
-    'C','h','e','c','k','A','d','m','i','n','R','i','g','h','t','s',0
-};
-static const WCHAR DelDirs[] = {'D','e','l','D','i','r','s',0};
-static const WCHAR PerUserInstall[] = {'P','e','r','U','s','e','r','I','n','s','t','a','l','l',0};
-static const WCHAR RegisterOCXs[] = {'R','e','g','i','s','t','e','r','O','C','X','s',0};
-static const WCHAR RunPreSetupCommands[] = {
-    'R','u','n','P','r','e','S','e','t','u','p','C','o','m','m','a','n','d','s',0
-};
-static const WCHAR RunPostSetupCommands[] = {
-    'R','u','n','P','o','s','t','S','e','t','u','p','C','o','m','m','a','n','d','s',0
-};
-
 /* Advanced INF callbacks */
 static HRESULT del_dirs_callback(HINF hinf, PCWSTR field, const void *arg)
 {
@@ -103,33 +89,25 @@ static HRESULT per_user_install_callback(HINF hinf, PCWSTR field, const void *ar
     INFCONTEXT context;
     DWORD size;
 
-    static const WCHAR disp_name[] = {'D','i','s','p','l','a','y','N','a','m','e',0};
-    static const WCHAR version[] = {'V','e','r','s','i','o','n',0};
-    static const WCHAR is_installed[] = {'I','s','I','n','s','t','a','l','l','e','d',0};
-    static const WCHAR comp_id[] = {'C','o','m','p','o','n','e','n','t','I','D',0};
-    static const WCHAR guid[] = {'G','U','I','D',0};
-    static const WCHAR locale[] = {'L','o','c','a','l','e',0};
-    static const WCHAR stub_path[] = {'S','t','u','b','P','a','t','h',0};
-
     per_user.bRollback = FALSE;
     per_user.dwIsInstalled = 0;
 
-    SetupGetLineTextW(NULL, hinf, field, disp_name, per_user.szDispName, ARRAY_SIZE(per_user.szDispName), &size);
+    SetupGetLineTextW(NULL, hinf, field, L"DisplayName", per_user.szDispName, ARRAY_SIZE(per_user.szDispName), &size);
 
-    SetupGetLineTextW(NULL, hinf, field, version, per_user.szVersion, ARRAY_SIZE(per_user.szVersion), &size);
+    SetupGetLineTextW(NULL, hinf, field, L"Version", per_user.szVersion, ARRAY_SIZE(per_user.szVersion), &size);
 
-    if (SetupFindFirstLineW(hinf, field, is_installed, &context))
+    if (SetupFindFirstLineW(hinf, field, L"IsInstalled", &context))
     {
         SetupGetIntField(&context, 1, (PINT)&per_user.dwIsInstalled);
     }
 
-    SetupGetLineTextW(NULL, hinf, field, comp_id, per_user.szCompID, ARRAY_SIZE(per_user.szCompID), &size);
+    SetupGetLineTextW(NULL, hinf, field, L"ComponentID", per_user.szCompID, ARRAY_SIZE(per_user.szCompID), &size);
 
-    SetupGetLineTextW(NULL, hinf, field, guid, per_user.szGUID, ARRAY_SIZE(per_user.szGUID), &size);
+    SetupGetLineTextW(NULL, hinf, field, L"GUID", per_user.szGUID, ARRAY_SIZE(per_user.szGUID), &size);
 
-    SetupGetLineTextW(NULL, hinf, field, locale, per_user.szLocale, ARRAY_SIZE(per_user.szLocale), &size);
+    SetupGetLineTextW(NULL, hinf, field, L"Locale", per_user.szLocale, ARRAY_SIZE(per_user.szLocale), &size);
 
-    SetupGetLineTextW(NULL, hinf, field, stub_path, per_user.szStub, ARRAY_SIZE(per_user.szStub), &size);
+    SetupGetLineTextW(NULL, hinf, field, L"StubPath", per_user.szStub, ARRAY_SIZE(per_user.szStub), &size);
 
     return SetPerUserSecValuesW(&per_user);
 }
@@ -249,13 +227,13 @@ static WCHAR *get_field_string(INFCONTEXT *context, DWORD index, WCHAR *buffer,
     if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
     {
         /* now grow the buffer */
-        if (buffer != static_buffer) HeapFree(GetProcessHeap(), 0, buffer);
-        if (!(buffer = HeapAlloc(GetProcessHeap(), 0, required*sizeof(WCHAR)))) return NULL;
+        if (buffer != static_buffer) free(buffer);
+        if (!(buffer = malloc(required*sizeof(WCHAR)))) return NULL;
         *size = required;
         if (SetupGetStringFieldW(context, index, buffer, *size, &required)) return buffer;
     }
 
-    if (buffer != static_buffer) HeapFree(GetProcessHeap(), 0, buffer);
+    if (buffer != static_buffer) free(buffer);
     return NULL;
 }
 
@@ -289,7 +267,7 @@ static HRESULT iterate_section_fields(HINF hinf, PCWSTR section, PCWSTR key,
     hr = S_OK;
 
  done:
-    if (buffer != static_buffer) HeapFree(GetProcessHeap(), 0, buffer);
+    if (buffer != static_buffer) free(buffer);
     return hr;
 }
 
@@ -299,8 +277,7 @@ static HRESULT check_admin_rights(const ADVInfo *info)
     INFCONTEXT context;
     HRESULT hr = S_OK;
 
-    if (!SetupFindFirstLineW(info->hinf, info->install_sec,
-                             CheckAdminRights, &context))
+    if (!SetupFindFirstLineW(info->hinf, info->install_sec, L"CheckAdminRights", &context))
         return S_OK;
 
     if (!SetupGetIntField(&context, 1, &check))
@@ -356,30 +333,29 @@ static HRESULT adv_install(ADVInfo *info)
     if (hr != S_OK)
         return hr;
 
-    hr = iterate_section_fields(info->hinf, info->install_sec, RunPreSetupCommands,
+    hr = iterate_section_fields(info->hinf, info->install_sec, L"RunPreSetupCommands",
                                 run_setup_commands_callback, info);
     if (hr != S_OK)
         return hr;
 
     OleInitialize(NULL);
     hr = iterate_section_fields(info->hinf, info->install_sec,
-                                RegisterOCXs, register_ocxs_callback, NULL);
+                                L"RegisterOCXs", register_ocxs_callback, NULL);
     OleUninitialize();
     if (hr != S_OK)
         return hr;
 
     hr = iterate_section_fields(info->hinf, info->install_sec,
-                                PerUserInstall, per_user_install_callback, info);
+                                L"PerUserInstall", per_user_install_callback, info);
     if (hr != S_OK)
         return hr;
 
-    hr = iterate_section_fields(info->hinf, info->install_sec, RunPostSetupCommands,
+    hr = iterate_section_fields(info->hinf, info->install_sec, L"RunPostSetupCommands",
                                 run_setup_commands_callback, info);
     if (hr != S_OK)
         return hr;
 
-    hr = iterate_section_fields(info->hinf, info->install_sec,
-                                DelDirs, del_dirs_callback, info);
+    hr = iterate_section_fields(info->hinf, info->install_sec, L"DelDirs", del_dirs_callback, info);
     if (hr != S_OK)
         return hr;
 
@@ -392,9 +368,6 @@ static HRESULT get_working_dir(ADVInfo *info, LPCWSTR inf_filename, LPCWSTR work
     WCHAR path[MAX_PATH];
     LPCWSTR ptr;
     DWORD len;
-
-    static const WCHAR backslash[] = {'\\',0};
-    static const WCHAR inf_dir[] = {'\\','I','N','F',0};
 
     if ((ptr = wcsrchr(inf_filename, '\\')))
     {
@@ -409,7 +382,7 @@ static HRESULT get_working_dir(ADVInfo *info, LPCWSTR inf_filename, LPCWSTR work
     else
     {
         GetCurrentDirectoryW(MAX_PATH, path);
-        lstrcatW(path, backslash);
+        lstrcatW(path, L"\\");
         lstrcatW(path, inf_filename);
 
         /* check if the INF file is in the current directory */
@@ -421,14 +394,14 @@ static HRESULT get_working_dir(ADVInfo *info, LPCWSTR inf_filename, LPCWSTR work
         {
             /* default to the windows\inf directory if all else fails */
             GetWindowsDirectoryW(path, MAX_PATH);
-            lstrcatW(path, inf_dir);
+            lstrcatW(path, L"\\INF");
         }
 
         len = lstrlenW(path) + 1;
         ptr = path;
     }
 
-    info->working_dir = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    info->working_dir = malloc(len * sizeof(WCHAR));
     if (!info->working_dir)
         return E_OUTOFMEMORY;
 
@@ -445,51 +418,29 @@ static HRESULT install_init(LPCWSTR inf_filename, LPCWSTR install_sec,
     HRESULT hr;
     LPCWSTR ptr, path;
 
-    static const WCHAR backslash[] = {'\\',0};
-    static const WCHAR default_install[] = {
-        'D','e','f','a','u','l','t','I','n','s','t','a','l','l',0
-    };
-
     if (!(ptr = wcsrchr(inf_filename, '\\')))
         ptr = inf_filename;
 
-    len = lstrlenW(ptr);
-
-    info->inf_filename = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+    info->inf_filename = wcsdup(ptr);
     if (!info->inf_filename)
         return E_OUTOFMEMORY;
 
-    lstrcpyW(info->inf_filename, ptr);
-
     /* FIXME: determine the proper platform to install (NTx86, etc) */
-    if (!install_sec || !*install_sec)
-    {
-        len = sizeof(default_install) - 1;
-        ptr = default_install;
-    }
-    else
-    {
-        len = lstrlenW(install_sec);
-        ptr = install_sec;
-    }
-
-    info->install_sec = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+    info->install_sec = wcsdup(install_sec && *install_sec ? install_sec : L"DefaultInstall");
     if (!info->install_sec)
         return E_OUTOFMEMORY;
-
-    lstrcpyW(info->install_sec, ptr);
 
     hr = get_working_dir(info, inf_filename, working_dir);
     if (FAILED(hr))
         return hr;
 
     len = lstrlenW(info->working_dir) + lstrlenW(info->inf_filename) + 2;
-    info->inf_path = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    info->inf_path = malloc(len * sizeof(WCHAR));
     if (!info->inf_path)
         return E_OUTOFMEMORY;
 
     lstrcpyW(info->inf_path, info->working_dir);
-    lstrcatW(info->inf_path, backslash);
+    lstrcatW(info->inf_path, L"\\");
     lstrcatW(info->inf_path, info->inf_filename);
 
     /* RunSetupCommand opens unmodified filename parameter */
@@ -517,10 +468,10 @@ static void install_release(const ADVInfo *info)
 {
     SetupCloseInfFile(info->hinf);
 
-    HeapFree(GetProcessHeap(), 0, info->inf_path);
-    HeapFree(GetProcessHeap(), 0, info->inf_filename);
-    HeapFree(GetProcessHeap(), 0, info->install_sec);
-    HeapFree(GetProcessHeap(), 0, info->working_dir);
+    free(info->inf_path);
+    free(info->inf_filename);
+    free(info->install_sec);
+    free(info->working_dir);
 }
 
 /* this structure very closely resembles parameters of RunSetupCommand() */
@@ -565,7 +516,7 @@ static HRESULT DoInfInstallW(const SETUPCOMMAND_PARAMSW *setup)
 done:
     install_release(&info);
 
-    return S_OK;
+    return hr;
 }
 
 /***********************************************************************
@@ -677,8 +628,15 @@ HRESULT WINAPI ExecuteCabW(HWND hwnd, CABINFOW* pCab, LPVOID pReserved)
 
     ZeroMemory(&info, sizeof(ADVInfo));
 
-    if (pCab->pszCab && *pCab->pszCab)
-        FIXME("Cab archive not extracted!\n");
+    if ((pCab->pszCab && *pCab->pszCab) && (pCab->pszInf && *pCab->pszInf) && *pCab->szSrcPath)
+    {
+        TRACE("pszCab: %s, pszInf: %s, szSrcPath: %s\n", debugstr_w(pCab->pszCab), debugstr_w(pCab->pszInf),
+                debugstr_w(pCab->szSrcPath));
+
+        hr = ExtractFilesW(pCab->pszCab, pCab->szSrcPath, 0, pCab->pszInf, NULL, 0);
+        if (FAILED(hr))
+            ERR("Failed to extract .inf file!\n");
+    }
 
     hr = install_init(pCab->pszInf, pCab->pszSection, pCab->szSrcPath, pCab->dwFlags, &info);
     if (hr != S_OK)
@@ -758,9 +716,8 @@ INT WINAPI LaunchINFSectionW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, INT sho
     if (!cmdline)
         return ADV_FAILURE;
 
-    cmdline_copy = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(cmdline) + 1) * sizeof(WCHAR));
+    cmdline_copy = wcsdup(cmdline);
     cmdline_ptr = cmdline_copy;
-    lstrcpyW(cmdline_copy, cmdline);
 
     inf_filename = get_parameter(&cmdline_ptr, ',', TRUE);
     install_sec = get_parameter(&cmdline_ptr, ',', TRUE);
@@ -787,7 +744,7 @@ INT WINAPI LaunchINFSectionW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, INT sho
 
 done:
     install_release(&info);
-    HeapFree(GetProcessHeap(), 0, cmdline_copy);
+    free(cmdline_copy);
 
     return SUCCEEDED(hr) ? ADV_SUCCESS : ADV_FAILURE;
 }
@@ -855,9 +812,8 @@ HRESULT WINAPI LaunchINFSectionExW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, I
     if (!cmdline)
         return ADV_FAILURE;
 
-    cmdline_copy = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(cmdline) + 1) * sizeof(WCHAR));
+    cmdline_copy = wcsdup(cmdline);
     cmdline_ptr = cmdline_copy;
-    lstrcpyW(cmdline_copy, cmdline);
 
     cabinfo.pszInf = get_parameter(&cmdline_ptr, ',', TRUE);
     cabinfo.pszSection = get_parameter(&cmdline_ptr, ',', TRUE);
@@ -870,7 +826,7 @@ HRESULT WINAPI LaunchINFSectionExW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, I
 
     if (!is_full_path(cabinfo.pszCab) && !is_full_path(cabinfo.pszInf))
     {
-        HeapFree(GetProcessHeap(), 0, cmdline_copy);
+        free(cmdline_copy);
         return E_INVALIDARG;
     }
 
@@ -887,7 +843,7 @@ HRESULT WINAPI LaunchINFSectionExW(HWND hWnd, HINSTANCE hInst, LPWSTR cmdline, I
     }
 
     hr = ExecuteCabW(hWnd, &cabinfo, NULL);
-    HeapFree(GetProcessHeap(), 0, cmdline_copy);
+    free(cmdline_copy);
     return SUCCEEDED(hr) ? ADV_SUCCESS : ADV_FAILURE;
 }
 
@@ -938,7 +894,7 @@ HRESULT WINAPI RunSetupCommandA(HWND hWnd, LPCSTR szCmdName,
     UNICODE_STRING dir, title;
     HRESULT hr;
 
-    TRACE("(%p, %s, %s, %s, %s, %p, %d, %p)\n",
+    TRACE("(%p, %s, %s, %s, %s, %p, %ld, %p)\n",
           hWnd, debugstr_a(szCmdName), debugstr_a(szInfSection),
           debugstr_a(szDir), debugstr_a(lpszTitle),
           phEXE, dwFlags, pvReserved);
@@ -995,7 +951,7 @@ HRESULT WINAPI RunSetupCommandW(HWND hWnd, LPCWSTR szCmdName,
     ADVInfo info;
     HRESULT hr;
 
-    TRACE("(%p, %s, %s, %s, %s, %p, %d, %p)\n",
+    TRACE("(%p, %s, %s, %s, %s, %p, %ld, %p)\n",
           hWnd, debugstr_w(szCmdName), debugstr_w(szInfSection),
           debugstr_w(szDir), debugstr_w(lpszTitle),
           phEXE, dwFlags, pvReserved);

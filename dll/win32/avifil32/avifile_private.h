@@ -56,16 +56,16 @@ DEFINE_AVIGUID(CLSID_ICMStream, 0x00020001, 0, 0);
 DEFINE_AVIGUID(CLSID_WAVFile,   0x00020003, 0, 0);
 DEFINE_AVIGUID(CLSID_ACMStream, 0x0002000F, 0, 0);
 
-extern HMODULE AVIFILE_hModule DECLSPEC_HIDDEN;
+extern HMODULE AVIFILE_hModule;
 
-extern HRESULT AVIFILE_CreateAVIFile(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT AVIFILE_CreateWAVFile(IUnknown *outer_unk, REFIID riid, void **ret_iface) DECLSPEC_HIDDEN;
-extern HRESULT AVIFILE_CreateACMStream(REFIID riid, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern HRESULT AVIFILE_CreateICMStream(REFIID riid, LPVOID *ppobj) DECLSPEC_HIDDEN;
-extern PGETFRAME AVIFILE_CreateGetFrame(PAVISTREAM pstream) DECLSPEC_HIDDEN;
-extern PAVIFILE  AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStreams) DECLSPEC_HIDDEN;
+extern HRESULT AVIFILE_CreateAVIFile(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppobj);
+extern HRESULT AVIFILE_CreateWAVFile(IUnknown *outer_unk, REFIID riid, void **ret_iface);
+extern HRESULT AVIFILE_CreateACMStream(REFIID riid, LPVOID *ppobj);
+extern HRESULT AVIFILE_CreateICMStream(REFIID riid, LPVOID *ppobj);
+extern PGETFRAME AVIFILE_CreateGetFrame(PAVISTREAM pstream);
+extern PAVIFILE  AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStreams);
 
-extern LPCWSTR  AVIFILE_BasenameW(LPCWSTR szFileName) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI avifil32_DllGetClassObject(REFCLSID pclsid, REFIID piid, LPVOID *ppv) DECLSPEC_HIDDEN;
+extern LPCWSTR  AVIFILE_BasenameW(LPCWSTR szFileName);
+extern HRESULT WINAPI avifil32_DllGetClassObject(REFCLSID pclsid, REFIID piid, LPVOID *ppv);
 
 #endif

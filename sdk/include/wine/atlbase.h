@@ -286,6 +286,7 @@ HRESULT WINAPI AtlRegisterTypeLib(HINSTANCE,LPCOLESTR);
 HRESULT WINAPI AtlRegisterClassCategoriesHelper(REFCLSID,const struct _ATL_CATMAP_ENTRY*,BOOL);
 HRESULT WINAPI AtlComModuleGetClassObject(_ATL_COM_MODULE*,REFCLSID,REFIID,void**);
 HRESULT WINAPI AtlComModuleRegisterClassObjects(_ATL_COM_MODULE*,DWORD,DWORD);
+HRESULT WINAPI AtlComModuleRevokeClassObjects(_ATL_COM_MODULE*);
 HRESULT WINAPI AtlComModuleUnregisterServer(_ATL_COM_MODULE*,BOOL,const CLSID*);
 BOOL WINAPI AtlWaitWithMessageLoop(HANDLE);
 HRESULT WINAPI AtlGetObjectSourceInterface(IUnknown*,GUID*,IID*,unsigned short*,unsigned short*);

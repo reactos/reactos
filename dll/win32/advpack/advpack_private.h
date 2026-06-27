@@ -21,21 +21,19 @@
 #ifndef __ADVPACK_PRIVATE_H
 #define __ADVPACK_PRIVATE_H
 
-#include "wine/heap.h"
+HRESULT do_ocx_reg(HMODULE hocx, BOOL do_reg, const WCHAR *flags, const WCHAR *param);
+LPWSTR get_parameter(LPWSTR *params, WCHAR separator, BOOL quoted);
+void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir);
 
-HRESULT do_ocx_reg(HMODULE hocx, BOOL do_reg, const WCHAR *flags, const WCHAR *param) DECLSPEC_HIDDEN;
-LPWSTR get_parameter(LPWSTR *params, WCHAR separator, BOOL quoted) DECLSPEC_HIDDEN;
-void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir) DECLSPEC_HIDDEN;
+HRESULT launch_exe(LPCWSTR cmd, LPCWSTR dir, HANDLE *phEXE);
 
-HRESULT launch_exe(LPCWSTR cmd, LPCWSTR dir, HANDLE *phEXE) DECLSPEC_HIDDEN;
-
-static inline char *heap_strdupWtoA(const WCHAR *str)
+static inline char *strdupWtoA(const WCHAR *str)
 {
     char *ret = NULL;
 
     if(str) {
         size_t size = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
-        ret = heap_alloc(size);
+        ret = malloc(size);
         if(ret)
             WideCharToMultiByte(CP_ACP, 0, str, -1, ret, size, NULL, NULL);
     }

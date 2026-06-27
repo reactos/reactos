@@ -26,7 +26,7 @@
 #include <winbase.h>
 #include <winuser.h>
 
-#include <wine/atlbase.h>
+#include <atlbase.h>
 #include <mshtml.h>
 
 #include <wine/test.h>
@@ -35,8 +35,6 @@ static void test_ax_win(void)
 {
     BOOL ret;
     WNDCLASSEXW wcex;
-    static const WCHAR AtlAxWin80[] = {'A','t','l','A','x','W','i','n','8','0',0};
-    static const WCHAR AtlAxWinLic80[] = {'A','t','l','A','x','W','i','n','L','i','c','8','0',0};
     static HMODULE hinstance = 0;
 
     ret = AtlAxWinInit();
@@ -46,13 +44,13 @@ static void test_ax_win(void)
 
     memset(&wcex, 0, sizeof(wcex));
     wcex.cbSize = sizeof(wcex);
-    ret = GetClassInfoExW(hinstance, AtlAxWin80, &wcex);
+    ret = GetClassInfoExW(hinstance, L"AtlAxWin80", &wcex);
     ok(ret, "AtlAxWin80 has not registered\n");
     ok(wcex.style == (CS_GLOBALCLASS | CS_DBLCLKS), "wcex.style %08x\n", wcex.style);
 
     memset(&wcex, 0, sizeof(wcex));
     wcex.cbSize = sizeof(wcex);
-    ret = GetClassInfoExW(hinstance, AtlAxWinLic80, &wcex);
+    ret = GetClassInfoExW(hinstance, L"AtlAxWinLic80", &wcex);
     ok(ret, "AtlAxWinLic80 has not registered\n");
     ok(wcex.style == (CS_GLOBALCLASS | CS_DBLCLKS), "wcex.style %08x\n", wcex.style);
 }
