@@ -1,5 +1,6 @@
 PROJECT(SHELL)
 
+add_subdirectory(evalcmd)
 add_subdirectory(shelldesktop)
 add_subdirectory(shellmenu)
 add_subdirectory(shellrecyclebin)
@@ -131,6 +132,9 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(shell32 PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-Wno-overloaded-virtual>")
 endif()
 target_link_libraries(shell32 shellmenu shelldesktop wine uuid recyclebin cpprt atl_classes oldnames)
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    target_link_libraries(shell32 evalcmd)
+endif()
 add_delay_importlibs(shell32 powrprof shdocvw devmgr winspool.drv winmm mpr uxtheme ole32 oleaut32 userenv browseui version fmifs netapi32 secur32)
 add_importlibs(shell32 advapi32 gdi32 user32 comctl32 comdlg32 shlwapi shcore msvcrt kernel32 ntdll)
 add_dependencies(shell32 stdole2) # shell32_shldisp.tlb needs stdole2.tlb

@@ -4,7 +4,7 @@
  * FILE:            dll/win32/netcfgx/netcfgx.c
  * PURPOSE:         Network devices installer
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"
@@ -133,4 +133,13 @@ DllGetClassObject(
     IClassFactory_Release(pcf);
 
     return hres;
+}
+
+DWORD
+WINAPI
+NetCfgDiagRepairRegistryBindings(
+    DWORD dwParam1)
+{
+    ERR("NetCfgDiagRepairRegistryBindings(%lx)\n", dwParam1);
+    return ERROR_SUCCESS;
 }

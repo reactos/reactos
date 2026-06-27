@@ -24,4 +24,9 @@ EXTERN_C const IID IID_INetCfgComponentPrivate;
 /* ??? */
 #endif
 
+DWORD
+WINAPI
+NetCfgDiagRepairRegistryBindings(
+    DWORD dwParam1);
+
 #endif /* __NETCFGX_UNDOC_H__ */

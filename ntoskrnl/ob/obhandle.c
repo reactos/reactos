@@ -1838,62 +1838,65 @@ ObpCloseHandle(IN HANDLE Handle,
     return Status;
 }
 
-/*++
-* @name ObpSetHandleAttributes
-*
-*     The ObpSetHandleAttributes routine <FILLMEIN>
-*
-* @param HandleTableEntry
-*        <FILLMEIN>.
-*
-* @param Context
-*        <FILLMEIN>.
-*
-* @return <FILLMEIN>.
-*
-* @remarks None.
-*
-*--*/
-BOOLEAN
+/**
+ * @brief
+ * Internal callback used by ObSetHandleAttributes().
+ * Updates the attributes of a handle given by its handle table entry.
+ *
+ * This routine sets or clears the @p OBJ_INHERIT attribute and the
+ * internal close-protection bit corresponding to the protect-from-close
+ * handle attribute.
+ *
+ * @param[in,out]   HandleTableEntry
+ * Pointer to an entry in a process' handle table, representing the
+ * handle whose attributes are to be modified.
+ *
+ * @param[in]   Context
+ * Pointer-sized value to an @p OBP_SET_HANDLE_ATTRIBUTES_CONTEXT structure,
+ * that supplies the requested handle attribute values and the caller mode
+ * captured by ObSetHandleAttributes().
+ *
+ * @return
+ * TRUE if the handle attributes are updated successfully, or FALSE
+ * if the requested change is not permitted.
+ *
+ * @remarks
+ * This routine is an internal callback for ExChangeHandle()
+ * (type: @p PEX_CHANGE_HANDLE_CALLBACK).
+ * It updates per-handle state rather than the underlying object.
+ * Requests to make a handle inheritable fail if the target object
+ * type does not permit the @p OBJ_INHERIT attribute.
+ **/
+static BOOLEAN
 NTAPI
-ObpSetHandleAttributes(IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
-                       IN ULONG_PTR Context)
+ObpSetHandleAttributes(
+    _Inout_ PHANDLE_TABLE_ENTRY HandleTableEntry,
+    _In_ ULONG_PTR Context)
 {
     POBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleInfo = (PVOID)Context;
-    POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
 
-    /* Check if making the handle inheritable */
+    /* Define the handle inheritance, using the OBJ_INHERIT attribute */
     if (SetHandleInfo->Information.Inherit)
     {
-        /* Check if inheriting is not supported for this object */
+        /* If inheritance is not supported for this object,
+         * fail without changing anything */
+        POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
         if (ObjectHeader->Type->TypeInfo.InvalidAttributes & OBJ_INHERIT)
-        {
-            /* Fail without changing anything */
             return FALSE;
-        }
 
-        /* Set the flag */
         HandleTableEntry->ObAttributes |= OBJ_INHERIT;
     }
     else
     {
-        /* Otherwise this implies we're removing the flag */
         HandleTableEntry->ObAttributes &= ~OBJ_INHERIT;
     }
 
-    /* Check if making the handle protected */
+    /* Define the handle protection, using the protect-from-close bit */
     if (SetHandleInfo->Information.ProtectFromClose)
-    {
-        /* Set the flag */
         HandleTableEntry->GrantedAccess |= ObpAccessProtectCloseBit;
-    }
     else
-    {
-        /* Otherwise, remove it */
         HandleTableEntry->GrantedAccess &= ~ObpAccessProtectCloseBit;
-    }
 
-    /* Return success */
     return TRUE;
 }
 
@@ -3283,36 +3286,45 @@ ObInsertObject(IN PVOID Object,
     return RealStatus;
 }
 
-/*++
-* @name ObSetHandleAttributes
-* @implemented NT5.1
-*
-*     The ObSetHandleAttributes routine <FILLMEIN>
-*
-* @param Handle
-*        <FILLMEIN>.
-*
-* @param HandleFlags
-*        <FILLMEIN>.
-*
-* @param PreviousMode
-*        <FILLMEIN>.
-*
-* @return <FILLMEIN>.
-*
-* @remarks None.
-*
-*--*/
+/**
+ * @brief
+ * Sets the attributes (inheritable and protect-from-close) of an
+ * existing object handle.
+ *
+ * @param[in]   Handle
+ * Handle whose attributes are to be modified.
+ *
+ * @param[in]   HandleFlags
+ * Pointer to an @p OBJECT_HANDLE_ATTRIBUTE_INFORMATION structure
+ * specifying the new values for the handle's inherit and
+ * protect-from-close attributes.
+ *
+ * @param[in]   PreviousMode
+ * Processor mode of the original caller. This is used to determine
+ * whether @p Handle may refer to a kernel handle.
+ *
+ * @return
+ * STATUS_SUCCESS on success, or STATUS_ACCESS_DENIED if the handle
+ * could not be located or its attributes could not be changed.
+ *
+ * @remarks
+ * This routine operates on per-handle state rather than on the
+ * underlying object itself.
+ * Requests to make a handle inheritable fail if the target object
+ * type does not permit the @p OBJ_INHERIT attribute.
+ **/
 NTSTATUS
 NTAPI
-ObSetHandleAttributes(IN HANDLE Handle,
-                      IN POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags,
-                      IN KPROCESSOR_MODE PreviousMode)
+ObSetHandleAttributes(
+    _In_ HANDLE Handle,
+    _In_ POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     OBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleAttributesContext;
-    BOOLEAN Result, AttachedToSystemProcess = FALSE;
+    BOOLEAN Result, AttachedToProcess = FALSE;
     PHANDLE_TABLE HandleTable;
     KAPC_STATE ApcState;
+
     PAGED_CODE();
 
     /* Check if this is a kernel handle */
@@ -3327,7 +3339,7 @@ ObSetHandleAttributes(IN HANDLE Handle,
         {
             /* Attach to the system process */
             KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
-            AttachedToSystemProcess = TRUE;
+            AttachedToProcess = TRUE;
         }
     }
     else
@@ -3346,15 +3358,12 @@ ObSetHandleAttributes(IN HANDLE Handle,
                             ObpSetHandleAttributes,
                             (ULONG_PTR)&SetHandleAttributesContext);
 
-    /* Did we attach to the system process? */
-    if (AttachedToSystemProcess)
-    {
-        /* Detach from it */
+    /* Detach from the system process if needed */
+    if (AttachedToProcess)
         KeUnstackDetachProcess(&ApcState);
-    }
 
     /* Return the result as an NTSTATUS value */
-    return Result ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+    return (Result ? STATUS_SUCCESS : STATUS_ACCESS_DENIED);
 }
 
 /*++

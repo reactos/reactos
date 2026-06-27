@@ -357,6 +357,11 @@ BuildParametersString(
 
     /* Format: "DefGw=;GwMetric=;IfMetric=0;DNS=;WINS=;DynamicUpdate=1;NameRegistration=0;" */
 
+    if (ppszParameters == NULL)
+        return E_FAIL;
+
+    *ppszParameters = NULL;
+
     /* Count Gateway entries */
     dwCount = 0;
     pAddr = pAdapter->NewGw;
@@ -366,58 +371,66 @@ BuildParametersString(
         pAddr = pAddr->Next;
     }
 
+    TRACE("Gateway count: %lu\n", dwCount);
+
     /* Build Default Gateway string */
-    pszDefGateway = CoTaskMemAlloc(dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
-    if (pszDefGateway == NULL)
+    if (dwCount > 0)
     {
-        hr = E_OUTOFMEMORY;
-        goto done;
-    }
-
-    ZeroMemory(pszDefGateway, dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
-
-    pString = pszDefGateway;
-    pAddr = pAdapter->NewGw;
-    while (pAddr != NULL)
-    {
-        if (pString != pszDefGateway)
+        pszDefGateway = CoTaskMemAlloc(dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
+        if (pszDefGateway == NULL)
         {
-            *pString = L',';
-            pString++;
+            hr = E_OUTOFMEMORY;
+            goto done;
         }
 
-        Address.S_un.S_addr = htonl(pAddr->u.SubnetMask);
-        pString = RtlIpv4AddressToStringW(&Address, pString);
+        ZeroMemory(pszDefGateway, dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
 
-        pAddr = pAddr->Next;
+        pString = pszDefGateway;
+        pAddr = pAdapter->NewGw;
+        while (pAddr != NULL)
+        {
+            if (pString != pszDefGateway)
+            {
+                *pString = L',';
+                pString++;
+            }
+
+            Address.S_un.S_addr = htonl(pAddr->IpAddress);
+            pString = RtlIpv4AddressToStringW(&Address, pString);
+
+            pAddr = pAddr->Next;
+        }
     }
 
     TRACE("DefaultGateway %S\n", pszDefGateway);
 
     /* Build Gateway Metric string */
-    pszGatewayMetric = CoTaskMemAlloc(dwCount * 5 * sizeof(WCHAR));
-    if (pszGatewayMetric == NULL)
+    if (dwCount > 0)
     {
-        hr = E_OUTOFMEMORY;
-        goto done;
-    }
-
-    ZeroMemory(pszGatewayMetric, dwCount * 5 * sizeof(WCHAR));
-
-    pString = pszGatewayMetric;
-    pAddr = pAdapter->NewGw;
-    while (pAddr != NULL)
-    {
-        if (pString != pszGatewayMetric)
+        pszGatewayMetric = CoTaskMemAlloc(dwCount * 5 * sizeof(WCHAR));
+        if (pszGatewayMetric == NULL)
         {
-            *pString = L',';
-            pString++;
+            hr = E_OUTOFMEMORY;
+            goto done;
         }
 
-        nLength = _swprintf(pString, L"%hu", pAddr->u.Metric);
-        pString += nLength;
+        ZeroMemory(pszGatewayMetric, dwCount * 5 * sizeof(WCHAR));
 
-        pAddr = pAddr->Next;
+        pString = pszGatewayMetric;
+        pAddr = pAdapter->NewGw;
+        while (pAddr != NULL)
+        {
+            if (pString != pszGatewayMetric)
+            {
+                *pString = L',';
+                pString++;
+            }
+
+            nLength = _swprintf(pString, L"%hu", pAddr->u.Metric);
+            pString += nLength;
+
+            pAddr = pAddr->Next;
+        }
     }
 
     TRACE("Gateway Metric %S\n", pszGatewayMetric);
@@ -431,39 +444,46 @@ BuildParametersString(
         pAddr = pAddr->Next;
     }
 
-    pszNameServers = CoTaskMemAlloc(dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
-    if (pszNameServers == NULL)
-    {
-        hr = E_OUTOFMEMORY;
-        goto done;
-    }
+    TRACE("DNS count: %lu\n", dwCount);
 
-    ZeroMemory(pszNameServers, dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
-
-    pString = pszNameServers;
-    pAddr = pAdapter->NewNs;
-    while (pAddr != NULL)
+    if (dwCount > 0)
     {
-        if (pString != pszNameServers)
+        pszNameServers = CoTaskMemAlloc(dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
+        if (pszNameServers == NULL)
         {
-            *pString = L',';
-            pString++;
+            hr = E_OUTOFMEMORY;
+            goto done;
         }
 
-        Address.S_un.S_addr = htonl(pAddr->IpAddress);
-        pString = RtlIpv4AddressToStringW(&Address, pString);
+        ZeroMemory(pszNameServers, dwCount * IP_STRING_MAX_LENGTH * sizeof(WCHAR));
 
-        pAddr = pAddr->Next;
+        pString = pszNameServers;
+        pAddr = pAdapter->NewNs;
+        while (pAddr != NULL)
+        {
+            if (pString != pszNameServers)
+            {
+                *pString = L',';
+                pString++;
+            }
+
+            Address.S_un.S_addr = htonl(pAddr->IpAddress);
+            pString = RtlIpv4AddressToStringW(&Address, pString);
+
+            pAddr = pAddr->Next;
+        }
     }
 
     TRACE("Name Servers %S\n", pszNameServers);
 
     /* Get the Parameters string length */
-    nLength = _scwprintf(L"DefGw=%s;GwMetric=%s;IfMetric=%lu;DNS=%s;",
-                         pszDefGateway,
-                         pszGatewayMetric,
+    nLength = _scwprintf(L"DefGw=%s;GwMetric=%s;IfMetric=%lu;DNS=%s;DynamicUpdate=%lu;NameRegistration=%lu;",
+                         pszDefGateway ? pszDefGateway : L"",
+                         pszGatewayMetric ? pszGatewayMetric : L"",
                          pAdapter->NewMetric,
-                         pszNameServers);
+                         pszNameServers ? pszNameServers : L"",
+                         pAdapter->NewRegisterAdapterName ? 1 : 0,
+                         pAdapter->NewRegistrationEnabled ? 1 : 0);
 
     TRACE("Param string length %d\n", nLength);
     if (nLength == -1)
@@ -481,11 +501,13 @@ BuildParametersString(
 
     /* Fill the Parameters buffer */
     _swprintf(pszParameters,
-              L"DefGw=%s;GwMetric=%s;IfMetric=%lu;DNS=%s;",
-              pszDefGateway,
-              pszGatewayMetric,
+              L"DefGw=%s;GwMetric=%s;IfMetric=%lu;DNS=%s;DynamicUpdate=%lu;NameRegistration=%lu;",
+              pszDefGateway ? pszDefGateway : L"",
+              pszGatewayMetric ? pszGatewayMetric : L"",
               pAdapter->NewMetric,
-              pszNameServers);
+              pszNameServers ? pszNameServers : L"",
+              pAdapter->NewRegisterAdapterName ? 1 : 0,
+              pAdapter->NewRegistrationEnabled ? 1 : 0);
 
     TRACE("Parameters %S\n", pszParameters);
 
@@ -503,6 +525,48 @@ done:
 
     return hr;
 }
+
+
+static
+PWSTR
+ExtractParameterValue(
+    PWSTR pszParameters,
+    PWSTR pszParameter)
+{
+    PWSTR pToken, pStart, pEnd, pBuffer;
+    INT length = 0;
+
+    TRACE("ExtractParameterValue(%S, %S)\n", pszParameters, pszParameter);
+
+    pToken = wcsstr(pszParameters, pszParameter);
+    if (pToken == NULL)
+        return NULL;
+
+    pStart = wcschr(pToken, L'=');
+    if (pStart == NULL)
+        return NULL;
+
+    pStart++;
+    pEnd = wcschr(pStart, L';');
+    if (pEnd == NULL)
+        length = wcslen(pStart);
+    else
+        length = pEnd - pStart;
+	TRACE("length %d\n", length);
+
+    if (length == 0)
+        return NULL;
+
+    pBuffer = (PWSTR)CoTaskMemAlloc((length + 1) * sizeof(WCHAR));
+    if (pBuffer)
+    {
+        CopyMemory(pBuffer, pStart, length * sizeof(WCHAR));
+        pBuffer[length] = UNICODE_NULL;
+    }
+
+    return pBuffer;
+}
+
 
 /***************************************************************
  * TCP/IP Filter Dialog
@@ -3020,63 +3084,6 @@ InitializeTcpipBasicDlgCtrls(
     return S_OK;
 }
 
-HRESULT
-CopyIpAddrString(
-    IP_ADDR_STRING * pSrc,
-    IP_ADDR ** pTarget,
-    COPY_TYPE Type,
-    LPWSTR szMetric)
-{
-    IP_ADDR_STRING * pCurrent;
-    IP_ADDR *pNew, *pLast;
-
-    pCurrent = pSrc;
-    pLast = NULL;
-
-    while(pCurrent)
-    {
-        pNew = CoTaskMemAlloc(sizeof(IP_ADDR));
-        if (!pNew)
-        {
-           break;
-        }
-        ZeroMemory(pNew, sizeof(IP_ADDR));
-        pNew->IpAddress = GetIpAddressFromStringA(pCurrent->IpAddress.String);
-        if (!pNew->IpAddress)
-        {
-            CoTaskMemFree(pNew);
-            return E_FAIL;
-        }
-
-       if (Type == SUBMASK)
-       {
-           pNew->u.SubnetMask = GetIpAddressFromStringA(pCurrent->IpMask.String);
-           pNew->NTEContext = pCurrent->Context;
-       }
-       else if (Type == METRIC)
-       {
-           if (szMetric && szMetric[0] != L'\0')
-           {
-               pNew->u.Metric = _wtoi(szMetric);
-               szMetric += wcslen(szMetric) + 1;
-           }
-       }
-
-        if (!pLast)
-            *pTarget = pNew;
-        else
-            pLast->Next = pNew;
-
-        pLast = pNew;
-        pCurrent = pCurrent->Next;
-
-    }
-    pLast->Next = NULL;
-    return S_OK;
-}
-
-
-
 INT_PTR
 CALLBACK
 TcpipBasicDlg(
@@ -3557,7 +3564,251 @@ done:
 }
 
 HRESULT
-ParseNameServer(
+LoadAddressSetings(
+    HKEY hAdapterKey,
+    AdapterSettings *pAdapter)
+{
+    PWSTR pszBuffer1 = NULL, pszBuffer2 = NULL, pStart1, pStart2, pEnd1, pEnd2;
+    DWORD dwSize;
+    IN_ADDR Address, SubnetMask;
+    IP_ADDR *pNewAddrEntry, *pOldAddrEntry, *pNewLast = NULL, *pOldLast = NULL;
+    HRESULT hr = S_OK;
+    NTSTATUS Status;
+
+    TRACE("LoadAddressSettings()\n");
+
+    dwSize = 0;
+    RegQueryValueExW(hAdapterKey, L"IpAddress", NULL, NULL, NULL, &dwSize);
+    if (dwSize == 0)
+        return S_OK;
+
+    pszBuffer1 = CoTaskMemAlloc(dwSize);
+    if (pszBuffer1 == NULL)
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    if (RegQueryValueExW(hAdapterKey, L"IpAddress", NULL, NULL, (PBYTE)pszBuffer1, &dwSize) != ERROR_SUCCESS)
+    {
+        hr = E_FAIL;
+        goto done;
+    }
+
+    dwSize = 0;
+    RegQueryValueExW(hAdapterKey, L"SubnetMask", NULL, NULL, NULL, &dwSize);
+    if (dwSize == 0)
+        return S_OK;
+
+    pszBuffer2 = CoTaskMemAlloc(dwSize);
+    if (pszBuffer2 == NULL)
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    if (RegQueryValueExW(hAdapterKey, L"SubnetMask", NULL, NULL, (PBYTE)pszBuffer2, &dwSize) != ERROR_SUCCESS)
+    {
+        hr = E_FAIL;
+        goto done;
+    }
+
+    pStart1 = pszBuffer1;
+    pStart2 = pszBuffer2;
+    for (;;)
+    {
+        TRACE("Start1: %S\n", pStart1);
+        TRACE("Start2: %S\n", pStart2);
+        Status = RtlIpv4StringToAddressW(pStart1, TRUE, (LPCWSTR *)&pEnd1, &Address);
+        if (Status != 0)
+        {
+            ERR("RtlIpv4StringToAddressW Status 0x%08lx\n", Status);
+            hr = E_FAIL;
+            break;
+        }
+
+        TRACE("Adress: %lx\n", Address.S_un.S_addr);
+
+        Status = RtlIpv4StringToAddressW(pStart2, TRUE, (LPCWSTR *)&pEnd2, &SubnetMask);
+        if (Status != 0)
+        {
+            ERR("RtlIpv4StringToAddressW Status 0x%08lx\n", Status);
+            hr = E_FAIL;
+            break;
+        }
+
+        TRACE("SubnetMask: %lx\n", SubnetMask.S_un.S_addr);
+
+        pNewAddrEntry = CoTaskMemAlloc(sizeof(IP_ADDR));
+        if (pNewAddrEntry)
+        {
+            ZeroMemory(pNewAddrEntry, sizeof(IP_ADDR));
+            pNewAddrEntry->IpAddress = ntohl(Address.S_un.S_addr);
+            pNewAddrEntry->u.SubnetMask = ntohl(SubnetMask.S_un.S_addr);;
+
+            if (!pNewLast)
+                pAdapter->NewIp = pNewAddrEntry;
+            else
+                pNewLast->Next = pNewAddrEntry;
+
+            pNewLast = pNewAddrEntry;
+        }
+
+        pOldAddrEntry = CoTaskMemAlloc(sizeof(IP_ADDR));
+        if (pOldAddrEntry)
+        {
+            ZeroMemory(pOldAddrEntry, sizeof(IP_ADDR));
+            pOldAddrEntry->IpAddress = ntohl(Address.S_un.S_addr);
+            pOldAddrEntry->u.SubnetMask = ntohl(SubnetMask.S_un.S_addr);;
+
+            if (!pOldLast)
+                pAdapter->OldIp = pOldAddrEntry;
+            else
+                pOldLast->Next = pOldAddrEntry;
+
+            pOldLast = pOldAddrEntry;
+        }
+
+        pStart1 = pEnd1 + 1;
+        pStart2 = pEnd2 + 1;
+
+        if ((*pStart1 == UNICODE_NULL) || (*pStart2 == UNICODE_NULL))
+            break;
+    }
+
+done:
+    if (pszBuffer1)
+        CoTaskMemFree(pszBuffer1);
+
+    if (pszBuffer2)
+        CoTaskMemFree(pszBuffer2);
+
+    return hr;
+}
+
+
+HRESULT
+LoadGatewaySettings(
+    HKEY hAdapterKey,
+    AdapterSettings *pAdapter)
+{
+    PWSTR pszBuffer1 = NULL, pszBuffer2 = NULL, pStart1, pStart2, pEnd1, pEnd2;
+    DWORD dwSize, dwMetric;
+    IN_ADDR Address;
+    IP_ADDR *pNewAddrEntry, *pOldAddrEntry, *pNewLast = NULL, *pOldLast = NULL;
+    HRESULT hr = S_OK;
+    NTSTATUS Status;
+
+    TRACE("LoadGatewaySettings()\n");
+
+    dwSize = 0;
+    RegQueryValueExW(hAdapterKey, L"DefaultGateway", NULL, NULL, NULL, &dwSize);
+    if (dwSize == 0)
+        return S_OK;
+
+    pszBuffer1 = CoTaskMemAlloc(dwSize);
+    if (pszBuffer1 == NULL)
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    if (RegQueryValueExW(hAdapterKey, L"DefaultGateway", NULL, NULL, (PBYTE)pszBuffer1, &dwSize) != ERROR_SUCCESS)
+    {
+        hr = E_FAIL;
+        goto done;
+    }
+
+    dwSize = 0;
+    RegQueryValueExW(hAdapterKey, L"DefaultGatewayMetric", NULL, NULL, NULL, &dwSize);
+    if (dwSize == 0)
+        return S_OK;
+
+    pszBuffer2 = CoTaskMemAlloc(dwSize);
+    if (pszBuffer2 == NULL)
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    if (RegQueryValueExW(hAdapterKey, L"DefaultGatewayMetric", NULL, NULL, (PBYTE)pszBuffer2, &dwSize) != ERROR_SUCCESS)
+    {
+        hr = E_FAIL;
+        goto done;
+    }
+
+    pStart1 = pszBuffer1;
+    pStart2 = pszBuffer2;
+    for (;;)
+    {
+        TRACE("Start1: %S\n", pStart1);
+        TRACE("Start2: %S\n", pStart2);
+        Status = RtlIpv4StringToAddressW(pStart1, TRUE, (LPCWSTR *)&pEnd1, &Address);
+        if (Status != 0)
+        {
+            ERR("RtlIpv4StringToAddressW Status 0x%08lx\n", Status);
+            hr = E_FAIL;
+            break;
+        }
+
+        TRACE("Adress: %lx\n", Address.S_un.S_addr);
+
+        dwMetric = wcstoul(pStart2, &pEnd2, 10);
+        if (dwMetric > 9999)
+            dwMetric = 9999;
+
+        TRACE("Metric: %lu\n", dwMetric);
+
+        pNewAddrEntry = CoTaskMemAlloc(sizeof(IP_ADDR));
+        if (pNewAddrEntry)
+        {
+            ZeroMemory(pNewAddrEntry, sizeof(IP_ADDR));
+            pNewAddrEntry->IpAddress = ntohl(Address.S_un.S_addr);
+            pNewAddrEntry->u.Metric = (USHORT)dwMetric;
+
+            if (!pNewLast)
+                pAdapter->NewGw = pNewAddrEntry;
+            else
+                pNewLast->Next = pNewAddrEntry;
+
+            pNewLast = pNewAddrEntry;
+        }
+
+        pOldAddrEntry = CoTaskMemAlloc(sizeof(IP_ADDR));
+        if (pOldAddrEntry)
+        {
+            ZeroMemory(pOldAddrEntry, sizeof(IP_ADDR));
+            pOldAddrEntry->IpAddress = ntohl(Address.S_un.S_addr);
+            pOldAddrEntry->u.Metric = (USHORT)dwMetric;
+
+            if (!pOldLast)
+                pAdapter->OldGw = pOldAddrEntry;
+            else
+                pOldLast->Next = pOldAddrEntry;
+
+            pOldLast = pOldAddrEntry;
+        }
+
+        pStart1 = pEnd1 + 1;
+        pStart2 = pEnd2 + 1;
+
+        if ((*pStart1 == UNICODE_NULL) || (*pStart2 == UNICODE_NULL))
+            break;
+    }
+
+done:
+    if (pszBuffer1)
+        CoTaskMemFree(pszBuffer1);
+
+    if (pszBuffer2)
+        CoTaskMemFree(pszBuffer2);
+
+    return hr;
+}
+
+
+HRESULT
+LoadNameServerSettings(
     HKEY hAdapterKey,
     AdapterSettings *pAdapter)
 {
@@ -3590,9 +3841,9 @@ ParseNameServer(
     for (;;)
     {
         Status = RtlIpv4StringToAddressW(pStart, TRUE, (LPCWSTR *)&pEnd, &Address);
-        TRACE("RtlIpv4StringToAddressW Status 0x%08lx\n", Status);
         if (Status != 0)
         {
+            ERR("RtlIpv4StringToAddressW Status 0x%08lx\n", Status);
             hr = E_FAIL;
             break;
         }
@@ -3652,6 +3903,8 @@ LoadAdapterSettings(
     DWORD dwSize;
     HRESULT hr = S_OK;
 
+    TRACE("LoadAdapterSettings()\n");
+
     pAdapter = (AdapterSettings*)CoTaskMemAlloc(sizeof(AdapterSettings));
     if (!pAdapter)
         return E_FAIL;
@@ -3674,14 +3927,18 @@ LoadAdapterSettings(
 
     if (!pAdapterInfo->DhcpEnabled)
     {
-        CopyIpAddrString(&pAdapterInfo->IpAddressList, &pAdapter->NewIp, SUBMASK, NULL);
-        CopyIpAddrString(&pAdapterInfo->IpAddressList, &pAdapter->OldIp, SUBMASK, NULL);
+        hr = LoadAddressSetings(hAdapterKey, pAdapter);
+        if (FAILED(hr))
+            goto done;
     }
 
-    CopyIpAddrString(&pAdapterInfo->GatewayList, &pAdapter->NewGw, METRIC, NULL);
-    CopyIpAddrString(&pAdapterInfo->GatewayList, &pAdapter->OldGw, METRIC, NULL);
+    hr = LoadGatewaySettings(hAdapterKey, pAdapter);
+    if (FAILED(hr))
+        goto done;
 
-    ParseNameServer(hAdapterKey, pAdapter);
+    hr = LoadNameServerSettings(hAdapterKey, pAdapter);
+    if (FAILED(hr))
+        goto done;
 
     pAdapter->DnsDhcpEnabled = (pAdapter->NewDhcpEnabled && (pAdapter->NewNs == NULL));
 
@@ -4563,7 +4820,7 @@ ITcpipProperties_fnUnknown1(
     DWORD dwSize;
     HRESULT hr = S_OK;
 
-    ERR("ITcpipProperties_fnUnknown1(%s %p)\n", wine_dbgstr_guid(pAdapterName), ppProperties);
+    TRACE("ITcpipProperties_fnUnknown1(%s %p)\n", wine_dbgstr_guid(pAdapterName), ppProperties);
     TcpipConfNotifyImpl *This = impl_from_ITcpipProperties(iface);
 
     pAdapter = GetAdapterByGuid(This, pAdapterName);
@@ -4575,6 +4832,7 @@ ITcpipProperties_fnUnknown1(
     if (FAILED(hr))
         goto done;
 
+    TRACE("DHCP: %lu\n", pAdapter->NewDhcpEnabled);
     TRACE("IpAddress string: %S\n", pszIpAddress);
 
     /* Build the Parameters string */
@@ -4642,9 +4900,15 @@ ITcpipProperties_fnUnknown2(
     GUID *pAdapterName,
     PTCPIP_PROPERTIES pProperties)
 {
+    AdapterSettings *pAdapter;
+    IN_ADDR IpAddress, SubnetMask, Gateway, Dns;
+    PWSTR  pszGateway = NULL, pszMetric = NULL, pszDns = NULL;
+    DWORD dwMetric;
+    LPCWSTR Term;
+    NTSTATUS Status;
     HRESULT hr = S_OK;
 
-    ERR("ITcpipProperties_fnUnknown2(%s %p)\n", wine_dbgstr_guid(pAdapterName), pProperties);
+    TRACE("ITcpipProperties_fnUnknown2(%s %p)\n", wine_dbgstr_guid(pAdapterName), pProperties);
 
     if (pProperties)
     {
@@ -4653,6 +4917,171 @@ ITcpipProperties_fnUnknown2(
         ERR("pProperties->pszSubnetMask %S\n", pProperties->pszSubnetMask);
         ERR("pProperties->pszParameters %S\n", pProperties->pszParameters);
     }
+
+    TcpipConfNotifyImpl *This = impl_from_ITcpipProperties(iface);
+
+    pAdapter = GetAdapterByGuid(This, pAdapterName);
+    if (pAdapter == NULL)
+        return E_FAIL;
+
+    pAdapter->NewDhcpEnabled = (pProperties->dwDhcp != 0);
+    if (pAdapter->NewDhcpEnabled)
+    {
+        TRACE("DHCP\n");
+        pAdapter->NewIp->IpAddress = 0;
+        pAdapter->NewIp->u.SubnetMask = 0;
+    }
+    else
+    {
+        TRACE("STATIC\n");
+        Status = RtlIpv4StringToAddressW((PCWSTR)pProperties->pszIpAddress,
+                                         TRUE,
+                                         &Term,
+                                         &IpAddress);
+        if (Status != 0 /*STATUS_SUCCESS*/)
+        {
+            hr = E_FAIL;
+            goto done;
+        }
+
+        TRACE("IP Address: %u.%u.%u.%u\n",
+              IpAddress.S_un.S_un_b.s_b1, IpAddress.S_un.S_un_b.s_b2, IpAddress.S_un.S_un_b.s_b3, IpAddress.S_un.S_un_b.s_b4);
+
+        Status = RtlIpv4StringToAddressW((PCWSTR)pProperties->pszSubnetMask,
+                                         TRUE,
+                                         &Term,
+                                         &SubnetMask);
+        if (Status != 0 /*STATUS_SUCCESS*/)
+        {
+            hr = E_FAIL;
+            goto done;
+        }
+
+        TRACE("Subnet Mask: %u.%u.%u.%u\n",
+              SubnetMask.S_un.S_un_b.s_b1, SubnetMask.S_un.S_un_b.s_b2, SubnetMask.S_un.S_un_b.s_b3, SubnetMask.S_un.S_un_b.s_b4);
+
+        TRACE("pAdapter->NewIp %p\n", pAdapter->NewIp);
+        if (pAdapter->NewIp == NULL)
+        {
+            pAdapter->NewIp = CoTaskMemAlloc(sizeof(IP_ADDR));
+            if (pAdapter->NewIp == NULL)
+            {
+                hr = E_OUTOFMEMORY;
+                goto done;
+            }
+
+            ZeroMemory(pAdapter->NewIp, sizeof(IP_ADDR));
+        }
+
+        pAdapter->NewIp->IpAddress = ntohl(IpAddress.S_un.S_addr);
+        pAdapter->NewIp->u.SubnetMask = ntohl(SubnetMask.S_un.S_addr);
+    }
+
+    /* Parse pszParameters */
+    pszGateway = ExtractParameterValue(pProperties->pszParameters, L"DefGw");
+    pszMetric = ExtractParameterValue(pProperties->pszParameters, L"GwMetric");
+    if (pszGateway != NULL && pszMetric != NULL)
+    {
+        TRACE("Gateway: %S\n", pszGateway);
+        TRACE("Metric: %S\n", pszMetric);
+        if ((wcslen(pszGateway) == 0) && (wcslen(pszMetric) == 0))
+        {
+            FIXME("Delete Gateway and Metric!\n");
+        }
+        else
+        {
+            Status = RtlIpv4StringToAddressW((PCWSTR)pszGateway,
+                                            TRUE,
+                                            &Term,
+                                            &Gateway);
+            if (Status != 0 /*STATUS_SUCCESS*/)
+            {
+                hr = E_FAIL;
+                goto done;
+            }
+
+            TRACE("Gateway: %u.%u.%u.%u\n",
+                  Gateway.S_un.S_un_b.s_b1, Gateway.S_un.S_un_b.s_b2, Gateway.S_un.S_un_b.s_b3, Gateway.S_un.S_un_b.s_b4);
+
+            TRACE("pAdapter->NewGw %p\n", pAdapter->NewGw);
+            if (pAdapter->NewGw == NULL)
+            {
+                pAdapter->NewGw = CoTaskMemAlloc(sizeof(IP_ADDR));
+                if (pAdapter->NewGw == NULL)
+                {
+                    hr = E_OUTOFMEMORY;
+                    goto done;
+                }
+
+                ZeroMemory(pAdapter->NewGw, sizeof(IP_ADDR));
+            }
+
+            pAdapter->NewGw->IpAddress = ntohl(Gateway.S_un.S_addr);
+
+            dwMetric = wcstoul(pszMetric, (PWSTR*)&Term, 10);
+            if (dwMetric > 9999)
+                dwMetric = 9999;
+            pAdapter->NewGw->u.Metric = (USHORT)dwMetric;
+        }
+    }
+
+    pszDns = ExtractParameterValue(pProperties->pszParameters, L"DNS");
+    if (pszDns)
+    {
+        TRACE("DNS: %S\n", pszDns);
+        if (wcslen(pszDns) == 0)
+        {
+            FIXME("Delete DNS!\n");
+        }
+        else
+        {
+            Status = RtlIpv4StringToAddressW((PCWSTR)pszDns,
+                                            TRUE,
+                                            &Term,
+                                            &Dns);
+            if (Status != 0 /*STATUS_SUCCESS*/)
+            {
+                hr = E_FAIL;
+                goto done;
+            }
+
+            TRACE("Dns: %u.%u.%u.%u\n",
+                  Dns.S_un.S_un_b.s_b1, Dns.S_un.S_un_b.s_b2, Dns.S_un.S_un_b.s_b3, Dns.S_un.S_un_b.s_b4);
+
+            TRACE("pAdapter->NewNs %p\n", pAdapter->NewNs);
+            if (pAdapter->NewNs == NULL)
+            {
+                pAdapter->NewNs = CoTaskMemAlloc(sizeof(IP_ADDR));
+                if (pAdapter->NewNs == NULL)
+                {
+                    hr = E_OUTOFMEMORY;
+                    goto done;
+                }
+
+                ZeroMemory(pAdapter->NewNs, sizeof(IP_ADDR));
+            }
+
+            pAdapter->NewNs->IpAddress = ntohl(Dns.S_un.S_addr);
+        }
+    }
+
+    /*
+        TODO:
+            IfMetric
+            DynamicUpdate
+            NameRegistration
+    */
+
+    if (This->pNComp)
+        ((INetCfgComponentImpl *)(This->pNComp))->pItem->bChanged = TRUE;
+
+done:
+    if (pszGateway)
+        CoTaskMemFree(pszGateway);
+    if (pszMetric)
+        CoTaskMemFree(pszMetric);
+    if (pszDns)
+        CoTaskMemFree(pszDns);
 
     return hr;
 }

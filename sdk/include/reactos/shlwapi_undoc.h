@@ -10,6 +10,10 @@
 
 #include <winreg.h> // For REGSAM
 
+#if !defined(_INC_SHLWAPI) && !defined(__WINE_SHLWAPI_H)
+#error Please #include <shlwapi.h> first
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,6 +61,8 @@ SHRestrictionLookup(
     _In_ LPCWSTR key,
     _In_ const POLICYDATA *polTable,
     _Inout_ LPDWORD polArr);
+
+INT WINAPI SHRestrictedMessageBox(_In_ HWND hWnd);
 
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
@@ -533,6 +539,27 @@ SHWindowsPolicyGetValue(
     _Out_opt_ PDWORD pcbValue);
 
 #define E_DATATYPE_MISMATCH HRESULT_FROM_WIN32(ERROR_DATATYPE_MISMATCH)
+
+static inline BOOL
+PathIsAbsolute(_In_ PCWSTR pszPath)
+{
+    return (PathGetDriveNumberW(pszPath) != -1 && pszPath[2] == L'\\') || PathIsUNCW(pszPath);
+}
+
+static inline HRESULT
+SHCoAlloc(_In_ SIZE_T cb, _Outptr_ PVOID* ppData)
+{
+    *ppData = CoTaskMemAlloc(cb);
+    return *ppData ? S_OK : E_OUTOFMEMORY;
+}
+
+static inline DWORD
+SHWindowsPolicyEx(_In_ REFGUID rpolid, _In_ DWORD dwDefaultValue)
+{
+    DWORD dwData, cbData = sizeof(dwData);
+    HRESULT hr = SHWindowsPolicyGetValue(rpolid, &dwData, &cbData);
+    return (SUCCEEDED(hr) ? dwData : dwDefaultValue);
+}
 
 /*****************************************************************************
  * ZoneCheck*

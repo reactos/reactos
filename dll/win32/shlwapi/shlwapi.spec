@@ -381,7 +381,7 @@
 381 stub -noname AssocCopyVerbs
 382 stdcall -noname ZoneComputePaneSize(ptr)
 383 stub -noname ZoneConfigureW
-384 stub -noname SHRestrictedMessageBox
+384 stdcall -noname SHRestrictedMessageBox(ptr)
 385 stub -noname SHLoadRawAccelerators
 386 stub -noname SHQueryRawAccelerator
 387 stub -noname SHQueryRawAcceleratorMsg
@@ -545,7 +545,7 @@
 549 stdcall -noname SHCoCreateInstanceAC(ptr ptr long ptr ptr)
 550 stub -noname GetTemplateInfoFromHandle
 551 stdcall -noname IShellFolder_CompareIDs(ptr ptr ptr ptr)
-552 stdcall -stub -noname -version=0x501-0x502 SHEvaluateSystemCommandTemplate(wstr ptr ptr ptr)
+552 stdcall -noname -version=0x501-0x502 SHEvaluateSystemCommandTemplate(wstr ptr ptr ptr)
 553 stdcall IsInternetESCEnabled()
 554 stdcall -noname -stub SHGetAllAccessSA()
 
