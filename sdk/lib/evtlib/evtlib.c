@@ -1508,13 +1508,14 @@ ElfWriteRecord(
 
         if (NewSize > LogFile->CurrentSize)
         {
+            EVTLTRACE1("Expanding the log file from %lu to %lu\n",
+                    LogFile->CurrentSize, NewSize);
             Status = LogFile->FileSetSize(LogFile, NewSize, LogFile->CurrentSize);
             if (!NT_SUCCESS(Status))
             {
                 EVTLTRACE1("FileSetSize() failed (Status 0x%08lx)\n", Status);
                 return Status;
             }
-
             LogFile->CurrentSize = NewSize;
         }
     }
