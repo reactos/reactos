@@ -20,9 +20,10 @@
 // Once things become stabilized enough, replace all the EVTLTRACE1 by EVTLTRACE
 #define EVTLTRACE1(...)  DPRINT1("EvtLib: " __VA_ARGS__)
 
-#define EVENTLOG_FILE_GRANULARITY (64 * 1024)
 
 /* GLOBALS *******************************************************************/
+
+#define EVENTLOG_FILE_GRANULARITY   (64 * 1024)
 
 static const EVENTLOGEOF EOFRecord =
 {
@@ -330,9 +331,6 @@ ElfpInitNewFile(
      */
     InitialSize = sizeof(EVENTLOGHEADER) + sizeof(EVENTLOGEOF); // TODO: Consider FileSize as well.
     InitialSize = ROUND_UP(InitialSize, EVENTLOG_FILE_GRANULARITY);
-
-    LogFile->Header.MaxSize = ROUND_UP(max(MaxSize, InitialSize),
-                                       EVENTLOG_FILE_GRANULARITY);
     LogFile->CurrentSize = InitialSize;
     Status = LogFile->FileSetSize(LogFile, LogFile->CurrentSize, FileSize);
     if (!NT_SUCCESS(Status))
@@ -340,6 +338,10 @@ ElfpInitNewFile(
         EVTLTRACE1("FileSetSize() failed (Status 0x%08lx)\n", Status);
         return Status;
     }
+
+    /* Ensure that the log maximum size is greater than the initial file size */
+    MaxSize = max(MaxSize, InitialSize);
+    LogFile->Header.MaxSize = ROUND_UP(MaxSize, EVENTLOG_FILE_GRANULARITY);
 
     LogFile->Header.Flags = 0;
     LogFile->Header.Retention = Retention;
