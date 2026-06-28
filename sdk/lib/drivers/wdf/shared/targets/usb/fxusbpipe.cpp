@@ -48,7 +48,8 @@ FxUsbPipeContinuousReader::FxUsbPipeContinuousReader(
 
     m_TargetDevice = m_Pipe->GetTargetDevice();
 
-    RtlZeroMemory(&m_Readers[0], m_NumReaders * sizeof(FxUsbPipeRepeatReader));
+    RtlZeroMemory(static_cast<PVOID>(&m_Readers[0]),
+                  m_NumReaders * sizeof(FxUsbPipeRepeatReader));
 }
 
 FxUsbPipeContinuousReader::~FxUsbPipeContinuousReader()
@@ -1891,4 +1892,3 @@ FxUsbPipe::Reset(
     }
     return status;
 }
-

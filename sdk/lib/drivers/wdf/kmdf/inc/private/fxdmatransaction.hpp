@@ -575,6 +575,7 @@ private:
 
     static
     VOID
+    NTAPI
     _AdapterListControl(
         __in  DEVICE_OBJECT         * DeviceObject,
         __in  IRP                   * Irp,

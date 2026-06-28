@@ -401,6 +401,7 @@ LocalConfigurePort(PWSTR pName, HWND hWnd, PWSTR pPortName)
     }
     else
     {
+        res = FALSE;
         SetLastError(ERROR_INVALID_PARAMETER);
     }
 

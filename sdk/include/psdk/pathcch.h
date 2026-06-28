@@ -253,7 +253,7 @@ PathIsUNCEx(
 #undef PathRenameExtensionW
 
 
-#ifdef DEPRECATE_SUPPORTED
+#if defined(DEPRECATE_SUPPORTED) && defined(_MSC_VER)
 
 // #pragma deprecated(PathIsRelativeWorker)
 // #pragma deprecated(StrIsEqualWorker)

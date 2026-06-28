@@ -31,6 +31,7 @@ include_directories(${REACTOS_SOURCE_DIR}/modules/rosapps/include/vfd
                     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 set_module_type(vfd win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(vfd zlib_solo uuid cppstl)
+add_cppstl_include_directories(vfd)
 set_target_cpp_properties(vfd WITH_EXCEPTIONS)
 
 # Okay - After a long investigation this modules PDBs are just absolutely fighting github actions

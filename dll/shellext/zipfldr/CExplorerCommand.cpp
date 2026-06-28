@@ -23,44 +23,44 @@ public:
     }
 
     // *** IExplorerCommand methods ***
-    STDMETHODIMP GetTitle(IShellItemArray *psiItemArray, PWSTR *ppszName)
+    STDMETHODIMP GetTitle(IShellItemArray *psiItemArray, PWSTR *ppszName) override
     {
         CStringW Title(MAKEINTRESOURCEW(IDS_MENUITEM));
         return SHStrDup(Title, ppszName);
     }
-    STDMETHODIMP GetIcon(IShellItemArray *psiItemArray, PWSTR *ppszIcon)
+    STDMETHODIMP GetIcon(IShellItemArray *psiItemArray, PWSTR *ppszIcon) override
     {
         CStringW IconName = L"zipfldr.dll,-1";
         return SHStrDup(IconName, ppszIcon);
     }
-    STDMETHODIMP GetToolTip(IShellItemArray *psiItemArray, PWSTR *ppszInfotip)
+    STDMETHODIMP GetToolTip(IShellItemArray *psiItemArray, PWSTR *ppszInfotip) override
     {
         CStringW HelpText(MAKEINTRESOURCEW(IDS_HELPTEXT));
         return SHStrDup(HelpText, ppszInfotip);
     }
-    STDMETHODIMP GetCanonicalName(GUID *pguidCommandName)
+    STDMETHODIMP GetCanonicalName(GUID *pguidCommandName) override
     {
         *pguidCommandName = CLSID_ZipFolderExtractAllCommand;
         return S_OK;
     }
-    STDMETHODIMP GetState(IShellItemArray *psiItemArray, BOOL fOkToBeSlow, EXPCMDSTATE *pCmdState)
+    STDMETHODIMP GetState(IShellItemArray *psiItemArray, BOOL fOkToBeSlow, EXPCMDSTATE *pCmdState) override
     {
         *pCmdState = ECS_ENABLED;
         return S_OK;
     }
-    STDMETHODIMP Invoke(IShellItemArray *psiItemArray, IBindCtx *pbc)
+    STDMETHODIMP Invoke(IShellItemArray *psiItemArray, IBindCtx *pbc) override
     {
         CMINVOKECOMMANDINFO cm = { sizeof(cm), 0 };
         cm.lpVerb = EXTRACT_VERBA;
         cm.nShow = SW_SHOW;
         return m_pZipObject->InvokeCommand(&cm);
     }
-    STDMETHODIMP GetFlags(EXPCMDFLAGS *pFlags)
+    STDMETHODIMP GetFlags(EXPCMDFLAGS *pFlags) override
     {
         *pFlags = ECF_DEFAULT;
         return S_OK;
     }
-    STDMETHODIMP EnumSubCommands(IEnumExplorerCommand **ppEnum)
+    STDMETHODIMP EnumSubCommands(IEnumExplorerCommand **ppEnum) override
     {
         DbgPrint("%s\n", __FUNCTION__);
         return E_NOTIMPL;
@@ -98,7 +98,7 @@ public:
     }
 
     // *** IEnumExplorerCommand methods ***
-    STDMETHODIMP Next(ULONG celt, IExplorerCommand **pUICommand, ULONG *pceltFetched)
+    STDMETHODIMP Next(ULONG celt, IExplorerCommand **pUICommand, ULONG *pceltFetched) override
     {
         if (!pUICommand)
             return E_POINTER;
@@ -119,7 +119,7 @@ public:
         }
         return S_FALSE;
     }
-    STDMETHODIMP Skip(ULONG celt)
+    STDMETHODIMP Skip(ULONG celt) override
     {
         if (m_bFirst)
         {
@@ -128,12 +128,12 @@ public:
         }
         return S_FALSE;
     }
-    STDMETHODIMP Reset()
+    STDMETHODIMP Reset() override
     {
         m_bFirst = true;
         return S_OK;
     }
-    STDMETHODIMP Clone(IEnumExplorerCommand **ppenum)
+    STDMETHODIMP Clone(IEnumExplorerCommand **ppenum) override
     {
         return E_NOTIMPL;
     }
@@ -162,11 +162,11 @@ public:
     }
 
     // *** IExplorerCommandProvider methods ***
-    STDMETHODIMP GetCommands(IUnknown *punkSite, REFIID riid, void **ppv)
+    STDMETHODIMP GetCommands(IUnknown *punkSite, REFIID riid, void **ppv) override
     {
         return ShellObjectCreatorInit<CEnumExplorerCommand>(m_pZipObject, riid, ppv);
     }
-    STDMETHODIMP GetCommand(REFGUID rguidCommandId, REFIID riid, void **ppv)
+    STDMETHODIMP GetCommand(REFGUID rguidCommandId, REFIID riid, void **ppv) override
     {
         UNIMPLEMENTED;
         *ppv = NULL;

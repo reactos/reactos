@@ -300,10 +300,21 @@ RtlAllocateAndInitializeSid(IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
                             OUT PSID *Sid)
 {
     PISID pSid;
+    ULONG SubAuthorities[8] =
+    {
+        SubAuthority0,
+        SubAuthority1,
+        SubAuthority2,
+        SubAuthority3,
+        SubAuthority4,
+        SubAuthority5,
+        SubAuthority6,
+        SubAuthority7
+    };
     PAGED_CODE_RTL();
 
     /* SIDs can only have up to 8 subauthorities */
-    if (SubAuthorityCount > 8) return STATUS_INVALID_SID;
+    if (SubAuthorityCount > RTL_NUMBER_OF(SubAuthorities)) return STATUS_INVALID_SID;
 
     /* Allocate memory to hold the SID */
     pSid = RtlpAllocateMemory(RtlLengthRequiredSid(SubAuthorityCount), TAG_SID);
@@ -313,21 +324,9 @@ RtlAllocateAndInitializeSid(IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
     pSid->Revision = SID_REVISION;
     pSid->SubAuthorityCount = SubAuthorityCount;
     pSid->IdentifierAuthority = *IdentifierAuthority;
-
-    /* Iteraratively drop into each successive lower count */
-    switch (SubAuthorityCount)
-    {
-        /* And copy the needed subahority */
-        case 8: pSid->SubAuthority[7] = SubAuthority7;
-        case 7: pSid->SubAuthority[6] = SubAuthority6;
-        case 6: pSid->SubAuthority[5] = SubAuthority5;
-        case 5: pSid->SubAuthority[4] = SubAuthority4;
-        case 4: pSid->SubAuthority[3] = SubAuthority3;
-        case 3: pSid->SubAuthority[2] = SubAuthority2;
-        case 2: pSid->SubAuthority[1] = SubAuthority1;
-        case 1: pSid->SubAuthority[0] = SubAuthority0;
-        default: break;
-    }
+    RtlCopyMemory(pSid->SubAuthority,
+                  SubAuthorities,
+                  SubAuthorityCount * sizeof(SubAuthorities[0]));
 
     /* Return the allocated SID */
     *Sid = pSid;

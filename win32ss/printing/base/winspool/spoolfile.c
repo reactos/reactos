@@ -28,6 +28,7 @@ GetSpoolFileHandle( HANDLE hPrinter )
         if ( pHandle->hSpoolFileHandle != INVALID_HANDLE_VALUE )
         {
               hHandle = pHandle->hSpoolFileHandle;
+              dwErrorCode = ERROR_SUCCESS;
         }
         else
         {

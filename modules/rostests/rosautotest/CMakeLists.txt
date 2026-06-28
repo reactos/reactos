@@ -39,6 +39,7 @@ list(APPEND SOURCE
 
 add_executable(rosautotest ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/rosautotestmsg.rc)
 target_link_libraries(rosautotest cppstl)
+add_cppstl_include_directories(rosautotest)
 set_target_cpp_properties(rosautotest WITH_EXCEPTIONS)
 set_module_type(rosautotest win32cui UNICODE)
 add_importlibs(rosautotest advapi32 shell32 user32 wininet msvcrt kernel32 ntdll)

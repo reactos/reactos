@@ -324,7 +324,7 @@ FxWmiTraceMessage(
     __in TRACEHANDLE  LoggerHandle,
     __in ULONG        MessageFlags,
     __in LPGUID       MessageGuid,
-    __in USHORT       MessageNumber,
+    __in ULONG        MessageNumber,
          ...
     )
 {
@@ -340,7 +340,7 @@ FxWmiTraceMessage(
     status = TraceMessageVa(LoggerHandle,
                             MessageFlags,
                             MessageGuid,
-                            MessageNumber,
+                            (USHORT)MessageNumber,
                             va);
 
     va_end(va);
@@ -615,7 +615,7 @@ FxIFR(
     __in UCHAR              MessageLevel,
     __in ULONG              MessageFlags,
     __in LPGUID             MessageGuid,
-    __in USHORT             MessageNumber,
+    __in ULONG              MessageNumber,
          ...
     )
 /*++
@@ -790,7 +790,7 @@ Returns:
         record->Signature     = FxIFRRecordSignature;
         record->Length        = (USHORT) size;
         record->PrevOffset    = (USHORT) offsetRet.u.s.Previous;
-        record->MessageNumber = MessageNumber;
+        record->MessageNumber = (USHORT)MessageNumber;
         record->Sequence      = InterlockedIncrement(header->SequenceNumberPointer);
         record->MessageGuid   = *MessageGuid;
     }
@@ -835,4 +835,3 @@ drop_message:
         return STATUS_UNSUCCESSFUL;
     }
 }
-

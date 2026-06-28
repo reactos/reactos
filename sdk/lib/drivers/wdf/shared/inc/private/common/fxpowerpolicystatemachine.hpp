@@ -136,6 +136,11 @@ union FxPwrPolStateInfo {
         ULONG PwrPolPowerDownFailedKnown : 1;
         ULONG PwrPolPowerUpFailedKnown : 1;
     } BitsByName;
+
+    constexpr FxPwrPolStateInfo(ULONG QueueOpen, ULONG KnownDroppedEvents) :
+        Bits{QueueOpen, KnownDroppedEvents}
+    {
+    }
 };
 
 struct POWER_POLICY_EVENT_TARGET_STATE {

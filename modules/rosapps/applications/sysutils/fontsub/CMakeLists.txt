@@ -9,6 +9,7 @@
 
 add_executable(fontsubedit fontsub.cpp fontsub_res.rc)
 target_link_libraries(fontsubedit cppstl)
+add_cppstl_include_directories(fontsubedit)
 set_module_type(fontsubedit win32gui UNICODE)
 add_importlibs(fontsubedit advapi32 comctl32 comdlg32 shell32 gdi32 user32 msvcrt kernel32)
 set_target_cpp_properties(fontsubedit WITH_EXCEPTIONS)

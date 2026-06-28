@@ -17,6 +17,7 @@ add_library(iernonce MODULE
 
 set_module_type(iernonce win32dll UNICODE)
 target_link_libraries(iernonce cppstl atl_classes)
+add_cppstl_include_directories(iernonce)
 set_target_cpp_properties(iernonce WITH_EXCEPTIONS)
 add_importlibs(iernonce advapi32 msvcrt gdi32 ole32 shell32 shlwapi kernel32 user32 ntdll)
 add_pch(iernonce iernonce.h SOURCE)

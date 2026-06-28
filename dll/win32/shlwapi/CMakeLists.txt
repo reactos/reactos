@@ -69,6 +69,7 @@ add_dependencies(shlwapi_autocomp psdk)
 
 set_module_type(shlwapi win32dll UNICODE)
 target_link_libraries(shlwapi uuid wine crtheap cppstl)
+add_cppstl_include_directories(shlwapi)
 if(DLL_EXPORT_VERSION LESS 0x600)
     target_link_libraries(shlwapi evalcmd)
 endif()

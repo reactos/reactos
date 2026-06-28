@@ -187,6 +187,21 @@ FontLink_Chain_IsPopulated(const FONTLINK_CHAIN *pChain)
     return pChain->LogFont.lfFaceName[0];
 }
 
+static inline VOID
+FontLink_Chain_Destroy(_Inout_ PFONTLINK_CHAIN pChain)
+{
+    PLIST_ENTRY Entry;
+
+    if (!FontLink_Chain_IsPopulated(pChain))
+        return;
+
+    while (!IsListEmpty(&pChain->FontLinkList))
+    {
+        Entry = RemoveHeadList(&pChain->FontLinkList);
+        FontLink_Destroy(CONTAINING_RECORD(Entry, FONTLINK, ListEntry));
+    }
+}
+
 /* TPMF_FIXED_PITCH is confusing; brain-dead api */
 #ifndef _TMPF_VARIABLE_PITCH
     #define _TMPF_VARIABLE_PITCH    TMPF_FIXED_PITCH
@@ -4037,9 +4052,10 @@ IntRequestFontSize(PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
         FontGDI->tmInternalLeading = FontGDI->tmHeight - FT_MulDiv(lfHeight, face->units_per_EM, Sum);
     }
-    else if (lfHeight < 0)
+    else
     {
         /* case (B): lfHeight is negative */
+        ASSERT(lfHeight < 0);
         if (pOS2->fsSelection & FM_SEL_USE_TYPO_METRICS)
         {
             FontGDI->tmAscent = FT_MulDiv(-lfHeight, pHori->Ascender, face->units_per_EM);
@@ -4162,9 +4178,10 @@ IntRequestFontSizeEx(FT_Face face, const LOGFONTW *plf)
         tmHeight = tmAscent + tmDescent;
         tmInternalLeading = tmHeight - FT_MulDiv(lfHeight, face->units_per_EM, Sum);
     }
-    else if (lfHeight < 0)
+    else
     {
         /* case (B): lfHeight is negative */
+        ASSERT(lfHeight < 0);
         if (pOS2->fsSelection & FM_SEL_USE_TYPO_METRICS)
         {
             tmAscent = FT_MulDiv(-lfHeight, pHori->Ascender, face->units_per_EM);
@@ -5071,6 +5088,7 @@ TextIntGetTextExtentPoint(
     ascender = FontGDI->tmAscent; /* Units above baseline */
     descender = FontGDI->tmDescent; /* Units below baseline */
     IntUnLockFreeType();
+    FontLink_Chain_Destroy(&Chain);
 
     if (bVerticalWriting)
     {
@@ -6712,6 +6730,7 @@ IntExtTextOutW(
     DWORD ch0, ch1;
     const DWORD del = 0x7f, nbsp = 0xa0; // DEL is ASCII DELETE and nbsp is a non-breaking space
     FONTLINK_CHAIN Chain;
+    BOOL bFontLinkChainInitialized = FALSE;
     SIZE spaceWidth;
 
     /* Check if String is valid */
@@ -6829,6 +6848,7 @@ IntExtTextOutW(
     }
 
     FontLink_Chain_Init(&Chain, TextObj, face);
+    bFontLinkChainInitialized = TRUE;
 
     /* Apply lfEscapement */
     if (FT_IS_SCALABLE(face) && plf->lfEscapement != 0)
@@ -7204,6 +7224,9 @@ IntExtTextOutW(
     EXLATEOBJ_vCleanup(&exloDst2RGB);
 
 Cleanup:
+    if (bFontLinkChainInitialized)
+        FontLink_Chain_Destroy(&Chain);
+
     DC_vFinishBlit(dc, NULL);
 
     if (TextObj != NULL)

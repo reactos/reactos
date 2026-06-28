@@ -220,7 +220,7 @@ set_image_base(freeldr_pe 0x10000)
 set_subsystem(freeldr_pe native)
 set_entrypoint(freeldr_pe RealEntryPoint)
 
-target_link_libraries(freeldr_pe freeldr_common cportlib libcntpr blrtl)
+target_link_libraries(freeldr_pe freeldr_common cportlib libcntpr blrtl compiler_builtins)
 if(ARCH STREQUAL "i386")
     target_link_libraries(freeldr_pe mini_hal)
 endif()

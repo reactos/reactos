@@ -139,7 +139,7 @@ struct _LOCAL_JOB
     // This sort key must be the first element for LookupElementSkiplist to work!
     DWORD dwJobID;                              /** Internal and external ID of this Job */
 
-    BOOL bAddedJob : 1;                         /** Whether AddJob has already been called on this Job. */
+    UINT bAddedJob : 1;                         /** Whether AddJob has already been called on this Job. */
     HANDLE hPrintProcessor;                     /** Handle returned by OpenPrintProcessor while the Job is printing. */
     PLOCAL_PRINTER pPrinter;                    /** Associated Printer to this Job */
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;     /** Associated Print Processor to this Job */
@@ -166,7 +166,7 @@ struct _LOCAL_JOB
  */
 struct _LOCAL_PRINTER_HANDLE
 {
-    BOOL bStartedDoc : 1;                       /** Whether StartDocPrinter has already been called. */
+    UINT bStartedDoc : 1;                       /** Whether StartDocPrinter has already been called. */
     HANDLE hSPLFile;                            /** Handle to an opened SPL file for Printer Job handles. */
     PLOCAL_PRINTER pPrinter;                    /** Printer associated with this handle. */
     PLOCAL_JOB pJob;                            /** Print Job associated with this handle. This can be the specified Job if this is a Print Job handle or the started job through LocalStartDocPrinter. */

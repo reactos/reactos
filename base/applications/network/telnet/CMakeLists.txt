@@ -23,6 +23,7 @@ list(APPEND SOURCE
 
 add_executable(telnet ${SOURCE} telnet.rc)
 target_link_libraries(telnet cppstl)
+add_cppstl_include_directories(telnet)
 set_target_cpp_properties(telnet WITH_EXCEPTIONS)
 
 if (MSVC)

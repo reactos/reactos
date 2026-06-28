@@ -17,8 +17,23 @@
 
 PLDR_MANIFEST_PROBER_ROUTINE LdrpManifestProberRoutine;
 ULONG LdrpNormalSnap;
+static LONG LdrpRosMsv10ImportWalkDepth;
 
 /* FUNCTIONS *****************************************************************/
+
+static
+BOOLEAN
+LdrpRosTraceMsv10Name(
+    _In_opt_ PUNICODE_STRING DllName)
+{
+    UNICODE_STRING Msv10Name;
+
+    if ((DllName == NULL) || (DllName->Buffer == NULL))
+        return FALSE;
+
+    RtlInitUnicodeString(&Msv10Name, L"msv1_0.dll");
+    return RtlEqualUnicodeString(DllName, &Msv10Name, TRUE);
+}
 
 
 NTSTATUS
@@ -676,8 +691,18 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundEntry = NULL;
     PIMAGE_IMPORT_DESCRIPTOR ImportEntry;
     ULONG BoundSize, IatSize;
+    BOOLEAN TraceMsv10;
 
     DPRINT("LdrpWalkImportDescriptor - BEGIN (%wZ %p '%S')\n", &LdrEntry->BaseDllName, LdrEntry, DllPath);
+    TraceMsv10 = LdrpRosTraceMsv10Name(&LdrEntry->BaseDllName);
+    if (TraceMsv10)
+    {
+        LdrpRosMsv10ImportWalkDepth++;
+        DPRINT1("ROSLDR walk-begin base=%wZ entry=%p path=%ws\n",
+                &LdrEntry->BaseDllName,
+                LdrEntry,
+                DllPath ? DllPath : L"");
+    }
 
     /* Set up the Act Ctx */
     RtlZeroMemory(&ActCtx, sizeof(ActCtx));
@@ -708,7 +733,15 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     }
 
     /* Check if we failed above */
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        if (TraceMsv10)
+        {
+            DPRINT1("ROSLDR walk-early-failed status=0x%08lx\n", Status);
+            LdrpRosMsv10ImportWalkDepth--;
+        }
+        return Status;
+    }
 
     /* Get the Active ActCtx */
     if (!LdrEntry->EntryPointActivationContext)
@@ -723,6 +756,11 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
                 "LDR: RtlGetActiveActivationContext() failed; ntstatus = "
                 "0x%08lx\n",
                 Status);
+            if (TraceMsv10)
+            {
+                DPRINT1("ROSLDR walk-actctx-failed status=0x%08lx\n", Status);
+                LdrpRosMsv10ImportWalkDepth--;
+            }
             return Status;
         }
     }
@@ -746,6 +784,14 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
                                                TRUE,
                                                IMAGE_DIRECTORY_ENTRY_IMPORT,
                                                &IatSize);
+    if (TraceMsv10)
+    {
+        DPRINT1("ROSLDR import-directories bound=%p bound-size=%lu import=%p import-size=%lu\n",
+                BoundEntry,
+                BoundSize,
+                ImportEntry,
+                IatSize);
+    }
 
     /* Check if we got at least one */
     if ((BoundEntry) || (ImportEntry))
@@ -797,6 +843,11 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     /* Release the activation context */
     RtlDeactivateActivationContextUnsafeFast(&ActCtx);
 
+    if (TraceMsv10)
+    {
+        DPRINT1("ROSLDR walk-end status=0x%08lx\n", Status);
+        LdrpRosMsv10ImportWalkDepth--;
+    }
     DPRINT("LdrpWalkImportDescriptor - END (%wZ %p)\n", &LdrEntry->BaseDllName, LdrEntry);
 
     /* Return status */
@@ -822,6 +873,12 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
     BOOLEAN RedirectedDll;
 
     DPRINT("LdrpLoadImportModule('%S' '%s' %p %p)\n", DllPath, ImportName, DataTableEntry, Existing);
+    if (LdrpRosMsv10ImportWalkDepth > 0)
+    {
+        DPRINT1("ROSLDR import-module-enter parent=msv1_0 name=%s path=%ws\n",
+                ImportName,
+                DllPath ? DllPath : L"");
+    }
 
     RedirectedDll = FALSE;
     RtlInitEmptyUnicodeString(&RedirectedImpDescName, NULL, 0);
@@ -831,6 +888,11 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
     RtlInitAnsiString(&AnsiString, ImportName);
     Status = RtlAnsiStringToUnicodeString(ImpDescName, &AnsiString, FALSE);
     if (!NT_SUCCESS(Status)) return Status;
+    if (LdrpRosMsv10ImportWalkDepth > 0)
+    {
+        DPRINT1("ROSLDR import-module-unicode name=%wZ\n",
+                ImpDescName);
+    }
 
     /* Find the extension, if present */
     p = ImpDescName->Buffer + ImpDescName->Length / sizeof(WCHAR) - 1;
@@ -896,6 +958,12 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
         /* It's already existing in the list */
         *Existing = TRUE;
         Status = STATUS_SUCCESS;
+        if (LdrpRosMsv10ImportWalkDepth > 0)
+        {
+            DPRINT1("ROSLDR import-module-loaded name=%wZ existing=1 entry=%p\n",
+                    ImpDescName,
+                    *DataTableEntry);
+        }
         goto done;
     }
 
@@ -910,6 +978,13 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
                         TRUE,
                         RedirectedDll,
                         DataTableEntry);
+    if (LdrpRosMsv10ImportWalkDepth > 0)
+    {
+        DPRINT1("ROSLDR import-module-map-result name=%wZ status=0x%08lx entry=%p\n",
+                ImpDescName,
+                Status,
+                NT_SUCCESS(Status) ? *DataTableEntry : NULL);
+    }
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("LDR: LdrpMapDll failed  with status %x for dll %wZ\n", Status, ImpDescName);
@@ -919,6 +994,12 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
     /* Walk its import descriptor table */
     Status = LdrpWalkImportDescriptor(DllPath,
                                       *DataTableEntry);
+    if (LdrpRosMsv10ImportWalkDepth > 0)
+    {
+        DPRINT1("ROSLDR import-module-walk-result name=%wZ status=0x%08lx\n",
+                ImpDescName,
+                Status);
+    }
     if (!NT_SUCCESS(Status))
     {
         /* Add it to the in-init-order list in case of failure */
@@ -927,6 +1008,12 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
     }
 
 done:
+    if (LdrpRosMsv10ImportWalkDepth > 0)
+    {
+        DPRINT1("ROSLDR import-module-done name=%wZ status=0x%08lx\n",
+                ImpDescName,
+                Status);
+    }
     RtlFreeUnicodeString(&RedirectedImpDescName);
 
     return Status;

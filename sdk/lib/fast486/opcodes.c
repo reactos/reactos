@@ -3811,6 +3811,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
 {
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
     FAST486_MOD_REG_RM ModRegRm;
+    FAST486_SEG_REGS SegmentReg;
     USHORT Selector;
 
     /* Make sure this is the right instruction */
@@ -3832,6 +3833,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
         Fast486Exception(State, FAST486_EXCEPTION_UD);
         return;
     }
+    SegmentReg = (FAST486_SEG_REGS)ModRegRm.Register;
 
     if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Selector))
     {
@@ -3839,13 +3841,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
         return;
     }
 
-    if (!Fast486LoadSegment(State, ModRegRm.Register, Selector))
+    if (!Fast486LoadSegment(State, SegmentReg, Selector))
     {
         /* Exception occurred */
         return;
     }
 
-    if ((INT)ModRegRm.Register == FAST486_REG_SS)
+    if (SegmentReg == FAST486_REG_SS)
     {
         /* Inhibit all interrupts until the next instruction */
         State->DoNotInterrupt = TRUE;

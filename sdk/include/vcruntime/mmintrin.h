@@ -22,6 +22,10 @@
 #ifndef _MMINTRIN_H_INCLUDED
 #define _MMINTRIN_H_INCLUDED
 
+#if defined(__clang__) && !defined(_MSC_VER)
+#include_next <mmintrin.h>
+#else
+
 #include <vcruntime.h>
 
 #ifdef __cplusplus
@@ -658,5 +662,7 @@ __INTRIN_INLINE_MMX __m64 _mm_set1_pi8(char b)
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* defined(__clang__) && !defined(_MSC_VER) */
 
 #endif /* _MMINTRIN_H_INCLUDED */

@@ -275,18 +275,23 @@ WINAPI
 LsapInitLsa(VOID)
 {
     NTSTATUS Status;
-    BOOLEAN PrivilegeEnabled;
+    BOOLEAN PrivilegeEnabled = FALSE;
 
+    ERR("ROSLSA lsasrv-init-enter\n");
     TRACE("LsapInitLsa()\n");
 
     /* Get the product type */
     RtlGetNtProductType(&LsapProductType);
+    ERR("ROSLSA lsasrv-product-type-done\n");
 
     /* Initialize the well known SIDs */
     LsapInitSids();
+    ERR("ROSLSA lsasrv-init-sids-done\n");
 
     /* Initialize the SRM server */
+    ERR("ROSLSA lsasrv-rm-init-enter\n");
     Status = LsapRmInitializeServer();
+    ERR("ROSLSA lsasrv-rm-init-result status=0x%08lx\n", Status);
     if (!NT_SUCCESS(Status))
     {
         ERR("LsapRmInitializeServer() failed (Status 0x%08lx)\n", Status);
@@ -294,16 +299,24 @@ LsapInitLsa(VOID)
     }
 
     /* Initialize the LSA database */
+    ERR("ROSLSA lsasrv-database-init-enter\n");
     LsapInitDatabase();
+    ERR("ROSLSA lsasrv-database-init-done\n");
 
     /* Initialize logon sessions */
+    ERR("ROSLSA lsasrv-logon-sessions-init-enter\n");
     LsapInitLogonSessions();
+    ERR("ROSLSA lsasrv-logon-sessions-init-done\n");
 
     /* Initialize the notification list */
+    ERR("ROSLSA lsasrv-notification-list-init-enter\n");
     LsapInitNotificationList();
+    ERR("ROSLSA lsasrv-notification-list-init-done\n");
 
     /* Initialize registered authentication packages */
+    ERR("ROSLSA lsasrv-auth-packages-init-enter\n");
     Status = LsapInitAuthPackages();
+    ERR("ROSLSA lsasrv-auth-packages-init-result status=0x%08lx\n", Status);
     if (!NT_SUCCESS(Status))
     {
         ERR("LsapInitAuthPackages() failed (Status 0x%08lx)\n", Status);
@@ -312,13 +325,18 @@ LsapInitLsa(VOID)
 
     /* Enable the token creation privilege for the rest of our lifetime */
     Status = RtlAdjustPrivilege(SE_CREATE_TOKEN_PRIVILEGE, TRUE, FALSE, &PrivilegeEnabled);
+    ERR("ROSLSA lsasrv-adjust-privilege-result status=0x%08lx enabled=%u\n",
+        Status,
+        PrivilegeEnabled);
     if (!NT_SUCCESS(Status))
     {
         ERR("RtlAdjustPrivilege(SE_CREATE_TOKEN_PRIVILEGE) failed, ignoring (Status 0x%08lx)\n", Status);
     }
 
     /* Start the authentication LPC port thread */
+    ERR("ROSLSA lsasrv-auth-port-enter\n");
     Status = StartAuthenticationPort();
+    ERR("ROSLSA lsasrv-auth-port-result status=0x%08lx\n", Status);
     if (!NT_SUCCESS(Status))
     {
         ERR("StartAuthenticationPort() failed (Status 0x%08lx)\n", Status);
@@ -326,13 +344,16 @@ LsapInitLsa(VOID)
     }
 
     /* Start the RPC server */
+    ERR("ROSLSA lsasrv-rpc-server-enter\n");
     Status = LsarStartRpcServer();
+    ERR("ROSLSA lsasrv-rpc-server-result status=0x%08lx\n", Status);
     if (!NT_SUCCESS(Status))
     {
         ERR("LsarStartRpcServer() failed (Status 0x%08lx)\n", Status);
         return Status;
     }
 
+    ERR("ROSLSA lsasrv-init-done\n");
     return STATUS_SUCCESS;
 }
 

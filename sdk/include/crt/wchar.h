@@ -973,11 +973,13 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
   getwc(
     _Inout_ FILE *_File);
 
+#if !(defined(__clang__) && defined(__cplusplus))
   _Check_return_
   _CRTIMP
   wint_t
   __cdecl
   getwchar(void);
+#endif
 
   _Check_return_opt_
   _CRTIMP
@@ -987,12 +989,14 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_ wchar_t _Ch,
     _Inout_ FILE *_File);
 
+#if !(defined(__clang__) && defined(__cplusplus))
   _Check_return_opt_
   _CRTIMP
   wint_t
   __cdecl
   putwchar(
     _In_ wchar_t _Ch);
+#endif
 
   _Check_return_opt_
   _CRTIMP_ALT

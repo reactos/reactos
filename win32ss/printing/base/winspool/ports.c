@@ -204,7 +204,7 @@ FreeMonitorUI( PMONITORUIDATA pmuid )
     }
 }
 
-BOOL FASTCALL
+BOOL
 StrNCatBuff( PWSTR ptr, size_t Size, PWSTR args, ...)
 {
     va_list Args;

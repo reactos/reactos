@@ -47,12 +47,15 @@ BOOL
 StartServicesManager(VOID)
 {
     STARTUPINFOW StartupInfo = { sizeof(StartupInfo) };
-    PROCESS_INFORMATION ProcessInformation;
+    PROCESS_INFORMATION ProcessInformation = {0};
     LPCWSTR ServiceString = L"services.exe";
+    DWORD dwError;
     BOOL res;
 
     /* Start the service control manager (services.exe) */
     TRACE("WL: Creating new process - %S\n", ServiceString);
+    ERR("ROSLSA winlogon-start-services-enter image=%S\n", ServiceString);
+    SetLastError(ERROR_SUCCESS);
     res = CreateProcessW(ServiceString,
                          NULL,
                          NULL,
@@ -63,9 +66,18 @@ StartServicesManager(VOID)
                          NULL,
                          &StartupInfo,
                          &ProcessInformation);
+    dwError = GetLastError();
+    ERR("ROSLSA winlogon-start-services-result success=%u error=%lu process=%p pid=%lu thread=%p tid=%lu\n",
+        res,
+        dwError,
+        ProcessInformation.hProcess,
+        ProcessInformation.dwProcessId,
+        ProcessInformation.hThread,
+        ProcessInformation.dwThreadId);
     if (!res)
     {
-        ERR("WL: Failed to execute services (error %lu)\n", GetLastError());
+        ERR("WL: Failed to execute services (error %lu)\n", dwError);
+        SetLastError(dwError);
         return FALSE;
     }
 
@@ -85,12 +97,15 @@ BOOL
 StartLsass(VOID)
 {
     STARTUPINFOW StartupInfo = { sizeof(StartupInfo) };
-    PROCESS_INFORMATION ProcessInformation;
+    PROCESS_INFORMATION ProcessInformation = {0};
     LPCWSTR ServiceString = L"lsass.exe";
+    DWORD dwError;
     BOOL res;
 
     /* Start the local security authority subsystem (lsass.exe) */
     TRACE("WL: Creating new process - %S\n", ServiceString);
+    ERR("ROSLSA winlogon-start-lsass-enter image=%S\n", ServiceString);
+    SetLastError(ERROR_SUCCESS);
     res = CreateProcessW(ServiceString,
                          NULL,
                          NULL,
@@ -101,6 +116,19 @@ StartLsass(VOID)
                          NULL,
                          &StartupInfo,
                          &ProcessInformation);
+    dwError = GetLastError();
+    ERR("ROSLSA winlogon-start-lsass-result success=%u error=%lu process=%p pid=%lu thread=%p tid=%lu\n",
+        res,
+        dwError,
+        ProcessInformation.hProcess,
+        ProcessInformation.dwProcessId,
+        ProcessInformation.hThread,
+        ProcessInformation.dwThreadId);
+    if (!res)
+    {
+        SetLastError(dwError);
+        return FALSE;
+    }
 
     TRACE("WL: Created new process - %S\n", ServiceString);
 
@@ -117,14 +145,21 @@ WaitForLsass(VOID)
 {
     HANDLE hEvent;
     DWORD dwError;
+    DWORD dwElapsed = 0;
+    DWORD dwWait;
 
+    ERR("ROSLSA winlogon-wait-enter\n");
+    SetLastError(ERROR_SUCCESS);
     hEvent = CreateEventW(NULL,
                           TRUE,
                           FALSE,
                           L"LSA_RPC_SERVER_ACTIVE");
+    dwError = GetLastError();
+    ERR("ROSLSA winlogon-event-create-result handle=%p error=%lu\n",
+        hEvent,
+        dwError);
     if (hEvent == NULL)
     {
-        dwError = GetLastError();
         TRACE("WL: Failed to create the notification event (Error %lu)\n", dwError);
 
         if (dwError == ERROR_ALREADY_EXISTS)
@@ -135,13 +170,45 @@ WaitForLsass(VOID)
             if (hEvent == NULL)
             {
                ERR("WL: Could not open the notification event (Error %lu)\n", GetLastError());
-               return;
+                return;
             }
+        }
+        else
+        {
+            ERR("ROSLSA winlogon-event-create-failed error=%lu\n", dwError);
+            return;
         }
     }
 
     TRACE("WL: Wait for the LSA server!\n");
-    WaitForSingleObject(hEvent, INFINITE);
+    for (;;)
+    {
+        dwWait = WaitForSingleObject(hEvent, 1000);
+        if (dwWait == WAIT_OBJECT_0)
+        {
+            ERR("ROSLSA winlogon-wait-signaled elapsed=%lu\n", dwElapsed);
+            break;
+        }
+
+        if (dwWait == WAIT_TIMEOUT)
+        {
+            dwElapsed += 1000;
+            if ((dwElapsed % 5000) == 0)
+            {
+                ERR("ROSLSA winlogon-wait-pending elapsed=%lu\n",
+                    dwElapsed);
+            }
+
+            continue;
+        }
+
+        dwError = GetLastError();
+        ERR("ROSLSA winlogon-wait-failed wait=%lu error=%lu elapsed=%lu\n",
+            dwWait,
+            dwError,
+            dwElapsed);
+        break;
+    }
     TRACE("WL: LSA server running!\n");
 
     CloseHandle(hEvent);

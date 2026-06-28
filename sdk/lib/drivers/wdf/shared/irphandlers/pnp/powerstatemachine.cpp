@@ -5252,7 +5252,7 @@ Return Value:
     //
     // Set our new state
     //
-    ASSERT(State <= 0xFF);
+    ASSERT((ULONG)State <= 0xFF);
     m_DevicePowerState = (BYTE) State;
 
     //

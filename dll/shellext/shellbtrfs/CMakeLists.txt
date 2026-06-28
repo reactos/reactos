@@ -44,6 +44,7 @@ add_rc_deps(shellbtrfs.rc ${shellbtrfs_rc_deps})
 
 set_module_type(shellbtrfs win32dll UNICODE)
 target_link_libraries(shellbtrfs uuid cppstl)
+add_cppstl_include_directories(shellbtrfs)
 set_target_cpp_properties(shellbtrfs WITH_EXCEPTIONS)
 add_importlibs(shellbtrfs advapi32 advapi32_vista ole32 shell32 shlwapi user32 comctl32 uxtheme setupapi comdlg32 gdi32 msvcrt kernel32_vista kernel32 ntdll)
 add_pch(shellbtrfs precomp.h "${PCH_SKIP_SOURCE}")

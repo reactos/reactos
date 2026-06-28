@@ -51,6 +51,10 @@ _HandleAddPort(HANDLE hXcv, PBYTE pInputData, PDWORD pcbOutputNeeded, DWORD* pdw
     {
         res = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnXcvDataPort(pXcv->hXcv, L"AddPort", pInputData, 0, NULL, 0, pcbOutputNeeded);
     }
+    else
+    {
+        res = ERROR_INVALID_PARAMETER;
+    }
     pPrintMonitor->refcount--;
 
     if ( res == ERROR_SUCCESS )
@@ -113,6 +117,10 @@ _HandleDeletePort(HANDLE hXcv, PBYTE pInputData, PDWORD pcbOutputNeeded, DWORD* 
     else if ( !pPrintMonitor->bIsLevel2 && ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnXcvDataPort )
     {
         res = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnXcvDataPort(pXcv->hXcv, L"DeletePort", pInputData, 0, NULL, 0, pcbOutputNeeded);
+    }
+    else
+    {
+        res = ERROR_INVALID_PARAMETER;
     }
     pPrintMonitor->refcount--;
     //
@@ -189,6 +197,10 @@ LocalXcvData(HANDLE hXcv, const WCHAR* pszDataName, BYTE* pInputData, DWORD cbIn
     else if ( !pPrintMonitor->bIsLevel2 && ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnXcvDataPort )
     {
         res = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnXcvDataPort(pXcv->hXcv, pszDataName, pInputData, cbInputData, pOutputData, cbOutputData, pcbOutputNeeded);
+    }
+    else
+    {
+        res = ERROR_INVALID_PARAMETER;
     }
     pPrintMonitor->refcount--;
 

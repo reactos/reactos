@@ -206,20 +206,62 @@ ScmLogEvent(DWORD dwEventId,
 VOID
 ScmWaitForLsa(VOID)
 {
-    HANDLE hEvent = CreateEventW(NULL, TRUE, FALSE, L"LSA_RPC_SERVER_ACTIVE");
+    HANDLE hEvent;
+    DWORD dwError;
+    DWORD dwElapsed = 0;
+    DWORD dwWait;
+
+    DPRINT1("ROSLSA scm-wait-enter\n");
+
+    SetLastError(ERROR_SUCCESS);
+    hEvent = CreateEventW(NULL, TRUE, FALSE, L"LSA_RPC_SERVER_ACTIVE");
+    dwError = GetLastError();
+    DPRINT1("ROSLSA scm-event-create-result handle=%p error=%lu\n",
+            hEvent,
+            dwError);
     if (hEvent == NULL)
     {
-        DPRINT1("Failed to create or open the notification event (Error %lu)\n", GetLastError());
+        DPRINT1("Failed to create or open the notification event (Error %lu)\n",
+                dwError);
     }
     else
     {
         DPRINT("Wait for the LSA server\n");
-        WaitForSingleObject(hEvent, INFINITE);
+        for (;;)
+        {
+            dwWait = WaitForSingleObject(hEvent, 1000);
+            if (dwWait == WAIT_OBJECT_0)
+            {
+                DPRINT1("ROSLSA scm-wait-signaled elapsed=%lu\n",
+                        dwElapsed);
+                break;
+            }
+
+            if (dwWait == WAIT_TIMEOUT)
+            {
+                dwElapsed += 1000;
+                if ((dwElapsed % 5000) == 0)
+                {
+                    DPRINT1("ROSLSA scm-wait-pending elapsed=%lu\n",
+                            dwElapsed);
+                }
+
+                continue;
+            }
+
+            dwError = GetLastError();
+            DPRINT1("ROSLSA scm-wait-failed wait=%lu error=%lu elapsed=%lu\n",
+                    dwWait,
+                    dwError,
+                    dwElapsed);
+            break;
+        }
         DPRINT("LSA server running\n");
         CloseHandle(hEvent);
     }
 
     DPRINT("ScmWaitForLsa() done\n");
+    DPRINT1("ROSLSA scm-wait-done\n");
 }
 
 

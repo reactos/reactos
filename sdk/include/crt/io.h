@@ -412,6 +412,7 @@ _getcwd(
     _In_z_ const char *_Filename,
     _Out_ struct _finddata32i64_t *_FindData);
 
+#ifndef __clang__
   _Check_return_
   _CRTIMP
   intptr_t
@@ -419,6 +420,7 @@ _getcwd(
   _findfirst64i32(
     _In_z_ const char *_Filename,
     _Out_ struct _finddata64i32_t *_FindData);
+#endif
 
   _Check_return_
   _CRTIMP
@@ -436,6 +438,7 @@ _getcwd(
     _In_ intptr_t _FindHandle,
     _Out_ struct _finddata32i64_t *_FindData);
 
+#ifndef __clang__
   _Check_return_
   _CRTIMP
   int
@@ -443,6 +446,7 @@ _getcwd(
   _findnext64i32(
     _In_ intptr_t _FindHandle,
     _Out_ struct _finddata64i32_t *_FindData);
+#endif
 
   _Check_return_
   _CRTIMP
@@ -937,4 +941,3 @@ static inline int __mingw_access (const char *__fname, int __mode) {
 #include <sec_api/io_s.h>
 
 #endif /* End _IO_H_ */
-

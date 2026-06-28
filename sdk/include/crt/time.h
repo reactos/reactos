@@ -49,6 +49,19 @@ extern "C" {
   typedef long clock_t;
 #endif
 
+#ifndef _TIMESPEC_DEFINED
+#define _TIMESPEC_DEFINED
+  struct timespec {
+    time_t tv_sec;
+    long tv_nsec;
+  };
+
+  struct itimerspec {
+    struct timespec it_interval;
+    struct timespec it_value;
+  };
+#endif
+
 #ifndef _SIZE_T_DEFINED
 #define _SIZE_T_DEFINED
 #undef size_t
@@ -291,7 +304,9 @@ extern "C" {
   _wasctime(
     _In_ const struct tm *_Tm);
 
+#ifndef __clang__
   _CRTIMP wchar_t *__cdecl _wctime(const time_t *_Time);
+#endif
 
   _CRTIMP
   _CRT_INSECURE_DEPRECATE(_wctime32_s)

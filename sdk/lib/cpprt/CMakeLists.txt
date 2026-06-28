@@ -20,6 +20,11 @@ if(MSVC)
 else()
     list(APPEND SOURCE
         __cxa_pure_virtual.cpp)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        list(APPEND SOURCE
+            exception.cpp
+            new_delete.cpp)
+    endif()
 endif()
 
 add_library(cpprt ${SOURCE} ${cpprt_asm})

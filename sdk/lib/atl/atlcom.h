@@ -594,9 +594,9 @@ public:                                                                         
         };                                                                        \
         return _entries;                                                        \
     }                                                                            \
-    virtual ULONG STDMETHODCALLTYPE AddRef() = 0;                                \
-    virtual ULONG STDMETHODCALLTYPE Release() = 0;                                \
-    STDMETHOD(QueryInterface)(REFIID, void **) = 0;
+    virtual ULONG STDMETHODCALLTYPE AddRef() override = 0;                       \
+    virtual ULONG STDMETHODCALLTYPE Release() override = 0;                      \
+    STDMETHOD(QueryInterface)(REFIID, void **) override = 0;
 
 #define COM_INTERFACE_ENTRY_IID(iid, x)                                            \
     {&iid, offsetofclass(x, _ComMapClass), _ATL_SIMPLEMAPENTRY},
@@ -732,7 +732,7 @@ public:
     }
 
 public:
-    STDMETHOD(CreateInstance)(LPUNKNOWN pUnkOuter, REFIID riid, void **ppvObj)
+    STDMETHOD(CreateInstance)(LPUNKNOWN pUnkOuter, REFIID riid, void **ppvObj) override
     {
         HRESULT hResult;
 
@@ -749,7 +749,7 @@ public:
         return hResult;
     }
 
-    STDMETHOD(LockServer)(BOOL fLock)
+    STDMETHOD(LockServer)(BOOL fLock) override
     {
         if (fLock)
             _pAtlModule->Lock();
@@ -783,7 +783,7 @@ public:
     {
     }
 
-    STDMETHOD(CreateInstance)(LPUNKNOWN pUnkOuter, REFIID riid, void **ppvObj)
+    STDMETHOD(CreateInstance)(LPUNKNOWN pUnkOuter, REFIID riid, void **ppvObj) override
     {
         HRESULT hResult;
 

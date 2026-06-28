@@ -286,7 +286,7 @@ UserPaintCaption(PWND pwnd, INT Flags)
 LRESULT FASTCALL
 DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
 {
-    HICON hIconRet;
+    HICON hIconRet = NULL;
     if ( wParam > ICON_SMALL2 )
     {
         SetLastError(ERROR_INVALID_PARAMETER);

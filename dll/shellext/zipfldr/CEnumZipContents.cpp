@@ -32,7 +32,7 @@ public:
     }
 
     // *** IEnumIDList methods ***
-    STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched)
+    STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched) override
     {
         if (!rgelt || (!pceltFetched && celt != 1))
             return E_POINTER;
@@ -67,7 +67,7 @@ public:
             *pceltFetched = fetched;
         return hr;
     }
-    STDMETHODIMP Skip(ULONG celt)
+    STDMETHODIMP Skip(ULONG celt) override
     {
         CStringW name;
         bool dir;
@@ -80,13 +80,13 @@ public:
         }
         return S_OK;
     }
-    STDMETHODIMP Reset()
+    STDMETHODIMP Reset() override
     {
         if (mEnumerator.Reset())
             return S_OK;
         return E_FAIL;
     }
-    STDMETHODIMP Clone(IEnumIDList **ppenum)
+    STDMETHODIMP Clone(IEnumIDList **ppenum) override
     {
         return E_NOTIMPL;
     }
@@ -106,4 +106,3 @@ HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, PCWSTR prefix, 
 {
     return ShellObjectCreatorInit<CEnumZipContents>(zip, flags, prefix, riid, ppvOut);
 }
-

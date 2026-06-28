@@ -113,7 +113,7 @@ ConResPrintfEx(
     IN PCON_STREAM Stream,
     IN HINSTANCE hInstance OPTIONAL,
     IN UINT   uID,
-    IN LANGID LanguageId,
+    IN UINT   LanguageId,
     ...);
 
 INT
@@ -182,7 +182,7 @@ ConResMsgPrintfEx(
     IN HINSTANCE hInstance OPTIONAL,
     IN DWORD  dwFlags,
     IN UINT   uID,
-    IN LANGID LanguageId,
+    IN UINT   LanguageId,
     ...);
 
 INT

@@ -87,6 +87,9 @@ public:
 
 #if (_WIN32_WINNT < _WIN32_WINNT_VISTA) || defined(__REACTOS__)
     // IPropertyBag2 interface (stubs)
+    using IPropertyBag::Read;
+    using IPropertyBag::Write;
+
     STDMETHODIMP Read(
         _In_ ULONG cProperties,
         _In_ PROPBAG2 *pPropBag,
@@ -99,7 +102,7 @@ public:
     STDMETHODIMP Write(
         _In_ ULONG cProperties,
         _In_ PROPBAG2 *pPropBag,
-        _In_ VARIANT *pvarValue)
+        _In_ VARIANT *pvarValue) override
     {
         return E_NOTIMPL;
     }
@@ -146,6 +149,9 @@ protected:
 
 public:
     CMemPropertyBag(DWORD dwMode) : CBasePropertyBag(dwMode) { }
+
+    using CBasePropertyBag::Read;
+    using CBasePropertyBag::Write;
 
     STDMETHODIMP Read(_In_z_ LPCWSTR pszPropName, _Inout_ VARIANT *pvari,
                       _Inout_opt_ IErrorLog *pErrorLog) override;
@@ -297,6 +303,9 @@ public:
     }
 
     HRESULT Init(HKEY hKey, LPCWSTR lpSubKey);
+
+    using CBasePropertyBag::Read;
+    using CBasePropertyBag::Write;
 
     STDMETHODIMP Read(_In_z_ LPCWSTR pszPropName, _Inout_ VARIANT *pvari,
                       _Inout_opt_ IErrorLog *pErrorLog) override;
@@ -505,7 +514,7 @@ CRegPropertyBag::Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari)
 
     HRESULT hr;
     LONG error;
-    VARIANTARG vargTemp = { 0 };
+    VARIANTARG vargTemp = {};
     switch (V_VT(pvari))
     {
         case VT_EMPTY:
@@ -807,6 +816,9 @@ public:
 
     HRESULT Init(LPCWSTR pszIniFile, LPCWSTR pszSection);
 
+    using CBasePropertyBag::Read;
+    using CBasePropertyBag::Write;
+
     STDMETHODIMP Read(
         _In_z_ LPCWSTR pszPropName,
         _Inout_ VARIANT *pvari,
@@ -918,7 +930,7 @@ CIniPropertyBag::Write(_In_z_ LPCWSTR pszPropName, _In_ VARIANT *pvari)
 
     HRESULT hr;
     BSTR bstr;
-    VARIANTARG vargTemp = { 0 };
+    VARIANTARG vargTemp = {};
     switch (V_VT(pvari))
     {
         case VT_EMPTY:
@@ -1031,6 +1043,9 @@ protected:
 
 public:
     CDesktopUpgradePropertyBag() : CBasePropertyBag(STGM_READ) { }
+
+    using CBasePropertyBag::Read;
+    using CBasePropertyBag::Write;
 
     STDMETHODIMP Read(
         _In_z_ LPCWSTR pszPropName,
@@ -1309,6 +1324,9 @@ public:
 
     HRESULT Init(_In_opt_ LPCITEMIDLIST pidl, _In_opt_ LPCWSTR pszPath, _In_ DWORD dwVspbFlags);
     BOOL IsSameBag(LPCITEMIDLIST pidl, LPCWSTR pszPath, DWORD dwVspbFlags) const;
+
+    using CBasePropertyBag::Read;
+    using CBasePropertyBag::Write;
 
     STDMETHODIMP Read(
         _In_z_ LPCWSTR pszPropName,

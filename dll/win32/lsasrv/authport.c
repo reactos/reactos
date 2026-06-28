@@ -345,10 +345,12 @@ StartAuthenticationPort(VOID)
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING PortName;
     DWORD ThreadId;
+    DWORD dwError;
     UNICODE_STRING EventName;
     HANDLE EventHandle;
     NTSTATUS Status;
 
+    ERR("ROSLSA authport-start-enter\n");
     TRACE("StartAuthenticationPort()\n");
 
     /* Initialize the logon context list */
@@ -368,6 +370,9 @@ StartAuthenticationPort(VOID)
                           sizeof(LSA_CONNECTION_INFO),
                           sizeof(LSA_API_MSG),
                           sizeof(LSA_API_MSG) * 32);
+    ERR("ROSLSA authport-create-port-result status=0x%08lx handle=%p\n",
+        Status,
+        AuthPortHandle);
     if (!NT_SUCCESS(Status))
     {
         WARN("NtCreatePort() failed (Status %lx)\n", Status);
@@ -384,6 +389,9 @@ StartAuthenticationPort(VOID)
     Status = NtOpenEvent(&EventHandle,
                          EVENT_MODIFY_STATE,
                          &ObjectAttributes);
+    ERR("ROSLSA authport-open-init-event-result status=0x%08lx handle=%p\n",
+        Status,
+        EventHandle);
     if (!NT_SUCCESS(Status))
     {
         TRACE("NtOpenEvent failed (Status 0x%08lx)\n", Status);
@@ -393,6 +401,9 @@ StartAuthenticationPort(VOID)
                                &ObjectAttributes,
                                NotificationEvent,
                                FALSE);
+        ERR("ROSLSA authport-create-init-event-result status=0x%08lx handle=%p\n",
+            Status,
+            EventHandle);
         if (!NT_SUCCESS(Status))
         {
             WARN("NtCreateEvent failed (Status 0x%08lx)\n", Status);
@@ -402,18 +413,25 @@ StartAuthenticationPort(VOID)
 
     Status = NtSetEvent(EventHandle, NULL);
     NtClose(EventHandle);
+    ERR("ROSLSA authport-set-init-event-result status=0x%08lx\n", Status);
     if (!NT_SUCCESS(Status))
     {
         WARN("NtSetEvent failed (Status 0x%08lx)\n", Status);
         return Status;
     }
 
+    SetLastError(ERROR_SUCCESS);
     PortThreadHandle = CreateThread(NULL,
                                     0x1000,
                                     (LPTHREAD_START_ROUTINE)AuthPortThreadRoutine,
                                     NULL,
                                     0,
                                     &ThreadId);
+    dwError = GetLastError();
+    ERR("ROSLSA authport-thread-result handle=%p id=%lu error=%lu\n",
+        PortThreadHandle,
+        ThreadId,
+        dwError);
 
 
     return STATUS_SUCCESS;

@@ -154,12 +154,34 @@ NTSTATUS WINAPI RtlUTF8ToUnicodeN(PWSTR uni_dest, ULONG uni_bytes_max,
 }
 
 /* Quick and dirty table for conversion */
-FILE_INFORMATION_CLASS ConvertToFileInfo[MaximumFileInfoByHandleClass] =
+static const INT InvalidFileInformationClass = -1;
+static const INT ConvertToFileInfo[MaximumFileInfoByHandleClass] =
 {
-    FileBasicInformation, FileStandardInformation, FileNameInformation, FileRenameInformation,
-    FileDispositionInformation, FileAllocationInformation, FileEndOfFileInformation, FileStreamInformation,
-    FileCompressionInformation, FileAttributeTagInformation, FileIdBothDirectoryInformation, (FILE_INFORMATION_CLASS)-1,
-    FileIoPriorityHintInformation, FileRemoteProtocolInformation
+    FileBasicInformation,
+    FileStandardInformation,
+    FileNameInformation,
+    FileRenameInformation,
+    FileDispositionInformation,
+    FileAllocationInformation,
+    FileEndOfFileInformation,
+    FileStreamInformation,
+    FileCompressionInformation,
+    FileAttributeTagInformation,
+    FileIdBothDirectoryInformation,
+    InvalidFileInformationClass,
+    FileIoPriorityHintInformation,
+    FileRemoteProtocolInformation,
+    InvalidFileInformationClass,
+    InvalidFileInformationClass,
+    InvalidFileInformationClass,
+    InvalidFileInformationClass,
+    InvalidFileInformationClass,
+    InvalidFileInformationClass,
+    InvalidFileInformationClass,
+    FileDispositionInformationEx,
+    FileRenameInformationEx,
+    InvalidFileInformationClass,
+    InvalidFileInformationClass,
 };
 
 /* Taken from kernel32 */
@@ -182,9 +204,9 @@ SetFileInformationByHandle(HANDLE hFile,
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
-    FILE_INFORMATION_CLASS FileInfoClass;
+    INT FileInfoClass;
 
-    FileInfoClass = (FILE_INFORMATION_CLASS)-1;
+    FileInfoClass = InvalidFileInformationClass;
 
     /* Attempt to convert the class */
     if (FileInformationClass < MaximumFileInfoByHandleClass)
@@ -193,7 +215,7 @@ SetFileInformationByHandle(HANDLE hFile,
     }
 
     /* If wrong, bail out */
-    if (FileInfoClass == -1)
+    if (FileInfoClass == InvalidFileInformationClass)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -201,7 +223,7 @@ SetFileInformationByHandle(HANDLE hFile,
 
     /* And set the information */
     Status = NtSetInformationFile(hFile, &IoStatusBlock, lpFileInformation,
-                                  dwBufferSize, FileInfoClass);
+                                  dwBufferSize, (FILE_INFORMATION_CLASS)FileInfoClass);
 
     if (!NT_SUCCESS(Status))
     {

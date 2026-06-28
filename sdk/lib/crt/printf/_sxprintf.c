@@ -25,7 +25,7 @@
 int __cdecl _tstreamout(FILE *stream, const _TCHAR *format, va_list argptr);
 
 int
-#if defined(USER32_WSPRINTF) && defined(_M_IX86)
+#if defined(USER32_WSPRINTF) && defined(_M_IX86) && USE_VARARGS
 __stdcall
 #else
 __cdecl
@@ -118,5 +118,4 @@ _sxprintf(
 
     return result;
 }
-
 

@@ -133,6 +133,19 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-fno-associative-math)
 
+    execute_process(
+        COMMAND ${CMAKE_C_COMPILER} --target=${CMAKE_C_COMPILER_TARGET} -print-resource-dir
+        OUTPUT_VARIABLE CLANG_RESOURCE_DIR
+        RESULT_VARIABLE CLANG_RESOURCE_DIR_RESULT)
+    string(STRIP "${CLANG_RESOURCE_DIR}" CLANG_RESOURCE_DIR)
+    set(CLANG_RESOURCE_INCLUDE_DIR "${CLANG_RESOURCE_DIR}/include")
+    if(NOT CLANG_RESOURCE_DIR_RESULT EQUAL 0 OR NOT EXISTS "${CLANG_RESOURCE_INCLUDE_DIR}")
+        message(FATAL_ERROR "Clang resource include directory not found: ${CLANG_RESOURCE_INCLUDE_DIR}")
+    endif()
+    add_compile_options("$<$<COMPILE_LANGUAGE:C>:-isystem${CLANG_RESOURCE_INCLUDE_DIR}>")
+    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-isystem${CLANG_RESOURCE_INCLUDE_DIR}>")
+    add_compile_options("$<$<COMPILE_LANGUAGE:ASM>:-isystem${CLANG_RESOURCE_INCLUDE_DIR}>")
+
     if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0)
         # disable "libcall optimization"
         # see https://mudongliang.github.io/2020/12/02/undefined-reference-to-stpcpy.html
@@ -374,7 +387,15 @@ set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor=\"${CMAKE_C_COMPILER}\" ${RC_PREPROCE
 # Optional 3rd parameter: stdcall stack bytes
 function(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
-        target_link_options(${MODULE} PRIVATE "-Wl,-entry,0")
+        if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+            if(ARCH STREQUAL "i386")
+                target_link_options(${MODULE} PRIVATE "-Wl,-entry,___ImageBase")
+            else()
+                target_link_options(${MODULE} PRIVATE "-Wl,-entry,__ImageBase")
+            endif()
+        else()
+            target_link_options(${MODULE} PRIVATE "-Wl,-entry,0")
+        endif()
     elseif(ARCH STREQUAL "i386")
         set(_entrysymbol _${ENTRYPOINT})
         if(${ARGC} GREATER 2)
@@ -398,6 +419,10 @@ function(set_module_type_toolchain MODULE TYPE)
     # Set the PE image version numbers from the NT OS version ReactOS is based on
     target_link_options(${MODULE} PRIVATE
         -Wl,--major-image-version,5 -Wl,--minor-image-version,01 -Wl,--major-os-version,5 -Wl,--minor-os-version,01)
+
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        target_link_libraries(${MODULE} compiler_builtins)
+    endif()
 
     if(TYPE IN_LIST KERNEL_MODULE_TYPES)
         # "kmdfdriver" is treated the same way as "wdmdriver" in toolchain-specific set_module_type
@@ -554,13 +579,19 @@ set(PSEH_LIB "pseh")
 
 function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_address)
     set(_object_file ${_binary_file}.o)
+    set(_asm_flags_string "${CMAKE_ASM_FLAGS}")
+    if(CMAKE_BUILD_TYPE)
+        string(TOUPPER "${CMAKE_BUILD_TYPE}" _build_type_upper)
+        string(APPEND _asm_flags_string " ${CMAKE_ASM_FLAGS_${_build_type_upper}}")
+    endif()
+    separate_arguments(_asm_flags NATIVE_COMMAND "${_asm_flags_string}")
 
     get_defines(_defines)
     get_includes(_includes)
 
     add_custom_command(
         OUTPUT ${_object_file}
-        COMMAND ${CMAKE_ASM_COMPILER} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm ${_includes} ${_defines} -D__ASM__ -c ${_asm_file}
+        COMMAND ${CMAKE_ASM_COMPILER} ${_asm_flags} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm ${_includes} ${_defines} -D__ASM__ -c ${_asm_file}
         DEPENDS ${_asm_file})
 
     add_custom_command(
@@ -626,16 +657,20 @@ add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WIT
 # We disable exceptions, unless said so
 add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,-fexceptions,-fno-exceptions>>")
 
-# G++ shipped with ROSBE uses sjlj exceptions on i386. Tell Clang it is so
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang" AND ARCH STREQUAL "i386")
+# G++ shipped with ROSBE uses sjlj exceptions on i386. LLVM-MinGW uses
+# Clang's default DWARF exception model and does not ship sjlj C++ ABI
+# entrypoints.
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang" AND ARCH STREQUAL "i386" AND DEFINED ENV{_ROSBE_ROSSCRIPTDIR})
     add_compile_options("$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>>:-fsjlj-exceptions>")
 endif()
 
 # Find default G++ libraries
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER_TARGET}-g++)
+    set(CLANG_TARGET_ARGS --target=${CMAKE_C_COMPILER_TARGET})
 else()
     set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER})
+    set(CLANG_TARGET_ARGS)
 endif()
 
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libwinpthread.a OUTPUT_VARIABLE LIBWINPTHREAD_LOCATION)
@@ -651,12 +686,34 @@ else()
     add_library(libwinpthread INTERFACE)
 endif()
 
+add_library(libmingwex STATIC IMPORTED)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
+string(STRIP ${LIBMINGWEX_LOCATION} LIBMINGWEX_LOCATION)
+set_target_properties(libmingwex PROPERTIES IMPORTED_LOCATION ${LIBMINGWEX_LOCATION})
+# libmingwex requires a CRT and imports from kernel32
+target_link_libraries(libmingwex INTERFACE libmsvcrt libkernel32)
+
 add_library(libgcc STATIC IMPORTED)
-execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc.a OUTPUT_VARIABLE LIBGCC_LOCATION)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    execute_process(COMMAND ${CMAKE_C_COMPILER} ${CLANG_TARGET_ARGS} -print-libgcc-file-name OUTPUT_VARIABLE LIBGCC_LOCATION)
+else()
+    execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc.a OUTPUT_VARIABLE LIBGCC_LOCATION)
+endif()
 string(STRIP ${LIBGCC_LOCATION} LIBGCC_LOCATION)
+if(NOT EXISTS "${LIBGCC_LOCATION}")
+    message(FATAL_ERROR "compiler runtime archive not found: ${LIBGCC_LOCATION}")
+endif()
 set_target_properties(libgcc PROPERTIES IMPORTED_LOCATION ${LIBGCC_LOCATION})
 # libgcc needs kernel32 and winpthread (an appropriate CRT must be linked manually)
 target_link_libraries(libgcc INTERFACE libwinpthread libkernel32)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_library(compiler_builtins STATIC IMPORTED GLOBAL)
+    set_target_properties(compiler_builtins PROPERTIES IMPORTED_LOCATION ${LIBGCC_LOCATION})
+else()
+    add_library(compiler_builtins INTERFACE)
+    target_link_libraries(compiler_builtins INTERFACE libgcc)
+endif()
 
 add_library(libgcc_eh INTERFACE)
 target_link_libraries(libgcc_eh INTERFACE libgcc)
@@ -666,25 +723,76 @@ if(EXISTS "${_LIBGCC_EH_PATH}")
     target_link_libraries(libgcc_eh INTERFACE "${_LIBGCC_EH_PATH}")
 endif()
 
-add_library(libsupc++ STATIC IMPORTED GLOBAL)
-execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
-string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
-set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
-target_link_libraries(libsupc++ INTERFACE libgcc_eh libgcc)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_library(libcxx_runtime STATIC IMPORTED GLOBAL)
+    set(LLVM_MINGW_RUNTIME_RESOLVER ${CMAKE_CXX_COMPILER} ${CLANG_TARGET_ARGS})
+    execute_process(COMMAND ${LLVM_MINGW_RUNTIME_RESOLVER} -print-file-name=libc++.a OUTPUT_VARIABLE LIBCXX_RUNTIME_LOCATION)
+    string(STRIP ${LIBCXX_RUNTIME_LOCATION} LIBCXX_RUNTIME_LOCATION)
+    if(NOT EXISTS "${LIBCXX_RUNTIME_LOCATION}")
+        message(FATAL_ERROR "LLVM C++ runtime archive not found: ${LIBCXX_RUNTIME_LOCATION}")
+    endif()
+    set_target_properties(libcxx_runtime PROPERTIES IMPORTED_LOCATION ${LIBCXX_RUNTIME_LOCATION})
+    get_filename_component(LLVM_MINGW_TARGET_LIB_DIR "${LIBCXX_RUNTIME_LOCATION}" DIRECTORY)
+    get_filename_component(LLVM_MINGW_TARGET_PREFIX "${LLVM_MINGW_TARGET_LIB_DIR}" DIRECTORY)
+    set(LLVM_LIBCXX_INCLUDE_DIR "${LLVM_MINGW_TARGET_PREFIX}/include/c++/v1")
+    if(NOT EXISTS "${LLVM_LIBCXX_INCLUDE_DIR}/cstddef")
+        message(FATAL_ERROR "LLVM libc++ include directory not found: ${LLVM_LIBCXX_INCLUDE_DIR}")
+    endif()
+    # CMake drops the canonical libc++ include directory because Clang reports it
+    # as implicit.  A build-local mirror keeps libc++ wrappers ahead of the
+    # ReactOS CRT headers for <cstddef>, <cstdlib>, and <cstring>.
+    set(LLVM_LIBCXX_INCLUDE_MIRROR_DIR "${REACTOS_BINARY_DIR}/llvm-libcxx-include")
+    file(REMOVE_RECURSE "${LLVM_LIBCXX_INCLUDE_MIRROR_DIR}")
+    file(COPY "${LLVM_LIBCXX_INCLUDE_DIR}/" DESTINATION "${LLVM_LIBCXX_INCLUDE_MIRROR_DIR}")
+    add_library(libunwind STATIC IMPORTED GLOBAL)
+    execute_process(COMMAND ${LLVM_MINGW_RUNTIME_RESOLVER} -print-file-name=libunwind.a OUTPUT_VARIABLE LIBUNWIND_LOCATION)
+    string(STRIP ${LIBUNWIND_LOCATION} LIBUNWIND_LOCATION)
+    if(NOT EXISTS "${LIBUNWIND_LOCATION}")
+        message(FATAL_ERROR "LLVM unwind archive not found: ${LIBUNWIND_LOCATION}")
+    endif()
+    set_target_properties(libunwind PROPERTIES IMPORTED_LOCATION ${LIBUNWIND_LOCATION})
+    target_link_libraries(libunwind INTERFACE gcc_msvcrt_support libpsapi libmingwex libkernel32_vista libkernel32 libgcc)
+    target_link_libraries(libcxx_runtime INTERFACE libunwind libmingwex libkernel32_vista libkernel32 oldnames)
 
-add_library(libmingwex STATIC IMPORTED)
-execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
-string(STRIP ${LIBMINGWEX_LOCATION} LIBMINGWEX_LOCATION)
-set_target_properties(libmingwex PROPERTIES IMPORTED_LOCATION ${LIBMINGWEX_LOCATION})
-# libmingwex requires a CRT and imports from kernel32
-target_link_libraries(libmingwex INTERFACE libmsvcrt libkernel32)
+    add_library(libc++abi STATIC IMPORTED GLOBAL)
+    execute_process(COMMAND ${LLVM_MINGW_RUNTIME_RESOLVER} -print-file-name=libc++abi.a OUTPUT_VARIABLE LIBCXXABI_LOCATION)
+    string(STRIP ${LIBCXXABI_LOCATION} LIBCXXABI_LOCATION)
+    if(NOT EXISTS "${LIBCXXABI_LOCATION}")
+        message(FATAL_ERROR "LLVM C++ ABI archive not found: ${LIBCXXABI_LOCATION}")
+    endif()
+    set_target_properties(libc++abi PROPERTIES IMPORTED_LOCATION ${LIBCXXABI_LOCATION})
+    target_link_libraries(libc++abi INTERFACE libcxx_runtime libunwind libmingwex libgcc_eh libgcc)
+
+    add_library(libsupc++ INTERFACE IMPORTED GLOBAL)
+    target_link_libraries(libsupc++ INTERFACE libcxx_runtime)
+else()
+    add_library(libsupc++ STATIC IMPORTED GLOBAL)
+    execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
+    string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
+    if(NOT EXISTS "${LIBSUPCXX_LOCATION}")
+        message(FATAL_ERROR "GCC C++ ABI archive not found: ${LIBSUPCXX_LOCATION}")
+    endif()
+    set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
+    target_link_libraries(libsupc++ INTERFACE libgcc_eh libgcc)
+endif()
 
 add_library(libstdc++ STATIC IMPORTED GLOBAL)
-execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libstdc++.a OUTPUT_VARIABLE LIBSTDCCXX_LOCATION)
-string(STRIP ${LIBSTDCCXX_LOCATION} LIBSTDCCXX_LOCATION)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set(LIBSTDCCXX_LOCATION ${LIBCXX_RUNTIME_LOCATION})
+else()
+    execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libstdc++.a OUTPUT_VARIABLE LIBSTDCCXX_LOCATION)
+    string(STRIP ${LIBSTDCCXX_LOCATION} LIBSTDCCXX_LOCATION)
+endif()
+if(NOT EXISTS "${LIBSTDCCXX_LOCATION}")
+    message(FATAL_ERROR "C++ standard library archive not found: ${LIBSTDCCXX_LOCATION}")
+endif()
 set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${LIBSTDCCXX_LOCATION})
-# libstdc++ requires libsupc++, mingwex provided by GCC, and ReactOS CRT shims
-target_link_libraries(libstdc++ INTERFACE libsupc++ stdc++compat libmingwex oldnames)
+# The C++ standard library requires ABI support, mingwex, and ReactOS CRT shims.
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_link_libraries(libstdc++ INTERFACE cpprt libunwind stdc++compat libmingwex libkernel32_vista libkernel32 oldnames)
+else()
+    target_link_libraries(libstdc++ INTERFACE libsupc++ stdc++compat libmingwex oldnames)
+endif()
 # this is for our SAL annotations
 target_compile_definitions(libstdc++ INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:PAL_STDCPP_COMPAT>")
 target_compile_options(libstdc++ INTERFACE

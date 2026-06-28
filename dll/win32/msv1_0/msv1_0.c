@@ -1383,16 +1383,22 @@ LsaApInitializePackage(IN ULONG AuthenticationPackageId,
     PANSI_STRING NameString;
     PCHAR NameBuffer;
 
+    ERR("ROSLSA msv1_0-init-enter id=%lu dispatch=%p name-out=%p\n",
+        AuthenticationPackageId,
+        LsaDispatchTable,
+        AuthenticationPackageName);
     TRACE("LsaApInitializePackage(%lu %p %p %p %p)\n",
           AuthenticationPackageId, LsaDispatchTable, Database,
           Confidentiality, AuthenticationPackageName);
 
     if (!PackageInitialized)
     {
+        ERR("ROSLSA msv1_0-global-init-enter\n");
         InitializeListHead(&LogonListHead);
         RtlInitializeResource(&LogonListResource);
         EnumCounter = 0;
         PackageInitialized = TRUE;
+        ERR("ROSLSA msv1_0-global-init-done\n");
     }
 
     /* Get the dispatch table entries */
@@ -1407,24 +1413,37 @@ LsaApInitializePackage(IN ULONG AuthenticationPackageId,
     DispatchTable.FreeClientBuffer = LsaDispatchTable->FreeClientBuffer;
     DispatchTable.CopyToClientBuffer = LsaDispatchTable->CopyToClientBuffer;
     DispatchTable.CopyFromClientBuffer = LsaDispatchTable->CopyFromClientBuffer;
+    ERR("ROSLSA msv1_0-dispatch-copy-done\n");
 
     /* Return the package name */
+    ERR("ROSLSA msv1_0-name-alloc-enter\n");
     NameString = DispatchTable.AllocateLsaHeap(sizeof(LSA_STRING));
     if (NameString == NULL)
+    {
+        ERR("ROSLSA msv1_0-name-string-alloc-failed\n");
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    ERR("ROSLSA msv1_0-name-string-alloc-result name-string=%p\n",
+        NameString);
 
     NameBuffer = DispatchTable.AllocateLsaHeap(sizeof(MSV1_0_PACKAGE_NAME));
     if (NameBuffer == NULL)
     {
+        ERR("ROSLSA msv1_0-name-buffer-alloc-failed\n");
         DispatchTable.FreeLsaHeap(NameString);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    ERR("ROSLSA msv1_0-name-buffer-alloc-result buffer=%p\n",
+        NameBuffer);
 
     strcpy(NameBuffer, MSV1_0_PACKAGE_NAME);
 
     RtlInitAnsiString(NameString, NameBuffer);
 
     *AuthenticationPackageName = (PLSA_STRING)NameString;
+    ERR("ROSLSA msv1_0-init-done name=%s string=%p\n",
+        NameString->Buffer,
+        NameString);
 
     return STATUS_SUCCESS;
 }

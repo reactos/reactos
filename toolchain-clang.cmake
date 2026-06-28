@@ -42,7 +42,52 @@ set(CMAKE_ASM_COMPILER_ID GNU)
 set(CMAKE_MC_COMPILER ${GCC_TOOLCHAIN_PREFIX}windmc)
 set(CMAKE_RC_COMPILER ${GCC_TOOLCHAIN_PREFIX}windres)
 # set(CMAKE_AR ${triplet}-ar)
-# set(CMAKE_DLLTOOL ${triplet}-dlltool)
+
+find_program(REACTOS_AS
+    NAMES ${GCC_TOOLCHAIN_PREFIX}as
+    PATHS /usr/bin /usr/local/bin
+    NO_DEFAULT_PATH)
+if(NOT REACTOS_AS)
+    find_program(REACTOS_AS NAMES ${GCC_TOOLCHAIN_PREFIX}as)
+endif()
+if(NOT REACTOS_AS)
+    message(FATAL_ERROR "GNU-compatible ${GCC_TOOLCHAIN_PREFIX}as not found")
+endif()
+execute_process(
+    COMMAND ${REACTOS_AS} --version
+    OUTPUT_VARIABLE REACTOS_AS_VERSION
+    ERROR_VARIABLE REACTOS_AS_VERSION_ERROR)
+string(FIND "${REACTOS_AS_VERSION}${REACTOS_AS_VERSION_ERROR}" "GNU assembler" REACTOS_AS_GNU_VERSION)
+if(REACTOS_AS_GNU_VERSION EQUAL -1)
+    message(FATAL_ERROR "${REACTOS_AS} is not GNU assembler")
+endif()
+get_filename_component(REACTOS_AS_DIR ${REACTOS_AS} DIRECTORY)
+set(REACTOS_AS_PREFIX "${REACTOS_AS_DIR}/${GCC_TOOLCHAIN_PREFIX}")
+set(REACTOS_AS_FLAGS "-B${REACTOS_AS_PREFIX} -fno-integrated-as")
+set(CMAKE_ASM_FLAGS_INIT "${REACTOS_AS_FLAGS}")
+set(CMAKE_ASM_FLAGS "${REACTOS_AS_FLAGS}" CACHE STRING "GNU assembler handoff flags" FORCE)
+message(STATUS "Using assembler ${REACTOS_AS}")
+
+find_program(REACTOS_DLLTOOL
+    NAMES ${triplet}-dlltool
+    PATHS /usr/bin /usr/local/bin
+    NO_DEFAULT_PATH)
+if(NOT REACTOS_DLLTOOL)
+    find_program(REACTOS_DLLTOOL NAMES ${triplet}-dlltool)
+endif()
+if(NOT REACTOS_DLLTOOL)
+    message(FATAL_ERROR "GNU-compatible ${triplet}-dlltool not found")
+endif()
+execute_process(
+    COMMAND ${REACTOS_DLLTOOL} --help
+    OUTPUT_VARIABLE REACTOS_DLLTOOL_HELP
+    ERROR_VARIABLE REACTOS_DLLTOOL_HELP_ERROR)
+string(FIND "${REACTOS_DLLTOOL_HELP}${REACTOS_DLLTOOL_HELP_ERROR}" "--output-delaylib" REACTOS_DLLTOOL_DELAYLIB_FLAG)
+if(REACTOS_DLLTOOL_DELAYLIB_FLAG EQUAL -1)
+    message(FATAL_ERROR "${REACTOS_DLLTOOL} does not support --output-delaylib")
+endif()
+set(CMAKE_DLLTOOL ${REACTOS_DLLTOOL} CACHE FILEPATH "GNU-compatible dlltool" FORCE)
+message(STATUS "Using dlltool ${CMAKE_DLLTOOL}")
 
 # This allows to have CMake test the compiler without linking
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
@@ -51,10 +96,29 @@ set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> crT <TARGET> <LINK_FLAGS> <OBJECTS
 set(CMAKE_CXX_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 
-set(CMAKE_C_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
-set(CMAKE_CXX_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C++ Libraries")
+set(CMAKE_C_STANDARD_LIBRARIES "" CACHE STRING "Standard C Libraries")
+set(CMAKE_CXX_STANDARD_LIBRARIES "" CACHE STRING "Standard C++ Libraries")
 
-find_program (LD_EXECUTABLE ${GCC_TOOLCHAIN_PREFIX}ld)
+find_program(REACTOS_LD
+    NAMES ${GCC_TOOLCHAIN_PREFIX}ld
+    PATHS /usr/bin /usr/local/bin
+    NO_DEFAULT_PATH)
+if(NOT REACTOS_LD)
+    find_program(REACTOS_LD NAMES ${GCC_TOOLCHAIN_PREFIX}ld)
+endif()
+if(NOT REACTOS_LD)
+    message(FATAL_ERROR "GNU-compatible ${GCC_TOOLCHAIN_PREFIX}ld not found")
+endif()
+execute_process(
+    COMMAND ${REACTOS_LD} --help
+    OUTPUT_VARIABLE REACTOS_LD_HELP
+    ERROR_VARIABLE REACTOS_LD_HELP_ERROR)
+string(FIND "${REACTOS_LD_HELP}${REACTOS_LD_HELP_ERROR}" "--script" REACTOS_LD_SCRIPT_FLAG)
+if(REACTOS_LD_SCRIPT_FLAG EQUAL -1)
+    message(FATAL_ERROR "${REACTOS_LD} does not support linker scripts")
+endif()
+set(CMAKE_LINKER ${REACTOS_LD} CACHE FILEPATH "GNU-compatible linker used by the Clang driver" FORCE)
+set(LD_EXECUTABLE ${REACTOS_LD} CACHE FILEPATH "GNU-compatible linker used by ReactOS linker rules" FORCE)
 message(STATUS "Using linker ${LD_EXECUTABLE}")
 
 set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import -fuse-ld=${LD_EXECUTABLE}")

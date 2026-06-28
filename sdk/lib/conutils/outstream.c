@@ -211,7 +211,7 @@ ConWrite(
          * the code page is always set to CP_UTF8). Otherwise use the
          * current stream's code page.
          */
-        if (/*(Stream->Mode == AnsiText) &&*/ (Stream->CodePage == INVALID_CP))
+        if (Stream->CodePage == INVALID_CP)
             CodePage = GetConsoleOutputCP(); // CP_ACP, CP_OEMCP
         else
             CodePage = Stream->CodePage;
@@ -739,14 +739,14 @@ ConResPrintfEx(
     IN PCON_STREAM Stream,
     IN HINSTANCE hInstance OPTIONAL,
     IN UINT   uID,
-    IN LANGID LanguageId,
+    IN UINT   LanguageId,
     ...)
 {
     INT Len;
     va_list args;
 
     va_start(args, LanguageId);
-    Len = ConResPrintfExV(Stream, hInstance, uID, LanguageId, args);
+    Len = ConResPrintfExV(Stream, hInstance, uID, (LANGID)LanguageId, args);
     va_end(args);
 
     return Len;
@@ -1393,7 +1393,7 @@ ConResMsgPrintfEx(
     IN HINSTANCE hInstance OPTIONAL,
     IN DWORD  dwFlags,
     IN UINT   uID,
-    IN LANGID LanguageId,
+    IN UINT   LanguageId,
     ...)
 {
     INT Len;
@@ -1407,7 +1407,7 @@ ConResMsgPrintfEx(
                              hInstance,
                              dwFlags,
                              uID,
-                             LanguageId,
+                             (LANGID)LanguageId,
                              &args);
     va_end(args);
 

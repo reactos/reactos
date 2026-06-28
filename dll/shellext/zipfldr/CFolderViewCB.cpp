@@ -19,7 +19,7 @@ public:
     }
 
     // *** IShellFolderViewCB methods ***
-    STDMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+    STDMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam) override
     {
         /* TODO: Handle SFVM_GET_WEBVIEW_CONTENT to add tasks */
         switch (uMsg)

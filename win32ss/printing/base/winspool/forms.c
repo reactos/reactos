@@ -289,6 +289,8 @@ GetFormA(HANDLE hPrinter, PSTR pFormName, DWORD Level, PBYTE pForm, DWORD cbBuf,
 
     if ( GetFormW( hPrinter, FormNameW, Level, pForm, cbBuf, pcbNeeded ) )
     {
+        dwErrorCode = ERROR_SUCCESS;
+
         switch ( Level )
         {
             case 2:
@@ -320,6 +322,10 @@ GetFormA(HANDLE hPrinter, PSTR pFormName, DWORD Level, PBYTE pForm, DWORD cbBuf,
                     goto Cleanup;
                 }
         }
+    }
+    else
+    {
+        dwErrorCode = GetLastError();
     }
 Cleanup:
     if (FormNameW) HeapFree(GetProcessHeap(), 0, FormNameW);

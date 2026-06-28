@@ -30,6 +30,13 @@ function(add_dependency_footer)
     endif()
 endfunction()
 
+function(add_cppstl_include_directories _target)
+    if(DEFINED LLVM_LIBCXX_INCLUDE_MIRROR_DIR)
+        target_include_directories(${_target} BEFORE PRIVATE
+            "$<$<COMPILE_LANGUAGE:CXX>:${LLVM_LIBCXX_INCLUDE_MIRROR_DIR}>")
+    endif()
+endfunction()
+
 function(add_message_headers _type)
     if(${_type} STREQUAL UNICODE)
         set(_flag "-U")

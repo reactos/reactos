@@ -91,6 +91,11 @@ union FxPowerStateInfo {
         ULONG PowerCompleteD0Known : 1;
         ULONG PowerCompleteDxKnown : 1;
     } BitsByName;
+
+    constexpr FxPowerStateInfo(ULONG QueueOpen, ULONG KnownDroppedEvents) :
+        Bits{QueueOpen, KnownDroppedEvents}
+    {
+    }
 };
 
 

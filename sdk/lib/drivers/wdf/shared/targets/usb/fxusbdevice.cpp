@@ -34,7 +34,9 @@ extern "C" {
 }
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+#ifndef UCHAR_MAX
 #define UCHAR_MAX (0xff)
+#endif
 #endif
 
 FxUsbDeviceControlContext::FxUsbDeviceControlContext(
@@ -2477,4 +2479,3 @@ Return Value:
 
     return FxUrbTypeLegacy;
 }
-

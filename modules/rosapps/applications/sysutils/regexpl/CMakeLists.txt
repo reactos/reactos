@@ -30,6 +30,7 @@ list(APPEND SOURCE
 
 add_executable(regexpl ${SOURCE} regexpl.rc)
 target_link_libraries(regexpl cppstl)
+add_cppstl_include_directories(regexpl)
 set_target_cpp_properties(regexpl WITH_EXCEPTIONS)
 set_module_type(regexpl win32cui)
 add_importlibs(regexpl user32 advapi32 msvcrt kernel32 ntdll)

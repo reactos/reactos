@@ -1473,14 +1473,20 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
     if (Cr0 & CR0_TS)
     {
         /*
-         * If it's incorrectly set, then maybe the state is actually still valid
-         * but we could have lost track of that due to a BIOS call.
-         * Make sure MP is still set, which should verify the theory.
+         * If TS is incorrectly set, the current thread may still own the NPX
+         * state while CR0 lost the MP half of the lazy-NPX contract.  Repair
+         * MP before clearing TS so later WAIT/FWAIT traps remain coherent.
          */
+        Cr0 = KiNormalizeNpxCr0State(Cr0);
         if (Cr0 & CR0_MP)
         {
-            /* Indeed, the state is actually still valid, so clear TS */
-            __writecr0(__readcr0() &~ CR0_TS);
+            DPRINT1("ROSNpx trap07-live-cr0-repair cr0=%lx thread=%p state=%lx save=%lx\n",
+                    Cr0,
+                    Thread,
+                    Thread->NpxState,
+                    SaveArea->Cr0NpxState);
+
+            __writecr0(KiNormalizeNpxCr0State(__readcr0()) & ~CR0_TS);
             KiEoiHelper(TrapFrame);
         }
 

@@ -1087,6 +1087,7 @@ FxDmaScatterGatherTransaction::StageTransfer(
 
 
 VOID
+NTAPI
 FxDmaScatterGatherTransaction::_AdapterListControl(
     __in  PDEVICE_OBJECT         DeviceObject,
     __in  PIRP                   Irp,            // UNUSED

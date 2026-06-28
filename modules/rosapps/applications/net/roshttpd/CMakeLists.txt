@@ -13,6 +13,7 @@ list(APPEND SOURCE
 
 add_executable(roshttpd ${SOURCE} common/roshttpd.rc)
 target_link_libraries(roshttpd cppstl)
+add_cppstl_include_directories(roshttpd)
 set_target_cpp_properties(roshttpd WITH_EXCEPTIONS)
 target_compile_definitions(roshttpd PRIVATE __USE_W32_SOCKETS)
 set_module_type(roshttpd win32cui)

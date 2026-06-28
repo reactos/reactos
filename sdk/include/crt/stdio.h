@@ -784,11 +784,13 @@ extern _CRTIMP int _commode;
   getwc(
     _Inout_ FILE *_File);
 
+#if !(defined(__clang__) && defined(__cplusplus))
   _Check_return_
   _CRTIMP
   wint_t
   __cdecl
   getwchar(void);
+#endif
 
   _Check_return_opt_
   _CRTIMP
@@ -798,12 +800,14 @@ extern _CRTIMP int _commode;
     _In_ wchar_t _Ch,
     _Inout_ FILE *_File);
 
+#if !(defined(__clang__) && defined(__cplusplus))
   _Check_return_opt_
   _CRTIMP
   wint_t
   __cdecl
   putwchar(
     _In_ wchar_t _Ch);
+#endif
 
   _Check_return_opt_
   _CRTIMP

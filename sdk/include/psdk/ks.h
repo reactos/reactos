@@ -87,6 +87,13 @@ typedef PVOID PKSWORKER;
 #if _MSC_VER >= 1100
 #define DEFINE_GUIDSTRUCT(guid, name) struct __declspec(uuid(guid)) name
 #define DEFINE_GUIDNAMED(name) __uuidof(struct name)
+#elif defined(__clang__)
+#define DEFINE_GUIDSTRUCT(guid, name) \
+  _Pragma("clang diagnostic push") \
+  _Pragma("clang diagnostic ignored \"-Wmissing-braces\"") \
+  extern const DECLSPEC_SELECTANY GUID __uuid__##name={STATIC_##name}; \
+  _Pragma("clang diagnostic pop")
+#define DEFINE_GUIDNAMED(name) __uuid__##name
 #else
 #define DEFINE_GUIDSTRUCT(guid, name) \
   extern const DECLSPEC_SELECTANY GUID __uuid__##name={STATIC_##name};

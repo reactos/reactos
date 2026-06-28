@@ -44,14 +44,18 @@ wWinMain(IN HINSTANCE hInstance,
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
+    DPRINT1("ROSLSA lsass-main-enter\n");
     DPRINT("Local Security Authority Subsystem\n");
     DPRINT("  Initializing...\n");
 
     /* Make us critical */
     RtlSetProcessIsCritical(TRUE, NULL, TRUE);
+    DPRINT1("ROSLSA lsass-critical-set\n");
 
     /* Initialize the LSA server DLL */
+    DPRINT1("ROSLSA lsass-init-lsa-enter\n");
     Status = LsapInitLsa();
+    DPRINT1("ROSLSA lsass-init-lsa-result status=0x%08lX\n", Status);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("LsapInitLsa() failed (Status 0x%08lX)\n", Status);
@@ -59,7 +63,9 @@ wWinMain(IN HINSTANCE hInstance,
     }
 
     /* Initialize the SAM server DLL */
+    DPRINT1("ROSLSA lsass-init-sam-enter\n");
     Status = SamIInitialize();
+    DPRINT1("ROSLSA lsass-init-sam-result status=0x%08lX\n", Status);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamIInitialize() failed (Status 0x%08lX)\n", Status);
@@ -67,7 +73,9 @@ wWinMain(IN HINSTANCE hInstance,
     }
 
     /* Start the security services */
+    DPRINT1("ROSLSA lsass-service-init-enter\n");
     Status = ServiceInit();
+    DPRINT1("ROSLSA lsass-service-init-result status=0x%08lX\n", Status);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ServiceInit() failed (Status 0x%08lX)\n", Status);
@@ -79,6 +87,7 @@ wWinMain(IN HINSTANCE hInstance,
     DPRINT("  Done...\n");
 
 ByeBye:
+    DPRINT1("ROSLSA lsass-main-exit status=0x%08lX\n", Status);
     NtTerminateThread(NtCurrentThread(), Status);
 
     return 0;

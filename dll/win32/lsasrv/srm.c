@@ -172,7 +172,10 @@ LsapRmInitializeServer(VOID)
     HANDLE InitEvent;
     HANDLE ThreadHandle;
     DWORD ThreadId;
+    DWORD dwError;
     NTSTATUS Status;
+
+    ERR("ROSLSA rm-init-enter\n");
 
     /* Create the LSA command port */
     RtlInitUnicodeString(&Name, L"\\SeLsaCommandPort");
@@ -182,6 +185,9 @@ LsapRmInitializeServer(VOID)
                           0,
                           PORT_MAXIMUM_MESSAGE_LENGTH,
                           2 * PAGE_SIZE);
+    ERR("ROSLSA rm-create-port-result status=0x%08lx handle=%p\n",
+        Status,
+        SeLsaCommandPort);
     if (!NT_SUCCESS(Status))
     {
         ERR("LsapRmInitializeServer - Port Create failed 0x%lx\n", Status);
@@ -192,6 +198,9 @@ LsapRmInitializeServer(VOID)
     RtlInitUnicodeString(&Name, L"\\SeLsaInitEvent");
     InitializeObjectAttributes(&ObjectAttributes, &Name, 0, NULL, NULL);
     Status = NtOpenEvent(&InitEvent, 2, &ObjectAttributes);
+    ERR("ROSLSA rm-open-init-event-result status=0x%08lx handle=%p\n",
+        Status,
+        InitEvent);
     if (!NT_SUCCESS(Status))
     {
         ERR("LsapRmInitializeServer - Lsa Init Event Open failed 0x%lx\n", Status);
@@ -200,6 +209,7 @@ LsapRmInitializeServer(VOID)
 
     /* Signal the kernel, that we are ready */
     Status = NtSetEvent(InitEvent, 0);
+    ERR("ROSLSA rm-set-init-event-result status=0x%08lx\n", Status);
     if (!NT_SUCCESS(Status))
     {
         ERR("LsapRmInitializeServer - Set Init Event failed 0x%lx\n", Status);
@@ -213,6 +223,7 @@ LsapRmInitializeServer(VOID)
 
     /* Connect to the kernel server */
     RtlInitUnicodeString(&Name, L"\\SeRmCommandPort");
+    ERR("ROSLSA rm-connect-port-enter\n");
     Status = NtConnectPort(&SeRmCommandPort,
                            &Name,
                            &SecurityQos,
@@ -221,6 +232,9 @@ LsapRmInitializeServer(VOID)
                            NULL,
                            NULL,
                            NULL);
+    ERR("ROSLSA rm-connect-port-result status=0x%08lx handle=%p\n",
+        Status,
+        SeRmCommandPort);
     if (!NT_SUCCESS(Status))
     {
         ERR("LsapRmInitializeServer - Connect to Rm Command Port failed 0x%lx\n", Status);
@@ -228,7 +242,13 @@ LsapRmInitializeServer(VOID)
     }
 
     /* Create the server thread */
+    SetLastError(ERROR_SUCCESS);
     ThreadHandle = CreateThread(NULL, 0, LsapRmServerThread, NULL, 0, &ThreadId);
+    dwError = GetLastError();
+    ERR("ROSLSA rm-thread-result handle=%p id=%lu error=%lu\n",
+        ThreadHandle,
+        ThreadId,
+        dwError);
     if (ThreadHandle == NULL)
     {
         ERR("LsapRmInitializeServer - Create Thread  failed 0x%lx\n", Status);

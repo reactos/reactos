@@ -42,15 +42,18 @@ LsarStartRpcServer(VOID)
     RPC_STATUS Status;
     DWORD dwError;
     HANDLE hEvent;
+    BOOL bResult;
 
     RtlInitializeCriticalSection(&PolicyHandleTableLock);
 
+    ERR("ROSLSA rpc-start-enter\n");
     TRACE("LsarStartRpcServer() called\n");
 
     Status = RpcServerUseProtseqEpW(L"ncacn_np",
                                     RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
                                     L"\\pipe\\lsarpc",
                                     NULL);
+    ERR("ROSLSA rpc-use-protseq-result status=%lx\n", Status);
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
@@ -60,15 +63,19 @@ LsarStartRpcServer(VOID)
     Status = RpcServerRegisterIf(lsarpc_v0_0_s_ifspec,
                                  NULL,
                                  NULL);
+    ERR("ROSLSA rpc-register-if-result status=%lx\n", Status);
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerRegisterIf() failed (Status %lx)\n", Status);
         return I_RpcMapWin32Status(Status);
     }
 
+    ERR("ROSLSA rpc-dssetup-init-enter\n");
     DsSetupInit();
+    ERR("ROSLSA rpc-dssetup-init-done\n");
 
     Status = RpcServerListen(1, 20, TRUE);
+    ERR("ROSLSA rpc-listen-result status=%lx\n", Status);
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerListen() failed (Status %lx)\n", Status);
@@ -77,13 +84,18 @@ LsarStartRpcServer(VOID)
 
     /* Notify the service manager */
     TRACE("Creating notification event!\n");
+    ERR("ROSLSA rpc-active-event-create-enter\n");
+    SetLastError(ERROR_SUCCESS);
     hEvent = CreateEventW(NULL,
                           TRUE,
                           FALSE,
                           L"LSA_RPC_SERVER_ACTIVE");
+    dwError = GetLastError();
+    ERR("ROSLSA rpc-active-event-create-result handle=%p error=%lu\n",
+        hEvent,
+        dwError);
     if (hEvent == NULL)
     {
-        dwError = GetLastError();
         TRACE("Failed to create or open the notification event (Error %lu)\n", dwError);
 #if 0
         if (dwError == ERROR_ALREADY_EXISTS)
@@ -102,7 +114,12 @@ LsarStartRpcServer(VOID)
     }
 
     TRACE("Set notification event!\n");
-    SetEvent(hEvent);
+    SetLastError(ERROR_SUCCESS);
+    bResult = SetEvent(hEvent);
+    dwError = GetLastError();
+    ERR("ROSLSA rpc-active-event-set-result success=%u error=%lu\n",
+        bResult,
+        dwError);
 
     /* NOTE: Do not close the event handle, as it must remain alive! */
 

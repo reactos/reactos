@@ -248,7 +248,7 @@ HRESULT CZipFolder::CopyZipEntry(unzFile uf, zipFile zf, unz_file_info64* info, 
         return E_FAIL;
     }
 
-    zip_fileinfo zi = {0};
+    zip_fileinfo zi = {};
     zi.dosDate = info->dosDate;
     zi.internal_fa = info->internal_fa;
     zi.external_fa = info->external_fa;

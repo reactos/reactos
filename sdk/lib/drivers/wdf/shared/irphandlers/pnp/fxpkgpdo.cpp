@@ -580,7 +580,7 @@ Returns:
 
 {
     PDEVICE_CAPABILITIES pDeviceCapabilities;
-    STACK_DEVICE_CAPABILITIES parentStackCapabilities = {0};
+    STACK_DEVICE_CAPABILITIES parentStackCapabilities = {};
     NTSTATUS status;
 
     status = STATUS_UNSUCCESSFUL;

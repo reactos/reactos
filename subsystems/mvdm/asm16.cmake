@@ -11,6 +11,12 @@ if(NOT MSVC)
 function(add_asm16_bin _target _binary_file _base_address)
     set(_concatenated_asm_file ${CMAKE_CURRENT_BINARY_DIR}/${_target}.asm)
     set(_object_file ${CMAKE_CURRENT_BINARY_DIR}/${_target}.o)
+    set(_asm_flags_string "${CMAKE_ASM_FLAGS}")
+    if(CMAKE_BUILD_TYPE)
+        string(TOUPPER "${CMAKE_BUILD_TYPE}" _build_type_upper)
+        string(APPEND _asm_flags_string " ${CMAKE_ASM_FLAGS_${_build_type_upper}}")
+    endif()
+    separate_arguments(_asm_flags NATIVE_COMMAND "${_asm_flags_string}")
 
     # unset(_source_file_list)
 
@@ -45,7 +51,7 @@ function(add_asm16_bin _target _binary_file _base_address)
     ##
     add_custom_command(
         OUTPUT ${_object_file}
-        COMMAND ${CMAKE_ASM_COMPILER} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} -D__ASM__ -c ${_concatenated_asm_file}
+        COMMAND ${CMAKE_ASM_COMPILER} ${_asm_flags} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} -D__ASM__ -c ${_concatenated_asm_file}
         DEPENDS ${_concatenated_asm_file})
 
     add_custom_command(

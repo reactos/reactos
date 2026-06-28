@@ -28,6 +28,20 @@ PVOID g_pfnSE_ProcessDying;
 
 /* FUNCTIONS *****************************************************************/
 
+static
+BOOLEAN
+LdrpRosTraceMsv10Name(
+    _In_opt_ PUNICODE_STRING DllName)
+{
+    UNICODE_STRING Msv10Name;
+
+    if ((DllName == NULL) || (DllName->Buffer == NULL))
+        return FALSE;
+
+    RtlInitUnicodeString(&Msv10Name, L"msv1_0.dll");
+    return RtlEqualUnicodeString(DllName, &Msv10Name, TRUE);
+}
+
 NTSTATUS
 NTAPI
 LdrpAllocateUnicodeString(IN OUT PUNICODE_STRING StringOut,
@@ -2436,6 +2450,8 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     UNICODE_STRING RawDllName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InInit = LdrpInLdrInit;
+    BOOLEAN TraceMsv10;
+    BOOLEAN DllAlreadyLoaded;
 
     /* Save the Raw DLL Name */
     if (DllName->Length >= sizeof(NameBuffer)) return STATUS_NAME_TOO_LONG;
@@ -2485,6 +2501,15 @@ LdrpLoadDll(IN BOOLEAN Redirected,
         (VOID)RtlAppendUnicodeStringToString(&RawDllName,
                                              &LdrApiDefaultExtension);
     }
+    TraceMsv10 = LdrpRosTraceMsv10Name(&RawDllName);
+    if (TraceMsv10)
+    {
+        DPRINT1("ROSLDR load-enter name=%wZ path=%ws callinit=%u ininit=%u\n",
+                &RawDllName,
+                DllPath ? DllPath : L"",
+                CallInit,
+                InInit);
+    }
 
     /* Check for init flag and acquire lock */
     if (!InInit) RtlEnterCriticalSection(&LdrpLoaderLock);
@@ -2500,13 +2525,24 @@ LdrpLoadDll(IN BOOLEAN Redirected,
         }
 
         /* Check if the DLL is already loaded */
-        if (!LdrpCheckForLoadedDll(DllPath,
-                                   &RawDllName,
-                                   FALSE,
-                                   Redirected,
-                                   &LdrEntry))
+        if (TraceMsv10)
+            DPRINT1("ROSLDR check-loaded-enter name=%wZ\n", &RawDllName);
+        DllAlreadyLoaded = LdrpCheckForLoadedDll(DllPath,
+                                                 &RawDllName,
+                                                 FALSE,
+                                                 Redirected,
+                                                 &LdrEntry);
+        if (TraceMsv10)
+        {
+            DPRINT1("ROSLDR check-loaded-result loaded=%u entry=%p\n",
+                    DllAlreadyLoaded,
+                    LdrEntry);
+        }
+        if (!DllAlreadyLoaded)
         {
             /* Map it */
+            if (TraceMsv10)
+                DPRINT1("ROSLDR map-enter name=%wZ\n", &RawDllName);
             Status = LdrpMapDll(DllPath,
                                 DllPath,
                                 NameBuffer,
@@ -2514,6 +2550,13 @@ LdrpLoadDll(IN BOOLEAN Redirected,
                                 FALSE,
                                 Redirected,
                                 &LdrEntry);
+            if (TraceMsv10)
+            {
+                DPRINT1("ROSLDR map-result status=0x%08lx entry=%p base=%p\n",
+                        Status,
+                        LdrEntry,
+                        NT_SUCCESS(Status) ? LdrEntry->DllBase : NULL);
+            }
             if (!NT_SUCCESS(Status))
                 _SEH2_LEAVE;
 
@@ -2536,7 +2579,18 @@ LdrpLoadDll(IN BOOLEAN Redirected,
                 if (!(LdrEntry->Flags & LDRP_COR_IMAGE))
                 {
                     /* Walk the Import Descriptor */
+                    if (TraceMsv10)
+                    {
+                        DPRINT1("ROSLDR walk-import-enter entry=%p base=%p\n",
+                                LdrEntry,
+                                LdrEntry->DllBase);
+                    }
                     Status = LdrpWalkImportDescriptor(DllPath, LdrEntry);
+                    if (TraceMsv10)
+                    {
+                        DPRINT1("ROSLDR walk-import-result status=0x%08lx\n",
+                                Status);
+                    }
                 }
 
                 /* Update load count, unless it's locked */
@@ -2589,7 +2643,14 @@ LdrpLoadDll(IN BOOLEAN Redirected,
                 }
 
                 /* Run the init routine */
+                if (TraceMsv10)
+                    DPRINT1("ROSLDR init-routines-enter entry=%p\n", LdrEntry);
                 Status = LdrpRunInitializeRoutines(NULL);
+                if (TraceMsv10)
+                {
+                    DPRINT1("ROSLDR init-routines-result status=0x%08lx\n",
+                            Status);
+                }
                 if (!NT_SUCCESS(Status))
                 {
                     /* Failed, unload the DLL */
@@ -2612,6 +2673,8 @@ LdrpLoadDll(IN BOOLEAN Redirected,
         }
         else
         {
+            if (TraceMsv10)
+                DPRINT1("ROSLDR already-loaded-path entry=%p\n", LdrEntry);
             /* We were already loaded. Are we a DLL? */
             if ((LdrEntry->Flags & LDRP_IMAGE_DLL) && (LdrEntry->LoadCount != 0xFFFF))
             {
@@ -2647,6 +2710,14 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     {
         /* Nothing found */
         *BaseAddress = NULL;
+    }
+
+    if (TraceMsv10)
+    {
+        DPRINT1("ROSLDR load-done name=%wZ status=0x%08lx base=%p\n",
+                &RawDllName,
+                Status,
+                *BaseAddress);
     }
 
     /* Return status */

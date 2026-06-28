@@ -385,7 +385,7 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
     CoffEntry = (PCOFF_SYMENT) CoffSymbolsBase;
     Count = CoffSymbolsLength / sizeof(COFF_SYMENT);
 
-    *SymbolsBase = malloc(Count * sizeof(ROSSYM_ENTRY));
+    *SymbolsBase = calloc(Count + 1, sizeof(ROSSYM_ENTRY));
     if (*SymbolsBase == NULL)
     {
         fprintf(stderr, "Unable to allocate memory for converted COFF symbols\n");
@@ -417,14 +417,33 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
             Current->FileOffset = 0;
             if (CoffEntry[i].e.e.e_zeroes == 0)
             {
-                if (sizeof(FuncName) <= strlen((char *) CoffStringsBase + CoffEntry[i].e.e.e_offset))
+                const char *CoffName;
+
+                if (CoffEntry[i].e.e.e_offset >= CoffStringsLength)
+                {
+                    free(*SymbolsBase);
+                    fprintf(stderr, "Invalid COFF string offset\n");
+                    StringHashTableFree(&StringHash);
+                    return 1;
+                }
+
+                CoffName = (char *) CoffStringsBase + CoffEntry[i].e.e.e_offset;
+                if (memchr(CoffName, '\0', CoffStringsLength - CoffEntry[i].e.e.e_offset) == NULL)
+                {
+                    free(*SymbolsBase);
+                    fprintf(stderr, "Unterminated COFF string\n");
+                    StringHashTableFree(&StringHash);
+                    return 1;
+                }
+
+                if (sizeof(FuncName) <= strlen(CoffName))
                 {
                     free(*SymbolsBase);
                     fprintf(stderr, "Function name too long\n");
                     StringHashTableFree(&StringHash);
                     return 1;
                 }
-                strcpy(FuncName, (char *) CoffStringsBase + CoffEntry[i].e.e.e_offset);
+                strcpy(FuncName, CoffName);
             }
             else
             {
@@ -444,13 +463,13 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
                                                       StringsLength,
                                                       StringsBase);
             Current->SourceLine = 0;
-            memset(++Current, 0, sizeof(*Current));
+            Current++;
         }
 
         i += CoffEntry[i].e_numaux;
     }
 
-    *SymbolsCount = (Current - *SymbolsBase + 1);
+    *SymbolsCount = (Current - *SymbolsBase);
     qsort(*SymbolsBase, *SymbolsCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *)) CompareSymEntry);
 
     StringHashTableFree(&StringHash);
@@ -1251,6 +1270,7 @@ int main(int argc, char* argv[])
     ULONG StabSymbolsCount = 0;
     PROSSYM_ENTRY StabSymbols = NULL;
     ULONG CoffSymbolsCount = 0;
+    ULONG CoffStringSlack;
     PROSSYM_ENTRY CoffSymbols = NULL;
     ULONG MergedSymbolsCount = 0;
     PROSSYM_ENTRY MergedSymbols = NULL;
@@ -1391,10 +1411,12 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+    CoffStringSlack = (CoffsLength / sizeof(COFF_SYMENT)) * (E_SYMNMLEN + 1);
+
     if (!UseDbgHelp)
     {
         StringBase = malloc(1 + StringsLength + CoffStringsLength +
-                            (CoffsLength / sizeof(ROSSYM_ENTRY)) * (E_SYMNMLEN + 1));
+                            CoffStringSlack);
         if (StringBase == NULL)
         {
             free(FileData);
@@ -1425,7 +1447,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        StringBase = realloc(StringBase, StringsLength + CoffStringsLength);
+        StringBase = realloc(StringBase, StringsLength + CoffStringsLength + CoffStringSlack);
         if (!StringBase)
         {
             free(FileData);

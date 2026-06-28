@@ -22,6 +22,10 @@
 #ifndef _INCLUDED_MM2
 #define _INCLUDED_MM2
 
+#if defined(__clang__) && !defined(_MSC_VER)
+#include_next <xmmintrin.h>
+#else
+
 #include <mmintrin.h>
 
 #if defined(_MM2_FUNCTIONALITY) && !defined(_MM_FUNCTIONALITY)
@@ -1240,5 +1244,7 @@ __INTRIN_INLINE_SSE __m64 _mm_sad_pu8(__m64 __a, __m64 __b)
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+
+#endif /* defined(__clang__) && !defined(_MSC_VER) */
 
 #endif /* _INCLUDED_MM2 */

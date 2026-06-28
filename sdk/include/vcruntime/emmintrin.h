@@ -11,6 +11,10 @@
 #ifndef _INCLUDED_EMM
 #define _INCLUDED_EMM
 
+#if defined(__clang__) && !defined(_MSC_VER)
+#include_next <emmintrin.h>
+#else
+
 #include <vcruntime.h>
 #include <xmmintrin.h>
 
@@ -1962,5 +1966,7 @@ void _mm_pause(void);
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+#endif /* defined(__clang__) && !defined(_MSC_VER) */
 
 #endif /* _INCLUDED_EMM */

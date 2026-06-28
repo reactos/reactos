@@ -883,6 +883,7 @@ LocalmonReadPort(HANDLE hPort, PBYTE pBuffer, DWORD cbBuffer, PDWORD pcbRead)
         ERR("ReadFile failed with error %lu!\n", dwErrorCode);
         goto Cleanup;
     }
+    dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
     if (bOpenedPort)

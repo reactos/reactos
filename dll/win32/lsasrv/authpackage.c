@@ -194,17 +194,30 @@ LsapAddAuthPackage(IN PWSTR ValueName,
     PackageName.Buffer = ValueData;
 
     Id = (PULONG)Context;
+    ERR("ROSLSA authpkg-add-enter type=%lu length=%lu id=%lu name=%wZ\n",
+        ValueType,
+        ValueLength,
+        *Id,
+        &PackageName);
 
     Package = RtlAllocateHeap(RtlGetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
                                   sizeof(AUTH_PACKAGE));
     if (Package == NULL)
+    {
+        ERR("ROSLSA authpkg-allocate-result status=0x%08lx\n",
+            STATUS_INSUFFICIENT_RESOURCES);
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
+    ERR("ROSLSA authpkg-load-enter name=%wZ\n", &PackageName);
     Status = LdrLoadDll(NULL,
                         NULL,
                         &PackageName,
                         &Package->ModuleHandle);
+    ERR("ROSLSA authpkg-load-result status=0x%08lx module=%p\n",
+        Status,
+        Package->ModuleHandle);
     if (!NT_SUCCESS(Status))
     {
         TRACE("LdrLoadDll failed (Status 0x%08lx)\n", Status);
@@ -212,10 +225,15 @@ LsapAddAuthPackage(IN PWSTR ValueName,
     }
 
     RtlInitAnsiString(&ProcName, "LsaApInitializePackage");
+    ERR("ROSLSA authpkg-proc-enter name=%s\n", ProcName.Buffer);
     Status = LdrGetProcedureAddress(Package->ModuleHandle,
                                     &ProcName,
                                     0,
                                     (PVOID *)&Package->LsaApInitializePackage);
+    ERR("ROSLSA authpkg-proc-result name=%s status=0x%08lx address=%p\n",
+        ProcName.Buffer,
+        Status,
+        Package->LsaApInitializePackage);
     if (!NT_SUCCESS(Status))
     {
         TRACE("LdrGetProcedureAddress() failed (Status 0x%08lx)\n", Status);
@@ -223,10 +241,15 @@ LsapAddAuthPackage(IN PWSTR ValueName,
     }
 
     RtlInitAnsiString(&ProcName, "LsaApCallPackage");
+    ERR("ROSLSA authpkg-proc-enter name=%s\n", ProcName.Buffer);
     Status = LdrGetProcedureAddress(Package->ModuleHandle,
                                     &ProcName,
                                     0,
                                     (PVOID *)&Package->LsaApCallPackage);
+    ERR("ROSLSA authpkg-proc-result name=%s status=0x%08lx address=%p\n",
+        ProcName.Buffer,
+        Status,
+        Package->LsaApCallPackage);
     if (!NT_SUCCESS(Status))
     {
         TRACE("LdrGetProcedureAddress() failed (Status 0x%08lx)\n", Status);
@@ -234,10 +257,15 @@ LsapAddAuthPackage(IN PWSTR ValueName,
     }
 
     RtlInitAnsiString(&ProcName, "LsaApCallPackagePassthrough");
+    ERR("ROSLSA authpkg-proc-enter name=%s\n", ProcName.Buffer);
     Status = LdrGetProcedureAddress(Package->ModuleHandle,
                                     &ProcName,
                                     0,
                                     (PVOID *)&Package->LsaApCallPackagePassthrough);
+    ERR("ROSLSA authpkg-proc-result name=%s status=0x%08lx address=%p\n",
+        ProcName.Buffer,
+        Status,
+        Package->LsaApCallPackagePassthrough);
     if (!NT_SUCCESS(Status))
     {
         TRACE("LdrGetProcedureAddress() failed (Status 0x%08lx)\n", Status);
@@ -245,10 +273,15 @@ LsapAddAuthPackage(IN PWSTR ValueName,
     }
 
     RtlInitAnsiString(&ProcName, "LsaApCallPackageUntrusted");
+    ERR("ROSLSA authpkg-proc-enter name=%s\n", ProcName.Buffer);
     Status = LdrGetProcedureAddress(Package->ModuleHandle,
                                     &ProcName,
                                     0,
                                     (PVOID *)&Package->LsaApCallPackageUntrusted);
+    ERR("ROSLSA authpkg-proc-result name=%s status=0x%08lx address=%p\n",
+        ProcName.Buffer,
+        Status,
+        Package->LsaApCallPackageUntrusted);
     if (!NT_SUCCESS(Status))
     {
         TRACE("LdrGetProcedureAddress() failed (Status 0x%08lx)\n", Status);
@@ -256,10 +289,15 @@ LsapAddAuthPackage(IN PWSTR ValueName,
     }
 
     RtlInitAnsiString(&ProcName, "LsaApLogonTerminated");
+    ERR("ROSLSA authpkg-proc-enter name=%s\n", ProcName.Buffer);
     Status = LdrGetProcedureAddress(Package->ModuleHandle,
                                     &ProcName,
                                     0,
                                     (PVOID *)&Package->LsaApLogonTerminated);
+    ERR("ROSLSA authpkg-proc-result name=%s status=0x%08lx address=%p\n",
+        ProcName.Buffer,
+        Status,
+        Package->LsaApLogonTerminated);
     if (!NT_SUCCESS(Status))
     {
         TRACE("LdrGetProcedureAddress() failed (Status 0x%08lx)\n", Status);
@@ -267,24 +305,39 @@ LsapAddAuthPackage(IN PWSTR ValueName,
     }
 
     RtlInitAnsiString(&ProcName, "LsaApLogonUserEx2");
+    ERR("ROSLSA authpkg-proc-enter name=%s\n", ProcName.Buffer);
     Status = LdrGetProcedureAddress(Package->ModuleHandle,
                                     &ProcName,
                                     0,
                                     (PVOID *)&Package->LsaApLogonUserEx2);
+    ERR("ROSLSA authpkg-proc-result name=%s status=0x%08lx address=%p\n",
+        ProcName.Buffer,
+        Status,
+        Package->LsaApLogonUserEx2);
     if (!NT_SUCCESS(Status))
     {
         RtlInitAnsiString(&ProcName, "LsaApLogonUserEx");
+        ERR("ROSLSA authpkg-proc-enter name=%s\n", ProcName.Buffer);
         Status = LdrGetProcedureAddress(Package->ModuleHandle,
                                         &ProcName,
                                         0,
                                         (PVOID *)&Package->LsaApLogonUserEx);
+        ERR("ROSLSA authpkg-proc-result name=%s status=0x%08lx address=%p\n",
+            ProcName.Buffer,
+            Status,
+            Package->LsaApLogonUserEx);
         if (!NT_SUCCESS(Status))
         {
             RtlInitAnsiString(&ProcName, "LsaApLogonUser");
+            ERR("ROSLSA authpkg-proc-enter name=%s\n", ProcName.Buffer);
             Status = LdrGetProcedureAddress(Package->ModuleHandle,
                                             &ProcName,
                                             0,
                                             (PVOID *)&Package->LsaApLogonUser);
+            ERR("ROSLSA authpkg-proc-result name=%s status=0x%08lx address=%p\n",
+                ProcName.Buffer,
+                Status,
+                Package->LsaApLogonUser);
             if (!NT_SUCCESS(Status))
             {
                 TRACE("LdrGetProcedureAddress() failed (Status 0x%08lx)\n", Status);
@@ -294,11 +347,17 @@ LsapAddAuthPackage(IN PWSTR ValueName,
     }
 
     /* Initialize the current package */
+    ERR("ROSLSA authpkg-init-package-enter id=%lu module=%p\n",
+        *Id,
+        Package->ModuleHandle);
     Status = Package->LsaApInitializePackage(*Id,
                                              &DispatchTable,
                                              NULL,
                                              NULL,
                                              &Package->Name);
+    ERR("ROSLSA authpkg-init-package-result status=0x%08lx package-name=%p\n",
+        Status,
+        Package->Name);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Package->LsaApInitializePackage() failed (Status 0x%08lx)\n", Status);
@@ -313,6 +372,10 @@ LsapAddAuthPackage(IN PWSTR ValueName,
     InsertTailList(&PackageListHead, &Package->Entry);
 
 done:
+    ERR("ROSLSA authpkg-add-done status=0x%08lx id=%lu package=%p\n",
+        Status,
+        *Id,
+        Package);
     if (!NT_SUCCESS(Status))
     {
         if (Package != NULL)

@@ -20,7 +20,6 @@
 class ProgressDlg : public CDialogImpl<ProgressDlg>
 {
 private:
-    INT_PTR m_DialogID;
     HWND m_hListBox;
     HFONT m_hBoldFont;
     HBITMAP m_hArrowBmp;

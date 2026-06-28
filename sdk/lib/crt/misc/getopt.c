@@ -83,9 +83,7 @@ warnx(const char *fmt,...)
 }
 
 static int
-gcd(a,b)
-	int a;
-	int b;
+gcd(int a, int b)
 {
 	int c;
 
@@ -100,11 +98,10 @@ gcd(a,b)
 }
 
 static void
-permute_args(panonopt_start,panonopt_end,opt_end,nargv)
-	int panonopt_start;
-	int panonopt_end;
-	int opt_end;
-	char * const *nargv;
+permute_args(int panonopt_start,
+             int panonopt_end,
+             int opt_end,
+             char * const *nargv)
 {
 	int cstart,cyclelen,i,j,ncycle,nnonopts,nopts,pos;
 	char *swap;
@@ -134,10 +131,7 @@ permute_args(panonopt_start,panonopt_end,opt_end,nargv)
 }
 
 static int
-getopt_internal(nargc,nargv,options)
-	int nargc;
-	char * const *nargv;
-	const char *options;
+getopt_internal(int nargc, char * const *nargv, const char *options)
 {
 	char *oli;
 	int optchar;
@@ -255,10 +249,7 @@ start:
 #ifdef REPLACE_GETOPT
 
 int
-getopt(nargc,nargv,options)
-	int nargc;
-	char * const *nargv;
-	const char *options;
+getopt(int nargc, char * const *nargv, const char *options)
 {
 	int retval;
 
@@ -280,12 +271,11 @@ getopt(nargc,nargv,options)
 #endif
 
 int
-getopt_long(nargc,nargv,options,long_options,idx)
-	int nargc;
-	char * const *nargv;
-	const char *options;
-	const struct option *long_options;
-	int *idx;
+getopt_long(int nargc,
+            char * const *nargv,
+            const char *options,
+            const struct option *long_options,
+            int *idx)
 {
 	int retval;
 

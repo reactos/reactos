@@ -742,6 +742,15 @@ static void set_mxcsr( unsigned int val )
 #endif
 
 #ifdef __REACTOS__
+#ifndef __ATTRIBUTE_SSE__
+#ifdef __clang__
+#define __ATTRIBUTE_SSE__ __attribute__((__target__("sse"), __min_vector_width__(128)))
+#elif defined(__GNUC__)
+#define __ATTRIBUTE_SSE__ __attribute__((__target__("sse")))
+#else
+#define __ATTRIBUTE_SSE__
+#endif
+#endif
 __ATTRIBUTE_SSE__
 #endif
 static void _setfp_sse( unsigned int *cw, unsigned int cw_mask,

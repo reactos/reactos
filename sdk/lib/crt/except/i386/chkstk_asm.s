@@ -12,6 +12,7 @@
 #define PAGE_SIZE 4096
 
 PUBLIC __chkstk
+PUBLIC __alloca
 PUBLIC __alloca_probe
 PUBLIC __alloca_probe_16
 .code
@@ -50,6 +51,7 @@ l1:
  guard page for the stack is hit, and the stack growing triggered
  */
 __chkstk:
+__alloca:
 __alloca_probe:
 
     /* EAX = size to be allocated */

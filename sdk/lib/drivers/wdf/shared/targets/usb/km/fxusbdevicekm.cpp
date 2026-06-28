@@ -37,7 +37,9 @@ extern "C" {
 
 
 
+#ifndef UCHAR_MAX
 #define UCHAR_MAX (0xff)
+#endif
 
 
 _Must_inspect_result_
@@ -1106,5 +1108,4 @@ FxUsbDevice::Reset(
 
     return status;
 }
-
 

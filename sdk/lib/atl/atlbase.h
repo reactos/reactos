@@ -202,7 +202,11 @@ typedef _ATL_WIN_MODULE70 _ATL_WIN_MODULE;
 #elif defined(__GNUC__)
 
 // GCC completely ignores __attribute__((unused)) on the __pobjMap_ pointer, so we pass it to a function that is not allowed to be optimized....
+#if defined(__clang__)
+static int __attribute__((optnone, unused)) hack_for_gcc(const _ATL_OBJMAP_ENTRY * const *)
+#else
 static int __attribute__((optimize("O0"), unused)) hack_for_gcc(const _ATL_OBJMAP_ENTRY * const *)
+#endif
 {
     return 1;
 }

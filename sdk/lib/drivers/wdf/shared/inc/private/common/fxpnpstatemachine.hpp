@@ -120,6 +120,11 @@ union FxPnpStateInfo {
         ULONG PnpEventPwrPolStarted : 1;
         ULONG PnpEventPwrPolStartFailed : 1;
     } BitsByName;
+
+    constexpr FxPnpStateInfo(ULONG QueueOpen, ULONG KnownDroppedEvents) :
+        Bits{QueueOpen, KnownDroppedEvents}
+    {
+    }
 };
 
 struct PNP_EVENT_TARGET_STATE {

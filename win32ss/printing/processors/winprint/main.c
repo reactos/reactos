@@ -271,6 +271,8 @@ PrintDocumentOnPrintProcessor(HANDLE hPrintProcessor, PWSTR pDocumentName)
     // Call the corresponding Print function for the datatype.
     if (pHandle->Datatype == RAW)
         dwErrorCode = PrintRawJob(pHandle, pDocumentName);
+    else
+        dwErrorCode = ERROR_INVALID_DATATYPE;
 
 Cleanup:
     SetLastError(dwErrorCode);

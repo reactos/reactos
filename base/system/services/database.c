@@ -21,6 +21,12 @@
 #define NDEBUG
 #include <debug.h>
 
+#define SCM_TRACE_SERVICE_ENTRY(TraceService, ...) \
+    do {                                           \
+        if (TraceService)                          \
+            DPRINT1(__VA_ARGS__);                  \
+    } while (0)
+
 
 /* GLOBALS *******************************************************************/
 
@@ -57,6 +63,20 @@ ScmIsGuestStateTraceService(
     return ScmIsGuestStateCollectorService(lpServiceName) ||
            (lpServiceName != NULL &&
             _wcsicmp(lpServiceName, L"VMware Physical Disk Helper Service") == 0);
+}
+
+
+static
+BOOL
+ScmShouldTraceServiceListEntry(
+    _In_opt_ LPCWSTR lpServiceName)
+{
+    if (ScmIsGuestStateTraceService(lpServiceName))
+        return TRUE;
+
+    return lpServiceName != NULL &&
+           (_wcsicmp(lpServiceName, L"vga") == 0 ||
+            _wcsicmp(lpServiceName, L"wuauserv") == 0);
 }
 
 
@@ -1072,24 +1092,42 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
     PSERVICE lpService = NULL;
     LPWSTR lpDisplayName = NULL;
     LPWSTR lpGroup = NULL;
+    BOOL bTraceService;
     DWORD dwSize;
     DWORD dwError;
-    DWORD dwServiceType;
-    DWORD dwStartType;
-    DWORD dwErrorControl;
-    DWORD dwTagId;
+    DWORD dwServiceType = 0;
+    DWORD dwStartType = 0;
+    DWORD dwErrorControl = 0;
+    DWORD dwTagId = 0;
 
     DPRINT("Service: '%S'\n", lpServiceName);
+    bTraceService = ScmShouldTraceServiceListEntry(lpServiceName);
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-enter service='%S' key=%p\n",
+                            lpServiceName,
+                            hServiceKey);
+
     if (*lpServiceName == L'{')
         return ERROR_SUCCESS;
 
     dwSize = sizeof(DWORD);
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-query service='%S' value=Type\n",
+                            lpServiceName);
+
     dwError = RegQueryValueExW(hServiceKey,
                                L"Type",
                                NULL,
                                NULL,
                                (LPBYTE)&dwServiceType,
                                &dwSize);
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-query-result service='%S' value=Type error=%lu size=%lu data=%lx\n",
+                            lpServiceName,
+                            dwError,
+                            dwSize,
+                            dwServiceType);
+
     if (dwError != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
@@ -1102,28 +1140,54 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
     DPRINT("Service type: %lx\n", dwServiceType);
 
     dwSize = sizeof(DWORD);
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-query service='%S' value=Start\n",
+                            lpServiceName);
+
     dwError = RegQueryValueExW(hServiceKey,
                                L"Start",
                                NULL,
                                NULL,
                                (LPBYTE)&dwStartType,
                                &dwSize);
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-query-result service='%S' value=Start error=%lu size=%lu data=%lx\n",
+                            lpServiceName,
+                            dwError,
+                            dwSize,
+                            dwStartType);
+
     if (dwError != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
     DPRINT("Start type: %lx\n", dwStartType);
 
     dwSize = sizeof(DWORD);
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-query service='%S' value=ErrorControl\n",
+                            lpServiceName);
+
     dwError = RegQueryValueExW(hServiceKey,
                                L"ErrorControl",
                                NULL,
                                NULL,
                                (LPBYTE)&dwErrorControl,
                                &dwSize);
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-query-result service='%S' value=ErrorControl error=%lu size=%lu data=%lx\n",
+                            lpServiceName,
+                            dwError,
+                            dwSize,
+                            dwErrorControl);
+
     if (dwError != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
     DPRINT("Error control: %lx\n", dwErrorControl);
+
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-query service='%S' value=Tag\n",
+                            lpServiceName);
 
     dwError = RegQueryValueExW(hServiceKey,
                                L"Tag",
@@ -1131,42 +1195,77 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
                                NULL,
                                (LPBYTE)&dwTagId,
                                &dwSize);
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-query-result service='%S' value=Tag error=%lu size=%lu data=%lx\n",
+                            lpServiceName,
+                            dwError,
+                            dwSize,
+                            dwTagId);
+
     if (dwError != ERROR_SUCCESS)
         dwTagId = 0;
 
     DPRINT("Tag: %lx\n", dwTagId);
 
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-read-string service='%S' value=Group\n",
+                            lpServiceName);
+
     dwError = ScmReadString(hServiceKey,
                             L"Group",
                             &lpGroup);
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-read-string-result service='%S' value=Group error=%lu data='%S'\n",
+                            lpServiceName,
+                            dwError,
+                            (dwError == ERROR_SUCCESS && lpGroup != NULL) ? lpGroup : L"(null)");
+
     if (dwError != ERROR_SUCCESS)
         lpGroup = NULL;
 
     DPRINT("Group: %S\n", lpGroup);
 
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-read-string service='%S' value=DisplayName\n",
+                            lpServiceName);
+
     dwError = ScmReadString(hServiceKey,
                             L"DisplayName",
                             &lpDisplayName);
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-read-string-result service='%S' value=DisplayName error=%lu data='%S'\n",
+                            lpServiceName,
+                            dwError,
+                            (dwError == ERROR_SUCCESS && lpDisplayName != NULL) ? lpDisplayName : L"(null)");
+
     if (dwError != ERROR_SUCCESS)
         lpDisplayName = NULL;
 
     DPRINT("Display name: %S\n", lpDisplayName);
 
-    if (ScmIsGuestStateTraceService(lpServiceName))
-    {
-        DPRINT1("ROSGUESTSTATE create-entry values type=%lx start=%lx error=%lx tag=%lx group='%S' display='%S'\n",
-                dwServiceType,
-                dwStartType,
-                dwErrorControl,
-                dwTagId,
-                lpGroup ? lpGroup : L"(null)",
-                lpDisplayName ? lpDisplayName : L"(null)");
-    }
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry values type=%lx start=%lx error=%lx tag=%lx group='%S' display='%S'\n",
+                            dwServiceType,
+                            dwStartType,
+                            dwErrorControl,
+                            dwTagId,
+                            lpGroup ? lpGroup : L"(null)",
+                            lpDisplayName ? lpDisplayName : L"(null)");
+
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-new-record service='%S'\n",
+                            lpServiceName);
 
     dwError = ScmCreateNewServiceRecord(lpServiceName,
                                         &lpService,
                                         dwServiceType,
                                         dwStartType);
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-new-record-result service='%S' error=%lu record=%p\n",
+                            lpServiceName,
+                            dwError,
+                            lpService);
+
     if (dwError != ERROR_SUCCESS)
         goto done;
 
@@ -1175,7 +1274,18 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
 
     if (lpGroup != NULL)
     {
+        SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                "ROSGUESTSTATE create-entry-set-group service='%S' group='%S'\n",
+                                lpServiceName,
+                                lpGroup);
+
         dwError = ScmSetServiceGroup(lpService, lpGroup);
+        SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                "ROSGUESTSTATE create-entry-set-group-result service='%S' error=%lu group-record=%p\n",
+                                lpServiceName,
+                                dwError,
+                                lpService->lpGroup);
+
         if (dwError != ERROR_SUCCESS)
             goto done;
     }
@@ -1197,42 +1307,79 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
            lpService->dwTag,
            lpService->dwErrorControl);
 
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-delete-flag service='%S'\n",
+                            lpServiceName);
+
     if (ScmIsDeleteFlagSet(hServiceKey))
         lpService->bDeleted = TRUE;
     else
         ScmGenerateServiceTag(lpService);
 
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-delete-flag-done service='%S' deleted=%u tag=%lu\n",
+                            lpServiceName,
+                            lpService->bDeleted,
+                            lpService->dwTag);
+
     if (lpService->Status.dwServiceType & SERVICE_WIN32)
     {
+        SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                "ROSGUESTSTATE create-entry-read-sd service='%S'\n",
+                                lpServiceName);
+
         dwError = ScmReadSecurityDescriptor(hServiceKey,
                                             &lpService->pSecurityDescriptor);
+        SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                "ROSGUESTSTATE create-entry-read-sd-result service='%S' error=%lu sd=%p\n",
+                                lpServiceName,
+                                dwError,
+                                lpService->pSecurityDescriptor);
+
         if (dwError != ERROR_SUCCESS)
             goto done;
 
         /* Assing the default security descriptor if the security descriptor cannot be read */
         if (lpService->pSecurityDescriptor == NULL)
         {
+            SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                    "ROSGUESTSTATE create-entry-default-sd service='%S'\n",
+                                    lpServiceName);
+
             DPRINT("No security descriptor found! Assign default security descriptor\n");
             dwError = ScmCreateDefaultServiceSD(&lpService->pSecurityDescriptor);
+            SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                    "ROSGUESTSTATE create-entry-default-sd-result service='%S' error=%lu sd=%p\n",
+                                    lpServiceName,
+                                    dwError,
+                                    lpService->pSecurityDescriptor);
+
             if (dwError != ERROR_SUCCESS)
                 goto done;
 
+            SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                    "ROSGUESTSTATE create-entry-write-sd service='%S'\n",
+                                    lpServiceName);
+
             dwError = ScmWriteSecurityDescriptor(hServiceKey,
                                                  lpService->pSecurityDescriptor);
+            SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                    "ROSGUESTSTATE create-entry-write-sd-result service='%S' error=%lu\n",
+                                    lpServiceName,
+                                    dwError);
+
             if (dwError != ERROR_SUCCESS)
                 goto done;
         }
     }
 
 done:
-    if (ScmIsGuestStateTraceService(lpServiceName))
-    {
-        DPRINT1("ROSGUESTSTATE create-entry-done error=%lu service=%p deleted=%u sd=%p\n",
-                dwError,
-                lpService,
-                (lpService != NULL) ? lpService->bDeleted : 0,
-                (lpService != NULL) ? lpService->pSecurityDescriptor : NULL);
-    }
+    SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                            "ROSGUESTSTATE create-entry-done error=%lu service=%p deleted=%u sd=%p\n",
+                            dwError,
+                            lpService,
+                            (lpService != NULL) ? lpService->bDeleted : 0,
+                            (lpService != NULL) ? lpService->pSecurityDescriptor : NULL);
 
     if (lpGroup != NULL)
         HeapFree(GetProcessHeap(), 0, lpGroup);
@@ -1322,18 +1469,24 @@ ScmCreateServiceDatabase(VOID)
     WCHAR szSubKey[MAX_PATH];
     HKEY hServicesKey;
     HKEY hServiceKey;
+    BOOL bTraceService = FALSE;
     DWORD dwSubKey;
     DWORD dwSubKeyLength;
     FILETIME ftLastChanged;
     DWORD dwError;
 
     DPRINT("ScmCreateServiceDatabase() called\n");
+    DPRINT1("ROSGUESTSTATE database-enter\n");
 
     /* Retrieve the NoInteractiveServies value */
     ScmGetNoInteractiveServicesValue();
+    DPRINT1("ROSGUESTSTATE database-nointeractive value=%lu\n",
+            NoInteractiveServices);
 
     /* Create the service group list */
     dwError = ScmCreateGroupList();
+    DPRINT1("ROSGUESTSTATE database-group-list-result error=%lu\n",
+            dwError);
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
@@ -1349,6 +1502,9 @@ ScmCreateServiceDatabase(VOID)
                             0,
                             KEY_READ,
                             &hServicesKey);
+    DPRINT1("ROSGUESTSTATE database-open-services-result error=%lu key=%p\n",
+            dwError,
+            (dwError == ERROR_SUCCESS) ? hServicesKey : NULL);
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
@@ -1364,22 +1520,60 @@ ScmCreateServiceDatabase(VOID)
                                 NULL,
                                 NULL,
                                 &ftLastChanged);
+        if (dwError == ERROR_SUCCESS)
+            bTraceService = ScmShouldTraceServiceListEntry(szSubKey);
+        else
+            bTraceService = FALSE;
+
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("ROSGUESTSTATE database-enum index=%lu error=%lu length=%lu name=''\n",
+                    dwSubKey,
+                    dwError,
+                    dwSubKeyLength);
+        }
+
+        SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                "ROSGUESTSTATE database-enum index=%lu error=%lu length=%lu name='%S'\n",
+                                dwSubKey,
+                                dwError,
+                                dwSubKeyLength,
+                                szSubKey);
         if (dwError == ERROR_SUCCESS &&
             szSubKey[0] != L'{')
         {
             DPRINT("SubKeyName: '%S'\n", szSubKey);
+            SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                    "ROSGUESTSTATE database-open-service index=%lu name='%S'\n",
+                                    dwSubKey,
+                                    szSubKey);
 
             dwError = RegOpenKeyExW(hServicesKey,
                                     szSubKey,
                                     0,
                                     KEY_READ,
                                     &hServiceKey);
+            SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                    "ROSGUESTSTATE database-open-service-result index=%lu name='%S' error=%lu key=%p\n",
+                                    dwSubKey,
+                                    szSubKey,
+                                    dwError,
+                                    (dwError == ERROR_SUCCESS) ? hServiceKey : NULL);
             if (dwError == ERROR_SUCCESS)
             {
                 dwError = CreateServiceListEntry(szSubKey,
                                                  hServiceKey);
+                SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                        "ROSGUESTSTATE database-create-service-result index=%lu name='%S' error=%lu\n",
+                                        dwSubKey,
+                                        szSubKey,
+                                        dwError);
 
                 RegCloseKey(hServiceKey);
+                SCM_TRACE_SERVICE_ENTRY(bTraceService,
+                                        "ROSGUESTSTATE database-close-service index=%lu name='%S'\n",
+                                        dwSubKey,
+                                        szSubKey);
             }
         }
 
@@ -1389,15 +1583,25 @@ ScmCreateServiceDatabase(VOID)
         dwSubKey++;
     }
 
+    DPRINT1("ROSGUESTSTATE database-enum-done index=%lu error=%lu\n",
+            dwSubKey,
+            dwError);
+
     RegCloseKey(hServicesKey);
+    DPRINT1("ROSGUESTSTATE database-close-services\n");
 
     /* Wait for the LSA server */
+    DPRINT1("ROSGUESTSTATE database-wait-lsa-enter\n");
     ScmWaitForLsa();
+    DPRINT1("ROSGUESTSTATE database-wait-lsa-done\n");
 
     /* Delete services that are marked for delete */
+    DPRINT1("ROSGUESTSTATE database-delete-marked-enter\n");
     ScmDeleteMarkedServices();
+    DPRINT1("ROSGUESTSTATE database-delete-marked-done\n");
 
     DPRINT("ScmCreateServiceDatabase() done\n");
+    DPRINT1("ROSGUESTSTATE database-done\n");
 
     return ERROR_SUCCESS;
 }
@@ -1771,6 +1975,225 @@ ScmControlService(
 
 
 static DWORD
+ScmWaitForTracedPipeOperation(
+    _In_ PSERVICE Service,
+    _In_ PCSTR OperationName,
+    _Inout_ LPOVERLAPPED Overlapped,
+    _Out_ LPDWORD BytesTransferred)
+{
+    HANDLE WaitHandles[2];
+    DWORD WaitHandleCount = 1;
+    DWORD StartTick;
+    DWORD dwError;
+    DWORD ExitCode = 0;
+
+    WaitHandles[0] = Overlapped->hEvent;
+    if (Service->lpImage->hProcess != NULL)
+    {
+        WaitHandles[WaitHandleCount] = Service->lpImage->hProcess;
+        WaitHandleCount++;
+    }
+
+    StartTick = GetTickCount();
+
+    for (;;)
+    {
+        DWORD Elapsed = GetTickCount() - StartTick;
+        if (Elapsed >= PipeTimeout)
+        {
+            DPRINT1("ROSGUESTSTATE %s-timeout elapsed=%lu timeout=%lu\n",
+                    OperationName,
+                    Elapsed,
+                    PipeTimeout);
+
+            if (!CancelIo(Service->lpImage->hControlPipe))
+            {
+                DPRINT1("ROSGUESTSTATE %s-cancel-failed error=%lu\n",
+                        OperationName,
+                        GetLastError());
+            }
+
+            return ERROR_SERVICE_REQUEST_TIMEOUT;
+        }
+
+        DWORD Remaining = PipeTimeout - Elapsed;
+        DWORD WaitTime = (Remaining > 1000) ? 1000 : Remaining;
+
+        DWORD WaitResult = WaitForMultipleObjects(WaitHandleCount,
+                                                  WaitHandles,
+                                                  FALSE,
+                                                  WaitTime);
+        if (WaitResult == WAIT_OBJECT_0)
+        {
+            if (!GetOverlappedResult(Service->lpImage->hControlPipe,
+                                     Overlapped,
+                                     BytesTransferred,
+                                     FALSE))
+            {
+                dwError = GetLastError();
+                DPRINT1("ROSGUESTSTATE %s-result-failed error=%lu\n",
+                        OperationName,
+                        dwError);
+                return dwError;
+            }
+
+            DPRINT1("ROSGUESTSTATE %s-complete bytes=%lu elapsed=%lu\n",
+                    OperationName,
+                    *BytesTransferred,
+                    GetTickCount() - StartTick);
+            return ERROR_SUCCESS;
+        }
+
+        if ((WaitHandleCount > 1) && (WaitResult == WAIT_OBJECT_0 + 1))
+        {
+            if (!GetExitCodeProcess(Service->lpImage->hProcess, &ExitCode))
+                ExitCode = GetLastError();
+
+            DPRINT1("ROSGUESTSTATE %s-process-exit exit=%lu elapsed=%lu\n",
+                    OperationName,
+                    ExitCode,
+                    GetTickCount() - StartTick);
+
+            if (!CancelIo(Service->lpImage->hControlPipe))
+            {
+                DPRINT1("ROSGUESTSTATE %s-cancel-after-exit-failed error=%lu\n",
+                        OperationName,
+                        GetLastError());
+            }
+
+            return ERROR_PROCESS_ABORTED;
+        }
+
+        if (WaitResult == WAIT_TIMEOUT)
+        {
+            DPRINT1("ROSGUESTSTATE %s-pending elapsed=%lu remaining=%lu\n",
+                    OperationName,
+                    Elapsed + WaitTime,
+                    Remaining - WaitTime);
+            continue;
+        }
+
+        dwError = GetLastError();
+        if (dwError == ERROR_SUCCESS)
+            dwError = ERROR_GEN_FAILURE;
+
+        DPRINT1("ROSGUESTSTATE %s-wait-failed wait=%lu error=%lu\n",
+                OperationName,
+                WaitResult,
+                dwError);
+        return dwError;
+    }
+}
+
+
+static DWORD
+ScmWaitForTracedServiceConnect(
+    _In_ PSERVICE Service)
+{
+    OVERLAPPED Overlapped = {0};
+    HANDLE PipeEvent;
+    DWORD dwRead = 0;
+    DWORD dwProcessId = 0;
+    DWORD dwError;
+    BOOL bResult;
+
+    DPRINT1("ROSGUESTSTATE wait-connect pipe=%p process=%lu timeout=%lu\n",
+            Service->lpImage->hControlPipe,
+            Service->lpImage->dwProcessId,
+            PipeTimeout);
+
+    PipeEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    if (PipeEvent == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT1("ROSGUESTSTATE connect-event-failed error=%lu\n", dwError);
+        return dwError;
+    }
+
+    Overlapped.hEvent = PipeEvent;
+    bResult = ConnectNamedPipe(Service->lpImage->hControlPipe, &Overlapped);
+    if (!bResult)
+    {
+        dwError = GetLastError();
+        DPRINT1("ROSGUESTSTATE connect-result result=0 error=%lu\n", dwError);
+
+        if (dwError == ERROR_IO_PENDING)
+        {
+            dwError = ScmWaitForTracedPipeOperation(Service,
+                                                    "connect",
+                                                    &Overlapped,
+                                                    &dwRead);
+        }
+        else if (dwError == ERROR_PIPE_CONNECTED)
+        {
+            dwError = ERROR_SUCCESS;
+        }
+
+        CloseHandle(PipeEvent);
+        if (dwError != ERROR_SUCCESS)
+            return dwError;
+    }
+    else
+    {
+        DPRINT1("ROSGUESTSTATE connect-result result=1 error=0\n");
+        CloseHandle(PipeEvent);
+    }
+
+    DPRINT1("ROSGUESTSTATE control-pipe-connected\n");
+
+    PipeEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    if (PipeEvent == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT1("ROSGUESTSTATE read-event-failed error=%lu\n", dwError);
+        return dwError;
+    }
+
+    ZeroMemory(&Overlapped, sizeof(Overlapped));
+    Overlapped.hEvent = PipeEvent;
+    bResult = ReadFile(Service->lpImage->hControlPipe,
+                       (LPVOID)&dwProcessId,
+                       sizeof(DWORD),
+                       &dwRead,
+                       &Overlapped);
+    if (!bResult)
+    {
+        dwError = GetLastError();
+        DPRINT1("ROSGUESTSTATE read-result result=0 error=%lu\n", dwError);
+
+        if (dwError == ERROR_IO_PENDING)
+        {
+            dwError = ScmWaitForTracedPipeOperation(Service,
+                                                    "read",
+                                                    &Overlapped,
+                                                    &dwRead);
+        }
+
+        CloseHandle(PipeEvent);
+        if (dwError != ERROR_SUCCESS)
+            return dwError;
+    }
+    else
+    {
+        DPRINT1("ROSGUESTSTATE read-result result=1 error=0 bytes=%lu pid=%lu\n",
+                dwRead,
+                dwProcessId);
+        CloseHandle(PipeEvent);
+    }
+
+    if ((ScmIsSecurityService(Service->lpImage) == FALSE) &&
+        (dwProcessId != Service->lpImage->dwProcessId))
+    {
+        DPRINT1("Log EVENT_SERVICE_DIFFERENT_PID_CONNECTED by %S\n",
+                Service->lpDisplayName);
+    }
+
+    DPRINT1("ROSGUESTSTATE wait-connect-done pid=%lu\n", dwProcessId);
+    return ERROR_SUCCESS;
+}
+
+
+static DWORD
 ScmWaitForServiceConnect(PSERVICE Service)
 {
     DWORD dwRead = 0;
@@ -1787,12 +2210,7 @@ ScmWaitForServiceConnect(PSERVICE Service)
     DPRINT("ScmWaitForServiceConnect()\n");
 
     if (ScmIsGuestStateTraceService(Service->lpServiceName))
-    {
-        DPRINT1("ROSGUESTSTATE wait-connect pipe=%p process=%lu timeout=%lu\n",
-                Service->lpImage->hControlPipe,
-                Service->lpImage->dwProcessId,
-                PipeTimeout);
-    }
+        return ScmWaitForTracedServiceConnect(Service);
 
     bResult = ConnectNamedPipe(Service->lpImage->hControlPipe,
                                &Overlapped);
