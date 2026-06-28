@@ -35,6 +35,16 @@ static HANDLE hScmSecurityServicesEvent = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
+static DWORD
+ScmErrorFromBoolean(BOOL Result)
+{
+    if (Result)
+        return ERROR_SUCCESS;
+
+    return GetLastError();
+}
+
+
 VOID
 PrintString(LPCSTR fmt, ...)
 {
@@ -296,11 +306,17 @@ wWinMain(HINSTANCE hInstance,
     HANDLE hScmAutoStartCompleteEvent = NULL;
     SC_RPC_LOCK Lock = NULL;
     BOOL bCanDeleteNamedPipeCriticalSection = FALSE;
+    BOOL bResult;
     DWORD dwError;
 
     DPRINT("SERVICES: Service Control Manager\n");
+    DPRINT1("ROSLSA scm-main-enter\n");
 
     dwError = CheckForLiveCD();
+    DPRINT1("ROSLSA scm-livecd-result error=%lu live=%u setup=%u\n",
+            dwError,
+            ScmLiveSetup,
+            ScmSetupInProgress);
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("SERVICES: Failed to check for LiveCD (Error %lu)\n", dwError);
@@ -314,7 +330,12 @@ wWinMain(HINSTANCE hInstance,
     ScmInitialize = TRUE;
 
     /* Create the start event */
+    SetLastError(ERROR_SUCCESS);
     hScmStartEvent = CreateEventW(NULL, TRUE, FALSE, SCM_START_EVENT);
+    dwError = GetLastError();
+    DPRINT1("ROSLSA scm-start-event-result handle=%p error=%lu\n",
+            hScmStartEvent,
+            dwError);
     if (hScmStartEvent == NULL)
     {
         DPRINT1("SERVICES: Failed to create the start event\n");
@@ -323,7 +344,12 @@ wWinMain(HINSTANCE hInstance,
     DPRINT("SERVICES: Created start event with handle %p\n", hScmStartEvent);
 
     /* Create the auto-start complete event */
+    SetLastError(ERROR_SUCCESS);
     hScmAutoStartCompleteEvent = CreateEventW(NULL, TRUE, FALSE, SCM_AUTOSTARTCOMPLETE_EVENT);
+    dwError = GetLastError();
+    DPRINT1("ROSLSA scm-autostart-event-result handle=%p error=%lu\n",
+            hScmAutoStartCompleteEvent,
+            dwError);
     if (hScmAutoStartCompleteEvent == NULL)
     {
         DPRINT1("SERVICES: Failed to create the auto-start complete event\n");
@@ -332,7 +358,12 @@ wWinMain(HINSTANCE hInstance,
     DPRINT("SERVICES: created auto-start complete event with handle %p\n", hScmAutoStartCompleteEvent);
 
     /* Create the shutdown event */
+    SetLastError(ERROR_SUCCESS);
     hScmShutdownEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    dwError = GetLastError();
+    DPRINT1("ROSLSA scm-shutdown-event-result handle=%p error=%lu\n",
+            hScmShutdownEvent,
+            dwError);
     if (hScmShutdownEvent == NULL)
     {
         DPRINT1("SERVICES: Failed to create the shutdown event\n");
@@ -351,6 +382,7 @@ wWinMain(HINSTANCE hInstance,
 
     /* Create the 'Last Known Good' control set */
     dwError = ScmCreateLastKnownGoodControlSet();
+    DPRINT1("ROSLSA scm-lkg-result error=%lu\n", dwError);
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("SERVICES: Failed to create the 'Last Known Good' control set (Error %lu)\n", dwError);
@@ -358,7 +390,9 @@ wWinMain(HINSTANCE hInstance,
     }
 
     /* Create the services database */
+    DPRINT1("ROSLSA scm-database-enter\n");
     dwError = ScmCreateServiceDatabase();
+    DPRINT1("ROSLSA scm-database-result error=%lu\n", dwError);
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("SERVICES: Failed to create SCM database (Error %lu)\n", dwError);
@@ -366,10 +400,17 @@ wWinMain(HINSTANCE hInstance,
     }
 
     /* Update the services database */
+    DPRINT1("ROSLSA scm-driver-state-enter\n");
     ScmGetBootAndSystemDriverState();
+    DPRINT1("ROSLSA scm-driver-state-done\n");
 
     /* Register the Service Control Manager process with the ReactOS Subsystem */
-    if (!RegisterServicesProcess(GetCurrentProcessId()))
+    bResult = RegisterServicesProcess(GetCurrentProcessId());
+    dwError = ScmErrorFromBoolean(bResult);
+    DPRINT1("ROSLSA scm-register-result success=%u error=%lu\n",
+            bResult,
+            dwError);
+    if (!bResult)
     {
         DPRINT1("SERVICES: Could not register SCM process\n");
         goto done;
@@ -380,6 +421,9 @@ wWinMain(HINSTANCE hInstance,
      * auto-start services have been started.
      */
     dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
+    DPRINT1("ROSLSA scm-start-lock-result error=%lu lock=%p\n",
+            dwError,
+            Lock);
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("SERVICES: Failed to acquire service start lock (Error %lu)\n", dwError);
@@ -387,10 +431,16 @@ wWinMain(HINSTANCE hInstance,
     }
 
     /* Start the RPC server */
+    DPRINT1("ROSLSA scm-rpc-enter\n");
     ScmStartRpcServer();
+    DPRINT1("ROSLSA scm-rpc-done\n");
 
     /* Signal start event */
-    SetEvent(hScmStartEvent);
+    bResult = SetEvent(hScmStartEvent);
+    dwError = ScmErrorFromBoolean(bResult);
+    DPRINT1("ROSLSA scm-start-event-signal-result success=%u error=%lu\n",
+            bResult,
+            dwError);
 
     DPRINT("SERVICES: Initialized\n");
 
@@ -404,25 +454,37 @@ wWinMain(HINSTANCE hInstance,
     SetProcessShutdownParameters(480, SHUTDOWN_NORETRY);
 
     /* Start auto-start services */
+    DPRINT1("ROSLSA scm-autostart-enter\n");
     ScmAutoStartServices();
+    DPRINT1("ROSLSA scm-autostart-done\n");
 
     /* Signal auto-start complete event */
-    SetEvent(hScmAutoStartCompleteEvent);
+    bResult = SetEvent(hScmAutoStartCompleteEvent);
+    dwError = ScmErrorFromBoolean(bResult);
+    DPRINT1("ROSLSA scm-autostart-event-signal-result success=%u error=%lu\n",
+            bResult,
+            dwError);
 
     /* FIXME: more to do ? */
 
     /* Release the service start lock */
+    DPRINT1("ROSLSA scm-release-start-lock-enter lock=%p\n", Lock);
     ScmReleaseServiceStartLock(&Lock);
+    DPRINT1("ROSLSA scm-release-start-lock-done lock=%p\n", Lock);
 
     /* Initialization finished */
     ScmInitialize = FALSE;
+    DPRINT1("ROSLSA scm-initialize-clear\n");
 
     DPRINT("SERVICES: Running\n");
+    DPRINT1("ROSLSA scm-shutdown-wait-enter\n");
 
     /* Wait until the shutdown event gets signaled */
-    WaitForSingleObject(hScmShutdownEvent, INFINITE);
+    dwError = WaitForSingleObject(hScmShutdownEvent, INFINITE);
+    DPRINT1("ROSLSA scm-shutdown-wait-done wait=%lu\n", dwError);
 
 done:
+    DPRINT1("ROSLSA scm-main-exit\n");
     ScmShutdownSecurity();
 
     /* Delete our communication named pipe's critical section */

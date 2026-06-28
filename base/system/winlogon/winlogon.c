@@ -139,6 +139,60 @@ StartLsass(VOID)
 }
 
 
+static VOID WaitForLsass(VOID);
+static INT_PTR CALLBACK GinaLoadFailedWindowProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+
+static
+VOID
+StartSecuritySubsystemsOrDie(
+    _Inout_ PULONG HardErrorResponse)
+{
+    if (!StartServicesManager())
+    {
+        ERR("WL: Could not start services.exe\n");
+        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, HardErrorResponse);
+        ExitProcess(1);
+    }
+
+    if (!StartLsass())
+    {
+        ERR("WL: Failed to start lsass.exe service (error %lu)\n", GetLastError());
+        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, HardErrorResponse);
+        ExitProcess(1);
+    }
+
+    WaitForLsass();
+    ERR("ROSLSA winlogon-wait-lsass-done\n");
+}
+
+
+static
+VOID
+InitializeLogonUiOrDie(
+    _Inout_ PWLSESSION Session)
+{
+    ERR("ROSLSA winlogon-notifications-enter\n");
+    InitNotifications();
+    ERR("ROSLSA winlogon-notifications-done\n");
+
+    ERR("ROSLSA winlogon-gina-init-enter\n");
+    if (!GinaInit(Session))
+    {
+        ERR("ROSLSA winlogon-gina-init-result success=0\n");
+        ERR("WL: Failed to initialize Gina\n");
+        /* GinaInit owns the loaded DLL name, so this dialog reports the default GINA module. */
+        DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), GetDesktopWindow(), GinaLoadFailedWindowProc, (LPARAM)L"msgina.dll");
+        HandleShutdown(Session, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
+        ExitProcess(1);
+    }
+    ERR("ROSLSA winlogon-gina-init-result success=1\n");
+
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSTARTINGUP);
+    ERR("ROSLSA winlogon-startup-status-displayed\n");
+}
+
+
 static
 VOID
 WaitForLsass(VOID)
@@ -217,13 +271,109 @@ WaitForLsass(VOID)
 
 static
 VOID
+FreeTcpIpString(
+    _In_opt_ PWSTR Value)
+{
+    if (Value != NULL)
+        HeapFree(GetProcessHeap(), 0, Value);
+}
+
+
+static
+LONG
+ReadTcpIpString(
+    _In_ HKEY Key,
+    _In_ PCWSTR ValueName,
+    _Outptr_result_bytebuffer_(*ValueSize) PWSTR *Value,
+    _Out_ PDWORD ValueSize)
+{
+    DWORD ValueType = 0;
+    LONG Error;
+
+    *Value = NULL;
+    *ValueSize = 0;
+
+    Error = RegQueryValueExW(Key,
+                             ValueName,
+                             NULL,
+                             &ValueType,
+                             NULL,
+                             ValueSize);
+    if (Error != ERROR_SUCCESS)
+        return Error;
+
+    if (ValueType != REG_SZ)
+        return ERROR_INVALID_DATA;
+
+    *Value = HeapAlloc(GetProcessHeap(), 0, *ValueSize);
+    if (*Value == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    Error = RegQueryValueExW(Key,
+                             ValueName,
+                             NULL,
+                             &ValueType,
+                             (LPBYTE)*Value,
+                             ValueSize);
+    if (Error != ERROR_SUCCESS)
+    {
+        FreeTcpIpString(*Value);
+        *Value = NULL;
+        return Error;
+    }
+
+    if (ValueType != REG_SZ)
+    {
+        FreeTcpIpString(*Value);
+        *Value = NULL;
+        return ERROR_INVALID_DATA;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+
+static
+VOID
+CopyTcpIpString(
+    _In_ HKEY Key,
+    _In_ PCWSTR SourceValue,
+    _In_ PCWSTR TargetValue)
+{
+    PWSTR Value;
+    DWORD ValueSize;
+    LONG Error;
+
+    Error = ReadTcpIpString(Key, SourceValue, &Value, &ValueSize);
+    if (Error != ERROR_SUCCESS)
+    {
+        if (Error == ERROR_NOT_ENOUGH_MEMORY)
+            ERR("WL: Could not allocate memory for %S\n", SourceValue);
+
+        return;
+    }
+
+    TRACE("%S is '%S'.\n", SourceValue, Value);
+
+    Error = RegSetValueExW(Key,
+                           TargetValue,
+                           0,
+                           REG_SZ,
+                           (LPBYTE)Value,
+                           ValueSize);
+    if (Error != ERROR_SUCCESS)
+        ERR("WL: RegSetValueExW(\"%S\") failed (error %lu)\n", TargetValue, Error);
+
+    FreeTcpIpString(Value);
+}
+
+
+static
+VOID
 UpdateTcpIpInformation(VOID)
 {
+    HKEY hKey;
     LONG lError;
-    HKEY hKey = NULL;
-    DWORD dwType, dwSize;
-    PWSTR pszBuffer;
-    WCHAR szBuffer[128] = L"";
 
     lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                            L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
@@ -236,117 +386,8 @@ UpdateTcpIpInformation(VOID)
         return;
     }
 
-    /*
-     * Read the "NV Hostname" value and copy it into the "Hostname" value.
-     */
-
-    pszBuffer = szBuffer;
-    dwSize = ARRAYSIZE(szBuffer);
-
-    lError = RegQueryValueExW(hKey,
-                              L"NV Hostname",
-                              NULL,
-                              &dwType,
-                              (LPBYTE)pszBuffer,
-                              &dwSize);
-    if (((lError == ERROR_INSUFFICIENT_BUFFER) || (lError == ERROR_MORE_DATA)) && (dwType == REG_SZ))
-    {
-        pszBuffer = HeapAlloc(GetProcessHeap(), 0, dwSize);
-        if (pszBuffer)
-        {
-            lError = RegQueryValueExW(hKey,
-                                      L"NV Hostname",
-                                      NULL,
-                                      &dwType,
-                                      (LPBYTE)pszBuffer,
-                                      &dwSize);
-        }
-        else
-        {
-            ERR("WL: Could not reallocate memory for pszBuffer\n");
-            goto Quit;
-        }
-    }
-    if ((lError == ERROR_SUCCESS) && (dwType == REG_SZ))
-    {
-        TRACE("NV Hostname is '%S'.\n", pszBuffer);
-
-        lError = RegSetValueExW(hKey,
-                                L"Hostname",
-                                0,
-                                REG_SZ,
-                                (LPBYTE)pszBuffer,
-                                dwSize);
-        if (lError != ERROR_SUCCESS)
-            ERR("WL: RegSetValueExW(\"Hostname\") failed (error %lu)\n", lError);
-    }
-
-    /*
-     * Read the "NV Domain" value and copy it into the "Domain" value.
-     */
-
-    // pszBuffer = szBuffer;
-    // dwSize = ARRAYSIZE(szBuffer);
-
-    lError = RegQueryValueExW(hKey,
-                              L"NV Domain",
-                              NULL,
-                              &dwType,
-                              (LPBYTE)pszBuffer,
-                              &dwSize);
-    if (((lError == ERROR_INSUFFICIENT_BUFFER) || (lError == ERROR_MORE_DATA)) && (dwType == REG_SZ))
-    {
-        if (pszBuffer != szBuffer)
-        {
-            PWSTR pszNewBuffer;
-            pszNewBuffer = HeapReAlloc(GetProcessHeap(), 0, pszBuffer, dwSize);
-            if (pszNewBuffer)
-            {
-                pszBuffer = pszNewBuffer;
-            }
-            else
-            {
-                HeapFree(GetProcessHeap(), 0, pszBuffer);
-                pszBuffer = NULL;
-            }
-        }
-        else
-        {
-            pszBuffer = HeapAlloc(GetProcessHeap(), 0, dwSize);
-        }
-        if (pszBuffer)
-        {
-            lError = RegQueryValueExW(hKey,
-                                      L"NV Domain",
-                                      NULL,
-                                      &dwType,
-                                      (LPBYTE)pszBuffer,
-                                      &dwSize);
-        }
-        else
-        {
-            ERR("WL: Could not reallocate memory for pszBuffer\n");
-            goto Quit;
-        }
-    }
-    if ((lError == ERROR_SUCCESS) && (dwType == REG_SZ))
-    {
-        TRACE("NV Domain is '%S'.\n", pszBuffer);
-
-        lError = RegSetValueExW(hKey,
-                                L"Domain",
-                                0,
-                                REG_SZ,
-                                (LPBYTE)pszBuffer,
-                                dwSize);
-        if (lError != ERROR_SUCCESS)
-            ERR("WL: RegSetValueExW(\"Domain\") failed (error %lu)\n", lError);
-    }
-
-    if (pszBuffer != szBuffer)
-        HeapFree(GetProcessHeap(), 0, pszBuffer);
-
-Quit:
+    CopyTcpIpString(hKey, L"NV Hostname", L"Hostname");
+    CopyTcpIpString(hKey, L"NV Domain", L"Domain");
     RegCloseKey(hKey);
 }
 
@@ -572,38 +613,8 @@ WinMain(
         ExitProcess(1);
     }
 
-    if (!StartServicesManager())
-    {
-        ERR("WL: Could not start services.exe\n");
-        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
-        ExitProcess(1);
-    }
-
-    if (!StartLsass())
-    {
-        ERR("WL: Failed to start lsass.exe service (error %lu)\n", GetLastError());
-        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
-        ExitProcess(1);
-    }
-
-    /* Wait for the LSA server */
-    WaitForLsass();
-
-    /* Init Notifications */
-    InitNotifications();
-
-    /* Load and initialize gina */
-    if (!GinaInit(WLSession))
-    {
-        ERR("WL: Failed to initialize Gina\n");
-        // FIXME: Retrieve the real name of the GINA DLL we were trying to load.
-        // It is known only inside the GinaInit function...
-        DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), GetDesktopWindow(), GinaLoadFailedWindowProc, (LPARAM)L"msgina.dll");
-        HandleShutdown(WLSession, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
-        ExitProcess(1);
-    }
-
-    DisplayStatusMessage(WLSession, WLSession->WinlogonDesktop, IDS_REACTOSISSTARTINGUP);
+    StartSecuritySubsystemsOrDie(&HardErrorResponse);
+    InitializeLogonUiOrDie(WLSession);
 
 #if 0
     /* Connect to NetLogon service (lsass.exe) */
