@@ -9,15 +9,19 @@
 #include "precomp.h"
 #include <ntquery.h> // PID_STG_*
 
+static const GUID FmtIdZipFolder = { 0xE88DCCE0, 0xB7B3, 0x11D1, { 0xA9,0xF0,0x00,0xAA,0x00,0x60,0xFA,0x31 } };
+
 static const FolderViewColumn g_ColumnDefs[] =
 {
     { IDS_COL_NAME,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   25, LVCFMT_LEFT,  &FMTID_Storage, PID_STG_NAME },
     { IDS_COL_TYPE,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   20, LVCFMT_LEFT,  &FMTID_Storage, PID_STG_STORAGETYPE },
-    { IDS_COL_COMPRSIZE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_RIGHT, },
-    { IDS_COL_PASSWORD,  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_LEFT },
-    { IDS_COL_SIZE,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_RIGHT, &FMTID_Storage, PID_STG_SIZE },
-    { IDS_COL_RATIO,     SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_LEFT },
+    { IDS_COL_COMPRSIZE, SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_RIGHT, &FmtIdZipFolder, 6 },
+    { IDS_COL_PASSWORD,  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_LEFT,  &FmtIdZipFolder, 2 },
+    { IDS_COL_SIZE,      SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_RIGHT, &FMTID_Storage, PID_STG_SIZE },
+    { IDS_COL_RATIO,     SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   10, LVCFMT_LEFT,  &FmtIdZipFolder, 4 },
     { IDS_COL_DATE_MOD,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT,  15, LVCFMT_LEFT,  &FMTID_Storage, PID_STG_WRITETIME },
+    // IDS_COL_METHOD,    SHCOLSTATE_TYPE_STR, ... &FmtIdZipFolder, 3 },
+    // IDS_COL_CRC32,     SHCOLSTATE_TYPE_STR, ... &FmtIdZipFolder, 5 },
 };
 
 static int MapScidToColumn(const SHCOLUMNID &scid)
@@ -330,6 +334,12 @@ STDMETHODIMP CZipFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *ps
     {
         V_VT(pv) = VT_UI8;
         V_UI8(pv) = zipEntry->UncompressedSize;
+        return S_OK;
+    }
+    else if (!isDir && IsEqual(*pscid, g_ColumnDefs[COL_COMPRSIZE]))
+    {
+        V_VT(pv) = VT_UI8;
+        V_UI8(pv) = zipEntry->CompressedSize;
         return S_OK;
     }
     else if (!isDir && IsEqual(*pscid, g_ColumnDefs[COL_DATE_MOD]))
