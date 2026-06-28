@@ -686,7 +686,7 @@ static BOOL stream_out_para_props( ME_TextEditor *editor, ME_OutStream *pStream,
             /* Word bar tab (vertical bar). Handled below */
             break;
         }
-#ifdef __REACTOS__
+#ifdef __REACTOS__ /* Import fix from Wine-11.3 */
         if ((ULONG)fmt->rgxTabs[i] >> 28 <= 5)
           strcat(props, leader[(ULONG)fmt->rgxTabs[i] >> 28]);
 #else
