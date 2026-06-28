@@ -68,6 +68,11 @@ if(ARCH STREQUAL "i386")
         math/i386/sqrt_asm.s
         math/i386/tan_asm.s
     )
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        list(APPEND LIBCNTPR_MATH_ASM_SOURCE
+            math/i386/compiler_rt_i386_asm.s
+        )
+    endif()
     list(APPEND CRT_MATH_ASM_SOURCE
         math/i386/ceilf.S
         math/i386/floorf.S

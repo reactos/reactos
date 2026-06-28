@@ -37,8 +37,8 @@
 37 stdcall CryptUIWizImport(long ptr wstr ptr ptr)
 38 stub CryptUIWizQueryCertRequestNoDS
 39 stub CryptUIWizSubmitCertRequestNoDS
-40 stdcall -private DllRegisterServer()
-41 stdcall -private DllUnregisterServer()
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
 42 stub EnrollmentCOMObjectFactory_getInstance
 43 stub I_CryptUIProtect
 44 stub I_CryptUIProtectFailure

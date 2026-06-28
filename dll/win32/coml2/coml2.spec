@@ -1,6 +1,6 @@
 @ stub Coml2DllGetClassObject
 @ stdcall CreateILockBytesOnHGlobal(ptr long ptr)
-@ stub DllGetClassObject
+@ stub -private DllGetClassObject
 @ stdcall FmtIdToPropStgName(ptr wstr)
 @ stdcall GetConvertStg(ptr)
 @ stdcall GetHGlobalFromILockBytes(ptr ptr)

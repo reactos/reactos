@@ -47,9 +47,9 @@ list(APPEND SOURCE
     where.c)
 
 BISON_TARGET(cond cond.y ${CMAKE_CURRENT_BINARY_DIR}/cond.tab.c)
-BISON_TARGET(sql sql.y ${CMAKE_CURRENT_BINARY_DIR}/sql.tab.c)
+BISON_TARGET(sql sql.y ${CMAKE_CURRENT_BINARY_DIR}/sql.tab.c COMPILE_FLAGS "-Wno-conflicts-rr")
 
-if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     set_source_files_properties(${BISON_cond_OUTPUTS} ${BISON_sql_OUTPUTS} PROPERTIES COMPILE_OPTIONS "-Wno-unused-but-set-variable")
 endif()
 

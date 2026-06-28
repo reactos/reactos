@@ -2730,9 +2730,9 @@ Copyright (C) 1997-2017 %s\n"),
 
 	if (warn_violate)
 		error(_("Warning: creating filesystem that does not conform to ISO-9660.\n"));
-	if (iso9660_level > 3)
+	if (verbose > 0 && iso9660_level > 3)
 		error(_("Warning: Creating ISO-9660:1999 (version 2) filesystem.\n"));
-	if (iso9660_namelen > LEN_ISONAME)
+	if (verbose > 0 && iso9660_namelen > LEN_ISONAME)
 		error(_("Warning: ISO-9660 filenames longer than %d may cause buffer overflows in the OS.\n"),
 			LEN_ISONAME);
 	if (use_Joliet && !use_RockRidge) {

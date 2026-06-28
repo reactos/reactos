@@ -4,7 +4,7 @@ if(DEFINED ENV{_ROSBE_ROSSCRIPTDIR})
 endif()
 
 # pass variables necessary for the toolchain (needed for try_compile)
-set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES ARCH CLANG_VERSION)
+set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES ARCH CLANG_VERSION LLVM_MINGW_ROOT REACTOS_CLANG_REQUIRE_LLD)
 
 # The name of the target operating system
 set(CMAKE_SYSTEM_NAME Windows)
@@ -33,9 +33,27 @@ else()
     set(GCC_TOOLCHAIN_PREFIX "${triplet}-")
 endif()
 
-set(CMAKE_C_COMPILER clang${CLANG_SUFFIX})
+set(LLVM_MINGW_ROOT "" CACHE PATH "Path to an llvm-mingw toolchain root")
+if(NOT LLVM_MINGW_ROOT AND DEFINED ENV{LLVM_MINGW_ROOT})
+    set(LLVM_MINGW_ROOT "$ENV{LLVM_MINGW_ROOT}" CACHE PATH "Path to an llvm-mingw toolchain root" FORCE)
+endif()
+
+set(LLVM_MINGW_BIN "")
+if(LLVM_MINGW_ROOT)
+    get_filename_component(LLVM_MINGW_BIN "${LLVM_MINGW_ROOT}/bin" ABSOLUTE)
+endif()
+
+if(LLVM_MINGW_BIN)
+    set(CMAKE_C_COMPILER "${LLVM_MINGW_BIN}/clang${CLANG_SUFFIX}")
+else()
+    set(CMAKE_C_COMPILER clang${CLANG_SUFFIX})
+endif()
 set(CMAKE_C_COMPILER_TARGET ${triplet})
-set(CMAKE_CXX_COMPILER clang++${CLANG_SUFFIX})
+if(LLVM_MINGW_BIN)
+    set(CMAKE_CXX_COMPILER "${LLVM_MINGW_BIN}/clang++${CLANG_SUFFIX}")
+else()
+    set(CMAKE_CXX_COMPILER clang++${CLANG_SUFFIX})
+endif()
 set(CMAKE_CXX_COMPILER_TARGET ${triplet})
 set(CMAKE_ASM_COMPILER ${GCC_TOOLCHAIN_PREFIX}gcc)
 set(CMAKE_ASM_COMPILER_ID GNU)
@@ -63,7 +81,7 @@ if(REACTOS_AS_GNU_VERSION EQUAL -1)
 endif()
 get_filename_component(REACTOS_AS_DIR ${REACTOS_AS} DIRECTORY)
 set(REACTOS_AS_PREFIX "${REACTOS_AS_DIR}/${GCC_TOOLCHAIN_PREFIX}")
-set(REACTOS_AS_FLAGS "-B${REACTOS_AS_PREFIX} -fno-integrated-as")
+set(REACTOS_AS_FLAGS "-B${REACTOS_AS_PREFIX}")
 set(CMAKE_ASM_FLAGS_INIT "${REACTOS_AS_FLAGS}")
 set(CMAKE_ASM_FLAGS "${REACTOS_AS_FLAGS}" CACHE STRING "GNU assembler handoff flags" FORCE)
 message(STATUS "Using assembler ${REACTOS_AS}")
@@ -99,15 +117,43 @@ set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
 set(CMAKE_C_STANDARD_LIBRARIES "" CACHE STRING "Standard C Libraries")
 set(CMAKE_CXX_STANDARD_LIBRARIES "" CACHE STRING "Standard C++ Libraries")
 
-find_program(REACTOS_LD
-    NAMES ${GCC_TOOLCHAIN_PREFIX}ld
-    PATHS /usr/bin /usr/local/bin
-    NO_DEFAULT_PATH)
+set(REACTOS_CLANG_REQUIRE_LLD OFF CACHE BOOL "Require an LLD linker for Clang MinGW builds")
+if(LLVM_MINGW_BIN)
+    set(REACTOS_CLANG_REQUIRE_LLD ON CACHE BOOL "Require an LLD linker for Clang MinGW builds" FORCE)
+endif()
+
+if(LLVM_MINGW_BIN)
+    find_program(REACTOS_LD
+        NAMES ld.lld ${GCC_TOOLCHAIN_PREFIX}ld
+        PATHS "${LLVM_MINGW_BIN}"
+        NO_DEFAULT_PATH)
+endif()
+if(NOT REACTOS_LD)
+    find_program(REACTOS_LD
+        NAMES ${GCC_TOOLCHAIN_PREFIX}ld
+        PATHS /usr/bin /usr/local/bin
+        NO_DEFAULT_PATH)
+endif()
 if(NOT REACTOS_LD)
     find_program(REACTOS_LD NAMES ${GCC_TOOLCHAIN_PREFIX}ld)
 endif()
 if(NOT REACTOS_LD)
     message(FATAL_ERROR "GNU-compatible ${GCC_TOOLCHAIN_PREFIX}ld not found")
+endif()
+execute_process(
+    COMMAND ${REACTOS_LD} --version
+    OUTPUT_VARIABLE REACTOS_LD_VERSION
+    ERROR_VARIABLE REACTOS_LD_VERSION_ERROR)
+string(FIND "${REACTOS_LD_VERSION}${REACTOS_LD_VERSION_ERROR}" "LLD" REACTOS_LD_LLD_VERSION)
+if(REACTOS_LD_LLD_VERSION EQUAL -1)
+    set(REACTOS_LD_IS_LLD FALSE CACHE INTERNAL "The Clang MinGW linker is LLD")
+else()
+    set(REACTOS_LD_IS_LLD TRUE CACHE INTERNAL "The Clang MinGW linker is LLD")
+endif()
+if(REACTOS_CLANG_REQUIRE_LLD)
+    if(NOT REACTOS_LD_IS_LLD)
+        message(FATAL_ERROR "${REACTOS_LD} is not LLD")
+    endif()
 endif()
 execute_process(
     COMMAND ${REACTOS_LD} --help

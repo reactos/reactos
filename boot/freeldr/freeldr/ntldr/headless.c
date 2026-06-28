@@ -13,8 +13,6 @@
 #include <cportlib/uartinfo.h>
 #include "ntldropts.h"
 
-#include <debug.h> // For _WARN()
-
 /* Note: Move these to some smbios.h header */
 #define SYSID_TYPE_UUID "_UUID_"
 #define SYSID_UUID_DATA_SIZE 16
@@ -63,7 +61,10 @@ WinLdrLoadGUID(
         CurrentAddress = (PSYSID_UUID_ENTRY)((ULONG_PTR)CurrentAddress + 1);
     }
 #else
-    _WARN("WinLdrLoadGUID needs SMBIOS table reading implementation on this platform!");
+    /*
+     * The UEFI and non-x86 paths lack a SYSID scan window.  The zero GUID is
+     * the defined result until the loader provides an SMBIOS table source.
+     */
 #endif
 
     RtlZeroMemory(SystemGuid, SYSID_UUID_DATA_SIZE);

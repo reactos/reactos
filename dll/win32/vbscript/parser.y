@@ -91,6 +91,7 @@ static statement_t *link_statements(statement_t*,statement_t*);
 %parse-param { parser_ctx_t *ctx }
 %define api.prefix {parser_}
 %define api.pure
+%expect 8
 %start Program
 
 %union {

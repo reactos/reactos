@@ -147,7 +147,7 @@
 @ stub DcomChannelSetHResult
 @ stdcall DestroyRunningObjectTable()
 @ stdcall DllDebugObjectRPCHook(long ptr) combase.DllDebugObjectRPCHook
-@ stdcall DllGetClassObject(ptr ptr ptr)
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stub DllGetClassObjectWOW
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()

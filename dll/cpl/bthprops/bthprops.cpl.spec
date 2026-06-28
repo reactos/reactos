@@ -62,4 +62,4 @@
 @ stub BthpMapStatusToErr
 #@ stub CPlApplet
 @ stdcall -private DllCanUnloadNow()
-@ stub DllGetClassObject
+@ stub -private DllGetClassObject

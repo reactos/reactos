@@ -31,7 +31,7 @@ list(APPEND SOURCE
     vbarray.c)
 
 BISON_TARGET(cc_parser cc_parser.y ${CMAKE_CURRENT_BINARY_DIR}/cc_parser.tab.c)
-BISON_TARGET(parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.c)
+BISON_TARGET(parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.c COMPILE_FLAGS "-Wno-conflicts-sr -Wno-conflicts-rr")
 
 list(APPEND PCH_SKIP_SOURCE
     guid.c

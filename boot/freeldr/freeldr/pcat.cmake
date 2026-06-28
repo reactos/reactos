@@ -208,6 +208,9 @@ if(MSVC)
     remove_target_compile_option(freeldr_common "/hotpatch")
 else()
     target_link_options(freeldr_pe PRIVATE -Wl,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200)
+    if(REACTOS_LD_IS_LLD)
+        target_link_options(freeldr_pe PRIVATE "-Wl,/driver")
+    endif()
     add_linker_script(freeldr_pe freeldr_gcc.lds)
     # Strip everything, including rossym data
     add_custom_command(TARGET freeldr_pe

@@ -103,6 +103,13 @@ foreach(_keyboard_layout ${_keyboard_layouts})
     if(MSVC)
         # Merge the .text and .rdata section into the .data section
         target_link_options(${_keyboard_layout} PRIVATE "/ignore:4254;/SECTION:.data,ER;/MERGE:.text=.data;/MERGE:.rdata=.data;/MERGE:.bss=.data;/MERGE:.edata=.data")
+    elseif(REACTOS_LD_IS_LLD)
+        # lld-link accepts COFF section merges instead of GNU ld scripts.
+        target_link_options(${_keyboard_layout} PRIVATE
+            "SHELL:-Xlinker /section:.data,ER"
+            "SHELL:-Xlinker /merge:.text=.data"
+            "SHELL:-Xlinker /merge:.rdata=.data"
+            "SHELL:-Xlinker /merge:.bss=.data")
     else()
         # Use a custom linker script
         target_link_options(${_keyboard_layout} PRIVATE "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/kbdlayout.lds")
