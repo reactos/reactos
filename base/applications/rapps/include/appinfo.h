@@ -143,7 +143,7 @@ class CAppInfo
     virtual InstallerType
     GetInstallerInfo(CStringW &SilentParameters) const { return GetInstallerType(); }
     virtual BOOL
-    UninstallApplication(UninstallCommandFlags Flags) = 0;
+    UninstallApplication(UninstallCommandFlags Flags = UCF_NONE) = 0;
 };
 
 class CAvailableApplicationInfo : public CAppInfo
@@ -176,6 +176,8 @@ class CAvailableApplicationInfo : public CAppInfo
 
     CConfigParser *
     GetConfigParser() const { return m_Parser; }
+    const CStringW
+    GetPackageName() const { return szIdentifier; }
 
     bool
     IsCompatible() const;
@@ -201,7 +203,7 @@ class CAvailableApplicationInfo : public CAppInfo
     virtual InstallerType
     GetInstallerInfo(CStringW &SilentParameters) const override;
     virtual BOOL
-    UninstallApplication(UninstallCommandFlags Flags) override;
+    UninstallApplication(UninstallCommandFlags Flags = UCF_NONE) override;
 };
 
 class CInstalledApplicationInfo : public CAppInfo
@@ -247,7 +249,7 @@ class CInstalledApplicationInfo : public CAppInfo
     virtual InstallerType
     GetInstallerType(bool NestedType = false) const override;
     virtual BOOL
-    UninstallApplication(UninstallCommandFlags Flags) override;
+    UninstallApplication(UninstallCommandFlags Flags = UCF_NONE) override;
 };
 
 BOOL
