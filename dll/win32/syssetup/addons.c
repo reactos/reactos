@@ -15,6 +15,24 @@ typedef enum _RappsConsent {
     DENIED
 } RappsConsent;
 
+typedef struct _ADDON_INSTALL_DATA
+{
+    PCWSTR Title;
+    PCWSTR AddonPath;
+    PCWSTR CreateProcessFormatString;
+    PCWSTR RappsId;
+} ADDON_INSTALL_DATA, *PADDON_INSTALL_DATA;
+typedef const ADDON_INSTALL_DATA* PCADDON_INSTALL_DATA;
+
+/* TODO: Move this out of code and into an .inf or something. */
+static const ADDON_INSTALL_DATA Addons[] = {
+#ifdef _M_IX86
+    {L"Wine Gecko", L"%SystemRoot%\\wine_gecko-2.40-x86.msi", L"msiexec.exe /i \"%s\" /qn /norestart", L"gecko"},
+    {L"WineVDM", L"%SystemRoot%\\winevdm_setup.exe", L"\"%s\" /VERYSILENT", L"winevdm"},
+#endif
+    {NULL, NULL, NULL}
+};
+
 HRESULT
 RunCommandAndWait(
     _In_ PWCHAR Command)
@@ -106,8 +124,6 @@ rapps_install:
         goto done;
 
     hr = RunCommandAndWait(Command);
-    if (!SUCCEEDED(hr))
-        goto done;
 
 done:
     /* We don't set an error in pNotify because the user chose to cancel rapps install.
@@ -161,7 +177,7 @@ InstallOptionalComponents(
                         szCaption,
                         MB_OK | MB_ICONWARNING | MB_TOPMOST);
 
-            goto done;
+            break;
         }
     }
 
