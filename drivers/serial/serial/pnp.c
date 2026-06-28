@@ -418,7 +418,6 @@ SerialPnp(
 					DeviceRelations = ExAllocatePoolWithTag(PagedPool,
 															FIELD_OFFSET(DEVICE_RELATIONS, Objects),
 															SERIAL_TAG);
-
 					if (!DeviceRelations)
 					{
 						Status = STATUS_INSUFFICIENT_RESOURCES;
