@@ -129,7 +129,7 @@ typedef struct ext3_dir_entry_2 EXT2_DIR_ENTRY2, *PEXT2_DIR_ENTRY2;
  *
  */
 
-#define CL_ASSERT(cond) do {switch('x') {case (cond): case 0: break;}} while (0)
+#define CL_ASSERT(cond) do { enum { cl_assert = 1 / (!!(cond)) }; } while (0)
 
 /* File System Releated *************************************************/
 

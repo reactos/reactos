@@ -221,6 +221,38 @@ elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options(
         -Wno-pragma-pack
         -Wno-unknown-warning-option
+        -Wno-absolute-value
+        -Wno-address-of-packed-member
+        -Wno-array-bounds
+        -Wno-array-parameter
+        -Wno-cast-calling-convention
+        -Wno-constant-conversion
+        -Wno-constant-logical-operand
+        -Wno-dll-attribute-on-redeclaration
+        -Wno-empty-body
+        -Wno-ignored-attributes
+        -Wno-implicit-enum-enum-cast
+        -Wno-implicit-exception-spec-mismatch
+        -Wno-incompatible-pointer-types-discards-qualifiers
+        -Wno-literal-range
+        -Wno-logical-not-parentheses
+        -Wno-main
+        -Wno-misleading-indentation
+        -Wno-missing-braces
+        -Wno-nontrivial-memcall
+        -Wno-overloaded-virtual
+        -Wno-parentheses-equality
+        -Wno-reinterpret-base-class
+        -Wno-self-assign-field
+        -Wno-shift-negative-value
+        -Wno-single-bit-bitfield-constant-conversion
+        -Wno-sizeof-array-div
+        -Wno-sometimes-uninitialized
+        -Wno-tautological-compare
+        -Wno-tautological-constant-out-of-range-compare
+        -Wno-uninitialized-const-pointer
+        -Wno-unused-but-set-variable
+        -Wno-unused-function
     )
 endif()
 
@@ -779,7 +811,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_link_libraries(libc++abi INTERFACE libcxx_runtime libunwind libmingwex libgcc_eh libgcc)
 
     add_library(libsupc++ INTERFACE IMPORTED GLOBAL)
-    target_link_libraries(libsupc++ INTERFACE libcxx_runtime)
+    target_link_libraries(libsupc++ INTERFACE libc++abi)
 else()
     add_library(libsupc++ STATIC IMPORTED GLOBAL)
     execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
@@ -804,7 +836,7 @@ endif()
 set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${LIBSTDCCXX_LOCATION})
 # The C++ standard library requires ABI support, mingwex, and ReactOS CRT shims.
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    target_link_libraries(libstdc++ INTERFACE cpprt libunwind stdc++compat libmingwex libkernel32_vista libkernel32 oldnames)
+    target_link_libraries(libstdc++ INTERFACE cpprt libc++abi libunwind stdc++compat libmingwex libkernel32_vista libkernel32 oldnames)
 else()
     target_link_libraries(libstdc++ INTERFACE libsupc++ stdc++compat libmingwex oldnames)
 endif()

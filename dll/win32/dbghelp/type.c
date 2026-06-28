@@ -22,7 +22,9 @@
  * upon which full support for datatype handling will eventually be built.
  */
 
+#ifndef NONAMELESSUNION
 #define NONAMELESSUNION
+#endif
 
 #include <stdlib.h>
 #include <stdarg.h>

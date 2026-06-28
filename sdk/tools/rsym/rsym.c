@@ -32,6 +32,7 @@
 
 #define MAX_PATH 260
 #define MAX_SYM_NAME 2000
+#define RSYM_MAXIMUM_FUNCTION_NAME 4096
 
 struct StringEntry
 {
@@ -241,7 +242,7 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
     int First = 1;
     char *Name;
     ULONG NameLen;
-    char FuncName[256];
+    char FuncName[RSYM_MAXIMUM_FUNCTION_NAME];
     PROSSYM_ENTRY Current;
     struct StringHashTable StringHash;
 
@@ -377,7 +378,7 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
 {
     ULONG Count, i;
     PCOFF_SYMENT CoffEntry;
-    char FuncName[512], FileName[1024];
+    char FuncName[RSYM_MAXIMUM_FUNCTION_NAME], FileName[1024];
     char *p;
     PROSSYM_ENTRY Current;
     struct StringHashTable StringHash;

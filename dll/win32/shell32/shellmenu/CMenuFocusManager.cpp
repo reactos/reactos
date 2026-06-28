@@ -112,7 +112,7 @@ CMenuFocusManager * CMenuFocusManager::AcquireManager()
         TlsSetValue(TlsIndex, obj);
     }
 
-    obj->AddRef();
+    static_cast<CComObject<CMenuFocusManager> *>(obj)->AddRef();
 
     return obj;
 }
@@ -120,7 +120,7 @@ CMenuFocusManager * CMenuFocusManager::AcquireManager()
 // Releases a previously acquired manager, and deletes it if the refcount reaches 0
 void CMenuFocusManager::ReleaseManager(CMenuFocusManager * obj)
 {
-    if (!obj->Release())
+    if (!static_cast<CComObject<CMenuFocusManager> *>(obj)->Release())
     {
         TlsSetValue(TlsIndex, NULL);
     }

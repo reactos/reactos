@@ -30,6 +30,7 @@
 /////////////////////////////////////////////////////////
 
 #include "precomp.h"
+#include <stdio.h>
 
 // It's probably a good idea to turn off the "identifier was truncated" warning
 // in MSVC (Paul Brannan 5/25/98)
@@ -37,46 +38,69 @@
 #pragma warning(disable: 4786)
 #endif
 
+static void stripLineEnding(char *buf)
+{
+    char *newline = strpbrk(buf, "\r\n");
+    if (newline != NULL) *newline = 0;
+}
+
+static void replaceControlChars(char *buf)
+{
+    int len = 0;
+
+    while (buf[len]) {
+        if ( /*(buf[len]>=0) &&*/ buf[len]< ' ' ) buf[len] = ' ';
+        len++;
+    };
+}
+
+static void collapseRepeatedSpaces(char *buf)
+{
+    int len = 0;
+
+    // not so fast, but work ;)
+    while ( buf[len] ) {
+        if ( (buf[len] == ' ') && (buf[len+1] == ' ')) {
+            memmove(buf+len, buf+len+1, strlen(buf+len));
+        } else len++;
+    };
+}
+
+static void stripInlineComment(char *buf)
+{
+    int len = 0;
+
+    // look for comment like this one
+    while (buf[len])
+    {
+        if ((buf[len] == '/') && (buf[len + 1] == '/')) buf[len] = 0;
+        else len++;
+
+        if (len && (buf[len - 1] == ' ')) {
+            len--;
+            buf[len] = 0;
+        };
+    }
+}
+
 // AVS
 // skip inline comments, empty lines
-static char * getline(istream& i, char* buf, int size){
-
-	int len = 0;
+static char * getline(FILE *stream, char* buf, int size){
 
 	while (1) {
 		memset(buf,0,size);
-		if (i.eof()) break;
-		i.getline(buf,size,'\n');
+		if (fgets(buf, size, stream) == NULL) break;
 
-		while (buf[len]) {
-			if ( /*(buf[len]>=0) &&*/ buf[len]< ' ' ) buf[len] = ' ';
-			len++;
-		};
-		len = 0;
-
-		// not so fast, but work ;)
-		while ( buf[len] ) {
-            if ( (buf[len] == ' ') && (buf[len+1] == ' ')) {
-				memmove(buf+len, buf+len+1, strlen(buf+len));
-            } else len++;
-		};
+		stripLineEnding(buf);
+		replaceControlChars(buf);
+		collapseRepeatedSpaces(buf);
 
 		if (buf[0] == ' ') memmove(buf, buf+1, size-1);
 
 		// empty or comment
 		if ((buf[0]==0)||(buf[0]==';')) continue;
 
-		len = 0; // look for comment like this one
-        while (buf[len])
-        {
-            if ((buf[len] == '/') && (buf[len + 1] == '/')) buf[len] = 0;
-            else len++;
-
-            if (len && (buf[len - 1] == ' ')) {
-                len--;
-                buf[len] = 0;
-            };
-        }
+		stripInlineComment(buf);
         // in case for comment like this one (in line just a comment)
         if (buf[0] == 0) continue;
 
@@ -433,12 +457,12 @@ int TMapLoader::LoadCharMap(string buf) {
 // AVS
 // ignore long comment [comment] ... [end comment]
 // recursive!
-int getLongComment(istream& is, char* wbuf, size_t sz) {
+int getLongComment(FILE *stream, char* wbuf, size_t sz) {
 
 	int bufLen;
-    while ( is ) {
+    while ( !feof(stream) ) {
 		wbuf[0] = 0;
-		getline(is, wbuf, sz);
+		getline(stream, wbuf, sz);
 		if ( wbuf[0]==0 ) return 1;
 		bufLen = strlen(wbuf);
 		if ( wbuf[0] == '[' && wbuf[bufLen-1] == ']' ) {
@@ -451,7 +475,7 @@ int getLongComment(istream& is, char* wbuf, size_t sz) {
 			};
 			if ( stricmp(temps.c_str(),"[comment]") == 0 ) {
 				// do recursive call
-				if ( !getLongComment(is, wbuf, sz) ) return 0;
+				if ( !getLongComment(stream, wbuf, sz) ) return 0;
 				continue;
 			};
 			if ( stricmp(temps.c_str(),"[end comment]") == 0 ) return 1;
@@ -467,7 +491,7 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 	char buf[256];
 	int bufLen;
 
-	ifstream inpfile(filename);
+	FILE *inpfile = fopen(filename, "r");
 	KeyTrans.DeleteAllDefs();
 	Charmap.init();
 
@@ -475,7 +499,7 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 	stringArray SA(0,0,sizeof(string));
 	int AllOk = 0;
 
-	while ( inpfile ) {
+	while ( inpfile != NULL && !feof(inpfile) ) {
 
 		getline(inpfile, buf, 255);
 		bufLen = strlen(buf);
@@ -591,7 +615,7 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 		};
 	};
 
-	inpfile.close();
+	if (inpfile != NULL) fclose(inpfile);
 
 	if ( !AllOk ) return 0;
 

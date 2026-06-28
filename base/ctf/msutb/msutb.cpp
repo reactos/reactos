@@ -1601,6 +1601,7 @@ public:
     STDMETHOD_(ULONG, Release)();
 
     // ITfLangBarEventSink methods
+    using CUIFWindow::OnSetFocus;
     STDMETHOD(OnSetFocus)(DWORD dwThreadId) override;
     STDMETHOD(OnThreadTerminate)(DWORD dwThreadId) override;
     STDMETHOD(OnThreadItemChange)(DWORD dwThreadId) override;
@@ -2078,7 +2079,6 @@ CTipbarAccessible::CTipbarAccessible(CTipbarAccItem *pItem)
 
 CTipbarAccessible::~CTipbarAccessible()
 {
-    m_pTypeInfo = m_pTypeInfo;
     if (m_pTypeInfo)
     {
         m_pTypeInfo->Release();

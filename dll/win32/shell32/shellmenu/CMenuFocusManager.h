@@ -99,8 +99,14 @@ public:
 
     DECLARE_NOT_AGGREGATABLE(CMenuFocusManager)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
-    BEGIN_COM_MAP(CMenuFocusManager)
-    END_COM_MAP()
+    HRESULT _InternalQueryInterface(REFIID, void **ppvObject)
+    {
+        if (ppvObject == NULL)
+            return E_POINTER;
+
+        *ppvObject = NULL;
+        return E_NOINTERFACE;
+    }
 
 private:
     LRESULT GetMsgHook(INT nCode, WPARAM wParam, LPARAM lParam);

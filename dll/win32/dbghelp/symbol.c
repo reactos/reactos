@@ -56,7 +56,7 @@ static inline int cmp_sorttab_addr(struct module* module, int idx, ULONG64 addr)
     return cmp_addr(ref, addr);
 }
 
-int __cdecl symt_cmp_addr(const void* p1, const void* p2)
+int DBGHELP_CDECL symt_cmp_addr(const void* p1, const void* p2)
 {
     const struct symt*  sym1 = *(const struct symt* const *)p1;
     const struct symt*  sym2 = *(const struct symt* const *)p2;
