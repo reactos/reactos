@@ -41,6 +41,98 @@ static DWORD PipeTimeout = 30000; /* 30 Seconds */
 
 static
 BOOL
+ScmIsGuestStateCollectorService(
+    _In_opt_ LPCWSTR lpServiceName)
+{
+    return lpServiceName != NULL &&
+           _wcsicmp(lpServiceName, L"ReactOSGuestStateCollector") == 0;
+}
+
+
+static
+BOOL
+ScmIsGuestStateTraceService(
+    _In_opt_ LPCWSTR lpServiceName)
+{
+    return ScmIsGuestStateCollectorService(lpServiceName) ||
+           (lpServiceName != NULL &&
+            _wcsicmp(lpServiceName, L"VMware Physical Disk Helper Service") == 0);
+}
+
+
+static
+VOID
+ScmTraceAutoStartScan(
+    _In_ PCSTR PassName,
+    _In_ PSERVICE Service)
+{
+    DPRINT1("ROSGUESTSTATE autostart-scan pass=%s service='%S' group='%S' start=%lu visited=%u tag=%lu state=%lu\n",
+            PassName,
+            Service->lpServiceName,
+            Service->lpGroup ? Service->lpGroup->lpGroupName : L"(null)",
+            Service->dwStartType,
+            Service->ServiceVisited,
+            Service->dwTag,
+            Service->Status.dwCurrentState);
+}
+
+
+static
+VOID
+ScmTraceAutoStartService(
+    _In_ PCSTR PassName,
+    _In_ PSERVICE Service)
+{
+    DPRINT1("ROSGUESTSTATE autostart-load pass=%s service='%S' group='%S' start=%lu visited=%u tag=%lu state=%lu\n",
+            PassName,
+            Service->lpServiceName,
+            Service->lpGroup ? Service->lpGroup->lpGroupName : L"(null)",
+            Service->dwStartType,
+            Service->ServiceVisited,
+            Service->dwTag,
+            Service->Status.dwCurrentState);
+}
+
+
+static
+VOID
+ScmTraceAutoStartServiceResult(
+    _In_ PCSTR PassName,
+    _In_ PSERVICE Service,
+    _In_ DWORD Error)
+{
+    DPRINT1("ROSGUESTSTATE autostart-result pass=%s service='%S' error=%lu state=%lu win32=%lu visited=%u image=%p\n",
+            PassName,
+            Service->lpServiceName,
+            Error,
+            Service->Status.dwCurrentState,
+            Service->Status.dwWin32ExitCode,
+            Service->ServiceVisited,
+            Service->lpImage);
+}
+
+
+static
+VOID
+ScmTraceGuestStateAutoStartTarget(
+    _In_ PCSTR PointName,
+    _In_opt_ PSERVICE Service)
+{
+    DPRINT1("ROSGUESTSTATE autostart-target point=%s service=%p group=%p groupname='%S' start=%lu visited=%u tag=%lu state=%lu image=%p\n",
+            PointName,
+            Service,
+            Service ? Service->lpGroup : NULL,
+            (Service && Service->lpGroup) ? Service->lpGroup->lpGroupName : L"(null)",
+            Service ? Service->dwStartType : 0,
+            Service ? Service->ServiceVisited : 0,
+            Service ? Service->dwTag : 0,
+            Service ? Service->Status.dwCurrentState : 0,
+            Service ? Service->lpImage : NULL);
+}
+
+
+static
+BOOL
 ScmIsSecurityService(
     _In_ PSERVICE_IMAGE pServiceImage)
 {
@@ -489,8 +581,20 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
                                     NULL);
     if (!NT_SUCCESS(Status))
     {
+        if (ScmIsGuestStateTraceService(pService->lpServiceName))
+        {
+            DPRINT1("ROSGUESTSTATE image-query-failed status=%lx\n", Status);
+        }
+
         DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
         return RtlNtStatusToDosError(Status);
+    }
+
+    if (ScmIsGuestStateTraceService(pService->lpServiceName))
+    {
+        DPRINT1("ROSGUESTSTATE image-query image='%S' object='%S'\n",
+                ImagePath.Buffer ? ImagePath.Buffer : L"(null)",
+                ObjectName.Buffer ? ObjectName.Buffer : L"(null)");
     }
 
     DPRINT("ImagePath: '%wZ'\n", &ImagePath);
@@ -538,6 +642,11 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
         dwError = ScmLogonService(pService, pServiceImage);
         if (dwError != ERROR_SUCCESS)
         {
+            if (ScmIsGuestStateTraceService(pService->lpServiceName))
+            {
+                DPRINT1("ROSGUESTSTATE logon-failed error=%lu\n", dwError);
+            }
+
             DPRINT1("ScmLogonService() failed (Error %lu)\n", dwError);
 
             /* Release the service image */
@@ -553,6 +662,11 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
                                           bSecurityService);
         if (dwError != ERROR_SUCCESS)
         {
+            if (ScmIsGuestStateTraceService(pService->lpServiceName))
+            {
+                DPRINT1("ROSGUESTSTATE control-pipe-failed error=%lu\n", dwError);
+            }
+
             DPRINT1("ScmCreateNewControlPipe() failed (Error %lu)\n", dwError);
 
             /* Unload the user profile */
@@ -1038,6 +1152,17 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
 
     DPRINT("Display name: %S\n", lpDisplayName);
 
+    if (ScmIsGuestStateTraceService(lpServiceName))
+    {
+        DPRINT1("ROSGUESTSTATE create-entry values type=%lx start=%lx error=%lx tag=%lx group='%S' display='%S'\n",
+                dwServiceType,
+                dwStartType,
+                dwErrorControl,
+                dwTagId,
+                lpGroup ? lpGroup : L"(null)",
+                lpDisplayName ? lpDisplayName : L"(null)");
+    }
+
     dwError = ScmCreateNewServiceRecord(lpServiceName,
                                         &lpService,
                                         dwServiceType,
@@ -1100,6 +1225,15 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
     }
 
 done:
+    if (ScmIsGuestStateTraceService(lpServiceName))
+    {
+        DPRINT1("ROSGUESTSTATE create-entry-done error=%lu service=%p deleted=%u sd=%p\n",
+                dwError,
+                lpService,
+                (lpService != NULL) ? lpService->bDeleted : 0,
+                (lpService != NULL) ? lpService->pSecurityDescriptor : NULL);
+    }
+
     if (lpGroup != NULL)
         HeapFree(GetProcessHeap(), 0, lpGroup);
 
@@ -1652,6 +1786,14 @@ ScmWaitForServiceConnect(PSERVICE Service)
 
     DPRINT("ScmWaitForServiceConnect()\n");
 
+    if (ScmIsGuestStateTraceService(Service->lpServiceName))
+    {
+        DPRINT1("ROSGUESTSTATE wait-connect pipe=%p process=%lu timeout=%lu\n",
+                Service->lpImage->hControlPipe,
+                Service->lpImage->dwProcessId,
+                PipeTimeout);
+    }
+
     bResult = ConnectNamedPipe(Service->lpImage->hControlPipe,
                                &Overlapped);
     if (bResult == FALSE)
@@ -1809,6 +1951,11 @@ ScmWaitForServiceConnect(PSERVICE Service)
 
     DPRINT("ScmWaitForServiceConnect() done\n");
 
+    if (ScmIsGuestStateTraceService(Service->lpServiceName))
+    {
+        DPRINT1("ROSGUESTSTATE wait-connect-done pid=%lu\n", dwProcessId);
+    }
+
     return ERROR_SUCCESS;
 }
 
@@ -1825,6 +1972,15 @@ ScmStartUserModeService(PSERVICE Service,
     DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("ScmStartUserModeService(%p)\n", Service);
+
+    if (ScmIsGuestStateTraceService(Service->lpServiceName))
+    {
+        DPRINT1("ROSGUESTSTATE start-user enter image='%S' account='%S' run-count=%lu token=%p\n",
+                Service->lpImage->pszImagePath,
+                Service->lpImage->pszAccountName ? Service->lpImage->pszAccountName : L"(null)",
+                Service->lpImage->dwImageRunCount,
+                Service->lpImage->hToken);
+    }
 
     /* If the image is already running, just send a start command */
     if (Service->lpImage->dwImageRunCount > 1)
@@ -1922,6 +2078,13 @@ ScmStartUserModeService(PSERVICE Service,
 
     if (!Result)
     {
+        if (ScmIsGuestStateTraceService(Service->lpServiceName))
+        {
+            DPRINT1("ROSGUESTSTATE createprocess-failed error=%lu image='%S'\n",
+                    dwError,
+                    Service->lpImage->pszImagePath);
+        }
+
         DPRINT1("Starting '%S' failed with error %d\n",
                 Service->lpServiceName, dwError);
         return dwError;
@@ -1933,6 +2096,15 @@ ScmStartUserModeService(PSERVICE Service,
     DPRINT("Thread Id: %lu  Handle %p\n",
            ProcessInformation.dwThreadId,
            ProcessInformation.hThread);
+
+    if (ScmIsGuestStateTraceService(Service->lpServiceName))
+    {
+        DPRINT1("ROSGUESTSTATE createprocess-ok pid=%lu tid=%lu process=%p thread=%p\n",
+                ProcessInformation.dwProcessId,
+                ProcessInformation.dwThreadId,
+                ProcessInformation.hProcess,
+                ProcessInformation.hThread);
+    }
 
     /* Get the process handle and ID */
     Service->lpImage->hProcess = ProcessInformation.hProcess;
@@ -1946,6 +2118,11 @@ ScmStartUserModeService(PSERVICE Service,
     dwError = ScmWaitForServiceConnect(Service);
     if (dwError != ERROR_SUCCESS)
     {
+        if (ScmIsGuestStateTraceService(Service->lpServiceName))
+        {
+            DPRINT1("ROSGUESTSTATE wait-connect-failed error=%lu\n", dwError);
+        }
+
         DPRINT1("Connecting control pipe failed! (Error %lu)\n", dwError);
         Service->lpImage->dwProcessId = 0;
         return dwError;
@@ -1976,6 +2153,16 @@ ScmLoadService(PSERVICE Service,
     DPRINT("ScmLoadService() called\n");
     DPRINT("Start Service %p (%S)\n", Service, Service->lpServiceName);
 
+    if (ScmIsGuestStateTraceService(Service->lpServiceName))
+    {
+        DPRINT1("ROSGUESTSTATE load-enter state=%lu type=%lu start=%lu visited=%u image=%p\n",
+                Service->Status.dwCurrentState,
+                Service->Status.dwServiceType,
+                Service->dwStartType,
+                Service->ServiceVisited,
+                Service->lpImage);
+    }
+
     if (Service->Status.dwCurrentState != SERVICE_STOPPED)
     {
         DPRINT("Service %S is already running\n", Service->lpServiceName);
@@ -1993,9 +2180,24 @@ ScmLoadService(PSERVICE Service,
     {
         /* Start user-mode service */
         dwError = ScmCreateOrReferenceServiceImage(Service);
+        if (ScmIsGuestStateTraceService(Service->lpServiceName))
+        {
+            DPRINT1("ROSGUESTSTATE create-image-result error=%lu image=%p\n",
+                    dwError,
+                    Service->lpImage);
+        }
+
         if (dwError == ERROR_SUCCESS)
         {
             dwError = ScmStartUserModeService(Service, argc, argv);
+            if (ScmIsGuestStateTraceService(Service->lpServiceName))
+            {
+                DPRINT1("ROSGUESTSTATE start-user-result error=%lu image=%p pid=%lu\n",
+                        dwError,
+                        Service->lpImage,
+                        Service->lpImage ? Service->lpImage->dwProcessId : 0);
+            }
+
             if (dwError == ERROR_SUCCESS)
             {
                 Service->Status.dwCurrentState = SERVICE_START_PENDING;
@@ -2015,6 +2217,14 @@ ScmLoadService(PSERVICE Service,
     }
 
     DPRINT("ScmLoadService() done (Error %lu)\n", dwError);
+
+    if (ScmIsGuestStateTraceService(Service->lpServiceName))
+    {
+        DPRINT1("ROSGUESTSTATE load-done error=%lu state=%lu win32=%lu\n",
+                dwError,
+                Service->Status.dwCurrentState,
+                Service->Status.dwWin32ExitCode);
+    }
 
     if (dwError == ERROR_SUCCESS)
     {
@@ -2125,6 +2335,7 @@ ScmAutoStartServices(VOID)
     PLIST_ENTRY ServiceEntry;
     PSERVICE_GROUP CurrentGroup;
     PSERVICE CurrentService;
+    PSERVICE GuestStateCollectorService = NULL;
     WCHAR szSafeBootServicePath[MAX_PATH];
     DWORD SafeBootEnabled;
     HKEY hKey;
@@ -2159,6 +2370,8 @@ ScmAutoStartServices(VOID)
     if (dwError != ERROR_SUCCESS)
         SafeBootEnabled = 0;
 
+    DPRINT1("ROSGUESTSTATE autostart-safe-boot=%lu\n", SafeBootEnabled);
+
     /* Acquire the service control critical section, to synchronize starts */
     EnterCriticalSection(&ControlServiceCriticalSection);
 
@@ -2167,6 +2380,12 @@ ScmAutoStartServices(VOID)
     while (ServiceEntry != &ServiceListHead)
     {
         CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
+        if (ScmIsGuestStateCollectorService(CurrentService->lpServiceName))
+        {
+            GuestStateCollectorService = CurrentService;
+            ScmTraceGuestStateAutoStartTarget("precheck", CurrentService);
+        }
 
         /* Build the safe boot path */
         StringCchCopyW(szSafeBootServicePath, ARRAYSIZE(szSafeBootServicePath),
@@ -2231,6 +2450,10 @@ ScmAutoStartServices(VOID)
         ServiceEntry = ServiceEntry->Flink;
     }
 
+    ScmTraceGuestStateAutoStartTarget("after-precheck", GuestStateCollectorService);
+    DPRINT1("ROSGUESTSTATE autostart-pass-enter pass=grouped target=%p\n",
+            GuestStateCollectorService);
+
     /* Start all services which are members of an existing group */
     GroupEntry = GroupListHead.Flink;
     while (GroupEntry != &GroupListHead)
@@ -2252,8 +2475,17 @@ ScmAutoStartServices(VOID)
                     (CurrentService->ServiceVisited == FALSE) &&
                     (CurrentService->dwTag == CurrentGroup->TagArray[i]))
                 {
+                    if (ScmIsGuestStateCollectorService(CurrentService->lpServiceName))
+                    {
+                        DPRINT1("ROSGUESTSTATE autostart-group-tag group='%S' tag=%lu\n",
+                                CurrentGroup->lpGroupName,
+                                CurrentService->dwTag);
+                    }
+
                     CurrentService->ServiceVisited = TRUE;
-                    ScmLoadService(CurrentService, 0, NULL);
+                    ScmTraceAutoStartService("group-tag", CurrentService);
+                    dwError = ScmLoadService(CurrentService, 0, NULL);
+                    ScmTraceAutoStartServiceResult("group-tag", CurrentService, dwError);
                 }
 
                 ServiceEntry = ServiceEntry->Flink;
@@ -2270,8 +2502,17 @@ ScmAutoStartServices(VOID)
                 (CurrentService->dwStartType == SERVICE_AUTO_START) &&
                 (CurrentService->ServiceVisited == FALSE))
             {
+                if (ScmIsGuestStateCollectorService(CurrentService->lpServiceName))
+                {
+                    DPRINT1("ROSGUESTSTATE autostart-group group='%S' tag=%lu\n",
+                            CurrentGroup->lpGroupName,
+                            CurrentService->dwTag);
+                }
+
                 CurrentService->ServiceVisited = TRUE;
-                ScmLoadService(CurrentService, 0, NULL);
+                ScmTraceAutoStartService("group", CurrentService);
+                dwError = ScmLoadService(CurrentService, 0, NULL);
+                ScmTraceAutoStartServiceResult("group", CurrentService, dwError);
             }
 
             ServiceEntry = ServiceEntry->Flink;
@@ -2280,39 +2521,70 @@ ScmAutoStartServices(VOID)
         GroupEntry = GroupEntry->Flink;
     }
 
+    ScmTraceGuestStateAutoStartTarget("after-grouped", GuestStateCollectorService);
+    DPRINT1("ROSGUESTSTATE autostart-pass-enter pass=missing-group target=%p\n",
+            GuestStateCollectorService);
+
     /* Start all services which are members of any non-existing group */
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)
     {
         CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+        ScmTraceAutoStartScan("missing-group", CurrentService);
 
         if ((CurrentService->lpGroup != NULL) &&
             (CurrentService->dwStartType == SERVICE_AUTO_START) &&
             (CurrentService->ServiceVisited == FALSE))
         {
+            if (ScmIsGuestStateCollectorService(CurrentService->lpServiceName))
+            {
+                DPRINT1("ROSGUESTSTATE autostart-missing-group group='%S' tag=%lu\n",
+                        CurrentService->lpGroup->lpGroupName,
+                        CurrentService->dwTag);
+            }
+
             CurrentService->ServiceVisited = TRUE;
-            ScmLoadService(CurrentService, 0, NULL);
+            ScmTraceAutoStartService("missing-group", CurrentService);
+            dwError = ScmLoadService(CurrentService, 0, NULL);
+            ScmTraceAutoStartServiceResult("missing-group", CurrentService, dwError);
         }
 
         ServiceEntry = ServiceEntry->Flink;
     }
+
+    ScmTraceGuestStateAutoStartTarget("after-missing-group", GuestStateCollectorService);
+    DPRINT1("ROSGUESTSTATE autostart-pass-enter pass=no-group target=%p\n",
+            GuestStateCollectorService);
 
     /* Start all services which are not a member of any group */
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)
     {
         CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+        ScmTraceAutoStartScan("no-group", CurrentService);
 
         if ((CurrentService->lpGroup == NULL) &&
             (CurrentService->dwStartType == SERVICE_AUTO_START) &&
             (CurrentService->ServiceVisited == FALSE))
         {
+            if (ScmIsGuestStateCollectorService(CurrentService->lpServiceName))
+            {
+                DPRINT1("ROSGUESTSTATE autostart-no-group tag=%lu\n",
+                        CurrentService->dwTag);
+            }
+
             CurrentService->ServiceVisited = TRUE;
-            ScmLoadService(CurrentService, 0, NULL);
+            ScmTraceAutoStartService("no-group", CurrentService);
+            dwError = ScmLoadService(CurrentService, 0, NULL);
+            ScmTraceAutoStartServiceResult("no-group", CurrentService, dwError);
         }
 
         ServiceEntry = ServiceEntry->Flink;
     }
+
+    ScmTraceGuestStateAutoStartTarget("after-no-group", GuestStateCollectorService);
+    DPRINT1("ROSGUESTSTATE autostart-pass-enter pass=clear-visited target=%p\n",
+            GuestStateCollectorService);
 
     /* Clear 'ServiceVisited' flag again */
     ServiceEntry = ServiceListHead.Flink;
@@ -2322,6 +2594,8 @@ ScmAutoStartServices(VOID)
         CurrentService->ServiceVisited = FALSE;
         ServiceEntry = ServiceEntry->Flink;
     }
+
+    ScmTraceGuestStateAutoStartTarget("after-clear-visited", GuestStateCollectorService);
 
     /* Release the critical section */
     LeaveCriticalSection(&ControlServiceCriticalSection);
