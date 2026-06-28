@@ -371,16 +371,21 @@ wWinMain(HINSTANCE hInstance,
     }
 
     /* Initialize our communication named pipe's critical section */
+    DPRINT1("ROSLSA scm-named-pipe-cs-enter\n");
     ScmInitNamedPipeCriticalSection();
     bCanDeleteNamedPipeCriticalSection = TRUE;
+    DPRINT1("ROSLSA scm-named-pipe-cs-done\n");
 
 //    ScmInitThreadManager();
 
-    ScmInitializeSecurity();
+    DPRINT1("ROSLSA scm-security-enter\n");
+    dwError = ScmInitializeSecurity();
+    DPRINT1("ROSLSA scm-security-result error=%lu\n", dwError);
 
     /* FIXME: more initialization */
 
     /* Create the 'Last Known Good' control set */
+    DPRINT1("ROSLSA scm-lkg-enter\n");
     dwError = ScmCreateLastKnownGoodControlSet();
     DPRINT1("ROSLSA scm-lkg-result error=%lu\n", dwError);
     if (dwError != ERROR_SUCCESS)

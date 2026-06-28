@@ -374,19 +374,27 @@ ScmInitializeSecurity(VOID)
 {
     DWORD dwError;
 
+    DPRINT1("ROSLSA scm-security-sids-enter\n");
     dwError = ScmCreateSids();
+    DPRINT1("ROSLSA scm-security-sids-result error=%lu\n", dwError);
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
+    DPRINT1("ROSLSA scm-security-acls-enter\n");
     dwError = ScmCreateAcls();
+    DPRINT1("ROSLSA scm-security-acls-result error=%lu\n", dwError);
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
+    DPRINT1("ROSLSA scm-security-default-sd-enter\n");
     dwError = ScmCreateDefaultSD();
+    DPRINT1("ROSLSA scm-security-default-sd-result error=%lu\n", dwError);
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
+    DPRINT1("ROSLSA scm-security-pipe-sd-enter\n");
     dwError = ScmCreatePipeSD();
+    DPRINT1("ROSLSA scm-security-pipe-sd-result error=%lu\n", dwError);
     if (dwError != ERROR_SUCCESS)
         return dwError;
 

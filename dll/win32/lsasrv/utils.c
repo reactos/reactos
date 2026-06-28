@@ -25,18 +25,39 @@ LsapLoadString(HINSTANCE hInstance,
     int string_num;
     int i;
 
+    ERR("ROSLSA load-string-enter id=%u max=%d instance=%p buffer=%p\n",
+        uId,
+        nBufferMax,
+        hInstance,
+        lpBuffer);
+
+    if ((lpBuffer != NULL) && (nBufferMax > 0))
+        lpBuffer[0] = UNICODE_NULL;
+
     /* Use loword (incremented by 1) as resourceid */
     hrsrc = FindResourceW(hInstance,
                           MAKEINTRESOURCEW((LOWORD(uId) >> 4) + 1),
                           (LPWSTR)RT_STRING);
     if (!hrsrc)
+    {
+        ERR("ROSLSA load-string-fail id=%u reason=resource\n", uId);
         return 0;
+    }
 
     hmem = LoadResource(hInstance, hrsrc);
     if (!hmem)
+    {
+        ERR("ROSLSA load-string-fail id=%u reason=load\n", uId);
         return 0;
+    }
 
     p = LockResource(hmem);
+    if (p == NULL)
+    {
+        ERR("ROSLSA load-string-fail id=%u reason=lock\n", uId);
+        return 0;
+    }
+
     string_num = uId & 0x000f;
     for (i = 0; i < string_num; i++)
         p += *p + 1;
@@ -55,6 +76,8 @@ LsapLoadString(HINSTANCE hInstance,
             return 0;
         }
     }
+
+    ERR("ROSLSA load-string-result id=%u chars=%d\n", uId, i);
 
     return i;
 }

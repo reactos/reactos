@@ -82,6 +82,7 @@ PSID LsapInteractiveSid = NULL;
 PSID LsapServiceSid = NULL;
 PSID LsapLocalSystemSid = NULL;
 PSID LsapAdministratorsSid = NULL;
+static ULONG LsapSidCreateSequence = 0;
 
 
 /* FUNCTIONS ***************************************************************/
@@ -99,18 +100,36 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
     SIZE_T AccountNameLength, DomainNameLength;
     PULONG p;
     ULONG i;
+    ULONG Sequence;
+
+    Sequence = ++LsapSidCreateSequence;
+    ERR("ROSLSA sid-create-enter seq=%lu subauth=%u use=%u account=%p domain=%p out=%p\n",
+        Sequence,
+        SubAuthorityCount,
+        Use,
+        AccountName,
+        DomainName,
+        SidPtr);
 
     AccountNameLength = wcslen(AccountName);
     DomainNameLength = wcslen(DomainName);
+    ERR("ROSLSA sid-create-lengths seq=%lu account-chars=%lu domain-chars=%lu\n",
+        Sequence,
+        (ULONG)AccountNameLength,
+        (ULONG)DomainNameLength);
     if ((AccountNameLength > UNICODE_STRING_MAX_CHARS) ||
         (DomainNameLength > UNICODE_STRING_MAX_CHARS))
     {
+        ERR("ROSLSA sid-create-fail seq=%lu reason=length\n", Sequence);
         return FALSE;
     }
 
     SidEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WELL_KNOWN_SID));
     if (SidEntry == NULL)
+    {
+        ERR("ROSLSA sid-create-fail seq=%lu reason=entry-alloc\n", Sequence);
         return FALSE;
+    }
 
     InitializeListHead(&SidEntry->ListEntry);
 
@@ -119,6 +138,7 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
                                     RtlLengthRequiredSid(SubAuthorityCount));
     if (SidEntry->Sid == NULL)
     {
+        ERR("ROSLSA sid-create-fail seq=%lu reason=sid-alloc\n", Sequence);
         RtlFreeHeap(RtlGetProcessHeap(), 0, SidEntry);
         return FALSE;
     }
@@ -141,6 +161,7 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
                                                    SidEntry->AccountName.MaximumLength);
     if (SidEntry->AccountName.Buffer == NULL)
     {
+        ERR("ROSLSA sid-create-fail seq=%lu reason=account-alloc\n", Sequence);
         RtlFreeHeap(RtlGetProcessHeap(), 0, SidEntry->Sid);
         RtlFreeHeap(RtlGetProcessHeap(), 0, SidEntry);
         return FALSE;
@@ -157,6 +178,7 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
                                                   SidEntry->DomainName.MaximumLength);
     if (SidEntry->DomainName.Buffer == NULL)
     {
+        ERR("ROSLSA sid-create-fail seq=%lu reason=domain-alloc\n", Sequence);
         RtlFreeHeap(RtlGetProcessHeap(), 0, SidEntry->AccountName.Buffer);
         RtlFreeHeap(RtlGetProcessHeap(), 0, SidEntry->Sid);
         RtlFreeHeap(RtlGetProcessHeap(), 0, SidEntry);
@@ -174,6 +196,11 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
     if (SidPtr != NULL)
         *SidPtr = SidEntry->Sid;
 
+    ERR("ROSLSA sid-create-done seq=%lu sid=%p out-set=%u\n",
+        Sequence,
+        SidEntry->Sid,
+        SidPtr != NULL);
+
     return TRUE;
 }
 
@@ -186,9 +213,11 @@ LsapInitSids(VOID)
     ULONG SubAuthorities[8];
     HINSTANCE hInstance;
 
+    ERR("ROSLSA sid-init-enter\n");
     InitializeListHead(&WellKnownSidListHead);
 
     hInstance = GetModuleHandleW(L"lsasrv.dll");
+    ERR("ROSLSA sid-init-module-result instance=%p\n", hInstance);
 
     /* NT Authority */
     LsapLoadString(hInstance, IDS_NT_AUTHORITY, szAccountName, ARRAYSIZE(szAccountName));
@@ -690,6 +719,7 @@ LsapInitSids(VOID)
 
     /* FIXME: Add more well known sids */
 
+    ERR("ROSLSA sid-init-exit\n");
     return STATUS_SUCCESS;
 }
 
