@@ -73,6 +73,32 @@ typedef struct _WELL_KNOWN_SID
     SID_NAME_USE Use;
 } WELL_KNOWN_SID, *PWELL_KNOWN_SID;
 
+typedef NTSTATUS
+(*PLSAP_LOOKUP_NAMES_STAGE)(DWORD Count,
+                            PRPC_UNICODE_STRING DomainNames,
+                            PRPC_UNICODE_STRING AccountNames,
+                            PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                            PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                            PULONG Mapped);
+
+typedef NTSTATUS
+(*PLSAP_LOOKUP_SIDS_STAGE)(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
+                           PLSAPR_TRANSLATED_NAME_EX NamesBuffer,
+                           PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                           PULONG Mapped);
+
+typedef struct _LSAP_LOOKUP_NAMES_STAGE
+{
+    PLSAP_LOOKUP_NAMES_STAGE Lookup;
+    PCSTR Name;
+} LSAP_LOOKUP_NAMES_STAGE, *PLSAP_LOOKUP_NAMES_STAGE_ENTRY;
+
+typedef struct _LSAP_LOOKUP_SIDS_STAGE
+{
+    PLSAP_LOOKUP_SIDS_STAGE Lookup;
+    PCSTR Name;
+} LSAP_LOOKUP_SIDS_STAGE, *PLSAP_LOOKUP_SIDS_STAGE_ENTRY;
+
 
 LIST_ENTRY WellKnownSidListHead;
 PSID LsapWorldSid = NULL;
@@ -86,6 +112,88 @@ static ULONG LsapSidCreateSequence = 0;
 
 
 /* FUNCTIONS ***************************************************************/
+
+static
+BOOLEAN
+LsapLookupStatusIsFatal(NTSTATUS Status)
+{
+    return !NT_SUCCESS(Status) &&
+           Status != STATUS_NONE_MAPPED &&
+           Status != STATUS_SOME_NOT_MAPPED;
+}
+
+
+static
+NTSTATUS
+LsapAllocateReferencedDomains(ULONG Count,
+                              PLSAPR_REFERENCED_DOMAIN_LIST *DomainsBuffer)
+{
+    *DomainsBuffer = MIDL_user_allocate(sizeof(LSAPR_REFERENCED_DOMAIN_LIST));
+    if (*DomainsBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    (*DomainsBuffer)->Domains = MIDL_user_allocate(Count * sizeof(LSA_TRUST_INFORMATION));
+    if ((*DomainsBuffer)->Domains == NULL)
+    {
+        MIDL_user_free(*DomainsBuffer);
+        *DomainsBuffer = NULL;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    (*DomainsBuffer)->Entries = 0;
+    (*DomainsBuffer)->MaxEntries = Count;
+    return STATUS_SUCCESS;
+}
+
+
+static
+VOID
+LsapFreeReferencedDomains(PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer)
+{
+    if (DomainsBuffer == NULL)
+        return;
+
+    if (DomainsBuffer->Domains != NULL)
+        MIDL_user_free(DomainsBuffer->Domains);
+
+    MIDL_user_free(DomainsBuffer);
+}
+
+
+static
+VOID
+LsapInitializeTranslatedSids(DWORD Count,
+                             PLSAPR_TRANSLATED_SID_EX2 SidsBuffer)
+{
+    ULONG i;
+
+    for (i = 0; i < Count; i++)
+    {
+        SidsBuffer[i].Use = SidTypeUnknown;
+        SidsBuffer[i].Sid = NULL;
+        SidsBuffer[i].DomainIndex = -1;
+        SidsBuffer[i].Flags = 0;
+    }
+}
+
+
+static
+VOID
+LsapInitializeTranslatedNames(ULONG Count,
+                              PLSAPR_TRANSLATED_NAME_EX NamesBuffer)
+{
+    ULONG i;
+
+    for (i = 0; i < Count; i++)
+    {
+        NamesBuffer[i].Use = SidTypeUnknown;
+        NamesBuffer[i].Name.Length = 0;
+        NamesBuffer[i].Name.MaximumLength = 0;
+        NamesBuffer[i].Name.Buffer = NULL;
+        NamesBuffer[i].DomainIndex = -1;
+        NamesBuffer[i].Flags = 0;
+    }
+}
 
 BOOLEAN
 LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
@@ -1181,6 +1289,140 @@ LsapCopySid(PSID SrcSid)
 
 static
 NTSTATUS
+LsapSetTranslatedSid(PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                     SID_NAME_USE Use,
+                     PSID Sid)
+{
+    SidsBuffer->Use = Use;
+    SidsBuffer->Sid = LsapCopySid(Sid);
+    if (SidsBuffer->Sid == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    SidsBuffer->DomainIndex = -1;
+    SidsBuffer->Flags = 0;
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+LsapAddDomainForWellKnownSid(PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                             PWELL_KNOWN_SID WellKnownSid,
+                             PULONG DomainIndex)
+{
+    UNICODE_STRING EmptyDomainName = RTL_CONSTANT_STRING(L"");
+    PWELL_KNOWN_SID DomainWellKnownSid;
+    PSID DomainSid;
+    NTSTATUS Status;
+
+    if (WellKnownSid->Use == SidTypeDomain)
+    {
+        return LsapAddDomainToDomainsList(DomainsBuffer,
+                                          &WellKnownSid->AccountName,
+                                          WellKnownSid->Sid,
+                                          DomainIndex);
+    }
+
+    DomainWellKnownSid = LsapLookupIsolatedWellKnownName(&WellKnownSid->DomainName);
+    if (DomainWellKnownSid != NULL)
+    {
+        return LsapAddDomainToDomainsList(DomainsBuffer,
+                                          &DomainWellKnownSid->AccountName,
+                                          DomainWellKnownSid->Sid,
+                                          DomainIndex);
+    }
+
+    DomainSid = CreateDomainSidFromAccountSid(WellKnownSid->Sid);
+    if (DomainSid == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                        &EmptyDomainName,
+                                        DomainSid,
+                                        DomainIndex);
+
+    MIDL_user_free(DomainSid);
+    return Status;
+}
+
+
+static
+NTSTATUS
+LsapMapWellKnownIsolatedName(PRPC_UNICODE_STRING AccountName,
+                             PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                             PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                             PULONG Mapped,
+                             PBOOLEAN NameMapped)
+{
+    PWELL_KNOWN_SID WellKnownSid;
+    ULONG DomainIndex;
+    NTSTATUS Status;
+
+    *NameMapped = FALSE;
+
+    WellKnownSid = LsapLookupIsolatedWellKnownName((PUNICODE_STRING)AccountName);
+    if (WellKnownSid == NULL)
+        return STATUS_SUCCESS;
+
+    Status = LsapSetTranslatedSid(SidsBuffer,
+                                  WellKnownSid->Use,
+                                  WellKnownSid->Sid);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = LsapAddDomainForWellKnownSid(DomainsBuffer,
+                                          WellKnownSid,
+                                          &DomainIndex);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    SidsBuffer->DomainIndex = DomainIndex;
+    (*Mapped)++;
+    *NameMapped = TRUE;
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+LsapMapIsolatedDomainName(PUNICODE_STRING AccountName,
+                          PUNICODE_STRING DomainName,
+                          PSID DomainSid,
+                          PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                          PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                          PULONG Mapped,
+                          PBOOLEAN NameMapped)
+{
+    ULONG DomainIndex;
+    NTSTATUS Status;
+
+    *NameMapped = FALSE;
+
+    if (!RtlEqualUnicodeString(AccountName, DomainName, TRUE))
+        return STATUS_SUCCESS;
+
+    Status = LsapSetTranslatedSid(SidsBuffer,
+                                  SidTypeDomain,
+                                  DomainSid);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                        DomainName,
+                                        DomainSid,
+                                        &DomainIndex);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    SidsBuffer->DomainIndex = DomainIndex;
+    (*Mapped)++;
+    *NameMapped = TRUE;
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
 LsapLookupIsolatedNames(DWORD Count,
                         PRPC_UNICODE_STRING DomainNames,
                         PRPC_UNICODE_STRING AccountNames,
@@ -1188,10 +1430,7 @@ LsapLookupIsolatedNames(DWORD Count,
                         PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
                         PULONG Mapped)
 {
-    UNICODE_STRING EmptyDomainName = RTL_CONSTANT_STRING(L"");
-    PWELL_KNOWN_SID ptr, ptr2;
-    PSID DomainSid;
-    ULONG DomainIndex;
+    BOOLEAN NameMapped;
     ULONG i;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1208,128 +1447,44 @@ LsapLookupIsolatedNames(DWORD Count,
         TRACE("Mapping name: %wZ\n", &AccountNames[i]);
 
         /* Look-up all well-known names */
-        ptr = LsapLookupIsolatedWellKnownName((PUNICODE_STRING)&AccountNames[i]);
-        if (ptr != NULL)
-        {
-            SidsBuffer[i].Use = ptr->Use;
-            SidsBuffer[i].Sid = LsapCopySid(ptr->Sid);
-            if (SidsBuffer[i].Sid == NULL)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto done;
-            }
+        Status = LsapMapWellKnownIsolatedName(&AccountNames[i],
+                                              DomainsBuffer,
+                                              &SidsBuffer[i],
+                                              Mapped,
+                                              &NameMapped);
+        if (!NT_SUCCESS(Status))
+            goto done;
 
-            SidsBuffer[i].DomainIndex = -1;
-            SidsBuffer[i].Flags = 0;
-
-            if (ptr->Use == SidTypeDomain)
-            {
-                Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                    &ptr->AccountName,
-                                                    ptr->Sid,
-                                                    &DomainIndex);
-                if (!NT_SUCCESS(Status))
-                    goto done;
-
-                SidsBuffer[i].DomainIndex = DomainIndex;
-            }
-            else
-            {
-                ptr2= LsapLookupIsolatedWellKnownName(&ptr->DomainName);
-                if (ptr2 != NULL)
-                {
-                    Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                        &ptr2->AccountName,
-                                                        ptr2->Sid,
-                                                        &DomainIndex);
-                    if (!NT_SUCCESS(Status))
-                        goto done;
-
-                    SidsBuffer[i].DomainIndex = DomainIndex;
-                }
-                else
-                {
-                    DomainSid = CreateDomainSidFromAccountSid(ptr->Sid);
-                    if (DomainSid == NULL)
-                    {
-                        Status = STATUS_INSUFFICIENT_RESOURCES;
-                        goto done;
-                    }
-
-                    Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                        &EmptyDomainName,
-                                                        DomainSid,
-                                                        &DomainIndex);
-
-                    if (DomainSid != NULL)
-                    {
-                        MIDL_user_free(DomainSid);
-                        DomainSid = NULL;
-                    }
-
-                    if (!NT_SUCCESS(Status))
-                        goto done;
-
-                    SidsBuffer[i].DomainIndex = DomainIndex;
-                }
-            }
-
-            (*Mapped)++;
+        if (NameMapped)
             continue;
-        }
 
         /* Look-up the built-in domain */
-        if (RtlEqualUnicodeString((PUNICODE_STRING)&AccountNames[i], &BuiltinDomainName, TRUE))
-        {
-            SidsBuffer[i].Use = SidTypeDomain;
-            SidsBuffer[i].Sid = LsapCopySid(BuiltinDomainSid);
-            if (SidsBuffer[i].Sid == NULL)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto done;
-            }
+        Status = LsapMapIsolatedDomainName((PUNICODE_STRING)&AccountNames[i],
+                                           &BuiltinDomainName,
+                                           BuiltinDomainSid,
+                                           DomainsBuffer,
+                                           &SidsBuffer[i],
+                                           Mapped,
+                                           &NameMapped);
+        if (!NT_SUCCESS(Status))
+            goto done;
 
-            SidsBuffer[i].DomainIndex = -1;
-            SidsBuffer[i].Flags = 0;
-
-            Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                &BuiltinDomainName,
-                                                BuiltinDomainSid,
-                                                &DomainIndex);
-            if (!NT_SUCCESS(Status))
-                goto done;
-
-            SidsBuffer[i].DomainIndex = DomainIndex;
-
-            (*Mapped)++;
+        if (NameMapped)
             continue;
-        }
 
         /* Look-up the account domain */
-        if (RtlEqualUnicodeString((PUNICODE_STRING)&AccountNames[i], &AccountDomainName, TRUE))
-        {
-            SidsBuffer[i].Use = SidTypeDomain;
-            SidsBuffer[i].Sid = LsapCopySid(AccountDomainSid);
-            if (SidsBuffer[i].Sid == NULL)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto done;
-            }
-            SidsBuffer[i].DomainIndex = -1;
-            SidsBuffer[i].Flags = 0;
+        Status = LsapMapIsolatedDomainName((PUNICODE_STRING)&AccountNames[i],
+                                           &AccountDomainName,
+                                           AccountDomainSid,
+                                           DomainsBuffer,
+                                           &SidsBuffer[i],
+                                           Mapped,
+                                           &NameMapped);
+        if (!NT_SUCCESS(Status))
+            goto done;
 
-            Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                &AccountDomainName,
-                                                AccountDomainSid,
-                                                &DomainIndex);
-            if (!NT_SUCCESS(Status))
-                goto done;
-
-            SidsBuffer[i].DomainIndex = DomainIndex;
-
-            (*Mapped)++;
+        if (NameMapped)
             continue;
-        }
 
         /* FIXME: Look-up the primary domain */
 
@@ -1839,6 +1994,105 @@ done:
 }
 
 
+static
+VOID
+LsapFreeSplitNames(DWORD Count,
+                   PRPC_UNICODE_STRING Names)
+{
+    ULONG i;
+
+    if (Names == NULL)
+        return;
+
+    for (i = 0; i < Count; i++)
+    {
+        if (Names[i].Buffer != NULL)
+            MIDL_user_free(Names[i].Buffer);
+    }
+
+    MIDL_user_free(Names);
+}
+
+
+static
+NTSTATUS
+LsapRunNameLookupStages(DWORD Count,
+                        PRPC_UNICODE_STRING DomainNames,
+                        PRPC_UNICODE_STRING AccountNames,
+                        PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                        PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                        PULONG Mapped)
+{
+    static const LSAP_LOOKUP_NAMES_STAGE LookupStages[] =
+    {
+        {LsapLookupIsolatedNames, "LsapLookupIsolatedNames"},
+        {LsapLookupIsolatedBuiltinNames, "LsapLookupIsolatedBuiltinNames"},
+        {LsapLookupIsolatedAccountNames, "LsapLookupIsolatedAccountNames"},
+        {LsapLookupFullyQualifiedWellKnownNames, "LsapLookupFullyQualifiedWellKnownNames"},
+        {LsapLookupBuiltinNames, "LsapLookupBuiltinNames"},
+        {LsapLookupAccountNames, "LsapLookupAccountNames"}
+    };
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    for (i = 0; i < RTL_NUMBER_OF(LookupStages); i++)
+    {
+        Status = LookupStages[i].Lookup(Count,
+                                        DomainNames,
+                                        AccountNames,
+                                        DomainsBuffer,
+                                        SidsBuffer,
+                                        Mapped);
+        if (LsapLookupStatusIsFatal(Status))
+        {
+            TRACE("%s failed! (Status %lx)\n", LookupStages[i].Name, Status);
+            return Status;
+        }
+
+        if (*Mapped == Count)
+            break;
+    }
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+LsapFinishNameLookup(NTSTATUS Status,
+                     DWORD Count,
+                     PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                     PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                     PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+                     PLSAPR_TRANSLATED_SIDS_EX2 TranslatedSids,
+                     DWORD *MappedCount,
+                     ULONG Mapped)
+{
+    if (!NT_SUCCESS(Status))
+    {
+        LsapFreeReferencedDomains(DomainsBuffer);
+
+        if (SidsBuffer != NULL)
+            MIDL_user_free(SidsBuffer);
+
+        return Status;
+    }
+
+    *ReferencedDomains = DomainsBuffer;
+    TranslatedSids->Entries = Count;
+    TranslatedSids->Sids = SidsBuffer;
+    *MappedCount = Mapped;
+
+    if (Mapped == 0)
+        return STATUS_NONE_MAPPED;
+
+    if (Mapped < Count)
+        return STATUS_SOME_NOT_MAPPED;
+
+    return Status;
+}
+
+
 NTSTATUS
 LsapLookupNames(DWORD Count,
                 PRPC_UNICODE_STRING Names,
@@ -1854,7 +2108,6 @@ LsapLookupNames(DWORD Count,
     PRPC_UNICODE_STRING DomainNames = NULL;
     PRPC_UNICODE_STRING AccountNames = NULL;
     ULONG SidsBufferLength;
-    ULONG i;
     ULONG Mapped = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1873,31 +2126,11 @@ LsapLookupNames(DWORD Count,
         goto done;
     }
 
-    DomainsBuffer = MIDL_user_allocate(sizeof(LSAPR_REFERENCED_DOMAIN_LIST));
-    if (DomainsBuffer == NULL)
-    {
-//TRACE("\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+    Status = LsapAllocateReferencedDomains(Count, &DomainsBuffer);
+    if (!NT_SUCCESS(Status))
         goto done;
-    }
 
-    DomainsBuffer->Domains = MIDL_user_allocate(Count * sizeof(LSA_TRUST_INFORMATION));
-    if (DomainsBuffer->Domains == NULL)
-    {
-//TRACE("\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-    DomainsBuffer->Entries = 0;
-    DomainsBuffer->MaxEntries = Count;
-
-    for (i = 0; i < Count; i++)
-    {
-        SidsBuffer[i].Use = SidTypeUnknown;
-        SidsBuffer[i].Sid = NULL;
-        SidsBuffer[i].DomainIndex = -1;
-        SidsBuffer[i].Flags = 0;
-    }
+    LsapInitializeTranslatedSids(Count, SidsBuffer);
 
     Status = LsapSplitNames(Count,
                             Names,
@@ -1909,173 +2142,26 @@ LsapLookupNames(DWORD Count,
         goto done;
     }
 
-
-    Status = LsapLookupIsolatedNames(Count,
+    Status = LsapRunNameLookupStages(Count,
                                      DomainNames,
                                      AccountNames,
                                      DomainsBuffer,
                                      SidsBuffer,
                                      &Mapped);
-    if (!NT_SUCCESS(Status) &&
-        Status != STATUS_NONE_MAPPED &&
-        Status != STATUS_SOME_NOT_MAPPED)
-    {
-        TRACE("LsapLookupIsolatedNames failed! (Status %lx)\n", Status);
-        goto done;
-    }
-
-    if (Mapped == Count)
-        goto done;
-
-
-    Status = LsapLookupIsolatedBuiltinNames(Count,
-                                            DomainNames,
-                                            AccountNames,
-                                            DomainsBuffer,
-                                            SidsBuffer,
-                                            &Mapped);
-    if (!NT_SUCCESS(Status) &&
-        Status != STATUS_NONE_MAPPED &&
-        Status != STATUS_SOME_NOT_MAPPED)
-    {
-        TRACE("LsapLookupIsolatedBuiltinNames failed! (Status %lx)\n", Status);
-        goto done;
-    }
-
-    if (Mapped == Count)
-        goto done;
-
-
-    Status = LsapLookupIsolatedAccountNames(Count,
-                                            DomainNames,
-                                            AccountNames,
-                                            DomainsBuffer,
-                                            SidsBuffer,
-                                            &Mapped);
-    if (!NT_SUCCESS(Status) &&
-        Status != STATUS_NONE_MAPPED &&
-        Status != STATUS_SOME_NOT_MAPPED)
-    {
-        TRACE("LsapLookupIsolatedAccountNames failed! (Status %lx)\n", Status);
-        goto done;
-    }
-
-    if (Mapped == Count)
-        goto done;
-
-    Status = LsapLookupFullyQualifiedWellKnownNames(Count,
-                                                    DomainNames,
-                                                    AccountNames,
-                                                    DomainsBuffer,
-                                                    SidsBuffer,
-                                                    &Mapped);
-    if (!NT_SUCCESS(Status) &&
-        Status != STATUS_NONE_MAPPED &&
-        Status != STATUS_SOME_NOT_MAPPED)
-    {
-        TRACE("LsapLookupFullyQualifiedWellKnownNames failed! (Status %lx)\n", Status);
-        goto done;
-    }
-
-    if (Mapped == Count)
-        goto done;
-
-    Status = LsapLookupBuiltinNames(Count,
-                                    DomainNames,
-                                    AccountNames,
-                                    DomainsBuffer,
-                                    SidsBuffer,
-                                    &Mapped);
-    if (!NT_SUCCESS(Status) &&
-        Status != STATUS_NONE_MAPPED &&
-        Status != STATUS_SOME_NOT_MAPPED)
-    {
-        TRACE("LsapLookupBuiltinNames failed! (Status %lx)\n", Status);
-        goto done;
-    }
-
-    if (Mapped == Count)
-        goto done;
-
-
-    Status = LsapLookupAccountNames(Count,
-                                    DomainNames,
-                                    AccountNames,
-                                    DomainsBuffer,
-                                    SidsBuffer,
-                                    &Mapped);
-    if (!NT_SUCCESS(Status) &&
-        Status != STATUS_NONE_MAPPED &&
-        Status != STATUS_SOME_NOT_MAPPED)
-    {
-        TRACE("LsapLookupAccountNames failed! (Status %lx)\n", Status);
-        goto done;
-    }
-
-    if (Mapped == Count)
-        goto done;
 
 done:
 //    TRACE("done: Status %lx\n", Status);
 
-    if (DomainNames != NULL)
-    {
-//TRACE("Free DomainNames\n");
-        for (i = 0; i < Count; i++)
-        {
-            if (DomainNames[i].Buffer != NULL)
-                MIDL_user_free(DomainNames[i].Buffer);
-        }
-
-        MIDL_user_free(DomainNames);
-    }
-
-    if (AccountNames != NULL)
-    {
-//TRACE("Free AccountNames\n");
-        for (i = 0; i < Count; i++)
-        {
-//TRACE("i: %lu\n", i);
-            if (AccountNames[i].Buffer != NULL)
-            {
-                MIDL_user_free(AccountNames[i].Buffer);
-            }
-        }
-
-        MIDL_user_free(AccountNames);
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
-//TRACE("Failure!\n");
-
-//TRACE("Free DomainsBuffer\n");
-        if (DomainsBuffer != NULL)
-        {
-            if (DomainsBuffer->Domains != NULL)
-                MIDL_user_free(DomainsBuffer->Domains);
-
-            MIDL_user_free(DomainsBuffer);
-        }
-
-//TRACE("Free SidsBuffer\n");
-        if (SidsBuffer != NULL)
-            MIDL_user_free(SidsBuffer);
-    }
-    else
-    {
-//TRACE("Success!\n");
-
-        *ReferencedDomains = DomainsBuffer;
-        TranslatedSids->Entries = Count;
-        TranslatedSids->Sids = SidsBuffer;
-        *MappedCount = Mapped;
-
-        if (Mapped == 0)
-            Status = STATUS_NONE_MAPPED;
-        else if (Mapped < Count)
-            Status = STATUS_SOME_NOT_MAPPED;
-    }
+    LsapFreeSplitNames(Count, DomainNames);
+    LsapFreeSplitNames(Count, AccountNames);
+    Status = LsapFinishNameLookup(Status,
+                                  Count,
+                                  DomainsBuffer,
+                                  SidsBuffer,
+                                  ReferencedDomains,
+                                  TranslatedSids,
+                                  MappedCount,
+                                  Mapped);
 
 //    TRACE("done: Status %lx\n", Status);
 
@@ -2438,6 +2524,78 @@ done:
 }
 
 
+static
+NTSTATUS
+LsapRunSidLookupStages(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
+                       PLSAPR_TRANSLATED_NAME_EX NamesBuffer,
+                       PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                       PULONG Mapped)
+{
+    static const LSAP_LOOKUP_SIDS_STAGE LookupStages[] =
+    {
+        {LsapLookupWellKnownSids, "LsapLookupWellKnownSids"},
+        {LsapLookupBuiltinDomainSids, "LsapLookupBuiltinDomainSids"},
+        {LsapLookupAccountDomainSids, "LsapLookupAccountDomainSids"}
+    };
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    for (i = 0; i < RTL_NUMBER_OF(LookupStages); i++)
+    {
+        Status = LookupStages[i].Lookup(SidEnumBuffer,
+                                        NamesBuffer,
+                                        DomainsBuffer,
+                                        Mapped);
+        if (LsapLookupStatusIsFatal(Status))
+        {
+            TRACE("%s failed! (Status %lx)\n", LookupStages[i].Name, Status);
+            return Status;
+        }
+
+        if (*Mapped == SidEnumBuffer->Entries)
+            break;
+    }
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+LsapFinishSidLookup(NTSTATUS Status,
+                    PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
+                    PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                    PLSAPR_TRANSLATED_NAME_EX NamesBuffer,
+                    PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+                    PLSAPR_TRANSLATED_NAMES_EX TranslatedNames,
+                    DWORD *MappedCount,
+                    ULONG Mapped)
+{
+    if (!NT_SUCCESS(Status))
+    {
+        LsapFreeReferencedDomains(DomainsBuffer);
+
+        if (NamesBuffer != NULL)
+            MIDL_user_free(NamesBuffer);
+
+        return Status;
+    }
+
+    *ReferencedDomains = DomainsBuffer;
+    TranslatedNames->Entries = SidEnumBuffer->Entries;
+    TranslatedNames->Names = NamesBuffer;
+    *MappedCount = Mapped;
+
+    if (Mapped == 0)
+        return STATUS_NONE_MAPPED;
+
+    if (Mapped < SidEnumBuffer->Entries)
+        return STATUS_SOME_NOT_MAPPED;
+
+    return Status;
+}
+
+
 NTSTATUS
 LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
@@ -2450,7 +2608,6 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
     PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer = NULL;
     PLSAPR_TRANSLATED_NAME_EX NamesBuffer = NULL;
     ULONG NamesBufferLength;
-    ULONG i;
     ULONG Mapped = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -2462,101 +2619,30 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
         goto done;
     }
 
-    DomainsBuffer = MIDL_user_allocate(sizeof(LSAPR_REFERENCED_DOMAIN_LIST));
-    if (DomainsBuffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+    Status = LsapAllocateReferencedDomains(SidEnumBuffer->Entries,
+                                           &DomainsBuffer);
+    if (!NT_SUCCESS(Status))
         goto done;
-    }
-
-    DomainsBuffer->Domains = MIDL_user_allocate(SidEnumBuffer->Entries * sizeof(LSA_TRUST_INFORMATION));
-    if (DomainsBuffer->Domains == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    DomainsBuffer->Entries = 0;
-    DomainsBuffer->MaxEntries = SidEnumBuffer->Entries;
 
     /* Initialize all name entries */
-    for (i = 0; i < SidEnumBuffer->Entries; i++)
-    {
-        NamesBuffer[i].Use = SidTypeUnknown;
-        NamesBuffer[i].Name.Length = 0;
-        NamesBuffer[i].Name.MaximumLength = 0;
-        NamesBuffer[i].Name.Buffer = NULL;
-        NamesBuffer[i].DomainIndex = -1;
-        NamesBuffer[i].Flags = 0;
-    }
+    LsapInitializeTranslatedNames(SidEnumBuffer->Entries, NamesBuffer);
 
-    /* Look-up well-known SIDs */
-    Status = LsapLookupWellKnownSids(SidEnumBuffer,
-                                     NamesBuffer,
-                                     DomainsBuffer,
-                                     &Mapped);
-    if (!NT_SUCCESS(Status) &&
-        Status != STATUS_NONE_MAPPED &&
-        Status != STATUS_SOME_NOT_MAPPED)
-        goto done;
-
-    if (Mapped == SidEnumBuffer->Entries)
-        goto done;
-
-    /* Look-up builtin domain SIDs */
-    Status = LsapLookupBuiltinDomainSids(SidEnumBuffer,
-                                         NamesBuffer,
-                                         DomainsBuffer,
-                                         &Mapped);
-    if (!NT_SUCCESS(Status) &&
-        Status != STATUS_NONE_MAPPED &&
-        Status != STATUS_SOME_NOT_MAPPED)
-        goto done;
-
-    if (Mapped == SidEnumBuffer->Entries)
-        goto done;
-
-    /* Look-up account domain SIDs */
-    Status = LsapLookupAccountDomainSids(SidEnumBuffer,
-                                         NamesBuffer,
-                                         DomainsBuffer,
-                                         &Mapped);
-    if (!NT_SUCCESS(Status) &&
-        Status != STATUS_NONE_MAPPED &&
-        Status != STATUS_SOME_NOT_MAPPED)
-        goto done;
-
-    if (Mapped == SidEnumBuffer->Entries)
-        goto done;
+    Status = LsapRunSidLookupStages(SidEnumBuffer,
+                                    NamesBuffer,
+                                    DomainsBuffer,
+                                    &Mapped);
 
 done:
     TRACE("done Status: %lx  Mapped: %lu\n", Status, Mapped);
 
-    if (!NT_SUCCESS(Status))
-    {
-        if (DomainsBuffer != NULL)
-        {
-            if (DomainsBuffer->Domains != NULL)
-                MIDL_user_free(DomainsBuffer->Domains);
-
-            MIDL_user_free(DomainsBuffer);
-        }
-
-        if (NamesBuffer != NULL)
-            MIDL_user_free(NamesBuffer);
-    }
-    else
-    {
-        *ReferencedDomains = DomainsBuffer;
-        TranslatedNames->Entries = SidEnumBuffer->Entries;
-        TranslatedNames->Names = NamesBuffer;
-        *MappedCount = Mapped;
-
-        if (Mapped == 0)
-            Status = STATUS_NONE_MAPPED;
-        else if (Mapped < SidEnumBuffer->Entries)
-            Status = STATUS_SOME_NOT_MAPPED;
-    }
+    Status = LsapFinishSidLookup(Status,
+                                 SidEnumBuffer,
+                                 DomainsBuffer,
+                                 NamesBuffer,
+                                 ReferencedDomains,
+                                 TranslatedNames,
+                                 MappedCount,
+                                 Mapped);
 
     return Status;
 }
