@@ -16,9 +16,9 @@
 #define NDEBUG
 #include <debug.h>
 
-#define EVTLTRACE(...)  DPRINT("EvtLib: " __VA_ARGS__)
+#define EVTLTRACE(fmt, ...) DPRINT("EvtLib: " fmt, ##__VA_ARGS__)
 // Once things become stabilized enough, replace all the EVTLTRACE1 by EVTLTRACE
-#define EVTLTRACE1(...)  DPRINT1("EvtLib: " __VA_ARGS__)
+#define EVTLTRACE1(fmt, ...) DPRINT1("EvtLib: " fmt, ##__VA_ARGS__)
 
 
 /* GLOBALS *******************************************************************/
