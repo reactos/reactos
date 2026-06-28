@@ -21,11 +21,10 @@ $if (_WDMDDK_)
 
 #define PAUSE_PROCESSOR YieldProcessor();
 
-/* FIXME: Based on AMD64 but needed to compile apps */
-#define KERNEL_STACK_SIZE                   12288
-#define KERNEL_LARGE_STACK_SIZE             61440
+/* Verified against modern NT/arm64 */
+#define KERNEL_STACK_SIZE                   0x8000
+#define KERNEL_LARGE_STACK_SIZE             0x12000
 #define KERNEL_LARGE_STACK_COMMIT KERNEL_STACK_SIZE
-/* FIXME End */
 
 #define EXCEPTION_READ_FAULT    0
 #define EXCEPTION_WRITE_FAULT   1
