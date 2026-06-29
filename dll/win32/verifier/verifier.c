@@ -87,7 +87,7 @@ BOOL WINAPI DllMain(HANDLE hInstance, DWORD dwReason, LPVOID lpReserved)
 VOID NTAPI AVrfpDllLoadCallback(PWSTR DllName, PVOID DllBase, SIZE_T DllSize, PVOID Reserved)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry = (PLDR_DATA_TABLE_ENTRY)Reserved;
-    DbgPrint(PROVIDER_PREFIX ": %ws @ %p: ep: %p\n", DllName, DllBase, LdrEntry->EntryPoint);
+    DbgPrint(PROVIDER_PREFIX ": loading %ws @ %p: ep: %p\n", DllName, DllBase, LdrEntry->EntryPoint);
     /* TODO: Hook entrypoint */
 }
 

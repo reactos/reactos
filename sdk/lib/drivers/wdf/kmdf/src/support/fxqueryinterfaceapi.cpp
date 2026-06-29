@@ -26,6 +26,7 @@ Revision History:
 
 extern "C" {
 // #include "FxQueryInterfaceAPI.tmh"
+#define RtlSizeTToULong RtlULongPtrToULong
 }
 
 //
@@ -35,7 +36,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfDeviceAddQueryInterface)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

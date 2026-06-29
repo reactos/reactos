@@ -19,8 +19,8 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/AHK_Tests/)
     add_subdirectory(AHK_Tests)
 endif()
 
-## Extra files for Boot/Live/Hybrid CD. You need to put them under [boot|live|hybrid]cd_extras
-## in the same layout as you want them to be in the CD.
+## Extra files for the Boot/Live CD. You need to put them under "[boot|live]cd_extras"
+## using the same layout as you want them to be in the CD.
 ## If you change the content of any of the following folders later on,
 ## run "cmake ." before compiling.
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/bootcd_extras/)
@@ -33,12 +33,6 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/livecd_extras/)
     file(GLOB_RECURSE EXTRA_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/livecd_extras/ ${CMAKE_CURRENT_SOURCE_DIR}/livecd_extras/*)
     foreach(item ${EXTRA_FILES})
         add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/livecd_extras/${item} DESTINATION extras NO_CAB NAME_ON_CD ${item} FOR livecd)
-    endforeach(item)
-endif()
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hybridcd_extras/)
-    file(GLOB_RECURSE EXTRA_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/hybridcd_extras/ ${CMAKE_CURRENT_SOURCE_DIR}/hybridcd_extras/*)
-    foreach(item ${EXTRA_FILES})
-        add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/hybridcd_extras/${item} DESTINATION extras NO_CAB NAME_ON_CD ${item} FOR hybridcd)
     endforeach(item)
 endif()
 

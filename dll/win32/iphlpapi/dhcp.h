@@ -9,10 +9,9 @@
 #ifndef WINE_DHCP_H_
 #define WINE_DHCP_H_
 
-DWORD getDhcpInfoForAdapter(DWORD AdapterIndex,
-                            PBOOL DhcpEnabled,
-                            PDWORD DhcpServer,
-                            time_t *LeaseObtained,
-                            time_t *LeaseExpires);
+DWORD
+getDhcpInfoForAdapter(
+    DWORD AdapterIndex,
+    PIP_ADAPTER_INFO ptr);
 
 #endif /* ndef WINE_DHCP_H_ */

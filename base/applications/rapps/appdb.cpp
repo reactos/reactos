@@ -11,11 +11,60 @@
 #include "appdb.h"
 #include "configparser.h"
 #include "settings.h"
+#include "misc.h"
 
 
 static HKEY g_RootKeyEnum[3] = {HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, HKEY_LOCAL_MACHINE};
 static REGSAM g_RegSamEnum[3] = {0, KEY_WOW64_32KEY, KEY_WOW64_64KEY};
 #define UNINSTALL_SUBKEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
+#define MANIFEST_DOTEXT L".txt"
+
+static inline HKEY
+GetRootKeyInfo(UINT Index, REGSAM &RegSam)
+{
+    C_ASSERT(_countof(g_RootKeyEnum) == _countof(g_RegSamEnum));
+    if (Index < _countof(g_RootKeyEnum))
+    {
+        RegSam = g_RegSamEnum[Index];
+        return g_RootKeyEnum[Index];
+    }
+    return NULL;
+}
+
+class CEnumInstalledRootKey
+{
+    // HKCU + HKLM (Native) + HKLM (WoW64)
+    // Note that HKEY_CURRENT_USER\Software does not have a redirect
+    // https://learn.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys#redirected-shared-and-reflected-keys-under-wow64
+
+    UINT m_Count;
+    UINT m_Index = 0;
+
+public:
+    CEnumInstalledRootKey()
+    {
+        // We don't want to display duplicate entries on systems without WoW64 keys support.
+        // When ROS starts supporting the WOW REGSAM flags,
+        // this code can be changed back to IsSystem64Bit() ? 3 : 2.
+        m_Count = 2 + !IsSameRegKey(HKEY_LOCAL_MACHINE, UNINSTALL_SUBKEY, KEY_WOW64_64KEY,
+                                                        UNINSTALL_SUBKEY, KEY_WOW64_32KEY);
+    }
+
+    HKEY Get(REGSAM &RegSam)
+    {
+        return m_Index < m_Count ? GetRootKeyInfo(m_Index, RegSam) : NULL;
+    }
+
+    void Next()
+    {
+        m_Index++;
+    }
+
+    UINT GetKeyIndex() const
+    {
+        return m_Index;
+    }
+};
 
 static VOID
 ClearList(CAtlList<CAppInfo *> &list)
@@ -34,6 +83,14 @@ CAppDB::CAppDB(const CStringW &path) : m_BasePath(path)
     m_BasePath.Canonicalize();
 }
 
+CStringW
+CAppDB::GetDefaultPath()
+{
+    CStringW path;
+    GetStorageDirectory(path);
+    return path;
+}
+
 CAvailableApplicationInfo *
 CAppDB::FindAvailableByPackageName(const CStringW &name)
 {
@@ -46,6 +103,24 @@ CAppDB::FindAvailableByPackageName(const CStringW &name)
             return static_cast<CAvailableApplicationInfo *>(Info);
         }
     }
+    return NULL;
+}
+
+CAvailableApplicationInfo *
+CAppDB::CreateAvailableAppInstance(const CStringW &PkgName, PCWSTR DBPath)
+{
+    CAvailableApplicationInfo *pAppInfo;
+    CPathW AppsPath = DBPath ? CPathW(DBPath) : (CPathW(GetDefaultPath()) += RAPPS_DATABASE_SUBDIR);
+    CPathW ManifestPath = CPathW(AppsPath) += PkgName + MANIFEST_DOTEXT;
+    CConfigParser *Parser = new CConfigParser(ManifestPath);
+    int Cat;
+    if (!Parser->GetInt(DB_CATEGORY, Cat))
+        Cat = ENUM_INVALID;
+
+    pAppInfo = new CAvailableApplicationInfo(Parser, PkgName, static_cast<AppsCategories>(Cat), AppsPath);
+    if (pAppInfo->Valid())
+        return pAppInfo;
+    delete pAppInfo;
     return NULL;
 }
 
@@ -76,7 +151,7 @@ CAppDB::EnumerateFiles()
     CPathW AppsPath = m_BasePath;
     AppsPath += RAPPS_DATABASE_SUBDIR;
     CPathW WildcardPath = AppsPath;
-    WildcardPath += L"*.txt";
+    WildcardPath += L"*" MANIFEST_DOTEXT;
 
     WIN32_FIND_DATAW FindFileData;
     HANDLE hFind = FindFirstFileW(WildcardPath, &FindFileData);
@@ -91,24 +166,13 @@ CAppDB::EnumerateFiles()
         PathRemoveExtensionW(szPkgName.GetBuffer(MAX_PATH));
         szPkgName.ReleaseBuffer();
 
-        CAppInfo *Info = FindByPackageName(szPkgName);
+        CAppInfo *Info = FindAvailableByPackageName(szPkgName);
         ATLASSERT(Info == NULL);
         if (!Info)
         {
-            CConfigParser *Parser = new CConfigParser(CPathW(AppsPath) += FindFileData.cFileName);
-            int Cat;
-            if (!Parser->GetInt(DB_CATEGORY, Cat))
-                Cat = ENUM_INVALID;
-
-            Info = new CAvailableApplicationInfo(Parser, szPkgName, static_cast<AppsCategories>(Cat), AppsPath);
-            if (Info->Valid())
-            {
+            Info = CreateAvailableAppInstance(szPkgName, AppsPath);
+            if (Info)
                 m_Available.AddTail(Info);
-            }
-            else
-            {
-                delete Info;
-            }
         }
 
     } while (FindNextFileW(hFind, &FindFileData));
@@ -139,30 +203,6 @@ CAppDB::UpdateAvailable()
     DeleteFileW(CabFile);
 
     EnumerateFiles();
-}
-
-static inline HKEY
-GetRootKeyInfo(UINT Index, REGSAM &RegSam)
-{
-    C_ASSERT(_countof(g_RootKeyEnum) == _countof(g_RegSamEnum));
-    if (Index < _countof(g_RootKeyEnum))
-    {
-        RegSam = g_RegSamEnum[Index];
-        return g_RootKeyEnum[Index];
-    }
-    return NULL;
-}
-
-HKEY
-CAppDB::EnumInstalledRootKey(UINT Index, REGSAM &RegSam)
-{
-    // Loop for through all combinations.
-    // Note that HKEY_CURRENT_USER\Software does not have a redirect
-    // https://docs.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys#redirected-shared-and-reflected-keys-under-wow64
-    if (Index < (IsSystem64Bit() ? 3 : 2))
-        return GetRootKeyInfo(Index, RegSam);
-    else
-        return NULL;
 }
 
 CInstalledApplicationInfo *
@@ -200,7 +240,7 @@ CAppDB::EnumerateRegistry(CAtlList<CAppInfo *> *List, LPCWSTR SearchOnly)
     ATLASSERT(List || SearchOnly);
     REGSAM wowsam;
     HKEY hRootKey;
-    for (UINT rki = 0; (hRootKey = EnumInstalledRootKey(rki, wowsam)); ++rki)
+    for (CEnumInstalledRootKey RootEnum; (hRootKey = RootEnum.Get(wowsam)) != NULL; RootEnum.Next())
     {
         CRegKey hKey;
         if (hKey.Open(hRootKey, UNINSTALL_SUBKEY, KEY_READ | wowsam) != ERROR_SUCCESS)
@@ -218,7 +258,7 @@ CAppDB::EnumerateRegistry(CAtlList<CAppInfo *> *List, LPCWSTR SearchOnly)
             if (List || !StrCmpIW(SearchOnly, szKeyName))
             {
                 CInstalledApplicationInfo *Info;
-                Info = CreateInstalledAppByRegistryKey(szKeyName, hKey, rki);
+                Info = CreateInstalledAppByRegistryKey(szKeyName, hKey, RootEnum.GetKeyIndex());
                 if (Info)
                 {
                     if (List)
@@ -303,7 +343,7 @@ CAppDB::RemoveCached()
     DeleteWithWildcard(ScrnshotFolder, L"*.tmp");
 
     // Delete data base files (*.txt)
-    DeleteWithWildcard(AppsPath, L"*.txt");
+    DeleteWithWildcard(AppsPath, L"*" MANIFEST_DOTEXT);
 
     RemoveDirectoryW(IconPath);
     RemoveDirectoryW(ScrnshotFolder);

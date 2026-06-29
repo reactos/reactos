@@ -33,20 +33,20 @@
     ((fn)((hwnd), WM_NULL, 0, 0L), 0L)
 #endif
 
-/* INT Cls_OnSetHotKey(HWND hwnd, INT nCode, UINT nOptions) */
+/* INT Cls_OnSetHotKey(HWND hwnd, WORD wVkCode, WORD wModifiers) */
 #ifndef HANDLE_WM_SETHOTKEY
 #define HANDLE_WM_SETHOTKEY(hwnd, wParam, lParam, fn) \
-    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)LOWORD(wParam), (UINT)HIWORD(wParam))
-#define FORWARD_WM_SETHOTKEY(hwnd, nCode, nOptions, fn) \
-    (INT)(fn)((hwnd), WM_SETHOTKEY, MAKEWPARAM((nCode), (nOptions)))
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (WORD)LOBYTE(LOWORD(wParam)), (WORD)HIBYTE(LOWORD(wParam)))
+#define FORWARD_WM_SETHOTKEY(hwnd, wVkCode, wModifiers, fn) \
+    (INT)(fn)((hwnd), WM_SETHOTKEY, (WPARAM)MAKEWORD((wVkCode), (wModifiers)), 0L)
 #endif
 
 /* INT Cls_OnGetHotKey(HWND hwnd) */
 #ifndef HANDLE_WM_GETHOTKEY
 #define HANDLE_WM_GETHOTKEY(hwnd, wParam, lParam, fn) \
-    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+    (LRESULT)(UINT_PTR)(DWORD)(fn)((hwnd))
 #define FORWARD_WM_GETHOTKEY(hwnd, fn) \
-    (INT)(fn)((hwnd), WM_GETHOTKEY, 0, 0L)
+    (DWORD)(fn)((hwnd), WM_GETHOTKEY, 0, 0L)
 #endif
 
 /* void Cls_OnPaintIcon(HWND hwnd) */

@@ -64,6 +64,9 @@ END
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
 #endif
+#ifdef LANGUAGE_HR_HR
+    #include "lang/hr-HR.rc"
+#endif
 #ifdef LANGUAGE_HI_IN
     #include "lang/hi-IN.rc"
 #endif
@@ -123,6 +126,9 @@ END
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_VI_VN
+    #include "lang/vi-VN.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"

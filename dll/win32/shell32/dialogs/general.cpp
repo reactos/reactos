@@ -23,8 +23,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 
-static const LPCWSTR s_pszExplorerKey =
-    L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer";
+static const LPCWSTR s_pszExplorerKey = REGSTR_PATH_EXPLORER;
+
+enum { UNDERLINE_ON, UNDERLINE_OFF, UNDERLINE_HOVER, UNDERLINE_IE };
 
 /////////////////////////////////////////////////////////////////////////////
 // Shell settings
@@ -60,10 +61,10 @@ SHELL32_WriteRegShellState(PREGSHELLSTATE prss)
 // bDoubleClick is FALSE if "Single-click to open an item (point to select)".
 //////////////////////////////////////////////////////////////////////////////
 // API Monitor:
-// SHLWAPI.dll	RegOpenKeyExW ( 0x000000c8, NULL, 0, MAXIMUM_ALLOWED, 0x00def234 )	ERROR_SUCCESS		0.0000243
-// SHLWAPI.dll	RegSetValueExW ( 0x000003e8, "ShellState", 0, REG_BINARY, 0x000c2050, 36 )	ERROR_SUCCESS		0.0001028
-// SHLWAPI.dll	RegCloseKey ( 0x000003e8 )	ERROR_SUCCESS		0.0000081
-// Explorer.EXE	SHSettingsChanged ( 0, "ShellState" )			0.0000131
+// SHLWAPI.dll	RegOpenKeyExW ( 0x000000c8, NULL, 0, MAXIMUM_ALLOWED, 0x00def234 )	ERROR_SUCCESS
+// SHLWAPI.dll	RegSetValueExW ( 0x000003e8, "ShellState", 0, REG_BINARY, 0x000c2050, 36 )	ERROR_SUCCESS
+// SHLWAPI.dll	RegCloseKey ( 0x000003e8 )	ERROR_SUCCESS
+// Explorer.EXE	SHSettingsChanged ( 0, "ShellState" ) (WM_SETTINGCHANGE handling)
 static BOOL
 IntSetShellStateSettings(BOOL bDoubleClick, BOOL bUseCommonTasks)
 {
@@ -71,16 +72,9 @@ IntSetShellStateSettings(BOOL bDoubleClick, BOOL bUseCommonTasks)
     shellstate.fDoubleClickInWebView = !!bDoubleClick;
     shellstate.fWebView = !!bUseCommonTasks;
     SHGetSetSettings(&shellstate, SSF_DOUBLECLICKINWEBVIEW | SSF_WEBVIEW, TRUE);
-
-    SHSettingsChanged(0, L"ShellState");
     return TRUE;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-// API Monitor:
-// SHLWAPI.dll	RegOpenKeyExW ( 0x000000c8, NULL, 0, MAXIMUM_ALLOWED, 0x0007e484 )	ERROR_SUCCESS		0.0000388
-// SHLWAPI.dll	RegQueryValueExW ( 0x000005a8, "ShellState", NULL, 0x0007e474, 0x000c2050, 0x0007e4fc )	ERROR_SUCCESS		0.0000271
-// SHLWAPI.dll	RegCloseKey ( 0x000005a8 )	ERROR_SUCCESS		0.0000112
 EXTERN_C BOOL
 SHELL32_ReadRegShellState(PREGSHELLSTATE prss)
 {
@@ -90,32 +84,61 @@ SHELL32_ReadRegShellState(PREGSHELLSTATE prss)
     return err == ERROR_SUCCESS && prss->dwSize >= REGSHELLSTATE_SIZE;
 }
 
-// bIconUnderline is TRUE if "Underline icon titles only when I point at them".
-// bIconUnderline is FALSE if "Underline icon titles consistent with my browser".
+// bUnderlineHover is TRUE if "Underline icon titles only when I point at them".
+// bUnderlineHover is FALSE if "Underline icon titles consistent with my browser".
 //////////////////////////////////////////////////////////////////////////////
 // API Monitor:
-// SHELL32.dll	SHRegGetUSValueW ( "Software\Microsoft\Windows\CurrentVersion\Explorer", "IconUnderline", NULL, 0x00d2f324, 0x00d2f328, FALSE, 0x00d2f32c, 4 )	ERROR_SUCCESS		0.0002484
-// SHELL32.dll	IsDlgButtonChecked ( 0x0005009e, 30104 )	BST_CHECKED		0.0000212
-// SHELL32.dll	SHRegSetUSValueW ( "Software\Microsoft\Windows\CurrentVersion\Explorer", "IconUnderline", 0, 0x00d2f314, 4, 6 )	ERROR_SUCCESS		0.0008300
-// Explorer.EXE	SHSettingsChanged ( 0, "Software\Microsoft\Windows\CurrentVersion\Explorer\IconUnderline" )			0.0000092
-static BOOL IntSetUnderlineState(BOOL bIconUnderline)
+// SHELL32.dll	SHRegGetUSValueW ( "Software\Microsoft\Windows\CurrentVersion\Explorer", "IconUnderline", NULL, 0x00d2f324, 0x00d2f328, FALSE, 0x00d2f32c, 4 )	ERROR_SUCCESS
+// SHELL32.dll	IsDlgButtonChecked ( 0x0005009e, 30104 )	BST_CHECKED
+// SHELL32.dll	SHRegSetUSValueW ( "Software\Microsoft\Windows\CurrentVersion\Explorer", "IconUnderline", 0, 0x00d2f314, 4, 6 )	ERROR_SUCCESS
+// Explorer.EXE	SHSettingsChanged ( 0, "Software\Microsoft\Windows\CurrentVersion\Explorer\IconUnderline" ) (WM_SETTINGCHANGE handling)
+static BOOL IntSetUnderlineState(BOOL bUnderlineHover)
 {
     LSTATUS Status;
-    DWORD dwValue = (bIconUnderline ? 3 : 2), dwSize = sizeof(DWORD);
+    DWORD dwValue = bUnderlineHover ? UNDERLINE_HOVER : UNDERLINE_IE;
     Status = SHRegSetUSValue(s_pszExplorerKey, L"IconUnderline", REG_NONE,
-                             &dwValue, dwSize, SHREGSET_FORCE_HKCU | SHREGSET_HKLM);
+                             &dwValue, sizeof(dwValue), SHREGSET_FORCE_HKCU | SHREGSET_HKLM);
     if (Status != ERROR_SUCCESS)
         return FALSE;
 
-    SHSettingsChanged(0, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\IconUnderline");
+    SHSendMessageBroadcastW(WM_SETTINGCHANGE, 0, (LPARAM)(REGSTR_PATH_EXPLORER L"\\IconUnderline"));
     return TRUE;
 }
 
-static BOOL IntGetUnderlineState(VOID)
+static UINT IntGetRawIconUnderlineValue()
 {
-    DWORD dwValue, dwDefault = 2, dwSize = sizeof(DWORD);
-    SHRegGetUSValue(s_pszExplorerKey, L"IconUnderline", NULL, &dwValue, &dwSize, FALSE, &dwDefault, sizeof(DWORD));
-    return dwValue == 3;
+    DWORD dwValue, dwDefault = UNDERLINE_ON;
+    DWORD dwSize = sizeof(dwValue);
+    SHRegGetUSValue(s_pszExplorerKey, L"IconUnderline", NULL, &dwValue, &dwSize, FALSE, &dwDefault, sizeof(dwDefault));
+    return dwValue;
+}
+
+static UINT SHELL_GetIconUnderlineMode()
+{
+    UINT mode = IntGetRawIconUnderlineValue();
+    if (mode < UNDERLINE_IE)
+        return mode;
+
+    WCHAR buf[sizeof("hoverX")];
+    *buf = UNICODE_NULL;
+    DWORD cb = sizeof(buf);
+    SHRegGetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main",
+                     L"Anchor Underline", NULL, buf, &cb, FALSE, buf, cb);
+    if (!lstrcmpiW(buf, L"no"))
+        return UNDERLINE_OFF;
+    if (!lstrcmpiW(buf, L"hover"))
+        return UNDERLINE_HOVER;
+    return UNDERLINE_ON;
+}
+
+UINT SHELL_GetIconUnderlineFlags()
+{
+    UINT mode = SHELL_GetIconUnderlineMode();
+    if (mode == UNDERLINE_HOVER)
+        return LVS_EX_UNDERLINEHOT;
+    if (mode == UNDERLINE_ON)
+        return LVS_EX_UNDERLINEHOT | LVS_EX_UNDERLINECOLD;
+    return 0;
 }
 
 // bNewWindowMode is TRUE if "Open each folder in its own window".
@@ -238,7 +261,6 @@ GeneralDlg_UpdateIcons(HWND hDlg, UINT nCtrlID, PGENERAL_DIALOG pGeneral)
 
     if (nCtrlID == IDC_FOLDER_OPTIONS_DOUBLECLICK)
     {
-        CheckRadioButton(hDlg, IDC_FOLDER_OPTIONS_ULBROWSER, IDC_FOLDER_OPTIONS_ULPOINT, IDC_FOLDER_OPTIONS_ULBROWSER);
         EnableWindow(GetDlgItem(hDlg, IDC_FOLDER_OPTIONS_ULBROWSER), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDC_FOLDER_OPTIONS_ULPOINT), FALSE);
     }
@@ -246,9 +268,16 @@ GeneralDlg_UpdateIcons(HWND hDlg, UINT nCtrlID, PGENERAL_DIALOG pGeneral)
 
 static void
 GeneralDlg_StoreToUI(HWND hwndDlg, BOOL bDoubleClick, BOOL bUseCommonTasks,
-                     BOOL bUnderline, BOOL bNewWindowMode, PGENERAL_DIALOG pGeneral)
+                     BOOL bUnderlineHover, BOOL bNewWindowMode, PGENERAL_DIALOG pGeneral)
 {
-    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDER_OPTIONS_COMMONTASKS), bUseCommonTasks); // FIXME: ROS DefView does not support WebView nor the tasks pane
+    if (SHRestricted(REST_CLASSICSHELL))
+    {
+        EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDER_OPTIONS_SINGLECLICK), FALSE);
+        bDoubleClick = TRUE;
+        bUseCommonTasks = FALSE;
+    }
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDER_OPTIONS_COMMONTASKS), bUseCommonTasks); // TODO: ROS DefView does not support WebView nor the tasks pane
 
     if (bUseCommonTasks)
         CheckRadioButton(hwndDlg, IDC_FOLDER_OPTIONS_COMMONTASKS, IDC_FOLDER_OPTIONS_CLASSICFOLDERS, IDC_FOLDER_OPTIONS_COMMONTASKS);
@@ -265,21 +294,12 @@ GeneralDlg_StoreToUI(HWND hwndDlg, BOOL bDoubleClick, BOOL bUseCommonTasks,
     else
         CheckRadioButton(hwndDlg, IDC_FOLDER_OPTIONS_SAMEWINDOW, IDC_FOLDER_OPTIONS_OWNWINDOW, IDC_FOLDER_OPTIONS_SAMEWINDOW);
 
-    if (!bDoubleClick)
-    {
-        EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDER_OPTIONS_ULBROWSER), TRUE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDER_OPTIONS_ULPOINT), TRUE);
-        if (bUnderline)
-            CheckRadioButton(hwndDlg, IDC_FOLDER_OPTIONS_ULBROWSER, IDC_FOLDER_OPTIONS_ULPOINT, IDC_FOLDER_OPTIONS_ULPOINT);
-        else
-            CheckRadioButton(hwndDlg, IDC_FOLDER_OPTIONS_ULBROWSER, IDC_FOLDER_OPTIONS_ULPOINT, IDC_FOLDER_OPTIONS_ULBROWSER);
-    }
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDER_OPTIONS_ULBROWSER), !bDoubleClick);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDER_OPTIONS_ULPOINT), !bDoubleClick);
+    if (bUnderlineHover)
+        CheckRadioButton(hwndDlg, IDC_FOLDER_OPTIONS_ULBROWSER, IDC_FOLDER_OPTIONS_ULPOINT, IDC_FOLDER_OPTIONS_ULPOINT);
     else
-    {
-        EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDER_OPTIONS_ULBROWSER), FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDER_OPTIONS_ULPOINT), FALSE);
         CheckRadioButton(hwndDlg, IDC_FOLDER_OPTIONS_ULBROWSER, IDC_FOLDER_OPTIONS_ULPOINT, IDC_FOLDER_OPTIONS_ULBROWSER);
-    }
 }
 
 static BOOL
@@ -289,10 +309,10 @@ GeneralDlg_OnInitDialog(HWND hwndDlg, PGENERAL_DIALOG pGeneral)
     SHGetSetSettings(&ss, SSF_DOUBLECLICKINWEBVIEW | SSF_WEBVIEW, FALSE);
     BOOL bDoubleClick = !!ss.fDoubleClickInWebView;
     BOOL bUseCommonTasks = !!ss.fWebView;
-    BOOL bUnderline = IntGetUnderlineState();
+    BOOL bUnderlineHover = IntGetRawIconUnderlineValue() == UNDERLINE_HOVER;
     BOOL bNewWindowMode = IntGetNewWindowMode();
 
-    GeneralDlg_StoreToUI(hwndDlg, bDoubleClick, bUseCommonTasks, bUnderline, bNewWindowMode, pGeneral);
+    GeneralDlg_StoreToUI(hwndDlg, bDoubleClick, bUseCommonTasks, bUnderlineHover, bNewWindowMode, pGeneral);
     GeneralDlg_UpdateIcons(hwndDlg, 0, pGeneral);
 
     return TRUE;
@@ -304,10 +324,10 @@ GeneralDlg_OnRestoreDefaults(HWND hwndDlg, PGENERAL_DIALOG pGeneral)
     // default values
     BOOL bDoubleClick = TRUE;
     BOOL bUseCommonTasks = TRUE;
-    BOOL bUnderline = FALSE;
+    BOOL bUnderlineHover = FALSE;
     BOOL bNewWindowMode = (_WIN32_WINNT < _WIN32_WINNT_WIN2K);
 
-    GeneralDlg_StoreToUI(hwndDlg, bDoubleClick, bUseCommonTasks, bUnderline, bNewWindowMode, pGeneral);
+    GeneralDlg_StoreToUI(hwndDlg, bDoubleClick, bUseCommonTasks, bUnderlineHover, bNewWindowMode, pGeneral);
     GeneralDlg_UpdateIcons(hwndDlg, 0, pGeneral);
 }
 
@@ -316,10 +336,10 @@ GeneralDlg_OnApply(HWND hwndDlg, PGENERAL_DIALOG pGeneral)
 {
     BOOL bDoubleClick = !(IsDlgButtonChecked(hwndDlg, IDC_FOLDER_OPTIONS_SINGLECLICK) == BST_CHECKED);
     BOOL bUseCommonTasks = (IsDlgButtonChecked(hwndDlg, IDC_FOLDER_OPTIONS_COMMONTASKS) == BST_CHECKED);
-    BOOL bUnderline = (IsDlgButtonChecked(hwndDlg, IDC_FOLDER_OPTIONS_ULPOINT) == BST_CHECKED);
+    BOOL bUnderlineHover = (IsDlgButtonChecked(hwndDlg, IDC_FOLDER_OPTIONS_ULPOINT) == BST_CHECKED);
     BOOL bNewWindowMode = !(IsDlgButtonChecked(hwndDlg, IDC_FOLDER_OPTIONS_SAMEWINDOW) == BST_CHECKED);
 
-    IntSetUnderlineState(bUnderline);
+    IntSetUnderlineState(bUnderlineHover);
     BOOL updateCabinets = IntSetNewWindowMode(bNewWindowMode) == S_OK;
     IntSetShellStateSettings(bDoubleClick, bUseCommonTasks);
     if (updateCabinets)

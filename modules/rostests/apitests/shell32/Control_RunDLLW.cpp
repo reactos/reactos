@@ -150,7 +150,7 @@ START_TEST(Control_RunDLLW)
 
     for (UINT i = 0; i < _countof(tests); i++)
     {
-        swprintf(buffer, L"%s%s", finename, tests[i].cmd);
+        _swprintf(buffer, L"%s%s", finename, tests[i].cmd);
 
         g_iClk = MSG_NOT_CALLED;
         g_iParams = MSG_NOT_CALLED;

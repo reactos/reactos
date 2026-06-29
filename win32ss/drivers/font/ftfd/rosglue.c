@@ -9,24 +9,29 @@
 
 #include "ftfd.h"
 
-#define NDEBUG
-#include <debug.h>
-
 #define TAG_FREETYPE  'PYTF'
 
-/*
- * First some generic routines
- */
-
-ULONG
-DbgPrint(IN PCCH Format, IN ...)
+/* print a message */
+void
+FT_Message(const char *format, ...)
 {
-    va_list args;
+    va_list va;
 
-    va_start(args, Format);
-    EngDebugPrint("ft2: ", (PCHAR)Format, args);
-    va_end(args);
-    return 0;
+    va_start(va, format);
+    EngDebugPrint("FreeType: ", (PCHAR)format, va);
+    va_end(va);
+}
+
+/* print a message and exit */
+void
+FT_Panic(const char *format, ...)
+{
+    va_list va;
+
+    va_start(va, format);
+    EngDebugPrint("FreeType: ", (PCHAR)format, va);
+    EngBugCheckEx(0xDEADBEEF, 0, 0, 0, 0);
+    va_end(va);
 }
 
 /*
@@ -36,42 +41,53 @@ DbgPrint(IN PCCH Format, IN ...)
  * buffer (need to copy the old contents to the new buffer). So, allocate
  * extra space for a size_t, store the allocated size in there and return
  * the address just past it as the allocated buffer.
+ * On win64 we need to align the allocation to 16 bytes, otherwise 8 bytes.
  */
+typedef struct _MALLOC_HEADER
+{
+    SIZE_T Size;
+    SIZE_T Alignment;
+} MALLOC_HEADER, * PMALLOC_HEADER;
 
 void *
 malloc(size_t Size)
 {
-    void *Object;
+    PMALLOC_HEADER Header;
 
-    Object = EngAllocMem(0, sizeof(size_t) + Size, TAG_FREETYPE);
-    if (Object != NULL)
+    Header = EngAllocMem(0, sizeof(MALLOC_HEADER) + Size, TAG_FREETYPE);
+    if (Header == NULL)
     {
-        *((size_t *)Object) = Size;
-        Object = (void *)((size_t *)Object + 1);
+        return NULL;
     }
 
-    return Object;
+    Header->Size = Size;
+    Header->Alignment = -1;
+    return (Header + 1);
 }
 
 void *
 realloc(void *Object, size_t Size)
 {
-    void *NewObject;
+    PVOID NewObject;
+    PMALLOC_HEADER OldHeader;
     size_t CopySize;
 
-    NewObject = EngAllocMem(0, sizeof(size_t) + Size, TAG_FREETYPE);
-    if (NewObject != NULL)
+    NewObject = malloc(Size);
+    if (NewObject == NULL)
     {
-        *((size_t *)NewObject) = Size;
-        NewObject = (void *)((size_t *)NewObject + 1);
-        CopySize = *((size_t *)Object - 1);
-        if (Size < CopySize)
-        {
-            CopySize = Size;
-        }
-        memcpy(NewObject, Object, CopySize);
-        EngFreeMem((size_t *)Object - 1);
+        return NULL;
     }
+
+    if (Object == NULL)
+    {
+        return NewObject;
+    }
+
+    OldHeader = (PMALLOC_HEADER)Object - 1;
+    CopySize = min(OldHeader->Size, Size);
+    memcpy(NewObject, Object, CopySize);
+
+    free(Object);
 
     return NewObject;
 }
@@ -81,7 +97,7 @@ free(void *Object)
 {
     if (Object != NULL)
     {
-        EngFreeMem((size_t *)Object - 1);
+        EngFreeMem((PMALLOC_HEADER)Object - 1);
     }
 }
 
@@ -96,34 +112,34 @@ free(void *Object)
 FILE *
 fopen(const char *FileName, const char *Mode)
 {
-    DPRINT1("Freetype tries to open file %s\n", FileName);
+    FT_Message("Freetype tries to open file %s\n", FileName);
     return NULL;
 }
 
 int
 fseek(FILE *Stream, long Offset, int Origin)
 {
-    DPRINT1("Doubleplus ungood: freetype shouldn't fseek!\n");
+    FT_Message("Doubleplus ungood: freetype shouldn't fseek!\n");
     return -1;
 }
 
 long
 ftell(FILE *Stream)
 {
-    DPRINT1("Doubleplus ungood: freetype shouldn't ftell!\n");
+    FT_Message("Doubleplus ungood: freetype shouldn't ftell!\n");
     return -1;
 }
 
 size_t
 fread(void *Buffer, size_t Size, size_t Count, FILE *Stream)
 {
-    DPRINT1("Doubleplus ungood: freetype shouldn't fread!\n");
+    FT_Message("Doubleplus ungood: freetype shouldn't fread!\n");
     return 0;
 }
 
 int
 fclose(FILE *Stream)
 {
-    DPRINT1("Doubleplus ungood: freetype shouldn't fclose!\n");
+    FT_Message("Doubleplus ungood: freetype shouldn't fclose!\n");
     return EOF;
 }

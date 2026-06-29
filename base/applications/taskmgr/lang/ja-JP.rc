@@ -46,17 +46,17 @@ BEGIN
         MENUITEM "重ねて表示(&C)", ID_WINDOWS_CASCADE
         MENUITEM "手前に表示(&B)", ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "Sh&ut Down"
+    POPUP "シャットダウン(&U)"
     BEGIN
-        MENUITEM "Stand &By", ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate", ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off", ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart", ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s", ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect", ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "スタンバイ(&B)", ID_SHUTDOWN_STANDBY
+        MENUITEM "休止(&H)", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "電源を切る(&U)", ID_SHUTDOWN_POWEROFF
+        MENUITEM "再起動(&R)", ID_SHUTDOWN_REBOOT
+        MENUITEM "%s のログオフ(&L)", ID_SHUTDOWN_LOGOFF
+        MENUITEM "ユーザーの切り替え(&S)\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "コンピューターのロック(&K)\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "接続を切る(&D)", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "コンピュータを切り離す(&E)", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "ヘルプ(&H)"
     BEGIN
@@ -136,8 +136,8 @@ BEGIN
         END
         MENUITEM "関係の設定(&A)...", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
-        MENUITEM "P&roperties", ID_PROCESS_PAGE_PROPERTIES
-        MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
+        MENUITEM "プロパティ(&R)", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "ファイルの場所を開く(&O)", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 
@@ -305,7 +305,7 @@ BEGIN
     AUTOCHECKBOX "I/O 書き込みバイト数", IDC_IOWRITEBYTES, 107, 127, 65, 10
     AUTOCHECKBOX "I/O その他", IDC_IOOTHER, 107, 138, 46, 10
     AUTOCHECKBOX "I/O その他のバイト数", IDC_IOOTHERBYTES, 107, 149, 65, 10
-    AUTOCHECKBOX "Command &Line", IDC_COMMANDLINE, 107, 160, 65, 10
+    AUTOCHECKBOX "コマンド ライン(&L)", IDC_COMMANDLINE, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -314,7 +314,7 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "タスク マネージャ"
     IDC_TASKMGR "タスク マネージャ"
-    IDS_IDLE_PROCESS "System Idle Process"
+    IDS_IDLE_PROCESS "システム アイドル プロセス"
 END
 
 STRINGTABLE
@@ -367,8 +367,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "プロセスを通常優先度クラスに設定します"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "プロセスを通常以下の優先度クラスに設定します"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "プロセスを低優先度クラスに設定します"
-    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
-    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
+    ID_PROCESS_PAGE_PROPERTIES "プロセス ファイルのプロパティを表示します"
+    ID_PROCESS_PAGE_OPENFILELOCATION "プロセス ファイルの場所を開きます"
 END
 
 STRINGTABLE
@@ -403,7 +403,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "I/O 読み取りバイト数"
     IDS_TAB_IOWRITESBYTES "I/O 書き込みバイト数"
     IDS_TAB_IOOTHERBYTES "I/O その他のバイト数"
-    IDS_TAB_COMMANDLINE "Command Line"
+    IDS_TAB_COMMANDLINE "コマンド ライン"
     IDS_MENU_SELECTCOLUMNS "列の選択(&S)..."
     IDS_MENU_16BITTASK "16 ビット タスクの表示(&S)"
     IDS_MENU_WINDOWS "ウィンドウ(&W)"

@@ -10,7 +10,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "列印目前主機的名稱。\n\nhostname"
-    IDS_NOSET "不支援 hostname -s。"
-    IDS_ERROR "Win32 錯誤"
+    IDS_USAGE "\n列印目前主機的名稱。\n\nhostname\n"
+    IDS_NOSET "sethostname: Open the ""Computer Name"" tab in the ""System"" Control Panel applet\nto change the host name.\n不支援 hostname -s。\n"
+    IDS_ERROR "錯誤： "
 END

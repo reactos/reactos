@@ -72,7 +72,6 @@ void Test___badioinfo(void)
 {
     typedef struct _ioinfo ioinfo;
     _CRTIMP extern ioinfo* __badioinfo[];
-    ok(__badioinfo != NULL, "__badioinfo is NULL\n");
     ok(__badioinfo[0] != NULL, "__badioinfo is NULL\n");
 }
 
@@ -94,7 +93,7 @@ void Test___lc_codepage(void)
     ok_int(__lc_codepage, 0);
     ok_int(___lc_codepage_func(), 0);
     __lc_codepage++;
-    todo_ros ok_int(___lc_codepage_func(), 0);
+    ok_int(___lc_codepage_func(), 0);
     __lc_codepage--;
 }
 
@@ -117,7 +116,7 @@ void Test___lc_handle(void)
     _CRTIMP int* ___lc_handle_func();
     ok_int(*___lc_handle_func(), 0);
     __lc_handle++;
-    todo_ros ok_int(*___lc_handle_func(), 0);
+    ok_int(*___lc_handle_func(), 0);
     __lc_handle--;
 }
 
@@ -202,7 +201,7 @@ void Test___wargv(void)
 void Test___winitenv(void)
 {
     _CRTIMP extern wchar_t** __winitenv;
-    todo_ros ok(__winitenv == NULL, "__winitenv is not NULL\n");
+    ok(__winitenv == NULL, "__winitenv is not NULL\n");
 #ifdef _M_IX86
     _CRTIMP wchar_t*** __p___winitenv(void);
     ok_ptr(__p___winitenv(), &__winitenv);
@@ -232,7 +231,15 @@ void Test__aexit_rtn(void)
 {
     typedef void (*_exit_t)(int exitcode);
     _CRTIMP extern _exit_t _aexit_rtn;
-    ok_ptr(_aexit_rtn, _exit);
+    // On Vista and Win 7 the pointer is encoded
+    if ((GetNTVersion() >= 0x600) && (GetNTVersion() <= 0x601))
+    {
+        ok_ptr(_aexit_rtn, EncodePointer(_exit));
+    }
+    else
+    {
+        ok_ptr(_aexit_rtn, _exit);
+    }
 }
 
 void Test__commode(void)
@@ -545,7 +552,7 @@ void Test__wcmdln(void)
 void Test__wenviron(void)
 {
     void* p = &_wenviron;
-    todo_ros ok(_wenviron == NULL, "_wenviron is not NULL\n");
+    ok(_wenviron == NULL, "_wenviron is not NULL\n");
 
     #undef _wenviron
     _CRTIMP extern wchar_t** _wenviron;
@@ -615,7 +622,7 @@ void Test__winver(void)
 void Test__wpgmptr(void)
 {
     void* p = _wpgmptr;
-    ok_ptr(_wpgmptr, NULL);
+    todo_ros ok_ptr(_wpgmptr, NULL);
 
     #undef _wpgmptr
     ok_ptr(_wpgmptr, p);

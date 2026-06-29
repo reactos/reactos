@@ -30,6 +30,10 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(cmipci PRIVATE -Wno-write-strings -Wno-switch)
 endif()
 
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(cmipci PRIVATE -Wno-enum-constexpr-conversion)
+endif()
+
 add_pch(cmipci precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET cmipci DESTINATION reactos/system32/drivers FOR all)
 

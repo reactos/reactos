@@ -54,6 +54,9 @@ IDI_DOC                   ICON      "res/doc.ico"
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_NO_NO
     #include "lang/no-NO.rc"
 #endif

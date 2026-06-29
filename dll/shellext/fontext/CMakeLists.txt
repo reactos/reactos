@@ -7,16 +7,13 @@ spec2def(fontext.dll fontext.spec)
 list(APPEND SOURCE
     CDataObject.cpp
     CEnumFonts.cpp
+    CFontBackgroundMenu.cpp
     CFontCache.cpp
-    CFontCache.hpp
     CFontExt.cpp
-    CFontExt.hpp
-    CFontMenu.cpp
+    CFontFolderViewCB.cpp
     fontext.cpp
     fontpidl.cpp
-    fontpidl.hpp
-    precomp.h
-    resource.h)
+    precomp.h)
 
 add_library(fontext MODULE
     ${SOURCE}

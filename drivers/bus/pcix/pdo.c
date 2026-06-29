@@ -543,7 +543,7 @@ PciPdoCreate(IN PPCI_FDO_EXTENSION DeviceExtension,
     SequenceNumber = InterlockedIncrement(&PciPdoSequenceNumber);
 
     /* Create the standard PCI device name for a PDO */
-    swprintf(DeviceName, L"\\Device\\NTPNP_PCI%04d", SequenceNumber);
+    _swprintf(DeviceName, L"\\Device\\NTPNP_PCI%04d", SequenceNumber);
     RtlInitUnicodeString(&DeviceString, DeviceName);
 
     /* Create the actual device now */
@@ -570,7 +570,7 @@ PciPdoCreate(IN PPCI_FDO_EXTENSION DeviceExtension,
     PdoExtension->IrpDispatchTable = &PciPdoDispatchTable;
     PdoExtension->PhysicalDeviceObject = DeviceObject;
     PdoExtension->Slot = Slot;
-    PdoExtension->PowerState.CurrentSystemState = PowerDeviceD0;
+    PdoExtension->PowerState.CurrentSystemState = PowerSystemWorking;
     PdoExtension->PowerState.CurrentDeviceState = PowerDeviceD0;
     PdoExtension->ParentFdoExtension = DeviceExtension;
 

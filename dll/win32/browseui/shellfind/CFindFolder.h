@@ -16,6 +16,7 @@ class CFindFolder :
         public IShellFolder2,
         public IPersistFolder2,
         public IShellFolderViewCB,
+        public IItemNameLimits,
         public IConnectionPointContainerImpl<CFindFolder>,
         public IConnectionPointImpl<CFindFolder, &DIID_DSearchCommandEvents>
 {
@@ -62,13 +63,22 @@ class CFindFolder :
     //// *** IShellFolderViewCB methods ***
     STDMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+    //// *** IItemNameLimits methods ***
+    STDMETHOD(GetMaxLength)(LPCWSTR pszName, int *piMaxNameLen) override;
+    STDMETHOD(GetValidCharacters)(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars) override;
+
 private:
     LPITEMIDLIST m_pidl;
-    CComPtr<IShellFolder2> m_pisfInner;
+    CComPtr<IShellFolder2> m_pisfInner, m_pSfDesktop;
     CComPtr<IShellFolderView> m_shellFolderView;
     CComPtr<IShellBrowser> m_shellBrowser;
     HANDLE m_hStopEvent;
 
+    HRESULT GetFSFolderAndChild(LPCITEMIDLIST pidl, IShellFolder **ppSF, PCUITEMID_CHILD *ppidlLast = NULL);
+    HRESULT GetFSFolder2AndChild(LPCITEMIDLIST pidl, IShellFolder2 **ppSF, PCUITEMID_CHILD *ppidlLast = NULL);
+    void FreePidlArray(HDPA hDpa);
+    HDPA CreateAbsolutePidlArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl);
+    static int CALLBACK SortItemsForDataObject(void *p1, void *p2, LPARAM lparam);
     void NotifyConnections(DISPID id);
     static DWORD WINAPI SearchThreadProc(LPVOID lpParameter);
 
@@ -116,6 +126,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IShellFolder2, IShellFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolder, IShellFolder)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderViewCB, IShellFolderViewCB)
+        COM_INTERFACE_ENTRY_IID(IID_IItemNameLimits, IItemNameLimits)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)

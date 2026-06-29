@@ -20,9 +20,6 @@
 
 #include "resource.h"
 
-#define NDEBUG
-#include <debug.h>
-
 #define MAX_PASSWORD_LENGTH 64
 
 static
@@ -256,10 +253,6 @@ wmain(
         dwLogonFlags  |= LOGON_NETCREDENTIALS_ONLY;
         dwLogonFlags  &= ~LOGON_WITH_PROFILE;
     }
-
-    DPRINT("User: %S\n", pszUserName);
-    DPRINT("Domain: %S\n", pszDomain);
-    DPRINT("CommandLine: %S\n", pszCommandLine);
 
     if (pszDomain == NULL)
     {

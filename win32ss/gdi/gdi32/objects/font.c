@@ -1,16 +1,19 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            win32ss/gdi/gdi32/objects/font.c
- * PURPOSE:
- * PROGRAMMER:
- *
+ * PROJECT:     ReactOS GDI32
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Font manipulation API
+ * COPYRIGHT:   Copyright 2019 James Tabor
+ *              Copyright 2019 Pierre Schweitzer (heis_spiter@hotmail.com)
+ *              Copyright 2019-2021 Hermes Belusca-Maito (hermes.belusca-maito@reactos.org)
+ *              Copyright 2018 Baruch Rutman (peterooch@gmail.com)
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <precomp.h>
 
 #include <math.h>
 #include <strsafe.h>
+#include <cjkcode.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -670,7 +673,7 @@ NewGetCharacterPlacementW(
         nSet = lpResults->nGlyphs;
 
     return NtGdiGetCharacterPlacementW( hdc,
-                                        (LPWSTR)lpString,
+                                        lpString,
                                         nSet,
                                         nMaxExtent,
                                         lpResults,
@@ -697,14 +700,13 @@ GetCharABCWidthsFloatW(HDC hdc,
     return NtGdiGetCharABCWidthsW( hdc,
                                    FirstChar,
                                    (ULONG)(LastChar - FirstChar + 1),
-                                   (PWCHAR) NULL,
+                                   NULL,
                                    0,
-                                   (PVOID)abcF);
+                                   abcF);
 }
 
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
@@ -714,7 +716,8 @@ GetCharWidthFloatW(HDC hdc,
                    PFLOAT pxBuffer)
 {
     DPRINT("GetCharWidthsFloatW\n");
-    if ((!pxBuffer) || (iFirstChar > iLastChar))
+    if ((!pxBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) ||
+        (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -722,14 +725,13 @@ GetCharWidthFloatW(HDC hdc,
     return NtGdiGetCharWidthW( hdc,
                                iFirstChar,
                                (ULONG)(iLastChar - iFirstChar + 1),
-                               (PWCHAR) NULL,
+                               NULL,
                                0,
-                               (PVOID) pxBuffer);
+                               pxBuffer);
 }
 
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
@@ -739,7 +741,8 @@ GetCharWidthW(HDC hdc,
               LPINT lpBuffer)
 {
     DPRINT("GetCharWidthsW\n");
-    if ((!lpBuffer) || (iFirstChar > iLastChar))
+    if ((!lpBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) ||
+        (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -747,14 +750,13 @@ GetCharWidthW(HDC hdc,
     return NtGdiGetCharWidthW( hdc,
                                iFirstChar,
                                (ULONG)(iLastChar - iFirstChar + 1),
-                               (PWCHAR) NULL,
+                               NULL,
                                GCW_NOFLOAT,
-                               (PVOID) lpBuffer);
+                               lpBuffer);
 }
 
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
@@ -764,7 +766,8 @@ GetCharWidth32W(HDC hdc,
                 LPINT lpBuffer)
 {
     DPRINT("GetCharWidths32W\n");
-    if ((!lpBuffer) || (iFirstChar > iLastChar))
+    if ((!lpBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) ||
+        (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -772,15 +775,13 @@ GetCharWidth32W(HDC hdc,
     return NtGdiGetCharWidthW( hdc,
                                iFirstChar,
                                (ULONG)(iLastChar - iFirstChar + 1),
-                               (PWCHAR) NULL,
+                               NULL,
                                GCW_NOFLOAT|GCW_WIN32,
-                               (PVOID) lpBuffer);
+                               lpBuffer);
 }
-
 
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
@@ -798,9 +799,9 @@ GetCharABCWidthsW(HDC hdc,
     return NtGdiGetCharABCWidthsW( hdc,
                                    FirstChar,
                                    (ULONG)(LastChar - FirstChar + 1),
-                                   (PWCHAR) NULL,
+                                   NULL,
                                    GCABCW_NOFLOAT,
-                                   (PVOID)lpabc);
+                                   lpabc);
 }
 
 /*
@@ -810,10 +811,9 @@ BOOL
 WINAPI
 GetCharWidthA(
     HDC	hdc,
-    UINT	iFirstChar,
-    UINT	iLastChar,
-    LPINT	lpBuffer
-)
+    UINT iFirstChar,
+    UINT iLastChar,
+    LPINT lpBuffer)
 {
     INT wlen, count = 0;
     LPSTR str;
@@ -821,6 +821,12 @@ GetCharWidthA(
     BOOL ret = TRUE;
 
     DPRINT("GetCharWidthsA\n");
+
+    if (!lpBuffer || (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
@@ -835,10 +841,10 @@ GetCharWidthA(
 
     ret = NtGdiGetCharWidthW( hdc,
                               wstr[0],
-                              (ULONG) count,
-                              (PWCHAR) wstr,
+                              count,
+                              wstr,
                               GCW_NOFLOAT,
-                              (PVOID) lpBuffer);
+                              lpBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
     HeapFree(GetProcessHeap(), 0, wstr);
@@ -853,10 +859,9 @@ BOOL
 WINAPI
 GetCharWidth32A(
     HDC	hdc,
-    UINT	iFirstChar,
-    UINT	iLastChar,
-    LPINT	lpBuffer
-)
+    UINT iFirstChar,
+    UINT iLastChar,
+    LPINT lpBuffer)
 {
     INT wlen, count = 0;
     LPSTR str;
@@ -864,6 +869,12 @@ GetCharWidth32A(
     BOOL ret = TRUE;
 
     DPRINT("GetCharWidths32A\n");
+
+    if (!lpBuffer || (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
@@ -878,10 +889,10 @@ GetCharWidth32A(
 
     ret = NtGdiGetCharWidthW( hdc,
                               wstr[0],
-                              (ULONG) count,
-                              (PWCHAR) wstr,
+                              count,
+                              wstr,
                               GCW_NOFLOAT|GCW_WIN32,
-                              (PVOID) lpBuffer);
+                              lpBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
     HeapFree(GetProcessHeap(), 0, wstr);
@@ -896,10 +907,9 @@ BOOL
 APIENTRY
 GetCharWidthFloatA(
     HDC	hdc,
-    UINT	iFirstChar,
-    UINT	iLastChar,
-    PFLOAT	pxBuffer
-)
+    UINT iFirstChar,
+    UINT iLastChar,
+    PFLOAT pxBuffer)
 {
     INT wlen, count = 0;
     LPSTR str;
@@ -907,6 +917,12 @@ GetCharWidthFloatA(
     BOOL ret = TRUE;
 
     DPRINT("GetCharWidthsFloatA\n");
+
+    if (!pxBuffer || (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
@@ -918,7 +934,7 @@ GetCharWidthFloatA(
         HeapFree(GetProcessHeap(), 0, str);
         return FALSE;
     }
-    ret = NtGdiGetCharWidthW( hdc, wstr[0], (ULONG) count, (PWCHAR) wstr, 0, (PVOID) pxBuffer);
+    ret = NtGdiGetCharWidthW(hdc, wstr[0], count, wstr, 0, pxBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
     HeapFree(GetProcessHeap(), 0, wstr);
@@ -998,7 +1014,7 @@ GetCharABCWidthsFloatA(
         HeapFree( GetProcessHeap(), 0, str );
         return FALSE;
     }
-    ret = NtGdiGetCharABCWidthsW( hdc,wstr[0],(ULONG)count, (PWCHAR)wstr, 0, (PVOID)lpABCF);
+    ret = NtGdiGetCharABCWidthsW(hdc, wstr[0], count, wstr, 0, lpABCF);
 
     HeapFree( GetProcessHeap(), 0, str );
     HeapFree( GetProcessHeap(), 0, wstr );
@@ -1035,16 +1051,19 @@ GetCharWidthI(HDC hdc,
               UINT giFirst,
               UINT cgi,
               LPWORD pgi,
-              LPINT lpBuffer
-             )
+              LPINT lpBuffer)
 {
     DPRINT("GetCharWidthsI\n");
-    if (!lpBuffer || (!pgi && (giFirst == MAXUSHORT))) // Cannot be at max.
+
+    if (!lpBuffer || (!pgi && HIWORD(giFirst)))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    if (!cgi) return TRUE;
+
+    if (!cgi)
+        return TRUE;
+
     return NtGdiGetCharWidthW( hdc,
                                giFirst,
                                cgi,
@@ -1094,8 +1113,13 @@ GetGlyphIndicesA(
     WCHAR *lpstrW;
     INT countW;
 
-    lpstrW = FONT_mbtowc(hdc, lpstr, count, &countW, NULL);
+    if (count > 0 && (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC || !GdiValidateHandle(hdc)))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return GDI_ERROR;
+    }
 
+    lpstrW = FONT_mbtowc(hdc, lpstr, count, &countW, NULL);
     if (lpstrW == NULL)
         return GDI_ERROR;
 
@@ -1104,94 +1128,120 @@ GetGlyphIndicesA(
     return Ret;
 }
 
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetGlyphOutlineA(
-    HDC		hdc,
-    UINT		uChar,
-    UINT		uFormat,
-    LPGLYPHMETRICS	lpgm,
-    DWORD		cbBuffer,
-    LPVOID		lpvBuffer,
-    CONST MAT2	*lpmat2
-)
+static __inline DWORD APIENTRY
+IntGetGlyphOutlineW(
+    HDC hdc,
+    UINT uChar,
+    UINT fuFormat,
+    LPGLYPHMETRICS lpgm,
+    DWORD cbBuffer,
+    LPVOID lpvBuffer,
+    CONST MAT2 *lpmat2,
+    BOOL bIgnoreRotation)
 {
+    if (!lpmat2 || !lpgm)
+        return GDI_ERROR;
+    if (!lpvBuffer)
+        cbBuffer = 0;
+    return NtGdiGetGlyphOutline(hdc, uChar, fuFormat, lpgm, cbBuffer, lpvBuffer, lpmat2,
+                                bIgnoreRotation);
+}
 
-    LPWSTR p = NULL;
-    DWORD ret;
-    UINT c;
-    DPRINT("GetGlyphOutlineA uChar %x\n", uChar);
-    if (!lpgm || !lpmat2) return GDI_ERROR;
-    if(!(uFormat & GGO_GLYPH_INDEX))
+static DWORD APIENTRY
+IntGetGlyphOutlineA(
+    HDC hdc,
+    UINT uChar,
+    UINT fuFormat,
+    LPGLYPHMETRICS lpgm,
+    DWORD cbBuffer,
+    LPVOID lpvBuffer,
+    CONST MAT2 *lpmat2,
+    BOOL bIgnoreRotation)
+{
+    UINT nCodePage, cchAnsi;
+    CHAR szAnsi[4];
+    WCHAR szWide[2];
+
+    if (fuFormat & GGO_GLYPH_INDEX)
     {
-        int len;
-        char mbchs[2];
-        if(uChar > 0xff)   /* but, 2 bytes character only */
-        {
-            len = 2;
-            mbchs[0] = (uChar & 0xff00) >> 8;
-            mbchs[1] = (uChar & 0xff);
-        }
-        else
-        {
-            len = 1;
-            mbchs[0] = (uChar & 0xff);
-        }
-        p = FONT_mbtowc(hdc, mbchs, len, NULL, NULL);
-        if(!p)
-            return GDI_ERROR;
-        c = p[0];
+        szWide[0] = (WCHAR)uChar;
+        return IntGetGlyphOutlineW(hdc, szWide[0], fuFormat, lpgm, cbBuffer, lpvBuffer, lpmat2,
+                                   bIgnoreRotation);
+    }
+
+    nCodePage = GdiGetCodePage(hdc);
+    if ((nCodePage == CP_SHIFTJIS ||
+         nCodePage == CP_HANGUL ||
+         nCodePage == CP_BIG5 ||
+         nCodePage == CP_GB2312) && IsDBCSLeadByteEx(nCodePage, HIBYTE(uChar)))
+    {
+        szAnsi[0] = HIBYTE(uChar);
+        szAnsi[1] = LOBYTE(uChar);
+        cchAnsi = 2;
     }
     else
-        c = uChar;
-    ret = NtGdiGetGlyphOutline(hdc, c, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
-    HeapFree(GetProcessHeap(), 0, p);
-    return ret;
+    {
+        szAnsi[0] = LOBYTE(uChar);
+        cchAnsi = 1;
+    }
+
+    if (!MultiByteToWideChar(nCodePage, 0, szAnsi, cchAnsi, szWide, _countof(szWide)))
+    {
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    return IntGetGlyphOutlineW(hdc, szWide[0], fuFormat, lpgm, cbBuffer, lpvBuffer, lpmat2,
+                               bIgnoreRotation);
+}
+
+/*
+ * @implemented
+ */
+DWORD WINAPI
+GetGlyphOutlineA(
+    _In_ HDC hdc,
+    _In_ UINT uChar,
+    _In_ UINT fuFormat,
+    _Out_ LPGLYPHMETRICS lpgm,
+    _In_ DWORD cbBuffer,
+    _Out_writes_bytes_opt_(cbBuffer) LPVOID lpvBuffer,
+    _In_ CONST MAT2 *lpmat2)
+{
+    return IntGetGlyphOutlineA(hdc, uChar, fuFormat, lpgm, cbBuffer, lpvBuffer, lpmat2, FALSE);
 }
 
 
 /*
  * @implemented
  */
-DWORD
-WINAPI
+DWORD WINAPI
 GetGlyphOutlineW(
-    HDC		hdc,
-    UINT		uChar,
-    UINT		uFormat,
-    LPGLYPHMETRICS	lpgm,
-    DWORD		cbBuffer,
-    LPVOID		lpvBuffer,
-    CONST MAT2	*lpmat2
-)
+    _In_ HDC hdc,
+    _In_ UINT uChar,
+    _In_ UINT fuFormat,
+    _Out_ LPGLYPHMETRICS lpgm,
+    _In_ DWORD cbBuffer,
+    _Out_writes_bytes_opt_(cbBuffer) LPVOID lpvBuffer,
+    _In_ CONST MAT2 *lpmat2)
 {
-    DPRINT("GetGlyphOutlineW uChar %x\n", uChar);
-    if (!lpgm || !lpmat2) return GDI_ERROR;
-    if (!lpvBuffer) cbBuffer = 0;
-    return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
+    return IntGetGlyphOutlineW(hdc, uChar, fuFormat, lpgm, cbBuffer, lpvBuffer, lpmat2, FALSE);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD
-WINAPI
+DWORD WINAPI
 GetGlyphOutlineWow(
-    DWORD	a0,
-    DWORD	a1,
-    DWORD	a2,
-    DWORD	a3,
-    DWORD	a4,
-    DWORD	a5,
-    DWORD	a6
-)
+    _In_ HDC hdc,
+    _In_ UINT uChar,
+    _In_ UINT fuFormat,
+    _Out_ LPGLYPHMETRICS lpgm,
+    _In_ DWORD cbBuffer,
+    _Out_writes_bytes_opt_(cbBuffer) LPVOID lpvBuffer,
+    _In_ CONST MAT2 *lpmat2)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    return IntGetGlyphOutlineA(hdc, uChar, fuFormat, lpgm, cbBuffer, lpvBuffer, lpmat2, TRUE);
 }
 
 /*
@@ -1664,7 +1714,7 @@ CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd)
                           &Logfont.elfEnumLogfontEx );
 
         RtlCopyMemory( &Logfont.elfDesignVector,
-                       (PVOID) &elfexd->elfDesignVector,
+                       &elfexd->elfDesignVector,
                        sizeof(DESIGNVECTOR));
 
         return NtGdiHfontCreate( &Logfont, 0, 0, 0, NULL);
@@ -1862,7 +1912,7 @@ CreateFontA(
     UNICODE_STRING StringU;
     HFONT ret;
 
-    RtlInitAnsiString(&StringA, (LPSTR)lpszFace);
+    RtlInitAnsiString(&StringA, lpszFace);
     RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
     ret = CreateFontW(nHeight,
@@ -1939,6 +1989,144 @@ CreateFontW(
     return CreateFontIndirectW(&logfont);
 }
 
+// Convert single or multiple font path(s)
+PWSTR
+FASTCALL
+IntConvertFontPaths(
+    _In_ PCWSTR pszFiles,
+    _Out_ PDWORD pcFiles,
+    _Out_ PDWORD pcwc,
+    _Inout_ PDWORD pfl,
+    _In_ BOOL bFlag)
+{
+    // FIXME: pfl
+    // FIXME: bFlag
+
+    *pcwc = *pcFiles = 0;
+
+    if (!*pszFiles)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    // Build "Fonts" path
+    WCHAR szFontsDir[MAX_PATH];
+    GetWindowsDirectoryW(szFontsDir, _countof(szFontsDir));
+    StringCchCatW(szFontsDir, _countof(szFontsDir), L"\\Fonts");
+
+    // Count the number of paths separated by '|'.
+    ULONG pathCount = 1;
+    for (PCWSTR pch1 = pszFiles; *pch1; ++pch1)
+    {
+        if (*pch1 == L'|')
+            pathCount++;
+    }
+
+    // Allocate memory for the paths.
+    SIZE_T cchBuff = pathCount * MAX_PATH;
+    PWSTR pszBuff = HEAP_alloc(cchBuff * sizeof(WCHAR));
+    if (!pszBuff)
+        return NULL;
+
+    pszBuff[0] = UNICODE_NULL;
+    *pcFiles = pathCount;
+
+    // Convert paths
+    DWORD dwError = ERROR_SUCCESS;
+    PCWSTR pch1, pch1Prev;
+    BOOL bFirst = TRUE;
+    for (pch1 = pch1Prev = pszFiles;; ++pch1)
+    {
+        if (*pch1 && *pch1 != L'|')
+            continue;
+
+        UINT_PTR spanLen = pch1 - pch1Prev;
+        if (spanLen < _countof(L".ttf") || spanLen >= MAX_PATH)
+        {
+            dwError = ERROR_INVALID_FUNCTION;
+            break;
+        }
+
+        WCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
+        StringCchCopyNW(szFileName, _countof(szFileName), pch1Prev, spanLen);
+
+        // Search file
+        if (!SearchPathW(L".", szFileName, NULL, _countof(szFullPath), szFullPath, NULL) &&
+            !SearchPathW(szFontsDir, szFileName, NULL, _countof(szFullPath), szFullPath, NULL))
+        {
+            dwError = ERROR_FILE_NOT_FOUND;
+            break;
+        }
+
+        if (bFirst)
+        {
+            bFirst = FALSE;
+        }
+        else
+        {
+            SIZE_T cch = wcslen(szFullPath);
+            if (cch < _countof(L".pfb"))
+            {
+                dwError = ERROR_INVALID_FUNCTION;
+                break;
+            }
+
+            // Check filename extension
+            PCWSTR pchDotExt = &szFullPath[cch - 4];
+            if (_wcsicmp(pchDotExt, L".pfb") != 0 &&
+                _wcsicmp(pchDotExt, L".mmm") != 0)
+            {
+                dwError = ERROR_INVALID_FUNCTION;
+                break;
+            }
+        }
+
+        // Convert to an NT path
+        UNICODE_STRING NtAbsPath;
+        if (!RtlDosPathNameToNtPathName_U(szFullPath, &NtAbsPath, NULL, NULL))
+        {
+            dwError = ERROR_OUTOFMEMORY;
+            break;
+        }
+
+        // Append a path and '|' to pszBuff
+        if (StringCchCatW(pszBuff, cchBuff, NtAbsPath.Buffer) != S_OK ||
+            StringCchCatW(pszBuff, cchBuff, L"|") != S_OK)
+        {
+            RtlFreeUnicodeString(&NtAbsPath);
+            dwError = ERROR_INVALID_FUNCTION;
+            break;
+        }
+
+        RtlFreeUnicodeString(&NtAbsPath);
+
+        if (!*pch1)
+            break;
+
+        pch1Prev = pch1 + 1;
+    }
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        HEAP_free(pszBuff);
+        *pcwc = *pcFiles = 0;
+        if (dwError != ERROR_INVALID_FUNCTION)
+            SetLastError(dwError);
+        return NULL;
+    }
+
+    *pcwc = (DWORD)wcslen(pszBuff);
+
+    // Convert '|' to '\0'
+    for (PWSTR pch2 = pszBuff; *pch2; ++pch2)
+    {
+        if (*pch2 == L'|')
+            *pch2 = UNICODE_NULL;
+    }
+
+    return pszBuff;
+}
 
 /*
  * @unimplemented
@@ -1955,157 +2143,165 @@ CreateScalableFontResourceA(
     return FALSE;
 }
 
-
-/*
- * @implemented
- */
-int
+/* @implemented */
+INT
 WINAPI
-AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
+AddFontResourceExW(
+    _In_ LPCWSTR lpszFilename,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pvReserved)
 {
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
-        SetLastError( ERROR_INVALID_PARAMETER );
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
-    return GdiAddFontResourceW(lpszFilename, fl,0);
+    return GdiAddFontResourceW(lpszFilename, fl, NULL);
 }
 
-
-/*
- * @implemented
- */
-int
+/* @implemented */
+INT
 WINAPI
-AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
+AddFontResourceExA(
+    _In_ LPCSTR lpszFilename,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pvReserved)
 {
-    NTSTATUS Status;
-    PWSTR FilenameW;
-    int rc;
-
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
-        SetLastError( ERROR_INVALID_PARAMETER );
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
-    Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
-    if ( !NT_SUCCESS (Status) )
-    {
-        SetLastError (RtlNtStatusToDosError(Status));
+    if (!lpszFilename)
         return 0;
-    }
 
-    rc = GdiAddFontResourceW ( FilenameW, fl, 0 );
-    HEAP_free ( FilenameW );
-    return rc;
-}
-
-
-/*
- * @implemented
- */
-int
-WINAPI
-AddFontResourceA ( LPCSTR lpszFilename )
-{
-    NTSTATUS Status;
     PWSTR FilenameW;
-    int rc = 0;
+    WCHAR szBuff[MAX_PATH];
 
-    Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
-    if ( !NT_SUCCESS (Status) )
+    _SEH2_TRY
     {
-        SetLastError (RtlNtStatusToDosError(Status));
+        FilenameW = HEAP_strdupA2W_buf(lpszFilename, szBuff, _countof(szBuff));
     }
-    else
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        rc = GdiAddFontResourceW ( FilenameW, 0, 0);
-
-        HEAP_free ( FilenameW );
+        _SEH2_YIELD(return 0);
     }
-    return rc;
-}
+    _SEH2_END;
 
-
-/*
- * @implemented
- */
-int
-WINAPI
-AddFontResourceW ( LPCWSTR lpszFilename )
-{
-    return GdiAddFontResourceW ( lpszFilename, 0, 0 );
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-RemoveFontResourceW(LPCWSTR lpFileName)
-{
-    return RemoveFontResourceExW(lpFileName,0,0);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-RemoveFontResourceA(LPCSTR lpFileName)
-{
-    return RemoveFontResourceExA(lpFileName,0,0);
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-RemoveFontResourceExA(LPCSTR lpFileName,
-                      DWORD fl,
-                      PVOID pdv
-                     )
-{
-    NTSTATUS Status;
-    LPWSTR lpFileNameW;
-
-    /* FIXME the flags */
-    /* FIXME the pdv */
-    /* FIXME NtGdiRemoveFontResource handle flags and pdv */
-
-    Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
-    if (!NT_SUCCESS (Status))
-        SetLastError (RtlNtStatusToDosError(Status));
-    else
+    if (!FilenameW)
     {
-
-        HEAP_free ( lpFileNameW );
+        SetLastError(ERROR_OUTOFMEMORY);
+        return 0;
     }
 
-    return 0;
+    INT ret = GdiAddFontResourceW(FilenameW, fl, NULL);
+    HEAP_strdupA2W_buf_free(FilenameW, szBuff);
+    return ret;
 }
 
-/*
- * @unimplemented
- */
+/* @implemented */
+INT
+WINAPI
+AddFontResourceA(_In_ LPCSTR lpszFilename)
+{
+    return AddFontResourceExA(lpszFilename, 0, NULL);
+}
+
+/* @implemented */
+INT
+WINAPI
+AddFontResourceW(_In_ LPCWSTR lpszFilename)
+{
+    return GdiAddFontResourceW(lpszFilename, 0, NULL);
+}
+
+/* @implemented */
 BOOL
 WINAPI
-RemoveFontResourceExW(LPCWSTR lpFileName,
-                      DWORD fl,
-                      PVOID pdv)
+RemoveFontResourceW(_In_ LPCWSTR lpFileName)
 {
-    /* FIXME the flags */
-    /* FIXME the pdv */
-    /* FIXME NtGdiRemoveFontResource handle flags and pdv */
+    return RemoveFontResourceExW(lpFileName, 0, NULL);
+}
+
+/* @implemented */
+BOOL
+WINAPI
+RemoveFontResourceA(_In_ LPCSTR lpFileName)
+{
+    return RemoveFontResourceExA(lpFileName, 0, NULL);
+}
+
+/* @implemented */
+BOOL
+WINAPI
+RemoveFontResourceExA(
+    _In_ LPCSTR lpFileName,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pdv)
+{
+    if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!lpFileName)
+        return FALSE;
+
+    WCHAR szBuff[MAX_PATH];
+    PWSTR FilenameW;
+
+    _SEH2_TRY
+    {
+        FilenameW = HEAP_strdupA2W_buf(lpFileName, szBuff, _countof(szBuff));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        FilenameW = NULL;
+    }
+    _SEH2_END;
+
+    if (!FilenameW)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+
+    BOOL result = RemoveFontResourceExW(FilenameW, fl, pdv);
+    HEAP_strdupA2W_buf_free(FilenameW, szBuff);
+    return result;
+}
+
+/* @implemented */
+BOOL
+WINAPI
+RemoveFontResourceExW(
+    _In_ LPCWSTR lpFileName,
+    _In_ DWORD fl,
+    _In_opt_ PVOID pdv)
+{
     DPRINT("RemoveFontResourceExW\n");
-    return 0;
-}
 
+    if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!lpFileName)
+        return FALSE;
+
+    ULONG cFiles, cwc;
+    PWSTR pszConverted = IntConvertFontPaths(lpFileName, &cFiles, &cwc, &fl, TRUE);
+    if (!pszConverted)
+        return FALSE;
+
+    BOOL ret = NtGdiRemoveFontResourceW(pszConverted, cwc, cFiles, fl, 0, NULL);
+    HEAP_free(pszConverted);
+    return ret;
+}
 
 /***********************************************************************
  *           GdiGetCharDimensions
@@ -2396,55 +2592,33 @@ NewEnumFontFamiliesExW(
     return ret;
 }
 
-/*
- * @implemented
- */
-int
+/* @implemented */
+INT
 WINAPI
 GdiAddFontResourceW(
     LPCWSTR lpszFilename,
     FLONG fl,
     DESIGNVECTOR *pdv)
 {
-    INT Ret;
-    WCHAR lpszBuffer[MAX_PATH];
-    WCHAR lpszAbsPath[MAX_PATH];
-    UNICODE_STRING NtAbsPath;
-
-    /* FIXME: We don't support multiple files passed in lpszFilename
-     *        as L"abcxxxxx.pfm|abcxxxxx.pfb"
-     */
-
-    /* Does the file exist in CurrentDirectory or in the Absolute Path passed? */
-    GetCurrentDirectoryW(MAX_PATH, lpszBuffer);
-
-    if (!SearchPathW(lpszBuffer, lpszFilename, NULL, MAX_PATH, lpszAbsPath, NULL))
-    {
-        /* Nope. Then let's check Fonts folder */
-        GetWindowsDirectoryW(lpszBuffer, MAX_PATH);
-        StringCbCatW(lpszBuffer, sizeof(lpszBuffer), L"\\Fonts");
-
-        if (!SearchPathW(lpszBuffer, lpszFilename, NULL, MAX_PATH, lpszAbsPath, NULL))
-        {
-            DPRINT1("Font not found. The Buffer is: %ls, the FileName is: %S\n", lpszBuffer, lpszFilename);
-            return 0;
-        }
-    }
-
-    /* We found the font file so: */
-    if (!RtlDosPathNameToNtPathName_U(lpszAbsPath, &NtAbsPath, NULL, NULL))
-    {
-        DPRINT1("Can't convert Path! Path: %ls\n", lpszAbsPath);
+    ULONG cFiles, cwc;
+    PWSTR pszConverted = IntConvertFontPaths(lpszFilename, &cFiles, &cwc, &fl, FALSE);
+    if (!pszConverted)
         return 0;
-    }
 
-    /* The Nt call expects a null-terminator included in cwc param. */
-    ASSERT(NtAbsPath.Buffer[NtAbsPath.Length / sizeof(WCHAR)] == UNICODE_NULL);
-    Ret = NtGdiAddFontResourceW(NtAbsPath.Buffer, NtAbsPath.Length / sizeof(WCHAR) + 1, 1, fl, 0, pdv);
+    INT ret = NtGdiAddFontResourceW(pszConverted, cwc, cFiles, fl, 0, pdv);
+    HEAP_free(pszConverted);
+    if (ret)
+        return ret;
 
-    RtlFreeUnicodeString(&NtAbsPath);
+    pszConverted = IntConvertFontPaths(lpszFilename, &cFiles, &cwc, &fl, TRUE);
+    if (!pszConverted)
+        return 0;
 
-    return Ret;
+    ret = NtGdiAddFontResourceW(pszConverted, cwc, cFiles, fl, 0, pdv);
+    HEAP_free(pszConverted);
+    if (!ret)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    return ret;
 }
 
 /*
@@ -2672,4 +2846,3 @@ cGetTTFFromFOT(DWORD x1 ,DWORD x2 ,DWORD x3, DWORD x4, DWORD x5, DWORD x6, DWORD
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
-

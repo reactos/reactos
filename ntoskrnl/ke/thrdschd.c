@@ -74,13 +74,84 @@ KiQueueReadyThread(IN PKTHREAD Thread,
     KxQueueReadyThread(Thread, Prcb);
 }
 
+#ifdef CONFIG_SMP
+ULONG
+NTAPI
+KiFindIdealProcessor(
+    _In_ KAFFINITY ProcessorSet,
+    _In_ UCHAR OriginalIdealProcessor)
+{
+    PKPRCB OriginalIdealPrcb;
+    KAFFINITY NodeMask;
+    ULONG Processor;
+
+    /* Check if we can use the original ideal processor */
+    if (ProcessorSet & AFFINITY_MASK(OriginalIdealProcessor))
+    {
+        /* We can, so use it */
+        return OriginalIdealProcessor;
+    }
+
+    /* Only use active processors */
+    ProcessorSet &= KeActiveProcessors;
+
+    /* Get the original ideal PRCB */
+    OriginalIdealPrcb = KiProcessorBlock[OriginalIdealProcessor];
+
+    /* Check if we can use the original node */
+    NodeMask = OriginalIdealPrcb->ParentNode->ProcessorMask & ProcessorSet;
+    if (NodeMask)
+    {
+        /* Use the node set instead */
+        ProcessorSet = NodeMask;
+    }
+
+    /* Calculate the ideal CPU from the affinity set */
+    BitScanReverseAffinity(&Processor, ProcessorSet);
+    return Processor;
+}
+
+static
+ULONG
+KiSelectNextProcessor(
+    _In_ PKTHREAD Thread)
+{
+    KAFFINITY PreferredSet, IdleSet;
+    ULONG Processor;
+
+    /* Start with the affinity */
+    PreferredSet = Thread->Affinity;
+
+    /* If we have matching idle processors, use them */
+    IdleSet = PreferredSet & KiIdleSummary;
+    if (IdleSet != 0)
+    {
+        PreferredSet = IdleSet;
+    }
+
+    /* Check if we can use the ideal processor */
+    if (PreferredSet & AFFINITY_MASK(Thread->IdealProcessor))
+    {
+        return Thread->IdealProcessor;
+    }
+
+    /* Return the first set bit */
+    NT_VERIFY(BitScanForwardAffinity(&Processor, PreferredSet) != FALSE);
+    ASSERT(Processor < KeNumberProcessors);
+
+    return Processor;
+}
+#else
+#define KiSelectNextProcessor(Thread) 0
+#endif
+
 VOID
 FASTCALL
 KiDeferredReadyThread(IN PKTHREAD Thread)
 {
     PKPRCB Prcb;
     BOOLEAN Preempted;
-    ULONG Processor = 0;
+    ULONG Processor;
     KPRIORITY OldPriority;
     PKTHREAD NextThread;
 
@@ -228,11 +299,15 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
     OldPriority = Thread->Priority;
     Thread->Preempted = FALSE;
 
-    /* Queue the thread on CPU 0 and get the PRCB and lock it */
-    Thread->NextProcessor = 0;
-    Prcb = KiProcessorBlock[0];
+    /* Select a processor to run on */
+    Processor = KiSelectNextProcessor(Thread);
+    Thread->NextProcessor = Processor;
+
+    /* Get the PRCB and lock it */
+    Prcb = KiProcessorBlock[Processor];
     KiAcquirePrcbLock(Prcb);
 
+#ifndef CONFIG_SMP
     /* Check if we have an idle summary */
     if (KiIdleSummary)
     {
@@ -245,9 +320,7 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
         KiReleasePrcbLock(Prcb);
         return;
     }
-
-    /* Set the CPU number */
-    Thread->NextProcessor = (UCHAR)Processor;
+#endif // !CONFIG_SMP
 
     /* Get the next scheduled thread */
     NextThread = Prcb->NextThread;
@@ -341,12 +414,12 @@ KiSelectNextThread(IN PKPRCB Prcb)
         Prcb->IdleSchedule = TRUE;
 
         /* FIXME: SMT support */
-        ASSERTMSG("SMP: Not yet implemented\n", FALSE);
+        //ASSERTMSG("SMP: Not yet implemented\n", FALSE);
     }
 
     /* Sanity checks and return the thread */
     ASSERT(Thread != NULL);
-    ASSERT((Thread->BasePriority == 0) || (Thread->Priority != 0));
+    //ASSERT((Thread->BasePriority == 0) || (Thread->Priority != 0));
     return Thread;
 }
 
@@ -680,6 +753,73 @@ KiSetPriorityThread(IN PKTHREAD Thread,
     }
 }
 
+#ifdef CONFIG_SMP
+static
+VOID
+KiUpdateEffectiveAffinityThread(
+    _In_ PKTHREAD Thread)
+{
+    PKPRCB Prcb;
+
+    /* Acquire the thread lock */
+    KiAcquireThreadLock(Thread);
+
+    /* Get the PRCB that the thread is to be run on and lock it */
+    Prcb = KiProcessorBlock[Thread->NextProcessor];
+    KiAcquirePrcbLock(Prcb);
+
+    /* Set the thread's affinity and ideal processor */
+    Thread->Affinity = Thread->UserAffinity;
+    Thread->IdealProcessor = Thread->UserIdealProcessor;
+
+    /* Check if the affinity doesn't match with the current processor */
+    if ((Prcb->SetMember & Thread->Affinity) == 0)
+    {
+        if (Thread->State == Running)
+        {
+            /* Check if there is the next thread is selected already */
+            if (Prcb->NextThread == NULL)
+            {
+                /* It is not, select a new thread and set it on standby */
+                Prcb->NextThread = KiSelectNextThread(Prcb);
+                Prcb->NextThread->State = Standby;
+            }
+
+            /* Check if the thread is running on a different processor */
+            if (Prcb != KeGetCurrentPrcb())
+            {
+                /* It is, send an IPI */
+                KiIpiSend(AFFINITY_MASK(Thread->NextProcessor), IPI_DPC);
+            }
+        }
+        else if (Thread->State == Standby)
+        {
+            /* Select a new thread and set it on standby */
+            Prcb->NextThread = KiSelectNextThread(Prcb);
+            Prcb->NextThread->State = Standby;
+
+            /* Insert the thread back into the ready list */
+            KiInsertDeferredReadyList(Thread);
+        }
+        else if (Thread->State == Ready)
+        {
+            /* Remove it from the list */
+            if (RemoveEntryList(&Thread->WaitListEntry))
+            {
+                /* The list is empty now, reset the ready summary */
+                Prcb->ReadySummary &= ~PRIORITY_MASK(Thread->Priority);
+            }
+
+            /* Insert the thread back into the ready list */
+            KiInsertDeferredReadyList(Thread);
+        }
+    }
+
+    KiReleasePrcbLock(Prcb);
+    KiReleaseThreadLock(Thread);
+}
+#endif // CONFIG_SMP
+
 KAFFINITY
 FASTCALL
 KiSetAffinityThread(IN PKTHREAD Thread,
@@ -701,14 +841,18 @@ KiSetAffinityThread(IN PKTHREAD Thread,
     /* Update the new affinity */
     Thread->UserAffinity = Affinity;
 
-    /* Check if system affinity is disabled */
+#ifdef CONFIG_SMP
+    /* Check if system affinity is not active */
     if (!Thread->SystemAffinityActive)
     {
-#ifdef CONFIG_SMP
-        /* FIXME: TODO */
-        DPRINT1("Affinity support disabled!\n");
-#endif
+        /* Calculate the new ideal processor from the affinity set */
+        Thread->UserIdealProcessor =
+            KiFindIdealProcessor(Affinity, Thread->UserIdealProcessor);
+
+        /* Update the effective affinity */
+        KiUpdateEffectiveAffinityThread(Thread);
     }
+#endif
 
     /* Return the old affinity */
     return OldAffinity;
@@ -722,8 +866,7 @@ KiSetAffinityThread(IN PKTHREAD Thread,
 // that could happen, Windows seems to define this as a macro that directly acceses
 // the ready summary through a single fs: read by going through the KPCR's PrcbData.
 //
-// See http://research.microsoft.com/en-us/collaboration/global/asia-pacific/
-//     programs/trk_case4_process-thread_management.pdf
+// See http://research.microsoft.com/en-us/collaboration/global/asia-pacific/programs/trk_case4_process-thread_management.pdf (DEAD_LINK)
 //
 // We need this per-arch because sometimes it's Prcb and sometimes PrcbData, and
 // because on x86 it's FS, and on x64 it's GS (not sure what it is on ARM/PPC).

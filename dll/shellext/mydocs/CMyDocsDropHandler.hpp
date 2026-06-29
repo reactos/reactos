@@ -21,21 +21,21 @@ public:
 
     // IDropTarget
     STDMETHODIMP DragEnter(IDataObject *pDataObject, DWORD dwKeyState,
-                           POINTL pt, DWORD *pdwEffect);
-    STDMETHODIMP DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-    STDMETHODIMP DragLeave();
+                           POINTL pt, DWORD *pdwEffect) override;
+    STDMETHODIMP DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHODIMP DragLeave() override;
     STDMETHODIMP Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt,
-                      DWORD *pdwEffect);
+                      DWORD *pdwEffect) override;
 
     // IPersist
-    STDMETHODIMP GetClassID(CLSID *lpClassId);
+    STDMETHODIMP GetClassID(CLSID *lpClassId) override;
 
     // IPersistFile
-    STDMETHODIMP GetCurFile(LPOLESTR *ppszFileName);
-    STDMETHODIMP IsDirty();
-    STDMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode);
-    STDMETHODIMP Save(LPCOLESTR pszFileName, BOOL fRemember);
-    STDMETHODIMP SaveCompleted(LPCOLESTR pszFileName);
+    STDMETHODIMP GetCurFile(LPOLESTR *ppszFileName) override;
+    STDMETHODIMP IsDirty() override;
+    STDMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) override;
+    STDMETHODIMP Save(LPCOLESTR pszFileName, BOOL fRemember) override;
+    STDMETHODIMP SaveCompleted(LPCOLESTR pszFileName) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_MYDOCS)
     DECLARE_NOT_AGGREGATABLE(CMyDocsDropHandler)

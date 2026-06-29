@@ -1,6 +1,5 @@
 
-add_definitions(-D__WINESRC__ -DDIRECTINPUT_VERSION=0x0800)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+add_definitions(-DDIRECTINPUT_VERSION=0x0800)
 spec2def(dinput8.dll dinput8.spec ADD_IMPORTLIB)
 set(DINPUT_SOURCE_FOLDER ../dinput)
 
@@ -27,3 +26,4 @@ set_module_type(dinput8 win32dll)
 target_link_libraries(dinput8 dxguid uuid wine)
 add_importlibs(dinput8 comctl32 ole32 user32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET dinput8 DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(dinput8) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

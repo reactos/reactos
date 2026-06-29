@@ -456,7 +456,9 @@ START_TEST(IShellFolderViewCB)
     if (!SUCCEEDED(hr))
         return;
 
-    ok_int(g_AddRef, 1);
+    ok(g_AddRef == 2 ||      // Win7+
+       g_AddRef == 1,        // Win2k3-Vista
+       "Wrong value for g_AddRef (0x%lX)\n", g_AddRef);
     ok_int(g_Release, 0);
 
     clear_list();
@@ -586,18 +588,73 @@ START_TEST(IShellFolderViewCB)
         IShellFolderViewCB* oldPtr;
 
         hr = folderView->SetCallback(NULL, &oldPtr);
-        ok_int(g_AddRef, 1);
-        ok_int(g_Release, 0);
+        switch (GetNTVersion())
+        {
+            case _WIN32_WINNT_WS03:
+            case _WIN32_WINNT_VISTA:
+                ok_int(g_AddRef, 1);
+                ok_int(g_Release, 0);
+                break;
+            case _WIN32_WINNT_WIN7:
+            case _WIN32_WINNT_WIN8:
+            case _WIN32_WINNT_WINBLUE:
+                ok_int(g_AddRef, 3);
+                ok_int(g_Release, 1);
+                break;
+            case _WIN32_WINNT_WIN10:
+                ok_int(g_AddRef, 6);
+                ok_int(g_Release, 4);
+                break;
+            default:
+                skip("Unknown NT Version (0x%lX)\n", GetNTVersion());
+                break;
+        }
 
         /* Last pointer is not optional! */
         IShellFolderViewCB* oldPtr2;
         hr = folderView->SetCallback(oldPtr, &oldPtr2);
-        ok_int(g_AddRef, 2);
-        ok_int(g_Release, 0);
+        switch (GetNTVersion())
+        {
+            case _WIN32_WINNT_WS03:
+            case _WIN32_WINNT_VISTA:
+                ok_int(g_AddRef, 2);
+                ok_int(g_Release, 0);
+                break;
+            case _WIN32_WINNT_WIN7:
+            case _WIN32_WINNT_WIN8:
+            case _WIN32_WINNT_WINBLUE:
+                ok_int(g_AddRef, 4);
+                ok_int(g_Release, 1);
+                break;
+            case _WIN32_WINNT_WIN10:
+                ok_int(g_AddRef, 7);
+                ok_int(g_Release, 4);
+                break;
+            default:
+                skip("Unknown NT Version (0x%lX)\n", GetNTVersion());
+                break;
+        }
     }
 
     ULONG refCount = psv->Release();
-    ok(refCount == 1, "refCount = %lu\n", refCount);
+    switch (GetNTVersion())
+    {
+        case _WIN32_WINNT_WS03:
+        case _WIN32_WINNT_WIN10:
+            ok(refCount == 1, "refCount = %lu\n", refCount);
+            break;
+        case _WIN32_WINNT_VISTA:
+            ok(refCount == 4, "refCount = %lu\n", refCount);
+            break;
+        case _WIN32_WINNT_WIN7:
+        case _WIN32_WINNT_WIN8:
+        case _WIN32_WINNT_WINBLUE:
+            ok(refCount == 6, "refCount = %lu\n", refCount);
+            break;
+        default:
+            skip("Unknown NT Version (0x%lX)\n", GetNTVersion());
+            break;
+    }
 
     static message release_list[] =
     {

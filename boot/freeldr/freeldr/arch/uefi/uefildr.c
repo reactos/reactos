@@ -57,6 +57,19 @@ EfiEntry(
     /* Initialize I/O subsystem */
     FsInit();
 
+    /* Initialize the module list */
+    if (!PeLdrInitializeModuleList())
+    {
+        UiMessageBoxCritical("Unable to initialize module list.");
+        goto Quit;
+    }
+
+    if (!MachInitializeBootDevices())
+    {
+        UiMessageBoxCritical("Error when detecting hardware.");
+        goto Quit;
+    }
+
     /* 0x32000 is what UEFI defines, but we can go smaller if we want */
     BasicStack = (PVOID)((ULONG_PTR)0x32000 + (ULONG_PTR)MmAllocateMemoryWithType(0x32000, LoaderOsloaderStack));
     _changestack();
@@ -69,6 +82,7 @@ Quit:
     return 0;
 }
 
+DECLSPEC_NORETURN
 void
 ExecuteLoaderCleanly(PVOID PreviousStack)
 {
@@ -76,10 +90,12 @@ ExecuteLoaderCleanly(PVOID PreviousStack)
     UefiServiceStack = PreviousStack;
 
     RunLoader();
+    Reboot();
     UNREACHABLE;
 }
 
 #ifndef _M_ARM
+DECLSPEC_NORETURN
 VOID __cdecl Reboot(VOID)
 {
     //TODO: Replace with a true firmware reboot eventually

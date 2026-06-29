@@ -1,25 +1,8 @@
-#include <stdarg.h>
+#include "ntdll_vista.h"
 
-#define WIN32_NO_STATUS
-
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <winuser.h>
-#include <winwlx.h>
-#include <ndk/rtltypes.h>
-#include <ndk/umfuncs.h>
-
-#define NDEBUG
-#include <debug.h>
-
-VOID
+NTSTATUS
 NTAPI
-RtlpInitializeKeyedEvent(VOID);
-
-VOID
-NTAPI
-RtlpCloseKeyedEvent(VOID);
+RtlpInitializeLocaleTable(VOID);
 
 BOOL
 WINAPI
@@ -27,10 +10,18 @@ DllMain(HANDLE hDll,
         DWORD dwReason,
         LPVOID lpReserved)
 {
+    NTSTATUS Status;
+
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         LdrDisableThreadCalloutsForDll(hDll);
         RtlpInitializeKeyedEvent();
+        Status = RtlpInitializeLocaleTable();
+        if (!NT_SUCCESS(Status))
+        {
+            RtlpCloseKeyedEvent();
+            return FALSE;
+        }
     }
     else if (dwReason == DLL_PROCESS_DETACH)
     {

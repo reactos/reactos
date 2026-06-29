@@ -15,7 +15,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOLEAN ObpCaseInsensitive = TRUE;
+ULONG ObpCaseInsensitive = TRUE;
 POBJECT_DIRECTORY ObpRootDirectoryObject;
 POBJECT_DIRECTORY ObpTypeDirectoryObject;
 

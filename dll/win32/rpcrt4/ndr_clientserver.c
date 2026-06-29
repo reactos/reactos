@@ -78,7 +78,6 @@ void WINAPI NdrClientInitializeNew( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE
   pStubMsg->PointerLength = 0;
   pStubMsg->fInDontFree = 0;
   pStubMsg->fDontCallFreeInst = 0;
-  pStubMsg->fInOnlyParam = 0;
   pStubMsg->fHasReturn = 0;
   pStubMsg->fHasExtensions = 0;
   pStubMsg->fHasNewCorrDesc = 0;
@@ -89,7 +88,7 @@ void WINAPI NdrClientInitializeNew( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE
   pStubMsg->fHasMemoryValidateCallback = 0;
   pStubMsg->fInFree = 0;
   pStubMsg->fNeedMCCP = 0;
-  pStubMsg->fUnused = 0;
+  pStubMsg->fUnused2 = 0;
   pStubMsg->dwDestContext = MSHCTX_DIFFERENTMACHINE;
   pStubMsg->pvDestContext = NULL;
   pStubMsg->pRpcChannelBuffer = NULL;
@@ -132,7 +131,6 @@ unsigned char* WINAPI NdrServerInitializeNew( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_M
   pStubMsg->PointerLength = 0;
   pStubMsg->fInDontFree = 0;
   pStubMsg->fDontCallFreeInst = 0;
-  pStubMsg->fInOnlyParam = 0;
   pStubMsg->fHasReturn = 0;
   pStubMsg->fHasExtensions = 0;
   pStubMsg->fHasNewCorrDesc = 0;
@@ -142,7 +140,7 @@ unsigned char* WINAPI NdrServerInitializeNew( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_M
   pStubMsg->fHasMemoryValidateCallback = 0;
   pStubMsg->fInFree = 0;
   pStubMsg->fNeedMCCP = 0;
-  pStubMsg->fUnused = 0;
+  pStubMsg->fUnused2 = 0;
   pStubMsg->dwDestContext = MSHCTX_DIFFERENTMACHINE;
   pStubMsg->pvDestContext = NULL;
   pStubMsg->pRpcChannelBuffer = NULL;
@@ -164,7 +162,7 @@ unsigned char *WINAPI NdrGetBuffer(PMIDL_STUB_MESSAGE stubmsg, ULONG buflen, RPC
 {
   RPC_STATUS status;
 
-  TRACE("(stubmsg == ^%p, buflen == %u, handle == %p)\n", stubmsg, buflen, handle);
+  TRACE("(stubmsg == ^%p, buflen == %lu, handle == %p)\n", stubmsg, buflen, handle);
   
   stubmsg->RpcMsg->Handle = handle;
   stubmsg->RpcMsg->BufferLength = buflen;
@@ -233,7 +231,7 @@ RPC_STATUS RPC_ENTRY NdrMapCommAndFaultStatus( PMIDL_STUB_MESSAGE pStubMsg,
                                                ULONG *pFaultStatus,
                                                RPC_STATUS Status )
 {
-    TRACE("(%p, %p, %p, %d)\n", pStubMsg, pCommStatus, pFaultStatus, Status);
+    TRACE("(%p, %p, %p, %ld)\n", pStubMsg, pCommStatus, pFaultStatus, Status);
 
     switch (Status)
     {

@@ -56,23 +56,23 @@ InbvBitBlt(
 VOID
 NTAPI
 InbvBufferToScreenBlt(
-    _In_ PUCHAR Buffer,
+    _In_reads_bytes_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG X,
     _In_ ULONG Y,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta
+    _In_ ULONG Stride
 );
 
 VOID
 NTAPI
 InbvScreenToBufferBlt(
-    _Out_ PUCHAR Buffer,
+    _Out_writes_bytes_all_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG X,
     _In_ ULONG Y,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta
+    _In_ ULONG Stride
 );
 
 //
@@ -109,42 +109,36 @@ InbvUpdateProgressBar(
 VOID
 NTAPI
 InbvPortEnableFifo(
-    IN ULONG PortId,
-    IN BOOLEAN Enable
-);
+    _In_ ULONG PortId,
+    _In_ BOOLEAN Enable);
 
 BOOLEAN
 NTAPI
 InbvPortPollOnly(
-    IN ULONG PortId
-);
+    _In_ ULONG PortId);
 
 BOOLEAN
 NTAPI
 InbvPortGetByte(
-    IN ULONG PortId,
-    OUT PUCHAR Byte
-);
+    _In_ ULONG PortId,
+    _Out_ PUCHAR Byte);
 
 VOID
 NTAPI
 InbvPortPutByte(
-    IN ULONG PortId,
-    IN UCHAR Byte
-);
-
-VOID
-NTAPI
-InbvPortTerminate(
-    IN ULONG PortId
-);
+    _In_ ULONG PortId,
+    _In_ UCHAR Byte);
 
 BOOLEAN
 NTAPI
 InbvPortInitialize(
-    IN ULONG BaudRate,
-    IN ULONG PortNumber,
-    IN PUCHAR PortAddress,
-    OUT PULONG PortId,
-    IN BOOLEAN IsMMIODevice
-);
+    _In_ ULONG BaudRate,
+    _In_ ULONG PortNumber,
+    _In_ PUCHAR PortAddress,
+    _Out_ PULONG PortId,
+    _In_ BOOLEAN IsMMIODevice);
+
+VOID
+NTAPI
+InbvPortTerminate(
+    _In_ ULONG PortId);

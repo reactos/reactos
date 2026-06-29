@@ -68,10 +68,11 @@ include(sdk/cmake/config.cmake)
 # Compiler flags handling
 include(sdk/cmake/compilerflags.cmake)
 
+# set_wine_module function
+include(sdk/cmake/set_wine_module.cmake)
+
 add_definitions(
     -D__REACTOS__
-    # swprintf without count argument is used in most of the codebase
-    -D_CRT_NON_CONFORMING_SWPRINTFS
 )
 
 # There doesn't seem to be a standard for __FILE__ being relative or absolute, so detect it at runtime.
@@ -140,6 +141,10 @@ if(NOT CMAKE_CROSSCOMPILING)
             add_definitions(/D_X86_ /D__i386__ /DWIN32 /D_WINDOWS)
         elseif(ARCH STREQUAL "amd64")
             add_definitions(-D_AMD64_ -D__x86_64__ /DWIN32 -D_WINDOWS)
+        elseif(ARCH STREQUAL "arm")
+            add_definitions(-D__arm__)
+        elseif(ARCH STREQUAL "arm64")
+            add_definitions(-D__aarch64__)
         endif()
         if(MSVC_VERSION GREATER 1699)
             add_definitions(/D_ALLOW_KEYWORD_MACROS)
@@ -153,7 +158,10 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     set(NATIVE_TARGETS asmpp bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink utf16le xml2sdb)
     if(NOT MSVC)
-        list(APPEND NATIVE_TARGETS rsym pefixup)
+        list(APPEND NATIVE_TARGETS pefixup)
+        if (ARCH STREQUAL "i386")
+            list(APPEND NATIVE_TARGETS rsym)
+        endif()
     endif()
 
     install(TARGETS ${NATIVE_TARGETS})
@@ -228,7 +236,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
     # Version Options
     add_definitions(-DWINVER=0x502
-                    -D_WIN32_IE=0x600
+                    -D_WIN32_IE=0x603
                     -D_WIN32_WINNT=0x502
                     -D_WIN32_WINDOWS=0x502
                     -D_SETUPAPI_VER=0x502
@@ -252,7 +260,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     elseif(ARCH STREQUAL "amd64")
         # clang-cl defines this one for itself
         if (NOT (MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang"))
-            add_compile_definitions(_M_AMD64)
+            add_compile_definitions(_M_AMD64 _M_X64)
         endif()
         add_definitions(-D_AMD64_ -D__x86_64__ -D_WIN64)
     elseif(ARCH STREQUAL "arm")
@@ -310,22 +318,23 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
     include_directories(
         sdk/include
+        sdk/include/crt
+        sdk/include/ddk
+        sdk/include/ndk
         sdk/include/psdk
-        sdk/include/dxsdk
+        sdk/include/reactos
+        sdk/include/reactos/libs
+        sdk/include/vcruntime
         sdk/include/winrt
         ${REACTOS_BINARY_DIR}/sdk/include
         ${REACTOS_BINARY_DIR}/sdk/include/psdk
-        ${REACTOS_BINARY_DIR}/sdk/include/dxsdk
         ${REACTOS_BINARY_DIR}/sdk/include/ddk
+        ${REACTOS_BINARY_DIR}/sdk/include/dxsdk
         ${REACTOS_BINARY_DIR}/sdk/include/reactos
         ${REACTOS_BINARY_DIR}/sdk/include/reactos/mc
-        sdk/include/crt
-        sdk/include/vcruntime
-        sdk/include/ddk
-        sdk/include/ndk
-        sdk/include/reactos
-        sdk/include/reactos/libs
-        sdk/lib/pseh/include)
+        sdk/include/dxsdk
+        sdk/lib/pseh/include
+    )
 
     if(ARCH STREQUAL "arm")
         include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/arm)
@@ -333,13 +342,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
     add_dependency_header()
 
-    add_subdirectory(sdk/include/ndk/tests)
-    add_subdirectory(sdk/include/xdk)
-    add_subdirectory(sdk/include/psdk)
-    add_subdirectory(sdk/include/dxsdk)
-    add_subdirectory(sdk/include/reactos/wine)
-    add_subdirectory(sdk/include/reactos/mc)
-    add_subdirectory(sdk/include/asm)
+    add_subdirectory(sdk/include)
 
     if(ARCH MATCHES "64$")
         include(sdk/cmake/baseaddress64.cmake)
@@ -375,7 +378,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     # Create the registry hives
     create_registry_hives()
 
-    # Create {bootcd, livecd, bootcdregtest}.lst
+    # Create {bootcd, bootcdregtest, livecd}.lst
     create_iso_lists()
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/sdk/include/reactos)

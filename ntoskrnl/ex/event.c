@@ -107,6 +107,13 @@ NtCreateEvent(OUT PHANDLE EventHandle,
     DPRINT("NtCreateEvent(0x%p, 0x%x, 0x%p)\n",
             EventHandle, DesiredAccess, ObjectAttributes);
 
+    /* Validate the event type */
+    if ((EventType != NotificationEvent) &&
+        (EventType != SynchronizationEvent))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Check if we were called from user-mode */
     if (PreviousMode != KernelMode)
     {
@@ -134,40 +141,41 @@ NtCreateEvent(OUT PHANDLE EventHandle,
                             0,
                             0,
                             (PVOID*)&Event);
-
-    /* Check for Success */
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        /* Initialize the Event */
-        KeInitializeEvent(Event,
-                          EventType,
-                          InitialState);
-
-        /* Insert it */
-        Status = ObInsertObject((PVOID)Event,
-                                 NULL,
-                                 DesiredAccess,
-                                 0,
-                                 NULL,
-                                 &hEvent);
-
-        /* Check for success */
-        if (NT_SUCCESS(Status))
-        {
-            /* Enter SEH for return */
-            _SEH2_TRY
-            {
-                /* Return the handle to the caller */
-                *EventHandle = hEvent;
-            }
-            _SEH2_EXCEPT(ExSystemExceptionFilter())
-            {
-                /* Get the exception code */
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-        }
+        DPRINT1("ObCreateObject failed: 0x%X\n", Status);
+        return Status;
     }
+
+    /* Initialize the Event */
+    KeInitializeEvent(Event, EventType, InitialState);
+
+    /* Insert it */
+    Status = ObInsertObject((PVOID)Event,
+                            NULL,
+                            DesiredAccess,
+                            0,
+                            NULL,
+                            &hEvent);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ObInsertObject failed: 0x%X\n", Status);
+        /* Note: ObInsertObject dereferences Event on failure */
+        return Status;
+    }
+
+    /* Enter SEH for return */
+    _SEH2_TRY
+    {
+        /* Return the handle to the caller */
+        *EventHandle = hEvent;
+    }
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
+    {
+        /* Get the exception code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     /* Return Status */
     return Status;

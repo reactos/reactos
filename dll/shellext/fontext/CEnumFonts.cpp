@@ -9,8 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
-
-
 class CEnumFonts :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IEnumIDList
@@ -21,12 +19,12 @@ private:
 
 public:
     CEnumFonts()
-        :m_dwFlags(0)
-        ,m_Index(0)
+        : m_dwFlags(0)
+        , m_Index(0)
     {
     }
 
-    STDMETHODIMP Initialize(CFontExt* folder, DWORD flags)
+    HRESULT Initialize(CFontExt* folder, DWORD flags)
     {
         m_dwFlags = flags;
         m_Index = 0;
@@ -34,7 +32,7 @@ public:
     }
 
     // *** IEnumIDList methods ***
-    STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched)
+    STDMETHODIMP Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched) override
     {
         if (!rgelt || (!pceltFetched && celt != 1))
             return E_POINTER;
@@ -44,46 +42,61 @@ public:
 
         while (celt)
         {
-            celt--;
-
-            if (m_Index < g_FontCache->Size())
-            {
-                CStringW Name = g_FontCache->Name(m_Index);
-                LPITEMIDLIST item = _ILCreate(Name, m_Index);
-                if (!item)
-                {
-                    hr = Fetched ? S_FALSE : E_OUTOFMEMORY;
-                    break;
-                }
-                rgelt[Fetched] = item;
-                m_Index++;
-                Fetched++;
-            }
-            else
+            if (m_Index >= g_FontCache->Size())
             {
                 hr = S_FALSE;
+                break;
             }
+
+            if (!g_FontCache->IsMarkDeleted(m_Index))
+            {
+                CStringW Name = g_FontCache->Name(m_Index), FileName = g_FontCache->File(m_Index);
+                if (Name.IsEmpty() || FileName.IsEmpty())
+                {
+                    ERR("Why is Name or FileName empty?\n");
+                }
+                else
+                {
+                    // Create a PIDL
+                    PITEMID_CHILD item = _ILCreate(Name, FileName);
+                    if (!item)
+                    {
+                        hr = Fetched ? S_FALSE : E_OUTOFMEMORY;
+                        break;
+                    }
+                    rgelt[Fetched++] = item;
+                    --celt;
+                }
+            }
+            m_Index++;
         }
 
         if (pceltFetched)
             *pceltFetched = Fetched;
         return hr;
     }
-    STDMETHODIMP Skip(ULONG celt)
+
+    STDMETHODIMP Skip(ULONG celt) override
     {
-        m_Index += celt;
+        for (ULONG i = 0; i < celt && m_Index < g_FontCache->Size(); ++i)
+        {
+            while (m_Index < g_FontCache->Size() && g_FontCache->IsMarkDeleted(m_Index))
+                ++m_Index;
+            ++m_Index;
+        }
         return S_OK;
     }
-    STDMETHODIMP Reset()
+
+    STDMETHODIMP Reset() override
     {
         m_Index = 0;
         return S_OK;
     }
-    STDMETHODIMP Clone(IEnumIDList **ppenum)
+
+    STDMETHODIMP Clone(IEnumIDList **ppenum) override
     {
         return E_NOTIMPL;
     }
-
 
 public:
     DECLARE_NOT_AGGREGATABLE(CEnumFonts)
@@ -94,9 +107,7 @@ public:
     END_COM_MAP()
 };
 
-
 HRESULT _CEnumFonts_CreateInstance(CFontExt* zip, DWORD flags, REFIID riid, LPVOID * ppvOut)
 {
     return ShellObjectCreatorInit<CEnumFonts>(zip, flags, riid, ppvOut);
 }
-

@@ -24,7 +24,7 @@
  *                  15-Feb-2004 vizzini - Created
  *
  * NOTES:
- *     - Baesd on http://www.nondot.org/sabre/os/files/Disk/FLOPPY.TXT
+ *     - Baesd on https://web.archive.org/web/20120130065947/http://www.nondot.org/sabre/os/files/Disk/FLOPPY.TXT
  *     - Some information taken from Intel 82077AA data sheet (order #290166-007)
  *     - Some definitions are PS/2-Specific; others include the original NEC PD765
  *     - Other information gathered from the comments in the NT 3.5 floppy driver

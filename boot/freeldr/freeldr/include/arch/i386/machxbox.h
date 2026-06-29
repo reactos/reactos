@@ -24,15 +24,13 @@
 
 #include <drivers/xbox/xgpu.h>
 
-extern UCHAR BitmapFont8x16[256 * 16];
-
 VOID XboxConsPutChar(int Ch);
 BOOLEAN XboxConsKbHit(VOID);
 int XboxConsGetCh(VOID);
 
 VOID XboxVideoInit(VOID);
 VOID XboxVideoClearScreen(UCHAR Attr);
-VIDEODISPLAYMODE XboxVideoSetDisplayMode(char *DisplayModem, BOOLEAN Init);
+VIDEODISPLAYMODE XboxVideoSetDisplayMode(PCSTR DisplayModem, BOOLEAN Init);
 VOID XboxVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG XboxVideoGetBufferSize(VOID);
 VOID XboxVideoGetFontsFromFirmware(PULONG RomFontPointers);
@@ -45,13 +43,11 @@ VOID XboxVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
 VOID XboxVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue);
 VOID XboxVideoSync(VOID);
 VOID XboxVideoPrepareForReactOS(VOID);
-VOID XboxVideoScrollUp(VOID);
 VOID XboxPrepareForReactOS(VOID);
 
 VOID XboxMemInit(VOID);
 PFREELDR_MEMORY_DESCRIPTOR XboxMemGetMemoryMap(ULONG *MemoryMapSize);
 
-VOID XboxDiskInit(BOOLEAN Init);
 BOOLEAN XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 BOOLEAN XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
 ULONG XboxDiskGetCacheableBlockCount(UCHAR DriveNumber);

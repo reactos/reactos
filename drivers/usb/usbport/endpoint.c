@@ -410,9 +410,17 @@ USBPORT_SetEndpointState(IN PUSBPORT_ENDPOINT Endpoint,
         Endpoint->FrameNumber = Packet->Get32BitFrameNumber(FdoExtension->MiniPortExt);
         KeReleaseSpinLock(&FdoExtension->MiniportSpinLock, OldIrql);
 
-        ExInterlockedInsertTailList(&FdoExtension->EpStateChangeList,
-                                    &Endpoint->StateChangeLink,
-                                    &FdoExtension->EpStateChangeSpinLock);
+        KIRQL StateChangeOldIrql;
+        KeAcquireSpinLock(&FdoExtension->EpStateChangeSpinLock, &StateChangeOldIrql);
+
+        if (Endpoint->StateChangeLink.Flink == NULL &&
+            Endpoint->StateChangeLink.Blink == NULL)
+        {
+            InsertTailList(&FdoExtension->EpStateChangeList,
+                          &Endpoint->StateChangeLink);
+        }
+
+        KeReleaseSpinLock(&FdoExtension->EpStateChangeSpinLock, StateChangeOldIrql);
 
         KeAcquireSpinLock(&FdoExtension->MiniportSpinLock, &OldIrql);
         Packet->InterruptNextSOF(FdoExtension->MiniPortExt);
@@ -505,6 +513,24 @@ USBPORT_DeleteEndpoint(IN PDEVICE_OBJECT FdoDevice,
     DPRINT1("USBPORT_DeleteEndpoint: Endpoint - %p\n", Endpoint);
 
     FdoExtension = FdoDevice->DeviceExtension;
+
+    /* 
+     * Remove endpoint from EpStateChangeList if it's still there.
+     * This prevents the DPC handler from accessing a deleted endpoint.
+     */
+    KIRQL StateChangeOldIrql;
+    KeAcquireSpinLock(&FdoExtension->EpStateChangeSpinLock, &StateChangeOldIrql);
+
+    if (Endpoint->StateChangeLink.Flink != NULL &&
+        Endpoint->StateChangeLink.Blink != NULL)
+    {
+        RemoveEntryList(&Endpoint->StateChangeLink);
+    }
+    
+    Endpoint->StateChangeLink.Flink = NULL;
+    Endpoint->StateChangeLink.Blink = NULL;
+    
+    KeReleaseSpinLock(&FdoExtension->EpStateChangeSpinLock, StateChangeOldIrql);
 
     if ((Endpoint->WorkerLink.Flink && Endpoint->WorkerLink.Blink) ||
         Endpoint->LockCounter != -1)
@@ -778,12 +804,13 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
     USBPORT_ENDPOINT_REQUIREMENTS EndpointRequirements = {0};
     PUSBPORT_COMMON_BUFFER_HEADER HeaderBuffer;
     MPSTATUS MpStatus;
-    USBD_STATUS USBDStatus;
+    USBD_STATUS USBDStatus = USBD_STATUS_SUCCESS;
     NTSTATUS Status;
     KIRQL OldIrql;
     USHORT MaxPacketSize;
     USHORT AdditionalTransaction;
     BOOLEAN IsAllocatedBandwidth;
+    ULONG RetryCount;
 
     DPRINT1("USBPORT_OpenPipe: DeviceHandle - %p, FdoDevice - %p, PipeHandle - %p\n",
            DeviceHandle,
@@ -1074,7 +1101,8 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
                 KeReleaseSpinLock(&Endpoint->EndpointSpinLock,
                                   Endpoint->EndpointOldIrql);
 
-                while (TRUE)
+                /* Wait maximum 1 second for the endpoint to be active */
+                for (RetryCount = 0; RetryCount < 1000; RetryCount++)
                 {
                     KeAcquireSpinLock(&Endpoint->EndpointSpinLock,
                                       &Endpoint->EndpointOldIrql);
@@ -1091,6 +1119,11 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
 
                     USBPORT_Wait(FdoDevice, 1); // 1 msec.
                 }
+                if (State != USBPORT_ENDPOINT_ACTIVE)
+                {
+                    DPRINT1("Timeout State %x\n", State);
+                    USBDStatus = USBD_STATUS_TIMEOUT;
+                }
             }
         }
         else
@@ -1102,10 +1135,6 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
         if (MpStatus)
         {
             USBDStatus = USBD_STATUS_INSUFFICIENT_RESOURCES;
-        }
-        else
-        {
-            USBDStatus = USBD_STATUS_SUCCESS;
         }
     }
 

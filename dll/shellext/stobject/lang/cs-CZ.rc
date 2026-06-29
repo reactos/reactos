@@ -24,6 +24,7 @@ BEGIN
     IDS_PWR_AC "On AC power"
     IDS_PWR_HOURS_REMAINING "zbývá %1!u!:%2!02u! hodin (%3!u!%%)"
     IDS_PWR_MINUTES_REMAINING "zbývá %1!u! minut (%2!u!%%)"
+    IDS_PWR_FULLY_CHARGED "Fully charged"
 
     //Hotplug related strings
     IDS_HOTPLUG_REMOVE_1 "Bezpečně odebrat hardware"

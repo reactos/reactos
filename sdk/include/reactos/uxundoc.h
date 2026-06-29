@@ -1,6 +1,22 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef HANDLE HTHEMEFILE;
+
+typedef struct tagPARSE_ERROR_INFO
+{
+    DWORD cbSize;
+    UINT nID;
+    WCHAR szDescription[2 * MAX_PATH];
+    WCHAR szFile[MAX_PATH];
+    WCHAR szLine[MAX_PATH];
+    INT nLineNo;
+} PARSE_ERROR_INFO, *PPARSE_ERROR_INFO;
+
+HRESULT WINAPI GetThemeParseErrorInfo(_Inout_ PPARSE_ERROR_INFO pInfo);
 
 /**********************************************************************
  *              ENUMTHEMEPROC
@@ -65,9 +81,17 @@ HRESULT WINAPI OpenThemeFile(LPCWSTR pszThemeFileName,
 
 HRESULT WINAPI CloseThemeFile(HTHEMEFILE hThemeFile);
 
+#define UXTAPPLYFLAG_LOADSYSTEMMETRICS  0x01 // https://stackoverflow.com/a/1036903
+#define UXTAPPLYFLAG_APPLYSYSTEMMETRICS 0x20 // https://stackoverflow.com/a/1036903
+
 HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile,
-                          char *unknown,
+                          UINT Flags,
                           HWND hWnd);
+
+HRESULT WINAPI SetSystemVisualStyle(PCWSTR pszStyleFile,
+                                    PCWSTR pszColor,
+                                    PCWSTR pszSize,
+                                    UINT Flags);
 
 HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName,
                                 LPWSTR pszColorName,
@@ -118,3 +142,6 @@ BOOL WINAPI ThemeHooksInstall(VOID);
 
 BOOL WINAPI ThemeHooksRemove(VOID);
 
+#ifdef __cplusplus
+} // extern "C"
+#endif

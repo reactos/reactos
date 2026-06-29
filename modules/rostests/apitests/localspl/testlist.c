@@ -5,8 +5,6 @@
  * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
  */
 
-#define __ROS_LONG64__
-
 #define STANDALONE
 #include <apitest.h>
 

@@ -292,7 +292,7 @@ Severity=Success
 Facility=System
 SymbolicName=CREATE_DELETE_LOCK_NOT_LOCKED
 Language=English
-The thread reaper was handed a thread to reap, but the thread's process'
+CREATE_DELETE_LOCK_NOT_LOCKED
 .
 
 MessageId=0x15
@@ -1177,6 +1177,14 @@ Facility=System
 SymbolicName=WIN32K_INIT_OR_RIT_FAILURE
 Language=English
 WIN32K_INIT_OR_RIT_FAILURE
+.
+
+MessageId=0x92
+Severity=Success
+Facility=System
+SymbolicName=UP_DRIVER_ON_MP_SYSTEM
+Language=English
+UP_DRIVER_ON_MP_SYSTEM
 .
 
 MessageId=0x93

@@ -2,16 +2,6 @@
 
 typedef struct
 {
-    const INetCfgComponent *lpVtbl;
-    const INetCfgComponentBindings *lpVtblComponentBindings;
-    LONG  ref;
-    NetCfgComponentItem * pItem;
-    INetCfgComponentPropertyUi * pProperty;
-    INetCfg * pNCfg;
-} INetCfgComponentImpl;
-
-typedef struct
-{
     const IEnumNetCfgComponent * lpVtbl;
     LONG  ref;
     NetCfgComponentItem * pCurrent;
@@ -19,11 +9,17 @@ typedef struct
     INetCfg * pNCfg;
 } IEnumNetCfgComponentImpl;
 
+HRESULT CreateNotifyObject(INetCfgComponentImpl * This, INetCfgComponent * iface);
+
 static __inline INetCfgComponentImpl* impl_from_INetCfgComponentBindings(INetCfgComponentBindings *iface)
 {
-    return (INetCfgComponentImpl*)((char *)iface - FIELD_OFFSET(INetCfgComponentImpl, lpVtblComponentBindings));
+    return (INetCfgComponentImpl*)((char *)iface - FIELD_OFFSET(INetCfgComponentImpl, lpVtblBindings));
 }
 
+static __inline INetCfgComponentImpl* impl_from_INetCfgComponentPrivate(INetCfgComponentPrivate *iface)
+{
+    return (INetCfgComponentImpl*)((char *)iface - FIELD_OFFSET(INetCfgComponentImpl, lpVtblPrivate));
+}
 
 /***************************************************************
  * INetCfgComponentBindings
@@ -83,7 +79,42 @@ INetCfgComponentBindings_fnSupportsBindingInterface(
     DWORD dwFlags,
     LPCWSTR pszwInterfaceName)
 {
-    return E_NOTIMPL;
+    INetCfgComponentImpl *pComponent;
+    PWSTR pszRange, pszStart, pszEnd;
+
+    pComponent = impl_from_INetCfgComponentBindings(iface);
+
+    if (!((dwFlags & NCF_UPPER) || (dwFlags & NCF_LOWER)))
+        return E_INVALIDARG;
+
+    if (!pszwInterfaceName)
+        return E_POINTER;
+
+    pszRange = (dwFlags & NCF_UPPER) ? pComponent->pItem->pszUpperRange : pComponent->pItem->pszLowerRange;
+    TRACE("Range: %S\n", pszRange);
+
+    pszStart = pszRange;
+    for (;;)
+    {
+        pszEnd = wcschr(pszStart, L',');
+        if (pszEnd == NULL)
+        {
+            TRACE("%S -- %S\n", pszStart, pszwInterfaceName);
+            return (_wcsicmp(pszStart, pszwInterfaceName)) ? S_FALSE : S_OK;
+        }
+        else
+        {
+            *pszEnd = UNICODE_NULL;
+            TRACE("%S -- %S\n", pszStart, pszwInterfaceName);
+            if (_wcsicmp(pszStart, pszwInterfaceName) == 0)
+                return S_OK;
+
+            *pszEnd = L',';
+            pszStart = pszEnd + 1;
+        }
+    }
+
+    return S_FALSE;
 }
 
 HRESULT
@@ -180,6 +211,76 @@ static const INetCfgComponentBindingsVtbl vt_NetCfgComponentBindings =
 };
 
 /***************************************************************
+ * INetCfgComponentPrivate
+ */
+
+HRESULT
+WINAPI
+INetCfgComponentPrivate_fnQueryInterface(
+    INetCfgComponentPrivate *iface,
+    REFIID iid,
+    LPVOID *ppvObj)
+{
+    INetCfgComponentImpl *This = impl_from_INetCfgComponentPrivate(iface);
+    return INetCfgComponent_QueryInterface((INetCfgComponent*)This, iid, ppvObj);
+}
+
+ULONG
+WINAPI
+INetCfgComponentPrivate_fnAddRef(
+    INetCfgComponentPrivate *iface)
+{
+    INetCfgComponentImpl *This = impl_from_INetCfgComponentPrivate(iface);
+    return INetCfgComponent_AddRef((INetCfgComponent*)This);
+}
+
+ULONG
+WINAPI
+INetCfgComponentPrivate_fnRelease(
+    INetCfgComponentPrivate *iface)
+{
+    INetCfgComponentImpl *This = impl_from_INetCfgComponentPrivate(iface);
+    return INetCfgComponent_Release((INetCfgComponent*)This);
+}
+
+HRESULT
+WINAPI
+INetCfgComponentPrivate_fnUnknown1(
+    INetCfgComponentPrivate *iface,
+    REFIID iid,
+    LPVOID *ppvObj)
+{
+    HRESULT hr;
+
+    TRACE("INetCfgComponentPrivate_fnUnknown1(%p %s %p)\n", iface, wine_dbgstr_guid(iid), ppvObj);
+
+    INetCfgComponentImpl *This = impl_from_INetCfgComponentPrivate(iface);
+    hr = CreateNotifyObject(This, (INetCfgComponent*)This);
+    if (FAILED(hr))
+        return hr;
+
+    TRACE("This->pItem %p\n", This->pItem);
+    if (This->pItem)
+    {
+        TRACE("This->pItem->pControl %p\n", This->pItem->pControl);
+        if (This->pItem->pControl)
+        {
+            return INetCfgComponentControl_QueryInterface(This->pItem->pControl, iid, ppvObj);
+        }
+    }
+
+    return S_OK;
+}
+
+static const INetCfgComponentPrivateVtbl vt_NetCfgComponentPrivate =
+{
+    INetCfgComponentPrivate_fnQueryInterface,
+    INetCfgComponentPrivate_fnAddRef,
+    INetCfgComponentPrivate_fnRelease,
+    INetCfgComponentPrivate_fnUnknown1,
+};
+
+/***************************************************************
  * INetCfgComponent
  */
 
@@ -202,8 +303,15 @@ INetCfgComponent_fnQueryInterface(
     }
     else if (IsEqualIID (iid, &IID_INetCfgComponentBindings))
     {
-        *ppvObj = (LPVOID)&This->lpVtblComponentBindings;
+        *ppvObj = (LPVOID)&This->lpVtblBindings;
         INetCfgComponentBindings_AddRef(iface);
+        return S_OK;
+    }
+    else if (IsEqualIID (iid, &IID_INetCfgComponentPrivate))
+    {
+        TRACE("IID_INetCfgComponentPrivate\n");
+        *ppvObj = (LPVOID)&This->lpVtblPrivate;
+        INetCfgComponentPrivate_AddRef(iface);
         return S_OK;
     }
 
@@ -488,22 +596,28 @@ INetCfgComponent_fnOpenParamKey(
 
 
 HRESULT
-CreateNotificationObject(
-    INetCfgComponentImpl * This,
-    INetCfgComponent * iface,
-    IUnknown  *pUnk)
+CreateNotifyObject(
+    INetCfgComponentImpl *This,
+    INetCfgComponent *iface)
 {
     WCHAR szName[150];
     HKEY hKey;
     DWORD dwSize, dwType;
     GUID CLSID_NotifyObject;
     LPOLESTR pStr;
-    INetCfgComponentPropertyUi * pNCCPU;
-    INetCfgComponentControl * pNCCC;
+    INetCfgComponentControl *pControl;
+    INetCfgComponentPropertyUi *pPropertyUi;
+    INetCfgComponentSetup *pSetup;
+    INetCfgComponentNotifyBinding *pNotifyBinding;
+    INetCfgComponentNotifyGlobal *pNotifyGlobal;
+    INetCfgComponentUpperEdge *pUpperEdge;
     HRESULT hr;
     LONG lRet;
     CLSID ClassGUID;
     CLSID InstanceGUID;
+
+    if (This->pItem->pControl)
+        return S_OK;
 
     wcscpy(szName,L"SYSTEM\\CurrentControlSet\\Control\\Network\\");
 
@@ -548,40 +662,49 @@ CreateNotificationObject(
     if (FAILED(hr))
         return E_FAIL;
 
-    hr = CoCreateInstance(&CLSID_NotifyObject, NULL, CLSCTX_INPROC_SERVER, &IID_INetCfgComponentPropertyUi, (LPVOID*)&pNCCPU);
+    hr = CoCreateInstance(&CLSID_NotifyObject, NULL, CLSCTX_INPROC_SERVER, &IID_INetCfgComponentControl, (LPVOID*)&pControl);
     if (FAILED(hr))
         return E_FAIL;
 
-    hr = INetCfgComponentPropertyUi_QueryInterface(pNCCPU, &IID_INetCfgComponentControl, (LPVOID*)&pNCCC);
-    if (FAILED(hr))
+    This->pItem->pControl = pControl;
+
+    hr = INetCfgComponentControl_QueryInterface(pControl, &IID_INetCfgComponentPropertyUi, (LPVOID*)&pPropertyUi);
+    if (SUCCEEDED(hr))
     {
-        INetCfgComponentPropertyUi_Release(pNCCPU);
-        return hr;
+        This->pItem->pPropertyUi = pPropertyUi;
     }
 
-    hr = INetCfgComponentPropertyUi_QueryPropertyUi(pNCCPU, pUnk);
-    if (FAILED(hr))
+    hr = INetCfgComponentControl_QueryInterface(pControl, &IID_INetCfgComponentSetup, (LPVOID*)&pSetup);
+    if (SUCCEEDED(hr))
     {
-        INetCfgComponentPropertyUi_Release(pNCCPU);
-        return hr;
+        This->pItem->pSetup = pSetup;
     }
 
-    hr = INetCfgComponentControl_Initialize(pNCCC, iface, This->pNCfg, FALSE);
-    if (FAILED(hr))
+    hr = INetCfgComponentControl_QueryInterface(pControl, &IID_INetCfgComponentNotifyBinding, (LPVOID*)&pNotifyBinding);
+    if (SUCCEEDED(hr))
     {
-        INetCfgComponentControl_Release(pNCCC);
-        INetCfgComponentPropertyUi_Release(pNCCPU);
-        return hr;
+        This->pItem->pNotifyBinding = pNotifyBinding;
     }
 
-    hr = INetCfgComponentPropertyUi_SetContext(pNCCPU, pUnk);
-    if (FAILED(hr))
+    hr = INetCfgComponentControl_QueryInterface(pControl, &IID_INetCfgComponentNotifyGlobal, (LPVOID*)&pNotifyGlobal);
+    if (SUCCEEDED(hr))
     {
-        INetCfgComponentPropertyUi_Release(pNCCPU);
-        return hr;
+        This->pItem->pNotifyGlobal = pNotifyGlobal;
     }
-    This->pProperty = pNCCPU;
-    This->pItem->pNCCC = pNCCC;
+
+    hr = INetCfgComponentControl_QueryInterface(pControl, &IID_INetCfgComponentUpperEdge, (LPVOID*)&pUpperEdge);
+    if (SUCCEEDED(hr))
+    {
+        This->pItem->pUpperEdge = pUpperEdge;
+    }
+
+    INetCfgComponentControl_Initialize(pControl, iface, This->pNCfg, FALSE);
+
+    if (This->pItem->pNotifyGlobal)
+    {
+        INetCfgComponentNotifyGlobal_GetSupportedNotifications(This->pItem->pNotifyGlobal,
+                                                               &This->pItem->dwSupportedNotifications);
+    }
 
     return S_OK;
 }
@@ -619,20 +742,22 @@ INetCfgComponent_fnRaisePropertyUi(
     INT_PTR iResult;
     INetCfgComponentImpl * This = (INetCfgComponentImpl*)iface;
 
-    if (!This->pProperty)
-    {
-         hr = CreateNotificationObject(This,iface, pUnk);
-         if (FAILED(hr))
-             return hr;
-    }
+    hr = CreateNotifyObject(This, iface);
+    if (FAILED(hr))
+        return hr;
 
-    if (dwFlags == NCRP_QUERY_PROPERTY_UI)
-        return S_OK;
+    if (This->pItem->pPropertyUi == NULL)
+        return E_FAIL;
+
+    if (dwFlags & NCRP_QUERY_PROPERTY_UI)
+        return INetCfgComponentPropertyUi_QueryPropertyUi(This->pItem->pPropertyUi, pUnk);
+
+    hr = INetCfgComponentPropertyUi_SetContext(This->pItem->pPropertyUi, pUnk);
 
     dwDefPages = 0;
     Pages = 0;
 
-    hr = INetCfgComponentPropertyUi_MergePropPages(This->pProperty, &dwDefPages, (BYTE**)&hppages, &Pages, hwndParent, NULL);
+    hr = INetCfgComponentPropertyUi_MergePropPages(This->pItem->pPropertyUi, &dwDefPages, (BYTE**)&hppages, &Pages, hwndParent, NULL);
     if (FAILED(hr) || !Pages)
     {
         return hr;
@@ -653,12 +778,25 @@ INetCfgComponent_fnRaisePropertyUi(
     CoTaskMemFree(hppages);
     if (iResult > 0)
     {
+        hr = INetCfgComponentPropertyUi_ApplyProperties(This->pItem->pPropertyUi);
         /* indicate that settings should be stored */
-        This->pItem->bChanged = TRUE;
-        return S_OK;
+        if (hr == S_OK)
+            This->pItem->bChanged = TRUE;
     }
-    return S_FALSE;
+    else if (iResult == 0)
+    {
+        hr = INetCfgComponentPropertyUi_CancelProperties(This->pItem->pPropertyUi);
+    }
+    else 
+    {
+        hr = S_FALSE;
+    }
+
+    INetCfgComponentPropertyUi_SetContext(This->pItem->pPropertyUi, NULL);
+
+    return hr;
 }
+
 static const INetCfgComponentVtbl vt_NetCfgComponent =
 {
     INetCfgComponent_fnQueryInterface,
@@ -693,8 +831,8 @@ INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, N
 
     This->ref = 1;
     This->lpVtbl = (const INetCfgComponent*)&vt_NetCfgComponent;
-    This->lpVtblComponentBindings = (const INetCfgComponentBindings*)&vt_NetCfgComponentBindings;
-    This->pProperty = NULL;
+    This->lpVtblBindings = (const INetCfgComponentBindings*)&vt_NetCfgComponentBindings;
+    This->lpVtblPrivate = (const INetCfgComponentPrivate*)&vt_NetCfgComponentPrivate;
     This->pItem = pItem;
     This->pNCfg = pNCfg;
 

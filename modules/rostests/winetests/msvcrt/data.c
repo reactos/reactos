@@ -32,7 +32,11 @@
 #include <errno.h>
 #include <direct.h>
 
-void __cdecl __getmainargs(int *, char ***, char ***, int, int *);
+#ifdef __REACTOS__
+_CRTIMP void __cdecl __getmainargs(int *, char ***, char ***, int, int *);
+_CRTIMP void __cdecl __wgetmainargs(int *, wchar_t ***, wchar_t ***, int, int *);
+#endif
+
 static int* (__cdecl *p___p___argc)(void);
 static char*** (__cdecl *p___p___argv)(void);
 
@@ -92,12 +96,12 @@ static void test_initvar( HMODULE hmsvcrt )
     winminor = *pp_winminor;
     winmajor = *pp_winmajor;
     GetVersionExA( &osvi);
-    ok( winminor == osvi.dwMinorVersion, "Wrong value for _winminor %02x expected %02x\n",
+    ok( winminor == osvi.dwMinorVersion, "Wrong value for _winminor %02x expected %02lx\n",
             winminor, osvi.dwMinorVersion);
-    ok( winmajor == osvi.dwMajorVersion, "Wrong value for _winmajor %02x expected %02x\n",
+    ok( winmajor == osvi.dwMajorVersion, "Wrong value for _winmajor %02x expected %02lx\n",
             winmajor, osvi.dwMajorVersion);
     ok( winver == ((osvi.dwMajorVersion << 8) | osvi.dwMinorVersion),
-            "Wrong value for _winver %02x expected %02x\n",
+            "Wrong value for _winver %02x expected %02lx\n",
             winver, ((osvi.dwMajorVersion << 8) | osvi.dwMinorVersion));
     if( !pp_osver || !pp_osplatform ) {
         win_skip("_osver variables are not available\n");
@@ -108,10 +112,10 @@ static void test_initvar( HMODULE hmsvcrt )
     ok( osver == (osvi.dwBuildNumber & 0xffff) ||
             ((osvi.dwBuildNumber >> 24) == osvi.dwMajorVersion &&
                  ((osvi.dwBuildNumber >> 16) & 0xff) == osvi.dwMinorVersion), /* 95/98/ME */
-            "Wrong value for _osver %04x expected %04x\n",
+            "Wrong value for _osver %04x expected %04lx\n",
             osver, osvi.dwBuildNumber);
     ok(osplatform == osvi.dwPlatformId,
-            "Wrong value for _osplatform %x expected %x\n",
+            "Wrong value for _osplatform %x expected %lx\n",
             osplatform, osvi.dwPlatformId);
 }
 
@@ -133,7 +137,7 @@ static void test___getmainargs(void)
 {
     int argc, new_argc, mode;
     char **argv, **new_argv, **envp;
-    char tmppath[MAX_PATH], filepath[MAX_PATH];
+    char tmppath[MAX_PATH], filepath[MAX_PATH + 14];
     FILE *f;
 
     ok(GetTempPathA(MAX_PATH, tmppath) != 0, "GetTempPath failed\n");
@@ -194,7 +198,7 @@ static void test___getmainargs(void)
 static void test___getmainargs_parent(char *name)
 {
     char cmdline[3*MAX_PATH];
-    char tmppath[MAX_PATH], filepath[MAX_PATH];
+    char tmppath[MAX_PATH], filepath[MAX_PATH + 14];
     STARTUPINFOA startup;
     PROCESS_INFORMATION proc;
     FILE *f;
@@ -218,7 +222,7 @@ static void test___getmainargs_parent(char *name)
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
     CreateProcessA(NULL, cmdline, NULL, NULL, TRUE, CREATE_DEFAULT_ERROR_MODE|NORMAL_PRIORITY_CLASS, NULL, NULL, &startup, &proc);
-    winetest_wait_child_process(proc.hProcess);
+    wait_child_process(proc.hProcess);
 
     _unlink(filepath);
     sprintf(filepath, "%swine_test\\a", tmppath);

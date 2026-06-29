@@ -7,9 +7,19 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenue dans l'assistant d'installation de ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Vous ne pouvez pas encore installer ReactOS directement depuis ce CD ! Veuillez redémarrer votre ordinateur depuis ce CD pour pouvoir installer ReactOS.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Cliquez sur Terminer pour quitter l'installation.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Bienvenue dans l'Assistant Installation de ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Cet assistant installe ou met à niveau ReactOS sur votre ordinateur, \
+et prépare la seconde étape d'installation.", IDC_STATIC, 115, 40, 195, 27
+////
+    GROUPBOX " INFORMATION IMPORTANTE ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS est en version Alpha : il n'est pas complet et est \
+en cours de développement. Il est conseillé de ne l'utiliser \
+que pour évaluation et test, pas pour un usage quotidien.\n\
+Il peut corrompre vos données ou endommager votre matériel.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Sauvegardez vos données ou testez sur un ordinateur secondaire \
+si vous souhaitez utiliser ReactOS sur du matériel.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+////
+    LTEXT "Cliquez sur Suivant pour continuer l'installation.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
@@ -17,11 +27,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Installer ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Installer une nouvelle copie de ReactOS. Cette option ne conservera pas vos données, paramètres et programmes. Vous pouvez effectuer des modifications sur les disques et les partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Mettre à jour ou réparer ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Mettre à jour ou réparer une copie existante de ReactOS. Cette option conserve vos données, paramètres et programmes. Cette option est seulement disponible si ReactOS est déjà installé sur cet ordinateur.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "Appuyer sur Suivant pour configurer les périphériques.", IDC_STATIC, 7, 1280, 297, 8
+    AUTORADIOBUTTON "&Installer ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Installe une nouvelle copie de ReactOS. Cette option ne conservera pas vos données, paramètres et programmes. Vous pouvez effectuer des modifications sur les disques et les partitions.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "&Mettre à niveau ou réparer ReactOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Met à niveau ou répare une copie existante de ReactOS. Cette option conserve vos données, paramètres et programmes. Cette option est seulement disponible si ReactOS est déjà installé sur cet ordinateur.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -29,10 +38,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "L'installation de ReactOS peut mettre à niveau les installations disponibles de ReactOS listées ci-dessous, ou, si une installation de ReactOS est endommagée, l'installation peut essayer de la réparer.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "L'installateur peut mettre à niveau les installations disponibles de ReactOS listées ci-dessous, ou, si une installation de ReactOS est endommagée, l'installateur peut essayer de la réparer.", IDC_STATIC, 6, 4, 303, 26
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&Ne pas mettre à jour", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Appuyer sur Suivant pour mettre à niveau l'installation sélectionnée, ou sur 'Ne pas mettre à niveau' pour continuer une nouvelle installation.", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "Appuyer sur Suivant pour mettre à niveau l'installation sélectionnée, ou sur 'Ne pas mettre à jour' pour effectuer une nouvelle installation.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -57,7 +66,7 @@ BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
     PUSHBUTTON "&Initialiser", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Créer", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "&Formatter", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Formater", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Supprimer", IDC_PARTDELETE, 63, 122, 50, 14
     PUSHBUTTON "&Pilote", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
     PUSHBUTTON "&Options avancées...", IDC_PARTMOREOPTS, 230, 122, 80, 14
@@ -66,7 +75,7 @@ END
 
 IDD_PARTITION DIALOGEX 0, 0, 200, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Créer et formatter une partition"
+CAPTION "Créer et formater une partition"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Taille :", IDC_STATIC, 7, 9, 70, 9
@@ -84,7 +93,7 @@ END
 
 IDD_FORMAT DIALOGEX 0, 0, 200, 83
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Formatter une partition"
+CAPTION "Formater une partition"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Système de fichier :", IDC_FS_STATIC, 7, 9, 70, 9
@@ -130,7 +139,7 @@ BEGIN
     LTEXT "Dossier de destination :", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     AUTOCHECKBOX "Je confirme que tous les paramètres sont corrects. Je reconnais également que\nReactOS est un logiciel dans un état de qualité Alpha et peut endommager mon ordinateur ou corrompre mes données.",
-        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
+        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE | WS_TABSTOP
     LTEXT "Merci de confirmer que tous les paramètres d'installation sont corrects,\npuis appuyer sur Installer pour démarrer le processus d'installation.", IDC_STATIC, 7, 124, 303, 18
 END
 
@@ -144,16 +153,30 @@ BEGIN
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
-IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Finalisation de l'assistant d'installation de ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Vous avez complété avec succès la première étape d'installation de ReactOS.", IDC_STATIC, 115, 50, 195, 17
-    LTEXT "Si vous appuyez sur Terminer, votre ordinateur va redémarrer.", IDC_STATIC, 115, 80, 195, 17
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
-    LTEXT "S'il y a un CD dans le lecteur, retirez le. Appuyez ensuite sur Terminer pour redémarrer votre ordinateur.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Redémarrage de votre ordinateur", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "La première étape d'installation de ReactOS a été complétée avec succès.", IDC_STATIC, 115, 40, 195, 24
+    // The following text can be replaced by IDS_FINISH_NO_REBOOT at runtime;
+    // please ensure it can hold in the text control!
+    LTEXT "Le programme d'installation va maintenant redémarrer votre ordinateur pour continuer avec la seconde étape d'installation.\n\nVotre ordinateur va redémarrer automatiquement dans 15 secondes ou si vous cliquez sur Redémarrer.", IDC_FINISHTEXT, 115, 70, 195, 64
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+END
+
+IDD_ABORTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation de ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "L'Assistant Installation de ReactOS s'est terminé prématurément", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "La première étape d'installation de ReactOS s'est terminée prématurément à cause d'une erreur ou parce que vous l'avez annulée.\n\nVous pourrez exécuter le programme d'installation ultérieurement pour installer ou mettre à jour ReactOS.", IDC_STATIC, 115, 40, 195, 56
+    // The following text can be replaced by IDS_ABORT_NO_REBOOT at runtime;
+    // please ensure it can hold in the text control!
+    LTEXT "Votre ordinateur va redémarrer automatiquement dans 15 secondes ou si vous cliquez sur Redémarrer.", IDC_FINISHTEXT, 115, 102, 195, 32
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
 /* Strings */
@@ -161,8 +184,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "Installation de ReactOS"
-    IDS_TYPETITLE "Bienvenue dans l'installation de ReactOS"
-    IDS_TYPESUBTITLE "Choisissez un type d'installation."
+    IDS_TYPETITLE "Type d'installation"
+    IDS_TYPESUBTITLE "Vous pouvez configurer une nouvelle installation de ReactOS, ou bien mettre à niveau ou réparer une installation existante."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "Configurer les périphériques de base"
     IDS_DEVICESUBTITLE "Configurer l'affichage et le clavier."
     IDS_DRIVETITLE "Configurer la partition d'installation et le dossier système"
@@ -170,13 +195,15 @@ BEGIN
     IDS_SUMMARYTITLE "Résumé de l'installation"
     IDS_SUMMARYSUBTITLE "Lister les propriétés d'installation à vérifier avant application sur le périphérique d'installation."
     IDS_PROCESSTITLE "Configurer la partition, copier les fichiers et configurer le système"
-    IDS_PROCESSSUBTITLE "Créer et formatter la partition, copier les fichiers, installer et configurer le chargeur de démarrage."
-    IDS_RESTARTTITLE "Première étape de configuration terminée"
-    IDS_RESTARTSUBTITLE "La première étape de l'installation est terminée. Veuillez redémarrer pour continuer avec la seconde étape."
+    IDS_PROCESSSUBTITLE "Créer et formater la partition, copier les fichiers, installer et configurer le chargeur de démarrage."
     IDS_ABORTSETUP "ReactOS n'est pas complètement installé sur votre ordinateur. Si vous quittez l'installation maintenant, vous devrez lancer l'installation de nouveau pour installer ReactOS. Voulez-vous quitter ?"
     IDS_ABORTSETUP2 "Abandonner l'installation ?"
     IDS_NO_TXTSETUP_SIF "Impossible de trouver 'txtsetup.sif'.\nL'installation ne peut continuer."
+    IDS_FINISH_NO_REBOOT "Le programme d'installation doit redémarrer votre ordinateur pour continuer avec la seconde étape d'installation.\n\nCliquez sur Redémarrer pour redémarrer immédiatement votre ordinateur.\nCliquez sur Différer pour quitter le programme d'installation et redémarrer votre ordinateur ultérieurement."
+    IDS_ABORT_NO_REBOOT "Cliquez sur Redémarrer pour redémarrer immédiatement votre ordinateur.\nCliquez sur Fermer pour quitter le programme d'installation."
     IDS_INSTALLBTN "&Installer"
+    IDS_RESTARTBTN "&Redémarrer"
+    IDS_POSTPONEBTN "&Différer"
     IDS_VOLUME_NOFORMAT "Non formaté"
 END
 
@@ -258,33 +285,33 @@ Les caractères d'espacement ne sont pas autorisés."
     IDS_ERROR_DIRECTORY_NAME "Le chemin d'installation de ReactOS doit être au format DOS de noms 8.3, \
 et contenir seulement des lettres, chiffres, tirets et points. Les caractères d'espacement ne sont pas autorisés."
 
-    IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
-    IDS_ERROR_CREATE_PARTITION "Failed to create a new partition."
+    IDS_ERROR_CREATE_PARTITION_TITLE "Créer une partition"
+    IDS_ERROR_CREATE_PARTITION "Échec lors de la création d'une nouvelle partition."
 
-    IDS_WARN_DELETE_PARTITION_TITLE "Delete partition?"
-    IDS_WARN_DELETE_PARTITION "Are you sure you want to delete the selected partition?"
-    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Are you sure you want to delete the selected extended partition and ALL the logical partitions it contains?"
+    IDS_WARN_DELETE_PARTITION_TITLE "Supprimer la partition ?"
+    IDS_WARN_DELETE_PARTITION "Êtes-vous sûr de vouloir supprimer la partition sélectionnée ?"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Êtes-vous sûr de vouloir supprimer la partition étendue sélectionnée et TOUTES les partitions logiques qu'elle contient ?"
 
-    IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
+    IDS_ERROR_WRITE_PTABLE "Le programme d'installation a échoué à écrire les tables de partition."
 
-    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
-on your system or could not create a new one. Without such a partition\n\
-the Setup program cannot install ReactOS.\
-\nClick on OK to return to the partition selection list."
+    IDS_ERROR_SYSTEM_PARTITION "Le programme d'installation de ReactOS ne peut pas trouver une partition système supportée\n\
+sur votre système, ou ne peut pas en créer une nouvelle. Sans une telle partition,\n\
+le programme d'installation ne peut pas installer ReactOS.\
+\nCliquez sur OK pour revenir à la liste de sélection des partitions."
 
-    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."
+    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Volume non reconnu lors du formatage de la partition."
 
-    IDS_ERROR_COULD_NOT_FORMAT "Setup is currently unable to format a partition in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_FORMAT "Le programme d'installation ne parvient actuellement pas à formater une partition en %s.\n\
+\nCliquez sur OK pour continuer l'installation.\
+\nCliquez sur Annuler pour quitter l'installation."
 
-    IDS_ERROR_FORMATTING_PARTITION "Setup is unable to format the partition:\n %s\n"
+    IDS_ERROR_FORMATTING_PARTITION "Le programme d'installation ne parvient pas à formater la partition :\n %s\n"
 
-    IDS_ERROR_COULD_NOT_CHECK "Setup is currently unable to check a partition formatted in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_CHECK "Le programme d'installation ne parvient actuellement pas à vérifier une partition formatée en %s.\n\
+\nCliquez sur OK pour continuer l'installation.\
+\nCliquez sur Annuler pour quitter l'installation."
 
-    IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+    IDS_ERROR_CHECKING_PARTITION "ChkDsk a détecté des erreurs disque.\n(Status 0x%08lx)."
 
     IDS_ERROR_WRITE_BOOT "Échec de l'installation du code de démarrage %s sur la partition système."
     IDS_ERROR_INSTALL_BOOTCODE "Échec de l'installation du code de démarrage %s sur le disque système."

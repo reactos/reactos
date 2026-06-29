@@ -1,0 +1,87 @@
+/*
+ * Copyright 2024 Gabriel Ivăncescu for CodeWeavers
+ * Copyright 2024 Jacek Caban for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep header
+
+import "dispex.idl";
+
+struct property_info
+{
+    UINT32 id;
+    UINT32 flags;
+    const WCHAR *name;
+    UINT32 index;
+    UINT32 iid;
+};
+
+const unsigned int PROPF_METHOD       = 0x0100;
+const unsigned int PROPF_CONSTR       = 0x0200;
+
+const unsigned int PROPF_ENUMERABLE   = 0x0400;
+const unsigned int PROPF_WRITABLE     = 0x0800;
+const unsigned int PROPF_CONFIGURABLE = 0x1000;
+
+const unsigned int PROPF_PUBLIC_MASK = PROPF_ENUMERABLE | PROPF_WRITABLE | PROPF_CONFIGURABLE;
+
+const unsigned int HOSTOBJ_CONSTRUCTOR = 0x0001;
+
+interface IWineJSDispatchHost;
+
+[
+    object,
+    uuid(d359f2fe-5531-741b-a41a-5cf92edc971c),
+    local
+]
+interface IWineJSDispatch : IDispatchEx
+{
+    void Free();
+    HRESULT GetPropertyFlags(DISPID id, UINT32 *ret);
+    HRESULT GetScriptGlobal(IWineJSDispatchHost **ret);
+}
+
+[
+    object,
+    uuid(b1ebc544-6644-40c6-97f6-ccd9cc32bfba),
+    local
+]
+interface IWineJSDispatchHost : IDispatchEx
+{
+    HRESULT GetJSDispatch(IWineJSDispatch **ret);
+    HRESULT LookupProperty(const WCHAR *name, DWORD flags, struct property_info *desc);
+    HRESULT NextProperty(DISPID id, struct property_info *desc);
+    HRESULT GetProperty(DISPID id, LCID lcid, VARIANT *r, EXCEPINFO *ei, IServiceProvider *caller);
+    HRESULT SetProperty(DISPID id, LCID lcid, VARIANT *v, EXCEPINFO *ei, IServiceProvider *caller);
+    HRESULT DeleteProperty(DISPID id);
+    HRESULT ConfigureProperty(DISPID id, UINT32 flags);
+    HRESULT CallFunction(DISPID id, UINT32 iid, DWORD flags, DISPPARAMS *dp, VARIANT *ret, EXCEPINFO *ei, IServiceProvider *caller);
+    HRESULT Construct(LCID lcid, DWORD flags, DISPPARAMS *dp, VARIANT *ret, EXCEPINFO *ei, IServiceProvider *caller);
+    HRESULT GetOuterDispatch(IWineJSDispatchHost **ret);
+    HRESULT ToString(BSTR *str);
+}
+
+[
+    object,
+    uuid(d359f2fe-5531-741b-a41a-5cf92edc971d),
+    local
+]
+interface IWineJScript : IUnknown
+{
+    HRESULT InitHostObject(IWineJSDispatchHost *host_obj, IWineJSDispatch *prototype, UINT32 flags, IWineJSDispatch **ret);
+    HRESULT InitHostConstructor(IWineJSDispatchHost *constr, IWineJSDispatch *prototype, IWineJSDispatch **ret);
+}

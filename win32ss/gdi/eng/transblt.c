@@ -145,11 +145,11 @@ EngTransparentBlt(
             {
                 if (OutputRect.top < InputRect.top)
                 {
-                    Direction = OutputRect.left < (InputRect.left ? CD_RIGHTDOWN : CD_LEFTDOWN);
+                    Direction = OutputRect.left < InputRect.left ? CD_RIGHTDOWN : CD_LEFTDOWN;
                 }
                 else
                 {
-                    Direction = OutputRect.left < (InputRect.left ? CD_RIGHTUP : CD_LEFTUP);
+                    Direction = OutputRect.left < InputRect.left ? CD_RIGHTUP : CD_LEFTUP;
                 }
             }
             else

@@ -79,6 +79,7 @@ BEGIN
     IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
     IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
     IDS_UNKNOWNERROR "Unknown error 0x%08x."
+    IDS_CANTDELETEFILE "Failed to delete the file(s)."
 
     IDS_WIZ_TITLE "Ekstraktimise visard"
     IDS_WIZ_DEST_TITLE "Vali sihtkoht"
@@ -90,6 +91,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "See kaust juba sisaldab faili nimega '%1'.\nKas tahad seda asendada?"
     IDS_PASSWORD_FILE_TEXT "The file '%1' is password protected. Please enter the password."
     IDS_PASSWORD_ZIP_TEXT "Please specify the password to use when extracting this zip file."
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "Ekstrakti &kõik..."
     IDS_HELPTEXT "Ekstraktib kausta sisu"

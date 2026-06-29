@@ -1,5 +1,5 @@
-  FreeType 2.9
-  ============
+  FreeType 2.10.4
+  ===============
 
   Homepage: https://www.freetype.org
 
@@ -15,22 +15,25 @@
   Read the  files `docs/INSTALL*'  for installation  instructions; see
   the file `docs/LICENSE.TXT' for the available licenses.
 
-  The FreeType 2 API reference is located in `docs/reference'; use the
-  file   `ft2-toc.html'   as   the   top  entry   point.    Additional
-  documentation is available as a separate package from our sites.  Go
-  to
+  The FreeType  2 API  reference is located  in `docs/reference/site';
+  use the file `index.html' as the top entry point.  [Please note that
+  currently the  search function  for locally  installed documentation
+  doesn't work due to cross-site scripting issues.]
+
+  Additional documentation is available as a separate package from our
+  sites.  Go to
 
     https://download.savannah.gnu.org/releases/freetype/
 
   and download one of the following files.
 
-    freetype-doc-2.9.tar.bz2
-    freetype-doc-2.9.tar.gz
-    ftdoc29.zip
+    freetype-doc-2.10.4.tar.xz
+    freetype-doc-2.10.4.tar.gz
+    ftdoc2104.zip
 
   To view the documentation online, go to
 
-    https://www.freetype.org/freetype2/documentation.html
+    https://www.freetype.org/freetype2/docs/
 
 
   Mailing Lists
@@ -64,6 +67,18 @@
   a terse message that only says `it doesn't work'.
 
 
+  Patches
+  =======
+
+  Please  submit patches  to  the `freetype-devel@nongnu.org'  mailing
+  list  --  and thank  you  in  advance  for  your work  on  improving
+  FreeType!
+
+  Details on the process can be found here:
+
+    https://www.freetype.org/developer.html#patches
+
+
   Enjoy!
 
 
@@ -71,7 +86,7 @@
 
 ----------------------------------------------------------------------
 
-Copyright 2006-2018 by
+Copyright (C) 2006-2020 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

@@ -22,7 +22,6 @@
 
 /***********************************************************************/
 
-/* For the moment, do nothing here. */
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 {
     TRACE("%p 0x%x %p: stub\n", hInstDLL, fdwReason, lpv);
@@ -32,6 +31,12 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
             UXTHEME_InitSystem(hInstDLL);
             break;
         case DLL_PROCESS_DETACH:
+            UXTHEME_UnInitSystem(hInstDLL);
+            break;
+        case DLL_THREAD_ATTACH:
+            break;
+        case DLL_THREAD_DETACH:
+            UXTHEME_DeleteParseErrorInfo();
             break;
     }
     return TRUE;

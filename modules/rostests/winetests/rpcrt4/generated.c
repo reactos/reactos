@@ -31,7 +31,7 @@
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300) && defined(__cplusplus)
 # define _TYPE_ALIGNMENT(type) __alignof(type)
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
 # define _TYPE_ALIGNMENT(type) __alignof__(type)
 #else
 /*
@@ -53,23 +53,23 @@
  * Test helper macros
  */
 
-#define TEST_TYPE_SIZE(type, size)             C_ASSERT(sizeof(type) == size);
+#define TEST_TYPE_SIZE(type, size)              C_ASSERT(sizeof(type) == size);
 
 #ifdef TYPE_ALIGNMENT
-# define TEST_TYPE_ALIGN(type, align)          C_ASSERT(TYPE_ALIGNMENT(type) == align);
+# define TEST_TYPE_ALIGN(type, align)           C_ASSERT(TYPE_ALIGNMENT(type) == align);
 #else
 # define TEST_TYPE_ALIGN(type, align)
 #endif
 
 #ifdef _TYPE_ALIGNMENT
-# define TEST_TARGET_ALIGN(type, align)        C_ASSERT(_TYPE_ALIGNMENT(*(type)0) == align);
-# define TEST_FIELD_ALIGN(type, field, align)  C_ASSERT(_TYPE_ALIGNMENT(((type*)0)->field) == align);
+# define TEST_TARGET_ALIGN(type, align)         C_ASSERT(_TYPE_ALIGNMENT(*(type)0) == align);
+# define TEST_FIELD_ALIGN(type, field, align)   C_ASSERT(_TYPE_ALIGNMENT(((type*)0)->field) == align);
 #else
 # define TEST_TARGET_ALIGN(type, align)
 # define TEST_FIELD_ALIGN(type, field, align)
 #endif
 
-#define TEST_FIELD_OFFSET(type, field, offset) C_ASSERT(FIELD_OFFSET(type, field) == offset);
+#define TEST_FIELD_OFFSET(type, field, offset)  C_ASSERT(FIELD_OFFSET(type, field) == offset);
 
 #define TEST_TARGET_SIZE(type, size)            TEST_TYPE_SIZE(*(type)0, size)
 #define TEST_FIELD_SIZE(type, field, size)      TEST_TYPE_SIZE((((type*)0)->field), size)
@@ -91,6 +91,7 @@ static void test_pack_RPC_STATUS(void)
     /* RPC_STATUS */
     TEST_TYPE_SIZE   (RPC_STATUS, 4)
     TEST_TYPE_ALIGN  (RPC_STATUS, 4)
+    TEST_TYPE_SIGNED (RPC_STATUS)
 }
 
 static void test_pack_PRPC_POLICY(void)
@@ -593,6 +594,15 @@ static void test_pack_MIDL_STUB_MESSAGE(void)
     TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, Memory, 8)
     TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, Memory, 8)
     TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, Memory, 48)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, IsClient, 1)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, IsClient, 1)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, IsClient, 56)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, Pad, 1)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, Pad, 1)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, Pad, 57)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, uFlags2, 2)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, uFlags2, 2)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, uFlags2, 58)
     TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, ReuseBuffer, 4)
     TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, ReuseBuffer, 4)
     TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, ReuseBuffer, 60)
@@ -614,6 +624,9 @@ static void test_pack_MIDL_STUB_MESSAGE(void)
     TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, uFlags, 1)
     TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, uFlags, 1)
     TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, uFlags, 97)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, UniquePtrCount, 2)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, UniquePtrCount, 2)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, UniquePtrCount, 98)
     TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, MaxCount, 8)
     TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, MaxCount, 8)
     TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, MaxCount, 104)
@@ -673,9 +686,9 @@ static void test_pack_MIDL_SYNTAX_INFO(void)
     TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, aUserMarshalQuadruple, 8)
     TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, aUserMarshalQuadruple, 8)
     TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, aUserMarshalQuadruple, 56)
-    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, pReserved1, 8)
-    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, pReserved1, 8)
-    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, pReserved1, 64)
+    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, pMethodProperties, 8)
+    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, pMethodProperties, 8)
+    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, pMethodProperties, 64)
     TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, pReserved2, 8)
     TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, pReserved2, 8)
     TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, pReserved2, 72)
@@ -940,6 +953,7 @@ static void test_pack_RPC_STATUS(void)
     /* RPC_STATUS */
     TEST_TYPE_SIZE   (RPC_STATUS, 4)
     TEST_TYPE_ALIGN  (RPC_STATUS, 4)
+    TEST_TYPE_SIGNED (RPC_STATUS)
 }
 
 static void test_pack_PRPC_POLICY(void)
@@ -1442,6 +1456,15 @@ static void test_pack_MIDL_STUB_MESSAGE(void)
     TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, Memory, 4)
     TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, Memory, 4)
     TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, Memory, 28)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, IsClient, 1)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, IsClient, 1)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, IsClient, 32)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, Pad, 1)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, Pad, 1)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, Pad, 33)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, uFlags2, 2)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, uFlags2, 2)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, uFlags2, 34)
     TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, ReuseBuffer, 4)
     TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, ReuseBuffer, 4)
     TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, ReuseBuffer, 36)
@@ -1463,6 +1486,9 @@ static void test_pack_MIDL_STUB_MESSAGE(void)
     TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, uFlags, 1)
     TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, uFlags, 1)
     TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, uFlags, 57)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, UniquePtrCount, 2)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, UniquePtrCount, 2)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, UniquePtrCount, 58)
     TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, MaxCount, 4)
     TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, MaxCount, 4)
     TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, MaxCount, 60)
@@ -1522,9 +1548,9 @@ static void test_pack_MIDL_SYNTAX_INFO(void)
     TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, aUserMarshalQuadruple, 4)
     TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, aUserMarshalQuadruple, 4)
     TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, aUserMarshalQuadruple, 36)
-    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, pReserved1, 4)
-    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, pReserved1, 4)
-    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, pReserved1, 40)
+    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, pMethodProperties, 4)
+    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, pMethodProperties, 4)
+    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, pMethodProperties, 40)
     TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, pReserved2, 4)
     TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, pReserved2, 4)
     TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, pReserved2, 44)

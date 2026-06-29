@@ -19,7 +19,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "DLL-filen %s kunde inte laddas.", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "Kontakta din systemadministratör för att ersätta eller återställa DLL-filen.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "&Starta om", 1, 80, 91, 68, 14
+    DEFPUSHBUTTON "&Starta om", IDOK, 80, 91, 68, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
@@ -28,10 +28,10 @@ CAPTION "System Shutdown"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "A system shutdown has been initiated. Please save all your work and terminate your session. All unsaved work will be lost when the system shuts down.", -1, 38, 7, 135, 40
-    LTEXT "The system shuts down in:", -1, 38, 50, 90, 8
+    LTEXT "A system shutdown has been initiated. Please save all your work and terminate your session. All unsaved work will be lost when the system shuts down.", IDC_STATIC, 38, 7, 135, 40
+    LTEXT "The system shuts down in:", IDC_STATIC, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Message:", -1, 38, 65, 135, 8
+    LTEXT "Message:", IDC_STATIC, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
@@ -52,6 +52,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Förbereder för viloläge..."
     IDS_SAVEYOURSETTINGS "Sparar dina inställningar..."
     IDS_REACTOSISSTARTINGUP "ReactOS startas..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d days"
 END

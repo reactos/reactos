@@ -17,7 +17,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Computerul se poate închide în siguranţă.", IDC_SHUTDOWNCOMPUTER, 31, 6, 132, 18
     ICON IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
-    DEFPUSHBUTTON  "&Repornire", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+    DEFPUSHBUTTON "&Repornire", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
 END
 
 IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
@@ -27,7 +27,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Încărcarea DLL-ului %s, de interfaţă utilizator pentru Log on, nu a reuşit ", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "Contactaţi administratorul de sistem pentru a înlocui biblioteca DLL sau restauraţi biblioteca DLL originală.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "&Repornire", 1, 80, 91, 68, 14
+    DEFPUSHBUTTON "&Repornire", IDOK, 80, 91, 68, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
@@ -36,10 +36,10 @@ CAPTION "Închidere sistem"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "Acest sistem se închide. Salvaţi lucrările curente şi faceţi Log off. Modificările care nu se salvează se vor pierde.", -1, 38, 7, 135, 40
-    LTEXT "Timp până la închidere:", -1, 38, 50, 90, 8
+    LTEXT "Acest sistem se închide. Salvaţi lucrările curente şi faceţi Log off. Modificările care nu se salvează se vor pierde.", IDC_STATIC, 38, 7, 135, 40
+    LTEXT "Timp până la închidere:", IDC_STATIC, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Mesaj:", -1, 38, 65, 135, 8
+    LTEXT "Mesaj:", IDC_STATIC, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
@@ -54,12 +54,13 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Se rulează script-urile de Log on…"
     IDS_LOADINGYOURPERSONALSETTINGS "Se încarcă setările personale…"
     IDS_CLOSINGNETWORKCONNECTIONS "Se închid conexiunile reţelei…"
-    IDS_REACTOSISRESTARTING "Se repornește..."
-    IDS_REACTOSISSHUTTINGDOWN "Se închide..."
+    IDS_REACTOSISRESTARTING "Se repornește…"
+    IDS_REACTOSISSHUTTINGDOWN "Se închide…"
     IDS_PREPARETOSTANDBY "Se pregăteşte pentru starea de veghe…"
     IDS_PREPARETOHIBERNATE "Se pregăteşte pentru hibernare…"
     IDS_SAVEYOURSETTINGS "Se salvează setările…"
     IDS_REACTOSISSTARTINGUP "Se porneşte ReactOS…"
+    IDS_LOGGINGOFF "Logging off…"
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d zile"
 END

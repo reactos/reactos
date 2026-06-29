@@ -84,7 +84,7 @@ static void test_DispGetParam(void)
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 0, VT_I2, &result, &err_index);
     ok(hr == DISP_E_PARAMNOTFOUND,
-       "Expected DISP_E_PARAMNOTFOUND, got %08x\n", hr);
+       "Expected DISP_E_PARAMNOTFOUND, got %08lx\n", hr);
     ok(V_VT(&result) == VT_EMPTY,
        "Expected VT_EMPTY, got %08x\n", V_VT(&result));
     ok(err_index == 0xdeadbeef,
@@ -96,7 +96,7 @@ static void test_DispGetParam(void)
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 1, VT_I2, &result, &err_index);
     ok(hr == DISP_E_PARAMNOTFOUND,
-       "Expected DISP_E_PARAMNOTFOUND, got %08x\n", hr);
+       "Expected DISP_E_PARAMNOTFOUND, got %08lx\n", hr);
     ok(V_VT(&result) == VT_EMPTY,
        "Expected VT_EMPTY, got %08x\n", V_VT(&result));
     ok(err_index == 0xdeadbeef,
@@ -107,7 +107,7 @@ static void test_DispGetParam(void)
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 0, VT_I2, NULL, &err_index);
     ok(hr == DISP_E_PARAMNOTFOUND,
-       "Expected DISP_E_PARAMNOTFOUND, got %08x\n", hr);
+       "Expected DISP_E_PARAMNOTFOUND, got %08lx\n", hr);
     ok(err_index == 0xdeadbeef,
        "Expected err_index to be unchanged, got %d\n", err_index);
 
@@ -116,7 +116,7 @@ static void test_DispGetParam(void)
     VariantInit(&result);
     hr = DispGetParam(&dispparams, 0, VT_I2, &result, NULL);
     ok(hr == DISP_E_PARAMNOTFOUND,
-       "Expected DISP_E_PARAMNOTFOUND, got %08x\n", hr);
+       "Expected DISP_E_PARAMNOTFOUND, got %08lx\n", hr);
     ok(V_VT(&result) == VT_EMPTY,
        "Expected VT_EMPTY, got %08x\n", V_VT(&result));
 
@@ -125,7 +125,7 @@ static void test_DispGetParam(void)
     VariantInit(&result);
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 0, VT_I2, &result, &err_index);
-    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08lx\n", hr);
     ok(V_VT(&result) == VT_EMPTY,
        "Expected VT_EMPTY, got %08x\n", V_VT(&result));
     ok(err_index == 0, "Expected 0, got %d\n", err_index);
@@ -145,7 +145,7 @@ static void test_DispGetParam(void)
     VariantInit(&result);
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 2, VT_I2, &result, &err_index);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(V_VT(&result) == VT_I2, "Expected VT_I2, got %08x\n", V_VT(&result));
     ok(V_I2(&result) == 42, "Expected 42, got %d\n", V_I2(&result));
     ok(err_index == 0xdeadbeef,
@@ -156,10 +156,10 @@ static void test_DispGetParam(void)
     VariantInit(&result);
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 1, VT_I4, &result, &err_index);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(V_VT(&result) == VT_I4, "Expected VT_I4, got %08x\n", V_VT(&result));
     ok(V_I4(&result) == 1234567890,
-       "Expected 1234567890, got %d\n", V_I4(&result));
+       "Expected 1234567890, got %ld\n", V_I4(&result));
     ok(err_index == 0xdeadbeef,
        "Expected err_index to be unchanged, got %d\n", err_index);
 
@@ -168,7 +168,7 @@ static void test_DispGetParam(void)
     VariantInit(&result);
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 0, VT_BSTR, &result, &err_index);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(V_VT(&result) == VT_BSTR, "Expected VT_BSTR, got %08x\n", V_VT(&result));
     ok_bstr(V_BSTR(&result), "Sunshine", "Expected %s, got %s\n");
     ok(err_index == 0xdeadbeef,
@@ -181,7 +181,7 @@ static void test_DispGetParam(void)
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 3, VT_I2, &result, &err_index);
     ok(hr == DISP_E_PARAMNOTFOUND,
-       "Expected DISP_E_PARAMNOTFOUND, got %08x\n", hr);
+       "Expected DISP_E_PARAMNOTFOUND, got %08lx\n", hr);
     ok(V_VT(&result) == VT_EMPTY,
        "Expected VT_EMPTY, got %08x\n", V_VT(&result));
     ok(err_index == 0xdeadbeef,
@@ -191,14 +191,14 @@ static void test_DispGetParam(void)
     INIT_DISPPARAMS(dispparams, vararg, NULL, 3, 0);
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 2, VT_I2, NULL, &err_index);
-    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08lx\n", hr);
     ok(err_index == 0, "Expected 0, got %d\n", err_index);
 
     /* puArgErr is NULL. */
     INIT_DISPPARAMS(dispparams, vararg, NULL, 3, 0);
     VariantInit(&result);
     hr = DispGetParam(&dispparams, 2, VT_I2, &result, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(V_VT(&result) == VT_I2, "Expected VT_I2, got %08x\n", V_VT(&result));
     ok(V_I2(&result) == 42, "Expected 42, got %d\n", V_I2(&result));
 
@@ -207,9 +207,9 @@ static void test_DispGetParam(void)
     VariantInit(&result);
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 2, VT_I4, &result, &err_index);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(V_VT(&result) == VT_I4, "Expected VT_I4, got %08x\n", V_VT(&result));
-    ok(V_I4(&result) == 42, "Expected 42, got %d\n", V_I4(&result));
+    ok(V_I4(&result) == 42, "Expected 42, got %ld\n", V_I4(&result));
     ok(err_index == 0xdeadbeef,
        "Expected err_index to be unchanged, got %d\n", err_index);
 
@@ -218,7 +218,7 @@ static void test_DispGetParam(void)
     VariantInit(&result);
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 2, VT_BSTR, &result, &err_index);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(V_VT(&result) == VT_BSTR, "Expected VT_BSTR, got %08x\n", V_VT(&result));
     ok_bstr(V_BSTR(&result), "42", "Expected %s, got %s\n");
     ok(err_index == 0xdeadbeef,
@@ -230,7 +230,7 @@ static void test_DispGetParam(void)
     VariantInit(&result);
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 1, VT_I2, &result, &err_index);
-    ok(hr == DISP_E_OVERFLOW, "Expected DISP_E_OVERFLOW, got %08x\n", hr);
+    ok(hr == DISP_E_OVERFLOW, "Expected DISP_E_OVERFLOW, got %08lx\n", hr);
     ok(V_VT(&result) == VT_EMPTY,
        "Expected VT_EMPTY, got %08x\n", V_VT(&result));
     ok(err_index == 1, "Expected 1, got %d\n", err_index);
@@ -241,7 +241,7 @@ static void test_DispGetParam(void)
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 0, VT_I2, &result, &err_index);
     ok(hr == DISP_E_TYPEMISMATCH,
-       "Expected DISP_E_TYPEMISMATCH, got %08x\n", hr);
+       "Expected DISP_E_TYPEMISMATCH, got %08lx\n", hr);
     ok(V_VT(&result) == VT_EMPTY,
        "Expected VT_EMPTY, got %08x\n", V_VT(&result));
     ok(err_index == 2, "Expected 2, got %d\n", err_index);
@@ -251,7 +251,7 @@ static void test_DispGetParam(void)
     VariantInit(&result);
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 2, VT_ILLEGAL, &result, &err_index);
-    ok(hr == DISP_E_BADVARTYPE, "Expected DISP_E_BADVARTYPE, got %08x\n", hr);
+    ok(hr == DISP_E_BADVARTYPE, "Expected DISP_E_BADVARTYPE, got %08lx\n", hr);
     ok(V_VT(&result) == VT_EMPTY,
        "Expected VT_EMPTY, got %08x\n", V_VT(&result));
     ok(err_index == 0, "Expected 0, got %d\n", err_index);
@@ -264,7 +264,7 @@ static void test_DispGetParam(void)
     VariantInit(&result);
     err_index = 0xdeadbeef;
     hr = DispGetParam(&dispparams, 0, VT_BSTR, &result, &err_index);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(V_VT(&result) == VT_BSTR, "Expected VT_BSTR, got %08x\n", V_VT(&result));
     ok(err_index == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", err_index);
     VariantClear(&result);
@@ -312,25 +312,25 @@ static void test_CreateStdDispatch(void)
     HRESULT hr;
 
     hr = CreateStdDispatch(NULL, NULL, NULL, NULL);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     hr = CreateStdDispatch(NULL, NULL, NULL, &unk);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     hr = LoadTypeLib(stdole2W, &tl);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     hr = ITypeLib_GetTypeInfoOfGuid(tl, &IID_IUnknown, &ti);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     ITypeLib_Release(tl);
 
     hr = CreateStdDispatch(NULL, &test_unk, NULL, &unk);
-    ok(hr == E_INVALIDARG, "got %08x\n", hr);
+    ok(hr == E_INVALIDARG, "got %08lx\n", hr);
 
     hr = CreateStdDispatch(NULL, NULL, ti, &unk);
-    ok(hr == E_INVALIDARG, "got %08x\n", hr);
+    ok(hr == E_INVALIDARG, "got %08lx\n", hr);
 
     hr = CreateStdDispatch(NULL, &test_unk, ti, &unk);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     IUnknown_Release(unk);
 
     ITypeInfo_Release(ti);

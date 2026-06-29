@@ -1,0 +1,9 @@
+; Legacy PATA Bus Enumerator Driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\legide","ErrorControl",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\legide","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\legide","ImagePath",0x00020000,"system32\drivers\legide.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\legide","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\legide","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\legide","Tag",0x00010001,0x00000021
+HKLM,"SYSTEM\CurrentControlSet\Services\legide\Parameters","LegacyDetection",0x00010001,0x00000001

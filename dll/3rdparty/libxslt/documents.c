@@ -6,7 +6,24 @@
  * daniel@veillard.com
  */
 
-#include "precomp.h"
+#define IN_LIBXSLT
+#include "libxslt.h"
+
+#include <string.h>
+
+#include <libxml/xmlmemory.h>
+#include <libxml/tree.h>
+#include <libxml/hash.h>
+#include <libxml/parser.h>
+#include <libxml/parserInternals.h>
+#include "xslt.h"
+#include "xsltInternals.h"
+#include "xsltutils.h"
+#include "documents.h"
+#include "transform.h"
+#include "imports.h"
+#include "keys.h"
+#include "security.h"
 
 #ifdef LIBXML_XINCLUDE_ENABLED
 #include <libxml/xinclude.h>
@@ -71,8 +88,6 @@ xsltDocDefaultLoaderFunc(const xmlChar * URI, xmlDictPtr dict, int options,
 	return(NULL);
     }
     inputPush(pctxt, inputStream);
-    if (pctxt->directory == NULL)
-        pctxt->directory = xmlParserGetDirectory((const char *) URI);
 
     xmlParseDocument(pctxt);
 
@@ -382,6 +397,8 @@ xsltLoadStyleDocument(xsltStylesheetPtr style, const xmlChar *URI) {
 	return(NULL);
 
     ret = xsltNewStyleDocument(style, doc);
+    if (ret == NULL)
+        xmlFreeDoc(doc);
     return(ret);
 }
 
@@ -416,4 +433,3 @@ xsltFindDocument (xsltTransformContextPtr ctxt, xmlDocPtr doc) {
 	return(ctxt->document);
     return(NULL);
 }
-

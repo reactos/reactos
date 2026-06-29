@@ -27,10 +27,10 @@
 #include <ntsecpkg.h>
 #include <ntsam.h>
 #include <ntlsa.h>
+#include <ntmsv1_0.h>
 
 #include <samsrv/samsrv.h>
 //#include <lsass/lsasrv.h>
-#include <msv1_0p.h>
 
 #include "ntlm/global.h"
 #include "ntlm/protocol.h"

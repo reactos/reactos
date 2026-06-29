@@ -13,27 +13,26 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
-        ID_NAME(CLSID_CERTMGR_CertMgrAboutObject_1),
+        ID_NAME(CLSID_CERTMGR_CertMgrAboutObject_1, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,   &IID_ISnapInAbout },
-            {    0x0,       &IID_IUnknown },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_ISnapInAbout },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IUnknown },
         },
         L"both"
     },
     {
-        ID_NAME(CLSID_CERTMGR_CertMgrObject_1),
+        ID_NAME(CLSID_CERTMGR_CertMgrObject_1, NTDDI_MIN, NTDDI_MAX),
         {
-            {  -0x1c,   &IID_IComponentData },
-            {    0x0,   &IID_IExtendPropertySheet },
-            {    0x0,       &IID_IUnknown },
-            {    0x4,   &IID_IPersistStream },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IComponentData },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IExtendPropertySheet },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IPersistStream },
         },
         L"both"
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
 
 START_TEST(certmgr)
 {
-    TestClasses(L"certmgr", ExpectedInterfaces, ExpectedInterfaceCount);
+    TestClasses(L"certmgr", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
 }

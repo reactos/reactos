@@ -8,13 +8,16 @@
 /* INCLUDES *******************************************************************/
 
 #include "precomp.h"
+#include <drivers/pc98/video.h>
 
 /* GLOBALS ********************************************************************/
 
-static ULONG_PTR PegcControl = 0;
-ULONG_PTR FrameBuffer = 0;
+#define BYTES_PER_SCANLINE (SCREEN_WIDTH / 8)
 
 #define PEGC_MAX_COLORS    256
+
+static ULONG_PTR PegcControl = 0;
+ULONG_PTR FrameBuffer = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -219,6 +222,9 @@ InitializeDisplay(VOID)
     TextSync();
     TextSync();
 
+    /* Turn off the text layer */
+    WRITE_GDC1_COMMAND(GDC_COMMAND_STOP2);
+
     /* START */
     WRITE_GDC2_COMMAND(GDC_COMMAND_BCTRL_START);
 
@@ -249,11 +255,11 @@ SetPaletteEntryRGB(
 
 VOID
 InitPaletteWithTable(
-    _In_ PULONG Table,
+    _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count)
 {
+    const ULONG* Entry = Table;
     ULONG i;
-    PULONG Entry = Table;
 
     for (i = 0; i < Count; i++)
         SetPaletteEntryRGB(i, *Entry++);
@@ -270,8 +276,8 @@ DisplayCharacter(
     _In_ ULONG TextColor,
     _In_ ULONG BackColor)
 {
+    const UCHAR* FontChar = GetFontPtr(Character);
     ULONG X, Y, PixelMask;
-    PUCHAR FontChar = GetFontPtr(Character);
 
     for (Y = Top;
          Y < Top + BOOTCHAR_HEIGHT;
@@ -292,11 +298,11 @@ DisplayCharacter(
 VOID
 PreserveRow(
     _In_ ULONG CurrentTop,
-    _In_ ULONG TopDelta,
+    _In_ ULONG Height,
     _In_ BOOLEAN Restore)
 {
     PULONG OldPosition, NewPosition;
-    ULONG PixelCount = TopDelta * (SCREEN_WIDTH / sizeof(ULONG));
+    ULONG PixelCount = Height * (SCREEN_WIDTH / sizeof(ULONG));
 
     if (Restore)
     {
@@ -316,23 +322,17 @@ PreserveRow(
 }
 
 VOID
-PrepareForSetPixel(VOID)
-{
-    NOTHING;
-}
-
-VOID
 DoScroll(
     _In_ ULONG Scroll)
 {
     USHORT i, Line;
     PUCHAR Src, Dst;
     PULONG SrcWide, DstWide;
-    USHORT PixelCount = (VidpScrollRegion[2] - VidpScrollRegion[0]) + 1;
-    ULONG_PTR SourceOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion[0], VidpScrollRegion[1] + Scroll);
-    ULONG_PTR DestinationOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion[0], VidpScrollRegion[1]);
+    USHORT PixelCount = (VidpScrollRegion.Right - VidpScrollRegion.Left) + 1;
+    ULONG_PTR SourceOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top + Scroll);
+    ULONG_PTR DestinationOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top);
 
-    for (Line = VidpScrollRegion[1]; Line <= VidpScrollRegion[3]; Line++)
+    for (Line = VidpScrollRegion.Top; Line <= VidpScrollRegion.Bottom; Line++)
     {
         SrcWide = (PULONG)SourceOffset;
         DstWide = (PULONG)DestinationOffset;
@@ -391,19 +391,14 @@ VidCleanUp(VOID)
 }
 
 VOID
-NTAPI
-VidResetDisplay(
-    _In_ BOOLEAN HalReset)
+ResetDisplay(
+    _In_ BOOLEAN SetMode)
 {
     PULONG PixelsPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, 0));
     ULONG PixelCount = ((SCREEN_WIDTH * SCREEN_HEIGHT) / sizeof(ULONG)) + 1;
 
-    /* Clear the current position */
-    VidpCurrentX = 0;
-    VidpCurrentY = 0;
-
-    /* Clear the screen with HAL if we were asked to */
-    if (HalReset)
+    /* Reset the video mode with HAL if requested */
+    if (SetMode)
         HalResetDisplay();
 
     WRITE_PORT_UCHAR((PUCHAR)GDC1_IO_o_MODE_FLIPFLOP1, GRAPH_MODE_DISPLAY_DISABLE);
@@ -422,12 +417,12 @@ VidResetDisplay(
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_writes_bytes_(Delta * Height) PUCHAR Buffer,
+    _Out_writes_bytes_all_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta)
+    _In_ ULONG Stride)
 {
     ULONG X, Y;
     PUCHAR OutputBuffer;
@@ -435,11 +430,11 @@ VidScreenToBufferBlt(
     PUSHORT PixelsPosition;
 
     /* Clear the destination buffer */
-    RtlZeroMemory(Buffer, Delta * Height);
+    RtlZeroMemory(Buffer, Height * Stride);
 
     for (Y = 0; Y < Height; Y++)
     {
-        OutputBuffer = Buffer + Y * Delta;
+        OutputBuffer = Buffer + Y * Stride;
         PixelsPosition = (PUSHORT)(FrameBuffer + FB_OFFSET(Left, Top + Y));
 
         for (X = 0; X < Width; X += sizeof(USHORT))

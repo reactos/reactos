@@ -473,7 +473,14 @@ BasicBehaviorChecks(HANDLE FileHandle)
 
     Length.QuadPart = TestStringSize;
     CREATE_SECTION(Section, (SECTION_ALL_ACCESS), NULL, Length, PAGE_READONLY, SEC_COMMIT, FileHandle, STATUS_SUCCESS, NO_HANDLE_CLOSE);
-    CheckObject(Section, 2, 1);
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
+#ifdef _M_IX86
+        CheckObject(Section, 33, 1);
+#else
+        CheckObject(Section, 32769, 1);
+#endif
+    else
+        CheckObject(Section, 2, 1);
     CheckSection(Section, SEC_FILE, Length.QuadPart, STATUS_SUCCESS);
     ZwClose(Section); //manually close it due to NO_HANDLE_CLOSE in CREATE_SECTION
 

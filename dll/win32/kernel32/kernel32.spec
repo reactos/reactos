@@ -1,5 +1,5 @@
-@ stdcall -version=0x600+ AcquireSRWLockExclusive(ptr) NTDLL.RtlAcquireSRWLockExclusive
-@ stdcall -version=0x600+ AcquireSRWLockShared(ptr) NTDLL.RtlAcquireSRWLockShared
+@ stdcall -version=0x600+ AcquireSRWLockExclusive(ptr) ntdll.RtlAcquireSRWLockExclusive
+@ stdcall -version=0x600+ AcquireSRWLockShared(ptr) ntdll.RtlAcquireSRWLockShared
 @ stdcall ActivateActCtx(ptr ptr)
 @ stdcall AddAtomA(str)
 @ stdcall AddAtomW(wstr)
@@ -90,7 +90,7 @@
 @ stdcall -version=0x600+ CompareStringOrdinal(wstr long wstr long long)
 @ stdcall CompareStringW(long long wstr long wstr long)
 @ stdcall ConnectNamedPipe(long ptr)
-;@ stdcall -arch=x86_64 ConsoleIMERoutine()
+@ stdcall -version=0x502-0x600 -arch=x86_64 ConsoleIMERoutine(ptr)
 @ stdcall ConsoleMenuControl(long long long)
 @ stdcall ContinueDebugEvent(long long long)
 @ stdcall -stub -version=0x600+ ConvertCalDateTimeToSystemTime(ptr ptr)
@@ -524,7 +524,7 @@
 @ stub -version=0x600+ GetNamedPipeAttribute
 @ stub -version=0x600+ GetNamedPipeClientComputerNameA
 @ stub -version=0x600+ GetNamedPipeClientComputerNameW
-@ stub -version=0x600+ GetNamedPipeClientProcessId
+@ stdcall -version=0x600+ GetNamedPipeClientProcessId(ptr ptr)
 @ stub -version=0x600+ GetNamedPipeClientSessionId
 @ stdcall GetNamedPipeHandleStateA(long ptr ptr ptr ptr str long)
 @ stdcall GetNamedPipeHandleStateW(long ptr ptr ptr ptr wstr long)
@@ -574,7 +574,7 @@
 @ stdcall GetProcessVersion(long)
 @ stdcall GetProcessWorkingSetSize(long ptr ptr)
 @ stdcall GetProcessWorkingSetSizeEx(long ptr ptr long)
-@ stub -version=0x600+ GetProductInfo
+@ stdcall -version=0x600+ GetProductInfo(long long long long ptr) ntdll.RtlGetProductInfo
 @ stdcall GetProfileIntA(str str long)
 @ stdcall GetProfileIntW(wstr wstr long)
 @ stdcall GetProfileSectionA(str ptr long)
@@ -760,6 +760,33 @@
 @ stdcall IsValidLocale(long long)
 @ stdcall -version=0x501-0x502 IsValidUILanguage(long)
 @ stdcall IsWow64Process(ptr ptr)
+@ stdcall -version=0x601+ K32EmptyWorkingSet(long) EmptyWorkingSet
+@ stdcall -version=0x601+ K32EnumDeviceDrivers(ptr long ptr) EnumDeviceDrivers
+@ stdcall -version=0x601+ K32EnumPageFilesA(ptr ptr) EnumPageFilesA
+@ stdcall -version=0x601+ K32EnumPageFilesW(ptr ptr) EnumPageFilesW
+@ stdcall -version=0x601+ K32EnumProcessModules(long ptr long ptr) EnumProcessModules
+@ stdcall -stub -version=0x601+ K32EnumProcessModulesEx(long ptr long ptr long); EnumProcessModulesEx
+@ stdcall -version=0x601+ K32EnumProcesses(ptr long ptr) EnumProcesses
+@ stdcall -version=0x601+ K32GetDeviceDriverBaseNameA(ptr ptr long) GetDeviceDriverBaseNameA
+@ stdcall -version=0x601+ K32GetDeviceDriverBaseNameW(ptr ptr long) GetDeviceDriverBaseNameW
+@ stdcall -version=0x601+ K32GetDeviceDriverFileNameA(ptr ptr long) GetDeviceDriverFileNameA
+@ stdcall -version=0x601+ K32GetDeviceDriverFileNameW(ptr ptr long) GetDeviceDriverFileNameW
+@ stdcall -version=0x601+ K32GetMappedFileNameA(long ptr ptr long) GetMappedFileNameA
+@ stdcall -version=0x601+ K32GetMappedFileNameW(long ptr ptr long) GetMappedFileNameW
+@ stdcall -version=0x601+ K32GetModuleBaseNameA(long long ptr long) GetModuleBaseNameA
+@ stdcall -version=0x601+ K32GetModuleBaseNameW(long long ptr long) GetModuleBaseNameW
+@ stdcall -version=0x601+ K32GetModuleFileNameExA(long long ptr long) GetModuleFileNameExA
+@ stdcall -version=0x601+ K32GetModuleFileNameExW(long long ptr long) GetModuleFileNameExW
+@ stdcall -version=0x601+ K32GetModuleInformation(long long ptr long) GetModuleInformation
+@ stdcall -version=0x601+ K32GetPerformanceInfo(ptr long) GetPerformanceInfo
+@ stdcall -version=0x601+ K32GetProcessImageFileNameA(long ptr long) GetProcessImageFileNameA
+@ stdcall -version=0x601+ K32GetProcessImageFileNameW(long ptr long) GetProcessImageFileNameW
+@ stdcall -version=0x601+ K32GetProcessMemoryInfo(long ptr long) GetProcessMemoryInfo
+@ stdcall -version=0x601+ K32GetWsChanges(long ptr long) GetWsChanges
+@ stdcall -stub -version=0x601+ K32GetWsChangesEx(long ptr ptr); GetWsChangesEx
+@ stdcall -version=0x601+ K32InitializeProcessForWsWatch(long) InitializeProcessForWsWatch
+@ stdcall -version=0x601+ K32QueryWorkingSet(long ptr long) QueryWorkingSet
+@ stdcall -version=0x601+ K32QueryWorkingSetEx(long ptr long) QueryWorkingSetEx
 @ stdcall -version=0x600+ LCIDToLocaleName(long wstr long long)
 @ stdcall LCMapStringA(long long str long ptr long)
 @ stdcall -version=0x600+ LCMapStringEx(long long wstr long ptr long ptr ptr long)
@@ -873,8 +900,8 @@
 @ stdcall QueryDepthSList(ptr) ntdll.RtlQueryDepthSList
 @ stdcall QueryDosDeviceA(str ptr long)
 @ stdcall QueryDosDeviceW(wstr ptr long)
-@ stdcall -version=0x600+ QueryFullProcessImageNameA(ptr long str ptr)
-@ stdcall -version=0x600+ QueryFullProcessImageNameW(ptr long wstr ptr)
+@ stdcall -version=0x600+ QueryFullProcessImageNameA(ptr long ptr ptr)
+@ stdcall -version=0x600+ QueryFullProcessImageNameW(ptr long ptr ptr)
 @ stub -version=0x600+ QueryIdleProcessorCycleTime
 @ stdcall QueryInformationJobObject(long long ptr long ptr)
 @ stdcall QueryMemoryResourceNotification(ptr ptr)
@@ -954,7 +981,7 @@
 @ stdcall -arch=x86_64 RtlRestoreContext(ptr ptr) ntdll.RtlRestoreContext
 @ stdcall RtlUnwind(ptr ptr ptr ptr) ntdll.RtlUnwind
 @ stdcall -arch=x86_64 RtlUnwindEx(ptr ptr ptr ptr ptr ptr) ntdll.RtlUnwindEx
-@ stdcall -arch=x86_64 RtlVirtualUnwind(ptr ptr ptr long) ntdll.RtlVirtualUnwind
+@ stdcall -arch=x86_64 RtlVirtualUnwind(long int64 int64 ptr ptr ptr ptr ptr) ntdll.RtlVirtualUnwind
 @ stdcall RtlZeroMemory(ptr long) ntdll.RtlZeroMemory
 @ stdcall ScrollConsoleScreenBufferA(long ptr ptr ptr ptr)
 @ stdcall ScrollConsoleScreenBufferW(long ptr ptr ptr ptr)
@@ -1077,6 +1104,7 @@
 @ stdcall SetTermsrvAppInstallMode(long)
 @ stdcall SetThreadAffinityMask(long long)
 @ stdcall SetThreadContext(long ptr)
+@ stdcall -version=0xA00+ SetThreadDescription(ptr wstr)
 @ stdcall -stub -version=0x600+ SetThreadErrorMode(long ptr)
 @ stdcall SetThreadExecutionState(long)
 @ stdcall SetThreadIdealProcessor(long long)
@@ -1128,8 +1156,10 @@
 @ stdcall Toolhelp32ReadProcessMemory(long ptr ptr long ptr)
 @ stdcall TransactNamedPipe(long ptr long ptr long ptr ptr)
 @ stdcall TransmitCommChar(long long)
+@ stdcall -version=0x601+ TryAcquireSRWLockExclusive(ptr) ntdll.RtlTryAcquireSRWLockExclusive
+@ stdcall -version=0x601+ TryAcquireSRWLockShared(ptr) ntdll.RtlTryAcquireSRWLockShared
 @ stdcall TryEnterCriticalSection(ptr) ntdll.RtlTryEnterCriticalSection
-@ stub -version=0x600+ TrySubmitThreadpoolCallback
+@ stdcall -version=0x600+ TrySubmitThreadpoolCallback(ptr ptr ptr)
 @ stdcall TzSpecificLocalTimeToSystemTime(ptr ptr ptr)
 @ stdcall UTRegister(long str str str ptr ptr ptr)
 @ stdcall UTUnRegister(long)

@@ -117,7 +117,7 @@ MempAllocatePageTables(VOID)
     // Max number of entries = MaxPageNum >> 10
     // FIXME: This is a number to describe ALL physical memory
     // and windows doesn't expect ALL memory mapped...
-    NumPageTables = TotalPagesInLookupTable >> 10;
+    NumPageTables = MmGetTotalPagesInLookupTable() >> 10;
 
     TRACE("NumPageTables = %d\n", NumPageTables);
 
@@ -454,6 +454,12 @@ WinLdrSetProcessorContext(
 
     /* Re-initialize EFLAGS */
     __writeeflags(0);
+
+    /* Disable paging first before disabling PAE to avoid crash
+     * because UEFI might have enabled paged mode with PAE.
+     * Our kernel doesn't support PAE, so disable it. */
+    __writecr0(__readcr0() & ~CR0_PG);
+    __writecr4(__readcr4() & ~CR4_PAE);
 
     /* Set the PDBR */
     __writecr3((ULONG_PTR)PDE);

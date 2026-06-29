@@ -40,7 +40,7 @@ ErrorMessage(
     if (szFormat)
     {
         va_start(arg_ptr, szFormat);
-        vswprintf(szMessage, szFormat, arg_ptr);
+        _vswprintf(szMessage, szFormat, arg_ptr);
         va_end(arg_ptr);
     }
 
@@ -138,6 +138,13 @@ VOID error_no_pipe(VOID)
 VOID error_out_of_memory(VOID)
 {
     ConErrResPuts(STRING_ERROR_OUT_OF_MEMORY);
+    nErrorLevel = 1;
+}
+
+VOID error_cant_exec_program(VOID)
+{
+    /* TODO: Windows uses the custom string "The system cannot execute the specified program" here */
+    ErrorMessage(ERROR_NO_ASSOCIATION, NULL);
     nErrorLevel = 1;
 }
 

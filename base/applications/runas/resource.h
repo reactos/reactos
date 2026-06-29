@@ -1,3 +1,5 @@
+#pragma once
+
 #define IDS_USAGE01   7000
 #define IDS_USAGE02   7001
 #define IDS_USAGE03   7002

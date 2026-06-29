@@ -9,8 +9,6 @@
 #define _INC_WINDOWS
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
@@ -31,7 +29,6 @@
 
 #include "compobj_private.h"
 #include "dictionary.h"
-#include "enumx.h"
 #include "moniker.h"
 
 #endif /* !_OLE32_PCH_ */

@@ -22787,28 +22787,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4369
 Language=English
-Network statistics for \\\\%1
+Network statistics for \\%1
 .
 Language=Polish
-Statystyki sieciowe dla \\\\%1
+Statystyki sieciowe dla \\%1
 .
 Language=Romanian
-Network statistics for \\\\%1
+Network statistics for \\%1
 .
 Language=Russian
-Network statistics for \\\\%1
+Network statistics for \\%1
 .
 Language=Spanish
-Network statistics for \\\\%1
+Network statistics for \\%1
 .
 Language=Turkish
-Network statistics for \\\\%1
+Network statistics for \\%1
 .
 Language=Chinese
-Network statistics for \\\\%1
+Network statistics for \\%1
 .
 Language=Taiwanese
-Network statistics for \\\\%1
+Network statistics for \\%1
 .
 
 MessageId=4370
@@ -22903,28 +22903,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4373
 Language=English
-Communication-device queues at \\\\%1
+Communication-device queues at \\%1
 .
 Language=Polish
-Kolejki urządzeń komunikacyjnych na \\\\%1
+Kolejki urządzeń komunikacyjnych na \\%1
 .
 Language=Romanian
-Communication-device queues at \\\\%1
+Communication-device queues at \\%1
 .
 Language=Russian
-Communication-device queues at \\\\%1
+Communication-device queues at \\%1
 .
 Language=Spanish
-Communication-device queues at \\\\%1
+Communication-device queues at \\%1
 .
 Language=Turkish
-Communication-device queues at \\\\%1
+Communication-device queues at \\%1
 .
 Language=Chinese
-Communication-device queues at \\\\%1
+Communication-device queues at \\%1
 .
 Language=Taiwanese
-Communication-device queues at \\\\%1
+Communication-device queues at \\%1
 .
 
 MessageId=4374
@@ -23106,28 +23106,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4380
 Language=English
-User accounts for \\\\%1
+User accounts for \\%1
 .
 Language=Polish
-Konta użytkowników dla \\\\%1
+Konta użytkowników dla \\%1
 .
 Language=Romanian
-User accounts for \\\\%1
+User accounts for \\%1
 .
 Language=Russian
-User accounts for \\\\%1
+User accounts for \\%1
 .
 Language=Spanish
-User accounts for \\\\%1
+User accounts for \\%1
 .
 Language=Turkish
-User accounts for \\\\%1
+User accounts for \\%1
 .
 Language=Chinese
-User accounts for \\\\%1
+User accounts for \\%1
 .
 Language=Taiwanese
-User accounts for \\\\%1
+User accounts for \\%1
 .
 
 MessageId=4381
@@ -23694,28 +23694,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4400
 Language=English
-Group Accounts for \\\\%1
+Group Accounts for \\%1
 .
 Language=Polish
-Konta grupowe dla \\\\%1
+Konta grupowe dla \\%1
 .
 Language=Romanian
-Conturile de grup pentru \\\\%1
+Conturile de grup pentru \\%1
 .
 Language=Russian
-Учетные записи групп для \\\\%1
+Учетные записи групп для \\%1
 .
 Language=Spanish
-Group Accounts for \\\\%1
+Group Accounts for \\%1
 .
 Language=Turkish
-Group Accounts for \\\\%1
+Group Accounts for \\%1
 .
 Language=Chinese
-Group Accounts for \\\\%1
+Group Accounts for \\%1
 .
 Language=Taiwanese
-Group Accounts for \\\\%1
+Group Accounts for \\%1
 .
 
 MessageId=4401
@@ -23810,28 +23810,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4405
 Language=English
-Aliases for \\\\%1
+Aliases for \\%1
 .
 Language=Polish
-Aliasy dla \\\\%1
+Aliasy dla \\%1
 .
 Language=Romanian
-Alias pentru \\\\%1
+Alias pentru \\%1
 .
 Language=Russian
-Псевдонимы для \\\\%1
+Псевдонимы для \\%1
 .
 Language=Spanish
-Alias de \\\\%1
+Alias de \\%1
 .
 Language=Turkish
-\\\\%1 için başka adlar
+\\%1 için başka adlar
 .
 Language=Chinese
-\\\\%1 的别名
+\\%1 的别名
 .
 Language=Taiwanese
-別名 \\\\%1
+別名 \\%1
 .
 
 MessageId=4406
@@ -23926,28 +23926,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4410
 Language=English
-User Accounts for \\\\%1
+User Accounts for \\%1
 .
 Language=Polish
-Konta użytkowników dla \\\\%1
+Konta użytkowników dla \\%1
 .
 Language=Romanian
-Conturi de utilizator pentru \\\\%1
+Conturi de utilizator pentru \\%1
 .
 Language=Russian
-Учетные записи пользователей для \\\\%1
+Учетные записи пользователей для \\%1
 .
 Language=Spanish
-Cuentas de usuario en \\\\%1
+Cuentas de usuario en \\%1
 .
 Language=Turkish
-\\\\%1 için kullanıcı hesapları
+\\%1 için kullanıcı hesapları
 .
 Language=Chinese
-\\\\%1 的用户帐户
+\\%1 的用户帐户
 .
 Language=Taiwanese
-使用者帳戶 \\\\%1
+使用者帳戶 \\%1
 .
 
 MessageId=4411
@@ -27029,28 +27029,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4623
 Language=English
-Workstation Statistics for \\\\%1
+Workstation Statistics for \\%1
 .
 Language=Polish
-Statystyka stacji roboczej dla \\\\%1
+Statystyka stacji roboczej dla \\%1
 .
 Language=Romanian
-Statistici pentru stația de lucru \\\\%1
+Statistici pentru stația de lucru \\%1
 .
 Language=Russian
-Статистика рабочей станции для \\\\%1
+Статистика рабочей станции для \\%1
 .
 Language=Spanish
-Workstation Statistics for \\\\%1
+Workstation Statistics for \\%1
 .
 Language=Turkish
-Workstation Statistics for \\\\%1
+Workstation Statistics for \\%1
 .
 Language=Chinese
-Workstation Statistics for \\\\%1
+Workstation Statistics for \\%1
 .
 Language=Taiwanese
-Workstation Statistics for \\\\%1
+Workstation Statistics for \\%1
 .
 
 MessageId=4624
@@ -27058,28 +27058,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4624
 Language=English
-Server Statistics for \\\\%1
+Server Statistics for \\%1
 .
 Language=Polish
-Statystyka serwera dla \\\\%1
+Statystyka serwera dla \\%1
 .
 Language=Romanian
-Statistici de server pentru \\\\%1
+Statistici de server pentru \\%1
 .
 Language=Russian
-Статистика сервера для \\\\%1
+Статистика сервера для \\%1
 .
 Language=Spanish
-Server Statistics for \\\\%1
+Server Statistics for \\%1
 .
 Language=Turkish
-Server Statistics for \\\\%1
+Server Statistics for \\%1
 .
 Language=Chinese
-Server Statistics for \\\\%1
+Server Statistics for \\%1
 .
 Language=Taiwanese
-Server Statistics for \\\\%1
+Server Statistics for \\%1
 .
 
 MessageId=4625
@@ -33657,28 +33657,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_5013
 Language=English
-From:   %1 at \\\\%2
+From:   %1 at \\%2
 .
 Language=Polish
-Od:   %1 na \\\\%2
+Od:   %1 na \\%2
 .
 Language=Romanian
-From:   %1 at \\\\%2
+From:   %1 at \\%2
 .
 Language=Russian
-From:   %1 at \\\\%2
+From:   %1 at \\%2
 .
 Language=Spanish
-From:   %1 at \\\\%2
+From:   %1 at \\%2
 .
 Language=Turkish
-From:   %1 at \\\\%2
+From:   %1 at \\%2
 .
 Language=Chinese
-From:   %1 at \\\\%2
+From:   %1 at \\%2
 .
 Language=Taiwanese
-From:   %1 at \\\\%2
+From:   %1 at \\%2
 .
 
 MessageId=5014
@@ -42880,35 +42880,35 @@ Facility=System
 SymbolicName=NELOG_NetlogonRpcCallCancelled
 Language=English
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
-is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+is not responsive.  The current RPC call from Netlogon on \\%3 to %1 has been cancelled.
 .
 Language=Polish
 Ustawienie sesji kontrolera %1 domeny Windows NT lub Windows 2000 dla domeny %2\n
-nie reaguje. Bieżące wywołanie RPC z usługi Netlogon na \\\\%3 do %1 zostało anulowane.
+nie reaguje. Bieżące wywołanie RPC z usługi Netlogon na \\%3 do %1 zostało anulowane.
 .
 Language=Romanian
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
-is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+is not responsive.  The current RPC call from Netlogon on \\%3 to %1 has been cancelled.
 .
 Language=Russian
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
-is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+is not responsive.  The current RPC call from Netlogon on \\%3 to %1 has been cancelled.
 .
 Language=Spanish
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
-is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+is not responsive.  The current RPC call from Netlogon on \\%3 to %1 has been cancelled.
 .
 Language=Turkish
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
-is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+is not responsive.  The current RPC call from Netlogon on \\%3 to %1 has been cancelled.
 .
 Language=Chinese
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
-is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+is not responsive.  The current RPC call from Netlogon on \\%3 to %1 has been cancelled.
 .
 Language=Taiwanese
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
-is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+is not responsive.  The current RPC call from Netlogon on \\%3 to %1 has been cancelled.
 .
 
 MessageId=5784

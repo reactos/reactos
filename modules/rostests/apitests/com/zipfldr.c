@@ -10,101 +10,76 @@
 #define NDEBUG
 #include <debug.h>
 
-/*
-This is only tested on w10 & 2k3, so the defines might be wrong for the other versions.
-CLSID_ZipFolderStorageHandler and CLSID_ZipFolderContextMenu seem to be the same.
-*/
-
-
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
-        ID_NAME(CLSID_ZipFolderStorageHandler),
+        ID_NAME(CLSID_ZipFolderStorageHandler, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,   &IID_IShellFolder2 },
-            {    0x0,       &IID_IShellFolder },
-            {    0x0,           &IID_IUnknown },
-            {    0x4,   &IID_IStorage },
-            {    0x8,   &IID_IContextMenu },
-            {    0xc,   &IID_IShellExtInit },
-#if _WIN32_WINNT < 0x0a00
-            {   0x10,   &IID_IPersistFile },
-            {   0x14,   &IID_IPersistFolder2 },
-            {   0x14,       &IID_IPersistFolder },
-            {   0x14,           &IID_IPersist },
-#else
-            {   0x10,   &IID_IPersistFolder2 },
-            {   0x10,       &IID_IPersistFolder },
-            {   0x10,           &IID_IPersist },
-            {   0x14,   &IID_IFolderType },
-#endif
+            { NTDDI_MIN,          NTDDI_WIN7SP1,      &IID_IPersistFile },
+
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IShellFolder2 },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IShellFolder },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IStorage },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IContextMenu },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IShellExtInit },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IPersistFolder2 },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IPersistFolder },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IPersist },
+
+            { NTDDI_VISTA,        NTDDI_MAX,          &IID_IFolderType},
         },
-        L"Apartment"
     },
     {
-        ID_NAME(CLSID_ZipFolderSendTo),
+        ID_NAME(CLSID_ZipFolderSendTo, NTDDI_MIN, NTDDI_MAX),
         {
-#if _WIN32_WINNT >= 0x0a00
-            {   -0x8,   &IID_IObjectWithSite },
-#endif
-            {    0x0,   &IID_IDropTarget },
-            {    0x0,       &IID_IUnknown },
-            {    0x4,   &IID_IPersistFile },
-            {    0x4,       &IID_IPersist },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IDropTarget },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IPersistFile },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IPersist },
+
+            { NTDDI_VISTA,        NTDDI_MAX,          &IID_IObjectWithSite },
         },
-        L"Apartment"
     },
     {
-        ID_NAME(CLSID_ZipFolderContextMenu),
+        ID_NAME(CLSID_ZipFolderContextMenu, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,   &IID_IShellFolder2 },
-            {    0x0,       &IID_IShellFolder },
-            {    0x0,           &IID_IUnknown },
-            {    0x4,   &IID_IStorage },
-            {    0x8,   &IID_IContextMenu },
-            {    0xc,   &IID_IShellExtInit },
-#if _WIN32_WINNT < 0x0a00
-            {   0x10,   &IID_IPersistFile },
-            {   0x14,   &IID_IPersistFolder2 },
-            {   0x14,       &IID_IPersistFolder },
-            {   0x14,           &IID_IPersist },
-#else
-            {   0x10,   &IID_IPersistFolder2 },
-            {   0x10,       &IID_IPersistFolder },
-            {   0x10,           &IID_IPersist },
-            {   0x14,   &IID_IFolderType },
-#endif
+            { NTDDI_MIN,          NTDDI_WIN7SP1,      &IID_IPersistFile },
+
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IShellFolder2 },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IShellFolder },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IStorage },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IContextMenu },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IShellExtInit },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IPersistFolder2 },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IPersistFolder },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IPersist },
+
+            { NTDDI_VISTA,        NTDDI_MAX,          &IID_IFolderType},
         },
-        L"Apartment"
     },
     {
-        ID_NAME(CLSID_ZipFolderRightDragHandler),
+        ID_NAME(CLSID_ZipFolderRightDragHandler, NTDDI_MIN, NTDDI_MAX),
         {
-            {   -0x4,   &IID_IContextMenu },
-            {    0x0,   &IID_IShellExtInit },
-            {    0x0,       &IID_IUnknown },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IContextMenu },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IShellExtInit },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IUnknown },
         },
-        L"Apartment"
     },
     {
-        ID_NAME(CLSID_ZipFolderDropHandler),
+        ID_NAME(CLSID_ZipFolderDropHandler, NTDDI_MIN, NTDDI_MAX),
         {
-#if _WIN32_WINNT < 0x0a00
-            {    0x0,   &IID_IDropTarget },
-            {    0x0,       &IID_IUnknown },
-            {    0x4,   &IID_IPersistFile },
-            {    0x4,       &IID_IPersist },
-#else
-            {   -0x4,   &IID_IDropTarget },
-            {    0x0,   &IID_IUnknown },
-#endif
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IDropTarget },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IUnknown },
+
+            { NTDDI_MIN,          NTDDI_WIN7SP1,      &IID_IPersistFile },
+            { NTDDI_MIN,          NTDDI_WIN7SP1,      &IID_IPersist },
         },
-        L"Apartment"
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
 
 START_TEST(zipfldr)
 {
-    TestClasses(L"zipfldr", ExpectedInterfaces, ExpectedInterfaceCount);
+    TestClasses(L"zipfldr", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
 }

@@ -501,7 +501,9 @@ BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD Ver
  */
 BOOL WINAPI SdbGetDatabaseInformation(PDB pdb, PDB_INFORMATION information)
 {
-    if (pdb && information)
+    RtlZeroMemory(information, sizeof(*information));
+
+    if (pdb)
     {
         information->dwFlags = 0;
         information->dwMajor = pdb->major;
@@ -519,16 +521,33 @@ BOOL WINAPI SdbGetDatabaseInformation(PDB pdb, PDB_INFORMATION information)
 }
 
 /**
- * @name SdbFreeDatabaseInformation
- * Free up resources allocated in SdbGetDatabaseInformation
+ * @unimplemented
+ * @name SdbGetDatabaseInformationByName
+ * Get information about the database
  *
- * @param information   The information retrieved from SdbGetDatabaseInformation
+ * @param lpwszFileName The database file
+ * @param ppAttrInfo    The returned information, allocated by this function
+ * @return TRUE on success
  */
-VOID WINAPI SdbFreeDatabaseInformation(PDB_INFORMATION information)
+BOOL WINAPI
+SdbGetDatabaseInformationByName(_In_ LPCWSTR lpwszFileName, _Outptr_ PDB_INFORMATION *ppAttrInfo)
 {
-    // No-op
+    SHIM_ERR("Unimplemented\n");
+    *ppAttrInfo = NULL;
+    return FALSE;
 }
 
+/**
+ * @unimplemented
+ * @name SdbFreeDatabaseInformation
+ * Free up resources allocated in SdbGetDatabaseInformationByName
+ *
+ * @param information   The information retrieved from SdbGetDatabaseInformationByName
+ */
+VOID WINAPI SdbFreeDatabaseInformation(_In_opt_ PDB_INFORMATION information)
+{
+    SHIM_ERR("Unimplemented\n");
+}
 
 /**
  * Find the first named child tag.

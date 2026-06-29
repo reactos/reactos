@@ -22,6 +22,14 @@ extern "C"
 #define KD_BREAKPOINT_SIZE        sizeof(UCHAR)
 #define KD_BREAKPOINT_VALUE       0xCC
 
+/* CPUID 1 - ECX flags */
+#define X86_FEATURE_SSE3        0x00000001
+#define X86_FEATURE_SSSE3       0x00000200
+#define X86_FEATURE_SSE4_1      0x00080000
+#define X86_FEATURE_SSE4_2      0x00100000
+#define X86_FEATURE_XSAVE       0x04000000
+#define X86_FEATURE_RDRAND      0x40000000
+
 /* CPUID 1 - EDX flags */
 #define X86_FEATURE_FPU         0x00000001 /* x87 FPU is present */
 #define X86_FEATURE_VME         0x00000002 /* Virtual 8086 Extensions are present */
@@ -32,7 +40,7 @@ extern "C"
 #define X86_FEATURE_CX8         0x00000100 /* CMPXCHG8B instruction present */
 #define X86_FEATURE_APIC        0x00000200 /* APIC is present */
 #define X86_FEATURE_SYSCALL     0x00000800 /* SYSCALL/SYSRET support present */
-#define X86_FEATURE_MTTR        0x00001000 /* Memory type range registers are present */
+#define X86_FEATURE_MTRR        0x00001000 /* Memory type range registers are present */
 #define X86_FEATURE_PGE         0x00002000 /* Page Global Enable */
 #define X86_FEATURE_CMOV        0x00008000 /* "Conditional move" instruction supported */
 #define X86_FEATURE_PAT         0x00010000 /* Page Attribute Table is supported */
@@ -189,6 +197,11 @@ typedef union _KTRAP_EXIT_SKIP_BITS
 #define PFX_FLAG_REP               0x00040000
 
 //
+// VDM State Pointer
+//
+extern const PULONG KiNtVdmState;
+
+//
 // VDM Helper Macros
 //
 // All VDM/V8086 opcode emulators have the same FASTCALL function definition.
@@ -210,8 +223,22 @@ typedef union _KTRAP_EXIT_SKIP_BITS
 // more time, this way we don't redefine ALL opcode handlers to have 3 parameters,
 // which would be forcing stack usage in all other scenarios.
 //
-#define KiVdmSetVdmEFlags(x)        InterlockedOr((PLONG)KiNtVdmState, (x));
-#define KiVdmClearVdmEFlags(x)      InterlockedAnd((PLONG)KiNtVdmState, ~(x))
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+FORCEINLINE ULONG KiVdmSetVdmEFlags(ULONG EFlags)
+{
+    return InterlockedOr((PLONG)KiNtVdmState, EFlags);
+}
+FORCEINLINE ULONG KiVdmClearVdmEFlags(ULONG EFlags)
+{
+    return InterlockedAnd((PLONG)KiNtVdmState, ~EFlags);
+}
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
 #define KiCallVdmHandler(x)         KiVdmOpcode##x(TrapFrame, Flags)
 #define KiCallVdmPrefixHandler(x)   KiVdmOpcodePrefix(TrapFrame, Flags | x)
 #define KiVdmUnhandledOpcode(x)                     \
@@ -462,7 +489,7 @@ NTAPI
 KiSetProcessorType(VOID);
 
 CODE_SEG("INIT")
-ULONG
+ULONG64
 NTAPI
 KiGetFeatureBits(VOID);
 
@@ -705,6 +732,7 @@ extern ULONG KeI386FxsrPresent;
 extern ULONG KiMXCsrMask;
 extern ULONG KeI386CpuType;
 extern ULONG KeI386CpuStep;
+extern ULONG KeI386MachineType;
 extern ULONG KiFastSystemCallDisable;
 extern UCHAR KiDebugRegisterTrapOffsets[9];
 extern UCHAR KiDebugRegisterContextOffsets[9];

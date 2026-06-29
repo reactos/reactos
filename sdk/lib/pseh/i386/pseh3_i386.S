@@ -47,9 +47,6 @@ __SEH3$_RegisterFrame:
     /* Save the address of the static data table */
     mov [eax + SEH3_REGISTRATION_FRAME_ScopeTable], edx
 
-    /* Set the handler address */
-    mov dword ptr [eax + SEH3_REGISTRATION_FRAME_Handler], offset __SEH3$_except_handler
-
     /* Set this as the end of the internal chain */
     mov dword ptr [eax + SEH3_REGISTRATION_FRAME_EndOfChain], eax
 

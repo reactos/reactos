@@ -310,34 +310,359 @@ SymbolicName=MSG_COMMAND_ASSIGN
 Severity=Informational
 Facility=System
 Language=English
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=German
-<Add ASSIGN command help text here>
+    Weist dem Volume mit dem Fokus einen Laufwerkbuchstaben oder
+    den Pfadnamen des eingebundenen Ordners zu.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  Der Laufwerkbuchstabe, den Sie dem Volume zuweisen
+                möchten.
+
+    MOUNT=<PATH>
+                Der Pfadname des eingebundenen Ordners, den Sie dem Volume
+                zuweisen möchten.
+
+    NOERR       Nur für Skripting. Bei einem Fehler wird die Verarbeitung
+                von Befehlen fortgesetzt, als sei der Fehler nicht aufge-
+                treten. Ohne den NOERR-Parameter wird "DiskPart" bei
+                einem Fehler mit dem entsprechenden Fehlercode beendet.
+
+    Wenn kein Laufwerkbuchstabe oder eingebundener Ordner angegeben ist,
+    wird der nächste verfügbare Laufwerkbuchstabe zugewiesen. Ein Fehler
+    wird generiert, wenn der Laufwerkbuchstabe oder Bereitstellungspunkt
+    bereits verwendet wird.
+
+    Mit dem Befehl "ASSIGN" können Sie den Laufwerkbuchstaben ändern,
+    der einem Wechseldatenträger zugeordnet ist.
+
+    Startvolumes oder Volumes, die die Auslagerungsdatei
+    enthalten, können keine Laufwerkbuchstaben zugewiesen werden. Dar\xFCber
+    hinaus können Laufwerkbuchstaben weder OEM-Partitionen
+    (sofern kein Start in Windows PE erfolgt) noch GPT-Partitionen (GUID-
+    Partitionstabelle) zugewiesen werden, die keine Basisdatenpartitionen,
+    ESP-Partitionen oder Wiederherstellungspartitionen sind.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    Volume ausgewählt werden.
+
+Beispiel:
+
+    ASSIGN LETTER=D
 .
 Language=Polish
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Portugese
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda ASSIGN>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Russian
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Albanian
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Turkish
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Chinese
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Taiwanese
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 
 
@@ -418,36 +743,369 @@ SymbolicName=MSG_COMMAND_AUTOMOUNT
 Severity=Informational
 Facility=System
 Language=English
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=German
-<Add AUTOMOUNT command help text here>
+    Aktiviert oder deaktiviert das Feature für die automatische
+    Bereitstellung.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Ermöglicht es ReactOS, dem System hinzugefügten Volumes
+                automatisch Laufwerkbuchstaben zuzuordnen.
+
+    DISABLE     Verhindert, dass ReactOS dem System hinzugefügten
+                Volumes Laufwerkbuchstaben zuordnet.
+
+    SCRUB       Entfernt eingebundene Ordnerpfadnamen, Laufwerkbuchstaben,
+                Ordnerverzeichnisse und Registrierungseinstellungen für
+                Volumes, die nicht mehr im System vorhanden sind. Damit wird
+                verhindert, dass früher im System enthaltene Volumes
+                automatisch ihren früheren Laufwerkbuchstaben und
+                eingebundenen Ordnerpfadnamen zugeordnet werden,
+                wenn sie dem System wieder hinzugefügt werden.
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten.
+                Ohne den Parameter NOERR wird DiskPart bei einem Fehler
+                mit dem entsprechenden Fehlercode beendet.
+
+    Bei aktiviertem Feature für automatische Bereitstellung wird das
+    Volume automatisch online geschaltet, und dem Volume wird ein
+    Laufwerkbuchstabe und ein Volume-GUID-Pfad zugeordnet, wenn das
+    Volume dem System hinzugefügt wird.
+    In SAN-Konfigurationen (Storage Area Network) wird durch Deaktivieren des
+    Features verhindert, dass Volumes automatisch online geschaltet werden und
+    neuen, für das System sichtbaren Volumes Laufwerkbuchstaben oder
+    Volume-GUID-Pfadnamen zugeordnet werden.
+
+Beispiel:
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Polish
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Portugese
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda AUTOMOUNT>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Russian
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Albanian
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Turkish
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Chinese
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Taiwanese
-<Add AUTOMOUNT command help text here>
-.
+    Enables or disables the automount feature.
 
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
+.
 
 
 MessageId=10006
@@ -740,78 +1398,732 @@ Language=Taiwanese
 
 
 MessageId=10010
-SymbolicName=MSG_COMMAND_CONVERT
+SymbolicName=MSG_COMMAND_CONVERT_GPT
 Severity=Informational
 Facility=System
 Language=English
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=German
-<Add CONVERT command help text here>
+    Konvertiert einen Datenträger mit MBR (Master Boot Record) Partitionstabelle
+    in einen Datenträger mit GPT (GUID Partititionstabelle) Partititonstabelle.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten.
+                Ohne den Parameter NOERR wird DiskPart bei einem Fehler mit
+                dem entsprechenden Fehlercode beendet.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    MBR-Datenträger ausgewählt sein.
+
+    Der Datenträger muss eine minimale Größe von 128 MB haben.
+
+    Wichtig:
+        Nur ein leerer Datenträger kann in einen GPT-Datenträger konvertiert
+        werden. Sichern Sie alle Daten und löschen Sie alle Partitionen und
+        Volumes bevor Sie den Datenträger konvertieres.
+
+Beispiel:
+    CONVERT GPT
 .
 Language=Polish
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Portugese
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda CONVERT>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Russian
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Albanian
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Turkish
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Chinese
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Taiwanese
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 
 
 MessageId=10011
-SymbolicName=MSG_COMMAND_CREATE_PARTITION_EFI
+SymbolicName=MSG_COMMAND_CONVERT_MBR
 Severity=Informational
 Facility=System
 Language=English
-<Add CREATE PARTITION EFI command help text here>
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
 .
 Language=German
-<Add CREATE PARTITION EFI command help text here>
+    Konvertiert einen Datenträger mit GPT (GUID Partititionstabelle) Partitionstabelle
+    in einen Datenträger mit MBR (Master Boot Record) Partititonstabelle.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten.
+                Ohne den Parameter NOERR wird DiskPart bei einem Fehler mit
+                dem entsprechenden Fehlercode beendet.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    GPT-Datenträger ausgewählt sein.
+
+    Wichtig:
+        Nur ein leerer Datenträger kann in einen MBR-Datenträger konvertiert
+        werden. Sichern Sie alle Daten und löschen Sie alle Partitionen und
+        Volumes bevor Sie den Datenträger konvertieres.
+
+Beispiel:
+    CONVERT MBR
 .
 Language=Polish
-<Add CREATE PARTITION EFI command help text here>
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
 .
 Language=Portugese
-<Add CREATE PARTITION EFI command help text here>
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda CREATE PARTITION EFI>
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
 .
 Language=Russian
-<Add CREATE PARTITION EFI command help text here>
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
 .
 Language=Albanian
-<Add CREATE PARTITION EFI command help text here>
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
 .
 Language=Turkish
-<Add CREATE PARTITION EFI command help text here>
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
 .
 Language=Chinese
-<Add CREATE PARTITION EFI command help text here>
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
 .
 Language=Taiwanese
-<Add CREATE PARTITION EFI command help text here>
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
 .
 
 
 MessageId=10012
+SymbolicName=MSG_COMMAND_CREATE_PARTITION_EFI
+Severity=Informational
+Facility=System
+Language=English
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
+.
+Language=German
+    Erstellt eine EFI-Systempartition (Extensible Firmware Interface)
+    auf einem GPT-Datenträger (GPT = GUID-Partitionstabelle).
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    Die Größe der Partition in MB. Falls keine Größe angegeben
+                ist, wird die Partition erweitert, bis im aktuellen Bereich
+                kein freier Speicherplatz mehr vorhanden ist.
+
+    OFFSET=<N>  Das Offset, in Kilobytes (KB), an dem die Partition
+                erstellt wird. Falls kein Offset angegeben ist, wird
+                die Partition im ersten Datenträgerbereich angelegt, der
+                eine ausreichende Größe für die Partition hat.
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten. Ohne den Parameter NOERR wird DiskPart bei
+                einem Fehler mit dem entsprechenden Fehlercode beendet.
+
+    Nachdem die Partition erstellt wurde, erhält die neue Partition
+    den Fokus.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    GPT-Basisdatenträger ausgewählt sein.
+
+Beispiel:
+
+    CREATE PARTITION EFI SIZE=1000
+.
+Language=Polish
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
+.
+Language=Portugese
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
+.
+Language=Romanian
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
+.
+Language=Russian
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
+.
+Language=Albanian
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
+.
+Language=Turkish
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
+.
+Language=Chinese
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
+.
+Language=Taiwanese
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
+.
+
+
+MessageId=10013
 SymbolicName=MSG_COMMAND_CREATE_PARTITION_EXTENDED
 Severity=Informational
 Facility=System
@@ -1194,7 +2506,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10013
+MessageId=10014
 SymbolicName=MSG_COMMAND_CREATE_PARTITION_LOGICAL
 Severity=Informational
 Facility=System
@@ -1561,43 +2873,408 @@ Language=Taiwanese
 .
 
 
-MessageId=10014
+MessageId=10015
 SymbolicName=MSG_COMMAND_CREATE_PARTITION_MSR
 Severity=Informational
 Facility=System
 Language=English
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=German
-<Add CREATE PARTITION MSR command help text here>
+    Erstellt eine MSR-Partition (Microsoft Reserved) auf einem GPT-Datenträger
+    (GPT = GUID-Partitionstabelle).
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    Die Größe der Partition in MB. Die Länge der Partition in
+                Byte entspricht mindestens dem durch N angegebenen Wert. Falls
+                keine Größe angegeben ist, wird die Partition erweitert, bis
+                sie den gesamten freien Speicherplatz im aktuellen Bereich
+                umfasst.
+
+    OFFSET=<N>  Das Offset, in Kilobyte (KB), an dem die Partition erstellt
+                wird. Falls kein Offset angegeben ist, wird die Partition im
+                ersten Datenträgerbereich erstellt, der eine ausreichende Größe
+                für die Partition hat.
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht.
+                Ohne den Parameter NOERR wird DiskPart bei einem Fehler mit dem
+                entsprechenden Fehlercode beendet.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein GPT-
+    Basisdatenträger ausgewählt sein.
+
+    Achtung:
+
+        Gehen Sie bei Verwendung dieses Befehls mit äußerster Vorsicht vor.
+        Da GPT-Datenträger ein bestimmtes Partitionslayout erfordern, könnte
+        der Datenträger beim Erstellen von MSR-Partitionen unlesbar werden.
+        Auf GPT-Datenträgern, die zum Starten von ReactOS verwendet werden, ist
+        die EFI-Systempartition die erste Partition auf dem Datenträger,
+        gefolgt von der MSR-Partition. GPT-Datenträger, die nur zum Speichern
+        von Daten verwendet werden, haben keine, EFI-Systempartition. Die
+        MSR-Partition ist daher in einem solchen Fall die erste Partition.
+
+    Von ReactOS werden online keine MSR-Partitionen bereitgestellt.
+    Auf MSR-Partitionen können Sie keine Daten speichern, und Sie können
+    MSR-Partitionen nicht löschen.
+
+Beispiel:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Polish
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Portugese
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda CREATE PARTITION MSR>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Russian
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Albanian
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Turkish
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Chinese
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Taiwanese
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 
 
-MessageId=10015
+MessageId=10016
 SymbolicName=MSG_COMMAND_CREATE_PARTITION_PRIMARY
 Severity=Informational
 Facility=System
@@ -2679,7 +4356,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10016
+MessageId=10017
 SymbolicName=MSG_COMMAND_DELETE_DISK
 Severity=Informational
 Facility=System
@@ -2715,7 +4392,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10017
+MessageId=10018
 SymbolicName=MSG_COMMAND_DELETE_PARTITION
 Severity=Informational
 Facility=System
@@ -2983,7 +4660,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10018
+MessageId=10019
 SymbolicName=MSG_COMMAND_DELETE_VOLUME
 Severity=Informational
 Facility=System
@@ -3019,7 +4696,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10019
+MessageId=10020
 SymbolicName=MSG_COMMAND_DETAIL_DISK
 Severity=Informational
 Facility=System
@@ -3144,7 +4821,7 @@ Language=Taiwanese
     DETAIL DISK
 .
 
-MessageId=10020
+MessageId=10021
 SymbolicName=MSG_COMMAND_DETAIL_PARTITION
 Severity=Informational
 Facility=System
@@ -3261,7 +4938,7 @@ Language=Taiwanese
     DETAIL PARTITION
 .
 
-MessageId=10021
+MessageId=10022
 SymbolicName=MSG_COMMAND_DETAIL_VOLUME
 Severity=Informational
 Facility=System
@@ -3387,7 +5064,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10022
+MessageId=10023
 SymbolicName=MSG_COMMAND_DETACH
 Severity=Informational
 Facility=System
@@ -3423,7 +5100,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10023
+MessageId=10024
 SymbolicName=MSG_COMMAND_EXIT
 Severity=Informational
 Facility=System
@@ -3519,7 +5196,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10024
+MessageId=10025
 SymbolicName=MSG_COMMAND_EXPAND
 Severity=Informational
 Facility=System
@@ -3555,7 +5232,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10025
+MessageId=10026
 SymbolicName=MSG_COMMAND_EXTEND
 Severity=Informational
 Facility=System
@@ -3591,7 +5268,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10026
+MessageId=10027
 SymbolicName=MSG_COMMAND_FILESYSTEMS
 Severity=Informational
 Facility=System
@@ -3720,7 +5397,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10027
+MessageId=10028
 SymbolicName=MSG_COMMAND_FORMAT
 Severity=Informational
 Facility=System
@@ -4377,43 +6054,782 @@ Language=Taiwanese
 .
 
 
-MessageId=10028
+MessageId=10029
 SymbolicName=MSG_COMMAND_GPT
 Severity=Informational
 Facility=System
 Language=English
-<Add GPT command help text here>
+    On basic GUID partition table (GPT) disks, assigns the GPT attribute(s) to
+    the partition with focus.
+
+Syntax:  GPT ATTRIBUTES=<N>
+
+    ATTRIBUTES=<N>
+
+                The hexadecimal value indicating the attributes to apply to the
+                partition with focus. The GPT attribute field is a 64-bit field
+                that contains two subfields. The higher field is interpreted
+                only in the context of a particular partition type GUID, while
+                the lower field is common to all partition types.
+
+                The following attribute can be set on any partition:
+
+                0x0000000000000001 marks the partition as required. This
+                indicates to all disk management utilities that the partition
+                should not be deleted. The EFI System partition contains only
+                those binaries necessary to start the operating system. This
+                makes it easy for original equipment manufacturer (OEM) or
+                operating system-specific binaries to be placed in other
+                partitions.
+
+                For basic data partitions, the following attributes are defined:
+
+                0x8000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER
+                Prevents the partition from having a drive
+                letter automatically assigned. By default, each partition is
+                assigned a new drive letter and a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. Setting this attribute ensures
+                that when a disk is moved to a new computer, a new drive letter
+                will not be automatically generated. Instead, the user can
+                manually assign drive letters.
+
+                0x4000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_HIDDEN
+                Defines the partition's volume as hidden.
+                Setting this attribute specifies that the volume will not be
+                assigned a drive letter or a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. A hidden partition's
+                volume is not reported by Win32 APIs such as FindFirstVolume
+                and FindNextVolume.
+
+                0x2000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY
+                Defines the partition as being a Volume Snapshot Service
+                shadow copy volume. Fle system filters use this flag to
+                prevent the filter from attaching to the volume.
+
+                0x1000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY
+                Prevents the volume from being written to.
+
+                Other attributes may be added at any time.
+
+    GPT partition attributes give additional information about the use of the
+    partition.
+
+    A basic GPT partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Changing the GPT attributes might cause your basic data volumes to
+        fail to be assigned drive letters, or prevent the file system from
+        mounting. Unless you are an original equipment manufacturer (OEM)
+        or an IT professional experienced with GPT disks, do not change GPT
+        attributes.
+
+Example:
+
+    GPT ATTRIBUTES=0x8000000000000000
+    GPT ATTRIBUTES=0xF000000000000001
 .
 Language=German
-<Add GPT command help text here>
+    Weist auf GPT-Basisdatenträgern (GPT = GUID-Partitionstabelle) der
+    ausgewählten Partition die GPT-Attribute zu.
+
+Syntax:  GPT ATTRIBUTES=<N>
+
+    ATTRIBUTES=<N>
+
+                Der Hexadezimalwert gibt die Attribute an, die auf die
+                ausgewählte Partition angewendet werden sollen. Das GPT-Attributfeld
+                ist ein 64-Bit-Feld, das zwei Unterfelder enthält. Das höhere Feld wird nur
+                im Kontext einer bestimmten Partitionstyp-GUID interpretiert, während
+                das niedrigere Feld für alle Partitionstypen verwendet wird.
+
+                Folgendes Attribut kann für alle Partitionen festgelegt werden:
+
+                0x0000000000000001 markiert die Partition als erforderlich. Damit
+                wird allen Hilfsprogrammen zur Datenträgerverwaltung angezeigt, dass
+                die Partition nicht gelöscht werden darf. Die EFI-Systempartition enthält
+                nur die zum Starten des Betriebssystems erforderlichen Binärdateien. Dadurch
+                können OEM-spezifische oder für das Betriebssystem erforderliche
+                Binärdateien problemlos in anderen Partitionen abgelegt
+                werden.
+
+                Für Basisdatenpartitionen sind folgende Attribute definiert:
+
+                0x8000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER
+                Verhindert, dass der Partition automatisch ein
+                Laufwerkbuchstabe zugewiesen wird. Standardmäßig wird jeder Partition ein neuer
+                Laufwerkbuchstabe und ein Volume-GUID-Pfadname zugewiesen. Der
+                Laufwerkbuchstabe und der Volume-GUID-Pfadname können verwendet werden,
+                um das Volume mit Win32 APIs zu öffnen. Durch Festlegen dieses
+                Attributs wird sichergestellt, dass bei der Übertragung nicht automatisch
+                ein neuer Laufwerkbuchstabe generiert wird. Stattdessen kann der Benutzer
+                Laufwerkbuchstaben manuell zuweisen.
+
+                0x4000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_HIDDEN
+                Definiert das Volume der Partition als versteckt. Mit
+                diesem Attribut wird festgelegt, dass dem Volume weder ein
+                Laufwerkbuchstabe noch ein Volume-GUID-Pfadname zugewiesen wird. Der
+                Laufwerkbuchstabe und der Volume-GUID-Pfadname können verwendet werden,
+                um das Volume mit Win32 APIs zu öffnen. Das Volume einer
+                versteckten Partition wird nicht von Win32 APIs wie FindFirstVolume
+                und FindNextVolume gemeldet.
+
+                0x2000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY
+                Definiert die Partition als Schattenkopievolume des
+                Volumemomentaufnahmedienstes. Dateisystemfilter verwenden dieses Kennzeichen,
+                um zu verhindern, dass der Filter mit dem Volume verbunden wird.
+
+                0x1000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY
+                Verhindert, dass in das Volume geschrieben wird.
+
+                Weitere Attribute können jederzeit hinzugefügt werden.
+
+    GPT-Partitionsattribute stellen zusätzliche Informationen zur Verwendung
+    der Partition bereit. Damit dieser Vorgang erfolgreich ausgeführt
+    werden kann, muss eine GPT-Basispartition ausgewählt werden.
+
+    Achtung:
+
+        Änderungen von GPT-Attributen können dazu führen, dass die Basisdatenvolumes
+        nicht mehr eingebunden oder den Volumes keine Laufwerkbuchstaben
+        zugewiesen werden können. Sofern Sie kein Originalgerätehersteller (OEM)
+        oder IT-Fachmann und im Umgang mit GPT-Datenträgern
+        erfahren sind, sollten Sie keine GPT-Attribute ändern.
+
+Beispiel:
+
+    GPT ATTRIBUTES=0x8000000000000000
+    GPT ATTRIBUTES=0xF000000000000001
 .
 Language=Polish
-<Add GPT command help text here>
+    On basic GUID partition table (GPT) disks, assigns the GPT attribute(s) to
+    the partition with focus.
+
+Syntax:  GPT ATTRIBUTES=<N>
+
+    ATTRIBUTES=<N>
+
+                The hexadecimal value indicating the attributes to apply to the
+                partition with focus. The GPT attribute field is a 64-bit field
+                that contains two subfields. The higher field is interpreted
+                only in the context of a particular partition type GUID, while
+                the lower field is common to all partition types.
+
+                The following attribute can be set on any partition:
+
+                0x0000000000000001 marks the partition as required. This
+                indicates to all disk management utilities that the partition
+                should not be deleted. The EFI System partition contains only
+                those binaries necessary to start the operating system. This
+                makes it easy for original equipment manufacturer (OEM) or
+                operating system-specific binaries to be placed in other
+                partitions.
+
+                For basic data partitions, the following attributes are defined:
+
+                0x8000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER
+                Prevents the partition from having a drive
+                letter automatically assigned. By default, each partition is
+                assigned a new drive letter and a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. Setting this attribute ensures
+                that when a disk is moved to a new computer, a new drive letter
+                will not be automatically generated. Instead, the user can
+                manually assign drive letters.
+
+                0x4000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_HIDDEN
+                Defines the partition's volume as hidden.
+                Setting this attribute specifies that the volume will not be
+                assigned a drive letter or a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. A hidden partition's
+                volume is not reported by Win32 APIs such as FindFirstVolume
+                and FindNextVolume.
+
+                0x2000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY
+                Defines the partition as being a Volume Snapshot Service
+                shadow copy volume. Fle system filters use this flag to
+                prevent the filter from attaching to the volume.
+
+                0x1000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY
+                Prevents the volume from being written to.
+
+                Other attributes may be added at any time.
+
+    GPT partition attributes give additional information about the use of the
+    partition.
+
+    A basic GPT partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Changing the GPT attributes might cause your basic data volumes to
+        fail to be assigned drive letters, or prevent the file system from
+        mounting. Unless you are an original equipment manufacturer (OEM)
+        or an IT professional experienced with GPT disks, do not change GPT
+        attributes.
+
+Example:
+
+    GPT ATTRIBUTES=0x8000000000000000
+    GPT ATTRIBUTES=0xF000000000000001
 .
 Language=Portugese
-<Add GPT command help text here>
+    On basic GUID partition table (GPT) disks, assigns the GPT attribute(s) to
+    the partition with focus.
+
+Syntax:  GPT ATTRIBUTES=<N>
+
+    ATTRIBUTES=<N>
+
+                The hexadecimal value indicating the attributes to apply to the
+                partition with focus. The GPT attribute field is a 64-bit field
+                that contains two subfields. The higher field is interpreted
+                only in the context of a particular partition type GUID, while
+                the lower field is common to all partition types.
+
+                The following attribute can be set on any partition:
+
+                0x0000000000000001 marks the partition as required. This
+                indicates to all disk management utilities that the partition
+                should not be deleted. The EFI System partition contains only
+                those binaries necessary to start the operating system. This
+                makes it easy for original equipment manufacturer (OEM) or
+                operating system-specific binaries to be placed in other
+                partitions.
+
+                For basic data partitions, the following attributes are defined:
+
+                0x8000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER
+                Prevents the partition from having a drive
+                letter automatically assigned. By default, each partition is
+                assigned a new drive letter and a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. Setting this attribute ensures
+                that when a disk is moved to a new computer, a new drive letter
+                will not be automatically generated. Instead, the user can
+                manually assign drive letters.
+
+                0x4000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_HIDDEN
+                Defines the partition's volume as hidden.
+                Setting this attribute specifies that the volume will not be
+                assigned a drive letter or a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. A hidden partition's
+                volume is not reported by Win32 APIs such as FindFirstVolume
+                and FindNextVolume.
+
+                0x2000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY
+                Defines the partition as being a Volume Snapshot Service
+                shadow copy volume. Fle system filters use this flag to
+                prevent the filter from attaching to the volume.
+
+                0x1000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY
+                Prevents the volume from being written to.
+
+                Other attributes may be added at any time.
+
+    GPT partition attributes give additional information about the use of the
+    partition.
+
+    A basic GPT partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Changing the GPT attributes might cause your basic data volumes to
+        fail to be assigned drive letters, or prevent the file system from
+        mounting. Unless you are an original equipment manufacturer (OEM)
+        or an IT professional experienced with GPT disks, do not change GPT
+        attributes.
+
+Example:
+
+    GPT ATTRIBUTES=0x8000000000000000
+    GPT ATTRIBUTES=0xF000000000000001
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda GPT>
+    On basic GUID partition table (GPT) disks, assigns the GPT attribute(s) to
+    the partition with focus.
+
+Syntax:  GPT ATTRIBUTES=<N>
+
+    ATTRIBUTES=<N>
+
+                The hexadecimal value indicating the attributes to apply to the
+                partition with focus. The GPT attribute field is a 64-bit field
+                that contains two subfields. The higher field is interpreted
+                only in the context of a particular partition type GUID, while
+                the lower field is common to all partition types.
+
+                The following attribute can be set on any partition:
+
+                0x0000000000000001 marks the partition as required. This
+                indicates to all disk management utilities that the partition
+                should not be deleted. The EFI System partition contains only
+                those binaries necessary to start the operating system. This
+                makes it easy for original equipment manufacturer (OEM) or
+                operating system-specific binaries to be placed in other
+                partitions.
+
+                For basic data partitions, the following attributes are defined:
+
+                0x8000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER
+                Prevents the partition from having a drive
+                letter automatically assigned. By default, each partition is
+                assigned a new drive letter and a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. Setting this attribute ensures
+                that when a disk is moved to a new computer, a new drive letter
+                will not be automatically generated. Instead, the user can
+                manually assign drive letters.
+
+                0x4000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_HIDDEN
+                Defines the partition's volume as hidden.
+                Setting this attribute specifies that the volume will not be
+                assigned a drive letter or a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. A hidden partition's
+                volume is not reported by Win32 APIs such as FindFirstVolume
+                and FindNextVolume.
+
+                0x2000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY
+                Defines the partition as being a Volume Snapshot Service
+                shadow copy volume. Fle system filters use this flag to
+                prevent the filter from attaching to the volume.
+
+                0x1000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY
+                Prevents the volume from being written to.
+
+                Other attributes may be added at any time.
+
+    GPT partition attributes give additional information about the use of the
+    partition.
+
+    A basic GPT partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Changing the GPT attributes might cause your basic data volumes to
+        fail to be assigned drive letters, or prevent the file system from
+        mounting. Unless you are an original equipment manufacturer (OEM)
+        or an IT professional experienced with GPT disks, do not change GPT
+        attributes.
+
+Example:
+
+    GPT ATTRIBUTES=0x8000000000000000
+    GPT ATTRIBUTES=0xF000000000000001
 .
 Language=Russian
-<Add GPT command help text here>
+    On basic GUID partition table (GPT) disks, assigns the GPT attribute(s) to
+    the partition with focus.
+
+Syntax:  GPT ATTRIBUTES=<N>
+
+    ATTRIBUTES=<N>
+
+                The hexadecimal value indicating the attributes to apply to the
+                partition with focus. The GPT attribute field is a 64-bit field
+                that contains two subfields. The higher field is interpreted
+                only in the context of a particular partition type GUID, while
+                the lower field is common to all partition types.
+
+                The following attribute can be set on any partition:
+
+                0x0000000000000001 marks the partition as required. This
+                indicates to all disk management utilities that the partition
+                should not be deleted. The EFI System partition contains only
+                those binaries necessary to start the operating system. This
+                makes it easy for original equipment manufacturer (OEM) or
+                operating system-specific binaries to be placed in other
+                partitions.
+
+                For basic data partitions, the following attributes are defined:
+
+                0x8000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER
+                Prevents the partition from having a drive
+                letter automatically assigned. By default, each partition is
+                assigned a new drive letter and a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. Setting this attribute ensures
+                that when a disk is moved to a new computer, a new drive letter
+                will not be automatically generated. Instead, the user can
+                manually assign drive letters.
+
+                0x4000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_HIDDEN
+                Defines the partition's volume as hidden.
+                Setting this attribute specifies that the volume will not be
+                assigned a drive letter or a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. A hidden partition's
+                volume is not reported by Win32 APIs such as FindFirstVolume
+                and FindNextVolume.
+
+                0x2000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY
+                Defines the partition as being a Volume Snapshot Service
+                shadow copy volume. Fle system filters use this flag to
+                prevent the filter from attaching to the volume.
+
+                0x1000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY
+                Prevents the volume from being written to.
+
+                Other attributes may be added at any time.
+
+    GPT partition attributes give additional information about the use of the
+    partition.
+
+    A basic GPT partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Changing the GPT attributes might cause your basic data volumes to
+        fail to be assigned drive letters, or prevent the file system from
+        mounting. Unless you are an original equipment manufacturer (OEM)
+        or an IT professional experienced with GPT disks, do not change GPT
+        attributes.
+
+Example:
+
+    GPT ATTRIBUTES=0x8000000000000000
+    GPT ATTRIBUTES=0xF000000000000001
 .
 Language=Albanian
-<Add GPT command help text here>
+    On basic GUID partition table (GPT) disks, assigns the GPT attribute(s) to
+    the partition with focus.
+
+Syntax:  GPT ATTRIBUTES=<N>
+
+    ATTRIBUTES=<N>
+
+                The hexadecimal value indicating the attributes to apply to the
+                partition with focus. The GPT attribute field is a 64-bit field
+                that contains two subfields. The higher field is interpreted
+                only in the context of a particular partition type GUID, while
+                the lower field is common to all partition types.
+
+                The following attribute can be set on any partition:
+
+                0x0000000000000001 marks the partition as required. This
+                indicates to all disk management utilities that the partition
+                should not be deleted. The EFI System partition contains only
+                those binaries necessary to start the operating system. This
+                makes it easy for original equipment manufacturer (OEM) or
+                operating system-specific binaries to be placed in other
+                partitions.
+
+                For basic data partitions, the following attributes are defined:
+
+                0x8000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER
+                Prevents the partition from having a drive
+                letter automatically assigned. By default, each partition is
+                assigned a new drive letter and a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. Setting this attribute ensures
+                that when a disk is moved to a new computer, a new drive letter
+                will not be automatically generated. Instead, the user can
+                manually assign drive letters.
+
+                0x4000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_HIDDEN
+                Defines the partition's volume as hidden.
+                Setting this attribute specifies that the volume will not be
+                assigned a drive letter or a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. A hidden partition's
+                volume is not reported by Win32 APIs such as FindFirstVolume
+                and FindNextVolume.
+
+                0x2000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY
+                Defines the partition as being a Volume Snapshot Service
+                shadow copy volume. Fle system filters use this flag to
+                prevent the filter from attaching to the volume.
+
+                0x1000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY
+                Prevents the volume from being written to.
+
+                Other attributes may be added at any time.
+
+    GPT partition attributes give additional information about the use of the
+    partition.
+
+    A basic GPT partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Changing the GPT attributes might cause your basic data volumes to
+        fail to be assigned drive letters, or prevent the file system from
+        mounting. Unless you are an original equipment manufacturer (OEM)
+        or an IT professional experienced with GPT disks, do not change GPT
+        attributes.
+
+Example:
+
+    GPT ATTRIBUTES=0x8000000000000000
+    GPT ATTRIBUTES=0xF000000000000001
 .
 Language=Turkish
-<Add GPT command help text here>
+    On basic GUID partition table (GPT) disks, assigns the GPT attribute(s) to
+    the partition with focus.
+
+Syntax:  GPT ATTRIBUTES=<N>
+
+    ATTRIBUTES=<N>
+
+                The hexadecimal value indicating the attributes to apply to the
+                partition with focus. The GPT attribute field is a 64-bit field
+                that contains two subfields. The higher field is interpreted
+                only in the context of a particular partition type GUID, while
+                the lower field is common to all partition types.
+
+                The following attribute can be set on any partition:
+
+                0x0000000000000001 marks the partition as required. This
+                indicates to all disk management utilities that the partition
+                should not be deleted. The EFI System partition contains only
+                those binaries necessary to start the operating system. This
+                makes it easy for original equipment manufacturer (OEM) or
+                operating system-specific binaries to be placed in other
+                partitions.
+
+                For basic data partitions, the following attributes are defined:
+
+                0x8000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER
+                Prevents the partition from having a drive
+                letter automatically assigned. By default, each partition is
+                assigned a new drive letter and a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. Setting this attribute ensures
+                that when a disk is moved to a new computer, a new drive letter
+                will not be automatically generated. Instead, the user can
+                manually assign drive letters.
+
+                0x4000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_HIDDEN
+                Defines the partition's volume as hidden.
+                Setting this attribute specifies that the volume will not be
+                assigned a drive letter or a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. A hidden partition's
+                volume is not reported by Win32 APIs such as FindFirstVolume
+                and FindNextVolume.
+
+                0x2000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY
+                Defines the partition as being a Volume Snapshot Service
+                shadow copy volume. Fle system filters use this flag to
+                prevent the filter from attaching to the volume.
+
+                0x1000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY
+                Prevents the volume from being written to.
+
+                Other attributes may be added at any time.
+
+    GPT partition attributes give additional information about the use of the
+    partition.
+
+    A basic GPT partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Changing the GPT attributes might cause your basic data volumes to
+        fail to be assigned drive letters, or prevent the file system from
+        mounting. Unless you are an original equipment manufacturer (OEM)
+        or an IT professional experienced with GPT disks, do not change GPT
+        attributes.
+
+Example:
+
+    GPT ATTRIBUTES=0x8000000000000000
+    GPT ATTRIBUTES=0xF000000000000001
 .
 Language=Chinese
-<Add GPT command help text here>
+    On basic GUID partition table (GPT) disks, assigns the GPT attribute(s) to
+    the partition with focus.
+
+Syntax:  GPT ATTRIBUTES=<N>
+
+    ATTRIBUTES=<N>
+
+                The hexadecimal value indicating the attributes to apply to the
+                partition with focus. The GPT attribute field is a 64-bit field
+                that contains two subfields. The higher field is interpreted
+                only in the context of a particular partition type GUID, while
+                the lower field is common to all partition types.
+
+                The following attribute can be set on any partition:
+
+                0x0000000000000001 marks the partition as required. This
+                indicates to all disk management utilities that the partition
+                should not be deleted. The EFI System partition contains only
+                those binaries necessary to start the operating system. This
+                makes it easy for original equipment manufacturer (OEM) or
+                operating system-specific binaries to be placed in other
+                partitions.
+
+                For basic data partitions, the following attributes are defined:
+
+                0x8000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER
+                Prevents the partition from having a drive
+                letter automatically assigned. By default, each partition is
+                assigned a new drive letter and a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. Setting this attribute ensures
+                that when a disk is moved to a new computer, a new drive letter
+                will not be automatically generated. Instead, the user can
+                manually assign drive letters.
+
+                0x4000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_HIDDEN
+                Defines the partition's volume as hidden.
+                Setting this attribute specifies that the volume will not be
+                assigned a drive letter or a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. A hidden partition's
+                volume is not reported by Win32 APIs such as FindFirstVolume
+                and FindNextVolume.
+
+                0x2000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY
+                Defines the partition as being a Volume Snapshot Service
+                shadow copy volume. Fle system filters use this flag to
+                prevent the filter from attaching to the volume.
+
+                0x1000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY
+                Prevents the volume from being written to.
+
+                Other attributes may be added at any time.
+
+    GPT partition attributes give additional information about the use of the
+    partition.
+
+    A basic GPT partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Changing the GPT attributes might cause your basic data volumes to
+        fail to be assigned drive letters, or prevent the file system from
+        mounting. Unless you are an original equipment manufacturer (OEM)
+        or an IT professional experienced with GPT disks, do not change GPT
+        attributes.
+
+Example:
+
+    GPT ATTRIBUTES=0x8000000000000000
+    GPT ATTRIBUTES=0xF000000000000001
 .
 Language=Taiwanese
-<Add GPT command help text here>
+    On basic GUID partition table (GPT) disks, assigns the GPT attribute(s) to
+    the partition with focus.
+
+Syntax:  GPT ATTRIBUTES=<N>
+
+    ATTRIBUTES=<N>
+
+                The hexadecimal value indicating the attributes to apply to the
+                partition with focus. The GPT attribute field is a 64-bit field
+                that contains two subfields. The higher field is interpreted
+                only in the context of a particular partition type GUID, while
+                the lower field is common to all partition types.
+
+                The following attribute can be set on any partition:
+
+                0x0000000000000001 marks the partition as required. This
+                indicates to all disk management utilities that the partition
+                should not be deleted. The EFI System partition contains only
+                those binaries necessary to start the operating system. This
+                makes it easy for original equipment manufacturer (OEM) or
+                operating system-specific binaries to be placed in other
+                partitions.
+
+                For basic data partitions, the following attributes are defined:
+
+                0x8000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER
+                Prevents the partition from having a drive
+                letter automatically assigned. By default, each partition is
+                assigned a new drive letter and a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. Setting this attribute ensures
+                that when a disk is moved to a new computer, a new drive letter
+                will not be automatically generated. Instead, the user can
+                manually assign drive letters.
+
+                0x4000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_HIDDEN
+                Defines the partition's volume as hidden.
+                Setting this attribute specifies that the volume will not be
+                assigned a drive letter or a volume GUID pathname. Both
+                the drive letter and the volume GUID pathname can be used to
+                open the volume using Win32 APIs. A hidden partition's
+                volume is not reported by Win32 APIs such as FindFirstVolume
+                and FindNextVolume.
+
+                0x2000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY
+                Defines the partition as being a Volume Snapshot Service
+                shadow copy volume. Fle system filters use this flag to
+                prevent the filter from attaching to the volume.
+
+                0x1000000000000000
+                GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY
+                Prevents the volume from being written to.
+
+                Other attributes may be added at any time.
+
+    GPT partition attributes give additional information about the use of the
+    partition.
+
+    A basic GPT partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Changing the GPT attributes might cause your basic data volumes to
+        fail to be assigned drive letters, or prevent the file system from
+        mounting. Unless you are an original equipment manufacturer (OEM)
+        or an IT professional experienced with GPT disks, do not change GPT
+        attributes.
+
+Example:
+
+    GPT ATTRIBUTES=0x8000000000000000
+    GPT ATTRIBUTES=0xF000000000000001
 .
 
 
-MessageId=10029
+MessageId=10030
 SymbolicName=MSG_COMMAND_HELP
 Severity=Informational
 Facility=System
@@ -4573,7 +6989,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10030
+MessageId=10031
 SymbolicName=MSG_COMMAND_IMPORT
 Severity=Informational
 Facility=System
@@ -4609,7 +7025,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10031
+MessageId=10032
 SymbolicName=MSG_COMMAND_INACTIVE
 Severity=Informational
 Facility=System
@@ -4850,7 +7266,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10032
+MessageId=10033
 SymbolicName=MSG_COMMAND_LIST_DISK
 Severity=Informational
 Facility=System
@@ -5105,7 +7521,7 @@ Language=Taiwanese
     LIST DISK
 .
 
-MessageId=10033
+MessageId=10034
 SymbolicName=MSG_COMMAND_LIST_PARTITION
 Severity=Informational
 Facility=System
@@ -5264,7 +7680,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10034
+MessageId=10035
 SymbolicName=MSG_COMMAND_LIST_VOLUME
 Severity=Informational
 Facility=System
@@ -5369,7 +7785,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10035
+MessageId=10036
 SymbolicName=MSG_COMMAND_LIST_VDISK
 Severity=Informational
 Facility=System
@@ -5405,7 +7821,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10036
+MessageId=10037
 SymbolicName=MSG_COMMAND_MERGE
 Severity=Informational
 Facility=System
@@ -5441,7 +7857,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10037
+MessageId=10038
 SymbolicName=MSG_COMMAND_OFFLINE
 Severity=Informational
 Facility=System
@@ -5477,7 +7893,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10038
+MessageId=10039
 SymbolicName=MSG_COMMAND_ONLINE
 Severity=Informational
 Facility=System
@@ -5513,7 +7929,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10039
+MessageId=10040
 SymbolicName=MSG_COMMAND_RECOVER
 Severity=Informational
 Facility=System
@@ -5549,7 +7965,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10040
+MessageId=10041
 SymbolicName=MSG_COMMAND_REM
 Severity=Informational
 Facility=System
@@ -5744,43 +8160,522 @@ Language=Taiwanese
 .
 
 
-MessageId=10041
+MessageId=10042
 SymbolicName=MSG_COMMAND_REMOVE
 Severity=Informational
 Facility=System
 Language=English
-<Add REMOVE command help text here>
+    Removes a drive letter or mounted folder pathname from the volume
+    with focus.
+
+Syntax:  REMOVE [LETTER=<D> | MOUNT=<PATH> | ALL] [DISMOUNT] [NOERR]
+
+    LETTER=<D>  The drive letter to be removed.
+
+    MOUNT=<PATH>
+                The mounted folder path to be removed.
+
+    ALL         Removes all current drive letters and mounted folder paths.
+
+    DISMOUNT    This parameter may be used if 1) all drive letters and
+                mounted folder paths have been removed from the volume, or
+                2) the ALL parameter is specified.  This parameter
+                specifies that the file system is to be dismounted and
+                the volume taken offline. If other processes are using
+                the volume, DiskPart closes any open handles before
+                dismounting the file system and taking the volume offline.
+                You can bring the volume online by assigning it a driver
+                letter, by creating a mounted folder path to the volume, or
+                by using the ONLINE command. DISMOUNT will fail if used
+                on a volume that has any remaining drive letters or mounted
+                folder paths. For scripting, using REMOVE ALL DISMOUNT is
+                recommended.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder path is specified, DiskPart removes
+    the first drive letter or mounted folder path it encounters. If the ALL
+    parameter is used, all current drive letters and mounted folder paths
+    are removed. If the DISMOUNT parameter is used, DiskPart closes all open
+    handles to the volume and then dismounts the volume and takes it offline.
+
+    The REMOVE command can be used to change the drive letter associated with a
+    removable drive. You cannot remove the drive letters on boot or
+    paging volumes.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    REMOVE LETTER=K
+    REMOVE MOUNT=G:\\MountH
+    REMOVE ALL DISMOUNT
 .
 Language=German
-<Add REMOVE command help text here>
+    Entfernt einen Laufwerkbuchstaben oder Pfadnamen für eingebundene Ordner
+    vom Volume, das den Fokus hat.
+
+Syntax:  REMOVE [LETTER=<D> | MOUNT=<PFAD> | ALL] [DISMOUNT] [NOERR]
+
+    LETTER=<D>  Der Laufwerkbuchstabe, der entfernt werden soll.
+
+    MOUNT=<PFAD>
+                Der Pfad des eingebundenen Ordners, der entfernt werden
+                soll.
+
+    ALL         Entfernt alle aktuellen Laufwerksbuchstaben und Pfade der
+                eingebundenen Ordner.
+
+    DISMOUNT    Der Parameter kann verwendet werden, falls 1) alle
+                Laufwerkbuchstaben und Pfade der eingebundenen Ordner vom
+                Volume entfernt wurden oder 2) falls der Parameter ALL
+                angegeben wird. Durch diesen Parameter wird angegeben, dass die
+                Bereitstellung des Dateisystems aufgehoben und das Volume
+                in den Offlinezustand versetzt werden soll. Wird das
+                Volume in anderen Prozessen verwendet, werden von DiskPart alle
+                geöffneten Handles geschlossen, bevor die Bereitstellung des
+                Dateisystems aufgehoben und das Volume in den Offlinezustand
+                versetzt wird.
+                Sie können das Volume in den Onlinezustand versetzen, indem Sie
+                ihm einen Laufwerkbuchstaben zuweisen. Erstellen Sie dazu einen
+                Pfad für einen eingebundenen Ordner zum Volume, oder
+                verwenden Sie den Befehl ONLINE.
+                Der Befehl DISMOUNT schlägt fehl, falls er auf einem Volume
+                ausgeführt wird, das verbleibende Laufwerkbuchstaben oder Pfade
+                für eingebundene Ordner beinhaltet. Für Skripting wird der
+                Befehl REMOVE ALL DISMOUNT empfohlen.
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten. Ohne den Parameter NOERR wird DiskPart bei
+                einem Fehler mit entsprechendem Fehlercode beendet.
+
+    Wurde kein Laufwerkbuchstabe oder Pfad für einen eingebundenen Ordner
+    angegeben, wird von DiskPart der erste erkannte Laufwerkbuchstabe oder Pfad
+    für eingebundene Ordner entfernt. Bei Verwendung des Parameters ALL
+    werden alle aktuellen Laufwerkbuchstaben und Pfade für eingebundene Ordner
+    entfernt. Bei Verwendung des Parameters DISMOUNT werden von DiskPart alle
+    geöffneten Handles für das Volume geschlossen, bevor die Bereitstellung des
+    Volumes aufgehoben und dieses in den Offlinezustand versetzt wird.
+
+    Der Befehl REMOVE kann zum Ändern des Laufwerkbuchstabens verwendet werden,
+    der einem Wechseldatenträger zugeordnet ist. Sie können die
+    Laufwerkbuchstaben auf Start- oder Auslagerungsvolumes nicht entfernen.
+
+    Damit dieser Vorgang erfolgreich verläuft, muss ein Volume ausgewählt werden.
+
+Beispiel:
+
+    REMOVE LETTER=K
+    REMOVE MOUNT=G:\\MountH
+    REMOVE ALL DISMOUNT
 .
 Language=Polish
-<Add REMOVE command help text here>
+    Removes a drive letter or mounted folder pathname from the volume
+    with focus.
+
+Syntax:  REMOVE [LETTER=<D> | MOUNT=<PATH> | ALL] [DISMOUNT] [NOERR]
+
+    LETTER=<D>  The drive letter to be removed.
+
+    MOUNT=<PATH>
+                The mounted folder path to be removed.
+
+    ALL         Removes all current drive letters and mounted folder paths.
+
+    DISMOUNT    This parameter may be used if 1) all drive letters and
+                mounted folder paths have been removed from the volume, or
+                2) the ALL parameter is specified.  This parameter
+                specifies that the file system is to be dismounted and
+                the volume taken offline. If other processes are using
+                the volume, DiskPart closes any open handles before
+                dismounting the file system and taking the volume offline.
+                You can bring the volume online by assigning it a driver
+                letter, by creating a mounted folder path to the volume, or
+                by using the ONLINE command. DISMOUNT will fail if used
+                on a volume that has any remaining drive letters or mounted
+                folder paths. For scripting, using REMOVE ALL DISMOUNT is
+                recommended.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder path is specified, DiskPart removes
+    the first drive letter or mounted folder path it encounters. If the ALL
+    parameter is used, all current drive letters and mounted folder paths
+    are removed. If the DISMOUNT parameter is used, DiskPart closes all open
+    handles to the volume and then dismounts the volume and takes it offline.
+
+    The REMOVE command can be used to change the drive letter associated with a
+    removable drive. You cannot remove the drive letters on boot or
+    paging volumes.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    REMOVE LETTER=K
+    REMOVE MOUNT=G:\\MountH
+    REMOVE ALL DISMOUNT
 .
 Language=Portugese
-<Add REMOVE command help text here>
+    Removes a drive letter or mounted folder pathname from the volume
+    with focus.
+
+Syntax:  REMOVE [LETTER=<D> | MOUNT=<PATH> | ALL] [DISMOUNT] [NOERR]
+
+    LETTER=<D>  The drive letter to be removed.
+
+    MOUNT=<PATH>
+                The mounted folder path to be removed.
+
+    ALL         Removes all current drive letters and mounted folder paths.
+
+    DISMOUNT    This parameter may be used if 1) all drive letters and
+                mounted folder paths have been removed from the volume, or
+                2) the ALL parameter is specified.  This parameter
+                specifies that the file system is to be dismounted and
+                the volume taken offline. If other processes are using
+                the volume, DiskPart closes any open handles before
+                dismounting the file system and taking the volume offline.
+                You can bring the volume online by assigning it a driver
+                letter, by creating a mounted folder path to the volume, or
+                by using the ONLINE command. DISMOUNT will fail if used
+                on a volume that has any remaining drive letters or mounted
+                folder paths. For scripting, using REMOVE ALL DISMOUNT is
+                recommended.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder path is specified, DiskPart removes
+    the first drive letter or mounted folder path it encounters. If the ALL
+    parameter is used, all current drive letters and mounted folder paths
+    are removed. If the DISMOUNT parameter is used, DiskPart closes all open
+    handles to the volume and then dismounts the volume and takes it offline.
+
+    The REMOVE command can be used to change the drive letter associated with a
+    removable drive. You cannot remove the drive letters on boot or
+    paging volumes.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    REMOVE LETTER=K
+    REMOVE MOUNT=G:\\MountH
+    REMOVE ALL DISMOUNT
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda REMOVE>
+    Removes a drive letter or mounted folder pathname from the volume
+    with focus.
+
+Syntax:  REMOVE [LETTER=<D> | MOUNT=<PATH> | ALL] [DISMOUNT] [NOERR]
+
+    LETTER=<D>  The drive letter to be removed.
+
+    MOUNT=<PATH>
+                The mounted folder path to be removed.
+
+    ALL         Removes all current drive letters and mounted folder paths.
+
+    DISMOUNT    This parameter may be used if 1) all drive letters and
+                mounted folder paths have been removed from the volume, or
+                2) the ALL parameter is specified.  This parameter
+                specifies that the file system is to be dismounted and
+                the volume taken offline. If other processes are using
+                the volume, DiskPart closes any open handles before
+                dismounting the file system and taking the volume offline.
+                You can bring the volume online by assigning it a driver
+                letter, by creating a mounted folder path to the volume, or
+                by using the ONLINE command. DISMOUNT will fail if used
+                on a volume that has any remaining drive letters or mounted
+                folder paths. For scripting, using REMOVE ALL DISMOUNT is
+                recommended.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder path is specified, DiskPart removes
+    the first drive letter or mounted folder path it encounters. If the ALL
+    parameter is used, all current drive letters and mounted folder paths
+    are removed. If the DISMOUNT parameter is used, DiskPart closes all open
+    handles to the volume and then dismounts the volume and takes it offline.
+
+    The REMOVE command can be used to change the drive letter associated with a
+    removable drive. You cannot remove the drive letters on boot or
+    paging volumes.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    REMOVE LETTER=K
+    REMOVE MOUNT=G:\\MountH
+    REMOVE ALL DISMOUNT
 .
 Language=Russian
-<Add REMOVE command help text here>
+    Removes a drive letter or mounted folder pathname from the volume
+    with focus.
+
+Syntax:  REMOVE [LETTER=<D> | MOUNT=<PATH> | ALL] [DISMOUNT] [NOERR]
+
+    LETTER=<D>  The drive letter to be removed.
+
+    MOUNT=<PATH>
+                The mounted folder path to be removed.
+
+    ALL         Removes all current drive letters and mounted folder paths.
+
+    DISMOUNT    This parameter may be used if 1) all drive letters and
+                mounted folder paths have been removed from the volume, or
+                2) the ALL parameter is specified.  This parameter
+                specifies that the file system is to be dismounted and
+                the volume taken offline. If other processes are using
+                the volume, DiskPart closes any open handles before
+                dismounting the file system and taking the volume offline.
+                You can bring the volume online by assigning it a driver
+                letter, by creating a mounted folder path to the volume, or
+                by using the ONLINE command. DISMOUNT will fail if used
+                on a volume that has any remaining drive letters or mounted
+                folder paths. For scripting, using REMOVE ALL DISMOUNT is
+                recommended.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder path is specified, DiskPart removes
+    the first drive letter or mounted folder path it encounters. If the ALL
+    parameter is used, all current drive letters and mounted folder paths
+    are removed. If the DISMOUNT parameter is used, DiskPart closes all open
+    handles to the volume and then dismounts the volume and takes it offline.
+
+    The REMOVE command can be used to change the drive letter associated with a
+    removable drive. You cannot remove the drive letters on boot or
+    paging volumes.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    REMOVE LETTER=K
+    REMOVE MOUNT=G:\\MountH
+    REMOVE ALL DISMOUNT
 .
 Language=Albanian
-<Add REMOVE command help text here>
+    Removes a drive letter or mounted folder pathname from the volume
+    with focus.
+
+Syntax:  REMOVE [LETTER=<D> | MOUNT=<PATH> | ALL] [DISMOUNT] [NOERR]
+
+    LETTER=<D>  The drive letter to be removed.
+
+    MOUNT=<PATH>
+                The mounted folder path to be removed.
+
+    ALL         Removes all current drive letters and mounted folder paths.
+
+    DISMOUNT    This parameter may be used if 1) all drive letters and
+                mounted folder paths have been removed from the volume, or
+                2) the ALL parameter is specified.  This parameter
+                specifies that the file system is to be dismounted and
+                the volume taken offline. If other processes are using
+                the volume, DiskPart closes any open handles before
+                dismounting the file system and taking the volume offline.
+                You can bring the volume online by assigning it a driver
+                letter, by creating a mounted folder path to the volume, or
+                by using the ONLINE command. DISMOUNT will fail if used
+                on a volume that has any remaining drive letters or mounted
+                folder paths. For scripting, using REMOVE ALL DISMOUNT is
+                recommended.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder path is specified, DiskPart removes
+    the first drive letter or mounted folder path it encounters. If the ALL
+    parameter is used, all current drive letters and mounted folder paths
+    are removed. If the DISMOUNT parameter is used, DiskPart closes all open
+    handles to the volume and then dismounts the volume and takes it offline.
+
+    The REMOVE command can be used to change the drive letter associated with a
+    removable drive. You cannot remove the drive letters on boot or
+    paging volumes.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    REMOVE LETTER=K
+    REMOVE MOUNT=G:\\MountH
+    REMOVE ALL DISMOUNT
 .
 Language=Turkish
-<Add REMOVE command help text here>
+    Removes a drive letter or mounted folder pathname from the volume
+    with focus.
+
+Syntax:  REMOVE [LETTER=<D> | MOUNT=<PATH> | ALL] [DISMOUNT] [NOERR]
+
+    LETTER=<D>  The drive letter to be removed.
+
+    MOUNT=<PATH>
+                The mounted folder path to be removed.
+
+    ALL         Removes all current drive letters and mounted folder paths.
+
+    DISMOUNT    This parameter may be used if 1) all drive letters and
+                mounted folder paths have been removed from the volume, or
+                2) the ALL parameter is specified.  This parameter
+                specifies that the file system is to be dismounted and
+                the volume taken offline. If other processes are using
+                the volume, DiskPart closes any open handles before
+                dismounting the file system and taking the volume offline.
+                You can bring the volume online by assigning it a driver
+                letter, by creating a mounted folder path to the volume, or
+                by using the ONLINE command. DISMOUNT will fail if used
+                on a volume that has any remaining drive letters or mounted
+                folder paths. For scripting, using REMOVE ALL DISMOUNT is
+                recommended.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder path is specified, DiskPart removes
+    the first drive letter or mounted folder path it encounters. If the ALL
+    parameter is used, all current drive letters and mounted folder paths
+    are removed. If the DISMOUNT parameter is used, DiskPart closes all open
+    handles to the volume and then dismounts the volume and takes it offline.
+
+    The REMOVE command can be used to change the drive letter associated with a
+    removable drive. You cannot remove the drive letters on boot or
+    paging volumes.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    REMOVE LETTER=K
+    REMOVE MOUNT=G:\\MountH
+    REMOVE ALL DISMOUNT
 .
 Language=Chinese
-<Add REMOVE command help text here>
+    Removes a drive letter or mounted folder pathname from the volume
+    with focus.
+
+Syntax:  REMOVE [LETTER=<D> | MOUNT=<PATH> | ALL] [DISMOUNT] [NOERR]
+
+    LETTER=<D>  The drive letter to be removed.
+
+    MOUNT=<PATH>
+                The mounted folder path to be removed.
+
+    ALL         Removes all current drive letters and mounted folder paths.
+
+    DISMOUNT    This parameter may be used if 1) all drive letters and
+                mounted folder paths have been removed from the volume, or
+                2) the ALL parameter is specified.  This parameter
+                specifies that the file system is to be dismounted and
+                the volume taken offline. If other processes are using
+                the volume, DiskPart closes any open handles before
+                dismounting the file system and taking the volume offline.
+                You can bring the volume online by assigning it a driver
+                letter, by creating a mounted folder path to the volume, or
+                by using the ONLINE command. DISMOUNT will fail if used
+                on a volume that has any remaining drive letters or mounted
+                folder paths. For scripting, using REMOVE ALL DISMOUNT is
+                recommended.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder path is specified, DiskPart removes
+    the first drive letter or mounted folder path it encounters. If the ALL
+    parameter is used, all current drive letters and mounted folder paths
+    are removed. If the DISMOUNT parameter is used, DiskPart closes all open
+    handles to the volume and then dismounts the volume and takes it offline.
+
+    The REMOVE command can be used to change the drive letter associated with a
+    removable drive. You cannot remove the drive letters on boot or
+    paging volumes.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    REMOVE LETTER=K
+    REMOVE MOUNT=G:\\MountH
+    REMOVE ALL DISMOUNT
 .
 Language=Taiwanese
-<Add REMOVE command help text here>
+    Removes a drive letter or mounted folder pathname from the volume
+    with focus.
+
+Syntax:  REMOVE [LETTER=<D> | MOUNT=<PATH> | ALL] [DISMOUNT] [NOERR]
+
+    LETTER=<D>  The drive letter to be removed.
+
+    MOUNT=<PATH>
+                The mounted folder path to be removed.
+
+    ALL         Removes all current drive letters and mounted folder paths.
+
+    DISMOUNT    This parameter may be used if 1) all drive letters and
+                mounted folder paths have been removed from the volume, or
+                2) the ALL parameter is specified.  This parameter
+                specifies that the file system is to be dismounted and
+                the volume taken offline. If other processes are using
+                the volume, DiskPart closes any open handles before
+                dismounting the file system and taking the volume offline.
+                You can bring the volume online by assigning it a driver
+                letter, by creating a mounted folder path to the volume, or
+                by using the ONLINE command. DISMOUNT will fail if used
+                on a volume that has any remaining drive letters or mounted
+                folder paths. For scripting, using REMOVE ALL DISMOUNT is
+                recommended.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder path is specified, DiskPart removes
+    the first drive letter or mounted folder path it encounters. If the ALL
+    parameter is used, all current drive letters and mounted folder paths
+    are removed. If the DISMOUNT parameter is used, DiskPart closes all open
+    handles to the volume and then dismounts the volume and takes it offline.
+
+    The REMOVE command can be used to change the drive letter associated with a
+    removable drive. You cannot remove the drive letters on boot or
+    paging volumes.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    REMOVE LETTER=K
+    REMOVE MOUNT=G:\\MountH
+    REMOVE ALL DISMOUNT
 .
 
 
-MessageId=10042
+MessageId=10043
 SymbolicName=MSG_COMMAND_REPAIR
 Severity=Informational
 Facility=System
@@ -5816,7 +8711,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10043
+MessageId=10044
 SymbolicName=MSG_COMMAND_RESCAN
 Severity=Informational
 Facility=System
@@ -5913,7 +8808,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10044
+MessageId=10045
 SymbolicName=MSG_COMMAND_RETAIN
 Severity=Informational
 Facility=System
@@ -5949,7 +8844,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10045
+MessageId=10046
 SymbolicName=MSG_COMMAND_SAN
 Severity=Informational
 Facility=System
@@ -5985,7 +8880,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10046
+MessageId=10047
 SymbolicName=MSG_COMMAND_SELECT_DISK
 Severity=Informational
 Facility=System
@@ -6406,7 +9301,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10047
+MessageId=10048
 SymbolicName=MSG_COMMAND_SELECT_PARTITION
 Severity=Informational
 Facility=System
@@ -6620,7 +9515,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10048
+MessageId=10049
 SymbolicName=MSG_COMMAND_SELECT_VOLUME
 Severity=Informational
 Facility=System
@@ -6848,7 +9743,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10049
+MessageId=10050
 SymbolicName=MSG_COMMAND_SELECT_VDISK
 Severity=Informational
 Facility=System
@@ -6884,7 +9779,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10050
+MessageId=10051
 SymbolicName=MSG_COMMAND_SETID
 Severity=Informational
 Facility=System
@@ -7724,7 +10619,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10051
+MessageId=10052
 SymbolicName=MSG_COMMAND_SHRINK
 Severity=Informational
 Facility=System
@@ -7760,7 +10655,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10052
+MessageId=10053
 SymbolicName=MSG_COMMAND_UNIQUEID_DISK
 Severity=Informational
 Facility=System

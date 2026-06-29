@@ -34,8 +34,12 @@ DECLSPEC_HIDDEN HINSTANCE shlwapi_hInstance = 0;
 DECLSPEC_HIDDEN DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
 
 #ifdef __REACTOS__
+extern CRITICAL_SECTION g_csZoneMgrLock;
 extern CRITICAL_SECTION g_csBagCacheLock;
 VOID FreeViewStatePropertyBagCache(VOID);
+VOID SHLWAPI_DeleteCachedZonesManager(VOID);
+VOID SHPolicyCache_DllProcessAttach(VOID);
+VOID SHPolicyCache_DllProcessDetach(VOID);
 #endif
 
 /*************************************************************************
@@ -68,14 +72,19 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 	    shlwapi_hInstance = hinstDLL;
 	    SHLWAPI_ThreadRef_index = TlsAlloc();
 #ifdef __REACTOS__
+	    InitializeCriticalSection(&g_csZoneMgrLock);
 	    InitializeCriticalSection(&g_csBagCacheLock);
+	    SHPolicyCache_DllProcessAttach();
 #endif
 	    break;
 	  case DLL_PROCESS_DETACH:
             if (fImpLoad) break;
 #ifdef __REACTOS__
 	    FreeViewStatePropertyBagCache();
+	    SHLWAPI_DeleteCachedZonesManager();
 	    DeleteCriticalSection(&g_csBagCacheLock);
+	    DeleteCriticalSection(&g_csZoneMgrLock);
+	    SHPolicyCache_DllProcessDetach();
 #endif
 	    if (SHLWAPI_ThreadRef_index != TLS_OUT_OF_INDEXES) TlsFree(SHLWAPI_ThreadRef_index);
 	    break;
@@ -123,6 +132,88 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
     return S_OK;
  }
 
- WARN("pdvi->cbSize = %d, unhandled\n", pdvi2->info1.cbSize);
+ WARN("pdvi->cbSize = %ld, unhandled\n", pdvi2->info1.cbSize);
  return E_INVALIDARG;
+}
+
+/*************************************************************************
+ *      WhichPlatform()        [SHLWAPI.276]
+ */
+UINT WINAPI WhichPlatform(void)
+{
+    static const char szIntegratedBrowser[] = "IntegratedBrowser";
+    static DWORD state = PLATFORM_UNKNOWN;
+    DWORD ret, data, size;
+    HMODULE hshell32;
+    HKEY hKey;
+
+    if (state)
+        return state;
+
+    /* If shell32 exports DllGetVersion(), the browser is integrated */
+    state = PLATFORM_BROWSERONLY;
+    hshell32 = LoadLibraryA("shell32.dll");
+    if (hshell32)
+    {
+        FARPROC pDllGetVersion;
+        pDllGetVersion = GetProcAddress(hshell32, "DllGetVersion");
+        state = pDllGetVersion ? PLATFORM_INTEGRATED : PLATFORM_BROWSERONLY;
+        FreeLibrary(hshell32);
+    }
+
+    /* Set or delete the key accordingly */
+    ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Internet Explorer", 0, KEY_ALL_ACCESS, &hKey);
+    if (!ret)
+    {
+        size = sizeof(data);
+        ret = RegQueryValueExA(hKey, szIntegratedBrowser, 0, 0, (BYTE *)&data, &size);
+        if (!ret && state == PLATFORM_BROWSERONLY)
+        {
+            /* Value exists but browser is not integrated */
+            RegDeleteValueA(hKey, szIntegratedBrowser);
+        }
+        else if (ret && state == PLATFORM_INTEGRATED)
+        {
+            /* Browser is integrated but value does not exist */
+            data = TRUE;
+            RegSetValueExA(hKey, szIntegratedBrowser, 0, REG_DWORD, (BYTE *)&data, sizeof(data));
+        }
+        RegCloseKey(hKey);
+    }
+
+    return state;
+}
+
+#ifndef __REACTOS__ /* See propbag.cpp */
+/***********************************************************************
+ *             SHGetViewStatePropertyBag [SHLWAPI.515]
+ */
+HRESULT WINAPI SHGetViewStatePropertyBag(PCIDLIST_ABSOLUTE pidl, PCWSTR bag_name, DWORD flags, REFIID riid, void **ppv)
+{
+    FIXME("%p, %s, %#lx, %s, %p stub.\n", pidl, debugstr_w(bag_name), flags, debugstr_guid(riid), ppv);
+
+    return E_NOTIMPL;
+}
+#endif
+
+/*************************************************************************
+ *      SHIsLowMemoryMachine    [SHLWAPI.@]
+ */
+BOOL WINAPI SHIsLowMemoryMachine(DWORD type)
+{
+#ifdef __REACTOS__
+    MEMORYSTATUS status;
+    static int is_low = -1;
+    TRACE("(0x%08x)\n", type);
+    if (type == 0 && is_low == -1)
+    {
+        GlobalMemoryStatus(&status);
+        is_low = (status.dwTotalPhys <= 0x1000000);
+    }
+    return is_low;
+#else
+    FIXME("%ld stub\n", type);
+
+    return FALSE;
+#endif
 }

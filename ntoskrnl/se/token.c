@@ -1335,6 +1335,7 @@ SepOpenThreadToken(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to impersonate the client (Status 0x%lx)\n", Status);
+        ObCloseHandle(TokenHandle, PreviousMode);
         ObDereferenceObject(NewToken);
         ObDereferenceObject(Thread2);
         return Status;

@@ -134,7 +134,7 @@ void check(CONTEXT * pContext)
     ok_eq_hex(pContext->SegFs, 0x53);
     ok_eq_hex(pContext->SegGs, 0x2B);
     ok_eq_hex(pContext->SegSs, continueContext.SegSs);
-    ok_eq_hex(pContext->EFlags, (continueContext.EFlags & ~0x1C0000) | 0x202);
+    ok_eq_hex(pContext->EFlags & ~0x1C0000, (continueContext.EFlags & ~0x1C0000) | 0x202);
 
     ok_eq_hex64(pContext->Rax, continueContext.Rax);
     ok_eq_hex64(pContext->Rdx, continueContext.Rdx);

@@ -310,12 +310,12 @@ KiInitializeBugCheck(VOID)
                                  LDR_DATA_TABLE_ENTRY,
                                  InLoadOrderLinks);
 
-    /* Cache the Bugcheck Message Strings. Prepare the Lookup Data */
-    ResourceInfo.Type = 11;
+    /* Cache the bugcheck message strings. Prepare the lookup data. */
+    ResourceInfo.Type = RT_MESSAGETABLE;
     ResourceInfo.Name = 1;
-    ResourceInfo.Language = 9;
+    ResourceInfo.Language = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
 
-    /* Do the lookup. */
+    /* Do the lookup */
     Status = LdrFindResource_U(LdrEntry->DllBase,
                                &ResourceInfo,
                                RESOURCE_DATA_LEVEL,
@@ -449,7 +449,7 @@ KiDoBugCheckCallbacks(VOID)
     NextEntry = ListHead->Flink;
     while (NextEntry != ListHead)
     {
-        /* Get the reord */
+        /* Get the record */
         CurrentRecord = CONTAINING_RECORD(NextEntry,
                                           KBUGCHECK_CALLBACK_RECORD,
                                           Entry);
@@ -1092,17 +1092,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         KeBugCheckOwner = Prcb->Number;
 
         /* Freeze the other CPUs */
-        for (ULONG i = 0; i < KeNumberProcessors; i++)
-        {
-            if (i != Prcb->Number)
-            {
-                /* Send the IPI */
-                KiIpiSend(AFFINITY_MASK(i), IPI_FREEZE);
-            }
-        }
-
-        /* Give the other CPUs one second to catch up */
-        KeStallExecutionProcessor(1000000);
+        KxFreezeExecution();
 #endif
 
         /* Display the BSOD */

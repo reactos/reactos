@@ -230,13 +230,14 @@ class CNotifySettingsPage : public CPropertyPageImpl<CNotifySettingsPage>
 private:
     HBITMAP m_hbmpTray;
     HWND m_hwndTaskbar;
+    static const WORD wImageIdLookupTable[2][2][2][2];
 
     void _UpdateDialog()
     {
         BOOL bShowClock = IsDlgButtonChecked(IDC_TASKBARPROP_CLOCK);
         BOOL bShowSeconds = IsDlgButtonChecked(IDC_TASKBARPROP_SECONDS);
         BOOL bHideInactive = IsDlgButtonChecked(IDC_TASKBARPROP_HIDEICONS);
-        UINT uImageId;
+        BOOL bShowDesktopButton = IsDlgButtonChecked(IDC_TASKBARPROP_DESKTOP);
 
         HWND hwndCustomizeNotifyButton = GetDlgItem(IDC_TASKBARPROP_ICONCUST);
         HWND hwndSeconds = GetDlgItem(IDC_TASKBARPROP_SECONDS);
@@ -246,19 +247,7 @@ private:
         ::EnableWindow(hwndSeconds, bShowClock);
         if (!bShowSeconds)
             CheckDlgButton(IDC_TASKBARPROP_SECONDS, BST_UNCHECKED);
-
-        if (bHideInactive && bShowClock && bShowSeconds)
-            uImageId = IDB_SYSTRAYPROP_HIDE_SECONDS;
-        else if (bHideInactive && bShowClock && !bShowSeconds)
-            uImageId = IDB_SYSTRAYPROP_HIDE_CLOCK;
-        else if (bHideInactive && !bShowClock)
-            uImageId = IDB_SYSTRAYPROP_HIDE_NOCLOCK;
-        else if (!bHideInactive && bShowClock && bShowSeconds)
-            uImageId = IDB_SYSTRAYPROP_SHOW_SECONDS;
-        else if (!bHideInactive && bShowClock && !bShowSeconds)
-            uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK;
-        else if (!bHideInactive && !bShowClock)
-            uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK;
+        UINT uImageId = wImageIdLookupTable[bShowClock][bShowSeconds][bHideInactive][bShowDesktopButton];
 
         SetBitmap(hwndTrayBitmap, &m_hbmpTray, uImageId);
     }
@@ -287,10 +276,15 @@ public:
 
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
-        CheckDlgButton(IDC_TASKBARPROP_CLOCK, (!g_TaskbarSettings.sr.HideClock) ? BST_CHECKED : BST_UNCHECKED);
+        ::EnableWindow(GetDlgItem(IDC_TASKBARPROP_CLOCK), !SHRestricted(REST_HIDECLOCK));
+        CheckDlgButton(IDC_TASKBARPROP_CLOCK, (!GetHideClock()) ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(IDC_TASKBARPROP_SECONDS, g_TaskbarSettings.bShowSeconds ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(IDC_TASKBARPROP_HIDEICONS, g_TaskbarSettings.bHideInactiveIcons ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(IDC_TASKBARPROP_DESKTOP, g_TaskbarSettings.bShowDesktopButton ? BST_CHECKED : BST_UNCHECKED);
+
+        // TODO: bHideInactiveIcons is not implemented yet, just disable for now
+        CheckDlgButton(IDC_TASKBARPROP_HIDEICONS, BST_UNCHECKED);
+        ::EnableWindow(GetDlgItem(IDC_TASKBARPROP_HIDEICONS), FALSE);
 
         _UpdateDialog();
         return TRUE;
@@ -321,6 +315,30 @@ public:
         SendMessage(m_hwndTaskbar, TWM_SETTINGSCHANGED, 0, (LPARAM)&newSettings);
 
         return PSNRET_NOERROR;
+    }
+};
+
+const WORD CNotifySettingsPage::wImageIdLookupTable[2][2][2][2] =
+{
+    {
+        {
+            {IDB_SYSTRAYPROP_SHOW_NOCLOCK_NODESK, IDB_SYSTRAYPROP_SHOW_NOCLOCK_DESK},
+            {IDB_SYSTRAYPROP_HIDE_NOCLOCK_NODESK, IDB_SYSTRAYPROP_HIDE_NOCLOCK_DESK}
+        },
+        {
+            {IDB_SYSTRAYPROP_SHOW_NOCLOCK_NODESK, IDB_SYSTRAYPROP_SHOW_NOCLOCK_DESK},
+            {IDB_SYSTRAYPROP_HIDE_NOCLOCK_NODESK, IDB_SYSTRAYPROP_HIDE_NOCLOCK_DESK}
+        }
+    },
+    {
+        {
+            {IDB_SYSTRAYPROP_SHOW_CLOCK_NODESK, IDB_SYSTRAYPROP_SHOW_CLOCK_DESK},
+            {IDB_SYSTRAYPROP_HIDE_CLOCK_NODESK, IDB_SYSTRAYPROP_HIDE_CLOCK_DESK}
+        },
+        {
+            {IDB_SYSTRAYPROP_SHOW_SECONDS_NODESK, IDB_SYSTRAYPROP_SHOW_SECONDS_DESK},
+            {IDB_SYSTRAYPROP_HIDE_SECONDS_NODESK, IDB_SYSTRAYPROP_HIDE_SECONDS_DESK}
+        }
     }
 };
 

@@ -278,7 +278,7 @@ BEGIN
     BEGIN
         MENUITEM "Devices by type",             IDM_DEVBYTYPE
         MENUITEM "Devices by connection",       IDM_DEVBYCONN
-        MENUITEM "Resources by type",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Resources by type",           IDM_RESBYTYPE
         MENUITEM "Resources by connection",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Show hidden devices",         IDM_SHOWHIDDEN
@@ -317,6 +317,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "Disable"
   IDS_TOOLTIP_UPDATE        "Update Driver Software"
   IDS_TOOLTIP_UNINSTALL     "Uninstall"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Memory"
+  IDS_TYPE_PORT             "Input/output (IO)"
+  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
+  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
 END
 
 /* Hints */

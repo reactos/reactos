@@ -1,1 +1,1 @@
-#include "../../reactos/wine/list.h"
+#include "../../wine/list.h"

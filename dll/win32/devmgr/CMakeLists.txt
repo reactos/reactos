@@ -19,6 +19,8 @@ list(APPEND SOURCE
     devmgmt/DeviceView.cpp
     devmgmt/MainWindow.cpp
     devmgmt/Node.cpp
+    devmgmt/ResourceNode.cpp
+    devmgmt/ResourceTypeNode.cpp
     devmgmt/RootNode.cpp)
 
 add_library(devmgr MODULE

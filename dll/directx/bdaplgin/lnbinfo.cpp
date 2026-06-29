@@ -78,7 +78,7 @@ CBDALNBInfo::QueryInterface(
     WCHAR Buffer[100];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CBDALNBInfo::QueryInterface: NoInterface for %s", lpstr);
+    _swprintf(Buffer, L"CBDALNBInfo::QueryInterface: NoInterface for %s", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 #endif
@@ -102,7 +102,7 @@ CBDALNBInfo::put_LocalOscillatorFrequencyLowBand(ULONG ulLOFLow)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDALNBInfo::put_LocalOscillatorFrequencyLowBand: m_NodeId %lu ulLOFLow %lu hr %lx\n", m_NodeId, ulLOFLow, hr);
+    _swprintf(Buffer, L"CBDALNBInfo::put_LocalOscillatorFrequencyLowBand: m_NodeId %lu ulLOFLow %lu hr %lx\n", m_NodeId, ulLOFLow, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -132,7 +132,7 @@ CBDALNBInfo::put_LocalOscillatorFrequencyHighBand(ULONG ulLOFHigh)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDALNBInfo::put_LocalOscillatorFrequencyHighBand: m_NodeId %lu ulLOFHigh %lu hr %lx\n", m_NodeId, ulLOFHigh, hr);
+    _swprintf(Buffer, L"CBDALNBInfo::put_LocalOscillatorFrequencyHighBand: m_NodeId %lu ulLOFHigh %lu hr %lx\n", m_NodeId, ulLOFHigh, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -162,7 +162,7 @@ CBDALNBInfo::put_HighLowSwitchFrequency(ULONG ulSwitchFrequency)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDALNBInfo::put_HighLowSwitchFrequency: m_NodeId %lu ulSwitchFrequency %lu hr %lx\n", m_NodeId, ulSwitchFrequency, hr);
+    _swprintf(Buffer, L"CBDALNBInfo::put_HighLowSwitchFrequency: m_NodeId %lu ulSwitchFrequency %lu hr %lx\n", m_NodeId, ulSwitchFrequency, hr);
     OutputDebugStringW(Buffer);
 #endif
 

@@ -303,7 +303,7 @@ found_drive:
 
 .jump_to_freeldr:
     // Transfer execution to the bootloader.
-    ljmp16 0, FREELDR_BASE
+    ljmp16 FREELDR_BASE / 16, 0
 
 
 /* FUNCTIONS *****************************************************************/

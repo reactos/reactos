@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(olepro32.dll olepro32.spec)
 add_typelib(olepro.idl)
 
@@ -20,3 +18,4 @@ set_module_type(olepro32 win32dll)
 target_link_libraries(olepro32 wine)
 add_importlibs(olepro32 oleaut32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET olepro32 DESTINATION reactos/system32 FOR all)
+set_wine_module(olepro32)

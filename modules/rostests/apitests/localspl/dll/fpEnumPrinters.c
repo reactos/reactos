@@ -20,6 +20,7 @@
 #include "../localspl_apitest.h"
 #include <spoolss.h>
 
+#define STATUS_ACCESS_VIOLATION ((DWORD)0xC0000005)
 extern BOOL GetLocalsplFuncs(LPPRINTPROVIDOR pp);
 
 START_TEST(fpEnumPrinters)

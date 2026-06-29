@@ -74,13 +74,13 @@ static HWND CreateBtn(HWND hWnd, LPCWSTR Text, LONG style, int i, int j)
 	HWND ret = CreateWnd(hWnd, L"Button", Text, style, i, j);
     if (GetWindowLongW(ret, GWL_STYLE) != (style | WS_CHILD | WS_VISIBLE))
     {
-        swprintf(buffer, L"expected 0x%x got 0x%x", (style | WS_CHILD | WS_VISIBLE), GetWindowLongW(ret, GWL_STYLE));
+        _swprintf(buffer, L"expected 0x%x got 0x%x", (style | WS_CHILD | WS_VISIBLE), GetWindowLongW(ret, GWL_STYLE));
         MessageBox(0, buffer, L"error", MB_OK);
     }
 
     if (SendMessageW(ret, BCM_GETIDEALSIZE, 0, (LPARAM)&s))
     {
-        swprintf(buffer, L"%s (%d, %d)", Text, s.cx, s.cy);
+        _swprintf(buffer, L"%s (%d, %d)", Text, s.cx, s.cy);
         SendMessageW(ret, WM_SETTEXT, 0, (LPARAM)buffer);
     }
     return ret;

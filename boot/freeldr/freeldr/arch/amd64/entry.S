@@ -214,7 +214,7 @@ SwitchToRealCompSegment:
     .byte HEX(0EA) // 32bit long jmp
 AddressOfRealModeEntryPoint:
     .long 0 // receives address of RealModeEntryPoint
-    .word HEX(20)//RMODE_CS
+    .word L_RMODE_CS
     nop
 
 CallRealMode_return:

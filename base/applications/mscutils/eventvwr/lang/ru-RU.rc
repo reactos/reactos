@@ -109,9 +109,9 @@ BEGIN
     LTEXT "&Описание:", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "&Данные:", IDC_DETAILS_STATIC, 8, 140, 30, 8
     AUTORADIOBUTTON "&Байты", IDC_BYTESRADIO, 49, 140, 34, 8
-    AUTORADIOBUTTON "&Слова", IDC_WORDRADIO, 87, 140, 34, 8
+    AUTORADIOBUTTON "&Слова", IDC_WORDSRADIO, 87, 140, 34, 8
+    LTEXT "&Данные:", IDC_DETAILS_STATIC, 8, 140, 30, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -171,6 +171,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Вы хотите сохранить журнал событий перед очисткой?"
     IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
     IDS_EVENTSTRINGIDNOTFOUND "Не найдено описание для события с кодом ( %lu ) в источнике ( %s ). Возможно, на локальном компьютере нет нужных данных в реестре или файлов DLL сообщений для отображения сообщений удаленного компьютера.\n\nСледующая информация часть события:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -223,16 +225,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Тип события:        %s\r\n\
-Источник события:   %s\r\n\
-Категория события:  %s\r\n\
-ID события:         %s\r\n\
-Дата:               %s\r\n\
-Время:              %s\r\n\
-Пользователь:       %s\r\n\
-Компьютер:          %s\r\n\
-Описание:\n%s"
+    IDS_COPY_EVTTYPE "Тип события:"
+    IDS_COPY_EVTSRC  "Источник события:"
+    IDS_COPY_EVTCAT  "Категория события:"
+    IDS_COPY_EVTID   "ID события:"
+    IDS_COPY_EVTDATE "Дата:"
+    IDS_COPY_EVTTIME "Время:"
+    IDS_COPY_EVTUSER "Пользователь:"
+    IDS_COPY_EVTCOMP "Компьютер:"
+    IDS_COPY_EVTTEXT "Описание:"
+    IDS_COPY_EVTDATA "Данные:"
 END
 
 STRINGTABLE

@@ -19,35 +19,34 @@ PTHREADINFO ptiLastInput = NULL;
 HWND ghwndOldFullscreen = NULL;
 
 /*
-  Check locking of a process or one or more menus are active.
-*/
+ * Check locking of a process or one or more menus are active.
+ */
 BOOL FASTCALL
 IsFGLocked(VOID)
 {
-   return (gppiLockSFW || guSFWLockCount);
+    return (gppiLockSFW || guSFWLockCount);
 }
 
 /*
-  Get capture window via foreground Queue.
-*/
+ * Get capture window via foreground Queue.
+ */
 HWND FASTCALL
 IntGetCaptureWindow(VOID)
 {
-   PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
-   return ( ForegroundQueue ? (ForegroundQueue->spwndCapture ? UserHMGetHandle(ForegroundQueue->spwndCapture) : 0) : 0);
+    PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
+    if (!ForegroundQueue)
+        return NULL;
+    return (ForegroundQueue->spwndCapture ? UserHMGetHandle(ForegroundQueue->spwndCapture) : NULL);
 }
 
 HWND FASTCALL
 IntGetThreadFocusWindow(VOID)
 {
-   PTHREADINFO pti;
-   PUSER_MESSAGE_QUEUE ThreadQueue;
-
-   pti = PsGetCurrentThreadWin32Thread();
-   ThreadQueue = pti->MessageQueue;
-   if (!ThreadQueue)
-     return NULL;
-   return ThreadQueue->spwndFocus ? UserHMGetHandle(ThreadQueue->spwndFocus) : 0;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    PUSER_MESSAGE_QUEUE ThreadQueue = pti->MessageQueue;
+    if (!ThreadQueue)
+        return NULL;
+    return (ThreadQueue->spwndFocus ? UserHMGetHandle(ThreadQueue->spwndFocus) : NULL);
 }
 
 BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
@@ -56,7 +55,7 @@ BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
     PMONITOR pMonitor;
 
     if (!Window || !(Window->style & WS_VISIBLE) || (Window->style & WS_CHILD) ||
-        (Window->ExStyle & WS_EX_TOOLWINDOW) || !IntGetWindowRect(Window, &rclWindow))
+        !IntGetWindowRect(Window, &rclWindow))
     {
         return FALSE;
     }
@@ -146,7 +145,6 @@ co_IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd, BOOL Clear)
    return Ret;
 }
 
-// Win: xxxFocusSetInputContext
 VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
 {
     PTHREADINFO pti;
@@ -186,7 +184,6 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
 //
 // Release Active, Capture and Focus Windows associated with this message queue.
 //
-// Win: xxxDeactivate
 BOOL FASTCALL
 IntDeactivateWindow(PTHREADINFO pti, HANDLE tid)
 {
@@ -613,7 +610,6 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
    return InAAPM;
 }
 
-// Win: xxxSendFocusMessages
 VOID FASTCALL
 IntSendFocusMessages( PTHREADINFO pti, PWND pWnd)
 {
@@ -1258,7 +1254,6 @@ co_IntMouseActivateWindow(PWND Wnd)
    return co_IntSetForegroundAndFocusWindow(Wnd, TRUE, TRUE);
 }
 
-/* Win: PWND xxxSetActiveWindow(Wnd) */
 BOOL FASTCALL
 UserSetActiveWindow( _In_opt_ PWND Wnd )
 {
@@ -1312,7 +1307,6 @@ UserSetActiveWindow( _In_opt_ PWND Wnd )
   return FALSE;
 }
 
-// Win: PWND xxxSetFocus(Window)
 HWND FASTCALL
 co_UserSetFocus(PWND Window)
 {
@@ -1423,20 +1417,19 @@ co_UserSetFocus(PWND Window)
 HWND FASTCALL
 UserGetForegroundWindow(VOID)
 {
-   PUSER_MESSAGE_QUEUE ForegroundQueue;
-
-   ForegroundQueue = IntGetFocusMessageQueue();
-   return( ForegroundQueue ? (ForegroundQueue->spwndActive ? UserHMGetHandle(ForegroundQueue->spwndActive) : 0) : 0);
+    PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
+    if (!ForegroundQueue)
+        return NULL;
+    return (ForegroundQueue->spwndActive ? UserHMGetHandle(ForegroundQueue->spwndActive) : NULL);
 }
 
 HWND FASTCALL UserGetActiveWindow(VOID)
 {
-   PTHREADINFO pti;
-   PUSER_MESSAGE_QUEUE ThreadQueue;
-
-   pti = PsGetCurrentThreadWin32Thread();
-   ThreadQueue = pti->MessageQueue;
-   return( ThreadQueue ? (ThreadQueue->spwndActive ? UserHMGetHandle(ThreadQueue->spwndActive) : 0) : 0);
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    PUSER_MESSAGE_QUEUE ThreadQueue = pti->MessageQueue;
+    if (!ThreadQueue)
+        return NULL;
+    return (ThreadQueue->spwndActive ? UserHMGetHandle(ThreadQueue->spwndActive) : NULL);
 }
 
 HWND APIENTRY
@@ -1652,7 +1645,7 @@ NtUserGetForegroundWindow(VOID)
    HWND Ret;
 
    TRACE("Enter NtUserGetForegroundWindow\n");
-   UserEnterExclusive();
+   UserEnterShared();
 
    Ret = UserGetForegroundWindow();
 

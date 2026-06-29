@@ -291,7 +291,6 @@ BOOL WINAPI SdbRegisterDatabaseEx(
     if (!SdbGUIDToString(&Information.Id, GuidBuffer, RTL_NUMBER_OF(GuidBuffer)))
     {
         SHIM_ERR("Unable to Convert GUID to string\n");
-        SdbFreeDatabaseInformation(&Information);
         SdbCloseDatabase(pdb);
         return FALSE;
     }
@@ -374,7 +373,6 @@ BOOL WINAPI SdbRegisterDatabaseEx(
         SHIM_ERR("Unable to create key %wZ\n", &KeyName);
     }
 
-    SdbFreeDatabaseInformation(&Information);
     SdbCloseDatabase(pdb);
 
     return NT_SUCCESS(Status);

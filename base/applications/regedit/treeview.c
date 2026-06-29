@@ -668,6 +668,8 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
         case TVN_BEGINLABELEDIT:
         {
             LPNMTVDISPINFO ptvdi = (LPNMTVDISPINFO)lParam;
+            HWND hWndFocus = GetFocus();
+
             /* cancel label edit for rootkeys */
             if (!TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem) ||
                 !TreeView_GetParent(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem)))
@@ -677,6 +679,12 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             else
             {
                 *Result = FALSE;
+            }
+
+            /* cancel label edit if VK_DELETE accelerator opened a MessageBox */
+            if (hWndFocus != g_pChildWnd->hTreeWnd && hWndFocus != TreeView_GetEditControl(g_pChildWnd->hTreeWnd))
+            {
+                *Result = TRUE;
             }
             return TRUE;
         }

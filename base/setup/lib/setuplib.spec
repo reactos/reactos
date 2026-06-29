@@ -1,15 +1,10 @@
 
-@ extern IsUnattendedSetup
-@ extern MbrPartitionTypes
-@ extern GptPartitionTypes
-
 ;; fileqsup and infsupp function pointers to be initialized by the user of this library
 ;;@ extern SpFileExports
 ;;@ extern SpInfExports
 
 ;; infsupp
 @ cdecl INF_GetDataField(ptr long ptr)  ## -private
-
 
 ;; filesup
 @ cdecl ConcatPathsV(ptr long long ptr)
@@ -43,6 +38,9 @@
 ;;;;
 @ cdecl IsPartitionActive(ptr)          ## -private
 @ cdecl SelectPartition(ptr long long)
+
+;; partinfo
+@ stdcall LookupPartitionTypeString(long ptr)
 
 ;; osdetect
 @ stdcall CreateNTOSInstallationsList(ptr)

@@ -311,7 +311,7 @@ BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD
         SdbpSetStringAttr(&attr_info[10], TAG_INTERNAL_NAME, SdbpGetStringAttr(translation, str_InternalName, file_info));
         SdbpSetStringAttr(&attr_info[11], TAG_LEGAL_COPYRIGHT, SdbpGetStringAttr(translation, str_LegalCopyright, file_info));
 
-        /* http://msdn.microsoft.com/en-us/library/windows/desktop/ms680339(v=vs.85).aspx */
+        /* https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-image_optional_header32 */
 
         SdbpSetDWORDAttr(&attr_info[17], TAG_PE_CHECKSUM, headers->OptionalHeader.CheckSum);
 

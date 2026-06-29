@@ -59,6 +59,54 @@ KiInitGdtEntry(PKGDTENTRY64 Entry, ULONG64 Base, ULONG Size, UCHAR Type, UCHAR D
     Entry->MustBeZero = 0;
 }
 
+extern ULONG64 KeFeatureBits;
+
+FORCEINLINE
+VOID
+KiSaveXState(
+    _Out_ PVOID Buffer,
+    _In_ ULONG64 ComponentMask)
+{
+    ComponentMask &= ~XSTATE_MASK_LEGACY_SSE;
+    if (KeFeatureBits & KF_XSAVES)
+    {
+        _xsaves64(Buffer, ComponentMask);
+    }
+    else if (KeFeatureBits & KF_XSAVEOPT)
+    {
+        _xsaveopt64(Buffer, ComponentMask);
+    }
+    else if (KeFeatureBits & KF_XSTATE)
+    {
+        _xsave64(Buffer, ComponentMask);
+    }
+    else
+    {
+        _fxsave64(Buffer);
+    }
+}
+
+FORCEINLINE
+VOID
+KiRestoreXState(
+    _In_ PVOID Buffer,
+    _In_ ULONG64 ComponentMask)
+{
+    ComponentMask &= ~XSTATE_MASK_LEGACY_SSE;
+    if (KeFeatureBits & KF_XSAVES)
+    {
+        _xrstors64(Buffer, ComponentMask);
+    }
+    else if (KeFeatureBits & KF_XSTATE)
+    {
+        _xrstor64(Buffer, ComponentMask);
+    }
+    else
+    {
+        _fxrstor64(Buffer);
+    }
+}
+
 #if defined(__GNUC__)
 
 static __inline__ __attribute__((always_inline)) void __lgdt(void *Source)

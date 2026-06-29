@@ -27,7 +27,9 @@ typedef union _DECLSPEC_INTRIN_TYPE _CRT_ALIGN(16) __m128i
     unsigned __int32 m128i_u32[4];
     unsigned __int64 m128i_u64[2];
 } __m128i;
+#ifdef _STATIC_ASSERT
 _STATIC_ASSERT(sizeof(__m128i) == 16);
+#endif
 
 typedef struct _DECLSPEC_INTRIN_TYPE _CRT_ALIGN(16) __m128d
 {
@@ -1345,8 +1347,15 @@ __INTRIN_INLINE_SSE2 __m128i _mm_xor_si128(__m128i a, __m128i b)
     return (__m128i)((__v2du)a ^ (__v2du)b);
 }
 
+#ifdef __clang__
 #define _mm_slli_si128(a, imm) \
     ((__m128i)__builtin_ia32_pslldqi128_byteshift((__v2di)(__m128i)(a), (int)(imm)))
+#else
+__INTRIN_INLINE_SSE2 __m128i _mm_slli_si128(__m128i a, const int imm)
+{
+  return (__m128i)__builtin_ia32_pslldqi128(a, imm * 8);
+}
+#endif
 
 __INTRIN_INLINE_SSE2 __m128i _mm_slli_epi16(__m128i a, int count)
 {
@@ -1398,8 +1407,15 @@ __INTRIN_INLINE_SSE2 __m128i _mm_sra_epi32(__m128i a, __m128i count)
     return (__m128i)__builtin_ia32_psrad128((__v4si)a, (__v4si)count);
 }
 
+#ifdef __clang__
 #define _mm_srli_si128(a, imm) \
     ((__m128i)__builtin_ia32_psrldqi128_byteshift((__v2di)(__m128i)(a), (int)(imm)))
+#else
+__INTRIN_INLINE_SSE2 __m128i _mm_srli_si128(__m128i a, const int imm)
+{
+    return (__m128i)__builtin_ia32_psrldqi128(a, imm * 8);
+}
+#endif
 
 __INTRIN_INLINE_SSE2 __m128i _mm_srli_epi16(__m128i a, int count)
 {

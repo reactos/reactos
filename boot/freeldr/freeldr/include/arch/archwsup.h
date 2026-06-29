@@ -24,10 +24,11 @@
 
 VOID
 AddReactOSArcDiskInfo(
-    IN PSTR ArcName,
-    IN ULONG Signature,
-    IN ULONG Checksum,
-    IN BOOLEAN ValidPartitionTable);
+    _In_ PCSTR ArcName,
+    _In_opt_ PGUID GptDiskGuid,
+    _In_ ULONG Signature,
+    _In_ ULONG Checksum,
+    _In_ BOOLEAN ValidPartitionTable);
 
 //
 // ARC Component Configuration Routines

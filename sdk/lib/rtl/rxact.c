@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
- * FILE:              lib/rtl/rxact.c
- * PURPOSE:           Registry Transaction API
- * PROGRAMMERS:       Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:     ReactOS Runtime Library (RTL)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Registry Transaction API
+ * COPYRIGHT:   Copyright 2014 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/

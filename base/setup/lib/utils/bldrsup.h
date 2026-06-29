@@ -20,8 +20,8 @@ typedef enum _BOOT_STORE_TYPE
 
 /*
  * Some references about EFI boot entries:
- * https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/overview-of-boot-options-in-efi
- * https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/identifying-backup-files-for-existing-boot-entries
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/overview-of-boot-options-in-efi
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/identifying-backup-files-for-existing-boot-entries
  */
 
 /*

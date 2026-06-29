@@ -1,15 +1,15 @@
 [Unattend]
 Signature = "$ReactOS$"
 
-; Set UnattendSetupEnabled to yes in order to get unattended setup working
+; Set UnattendSetupEnabled to yes in order to get unattended setup working.
 ; yes - unattend setup enabled
 ; no - unattend setup disabled
 UnattendSetupEnabled = yes
 
-; Install to \Device\Harddisk0\Partition1\ReactOS
+; Install to \Device\Harddisk0\Partition1\Windows for taming unreliable Winetests (ROSTESTS-416)
 DestinationDiskNumber = 0
 DestinationPartitionNumber = 1
-InstallationDirectory=ReactOS
+InstallationDirectory=Windows
 
 ; BootLoaderLocation=0  Skip installation
 ; BootLoaderLocation=1  Install on removable media (floppy)
@@ -22,36 +22,32 @@ FullName="MyName"
 ComputerName="MYCOMPUTERNAME"
 ;AdminPassword="MyPassword"
 
-; TimeZone is set GMT as default
+; TimeZone is set to GMT as default.
 TimeZoneIndex=85
 
-; enable this setting to disable daylight saving changes
-; DisableAutoDaylightTimeSet = 1
+; Enable this setting to disable daylight saving changes.
+;DisableAutoDaylightTimeSet = 1
 
-; enable this setting to format the selected partition
+; Enable this setting to format the selected partition.
 ; 1 - format enabled
 ; 0 - format disabled
 FormatPartition=1
 
-; enable this setting to automatically create a partition
-; during installation
+; Enable this setting to automatically create a partition during installation.
 ; 1 - enabled
 ; 0 - disabled
 AutoPartition = 1
 
-; choose default file system type
+; Choose default file system type.
 ; 0 - FAT
 ; 1 - BtrFS
 FsType = 0
 
-; set this option to automatically
-; specify language in 2nd mode setup
-; see hivesys.inf for available languages
+; Set this option to automatically specify language in 2nd mode setup.
+; See hivesys.inf for available languages.
 LocaleID = 409
 
-; enable this section to automatically launch programs
-; after 3rd boot
-;
+; Enable this section to automatically launch programs after 3rd boot.
 [GuiRunOnce]
 %SystemRoot%\system32\cmd.exe /c "regtest.cmd"
 
@@ -60,4 +56,3 @@ BitsPerPel = 16
 XResolution = 800
 YResolution = 600
 VRefresh = 0
-

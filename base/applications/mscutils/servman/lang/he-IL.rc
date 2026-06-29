@@ -156,7 +156,8 @@ BEGIN
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "שירותים מסוימים תלויים בשירותים אחרים, במנהלים של התקנים של המערכת ובקבוצות סדר טעינה. אם רכיב מערכת הופסק או שאינו פועל כראוי, ייתכן ששירותים התלויים בו יושפעו.", IDC_STATIC, 8, 7, 238, 26
-    LTEXT "שירות זה תלוי ברכיבי המערכת הבאים", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "שירות זה תלוי ברכיבי המערכת הבאים:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "The following components depend on this service:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 

@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
- *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2021-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -37,17 +37,17 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "聲音"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
-    GROUPBOX "聲音衛士", -1, 6, 11, 234, 98
-    LTEXT "如果您希望 ReactOS 能在系統發出聲音時發出可視警告，請使用「聲音衛士」。",
+    GROUPBOX "SoundSentry", -1, 6, 11, 234, 98
+    LTEXT "如果您希望 ReactOS 能在系統發出聲音時發出可視警告，請使用「SoundSentry」。",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "使用聲音衛士(&S)", IDC_SENTRY_BOX, 12, 49, 90, 14
+    AUTOCHECKBOX "使用 SoundSentry(&S)", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "選擇視覺警告:", IDC_SENTRY_TEXT, 12, 72, 222, 11
     COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    GROUPBOX "聲音顯示", -1, 6, 115, 234, 67
-    LTEXT "如果您希望程式顯示所發出的語音和聲音的文字，請使用「聲音顯示」。",
+    GROUPBOX "ShowSounds", -1, 6, 115, 234, 67
+    LTEXT "如果您希望程式顯示所發出的語音和聲音的文字，請使用「ShowSounds」。",
           -1, 12, 125, 222, 29
-    AUTOCHECKBOX "使用聲音顯示(&H)", IDC_SSHOW_BOX, 12, 148, 222, 14
+    AUTOCHECKBOX "使用 ShowSounds(&H)", IDC_SSHOW_BOX, 12, 148, 222, 14
 END
 
 IDD_PROPPAGEDISPLAY DIALOGEX 0, 0, 246, 220

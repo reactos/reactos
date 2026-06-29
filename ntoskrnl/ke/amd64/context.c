@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         CONTEXT related functions
- * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     CONTEXT related functions for x64
+ * COPYRIGHT:   Copyright 2008-2020 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
@@ -290,6 +290,28 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
     /* Restore IRQL */
     if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
+}
+
+VOID
+RtlGetUnwindContext(
+    _Out_ PCONTEXT Context,
+    _In_ DWORD64 TargetFrame);
+
+VOID
+KiGetTrapContextInternal(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _Out_ PCONTEXT Context)
+{
+    ULONG64 TargetFrame;
+
+    /* Get the volatile register context from the trap frame */
+    KeTrapFrameToContext(TrapFrame, NULL, Context);
+
+    /* The target frame is MAX_SYSCALL_PARAM_SIZE bytes before the trap frame */
+    TargetFrame = (ULONG64)TrapFrame - MAX_SYSCALL_PARAM_SIZE;
+
+    /* Get the nonvolatiles on the stack */
+    RtlGetUnwindContext(Context, TargetFrame);
 }
 
 VOID

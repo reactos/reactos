@@ -7,7 +7,7 @@
  */
 
 /* Useful references:
-    http://msdn.microsoft.com/en-us/library/ms220938(VS.80).aspx
+    https://learn.microsoft.com/en-us/previous-versions/ms220938(v=vs.80)
     http://blogs.msdn.com/b/jiangyue/archive/2010/03/16/windows-heap-overrun-monitoring.aspx
 */
 
@@ -201,6 +201,10 @@ RtlpDphReportCorruptedBlock(
 
 BOOLEAN NTAPI
 RtlpDphNormalHeapValidate(PDPH_HEAP_ROOT DphRoot, ULONG Flags, PVOID BaseAddress);
+
+/* verifier.c */
+VOID NTAPI
+AVrfInternalHeapFreeNotification(PVOID AllocationBase, SIZE_T AllocationSize);
 
 
 VOID NTAPI
@@ -1348,67 +1352,67 @@ RtlpDphReportCorruptedBlock(
 
     if (ValidationInfo & DPH_VALINFO_CORRUPTED_AFTER_FREE)
     {
-        RtlApplicationVerifierStop(
-            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_AFTER_FREE, "block corrupted after having been freed",
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_HEADER, "block corrupted after having been freed",
             RtlpDphHeapFromPointer(DphRoot), "Heap handle", Block, "Heap block", (PVOID)Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_ALREADY_FREED)
     {
-        RtlApplicationVerifierStop(
+        VERIFIER_STOP(
             APPLICATION_VERIFIER_DOUBLE_FREE, "block already freed", RtlpDphHeapFromPointer(DphRoot), "Heap handle",
             Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_INFIX_PATTERN)
     {
-        RtlApplicationVerifierStop(
-            APPLICATION_VERIFIER_CORRUPTED_INFIX_PATTERN, "corrupted infix pattern for freed block",
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_FREED_HEAP_BLOCK, "corrupted infix pattern for freed block",
             RtlpDphHeapFromPointer(DphRoot), "Heap handle", Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_POINTER)
     {
-        RtlApplicationVerifierStop(
-            APPLICATION_VERIFIER_CORRUPT_HEAP_POINTER, "corrupted heap pointer or using wrong heap",
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_SWITCHED_HEAP_HANDLE, "corrupted heap pointer or using wrong heap",
             RtlpDphHeapFromPointer(DphRoot), "Heap handle used", Block, "Heap block", Size, "Block size",
             SafeInfo.Heap, "Actual heap handle");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_SUFFIX_PATTERN)
     {
-        RtlApplicationVerifierStop(
-            APPLICATION_VERIFIER_CORRUPTED_SUFFIX_PATTERN, "corrupted suffix pattern", RtlpDphHeapFromPointer(DphRoot),
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_SUFFIX, "corrupted suffix pattern", RtlpDphHeapFromPointer(DphRoot),
             "Heap handle used", Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_PREFIX_PATTERN)
     {
-        RtlApplicationVerifierStop(
-            APPLICATION_VERIFIER_CORRUPTED_PREFIX_PATTERN, "corrupted prefix pattern", RtlpDphHeapFromPointer(DphRoot),
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_PREFIX, "corrupted prefix pattern", RtlpDphHeapFromPointer(DphRoot),
             "Heap handle used", Block, "Heap block", Size, "Block size", 0, "");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_START_STAMP)
     {
-        RtlApplicationVerifierStop(
-            APPLICATION_VERIFIER_CORRUPTED_START_STAMP, "corrupted start stamp", RtlpDphHeapFromPointer(DphRoot),
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_START_STAMP, "corrupted start stamp", RtlpDphHeapFromPointer(DphRoot),
             "Heap handle used", Block, "Heap block", Size, "Block size", (PVOID)(ULONG_PTR)SafeInfo.StartStamp,
             "Corrupted start stamp");
     }
 
     if (ValidationInfo & DPH_VALINFO_BAD_END_STAMP)
     {
-        RtlApplicationVerifierStop(
-            APPLICATION_VERIFIER_CORRUPTED_END_STAMP, "corrupted end stamp", RtlpDphHeapFromPointer(DphRoot),
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_END_STAMP, "corrupted end stamp", RtlpDphHeapFromPointer(DphRoot),
             "Heap handle used", Block, "Heap block", Size, "Block size", (PVOID)(ULONG_PTR)SafeInfo.EndStamp,
             "Corrupted end stamp");
     }
 
     if (ValidationInfo & DPH_VALINFO_EXCEPTION)
     {
-        RtlApplicationVerifierStop(
-            APPLICATION_VERIFIER_EXCEPTION_WHILE_VERIFYING_BLOCK_HEADER, "exception raised while verifying block",
+        VERIFIER_STOP(
+            APPLICATION_VERIFIER_CORRUPTED_HEAP_BLOCK_EXCEPTION_RAISED_FOR_HEADER, "exception raised while verifying block",
             RtlpDphHeapFromPointer(DphRoot), "Heap handle used", Block, "Heap block", Size, "Block size", 0, "");
     }
 }
@@ -1682,7 +1686,12 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
     /* Check if it's not a process heap */
     if (HeapPtr == RtlGetProcessHeap())
     {
-        DbgBreakPoint();
+        VERIFIER_STOP(APPLICATION_VERIFIER_DESTROY_PROCESS_HEAP,
+                      "attempt to destroy process heap",
+                      HeapPtr, "Heap handle",
+                      0, "",
+                      0, "",
+                      0, "");
         return NULL;
     }
 
@@ -1712,8 +1721,7 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
             }
         }
 
-        /* FIXME: Call AV notification */
-        //AVrfInternalHeapFreeNotification();
+        AVrfInternalHeapFreeNotification(Node->pUserAllocation, Node->nUserRequestedSize);
 
         /* Go to the next node */
         Ptr = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, FALSE);

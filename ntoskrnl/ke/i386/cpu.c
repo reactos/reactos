@@ -9,10 +9,10 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <xmmintrin.h>
+
 #define NDEBUG
 #include <debug.h>
-
-#include <xmmintrin.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -209,13 +209,13 @@ KiSetProcessorType(VOID)
 }
 
 CODE_SEG("INIT")
-ULONG
+ULONG64
 NTAPI
 KiGetFeatureBits(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
-    ULONG FeatureBits = KF_WORKING_PTE;
+    ULONG64 FeatureBits = KF_WORKING_PTE;
     CPU_INFO CpuInfo, DummyCpuInfo;
     UCHAR Ccr1;
     BOOLEAN ExtendedCPUID = TRUE;
@@ -361,6 +361,14 @@ KiGetFeatureBits(VOID)
             break;
     }
 
+    /* Get some features from ECX */
+    if (CpuInfo.Ecx & X86_FEATURE_SSE3) FeatureBits |= KF_SSE3;
+    if (CpuInfo.Ecx & X86_FEATURE_SSSE3) FeatureBits |= KF_SSSE3;
+    if (CpuInfo.Ecx & X86_FEATURE_SSE4_1) FeatureBits |= KF_SSE4_1;
+    if (CpuInfo.Ecx & X86_FEATURE_SSE4_2) FeatureBits |= KF_SSE4_2;
+    if (CpuInfo.Ecx & X86_FEATURE_XSAVE) FeatureBits |= KF_XSTATE;
+    if (CpuInfo.Ecx & X86_FEATURE_RDRAND) FeatureBits |= KF_RDRAND;
+
     /* Set the current features */
     CpuFeatures = CpuInfo.Edx;
 
@@ -370,7 +378,7 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & X86_FEATURE_TSC)     FeatureBits |= KF_RDTSC;
     if (CpuFeatures & X86_FEATURE_CX8)     FeatureBits |= KF_CMPXCHG8B;
     if (CpuFeatures & X86_FEATURE_SYSCALL) FeatureBits |= KF_FAST_SYSCALL;
-    if (CpuFeatures & X86_FEATURE_MTTR)    FeatureBits |= KF_MTRR;
+    if (CpuFeatures & X86_FEATURE_MTRR)    FeatureBits |= KF_MTRR;
     if (CpuFeatures & X86_FEATURE_PGE)     FeatureBits |= KF_GLOBAL_PAGE | KF_CR4;
     if (CpuFeatures & X86_FEATURE_CMOV)    FeatureBits |= KF_CMOV;
     if (CpuFeatures & X86_FEATURE_PAT)     FeatureBits |= KF_PAT;
@@ -443,9 +451,9 @@ KiReportCpuFeatures(VOID)
         CpuFeatures = CpuInfo.Edx;
     }
 
-    DPRINT1("Supported CPU features: ");
+    DPRINT1("Supported CPU features:");
 
-#define print_kf_bit(kf_value) if (KeFeatureBits & kf_value) DbgPrint(#kf_value " ")
+#define print_kf_bit(kf_value) if (KeFeatureBits & kf_value) DbgPrint(" " #kf_value)
     print_kf_bit(KF_V86_VIS);
     print_kf_bit(KF_RDTSC);
     print_kf_bit(KF_CR4);
@@ -469,7 +477,7 @@ KiReportCpuFeatures(VOID)
     print_kf_bit(KF_NX_ENABLED);
 #undef print_kf_bit
 
-#define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(#cpu_flag " ")
+#define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(" " #cpu_flag)
     print_cf(X86_FEATURE_PAE);
     print_cf(X86_FEATURE_APIC);
     print_cf(X86_FEATURE_HT);
@@ -1647,19 +1655,6 @@ KeSetDmaIoCoherency(IN ULONG Coherency)
 {
     /* Save the coherency globally */
     KiDmaIoCoherency = Coherency;
-}
-
-/*
- * @implemented
- */
-KAFFINITY
-NTAPI
-KeQueryActiveProcessors(VOID)
-{
-    PAGED_CODE();
-
-    /* Simply return the number of active processors */
-    return KeActiveProcessors;
 }
 
 /*

@@ -15,6 +15,49 @@ void TaskManager_OnFileNew(void)
     WCHAR       szTitle[40];
     WCHAR       szText[256];
 
+    /* If CTRL is held, start the user's command-line shell */
+    if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+    {
+        STARTUPINFOW si = { sizeof(si) };
+        PROCESS_INFORMATION pi;
+        WCHAR szComSpec[MAX_PATH];
+        WCHAR fallbackCmd[] = L"cmd.exe";
+        DWORD cchEnv = GetEnvironmentVariableW(L"ComSpec", szComSpec, _countof(szComSpec));
+        if (cchEnv == 0 || cchEnv > _countof(szComSpec))
+        {
+            /* Couldn't get the environment variable, default to cmd.exe */
+            wcscpy(szComSpec, fallbackCmd);
+        }
+        BOOL result = CreateProcessW(NULL,
+                                     szComSpec,
+                                     NULL,
+                                     NULL,
+                                     FALSE,
+                                     CREATE_NEW_CONSOLE,
+                                     NULL,
+                                     NULL,
+                                     &si, &pi);
+        if (!result)
+        {
+            /* Couldn't start the user's command-line shell, fall back to cmd.exe */
+            result = CreateProcessW(NULL,
+                                    fallbackCmd,
+                                    NULL,
+                                    NULL,
+                                    FALSE,
+                                    CREATE_NEW_CONSOLE,
+                                    NULL,
+                                    NULL,
+                                    &si, &pi);
+        }
+        if (result)
+        {
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
+        }
+        return;
+    }
+
     /* Load language strings from resource file */
     LoadStringW(hInst, IDS_CREATENEWTASK, szTitle, _countof(szTitle));
     LoadStringW(hInst, IDS_CREATENEWTASK_DESC, szText, _countof(szText));

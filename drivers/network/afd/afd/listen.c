@@ -104,7 +104,7 @@ static NTSTATUS NTAPI ListenComplete( PDEVICE_OBJECT DeviceObject,
     ASSERT(FCB->ListenIrp.InFlightRequest == Irp);
     FCB->ListenIrp.InFlightRequest = NULL;
 
-    if( FCB->State == SOCKET_STATE_CLOSED ) {
+    if( FCB->SharedData.State == SOCKET_STATE_CLOSED ) {
         /* Cleanup our IRP queue because the FCB is being destroyed */
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_PREACCEPT] ) ) {
            NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_PREACCEPT]);
@@ -239,7 +239,7 @@ NTSTATUS AfdListenSocket( PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
                                        0 );
 
-    if( FCB->State != SOCKET_STATE_BOUND ) {
+    if( FCB->SharedData.State != SOCKET_STATE_BOUND ) {
         Status = STATUS_INVALID_PARAMETER;
         AFD_DbgPrint(MIN_TRACE,("Could not listen an unbound socket\n"));
         return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
@@ -274,7 +274,7 @@ NTSTATUS AfdListenSocket( PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
     }
 
-    FCB->State = SOCKET_STATE_LISTENING;
+    FCB->SharedData.State = SOCKET_STATE_LISTENING;
 
     Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
                         FCB->Connection.Object,

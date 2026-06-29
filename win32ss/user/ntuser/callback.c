@@ -1144,7 +1144,7 @@ co_IntSetWndIcons(VOID)
    IntLoadSystenIcons(Common->hIconBang,     OIC_BANG);
    IntLoadSystenIcons(Common->hIconNote,     OIC_NOTE);
    IntLoadSystenIcons(gpsi->hIconWindows,    OIC_WINLOGO);
-   IntLoadSystenIcons(gpsi->hIconSmWindows,  OIC_WINLOGO+1);
+   IntLoadSystenIcons(gpsi->hIconSmWindows,  OIC_INTERNAL_WINSMALL);
 
    ERR("hIconSmWindows %p hIconWindows %p \n",gpsi->hIconSmWindows,gpsi->hIconWindows);
 
@@ -1247,7 +1247,6 @@ co_UserCBClientPrinterThunk( PVOID pkt, INT InSize, PVOID pvOutData, INT OutSize
    return 0;
 }
 
-// Win: ClientImmProcessKey
 DWORD
 APIENTRY
 co_IntImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKeyID)
@@ -1272,7 +1271,6 @@ co_IntImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKey
     return ret;
 }
 
-/* Win: ClientImmLoadLayout */
 BOOL
 APIENTRY
 co_ClientImmLoadLayout(

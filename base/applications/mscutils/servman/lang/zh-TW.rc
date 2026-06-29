@@ -165,6 +165,7 @@ BEGIN
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "一些服務依賴於其他服務，系統驅動程式和載入順序組。如果一個系統元件被停止或者沒有正確運行，被其依賴的服務也會被影響。", IDC_STATIC, 8, 7, 238, 26
     LTEXT "這個服務依賴於以下的元件：", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "The following components depend on this service:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 

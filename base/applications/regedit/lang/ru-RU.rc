@@ -445,6 +445,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Добавляет новое строковое значение"
     ID_EDIT_NEW_BINARYVALUE "Добавляет новое бинарное значение"
     ID_EDIT_NEW_DWORDVALUE "Добавляет новое DWORD-значение"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Добавляет новое многострочное значение"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Добавляет новое расширяемое строковое значение"
     ID_REGISTRY_IMPORTREGISTRYFILE "Импортирует текстовой файл в реестр"
     ID_REGISTRY_EXPORTREGISTRYFILE "Экспортирует весь реестр или его часть в текстовой файл"
     ID_REGISTRY_LOADHIVE "Загрузить файл куста реестра в реестр"

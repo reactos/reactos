@@ -23,6 +23,7 @@
 #include <wininet.h>
 #include <shlobj.h>
 #include <shobjidl.h>
+#include <emptyvc.h>
 #include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 #include <tchar.h>
@@ -42,8 +43,8 @@
 #include <shlguid_undoc.h>
 #include <shlobj_undoc.h>
 
-#define SHLWAPI_ISHELLFOLDER_HELPERS
 #include <shlwapi_undoc.h>
+#include <ishellfolder_helpers.h>
 
 #include <shellapi.h>
 #undef ShellExecute
@@ -93,6 +94,7 @@
 #include "folders/CPrinterFolder.h"
 #include "folders/CAdminToolsFolder.h"
 #include "folders/CRecycleBin.h"
+#include "folders/CRecycleBinFolderViewCB.h"
 #include "droptargets/CexeDropHandler.h"
 #include "droptargets/CFSDropTarget.h"
 #include "COpenWithMenu.h"
@@ -130,6 +132,9 @@ extern const GUID SHELL32_AdvtShortcutComponent;
 
 #define MAX_PROPERTY_SHEET_PAGE 32
 
+#define SHV_CHANGE_NOTIFY   (WM_USER + 0x1111)
+#define SHV_UPDATESTATUSBAR (WM_USER + 0x1112)
+
 extern inline
 BOOL
 CALLBACK
@@ -165,32 +170,53 @@ PropSheetPageLifetimeCallback(HWND hWnd, UINT uMsg, PROPSHEETPAGEW *pPSP)
     return TRUE;
 }
 
-EXTERN_C HRESULT WINAPI
-SHMultiFileProperties(IDataObject *pDataObject, DWORD dwFlags);
 HRESULT
 SHELL32_ShowPropertiesDialog(IDataObject *pdtobj);
 HRESULT
 SHELL32_ShowFilesystemItemPropertiesDialogAsync(IDataObject *pDO);
 HRESULT
+SHELL32_ShowFilesystemItemsPropertiesDialogAsync(HWND hOwner, IDataObject *pDO);
+HRESULT
 SHELL32_ShowShellExtensionProperties(const CLSID *pClsid, IDataObject *pDO);
 HRESULT
 SHELL_ShowItemIDListProperties(LPCITEMIDLIST pidl);
 
+typedef HDSA HDCMA; // DynamicContextMenuArray
+typedef struct _DCMENTRY
+{
+    IContextMenu *pCM;
+    UINT idCmdFirst;
+    UINT idCmdLast;
+} DCMENTRY;
+#define DCMA_Create() ( (HDCMA)DSA_Create(sizeof(DCMENTRY), 4) )
+void DCMA_Destroy(HDCMA hDCMA);
+#define DCMA_GetEntry(hDCMA, iItem) ( (DCMENTRY*)DSA_GetItemPtr((HDSA)(hDCMA), (iItem)) )
+HRESULT DCMA_InvokeCommand(HDCMA hDCMA, CMINVOKECOMMANDINFO *pICI);
+
+UINT
+DCMA_InsertMenuItems(
+    _In_ HDCMA hDCMA,
+    _In_ HDCIA hDCIA,
+    _In_opt_ LPCITEMIDLIST pidlFolder,
+    _In_opt_ IDataObject *pDO,
+    _In_opt_ HKEY *pKeys,
+    _In_opt_ UINT nKeys,
+    _In_ QCMINFO *pQCMI,
+    _In_opt_ UINT fCmf,
+    _In_opt_ IUnknown *pUnkSite);
+
 HRESULT
 SHELL32_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdo, UINT msg);
+PCSTR
+MapFcidmCmdToVerb(_In_ UINT_PTR CmdId);
 UINT
 MapVerbToDfmCmd(_In_ LPCSTR verba);
 UINT
 GetDfmCmd(_In_ IContextMenu *pCM, _In_ LPCSTR verba);
-#define SHELL_ExecuteControlPanelCPL(hwnd, cpl) SHRunControlPanel((cpl), (hwnd))
 
-#define CmicFlagsToSeeFlags(flags)  ((flags) & SEE_CMIC_COMMON_FLAGS)
-static inline UINT SeeFlagsToCmicFlags(UINT flags)
-{
-    if (flags & SEE_MASK_CLASSNAME)
-        flags &= ~(SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE);
-    return flags & SEE_CMIC_COMMON_FLAGS;
-}
+EXTERN_C BOOL WINAPI
+SHELL32_RunControlPanel(_In_ PCWSTR commandLine, _In_opt_ HWND parent);
+#define SHELL_ExecuteControlPanelCPL(hwnd, cpl) SHELL32_RunControlPanel((cpl), (hwnd))
 
 
 // CStubWindow32 --- The owner window of file property sheets.
@@ -223,13 +249,6 @@ public:
 
 void PostCabinetMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 
-HRESULT
-Shell_TranslateIDListAlias(
-    _In_ LPCITEMIDLIST pidl,
-    _In_ HANDLE hToken,
-    _Out_ LPITEMIDLIST *ppidlAlias,
-    _In_ DWORD dwFlags);
-
 BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName);
 DWORD BindCtx_GetMode(_In_ IBindCtx *pbc, _In_ DWORD dwDefault);
 BOOL SHSkipJunctionBinding(_In_ IBindCtx *pbc, _In_ CLSID *pclsid);
@@ -239,24 +258,9 @@ BOOL Shell_FailForceReturn(_In_ HRESULT hr);
 EXTERN_C INT
 Shell_ParseSpecialFolder(_In_ LPCWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ INT *pcch);
 
-HRESULT
-Shell_DisplayNameOf(
-    _In_ IShellFolder *psf,
-    _In_ LPCITEMIDLIST pidl,
-    _In_ DWORD dwFlags,
-    _Out_ LPWSTR pszBuf,
-    _In_ UINT cchBuf);
-
-EXTERN_C
-HRESULT SHBindToObject(
+SHSTDAPI
+SHBindToObject(
     _In_opt_ IShellFolder *psf,
-    _In_ LPCITEMIDLIST pidl,
-    _In_ REFIID riid,
-    _Out_ void **ppvObj);
-
-HRESULT
-SHBindToObjectEx(
-    _In_opt_ IShellFolder *pShellFolder,
     _In_ LPCITEMIDLIST pidl,
     _In_opt_ IBindCtx *pBindCtx,
     _In_ REFIID riid,
@@ -267,6 +271,13 @@ SHELL_GetUIObjectOfAbsoluteItem(
     _In_opt_ HWND hWnd,
     _In_ PCIDLIST_ABSOLUTE pidl,
     _In_ REFIID riid, _Out_ void **ppvObj);
+
+HRESULT
+SHELL_DisplayNameOf(
+    _In_opt_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_opt_ UINT Flags,
+    _Out_ PWSTR *ppStr);
 
 DWORD
 SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAttributes);
@@ -293,10 +304,13 @@ BindCtx_RegisterObjectParam(
 BOOL PathIsDotOrDotDotW(_In_ LPCWSTR pszPath);
 BOOL PathIsValidElement(_In_ LPCWSTR pszPath);
 BOOL PathIsDosDevice(_In_ LPCWSTR pszName);
+HRESULT SHELL32_GetDllFromRundll32CommandLine(LPCWSTR pszCmd, LPWSTR pszOut, SIZE_T cchMax);
 HRESULT SHILAppend(_Inout_ LPITEMIDLIST pidl, _Inout_ LPITEMIDLIST *ppidl);
 
+HRESULT DataObject_GetHIDACount(IDataObject *pdo);
 PIDLIST_ABSOLUTE SHELL_CIDA_ILCloneFull(_In_ const CIDA *pCIDA, _In_ UINT Index);
 PIDLIST_ABSOLUTE SHELL_DataObject_ILCloneFullItem(_In_ IDataObject *pDO, _In_ UINT Index);
+HRESULT SHELL_CloneDataObject(_In_ IDataObject *pDO, _Out_ IDataObject **ppDO);
 
 EXTERN_C HRESULT
 IUnknown_InitializeCommand(
@@ -319,5 +333,24 @@ InvokeIExecuteCommandWithDataObject(
     _In_ IDataObject *pDO,
     _In_opt_ LPCMINVOKECOMMANDINFOEX pICI,
     _In_opt_ IUnknown *pSite);
+
+typedef enum _FILEOPCALLBACKEVENT {
+    FOCE_STARTOPERATIONS,
+    FOCE_FINISHOPERATIONS,
+    FOCE_PREMOVEITEM,
+    FOCE_POSTMOVEITEM,
+    FOCE_PRECOPYITEM,
+    FOCE_POSTCOPYITEM,
+    FOCE_PREDELETEITEM,
+    FOCE_POSTDELETEITEM,
+    FOCE_PRERENAMEITEM,
+    FOCE_POSTRENAMEITEM,
+    FOCE_PRENEWITEM,
+    FOCE_POSTNEWITEM
+} FILEOPCALLBACKEVENT;
+typedef HRESULT (CALLBACK *FILEOPCALLBACK)(FILEOPCALLBACKEVENT Event, LPCWSTR Source, LPCWSTR Destination,
+                                           UINT Attributes, HRESULT hr, void *CallerData);
+int SHELL32_FileOperation(LPSHFILEOPSTRUCTW lpFileOp, FILEOPCALLBACK Callback, void *CallerData);
+HRESULT SHELL_SingleFileOperation(HWND hWnd, UINT Op, PCWSTR Src, PCWSTR Dest, UINT Flags, PWSTR *ppNewName);
 
 #endif /* _PRECOMP_H__ */

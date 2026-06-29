@@ -17,7 +17,7 @@ BEGIN
     PUSHBUTTON "&Přidat...", IDC_USERS_ADD, 87, 98, 50, 14
     PUSHBUTTON "&Odebrat", IDC_USERS_REMOVE, 141, 98, 50, 14
     PUSHBUTTON "&Vlastnosti", IDC_USERS_PROPERTIES, 195, 98, 50, 14
-    AUTOCHECKBOX "Vyžadovat uživatelské jméno a heslo při spuštění sytému.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 200, 14, WS_DISABLED
+    AUTOCHECKBOX "Vyžadovat uživatelské jméno a heslo při spuštění sytému.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 200, 14
     PUSHBUTTON "Reset Password", IDC_USERS_RESET, 165, 200, 80, 14, WS_DISABLED
 END
 

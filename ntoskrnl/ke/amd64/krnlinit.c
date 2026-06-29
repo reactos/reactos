@@ -232,9 +232,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     PVOID DpcStack;
     ULONG i;
 
-    /* Set boot-level flags */
-    KeFeatureBits = Prcb->FeatureBits;
-
     /* Initialize 8/16 bit SList support */
     RtlpUse16ByteSLists = (KeFeatureBits & KF_CMPXCHG16B) ? TRUE : FALSE;
 

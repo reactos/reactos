@@ -144,8 +144,8 @@ PsChangeQuantumTable(
 NTSTATUS
 NTAPI
 PsReferenceProcessFilePointer(
-    IN PEPROCESS Process,
-    OUT PFILE_OBJECT *FileObject
+    _In_ PEPROCESS Process,
+    _Outptr_ PFILE_OBJECT *FileObject
 );
 
 //

@@ -9,6 +9,7 @@ struct SETTINGS_INFO
     BOOL bLogEnabled;
     WCHAR szDownloadDir[MAX_PATH];
     BOOL bDelInstaller;
+    BOOL bSmallIcons;
     /* Window Pos */
     BOOL Maximized;
     INT Left;

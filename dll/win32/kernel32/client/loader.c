@@ -147,7 +147,7 @@ LoadLibraryA(LPCSTR lpLibFileName)
     }
 
     /* Call the Ex version of the API */
-    return LoadLibraryExA(lpLibFileName, 0, 0);
+    return LoadLibraryExA(lpLibFileName, NULL, 0);
 }
 
 /*
@@ -179,7 +179,7 @@ DECLSPEC_HOTPATCH
 LoadLibraryW(LPCWSTR lpLibFileName)
 {
     /* Call Ex version of the API */
-    return LoadLibraryExW(lpLibFileName, 0, 0);
+    return LoadLibraryExW(lpLibFileName, NULL, 0);
 }
 
 

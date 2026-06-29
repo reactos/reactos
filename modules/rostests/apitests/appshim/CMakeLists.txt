@@ -1,10 +1,10 @@
 project(appcompat)
-add_definitions(-D__ROS_LONG64__)
 
 list(APPEND SOURCE
     dispmode.c
     forcedxsetup.c
     genral_hooks.c
+    globmemstatus.c
     ignorefreelib.c
     ignoreloadlib.c
     layer_hooks.c

@@ -114,19 +114,25 @@ static const PCSTR CustomBootPrompt =
 
 VOID OptionMenuCustomBoot(VOID)
 {
-    PCSTR CustomBootMenuList[] = {
+    static PCSTR CustomBootMenuList[] = {
 #if defined(_M_IX86) || defined(_M_AMD64)
         "Boot Sector (Disk/Partition/File)",
         "Linux",
 #endif
         "ReactOS",
         "ReactOS Setup"
-        };
+    };
+    static ULONG MenuActionsMap[RTL_NUMBER_OF(CustomBootMenuList)] = {
+#if defined(_M_IX86) || defined(_M_AMD64)
+        0, 1,
+#endif
+        2, 3
+    };
+
     ULONG SelectedMenuItem;
     OperatingSystemItem OperatingSystem;
 
     if (!UiDisplayMenu("Please choose a boot method:", NULL,
-                       FALSE,
                        CustomBootMenuList,
                        RTL_NUMBER_OF(CustomBootMenuList),
                        0, -1,
@@ -140,7 +146,7 @@ VOID OptionMenuCustomBoot(VOID)
 
     /* Initialize a new custom OS entry */
     OperatingSystem.SectionId = 0;
-    switch (SelectedMenuItem)
+    switch (MenuActionsMap[SelectedMenuItem])
     {
 #if defined(_M_IX86) || defined(_M_AMD64)
         case 0: // Boot Sector (Disk/Partition/File)
@@ -149,20 +155,13 @@ VOID OptionMenuCustomBoot(VOID)
         case 1: // Linux
             EditCustomBootLinux(&OperatingSystem);
             break;
+#endif /* _M_IX86 || _M_AMD64 */
         case 2: // ReactOS
             EditCustomBootReactOS(&OperatingSystem, FALSE);
             break;
         case 3: // ReactOS Setup
             EditCustomBootReactOS(&OperatingSystem, TRUE);
             break;
-#else
-        case 0: // ReactOS
-            EditCustomBootReactOS(&OperatingSystem, FALSE);
-            break;
-        case 1: // ReactOS Setup
-            EditCustomBootReactOS(&OperatingSystem, TRUE);
-            break;
-#endif /* _M_IX86 || _M_AMD64 */
     }
 
     /* And boot it */
@@ -569,13 +568,3 @@ EditCustomBootReactOS(
     OperatingSystem->SectionId = SectionId;
     OperatingSystem->LoadIdentifier = NULL;
 }
-
-#ifdef HAS_OPTION_MENU_REBOOT
-
-VOID OptionMenuReboot(VOID)
-{
-    UiMessageBox("The system will now reboot.");
-    Reboot();
-}
-
-#endif // HAS_OPTION_MENU_REBOOT

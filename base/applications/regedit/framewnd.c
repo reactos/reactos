@@ -165,9 +165,32 @@ void SetupStatusBar(HWND hWnd, BOOL bResize)
 void UpdateStatusBar(void)
 {
     HKEY hKeyRoot;
-    LPCWSTR pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+    LPCWSTR pszKeyPath, pszRootName;
+    LPWSTR pszFullPath;
+    DWORD dwCbFullPath;
 
-    SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)pszKeyPath);
+    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+    if (!pszKeyPath)
+        return;
+
+    pszRootName = get_root_key_name(hKeyRoot);
+    dwCbFullPath = (wcslen(pszRootName) + 1 + wcslen(pszKeyPath) + 1) * sizeof(WCHAR);
+    pszFullPath = malloc(dwCbFullPath);
+    if (!pszFullPath)
+        return;
+
+    if (pszKeyPath[0] != UNICODE_NULL)
+    {
+        StringCbPrintfW(pszFullPath, dwCbFullPath, L"%s%s%s", pszRootName,
+                        ((pszKeyPath[0] == L'\\') ? L"" : L"\\"), pszKeyPath);
+    }
+    else
+    {
+        StringCbCopyW(pszFullPath, dwCbFullPath, pszRootName);
+    }
+
+    SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)pszFullPath);
+    free(pszFullPath);
 }
 
 static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
@@ -1446,7 +1469,8 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         // For now, the Help dialog item is disabled because of lacking of HTML Help support
         EnableMenuItem(GetMenu(hWnd), ID_HELP_HELPTOPICS, MF_BYCOMMAND | MF_GRAYED);
         GetClientRect(hWnd, &rc);
-        CreateWindowExW(0, szChildClass, NULL, WS_CHILD | WS_VISIBLE,
+        CreateWindowExW(0, szChildClass, NULL,
+                        WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
                         rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
                         hWnd, (HMENU)0, hInst, 0);
         break;

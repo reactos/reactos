@@ -50,6 +50,11 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(msi_custom PRIVATE -Wno-format)
 endif()
 
+if (MSVC)
+    # Disable warning C5287: operands are different enum types
+    target_compile_options(msi_winetest PRIVATE /wd5287)
+endif()
+
 # msi_winetest.rc: let rc.exe find custom.dll in its subdirectory, i.e. Debug.
 if (MSVC_IDE)
     target_include_directories(msi_winetest PRIVATE $<$<COMPILE_LANGUAGE:RC>:$<TARGET_FILE_DIR:msi_custom>>)

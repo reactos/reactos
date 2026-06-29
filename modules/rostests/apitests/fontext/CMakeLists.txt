@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__ROS_LONG64__
     -DWINETEST_USE_DBGSTR_LONGLONG
     -DUNICODE
     -D_UNICODE)

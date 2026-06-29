@@ -18,14 +18,13 @@
 #ifdef LIBXML_CATALOG_ENABLED
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#elif defined (_WIN32)
+#include <io.h>
 #endif
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
@@ -37,9 +36,9 @@
 #include <libxml/catalog.h>
 #include <libxml/xmlerror.h>
 #include <libxml/threads.h>
-#include <libxml/globals.h>
 
-#include "buf.h"
+#include "private/buf.h"
+#include "private/error.h"
 
 #define MAX_DELEGATE	50
 #define MAX_CATAL_DEPTH	50
@@ -891,11 +890,7 @@ xmlParseCatalogFile(const char *filename) {
 
     ctxt = xmlNewParserCtxt();
     if (ctxt == NULL) {
-#ifdef LIBXML_SAX1_ENABLED
-	if (xmlDefaultSAXHandler.error != NULL) {
-	    xmlDefaultSAXHandler.error(NULL, "out of memory\n");
-	}
-#endif
+        xmlCatalogErrMemory("allocating parser context");
 	return(NULL);
     }
 
@@ -2177,7 +2172,6 @@ xmlParseSGMLCatalogPubid(const xmlChar *cur, xmlChar **id) {
     int len = 0;
     int size = 50;
     xmlChar stop;
-    int count = 0;
 
     *id = NULL;
 
@@ -2190,7 +2184,7 @@ xmlParseSGMLCatalogPubid(const xmlChar *cur, xmlChar **id) {
     } else {
 	stop = ' ';
     }
-    buf = (xmlChar *) xmlMallocAtomic(size * sizeof(xmlChar));
+    buf = (xmlChar *) xmlMallocAtomic(size);
     if (buf == NULL) {
         xmlCatalogErrMemory("allocating public ID");
 	return(NULL);
@@ -2202,7 +2196,7 @@ xmlParseSGMLCatalogPubid(const xmlChar *cur, xmlChar **id) {
 	    break;
 	if (len + 1 >= size) {
 	    size *= 2;
-	    tmp = (xmlChar *) xmlRealloc(buf, size * sizeof(xmlChar));
+	    tmp = (xmlChar *) xmlRealloc(buf, size);
 	    if (tmp == NULL) {
 		xmlCatalogErrMemory("allocating public ID");
 		xmlFree(buf);
@@ -2211,7 +2205,6 @@ xmlParseSGMLCatalogPubid(const xmlChar *cur, xmlChar **id) {
 	    buf = tmp;
 	}
 	buf[len++] = *cur;
-	count++;
 	NEXT;
     }
     buf[len] = 0;
@@ -2975,6 +2968,8 @@ xmlACatalogAdd(xmlCatalogPtr catal, const xmlChar * type,
 	    if (catal->sgml == NULL)
 		catal->sgml = xmlHashCreate(10);
             res = xmlHashAddEntry(catal->sgml, orig, entry);
+            if (res < 0)
+                xmlFreeCatalogEntry(entry, NULL);
         }
     }
     return (res);
@@ -3135,7 +3130,7 @@ xmlInitializeCatalog(void) {
 					strncpy(p, "\\..\\etc\\catalog", 255 - (p - buf));
 					uri = xmlCanonicPath((const xmlChar*)buf);
 					if (uri != NULL) {
-						strncpy(XML_XML_DEFAULT_CATALOG, uri, 255);
+						strncpy(XML_XML_DEFAULT_CATALOG, (char* )uri, 255);
 						xmlFree(uri);
 					}
 				}

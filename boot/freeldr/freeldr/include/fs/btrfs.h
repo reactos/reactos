@@ -71,6 +71,7 @@ typedef u64 __u64;
 
 #define BTRFS_DEV_ITEMS_OBJECTID 1ULL
 
+#define BTRFS_FT_UNKNOWN    0
 #define BTRFS_FT_REG_FILE   1
 #define BTRFS_FT_DIR        2
 #define BTRFS_FT_SYMLINK    7
@@ -416,6 +417,13 @@ typedef struct {
     u64 position;
     struct btrfs_inode_item inode;
     PBTRFS_INFO Volume;
-} btrfs_file_info, * pbtrfs_file_info;
+    ULONG FileNameLength;
+    UCHAR Attributes;
+    CHAR FileName[RTL_FIELD_SIZE(FILEINFORMATION, FileName)];
+} btrfs_file_info, *pbtrfs_file_info;
+
+ULONGLONG
+BtrFsGetVolumeSize(
+    _In_ ULONG DeviceId);
 
 const DEVVTBL* BtrFsMount(ULONG DeviceId);

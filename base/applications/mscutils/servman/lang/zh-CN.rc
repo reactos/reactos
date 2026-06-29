@@ -158,7 +158,8 @@ BEGIN
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "一些服务依赖于其他服务，系统驱动程序和加载顺序组。如果一个系统组件被停止或者没有正确运行，依赖它的服务也会被影响。", IDC_STATIC, 8, 7, 238, 26
-    LTEXT "这个服务依赖于以下的组件", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "这个服务依赖于以下的组件:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "The following components depend on this service:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 

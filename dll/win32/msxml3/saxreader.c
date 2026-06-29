@@ -20,15 +20,11 @@
  */
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-# include <libxml/SAX2.h>
-# include <libxml/parserInternals.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
+#include <libxml/SAX2.h>
+#include <libxml/parserInternals.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -44,8 +40,6 @@
 #include "wine/debug.h"
 
 #include "msxml_private.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -136,7 +130,7 @@ static saxreader_feature get_saxreader_feature(const WCHAR *name)
     {
         n = (min+max)/2;
 
-        c = strcmpW(saxreader_feature_map[n].name, name);
+        c = wcscmp(saxreader_feature_map[n].name, name);
         if (!c)
             return saxreader_feature_map[n].feature;
 
@@ -456,10 +450,10 @@ static BSTR build_qname(BSTR prefix, BSTR local)
         WCHAR *ptr;
 
         ptr = qname;
-        strcpyW(ptr, prefix);
+        lstrcpyW(ptr, prefix);
         ptr += SysStringLen(prefix);
         *ptr++ = ':';
-        strcpyW(ptr, local);
+        lstrcpyW(ptr, local);
         return qname;
     }
     else
@@ -472,13 +466,13 @@ static element_entry* alloc_element_entry(const xmlChar *local, const xmlChar *p
     element_entry *ret;
     int i;
 
-    ret = heap_alloc(sizeof(*ret));
+    ret = malloc(sizeof(*ret));
     if (!ret) return ret;
 
     ret->local  = bstr_from_xmlChar(local);
     ret->prefix = bstr_from_xmlChar(prefix);
     ret->qname  = build_qname(ret->prefix, ret->local);
-    ret->ns = nb_ns ? heap_alloc(nb_ns*sizeof(ns)) : NULL;
+    ret->ns = nb_ns ? malloc(nb_ns * sizeof(ns)) : NULL;
     ret->ns_count = nb_ns;
 
     for (i=0; i < nb_ns; i++)
@@ -504,8 +498,8 @@ static void free_element_entry(element_entry *element)
     SysFreeString(element->local);
     SysFreeString(element->qname);
 
-    heap_free(element->ns);
-    heap_free(element);
+    free(element->ns);
+    free(element);
 }
 
 static void push_element_ns(saxlocator *locator, element_entry *element)
@@ -536,7 +530,7 @@ static BSTR find_element_uri(saxlocator *locator, const xmlChar *uri)
     LIST_FOR_EACH_ENTRY(element, &locator->elements, element_entry, entry)
     {
         for (i=0; i < element->ns_count; i++)
-            if (!strcmpW(uriW, element->ns[i].uri))
+            if (!wcscmp(uriW, element->ns[i].uri))
             {
                 SysFreeString(uriW);
                 return element->ns[i].uri;
@@ -573,7 +567,7 @@ static BOOL bstr_pool_insert(struct bstrpool *pool, BSTR pool_entry)
 {
     if (!pool->pool)
     {
-        pool->pool = heap_alloc(16 * sizeof(*pool->pool));
+        pool->pool = malloc(16 * sizeof(*pool->pool));
         if (!pool->pool)
             return FALSE;
 
@@ -582,12 +576,12 @@ static BOOL bstr_pool_insert(struct bstrpool *pool, BSTR pool_entry)
     }
     else if (pool->index == pool->len)
     {
-        BSTR *realloc = heap_realloc(pool->pool, pool->len * 2 * sizeof(*realloc));
+        BSTR *new_pool = realloc(pool->pool, pool->len * 2 * sizeof(*new_pool));
 
-        if (!realloc)
+        if (!new_pool)
             return FALSE;
 
-        pool->pool = realloc;
+        pool->pool = new_pool;
         pool->len *= 2;
     }
 
@@ -602,7 +596,7 @@ static void free_bstr_pool(struct bstrpool *pool)
     for (i = 0; i < pool->index; i++)
         SysFreeString(pool->pool[i]);
 
-    heap_free(pool->pool);
+    free(pool->pool);
 
     pool->pool = NULL;
     pool->index = pool->len = 0;
@@ -755,9 +749,7 @@ static HRESULT WINAPI ivbsaxattributes_GetTypeInfo(
     IVBSAXAttributes *iface,
     UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo )
 {
-    saxlocator *This = impl_from_IVBSAXAttributes( iface );
-
-    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+    TRACE("%p, %u, %lx, %p.\n", iface, iTInfo, lcid, ppTInfo);
 
     return get_typeinfo(IVBSAXAttributes_tid, ppTInfo);
 }
@@ -770,11 +762,10 @@ static HRESULT WINAPI ivbsaxattributes_GetIDsOfNames(
     LCID lcid,
     DISPID* rgDispId)
 {
-    saxlocator *This = impl_from_IVBSAXAttributes( iface );
     ITypeInfo *typeinfo;
     HRESULT hr;
 
-    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+    TRACE("%p, %s, %p, %u, %lx %p.\n", iface, debugstr_guid(riid), rgszNames, cNames,
           lcid, rgDispId);
 
     if(!rgszNames || cNames == 0 || !rgDispId)
@@ -801,18 +792,16 @@ static HRESULT WINAPI ivbsaxattributes_Invoke(
     EXCEPINFO* pExcepInfo,
     UINT* puArgErr)
 {
-    saxlocator *This = impl_from_IVBSAXAttributes( iface );
     ITypeInfo *typeinfo;
     HRESULT hr;
 
-    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+    TRACE("%p, %ld, %s, %lx, %d, %p, %p, %p, %p.\n", iface, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
     hr = get_typeinfo(IVBSAXAttributes_tid, &typeinfo);
     if(SUCCEEDED(hr))
     {
-        hr = ITypeInfo_Invoke(typeinfo, &This->IVBSAXAttributes_iface, dispIdMember, wFlags,
-                pDispParams, pVarResult, pExcepInfo, puArgErr);
+        hr = ITypeInfo_Invoke(typeinfo, iface, dispIdMember, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
         ITypeInfo_Release(typeinfo);
     }
 
@@ -1410,14 +1399,14 @@ static BSTR saxreader_get_unescaped_value(const xmlChar *buf, int len)
     str_len = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)buf, len, NULL, 0);
     if (len != -1) str_len++;
 
-    str = heap_alloc(str_len*sizeof(WCHAR));
+    str = malloc(str_len * sizeof(WCHAR));
     if (!str) return NULL;
 
     MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)buf, len, str, str_len);
     if (len != -1) str[str_len-1] = 0;
 
     ptrW = str;
-    while ((dest = strstrW(ptrW, ampescW)))
+    while ((dest = wcsstr(ptrW, ampescW)))
     {
         WCHAR *src;
 
@@ -1426,13 +1415,13 @@ static BSTR saxreader_get_unescaped_value(const xmlChar *buf, int len)
         dest++;
 
         /* move together with null terminator */
-        memmove(dest, src, (strlenW(src) + 1)*sizeof(WCHAR));
+        memmove(dest, src, (lstrlenW(src) + 1)*sizeof(WCHAR));
 
         ptrW++;
     }
 
     bstr = SysAllocString(str);
-    heap_free(str);
+    free(str);
 
     return bstr;
 }
@@ -1472,13 +1461,15 @@ static HRESULT SAXAttributes_populate(saxlocator *locator,
     if(locator->attr_count > locator->attr_alloc_count)
     {
         int new_size = locator->attr_count * 2;
-        attrs = heap_realloc_zero(locator->attributes, new_size * sizeof(struct _attributes));
+        attrs = realloc(locator->attributes, new_size * sizeof(*locator->attributes));
         if(!attrs)
         {
             free_attribute_values(locator);
             locator->attr_count = 0;
             return E_OUTOFMEMORY;
         }
+        memset(attrs + locator->attr_alloc_count, 0,
+                (new_size - locator->attr_alloc_count) * sizeof(*locator->attributes));
         locator->attributes = attrs;
         locator->attr_alloc_count = new_size;
     }
@@ -1922,7 +1913,7 @@ static void libxmlComment(void *ctx, const xmlChar *value)
         format_error_message_from_id(This, hr);
 }
 
-static void libxmlFatalError(void *ctx, const char *msg, ...)
+static void WINAPIV libxmlFatalError(void *ctx, const char *msg, ...)
 {
     saxlocator *This = ctx;
     struct saxerrorhandler_iface *handler = saxreader_get_errorhandler(This->saxreader);
@@ -1941,7 +1932,7 @@ static void libxmlFatalError(void *ctx, const char *msg, ...)
     va_end(args);
 
     len = MultiByteToWideChar(CP_UNIXCP, 0, message, -1, NULL, 0);
-    error = heap_alloc(sizeof(WCHAR)*len);
+    error = malloc(sizeof(WCHAR) * len);
     if(error)
     {
         MultiByteToWideChar(CP_UNIXCP, 0, message, -1, error, len);
@@ -1952,7 +1943,7 @@ static void libxmlFatalError(void *ctx, const char *msg, ...)
     {
         xmlStopParser(This->pParserCtxt);
         This->ret = E_FAIL;
-        heap_free(error);
+        free(error);
         return;
     }
 
@@ -1968,7 +1959,7 @@ static void libxmlFatalError(void *ctx, const char *msg, ...)
     else
         ISAXErrorHandler_fatalError(handler->handler, &This->ISAXLocator_iface, error, E_FAIL);
 
-    heap_free(error);
+    free(error);
 
     xmlStopParser(This->pParserCtxt);
     This->ret = E_FAIL;
@@ -2156,9 +2147,7 @@ static HRESULT WINAPI ivbsaxlocator_GetTypeInfo(
     IVBSAXLocator *iface,
     UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo )
 {
-    saxlocator *This = impl_from_IVBSAXLocator( iface );
-
-    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+    TRACE("%p, %u, %lx, %p.\n", iface, iTInfo, lcid, ppTInfo);
 
     return get_typeinfo(IVBSAXLocator_tid, ppTInfo);
 }
@@ -2171,11 +2160,10 @@ static HRESULT WINAPI ivbsaxlocator_GetIDsOfNames(
     LCID lcid,
     DISPID* rgDispId)
 {
-    saxlocator *This = impl_from_IVBSAXLocator( iface );
     ITypeInfo *typeinfo;
     HRESULT hr;
 
-    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+    TRACE("%p, %s, %p, %u, %lx, %p.\n", iface, debugstr_guid(riid), rgszNames, cNames,
           lcid, rgDispId);
 
     if(!rgszNames || cNames == 0 || !rgDispId)
@@ -2202,18 +2190,16 @@ static HRESULT WINAPI ivbsaxlocator_Invoke(
     EXCEPINFO* pExcepInfo,
     UINT* puArgErr)
 {
-    saxlocator *This = impl_from_IVBSAXLocator( iface );
     ITypeInfo *typeinfo;
     HRESULT hr;
 
-    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+    TRACE("%p, %ld, %s, %lx, %d, %p, %p, %p, %p.\n", iface, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
     hr = get_typeinfo(IVBSAXLocator_tid, &typeinfo);
     if(SUCCEEDED(hr))
     {
-        hr = ITypeInfo_Invoke(typeinfo, &This->IVBSAXLocator_iface, dispIdMember, wFlags,
-                pDispParams, pVarResult, pExcepInfo, puArgErr);
+        hr = ITypeInfo_Invoke(typeinfo, iface, dispIdMember, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
         ITypeInfo_Release(typeinfo);
     }
 
@@ -2324,7 +2310,7 @@ static ULONG WINAPI isaxlocator_AddRef(ISAXLocator* iface)
 {
     saxlocator *This = impl_from_ISAXLocator( iface );
     ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
@@ -2332,11 +2318,11 @@ static ULONG WINAPI isaxlocator_Release(
         ISAXLocator* iface)
 {
     saxlocator *This = impl_from_ISAXLocator( iface );
-    LONG ref = InterlockedDecrement( &This->ref );
+    ULONG ref = InterlockedDecrement( &This->ref );
 
-    TRACE("(%p)->(%d)\n", This, ref );
+    TRACE("%p, refcount %ld.\n", iface, ref );
 
-    if (ref == 0)
+    if (!ref)
     {
         element_entry *element, *element2;
         int index;
@@ -2351,7 +2337,7 @@ static ULONG WINAPI isaxlocator_Release(
             SysFreeString(This->attributes[index].szValue);
             SysFreeString(This->attributes[index].szQName);
         }
-        heap_free(This->attributes);
+        free(This->attributes);
 
         /* element stack */
         LIST_FOR_EACH_ENTRY_SAFE(element, element2, &This->elements, element_entry, entry)
@@ -2361,7 +2347,7 @@ static ULONG WINAPI isaxlocator_Release(
         }
 
         ISAXXMLReader_Release(&This->saxreader->ISAXXMLReader_iface);
-        heap_free( This );
+        free(This);
     }
 
     return ref;
@@ -2450,7 +2436,7 @@ static HRESULT SAXLocator_create(saxreader *reader, saxlocator **ppsaxlocator, B
 
     saxlocator *locator;
 
-    locator = heap_alloc( sizeof (*locator) );
+    locator = malloc(sizeof(*locator));
     if( !locator )
         return E_OUTOFMEMORY;
 
@@ -2477,18 +2463,18 @@ static HRESULT SAXLocator_create(saxreader *reader, saxlocator **ppsaxlocator, B
     if(!locator->namespaceUri)
     {
         ISAXXMLReader_Release(&reader->ISAXXMLReader_iface);
-        heap_free(locator);
+        free(locator);
         return E_OUTOFMEMORY;
     }
 
     locator->attr_alloc_count = 8;
     locator->attr_count = 0;
-    locator->attributes = heap_alloc_zero(sizeof(struct _attributes)*locator->attr_alloc_count);
+    locator->attributes = calloc(locator->attr_alloc_count, sizeof(*locator->attributes));
     if(!locator->attributes)
     {
         ISAXXMLReader_Release(&reader->ISAXXMLReader_iface);
         SysFreeString(locator->namespaceUri);
-        heap_free(locator);
+        free(locator);
         return E_OUTOFMEMORY;
     }
 
@@ -2517,18 +2503,9 @@ static HRESULT internal_parseBuffer(saxreader *This, const char *buffer, int siz
 
     if (size >= 4)
     {
-        const unsigned char *buff = (unsigned char*)buffer;
-
         encoding = xmlDetectCharEncoding((xmlChar*)buffer, 4);
         enc_name = (xmlChar*)xmlGetCharEncodingName(encoding);
         TRACE("detected encoding: %s\n", enc_name);
-        /* skip BOM, parser won't switch encodings and so won't skip it on its own */
-        if ((encoding == XML_CHAR_ENCODING_UTF8) &&
-            buff[0] == 0xEF && buff[1] == 0xBB && buff[2] == 0xBF)
-        {
-            buffer += 3;
-            size -= 3;
-        }
     }
 
     /* if libxml2 detection failed try to guess */
@@ -2653,7 +2630,7 @@ static HRESULT internal_parse(
         case VT_BSTR|VT_BYREF:
         {
             BSTR str = V_ISBYREF(&varInput) ? *V_BSTRREF(&varInput) : V_BSTR(&varInput);
-            hr = internal_parseBuffer(This, (const char*)str, strlenW(str)*sizeof(WCHAR), vbInterface);
+            hr = internal_parseBuffer(This, (const char*)str, lstrlenW(str)*sizeof(WCHAR), vbInterface);
             break;
         }
         case VT_ARRAY|VT_UI1: {
@@ -2734,23 +2711,23 @@ static HRESULT internal_onDataAvailable(void *obj, char *ptr, DWORD len)
     return internal_parseBuffer(This, ptr, len, FALSE);
 }
 
-static HRESULT internal_parseURL(
-        saxreader* This,
-        const WCHAR *url,
-        BOOL vbInterface)
+static HRESULT internal_parseURL(saxreader *reader, const WCHAR *url, BOOL vbInterface)
 {
     IMoniker *mon;
     bsc_t *bsc;
     HRESULT hr;
 
-    TRACE("(%p)->(%s)\n", This, debugstr_w(url));
+    TRACE("%p, %s.\n", reader, debugstr_w(url));
+
+    if (!url && reader->version < MSXML4)
+        return E_INVALIDARG;
 
     hr = create_moniker_from_url(url, &mon);
     if(FAILED(hr))
         return hr;
 
-    if(vbInterface) hr = bind_url(mon, internal_vbonDataAvailable, This, &bsc);
-    else hr = bind_url(mon, internal_onDataAvailable, This, &bsc);
+    if(vbInterface) hr = bind_url(mon, internal_vbonDataAvailable, reader, &bsc);
+    else hr = bind_url(mon, internal_onDataAvailable, reader, &bsc);
     IMoniker_Release(mon);
 
     if(FAILED(hr))
@@ -2964,7 +2941,7 @@ static ULONG WINAPI saxxmlreader_Release(
         SysFreeString(This->xmldecl_version);
         free_bstr_pool(&This->pool);
 
-        heap_free( This );
+        free(This);
     }
 
     return ref;
@@ -3453,7 +3430,7 @@ HRESULT SAXXMLReader_create(MSXML_VERSION version, LPVOID *ppObj)
 
     TRACE("(%p)\n", ppObj);
 
-    reader = heap_alloc( sizeof (*reader) );
+    reader = malloc(sizeof(*reader));
     if( !reader )
         return E_OUTOFMEMORY;
 
@@ -3491,14 +3468,3 @@ HRESULT SAXXMLReader_create(MSXML_VERSION version, LPVOID *ppObj)
 
     return S_OK;
 }
-
-#else
-
-HRESULT SAXXMLReader_create(MSXML_VERSION version, LPVOID *ppObj)
-{
-    MESSAGE("This program tried to use a SAX XML Reader object, but\n"
-            "libxml2 support was not present at compile time.\n");
-    return E_NOTIMPL;
-}
-
-#endif

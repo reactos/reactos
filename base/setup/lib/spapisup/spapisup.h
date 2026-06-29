@@ -13,15 +13,17 @@
 #define _SETUPAPI_
 #endif
 
-/* Architecture names to be used for architecture-specific INF sections */
-#ifdef _M_IX86
+/* Architecture name suffixes for architecture-specific INF sections */
+#if defined(_M_IX86)
 #define INF_ARCH L"x86"
 #elif defined(_M_AMD64)
 #define INF_ARCH L"amd64"
-#elif defined(_M_IA64)
-#define INF_ARCH L"ia64"
 #elif defined(_M_ARM)
 #define INF_ARCH L"arm"
+#elif defined(_M_ARM64)
+#define INF_ARCH L"arm64"
+#elif defined(_M_IA64)
+#define INF_ARCH L"ia64"
 #elif defined(_M_PPC)
 #define INF_ARCH L"ppc"
 #endif

@@ -14,6 +14,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <winsvc.h>
 #include <windowsx.h>
 #include <objbase.h>
 #include <netcfgx.h>
@@ -22,6 +23,9 @@
 #include <devguid.h>
 #include <commctrl.h>
 #include <cfgmgr32.h>
+
+#include <netcfgx_undoc.h>
+#include <netcfgn_undoc.h>
 
 #include <wine/debug.h>
 
@@ -47,10 +51,42 @@ typedef struct tagNetCfgComponentItem
     DWORD dwCharacteristics;    //Y
     ULONG Status;               //Y
     BOOL bChanged;              //Y
+    LPWSTR pszUpperRange;
+    LPWSTR pszLowerRange;
     LPWSTR pszBinding;
-    struct tagNetCfgComponentItem * pNext;
-    INetCfgComponentControl * pNCCC;
-}NetCfgComponentItem;
+    DWORD dwSupportedNotifications;
+    INetCfgComponentControl *pControl;
+    INetCfgComponentPropertyUi *pPropertyUi;
+    INetCfgComponentSetup *pSetup;
+    INetCfgComponentNotifyBinding *pNotifyBinding;
+    INetCfgComponentNotifyGlobal *pNotifyGlobal;
+    INetCfgComponentUpperEdge *pUpperEdge;
+    struct tagNetCfgComponentItem *pNext;
+} NetCfgComponentItem;
+
+typedef struct
+{
+    const INetCfg * lpVtbl;
+    const INetCfgLock * lpVtblLock;
+    const INetCfgPnpReconfigCallback *lpVtblPnpReconfigCallback;
+    LONG                       ref;
+    BOOL bInitialized;
+    HANDLE hMutex;
+    NetCfgComponentItem *pNet;
+    NetCfgComponentItem * pService;
+    NetCfgComponentItem * pClient;
+    NetCfgComponentItem * pProtocol;
+} INetCfgImpl;
+
+typedef struct
+{
+    const INetCfgComponent *lpVtbl;
+    const INetCfgComponentBindings *lpVtblBindings;
+    const INetCfgComponentPrivate  *lpVtblPrivate;
+    LONG  ref;
+    NetCfgComponentItem * pItem;
+    INetCfg * pNCfg;
+} INetCfgComponentImpl;
 
 /* netcfg_iface.c */
 HRESULT WINAPI INetCfg_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
@@ -72,6 +108,12 @@ HRESULT WINAPI IEnumNetCfgBindingInterface_Constructor(IUnknown *pUnkOuter, REFI
 /* netcfgbindingpath_iface.c */
 HRESULT WINAPI INetCfgBindingPath_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv);
 HRESULT WINAPI IEnumNetCfgBindingPath_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv, DWORD dwFlags);
+
+/* netcfgclass_iface.c */
+HRESULT WINAPI INetCfgClass_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv, const GUID *pguidClass, INetCfg *pNetCfg);
+
+/* netinstall.c */
+BOOL InstallNetworkComponent(_In_ PCWSTR pszComponentId);
 
 /* tcpipconf_notify.c */
 HRESULT WINAPI TcpipConfigNotify_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);

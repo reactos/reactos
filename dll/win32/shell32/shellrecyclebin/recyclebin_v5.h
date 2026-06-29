@@ -52,6 +52,10 @@ DECLARE_INTERFACE_(IRecycleBin5, IRecycleBin)
         THIS_
         IN LPCWSTR pDeletedFileName,
         IN DELETED_FILE_RECORD *pDeletedFile) PURE;
+    STDMETHOD(RemoveFromDatabase)(
+        THIS_
+        IN LPCWSTR pDeletedFileName,
+        IN DELETED_FILE_RECORD *pDeletedFile) PURE;
     STDMETHOD(OnClosing)(
         THIS_
         IN IRecycleBinEnumList *prbel) PURE;

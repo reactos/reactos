@@ -95,14 +95,14 @@ __INTRIN_INLINE void _ReadWriteBarrier(void)
 #define _ReadBarrier _ReadWriteBarrier
 #define _WriteBarrier _ReadWriteBarrier
 
-#if !HAS_BUILTIN(_mm_mfence)
+#if !HAS_BUILTIN(_mm_mfence) && !defined(__clang__)
 __INTRIN_INLINE void _mm_mfence(void)
 {
 	__asm__ __volatile__("mfence" : : : "memory");
 }
 #endif
 
-#if !HAS_BUILTIN(_mm_lfence)
+#if !HAS_BUILTIN(_mm_lfence)&& !defined(__clang__)
 __INTRIN_INLINE void _mm_lfence(void)
 {
 	_ReadBarrier();
@@ -1227,7 +1227,7 @@ __INTRIN_INLINE unsigned int __cdecl _rotl(unsigned int value, int shift)
 __INTRIN_INLINE unsigned long long _rotl64(unsigned long long value, int shift)
 {
 	unsigned long long retval;
-	__asm__("rolq %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
+	__asm__("rolq %b[shift], %[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 #else /* __x86_64__ */
@@ -1271,7 +1271,7 @@ __INTRIN_INLINE unsigned short __cdecl _rotr16(unsigned short value, unsigned ch
 __INTRIN_INLINE unsigned long long _rotr64(unsigned long long value, int shift)
 {
 	unsigned long long retval;
-	__asm__("rorq %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
+	__asm__("rorq %b[shift], %[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 #else /* __x86_64__ */
@@ -1301,8 +1301,13 @@ __INTRIN_INLINE unsigned long __cdecl _lrotr(unsigned long value, int shift)
 }
 #endif
 
-#ifdef __x86_64__
-__INTRIN_INLINE unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
+#if defined __x86_64__
+#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
+static inline __attribute__((__always_inline__))
+#else
+__INTRIN_INLINE
+#endif
+unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
 {
     unsigned long long retval;
     unsigned char shift = Bit & 0x3F;
@@ -1348,7 +1353,12 @@ __INTRIN_INLINE unsigned long long __ull_rshift(unsigned long long Mask, int Bit
 	just confuses it. Also we declare Bit as an int and then truncate it to
 	match Visual C++ behavior
 */
-__INTRIN_INLINE unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
+#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
+static inline __attribute__((__always_inline__))
+#else
+__INTRIN_INLINE
+#endif
+unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
 {
 	unsigned long long retval = Mask;
 
@@ -1546,9 +1556,9 @@ __INTRIN_INLINE void __inbytestring(unsigned short Port, unsigned char * Buffer,
 {
 	__asm__ __volatile__
 	(
-		"rep; insb" :
-		[Buffer] "=D" (Buffer), [Count] "=c" (Count) :
-		"d" (Port), "[Buffer]" (Buffer), "[Count]" (Count) :
+		"rep insb" :
+		"+D" (Buffer), "+c" (Count) :
+		"d" (Port) :
 		"memory"
 	);
 }
@@ -1557,9 +1567,9 @@ __INTRIN_INLINE void __inwordstring(unsigned short Port, unsigned short * Buffer
 {
 	__asm__ __volatile__
 	(
-		"rep; insw" :
-		[Buffer] "=D" (Buffer), [Count] "=c" (Count) :
-		"d" (Port), "[Buffer]" (Buffer), "[Count]" (Count) :
+		"rep insw" :
+		"+D" (Buffer), "+c" (Count) :
+		"d" (Port) :
 		"memory"
 	);
 }
@@ -1568,9 +1578,9 @@ __INTRIN_INLINE void __indwordstring(unsigned short Port, unsigned long * Buffer
 {
 	__asm__ __volatile__
 	(
-		"rep; insl" :
-		[Buffer] "=D" (Buffer), [Count] "=c" (Count) :
-		"d" (Port), "[Buffer]" (Buffer), "[Count]" (Count) :
+		"rep insl" :
+		"+D" (Buffer), "+c" (Count) :
+		"d" (Port) :
 		"memory"
 	);
 }
@@ -1592,17 +1602,35 @@ __INTRIN_INLINE void __outdword(unsigned short Port, unsigned long Data)
 
 __INTRIN_INLINE void __outbytestring(unsigned short Port, unsigned char * Buffer, unsigned long Count)
 {
-	__asm__ __volatile__("rep; outsb" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
+	__asm__ __volatile__
+	(
+		"rep outsb" :
+		"+S" (Buffer), "+c" (Count) :
+		"d" (Port) :
+		"memory"
+	);
 }
 
 __INTRIN_INLINE void __outwordstring(unsigned short Port, unsigned short * Buffer, unsigned long Count)
 {
-	__asm__ __volatile__("rep; outsw" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
+	__asm__ __volatile__
+	(
+		"rep outsw" :
+		"+S" (Buffer), "+c" (Count) :
+		"d" (Port) :
+		"memory"
+	);
 }
 
 __INTRIN_INLINE void __outdwordstring(unsigned short Port, unsigned long * Buffer, unsigned long Count)
 {
-	__asm__ __volatile__("rep; outsl" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
+	__asm__ __volatile__
+	(
+		"rep outsl" :
+		"+S" (Buffer), "+c" (Count) :
+		"d" (Port) :
+		"memory"
+	);
 }
 
 __INTRIN_INLINE int __cdecl _inp(unsigned short Port)
@@ -1641,15 +1669,19 @@ __INTRIN_INLINE unsigned long __cdecl _outpd(unsigned short Port, unsigned long 
 
 /*** System information ***/
 
+#if !HAS_BUILTIN(__cpuid)
 __INTRIN_INLINE void __cpuid(int CPUInfo[4], int InfoType)
 {
 	__asm__ __volatile__("cpuid" : "=a" (CPUInfo[0]), "=b" (CPUInfo[1]), "=c" (CPUInfo[2]), "=d" (CPUInfo[3]) : "a" (InfoType));
 }
+#endif
 
+#if !HAS_BUILTIN(__cpuidex)
 __INTRIN_INLINE void __cpuidex(int CPUInfo[4], int InfoType, int ECXValue)
 {
 	__asm__ __volatile__("cpuid" : "=a" (CPUInfo[0]), "=b" (CPUInfo[1]), "=c" (CPUInfo[2]), "=d" (CPUInfo[3]) : "a" (InfoType), "c" (ECXValue));
 }
+#endif
 
 #if !HAS_BUILTIN(__rdtsc)
 __INTRIN_INLINE unsigned long long __rdtsc(void)
@@ -1972,8 +2004,12 @@ __INTRIN_INLINE void __invlpg(void *Address)
 
 
 /*** System operations ***/
-
-__INTRIN_INLINE unsigned long long __readmsr(unsigned long reg)
+#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
+static inline __attribute__((__always_inline__))
+#else
+__INTRIN_INLINE
+#endif
+unsigned long long __readmsr(unsigned long reg)
 {
 #ifdef __x86_64__
 	unsigned long low, high;
@@ -1986,7 +2022,12 @@ __INTRIN_INLINE unsigned long long __readmsr(unsigned long reg)
 #endif
 }
 
-__INTRIN_INLINE void __writemsr(unsigned long Register, unsigned long long Value)
+#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
+static inline __attribute__((__always_inline__))
+#else
+__INTRIN_INLINE
+#endif
+void __writemsr(unsigned long Register, unsigned long long Value)
 {
 #ifdef __x86_64__
 	__asm__ __volatile__("wrmsr" : : "a" (Value), "d" (Value >> 32), "c" (Register));

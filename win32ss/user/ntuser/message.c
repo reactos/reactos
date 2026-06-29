@@ -2187,18 +2187,14 @@ IntUninitMessagePumpHook(VOID)
 }
 
 BOOL FASTCALL
-IntCallMsgFilter( LPMSG lpmsg, INT code)
+IntCallMsgFilter(LPMSG lpmsg, INT code)
 {
-    BOOL Ret = FALSE;
+    BOOL Ret;
 
-    if ( co_HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)lpmsg))
-    {
-        Ret = TRUE;
-    }
-    else
-    {
-        Ret = co_HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)lpmsg);
-    }
+    Ret = co_HOOK_CallHooks(WH_SYSMSGFILTER, code, 0, (LPARAM)lpmsg);
+    if (!Ret)
+        Ret = co_HOOK_CallHooks(WH_MSGFILTER, code, 0, (LPARAM)lpmsg);
+
     return Ret;
 }
 
@@ -2447,16 +2443,7 @@ NtUserCallMsgFilter( LPMSG lpmsg, INT code)
     _SEH2_END;
 
     UserEnterExclusive();
-
-    if ( co_HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)&Msg))
-    {
-        Ret = TRUE;
-    }
-    else
-    {
-        Ret = co_HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)&Msg);
-    }
-
+    Ret = IntCallMsgFilter(&Msg, code);
     UserLeave();
 
     _SEH2_TRY

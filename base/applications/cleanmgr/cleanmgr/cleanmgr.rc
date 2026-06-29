@@ -1,0 +1,64 @@
+/*
+ * PROJECT:     ReactOS Disk Cleanup
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Resources
+ * COPYRIGHT:   Copyright 2023-2025 Mark Jansen <mark.jansen@reactos.org>
+ */
+
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+#include "resource.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Disk Cleanup"
+#define REACTOS_STR_INTERNAL_NAME     "cleanmgr"
+#define REACTOS_STR_ORIGINAL_FILENAME "cleanmgr.exe"
+#include <reactos/version.rc>
+
+#include <reactos/manifest_exe.rc>
+
+IDI_CLEANMGR ICON "resources/cleanmgr.ico"
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_PROPERTIES_MAIN_TITLE "Disk Cleanup for (%c:)"
+    IDS_TOTAL_CLEANABLE_CAPTION "You can use Disk Cleanup to free up to %s of disk space on (%c:)."
+    IDS_DISK_CLEANUP "Disk Cleanup"
+    IDS_CONFIRM_DELETE "Are you sure you want to delete these files permanently?"
+    IDS_CALCULATING "Disk Cleanup is calculating how much space can be gained on (%s)."
+    IDS_SCANNING "Scanning: %s"
+    IDS_CLEANING_CAPTION "Disk Cleanup is cleaning up files on %s."
+    IDS_CLEANING "Cleaning: %s"
+END
+
+IDD_PROPERTIES_MAIN DIALOGEX 0, 0, 235, 215
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Disk Cleanup"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_DISKICON,"Static",SS_ICON,6,6,20,20
+    LTEXT           "You can use Disk Cleanup to free up to 0.0MB of disk space on drive C.",IDC_TOTAL_CLEANABLE,36,6,192,18
+    LTEXT           "Files to delete:",IDC_STATIC,6,30,222,8
+    CONTROL         "",IDC_HANDLERLIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,6,42,222,66
+    LTEXT           "Total amount of disk space gained:",IDC_STATIC,6,114,144,8
+    RTEXT           "",IDC_SELECTED_GAINED,156,114,73,8
+    GROUPBOX        "Description",IDC_STATIC,6,126,222,84
+    LTEXT           "",IDC_DESCRIPTION,12,138,210,54
+    PUSHBUTTON      "Details...",IDC_DETAILS,150,192,74,14
+END
+
+IDD_SELECTDRIVE DIALOGEX 0, 0, 177, 74
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Disk Cleanup - Select Drive"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,30,48,50,14
+    PUSHBUTTON      "E&xit",IDCANCEL,96,48,50,14
+    LTEXT           "Select the drive to clean up.",IDC_STATIC,12,6,150,8
+    COMBOBOX        IDC_DRIVES,12,24,150,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+

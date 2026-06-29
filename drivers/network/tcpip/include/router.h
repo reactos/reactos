@@ -34,8 +34,7 @@ PFIB_ENTRY RouterCreateRoute(
     PIP_ADDRESS NetworkAddress,
     PIP_ADDRESS Netmask,
     PIP_ADDRESS RouterAddress,
-    PIP_INTERFACE Interface,
-    UINT Metric);
+    PIP_INTERFACE Interface);
 
 NTSTATUS RouterStartup(
     VOID);
@@ -48,5 +47,7 @@ VOID RouterRemoveRoutesForInterface(PIP_INTERFACE Interface);
 UINT CountFIBs(PIP_INTERFACE IF);
 
 UINT CopyFIBs( PIP_INTERFACE IF, PFIB_ENTRY Target );
+
+UINT ProcessAutoMetric(PIP_INTERFACE Interface);
 
 /* EOF */

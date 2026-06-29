@@ -20,8 +20,6 @@
 
 #include <stdarg.h>
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
 #include "wincrypt.h"
@@ -30,141 +28,156 @@
 
 #include "wine/test.h"
 
-struct ustring {
-    DWORD Length;
-    DWORD MaximumLength;
-    unsigned char *Buffer;
-};
-
 static const char szRsaBaseProv[] = MS_DEF_PROV_A;
 static const char szNonExistentProv[] = "Wine Nonexistent Cryptographic Provider v11.2";
 static const char szKeySet[] = "wine_test_keyset";
 static const char szBadKeySet[] = "wine_test_bad_keyset";
 #define NON_DEF_PROV_TYPE 999
 
-static BOOL (WINAPI *pCryptAcquireContextA)(HCRYPTPROV*,LPCSTR,LPCSTR,DWORD,DWORD);
 static BOOL (WINAPI *pCryptEnumProviderTypesA)(DWORD, DWORD*, DWORD, DWORD*, LPSTR, DWORD*);
 static BOOL (WINAPI *pCryptEnumProvidersA)(DWORD, DWORD*, DWORD, DWORD*, LPSTR, DWORD*);
 static BOOL (WINAPI *pCryptGetDefaultProviderA)(DWORD, DWORD*, DWORD, LPSTR, DWORD*);
-static BOOL (WINAPI *pCryptReleaseContext)(HCRYPTPROV, DWORD);
 static BOOL (WINAPI *pCryptSetProviderExA)(LPCSTR, DWORD, DWORD*, DWORD);
-static BOOL (WINAPI *pCryptCreateHash)(HCRYPTPROV, ALG_ID, HCRYPTKEY, DWORD, HCRYPTHASH*);
-static BOOL (WINAPI *pCryptDestroyHash)(HCRYPTHASH);
 static BOOL (WINAPI *pCryptGenRandom)(HCRYPTPROV, DWORD, BYTE*);
-static BOOL (WINAPI *pCryptContextAddRef)(HCRYPTPROV, DWORD*, DWORD dwFlags);
-static BOOL (WINAPI *pCryptGenKey)(HCRYPTPROV, ALG_ID, DWORD, HCRYPTKEY*);
-static BOOL (WINAPI *pCryptDestroyKey)(HCRYPTKEY);
-static BOOL (WINAPI *pCryptDecrypt)(HCRYPTKEY, HCRYPTHASH, BOOL, DWORD, BYTE*, DWORD*);
-static BOOL (WINAPI *pCryptDeriveKey)(HCRYPTPROV, ALG_ID, HCRYPTHASH, DWORD, HCRYPTKEY*);
 static BOOL (WINAPI *pCryptDuplicateHash)(HCRYPTHASH, DWORD*, DWORD, HCRYPTHASH*);
-static BOOL (WINAPI *pCryptDuplicateKey)(HCRYPTKEY, DWORD*, DWORD, HCRYPTKEY*);
-static BOOL (WINAPI *pCryptEncrypt)(HCRYPTKEY, HCRYPTHASH, BOOL, DWORD, BYTE*, DWORD*, DWORD);
-static BOOL (WINAPI *pCryptExportKey)(HCRYPTKEY, HCRYPTKEY, DWORD, DWORD, BYTE*, DWORD*);
-static BOOL (WINAPI *pCryptGetHashParam)(HCRYPTHASH, DWORD, BYTE*, DWORD*, DWORD);
-static BOOL (WINAPI *pCryptGetKeyParam)(HCRYPTKEY, DWORD, BYTE*, DWORD*, DWORD);
-static BOOL (WINAPI *pCryptGetProvParam)(HCRYPTPROV, DWORD, BYTE*, DWORD*, DWORD);
-static BOOL (WINAPI *pCryptGetUserKey)(HCRYPTPROV, DWORD, HCRYPTKEY*);
-static BOOL (WINAPI *pCryptHashData)(HCRYPTHASH, BYTE*, DWORD, DWORD);
 static BOOL (WINAPI *pCryptHashSessionKey)(HCRYPTHASH, HCRYPTKEY, DWORD);
-static BOOL (WINAPI *pCryptImportKey)(HCRYPTPROV, BYTE*, DWORD, HCRYPTKEY, DWORD, HCRYPTKEY*);
 static BOOL (WINAPI *pCryptSignHashW)(HCRYPTHASH, DWORD, LPCWSTR, DWORD, BYTE*, DWORD*);
-static BOOL (WINAPI *pCryptSetHashParam)(HCRYPTKEY, DWORD, BYTE*, DWORD);
-static BOOL (WINAPI *pCryptSetKeyParam)(HCRYPTKEY, DWORD, BYTE*, DWORD);
-static BOOL (WINAPI *pCryptSetProvParam)(HCRYPTPROV, DWORD, BYTE*, DWORD);
 static BOOL (WINAPI *pCryptVerifySignatureW)(HCRYPTHASH, BYTE*, DWORD, HCRYPTKEY, LPCWSTR, DWORD);
-static NTSTATUS (WINAPI *pSystemFunction004)(struct ustring*,struct ustring*, struct ustring*);
-static NTSTATUS (WINAPI *pSystemFunction005)(struct ustring*,struct ustring*, struct ustring*);
 static BOOLEAN (WINAPI *pSystemFunction036)(PVOID, ULONG);
 
 static void init_function_pointers(void)
 {
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
 
-    pCryptAcquireContextA = (void*)GetProcAddress(hadvapi32, "CryptAcquireContextA");
     pCryptEnumProviderTypesA = (void*)GetProcAddress(hadvapi32, "CryptEnumProviderTypesA");
     pCryptEnumProvidersA = (void*)GetProcAddress(hadvapi32, "CryptEnumProvidersA");
     pCryptGetDefaultProviderA = (void*)GetProcAddress(hadvapi32, "CryptGetDefaultProviderA");
-    pCryptReleaseContext = (void*)GetProcAddress(hadvapi32, "CryptReleaseContext");
     pCryptSetProviderExA = (void*)GetProcAddress(hadvapi32, "CryptSetProviderExA");
-    pCryptCreateHash = (void*)GetProcAddress(hadvapi32, "CryptCreateHash");
-    pCryptDestroyHash = (void*)GetProcAddress(hadvapi32, "CryptDestroyHash");
     pCryptGenRandom = (void*)GetProcAddress(hadvapi32, "CryptGenRandom");
-    pCryptContextAddRef = (void*)GetProcAddress(hadvapi32, "CryptContextAddRef");
-    pCryptGenKey = (void*)GetProcAddress(hadvapi32, "CryptGenKey");
-    pCryptDestroyKey = (void*)GetProcAddress(hadvapi32, "CryptDestroyKey");
-    pCryptDecrypt = (void*)GetProcAddress(hadvapi32, "CryptDecrypt");
-    pCryptDeriveKey = (void*)GetProcAddress(hadvapi32, "CryptDeriveKey");
     pCryptDuplicateHash = (void*)GetProcAddress(hadvapi32, "CryptDuplicateHash");
-    pCryptDuplicateKey = (void*)GetProcAddress(hadvapi32, "CryptDuplicateKey");
-    pCryptEncrypt = (void*)GetProcAddress(hadvapi32, "CryptEncrypt");
-    pCryptExportKey = (void*)GetProcAddress(hadvapi32, "CryptExportKey");
-    pCryptGetHashParam = (void*)GetProcAddress(hadvapi32, "CryptGetHashParam");
-    pCryptGetKeyParam = (void*)GetProcAddress(hadvapi32, "CryptGetKeyParam");
-    pCryptGetProvParam = (void*)GetProcAddress(hadvapi32, "CryptGetProvParam");
-    pCryptGetUserKey = (void*)GetProcAddress(hadvapi32, "CryptGetUserKey");
-    pCryptHashData = (void*)GetProcAddress(hadvapi32, "CryptHashData");
     pCryptHashSessionKey = (void*)GetProcAddress(hadvapi32, "CryptHashSessionKey");
-    pCryptImportKey = (void*)GetProcAddress(hadvapi32, "CryptImportKey");
     pCryptSignHashW = (void*)GetProcAddress(hadvapi32, "CryptSignHashW");
-    pCryptSetHashParam = (void*)GetProcAddress(hadvapi32, "CryptSetHashParam");
-    pCryptSetKeyParam = (void*)GetProcAddress(hadvapi32, "CryptSetKeyParam");
-    pCryptSetProvParam = (void*)GetProcAddress(hadvapi32, "CryptSetProvParam");
     pCryptVerifySignatureW = (void*)GetProcAddress(hadvapi32, "CryptVerifySignatureW");
-    pSystemFunction004 = (void*)GetProcAddress(hadvapi32, "SystemFunction004");
-    pSystemFunction005 = (void*)GetProcAddress(hadvapi32, "SystemFunction005");
     pSystemFunction036 = (void*)GetProcAddress(hadvapi32, "SystemFunction036");
 }
 
 static void init_environment(void)
 {
-	HCRYPTPROV hProv;
-	
-	/* Ensure that container "wine_test_keyset" does exist */
-	if (!pCryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, PROV_RSA_FULL, 0))
-	{
-		pCryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, PROV_RSA_FULL, CRYPT_NEWKEYSET);
-	}
-	pCryptReleaseContext(hProv, 0);
+    HCRYPTPROV hProv;
+    BOOL ret;
 
-	/* Ensure that container "wine_test_keyset" does exist in default PROV_RSA_FULL type provider */
-	if (!pCryptAcquireContextA(&hProv, szKeySet, NULL, PROV_RSA_FULL, 0))
-	{
-		pCryptAcquireContextA(&hProv, szKeySet, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET);
-	}
-	pCryptReleaseContext(hProv, 0);
+    /* Ensure that container "wine_test_keyset" does exist */
+    if (!CryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, PROV_RSA_FULL, 0))
+    {
+        CryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, PROV_RSA_FULL, CRYPT_NEWKEYSET);
+    }
+    ret = CryptReleaseContext(hProv, 0);
+    ok(ret, "got %lu\n", GetLastError());
 
-	/* Ensure that container "wine_test_bad_keyset" does not exist. */
-	if (pCryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv, PROV_RSA_FULL, 0))
-	{
-		pCryptReleaseContext(hProv, 0);
-		pCryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
-	}
+    /* Ensure that container "wine_test_keyset" does exist in default PROV_RSA_FULL type provider */
+    if (!CryptAcquireContextA(&hProv, szKeySet, NULL, PROV_RSA_FULL, 0))
+    {
+        CryptAcquireContextA(&hProv, szKeySet, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET);
+    }
+    ret = CryptReleaseContext(hProv, 0);
+    ok(ret, "got %lu\n", GetLastError());
+
+    /* Ensure that container "wine_test_bad_keyset" does not exist. */
+    if (CryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv, PROV_RSA_FULL, 0))
+    {
+        ret = CryptReleaseContext(hProv, 0);
+        ok(ret, "got %lu\n", GetLastError());
+
+        CryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
+    }
 }
 
 static void clean_up_environment(void)
 {
-	HCRYPTPROV hProv;
+    HCRYPTPROV hProv;
+    BOOL ret;
 
-	/* Remove container "wine_test_keyset" */
-	if (pCryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, PROV_RSA_FULL, 0))
-	{
-		pCryptReleaseContext(hProv, 0);
-		pCryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
-	}
+    /* Remove container "wine_test_keyset" */
+    if (CryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, PROV_RSA_FULL, 0))
+    {
+        ret = CryptReleaseContext(hProv, 0);
+        ok(ret, "got %lu\n", GetLastError());
 
-	/* Remove container "wine_test_keyset" from default PROV_RSA_FULL type provider */
-	if (pCryptAcquireContextA(&hProv, szKeySet, NULL, PROV_RSA_FULL, 0))
-	{
-		pCryptReleaseContext(hProv, 0);
-		pCryptAcquireContextA(&hProv, szKeySet, NULL, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
-	}
+        CryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
+    }
 
-        /* Remove container "wine_test_bad_keyset" */
-        if (pCryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv, PROV_RSA_FULL, 0))
-        {
-                pCryptReleaseContext(hProv, 0);
-                pCryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
-        }
+    /* Remove container "wine_test_keyset" from default PROV_RSA_FULL type provider */
+    if (CryptAcquireContextA(&hProv, szKeySet, NULL, PROV_RSA_FULL, 0))
+    {
+        ret = CryptReleaseContext(hProv, 0);
+        ok(ret, "got %lu\n", GetLastError());
+
+        CryptAcquireContextA(&hProv, szKeySet, NULL, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
+    }
+
+    /* Remove container "wine_test_bad_keyset" */
+    if (CryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv, PROV_RSA_FULL, 0))
+    {
+        ret = CryptReleaseContext(hProv, 0);
+        ok(ret, "got %lu\n", GetLastError());
+
+        CryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
+    }
+}
+
+static void test_CryptReleaseContext(void)
+{
+    BOOL ret;
+    HCRYPTPROV prov;
+
+    /* TODO: Add cases for ERROR_BUSY, ERROR_INVALID_HANDLE and NTE_BAD_UID */
+
+    /* NULL provider */
+
+    SetLastError(0xdeadbeef);
+    ret = CryptReleaseContext(0, 0);
+    ok(!ret, "CryptReleaseContext succeeded unexpectedly\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "got %lu\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = CryptReleaseContext(0, ~0);
+    ok(!ret, "CryptReleaseContext succeeded unexpectedly\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "got %lu\n", GetLastError());
+
+    /* Additional refcount */
+
+    ret = CryptAcquireContextA(&prov, szKeySet, szRsaBaseProv, PROV_RSA_FULL, 0);
+    ok(ret, "got %lu\n", GetLastError());
+
+    ret = CryptContextAddRef(prov, NULL, 0);
+    ok(ret, "got %lu\n", GetLastError());
+
+    ret = CryptContextAddRef(0, NULL, 0);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %lu\n", GetLastError());
+    ret = CryptContextAddRef(0xdeadbeef, NULL, 0);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %lu\n", GetLastError());
+
+    ret = CryptReleaseContext(prov, 0);
+    ok(ret, "got %lu\n", GetLastError());
+
+    /* Nonzero flags, which allow release nonetheless */
+
+    SetLastError(0xdeadbeef);
+    ret = CryptReleaseContext(prov, ~0);
+    ok(!ret, "CryptReleaseContext succeeded unexpectedly\n");
+    ok(GetLastError() == NTE_BAD_FLAGS, "got %lu\n", GetLastError());
+
+    /* Obsolete provider */
+
+    SetLastError(0xdeadbeef);
+    ret = CryptReleaseContext(prov, 0);
+    ok(!ret, "CryptReleaseContext succeeded unexpectedly\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "got %lu\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = CryptReleaseContext(prov, ~0);
+    ok(!ret, "CryptReleaseContext succeeded unexpectedly\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "got %lu\n", GetLastError());
 }
 
 static void test_acquire_context(void)
@@ -177,55 +190,64 @@ static void test_acquire_context(void)
 	 * The order of the error tests seems to match Windows XP's rsaenh.dll CSP,
 	 * but since this is likely to change between CSP versions, we don't check
 	 * this. Please don't change the order of tests. */
-	result = pCryptAcquireContextA(&hProv, NULL, NULL, 0, 0);
-	ok(!result && GetLastError()==NTE_BAD_PROV_TYPE, "%d\n", GetLastError());
+	result = CryptAcquireContextA(&hProv, NULL, NULL, 0, 0);
+	ok(!result && GetLastError()==NTE_BAD_PROV_TYPE, "%ld\n", GetLastError());
 	
-	result = pCryptAcquireContextA(&hProv, NULL, NULL, 1000, 0);
-	ok(!result && GetLastError()==NTE_BAD_PROV_TYPE, "%d\n", GetLastError());
+	result = CryptAcquireContextA(&hProv, NULL, NULL, 1000, 0);
+	ok(!result && GetLastError()==NTE_BAD_PROV_TYPE, "%ld\n", GetLastError());
 
-	result = pCryptAcquireContextA(&hProv, NULL, NULL, NON_DEF_PROV_TYPE, 0);
-	ok(!result && GetLastError()==NTE_PROV_TYPE_NOT_DEF, "%d\n", GetLastError());
+	result = CryptAcquireContextA(&hProv, NULL, NULL, NON_DEF_PROV_TYPE, 0);
+	ok(!result && GetLastError()==NTE_PROV_TYPE_NOT_DEF, "%ld\n", GetLastError());
 	
-	result = pCryptAcquireContextA(&hProv, szKeySet, szNonExistentProv, PROV_RSA_FULL, 0);
-	ok(!result && GetLastError()==NTE_KEYSET_NOT_DEF, "%d\n", GetLastError());
+	result = CryptAcquireContextA(&hProv, szKeySet, szNonExistentProv, PROV_RSA_FULL, 0);
+	ok(!result && GetLastError()==NTE_KEYSET_NOT_DEF, "%ld\n", GetLastError());
 
-	result = pCryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, NON_DEF_PROV_TYPE, 0);
-	ok(!result && GetLastError()==NTE_PROV_TYPE_NO_MATCH, "%d\n", GetLastError());
+	result = CryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, NON_DEF_PROV_TYPE, 0);
+	ok(!result && GetLastError()==NTE_PROV_TYPE_NO_MATCH, "%ld\n", GetLastError());
 	
+
+if (0)
+{
 	/* This test fails under Win2k SP4:
-	   result = TRUE, GetLastError() == ERROR_INVALID_PARAMETER
+	   result = TRUE, GetLastError() == ERROR_INVALID_PARAMETER */
 	SetLastError(0xdeadbeef);
-	result = pCryptAcquireContextA(NULL, szKeySet, szRsaBaseProv, PROV_RSA_FULL, 0);
-	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "%d/%d\n", result, GetLastError());
-	*/
+	result = CryptAcquireContextA(NULL, szKeySet, szRsaBaseProv, PROV_RSA_FULL, 0);
+	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "%d/%ld\n", result, GetLastError());
+}
 	
 	/* Last not least, try to really acquire a context. */
 	hProv = 0;
 	SetLastError(0xdeadbeef);
-	result = pCryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, PROV_RSA_FULL, 0);
+	result = CryptAcquireContextA(&hProv, szKeySet, szRsaBaseProv, PROV_RSA_FULL, 0);
 	GLE = GetLastError();
 	ok(result && (GLE == ERROR_ENVVAR_NOT_FOUND   || 
 		      GLE == ERROR_SUCCESS            || 
 		      GLE == ERROR_RING2_STACK_IN_USE || 
 		      GLE == NTE_FAIL                 ||
-		      GLE == ERROR_NOT_LOGGED_ON), "%d/%d\n", result, GLE);
+		      GLE == ERROR_NOT_LOGGED_ON), "%d/%ld\n", result, GLE);
 
-	if (hProv) 
-		pCryptReleaseContext(hProv, 0);
+	if (hProv)
+	{
+	    result = CryptReleaseContext(hProv, 0);
+	    ok(result, "got %lu\n", GetLastError());
+	}
 
 	/* Try again, witch an empty ("\0") szProvider parameter */
 	hProv = 0;
 	SetLastError(0xdeadbeef);
-	result = pCryptAcquireContextA(&hProv, szKeySet, "", PROV_RSA_FULL, 0);
+	result = CryptAcquireContextA(&hProv, szKeySet, "", PROV_RSA_FULL, 0);
 	GLE = GetLastError();
 	ok(result && (GLE == ERROR_ENVVAR_NOT_FOUND   || 
 		      GLE == ERROR_SUCCESS            || 
 		      GLE == ERROR_RING2_STACK_IN_USE || 
 		      GLE == NTE_FAIL                 ||
-		      GLE == ERROR_NOT_LOGGED_ON), "%d/%d\n", result, GetLastError());
+		      GLE == ERROR_NOT_LOGGED_ON), "%d/%ld\n", result, GetLastError());
 
-	if (hProv) 
-		pCryptReleaseContext(hProv, 0);
+	if (hProv)
+	{
+	    result = CryptReleaseContext(hProv, 0);
+	    ok(result, "got %lu\n", GetLastError());
+	}
 }
 
 static void test_incorrect_api_usage(void)
@@ -247,146 +269,219 @@ static void test_incorrect_api_usage(void)
      * robust here and returns an ERROR_INVALID_PARAMETER code.
      */
     
-    result = pCryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv, 
+    result = CryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv,
                                    PROV_RSA_FULL, CRYPT_NEWKEYSET);
-    ok (result, "%08x\n", GetLastError());
+    ok (result, "%08lx\n", GetLastError());
     if (!result) return;
 
-    result = pCryptCreateHash(hProv, CALG_SHA, 0, 0, &hHash);
-    ok (result, "%d\n", GetLastError());
-    if (!result) return;
-    pCryptDestroyHash(hHash);
+    /* Looks like native handles are just pointers. */
+    ok(!!*(void **)hProv, "Got zero *(void **)hProv.\n");
 
-    result = pCryptCreateHash(0, CALG_SHA, 0, 0, &hHash);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
-
-    result = pCryptGenKey(0, CALG_RC4, 0, &hKey);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
-
-    result = pCryptGenKey(hProv, CALG_RC4, 0, &hKey);
-    ok (result, "%d\n", GetLastError());
+    result = CryptCreateHash(hProv, CALG_SHA, 0, 0, &hHash);
+    ok (result, "%ld\n", GetLastError());
     if (!result) return;
 
-    result = pCryptDestroyKey(hKey);
-    ok (result, "%d\n", GetLastError());
+    result = CryptDeriveKey(0, CALG_RC4, hHash, 0, &hKey2);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
-    result = pCryptGenKey(hProv, CALG_RC4, 0, &hKey2);
-    ok (result, "%d\n", GetLastError());
+    result = CryptDeriveKey(hProv, CALG_RC4, 0, 0, &hKey2);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptHashData(0, &temp, 1, 0);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptGenKey(hProv, CALG_RC4, 0, &hKey);
+    ok (result, "%ld\n", GetLastError());
     if (!result) return;
 
-    result = pCryptDestroyKey(hKey2);
-    ok (result, "%d\n", GetLastError());
+    result = pCryptHashSessionKey(hHash, 0, 0);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = pCryptHashSessionKey(0, hKey, 0);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptDestroyHash(hHash);
+    ok (result, "%08lx\n", GetLastError());
+
+    result = CryptDestroyHash(0);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptCreateHash(0xdeadbeef, CALG_SHA, 0, 0, &hHash);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptCreateHash(0, CALG_SHA, 0, 0, &hHash);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptGenKey(0, CALG_RC4, 0, &hKey);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    dwLen = 0;
+    SetLastError(0xdeadbeef);
+    result = CryptDecrypt(hKey, 0, FALSE, 0, &temp, &dwLen);
+    ok (result, "%lx\n", GetLastError());
+    dwLen = 0;
+    SetLastError(0xdeadbeef);
+    result = CryptDecrypt(hKey, 0, TRUE, 0, &temp, &dwLen);
+    ok (!result && GetLastError() == NTE_BAD_LEN, "%lx\n", GetLastError());
+    dwLen = 1;
+    result = CryptDecrypt(hKey, 0, TRUE, 0, &temp, &dwLen);
+    ok (result, "%ld\n", GetLastError());
+    result = CryptDecrypt(hKey, 0xdeadbeef, TRUE, 0, &temp, &dwLen);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+    result = CryptDecrypt(0, 0, TRUE, 0, &temp, &dwLen);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+    result = CryptDecrypt(0xdeadbeef, 0, TRUE, 0, &temp, &dwLen);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptEncrypt(hKey, 0, TRUE, 0, &temp, &dwLen, sizeof(temp));
+    ok (result, "%ld\n", GetLastError());
+    result = CryptEncrypt(hKey, 0xdeadbeef, TRUE, 0, &temp, &dwLen, sizeof(temp));
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+    result = CryptEncrypt(0, 0, TRUE, 0, &temp, &dwLen, sizeof(temp));
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+    result = CryptEncrypt(0xdeadbeef, 0, TRUE, 0, &temp, &dwLen, sizeof(temp));
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    dwLen = 1;
+    result = CryptExportKey(hKey, 0xdeadbeef, 0, 0, &temp, &dwLen);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptDestroyKey(hKey);
+    ok (result, "%ld\n", GetLastError());
+
+    result = CryptGenKey(hProv, CALG_RC4, 0, &hKey2);
+    ok (result, "%ld\n", GetLastError());
+    if (!result) return;
+
+    result = CryptDestroyKey(hKey2);
+    ok (result, "%ld\n", GetLastError());
+
+    result = CryptDestroyKey(0);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
     dwTemp = CRYPT_MODE_ECB;    
-    result = pCryptSetKeyParam(hKey2, KP_MODE, (BYTE*)&dwTemp, sizeof(DWORD));
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
-    
-    result = pCryptAcquireContextA(&hProv2, szBadKeySet, NULL, PROV_RSA_FULL, 
+    result = CryptSetKeyParam(hKey2, KP_MODE, (BYTE*)&dwTemp, sizeof(DWORD));
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    hProv2 = 0xdeadbeef;
+    result = CryptAcquireContextA(&hProv2, szBadKeySet, NULL, PROV_RSA_FULL,
                                    CRYPT_DELETEKEYSET);
-    ok (result, "%d\n", GetLastError());
-    if (!result) return;
-    
-    result = pCryptReleaseContext(hProv, 0);
-    ok (result, "%d\n", GetLastError());
+    ok (result, "%ld\n", GetLastError());
+    ok (hProv2 == 0, "%Id\n", hProv2);
     if (!result) return;
 
-    result = pCryptReleaseContext(hProv, 0);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptReleaseContext(hProv, 0);
+    ok(result, "got %lu\n", GetLastError());
+    if (!result) return;
+
+    result = pCryptGenRandom(0, 1, &temp);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
     result = pCryptGenRandom(hProv, 1, &temp);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
-#ifdef CRASHES_ON_NT40
-    result = pCryptContextAddRef(hProv, NULL, 0);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptContextAddRef(hProv, NULL, 0);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptCreateHash(hProv, CALG_SHA, 0, 0, &hHash2);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    dwLen = 1;
+    result = CryptDecrypt(hKey, 0, TRUE, 0, &temp, &dwLen);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    dwLen = 1;
+    result = CryptEncrypt(hKey, 0, TRUE, 0, &temp, &dwLen, 1);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptDeriveKey(hProv, CALG_RC4, hHash, 0, &hKey2);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+#if defined(__REACTOS__) && defined(_M_AMD64)
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: The following tests normally completes on ReactOS x64, but not after being fuzzed from other tests in our test suite.\n");
+        return;
+    }
 #endif
-
-    result = pCryptCreateHash(hProv, CALG_SHA, 0, 0, &hHash2);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
-
-    dwLen = 1;
-    result = pCryptDecrypt(hKey, 0, TRUE, 0, &temp, &dwLen);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
-
-    dwLen = 1;
-    result = pCryptEncrypt(hKey, 0, TRUE, 0, &temp, &dwLen, 1);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
-
-    result = pCryptDeriveKey(hProv, CALG_RC4, hHash, 0, &hKey2);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
-
-#ifdef CRASHES_ON_NT40
     result = pCryptDuplicateHash(hHash, NULL, 0, &hHash2);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
-    result = pCryptDuplicateKey(hKey, NULL, 0, &hKey2);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
-#endif
-
-    dwLen = 1;
-    result = pCryptExportKey(hKey, 0, 0, 0, &temp, &dwLen);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
-
-    result = pCryptGenKey(hProv, CALG_RC4, 0, &hKey2);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptDuplicateKey(hKey, NULL, 0, &hKey2);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
     dwLen = 1;
-    result = pCryptGetHashParam(hHash, 0, &temp, &dwLen, 0);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptExportKey(hKey, 0, 0, 0, &temp, &dwLen);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptGenKey(hProv, CALG_RC4, 0, &hKey2);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
     dwLen = 1;
-    result = pCryptGetKeyParam(hKey, 0, &temp, &dwLen, 0);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptGetHashParam(hHash, 0, &temp, &dwLen, 0);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
     dwLen = 1;
-    result = pCryptGetProvParam(hProv, 0, &temp, &dwLen, 0);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
-    
-    result = pCryptGetUserKey(hProv, 0, &hKey2);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptGetKeyParam(hKey, 0, &temp, &dwLen, 0);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
-    result = pCryptHashData(hHash, &temp, 1, 0);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    dwLen = 1;
+    result = CryptGetProvParam(hProv, 0, &temp, &dwLen, 0);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptGetUserKey(0, 0, &hKey2);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptGetUserKey(hProv, 0, &hKey2);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptHashData(hHash, &temp, 1, 0);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
     result = pCryptHashSessionKey(hHash, hKey, 0);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
-    result = pCryptImportKey(hProv, &temp, 1, 0, 0, &hKey2);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptImportKey(hProv, &temp, 1, 0, 0, &hKey2);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
     if (pCryptSignHashW)
     {
         dwLen = 1;
         result = pCryptSignHashW(hHash, 0, NULL, 0, &temp, &dwLen);
         ok (!result && (GetLastError() == ERROR_INVALID_PARAMETER ||
-            GetLastError() == ERROR_CALL_NOT_IMPLEMENTED), "%d\n", GetLastError());
+            GetLastError() == ERROR_CALL_NOT_IMPLEMENTED), "%ld\n", GetLastError());
+        result = pCryptSignHashW(hHash, 0, NULL, 0, &temp, &dwLen);
+        ok (!result && (GetLastError() == ERROR_INVALID_PARAMETER ||
+            GetLastError() == ERROR_CALL_NOT_IMPLEMENTED), "%ld\n", GetLastError());
     }
     else
         win_skip("CryptSignHashW is not available\n");
 
-    result = pCryptSetKeyParam(hKey, 0, &temp, 1);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptSetKeyParam(hKey, 0, &temp, 1);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
-    result = pCryptSetHashParam(hHash, 0, &temp, 1);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptSetHashParam(hHash, 0, &temp, 1);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
-    result = pCryptSetProvParam(hProv, 0, &temp, 1);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptSetProvParam(0, 0, &temp, 1);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
+
+    result = CryptSetProvParam(hProv, 0, &temp, 1);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 
     if (pCryptVerifySignatureW)
     {
         result = pCryptVerifySignatureW(hHash, &temp, 1, hKey, NULL, 0);
         ok (!result && (GetLastError() == ERROR_INVALID_PARAMETER ||
-            GetLastError() == ERROR_CALL_NOT_IMPLEMENTED), "%d\n", GetLastError());
+            GetLastError() == ERROR_CALL_NOT_IMPLEMENTED), "%ld\n", GetLastError());
     }
     else
         win_skip("CryptVerifySignatureW is not available\n");
 
-    result = pCryptDestroyHash(hHash);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptDestroyHash(hHash);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
     
-    result = pCryptDestroyKey(hKey);
-    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+    result = CryptDestroyKey(hKey);
+    ok (!result && GetLastError() == ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 }
 
 static const BYTE privKey[] = {
@@ -437,49 +532,51 @@ static void test_verify_sig(void)
 		return;
 	}
 	ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-	 "Expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
-	ret = pCryptAcquireContextA(&prov, szKeySet, NULL, PROV_RSA_FULL,
+	 "Expected ERROR_INVALID_PARAMETER, got %08lx\n", GetLastError());
+	ret = CryptAcquireContextA(&prov, szKeySet, NULL, PROV_RSA_FULL,
 	 CRYPT_NEWKEYSET);
 	if (!ret && GetLastError() == NTE_EXISTS)
-		ret = pCryptAcquireContextA(&prov, szKeySet, NULL, PROV_RSA_FULL, 0);
-	ok(ret, "CryptAcquireContextA failed: %08x\n", GetLastError());
-	ret = pCryptImportKey(prov, (LPBYTE)privKey, sizeof(privKey), 0, 0, &key);
-	ok(ret, "CryptImportKey failed: %08x\n", GetLastError());
-	ret = pCryptCreateHash(prov, CALG_MD5, 0, 0, &hash);
-	ok(ret, "CryptCreateHash failed: %08x\n", GetLastError());
+		ret = CryptAcquireContextA(&prov, szKeySet, NULL, PROV_RSA_FULL, 0);
+	ok(ret, "CryptAcquireContextA failed: %08lx\n", GetLastError());
+	ret = CryptImportKey(prov, (LPBYTE)privKey, sizeof(privKey), 0, 0, &key);
+	ok(ret, "CryptImportKey failed: %08lx\n", GetLastError());
+	ret = CryptCreateHash(prov, CALG_MD5, 0, 0, &hash);
+	ok(ret, "CryptCreateHash failed: %08lx\n", GetLastError());
 	SetLastError(0xdeadbeef);
 	ret = pCryptVerifySignatureW(hash, NULL, 0, 0, NULL, 0);
 	ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-	 "Expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
+	 "Expected ERROR_INVALID_PARAMETER, got %08lx\n", GetLastError());
 	SetLastError(0xdeadbeef);
 	ret = pCryptVerifySignatureW(0, NULL, 0, key, NULL, 0);
 	ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-	 "Expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
+	 "Expected ERROR_INVALID_PARAMETER, got %08lx\n", GetLastError());
 	SetLastError(0xdeadbeef);
 	ret = pCryptVerifySignatureW(hash, NULL, 0, key, NULL, 0);
 	ok(!ret && (GetLastError() == NTE_BAD_SIGNATURE ||
 	 GetLastError() == ERROR_INVALID_PARAMETER),
-	 "Expected NTE_BAD_SIGNATURE or ERROR_INVALID_PARAMETER, got %08x\n",
+	 "Expected NTE_BAD_SIGNATURE or ERROR_INVALID_PARAMETER, got %08lx\n",
 	 GetLastError());
 	SetLastError(0xdeadbeef);
 	ret = pCryptVerifySignatureW(hash, NULL, sizeof(bogus), key, NULL, 0);
 	ok(!ret && (GetLastError() == NTE_BAD_SIGNATURE ||
 	 GetLastError() == ERROR_INVALID_PARAMETER),
-	 "Expected NTE_BAD_SIGNATURE or ERROR_INVALID_PARAMETER, got %08x\n",
+	 "Expected NTE_BAD_SIGNATURE or ERROR_INVALID_PARAMETER, got %08lx\n",
 	 GetLastError());
 	SetLastError(0xdeadbeef);
 	ret = pCryptVerifySignatureW(hash, bogus, 0, key, NULL, 0);
 	ok(!ret && GetLastError() == NTE_BAD_SIGNATURE,
-	 "Expected NTE_BAD_SIGNATURE, got %08x\n", GetLastError());
+	 "Expected NTE_BAD_SIGNATURE, got %08lx\n", GetLastError());
 	SetLastError(0xdeadbeef);
 	ret = pCryptVerifySignatureW(hash, bogus, sizeof(bogus), key, NULL, 0);
 	ok(!ret &&
          (GetLastError() == NTE_BAD_SIGNATURE ||
          broken(GetLastError() == NTE_BAD_HASH_STATE /* older NT4 */)),
-	 "Expected NTE_BAD_SIGNATURE, got %08x\n", GetLastError());
-	pCryptDestroyKey(key);
-	pCryptDestroyHash(hash);
-	pCryptReleaseContext(prov, 0);
+	 "Expected NTE_BAD_SIGNATURE, got %08lx\n", GetLastError());
+	CryptDestroyKey(key);
+	CryptDestroyHash(hash);
+
+	ret = CryptReleaseContext(prov, 0);
+	ok(ret, "got %lu\n", GetLastError());
 }
 
 static BOOL FindProvRegVals(DWORD dwIndex, DWORD *pdwProvType, LPSTR *pszProvName, 
@@ -543,11 +640,11 @@ static void test_enum_providers(void)
 	
 	/* check pdwReserved flag for NULL */
 	result = pCryptEnumProvidersA(dwIndex, &notNull, 0, &type, NULL, &providerLen);
-	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "%d\n", GetLastError());
+	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "%ld\n", GetLastError());
 	
 	/* check dwFlags == 0 */
 	result = pCryptEnumProvidersA(dwIndex, NULL, notZeroFlags, &type, NULL, &providerLen);
-	ok(!result && GetLastError()==NTE_BAD_FLAGS, "%d\n", GetLastError());
+	ok(!result && GetLastError()==NTE_BAD_FLAGS, "%ld\n", GetLastError());
 	
 	/* alloc provider to half the size required
 	 * cbName holds the size required */
@@ -556,7 +653,7 @@ static void test_enum_providers(void)
 		return;
 
 	result = pCryptEnumProvidersA(dwIndex, NULL, 0, &type, provider, &providerLen);
-	ok(!result && GetLastError()==ERROR_MORE_DATA, "expected %i, got %d\n",
+	ok(!result && GetLastError()==ERROR_MORE_DATA, "expected %i, got %ld\n",
 		ERROR_MORE_DATA, GetLastError());
 
 	LocalFree(provider);
@@ -574,7 +671,7 @@ static void test_enum_providers(void)
 	 * ERROR_NO_MORE_ITEMS */
 	for (count = 0; count < provCount + 1; count++)
 		result = pCryptEnumProvidersA(count, NULL, 0, &type, NULL, &providerLen);
-	ok(!result && GetLastError()==ERROR_NO_MORE_ITEMS, "expected %i, got %d\n", 
+	ok(!result && GetLastError()==ERROR_NO_MORE_ITEMS, "expected %i, got %ld\n",
 			ERROR_NO_MORE_ITEMS, GetLastError());
 	
 	/* check expected versus actual values returned */
@@ -585,20 +682,20 @@ static void test_enum_providers(void)
 		
 	providerLen = -1;
 	result = pCryptEnumProvidersA(dwIndex, NULL, 0, &type, provider, &providerLen);
-	ok(result, "expected TRUE, got %d\n", result);
-	ok(type==dwType, "expected %d, got %d\n", dwType, type);
+	ok(result, "expected TRUE, got %ld\n", result);
+	ok(type==dwType, "expected %ld, got %ld\n", dwType, type);
 	if (pszProvName)
 	    ok(!strcmp(pszProvName, provider), "expected %s, got %s\n", pszProvName, provider);
-	ok(cbName==providerLen, "expected %d, got %d\n", cbName, providerLen);
+	ok(cbName==providerLen, "expected %ld, got %ld\n", cbName, providerLen);
 
 	providerLen = -1000;
 	provider[0] = 0;
 	result = pCryptEnumProvidersA(dwIndex, NULL, 0, &type, provider, &providerLen);
-	ok(result, "expected TRUE, got %d\n", result);
-	ok(type==dwType, "expected %d, got %d\n", dwType, type);
+	ok(result, "expected TRUE, got %ld\n", result);
+	ok(type==dwType, "expected %ld, got %ld\n", dwType, type);
 	if (pszProvName)
 	    ok(!strcmp(pszProvName, provider), "expected %s, got %s\n", pszProvName, provider);
-	ok(cbName==providerLen, "expected %d, got %d\n", cbName, providerLen);
+	ok(cbName==providerLen, "expected %ld, got %ld\n", cbName, providerLen);
 
 	LocalFree(pszProvName);
 	LocalFree(provider);
@@ -696,12 +793,12 @@ static void test_enum_provider_types(void)
 
 	/* check pdwReserved for NULL */
 	result = pCryptEnumProviderTypesA(index, &notNull, 0, &provType, typeName, &typeNameSize);
-	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n",
+	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %ld\n",
 		GetLastError());
 
 	/* check dwFlags == zero */
 	result = pCryptEnumProviderTypesA(index, NULL, notZeroFlags, &provType, typeName, &typeNameSize);
-	ok(!result && GetLastError()==NTE_BAD_FLAGS, "expected ERROR_INVALID_PARAMETER, got %d\n",
+	ok(!result && GetLastError()==NTE_BAD_FLAGS, "expected ERROR_INVALID_PARAMETER, got %ld\n",
 		GetLastError());
 
 	/* This test fails under Win2k SP4:
@@ -716,7 +813,7 @@ static void test_enum_provider_types(void)
 
 		SetLastError(0xdeadbeef);
 		result = pCryptEnumProviderTypesA(index, NULL, 0, &provType, typeName, &typeNameSize);
-		ok(!result && GetLastError()==ERROR_MORE_DATA, "expected 0/ERROR_MORE_DATA, got %d/%d\n",
+		ok(!result && GetLastError()==ERROR_MORE_DATA, "expected 0/ERROR_MORE_DATA, got %ld/%ld\n",
 			result, GetLastError());
 
 		LocalFree(typeName);
@@ -729,28 +826,28 @@ static void test_enum_provider_types(void)
 	while(pCryptEnumProviderTypesA(typeCount++, NULL, 0, &provType, NULL, &typeNameSize))
 		;
 	typeCount--;
-	ok(typeCount==dwTypeCount, "expected %d, got %d\n", dwTypeCount, typeCount);
+	ok(typeCount==dwTypeCount, "expected %ld, got %ld\n", dwTypeCount, typeCount);
 
 	/* loop past the actual number of provider types to get the error
 	 * ERROR_NO_MORE_ITEMS */
 	for (typeCount = 0; typeCount < dwTypeCount + 1; typeCount++)
 		result = pCryptEnumProviderTypesA(typeCount, NULL, 0, &provType, NULL, &typeNameSize);
-	ok(!result && GetLastError()==ERROR_NO_MORE_ITEMS, "expected ERROR_NO_MORE_ITEMS, got %d\n",
+	ok(!result && GetLastError()==ERROR_NO_MORE_ITEMS, "expected ERROR_NO_MORE_ITEMS, got %ld\n",
 		GetLastError());
 
 	/* check expected versus actual values returned */
 	result = pCryptEnumProviderTypesA(index, NULL, 0, &provType, NULL, &typeNameSize);
-	ok(result && typeNameSize==cbTypeName, "expected %d, got %d\n", cbTypeName, typeNameSize);
+	ok(result && typeNameSize==cbTypeName, "expected %ld, got %ld\n", cbTypeName, typeNameSize);
 	if (!(typeName = LocalAlloc(LMEM_ZEROINIT, typeNameSize)))
 		goto cleanup;
 
 	typeNameSize = 0xdeadbeef;
 	result = pCryptEnumProviderTypesA(index, NULL, 0, &provType, typeName, &typeNameSize);
-	ok(result, "expected TRUE, got %d\n", result);
-	ok(provType==dwProvType, "expected %d, got %d\n", dwProvType, provType);
+	ok(result, "expected TRUE, got %ld\n", result);
+	ok(provType==dwProvType, "expected %ld, got %ld\n", dwProvType, provType);
 	if (pszTypeName)
 		ok(!strcmp(pszTypeName, typeName), "expected %s, got %s\n", pszTypeName, typeName);
-	ok(typeNameSize==cbTypeName, "expected %d, got %d\n", cbTypeName, typeNameSize);
+	ok(typeNameSize==cbTypeName, "expected %ld, got %ld\n", cbTypeName, typeNameSize);
 
 	LocalFree(typeName);
 cleanup:
@@ -837,13 +934,13 @@ static void test_get_default_provider(void)
 	
 	/* check pdwReserved for NULL */
 	result = pCryptGetDefaultProviderA(provType, &notNull, flags, provName, &provNameSize);
-	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "expected %i, got %d\n",
+	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "expected %i, got %ld\n",
 		ERROR_INVALID_PARAMETER, GetLastError());
 	
 	/* check for invalid flag */
 	flags = 0xdeadbeef;
 	result = pCryptGetDefaultProviderA(provType, NULL, flags, provName, &provNameSize);
-	ok(!result && GetLastError()==NTE_BAD_FLAGS, "expected %d, got %d\n",
+	ok(!result && GetLastError()==NTE_BAD_FLAGS, "expected %ld, got %ld\n",
 		NTE_BAD_FLAGS, GetLastError());
 	flags = CRYPT_MACHINE_DEFAULT;
 	
@@ -852,7 +949,7 @@ static void test_get_default_provider(void)
 	result = pCryptGetDefaultProviderA(provType, NULL, flags, provName, &provNameSize);
 	ok(!result && (GetLastError() == NTE_BAD_PROV_TYPE ||
 	               GetLastError() == ERROR_INVALID_PARAMETER),
-		"expected NTE_BAD_PROV_TYPE or ERROR_INVALID_PARAMETER, got %d/%d\n",
+		"expected NTE_BAD_PROV_TYPE or ERROR_INVALID_PARAMETER, got %ld/%ld\n",
 		result, GetLastError());
 	provType = PROV_RSA_FULL;
 	
@@ -865,14 +962,14 @@ static void test_get_default_provider(void)
 		return;
 	
 	result = pCryptGetDefaultProviderA(provType, NULL, flags, provName, &provNameSize);
-	ok(!result && GetLastError()==ERROR_MORE_DATA, "expected %i, got %d\n",
+	ok(!result && GetLastError()==ERROR_MORE_DATA, "expected %i, got %ld\n",
 		ERROR_MORE_DATA, GetLastError());
 		
 	LocalFree(provName);
 	
 	/* check expected versus actual values returned */
 	result = pCryptGetDefaultProviderA(provType, NULL, flags, NULL, &provNameSize);
-	ok(result && provNameSize==cbProvName, "expected %d, got %d\n", cbProvName, provNameSize);
+	ok(result && provNameSize==cbProvName, "expected %ld, got %ld\n", cbProvName, provNameSize);
 	provNameSize = cbProvName;
 	
 	if (!(provName = LocalAlloc(LMEM_ZEROINIT, provNameSize)))
@@ -880,10 +977,10 @@ static void test_get_default_provider(void)
 	
 	provNameSize = 0xdeadbeef;
 	result = pCryptGetDefaultProviderA(provType, NULL, flags, provName, &provNameSize);
-	ok(result, "expected TRUE, got %d\n", result);
+	ok(result, "expected TRUE, got %ld\n", result);
 	if(pszProvName)
 	    ok(!strcmp(pszProvName, provName), "expected %s, got %s\n", pszProvName, provName);
-	ok(provNameSize==cbProvName, "expected %d, got %d\n", cbProvName, provNameSize);
+	ok(provNameSize==cbProvName, "expected %ld, got %ld\n", cbProvName, provNameSize);
 
 	LocalFree(pszProvName);
 	LocalFree(provName);
@@ -911,11 +1008,11 @@ static void test_set_provider_ex(void)
         if (!(curProvName = LocalAlloc(LMEM_ZEROINIT, curlen)))
             return;
         result = pCryptGetDefaultProviderA(PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT, curProvName, &curlen);
-        ok(result, "%d\n", GetLastError());
+        ok(result, "%ld\n", GetLastError());
 
 	/* check pdwReserved for NULL */
 	result = pCryptSetProviderExA(MS_DEF_PROV_A, PROV_RSA_FULL, &notNull, CRYPT_MACHINE_DEFAULT);
-	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "expected %i, got %d\n",
+	ok(!result && GetLastError()==ERROR_INVALID_PARAMETER, "expected %i, got %ld\n",
 		ERROR_INVALID_PARAMETER, GetLastError());
 
 	/* remove the default provider and then set it to MS_DEF_PROV/PROV_RSA_FULL */
@@ -924,31 +1021,31 @@ static void test_set_provider_ex(void)
 	if (!result)
 	{
                 ok( GetLastError() == ERROR_ACCESS_DENIED || broken(GetLastError() == ERROR_INVALID_PARAMETER),
-                    "wrong error %u\n", GetLastError() );
+                    "wrong error %lu\n", GetLastError() );
 		skip("Not enough rights to remove the default provider\n");
                 LocalFree(curProvName);
 		return;
 	}
 
 	result = pCryptSetProviderExA(MS_DEF_PROV_A, PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT);
-	ok(result, "%d\n", GetLastError());
+	ok(result, "%ld\n", GetLastError());
 	
 	/* call CryptGetDefaultProvider to see if they match */
 	result = pCryptGetDefaultProviderA(PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT, NULL, &cbProvName);
-	ok(result, "%d\n", GetLastError());
+	ok(result, "%ld\n", GetLastError());
 	if (!(pszProvName = LocalAlloc(LMEM_ZEROINIT, cbProvName)))
 		goto reset;
 
 	result = pCryptGetDefaultProviderA(PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT, pszProvName, &cbProvName);
 	ok(result && !strcmp(MS_DEF_PROV_A, pszProvName), "expected %s, got %s\n", MS_DEF_PROV_A, pszProvName);
-	ok(result && cbProvName==(strlen(MS_DEF_PROV_A) + 1), "expected %i, got %d\n", (lstrlenA(MS_DEF_PROV_A) + 1), cbProvName);
+	ok(result && cbProvName==(strlen(MS_DEF_PROV_A) + 1), "expected %i, got %ld\n", (lstrlenA(MS_DEF_PROV_A) + 1), cbProvName);
 
 	LocalFree(pszProvName);
 
 reset:
         /* Set the provider back to its original */
         result = pCryptSetProviderExA(curProvName, PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT);
-        ok(result, "%d\n", GetLastError());
+        ok(result, "%ld\n", GetLastError());
         LocalFree(curProvName);
 }
 
@@ -976,7 +1073,7 @@ static void test_machine_guid(void)
    {
        restoreGuid = TRUE;
        r = RegDeleteValueA(key, "MachineGuid");
-       ok(!r || broken(r == ERROR_ACCESS_DENIED) /*win8*/, "RegDeleteValueA failed: %d\n", r);
+       ok(!r || broken(r == ERROR_ACCESS_DENIED) /*win8*/, "RegDeleteValueA failed: %ld\n", r);
        if (r == ERROR_ACCESS_DENIED)
        {
            skip("broken virtualization on HKLM\\Software\\Microsoft\\Cryptography\n");
@@ -985,13 +1082,14 @@ static void test_machine_guid(void)
        }
    }
    else
-       ok(r == ERROR_FILE_NOT_FOUND, "expected ERROR_FILE_NOT_FOUND, got %d\n",
+       ok(r == ERROR_FILE_NOT_FOUND, "expected ERROR_FILE_NOT_FOUND, got %ld\n",
           r);
    /* Create and release a provider */
-   ret = pCryptAcquireContextA(&hCryptProv, szKeySet, NULL, PROV_RSA_FULL, 0);
+   ret = CryptAcquireContextA(&hCryptProv, szKeySet, NULL, PROV_RSA_FULL, 0);
    ok(ret || broken(!ret && GetLastError() == NTE_KEYSET_ENTRY_BAD /* NT4 */),
-      "CryptAcquireContextA failed: %08x\n", GetLastError());
-   pCryptReleaseContext(hCryptProv, 0);
+      "CryptAcquireContextA failed: %08lx\n", GetLastError());
+   ret = CryptReleaseContext(hCryptProv, 0);
+   ok(ret, "got %lu\n", GetLastError());
 
    if (restoreGuid)
        RegSetValueExA(key, "MachineGuid", 0, REG_SZ, (const BYTE *)originalGuid,
@@ -1019,9 +1117,9 @@ static void test_rc2_keylen(void)
     BOOL ret;
 
     SetLastError(0xdeadbeef);
-    ret = pCryptAcquireContextA(&provider, NULL, NULL,
+    ret = CryptAcquireContextA(&provider, NULL, NULL,
                                 PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    ok(ret, "CryptAcquireContext error %u\n", GetLastError());
+    ok(ret, "CryptAcquireContext error %lu\n", GetLastError());
     if (ret)
     {
         key_blob.header.bType = PLAINTEXTKEYBLOB;
@@ -1033,71 +1131,68 @@ static void test_rc2_keylen(void)
 
         /* Importing a 16-byte key works with the default provider. */
         SetLastError(0xdeadbeef);
-        ret = pCryptImportKey(provider, (BYTE*)&key_blob,
-                          sizeof(BLOBHEADER)+sizeof(DWORD)+key_blob.key_size,
-                          0, CRYPT_IPSEC_HMAC_KEY, &hkey);
+        ret = CryptImportKey(provider, (BYTE *)&key_blob, sizeof(BLOBHEADER) + sizeof(DWORD) + key_blob.key_size,
+                0, CRYPT_IPSEC_HMAC_KEY, &hkey);
         /* CRYPT_IPSEC_HMAC_KEY is not supported on W2K and lower */
         ok(ret ||
            broken(!ret && GetLastError() == NTE_BAD_FLAGS),
-           "CryptImportKey error %08x\n", GetLastError());
-
+           "CryptImportKey error %08lx\n", GetLastError());
         if (ret)
-            pCryptDestroyKey(hkey);
-        pCryptReleaseContext(provider, 0);
+            CryptDestroyKey(hkey);
+
+        ret = CryptReleaseContext(provider, 0);
+        ok(ret, "got %lu\n", GetLastError());
     }
 
     SetLastError(0xdeadbeef);
-    ret = pCryptAcquireContextA(&provider, NULL, MS_DEF_PROV_A,
+    ret = CryptAcquireContextA(&provider, NULL, MS_DEF_PROV_A,
                                 PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    ok(ret, "CryptAcquireContext error %08x\n", GetLastError());
+    ok(ret, "CryptAcquireContext error %08lx\n", GetLastError());
 
     if (ret)
     {
         /* Importing a 16-byte key doesn't work with the base provider.. */
         SetLastError(0xdeadbeef);
-        ret = pCryptImportKey(provider, (BYTE*)&key_blob,
-                              sizeof(BLOBHEADER)+sizeof(DWORD)+key_blob.key_size,
-                              0, 0, &hkey);
+        ret = CryptImportKey(provider, (BYTE *)&key_blob, sizeof(BLOBHEADER) + sizeof(DWORD) + key_blob.key_size,
+                0, 0, &hkey);
         ok(!ret && (GetLastError() == NTE_BAD_DATA ||
                     GetLastError() == NTE_BAD_LEN || /* Win7 */
                     GetLastError() == NTE_BAD_TYPE || /* W2K */
                     GetLastError() == NTE_PERM), /* Win9x, WinMe and NT4 */
-           "unexpected error %08x\n", GetLastError());
+           "unexpected error %08lx\n", GetLastError());
         /* but importing an 56-bit (7-byte) key does.. */
         key_blob.key_size = 7;
         SetLastError(0xdeadbeef);
-        ret = pCryptImportKey(provider, (BYTE*)&key_blob,
-                              sizeof(BLOBHEADER)+sizeof(DWORD)+key_blob.key_size,
-                              0, 0, &hkey);
+        ret = CryptImportKey(provider, (BYTE *)&key_blob, sizeof(BLOBHEADER) + sizeof(DWORD) + key_blob.key_size,
+                0, 0, &hkey);
         ok(ret ||
            broken(!ret && GetLastError() == NTE_BAD_TYPE) || /* W2K */
            broken(!ret && GetLastError() == NTE_PERM), /* Win9x, WinMe and NT4 */
-           "CryptAcquireContext error %08x\n", GetLastError());
+           "CryptAcquireContext error %08lx\n", GetLastError());
         if (ret)
-            pCryptDestroyKey(hkey);
+            CryptDestroyKey(hkey);
         /* as does importing a 16-byte key with the base provider when
          * CRYPT_IPSEC_HMAC_KEY is specified.
          */
         key_blob.key_size = sizeof(key);
         SetLastError(0xdeadbeef);
-        ret = pCryptImportKey(provider, (BYTE*)&key_blob,
-                              sizeof(BLOBHEADER)+sizeof(DWORD)+key_blob.key_size,
-                              0, CRYPT_IPSEC_HMAC_KEY, &hkey);
+        ret = CryptImportKey(provider, (BYTE *)&key_blob, sizeof(BLOBHEADER) + sizeof(DWORD) + key_blob.key_size,
+                0, CRYPT_IPSEC_HMAC_KEY, &hkey);
         /* CRYPT_IPSEC_HMAC_KEY is not supported on W2K and lower */
         ok(ret ||
            broken(!ret && GetLastError() == NTE_BAD_FLAGS),
-           "CryptImportKey error %08x\n", GetLastError());
+           "CryptImportKey error %08lx\n", GetLastError());
         if (ret)
-            pCryptDestroyKey(hkey);
+            CryptDestroyKey(hkey);
 
-        pCryptReleaseContext(provider, 0);
+        ret = CryptReleaseContext(provider, 0);
+        ok(ret, "got %lu\n", GetLastError());
     }
 
     key_blob.key_size = sizeof(key);
     SetLastError(0xdeadbeef);
-    ret = pCryptAcquireContextA(&provider, NULL, NULL,
-                                PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    ok(ret, "CryptAcquireContext error %08x\n", GetLastError());
+    ret = CryptAcquireContextA(&provider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    ok(ret, "CryptAcquireContext error %08lx\n", GetLastError());
 
     if (ret)
     {
@@ -1105,140 +1200,31 @@ static void test_rc2_keylen(void)
          * CRYPT_IPSEC_HMAC_KEY is specified.
          */
         SetLastError(0xdeadbeef);
-        ret = pCryptImportKey(provider, (BYTE*)&key_blob,
-                              sizeof(BLOBHEADER)+sizeof(DWORD)+key_blob.key_size,
-                              0, CRYPT_IPSEC_HMAC_KEY, &hkey);
+        ret = CryptImportKey(provider, (BYTE *)&key_blob, sizeof(BLOBHEADER) + sizeof(DWORD) + key_blob.key_size,
+                0, CRYPT_IPSEC_HMAC_KEY, &hkey);
         ok(ret ||
            broken(!ret && GetLastError() == NTE_BAD_FLAGS),
-           "CryptImportKey error %08x\n", GetLastError());
+           "CryptImportKey error %08lx\n", GetLastError());
         if (ret)
-            pCryptDestroyKey(hkey);
+            CryptDestroyKey(hkey);
 
         /* There is no apparent limit to the size of the input key when
          * CRYPT_IPSEC_HMAC_KEY is specified.
          */
         key_blob.key_size = sizeof(key_blob.key_data);
         SetLastError(0xdeadbeef);
-        ret = pCryptImportKey(provider, (BYTE*)&key_blob,
-                              sizeof(BLOBHEADER)+sizeof(DWORD)+key_blob.key_size,
-                              0, CRYPT_IPSEC_HMAC_KEY, &hkey);
+        ret = CryptImportKey(provider, (BYTE *)&key_blob, sizeof(BLOBHEADER) + sizeof(DWORD) + key_blob.key_size,
+                0, CRYPT_IPSEC_HMAC_KEY, &hkey);
         ok(ret ||
            broken(!ret && GetLastError() == NTE_BAD_FLAGS),
-           "CryptImportKey error %08x\n", GetLastError());
+           "CryptImportKey error %08lx\n", GetLastError());
         if (ret)
-            pCryptDestroyKey(hkey);
+            CryptDestroyKey(hkey);
 
-        pCryptReleaseContext(provider, 0);
+        ret = CryptReleaseContext(provider, 0);
+        ok(ret, "got %lu\n", GetLastError());
     }
 }
-
-static void test_SystemFunction004(void)
-{
-    struct ustring inData;
-    struct ustring keyData;
-    struct ustring outData;
-    char inString[] = "Testdata for encryption";
-    char keyString[] = "EncryptionKey";
-    unsigned char outBuffer[32];
-    NTSTATUS Status;
-#if 0
-    int i;
-#endif
-
-    if (!pSystemFunction004)
-    {
-        win_skip("SystemFunction004 is not available\n");
-        return;
-    }
-
-    inData.Length = strlen(inString) + 1;
-    inData.MaximumLength = inData.Length;
-    inData.Buffer = (unsigned char *)inString;
-
-    keyData.Length = strlen(keyString) + 1;
-    keyData.MaximumLength = keyData.Length;
-    keyData.Buffer = (unsigned char *)keyString;
-
-    outData.Length = 0;
-    outData.MaximumLength = 0;
-    outData.Buffer = NULL;
-
-    Status = pSystemFunction004(&inData, &keyData, &outData);
-    ok(Status == STATUS_BUFFER_TOO_SMALL, "Expected SystemFunction004 to return STATUS_BUFFER_TOO_SMALL, got 0x%08lx\n", Status);
-    ok(outData.Length == 32, "Expected outData.Length to be 32, got %lu\n", outData.Length);
-    ok(outData.MaximumLength == 0, "Expected outData.MaximumLength to be 0, got %lu\n", outData.MaximumLength);
-    ok(outData.Buffer == NULL, "Expected outData.Length to be NULL, got %p\n", outData.Buffer);
-
-    outData.Length = sizeof(outBuffer);
-    outData.MaximumLength = outData.Length;
-    outData.Buffer = outBuffer;
-
-    Status = pSystemFunction004(&inData, &keyData, &outData);
-    ok(Status == STATUS_SUCCESS, "Expected SystemFunction004 to return STATUS_SUCCESS, got 0x%08lx\n", Status);
-    ok(outData.Length == 32, "Expected outData.Length to be 32, got %lu\n", outData.Length);
-    ok(outData.MaximumLength == 32, "Expected outData.MaximumLength to be 32, got %lu\n", outData.MaximumLength);
-    ok(outData.Buffer != NULL, "Expected outData.Buffer not to be NULL, got %p\n", outData.Buffer);
-#if 0
-    if (Status == STATUS_SUCCESS)
-    {
-         printf("outData.Buffer:\n");
-         for (i = 0; i < sizeof(outBuffer); i++)
-              printf("0x%02x ", outBuffer[i]);
-         printf("\n");
-    }
-#endif
-}
-
-static void test_SystemFunction005(void)
-{
-    struct ustring inData;
-    struct ustring keyData;
-    struct ustring outData;
-    unsigned char inBuffer[32] = {0xdc, 0xff, 0x05, 0x8d, 0xaf, 0xb6, 0xe2, 0x8c, 0x4f, 0xee, 0x00, 0x06, 0xac, 0x1d, 0x56, 0xf1,
-                                  0x24, 0xbd, 0x17, 0xe0, 0xf6, 0xb8, 0x6d, 0x3a, 0x69, 0x5d, 0x14, 0xf9, 0x5a, 0x54, 0x93, 0xd1};
-    char keyString[] = "EncryptionKey";
-    char outBuffer[24];
-    NTSTATUS Status;
-
-    if (!pSystemFunction005)
-    {
-        win_skip("SystemFunction005 is not available\n");
-        return;
-    }
-
-    inData.Length = sizeof(inBuffer);
-    inData.MaximumLength = inData.Length;
-    inData.Buffer = inBuffer;
-
-    keyData.Length = strlen(keyString) + 1;
-    keyData.MaximumLength = keyData.Length;
-    keyData.Buffer = (unsigned char *)keyString;
-
-    outData.Length = 0;
-    outData.MaximumLength = 0;
-    outData.Buffer = NULL;
-
-    Status = pSystemFunction005(&inData, &keyData, &outData);
-    ok(Status == STATUS_BUFFER_TOO_SMALL, "Expected SystemFunction005 to return STATUS_BUFFER_TOO_SMALL, got 0x%08lx\n", Status);
-    ok(outData.Length == 24, "Expected outData.Length to be 24, got %lu\n", outData.Length);
-    ok(outData.MaximumLength == 0, "Expected outData.MaximumLength to be 0, got %lu\n", outData.MaximumLength);
-    ok(outData.Buffer == NULL, "Expected outData.Buffer to be NULL, got %p\n", outData.Buffer);
-
-    outData.Length = sizeof(outBuffer);
-    outData.MaximumLength = outData.Length;
-    outData.Buffer = (unsigned char *)outBuffer;
-
-    Status = pSystemFunction005(&inData, &keyData, &outData);
-    ok(Status == STATUS_SUCCESS, "Expected SystemFunction005 to return STATUS_SUCCESS, got 0x%08lx\n", Status);
-    ok(outData.Length == 24, "Expected outData.Length to be 24, got %lu\n", outData.Length);
-    ok(outData.MaximumLength == 24, "Expected outData.MaximumLength to be 24, got %lu\n", outData.MaximumLength);
-    ok(outData.Buffer != NULL, "Expected outData.Buffer not to be NULL, got %p\n", outData.Buffer);
-#if 0
-    if (Status == STATUS_SUCCESS)
-        printf("outData.Buffer: '%s'\n", outData.Buffer);
-#endif
-}
-
 
 static void test_SystemFunction036(void)
 {
@@ -1259,7 +1245,7 @@ static void test_SystemFunction036(void)
     {
         SetLastError(0xdeadbeef);
         ret = pSystemFunction036(NULL, 5);
-        trace("ret = %d, GetLastError() = %d\n", ret, GetLastError());
+        trace("ret = %d, GetLastError() = %ld\n", ret, GetLastError());
     }
 
     ret = pSystemFunction036(&test, 0);
@@ -1278,49 +1264,49 @@ static void test_container_sd(void)
 
     ret = CryptAcquireContextA(&prov, "winetest", "Microsoft Enhanced Cryptographic Provider v1.0",
                                PROV_RSA_FULL, CRYPT_MACHINE_KEYSET|CRYPT_NEWKEYSET);
-    ok(ret, "got %u\n", GetLastError());
+    ok(ret, "got %lu\n", GetLastError());
 
     len = 0;
     SetLastError(0xdeadbeef);
     ret = CryptGetProvParam(prov, PP_KEYSET_SEC_DESCR, NULL, &len, OWNER_SECURITY_INFORMATION);
     err = GetLastError();
-    ok(ret, "got %u\n", err);
-    ok(err == ERROR_INSUFFICIENT_BUFFER || broken(err == ERROR_INVALID_PARAMETER), "got %u\n", err);
+    ok(ret, "got %lu\n", err);
+    ok(err == ERROR_INSUFFICIENT_BUFFER || broken(err == ERROR_INVALID_PARAMETER), "got %lu\n", err);
     ok(len, "expected len > 0\n");
 
-    sd = HeapAlloc(GetProcessHeap(), 0, len);
+    sd = malloc(len);
     ret = CryptGetProvParam(prov, PP_KEYSET_SEC_DESCR, (BYTE *)sd, &len, OWNER_SECURITY_INFORMATION);
-    ok(ret, "got %u\n", GetLastError());
-    HeapFree(GetProcessHeap(), 0, sd);
+    ok(ret, "got %lu\n", GetLastError());
+    free(sd);
 
     ret = CryptReleaseContext(prov, 0);
-    ok(ret, "got %u\n", GetLastError());
+    ok(ret, "got %lu\n", GetLastError());
 
+    prov = 0xdeadbeef;
     ret = CryptAcquireContextA(&prov, "winetest", "Microsoft Enhanced Cryptographic Provider v1.0",
                                PROV_RSA_FULL, CRYPT_MACHINE_KEYSET|CRYPT_DELETEKEYSET);
-    ok(ret, "got %u\n", GetLastError());
+    ok(ret, "got %lu\n", GetLastError());
+    ok(prov == 0, "got %Id\n", prov);
 }
 
 START_TEST(crypt)
 {
     init_function_pointers();
-    if (pCryptAcquireContextA && pCryptReleaseContext)
-    {
-	test_rc2_keylen();
-	init_environment();
-	test_acquire_context();
-	test_incorrect_api_usage();
-	test_verify_sig();
-	test_machine_guid();
-	test_container_sd();
-	clean_up_environment();
-    }
-	
-	test_enum_providers();
-	test_enum_provider_types();
-	test_get_default_provider();
-	test_set_provider_ex();
-	test_SystemFunction004();
-	test_SystemFunction005();
-	test_SystemFunction036();
+
+    test_rc2_keylen();
+
+    init_environment();
+    test_CryptReleaseContext();
+    test_acquire_context();
+    test_incorrect_api_usage();
+    test_verify_sig();
+    test_machine_guid();
+    test_container_sd();
+    clean_up_environment();
+
+    test_enum_providers();
+    test_enum_provider_types();
+    test_get_default_provider();
+    test_set_provider_ex();
+    test_SystemFunction036();
 }

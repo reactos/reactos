@@ -9,6 +9,10 @@ typedef struct _ReactOS_ShimData
     DWORD dwMagic;
     DWORD dwReserved2[242];
     DWORD dwRosProcessCompatVersion;
+
+#ifdef _M_AMD64
+    PVOID RtlGetCurrentDirectory_U_RtlpMsysDecoy;
+#endif
 } ReactOS_ShimData;
 
 

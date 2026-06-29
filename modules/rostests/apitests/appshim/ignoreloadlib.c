@@ -1,9 +1,9 @@
 /*
-* PROJECT:     appshim_apitest
-* LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
-* PURPOSE:     Tests for IgnoreLoadLibrary shim
-* COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
-*/
+ * PROJECT:     appshim_apitest
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Tests for IgnoreLoadLibrary shim
+ * COPYRIGHT:   Copyright 2019 Mark Jansen <mark.jansen@reactos.org>
+ */
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
@@ -269,6 +269,14 @@ START_TEST(ignoreloadlib)
 
     dwErrorMode = GetErrorMode();
     trace("Error mode: 0x%x\n", dwErrorMode);
+
+#ifdef _M_IX86
+    if (g_WinVersion > _WIN32_WINNT_WS03 && g_WinVersion < _WIN32_WINNT_WIN8)
+    {
+        g_h111 = g_hSentinelModule;
+        g_h0 = g_hSentinelModule;
+    }
+#endif
 
     for (n = 0; n < num_shims; ++n)
     {

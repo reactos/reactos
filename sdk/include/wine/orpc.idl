@@ -1,0 +1,191 @@
+/*
+ * Copyright 2003 Ove Kåven, TransGaming Technologies
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep header
+
+import "unknwn.idl";
+
+[
+    uuid(99fcfe60-5260-101b-bbcb-00aa0021347a),
+    pointer_default(unique)
+]
+interface ObjectRpcBaseTypes
+{
+    typedef unsigned hyper ID;
+    typedef ID MID;
+    typedef ID OXID;
+    typedef ID OID;
+    typedef ID SETID;
+    typedef GUID IPID;
+    typedef GUID CID;
+    typedef REFGUID REFIPID;
+
+    const unsigned short COM_MINOR_VERSION_1 = 1;
+    const unsigned short COM_MINOR_VERSION_2 = 2;
+
+    const unsigned short COM_MAJOR_VERSION = 5;
+    const unsigned short COM_MINOR_VERSION = 3;
+
+    typedef struct tagCOMVERSION
+    {
+        unsigned short MajorVersion;
+        unsigned short MinorVersion;
+    } COMVERSION;
+
+    const unsigned long ORPCF_NULL = 0;
+    const unsigned long ORPCF_LOCAL = 1;
+    const unsigned long ORPCF_RESERVED1 = 2;
+    const unsigned long ORPCF_RESERVED2 = 4;
+    const unsigned long ORPCF_RESERVED3 = 8;
+    const unsigned long ORPCF_RESERVED4 = 16;
+
+    typedef struct tagORPC_EXTENT
+    {
+        GUID id;
+        unsigned long size;
+        [size_is((size + 7) & ~7)] byte data[];
+    } ORPC_EXTENT;
+
+    typedef struct tagORPC_EXTENT_ARRAY
+    {
+        unsigned long size;
+        unsigned long reserved;
+        [size_is((size + 1) & ~1,), unique] ORPC_EXTENT **extent;
+    } ORPC_EXTENT_ARRAY;
+
+    typedef struct tagORPCTHIS
+    {
+        COMVERSION version;
+        unsigned long flags;
+        unsigned long reserved1;
+        CID cid;
+        [unique] ORPC_EXTENT_ARRAY *extensions;
+    } ORPCTHIS;
+
+    typedef struct tagORPCTHAT
+    {
+        unsigned long flags;
+        [unique] ORPC_EXTENT_ARRAY *extensions;
+    } ORPCTHAT;
+
+    const unsigned short NCADG_IP_UDP = 0x08;
+    const unsigned short NCACN_IP_TCP = 0x07;
+    const unsigned short NCADG_IPX = 0x0E;
+    const unsigned short NCACN_SPX = 0x0C;
+    const unsigned short NCACN_NB_NB = 0x12;
+    const unsigned short NCACN_NB_IPX = 0x0D;
+    const unsigned short NCACN_DNET_NSP = 0x04;
+    const unsigned short NCACN_HTTP = 0x1F;
+
+    typedef struct tagSTRINGBINDING
+    {
+        unsigned short wTowerId;
+        [string] WCHAR aNetworkAddr[];
+    } STRINGBINDING;
+
+    const unsigned short COM_C_AUTHZ_NONE = 0xffff;
+
+    typedef struct tagSECURITYBINDING
+    {
+        unsigned short wAuthnSvc;
+        unsigned short wAuthzSvc;
+        [string] WCHAR aPrincName[];
+    } SECURITYBINDING;
+
+    typedef struct tagDUALSTRINGARRAY
+    {
+        unsigned short wNumEntries;
+        unsigned short wSecurityOffset;
+        [size_is(wNumEntries)] unsigned short aStringArray[];
+    } DUALSTRINGARRAY;
+
+    typedef struct tagOXID_INFO
+    {
+        DWORD dwTid;
+        DWORD dwPid;
+        IPID ipidRemUnknown;
+        DWORD dwAuthnHint;
+        DUALSTRINGARRAY *psa;
+    } OXID_INFO;
+
+    const unsigned long OBJREF_SIGNATURE = 0x574f454d; /* "MEOW" */
+    const unsigned long OBJREF_STANDARD = 0x1;
+    const unsigned long OBJREF_HANDLER = 0x2;
+    const unsigned long OBJREF_CUSTOM = 0x4;
+    const unsigned long SORF_OXRES1 = 0x1;
+    const unsigned long SORF_OXRES2 = 0x20;
+    const unsigned long SORF_OXRES3 = 0x40;
+    const unsigned long SORF_OXRES4 = 0x80;
+    const unsigned long SORF_OXRES5 = 0x100;
+    const unsigned long SORF_OXRES6 = 0x200;
+    const unsigned long SORF_OXRES7 = 0x400;
+    const unsigned long SORF_OXRES8 = 0x800;
+    const unsigned long SORF_NULL = 0x0;
+    const unsigned long SORF_NOPING = 0x1000;
+
+    typedef struct tagSTDOBJREF
+    {
+        unsigned long flags;
+        unsigned long cPublicRefs;
+        OXID oxid;
+        OID oid;
+        IPID ipid;
+    } STDOBJREF;
+
+    typedef struct tagOBJREF
+    {
+        unsigned long signature;
+        unsigned long flags;
+        GUID iid;
+        [switch_is(flags)]
+        union
+        {
+            [case(OBJREF_STANDARD)]
+            struct OR_STANDARD
+            {
+                STDOBJREF std;
+                DUALSTRINGARRAY saResAddr;
+            } u_standard;
+
+            [case(OBJREF_HANDLER)]
+            struct OR_HANDLER
+            {
+                STDOBJREF std;
+                CLSID clsid;
+                DUALSTRINGARRAY saResAddr;
+            } u_handler;
+
+            [case(OBJREF_CUSTOM)]
+            struct OR_CUSTOM
+            {
+                CLSID clsid;
+                unsigned long cbExtension;
+                ULONG size;
+                [size_is(size), ref] byte *pData;
+            } u_custom;
+        } u_objref;
+    } OBJREF;
+
+    typedef struct tagMInterfacePointer
+    {
+        ULONG ulCntData;
+        [size_is(ulCntData)] BYTE abData[];
+    } MInterfacePointer;
+
+    typedef [unique] MInterfacePointer *PMInterfacePointer;
+}

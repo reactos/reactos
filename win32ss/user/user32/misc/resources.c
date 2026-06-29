@@ -9,8 +9,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(resource);
 #define CR_INVALID_DATA                   0x0000001F
 #endif
 
-typedef DWORD (WINAPI *CMP_REGNOTIFY) (HANDLE, LPVOID, DWORD, PULONG);
-typedef DWORD (WINAPI *CMP_UNREGNOTIFY) (ULONG );
+typedef DWORD (WINAPI *CMP_REGNOTIFY) (HANDLE, LPVOID, DWORD, PHDEVNOTIFY);
+typedef DWORD (WINAPI *CMP_UNREGNOTIFY) (HDEVNOTIFY);
 
 static HINSTANCE hSetupApi = NULL;
 
@@ -127,7 +127,7 @@ RegisterDeviceNotificationW(HANDLE hRecipient,
         return NULL;
     }
 
-    ConfigRet  = RegNotify(hRecipient, NotificationFilter, Flags, (PULONG) &hDevNotify);
+    ConfigRet  = RegNotify(hRecipient, NotificationFilter, Flags, &hDevNotify);
     if (ConfigRet != CR_SUCCESS)
     {
         switch (ConfigRet)
@@ -175,7 +175,7 @@ UnregisterDeviceNotification(HDEVNOTIFY Handle)
         return FALSE;
     }
 
-    ConfigRet  = UnRegNotify((ULONG_PTR)Handle );
+    ConfigRet  = UnRegNotify(Handle);
     if (ConfigRet != CR_SUCCESS)
     {
         switch (ConfigRet)

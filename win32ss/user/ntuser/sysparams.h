@@ -54,7 +54,7 @@ typedef struct _SPIVALUES
     UINT uiFocusBorderWidth;
     UINT uiFocusBorderHeight;
 
-    /* Accessability */
+    /* Accessibility */
     ACCESSTIMEOUT accesstimeout;
     HIGHCONTRASTW highcontrast;
     BOOL bScreenReader;
@@ -156,6 +156,12 @@ typedef struct _SPIVALUES
     DWORD dwActiveTrackingTimeout;
     DWORD dwForegroundFlashCount;
     DWORD dwCaretWidth;
+
+    /* Snap */
+    // BOOL bWinArranging; (g_bWindowSnapEnabled)
+    BOOL bDockMoving;
+    // BOOL bSnapSizing;
+    // BOOL bDragFromMaximize;
 
 //    SPI_LANGDRIVER
 //    SPI_SETDESKPATTERN

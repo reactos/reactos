@@ -2,7 +2,7 @@
  * jpeglib.h
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modified 2002-2019 by Guido Vollbeding.
+ * Modified 2002-2025 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -34,12 +34,12 @@ extern "C" {
 #endif
 
 /* Version IDs for the JPEG library.
- * Might be useful for tests like "#if JPEG_LIB_VERSION >= 90".
+ * Might be useful for tests like "#if JPEG_LIB_VERSION >= 100".
  */
 
-#define JPEG_LIB_VERSION        90	/* Compatibility version 9.0 */
-#define JPEG_LIB_VERSION_MAJOR  9
-#define JPEG_LIB_VERSION_MINOR  4
+#define JPEG_LIB_VERSION        100	/* Compatibility version 10.0 */
+#define JPEG_LIB_VERSION_MAJOR  10
+#define JPEG_LIB_VERSION_MINOR  0
 
 
 /* Various constants determining the sizes of things.
@@ -384,8 +384,9 @@ struct jpeg_compress_struct {
   UINT16 Y_density;		/* Vertical pixel density */
   boolean write_Adobe_marker;	/* should an Adobe marker be written? */
 
-  J_COLOR_TRANSFORM color_transform;
   /* Color transform identifier, writes LSE marker if nonzero */
+  J_COLOR_TRANSFORM color_transform;
+  UINT16 LSE_maxtrans;		/* LSE MAXTRANS value, usually = MAXJSAMPLE */
 
   /* State variable: index of next scanline to be written to
    * jpeg_write_scanlines().  Application may use this to control its
@@ -606,8 +607,9 @@ struct jpeg_decompress_struct {
   boolean saw_Adobe_marker;	/* TRUE iff an Adobe APP14 marker was found */
   UINT8 Adobe_transform;	/* Color transform code from Adobe marker */
 
-  J_COLOR_TRANSFORM color_transform;
   /* Color transform identifier derived from LSE marker, otherwise zero */
+  J_COLOR_TRANSFORM color_transform;
+  UINT16 LSE_maxtrans;		/* LSE MAXTRANS value, usually = MAXJSAMPLE */
 
   boolean CCIR601_sampling;	/* TRUE=first samples are cosited */
 
@@ -883,7 +885,7 @@ typedef JMETHOD(boolean, jpeg_marker_parser_method, (j_decompress_ptr cinfo));
 /* Short forms of external names for systems with brain-damaged linkers.
  * We shorten external names to be unique in the first six letters, which
  * is good enough for all known systems.
- * (If your compiler itself needs names to be unique in less than 15
+ * (If your compiler itself needs names to be unique in less than 15 
  * characters, you are out of luck.  Get a better compiler.)
  */
 

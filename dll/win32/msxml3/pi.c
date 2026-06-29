@@ -20,13 +20,9 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -34,11 +30,10 @@
 #include "ole2.h"
 #include "msxml6.h"
 
+#include "xmlparser.h"
 #include "msxml_private.h"
 
 #include "wine/debug.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -101,7 +96,7 @@ static ULONG WINAPI dom_pi_AddRef(
 {
     dom_pi *This = impl_from_IXMLDOMProcessingInstruction( iface );
     ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
@@ -111,11 +106,11 @@ static ULONG WINAPI dom_pi_Release(
     dom_pi *This = impl_from_IXMLDOMProcessingInstruction( iface );
     ULONG ref = InterlockedDecrement( &This->ref );
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     if ( ref == 0 )
     {
         destroy_xmlnode(&This->node);
-        heap_free( This );
+        free(This);
     }
 
     return ref;
@@ -197,7 +192,7 @@ static HRESULT WINAPI dom_pi_put_nodeValue(
     if(hr == S_OK)
     {
         static const WCHAR xmlW[] = {'x','m','l',0};
-        if(!strcmpW(target, xmlW))
+        if(!wcscmp(target, xmlW))
         {
             SysFreeString(target);
             return E_FAIL;
@@ -287,6 +282,139 @@ static HRESULT WINAPI dom_pi_get_nextSibling(
     return node_get_next_sibling(&This->node, domNode);
 }
 
+static HRESULT xml_get_value(xmlChar **p, xmlChar **value)
+{
+    xmlChar *v, q;
+    int len;
+
+    while (isspace(**p)) *p += 1;
+    if (**p != '=') return XML_E_MISSINGEQUALS;
+    *p += 1;
+
+    while (isspace(**p)) *p += 1;
+    if (**p != '"' && **p != '\'') return XML_E_MISSINGQUOTE;
+    q = **p;
+    *p += 1;
+
+    v = *p;
+    while (**p && **p != q) *p += 1;
+    if (!**p) return XML_E_BADCHARINSTRING;
+    len = *p - v;
+    if (!len) return XML_E_MISSINGNAME;
+    *p += 1;
+
+    *value = malloc(len + 1);
+    if (!*value) return E_OUTOFMEMORY;
+    memcpy(*value, v, len);
+    *(*value + len) = 0;
+
+    return S_OK;
+}
+
+static void set_prop(xmlNodePtr node, xmlAttrPtr attr)
+{
+    xmlAttrPtr prop;
+
+    if (!node->properties)
+    {
+        node->properties = attr;
+        return;
+    }
+
+    prop = node->properties;
+    while (prop->next) prop = prop->next;
+
+    prop->next = attr;
+}
+
+static HRESULT parse_xml_decl(xmlNodePtr node)
+{
+    xmlChar *version, *encoding, *standalone, *p;
+    xmlAttrPtr attr;
+    HRESULT hr = S_OK;
+
+    if (!node->content) return S_OK;
+
+    version = encoding = standalone = NULL;
+
+    p = node->content;
+
+    while (*p)
+    {
+        while (isspace(*p)) p++;
+        if (!*p) break;
+
+        if (!strncmp((const char *)p, "version", 7))
+        {
+            p += 7;
+            if ((hr = xml_get_value(&p, &version)) != S_OK) goto fail;
+        }
+        else if (!strncmp((const char *)p, "encoding", 8))
+        {
+            p += 8;
+            if ((hr = xml_get_value(&p, &encoding)) != S_OK) goto fail;
+        }
+        else if (!strncmp((const char *)p, "standalone", 10))
+        {
+            p += 10;
+            if ((hr = xml_get_value(&p, &standalone)) != S_OK) goto fail;
+        }
+        else
+        {
+            FIXME("unexpected XML attribute %s\n", debugstr_a((const char *)p));
+            hr = XML_E_UNEXPECTED_ATTRIBUTE;
+            goto fail;
+        }
+    }
+
+    /* xmlSetProp/xmlSetNsProp accept only nodes of type XML_ELEMENT_NODE,
+     * so we have to create and assign attributes to a node by hand.
+     */
+
+    if (version)
+    {
+        attr = xmlSetNsProp(NULL, NULL, (const xmlChar *)"version", version);
+        if (attr)
+        {
+            attr->doc = node->doc;
+            set_prop(node, attr);
+        }
+        else hr = E_OUTOFMEMORY;
+    }
+    if (encoding)
+    {
+        attr = xmlSetNsProp(NULL, NULL, (const xmlChar *)"encoding", encoding);
+        if (attr)
+        {
+            attr->doc = node->doc;
+            set_prop(node, attr);
+        }
+        else hr = E_OUTOFMEMORY;
+    }
+    if (standalone)
+    {
+        attr = xmlSetNsProp(NULL, NULL, (const xmlChar *)"standalone", standalone);
+        if (attr)
+        {
+            attr->doc = node->doc;
+            set_prop(node, attr);
+        }
+        else hr = E_OUTOFMEMORY;
+    }
+
+fail:
+    if (hr != S_OK)
+    {
+        xmlFreePropList(node->properties);
+        node->properties = NULL;
+    }
+
+    free(version);
+    free(encoding);
+    free(standalone);
+    return hr;
+}
+
 static HRESULT WINAPI dom_pi_get_attributes(
     IXMLDOMProcessingInstruction *iface,
     IXMLDOMNamedNodeMap** map)
@@ -305,17 +433,12 @@ static HRESULT WINAPI dom_pi_get_attributes(
     hr = node_get_nodeName(&This->node, &name);
     if (hr != S_OK) return hr;
 
-    if (!strcmpW(name, xmlW))
-    {
-        FIXME("created dummy map for <?xml ?>\n");
+    if (!wcscmp(name, xmlW))
         *map = create_nodemap(This->node.node, &dom_pi_attr_map);
-        SysFreeString(name);
-        return S_OK;
-    }
 
     SysFreeString(name);
 
-    return S_FALSE;
+    return *map ? S_OK : S_FALSE;
 }
 
 static HRESULT WINAPI dom_pi_insertBefore(
@@ -612,7 +735,7 @@ static HRESULT WINAPI dom_pi_put_data(
     if(hr == S_OK)
     {
         static const WCHAR xmlW[] = {'x','m','l',0};
-        if(!strcmpW(target, xmlW))
+        if(!wcscmp(target, xmlW))
         {
             SysFreeString(target);
             return E_FAIL;
@@ -622,6 +745,34 @@ static HRESULT WINAPI dom_pi_put_data(
     }
 
     return node_set_content(&This->node, data);
+}
+
+HRESULT dom_pi_put_xml_decl(IXMLDOMNode *node, BSTR data)
+{
+    static const WCHAR xmlW[] = {'x','m','l',0};
+    xmlnode *node_obj;
+    HRESULT hr;
+    BSTR name;
+
+    if (!data)
+        return XML_E_XMLDECLSYNTAX;
+
+    node_obj = get_node_obj(node);
+    hr = node_set_content(node_obj, data);
+    if (FAILED(hr))
+        return hr;
+
+    hr = node_get_nodeName(node_obj, &name);
+    if (FAILED(hr))
+        return hr;
+
+    if (!lstrcmpW(name, xmlW) && !node_obj->node->properties)
+        hr = parse_xml_decl(node_obj->node);
+    else
+        hr = S_OK;
+
+    SysFreeString(name);
+    return hr;
 }
 
 static const struct IXMLDOMProcessingInstructionVtbl dom_pi_vtbl =
@@ -675,6 +826,27 @@ static const struct IXMLDOMProcessingInstructionVtbl dom_pi_vtbl =
     dom_pi_put_data
 };
 
+static xmlAttrPtr node_has_prop(const xmlNode *node, const xmlChar *name)
+{
+    xmlAttrPtr prop;
+
+    /* xmlHasNsProp accepts only nodes of type XML_ELEMENT_NODE,
+     * so we have to look for an attribute in the node by hand.
+     */
+
+    prop = node->properties;
+
+    while (prop)
+    {
+        if (xmlStrEqual(prop->name, name))
+            return prop;
+
+        prop = prop->next;
+    }
+
+    return NULL;
+}
+
 static HRESULT dom_pi_get_qualified_item(const xmlNodePtr node, BSTR name, BSTR uri,
     IXMLDOMNode **item)
 {
@@ -684,10 +856,28 @@ static HRESULT dom_pi_get_qualified_item(const xmlNodePtr node, BSTR name, BSTR 
 
 static HRESULT dom_pi_get_named_item(const xmlNodePtr node, BSTR name, IXMLDOMNode **item)
 {
-    FIXME("(%p)->(%s %p): stub\n", node, debugstr_w(name), item );
-    if (item)
+    xmlChar *nameA;
+    xmlAttrPtr attr;
+
+    TRACE("(%p)->(%s %p)\n", node, debugstr_w(name), item);
+
+    if (!item) return E_POINTER;
+
+    nameA = xmlchar_from_wchar(name);
+    if (!nameA) return E_OUTOFMEMORY;
+
+    attr = node_has_prop(node, nameA);
+    free(nameA);
+
+    if (!attr)
+    {
         *item = NULL;
-    return S_FALSE;
+        return S_FALSE;
+    }
+
+    *item = create_node((xmlNodePtr)attr);
+
+    return S_OK;
 }
 
 static HRESULT dom_pi_set_named_item(xmlNodePtr node, IXMLDOMNode *newItem, IXMLDOMNode **namedItem)
@@ -710,7 +900,7 @@ static HRESULT dom_pi_remove_named_item(xmlNodePtr node, BSTR name, IXMLDOMNode 
 
 static HRESULT dom_pi_get_item(const xmlNodePtr node, LONG index, IXMLDOMNode **item)
 {
-    FIXME("(%p)->(%d %p): stub\n", node, index, item);
+    FIXME("%p, %ld, %p: stub\n", node, index, item);
     return E_NOTIMPL;
 }
 
@@ -724,7 +914,7 @@ static HRESULT dom_pi_get_length(const xmlNodePtr node, LONG *length)
 
 static HRESULT dom_pi_next_node(const xmlNodePtr node, LONG *iter, IXMLDOMNode **nextNode)
 {
-    FIXME("(%p)->(%d %p): stub\n", node, *iter, nextNode);
+    FIXME("%p, %ld, %p: stub\n", node, *iter, nextNode);
     return E_NOTIMPL;
 }
 
@@ -755,7 +945,7 @@ IUnknown* create_pi( xmlNodePtr pi )
 {
     dom_pi *This;
 
-    This = heap_alloc( sizeof *This );
+    This = malloc(sizeof(*This));
     if ( !This )
         return NULL;
 
@@ -766,5 +956,3 @@ IUnknown* create_pi( xmlNodePtr pi )
 
     return (IUnknown*)&This->IXMLDOMProcessingInstruction_iface;
 }
-
-#endif

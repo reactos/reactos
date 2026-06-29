@@ -10,12 +10,15 @@
 typedef struct _BOOTMGRINFO
 {
     PCSTR DebugString;
+    PCSTR VideoOptions;
     PCSTR DefaultOs;
     LONG  TimeOut;
     ULONG_PTR FrLdrSection;
 } BOOTMGRINFO, *PBOOTMGRINFO;
 
 extern BOOTMGRINFO BootMgrInfo;
+
+PBOOTMGRINFO GetBootMgrInfo(VOID);
 
 VOID
 LoadSettings(

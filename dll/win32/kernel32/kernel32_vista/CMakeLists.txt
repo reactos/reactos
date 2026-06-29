@@ -7,11 +7,21 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys ..)
 spec2def(kernel32_vista.dll kernel32_vista.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    EnumSystemLocalesEx.c
     firmware.c
+    GetLocaleInfoEx.c
     GetFileInformationByHandleEx.c
+    GetFinalPathNameByHandle.c
+    GetNamedPipeClientProcessId.c
     GetTickCount64.c
+    GetUserDefaultLocaleName.c
     InitOnce.c
+    IsValidLocaleName.c
+    LCIDToLocaleName.c
+    LocaleNameToLCID.c
     sync.c
+    ThreadDescription.c
+    threadpool.c
     vista.c)
 
 # These functions are not exported from kernel32_vista (yet).
@@ -32,6 +42,5 @@ add_library(kernel32_vista MODULE
 set_module_type(kernel32_vista win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(kernel32_vista kernel32_vista_static kernel32_shared)
 add_importlibs(kernel32_vista kernel32 ntdll_vista ntdll)
-add_delay_importlibs(kernel32_vista ntdll_vista)
 add_dependencies(kernel32_vista psdk)
 add_cd_file(TARGET kernel32_vista DESTINATION reactos/system32 FOR all)

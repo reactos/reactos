@@ -12,7 +12,7 @@ BEGIN
     PUSHBUTTON "&Hinzufügen...", IDC_USERS_ADD, 87, 98, 50, 14
     PUSHBUTTON "&Entfernen", IDC_USERS_REMOVE, 141, 98, 50, 14
     PUSHBUTTON "E&igenschaften", IDC_USERS_PROPERTIES, 195, 98, 50, 14
-    AUTOCHECKBOX "Benut&zer müssen Benutzername und Kennwort zum Starten eingeben", IDC_USERS_STARTUP_REQUIRE, 10, 118, 235, 14, WS_DISABLED
+    AUTOCHECKBOX "Benut&zer müssen Benutzername und Kennwort zum Starten eingeben", IDC_USERS_STARTUP_REQUIRE, 10, 118, 235, 14
     PUSHBUTTON "Kenn&wort zurücksetzen", IDC_USERS_RESET, 165, 200, 80, 14, WS_DISABLED
 END
 

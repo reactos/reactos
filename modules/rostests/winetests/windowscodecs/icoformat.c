@@ -143,34 +143,34 @@ static void test_ico_data_(void *data, DWORD data_size, HRESULT init_hr, int tod
 
     hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
         &IID_IWICImagingFactory, (void**)&factory);
-    ok(hr == S_OK, "CoCreateInstance failed, hr=%x\n", hr);
+    ok(hr == S_OK, "CoCreateInstance failed, hr=%lx\n", hr);
     if (FAILED(hr)) return;
 
     hr = IWICImagingFactory_CreateStream(factory, &icostream);
-    ok(hr == S_OK, "CreateStream failed, hr=%x\n", hr);
+    ok(hr == S_OK, "CreateStream failed, hr=%lx\n", hr);
     if (SUCCEEDED(hr))
     {
         hr = IWICStream_InitializeFromMemory(icostream, data, data_size);
-        ok(hr == S_OK, "InitializeFromMemory failed, hr=%x\n", hr);
+        ok(hr == S_OK, "InitializeFromMemory failed, hr=%lx\n", hr);
 
         if (SUCCEEDED(hr))
         {
             hr = CoCreateInstance(&CLSID_WICIcoDecoder, NULL, CLSCTX_INPROC_SERVER,
                 &IID_IWICBitmapDecoder, (void**)&decoder);
-            ok(hr == S_OK, "CoCreateInstance failed, hr=%x\n", hr);
+            ok(hr == S_OK, "CoCreateInstance failed, hr=%lx\n", hr);
         }
 
         if (SUCCEEDED(hr))
         {
             hr = IWICBitmapDecoder_Initialize(decoder, (IStream*)icostream,
                 WICDecodeMetadataCacheOnDemand);
-        todo_wine_if(todo)
-            ok_(__FILE__, line)(hr == init_hr, "Initialize failed, hr=%x\n", hr);
+            todo_wine_if(todo)
+            ok_(__FILE__, line)(hr == init_hr, "Initialize failed, hr=%lx\n", hr);
 
             if (SUCCEEDED(hr))
             {
                 hr = IWICBitmapDecoder_GetFrame(decoder, 0, &framedecode);
-                ok(hr == S_OK, "GetFrame failed, hr=%x\n", hr);
+                ok(hr == S_OK, "GetFrame failed, hr=%lx\n", hr);
             }
 
             if (SUCCEEDED(hr))
@@ -180,16 +180,16 @@ static void test_ico_data_(void *data, DWORD data_size, HRESULT init_hr, int tod
 
                 width = height = 0;
                 hr = IWICBitmapFrameDecode_GetSize(framedecode, &width, &height);
-                ok(hr == S_OK, "GetFrameSize failed, hr=%x\n", hr);
+                ok(hr == S_OK, "GetFrameSize failed, hr=%lx\n", hr);
                 ok(width == 16 && height == 16, "framesize=%ux%u\n", width, height);
 
                 hr = IWICBitmapFrameDecode_GetThumbnail(framedecode, &thumbnail);
-                ok(hr == S_OK, "GetThumbnail failed, hr=%x\n", hr);
+                ok(hr == S_OK, "GetThumbnail failed, hr=%lx\n", hr);
                 if (hr == S_OK)
                 {
                     width = height = 0;
                     hr = IWICBitmapSource_GetSize(thumbnail, &width, &height);
-                    ok(hr == S_OK, "GetFrameSize failed, hr=%x\n", hr);
+                    ok(hr == S_OK, "GetFrameSize failed, hr=%lx\n", hr);
                     ok(width == 16 && height == 16, "framesize=%ux%u\n", width, height);
                     IWICBitmapSource_Release(thumbnail);
                 }

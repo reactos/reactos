@@ -3,10 +3,9 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__WINESRC__
-    -D_WINE)
+    -D_WINE
+    -D_WINHTTP_INTERNAL_)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(winhttp.dll winhttp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -28,9 +27,10 @@ add_library(winhttp MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/winhttp.def)
 
 set_module_type(winhttp win32dll)
-target_link_libraries(winhttp uuid wine)
-add_delay_importlibs(winhttp oleaut32 crypt32 secur32)
+target_link_libraries(winhttp uuid wine oldnames wine_dll_register)
+add_delay_importlibs(winhttp oleaut32 crypt32 secur32 iphlpapi dhcpcsvc)
 add_importlibs(winhttp user32 advapi32 ws2_32 jsproxy kernel32_vista msvcrt kernel32 ntdll)
 add_dependencies(winhttp stdole2)
 add_pch(winhttp precomp.h SOURCE)
 add_cd_file(TARGET winhttp DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(winhttp) # CORE-5743: No ARRAY_SIZE macro

@@ -302,6 +302,6 @@ typedef struct Color
     ARGB Argb;
 } Color;
 
-#endif /* end of c typedefs */
+#endif  /* end of c typedefs */
 
-#endif /* _GDIPLUSCOLOR_H */
+#endif  /* _GDIPLUSCOLOR_H */

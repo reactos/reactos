@@ -1,9 +1,4 @@
 
-add_definitions(
-    -D__WINESRC__
-    -D_WINE)
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(cryptui.dll cryptui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -13,7 +8,9 @@ list(APPEND SOURCE
 
 add_library(cryptui MODULE ${SOURCE} cryptui.rc)
 set_module_type(cryptui win32dll)
-target_link_libraries(cryptui uuid wine oldnames)
+target_compile_definitions(cryptui PRIVATE _WINE)
+target_link_libraries(cryptui uuid wine oldnames wine_dll_register)
 add_delay_importlibs(cryptui urlmon wintrust)
 add_importlibs(cryptui user32 ole32 crypt32 gdi32 advapi32 comctl32 comdlg32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET cryptui DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(cryptui) # CORE-5743: No ARRAY_SIZE macro

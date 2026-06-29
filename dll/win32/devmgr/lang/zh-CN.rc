@@ -282,7 +282,7 @@ BEGIN
     BEGIN
         MENUITEM "按类型设备",             IDM_DEVBYTYPE
         MENUITEM "依连接排序设备",       IDM_DEVBYCONN
-        MENUITEM "依类型排序资源",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "依类型排序资源",           IDM_RESBYTYPE
         MENUITEM "依连接排序资源",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "显示隐藏的设备",         IDM_SHOWHIDDEN
@@ -321,6 +321,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "禁用"
   IDS_TOOLTIP_UPDATE        "更新驱动程序软件"
   IDS_TOOLTIP_UNINSTALL     "卸载"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Memory"
+  IDS_TYPE_PORT             "Input/output (IO)"
+  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
+  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
 END
 
 /* Hints */

@@ -65,8 +65,26 @@ StartupPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         //FIXME: What about HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Userinit
         //FIXME: Common Startup (startmenu)
-
+        DisableAllExcept(hDlg, IDC_STARTUP_LIST); // FIXME: Implement saving
         return TRUE;
+
+    case WM_NOTIFY:
+        if (wParam == IDC_STARTUP_LIST)
+        {
+            NMLISTVIEW *pnmlv = (NMLISTVIEW*)lParam;
+            UINT toggled = (pnmlv->uOldState ^ pnmlv->uNewState) & LVIS_STATEIMAGEMASK;
+            if (pnmlv->hdr.code == LVN_ITEMCHANGING && (pnmlv->uChanged & LVIF_STATE) && toggled)
+            {
+                // Only allow checkbox changes during WM_INITDIALOG
+                if (!IsWindowEnabled(GetDlgItem(hDlg, IDC_BTN_STARTUP_ACTIVATE)))
+                {
+                    MessageBeep(-1);
+                    SetWindowLongPtr(hDlg, DWLP_MSGRESULT, TRUE);
+                    return TRUE;
+                }
+            }
+        }
+        break;
     }
 
     return 0;

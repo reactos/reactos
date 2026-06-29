@@ -19,9 +19,8 @@
 
 #include <windef.h>
 #include <winbase.h>
-// #include <winnls.h>
-#include <wincon.h>  // Console APIs (only if kernel32 support included)
-#include <winnls.h> // for WideCharToMultiByte
+#include <wincon.h>     // Console APIs (only if kernel32 support included)
+#include <winnls.h>     // For WideCharToMultiByte
 #include <strsafe.h>
 
 #include "conutils.h"
@@ -219,7 +218,7 @@ static BOOL
 ConPagerWorker(
     IN PCON_PAGER Pager,
     IN PCTCH TextBuff,
-    IN DWORD cch)
+    IN SIZE_T cch)
 {
     const DWORD PageColumns = Pager->PageColumns;
     const DWORD ScrollRows = Pager->ScrollRows;
@@ -551,7 +550,7 @@ ConWritePaging(
     IN PAGE_PROMPT PagePrompt,
     IN BOOL StartPaging,
     IN PCTCH szStr,
-    IN DWORD len)
+    IN SIZE_T len)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     BOOL bIsConsole;
@@ -649,7 +648,7 @@ ConPutsPaging(
     IN BOOL StartPaging,
     IN PCTSTR szStr)
 {
-    DWORD len;
+    SIZE_T len;
 
     /* Return if no string has been given */
     if (szStr == NULL)
@@ -673,8 +672,7 @@ ConResPagingEx(
     Len = K32LoadStringW(hInstance, uID, (PWSTR)&szStr, 0);
     if (szStr && Len)
         return ConWritePaging(Pager, PagePrompt, StartPaging, szStr, Len);
-    else
-        return TRUE;
+    return TRUE;
 }
 
 BOOL
@@ -684,8 +682,7 @@ ConResPaging(
     IN BOOL StartPaging,
     IN UINT uID)
 {
-    return ConResPagingEx(Pager, PagePrompt, StartPaging,
-                          NULL /*GetModuleHandleW(NULL)*/, uID);
+    return ConResPagingEx(Pager, PagePrompt, StartPaging, NULL, uID);
 }
 
 /* EOF */

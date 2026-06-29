@@ -107,9 +107,9 @@ BEGIN
     LTEXT "描述(&D)：", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "数据(&A)：", IDC_DETAILS_STATIC, 8, 140, 25, 8
     AUTORADIOBUTTON "字节(&B)", IDC_BYTESRADIO, 39, 140, 34, 8
-    AUTORADIOBUTTON "字(&W)", IDC_WORDRADIO, 77, 140, 34, 8
+    AUTORADIOBUTTON "字(&W)", IDC_WORDSRADIO, 77, 140, 34, 8
+    LTEXT "数据(&A)：", IDC_DETAILS_STATIC, 8, 140, 25, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -169,6 +169,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件日志吗？"
     IDS_RESTOREDEFAULTS "你想要将这个日志的所有设置恢复为默认值吗？"
     IDS_EVENTSTRINGIDNOTFOUND "无法找到来源（%s）中的事件 ID（%lu）的描述。本地计算机可能没有显示来自远程计算机的消息所必需的注册表信息或消息 DLL 文件。\n\n下面的信息是事件的一部分：\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -220,16 +222,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-事件类型：   %s\r\n\
-事件源：    %s\r\n\
-事件类别：   %s\r\n\
-事件 ID：  %s\r\n\
-日期：     %s\r\n\
-时间：     %s\r\n\
-用户：     %s\r\n\
-电脑：     %s\r\n\
-描述：\r\n%s"
+    IDS_COPY_EVTTYPE "事件类型："
+    IDS_COPY_EVTSRC  "事件源："
+    IDS_COPY_EVTCAT  "事件类别："
+    IDS_COPY_EVTID   "事件 ID："
+    IDS_COPY_EVTDATE "日期："
+    IDS_COPY_EVTTIME "时间："
+    IDS_COPY_EVTUSER "用户："
+    IDS_COPY_EVTCOMP "电脑："
+    IDS_COPY_EVTTEXT "描述："
+    IDS_COPY_EVTDATA "数据："
 END
 
 STRINGTABLE

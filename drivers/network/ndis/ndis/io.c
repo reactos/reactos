@@ -333,7 +333,7 @@ NdisMAllocateMapRegisters(
   Description.Master = TRUE;                         /* implied by calling this function */
   Description.ScatterGather = TRUE;                  /* XXX UNTRUE: All BM DMA are S/G (ms seems to do this) */
   Description.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
-  Description.InterfaceType = Adapter->NdisMiniportBlock.BusType;
+  Description.InterfaceType = (INTERFACE_TYPE)Adapter->NdisMiniportBlock.BusType;
   Description.DmaChannel = DmaChannel;
   Description.MaximumLength = MaximumBufferSize;
 
@@ -883,7 +883,7 @@ NdisMRegisterDmaChannel(
   DeviceDesc.Dma64BitAddresses = FALSE;
   DeviceDesc.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
   DeviceDesc.DmaChannel = DmaDescription->DmaChannel;
-  DeviceDesc.InterfaceType = Adapter->NdisMiniportBlock.BusType;
+  DeviceDesc.InterfaceType = (INTERFACE_TYPE)Adapter->NdisMiniportBlock.BusType;
   DeviceDesc.DmaWidth = DmaDescription->DmaWidth;
   DeviceDesc.DmaSpeed = DmaDescription->DmaSpeed;
   DeviceDesc.MaximumLength = MaximumLength;
@@ -1039,16 +1039,15 @@ NdisMRegisterIoPortRange(
 
   NDIS_DbgPrint(MAX_TRACE, ("Called - InitialPort 0x%x, NumberOfPorts 0x%x\n", InitialPort, NumberOfPorts));
 
-  memset(&PortAddress, 0, sizeof(PortAddress));
-
   /*
    * FIXME: NDIS 5+ completely ignores the InitialPort parameter, but
    * we don't have a way to get the I/O base address yet (see
    * NDIS_MINIPORT_BLOCK->AllocatedResources and
    * NDIS_MINIPORT_BLOCK->AllocatedResourcesTranslated).
    */
+  PortAddress.QuadPart = 0ULL;
   if(InitialPort)
-      PortAddress = RtlConvertUlongToLargeInteger(InitialPort);
+      PortAddress.QuadPart = (ULONGLONG)InitialPort;
   else
       ASSERT(FALSE);
 
@@ -1104,7 +1103,7 @@ NdisMDeregisterIoPortRange(IN  NDIS_HANDLE MiniportAdapterHandle,
  */
 {
     PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
-    PHYSICAL_ADDRESS PortAddress = RtlConvertUlongToLargeInteger(InitialPort);
+    PHYSICAL_ADDRESS PortAddress = RTL_CONSTANT_LARGE_INTEGER((ULONGLONG)InitialPort);
     PHYSICAL_ADDRESS TranslatedAddress;
     ULONG AddressSpace = 1;
 
@@ -1196,7 +1195,7 @@ NdisMInitializeScatterGatherDma(
     DeviceDesc.Dma32BitAddresses = TRUE; // All callers support 32-bit addresses
     DeviceDesc.Dma64BitAddresses = Dma64BitAddresses;
     DeviceDesc.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
-    DeviceDesc.InterfaceType = Adapter->NdisMiniportBlock.BusType;
+    DeviceDesc.InterfaceType = (INTERFACE_TYPE)Adapter->NdisMiniportBlock.BusType;
     DeviceDesc.MaximumLength = MaximumPhysicalMapping;
 
     Adapter->NdisMiniportBlock.SystemAdapterObject =

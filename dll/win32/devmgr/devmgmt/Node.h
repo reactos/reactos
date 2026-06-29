@@ -6,7 +6,9 @@ enum NodeType
 {
     RootNode,
     ClassNode,
-    DeviceNode
+    DeviceNode,
+    ResourceNode,
+    ResourceTypeNode
 };
 
 class CNode

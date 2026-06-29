@@ -11,6 +11,10 @@ list(APPEND SOURCE
     themes.c
     genral.spec)
 
+if(ARCH STREQUAL "amd64")
+    list(APPEND SOURCE msys2.c)
+endif()
+
 add_library(acgenral MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/acgenral.def)

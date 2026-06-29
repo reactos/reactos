@@ -2,7 +2,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Печать имени текущего узла.\n\nhostname"
-    IDS_NOSET "hostname -s не поддерживается."
-    IDS_ERROR "Ошибка Win32"
+    IDS_USAGE "\nПечать имени текущего узла.\n\nhostname\n"
+    IDS_NOSET "sethostname: Open the ""Computer Name"" tab in the ""System"" Control Panel applet\nto change the host name.\nhostname -s не поддерживается.\n"
+    IDS_ERROR "Ошибка: "
 END

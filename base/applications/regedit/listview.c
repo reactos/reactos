@@ -438,6 +438,27 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
                     return ((int)qw2 - (int)qw1);
             }
 
+            case REG_SZ:
+            case REG_EXPAND_SZ:
+            case REG_MULTI_SZ:
+            {
+                INT nCompare;
+                size_t nCommonLength = min(l->val_len, r->val_len) / sizeof(WCHAR);
+                if (pSortInfo->bSortAscending)
+                {
+                    nCompare = StrCmpNW((WCHAR*)l->val, (WCHAR*)r->val, nCommonLength);
+                    if (nCompare == 0)
+                        nCompare = l->val_len - r->val_len;
+                }
+                else
+                {
+                    nCompare = StrCmpNW((WCHAR*)r->val, (WCHAR*)l->val, nCommonLength);
+                    if (nCompare == 0)
+                        nCompare = r->val_len - l->val_len;
+                }
+                return nCompare;
+            }
+
             default:
             {
                 INT nCompare = 0;

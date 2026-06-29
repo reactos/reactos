@@ -1,6 +1,4 @@
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_definitions(-D__WINESRC__)
 spec2def(twain_32.dll twain_32.spec)
 
 list(APPEND SOURCE
@@ -18,3 +16,4 @@ target_link_libraries(twain_32 wine)
 add_importlibs(twain_32 user32 msvcrt kernel32 ntdll)
 add_pch(twain_32 precomp.h SOURCE)
 add_cd_file(TARGET twain_32 DESTINATION reactos FOR all)
+set_wine_module(twain_32)

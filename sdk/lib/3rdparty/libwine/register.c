@@ -30,9 +30,21 @@
 #include "rpcproxy.h"
 #include "atliface.h"
 
+static inline void *image_base(void)
+{
+#if defined(__MINGW32__) || defined(_MSC_VER)
+    extern IMAGE_DOS_HEADER __ImageBase;
+    return (void *)&__ImageBase;
+#else
+    extern IMAGE_NT_HEADERS __wine_spec_nt_header;
+    return (void *)((__wine_spec_nt_header.OptionalHeader.ImageBase + 0xffff) & ~0xffff);
+#endif
+}
+
 static const WCHAR atl100W[] = {'a','t','l','1','0','0','.','d','l','l',0};
 static const WCHAR regtypeW[] = {'W','I','N','E','_','R','E','G','I','S','T','R','Y',0};
 static const WCHAR moduleW[] = {'M','O','D','U','L','E',0};
+static const WCHAR systemrootW[] = {'S','y','s','t','e','m','R','o','o','t',0};
 
 struct reg_info
 {
@@ -63,6 +75,8 @@ static IRegistrar *create_registrar( HMODULE inst, struct reg_info *info )
 
         GetModuleFileNameW( inst, str, MAX_PATH );
         IRegistrar_AddReplacement( info->registrar, moduleW, str );
+        GetEnvironmentVariableW( systemrootW, str, MAX_PATH );
+        IRegistrar_AddReplacement( info->registrar, systemrootW, str );
     }
     return info->registrar;
 }
@@ -115,6 +129,32 @@ HRESULT __wine_unregister_resources( HMODULE module )
     info.do_register = FALSE;
     info.result = S_OK;
     EnumResourceNamesW( module, regtypeW, register_resource, (LONG_PTR)&info );
+    if (info.registrar) IRegistrar_Release( info.registrar );
+    return info.result;
+}
+
+// FIXME: Workaround until all modules use the new prototype
+// See rpcproxy.h
+HRESULT __cdecl __wine_register_resources_new(void)
+{
+    struct reg_info info;
+
+    info.registrar = NULL;
+    info.do_register = TRUE;
+    info.result = S_OK;
+    EnumResourceNamesW( image_base(), regtypeW, register_resource, (LONG_PTR)&info );
+    if (info.registrar) IRegistrar_Release( info.registrar );
+    return info.result;
+}
+
+HRESULT __cdecl __wine_unregister_resources_new(void)
+{
+    struct reg_info info;
+
+    info.registrar = NULL;
+    info.do_register = FALSE;
+    info.result = S_OK;
+    EnumResourceNamesW( image_base(), regtypeW, register_resource, (LONG_PTR)&info );
     if (info.registrar) IRegistrar_Release( info.registrar );
     return info.result;
 }

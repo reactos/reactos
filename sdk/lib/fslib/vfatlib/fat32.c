@@ -384,7 +384,7 @@ done:
 
 NTSTATUS
 Fat32Format(IN HANDLE FileHandle,
-            IN PPARTITION_INFORMATION PartitionInfo,
+            IN PPARTITION_INFORMATION_EX PartitionInfo,
             IN PDISK_GEOMETRY DiskGeometry,
             IN PUNICODE_STRING Label,
             IN BOOLEAN QuickFormat,
@@ -441,7 +441,7 @@ Fat32Format(IN HANDLE FileHandle,
     BootSector.FATSectors = 0;
     BootSector.SectorsPerTrack = DiskGeometry->SectorsPerTrack;
     BootSector.Heads = DiskGeometry->TracksPerCylinder;
-    BootSector.HiddenSectors = PartitionInfo->HiddenSectors;
+    BootSector.HiddenSectors = (PartitionInfo->PartitionStyle == PARTITION_STYLE_MBR) ? PartitionInfo->Mbr.HiddenSectors : 0;
     BootSector.SectorsHuge = PartitionInfo->PartitionLength.QuadPart >>
         GetShiftCount(BootSector.BytesPerSector); /* Use shifting to avoid 64-bit division */
     BootSector.FATSectors32 = 0; /* Set later */

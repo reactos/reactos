@@ -18,7 +18,7 @@ BEGIN
     END
     POPUP "&View"
     BEGIN
-        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+        MENUITEM "&Mode fenêtre unique", IDM_SWITCHVIEW
     END
     POPUP "Périp&hérique"
     BEGIN

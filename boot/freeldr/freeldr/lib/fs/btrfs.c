@@ -8,6 +8,7 @@
 /* Some code was taken from u-boot, https://github.com/u-boot/u-boot/tree/master/fs/btrfs */
 
 #include <freeldr.h>
+#include "fs/stat.h"
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
@@ -1051,15 +1052,16 @@ static inline const char *skip_current_directories(const char *cur)
 
 static u64 btrfs_lookup_path(PBTRFS_INFO BtrFsInfo,
                              const struct btrfs_root_item *root, u64 inr, const char *path,
-                             u8 *type_p, struct btrfs_inode_item *inode_item_p, int symlink_limit)
+                             u8 *type_p, struct btrfs_inode_item *inode_item_p, int symlink_limit,
+                             _Out_opt_ PCHAR filename_buffer, _Inout_ PULONG filename_length)
 {
     struct btrfs_dir_item item;
     struct btrfs_inode_item inode_item;
     u8 type = BTRFS_FT_DIR;
     int len, have_inode = 0;
     const char *cur = path;
-    struct btrfs_disk_key key;
-    char *link_target = NULL;
+    const char *last_elem;
+    int last_elem_len;
 
     if (*cur == '/' || *cur == '\\')
     {
@@ -1077,6 +1079,10 @@ static u64 btrfs_lookup_path(PBTRFS_INFO BtrFsInfo,
             ERR("%s: Name too long at \"%.*s\"\n", BTRFS_NAME_MAX, cur);
             return INVALID_INODE;
         }
+
+        /* Save the pointer/length of the current path element */
+        last_elem = cur;
+        last_elem_len = len;
 
         if (len == 1 && cur[0] == '.')
             break;
@@ -1109,6 +1115,8 @@ static u64 btrfs_lookup_path(PBTRFS_INFO BtrFsInfo,
 
         if (type == BTRFS_FT_SYMLINK && symlink_limit >= 0)
         {
+            char *link_target = NULL;
+
             if (!symlink_limit)
             {
                 TRACE("%s: Too much symlinks!\n");
@@ -1119,7 +1127,9 @@ static u64 btrfs_lookup_path(PBTRFS_INFO BtrFsInfo,
             if (!btrfs_readlink(BtrFsInfo, root, item.location.objectid, &link_target))
                 return INVALID_INODE;
 
-            inr = btrfs_lookup_path(BtrFsInfo, root, inr, link_target, &type, &inode_item, symlink_limit - 1);
+            inr = btrfs_lookup_path(BtrFsInfo, root, inr, link_target,
+                                    &type, &inode_item, symlink_limit - 1,
+                                    NULL, NULL);
 
             FrLdrTempFree(link_target, TAG_BTRFS_LINK);
 
@@ -1144,6 +1154,7 @@ static u64 btrfs_lookup_path(PBTRFS_INFO BtrFsInfo,
     {
         if (!have_inode)
         {
+            struct btrfs_disk_key key;
             key.objectid = inr;
             key.type = BTRFS_INODE_ITEM_KEY;
             key.offset = 0;
@@ -1153,6 +1164,13 @@ static u64 btrfs_lookup_path(PBTRFS_INFO BtrFsInfo,
         }
 
         *inode_item_p = inode_item;
+    }
+
+    if (filename_buffer)
+    {
+        /* Copy the file name, perhaps truncated */
+        *filename_length = min(*filename_length, last_elem_len);
+        RtlCopyMemory(filename_buffer, last_elem, *filename_length);
     }
 
     return inr;
@@ -1176,6 +1194,14 @@ ARC_STATUS BtrFsGetFileInformation(ULONG FileId, FILEINFORMATION *Information)
     Information->EndingAddress.QuadPart = phandle->inode.size;
     Information->CurrentAddress.QuadPart = phandle->position;
 
+    /* Set the ARC file attributes */
+    Information->Attributes = phandle->Attributes;
+
+    /* Copy the file name, perhaps truncated, and NUL-terminated */
+    Information->FileNameLength = min(phandle->FileNameLength, sizeof(Information->FileName) - 1);
+    RtlCopyMemory(Information->FileName, phandle->FileName, Information->FileNameLength);
+    Information->FileName[Information->FileNameLength] = ANSI_NULL;
+
     TRACE("BtrFsGetFileInformation(%lu) -> FileSize = %llu, FilePointer = 0x%llx\n",
           FileId, Information->EndingAddress.QuadPart, Information->CurrentAddress.QuadPart);
 
@@ -1186,6 +1212,7 @@ ARC_STATUS BtrFsOpen(CHAR *Path, OPENMODE OpenMode, ULONG *FileId)
 {
     PBTRFS_INFO BtrFsInfo;
     ULONG DeviceId;
+    ULONG FileNameLength;
     u64 inr;
     u8 type;
 
@@ -1202,20 +1229,41 @@ ARC_STATUS BtrFsOpen(CHAR *Path, OPENMODE OpenMode, ULONG *FileId)
     DeviceId = FsGetDeviceId(*FileId);
     BtrFsInfo = BtrFsVolumes[DeviceId];
 
+    temp_file_info.FileNameLength = 0;
+    temp_file_info.FileName[0] = ANSI_NULL;
+    FileNameLength = sizeof(temp_file_info.FileName) - 1;
+
     inr = btrfs_lookup_path(BtrFsInfo, &BtrFsInfo->FsRoot,
                             BtrFsInfo->FsRoot.root_dirid,
-                            Path, &type, &temp_file_info.inode, 40);
-
+                            Path, &type, &temp_file_info.inode, 40,
+                            temp_file_info.FileName, &FileNameLength);
     if (inr == INVALID_INODE)
     {
         TRACE("Cannot lookup file %s\n", Path);
         return ENOENT;
     }
-
     if (type != BTRFS_FT_REG_FILE)
     {
         TRACE("Not a regular file: %s\n", Path);
         return EISDIR;
+    }
+
+    temp_file_info.FileNameLength = FileNameLength;
+
+    /* Map the attributes to ARC file attributes. NOTE: We don't look
+     * at the "user.DOSATTRIB" (EA_DOSATTRIB) WinBtrfs-compatible XATTR. */
+    temp_file_info.Attributes = 0;
+    if (!(temp_file_info.inode.mode & (_S_IWUSR | _S_IWGRP | _S_IWOTH)))
+        temp_file_info.Attributes |= ReadOnlyFile;
+    if (_S_ISDIR(temp_file_info.inode.mode))
+        temp_file_info.Attributes |= DirectoryFile;
+
+    /* Set hidden attribute for all entries starting with '.' */
+    if ((temp_file_info.FileNameLength >= 2 && temp_file_info.FileName[0] == '.') &&
+         ((temp_file_info.FileNameLength == 2 && temp_file_info.FileName[1] != '.') ||
+           temp_file_info.FileNameLength >= 3))
+    {
+        temp_file_info.Attributes |= HiddenFile;
     }
 
     TRACE("found inode inr=%llu size=%llu\n", inr, temp_file_info.inode.size);
@@ -1283,6 +1331,24 @@ ARC_STATUS BtrFsSeek(ULONG FileId, LARGE_INTEGER *Position, SEEKMODE SeekMode)
     phandle->position = NewPosition.QuadPart;
     return ESUCCESS;
 }
+
+
+/**
+ * @brief
+ * Returns the size of the BTRFS volume laid on the storage media device
+ * opened via @p DeviceId.
+ **/
+ULONGLONG
+BtrFsGetVolumeSize(
+    _In_ ULONG DeviceId)
+{
+    PBTRFS_INFO Volume = BtrFsVolumes[DeviceId];
+    ASSERT(Volume);
+
+    /* NOTE: BytesPerSector is given by Volume->SuperBlock.sectorsize */
+    return Volume->SuperBlock.total_bytes;
+}
+
 
 const DEVVTBL BtrFsFuncTable =
 {

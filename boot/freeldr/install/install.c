@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 
     InstallBootSector(argv[2]);
 
-    _tprintf(_T("You must now copy freeldr.sys & freeldr.ini to %s.\n"), argv[1]);
+    _tprintf(_T("You must now copy freeldr.sys, rosload.exe and freeldr.ini to %s.\n"), argv[1]);
 
     CloseVolume();
 

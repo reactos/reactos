@@ -32,7 +32,7 @@ BEGIN
     IDS_DHCPYES             "\tDHCP Enabled. . . . . . . . . . . : Yes\n"
     IDS_AUTOCONFIGNO        "\tAutoconfiguration Enabled . . . . : No\n"
     IDS_AUTOCONFIGYES       "\tAutoconfiguration Enabled . . . . : Yes\n"
-    IDS_IPADDRESS           "\tIP Address. . . . . . . . . . . . : %hs\n"
+    IDS_IPADDRESS           "\tIPv4 Address. . . . . . . . . . . : %hs\n"
     IDS_SUBNETMASK          "\tSubnet Mask . . . . . . . . . . . : %hs\n"
     IDS_DEFAULTGATEWAY      "\tDefault Gateway . . . . . . . . . : %hs\n"
     IDS_DHCPSERVER          "\tDHCP Server . . . . . . . . . . . : %hs\n"
@@ -89,52 +89,56 @@ BEGIN
     IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
     IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
     IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
-    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
+    IDS_DHCPRELEASED        "IP address for adapter %ls has already been released.\n"
     IDS_DHCPRELEASEERROR    "An error occurred while releasing interface %ls: "
     IDS_DHCPRENEWERROR      "An error occurred while renewing interface %ls: "
+    IDS_DHCPSETIDERROR      "Attempt to set the class id for adapter %ls failed: "
+    IDS_DHCPSETIDSUCCESS    "Successfully set the class id for adapter %ls.\n"
 END
 
 STRINGTABLE
 BEGIN
-/* Please keep the spacing/formatting as per En.rc when translating */
+/* Please keep the spacing/formatting as per en-US.rc when translating */
     IDS_USAGE
-    "\nВИКОРИСТАННЯ:\n\
-        ipconfig [/? | /all | /renew [адаптер] | /release [адаптер] |\n\
-                  /flushdns | /displaydns | /registerdns |\n\
-                  /showclassid адптер |\n\
-                  /setclassid адаптер [встановлюваний_classid] ]\n\
+"\nВИКОРИСТАННЯ:\n\
+    ipconfig [/? | /all | /renew [адаптер] | /release [адаптер] |\n\
+              /flushdns | /displaydns | /registerdns |\n\
+              /showclassid адптер |\n\
+              /setclassid адаптер [встановлюваний_classid] ]\n\
 \n\
-    де\n\
-        адаптер         Назва з'єднання\n\
-                       (дозволені символи маскування -- *(будь-яка кількість знаків) і ?(один символ)\n\
+    де:\n\
+    адаптер         Назва з'єднання\n\
+                    (дозволені символи маскування -- *(будь-яка кількість\n\
+                    знаків) і ?(один символ)\n\
 \n\
-        Ключі:\n\
-           /?           Вивести це повідомлення\n\
-           /all         Показати повну інформацію про мережні налаштування.\n\
-           /release     Звільнити IP-адресу вказаного адаптера.\n\
-           /renew       Обновити IP-адресу вказаного адаптера.\n\
-           /flushdns    Очистити кеш DNS записів.\n\
-           /registerdns Оновити всі реєстрації DHCP і перереєстувати імена DNS.\n\
-           /displaydns  Показати вміст кешу DNS.\n\
-           /showclassid Показати всі довзолені для вказаного адаптера коди(Class ID) DHCP.\n\
-           /setclassid  Змінтити код DHCP (Class ID).\n\
+Ключі:\n\
+    /?              Вивести це повідомлення.\n\
+    /all            Показати повну інформацію про мережні налаштування.\n\
+    /release        Звільнити IPv4-адресу вказаного адаптера.\n\
+    /renew          Оновити IPv4-адресу вказаного адаптера.\n\
+    /flushdns       Очистити кеш DNS записів.\n\
+    /registerdns    Оновити всі реєстрації DHCP і перереєстувати імена DNS.\n\
+    /displaydns     Показати вміст кешу DNS.\n\
+    /showclassid    Показати всі довзолені для вказаного адаптера коди (Class ID) DHCP.\n\
+    /setclassid     Змінтити код DHCP (Class ID).\n\
 \n\
-    По замовчуванню відображається тільки IP-адреса, маска підмережі і шлюз\n\
-    для кожного адаптера зв'язаного з TCP/IP.\n\
+По замовчуванню відображається тільки IP-адреса, маска підмережі і шлюз\n\
+для кожного адаптера зв'язаного з TCP/IP.\n\
 \n\
-    При використанні ключів Release і Renew, якщо не було вказано ім'я адаптера,то\n\
-    IP-адреса звільняється чи оновлюється для всіх адапетрів зв'язаних з TCP/IP.\n\
+При використанні ключів Release і Renew, якщо не було вказано ім'я адаптера,то\n\
+IP-адреса звільняється чи оновлюється для всіх адапетрів зв'язаних з TCP/IP.\n\
 \n\
-    При використанні ключа Setclassid, якщо не було вказано ID класу (ClassId), то існуючий код класу буде видалено.\n\
+При використанні ключа Setclassid, якщо не було вказано ID класу (ClassId), то існуючий код класу буде видалено.\n\
 \n\
-    Приклади:\n\
-        > ipconfig                   ... Вивести загальну інформацію.\n\
-        > ipconfig /all              ... Вивести повну інформацію.\n\
-        > ipconfig /renew            ... Оновити стан всіх адапетрів\n\
-        > ipconfig /renew EL*        ... Оновити стан всіх з'єднань,\n\
-                                          ім'я яких починається на EL\n\
-        > ipconfig /release *Con*    ... Звільнити (скинути динамічну конфігурацію)\n\
-                                         всі з'єднання, які містять у назві ""Сon""\n\
-                                         напр. ""Local Area Connection 1"" чи\n\
-                                               ""Local Area Connection 2""\n"
+Приклади:\n\
+    > ipconfig                   ... Вивести загальну інформацію.\n\
+    > ipconfig /all              ... Вивести повну інформацію.\n\
+    > ipconfig /renew            ... Оновити стан всіх адапетрів\n\
+    > ipconfig /renew EL*        ... Оновити стан всіх з'єднань,\n\
+                                      ім'я яких починається на EL\n\
+    > ipconfig /release *Con*    ... Звільнити (скинути динамічну конфігурацію)\n\
+                                     всі з'єднання, які містять у назві ""Сon""\n\
+                                     напр. ""Local Area Connection 1""\n\
+                                        чи ""Local Area Connection 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

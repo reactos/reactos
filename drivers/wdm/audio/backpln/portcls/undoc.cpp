@@ -651,7 +651,7 @@ DumpFilterDescriptor(
             for(Index = 0; Index < FilterDescription->PinCount; Index++)
             {
                // print prefix
-               swprintf(Buffer, L"PinIndex %lu", Index);
+               _swprintf(Buffer, L"PinIndex %lu", Index);
 
                // dump automation table
                DumpAutomationTable((PPCAUTOMATION_TABLE)PinDescriptor->AutomationTable, Buffer, L"    ");
@@ -679,7 +679,7 @@ DumpFilterDescriptor(
             for(Index = 0; Index < FilterDescription->NodeCount; Index++)
             {
                 // print prefix
-                swprintf(Buffer, L"NodeIndex %lu", Index);
+                _swprintf(Buffer, L"NodeIndex %lu", Index);
 
                 // dump automation table
                 DumpAutomationTable((PPCAUTOMATION_TABLE)NodeDescriptor->AutomationTable, Buffer, L"    ");

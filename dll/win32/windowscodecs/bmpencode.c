@@ -17,8 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include <stdarg.h>
 
 #define COBJMACROS
@@ -56,10 +54,7 @@ static const struct bmp_pixelformat formats[] = {
     {&GUID_WICPixelFormat16bppBGR555, 16, 0, BI_RGB},
     {&GUID_WICPixelFormat16bppBGR565, 16, 0, BI_BITFIELDS, 0xf800, 0x7e0, 0x1f, 0},
     {&GUID_WICPixelFormat32bppBGR, 32, 0, BI_RGB},
-#if 0
-    /* Windows doesn't seem to support this one. */
     {&GUID_WICPixelFormat32bppBGRA, 32, 0, BI_BITFIELDS, 0xff0000, 0xff00, 0xff, 0xff000000},
-#endif
     {NULL}
 };
 
@@ -78,8 +73,6 @@ typedef struct BmpFrameEncode {
     UINT colors;
     BOOL committed;
 } BmpFrameEncode;
-
-static const WCHAR wszEnableV5Header32bppBGRA[] = {'E','n','a','b','l','e','V','5','H','e','a','d','e','r','3','2','b','p','p','B','G','R','A',0};
 
 static inline BmpFrameEncode *impl_from_IWICBitmapFrameEncode(IWICBitmapFrameEncode *iface)
 {
@@ -114,7 +107,7 @@ static ULONG WINAPI BmpFrameEncode_AddRef(IWICBitmapFrameEncode *iface)
     BmpFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     return ref;
 }
@@ -124,13 +117,13 @@ static ULONG WINAPI BmpFrameEncode_Release(IWICBitmapFrameEncode *iface)
     BmpFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     if (ref == 0)
     {
         if (This->stream) IStream_Release(This->stream);
-        HeapFree(GetProcessHeap(), 0, This->bits);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This->bits);
+        free(This);
     }
 
     return ref;
@@ -253,7 +246,7 @@ static HRESULT BmpFrameEncode_AllocateBits(BmpFrameEncode *This)
             return WINCODEC_ERR_WRONGSTATE;
 
         This->stride = (((This->width * This->format->bpp)+31)/32)*4;
-        This->bits = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->stride * This->height);
+        This->bits = calloc(This->stride, This->height);
         if (!This->bits) return E_OUTOFMEMORY;
     }
 
@@ -316,7 +309,8 @@ static HRESULT WINAPI BmpFrameEncode_WriteSource(IWICBitmapFrameEncode *iface,
     if (SUCCEEDED(hr))
     {
         hr = write_source(iface, pIBitmapSource, prc,
-            This->format->guid, This->format->bpp, This->width, This->height);
+            This->format->guid, This->format->bpp, !This->colors && This->format->colors,
+            This->width, This->height);
     }
 
     return hr;
@@ -400,10 +394,16 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
 }
 
 static HRESULT WINAPI BmpFrameEncode_GetMetadataQueryWriter(IWICBitmapFrameEncode *iface,
-    IWICMetadataQueryWriter **ppIMetadataQueryWriter)
+        IWICMetadataQueryWriter **query_writer)
 {
-    FIXME("(%p, %p): stub\n", iface, ppIMetadataQueryWriter);
-    return E_NOTIMPL;
+    BmpFrameEncode *encoder = impl_from_IWICBitmapFrameEncode(iface);
+
+    TRACE("iface %p, query_writer %p.\n", iface, query_writer);
+
+    if (!encoder->initialized)
+        return WINCODEC_ERR_NOTINITIALIZED;
+
+    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
 }
 
 static const IWICBitmapFrameEncodeVtbl BmpFrameEncode_Vtbl = {
@@ -463,7 +463,7 @@ static ULONG WINAPI BmpEncoder_AddRef(IWICBitmapEncoder *iface)
     BmpEncoder *This = impl_from_IWICBitmapEncoder(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     return ref;
 }
@@ -473,13 +473,13 @@ static ULONG WINAPI BmpEncoder_Release(IWICBitmapEncoder *iface)
     BmpEncoder *This = impl_from_IWICBitmapEncoder(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     if (ref == 0)
     {
         if (This->stream) IStream_Release(This->stream);
         if (This->frame) IWICBitmapFrameEncode_Release(&This->frame->IWICBitmapFrameEncode_iface);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This);
     }
 
     return ref;
@@ -563,7 +563,7 @@ static HRESULT WINAPI BmpEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
     HRESULT hr;
     static const PROPBAG2 opts[1] =
     {
-        { PROPBAG2_TYPE_DATA, VT_BOOL, 0, 0, (LPOLESTR)wszEnableV5Header32bppBGRA },
+        { PROPBAG2_TYPE_DATA, VT_BOOL, 0, 0, (LPOLESTR)L"EnableV5Header32bppBGRA" },
     };
 
     TRACE("(%p,%p,%p)\n", iface, ppIFrameEncode, ppIEncoderOptions);
@@ -578,7 +578,7 @@ static HRESULT WINAPI BmpEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
         if (FAILED(hr)) return hr;
     }
 
-    encode = HeapAlloc(GetProcessHeap(), 0, sizeof(BmpFrameEncode));
+    encode = malloc(sizeof(BmpFrameEncode));
     if (!encode)
     {
         IPropertyBag2_Release(*ppIEncoderOptions);
@@ -648,7 +648,7 @@ HRESULT BmpEncoder_CreateInstance(REFIID iid, void** ppv)
 
     *ppv = NULL;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(BmpEncoder));
+    This = malloc(sizeof(BmpEncoder));
     if (!This) return E_OUTOFMEMORY;
 
     This->IWICBitmapEncoder_iface.lpVtbl = &BmpEncoder_Vtbl;

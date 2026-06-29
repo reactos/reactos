@@ -31,16 +31,6 @@ import "oaidl.idl";
 #define vi_progid(str)
 #endif
 
-[
-    uuid(f5078f18-c551-11d3-89b9-0000f81fe221),
-    version(6.0),
-    helpstring("Microsoft XML, v6.0")
-]
-library MSXML2
-{
-
-importlib("stdole2.tlb");
-
 interface IXMLDOMImplementation;
 interface IXMLDOMNode;
 interface IXMLDOMDocumentFragment;
@@ -62,6 +52,8 @@ interface IXMLDOMEntity;
 interface IXMLDOMEntityReference;
 interface IXMLDOMParseError;
 interface IXMLDOMParseErrorCollection;
+interface IXMLHTTPRequest2Callback;
+interface IXMLHTTPRequest3Callback;
 interface IXTLRuntime;
 interface IXSLTemplate;
 interface IXSLProcessor;
@@ -75,8 +67,8 @@ interface ISAXEntityResolver;
 interface ISAXErrorHandler;
 interface ISAXLexicalHandler;
 interface ISAXLocator;
-interface ISAXXMLReader;
 interface ISAXXMLFilter;
+interface ISAXXMLReader;
 
 interface IVBSAXAttributes;
 interface IVBSAXContentHandler;
@@ -109,9 +101,9 @@ interface ISchemaAny;
 interface ISchemaIdentityConstraint;
 interface ISchemaNotation;
 
-
-cpp_quote("#define DOMDocument DOMDocument2")
-cpp_quote("#define CLSID_DOMDocument CLSID_DOMDocument2")
+cpp_quote("#ifdef __ISAXXMLReader_INTERFACE_DEFINED__")
+cpp_quote("#undef __MSXML2_LIBRARY_DEFINED__")
+cpp_quote("#endif")
 
 cpp_quote("#ifndef __MSXML_DOMNODETYPE_DEFINED")
 cpp_quote("#define __MSXML_DOMNODETYPE_DEFINED")
@@ -133,6 +125,8 @@ typedef enum tagDOMNodeType
 } DOMNodeType;
 cpp_quote("#endif")
 
+cpp_quote("#ifndef __msxml_som_enums__")
+cpp_quote("#define __msxml_som_enums__")
 typedef enum _SOMITEMTYPE
 {
     SOMITEM_SCHEMA                      = 0x1000,
@@ -260,6 +254,53 @@ typedef enum _SCHEMATYPEVARIETY
     SCHEMATYPEVARIETY_LIST      =  1,
     SCHEMATYPEVARIETY_UNION     =  2,
 } SCHEMATYPEVARIETY;
+cpp_quote("#endif /* __msxml_som_enums__ */")
+
+typedef [v1_enum] enum _XHR_CRED_PROMPT
+{
+    XHR_CRED_PROMPT_ALL,
+    XHR_CRED_PROMPT_NONE,
+    XHR_CRED_PROMPT_PROXY
+} XHR_CRED_PROMPT;
+
+typedef [v1_enum] enum _XHR_AUTH
+{
+    XHR_AUTH_ALL,
+    XHR_AUTH_NONE,
+    XHR_AUTH_PROXY
+} XHR_AUTH;
+
+typedef [v1_enum] enum _XHR_PROPERTY
+{
+    XHR_PROP_NO_CRED_PROMPT,
+    XHR_PROP_NO_AUTH,
+    XHR_PROP_TIMEOUT,
+    XHR_PROP_NO_DEFAULT_HEADERS,
+    XHR_PROP_REPORT_REDIRECT_STATUS,
+    XHR_PROP_NO_CACHE,
+    XHR_PROP_EXTENDED_ERROR,
+    XHR_PROP_QUERY_STRING_UTF8,
+    XHR_PROP_IGNORE_CERT_ERRORS,
+    XHR_PROP_ONDATA_THRESHOLD,
+    XHR_PROP_SET_ENTERPRISEID,
+    XHR_PROP_MAX_CONNECTIONS
+} XHR_PROPERTY;
+
+typedef struct tagXHR_COOKIE
+{
+    [ref, string] WCHAR *pwszUrl;
+    [ref, string] WCHAR *pwszName;
+    [unique, string] WCHAR *pwszValue;
+    [unique, string] WCHAR *pwszP3PPolicy;
+    FILETIME ftExpires;
+    DWORD dwFlags;
+} XHR_COOKIE;
+
+typedef struct tagXHR_CERT
+{
+    DWORD cbCert;
+    [ref, size_is(cbCert)] BYTE *pbCert;
+} XHR_CERT;
 
 [
 local,
@@ -605,7 +646,7 @@ interface IXMLDOMSchemaCollection2 : IXMLDOMSchemaCollection
     HRESULT getDeclaration(
         [in] IXMLDOMNode* node,
         [out,retval]ISchemaItem** item);
-};
+}
 
 [
 local,
@@ -1263,7 +1304,18 @@ interface IXMLHTTPRequest : IDispatch
 
     [propput, id(14)]
     HRESULT onreadystatechange([in] IDispatch *pReadyStateSink);
-};
+}
+
+typedef enum _SXH_SERVER_CERT_OPTION
+{
+    SXH_SERVER_CERT_IGNORE_UNKNOWN_CA        = 0x00000100,
+    SXH_SERVER_CERT_IGNORE_WRONG_USAGE       = 0x00000200,
+    SXH_SERVER_CERT_IGNORE_CERT_CN_INVALID   = 0x00001000,
+    SXH_SERVER_CERT_IGNORE_CERT_DATE_INVALID = 0x00002000,
+    SXH_SERVER_CERT_IGNORE_ALL_SERVER_ERRORS =
+           (SXH_SERVER_CERT_IGNORE_UNKNOWN_CA | SXH_SERVER_CERT_IGNORE_WRONG_USAGE |
+            SXH_SERVER_CERT_IGNORE_CERT_CN_INVALID | SXH_SERVER_CERT_IGNORE_CERT_DATE_INVALID),
+} SXH_SERVER_CERT_OPTION;
 
 [
 object,
@@ -1304,6 +1356,66 @@ interface IServerXMLHTTPRequest : IXMLHTTPRequest
         [in] SERVERXMLHTTP_OPTION option,
         [in] VARIANT value);
 }
+
+[
+    object,
+    uuid(e5d37dc0-552a-4d52-9cc0-a14d546fbd04),
+]
+interface IXMLHTTPRequest2 : IUnknown
+{
+    HRESULT Open([in, string, ref] const WCHAR *method, [in, string, ref] const WCHAR *url,
+        [in] IXMLHTTPRequest2Callback *callback,
+        [in, string, unique] const WCHAR *username, [in, string, unique] const WCHAR *password,
+        [in, string, unique] const WCHAR *proxyuser, [in, string, unique] const WCHAR *proxypassword);
+
+    HRESULT Send([in, unique] ISequentialStream *body, [in] ULONGLONG length);
+    HRESULT Abort();
+    HRESULT SetCookie([in, ref] const XHR_COOKIE *cookie, [out] DWORD *state);
+    HRESULT SetCustomResponseStream([in] ISequentialStream *stream);
+    HRESULT SetProperty([in] XHR_PROPERTY property, [in] ULONGLONG value);
+    HRESULT SetRequestHeader([in, string, ref] const WCHAR *header, [in, string, unique] const WCHAR *value);
+    HRESULT GetAllResponseHeaders([out, string] WCHAR **headers);
+    HRESULT GetCookie( [in, ref, string] const WCHAR *url, [in, unique, string] const WCHAR *name,
+        [in] DWORD flags, [out] ULONG *cookies_cnt, [out, size_is(,*cookies_cnt)] XHR_COOKIE **cookies);
+    HRESULT GetResponseHeader([in, string, ref] const WCHAR *header, [out, string] WCHAR **value);
+};
+
+[
+    object,
+    uuid(a1c9feee-0617-4f23-9d58-8961ea43567c)
+]
+interface IXMLHTTPRequest3 : IXMLHTTPRequest2
+{
+    HRESULT SetClientCertificate([in] DWORD count, [in, unique, size_is(count)] const BYTE *hashes,
+        [in, string, unique] const WCHAR *pin);
+};
+
+[
+    object,
+    uuid(a44a9299-e321-40de-8866-341b41669162),
+    pointer_default(ref)
+]
+interface IXMLHTTPRequest2Callback : IUnknown
+{
+    HRESULT OnRedirect([in] IXMLHTTPRequest2 *xhr, [in, string] const WCHAR *url);
+    HRESULT OnHeadersAvailable([in] IXMLHTTPRequest2 *xhr, [in] DWORD status, [in, string] const WCHAR *msg);
+    HRESULT OnDataAvailable([in] IXMLHTTPRequest2 *xhr, [in] ISequentialStream *stream);
+    HRESULT OnResponseReceived([in] IXMLHTTPRequest2 *xhr, [in] ISequentialStream *stream);
+    HRESULT OnError([in] IXMLHTTPRequest2 *xhr, [in] HRESULT error);
+};
+
+[
+    object,
+    uuid(b9e57830-8c6c-4a6f-9c13-47772bb047bb)
+]
+interface IXMLHTTPRequest3Callback : IXMLHTTPRequest2Callback
+{
+    HRESULT OnServerCertificateReceived([in] IXMLHTTPRequest3 *xhr, [in] DWORD errors,
+        [in] DWORD count, [in, unique, size_is(count)] const XHR_CERT *certificates);
+
+    HRESULT OnClientCertificateRequested([in] IXMLHTTPRequest3 *xhr,
+        [in] DWORD count, [in, string, unique, size_is(count)] const WCHAR **list);
+};
 
 [
 object,
@@ -1415,266 +1527,6 @@ interface IXMLDOMParseErrorCollection : IDispatch
     HRESULT _newEnum( [retval, out] IUnknown **ppunk);
 }
 
-[
-    uuid(F6D90F11-9C73-11D3-B32E-00C04F990BB4)
-]
-coclass DOMDocument
-{
-    [default] interface IXMLDOMDocument2;
-    [default, source] dispinterface XMLDOMDocumentEvents;
-}
-
-[
-    uuid(f5078f1b-c551-11d3-89b9-0000f81fe221)
-]
-coclass DOMDocument26
-{
-    [default] interface IXMLDOMDocument2;
-    [default, source] dispinterface XMLDOMDocumentEvents;
-}
-
-[
-    uuid(f5078f32-c551-11d3-89b9-0000f81fe221)
-]
-coclass DOMDocument30
-{
-    [default] interface IXMLDOMDocument2;
-    [default, source] dispinterface XMLDOMDocumentEvents;
-}
-
-[
-    uuid(88d969c0-f192-11d4-a65f-0040963251e5)
-]
-coclass DOMDocument40
-{
-    [default] interface IXMLDOMDocument2;
-    [default, source] dispinterface XMLDOMDocumentEvents;
-}
-
-[
-    helpstring("XML DOM Document 6.0"),
-    progid("Msxml2.DOMDocument.6.0"),
-    threading(both),
-    uuid(88d96a05-f192-11d4-a65f-0040963251e5)
-]
-coclass DOMDocument60
-{
-    [default] interface IXMLDOMDocument3;
-    [default, source] dispinterface XMLDOMDocumentEvents;
-}
-
-[
-    uuid(F6D90F12-9C73-11D3-B32E-00C04F990BB4)
-]
-coclass FreeThreadedDOMDocument
-{
-    [default] interface IXMLDOMDocument2;
-    [default, source] dispinterface XMLDOMDocumentEvents;
-}
-
-[
-    uuid(f5078f1c-c551-11d3-89b9-0000f81fe221)
-]
-coclass FreeThreadedDOMDocument26
-{
-    [default] interface IXMLDOMDocument2;
-    [default, source] dispinterface XMLDOMDocumentEvents;
-}
-
-[
-    uuid(f5078f33-c551-11d3-89b9-0000f81fe221)
-]
-coclass FreeThreadedDOMDocument30
-{
-    [default] interface IXMLDOMDocument2;
-    [default, source] dispinterface XMLDOMDocumentEvents;
-}
-
-[
-    uuid(88d969c1-f192-11d4-a65f-0040963251e5)
-]
-coclass FreeThreadedDOMDocument40
-{
-    [default] interface IXMLDOMDocument2;
-    [default, source] dispinterface XMLDOMDocumentEvents;
-}
-
-[
-    helpstring("Free threaded XML DOM Document 6.0"),
-    progid("Msxml2.FreeThreadedDOMDocument.6.0"),
-    threading(both),
-    uuid(88d96a06-f192-11d4-a65f-0040963251e5),
-]
-coclass FreeThreadedDOMDocument60
-{
-    [default] interface IXMLDOMDocument3;
-    [default, source] dispinterface XMLDOMDocumentEvents;
-}
-
-[
-    uuid(f6d90f16-9c73-11d3-b32e-00c04f990bb4)
-]
-coclass XMLHTTP
-{
-    [default] interface IXMLHTTPRequest;
-}
-
-[
-    uuid(f5078f1e-c551-11d3-89b9-0000f81fe221)
-]
-coclass XMLHTTP26
-{
-    [default] interface IXMLHTTPRequest;
-}
-
-[
-    uuid(f5078f35-c551-11d3-89b9-0000f81fe221)
-]
-coclass XMLHTTP30
-{
-    [default] interface IXMLHTTPRequest;
-}
-
-[
-    uuid(88d969c5-f192-11d4-a65f-0040963251e5)
-]
-coclass XMLHTTP40
-{
-    [default] interface IXMLHTTPRequest;
-}
-
-[
-    helpstring("XML HTTP 6.0"),
-    progid("Msxml2.XMLHTTP.6.0"),
-    threading(apartment),
-    uuid(88d96a0a-f192-11d4-a65f-0040963251e5)
-]
-coclass XMLHTTP60
-{
-    [default] interface IXMLHTTPRequest;
-}
-
-[
-    uuid(afba6b42-5692-48ea-8141-dc517dcf0ef1)
-]
-coclass ServerXMLHTTP
-{
-    [default] interface IServerXMLHTTPRequest;
-}
-
-[
-    uuid(afb40ffd-b609-40a3-9828-f88bbe11e4e3)
-]
-coclass ServerXMLHTTP30
-{
-    [default] interface IServerXMLHTTPRequest;
-}
-
-[
-    uuid(88d969c6-f192-11d4-a65f-0040963251e5)
-]
-coclass ServerXMLHTTP40
-{
-    [default] interface IServerXMLHTTPRequest2;
-}
-
-[
-    helpstring("Server XML HTTP 6.0"),
-    progid("Msxml2.ServerXMLHTTP.6.0"),
-    threading(apartment),
-    uuid(88d96a0b-f192-11d4-a65f-0040963251e5)
-]
-coclass ServerXMLHTTP60
-{
-    [default] interface IServerXMLHTTPRequest2;
-}
-
-[
-    uuid(373984c9-b845-449b-91e7-45ac83036ade)
-]
-coclass XMLSchemaCache
-{
-    [default] interface IXMLDOMSchemaCollection;
-}
-
-[
-    uuid(f5078f1d-c551-11d3-89b9-0000f81fe221)
-]
-coclass XMLSchemaCache26
-{
-    [default] interface IXMLDOMSchemaCollection;
-}
-
-[
-    uuid(f5078f34-c551-11d3-89b9-0000f81fe221)
-]
-coclass XMLSchemaCache30
-{
-    [default] interface IXMLDOMSchemaCollection;
-}
-
-[
-    uuid(88d969c2-f192-11d4-a65f-0040963251e5)
-]
-coclass XMLSchemaCache40
-{
-    [default] interface IXMLDOMSchemaCollection2;
-}
-
-[
-    helpstring("XML Schema Cache 6.0"),
-    progid("Msxml2.XMLSchemaCache.6.0"),
-    threading(both),
-    uuid(88d96a07-f192-11d4-a65f-0040963251e5)
-]
-coclass XMLSchemaCache60
-{
-    [default] interface IXMLDOMSchemaCollection2;
-}
-
-[
-    uuid(2933BF94-7B36-11d2-B20E-00C04F983E60)
-]
-coclass XSLTemplate
-{
-    [default] interface IXSLTemplate;
-}
-
-[
-    uuid(f5078f21-c551-11d3-89b9-0000f81fe221)
-]
-coclass XSLTemplate26
-{
-    [default] interface IXSLTemplate;
-}
-
-[
-    uuid(f5078f36-c551-11d3-89b9-0000f81fe221)
-]
-coclass XSLTemplate30
-{
-    [default] interface IXSLTemplate;
-}
-
-[
-    uuid(88d969c3-f192-11d4-a65f-0040963251e5)
-]
-coclass XSLTemplate40
-{
-    [default] interface IXSLTemplate;
-}
-
-[
-    helpstring("XSL Template 6.0"),
-    progid("Msxml2.XSLTemplate.6.0"),
-    threading(both),
-    uuid(88d96a08-f192-11d4-a65f-0040963251e5)
-]
-coclass XSLTemplate60
-{
-    [default] interface IXSLTemplate;
-}
-
 /*
  * Sax Interfaces
  */
@@ -1761,7 +1613,7 @@ interface ISAXAttributes : IUnknown
         [in] int nQName,
         [out] const WCHAR ** pValue,
         [out] int * nValue);
-};
+}
 
 [
     object,
@@ -1821,7 +1673,7 @@ interface ISAXContentHandler : IUnknown
     HRESULT skippedEntity(
         [in] const WCHAR * pName,
         [in] int nName);
-};
+}
 
 [
     object,
@@ -1861,7 +1713,18 @@ interface ISAXDeclHandler : IUnknown
         [in] int nPublicId,
         [in] const WCHAR * pSystemId,
         [in] int nSystemId);
-};
+}
+
+[
+    helpstring("Free Threaded XML HTTP Request class 6.0"),
+    progid("Msxml2.FreeThreadedXMLHTTP60.6.0"),
+    threading(both),
+    uuid(88d96a09-f192-11d4-a65f-0040963251e5)
+]
+coclass FreeThreadedXMLHTTP60
+{
+    [default] interface IXMLHTTPRequest2;
+}
 
 [
     object,
@@ -1887,7 +1750,7 @@ interface ISAXDTDHandler : IUnknown
         [in] int nSystemId,
         [in] const WCHAR * pNotationName,
         [in] int nNotationName);
-};
+}
 
 [
     object,
@@ -1900,7 +1763,7 @@ interface ISAXEntityResolver : IUnknown
         [in] const WCHAR * pPublicId,
         [in] const WCHAR * pSystemId,
         [out, retval] VARIANT * ret);
-};
+}
 
 [
     object,
@@ -1923,7 +1786,7 @@ interface ISAXErrorHandler : IUnknown
         [in] ISAXLocator * pLocator,
         [in] const WCHAR * pErrorMessage,
         [in] HRESULT hrErrorCode);
-};
+}
 
 [
     object,
@@ -1957,7 +1820,7 @@ interface ISAXLexicalHandler : IUnknown
     HRESULT comment(
         [in] const WCHAR * pChars,
         [in] int nChars);
-};
+}
 
 [
     object,
@@ -1977,20 +1840,7 @@ interface ISAXLocator : IUnknown
 
     HRESULT getSystemId(
         [out, retval] const WCHAR ** systemId);
-};
-
-[
-    local,
-    object,
-    uuid(70409222-ca09-4475-acb8-40312fe8d145)
-]
-interface ISAXXMLFilter : ISAXXMLReader
-{
-    HRESULT getParent(
-        [out, retval] ISAXXMLReader ** pReader);
-    HRESULT putParent(
-        [in] ISAXXMLReader * reader);
-};
+}
 
 [
 local,
@@ -2050,6 +1900,19 @@ interface ISAXXMLReader : IUnknown
 }
 
 [
+    local,
+    object,
+    uuid(70409222-ca09-4475-acb8-40312fe8d145)
+]
+interface ISAXXMLFilter : ISAXXMLReader
+{
+    HRESULT getParent(
+        [out, retval] ISAXXMLReader ** pReader);
+    HRESULT putParent(
+        [in] ISAXXMLReader * reader);
+}
+
+[
     object,
     dual,
     oleautomation,
@@ -2096,7 +1959,7 @@ interface IVBSAXAttributes : IDispatch
 
     [id(DISPID_SAX_ATTRIBUTES_GETVALUEFROMQNAME)]
     HRESULT getValueFromQName( [in] BSTR QName, [out, retval] BSTR * value);
-};
+}
 
 [
     object,
@@ -2143,7 +2006,7 @@ interface IVBSAXContentHandler : IDispatch
 
     [id(DISPID_SAX_CONTENTHANDLER_SKIPPEDENTITY)]
     HRESULT skippedEntity( [in, out] BSTR * name);
-};
+}
 
 [
     object,
@@ -2176,7 +2039,7 @@ interface IVBSAXDeclHandler : IDispatch
         [in, out] BSTR * name,
         [in, out] BSTR * publicId,
         [in, out] BSTR * systemId);
-};
+}
 
 [
     object,
@@ -2198,7 +2061,7 @@ interface IVBSAXDTDHandler : IDispatch
         [in, out] BSTR * publicId,
         [in, out] BSTR * systemId,
         [in, out] BSTR * notationName);
-};
+}
 
 [
     object,
@@ -2213,7 +2076,7 @@ interface IVBSAXEntityResolver : IDispatch
         [in, out] BSTR * publicId,
         [in, out] BSTR * systemId,
         [out, retval] VARIANT * ret);
-};
+}
 
 [
     object,
@@ -2240,7 +2103,7 @@ interface IVBSAXErrorHandler : IDispatch
 	    [in] IVBSAXLocator * locator,
 	    [in, out] BSTR * errorMessage,
             [in] LONG errorCode);
-};
+}
 
 [
     object,
@@ -2270,7 +2133,7 @@ interface IVBSAXLexicalHandler : IDispatch
 
     [id(DISPID_SAX_LEXICALHANDLER_COMMENT)]
     HRESULT comment( [in, out] BSTR * chars);
-};
+}
 
 [
     object,
@@ -2291,7 +2154,7 @@ interface IVBSAXLocator : IDispatch
 
     [propget, id(DISPID_SAX_LOCATOR_SYSTEMID)]
     HRESULT systemId( [out, retval] BSTR * systemId);
-};
+}
 
 [
     object,
@@ -2306,7 +2169,7 @@ interface IVBSAXXMLFilter : IDispatch
     [propputref, id(DISPID_SAX_XMLFILTER_PARENT)]
     HRESULT parent( [in] IVBSAXXMLReader * reader);
 
-};
+}
 
 [
     dual,
@@ -2422,7 +2285,7 @@ interface IMXAttributes : IDispatch
 
     [id(DISPID_MX_ATTRIBUTES_SETVALUE)]
     HRESULT setValue([in] int index, [in] BSTR value);
-};
+}
 
 [
     local,
@@ -2453,7 +2316,7 @@ interface IMXReaderControl : IDispatch
 
     [id(DISPID_MX_READER_CONTROL_SUSPEND)]
     HRESULT suspend();
-};
+}
 
 [
     object,
@@ -2505,7 +2368,7 @@ interface IMXWriter :  IDispatch
 
     [id(DISPID_MX_WRITER_FLUSH)]
     HRESULT flush();
-};
+}
 
 [
     local,
@@ -2701,7 +2564,7 @@ interface ISchemaStringCollection : IDispatch
     [id(DISPID_NEWENUM), hidden, restricted, propget]
     HRESULT _newEnum(
         [out,retval] IUnknown** ppunk);
-};
+}
 
 [
     local,
@@ -2735,7 +2598,7 @@ interface ISchemaItemCollection : IDispatch
     [id(DISPID_NEWENUM), hidden, restricted, propget]
     HRESULT _newEnum(
         [out,retval]IUnknown** ppunk);
-};
+}
 
 [
     local,
@@ -2774,7 +2637,7 @@ interface ISchemaItem : IDispatch
     HRESULT writeAnnotation(
         [in] IUnknown* annotationSink,
         [out,retval] VARIANT_BOOL* isWritten);
-};
+}
 
 [
     local,
@@ -2820,7 +2683,7 @@ interface ISchema : ISchemaItem
     [id(DISPID_SOM_SCHEMALOCATIONS), propget]
     HRESULT schemaLocations(
         [out,retval] ISchemaStringCollection** schemaLocations);
-};
+}
 
 [
     local,
@@ -2838,7 +2701,7 @@ interface ISchemaParticle : ISchemaItem
     [id(DISPID_SOM_MAXOCCURS), propget]
     HRESULT maxOccurs(
         [out,retval] VARIANT* maxOccurs);
-};
+}
 
 [
     object,
@@ -2871,7 +2734,7 @@ interface ISchemaAttribute : ISchemaItem
     [id(DISPID_SOM_ISREFERENCE), propget]
     HRESULT isReference(
         [out,retval] VARIANT_BOOL* reference);
-};
+}
 
 [
     local,
@@ -2925,7 +2788,7 @@ interface ISchemaElement : ISchemaParticle
     [id(DISPID_SOM_ISREFERENCE), propget]
     HRESULT isReference(
         [out,retval] VARIANT_BOOL* reference);
-};
+}
 
 [
     local,
@@ -3004,7 +2867,7 @@ interface ISchemaType : ISchemaItem
     [id(DISPID_SOM_PATTERNS), propget]
     HRESULT patterns(
         [out,retval] ISchemaStringCollection** patterns);
-};
+}
 
 [
     local,
@@ -3038,7 +2901,7 @@ interface ISchemaComplexType : ISchemaType
     [id(DISPID_SOM_PROHIBITED), propget]
     HRESULT prohibitedSubstitutions(
         [out,retval] SCHEMADERIVATIONMETHOD* prohibited);
-};
+}
 
 [
     local,
@@ -3056,7 +2919,7 @@ interface ISchemaAttributeGroup : ISchemaItem
     [id(DISPID_SOM_ATTRIBUTES), propget]
         HRESULT attributes(
             [out,retval] ISchemaItemCollection** attributes);
-};
+}
 
 [
     local,
@@ -3070,7 +2933,7 @@ interface ISchemaModelGroup : ISchemaParticle
     [id(DISPID_SOM_PARTICLES), propget]
     HRESULT particles(
         [out,retval] ISchemaItemCollection** particles);
-};
+}
 
 [
     local,
@@ -3088,7 +2951,7 @@ interface ISchemaAny : ISchemaParticle
     [id(DISPID_SOM_PROCESSCONTENTS), propget]
     HRESULT processContents(
         [out,retval] SCHEMAPROCESSCONTENTS* processContents);
-};
+}
 
 [
     local,
@@ -3110,7 +2973,7 @@ interface ISchemaIdentityConstraint : ISchemaItem
     [id(DISPID_SOM_REFERENCEDKEY), propget]
     HRESULT referencedKey(
         [out,retval] ISchemaIdentityConstraint** key);
-};
+}
 
 [
     local,
@@ -3128,36 +2991,90 @@ interface ISchemaNotation : ISchemaItem
     [id(DISPID_SOM_PUBLICIDENTIFIER), propget]
     HRESULT publicIdentifier(
         [out,retval] BSTR* uri);
-};
-
-
-[
-    uuid(079aa557-4a18-424a-8eee-e39f0a8d41b9)
-]
-coclass SAXXMLReader
-{
-    [default] interface IVBSAXXMLReader;
-    interface ISAXXMLReader;
-    interface IMXReaderControl;
-};
+}
 
 [
-    uuid(3124c396-fb13-4836-a6ad-1317f1713688)
+    uuid(f5078f18-c551-11d3-89b9-0000f81fe221),
+    version(6.0),
+    helpstring("Microsoft XML, v6.0")
 ]
-coclass SAXXMLReader30
+library MSXML2
 {
-    [default] interface IVBSAXXMLReader;
-    interface ISAXXMLReader;
-    interface IMXReaderControl;
-};
+
+importlib("stdole2.tlb");
+
+interface IXMLDOMNotation;
+interface IXMLDOMEntity;
+interface IXMLDOMEntityReference;
+interface IXMLDOMParseError2;
+interface IXMLDOMParseErrorCollection;
+interface IXMLDOMSelection;
+interface IXTLRuntime;
+dispinterface XMLDOMDocumentEvents;
+interface ISAXXMLFilter;
+interface IVBSAXXMLFilter;
+interface IMXReaderControl;
+interface IMXSchemaDeclHandler;
+interface IMXXMLFilter;
+interface ISchemaElement;
+interface ISchemaParticle;
+interface ISchemaType;
+interface ISchemaComplexType;
+interface ISchemaAny;
+interface ISchemaModelGroup;
+interface ISchemaAttribute;
+interface ISchemaAttributeGroup;
+interface ISchemaIdentityConstraint;
+interface ISchemaNotation;
+
+[hidden] typedef struct __msxml6_ReferenceRemainingTypes__
+{
+    enum tagDOMNodeType __tagDomNodeType__;
+    DOMNodeType __domNodeType__;
+    enum _SERVERXMLHTTP_OPTION __serverXmlHttpOptionEnum__;
+    SERVERXMLHTTP_OPTION __serverXmlHttpOption__;
+    enum _SXH_SERVER_CERT_OPTION __serverCertOptionEnum__;
+    SXH_SERVER_CERT_OPTION __serverCertOption__;
+    enum _SXH_PROXY_SETTING __proxySettingEnum__;
+    SXH_PROXY_SETTING __proxySetting__;
+    enum _SOMITEMTYPE __somItemTypeEnum__;
+    SOMITEMTYPE __somItemType__;
+    enum _SCHEMAUSE __schemaUseEnum__;
+    SCHEMAUSE __schemaUse__;
+    enum _SCHEMADERIVATIONMETHOD __schemaDerivationMethodEnum__;
+    SCHEMADERIVATIONMETHOD __schemaDerivationMethod__;
+    enum _SCHEMACONTENTTYPE __schemaContentTypeEnum__;
+    SCHEMACONTENTTYPE __schemaContentType__;
+    enum _SCHEMAPROCESSCONTENTS __schemaProcessContentsEnum__;
+    SCHEMAPROCESSCONTENTS __schemaProcessContents__;
+    enum _SCHEMAWHITESPACE __schemaWhitespaceEnum__;
+    SCHEMAWHITESPACE __schemaWhitespace__;
+    enum _SCHEMATYPEVARIETY __schemaTypeVarietyEnum__;
+    SCHEMATYPEVARIETY __schemaTypeVariety__;
+} __msxml6_ReferenceRemainingTypes__;
 
 [
-    uuid(7c6e29bc-8b8b-4c3d-859e-af6cd158be0f)
+    helpstring("XML DOM Document 6.0"),
+    progid("Msxml2.DOMDocument.6.0"),
+    threading(both),
+    uuid(88d96a05-f192-11d4-a65f-0040963251e5)
 ]
-coclass SAXXMLReader40
+coclass DOMDocument60
 {
-    [default] interface IVBSAXXMLReader;
-    interface ISAXXMLReader;
+    [default] interface IXMLDOMDocument3;
+    [default, source] dispinterface XMLDOMDocumentEvents;
+}
+
+[
+    helpstring("Free threaded XML DOM Document 6.0"),
+    progid("Msxml2.FreeThreadedDOMDocument.6.0"),
+    threading(both),
+    uuid(88d96a06-f192-11d4-a65f-0040963251e5),
+]
+coclass FreeThreadedDOMDocument60
+{
+    [default] interface IXMLDOMDocument3;
+    [default, source] dispinterface XMLDOMDocumentEvents;
 }
 
 [
@@ -3173,63 +3090,14 @@ coclass SAXXMLReader60
 }
 
 [
-    uuid(a4c23ec3-6b70-4466-9127-550077239978)
+    helpstring("XML Schema Cache 6.0"),
+    progid("Msxml2.XMLSchemaCache.6.0"),
+    threading(both),
+    uuid(88d96a07-f192-11d4-a65f-0040963251e5)
 ]
-coclass MXHTMLWriter
+coclass XMLSchemaCache60
 {
-    [default] interface IMXWriter;
-
-    interface ISAXContentHandler;
-    interface ISAXErrorHandler;
-    interface ISAXDTDHandler;
-    interface ISAXLexicalHandler;
-    interface ISAXDeclHandler;
-
-    interface IVBSAXContentHandler;
-    interface IVBSAXDeclHandler;
-    interface IVBSAXDTDHandler;
-    interface IVBSAXErrorHandler;
-    interface IVBSAXLexicalHandler;
-}
-
-[
-    uuid(853d1540-c1a7-4aa9-a226-4d3bd301146d)
-]
-coclass MXHTMLWriter30
-{
-    [default] interface IMXWriter;
-
-    interface ISAXContentHandler;
-    interface ISAXDeclHandler;
-    interface ISAXDTDHandler;
-    interface ISAXErrorHandler;
-    interface ISAXLexicalHandler;
-
-    interface IVBSAXContentHandler;
-    interface IVBSAXDeclHandler;
-    interface IVBSAXDTDHandler;
-    interface IVBSAXErrorHandler;
-    interface IVBSAXLexicalHandler;
-}
-
-[
-    uuid(88d969c9-f192-11d4-a65f-0040963251e5)
-]
-coclass MXHTMLWriter40
-{
-    [default] interface IMXWriter;
-
-    interface ISAXContentHandler;
-    interface ISAXDeclHandler;
-    interface ISAXDTDHandler;
-    interface ISAXErrorHandler;
-    interface ISAXLexicalHandler;
-
-    interface IVBSAXContentHandler;
-    interface IVBSAXDeclHandler;
-    interface IVBSAXDTDHandler;
-    interface IVBSAXErrorHandler;
-    interface IVBSAXLexicalHandler;
+    [default] interface IXMLDOMSchemaCollection2;
 }
 
 [
@@ -3239,66 +3107,6 @@ coclass MXHTMLWriter40
     uuid(88d96a10-f192-11d4-a65f-0040963251e5)
 ]
 coclass MXHTMLWriter60
-{
-    [default] interface IMXWriter;
-
-    interface ISAXContentHandler;
-    interface ISAXDeclHandler;
-    interface ISAXDTDHandler;
-    interface ISAXErrorHandler;
-    interface ISAXLexicalHandler;
-
-    interface IVBSAXContentHandler;
-    interface IVBSAXDeclHandler;
-    interface IVBSAXDTDHandler;
-    interface IVBSAXErrorHandler;
-    interface IVBSAXLexicalHandler;
-}
-
-[
-    uuid(fc220ad8-a72a-4ee8-926e-0b7ad152a020)
-]
-coclass MXXMLWriter
-{
-    [default] interface IMXWriter;
-
-    interface ISAXContentHandler;
-    interface ISAXErrorHandler;
-    interface ISAXDTDHandler;
-    interface ISAXLexicalHandler;
-    interface ISAXDeclHandler;
-
-    interface IVBSAXContentHandler;
-    interface IVBSAXDeclHandler;
-    interface IVBSAXDTDHandler;
-    interface IVBSAXErrorHandler;
-    interface IVBSAXLexicalHandler;
-};
-
-[
-    uuid(3d813dfe-6c91-4a4e-8f41-04346a841d9c)
-]
-coclass MXXMLWriter30
-{
-    [default] interface IMXWriter;
-
-    interface ISAXContentHandler;
-    interface ISAXDeclHandler;
-    interface ISAXDTDHandler;
-    interface ISAXErrorHandler;
-    interface ISAXLexicalHandler;
-
-    interface IVBSAXContentHandler;
-    interface IVBSAXDeclHandler;
-    interface IVBSAXDTDHandler;
-    interface IVBSAXErrorHandler;
-    interface IVBSAXLexicalHandler;
-};
-
-[
-    uuid(88d969c8-f192-11d4-a65f-0040963251e5),
-]
-coclass MXXMLWriter40
 {
     [default] interface IMXWriter;
 
@@ -3339,24 +3147,6 @@ coclass MXXMLWriter60
 }
 
 [
-    uuid(88d969d5-f192-11d4-a65f-0040963251e5)
-]
-coclass MXNamespaceManager
-{
-    [default] interface IVBMXNamespaceManager;
-    interface IMXNamespaceManager;
-}
-
-[
-    uuid(88d969d6-f192-11d4-a65f-0040963251e5)
-]
-coclass MXNamespaceManager40
-{
-    [default] interface IVBMXNamespaceManager;
-    interface IMXNamespaceManager;
-}
-
-[
     helpstring("MXNamespaceManager 6.0"),
     progid("Msxml2.MXNamespaceManager.6.0"),
     threading(both),
@@ -3366,36 +3156,6 @@ coclass MXNamespaceManager60
 {
     [default] interface IVBMXNamespaceManager;
     interface IMXNamespaceManager;
-}
-
-[
-    uuid(4dd441ad-526d-4a77-9f1b-9841ed802fb0)
-]
-coclass SAXAttributes
-{
-    [default] interface IMXAttributes;
-    interface IVBSAXAttributes;
-    interface ISAXAttributes;
-}
-
-[
-    uuid(3e784a01-f3ae-4dc0-9354-9526b9370eba)
-]
-coclass SAXAttributes30
-{
-    [default] interface IMXAttributes;
-    interface IVBSAXAttributes;
-    interface ISAXAttributes;
-}
-
-[
-    uuid(88d969ca-f192-11d4-a65f-0040963251e5),
-]
-coclass SAXAttributes40
-{
-    [default] interface IMXAttributes;
-    interface IVBSAXAttributes;
-    interface ISAXAttributes;
 }
 
 [
@@ -3411,6 +3171,41 @@ coclass SAXAttributes60
     interface ISAXAttributes;
 }
 
+[
+    helpstring("XSL Template 6.0"),
+    progid("Msxml2.XSLTemplate.6.0"),
+    threading(both),
+    uuid(88d96a08-f192-11d4-a65f-0040963251e5)
+]
+coclass XSLTemplate60
+{
+    [default] interface IXSLTemplate;
+}
+
+[
+    helpstring("XML HTTP 6.0"),
+    progid("Msxml2.XMLHTTP.6.0"),
+    threading(apartment),
+    uuid(88d96a0a-f192-11d4-a65f-0040963251e5)
+]
+coclass XMLHTTP60
+{
+    [default] interface IXMLHTTPRequest;
+}
+
+[
+    helpstring("Server XML HTTP 6.0"),
+    progid("Msxml2.ServerXMLHTTP.6.0"),
+    threading(apartment),
+    uuid(88d96a0b-f192-11d4-a65f-0040963251e5)
+]
+coclass ServerXMLHTTP60
+{
+    [default] interface IServerXMLHTTPRequest2;
+}
+
+} /* Library MSXML */
+
 /*
  * Error Codes
  */
@@ -3418,5 +3213,3 @@ cpp_quote("#define E_XML_NOTWF              0xC00CE223")
 cpp_quote("#define E_XML_NODTD              0xC00CE224")
 cpp_quote("#define E_XML_INVALID            0xC00CE225")
 cpp_quote("#define E_XML_BUFFERTOOSMALL     0xC00CE226")
-
-} /* Library MSXML */

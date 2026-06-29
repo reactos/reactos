@@ -16,6 +16,8 @@
 #include <atlcomcli.h>      // for CComVariant
 #include <atlconv.h>        // for CA2W and CW2A
 #include <strsafe.h>        // for StringC... functions
+#include <cstdlib>          // __min
+#include <new>              // std::nothrow
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -26,7 +28,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 class CBasePropertyBag
     : public IPropertyBag
-#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT < _WIN32_WINNT_VISTA) || defined(__REACTOS__)
     , public IPropertyBag2
 #endif
 {
@@ -48,15 +50,17 @@ public:
     {
         if (!ppvObject)
             return E_POINTER;
-
-#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
-        if (::IsEqualGUID(riid, IID_IPropertyBag2))
+        
+        if (GetProcessOsVersion() < _WIN32_WINNT_VISTA)
         {
-            AddRef();
-            *ppvObject = static_cast<IPropertyBag2*>(this);
-            return S_OK;
+            if (::IsEqualGUID(riid, IID_IPropertyBag2))
+            {
+                AddRef();
+                *ppvObject = static_cast<IPropertyBag2*>(this);
+                return S_OK;
+            }
         }
-#endif
+
         if (::IsEqualGUID(riid, IID_IUnknown) || ::IsEqualGUID(riid, IID_IPropertyBag))
         {
             AddRef();
@@ -81,7 +85,7 @@ public:
         return m_cRefs;
     }
 
-#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT < _WIN32_WINNT_VISTA) || defined(__REACTOS__)
     // IPropertyBag2 interface (stubs)
     STDMETHODIMP Read(
         _In_ ULONG cProperties,
@@ -162,13 +166,14 @@ CMemPropertyBag::Read(
 
     ::VariantInit(pvari);
 
-#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
-    if (!MODE_CAN_READ(m_dwMode))
+    if (GetProcessOsVersion() < _WIN32_WINNT_VISTA)
     {
-        ERR("%p: 0x%X\n", this, m_dwMode);
-        return E_ACCESSDENIED;
+        if (!MODE_CAN_READ(m_dwMode))
+        {
+            ERR("%p: 0x%X\n", this, m_dwMode);
+            return E_ACCESSDENIED;
+        }
     }
-#endif
 
     if (!pszPropName || !pvari)
     {
@@ -207,13 +212,14 @@ CMemPropertyBag::Write(
 {
     TRACE("%p: %s %p\n", this, debugstr_w(pszPropName), pvari);
 
-#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
-    if (!MODE_CAN_WRITE(m_dwMode))
+    if (GetProcessOsVersion() < _WIN32_WINNT_VISTA)
     {
-        ERR("%p: 0x%X\n", this, m_dwMode);
-        return E_ACCESSDENIED;
+        if (!MODE_CAN_WRITE(m_dwMode))
+        {
+            ERR("%p: 0x%X\n", this, m_dwMode);
+            return E_ACCESSDENIED;
+        }
     }
-#endif
 
     if (!pszPropName || !pvari)
     {
@@ -257,7 +263,9 @@ SHCreatePropertyBagOnMemory(_In_ DWORD dwMode, _In_ REFIID riid, _Out_ void **pp
 
     *ppvObj = NULL;
 
-    CComPtr<CMemPropertyBag> pMemBag(new CMemPropertyBag(dwMode));
+    CComPtr<CMemPropertyBag> pMemBag(new(std::nothrow) CMemPropertyBag(dwMode));
+    if (!pMemBag)
+        return E_OUTOFMEMORY;
 
     return pMemBag->QueryInterface(riid, ppvObj);
 }
@@ -584,7 +592,9 @@ SHCreatePropertyBagOnRegKey(
 
     *ppvObj = NULL;
 
-    CComPtr<CRegPropertyBag> pRegBag(new CRegPropertyBag(dwMode));
+    CComPtr<CRegPropertyBag> pRegBag(new(std::nothrow) CRegPropertyBag(dwMode));
+    if (!pRegBag)
+        return E_OUTOFMEMORY;
 
     HRESULT hr = pRegBag->Init(hKey, pszSubKey);
     if (FAILED(hr))
@@ -836,7 +846,7 @@ CIniPropertyBag::_GetSectionAndName(
     if (pchSep)
     {
         UINT cchSep = (UINT)(pchSep - pszStart + 1);
-        StrCpyNW(pszSection, pszStart, min(cchSep, cchSectionMax));
+        StrCpyNW(pszSection, pszStart, __min(cchSep, cchSectionMax));
         StrCpyNW(pszName, pchSep + 1, cchNameMax);
         return S_OK;
     }
@@ -995,7 +1005,9 @@ SHCreatePropertyBagOnProfileSection(
     if (!PathFileExistsW(lpFileName))
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 
-    CComPtr<CIniPropertyBag> pIniPB(new CIniPropertyBag(dwMode));
+    CComPtr<CIniPropertyBag> pIniPB(new(std::nothrow) CIniPropertyBag(dwMode));
+    if (!pIniPB)
+        return E_OUTOFMEMORY;
 
     HRESULT hr = pIniPB->Init(lpFileName, pszSection);
     if (FAILED(hr))
@@ -1197,7 +1209,9 @@ CDesktopUpgradePropertyBag::Read(
 HRESULT SHGetDesktopUpgradePropertyBag(REFIID riid, void **ppvObj)
 {
     *ppvObj = NULL;
-    CComPtr<CDesktopUpgradePropertyBag> pPropBag(new CDesktopUpgradePropertyBag());
+    CComPtr<CDesktopUpgradePropertyBag> pPropBag(new(std::nothrow) CDesktopUpgradePropertyBag());
+    if (!pPropBag)
+        return E_OUTOFMEMORY;
     return pPropBag->QueryInterface(riid, ppvObj);
 }
 
@@ -1392,7 +1406,7 @@ BOOL CViewStatePropertyBag::_CanAccessGlobalDefaultsBag() const
     if (_CanAccessFolderDefaultsBag())
         return TRUE;
 
-    return ((m_dwVspbFlags & SHGVSPB_GLOBALDEAFAULTS) == SHGVSPB_GLOBALDEAFAULTS);
+    return ((m_dwVspbFlags & SHGVSPB_GLOBALDEFAULTS) == SHGVSPB_GLOBALDEFAULTS);
 }
 
 BOOL CViewStatePropertyBag::_CanAccessInheritBag() const
@@ -1417,7 +1431,7 @@ void CViewStatePropertyBag::_ResetTryAgainFlag()
         m_bUserDefaultsBag = FALSE;
     else if ((m_dwVspbFlags & SHGVSPB_ALLUSERS) && (m_dwVspbFlags & SHGVSPB_PERFOLDER))
         m_bFolderDefaultsBag = FALSE;
-    else if ((m_dwVspbFlags & SHGVSPB_GLOBALDEAFAULTS) == SHGVSPB_GLOBALDEAFAULTS)
+    else if ((m_dwVspbFlags & SHGVSPB_GLOBALDEFAULTS) == SHGVSPB_GLOBALDEFAULTS)
         m_bGlobalDefaultsBag = FALSE;
 }
 
@@ -1678,7 +1692,7 @@ BOOL CViewStatePropertyBag::_EnsureGlobalDefaultsBag(DWORD dwMode, REFIID riid)
     if (!m_pGlobalDefaultsBag && !m_bGlobalDefaultsBag && _CanAccessGlobalDefaultsBag())
     {
         m_bGlobalDefaultsBag = TRUE;
-        _CreateBag(NULL, m_pszPath, SHGVSPB_GLOBALDEAFAULTS, dwMode, riid, &m_pGlobalDefaultsBag);
+        _CreateBag(NULL, m_pszPath, SHGVSPB_GLOBALDEFAULTS, dwMode, riid, &m_pGlobalDefaultsBag);
     }
     return (m_pGlobalDefaultsBag != NULL);
 }
@@ -1908,7 +1922,12 @@ SHGetViewStatePropertyBag(
         return E_FAIL;
     }
 
-    CComPtr<CViewStatePropertyBag> pBag(new CViewStatePropertyBag());
+    CComPtr<CViewStatePropertyBag> pBag(new(std::nothrow) CViewStatePropertyBag());
+    if (!pBag)
+    {
+        ::LeaveCriticalSection(&g_csBagCacheLock);
+        return E_OUTOFMEMORY;
+    }
 
     hr = pBag->Init(pidl, bag_name, flags);
     if (FAILED(hr))

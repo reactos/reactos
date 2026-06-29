@@ -81,17 +81,17 @@ IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Datum:", IDC_STATIC, 8, 5, 31, 8
+    LTEXT "&Datum:", IDC_STATIC, 8, 5, 31, 8
     EDITTEXT IDC_EVENTDATESTATIC, 46, 5, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Zdroj:", IDC_STATIC, 103, 5, 36, 8
+    LTEXT "&Zdroj:", IDC_STATIC, 103, 5, 36, 8
     EDITTEXT IDC_EVENTSOURCESTATIC, 140, 5, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Čas:", IDC_STATIC, 8, 15, 31, 8
+    LTEXT "Č&as:", IDC_STATIC, 8, 15, 31, 8
     EDITTEXT IDC_EVENTTIMESTATIC, 46, 15, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Kategorie:", IDC_STATIC, 103, 15, 36, 8
+    LTEXT "&Kategorie:", IDC_STATIC, 103, 15, 36, 8
     EDITTEXT IDC_EVENTCATEGORYSTATIC, 140, 15, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Typ:", IDC_STATIC, 8, 25, 31, 8
+    LTEXT "T&yp:", IDC_STATIC, 8, 25, 31, 8
     EDITTEXT IDC_EVENTTYPESTATIC, 46, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "ID události:", IDC_STATIC, 103, 25, 36, 8
+    LTEXT "&ID události:", IDC_STATIC, 103, 25, 36, 8
     EDITTEXT IDC_EVENTIDSTATIC, 140, 25, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Uživatel:", IDC_STATIC, 8, 35, 36, 8
     EDITTEXT IDC_EVENTUSERSTATIC, 46, 35, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -105,9 +105,9 @@ BEGIN
     LTEXT "&Popis:", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "D&ata:", IDC_DETAILS_STATIC, 8, 140, 20, 8
-    AUTORADIOBUTTON "&Byty", IDC_BYTESRADIO, 39, 140, 34, 8
-    AUTORADIOBUTTON "&Word", IDC_WORDRADIO, 77, 140, 34, 8
+    AUTORADIOBUTTON "&Bajty", IDC_BYTESRADIO, 39, 140, 34, 8
+    AUTORADIOBUTTON "&Slova", IDC_WORDSRADIO, 77, 140, 34, 8
+    LTEXT "Da&ta:", IDC_DETAILS_STATIC, 8, 140, 20, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -167,6 +167,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Chcete tento protokol před odstraněním uložit?"
     IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
     IDS_EVENTSTRINGIDNOTFOUND "Popis ID události ( %lu ) zdroj ( %s ) nebyl nalezen. Místní počítač neobsahuje potřebné informace v registru nebo chybí DLL soubory pro zobrazení zpráv ze vzdáleného počítače.\n\nThe following information is part of the event:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -201,7 +203,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "byty" // "%s bytes"
+    IDS_BYTES_FORMAT "bajtů" // "%s bytes"
     // "%1!ls! (%2!ls! bytes)"
 END
 
@@ -219,16 +221,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Typ:       %s\r\n\
-Zdroj:     %s\r\n\
-Kategorie: %s\r\n\
-ID:        %s\r\n\
-Datum:     %s\r\n\
-Čas:       %s\r\n\
-Uživatel:  %s\r\n\
-Počítač:   %s\r\n\
-Popis:\r\n%s"
+    IDS_COPY_EVTTYPE "Typ:"
+    IDS_COPY_EVTSRC  "Zdroj:"
+    IDS_COPY_EVTCAT  "Kategorie:"
+    IDS_COPY_EVTID   "ID události:"
+    IDS_COPY_EVTDATE "Datum:"
+    IDS_COPY_EVTTIME "Čas:"
+    IDS_COPY_EVTUSER "Uživatel:"
+    IDS_COPY_EVTCOMP "Počítač:"
+    IDS_COPY_EVTTEXT "Popis:"
+    IDS_COPY_EVTDATA "Data:"
 END
 
 STRINGTABLE

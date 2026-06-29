@@ -282,7 +282,7 @@ BEGIN
     BEGIN
         MENUITEM "Dispozitive după tip",        IDM_DEVBYTYPE
         MENUITEM "Dispozitive după conexiune",  IDM_DEVBYCONN
-        MENUITEM "Resurse după tip",            IDM_RESBYTYPE, GRAYED
+        MENUITEM "Resurse după tip",            IDM_RESBYTYPE
         MENUITEM "Resurse după conexiune",      IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Dispozitive ascunse",         IDM_SHOWHIDDEN
@@ -321,6 +321,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "Dezactivare"
   IDS_TOOLTIP_UPDATE        "Actualizare driver…"
   IDS_TOOLTIP_UNINSTALL     "Dezinstalează"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Memory"
+  IDS_TYPE_PORT             "Input/output (IO)"
+  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
+  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
 END
 
 /* Hints */

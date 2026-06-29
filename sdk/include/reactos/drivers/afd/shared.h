@@ -121,6 +121,12 @@ typedef struct  _AFD_CONNECT_INFO {
     TRANSPORT_ADDRESS			RemoteAddress;
 } AFD_CONNECT_INFO , *PAFD_CONNECT_INFO ;
 
+typedef struct _AFD_SUPER_CONNECT_INFO
+{
+    BOOLEAN SanActive;
+    TRANSPORT_ADDRESS RemoteAddress;
+} AFD_SUPER_CONNECT_INFO, *PAFD_SUPER_CONNECT_INFO;
+
 typedef struct _AFD_EVENT_SELECT_INFO {
     HANDLE				EventObject;
     ULONG				Events;
@@ -261,6 +267,7 @@ typedef struct _AFD_TDI_HANDLE_DATA
 #define AFD_DEFER_ACCEPT		35
 #define AFD_GET_PENDING_CONNECT_DATA	41
 #define AFD_VALIDATE_GROUP		42
+#define AFD_SUPER_CONNECT 49
 
 /* AFD IOCTLs */
 
@@ -336,6 +343,8 @@ typedef struct _AFD_TDI_HANDLE_DATA
   _AFD_CONTROL_CODE(AFD_ENUM_NETWORK_EVENTS, METHOD_NEITHER)
 #define IOCTL_AFD_VALIDATE_GROUP \
   _AFD_CONTROL_CODE(AFD_VALIDATE_GROUP, METHOD_NEITHER)
+#define IOCTL_AFD_SUPER_CONNECT \
+  _AFD_CONTROL_CODE(AFD_SUPER_CONNECT, METHOD_NEITHER)
 
 typedef struct _AFD_SOCKET_INFORMATION {
     BOOL CommandChannel;
@@ -347,6 +356,60 @@ typedef struct _AFD_SOCKET_INFORMATION {
     UNICODE_STRING TdiDeviceName;
     SOCKADDR Name;
 } AFD_SOCKET_INFORMATION, *PAFD_SOCKET_INFORMATION;
+
+
+typedef enum _SOCKET_STATE {
+    SocketOpen,
+    SocketBound,
+    SocketBoundUdp,
+    SocketConnected,
+    SocketClosed
+} SOCKET_STATE, *PSOCKET_STATE;
+
+typedef struct _SOCK_SHARED_INFO {
+    SOCKET_STATE				State;
+    LONG						RefCount;
+    INT							AddressFamily;
+    INT							SocketType;
+    INT							Protocol;
+    INT							SizeOfLocalAddress;
+    INT							SizeOfRemoteAddress;
+    struct linger				LingerData;
+    ULONG						SendTimeout;
+    ULONG						RecvTimeout;
+    ULONG						SizeOfRecvBuffer;
+    ULONG						SizeOfSendBuffer;
+    ULONG						ConnectTime;
+    struct {
+        BOOLEAN					Listening:1;
+        BOOLEAN					Broadcast:1;
+        BOOLEAN					Debug:1;
+        BOOLEAN					OobInline:1;
+        BOOLEAN					ReuseAddresses:1;
+        BOOLEAN					ExclusiveAddressUse:1;
+        BOOLEAN					NonBlocking:1;
+        BOOLEAN					DontUseWildcard:1;
+        BOOLEAN					ReceiveShutdown:1;
+        BOOLEAN					SendShutdown:1;
+        BOOLEAN					UseDelayedAcceptance:1;
+		BOOLEAN					UseSAN:1;
+    }; // Flags
+    DWORD						CreateFlags;
+    DWORD						ServiceFlags1;
+    DWORD						ProviderFlags;
+    GROUP						GroupID;
+    DWORD						GroupType;
+    INT							GroupPriority;
+    INT							SocketLastError;
+    HWND						hWnd;
+    LONG						Unknown;
+    DWORD						SequenceNumber;
+    UINT						wMsg;
+    LONG						AsyncEvents;
+    LONG						AsyncDisabledEvents;
+    SOCKADDR					WSLocalAddress;
+    SOCKADDR					WSRemoteAddress;
+} SOCK_SHARED_INFO, *PSOCK_SHARED_INFO;
 
 typedef struct _FILE_REQUEST_BIND {
     SOCKADDR Name;

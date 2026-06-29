@@ -1,7 +1,7 @@
 [Unattend]
 Signature = "$ReactOS$"
 
-; Set UnattendSetupEnabled to yes in order to get unattended setup working
+; Set UnattendSetupEnabled to yes in order to get unattended setup working.
 ; yes - unattend setup enabled
 ; no - unattend setup disabled
 UnattendSetupEnabled = no
@@ -22,61 +22,60 @@ FullName="MyName"
 ComputerName="MYCOMPUTERNAME"
 ;AdminPassword="MyPassword"
 
-; TimeZone is set GMT as default
+; TimeZone is set to GMT as default.
 TimeZoneIndex=85
 
-; enable this setting to disable daylight saving changes
-; DisableAutoDaylightTimeSet = 1
+; Enable this setting to disable daylight saving changes.
+;DisableAutoDaylightTimeSet = 1
 
-; enable this setting to format the selected partition
+; Enable this setting to format the selected partition.
 ; 1 - format enabled
 ; 0 - format disabled
 FormatPartition=1
 
-; enable this setting to automatically create a partition
-; during installation
+; Enable this setting to automatically create a partition during installation.
 ; 1 - enabled
 ; 0 - disabled
 AutoPartition = 1
 
-; choose default file system type
+; Choose default file system type.
 ; 0 - FAT
 ; 1 - BtrFS
 FsType = 0
 
-; enable this setting to disable Gecko install
+; Enable this setting to disable Gecko install.
 ; yes - disabled
 ; no  - enabled
 DisableGeckoInst = no
 
-; set this option to automatically
-; specify language in 2nd mode setup
-; see hivesys.inf for available languages
+; Set this option to automatically specify language in 2nd mode setup.
+; See hivesys.inf for available languages.
 LocaleID = 409
 
-; set product option
-; 0: ReactOS Server
-; 1: ReactOS Workstation
-ProductOption = 0
+; Set installation type.
+; 0 - ReactOS Server
+; 1 - ReactOS Workstation
+; 2 - ReactOS Server Core
+; 3 - ReactOS Nano Server (Reserved)
+InstallationType = 0
 
-; enable this section to automatically launch programs
-; after 3rd boot
-;
-; [GuiRunOnce]
-; %SystemRoot%\system32\cmd.exe
-; Enable the next line (+ the GuiRunOnce section) to enable the lautus theme
-; "rundll32.exe shell32.dll,Control_RunDLL desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:%SYSTEMROOT%\Resources\themes\lautus\lautus.msstyles"
+; Enable this section to automatically launch programs after 3rd boot.
+;[GuiRunOnce]
+;%SystemRoot%\system32\cmd.exe
 
+; Enable this section to change resolution / bpp.
+; Setting a value to 0 or skipping it will leave it unchanged.
+;[Display]
+;BitsPerPel = 32
+;XResolution = 1440
+;YResolution = 900
+;VRefresh = 0
 
-; enable this section to change resolution / bpp
-; setting a value to 0 or skipping it will leave it unchanged
-; [Display]
-; BitsPerPel = 32
-; XResolution = 1440
-; YResolution = 900
-; VRefresh = 0
-
-; enable this section to add environment variables
+; Enable this section to add environment variables.
 ;[Env]
 ;WINETEST_PLATFORM=reactos
 
+; Enable this section to enable the default ReactOS theme.
+;[Shell]
+;DefaultThemesOff = no
+;CustomDefaultThemeFile = "%WINDIR%\Resources\Themes\Lautus\lautus.msstyles"

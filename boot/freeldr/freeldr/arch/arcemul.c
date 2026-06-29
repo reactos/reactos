@@ -40,4 +40,35 @@ ArcGetRelativeTime(VOID)
     return ret;
 }
 
+PCONFIGURATION_COMPONENT_DATA
+MachHwDetect(_In_opt_ PCSTR Options)
+{
+    return MachVtbl.HwDetect(Options);
+}
+
+VOID MachPrepareForReactOS(VOID)
+{
+    MachVtbl.PrepareForReactOS();
+}
+
+VOID MachGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize)
+{
+    MachVtbl.GetExtendedBIOSData(ExtendedBIOSDataArea, ExtendedBIOSDataSize);
+}
+
+VOID MachVideoGetFontsFromFirmware(PULONG RomFontPointers)
+{
+    MachVtbl.VideoGetFontsFromFirmware(RomFontPointers);
+}
+
+ULONG
+MachGetBootSectorLoadAddress(IN UCHAR DriveNumber)
+{
+#if defined(SARCH_PC98)
+    return Pc98GetBootSectorLoadAddress(DriveNumber);
+#else
+    return 0x7C00;
+#endif
+}
+
 /* EOF */

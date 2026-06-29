@@ -227,6 +227,28 @@ state_init(void *ipp)
 	send_discover(ip);
 }
 
+void
+state_release(void *ipp)
+{
+	struct interface_info *ip = ipp;
+	ULONG foo = (ULONG) GetTickCount();
+
+	ASSERT_STATE(state, S_BOUND);
+
+	/* Make a DHCPRELEASE packet, and set appropriate per-interface
+	   flags. */
+	make_release(ip, ip->client->active);
+
+	/* make_request doesn't initialize xid because it normally comes
+	   from the DHCPDISCOVER, but we haven't sent a DHCPDISCOVER,
+	   so pick an xid now. */
+	ip->client->xid = RtlRandom(&foo);
+	send_release(ip);
+
+	ip->client->state = S_RELEASED;
+    unbind_lease(ip);
+}
+
 /*
  * state_selecting is called when one or more DHCPOFFER packets
  * have been received and a configurable period of time has passed.
@@ -379,6 +401,7 @@ dhcpack(struct packet *packet)
 		    ip->client->new->renewal / 2 + ip->client->new->renewal / 4;
 
 #ifdef __REACTOS__
+	ip->client->new->lease = ip->client->new->expiry;
 	ip->client->new->obtained = cur_time;
 #endif
 	ip->client->new->expiry += cur_time;
@@ -440,6 +463,23 @@ void set_name_servers( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
 }
 
 void
+unset_name_servers(
+    PDHCP_ADAPTER Adapter)
+{
+    CHAR Buffer[200] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
+    HKEY RegKey;
+
+    strcat(Buffer, Adapter->DhclientInfo.name);
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, Buffer, 0, KEY_WRITE, &RegKey ) != ERROR_SUCCESS)
+        return;
+
+    RegDeleteValueW( RegKey, L"DhcpNameServer" );
+
+    RegCloseKey( RegKey );
+}
+
+
+void
 set_domain(PDHCP_ADAPTER Adapter,
            struct client_lease *new_lease)
 {
@@ -489,12 +529,40 @@ set_domain(PDHCP_ADAPTER Adapter,
 
 }
 
+void
+unset_domain(
+    PDHCP_ADAPTER Adapter)
+{
+    CHAR Buffer1[MAX_PATH] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
+    CHAR Buffer2[MAX_PATH] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters";
+    HKEY RegKey1, RegKey2;
+
+    strcat(Buffer1, Adapter->DhclientInfo.name);
+
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, Buffer1, 0, KEY_WRITE, &RegKey1 ) != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, Buffer2, 0, KEY_WRITE, &RegKey2 ) != ERROR_SUCCESS)
+    {
+        RegCloseKey(RegKey1);
+        return;
+    }
+
+    RegDeleteValueW(RegKey1, L"DhcpDomain");
+    RegDeleteValueW(RegKey2, L"DhcpDomain");
+
+    RegCloseKey(RegKey1);
+    RegCloseKey(RegKey2);
+}
+
+
 void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
     CHAR Buffer[200] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
     struct iaddr netmask;
     HKEY hkey;
     int i;
-    DWORD dwEnableDHCP;
 
     strcat(Buffer, Adapter->DhclientInfo.name);
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, Buffer, 0, KEY_WRITE, &hkey) != ERROR_SUCCESS)
@@ -530,8 +598,15 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
                     strcat(Buffer, ".");
             }
             RegSetValueExA(hkey, "DhcpSubnetMask", 0, REG_SZ, (LPBYTE)Buffer, strlen(Buffer)+1);
-            dwEnableDHCP = 1;
-            RegSetValueExA(hkey, "EnableDHCP", 0, REG_DWORD, (LPBYTE)&dwEnableDHCP, sizeof(DWORD));
+            RegSetValueExA(hkey, "DhcpServer", 0, REG_SZ, (LPBYTE)piaddr(new_lease->serveraddress), strlen(piaddr(new_lease->serveraddress))+1);
+
+            RegSetValueExA(hkey, "Lease", 0, REG_DWORD, (LPBYTE)&new_lease->lease, sizeof(DWORD));
+            RegSetValueExA(hkey, "LeaseObtainedTime", 0, REG_DWORD, (LPBYTE)&new_lease->obtained, sizeof(DWORD));
+            RegSetValueExA(hkey, "LeaseTerminatesTime", 0, REG_DWORD, (LPBYTE)&new_lease->expiry, sizeof(DWORD));
+            RegSetValueExA(hkey, "T1", 0, REG_DWORD, (LPBYTE)&new_lease->renewal, sizeof(DWORD));
+            RegSetValueExA(hkey, "T2", 0, REG_DWORD, (LPBYTE)&new_lease->rebind, sizeof(DWORD));
+            DWORD dwAddressType = 0;
+            RegSetValueExA(hkey, "AddressType", 0, REG_DWORD, (LPBYTE)&dwAddressType, sizeof(DWORD));
         }
 
         if( !NT_SUCCESS(Status) )
@@ -569,6 +644,58 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
             }
             RegSetValueExA(hkey, "DhcpDefaultGateway", 0, REG_SZ, (LPBYTE)Buffer, strlen(Buffer)+1);
         }
+    }
+
+    if (hkey)
+        RegCloseKey(hkey);
+}
+
+void
+reset_adapter( PDHCP_ADAPTER Adapter) {
+    CHAR Buffer[200] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
+    CHAR IpAddress[] = "0.0.0.0";
+    CHAR SubnetMask[] = "255.0.0.0";
+    CHAR Server[] = "255.255.255.255";
+    HKEY hkey;
+	DWORD lease;
+    time_t cur_time, new_time;
+
+    time(&cur_time);
+
+    strcat(Buffer, Adapter->DhclientInfo.name);
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, Buffer, 0, KEY_WRITE, &hkey) != ERROR_SUCCESS)
+        hkey = NULL;
+
+    if( Adapter->NteContext )
+    {
+        DeleteIPAddress( Adapter->NteContext );
+        Adapter->NteContext = 0;
+    }
+
+    if (hkey) {
+        RegSetValueExA(hkey, "DhcpIPAddress", 0, REG_SZ, (LPBYTE)IpAddress, strlen(IpAddress)+1);
+        RegSetValueExA(hkey, "DhcpSubnetMask", 0, REG_SZ, (LPBYTE)SubnetMask, strlen(SubnetMask)+1);
+        RegSetValueExA(hkey, "DhcpServer", 0, REG_SZ, (LPBYTE)Server, strlen(Server)+1);
+
+        lease = 3600;
+        RegSetValueExA(hkey, "Lease", 0, REG_DWORD, (LPBYTE)&lease, sizeof(DWORD));
+        RegSetValueExA(hkey, "LeaseObtainedTime", 0, REG_DWORD, (LPBYTE)&cur_time, sizeof(DWORD));
+        new_time = cur_time + lease;
+        RegSetValueExA(hkey, "LeaseTerminatesTime", 0, REG_DWORD, (LPBYTE)&new_time, sizeof(DWORD));
+        new_time = cur_time + (lease / 2);
+        RegSetValueExA(hkey, "T1", 0, REG_DWORD, (LPBYTE)&new_time, sizeof(DWORD));
+        new_time = cur_time + lease - (lease / 8);
+        RegSetValueExA(hkey, "T2", 0, REG_DWORD, (LPBYTE)&new_time, sizeof(DWORD));
+        DWORD dwAddressType = 0;
+        RegSetValueExA(hkey, "AddressType", 0, REG_DWORD, (LPBYTE)&dwAddressType, sizeof(DWORD));
+    }
+
+    if( Adapter->RouterMib.dwForwardNextHop ) {
+        DeleteIpForwardEntry( &Adapter->RouterMib );
+    }
+
+    if (hkey) {
+        RegDeleteValueA(hkey, "DhcpDefaultGateway");
     }
 
     if (hkey)
@@ -616,6 +743,28 @@ bind_lease(struct interface_info *ip)
     }
     set_name_servers( Adapter, new_lease );
     set_domain( Adapter, new_lease );
+}
+
+void
+unbind_lease(struct interface_info *ip)
+{
+    PDHCP_ADAPTER Adapter;
+
+    if (ip->client->active) {
+        free_client_lease(ip->client->active);
+        ip->client->active = NULL;
+    }
+
+    Adapter = AdapterFindInfo( ip );
+    if (Adapter) {
+        reset_adapter(Adapter);
+        unset_name_servers(Adapter);
+        unset_domain(Adapter);
+    }
+    else {
+        warning("Could not find adapter for info %p\n", ip);
+        return;
+    }
 }
 
 /*
@@ -712,7 +861,8 @@ dhcpoffer(struct packet *packet)
 	struct interface_info *ip = packet->interface;
 	struct client_lease *lease, *lp;
 	int i;
-	int arp_timeout_needed = 0, stop_selecting;
+	int arp_timeout_needed = 0;
+	time_t stop_selecting;
 	char *name = packet->options[DHO_DHCP_MESSAGE_TYPE].len ?
 	    "DHCPOFFER" : "BOOTREPLY";
         time_t cur_time;
@@ -870,8 +1020,16 @@ packet_to_lease(struct packet *packet)
 	lease->address.len = sizeof(packet->raw->yiaddr);
 	memcpy(lease->address.iabuf, &packet->raw->yiaddr, lease->address.len);
 #ifdef __REACTOS__
-	lease->serveraddress.len = sizeof(packet->raw->siaddr);
-	memcpy(lease->serveraddress.iabuf, &packet->raw->siaddr, lease->address.len);
+	if (packet->raw->siaddr.S_un.S_addr == 0)
+	{
+		lease->serveraddress.len = packet->client_addr.len;
+		memcpy(lease->serveraddress.iabuf, &packet->client_addr.iabuf, packet->client_addr.len);
+	}
+	else
+	{
+		lease->serveraddress.len = sizeof(packet->raw->siaddr);
+		memcpy(lease->serveraddress.iabuf, &packet->raw->siaddr, lease->serveraddress.len);
+	}
 #endif
 
 	/* If the server name was filled out, copy it. */
@@ -1060,53 +1218,191 @@ send_discover(void *ipp)
 void
 state_panic(void *ipp)
 {
-	struct interface_info *ip = ipp;
-	uint16_t address_low;
-	int i;
+    CHAR szKeyNameBuffer[200] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
+    CHAR Server[] = "255.255.255.255";
+    CHAR SubnetMask[] = "255.255.0.0";
+    CHAR AddressBuffer[32];
+    struct interface_info *ip = ipp;
+    uint16_t address_low;
+    int i;
     IPAddr IpAddress;
     ULONG Buffer[20];
     ULONG BufferSize;
     DWORD ret;
+    HKEY hKey = NULL;
     PDHCP_ADAPTER Adapter = AdapterFindInfo(ip);
+    NTSTATUS Status;
+    DWORD lease = 0;
+    time_t cur_time, never_time = 0x7FFFFFFF;
+    struct in_addr addr;
+    DWORD dwAddressType = 0;
 
-	note("No DHCPOFFERS received.");
+    note("No DHCPOFFERS received.");
 
-    if (!Adapter->NteContext)
+    time(&cur_time);
+
+    strcat(szKeyNameBuffer, Adapter->DhclientInfo.name);
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, szKeyNameBuffer, 0, KEY_WRITE, &hKey) != ERROR_SUCCESS)
+        hKey = NULL;
+
+    if (Adapter && !Adapter->NteContext)
     {
-        /* Generate an automatic private address */
-        DbgPrint("DHCPCSVC: Failed to receive a response from a DHCP server. An automatic private address will be assigned.\n");
-
-        /* FIXME: The address generation code sucks */
-        srand(0);
-
-        for (;;)
+        DH_DbgPrint(MID_TRACE,("DHCPCSVC: Failed to receive a response from a DHCP server\n"));
+        if ((Adapter->AlternateConfiguration != NULL) &&
+            (Adapter->AlternateConfiguration->IpAddress != 0))
         {
-            address_low = rand();
-            for (i = 0; i < ip->hw_address.hlen; i++)
-                address_low += ip->hw_address.haddr[i];
+            /* Use the alternate configuration */
+            DH_DbgPrint(MID_TRACE,("DHCPCSVC: The alternate configuration will be used.\n"));
 
-            IpAddress = htonl(0xA9FE0000 | address_low);  // 169.254.X.X
+            /* IPAddress & SubnetMask */
+            Status = AddIPAddress(htonl(Adapter->AlternateConfiguration->IpAddress),
+                                  htonl(Adapter->AlternateConfiguration->SubnetMask),
+                                  Adapter->IfMib.dwIndex,
+                                  &Adapter->NteContext,
+                                  &Adapter->NteInstance);
+            if (!NT_SUCCESS(Status))
+                DH_DbgPrint(MID_TRACE,("AddIPAddress: %lx\n", Status));
 
-            /* Send an ARP request to check if the IP address is already in use */
-            BufferSize = sizeof(Buffer);
-            ret = SendARP(IpAddress,
-                          IpAddress,
-                          Buffer,
-                          &BufferSize);
-            DH_DbgPrint(MID_TRACE,("DHCPCSVC: SendARP returned %lu\n", ret));
-            if (ret != 0)
+            /* DefaultGateway */
+            if (Adapter->AlternateConfiguration->DefaultGateway != 0)
             {
-                /* The IP address is not in use */
-                DH_DbgPrint(MID_TRACE,("DHCPCSVC: Using automatic private address\n"));
-                AddIPAddress(IpAddress,
-                             htonl(0xFFFF0000), // 255.255.0.0
-                             Adapter->IfMib.dwIndex,
-                             &Adapter->NteContext,
-                             &Adapter->NteInstance);
-                return;
+                Adapter->RouterMib.dwForwardDest = 0; /* Default route */
+                Adapter->RouterMib.dwForwardMask = 0;
+                Adapter->RouterMib.dwForwardMetric1 = 1;
+                Adapter->RouterMib.dwForwardIfIndex = Adapter->IfMib.dwIndex;
+
+                if (Adapter->RouterMib.dwForwardNextHop)
+                {
+                    /* If we set a default route before, delete it before continuing */
+                    DeleteIpForwardEntry(&Adapter->RouterMib);
+                }
+
+                Adapter->RouterMib.dwForwardNextHop = htonl(Adapter->AlternateConfiguration->DefaultGateway);
+
+                Status = CreateIpForwardEntry(&Adapter->RouterMib);
+                if (!NT_SUCCESS(Status))
+                    DH_DbgPrint(MID_TRACE,("CreateIpForwardEntry: %lx\n", Status));
+            }
+
+            if (hKey)
+            {
+                addr.S_un.S_addr = htonl(Adapter->AlternateConfiguration->IpAddress);
+                RtlIpv4AddressToStringA(&addr, AddressBuffer);
+                RegSetValueExA(hKey, "DhcpIPAddress", 0, REG_SZ, (LPBYTE)AddressBuffer, strlen(AddressBuffer) + 1);
+                addr.S_un.S_addr = htonl(Adapter->AlternateConfiguration->SubnetMask);
+                RtlIpv4AddressToStringA(&addr, AddressBuffer);
+                RegSetValueExA(hKey, "DhcpSubnetMask", 0, REG_SZ, (LPBYTE)AddressBuffer, strlen(AddressBuffer) + 1);
+                if (Adapter->AlternateConfiguration->DefaultGateway != 0)
+                {
+                    addr.S_un.S_addr = htonl(Adapter->AlternateConfiguration->DefaultGateway);
+                    RtlIpv4AddressToStringA(&addr, AddressBuffer);
+                    RegSetValueExA(hKey, "DhcpDefaultGateway", 0, REG_SZ, (LPBYTE)AddressBuffer, strlen(AddressBuffer) + 1);
+                }
+                else
+                {
+                    RegDeleteValueA(hKey, "DhcpDefaultGateway");
+                }
+                RegSetValueExA(hKey, "DhcpServer", 0, REG_SZ, (LPBYTE)Server, strlen(Server) + 1);
+                RegDeleteValueA(hKey, "DhcpDomain");
+
+                if (Adapter->AlternateConfiguration->DnsServer1 != 0)
+                {
+                    char *pPtr;
+                    addr.S_un.S_addr = htonl(Adapter->AlternateConfiguration->DnsServer1);
+                    pPtr = RtlIpv4AddressToStringA(&addr, AddressBuffer);
+                    if (Adapter->AlternateConfiguration->DnsServer2 != 0)
+                    {
+                        *pPtr = ' ';
+                        pPtr++;
+                        addr.S_un.S_addr = htonl(Adapter->AlternateConfiguration->DnsServer2);
+                        RtlIpv4AddressToStringA(&addr, pPtr);
+                    }
+
+                    RegSetValueExA(hKey, "DhcpNameServer", 0, REG_SZ, (LPBYTE)AddressBuffer, strlen(AddressBuffer) + 1);
+                }
+                else
+                {
+                    RegDeleteValueA(hKey, "DhcpNameServer");
+                }
+
+                RegDeleteValueA(hKey, "IPAutoconfigurationAddress");
+                RegDeleteValueA(hKey, "IPAutoconfigurationMask");
+
+                RegSetValueExA(hKey, "Lease", 0, REG_DWORD, (LPBYTE)&lease, sizeof(DWORD));
+                RegSetValueExA(hKey, "LeaseObtainedTime", 0, REG_DWORD, (LPBYTE)&cur_time, sizeof(DWORD));
+                RegSetValueExA(hKey, "LeaseTerminatesTime", 0, REG_DWORD, (LPBYTE)&never_time, sizeof(DWORD));
+                RegSetValueExA(hKey, "T1", 0, REG_DWORD, (LPBYTE)&cur_time, sizeof(DWORD));
+                RegSetValueExA(hKey, "T2", 0, REG_DWORD, (LPBYTE)&cur_time, sizeof(DWORD));
+                RegSetValueExA(hKey, "AddressType", 0, REG_DWORD, (LPBYTE)&dwAddressType, sizeof(DWORD));
+            }
+        }
+        else
+        {
+            /* Generate an automatic private address */
+            DH_DbgPrint(MID_TRACE,("DHCPCSVC: An automatic private address will be assigned.\n"));
+
+            /* FIXME: The address generation code sucks */
+            srand(0);
+
+            for (;;)
+            {
+                address_low = rand();
+                for (i = 0; i < ip->hw_address.hlen; i++)
+                    address_low += ip->hw_address.haddr[i];
+
+                IpAddress = htonl(0xA9FE0000 | address_low);  // 169.254.X.X
+
+                /* Send an ARP request to check if the IP address is already in use */
+                BufferSize = sizeof(Buffer);
+                ret = SendARP(IpAddress,
+                              IpAddress,
+                              Buffer,
+                              &BufferSize);
+                DH_DbgPrint(MID_TRACE,("DHCPCSVC: SendARP returned %lu\n", ret));
+                if (ret != 0)
+                {
+                    /* The IP address is not in use */
+                    DH_DbgPrint(MID_TRACE,("DHCPCSVC: Using automatic private address\n"));
+                    Status = AddIPAddress(IpAddress,
+                                          htonl(0xFFFF0000), // 255.255.0.0
+                                          Adapter->IfMib.dwIndex,
+                                          &Adapter->NteContext,
+                                          &Adapter->NteInstance);
+                    if (!NT_SUCCESS(Status))
+                        DH_DbgPrint(MID_TRACE,("AddIPAddress: %lx\n", Status));
+
+                    if (hKey)
+                    {
+                        addr.S_un.S_addr = IpAddress;
+                        RtlIpv4AddressToStringA(&addr, AddressBuffer);
+                        RegSetValueExA(hKey, "DhcpIPAddress", 0, REG_SZ, (LPBYTE)AddressBuffer, strlen(AddressBuffer) + 1);
+                        RegSetValueExA(hKey, "DhcpSubnetMask", 0, REG_SZ, (LPBYTE)SubnetMask, strlen(SubnetMask) + 1);
+                        RegSetValueExA(hKey, "DhcpServer", 0, REG_SZ, (LPBYTE)Server, strlen(Server) + 1);
+                        RegDeleteValueA(hKey, "DhcpDefaultGateway");
+                        RegDeleteValueA(hKey, "DhcpDomain");
+                        RegDeleteValueA(hKey, "DhcpNameServer");
+
+                        RegSetValueExA(hKey, "IPAutoconfigurationAddress", 0, REG_SZ, (LPBYTE)AddressBuffer, strlen(AddressBuffer) + 1);
+                        RegSetValueExA(hKey, "IPAutoconfigurationMask", 0, REG_SZ, (LPBYTE)SubnetMask, strlen(SubnetMask) + 1);
+
+                        RegSetValueExA(hKey, "Lease", 0, REG_DWORD, (LPBYTE)&lease, sizeof(DWORD));
+                        RegSetValueExA(hKey, "LeaseObtainedTime", 0, REG_DWORD, (LPBYTE)&cur_time, sizeof(DWORD));
+                        RegSetValueExA(hKey, "LeaseTerminatesTime", 0, REG_DWORD, (LPBYTE)&never_time, sizeof(DWORD));
+                        RegSetValueExA(hKey, "T1", 0, REG_DWORD, (LPBYTE)&cur_time, sizeof(DWORD));
+                        RegSetValueExA(hKey, "T2", 0, REG_DWORD, (LPBYTE)&cur_time, sizeof(DWORD));
+                        dwAddressType = 1;
+                        RegSetValueExA(hKey, "AddressType", 0, REG_DWORD, (LPBYTE)&dwAddressType, sizeof(DWORD));
+                    }
+
+                    goto done;
+                }
             }
         }
     }
+
+done:
+    if (hKey)
+        RegCloseKey(hKey);
 }
 
 void
@@ -1250,6 +1546,31 @@ send_decline(void *ipp)
 	/* Send out a packet. */
 	(void) send_packet(ip, &ip->client->packet, ip->client->packet_length,
 	    inaddr_any, &sockaddr_broadcast, NULL);
+}
+
+void
+send_release(void *ipp)
+{
+	struct interface_info *ip = ipp;
+	struct sockaddr_in destination;
+	struct in_addr from;
+
+	memset(&destination, 0, sizeof(destination));
+	memcpy(&destination.sin_addr.s_addr,
+		   ip->client->destination.iabuf,
+		   sizeof(destination.sin_addr.s_addr));
+	destination.sin_port = htons(REMOTE_PORT);
+	destination.sin_family = AF_INET;
+
+	memcpy(&from, ip->client->active->address.iabuf,
+	    sizeof(from));
+
+	note("DHCPRELEASE on %s to %s port %d", ip->name,
+	    inet_ntoa(destination.sin_addr), ntohs(destination.sin_port));
+
+	/* Send out a packet. */
+	(void) send_packet(ip, &ip->client->packet, ip->client->packet_length,
+	    from, &destination, NULL);
 }
 
 void
@@ -1501,6 +1822,70 @@ make_decline(struct interface_info *ip, struct client_lease *lease)
 	/* ciaddr must always be zero. */
 	memset(&ip->client->packet.ciaddr, 0,
 	    sizeof(ip->client->packet.ciaddr));
+	memset(&ip->client->packet.yiaddr, 0,
+	    sizeof(ip->client->packet.yiaddr));
+	memset(&ip->client->packet.siaddr, 0,
+	    sizeof(ip->client->packet.siaddr));
+	memset(&ip->client->packet.giaddr, 0,
+	    sizeof(ip->client->packet.giaddr));
+	memcpy(ip->client->packet.chaddr,
+	    ip->hw_address.haddr, ip->hw_address.hlen);
+}
+
+void
+make_release(struct interface_info *ip, struct client_lease *lease)
+{
+	struct tree_cache *options[256], message_type_tree;
+	struct tree_cache server_id_tree, client_id_tree;
+	unsigned char release = DHCPRELEASE;
+	int i;
+
+	memset(options, 0, sizeof(options));
+	memset(&ip->client->packet, 0, sizeof(ip->client->packet));
+
+	/* Set DHCP_MESSAGE_TYPE to DHCPRELEASE */
+	i = DHO_DHCP_MESSAGE_TYPE;
+	options[i] = &message_type_tree;
+	options[i]->value = &release;
+	options[i]->len = sizeof(release);
+	options[i]->buf_size = sizeof(release);
+	options[i]->timeout = 0xFFFFFFFF;
+
+	/* Send back the server identifier... */
+	i = DHO_DHCP_SERVER_IDENTIFIER;
+	options[i] = &server_id_tree;
+	options[i]->value = lease->options[i].data;
+	options[i]->len = lease->options[i].len;
+	options[i]->buf_size = lease->options[i].len;
+	options[i]->timeout = 0xFFFFFFFF;
+
+	/* Send the uid if the user supplied one. */
+	i = DHO_DHCP_CLIENT_IDENTIFIER;
+	if (ip->client->config->send_options[i].len)
+	{
+		options[i] = &client_id_tree;
+		options[i]->value = ip->client->config->send_options[i].data;
+		options[i]->len = ip->client->config->send_options[i].len;
+		options[i]->buf_size = ip->client->config->send_options[i].len;
+		options[i]->timeout = 0xFFFFFFFF;
+	}
+
+	/* Set up the option buffer... */
+	ip->client->packet_length = cons_options(NULL, &ip->client->packet, 0, options);
+	if (ip->client->packet_length < BOOTP_MIN_LEN)
+		ip->client->packet_length = BOOTP_MIN_LEN;
+
+	ip->client->packet.op = BOOTREQUEST;
+	ip->client->packet.htype = ip->hw_address.htype;
+	ip->client->packet.hlen = ip->hw_address.hlen;
+	ip->client->packet.hops = 0;
+	ip->client->packet.xid = 0;
+	ip->client->packet.secs = 0;
+	ip->client->packet.flags = 0;
+
+	/* ciaddr is the address to be released */
+	memcpy(&ip->client->packet.ciaddr,
+	    lease->address.iabuf, lease->address.len);
 	memset(&ip->client->packet.yiaddr, 0,
 	    sizeof(ip->client->packet.yiaddr));
 	memset(&ip->client->packet.siaddr, 0,

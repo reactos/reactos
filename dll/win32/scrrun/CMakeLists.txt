@@ -1,6 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
+add_definitions(-D__ROS_LONG64__)
 spec2def(scrrun.dll scrrun.spec)
 add_idl_headers(scrrun_idlheader scrrun.idl)
 add_typelib(scrrun.idl)
@@ -29,7 +28,9 @@ add_library(scrrun MODULE
 
 add_dependencies(scrrun scrrun_idlheader stdole2)
 set_module_type(scrrun win32dll)
+target_compile_definitions(scrrun PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(scrrun uuid wine oldnames)
 add_importlibs(scrrun oleaut32 version advapi32 msvcrt kernel32 ntdll)
 add_pch(scrrun precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET scrrun DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(scrrun) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

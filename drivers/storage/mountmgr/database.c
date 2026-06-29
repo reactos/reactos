@@ -255,8 +255,8 @@ DeleteRemoteDatabaseEntry(IN HANDLE Database,
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Validate parameters: ensure we won't get negative size */
-    if (Entry->EntrySize + StartingOffset > DatabaseSize)
+    /* Validate parameters: ensure we won't get zero or negative size */
+    if (Entry->EntrySize + StartingOffset >= DatabaseSize)
     {
         /* If we get invalid parameters, truncate the whole database
          * starting the wrong entry. We can't rely on the rest
@@ -1303,12 +1303,14 @@ QueryVolumeName(IN HANDLE RootDirectory,
     PFILE_NAME_INFORMATION FileNameInfo;
     PREPARSE_DATA_BUFFER ReparseDataBuffer;
 
-    UNREFERENCED_PARAMETER(ReparsePointInformation);
-
     if (!FileName)
     {
+        UNICODE_STRING Reference;
+
+        Reference.Length = Reference.MaximumLength = sizeof(ReparsePointInformation->FileReference);
+        Reference.Buffer = (PWSTR)&(ReparsePointInformation->FileReference);
         InitializeObjectAttributes(&ObjectAttributes,
-                                   NULL,
+                                   &Reference,
                                    OBJ_KERNEL_HANDLE,
                                    RootDirectory,
                                    NULL);

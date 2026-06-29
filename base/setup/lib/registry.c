@@ -712,7 +712,7 @@ RegInitializeRegistry(
      * Use a dummy root key name:
      * - On 2k/XP/2k3, this is "$$$PROTO.HIV"
      * - On Vista+, this is "CMI-CreateHive{guid}"
-     * See https://github.com/libyal/winreg-kb/blob/master/documentation/Registry%20files.asciidoc
+     * See https://github.com/libyal/winreg-kb/blob/main/docs/sources/windows-registry/Files.md
      * for more information.
      */
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SYSTEM\\$$$PROTO.HIV");

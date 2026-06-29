@@ -43,28 +43,21 @@ static UCHAR DbgChannels[DBG_CHANNELS_COUNT];
 ULONG DebugPort = RS232;
 
 /* Serial debug connection */
-#if defined(SARCH_PC98)
-ULONG BaudRate = 9600;
-#else
-ULONG BaudRate = 115200;
-#endif
-
-ULONG ComPort  = 0; // The COM port initializer chooses the first available port starting from COM4 down to COM1.
-ULONG PortIrq  = 0; // Not used at the moment.
+#include <cportlib/uartinfo.h>
+ULONG ComPortBaudRate = DEFAULT_DEBUG_BAUD_RATE;
+// The COM port initializer chooses the first available port starting from COM4 down to COM1.
+PUCHAR ComPortAddress = NULL;
 
 BOOLEAN DebugStartOfLine = TRUE;
-
-#ifdef UEFIBOOT
-VOID
-ARMWriteToUART(UCHAR Data);
-#endif
 
 VOID
 DebugInit(
     _In_ PCSTR DebugString)
 {
+#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
+
     static BOOLEAN Initialized = FALSE;
-    PSTR CommandLine, PortString, BaudString, IrqString;
+    PSTR CommandLine, PortString, BaudString;
     ULONG Value;
     CHAR DbgStringBuffer[256];
 
@@ -111,40 +104,50 @@ DebugInit(
     /* Get the port and baud rate */
     PortString = strstr(CommandLine, "DEBUGPORT");
     BaudString = strstr(CommandLine, "BAUDRATE");
-    IrqString  = strstr(CommandLine, "IRQ");
 
     /*
-     * Check if we got /DEBUGPORT parameters.
-     * NOTE: Inspired by reactos/ntoskrnl/kd/kdinit.c, KdInitSystem(...)
+     * Check if we got DEBUGPORT parameters.
+     * NOTE: Inspired by ntoskrnl/kd/kdinit.c, KdInitSystem(...)
      */
     while (PortString)
     {
-        /* Move past the actual string, to reach the port*/
-        PortString += strlen("DEBUGPORT");
-
-        /* Now get past any spaces and skip the equal sign */
-        while (*PortString == ' ') PortString++;
-        PortString++;
+        /* Move past the actual string and any spaces */
+        PortString += CONST_STR_LEN("DEBUGPORT");
+        while (*PortString == ' ') ++PortString;
+        /* Skip the equals sign */
+        if (*PortString) ++PortString;
 
         /* Check for possible ports and set the port to use */
-        if (strncmp(PortString, "SCREEN", 6) == 0)
+        if (_strnicmp(PortString, "SCREEN", CONST_STR_LEN("SCREEN")) == 0)
         {
-            PortString += 6;
+            PortString += CONST_STR_LEN("SCREEN");
             DebugPort |= SCREEN;
         }
-        else if (strncmp(PortString, "BOCHS", 5) == 0)
+        else if (_strnicmp(PortString, "BOCHS", CONST_STR_LEN("BOCHS")) == 0)
         {
-            PortString += 5;
+            PortString += CONST_STR_LEN("BOCHS");
             DebugPort |= BOCHS;
         }
-        else if (strncmp(PortString, "COM", 3) == 0)
+        else if (_strnicmp(PortString, "COM", CONST_STR_LEN("COM")) == 0)
         {
-            PortString += 3;
+            PortString += CONST_STR_LEN("COM");
             DebugPort |= RS232;
 
             /* Set the port to use */
-            Value = atol(PortString);
-            if (Value) ComPort = Value;
+            if (*PortString != ':')
+            {
+                /* Read the port and set its address */
+                Value = (ULONG)atol(PortString);
+                if (Value > 0 && Value <= MAX_COM_PORTS)
+                    ComPortAddress = UlongToPtr(BaseArray[Value]);
+            }
+            else
+            {
+                /* Retrieve and set its address */
+                Value = strtoul(PortString + 1, NULL, 0);
+                if (Value)
+                    ComPortAddress = UlongToPtr(Value);
+            }
         }
 
         PortString = strstr(PortString, "DEBUGPORT");
@@ -153,36 +156,16 @@ DebugInit(
     /* Check if we got a baud rate */
     if (BaudString)
     {
-        /* Move past the actual string, to reach the rate */
-        BaudString += strlen("BAUDRATE");
+        /* Move past the actual string and any spaces */
+        BaudString += CONST_STR_LEN("BAUDRATE");
+        while (*BaudString == ' ') ++BaudString;
 
-        /* Now get past any spaces */
-        while (*BaudString == ' ') BaudString++;
-
-        /* And make sure we have a rate */
+        /* Make sure we have a rate */
         if (*BaudString)
         {
             /* Read and set it */
-            Value = atol(BaudString + 1);
-            if (Value) BaudRate = Value;
-        }
-    }
-
-    /* Check Serial Port Settings [IRQ] */
-    if (IrqString)
-    {
-        /* Move past the actual string, to reach the rate */
-        IrqString += strlen("IRQ");
-
-        /* Now get past any spaces */
-        while (*IrqString == ' ') IrqString++;
-
-        /* And make sure we have an IRQ */
-        if (*IrqString)
-        {
-            /* Read and set it */
-            Value = atol(IrqString + 1);
-            if (Value) PortIrq = Value;
+            Value = (ULONG)atol(BaudString + 1);
+            if (Value) ComPortBaudRate = Value;
         }
     }
 
@@ -192,7 +175,7 @@ Done:
     /* Try to initialize the port; if it fails, remove the corresponding flag */
     if (DebugPort & RS232)
     {
-        if (!Rs232PortInitialize(ComPort, BaudRate))
+        if (!Rs232PortInitialize(ComPortAddress, ComPortBaudRate))
             DebugPort &= ~RS232;
     }
 }
@@ -424,10 +407,44 @@ DbgParseDebugChannels(PCHAR Value)
 
 #else
 
+#undef DebugInit
+VOID
+DebugInit(
+    _In_ PCSTR DebugString)
+{
+    UNREFERENCED_PARAMETER(DebugString);
+}
+
 ULONG
 DbgPrint(PCCH Format, ...)
 {
+    UNREFERENCED_PARAMETER(Format);
     return 0;
+}
+
+VOID
+DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, ...)
+{
+    UNREFERENCED_PARAMETER(Mask);
+    UNREFERENCED_PARAMETER(Level);
+    UNREFERENCED_PARAMETER(File);
+    UNREFERENCED_PARAMETER(Line);
+    UNREFERENCED_PARAMETER(Format);
+}
+
+VOID
+DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
+{
+    UNREFERENCED_PARAMETER(Mask);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(Length);
+}
+
+#undef DbgParseDebugChannels
+VOID
+DbgParseDebugChannels(PCHAR Value)
+{
+    UNREFERENCED_PARAMETER(Value);
 }
 
 #endif // DBG
@@ -494,9 +511,21 @@ RtlAssert(IN PVOID FailedAssertion,
           IN ULONG LineNumber,
           IN PCHAR Message OPTIONAL)
 {
+    PCSTR Format;
+
     if (Message)
     {
-        DbgPrint("Assertion \'%s\' failed at %s line %lu: %s\n",
+        Format = "Assertion \'%s\' failed at %s line %lu: %s\n";
+
+        DbgPrint(Format,
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber,
+                 Message);
+
+        FrLdrBugCheckWithMessage(
+                 ASSERT_FAILURE, FileName, LineNumber,
+                 Format,
                  (PCHAR)FailedAssertion,
                  (PCHAR)FileName,
                  LineNumber,
@@ -504,7 +533,16 @@ RtlAssert(IN PVOID FailedAssertion,
     }
     else
     {
-        DbgPrint("Assertion \'%s\' failed at %s line %lu\n",
+        Format = "Assertion \'%s\' failed at %s line %lu\n";
+
+        DbgPrint(Format,
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber);
+
+        FrLdrBugCheckWithMessage(
+                 ASSERT_FAILURE, FileName, LineNumber,
+                 Format,
                  (PCHAR)FailedAssertion,
                  (PCHAR)FileName,
                  LineNumber);
@@ -519,6 +557,7 @@ char *BugCodeStrings[] =
     "MISSING_HARDWARE_REQUIREMENTS",
     "FREELDR_IMAGE_CORRUPTION",
     "MEMORY_INIT_FAILURE",
+    "ASSERT_FAILURE",
 #ifdef UEFIBOOT
     "EXIT_BOOTSERVICES_FAILURE",
 #endif

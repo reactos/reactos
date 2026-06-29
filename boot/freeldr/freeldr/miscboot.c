@@ -38,6 +38,10 @@ LoadAndBootSector(
     _In_ PCHAR Argv[],
     _In_ PCHAR Envp[])
 {
+#if defined(SARCH_XBOX)
+    UiMessageBox("Boot sector booting is not supported on XBOX.");
+    return ENOEXEC;
+#endif
     ARC_STATUS Status;
     PCSTR ArgValue;
     PCSTR BootPath;
@@ -145,8 +149,8 @@ LoadAndBootSector(
         BiosDriveNumber = 0;
     if (!BiosDriveNumber)
     {
-        BiosDriveNumber = FrldrBootDrive;
-        PartitionNumber = FrldrBootPartition;
+        BiosDriveNumber = FrldrGetBootDrive();
+        PartitionNumber = FrldrGetBootPartition();
     }
 
 
@@ -161,11 +165,7 @@ LoadAndBootSector(
         return Status;
     }
 
-#if defined(SARCH_PC98)
-    LoadAddress = Pc98GetBootSectorLoadAddress(BiosDriveNumber);
-#else
-    LoadAddress = 0x7C00;
-#endif
+    LoadAddress = MachGetBootSectorLoadAddress(BiosDriveNumber);
 
     /*
      * Now try to load the boot sector: disk MBR (when PartitionNumber == 0),

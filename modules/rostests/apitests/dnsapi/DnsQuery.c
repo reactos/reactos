@@ -61,11 +61,14 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_A(NULL, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_A failed with error %lu\n", dns_status);
-    ok(dp == InvalidPointer, "dp = %p\n", dp);
+    ok(dp == InvalidPointer || dp == 0, "dp = %p\n", dp);
 
     //NULL dp
-    dns_status = DnsQuery_A(host_name, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
-    ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_A failed with error %lu\n", dns_status);
+    if (dp)
+    {
+        dns_status = DnsQuery_A(host_name, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
+        ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_A failed with error %lu\n", dns_status);
+    }
 
     //Testing HostName
     dp = InvalidPointer;
@@ -152,7 +155,7 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_A(" ", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     /* On Windows 7 is DNS_ERROR_INVALID_NAME_CHAR on XP is ERROR_TIMEOUT on Win 2k3 is ERROR_INVALID_NAME*/
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_A failed with error %lu expected %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_A failed with error %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(strcmp(dp->pName, host_name) == 0, "DnsQuery_A returned wrong answer '%s' expected '%s'\n", dp->pName, host_name);
@@ -231,7 +234,7 @@ void TestHostName(void)
 
     dp = InvalidPointer;
     dns_status = DnsQuery_A("localhost ", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_A wrong status %lu expected %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_A wrong status %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(strcmp(dp->pName, "localhost") == 0, "DnsQuery_A returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
@@ -244,7 +247,7 @@ void TestHostName(void)
 
     dp = InvalidPointer;
     dns_status = DnsQuery_A(" localhost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_A wrong status %lu expected %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_A wrong status %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(strcmp(dp->pName, "localhost") == 0, "DnsQuery_A returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
@@ -258,7 +261,7 @@ void TestHostName(void)
     dp = InvalidPointer;
     strcpy(test_name, " local host ");
     dns_status = DnsQuery_A(test_name, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_A wrong status %lu expected %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_A wrong status %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(strcmp(dp->pName, "localhost") == 0, "DnsQuery_A returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
@@ -274,11 +277,14 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_UTF8(NULL, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
-    ok(dp == InvalidPointer, "dp = %p\n", dp);
+    ok(dp == InvalidPointer || dp == 0, "dp = %p\n", dp);
 
     //NULL dp
-    dns_status = DnsQuery_UTF8(host_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
-    ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
+    if (dp)
+    {
+        dns_status = DnsQuery_UTF8(host_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
+        ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
+    }
 
     //Testing HostName
     dp = InvalidPointer;
@@ -377,7 +383,7 @@ void TestHostName(void)
     wcstombs(test_nameUTF8, test_nameW, 255);
     dns_status = DnsQuery_UTF8(test_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     /* On Windows 7 is DNS_ERROR_INVALID_NAME_CHAR on XP is ERROR_TIMEOUT on Win 2k3 is ERROR_INVALID_NAME*/
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_UTF8 failed with error %lu expected %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_UTF8 failed with error %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(strcmp(dp->pName, host_name) == 0, "DnsQuery_UTF8 returned wrong answer '%s' expected '%s'\n", dp->pName, host_name);
@@ -468,7 +474,7 @@ void TestHostName(void)
     wcscpy(test_nameW, L"localhost ");
     wcstombs(test_nameUTF8, test_nameW, 255);
     dns_status = DnsQuery_UTF8(test_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_UTF8 wrong status %lu expected %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_UTF8 wrong status %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(strcmp(dp->pName, "localhost") == 0, "DnsQuery_UTF8 returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
@@ -483,7 +489,7 @@ void TestHostName(void)
     wcscpy(test_nameW, L" localhost");
     wcstombs(test_nameUTF8, test_nameW, 255);
     dns_status = DnsQuery_UTF8(test_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_UTF8 wrong status %lu expected %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_UTF8 wrong status %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(strcmp(dp->pName, "localhost") == 0, "DnsQuery_UTF8 returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
@@ -498,7 +504,7 @@ void TestHostName(void)
     wcscpy(test_nameW, L" local host ");
     wcstombs(test_nameUTF8, test_nameW, 255);
     dns_status = DnsQuery_UTF8(test_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_UTF8 wrong status %lu expected %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_UTF8 wrong status %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(strcmp(dp->pName, "localhost") == 0, "DnsQuery_UTF8 returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
@@ -523,13 +529,16 @@ void TestHostName(void)
     {
         /* Win7 */
         ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_W failed with error %lu\n", dns_status);
-        ok(dp == InvalidPointer, "dp = %p\n", dp);
+        ok(dp == InvalidPointer || dp == 0, "dp = %p\n", dp);
     }
     if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
 
     //NULL dp
-    dns_status = DnsQuery_W(host_nameW, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
-    ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_W failed with error %lu\n", dns_status);
+    if (dp)
+    {
+        dns_status = DnsQuery_W(host_nameW, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
+        ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_W failed with error %lu\n", dns_status);
+    }
 
     //Testing HostName
     dns_status = DnsQuery_W(host_nameW, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
@@ -607,7 +616,7 @@ void TestHostName(void)
 
     dp = InvalidPointer;
     dns_status = DnsQuery_W(L" ", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_W wrong status %lu expected %u or %u or %d\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_W wrong status %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(wcscmp((LPCWSTR)dp->pName, L"localhost") == 0, "DnsQuery_W returned wrong answer '%ls' expected '%ls'\n", (LPCWSTR)dp->pName, L"localhost");
@@ -684,7 +693,7 @@ void TestHostName(void)
 
     dp = InvalidPointer;
     dns_status = DnsQuery_W(L"localhost ", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_W wrong status %lu expected %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_W wrong status %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(wcscmp((LPCWSTR)dp->pName, L"localhost") == 0, "DnsQuery_W returned wrong answer '%ls' expected '%ls'\n", (LPCWSTR)dp->pName, L"localhost");
@@ -697,7 +706,7 @@ void TestHostName(void)
 
     dp = InvalidPointer;
     dns_status = DnsQuery_W(L" localhost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_W wrong status %lu expected %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_W wrong status %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(wcscmp((LPCWSTR)dp->pName, L"localhost") == 0, "DnsQuery_W returned wrong answer '%ls' expected '%ls'\n", (LPCWSTR)dp->pName, L"localhost");
@@ -711,7 +720,7 @@ void TestHostName(void)
     dp = InvalidPointer;
     wcscpy(test_nameW, L" local host ");
     dns_status = DnsQuery_W(test_nameW, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
-    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR), "DnsQuery_W wrong status %lu expected %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR);
+    ok(dns_status == ERROR_INVALID_NAME || broken(dns_status == ERROR_TIMEOUT) || broken(dns_status == DNS_ERROR_INVALID_NAME_CHAR) || broken(dns_status == DNS_ERROR_RCODE_NAME_ERROR), "DnsQuery_W wrong status %lu expected %u or %u or %u or %u\n", dns_status, ERROR_INVALID_NAME, ERROR_TIMEOUT, DNS_ERROR_INVALID_NAME_CHAR, DNS_ERROR_RCODE_NAME_ERROR);
     if (dp != InvalidPointer && dns_status == NO_ERROR)
     {
         ok(wcscmp((LPCWSTR)dp->pName, L"localhost") == 0, "DnsQuery_W returned wrong answer '%ls' expected '%ls'\n", (LPCWSTR)dp->pName, L"localhost");

@@ -6,17 +6,17 @@
  */
 
 #include <uefildr.h>
-
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 16
+#include "../vidfb.h"
 
 /* GLOBALS ********************************************************************/
 
-extern EFI_SYSTEM_TABLE* GlobalSystemTable;
+UCHAR MachDefaultTextColor = COLOR_GRAY;
+
 static unsigned CurrentCursorX = 0;
 static unsigned CurrentCursorY = 0;
-static unsigned CurrentAttr = 0x0f;
-static EFI_INPUT_KEY Key;
+static UCHAR CurrentAttr = ATTR(COLOR_GRAY, COLOR_BLACK);
+
+extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 static BOOLEAN ExtendedKey = FALSE;
 static char ExtendedScanCode = 0;
 
@@ -33,7 +33,7 @@ UefiConsPutChar(int c)
     NeedScroll = (CurrentCursorY >= Height);
     if (NeedScroll)
     {
-        UefiVideoScrollUp();
+        FbConsScrollUp(CurrentAttr);
         --CurrentCursorY;
     }
     if (c == '\r')
@@ -43,7 +43,6 @@ UefiConsPutChar(int c)
     else if (c == '\n')
     {
         CurrentCursorX = 0;
-
         if (!NeedScroll)
             ++CurrentCursorY;
     }
@@ -121,12 +120,15 @@ ConvertToBiosExtValue(UCHAR KeyIn)
 BOOLEAN
 UefiConsKbHit(VOID)
 {
-    return (GlobalSystemTable->ConIn->ReadKeyStroke(GlobalSystemTable->ConIn, &Key) != EFI_NOT_READY);
+    return (GlobalSystemTable->BootServices->CheckEvent(
+                GlobalSystemTable->ConIn->WaitForKey) == EFI_SUCCESS);
 }
 
 int
 UefiConsGetCh(VOID)
 {
+    EFI_INPUT_KEY Key;
+    EFI_STATUS Status;
     UCHAR KeyOutput = 0;
 
     /* If an extended key press was detected the last time we were called
@@ -136,6 +138,10 @@ UefiConsGetCh(VOID)
         ExtendedKey = FALSE;
         return ExtendedScanCode;
     }
+
+    Status = GlobalSystemTable->ConIn->ReadKeyStroke(GlobalSystemTable->ConIn, &Key);
+    if (EFI_ERROR(Status))
+        return 0;
 
     if (Key.UnicodeChar != 0)
     {
@@ -147,9 +153,5 @@ UefiConsGetCh(VOID)
         ExtendedScanCode = ConvertToBiosExtValue(Key.ScanCode);
         KeyOutput = KEY_EXTENDED;
     }
-
-    /* UEFI will stack input requests, we have to clear it */
-    Key.UnicodeChar = 0;
-    Key.ScanCode = 0;
     return KeyOutput;
 }

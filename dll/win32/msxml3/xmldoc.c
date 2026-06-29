@@ -20,13 +20,9 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -41,8 +37,6 @@
 #include "wine/debug.h"
 
 #include "msxml_private.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -108,7 +102,7 @@ static ULONG WINAPI xmldoc_AddRef(IXMLDocument *iface)
 {
     xmldoc *This = impl_from_IXMLDocument(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %ld.\n", iface, ref);
     return ref;
 }
 
@@ -117,13 +111,13 @@ static ULONG WINAPI xmldoc_Release(IXMLDocument *iface)
     xmldoc *This = impl_from_IXMLDocument(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %ld.\n", iface, ref);
 
     if (ref == 0)
     {
         xmlFreeDoc(This->xmldoc);
         if (This->stream) IStream_Release(This->stream);
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -143,9 +137,7 @@ static HRESULT WINAPI xmldoc_GetTypeInfoCount(IXMLDocument *iface, UINT* pctinfo
 static HRESULT WINAPI xmldoc_GetTypeInfo(IXMLDocument *iface, UINT iTInfo,
                                          LCID lcid, ITypeInfo** ppTInfo)
 {
-    xmldoc *This = impl_from_IXMLDocument(iface);
-
-    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+    TRACE("%p, %u, %lx, %p.\n", iface, iTInfo, lcid, ppTInfo);
 
     return get_typeinfo(IXMLDocument_tid, ppTInfo);
 }
@@ -154,11 +146,10 @@ static HRESULT WINAPI xmldoc_GetIDsOfNames(IXMLDocument *iface, REFIID riid,
                                            LPOLESTR* rgszNames, UINT cNames,
                                            LCID lcid, DISPID* rgDispId)
 {
-    xmldoc *This = impl_from_IXMLDocument(iface);
     ITypeInfo *typeinfo;
     HRESULT hr;
 
-    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+    TRACE("%p, %s, %p, %u, %lx, %p.\n", iface, debugstr_guid(riid), rgszNames, cNames,
           lcid, rgDispId);
 
     if(!rgszNames || cNames == 0 || !rgDispId)
@@ -179,18 +170,16 @@ static HRESULT WINAPI xmldoc_Invoke(IXMLDocument *iface, DISPID dispIdMember,
                                     DISPPARAMS* pDispParams, VARIANT* pVarResult,
                                     EXCEPINFO* pExcepInfo, UINT* puArgErr)
 {
-    xmldoc *This = impl_from_IXMLDocument(iface);
     ITypeInfo *typeinfo;
     HRESULT hr;
 
-    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+    TRACE("%p, %ld, %s, %lx, %d, %p, %p, %p, %p.\n", iface, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
     hr = get_typeinfo(IXMLDocument_tid, &typeinfo);
     if(SUCCEEDED(hr))
     {
-        hr = ITypeInfo_Invoke(typeinfo, &This->IXMLDocument_iface, dispIdMember, wFlags,
-                pDispParams, pVarResult, pExcepInfo, puArgErr);
+        hr = ITypeInfo_Invoke(typeinfo, iface, dispIdMember, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
         ITypeInfo_Release(typeinfo);
     }
 
@@ -597,12 +586,8 @@ static HRESULT WINAPI xmldoc_IPersistStreamInit_IsDirty(
 
 static xmlDocPtr parse_xml(char *ptr, int len)
 {
-#ifdef HAVE_XMLREADMEMORY
     return xmlReadMemory(ptr, len, NULL, NULL,
                          XML_PARSE_NOERROR | XML_PARSE_NOWARNING | XML_PARSE_NOBLANKS);
-#else
-    return xmlParseMemory(ptr, len);
-#endif
 }
 
 static HRESULT WINAPI xmldoc_IPersistStreamInit_Load(
@@ -702,7 +687,7 @@ HRESULT XMLDocument_create(LPVOID *ppObj)
 
     TRACE("(%p)\n", ppObj);
 
-    doc = heap_alloc(sizeof (*doc));
+    doc = malloc(sizeof(*doc));
     if(!doc)
         return E_OUTOFMEMORY;
 
@@ -718,14 +703,3 @@ HRESULT XMLDocument_create(LPVOID *ppObj)
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;
 }
-
-#else
-
-HRESULT XMLDocument_create(LPVOID *ppObj)
-{
-    MESSAGE("This program tried to use an XMLDocument object, but\n"
-            "libxml2 support was not present at compile time.\n");
-    return E_NOTIMPL;
-}
-
-#endif

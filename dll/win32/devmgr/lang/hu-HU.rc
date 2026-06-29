@@ -274,7 +274,7 @@ BEGIN
     BEGIN
         MENUITEM "Eszközök típus szerint",          IDM_DEVBYTYPE
         MENUITEM "Eszközök kapcsolódás szerint",    IDM_DEVBYCONN
-        MENUITEM "Erőforrások típus szerint",       IDM_RESBYTYPE, GRAYED
+        MENUITEM "Erőforrások típus szerint",       IDM_RESBYTYPE
         MENUITEM "Erőforrások kapcsolódás szerint", IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Rejtett eszközök megjelenítése",  IDM_SHOWHIDDEN
@@ -313,6 +313,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "Letiltás"
   IDS_TOOLTIP_UPDATE        "Illesztőprogram frissítése"
   IDS_TOOLTIP_UNINSTALL     "Eltávolítás"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Memory"
+  IDS_TYPE_PORT             "Input/output (IO)"
+  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
+  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
 END
 
 /* Hints */

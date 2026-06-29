@@ -36,21 +36,6 @@ static HRESULT (WINAPI *pCreateDebuggingInterfaceFromVersion)(int, LPCWSTR, IUnk
 
 const WCHAR v2_0[] = {'v','2','.','0','.','5','0','7','2','7',0};
 
-static const char *debugstr_guid(REFIID riid)
-{
-    static char buf[50];
-
-    if(!riid)
-        return "(null)";
-
-    sprintf(buf, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
-            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
-            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-    return buf;
-}
-
 static HRESULT WINAPI ManagedCallback2_QueryInterface(ICorDebugManagedCallback2 *iface, REFIID riid, void **ppv)
 {
     if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_ICorDebugManagedCallback2, riid))
@@ -59,7 +44,7 @@ static HRESULT WINAPI ManagedCallback2_QueryInterface(ICorDebugManagedCallback2 
         return S_OK;
     }
 
-    ok(0, "unexpected riid (%s)\n", debugstr_guid(riid));
+    ok(0, "unexpected riid %s\n", wine_dbgstr_guid(riid));
 
     *ppv = NULL;
     return E_NOINTERFACE;
@@ -167,7 +152,7 @@ static HRESULT WINAPI ManagedCallback_QueryInterface(ICorDebugManagedCallback *i
         return S_OK;
     }
 
-    ok(0, "unexpected riid (%s)\n", debugstr_guid(riid));
+    ok(0, "unexpected riid %s\n", wine_dbgstr_guid(riid));
     *ppv = NULL;
     return E_NOINTERFACE;
 }
@@ -425,17 +410,17 @@ static void _check_process_enum(unsigned line, ICorDebug *pCorDebug, ULONG nExpe
     ICorDebugProcessEnum *pProcessEnum = NULL;
 
     hr = ICorDebug_EnumerateProcesses(pCorDebug, NULL);
-    ok_(__FILE__,line) (hr == E_INVALIDARG, "expected E_INVALIDARG got %08x\n", hr);
+    ok_(__FILE__,line) (hr == E_INVALIDARG, "expected E_INVALIDARG got %08lx\n", hr);
 
     hr = ICorDebug_EnumerateProcesses(pCorDebug, &pProcessEnum);
-    ok_(__FILE__,line) (hr == S_OK, "expected S_OK got %08x\n", hr);
+    ok_(__FILE__,line) (hr == S_OK, "expected S_OK got %08lx\n", hr);
     if(hr == S_OK)
     {
         ULONG cnt;
 
         hr = ICorDebugProcessEnum_GetCount(pProcessEnum, &cnt);
-        ok_(__FILE__,line) (hr == S_OK, "expected S_OK got %08x\n", hr);
-        ok_(__FILE__,line) (cnt == nExpected, "expected %d got %d\n", nExpected, cnt);
+        ok_(__FILE__,line) (hr == S_OK, "expected S_OK got %08lx\n", hr);
+        ok_(__FILE__,line) (cnt == nExpected, "expected %ld got %ld\n", nExpected, cnt);
 
         ICorDebugProcessEnum_Release(pProcessEnum);
     }
@@ -448,36 +433,36 @@ static void test_createDebugger(void)
     ICorDebug *pCorDebug;
 
     hr = pCreateDebuggingInterfaceFromVersion(0, v2_0, &pUnk);
-    ok(hr == E_INVALIDARG, "CreateDebuggingInterfaceFromVersion returned %08x\n", hr);
+    ok(hr == E_INVALIDARG, "CreateDebuggingInterfaceFromVersion returned %08lx\n", hr);
 
     hr = pCreateDebuggingInterfaceFromVersion(1, v2_0, &pUnk);
-    ok(hr == E_INVALIDARG, "CreateDebuggingInterfaceFromVersion returned %08x\n", hr);
+    ok(hr == E_INVALIDARG, "CreateDebuggingInterfaceFromVersion returned %08lx\n", hr);
 
     hr = pCreateDebuggingInterfaceFromVersion(2, v2_0, &pUnk);
-    ok(hr == E_INVALIDARG, "CreateDebuggingInterfaceFromVersion returned %08x\n", hr);
+    ok(hr == E_INVALIDARG, "CreateDebuggingInterfaceFromVersion returned %08lx\n", hr);
 
     hr = pCreateDebuggingInterfaceFromVersion(4, v2_0, &pUnk);
-    ok(hr == E_INVALIDARG, "CreateDebuggingInterfaceFromVersion returned %08x\n", hr);
+    ok(hr == E_INVALIDARG, "CreateDebuggingInterfaceFromVersion returned %08lx\n", hr);
 
     hr = pCreateDebuggingInterfaceFromVersion(3, v2_0, NULL);
-    ok(hr == E_INVALIDARG, "CreateDebuggingInterfaceFromVersion returned %08x\n", hr);
+    ok(hr == E_INVALIDARG, "CreateDebuggingInterfaceFromVersion returned %08lx\n", hr);
 
     hr = pCreateDebuggingInterfaceFromVersion(3, v2_0, &pUnk);
     if(hr == S_OK)
     {
         hr = IUnknown_QueryInterface(pUnk, &IID_ICorDebug, (void**)&pCorDebug);
-        ok(hr == S_OK, "expected S_OK got %08x\n", hr);
+        ok(hr == S_OK, "expected S_OK got %08lx\n", hr);
         if(hr == S_OK)
         {
             hr = ICorDebug_Initialize(pCorDebug);
-            ok(hr == S_OK, "expected S_OK got %08x\n", hr);
+            ok(hr == S_OK, "expected S_OK got %08lx\n", hr);
             if(hr == S_OK)
             {
                 hr = ICorDebug_SetManagedHandler(pCorDebug, NULL);
-                ok(hr == E_INVALIDARG, "expected E_INVALIDARG got %08x\n", hr);
+                ok(hr == E_INVALIDARG, "expected E_INVALIDARG got %08lx\n", hr);
 
                 hr = ICorDebug_SetManagedHandler(pCorDebug, &ManagedCallback);
-                ok(hr == S_OK, "expected S_OK got %08x\n", hr);
+                ok(hr == S_OK, "expected S_OK got %08lx\n", hr);
 
                 /* We should have no processes */
                 check_process_enum(pCorDebug, 0);

@@ -24,6 +24,10 @@ Revision History:
 --*/
 
 #include "coreprivshared.hpp"
+#ifdef __REACTOS__
+#include "../../reactos_special.h"
+#include "../../kmdf/inc/private/wdf115.h"
+#endif
 
 //
 // extern "C" all APIs
@@ -35,8 +39,8 @@ extern "C" {
 //
 extern WDF_TRIAGE_INFO g_WdfTriageInfo;
 
-
 VOID
+NTAPI
 WDFEXPORT(WdfVerifierDbgBreakPoint)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals
@@ -75,6 +79,7 @@ Return Value:
 
 
 VOID
+NTAPI
 WDFEXPORT(WdfVerifierKeBugCheck)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -146,6 +151,7 @@ Return Value:
 }
 
 VOID
+NTAPI
 WDFEXPORT(WdfCxVerifierKeBugCheck)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -238,6 +244,7 @@ Return Value:
 
 
 PVOID
+NTAPI
 WDFEXPORT(WdfGetTriageInfo)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals

@@ -32,10 +32,11 @@ class CPrinterFolder :
 {
     private:
         CLSID *pclsid;
-
         LPITEMIDLIST pidlRoot;  /* absolute pidl */
-
         int dwAttributes;        /* attributes returned by GetAttributesOf FIXME: use it */
+
+        HRESULT _AssocCreate(REFIID riid, PVOID *ppvObj);
+
     public:
         CPrinterFolder();
         ~CPrinterFolder();

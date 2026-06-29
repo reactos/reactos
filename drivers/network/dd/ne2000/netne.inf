@@ -42,6 +42,9 @@ CopyFiles = NE2000_CopyFiles.NT
 [NE2000_AddReg.NT]
 HKR,,Port,0x00000000,"c100"
 HKR,,Irq,0x00000000,"B"
+HKR, Ndi,            Service,    0, "ne2000"
+HKR, Ndi\Interfaces, UpperRange, 0, "ndis5"
+HKR, Ndi\Interfaces, LowerRange, 0, "ethernet"
 
 [NE2000_CopyFiles.NT]
 ne2000.sys

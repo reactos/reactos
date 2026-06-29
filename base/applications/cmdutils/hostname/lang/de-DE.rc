@@ -2,7 +2,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Zeigt den Computernamen an.\n\nhostname"
-    IDS_NOSET "Der Befehl hostname -s wird nicht unterstützt."
-    IDS_ERROR "Win32-Fehler"
+    IDS_USAGE "\nZeigt den Computernamen an.\n\nhostname\n"
+    IDS_NOSET "sethostname: Open the ""Computer Name"" tab in the ""System"" Control Panel applet\nto change the host name.\nDer Befehl hostname -s wird nicht unterstützt.\n"
+    IDS_ERROR "Fehler: "
 END

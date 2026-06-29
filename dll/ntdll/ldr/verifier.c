@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Verifier support routines
  * COPYRIGHT:   Copyright 2011 Aleksey Bragin (aleksey@reactos.org)
- *              Copyright 2018 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2018-2025 Mark Jansen (mark.jansen@reactos.org)
  */
 
 
@@ -12,6 +12,10 @@
 
 #define NDEBUG
 #include <debug.h>
+
+ /* heappage.c */
+HANDLE NTAPI RtlpPageHeapCreate(ULONG Flags, PVOID Addr, SIZE_T TotalSize, SIZE_T CommitSize, PVOID Lock, PRTL_HEAP_PARAMETERS Parameters);
+PVOID NTAPI RtlpPageHeapDestroy(HANDLE HeapPtr);
 
 extern PLDR_DATA_TABLE_ENTRY LdrpImageEntry;
 ULONG AVrfpVerifierFlags = 0;
@@ -329,7 +333,7 @@ AVrfDllUnloadNotification(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     PLIST_ENTRY Entry;
 
-    if (!(NtCurrentPeb()->NtGlobalFlag & FLG_APPLICATION_VERIFIER))
+    if (!(NtCurrentPeb()->NtGlobalFlag & FLG_APPLICATION_VERIFIER) || !AVrfpInitialized)
         return;
 
     RtlEnterCriticalSection(&AVrfpVerifierLock);
@@ -355,6 +359,31 @@ AVrfDllUnloadNotification(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     RtlLeaveCriticalSection(&AVrfpVerifierLock);
 }
 
+VOID
+NTAPI
+AVrfInternalHeapFreeNotification(PVOID AllocationBase, SIZE_T AllocationSize)
+{
+    PLIST_ENTRY Entry;
+
+    if (!(NtCurrentPeb()->NtGlobalFlag & FLG_APPLICATION_VERIFIER) || !AVrfpInitialized)
+        return;
+
+    RtlEnterCriticalSection(&AVrfpVerifierLock);
+    for (Entry = AVrfpVerifierProvidersList.Flink; Entry != &AVrfpVerifierProvidersList; Entry = Entry->Flink)
+    {
+        PVERIFIER_PROVIDER Provider;
+        RTL_VERIFIER_NTDLLHEAPFREE_CALLBACK ProviderHeapFreeCallback;
+
+        Provider = CONTAINING_RECORD(Entry, VERIFIER_PROVIDER, ListEntry);
+
+        ProviderHeapFreeCallback = Provider->ProviderNtdllHeapFreeCallback;
+        if (ProviderHeapFreeCallback)
+        {
+            ProviderHeapFreeCallback(AllocationBase, AllocationSize);
+        }
+    }
+    RtlLeaveCriticalSection(&AVrfpVerifierLock);
+}
 
 VOID
 NTAPI
@@ -480,13 +509,48 @@ AVrfpChainDuplicateThunks(VOID)
     }
 }
 
+static
+PVOID
+NTAPI
+AVrfpGetStackTraceAddress(ULONG Arg0)
+{
+    UNIMPLEMENTED;
+    DbgBreakPoint();
+    return NULL;
+}
+
+static
+HANDLE
+NTAPI
+AVrfpDebugPageHeapCreate(ULONG Flags,
+                         PVOID Addr,
+                         SIZE_T TotalSize,
+                         SIZE_T CommitSize,
+                         PVOID Lock,
+                         PRTL_HEAP_PARAMETERS Parameters)
+{
+    HANDLE hHeap;
+    hHeap = RtlpPageHeapCreate(Flags, Addr, TotalSize, CommitSize, Lock, Parameters);
+    DbgPrint("AVRF: DebugPageHeapCreate(Flags=%x, Addr=%p, TotalSize=%u, CommitSize=%u, Lock=%p, Parameters=%p) = %p\n",
+             Flags, Addr, TotalSize, CommitSize, Lock, Parameters, hHeap);
+    return hHeap;
+}
+
+static
+PVOID
+AVrfpDebugPageHeapDestroy(HANDLE HeapPtr)
+{
+    DbgPrint("AVRF: DebugPageHeapDestroy(HeapPtr=%p)\n", HeapPtr);
+    return RtlpPageHeapDestroy(HeapPtr);
+}
+
 NTSTATUS
 NTAPI
 AVrfpLoadAndInitializeProvider(PVERIFIER_PROVIDER Provider)
 {
     WCHAR StringBuffer[MAX_PATH + 11];
     UNICODE_STRING DllPath;
-    PRTL_VERIFIER_PROVIDER_DESCRIPTOR Descriptor;
+    PRTL_VERIFIER_PROVIDER_DESCRIPTOR Descriptor = NULL;
     PIMAGE_NT_HEADERS ImageNtHeader;
     NTSTATUS Status;
 
@@ -544,13 +608,9 @@ AVrfpLoadAndInitializeProvider(PVERIFIER_PROVIDER Provider)
                 Descriptor->VerifierFlags = AVrfpVerifierFlags;
                 Descriptor->VerifierDebug = AVrfpDebug;
 
-                /* We don't have these yet */
-                DPRINT1("AVRF: RtlpGetStackTraceAddress MISSING\n");
-                DPRINT1("AVRF: RtlpDebugPageHeapCreate MISSING\n");
-                DPRINT1("AVRF: RtlpDebugPageHeapDestroy MISSING\n");
-                Descriptor->RtlpGetStackTraceAddress = NULL;
-                Descriptor->RtlpDebugPageHeapCreate = NULL;
-                Descriptor->RtlpDebugPageHeapDestroy = NULL;
+                Descriptor->RtlpGetStackTraceAddress = AVrfpGetStackTraceAddress;
+                Descriptor->RtlpDebugPageHeapCreate = AVrfpDebugPageHeapCreate;
+                Descriptor->RtlpDebugPageHeapDestroy = AVrfpDebugPageHeapDestroy;
                 Status = STATUS_SUCCESS;
             }
             else

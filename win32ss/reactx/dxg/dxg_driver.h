@@ -631,18 +631,14 @@ DxDvpReleaseNotification(
     return 0;
 }
 
-DWORD
+FLATPTR
 NTAPI
 DxDdHeapVidMemAllocAligned(
-    PVOID p1,
-    PVOID p2,
-    PVOID p3,
-    PVOID p4,
-    PVOID p5)
-{
-    TRACE();
-    return 0;
-}
+    LPVIDMEM DdrawVidMem,
+    DWORD Width,
+    DWORD Height,
+    LPSURFACEALIGNMENT Alignment,
+    LPDWORD ResolvedPitch);
 
 DWORD
 NTAPI

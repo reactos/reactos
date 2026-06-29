@@ -27,7 +27,7 @@ DBG_DEFAULT_CHANNEL(DISK);
 /* Enable this line if you want to support multi-drive caching (increases FreeLdr size!) */
 // #define CACHE_MULTI_DRIVES
 
-#include <pshpack2.h>
+#include <pshpack1.h>
 
 typedef struct
 {
@@ -74,6 +74,22 @@ typedef struct
     UCHAR   Reserved;
 } I386_CDROM_SPEC_PACKET, *PI386_CDROM_SPEC_PACKET;
 
+/*
+ * Extended disk geometry (Int13 / AH=48h)
+ * See also ntdddisk.h DISK_EX_INT13_INFO
+ */
+typedef struct _EXTENDED_GEOMETRY
+{
+    USHORT      Size;
+    USHORT      Flags;
+    ULONG       Cylinders;
+    ULONG       Heads;
+    ULONG       SectorsPerTrack;
+    ULONGLONG   Sectors;
+    USHORT      BytesPerSector;
+    ULONG       PDPTE;
+} EXTENDED_GEOMETRY, *PEXTENDED_GEOMETRY;
+
 #include <poppack.h>
 
 typedef struct _PC_DISK_DRIVE
@@ -115,64 +131,42 @@ static PC_DISK_DRIVE PcDiskDrive;
 
 /* DISK IO ERROR SUPPORT *****************************************************/
 
-static LONG lReportError = 0; // >= 0: display errors; < 0: hide errors.
-
-LONG DiskReportError(BOOLEAN bShowError)
-{
-    /* Set the reference count */
-    if (bShowError) ++lReportError;
-    else            --lReportError;
-    return lReportError;
-}
-
-static PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
+/* For disk.c!DiskError() */
+PCSTR
+DiskGetErrorCodeString(
+    _In_ ULONG ErrorCode)
 {
     switch (ErrorCode)
     {
-    case 0x00:  return "no error";
-    case 0x01:  return "bad command passed to driver";
-    case 0x02:  return "address mark not found or bad sector";
-    case 0x03:  return "diskette write protect error";
-    case 0x04:  return "sector not found";
-    case 0x05:  return "fixed disk reset failed";
-    case 0x06:  return "diskette changed or removed";
-    case 0x07:  return "bad fixed disk parameter table";
+    case 0x00:  return "No error";
+    case 0x01:  return "Bad command passed to driver";
+    case 0x02:  return "Address mark not found or bad sector";
+    case 0x03:  return "Diskette write protect error";
+    case 0x04:  return "Sector not found";
+    case 0x05:  return "Fixed disk reset failed";
+    case 0x06:  return "Diskette changed or removed";
+    case 0x07:  return "Bad fixed disk parameter table";
     case 0x08:  return "DMA overrun";
     case 0x09:  return "DMA access across 64k boundary";
-    case 0x0A:  return "bad fixed disk sector flag";
-    case 0x0B:  return "bad fixed disk cylinder";
-    case 0x0C:  return "unsupported track/invalid media";
-    case 0x0D:  return "invalid number of sectors on fixed disk format";
-    case 0x0E:  return "fixed disk controlled data address mark detected";
-    case 0x0F:  return "fixed disk DMA arbitration level out of range";
+    case 0x0A:  return "Bad fixed disk sector flag";
+    case 0x0B:  return "Bad fixed disk cylinder";
+    case 0x0C:  return "Unsupported track/invalid media";
+    case 0x0D:  return "Invalid number of sectors on fixed disk format";
+    case 0x0E:  return "Fixed disk controlled data address mark detected";
+    case 0x0F:  return "Fixed disk DMA arbitration level out of range";
     case 0x10:  return "ECC/CRC error on disk read";
-    case 0x11:  return "recoverable fixed disk data error, data fixed by ECC";
-    case 0x20:  return "controller error (NEC for floppies)";
-    case 0x40:  return "seek failure";
-    case 0x80:  return "time out, drive not ready";
-    case 0xAA:  return "fixed disk drive not ready";
-    case 0xBB:  return "fixed disk undefined error";
-    case 0xCC:  return "fixed disk write fault on selected drive";
-    case 0xE0:  return "fixed disk status error/Error reg = 0";
-    case 0xFF:  return "sense operation failed";
+    case 0x11:  return "Recoverable fixed disk data error, data fixed by ECC";
+    case 0x20:  return "Controller error (NEC for floppies)";
+    case 0x40:  return "Seek failure";
+    case 0x80:  return "Time out, drive not ready";
+    case 0xAA:  return "Fixed disk drive not ready";
+    case 0xBB:  return "Fixed disk undefined error";
+    case 0xCC:  return "Fixed disk write fault on selected drive";
+    case 0xE0:  return "Fixed disk status error/Error reg = 0";
+    case 0xFF:  return "Sense operation failed";
 
-    default:    return "unknown error code";
+    default:    return "Unknown error code";
     }
-}
-
-static VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
-{
-    CHAR ErrorCodeString[200];
-
-    if (lReportError < 0)
-        return;
-
-    sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s",
-            ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
-
-    ERR("%s\n", ErrorCodeString);
-
-    UiMessageBox(ErrorCodeString);
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -276,14 +270,18 @@ DiskInt13ExtensionsSupported(IN UCHAR DriveNumber)
         return FALSE;
     }
 
+#if DBG
+    TRACE("Drive 0x%x: INT 13h Extended version: 0x%02x, API bitmap: 0x%04x\n",
+          DriveNumber, RegsOut.b.ah, RegsOut.w.cx);
+#endif
     if (!(RegsOut.w.cx & 0x0001))
     {
         /*
          * CX = API subset support bitmap.
          * Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported.
          */
-        WARN("Suspicious API subset support bitmap 0x%x on device 0x%lx\n",
-             RegsOut.w.cx, DriveNumber);
+        WARN("Drive 0x%x: Suspicious API subset support bitmap 0x%04x\n",
+             DriveNumber, RegsOut.w.cx);
         return FALSE;
     }
 
@@ -292,21 +290,27 @@ DiskInt13ExtensionsSupported(IN UCHAR DriveNumber)
 
 static BOOLEAN
 DiskGetExtendedDriveParameters(
-    IN UCHAR DriveNumber,
-    IN PPC_DISK_DRIVE DiskDrive,
-    OUT PVOID Buffer,
-    IN USHORT BufferSize)
+    _In_ UCHAR DriveNumber,
+    _In_ PPC_DISK_DRIVE DiskDrive,
+    _Out_ PVOID Buffer,
+    _In_ USHORT BufferSize)
 {
+    PEXTENDED_GEOMETRY Ptr = (PEXTENDED_GEOMETRY)BIOSCALLBUFFER;
     REGS RegsIn, RegsOut;
-    PUSHORT Ptr = (PUSHORT)(BIOSCALLBUFFER);
 
     TRACE("DiskGetExtendedDriveParameters(0x%x)\n", DriveNumber);
 
-    if (!DiskDrive->Int13ExtensionsSupported)
+    if (!DiskDrive->Int13ExtensionsSupported || (BufferSize < sizeof(*Ptr)))
         return FALSE;
 
-    /* Initialize transfer buffer */
-    *Ptr = BufferSize;
+    /*
+     * Initialize the transfer buffer.
+     * NOTE: Zeroing out the buffer also helps avoiding the bug where Dell
+     * machines using PhoenixBIOS 4.0 Release 6.0 fail to correctly handle
+     * this function if Ptr->Flags is not 0 on entry.
+     */
+    RtlZeroMemory(Ptr, sizeof(*Ptr)); // BufferSize;
+    Ptr->Size = BufferSize;
 
     /*
      * BIOS Int 13h, function 48h - Get drive parameters
@@ -322,7 +326,7 @@ DiskGetExtendedDriveParameters(
      */
     RegsIn.b.ah = 0x48;
     RegsIn.b.dl = DriveNumber;
-    RegsIn.x.ds = BIOSCALLBUFSEGMENT;   // DS:SI -> result buffer
+    RegsIn.x.ds = BIOSCALLBUFSEGMENT;
     RegsIn.w.si = BIOSCALLBUFOFFSET;
 
     /* Get drive parameters */
@@ -333,39 +337,56 @@ DiskGetExtendedDriveParameters(
     RtlCopyMemory(Buffer, Ptr, BufferSize);
 
 #if DBG
-    TRACE("size of buffer:                          %x\n", Ptr[0]);
-    TRACE("information flags:                       %x\n", Ptr[1]);
-    TRACE("number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]);
-    TRACE("number of physical heads on drive:       %u\n", *(PULONG)&Ptr[4]);
-    TRACE("number of physical sectors per track:    %u\n", *(PULONG)&Ptr[6]);
-    TRACE("total number of sectors on drive:        %I64u\n", *(PULONGLONG)&Ptr[8]);
-    TRACE("bytes per sector:                        %u\n", Ptr[12]);
-    if (Ptr[0] >= 0x1e)
+    TRACE("Size of buffer:                          0x%x\n", Ptr->Size);
+    TRACE("Information flags:                       0x%x\n", Ptr->Flags);
+    TRACE("Number of physical cylinders on drive:   %u\n", Ptr->Cylinders);
+    TRACE("Number of physical heads on drive:       %u\n", Ptr->Heads);
+    TRACE("Number of physical sectors per track:    %u\n", Ptr->SectorsPerTrack);
+    TRACE("Total number of sectors on drive:        %I64u\n", Ptr->Sectors);
+    TRACE("Bytes per sector:                        %u\n", Ptr->BytesPerSector);
+    if (Ptr->Size >= 0x1E)
     {
-        // Ptr[13]: offset, Ptr[14]: segment
-        TRACE("EDD configuration parameters:            %x:%x\n", Ptr[14], Ptr[13]);
-        if (Ptr[13] != 0xffff && Ptr[14] != 0xffff)
+        // LOWORD(Ptr->PDPTE): offset, HIWORD(Ptr->PDPTE): segment
+        USHORT Off = (USHORT)(Ptr->PDPTE & 0xFFFF);         // ((PUSHORT)&Ptr->PDPTE)[0];
+        USHORT Seg = (USHORT)((Ptr->PDPTE >> 16) & 0xFFFF); // ((PUSHORT)&Ptr->PDPTE)[1];
+        TRACE("EDD configuration parameters (DPTE):     %x:%x\n", Seg, Off);
+
+        /* The DPTE pointer is valid if it's != FFFF:FFFF (per the Enhanced Disk
+         * Drive Specification), but also, when it's != 0000:0000 (broken BIOSes) */
+        if (Ptr->PDPTE != 0xFFFFFFFF && Ptr->PDPTE != 0)
         {
-            PUCHAR SpecPtr = (PUCHAR)(ULONG_PTR)((Ptr[14] << 4) + Ptr[13]);
-            TRACE("SpecPtr:                                 %x\n", SpecPtr);
-            TRACE("physical I/O port base address:          %x\n", *(PUSHORT)&SpecPtr[0]);
-            TRACE("disk-drive control port address:         %x\n", *(PUSHORT)&SpecPtr[2]);
-            TRACE("drive flags:                             %x\n", SpecPtr[4]);
-            TRACE("proprietary information:                 %x\n", SpecPtr[5]);
+            PUCHAR SpecPtr = (PUCHAR)(ULONG_PTR)((Seg << 4) + Off);
+            TRACE("SpecPtr:                                 0x%x\n", SpecPtr);
+            TRACE("Physical I/O port base address:          0x%x\n", *(PUSHORT)&SpecPtr[0]);
+            TRACE("Disk-drive control port address:         0x%x\n", *(PUSHORT)&SpecPtr[2]);
+            TRACE("Head register upper nibble:              0x%x\n", SpecPtr[4]);
+            TRACE("BIOS Vendor-specific:                    0x%x\n", SpecPtr[5]);
             TRACE("IRQ for drive:                           %u\n", SpecPtr[6]);
-            TRACE("sector count for multi-sector transfers: %u\n", SpecPtr[7]);
-            TRACE("DMA control:                             %x\n", SpecPtr[8]);
-            TRACE("programmed I/O control:                  %x\n", SpecPtr[9]);
-            TRACE("drive options:                           %x\n", *(PUSHORT)&SpecPtr[10]);
+            TRACE("Sector count for multi-sector transfers: %u\n", SpecPtr[7]);
+            TRACE("DMA control:                             0x%x\n", SpecPtr[8]);
+            TRACE("Programmed I/O control:                  0x%x\n", SpecPtr[9]);
+            TRACE("Drive options:                           0x%x\n", *(PUSHORT)&SpecPtr[10]);
         }
     }
-    if (Ptr[0] >= 0x42)
+    if (Ptr->Size >= 0x42)
     {
-        TRACE("signature:                             %x\n", Ptr[15]);
+        TRACE("Signature:                             0x%x\n", ((PUSHORT)Ptr)[15]);
     }
-#endif
+#endif // DBG
 
     return TRUE;
+}
+
+CONFIGURATION_TYPE
+DiskGetConfigType(
+    _In_ UCHAR DriveNumber)
+{
+    if ((DriveNumber == FrldrBootDrive)/* && DiskIsDriveRemovable(DriveNumber) */ && (FrldrBootPartition == 0xFF))
+        return CdromController; /* This is our El Torito boot CD-ROM */
+    else if (DiskIsDriveRemovable(DriveNumber))
+        return FloppyDiskPeripheral;
+    else
+        return DiskPeripheral;
 }
 
 static BOOLEAN
@@ -378,26 +399,23 @@ InitDriveGeometry(
     ULONG Cylinders;
 
     /* Get the extended geometry first */
-    DiskDrive->ExtGeometry.Size = sizeof(DiskDrive->ExtGeometry);
+    RtlZeroMemory(&DiskDrive->ExtGeometry, sizeof(DiskDrive->ExtGeometry));
     Success = DiskGetExtendedDriveParameters(DriveNumber, DiskDrive,
                                              &DiskDrive->ExtGeometry,
-                                             DiskDrive->ExtGeometry.Size);
-    if (!Success)
-    {
-        /* Failed, zero it out */
-        RtlZeroMemory(&DiskDrive->ExtGeometry, sizeof(DiskDrive->ExtGeometry));
-    }
-    else
+                                             sizeof(DiskDrive->ExtGeometry));
+    if (Success)
     {
         TRACE("DiskGetExtendedDriveParameters(0x%x) returned:\n"
               "Cylinders  : 0x%x\n"
               "Heads      : 0x%x\n"
               "Sects/Track: 0x%x\n"
+              "Total Sects: 0x%llx\n"
               "Bytes/Sect : 0x%x\n",
               DriveNumber,
               DiskDrive->ExtGeometry.Cylinders,
               DiskDrive->ExtGeometry.Heads,
               DiskDrive->ExtGeometry.SectorsPerTrack,
+              DiskDrive->ExtGeometry.Sectors,
               DiskDrive->ExtGeometry.BytesPerSector);
     }
 
@@ -444,7 +462,7 @@ InitDriveGeometry(
     DiskDrive->Geometry.Cylinders = Cylinders;
     DiskDrive->Geometry.Heads = RegsOut.b.dh + 1;
     DiskDrive->Geometry.SectorsPerTrack = RegsOut.b.cl & 0x3F;
-    DiskDrive->Geometry.BytesPerSector = 512;   /* Just assume 512 bytes per sector */
+    DiskDrive->Geometry.BytesPerSector = 512; /* Just assume 512 bytes per sector */
 
     DiskDrive->Geometry.Sectors = (ULONGLONG)DiskDrive->Geometry.Cylinders *
                                              DiskDrive->Geometry.Heads *
@@ -453,12 +471,14 @@ InitDriveGeometry(
     TRACE("Regular Int13h(0x%x) returned:\n"
           "Cylinders  : 0x%x\n"
           "Heads      : 0x%x\n"
-          "Sects/Track: 0x%x (original 0x%x)\n"
+          "Sects/Track: 0x%x\n"
+          "Total Sects: 0x%llx\n"
           "Bytes/Sect : 0x%x\n",
           DriveNumber,
           DiskDrive->Geometry.Cylinders,
           DiskDrive->Geometry.Heads,
-          DiskDrive->Geometry.SectorsPerTrack, RegsOut.b.cl,
+          DiskDrive->Geometry.SectorsPerTrack,
+          DiskDrive->Geometry.Sectors,
           DiskDrive->Geometry.BytesPerSector);
 
     return Success;
@@ -566,9 +586,9 @@ PcDiskReadLogicalSectorsLBA(
     IN ULONG SectorCount,
     OUT PVOID Buffer)
 {
+    PI386_DISK_ADDRESS_PACKET Packet = (PI386_DISK_ADDRESS_PACKET)BIOSCALLBUFFER;
     REGS RegsIn, RegsOut;
     ULONG RetryCount;
-    PI386_DISK_ADDRESS_PACKET Packet = (PI386_DISK_ADDRESS_PACKET)(BIOSCALLBUFFER);
 
     /* Setup disk address packet */
     RtlZeroMemory(Packet, sizeof(*Packet));
@@ -616,7 +636,7 @@ PcDiskReadLogicalSectorsLBA(
 
     /* If we get here then the read failed */
     DiskError("Disk Read Failed in LBA mode", RegsOut.b.ah);
-    ERR("Disk Read Failed in LBA mode: %x (%s) (DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d)\n",
+    ERR("Disk Read Failed in LBA mode: %x (%s) (DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u)\n",
         RegsOut.b.ah, DiskGetErrorCodeString(RegsOut.b.ah),
         DriveNumber, SectorNumber, SectorCount);
 
@@ -719,7 +739,7 @@ PcDiskReadLogicalSectorsCHS(
         if (RetryCount >= 3)
         {
             DiskError("Disk Read Failed in CHS mode, after retrying 3 times", RegsOut.b.ah);
-            ERR("Disk Read Failed in CHS mode, after retrying 3 times: %x (%s) (DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d)\n",
+            ERR("Disk Read Failed in CHS mode, after retrying 3 times: %x (%s) (DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u)\n",
                 RegsOut.b.ah, DiskGetErrorCodeString(RegsOut.b.ah),
                 DriveNumber, SectorNumber, SectorCount);
             return FALSE;
@@ -750,7 +770,7 @@ PcDiskReadLogicalSectors(
 {
     PPC_DISK_DRIVE DiskDrive;
 
-    TRACE("PcDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n",
+    TRACE("PcDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u Buffer: 0x%x\n",
           DriveNumber, SectorNumber, SectorCount, Buffer);
 
     /* 16-bit BIOS addressing limitation */

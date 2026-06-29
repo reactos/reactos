@@ -40,6 +40,7 @@ static const NDIS_OID DcpSupportedOidList[] =
     OID_802_3_CURRENT_ADDRESS,
     OID_802_3_MULTICAST_LIST,
     OID_802_3_MAXIMUM_LIST_SIZE,
+    OID_GEN_PHYSICAL_MEDIUM,
 
     /* Statistics */
     OID_GEN_XMIT_OK,
@@ -355,6 +356,10 @@ DcQueryInformation(
         case OID_802_3_CURRENT_ADDRESS:
             InfoPtr = Adapter->CurrentMacAddress;
             InfoLength = ETH_LENGTH_OF_ADDRESS;
+            break;
+
+        case OID_GEN_PHYSICAL_MEDIUM:
+            GenericInfo.Ulong = NdisPhysicalMedium802_3;
             break;
 
         case OID_GEN_XMIT_OK:

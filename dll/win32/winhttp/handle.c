@@ -18,12 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "ws2tcpip.h"
 #include <stdarg.h>
 
 #include "windef.h"
 #include "winbase.h"
+#include "ws2tcpip.h"
 #include "winhttp.h"
 
 #include "wine/debug.h"
@@ -49,7 +48,7 @@ static ULONG_PTR max_handles;
 struct object_header *addref_object( struct object_header *hdr )
 {
     ULONG refs = InterlockedIncrement( &hdr->refs );
-    TRACE("%p -> refcount = %d\n", hdr, refs);
+    TRACE( "%p -> refcount = %lu\n", hdr, refs );
     return hdr;
 }
 
@@ -65,22 +64,21 @@ struct object_header *grab_object( HINTERNET hinternet )
 
     LeaveCriticalSection( &handle_cs );
 
-    TRACE("handle 0x%lx -> %p\n", handle, hdr);
+    TRACE( "handle %Ix -> %p\n", handle, hdr );
     return hdr;
 }
 
 void release_object( struct object_header *hdr )
 {
     ULONG refs = InterlockedDecrement( &hdr->refs );
-    TRACE("object %p refcount = %d\n", hdr, refs);
+    TRACE( "object %p refcount = %lu\n", hdr, refs );
     if (!refs)
     {
         if (hdr->type == WINHTTP_HANDLE_TYPE_REQUEST) close_connection( (struct request *)hdr );
 
         send_callback( hdr, WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, &hdr->handle, sizeof(HINTERNET) );
 
-        TRACE("destroying object %p\n", hdr);
-        if (hdr->type != WINHTTP_HANDLE_TYPE_SESSION) list_remove( &hdr->entry );
+        TRACE( "destroying object %p\n", hdr );
         hdr->vtbl->destroy( hdr );
     }
 }
@@ -90,21 +88,23 @@ HINTERNET alloc_handle( struct object_header *hdr )
     struct object_header **p;
     ULONG_PTR handle, num;
 
-    list_init( &hdr->children );
     hdr->handle = NULL;
 
     EnterCriticalSection( &handle_cs );
     if (!max_handles)
     {
         num = HANDLE_CHUNK_SIZE;
-        if (!(p = heap_alloc_zero( sizeof(ULONG_PTR) * num ))) goto end;
+        if (!(p = calloc( 1, sizeof(*p) * num ))) goto end;
         handles = p;
         max_handles = num;
     }
     if (max_handles == next_handle)
     {
+        size_t new_size, old_size = max_handles * sizeof(*handles);
         num = max_handles * 2;
-        if (!(p = heap_realloc_zero( handles, sizeof(ULONG_PTR) * num ))) goto end;
+        new_size = num * sizeof(*handles);
+        if (!(p = realloc( handles, new_size ))) goto end;
+        memset( (char *)p + old_size, 0, new_size - old_size );
         handles = p;
         max_handles = num;
     }
@@ -124,7 +124,7 @@ BOOL free_handle( HINTERNET hinternet )
 {
     BOOL ret = FALSE;
     ULONG_PTR handle = (ULONG_PTR)hinternet;
-    struct object_header *hdr = NULL, *child, *next;
+    struct object_header *hdr = NULL;
 
     EnterCriticalSection( &handle_cs );
 
@@ -134,7 +134,7 @@ BOOL free_handle( HINTERNET hinternet )
         if (handles[handle])
         {
             hdr = handles[handle];
-            TRACE("destroying handle 0x%lx for object %p\n", handle + 1, hdr);
+            TRACE( "destroying handle %Ix for object %p\n", handle + 1, hdr );
             handles[handle] = NULL;
             ret = TRUE;
         }
@@ -144,11 +144,8 @@ BOOL free_handle( HINTERNET hinternet )
 
     if (hdr)
     {
-        LIST_FOR_EACH_ENTRY_SAFE( child, next, &hdr->children, struct object_header, entry )
-        {
-            TRACE("freeing child handle %p for parent handle 0x%lx\n", child->handle, handle + 1);
-            free_handle( child->handle );
-        }
+        if (hdr->vtbl->handle_closing)
+            hdr->vtbl->handle_closing( hdr );
         release_object( hdr );
     }
 

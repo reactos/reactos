@@ -7,8 +7,8 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *
  * DOCUMENTATION:   IBM Personal System/2 Hardware Interface Technical Reference, May 1988 (Section 10)
- *                  http://wiki.osdev.org/%228042%22_PS/2_Controller
- *                  http://www.computer-engineering.org/ps2keyboard/
+ *                  https://wiki.osdev.org/%228042%22_PS/2_Controller
+ *                  http://www.computer-engineering.org/ps2keyboard/ (DEAD_LINK)
  */
 
 /* INCLUDES *******************************************************************/
@@ -96,7 +96,7 @@ static BYTE WINAPI PS2ReadControl(USHORT Port)
      * On IBM PC-ATs this is the state of the hardware keyboard
      * lock mechanism. It is not widely used, but some programs
      * still use it, see for example:
-     * http://www.os2museum.com/wp/the-dos-4-0-shell-mouse-mystery/
+     * https://www.os2museum.com/wp/the-dos-4-0-shell-mouse-mystery/
      */
     StatusRegister |= PS2_STAT_KBD_ENABLE;
 
@@ -300,7 +300,7 @@ static VOID WINAPI PS2WriteData(USHORT Port, BYTE Data)
                 /*
                  * Update the "System enabled" flag of the status register
                  * with bit 2 of the controller configuration byte.
-                 * See: http://www.win.tue.nl/~aeb/linux/kbd/scancodes-11.html#kccb2
+                 * See: https://aeb.win.tue.nl/linux/kbd/scancodes-11.html#kccb2
                  * for more details.
                  */
                 if (ControllerConfig & PS2_CONFIG_SYSTEM)
@@ -312,7 +312,7 @@ static VOID WINAPI PS2WriteData(USHORT Port, BYTE Data)
                  * Update the "Keyboard enable" flag of the status register
                  * with the "Ignore keyboard lock" flag of the controller
                  * configuration byte (if set), then reset the latter one.
-                 * See: http://www.win.tue.nl/~aeb/linux/kbd/scancodes-11.html#kccb3
+                 * See: https://aeb.win.tue.nl/linux/kbd/scancodes-11.html#kccb3
                  * for more details.
                  */
                 if (ControllerConfig & PS2_CONFIG_NO_KEYLOCK)

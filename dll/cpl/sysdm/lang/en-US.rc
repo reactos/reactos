@@ -323,10 +323,34 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 106, 140, 54, 15
 END
 
+IDD_VISUALEFFECTS DIALOGEX 6, 18, 227, 204
+CAPTION "Visual Effects"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+   LTEXT "Select the settings you want to use for the appearance and performance of ReactOS on this computer.", IDC_STATIC, 7, 6, 208, 18
+   CONTROL "", IDC_TREE, "SysTreeView32", TVS_LINESATROOT | TVS_DISABLEDRAGDROP | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 32, 213, 168
+END
+
+IDD_ADVANCEDPERF DIALOGEX 6, 18, 227, 128
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+   GROUPBOX "CPU scheduling", IDC_STATIC, 7, 8, 213, 46
+   LTEXT "Adjust for best performance of:", IDC_STATIC, 14, 23, 199, 8
+   AUTORADIOBUTTON "&Programs", IDC_CPUCLIENT, 14, 36, 75, 12
+   AUTORADIOBUTTON "Background &services", IDC_CPUSERVER, 96, 36, 85, 12
+   GROUPBOX "Virtual memory", IDC_STATIC, 7, 60, 213, 57
+   LTEXT "A paging file is an area on the hard disk that ReactOS uses as if it were RAM.", IDC_STATIC, 14, 74, 199, 16
+   PUSHBUTTON "&Change...", IDC_CHANGESWAP, 163, 97, 50, 14
+END
+
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "System"
     IDS_CPLSYSTEMDESCRIPTION "See information about your computer and change various system and hardware settings."
+    IDS_PERFORMANCEOPTIONS "Performance Options"
     IDS_MEGABYTE "MB of RAM"
     IDS_GIGABYTE "GB of RAM"
     IDS_TERABYTE "TB of RAM"

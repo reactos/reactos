@@ -102,7 +102,7 @@ CopyLoop (
                                      NULL,
                                      NULL);
                 /* With sync read, 0 length + status success mean EOF:
-                 * https://msdn.microsoft.com/en-us/library/windows/desktop/aa365467(v=vs.85).aspx
+                 * https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile
                  */
                 if (NT_SUCCESS(errCode) && IoStatusBlock.Information == 0)
                 {
@@ -254,11 +254,13 @@ BasepCopyFileExW(IN LPCWSTR lpExistingFileName,
                                              GENERIC_WRITE,
                                              FILE_SHARE_WRITE,
                                              NULL,
-                                             dwCopyFlags ? CREATE_NEW : CREATE_ALWAYS,
+                                             (dwCopyFlags & COPY_FILE_FAIL_IF_EXISTS) ? CREATE_NEW : CREATE_ALWAYS,
                                              FileBasic.FileAttributes,
                                              NULL);
                 if (INVALID_HANDLE_VALUE != FileHandleDest)
                 {
+                    if (!(dwCopyFlags & COPY_FILE_FAIL_IF_EXISTS) && GetLastError() == ERROR_ALREADY_EXISTS)
+                        SetLastError(ERROR_SUCCESS);
                     errCode = CopyLoop(FileHandleSource,
                                        FileHandleDest,
                                        FileStandard.EndOfFile,
@@ -356,80 +358,6 @@ CopyFileExW(IN LPCWSTR lpExistingFileName,
 
     return Ret;
 }
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-CopyFileExA(IN LPCSTR lpExistingFileName,
-            IN LPCSTR lpNewFileName,
-            IN LPPROGRESS_ROUTINE lpProgressRoutine OPTIONAL,
-            IN LPVOID lpData OPTIONAL,
-            IN LPBOOL pbCancel OPTIONAL,
-            IN DWORD dwCopyFlags)
-{
-    BOOL Result = FALSE;
-    UNICODE_STRING lpNewFileNameW;
-    PUNICODE_STRING lpExistingFileNameW;
-
-    lpExistingFileNameW = Basep8BitStringToStaticUnicodeString(lpExistingFileName);
-    if (!lpExistingFileNameW)
-    {
-        return FALSE;
-    }
-
-    if (Basep8BitStringToDynamicUnicodeString(&lpNewFileNameW, lpNewFileName))
-    {
-        Result = CopyFileExW(lpExistingFileNameW->Buffer,
-                             lpNewFileNameW.Buffer,
-                             lpProgressRoutine,
-                             lpData,
-                             pbCancel,
-                             dwCopyFlags);
-
-        RtlFreeUnicodeString(&lpNewFileNameW);
-    }
-
-    return Result;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-CopyFileA(IN LPCSTR lpExistingFileName,
-          IN LPCSTR lpNewFileName,
-          IN BOOL bFailIfExists)
-{
-    BOOL Result = FALSE;
-    UNICODE_STRING lpNewFileNameW;
-    PUNICODE_STRING lpExistingFileNameW;
-
-    lpExistingFileNameW = Basep8BitStringToStaticUnicodeString(lpExistingFileName);
-    if (!lpExistingFileNameW)
-    {
-        return FALSE;
-    }
-
-    if (Basep8BitStringToDynamicUnicodeString(&lpNewFileNameW, lpNewFileName))
-    {
-        Result = CopyFileExW(lpExistingFileNameW->Buffer,
-                             lpNewFileNameW.Buffer,
-                             NULL,
-                             NULL,
-                             NULL,
-                             (bFailIfExists ? COPY_FILE_FAIL_IF_EXISTS : 0));
-
-        RtlFreeUnicodeString(&lpNewFileNameW);
-    }
-
-    return Result;
-}
-
 
 /*
  * @implemented

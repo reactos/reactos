@@ -61,7 +61,7 @@ LookupDirectoryById(
  * but here we try to remove this constraint.
  *
  * TXTSETUP.SIF entries syntax explained at:
- * http://www.msfn.org/board/topic/125480-txtsetupsif-syntax/
+ * https://msfn.org/board/topic/125480-txtsetupsif-syntax/
  */
 static NTSTATUS
 GetSourceFileAndTargetLocation(

@@ -81,11 +81,11 @@ typedef enum _CMOS_REGISTERS
  * CMOS Memory Map
  *
  * See the following documentation for more information:
- * http://www.intel-assembler.it/portale/5/cmos-memory-map-123/cmos-memory-map-123.asp
- * http://wiki.osdev.org/CMOS
+ * https://web.archive.org/web/20170825030728/http://www.intel-assembler.it/portale/5/cmos-memory-map-123/cmos-memory-map-123.asp
+ * https://wiki.osdev.org/CMOS
  * http://www.walshcomptech.com/ohlandl/config/cmos_registers.html
- * http://www.fysnet.net/cmosinfo.htm
- * http://www.bioscentral.com/misc/cmosmap.htm
+ * https://www.fysnet.net/cmosinfo.htm
+ * https://web.archive.org/web/20240119203005/http://www.bioscentral.com/misc/cmosmap.htm
  */
 #pragma pack(push, 1)
 typedef struct

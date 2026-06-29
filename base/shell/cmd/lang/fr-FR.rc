@@ -118,7 +118,7 @@ Appuyer sur ENTREE pour conserver la même date."
 DEL [/N /P /T /Q /W /Y /Z] fichier ...\n\
 DELETE [/N /P /T /Q /W /Y /Z] fichier ...\n\
 ERASE [/N /P /T /Q /W /Y /Z] fichier ...\n\n\
-  fichier  Specifie le(s) fichier(s) à effacer.\n\n\
+  fichier  Spécifie le(s) fichier(s) à effacer.\n\n\
   /N    Rien.\n\
   /P    Demande. Demande avant d'effacer pour chaque fichier.\n\
   /T    Total. Affiche le total de fichiers effacés et l'espace disque libéré.\n\
@@ -288,7 +288,7 @@ MOVE [/N][/Y|/-Y][lecteur:][chemin]nomrep1 nomrep2\n\n\
   /N                          Nothing. Do everything but move files or directories.\n\n\
 Limitations actuelles :\n\
   - Vous ne pouvez pas déplacer un fichier/répertoire d'un disque à un autre.\n"
-    STRING_MSGBOX_HELP "Affiche une boite de dialogue et retourne la réponse de l'utilisateur\n\n\
+    STRING_MSGBOX_HELP "Affiche une boîte de dialogue et retourne la réponse de l'utilisateur\n\n\
 MSGBOX type ['titre'] prompt\n\n\
 type          boutons affichés\n\
               les valeurs possibles sont: OK, OKCANCEL,\n\
@@ -374,7 +374,7 @@ START [""titre""] [/D chemin] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
   B           Lance la commande ou le programme sans créer de fenêtre.\n\
   MIN         Démarre avec la fenêtre réduite.\n\
   MAX         Démarre avec la fenêtre agrandie.\n\
-  WAIT        Lance la commande ou le programme et attend qu'elle termine.\n\
+  WAIT        Lance la commande ou le programme et attend qu'elle se termine.\n\
   commande    Indique la commande ou le programme à lancer.\n\
   paramètres  Spécifie les paramètres à passer à la commande ou au programme.\n"
     STRING_TITLE_HELP "Change le titre de la fenêtre de l'invite de commandes.\n\n\
@@ -508,13 +508,13 @@ titre         titre de la fenêtre"
     STRING_ERROR_CANNOTPIPE "Erreur ! Impossible de chaîner ! Échec à l'ouverture du fichier temporaire!\n"
     STRING_ERROR_D_PAUSEMSG "Appuyez sur une touche pour continuer . . . "
     STRING_ERROR_DRIVER_NOT_READY "Lecteur non prêt"
-    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
-    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
-    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
-    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
-    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
-    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
-    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
+    STRING_ERROR_INVALID_NUMBER1 "Nombre invalide. Les constantes numériques sont soit décimales (42), hexadécimales (0x2A), ou octales (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Nombre invalide. Les nombres sont limités à une précision de 32-bits.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Erreur de division par zéro.\n"
+    STRING_ERROR_INVALID_DEVICE L"Périphérique non valide '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Tentative non valide d'appel d'une étiquette en dehors du script de commandes.\n"
+    STRING_ERROR_UNEXPECTED "%s n'était pas attendu.\n"
+    STRING_ERROR_WHILE_PROCESSING "Une erreur est apparue lors du traitement : %s.\n"
     STRING_SET_ENV_ERROR "Variable d'environnement '%s' non définie\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
     STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"

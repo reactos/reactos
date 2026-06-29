@@ -119,7 +119,6 @@ NdisInterlockedRemoveHeadList(
 
 typedef struct _NDIS_HANDLE_OBJECT
 {
-  HANDLE FileHandle;
   BOOLEAN Mapped;
   ULONG FileLength;
   PVOID MapBuffer;
@@ -203,15 +202,8 @@ NdisCloseFile(
 
   FileHandleObject = NDIS_HANDLE_TO_POBJECT(FileHandle);
 
-  ASSERT ( FileHandleObject->FileHandle );
-
-  if ( FileHandleObject->Mapped )
-    NdisUnmapFile ( FileHandle );
-
-  ZwClose ( FileHandleObject->FileHandle );
-
-  memset ( FileHandleObject, 0, sizeof(NDIS_HANDLE_OBJECT) );
-
+  if ( FileHandleObject->MapBuffer )
+    ExFreePool ( FileHandleObject->MapBuffer );
   ExFreePool ( FileHandleObject );
 }
 
@@ -228,10 +220,14 @@ NdisOpenFile(
     IN  PNDIS_STRING            FileName,
     IN  NDIS_PHYSICAL_ADDRESS   HighestAcceptableAddress)
 {
+  HANDLE NtFileHandle = NULL;
   NDIS_STRING FullFileName;
   OBJECT_ATTRIBUTES ObjectAttributes;
   PNDIS_HANDLE_OBJECT FileHandleObject = NULL;
   IO_STATUS_BLOCK IoStatusBlock;
+  FILE_STANDARD_INFORMATION StandardInfo;
+  UINT NtFileLength;
+  NTSTATUS NtStatus;
 
   ASSERT_IRQL(PASSIVE_LEVEL);
 
@@ -263,10 +259,10 @@ NdisOpenFile(
   memset ( FileHandleObject, 0, sizeof(NDIS_HANDLE_OBJECT) );
 
   memmove ( FullFileName.Buffer, NDIS_FILE_FOLDER, FullFileName.Length );
-  *Status = RtlAppendUnicodeStringToString ( &FullFileName, FileName );
-  if ( !NT_SUCCESS(*Status) )
+  NtStatus = RtlAppendUnicodeStringToString ( &FullFileName, FileName );
+  if ( !NT_SUCCESS(NtStatus) )
   {
-    NDIS_DbgPrint(MIN_TRACE, ("RtlAppendUnicodeStringToString failed (%x)\n", *Status));
+    NDIS_DbgPrint(MIN_TRACE, ("RtlAppendUnicodeStringToString failed (%x)\n", NtStatus));
     *Status = NDIS_STATUS_FAILURE;
     goto cleanup;
   }
@@ -277,8 +273,8 @@ NdisOpenFile(
     NULL,
     NULL );
 
-  *Status = ZwCreateFile (
-    &FileHandleObject->FileHandle,
+  NtStatus = ZwCreateFile (
+    &NtFileHandle,
     FILE_READ_DATA|SYNCHRONIZE,
     &ObjectAttributes,
     &IoStatusBlock,
@@ -290,13 +286,63 @@ NdisOpenFile(
     0, // PVOID EaBuffer
     0 ); // ULONG EaLength
 
-  if ( !NT_SUCCESS(*Status) )
+  if ( !NT_SUCCESS(NtStatus) )
   {
-    NDIS_DbgPrint(MIN_TRACE, ("ZwCreateFile failed (%x) Name %wZ\n", *Status, FileName));
-    *Status = NDIS_STATUS_FAILURE;
+    NDIS_DbgPrint(MIN_TRACE, ("ZwCreateFile failed (%x) Name %wZ\n", NtStatus, FileName));
+    *Status = NDIS_STATUS_FILE_NOT_FOUND;
+    goto cleanup;
+  }
+
+  NtStatus = ZwQueryInformationFile(
+    NtFileHandle,
+    &IoStatusBlock,
+    &StandardInfo,
+    sizeof(StandardInfo),
+    FileStandardInformation);
+  if (!NT_SUCCESS(NtStatus))
+  {
+    NDIS_DbgPrint(MIN_TRACE, ("ZwQueryInformationFile failed (%x) Name %wZ\n", NtStatus, FileName));
+    *Status = NDIS_STATUS_ERROR_READING_FILE;
+    goto cleanup;
+  }
+  if (StandardInfo.EndOfFile.HighPart != 0 || StandardInfo.EndOfFile.LowPart == 0)
+  {
+    NDIS_DbgPrint(MIN_TRACE, ("ZwQueryInformationFile failed Name %wZ\n", FileName));
+    *Status = NDIS_STATUS_ERROR_READING_FILE;
+    goto cleanup;
+  }
+  NtFileLength = StandardInfo.EndOfFile.LowPart;
+
+  FileHandleObject->MapBuffer = ExAllocatePool( NonPagedPool, NtFileLength );
+  if (!FileHandleObject->MapBuffer)
+  {
+    NDIS_DbgPrint(MIN_TRACE, ("ExAllocatePool failed Name %wZ\n", FileName));
+    *Status = NDIS_STATUS_ERROR_READING_FILE;
+    goto cleanup;
+  }
+
+  NtStatus = ZwReadFile(
+    NtFileHandle,
+    NULL,
+    NULL,
+    NULL,
+    &IoStatusBlock,
+    FileHandleObject->MapBuffer,
+    NtFileLength,
+    NULL,
+    NULL);
+  if ( !NT_SUCCESS(NtStatus) || IoStatusBlock.Information != NtFileLength )
+  {
+    NDIS_DbgPrint(MIN_TRACE, ("ZwReadFile failed (%x) Name %wZ\n", NtStatus, FileName));
+    *Status = NDIS_STATUS_ERROR_READING_FILE;
+    goto cleanup;
   }
 
 cleanup:
+  if ( NtFileHandle != NULL )
+  {
+    ZwClose( NtFileHandle );
+  }
   if ( FullFileName.Buffer != NULL )
   {
     ExFreePool ( FullFileName.Buffer );
@@ -304,16 +350,19 @@ cleanup:
   }
   if ( !NT_SUCCESS(*Status) )
   {
-    if( FileHandleObject ) {
-	ExFreePool ( FileHandleObject );
-	FileHandleObject = NULL;
+    if ( FileHandleObject )
+    {
+      if ( FileHandleObject->MapBuffer )
+        ExFreePool( FileHandleObject->MapBuffer );
+      ExFreePool ( FileHandleObject );
     }
     *FileHandle = NULL;
   }
   else
+  {
     *FileHandle = NDIS_POBJECT_TO_HANDLE(FileHandleObject);
-
-  return;
+    *FileLength = NtFileLength;
+  }
 }
 
 /*

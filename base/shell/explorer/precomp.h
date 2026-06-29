@@ -42,6 +42,7 @@
 #include <shlwapi_undoc.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
+#include <shdocvw_undoc.h>
 #include <undocshell.h>
 
 #include <ui/rosctrls.h>
@@ -119,7 +120,7 @@ VOID InitRSHELL(VOID);
 HRESULT WINAPI _CStartMenu_CreateInstance(REFIID riid, void **ppv);
 HANDLE WINAPI _SHCreateDesktop(IShellDesktopTray *ShellDesk);
 BOOL WINAPI _SHDesktopMessageLoop(HANDLE hDesktop);
-DWORD WINAPI _WinList_Init(void);
+BOOL WINAPI _WinList_Init(void);
 void WINAPI _ShellDDEInit(BOOL bInit);
 HRESULT WINAPI _CBandSiteMenu_CreateInstance(REFIID riid, void **ppv);
 HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv);
@@ -131,7 +132,7 @@ HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void 
 #define TWM_GETTASKSWITCH (WM_USER + 236)
 #define TWM_OPENSTARTMENU (WM_USER + 260)
 #define TWM_SETTINGSCHANGED (WM_USER + 300)
-#define TWM_PULSE (WM_USER + 400)
+#define TWM_SETZORDER (WM_USER + 338)
 
 extern const GUID IID_IShellDesktopTray;
 
@@ -152,6 +153,7 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
     STDMETHOD_(BOOL, ExecContextMenuCmd) (THIS_ UINT uiCmd) PURE;
     STDMETHOD_(BOOL, Lock) (THIS_ BOOL bLock) PURE;
     STDMETHOD_(BOOL, IsTaskWnd) (THIS_ HWND hWnd) PURE;
+    STDMETHOD_(HRESULT, NotifyFullScreenToAppBars)(THIS_ HMONITOR hMonitor, BOOL bFullOpening) PURE;
 };
 #undef INTERFACE
 
@@ -170,6 +172,7 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
 #define ITrayWindow_ExecContextMenuCmd(p,a) (p)->lpVtbl->ExecContextMenuCmd(p,a)
 #define ITrayWindow_Lock(p,a)               (p)->lpVtbl->Lock(p,a)
 #define ITrayWindow_IsTaskWnd(p,a)          (p)->lpVtbl->IsTaskWnd(p,a)
+#define ITrayWindow_NotifyFullScreenToAppBars(p,a,b) (p)->lpVtbl->NotifyFullScreenToAppBars(p,a,b)
 #endif
 
 HRESULT CreateTrayWindow(ITrayWindow ** ppTray);
@@ -352,6 +355,8 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
  */
 VOID
 ShowCustomizeClassic(HINSTANCE, HWND);
+VOID
+ClearRecentAndMru();
 
 /*
 * startmnusite.cpp
@@ -365,6 +370,11 @@ CStartMenuSite_CreateInstance(IN OUT ITrayWindow *Tray, const IID & riid, PVOID 
 
 /* TrayClockWnd */
 HRESULT CTrayClockWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
+
+static inline BOOL GetHideClock()
+{
+    return g_TaskbarSettings.sr.HideClock || SHRestricted(REST_HIDECLOCK);
+}
 
 /* TrayNotifyWnd */
 #define TNWM_GETMINIMUMSIZE (WM_USER + 0x100)

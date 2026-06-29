@@ -15,12 +15,10 @@ Signature = "$Windows NT$"
 _1 = %cdname%,%cdtagfile%,,""
 
 [SourceDisksNames.x86]
-;1 = %cdname%,%cdtagfilei%,,\i386
-1 = %cdname%,%cdtagfilei%,,\reactos
+1 = %cdname%,%cdtagfilei%,,\i386
 
 [SourceDisksNames.amd64]
-;1 = %cdname%,%cdtagfilea%,,\amd64
-1 = %cdname%,%cdtagfilei%,,\reactos
+1 = %cdname%,%cdtagfilea%,,\amd64
 
 ;
 ; The directories listed in the [Directories] or [WinntDirectories] sections
@@ -43,7 +41,7 @@ _1 = %cdname%,%cdtagfile%,,""
 
 [DiskSpaceRequirements]
 ; Required free system partition disk space in MB
-FreeSysPartDiskSpace=450
+FreeSysPartDiskSpace = 450
 
 ;
 ; The [SourceDisksFiles] section lists all the files available to the
@@ -87,10 +85,10 @@ FreeSysPartDiskSpace=450
 ; "MouseDrivers.Load" sections.
 ;
 [SourceDisksFiles]
-acpi.sys     = 1,,,,,,,4,1,,,1,4
 nmidebug.sys = 1,,,,,,x,4,,,,1,4
 sacdrv.sys   = 1,,,,,,x,4,,,,1,4
-uniata.sys   = 1,,,,,,x,4,,,,1,4
+;uniata.sys   = 1,,,,,,x,4,,,,1,4
+atapi.sys    = 1,,,,,,x,4,,,,1,4
 buslogic.sys = 1,,,,,,x,4,,,,1,4
 blue.sys     = 1,,,,,,x,4,,,,1,4
 vgafonts.cab = 1,,,,,,,1,,,,1,1
@@ -126,7 +124,7 @@ storport.sys = 1,,,,,,,4,,,,1,4
 fastfat.sys  = 1,,,,,,x,4,,,,1,4
 btrfs.sys    = 1,,,,,,x,4,,,,1,4
 ramdisk.sys  = 1,,,,,,x,4,,,,1,4
-pciide.sys   = 1,,,,,,,4,,,,1,4
+pciide.sys   = 1,,,,,,x,4,,,,1,4
 pciidex.sys  = 1,,,,,,,4,,,,1,4
 pcix.sys     = 1,,,,,,,4,,,,1,4
 pcmcia.sys   = 1,,,,,,,4,,,,1,4
@@ -136,10 +134,15 @@ wmilib.sys   = 1,,,,,,,4,,,,1,4
 ksecdd.sys   = 1,,,,,,,4,,,,1,4
 mountmgr.sys = 1,,,,,,x,4,,,,1,4
 partmgr.sys  = 1,,,,,,x,4,,,,1,4
+wdfldr.sys   = 1,,,,,,,4,,,,1,4
+wdf01000.sys = 1,,,,,,x,4,,,,1,4
 
 [SourceDisksFiles.x86]
+acpi.sys     = 1,,,,,,,4,1,,,1,4
+legide.sys   = 1,,,,,,,4,,,,1,4
 
 [SourceDisksFiles.amd64]
+acpi.sys     = 1,,,,,,x,4,,,,1,4
 
 ;
 ; The [SystemPartitionFiles] section lists all the files
@@ -156,11 +159,15 @@ PCI\CC_0601 = isapnp
 PCI\CC_0604 = pci
 PCI\VEN_104B&CC_0100 = buslogic
 PCI\CC_0101 = pciide
-PCI\CC_0104 = uniata
-PCI\CC_0105 = uniata
-PCI\CC_0106 = uniata
+;PCI\CC_0104 = uniata
+;PCI\CC_0105 = uniata
+;PCI\CC_0106 = uniata
+PCI\CC_0104 = pciide
+PCI\CC_0105 = pciide
+PCI\CC_0106 = pciide
 ;PCI\CC_0106 = storahci
-*PNP0600 = uniata
+;*PNP0600 = uniata
+*PNP0600 = atapi
 USB\CLASS_09 = usbhub
 USB\ROOT_HUB = usbhub
 USB\ROOT_HUB20 = usbhub
@@ -199,9 +206,11 @@ i8042prt = i8042prt.sys
 
 [BusExtenders.Load]
 pciide = pciide.sys
+atapi = atapi.sys
 
 [SCSI.Load]
-uniata = uniata.sys
+;uniata = uniata.sys
+atapi = atapi.sys
 buslogic = buslogic.sys
 storahci = storahci.sys
 disk = disk.sys
@@ -210,7 +219,7 @@ disk = disk.sys
 inport = inport.sys
 
 [Cabinets]
-Cabinet=reactos.cab
+Cabinet = reactos.cab
 
 [SetupData]
 DefaultPath = \ReactOS
@@ -477,7 +486,6 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000490 = "Walon"
 ;00000435 = "Zulu"
 
-
 [KeyboardLayout]
 0000041C = "Albanian"
 00000401 = "Arabic (101)"
@@ -496,6 +504,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000455 = "Burmese"
 00000C0C = "Canadian French (Legacy)"
 00011009 = "Canadian Multilingual Standard"
+00060409 = "Colemak"
 0000041A = "Croatian"
 00000405 = "Czech"
 00010405 = "Czech (QWERTY)"
@@ -513,9 +522,12 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000040C = "French (France)"
 00000437 = "Georgian"
 00000407 = "German (Germany)"
-00030407 = "German (de_ergo)"
-00020407 = "German (NEO-1.1)"
-00010407 = "German (Ristome)"
+00010407 = "German (IBM)"
+00020407 = "German Extended (E1)"
+;00030407 = "German Extended (E2)"
+00060407 = "German (de_ergo)"
+00050407 = "German (NEO-1.1)"
+00040407 = "German (Ristome)"
 00000807 = "German (Swiss)"
 00000408 = "Greek"
 00010408 = "Greek 220"
@@ -577,8 +589,11 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000407 = kbdgr.dll
 00000807 = kbdsg.dll
 00010407 = kbdgr1.dll
-00020407 = kbdgneo.dll
-00030407 = kbdgerg.dll
+00020407 = kbdgre1.dll
+;00030407 = kbdgre2.dll
+00050407 = kbdgneo.dll
+00060407 = kbdgerg.dll
+00040407 = kbdgrist.dll
 00000408 = kbdhe.dll
 00010408 = kbdhe.dll
 00000409 = kbdus.dll
@@ -590,6 +605,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00030409 = kbdusl.dll
 00040409 = kbdusr.dll
 00050409 = kbdusa.dll
+00060409 = kbdcmk.dll
 0000040A = kbdsp.dll
 0000080A = kbdla.dll
 0000040B = kbdfi.dll
@@ -657,5 +673,9 @@ AddReg = registry.inf,AddReg
 [HiveInfs.Upgrade]
 DelReg = registry.inf,DelReg
 AddReg = registry.inf,AddReg
+
+[Strings]
+cdname      = "ReactOS Installation Media"
+productname = "ReactOS"
 
 ; EOF

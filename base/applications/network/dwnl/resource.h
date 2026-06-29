@@ -1,5 +1,4 @@
-#ifndef RESOURCE_H
-#define RESOURCE_H
+#pragma once
 
 #define IDS_USAGE                 0
 #define IDS_RESOLVING             1
@@ -18,5 +17,3 @@
 #define IDS_ERROR_CODE     13
 #define IDS_ERROR_FILENAME 14
 #define IDS_ERROR_PROTOCOL 15
-
-#endif /* RESOURCE_H */

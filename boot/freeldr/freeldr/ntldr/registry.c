@@ -99,14 +99,7 @@ RegInitializeHive(
     _In_ BOOLEAN LoadAlternate)
 {
     NTSTATUS Status;
-/*
- * FIXME: Disable compilation of some parts of code for AMD64 for now,
- * since it makes the FreeLdr binary size so large that it prevents
- * x64 ROS from booting.
- */
-#if !defined(_M_AMD64)
     CM_CHECK_REGISTRY_STATUS CmStatusCode;
-#endif
 
     /* Initialize the hive */
     Status = HvInitialize(GET_HHIVE(CmHive),
@@ -128,8 +121,6 @@ RegInitializeHive(
         return FALSE;
     }
 
-/* FIXME: See the comment above */
-#if !defined(_M_AMD64)
     /* Now check the hive and purge volatile data */
     CmStatusCode = CmCheckRegistry(CmHive, CM_CHECK_REGISTRY_BOOTLOADER_PURGE_VOLATILES | CM_CHECK_REGISTRY_VALIDATE_HIVE);
     if (!CM_CHECK_REGISTRY_SUCCESS(CmStatusCode))
@@ -137,13 +128,10 @@ RegInitializeHive(
         ERR("CmCheckRegistry detected problems with the loaded flat hive (check code %lu)\n", CmStatusCode);
         return FALSE;
     }
-#endif
 
     return TRUE;
 }
 
-/* FIXME: See the comment above */
-#if !defined(_M_AMD64)
 /**
  * @brief
  * Loads and reads a hive log at specified
@@ -418,7 +406,6 @@ RegRecoverDataHive(
     HiveBaseBlock->CheckSum = HvpHiveHeaderChecksum(HiveBaseBlock);
     return TRUE;
 }
-#endif
 
 /**
  * @brief
@@ -464,14 +451,6 @@ RegImportBinaryHive(
     CmSystemHive = FrLdrTempAlloc(sizeof(CMHIVE), 'eviH');
     Success = RegInitializeHive(CmSystemHive, ChunkBase, LoadAlternate);
     if (!Success)
-/* FIXME: See the comment above */
-#if defined(_M_AMD64)
-    {
-        ERR("Corrupted hive %p!\n", ChunkBase);
-        FrLdrTempFree(CmSystemHive, 'eviH');
-        return FALSE;
-    }
-#else
     {
         /* Free the buffer and retry again */
         FrLdrTempFree(CmSystemHive, 'eviH');
@@ -505,7 +484,6 @@ RegImportBinaryHive(
          */
         ((PHBASE_BLOCK)ChunkBase)->BootRecover = HBOOT_BOOT_RECOVERED_BY_HIVE_LOG;
     }
-#endif
 
     /* Save the root key node */
     SystemHive = GET_HHIVE(CmSystemHive);

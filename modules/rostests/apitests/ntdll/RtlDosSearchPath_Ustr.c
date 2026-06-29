@@ -210,4 +210,23 @@ START_TEST(RtlDosSearchPath_Ustr)
     ok_eq_pointer(FullNameOut, NULL);
     ok_eq_ulong(FilePartSize, 0UL);
     ok_eq_ulong(LengthNeeded, 0UL);
+
+    /* Buffer overflow test
+     * length(longDirName) + length(longFileName) + length(ext) = MAX_PATH
+     */
+    RtlInitUnicodeString(&PathString, L"C:\\Program Files\\Very_long_test_path_which_can_trigger_heap_overflow_test_1234567890______________________________________________________AB");
+    RtlInitUnicodeString(&FileNameString, L"this_is_long_file_name_for_checking______________________________________________________________________________CD");
+    RtlInitUnicodeString(&ExtensionString, L".txt");
+    StartSeh()
+        Status = RtlDosSearchPath_Ustr(0,
+                                       &PathString,
+                                       &FileNameString,
+                                       &ExtensionString,
+                                       &CallerBuffer,
+                                       &DynamicString,
+                                       &FullNameOut,
+                                       &FilePartSize,
+                                       &LengthNeeded);
+        ok_eq_hex(Status, STATUS_NO_SUCH_FILE);
+    EndSeh(STATUS_SUCCESS);
 }

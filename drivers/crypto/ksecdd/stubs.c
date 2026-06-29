@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS Drivers
- * COPYRIGHT:       See COPYING in the top level directory
- * PURPOSE:         Kernel Security Support Provider Interface Driver
- *
- * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:     ReactOS Kernel Security Support Provider Interface Driver
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Stub functions for ksecdd
+ * COPYRIGHT:   Copyright 2014 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/

@@ -384,7 +384,7 @@ KiVerifyCpuFeatures(PKPRCB Prcb)
         KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x386, 0, 0, 0);
 
     // 3. Finally, obtain CPU features.
-    ULONG FeatureBits = KiGetFeatureBits();
+    ULONG64 FeatureBits = KiGetFeatureBits();
 
     // 4. Verify it supports everything we need.
     if (!(FeatureBits & KF_RDTSC))
@@ -423,7 +423,8 @@ KiVerifyCpuFeatures(PKPRCB Prcb)
     }
 
     // 5. Save feature bits.
-    Prcb->FeatureBits = FeatureBits;
+    Prcb->FeatureBits = (ULONG)FeatureBits;
+    Prcb->FeatureBitsHigh = FeatureBits >> 32;
 }
 
 CODE_SEG("INIT")
@@ -445,7 +446,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
     /* Set boot-level flags */
     if (Number == 0)
-        KeFeatureBits = Prcb->FeatureBits;
+        KeFeatureBits = Prcb->FeatureBits | (ULONG64)Prcb->FeatureBitsHigh << 32;
 
     /* Set the default NX policy (opt-in) */
     SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
@@ -571,6 +572,17 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         (KeFeatureBits & KF_3DNOW) ? TRUE: FALSE;
     SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
         (KeFeatureBits & KF_RDTSC) ? TRUE: FALSE;
+    SharedUserData->ProcessorFeatures[PF_RDRAND_INSTRUCTION_AVAILABLE] =
+        (KeFeatureBits & KF_RDRAND) ? TRUE : FALSE;
+    // Note: On x86 we lack support for saving/restoring SSE state
+    SharedUserData->ProcessorFeatures[PF_SSE3_INSTRUCTIONS_AVAILABLE] =
+        (KeFeatureBits & KF_SSE3) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_SSSE3_INSTRUCTIONS_AVAILABLE] =
+        (KeFeatureBits & KF_SSSE3) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_SSE4_1_INSTRUCTIONS_AVAILABLE] =
+        (KeFeatureBits & KF_SSE4_1) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_SSE4_2_INSTRUCTIONS_AVAILABLE] =
+        (KeFeatureBits & KF_SSE4_2) ? TRUE : FALSE;
 
     /* Set up the thread-related fields in the PRCB */
     Prcb->CurrentThread = InitThread;

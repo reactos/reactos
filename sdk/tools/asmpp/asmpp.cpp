@@ -298,6 +298,8 @@ unsigned int g_label_number = 0;
 
 bool g_processing_jmp = false;
 
+vector<bool> g_proc_frame_stack;
+
 enum class IDTYPE
 {
     Memory,
@@ -356,6 +358,27 @@ iequals(const string &a, const string &b)
         if (tolower(a[i]) != tolower(b[i]))
             return false;
     return true;
+}
+
+const char*
+get_expression_operator(const string &op)
+{
+    const struct
+    {
+        const char* masm;
+        const char* gas;
+    } operators[] = {
+        {"and", "&"}, {"or", "|"}, {"shl", "<<"}, {"shr", ">>"}, {"not", "~"},
+        {"eq", "=="}, {"ne", "!="}, {"lt", "<"}, {"le", "<="}, {"gt", ">"}, {"ge", ">="},
+    };
+
+    for (const auto& entry : operators)
+    {
+        if (iequals(op, entry.masm))
+            return entry.gas;
+    }
+
+    return nullptr;
 }
 
 Token
@@ -500,43 +523,45 @@ translate_expression(TokenList &tokens, size_t index, const vector<string> &macr
                 break;
 
             case TOKEN_TYPE::Instruction:
-                if (iequals(tok.str(), "and"))
-                {
-                    printf("&");
-                    index += 1;
-                }
-                else if (iequals(tok.str(), "or"))
-                {
-                    printf("|");
-                    index += 1;
-                }
-                else if (iequals(tok.str(), "shl"))
-                {
-                    printf("<<");
-                    index += 1;
-                }
-                else if (iequals(tok.str(), "not"))
-                {
-                    printf("!");
-                    index += 1;
-                }
-                else
+            {
+                const char* op = get_expression_operator(tok.str());
+                if (!op)
                 {
                     throw "Invalid expression";
                 }
+                printf("%s", op);
+                index += 1;
                 break;
+            }
 
             case TOKEN_TYPE::Operator:
                 if (tok.str() == ",")
                 {
                     return index;
                 }
+                index = translate_token(tokens, index, macro_params);
+                break;
+
+            case TOKEN_TYPE::Identifier:
+            {
+                const char* op = get_expression_operator(tok.str());
+                if (op)
+                {
+                    printf("%s", op);
+                    index += 1;
+                }
+                else
+                {
+                    index = translate_token(tokens, index, macro_params);
+                }
+                break;
+            }
+
             case TOKEN_TYPE::WhiteSpace:
             case TOKEN_TYPE::BraceOpen:
             case TOKEN_TYPE::BraceClose:
             case TOKEN_TYPE::DecNumber:
             case TOKEN_TYPE::HexNumber:
-            case TOKEN_TYPE::Identifier:
                 index = translate_token(tokens, index, macro_params);
                 break;
 
@@ -581,6 +606,55 @@ size_t translate_mem_ref(TokenList& tokens, size_t index, const vector<string>& 
     return index;
 }
 
+static
+bool
+is_number_token(const Token& tok)
+{
+    return ((tok.type() == TOKEN_TYPE::DecNumber) ||
+            (tok.type() == TOKEN_TYPE::HexNumber));
+}
+
+static
+size_t
+skip_whitespace(TokenList& tokens, size_t index)
+{
+    if ((index < tokens.size()) &&
+        (tokens[index].type() == TOKEN_TYPE::WhiteSpace))
+    {
+        index++;
+    }
+
+    return index;
+}
+
+static
+size_t
+translate_rip_relative_offset(TokenList& tokens, size_t index, const vector<string>& macro_params)
+{
+    size_t operatorIndex = skip_whitespace(tokens, index);
+    if ((operatorIndex == tokens.size()) ||
+        (tokens[operatorIndex].type() != TOKEN_TYPE::Operator) ||
+        ((tokens[operatorIndex].str() != "+") &&
+         (tokens[operatorIndex].str() != "-")))
+    {
+        return index;
+    }
+
+    size_t numberIndex = skip_whitespace(tokens, operatorIndex + 1);
+    if ((numberIndex == tokens.size()) ||
+        !is_number_token(tokens[numberIndex]))
+    {
+        return index;
+    }
+
+    while (index <= numberIndex)
+    {
+        index = translate_token(tokens, index, macro_params);
+    }
+
+    return index;
+}
+
 size_t translate_instruction_param(TokenList& tokens, size_t index, const vector<string>& macro_params)
 {
     switch (tokens[index].type())
@@ -622,6 +696,7 @@ size_t translate_instruction_param(TokenList& tokens, size_t index, const vector
                     !is_string_in_list(macro_params, tok.str()) &&
                     !g_processing_jmp)
                 {
+                    index = translate_rip_relative_offset(tokens, index, macro_params);
                     printf("[rip]");
                 }
                 break;
@@ -934,6 +1009,31 @@ translate_record(TokenList &tokens, size_t index, const vector<string> &macro_pa
     return index;
 }
 
+static
+bool
+find_proc_frame(TokenList& tokens, size_t index, size_t& frameEndIndex)
+{
+    while (index < tokens.size())
+    {
+        Token tok = tokens[index];
+        if ((tok.type() == TOKEN_TYPE::NewLine) ||
+            (tok.type() == TOKEN_TYPE::Comment))
+        {
+            return false;
+        }
+
+        if (tok.type() == TOKEN_TYPE::KW_FRAME)
+        {
+            frameEndIndex = index + 1;
+            return true;
+        }
+
+        index++;
+    }
+
+    return false;
+}
+
 size_t
 translate_identifier_construct(TokenList& tokens, size_t index, const vector<string> &macro_params)
 {
@@ -989,19 +1089,21 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
 
         case TOKEN_TYPE::KW_PROC:
         {
-            printf(".func %s\n", tok.str().c_str());
             printf("%s:", tok.str().c_str());
             index += 3;
 
-            if ((tokens[index].type() == TOKEN_TYPE::WhiteSpace) &&
-                (tokens[index + 1].type() == TOKEN_TYPE::KW_FRAME))
+            size_t frameEndIndex;
+            bool hasFrame = find_proc_frame(tokens, index, frameEndIndex);
+            g_proc_frame_stack.push_back(hasFrame);
+
+            if (hasFrame)
             {
 #ifdef TARGET_amd64
                 printf("\n.seh_proc %s\n", tok.str().c_str());
 #else
                 printf("\n.cfi_startproc\n");
 #endif
-                index += 2;
+                index = frameEndIndex;
             }
             add_identifier(tok, IDTYPE::Label);
             break;
@@ -1009,7 +1111,21 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
 
         case TOKEN_TYPE::KW_ENDP:
         {
-            printf(".seh_endproc\n.endfunc");
+            bool hasFrame = false;
+            if (!g_proc_frame_stack.empty())
+            {
+                hasFrame = g_proc_frame_stack.back();
+                g_proc_frame_stack.pop_back();
+            }
+
+            if (hasFrame)
+            {
+#ifdef TARGET_amd64
+                printf(".seh_endproc");
+#else
+                printf(".cfi_endproc");
+#endif
+            }
             index += 3;
             break;
         }
@@ -1026,6 +1142,8 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
 
     return index;
 }
+
+static bool g_intel_syntax_emitted = false;
 
 size_t
 translate_construct(TokenList& tokens, size_t index, const vector<string> &macro_params)
@@ -1051,14 +1169,21 @@ translate_construct(TokenList& tokens, size_t index, const vector<string> &macro
             break;
 
         case TOKEN_TYPE::KW_code:
+        {
+            printf(".text\n");
 #ifdef TARGET_amd64
-            printf(".code64");
+            printf(".code64\n");
 #else
-            printf(".code");
+            printf(".code32\n");
 #endif
-            printf(" .intel_syntax noprefix");
+            if (!g_intel_syntax_emitted)
+            {
+                printf(".intel_syntax noprefix\n");
+                g_intel_syntax_emitted = true;
+            }
             index++;
             break;
+        }
 
         case TOKEN_TYPE::KW_const:
             printf(".section .rdata");
@@ -1090,11 +1215,13 @@ translate_construct(TokenList& tokens, size_t index, const vector<string> &macro
         }
 
         case TOKEN_TYPE::KW_if:
+            printf(".");
+            return translate_expression(tokens, index, macro_params);
+
         case TOKEN_TYPE::KW_ifdef:
         case TOKEN_TYPE::KW_ifndef:
         case TOKEN_TYPE::KW_else:
         case TOKEN_TYPE::KW_endif:
-            // TODO: handle parameter differences between "if" and ".if" etc.
             printf(".");
             return complete_line(tokens, index, macro_params);
 

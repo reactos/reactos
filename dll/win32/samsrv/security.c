@@ -219,7 +219,7 @@ SampCreateServerSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    /* Get the reqired buffer size for the self-relative SD */
+    /* Get the required buffer size for the self-relative SD */
     Status = RtlAbsoluteToSelfRelativeSD(AbsSD,
                                          NULL,
                                          &RelSDSize);
@@ -481,7 +481,7 @@ SampCreateBuiltinDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    /* Get the reqired buffer size for the self-relative SD */
+    /* Get the required buffer size for the self-relative SD */
     Status = RtlAbsoluteToSelfRelativeSD(AbsSD,
                                          NULL,
                                          &RelSDSize);
@@ -795,7 +795,7 @@ SampCreateAccountDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    /* Get the reqired buffer size for the self-relative SD */
+    /* Get the required buffer size for the self-relative SD */
     Status = RtlAbsoluteToSelfRelativeSD(AbsSD,
                                          NULL,
                                          &RelSDSize);
@@ -1082,7 +1082,7 @@ SampCreateAliasSD(OUT PSECURITY_DESCRIPTOR *AliasSd,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    /* Get the reqired buffer size for the self-relative SD */
+    /* Get the required buffer size for the self-relative SD */
     Status = RtlAbsoluteToSelfRelativeSD(AbsSD,
                                          NULL,
                                          &RelSDSize);
@@ -1369,7 +1369,7 @@ SampCreateGroupSD(OUT PSECURITY_DESCRIPTOR *GroupSd,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    /* Get the reqired buffer size for the self-relative SD */
+    /* Get the required buffer size for the self-relative SD */
     Status = RtlAbsoluteToSelfRelativeSD(AbsSD,
                                          NULL,
                                          &RelSDSize);
@@ -1641,7 +1641,7 @@ SampCreateUserSD(IN PSID UserSid,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    /* Get the reqired buffer size for the self-relative SD */
+    /* Get the required buffer size for the self-relative SD */
     Status = RtlAbsoluteToSelfRelativeSD(AbsSD,
                                          NULL,
                                          &RelSDSize);

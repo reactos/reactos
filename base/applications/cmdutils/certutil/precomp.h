@@ -1,5 +1,4 @@
-#ifndef __CERTUTIL_PRECOMP_H
-#define __CERTUTIL_PRECOMP_H
+#pragma once
 
 /* INCLUDES ******************************************************************/
 
@@ -7,10 +6,10 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
-#include <winuser.h>
+#include <strsafe.h>
 
 #include <conutils.h>
 
 
-#endif /* __CERTUTIL_PRECOMP_H */
+BOOL hash_file(LPCWSTR Filename);
+BOOL asn_dump(LPCWSTR Filename);

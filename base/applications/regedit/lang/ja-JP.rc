@@ -432,6 +432,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "新しい文字列値を追加します"
     ID_EDIT_NEW_BINARYVALUE "新しいバイナリ値を追加します"
     ID_EDIT_NEW_DWORDVALUE "新しい DWORD 値を追加します"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "テキスト ファイルをレジストリにインポートします"
     ID_REGISTRY_EXPORTREGISTRYFILE "レジストリの一部または全体をテキスト ファイルにエクスポートします"
     ID_REGISTRY_LOADHIVE "ハイブ ファイルをレジストリに読み込みます"

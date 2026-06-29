@@ -111,8 +111,8 @@ typedef struct _VIDEO_PORT_AGP_SERVICES {
 BOOLEAN
 NTAPI
 VideoPortGetAgpServices(
-  IN PVOID HwDeviceExtension,
-  IN PVIDEO_PORT_AGP_SERVICES AgpServices);
+    _In_ PVOID HwDeviceExtension,
+    _Out_ PVIDEO_PORT_AGP_SERVICES AgpServices);
 
 #ifdef __cplusplus
 }

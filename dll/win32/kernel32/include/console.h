@@ -33,12 +33,6 @@ DWORD
 WINAPI
 PropDialogHandler(IN LPVOID lpThreadParameter);
 
-HANDLE WINAPI
-DuplicateConsoleHandle(HANDLE hConsole,
-                       DWORD  dwDesiredAccess,
-                       BOOL   bInheritHandle,
-                       DWORD  dwOptions);
-
 BOOL WINAPI
 GetConsoleHandleInformation(IN HANDLE hHandle,
                             OUT LPDWORD lpdwFlags);
@@ -47,15 +41,6 @@ BOOL WINAPI
 SetConsoleHandleInformation(IN HANDLE hHandle,
                             IN DWORD dwMask,
                             IN DWORD dwFlags);
-
-BOOL WINAPI
-VerifyConsoleIoHandle(HANDLE Handle);
-
-BOOL WINAPI
-CloseConsoleHandle(HANDLE Handle);
-
-HANDLE WINAPI
-GetConsoleInputWaitHandle(VOID);
 
 HANDLE
 TranslateStdHandle(HANDLE hHandle);
@@ -91,11 +76,5 @@ GetCurrentExeName(OUT PWCHAR ExeName,
 LPCWSTR
 IntCheckForConsoleFileName(IN LPCWSTR pszName,
                            IN DWORD dwDesiredAccess);
-
-HANDLE WINAPI
-OpenConsoleW(LPCWSTR wsName,
-             DWORD   dwDesiredAccess,
-             BOOL    bInheritHandle,
-             DWORD   dwShareMode);
 
 /* EOF */

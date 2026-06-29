@@ -1,0 +1,41 @@
+/*++
+
+Copyright (c) Microsoft Corporation All Rights Reserved
+
+Module Name:
+
+    sklhdaudbus.rc
+
+Abstract:
+
+--*/
+
+#include <windows.h>
+
+#define VER_FILETYPE                VFT_DRV
+#define VER_FILESUBTYPE             VFT2_DRV_SYSTEM
+#define VER_FILEDESCRIPTION_STR     "CoolStar HD Audio"
+#define VER_INTERNALNAME_STR        "sklhdaudbus.sys"
+#define VER_ORIGINALFILENAME_STR    "sklhdaudbus.sys"
+
+#define VER_LEGALCOPYRIGHT_YEARS    "2024"
+#define VER_LEGALCOPYRIGHT_STR	    "Copyright (C) " VER_LEGALCOPYRIGHT_YEARS " CoolStar."
+
+#define VER_FILEVERSION 1,0,5,0
+#define VER_PRODUCTVERSION_STR "1.0.5.0"
+#define VER_PRODUCTVERSION 1,0,5,0
+#define LVER_PRODUCTVERSION_STR L"1.0.5.0"
+
+#define VER_FILEFLAGSMASK		(VS_FF_DEBUG | VS_FF_PRERELEASE)
+#ifdef DEBUG
+#define VER_FILEFLAGS			(VS_FF_DEBUG)
+#else
+#define VER_FILEFLAGS			(0)
+#endif
+
+#define VER_FILEOS				VOS_NT_WINDOWS32
+
+#define VER_COMPANYNAME_STR         "CoolStar"
+#define VER_PRODUCTNAME_STR         "CoolStar HD Audio"
+
+#include "common.ver"

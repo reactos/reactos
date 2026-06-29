@@ -143,14 +143,14 @@ OnTimer(
         iSeconds -= iMinutes * 60;
 
         LoadStringW(hAppInstance, IDS_TIMEOUTSHORTFORMAT, szFormatBuffer, ARRAYSIZE(szFormatBuffer));
-        swprintf(szBuffer, szFormatBuffer, iHours, iMinutes, iSeconds);
+        _swprintf(szBuffer, szFormatBuffer, iHours, iMinutes, iSeconds);
     }
     else
     {
         iDays = (INT)(pShutdownParams->dwTimeout / SECONDS_PER_DAY);
 
         LoadStringW(hAppInstance, IDS_TIMEOUTLONGFORMAT, szFormatBuffer, ARRAYSIZE(szFormatBuffer));
-        swprintf(szBuffer, szFormatBuffer, iDays);
+        _swprintf(szBuffer, szFormatBuffer, iDays);
     }
 
     SetDlgItemTextW(hwndDlg, IDC_SYSSHUTDOWNTIMELEFT, szBuffer);

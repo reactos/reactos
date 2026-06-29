@@ -19,7 +19,7 @@ BEGIN
     PUSHBUTTON "&Adicionar...", IDC_USERS_ADD, 87, 98, 50, 14
     PUSHBUTTON "&Remover", IDC_USERS_REMOVE, 141, 98, 50, 14
     PUSHBUTTON "Pr&opriedades", IDC_USERS_PROPERTIES, 195, 98, 50, 14
-    AUTOCHECKBOX "Requer um nome de utilizador e uma palavra-passe ao iniciar o sistema.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 240, 14, WS_DISABLED
+    AUTOCHECKBOX "Requer um nome de utilizador e uma palavra-passe ao iniciar o sistema.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 240, 14
     PUSHBUTTON "Redefinir palavra-passe", IDC_USERS_RESET, 165, 200, 80, 14, WS_DISABLED
 END
 

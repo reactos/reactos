@@ -62,6 +62,9 @@ const PCSTR ArcTypes[MaximumType + 1] = // CmTypeName
     "Undefined"
 };
 
+#define TAG_HW_COMPONENT_DATA   'DCwH'
+#define TAG_HW_NAME             'mNwH'
+
 PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
 
 // ARC Disk Information
@@ -70,30 +73,53 @@ ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[32];
 
 /* FUNCTIONS ******************************************************************/
 
-#define TAG_HW_COMPONENT_DATA   'DCwH'
-#define TAG_HW_NAME             'mNwH'
-
 VOID
 AddReactOSArcDiskInfo(
-    IN PSTR ArcName,
-    IN ULONG Signature,
-    IN ULONG Checksum,
-    IN BOOLEAN ValidPartitionTable)
+    _In_ PCSTR ArcName,
+    _In_opt_ PGUID GptDiskGuid,
+    _In_ ULONG Signature,
+    _In_ ULONG Checksum,
+    _In_ BOOLEAN ValidPartitionTable)
 {
-    ASSERT(reactos_disk_count < sizeof(reactos_arc_disk_info)/sizeof(reactos_arc_disk_info[0]));
+    PARC_DISK_SIGNATURE ArcDiskSignature;
+    C_ASSERT(sizeof(*GptDiskGuid) == sizeof(ArcDiskSignature->GptSignature));
+
+    ASSERT(reactos_disk_count < RTL_NUMBER_OF(reactos_arc_disk_info));
 
     /* Fill out the ARC disk block */
+    RtlZeroMemory(&reactos_arc_disk_info[reactos_disk_count],
+                  sizeof(reactos_arc_disk_info[reactos_disk_count]));
+    ArcDiskSignature = &(reactos_arc_disk_info[reactos_disk_count].DiskSignature);
 
-    reactos_arc_disk_info[reactos_disk_count].DiskSignature.Signature = Signature;
-    reactos_arc_disk_info[reactos_disk_count].DiskSignature.CheckSum = Checksum;
-    reactos_arc_disk_info[reactos_disk_count].DiskSignature.ValidPartitionTable = ValidPartitionTable;
+    ArcDiskSignature->Signature = Signature;
+    ArcDiskSignature->CheckSum = Checksum;
+    ArcDiskSignature->ValidPartitionTable = ValidPartitionTable;
+
+    ArcDiskSignature->IsGpt = (GptDiskGuid != NULL);
+    if (GptDiskGuid)
+    {
+        RtlCopyMemory(&ArcDiskSignature->GptSignature,
+                      GptDiskGuid, sizeof(*GptDiskGuid));
+    }
 
     strcpy(reactos_arc_disk_info[reactos_disk_count].ArcName, ArcName);
-    reactos_arc_disk_info[reactos_disk_count].DiskSignature.ArcName =
-        reactos_arc_disk_info[reactos_disk_count].ArcName;
+    ArcDiskSignature->ArcName = reactos_arc_disk_info[reactos_disk_count].ArcName;
 
-    reactos_disk_count++;
+    ++reactos_disk_count;
 }
+
+ULONG ArcGetDiskCount(VOID)
+{
+    return reactos_disk_count;
+}
+
+PARC_DISK_SIGNATURE_EX ArcGetDiskInfo(ULONG Index)
+{
+    if (Index >= reactos_disk_count)
+        return NULL;
+    return &reactos_arc_disk_info[Index];
+}
+
 
 //
 // ARC Component Configuration Routines

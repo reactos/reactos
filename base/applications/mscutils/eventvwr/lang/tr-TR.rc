@@ -106,9 +106,9 @@ BEGIN
     LTEXT "Açıklama:", IDC_STATIC, 8, 65, 39, 8//FIXME: add accel
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "Veri:", IDC_DETAILS_STATIC, 8, 140, 20, 8//FIXME: add accel
     AUTORADIOBUTTON "&Baytlar", IDC_BYTESRADIO, 39, 140, 34, 8
-    AUTORADIOBUTTON "Sö&zcük", IDC_WORDRADIO, 77, 140, 34, 8
+    AUTORADIOBUTTON "Sö&zcükler", IDC_WORDSRADIO, 77, 140, 34, 8
+    LTEXT "Veri:", IDC_DETAILS_STATIC, 8, 140, 20, 8//FIXME: add accel
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -168,6 +168,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Silmeden önce bu olay kaydını kaydetmek ister misiniz?"
     IDS_RESTOREDEFAULTS "Bu günlük için tüm ayarları varsayılan değerlerine geri yüklemek istiyor musunuz?"
     IDS_EVENTSTRINGIDNOTFOUND "( %s ) kaynağındaki ( %lu ) olay kimliği için açıklama bulunamıyor. Yerel bilgisayarda, uzak bilgisayardan iletileri görüntülemesi için gerekli Kayıt Defteri bilgisi veya ileti DLL dosyaları olmayabilir.\n\nAşağıdaki bilgi olayın parçasıdır:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -220,16 +222,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Olay Türü:          %s\r\n\
-Olay Kaynağı:       %s\r\n\
-Olay Kategorisi:    %s\r\n\
-Olay Kimliği:       %s\r\n\
-Tarih:              %s\r\n\
-Saat:               %s\r\n\
-Kullanıcı:          %s\r\n\
-Bilgisayar:         %s\r\n\
-Tanım:\r\n%s"
+    IDS_COPY_EVTTYPE "Olay Türü:"
+    IDS_COPY_EVTSRC  "Olay Kaynağı:"
+    IDS_COPY_EVTCAT  "Olay Kategorisi:"
+    IDS_COPY_EVTID   "Olay Kimliği:"
+    IDS_COPY_EVTDATE "Tarih:"
+    IDS_COPY_EVTTIME "Saat:"
+    IDS_COPY_EVTUSER "Kullanıcı:"
+    IDS_COPY_EVTCOMP "Bilgisayar:"
+    IDS_COPY_EVTTEXT "Tanım:"
+    IDS_COPY_EVTDATA "Veri:"
 END
 
 STRINGTABLE

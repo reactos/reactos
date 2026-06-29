@@ -27,40 +27,13 @@
 #define NDEBUG
 #include <debug.h>
 
-#define PM_REGISTRATION_NOTIFY (WM_APP + 1)
-/* Private Message used to communicate progress from the background
-   registration thread to the main thread.
-   wParam = 0 Registration in progress
-          = 1 Registration completed
-   lParam = Pointer to a REGISTRATIONNOTIFY structure */
-
-#define PM_ITEM_START (WM_APP + 2)
-#define PM_ITEM_END   (WM_APP + 3)
-#define PM_STEP_START (WM_APP + 4)
-#define PM_STEP_END   (WM_APP + 5)
-#define PM_ITEMS_DONE (WM_APP + 6)
-
-typedef struct _REGISTRATIONNOTIFY
-{
-    ULONG Progress;
-    UINT ActivityID;
-    LPCWSTR CurrentItem;
-    LPCWSTR ErrorMessage;
-    UINT MessageID;
-    DWORD LastError;
-} REGISTRATIONNOTIFY, *PREGISTRATIONNOTIFY;
-
-typedef struct _ITEMSDATA
-{
-    HWND hwndDlg;
-} ITEMSDATA, *PITEMSDATA;
-
 typedef struct _REGISTRATIONDATA
 {
     HWND hwndDlg;
     ULONG DllCount;
     ULONG Registered;
     PVOID DefaultContext;
+    PREGISTRATIONNOTIFY pNotify;
 } REGISTRATIONDATA, *PREGISTRATIONDATA;
 
 typedef struct _TIMEZONE_ENTRY
@@ -78,7 +51,6 @@ typedef struct _TIMEZONE_ENTRY
 /* FUNCTIONS ****************************************************************/
 
 extern void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
-
 
 static VOID
 CenterWindow(HWND hWnd)
@@ -239,7 +211,7 @@ WelcomeDlgProc(HWND hwndDlg,
             hwndControl = GetParent(hwndDlg);
 
             /* Center the wizard window */
-            CenterWindow (hwndControl);
+            CenterWindow(hwndControl);
 
             /* Hide the system menu */
             dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
@@ -247,8 +219,8 @@ WelcomeDlgProc(HWND hwndDlg,
 
             /* Hide and disable the 'Cancel' button */
             hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
-            ShowWindow (hwndControl, SW_HIDE);
-            EnableWindow (hwndControl, FALSE);
+            ShowWindow(hwndControl, SW_HIDE);
+            EnableWindow(hwndControl, FALSE);
 
             /* Set title font */
             SendDlgItemMessage(hwndDlg,
@@ -259,7 +231,6 @@ WelcomeDlgProc(HWND hwndDlg,
         }
         break;
 
-
         case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
@@ -267,15 +238,27 @@ WelcomeDlgProc(HWND hwndDlg,
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
+                {
                     LogItem(L"BEGIN", L"WelcomePage");
-                    /* Enable the Next button */
+                    /* Only "Next" for the first page and hide "Back" */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+                    // PropSheet_ShowWizButtons(GetParent(hwndDlg), 0, PSWIZB_BACK);
+                    ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_HIDE);
                     if (pSetupData->UnattendSetup)
                     {
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_ACKPAGE);
                         return TRUE;
                     }
                     break;
+                }
+
+                case PSN_KILLACTIVE:
+                {
+                    /* Show "Back" button */
+                    // PropSheet_ShowWizButtons(GetParent(hwndDlg), PSWIZB_BACK, PSWIZB_BACK);
+                    ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_SHOW);
+                    break;
+                }
 
                 case PSN_WIZNEXT:
                     LogItem(L"END", L"WelcomePage");
@@ -384,7 +367,7 @@ AckPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_PRODUCT);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_INSTALLATION);
                         return TRUE;
                     }
                     break;
@@ -412,6 +395,7 @@ static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\
 static const WCHAR s_szWinlogon[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon";
 static const WCHAR s_szDefaultSoundEvents[] = L"AppEvents\\Schemes\\Apps\\.Default";
 static const WCHAR s_szExplorerSoundEvents[] = L"AppEvents\\Schemes\\Apps\\Explorer";
+static const WCHAR s_szCurrentVersion[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
 
 typedef struct _PRODUCT_OPTION_DATA
 {
@@ -422,10 +406,20 @@ typedef struct _PRODUCT_OPTION_DATA
     DWORD LogonType;
 } PRODUCT_OPTION_DATA;
 
-static const PRODUCT_OPTION_DATA s_ProductOptionData[] =
+static const PRODUCT_OPTION_DATA s_ProductOptionData[INSTALLATION_TYPE_MAX] =
 {
     { L"Terminal Server\0", L"ServerNT", 0, 0x200, 0 },
-    { L"\0", L"WinNT", 1, 0x300, 1 }
+    { L"\0", L"WinNT", 1, 0x300, 1 },
+    { L"Terminal Server\0", L"ServerNT", 0, 0x200, 0 }
+    // { L"Terminal Server\0", L"ServerNT", 0, 0x200, 0 }
+};
+
+static const WCHAR* InstallationTypes[INSTALLATION_TYPE_MAX] =
+{
+    L"Server",
+    L"Client",
+    L"Server Core",
+    // L"Nano Server"
 };
 
 static const WCHAR* s_DefaultSoundEvents[][2] = 
@@ -548,14 +542,14 @@ Error:
 }
 
 static BOOL
-DoWriteProductOption(PRODUCT_OPTION nOption)
+DoWriteInstallationType(INSTALLATION_TYPE nOption)
 {
     HKEY hKey;
     LONG error;
     LPCWSTR pszData;
     DWORD dwValue, cbData;
     const PRODUCT_OPTION_DATA *pData = &s_ProductOptionData[nOption];
-    ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
+    ASSERT(0 <= nOption && nOption < INSTALLATION_TYPE_MAX);
 
     /* open ProductOptions key */
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szProductOptions, 0, KEY_WRITE, &hKey);
@@ -645,11 +639,40 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
         goto Error;
     }
 
-    if (nOption == PRODUCT_OPTION_WORKSTATION)
+    if (nOption == INSTALLATION_TYPE_WORKSTATION)
     {
         /* Write system sound events values for Workstation */
         DoWriteSoundEvents(HKEY_CURRENT_USER, s_szDefaultSoundEvents, s_DefaultSoundEvents, _countof(s_DefaultSoundEvents));
         DoWriteSoundEvents(HKEY_CURRENT_USER, s_szExplorerSoundEvents, s_ExplorerSoundEvents, _countof(s_ExplorerSoundEvents));
+    }
+
+    if (nOption == INSTALLATION_TYPE_SERVER_CORE)
+    {
+        /* Set the shell to command prompt */
+        WCHAR szShell[] = L"cmd.exe";
+        cbData = sizeof(szShell);
+        error = RegSetValueExW(hKey, L"Shell", 0, REG_SZ, (const BYTE *)szShell, cbData);
+        if (error)
+        {
+            DPRINT1("RegSetValueExW failed\n");
+            goto Error;
+        }
+    }
+
+    /* Open InstallationType key and write InstallationType value */
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szCurrentVersion, 0, KEY_WRITE, &hKey);
+    if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
+
+    cbData = (DWORD)((wcslen(InstallationTypes[nOption]) + 1) * sizeof(WCHAR));
+    error = RegSetValueExW(hKey, L"InstallationType", 0, REG_SZ, (const BYTE *)InstallationTypes[nOption], cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
     }
 
 Error:
@@ -660,30 +683,38 @@ Error:
 }
 
 static void
-OnChooseOption(HWND hwndDlg, PRODUCT_OPTION nOption)
+OnChooseInstallationType(HWND hwndDlg, INSTALLATION_TYPE nOption)
 {
     WCHAR szText[256];
-    ASSERT(0 <= nOption && nOption < _countof(s_ProductOptionData));
+    ASSERT(0 <= nOption && nOption < INSTALLATION_TYPE_MAX);
 
     switch (nOption)
     {
-        case PRODUCT_OPTION_SERVER:
-            LoadStringW(hDllInstance, IDS_PRODUCTSERVERINFO, szText, _countof(szText));
+        case INSTALLATION_TYPE_SERVER:
+            LoadStringW(hDllInstance, IDS_INSTALLATIONSERVERINFO, szText, _countof(szText));
             break;
 
-        case PRODUCT_OPTION_WORKSTATION:
-            LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONINFO, szText, _countof(szText));
+        case INSTALLATION_TYPE_WORKSTATION:
+            LoadStringW(hDllInstance, IDS_INSTALLATIONWORKSTATIONINFO, szText, _countof(szText));
             break;
+
+        case INSTALLATION_TYPE_SERVER_CORE:
+            LoadStringW(hDllInstance, IDS_INSTALLATIONSERVERCOREINFO, szText, _countof(szText));
+            break;
+
+        // case INSTALLATION_TYPE_NANO_SERVER:
+        //     LoadStringW(hDllInstance, IDS_INSTALLATIONSERVERINFO, szText, _countof(szText));
+        //     break;
 
         default:
             return;
     }
 
-    SetDlgItemTextW(hwndDlg, IDC_PRODUCT_DESCRIPTION, szText);
+    SetDlgItemTextW(hwndDlg, IDC_INSTALLATION_DESCRIPTION, szText);
 }
 
 static INT_PTR CALLBACK
-ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+InstallTypePageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LPNMHDR lpnm;
     PSETUPDATA pSetupData;
@@ -702,35 +733,53 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             LoadStringW(hDllInstance, IDS_DEFAULT, szDefault, _countof(szDefault));
 
-            LoadStringW(hDllInstance, IDS_PRODUCTSERVERNAME, szText, _countof(szText));
-            if (PRODUCT_OPTION_DEFAULT == PRODUCT_OPTION_SERVER)
+            LoadStringW(hDllInstance, IDS_INSTALLATIONSERVERNAME, szText, _countof(szText));
+            if (INSTALLATION_TYPE_DEFAULT == INSTALLATION_TYPE_SERVER)
             {
                 StringCchCatW(szText, _countof(szText), L" ");
                 StringCchCatW(szText, _countof(szText), szDefault);
             }
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_ADDSTRING, 0, (LPARAM)szText);
 
-            LoadStringW(hDllInstance, IDS_PRODUCTWORKSTATIONNAME, szText, _countof(szText));
-            if (PRODUCT_OPTION_DEFAULT == PRODUCT_OPTION_WORKSTATION)
+            LoadStringW(hDllInstance, IDS_INSTALLATIONWORKSTATIONNAME, szText, _countof(szText));
+            if (INSTALLATION_TYPE_DEFAULT == INSTALLATION_TYPE_WORKSTATION)
             {
                 StringCchCatW(szText, _countof(szText), L" ");
                 StringCchCatW(szText, _countof(szText), szDefault);
             }
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_ADDSTRING, 0, (LPARAM)szText);
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_ADDSTRING, 0, (LPARAM)szText);
 
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_SETCURSEL, PRODUCT_OPTION_DEFAULT, 0);
-            OnChooseOption(hwndDlg, PRODUCT_OPTION_DEFAULT);
+            LoadStringW(hDllInstance, IDS_INSTALLATIONSERVERCORENAME, szText, _countof(szText));
+            if (INSTALLATION_TYPE_DEFAULT == INSTALLATION_TYPE_SERVER_CORE)
+            {
+                StringCchCatW(szText, _countof(szText), L" ");
+                StringCchCatW(szText, _countof(szText), szDefault);
+            }
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_ADDSTRING, 0, (LPARAM)szText);
+
+#if 0
+            LoadStringW(hDllInstance, IDS_INSTALLATIONNANOSERVERNAME, szText, _countof(szText));
+            if (INSTALLATION_TYPE_DEFAULT == INSTALLATION_TYPE_NANO_SERVER)
+            {
+                StringCchCatW(szText, _countof(szText), L" ");
+                StringCchCatW(szText, _countof(szText), szDefault);
+            }
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_ADDSTRING, 0, (LPARAM)szText);
+#endif
+
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_SETCURSEL, INSTALLATION_TYPE_DEFAULT, 0);
+            OnChooseInstallationType(hwndDlg, INSTALLATION_TYPE_DEFAULT);
 
             hIcon = LoadIcon(NULL, IDI_WINLOGO);
-            SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_ICON, STM_SETICON, (WPARAM)hIcon, 0);
+            SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_ICON, STM_SETICON, (WPARAM)hIcon, 0);
             return TRUE;
         }
 
         case WM_COMMAND:
-            if (HIWORD(wParam) == CBN_SELCHANGE && IDC_PRODUCT_OPTIONS == LOWORD(wParam))
+            if (HIWORD(wParam) == CBN_SELCHANGE && IDC_INSTALLATION_TYPES == LOWORD(wParam))
             {
-                iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
-                OnChooseOption(hwndDlg, (PRODUCT_OPTION)iItem);
+                iItem = SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_GETCURSEL, 0, 0);
+                OnChooseInstallationType(hwndDlg, (INSTALLATION_TYPE)iItem);
             }
             break;
 
@@ -745,17 +794,17 @@ ProductPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        OnChooseOption(hwndDlg, pSetupData->ProductOption);
-                        DoWriteProductOption(pSetupData->ProductOption);
+                        OnChooseInstallationType(hwndDlg, pSetupData->InstallationType);
+                        DoWriteInstallationType(pSetupData->InstallationType);
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
                     }
                     break;
 
                 case PSN_WIZNEXT:
-                    iItem = SendDlgItemMessageW(hwndDlg, IDC_PRODUCT_OPTIONS, CB_GETCURSEL, 0, 0);
-                    pSetupData->ProductOption = (PRODUCT_OPTION)iItem;
-                    DoWriteProductOption(pSetupData->ProductOption);
+                    iItem = SendDlgItemMessageW(hwndDlg, IDC_INSTALLATION_TYPES, CB_GETCURSEL, 0, 0);
+                    pSetupData->InstallationType = (INSTALLATION_TYPE)iItem;
+                    DoWriteInstallationType(pSetupData->InstallationType);
                     break;
 
                 case PSN_WIZBACK:
@@ -964,29 +1013,34 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
     SetAccountsDomainSid(NULL, ComputerName);
 
     /* Now we need to set the Hostname */
-    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                           L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
-                           0,
-                           KEY_SET_VALUE,
-                           &hKey);
-    if (lError != ERROR_SUCCESS)
+    lError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                             L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_WRITE,
+                             NULL,
+                             &hKey,
+                             NULL);
+    if (lError == ERROR_SUCCESS)
     {
-        DPRINT1("RegOpenKeyExW for Tcpip\\Parameters failed (%08lX)\n", lError);
-        return TRUE;
-    }
+        lError = RegSetValueEx(hKey,
+                               L"Hostname",
+                               0,
+                               REG_SZ,
+                               (LPBYTE)ComputerName,
+                               (wcslen(ComputerName) + 1) * sizeof(WCHAR));
+        if (lError != ERROR_SUCCESS)
+        {
+            DPRINT1("RegSetValueEx(\"Hostname\") failed (%08lX)\n", lError);
+        }
 
-    lError = RegSetValueEx(hKey,
-                           L"Hostname",
-                           0,
-                           REG_SZ,
-                           (LPBYTE)ComputerName,
-                           (wcslen(ComputerName) + 1) * sizeof(WCHAR));
-    if (lError != ERROR_SUCCESS)
+        RegCloseKey(hKey);
+    }
+    else
     {
-        DPRINT1("RegSetValueEx(\"Hostname\") failed (%08lX)\n", lError);
+        DPRINT1("RegCreateKeyExW for Tcpip\\Parameters failed (%08lX)\n", lError);
     }
-
-    RegCloseKey(hKey);
 
     return TRUE;
 }
@@ -1129,7 +1183,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup && WriteComputerSettings(pSetupData->ComputerName, hwndDlg))
                     {
-                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_THEMEPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_DATETIMEPAGE);
                         return TRUE;
                     }
                     break;
@@ -1389,16 +1443,100 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
     return TRUE;
 }
 
+
+VOID
+EnableVisualTheme(
+    _In_opt_ HWND hwndParent,
+    _In_opt_ PCWSTR ThemeFile)
+{
+    enum { THEME_FILE, STYLE_FILE, UNKNOWN } fType;
+    WCHAR szPath[MAX_PATH]; // Expanded path of the file to use.
+    WCHAR szStyleFile[MAX_PATH];
+
+    fType = THEME_FILE; // Default to Classic theme.
+    if (ThemeFile)
+    {
+        /* Expand the path if possible */
+        if (ExpandEnvironmentStringsW(ThemeFile, szPath, _countof(szPath)) != 0)
+            ThemeFile = szPath;
+
+        /* Determine the file type from its extension */
+        fType = UNKNOWN; {
+        PCWSTR pszExt = wcsrchr(ThemeFile, L'.'); // PathFindExtensionW(ThemeFile);
+        if (pszExt)
+        {
+            if (_wcsicmp(pszExt, L".theme") == 0)
+                fType = THEME_FILE;
+            else if (_wcsicmp(pszExt, L".msstyles") == 0)
+                fType = STYLE_FILE;
+        } }
+        if (fType == UNKNOWN)
+        {
+            DPRINT1("EnableVisualTheme(): Unknown file '%S'\n", ThemeFile);
+            return;
+        }
+    }
+
+    DPRINT1("Applying visual %s '%S'\n",
+            (fType == THEME_FILE) ? "theme" : "style",
+            ThemeFile ? ThemeFile : L"(Classic)");
+
+//
+// TODO: Use instead uxtheme!SetSystemVisualStyle() once it is implemented,
+// https://stackoverflow.com/a/1036903
+// https://pinvoke.net/default.aspx/uxtheme.SetSystemVisualStyle
+// or ApplyTheme(NULL, 0, NULL) for restoring the classic theme.
+//
+// NOTE: The '/Action:ActivateMSTheme' is ReactOS-specific.
+//
+
+    if (ThemeFile && (fType == THEME_FILE))
+    {
+        /* Retrieve the visual style specified in the theme file.
+         * If none, fall back to the classic theme. */
+        if (GetPrivateProfileStringW(L"VisualStyles", L"Path", NULL,
+                                     szStyleFile, _countof(szStyleFile), ThemeFile) && *szStyleFile)
+        {
+            /* Expand the path if possible */
+            ThemeFile = szStyleFile;
+            if (ExpandEnvironmentStringsW(ThemeFile, szPath, _countof(szPath)) != 0)
+                ThemeFile = szPath;
+        }
+        else
+        {
+            ThemeFile = NULL;
+        }
+
+        DPRINT1("--> Applying visual style '%S'\n",
+                ThemeFile ? ThemeFile : L"(Classic)");
+    }
+
+    if (ThemeFile)
+    {
+        WCHAR wszParams[1024];
+        // FIXME: L"desk.cpl desk,@Appearance" regression, see commit 50d260a7f0
+        PCWSTR format = L"desk.cpl,,2 /Action:ActivateMSTheme /file:\"%s\"";
+
+        StringCchPrintfW(wszParams, _countof(wszParams), format, ThemeFile);
+        RunControlPanelApplet(hwndParent, wszParams);
+    }
+    else
+    {
+        RunControlPanelApplet(hwndParent, L"desk.cpl,,2 /Action:ActivateMSTheme");
+    }
+}
+
+
 static VOID
 WriteUserLocale(VOID)
 {
     HKEY hKey;
     LCID lcid;
-    WCHAR Locale[12];
+    WCHAR Locale[9] = L"0000";
 
     lcid = GetSystemDefaultLCID();
 
-    if (GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Locale, ARRAYSIZE(Locale)) != 0)
+    if (GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, &Locale[4], _countof(Locale) - 4) != 0)
     {
         if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Control Panel\\International",
                             0, NULL, REG_OPTION_NON_VOLATILE,
@@ -1621,6 +1759,53 @@ DestroyTimeZoneList(PSETUPDATA SetupData)
 }
 
 
+static BOOL
+HasDaylightSavingTime(PTIMEZONE_ENTRY Entry)
+{
+    /* If StandardDate.wMonth and DaylightDate.wMonth are zero,
+     * the timezone does not observe daylight saving time */
+    return (Entry->TimezoneInfo.StandardDate.wMonth != 0 &&
+            Entry->TimezoneInfo.DaylightDate.wMonth != 0);
+}
+
+static PTIMEZONE_ENTRY
+GetSelectedTimeZoneEntry(PSETUPDATA SetupData, DWORD dwEntryIndex)
+{
+    PTIMEZONE_ENTRY Entry;
+
+    for (Entry = SetupData->TimeZoneListHead; Entry != NULL; Entry = Entry->Next)
+    {
+        if (Entry->Index == dwEntryIndex)
+            return Entry;
+    }
+
+    return NULL;
+}
+
+static PTIMEZONE_ENTRY
+GetTimeZoneEntryByIndex(PSETUPDATA SetupData, DWORD dwComboIndex)
+{
+    PTIMEZONE_ENTRY Entry;
+    DWORD i;
+
+    for (Entry = SetupData->TimeZoneListHead, i = 0; Entry != NULL && i < dwComboIndex; i++, Entry = Entry->Next);
+
+    return Entry;
+}
+
+static VOID
+UpdateAutoDaylightCheckbox(HWND hwndDlg, PTIMEZONE_ENTRY Entry)
+{
+    BOOL bHasDST = (Entry != NULL && HasDaylightSavingTime(Entry));
+
+    /* Enable or disable the checkbox based on DST support */
+    EnableDlgItem(hwndDlg, IDC_AUTODAYLIGHT, bHasDST);
+
+    /* Check the checkbox only if DST is supported, otherwise uncheck it */
+    SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK,
+                       (WPARAM)(bHasDST ? BST_CHECKED : BST_UNCHECKED), 0);
+}
+
 static VOID
 ShowTimeZoneList(HWND hwnd, PSETUPDATA SetupData, DWORD dwEntryIndex)
 {
@@ -1794,6 +1979,9 @@ DateTimePageDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
+            DWORD dwEntryIndex;
+            PTIMEZONE_ENTRY Entry;
+
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
@@ -1805,17 +1993,31 @@ DateTimePageDlgProc(HWND hwndDlg,
                 ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
                                  SetupData, SetupData->TimeZoneIndex);
 
-                if (!SetupData->DisableAutoDaylightTimeSet)
+                Entry = GetSelectedTimeZoneEntry(SetupData, SetupData->TimeZoneIndex);
+                if (!SetupData->DisableAutoDaylightTimeSet && Entry != NULL && HasDaylightSavingTime(Entry))
                 {
                     SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+                    EnableDlgItem(hwndDlg, IDC_AUTODAYLIGHT, TRUE);
+                }
+                else
+                {
+                    SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+                    EnableDlgItem(hwndDlg, IDC_AUTODAYLIGHT, FALSE);
                 }
             }
             else
             {
+                /* Get the default time zone index from the registry */
+                dwEntryIndex = (DWORD)-1;
+                GetTimeZoneListIndex(&dwEntryIndex);
+
                 ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
                                  SetupData, -1);
 
-                SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+                /* Set the auto-daylight checkbox based on whether
+                 * the selected timezone observes DST */
+                Entry = GetSelectedTimeZoneEntry(SetupData, dwEntryIndex);
+                UpdateAutoDaylightCheckbox(hwndDlg, Entry);
             }
             break;
         }
@@ -1832,6 +2034,16 @@ DateTimePageDlgProc(HWND hwndDlg,
             break;
         }
 
+        case WM_COMMAND:
+            if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_TIMEZONELIST)
+            {
+                /* User changed the timezone selection */
+                DWORD dwIndex = (DWORD)SendDlgItemMessage(hwndDlg, IDC_TIMEZONELIST, CB_GETCURSEL, 0, 0);
+                PTIMEZONE_ENTRY Entry = GetTimeZoneEntryByIndex(SetupData, dwIndex);
+                UpdateAutoDaylightCheckbox(hwndDlg, Entry);
+            }
+            break;
+
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
             {
@@ -1847,7 +2059,7 @@ DateTimePageDlgProc(HWND hwndDlg,
 
                     if (SetupData->UnattendSetup && WriteDateTimeSettings(hwndDlg, SetupData))
                     {
-                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, SetupData->uFirstNetworkWizardPage);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_THEMEPAGE);
                         return TRUE;
                     }
 
@@ -1949,13 +2161,14 @@ ThemePageDlgProc(HWND hwndDlg,
 
             /* Register the imagelist */
             ListView_SetImageList(hListView, himl, LVSIL_NORMAL);
-            /* Transparant background */
+            /* Transparent background */
             ListView_SetBkColor(hListView, CLR_NONE);
             ListView_SetTextBkColor(hListView, CLR_NONE);
             /* Reduce the size between the items */
             ListView_SetIconSpacing(hListView, 190, 173);
             break;
         }
+
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
             {
@@ -1969,17 +2182,13 @@ ThemePageDlgProc(HWND hwndDlg,
 
                         if (Themes[iTheme].ThemeFile)
                         {
-                            WCHAR wszParams[1024];
                             WCHAR wszTheme[MAX_PATH];
-                            WCHAR* format = L"desk.cpl,,2 /Action:ActivateMSTheme /file:\"%s\"";
-
                             SHGetFolderPathAndSubDirW(0, CSIDL_RESOURCES, NULL, SHGFP_TYPE_DEFAULT, Themes[iTheme].ThemeFile, wszTheme);
-                            swprintf(wszParams, format, wszTheme);
-                            RunControlPanelApplet(hwndDlg, wszParams);
+                            EnableVisualTheme(hwndDlg, wszTheme);
                         }
                         else
                         {
-                            RunControlPanelApplet(hwndDlg, L"desk.cpl,,2 /Action:ActivateMSTheme");
+                            EnableVisualTheme(hwndDlg, Themes[iTheme].ThemeFile);
                         }
                     }
                     break;
@@ -2019,7 +2228,6 @@ RegistrationNotificationProc(PVOID Context,
                              UINT_PTR Param2)
 {
     PREGISTRATIONDATA RegistrationData;
-    REGISTRATIONNOTIFY RegistrationNotify;
     PSP_REGISTER_CONTROL_STATUSW StatusInfo;
     UINT MessageID;
 
@@ -2029,23 +2237,24 @@ RegistrationNotificationProc(PVOID Context,
         Notification == SPFILENOTIFY_ENDREGISTRATION)
     {
         StatusInfo = (PSP_REGISTER_CONTROL_STATUSW) Param1;
-        RegistrationNotify.CurrentItem = wcsrchr(StatusInfo->FileName, L'\\');
-        if (RegistrationNotify.CurrentItem == NULL)
+        RegistrationData->pNotify->CurrentItem = wcsrchr(StatusInfo->FileName, L'\\');
+        if (RegistrationData->pNotify->CurrentItem == NULL)
         {
-            RegistrationNotify.CurrentItem = StatusInfo->FileName;
+            RegistrationData->pNotify->CurrentItem = StatusInfo->FileName;
         }
         else
         {
-            RegistrationNotify.CurrentItem++;
+            RegistrationData->pNotify->CurrentItem++;
         }
 
         if (Notification == SPFILENOTIFY_STARTREGISTRATION)
         {
             DPRINT("Received SPFILENOTIFY_STARTREGISTRATION notification for %S\n",
                    StatusInfo->FileName);
-            RegistrationNotify.ErrorMessage = NULL;
-            RegistrationNotify.Progress = RegistrationData->Registered;
-            SendMessage(RegistrationData->hwndDlg, PM_STEP_START, 0, (LPARAM)&RegistrationNotify);
+            RegistrationData->pNotify->Progress = RegistrationData->Registered;
+
+            DPRINT("RegisterDll: Start step %ld\n", RegistrationData->pNotify->Progress);
+            SendMessage(RegistrationData->hwndDlg, PM_STEP_START, 0, (LPARAM)RegistrationData->pNotify);
         }
         else
         {
@@ -2077,13 +2286,13 @@ RegistrationNotificationProc(PVOID Context,
                         break;
                 }
 
-                RegistrationNotify.MessageID = MessageID;
-                RegistrationNotify.LastError = StatusInfo->Win32Error;
+                RegistrationData->pNotify->MessageID = MessageID;
+                RegistrationData->pNotify->LastError = StatusInfo->Win32Error;
             }
             else
             {
-                RegistrationNotify.MessageID = 0;
-                RegistrationNotify.LastError = ERROR_SUCCESS;
+                RegistrationData->pNotify->MessageID = 0;
+                RegistrationData->pNotify->LastError = ERROR_SUCCESS;
             }
 
             if (RegistrationData->Registered < RegistrationData->DllCount)
@@ -2091,8 +2300,9 @@ RegistrationNotificationProc(PVOID Context,
                 RegistrationData->Registered++;
             }
 
-            RegistrationNotify.Progress = RegistrationData->Registered;
-            SendMessage(RegistrationData->hwndDlg, PM_STEP_END, 0, (LPARAM)&RegistrationNotify);
+            RegistrationData->pNotify->Progress = RegistrationData->Registered;
+            DPRINT("RegisterDll: End step %ld\n", RegistrationData->pNotify->Progress);
+            SendMessage(RegistrationData->hwndDlg, PM_STEP_END, 0, (LPARAM)RegistrationData->pNotify);
         }
 
         return FILEOP_DOIT;
@@ -2109,13 +2319,14 @@ RegistrationNotificationProc(PVOID Context,
 static
 DWORD
 RegisterDlls(
-    PITEMSDATA pItemsData)
+    _In_ PITEMSDATA pItemsData,
+    _In_ PREGISTRATIONNOTIFY pNotify)
 {
     REGISTRATIONDATA RegistrationData;
     WCHAR SectionName[512];
     INFCONTEXT Context;
     LONG DllCount = 0;
-    DWORD LastError = NO_ERROR;
+    DWORD Error = NO_ERROR;
 
     ZeroMemory(&RegistrationData, sizeof(REGISTRATIONDATA));
     RegistrationData.hwndDlg = pItemsData->hwndDlg;
@@ -2125,7 +2336,7 @@ RegisterDlls(
                              L"RegisterDlls", &Context))
     {
         DPRINT1("No RegistrationPhase2 section found\n");
-        return FALSE;
+        return GetLastError();
     }
 
     if (!SetupGetStringFieldW(&Context, 1, SectionName,
@@ -2133,21 +2344,19 @@ RegisterDlls(
                               NULL))
     {
         DPRINT1("Unable to retrieve section name\n");
-        return FALSE;
+        return GetLastError();
     }
 
     DllCount = SetupGetLineCountW(hSysSetupInf, SectionName);
-    DPRINT1("SectionName %S DllCount %ld\n", SectionName, DllCount);
+    DPRINT("SectionName %S DllCount %ld\n", SectionName, DllCount);
     if (DllCount < 0)
     {
-        SetLastError(STATUS_NOT_FOUND);
-        return FALSE;
+        return STATUS_NOT_FOUND;
     }
 
     RegistrationData.DllCount = (ULONG)DllCount;
     RegistrationData.DefaultContext = SetupInitDefaultQueueCallback(RegistrationData.hwndDlg);
-
-    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 0, (LPARAM)RegistrationData.DllCount);
+    RegistrationData.pNotify = pNotify;
 
     _SEH2_TRY
     {
@@ -2163,23 +2372,93 @@ RegisterDlls(
                                          NULL,
                                          NULL))
         {
-            LastError = GetLastError();
+            Error = GetLastError();
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         DPRINT("Catching exception\n");
-        LastError = RtlNtStatusToDosError(_SEH2_GetExceptionCode());
+        Error = RtlNtStatusToDosError(_SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
     SetupTermDefaultQueueCallback(RegistrationData.DefaultContext);
 
-    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 0, LastError);
-
-    return 0;
+    return Error;
 }
 
+static
+VOID
+RegisterComponents(
+    PITEMSDATA pItemsData)
+{
+    WCHAR SectionName[512];
+    INFCONTEXT Context;
+    LONG Steps = 0;
+    DWORD Error = NO_ERROR;
+    REGISTRATIONNOTIFY Notify;
+
+    ZeroMemory(&Notify, sizeof(Notify));
+
+    /* Count the 'RegisterDlls' steps */
+    if (!SetupFindFirstLineW(hSysSetupInf, L"RegistrationPhase2",
+                             L"RegisterDlls", &Context))
+    {
+        DPRINT1("No RegistrationPhase2 section found\n");
+        return;
+    }
+
+    if (!SetupGetStringFieldW(&Context, 1, SectionName,
+                              ARRAYSIZE(SectionName),
+                              NULL))
+    {
+        DPRINT1("Unable to retrieve section name\n");
+        return;
+    }
+
+    Steps += SetupGetLineCountW(hSysSetupInf, SectionName);
+
+    /* Count the 'TypeLibratries' steps */
+    Steps += SetupGetLineCountW(hSysSetupInf, L"TypeLibraries");
+
+    /* Start the item */
+    DPRINT("Register Components: %ld Steps\n", Steps);
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 0, (LPARAM)Steps);
+
+    Error = RegisterDlls(pItemsData, &Notify);
+    if (Error == ERROR_SUCCESS)
+        RegisterTypeLibraries(pItemsData, &Notify, hSysSetupInf, L"TypeLibraries");
+
+    /* End the item */
+    DPRINT("Register Components: done\n");
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 0, Error);
+}
+
+static
+VOID
+SaveSettings(
+    PITEMSDATA pItemsData)
+{
+    LONG Steps = 0;
+    DWORD Error = NO_ERROR;
+    REGISTRATIONNOTIFY Notify;
+
+    ZeroMemory(&Notify, sizeof(Notify));
+
+    /* Count steps */
+    Steps = CountSecuritySteps();
+
+    /* Start the item */
+    DPRINT("Install security: %ld Steps\n", Steps);
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 2, (LPARAM)Steps);
+
+    /* Install steps */
+    Error = InstallSecurity(pItemsData, &Notify);
+
+    /* End the item */
+    DPRINT("Install security: done\n");
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 2, Error);
+}
 
 static
 DWORD
@@ -2193,11 +2472,17 @@ ItemCompletionThread(
     pItemsData = (PITEMSDATA)Parameter;
     hwndDlg = pItemsData->hwndDlg;
 
-    RegisterDlls(pItemsData);
+    /* Step 0 - Registering components */
+    RegisterComponents(pItemsData);
 
-    RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
+    /* Step 1 - Installing start menu items */
+    InstallStartMenuItems(pItemsData);
 
-    /* FIXME: Add completion steps here! */
+    /* Step 2 - Saving Settings */
+    SaveSettings(pItemsData);
+
+    /* Step 3 - Removing temporary files */
+//    RemoveTempFiles(pItemsData);
 
     // FIXME: Move this call to a separate cleanup page!
     RtlCreateBootStatusDataFile();
@@ -2335,6 +2620,8 @@ ProcessPageDlgProc(HWND hwndDlg,
 {
     PSETUPDATA SetupData;
     PREGISTRATIONNOTIFY RegistrationNotify;
+    static HICON s_hCheckIcon, s_hArrowIcon, s_hCrossIcon;
+    static HFONT s_hNormalFont;
 
     /* Retrieve pointer to the global setup data */
     SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
@@ -2342,24 +2629,43 @@ ProcessPageDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT2), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT3), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT4), SW_HIDE);
+            ShowDlgItem(hwndDlg, IDC_TASKTEXT4, SW_HIDE);
+            ShowDlgItem(hwndDlg, IDC_CHECK4, SW_HIDE);
+            s_hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON), IMAGE_ICON, 16, 16, 0);
+            s_hArrowIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_ARROWICON), IMAGE_ICON, 16, 16, 0);
+            s_hCrossIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CROSSICON), IMAGE_ICON, 16, 16, 0);
+            s_hNormalFont = (HFONT)SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_GETFONT, 0, 0);
+            break;
+        }
+
+        case WM_DESTROY:
+            DestroyIcon(s_hCheckIcon);
+            DestroyIcon(s_hArrowIcon);
+            DestroyIcon(s_hCrossIcon);
             break;
 
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
             {
                 case PSN_SETACTIVE:
-                    /* Disable the Back and Next buttons */
+                {
+                    LogItem(L"BEGIN", L"ProcessPage");
+
+                    /* Disable all buttons during installation; hide "Back" */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
+                    // PropSheet_ShowWizButtons(GetParent(hwndDlg), 0, PSWIZB_BACK);
+                    ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_HIDE);
+
                     RunItemCompletionThread(hwndDlg);
                     break;
+                }
 
                 case PSN_WIZNEXT:
+                    LogItem(L"END", L"ProcessPage");
                     break;
 
                 case PSN_WIZBACK:
@@ -2376,15 +2682,19 @@ ProcessPageDlgProc(HWND hwndDlg,
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, (ULONG)lParam));
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, 0, 0);
             SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
+            SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hArrowIcon);
             break;
 
         case PM_ITEM_END:
             DPRINT("PM_ITEM_END\n");
+            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)s_hNormalFont, (LPARAM)TRUE);
             if (lParam == ERROR_SUCCESS)
             {
+                SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hCheckIcon);
             }
             else
             {
+                SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hCrossIcon);
                 ShowItemError(hwndDlg, (DWORD)lParam);
             }
             break;
@@ -2456,7 +2766,6 @@ FinishDlgProc(HWND hwndDlg,
               WPARAM wParam,
               LPARAM lParam)
 {
-
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -2482,8 +2791,12 @@ FinishDlgProc(HWND hwndDlg,
                 SetInstallationCompleted();
                 PostQuitMessage(0);
             }
+
+            /* Ensure that the installer wizard window is made visible and focused */
+            ShowWindow(GetParent(hwndDlg), SW_SHOW);
+            SwitchToThisWindow(GetParent(hwndDlg), TRUE);
+            break;
         }
-        break;
 
         case WM_DESTROY:
         {
@@ -2494,11 +2807,11 @@ FinishDlgProc(HWND hwndDlg,
 
         case WM_TIMER:
         {
-            INT Position;
             HWND hWndProgress;
+            INT Position;
 
             hWndProgress = GetDlgItem(hwndDlg, IDC_RESTART_PROGRESS);
-            Position = SendMessage(hWndProgress, PBM_GETPOS, 0, 0);
+            Position = SendMessageW(hWndProgress, PBM_GETPOS, 0, 0);
             if (Position == 300)
             {
                 KillTimer(hwndDlg, 1);
@@ -2506,10 +2819,10 @@ FinishDlgProc(HWND hwndDlg,
             }
             else
             {
-                SendMessage(hWndProgress, PBM_SETPOS, Position + 1, 0);
+                SendMessageW(hWndProgress, PBM_SETPOS, Position + 1, 0);
             }
+            return TRUE;
         }
-        return TRUE;
 
         case WM_NOTIFY:
         {
@@ -2518,14 +2831,22 @@ FinishDlgProc(HWND hwndDlg,
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
-                    /* Enable the correct buttons on for the active page */
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH);
+                {
+                    HWND hWndParent = GetParent(hwndDlg);
 
-                    SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0,
-                                       MAKELPARAM(0, 300));
+                    /* Only "Finish" for closing the wizard, and hide "Back" and "Next" */
+                    PropSheet_SetWizButtons(hWndParent, PSWIZB_FINISH);
+                    // PropSheet_ShowWizButtons(hWndParent, 0, PSWIZB_BACK | PSWIZB_NEXT | PSWIZB_CANCEL);
+                    ShowDlgItem(hWndParent, ID_WIZBACK, SW_HIDE);
+                    ShowDlgItem(hWndParent, ID_WIZNEXT, SW_HIDE);
+
+                    /* Set up the reboot progress bar and countdown timer.
+                     * 300 steps at 50 ms each: 15 seconds */
+                    SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, 300));
                     SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETPOS, 0, 0);
                     SetTimer(hwndDlg, 1, 50, NULL);
                     break;
+                }
 
                 case PSN_WIZFINISH:
                     DestroyWindow(GetParent(hwndDlg));
@@ -2534,8 +2855,8 @@ FinishDlgProc(HWND hwndDlg,
                 default:
                     break;
             }
+            break;
         }
-        break;
 
         default:
             break;
@@ -2717,9 +3038,9 @@ ProcessUnattendSection(
             else
                 pSetupData->DisableGeckoInst = FALSE;
         }
-        else if (!_wcsicmp(szName, L"ProductOption"))
+        else if (!_wcsicmp(szName, L"InstallationType"))
         {
-            pSetupData->ProductOption = (PRODUCT_OPTION)_wtoi(szValue);
+            pSetupData->InstallationType = (INSTALLATION_TYPE)_wtoi(szValue);
         }
     } while (SetupFindNextLine(&InfContext, &InfContext));
 
@@ -2811,7 +3132,7 @@ ProcessUnattendSection(
                                      NULL))
             {
                 WCHAR szPath[MAX_PATH];
-                swprintf(szName, L"%d", i);
+                _swprintf(szName, L"%d", i);
                 DPRINT("szName %S szValue %S\n", szName, szValue);
 
                 if (ExpandEnvironmentStringsW(szValue, szPath, MAX_PATH))
@@ -3063,7 +3384,7 @@ ProcessSetupInf(
     }
 
     /* Save the path in Win32 format in the setup INF */
-    swprintf(szValue, L"\"%s\"", pSetupData->SourcePath);
+    _swprintf(szValue, L"\"%s\"", pSetupData->SourcePath);
     WritePrivateProfileStringW(L"data", L"dospath", szValue, szPath);
 
     /*
@@ -3162,7 +3483,7 @@ InstallWizard(VOID)
                     MB_ICONERROR | MB_OK);
         goto done;
     }
-    pSetupData->ProductOption = PRODUCT_OPTION_DEFAULT;
+    pSetupData->InstallationType = INSTALLATION_TYPE_DEFAULT;
 
     hNetShell = LoadLibraryW(L"netshell.dll");
     if (hNetShell != NULL)
@@ -3213,12 +3534,12 @@ InstallWizard(VOID)
     psp.pfnDlgProc = AckPageDlgProc;
     phpage[nPages++] = CreatePropertySheetPage(&psp);
 
-    /* Create the Product page */
+    /* Create the Installation Type page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PRODUCTTITLE);
-    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PRODUCTSUBTITLE);
-    psp.pszTemplate = MAKEINTRESOURCE(IDD_PRODUCT);
-    psp.pfnDlgProc = ProductPageDlgProc;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_INSTALLATIONTITLE);
+    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_INSTALLATIONSUBTITLE);
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_INSTALLATION);
+    psp.pfnDlgProc = InstallTypePageDlgProc;
     phpage[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the Locale page */

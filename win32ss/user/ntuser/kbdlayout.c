@@ -312,7 +312,7 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
     }
 
     /* Set keyboard layout name */
-    swprintf(pkf->awchKF, L"%wZ", pwszKLID);
+    _swprintf(pkf->awchKF, L"%wZ", pwszKLID);
 
     /* Open layout registry key */
     RtlStringCbCatW(wszLayoutRegKey, sizeof(wszLayoutRegKey), pkf->awchKF);
@@ -1154,7 +1154,7 @@ cleanup:
  *
  * NOTE: We adopt a different design from Microsoft's one due to security reason.
  *       We don't use the 3rd parameter of NtUserLoadKeyboardLayoutEx.
- *       See https://bugtraq.securityfocus.com/detail/50056B96.6040306
+ *       See https://seclists.org/fulldisclosure/2012/Jul/137
  */
 HKL
 NTAPI

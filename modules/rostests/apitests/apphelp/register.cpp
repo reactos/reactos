@@ -46,18 +46,18 @@ static BOOL WriteSdbFile(const WCHAR* FileName, const unsigned char* Data, DWORD
 
     if (Handle == INVALID_HANDLE_VALUE)
     {
-        skip("Failed to create temp file %ls, error %u\n", FileName, GetLastError());
+        skip("Failed to create temp file %ls, error %lu\n", FileName, GetLastError());
         return FALSE;
     }
     Success = WriteFile(Handle, Data, Size, &dwWritten, NULL);
-    ok(Success == TRUE, "WriteFile failed with %u\n", GetLastError());
-    ok(dwWritten == Size, "WriteFile wrote %u bytes instead of %u\n", dwWritten, Size);
+    ok(Success == TRUE, "WriteFile failed with %lu\n", GetLastError());
+    ok(dwWritten == Size, "WriteFile wrote %lu bytes instead of %lu\n", dwWritten, Size);
     if (CustomID)
     {
         DWORD dwGuidSize;
         SetFilePointer(Handle, 30, NULL, FILE_BEGIN);
         Success = WriteFile(Handle, CustomID, sizeof(*CustomID), &dwGuidSize, NULL);
-        ok(dwGuidSize == sizeof(GUID), "WriteFile wrote %u bytes instead of %u\n", dwGuidSize, sizeof(GUID));
+        ok(dwGuidSize == sizeof(GUID), "WriteFile wrote %lu bytes instead of 0l%u\n", dwGuidSize, sizeof(GUID));
     }
     CloseHandle(Handle);
     return Success && (dwWritten == Size);
@@ -140,30 +140,30 @@ static void ok_keys_(REFGUID Guid, LPCWSTR DisplayName, LPCWSTR Path, DWORD Type
     }
 
     Status = key.Open(key.m_hKey, GuidString.Buffer, KEY_READ);
-    winetest_ok(!Status, "Unable to open %s key (0x%x)\n", wine_dbgstr_w(GuidString.Buffer), Status);
+    winetest_ok(!Status, "Unable to open %s key (0x%lx)\n", wine_dbgstr_w(GuidString.Buffer), Status);
     RtlFreeUnicodeString(&GuidString);
     if (Status)
         return;
 
     ULONG nChars = _countof(StringBuffer);
     Status = key.QueryStringValue(L"DatabaseDescription", StringBuffer, &nChars);
-    winetest_ok(!Status, "Unable to read DatabaseDescription (0x%x)\n", Status);
+    winetest_ok(!Status, "Unable to read DatabaseDescription (0x%lx)\n", Status);
     if (!Status)
         winetest_ok(!wcscmp(DisplayName, StringBuffer), "Expected DatabaseDescription to be %s, was %s\n", wine_dbgstr_w(DisplayName), wine_dbgstr_w(StringBuffer));
 
     nChars = _countof(StringBuffer);
     Status = key.QueryStringValue(L"DatabasePath", StringBuffer, &nChars);
-    winetest_ok(!Status, "Unable to read DatabasePath (0x%x)\n", Status);
+    winetest_ok(!Status, "Unable to read DatabasePath (0x%lx)\n", Status);
     if (!Status)
         winetest_ok(!wcscmp(Path, StringBuffer), "Expected DatabasePath to be %s, was %s\n", wine_dbgstr_w(Path), wine_dbgstr_w(StringBuffer));
 
     Status = key.QueryDWORDValue(L"DatabaseType", ValueBuffer);
-    winetest_ok(!Status, "Unable to read DatabaseType (0x%x)\n", Status);
+    winetest_ok(!Status, "Unable to read DatabaseType (0x%lx)\n", Status);
     if (!Status)
-        winetest_ok(ValueBuffer == Type, "Expected DatabaseType to be 0x%x, was 0x%x\n", Type, ValueBuffer);
+        winetest_ok(ValueBuffer == Type, "Expected DatabaseType to be 0x%lx, was 0x%lx\n", Type, ValueBuffer);
 
     Status = key.QueryQWORDValue(L"DatabaseInstallTimeStamp", LargeUIntBuffer.QuadPart);
-    winetest_ok(!Status, "Unable to read DatabaseInstallTimeStamp (0x%x)\n", Status);
+    winetest_ok(!Status, "Unable to read DatabaseInstallTimeStamp (0x%lx)\n", Status);
     if (!Status)
     {
         if (TimeStamp)
@@ -176,7 +176,7 @@ static void ok_keys_(REFGUID Guid, LPCWSTR DisplayName, LPCWSTR Path, DWORD Type
             ULARGE_INTEGER CurrentTime;
             FileTimeNow(CurrentTime);
             ULONG DiffMS = (ULONG)((CurrentTime.QuadPart - LargeUIntBuffer.QuadPart) / 10000);
-            winetest_ok(DiffMS < 5000 , "Expected DatabaseInstallTimeStamp to be less than 5 seconds before now (was: %u)\n", DiffMS);
+            winetest_ok(DiffMS < 5000 , "Expected DatabaseInstallTimeStamp to be less than 5 seconds before now (was: %lu)\n", DiffMS);
         }
     }
 }

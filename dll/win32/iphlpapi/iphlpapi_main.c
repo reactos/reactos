@@ -686,8 +686,6 @@ DWORD WINAPI GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
 DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 {
   DWORD ret;
-  BOOL dhcpEnabled;
-  DWORD dhcpServer;
 
   TRACE("pAdapterInfo %p, pOutBufLen %p\n", pAdapterInfo, pOutBufLen);
   if (!pOutBufLen)
@@ -771,12 +769,7 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
               ptr->IpAddressList.Context = ptr->Index;
               toIPAddressString(getInterfaceGatewayByIndex(table->indexes[ndx]),
                ptr->GatewayList.IpAddress.String);
-              getDhcpInfoForAdapter(table->indexes[ndx], &dhcpEnabled,
-                                    &dhcpServer, &ptr->LeaseObtained,
-                                    &ptr->LeaseExpires);
-              ptr->DhcpEnabled = (DWORD) dhcpEnabled;
-              toIPAddressString(dhcpServer,
-                                ptr->DhcpServer.IpAddress.String);
+              getDhcpInfoForAdapter(table->indexes[ndx], ptr);
               if (winsEnabled) {
                 ptr->HaveWins = TRUE;
                 memcpy(ptr->PrimaryWinsServer.IpAddress.String,
@@ -1956,12 +1949,23 @@ DWORD WINAPI GetIpStatistics(PMIB_IPSTATS pStats)
  */
 DWORD WINAPI GetIpStatisticsEx(PMIB_IPSTATS pStats, DWORD dwFamily)
 {
-  DWORD ret;
+    HANDLE tcpFile;
+    DWORD ret;
 
-  TRACE("pStats %p\n", pStats);
-  ret = getIPStats(pStats, dwFamily);
-  TRACE("returning %ld\n", ret);
-  return ret;
+    if (!pStats)
+        return ERROR_INVALID_PARAMETER;
+
+    if (dwFamily != AF_INET && dwFamily != AF_INET6)
+        return ERROR_INVALID_PARAMETER;
+
+    if (!NT_SUCCESS(openTcpFile(&tcpFile, FILE_READ_DATA)))
+        return ERROR_NOT_SUPPORTED;
+
+    TRACE("pStats %p\n", pStats);
+    ret = getIPStats(tcpFile, pStats);
+    closeTcpFile(tcpFile);
+    TRACE("returning %ld\n", ret);
+    return ret;
 }
 
 /******************************************************************
@@ -2496,12 +2500,23 @@ BOOL WINAPI GetRTTAndHopCount(IPAddr DestIpAddress, PULONG HopCount, ULONG MaxHo
  */
 DWORD WINAPI GetTcpStatisticsEx(PMIB_TCPSTATS pStats, DWORD dwFamily)
 {
-  DWORD ret;
+    HANDLE tcpFile;
+    DWORD ret;
 
-  TRACE("pStats %p\n", pStats);
-  ret = getTCPStats(pStats, dwFamily);
-  TRACE("returning %ld\n", ret);
-  return ret;
+    if (!pStats)
+        return ERROR_INVALID_PARAMETER;
+
+    if (dwFamily != AF_INET && dwFamily != AF_INET6)
+        return ERROR_INVALID_PARAMETER;
+
+    if (!NT_SUCCESS(openTcpFile(&tcpFile, FILE_READ_DATA)))
+        return ERROR_NOT_SUPPORTED;
+
+    TRACE("pStats %p\n", pStats);
+    ret = getTCPStats(tcpFile, pStats);
+    closeTcpFile(tcpFile);
+    TRACE("returning %ld\n", ret);
+    return ret;
 }
 
 /******************************************************************
@@ -2559,12 +2574,23 @@ DWORD WINAPI GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
  */
 DWORD WINAPI GetUdpStatisticsEx(PMIB_UDPSTATS pStats, DWORD dwFamily)
 {
-  DWORD ret;
+    HANDLE tcpFile;
+    DWORD ret;
 
-  TRACE("pStats %p\n", pStats);
-  ret = getUDPStats(pStats, dwFamily);
-  TRACE("returning %ld\n", ret);
-  return ret;
+    if (!pStats)
+        return ERROR_INVALID_PARAMETER;
+
+    if (dwFamily != AF_INET && dwFamily != AF_INET6)
+        return ERROR_INVALID_PARAMETER;
+
+    if (!NT_SUCCESS(openTcpFile(&tcpFile, FILE_READ_DATA)))
+        return ERROR_NOT_SUPPORTED;
+
+    TRACE("pStats %p\n", pStats);
+    ret = getUDPStats(tcpFile, pStats);
+    closeTcpFile(tcpFile);
+    TRACE("returning %ld\n", ret);
+    return ret;
 }
 
 /******************************************************************
@@ -2648,10 +2674,7 @@ DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
   if (DhcpCApiInitialize(&Version) != ERROR_SUCCESS)
       return ERROR_PROC_NOT_FOUND;
 
-  if (DhcpReleaseIpAddressLease(AdapterInfo->Index))
-      Status = ERROR_SUCCESS;
-  else
-      Status = ERROR_PROC_NOT_FOUND;
+  Status = DhcpReleaseParameters(AdapterInfo->Name);
 
   DhcpCApiCleanup();
 
@@ -2682,10 +2705,7 @@ DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
   if (DhcpCApiInitialize(&Version) != ERROR_SUCCESS)
       return ERROR_PROC_NOT_FOUND;
 
-  if (DhcpRenewIpAddressLease(AdapterInfo->Index))
-      Status = ERROR_SUCCESS;
-  else
-      Status = ERROR_PROC_NOT_FOUND;
+  Status = DhcpAcquireParameters(AdapterInfo->Name);
 
   DhcpCApiCleanup();
 
@@ -3201,6 +3221,7 @@ DWORD WINAPI GetBestInterfaceEx(struct sockaddr *pDestAddr,PDWORD pdwBestIfIndex
     return 0L;
 }
 
+#ifdef GetAdaptersAddressesV1
 /*
  * @unimplemented
  */
@@ -3209,6 +3230,7 @@ DWORD WINAPI NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **pp
     FIXME(":stub\n");
     return 0L;
 }
+#endif
 
 /*
  * @unimplemented
@@ -3319,4 +3341,81 @@ NhGetInterfaceNameFromGuid(_In_ const GUID * pInterfaceGUID,
         SetLastError(ERROR_PATH_NOT_FOUND);
 
     return result;
+}
+
+DWORD WINAPI
+NhGetGuidFromInterfaceName(_In_ PWCHAR pInterfaceName,
+                           _Out_ GUID *pInterfaceGUID,
+                           DWORD dwUnknown3,
+                           DWORD dwUnknown4)
+{
+    WCHAR szGuidBuffer[45];
+    UNICODE_STRING GuidString;
+    HKEY hAdaptersKey = NULL, hAdapterKey = NULL, hConnectionKey = NULL;
+    PWSTR pszNameBuffer = NULL;
+    DWORD i, dwNameSize, dwValueSize;
+    BOOL bFound = FALSE;
+    DWORD result = ERROR_SUCCESS;
+
+    result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}", 0, KEY_READ, &hAdaptersKey);
+    if (result != ERROR_SUCCESS)
+    {
+        // failed to find adapter entry
+        return ERROR_NOT_FOUND;
+    }
+
+    for (i = 0; ; i++)
+    {
+        dwNameSize = ARRAYSIZE(szGuidBuffer);
+        result = RegEnumKeyExW(hAdaptersKey,
+                               i,
+                               szGuidBuffer,
+                               &dwNameSize,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
+        if (result != ERROR_SUCCESS)
+            break;
+
+        TRACE("Guid %S\n", szGuidBuffer);
+
+        result = RegOpenKeyExW(hAdaptersKey, szGuidBuffer, 0, KEY_READ, &hAdapterKey);
+        if (result == ERROR_SUCCESS)
+        {
+            result = RegOpenKeyExW(hAdapterKey, L"Connection", 0, KEY_READ, &hConnectionKey);
+            if (result == ERROR_SUCCESS)
+            {
+                RegQueryValueExW(hConnectionKey, L"Name", NULL, NULL, NULL, &dwValueSize);
+                pszNameBuffer = HeapAlloc(GetProcessHeap(), 0, dwValueSize);
+                if (pszNameBuffer)
+                {
+                    RegQueryValueExW(hConnectionKey, L"Name", NULL, NULL, (PBYTE)pszNameBuffer, &dwValueSize);
+
+                    TRACE("%S -- %S\n", pInterfaceName, pszNameBuffer);
+                    if (_wcsnicmp(pInterfaceName, pszNameBuffer, wcslen(pszNameBuffer)) == 0)
+                    {
+                        TRACE("Found it!\n");
+                        RtlInitUnicodeString(&GuidString, szGuidBuffer);
+                        RtlGUIDFromString(&GuidString, pInterfaceGUID);
+
+                        bFound = TRUE;
+                    }
+
+                    HeapFree(GetProcessHeap(), 0, pszNameBuffer);
+                }
+
+                RegCloseKey(hConnectionKey);
+            }
+
+            RegCloseKey(hAdapterKey);
+        }
+
+        if (bFound == TRUE)
+            break;
+    }
+
+    RegCloseKey(hAdaptersKey);
+
+    return bFound ? ERROR_SUCCESS : ERROR_NOT_FOUND;
 }

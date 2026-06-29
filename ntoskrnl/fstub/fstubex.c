@@ -94,17 +94,11 @@ C_ASSERT(sizeof(MASTER_BOOT_RECORD) == 512);
 #define EFI_GUID_STRING_SIZE 0x27
 
 #define IS_VALID_DISK_INFO(Disk) \
-  (Disk)               &&        \
-  (Disk->DeviceObject) &&        \
-  (Disk->SectorSize)   &&        \
-  (Disk->Buffer)       &&        \
-  (Disk->SectorCount)
-
-VOID
-NTAPI
-FstubDbgPrintPartitionEx(IN PPARTITION_INFORMATION_EX PartitionEntry,
-                         IN ULONG PartitionNumber
-);
+    ((Disk)                &&    \
+    ((Disk)->DeviceObject) &&    \
+    ((Disk)->SectorSize)   &&    \
+    ((Disk)->Buffer)       &&    \
+    ((Disk)->SectorCount))
 
 NTSTATUS
 NTAPI
@@ -188,9 +182,8 @@ FstubAdjustPartitionCount(IN ULONG SectorSize,
     }
 
     /* Then, ensure that we will have a round value,
-     * ie, all sectors will be full of entries
-     * There won't be lonely entries
-     */
+     * i.e. all sectors will be full of entries.
+     * There won't be lonely entries. */
     Count = (Count * PARTITION_ENTRY_SIZE) / SectorSize;
     Count = (Count * SectorSize) / PARTITION_ENTRY_SIZE;
     ASSERT(*PartitionCount <= Count);
@@ -494,7 +487,7 @@ FstubCreateDiskRaw(IN PDEVICE_OBJECT DeviceObject)
     /* Only zero useful stuff */
     MasterBootRecord = (PMASTER_BOOT_RECORD)Disk->Buffer;
     MasterBootRecord->Signature = 0;
-    RtlZeroMemory(MasterBootRecord->PartitionTable, sizeof(PARTITION_TABLE_ENTRY));
+    RtlZeroMemory(MasterBootRecord->PartitionTable, sizeof(PARTITION_TABLE_ENTRY) * NUM_PARTITION_TABLE_ENTRIES);
     MasterBootRecord->MasterBootRecordMagic = 0;
 
     /* Write back that destroyed MBR */
@@ -530,34 +523,30 @@ FstubCreateDiskRaw(IN PDEVICE_OBJECT DeviceObject)
     return Status;
 }
 
-PCHAR
-NTAPI
-FstubDbgGuidToString(IN PGUID Guid,
-                     OUT PCHAR String)
+#ifndef NDEBUG
+static __inline
+VOID
+FstubDbgGuidToString(
+    _In_ PGUID Guid,
+    _Out_ PCHAR String)
 {
     sprintf(String,
             "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-            Guid->Data1,
-            Guid->Data2,
-            Guid->Data3,
-            Guid->Data4[0],
-            Guid->Data4[1],
-            Guid->Data4[2],
-            Guid->Data4[3],
-            Guid->Data4[4],
-            Guid->Data4[5],
-            Guid->Data4[6],
-            Guid->Data4[7]);
-
-    return String;
+            Guid->Data1, Guid->Data2, Guid->Data3,
+            Guid->Data4[0], Guid->Data4[1], Guid->Data4[2], Guid->Data4[3],
+            Guid->Data4[4], Guid->Data4[5], Guid->Data4[6], Guid->Data4[7]);
 }
 
-VOID
-NTAPI
-FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
+static VOID
+FstubDbgPrintPartitionEx(
+    _In_ PPARTITION_INFORMATION_EX PartitionEntry,
+    _In_ ULONG PartitionNumber);
+
+static VOID
+FstubDbgPrintDriveLayoutEx(
+    _In_ PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
 {
     ULONG i;
-    CHAR Guid[EFI_GUID_STRING_SIZE];
 
     PAGED_CODE();
 
@@ -565,105 +554,117 @@ FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
     switch (DriveLayout->PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
-            if (DriveLayout->PartitionCount % 4 != 0)
+        {
+            if (DriveLayout->PartitionCount % NUM_PARTITION_TABLE_ENTRIES != 0)
             {
-                DPRINT("Warning: Partition count isn't a 4-factor: %lu!\n", DriveLayout->PartitionCount);
+                DbgPrint("  Warning: Partition count isn't a 4-factor: %lu!\n", DriveLayout->PartitionCount);
             }
-
-            DPRINT("Signature: %8.8x\n", DriveLayout->Mbr.Signature);
+            DbgPrint("  Signature: %8.8x\n", DriveLayout->Mbr.Signature);
             for (i = 0; i < DriveLayout->PartitionCount; i++)
             {
                 FstubDbgPrintPartitionEx(DriveLayout->PartitionEntry, i);
             }
-
             break;
+        }
+
         case PARTITION_STYLE_GPT:
+        {
+            CHAR Guid[EFI_GUID_STRING_SIZE];
             FstubDbgGuidToString(&(DriveLayout->Gpt.DiskId), Guid);
-            DPRINT("DiskId: %s\n", Guid);
-            DPRINT("StartingUsableOffset: %I64x\n", DriveLayout->Gpt.StartingUsableOffset.QuadPart);
-            DPRINT("UsableLength: %I64x\n", DriveLayout->Gpt.UsableLength.QuadPart);
-            DPRINT("MaxPartitionCount: %lu\n", DriveLayout->Gpt.MaxPartitionCount);
+            DbgPrint("  DiskId: %s\n", Guid);
+            DbgPrint("  StartingUsableOffset: %I64x\n", DriveLayout->Gpt.StartingUsableOffset.QuadPart);
+            DbgPrint("  UsableLength: %I64x\n", DriveLayout->Gpt.UsableLength.QuadPart);
+            DbgPrint("  MaxPartitionCount: %lu\n", DriveLayout->Gpt.MaxPartitionCount);
             for (i = 0; i < DriveLayout->PartitionCount; i++)
             {
                 FstubDbgPrintPartitionEx(DriveLayout->PartitionEntry, i);
             }
-
             break;
+        }
+
         default:
-            DPRINT("Unsupported partition style: %lu\n", DriveLayout->PartitionStyle);
+            DbgPrint("  Unsupported partition style: %lu\n", DriveLayout->PartitionStyle);
     }
 }
 
-VOID
-NTAPI
-FstubDbgPrintPartitionEx(IN PPARTITION_INFORMATION_EX PartitionEntry,
-                         IN ULONG PartitionNumber)
+static VOID
+FstubDbgPrintPartitionEx(
+    _In_ PPARTITION_INFORMATION_EX PartitionEntry,
+    _In_ ULONG PartitionNumber)
 {
-    CHAR Guid[EFI_GUID_STRING_SIZE];
-
     PAGED_CODE();
 
     DPRINT("Printing partition %lu\n", PartitionNumber);
-
     switch (PartitionEntry[PartitionNumber].PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
-            DPRINT("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
-            DPRINT("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
-            DPRINT("  RewritePartition: %u\n", PartitionEntry[PartitionNumber].RewritePartition);
-            DPRINT("  PartitionType: %02x\n", PartitionEntry[PartitionNumber].Mbr.PartitionType);
-            DPRINT("  BootIndicator: %u\n", PartitionEntry[PartitionNumber].Mbr.BootIndicator);
-            DPRINT("  RecognizedPartition: %u\n", PartitionEntry[PartitionNumber].Mbr.RecognizedPartition);
-            DPRINT("  HiddenSectors: %lu\n", PartitionEntry[PartitionNumber].Mbr.HiddenSectors);
-
+        {
+            DbgPrint("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
+            DbgPrint("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
+            DbgPrint("  RewritePartition: %u\n", PartitionEntry[PartitionNumber].RewritePartition);
+            DbgPrint("  PartitionType: %02x\n", PartitionEntry[PartitionNumber].Mbr.PartitionType);
+            DbgPrint("  BootIndicator: %u\n", PartitionEntry[PartitionNumber].Mbr.BootIndicator);
+            DbgPrint("  RecognizedPartition: %u\n", PartitionEntry[PartitionNumber].Mbr.RecognizedPartition);
+            DbgPrint("  HiddenSectors: %lu\n", PartitionEntry[PartitionNumber].Mbr.HiddenSectors);
             break;
+        }
+
         case PARTITION_STYLE_GPT:
-            DPRINT("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
-            DPRINT("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
-            DPRINT("  RewritePartition: %u\n", PartitionEntry[PartitionNumber].RewritePartition);
+        {
+            CHAR Guid[EFI_GUID_STRING_SIZE];
+            DbgPrint("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
+            DbgPrint("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
+            DbgPrint("  RewritePartition: %u\n", PartitionEntry[PartitionNumber].RewritePartition);
             FstubDbgGuidToString(&(PartitionEntry[PartitionNumber].Gpt.PartitionType), Guid);
-            DPRINT("  PartitionType: %s\n", Guid);
+            DbgPrint("  PartitionType: %s\n", Guid);
             FstubDbgGuidToString(&(PartitionEntry[PartitionNumber].Gpt.PartitionId), Guid);
-            DPRINT("  PartitionId: %s\n", Guid);
-            DPRINT("  Attributes: %I64x\n", PartitionEntry[PartitionNumber].Gpt.Attributes);
-            DPRINT("  Name: %ws\n", PartitionEntry[PartitionNumber].Gpt.Name);
-
+            DbgPrint("  PartitionId: %s\n", Guid);
+            DbgPrint("  Attributes: %I64x\n", PartitionEntry[PartitionNumber].Gpt.Attributes);
+            DbgPrint("  Name: %ws\n", PartitionEntry[PartitionNumber].Gpt.Name);
             break;
+        }
+
         default:
-            DPRINT("  Unsupported partition style: %ld\n", PartitionEntry[PartitionNumber].PartitionStyle);
+            DbgPrint("  Unsupported partition style: %ld\n", PartitionEntry[PartitionNumber].PartitionStyle);
     }
 }
 
-VOID
-NTAPI
-FstubDbgPrintSetPartitionEx(IN PSET_PARTITION_INFORMATION_EX PartitionEntry,
-                            IN ULONG PartitionNumber)
+static VOID
+FstubDbgPrintSetPartitionEx(
+    _In_ PSET_PARTITION_INFORMATION_EX PartitionEntry,
+    _In_ ULONG PartitionNumber)
 {
-    CHAR Guid[EFI_GUID_STRING_SIZE];
-
     PAGED_CODE();
 
     DPRINT("FSTUB: SET_PARTITION_INFORMATION_EX: %p\n", PartitionEntry);
-    DPRINT("Modifying partition %lu\n", PartitionNumber);
+    DbgPrint("Modifying partition %lu\n", PartitionNumber);
     switch (PartitionEntry->PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
-            DPRINT("  PartitionType: %02x\n", PartitionEntry->Mbr.PartitionType);
-
+            DbgPrint("  PartitionType: %02x\n", PartitionEntry->Mbr.PartitionType);
             break;
+
         case PARTITION_STYLE_GPT:
+        {
+            CHAR Guid[EFI_GUID_STRING_SIZE];
             FstubDbgGuidToString(&(PartitionEntry->Gpt.PartitionType), Guid);
-            DPRINT("  PartitionType: %s\n", Guid);
+            DbgPrint("  PartitionType: %s\n", Guid);
             FstubDbgGuidToString(&(PartitionEntry->Gpt.PartitionId), Guid);
-            DPRINT("  PartitionId: %s\n", Guid);
-            DPRINT("  Attributes: %I64x\n", PartitionEntry->Gpt.Attributes);
-            DPRINT("  Name: %ws\n", PartitionEntry->Gpt.Name);
-
+            DbgPrint("  PartitionId: %s\n", Guid);
+            DbgPrint("  Attributes: %I64x\n", PartitionEntry->Gpt.Attributes);
+            DbgPrint("  Name: %ws\n", PartitionEntry->Gpt.Name);
             break;
+        }
+
         default:
-            DPRINT("  Unsupported partition style: %ld\n", PartitionEntry[PartitionNumber].PartitionStyle);
+            DbgPrint("  Unsupported partition style: %ld\n", PartitionEntry->PartitionStyle);
     }
 }
+
+#else
+#define FstubDbgPrintDriveLayoutEx(DriveLayout)
+#define FstubDbgPrintSetPartitionEx(PartitionEntry, PartitionNumber)
+#endif // !NDEBUG
 
 NTSTATUS
 NTAPI
@@ -985,6 +986,7 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
     ULONGLONG PartitionEntryLBA;
 #endif
     PDRIVE_LAYOUT_INFORMATION_EX DriveLayoutEx = NULL;
+    PPARTITION_INFORMATION_EX PartitionInfo;
     ULONG i, PartitionCount, PartitionIndex, PartitionsPerSector;
 
     PAGED_CODE();
@@ -1041,7 +1043,7 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
     DriveLayoutEx->PartitionStyle = PARTITION_STYLE_GPT;
     /* Translate LBA -> Offset */
     DriveLayoutEx->Gpt.StartingUsableOffset.QuadPart = EfiHeader->FirstUsableLBA * Disk->SectorSize;
-    DriveLayoutEx->Gpt.UsableLength.QuadPart = EfiHeader->LastUsableLBA - EfiHeader->FirstUsableLBA * Disk->SectorSize;
+    DriveLayoutEx->Gpt.UsableLength.QuadPart = (EfiHeader->LastUsableLBA - EfiHeader->FirstUsableLBA) * Disk->SectorSize;
     DriveLayoutEx->Gpt.MaxPartitionCount = EfiHeader->NumberOfEntries;
     DriveLayoutEx->Gpt.DiskId = EfiHeader->DiskGUID;
 
@@ -1076,28 +1078,24 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
         PartitionEntry = ((PEFI_PARTITION_ENTRY)Disk->Buffer)[PartitionIndex];
         PartitionIndex++;
 
-        /* If partition GUID is 00000000-0000-0000-0000-000000000000, then it's unused, skip it */
-        if (PartitionEntry.PartitionType.Data1 == 0 &&
-            PartitionEntry.PartitionType.Data2 == 0 &&
-            PartitionEntry.PartitionType.Data3 == 0 &&
-            ((PULONGLONG)PartitionEntry.PartitionType.Data4)[0] == 0)
-        {
+        /* Skip unused partition */
+        if (IsEqualGUID(&PartitionEntry.PartitionType, &PARTITION_ENTRY_UNUSED_GUID))
             continue;
-        }
 
         /* Write data to structure. Don't forget GPT is using sectors, Windows offsets */
-        DriveLayoutEx->PartitionEntry[PartitionCount].StartingOffset.QuadPart = PartitionEntry.StartingLBA * Disk->SectorSize;
-        DriveLayoutEx->PartitionEntry[PartitionCount].PartitionLength.QuadPart = (PartitionEntry.EndingLBA -
-                                                                                  PartitionEntry.StartingLBA + 1) *
-                                                                                 Disk->SectorSize;
+        PartitionInfo = &DriveLayoutEx->PartitionEntry[PartitionCount];
+
+        PartitionInfo->StartingOffset.QuadPart = PartitionEntry.StartingLBA * Disk->SectorSize;
+        PartitionInfo->PartitionLength.QuadPart = (PartitionEntry.EndingLBA -
+                                                   PartitionEntry.StartingLBA + 1) * Disk->SectorSize;
         /* This number starts from 1 */
-        DriveLayoutEx->PartitionEntry[PartitionCount].PartitionNumber = PartitionCount + 1;
-        DriveLayoutEx->PartitionEntry[PartitionCount].RewritePartition = FALSE;
-        DriveLayoutEx->PartitionEntry[PartitionCount].PartitionStyle = PARTITION_STYLE_GPT;
-        DriveLayoutEx->PartitionEntry[PartitionCount].Gpt.PartitionType = PartitionEntry.PartitionType;
-        DriveLayoutEx->PartitionEntry[PartitionCount].Gpt.PartitionId = PartitionEntry.UniquePartition;
-        DriveLayoutEx->PartitionEntry[PartitionCount].Gpt.Attributes = PartitionEntry.Attributes;
-        RtlCopyMemory(DriveLayoutEx->PartitionEntry[PartitionCount].Gpt.Name,
+        PartitionInfo->PartitionNumber = PartitionCount + 1;
+        PartitionInfo->RewritePartition = FALSE;
+        PartitionInfo->PartitionStyle = PARTITION_STYLE_GPT;
+        PartitionInfo->Gpt.PartitionType = PartitionEntry.PartitionType;
+        PartitionInfo->Gpt.PartitionId = PartitionEntry.UniquePartition;
+        PartitionInfo->Gpt.Attributes = PartitionEntry.Attributes;
+        RtlCopyMemory(PartitionInfo->Gpt.Name,
                       PartitionEntry.Name, sizeof(PartitionEntry.Name));
 
         /* Update partition count */
@@ -1656,14 +1654,9 @@ FstubWritePartitionTableEFI(IN PDISK_INFORMATION Disk,
 
     for (i = 0, WrittenPartitions = 0; i < PartitionCount; i++)
     {
-        /* If partition GUID is 00000000-0000-0000-0000-000000000000, then it's unused, skip it */
-        if (PartitionEntries[i].Gpt.PartitionType.Data1 == 0 &&
-            PartitionEntries[i].Gpt.PartitionType.Data2 == 0 &&
-            PartitionEntries[i].Gpt.PartitionType.Data3 == 0 &&
-            ((PULONGLONG)PartitionEntries[i].Gpt.PartitionType.Data4)[0] == 0)
-        {
+        /* Skip unused partition */
+        if (IsEqualGUID(&PartitionEntries[i].Gpt.PartitionType, &PARTITION_ENTRY_UNUSED_GUID))
             continue;
-        }
 
         /* Copy the entry in the partition entry format */
         FstubCopyEntryEFI(&Entry, &PartitionEntries[i], Disk->SectorSize);
@@ -1797,7 +1790,7 @@ FstubWriteSector(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
-/* FUNCTIONS *****************************************************************/
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
@@ -1971,15 +1964,17 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
             ArcDiskSignature = CONTAINING_RECORD(NextEntry,
                                                  ARC_DISK_SIGNATURE,
                                                  ListEntry);
-            /* If they match, i.e.
-             * - There's only one disk for both BIOS and detected
-             * - Signatures are matching
-             * - This is MBR
-             * (We don't check checksums here)
+
+            /*
+             * If this is the only MBR disk in the ARC list and detected in
+             * the device tree, just go ahead and retrieve the information.
+             * Otherwise, verify whether the signatures match before proceeding.
+             * Note that contrary to IopCreateArcNamesDisk(), we don't verify
+             * the checksums here.
              */
-            if (((SingleDisk && DiskCount == 1) ||
-                (IopVerifyDiskSignature(DriveLayout, ArcDiskSignature, &Signature))) &&
-                (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR))
+            if ((SingleDisk && (DiskCount == 1) &&
+                 (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR)) ||
+                IopVerifyDiskSignature(DriveLayout, ArcDiskSignature, &Signature))
             {
                 /* Create ARC name */
                 sprintf(ArcBuffer, "\\ArcName\\%s", ArcDiskSignature->ArcName);
@@ -2277,7 +2272,7 @@ Cleanup:
 NTSTATUS
 NTAPI
 IoReadPartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
-                       IN PDRIVE_LAYOUT_INFORMATION_EX* DriveLayout)
+                       OUT PDRIVE_LAYOUT_INFORMATION_EX* DriveLayout)
 {
     NTSTATUS Status;
     PDISK_INFORMATION Disk;
@@ -2332,9 +2327,7 @@ IoReadPartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
 
     /* In case of success, print data */
     if (NT_SUCCESS(Status))
-    {
         FstubDbgPrintDriveLayoutEx(*DriveLayout);
-    }
 
     return Status;
 }

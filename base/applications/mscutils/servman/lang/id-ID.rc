@@ -156,7 +156,8 @@ BEGIN
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "Beberapa layanan bergantung pada layanan lainnya, driver sistem dan grup urutan pengambilan. Jika komponen sistem dihentikan atau tidak berjalan dengan benar, layanan yang bergantung akan dipengaruhi.", IDC_STATIC, 8, 7, 238, 26
-    LTEXT "Layanan ini tergantung pada komponen berikut", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "Layanan ini tergantung pada komponen berikut:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "The following components depend on this service:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 

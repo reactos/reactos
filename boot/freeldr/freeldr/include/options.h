@@ -1,24 +1,23 @@
 /*
- *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     FreeLoader
+ * LICENSE:     Dual-licensed:
+ *              GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ *              MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     FreeLoader Setup and Configuration F2 menu.
+ * COPYRIGHT:   Copyright 2022-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #pragma once
 
-VOID DoOptionsMenu(IN OperatingSystemItem* OperatingSystem);
-VOID DisplayBootTimeOptions(VOID);
-VOID AppendBootTimeOptions(PCHAR BootOptions);
+#define HAS_OPTION_MENU_EDIT_CMDLINE
+#define HAS_OPTION_MENU_CUSTOM_BOOT
+
+VOID
+FreeLdrSetupMenu(
+    _In_opt_ OperatingSystemItem* OperatingSystem);
+
+VOID
+DisplayBootTimeOptions(
+    _In_ OperatingSystemItem* OperatingSystem);
+
+VOID OptionMenuReboot(VOID);

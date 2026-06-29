@@ -14,6 +14,8 @@
 #define IDB_ROSBMP 55
 #define IDB_ROSMASK 56
 
+#define IDS_PERFORMANCEOPTIONS 35
+
 #define IDS_CPLSYSTEMNAME        60
 #define IDS_CPLSYSTEMDESCRIPTION 61
 
@@ -151,6 +153,16 @@
 #define IDC_BUTTON_MOVE_UP       710
 #define IDC_BUTTON_MOVE_DOWN     711
 #define IDC_BUTTON_EDIT_TEXT     712
+
+/* Visual Effects */
+#define IDD_VISUALEFFECTS 112
+#define IDC_TREE 100
+
+/* Advanced Performance */
+#define IDD_ADVANCEDPERF 115
+#define IDC_CPUCLIENT    100
+#define IDC_CPUSERVER    101
+#define IDC_CHANGESWAP   102
 
 /* Virtual memory */
 #define IDD_VIRTMEM      900

@@ -1,6 +1,11 @@
-#ifndef FONTEXT_PRECOMP_H
-#define FONTEXT_PRECOMP_H
+/*
+ * PROJECT:     ReactOS Font Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Font folder shell extension
+ * COPYRIGHT:   Copyright 2019,2020 Mark Jansen <mark.jansen@reactos.org>
+ */
 
+#pragma once
 
 #define WIN32_NO_STATUS
 #define COM_NO_WINDOWS_H
@@ -15,6 +20,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlcoll.h>
+#include <atlsimpcoll.h>
 #include <atlstr.h>
 #include <wine/debug.h>
 #include <shellutils.h>
@@ -22,17 +28,29 @@
 extern const GUID CLSID_CFontExt;
 extern LONG g_ModuleRefCnt;
 
+typedef struct tagINSTALL_FONT_DATA
+{
+    IDataObject* pDataObj = nullptr;
+    HRESULT hrResult = S_OK;
+    HWND hwnd = nullptr;
+    UINT iStep = 0;
+    UINT cSteps = 0;
+    BOOL bCanceled = FALSE;
+    LPCITEMIDLIST pidlParent = nullptr;
+    PCUIDLIST_RELATIVE* apidl = nullptr;
+} INSTALL_FONT_DATA, *PINSTALL_FONT_DATA;
+
 #include "resource.h"
 #include "fontpidl.hpp"
 #include "CFontCache.hpp"
 #include "CFontExt.hpp"
+#include "CFontFolderViewCB.h"
+#include "CFontBackgroundMenu.h"
 
 #define FONT_HIVE   HKEY_LOCAL_MACHINE
 #define FONT_KEY    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"
 
 HRESULT _CEnumFonts_CreateInstance(CFontExt* zip, DWORD flags, REFIID riid, LPVOID* ppvOut);
-HRESULT _CFontMenu_CreateInstance(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
-                                  IShellFolder *psf, REFIID riid, LPVOID* ppvOut);
 HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
                                     REFIID riid, LPVOID* ppvOut);
 
@@ -44,10 +62,51 @@ inline BOOL IsFontDotExt(LPCWSTR pchDotExt)
     };
     for (const LPCWSTR *pp = array; *pp; ++pp)
     {
-        if (!_wcsicmp(*pp, pchDotExt))
+        if (!StrCmpIW(*pp, pchDotExt))
             return TRUE;
     }
     return FALSE;
 }
 
-#endif /* FONTEXT_PRECOMP_H */
+HRESULT InstallFontFiles(_Inout_ PINSTALL_FONT_DATA pData);
+
+HRESULT
+DoInstallFontFile(
+    _In_ PCWSTR pszFontPath,
+    _In_ PCWSTR pszFontsDir,
+    _In_ HKEY hkeyFonts);
+
+HRESULT DoGetFontTitle(
+    _In_ PCWSTR pszFontPath,
+    _Out_ CStringW& strFontName);
+
+BOOL CheckDropFontFiles(HDROP hDrop);
+BOOL CheckDataObject(IDataObject *pDataObj);
+HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj);
+HRESULT DoPreviewFontFiles(HWND hwnd, IDataObject* pDataObj);
+HRESULT DoDeleteFontFiles(HWND hwnd, IDataObject* pDataObj);
+void RunFontViewer(HWND hwnd, const FontPidlEntry* fontEntry);
+
+HRESULT
+APIENTRY
+CFontBackgroundMenu_Create(
+    CFontExt* pFontExt,
+    HWND hwnd,
+    IShellFolder* psf,
+    IContextMenu** ppcm);
+
+LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys);
+void CloseRegKeyArray(HKEY* array, UINT cKeys);
+
+struct CRegKeyHandleArray
+{
+    HKEY hKeys[16];
+    UINT cKeys;
+
+    CRegKeyHandleArray() : cKeys(0) {}
+    ~CRegKeyHandleArray() { CloseRegKeyArray(hKeys, cKeys); }
+    operator HKEY*() { return hKeys; }
+    operator UINT*() { return &cKeys; }
+    operator UINT() { return cKeys; }
+    HKEY& operator [](SIZE_T i) { return hKeys[i]; }
+};

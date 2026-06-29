@@ -61,7 +61,8 @@ static ULONG SupportedOidList[] =
     OID_802_3_MAC_OPTIONS,
     OID_802_3_RCV_ERROR_ALIGNMENT,
     OID_802_3_XMIT_ONE_COLLISION,
-    OID_802_3_XMIT_MORE_COLLISIONS
+    OID_802_3_XMIT_MORE_COLLISIONS,
+    OID_GEN_PHYSICAL_MEDIUM
 };
 
 NDIS_STATUS
@@ -198,6 +199,10 @@ MiniportQueryInformation (
 
         case OID_802_3_MAXIMUM_LIST_SIZE:
             genericUlong = MAXIMUM_MULTICAST_ADDRESSES;
+            break;
+
+        case OID_GEN_PHYSICAL_MEDIUM:
+            genericUlong = NdisPhysicalMedium802_3;
             break;
 
         case OID_GEN_XMIT_OK:

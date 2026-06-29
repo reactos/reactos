@@ -22,9 +22,16 @@ AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    if( FCB->ContextSize < ContextSize ) ContextSize = FCB->ContextSize;
-
-    if( FCB->Context ) {
+    if (ContextSize == sizeof(FCB->SharedData))
+    {
+        RtlCopyMemory(Irp->UserBuffer,
+                      &FCB->SharedData,
+                      ContextSize);
+        Status = STATUS_SUCCESS;
+    }
+    else if (FCB->Context)
+    {
+        ContextSize = min(ContextSize, FCB->ContextSize);
         RtlCopyMemory( Irp->UserBuffer,
                        FCB->Context,
                        ContextSize );

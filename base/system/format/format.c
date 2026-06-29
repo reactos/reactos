@@ -40,7 +40,6 @@
 //======================================================================
 
 #include <stdio.h>
-#include <tchar.h>
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
@@ -114,9 +113,15 @@ SIZEDEFINITION LegalSizes[] = {
 // Takes the win32 error code and prints the text version.
 //
 //----------------------------------------------------------------------
-static VOID PrintWin32Error(LPWSTR Message, DWORD ErrorCode)
+static VOID PrintWin32Error(UINT Message, DWORD ErrorCode)
 {
-    ConPrintf(StdErr, L"%s: ", Message);
+    PCWSTR pszMsg;
+    INT Len;
+
+    Len = LoadStringW(NULL, Message, (PWSTR)&pszMsg, 0);
+    if (Len > 0)
+        ConPrintf(StdErr, L"%.*s: ", Len, pszMsg);
+
     ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
                NULL, ErrorCode, LANG_USER_DEFAULT);
     ConPuts(StdErr, L"\n");
@@ -156,7 +161,7 @@ static int ParseCommandLine(int argc, WCHAR *argv[])
                     if (gotSize) return -1;
                     j = 0;
                     while (LegalSizes[j].ClusterSize &&
-                           wcsicmp(LegalSizes[j].SizeString, &argv[i][3]))
+                           _wcsicmp(LegalSizes[j].SizeString, &argv[i][3]))
                     {
                         j++;
                     }
@@ -172,13 +177,13 @@ static int ParseCommandLine(int argc, WCHAR *argv[])
                     gotLabel = TRUE;
                     GotALabel = TRUE;
                 }
-                else if (!wcsicmp(&argv[i][1], L"Q"))
+                else if (!_wcsicmp(&argv[i][1], L"Q"))
                 {
                     if (gotQuick) return -1;
                     QuickFormat = TRUE;
                     gotQuick = TRUE;
                 }
-                else if (!wcsicmp(&argv[i][1], L"C"))
+                else if (!_wcsicmp(&argv[i][1], L"C"))
                 {
                     if (gotCompressed) return -1;
                     CompressDrive = TRUE;
@@ -314,24 +319,13 @@ static BOOLEAN LoadFMIFSEntryPoints(VOID)
 //----------------------------------------------------------------------
 static VOID Usage(LPWSTR ProgramName)
 {
-    WCHAR szMsg[RC_STRING_MAX_SIZE];
     WCHAR szFormats[MAX_PATH];
     WCHAR szFormatW[MAX_PATH];
     DWORD Index = 0;
     BYTE dummy;
     BOOLEAN latestVersion;
 
-    K32LoadStringW(GetModuleHandle(NULL), STRING_HELP, szMsg, ARRAYSIZE(szMsg));
-
-#ifndef FMIFS_IMPORT_DLL
-    if (!LoadFMIFSEntryPoints())
-    {
-        ConPrintf(StdOut, szMsg, ProgramName, L"");
-        return;
-    }
-#endif
-
-    szFormats[0] = 0;
+    szFormats[0] = UNICODE_NULL;
     while (QueryAvailableFileSystemFormat(Index++, szFormatW, &dummy, &dummy, &latestVersion))
     {
         if (!latestVersion)
@@ -341,7 +335,7 @@ static VOID Usage(LPWSTR ProgramName)
 
         wcscat(szFormats, szFormatW);
     }
-    ConPrintf(StdOut, szMsg, ProgramName, szFormats);
+    ConResPrintf(StdOut, STRING_HELP, ProgramName, szFormats);
 }
 
 
@@ -360,16 +354,17 @@ static VOID Usage(LPWSTR ProgramName)
 int wmain(int argc, WCHAR *argv[])
 {
     int badArg;
-    DEVICE_INFORMATION DeviceInformation = {0};
+    DEVICE_INFORMATION DeviceInformation;
     FMIFS_MEDIA_FLAG media = FMIFS_HARDDISK;
     DWORD driveType;
     WCHAR fileSystem[1024];
-    WCHAR volumeName[1024] = {0};
+    WCHAR volumeName[1024];
     WCHAR input[1024];
     DWORD serialNumber;
-    DWORD flags, maxComponent;
-    ULARGE_INTEGER freeBytesAvailableToCaller, totalNumberOfBytes, totalNumberOfFreeBytes;
-    WCHAR szMsg[RC_STRING_MAX_SIZE];
+    ULARGE_INTEGER totalNumberOfBytes, totalNumberOfFreeBytes;
+    DWORD dwError;
+    PCWSTR pszMsg;
+    INT Len;
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
@@ -424,19 +419,14 @@ int wmain(int argc, WCHAR *argv[])
     driveType = GetDriveTypeW(RootDirectory);
     switch (driveType)
     {
-        case DRIVE_UNKNOWN :
-            K32LoadStringW(GetModuleHandle(NULL), STRING_ERROR_DRIVE_TYPE, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
+        case DRIVE_UNKNOWN:
+        case DRIVE_NO_ROOT_DIR: // This case used to report STRING_NO_VOLUME, which has no ".\n".
+            ConResPuts(StdErr, STRING_ERROR_DRIVE_TYPE);
             return -1;
 
         case DRIVE_REMOTE:
         case DRIVE_CDROM:
             ConResPuts(StdOut, STRING_NO_SUPPORT);
-            return -1;
-
-        case DRIVE_NO_ROOT_DIR:
-            K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
             return -1;
 
         case DRIVE_REMOVABLE:
@@ -468,28 +458,34 @@ int wmain(int argc, WCHAR *argv[])
     }
 
     //
-    // Determine the drive's file system format
+    // Get the existing name and file system, and print out the latter
     //
     if (!GetVolumeInformationW(RootDirectory,
                                volumeName, ARRAYSIZE(volumeName),
-                               &serialNumber, &maxComponent, &flags,
+                               NULL, NULL, NULL,
                                fileSystem, ARRAYSIZE(fileSystem)))
     {
-        if (GetLastError() == ERROR_UNRECOGNIZED_VOLUME)
+        dwError = GetLastError();
+        if (dwError == ERROR_UNRECOGNIZED_VOLUME)
         {
+            // Unformatted volume
+            volumeName[0] = UNICODE_NULL;
             wcscpy(fileSystem, L"RAW");
         }
         else
         {
-            K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
+            PrintWin32Error(STRING_NO_VOLUME, dwError);
             return -1;
         }
     }
 
-    if (QueryDeviceInformation(RootDirectory,
-                               &DeviceInformation,
-                               sizeof(DeviceInformation)))
+    ConResPrintf(StdOut, STRING_FILESYSTEM, fileSystem);
+
+    if (!QueryDeviceInformation(RootDirectory, &DeviceInformation, sizeof(DeviceInformation)))
+    {
+        totalNumberOfBytes.QuadPart = 0;
+    }
+    else
     {
         totalNumberOfBytes.QuadPart = DeviceInformation.SectorSize *
                                       DeviceInformation.SectorCount.QuadPart;
@@ -500,15 +496,14 @@ int wmain(int argc, WCHAR *argv[])
      * Fallback to GetFreeDiskSpaceExW if we did not get any volume length. */
     if (totalNumberOfBytes.QuadPart == 0 &&
         !GetDiskFreeSpaceExW(RootDirectory,
-                             &freeBytesAvailableToCaller,
+                             NULL,
                              &totalNumberOfBytes,
-                             &totalNumberOfFreeBytes))
+                             NULL))
     {
-        K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
+        dwError = GetLastError();
+        PrintWin32Error(STRING_NO_VOLUME_SIZE, dwError);
         return -1;
     }
-    ConResPrintf(StdOut, STRING_FILESYSTEM, fileSystem);
 
     //
     // Make sure they want to do this
@@ -521,9 +516,9 @@ int wmain(int argc, WCHAR *argv[])
             {
                 ConResPrintf(StdOut, STRING_LABEL_NAME_EDIT, RootDirectory[0]);
                 fgetws(input, ARRAYSIZE(input), stdin);
-                input[wcslen(input) - 1] = 0;
+                input[wcslen(input) - 1] = UNICODE_NULL;
 
-                if (!wcsicmp(input, volumeName))
+                if (!_wcsicmp(input, volumeName))
                     break;
 
                 ConResPuts(StdOut, STRING_ERROR_LABEL);
@@ -532,12 +527,14 @@ int wmain(int argc, WCHAR *argv[])
 
         ConResPrintf(StdOut, STRING_YN_FORMAT, RootDirectory[0]);
 
-        K32LoadStringW(GetModuleHandle(NULL), STRING_YES_NO_FAQ, szMsg, ARRAYSIZE(szMsg));
+        Len = LoadStringW(NULL, STRING_YES_NO_FAQ, (PWSTR)&pszMsg, 0);
+        if (Len < 2) pszMsg = L"YN";
         while (TRUE)
         {
             fgetws(input, ARRAYSIZE(input), stdin);
-            if (_wcsnicmp(&input[0], &szMsg[0], 1) == 0) break;
-            if (_wcsnicmp(&input[0], &szMsg[1], 1) == 0)
+            if (towupper(input[0]) == pszMsg[0])
+                break;
+            if (towupper(input[0]) == pszMsg[1])
             {
                 ConPuts(StdOut, L"\n");
                 return 0;
@@ -550,27 +547,29 @@ int wmain(int argc, WCHAR *argv[])
     //
     if (!QuickFormat)
     {
-        K32LoadStringW(GetModuleHandle(NULL), STRING_VERIFYING, szMsg, ARRAYSIZE(szMsg));
+        Len = LoadStringW(NULL, STRING_VERIFYING, (PWSTR)&pszMsg, 0);
         if (totalNumberOfBytes.QuadPart > 1024*1024*10)
         {
-            ConPrintf(StdOut, L"%s %luM\n", szMsg, (DWORD)(totalNumberOfBytes.QuadPart/(1024*1024)));
+            ConPrintf(StdOut, L"%.*s %luM\n", Len, pszMsg,
+                (DWORD)(totalNumberOfBytes.QuadPart/(1024*1024)));
         }
         else
         {
-            ConPrintf(StdOut, L"%s %.1fM\n", szMsg,
+            ConPrintf(StdOut, L"%.*s %.1fM\n", Len, pszMsg,
                 ((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
         }
     }
     else
     {
-        K32LoadStringW(GetModuleHandle(NULL), STRING_FAST_FMT, szMsg, ARRAYSIZE(szMsg));
+        Len = LoadStringW(NULL, STRING_FAST_FMT, (PWSTR)&pszMsg, 0);
         if (totalNumberOfBytes.QuadPart > 1024*1024*10)
         {
-            ConPrintf(StdOut, L"%s %luM\n", szMsg, (DWORD)(totalNumberOfBytes.QuadPart/(1024*1024)));
+            ConPrintf(StdOut, L"%.*s %luM\n", Len, pszMsg,
+                (DWORD)(totalNumberOfBytes.QuadPart/(1024*1024)));
         }
         else
         {
-            ConPrintf(StdOut, L"%s %.2fM\n", szMsg,
+            ConPrintf(StdOut, L"%.*s %.2fM\n", Len, pszMsg,
                 ((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
         }
         ConResPuts(StdOut, STRING_CREATE_FSYS);
@@ -601,36 +600,26 @@ int wmain(int argc, WCHAR *argv[])
     {
         ConResPuts(StdOut, STRING_ENTER_LABEL);
         fgetws(input, ARRAYSIZE(LabelString), stdin);
+        input[wcslen(input) - 1] = UNICODE_NULL;
 
-        input[wcslen(input) - 1] = 0;
         if (!SetVolumeLabelW(RootDirectory, input))
         {
-            K32LoadStringW(GetModuleHandle(NULL), STRING_NO_LABEL, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
+            dwError = GetLastError();
+            PrintWin32Error(STRING_NO_LABEL, dwError);
             return -1;
         }
     }
 
-    if (!GetVolumeInformationW(RootDirectory,
-                               volumeName, ARRAYSIZE(volumeName),
-                               &serialNumber, &maxComponent, &flags,
-                               fileSystem, ARRAYSIZE(fileSystem)))
-    {
-        K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
-        return -1;
-    }
-
     //
-    // Print out some stuff including the formatted size
+    // Get and print out some stuff including the formatted size
     //
     if (!GetDiskFreeSpaceExW(RootDirectory,
-                             &freeBytesAvailableToCaller,
+                             NULL,
                              &totalNumberOfBytes,
                              &totalNumberOfFreeBytes))
     {
-        K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
+        dwError = GetLastError();
+        PrintWin32Error(STRING_NO_VOLUME_SIZE, dwError);
         return -1;
     }
 
@@ -638,17 +627,18 @@ int wmain(int argc, WCHAR *argv[])
                                             totalNumberOfFreeBytes.QuadPart);
 
     //
-    // Get the drive's serial number
+    // Get and print out the new serial number
     //
     if (!GetVolumeInformationW(RootDirectory,
-                               volumeName, ARRAYSIZE(volumeName),
-                               &serialNumber, &maxComponent, &flags,
-                               fileSystem, ARRAYSIZE(fileSystem)))
+                               NULL, 0,
+                               &serialNumber, NULL, NULL,
+                               NULL, 0))
     {
-        K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
+        dwError = GetLastError();
+        PrintWin32Error(STRING_NO_VOLUME, dwError);
         return -1;
     }
+
     ConResPrintf(StdOut, STRING_SERIAL_NUMBER,
                          (unsigned int)(serialNumber >> 16),
                          (unsigned int)(serialNumber & 0xFFFF));

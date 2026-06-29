@@ -56,13 +56,14 @@ class CTrayBandSite :
     };
 
 public:
-
-    virtual ULONG STDMETHODCALLTYPE AddRef()
+    STDMETHODIMP_(ULONG)
+    AddRef() override
     {
         return InterlockedIncrement(&m_RefCount);
     }
 
-    virtual ULONG STDMETHODCALLTYPE Release()
+    STDMETHODIMP_(ULONG)
+    Release() override
     {
         ULONG Ret = InterlockedDecrement(&m_RefCount);
 
@@ -72,7 +73,8 @@ public:
         return Ret;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE QueryInterface(IN REFIID riid, OUT LPVOID *ppvObj)
+    STDMETHODIMP
+    QueryInterface(IN REFIID riid, OUT LPVOID *ppvObj) override
     {
         if (ppvObj == NULL)
             return E_POINTER;
@@ -115,10 +117,11 @@ public:
 
     virtual ~CTrayBandSite() { }
 
-    virtual HRESULT STDMETHODCALLTYPE OnLoad(
+    STDMETHODIMP
+    OnLoad(
         IN OUT IStream *pStm,
         IN REFIID riid,
-        OUT PVOID *pvObj)
+        OUT PVOID *pvObj) override
     {
         LARGE_INTEGER liPosZero;
         ULARGE_INTEGER liCurrent;
@@ -187,9 +190,10 @@ public:
         return hRet;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE OnSave(
+    STDMETHODIMP
+    OnSave(
         IN OUT IUnknown *pUnk,
-        IN OUT IStream *pStm)
+        IN OUT IStream *pStm) override
     {
         /* NOTE: Callback routine called by the shell while saving the task band
                  stream. We use it to intercept the default behavior when the task
@@ -199,17 +203,19 @@ public:
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE IsTaskBand(IN IUnknown *punk)
+    STDMETHODIMP
+    IsTaskBand(IN IUnknown *punk) override
     {
         return IsSameObject(m_BandSite, punk);
     }
 
-    virtual HRESULT STDMETHODCALLTYPE ProcessMessage(
+    STDMETHODIMP
+    ProcessMessage(
         IN HWND hWnd,
         IN UINT uMsg,
         IN WPARAM wParam,
         IN LPARAM lParam,
-        OUT LRESULT *plResult)
+        OUT LRESULT *plResult) override
     {
         HRESULT hRet;
 
@@ -277,13 +283,14 @@ public:
         return hRet;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE AddContextMenus(
+    STDMETHODIMP
+    AddContextMenus(
         IN HMENU hmenu,
         IN UINT indexMenu,
         IN UINT idCmdFirst,
         IN UINT idCmdLast,
         IN UINT uFlags,
-        OUT IContextMenu **ppcm)
+        OUT IContextMenu **ppcm) override
     {
         HRESULT hRet;
 
@@ -313,7 +320,8 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Lock(IN BOOL bLock)
+    STDMETHODIMP
+    Lock(IN BOOL bLock) override
     {
         BOOL bPrevLocked = Locked;
         BANDSITEINFO bsi;
@@ -342,7 +350,8 @@ public:
 
     /*******************************************************************/
 
-    virtual HRESULT STDMETHODCALLTYPE AddBand(IN IUnknown *punk)
+    STDMETHODIMP
+    AddBand(IN IUnknown *punk) override
     {
         /* Send the DBID_DELAYINIT command to initialize the band to be added */
         /* FIXME: Should be delayed */
@@ -367,19 +376,21 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE EnumBands(
+    STDMETHODIMP
+    EnumBands(
         IN UINT uBand,
-        OUT DWORD *pdwBandID)
+        OUT DWORD *pdwBandID) override
     {
         return m_BandSite->EnumBands(uBand, pdwBandID);
     }
 
-    virtual HRESULT STDMETHODCALLTYPE QueryBand(
+    STDMETHODIMP
+    QueryBand(
         IN DWORD dwBandID,
         OUT IDeskBand **ppstb,
         OUT DWORD *pdwState,
         OUT LPWSTR pszName,
-        IN int cchName)
+        IN int cchName) override
     {
         HRESULT hRet;
         IDeskBand *pstb = NULL;
@@ -415,36 +426,38 @@ public:
         return hRet;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE SetBandState(
+    STDMETHODIMP
+    SetBandState(
         IN DWORD dwBandID,
         IN DWORD dwMask,
-        IN DWORD dwState)
+        IN DWORD dwState) override
     {
         return m_BandSite->SetBandState(dwBandID, dwMask, dwState);
     }
 
-    virtual HRESULT STDMETHODCALLTYPE RemoveBand(
-        IN DWORD dwBandID)
+    STDMETHODIMP
+    RemoveBand(IN DWORD dwBandID) override
     {
         return m_BandSite->RemoveBand(dwBandID);
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetBandObject(
+    STDMETHODIMP
+    GetBandObject(
         IN DWORD dwBandID,
         IN REFIID riid,
-        OUT VOID **ppv)
+        OUT VOID **ppv) override
     {
         return m_BandSite->GetBandObject(dwBandID, riid, ppv);
     }
 
-    virtual HRESULT STDMETHODCALLTYPE SetBandSiteInfo(
-        IN const BANDSITEINFO *pbsinfo)
+    STDMETHODIMP
+    SetBandSiteInfo(IN const BANDSITEINFO *pbsinfo) override
     {
         return m_BandSite->SetBandSiteInfo(pbsinfo);
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetBandSiteInfo(
-        IN OUT BANDSITEINFO *pbsinfo)
+    STDMETHODIMP
+    GetBandSiteInfo(IN OUT BANDSITEINFO *pbsinfo) override
     {
         return m_BandSite->GetBandSiteInfo(pbsinfo);
     }

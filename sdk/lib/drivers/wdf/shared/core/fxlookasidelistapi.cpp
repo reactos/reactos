@@ -36,7 +36,7 @@ __drv_when(PoolType == 1 || PoolType == 257, __drv_maxIRQL(APC_LEVEL))
 __drv_when(PoolType == 0 || PoolType == 256, __drv_maxIRQL(DISPATCH_LEVEL))
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfLookasideListCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -236,7 +236,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfMemoryCreateFromLookaside)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

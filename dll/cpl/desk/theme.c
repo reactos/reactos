@@ -140,7 +140,7 @@ LoadCurrentScheme(OUT COLOR_SCHEME *scheme)
 #if (WINVER >= 0x0600)
     /* Size of NONCLIENTMETRICSA/W depends on current version of the OS.
      * see:
-     *  https://msdn.microsoft.com/en-us/library/windows/desktop/ff729175%28v=vs.85%29.aspx
+     *  https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-nonclientmetricsa
      */
     if (GetVersionEx(&osvi))
     {
@@ -204,7 +204,7 @@ LoadCurrentScheme(OUT COLOR_SCHEME *scheme)
                                 0);
     if (!ret) return FALSE;
 
-    /* Show shadows under menus */
+    /* Show shadows under windows */
     ret = SystemParametersInfoW(SPI_GETDROPSHADOW,
                                 0,
                                 &scheme->Effects.bDropShadow,
@@ -402,7 +402,7 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
     /* Use large icons */
     //SYS_CONFIG(SPI_GETDRAGFULLWINDOWS,   (PVOID) g->SchemeAdv.Effects.bMenuFade);
 
-    /* Show shadows under menus */
+    /* Show shadows under windows */
     SYS_CONFIG(SPI_SETDROPSHADOW,                0, IntToPtr(scheme->Effects.bDropShadow));
 
     /* Show window contents while dragging */
@@ -437,6 +437,19 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
                     REG_SZ,
                     StyleName,
                     (lstrlenW(StyleName) + 1) * sizeof(WCHAR));
+    }
+
+    if (pSelectedTheme->ThemeActive)
+    {
+        SHSetValueW(HKEY_CURRENT_USER, L"Control Panel\\Appearance", L"Current", REG_SZ, NULL, 0);
+        SHSetValueW(HKEY_CURRENT_USER, L"Control Panel\\Appearance", L"NewCurrent", REG_SZ, NULL, 0);
+    }
+    else if (pSelectedTheme->Color)
+    {
+        PCWSTR ClassicSchemeName = pSelectedTheme->Color->DisplayName;
+        DWORD cb = (lstrlenW(ClassicSchemeName) + 1) * sizeof(WCHAR);
+        SHSetValueW(HKEY_CURRENT_USER, L"Control Panel\\Appearance", L"Current", REG_SZ, ClassicSchemeName, cb); // 95+
+        SHSetValueW(HKEY_CURRENT_USER, L"Control Panel\\Appearance", L"NewCurrent", REG_SZ, ClassicSchemeName, cb); // XP+
     }
 }
 

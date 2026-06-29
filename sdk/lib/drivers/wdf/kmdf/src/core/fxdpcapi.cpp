@@ -39,7 +39,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfDpcCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -130,7 +130,7 @@ Notes:
 
 __drv_maxIRQL(HIGH_LEVEL)
 KDPC*
-STDCALL
+NTAPI
 WDFEXPORT(WdfDpcWdmGetDpc)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -168,7 +168,7 @@ Returns:
 
 __drv_maxIRQL(HIGH_LEVEL)
 BOOLEAN
-STDCALL
+NTAPI
 WDFEXPORT(WdfDpcEnqueue)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -205,7 +205,7 @@ Returns:
 __drv_when(Wait == __true, __drv_maxIRQL(PASSIVE_LEVEL))
 __drv_when(Wait == __false, __drv_maxIRQL(HIGH_LEVEL))
 BOOLEAN
-STDCALL
+NTAPI
 WDFEXPORT(WdfDpcCancel)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -258,7 +258,7 @@ Returns:
 
 __drv_maxIRQL(HIGH_LEVEL)
 WDFOBJECT
-STDCALL
+NTAPI
 WDFEXPORT(WdfDpcGetParentObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

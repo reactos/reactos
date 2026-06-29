@@ -88,6 +88,8 @@ list(APPEND SOURCE
 
 add_library(ext2fs MODULE ${SOURCE} ext2fs.rc)
 
+target_compile_definitions(ext2fs PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
+
 if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     # Disable warning C4101: 'i': unreferenced local variable
     # Disable warning C4189: 'sbi': local variable is initialized but not referenced
@@ -100,7 +102,9 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
         -Wno-pointer-sign -Wno-unused-function -Wno-unused-variable -Wno-missing-braces -Wno-unused-but-set-variable)
 endif()
 
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(ext2fs PRIVATE -Wno-address-of-packed-member)
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(ext2fs PRIVATE
         -Wno-parentheses-equality
         -Wno-incompatible-pointer-types-discards-qualifiers

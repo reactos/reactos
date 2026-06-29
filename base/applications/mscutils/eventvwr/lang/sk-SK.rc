@@ -105,9 +105,9 @@ BEGIN
     LTEXT "&Popis:", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "Ú&daje:", IDC_DETAILS_STATIC, 8, 140, 20, 8
     AUTORADIOBUTTON "&Bajty", IDC_BYTESRADIO, 39, 140, 34, 8
-    AUTORADIOBUTTON "&Slová", IDC_WORDRADIO, 77, 140, 34, 8
+    AUTORADIOBUTTON "&Slová", IDC_WORDSRADIO, 77, 140, 34, 8
+    LTEXT "Ú&daje:", IDC_DETAILS_STATIC, 8, 140, 20, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -167,6 +167,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
     IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
     IDS_EVENTSTRINGIDNOTFOUND "Popis pre udalosť ID ( %lu ) zo zdroja ( %s ) nebol nájdený. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer.\n\nThe following information is part of the event:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -201,7 +203,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
+    IDS_BYTES_FORMAT "bajtov" // "%s bytes"
     // "%1!ls! (%2!ls! bytes)"
 END
 
@@ -219,16 +221,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Event Type:     %s\r\n\
-Event Source:   %s\r\n\
-Event Category: %s\r\n\
-Event ID:       %s\r\n\
-Date:           %s\r\n\
-Time:           %s\r\n\
-User:           %s\r\n\
-Computer:       %s\r\n\
-Description:\r\n%s"
+    IDS_COPY_EVTTYPE "Event Type:"
+    IDS_COPY_EVTSRC  "Event Source:"
+    IDS_COPY_EVTCAT  "Event Category:"
+    IDS_COPY_EVTID   "Event ID:"
+    IDS_COPY_EVTDATE "Date:"
+    IDS_COPY_EVTTIME "Time:"
+    IDS_COPY_EVTUSER "User:"
+    IDS_COPY_EVTCOMP "Computer:"
+    IDS_COPY_EVTTEXT "Description:"
+    IDS_COPY_EVTDATA "Data:"
 END
 
 STRINGTABLE

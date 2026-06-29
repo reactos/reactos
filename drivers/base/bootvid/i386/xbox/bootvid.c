@@ -10,9 +10,13 @@
 #include "precomp.h"
 #include <drivers/xbox/xgpu.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
+
+#define BB_OFFSET(x, y)    ((y) * SCREEN_WIDTH + (x))
+#define FB_OFFSET(x, y)    (((PanV + (y)) * FrameBufferWidth + PanH + (x)) * BytesPerPixel)
 
 static ULONG_PTR FrameBufferStart = 0;
 static ULONG FrameBufferWidth, FrameBufferHeight, PanH, PanV;
@@ -66,7 +70,7 @@ ApplyPalette(VOID)
     /* Left panning */
     for (y = 0; y < SCREEN_HEIGHT; y++)
     {
-        Frame = (PULONG)(FrameBufferStart + FB_OFFSET(-PanH, y));
+        Frame = (PULONG)(FrameBufferStart + FB_OFFSET(-(LONG)PanH, y));
 
         for (x = 0; x < PanH; x++)
         {
@@ -98,7 +102,7 @@ ApplyPalette(VOID)
     }
 
     /* Bottom panning */
-    Frame = (PULONG)(FrameBufferStart + FB_OFFSET(-PanH, SCREEN_HEIGHT));
+    Frame = (PULONG)(FrameBufferStart + FB_OFFSET(-(LONG)PanH, SCREEN_HEIGHT));
     for (x = 0; x < PanV * FrameBufferWidth; x++)
     {
         *Frame++ = CachedPalette[0];
@@ -199,7 +203,7 @@ VidInitialize(
     /* Place backbuffer in the hidden part of framebuffer */
     BackBuffer = (PUCHAR)(FrameBufferStart + NV2A_VIDEO_MEMORY_SIZE - BackBufferSize);
 
-    /* Now check if we have to set the mode */
+    /* Check whether we have to set the video mode */
     if (SetMode)
         VidResetDisplay(TRUE);
 
@@ -220,16 +224,11 @@ VidCleanUp(VOID)
 }
 
 VOID
-NTAPI
-VidResetDisplay(
-    _In_ BOOLEAN HalReset)
+ResetDisplay(
+    _In_ BOOLEAN SetMode)
 {
-    /* Clear the current position */
-    VidpCurrentX = 0;
-    VidpCurrentY = 0;
-
-    /* Clear the screen with HAL if we were asked to */
-    if (HalReset)
+    /* Reset the video mode with HAL if requested */
+    if (SetMode)
         HalResetDisplay();
 
     /* Re-initialize the palette and fill the screen black */
@@ -240,23 +239,16 @@ VidResetDisplay(
 
 VOID
 InitPaletteWithTable(
-    _In_ PULONG Table,
+    _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count)
 {
-    PULONG Entry = Table;
+    const ULONG* Entry = Table;
 
     for (ULONG i = 0; i < Count; i++, Entry++)
     {
         CachedPalette[i] = *Entry | 0xFF000000;
     }
     ApplyPalette();
-}
-
-VOID
-PrepareForSetPixel(VOID)
-{
-    /* Nothing to prepare */
-    NOTHING;
 }
 
 VOID
@@ -275,7 +267,7 @@ SetPixel(
 VOID
 PreserveRow(
     _In_ ULONG CurrentTop,
-    _In_ ULONG TopDelta,
+    _In_ ULONG Height,
     _In_ BOOLEAN Restore)
 {
     PUCHAR NewPosition, OldPosition;
@@ -295,7 +287,7 @@ PreserveRow(
     }
 
     /* Set the count and loop every pixel of backbuffer */
-    ULONG Count = TopDelta * SCREEN_WIDTH;
+    ULONG Count = Height * SCREEN_WIDTH;
 
     RtlCopyMemory(NewPosition, OldPosition, Count);
 
@@ -304,7 +296,7 @@ PreserveRow(
         NewPosition = BackBuffer + BB_OFFSET(0, CurrentTop);
 
         /* Set the count and loop every pixel of framebuffer */
-        for (ULONG y = 0; y < TopDelta; y++)
+        for (ULONG y = 0; y < Height; y++)
         {
             PULONG Frame = (PULONG)(FrameBufferStart + FB_OFFSET(0, CurrentTop + y));
 
@@ -321,21 +313,21 @@ VOID
 DoScroll(
     _In_ ULONG Scroll)
 {
-    ULONG RowSize = VidpScrollRegion[2] - VidpScrollRegion[0] + 1;
+    ULONG RowSize = VidpScrollRegion.Right - VidpScrollRegion.Left + 1;
 
     /* Calculate the position in memory for the row */
-    PUCHAR OldPosition = BackBuffer + BB_OFFSET(VidpScrollRegion[0], VidpScrollRegion[1] + Scroll);
-    PUCHAR NewPosition = BackBuffer + BB_OFFSET(VidpScrollRegion[0], VidpScrollRegion[1]);
+    PUCHAR OldPosition = BackBuffer + BB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top + Scroll);
+    PUCHAR NewPosition = BackBuffer + BB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top);
 
     /* Start loop */
-    for (ULONG Top = VidpScrollRegion[1]; Top <= VidpScrollRegion[3]; ++Top)
+    for (ULONG Top = VidpScrollRegion.Top; Top <= VidpScrollRegion.Bottom; ++Top)
     {
         ULONG i;
 
         /* Scroll the row */
         RtlCopyMemory(NewPosition, OldPosition, RowSize);
 
-        PULONG Frame = (PULONG)(FrameBufferStart + FB_OFFSET(VidpScrollRegion[0], Top));
+        PULONG Frame = (PULONG)(FrameBufferStart + FB_OFFSET(VidpScrollRegion.Left, Top));
 
         for (i = 0; i < RowSize; ++i)
             Frame[i] = CachedPalette[NewPosition[i]];
@@ -354,7 +346,7 @@ DisplayCharacter(
     _In_ ULONG BackColor)
 {
     /* Get the font and pixel pointer */
-    PUCHAR FontChar = GetFontPtr(Character);
+    const UCHAR* FontChar = GetFontPtr(Character);
 
     /* Loop each pixel height */
     for (ULONG y = Top; y < Top + BOOTCHAR_HEIGHT; y++, FontChar += FONT_PTR_DELTA)
@@ -409,22 +401,22 @@ VidSolidColorFill(
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_writes_bytes_(Delta * Height) PUCHAR Buffer,
+    _Out_writes_bytes_all_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta)
+    _In_ ULONG Stride)
 {
     /* Clear the destination buffer */
-    RtlZeroMemory(Buffer, Delta * Height);
+    RtlZeroMemory(Buffer, Height * Stride);
 
     /* Start the outer Y height loop */
     for (ULONG y = 0; y < Height; y++)
     {
         /* Set current scanline */
         PUCHAR Back = BackBuffer + BB_OFFSET(Left, Top + y);
-        PUCHAR Buf = Buffer + y * Delta;
+        PUCHAR Buf = Buffer + y * Stride;
 
         /* Start the X inner loop */
         for (ULONG x = 0; x < Width; x += sizeof(USHORT))

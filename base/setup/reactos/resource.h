@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS GUI first stage setup application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Resource header
+ * COPYRIGHT:   Copyright 2008-2010 Matthias Kupfer <mkupfer@reactos.org>
+ *              Copyright 2008-2009 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2018-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ */
+
 #pragma once
 
 /* Bitmaps */
@@ -17,6 +26,9 @@
 /* Dialogs */
 #define IDD_STARTPAGE        2000
 #define IDC_STARTTITLE       2001
+#define IDC_WARNTEXT1        2002   // TEMPTEMP: TODO: Remove once we reach 0.5/Beta :)
+#define IDC_WARNTEXT2        2003   // TEMPTEMP: TODO: Remove once we reach 0.5/Beta :)
+#define IDC_WARNTEXT3        2004   // TEMPTEMP: TODO: Remove once we reach 0.5/Beta :)
 
 #define IDD_TYPEPAGE         2010
 #define IDC_INSTALL          2011
@@ -59,9 +71,11 @@
 #define IDC_ITEM             2062
 #define IDC_PROCESSPROGRESS  2063
 
-#define IDD_RESTARTPAGE      2070
+#define IDD_FINISHPAGE       2070
 #define IDC_FINISHTITLE      2071
-#define IDC_RESTART_PROGRESS 2072
+#define IDC_FINISHTEXT       2072
+#define IDC_RESTART_PROGRESS 2073
+#define IDD_ABORTPAGE        2075 // Page derived from IDD_FINISHPAGE
 
 #define IDD_ADVINSTOPTS      2080
 #define IDC_PATH             2081
@@ -83,20 +97,24 @@
 #define IDS_CAPTION          5000
 #define IDS_TYPETITLE        5001
 #define IDS_TYPESUBTITLE     5002
-#define IDS_DEVICETITLE      5003
-#define IDS_DEVICESUBTITLE   5004
-#define IDS_DRIVETITLE       5005
-#define IDS_DRIVESUBTITLE    5006
-#define IDS_SUMMARYTITLE     5007
-#define IDS_SUMMARYSUBTITLE  5008
-#define IDS_PROCESSTITLE     5009
-#define IDS_PROCESSSUBTITLE  5010
-#define IDS_RESTARTTITLE     5011
-#define IDS_RESTARTSUBTITLE  5012
+#define IDS_UPDATETITLE      5003
+#define IDS_UPDATESUBTITLE   5004
+#define IDS_DEVICETITLE      5005
+#define IDS_DEVICESUBTITLE   5006
+#define IDS_DRIVETITLE       5007
+#define IDS_DRIVESUBTITLE    5008
+#define IDS_SUMMARYTITLE     5009
+#define IDS_SUMMARYSUBTITLE  5010
+#define IDS_PROCESSTITLE     5011
+#define IDS_PROCESSSUBTITLE  5012
 #define IDS_ABORTSETUP       5020
 #define IDS_ABORTSETUP2      5021
 #define IDS_NO_TXTSETUP_SIF  5022
+#define IDS_FINISH_NO_REBOOT 5023
+#define IDS_ABORT_NO_REBOOT  5024
 #define IDS_INSTALLBTN       5030
+#define IDS_RESTARTBTN       5031
+#define IDS_POSTPONEBTN      5032
 #define IDS_VOLUME_NOFORMAT  5040
 
 #define IDS_INSTALLATION_NAME   5100

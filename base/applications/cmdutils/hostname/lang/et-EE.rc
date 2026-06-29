@@ -2,7 +2,7 @@ LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Trükib praeguse hosti nime.\n\nhostname"
-    IDS_NOSET "hostname -s ei ole toetatud."
-    IDS_ERROR "Win32 tõrge"
+    IDS_USAGE "\nTrükib praeguse hosti nime.\n\nhostname\n"
+    IDS_NOSET "sethostname: Open the ""Computer Name"" tab in the ""System"" Control Panel applet\nto change the host name.\nhostname -s ei ole toetatud.\n"
+    IDS_ERROR "Tõrge: "
 END

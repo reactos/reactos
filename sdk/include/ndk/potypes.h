@@ -51,6 +51,33 @@ typedef enum _SYSTEM_DOCK_STATE
     SystemDocked
 } SYSTEM_DOCK_STATE, *PSYSTEM_DOCK_STATE;
 
+//
+// Some useful macros for SYSTEM_POWER_CAPABILITIES,
+// similar to the powrprof.dll IsPwr*() functions.
+//
+
+/*
+ * BOOLEAN WINAPI
+ * IsPwrSuspendAllowed(VOID);
+ */
+#define IS_PWR_SUSPEND_ALLOWED(PowerCaps) \
+    ((PowerCaps)->SystemS1 || (PowerCaps)->SystemS2 || (PowerCaps)->SystemS3)
+
+/*
+ * BOOLEAN WINAPI
+ * IsPwrHibernateAllowed(VOID);
+ */
+#define IS_PWR_HIBERNATE_ALLOWED(PowerCaps) \
+    ((PowerCaps)->SystemS4 && (PowerCaps)->HiberFilePresent)
+
+/*
+ * BOOLEAN WINAPI
+ * IsPwrShutdownAllowed(VOID);
+ */
+#define IS_PWR_POWEROFF_ALLOWED(PowerCaps) \
+    (!!(PowerCaps)->SystemS5)
+
+
 #ifndef NTOS_MODE_USER
 
 //

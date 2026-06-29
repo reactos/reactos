@@ -28,7 +28,7 @@ BEGIN
     STRING_FMIFS_FAIL "Could not located FMIFS entry points.\n\n"
     STRING_UNKNOW_ARG "Unknown argument: %s\n"
     STRING_DRIVE_PARM "Required drive parameter is missing.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Could not get drive type"
+    STRING_ERROR_DRIVE_TYPE "Could not get drive type.\n"
     STRING_INSERT_DISK "Insert a new floppy in drive %C:\nand press Enter when ready..."
     STRING_NO_VOLUME "Could not query volume"
     STRING_NO_VOLUME_SIZE "Could not query volume size"

@@ -20,13 +20,15 @@ jobs:
     - name: Get RosBE build specifics
       id: get_rosbe_spec
       run: |
-        gcc -march=native -Q --help=target | grep "\-march= " | awk '{print $NF}'
+        # Print actual cpu-type option only.
+        echo -march = $(gcc -march=native -Q --help=target | grep "\-march=  " | awk '{print $NF}')
+        # Take all options/text into account.
         echo march-sha=$(gcc -march=native -Q --help=target | sha1sum | awk '{print $1}') >> $GITHUB_OUTPUT
         echo git-sha=$(git ls-remote https://github.com/zefklop/RosBE.git | grep unix_amd64 | awk '{print $1}') >> $GITHUB_OUTPUT
         wget https://gist.githubusercontent.com/zefklop/b2d6a0b470c70183e93d5285a03f5899/raw/build_rosbe_ci.sh
     - name: Get RosBE
       id: get_rosbe
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: RosBE-CI
         key: RosBE-CI-${{runner.os}}-${{steps.get_rosbe_spec.outputs.march-sha}}-${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}
@@ -46,11 +48,11 @@ jobs:
         sudo ./llvm.sh $LLVM_VERSION
         echo "D_CLANG_VERSION=-DCLANG_VERSION=$LLVM_VERSION" >> $GITHUB_ENV
     - name: Source checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: src
     - name: Set up cache for ccache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ccache
         key: ccache-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
@@ -70,16 +72,15 @@ jobs:
     - name: Build
       run: echo 'cmake --build ${{github.workspace}}/build -- -k0' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Generate ISOs
-      run: echo 'cmake --build ${{github.workspace}}/build --target bootcd --target livecd' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
+      run: echo 'cmake --build ${{github.workspace}}/build --target bootcd' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Print ccache statistics
       run: ccache -s
     - name: Upload ISOs
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
           build/bootcd.iso
-          build/livecd.iso
 
   build-msvc:
     strategy:
@@ -119,7 +120,7 @@ jobs:
         arch: amd64
         toolset: ${{matrix.toolset}}
     - name: Source checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: src
     - name: Configure
@@ -127,17 +128,16 @@ jobs:
     - name: Build
       run: cmake --build build -- -k0
     - name: Generate ISOs
-      run: cmake --build build --target bootcd --target livecd
+      run: cmake --build build --target bootcd
     - name: Upload ISOs
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
           build/bootcd.iso
-          build/livecd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: build/msvc_pdb
@@ -145,11 +145,19 @@ jobs:
   build-msvc-arm:
     strategy:
       matrix:
-        toolset: ['14','14.2'] # VS 2022, 2019
+        os: [windows-2022, windows-latest]
+        toolset: ['14', '14.29'] # VS 2022 (ongoing), 2019 (last)
         arch: [arm, arm64]
         config: [Debug, Release]
+        exclude:
+          # arm64: windows-latest is enough/fine.
+          - os: windows-2022
+            arch: arm64
+          # arm (sdk): only available on windows-2022.
+          - os: windows-latest
+            arch: arm
       fail-fast: false
-    runs-on: windows-latest
+    runs-on: ${{matrix.os}}
     steps:
     - name: Install ninja
       run: choco install -y ninja
@@ -174,7 +182,7 @@ jobs:
         arch: amd64_arm64
         toolset: ${{matrix.toolset}}
     - name: Source checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: src
     - name: Configure
@@ -182,9 +190,21 @@ jobs:
     - name: Build base module
       if: ${{ matrix.arch == 'arm' }}
       run: cmake --build build --target base/all
+    - name: Build dll:3rdparty
+      if: ${{ matrix.arch == 'arm' }}
+      run: cmake --build build --target dll/3rdparty/all -- -k0
     - name: Build control panel applets
       if: ${{ matrix.arch == 'arm' }}
       run: cmake --build build --target dll/cpl/all
+    - name: Build dll:opengl
+      if: ${{ matrix.arch == 'arm' }}
+      run: cmake --build build --target dll/opengl/all -- -k0
+    - name: Build dll:shellext
+      if: ${{ matrix.arch == 'arm' }}
+      run: cmake --build build --target dll/shellext/all -- -k0
+    - name: Build drivers:base
+      if: ${{ matrix.arch == 'arm' }}
+      run: cmake --build build --target drivers/base/all -- -k0
     - name: Build rosapps
       if: ${{ matrix.arch == 'arm' }}
       run: cmake --build build --target modules/rosapps/all
@@ -194,13 +214,20 @@ jobs:
     - name: Build some applications (arm64)
       if: ${{ matrix.arch == 'arm64' }}
       run: cmake --build build --target calc magnify mstsc notepad osk regedit taskmgr winmine wordpad base/applications/screensavers/all -- -k0
+    - name: Build control panel applets (arm64)
+      if: ${{ matrix.arch == 'arm64' }}
+      run: cmake --build build --target dll/cpl/all -- -k0
     - name: Upload compiled binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
           build/base
+          build/dll/3rdparty
           build/dll/cpl
+          build/dll/opengl
+          build/dll/shellext
+          build/drivers/base
           build/modules/rosapps
           build/subsystems
           !**/CMakeFiles
@@ -218,7 +245,7 @@ jobs:
           !**/*.tlb
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
@@ -260,7 +287,7 @@ jobs:
     - name: Add LLVM to PATH
       run: echo "${env:LLVM_PATH}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     - name: Source checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: src
     - name: Configure
@@ -268,17 +295,16 @@ jobs:
     - name: Build
       run: cmake --build build -- -k0
     - name: Generate ISOs
-      run: cmake --build build --target bootcd --target livecd
+      run: cmake --build build --target bootcd
     - name: Upload ISOs
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
           build/bootcd.iso
-          build/livecd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: reactos-syms-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
@@ -298,13 +324,15 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: amd64_x86
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         path: src
     - name: Configure
       run: |
         mkdir build
         cd build
-        cmake -G "Visual Studio 17 2022" -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
+        $GENERATOR = "Visual Studio 17 2022"
+        if ($env:VisualStudioVersion -ge "18") { $GENERATOR = "Visual Studio 18 2026" }
+        cmake -G $GENERATOR -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
     - name: Build
-      run: cmake --build ${{github.workspace}}\build --target bootcd --target livecd
+      run: cmake --build ${{github.workspace}}\build --target bootcd

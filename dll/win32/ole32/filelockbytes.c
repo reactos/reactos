@@ -28,9 +28,6 @@
 #include <limits.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -189,7 +186,7 @@ static HRESULT WINAPI FileLockBytesImpl_ReadAt(
     LARGE_INTEGER offset;
     ULONG cbRead;
 
-    TRACE("(%p)-> %i %p %i %p\n",This, ulOffset.u.LowPart, pv, cb, pcbRead);
+    TRACE("%p, %ld, %p, %lu, %p.\n", iface, ulOffset.LowPart, pv, cb, pcbRead);
 
     /* verify a sane environment */
     if (!This) return E_FAIL;
@@ -244,7 +241,7 @@ static HRESULT WINAPI FileLockBytesImpl_WriteAt(
     LARGE_INTEGER offset;
     ULONG cbWritten;
 
-    TRACE("(%p)-> %i %p %i %p\n",This, ulOffset.u.LowPart, pv, cb, pcbWritten);
+    TRACE("%p, %ld, %p, %lu, %p.\n", iface, ulOffset.LowPart, pv, cb, pcbWritten);
 
     /* verify a sane environment */
     if (!This) return E_FAIL;
@@ -297,7 +294,7 @@ static HRESULT WINAPI FileLockBytesImpl_SetSize(ILockBytes* iface, ULARGE_INTEGE
     HRESULT hr = S_OK;
     LARGE_INTEGER newpos;
 
-    TRACE("new size %u\n", newSize.u.LowPart);
+    TRACE("new size %lu\n", newSize.LowPart);
 
     newpos.QuadPart = newSize.QuadPart;
     if (SetFilePointerEx(This->hfile, newpos, NULL, FILE_BEGIN))
@@ -316,7 +313,7 @@ static HRESULT get_lock_error(void)
     case ERROR_ACCESS_DENIED:  return STG_E_ACCESSDENIED; break;
     case ERROR_NOT_SUPPORTED:  return STG_E_INVALIDFUNCTION; break;
     default:
-        FIXME("no mapping for error %d\n", GetLastError());
+        FIXME("no mapping for error %ld\n", GetLastError());
         return STG_E_INVALIDFUNCTION;
     }
 }
@@ -328,7 +325,7 @@ static HRESULT WINAPI FileLockBytesImpl_LockRegion(ILockBytes* iface,
     OVERLAPPED ol;
     DWORD lock_flags = LOCKFILE_FAIL_IMMEDIATELY;
 
-    TRACE("ofs %u count %u flags %x\n", libOffset.u.LowPart, cb.u.LowPart, dwLockType);
+    TRACE("ofs %lu count %lu flags %lx\n", libOffset.LowPart, cb.LowPart, dwLockType);
 
     if (dwLockType & LOCK_WRITE)
         return STG_E_INVALIDFUNCTION;
@@ -337,10 +334,10 @@ static HRESULT WINAPI FileLockBytesImpl_LockRegion(ILockBytes* iface,
         lock_flags |= LOCKFILE_EXCLUSIVE_LOCK;
 
     ol.hEvent = 0;
-    ol.u.s.Offset = libOffset.u.LowPart;
-    ol.u.s.OffsetHigh = libOffset.u.HighPart;
+    ol.Offset = libOffset.LowPart;
+    ol.OffsetHigh = libOffset.HighPart;
 
-    if (LockFileEx(This->hfile, lock_flags, 0, cb.u.LowPart, cb.u.HighPart, &ol))
+    if (LockFileEx(This->hfile, lock_flags, 0, cb.LowPart, cb.HighPart, &ol))
         return S_OK;
     return get_lock_error();
 }
@@ -351,16 +348,16 @@ static HRESULT WINAPI FileLockBytesImpl_UnlockRegion(ILockBytes* iface,
     FileLockBytesImpl* This = impl_from_ILockBytes(iface);
     OVERLAPPED ol;
 
-    TRACE("ofs %u count %u flags %x\n", libOffset.u.LowPart, cb.u.LowPart, dwLockType);
+    TRACE("ofs %lu count %lu flags %lx\n", libOffset.LowPart, cb.LowPart, dwLockType);
 
     if (dwLockType & LOCK_WRITE)
         return STG_E_INVALIDFUNCTION;
 
     ol.hEvent = 0;
-    ol.u.s.Offset = libOffset.u.LowPart;
-    ol.u.s.OffsetHigh = libOffset.u.HighPart;
+    ol.Offset = libOffset.LowPart;
+    ol.OffsetHigh = libOffset.HighPart;
 
-    if (UnlockFileEx(This->hfile, 0, cb.u.LowPart, cb.u.HighPart, &ol))
+    if (UnlockFileEx(This->hfile, 0, cb.LowPart, cb.HighPart, &ol))
         return S_OK;
     return get_lock_error();
 }
@@ -382,7 +379,7 @@ static HRESULT WINAPI FileLockBytesImpl_Stat(ILockBytes* iface,
 
     pstatstg->type = STGTY_LOCKBYTES;
 
-    pstatstg->cbSize.u.LowPart = GetFileSize(This->hfile, &pstatstg->cbSize.u.HighPart);
+    pstatstg->cbSize.LowPart = GetFileSize(This->hfile, &pstatstg->cbSize.HighPart);
     /* FIXME: If the implementation is exported, we'll need to set other fields. */
 
     pstatstg->grfLocksSupported = LOCK_EXCLUSIVE|LOCK_ONLYONCE|WINE_LOCK_READ;

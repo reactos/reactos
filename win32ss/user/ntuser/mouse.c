@@ -92,7 +92,7 @@ UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
     }
 
     /* If mouseData is used by button 4, send input and clear mi */
-    if (mi.dwFlags & (MOUSE_BUTTON_4_DOWN | MOUSE_BUTTON_4_UP))
+    if (mi.dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP))
     {
         UserSendMouseInput(&mi, FALSE);
         RtlZeroMemory(&mi, sizeof(mi));
@@ -111,7 +111,7 @@ UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
     }
 
     /* If mouseData is used by button 5, send input and clear mi */
-    if (mi.dwFlags & (MOUSE_BUTTON_5_DOWN | MOUSE_BUTTON_5_UP))
+    if (mi.dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP))
     {
         UserSendMouseInput(&mi, FALSE);
         RtlZeroMemory(&mi, sizeof(mi));
@@ -326,7 +326,7 @@ UserSendMouseInput(MOUSEINPUT *pmi, BOOL bInjected)
             SET_KEY_DOWN(gafAsyncKeyState, VK_XBUTTON1, FALSE);
             pCurInfo->ButtonsDown &= ~MK_XBUTTON1;
             Msg.wParam &= ~MK_XBUTTON1;
-            Msg.wParam |= MAKEWPARAM(0, XBUTTON2);
+            Msg.wParam |= MAKEWPARAM(0, XBUTTON1);
             co_MsqInsertMouseMessage(&Msg, bInjected, pmi->dwExtraInfo, TRUE);
         }
         if (pmi->mouseData & XBUTTON2)
@@ -579,7 +579,7 @@ NtUserGetMouseMovePointsEx(
 
     UserEnterShared();
 
-    // http://msdn.microsoft.com/en-us/library/ms646259(v=vs.85).aspx
+    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmousemovepointsex
     // This explains the math issues in transforming points.
     iRet = gcMouseHistoryOfMoves; // FIFO is forward so retrieve backward.
     //Hit = FALSE;

@@ -401,24 +401,15 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
     return cMonitors;
 }
 
-PMONITOR NTAPI
-UserMonitorFromRect(
-    PRECTL pRect,
-    DWORD dwFlags)
+HMONITOR FASTCALL
+IntGetMonitorFromRect(
+    _In_ LPCRECTL pRect,
+    _In_ DWORD dwFlags)
 {
     ULONG cMonitors, LargestArea = 0, i;
     PRECTL prcMonitorList = NULL;
     HMONITOR *phMonitorList = NULL;
     HMONITOR hMonitor = NULL;
-
-    /* Check if flags are valid */
-    if (dwFlags != MONITOR_DEFAULTTONULL &&
-        dwFlags != MONITOR_DEFAULTTOPRIMARY &&
-        dwFlags != MONITOR_DEFAULTTONEAREST)
-    {
-        EngSetLastError(ERROR_INVALID_FLAGS);
-        return NULL;
-    }
 
     /* Find intersecting monitors */
     cMonitors = IntGetMonitorsFromRect(pRect, &hMonitor, NULL, 1, dwFlags);
@@ -452,8 +443,7 @@ UserMonitorFromRect(
     }
 
     /* Get intersecting monitors again but now with rectangle list */
-    cMonitors = IntGetMonitorsFromRect(pRect, phMonitorList, prcMonitorList,
-                                       cMonitors, 0);
+    cMonitors = IntGetMonitorsFromRect(pRect, phMonitorList, prcMonitorList, cMonitors, 0);
 
     /* Find largest intersection */
     for (i = 0; i < cMonitors; i++)
@@ -472,7 +462,26 @@ cleanup:
         ExFreePoolWithTag(phMonitorList, USERTAG_MONITORRECTS);
     if (prcMonitorList)
         ExFreePoolWithTag(prcMonitorList, USERTAG_MONITORRECTS);
+    return hMonitor;
+}
 
+PMONITOR NTAPI
+UserMonitorFromRect(
+    PRECTL pRect,
+    DWORD dwFlags)
+{
+    HMONITOR hMonitor;
+
+    /* Check if flags are valid */
+    if (dwFlags != MONITOR_DEFAULTTONULL &&
+        dwFlags != MONITOR_DEFAULTTOPRIMARY &&
+        dwFlags != MONITOR_DEFAULTTONEAREST)
+    {
+        EngSetLastError(ERROR_INVALID_FLAGS);
+        return NULL;
+    }
+
+    hMonitor = IntGetMonitorFromRect(pRect, dwFlags);
     return UserGetMonitorObject(hMonitor);
 }
 
@@ -825,8 +834,8 @@ cleanup:
 HMONITOR
 APIENTRY
 NtUserMonitorFromPoint(
-    IN POINT pt,
-    IN DWORD dwFlags)
+    _In_ POINT pt,
+    _In_ DWORD dwFlags)
 {
     RECTL rc;
     HMONITOR hMonitor = NULL;
@@ -875,15 +884,12 @@ NtUserMonitorFromPoint(
 HMONITOR
 APIENTRY
 NtUserMonitorFromRect(
-    IN LPCRECTL pRectUnsafe,
-    IN DWORD dwFlags)
+    _In_ LPCRECTL pRectUnsafe,
+    _In_ DWORD dwFlags)
 {
-    ULONG cMonitors, LargestArea = 0, i;
-    PRECTL prcMonitorList = NULL;
-    HMONITOR *phMonitorList = NULL;
-    HMONITOR hMonitor = NULL;
     RECTL Rect;
     NTSTATUS Status;
+    HMONITOR hMonitor;
 
     /* Check if flags are valid */
     if (dwFlags != MONITOR_DEFAULTTONULL &&
@@ -902,60 +908,14 @@ NtUserMonitorFromRect(
         return NULL;
     }
 
+    if (RECTL_bIsEmptyRect(&Rect))
+    {
+        Rect.right = Rect.left + 1;
+        Rect.bottom = Rect.top + 1;
+    }
+
     UserEnterShared();
-
-    /* Find intersecting monitors */
-    cMonitors = IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
-    if (cMonitors <= 1)
-    {
-        /* No or one monitor found. Just return handle. */
-        goto cleanup;
-    }
-
-    /* There is more than one monitor. Find monitor with largest intersection.
-       Temporary reset hMonitor */
-    hMonitor = NULL;
-
-    /* Allocate helper buffers */
-    phMonitorList = ExAllocatePoolWithTag(PagedPool,
-                                          sizeof(HMONITOR) * cMonitors,
-                                          USERTAG_MONITORRECTS);
-    if (phMonitorList == NULL)
-    {
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        goto cleanup;
-    }
-
-    prcMonitorList = ExAllocatePoolWithTag(PagedPool,
-                                           sizeof(RECT) * cMonitors,
-                                           USERTAG_MONITORRECTS);
-    if (prcMonitorList == NULL)
-    {
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        goto cleanup;
-    }
-
-    /* Get intersecting monitors again but now with rectangle list */
-    cMonitors = IntGetMonitorsFromRect(&Rect, phMonitorList, prcMonitorList,
-                                       cMonitors, 0);
-
-    /* Find largest intersection */
-    for (i = 0; i < cMonitors; i++)
-    {
-        ULONG Area = (prcMonitorList[i].right - prcMonitorList[i].left) *
-                     (prcMonitorList[i].bottom - prcMonitorList[i].top);
-        if (Area >= LargestArea)
-        {
-            hMonitor = phMonitorList[i];
-            LargestArea = Area;
-        }
-    }
-
-cleanup:
-    if (phMonitorList)
-        ExFreePoolWithTag(phMonitorList, USERTAG_MONITORRECTS);
-    if (prcMonitorList)
-        ExFreePoolWithTag(prcMonitorList, USERTAG_MONITORRECTS);
+    hMonitor = IntGetMonitorFromRect(&Rect, dwFlags);
     UserLeave();
 
     return hMonitor;
@@ -965,8 +925,8 @@ cleanup:
 HMONITOR
 APIENTRY
 NtUserMonitorFromWindow(
-    IN HWND hWnd,
-    IN DWORD dwFlags)
+    _In_ HWND hWnd,
+    _In_ DWORD dwFlags)
 {
     PWND pWnd;
     HMONITOR hMonitor = NULL;
@@ -985,24 +945,25 @@ NtUserMonitorFromWindow(
 
     UserEnterShared();
 
-    /* If window is given, use it first */
     if (hWnd)
     {
         /* Get window object */
         pWnd = UserGetWindowObject(hWnd);
-        if (!pWnd)
-            goto cleanup;
-
-        /* Find only monitors which have intersection with given window */
-        Rect.left = Rect.right = pWnd->rcWindow.left;
-        Rect.top = Rect.bottom = pWnd->rcWindow.bottom;
+        if (pWnd)
+        {
+            Rect = ((pWnd->style & WS_MINIMIZE) ? pWnd->InternalPos.NormalRect : pWnd->rcWindow);
+            if (RECTL_bIsEmptyRect(&Rect))
+            {
+                Rect.right = Rect.left + 1;
+                Rect.bottom = Rect.top + 1;
+            }
+        }
     }
 
-    /* Find monitors now */
-    IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
+    hMonitor = IntGetMonitorFromRect(&Rect, dwFlags);
 
-cleanup:
-    TRACE("Leave NtUserMonitorFromWindow, ret=%p\n", hMonitor);
     UserLeave();
+
+    TRACE("Leave NtUserMonitorFromWindow, ret=%p\n", hMonitor);
     return hMonitor;
 }

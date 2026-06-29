@@ -56,9 +56,7 @@ ULONG LdrpNumberOfProcessors;
 PVOID NtDllBase;
 extern LARGE_INTEGER RtlpTimeout;
 extern BOOLEAN RtlpTimeoutDisable;
-PVOID LdrpHeap;
 LIST_ENTRY LdrpHashTable[LDR_HASH_TABLE_ENTRIES];
-LIST_ENTRY LdrpDllNotificationList;
 HANDLE LdrpKnownDllObjectDirectory;
 UNICODE_STRING LdrpKnownDllPath;
 WCHAR LdrpKnownDllPathBuffer[128];
@@ -88,6 +86,7 @@ ULONG LdrpActiveUnloadCount;
 VOID NTAPI RtlpInitializeVectoredExceptionHandling(VOID);
 VOID NTAPI RtlpInitDeferredCriticalSection(VOID);
 VOID NTAPI RtlInitializeHeapManager(VOID);
+NTSTATUS NTAPI RtlpInitializeLocaleTable(VOID);
 
 ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
 ULONG RtlpShutdownProcessFlags; // TODO: Use it
@@ -95,6 +94,10 @@ ULONG RtlpShutdownProcessFlags; // TODO: Use it
 NTSTATUS LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders, PVOID ImageBase);
 NTSTATUS NTAPI RtlpInitializeActCtx(PVOID* pOldShimData);
 extern BOOLEAN RtlpUse16ByteSLists;
+
+#ifdef _M_AMD64
+extern ULONG NTAPI RtlGetCurrentDirectory_U_RtlpMsysDecoy(ULONG MaximumLength, PWSTR Buffer);
+#endif
 
 #ifdef _WIN64
 #define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
@@ -517,6 +520,9 @@ LdrpInitializeThread(IN PCONTEXT Context)
             NtCurrentTeb()->RealClientId.UniqueProcess,
             NtCurrentTeb()->RealClientId.UniqueThread);
 
+    /* Acquire the loader Lock */
+    RtlEnterCriticalSection(&LdrpLoaderLock);
+
     /* Allocate an Activation Context Stack */
     DPRINT("ActivationContextStack %p\n", NtCurrentTeb()->ActivationContextStackPointer);
     Status = RtlAllocateActivationContextStack(&NtCurrentTeb()->ActivationContextStackPointer);
@@ -526,7 +532,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
     }
 
     /* Make sure we are not shutting down */
-    if (LdrpShutdownInProgress) return;
+    if (LdrpShutdownInProgress) goto Exit;
 
     /* Allocate TLS */
     LdrpAllocateTls();
@@ -632,6 +638,11 @@ LdrpInitializeThread(IN PCONTEXT Context)
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);
     }
+
+Exit:
+
+    /* Release the loader lock */
+    RtlLeaveCriticalSection(&LdrpLoaderLock);
 
     DPRINT("LdrpInitializeThread() done\n");
 }
@@ -1510,7 +1521,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
         /* Call AVRF if necessary */
         if (Peb->NtGlobalFlag & (FLG_APPLICATION_VERIFIER | FLG_HEAP_PAGE_ALLOCS))
         {
-            Status = LdrpInitializeApplicationVerifierPackage(KeyHandle, Peb, TRUE, FALSE);
+            Status = LdrpInitializeApplicationVerifierPackage(KeyHandle, Peb, FALSE, FALSE);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("AVRF: LdrpInitializeApplicationVerifierPackage failed with %08X\n", Status);
@@ -1538,7 +1549,9 @@ VOID
 NTAPI
 LdrpValidateImageForMp(IN PLDR_DATA_TABLE_ENTRY LdrDataTableEntry)
 {
-    UNIMPLEMENTED;
+    DPRINT("LdrpValidateImageForMp is unimplemented\n");
+    // TODO:
+    // Scan the LockPrefixTable in the load config directory
 }
 
 BOOLEAN
@@ -1606,6 +1619,9 @@ LdrpInitializeProcessCompat(PVOID pProcessActctx, PVOID* pOldShimData)
             DPRINT1("LdrpInitializeProcessCompat: Corrupt pShimData (0x%x, %u)\n", pShimData->dwMagic, pShimData->dwSize);
             return;
         }
+#ifdef _M_AMD64
+        pShimData->RtlGetCurrentDirectory_U_RtlpMsysDecoy = &RtlGetCurrentDirectory_U_RtlpMsysDecoy;   /* We need this private symbol for a MSYS shim */
+#endif
         if (pShimData->dwRosProcessCompatVersion)
         {
             if (pShimData->dwRosProcessCompatVersion == REACTOS_COMPATVERSION_IGNOREMANIFEST)
@@ -1675,6 +1691,10 @@ LdrpInitializeProcessCompat(PVOID pProcessActctx, PVOID* pOldShimData)
 
                     pShimData->dwSize = sizeof(*pShimData);
                     pShimData->dwMagic = REACTOS_SHIMDATA_MAGIC;
+#ifdef _M_AMD64
+                    /* The process did not ask for shims, but we want to make sure that if the Peb->pShimData is available, the data in it is complete */
+                    pShimData->RtlGetCurrentDirectory_U_RtlpMsysDecoy = &RtlGetCurrentDirectory_U_RtlpMsysDecoy;
+#endif
 
                     Peb->pShimData = pShimData;
                     *pOldShimData = pShimData;
@@ -1998,9 +2018,8 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     //Peb->FastPebLockRoutine = (PPEBLOCKROUTINE)RtlEnterCriticalSection;
     //Peb->FastPebUnlockRoutine = (PPEBLOCKROUTINE)RtlLeaveCriticalSection;
 
-    /* Setup Callout Lock and Notification list */
+    /* Setup Callout Lock */
     //RtlInitializeCriticalSection(&RtlpCalloutEntryLock);
-    InitializeListHead(&LdrpDllNotificationList);
 
     /* For old executables, use 16-byte aligned heap */
     if ((NtHeader->OptionalHeader.MajorSubsystemVersion <= 3) &&
@@ -2022,6 +2041,13 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     {
         DPRINT1("Failed to create process heap\n");
         return STATUS_NO_MEMORY;
+    }
+
+    Status = RtlpInitializeLocaleTable();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to initialize locale table\n");
+        return Status;
     }
 
     /* Allocate an Activation Context Stack */
@@ -2405,10 +2431,10 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check whether all static imports were properly loaded and return here */
     if (!NT_SUCCESS(ImportStatus)) return ImportStatus;
 
-#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+    /* Following two calls are for Vista+ support, required for winesync */
     /* Initialize the keyed event for condition variables */
     RtlpInitializeKeyedEvent();
-#endif
+    RtlpInitializeThreadPooling();
 
     /* Initialize TLS */
     Status = LdrpInitializeTls();

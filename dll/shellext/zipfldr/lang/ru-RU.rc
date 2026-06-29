@@ -79,6 +79,7 @@ BEGIN
     IDS_CANTEXTRACTFILE "Не удалось извлечь файл '%1'."
     IDS_DECOMPRESSERROR "Неизвестный метод компрессии %d. Продолжить?"
     IDS_UNKNOWNERROR "Неизвестная ошибка 0x%08x."
+    IDS_CANTDELETEFILE "Failed to delete the file(s)."
 
     IDS_WIZ_TITLE "Мастер извлечения архивов"
     IDS_WIZ_DEST_TITLE "Укажите путь"
@@ -90,6 +91,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "В данной папке уже есть файл '%1!ls!'.\nВы хотите заменить его?"
     IDS_PASSWORD_FILE_TEXT "Файл '%1' защищён паролем. Пожалуйста введите пароль."
     IDS_PASSWORD_ZIP_TEXT "Пожалуйста укажите пароль для извлечения этого zip архива."
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "&Извлечь всё..."
     IDS_HELPTEXT "Извлекает содержимое архива"

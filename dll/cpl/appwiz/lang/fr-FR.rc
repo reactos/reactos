@@ -46,7 +46,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Supprimer des raccourcis/dossiers"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Pour supprimer un élément du menu démarrer, sélectionnez l'élément puis cliquez sur Surpprimer.", -1, 10, 10, 192, 16
+    LTEXT "&Pour supprimer un élément du menu démarrer, sélectionnez l'élément puis cliquez sur Supprimer.", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
     PUSHBUTTON "&Supprimer", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
@@ -82,9 +82,9 @@ BEGIN
     IDS_DWL_FAILED "Échec lors du téléchargement du paquet Gecko. Assurez-vous d'avoir une connexion Internet pour pouvoir le télécharger. L'installation va continuer sans installer Gecko."
     IDS_CANTMAKEINETSHORTCUT "Échec lors de la création du raccourci Internet."
     IDS_CANTMAKESHORTCUT "Échec lors de la création du raccourci."
-    IDS_NO_MEMORY "No memory could be allocated!"
-    IDS_NO_DIRECTORY "No directory given!"
-    IDS_INVALID_PATH "The given path is invalid!"
-    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
-    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
+    IDS_NO_MEMORY "La mémoire n'a pas pu être allouée !"
+    IDS_NO_DIRECTORY "Aucun répertoire spécifié !"
+    IDS_INVALID_PATH "Le répertoire spécifié est invalide !"
+    IDS_INVALID_NAME "Le nom de raccourci saisi contient des caractères invalides pour les noms de fichier, ou est trop long."
+    IDS_BROWSE_FOR_TARGET "Veuillez sélectionner la cible du raccourci ci-dessous :"
 END

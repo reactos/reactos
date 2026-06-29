@@ -468,13 +468,13 @@ typedef struct _tagCOMPOSITIONFORM {
 #define SOFTKEYBOARD_TYPE_T1    0x0001 /* for Tranditional Chinese */
 #define SOFTKEYBOARD_TYPE_C1    0x0002 /* for Simplified Chinese */
 
-HIMC WINAPI ImmAssociateContext(_In_ HWND hWnd, _In_ HIMC hIMC);
+HIMC WINAPI ImmAssociateContext(_In_ HWND hWnd, _In_opt_ HIMC hIMC);
 #if (WINVER >= 0x040A)
-BOOL WINAPI ImmAssociateContextEx(_In_ HWND hWnd, _In_ HIMC hIMC, _In_ DWORD dwFlags);
+BOOL WINAPI ImmAssociateContextEx(_In_ HWND hWnd, _In_opt_ HIMC hIMC, _In_ DWORD dwFlags);
 #endif
 
-BOOL WINAPI ImmConfigureIMEA(_In_ HKL hKL, _In_ HWND hWnd, _In_ DWORD dwMode, _In_ LPVOID lpData);
-BOOL WINAPI ImmConfigureIMEW(_In_ HKL hKL, _In_ HWND hWnd, _In_ DWORD dwMode, _In_ LPVOID lpData);
+BOOL WINAPI ImmConfigureIMEA(_In_ HKL hKL, _In_ HWND hWnd, _In_ DWORD dwMode, _Inout_opt_ LPVOID lpData);
+BOOL WINAPI ImmConfigureIMEW(_In_ HKL hKL, _In_ HWND hWnd, _In_ DWORD dwMode, _Inout_opt_ LPVOID lpData);
 HIMC WINAPI ImmCreateContext(VOID);
 BOOL WINAPI ImmDestroyContext(_In_ HIMC hIMC);
 #if (WINVER >= 0x040A)
@@ -604,7 +604,7 @@ ImmGetConversionStatus(
     _Out_opt_ LPDWORD lpfdwConversion,
     _Out_opt_ LPDWORD lpfdwSentence);
 
-HWND WINAPI ImmGetDefaultIMEWnd(_In_ HWND hWnd);
+HWND WINAPI ImmGetDefaultIMEWnd(_In_opt_ HWND hWnd);
 
 UINT
 WINAPI
@@ -658,7 +658,7 @@ ImmGetImeMenuItemsA(
     _In_ HIMC hIMC,
     _In_ DWORD dwFlags,
     _In_ DWORD dwType,
-    _Out_opt_ LPIMEMENUITEMINFOA lpImeParentMenu,
+    _Inout_opt_ LPIMEMENUITEMINFOA lpImeParentMenu,
     _Out_writes_bytes_opt_(dwSize) LPIMEMENUITEMINFOA lpImeMenu,
     _In_ DWORD dwSize);
 
@@ -668,7 +668,7 @@ ImmGetImeMenuItemsW(
     _In_ HIMC hIMC,
     _In_ DWORD dwFlags,
     _In_ DWORD dwType,
-    _Out_opt_ LPIMEMENUITEMINFOW lpImeParentMenu,
+    _Inout_opt_ LPIMEMENUITEMINFOW lpImeParentMenu,
     _Out_writes_bytes_opt_(dwSize) LPIMEMENUITEMINFOW lpImeMenu,
     _In_ DWORD dwSize);
 
@@ -707,14 +707,14 @@ BOOL WINAPI ImmIsIME(_In_ HKL hKL);
 
 BOOL WINAPI
 ImmIsUIMessageA(
-    _In_ HWND hWndIME,
+    _In_opt_ HWND hWndIME,
     _In_ UINT msg,
     _In_ WPARAM wParam,
     _In_ LPARAM lParam);
 
 BOOL WINAPI
 ImmIsUIMessageW(
-    _In_ HWND hWndIME,
+    _In_opt_ HWND hWndIME,
     _In_ UINT msg,
     _In_ WPARAM wParam,
     _In_ LPARAM lParam);
@@ -730,17 +730,17 @@ BOOL
 WINAPI
 ImmRegisterWordA(
     _In_ HKL hKL,
-    _In_ LPCSTR lpszReading,
+    _In_opt_ LPCSTR lpszReading,
     _In_ DWORD dwStyle,
-    _In_ LPCSTR lpszRegister);
+    _In_opt_ LPCSTR lpszRegister);
 
 BOOL
 WINAPI
 ImmRegisterWordW(
     _In_ HKL hKL,
-    _In_ LPCWSTR lpszReading,
+    _In_opt_ LPCWSTR lpszReading,
     _In_ DWORD dwStyle,
-    _In_ LPCWSTR lpszRegister);
+    _In_opt_ LPCWSTR lpszRegister);
 
 BOOL WINAPI ImmReleaseContext(_In_ HWND hWnd, _In_ HIMC hIMC);
 BOOL WINAPI ImmSetCandidateWindow(_In_ HIMC hIMC, _In_ LPCANDIDATEFORM lpCandidate);
@@ -781,17 +781,17 @@ BOOL
 WINAPI
 ImmUnregisterWordA(
     _In_ HKL hKL,
-    _In_ LPCSTR lpszReading,
+    _In_opt_ LPCSTR lpszReading,
     _In_ DWORD dwStyle,
-    _In_ LPCSTR lpszUnregister);
+    _In_opt_ LPCSTR lpszUnregister);
 
 BOOL
 WINAPI
 ImmUnregisterWordW(
     _In_ HKL hKL,
-    _In_ LPCWSTR lpszReading,
+    _In_opt_ LPCWSTR lpszReading,
     _In_ DWORD dwStyle,
-    _In_ LPCWSTR lpszUnregister);
+    _In_opt_ LPCWSTR lpszUnregister);
 
 #ifdef UNICODE
     #define ImmConfigureIME ImmConfigureIMEW

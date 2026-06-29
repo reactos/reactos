@@ -1,0 +1,50 @@
+HKCR
+{
+    NoRemove SystemFileAssociations
+    {
+        NoRemove audio
+        {
+            val Details = s 'prop:Name;Size;Type;Artist;Album;Year;Track;Duration'
+            val InfoTip = s 'prop:Artist;Album;Year;Track;Duration;Type;Bitrate;Protected;Size'
+            val TileInfo = s 'prop:Artist;Album;Duration'
+            NoRemove DefaultIcon = e '%%SystemRoot%%\system32\mplay32.exe,-10'
+            NoRemove OpenWithList
+            {
+                NoRemove mplay32.exe
+            }
+        }
+        NoRemove image
+        {
+            val Details = s 'prop:Name;Type;Dimensions;Size;Write'
+            val InfoTip = s 'prop:Dimensions;WhenTaken;DocTitle;DocComments;CameraModel;Type;Size'
+            val TileInfo = s 'prop:Dimensions;Type;Size'
+            NoRemove DefaultIcon = e '%%SystemRoot%%\system32\shell32.dll,-152'
+            NoRemove OpenWithList
+            {
+                NoRemove mspaint.exe
+            }
+            NoRemove shell
+            {
+                NoRemove edit
+                {
+                    NoRemove command = e '%%SystemRoot%%\system32\mspaint.exe %%1'
+                }
+            }
+        }
+        NoRemove system
+        {
+            val EditFlags = d '&H00100001'
+            val AlwaysShowExt = s ''
+            val NoOpen = s ''
+            NoRemove DefaultIcon = e '%%SystemRoot%%\system32\shell32.dll,-154'
+        }
+        NoRemove video
+        {
+            NoRemove DefaultIcon = e '%%SystemRoot%%\system32\mplay32.exe,-10'
+            NoRemove OpenWithList
+            {
+                NoRemove mplay32.exe
+            }
+        }
+    }
+}

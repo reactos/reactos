@@ -4,7 +4,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Tipărește numele gazdei curente.\n\nhostname"
-    IDS_NOSET "hostname -s nu este acceptat."
-    IDS_ERROR "Eroare Win32"
+    IDS_USAGE "\nTipărește numele gazdei curente.\n\nhostname\n"
+    IDS_NOSET "sethostname: Open the ""Computer Name"" tab in the ""System"" Control Panel applet\nto change the host name.\nhostname -s nu este acceptat.\n"
+    IDS_ERROR "Eroare: "
 END

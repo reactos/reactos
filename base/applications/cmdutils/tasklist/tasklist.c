@@ -45,13 +45,10 @@ VOID PrintString(LPCWSTR String, UINT MaxWidth, BOOL bAlignLeft)
 // if bAlignLeft == TRUE then aligned to left, otherwise aligned to right
 // MaxWidth is the width for printing.
 // The string WILL be truncated if it's longer than RES_STR_MAXLEN
-VOID PrintResString(HINSTANCE hInstance, UINT uID, UINT MaxWidth, BOOL bAlignLeft)
+VOID PrintResString(UINT uID, UINT MaxWidth, BOOL bAlignLeft)
 {
-    if (!hInstance)
-        return;
-
     WCHAR StringBuffer[RES_STR_MAXLEN];
-    LoadStringW(hInstance, uID, StringBuffer, _countof(StringBuffer));
+    LoadStringW(NULL, uID, StringBuffer, _countof(StringBuffer));
     PrintString(StringBuffer, MaxWidth, bAlignLeft);
 }
 
@@ -66,11 +63,8 @@ VOID PrintNum(LONGLONG Number, UINT MaxWidth)
 // Print memory size using KB as unit, with comma-separated number, aligned to right.
 // MaxWidth is the width for printing.
 // the number WILL be truncated if it's longer than MaxWidth
-BOOL PrintMemory(SIZE_T MemorySizeByte, UINT MaxWidth, HINSTANCE hInstance)
+BOOL PrintMemory(SIZE_T MemorySizeByte, UINT MaxWidth)
 {
-    if (!hInstance)
-        return FALSE;
-
     SIZE_T MemorySize = MemorySizeByte >> 10;
 
     WCHAR NumberString[27] = { 0 }; // length 26 is enough to display ULLONG_MAX in decimal with comma, one more for zero-terminated.
@@ -105,28 +99,24 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, UINT MaxWidth, HINSTANCE hInstance)
     }
 
     WCHAR FormatStr[RES_STR_MAXLEN];
-    LoadStringW(hInstance, IDS_MEMORY_STR, FormatStr, _countof(FormatStr));
+    LoadStringW(NULL, IDS_MEMORY_STR, FormatStr, _countof(FormatStr));
 
     WCHAR String[RES_STR_MAXLEN + _countof(NumberString)] = { 0 };
-
     StringCchPrintfW(String, _countof(String), FormatStr, NumberString);
     PrintString(String, MaxWidth, FALSE);
 
     return TRUE;
 }
 
-VOID PrintHeader(HINSTANCE hInstance)
+VOID PrintHeader(VOID)
 {
-    if (!hInstance)
-        return;
-
-    PrintResString(hInstance, IDS_HEADER_IMAGENAME, COLUMNWIDTH_IMAGENAME, TRUE);
+    PrintResString(IDS_HEADER_IMAGENAME, COLUMNWIDTH_IMAGENAME, TRUE);
     PrintSpace(1);
-    PrintResString(hInstance, IDS_HEADER_PID,       COLUMNWIDTH_PID,       FALSE);
+    PrintResString(IDS_HEADER_PID,       COLUMNWIDTH_PID,       FALSE);
     PrintSpace(1);
-    PrintResString(hInstance, IDS_HEADER_SESSION,   COLUMNWIDTH_SESSION,   FALSE);
+    PrintResString(IDS_HEADER_SESSION,   COLUMNWIDTH_SESSION,   FALSE);
     PrintSpace(1);
-    PrintResString(hInstance, IDS_HEADER_MEMUSAGE,  COLUMNWIDTH_MEMUSAGE,  FALSE);
+    PrintResString(IDS_HEADER_MEMUSAGE,  COLUMNWIDTH_MEMUSAGE,  FALSE);
 
     ConPuts(StdOut, L"\n");
 
@@ -205,15 +195,10 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
         return FALSE;
     }
 
-    HINSTANCE hInstance = GetModuleHandleW(NULL);
-    assert(hInstance);
-
     ConPuts(StdOut, L"\n");
 
     if (!bNoHeader)
-    {
-        PrintHeader(hInstance);
-    }
+        PrintHeader();
 
     PSYSTEM_PROCESS_INFORMATION pSPI;
     pSPI = (PSYSTEM_PROCESS_INFORMATION)ProcessInfoBuffer;
@@ -225,7 +210,7 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
         PrintSpace(1);
         PrintNum((ULONGLONG)pSPI->SessionId, COLUMNWIDTH_SESSION);
         PrintSpace(1);
-        PrintMemory(pSPI->WorkingSetSize, COLUMNWIDTH_MEMUSAGE, hInstance);
+        PrintMemory(pSPI->WorkingSetSize, COLUMNWIDTH_MEMUSAGE);
 
         ConPuts(StdOut, L"\n");
 

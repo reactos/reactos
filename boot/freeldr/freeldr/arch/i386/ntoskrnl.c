@@ -57,6 +57,8 @@ IoSetPartitionInformation(
 }
 
 #ifndef _M_AMD64
+#include "disk/part_mbr.h" // For PARTITION_TABLE_ENTRY and MASTER_BOOT_RECORD
+
 NTSTATUS
 NTAPI
 IopReadBootRecord(
@@ -203,7 +205,7 @@ IoReadPartitionTable(
     *PartitionBuffer = Partitions;
     return STATUS_SUCCESS;
 }
-#endif // _M_AMD64
+#endif // !_M_AMD64
 
 NTSTATUS
 FASTCALL

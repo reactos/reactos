@@ -178,6 +178,20 @@ static const IClassFactoryVtbl CUrlHistoryFactoryVtbl = {
 
 static IClassFactory CUrlHistoryFactory = { &CUrlHistoryFactoryVtbl };
 
+#ifdef __REACTOS__
+extern HRESULT WINAPI CInternetFolder_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID riid, void **ppv);
+
+static const IClassFactoryVtbl CInternetFolderFactoryVtbl = {
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    CInternetFolder_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static IClassFactory CInternetFolderFactory = { &CInternetFolderFactoryVtbl };
+#endif
+
 /******************************************************************
  *              DllMain (ieframe.@)
  */
@@ -225,6 +239,13 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
         TRACE("(CLSID_CUrlHistory %s %p)\n", debugstr_guid(riid), ppv);
         return IClassFactory_QueryInterface(&CUrlHistoryFactory, riid, ppv);
     }
+
+#ifdef __REACTOS__
+    if(IsEqualGUID(&CLSID_Internet, rclsid)) {
+        TRACE("(CLSID_Internet %s %p)\n", debugstr_guid(riid), ppv);
+        return IClassFactory_QueryInterface(&CInternetFolderFactory, riid, ppv);
+    }
+#endif
 
     FIXME("%s %s %p\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
     return CLASS_E_CLASSNOTAVAILABLE;

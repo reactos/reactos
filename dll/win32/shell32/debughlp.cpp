@@ -22,6 +22,17 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(pidl);
 
+static inline BYTE _dbg_ILGetType(LPCITEMIDLIST pidl)
+{
+    return pidl && pidl->mkid.cb >= 3 ? pidl->mkid.abID[0] : 0;
+}
+
+static inline BYTE _dbg_ILGetFSType(LPCITEMIDLIST pidl)
+{
+    const BYTE type = _dbg_ILGetType(pidl);
+    return (type & PT_FOLDERTYPEMASK) == PT_FS ? type : 0;
+}
+
 static
 LPITEMIDLIST _dbg_ILGetNext(LPCITEMIDLIST pidl)
 {
@@ -97,6 +108,9 @@ LPWSTR _dbg_ILGetTextPointerW(LPCITEMIDLIST pidl)
 
     if (pdata)
     {
+      if (_dbg_ILGetFSType(pidl) & PT_FS_UNICODE_FLAG)
+        return (LPWSTR)&(pdata->u.file.szNames);
+
       switch (pdata->type)
       {
         case PT_GUID:
@@ -126,9 +140,6 @@ LPWSTR _dbg_ILGetTextPointerW(LPCITEMIDLIST pidl)
         case PT_SHARE:
           /* return (LPSTR)&(pdata->u.network.szNames); */
           return NULL;
-
-        case PT_VALUEW:
-          return (LPWSTR)&(pdata->u.file.szNames);
       }
     }
     return NULL;
@@ -271,7 +282,7 @@ static void pdump_impl (LPCITEMIDLIST pidl)
               char szName[MAX_PATH];
 
               _dbg_ILSimpleGetText(pidltemp, szName, MAX_PATH);
-              if ( pData && (PT_FOLDER == type || PT_VALUE == type) )
+              if (_dbg_ILGetFSType(pidltemp))
                 dwAttrib = pData->u.file.uFileAttribs;
 
               MESSAGE ("[%p] size=%04u type=%x attr=0x%08x name=%s (%s,%s)\n",
@@ -288,7 +299,7 @@ static void pdump_impl (LPCITEMIDLIST pidl)
               char szName[MAX_PATH];
 
               _dbg_ILSimpleGetText(pidltemp, szName, MAX_PATH);
-              if ( pData && (PT_FOLDER == type || PT_VALUE == type) )
+              if (_dbg_ILGetFSType(pidltemp))
                 dwAttrib = pData->u.file.uFileAttribs;
 
               MESSAGE ("[%p] size=%04u type=%x attr=0x%08x name=%s (%s,%s)\n",
@@ -441,7 +452,7 @@ const char * shdebugstr_guid( const struct _GUID *id )
         }
 
             return wine_dbg_sprintf( "\n\t{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x} (%s)",
-                 id->Data1, id->Data2, id->Data3,
+                 (UINT)id->Data1, id->Data2, id->Data3,
                  id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
                  id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7], name ? name : "unknown" );
 }

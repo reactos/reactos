@@ -47,6 +47,8 @@ static void test_decode_adobe_cmyk(void)
 {
     IWICBitmapDecoder *decoder;
     IWICBitmapFrameDecode *framedecode;
+    IWICImagingFactory *factory;
+    IWICPalette *palette;
     HRESULT hr;
     HGLOBAL hjpegdata;
     char *jpegdata;
@@ -74,8 +76,12 @@ static void test_decode_adobe_cmyk(void)
 
     hr = CoCreateInstance(&CLSID_WICJpegDecoder, NULL, CLSCTX_INPROC_SERVER,
         &IID_IWICBitmapDecoder, (void**)&decoder);
-    ok(SUCCEEDED(hr), "CoCreateInstance failed, hr=%x\n", hr);
+    ok(SUCCEEDED(hr), "CoCreateInstance failed, hr=%lx\n", hr);
     if (FAILED(hr)) return;
+
+    hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IWICImagingFactory, (void **)&factory);
+    ok(SUCCEEDED(hr), "CoCreateInstance failed, hr=%lx\n", hr);
 
     hjpegdata = GlobalAlloc(GMEM_MOVEABLE, sizeof(jpeg_adobe_cmyk_1x5));
     ok(hjpegdata != 0, "GlobalAlloc failed\n");
@@ -86,31 +92,31 @@ static void test_decode_adobe_cmyk(void)
         GlobalUnlock(hjpegdata);
 
         hr = CreateStreamOnHGlobal(hjpegdata, FALSE, &jpegstream);
-        ok(SUCCEEDED(hr), "CreateStreamOnHGlobal failed, hr=%x\n", hr);
+        ok(SUCCEEDED(hr), "CreateStreamOnHGlobal failed, hr=%lx\n", hr);
         if (SUCCEEDED(hr))
         {
             hr = IWICBitmapDecoder_Initialize(decoder, jpegstream, WICDecodeMetadataCacheOnLoad);
-            ok(hr == S_OK, "Initialize failed, hr=%x\n", hr);
+            ok(hr == S_OK, "Initialize failed, hr=%lx\n", hr);
 
             hr = IWICBitmapDecoder_GetContainerFormat(decoder, &guidresult);
-            ok(SUCCEEDED(hr), "GetContainerFormat failed, hr=%x\n", hr);
+            ok(SUCCEEDED(hr), "GetContainerFormat failed, hr=%lx\n", hr);
             ok(IsEqualGUID(&guidresult, &GUID_ContainerFormatJpeg), "unexpected container format\n");
 
             hr = IWICBitmapDecoder_GetFrameCount(decoder, &count);
-            ok(SUCCEEDED(hr), "GetFrameCount failed, hr=%x\n", hr);
+            ok(SUCCEEDED(hr), "GetFrameCount failed, hr=%lx\n", hr);
             ok(count == 1, "unexpected count %u\n", count);
 
             hr = IWICBitmapDecoder_GetFrame(decoder, 0, &framedecode);
-            ok(SUCCEEDED(hr), "GetFrame failed, hr=%x\n", hr);
+            ok(SUCCEEDED(hr), "GetFrame failed, hr=%lx\n", hr);
             if (SUCCEEDED(hr))
             {
                 hr = IWICBitmapFrameDecode_GetSize(framedecode, &width, &height);
-                ok(SUCCEEDED(hr), "GetSize failed, hr=%x\n", hr);
+                ok(SUCCEEDED(hr), "GetSize failed, hr=%lx\n", hr);
                 ok(width == 1, "expected width=1, got %u\n", width);
                 ok(height == 5, "expected height=5, got %u\n", height);
 
                 hr = IWICBitmapFrameDecode_GetPixelFormat(framedecode, &guidresult);
-                ok(SUCCEEDED(hr), "GetPixelFormat failed, hr=%x\n", hr);
+                ok(SUCCEEDED(hr), "GetPixelFormat failed, hr=%lx\n", hr);
                 ok(IsEqualGUID(&guidresult, &GUID_WICPixelFormat32bppCMYK) ||
                     broken(IsEqualGUID(&guidresult, &GUID_WICPixelFormat24bppBGR)), /* xp/2003 */
                     "unexpected pixel format: %s\n", wine_dbgstr_guid(&guidresult));
@@ -120,18 +126,32 @@ static void test_decode_adobe_cmyk(void)
                 for(i=2; i>0; --i)
                 {
                     hr = IWICBitmapFrameDecode_CopyPixels(framedecode, NULL, 4, sizeof(imagedata), imagedata);
-                    ok(SUCCEEDED(hr), "CopyPixels failed, hr=%x\n", hr);
+                    ok(SUCCEEDED(hr), "CopyPixels failed, hr=%lx\n", hr);
                     ok(!memcmp(imagedata, expected_imagedata, sizeof(imagedata)) ||
                             broken(!memcmp(imagedata, expected_imagedata_24bpp, sizeof(expected_imagedata))), /* xp/2003 */
                             "unexpected image data\n");
                 }
+
+                hr = IWICImagingFactory_CreatePalette(factory, &palette);
+                ok(SUCCEEDED(hr), "CreatePalette failed, hr=%lx\n", hr);
+
+                hr = IWICBitmapDecoder_CopyPalette(decoder, palette);
+                ok(hr == WINCODEC_ERR_PALETTEUNAVAILABLE, "Unexpected hr %#lx.\n", hr);
+
+                hr = IWICBitmapFrameDecode_CopyPalette(framedecode, palette);
+                ok(hr == WINCODEC_ERR_PALETTEUNAVAILABLE, "Unexpected hr %#lx.\n", hr);
+
+                IWICPalette_Release(palette);
+
                 IWICBitmapFrameDecode_Release(framedecode);
             }
             IStream_Release(jpegstream);
         }
         GlobalFree(hjpegdata);
     }
+
     IWICBitmapDecoder_Release(decoder);
+    IWICImagingFactory_Release(factory);
 }
 
 

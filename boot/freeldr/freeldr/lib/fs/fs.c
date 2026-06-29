@@ -65,7 +65,7 @@ PFS_MOUNT FileSystems[] =
     BtrFsMount,
 #ifndef _M_ARM
     NtfsMount,
-    Ext2Mount,
+    ExtMount,
 #endif
 #if defined(_M_IX86) || defined(_M_AMD64)
 #ifndef UEFIBOOT
@@ -257,7 +257,7 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
          pEntry = pEntry->Flink)
     {
         pDevice = CONTAINING_RECORD(pEntry, DEVICE, ListEntry);
-        if (strncmp(pDevice->DeviceName, DeviceName, Length) == 0)
+        if ((strlen(pDevice->DeviceName) == Length) && (strncmp(pDevice->DeviceName, DeviceName, Length) == 0))
             break;
     }
 
@@ -532,6 +532,83 @@ FsOpenFile(
     return ArcOpen(FullPath, OpenMode, FileId);
 }
 
+/**
+ * @brief
+ * Returns the (useful) size of a file-system volume laid on the
+ * storage media device opened via @p DeviceId.
+ **/
+ARC_STATUS
+FsGetVolumeSize(
+    _In_ ULONG DeviceId,
+    _Out_ PULONGLONG VolumeSize)
+{
+    DEVICE* pDevice;
+    const DEVVTBL* FuncTable;
+    PCWSTR ServiceName;
+    ULONGLONG (*pFsGetVolumeSize)(_In_ ULONG DeviceId);
+
+    /* Check whether this file actually references a device */
+    pDevice = FsGetDeviceById(DeviceId);
+    if (!pDevice)
+        return EBADF; /* It doesn't, fail */
+
+    *VolumeSize = 0;
+
+    // TODO: Mount the device, if not already done?
+#if 1 // FIXME: TEMP HACK!
+    if (!pDevice->FileFuncTable && (pDevice->ReferenceCount <= 1))
+    {
+        for (ULONG fs = 0; fs < _countof(FileSystems); ++fs)
+        {
+            pDevice->FileFuncTable = FileSystems[fs](DeviceId);
+            if (pDevice->FileFuncTable)
+                break;
+        }
+    }
+#endif
+    // TODO: Use a virtual table function member for easily handling other file systems.
+
+    /* Check that the device is mounted (non-NULL FileFuncTable)
+     * and there is an associated "service" (file-system) name. */
+    FuncTable = pDevice->FileFuncTable;
+    ServiceName = (FuncTable && FuncTable->ServiceName)
+                    ? FuncTable->ServiceName : NULL;
+    if (!ServiceName)
+    {
+        ERR("Non-mounted device %lu\n", DeviceId);
+        return ENXIO;
+    }
+
+    /* HACK: Since we don't currently use a virtual table function member,
+     * we instead do a manual lookup over the file-system name.
+     * The ordering follows that of the FileSystems[] table. */
+#ifndef _M_ARM
+    if (!_wcsicmp(ServiceName, L"cdfs"))
+        pFsGetVolumeSize = IsoGetVolumeSize;
+    else
+#endif
+    if (!_wcsicmp(ServiceName, L"fastfat") || !_wcsicmp(ServiceName, L"vfatfs"))
+        pFsGetVolumeSize = FatGetVolumeSize;
+    else
+    if (!_wcsicmp(ServiceName, L"btrfs"))
+        pFsGetVolumeSize = BtrFsGetVolumeSize;
+    else
+#ifndef _M_ARM
+    if (!_wcsicmp(ServiceName, L"ntfs"))
+        pFsGetVolumeSize = NtfsGetVolumeSize;
+    else
+    if (!_wcsicmp(ServiceName, L"ext2fs"))
+        pFsGetVolumeSize = ExtGetVolumeSize;
+    else
+#endif
+    {
+        ERR("Unsupported file system '%S' on storage device %lu\n", ServiceName, DeviceId);
+        return EIO; // ENXIO;
+    }
+    *VolumeSize = pFsGetVolumeSize(DeviceId);
+    return ESUCCESS;
+}
+
 /*
  * FsGetNumPathParts()
  * This function parses a path in the form of dir1\dir2\file1.ext
@@ -592,7 +669,7 @@ VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
     TRACE("FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
 }
 
-VOID
+BOOLEAN
 FsRegisterDevice(
     _In_ PCSTR DeviceName,
     _In_ const DEVVTBL* FuncTable)
@@ -603,9 +680,10 @@ FsRegisterDevice(
     TRACE("FsRegisterDevice(%s)\n", DeviceName);
 
     Length = strlen(DeviceName) + 1;
-    pNewEntry = FrLdrTempAlloc(sizeof(DEVICE) + Length, TAG_DEVICE);
+    pNewEntry = FrLdrTempAlloc(sizeof(*pNewEntry) + Length, TAG_DEVICE);
     if (!pNewEntry)
-        return;
+        return FALSE;
+    RtlZeroMemory(pNewEntry, sizeof(*pNewEntry));
     pNewEntry->FuncTable = FuncTable;
     pNewEntry->DeviceId = INVALID_FILE_ID;
     pNewEntry->ReferenceCount = 0;
@@ -613,6 +691,7 @@ FsRegisterDevice(
     RtlCopyMemory(pNewEntry->DeviceName, DeviceName, Length);
 
     InsertHeadList(&DeviceListHead, &pNewEntry->ListEntry);
+    return TRUE;
 }
 
 PCWSTR FsGetServiceName(ULONG FileId)

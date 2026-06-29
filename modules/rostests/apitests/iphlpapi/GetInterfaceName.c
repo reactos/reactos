@@ -38,9 +38,9 @@ test_NhGetInterfaceNameFromGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     StartSeh()
         ApiReturn = pNhGetInterfaceNameFromGuid(NULL, &Name, &ulOutBufLen, par1, par2);
         Error = GetLastError();
-    EndSeh(((GetVersion() & 0xFF) >= 6) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION);
+    EndSeh(GetNTVersion() >= _WIN32_WINNT_VISTA ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION);
 
-    ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_INVALID_PARAMETER : ERROR_SUCCESS);
+    ok_long(ApiReturn, GetNTVersion() >= _WIN32_WINNT_VISTA ? ERROR_INVALID_PARAMETER : ERROR_SUCCESS);
     ok(Error == 0xbeeffeed,
        "GetLastError() returned %ld, expected 0xbeeffeed\n",
        Error);
@@ -55,8 +55,8 @@ test_NhGetInterfaceNameFromGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     ApiReturn = pNhGetInterfaceNameFromGuid(&AdapterGUID, NULL, &ulOutBufLen, par1, par2);
     Error = GetLastError();
 
-    ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_INVALID_PARAMETER : ERROR_SUCCESS);
-    ok_long(Error, ((GetVersion() & 0xFF) >= 6) ? ERROR_SUCCESS : 0xbeeffeed);
+    ok_long(ApiReturn, GetNTVersion() >= _WIN32_WINNT_VISTA ? ERROR_INVALID_PARAMETER : ERROR_SUCCESS);
+    ok_long(Error, GetNTVersion() >= _WIN32_WINNT_VISTA ? ERROR_SUCCESS : 0xbeeffeed);
     ok(ulOutBufLen > 0,
        "ulOutBufLen is %ld, expected > 0\n",
        ulOutBufLen);
@@ -93,7 +93,7 @@ test_NhGetInterfaceNameFromGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     ok(ApiReturn == ERROR_SUCCESS,
        "ApiReturn returned %ld, expected ERROR_SUCCESS\n",
        ApiReturn);
-    ok_long(Error, ((GetVersion() & 0xFF) >= 6) ? 0 : 0xbeeffeed);
+    ok_long(Error, GetNTVersion() >= _WIN32_WINNT_VISTA ? 0 : 0xbeeffeed);
     ok(ulOutBufLen > 0,
        "ulOutBufLen is %ld, expected > 0\n",
        ulOutBufLen);
@@ -111,12 +111,9 @@ test_NhGetInterfaceNameFromGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     ApiReturn = pNhGetInterfaceNameFromGuid((PVOID)&UniqueGUID, &Name, &ulOutBufLen, par1, par2);
     Error = GetLastError();
 
-    ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_INVALID_PARAMETER : ERROR_NOT_FOUND);
-#ifdef _M_AMD64
-    ok_long(Error, ERROR_FILE_NOT_FOUND);
-#else
-    ok_long(Error, 0);
-#endif
+    ok_long(ApiReturn, GetNTVersion() >= _WIN32_WINNT_VISTA ? ERROR_INVALID_PARAMETER : ERROR_NOT_FOUND);
+    // Windows 8+ succeeds on x64, Server 2003 x86 returns ERROR_FILE_NOT_FOUND
+    ok(Error == ERROR_FILE_NOT_FOUND || Error == ERROR_SUCCESS, "Unexpected error. (0x%lX)\n", Error);
     ok(ulOutBufLen == sizeof(Name),
        "ulOutBufLen is %ld, expected = sizeof(Name)\n",
        ulOutBufLen);
@@ -129,9 +126,12 @@ test_NhGetInterfaceNameFromGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     ApiReturn = pNhGetInterfaceNameFromGuid(&AdapterGUID, &Name, &ulOutBufLen, par1, par2);
     Error = GetLastError();
 
-    ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_NOT_ENOUGH_MEMORY : ERROR_INSUFFICIENT_BUFFER);
-    ok_long(Error, ((GetVersion() & 0xFF) >= 6) ? 0 : 0xbeeffeed);
-    ok_long(ulOutBufLen, MAX_INTERFACE_NAME_LEN * 2 + ((GetVersion() & 0xFF) >= 6 ? 2 : 0));
+    ok_long(ApiReturn, GetNTVersion() >= _WIN32_WINNT_VISTA ? ERROR_NOT_ENOUGH_MEMORY : ERROR_INSUFFICIENT_BUFFER);
+    ok_long(Error, GetNTVersion() >= _WIN32_WINNT_VISTA ? 0 : 0xbeeffeed);
+    if (GetNTVersion() != _WIN32_WINNT_VISTA)
+        ok_long(ulOutBufLen, MAX_INTERFACE_NAME_LEN * 2 + (GetNTVersion() >= _WIN32_WINNT_VISTA ? 2 : 0));
+    else
+        ok_long(ulOutBufLen, 0);
     ok_wstr(L"", Name);
 }
 
@@ -158,9 +158,9 @@ test_NhGetInterfaceNameFromDeviceGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     StartSeh()
         ApiReturn = pNhGetInterfaceNameFromDeviceGuid(NULL, &Name, &ulOutBufLen, par1, par2);
         Error = GetLastError();
-    EndSeh(((GetVersion() & 0xFF) >= 6) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION);
+    EndSeh(GetNTVersion() >= _WIN32_WINNT_VISTA ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION);
 
-    ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_INVALID_PARAMETER : 0);
+    ok_long(ApiReturn, GetNTVersion() >= _WIN32_WINNT_VISTA ? ERROR_INVALID_PARAMETER : 0);
     ok(Error == 0xbeeffeed,
        "GetLastError() returned %ld, expected ERROR_SUCCESS\n",
        Error);
@@ -177,10 +177,10 @@ test_NhGetInterfaceNameFromDeviceGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     StartSeh()
         ApiReturn = pNhGetInterfaceNameFromDeviceGuid(&AdapterGUID, NULL, &ulOutBufLen, par1, par2);
         Error = GetLastError();
-    EndSeh(((GetVersion() & 0xFF) >= 6) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION);
+    EndSeh(GetNTVersion() >= _WIN32_WINNT_VISTA ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION);
 
-    ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_INVALID_PARAMETER : 0);
-    ok_long(Error, ((GetVersion() & 0xFF) >= 6) ? ERROR_SUCCESS : 0xbeeffeed);
+    ok_long(ApiReturn, GetNTVersion() >= _WIN32_WINNT_VISTA ? ERROR_INVALID_PARAMETER : 0);
+    ok_long(Error, GetNTVersion() >= _WIN32_WINNT_VISTA ? ERROR_SUCCESS : 0xbeeffeed);
     ok(ulOutBufLen > 0,
        "ulOutBufLen is %ld, expected > 0\n",
        ulOutBufLen);
@@ -233,7 +233,7 @@ test_NhGetInterfaceNameFromDeviceGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     ApiReturn = pNhGetInterfaceNameFromDeviceGuid((PVOID)&UniqueGUID, &Name, &ulOutBufLen, par1, par2);
     Error = GetLastError();
 
-    ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_INVALID_PARAMETER : ERROR_NOT_FOUND);
+    ok_long(ApiReturn, GetNTVersion() >= _WIN32_WINNT_VISTA ? ERROR_INVALID_PARAMETER : ERROR_NOT_FOUND);
     ok(Error == ERROR_SUCCESS,
        "GetLastError() returned %ld, expected ERROR_SUCCESS\n",
        Error);
@@ -249,11 +249,14 @@ test_NhGetInterfaceNameFromDeviceGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     ApiReturn = pNhGetInterfaceNameFromDeviceGuid(&AdapterGUID, &Name, &ulOutBufLen, par1, par2);
     Error = GetLastError();
 
-    ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_NOT_ENOUGH_MEMORY : ERROR_INSUFFICIENT_BUFFER);
+    ok_long(ApiReturn, GetNTVersion() >= _WIN32_WINNT_VISTA ? ERROR_NOT_ENOUGH_MEMORY : ERROR_INSUFFICIENT_BUFFER);
     ok(Error == ERROR_SUCCESS,
        "GetLastError() returned %ld, expected ERROR_SUCCESS\n",
        Error);
-    ok_long(ulOutBufLen, MAX_INTERFACE_NAME_LEN * 2 + (((GetVersion() & 0xFF) >= 6) ? 2 : 0));
+    if (GetNTVersion() != _WIN32_WINNT_VISTA)
+        ok_long(ulOutBufLen, MAX_INTERFACE_NAME_LEN * 2 + (GetNTVersion() >= _WIN32_WINNT_VISTA ? 2 : 0));
+    else
+        ok_long(ulOutBufLen, 0);
     ok_wstr(L"", Name);
 }
 

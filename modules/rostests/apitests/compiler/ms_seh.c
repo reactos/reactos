@@ -79,6 +79,10 @@ int seh0058();
     } \
     _SEH2_END
 
+#if defined(_MSC_VER) && !defined(_USE_NATIVE_SEH)
+#define _USE_NATIVE_SEH
+#endif
+
 START_TEST(ms_seh)
 {
     run_test(seh0001);
@@ -147,9 +151,7 @@ START_TEST(ms_seh)
     run_test(seh0052);
     run_test(seh0053);
     run_test(seh0054);
-#ifdef _USE_NATIVE_SEH
     run_test(seh0055);
-#endif
     run_test(seh0056);
     run_test(seh0057);
     run_test(seh0058);

@@ -34,19 +34,22 @@ TestShellFolder(
     ok(hr == S_OK, "hr = %lx\n", hr);
     ok(pdt != pdt_2, "Expected %p != %p\n", static_cast<PVOID>(pdt), static_cast<PVOID>(pdt_2));
 
-    hr = psf2->CreateViewObject(NULL, IID_PPV_ARG(IContextMenu, &pcm));
-    ok(hr == S_OK, "hr = %lx\n", hr);
+    if (GetNTVersion() < _WIN32_WINNT_WIN10)
+    {
+        hr = psf2->CreateViewObject(NULL, IID_PPV_ARG(IContextMenu, &pcm));
+        ok(hr == S_OK, "hr = %lx\n", hr);
 
-    hr = psf2->CreateViewObject(NULL, IID_PPV_ARG(IContextMenu, &pcm_2));
-    ok(hr == S_OK, "hr = %lx\n", hr);
-    ok(pcm != pcm_2, "Expected %p != %p\n", static_cast<PVOID>(pcm), static_cast<PVOID>(pcm_2));
+        hr = psf2->CreateViewObject(NULL, IID_PPV_ARG(IContextMenu, &pcm_2));
+        ok(hr == S_OK, "hr = %lx\n", hr);
+        ok(pcm != pcm_2, "Expected %p != %p\n", static_cast<PVOID>(pcm), static_cast<PVOID>(pcm_2));
 
-    hr = psf2->CreateViewObject(NULL, IID_PPV_ARG(IShellView, &psv));
-    ok(hr == S_OK, "hr = %lx\n", hr);
+        hr = psf2->CreateViewObject(NULL, IID_PPV_ARG(IShellView, &psv));
+        ok(hr == S_OK, "hr = %lx\n", hr);
 
-    hr = psf2->CreateViewObject(NULL, IID_PPV_ARG(IShellView, &psv_2));
-    ok(hr == S_OK, "hr = %lx\n", hr);
-    ok(psv != psv_2, "Expected %p != %p\n", static_cast<PVOID>(psv), static_cast<PVOID>(psv_2));
+        hr = psf2->CreateViewObject(NULL, IID_PPV_ARG(IShellView, &psv_2));
+        ok(hr == S_OK, "hr = %lx\n", hr);
+        ok(psv != psv_2, "Expected %p != %p\n", static_cast<PVOID>(psv), static_cast<PVOID>(psv_2));
+    }
 }
 
 VOID TestInitialize(_In_ IShellFolder2 *psf2)
@@ -55,21 +58,20 @@ VOID TestInitialize(_In_ IShellFolder2 *psf2)
     HRESULT hr = psf2->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
     ok(hr == S_OK, "hr = %lx\n", hr);
 
-    hr = ppf2->Initialize(NULL);
-    ok(hr == S_OK, "hr = %lx\n", hr);
+    if (GetNTVersion() < _WIN32_WINNT_WIN10)
+    {
+        hr = ppf2->Initialize(NULL);
+        ok(hr == S_OK, "hr = %lx\n", hr);
 
-    hr = ppf2->Initialize((LPCITEMIDLIST)INVALID_POINTER);
-    ok(hr == S_OK, "hr = %lx\n", hr);
+        hr = ppf2->Initialize((LPCITEMIDLIST)INVALID_POINTER);
+        ok(hr == S_OK, "hr = %lx\n", hr);
 
-    //crashes in xp
-    //hr = ppf2->GetCurFolder(NULL);
-    //ok(hr == E_INVALIDARG, "hr = %lx\n", hr);
-
-    CComHeapPtr<ITEMIDLIST> pidl;
-    hr = ppf2->GetCurFolder(&pidl);
-    ok(hr == S_OK, "hr = %lx\n", hr);
-    // 0 in win10, 14 in xp
-    ok(pidl->mkid.cb == 0x14, "expected empty pidl got cb = %x\n", pidl->mkid.cb);
+        CComHeapPtr<ITEMIDLIST> pidl;
+        hr = ppf2->GetCurFolder(&pidl);
+        ok(hr == S_OK, "hr = %lx\n", hr);
+        // 0 in early win10, 14 in xp; crashes on late win10
+        ok(pidl->mkid.cb == 0x14, "expected empty pidl got cb = %x\n", pidl->mkid.cb);
+    }
 }
 
 START_TEST(CMyComputer)
@@ -92,13 +94,16 @@ START_TEST(CMyComputer)
         return;
     }
 
-    /* second create should give us a pointer to the same object */
-    hr = CoCreateInstance(CLSID_MyComputer,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IShellFolder2, &psf2_2));
-    ok(hr == S_OK, "hr = %lx\n", hr);
-    ok(psf2 == psf2_2, "Expected %p == %p\n", static_cast<PVOID>(psf2), static_cast<PVOID>(psf2_2));
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+    {
+        /* NT5.x returns a pointer to the same object but not NT6.x and newer. */
+        hr = CoCreateInstance(CLSID_MyComputer,
+                              NULL,
+                              CLSCTX_INPROC_SERVER,
+                              IID_PPV_ARG(IShellFolder2, &psf2_2));
+        ok(hr == S_OK, "hr = %lx\n", hr);
+        ok(psf2 == psf2_2, "Expected %p == %p\n", static_cast<PVOID>(psf2), static_cast<PVOID>(psf2_2));
+    }
 
     TestShellFolder(psf2);
     TestInitialize(psf2);

@@ -21,6 +21,10 @@ add_library(usbccgp MODULE
     ${PCH_SKIP_SOURCE}
     usbccgp.rc)
 
+target_compile_definitions(usbccgp
+    # HACK: Disabled until USB Stack is reinvestigated.
+    PRIVATE NO_KERNEL_LIST_ENTRY_CHECKS)
+
 target_link_libraries(usbccgp ${PSEH_LIB})
 set_module_type(usbccgp kernelmodedriver)
 add_importlibs(usbccgp ntoskrnl hal usbd)

@@ -49,10 +49,25 @@
 #define InterlockedBitTestAndReset64NoFence __NF_(_interlockedbittestandreset64)
 #endif /* _WIN64 */
 
+#if defined(_M_AMD64) || defined(_M_IX86)
+FORCEINLINE
+long
+_InlineInterlockedAdd(
+    _Inout_ _Interlocked_operand_ volatile long *Addend,
+    _In_ long Value)
+{
+    return _InterlockedExchangeAdd(Addend, Value) + Value;
+}
+#define InterlockedAdd _InlineInterlockedAdd
+#define InterlockedAddAcquire _InlineInterlockedAdd
+#define InterlockedAddRelease _InlineInterlockedAdd
+#define InterlockedAddNoFence _InlineInterlockedAdd
+#else
 #define InterlockedAdd _InterlockedAdd
 #define InterlockedAddAcquire __ACQ_(_InterlockedAdd)
 #define InterlockedAddRelease __REL_(_InterlockedAdd)
 #define InterlockedAddNoFence __NF_(_InterlockedAdd)
+#endif
 
 #define InterlockedAdd64 _InterlockedAdd64
 #define InterlockedAddAcquire64 __ACQ_(_InterlockedAdd64)

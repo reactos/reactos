@@ -1,11 +1,10 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            win32ss/user/user32/controls/appswitch.c
- * PURPOSE:         app switching functionality
- * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
- *                  David Quintana (gigaherz@gmail.com)
- *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PROJECT:     ReactOS user32.dll
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     App switching functionality
+ * COPYRIGHT:   Copyright Johannes Anderwald (johannes.anderwald@reactos.org)
+ *              Copyright David Quintana (gigaherz@gmail.com)
+ *              Copyright Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 //
@@ -63,27 +62,70 @@ int nShift = 0;
 
 BOOL Esc = FALSE;
 
+enum { DefSwitchRows = 3, DefSwitchColumns = 7 };
 BOOL CoolSwitch = TRUE;
-int CoolSwitchRows = 3;
-int CoolSwitchColumns = 7;
+int CoolSwitchRows = DefSwitchRows;
+int CoolSwitchColumns = DefSwitchColumns;
+BOOL SettingsLoaded = FALSE;
 
 // window style
 const DWORD Style = WS_POPUP | WS_BORDER | WS_DISABLED;
 const DWORD ExStyle = WS_EX_TOPMOST | WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW;
 
-BOOL LoadCoolSwitchSettings(void)
+static int GetRegInt(HKEY hKey, PCWSTR Name, int DefVal)
 {
-   CoolSwitch = TRUE;
-   CoolSwitchRows = 3;
-   CoolSwitchColumns = 7;
+    WCHAR buf[sizeof("-2147483648")];
+    DWORD cb = sizeof(buf), type;
+    DWORD err = RegQueryValueExW(hKey, Name, NULL, &type, (BYTE*)buf, &cb);
+    if (err == ERROR_SUCCESS && cb <= sizeof(buf) - sizeof(*buf))
+    {
+        buf[cb / sizeof(*buf)] = UNICODE_NULL;
+        if (type == REG_SZ || type == REG_EXPAND_SZ)
+        {
+            WCHAR *pszEnd;
+            long Value = wcstol(buf, &pszEnd, 10);
+            return pszEnd > buf ? Value : DefVal;
+        }
+        if ((type == REG_DWORD || type == REG_BINARY) && cb == sizeof(DWORD))
+        {
+            return *(DWORD*)buf;
+        }
+    }
+    return DefVal;
+}
 
-   // FIXME: load the settings from registry
+static void LoadCoolSwitchSettings(void)
+{
+    HKEY hKey;
 
-   TRACE("CoolSwitch: %d\n", CoolSwitch);
-   TRACE("CoolSwitchRows: %d\n", CoolSwitchRows);
-   TRACE("CoolSwitchColumns: %d\n", CoolSwitchColumns);
+    if (SettingsLoaded
+#if DBG
+        && !(GetKeyState(VK_SCROLL) & 1) // If Scroll-Lock is on, always read the settings
+#endif
+        )
+    {
+        return;
+    }
 
-   return TRUE;
+    SettingsLoaded = TRUE;
+    // TODO: Should read from win.ini instead when IniFileMapping is implemented
+    if (!RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_READ, &hKey))
+    {
+        CoolSwitch = GetRegInt(hKey, L"CoolSwitch", TRUE);
+        CoolSwitchRows = GetRegInt(hKey, L"CoolSwitchRows", DefSwitchRows);
+        CoolSwitchColumns = GetRegInt(hKey, L"CoolSwitchColumns", DefSwitchColumns);
+        RegCloseKey(hKey);
+    }
+
+    if (CoolSwitchRows * CoolSwitchColumns < 3)
+    {
+        CoolSwitchRows = DefSwitchRows;
+        CoolSwitchColumns = DefSwitchColumns;
+    }
+
+    TRACE("CoolSwitch: %d\n", CoolSwitch);
+    TRACE("CoolSwitchRows: %d\n", CoolSwitchRows);
+    TRACE("CoolSwitchColumns: %d\n", CoolSwitchColumns);
 }
 
 void ResizeAndCenter(HWND hwnd, int width, int height)
@@ -213,10 +255,10 @@ static HWND GetNiceRootOwner(HWND hwnd)
     return hwnd;
 }
 
-// c.f. http://blogs.msdn.com/b/oldnewthing/archive/2007/10/08/5351207.aspx
+// c.f. https://devblogs.microsoft.com/oldnewthing/20071008-00/?p=24863
 BOOL IsAltTabWindow(HWND hwnd)
 {
-    DWORD ExStyle;
+    LONG_PTR ExStyle, ClassStyle;
     RECT rc;
     HWND hwndTry, hwndWalk;
     WCHAR szClass[64];
@@ -226,7 +268,7 @@ BOOL IsAltTabWindow(HWND hwnd)
         return FALSE;
 
     // must not be WS_EX_TOOLWINDOW nor WS_EX_NOACTIVATE
-    ExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    ExStyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
     if (ExStyle & (WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE))
         return FALSE;
 
@@ -242,6 +284,11 @@ BOOL IsAltTabWindow(HWND hwnd)
     {
         return TRUE;
     }
+
+    // must not be an IME-related window
+    ClassStyle = GetClassLongPtrW(hwnd, GCL_STYLE);
+    if (ClassStyle & CS_IME)
+        return FALSE;
 
     // get 'nice' root owner
     hwndWalk = GetNiceRootOwner(hwnd);

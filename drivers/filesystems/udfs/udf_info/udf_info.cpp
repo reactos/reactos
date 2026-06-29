@@ -1690,7 +1690,7 @@ UDFWriteFile__(
         Vcb->LowFreeSpace ? "LowSpace" : ""));
     if(UDFIsADirectory(FileInfo) && !WasInIcb && !Vcb->LowFreeSpace) {
         FileInfo->Dloc->DataLoc.Flags |= EXTENT_FLAG_ALLOC_SEQUENTIAL;
-        status = UDFResizeExtent(Vcb, PartNum, (t*2+Vcb->WriteBlockSize-1) & ~(SIZE_T)(Vcb->WriteBlockSize-1), FALSE, &(Dloc->DataLoc));
+        status = UDFResizeExtent(Vcb, PartNum, (t*2+Vcb->WriteBlockSize-1) & ~(UINT64)(Vcb->WriteBlockSize-1), FALSE, &(Dloc->DataLoc));
         if(OS_SUCCESS(status)) {
             AdPrint(("  preallocated space for Dir\n"));
             FileInfo->Dloc->DataLoc.Flags |= EXTENT_FLAG_PREALLOCATED;

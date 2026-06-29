@@ -18,7 +18,7 @@ BEGIN
                    Le impostazioni predefinite sono fortemente consigliate per un uso normale\n\
                    NTFS supporta 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                    FAT supporta 8192, 16K, 32K, 64K, 128K, 256K.\n\
-                   NTFS compresso non è supportato per unità di allocazione\n\
+                   la compressione NTFS non è supportata per unità di allocazione\n\
                    maggiori di 4096.\n\
   -C               I file creati sul nuovo volume saranno compressi.\n\n"
     STRING_COMPLETE "%lu percento completato.\r"
@@ -27,7 +27,7 @@ BEGIN
     STRING_FMIFS_FAIL "Impossibile trovare 'FMIFS entry points'.\n\n"
     STRING_UNKNOW_ARG "Parametro sconosciuto: %s\n"
     STRING_DRIVE_PARM "Manca il parametro 'drive'.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Impossibile rilevare il tipo di drive"
+    STRING_ERROR_DRIVE_TYPE "Impossibile rilevare il tipo di drive.\n"
     STRING_INSERT_DISK "Inserire un floppy nuovo nel drive %C:\n e successivamente premere Invio..."
     STRING_NO_VOLUME "Impossibile rilevare il volume"
     STRING_NO_VOLUME_SIZE "Impossibile rilevare la dimensione del volume"
@@ -43,6 +43,6 @@ BEGIN
     STRING_VOL_COMPRESS "Il Volume non supporta la compressione.\n"
     STRING_ENTER_LABEL "Etichetta (11 caratteri, Invio per nessuna)? "
     STRING_NO_LABEL "Impossibile applicare l'etichetta al volume"
-    STRING_FREE_SPACE "\n%I64d bytes totali sul disco.\n%I64d bytes sono liberi.\n"
-    STRING_SERIAL_NUMBER "\nVolume Serial Number è %04X-%04X\n"
+    STRING_FREE_SPACE "\n%I64d byte totali sul disco.\n%I64d bytes liberi.\n"
+    STRING_SERIAL_NUMBER "\nIl Numero di Serie è %04X-%04X\n"
 END

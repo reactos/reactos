@@ -37,6 +37,37 @@ typedef enum AppPolicyWindowingModel
     AppPolicyWindowingModel_ClassicPhone = 3
 } AppPolicyWindowingModel;
 
+typedef enum AppPolicyMediaFoundationCodecLoading
+{
+    AppPolicyMediaFoundationCodecLoading_All = 0,
+} AppPolicyMediaFoundationCodecLoading;
+
+typedef struct PACKAGE_VERSION
+{
+    union
+    {
+        UINT64 Version;
+        struct
+        {
+            USHORT Revision;
+            USHORT Build;
+            USHORT Minor;
+            USHORT Major;
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+} PACKAGE_VERSION;
+
+typedef struct PACKAGE_ID
+{
+    UINT32 reserved;
+    UINT32 processorArchitecture;
+    PACKAGE_VERSION version;
+    PWSTR name;
+    PWSTR publisher;
+    PWSTR resourceId;
+    PWSTR publisherId;
+} PACKAGE_ID;
+
 WINBASEAPI
 _Check_return_
 _Success_(return == ERROR_SUCCESS)
@@ -72,6 +103,15 @@ WINAPI
 AppPolicyGetWindowingModel(
     _In_ HANDLE processToken,
     _Out_ AppPolicyWindowingModel* policy);
+
+WINBASEAPI
+_Check_return_
+_Success_(return == ERROR_SUCCESS)
+LONG
+WINAPI
+AppPolicyGetMediaFoundationCodecLoading(
+    _In_ HANDLE processToken,
+    _Out_ AppPolicyMediaFoundationCodecLoading* policy);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -58,10 +58,53 @@ static BOOL RecentHasShortcut(HWND hwnd)
     return TRUE;
 }
 
-static VOID OnClearRecentItems(HWND hwnd)
+static const PCWSTR g_MruKeys[] = 
+{
+    L"Software\\Microsoft\\Internet Explorer\\TypedURLs",
+    L"Explorer\\RunMRU",
+    L"Explorer\\Comdlg32\\OpenSaveMRU",
+    L"Explorer\\Comdlg32\\LastVisitedMRU",
+};
+
+static BOOL HandleMruData(BOOL Delete)
+{
+    for (UINT i = 0; i < _countof(g_MruKeys); ++i)
+    {
+        WCHAR szKey[200];
+        PCWSTR pszKey = g_MruKeys[i];
+        if (*pszKey != 'S') // Keys not starting with S[oftware] are assumed to be relative to "SMWCV"
+        {
+            wsprintfW(szKey, L"%s\\%s", L"Software\\Microsoft\\Windows\\CurrentVersion", pszKey);
+            pszKey = szKey;
+        }
+
+        HKEY hKey;
+        if (Delete)
+        {
+            SHDeleteKeyW(HKEY_CURRENT_USER, pszKey);
+        }
+        else if (RegOpenKeyExW(HKEY_CURRENT_USER, pszKey, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+VOID ClearRecentAndMru()
 {
     SHAddToRecentDocs(SHARD_PIDL, NULL);
-    EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), RecentHasShortcut(hwnd));
+    HandleMruData(TRUE);
+}
+
+static VOID InitializeClearButton(HWND hwnd)
+{
+    HWND hWndClear = GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR);
+    BOOL bHasData = RecentHasShortcut(hwnd) || HandleMruData(FALSE);
+    if (!bHasData && hWndClear == GetFocus())
+        SendMessage(hwnd, WM_NEXTDLGCTL, 0, FALSE);
+    EnableWindow(hWndClear, bHasData);
 }
 
 struct CUSTOM_ENTRY;
@@ -175,7 +218,7 @@ static VOID AddCustomItem(HWND hTreeView, const CUSTOM_ENTRY *entry)
 
 static void CustomizeClassic_OnInitDialog(HWND hwnd)
 {
-    EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), RecentHasShortcut(hwnd));
+    InitializeClearButton(hwnd);
 
     HWND hTreeView = GetDlgItem(hwnd, IDC_CLASSICSTART_SETTINGS);
 
@@ -240,7 +283,8 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
                     OnAdvancedStartMenuItems();
                     break;
                 case IDC_CLASSICSTART_CLEAR:
-                    OnClearRecentItems(hwnd);
+                    ClearRecentAndMru();
+                    InitializeClearButton(hwnd);
                     break;
                 case IDOK:
                     if (CustomizeClassic_OnOK(hwnd))

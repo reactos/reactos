@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 generate_idl_iids(qmgr_local.idl)
 spec2def(qmgr.dll qmgr.spec)
 
@@ -29,3 +27,4 @@ add_importlibs(qmgr winhttp ole32 advapi32 msvcrt kernel32 ntdll)
 add_pch(qmgr precomp.h SOURCE)
 add_cd_file(TARGET qmgr DESTINATION reactos/system32 FOR all)
 add_dependencies(qmgr qmgr_idlheader)
+set_wine_module_FIXME(qmgr) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

@@ -25,7 +25,7 @@ list(APPEND SOURCE
     mem.cpp
     misc.cpp
     namesup.cpp
-    pnp.cpp
+    #pnp.cpp
     read.cpp
     secursup.cpp
     shutdown.cpp
@@ -40,6 +40,8 @@ list(APPEND SOURCE
     udffs.h)
 
 add_library(udfs MODULE ${SOURCE} udffs.rc)
+
+target_compile_definitions(udfs PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(udfs PRIVATE -Wno-unused-but-set-variable)

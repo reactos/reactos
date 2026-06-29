@@ -306,7 +306,7 @@ extern "C" {
 #endif /* !defined(RC_INVOKED) */
 
 #ifndef	NO_OLDNAMES
-#define	_S_IFBLK	0x3000	/* Block: Is this ever set under w32? */
+#define	_S_IFBLK	0x6000	/* Block: Is this ever set under w32? */
 
 #define S_IFMT _S_IFMT
 #define S_IFDIR _S_IFDIR

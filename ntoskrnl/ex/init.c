@@ -863,6 +863,16 @@ ExpLoadBootSymbols(
                                 LdrEntry->DllBase,
                                 (ULONG_PTR)PsGetCurrentProcessId());
         }
+
+#ifdef CONFIG_SMP
+        /* Check that the image is safe to use if we have more than one CPU */
+        if (!MmVerifyImageIsOkForMpUse(LdrEntry->DllBase))
+        {
+            KeBugCheckEx(UP_DRIVER_ON_MP_SYSTEM,
+                         (ULONG_PTR)LdrEntry->DllBase,
+                         0, 0, 0);
+        }
+#endif // CONFIG_SMP
     }
 }
 
@@ -1135,8 +1145,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     {
         /* Get the service pack string */
         Status = RtlFindMessage(NtosEntry->DllBase,
-                                11,
-                                0,
+                                RT_MESSAGETABLE,
+                                MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                                 WINDOWS_NT_CSD_STRING,
                                 &MsgEntry);
         if (NT_SUCCESS(Status))
@@ -1424,8 +1434,8 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Find the banner message */
     MsgStatus = RtlFindMessage(NtosEntry->DllBase,
-                               11,
-                               0,
+                               RT_MESSAGETABLE,
+                               MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                                WINDOWS_NT_BANNER,
                                &MsgEntry);
 
@@ -1540,9 +1550,7 @@ Phase1InitializationDiscard(IN PVOID Context)
                                                     10000000);
 
             /* Set the boot time-zone bias */
-            SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.HighPart;
-            SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.LowPart;
-            SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.HighPart;
+            KiWriteSystemTime(&SharedUserData->TimeZoneBias, ExpTimeZoneBias);
 
             /* Convert the boot time to local time, and set it */
             UniversalBootTime.QuadPart = SystemBootTime.QuadPart +
@@ -1559,6 +1567,34 @@ Phase1InitializationDiscard(IN PVOID Context)
     }
 
 #ifdef CONFIG_SMP
+    /*
+     * IMPORTANT NOTE:
+     * Because ReactOS is a "nice" OS, we do not care _at all_
+     * about any number of registered/licensed processors:
+     * no usage of KeRegisteredProcessors nor KeLicensedProcessors.
+     */
+    if (CommandLine)
+    {
+        PSTR Option;
+
+        /* Check for NUMPROC: maximum number of logical processors
+         * that can be started (including dynamically) at run-time */
+        Option = strstr(CommandLine, "NUMPROC");
+        if (Option) Option = strstr(Option, "=");
+        if (Option) KeNumprocSpecified = atol(Option + 1);
+
+        /* Check for BOOTPROC (NT6+ and ReactOS): maximum number
+         * of logical processors that can be started at boot-time */
+        Option = strstr(CommandLine, "BOOTPROC");
+        if (Option) Option = strstr(Option, "=");
+        if (Option) KeBootprocSpecified = atol(Option + 1);
+
+        /* Check for MAXPROC (NT6+ and ReactOS): forces the kernel to report
+         * as existing the maximum number of processors that can be handled */
+        if (strstr(CommandLine, "MAXPROC"))
+            KeMaximumProcessors = MAXIMUM_PROCESSORS;
+    }
+
     /* Start Application Processors */
     KeStartAllProcessors();
 #endif
@@ -1585,8 +1621,8 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Get the information string from our resource file */
     MsgStatus = RtlFindMessage(NtosEntry->DllBase,
-                               11,
-                               0,
+                               RT_MESSAGETABLE,
+                               MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                                KeNumberProcessors > 1 ?
                                WINDOWS_NT_INFO_STRING_PLURAL :
                                WINDOWS_NT_INFO_STRING,
@@ -1759,14 +1795,14 @@ Phase1InitializationDiscard(IN PVOID Context)
 
             /* Find the message to print out */
             Status = RtlFindMessage(NtosEntry->DllBase,
-                                    11,
-                                    0,
+                                    RT_MESSAGETABLE,
+                                    MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                                     MessageCode,
                                     &MsgEntry);
             if (NT_SUCCESS(Status))
             {
                 /* Display it */
-                InbvDisplayString((PCHAR)MsgEntry->Text);
+                InbvDisplayString((PCSTR)MsgEntry->Text);
             }
         }
     }
@@ -1779,14 +1815,14 @@ Phase1InitializationDiscard(IN PVOID Context)
         {
             /* Find the message to print out */
             Status = RtlFindMessage(NtosEntry->DllBase,
-                                    11,
-                                    0,
+                                    RT_MESSAGETABLE,
+                                    MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                                     BOOTLOG_ENABLED,
                                     &MsgEntry);
             if (NT_SUCCESS(Status))
             {
                 /* Display it */
-                InbvDisplayString((PCHAR)MsgEntry->Text);
+                InbvDisplayString((PCSTR)MsgEntry->Text);
             }
 
             /* Setup boot logging */

@@ -38,8 +38,6 @@ ImageModel::ImageModel()
     , m_undoSteps(0)
     , m_redoSteps(0)
 {
-    ZeroMemory(m_historyItems, sizeof(m_historyItems));
-
     m_hbmMaster = CreateColorDIB(1, 1, RGB(255, 255, 255));
     m_hbmOld = ::SelectObject(m_hDrawingDC, m_hbmMaster);
 
@@ -130,6 +128,7 @@ void ImageModel::PushImageForUndo()
     if (hbm == NULL)
     {
         ShowOutOfMemory();
+        ClearHistory();
         return;
     }
 
@@ -143,6 +142,7 @@ void ImageModel::PushImageForUndo(HBITMAP hbm)
     if (hbm == NULL)
     {
         ShowOutOfMemory();
+        ClearHistory();
         return;
     }
 
@@ -201,6 +201,7 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     if (!hbmNew)
     {
         ShowOutOfMemory();
+        ClearHistory();
         return;
     }
 

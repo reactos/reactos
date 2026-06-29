@@ -16,9 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 
 #define COBJMACROS
@@ -30,7 +27,6 @@
 #include "wincodecs_private.h"
 
 #include "wine/debug.h"
-#include "wine/library.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
@@ -156,7 +152,7 @@ static ULONG WINAPI TgaDecoder_AddRef(IWICBitmapDecoder *iface)
     TgaDecoder *This = impl_from_IWICBitmapDecoder(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     return ref;
 }
@@ -166,7 +162,7 @@ static ULONG WINAPI TgaDecoder_Release(IWICBitmapDecoder *iface)
     TgaDecoder *This = impl_from_IWICBitmapDecoder(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     if (ref == 0)
     {
@@ -174,8 +170,8 @@ static ULONG WINAPI TgaDecoder_Release(IWICBitmapDecoder *iface)
         DeleteCriticalSection(&This->lock);
         if (This->stream)
             IStream_Release(This->stream);
-        HeapFree(GetProcessHeap(), 0, This->imagebits);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This->imagebits);
+        free(This);
     }
 
     return ref;
@@ -226,7 +222,7 @@ static HRESULT WINAPI TgaDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     hr = IStream_Read(pIStream, &This->header, sizeof(tga_header), &bytesread);
     if (SUCCEEDED(hr) && bytesread != sizeof(tga_header))
     {
-        TRACE("got only %u bytes\n", bytesread);
+        TRACE("got only %lu bytes\n", bytesread);
         hr = E_FAIL;
     }
     if (FAILED(hr)) goto end;
@@ -298,7 +294,7 @@ static HRESULT WINAPI TgaDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
         hr = IStream_Read(pIStream, &footer, sizeof(tga_footer), &bytesread);
         if (SUCCEEDED(hr) && bytesread != sizeof(tga_footer))
         {
-            TRACE("got only %u footer bytes\n", bytesread);
+            TRACE("got only %lu footer bytes\n", bytesread);
             hr = E_FAIL;
         }
 
@@ -330,7 +326,7 @@ static HRESULT WINAPI TgaDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
         hr = IStream_Read(pIStream, &This->extension_area, sizeof(tga_extension_area), &bytesread);
         if (SUCCEEDED(hr) && bytesread != sizeof(tga_extension_area))
         {
-            TRACE("got only %u extension area bytes\n", bytesread);
+            TRACE("got only %lu extension area bytes\n", bytesread);
             hr = E_FAIL;
         }
         if (SUCCEEDED(hr) && This->extension_area.size < 495)
@@ -627,7 +623,7 @@ static HRESULT WINAPI TgaDecoder_Frame_CopyPalette(IWICBitmapFrameDecode *iface,
         return E_FAIL;
     }
 
-    colormap_data = HeapAlloc(GetProcessHeap(), 0, This->colormap_length);
+    colormap_data = malloc(This->colormap_length);
     if (!colormap_data) return E_OUTOFMEMORY;
 
     wcolormap_data = (WORD*)colormap_data;
@@ -643,7 +639,7 @@ static HRESULT WINAPI TgaDecoder_Frame_CopyPalette(IWICBitmapFrameDecode *iface,
         hr = IStream_Read(This->stream, colormap_data, This->colormap_length, &bytesread);
         if (SUCCEEDED(hr) && bytesread != This->colormap_length)
         {
-            WARN("expected %i bytes in colormap, got %i\n", This->colormap_length, bytesread);
+            WARN("expected %li bytes in colormap, got %li\n", This->colormap_length, bytesread);
             hr = E_FAIL;
         }
     }
@@ -747,7 +743,7 @@ static HRESULT WINAPI TgaDecoder_Frame_CopyPalette(IWICBitmapFrameDecode *iface,
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, colormap_data);
+    free(colormap_data);
 
     if (SUCCEEDED(hr))
         hr = IWICPalette_InitializeCustom(pIPalette, colors, 256);
@@ -835,7 +831,7 @@ static HRESULT TgaDecoder_ReadImage(TgaDecoder *This)
         if (SUCCEEDED(hr))
         {
             datasize = This->header.width * This->header.height * (This->header.depth / 8);
-            This->imagebits = HeapAlloc(GetProcessHeap(), 0, datasize);
+            This->imagebits = malloc(datasize);
             if (!This->imagebits) hr = E_OUTOFMEMORY;
         }
 
@@ -874,7 +870,7 @@ static HRESULT TgaDecoder_ReadImage(TgaDecoder *This)
         }
         else
         {
-            HeapFree(GetProcessHeap(), 0, This->imagebits);
+            free(This->imagebits);
             This->imagebits = NULL;
         }
     }
@@ -948,7 +944,7 @@ HRESULT TgaDecoder_CreateInstance(REFIID iid, void** ppv)
 
     *ppv = NULL;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(TgaDecoder));
+    This = malloc(sizeof(TgaDecoder));
     if (!This) return E_OUTOFMEMORY;
 
     This->IWICBitmapDecoder_iface.lpVtbl = &TgaDecoder_Vtbl;
@@ -957,7 +953,11 @@ HRESULT TgaDecoder_CreateInstance(REFIID iid, void** ppv)
     This->initialized = FALSE;
     This->stream = NULL;
     This->imagebits = NULL;
+#ifdef __REACTOS__
     InitializeCriticalSection(&This->lock);
+#else
+    InitializeCriticalSectionEx(&This->lock, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
+#endif
     This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": TgaDecoder.lock");
 
     ret = IWICBitmapDecoder_QueryInterface(&This->IWICBitmapDecoder_iface, iid, ppv);

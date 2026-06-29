@@ -14,10 +14,9 @@
 
 #include "services.h"
 
+#include <winbase_undoc.h>
 #include <userenv.h>
 #include <strsafe.h>
-
-#include <reactos/undocuser.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1410,9 +1409,85 @@ ScmGetBootAndSystemDriverState(VOID)
 
 
 /*
- * ScmControlService must never be called with the database lock being held.
+ * ScmSendControlPacket must never be called with the database lock being held.
  * The service passed must always be referenced instead.
  */
+DWORD
+ScmSendControlPacket(
+    _In_ HANDLE hControlPipe,
+    _In_ PCWSTR pServiceName,
+    _In_ DWORD dwControl,
+    _In_ DWORD dwControlPacketSize,
+    _In_ PVOID pControlPacket)
+{
+    DWORD dwError = ERROR_SUCCESS;
+    BOOL bResult;
+    SCM_REPLY_PACKET ReplyPacket;
+    DWORD dwReadCount = 0;
+    OVERLAPPED Overlapped = {0};
+
+    DPRINT("ScmSendControlPacket(%p, %lu, %p) called\n",
+           hControlPipe, dwControlPacketSize, pControlPacket);
+
+    /* Acquire the service control critical section, to synchronize requests */
+    EnterCriticalSection(&ControlServiceCriticalSection);
+
+    bResult = TransactNamedPipe(hControlPipe,
+                                pControlPacket,
+                                dwControlPacketSize,
+                                &ReplyPacket,
+                                sizeof(ReplyPacket),
+                                &dwReadCount,
+                                &Overlapped);
+    if (!bResult)
+    {
+        /* Fail for any error other than pending IO */
+        dwError = GetLastError();
+        if (dwError != ERROR_IO_PENDING)
+        {
+            DPRINT1("TransactNamedPipe(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
+            goto Done;
+        }
+
+        DPRINT("TransactNamedPipe(%S, %d) returned ERROR_IO_PENDING\n", pServiceName, dwControl);
+
+        dwError = WaitForSingleObject(hControlPipe, PipeTimeout);
+        DPRINT("WaitForSingleObject(%S, %d) returned %lu\n", pServiceName, dwControl, dwError);
+
+        if (dwError == WAIT_TIMEOUT)
+        {
+            DPRINT1("WaitForSingleObject(%S, %d) timed out\n", pServiceName, dwControl);
+            bResult = CancelIo(hControlPipe);
+            if (!bResult)
+                DPRINT1("CancelIo(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, GetLastError());
+
+            dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
+        }
+        else if (dwError == WAIT_OBJECT_0)
+        {
+            bResult = GetOverlappedResult(hControlPipe,
+                                          &Overlapped,
+                                          &dwReadCount,
+                                          TRUE);
+            if (!bResult)
+            {
+                dwError = GetLastError();
+                DPRINT1("GetOverlappedResult(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
+            }
+        }
+    }
+
+Done:
+    /* Release the service control critical section */
+    LeaveCriticalSection(&ControlServiceCriticalSection);
+
+    if (dwReadCount == sizeof(ReplyPacket))
+        dwError = ReplyPacket.dwError;
+
+    return dwError;
+}
+
+
 DWORD
 ScmControlServiceEx(
     _In_ HANDLE hControlPipe,
@@ -1424,16 +1499,12 @@ ScmControlServiceEx(
     _In_reads_opt_(argc) const PCWSTR* argv)
 {
     DWORD dwError = ERROR_SUCCESS;
-    BOOL bResult;
     PSCM_CONTROL_PACKET ControlPacket;
-    SCM_REPLY_PACKET ReplyPacket;
     DWORD PacketSize;
     DWORD i;
     PWSTR Ptr;
-    DWORD dwReadCount = 0;
-    OVERLAPPED Overlapped = {0};
 
-    DPRINT("ScmControlService(%S, %d) called\n", pServiceName, dwControl);
+    DPRINT("ScmControlServiceEx(%S, %d) called\n", pServiceName, dwControl);
 
     /* Calculate the total size of the control packet:
      * initial structure, the start command line, and the argument vector */
@@ -1503,67 +1574,19 @@ ScmControlServiceEx(
         }
     }
 
-    /* Acquire the service control critical section, to synchronize requests */
-    EnterCriticalSection(&ControlServiceCriticalSection);
-
-    bResult = TransactNamedPipe(hControlPipe,
-                                ControlPacket,
-                                PacketSize,
-                                &ReplyPacket,
-                                sizeof(ReplyPacket),
-                                &dwReadCount,
-                                &Overlapped);
-    if (!bResult)
-    {
-        /* Fail for any error other than pending IO */
-        dwError = GetLastError();
-        if (dwError != ERROR_IO_PENDING)
-        {
-            DPRINT1("TransactNamedPipe(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
-            goto Done;
-        }
-
-        DPRINT("TransactNamedPipe(%S, %d) returned ERROR_IO_PENDING\n", pServiceName, dwControl);
-
-        dwError = WaitForSingleObject(hControlPipe, PipeTimeout);
-        DPRINT("WaitForSingleObject(%S, %d) returned %lu\n", pServiceName, dwControl, dwError);
-
-        if (dwError == WAIT_TIMEOUT)
-        {
-            DPRINT1("WaitForSingleObject(%S, %d) timed out\n", pServiceName, dwControl);
-            bResult = CancelIo(hControlPipe);
-            if (!bResult)
-                DPRINT1("CancelIo(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, GetLastError());
-
-            dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
-        }
-        else if (dwError == WAIT_OBJECT_0)
-        {
-            bResult = GetOverlappedResult(hControlPipe,
-                                          &Overlapped,
-                                          &dwReadCount,
-                                          TRUE);
-            if (!bResult)
-            {
-                dwError = GetLastError();
-                DPRINT1("GetOverlappedResult(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
-            }
-        }
-    }
-
-Done:
-    /* Release the service control critical section */
-    LeaveCriticalSection(&ControlServiceCriticalSection);
+    dwError = ScmSendControlPacket(hControlPipe,
+                                   pServiceName,
+                                   dwControl,
+                                   PacketSize,
+                                   ControlPacket);
 
     /* Free the control packet */
     HeapFree(GetProcessHeap(), 0, ControlPacket);
 
-    if (dwReadCount == sizeof(ReplyPacket))
-        dwError = ReplyPacket.dwError;
-
-    DPRINT("ScmControlService(%S, %d) done (Error %lu)\n", pServiceName, dwControl, dwError);
+    DPRINT("ScmControlServiceEx(%S, %d) done (Error %lu)\n", pServiceName, dwControl, dwError);
     return dwError;
 }
+
 
 DWORD
 ScmControlService(
@@ -1572,11 +1595,44 @@ ScmControlService(
     _In_ DWORD dwControl,
     _In_ SERVICE_STATUS_HANDLE hServiceStatus)
 {
-    return ScmControlServiceEx(hControlPipe,
-                               pServiceName,
-                               dwControl,
-                               hServiceStatus,
-                               0, 0, NULL);
+    DWORD dwError = ERROR_SUCCESS;
+    PSCM_CONTROL_PACKET ControlPacket;
+    DWORD PacketSize;
+    PWSTR Ptr;
+
+    DPRINT("ScmControlService(%S, %d) called\n", pServiceName, dwControl);
+
+    /* Calculate the total size of the control packet:
+     * initial structure, the start command line, and the argument vector */
+    PacketSize = sizeof(SCM_CONTROL_PACKET);
+    PacketSize += (DWORD)((wcslen(pServiceName) + 1) * sizeof(WCHAR));
+
+    /* Allocate the control packet */
+    ControlPacket = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, PacketSize);
+    if (!ControlPacket)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    ControlPacket->dwSize = PacketSize;
+    ControlPacket->dwControl = dwControl;
+    ControlPacket->hServiceStatus = hServiceStatus;
+
+    /* Copy the service name */
+    ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
+    Ptr = (PWSTR)((ULONG_PTR)ControlPacket + ControlPacket->dwServiceNameOffset);
+    wcscpy(Ptr, pServiceName);
+
+    /* Send the control packet */
+    dwError = ScmSendControlPacket(hControlPipe,
+                                   pServiceName,
+                                   dwControl,
+                                   PacketSize,
+                                   ControlPacket);
+
+    /* Free the control packet */
+    HeapFree(GetProcessHeap(), 0, ControlPacket);
+
+    DPRINT("ScmControlService(%S, %d) done (Error %lu)\n", pServiceName, dwControl, dwError);
+    return dwError;
 }
 
 

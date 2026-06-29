@@ -1,4 +1,11 @@
-/*  Portuguese (PT) translation by Jose Jesus zecarlos1957@hotmail.com 25-2-2021 */
+/*
+ * PROJECT:     ReactOS Device Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATORS: Copyright 2007 Marcelo Zamperetti <marcelohz@gmail.com>
+ *              Copyright 2020-2026 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ *              Copyright 2021 Gabriel Aguiar <fgygh5804@gmail.com>
+ */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -76,7 +83,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Os controladores para este dispositivo não estão instalados."
     IDS_DEV_HARDWARE_DISABLED "Este dispositivo está desactivado porque a BIOS para o dispositivo não lhe deu nenhum recurso."
     IDS_DEV_CANT_SHARE_IRQ "Este dispositivo utiliza um recurso de Requisição de Interrupção (IRQ) que está em uso por outro dispositivo e não pode ser compartilhado.\nDeve alterar a configuração conflitante ou remover o controlador de modo real que está a causar o conflito."
-    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
+    IDS_DEV_FAILED_ADD "Este dispositivo não está a funcionar correctamente porque o ReactOS não consegue carregar os controladores necessários."
     IDS_DEV_DISABLED_SERVICE "O ReactOS não pode instalar os controladores para este dispositivo porque não consegue acessar o controlador ou local de rede que possui os ficheiros de configuração."
     IDS_DEV_TRANSLATION_FAILED "Este dispositivo não está a responder ao seu controlador."
     IDS_DEV_NO_SOFTCONFIG "O ReactOS não pode determinar as configurações para este dispositivo. Consulte a documentação que veio com este dispositivo e utilize o guia de recursos para definir a configuração."
@@ -199,7 +206,7 @@ BEGIN
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
     LTEXT "Fornecedor:", -1, 14, 134, 50, 8
     EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Versão do arquivo:", -1, 14, 150, 50, 8
+    LTEXT "Versão do ficheiro:", -1, 14, 150, 50, 8
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Direitos autorais:", -1, 14, 166, 50, 8
     EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
@@ -274,7 +281,7 @@ BEGIN
     BEGIN
         MENUITEM "Dispositivos por tipo",             IDM_DEVBYTYPE
         MENUITEM "Dispositivos por ligação",       IDM_DEVBYCONN
-        MENUITEM "Recursos por tipo",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Recursos por tipo",           IDM_RESBYTYPE
         MENUITEM "Recursos por ligação",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Mostrar dispositivos ocultos",         IDM_SHOWHIDDEN
@@ -312,6 +319,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "Desabilitar"
   IDS_TOOLTIP_UPDATE        "Actualizar software do controlador"
   IDS_TOOLTIP_UNINSTALL     "Desinstalar"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Memória"
+  IDS_TYPE_PORT             "Entrada/Saida (IO)"
+  IDS_TYPE_DMA              "Acesso directo à memória (DMA)"
+  IDS_TYPE_IRQ              "Pedido de Interrupção (IRQ)"
 END
 
 /* Hints */

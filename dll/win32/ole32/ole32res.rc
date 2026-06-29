@@ -49,5 +49,3 @@ CURSOR_COPY CURSOR drag_copy.cur
 
 /* @makedep: drag_link.cur */
 CURSOR_LINK CURSOR drag_link.cur
-
-1 WINE_REGISTRY "ole32.rgs"

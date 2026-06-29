@@ -18,7 +18,7 @@ add_library(ftfd MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/ftfd.def)
 
 set_module_type(ftfd kerneldll ENTRYPOINT FtfdEnableDriver 12)
-target_link_libraries(ftfd freetype libcntpr)
+target_link_libraries(ftfd freetype libcntpr setjmp ${PSEH_LIB})
 add_pch(ftfd ftfd.h "${PCH_SKIP_SOURCE}")
 add_importlibs(ftfd win32k)
 add_dependencies(ftfd psdk)

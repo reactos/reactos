@@ -1490,7 +1490,24 @@ typedef union {
     /// RDPKRU/WRPKRU instructions).
     ///
     UINT32    OSPKE            : 1;
-    UINT32    Reserved8        : 8;
+    UINT32    Reserved8        : 1;
+    ///
+    /// [Bit 6] AVX512_VBMI2.
+    ///
+    UINT32    AVX512_VBMI2     : 1;
+    UINT32    Reserved         : 3;
+    ///
+    /// [Bit 10] AVX512_VPCLMULQDQ.
+    ///
+    UINT32    AVX512_VPCLMULQDQ: 1;
+    ///
+    /// [Bit 11] AVX512_VNNI.
+    ///
+    UINT32    AVX512_VNNI      : 1;
+    ///
+    /// [Bit 12] AVX512_BITALG.
+    ///
+    UINT32    AVX512_BITALG    : 1;
     ///
     /// [Bit 13] If 1, the following MSRs are supported: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE,
     /// IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE.
@@ -1549,18 +1566,31 @@ typedef union {
     /// [Bit 3] AVX512_4FMAPS. (Intel Xeon Phi only.)
     ///
     UINT32    AVX512_4FMAPS                           : 1;
+    UINT32    Reserved2                               : 4;
     ///
-    /// [Bit 14:4] Reserved.
+    /// [Bit 8] AVX512_VP2INTERSECT.
     ///
-    UINT32    Reserved4                               : 11;
+    UINT32    AVX512_VP2INTERSECT                     : 1;
+    ///
+    /// [Bit 14:9] Reserved.
+    ///
+    UINT32    Reserved3                               : 6;
     ///
     /// [Bit 15] Hybrid. If 1, the processor is identified as a hybrid part.
     ///
     UINT32    Hybrid                                  : 1;
     ///
-    /// [Bit 25:16] Reserved.
+    /// [Bit 22:16] Reserved.
     ///
-    UINT32    Reserved5                               : 10;
+    UINT32    Reserved4                               : 7;
+    ///
+    /// [Bit 23] AVX512_FP16.
+    ///
+    UINT32    AVX512_FP16                             : 1;
+    ///
+    /// [Bit 25:24] Reserved.
+    ///
+    UINT32    Reserved5                               : 2;
     ///
     /// [Bit 26] Enumerates support for indirect branch restricted speculation
     /// (IBRS) and the indirect branch pre-dictor barrier (IBPB). Processors
@@ -1982,9 +2012,9 @@ typedef union {
     ///
     UINT32    AVX_512    : 3;
     ///
-    /// [Bit 8] Used for IA32_XSS.
+    /// [Bit 8] Intel PT state.
     ///
-    UINT32    IA32_XSS   : 1;
+    UINT32    IPT        : 1;
     ///
     /// [Bit 9] PKRU state.
     ///
@@ -2057,7 +2087,11 @@ typedef union {
     /// [Bit 3] Supports XSAVES/XRSTORS and IA32_XSS if set.
     ///
     UINT32    XSAVES   : 1;
-    UINT32    Reserved : 28;
+    ///
+    /// [Bit 4] Supports ExtendedFeatureDisable if set.
+    ///
+    UINT32    Xfd      : 1;
+    UINT32    Reserved : 27;
   } Bits;
   ///
   /// All bit fields as a 32-bit value
@@ -2077,21 +2111,44 @@ typedef union {
     ///
     /// [Bits 7:0] Used for XCR0.
     ///
-    UINT32    XCR0      : 1;
+    UINT32    XCR0      : 8;
     ///
-    /// [Bit 8] PT STate.
+    /// [Bit 8] PT state.
     ///
     UINT32    PT        : 1;
     ///
     /// [Bit 9] Used for XCR0.
     ///
     UINT32    XCR0_1    : 1;
-    UINT32    Reserved1 : 3;
     ///
-    /// [Bit 13] HWP state.
+    /// [Bit 10] PASID state.
     ///
-    UINT32    HWPState  : 1;
-    UINT32    Reserved8 : 18;
+    UINT32    PASID     : 1;
+    ///
+    /// [Bit 11] CET user state.
+    ///
+    UINT32    CET_U     : 1;
+    ///
+    /// [Bit 12] CET supervisor state.
+    ///
+    UINT32    CET_S     : 1;
+    ///
+    /// [Bit 13] HDC state.
+    ///
+    UINT32    HDC       : 1;
+    ///
+    /// [Bit 14] UINTR state.
+    ///
+    UINT32    UINTR     : 1;
+    ///
+    /// [Bit 15] LBR state.
+    ///
+    UINT32    LBR       : 1;
+    ///
+    /// [Bit 16] HWP state.
+    ///
+    UINT32    HWP       : 1;
+    UINT32    Reserved8 : 15;
   } Bits;
   ///
   /// All bit fields as a 32-bit value
@@ -2167,7 +2224,7 @@ typedef union {
     /// following the preceding state component (otherwise, it is located
     /// immediately following the preceding state component).
     ///
-    UINT32    Compacted : 1;
+    UINT32    Aligned : 1;
     UINT32    Reserved  : 30;
   } Bits;
   ///

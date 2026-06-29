@@ -193,7 +193,7 @@ ProcessorSetFriendlyName(
         goto done;
     }
 
-    swprintf(KeyNameBuffer, L"%s\\%s\\%s", pszPrefix, DeviceId, InstanceId);
+    _swprintf(KeyNameBuffer, L"%s\\%s\\%s", pszPrefix, DeviceId, InstanceId);
 
     RtlInitUnicodeString(&EnumKeyName, KeyNameBuffer);
     InitializeObjectAttributes(&ObjectAttributes,

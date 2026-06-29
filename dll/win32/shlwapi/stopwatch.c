@@ -23,14 +23,9 @@
  * B) Want to use a substandard API to tune its performance.
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
-
-#define NONAMELESSUNION
 
 #include "windef.h"
 #include "winbase.h"
@@ -96,7 +91,7 @@ void WINAPI StopWatchFlush(void)
 DWORD WINAPI StopWatchW(DWORD dwClass, LPCWSTR lpszStr, DWORD dwUnknown,
                         DWORD dwMode, DWORD dwTimeStamp)
 {
-    FIXME("(%d,%s,%d,%d,%d) stub!\n", dwClass, debugstr_w(lpszStr),
+    FIXME("(%ld,%s,%ld,%ld,%ld) stub!\n", dwClass, debugstr_w(lpszStr),
         dwUnknown, dwMode, dwTimeStamp);
   return ERROR_SUCCESS;
 }
@@ -174,7 +169,7 @@ void WINAPI StopWatch_MarkFrameStart(LPCSTR lpszName)
  */
 void WINAPI StopWatch_MarkJavaStop(LPCWSTR lpszEvent, HWND hWnd, DWORD dwReserved)
 {
-  FIXME("(%s,%p,0x%08x) stub!\n", debugstr_w(lpszEvent), hWnd, dwReserved);
+  FIXME("(%s,%p,0x%08lx) stub!\n", debugstr_w(lpszEvent), hWnd, dwReserved);
 }
 
 /*************************************************************************
@@ -218,7 +213,7 @@ DWORD WINAPI GetPerfTime(void)
  */
 DWORD WINAPI StopWatch_SetMsgLastLocation(DWORD dwUnknown)
 {
-  FIXME("(%d) stub!\n", dwUnknown);
+  FIXME("(%ld) stub!\n", dwUnknown);
 
   return dwUnknown;
 }

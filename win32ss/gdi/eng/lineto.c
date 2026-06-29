@@ -78,7 +78,7 @@ HandleStyles(
     else
     {
         iStyle = 0;
-        lStyleMax = MAX_COORD;
+        lStyleMax = MAXLONG;
     }
 
     *piStyle = iStyle;
@@ -145,6 +145,7 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
                 y++;
                 if (y == lStyleMax)
                 {
+                    ASSERT(cStyles);
                     iStyle = (iStyle + 1) % cStyles;
                     lStyleMax = y + pulStyles[iStyle];
                 }
@@ -160,6 +161,7 @@ NWtoSE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
                 x++;
                 if (x == lStyleMax)
                 {
+                    ASSERT(cStyles);
                     iStyle = (iStyle + 1) % cStyles;
                     lStyleMax = x + pulStyles[iStyle];
                 }
@@ -231,6 +233,7 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
                 y--;
                 if (y == lStyleMax)
                 {
+                    ASSERT(cStyles);
                     iStyle = (iStyle - 1) % cStyles;
                     lStyleMax = y - pulStyles[iStyle];
                 }
@@ -246,6 +249,7 @@ SWtoNE(SURFOBJ* OutputObj, CLIPOBJ* Clip,
                 x++;
                 if (x == lStyleMax)
                 {
+                    ASSERT(cStyles);
                     iStyle = (iStyle + 1) % cStyles;
                     lStyleMax = x + pulStyles[iStyle];
                 }
@@ -317,6 +321,7 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
                 y++;
                 if (y == lStyleMax)
                 {
+                    ASSERT(cStyles);
                     iStyle = (iStyle + 1) % cStyles;
                     lStyleMax = y + pulStyles[iStyle];
                 }
@@ -332,6 +337,7 @@ NEtoSW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
                 x--;
                 if (x == lStyleMax)
                 {
+                    ASSERT(cStyles);
                     iStyle = (iStyle - 1) % cStyles;
                     lStyleMax = x - pulStyles[iStyle];
                 }
@@ -403,6 +409,7 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
                 y--;
                 if (y == lStyleMax)
                 {
+                    ASSERT(cStyles);
                     iStyle = (iStyle - 1) % cStyles;
                     lStyleMax = y - pulStyles[iStyle];
                 }
@@ -418,6 +425,7 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
                 x--;
                 if (x == lStyleMax)
                 {
+                    ASSERT(cStyles);
                     iStyle = (iStyle - 1) % cStyles;
                     lStyleMax = x - pulStyles[iStyle];
                 }

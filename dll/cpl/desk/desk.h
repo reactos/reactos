@@ -61,6 +61,10 @@ INT AllocAndLoadString(LPTSTR *lpTarget,
                        HINSTANCE hInst,
                        UINT uID);
 
+UINT
+ClrBtn_CustomDraw(NMCUSTOMDRAW *pCD,
+                  COLORREF Color);
+
 ULONG __cdecl DbgPrint(PCCH Format,...);
 
 /*

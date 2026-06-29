@@ -6,25 +6,26 @@
  */
 
 #include <freeldr.h>
+#include <ndk/kefuncs.h> // For KeFindConfiguration*Entry()
 #include <ndk/ldrtypes.h>
 #include "winldr.h"
 #include "ntldropts.h"
 #include "registry.h"
 #include <internal/cmboot.h>
 
+#include <drivers/bootvid/framebuf.h> // For CM_FRAMEBUF_DEVICE_DATA
+
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
-// FIXME: Find a better way to retrieve ARC disk information
-extern ULONG reactos_disk_count;
-extern ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[];
+ULONG ArcGetDiskCount(VOID);
+PARC_DISK_SIGNATURE_EX ArcGetDiskInfo(ULONG Index);
 
-extern ULONG LoaderPagesSpanned;
-extern BOOLEAN AcpiPresent;
+BOOLEAN IsAcpiPresent(VOID);
 
 extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
 extern BOOLEAN WinLdrTerminalConnected;
-extern VOID WinLdrSetupEms(IN PCSTR BootOptions);
+extern VOID WinLdrSetupEms(_In_ PCSTR BootOptions);
 
 PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
 /**/PCWSTR BootFileSystem = NULL;/**/
@@ -104,6 +105,13 @@ AllocateAndInitLPB(
     Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
     Extension->MinorVersion = (VersionToBoot & 0xFF);
 
+#ifdef UEFIBOOT
+    Extension->BootViaEFI = 1;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    LoaderBlock->FirmwareInformation.FirmwareTypeEfi = 1;
+#endif
+#endif
+
     /* Init three critical lists, used right away */
     InitializeListHead(&LoaderBlock->LoadOrderListHead);
     InitializeListHead(&LoaderBlock->MemoryDescriptorListHead);
@@ -113,40 +121,49 @@ AllocateAndInitLPB(
 }
 
 // Init "phase 1"
-VOID
-WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
-                       PCSTR Options,
-                       PCSTR SystemRoot,
-                       PCSTR BootPath,
-                       USHORT VersionToBoot)
+static VOID
+WinLdrInitializePhase1(
+    _In_ USHORT OperatingSystemVersion,
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ PCSTR BootOptions,
+    _In_ PCSTR SystemPartition,
+    _In_ PCSTR BootPath)
 {
     /*
      * Examples of correct options and paths:
-     * CHAR Options[] = "/DEBUGPORT=COM1 /BAUDRATE=115200";
-     * CHAR Options[] = "/NODEBUG";
-     * CHAR SystemRoot[] = "\\WINNT\\";
-     * CHAR ArcBoot[] = "multi(0)disk(0)rdisk(0)partition(1)";
+     * CHAR BootOptions[] = "DEBUGPORT=COM1 BAUDRATE=115200";
+     * CHAR SystemPartition[] = "multi(0)disk(0)rdisk(0)partition(1)";
+     * CHAR BootPath[] = "multi(0)disk(0)rdisk(0)partition(2)\\ReactOS\\";
+     * --> ArcBootDevice = "multi(0)disk(0)rdisk(0)partition(2)"
+     *     SystemRoot = "\\ReactOS\\"
      */
-
-    PSTR  LoadOptions, NewLoadOptions;
     CHAR  HalPath[] = "\\";
-    CHAR  ArcBoot[MAX_PATH+1];
-    CHAR  MiscFiles[MAX_PATH+1];
+    CHAR  FilePath[MAX_PATH+1];
     ULONG i;
-    ULONG_PTR PathSeparator;
     PLOADER_PARAMETER_EXTENSION Extension;
 
-    /* Construct SystemRoot and ArcBoot from SystemPath */
-    PathSeparator = strstr(BootPath, "\\") - BootPath;
-    RtlStringCbCopyNA(ArcBoot, sizeof(ArcBoot), BootPath, PathSeparator);
+    /* Convert BootPath to SystemRoot. Attempt to handle paths like:
+     * "multi(0)disk(0)rdisk(0)partition(2)ReactOS\\weird)name"
+     * where SystemRoot would be: "ReactOS\\weird)name" */
+    PCSTR SystemRoot = BootPath + strcspn(BootPath, "\\");
+    PCSTR LastParen;
 
-    TRACE("ArcBoot: '%s'\n", ArcBoot);
-    TRACE("SystemRoot: '%s'\n", SystemRoot);
-    TRACE("Options: '%s'\n", Options);
+    CHAR Sep = *SystemRoot;
+    *(PSTR)SystemRoot = ANSI_NULL;
+    LastParen = strrchr(BootPath, ')');
+    *(PSTR)SystemRoot = Sep;
+    if (LastParen && (LastParen < SystemRoot))
+        SystemRoot = (LastParen + 1);
 
-    /* Fill ARC BootDevice */
+    TRACE("SystemPartition: '%s'\n", SystemPartition);
+    TRACE("ArcBootDevice:   '%.*s'\n", (SystemRoot - BootPath), BootPath);
+    TRACE("SystemRoot:      '%s'\n", SystemRoot);
+    TRACE("BootOptions:     '%s'\n", BootOptions);
+
+    /* Fill the OS boot partition ARC device path */
     LoaderBlock->ArcBootDeviceName = WinLdrSystemBlock->ArcBootDeviceName;
-    RtlStringCbCopyA(LoaderBlock->ArcBootDeviceName, sizeof(WinLdrSystemBlock->ArcBootDeviceName), ArcBoot);
+    RtlStringCbCopyNA(LoaderBlock->ArcBootDeviceName, sizeof(WinLdrSystemBlock->ArcBootDeviceName),
+                      BootPath, (SystemRoot - BootPath) * sizeof(CHAR));
     LoaderBlock->ArcBootDeviceName = PaToVa(LoaderBlock->ArcBootDeviceName);
 
 //
@@ -158,7 +175,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     {
         PSETUP_LOADER_BLOCK SetupBlock = LoaderBlock->SetupLdrBlock;
 
-        /* Adjust the ARC path in the setup block - Matches ArcBoot path */
+        /* Adjust the ARC path in the setup block - Matches ArcBootDeviceName */
         SetupBlock->ArcSetupDeviceName = WinLdrSystemBlock->ArcBootDeviceName;
         SetupBlock->ArcSetupDeviceName = PaToVa(SetupBlock->ArcSetupDeviceName);
 
@@ -166,8 +183,9 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         LoaderBlock->SetupLdrBlock = PaToVa(LoaderBlock->SetupLdrBlock);
     }
 
-    /* Fill ARC HalDevice, it matches ArcBoot path */
-    LoaderBlock->ArcHalDeviceName = WinLdrSystemBlock->ArcBootDeviceName;
+    /* Fill the firmware system loader / "HAL" partition ARC device path */
+    LoaderBlock->ArcHalDeviceName = WinLdrSystemBlock->ArcHalDeviceName;
+    RtlStringCbCopyA(LoaderBlock->ArcHalDeviceName, sizeof(WinLdrSystemBlock->ArcHalDeviceName), SystemPartition);
     LoaderBlock->ArcHalDeviceName = PaToVa(LoaderBlock->ArcHalDeviceName);
 
     /* Fill SystemRoot */
@@ -180,18 +198,9 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     RtlStringCbCopyA(LoaderBlock->NtHalPathName, sizeof(WinLdrSystemBlock->NtHalPathName), HalPath);
     LoaderBlock->NtHalPathName = PaToVa(LoaderBlock->NtHalPathName);
 
-    /* Fill LoadOptions and strip the '/' switch symbol in front of each option */
-    NewLoadOptions = LoadOptions = LoaderBlock->LoadOptions = WinLdrSystemBlock->LoadOptions;
-    RtlStringCbCopyA(LoaderBlock->LoadOptions, sizeof(WinLdrSystemBlock->LoadOptions), Options);
-
-    do
-    {
-        while (*LoadOptions == '/')
-            ++LoadOptions;
-
-        *NewLoadOptions++ = *LoadOptions;
-    } while (*LoadOptions++);
-
+    /* Fill LoadOptions */
+    LoaderBlock->LoadOptions = WinLdrSystemBlock->LoadOptions;
+    RtlStringCbCopyA(LoaderBlock->LoadOptions, sizeof(WinLdrSystemBlock->LoadOptions), BootOptions);
     LoaderBlock->LoadOptions = PaToVa(LoaderBlock->LoadOptions);
 
     /* ARC devices */
@@ -199,7 +208,8 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     InitializeListHead(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
 
     /* Convert ARC disk information from freeldr to a correct format */
-    for (i = 0; i < reactos_disk_count; i++)
+    ULONG DiscCount = ArcGetDiskCount();
+    for (i = 0; i < DiscCount; i++)
     {
         PARC_DISK_SIGNATURE_EX ArcDiskSig;
 
@@ -208,12 +218,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         if (!ArcDiskSig)
         {
             ERR("Failed to allocate ARC structure! Ignoring remaining ARC disks. (i = %lu, DiskCount = %lu)\n",
-                i, reactos_disk_count);
+                i, DiscCount);
             break;
         }
 
         /* Copy the data over */
-        RtlCopyMemory(ArcDiskSig, &reactos_arc_disk_info[i], sizeof(ARC_DISK_SIGNATURE_EX));
+        RtlCopyMemory(ArcDiskSig, ArcGetDiskInfo(i), sizeof(ARC_DISK_SIGNATURE_EX));
 
         /* Set the ARC Name pointer */
         ArcDiskSig->DiskSignature.ArcName = PaToVa(ArcDiskSig->ArcName);
@@ -248,14 +258,14 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     Extension->Profile.Status = 2;
 
     /* Check if FreeLdr detected a ACPI table */
-    if (AcpiPresent)
+    if (IsAcpiPresent())
     {
         /* Set the pointer to something for compatibility */
         Extension->AcpiTable = (PVOID)1;
         // FIXME: Extension->AcpiTableSize;
     }
 
-    if (VersionToBoot >= _WIN32_WINNT_VISTA)
+    if (OperatingSystemVersion >= _WIN32_WINNT_VISTA)
     {
         Extension->BootViaWinload = 1;
         Extension->LoaderPerformanceData = PaToVa(&WinLdrSystemBlock->LoaderPerformanceData);
@@ -264,21 +274,20 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         List_PaToVa(&Extension->BootApplicationPersistentData);
     }
 
-#ifdef _M_IX86
-    /* Set headless block pointer */
+    /* Set the headless block pointer */
     if (WinLdrTerminalConnected)
     {
         Extension->HeadlessLoaderBlock = &WinLdrSystemBlock->HeadlessLoaderBlock;
         RtlCopyMemory(Extension->HeadlessLoaderBlock,
                       &LoaderRedirectionInformation,
-                      sizeof(HEADLESS_LOADER_BLOCK));
+                      sizeof(LoaderRedirectionInformation));
         Extension->HeadlessLoaderBlock = PaToVa(Extension->HeadlessLoaderBlock);
     }
-#endif
+
     /* Load drivers database */
-    RtlStringCbCopyA(MiscFiles, sizeof(MiscFiles), BootPath);
-    RtlStringCbCatA(MiscFiles, sizeof(MiscFiles), "AppPatch\\drvmain.sdb");
-    Extension->DrvDBImage = PaToVa(WinLdrLoadModule(MiscFiles,
+    RtlStringCbCopyA(FilePath, sizeof(FilePath), BootPath);
+    RtlStringCbCatA(FilePath, sizeof(FilePath), "AppPatch\\drvmain.sdb");
+    Extension->DrvDBImage = PaToVa(WinLdrLoadModule(FilePath,
                                                     &Extension->DrvDBSize,
                                                     LoaderRegistryData));
 
@@ -515,13 +524,13 @@ WinLdrDetectVersion(VOID)
 static
 PVOID
 LoadModule(
-    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN PCCH Path,
-    IN PCCH File,
-    IN PCCH ImportName, // BaseDllName
-    IN TYPE_OF_MEMORY MemoryType,
-    OUT PLDR_DATA_TABLE_ENTRY *Dte,
-    IN ULONG Percentage)
+    _Inout_ PLIST_ENTRY LoadOrderListHead,
+    _In_ PCSTR Path,
+    _In_ PCSTR File,
+    _In_ PCSTR ImportName, // BaseDllName
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PLDR_DATA_TABLE_ENTRY* Dte,
+    _In_ ULONG Percentage)
 {
     BOOLEAN Success;
     CHAR FullFileName[MAX_PATH];
@@ -543,7 +552,7 @@ LoadModule(
     }
     TRACE("%s loaded successfully at %p\n", File, BaseAddress);
 
-    Success = PeLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
+    Success = PeLdrAllocateDataTableEntry(LoadOrderListHead,
                                           ImportName,
                                           FullFileName,
                                           PaToVa(BaseAddress),
@@ -617,6 +626,112 @@ WinLdrIsPaeSupported(
 }
 #endif /* _M_IX86 */
 
+static VOID
+NtLdrDetectBootVid(
+    _In_ PCONFIGURATION_COMPONENT_DATA ConfigTree,
+    _Out_writes_bytes_(BootVidNameSize) _Always_(_Post_z_)
+         PSTR BootVidName,
+    _In_ SIZE_T BootVidNameSize)
+{
+    /* NOTE: The following array should instead be read from txtsetup.sif */
+    static const struct
+    {
+        PCSTR SystemSubId;
+        PCSTR ModuleName;
+    } BootVidNames[] =
+    {
+#if defined(_M_IX86) && !defined(UEFIBOOT)
+        {"PC-98", "pc98bvid.dll"},
+        {"Xbox", "xboxbvid.dll"},
+#endif
+        {"EFI", "lfbbvid.dll"},
+    };
+
+    /* Default BootVid file name */
+    RtlStringCbCopyA(BootVidName, BootVidNameSize, "bootvid.dll");
+
+    /* Attempt auto-detection by System ID */
+    PCONFIGURATION_COMPONENT_DATA Entry;
+    Entry = KeFindConfigurationEntry(ConfigTree,
+                                     SystemClass,
+                                     ArcSystem,
+                                     NULL);
+    if (!Entry)
+    {
+        /* No SystemClass ArcSystem entry, retry with hack */
+        Entry = KeFindConfigurationEntry(ConfigTree,
+                                         SystemClass,
+                                         MaximumType, // HACK for non-ARC machines
+                                         NULL);
+    }
+    if (Entry)
+    {
+        // Entry->ComponentEntry.IdentifierLength;
+        TRACE("ARC System ID: '%s'\n", Entry->ComponentEntry.Identifier);
+
+        /* Look up the name */
+        for (ULONG i = 0; i < RTL_NUMBER_OF(BootVidNames); ++i)
+        {
+            if (strstr(Entry->ComponentEntry.Identifier, BootVidNames[i].SystemSubId))
+            {
+                RtlStringCbCopyA(BootVidName, BootVidNameSize, BootVidNames[i].ModuleName);
+                break;
+            }
+        }
+    }
+    /* Special-case detection if the display controller contains
+     * a DeviceSpecific CM_FRAMEBUF_DEVICE_DATA resource */
+    Entry = KeFindConfigurationEntry(ConfigTree,
+                                     ControllerClass,
+                                     DisplayController,
+                                     NULL);
+    if (Entry)
+    {
+        /* Cast to PCM_PARTIAL_RESOURCE_LIST to access
+         * the common Version and Revision fields */
+        PCM_PARTIAL_RESOURCE_LIST ResourceList =
+            (PCM_PARTIAL_RESOURCE_LIST)Entry->ConfigurationData;
+        ULONG ConfigurationDataLength =
+            Entry->ComponentEntry.ConfigurationDataLength;
+
+        // Entry->ComponentEntry.IdentifierLength;
+        TRACE("Display: '%s'\n", Entry->ComponentEntry.Identifier);
+
+        /* The configuration data length must be valid.
+         * The Version/Revision must be greater than or equal to 1.2
+         * in order to describe a valid new configuration data. */
+        if (Entry->ConfigurationData &&
+            (ConfigurationDataLength >= sizeof(CM_PARTIAL_RESOURCE_LIST)) &&
+            ( (ResourceList->Version >  1) ||
+             ((ResourceList->Version == 1) && (ResourceList->Revision > 1)) ))
+        {
+            /* Try to find the DeviceSpecific resource */
+            PCM_PARTIAL_RESOURCE_DESCRIPTOR DeviceSpecific = NULL;
+            for (ULONG i = 0; i < ResourceList->Count; ++i)
+            {
+                PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor =
+                    &ResourceList->PartialDescriptors[i];
+                if (Descriptor->Type == CmResourceTypeDeviceSpecific)
+                {
+                    /* NOTE: This descriptor *MUST* be the last one.
+                     * The actual device data follows the descriptor. */
+                    ASSERT(i == ResourceList->Count - 1);
+                    DeviceSpecific = Descriptor;
+                    break;
+                }
+            }
+
+            /* Check whether the resource describes framebuffer information */
+            if (DeviceSpecific &&
+                (DeviceSpecific->u.DeviceSpecificData.DataSize >= sizeof(CM_FRAMEBUF_DEVICE_DATA)))
+            {
+                /* It does, use the Linear FrameBuffer Boot Video Driver instead */
+                RtlStringCbCopyA(BootVidName, BootVidNameSize, "lfbbvid.dll");
+            }
+        }
+    }
+}
+
 static
 BOOLEAN
 LoadWindowsCore(IN USHORT OperatingSystemVersion,
@@ -628,14 +743,14 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     BOOLEAN Success;
     PCSTR Option;
     ULONG OptionLength;
-    PVOID KernelBase, HalBase, KdDllBase = NULL;
-    PLDR_DATA_TABLE_ENTRY HalDTE, KdDllDTE = NULL;
+    PVOID KernelBase, HalBase, KdDllBase = NULL, BootVidBase = NULL;
+    PLDR_DATA_TABLE_ENTRY HalDTE, KdDllDTE = NULL, BootVidDTE = NULL;
+    PCSTR ModuleName;
     CHAR DirPath[MAX_PATH];
     CHAR HalFileName[MAX_PATH];
     CHAR KernelFileName[MAX_PATH];
     CHAR KdDllName[MAX_PATH];
-
-    if (!KernelDTE) return FALSE;
+    CHAR BootVidName[MAX_PATH];
 
     /* Initialize SystemRoot\System32 path */
     RtlStringCbCopyA(DirPath, sizeof(DirPath), BootPath);
@@ -711,7 +826,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
 
     /*
      * Select the HAL and KERNEL file names.
-     * Check for any "/HAL=" or "/KERNEL=" override option.
+     * Check for any "HAL=" or "KERNEL=" override option.
      *
      * See the following links to know how the file names are actually chosen:
      * https://www.geoffchappell.com/notes/windows/boot/bcd/osloader/detecthal.htm
@@ -762,8 +877,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
      */
 
     /* Load the Kernel */
-    KernelBase = LoadModule(LoaderBlock, DirPath, KernelFileName,
-                            "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30);
+    KernelBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                            DirPath, KernelFileName,
+                            "ntoskrnl.exe", LoaderSystemCode,
+                            KernelDTE, 30);
     if (!KernelBase)
     {
         ERR("LoadModule('%s') failed\n", KernelFileName);
@@ -772,8 +889,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     }
 
     /* Load the HAL */
-    HalBase = LoadModule(LoaderBlock, DirPath, HalFileName,
-                         "hal.dll", LoaderHalCode, &HalDTE, 35);
+    HalBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                         DirPath, HalFileName,
+                         "hal.dll", LoaderHalCode,
+                         &HalDTE, 35);
     if (!HalBase)
     {
         ERR("LoadModule('%s') failed\n", HalFileName);
@@ -847,8 +966,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         _strlwr(KdDllName);
 
         /* Load the KD DLL. Override its base DLL name to the default "KDCOM.DLL". */
-        KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
-                               "kdcom.dll", LoaderSystemCode, &KdDllDTE, 40);
+        KdDllBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                               DirPath, KdDllName,
+                               "kdcom.dll", LoaderSystemCode,
+                               &KdDllDTE, 40);
         if (!KdDllBase)
         {
             /* If we failed to load a custom KD DLL, fall back to the standard one */
@@ -860,8 +981,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 IsCustomKdDll = FALSE;
                 RtlStringCbCopyA(KdDllName, sizeof(KdDllName), "kdcom.dll");
 
-                KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
-                                       "kdcom.dll", LoaderSystemCode, &KdDllDTE, 40);
+                KdDllBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                                       DirPath, KdDllName,
+                                       "kdcom.dll", LoaderSystemCode,
+                                       &KdDllDTE, 40);
             }
 
             if (!KdDllBase)
@@ -873,33 +996,76 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         }
     }
 
-    /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
+    /* Load the correct Boot Video Driver */
+    if (OperatingSystemVersion >= _WIN32_WINNT_WIN2K)
+    {
+        /* Check whether there is a BOOTVID option */
+        Option = NtLdrGetOptionEx(BootOptions, "BOOTVID=", &OptionLength);
+        if (Option && (OptionLength > 8))
+        {
+            /* Retrieve the BootVid file name */
+            Option += 8; OptionLength -= 8;
+            RtlStringCbCopyNA(BootVidName, sizeof(BootVidName), Option, OptionLength);
+            _strlwr(BootVidName);
+            TRACE("User-specified BootVid file: '%s'\n", BootVidName);
+        }
+        else
+        {
+            /* No option given, attempt auto-detection */
+            NtLdrDetectBootVid(LoaderBlock->ConfigurationRoot,
+                               BootVidName, sizeof(BootVidName));
+            TRACE("Auto-detected BootVid file: '%s'\n", BootVidName);
+        }
+
+        /* Load the BootVid */
+        BootVidBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                                 DirPath, BootVidName,
+                                 "bootvid.dll", LoaderSystemCode,
+                                 &BootVidDTE, 45);
+        if (!BootVidBase)
+        {
+            /* Ignore the failure; we will fail later when scanning the
+             * kernel import tables, if it really needs the BootVid. */
+            ERR("LoadModule('%s') failed\n", BootVidName);
+        }
+    }
+
+    /* Load all referenced DLLs for Kernel, HAL, Kernel Debugger Transport and BootVid */
+    ModuleName = KernelFileName;
     Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
     if (!Success)
-    {
-        UiMessageBox("Could not load %s", KernelFileName);
         goto Quit;
-    }
+    ModuleName = HalFileName;
     Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
     if (!Success)
-    {
-        UiMessageBox("Could not load %s", HalFileName);
         goto Quit;
-    }
     if (KdDllDTE)
     {
+        ModuleName = KdDllName;
         Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, KdDllDTE);
         if (!Success)
-        {
-            UiMessageBox("Could not load %s", KdDllName);
             goto Quit;
-        }
+    }
+    if (BootVidDTE)
+    {
+        ModuleName = BootVidName;
+        Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, BootVidDTE);
+        if (!Success)
+            goto Quit;
     }
 
 Quit:
     if (!Success)
     {
+        ERR("PeLdrScanImportDescriptorTable('%s') failed\n", ModuleName);
+        UiMessageBox("Could not load %s", ModuleName);
+
         /* Cleanup and bail out */
+        if (BootVidDTE)
+            PeLdrFreeDataTableEntry(BootVidDTE);
+        if (BootVidBase) // Optional
+            MmFreeMemory(BootVidBase);
+
         if (KdDllDTE)
             PeLdrFreeDataTableEntry(KdDllDTE);
         if (KdDllBase) // Optional
@@ -976,6 +1142,39 @@ WinLdrInitErrataInf(
     return TRUE;
 }
 
+/**
+ * @brief
+ * Normalize in-place the NT boot options by removing any leading '/',
+ * normalizing TABs to spaces, etc.
+ **/
+VOID
+NtLdrNormalizeOptions(
+    _Inout_ PSTR LoadOptions)
+{
+    PCHAR NewOptions = LoadOptions;
+    PCSTR Options, Option;
+    ULONG OptionLength;
+
+    /* Normalize the boot options by successively enumerating each and
+     * copying them back, stripping and replacing any extra separator
+     * by one single space. */
+    Options = LoadOptions;
+    while ((Option = NtLdrGetNextOption(&Options, &OptionLength)))
+    {
+        if (NewOptions > LoadOptions)
+            *NewOptions++ = ' ';
+
+        /* If necessary, move the current option back */
+        ASSERT(NewOptions <= Option);
+        if (NewOptions < Option)
+            RtlMoveMemory(NewOptions, Option, OptionLength * sizeof(CHAR));
+        NewOptions += OptionLength;
+    }
+
+    /* NUL-terminate */
+    *NewOptions = ANSI_NULL;
+}
+
 ARC_STATUS
 LoadAndBootWindows(
     IN ULONG Argc,
@@ -992,7 +1191,7 @@ LoadAndBootWindows(
     PLOADER_PARAMETER_BLOCK LoaderBlock;
     CHAR BootPath[MAX_PATH];
     CHAR FilePath[MAX_PATH];
-    CHAR BootOptions[256];
+    CHAR BootOptions[MAX_OPTIONS_LENGTH+1];
 
     /* Retrieve the (mandatory) boot type */
     ArgValue = GetArgumentValue(Argc, Argv, "BootType");
@@ -1031,7 +1230,7 @@ LoadAndBootWindows(
     }
 
     /* Let the user know we started loading */
-    UiDrawBackdrop();
+    UiDrawBackdrop(UiGetScreenHeight());
     UiDrawStatusText("Loading...");
     UiDrawProgressBarCenter("Loading NT...");
 
@@ -1074,12 +1273,10 @@ LoadAndBootWindows(
     ArgValue = GetArgumentValue(Argc, Argv, "Options");
     if (ArgValue && *ArgValue)
         RtlStringCbCopyA(BootOptions, sizeof(BootOptions), ArgValue);
-
-    /* Append boot-time options */
-    AppendBootTimeOptions(BootOptions);
+    TRACE("BootOptions(1): '%s'\n", BootOptions);
 
     /*
-     * Set the "/HAL=" and "/KERNEL=" options if needed.
+     * Set the "HAL=" and "KERNEL=" options if needed.
      * If already present on the standard "Options=" option line, they take
      * precedence over those passed via the separate "Hal=" and "Kernel="
      * options.
@@ -1111,11 +1308,16 @@ LoadAndBootWindows(
         }
     }
 
-    TRACE("BootOptions: '%s'\n", BootOptions);
+    /* Append boot-time options */
+    AppendBootTimeOptions(BootOptions, sizeof(BootOptions));
+
+    /* Post-process the boot options */
+    NtLdrNormalizeOptions(BootOptions);
+    TRACE("BootOptions(2): '%s'\n", BootOptions);
 
     /* Check if a RAM disk file was given */
     FileName = NtLdrGetOptionEx(BootOptions, "RDPATH=", &FileNameLength);
-    if (FileName && (FileNameLength > 7))
+    if (FileName && (FileNameLength >= 7))
     {
         /* Load the RAM disk */
         Status = RamDiskInitialize(FALSE, BootOptions, SystemPartition);
@@ -1166,33 +1368,29 @@ LoadAndBootWindows(
     return LoadAndBootWindowsCommon(OperatingSystemVersion,
                                     LoaderBlock,
                                     BootOptions,
+                                    SystemPartition,
                                     BootPath);
 }
 
 ARC_STATUS
 LoadAndBootWindowsCommon(
-    IN USHORT OperatingSystemVersion,
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN PCSTR BootOptions,
-    IN PCSTR BootPath)
+    _In_ USHORT OperatingSystemVersion,
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ PCSTR BootOptions,
+    _In_ PCSTR SystemPartition,
+    _In_ PCSTR BootPath)
 {
     PLOADER_PARAMETER_BLOCK LoaderBlockVA;
     BOOLEAN Success;
     PLDR_DATA_TABLE_ENTRY KernelDTE;
     KERNEL_ENTRY_POINT KiSystemStartup;
-    PCSTR SystemRoot;
 
     TRACE("LoadAndBootWindowsCommon()\n");
 
     ASSERT(OperatingSystemVersion != 0);
 
-#ifdef _M_IX86
     /* Setup redirection support */
     WinLdrSetupEms(BootOptions);
-#endif
-
-    /* Convert BootPath to SystemRoot */
-    SystemRoot = strstr(BootPath, "\\");
 
     /* Detect hardware */
     UiUpdateProgressBar(20, "Detecting hardware...");
@@ -1237,11 +1435,11 @@ LoadAndBootWindowsCommon(
     PeLdrImportDllLoadCallback = NULL;
 
     /* Initialize Phase 1 - no drivers loading anymore */
-    WinLdrInitializePhase1(LoaderBlock,
+    WinLdrInitializePhase1(OperatingSystemVersion,
+                           LoaderBlock,
                            BootOptions,
-                           SystemRoot,
-                           BootPath,
-                           OperatingSystemVersion);
+                           SystemPartition,
+                           BootPath);
 
     UiUpdateProgressBar(100, NULL);
 
@@ -1251,6 +1449,33 @@ LoadAndBootWindowsCommon(
 
     /* "Stop all motors", change videomode */
     MachPrepareForReactOS();
+
+    /* Show the "debug mode" notice if needed */
+    /* Match KdInitSystem() conditions */
+    if (!NtLdrGetOption(BootOptions, "CRASHDEBUG") &&
+        !NtLdrGetOption(BootOptions, "NODEBUG") &&
+        !!NtLdrGetOption(BootOptions, "DEBUG"))
+    {
+        /* Check whether there is a DEBUGPORT option */
+        PCSTR DebugPort;
+        ULONG DebugPortLength = 0;
+        DebugPort = NtLdrGetOptionEx(BootOptions, "DEBUGPORT=", &DebugPortLength);
+        if (DebugPort != NULL && DebugPortLength > 10)
+        {
+            /* Move to the debug port name */
+            DebugPort += 10; DebugPortLength -= 10;
+        }
+        else
+        {
+            /* Default to COM */
+            DebugPort = "COM"; DebugPortLength = 3;
+        }
+
+        /* It is booting in debug mode, show the banner */
+        TuiPrintf("You need to connect a debugger on port %.*s\n"
+                  "For more information, visit https://reactos.org/wiki/Debugging.\n",
+                  DebugPortLength, DebugPort);
+    }
 
     /* Debugging... */
     //DumpMemoryAllocMap();
@@ -1265,7 +1490,7 @@ LoadAndBootWindowsCommon(
     WinLdrSetProcessorContext(OperatingSystemVersion);
 
     /* Save final value of LoaderPagesSpanned */
-    LoaderBlock->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
+    LoaderBlock->Extension->LoaderPagesSpanned = MmGetLoaderPagesSpanned();
 
     TRACE("Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
           KiSystemStartup, LoaderBlockVA);

@@ -32,7 +32,7 @@
 #define MAX_CONTROLLERS 4
 
 /* MS doesn't prototype this but the w2k kernel exports it */
-int _cdecl swprintf(const WCHAR *, ...);
+int _cdecl _swprintf(const WCHAR *, ...);
 
 /* need ioctls in ddk build mode */
 #include <ntdddisk.h>
@@ -107,7 +107,7 @@ StopMotor(PCONTROLLER_INFO ControllerInfo);
 /*
  * MEDIA TYPES
  *
- * This table was found at http://www.nondot.org/sabre/os/files/Disk/FloppyMediaIDs.txt.
+ * This table was found at https://web.archive.org/web/20021207232702/http://www.nondot.org/sabre/os/files/Disk/FloppyMediaIDs.txt .
  * Thanks to raster@indirect.com for this information.
  *
  * Format   Size   Cyls   Heads  Sec/Trk   FATs   Sec/FAT   Sec/Root   Media

@@ -1084,23 +1084,6 @@ NtGdiGetSpoolMessage(
 /*
  * @unimplemented
  */
-DWORD
-APIENTRY
-NtGdiGetGlyphIndicesWInternal(
-    IN HDC hdc,
-    IN OPTIONAL LPWSTR pwc,
-    IN INT cwc,
-    OUT OPTIONAL LPWORD pgi,
-    IN DWORD iMode,
-    IN BOOL bSubset)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 INT
 APIENTRY
 NtGdiGetLinkedUFIs(
@@ -1177,23 +1160,6 @@ NtGdiGetStringBitmapW(
 {
     UNIMPLEMENTED;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiRemoveFontResourceW(
-    IN WCHAR *pwszFiles,
-    IN ULONG cwc,
-    IN ULONG cFiles,
-    IN ULONG fl,
-    IN DWORD dwPidTid,
-    IN OPTIONAL DESIGNVECTOR *pdv)
-{
-    UNIMPLEMENTED;
-    return FALSE;
 }
 
 /*

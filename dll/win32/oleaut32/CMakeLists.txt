@@ -3,16 +3,15 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__WINESRC__
     -D__ROS_LONG64__
     -DCOM_NO_WINDOWS_H
     -D_OLEAUT32_
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL
     -DENTRY_PREFIX=OLEAUTPS_
-    -DPROXY_CLSID=CLSID_PSFactoryBuffer)
+    -DPROXY_CLSID=CLSID_PSFactoryBuffer
+    -D_CRT_NON_CONFORMING_SWPRINTFS)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(oleaut32.dll oleaut32.spec ADD_IMPORTLIB)
 add_rpcproxy_files(oleaut32_oaidl.idl oleaut32_ocidl.idl)
 
@@ -55,6 +54,10 @@ if(MSVC)
     target_compile_options(oleaut32 PRIVATE /wd4146 /wd4267)
 endif()
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(oleaut32 PRIVATE -Wno-misleading-indentation)
+endif()
+
 add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
 add_dependencies(oleaut32 oleaut32_idlheader)
 set_module_type(oleaut32 win32dll)
@@ -63,3 +66,4 @@ add_delay_importlibs(oleaut32 comctl32 urlmon windowscodecs)
 add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
 add_pch(oleaut32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET oleaut32 DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(oleaut32) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

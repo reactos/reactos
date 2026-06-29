@@ -4881,9 +4881,21 @@ typedef struct {
 
   WINCOMMCTRLAPI
   BOOL
+  WINAPI Str_SetPtrA(
+    _Inout_ LPSTR *ppsz,
+    _In_opt_ LPCSTR psz);
+
+  WINCOMMCTRLAPI
+  BOOL
   WINAPI Str_SetPtrW(
     _Inout_ LPWSTR *ppsz,
     _In_opt_ LPCWSTR psz);
+
+#ifdef UNICODE
+#define Str_SetPtr Str_SetPtrW
+#else
+#define Str_SetPtr Str_SetPtrA
+#endif
 
 typedef struct _DPASTREAMINFO {
   int iPos;

@@ -150,7 +150,7 @@ GetJobFilePath(PCWSTR pwszExtension, DWORD dwJobID, PWSTR pwszOutput)
     if (pwszOutput)
     {
         CopyMemory(pwszOutput, wszJobDirectory, cchJobDirectory * sizeof(WCHAR));
-        swprintf(&pwszOutput[cchJobDirectory], L"\\%05lu.%s", dwJobID, pwszExtension);
+        _swprintf(&pwszOutput[cchJobDirectory], L"\\%05lu.%s", dwJobID, pwszExtension);
     }
 
     // pwszExtension may be L"SPL" or L"SHD", same length for both!

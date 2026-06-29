@@ -254,10 +254,10 @@ OFFSET(CuRet, KCALLOUT_FRAME, ReturnAddress), // 0001CH
 OFFSET(CuOutBf, KCALLOUT_FRAME, Result), // 00020H
 OFFSET(CuOutLn, KCALLOUT_FRAME, ResultLength), // 00024H
 
-//HEADER("??? offsets"),
-//OFFSET(ErrHandler, ???, Handler),
-//OFFSET(ErrNext, ???, Next),
-//OFFSET(ErrLength, ???, Length),
+HEADER("EXCEPTION_REGISTRATION_RECORD offsets"),
+OFFSET(ErrNext, EXCEPTION_REGISTRATION_RECORD, Next), // 00000H
+OFFSET(ErrHandler, EXCEPTION_REGISTRATION_RECORD, Handler), // 00004H
+SIZE(ErrLength, EXCEPTION_REGISTRATION_RECORD), // 00008H
 
 HEADER("FLOATING_SAVE_AREA offsets"),
 OFFSET(FpControlWord, FLOATING_SAVE_AREA, ControlWord),
@@ -280,6 +280,20 @@ OFFSET(FxDataOffset, XSAVE_FORMAT, DataOffset),
 OFFSET(FxDataSelector, XSAVE_FORMAT, DataSelector),
 OFFSET(FxMxCsr, XSAVE_FORMAT, MxCsr),
 SIZE(XSAVE_FORMAT_SIZE, XSAVE_FORMAT),
+
+// This one is not in the native header
+HEADER("_JUMP_BUFFER offsets"),
+OFFSET(JbEbp, _JUMP_BUFFER, Ebp),
+OFFSET(JbEbx, _JUMP_BUFFER, Ebx),
+OFFSET(JbEdi, _JUMP_BUFFER, Edi),
+OFFSET(JbEsi, _JUMP_BUFFER, Esi),
+OFFSET(JbEsp, _JUMP_BUFFER, Esp),
+OFFSET(JbEip, _JUMP_BUFFER, Eip),
+OFFSET(JbRegistration, _JUMP_BUFFER, Registration),
+OFFSET(JbTryLevel, _JUMP_BUFFER, TryLevel),
+OFFSET(JbCookie, _JUMP_BUFFER, Cookie),
+OFFSET(JbUnwindFunc, _JUMP_BUFFER, UnwindFunc),
+OFFSET(JbUnwindData, _JUMP_BUFFER, UnwindData),
 
 HEADER("KGDTENTRY offsets"),
 OFFSET(KgdtLimitLow, KGDTENTRY, LimitLow),

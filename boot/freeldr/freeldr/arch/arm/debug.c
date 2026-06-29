@@ -9,11 +9,12 @@
 #include <debug.h>
 
 #define QEMUUART 0x09000000
-volatile unsigned int * UART0DR = (unsigned int *) QEMUUART;
+volatile unsigned int* UART0DR = (unsigned int*)QEMUUART;
 
 BOOLEAN
-Rs232PortInitialize(IN ULONG ComPort,
-                    IN ULONG BaudRate)
+Rs232PortInitialize(
+    _In_ PUCHAR PortAddress,
+    _In_ ULONG BaudRate)
 {
     return TRUE;
 }
@@ -24,12 +25,13 @@ Rs232PortPutByte(UCHAR ByteToSend)
     *UART0DR = ByteToSend;
 }
 
+DECLSPEC_NORETURN
 VOID
 FrLdrBugCheckWithMessage(
     ULONG BugCode,
     PCHAR File,
     ULONG Line,
-    PSTR Format,
+    PCSTR Format,
     ...)
 {
 }

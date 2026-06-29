@@ -39,11 +39,23 @@ BOOLEAN VpNoVesa = FALSE;
 PKPROCESS CsrProcess = NULL;
 static ULONG VideoPortMaxObjectNumber = -1;
 BOOLEAN VideoPortUseNewKey = FALSE;
-KMUTEX VideoPortInt10Mutex;
+
 KSPIN_LOCK HwResetAdaptersLock;
 RTL_STATIC_LIST_HEAD(HwResetAdaptersList);
+KMUTEX VgaSyncLock;
+PVIDEO_PORT_DEVICE_EXTENSION VgaDeviceExtension = NULL;
+PVIDEO_ACCESS_RANGE VgaRanges = NULL;
+ULONG NumOfVgaRanges = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+static BOOLEAN
+IntIsVgaSaveDriver(
+    _In_ PDRIVER_OBJECT DriverObject)
+{
+    static const UNICODE_STRING VgaSave = RTL_CONSTANT_STRING(L"\\Driver\\VgaSave");
+    return RtlEqualUnicodeString(&VgaSave, &DriverObject->DriverName, TRUE);
+}
 
 ULONG
 NTAPI
@@ -69,7 +81,7 @@ IntVideoPortAddDeviceMapLink(
 
     /* Create a unicode device name. */
     DeviceNumber = DeviceExtension->DeviceNumber;
-    swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
+    _swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
 
     if (VideoPortUseNewKey)
         RegistryPath = &DeviceExtension->NewRegistryPath;
@@ -102,7 +114,7 @@ IntVideoPortAddDeviceMapLink(
     }
 
     /* Create symbolic link "\??\DISPLAYx" */
-    swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber + 1);
+    _swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber + 1);
     RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
     RtlInitUnicodeString(&DeviceName, DeviceBuffer);
     Status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
@@ -193,7 +205,7 @@ IntVideoPortCreateAdapterDeviceObject(
      */
 
     /* Create a unicode device name. */
-    swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
+    _swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
     RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
     INFO_(VIDEOPRT, "HwDeviceExtension size is: 0x%x\n",
@@ -234,8 +246,16 @@ IntVideoPortCreateAdapterDeviceObject(
     DeviceExtension->SessionId = -1;
     DeviceExtension->AdapterNumber = AdapterNumber;
     DeviceExtension->DisplayNumber = DisplayNumber;
+    DeviceExtension->IsVgaDriver = IntIsVgaSaveDriver(DriverObject);
 
     InitializeListHead(&DeviceExtension->ChildDeviceList);
+
+    /* 
+     * Miniport owns this blob; many miniports assume it's initially zeroed.
+     * Removing this crashes the NVIDIA GPU driver.
+     */
+    RtlZeroMemory(DeviceExtension->MiniPortDeviceExtension,
+                  DriverExtension->InitializationData.HwDeviceExtensionSize);
 
     /* Get the registry path associated with this device. */
     Status = IntCreateRegistryPath(&DriverExtension->RegistryPath,
@@ -423,10 +443,14 @@ IntVideoPortFindAdapter(
     SYSTEM_BASIC_INFORMATION SystemBasicInfo;
     UCHAR Again = FALSE;
     BOOL LegacyDetection = FALSE;
+    BOOLEAN VgaResourcesReleased = FALSE;
 
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension->IsVgaDetect = DeviceExtension->IsVgaDriver;
+    DeviceExtension->IsLegacyDetect = FALSE;
+    DeviceExtension->ReportDevice = FALSE;
 
-    /* Setup a ConfigInfo structure that we will pass to HwFindAdapter. */
+    /* Setup a ConfigInfo structure that we will pass to HwFindAdapter */
     RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO));
     ConfigInfo.Length = sizeof(VIDEO_PORT_CONFIG_INFO);
     ConfigInfo.AdapterInterfaceType = DeviceExtension->AdapterInterfaceType;
@@ -462,7 +486,25 @@ IntVideoPortFindAdapter(
     if (DeviceExtension->PhysicalDeviceObject == NULL)
     {
         LegacyDetection = TRUE;
+        DeviceExtension->IsLegacyDevice = TRUE;
+        DeviceExtension->IsLegacyDetect = TRUE;
     }
+    else
+    {
+        DeviceExtension->IsLegacyDevice = FALSE;
+    }
+
+     /* If we already have a VGA miniport and are about to probe for additional adapters,
+      * release its resources temporarily so conflicts are visible during detection.
+      * We'll reclaim them later if no new adapter successfully claims them. */
+    KeWaitForMutexObject(&VgaSyncLock, Executive, KernelMode, FALSE, NULL);
+    if (VgaDeviceExtension)
+    {
+        INFO_(VIDEOPRT, "Temporarily releasing VGA resources for adapter probing\n");
+        IntVideoPortReleaseResources(VgaDeviceExtension);
+        VgaResourcesReleased = TRUE;
+    }
+    KeReleaseMutex(&VgaSyncLock, FALSE);
 
     if (LegacyDetection)
     {
@@ -521,7 +563,28 @@ IntVideoPortFindAdapter(
 
     if (vpStatus != NO_ERROR)
     {
-        ERR_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", vpStatus);
+        ERR_(VIDEOPRT, "HwFindAdapter failed (vpStatus=0x%X) bus=%u iface=%u legacy=%u vga=%u detect(VGA=%u LEGACY=%u)\n",
+              vpStatus,
+              DeviceExtension->SystemIoBusNumber,
+              DeviceExtension->AdapterInterfaceType,
+              DeviceExtension->IsLegacyDevice,
+              DeviceExtension->IsVgaDriver,
+              DeviceExtension->IsVgaDetect,
+              DeviceExtension->IsLegacyDetect);
+        /* If we released VGA resources, reclaim them so VGA fallback still works */
+        if (VgaResourcesReleased)
+        {
+            if (VgaDeviceExtension && VgaRanges && NumOfVgaRanges)
+            {
+                INFO_(VIDEOPRT, "Reclaiming VGA resources after failed probe\n");
+                if (VideoPortVerifyAccessRanges(&VgaDeviceExtension->MiniPortDeviceExtension,
+                                                NumOfVgaRanges,
+                                                VgaRanges) != NO_ERROR)
+                {
+                    WARN_(VIDEOPRT, "Failed to reclaim VGA resources after probe failure\n");
+                }
+            }
+        }
         Status = STATUS_UNSUCCESSFUL;
         goto Failure;
     }
@@ -559,6 +622,75 @@ IntVideoPortFindAdapter(
                                     &HwResetAdaptersLock);
     }
 
+    if (DeviceExtension->IsVgaDriver)
+    {
+        KeWaitForMutexObject(&VgaSyncLock, Executive, KernelMode, FALSE, NULL);
+        if (VgaDeviceExtension == NULL)
+        {
+            VgaDeviceExtension = DeviceExtension;
+        }
+        KeReleaseMutex(&VgaSyncLock, FALSE);
+    }
+
+    DeviceExtension->IsVgaDetect = FALSE;
+    DeviceExtension->IsLegacyDetect = FALSE;
+
+    /* For legacy (non-PnP) adapters we should report a detected device so that
+     * a PDO exists for higher layers to enumerate consistently (mirrors ScsiPort).*/
+    if (DeviceExtension->IsLegacyDevice && !DeviceExtension->ReportDevice)
+    {
+        PDEVICE_OBJECT ReportedPdo = NULL;
+        NTSTATUS repStatus = IoReportDetectedDevice(DriverObject,
+                                                    DeviceExtension->AdapterInterfaceType,
+                                                    DeviceExtension->SystemIoBusNumber,
+                                                    DeviceExtension->SystemIoSlotNumber,
+                                                    NULL,
+                                                    NULL,
+                                                    FALSE,
+                                                    &ReportedPdo);
+        if (!NT_SUCCESS(repStatus))
+        {
+            WARN_(VIDEOPRT, "IoReportDetectedDevice failed 0x%08lx (bus=%u slot=%u)\n",
+                  repStatus,
+                  DeviceExtension->SystemIoBusNumber,
+                  DeviceExtension->SystemIoSlotNumber);
+        }
+        else
+        {
+            INFO_(VIDEOPRT, "Reported legacy adapter PDO %p (bus=%u slot=%u)\n",
+                  ReportedPdo,
+                  DeviceExtension->SystemIoBusNumber,
+                  DeviceExtension->SystemIoSlotNumber);
+            DeviceExtension->ReportDevice = TRUE;
+        }
+    }
+
+    /* Attempt to reclaim VGA resources after probing if a VGA device exists */
+    if (VgaDeviceExtension && VgaRanges && NumOfVgaRanges)
+    {
+        VP_STATUS vr;
+        INFO_(VIDEOPRT, "Attempt VGA reclaim after probe (ranges=%lu)\n", NumOfVgaRanges);
+        vr = VideoPortVerifyAccessRanges(&VgaDeviceExtension->MiniPortDeviceExtension,
+                                         NumOfVgaRanges,
+                                         VgaRanges);
+        if (vr != NO_ERROR)
+        {
+            /* Another driver has taken VGA resources; drop fallback state */
+            WARN_(VIDEOPRT, "VGA reclaim failed (vpStatus=0x%X); releasing fallback state\n", vr);
+            KeWaitForMutexObject(&VgaSyncLock, Executive, KernelMode, FALSE, NULL);
+            ExFreePoolWithTag(VgaRanges, TAG_VIDEO_PORT);
+            VgaRanges = NULL;
+            NumOfVgaRanges = 0;
+            VgaDeviceExtension = NULL;
+            KeReleaseMutex(&VgaSyncLock, FALSE);
+
+        }
+        else
+        {
+            INFO_(VIDEOPRT, "VGA reclaim succeeded\n");
+        }
+    }
+
     INFO_(VIDEOPRT, "STATUS_SUCCESS\n");
     return STATUS_SUCCESS;
 
@@ -566,33 +698,75 @@ Failure:
     RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
     if (DeviceExtension->NextDeviceObject)
         IoDetachDevice(DeviceExtension->NextDeviceObject);
+
+    /* Explicitly reclaim VGA resources on complete failure */
+    if (VgaResourcesReleased)
+    {
+        if (VgaDeviceExtension && VgaRanges && NumOfVgaRanges)
+        {
+            INFO_(VIDEOPRT, "Final reclaim attempt of VGA resources during failure cleanup\n");
+            if (VideoPortVerifyAccessRanges(&VgaDeviceExtension->MiniPortDeviceExtension,
+                                            NumOfVgaRanges,
+                                            VgaRanges) != NO_ERROR)
+            {
+                WARN_(VIDEOPRT, "VGA reclaim failed during failure cleanup\n");
+            }
+        }
+    }
     IoDeleteDevice(DeviceObject);
     return Status;
 }
 
-VOID
+/**
+ * @brief
+ * Attach the current thread to the CSRSS process. The caller must detach from
+ * the process by invoking IntDetachFromCSRSS() after operating in its context.
+ *
+ * @param[out]  CallingProcess
+ * Pointer to a PKPROCESS variable that receives the current process.
+ *
+ * @param[out]  ApcState
+ * Pointer to a caller-provided KAPC_STATE structure that will be initialized.
+ *
+ * @return
+ * TRUE if attachment succeeded (the CSRSS process exists); FALSE if not.
+ **/
+BOOLEAN
 FASTCALL
 IntAttachToCSRSS(
-    PKPROCESS *CallingProcess,
-    PKAPC_STATE ApcState)
+    _Outptr_ PKPROCESS* CallingProcess,
+    _Out_ PKAPC_STATE ApcState)
 {
+    if (!CsrProcess)
+        return FALSE;
+
     *CallingProcess = (PKPROCESS)PsGetCurrentProcess();
     if (*CallingProcess != CsrProcess)
-    {
         KeStackAttachProcess(CsrProcess, ApcState);
-    }
+    return TRUE;
 }
 
+/**
+ * @brief
+ * Detach the current thread from the CSRSS process. This routine is
+ * to be invoked after a previous successful IntAttachToCSRSS() call.
+ *
+ * @param[in]   CallingProcess
+ * The calling process that previously invoked IntAttachToCSRSS().
+ *
+ * @param[in]   ApcState
+ * Pointer to the KAPC_STATE structure that was initialized by a
+ * previous IntAttachToCSRSS() call.
+ **/
 VOID
 FASTCALL
 IntDetachFromCSRSS(
-    PKPROCESS *CallingProcess,
-    PKAPC_STATE ApcState)
+    _In_ PKPROCESS CallingProcess,
+    _In_ PKAPC_STATE ApcState)
 {
-    if (*CallingProcess != CsrProcess)
-    {
+    ASSERT(CsrProcess);
+    if (CallingProcess != CsrProcess)
         KeUnstackDetachProcess(ApcState);
-    }
 }
 
 VOID
@@ -601,21 +775,21 @@ IntLoadRegistryParameters(VOID)
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
-    UNICODE_STRING UseNewKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\UseNewKey");
-    UNICODE_STRING Path = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control");
+    UNICODE_STRING KeyPath;
     UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SystemStartOptions");
     OBJECT_ATTRIBUTES ObjectAttributes;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
     ULONG Length, NewLength;
 
     /* Check if we need to use new registry */
+    RtlInitUnicodeString(&KeyPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\UseNewKey");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &UseNewKeyPath,
+                               &KeyPath,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenKey(&KeyHandle,
-                       GENERIC_READ | GENERIC_WRITE,
+                       KEY_QUERY_VALUE,
                        &ObjectAttributes);
     if (NT_SUCCESS(Status))
     {
@@ -623,9 +797,29 @@ IntLoadRegistryParameters(VOID)
         ZwClose(KeyHandle);
     }
 
-    /* Initialize object attributes with the path we want */
+#ifdef _M_IX86
+    /* Check whether we need to use the 32-bit x86 emulator instead of V86 mode */
+    RtlInitUnicodeString(&KeyPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\DisableEmulator");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Path,
+                               &KeyPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(&KeyHandle,
+                       KEY_QUERY_VALUE,
+                       &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        VideoPortDisableX86Emulator = TRUE;
+        ZwClose(KeyHandle);
+    }
+    DPRINT1("Using %s\n", VideoPortDisableX86Emulator ? "V86 mode" : "x86 emulator");
+#endif // _M_IX86
+
+    /* Initialize object attributes with the path we want */
+    RtlInitUnicodeString(&KeyPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyPath,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
@@ -650,7 +844,7 @@ IntLoadRegistryParameters(VOID)
     if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
     {
         VideoPortDebugPrint(Error, "ZwQueryValueKey failed (0x%x)\n", Status);
-        ObCloseHandle(KeyHandle, KernelMode);
+        ZwClose(KeyHandle);
         return;
     }
 
@@ -659,7 +853,7 @@ IntLoadRegistryParameters(VOID)
     if (!KeyInfo)
     {
         VideoPortDebugPrint(Error, "Out of memory\n");
-        ObCloseHandle(KeyHandle, KernelMode);
+        ZwClose(KeyHandle);
         return;
     }
 
@@ -670,7 +864,7 @@ IntLoadRegistryParameters(VOID)
                              KeyInfo,
                              Length,
                              &NewLength);
-    ObCloseHandle(KeyHandle, KernelMode);
+    ZwClose(KeyHandle);
 
     if (!NT_SUCCESS(Status))
     {
@@ -706,10 +900,9 @@ IntLoadRegistryParameters(VOID)
     /* If we are in BASEVIDEO, create the volatile registry key for Win32k */
     if (VpBaseVideo)
     {
-        RtlInitUnicodeString(&Path, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\BaseVideo");
-
+        RtlInitUnicodeString(&KeyPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\BaseVideo");
         InitializeObjectAttributes(&ObjectAttributes,
-                                   &Path,
+                                   &KeyPath,
                                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    NULL,
                                    NULL);
@@ -722,7 +915,7 @@ IntLoadRegistryParameters(VOID)
                              REG_OPTION_VOLATILE,
                              NULL);
         if (NT_SUCCESS(Status))
-            ObCloseHandle(KeyHandle, KernelMode);
+            ZwClose(KeyHandle);
         else
             ERR_(VIDEOPRT, "Failed to create the BaseVideo key (0x%x)\n", Status);
     }
@@ -748,7 +941,7 @@ VideoPortInitialize(
     NTSTATUS Status;
     PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
     BOOLEAN PnpDriver = FALSE, LegacyDetection = FALSE;
-    static BOOLEAN FirstInitialization;
+    static BOOLEAN FirstInitialization = FALSE;
 
     TRACE_(VIDEOPRT, "VideoPortInitialize\n");
 
@@ -756,8 +949,16 @@ VideoPortInitialize(
     {
         FirstInitialization = TRUE;
         KeInitializeMutex(&VideoPortInt10Mutex, 0);
+        KeInitializeMutex(&VgaSyncLock, 0);
         KeInitializeSpinLock(&HwResetAdaptersLock);
         IntLoadRegistryParameters();
+
+        Status = IntInitializeInt10();
+        if (!NT_SUCCESS(Status))
+        {
+            ERR_(VIDEOPRT, "IntInitializeInt10(FirstInit) failed: 0x%lx\n", Status);
+            // return Status; // Let's continue and hope for the best...
+        }
     }
 
     /* As a first thing do parameter checks. */
@@ -951,10 +1152,11 @@ VideoPortInitialize(
  * @implemented
  */
 VOID
+__cdecl
 VideoPortDebugPrint(
-    IN VIDEO_DEBUG_LEVEL DebugPrintLevel,
-    IN PCHAR DebugMessage,
-    ...)
+    _In_ VIDEO_DEBUG_LEVEL DebugPrintLevel,
+    _In_ PSTR DebugMessage,
+    _In_ ...)
 {
     va_list ap;
 
@@ -962,7 +1164,7 @@ VideoPortDebugPrint(
         DebugPrintLevel = Error;
 
     va_start(ap, DebugMessage);
-    vDbgPrintEx(DPFLTR_IHVVIDEO_ID, DebugPrintLevel, DebugMessage, ap);
+    vDbgPrintEx(DPFLTR_VIDEO_ID, DebugPrintLevel, DebugMessage, ap);
     va_end(ap);
 }
 
@@ -1154,7 +1356,7 @@ VideoPortGetRomImage(
     TRACE_(VIDEOPRT, "VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
            HwDeviceExtension, Length);
 
-    /* If the length is zero then free the existing buffer. */
+    /* If the length is zero then free the existing buffer */
     if (Length == 0)
     {
         if (RomImageBuffer != NULL)
@@ -1168,28 +1370,31 @@ VideoPortGetRomImage(
     {
         /*
          * The DDK says we shouldn't use the legacy C0000 method but get the
-         * rom base address from the corresponding pci or acpi register but
+         * ROM base address from the corresponding PCI or ACPI register but
          * lets ignore that and use C0000 anyway. We have already mapped the
-         * bios area into memory so we'll copy from there.
+         * BIOS area into memory so we'll copy from there.
          */
 
-        /* Copy the bios. */
+        /* Copy the BIOS */
         Length = min(Length, 0x10000);
         if (RomImageBuffer != NULL)
-        {
             ExFreePool(RomImageBuffer);
-        }
 
         RomImageBuffer = ExAllocatePool(PagedPool, Length);
         if (RomImageBuffer == NULL)
-        {
             return NULL;
+
+        /* Perform the copy in the CSRSS context */
+        if (IntAttachToCSRSS(&CallingProcess, &ApcState))
+        {
+            RtlCopyMemory(RomImageBuffer, (PUCHAR)0xC0000, Length);
+            IntDetachFromCSRSS(CallingProcess, &ApcState);
         }
-
-        IntAttachToCSRSS(&CallingProcess, &ApcState);
-        RtlCopyMemory(RomImageBuffer, (PUCHAR)0xC0000, Length);
-        IntDetachFromCSRSS(&CallingProcess, &ApcState);
-
+        else
+        {
+            ExFreePool(RomImageBuffer);
+            RomImageBuffer = NULL;
+        }
         return RomImageBuffer;
     }
 }
@@ -1290,7 +1495,7 @@ IntVideoPortEnumerateChildren(
     VIDEO_CHILD_ENUM_INFO ChildEnumInfo;
     BOOLEAN bHaveLastMonitorID = FALSE;
     UCHAR LastMonitorID[10];
-    ULONG Unused;
+    ULONG Uid, Unused;
     UINT i;
     PDEVICE_OBJECT ChildDeviceObject;
     PVIDEO_PORT_CHILD_EXTENSION ChildExtension;
@@ -1352,7 +1557,7 @@ IntVideoPortEnumerateChildren(
                      &ChildEnumInfo,
                      &ChildExtension->ChildType,
                      ChildExtension->ChildDescriptor,
-                     &ChildExtension->ChildId,
+                     &Uid,
                      &Unused);
         if (Status == VIDEO_ENUM_MORE_DEVICES)
         {

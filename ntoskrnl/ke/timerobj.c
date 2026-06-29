@@ -249,6 +249,7 @@ KeInitializeTimerEx(OUT PKTIMER Timer,
            "NotificationTimer" : "SynchronizationTimer");
 
     /* Initialize the Dispatch Header */
+    ASSERT((Type == NotificationTimer) || (Type == SynchronizationTimer));
     Timer->Header.Type = TimerNotificationObject + Type;
     //Timer->Header.TimerControlFlags = 0; // win does not init this field
     Timer->Header.Hand = sizeof(KTIMER) / sizeof(ULONG);

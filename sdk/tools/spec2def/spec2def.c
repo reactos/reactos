@@ -67,6 +67,7 @@ int gbImportLib = 0;
 int gbNotPrivateNoWarn = 0;
 int gbTracing = 0;
 int giArch = ARCH_X86;
+int gbDbgExports = 0;
 char *pszArchString = "i386";
 char *pszArchString2;
 char *pszSourceFileName = NULL;
@@ -1162,6 +1163,13 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
 
                 } while (*pc == ',');
             }
+            else if (CompareToken(pc, "-dbg"))
+            {
+                if (!gbDbgExports)
+                {
+                    included = 0;
+                }
+            }
             else if (CompareToken(pc, "-private"))
             {
                 exp.uFlags |= FL_PRIVATE;
@@ -1197,6 +1205,10 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
             else if (CompareToken(pc, "-register"))
             {
                 exp.uFlags |= FL_REGISTER;
+            }
+            else if (CompareToken(pc, "-import"))
+            {
+                /* The export is imported from an import library. Ignored. */
             }
             else
             {
@@ -1450,11 +1462,12 @@ ApplyOrdinals(EXPORT* pexports, unsigned cExports)
     /* Pass 1: mark the ordinals that are already used */
     for (i = 0; i < cExports; i++)
     {
-        if (pexports[i].uFlags & FL_ORDINAL)
+        if ((pexports[i].uFlags & FL_ORDINAL) && pexports[i].bVersionIncluded)
         {
             if (used[pexports[i].nOrdinal] != 0)
             {
                 fprintf(stderr, "Found duplicate ordinal: %u\n", pexports[i].nOrdinal);
+                free(used);
                 return -1;
             }
             used[pexports[i].nOrdinal] = 1;
@@ -1505,6 +1518,7 @@ void usage(void)
            "  -s=<file>               generate a stub file\n"
            "  -i=<file>               generate an import alias file\n"
            "  --ms                    MSVC compatibility\n"
+           "  --dbg                   Enable debug exports\n"
            "  -n=<name>               name of the dll\n"
            "  --version=<version>     Sets the version to create exports for\n"
            "  --implib                generate a def file for an import library\n"
@@ -1571,6 +1585,10 @@ int main(int argc, char *argv[])
         {
             gbMSComp = 1;
         }
+        else if (strcasecmp(argv[i], "--dbg") == 0)
+        {
+            gbDbgExports = 1;
+        }
         else if (strcasecmp(argv[i], "--no-private-warnings") == 0)
         {
             gbNotPrivateNoWarn = 1;
@@ -1606,7 +1624,7 @@ int main(int argc, char *argv[])
     else if (strcasecmp(pszArchString, "arm64") == 0) giArch = ARCH_ARM64;
     else if (strcasecmp(pszArchString, "ppc") == 0) giArch = ARCH_PPC;
 
-    if ((giArch == ARCH_AMD64) || (giArch == ARCH_IA64))
+    if ((giArch == ARCH_AMD64) || (giArch == ARCH_IA64) || (giArch == ARCH_ARM64))
     {
         pszArchString2 = "win64";
     }

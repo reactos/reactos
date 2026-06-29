@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dynamická knihovna %s selhala při nahrávání.", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "Kontaktujte správce počítače pro nahrazení dynamickě knihovny nebo obnovte původní dynamickou knihovnu.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "&Restart", 1, 80, 91, 68, 14
+    DEFPUSHBUTTON "&Restartovat", IDOK, 80, 91, 68, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
@@ -35,10 +35,10 @@ CAPTION "Vypínání systému"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "Byl zahájen proces vypínání systému. Uložte prosím svoji práci a ukončete sezení. Veškerá neuložená data budou po vypnutí systému ztracena.", -1, 38, 7, 135, 40
-    LTEXT "Systém se vypne za:", -1, 38, 50, 90, 8
+    LTEXT "Byl zahájen proces vypínání systému. Uložte prosím svoji práci a ukončete sezení. Veškerá neuložená data budou po vypnutí systému ztracena.", IDC_STATIC, 38, 7, 135, 40
+    LTEXT "Systém se vypne za:", IDC_STATIC, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Zpráva:", -1, 38, 65, 135, 8
+    LTEXT "Zpráva:", IDC_STATIC, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
@@ -59,6 +59,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Příprava k přechodu do režimu hibernace..."
     IDS_SAVEYOURSETTINGS "Ukládání osobního nastavení..."
     IDS_REACTOSISSTARTINGUP "ReactOS se spouští..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d dní"
 END

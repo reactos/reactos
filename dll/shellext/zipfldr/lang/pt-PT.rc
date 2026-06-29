@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Portuguese (Portugal) resource translation
- * Translated by Jose Jesus (zecarlos1957@hotmail.com)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019-2026 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
@@ -35,7 +35,7 @@ END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Confirmar reposição de arquivo"
+CAPTION "Confirmar reposição de ficheiro"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "&Sim",IDYES,6,36,62,14
@@ -79,6 +79,7 @@ BEGIN
     IDS_CANTEXTRACTFILE "Não é possível extrair o ficheiro '%1'."
     IDS_DECOMPRESSERROR "Método de compressão %d não suportado. Pretende continuar?"
     IDS_UNKNOWNERROR "Erro desconhecido 0x%08x."
+    IDS_CANTDELETEFILE "Falha ao eliminar o ficheiro(s)."
 
     IDS_WIZ_TITLE "Assistente de extracção"
     IDS_WIZ_DEST_TITLE "Seleccione um destino"
@@ -87,9 +88,10 @@ BEGIN
     IDS_WIZ_COMPL_SUBTITLE "Os ficheiros no arquivo zip foram extraídos."
     IDS_WIZ_BROWSE_TITLE "Seleccione o local para onde deseja extrair os itens seleccionados."
 
-    IDS_OVERWRITEFILE_TEXT "Esta pasta já contém um arquivo chamado '%1'.\nDeseja substituí-lo?"
-    IDS_PASSWORD_FILE_TEXT "O arquivo '%1' está protegido. Por favor, digite a palavra-passe."
-    IDS_PASSWORD_ZIP_TEXT "Especifique a palavra-passe a ser usada ao extrair este arquivo zip."
+    IDS_OVERWRITEFILE_TEXT "Esta pasta já contém um ficheiro chamado '%1'.\nDeseja substituí-lo?"
+    IDS_PASSWORD_FILE_TEXT "O ficheiro '%1' está protegido. Por favor, digite a palavra-passe."
+    IDS_PASSWORD_ZIP_TEXT "Especifique a palavra-passe a ser usada ao extrair este ficheiro zip."
+    IDS_CONFIRMDELETE_TEXT "Deseja eliminar o ficheiro?(s)?"
 
     IDS_MENUITEM "Extrair &todos..."
     IDS_HELPTEXT "Extrair o conteúdo da pasta"

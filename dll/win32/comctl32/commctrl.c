@@ -686,7 +686,11 @@ void WINAPI DrawStatusTextW (HDC hdc, LPCRECT lprc, LPCWSTR text, UINT style)
         border = 0;
 
     oldbkcolor = SetBkColor (hdc, comctl32_color.clrBtnFace);
+#ifdef __REACTOS__ // HACK for CORE-19854.
+    DrawEdge (hdc, &r, border, BF_RECT|BF_ADJUST);
+#else
     DrawEdge (hdc, &r, border, BF_MIDDLE|BF_RECT|BF_ADJUST);
+#endif
 
     /* now draw text */
     if (text) {

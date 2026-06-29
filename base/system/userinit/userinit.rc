@@ -32,6 +32,9 @@ IDB_ROSMASK BITMAP "res/rosbitmap_mask.bmp"
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_EO_AA
+    #include "lang/eo-AA.rc"
+#endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
 #endif

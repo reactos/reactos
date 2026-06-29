@@ -14,7 +14,7 @@ DisplayServerConfig(
 {
     PSERVER_TRANSPORT_INFO_0 TransportInfo = NULL;
     DWORD dwRead, dwTotal, i;
-    INT nPaddedLength = 38;
+    const DWORD nPaddedLength = 38;
     NET_API_STATUS Status;
 
     Status = NetServerTransportEnum(NULL, 0, (PBYTE*)&TransportInfo,
@@ -78,7 +78,7 @@ DisplayWorkstationConfig(VOID)
     PWKSTA_USER_INFO_1 UserInfo = NULL;
     PWKSTA_TRANSPORT_INFO_0 TransportInfo = NULL;
     DWORD dwRead = 0, dwTotal = 0, i;
-    INT nPaddedLength = 38;
+    const DWORD nPaddedLength = 38;
     NET_API_STATUS Status;
 
     Status = NetWkstaGetInfo(NULL, 100, (PBYTE*)&WorkstationInfo);

@@ -295,7 +295,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Check if we from user mode */
+    /* Check if we came from user mode */
     if (PreviousMode != KernelMode)
     {
         /* Get the access mask */
@@ -529,7 +529,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                     Irp->AssociatedIrp.SystemBuffer =
                         ExAllocatePoolWithQuotaTag(PoolType,
                                                    BufferLength,
-                                                   TAG_SYS_BUF);
+                                                   TAG_IOBUF);
 
                     /* Check if we got a buffer */
                     if (InputBuffer)
@@ -576,7 +576,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                     Irp->AssociatedIrp.SystemBuffer =
                         ExAllocatePoolWithQuotaTag(PoolType,
                                                    InputBufferLength,
-                                                   TAG_SYS_BUF);
+                                                   TAG_IOBUF);
 
                     /* Copy into the System Buffer */
                     RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
@@ -2047,7 +2047,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                 AuxBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                                   CapturedFileName.Length +
                                                   sizeof(UNICODE_STRING),
-                                                  TAG_SYSB);
+                                                  TAG_IOBUF);
                 RtlCopyMemory((PVOID)((ULONG_PTR)AuxBuffer +
                                       sizeof(UNICODE_STRING)),
                               CapturedFileName.Buffer,
@@ -2064,7 +2064,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Free buffer and return the exception code */
-            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -2100,7 +2100,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+        if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
         return Status;
     }
 
@@ -2108,7 +2108,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     if (FileObject->CompletionContext != NULL && ApcRoutine != NULL)
     {
         ObDereferenceObject(FileObject);
-        if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+        if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -2125,7 +2125,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
             ObDereferenceObject(FileObject);
             return Status;
         }
@@ -2143,7 +2143,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         {
             if (Event) ObDereferenceObject(Event);
             ObDereferenceObject(FileObject);
-            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
             return Status;
         }
 
@@ -2181,13 +2181,13 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         {
             /* Allocate a buffer */
             Irp->AssociatedIrp.SystemBuffer =
-                ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
+                ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Allocating failed, clean up and return the exception code */
             IopCleanupAfterException(FileObject, Irp, Event, NULL);
-            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_IOBUF);
 
             /* Return the exception code */
             return _SEH2_GetExceptionCode();
@@ -2517,7 +2517,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -2985,7 +2985,7 @@ NtReadFile(IN HANDLE FileHandle,
             {
                 /* Allocate a buffer */
                 Irp->AssociatedIrp.SystemBuffer =
-                    ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
+                    ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -3286,7 +3286,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
 
         /* Copy the data into it */
         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
@@ -4058,7 +4058,7 @@ NtWriteFile(IN HANDLE FileHandle,
             {
                 /* Allocate a buffer */
                 Irp->AssociatedIrp.SystemBuffer =
-                    ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
+                    ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
 
                 /* Copy the data into it */
                 RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
@@ -4385,7 +4385,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -4566,7 +4566,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IOBUF);
 
         /* Copy the data into it */
         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, FsInformation, Length);

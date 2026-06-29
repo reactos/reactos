@@ -27,21 +27,29 @@ PartitionCreateDevice(
     UNICODE_STRING deviceName;
     UINT32 volumeNum;
 
-    // create the device object
-
     volumeNum = HarddiskVolumeNextId++;
-    swprintf(nameBuf, L"\\Device\\HarddiskVolume%lu", volumeNum);
+    _swprintf(nameBuf, L"\\Device\\HarddiskVolume%lu", volumeNum);
     RtlCreateUnicodeString(&deviceName, nameBuf);
 
+    /*
+     * Create the partition/volume device object.
+     *
+     * Due to the fact we are also a (basic) volume manager, this device is
+     * ALSO a volume device. Because of this, we need to assign it a device
+     * name, and a specific device type for IoCreateDevice() to create a VPB
+     * for this device, so that a filesystem can be mounted on it.
+     * Once we get a separate volume manager, this partition DO can become
+     * anonymous, have a different device type, and without any associated VPB.
+     * (The attached volume, on the contrary, would require a VPB.)
+     */
     PDEVICE_OBJECT partitionDevice;
     NTSTATUS status = IoCreateDevice(FDObject->DriverObject,
                                      sizeof(PARTITION_EXTENSION),
                                      &deviceName,
-                                     FILE_DEVICE_DISK,
+                                     FILE_DEVICE_DISK, // FILE_DEVICE_MASS_STORAGE,
                                      FILE_DEVICE_SECURE_OPEN,
                                      FALSE,
                                      &partitionDevice);
-
     if (!NT_SUCCESS(status))
     {
         ERR("Unable to create device object %wZ\n", &deviceName);
@@ -52,6 +60,13 @@ PartitionCreateDevice(
 
     PPARTITION_EXTENSION partExt = partitionDevice->DeviceExtension;
     RtlZeroMemory(partExt, sizeof(*partExt));
+
+    partExt->DeviceObject = partitionDevice;
+    partExt->LowerDevice = FDObject;
+
+    // NOTE: See comment above.
+    // PFDO_EXTENSION fdoExtension = FDObject->DeviceExtension;
+    // partitionDevice->DeviceType = /*fdoExtension->LowerDevice*/FDObject->DeviceType;
 
     partitionDevice->StackSize = FDObject->StackSize;
     partitionDevice->Flags |= DO_DIRECT_IO;
@@ -78,13 +93,10 @@ PartitionCreateDevice(
     partExt->DetectedNumber = PdoNumber; // counts only partitions with PDO created
     partExt->VolumeNumber = volumeNum;
 
-    partExt->DeviceObject = partitionDevice;
-    partExt->LowerDevice = FDObject;
-
+    // The device is initialized
     partitionDevice->Flags &= ~DO_DEVICE_INITIALIZING;
 
     *PDO = partitionDevice;
-
     return status;
 }
 
@@ -103,7 +115,7 @@ PartitionHandleStartDevice(
     PFDO_EXTENSION fdoExtension = PartExt->LowerDevice->DeviceExtension;
 
     // \\Device\\Harddisk%lu\\Partition%lu
-    swprintf(nameBuf, PartitionSymLinkFormat,
+    _swprintf(nameBuf, PartitionSymLinkFormat,
         fdoExtension->DiskData.DeviceNumber, PartExt->DetectedNumber);
 
     if (!RtlCreateUnicodeString(&partitionSymlink, nameBuf))
@@ -136,11 +148,9 @@ PartitionHandleStartDevice(
         return status;
     }
 
+    INFO("Partition interface %wZ\n", &interfaceName);
     PartExt->PartitionInterfaceName = interfaceName;
     status = IoSetDeviceInterfaceState(&interfaceName, TRUE);
-
-    INFO("Partition interface %wZ\n", &interfaceName);
-
     if (!NT_SUCCESS(status))
     {
         RtlFreeUnicodeString(&interfaceName);
@@ -157,11 +167,9 @@ PartitionHandleStartDevice(
         return status;
     }
 
+    INFO("Volume interface %wZ\n", &interfaceName);
     PartExt->VolumeInterfaceName = interfaceName;
     status = IoSetDeviceInterfaceState(&interfaceName, TRUE);
-
-    INFO("Volume interface %wZ\n", &interfaceName);
-
     if (!NT_SUCCESS(status))
     {
         RtlFreeUnicodeString(&interfaceName);
@@ -288,7 +296,7 @@ PartitionHandleRemove(
         UNICODE_STRING partitionSymlink;
         PFDO_EXTENSION fdoExtension = PartExt->LowerDevice->DeviceExtension;
 
-        swprintf(nameBuf, PartitionSymLinkFormat,
+        _swprintf(nameBuf, PartitionSymLinkFormat,
             fdoExtension->DiskData.DeviceNumber, PartExt->DetectedNumber);
 
         RtlInitUnicodeString(&partitionSymlink, nameBuf);
@@ -433,28 +441,28 @@ PartitionHandleQueryId(
 
             if (fdoExtension->DiskData.PartitionStyle == PARTITION_STYLE_MBR)
             {
-                swprintf(string, L"S%08lx_O%I64x_L%I64x",
-                         fdoExtension->DiskData.Mbr.Signature,
-                         PartExt->StartingOffset,
-                         PartExt->PartitionLength);
+                _swprintf(string, L"S%08lx_O%I64x_L%I64x",
+                          fdoExtension->DiskData.Mbr.Signature,
+                          PartExt->StartingOffset,
+                          PartExt->PartitionLength);
             }
             else
             {
-                swprintf(string,
-                        L"S%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02xS_O%I64x_L%I64x",
-                        fdoExtension->DiskData.Gpt.DiskId.Data1,
-                        fdoExtension->DiskData.Gpt.DiskId.Data2,
-                        fdoExtension->DiskData.Gpt.DiskId.Data3,
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[0],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[1],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[2],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[3],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[4],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[5],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[6],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[7],
-                        PartExt->StartingOffset,
-                        PartExt->PartitionLength);
+                _swprintf(string,
+                          L"S%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02xS_O%I64x_L%I64x",
+                          fdoExtension->DiskData.Gpt.DiskId.Data1,
+                          fdoExtension->DiskData.Gpt.DiskId.Data2,
+                          fdoExtension->DiskData.Gpt.DiskId.Data3,
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[0],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[1],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[2],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[3],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[4],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[5],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[6],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[7],
+                          PartExt->StartingOffset,
+                          PartExt->PartitionLength);
             }
 
             PartMgrReleaseLayoutLock(fdoExtension);
@@ -770,6 +778,27 @@ PartitionHandleDeviceControl(
             IoInvalidateDeviceRelations(fdoExtension->PhysicalDiskDO, BusRelations);
 
             status = STATUS_SUCCESS;
+            break;
+        }
+        case IOCTL_STORAGE_GET_DEVICE_NUMBER:
+        {
+            PSTORAGE_DEVICE_NUMBER deviceNumber = Irp->AssociatedIrp.SystemBuffer;
+            if (!VerifyIrpOutBufferSize(Irp, sizeof(*deviceNumber)))
+            {
+                status = STATUS_BUFFER_TOO_SMALL;
+                break;
+            }
+
+            PartMgrAcquireLayoutLock(fdoExtension);
+
+            deviceNumber->DeviceType = partExt->DeviceObject->DeviceType;
+            deviceNumber->DeviceNumber = fdoExtension->DiskData.DeviceNumber;
+            deviceNumber->PartitionNumber = partExt->DetectedNumber;
+
+            PartMgrReleaseLayoutLock(fdoExtension);
+
+            status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = sizeof(*deviceNumber);
             break;
         }
         case IOCTL_STORAGE_MEDIA_REMOVAL:

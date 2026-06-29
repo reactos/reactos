@@ -66,6 +66,8 @@ class CFolderOptions :
             return HandleDefFolderSettings(ResetToDefault ? DFSA_RESET : DFSA_APPLY);
         }
 
+        static HRESULT ResetGlobalAndDefViewFolderSettings();
+
         DECLARE_REGISTRY_RESOURCEID(IDR_FOLDEROPTIONS)
         DECLARE_NOT_AGGREGATABLE(CFolderOptions)
 

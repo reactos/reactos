@@ -67,11 +67,21 @@ VOID
 #define HALP_LOW_STUB_SIZE_IN_PAGES 3
 #endif
 
-/* Conversion functions */
-#define BCD_INT(bcd)            \
-    (((bcd & 0xF0) >> 4) * 10 + (bcd & 0x0F))
-#define INT_BCD(int)            \
-    (UCHAR)(((int / 10) << 4) + (int % 10))
+FORCEINLINE
+UCHAR
+BCD_INT(
+    _In_ UCHAR Bcd)
+{
+    return ((Bcd & 0xF0) >> 4) * 10 + (Bcd & 0x0F);
+}
+
+FORCEINLINE
+UCHAR
+INT_BCD(
+    _In_ CSHORT Int)
+{
+    return ((Int / 10) << 4) + (Int % 10);
+}
 
 typedef
 BOOLEAN
@@ -244,6 +254,7 @@ typedef struct _HALP_ROLLOVER
     ULONG Increment;
 } HALP_ROLLOVER, *PHALP_ROLLOVER;
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpCalibrateStallExecution(VOID);
@@ -588,6 +599,20 @@ HalInitializeBios(
 #define KiEnterInterruptTrap(TrapFrame) /* We do all neccessary in asm code */
 #endif // _M_AMD64
 
+#ifdef _MINIHAL_
+#if defined(_M_IX86) || defined(_M_AMD64)
+/* Use intrinsics for IA-32 and amd64 */
+#include <ioaccess.h>
+
+#define READ_PORT_BUFFER_UCHAR(port, buffer, count)   __inbytestring(H2I(port), buffer, count)
+#define READ_PORT_BUFFER_USHORT(port, buffer, count)  __inwordstring(H2I(port), buffer, count)
+#define READ_PORT_BUFFER_ULONG(port, buffer, count)   __indwordstring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_UCHAR(port, buffer, count)  __outbytestring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_USHORT(port, buffer, count) __outwordstring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_ULONG(port, buffer, count)  __outdwordstring(H2I(port), buffer, count)
+#endif
+#endif
+
 extern BOOLEAN HalpNMIInProgress;
 
 extern ADDRESS_USAGE HalpDefaultIoSpace;
@@ -608,4 +633,5 @@ extern KAFFINITY HalpDefaultInterruptAffinity;
 
 extern IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR+1];
 
+extern BOOLEAN HalBootViaEfi;
 extern const USHORT HalpBuildType;

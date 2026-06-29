@@ -20,11 +20,12 @@ if /I "%1" == "/?" (
 
 REM Get the source root directory
 set REACTOS_SOURCE_DIR=%~dp0
+set REACTOS_SOURCE_DIR=%REACTOS_SOURCE_DIR:\=/%
 
 REM Ensure there's no spaces in the source path
 echo %REACTOS_SOURCE_DIR%| find " " > NUL
 if %ERRORLEVEL% == 0 (
-    echo. && echo   Your source path contains at least one space.
+    echo. & echo   Your source path contains at least one space.
     echo   This will cause problems with building.
     echo   Please rename your folders so there are no spaces in the source path,
     echo   or move your source to a different folder.
@@ -56,6 +57,7 @@ if defined ROS_ARCH (
     cl 2>&1 | findstr /R /c:"19\.2.\." > NUL && set VS_VERSION=16
     cl 2>&1 | findstr /R /c:"19\.3.\." > NUL && set VS_VERSION=17
     cl 2>&1 | findstr /R /c:"19\.4.\." > NUL && set VS_VERSION=17
+    cl 2>&1 | findstr /R /c:"19\.5.\." > NUL && set VS_VERSION=18
     if not defined VS_VERSION (
         echo Error: Visual Studio version too old ^(before 14 ^(2015^)^) or version detection failed.
         goto quit
@@ -70,7 +72,7 @@ if defined ROS_ARCH (
 
 REM Checkpoint
 if not defined ARCH (
-    echo Unknown build architecture
+    echo Unknown build architecture.
     goto quit
 )
 
@@ -97,14 +99,14 @@ set REMAINING=%*
         ) else if /I "!PARAM!" == "Ninja" (
             set CMAKE_GENERATOR="Ninja"
         ) else if /I "!PARAM!" == "VSSolution" (
-            echo. && echo Error: Creation of VS Solution files is not supported in a MinGW environment.
+            echo. & echo Error: Creation of VS Solution files is not supported in a MinGW environment.
             echo Please run this command in a [Developer] Command Prompt for Visual Studio.
             goto quit
         ) else if /I "!PARAM:~0,2!" == "-D" (
             REM User is passing a switch to CMake
             set "CMAKE_PARAMS=%CMAKE_PARAMS% !PARAM!"
         ) else (
-            echo. && echo   Warning: Unrecognized switch "!PARAM!" && echo.
+            echo. & echo   Warning: Unrecognized switch "!PARAM!" & echo.
         )
     ) else (
         if /I "!PARAM!" == "CodeBlocks" (
@@ -145,7 +147,7 @@ set REMAINING=%*
             REM User is passing a switch to CMake
             set "CMAKE_PARAMS=%CMAKE_PARAMS% !PARAM!"
         ) else (
-            echo. && echo   Warning: Unrecognized switch "!PARAM!" && echo.
+            echo. & echo   Warning: Unrecognized switch "!PARAM!" & echo.
         )
     )
 
@@ -157,6 +159,10 @@ if "!CMAKE_GENERATOR!" == "Ninja" (
     echo This script defaults to Ninja. Type "configure help" for alternative options.
 )
 
+REM Display information
+echo Configuring a new ReactOS build on:
+(for /f "delims=" %%x in ('ver') do @echo %%x) & echo.
+
 REM Create directories
 set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH%
 
@@ -164,7 +170,7 @@ if "%VS_SOLUTION%" == "1" (
     set REACTOS_OUTPUT_PATH=%REACTOS_OUTPUT_PATH%-sln
 )
 
-if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
+if "%REACTOS_SOURCE_DIR%" == "%CD:\=/%/" (
     set CD_SAME_AS_SOURCE=1
     echo Creating directories in %REACTOS_OUTPUT_PATH%
 
@@ -175,26 +181,23 @@ if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
 )
 
 if "%VS_SOLUTION%" == "1" (
-
     if exist build.ninja (
-        echo. && echo Error: This directory has already been configured for ninja.
+        echo. & echo Error: This directory has already been configured for ninja.
         echo An output folder configured for ninja can't be reconfigured for VSSolution.
         echo Use an empty folder or delete the contents of this folder, then try again.
         goto quit
     )
 ) else if exist REACTOS.sln (
-    echo. && echo Error: This directory has already been configured for Visual Studio.
+    echo. & echo Error: This directory has already been configured for Visual Studio.
     echo An output folder configured for VSSolution can't be reconfigured for ninja.
-    echo Use an empty folder or delete the contents of this folder, then try again. && echo.
+    echo Use an empty folder or delete the contents of this folder, then try again. & echo.
     goto quit
 )
 
-echo Preparing reactos...
 
 if EXIST CMakeCache.txt (
-    del CMakeCache.txt /q
+    del /q CMakeCache.txt
 )
-
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %CMAKE_PARAMS% "%REACTOS_SOURCE_DIR%"
@@ -213,17 +216,17 @@ if "%CD_SAME_AS_SOURCE%" == "1" (
 )
 
 if "%VS_SOLUTION%" == "1" (
-    set ENDV= You can now use msbuild or open REACTOS.sln%ENDV%.
+    set ENDV= You can now use msbuild or open REACTOS.sln%ENDV%
 ) else (
-    set ENDV= Execute appropriate build commands ^(ex: ninja, make, nmake, etc...^)%ENDV%
+    set ENDV= Execute appropriate build commands ^(e.g. ninja, make, nmake, etc.^)%ENDV%
 )
 
-echo. && echo Configure script complete^^!%ENDV%
+echo. & echo Configure script complete^^!%ENDV%
 
 goto quit
 
 :cmake_notfound
-echo Unable to find cmake, if it is installed, check your PATH variable.
+echo Unable to find cmake. If it is installed, check your PATH variable.
 
 :quit
 endlocal

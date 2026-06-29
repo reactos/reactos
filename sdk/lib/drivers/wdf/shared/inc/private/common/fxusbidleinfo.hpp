@@ -37,7 +37,7 @@ private:
     __drv_maxIRQL(PASSIVE_LEVEL)
     static
     VOID
-    STDCALL
+    NTAPI
     _UsbIdleCallback(
         __in PVOID Context
         );

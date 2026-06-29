@@ -175,7 +175,7 @@ class CAppInfoDisplay : public CUiWindow<CWindowImpl<CAppInfoDisplay>>
     Create(HWND hwndParent);
 
     VOID
-    ShowAppInfo(CAppInfo *Info);
+    ShowAppInfo(CAppInfo &Info, bool OnlyUpdateText = false);
     void
     SetWelcomeText(bool bAppwiz);
     VOID
@@ -376,6 +376,9 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     VOID
     OnCommand(WPARAM wParam, LPARAM lParam);
 
+    void
+    _UpdateInstallBtn();
+
   public:
     CApplicationView(CMainWindow *MainWindow);
     ~CApplicationView();
@@ -387,6 +390,8 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     Create(HWND hwndParent);
     void
     SetRedraw(BOOL bRedraw);
+    void
+    RefreshAvailableItem(PCWSTR PackageName);
     void
     SetFocusOnSearchBar();
     BOOL
@@ -415,13 +420,12 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     VOID
     RestoreListSelection(const RESTORELISTSELECTION &Restore);
 
-    // this function is called when a item of listview get focus.
-    // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
+    VOID
+    RefreshDetailsPane(CAppInfo &Info, bool OnlyUpdateText = false);
+
     VOID
     ItemGetFocus(LPVOID CallbackParam);
 
-    // this function is called when a item of listview is checked/unchecked
-    // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
     VOID
     ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam);
 };

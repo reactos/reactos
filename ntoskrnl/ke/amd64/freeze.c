@@ -1,8 +1,30 @@
 /*
  * PROJECT:     ReactOS Kernel
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Processor freeze support for x64
- * COPYRIGHT:   Copyright 2023 Timo Kreuzer <timo.kreuzer@reactos.org>
+ * COPYRIGHT:   Copyright 2023-2024 Timo Kreuzer <timo.kreuzer@reactos.org>
+ */
+
+/*
+
+ IpiFrozen state graph (based on Windows behavior):
+
+    +-----------------+     Freeze request      +-----------------+
+    | RUNNING         |------------------------>| TARGET_FREEZE   |
+    +-----------------+<---------               +-----------------+
+            |^                  | Resume                |
+     Freeze || Thaw        +-----------+ Thaw request   | Freeze IPI
+            v|             | THAW      |<-----------\   v
+    +-----------------+    +-----------+        +-----------------+
+    | OWNER + ACTIVE  |         ^               | FROZEN          |
+    +-----------------+         |               +-----------------+
+            ^                   |                       ^
+            | Kd proc switch    |                       | Kd proc switch
+            v                   |                       v
+    +-----------------+         |               +-----------------+
+    | OWNER           |---------+               | FROZEN + ACTIVE |
+    +-----------------+ Thaw request            +-----------------+
+
  */
 
 /* INCLUDES *******************************************************************/
@@ -98,8 +120,8 @@ KxFreezeExecution(
         }
     }
 
-    /* We are the owner now */
-    CurrentPrcb->IpiFrozen = IPI_FROZEN_STATE_OWNER;
+    /* We are the owner now and active */
+    CurrentPrcb->IpiFrozen = IPI_FROZEN_STATE_OWNER | IPI_FROZEN_FLAG_ACTIVE;
 
     /* Loop all processors */
     for (ULONG i = 0; i < KeNumberProcessors; i++)
@@ -107,7 +129,7 @@ KxFreezeExecution(
         PKPRCB TargetPrcb = KiProcessorBlock[i];
         if (TargetPrcb != CurrentPrcb)
         {
-            /* Nobody else is allowed to change IpiFrozen, except the freeze owner */
+            /* Only the active processor is allowed to change IpiFrozen */
             ASSERT(TargetPrcb->IpiFrozen == IPI_FROZEN_STATE_RUNNING);
 
             /* Request target to freeze */
@@ -142,6 +164,7 @@ KxThawExecution(
     VOID)
 {
     PKPRCB CurrentPrcb = KeGetCurrentPrcb();
+    ASSERT(CurrentPrcb->IpiFrozen & IPI_FROZEN_FLAG_ACTIVE);
 
     /* Loop all processors */
     for (ULONG i = 0; i < KeNumberProcessors; i++)
@@ -190,6 +213,10 @@ KxSwitchKdProcessor(
     /* Make sure that the processor index is valid */
     ASSERT(ProcessorIndex < KeNumberProcessors);
 
+    /* We are no longer active */
+    ASSERT(CurrentPrcb->IpiFrozen & IPI_FROZEN_FLAG_ACTIVE);
+    CurrentPrcb->IpiFrozen &= ~IPI_FROZEN_FLAG_ACTIVE;
+
     /* Inform the target processor that it's his turn now */
     TargetPrcb = KiProcessorBlock[ProcessorIndex];
     TargetPrcb->IpiFrozen |= IPI_FROZEN_FLAG_ACTIVE;
@@ -212,12 +239,12 @@ KxSwitchKdProcessor(
     {
         /* Another CPU has completed, we can leave the debugger now */
         KdpDprintf("[%u] KxSwitchKdProcessor: ContinueSuccess\n", KeGetCurrentProcessorNumber());
-        CurrentPrcb->IpiFrozen = IPI_FROZEN_STATE_OWNER;
+        CurrentPrcb->IpiFrozen = IPI_FROZEN_STATE_OWNER | IPI_FROZEN_FLAG_ACTIVE;
         return ContinueSuccess;
     }
 
     /* We have been reselected, return to Kd to continue in the debugger */
-    CurrentPrcb->IpiFrozen = IPI_FROZEN_STATE_OWNER;
+    ASSERT(CurrentPrcb->IpiFrozen == (IPI_FROZEN_STATE_OWNER | IPI_FROZEN_FLAG_ACTIVE));
 
     return ContinueProcessorReselected;
 }

@@ -15,21 +15,17 @@
 #define IShellFolder_CompareIDs _disabled_IShellFolder_CompareIDs_
 
 #include "precomp.h"
+#include <winver.h>
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
+#include <userenv.h>
 #include <atlstr.h>
+#include "resource.h"
 
-/*
- * HACK!
- */
-#undef IShellFolder_GetDisplayNameOf
-#undef IShellFolder_ParseDisplayName
-#undef IShellFolder_CompareIDs
-
-#define SHLWAPI_ISHELLFOLDER_HELPERS /* HACK! */
 #include <shlwapi_undoc.h>
+#include <ishellfolder_helpers.h>
 
 #include <strsafe.h>
 
@@ -39,11 +35,270 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+EXTERN_C LSTATUS WINAPI RegGetValueW(HKEY, LPCWSTR, LPCWSTR, DWORD, LPDWORD, PVOID, LPDWORD);
+
 static inline WORD 
 GetVersionMajorMinor()
 {
     DWORD version = GetVersion();
     return MAKEWORD(HIBYTE(version), LOBYTE(version));
+}
+
+static BOOL
+UnExpandEnvironmentStringForUserA(
+    _In_ HANDLE hUserToken,
+    _In_ PCSTR lpString,
+    _In_ PCSTR lpSrc,
+    _Out_ PSTR pszDest,
+    _In_ INT cchDest)
+{
+    CHAR szBuff[MAX_PATH];
+    INT cchExpanded;
+
+    if (hUserToken)
+    {
+        if (ExpandEnvironmentStringsForUserA(hUserToken, lpSrc, szBuff, _countof(szBuff)))
+            cchExpanded = lstrlenA(szBuff) + 1;
+        else
+            cchExpanded = 0;
+    }
+    else
+    {
+        cchExpanded = ExpandEnvironmentStringsA(lpSrc, szBuff, _countof(szBuff));
+    }
+
+    if (!cchExpanded || cchExpanded > cchDest)
+        return FALSE;
+
+    INT cchEnvPath = cchExpanded - 1;
+    if (CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
+                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
+    {
+        return FALSE;
+    }
+
+    INT cchSuffix = lstrlenA(lpString) - cchEnvPath;
+    if (lstrlenA(lpSrc) + cchSuffix >= cchDest)
+        return FALSE;
+
+    StringCchCopyA(pszDest, cchDest, lpSrc);
+    StringCchCatA(pszDest, cchDest, &lpString[cchEnvPath]);
+    return TRUE;
+}
+
+static BOOL
+UnExpandEnvironmentStringForUserW(
+    _In_ HANDLE hUserToken,
+    _In_ PCWSTR lpString,
+    _In_ PCWSTR lpSrc,
+    _Out_ PWSTR pszDest,
+    _In_ INT cchDest)
+{
+    WCHAR szBuff[MAX_PATH];
+    INT cchExpanded;
+
+    if (hUserToken)
+    {
+        if (ExpandEnvironmentStringsForUserW(hUserToken, lpSrc, szBuff, _countof(szBuff)))
+            cchExpanded = lstrlenW(szBuff) + 1;
+        else
+            cchExpanded = 0;
+    }
+    else
+    {
+        cchExpanded = ExpandEnvironmentStringsW(lpSrc, szBuff, _countof(szBuff));
+    }
+
+    if (!cchExpanded || cchExpanded > cchDest)
+        return FALSE;
+
+    INT cchEnvPath = cchExpanded - 1;
+    if (CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
+                       szBuff, cchEnvPath, lpString, cchEnvPath) != CSTR_EQUAL)
+    {
+        return FALSE;
+    }
+
+    INT cchSuffix = lstrlenW(lpString) - cchEnvPath;
+    if (lstrlenW(lpSrc) + cchSuffix >= cchDest)
+        return FALSE;
+
+    StringCchCopyW(pszDest, cchDest, lpSrc);
+    StringCchCatW(pszDest, cchDest, &lpString[cchEnvPath]);
+    return TRUE;
+}
+
+/*************************************************************************
+ * PathUnExpandEnvStringsForUserA [SHLWAPI.465]
+ *
+ * See PathUnExpandEnvStringsForUserW.
+ */
+EXTERN_C
+BOOL WINAPI
+PathUnExpandEnvStringsForUserA(
+    _In_ HANDLE hUserToken,
+    _In_ PCSTR pszPath,
+    _Out_writes_(cchBuff) PSTR pszBuff,
+    _In_ INT cchBuff)
+{
+    static const PCSTR c_varsA[] =
+    {
+        "%APPDATA%",
+        "%USERPROFILE%",
+        "%ALLUSERSPROFILE%",
+        "%ProgramFiles%",
+        "%SystemRoot%",
+        "%SystemDrive%",
+    };
+
+    if (!pszPath)
+    {
+        if (pszBuff && cchBuff)
+            *pszBuff = ANSI_NULL;
+
+        return FALSE;
+    }
+
+    if (!pszBuff)
+        return FALSE;
+
+    for (size_t iVar = 0; iVar < _countof(c_varsA); ++iVar)
+    {
+        if (UnExpandEnvironmentStringForUserA(hUserToken, pszPath, c_varsA[iVar],
+                                              pszBuff, cchBuff))
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/*************************************************************************
+ * PathUnExpandEnvStringsForUserW [SHLWAPI.466]
+ *
+ * https://undoc.airesoft.co.uk/shlwapi.dll/PathUnExpandEnvStringsForUserW.php
+ */
+EXTERN_C
+BOOL WINAPI
+PathUnExpandEnvStringsForUserW(
+    _In_ HANDLE hUserToken,
+    _In_ PCWSTR pwszPath,
+    _Out_writes_(cchBuff) PWSTR pszBuff,
+    _In_ INT cchBuff)
+{
+    static const PCWSTR c_varsW[] =
+    {
+        L"%APPDATA%",
+        L"%USERPROFILE%",
+        L"%ALLUSERSPROFILE%",
+        L"%ProgramFiles%",
+        L"%SystemRoot%",
+        L"%SystemDrive%",
+    };
+
+    if (!pwszPath)
+    {
+        if (pszBuff && cchBuff)
+            *pszBuff = UNICODE_NULL;
+
+        return FALSE;
+    }
+
+    if (!pszBuff)
+        return FALSE;
+
+    for (size_t iVar = 0; iVar < _countof(c_varsW); ++iVar)
+    {
+        if (UnExpandEnvironmentStringForUserW(hUserToken, pwszPath, c_varsW[iVar],
+                                              pszBuff, cchBuff))
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/*************************************************************************
+ *      MapWin32ErrorToSTG [SHLWAPI.485]
+ *
+ * https://undoc.airesoft.co.uk/shlwapi.dll/MapWin32ErrorToSTG.php
+ */
+EXTERN_C HRESULT WINAPI
+MapWin32ErrorToSTG(_In_ HRESULT hr)
+{
+    switch (hr)
+    {
+        case HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED):
+            return STG_E_ACCESSDENIED;
+        case HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND):
+        case HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND):
+            return STG_E_FILENOTFOUND;
+        case HRESULT_FROM_WIN32(ERROR_FILE_EXISTS):
+        case HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS):
+            return STG_E_FILEALREADYEXISTS;
+        default:
+            return hr;
+    }
+}
+
+static BOOL CharLowerNoDBCSAWorker(PSTR lpString, INT cchMax, BOOL bUppercase)
+{
+    CHAR szBuff[MAX_PATH];
+    INT cch;
+    if (!lpString)
+        return FALSE;
+    cch = cchMax ? cchMax : lstrlenA(lpString);
+    if (FAILED(StringCchCopyA(szBuff, _countof(szBuff), lpString)))
+        return FALSE;
+    return LCMapStringA(LOCALE_SYSTEM_DEFAULT, (bUppercase ? LCMAP_UPPERCASE : LCMAP_LOWERCASE),
+                        szBuff, cch, lpString, cch);
+}
+
+static BOOL CharLowerNoDBCSWWorker(PWSTR lpString, INT cchMax, BOOL bUppercase)
+{
+    WCHAR szDest[MAX_PATH];
+    INT cch;
+    if (!lpString)
+        return FALSE;
+    cch = cchMax ? cchMax : lstrlenW(lpString);
+    if (FAILED(StringCchCopyW(szDest, _countof(szDest), lpString)))
+        return FALSE;
+    return LCMapStringW(LOCALE_SYSTEM_DEFAULT, (bUppercase ? LCMAP_UPPERCASE : LCMAP_LOWERCASE),
+                        szDest, cch, lpString, cch);
+}
+
+/*************************************************************************
+ * CharLowerNoDBCSA [SHLWAPI.453]
+ */
+EXTERN_C PSTR WINAPI CharLowerNoDBCSA(_Inout_ PSTR lpString)
+{
+    return CharLowerNoDBCSAWorker(lpString, 0, FALSE) ? lpString : NULL;
+}
+
+/*************************************************************************
+ * CharLowerNoDBCSW [SHLWAPI.454]
+ */
+EXTERN_C PWSTR WINAPI CharLowerNoDBCSW(_Inout_ PWSTR lpString)
+{
+    return CharLowerNoDBCSWWorker(lpString, 0, FALSE) ? lpString : NULL;
+}
+
+/*************************************************************************
+ * CharUpperNoDBCSA [SHLWAPI.451]
+ */
+EXTERN_C PSTR WINAPI CharUpperNoDBCSA(_Inout_ PSTR lpString)
+{
+    return CharLowerNoDBCSAWorker(lpString, 0, TRUE) ? lpString : NULL;
+}
+
+/*************************************************************************
+ * CharUpperNoDBCSW [SHLWAPI.452]
+ */
+EXTERN_C PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString)
+{
+    return CharLowerNoDBCSWWorker(lpString, 0, TRUE) ? lpString : NULL;
 }
 
 static HRESULT
@@ -162,6 +417,107 @@ SHInvokeCommandOnContextMenu(
     return SHInvokeCommandOnContextMenuEx(hWnd, pUnk, pCM, fCMIC, CMF_EXTENDEDVERBS, pszVerb, NULL);
 }
 
+static inline BOOL
+IsTextAsciiOnly(PCSTR psz)
+{
+    for (const signed char *pch = (const signed char *)psz; *pch; ++pch)
+    {
+        if (*pch < 0)
+            return FALSE;
+    }
+    return TRUE;
+}
+
+/*************************************************************************
+ * SHInvokeCommandsOnContextMenu [SHLWAPI.541]
+ */
+EXTERN_C
+HRESULT WINAPI
+SHInvokeCommandsOnContextMenu(
+    _In_opt_ HWND hwnd,
+    _In_opt_ IUnknown *punkSite,
+    _In_ IContextMenu *pCM,
+    _In_ DWORD fMask,
+    _In_reads_opt_(cVerbs) PCSTR *pVerbs,
+    _In_ UINT cVerbs)
+{
+    HRESULT hr;
+    CMINVOKECOMMANDINFOEX ici;
+    WCHAR szVerbW[MAX_PATH];
+    HMENU hMenu = NULL;
+    UINT iVerb, idDefault = (UINT)-1;
+    PCSTR pszVerbA = NULL;
+
+    if (!pCM)
+        return E_INVALIDARG;
+
+    hMenu = CreatePopupMenu();
+    if (!hMenu)
+        return E_OUTOFMEMORY;
+
+    if (punkSite)
+        IUnknown_SetSite(pCM, punkSite);
+
+    hr = pCM->QueryContextMenu(hMenu, 0, 1, MAXSHORT, (cVerbs ? 0 : CMF_DEFAULTONLY));
+    if (FAILED(hr))
+        goto Cleanup;
+
+    if (!cVerbs)
+    {
+        idDefault = GetMenuDefaultItem(hMenu, FALSE, 0);
+        if (idDefault != (UINT)-1)
+            pszVerbA = MAKEINTRESOURCEA(idDefault - 1);
+    }
+
+    ZeroMemory(&ici, sizeof(ici));
+    ici.cbSize = sizeof(ici);
+    ici.hwnd   = hwnd;
+    ici.nShow  = SW_SHOWNORMAL;
+
+    iVerb = 0;
+    do
+    {
+        if (cVerbs)
+            pszVerbA = pVerbs[iVerb];
+
+        if (!pszVerbA && idDefault == (UINT)-1)
+        {
+            hr = E_FAIL;
+            break;
+        }
+
+        ici.fMask   = fMask;
+        ici.lpVerb  = pszVerbA;
+        ici.lpVerbW = NULL;
+
+        if (idDefault == (UINT)-1 && !IS_INTRESOURCE(pszVerbA) && IsTextAsciiOnly(pszVerbA))
+        {
+            size_t ich;
+            for (ich = 0; pszVerbA[ich] && ich + 1 < _countof(szVerbW); ++ich)
+            {
+                szVerbW[ich] = (BYTE)pszVerbA[ich];
+            }
+            szVerbW[ich] = UNICODE_NULL;
+
+            ici.lpVerbW = szVerbW;
+            ici.fMask |= CMIC_MASK_UNICODE;
+        }
+
+        hr = pCM->InvokeCommand((LPCMINVOKECOMMANDINFO)&ici);
+
+        if (SUCCEEDED(hr) || hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))
+            break;
+
+        ++iVerb;
+    } while (iVerb < cVerbs);
+
+Cleanup:
+    if (punkSite)
+        IUnknown_SetSite(pCM, NULL);
+    DestroyMenu(hMenu);
+    return hr;
+}
+
 /*************************************************************************
  * SHInvokeCommandWithFlagsAndSite [SHLWAPI.571]
  */
@@ -208,6 +564,89 @@ IContextMenu_Invoke(
     HRESULT hr = SHInvokeCommandOnContextMenuInternal(hwnd, NULL, pContextMenu, 0,
                                                       uFlags, lpVerb, NULL, false);
     return !FAILED_UNEXPECTEDLY(hr);
+}
+
+/*************************************************************************
+ * ShellExecuteCommand [INTERNAL]
+ */
+static HRESULT
+ShellExecuteCommand(_In_opt_ HWND hWnd, _In_ PCWSTR Command, _In_opt_ UINT Flags)
+{
+    WCHAR szCmd[MAX_PATH * 2];
+    int len = PathProcessCommand(Command, szCmd, _countof(szCmd), PPCF_ADDARGUMENTS | PPCF_FORCEQUALIFY);
+    if (len <= 0) // Could not resolve the command, just use the input
+    {
+        HRESULT hr = StringCchCopyW(szCmd, _countof(szCmd), Command);
+        if (FAILED(hr))
+            return hr;
+    }
+    PWSTR pszArgs = PathGetArgsW(szCmd);
+    PathRemoveArgsW(szCmd);
+    PathUnquoteSpacesW(szCmd);
+
+    SHELLEXECUTEINFOW sei = { sizeof(sei), Flags, hWnd, NULL, szCmd, pszArgs };
+    sei.nShow = SW_SHOW;
+    UINT error = ShellExecuteExW(&sei) ? ERROR_SUCCESS : GetLastError();
+    return HRESULT_FROM_WIN32(error);
+}
+
+/*************************************************************************
+ * RunRegCommand [SHLWAPI.469]
+ */
+EXTERN_C HRESULT WINAPI
+RunRegCommand(_In_opt_ HWND hWnd, _In_ HKEY hKey, _In_opt_ PCWSTR pszSubKey)
+{
+    WCHAR szCmd[MAX_PATH * 2];
+    DWORD cb = sizeof(szCmd);
+    DWORD error = RegGetValueW(hKey, pszSubKey, NULL, RRF_RT_REG_SZ, NULL, szCmd, &cb);
+    if (error)
+        return HRESULT_FROM_WIN32(error);
+    return ShellExecuteCommand(hWnd, szCmd, SEE_MASK_FLAG_LOG_USAGE);
+}
+
+/*************************************************************************
+ * RunIndirectRegCommand [SHLWAPI.468]
+ */
+EXTERN_C HRESULT WINAPI
+RunIndirectRegCommand(_In_opt_ HWND hWnd, _In_ HKEY hKey, _In_opt_ PCWSTR pszSubKey, _In_ PCWSTR pszVerb)
+{
+    WCHAR szKey[MAX_PATH];
+    HRESULT hr;
+    if (pszSubKey)
+        hr = StringCchPrintfW(szKey, _countof(szKey), L"%s\\shell\\%s\\command", pszSubKey, pszVerb);
+    else
+        hr = StringCchPrintfW(szKey, _countof(szKey), L"shell\\%s\\command", pszVerb);
+    return SUCCEEDED(hr) ? RunRegCommand(hWnd, hKey, szKey) : hr;
+}
+
+/*************************************************************************
+ * SHRunIndirectRegClientCommand [SHLWAPI.467]
+ */
+EXTERN_C HRESULT WINAPI
+SHRunIndirectRegClientCommand(_In_opt_ HWND hWnd, _In_ PCWSTR pszClientType)
+{
+    WCHAR szKey[MAX_PATH], szClient[MAX_PATH];
+    HRESULT hr = StringCchPrintfW(szKey, _countof(szKey), L"Software\\Clients\\%s", pszClientType);
+    if (FAILED(hr))
+        return hr;
+
+    // Find the default client
+    DWORD error, cb;
+    cb = sizeof(szClient);
+    error = RegGetValueW(HKEY_CURRENT_USER, szKey, NULL, RRF_RT_REG_SZ, NULL, szClient, &cb);
+    if (error)
+    {
+        cb = sizeof(szClient);
+        if (error != ERROR_MORE_DATA && error != ERROR_BUFFER_OVERFLOW)
+            error = RegGetValueW(HKEY_LOCAL_MACHINE, szKey, NULL, RRF_RT_REG_SZ, NULL, szClient, &cb);
+        if (error)
+            return HRESULT_FROM_WIN32(error);
+    }
+
+    hr = StringCchPrintfW(szKey, _countof(szKey), L"Software\\Clients\\%s\\%s", pszClientType, szClient);
+    if (SUCCEEDED(hr))
+        hr = RunIndirectRegCommand(hWnd, HKEY_LOCAL_MACHINE, szKey, L"open");
+    return hr;
 }
 
 /*************************************************************************
@@ -385,4 +824,438 @@ IShellFolder_CompareIDs(
     }
 
     return psf->CompareIDs(lParam, pidl1, pidl2);
+}
+
+/*************************************************************************
+ * SHDialogProc [INTERNAL]
+ *
+ * Used in SHDialogBox below
+ */
+
+typedef struct tagSHDIALOG
+{
+    SHDIALOGPROC fn;
+    PVOID pThis;
+} SHDIALOG, *PSHDIALOG;
+
+static INT_PTR CALLBACK
+SHDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PSHDIALOG pData;
+    INT_PTR result;
+    HWND hwndItem;
+    LRESULT ret;
+
+    if (uMsg == WM_INITDIALOG)
+    {
+        pData = (PSHDIALOG)lParam;
+        SetWindowLongPtrA(hWnd, DWLP_USER, lParam);
+        lParam = (LPARAM)pData->pThis;
+    }
+    else
+    {
+        pData = (PSHDIALOG)GetWindowLongPtrA(hWnd, DWLP_USER);
+    }
+
+    if (pData && pData->fn)
+    {
+        result = pData->fn(pData->pThis, hWnd, uMsg, wParam, lParam);
+        if (result)
+            return result;
+    }
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            return TRUE;
+
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDHELP)
+                return FALSE;
+
+            hwndItem = GetDlgItem(hWnd, LOWORD(wParam));
+            if (!hwndItem)
+                return FALSE;
+
+            ret = SendMessageA(hwndItem, WM_GETDLGCODE, 0, 0);
+            if (!(ret & (DLGC_DEFPUSHBUTTON | DLGC_UNDEFPUSHBUTTON)))
+                return FALSE;
+
+            EndDialog(hWnd, LOWORD(wParam));
+            return TRUE;
+
+        default:
+            return FALSE;
+    }
+}
+
+/*************************************************************************
+ * SHDialogBox [SHLWAPI.277]
+ */
+EXTERN_C INT_PTR WINAPI
+SHDialogBox(
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCSTR lpTemplateName,
+    _In_opt_ HWND hWndParent,
+    _In_opt_ SHDIALOGPROC fn,
+    _In_opt_ PVOID pThis)
+{
+    SHDIALOG data = { fn, pThis };
+    return DialogBoxParamA(hInstance, lpTemplateName, hWndParent, SHDialogProc, (LPARAM)&data);
+}
+
+/*************************************************************************
+ * NextPathA [SHLWAPI.449]
+ *
+ * See NextPathW.
+ */
+EXTERN_C PSTR WINAPI
+NextPathA(
+    _In_ PCSTR pszStart,
+    _Out_writes_(cchDest) PSTR pszDest,
+    _In_ UINT cchDest)
+{
+    if (!pszStart)
+        return NULL;
+
+    PCSTR pchStart = pszStart;
+    while (*pchStart == ';')
+        ++pchStart;
+
+    if (!*pchStart)
+        return NULL;
+
+    PSTR pchEnd = StrChrA(pchStart, ';');
+    if (!pchEnd)
+        pchEnd = (PSTR)(pchStart + lstrlenA(pchStart));
+
+    const UINT cchSegment = (UINT)(pchEnd - pchStart);
+    const UINT cchToCopy = min(cchSegment + 1, cchDest);
+    lstrcpynA(pszDest, pchStart, cchToCopy);
+    pszDest[cchSegment] = ANSI_NULL;
+
+    PathRemoveBlanksA(pszDest);
+    if (!*pszDest)
+        return NULL;
+
+    return (*pchEnd == ';') ? (pchEnd + 1) : pchEnd;
+}
+
+/*************************************************************************
+ * NextPathW [SHLWAPI.450]
+ *
+ * Extracts the next path from a semicolon-separated path string (Unicode version)
+ *
+ * @param pszStart Parsing start position (semicolon-separated path string)
+ * @param pszDest Buffer to store the extracted path
+ * @param cchDest Buffer size (number of characters)
+ * @return Pointer to the beginning of the next path. NULL if there are no more paths.
+ */
+EXTERN_C PWSTR WINAPI
+NextPathW(
+    _In_ PCWSTR pszStart,
+    _Out_writes_(cchDest) PWSTR pszDest,
+    _In_ UINT cchDest)
+{
+    if (!pszStart)
+        return NULL;
+
+    PCWSTR pchStart = pszStart;
+    while (*pchStart == L';')
+        ++pchStart;
+
+    if (!*pchStart)
+        return NULL;
+
+    PWSTR pchEnd = StrChrW(pchStart, L';');
+    if (!pchEnd)
+        pchEnd = (PWSTR)(pchStart + lstrlenW(pchStart));
+
+    const UINT cchSegment = (UINT)(pchEnd - pchStart);
+    const UINT cchToCopy = min(cchSegment + 1, cchDest);
+    lstrcpynW(pszDest, pchStart, cchToCopy);
+    pszDest[cchSegment] = UNICODE_NULL;
+
+    PathRemoveBlanksW(pszDest);
+    if (!*pszDest)
+        return NULL;
+
+    return (*pchEnd == L';') ? (pchEnd + 1) : pchEnd;
+}
+
+static HRESULT
+_AllocValueString(
+    HKEY hkey,
+    PCWSTR pszSubKey,
+    PCWSTR pszValue,
+    PWSTR* ppszOut)
+{
+    *ppszOut = NULL;
+
+    DWORD cbData;
+    LSTATUS error = SHGetValueW(hkey, pszSubKey, pszValue, NULL, NULL, &cbData);
+    if (error)
+        return HRESULT_FROM_WIN32(error);
+
+    PWSTR pszData = (PWSTR)LocalAlloc(LPTR, cbData);
+    if (!pszData)
+        return HRESULT_FROM_WIN32(ERROR_OUTOFMEMORY);
+
+    error = SHGetValueW(hkey, pszSubKey, pszValue, NULL, pszData, &cbData);
+    if (error)
+    {
+        LocalFree(pszData);
+        return HRESULT_FROM_WIN32(error);
+    }
+
+    *ppszOut = pszData;
+    return S_OK;
+}
+
+/*************************************************************************
+ * IUnknown_ShowBrowserBar [SHLWAPI.539]
+ *
+ * @see IWebBrowser2
+ */
+EXTERN_C HRESULT WINAPI
+IUnknown_ShowBrowserBar(
+    _In_ IUnknown* punk,
+    _In_ REFGUID rguid,
+    _In_ BOOL bShow)
+{
+    CComPtr<IWebBrowser2> pWB2;
+    HRESULT hr = IUnknown_QueryServiceForWebBrowserApp(punk, IID_IWebBrowser2, (PVOID*)&pWB2);
+    if (FAILED(hr))
+        return hr;
+
+    WCHAR szGUID[40];
+    StringFromGUID2(rguid, szGUID, _countof(szGUID));
+
+    CComVariant varClsid(szGUID), varShow((bool)!!bShow), varSize;
+    return pWB2->ShowBrowserBar(&varClsid, &varShow, &varSize);
+}
+
+/*************************************************************************
+ * PrettifyFileDescriptionW [SHLWAPI.492]
+ *
+ * @see SHGetFileDescriptionW
+ */
+VOID WINAPI
+PrettifyFileDescriptionW(_Inout_ PWSTR pszTarget, _In_opt_ PCWSTR pszCutList)
+{
+    if (!pszTarget || !*pszTarget)
+        return;
+
+    PWSTR pszFreeList = NULL;
+    PCWSTR pszList = pszCutList;
+    PCWSTR pszAssoc = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileAssociation";
+    if (_AllocValueString(HKEY_LOCAL_MACHINE, pszAssoc, L"CutList", &pszFreeList) == S_OK)
+        pszList = pszFreeList;
+
+    if (pszList && *pszList)
+    {
+        for (PCWSTR pszEntry = pszList; *pszEntry; pszEntry += lstrlenW(pszEntry) + 1)
+        {
+            PWSTR pszMatch = StrRStrIW(pszTarget, NULL, pszEntry);
+            if (!pszMatch)
+                continue;
+
+            if (pszMatch[lstrlenW(pszEntry)])
+                continue;
+
+            *pszMatch = UNICODE_NULL;
+            while (pszMatch > pszTarget && pszMatch[-1] == L' ')
+            {
+                --pszMatch;
+                *pszMatch = UNICODE_NULL;
+            }
+
+            break;
+        }
+    }
+
+    if (pszFreeList)
+        LocalFree(pszFreeList);
+}
+
+/*************************************************************************
+ * SHGetFileDescriptionW [SHLWAPI.348]
+ *
+ * @see SHGetFileDescriptionA
+ * @see PrettifyFileDescriptionW
+ */
+BOOL WINAPI SHGetFileDescriptionW(
+    _In_ PCWSTR pszPath,
+    _In_opt_ PCWSTR pszVerKey,
+    _In_opt_ PCWSTR pszDisplayName,
+    _Out_opt_ PWSTR pszOut,
+    _Inout_ PUINT pcchOut)
+{
+    DWORD pdwAttrs = 0;
+    if (!PathFileExistsAndAttributesW(pszPath, &pdwAttrs))
+        return FALSE;
+
+    WCHAR szPath[MAX_PATH];
+    StringCchCopyW(szPath, _countof(szPath), pszPath);
+
+    PVOID pvDescription  = NULL;
+    UINT  cchDescription = 0;
+    PVOID pvBlock = NULL;
+
+    BOOL bIsFile = !(pdwAttrs & FILE_ATTRIBUTE_DIRECTORY) &&
+                   !PathIsUNCServerW(pszPath) &&
+                   !PathIsUNCServerShareW(pszPath);
+    if (bIsFile)
+    {
+        DWORD dwHandle = 0;
+        DWORD cbBlock  = GetFileVersionInfoSizeW(szPath, &dwHandle);
+        if (cbBlock)
+        {
+            pvBlock = LocalAlloc(LPTR, cbBlock);
+            if (pvBlock && GetFileVersionInfoW(szPath, dwHandle, cbBlock, pvBlock))
+            {
+                WCHAR szSubBlock[60];
+                BOOL ret = FALSE;
+                if (pszVerKey)
+                {
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock), pszVerKey);
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                }
+
+                if (!ret)
+                {
+                    PVOID pTranslation = NULL;
+                    UINT cbTranslation = 0;
+                    if (VerQueryValueW(pvBlock, L"\\VarFileInfo\\Translation", &pTranslation,
+                                       &cbTranslation) && cbTranslation)
+                    {
+                        UINT langId   = ((PWORD)pTranslation)[0];
+                        UINT codePage = ((PWORD)pTranslation)[1];
+                        StringCchPrintfW(szSubBlock, _countof(szSubBlock),
+                                         L"\\StringFileInfo\\%04X%04X\\FileDescription",
+                                         langId, codePage);
+                        ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                    }
+                }
+
+                if (!ret)
+                {
+                    // 0x0409: English (United States), 0x04B0: UTF-16 codepage
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock),
+                                   L"\\StringFileInfo\\040904B0\\FileDescription");
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                }
+                if (!ret)
+                {
+                    // 0x0409: English (United States), 0x04E4: Latin 1 codepage
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock),
+                                   L"\\StringFileInfo\\040904E4\\FileDescription");
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                }
+                if (!ret)
+                {
+                    // 0x0409: English (United States), 0x0000: Neutral
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock),
+                                   L"\\StringFileInfo\\04090000\\FileDescription");
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                }
+            }
+        }
+    }
+
+    PWSTR pszDescription = (PWSTR)pvDescription;
+    if (!pszDescription || !*pszDescription)
+    {
+        PathRemoveExtensionW(szPath);
+        pszDescription = PathFindFileNameW(szPath);
+        cchDescription = lstrlenW(pszDescription);
+    }
+
+    PrettifyFileDescriptionW(pszDescription, pszDisplayName);
+
+    UINT cchResult = lstrlenW(pszDescription) + 1;
+    if (pszOut)
+    {
+        UINT cchCopy = min(cchResult, *pcchOut);
+        StringCchCopyW(pszOut, cchCopy, pszDescription);
+        *pcchOut = cchCopy;
+    }
+    else
+    {
+        *pcchOut = cchResult;
+    }
+
+    if (pvBlock)
+        LocalFree(pvBlock);
+
+    return TRUE;
+}
+
+/*************************************************************************
+ * SHGetFileDescriptionA [SHLWAPI.349]
+ *
+ * @see SHGetFileDescriptionW
+ */
+BOOL WINAPI SHGetFileDescriptionA(
+    _In_ PCSTR pszPath,
+    _In_opt_ PCSTR pszVerKey,
+    _In_opt_ PCSTR pszDisplayName,
+    _Out_opt_ PSTR pszOut,
+    _Inout_ PUINT pcchOut)
+{
+    WCHAR szPathW[MAX_PATH], szVerKeyW[MAX_PATH], szDisplayNameW[MAX_PATH], szOutW[MAX_PATH];
+    CHAR szOutA[MAX_PATH];
+    BOOL ret;
+    UINT cchOutW;
+
+    SHAnsiToUnicode(pszPath, szPathW, _countof(szPathW));
+    szPathW[_countof(szPathW) - 1] = UNICODE_NULL;
+
+    if (pszVerKey)
+    {
+        SHAnsiToUnicode(pszVerKey, szVerKeyW, _countof(szVerKeyW));
+        szVerKeyW[_countof(szVerKeyW) - 1] = UNICODE_NULL;
+    }
+
+    if (pszDisplayName)
+    {
+        SHAnsiToUnicode(pszDisplayName, szDisplayNameW, _countof(szDisplayNameW));
+        szDisplayNameW[_countof(szDisplayNameW) - 1] = UNICODE_NULL;
+    }
+
+    cchOutW = (UINT)_countof(szOutW);
+    ret = SHGetFileDescriptionW(szPathW, (pszVerKey ? szVerKeyW : NULL),
+                                (pszDisplayName ? szDisplayNameW : NULL), szOutW, &cchOutW);
+    if (ret)
+    {
+        szOutW[_countof(szOutW) - 1] = UNICODE_NULL;
+
+        if (!pszOut)
+            pszOut = szOutA;
+
+        SHUnicodeToAnsi(szOutW, pszOut, *pcchOut);
+        if (*pcchOut > 0)
+            pszOut[*pcchOut - 1] = ANSI_NULL;
+        *pcchOut = lstrlenA(pszOut) + 1;
+    }
+
+    return ret;
+}
+
+/*************************************************************************
+ * SHRestrictedMessageBox [SHLWAPI.384]
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/util/restrictions/messagebox.htm
+ * @see ShellMessageBoxW
+ */
+EXTERN_C INT WINAPI SHRestrictedMessageBox(_In_ HWND hWnd)
+{
+    return ShellMessageBoxW(shlwapi_hInstance, hWnd, MAKEINTRESOURCEW(IDS_RESTRICTED),
+                            MAKEINTRESOURCEW(IDS_RESTRICTIONS), MB_ICONERROR);
+}
+
+EXTERN_C ULONG WINAPI GetProcessOsVersion(void)
+{
+    PPEB Peb = NtCurrentTeb()->Peb;
+    return (Peb->OSMajorVersion << 8) | Peb->OSMinorVersion;
 }

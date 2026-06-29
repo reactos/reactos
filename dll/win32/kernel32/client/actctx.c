@@ -156,7 +156,7 @@ BasepProbeForDllManifest(IN PVOID DllHandle,
     /* Check whether the image has manifest resource associated with it */
     Info.Type = (ULONG_PTR)RT_MANIFEST;
     Info.Name = (ULONG_PTR)ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
-    Info.Language = 0;
+    Info.Language = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
     if (!(Status = LdrFindResource_U(DllHandle, &Info, 3, &Entry)))
     {
         /* Create the activation context */

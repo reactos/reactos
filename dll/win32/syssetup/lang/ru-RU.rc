@@ -13,15 +13,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Добро пожаловать в мастер установки ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Этот мастер поможет ввести сведения для правильной установки ReactOS и установит ее на ваш компьютер.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Добро пожаловать в мастер установки ReactOS", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Этот мастер поможет ввести сведения для правильной установки ReactOS и установит ее на ваш компьютер.", IDC_STATIC, 115, 40, 195, 50
     LTEXT "Нажмите ""Далее"" для продолжения установки.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Установка ReactOS"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Разработчики ReactOS и Open Source-проекты, благодаря которым была создана ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
@@ -30,18 +30,18 @@ BEGIN
     LTEXT "Нажмите ""Далее"" для продолжения установки.", IDC_STATIC, 15, 136, 195, 17
 END
 
-IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "Установка ReactOS"
+IDD_INSTALLATION DIALOGEX 0, 0, 317, 143
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
-    LTEXT "Пожалуйста, укажите тип продкута:", IDC_STATIC, 35, 7, 230, 12
-    LTEXT "&Тип продукта:", IDC_STATIC, 5, 32, 85, 10
-    COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "Информация о продукте", IDC_STATIC, 5, 50, 305, 85
+    ICON "", IDC_INSTALLATION_ICON, 5, 5, 20, 20
+    LTEXT "Please choose an installation type:", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "Installation &Types:", IDC_STATIC, 5, 32, 85, 10
+    COMBOBOX IDC_INSTALLATION_TYPES, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "Installation Summary", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Описание:", IDC_STATIC, 20, 65, 70, 10
-    EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
+    EDITTEXT IDC_INSTALLATION_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -125,17 +125,21 @@ BEGIN
     LTEXT "Удаление временных файлов", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
+    ICON "", IDC_CHECK1, 48, 26, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
+    ICON "", IDC_CHECK2, 48, 38, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
+    ICON "", IDC_CHECK3, 48, 50, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
+    ICON "", IDC_CHECK4, 48, 62, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Завершение установки ReactOS"
+CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Завершение мастера установки ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Вы успешно закончили установку ReactOS.\n\nНажмите ""Готово"" для перезагрузки вашего компьютера.", IDC_STATIC, 115, 40, 195, 100
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Если CD находится в приводе, нужно извлечь его. Для перезагрузки компьютера нажмите ""Готово"".", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Вы успешно закончили установку ReactOS.\n\nЕсли CD находится в приводе, нужно извлечь его. Для перезагрузки компьютера нажмите ""Готово"".", IDC_STATIC, 115, 40, 195, 48
+    LTEXT "Your computer will automatically restart in 15 seconds.", IDC_STATIC, 115, 110, 195, 24
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -150,7 +154,7 @@ END
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Пожалуйста подождите..."
-FONT 8, "MS Shell Dlg", 400, 0, 1
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
@@ -256,11 +260,17 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PRODUCTTITLE "Тип продукта"
-    IDS_PRODUCTSUBTITLE "Вы можете выбрать тип продукта, который изменяет поведение системы."
-    IDS_PRODUCTSERVERNAME "Сервер ReactOS"
-    IDS_PRODUCTWORKSTATIONNAME "Рабочая станция ReactOS"
-    IDS_PRODUCTSERVERINFO "Система будет распознаваться как сервер. Приватные папки ""Мои Изображения"", ""Мои видеозаписи"" и ""Моя музыка"" не будут зависеть от папки ""Мои документы""."
-    IDS_PRODUCTWORKSTATIONINFO "Система будет распознаваться как рабочая станция. Приватные папки ""Мои изображения"", ""Мои видеозаписи"" и ""Моя музыка"" будут находиться в папке ""Мои документы""."
+    IDS_INSTALLATIONTITLE "Тип продукта"
+    IDS_INSTALLATIONSUBTITLE "Вы можете выбрать тип продукта, который изменяет поведение системы."
+    IDS_INSTALLATIONSERVERNAME "Сервер ReactOS"
+    IDS_INSTALLATIONSERVERINFO "Система будет распознаваться как сервер. Приватные папки ""Мои Изображения"", ""Мои видеозаписи"" и ""Моя музыка"" не будут зависеть от папки ""Мои документы""."
+    IDS_INSTALLATIONWORKSTATIONNAME "Рабочая станция ReactOS"
+    IDS_INSTALLATIONWORKSTATIONINFO "Система будет распознаваться как рабочая станция. Приватные папки ""Мои изображения"", ""Мои видеозаписи"" и ""Моя музыка"" будут находиться в папке ""Мои документы""."
+    IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    /* Reserved for future use
+     * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
+     * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."
+     */
     IDS_DEFAULT "(по умолчанию)"
 END

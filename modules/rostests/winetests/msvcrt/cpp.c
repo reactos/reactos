@@ -44,12 +44,8 @@ typedef struct __type_info
 #endif
 
 /* Function pointers. We need to use these to call these funcs as __thiscall */
-static HMODULE hMsvcrt;
-
-static void* (__cdecl *poperator_new)(unsigned int);
+static void* (__cdecl *poperator_new)(size_t);
 static void  (__cdecl *poperator_delete)(void*);
-static void* (__cdecl *pmalloc)(unsigned int);
-static void  (__cdecl *pfree)(void*);
 
 /* exception */
 static void (__thiscall *pexception_ctor)(exception*,LPCSTR*);
@@ -112,9 +108,6 @@ static void* (__cdecl *p__RTDynamicCast)(void*,int,void*,void*,int);
 static char* (__cdecl *p__unDName)(char*,const char*,int,void*,void*,unsigned short int);
 
 
-/* _very_ early native versions have serious RTTI bugs, so we check */
-static void* bAncientVersion;
-
 /* Emulate a __thiscall */
 #ifdef __i386__
 
@@ -157,23 +150,12 @@ static void init_thiscall_thunk(void)
 #endif /* __i386__ */
 
 /* Some exports are only available in later versions */
-#define SETNOFAIL(x,y) x = (void*)GetProcAddress(hMsvcrt,y)
+#define SETNOFAIL(x,y) x = (void*)GetProcAddress(hmsvcrt,y)
 #define SET(x,y) do { SETNOFAIL(x,y); ok(x != NULL, "Export '%s' not found\n", y); } while(0)
 
 static BOOL InitFunctionPtrs(void)
 {
-    hMsvcrt = GetModuleHandleA("msvcrt.dll");
-    if (!hMsvcrt)
-        hMsvcrt = GetModuleHandleA("msvcrtd.dll");
-    ok(hMsvcrt != 0, "GetModuleHandleA failed\n");
-    if (!hMsvcrt)
-    {
-        win_skip("Could not load msvcrt.dll\n");
-        return FALSE;
-    }
-
-    SET(pmalloc, "malloc");
-    SET(pfree, "free");
+    HMODULE hmsvcrt = GetModuleHandleA("msvcrt.dll");
 
     SET(pexception_vtable, "??_7exception@@6B@");
     SET(pbad_typeid_vtable, "??_7bad_typeid@@6B@");
@@ -187,7 +169,6 @@ static BOOL InitFunctionPtrs(void)
     SET(p__unDName,"__unDName");
 
     /* Extremely early versions export logic_error, and crash in RTTI */
-    SETNOFAIL(bAncientVersion, "??0logic_error@@QAE@ABQBD@Z");
     if (sizeof(void *) > sizeof(int))  /* 64-bit initialization */
     {
         SETNOFAIL(poperator_new, "??_U@YAPEAX_K@Z");
@@ -242,50 +223,50 @@ static BOOL InitFunctionPtrs(void)
         SETNOFAIL(poperator_new, "??_U@YAPAXI@Z");
         SETNOFAIL(poperator_delete, "??_V@YAXPAX@Z");
 
-        SET(pexception_ctor, "??0exception@std@@QAA@ABQBD@Z");
-        SET(pexception_copy_ctor, "??0exception@std@@QAA@ABV01@@Z");
-        SET(pexception_default_ctor, "??0exception@std@@QAA@XZ");
-        SET(pexception_dtor, "??1exception@std@@UAA@XZ");
-        SET(pexception_opequals, "??4exception@std@@QAAAAV01@ABV01@@Z");
-        SET(pexception_what, "?what@exception@std@@UBAPBDXZ");
-        SET(pexception_vector_dtor, "??_Eexception@@UAEPAXI@Z");/**/
-        SET(pexception_scalar_dtor, "??_Gexception@@UAEPAXI@Z");/**/
+        SET(pexception_ctor, "??0exception@@QAA@ABQBD@Z");
+        SET(pexception_copy_ctor, "??0exception@@QAA@ABV0@@Z");
+        SET(pexception_default_ctor, "??0exception@@QAA@XZ");
+        SET(pexception_dtor, "??1exception@@UAA@XZ");
+        SET(pexception_opequals, "??4exception@@QAAAAV0@ABV0@@Z");
+        SET(pexception_what, "?what@exception@@UBAPBDXZ");
+        pexception_vector_dtor = (void*)pexception_vtable[0];
+        pexception_scalar_dtor = (void*)pexception_vtable[0];
 
-        SET(pbad_typeid_ctor, "??0bad_typeid@std@@QAA@PBD@Z");
-        SETNOFAIL(pbad_typeid_ctor_closure, "??_Fbad_typeid@std@@QAAXXZ");
-        SET(pbad_typeid_copy_ctor, "??0bad_typeid@std@@QAA@ABV01@@Z");
-        SET(pbad_typeid_dtor, "??1bad_typeid@std@@UAA@XZ");
-        SET(pbad_typeid_opequals, "??4bad_typeid@std@@QAAAAV01@ABV01@@Z");
-        SET(pbad_typeid_what, "?what@exception@std@@UBAPBDXZ");
-        SET(pbad_typeid_vector_dtor, "??_Ebad_cast@@UAEPAXI@Z");
-        SET(pbad_typeid_scalar_dtor, "??_Gbad_cast@@UAEPAXI@Z");
+        SET(pbad_typeid_ctor, "??0bad_typeid@@QAA@PBD@Z");
+        SETNOFAIL(pbad_typeid_ctor_closure, "??_Fbad_typeid@@QAAXXZ");
+        SET(pbad_typeid_copy_ctor, "??0bad_typeid@@QAA@ABV0@@Z");
+        SET(pbad_typeid_dtor, "??1bad_typeid@@UAA@XZ");
+        SET(pbad_typeid_opequals, "??4bad_typeid@@QAAAAV0@ABV0@@Z");
+        SET(pbad_typeid_what, "?what@exception@@UBAPBDXZ");
+        pbad_typeid_vector_dtor = (void*)pbad_typeid_vtable[0];
+        pbad_typeid_scalar_dtor = (void*)pbad_typeid_vtable[0];
 
         SETNOFAIL(pbad_cast_ctor, "??0bad_cast@@QAE@ABQBD@Z");
         if (!pbad_cast_ctor)
-            SET(pbad_cast_ctor, "??0bad_cast@std@@AAA@PBQBD@Z");
-        SETNOFAIL(pbad_cast_ctor2, "??0bad_cast@std@@QAA@PBD@Z");
-        SETNOFAIL(pbad_cast_ctor_closure, "??_Fbad_cast@std@@QAAXXZ");
-        /* FIXME: No ARM equivalent for "??0bad_cast@@QAE@ABV0@@Z" */
-        SET(pbad_cast_dtor, "??1bad_cast@std@@UAA@XZ");
-        SET(pbad_cast_opequals, "??4bad_cast@std@@QAAAAV01@ABV01@@Z");
-        SET(pbad_cast_what, "?what@exception@std@@UBAPBDXZ");
-        SET(pbad_cast_vector_dtor, "??_Ebad_cast@@UAEPAXI@Z");
-        SET(pbad_cast_scalar_dtor, "??_Gbad_cast@@UAEPAXI@Z");
+            SET(pbad_cast_ctor, "??0bad_cast@@AAA@PBQBD@Z");
+        SETNOFAIL(pbad_cast_ctor2, "??0bad_cast@@QAA@PBD@Z");
+        SETNOFAIL(pbad_cast_ctor_closure, "??_Fbad_cast@@QAAXXZ");
+        SET(pbad_cast_copy_ctor, "??0bad_cast@@QAA@ABV0@@Z");
+        SET(pbad_cast_dtor, "??1bad_cast@@UAA@XZ");
+        SET(pbad_cast_opequals, "??4bad_cast@@QAAAAV0@ABV0@@Z");
+        SET(pbad_cast_what, "?what@exception@@UBAPBDXZ");
+        pbad_cast_vector_dtor = (void*)pbad_cast_vtable[0];
+        pbad_cast_scalar_dtor = (void*)pbad_cast_vtable[0];
 
-        SET(p__non_rtti_object_ctor, "??0__non_rtti_object@std@@QAA@PBD@Z");
-        SET(p__non_rtti_object_copy_ctor, "??0__non_rtti_object@std@@QAA@ABV01@@Z");
-        SET(p__non_rtti_object_dtor, "??1__non_rtti_object@std@@UAA@XZ");
-        SET(p__non_rtti_object_opequals, "??4__non_rtti_object@std@@QAAAAV01@ABV01@@Z");
-        SET(p__non_rtti_object_what, "?what@exception@std@@UBAPBDXZ");
-        SET(p__non_rtti_object_vector_dtor, "??_E__non_rtti_object@@UAEPAXI@Z");
-        SET(p__non_rtti_object_scalar_dtor, "??_G__non_rtti_object@@UAEPAXI@Z");
+        SET(p__non_rtti_object_ctor, "??0__non_rtti_object@@QAA@PBD@Z");
+        SET(p__non_rtti_object_copy_ctor, "??0__non_rtti_object@@QAA@ABV0@@Z");
+        SET(p__non_rtti_object_dtor, "??1__non_rtti_object@@UAA@XZ");
+        SET(p__non_rtti_object_opequals, "??4__non_rtti_object@@QAAAAV0@ABV0@@Z");
+        SET(p__non_rtti_object_what, "?what@exception@@UBAPBDXZ");
+        p__non_rtti_object_vector_dtor = (void*)p__non_rtti_object_vtable[0];
+        p__non_rtti_object_scalar_dtor = (void*)p__non_rtti_object_vtable[0];
 
         SET(ptype_info_dtor, "??1type_info@@UAA@XZ");
         SET(ptype_info_raw_name, "?raw_name@type_info@@QBAPBDXZ");
-        SET(ptype_info_name, "?name@type_info@@QBEPBDXZ");
-        SET(ptype_info_before, "?before@type_info@@QBA_NABV1@@Z");
-        SET(ptype_info_opequals_equals, "??8type_info@@QBA_NABV0@@Z");
-        SET(ptype_info_opnot_equals, "??9type_info@@QBA_NABV0@@Z");
+        SET(ptype_info_name, "?name@type_info@@QBAPBDXZ");
+        SET(ptype_info_before, "?before@type_info@@QBAHABV1@@Z");
+        SET(ptype_info_opequals_equals, "??8type_info@@QBAHABV0@@Z");
+        SET(ptype_info_opnot_equals, "??9type_info@@QBAHABV0@@Z");
 #else
         SETNOFAIL(poperator_new, "??_U@YAPAXI@Z");
         SETNOFAIL(poperator_delete, "??_V@YAXPAX@Z");
@@ -338,9 +319,9 @@ static BOOL InitFunctionPtrs(void)
     }
 
     if (!poperator_new)
-        poperator_new = pmalloc;
+        poperator_new = malloc;
     if (!poperator_delete)
-        poperator_delete = pfree;
+        poperator_delete = free;
 
     init_thiscall_thunk();
     return TRUE;
@@ -448,7 +429,7 @@ static void test_exception(void)
   name = call_func1(pexception_what, &e);
   ok(e.name == name, "Bad exception name from vtable e::what()\n");
 
-  if (p__RTtypeid && !bAncientVersion)
+  if (p__RTtypeid)
   {
     /* Check the rtti */
     type_info *ti = p__RTtypeid(&e);
@@ -571,7 +552,7 @@ static void test_bad_typeid(void)
   name = call_func1(pbad_typeid_what, &e);
   ok(e.name == name, "Bad bad_typeid name from vtable e::what()\n");
 
-  if (p__RTtypeid && !bAncientVersion)
+  if (p__RTtypeid)
   {
     /* Check the rtti */
     type_info *ti = p__RTtypeid(&e);
@@ -699,7 +680,7 @@ static void test_bad_cast(void)
   name = call_func1(pbad_cast_what, &e);
   ok(e.name == name, "Bad bad_cast name from vtable e::what()\n");
 
-  if (p__RTtypeid && !bAncientVersion)
+  if (p__RTtypeid)
   {
     /* Check the rtti */
     type_info *ti = p__RTtypeid(&e);
@@ -801,7 +782,7 @@ static void test___non_rtti_object(void)
   name = call_func1(p__non_rtti_object_what, &e);
   ok(e.name == name, "Bad __non_rtti_object name from vtable e::what()\n");
 
-  if (p__RTtypeid && !bAncientVersion)
+  if (p__RTtypeid)
   {
     /* Check the rtti */
     type_info *ti = p__RTtypeid(&e);
@@ -818,14 +799,14 @@ static void test_type_info(void)
   char* name;
   int res;
 
-  if (!pmalloc || !pfree || !ptype_info_dtor || !ptype_info_raw_name ||
+  if (!ptype_info_dtor || !ptype_info_raw_name ||
       !ptype_info_name || !ptype_info_before ||
       !ptype_info_opequals_equals || !ptype_info_opnot_equals)
     return;
 
   /* Test calling the dtors */
   call_func1(ptype_info_dtor, &t1); /* No effect, since name is NULL */
-  t1.name = pmalloc(64);
+  t1.name = malloc(64);
   strcpy(t1.name, "foo");
   call_func1(ptype_info_dtor, &t1); /* Frees t1.name using 'free' */
 
@@ -888,7 +869,7 @@ static inline void/*rtti_object_locator*/ *get_obj_locator( void *cppobj )
     return (void *)vtable[-1];
 }
 
-#ifndef __x86_64__
+#ifdef __i386__
 #define DEFINE_RTTI_REF(type, name) type *name
 #define RTTI_REF(instance, name) &instance.name
 #define RTTI_REF_SIG0(instance, name, base) RTTI_REF(instance, name)
@@ -910,33 +891,36 @@ static void test_rtti(void)
       DEFINE_RTTI_REF(void, object_locator);
   } *obj_locator;
 
+  struct _rtti_base_descriptor
+  {
+    DEFINE_RTTI_REF(type_info, type_descriptor);
+    int num_base_classes;
+    struct {
+      int this_offset;
+      int vbase_descr;
+      int vbase_offset;
+    } this_ptr_offsets;
+    unsigned int attributes;
+  };
+
+  struct _rtti_base_array {
+    DEFINE_RTTI_REF(struct _rtti_base_descriptor, bases[4]);
+  };
+
+  struct _rtti_object_hierarchy {
+    unsigned int signature;
+    unsigned int attributes;
+    int array_len;
+    DEFINE_RTTI_REF(struct _rtti_base_array, base_classes);
+  };
+
   struct rtti_data
   {
     type_info type_info[4];
 
-    struct _rtti_base_descriptor
-    {
-      DEFINE_RTTI_REF(type_info, type_descriptor);
-      int num_base_classes;
-      struct {
-        int this_offset;
-        int vbase_descr;
-        int vbase_offset;
-      } this_ptr_offsets;
-      unsigned int attributes;
-    } base_descriptor[4];
-
-    struct _rtti_base_array {
-      DEFINE_RTTI_REF(struct _rtti_base_descriptor, bases[4]);
-    } base_array;
-
-    struct _rtti_object_hierarchy {
-      unsigned int signature;
-      unsigned int attributes;
-      int array_len;
-      DEFINE_RTTI_REF(struct _rtti_base_array, base_classes);
-    } object_hierarchy;
-
+    struct _rtti_base_descriptor base_descriptor[4];
+    struct _rtti_base_array base_array;
+    struct _rtti_object_hierarchy  object_hierarchy;
     struct _object_locator object_locator;
   } simple_class_rtti = {
     { {NULL, NULL, "simple_class"} },
@@ -962,11 +946,17 @@ static void test_rtti(void)
   void *simple_class_vtbl[2] = {&simple_class_rtti.object_locator};
   void *simple_class = &simple_class_vtbl[1];
   void *child_class_vtbl[2] = {&child_class_rtti.object_locator};
-  void *child_class = &child_class_vtbl[1];
+  struct {
+      void *vtbl;
+      char data[4];
+  } child_class = { &child_class_vtbl[1] };
   void *simple_class_sig0_vtbl[2] = {&simple_class_sig0_rtti.object_locator};
   void *simple_class_sig0 = &simple_class_sig0_vtbl[1];
   void *child_class_sig0_vtbl[2] = {&child_class_sig0_rtti.object_locator};
-  void *child_class_sig0 = &child_class_sig0_vtbl[1];
+  struct {
+      void *vtbl;
+      char data[4];
+  } child_class_sig0 = { &child_class_sig0_vtbl[1] };
   void *virtual_base_class_vtbl[2] = {&virtual_base_class_rtti.object_locator};
   int virtual_base_class_vbtbl[2] = {0, 0x100};
   struct {
@@ -980,12 +970,11 @@ static void test_rtti(void)
   exception e,b;
   void *casted;
   BOOL old_signature;
-#ifdef __x86_64__
+#ifndef __i386__
   char *base = (char*)GetModuleHandleW(NULL);
 #endif
 
-  if (bAncientVersion ||
-      !p__RTCastToVoid || !p__RTtypeid || !pexception_ctor || !pbad_typeid_ctor
+  if (!p__RTCastToVoid || !p__RTtypeid || !pexception_ctor || !pbad_typeid_ctor
       || !p__RTDynamicCast || !pexception_dtor || !pbad_typeid_dtor)
     return;
 
@@ -1099,44 +1088,30 @@ static void test_demangle_datatype(void)
 {
     char * name;
     struct _demangle demangle[]={
-/*	{ "BlaBla"," ?? ::Bla", FALSE}, */
-	{ "ABVVec4@ref2@dice@@","class dice::ref2::Vec4 const &",TRUE},
-	{ "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$0H@@@", "class CDB_GEN_BIG_ENUM_FLAG<enum CDB_WYSIWYG_BITS_ENUM,7>", TRUE},
-	{ "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$0HO@@@", "class CDB_GEN_BIG_ENUM_FLAG<enum CDB_WYSIWYG_BITS_ENUM,126>",TRUE},
-	{ "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$0HOA@@@", "class CDB_GEN_BIG_ENUM_FLAG<enum CDB_WYSIWYG_BITS_ENUM,2016>",TRUE},
-	{ "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$0HOAA@@@", "class CDB_GEN_BIG_ENUM_FLAG<enum CDB_WYSIWYG_BITS_ENUM,32256>",TRUE},
-	{ "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$01@@@", "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$01@@@", FALSE},
-/*	{ "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$011@@@", "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$011@@@",FALSE}, */
+        { "BlaBla"," ?? ::Bla", FALSE},
+        { "ABVVec4@ref2@dice@@", "class dice::ref2::Vec4 const &", TRUE},
+        { "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$0H@@@",
+            "class CDB_GEN_BIG_ENUM_FLAG<enum CDB_WYSIWYG_BITS_ENUM,7>", TRUE},
+        { "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$0HO@@@",
+            "class CDB_GEN_BIG_ENUM_FLAG<enum CDB_WYSIWYG_BITS_ENUM,126>",TRUE},
+        { "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$0HOA@@@",
+            "class CDB_GEN_BIG_ENUM_FLAG<enum CDB_WYSIWYG_BITS_ENUM,2016>",TRUE},
+        { "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$0HOAA@@@",
+            "class CDB_GEN_BIG_ENUM_FLAG<enum CDB_WYSIWYG_BITS_ENUM,32256>",TRUE},
+        { "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$01@@@",
+            "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$01@@@", FALSE},
+        { "P8test@@AACXZ", "signed char (__cdecl test::*)(void)", TRUE},
+        { "P8test@@BACXZ", "signed char (__cdecl test::*)(void)const ", TRUE},
     };
     int i, num_test = ARRAY_SIZE(demangle);
 
     for (i = 0; i < num_test; i++)
     {
-	name = p__unDName(0, demangle[i].mangled, 0, pmalloc, pfree, 0x2800);
+        name = p__unDName(0, demangle[i].mangled, 0, malloc, free, 0x2800);
         todo_wine_if (!demangle[i].test_in_wine)
             ok(name != NULL && !strcmp(name,demangle[i].result), "Got name \"%s\" for %d\n", name, i);
-        if(name)
-            pfree(name);
+        free(name);
     }
-}
-
-/* Compare two strings treating multiple spaces (' ', ascii 0x20) in s2 
-   as single space. Needed for test_demangle as __unDName() returns sometimes
-   two spaces instead of one in some older native msvcrt dlls. */
-static int strcmp_space(const char *s1, const char *s2)
-{
-    const char* s2start = s2;
-    do {
-        while (*s1 == *s2 && *s1) {
-            s1++;
-            s2++;
-        }
-        if (*s2 == ' ' && s2 > s2start && *(s2 - 1) == ' ')
-            s2++;
-        else
-            break;
-    } while (*s1 && *s2);
-    return *s1 - *s2;
 }
 
 static void test_demangle(void)
@@ -1202,7 +1177,7 @@ static void test_demangle(void)
 /* 23 */ {"??0streambuf@@QAE@ABV0@@Z", "public: __thiscall streambuf::streambuf(class streambuf const &)"},
 /* 24 */ {"??0strstreambuf@@QAE@ABV0@@Z", "public: __thiscall strstreambuf::strstreambuf(class strstreambuf const &)"},
 /* 25 */ {"??0strstreambuf@@QAE@H@Z", "public: __thiscall strstreambuf::strstreambuf(int)"},
-/* 26 */ {"??0strstreambuf@@QAE@P6APAXJ@ZP6AXPAX@Z@Z", "public: __thiscall strstreambuf::strstreambuf(void * (__cdecl*)(long),void (__cdecl*)(void *))"},
+/* 26 */ {"??0strstreambuf@@QAE@Q6APAXJ@ZS6AXPAX@Z@Z", "public: __thiscall strstreambuf::strstreambuf(void * (__cdecl*const)(long),void (__cdecl*const volatile)(void *))"},
 /* 27 */ {"??0strstreambuf@@QAE@PADH0@Z", "public: __thiscall strstreambuf::strstreambuf(char *,int,char *)"},
 /* 28 */ {"??0strstreambuf@@QAE@PAEH0@Z", "public: __thiscall strstreambuf::strstreambuf(unsigned char *,int,unsigned char *)"},
 /* 29 */ {"??0strstreambuf@@QAE@XZ", "public: __thiscall strstreambuf::strstreambuf(void)"},
@@ -1237,7 +1212,7 @@ static void test_demangle(void)
 /* 58 */ {"?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAJ@Z", "protected: virtual class std::istreambuf_iterator<char,struct std::char_traits<char> > __thiscall std::num_get<char,class std::istreambuf_iterator<char,struct std::char_traits<char> > >::do_get(class std::istreambuf_iterator<char,struct std::char_traits<char> >,class std::istreambuf_iterator<char,struct std::char_traits<char> >,class std::ios_base &,int &,long &)const "},
 /* 59 */ {"?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAK@Z", "protected: virtual class std::istreambuf_iterator<char,struct std::char_traits<char> > __thiscall std::num_get<char,class std::istreambuf_iterator<char,struct std::char_traits<char> > >::do_get(class std::istreambuf_iterator<char,struct std::char_traits<char> >,class std::istreambuf_iterator<char,struct std::char_traits<char> >,class std::ios_base &,int &,unsigned long &)const "},
 /* 60 */ {"?do_get@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@MBE?AV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@V32@0AAVios_base@2@AAHAAM@Z", "protected: virtual class std::istreambuf_iterator<char,struct std::char_traits<char> > __thiscall std::num_get<char,class std::istreambuf_iterator<char,struct std::char_traits<char> > >::do_get(class std::istreambuf_iterator<char,struct std::char_traits<char> >,class std::istreambuf_iterator<char,struct std::char_traits<char> >,class std::ios_base &,int &,float &)const "},
-/* 61 */ {"?_query_new_handler@@YAP6AHI@ZXZ", "int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)"},
+/* 61 */ {"?_query_new_handler@@YAR6AHI@ZXZ", "int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)"},
 /* 62 */ {"?register_callback@ios_base@std@@QAEXP6AXW4event@12@AAV12@H@ZH@Z", "public: void __thiscall std::ios_base::register_callback(void (__cdecl*)(enum std::ios_base::event,class std::ios_base &,int),int)"},
 /* 63 */ {"?seekg@?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV12@JW4seekdir@ios_base@2@@Z", "public: class std::basic_istream<char,struct std::char_traits<char> > & __thiscall std::basic_istream<char,struct std::char_traits<char> >::seekg(long,enum std::ios_base::seekdir)"},
 /* 64 */ {"?seekg@?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV12@V?$fpos@H@2@@Z", "public: class std::basic_istream<char,struct std::char_traits<char> > & __thiscall std::basic_istream<char,struct std::char_traits<char> >::seekg(class std::fpos<int>)"},
@@ -1325,22 +1300,61 @@ static void test_demangle(void)
            "??$run@XVTask_Render_Preview@@@QtConcurrent@@YA?AV?$QFuture@X@@PEAVTask_Render_Preview@@P82@EAAXXZ@Z"},
 /* 130 */ {"??_E?$TStrArray@$$BY0BAA@D$0BA@@@UAEPAXI@Z",
            "public: virtual void * __thiscall TStrArray<char [256],16>::`vector deleting destructor'(unsigned int)"},
+/* 131 */ {"??_R0?AVCC@DD@@@8", "class DD::CC `RTTI Type Descriptor'"},
+/* 132 */ {"??$meth@FD@DD@CC@@QAE_NK@Z", "public: bool __thiscall CC::DD::meth<short,char>(unsigned long)"},
+/* 133 */ {"?func@@YAXPIFAH@Z", "void __cdecl func(int __unaligned * __restrict)"},
+/* 135 */ {"?x@@3PAY02HA", "int (* x)[3]"},
+/* 136 */ {"?Qux@Bar@@0PAPAP6AHPAV1@AAH1PAH@ZA",
+           "private: static int (__cdecl** * Bar::Qux)(class Bar *,int &,int &,int *)"}, /* variation of 105: note white space handling! */
+/* 137 */ {"?x@@3PAW4myenum@@A", "enum myenum * x"},
+/* 138 */ {"?pfunc@@3PAY0E@P6AXF@ZA", "void (__cdecl*(* pfunc)[4])(short)"},
+/* 139 */ {"??$?0AEAVzzz@BB4@AA@@AEAV012@$0A@@?$pair@Vzzz@BB4@AA@@V123@@std@@QEAA@AEAVzzz@BB4@AA@@0@Z",
+           "public: __cdecl std::pair<class AA::BB4::zzz,class AA::BB4::zzz>::pair<class AA::BB4::zzz,class AA::BB4::zzz><class AA::BB4::zzz & __ptr64,class AA::BB4::zzz & __ptr64,0>(class AA::BB4::zzz & __ptr64,class AA::BB4::zzz & __ptr64) __ptr64"},
+/* 140 */ {"??$?BH@?$foo@N@@QEAAHXZ", "public: __cdecl foo<double>::operator<int> int(void) __ptr64"},
+/* 141 */ {"??Bcastop@@QAEHXZ", "public: __thiscall castop::operator int(void)"},
+/* 142 */ {"??Bcastop@@QAE?BHXZ", "public: __thiscall castop::operator int const (void)"},
+/* 143 */ {"?pfield@@3PTAA@@DT1@", "char const volatile AA::* const volatile pfield"},
+/* 144 */ {"?ptititi1@@3PEQtititi@@IEQ1@", "unsigned int tititi::* __ptr64 __ptr64 ptititi1"},
+/* 145 */ {"?ptititi2@@3PERtititi@@IER1@", "unsigned int const tititi::* __ptr64 const __ptr64 ptititi2"},
+/* 146 */ {"?ptititi3@@3PEStititi@@IES1@", "unsigned int volatile tititi::* __ptr64 volatile __ptr64 ptititi3"},
+/* 147 */ {"?ptititi4@@3PETtititi@@IET1@", "unsigned int const volatile tititi::* __ptr64 const volatile __ptr64 ptititi4"},
+/* 148 */ {"?ptititi4v@@3RETtititi@@IET1@", "unsigned int const volatile tititi::* __ptr64 const volatile __ptr64 ptititi4v"},
+/* 149 */ {"?meth@AAA@@QFCEXXZ", "public: void __thiscall AAA::meth(void)volatile __unaligned "},
+/* 150 */ {"?RegisterModuleUninitializer@<CrtImplementationDetails>@@YAXP$AAVEventHandler@System@@@Z",
+           "void __cdecl <CrtImplementationDetails>::RegisterModuleUninitializer(class System::EventHandler ^)"},
+/* 151 */ {"?RegisterModuleUninitializer@<CrtImplementationDetails>@@YAXBE$AAVEventHandler@System@@@Z",
+           "void __cdecl <CrtImplementationDetails>::RegisterModuleUninitializer(class System::EventHandler % __ptr64 volatile)"},
+/* 152 */ {"??$forward@AEAUFFIValue@?1??call@FFIFunctionBinder@@CAHPEAUlua_State@@@Z@@std@@YAAEAUFFIValue@?1??call@"
+           "FFIFunctionBinder@@CAHPEAUxlua_State@@@Z@AEAU1?1??23@CAH0@Z@@Z",
+           "struct `private: static int __cdecl FFIFunctionBinder::call(struct xlua_State * __ptr64)'::`2'::FFIValue & "
+           "__ptr64 __cdecl std::forward<struct `private: static int __cdecl FFIFunctionBinder::call(struct lua_State "
+           "* __ptr64)'::`2'::FFIValue & __ptr64>(struct `private: static int __cdecl FFIFunctionBinder::call(struct "
+           "xlua_State * __ptr64)'::`2'::FFIValue & __ptr64)"},
+/* 153 */ {"?$AAA@XX", "AAA<void,void>"},
+/* 154 */ {"?$AAA@", "AAA<>"},
     };
-    int i, num_test = ARRAY_SIZE(test);
+    int i;
     char* name;
 
-    for (i = 0; i < num_test; i++)
+    for (i = 0; i < ARRAY_SIZE(test); i++)
     {
-	name = p__unDName(0, test[i].in, 0, pmalloc, pfree, test[i].flags);
+#ifdef __REACTOS__
+        if (((i == 149) || (i == 150)) && (_winver < 0x600))
+        {
+            skip("Skipping test with i = %u, because it fails on Windows 2003\n", i);
+            continue;
+        }
+#endif // __REACTOS__
+	name = p__unDName(0, test[i].in, 0, malloc, free, test[i].flags);
         ok(name != NULL, "%u: unDName failed\n", i);
         if (!name) continue;
-        ok( !strcmp_space(test[i].out, name) ||
-            broken(test[i].broken && !strcmp_space(test[i].broken, name)),
+        ok( !strcmp(test[i].out, name) ||
+            broken(test[i].broken && !strcmp(test[i].broken, name)),
            "%u: Got name \"%s\"\n", i, name );
-        ok( !strcmp_space(test[i].out, name) ||
-            broken(test[i].broken && !strcmp_space(test[i].broken, name)),
+        ok( !strcmp(test[i].out, name) ||
+            broken(test[i].broken && !strcmp(test[i].broken, name)),
            "%u: Expected \"%s\"\n", i, test[i].out );
-        pfree(name);
+        free(name);
     }
 }
 

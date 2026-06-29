@@ -622,7 +622,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLoadControlReg)
     /* Get the value */
     Value = State->GeneralRegs[ModRegRm.SecondRegister].Long;
 
-    if (ModRegRm.Register == (INT)FAST486_REG_CR0)
+    if (ModRegRm.Register == (FAST486_GEN_REGS)FAST486_REG_CR0)
     {
         /* CR0 checks */
 
@@ -640,7 +640,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLoadControlReg)
     State->PrefetchValid = FALSE;
 #endif
 
-    if (ModRegRm.Register == (INT)FAST486_REG_CR3)
+    if (ModRegRm.Register == (FAST486_GEN_REGS)FAST486_REG_CR3)
     {
         /* Flush the TLB */
         Fast486FlushTlb(State);
@@ -688,12 +688,12 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLoadDebugReg)
     /* Load a value to the debug register */
     State->DebugRegisters[ModRegRm.Register] = State->GeneralRegs[ModRegRm.SecondRegister].Long;
 
-    if (ModRegRm.Register == (INT)FAST486_REG_DR4)
+    if (ModRegRm.Register == (FAST486_GEN_REGS)FAST486_REG_DR4)
     {
         /* The reserved bits are 1 */
         State->DebugRegisters[ModRegRm.Register] |= FAST486_DR4_RESERVED;
     }
-    else if (ModRegRm.Register == (INT)FAST486_REG_DR5)
+    else if (ModRegRm.Register == (FAST486_GEN_REGS)FAST486_REG_DR5)
     {
         /* The reserved bits are 0 */
         State->DebugRegisters[ModRegRm.Register] &= ~FAST486_DR5_RESERVED;

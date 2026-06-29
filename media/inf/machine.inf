@@ -75,6 +75,7 @@ HKR, , Icon,           0, "-27"
 %NecCb.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_1033&DEV_0001
 %NecVl.DeviceDesc% = NO_DRV,PCI\VEN_1033&DEV_0002
 %NecVl.DeviceDesc% = NO_DRV,PCI\VEN_1033&DEV_0016
+%NecCb.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_1033&DEV_002C
 %NecCb.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_1033&DEV_002D
 %NecCb.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_1033&DEV_003B
 

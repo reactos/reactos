@@ -6,7 +6,7 @@
  */
 
 #include <kmt_test.h>
-
+#include <mountmgr.h>
 
 static
 void
@@ -24,17 +24,16 @@ TestIoVolumeDeviceToDosName(void)
     RtlInitEmptyUnicodeString(&VolumeDeviceName,
                               VolumeDeviceNameBuffer,
                               sizeof(VolumeDeviceNameBuffer));
-    VolumeNumber = 0;
-    while (1)
+    // TODO: Query the partition/volume manager for the list of volumes.
+    for (VolumeNumber = 0; VolumeNumber < 32; ++VolumeNumber)
     {
-        VolumeNumber++;
         Status = RtlStringCbPrintfW(VolumeDeviceName.Buffer,
                                     VolumeDeviceName.MaximumLength,
                                     L"\\Device\\HarddiskVolume%lu",
                                     VolumeNumber);
         if (!NT_SUCCESS(Status))
         {
-            trace("RtlStringCbPrintfW(0x%lx) failed with %lx\n",
+            trace("RtlStringCbPrintfW(%lu) failed with 0x%lx\n",
                   VolumeNumber, Status);
             break;
         }
@@ -46,7 +45,7 @@ TestIoVolumeDeviceToDosName(void)
                                           &DeviceObject);
         if (!NT_SUCCESS(Status))
         {
-            trace("IoGetDeviceObjectPointer(%wZ) failed with %lx\n",
+            trace("IoGetDeviceObjectPointer(%wZ) failed with 0x%lx\n",
                   &VolumeDeviceName, Status);
             continue;
         }
@@ -56,6 +55,22 @@ TestIoVolumeDeviceToDosName(void)
         if (!skip(NT_SUCCESS(Status), "No DOS name\n"))
         {
             trace("DOS name for %wZ is %wZ\n", &VolumeDeviceName, &DosName);
+
+            /* The DosName should contain one NUL-terminated string (always there?),
+             * plus one final NUL-terminator */
+            ok(DosName.MaximumLength == DosName.Length + sizeof(UNICODE_NULL),
+               "Unexpected DOS name maximum length %hu, expected %hu\n",
+               DosName.MaximumLength, DosName.Length + sizeof(UNICODE_NULL));
+            ok(DosName.Length >= sizeof(UNICODE_NULL),
+               "DOS name too short (length: %lu)\n",
+               DosName.Length / sizeof(WCHAR));
+            ok(DosName.Buffer[DosName.Length / sizeof(WCHAR)] == UNICODE_NULL,
+               "Missing NUL-terminator (1)\n");
+            ok(DosName.Buffer[DosName.MaximumLength / sizeof(WCHAR) - 1] == UNICODE_NULL,
+               "Missing NUL-terminator (2)\n");
+
+            /* The DOS name is either a drive letter, or a
+             * volume GUID name (if the volume is not mounted) */
             if (DosName.Length == 2 * sizeof(WCHAR))
             {
                 ok(DosName.Buffer[0] >= L'A' &&
@@ -67,6 +82,8 @@ TestIoVolumeDeviceToDosName(void)
             {
                 ok(RtlPrefixUnicodeString(&DosVolumePrefix, &DosName, FALSE),
                    "Unexpected volume path: %wZ\n", &DosName);
+                ok(MOUNTMGR_IS_DOS_VOLUME_NAME(&DosName),
+                   "Invalid DOS volume path returned: %wZ\n", &DosName);
             }
             RtlFreeUnicodeString(&DosName);
         }

@@ -48,13 +48,11 @@ typedef struct _LOADER_SYSTEM_BLOCK
     LOADER_PARAMETER_BLOCK LoaderBlock;
     LOADER_PARAMETER_EXTENSION Extension;
     SETUP_LOADER_BLOCK SetupBlock;
-#ifdef _M_IX86
     HEADLESS_LOADER_BLOCK HeadlessLoaderBlock;
-#endif
     NLS_DATA_BLOCK NlsDataBlock;
     CHAR LoadOptions[MAX_OPTIONS_LENGTH+1];
     CHAR ArcBootDeviceName[MAX_PATH+1];
-    // CHAR ArcHalDeviceName[MAX_PATH];
+    CHAR ArcHalDeviceName[MAX_PATH+1];
     CHAR NtBootPathName[MAX_PATH+1];
     CHAR NtHalPathName[MAX_PATH+1];
     ARC_DISK_INFORMATION ArcDiskInformation;
@@ -79,27 +77,14 @@ extern BOOLEAN SosEnabled;
 extern BOOLEAN PaeModeOn;
 #endif
 
-FORCEINLINE
-VOID
-UiResetForSOS(VOID)
-{
-#ifdef _M_ARM
-    /* Re-initialize the UI */
-    UiInitialize(TRUE);
-#else
-    /* Reset the UI and switch to MiniTui */
-    UiVtbl.UnInitialize();
-    UiVtbl = MiniTuiVtbl;
-    UiVtbl.Initialize();
-#endif
-    /* Disable the progress bar */
-    UiProgressBar.Show = FALSE;
-}
-
 VOID
 NtLdrOutputLoadMsg(
     _In_ PCSTR FileName,
     _In_opt_ PCSTR Description);
+
+VOID
+NtLdrNormalizeOptions(
+    _Inout_ PSTR LoadOptions);
 
 PVOID WinLdrLoadModule(PCSTR ModuleName, PULONG Size,
                        TYPE_OF_MEMORY MemoryType);
@@ -139,13 +124,6 @@ WinLdrAddDriverToList(
 
 // winldr.c
 VOID
-WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
-                       PCSTR Options,
-                       PCSTR SystemPath,
-                       PCSTR BootPath,
-                       USHORT VersionToBoot);
-
-VOID
 WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 VOID
@@ -156,10 +134,11 @@ WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 ARC_STATUS
 LoadAndBootWindowsCommon(
-    IN USHORT OperatingSystemVersion,
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN PCSTR BootOptions,
-    IN PCSTR BootPath);
+    _In_ USHORT OperatingSystemVersion,
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ PCSTR BootOptions,
+    _In_ PCSTR SystemPartition,
+    _In_ PCSTR BootPath);
 
 VOID
 WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);

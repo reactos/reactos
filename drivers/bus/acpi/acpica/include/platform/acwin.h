@@ -88,6 +88,7 @@ typedef unsigned int                    u32;
 typedef COMPILER_DEPENDENT_UINT64       u64;
 #endif
 
+#ifndef __REACTOS__
 /*
  * Map low I/O functions for MS. This allows us to disable MS language
  * extensions for maximum portability.
@@ -101,6 +102,7 @@ typedef COMPILER_DEPENDENT_UINT64       u64;
 #define mkdir           _mkdir
 #define fileno          _fileno
 #define isatty          _isatty
+#endif // __REACTOS__
 
 #if _MSC_VER <= 1200 /* Versions below VC++ 6 */
 #define vsnprintf       _vsnprintf

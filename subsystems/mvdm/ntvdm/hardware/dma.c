@@ -458,7 +458,7 @@ DWORD DmaRequest(IN WORD      iChannel,
     ret = min(pDcp->DmaChannel[Channel].CurrElemCnt, length / Size);
     length = ret * Size;
 
-    /* 16-bit mode addressing, see: http://wiki.osdev.org/ISA_DMA#16_bit_issues */
+    /* 16-bit mode addressing, see: https://wiki.osdev.org/ISA_DMA#16_bit_issues */
     CurrAddress = (iChannel < 4) ? (DmaPageRegisters[iChannel].Page << 16) | ((pDcp->DmaChannel[Channel].CurrAddress << 0) & 0xFFFF)
                                  : (DmaPageRegisters[iChannel].Page << 16) | ((pDcp->DmaChannel[Channel].CurrAddress << 1) & 0xFFFF);
 

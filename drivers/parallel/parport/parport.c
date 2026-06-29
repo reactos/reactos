@@ -5,6 +5,8 @@
  */
 
 #include "parport.h"
+#define NDEBUG
+#include <debug.h>
 
 static DRIVER_UNLOAD DriverUnload;
 static DRIVER_DISPATCH DispatchCreate;
@@ -125,6 +127,11 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     ULONG i;
 
     DPRINT("Parport DriverEntry\n");
+
+    if (IsNEC_98)
+    {
+        return STATUS_NOT_IMPLEMENTED;
+    }
 
     DriverObject->DriverUnload = DriverUnload;
     DriverObject->DriverExtension->AddDevice = AddDevice;

@@ -53,7 +53,7 @@ extern const PCSTR UiMonthNames[12];
 
 BOOLEAN    UiInitialize(BOOLEAN ShowUi);                                // Initialize User-Interface
 VOID    UiUnInitialize(PCSTR BootText);                        // Un-initialize User-Interface
-VOID    UiDrawBackdrop(VOID);                                    // Fills the entire screen with a backdrop
+VOID    UiDrawBackdrop(ULONG DrawHeight);                      // Fills the entire screen with a backdrop
 VOID    UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);    // Fills the area specified with FillChar and Attr
 VOID    UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);    // Draws a shadow on the bottom and right sides of the area specified
 VOID    UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);    // Draws a box around the area specified
@@ -102,6 +102,12 @@ UiMessageBox(
 VOID
 UiMessageBoxCritical(
     _In_ PCSTR MessageText);
+
+ULONG
+UiGetScreenHeight(VOID);
+
+UCHAR
+UiGetMenuBgColor(VOID);
 
 /* Loading Progress-Bar Functions ********************************************/
 
@@ -205,7 +211,6 @@ typedef struct tagUI_MENU_INFO
 {
     PCSTR   MenuHeader;
     PCSTR   MenuFooter;
-    BOOLEAN ShowBootOptions;
 
     PCSTR*  MenuItemList;
     ULONG   MenuItemCount;
@@ -230,7 +235,6 @@ BOOLEAN
 UiDisplayMenu(
     IN PCSTR MenuHeader,
     IN PCSTR MenuFooter OPTIONAL,
-    IN BOOLEAN ShowBootOptions,
     IN PCSTR MenuItemList[],
     IN ULONG MenuItemCount,
     IN ULONG DefaultMenuItem,
@@ -250,7 +254,7 @@ typedef struct tagUIVTBL
     BOOLEAN (*Initialize)(VOID);
     VOID (*UnInitialize)(VOID);
 
-    VOID (*DrawBackdrop)(VOID);
+    VOID (*DrawBackdrop)(ULONG DrawHeight);
     VOID (*FillArea)(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr);
     VOID (*DrawShadow)(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);
     VOID (*DrawBox)(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);
@@ -287,7 +291,6 @@ typedef struct tagUIVTBL
     BOOLEAN (*DisplayMenu)(
         IN PCSTR MenuHeader,
         IN PCSTR MenuFooter OPTIONAL,
-        IN BOOLEAN ShowBootOptions,
         IN PCSTR MenuItemList[],
         IN ULONG MenuItemCount,
         IN ULONG DefaultMenuItem,
@@ -301,6 +304,9 @@ typedef struct tagUIVTBL
 } UIVTBL, *PUIVTBL;
 
 VOID UiInit(const char *CmdLine);
+
+VOID
+UiResetForSOS(VOID);
 
 extern UIVTBL UiVtbl;
 

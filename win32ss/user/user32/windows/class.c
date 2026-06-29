@@ -1077,6 +1077,14 @@ GetClassWord(
     return retvalue;
 }
 
+#define PUBLIC_EXSTYLE ( \
+    WS_EX_NOACTIVATE | WS_EX_COMPOSITED | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT | \
+    WS_EX_LAYERED | WS_EX_APPWINDOW | WS_EX_STATICEDGE | WS_EX_CONTROLPARENT | \
+    WS_EX_LEFTSCROLLBAR | WS_EX_RTLREADING | WS_EX_RIGHT | WS_EX_CONTEXTHELP | \
+    WS_EX_CLIENTEDGE | WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW | WS_EX_MDICHILD | \
+    WS_EX_TRANSPARENT | WS_EX_ACCEPTFILES | WS_EX_TOPMOST | WS_EX_NOPARENTNOTIFY | \
+    WS_EX_DRAGDETECT | WS_EX_DLGMODALFRAME \
+)
 
 LONG_PTR IntGetWindowLong( HWND hwnd, INT offset, UINT size, BOOL unicode )
 {
@@ -1116,7 +1124,7 @@ LONG_PTR IntGetWindowLong( HWND hwnd, INT offset, UINT size, BOOL unicode )
     {
     case GWLP_USERDATA:  retvalue = wndPtr->dwUserData; break;
     case GWL_STYLE:      retvalue = wndPtr->style; break;
-    case GWL_EXSTYLE:    retvalue = wndPtr->ExStyle; break;
+    case GWL_EXSTYLE:    retvalue = (wndPtr->ExStyle & PUBLIC_EXSTYLE); break;
     case GWLP_ID:        retvalue = wndPtr->IDMenu; break;
     case GWLP_HINSTANCE: retvalue = (ULONG_PTR)wndPtr->hModule; break;
 #if 0

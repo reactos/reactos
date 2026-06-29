@@ -205,7 +205,7 @@ ObpLookupEntryDirectory(
     IN POBJECT_DIRECTORY Directory,
     IN PUNICODE_STRING Name,
     IN ULONG Attributes,
-    IN UCHAR SearchShadow,
+    IN BOOLEAN SearchShadow,
     IN POBP_LOOKUP_CONTEXT Context
 );
 
@@ -290,24 +290,6 @@ ObpLookupObjectName(
     IN OUT PACCESS_STATE AccessState,
     OUT POBP_LOOKUP_CONTEXT LookupContext,
     OUT PVOID *FoundObject
-);
-
-//
-// Object Attribute Functions
-//
-BOOLEAN
-NTAPI
-ObpSetHandleAttributes(
-    IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
-    IN ULONG_PTR Context
-);
-
-NTSTATUS
-NTAPI
-ObQueryDeviceMapInformation(
-    _In_opt_ PEPROCESS Process,
-    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
-    _In_ ULONG Flags
 );
 
 //
@@ -408,6 +390,14 @@ ObReferenceFileObjectForWrite(
 //
 // DOS Devices Functions
 //
+NTSTATUS
+NTAPI
+ObQueryDeviceMapInformation(
+    _In_opt_ PEPROCESS Process,
+    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
+    _In_ ULONG Flags
+);
+
 NTSTATUS
 NTAPI
 ObSetDeviceMap(
@@ -648,6 +638,7 @@ extern ALIGNEDNAME ObpDosDevicesShortNameRoot;
 extern UNICODE_STRING ObpDosDevicesShortName;
 extern WCHAR ObpUnsecureGlobalNamesBuffer[128];
 extern ULONG ObpUnsecureGlobalNamesLength;
+extern ULONG ObpCaseInsensitive;
 extern ULONG ObpObjectSecurityMode;
 extern ULONG ObpProtectionMode;
 extern ULONG ObpLUIDDeviceMapsDisabled;

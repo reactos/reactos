@@ -3,102 +3,26 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     CZipEnumerator
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
- *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2023-2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
+
+#define EF_UNIPATH 0x7075 // Unicode Path extra field ID
 
 struct CZipEnumerator
 {
-private:
     CComPtr<IZip> m_Zip;
-    bool m_First;
-    CAtlList<CStringW> m_Returned;
-    UINT m_nCodePage;
+    BOOL m_First = TRUE;
+    CAtlList<CStringW> m_Returned; // for unique checking
+    UINT m_nCodePage = GetZipCodePage(TRUE);
+
+    static DWORD CalculateCRC32(PCSTR filename);
+    static CStringA GetUtf8Name(PCSTR originalName, const BYTE* extraField, DWORD extraFieldLen);
+
 public:
-    CZipEnumerator()
-        : m_First(true)
-        , m_nCodePage(GetZipCodePage(TRUE))
-    {
-    }
+    CZipEnumerator();
 
-    bool initialize(IZip* zip)
-    {
-        m_Zip = zip;
-        return reset();
-    }
-
-    bool reset()
-    {
-        unzFile uf = m_Zip->getZip();
-        m_First = true;
-        if (unzGoToFirstFile(uf) != UNZ_OK)
-            return false;
-        m_Returned.RemoveAll();
-        return true;
-    }
-
-    bool next_unique(PCWSTR prefix, CStringW& name, bool& folder, unz_file_info64& info)
-    {
-        size_t len = wcslen(prefix);
-        CStringW tmp;
-        while (next(tmp, info))
-        {
-            if (!_wcsnicmp(tmp, prefix, len))
-            {
-                int pos = tmp.Find(L'/', len);
-                if (pos < 0)
-                {
-                    name = tmp.Mid(len);
-                    folder = false;
-                }
-                else
-                {
-                    name = tmp.Mid(len, pos - len);
-                    folder = true;
-                }
-                tmp = name;
-                tmp.MakeLower();
-
-                POSITION it = m_Returned.Find(tmp);
-                if (!name.IsEmpty() && !it)
-                {
-                    m_Returned.AddTail(tmp);
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    bool next(CStringW& name, unz_file_info64& info)
-    {
-        int err;
-
-        unzFile uf = m_Zip->getZip();
-        if (!m_First)
-        {
-            err = unzGoToNextFile(uf);
-            if (err == UNZ_END_OF_LIST_OF_FILE)
-            {
-                return false;
-            }
-        }
-        m_First = false;
-
-        err = unzGetCurrentFileInfo64(uf, &info, NULL, 0, NULL, 0, NULL, 0);
-        if (err == UNZ_OK)
-        {
-            CStringA nameA;
-            PSTR buf = nameA.GetBuffer(info.size_filename);
-            err = unzGetCurrentFileInfo64(uf, NULL, buf, nameA.GetAllocLength(), NULL, 0, NULL, 0);
-            nameA.ReleaseBuffer(info.size_filename);
-            nameA.Replace('\\', '/');
-
-            if (info.flag & MINIZIP_UTF8_FLAG)
-                name = CA2WEX<MAX_PATH>(nameA, CP_UTF8);
-            else
-                name = CA2WEX<MAX_PATH>(nameA, m_nCodePage);
-        }
-        return err == UNZ_OK;
-    }
+    BOOL Initialize(IZip* zip);
+    BOOL Reset();
+    BOOL Next(CStringW& name, unz_file_info64& info);
+    BOOL NextUnique(PCWSTR prefix, CStringW& name, bool& folder, unz_file_info64& info);
 };
-

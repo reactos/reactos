@@ -40,6 +40,7 @@ typedef struct
     HBITMAP hImageStrip;
     HBRUSH hBrush;
     HFONT hfFont;
+    BOOL bCloseDlg;
     WNDPROC OldButtonProc;
 } LOGOFF_DLG_CONTEXT, *PLOGOFF_DLG_CONTEXT;
 
@@ -151,9 +152,8 @@ DoLoadIcons(HWND hwndDlg, PPICK_ICON_CONTEXT pIconContext, LPCWSTR pszFile)
         }
     }
 
-    // Set the text and reset the edit control's modification flag
     SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szPath);
-    SendDlgItemMessage(hwndDlg, IDC_EDIT_PATH, EM_SETMODIFY, FALSE, 0);
+    SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
 
     if (pIconContext->nIcons == 0)
     {
@@ -194,9 +194,7 @@ INT_PTR CALLBACK PickIconProc(
     HICON hIcon;
     INT index, count;
     WCHAR szText[MAX_PATH], szFilter[100];
-    CStringW strTitle;
     OPENFILENAMEW ofn;
-
     PPICK_ICON_CONTEXT pIconContext = (PPICK_ICON_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch(uMsg)
@@ -251,18 +249,11 @@ INT_PTR CALLBACK PickIconProc(
             case IDOK:
             {
                 /* Check whether the path edit control has been modified; if so load the icons instead of validating */
-                if (SendDlgItemMessage(hwndDlg, IDC_EDIT_PATH, EM_GETMODIFY, 0, 0))
+                GetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText, _countof(szText));
+                if (lstrcmpiW(szText, pIconContext->szPath))
                 {
-                    /* Reset the edit control's modification flag and retrieve the text */
-                    SendDlgItemMessage(hwndDlg, IDC_EDIT_PATH, EM_SETMODIFY, FALSE, 0);
-                    GetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText, _countof(szText));
-
-                    // Load the icons
                     if (!DoLoadIcons(hwndDlg, pIconContext, szText))
                         NoIconsInFile(hwndDlg, pIconContext);
-
-                    // Set the selection
-                    SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
                     break;
                 }
 
@@ -293,6 +284,7 @@ INT_PTR CALLBACK PickIconProc(
             case IDC_BUTTON_PATH:
             {
                 // Choose the module path
+                CStringW strTitle;
                 szText[0] = 0;
                 szFilter[0] = 0;
                 ZeroMemory(&ofn, sizeof(ofn));
@@ -310,9 +302,6 @@ INT_PTR CALLBACK PickIconProc(
                 // Load the icons
                 if (!DoLoadIcons(hwndDlg, pIconContext, szText))
                     NoIconsInFile(hwndDlg, pIconContext);
-
-                // Set the selection
-                SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
                 break;
             }
 
@@ -331,8 +320,9 @@ INT_PTR CALLBACK PickIconProc(
             lpdis = (LPDRAWITEMSTRUCT)lParam;
             if (lpdis->itemID == (UINT)-1)
                 break;
-            switch (lpdis->itemAction)
+            switch (lpdis->itemAction) // FIXME: MSDN says that more than one of these can be set
             {
+                // FIXME: ODA_FOCUS
                 case ODA_SELECT:
                 case ODA_DRAWENTIRE:
                 {
@@ -365,11 +355,12 @@ BOOL WINAPI PickIconDlg(
     UINT nMaxFile,
     INT* lpdwIconIndex)
 {
+    CCoInit ComInit; // For SHAutoComplete (CORE-20030)
     int res;
     WCHAR szExpandedPath[MAX_PATH];
 
     // Initialize the dialog
-    PICK_ICON_CONTEXT IconContext = { NULL };
+    PICK_ICON_CONTEXT IconContext = {0};
     IconContext.Index = *lpdwIconIndex;
     StringCchCopyW(IconContext.szPath, _countof(IconContext.szPath), lpstrFile);
     ExpandEnvironmentStringsW(lpstrFile, szExpandedPath, _countof(szExpandedPath));
@@ -583,7 +574,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     INT ic;
                     WCHAR *psz, *pszExpanded, *parent = NULL;
                     DWORD cchExpand;
-                    SHELLEXECUTEINFOW sei;
+                    SHELLEXECUTEINFOW sei = { sizeof(sei) };
                     NMRUNFILEDLGW nmrfd;
 
                     ic = GetWindowTextLengthW(htxt);
@@ -592,9 +583,6 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                         EndDialog(hwnd, IDCANCEL);
                         return TRUE;
                     }
-
-                    ZeroMemory(&sei, sizeof(sei));
-                    sei.cbSize = sizeof(sei);
 
                     /*
                      * Allocate a new MRU entry, we need to add two characters
@@ -694,7 +682,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                                 EndDialog(hwnd, IDOK);
                                 break;
                             }
-                            else if (SUCCEEDED(ShellExecuteExW(&sei)))
+                            else if (ShellExecuteExW(&sei))
                             {
                                 /* Call GetWindowText again in case the contents of the edit box have changed. */
                                 GetWindowTextW(htxt, psz, ic + 1);
@@ -768,9 +756,11 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                 case IDC_RUNDLG_EDITPATH:
                 {
                     if (HIWORD(wParam) == CBN_EDITCHANGE)
-                    {
                         EnableOkButtonFromEditContents(hwnd);
-                    }
+
+                    // Delay handling dropdown changes until the edit box has been updated.
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                        PostMessage(hwnd, message, MAKELONG(IDC_RUNDLG_EDITPATH, CBN_EDITCHANGE), lParam);
                     return TRUE;
                 }
             }
@@ -1140,7 +1130,7 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
     hbmOld = (HBITMAP)SelectObject(hdcMem, pContext->hImageStrip);
     rect = pdis->rcItem;
 
-    /* Check the button ID for revelant bitmap to be used */
+    /* Check the button ID for relevant bitmap to be used */
     switch (pdis->CtlID)
     {
         case IDC_LOG_OFF_BUTTON:
@@ -1460,23 +1450,33 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             return TRUE;
         }
 
-        case WM_CLOSE:
-            EndDialog(hwnd, IDCANCEL);
-            break;
+        case WM_DESTROY:
+            if (pContext->bFriendlyUI)
+                EndFriendlyDialog(hwnd, pContext);
+            return TRUE;
 
-        /*
-        * If the user deactivates the log off dialog (it loses its focus
-        * while the dialog is not being closed), then destroy the dialog
-        * box.
-        */
         case WM_ACTIVATE:
         {
+            /*
+             * If the user deactivates the log-off dialog (it loses its focus
+             * while the dialog is not being closed), then destroy the dialog
+             * and cancel user logoff.
+             */
             if (LOWORD(wParam) == WA_INACTIVE)
             {
-                EndDialog(hwnd, IDCANCEL);
+                if (!pContext->bCloseDlg)
+                {
+                    pContext->bCloseDlg = TRUE;
+                    EndDialog(hwnd, IDCANCEL);
+                }
             }
             return FALSE;
         }
+
+        case WM_CLOSE:
+            pContext->bCloseDlg = TRUE;
+            EndDialog(hwnd, IDCANCEL);
+            break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -1487,15 +1487,11 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     break;
 
                 case IDCANCEL:
+                    pContext->bCloseDlg = TRUE;
                     EndDialog(hwnd, IDCANCEL);
                     break;
             }
             break;
-
-        case WM_DESTROY:
-            if (pContext->bFriendlyUI)
-                EndFriendlyDialog(hwnd, pContext);
-            return TRUE;
 
         case WM_CTLCOLORSTATIC:
         {
@@ -1547,7 +1543,7 @@ EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
     CComPtr<IUnknown> fadeHandler;
     HWND parent = NULL;
     DWORD LogoffDialogID = IDD_LOG_OFF;
-    LOGOFF_DLG_CONTEXT Context;
+    LOGOFF_DLG_CONTEXT Context = {0};
 
     if (!CallShellDimScreen(&fadeHandler, &parent))
         parent = hWndOwner;
@@ -1607,7 +1603,7 @@ VOID ExitWindowsDialog_backup(HWND hWndOwner)
  */
 void WINAPI ExitWindowsDialog(HWND hWndOwner)
 {
-    typedef DWORD (WINAPI *ShellShFunc)(HWND hParent, WCHAR *Username, BOOL bHideLogoff);
+    typedef DWORD (WINAPI *ShellShFunc)(HWND hWndParent, LPCWSTR pUserName, DWORD dwExcludeOptions);
     HINSTANCE msginaDll = LoadLibraryW(L"msgina.dll");
 
     TRACE("(%p)\n", hWndOwner);
@@ -1627,11 +1623,10 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
     }
 
     ShellShFunc pShellShutdownDialog = (ShellShFunc)GetProcAddress(msginaDll, "ShellShutdownDialog");
-
     if (pShellShutdownDialog)
     {
         /* Actually call the function */
-        DWORD returnValue = pShellShutdownDialog(parent, NULL, FALSE);
+        DWORD returnValue = pShellShutdownDialog(parent, NULL, 0);
 
         switch (returnValue)
         {

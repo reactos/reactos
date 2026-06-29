@@ -12,7 +12,7 @@ BEGIN
     PUSHBUTTON "A&jouter...", IDC_USERS_ADD, 87, 98, 50, 14
     PUSHBUTTON "&Retirer", IDC_USERS_REMOVE, 141, 98, 50, 14
     PUSHBUTTON "Pr&opriétés", IDC_USERS_PROPERTIES, 195, 98, 50, 14
-    AUTOCHECKBOX "Nécessite un identifiant et mot de passe au démarrage du système.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 235, 14, WS_DISABLED
+    AUTOCHECKBOX "Nécessite un identifiant et mot de passe au démarrage du système.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 235, 14
     PUSHBUTTON "Réinitialiser le &mot de passe", IDC_USERS_RESET, 145, 200, 100, 14, WS_DISABLED
 END
 

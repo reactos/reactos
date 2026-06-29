@@ -28,11 +28,11 @@ ARBITER_INSTANCE IopRootPortArbiter;
 
 extern KEVENT PiEnumerationFinished;
 
-NTSTATUS NTAPI IopPortInitialize(VOID);
-NTSTATUS NTAPI IopMemInitialize(VOID);
-NTSTATUS NTAPI IopDmaInitialize(VOID);
-NTSTATUS NTAPI IopIrqInitialize(VOID);
-NTSTATUS NTAPI IopBusNumberInitialize(VOID);
+NTSTATUS NTAPI IopArbPortInitialize(VOID);
+NTSTATUS NTAPI IopArbMemInitialize(VOID);
+NTSTATUS NTAPI IopArbDmaInitialize(VOID);
+NTSTATUS NTAPI IopArbIrqInitialize(VOID);
+NTSTATUS NTAPI IopArbBusNumberInitialize(VOID);
 
 /* FUNCTIONS ******************************************************************/
 
@@ -50,38 +50,38 @@ IopInitializeArbiters(VOID)
 {
     NTSTATUS Status;
 
-    Status = IopPortInitialize();
+    Status = IopArbPortInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopPortInitialize() return %X\n", Status);
+        DPRINT1("IopArbPortInitialize() return %X\n", Status);
         return Status;
     }
 
-    Status = IopMemInitialize();
+    Status = IopArbMemInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopMemInitialize() return %X\n", Status);
+        DPRINT1("IopArbMemInitialize() return %X\n", Status);
         return Status;
     }
 
-    Status = IopDmaInitialize();
+    Status = IopArbDmaInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopDmaInitialize() return %X\n", Status);
+        DPRINT1("IopArbDmaInitialize() return %X\n", Status);
         return Status;
     }
 
-    Status = IopIrqInitialize();
+    Status = IopArbIrqInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopIrqInitialize() return %X\n", Status);
+        DPRINT1("IopArbIrqInitialize() return %X\n", Status);
         return Status;
     }
 
-    Status = IopBusNumberInitialize();
+    Status = IopArbBusNumberInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopBusNumberInitialize() return %X\n", Status);
+        DPRINT1("IopArbBusNumberInitialize() return %X\n", Status);
     }
 
     return Status;
@@ -444,10 +444,19 @@ IopInitializePlugPlayServices(VOID)
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Initialize the Bus Type GUID List */
-    PnpBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
-    RtlZeroMemory(PnpBusTypeGuidList, sizeof(IO_BUS_TYPE_GUID_LIST));
-    ExInitializeFastMutex(&PnpBusTypeGuidList->Lock);
-
+    ExInitializeFastMutex(&PnpBusTypeGuidList.Lock);
+    PnpBusTypeGuidList.AllocatedCount = 8;
+    PnpBusTypeGuidList.GuidCount = 0;
+    PnpBusTypeGuidList.Guids = ExAllocatePoolWithTag(PagedPool,
+                                                     PnpBusTypeGuidList.AllocatedCount * sizeof(GUID),
+                                                     TAG_PNP_GUIDS);
+    if (PnpBusTypeGuidList.Guids == NULL)
+    {
+        DPRINT1("Failed to allocate PnP GUID buffer!\n");
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
+    }
+    RtlZeroMemory(PnpBusTypeGuidList.Guids, PnpBusTypeGuidList.AllocatedCount * sizeof(GUID));
+  
     /* Initialize PnP root relations (this is a syncronous operation) */
     PiQueueDeviceAction(Pdo, PiActionEnumRootDevices, NULL, NULL);
 

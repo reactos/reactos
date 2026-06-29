@@ -1226,7 +1226,12 @@ SkipCheck:
     /* Insert this entry */
     LdrpInsertMemoryTableEntry(LdrEntry);
 
-    // LdrpSendDllNotifications(LdrEntry, TRUE, Status == STATUS_IMAGE_NOT_AT_BASE)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+    LdrpSendDllNotifications(LdrEntry, LDR_DLL_NOTIFICATION_REASON_LOADED);
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
+    LdrEntry->Flags |= LDRP_LOAD_NOTIFICATIONS_SENT; /* LdrEntry->LoadNotificationsSent = TRUE; */
+#endif
+#endif
 
     /* Check for invalid CPU Image */
     if (Status == STATUS_IMAGE_MACHINE_TYPE_MISMATCH)
@@ -2373,6 +2378,15 @@ LdrpGetProcedureAddress(
                     Status = _SEH2_GetExceptionCode();
                 }
                 _SEH2_END;
+
+                /* Check if it succeeded */
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Failed, unload the entry */
+                    DPRINT1("Initialization routine failed with 0x%08x\n", Status);
+                    LdrUnloadDll(LdrEntry->DllBase);
+                    LdrEntry = NULL;
+                }
             }
         }
 

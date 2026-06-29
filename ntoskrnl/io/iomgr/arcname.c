@@ -45,20 +45,20 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     BOOLEAN FoundBoot = FALSE;
     UNICODE_STRING SystemDevice, LoaderPathNameW, BootDeviceName;
     PARC_DISK_INFORMATION ArcDiskInfo = LoaderBlock->ArcDiskInformation;
-    ANSI_STRING ArcSystemString, ArcString, LanmanRedirector, LoaderPathNameA;
+    ANSI_STRING ArcString, LanmanRedirector, LoaderPathNameA;
 
     /* Check if we only have one disk on the machine */
     SingleDisk = (ArcDiskInfo->DiskSignatureListHead.Flink->Flink ==
                  &ArcDiskInfo->DiskSignatureListHead);
 
-    /* Create the global HAL partition name */
+    /* Create the firmware system loader / HAL partition global name */
     sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcHalDeviceName);
     RtlInitAnsiString(&ArcString, Buffer);
     Status = RtlAnsiStringToUnicodeString(&IoArcHalDeviceName, &ArcString, TRUE);
     if (!NT_SUCCESS(Status))
         return Status;
 
-    /* Create the global system partition name */
+    /* Create the OS boot partition global name */
     sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
     RtlInitAnsiString(&ArcString, Buffer);
     Status = RtlAnsiStringToUnicodeString(&IoArcBootDeviceName, &ArcString, TRUE);
@@ -84,9 +84,6 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Then disable single-disk mode, since there's a CD drive out there */
         SingleDisk = FALSE;
     }
-
-    /* Build the boot strings */
-    RtlInitAnsiString(&ArcSystemString, LoaderBlock->ArcHalDeviceName);
 
     /* If we are doing remote booting */
     if (IoRemoteBootClient)
@@ -631,7 +628,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
         /* Check MBR type against EZ Drive type */
         StartingOffset.QuadPart = 0;
-        HalExamineMBR(DeviceObject, DiskGeometry.BytesPerSector, 0x55, &Data);
+        HalExamineMBR(DeviceObject, DiskGeometry.BytesPerSector, PARTITION_EZDRIVE, &Data);
         if (Data)
         {
             /* If MBR is of the EZ Drive type, we'll read after it */
@@ -704,10 +701,10 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                                  ListEntry);
 
             /*
-             * If this is the only MBR disk in the ARC list and detected
-             * in the device tree, just go ahead and create the ArcName link.
-             * Otherwise, check whether the signatures and checksums match
-             * before creating the ArcName link.
+             * If this is the only MBR disk in the ARC list and detected in
+             * the device tree, just go ahead and create the ArcName links.
+             * Otherwise, verify whether the signatures and checksums match
+             * before proceeding.
              */
             if ((SingleDisk && (DiskCount == 1) &&
                  (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR)) ||

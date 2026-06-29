@@ -1,0 +1,123 @@
+/*
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     PnP manager Root Bus Arbiter
+ * COPYRIGHT:   Copyright 2025 Justin Miller <justin.miller@reactos.org>
+ */
+
+/* INCLUDES *****************************************************************/
+
+#include <ntoskrnl.h>
+#define NDEBUG
+#include <debug.h>
+
+/* GLOBALS *******************************************************************/
+
+extern ARBITER_INSTANCE IopRootBusNumberArbiter;
+
+/* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+NTAPI
+IopArbBusNumberUnpackRequirements(
+    _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
+    _Out_ PUINT64 OutMinimumAddress,
+    _Out_ PUINT64 OutMaximumAddress,
+    _Out_ PUINT32 OutLength,
+    _Out_ PUINT32 OutAlignment)
+{
+    PAGED_CODE();
+    DPRINT("IopArbBusNumberUnpackRequirements: IoDescriptor: %p, OutMinimumAddress: %p, OutMaximumAddress: %p, OutLength: %p, OutAlignment: %p\n",
+           IoDescriptor,
+           OutMinimumAddress,
+           OutMaximumAddress,
+           OutLength,
+           OutAlignment);
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+IopArbBusNumberPackResource(
+    _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
+    _In_ UINT64 Start,
+    _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor)
+{
+    PAGED_CODE();
+    DPRINT("IopArbBusNumberPackResource: IoDescriptor: %p, Start: %I64x, CmDescriptor: %p\n",
+           IoDescriptor,
+           Start,
+           CmDescriptor);
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+IopArbBusNumberUnpackResource(
+    _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor,
+    _Out_ PUINT64 Start,
+    _Out_ PUINT32 OutLength)
+{
+    PAGED_CODE();
+    DPRINT("IopArbBusNumberUnpackResource: CmDescriptor: %p, Start: %p, OutLength: %p\n",
+           CmDescriptor,
+           Start,
+           OutLength);
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+INT32
+NTAPI
+IopArbBusNumberScoreRequirement(
+    _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
+{
+    PAGED_CODE();
+    DPRINT("IopArbBusNumberScoreRequirement: IoDescriptor: %p\n",
+           IoDescriptor);
+
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/**
+ * @brief Initialize the RootBusArbiter
+ *
+ * Initializes rootbus arbiter against IopRootBusNumberArbiter for use in PCI
+ * every "bus" gets to check against this.
+ * @return NTSTATUS
+ * @retval STATUS_SUCCESS
+ * @retval STATUS_UNSUCCESSFUL
+ * @retval STATUS_INSUFFICIENT_RESOURCES
+ */
+NTSTATUS
+NTAPI
+IopArbBusNumberInitialize(VOID)
+{
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+
+    PAGED_CODE();
+    IopRootBusNumberArbiter.Name = L"RootBusNumber";
+    IopRootBusNumberArbiter.UnpackRequirement = IopArbBusNumberUnpackRequirements;
+    IopRootBusNumberArbiter.PackResource = IopArbBusNumberPackResource;
+    IopRootBusNumberArbiter.UnpackResource = IopArbBusNumberUnpackResource;
+    IopRootBusNumberArbiter.ScoreRequirement = IopArbBusNumberScoreRequirement;
+
+    Status = ArbInitializeArbiterInstance(&IopRootBusNumberArbiter,
+                                          NULL,
+                                          CmResourceTypeBusNumber,
+                                          IopRootBusNumberArbiter.Name,
+                                          L"Root",
+                                          NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopArbBusNumberInitialize: Failed with %X", Status);
+    }
+
+    return Status;
+}

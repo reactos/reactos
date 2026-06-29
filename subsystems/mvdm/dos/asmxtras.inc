@@ -27,13 +27,6 @@
     #define DWORD long
 #endif
 
-/* OFFset macro */
-#ifdef _USE_ML
-    #define OFF(x) offset x
-#else
-    #define OFF(x) x
-#endif
-
 /*
  * Set of macros for defining and using structures:
  * - STRUCT(name, ...) defines a structure of name 'name'.

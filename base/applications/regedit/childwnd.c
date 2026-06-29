@@ -11,7 +11,7 @@
 #include <shlguid.h>
 
 ChildWnd* g_pChildWnd;
-static int last_split;
+static int last_split = -1;
 HBITMAP SizingPattern;
 HBRUSH  SizingBrush;
 WCHAR Suggestions[256];
@@ -99,15 +99,19 @@ extern void ResizeWnd(int cx, int cy)
     const int nButtonWidth = 44;
     const int nButtonHeight = 22;
     int cyEdge = GetSystemMetrics(SM_CYEDGE);
-    const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE;
-    SetRect(&rt, 0, 0, cx, cy);
+    const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS;
+
     cy = 0;
-    if (hStatusBar != NULL)
+    if (IsWindowVisible(hStatusBar))
     {
         GetWindowRect(hStatusBar, &rs);
         cy = rs.bottom - rs.top;
     }
+
     GetWindowRect(g_pChildWnd->hAddressBtnWnd, &rb);
+
+    GetClientRect(g_pChildWnd->hWnd, &rt);
+    RedrawWindow(g_pChildWnd->hWnd, &rt, NULL, RDW_INVALIDATE | RDW_NOCHILDREN);
 
     g_pChildWnd->nSplitPos = ClampSplitBarX(g_pChildWnd->hWnd, g_pChildWnd->nSplitPos);
 
@@ -148,7 +152,7 @@ static void draw_splitbar(HWND hWnd, int x)
 {
     RECT rt;
     HGDIOBJ OldObj;
-    HDC hdc = GetDC(hWnd);
+    HDC hdc = GetDCEx(hWnd, NULL, DCX_CACHE);
 
     if(!SizingPattern)
     {
@@ -159,7 +163,10 @@ static void draw_splitbar(HWND hWnd, int x)
     {
         SizingBrush = CreatePatternBrush(SizingPattern);
     }
-    GetClientRect(hWnd, &rt);
+
+    GetWindowRect(g_pChildWnd->hTreeWnd, &rt);
+    MapWindowPoints(NULL, hWnd, (POINT *)&rt, sizeof(rt) / sizeof(POINT));
+
     rt.left = x - SPLIT_WIDTH/2;
     rt.right = x + SPLIT_WIDTH/2+1;
     OldObj = SelectObject(hdc, SizingBrush);
@@ -388,7 +395,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->nSplitPos = 190;
         g_pChildWnd->hWnd = hWnd;
 
-        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+        /* ES_AUTOHSCROLL style enables horizontal scrolling and shrinking */
+        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL;
         g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, style,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);

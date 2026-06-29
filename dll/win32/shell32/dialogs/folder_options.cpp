@@ -83,110 +83,6 @@ HBITMAP BitmapFromIcon(HICON hIcon, INT cx, INT cy)
     return hbm;
 }
 
-HBITMAP CreateCheckImage(HDC hDC, BOOL bCheck, BOOL bEnabled)
-{
-    INT cxSmallIcon = GetSystemMetrics(SM_CXSMICON);
-    INT cySmallIcon = GetSystemMetrics(SM_CYSMICON);
-
-    HBITMAP hbm = Create24BppBitmap(hDC, cxSmallIcon, cySmallIcon);
-    if (hbm == NULL)
-        return NULL;    // failure
-
-    RECT Rect, BoxRect;
-    SetRect(&Rect, 0, 0, cxSmallIcon, cySmallIcon);
-    BoxRect = Rect;
-    InflateRect(&BoxRect, -1, -1);
-
-    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
-    {
-        UINT uState = DFCS_BUTTONCHECK | DFCS_FLAT | DFCS_MONO;
-        if (bCheck)
-            uState |= DFCS_CHECKED;
-        if (!bEnabled)
-            uState |= DFCS_INACTIVE;
-        DrawFrameControl(hDC, &BoxRect, DFC_BUTTON, uState);
-    }
-    SelectObject(hDC, hbmOld);
-
-    return hbm;     // success
-}
-
-HBITMAP CreateCheckMask(HDC hDC)
-{
-    INT cxSmallIcon = GetSystemMetrics(SM_CXSMICON);
-    INT cySmallIcon = GetSystemMetrics(SM_CYSMICON);
-
-    HBITMAP hbm = CreateBitmap(cxSmallIcon, cySmallIcon, 1, 1, NULL);
-    if (hbm == NULL)
-        return NULL;    // failure
-
-    RECT Rect, BoxRect;
-    SetRect(&Rect, 0, 0, cxSmallIcon, cySmallIcon);
-    BoxRect = Rect;
-    InflateRect(&BoxRect, -1, -1);
-
-    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
-    {
-        FillRect(hDC, &Rect, HBRUSH(GetStockObject(WHITE_BRUSH)));
-        FillRect(hDC, &BoxRect, HBRUSH(GetStockObject(BLACK_BRUSH)));
-    }
-    SelectObject(hDC, hbmOld);
-
-    return hbm;     // success
-}
-
-HBITMAP CreateRadioImage(HDC hDC, BOOL bCheck, BOOL bEnabled)
-{
-    INT cxSmallIcon = GetSystemMetrics(SM_CXSMICON);
-    INT cySmallIcon = GetSystemMetrics(SM_CYSMICON);
-
-    HBITMAP hbm = Create24BppBitmap(hDC, cxSmallIcon, cySmallIcon);
-    if (hbm == NULL)
-        return NULL;    // failure
-
-    RECT Rect, BoxRect;
-    SetRect(&Rect, 0, 0, cxSmallIcon, cySmallIcon);
-    BoxRect = Rect;
-    InflateRect(&BoxRect, -1, -1);
-
-    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
-    {
-        UINT uState = DFCS_BUTTONRADIOIMAGE | DFCS_FLAT | DFCS_MONO;
-        if (bCheck)
-            uState |= DFCS_CHECKED;
-        if (!bEnabled)
-            uState |= DFCS_INACTIVE;
-        DrawFrameControl(hDC, &BoxRect, DFC_BUTTON, uState);
-    }
-    SelectObject(hDC, hbmOld);
-
-    return hbm;     // success
-}
-
-HBITMAP CreateRadioMask(HDC hDC)
-{
-    INT cxSmallIcon = GetSystemMetrics(SM_CXSMICON);
-    INT cySmallIcon = GetSystemMetrics(SM_CYSMICON);
-
-    HBITMAP hbm = CreateBitmap(cxSmallIcon, cySmallIcon, 1, 1, NULL);
-    if (hbm == NULL)
-        return NULL;    // failure
-
-    RECT Rect, BoxRect;
-    SetRect(&Rect, 0, 0, cxSmallIcon, cySmallIcon);
-    BoxRect = Rect;
-    InflateRect(&BoxRect, -1, -1);
-
-    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
-    {
-        FillRect(hDC, &Rect, HBRUSH(GetStockObject(WHITE_BRUSH)));
-        UINT uState = DFCS_BUTTONRADIOMASK | DFCS_FLAT | DFCS_MONO;
-        DrawFrameControl(hDC, &BoxRect, DFC_BUTTON, uState);
-    }
-    SelectObject(hDC, hbmOld);
-
-    return hbm;     // success
-}
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -234,11 +130,28 @@ enum {
 static DWORD CALLBACK
 ShowFolderOptionsDialogThreadProc(LPVOID param)
 {
-    CCoInit com; // Required when started from rundll32 (SHAutoComplete in PickIconDlg)
+    CCoInit com; // Required when started from rundll32 (IRegTreeOptions, SHAutoComplete (in PickIconDlg))
     PROPSHEETHEADERW pinfo;
     HPROPSHEETPAGE hppages[3];
     HPROPSHEETPAGE hpage;
     UINT num_pages = 0;
+
+    // the stub window to hide taskbar button
+    DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
+    DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW;
+    CMSGlobalFolderOptionsStub stub;
+    if (!stub.Create(NULL, NULL, NULL, style, exstyle))
+    {
+        ERR("stub.Create failed\n");
+        return 0;
+    }
+
+    if (SHRestricted(REST_NOFOLDEROPTIONS))
+    {
+        SHRestrictedMessageBox(stub);
+        stub.DestroyWindow();
+        return 0;
+    }
 
     hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg, 0, NULL);
     if (hpage)
@@ -251,16 +164,6 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
     hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_FILETYPES, FolderOptionsFileTypesDlg, 0, NULL);
     if (hpage)
         hppages[num_pages++] = hpage;
-
-    // the stub window to hide taskbar button
-    DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
-    DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW;
-    CMSGlobalFolderOptionsStub stub;
-    if (!stub.Create(NULL, NULL, NULL, style, exstyle))
-    {
-        ERR("stub.Create failed\n");
-        return 0;
-    }
 
     memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
@@ -294,7 +197,7 @@ ShowFolderOptionsDialog(UINT Page, BOOL Async = FALSE)
         SetForegroundWindow(hPop);
         return;
     }
-    
+
     LPVOID param = UlongToPtr(Page);
     if (Async)
         SHCreateThread(ShowFolderOptionsDialogThreadProc, param, 0, 0);

@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 #include <immdev.h>
+#include <winnls32.h> /* For IMEPROA/W */
 
 #define IME_MASK        (0xE0000000UL)
 #define SUBST_MASK      (0xD0000000UL)
@@ -27,6 +28,46 @@ extern "C" {
 /* The special values for ImmFreeLayout hKL */
 #define HKL_SWITCH_TO_NON_IME   ((HKL)UlongToHandle(1))
 #define HKL_RELEASE_IME         ((HKL)UlongToHandle(2))
+
+#define WM_IME_SYSTEM 0x00000287
+
+/* The additional dwIndex value for ImmGetCompositionStringA/W */
+#define GCS_PRIVATE 0x8000
+
+/* Used in ImmGetCompositionStringA/W */
+typedef struct tagCOMPSTR_PRIVATE
+{
+    DWORD dwUnknown0; /* FIXME: Rename */
+    DWORD dwUnknown1; /* FIXME: Rename */
+    DWORD dwLen;
+    DWORD dwOffset;
+} COMPSTR_PRIVATE, *PCOMPSTR_PRIVATE, *LPCOMPSTR_PRIVATE;
+
+/* wParam for WM_IME_SYSTEM */
+#define IMS_NOTIFYIMESHOW       0x05
+#define IMS_UPDATEIMEUI         0x06
+#define IMS_SETCANDFORM         0x09
+#define IMS_SETCOMPFONT         0x0A
+#define IMS_SETCOMPFORM         0x0B
+#define IMS_CONFIGURE           0x0D
+#define IMS_SETOPENSTATUS       0x0F
+#define IMS_FREELAYOUT          0x11
+#define IMS_SOFTKBDONOFF        0x13
+#define IMS_GETCONVSTATUS       0x14
+#define IMS_IMEHELP             0x15
+#define IMS_IMEACTIVATE         0x17
+#define IMS_IMEDEACTIVATE       0x18
+#define IMS_ACTIVATELAYOUT      0x19
+#define IMS_CONSOLEIME_1A       0x1A /* Undocumented console IME WM_IME_SYSTEM subcommand (0x1A), used internally by conime for Windows compatibility. */
+#define IMS_CONSOLEIME_1B       0x1B /* Undocumented console IME WM_IME_SYSTEM subcommand (0x1B), used internally by conime for Windows compatibility. */
+#define IMS_GETIMEMENU          0x1C
+#define IMS_IMEMENUITEMSELECTED 0x1D
+#define IMS_GETCONTEXT          0x1E
+#define IMS_SENDNOTIFICATION    0x1F
+#define IMS_COMPLETECOMPSTR     0x20
+#define IMS_LOADTHREADLAYOUT    0x21
+#define IMS_SETLANGBAND         0x23
+#define IMS_UNSETLANGBAND       0x24
 
 typedef struct tagIMEINFOEX
 {
@@ -112,7 +153,7 @@ C_ASSERT(sizeof(IMEDPI) == 0xa8);
 #define IMEDPI_FLAG_LOCKED 0x2
 
 PIMEDPI WINAPI ImmLockImeDpi(_In_ HKL hKL);
-VOID WINAPI ImmUnlockImeDpi(_Inout_ PIMEDPI pImeDpi);
+VOID WINAPI ImmUnlockImeDpi(_Inout_opt_ PIMEDPI pImeDpi);
 
 /* unconfirmed */
 typedef struct tagCLIENTIMC
@@ -141,10 +182,9 @@ C_ASSERT(sizeof(CLIENTIMC) == 0x34);
 /* flags for CLIENTIMC */
 #define CLIENTIMC_WIDE 0x1
 #define CLIENTIMC_ACTIVE 0x2
-#define CLIENTIMC_UNKNOWN4 0x20
 #define CLIENTIMC_DESTROY 0x40
 #define CLIENTIMC_DISABLEIME 0x80
-#define CLIENTIMC_UNKNOWN2 0x100
+#define CLIENTIMC_LOCKED 0x100
 
 PCLIENTIMC WINAPI ImmLockClientImc(_In_ HIMC hImc);
 VOID WINAPI ImmUnlockClientImc(_Inout_ PCLIENTIMC pClientImc);
@@ -169,6 +209,24 @@ typedef struct INPUTCONTEXTDX
     DWORD dwChange;             // +0x158
     HIMCC hCtfImeContext;
 } INPUTCONTEXTDX, *PINPUTCONTEXTDX, NEAR *NPINPUTCONTEXTDX, FAR *LPINPUTCONTEXTDX;
+
+/* INPUTCONTEXTDX.dwUIFlags flags */
+#define _IME_UI_HIDDEN 0x2
+#define _IME_UI_VERTICAL 0x4
+#define _IME_UI_NO_COMPFORM 0x8
+
+/* ImmGetAppCompatFlags flags */
+#define _IME_APP_COMPAT_DIRECT_IME_SYSTEM 0x1
+#define _IME_APP_COMPAT_DIRECT_IME_FONT 0x80
+#define _IME_APP_COMPAT_PROCESS_BY_IME 0x10000
+#define _IME_APP_COMPAT_SPECIAL_IME 0x80000000
+
+/* Extra conversion mode */
+#define _IME_CMODE_EXTENDED 0x80000000
+
+/* Extra IME mode */
+#define _IME_MODE_KOR_SBCSCHAR 0x0002 /* For Korean */
+#define _IME_MODE_JPN_SBCSCHAR 0x0008 /* For Japanese */
 
 typedef struct IME_SUBSTATE
 {
@@ -196,25 +254,6 @@ typedef struct IME_STATE
 C_ASSERT(sizeof(IME_STATE) == 0x18);
 #endif
 
-/* for WM_IME_REPORT IR_UNDETERMINE */
-typedef struct tagUNDETERMINESTRUCT
-{
-    DWORD dwSize;
-    UINT  uDefIMESize;
-    UINT  uDefIMEPos;
-    UINT  uUndetTextLen;
-    UINT  uUndetTextPos;
-    UINT  uUndetAttrPos;
-    UINT  uCursorPos;
-    UINT  uDeltaStart;
-    UINT  uDetermineTextLen;
-    UINT  uDetermineTextPos;
-    UINT  uDetermineDelimPos;
-    UINT  uYomiTextLen;
-    UINT  uYomiTextPos;
-    UINT  uYomiDelimPos;
-} UNDETERMINESTRUCT, *PUNDETERMINESTRUCT, *LPUNDETERMINESTRUCT;
-
 UINT WINAPI GetKeyboardLayoutCP(_In_ LANGID wLangId);
 
 BOOL WINAPI
@@ -225,9 +264,66 @@ ImmGetImeInfoEx(
 
 BOOL WINAPI ImmLoadLayout(_In_ HKL hKL, _Inout_ PIMEINFOEX pImeInfoEx);
 DWORD WINAPI ImmGetAppCompatFlags(_In_ HIMC hIMC);
-BOOL WINAPI ImmSetActiveContext(_In_ HWND hwnd, _In_ HIMC hIMC, _In_ BOOL fFlag);
+BOOL WINAPI ImmSetActiveContext(_In_ HWND hwnd, _In_opt_ HIMC hIMC, _In_ BOOL fFlag);
 BOOL WINAPI ImmLoadIME(_In_ HKL hKL);
 DWORD WINAPI ImmProcessKey(_In_ HWND, _In_ HKL, _In_ UINT, _In_ LPARAM, _In_ DWORD);
+BOOL WINAPI ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC);
+BOOL WINAPI ImmWINNLSGetEnableStatus(_In_opt_ HWND hWnd);
+BOOL WINAPI ImmSetActiveContextConsoleIME(_In_ HWND hwnd, _In_ BOOL fFlag);
+BOOL WINAPI ImmActivateLayout(_In_ HKL hKL);
+BOOL WINAPI ImmFreeLayout(_In_ HKL hKL);
+
+BOOL WINAPI
+ImmGetHotKey(
+    _In_ DWORD dwHotKey,
+    _Out_ LPUINT lpuModifiers,
+    _Out_ LPUINT lpuVKey,
+    _Out_opt_ LPHKL lphKL);
+
+BOOL WINAPI
+ImmSetHotKey(
+    _In_ DWORD dwID,
+    _In_ UINT uModifiers,
+    _In_ UINT uVirtualKey,
+    _In_opt_ _When_((dwAction == SETIMEHOTKEY_ADD) &&
+                    !(IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId &&
+                      dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST), _Null_) HKL hKL);
+
+BOOL WINAPI
+ImmWINNLSEnableIME(
+    _In_opt_ HWND hWnd,
+    _In_ BOOL enable);
+
+LRESULT WINAPI
+ImmSystemHandler(
+    _In_ HIMC hIMC,
+    _Inout_opt_ WPARAM wParam,
+    _Inout_opt_ LPARAM lParam);
+
+DWORD WINAPI
+ImmCallImeConsoleIME(
+    _In_ HWND hWnd,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam,
+    _Out_ LPUINT puVK);
+
+BOOL WINAPI ImmIMPGetIMEA(_In_opt_ HWND hWnd, _Out_ LPIMEPROA pImePro);
+BOOL WINAPI ImmIMPGetIMEW(_In_opt_ HWND hWnd, _Out_ LPIMEPROW pImePro);
+BOOL WINAPI ImmIMPQueryIMEA(_Inout_ LPIMEPROA pImePro);
+BOOL WINAPI ImmIMPQueryIMEW(_Inout_ LPIMEPROW pImePro);
+BOOL WINAPI ImmIMPSetIMEA(_In_opt_ HWND hWnd, _Inout_ LPIMEPROA pImePro);
+BOOL WINAPI ImmIMPSetIMEW(_In_opt_ HWND hWnd, _Inout_ LPIMEPROW pImePro);
+
+LRESULT WINAPI
+ImmSendIMEMessageExA(
+    _In_ HWND hWnd,
+    _In_ LPARAM lParam);
+
+LRESULT WINAPI
+ImmSendIMEMessageExW(
+    _In_ HWND hWnd,
+    _In_ LPARAM lParam);
 
 HRESULT WINAPI CtfAImmActivate(_Out_opt_ HINSTANCE *phinstCtfIme);
 HRESULT WINAPI CtfAImmDeactivate(_In_ BOOL bDestroy);
@@ -242,9 +338,10 @@ VOID WINAPI CtfImmCoUninitialize(VOID);
 VOID WINAPI CtfImmEnterCoInitCountSkipMode(VOID);
 BOOL WINAPI CtfImmLeaveCoInitCountSkipMode(VOID);
 HRESULT WINAPI CtfImmLastEnabledWndDestroy(_In_ BOOL bCreate);
-BOOL WINAPI CtfImmIsCiceroStartedInThread(VOID);
 HRESULT WINAPI CtfImmTIMActivate(_In_ HKL hKL);
 BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID);
+BOOL WINAPI CtfImmIsCiceroEnabled(VOID);
+BOOL WINAPI CtfImmIsGuidMapEnable(_In_ HIMC hIMC);
 
 LRESULT WINAPI
 CtfImmDispatchDefImeMessage(
@@ -252,6 +349,18 @@ CtfImmDispatchDefImeMessage(
     _In_ UINT uMsg,
     _In_ WPARAM wParam,
     _In_ LPARAM lParam);
+
+#ifdef UNICODE
+    #define ImmIMPGetIME ImmIMPGetIMEW
+    #define ImmIMPQueryIME ImmIMPQueryIMEW
+    #define ImmIMPSetIME ImmIMPSetIMEW
+    #define ImmSendIMEMessageEx ImmSendIMEMessageExW
+#else
+    #define ImmIMPGetIME ImmIMPGetIMEA
+    #define ImmIMPQueryIME ImmIMPQueryIMEA
+    #define ImmIMPSetIME ImmIMPSetIMEA
+    #define ImmSendIMEMessageEx ImmSendIMEMessageExA
+#endif
 
 #ifdef __cplusplus
 } // extern "C"

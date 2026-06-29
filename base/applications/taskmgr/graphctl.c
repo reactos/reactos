@@ -67,18 +67,15 @@ GraphCtrl_Create(PTM_GRAPH_CONTROL inst, HWND hWnd, HWND hParentWnd, PTM_FORMAT 
     inst->ftPixelsPerPercent = (FLOAT)(inst->BitmapHeight) / 100.00f;
 
     hdc = GetDC(hParentWnd);
-    hdcg = CreateCompatibleDC(hdc);
-    inst->hdcGraph = hdcg;
-    inst->hbmGraph = CreateCompatibleBitmap(hdc, inst->BitmapWidth, inst->BitmapHeight);
-
-    if (!hdc ||
-        !hdcg ||
-        !inst->hbmGraph)
-    {
+    if (!hdc)
         goto fail;
-    }
 
+    inst->hdcGraph = hdcg = CreateCompatibleDC(hdc);
+    inst->hbmGraph = CreateCompatibleBitmap(hdc, inst->BitmapWidth, inst->BitmapHeight);
     ReleaseDC(hParentWnd, hdc);
+    if (!hdcg || !inst->hbmGraph)
+        goto fail;
+
     hbmOld = (HBITMAP)SelectObject(hdcg, inst->hbmGraph);
     DeleteObject(hbmOld);
 

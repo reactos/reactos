@@ -519,7 +519,7 @@ UserpFormatMessages(
     FormatA.Buffer = NULL;
     Status = RtlFindMessage(GetModuleHandleW(L"ntdll"),
                             (ULONG_PTR)RT_MESSAGETABLE,
-                            LANG_NEUTRAL,
+                            MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                             Message->Status,
                             &MessageResource);
     if (NT_SUCCESS(Status))
@@ -660,7 +660,7 @@ UserpFormatMessages(
         /* Retrieve the description of the exception code */
         Status = RtlFindMessage(GetModuleHandleW(L"ntdll"),
                                 (ULONG_PTR)RT_MESSAGETABLE,
-                                LANG_NEUTRAL,
+                                MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                                 ExceptionCode,
                                 &MessageResource);
         if (NT_SUCCESS(Status))

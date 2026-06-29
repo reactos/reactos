@@ -1,0 +1,11 @@
+@ stdcall -private DllInitialize(ptr)
+@ stdcall -private DllUnload()
+@ stdcall WdfLdrDiagnosticsValueByNameAsULONG(ptr ptr)
+@ stdcall WdfLdrQueryInterface(ptr)
+@ stdcall WdfRegisterClassLibrary(ptr ptr ptr)
+@ stdcall WdfRegisterLibrary(ptr ptr ptr)
+@ stdcall WdfVersionBind(ptr ptr ptr ptr)
+@ stdcall WdfVersionUnbind(ptr ptr ptr)
+@ stdcall WdfVersionBindClass(ptr ptr ptr)
+@ stdcall WdfVersionUnbindClass(ptr ptr ptr)
+

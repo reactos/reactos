@@ -33,7 +33,7 @@ SampSetupAddMemberToAlias(HKEY hDomainKey,
 
     ConvertSidToStringSidW(MemberSid, &MemberSidString);
 
-    swprintf(szKeyName, L"Aliases\\%08lX\\Members", AliasId);
+    _swprintf(szKeyName, L"Aliases\\%08lX\\Members", AliasId);
 
     if (!RegCreateKeyExW(hDomainKey,
                          szKeyName,
@@ -55,7 +55,7 @@ SampSetupAddMemberToAlias(HKEY hDomainKey,
         RegCloseKey(hMembersKey);
     }
 
-    swprintf(szKeyName, L"Aliases\\Members\\%s", MemberSidString);
+    _swprintf(szKeyName, L"Aliases\\Members\\%s", MemberSidString);
 
     if (!RegCreateKeyExW(hDomainKey,
                          szKeyName,
@@ -67,7 +67,7 @@ SampSetupAddMemberToAlias(HKEY hDomainKey,
                          &hMembersKey,
                          &dwDisposition))
     {
-        swprintf(szKeyName, L"%08lX", AliasId);
+        _swprintf(szKeyName, L"%08lX", AliasId);
 
         RegSetValueEx(hMembersKey,
                       szKeyName,
@@ -100,7 +100,7 @@ SampSetupCreateAliasAccount(HANDLE hDomainKey,
     ULONG SdSize = 0;
     NTSTATUS Status;
 
-    swprintf(szAccountKeyName, L"Aliases\\%08lX", ulRelativeId);
+    _swprintf(szAccountKeyName, L"Aliases\\%08lX", ulRelativeId);
 
     Status = SampRegCreateKey(hDomainKey,
                               szAccountKeyName,
@@ -186,7 +186,7 @@ SampSetupAddMemberToGroup(IN HANDLE hDomainKey,
     ULONG i;
     NTSTATUS Status;
 
-    swprintf(szKeyName, L"Groups\\%08lX", GroupId);
+    _swprintf(szKeyName, L"Groups\\%08lX", GroupId);
 
     Status = SampRegOpenKey(hDomainKey,
                             szKeyName,
@@ -272,7 +272,7 @@ SampSetupCreateGroupAccount(HANDLE hDomainKey,
     FixedGroupData.GroupId = ulRelativeId;
     FixedGroupData.Attributes = 0;
 
-    swprintf(szAccountKeyName, L"Groups\\%08lX", ulRelativeId);
+    _swprintf(szAccountKeyName, L"Groups\\%08lX", ulRelativeId);
 
     Status = SampRegCreateKey(hDomainKey,
                               szAccountKeyName,
@@ -401,7 +401,7 @@ SampSetupCreateUserAccount(HANDLE hDomainKey,
     FixedUserData.AdminCount = 0;
     FixedUserData.OperatorCount = 0;
 
-    swprintf(szAccountKeyName, L"Users\\%08lX", ulRelativeId);
+    _swprintf(szAccountKeyName, L"Users\\%08lX", ulRelativeId);
 
     Status = SampRegCreateKey(hDomainKey,
                               szAccountKeyName,

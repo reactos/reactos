@@ -82,21 +82,21 @@ IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Datum:", IDC_STATIC, 8, 5, 31, 8
+    LTEXT "&Datum:", IDC_STATIC, 8, 5, 31, 8
     EDITTEXT IDC_EVENTDATESTATIC, 46, 5, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Quelle:", IDC_STATIC, 103, 5, 36, 8
+    LTEXT "&Quelle:", IDC_STATIC, 103, 5, 36, 8
     EDITTEXT IDC_EVENTSOURCESTATIC, 140, 5, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Zeit:", IDC_STATIC, 8, 15, 31, 8
+    LTEXT "&Zeit:", IDC_STATIC, 8, 15, 31, 8
     EDITTEXT IDC_EVENTTIMESTATIC, 46, 15, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Kategorie:", IDC_STATIC, 103, 15, 36, 8
+    LTEXT "&Kategorie:", IDC_STATIC, 103, 15, 36, 8
     EDITTEXT IDC_EVENTCATEGORYSTATIC, 140, 15, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Typ:", IDC_STATIC, 8, 25, 31, 8
+    LTEXT "&Typ:", IDC_STATIC, 8, 25, 31, 8
     EDITTEXT IDC_EVENTTYPESTATIC, 46, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Ereignis-ID:", IDC_STATIC, 103, 25, 36, 8
+    LTEXT "E&reignis-ID:", IDC_STATIC, 103, 25, 36, 8
     EDITTEXT IDC_EVENTIDSTATIC, 140, 25, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Benutzer:", IDC_STATIC, 8, 35, 36, 8
+    LTEXT "B&enutzer:", IDC_STATIC, 8, 35, 36, 8
     EDITTEXT IDC_EVENTUSERSTATIC, 46, 35, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Computer:", IDC_STATIC, 8, 45, 36, 8
+    LTEXT "C&omputer:", IDC_STATIC, 8, 45, 36, 8
     EDITTEXT IDC_EVENTCOMPUTERSTATIC, 46, 45, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
 
     PUSHBUTTON "", IDC_PREVIOUS, 230, 5, 28, 14, BS_ICON
@@ -106,9 +106,9 @@ BEGIN
     LTEXT "&Bezeichnung:", IDC_STATIC, 8, 65, 45, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "D&aten:", IDC_DETAILS_STATIC, 8, 140, 24, 8
     AUTORADIOBUTTON "&Bytes", IDC_BYTESRADIO, 39, 140, 34, 8
-    AUTORADIOBUTTON "&Word", IDC_WORDRADIO, 77, 140, 34, 8
+    AUTORADIOBUTTON "&Wörter", IDC_WORDSRADIO, 77, 140, 34, 8
+    LTEXT "D&aten:", IDC_DETAILS_STATIC, 8, 140, 24, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -168,6 +168,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Möchten Sie dieses Protokoll vor dem Löschen speichern?"
     IDS_RESTOREDEFAULTS "Möchten Sie alle Einstellungen für dieses Protokoll wieder auf die Standardwerte zurücksetzen?"
     IDS_EVENTSTRINGIDNOTFOUND "Die Bezeichnung für die Ereignis-ID ( %lu ) in der Quelle ( %s ) kann nicht gefunden werden. Es könnte sein, dass der lokale Computer die notwendigen Registry Einträge oder Nachrichten DLLs, um Nachrichten entfernter Computer anzuzeigen, nicht besitzt.\n\nDas Ereignis enthält folgende Informationen:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -220,16 +222,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Typ:            %s\r\n\
-Quelle:         %s\r\n\
-Kategorie:      %s\r\n\
-Ereignis-ID:    %s\r\n\
-Datum:          %s\r\n\
-Zeit:           %s\r\n\
-Benutzer:       %s\r\n\
-Computer:       %s\r\n\
-Beschreibung:\r\n%s"
+    IDS_COPY_EVTTYPE "Typ:"
+    IDS_COPY_EVTSRC  "Quelle:"
+    IDS_COPY_EVTCAT  "Kategorie:"
+    IDS_COPY_EVTID   "Ereignis-ID:"
+    IDS_COPY_EVTDATE "Datum:"
+    IDS_COPY_EVTTIME "Zeit:"
+    IDS_COPY_EVTUSER "Benutzer:"
+    IDS_COPY_EVTCOMP "Computer:"
+    IDS_COPY_EVTTEXT "Beschreibung:"
+    IDS_COPY_EVTDATA "Daten:"
 END
 
 STRINGTABLE

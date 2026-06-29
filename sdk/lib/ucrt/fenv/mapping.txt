@@ -1,0 +1,28 @@
+
+
+Bit     Value   MXCSR flag              Abstract flag           FE flag         __acrt_fenv_abstract_control
+--------------------------------------------------------------------------------------------------------------
+0       0x0001  _MM_EXCEPT_INVALID      _SW_INVALID     0x00010  FE_INVALID     invalid
+1       0x0002  _MM_EXCEPT_DENORM       _SW_DENORMAL    0x08000  -              denormal (0x20!)
+2       0x0004  _MM_EXCEPT_DIV_ZERO     _SW_ZERODIVIDE  0x00008  FE_DIVBYZERO   zero_divide
+3       0x0008  _MM_EXCEPT_OVERFLOW     _SW_OVERFLOW    0x00004  FE_OVERFLOW    overflow
+4       0x0010  _MM_EXCEPT_UNDERFLOW    _SW_UNDERFLOW   0x00002  FE_UNDERFLOW   underflow
+5       0x0020  _MM_EXCEPT_INEXACT      _SW_INEXACT     0x00001  FE_INEXACT     inexact
+6       0x0040  _MM_DENORMALS_ARE_ZERO
+7       0x0080  _MM_MASK_INVALID        _EM_INVALID     0x00010                 em_invalid
+8       0x0100  _MM_MASK_DENORM         _EM_DENORMAL    0x80000                 em_denormal (0x20!)
+9       0x0200  _MM_MASK_DIV_ZERO       _EM_ZERODIVIDE  0x00008                 em_zero_divide
+10      0x0400  _MM_MASK_OVERFLOW       _EM_OVERFLOW    0x00004                 em_overflow
+11      0x0800  _MM_MASK_UNDERFLOW      _EM_UNDERFLOW   0x00002                 em_underflow
+12      0x1000  _MM_MASK_INEXACT        _EM_INEXACT     0x00001                 em_inexact
+13-14   0x6000  _MM_ROUND_MASK          _MCW_RC         0x00300                 rc_mask
+          0x0000 _MM_ROUND_NEAREST      _RC_NEAR        0x00000  FE_TONEAREST   rc_near
+          0x2000  _MM_ROUND_DOWN        _RC_DOWN        0x00100  FE_DOWNWARD    rc_down
+          0x4000  _MM_ROUND_UP          _RC_UP          0x00200  FE_UPWARD      rc_up
+          0x6000  _MM_ROUND_TOWARD_ZERO _RC_CHOP        0x00300  FE_TOWARDZERO  rc_chop
+15      0x8000  _MM_FLUSH_ZERO_MASK
+6+15    0x8040
+          0x0000                        _DN_SAVE                        0x0000000 dn_save 0x0
+          0x0040  _MM_DENORMALS_ZERO    _DN_FLUSH_OPERANDS_SAVE_RESULTS 0x2000000 dn_flush_operands_save_results 0x800
+          0x8000  _MM_FLUSH_ZERO_MASK   _DN_SAVE_OPERANDS_FLUSH_RESULTS 0x3000000 dn_save_operands_flush_results 0xC00
+          0x8040                        _DN_FLUSH                       0x1000000 dn_flush 0x400

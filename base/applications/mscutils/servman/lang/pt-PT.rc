@@ -157,6 +157,7 @@ BEGIN
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "Alguns serviços dependem de outros serviços, controladores de sistema e grupos de ordenamento de carregamento. Se um componente do sistema for parado ou não estiver a ser executado correctamente, os serviços dependentes podem ser afectados.", IDC_STATIC, 8, 7, 238, 34
     LTEXT "Este serviço depende dos seguintes componentes do sistema:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "The following components depend on this service:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "Os seguintes componentes do sistema dependem deste serviço:", IDC_DEPEND_SERVICE, 8, 138, 236, 13
 END
 

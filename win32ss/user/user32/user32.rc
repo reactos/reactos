@@ -55,12 +55,13 @@ OCR_HAND CURSOR "resources/ocr_hand.cur"
 
 /* Icons */
 
-OIC_SAMPLE ICON "resources/oic_sample.ico"
-OIC_HAND ICON "resources/oic_hand.ico"
-OIC_QUES ICON "resources/oic_ques.ico"
-OIC_BANG ICON "resources/oic_bang.ico"
-OIC_NOTE ICON "resources/oic_note.ico"
-OIC_WINLOGO ICON "resources/oic_reactos.ico"
+100 ICON "resources/oic_sample.ico"     /* IDI_APPLICATION */
+101 ICON "resources/oic_bang.ico"       /* IDI_WARNING */
+102 ICON "resources/oic_ques.ico"       /* IDI_QUESTION */
+103 ICON "resources/oic_hand.ico"       /* IDI_ERROR */
+104 ICON "resources/oic_note.ico"       /* IDI_INFORMATION */
+105 ICON "resources/oic_reactos.ico"    /* IDI_WINLOGO */
+/* 106 ICON "resources/oic_shield.ico"     IDI_SHIELD */
 
 /* Bitmaps */
 

@@ -27,7 +27,7 @@ BOOLEAN IsUnattendedSetup = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
+BOOLEAN
 NTAPI
 CheckUnattendedSetup(
     IN OUT PUSETUP_DATA pSetupData)
@@ -47,7 +47,7 @@ CheckUnattendedSetup(
     if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
     {
         DPRINT("Does not exist: %S\n", UnattendInfPath);
-        return;
+        return IsUnattendedSetup;
     }
 
     /* Load 'unattend.inf' from installation media */
@@ -59,7 +59,7 @@ CheckUnattendedSetup(
     if (UnattendInf == INVALID_HANDLE_VALUE)
     {
         DPRINT("SpInfOpenInfFile() failed\n");
-        return;
+        return IsUnattendedSetup;
     }
 
     /* Open 'Unattend' section */
@@ -200,6 +200,7 @@ CheckUnattendedSetup(
 
 Quit:
     SpInfCloseInfFile(UnattendInf);
+    return IsUnattendedSetup;
 }
 
 VOID
@@ -1402,33 +1403,6 @@ Cleanup:
     }
 
     return ErrorNumber;
-}
-
-
-/* ENTRY-POINT ***************************************************************/
-
-/* Declared in ndk/umfuncs.h */
-NTSTATUS
-NTAPI
-LdrDisableThreadCalloutsForDll(
-    _In_ PVOID BaseAddress);
-
-BOOL
-NTAPI
-DllMain(
-    _In_ HINSTANCE hDll,
-    _In_ ULONG dwReason,
-    _In_opt_ PVOID pReserved)
-{
-    UNREFERENCED_PARAMETER(pReserved);
-
-    if (dwReason == DLL_PROCESS_ATTACH)
-    {
-        LdrDisableThreadCalloutsForDll(hDll);
-        ProcessHeap = RtlGetProcessHeap();
-    }
-
-    return TRUE;
 }
 
 /* EOF */

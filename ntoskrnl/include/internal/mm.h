@@ -109,8 +109,6 @@ typedef ULONG_PTR SWAPENTRY;
 #define PAGE_WRITETHROUGH                   (1024)
 #define PAGE_SYSTEM                         (2048)
 
-#define SEC_PHYSICALMEMORY                  (0x80000000)
-
 #define MC_USER                             (0)
 #define MC_SYSTEM                           (1)
 #define MC_MAXIMUM                          (2)
@@ -131,6 +129,13 @@ typedef ULONG_PTR SWAPENTRY;
 #define MM_ROUND_DOWN(x,s)                  \
     ((PVOID)(((ULONG_PTR)(x)) & ~((ULONG_PTR)(s)-1)))
 
+/* PAGE_ROUND_UP and PAGE_ROUND_DOWN equivalent, with support for 64-bit-only data types */
+#define PAGE_ROUND_UP_64(x) \
+    (((x) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
+
+#define PAGE_ROUND_DOWN_64(x) \
+    ((x) & ~(PAGE_SIZE - 1))
+
 #define PAGE_FLAGS_VALID_FOR_SECTION \
     (PAGE_READONLY | \
      PAGE_READWRITE | \
@@ -140,7 +145,8 @@ typedef ULONG_PTR SWAPENTRY;
      PAGE_EXECUTE_READWRITE | \
      PAGE_EXECUTE_WRITECOPY | \
      PAGE_NOACCESS | \
-     PAGE_NOCACHE)
+     PAGE_NOCACHE | \
+     PAGE_WRITECOMBINE)
 
 #define PAGE_IS_READABLE                    \
     (PAGE_READONLY | \
@@ -252,7 +258,6 @@ typedef struct _MEMORY_AREA
     ULONG Flags;
     BOOLEAN DeleteInProgress;
     ULONG Magic;
-    PVOID Vad;
 
     struct
     {
@@ -261,6 +266,11 @@ typedef struct _MEMORY_AREA
         LIST_ENTRY RegionListHead;
     } SectionData;
 } MEMORY_AREA, *PMEMORY_AREA;
+
+#define MI_SET_MEMORY_AREA_VAD(Vad) do { (Vad)->u.VadFlags.Spare |= 1; } while (0)
+#define MI_IS_MEMORY_AREA_VAD(Vad) (((Vad)->u.VadFlags.Spare & 1) != 0)
+#define MI_SET_ROSMM_VAD(Vad) do { (Vad)->u.VadFlags.Spare |= 2; } while (0)
+#define MI_IS_ROSMM_VAD(Vad) (((Vad)->u.VadFlags.Spare & 2) != 0)
 
 typedef struct _MM_RMAP_ENTRY
 {
@@ -369,6 +379,12 @@ typedef struct _MMPFNENTRY
     USHORT ParityError:1;
 } MMPFNENTRY;
 
+#ifdef _WIN64
+#define MI_PTE_FRAME_BITS 57
+#else
+#define MI_PTE_FRAME_BITS 25
+#endif
+
 // Mm internal
 typedef struct _MMPFN
 {
@@ -402,6 +418,9 @@ typedef struct _MMPFN
             USHORT ShortFlags;
         } e2;
     } u3;
+#ifdef _WIN64
+    ULONG UsedPageTableEntries;
+#endif
     union
     {
         MMPTE OriginalPte;
@@ -415,7 +434,7 @@ typedef struct _MMPFN
         ULONG_PTR EntireFrame;
         struct
         {
-            ULONG_PTR PteFrame:25;
+            ULONG_PTR PteFrame : MI_PTE_FRAME_BITS;
             ULONG_PTR InPageError:1;
             ULONG_PTR VerifierAllocation:1;
             ULONG_PTR AweAllocation:1;
@@ -611,6 +630,13 @@ MmLocateMemoryAreaByRegion(
     SIZE_T Length
 );
 
+BOOLEAN
+NTAPI
+MmIsAddressRangeFree(
+    _In_ PMMSUPPORT AddressSpace,
+    _In_ PVOID Address,
+    _In_ ULONG_PTR Length);
+
 PVOID
 NTAPI
 MmFindGap(
@@ -619,15 +645,6 @@ MmFindGap(
     ULONG_PTR Granularity,
     BOOLEAN TopDown
 );
-
-VOID
-NTAPI
-MiRosCheckMemoryAreas(
-   PMMSUPPORT AddressSpace);
-
-VOID
-NTAPI
-MiCheckAllProcessMemoryAreas(VOID);
 
 /* npool.c *******************************************************************/
 
@@ -684,12 +701,6 @@ MmBuildMdlFromPages(
 );
 
 /* mminit.c ******************************************************************/
-
-VOID
-NTAPI
-MmInit1(
-    VOID
-);
 
 CODE_SEG("INIT")
 BOOLEAN
@@ -795,18 +806,6 @@ NTAPI
 MmSetMemoryPriorityProcess(
     IN PEPROCESS Process,
     IN UCHAR MemoryPriority
-);
-
-/* i386/pfault.c *************************************************************/
-
-NTSTATUS
-NTAPI
-MmPageFault(
-    ULONG Cs,
-    PULONG Eip,
-    PULONG Eax,
-    ULONG Cr2,
-    ULONG ErrorCode
 );
 
 /* special.c *****************************************************************/
@@ -1642,12 +1641,17 @@ MmUnloadSystemImage(
     IN PVOID ImageHandle
 );
 
+#ifdef CONFIG_SMP
+BOOLEAN
+NTAPI
+MmVerifyImageIsOkForMpUse(
+    _In_ PVOID BaseAddress);
+#endif // CONFIG_SMP
+
 NTSTATUS
 NTAPI
 MmCheckSystemImage(
-    IN HANDLE ImageHandle,
-    IN BOOLEAN PurgeSection
-);
+    _In_ HANDLE ImageHandle);
 
 NTSTATUS
 NTAPI

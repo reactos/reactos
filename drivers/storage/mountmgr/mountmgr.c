@@ -995,7 +995,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
 
         FreePool(UniqueId);
         FreePool(TargetDeviceName.Buffer);
-        FreePool(DeviceInformation->DeviceName.Buffer);
+        FreePool(DeviceInformation->SymbolicName.Buffer);
         FreePool(DeviceInformation);
 
         KeReleaseSemaphore(&(DeviceExtension->DeviceLock), IO_NO_INCREMENT, 1, FALSE);

@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
    printf("Reading file\n");
    Status = ZwReadFile(FileHandle,
 			NULL,
-			(PIO_APC_ROUTINE)ApcRoutine,
+			ApcRoutine,
 			(PVOID) 0xdeadbeef,
 			&IoStatus,
 			Buffer,

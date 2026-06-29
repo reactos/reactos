@@ -3,6 +3,7 @@
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Test for SetFocus/GetFocus/GetGUIThreadInfo
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+*               Copyright 2024 Doug Lyons <douglyons@douglyons.com>
  */
 
 #include "precomp.h"
@@ -76,9 +77,61 @@ Test_CopyImage_Flags(UINT uType)
     DeleteObject(hImage);
 }
 
+static VOID
+Test_CopyImage_hImage_NULL(void)
+{
+    HANDLE hImg;
+    DWORD LastError;
+
+    /* Test NULL HANDLE return and GetLastError return. */
+    SetLastError(0xdeadbeef);
+    hImg = CopyImage(NULL, IMAGE_ICON, 16, 16, LR_COPYFROMRESOURCE);
+    LastError = GetLastError();
+    ok(LastError == ERROR_INVALID_CURSOR_HANDLE, "Wrong error 0x%08lx returned\n", LastError);
+    ok(!hImg, "Image returned should have been NULL, hImg was %p\n", hImg);
+
+    SetLastError(0xdeadbeef);
+    hImg = CopyImage(NULL, IMAGE_BITMAP, 16, 16, LR_COPYFROMRESOURCE);
+    LastError = GetLastError();
+    ok(LastError == ERROR_INVALID_HANDLE, "Wrong error 0x%08lx returned\n", LastError);
+    ok(!hImg, "Image returned should have been NULL, hImg was %p\n", hImg);
+
+
+    SetLastError(0xdeadbeef);
+    hImg = CopyImage(NULL, IMAGE_CURSOR, 16, 16, LR_COPYFROMRESOURCE);
+    LastError = GetLastError();
+    ok(LastError == ERROR_INVALID_CURSOR_HANDLE, "Wrong error 0x%08lx returned\n", LastError);
+    ok(!hImg, "Image returned should have been NULL, hImg was %p\n", hImg);
+
+    /* Test bad Flags for Invalid Parameter return */
+    SetLastError(0xdeadbeef);
+    /* 0x80000000 is an invalid flag value */
+    hImg = CopyImage(NULL, IMAGE_BITMAP, 16, 16, 0x80000000);
+    LastError = GetLastError();
+    ok(LastError == ERROR_INVALID_PARAMETER, "Wrong error 0x%08lx returned\n", LastError);
+    ok(!hImg, "Image returned should have been NULL, hImg was %p\n", hImg);
+
+    /* Test bad Type (5) GetLastError return value. Not Icon, Cursor, or Bitmap. */
+    SetLastError(0xdeadbeef);
+    hImg = CopyImage(NULL, 5, 16, 16, LR_COPYFROMRESOURCE);
+    LastError = GetLastError();
+    ok(LastError == ERROR_INVALID_PARAMETER, "Wrong error 0x%08lx returned\n", LastError);
+    ok(!hImg, "Image returned should have been NULL, hImg was %p\n", hImg);
+
+    /* Test bad type (5) GetLastError return value with good HANDLE */
+    hImg = CreateTestImage(IMAGE_ICON);
+    SetLastError(0xdeadbeef);
+    hImg = CopyImage(hImg, 5, 16, 16, LR_COPYFROMRESOURCE);
+    LastError = GetLastError();
+    ok(LastError == ERROR_INVALID_PARAMETER, "Wrong error 0x%08lx returned\n", LastError);
+    ok(!hImg, "Image returned should have been NULL, hImg was %p\n", hImg);
+    DeleteObject(hImg);
+}
+
 START_TEST(CopyImage)
 {
     Test_CopyImage_Flags(IMAGE_BITMAP);
     Test_CopyImage_Flags(IMAGE_CURSOR);
     Test_CopyImage_Flags(IMAGE_ICON);
+    Test_CopyImage_hImage_NULL();
 }

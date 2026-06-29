@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(msftedit.dll msftedit.spec)
 
 list(APPEND SOURCE
@@ -14,3 +12,4 @@ set_module_type(msftedit win32dll)
 target_link_libraries(msftedit uuid wine)
 add_importlibs(msftedit riched20 msvcrt kernel32 ntdll)
 add_cd_file(TARGET msftedit DESTINATION reactos/system32 FOR all)
+set_wine_module(msftedit)

@@ -356,7 +356,7 @@ CreateClassDeviceObject(
 	DeviceIdW = &DeviceNameU.Buffer[PrefixLength / sizeof(WCHAR)];
 	while (DeviceId < 9999)
 	{
-		DeviceNameU.Length = (USHORT)(PrefixLength + swprintf(DeviceIdW, L"%lu", DeviceId) * sizeof(WCHAR));
+		DeviceNameU.Length = (USHORT)(PrefixLength + _swprintf(DeviceIdW, L"%lu", DeviceId) * sizeof(WCHAR));
 		Status = IoCreateDevice(
 			DriverObject,
 			sizeof(CLASS_DEVICE_EXTENSION),
@@ -873,6 +873,8 @@ ClassPnp(
 			}
 			else
 				DeviceExtension->FileHandle = NULL;
+			if (DeviceExtension->InterfaceName.Length != 0)
+				IoSetDeviceInterfaceState(&DeviceExtension->InterfaceName, TRUE);
 			Irp->IoStatus.Status = Status;
 			IoCompleteRequest(Irp, IO_NO_INCREMENT);
 			return Status;
@@ -887,6 +889,8 @@ ClassPnp(
 			break;
 
         case IRP_MN_REMOVE_DEVICE:
+			if (DeviceExtension->InterfaceName.Length != 0)
+				IoSetDeviceInterfaceState(&DeviceExtension->InterfaceName, FALSE);
             if (DeviceExtension->FileHandle)
 			{
 				ZwClose(DeviceExtension->FileHandle);

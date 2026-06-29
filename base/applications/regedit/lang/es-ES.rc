@@ -435,6 +435,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Añade un nuevo valor de cadena"
     ID_EDIT_NEW_BINARYVALUE "Añade un nuevo valor binario"
     ID_EDIT_NEW_DWORDVALUE "Añade un nuevo valor de doble palabra"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importa un archivo de texto al Registro"
     ID_REGISTRY_EXPORTREGISTRYFILE "Exporta todo o parte del Registro a un archivo de texto"
     ID_REGISTRY_LOADHIVE "Carga un subárbol en el Registro"

@@ -385,13 +385,17 @@ USBCCGP_InitFunctionDescriptor(
     //
     // now init hardware id
     //
-    Index = swprintf(Buffer, L"USB\\VID_%04x&PID_%04x&Rev_%04x&MI_%02x", FDODeviceExtension->DeviceDescriptor->idVendor,
-                                                                         FDODeviceExtension->DeviceDescriptor->idProduct,
-                                                                         FDODeviceExtension->DeviceDescriptor->bcdDevice,
-                                                                         Descriptor->bFirstInterface) + 1;
-    Index += swprintf(&Buffer[Index], L"USB\\VID_%04x&PID_%04x&MI_%02x", FDODeviceExtension->DeviceDescriptor->idVendor,
-                                                                         FDODeviceExtension->DeviceDescriptor->idProduct,
-                                                                         Descriptor->bFirstInterface) + 1;
+    Index = _swprintf(Buffer,
+                      L"USB\\VID_%04x&PID_%04x&Rev_%04x&MI_%02x",
+                      FDODeviceExtension->DeviceDescriptor->idVendor,
+                      FDODeviceExtension->DeviceDescriptor->idProduct,
+                      FDODeviceExtension->DeviceDescriptor->bcdDevice,
+                      Descriptor->bFirstInterface) + 1;
+    Index += _swprintf(&Buffer[Index],
+                       L"USB\\VID_%04x&PID_%04x&MI_%02x",
+                       FDODeviceExtension->DeviceDescriptor->idVendor,
+                       FDODeviceExtension->DeviceDescriptor->idProduct,
+                       Descriptor->bFirstInterface) + 1;
 
     // allocate result buffer
     DescriptionBuffer = AllocateItem(NonPagedPool, (Index + 1) * sizeof(WCHAR));
@@ -412,9 +416,18 @@ USBCCGP_InitFunctionDescriptor(
     //
     // now init the compatible id
     //
-    Index = swprintf(Buffer, L"USB\\Class_%02x&SubClass_%02x&Prot_%02x", Descriptor->bFunctionClass, Descriptor->bFunctionSubClass, Descriptor->bFunctionProtocol) + 1;
-    Index += swprintf(&Buffer[Index], L"USB\\Class_%02x&SubClass_%02x",  Descriptor->bFunctionClass, Descriptor->bFunctionSubClass) + 1;
-    Index += swprintf(&Buffer[Index], L"USB\\Class_%02x", Descriptor->bFunctionClass) + 1;
+    Index = _swprintf(Buffer,
+                      L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
+                      Descriptor->bFunctionClass,
+                      Descriptor->bFunctionSubClass,
+                      Descriptor->bFunctionProtocol) + 1;
+    Index += _swprintf(&Buffer[Index],
+                       L"USB\\Class_%02x&SubClass_%02x",
+                       Descriptor->bFunctionClass,
+                       Descriptor->bFunctionSubClass) + 1;
+    Index += _swprintf(&Buffer[Index],
+                       L"USB\\Class_%02x",
+                       Descriptor->bFunctionClass) + 1;
 
     // allocate result buffer
     DescriptionBuffer = AllocateItem(NonPagedPool, (Index + 1) * sizeof(WCHAR));
@@ -549,13 +562,17 @@ USBCCG_InitIdsWithInterfaceDescriptor(
     //
     // now init hardware id
     //
-    Index = swprintf(Buffer, L"USB\\VID_%04x&PID_%04x&Rev_%04x&MI_%02x", FDODeviceExtension->DeviceDescriptor->idVendor,
-                                                                         FDODeviceExtension->DeviceDescriptor->idProduct,
-                                                                         FDODeviceExtension->DeviceDescriptor->bcdDevice,
-                                                                         FunctionIndex) + 1;
-    Index += swprintf(&Buffer[Index], L"USB\\VID_%04x&PID_%04x&MI_%02x", FDODeviceExtension->DeviceDescriptor->idVendor,
-                                                                         FDODeviceExtension->DeviceDescriptor->idProduct,
-                                                                         FunctionIndex) + 1;
+    Index = _swprintf(Buffer,
+                      L"USB\\VID_%04x&PID_%04x&Rev_%04x&MI_%02x",
+                      FDODeviceExtension->DeviceDescriptor->idVendor,
+                      FDODeviceExtension->DeviceDescriptor->idProduct,
+                      FDODeviceExtension->DeviceDescriptor->bcdDevice,
+                      FunctionIndex) + 1;
+    Index += _swprintf(&Buffer[Index],
+                       L"USB\\VID_%04x&PID_%04x&MI_%02x",
+                       FDODeviceExtension->DeviceDescriptor->idVendor,
+                       FDODeviceExtension->DeviceDescriptor->idProduct,
+                       FunctionIndex) + 1;
 
     // allocate result buffer
     DescriptionBuffer = AllocateItem(NonPagedPool, (Index + 1) * sizeof(WCHAR));
@@ -576,9 +593,18 @@ USBCCG_InitIdsWithInterfaceDescriptor(
     //
     // now init the compatible id
     //
-    Index = swprintf(Buffer, L"USB\\Class_%02x&SubClass_%02x&Prot_%02x", Descriptor->bInterfaceClass, Descriptor->bInterfaceSubClass, Descriptor->bInterfaceProtocol) + 1;
-    Index += swprintf(&Buffer[Index], L"USB\\Class_%02x&SubClass_%02x",  Descriptor->bInterfaceClass, Descriptor->bInterfaceSubClass) + 1;
-    Index += swprintf(&Buffer[Index], L"USB\\Class_%02x", Descriptor->bInterfaceClass) + 1;
+    Index = _swprintf(Buffer,
+                      L"USB\\Class_%02x&SubClass_%02x&Prot_%02x",
+                      Descriptor->bInterfaceClass,
+                      Descriptor->bInterfaceSubClass,
+                      Descriptor->bInterfaceProtocol) + 1;
+    Index += _swprintf(&Buffer[Index],
+                       L"USB\\Class_%02x&SubClass_%02x",
+                       Descriptor->bInterfaceClass,
+                       Descriptor->bInterfaceSubClass) + 1;
+    Index += _swprintf(&Buffer[Index],
+                       L"USB\\Class_%02x",
+                       Descriptor->bInterfaceClass) + 1;
 
     // allocate result buffer
     DescriptionBuffer = AllocateItem(NonPagedPool, (Index + 1) * sizeof(WCHAR));
@@ -607,10 +633,10 @@ NTSTATUS
 USBCCGP_LegacyEnum(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    ULONG Index;
+    ULONG Index, SubIndex;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     NTSTATUS Status = STATUS_SUCCESS;
-    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor, NextInterfaceDescriptor;
 
     //
     // get device extension
@@ -639,7 +665,7 @@ USBCCGP_LegacyEnum(
     //
     // init function descriptors
     //
-    FDODeviceExtension->FunctionDescriptorCount = 0;
+    FDODeviceExtension->FunctionDescriptorCount = FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces;
     for (Index = 0; Index < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces; Index++)
     {
         // get interface descriptor
@@ -654,24 +680,66 @@ USBCCGP_LegacyEnum(
             return STATUS_UNSUCCESSFUL;
         }
 
-        //
-        // init function descriptor
-        //
-        FDODeviceExtension->FunctionDescriptor[Index].FunctionNumber = Index;
-        FDODeviceExtension->FunctionDescriptor[Index].NumberOfInterfaces = 1;
-        FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR) * 1);
-        if (!FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList)
+        SubIndex = 0;
+        if (InterfaceDescriptor->bInterfaceClass == USB_DEVICE_CLASS_AUDIO)
+        {
+            // AUDIO CLASS lets group all audio interfaces together
+            //
+            // init function descriptor
+            //
+            FDODeviceExtension->FunctionDescriptor[Index].FunctionNumber = Index;
+            FDODeviceExtension->FunctionDescriptor[Index].NumberOfInterfaces = 1;
+            FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR) * FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces);
+            if (!FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList)
+            {
+                //
+                // no memory
+                //
+                FreeItem(FDODeviceExtension->FunctionDescriptor);
+                FDODeviceExtension->FunctionDescriptor = NULL;
+                FDODeviceExtension->FunctionDescriptorCount = 0;
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            //
+            // store interface descriptor
+            //
+            FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList[SubIndex] = InterfaceDescriptor;
+            while (TRUE)
+            {
+                NextInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(FDODeviceExtension->ConfigurationDescriptor, FDODeviceExtension->ConfigurationDescriptor, Index + SubIndex + 1, 0, -1, -1, -1);
+                if (!NextInterfaceDescriptor || NextInterfaceDescriptor->bInterfaceClass != USB_DEVICE_CLASS_AUDIO)
+                {
+                    // end of collection
+                    break;
+                }
+                SubIndex++;
+                ASSERT(SubIndex < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces);
+                FDODeviceExtension->FunctionDescriptor[Index].NumberOfInterfaces++;
+                FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList[SubIndex] = NextInterfaceDescriptor;
+            }
+        }
+        else
         {
             //
-            // no memory
+            // init function descriptor
             //
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
+            FDODeviceExtension->FunctionDescriptor[Index].FunctionNumber = Index;
+            FDODeviceExtension->FunctionDescriptor[Index].NumberOfInterfaces = 1;
+            FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR));
+            if (!FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList)
+            {
+                //
+                // no memory
+                //
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
 
-        //
-        // store interface descriptor
-        //
-        FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList[0] = InterfaceDescriptor;
+            //
+            // store interface descriptor
+            //
+            FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList[0] = InterfaceDescriptor;
+        }
 
         //
         // now init the device ids
@@ -685,11 +753,10 @@ USBCCGP_LegacyEnum(
             DPRINT1("[USBCCGP] Failed to init ids with %lx\n", Status);
             return Status;
         }
-
         //
-        // store function count
+        // increment interface count
         //
-        FDODeviceExtension->FunctionDescriptorCount++;
+        Index += SubIndex;
     }
 
     //
@@ -734,7 +801,7 @@ USBCCGP_EnumWithAudioLegacy(
         DPRINT1("Index %lu Descriptor %p\n", Index, InterfaceDescriptor);
         ASSERT(InterfaceDescriptor);
 
-        if (InterfaceDescriptor->bInterfaceClass != 0x1)
+        if (InterfaceDescriptor->bInterfaceClass != USB_DEVICE_CLASS_AUDIO)
         {
             //
             // collection contains non audio class

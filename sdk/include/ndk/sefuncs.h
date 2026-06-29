@@ -443,6 +443,7 @@ ZwOpenProcessToken(
     _In_ ACCESS_MASK DesiredAccess,
     _Out_ PHANDLE TokenHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI

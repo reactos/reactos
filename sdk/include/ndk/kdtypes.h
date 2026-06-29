@@ -91,11 +91,19 @@ typedef enum _SYSDBG_COMMAND
     SysDbgGetTriageDump = 29,
     SysDbgGetKdBlockEnable = 30,
     SysDbgSetKdBlockEnable = 31,
+#if (NTDDI_VERSION >= NTDDI_VISTA)
     SysDbgRegisterForUmBreakInfo = 32,
     SysDbgGetUmBreakPid = 33,
     SysDbgClearUmBreakPid = 34,
     SysDbgGetUmAttachPid = 35,
     SysDbgClearUmAttachPid = 36,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) // NTDDI_WIN81
+    SysDbgGetLiveKernelDump = 37,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_VB)
+    SysDbgKdPullRemoteFile = 38,
+#endif
 } SYSDBG_COMMAND;
 
 //
@@ -161,6 +169,96 @@ typedef struct _SYSDBG_TRIAGE_DUMP
     ULONG ThreadHandles;
     PHANDLE Handles;
 } SYSDBG_TRIAGE_DUMP, *PSYSDBG_TRIAGE_DUMP;
+
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) // NTDDI_WIN81
+
+typedef union _SYSDBG_LIVEDUMP_CONTROL_FLAGS
+{
+    struct
+    {
+        ULONG UseDumpStorageStack : 1;
+        ULONG CompressMemoryPagesData : 1;
+        ULONG IncludeUserSpaceMemoryPages : 1;
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS4)
+        ULONG AbortIfMemoryPressure : 1;
+#if (NTDDI_VERSION >= NTDDI_WIN11)
+        ULONG SelectiveDump : 1;
+        ULONG Reserved : 27;
+#else
+        ULONG Reserved : 28;
+#endif // (NTDDI_VERSION >= NTDDI_WIN11)
+#else
+        ULONG Reserved : 29;
+#endif // (NTDDI_VERSION >= NTDDI_WIN10_RS4)
+    };
+    ULONG AsUlong;
+} SYSDBG_LIVEDUMP_CONTROL_FLAGS;
+
+typedef union _SYSDBG_LIVEDUMP_CONTROL_ADDPAGES
+{
+    struct
+    {
+        ULONG HypervisorPages : 1;
+#if (NTDDI_VERSION >= NTDDI_WIN11)
+        ULONG NonEssentialHypervisorPages : 1;
+        ULONG Reserved : 30;
+#else
+        ULONG Reserved : 31;
+#endif
+    };
+    ULONG AsUlong;
+} SYSDBG_LIVEDUMP_CONTROL_ADDPAGES;
+
+#if (NTDDI_VERSION >= NTDDI_WIN11)
+
+typedef struct _SYSDBG_LIVEDUMP_SELECTIVE_CONTROL
+{
+    ULONG Version;
+    ULONG Size;
+    union
+    {
+        ULONGLONG Flags;
+        struct
+        {
+            ULONGLONG ThreadKernelStacks : 1;
+            ULONGLONG ReservedFlags : 63;
+        };
+    };
+    ULONGLONG Reserved[4];
+} SYSDBG_LIVEDUMP_SELECTIVE_CONTROL, *PSYSDBG_LIVEDUMP_SELECTIVE_CONTROL;
+
+#define SYSDBG_LIVEDUMP_CONTROL_VERSION         1
+#define SYSDBG_LIVEDUMP_CONTROL_VERSION_WIN11   2
+
+#endif // (NTDDI_VERSION >= NTDDI_WIN11)
+
+typedef struct _SYSDBG_LIVEDUMP_CONTROL
+{
+    ULONG Version;
+    ULONG BugCheckCode;
+    ULONG_PTR BugCheckParam1;
+    ULONG_PTR BugCheckParam2;
+    ULONG_PTR BugCheckParam3;
+    ULONG_PTR BugCheckParam4;
+    PVOID DumpFileHandle;
+    PVOID CancelEventHandle;
+    SYSDBG_LIVEDUMP_CONTROL_FLAGS Flags;
+    SYSDBG_LIVEDUMP_CONTROL_ADDPAGES AddPagesControl;
+#if (NTDDI_VERSION >= NTDDI_WIN11)
+    PSYSDBG_LIVEDUMP_SELECTIVE_CONTROL SelectiveControl;
+#endif
+} SYSDBG_LIVEDUMP_CONTROL, *PSYSDBG_LIVEDUMP_CONTROL;
+
+#endif // (NTDDI_VERSION >= NTDDI_WINBLUE)
+
+#if (NTDDI_VERSION >= NTDDI_WIN10_VB)
+
+typedef struct _SYSDBG_KD_PULL_REMOTE_FILE
+{
+    UNICODE_STRING ImageFileName;
+} SYSDBG_KD_PULL_REMOTE_FILE, *PSYSDBG_KD_PULL_REMOTE_FILE;
+
+#endif
 
 //
 // KD Structures

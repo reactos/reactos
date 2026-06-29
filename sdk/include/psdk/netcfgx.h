@@ -228,7 +228,7 @@ DECLARE_INTERFACE_(INetCfgComponentBindings, IUnknown)
 #define INetCfgComponentBindings_Release(p)                      (p)->lpVtbl->Release(p)
 #define INetCfgComponentBindings_BindTo(p,a)                     (p)->lpVtbl->BindTo(p,a)
 #define INetCfgComponentBindings_UnbindFrom(p,a)                 (p)->lpVtbl->UnbindFrom(p,a)
-#define INetCfgComponentBindings_SupportsBindingInterface(p,a,b) (p)->lpVtbl->UnbindFrom(p,a,b)
+#define INetCfgComponentBindings_SupportsBindingInterface(p,a,b) (p)->lpVtbl->SupportsBindingInterface(p,a,b)
 #define INetCfgComponentBindings_IsBoundTo(p,a)                  (p)->lpVtbl->IsBoundTo(p,a)
 #define INetCfgComponentBindings_IsBindableTo(p,a)               (p)->lpVtbl->IsBindableTo(p,a)
 #define INetCfgComponentBindings_EnumBindingPaths(p,a,b)         (p)->lpVtbl->EnumBindingPaths(p,a,b)
@@ -314,5 +314,101 @@ EXTERN_C const IID IID_INetCfg;
 #define NETCFG_S_CAUSED_SETUP_CHANGE                 0x8004A024
 #define NETCFG_S_COMMIT_NOW                          0x8004A025
 
+EXTERN_C const IID IID_INetCfgClass;
+
+#undef  INTERFACE
+#define INTERFACE   INetCfgClass
+DECLARE_INTERFACE_(INetCfgClass, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    STDMETHOD_(HRESULT,FindComponent) (THIS_ LPCWSTR pszwComponentId, INetCfgComponent **ppnccItem) PURE;
+    STDMETHOD_(HRESULT,EnumComponents) (THIS_ IEnumNetCfgComponent **ppenumComponent) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgClass_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgClass_AddRef(p)              (p)->lpVtbl->AddRef(p)
+#define INetCfgClass_Release(p)             (p)->lpVtbl->Release(p)
+#define INetCfgClass_FindComponent(p,a,b)   (p)->lpVtbl->FindComponent(p,a,b)
+#define INetCfgClass_EnumComponents(p,a)    (p)->lpVtbl->EnumComponents(p,a)
+#endif
+
+typedef 
+enum tagOBO_TOKEN_TYPE
+{
+    OBO_USER = 1,
+    OBO_COMPONENT = 2,
+    OBO_SOFTWARE = 3
+} OBO_TOKEN_TYPE;
+
+typedef struct tagOBO_TOKEN
+{
+    OBO_TOKEN_TYPE Type;
+    INetCfgComponent *pncc;
+    LPCWSTR pszwManufacturer;
+    LPCWSTR pszwProduct;
+    LPCWSTR pszwDisplayName;
+    BOOL fRegistered;
+} OBO_TOKEN;
+
+#define NSF_PRIMARYINSTALL 1
+#define NSF_POSTSYSINSTALL 2
+
+EXTERN_C const IID IID_INetCfgClassSetup;
+
+#undef  INTERFACE
+#define INTERFACE   INetCfgClassSetup
+DECLARE_INTERFACE_(INetCfgClassSetup, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    STDMETHOD_(HRESULT,SelectAndInstall)(THIS_ HWND hwndParent, OBO_TOKEN *pOboToken, INetCfgComponent **ppnccItem) PURE;
+    STDMETHOD_(HRESULT,Install)(THIS_ LPCWSTR pszwInfId, OBO_TOKEN *pOboToken, DWORD dwSetupFlags, DWORD dwUpgradeFromBuildNo,
+                                LPCWSTR pszwAnswerFile, LPCWSTR pszwAnswerSections, INetCfgComponent **ppnccItem) PURE;
+    STDMETHOD_(HRESULT,DeInstall)(THIS_ INetCfgComponent *pComponent, OBO_TOKEN *pOboToken, LPWSTR *pmszwRefs) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgClassSetup_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgClassSetup_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define INetCfgClassSetup_Release(p)                 (p)->lpVtbl->Release(p)
+#define INetCfgClassSetup_SelectAndInstall(p,a,b,c)  (p)->lpVtbl->SelectAndInstall(p,a,b,c)
+#define INetCfgClassSetup_Install(p,a,b,c,d,e,f,g)   (p)->lpVtbl->Install(p,a,b,c,d,e,f,g)
+#define INetCfgClassSetup_DeInstall(p,a,b,c)         (p)->lpVtbl->DeInstall(p,a,b,c)
+#endif
+
+EXTERN_C const IID IID_INetCfgSysPrep;
+
+#undef  INTERFACE
+#define INTERFACE   INetCfgSysPrep
+DECLARE_INTERFACE_(INetCfgSysPrep, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT,HrSetupSetFirstDword)(THIS_ LPCWSTR pwszSection, LPCWSTR pwszKey, DWORD dwValue) PURE;
+    STDMETHOD_(HRESULT,HrSetupSetFirstString)(THIS_ LPCWSTR pwszSection, LPCWSTR pwszKey, LPCWSTR pwszValue) PURE;
+    STDMETHOD_(HRESULT,HrSetupSetFirstStringAsBool)(THIS_ LPCWSTR pwszSection, LPCWSTR pwszKey, BOOL fValue) PURE;
+    STDMETHOD_(HRESULT,HrSetupSetFirstMultiSzField)(THIS_ LPCWSTR pwszSection, LPCWSTR pwszKey, LPCWSTR pmszValue) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgSysPrep_QueryInterface(p,a,b)                (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgSysPrep_AddRef(p)                            (p)->lpVtbl->AddRef(p)
+#define INetCfgSysPrep_Release(p)                           (p)->lpVtbl->Release(p)
+#define INetCfgSysPrep_HrSetupSetFirstDword(p,a,b,c)        (p)->lpVtbl->HrSetupSetFirstDword(p,a,b,c)
+#define INetCfgSysPrep_HrSetupSetFirstString(p,a,b,c)       (p)->lpVtbl->HrSetupSetFirstString(p,a,b,c)
+#define INetCfgSysPrep_HrSetupSetFirstStringAsBool(p,a,b,c) (p)->lpVtbl->HrSetupSetFirstStringAsBool(p,a,b,c)
+#define INetCfgSysPrep_HrSetupSetFirstMultiSzField(p,a,b,c) (p)->lpVtbl->HrSetupSetFirstMultiSzField(p,a,b,c)
+#endif
 
 #endif

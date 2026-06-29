@@ -1,17 +1,36 @@
 
 list(APPEND SOURCE
+    auto_array_ptr.h
     CConfiguration.cpp
+    CConfiguration.h
     CFatalException.cpp
+    CFatalException.h
     CInvalidParameterException.cpp
+    CInvalidParameterException.h
     CJournaledTestList.cpp
+    CJournaledTestList.h
     CPipe.cpp
+    CPipe.h
     CPipedProcess.cpp
+    CPipedProcess.h
     CProcess.cpp
+    CProcess.h
     CSimpleException.cpp
+    CSimpleException.h
+    CTest.h
+    CTestInfo.h
     CTestList.cpp
+    CTestList.h
     CVirtualTestList.cpp
+    CVirtualTestList.h
     CWebService.cpp
+    CWebService.h
+    CWebServiceLibCurl.cpp
+    CWebServiceLibCurl.h
+    CWebServiceWinInet.cpp
+    CWebServiceWinInet.h
     CWineTest.cpp
+    CWineTest.h
     main.cpp
     misc.cpp
     shutdown.cpp

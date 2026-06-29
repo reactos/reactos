@@ -416,7 +416,7 @@ static btrfs_chunk* add_chunk(LIST_ENTRY* chunks, uint64_t flags, btrfs_root* ch
         size = 0x800000;
 
     size = min(size, dev->dev_item.num_bytes / 10); // cap at 10%
-    size &= ~(sector_size - 1);
+    size &= ~(UINT64)(sector_size - 1);
 
     stripes = flags & BLOCK_FLAG_DUPLICATE ? 2 : 1;
 

@@ -52,7 +52,8 @@ public:
 
     /*****************************************************************************/
 
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(OUT HWND *phwnd)
+    STDMETHODIMP
+    GetWindow(OUT HWND *phwnd) override
     {
         if (!m_hWnd)
             return E_FAIL;
@@ -62,40 +63,42 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(
-        IN BOOL fEnterMode)
+    STDMETHODIMP
+    ContextSensitiveHelp(IN BOOL fEnterMode) override
     {
         /* FIXME: Implement */
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE ShowDW(
-        IN BOOL bShow)
+    STDMETHODIMP
+    ShowDW(IN BOOL bShow) override
     {
         /* We don't do anything... */
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE CloseDW(
-        IN DWORD dwReserved)
+    STDMETHODIMP
+    CloseDW(IN DWORD dwReserved) override
     {
         /* We don't do anything... */
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(
+    STDMETHODIMP
+    ResizeBorderDW(
         LPCRECT prcBorder,
         IUnknown *punkToolbarSite,
-        BOOL fReserved)
+        BOOL fReserved) override
     {
         /* No need to implement this method */
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetBandInfo(
+    STDMETHODIMP
+    GetBandInfo(
         IN DWORD dwBandID,
         IN DWORD dwViewMode,
-        IN OUT DESKBANDINFO *pdbi)
+        IN OUT DESKBANDINFO *pdbi) override
     {
         TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
 
@@ -151,13 +154,25 @@ public:
 
     /*****************************************************************************/
     // *** IOleCommandTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
+
+    STDMETHODIMP
+    QueryStatus(
+        const GUID *pguidCmdGroup,
+        ULONG cCmds,
+        OLECMD prgCmds [],
+        OLECMDTEXT *pCmdText) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+    STDMETHODIMP
+    Exec(
+        const GUID *pguidCmdGroup,
+        DWORD nCmdID,
+        DWORD nCmdexecopt,
+        VARIANT *pvaIn,
+        VARIANT *pvaOut) override
     {
         if (IsEqualIID(*pguidCmdGroup, IID_IBandSite))
         {
@@ -175,22 +190,22 @@ public:
 
     /*****************************************************************************/
 
-    virtual HRESULT STDMETHODCALLTYPE SetClient(
-        IN IUnknown *punkClient)
+    STDMETHODIMP
+    SetClient(IN IUnknown *punkClient) override
     {
         TRACE("IDeskBar::SetClient(0x%p)\n", punkClient);
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetClient(
-        OUT IUnknown **ppunkClient)
+    STDMETHODIMP
+    GetClient(OUT IUnknown **ppunkClient) override
     {
         TRACE("IDeskBar::GetClient(0x%p)\n", ppunkClient);
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE OnPosRectChangeDB(
-        IN RECT *prc)
+    STDMETHODIMP
+    OnPosRectChangeDB(IN RECT *prc) override
     {
         TRACE("IDeskBar::OnPosRectChangeDB(0x%p=(%d,%d,%d,%d))\n", prc, prc->left, prc->top, prc->right, prc->bottom);
         if (prc->bottom - prc->top == 0)
@@ -201,8 +216,8 @@ public:
 
     /*****************************************************************************/
 
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(
-        OUT CLSID *pClassID)
+    STDMETHODIMP
+    GetClassID(OUT CLSID *pClassID) override
     {
         TRACE("CTaskBand::GetClassID(0x%p)\n", pClassID);
         /* We're going to return the (internal!) CLSID of the task band interface */
@@ -210,30 +225,32 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE IsDirty()
+    STDMETHODIMP
+    IsDirty() override
     {
         /* The object hasn't changed since the last save! */
         return S_FALSE;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Load(
-        IN IStream *pStm)
+    STDMETHODIMP
+    Load(IN IStream *pStm) override
     {
         TRACE("CTaskBand::Load called\n");
         /* Nothing to do */
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Save(
+    STDMETHODIMP
+    Save(
         IN IStream *pStm,
-        IN BOOL fClearDirty)
+        IN BOOL fClearDirty) override
     {
         /* Nothing to do */
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(
-        OUT ULARGE_INTEGER *pcbSize)
+    STDMETHODIMP
+    GetSizeMax(OUT ULARGE_INTEGER *pcbSize) override
     {
         TRACE("CTaskBand::GetSizeMax called\n");
         /* We don't need any space for the task band */
@@ -243,7 +260,8 @@ public:
 
     /*****************************************************************************/
 
-    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite)
+    STDMETHODIMP
+    SetSite(IUnknown *pUnkSite) override
     {
         HRESULT hRet;
         HWND hwndSite;
@@ -269,9 +287,10 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetSite(
+    STDMETHODIMP
+    GetSite(
         IN REFIID riid,
-        OUT VOID **ppvSite)
+        OUT VOID **ppvSite) override
     {
         TRACE("CTaskBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
 
@@ -286,37 +305,20 @@ public:
 
     /*****************************************************************************/
 
-    virtual HRESULT STDMETHODCALLTYPE ProcessMessage(
-        IN HWND hWnd,
-        IN UINT uMsg,
-        IN WPARAM wParam,
-        IN LPARAM lParam,
-        OUT LRESULT *plrResult)
-    {
-        TRACE("CTaskBand: IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
-        return E_NOTIMPL;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE ContainsWindow(
-        IN HWND hWnd)
-    {
-        if (hWnd == m_hWnd ||
-            IsChild(m_hWnd, hWnd))
-        {
-            TRACE("CTaskBand::ContainsWindow(0x%p) returns S_OK\n", hWnd);
-            return S_OK;
-        }
-
-        return S_FALSE;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+    STDMETHODIMP
+    OnWinEvent(
+        HWND hWnd,
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam,
+        LRESULT *theResult) override
     {
         //UNIMPLEMENTED;
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd)
+    STDMETHODIMP
+    IsWindowOwner(HWND hWnd) override
     {
         return (hWnd == m_hWnd) ? S_OK : S_FALSE;
     }

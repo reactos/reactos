@@ -434,6 +434,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Додає нове рядкове значення"
     ID_EDIT_NEW_BINARYVALUE "Додає нове двійкове значення"
     ID_EDIT_NEW_DWORDVALUE "Додає нове DWORD-значення"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "Імпортує текстовий файл до реєстру"
     ID_REGISTRY_EXPORTREGISTRYFILE "Експортує весь реєстр або його частину в текстовий файл"
     ID_REGISTRY_LOADHIVE "Loads a hive file into the registry"

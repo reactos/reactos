@@ -5,7 +5,7 @@
  * TRANSLATORS: Copyright 2007 Olaf Siejka <caemyr@gmail.com>
  *              Copyright 2009 Maciej Bialas <bjauy@o2.pl>
  *              Copyright 2017 Marcin Mikołajczak <me@m4sk.in>
- *              Copyright 2020-2024 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ *              Copyright 2020-2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -175,7 +175,7 @@ BEGIN
     LTEXT            "Elementy menu Start:", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "StartMenuSe&ttings", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "Niedawno używane dokumenty ", IDC_STATIC, 7, 133, 238, 56
-    LTEXT            "Zaznacz tę opcję, aby zapewnić szybki dostęp do niedawno otwieranych dokumentów.  Wyczyszczenie tej listy nie powoduje usunięcia dokumentów.", IDC_STATIC, 14, 144, 224, 21
+    LTEXT            "Zaznacz tę opcję, aby zapewnić szybki dostęp do niedawno otwieranych dokumentów.  Wyczyszczenie tej listy nie powoduje usunięcia dokumentów.", IDC_STATIC, 14, 144, 224, 24
     AUTOCHECKBOX     "Wyświetl moje ostatnio otwierane dokumenty", IDC_RECENTLY, 14, 171, 162, 10
     PUSHBUTTON       "Wy&czyść listę", IDC_CLEAR, 182, 168, 55, 14
 END
@@ -218,5 +218,5 @@ BEGIN
     IDS_RESTORE_ALL "&Pokaż otwarte okna"
     IDS_TRAYWND_UNDO_CASCADE "&Cofnij kaskadowe ułożenie okien"
     IDS_TRAYWND_UNDO_TILE "&Cofnij sąsiadujące ułożenie okien"
-    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
+    IDS_TRAYDESKBTN_TOOLTIP "Pokaż pulpit/okna"
 END

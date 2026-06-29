@@ -1571,10 +1571,10 @@ FsRtlAcquireFileExclusiveCommon(IN PFILE_OBJECT FileObject,
     /* Get master FsRtl lock */
     FsRtlEnterFileSystem();
 
-    DriverExtension = (PEXTENDED_DRIVER_EXTENSION)DeviceObject->DriverObject->DriverExtension;
+    DriverExtension = IoGetDrvObjExtension(DeviceObject->DriverObject);
     FilterCallbacks = DriverExtension->FsFilterCallbacks;
 
-    /* Check if Filter Cllbacks are supported */
+    /* Check if Filter Callbacks are supported */
     if (FilterCallbacks && FilterCallbacks->PreAcquireForSectionSynchronization)
     {
         NTSTATUS Status;
@@ -2038,7 +2038,7 @@ FsRtlRegisterFileSystemFilterCallbacks(
     RtlCopyMemory(NewCallbacks, Callbacks, Callbacks->SizeOfFsFilterCallbacks);
 
     /* Set the callbacks in the driver extension */
-    DriverExtension = (PEXTENDED_DRIVER_EXTENSION)FilterDriverObject->DriverExtension;
+    DriverExtension = IoGetDrvObjExtension(FilterDriverObject);
     DriverExtension->FsFilterCallbacks = NewCallbacks;
 
     return STATUS_SUCCESS;

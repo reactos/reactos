@@ -16,6 +16,7 @@ list(APPEND _keyboard_layouts
     kbdbu
     kbdbur
     kbdcan
+    kbdcmk
     kbdcr
     kbdcz
     kbdcz1
@@ -31,6 +32,8 @@ list(APPEND _keyboard_layouts
     kbdgneo
     kbdgr
     kbdgr1
+    kbdgre1
+    kbdgrist
     kbdhe
     kbdheb
     kbdhu
@@ -114,6 +117,6 @@ foreach(_keyboard_layout ${_keyboard_layouts})
         target_link_libraries(${_keyboard_layout} runtmchk)
     endif()
 
-    add_dependencies(${_keyboard_layout} psdk)
+    add_dependencies(${_keyboard_layout} xdk)
     add_cd_file(TARGET ${_keyboard_layout} DESTINATION reactos/system32 FOR all)
 endforeach()

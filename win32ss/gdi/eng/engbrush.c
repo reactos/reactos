@@ -132,20 +132,42 @@ EBRUSHOBJ_vSetSolidRGBColor(EBRUSHOBJ *pebo, COLORREF crColor)
     pebo->crRealize = crColor;
     pebo->ulRGBColor = crColor;
 
-    /* Initialize an XLATEOBJ RGB -> surface */
-    EXLATEOBJ_vInitialize(&exlo,
-                          &gpalRGB,
-                          pebo->ppalSurf,
-                          pebo->crCurrentBack,
-                          0,
-                          0);
+    /* Special handling for mono-surfaces */
+    if (pebo->ppalSurf->flFlags & PAL_MONOCHROME)
+    {
+        /* Determine the indices for back and fore color */
+        ULONG iBackIndex =
+            PALETTE_ulGetNearestPaletteIndex(pebo->ppalSurf, pebo->crCurrentBack);
+        ULONG iForeIndex = iBackIndex ^ 1;
 
-    /* Translate the brush color to the target format */
-    iSolidColor = XLATEOBJ_iXlate(&exlo.xlo, crColor);
-    pebo->BrushObject.iSolidColor = iSolidColor;
+        /* Get the translated back color */
+        ULONG rgbBack = PALETTE_ulGetRGBColorFromIndex(pebo->ppalSurf, iBackIndex);
 
-    /* Clean up the XLATEOBJ */
-    EXLATEOBJ_vCleanup(&exlo);
+        /* Match the pen color against RGB and translated background color */
+        if ((crColor == rgbBack) || (crColor == pebo->crCurrentBack))
+                pebo->BrushObject.iSolidColor = iBackIndex;
+        else
+            pebo->BrushObject.iSolidColor = iForeIndex;
+
+        pebo->flattrs |= BR_NEED_BK_CLR;
+    }
+    else
+    {
+        /* Initialize an XLATEOBJ RGB -> surface */
+        EXLATEOBJ_vInitialize(&exlo,
+                              &gpalRGB,
+                              pebo->ppalSurf,
+                              pebo->crCurrentBack,
+                              0,
+                              0);
+
+        /* Translate the brush color to the target format */
+        iSolidColor = XLATEOBJ_iXlate(&exlo.xlo, crColor);
+        pebo->BrushObject.iSolidColor = iSolidColor;
+
+        /* Clean up the XLATEOBJ */
+        EXLATEOBJ_vCleanup(&exlo);
+    }
 }
 
 VOID

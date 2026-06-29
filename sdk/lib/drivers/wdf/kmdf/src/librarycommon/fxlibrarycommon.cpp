@@ -9,20 +9,29 @@ extern "C" {
 //
 // This will cause inclusion of VfWdfFunctions table implementation from header
 //
-#define  VF_FX_DYNAMICS_GENERATE_TABLE   1
+// TODO: Uncomment when implement verified functions table
+//#define  VF_FX_DYNAMICS_GENERATE_TABLE   1
 
 //
 // Compute the length based on the max. service name length and the rest of the
 // error string as seen in ReportDdiFunctionCountMismatch
 //
+// TODO: Fix this !!!
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
 #define EVTLOG_DDI_COUNT_ERROR_MAX_LEN (53 + MAX_PATH)
 
 #include "fx.hpp"
 #include "fxldr.h"
 #include "fxlibrarycommon.h"
 #include "fxtelemetry.hpp"
+#ifndef __REACTOS__
 #include "wdfversionlog.h"
 #include "minwindef.h"
+#else
+#include "reactos_special.h"
+#endif
 
 extern "C" {
 //
@@ -211,16 +220,19 @@ ReportDdiFunctionCountMismatch(
     //
     // Report a telemetry event that can be used to proactively fix drivers
     //
+#ifndef __REACTOS__
     TraceLoggingWrite(g_TelemetryProvider,
                     "KmdfClientFunctionCountMismatch",
                     WDF_TELEMETRY_EVT_KEYWORDS,
                     TraceLoggingUnicodeString(ServiceName, "ServiceName"),
                     TraceLoggingUInt32(ActualFunctionCount, "FunctionCount"),
                     TraceLoggingUInt32(ExpectedFunctionCount, "ExpectedCount"));
+#endif
 }
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxLibraryCommonCommission(
     VOID
     )
@@ -244,6 +256,7 @@ FxLibraryCommonCommission(
     //
     // register telemetry provider.
     //
+#ifndef __REACTOS__
     RegisterTelemetryProvider();
 
     //
@@ -261,7 +274,7 @@ FxLibraryCommonCommission(
         //
         status = STATUS_SUCCESS;
     }
-
+#endif
     //
     // Attempt to load RtlGetVersion (works for > w2k).
     //
@@ -290,6 +303,7 @@ FxLibraryCommonCommission(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxLibraryCommonDecommission(
     VOID
     )
@@ -300,17 +314,18 @@ FxLibraryCommonDecommission(
     // Uninitialize WPP tracing.
     //
     if (FxLibraryGlobals.InternalTracingInitialized) {
-        TraceUninitialize();
+        //TraceUninitialize(); __REACTOS__ : not compiled
         FxLibraryGlobals.InternalTracingInitialized = FALSE;
     }
 
     //
     // Unregister telemetry provider.
     //
-    UnregisterTelemetryProvider();
+    //UnregisterTelemetryProvider(); __REACTOS__ : not compiled
 
+#ifndef __REACTOS__
     EventUnregisterMicrosoft_Windows_DriverFrameworks_KernelMode_Performance();
-
+#endif // __REACTOS__
     //
     // Decommission this version's DLL globals.
     //
@@ -327,6 +342,7 @@ FxLibraryCommonDecommission(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxLibraryCommonRegisterClient(
     __inout PWDF_BIND_INFO        Info,
     __deref_out PWDF_DRIVER_GLOBALS *WdfDriverGlobals,
@@ -478,8 +494,14 @@ FxLibraryCommonRegisterClient(
         }
         else {
             __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
-                     ": Enhanced Verification is ON \n"));
+                     "Verifier functions table NOT IMPLEMENTED\n"));
 
+            DbgBreakPoint();
+
+            __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
+                     ": Enhanced Verification is ON\n"));
+
+#ifndef __REACTOS__
             LockVerifierSection(fxDriverGlobals, ClientInfo->RegistryPath);
 
             if (Microsoft_Windows_DriverFrameworks_KernelMode_PerformanceHandle == NULL) {
@@ -504,6 +526,7 @@ FxLibraryCommonRegisterClient(
                 //
                 *((WDFFUNC**) Info->FuncTable) = (WDFFUNC*) &VfWdfVersion.Functions;
             }
+#endif // __REACTOS__
         }
 
         status = STATUS_SUCCESS;
@@ -521,6 +544,7 @@ Done:
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 FxLibraryCommonUnregisterClient(
     __in PWDF_BIND_INFO        Info,
     __in PWDF_DRIVER_GLOBALS   WdfDriverGlobals

@@ -238,8 +238,10 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
                                                                                     \
     if ((CheckData)->IsAcquired)                                                    \
         ExpectedIrql = (CheckData)->IrqlWhenAcquired;                               \
-    ok_irql(ExpectedIrql);                                                          \
-    ok_bool_false(KeAreApcsDisabled(), "KeAreApcsDisabled returned");               \
+    if (GetNTVersion() < _WIN32_WINNT_WIN8)                                         \
+        ok_irql(ExpectedIrql);                                                      \
+    if (GetNTVersion() == _WIN32_WINNT_WS03)                                        \
+        ok_bool_false(KeAreApcsDisabled(), "KeAreApcsDisabled returned");           \
     ok_bool_true(KmtAreInterruptsEnabled(), "Interrupts enabled:");                 \
 } while (0)
 
@@ -257,9 +259,15 @@ TestSpinLock(
     if (SpinLock)
         ok_eq_ulongptr(*SpinLock, 0);
     CheckData->Acquire(SpinLock, CheckData);
-    CheckSpinLock(SpinLock, CheckData, 1);
+#ifdef _M_IX86
+    if (GetNTVersion() < _WIN32_WINNT_WIN8)
+        CheckSpinLock(SpinLock, CheckData, 1);
+#endif
     CheckData->Release(SpinLock, CheckData);
-    CheckSpinLock(SpinLock, CheckData, 0);
+#ifdef _M_IX86
+    if (GetNTVersion() < _WIN32_WINNT_WIN8)
+        CheckSpinLock(SpinLock, CheckData, 0);
+#endif
 
     if (CheckData->TryAcquire)
     {
@@ -295,19 +303,31 @@ TestSpinLock(
     {
         /* acquire/release without irql change */
         CheckData->AcquireNoRaise(SpinLock, CheckData);
-        CheckSpinLock(SpinLock, CheckData, 1);
+#ifdef _M_IX86
+        // Fails on x64 and Windows 8+
+        if (GetNTVersion() < _WIN32_WINNT_WIN8)
+            CheckSpinLock(SpinLock, CheckData, 1);
+#endif
         CheckData->ReleaseNoLower(SpinLock, CheckData);
         CheckSpinLock(SpinLock, CheckData, 0);
 
         /* acquire without raise, but normal release */
         CheckData->AcquireNoRaise(SpinLock, CheckData);
-        CheckSpinLock(SpinLock, CheckData, 1);
+#ifdef _M_IX86
+        // Fails on x64 and Windows 8+
+        if (GetNTVersion() < _WIN32_WINNT_WIN8)
+            CheckSpinLock(SpinLock, CheckData, 1);
+#endif
         CheckData->Release(SpinLock, CheckData);
         CheckSpinLock(SpinLock, CheckData, 0);
 
         /* acquire normally but release without lower */
         CheckData->Acquire(SpinLock, CheckData);
-        CheckSpinLock(SpinLock, CheckData, 1);
+#ifdef _M_IX86
+        // Fails on x64 and Windows 8+
+        if (GetNTVersion() < _WIN32_WINNT_WIN8)
+            CheckSpinLock(SpinLock, CheckData, 1);
+#endif
         CheckData->ReleaseNoLower(SpinLock, CheckData);
         CheckSpinLock(SpinLock, CheckData, 0);
         CheckData->IsAcquired = FALSE;
@@ -349,7 +369,7 @@ START_TEST(KeSpinLock)
     PKSPIN_LOCK pSpinLock = &SpinLock;
     KIRQL Irql, SynchIrql = KmtIsMultiProcessorBuild ? IPI_LEVEL - 2 : DISPATCH_LEVEL;
     KIRQL OriginalIrqls[] = { PASSIVE_LEVEL, APC_LEVEL, DISPATCH_LEVEL, HIGH_LEVEL };
-    CHECK_DATA TestData[] =
+    CHECK_DATA TestDataWS03[] =
     {
         { CheckLock,        DISPATCH_LEVEL, AcquireNormal,        ReleaseNormal,        NULL,           AcquireNoRaise,        ReleaseNoLower,        TryNoRaise },
         { CheckLock,        DISPATCH_LEVEL, AcquireExp,           ReleaseExp,           NULL,           AcquireExpNoRaise,     ReleaseExpNoLower,     NULL },
@@ -363,6 +383,18 @@ START_TEST(KeSpinLock)
         { CheckQueue,       DISPATCH_LEVEL, AcquireQueued,        ReleaseQueued,        TryQueued,      NULL,                  NULL,                  NULL,       LockQueuePfnLock },
         { CheckQueue,       SynchIrql,      AcquireQueuedSynch,   ReleaseQueued,        TryQueuedSynch, NULL,                  NULL,                  NULL,       LockQueuePfnLock },
     };
+    CHECK_DATA TestDataWin7[] = 
+    {
+        { CheckLock,        DISPATCH_LEVEL, AcquireNormal,        ReleaseNormal,        NULL,           AcquireNoRaise,        ReleaseNoLower,        TryNoRaise },
+        { CheckLock,        DISPATCH_LEVEL, AcquireExp,           ReleaseExp,           NULL,           AcquireExpNoRaise,     ReleaseExpNoLower,     NULL },
+        { CheckLock,        DISPATCH_LEVEL, AcquireNormal,        ReleaseNormal,        NULL,           AcquireInt,            ReleaseInt,            NULL },
+        { CheckLock,        SynchIrql,      AcquireSynch,         ReleaseNormal,        NULL,           NULL,                  NULL,                  NULL },
+        { CheckQueueHandle, DISPATCH_LEVEL, AcquireInStackQueued, ReleaseInStackQueued, NULL,           AcquireInStackNoRaise, ReleaseInStackNoRaise, NULL },
+        { CheckQueueHandle, SynchIrql,      AcquireInStackSynch,  ReleaseInStackQueued, NULL,           NULL,                  NULL,                  NULL },
+        { CheckQueueHandle, DISPATCH_LEVEL, AcquireInStackQueued, ReleaseInStackQueued, NULL,           AcquireInStackForDpc,  ReleaseInStackForDpc,  NULL },
+    };
+    CHECK_DATA *TestData;
+    ULONG TestElements;
     int i, iIrql;
     PKPRCB Prcb;
 
@@ -398,7 +430,30 @@ START_TEST(KeSpinLock)
     if (!KmtIsMultiProcessorBuild && !KmtIsCheckedBuild)
         pSpinLock = NULL;
 
-    for (i = 0; i < sizeof TestData / sizeof TestData[0]; ++i)
+    switch (GetNTVersion())
+    {
+        case _WIN32_WINNT_VISTA:
+#ifdef _M_X64
+            skip(FALSE, "This test is broken on Vista x64.\n");
+            goto done;
+#endif
+        case _WIN32_WINNT_WS03:
+            TestData = TestDataWS03;
+            TestElements = RTL_NUMBER_OF(TestDataWS03);
+            break;
+        case _WIN32_WINNT_WIN7:
+        case _WIN32_WINNT_WIN8:
+        case _WIN32_WINNT_WINBLUE:
+        case _WIN32_WINNT_WIN10:
+            TestData = TestDataWin7;
+            TestElements = RTL_NUMBER_OF(TestDataWin7);
+            break;
+        default:
+            skip(FALSE, "Unknown NT version (0x%X).\n", GetNTVersion());
+            goto done;
+    }
+
+    for (i = 0; i < TestElements; ++i)
     {
         memset(&SpinLock, 0x55, sizeof SpinLock);
         KeInitializeSpinLock(&SpinLock);
@@ -423,6 +478,6 @@ START_TEST(KeSpinLock)
             KeLowerIrql(Irql);
         }
     }
-
+done:
     KmtSetIrql(PASSIVE_LEVEL);
 }

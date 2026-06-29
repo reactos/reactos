@@ -63,7 +63,7 @@ CreateDIBPalette(
         cColors = 1 << cBitsPixel;
 
         /* Allocate the palette */
-        ppal = PALETTE_AllocPalette(PAL_INDEXED,
+        ppal = PALETTE_AllocPalette(PAL_INDEXED | PAL_DIBSECTION,
                                     cColors,
                                     NULL,
                                     0,
@@ -221,7 +221,7 @@ CreateDIBPalette(
         }
 
         /* Allocate the bitfield palette */
-        ppal = PALETTE_AllocPalette(PAL_BITFIELDS,
+        ppal = PALETTE_AllocPalette(PAL_BITFIELDS | PAL_DIBSECTION,
                                     0,
                                     NULL,
                                     flRedMask,
@@ -519,22 +519,16 @@ NtGdiSetDIBitsToDeviceInternal(
     _SEH2_END;
 
     DPRINT("StartScan %d ScanLines %d Bits %p bmi %p ColorUse %d\n"
-           "    Height %d Width %d SizeImage %d\n"
+           "    Height %d Width %d biSizeImage %d\n"
            "    biHeight %d biWidth %d biBitCount %d\n"
-           "    XSrc %d YSrc %d xDext %d yDest %d\n",
+           "    XSrc %d YSrc %d XDest %d YDest %d\n",
            StartScan, ScanLines, Bits, bmi, ColorUse,
            Height, Width, bmi->bmiHeader.biSizeImage,
            bmi->bmiHeader.biHeight, bmi->bmiHeader.biWidth,
            bmi->bmiHeader.biBitCount,
            XSrc, YSrc, XDest, YDest);
 
-    if (YDest >= 0)
-    {
-        ScanLines = min(abs(Height), ScanLines);
-        if (YSrc > 0)
-            ScanLines += YSrc;
-    }
-    else
+    if (YDest < 0)
     {
         ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
     }
@@ -582,10 +576,6 @@ NtGdiSetDIBitsToDeviceInternal(
 
     SourceSize.cx = bmi->bmiHeader.biWidth;
     SourceSize.cy = ScanLines;
-    if (YDest >= 0 && YSrc > 0)
-    {
-        ScanLines += YSrc;
-    }
 
     //DIBWidth = WIDTH_BYTES_ALIGN32(SourceSize.cx, bmi->bmiHeader.biBitCount);
 
@@ -1401,13 +1391,13 @@ NtGdiStretchDIBitsInternal(
         {
             NtGdiBitBlt(hdc, xDst, yDst, cxDst, cyDst,
                         hdcMem, xSrc, abs(pbmiSafe->bmiHeader.biHeight) - cySrc - ySrc,
-                        dwRop, 0, 0);
+                        dwRop, CLR_INVALID, 0);
         }
         else
         {
             NtGdiStretchBlt(hdc, xDst, yDst, cxDst, cyDst,
                             hdcMem, xSrc, abs(pbmiSafe->bmiHeader.biHeight) - cySrc - ySrc,
-                            cxSrc, cySrc, dwRop, 0);
+                            cxSrc, cySrc, dwRop, CLR_INVALID);
         }
 
         /* cleanup */

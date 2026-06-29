@@ -23,9 +23,6 @@
 #include <shlobj.h>
 #include <dlgs.h>
 #include <cderr.h>
-/* RegGetValueW is supported by Win2k3 SP1 but headers need Win Vista */
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
 #include <winreg.h>
 #define NO_SHLWAPI_STREAM
 #include <shlwapi.h>

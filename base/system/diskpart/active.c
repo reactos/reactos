@@ -12,7 +12,7 @@
 #include <debug.h>
 
 
-BOOL
+EXIT_CODE
 active_main(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -24,33 +24,40 @@ active_main(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentPartition == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_PARTITION);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
-    if (CurrentPartition->BootIndicator)
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        ConResPuts(StdOut, IDS_ACTIVE_ALREADY);
-        return TRUE;
-    }
+        if (CurrentPartition->Mbr.BootIndicator)
+        {
+            ConResPuts(StdOut, IDS_ACTIVE_ALREADY);
+            return EXIT_SUCCESS;
+        }
 
-    CurrentPartition->BootIndicator = TRUE;
-    CurrentDisk->Dirty = TRUE;
-    UpdateDiskLayout(CurrentDisk);
-    Status = WritePartitions(CurrentDisk);
-    if (NT_SUCCESS(Status))
-    {
-        ConResPuts(StdOut, IDS_ACTIVE_SUCCESS);
+        CurrentPartition->Mbr.BootIndicator = TRUE;
+        CurrentDisk->Dirty = TRUE;
+        UpdateMbrDiskLayout(CurrentDisk);
+        Status = WriteMbrPartitions(CurrentDisk);
+        if (NT_SUCCESS(Status))
+        {
+            ConResPuts(StdOut, IDS_ACTIVE_SUCCESS);
+        }
+        else
+        {
+            ConResPuts(StdOut, IDS_ACTIVE_FAIL);
+        }
     }
     else
     {
-        ConResPuts(StdOut, IDS_ACTIVE_FAIL);
+        ConResPuts(StdOut, IDS_ACTIVE_NO_MBR);
     }
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

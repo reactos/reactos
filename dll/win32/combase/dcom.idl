@@ -1,0 +1,62 @@
+/*
+ * Copyright 2003 Ove Kåven, TransGaming Technologies
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* see the official DCOM specification
+ * (there's a copy at http://www.grimes.demon.co.uk/DCOM/DCOMSpec.htm) */
+
+#pragma makedep header
+
+#include "wine/orpc.idl"
+
+[
+    object,
+    uuid(00000131-0000-0000-c000-000000000046)
+]
+interface IRemUnknown : IUnknown
+{
+    typedef [unique] IRemUnknown *LPREMUNKNOWN;
+
+    typedef struct tagREMQIRESULT
+    {
+        HRESULT hResult;
+        STDOBJREF std;
+    } REMQIRESULT;
+
+    typedef struct tagREMINTERFACEREF
+    {
+        IPID ipid;
+        unsigned long cPublicRefs;
+        unsigned long cPrivateRefs;
+    } REMINTERFACEREF;
+
+    HRESULT RemQueryInterface(
+        [in] REFIPID ripid,
+        [in] ULONG cRefs,
+        [in] unsigned short cIids,
+        [in, size_is(cIids)] IID *iids,
+        [out, size_is(,cIids)] REMQIRESULT **ppQIResults);
+
+    HRESULT RemAddRef(
+        [in] unsigned short cInterfaceRefs,
+        [in, size_is(cInterfaceRefs)] REMINTERFACEREF *InterfaceRefs,
+        [out, size_is(cInterfaceRefs)] HRESULT *pResults);
+
+    HRESULT RemRelease(
+        [in] unsigned short cInterfaceRefs,
+        [in, size_is(cInterfaceRefs)] REMINTERFACEREF *InterfaceRefs);
+}

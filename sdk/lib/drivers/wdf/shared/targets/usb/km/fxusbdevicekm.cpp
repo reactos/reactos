@@ -22,11 +22,13 @@ extern "C" {
 #include <initguid.h>
 }
 
-#include "fxusbpch.hpp"
+#include "../fxusbpch.hpp"
 
 
 extern "C" {
+#if defined(EVENT_TRACING)
 #include "FxUsbDeviceKm.tmh"
+#endif
 }
 
 
@@ -49,6 +51,7 @@ FxUsbDevice::InitDevice(
     WDF_REQUEST_SEND_OPTIONS options;
     NTSTATUS status;
     ULONG size;
+    ULONG paddedSize;
 
     RtlZeroMemory(&urb, sizeof(urb));
 
@@ -179,7 +182,7 @@ FxUsbDevice::InitDevice(
 
 
     size = config.wTotalLength;
-    ULONG paddedSize = size + sizeof(USB_DEVICE_DESCRIPTOR);
+    paddedSize = size + sizeof(USB_DEVICE_DESCRIPTOR);
 
     m_ConfigDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)
         FxPoolAllocate(GetDriverGlobals(),

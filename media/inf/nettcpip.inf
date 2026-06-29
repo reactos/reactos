@@ -28,6 +28,8 @@ HKR,"Ndi","ClsId",0x00000000,"{A907657F-6FDF-11D0-8EFB-00C04FD912B2}"
 HKR,"Ndi","HelpText",0x00000000,"%TCPIP_DEF%"
 HKR,"Ndi","Service",0x00000000,"Tcpip"
 HKR,"Ndi","CoServices",0x00010000,"Tcpip","Dhcp","Dnscache"
+HKR,"Ndi\Interfaces","UpperRange",0x00000000,"tdi"
+HKR,"Ndi\Interfaces","LowerRange",0x00000000,"ndis4,ndis5"
 
 ; TCP/IPv4 driver
 ; NOTE: These settings should be added by the network setup
@@ -270,9 +272,14 @@ ErrorControl  = 1
 ServiceBinary = "%11%\svchost.exe -k netsvcs"
 LoadOrderGroup = TDI
 StartName     = "LocalSystem"
-AddReg=dhcp_AddReg
+AddReg = dhcp_AddReg,dhcp_AddReg_Options
 
 [dhcp_AddReg]
+HKR,"Configurations",,0x00000010
+HKR,"Parameters",,0x00000010
+HKR,"Parameters\Options",,0x00000010
+
+[dhcp_AddReg_Options]
 HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
 
 [dns_Service_Inst]

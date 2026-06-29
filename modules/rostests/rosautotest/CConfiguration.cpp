@@ -6,11 +6,13 @@
  */
 
 #include "precomp.h"
+#include <versionhelpers.h>
 
-#define CONFIGURATION_FILENAMEA   "rosautotest.ini"
-#define CONFIGURATION_FILENAMEW   L"rosautotest.ini"
+#define CONFIGURATION_FILENAME   "rosautotest.ini"
 
-typedef void (WINAPI *GETSYSINFO)(LPSYSTEM_INFO);
+static void (WINAPI *pGetSystemInfo)(LPSYSTEM_INFO);
+static void(NTAPI *pRtlGetVersion)(RTL_OSVERSIONINFOEXW *);
+
 
 /**
  * Constructs an empty CConfiguration object
@@ -24,14 +26,12 @@ CConfiguration::CConfiguration()
       m_Submit(false),
       m_ListModules(false)
 {
-    WCHAR WindowsDirectory[MAX_PATH];
     WCHAR Interactive[32];
 
-    /* Check if we are running under ReactOS from the SystemRoot directory */
-    if(!GetWindowsDirectoryW(WindowsDirectory, MAX_PATH))
-        FATAL("GetWindowsDirectoryW failed\n");
-
-    m_IsReactOS = !_wcsnicmp(&WindowsDirectory[3], L"reactos", 7);
+    /* Check if we are running under ReactOS by calling our versionhelper function.
+       We cannot use the name of the SystemRoot folder, because bootcdregtest is using "c:\Windows".
+       Note: "IsReactOS()" without "::" would resolve to CConfiguration::IsReactOS(). */
+    m_IsReactOS = ::IsReactOS();
 
     if(GetEnvironmentVariableW(L"WINETEST_INTERACTIVE", Interactive, _countof(Interactive)))
         m_IsInteractive = _wtoi(Interactive);
@@ -141,9 +141,6 @@ void
 CConfiguration::GetSystemInformation()
 {
     char ProductType;
-    GETSYSINFO GetSysInfo;
-    HMODULE hKernel32;
-    OSVERSIONINFOEXW os;
     stringstream ss;
     SYSTEM_INFO si;
 
@@ -159,38 +156,47 @@ CConfiguration::GetSystemInformation()
     }
     else
     {
+        RTL_OSVERSIONINFOEXW rtlinfo = {0};
         /* No, then use the info from GetVersionExW */
-        os.dwOSVersionInfoSize = sizeof(os);
+        rtlinfo.dwOSVersionInfoSize = sizeof(rtlinfo);
 
-        if(!GetVersionExW((LPOSVERSIONINFOW)&os))
-            FATAL("GetVersionExW failed\n");
+        if (!pRtlGetVersion)
+        {
+            HMODULE hNtdll = GetModuleHandleW(L"ntdll.dll");
+            pRtlGetVersion = (decltype(pRtlGetVersion))GetProcAddress(hNtdll, "RtlGetVersion");
+        }
 
-        if(os.dwMajorVersion < 5)
+        pRtlGetVersion(&rtlinfo);
+
+        if (rtlinfo.dwMajorVersion < 5)
             EXCEPTION("Application requires at least Windows 2000!\n");
 
-        if(os.wProductType == VER_NT_WORKSTATION)
+        if (rtlinfo.wProductType == VER_NT_WORKSTATION)
             ProductType = 'w';
         else
             ProductType = 's';
 
         /* Print all necessary identification information into the Platform string */
-        ss << os.dwMajorVersion << '.'
-           << os.dwMinorVersion << '.'
-           << os.dwBuildNumber << '.'
-           << os.wServicePackMajor << '.'
-           << os.wServicePackMinor << '.'
+        ss << rtlinfo.dwMajorVersion << '.'
+           << rtlinfo.dwMinorVersion << '.'
+           << rtlinfo.dwBuildNumber << '.'
+           << rtlinfo.wServicePackMajor << '.'
+           << rtlinfo.wServicePackMinor << '.'
            << ProductType << '.';
     }
 
     /* We also need to know about the processor architecture.
        To retrieve this information accurately, check whether "GetNativeSystemInfo" is exported and use it then, otherwise fall back to "GetSystemInfo". */
-    hKernel32 = GetModuleHandleW(L"KERNEL32.DLL");
-    GetSysInfo = (GETSYSINFO)GetProcAddress(hKernel32, "GetNativeSystemInfo");
+    if (!pGetSystemInfo)
+    {
+        HMODULE hKernel32 = GetModuleHandleW(L"KERNEL32.DLL");
+        pGetSystemInfo = (decltype(pGetSystemInfo))GetProcAddress(hKernel32, "GetNativeSystemInfo");
 
-    if(!GetSysInfo)
-        GetSysInfo = (GETSYSINFO)GetProcAddress(hKernel32, "GetSystemInfo");
+        if (!pGetSystemInfo)
+            pGetSystemInfo = GetSystemInfo;
+    }
 
-    GetSysInfo(&si);
+    pGetSystemInfo(&si);
     ss << si.wProcessorArchitecture;
 
     m_SystemInfoRequestString = ss.str();
@@ -214,11 +220,11 @@ CConfiguration::GetConfigurationFromFile()
         /* Build the path to the configuration file from the application's path */
         GetModuleFileNameW(NULL, ConfigFile, MAX_PATH);
         Length = wcsrchr(ConfigFile, '\\') - ConfigFile + 1;
-        wcscpy(&ConfigFile[Length], CONFIGURATION_FILENAMEW);
+        wcscpy(&ConfigFile[Length], TEXT(CONFIGURATION_FILENAME));
 
         /* Check if it exists */
         if(GetFileAttributesW(ConfigFile) == INVALID_FILE_ATTRIBUTES)
-            EXCEPTION("Missing \"" CONFIGURATION_FILENAMEA "\" configuration file!\n");
+            EXCEPTION("Missing \"" CONFIGURATION_FILENAME "\" configuration file!\n");
 
         /* Get the user name */
         m_AuthenticationRequestString = "&sourceid=";

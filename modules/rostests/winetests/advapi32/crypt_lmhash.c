@@ -287,18 +287,18 @@ static void test_SystemFunction004(void)
     r = pSystemFunction002(out.Buffer, key.Buffer, output);
     ok(r == STATUS_SUCCESS, "function failed\n");
 
-    ok(((unsigned int*)output)[0] == in.Length, "crypted length wrong\n");
-    ok(((unsigned int*)output)[1] == 1, "crypted value wrong\n");
+    ok(((unsigned int*)output)[0] == in.Length, "encrypted length wrong\n");
+    ok(((unsigned int*)output)[1] == 1, "encrypted value wrong\n");
 
     memset(output, 0, sizeof output);
     r = pSystemFunction002(out.Buffer+8, key.Buffer, output);
     ok(r == STATUS_SUCCESS, "function failed\n");
-    ok(!memcmp(output, inbuf, sizeof output), "crypted data wrong\n");
+    ok(!memcmp(output, inbuf, sizeof output), "encrypted data wrong\n");
 
     memset(output, 0, sizeof output);
     r = pSystemFunction002(out.Buffer+16, key.Buffer, output);
     ok(r == STATUS_SUCCESS, "function failed\n");
-    ok(!memcmp(output, inbuf, sizeof output), "crypted data wrong\n");
+    ok(!memcmp(output, inbuf, sizeof output), "encrypted data wrong\n");
 }
 
 static void test_SystemFunction005(void)

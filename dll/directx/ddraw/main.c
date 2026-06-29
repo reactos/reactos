@@ -287,8 +287,7 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback,
 
 
 /*
-   See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/
-       Display_d/hh/Display_d/d3d_21ac30ea-9803-401e-b541-6b08af79653d.xml.asp
+   See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/Display_d/hh/Display_d/d3d_21ac30ea-9803-401e-b541-6b08af79653d.xml.asp (DEAD_LINK)
 
    for more info about this command see msdn documentation
 

@@ -64,7 +64,8 @@ set(LTCG FALSE CACHE BOOL
 "Whether to build with link-time code generation")
 
 set(GDB FALSE CACHE BOOL
-"Whether to compile for debugging with GDB.
+"Whether to use by default KDGDB.DLL instead of KDCOM.DLL for debugging with GDB.
+Mainly used for cloud-based ReactOS development using Gitpod and Docker.
 If you don't use GDB, don't enable this.")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -91,8 +92,6 @@ else()
     endif()
     set(_WINKD_ FALSE CACHE BOOL "Whether to compile with the KD protocol.")
 endif()
-
-option(BUILD_MP "Whether to build the multiprocessor versions of NTOSKRNL and HAL." ON)
 
 cmake_dependent_option(ISAPNP_ENABLE "Whether to enable the ISA PnP support." ON
                        "ARCH STREQUAL i386 AND NOT SARCH STREQUAL xbox" OFF)

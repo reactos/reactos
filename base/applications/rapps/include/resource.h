@@ -1,4 +1,5 @@
 #pragma once
+#define LVCHECKSTYLES LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_SINGLESEL | LVS_SORTASCENDING
 
 /* Icons */
 #define IDI_MAIN                 10
@@ -40,11 +41,11 @@
 #define IDC_STATUSBAR            1000
 #define IDC_DOWNLOAD_PROGRESS    1001
 #define IDC_DOWNLOAD_STATUS      1002
-#define IDC_SAVE_WINDOW_POS      1003
-#define IDC_UPDATE_AVLIST        1004
+#define IDC_GENERALLIST          1003
+
 #define IDC_DOWNLOAD_DIR_EDIT    1005
 #define IDC_DEL_AFTER_INSTALL    1006
-#define IDC_LOG_ENABLED          1007
+
 #define IDC_CHOOSE               1008
 #define IDC_DEFAULT_SETTINGS     1009
 #define IDC_INSTALL_TEXT         1010
@@ -127,6 +128,10 @@
 #define IDS_APP_DISPLAY_LIST     136
 #define IDS_APP_DISPLAY_TILE     137
 #define IDS_NO_SEARCH_RESULTS    138
+#define IDS_CFG_SAVE_WINDOW_POS  139
+#define IDS_CFG_UPDATE_AVLIST    140
+#define IDS_CFG_LOG_ENABLED      141
+#define IDS_CFG_SMALL_ICONS      142
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200
@@ -235,6 +240,7 @@
 
 /* Generated installer */
 #define IDS_INSTGEN_CONFIRMUNINST               1000
+#define IDS_INSTGEN_CONFIRMINSTRUNAPP           1001
 
 /* Accelerators */
 #define HOTKEYS                  715

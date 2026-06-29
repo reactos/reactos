@@ -1762,10 +1762,8 @@ static void EDIT_SetCaretPos(EDITSTATE *es, INT pos,
 
     SetCaretPos(pt.x, pt.y);
 
-    if (!ImmIsIME(hKL))
-        return;
-
-    EDIT_ImmSetCompositionWindow(es, pt);
+    if (ImmIsIME(hKL))
+        EDIT_ImmSetCompositionWindow(es, pt);
 #else
 	TRACE("%d - %dx%d\n", pos, (short)LOWORD(res), (short)HIWORD(res));
 	SetCaretPos((short)LOWORD(res), (short)HIWORD(res));
@@ -2591,7 +2589,11 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, const WCHAR *lpsz_r
 		EDIT_CalcLineWidth_SL(es);
 		/* remove chars that don't fit */
 		if (honor_limit && !(es->style & ES_AUTOHSCROLL) && (es->text_width > fw)) {
+#ifdef __REACTOS__
+			while ((es->text_width > fw) && s + strl > 0) {
+#else
 			while ((es->text_width > fw) && s + strl >= s) {
+#endif
 				lstrcpyW(es->text + s + strl - 1, es->text + s + strl);
 				strl--;
 				es->text_length = -1;
@@ -2711,6 +2713,9 @@ static void EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc)
     if (!hloc)
         return;
 
+#ifdef __REACTOS__
+    if (es->text)
+#endif
     EDIT_UnlockBuffer(es, TRUE);
 
     es->hloc32W = hloc;
@@ -3462,6 +3467,9 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
                 {
                     if (!notify_parent(es, EN_UPDATE)) break;
                     notify_parent(es, EN_CHANGE);
+#ifdef __REACTOS__
+					EDIT_EM_ScrollCaret(es);
+#endif
                 }
             }
             break;
@@ -3983,8 +3991,13 @@ static LRESULT  EDIT_WM_StyleChanged ( EDITSTATE *es, WPARAM which, const STYLES
                 /* Only a subset of changes can be applied after the control
                  * has been created.
                  */
+#ifdef __REACTOS__
+                style_change_mask = ES_UPPERCASE | ES_LOWERCASE |
+                                    ES_NUMBER | ES_LEFT | ES_RIGHT | ES_CENTER;
+#else
                 style_change_mask = ES_UPPERCASE | ES_LOWERCASE |
                                     ES_NUMBER;
+#endif
                 if (es->style & ES_MULTILINE)
                         style_change_mask |= ES_WANTRETURN;
 
@@ -5134,7 +5147,22 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         break;
 
     case WM_VSCROLL:
+#ifdef __REACTOS__
+    {
+        SCROLLINFO si;
+
+        si.cbSize = sizeof(si);
+        si.fMask = SIF_TRACKPOS;
+        if (!GetScrollInfo(hwnd, SB_VERT, &si))
+        {
+            result = 1;
+            break;
+        }
+        result = EDIT_WM_VScroll(es, LOWORD(wParam), si.nTrackPos);
+    }
+#else
         result = EDIT_WM_VScroll(es, LOWORD(wParam), (short)HIWORD(wParam));
+#endif
         break;
 
     case WM_MOUSEWHEEL:
@@ -5171,32 +5199,43 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     /* IME messages to make the edit control IME aware */
     case WM_IME_SETCONTEXT:
 #ifdef __REACTOS__
-        if (FALSE) /* FIXME: Condition */
-            lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
-
-        if (wParam)
         {
-            HIMC hIMC = ImmGetContext(hwnd);
-            LPINPUTCONTEXTDX pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-            if (pIC)
-            {
-                pIC->dwUIFlags &= ~0x40000;
-                ImmUnlockIMC(hIMC);
-            }
-            if (FALSE) /* FIXME: Condition */
-                ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
-            ImmReleaseContext(hwnd, hIMC);
-        }
+            HKL hKL = GetKeyboardLayout(0);
 
-        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+            /* Korean doesn't want composition window */
+            if (PRIMARYLANGID(LOWORD(hKL)) == LANG_KOREAN)
+                lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
+
+            if (wParam)
+            {
+                HIMC hIMC = ImmGetContext(hwnd);
+                LPINPUTCONTEXTDX pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+                if (pIC)
+                {
+                    pIC->dwUIFlags &= ~0x40000;
+                    ImmUnlockIMC(hIMC);
+                }
+                if (FALSE) /* FIXME: Condition */
+                    ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+                ImmReleaseContext(hwnd, hIMC);
+            }
+
+            result = DefWindowProcW(hwnd, msg, wParam, lParam);
+        }
 #endif
         break;
 
     case WM_IME_STARTCOMPOSITION:
 #ifdef __REACTOS__
-        if (FALSE) /* FIXME: Condition */
-            return TRUE;
-        result = DefWindowProcW(hwnd, msg, wParam, lParam);
+        {
+            HKL hKL = GetKeyboardLayout(0);
+
+            /* Korean doesn't want composition window */
+            if (PRIMARYLANGID(LOWORD(hKL)) == LANG_KOREAN)
+                return TRUE;
+
+            result = DefWindowProcW(hwnd, msg, wParam, lParam);
+        }
 #else
         es->composition_start = es->selection_end;
         es->composition_len = 0;

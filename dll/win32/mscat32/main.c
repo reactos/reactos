@@ -29,7 +29,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     TRACE("(%p, %d, %p)\n",hinstDLL,fdwReason,lpvReserved);
 
+#ifndef __REACTOS__
     if (fdwReason == DLL_WINE_PREATTACH) return FALSE; /* prefer native version */
+#endif
 
     if (fdwReason == DLL_PROCESS_ATTACH)
     {

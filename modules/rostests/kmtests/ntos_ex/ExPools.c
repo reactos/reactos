@@ -12,7 +12,7 @@
 
 #define TAG_POOLTEST 'tstP'
 
-#define BASE_POOL_TYPE_MASK 1
+#define BASE_POOL_TYPE_MASK 3
 #define QUOTA_POOL_MASK 8
 
 static
@@ -109,54 +109,6 @@ static VOID PoolsTest(VOID)
     ExFreePoolWithTag(Allocs, TAG_POOLTEST);
 }
 
-static VOID PoolsCorruption(VOID)
-{
-    PULONG Ptr;
-    ULONG AllocSize;
-
-    // start with non-paged pool
-    AllocSize = 4096 + 0x10;
-    Ptr = ExAllocatePoolWithTag(NonPagedPool, AllocSize, TAG_POOLTEST);
-
-    // touch all bytes, it shouldn't cause an exception
-    RtlZeroMemory(Ptr, AllocSize);
-
-/* TODO: These fail because accessing invalid memory doesn't necessarily
-         cause an access violation */
-#ifdef THIS_DOESNT_WORK
-    // test buffer overrun, right after our allocation ends
-    _SEH2_TRY
-    {
-        TestPtr = (PULONG)((PUCHAR)Ptr + AllocSize);
-        //Ptr[4] = 0xd33dbeef;
-        *TestPtr = 0xd33dbeef;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Get the status */
-        Status = _SEH2_GetExceptionCode();
-    } _SEH2_END;
-
-    ok(Status == STATUS_ACCESS_VIOLATION, "Exception should occur, but got Status 0x%08lX\n", Status);
-
-    // test overrun in a distant byte range, but within 4096KB
-    _SEH2_TRY
-    {
-        Ptr[2020] = 0xdeadb33f;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Get the status */
-        Status = _SEH2_GetExceptionCode();
-    } _SEH2_END;
-
-    ok(Status == STATUS_ACCESS_VIOLATION, "Exception should occur, but got Status 0x%08lX\n", Status);
-#endif
-
-    // free the pool
-    ExFreePoolWithTag(Ptr, TAG_POOLTEST);
-}
-
 static
 VOID
 TestPoolTags(VOID)
@@ -189,7 +141,6 @@ VOID
 TestPoolQuota(VOID)
 {
     PEPROCESS Process = PsGetCurrentProcess();
-    PEPROCESS StoredProcess;
     PVOID Memory;
     LONG InitialRefCount;
     LONG RefCount;
@@ -211,16 +162,23 @@ TestPoolQuota(VOID)
         RefCount = GetRefCount(Process);
         ok_eq_long(RefCount, InitialRefCount + 1);
 
-        /* A pointer to the process is found right before the next pool header */
-        StoredProcess = ((PVOID *)((ULONG_PTR)Memory + 2 * sizeof(LIST_ENTRY)))[-1];
-        ok_eq_pointer(StoredProcess, Process);
+#ifdef _M_IX86
+        if (GetNTVersion() <= _WIN32_WINNT_WIN7)
+        {
+            /* For x86 NT 6.2 and older: a pointer to the process is found right before the next pool header */
+            PEPROCESS StoredProcess = ((PVOID *)((ULONG_PTR)Memory + 2 * sizeof(LIST_ENTRY)))[-1];
+            ok_eq_pointer(StoredProcess, Process);
+        }
+#endif
 
         /* Pool type should have QUOTA_POOL_MASK set */
         PoolType = KmtGetPoolType(Memory);
         ok(PoolType != 0, "PoolType is 0\n");
         PoolType--;
         ok(PoolType & QUOTA_POOL_MASK, "PoolType = %x\n", PoolType);
-        ok((PoolType & BASE_POOL_TYPE_MASK) == PagedPool, "PoolType = %x\n", PoolType);
+        ok((PoolType & BASE_POOL_TYPE_MASK) == PagedPool ||                // Win2k3
+           (PoolType & BASE_POOL_TYPE_MASK) == NonPagedPoolMustSucceed,    // Vista+ promotes the memory allocation
+           "PoolType = %x\n", PoolType);
 
         ExFreePoolWithTag(Memory, 'tQmK');
         RefCount = GetRefCount(Process);
@@ -244,6 +202,16 @@ TestPoolQuota(VOID)
         ok_eq_long(RefCount, InitialRefCount);
     }
 
+#ifdef _WIN64
+    KmtStartSeh()
+        Memory = ExAllocatePoolWithQuotaTag(PagedPool,
+                                            0x7FFFFFFF,
+                                            'tQmK');
+        ok(Memory != NULL, "Failed to get 2GB block: %p\n", Memory);
+        if (Memory)
+            ExFreePoolWithTag(Memory, 'tQmK');
+    KmtEndSeh(STATUS_SUCCESS);
+#else
     /* Function raises by default */
     KmtStartSeh()
         Memory = ExAllocatePoolWithQuotaTag(PagedPool,
@@ -262,6 +230,7 @@ TestPoolQuota(VOID)
         if (Memory)
             ExFreePoolWithTag(Memory, 'tQmK');
     KmtEndSeh(STATUS_SUCCESS);
+#endif // _WIN64
 }
 
 static
@@ -308,7 +277,6 @@ TestBigPoolExpansion(VOID)
 START_TEST(ExPools)
 {
     PoolsTest();
-    PoolsCorruption();
     TestPoolTags();
     TestPoolQuota();
     TestBigPoolExpansion();

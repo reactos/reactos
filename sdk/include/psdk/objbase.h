@@ -247,6 +247,7 @@ typedef interface IRpcChannelBuffer IRpcChannelBuffer;
 #include <stdlib.h>
 #endif
 
+#include <combaseapi.h>
 #include <wtypes.h>
 #include <unknwn.h>
 #include <objidl.h>
@@ -281,6 +282,8 @@ typedef enum tagCOINIT
     COINIT_SPEED_OVER_MEMORY  = 0x8  /* Trade memory for speed */
 } COINIT;
 
+DECLARE_HANDLE(CO_MTA_USAGE_COOKIE);
+
 _Check_return_ HRESULT WINAPI CoInitialize(_In_opt_ LPVOID lpReserved);
 
 _Check_return_
@@ -294,6 +297,8 @@ void WINAPI CoUninitialize(void);
 DWORD WINAPI CoGetCurrentProcess(void);
 HRESULT WINAPI CoGetCurrentLogicalThreadId(_Out_ GUID *id);
 HRESULT WINAPI CoGetApartmentType(_Out_ APTTYPE *type, _Out_ APTTYPEQUALIFIER *qualifier);
+HRESULT WINAPI CoIncrementMTAUsage(_Out_ CO_MTA_USAGE_COOKIE *cookie);
+HRESULT WINAPI CoDecrementMTAUsage(_In_ CO_MTA_USAGE_COOKIE cookie);
 
 HINSTANCE WINAPI CoLoadLibrary(_In_ LPOLESTR lpszLibName, _In_ BOOL bAutoFree);
 void WINAPI CoFreeAllLibraries(void);
@@ -530,6 +535,20 @@ CoLockObjectExternal(
   _In_ BOOL fLastUnlockReleases);
 
 BOOL WINAPI CoIsHandlerConnected(_In_ LPUNKNOWN pUnk);
+
+_Check_return_
+HRESULT
+WINAPI
+CoDisableCallCancellation(
+  _In_opt_ void *reserved
+);
+
+_Check_return_
+HRESULT
+WINAPI
+CoEnableCallCancellation(
+  _In_opt_ void *reserved
+);
 
 /* security */
 

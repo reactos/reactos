@@ -90,6 +90,16 @@ typedef struct _THEME_FILE {
     PTHEME_IMAGE images;
 } THEME_FILE, *PTHEME_FILE;
 
+typedef struct tagTMERRINFO
+{
+    UINT nID;
+    WCHAR szParam1[MAX_PATH];
+    WCHAR szParam2[MAX_PATH];
+    WCHAR szFile[MAX_PATH];
+    WCHAR szLine[MAX_PATH];
+    INT nLineNo;
+} TMERRINFO, *PTMERRINFO;
+
 typedef struct _UXINI_FILE *PUXINI_FILE;
 
 typedef struct _UXTHEME_HANDLE
@@ -276,6 +286,7 @@ extern ATOM atWndContext;
 extern BOOL g_bThemeHooksActive;
 
 void UXTHEME_InitSystem(HINSTANCE hInst);
+void UXTHEME_UnInitSystem(HINSTANCE hInst);
 void UXTHEME_LoadTheme(BOOL bLoad);
 BOOL CALLBACK UXTHEME_broadcast_theme_changed (HWND hWnd, LPARAM enable);
 
@@ -285,5 +296,34 @@ BOOL CALLBACK UXTHEME_broadcast_theme_changed (HWND hWnd, LPARAM enable);
 #define ALPHABLEND_BINARY           1
 /* Full alpha blending */
 #define ALPHABLEND_FULL             2
+
+extern DWORD gdwErrorInfoTlsIndex;
+
+VOID UXTHEME_DeleteParseErrorInfo(VOID);
+
+static inline
+HRESULT
+UXTHEME_MakeError(_In_ LONG error)
+{
+    if (error < 0)
+        return (HRESULT)error;
+    return HRESULT_FROM_WIN32(error);
+}
+
+static inline
+HRESULT
+UXTHEME_MakeLastError(VOID)
+{
+    return UXTHEME_MakeError(GetLastError());
+}
+
+HRESULT
+UXTHEME_MakeParseError(
+    _In_ UINT nID,
+    _In_ LPCWSTR pszParam1,
+    _In_ LPCWSTR pszParam2,
+    _In_ LPCWSTR pszFile,
+    _In_ LPCWSTR pszLine,
+    _In_ INT nLineNo);
 
 #endif /* _UXTHEME_PCH_ */

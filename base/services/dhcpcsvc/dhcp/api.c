@@ -31,125 +31,148 @@ VOID ApiFree() {
     DeleteCriticalSection( &ApiCriticalSection );
 }
 
+DWORD
+WINAPI
+RpcThreadRoutine(
+    LPVOID lpParameter)
+{
+    RPC_STATUS Status;
+
+    Status = RpcServerUseProtseqEpW(L"ncacn_np", 20, L"\\pipe\\dhcpcsvc", NULL);
+    if (Status != RPC_S_OK)
+    {
+        DPRINT1("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+        return 0;
+    }
+
+    Status = RpcServerRegisterIf(Server_dhcpcsvc_v0_0_s_ifspec, NULL, NULL);
+    if (Status != RPC_S_OK)
+    {
+        DPRINT1("RpcServerRegisterIf() failed (Status %lx)\n", Status);
+        return 0;
+    }
+
+    Status = RpcServerListen(1, RPC_C_LISTEN_MAX_CALLS_DEFAULT, FALSE);
+    if (Status != RPC_S_OK)
+    {
+        DPRINT1("RpcServerListen() failed (Status %lx)\n", Status);
+    }
+
+    return 0;
+}
+
+HANDLE
+InitRpc(VOID)
+{
+    return CreateThread( NULL, 0, RpcThreadRoutine, (LPVOID)NULL, 0, NULL);
+}
+
+VOID
+ShutdownRpc(VOID)
+{
+    RpcMgmtStopServerListening(NULL);
+}
+
 /* This represents the service portion of the DHCP client API */
 
-DWORD DSLeaseIpAddress( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
-    COMM_DHCP_REPLY Reply;
+/* Function 0 */
+DWORD
+__stdcall
+Server_EnableDhcp(
+    _In_ PDHCP_SERVER_NAME ServerName,
+    _In_ LPWSTR AdapterName,
+    _In_ BOOL Enable)
+{
     PDHCP_ADAPTER Adapter;
     struct protocol* proto;
+    DWORD ret = ERROR_SUCCESS;
+
+    DPRINT1("Server_EnableDhcp(%S %u)\n", AdapterName, Enable);
 
     ApiLock();
 
-    Adapter = AdapterFindIndex( Req->AdapterIndex );
+    Adapter = AdapterFindName(AdapterName);
+    if (Adapter == NULL)
+    {
+        ret = ERROR_FILE_NOT_FOUND;
+        goto done;
+    }
 
-    Reply.Reply = Adapter ? 1 : 0;
+    DPRINT1("Adapter: %p\n", Adapter);
 
-    if( Adapter ) {
-        proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
-        if (proto)
-            remove_protocol(proto);
+    if (Enable)
+    {
+        DPRINT1("Enable DHCP for Adapter: %p\n", Adapter);
 
-        add_protocol( Adapter->DhclientInfo.name,
-                      Adapter->DhclientInfo.rfdesc, got_one,
-                      &Adapter->DhclientInfo );
+        if (Adapter->DhclientState.state != S_STATIC)
+        {
+            DPRINT1("The Adapter is already enabled!\n");
+            goto done;
+        }
+
+        add_protocol(Adapter->DhclientInfo.name,
+                     Adapter->DhclientInfo.rfdesc, got_one,
+                     &Adapter->DhclientInfo);
 
         Adapter->DhclientInfo.client->state = S_INIT;
         state_reboot(&Adapter->DhclientInfo);
-
-        if (hAdapterStateChangedEvent != NULL)
-            SetEvent(hAdapterStateChangedEvent);
     }
+    else
+    {
+        DPRINT1("Disable DHCP for Adapter: %p\n", Adapter);
 
-    ApiUnlock();
-
-    return Send(CommPipe, &Reply );
-}
-
-DWORD DSQueryHWInfo( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
-    COMM_DHCP_REPLY Reply;
-    PDHCP_ADAPTER Adapter;
-
-    ApiLock();
-
-    Adapter = AdapterFindIndex( Req->AdapterIndex );
-
-    Reply.Reply = Adapter ? 1 : 0;
-
-    if (Adapter) {
-        Reply.QueryHWInfo.AdapterIndex = Req->AdapterIndex;
-        Reply.QueryHWInfo.MediaType = Adapter->IfMib.dwType;
-        Reply.QueryHWInfo.Mtu = Adapter->IfMib.dwMtu;
-        Reply.QueryHWInfo.Speed = Adapter->IfMib.dwSpeed;
-    }
-
-    ApiUnlock();
-
-    return Send(CommPipe,  &Reply );
-}
-
-DWORD DSReleaseIpAddressLease( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
-    COMM_DHCP_REPLY Reply;
-    PDHCP_ADAPTER Adapter;
-    struct protocol* proto;
-
-    ApiLock();
-
-    Adapter = AdapterFindIndex( Req->AdapterIndex );
-
-    Reply.Reply = Adapter ? 1 : 0;
-
-    if( Adapter ) {
-        if (Adapter->NteContext)
+        if (Adapter->DhclientState.state == S_STATIC)
         {
-            DeleteIPAddress( Adapter->NteContext );
-            Adapter->NteContext = 0;
-        }
-        if (Adapter->RouterMib.dwForwardNextHop)
-        {
-            DeleteIpForwardEntry( &Adapter->RouterMib );
-            Adapter->RouterMib.dwForwardNextHop = 0;
+            DPRINT1("The Adapter is already disabled!\n");
+            goto done;
         }
 
-        proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
+        Adapter->DhclientState.state = S_STATIC;
+        proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
         if (proto)
-           remove_protocol(proto);
-
-        Adapter->DhclientInfo.client->active = NULL;
-        Adapter->DhclientInfo.client->state = S_INIT;
-
-        if (hAdapterStateChangedEvent != NULL)
-            SetEvent(hAdapterStateChangedEvent);
+            remove_protocol(proto);
     }
 
+    if (hAdapterStateChangedEvent != NULL)
+        SetEvent(hAdapterStateChangedEvent);
+
+done:
     ApiUnlock();
 
-    return Send(CommPipe,  &Reply );
+    return ret;
 }
 
-DWORD DSRenewIpAddressLease( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
-    COMM_DHCP_REPLY Reply;
+/* Function 1 */
+DWORD
+__stdcall
+Server_AcquireParameters(
+    _In_ PDHCP_SERVER_NAME ServerName,
+    _In_ LPWSTR AdapterName)
+{
     PDHCP_ADAPTER Adapter;
     struct protocol* proto;
+    DWORD ret = ERROR_SUCCESS;
+
+    DPRINT("Server_AcquireParameters(%S)\n", AdapterName);
 
     ApiLock();
 
-    Adapter = AdapterFindIndex( Req->AdapterIndex );
-
-    if( !Adapter || Adapter->DhclientState.state == S_STATIC ) {
-        Reply.Reply = 0;
-        ApiUnlock();
-        return Send(CommPipe,  &Reply );
+    Adapter = AdapterFindName(AdapterName);
+    if (Adapter == NULL || Adapter->DhclientState.state == S_STATIC)
+    {
+        ret = ERROR_FILE_NOT_FOUND;
+        goto done;
     }
 
-    Reply.Reply = 1;
+    DPRINT("Adapter: %p\n", Adapter);
 
-    proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
+    proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
     if (proto)
         remove_protocol(proto);
 
-    add_protocol( Adapter->DhclientInfo.name,
-                  Adapter->DhclientInfo.rfdesc, got_one,
-                  &Adapter->DhclientInfo );
+    add_protocol(Adapter->DhclientInfo.name,
+                 Adapter->DhclientInfo.rfdesc, got_one,
+                 &Adapter->DhclientInfo);
 
     Adapter->DhclientInfo.client->state = S_INIT;
     state_reboot(&Adapter->DhclientInfo);
@@ -157,88 +180,192 @@ DWORD DSRenewIpAddressLease( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *
     if (hAdapterStateChangedEvent != NULL)
         SetEvent(hAdapterStateChangedEvent);
 
+done:
     ApiUnlock();
 
-    return Send(CommPipe,  &Reply );
+    return ret;
 }
 
-DWORD DSStaticRefreshParams( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
-    NTSTATUS Status;
-    COMM_DHCP_REPLY Reply;
+/* Function 2 */
+DWORD
+__stdcall
+Server_AcquireParametersByBroadcast(
+    _In_ PDHCP_SERVER_NAME ServerName,
+    _In_ LPWSTR AdapterName)
+{
+    DPRINT1("Server_AcquireParametersByBroadcast(%S) is unimplemented!\n", AdapterName);
+    return ERROR_SUCCESS;
+}
+
+/* Function 3 */
+DWORD
+__stdcall
+Server_ReleaseParameters(
+    _In_ PDHCP_SERVER_NAME ServerName,
+    _In_ LPWSTR AdapterName)
+{
     PDHCP_ADAPTER Adapter;
     struct protocol* proto;
+    DWORD ret = ERROR_SUCCESS;
+
+    DPRINT("Server_ReleaseParameters(%S)\n", AdapterName);
 
     ApiLock();
 
-    Adapter = AdapterFindIndex( Req->AdapterIndex );
-
-    Reply.Reply = Adapter ? 1 : 0;
-
-    if( Adapter ) {
-        if (Adapter->NteContext)
-        {
-            DeleteIPAddress( Adapter->NteContext );
-            Adapter->NteContext = 0;
-        }
-        if (Adapter->RouterMib.dwForwardNextHop)
-        {
-            DeleteIpForwardEntry( &Adapter->RouterMib );
-            Adapter->RouterMib.dwForwardNextHop = 0;
-        }
-
-        Adapter->DhclientState.state = S_STATIC;
-        proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
-        if (proto)
-            remove_protocol(proto);
-        Status = AddIPAddress( Req->Body.StaticRefreshParams.IPAddress,
-                               Req->Body.StaticRefreshParams.Netmask,
-                               Req->AdapterIndex,
-                               &Adapter->NteContext,
-                               &Adapter->NteInstance );
-        Reply.Reply = NT_SUCCESS(Status);
-
-        if (hAdapterStateChangedEvent != NULL)
-            SetEvent(hAdapterStateChangedEvent);
+    Adapter = AdapterFindName(AdapterName);
+    if (Adapter == NULL)
+    {
+        ret = ERROR_FILE_NOT_FOUND;
+        goto done;
     }
 
+    DPRINT("Adapter: %p\n", Adapter);
+
+    state_release(&Adapter->DhclientInfo);
+
+    proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
+    if (proto)
+        remove_protocol(proto);
+
+    if (hAdapterStateChangedEvent != NULL)
+        SetEvent(hAdapterStateChangedEvent);
+
+done:
     ApiUnlock();
 
-    return Send(CommPipe,  &Reply );
+    return ret;
 }
 
-DWORD DSGetAdapterInfo( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req ) {
-    COMM_DHCP_REPLY Reply;
+/* Function 4 */
+DWORD
+__stdcall
+Server_FallbackRefreshParams(
+    _In_ PDHCP_SERVER_NAME ServerName,
+    _In_ LPWSTR AdapterName)
+{
     PDHCP_ADAPTER Adapter;
+    HKEY hAdapterKey;
+    DWORD ret = ERROR_SUCCESS;
+
+    DPRINT("Server_FallbackRefreshParams(%S)\n", AdapterName);
 
     ApiLock();
 
-    Adapter = AdapterFindIndex( Req->AdapterIndex );
-
-    Reply.Reply = Adapter ? 1 : 0;
-
-    if( Adapter ) {
-        Reply.GetAdapterInfo.DhcpEnabled = (S_STATIC != Adapter->DhclientState.state);
-        if (S_BOUND == Adapter->DhclientState.state) {
-            if (sizeof(Reply.GetAdapterInfo.DhcpServer) ==
-                Adapter->DhclientState.active->serveraddress.len) {
-                memcpy(&Reply.GetAdapterInfo.DhcpServer,
-                       Adapter->DhclientState.active->serveraddress.iabuf,
-                       Adapter->DhclientState.active->serveraddress.len);
-            } else {
-                DPRINT1("Unexpected server address len %d\n",
-                        Adapter->DhclientState.active->serveraddress.len);
-                Reply.GetAdapterInfo.DhcpServer = htonl(INADDR_NONE);
-            }
-            Reply.GetAdapterInfo.LeaseObtained = Adapter->DhclientState.active->obtained;
-            Reply.GetAdapterInfo.LeaseExpires = Adapter->DhclientState.active->expiry;
-        } else {
-            Reply.GetAdapterInfo.DhcpServer = htonl(INADDR_NONE);
-            Reply.GetAdapterInfo.LeaseObtained = 0;
-            Reply.GetAdapterInfo.LeaseExpires = 0;
-        }
+    Adapter = AdapterFindName(AdapterName);
+    if (Adapter == NULL)
+    {
+        ret = ERROR_FILE_NOT_FOUND;
+        goto done;
     }
 
+    DPRINT("Adapter: %p\n", Adapter);
+
+    if (Adapter->AlternateConfiguration)
+    {
+        free(Adapter->AlternateConfiguration);
+        Adapter->AlternateConfiguration = NULL;
+    }
+
+    hAdapterKey = FindAdapterKey(Adapter);
+    if (hAdapterKey)
+    {
+        ret = LoadAlternateConfiguration(Adapter, hAdapterKey);
+        RegCloseKey(hAdapterKey);
+    }
+
+done:
     ApiUnlock();
 
-    return Send(CommPipe,  &Reply );
+    return ret;
+}
+
+
+/* Function 5 */
+DWORD
+__stdcall
+Server_StaticRefreshParams(
+    _In_ PDHCP_SERVER_NAME ServerName,
+    _In_ DWORD AdapterIndex,
+    _In_ DWORD Address,
+    _In_ DWORD Netmask)
+{
+    PDHCP_ADAPTER Adapter;
+    struct protocol* proto;
+    DWORD ret = ERROR_SUCCESS;
+
+    DPRINT("Server_StaticRefreshParams()\n");
+
+    ApiLock();
+
+    Adapter = AdapterFindIndex(AdapterIndex);
+    if (Adapter == NULL)
+    {
+        ret = ERROR_FILE_NOT_FOUND;
+        goto done;
+    }
+
+    DPRINT("Adapter: %p\n", Adapter);
+
+    if (Adapter->NteContext)
+    {
+        DeleteIPAddress(Adapter->NteContext);
+        Adapter->NteContext = 0;
+    }
+    if (Adapter->RouterMib.dwForwardNextHop)
+    {
+        DeleteIpForwardEntry(&Adapter->RouterMib);
+        Adapter->RouterMib.dwForwardNextHop = 0;
+    }
+
+    Adapter->DhclientState.state = S_STATIC;
+    proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
+    if (proto)
+        remove_protocol(proto);
+
+    ret = AddIPAddress(Address,
+                       Netmask,
+                       AdapterIndex,
+                       &Adapter->NteContext,
+                       &Adapter->NteInstance);
+
+    if (hAdapterStateChangedEvent != NULL)
+        SetEvent(hAdapterStateChangedEvent);
+
+done:
+    ApiUnlock();
+
+    return ret;
+}
+
+/* Function 6 */
+DWORD
+__stdcall
+Server_RemoveDNSRegistrations(
+    _In_ PDHCP_SERVER_NAME ServerName)
+{
+    DPRINT1("Server_RemoveDNSRegistrations()\n");
+    /* FIXME: Call dnsapi.DnsRemoveRegistrations() */
+    return ERROR_SUCCESS;
+}
+
+/* Function 7 */
+DWORD
+__stdcall
+Server_RequestParams(
+    _In_ PDHCP_SERVER_NAME ServerName,
+    _In_ LPWSTR AdapterName,
+    _In_ DHCPCAPI_CLASSID *ClassId,
+    _In_ DHCPCAPI_PARAMS_ARRAY *SendParams,
+    _In_ DWORD Unknown5,
+    _In_ DWORD Unknown6)
+{
+    DPRINT1("Server_RequestParams(%S %p %p %lx %lx)\n",
+            AdapterName, ClassId, SendParams, Unknown5, Unknown6);
+
+    if (SendParams != NULL)
+    {
+        DPRINT1("SendParams nParams %lu  Params %p\n", SendParams->nParams, SendParams->Params);
+    }
+
+    return ERROR_SUCCESS;
 }

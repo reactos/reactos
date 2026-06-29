@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(dplay.dll dplay.spec)
 
 add_library(dplay MODULE

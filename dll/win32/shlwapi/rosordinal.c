@@ -15,6 +15,9 @@ HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam,
     IContextMenu3* pcmenu3;
     IContextMenu2* pcmenu2;
 
+    if (!pUnk)
+        return E_FAIL;
+
     /* First try to use the IContextMenu3 interface */
     hr = IUnknown_QueryInterface(pUnk, &IID_IContextMenu3, (void**)&pcmenu3);
     if (SUCCEEDED(hr))
@@ -35,7 +38,9 @@ HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam,
 
     hr = IContextMenu2_HandleMenuMsg(pcmenu2, uMsg, wParam, lParam);
     IContextMenu2_Release(pcmenu2);
-    return hr;
+    if (pResult)
+        *pResult = 0;
+    return hr == S_OK ? S_FALSE : hr;
 }
 
 /* http://undoc.airesoft.co.uk/shlwapi.dll/SHAreIconsEqual.php */

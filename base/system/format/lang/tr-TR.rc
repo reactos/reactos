@@ -30,7 +30,7 @@ BEGIN
     STRING_FMIFS_FAIL "FMIFS giriş noktaları konumlandırılamadı.\n\n"
     STRING_UNKNOW_ARG "Bilinmeyen değişken: %s\n"
     STRING_DRIVE_PARM "İstenen sürücü değişkeni eksik.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Sürücü türü alınamadı."
+    STRING_ERROR_DRIVE_TYPE "Sürücü türü alınamadı.\n"
     STRING_INSERT_DISK "%C: sürücüsüne yeni bir yumuşak disk yerleştiriniz\nve hazır olduğunda Enter'e basınız..."
     STRING_NO_VOLUME "Birim sorgulanamadı."
     STRING_NO_VOLUME_SIZE "Birim boyutu sorgulanamadı."

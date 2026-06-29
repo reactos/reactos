@@ -467,7 +467,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
-    STDCALL
+    NTAPI
     _PnpFilteredStartDeviceCompletionRoutine(
         __in    MdDeviceObject DeviceObject,
         __inout MdIrp Irp,
@@ -477,7 +477,7 @@ protected:
     _Must_inspect_result_
     static
     NTSTATUS
-    STDCALL
+    NTAPI
     _PnpStartDeviceCompletionRoutine(
         __in    MdDeviceObject DeviceObject,
         __inout MdIrp Irp,

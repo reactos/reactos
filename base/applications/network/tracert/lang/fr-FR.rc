@@ -8,7 +8,7 @@ Usage: tracert [-d] [-h sauts_max] [-j liste_dhôtes] [-w délai] nom_de_la_cibl
 Options :\n\
     -d                 Ne pas résoudre les adresses en noms d'hôtes.\n\
     -h sauts_max       Nombre de sauts maximum pour atteindre la cible.\n\
-    -j liste_dhôtes    Intinéraire source imprécis dans la liste d'hôtes.\n\
+    -j liste_dhôtes    Itinéraire source imprécis dans la liste d'hôtes.\n\
     -w délai           Délai d'expiration en millisecondes pour chaque réponse.\n\
     -4                 Force l'utilisation d'IPv4.\n\
     -6                 Force l'utilisation d'IPv6.\n\
@@ -33,4 +33,7 @@ Options :\n\
     IDS_HOP_RESPONSE    "  rapporte : "
     IDS_DEST_HOST_UNREACHABLE "Hôte de destination inatteignable.\n"
     IDS_DEST_NET_UNREACHABLE  "Réseau de destination inatteignable.\n"
+    IDS_BAD_OPTION_VALUE      "Bad value for option %1!ls!.\n"
+    IDS_MISSING_OPTION_VALUE  "A value must be supplied for option %1!ls!.\n"
+    IDS_MISSING_TARGET "A target name or address must be specified.\n"
 END

@@ -20,8 +20,10 @@ list(APPEND SOURCE
     CSendToZip.cpp
     CZipCreator.cpp
     CZipEnumerator.hpp
+    CZipEnumerator.cpp
     CZipExtract.cpp
     CZipFolder.hpp
+    CZipFolder.cpp
     CZipPassword.cpp
     Debug.cpp
     zipfldr.spec

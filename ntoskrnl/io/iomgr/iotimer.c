@@ -136,11 +136,9 @@ IoStartTimer(IN PDEVICE_OBJECT DeviceObject)
     PIO_TIMER IoTimer = DeviceObject->Timer;
 
     /* Make sure the device isn't unloading */
-    if (!(((PEXTENDED_DEVOBJ_EXTENSION)(DeviceObject->DeviceObjectExtension))->
-            ExtensionFlags & (DOE_UNLOAD_PENDING |
-                              DOE_DELETE_PENDING |
-                              DOE_REMOVE_PENDING |
-                              DOE_REMOVE_PROCESSED)))
+    if (!(IoGetDevObjExtension(DeviceObject)->ExtensionFlags &
+         (DOE_UNLOAD_PENDING | DOE_DELETE_PENDING |
+          DOE_REMOVE_PENDING | DOE_REMOVE_PROCESSED)))
     {
         /* Lock Timers */
         KeAcquireSpinLock(&IopTimerLock, &OldIrql);

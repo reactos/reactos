@@ -23,6 +23,9 @@ class CAppDB
   public:
     CAppDB(const CStringW &path);
 
+    static CStringW
+    GetDefaultPath();
+
     VOID
     GetApps(CAtlList<CAppInfo *> &List, AppsCategories Type) const;
     CAvailableApplicationInfo *
@@ -44,8 +47,8 @@ class CAppDB
     CreateInstalledAppByRegistryKey(LPCWSTR Name);
     static CInstalledApplicationInfo *
     CreateInstalledAppInstance(LPCWSTR KeyName, BOOL User, REGSAM WowSam);
-    static HKEY
-    EnumInstalledRootKey(UINT Index, REGSAM &RegSam);
+    static CAvailableApplicationInfo *
+    CreateAvailableAppInstance(const CStringW &PkgName, PCWSTR DBPath = NULL);
 
     size_t GetAvailableCount() const
     {

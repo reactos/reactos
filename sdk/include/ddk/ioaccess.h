@@ -43,7 +43,7 @@ extern "C" {
 
 #define MEMORY_BARRIER()
 
-#elif defined(_PPC_) || defined(_MIPS_) || defined(_ARM_)
+#elif defined(_PPC_) || defined(_MIPS_) || defined(_ARM_) || defined(_ARM64_)
 
 #define READ_REGISTER_UCHAR(r)      (*(volatile UCHAR * const)(r))
 #define READ_REGISTER_USHORT(r)     (*(volatile USHORT * const)(r))

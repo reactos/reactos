@@ -150,6 +150,101 @@ cleanup:
     return OutKey;
 }
 
+DWORD
+LoadAlternateConfiguration(
+    PDHCP_ADAPTER Adapter,
+    HKEY hAdapterKey)
+{
+    PWSTR pszConfigName = NULL;
+    HKEY hConfigsKey = NULL, hConfigKey = NULL;
+    PALTERNATE_CONFIGURATION pAltConfig = NULL;
+    DWORD dwSize;
+    DWORD dwError;
+
+    DPRINT("LoadAlternateConfiguration()\n");
+
+    dwSize = 0;
+    RegQueryValueExW(hAdapterKey, L"ActiveConfigurations", NULL, NULL, NULL, &dwSize);
+    if (dwSize == 0)
+    {
+        DPRINT1("There is no active configuration!\n");
+        return ERROR_SUCCESS;
+    }
+
+    pszConfigName = malloc(dwSize);
+    if (pszConfigName == NULL)
+    {
+        DPRINT1("Failed to allocate memory!\n");
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    dwError = RegQueryValueExW(hAdapterKey, L"ActiveConfigurations", NULL, NULL, (PBYTE)pszConfigName, &dwSize);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to read the ActiveConfigurations value!\n");
+        goto done;
+    }
+
+    DPRINT("ActiveConfigurations: %S\n", pszConfigName);
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"System\\CurrentControlSet\\Services\\DHCP\\Configurations", 0, KEY_READ, &hConfigsKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to open configurations key!\n");
+        goto done;
+    }
+
+    dwError = RegOpenKeyExW(hConfigsKey, pszConfigName, 0, KEY_READ, &hConfigKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to open configuration key %S!\n", pszConfigName);
+        goto done;
+    }
+
+    dwSize = 0;
+    RegQueryValueExW(hConfigKey, L"Options", NULL, NULL, NULL, &dwSize);
+
+    DbgPrint("Found alternate configuration: Size %lu\n", dwSize);
+    pAltConfig = malloc(dwSize);
+    if (pAltConfig == NULL)
+    {
+        DPRINT1("Failed to allocate memory!\n");
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    dwError = RegQueryValueExW(hConfigKey, L"Options", NULL, NULL, (PBYTE)pAltConfig, &dwSize);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to read the alternate configuration!\n");
+        goto done;
+    }
+
+    DPRINT("IpAddress:  %08lx\n", pAltConfig->IpAddress);
+    DPRINT("SubnetMask: %08lx\n", pAltConfig->SubnetMask);
+
+    Adapter->AlternateConfiguration = pAltConfig;
+    DPRINT("Success!\n");
+
+done:
+    if (dwError != ERROR_SUCCESS)
+    {
+        if (pAltConfig)
+            free(pAltConfig);
+    }
+
+    if (hConfigKey)
+        RegCloseKey(hConfigKey);
+
+    if (hConfigsKey)
+        RegCloseKey(hConfigsKey);
+
+    if (pszConfigName)
+        free(pszConfigName);
+
+    return dwError;
+}
+
 BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     HKEY AdapterKey;
     DWORD Error = ERROR_SUCCESS, DhcpEnabled, Length = sizeof(DWORD);
@@ -165,6 +260,8 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
 
         if (Error != ERROR_SUCCESS || Length != sizeof(DWORD))
             DhcpEnabled = 1;
+
+        LoadAlternateConfiguration(Adapter, AdapterKey);
 
         CloseHandle(AdapterKey);
     }
@@ -183,7 +280,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
         /* Automatic case */
         DbgPrint("DHCPCSVC: Adapter Name: [%s] (dynamic)\n", Adapter->DhclientInfo.name);
 
-	Adapter->DhclientInfo.client->state = S_INIT;
+        Adapter->DhclientInfo.client->state = S_INIT;
     }
 
     return TRUE;
@@ -285,6 +382,17 @@ IsReconnectHackNeeded(PDHCP_ADAPTER Adapter, const MIB_IFROW* IfEntry)
     }
 }
 
+VOID
+FreeAdapter(
+    PDHCP_ADAPTER Adapter)
+{
+    if (Adapter == NULL)
+        return;
+    if (Adapter->AlternateConfiguration)
+        free(Adapter->AlternateConfiguration);
+    free(Adapter);
+}
+
 /*
  * XXX Figure out the way to bind a specific adapter to a socket.
  */
@@ -371,7 +479,9 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
 
             Adapter = (DHCP_ADAPTER*) calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
 
-            if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET && InterfaceConnected(&Table->table[i])) {
+            if (Adapter &&
+                (Table->table[i].dwType == MIB_IF_TYPE_ETHERNET || Table->table[i].dwType == IF_TYPE_IEEE80211) &&
+                InterfaceConnected(&Table->table[i])) {
                 memcpy( &Adapter->IfMib, &Table->table[i],
                         sizeof(Adapter->IfMib) );
                 Adapter->DhclientInfo.client = &Adapter->DhclientState;
@@ -450,8 +560,8 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                     AdapterCount++;
                     SetEvent(hAdapterStateChangedEvent);
                     ApiUnlock();
-                } else { free( Adapter ); Adapter = 0; }
-            } else { free( Adapter ); Adapter = 0; }
+                } else { FreeAdapter( Adapter ); Adapter = 0; }
+            } else { FreeAdapter( Adapter ); Adapter = 0; }
 
             if( !Adapter )
                 DH_DbgPrint(MID_TRACE,("Adapter %d was rejected\n",
@@ -489,7 +599,7 @@ void AdapterStop() {
     while( !IsListEmpty( &AdapterList ) ) {
         ListEntry = (PLIST_ENTRY)RemoveHeadList( &AdapterList );
         Adapter = CONTAINING_RECORD( ListEntry, DHCP_ADAPTER, ListEntry );
-        free( Adapter );
+        FreeAdapter( Adapter );
     }
     ApiUnlock();
     WSACleanup();
@@ -512,12 +622,14 @@ PDHCP_ADAPTER AdapterFindIndex( unsigned int indx ) {
 PDHCP_ADAPTER AdapterFindName( const WCHAR *name ) {
     PDHCP_ADAPTER Adapter;
     PLIST_ENTRY ListEntry;
+    WCHAR UnicodeName[45];
 
     for( ListEntry = AdapterList.Flink;
          ListEntry != &AdapterList;
          ListEntry = ListEntry->Flink ) {
         Adapter = CONTAINING_RECORD( ListEntry, DHCP_ADAPTER, ListEntry );
-        if( !_wcsicmp( Adapter->IfMib.wszName, name ) ) return Adapter;
+        mbstowcs(UnicodeName, (const CHAR *)Adapter->IfMib.bDescr, strlen((const CHAR *)Adapter->IfMib.bDescr) + 1);
+        if( !wcsicmp(UnicodeName, name ) ) return Adapter;
     }
 
     return NULL;
@@ -537,7 +649,7 @@ PDHCP_ADAPTER AdapterFindInfo( struct interface_info *ip ) {
     return NULL;
 }
 
-PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t haddr[16], u_int8_t hlen ) {
+PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t *haddr, u_int8_t hlen ) {
     PDHCP_ADAPTER Adapter;
     PLIST_ENTRY ListEntry;
 

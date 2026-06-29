@@ -60,7 +60,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
     IoInterrupt = ExAllocatePoolZero(NonPagedPool,
                                      (Count - 1) * sizeof(KINTERRUPT) +
                                      sizeof(IO_INTERRUPT),
-                                     TAG_KINTERRUPT);
+                                     TAG_IO_INTERRUPT);
     if (!IoInterrupt) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Use the structure's spinlock, if none was provided */
@@ -105,7 +105,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
             if (FirstRun)
             {
                 /* We failed early so just free this */
-                ExFreePoolWithTag(IoInterrupt, TAG_KINTERRUPT);
+                ExFreePoolWithTag(IoInterrupt, TAG_IO_INTERRUPT);
             }
             else
             {
@@ -166,7 +166,7 @@ IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
     }
 
     /* Free the I/O interrupt */
-    ExFreePoolWithTag(IoInterrupt, TAG_KINTERRUPT);
+    ExFreePoolWithTag(IoInterrupt, TAG_IO_INTERRUPT);
 }
 
 NTSTATUS
@@ -189,7 +189,8 @@ IopConnectInterruptExFullySpecific(
                                 Parameters->FullySpecified.ShareVector,
                                 Parameters->FullySpecified.ProcessorEnableMask,
                                 Parameters->FullySpecified.FloatingSave);
-    DPRINT("IopConnectInterruptEx_FullySpecific: has failed with status %X", Status);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("IopConnectInterruptExFullySpecific() failed: 0x%lx\n", Status);
     return Status;
 }
 

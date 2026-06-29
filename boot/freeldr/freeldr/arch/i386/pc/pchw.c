@@ -225,8 +225,7 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         /* Set 'Identifier' value */
         RtlStringCbPrintfA(Identifier, sizeof(Identifier), "FLOPPY%d", FloppyNumber + 1);
 
-        Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
-               sizeof(CM_FLOPPY_DEVICE_DATA);
+        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) + sizeof(*FloppyData);
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
@@ -243,9 +242,9 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
         PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
         PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
-        PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_FLOPPY_DEVICE_DATA);
+        PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(*FloppyData);
 
-        FloppyData = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
+        FloppyData = (PCM_FLOPPY_DEVICE_DATA)(PartialDescriptor + 1);
         FloppyData->Version = 2;
         FloppyData->Revision = 0;
         FloppyData->MaxDensity = MaxDensity[FloppyType];
@@ -281,8 +280,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
     TRACE("Floppy count: %u\n", FloppyCount);
 
     /* Always create a BIOS disk controller, no matter if we have floppy drives or not */
-    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
-           2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[3]);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
@@ -364,7 +362,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     }
 
     /* Allocate resource descriptor */
-    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) +
            sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
@@ -385,7 +383,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
 
     /* Get harddisk Int13 geometry data */
-    Int13Drives = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
+    Int13Drives = (PCM_INT13_DRIVE_PARAMETER)&PartialResourceList->PartialDescriptors[1];
     for (i = 0; i < DiskCount; i++)
     {
         DriveNumber = 0x80 + i;

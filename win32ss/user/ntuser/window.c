@@ -120,7 +120,6 @@ PWND FASTCALL ValidateHwndNoErr(HWND hWnd)
 }
 
 /* Temp HACK */
-// Win: ValidateHwnd
 PWND FASTCALL UserGetWindowObject(HWND hWnd)
 {
     PWND Window;
@@ -428,7 +427,7 @@ IntGetWindow(HWND hWnd,
                 break;
 
             default:
-                Wnd = NULL;
+                EngSetLastError(ERROR_INVALID_GW_COMMAND);
                 break;
     }
 
@@ -1292,7 +1291,6 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    return WndOldParent;
 }
 
-// Win: xxxSetParent
 HWND FASTCALL
 co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 {
@@ -1372,7 +1370,6 @@ IntUnlinkWindow(PWND Wnd)
     WndSetNext(Wnd, NULL);
 }
 
-// Win: ExpandWindowList
 BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
 {
     PWINDOWLIST pwlOld, pwlNew;
@@ -1393,7 +1390,6 @@ BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
     return TRUE;
 }
 
-// Win: InternalBuildHwndList
 PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFlags)
 {
     ASSERT(!WL_IS_BAD(pwl));
@@ -1423,7 +1419,6 @@ PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFla
     return pwl;
 }
 
-// Win: BuildHwndList
 PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
 {
     PWINDOWLIST pwl;
@@ -1469,7 +1464,6 @@ PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
     return pwl;
 }
 
-// Win: FreeHwndList
 VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget)
 {
     PWINDOWLIST pwl, *ppwl;
@@ -1533,7 +1527,7 @@ NtUserBuildHwndList(
    if (pcHwndNeeded == NULL)
        return STATUS_INVALID_PARAMETER;
 
-   UserEnterExclusive();
+   UserEnterShared();
 
    if (hwndParent || !dwThreadId)
    {
@@ -1694,18 +1688,21 @@ Quit:
 
 static void IntSendParentNotify( PWND pWindow, UINT msg )
 {
+    PWND Parent;
+
     if ( (pWindow->style & (WS_CHILD | WS_POPUP)) == WS_CHILD &&
          !(pWindow->ExStyle & WS_EX_NOPARENTNOTIFY))
     {
-        if (VerifyWnd(pWindow->spwndParent) && !UserIsDesktopWindow(pWindow->spwndParent))
+        Parent = pWindow->spwndParent;
+        if (VerifyWnd(Parent) && !UserIsDesktopWindow(Parent))
         {
             USER_REFERENCE_ENTRY Ref;
-            UserRefObjectCo(pWindow->spwndParent, &Ref);
-            co_IntSendMessage( UserHMGetHandle(pWindow->spwndParent),
+            UserRefObjectCo(Parent, &Ref);
+            co_IntSendMessage( UserHMGetHandle(Parent),
                                WM_PARENTNOTIFY,
                                MAKEWPARAM( msg, pWindow->IDMenu),
                                (LPARAM)UserHMGetHandle(pWindow) );
-            UserDerefObjectCo(pWindow->spwndParent);
+            UserDerefObjectCo(Parent);
         }
     }
 }
@@ -1718,13 +1715,17 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWND ParentWindow, DWORD* dwShowMode)
    /* default positioning for overlapped windows */
     if(!(Cs->style & (WS_POPUP | WS_CHILD)))
    {
-      PMONITOR pMonitor;
+      PMONITOR pMonitor = NULL;
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
+      PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
 
-      pMonitor = UserGetPrimaryMonitor();
+      if (ppi && ppi->hMonitor)
+         pMonitor = UserGetMonitorObject(ppi->hMonitor);
+      if (!pMonitor)
+         pMonitor = UserGetPrimaryMonitor();
 
       /* Check if we don't have a monitor attached yet */
-      if(pMonitor == NULL)
+      if (pMonitor == NULL)
       {
           Cs->x = Cs->y = 0;
           Cs->cx = 800;
@@ -1831,7 +1832,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       }
       else
       { /*
-         * Note from MSDN <http://msdn.microsoft.com/en-us/library/aa913269.aspx>:
+         * Note from MSDN <https://learn.microsoft.com/en-us/previous-versions/aa913269(v=msdn.10)>:
          *
          * Dialog boxes and message boxes do not inherit layout, so you must
          * set the layout explicitly.
@@ -1872,14 +1873,6 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    }
 
    TRACE("Created window object with handle %p\n", hWnd);
-
-   if (pdeskCreated && pdeskCreated->DesktopWindow == NULL )
-   {  /* HACK: Helper for win32csr/desktopbg.c */
-      /* If there is no desktop window yet, we must be creating it */
-      TRACE("CreateWindow setting desktop.\n");
-      pdeskCreated->DesktopWindow = hWnd;
-      pdeskCreated->pDeskInfo->spwnd = pWnd;
-   }
 
    /*
     * Fill out the structure describing it.
@@ -2575,6 +2568,16 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
        co_IntUserManualGuiCheck(TRUE);
    }
 
+   /* Set the hotkey */
+   if (!(Window->style & (WS_POPUP | WS_CHILD)) || (Window->ExStyle & WS_EX_APPWINDOW))
+   {
+       if (pti->ppi->dwHotkey)
+       {
+          co_IntSendMessage(UserHMGetHandle(Window), WM_SETHOTKEY, pti->ppi->dwHotkey, 0);
+          pti->ppi->dwHotkey = 0; /* Only the first suitable window gets the hotkey */
+       }
+   }
+
    TRACE("co_UserCreateWindowEx(%wZ): Created window %p\n", ClassName, hWnd);
    ret = Window;
 
@@ -2816,7 +2819,6 @@ cleanup:
    return hwnd;
 }
 
-// Win: xxxDW_DestroyOwnedWindows
 VOID FASTCALL IntDestroyOwnedWindows(PWND Window)
 {
     HWND* List;
@@ -2852,7 +2854,6 @@ VOID FASTCALL IntDestroyOwnedWindows(PWND Window)
     ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
 }
 
-// Win: xxxDestroyWindow
 BOOLEAN co_UserDestroyWindow(PVOID Object)
 {
    HWND hWnd;
@@ -3337,99 +3338,98 @@ Exit:
    return Ret;
 }
 
-
-/*
- * @implemented
- */
-PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
+/* @implemented */
+PWND FASTCALL
+UserGetAncestor(_In_ PWND pWnd, _In_ UINT uType)
 {
-   PWND WndAncestor, Parent;
+    PWND WndAncestor, Parent, pwndMessage;
+    PDESKTOP pDesktop;
+    PWND pwndDesktop;
 
-   if (UserHMGetHandle(Wnd) == IntGetDesktopWindow())
-   {
-      return NULL;
-   }
+    pDesktop = pWnd->head.rpdesk;
+    ASSERT(pDesktop);
+    ASSERT(pDesktop->pDeskInfo);
 
-   switch (Type)
-   {
-      case GA_PARENT:
-         {
-            WndAncestor = Wnd->spwndParent;
-            break;
-         }
+    pwndDesktop = pDesktop->pDeskInfo->spwnd;
+    if (pWnd == pwndDesktop)
+        return NULL;
 
-      case GA_ROOT:
-         {
-            WndAncestor = Wnd;
-            Parent = NULL;
+    pwndMessage = pDesktop->spwndMessage;
+    if (pWnd == pwndMessage)
+        return NULL;
 
-            for(;;)
+    Parent = pWnd->spwndParent;
+    if (!Parent)
+        return NULL;
+
+    switch (uType)
+    {
+        case GA_PARENT:
+            return Parent;
+
+        case GA_ROOT:
+            WndAncestor = pWnd;
+            if (Parent == pwndDesktop)
+                break;
+
+            do
             {
-               if(!(Parent = WndAncestor->spwndParent))
-               {
-                  break;
-               }
-               if(IntIsDesktopWindow(Parent))
-               {
-                  break;
-               }
+                if (Parent == pwndMessage)
+                    break;
 
-               WndAncestor = Parent;
+                WndAncestor = Parent;
+
+                pDesktop = Parent->head.rpdesk;
+                ASSERT(pDesktop);
+                ASSERT(pDesktop->pDeskInfo);
+
+                Parent = Parent->spwndParent;
+            } while (Parent != pDesktop->pDeskInfo->spwnd);
+            break;
+
+        case GA_ROOTOWNER:
+            WndAncestor = pWnd;
+            for (PWND pwndNode = IntGetParent(pWnd); pwndNode; pwndNode = IntGetParent(pwndNode))
+            {
+                WndAncestor = pwndNode;
             }
             break;
-         }
 
-      case GA_ROOTOWNER:
-         {
-            WndAncestor = Wnd;
-
-            for (;;)
-            {
-               Parent = IntGetParent(WndAncestor);
-
-               if (!Parent)
-               {
-                  break;
-               }
-
-               WndAncestor = Parent;
-            }
-            break;
-         }
-
-      default:
-         {
+        default:
             return NULL;
-         }
-   }
+    }
 
-   return WndAncestor;
+    return WndAncestor;
 }
 
-/*
- * @implemented
- */
+/* @implemented */
 HWND APIENTRY
-NtUserGetAncestor(HWND hWnd, UINT Type)
+NtUserGetAncestor(_In_ HWND hWnd, _In_ UINT uType)
 {
-   PWND Window, Ancestor;
-   HWND Ret = NULL;
+    PWND Window, pwndAncestor;
+    HWND hwndAncestor = NULL;
 
-   TRACE("Enter NtUserGetAncestor\n");
-   UserEnterExclusive();
+    TRACE("Enter NtUserGetAncestor\n");
+    UserEnterShared();
 
-   Window = UserGetWindowObject(hWnd);
-   if (Window)
-   {
-      Ancestor = UserGetAncestor(Window, Type);
-      /* fixme: can UserGetAncestor ever return NULL for a valid window? */
+    Window = UserGetWindowObject(hWnd);
+    if (!Window)
+        goto Quit;
 
-      Ret = (Ancestor ? UserHMGetHandle(Ancestor) : NULL);
-   }
+    if (!uType || uType > GA_ROOTOWNER)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        goto Quit;
+    }
 
-   TRACE("Leave NtUserGetAncestor, ret=%p\n", Ret);
-   UserLeave();
-   return Ret;
+    pwndAncestor = UserGetAncestor(Window, uType);
+    if (pwndAncestor)
+        hwndAncestor = UserHMGetHandle(pwndAncestor);
+
+Quit:
+    UserLeave();
+    TRACE("Leave NtUserGetAncestor returning %p\n", hwndAncestor);
+    return hwndAncestor;
 }
 
 ////

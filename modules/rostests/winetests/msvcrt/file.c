@@ -35,6 +35,25 @@
 #include <process.h>
 #include <errno.h>
 #include <locale.h>
+#ifdef __REACTOS__
+#include <ntndk.h>
+#else
+#include <winternl.h>
+#endif
+
+#define WX_OPEN           0x01
+#define WX_ATEOF          0x02
+#define WX_READNL         0x04
+#define WX_PIPE           0x08
+#define WX_DONTINHERIT    0x10
+#define WX_APPEND         0x20
+#define WX_TTY            0x40
+#define WX_TEXT           0x80
+
+#define EF_UTF8           0x01
+#define EF_UTF16          0x02
+#define EF_CRIT_INIT      0x04
+#define EF_UNK_UNICODE    0x08
 
 #define MSVCRT_FD_BLOCK_SIZE 32
 typedef struct {
@@ -52,6 +71,7 @@ static int (__cdecl *p_fopen_s)(FILE**, const char*, const char*);
 static int (__cdecl *p__wfopen_s)(FILE**, const wchar_t*, const wchar_t*);
 static errno_t (__cdecl *p__get_fmode)(int*);
 static errno_t (__cdecl *p__set_fmode)(int);
+static int (__cdecl *p__setmaxstdio)(int);
 
 static const char* get_base_name(const char *path)
 {
@@ -76,6 +96,7 @@ static void init(void)
     __pioinfo = (void*)GetProcAddress(hmod, "__pioinfo");
     p__get_fmode = (void*)GetProcAddress(hmod, "_get_fmode");
     p__set_fmode = (void*)GetProcAddress(hmod, "_set_fmode");
+    p__setmaxstdio = (void*)GetProcAddress(hmod, "_setmaxstdio");
 }
 
 static void test_filbuf( void )
@@ -211,7 +232,50 @@ static void test_fileops( void )
     ok(fread(buffer, sizeof(buffer), 1, file) == 0, "fread test failed\n");
     /* feof should be set now */
     ok(feof(file), "feof after fread failed\n");
-    fclose (file);
+    clearerr(file);
+    ok(!feof(file), "feof after clearerr failed\n");
+    fclose(file);
+
+    file = fopen("fdopen.tst", "rb");
+    ok( file != NULL, "fopen failed\n");
+    /* sizeof(buffer) > content of file */
+    ok(fread(buffer, sizeof(buffer), 1, file) == 0, "fread test failed\n");
+    /* feof should be set now */
+    ok(feof(file), "feof after fread failed\n");
+    rewind(file);
+    ok(!feof(file), "feof after rewind failed\n");
+    fclose(file);
+
+    file = fopen("fdopen.tst", "rb");
+    ok( file != NULL, "fopen failed\n");
+    /* sizeof(buffer) > content of file */
+    ok(fread(buffer, sizeof(buffer), 1, file) == 0, "fread test failed\n");
+    /* feof should be set now */
+    ok(feof(file), "feof after fread failed\n");
+    fseek(file, 0, SEEK_SET);
+    ok(!feof(file), "feof after fseek failed\n");
+    fclose(file);
+
+    file = fopen("fdopen.tst", "rb");
+    ok( file != NULL, "fopen failed\n");
+    /* sizeof(buffer) > content of file */
+    ok(fread(buffer, sizeof(buffer), 1, file) == 0, "fread test failed\n");
+    /* feof should be set now */
+    ok(feof(file), "feof after fread failed\n");
+    fgetpos(file, &pos);
+    fsetpos(file, &pos);
+    ok(!feof(file), "feof after fsetpos failed\n");
+    fclose(file);
+
+    file = fopen("fdopen.tst", "rb");
+    ok( file != NULL, "fopen failed\n");
+    /* sizeof(buffer) > content of file */
+    ok(fread(buffer, sizeof(buffer), 1, file) == 0, "fread test failed\n");
+    /* feof should be set now */
+    ok(feof(file), "feof after fread failed\n");
+    fsetpos(file, &pos);
+    ok(!feof(file), "feof after fsetpos failed\n");
+    fclose(file);
 
     unlink ("fdopen.tst");
 }
@@ -243,8 +307,21 @@ static void test_readmode( BOOL ascii_mode )
         write (fd, &padbuffer[i], 1);
     write (fd, nlbuffer, strlen(nlbuffer));
     write (fd, outbuffer, sizeof (outbuffer));
+
+    errno = 0xdeadbeef;
+    _doserrno = 0xdeadbeef;
+    ok(read(fd, buffer, 1) == -1, "read succeeded on write-only file\n");
+    ok(errno == EBADF, "errno = %d\n", errno);
+    ok(_doserrno == ERROR_ACCESS_DENIED, "doserrno = %ld\n", _doserrno);
+
     close (fd);
     
+    fd = open ("fdopen.tst", O_RDONLY, _S_IREAD |_S_IWRITE);
+    errno = 0xdeadbeef;
+    ok(dup2(fd, -1) == -1, "dup2(fd, -1) succeeded\n");
+    ok(errno == EBADF, "errno = %d\n", errno);
+    close (fd);
+
     if (ascii_mode) {
         /* Open file in ascii mode */
         fd = open ("fdopen.tst", O_RDONLY);
@@ -262,7 +339,7 @@ static void test_readmode( BOOL ascii_mode )
     ok(fgets(buffer,2*BUFSIZ+256,file) !=0,"padding line fgets failed unexpected in %s\n", IOMODE);
     l = ftell(file);
     pl = 2*BUFSIZ-2;
-    ok(l == pl,"padding line ftell got %d should be %d in %s\n", l, pl, IOMODE);
+    ok(l == pl,"padding line ftell got %ld should be %d in %s\n", l, pl, IOMODE);
     ok(lstrlenA(buffer) == pl+ao,"padding line fgets got size %d should be %d in %s\n",
      lstrlenA(buffer), pl+ao, IOMODE);
     for (fp=0; fp<strlen(outbuffer); fp++)
@@ -270,25 +347,31 @@ static void test_readmode( BOOL ascii_mode )
     fp++;
     ok(fgets(buffer,256,file) !=0,"line 1 fgets failed unexpected in %s\n", IOMODE);
     l = ftell(file);
-    ok(l == pl+fp,"line 1 ftell got %d should be %d in %s\n", l, pl+fp, IOMODE);
+    ok(l == pl+fp,"line 1 ftell got %ld should be %d in %s\n", l, pl+fp, IOMODE);
     ok(lstrlenA(buffer) == fp+ao,"line 1 fgets got size %d should be %d in %s\n",
      lstrlenA(buffer), fp+ao, IOMODE);
     /* test a seek back across the buffer boundary */
     l = pl;
     ok(fseek(file,l,SEEK_SET)==0,"seek failure in %s\n", IOMODE);
     l = ftell(file);
-    ok(l == pl,"ftell after seek got %d should be %d in %s\n", l, pl, IOMODE);
+    ok(l == pl,"ftell after seek got %ld should be %d in %s\n", l, pl, IOMODE);
     ok(fgets(buffer,256,file) !=0,"second read of line 1 fgets failed unexpected in %s\n", IOMODE);
     l = ftell(file);
-    ok(l == pl+fp,"second read of line 1 ftell got %d should be %d in %s\n", l, pl+fp, IOMODE);
+    ok(l == pl+fp,"second read of line 1 ftell got %ld should be %d in %s\n", l, pl+fp, IOMODE);
     ok(lstrlenA(buffer) == fp+ao,"second read of line 1 fgets got size %d should be %d in %s\n",
      lstrlenA(buffer), fp+ao, IOMODE);
     ok(fgets(buffer,256,file) !=0,"line 2 fgets failed unexpected in %s\n", IOMODE);
     fp += 2;
     l = ftell(file);
-    ok(l == pl+fp,"line 2 ftell got %d should be %d in %s\n", l, pl+fp, IOMODE);
+    ok(l == pl+fp,"line 2 ftell got %ld should be %d in %s\n", l, pl+fp, IOMODE);
     ok(lstrlenA(buffer) == 2+ao,"line 2 fgets got size %d should be %d in %s\n",
      lstrlenA(buffer), 2+ao, IOMODE);
+
+    errno = 0xdeadbeef;
+    _doserrno = 0xdeadbeef;
+    ok(write(fd, buffer, 1) == -1, "read succeeded on write-only file\n");
+    ok(errno == EBADF, "errno = %d\n", errno);
+    ok(_doserrno == ERROR_ACCESS_DENIED, "doserrno = %ld\n", _doserrno);
     
     /* test fread across buffer boundary */
     rewind(file);
@@ -298,7 +381,7 @@ static void test_readmode( BOOL ascii_mode )
     i=fread(buffer,1,BUFSIZ+strlen(outbuffer),file);
     ok(i==BUFSIZ+j,"fread failed, expected %d got %d in %s\n", BUFSIZ+j, i, IOMODE);
     l = ftell(file);
-    ok(l == pl+j-(ao*4)-5,"ftell after fread got %d should be %d in %s\n", l, pl+j-(ao*4)-5, IOMODE);
+    ok(l == pl+j-(ao*4)-5,"ftell after fread got %ld should be %d in %s\n", l, pl+j-(ao*4)-5, IOMODE);
     for (m=0; m<3; m++)
         ok(buffer[m]==padbuffer[m+(BUFSIZ-4)%strlen(padbuffer)],"expected %c got %c\n", padbuffer[m], buffer[m]);
     m+=BUFSIZ+2+ao;
@@ -687,7 +770,7 @@ static void test_fflush( void )
   char buf1[16], buf2[24];
   char *tempf;
   FILE *tempfh;
-  int ret;
+  int ret, fd;
 
   tempf=_tempnam(".","wne");
 
@@ -728,7 +811,23 @@ static void test_fflush( void )
   ok(memcmp(buf1, buf2, sizeof(buf1)) == 0, "Got unexpected data (%c)\n", buf2[0]);
 
   fclose(tempfh);
+  unlink(tempf);
 
+  /* test flush failure */
+  tempfh = fopen(tempf,"wb");
+  ok(tempfh != NULL, "Can't open test file.\n");
+  fwrite(obuf, 1, sizeof(obuf), tempfh);
+  fd = tempfh->_file;
+  tempfh->_file = -1;
+
+  ok(tempfh->_ptr - tempfh->_base, "buffer is empty\n");
+  ret = fflush(tempfh);
+  ok(ret == EOF, "expected EOF, got %d\n", ret);
+  ok(!(tempfh->_ptr - tempfh->_base), "buffer should be empty\n");
+  ok(!tempfh->_cnt, "tempfh->_cnt = %d\n", tempfh->_cnt);
+
+  tempfh->_file = fd;
+  fclose(tempfh);
   unlink(tempf);
   free(tempf);
 }
@@ -764,10 +863,10 @@ static void test_fgetwc( void )
   tempfh = fopen(tempf,"rt"); /* open in TEXT mode */
   fgetws(wtextW,LLEN,tempfh);
   l=ftell(tempfh);
-  ok(l==BUFSIZ-2, "ftell expected %d got %d\n", BUFSIZ-2, l);
+  ok(l==BUFSIZ-2, "ftell expected %d got %ld\n", BUFSIZ-2, l);
   fgetws(wtextW,LLEN,tempfh);
   l=ftell(tempfh);
-  ok(l==BUFSIZ-2+strlen(mytext), "ftell expected %d got %d\n", BUFSIZ-2+lstrlenA(mytext), l);
+  ok(l==BUFSIZ-2+strlen(mytext), "ftell expected %d got %ld\n", BUFSIZ-2+lstrlenA(mytext), l);
   mytextW = AtoW (mytext);
   aptr = mytextW;
   wptr = wtextW;
@@ -800,25 +899,25 @@ static void test_fgetwc( void )
   fgetws(wtextW,j,tempfh);
   l=ftell(tempfh);
   j=(j-1)*sizeof(WCHAR);
-  ok(l==j, "ftell expected %d got %d\n", j, l);
+  ok(l==j, "ftell expected %d got %ld\n", j, l);
   i=fgetc(tempfh);
   ok(i=='a', "fgetc expected %d got %d\n", 0x61, i);
   l=ftell(tempfh);
   j++;
-  ok(l==j, "ftell expected %d got %d\n", j, l);
+  ok(l==j, "ftell expected %d got %ld\n", j, l);
   fgetws(wtextW,3,tempfh);
   ok(wtextW[0]=='\r',"expected carriage return got %04hx\n", wtextW[0]);
   ok(wtextW[1]=='\n',"expected newline got %04hx\n", wtextW[1]);
   l=ftell(tempfh);
   j += 4;
-  ok(l==j, "ftell expected %d got %d\n", j, l);
+  ok(l==j, "ftell expected %d got %ld\n", j, l);
   for(i=0; i<strlen(mytext); i++)
     wtextW[i] = 0;
   /* the first time we get the string, it should be entirely within the local buffer */
   fgetws(wtextW,LLEN,tempfh);
   l=ftell(tempfh);
   j += (strlen(mytext)-1)*sizeof(WCHAR);
-  ok(l==j, "ftell expected %d got %d\n", j, l);
+  ok(l==j, "ftell expected %d got %ld\n", j, l);
   diff_found = FALSE;
   aptr = mytextW;
   wptr = wtextW;
@@ -955,6 +1054,38 @@ static void test_fgetwc_unicode(void)
     ok(ch == WEOF, "got %04hx, expected WEOF (unicode)\n", ch);
     fclose(tempfh);
 
+    tempfh = fopen(tempfile, "r,ccs=utf-8");
+    ok(tempfh != NULL, "can't open tempfile\n");
+    for (i = 1; i < ARRAY_SIZE(wchar_text); i++)
+    {
+        ch = fgetwc(tempfh);
+        ok(ch == wchar_text[i],
+                "got %04hx, expected %04x (unicode[%d])\n", ch, wchar_text[i], i-1);
+    }
+    ch = fgetwc(tempfh);
+    ok(ch == WEOF, "got %04hx, expected WEOF (unicode)\n", ch);
+    fclose(tempfh);
+
+    tempfh = fopen(tempfile, "a,ccs=utf-16le");
+    ok(tempfh != NULL, "can't open tempfile\n");
+    ch = fputwc('a', tempfh);
+    ok(ch == 'a', "fputwc returned %x\n", ch);
+    fclose(tempfh);
+
+    tempfh = fopen(tempfile, "a+,ccs=utf-8");
+    ok(tempfh != NULL, "can't open tempfile\n");
+    for (i = 1; i < ARRAY_SIZE(wchar_text); i++)
+    {
+        ch = fgetwc(tempfh);
+        ok(ch == wchar_text[i],
+                "got %04hx, expected %04x (unicode[%d])\n", ch, wchar_text[i], i-1);
+    }
+    ch = fgetwc(tempfh);
+    ok(ch == 'a', "got %04x, expected 'a'\n", ch);
+    ch = fgetwc(tempfh);
+    ok(ch == WEOF, "got %04hx, expected WEOF (unicode)\n", ch);
+    fclose(tempfh);
+
     tempfh = fopen(tempfile, "wb");
     ok(tempfh != NULL, "can't open tempfile\n");
     ret = WideCharToMultiByte(CP_UTF8, 0, wchar_text, ARRAY_SIZE(wchar_text),
@@ -974,6 +1105,57 @@ static void test_fgetwc_unicode(void)
     ch = fgetwc(tempfh);
     ok(ch == WEOF, "got %04hx, expected WEOF (utf8)\n", ch);
     fclose(tempfh);
+
+    tempfh = fopen(tempfile, "wb");
+    ok(tempfh != NULL, "can't open tempfile\n");
+    fwrite(wchar_text+1, 1, sizeof(wchar_text)-1, tempfh);
+    fclose(tempfh);
+
+    tempfh = fopen(tempfile, "rt,ccs=utf-16le");
+    ok(tempfh != NULL, "can't open tempfile\n");
+    for (i = 1; i < ARRAY_SIZE(wchar_text); i++)
+    {
+        ch = fgetwc(tempfh);
+        ok(ch == wchar_text[i],
+                "got %04hx, expected %04x (unicode[%d])\n", ch, wchar_text[i], i-1);
+    }
+    ch = fgetwc(tempfh);
+    ok(ch == WEOF, "got %04hx, expected WEOF (unicode)\n", ch);
+    fclose(tempfh);
+
+    tempfh = fopen(tempfile, "wb");
+    ok(tempfh != NULL, "can't open tempfile\n");
+    ret = WideCharToMultiByte(CP_UTF8, 0, wchar_text + 1, ARRAY_SIZE(wchar_text) - 1,
+                              utf8_text, sizeof(utf8_text), NULL, NULL);
+    ok(ret > 0, "utf-8 conversion failed\n");
+    utf8_text[ret] = 0;
+    fwrite(utf8_text, sizeof(char), ret, tempfh);
+    fclose(tempfh);
+
+    tempfh = fopen(tempfile, "rt, ccs=UTF-8");
+    ok(tempfh != NULL, "can't open tempfile\n");
+    for (i = 1; i < ARRAY_SIZE(wchar_text); i++)
+    {
+        ch = fgetwc(tempfh);
+        ok(ch == wchar_text[i],
+           "got %04hx, expected %04x (utf8[%d])\n", ch, wchar_text[i], i-1);
+    }
+    ch = fgetwc(tempfh);
+    ok(ch == WEOF, "got %04hx, expected WEOF (utf8)\n", ch);
+    fclose(tempfh);
+
+    tempfh = fopen(tempfile, "rt, ccs=unicode");
+    ok(tempfh != NULL, "can't open tempfile\n");
+    for (i = 0; utf8_text[i]; i++)
+    {
+        ch = fgetwc(tempfh);
+        ok(ch == (unsigned char) utf8_text[i],
+           "got %04hx, expected %04x (unicode[%d])\n", ch, (unsigned char)utf8_text[i], i);
+    }
+    ch = fgetwc(tempfh);
+    ok(ch == WEOF, "got %04hx, expected WEOF (unicode)\n", ch);
+    fclose(tempfh);
+
     unlink(temppath);
 }
 
@@ -1034,6 +1216,98 @@ static void test_fputwc(void)
     _unlink(tempfile);
 }
 
+static void test_freopen( void )
+{
+    char filename1[8] = "AXXXXXX";
+    char filename2[8] = "BXXXXXX";
+    FILE *file;
+    FILE *new;
+    int ret;
+    int fd;
+    char ch;
+    long pos;
+
+    mktemp(filename1);
+    mktemp(filename2);
+
+    file = fopen(filename1, "wt");
+    ok(file != NULL, "fopen(filename1) returned NULL\n");
+    ret = fwrite("1", 1, 1, file);
+    ok(ret == 1, "fwrite() returned %d (%d)\n", ret, errno);
+    ret = fclose(file);
+    ok(ret == 0, "fclose() returned %d\n", ret);
+
+    file = fopen(filename2, "wt");
+    ok(file != NULL, "fopen(filename1) returned NULL\n");
+    ret = fwrite("2", 1, 1, file);
+    ok(ret == 1, "fwrite() returned %d (%d)\n", ret, errno);
+    ret = fclose(file);
+    ok(ret == 0, "fclose() returned %d\n", ret);
+
+    file = fopen(filename1, "rt");
+    ok(file != NULL, "fopen(filename1) returned NULL\n");
+    file = freopen(filename2, "rt", file);
+    ok(file != NULL, "fopen(filename2) returned NULL\n");
+    ch = '#';
+    ret = fread(&ch, 1, 1, file);
+    ok(ret == 1, "fread() returned %d\n", ret);
+    ok(ch == '2', "fread() read %c\n", ch);
+    ret = fclose(file);
+    ok(ret == 0, "fclose() returned %d\n", ret);
+
+    file = fopen(filename1, "at");
+    ok(file != NULL, "fopen(filename1) returned NULL\n");
+    file = freopen(filename1, "rt", file);
+    ok(file != NULL, "fopen(filename1) returned NULL\n");
+    pos = ftell(file);
+    ok(pos == 0, "ftell() returned %ld\n", pos);
+    ch = '#';
+    ret = fread(&ch, 1, 1, file);
+    ok(ret == 1, "fread() returned %d\n", ret);
+    ok(ch == '1', "fread() read %c\n", ch);
+    ret = fclose(file);
+    ok(ret == 0, "fclose() returned %d\n", ret);
+
+    file = fopen(filename1, "rt");
+    ok(file != NULL, "fopen(filename1) returned NULL\n");
+    fd = fileno(file);
+    ok(fd > 0, "fileno() returned %d\n", fd);
+    /* invalid filename */
+    new = freopen("_:", "rt", file);
+    ok(new == NULL, "fopen(_:) returned non NULL\n");
+    errno = 0xdeadbeef;
+    ch = '#';
+    ret = read(fd, &ch, 1);
+    ok(ret == -1, "read() returned %d\n", ret);
+    ok(errno == EBADF, "errno is %d\n", errno);
+    errno = 0xdeadbeef;
+    ret = fclose(file);
+    ok(ret == EOF, "fclose(file) succeeded\n");
+    ok(errno == 0xdeadbeef, "errno is %d\n", errno);
+
+    file = fopen(filename1, "rb");
+    ok(file != NULL, "couldn't open %s\n", filename1);
+    close(file->_file);
+    file->_file = -1;
+
+    new = freopen(filename2, "rb", file);
+    ok(new == file, "freopen() didn't return same FILE*\n");
+
+    fd = fileno(file);
+    ok(fd > 0, "fileno() returned %d\n", fd);
+
+    ch = '#';
+    ret = fread(&ch, 1, 1, file);
+    ok(ret == 1, "fread() returned %d\n", ret);
+    ok(ch == '2', "Unexpected char\n");
+
+    ret = fclose(file);
+    ok(ret == 0, "fclose(file) returned %d\n", ret);
+
+    unlink(filename1);
+    unlink(filename2);
+}
+
 static void test_ctrlz( void )
 {
   char* tempf;
@@ -1062,7 +1336,7 @@ static void test_ctrlz( void )
   ok(i==j, "returned string length expected %d got %d\n", j, i);
   j+=4; /* ftell should indicate the true end of file */
   l=ftell(tempfh);
-  ok(l==j, "ftell expected %d got %d\n", j, l);
+  ok(l==j, "ftell expected %d got %ld\n", j, l);
   ok(feof(tempfh), "did not get EOF\n");
   fclose(tempfh);
   
@@ -1072,7 +1346,7 @@ static void test_ctrlz( void )
   j=strlen(mytext)+3; /* should get through newline */
   ok(i==j, "returned string length expected %d got %d\n", j, i);
   l=ftell(tempfh);
-  ok(l==j, "ftell expected %d got %d\n", j, l);
+  ok(l==j, "ftell expected %d got %ld\n", j, l);
   ok(fgets(buffer,256,tempfh) != 0,"fgets failed unexpected\n");
   i=strlen(buffer);
   ok(i==1, "returned string length expected %d got %d\n", 1, i);
@@ -1185,7 +1459,7 @@ static void test_file_write_read( void )
 
   memset(btext, 0, LLEN);
   tempfd = _open(tempf,_O_APPEND|_O_RDWR); /* open for APPEND in default mode */
-  ok(tell(tempfd) == 0, "bad position %u expecting 0\n", tell(tempfd));
+  ok(tell(tempfd) == 0, "bad position %lu expecting 0\n", tell(tempfd));
   ok(_read(tempfd,btext,LLEN) == lstrlenA(mytext), "_read _O_APPEND got bad length\n");
   ok( memcmp(mytext,btext,strlen(mytext)) == 0, "problems with _O_APPEND _read\n");
   _close(tempfd);
@@ -1206,15 +1480,15 @@ static void test_file_write_read( void )
   _lseek(tempfd, -3, FILE_END);
   ret = _read(tempfd,btext,1);
   ok(ret == 1 && *btext == 'e', "_read expected 'e' got \"%.*s\" bad length: %d\n", ret, btext, ret);
-  ok(tell(tempfd) == 41, "bad position %u expecting 41\n", tell(tempfd));
+  ok(tell(tempfd) == 41, "bad position %lu expecting 41\n", tell(tempfd));
   _lseek(tempfd, -3, FILE_END);
   ret = _read(tempfd,btext,2);
   ok(ret == 1 && *btext == 'e', "_read expected 'e' got \"%.*s\" bad length: %d\n", ret, btext, ret);
-  ok(tell(tempfd) == 42, "bad position %u expecting 42\n", tell(tempfd));
+  ok(tell(tempfd) == 42, "bad position %lu expecting 42\n", tell(tempfd));
   _lseek(tempfd, -3, FILE_END);
   ret = _read(tempfd,btext,3);
   ok(ret == 2 && *btext == 'e', "_read expected 'e' got \"%.*s\" bad length: %d\n", ret, btext, ret);
-  ok(tell(tempfd) == 43, "bad position %u expecting 43\n", tell(tempfd));
+  ok(tell(tempfd) == 43, "bad position %lu expecting 43\n", tell(tempfd));
    _close(tempfd);
 
   ret = unlink(tempf);
@@ -1336,9 +1610,9 @@ static void test_file_write_read( void )
       /* test invalid utf8 sequence */
       lseek(tempfd, 5, SEEK_SET);
       ret = _read(tempfd, btext, sizeof(btext));
-      todo_wine ok(ret == 10, "_read returned %d, expected 10\n", ret);
+      ok(ret == 10, "_read returned %d, expected 10\n", ret);
       /* invalid char should be replaced by U+FFFD in MultiByteToWideChar */
-      todo_wine ok(!memcmp(btext, "\xfd\xff", 2), "invalid UTF8 character was not replaced by U+FFFD\n");
+      ok(!memcmp(btext, "\xfd\xff", 2), "invalid UTF8 character was not replaced by U+FFFD\n");
       ok(!memcmp(btext+ret-8, "\x62\x00\x7c\x01\x0d\x00\x0a\x00", 8), "btext is incorrect\n");
       _close(tempfd);
   }
@@ -1355,13 +1629,27 @@ static void test_file_write_read( void )
   free(tempf);
 }
 
-static void test_file_inherit_child(const char* fd_s)
+static void test_file_inherit_child(const char* fd_s, const char *handle_str)
 {
+    HANDLE handle_value;
     int fd = atoi(fd_s);
+    HANDLE *handle_ptr;
+    unsigned int count;
     char buffer[32];
+    STARTUPINFOA si;
     int ret;
 
-    ret =write(fd, "Success", 8);
+    GetStartupInfoA(&si);
+    count = *(unsigned *)si.lpReserved2;
+    if (handle_str)
+    {
+        ok(count == 3, "Got unexpected count %u.\n", count);
+        sscanf(handle_str, "%p", &handle_value);
+        handle_ptr = (HANDLE *)(si.lpReserved2 + sizeof(unsigned) + count);
+        ok(handle_value == handle_ptr[1], "Got unexpected handle %p.\n", handle_ptr[1]);
+    }
+
+    ret = write(fd, "Success", 8);
     ok( ret == 8, "Couldn't write in child process on %d (%s)\n", fd, strerror(errno));
     lseek(fd, 0, SEEK_SET);
     ok(read(fd, buffer, sizeof (buffer)) == 8, "Couldn't read back the data\n");
@@ -1430,7 +1718,7 @@ static void test_stdout_handle( STARTUPINFOA *startup, char *cmdline, HANDLE hst
 
     CreateProcessA( NULL, cmdline, NULL, NULL, TRUE,
                     CREATE_DEFAULT_ERROR_MODE | NORMAL_PRIORITY_CLASS, NULL, NULL, startup, &proc );
-    winetest_wait_child_process( proc.hProcess );
+    wait_child_process( proc.hProcess );
 
     data = read_file( hErrorFile );
     if (expect_stdout)
@@ -1451,6 +1739,18 @@ static void test_stdout_handle( STARTUPINFOA *startup, char *cmdline, HANDLE hst
     DeleteFileA( "fdopen.err" );
 }
 
+static unsigned WINAPI read_pipe_thread(void *argument)
+{
+    unsigned char buffer[2];
+    int ret;
+    int *pipefds = argument;
+
+    ret = _read(pipefds[0], buffer, sizeof(buffer));
+    ok(ret == 1, "ret = %d\n", ret);
+    ok(buffer[0] == 'a', "%x\n", buffer[0]);
+    return 0;
+}
+
 static void test_file_inherit( const char* selfname )
 {
     int			fd;
@@ -1460,16 +1760,20 @@ static void test_file_inherit( const char* selfname )
     STARTUPINFOA startup;
     SECURITY_ATTRIBUTES sa;
     HANDLE handles[3];
+    HANDLE thread_handle;
+    int pipefds[2];
+    intptr_t ret;
 
     fd = open ("fdopen.tst", O_CREAT | O_RDWR | O_BINARY, _S_IREAD |_S_IWRITE);
     ok(fd != -1, "Couldn't create test file\n");
     arg_v[0] = get_base_name(selfname);
-    arg_v[1] = "tests/file.c";
+    arg_v[1] = "file";
     arg_v[2] = "inherit";
     arg_v[3] = buffer; sprintf(buffer, "%d", fd);
     arg_v[4] = 0;
-    _spawnvp(_P_WAIT, selfname, arg_v);
-    ok(tell(fd) == 8, "bad position %u expecting 8\n", tell(fd));
+    ret = _spawnvp(_P_WAIT, selfname, arg_v);
+    ok(ret == 0, "_spawnvp returned %Id, errno %d\n", ret, errno);
+    ok(tell(fd) == 8, "bad position %lu expecting 8\n", tell(fd));
     lseek(fd, 0, SEEK_SET);
     ok(read(fd, buffer, sizeof (buffer)) == 8 && memcmp(buffer, "Success", 8) == 0, "Couldn't read back the data\n");
     close (fd);
@@ -1477,16 +1781,51 @@ static void test_file_inherit( const char* selfname )
     
     fd = open ("fdopen.tst", O_CREAT | O_RDWR | O_BINARY | O_NOINHERIT, _S_IREAD |_S_IWRITE);
     ok(fd != -1, "Couldn't create test file\n");
-    arg_v[1] = "tests/file.c";
+    arg_v[1] = "file";
     arg_v[2] = "inherit_no";
     arg_v[3] = buffer; sprintf(buffer, "%d", fd);
     arg_v[4] = 0;
-    _spawnvp(_P_WAIT, selfname, arg_v);
-    ok(tell(fd) == 0, "bad position %u expecting 0\n", tell(fd));
+    ret = _spawnvp(_P_WAIT, selfname, arg_v);
+    ok(ret == 0, "_spawnvp returned %Id, errno %d\n", ret, errno);
+    ok(tell(fd) == 0, "bad position %lu expecting 0\n", tell(fd));
     ok(read(fd, buffer, sizeof (buffer)) == 0, "Found unexpected data (%s)\n", buffer);
     close (fd);
     ok(unlink("fdopen.tst") == 0, "Couldn't unlink\n");
 
+    /* Show that spawn works while a read is active */
+    ok(_pipe(pipefds, 1, O_BINARY) == 0, "_pipe() failed\n");
+    thread_handle = (HANDLE)_beginthreadex(NULL, 0, read_pipe_thread, pipefds, 0, NULL);
+    Sleep(100); /* try to make sure the thread is reading */
+    fd = open ("fdopen.tst", O_CREAT | O_RDWR | O_BINARY, _S_IREAD |_S_IWRITE);
+    ok(fd != -1, "Couldn't create test file\n");
+    arg_v[1] = "tests/file.c";
+    arg_v[2] = "inherit";
+    arg_v[3] = buffer; sprintf(buffer, "%d", fd);
+    arg_v[4] = 0;
+#ifdef __REACTOS__
+    if (is_reactos())
+    {
+        skip("Skipping test_file_inherit pipe test, because it hangs on ReactOS\n");
+    }
+    else
+    {
+#endif
+    ret = _spawnvp(_P_WAIT, selfname, arg_v);
+    ok(ret == 0, "_spawnvp returned %Id, errno %d\n", ret, errno);
+    ret = tell(fd);
+    ok(ret == 8, "bad position %Iu expecting 8\n", ret);
+    lseek(fd, 0, SEEK_SET);
+    ok(read(fd, buffer, sizeof (buffer)) == 8 && memcmp(buffer, "Success", 8) == 0, "Couldn't read back the data\n");
+    close (fd);
+    ok(unlink("fdopen.tst") == 0, "Couldn't unlink\n");
+    _write(pipefds[1], "a", 1);
+    WaitForSingleObject(thread_handle, INFINITE);
+    CloseHandle(thread_handle);
+    close(pipefds[0]);
+    close(pipefds[1]);
+#ifdef __REACTOS__
+    }
+#endif
     /* make file handle inheritable */
     sa.nLength = sizeof(sa);
     sa.lpSecurityDescriptor = NULL;
@@ -1544,6 +1883,22 @@ static void test_file_inherit( const char* selfname )
     test_stdout_handle( &startup, cmdline, handles[1], TRUE, "large size block" );
     CloseHandle( handles[1] );
     DeleteFileA("fdopen.tst");
+
+    /* test inherit block with invalid handle */
+    handles[1] = INVALID_HANDLE_VALUE;
+    create_io_inherit_block( &startup, 3, handles );
+    sprintf(cmdline, "%s file inherit 1 %p", selfname, handles[1]);
+    test_stdout_handle( &startup, cmdline, NULL, FALSE, "INVALID_HANDLE_VALUE stdout handle" );
+
+    handles[1] = NULL;
+    create_io_inherit_block( &startup, 3, handles );
+    sprintf(cmdline, "%s file inherit 1 %p", selfname, handles[1]);
+    test_stdout_handle( &startup, cmdline, NULL, FALSE, "NULL stdout handle" );
+
+    handles[1] = (void *)0xdeadbeef;
+    create_io_inherit_block( &startup, 3, handles );
+    sprintf(cmdline, "%s file inherit 1 %p", selfname, handles[1]);
+    test_stdout_handle( &startup, cmdline, NULL, FALSE, "invalid stdout handle" );
 }
 
 static void test_invalid_stdin_child( void )
@@ -1557,6 +1912,8 @@ static void test_invalid_stdin_child( void )
     handle = (HANDLE)_get_osfhandle(STDIN_FILENO);
     ok(handle == (HANDLE)-2, "handle = %p\n", handle);
     ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+    handle = GetStdHandle(STD_INPUT_HANDLE);
+    ok((LONG_PTR)handle > 0, "Expecting passed handle to be untouched\n");
 
     info = &__pioinfo[STDIN_FILENO/MSVCRT_FD_BLOCK_SIZE][STDIN_FILENO%MSVCRT_FD_BLOCK_SIZE];
     ok(info->handle == (HANDLE)-2, "info->handle = %p\n", info->handle);
@@ -1631,7 +1988,11 @@ static void test_invalid_stdin( const char* selfname )
     }
 
     ret = RegOpenCurrentUser(KEY_READ, &key);
-    ok(!ret, "RegOpenCurrentUser failed: %x\n", ret);
+    ok(!ret, "RegOpenCurrentUser failed: %lx\n", ret);
+
+    ret = DuplicateHandle(GetCurrentProcess(), key, GetCurrentProcess(),
+            (HANDLE *)&key, GENERIC_READ, TRUE, DUPLICATE_CLOSE_SOURCE);
+    ok(ret, "DuplicateHandle failed: %lx\n", GetLastError());
 
     sa.nLength = sizeof(sa);
     sa.lpSecurityDescriptor = NULL;
@@ -1647,10 +2008,10 @@ static void test_invalid_stdin( const char* selfname )
     sprintf(cmdline, "%s file stdin", selfname);
     CreateProcessA(NULL, cmdline, NULL, NULL, TRUE,
             CREATE_DEFAULT_ERROR_MODE|NORMAL_PRIORITY_CLASS, NULL, NULL, &startup, &proc);
-    winetest_wait_child_process(proc.hProcess);
+    wait_child_process(proc.hProcess);
 
     ret = RegCloseKey(key);
-    ok(!ret, "RegCloseKey failed: %x\n", ret);
+    ok(!ret, "RegCloseKey failed: %lx\n", ret);
 }
 
 static void test_tmpnam( void )
@@ -1678,8 +2039,8 @@ static void test_chsize( void )
     LONG cur, pos, count;
     char temptext[] = "012345678";
     char *tempfile = _tempnam( ".", "tst" );
-    
-    ok( tempfile != NULL, "Couldn't create test file: %s\n", tempfile );
+
+    ok( tempfile != NULL, "Couldn't create test file\n" );
 
     fd = _open( tempfile, _O_CREAT|_O_TRUNC|_O_RDWR, _S_IREAD|_S_IWRITE );
     ok( fd > 0, "Couldn't open test file\n" );
@@ -1694,14 +2055,14 @@ static void test_chsize( void )
     ok( _chsize( fd, sizeof(temptext) / 2 ) == 0, "_chsize() failed\n" );
 
     pos = _lseek( fd, 0, SEEK_CUR );
-    ok( cur == pos, "File pointer changed from: %d to: %d\n", cur, pos );
+    ok( cur == pos, "File pointer changed from: %ld to: %ld\n", cur, pos );
     ok( _filelength( fd ) == sizeof(temptext) / 2, "Wrong file size\n" );
 
     /* enlarge the file */
     ok( _chsize( fd, sizeof(temptext) * 2 ) == 0, "_chsize() failed\n" ); 
 
     pos = _lseek( fd, 0, SEEK_CUR );
-    ok( cur == pos, "File pointer changed from: %d to: %d\n", cur, pos );
+    ok( cur == pos, "File pointer changed from: %ld to: %ld\n", cur, pos );
     ok( _filelength( fd ) == sizeof(temptext) * 2, "Wrong file size\n" );
 
     _close( fd );
@@ -1748,6 +2109,11 @@ static void test_fopen_fclose_fcloseall( void )
     ret = fclose(stream3);
     ok(ret == EOF, "Closing file '%s' returned %d\n", fname3, ret);
     ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+    skip_2k3_crash {
+    ret = fclose(NULL);
+    ok(ret == EOF, "Closing NULL file returned %d\n", ret);
+    ok(errno == EINVAL, "errno = %d\n", errno);
+    }
 
     /* testing fcloseall() */
     numclosed = _fcloseall();
@@ -1879,12 +2245,6 @@ static void test_fopen_s( void )
 static void test__wfopen_s( void )
 {
     const char name[] = "empty1";
-    const WCHAR wname[] = {
-       'e','m','p','t','y','1',0
-    };
-    const WCHAR wmode[] = {
-       'w',0
-    };
     char buff[16];
     FILE *file;
     int ret;
@@ -1896,7 +2256,7 @@ static void test__wfopen_s( void )
         return;
     }
     /* testing _wfopen_s */
-    ret = p__wfopen_s(&file, wname, wmode);
+    ret = p__wfopen_s(&file, L"empty1", L"w");
     ok(ret == 0, "_wfopen_s failed with %d\n", ret);
     ok(file != 0, "_wfopen_s failed to return value\n");
     fwrite(name, sizeof(name), 1, file);
@@ -2007,8 +2367,12 @@ static void test_get_osfhandle(void)
 
 static void test_setmaxstdio(void)
 {
-    ok(2048 == _setmaxstdio(2048),"_setmaxstdio returned %d instead of 2048\n",_setmaxstdio(2048));
-    ok(-1 == _setmaxstdio(2049),"_setmaxstdio returned %d instead of -1\n",_setmaxstdio(2049));
+    if (p__setmaxstdio)
+    {
+        ok(2048 == p__setmaxstdio(2048),"_setmaxstdio returned %d instead of 2048\n",p__setmaxstdio(2048));
+        ok(-1 == p__setmaxstdio(2049),"_setmaxstdio returned %d instead of -1\n",p__setmaxstdio(2049));
+    }
+    else win_skip( "_setmaxstdio not supported\n" );
 }
 
 static void test_stat(void)
@@ -2159,7 +2523,13 @@ static void test_pipes(const char* selfname)
     char expected[4096];
     int r;
     int i;
-
+#ifdef __REACTOS__
+    if (is_reactos())
+    {
+        win_skip("Skipping test_pipes, because it hangs on ReactOS\n");
+        return;
+    }
+#endif
     /* Test reading from a pipe with read() */
     if (_pipe(pipes, 1024, O_BINARY) < 0)
     {
@@ -2168,7 +2538,7 @@ static void test_pipes(const char* selfname)
     }
 
     arg_v[0] = get_base_name(selfname);
-    arg_v[1] = "tests/file.c";
+    arg_v[1] = "file";
     arg_v[2] = "pipes";
     arg_v[3] = str_fdr; sprintf(str_fdr, "%d", pipes[0]);
     arg_v[4] = str_fdw; sprintf(str_fdw, "%d", pipes[1]);
@@ -2197,7 +2567,7 @@ static void test_pipes(const char* selfname)
         return;
     }
 
-    arg_v[1] = "tests/file.c";
+    arg_v[1] = "file";
     arg_v[2] = "pipes";
     arg_v[3] = str_fdr; sprintf(str_fdr, "%d", pipes[0]);
     arg_v[4] = str_fdw; sprintf(str_fdw, "%d", pipes[1]);
@@ -2313,7 +2683,7 @@ static void test_stdin(void)
             "GetStdHandle(STD_INPUT_HANDLE) != _get_osfhandle(STDIN_FILENO)\n");
 
     r = SetStdHandle(STD_INPUT_HANDLE, INVALID_HANDLE_VALUE);
-    ok(r == TRUE, "SetStdHandle returned %x, expected TRUE\n", r);
+    ok(r == TRUE, "SetStdHandle returned %lx, expected TRUE\n", r);
     h = GetStdHandle(STD_INPUT_HANDLE);
     ok(h == INVALID_HANDLE_VALUE, "h = %p\n", h);
 
@@ -2548,7 +2918,7 @@ static void test__creat(void)
         pos = _tell(fd);
         ok(pos == 6, "expected pos 6 (text mode), got %d\n", pos);
     }
-    ok(_lseek(fd, SEEK_SET, 0) == 0, "_lseek failed\n");
+    ok(_lseek(fd, 0, SEEK_SET) == 0, "_lseek failed\n");
     count = _read(fd, buf, 6);
     ok(count == 4, "_read returned %d, expected 4\n", count);
     count = count > 0 ? count > 4 ? 4 : count : 0;
@@ -2568,7 +2938,7 @@ static void test__creat(void)
         pos = _tell(fd);
         ok(pos == 4, "expected pos 4 (binary mode), got %d\n", pos);
     }
-    ok(_lseek(fd, SEEK_SET, 0) == 0, "_lseek failed\n");
+    ok(_lseek(fd, 0, SEEK_SET) == 0, "_lseek failed\n");
     count = _read(fd, buf, 6);
     ok(count == 4, "_read returned %d, expected 4\n", count);
     count = count > 0 ? count > 4 ? 4 : count : 0;
@@ -2581,6 +2951,215 @@ static void test__creat(void)
 
     if (have_fmode)
         p__set_fmode(old_fmode);
+}
+
+static void test_lseek(void)
+{
+    int fd;
+    char testdata[4] = {'a', '\n', 'b', '\n'};
+
+    errno = 0xdeadbeef;
+    ok(_lseek(-42, 0, SEEK_SET) == -1, "expected failure\n");
+    ok(errno == EBADF, "errno = %d\n", errno);
+
+    fd = _creat("_creat.tst", _S_IWRITE);
+    ok(fd > 0, "_creat failed\n");
+    _write(fd, testdata, 4);
+
+    errno = 0xdeadbeef;
+    ok(_lseek(fd, 0, 42) == -1, "expected failure\n");
+    ok(errno == EINVAL, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ok(_lseek(fd, -42, SEEK_SET) == -1, "expected failure\n");
+    ok(errno == EINVAL, "errno = %d\n", errno);
+
+    _close(fd);
+    DeleteFileA("_creat.tst");
+}
+
+static BOOL has_sequential_hint(int fd)
+{
+    HANDLE handle;
+    FILE_MODE_INFORMATION mode_info;
+    IO_STATUS_BLOCK io;
+    NTSTATUS status;
+
+    handle = (HANDLE)_get_osfhandle(fd);
+    status = NtQueryInformationFile(handle, &io, &mode_info, sizeof(mode_info),
+            FileModeInformation);
+    ok(!status, "NtQueryInformationFile failed\n");
+    return (mode_info.Mode & FILE_SEQUENTIAL_ONLY) != 0;
+}
+
+static void test_fopen_hints(void)
+{
+    static const struct {
+        const char *mode;
+        BOOL seq;
+    } tests[] = {
+        { "rb", FALSE },
+        { "rbS", TRUE },
+        { "rbR", FALSE },
+        { "rbSR", TRUE },
+        { "rbRS", FALSE }
+    };
+
+    char temppath[MAX_PATH], tempfile[MAX_PATH];
+    FILE *fp;
+    int i;
+
+    GetTempPathA(MAX_PATH, temppath);
+    GetTempFileNameA(temppath, "", 0, tempfile);
+
+    for (i = 0; i < ARRAY_SIZE(tests); ++i)
+    {
+        fp = fopen(tempfile, tests[i].mode);
+        ok(fp != NULL, "unable to fopen test file with mode \"%s\"\n", tests[i].mode);
+        ok(has_sequential_hint(_fileno(fp)) == tests[i].seq,
+                "unexpected sequential hint for fopen mode \"%s\"\n", tests[i].mode);
+        fclose(fp);
+    }
+    unlink(tempfile);
+}
+
+static void test_open_hints(void)
+{
+    static const struct {
+        int mode;
+        BOOL seq;
+    } tests[] = {
+        { _O_RDONLY | _O_BINARY, FALSE },
+        { _O_RDONLY | _O_BINARY | _O_SEQUENTIAL, TRUE },
+        { _O_RDONLY | _O_BINARY | _O_RANDOM, FALSE },
+        { _O_RDONLY | _O_BINARY | _O_RANDOM | _O_SEQUENTIAL, TRUE }
+    };
+
+    char temppath[MAX_PATH], tempfile[MAX_PATH];
+    int fd;
+    int i;
+
+    GetTempPathA(MAX_PATH, temppath);
+    GetTempFileNameA(temppath, "", 0, tempfile);
+
+    for (i = 0; i < ARRAY_SIZE(tests); ++i)
+    {
+        fd = open(tempfile, tests[i].mode);
+        ok(fd != -1, "unable to _open test file with flags %x\n", tests[i].mode);
+        ok(has_sequential_hint(fd) == tests[i].seq,
+                "unexpected sequential hint for _open flags %x\n", tests[i].mode);
+        close(fd);
+    }
+    unlink(tempfile);
+}
+
+static void test_ioinfo_flags(void)
+{
+    HANDLE handle;
+    ioinfo *info;
+    char *tempf;
+    int tempfd;
+
+    tempf = _tempnam(".","wne");
+
+    tempfd = _open(tempf, _O_CREAT|_O_TRUNC|_O_WRONLY|_O_WTEXT, _S_IWRITE);
+    ok(tempfd != -1, "_open failed with error: %d\n", errno);
+
+    handle = (HANDLE)_get_osfhandle(tempfd);
+    info = &__pioinfo[tempfd / MSVCRT_FD_BLOCK_SIZE][tempfd % MSVCRT_FD_BLOCK_SIZE];
+    ok(!!info, "NULL info.\n");
+    ok(info->handle == handle, "Unexpected handle %p, expected %p.\n", info->handle, handle);
+    skip_2k3_fail ok(info->exflag == (EF_UTF16 | EF_CRIT_INIT | EF_UNK_UNICODE), "Unexpected exflag %#x.\n", info->exflag);
+    ok(info->wxflag == (WX_TEXT | WX_OPEN), "Unexpected wxflag %#x.\n", info->wxflag);
+
+    close(tempfd);
+
+    ok(info->handle == INVALID_HANDLE_VALUE, "Unexpected handle %p.\n", info->handle);
+    skip_2k3_fail ok(info->exflag == (EF_UTF16 | EF_CRIT_INIT | EF_UNK_UNICODE), "Unexpected exflag %#x.\n", info->exflag);
+    ok(!info->wxflag, "Unexpected wxflag %#x.\n", info->wxflag);
+
+    info = &__pioinfo[(tempfd + 4) / MSVCRT_FD_BLOCK_SIZE][(tempfd + 4) % MSVCRT_FD_BLOCK_SIZE];
+    ok(!!info, "NULL info.\n");
+    ok(info->handle == INVALID_HANDLE_VALUE, "Unexpected handle %p.\n", info->handle);
+    ok(!info->exflag, "Unexpected exflag %#x.\n", info->exflag);
+
+    unlink(tempf);
+    free(tempf);
+}
+
+static void test_std_stream_buffering(void)
+{
+    int dup_fd, ret, pos;
+    FILE *file;
+    char ch;
+
+    dup_fd = _dup(STDOUT_FILENO);
+    ok(dup_fd != -1, "_dup failed\n");
+
+    file = freopen("std_stream_test.tmp", "w", stdout);
+    ok(file != NULL, "freopen failed\n");
+
+    ret = fprintf(stdout, "test");
+    pos = _telli64(STDOUT_FILENO);
+
+    fflush(stdout);
+    _dup2(dup_fd, STDOUT_FILENO);
+    close(dup_fd);
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    ok(ret == 4, "fprintf(stdout) returned %d\n", ret);
+    ok(!pos, "expected stdout to be buffered\n");
+
+    dup_fd = _dup(STDERR_FILENO);
+    ok(dup_fd != -1, "_dup failed\n");
+
+    file = freopen("std_stream_test.tmp", "w", stderr);
+    ok(file != NULL, "freopen failed\n");
+
+    ret = fprintf(stderr, "test");
+    ok(ret == 4, "fprintf(stderr) returned %d\n", ret);
+    pos = _telli64(STDERR_FILENO);
+    ok(!pos, "expected stderr to be buffered\n");
+
+    fflush(stderr);
+    _dup2(dup_fd, STDERR_FILENO);
+    close(dup_fd);
+
+    dup_fd = _dup(STDIN_FILENO);
+    ok(dup_fd != -1, "_dup failed\n");
+
+    file = freopen("std_stream_test.tmp", "r", stdin);
+    ok(file != NULL, "freopen failed\n");
+
+    ch = 0;
+    ret = fscanf(stdin, "%c", &ch);
+    ok(ret == 1, "fscanf returned %d\n", ret);
+    ok(ch == 't', "ch = 0x%x\n", (unsigned char)ch);
+    pos = _telli64(STDIN_FILENO);
+    ok(pos == 4, "pos = %d\n", pos);
+
+    fflush(stdin);
+    _dup2(dup_fd, STDIN_FILENO);
+    close(dup_fd);
+
+    ok(DeleteFileA("std_stream_test.tmp"), "DeleteFile failed\n");
+}
+
+static void test_std_stream_open(void)
+{
+    FILE *f;
+    int fd;
+
+    fd = _dup(STDIN_FILENO);
+    ok(fd != -1, "_dup failed\n");
+
+    ok(!fclose(stdin), "fclose failed\n");
+    f = fopen("nul", "r");
+    ok(f == stdin, "f = %p, expected %p\n", f, stdin);
+    ok(_fileno(f) == STDIN_FILENO, "_fileno(f) = %d\n", _fileno(f));
+
+    _dup2(fd, STDIN_FILENO);
+    close(fd);
 }
 
 START_TEST(file)
@@ -2596,7 +3175,7 @@ START_TEST(file)
     if (arg_c >= 3)
     {
         if (strcmp(arg_v[2], "inherit") == 0)
-            test_file_inherit_child(arg_v[3]);
+            test_file_inherit_child(arg_v[3], arg_c > 4 ? arg_v[4] : NULL);
         else if (strcmp(arg_v[2], "inherit_no") == 0)
             test_file_inherit_child_no(arg_v[3]);
         else if (strcmp(arg_v[2], "pipes") == 0)
@@ -2642,6 +3221,7 @@ START_TEST(file)
     test_fgetwc_locale("AB\x83\xa9", "C", 0);
     test_fgetwc_unicode();
     test_fputwc();
+    test_freopen();
     test_ctrlz();
     test_file_put_get();
     test_tmpnam();
@@ -2654,6 +3234,12 @@ START_TEST(file)
     test_write_flush();
     test_close();
     test__creat();
+    test_lseek();
+    test_fopen_hints();
+    test_open_hints();
+    test_ioinfo_flags();
+    test_std_stream_buffering();
+    test_std_stream_open();
 
     /* Wait for the (_P_NOWAIT) spawned processes to finish to make sure the report
      * file contains lines in the correct order

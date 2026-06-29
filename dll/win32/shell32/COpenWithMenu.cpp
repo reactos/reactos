@@ -31,6 +31,117 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
+static SIZE_T PathGetAppFromCommandLine(LPCWSTR pszIn, LPWSTR pszOut, SIZE_T cchMax)
+{
+    SIZE_T count = 0;
+    WCHAR stop = ' ';
+    if (pszIn[0] == '"')
+        stop = *(pszIn++);
+
+    for (LPCWSTR pwszSrc = pszIn; *pwszSrc && *pwszSrc != stop; ++pwszSrc)
+    {
+        if (++count >= cchMax)
+            return 0;
+        *(pszOut++) = *pwszSrc;
+    }
+    *pszOut = UNICODE_NULL;
+    return count;
+}
+
+HRESULT SHELL32_GetDllFromRundll32CommandLine(LPCWSTR pszCmd, LPWSTR pszOut, SIZE_T cchMax)
+{
+    WCHAR szDll[MAX_PATH + 100];
+    if (!PathGetAppFromCommandLine(pszCmd, szDll, _countof(szDll)))
+        return HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+
+    PWSTR pszName = PathFindFileNameW(szDll);
+    if (_wcsicmp(pszName, L"rundll32") && _wcsicmp(pszName, L"rundll32.exe"))
+        return E_UNEXPECTED;
+
+    PCWSTR pszDllStart = pszCmd + (pszName - szDll) + lstrlenW(pszName);
+
+    if (*pszDllStart == '\"')
+        ++pszDllStart; // Skip possible end quote of ..\rundll32.exe" foo.dll,func
+    while (*pszDllStart <= ' ' && *pszDllStart)
+        ++pszDllStart;
+    if (PathGetAppFromCommandLine(pszDllStart, szDll, _countof(szDll)))
+    {
+        BOOL quoted = *pszDllStart == '\"';
+        PWSTR pszComma = szDll + lstrlenW(szDll);
+        while (!quoted && pszComma > szDll && *pszComma != ',' && *pszComma != '\\' && *pszComma != '/')
+            --pszComma;
+        SIZE_T cch = pszComma - szDll;
+        if (cch <= cchMax && (quoted || *pszComma == ','))
+        {
+            *pszComma = UNICODE_NULL;
+            lstrcpynW(pszOut, szDll, cchMax);
+            return S_OK;
+        }
+    }
+    return HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+}
+
+static HRESULT SH32_EvaluateValidExecApp(_Inout_ PWSTR pszCmd, _In_ SIZE_T cchMax)
+{
+    // FIXME: SHEvaluateSystemCommandTemplate is not implemented yet, using a minimal version.
+    if (!PathGetAppFromCommandLine(pszCmd, pszCmd, cchMax))
+        return E_FAIL;
+
+    UINT fPRF = PRF_VERIFYEXISTS | PRF_TRYPROGRAMEXTENSIONS | PRF_DONTFINDLNK;
+    WCHAR szCurrDir[MAX_PATH];
+    LPCWSTR pszDirsArr[2] = { szCurrDir, NULL }, *ppszDirs = NULL;
+    if (GetCurrentDirectoryW(_countof(szCurrDir), szCurrDir))
+        ppszDirs = pszDirsArr;
+    if (PathResolveW(pszCmd, ppszDirs, fPRF | (ppszDirs ? PRF_FIRSTDIRDEF : 0)))
+        return S_OK;
+    return E_FAIL;
+}
+
+HRESULT SH32_InvokeOpenWith(_In_ PCWSTR pszPath, _In_ LPCMINVOKECOMMANDINFO pici, _Out_ HANDLE *phProcess)
+{
+    if (!pszPath || !pici)
+        return HResultFromWin32(ERROR_INVALID_PARAMETER);
+
+    HRESULT hr = HResultFromWin32(ERROR_NO_ASSOCIATION);
+    SHELLEXECUTEINFOW sei = { sizeof(sei), CmicFlagsToSeeFlags(pici->fMask), pici->hwnd };
+    sei.fMask |= SEE_MASK_CLASSKEY | SEE_MASK_NOZONECHECKS;
+    sei.lpFile = pszPath;
+    sei.nShow = pici->nShow;
+    if (phProcess)
+    {
+        sei.fMask |= SEE_MASK_NOCLOSEPROCESS;
+        sei.hProcess = NULL;
+    }
+
+    if (!RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Unknown", 0, KEY_READ, &sei.hkeyClass))
+    {
+        // Use the internal dialog only if HKCR\Unknown\shell\openas\command exists but is invalid.
+        WCHAR szCmd[MAX_PATH * 2];
+        DWORD cch = _countof(szCmd);
+        hr = AssocQueryStringByKeyW(ASSOCF_NOTRUNCATE | ASSOCF_NOFIXUPS |
+                                    ASSOCF_IGNOREBASECLASS | ASSOCF_INIT_IGNOREUNKNOWN,
+                                    ASSOCSTR_COMMAND, sei.hkeyClass, NULL, szCmd, &cch);
+        if (SUCCEEDED(hr) && FAILED(SH32_EvaluateValidExecApp(szCmd, _countof(szCmd))))
+        {
+            OPENASINFO info = { pszPath, NULL, OAIF_EXEC | OAIF_REGISTER_EXT | OAIF_ALLOW_REGISTRATION };
+            hr = SHOpenWithDialog(sei.hwnd, &info);
+        }
+        else
+        {
+            hr = ShellExecuteExW(&sei) ? S_OK : HResultFromWin32(GetLastError());
+        }
+        RegCloseKey(sei.hkeyClass);
+    }
+    else if (!(pici->fMask & CMIC_MASK_FLAG_NO_UI))
+    {
+        SHELL_ErrorBox(sei.hwnd, hr);
+    }
+
+    if (phProcess)
+        *phProcess = sei.hProcess;
+    return hr;
+}
+
 class COpenWithList
 {
     public:
@@ -378,7 +489,7 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
     }
 
     /* Query name */
-    swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\FileDescription", wLang, wCode);
+    _swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\FileDescription", wLang, wCode);
     success = VerQueryValueW(pBuf, wszBuf, (LPVOID *)&pResult, &cchLen) && (cchLen > 1);
     if (success)
         StringCchCopyNW(pApp->wszName, _countof(pApp->wszName), pResult, cchLen);
@@ -396,26 +507,23 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
 
 BOOL COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
 {
-    WCHAR wszBuf[MAX_PATH], *pwszDest = wszBuf;
+    WCHAR wszBuf[MAX_PATH];
 
     /* Remove arguments */
-    if (pwszCmd[0] == '"')
-    {
-        for(LPCWSTR pwszSrc = pwszCmd + 1; *pwszSrc && *pwszSrc != '"'; ++pwszSrc)
-            *(pwszDest++) = *pwszSrc;
-    }
-    else
-    {
-        for(LPCWSTR pwszSrc = pwszCmd; *pwszSrc && *pwszSrc != ' '; ++pwszSrc)
-            *(pwszDest++) = *pwszSrc;
-    }
+    if (!PathGetAppFromCommandLine(pwszCmd, wszBuf, _countof(wszBuf)))
+        return FALSE;
 
-    *pwszDest = 0;
+    /* Replace rundll32.exe with the dll path */
+    SHELL32_GetDllFromRundll32CommandLine(pwszCmd, wszBuf, _countof(wszBuf));
 
-    /* Expand evn vers and optionally search for path */
+    /* Expand env. vars and optionally search for path */
     ExpandEnvironmentStrings(wszBuf, pwszAppPath, MAX_PATH);
     if (!PathFileExists(pwszAppPath))
-        return SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+    {
+        UINT cch = SearchPathW(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+        if (!cch || cch >= MAX_PATH)
+            return FALSE;
+    }
     return TRUE;
 }
 
@@ -644,7 +752,7 @@ VOID COpenWithList::LoadRecommendedFromHKCU(LPCWSTR pwszExt)
         LoadMRUList(hKey);
         LoadProgIdList(hKey, pwszExt);
 
-        /* Handle "Aplication" value */
+        /* Handle "Application" value */
         DWORD cbBuf = sizeof(wszBuf);
         if (RegGetValueW(hKey, NULL, L"Application", RRF_RT_REG_SZ, NULL, wszBuf, &cbBuf) == ERROR_SUCCESS)
         {
@@ -769,6 +877,16 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
         return FALSE;
     }
 
+    /* Create "DefaultIcon" key */
+    HKEY hDefIconKey;
+    if (RegCreateKeyExW(hKey, L"DefaultIcon", 0, NULL, 0, KEY_WRITE, NULL,
+                        &hDefIconKey, NULL) == ERROR_SUCCESS)
+    {
+        RegSetString(hDefIconKey, NULL, pApp->wszFilename, REG_EXPAND_SZ);
+        RegCloseKey(hDefIconKey);
+        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
+    }
+
     /* Copy static verbs from Classes\Applications key */
     /* FIXME: SHCopyKey does not copy the security attributes of the keys */
     /* FIXME: Windows does not actually copy the verb keys */
@@ -818,6 +936,7 @@ class COpenWithDialog
 
         const OPENASINFO *m_pInfo;
         COpenWithList *m_pAppList;
+        UINT m_InFlags;
         BOOL m_bListAllocated;
         HWND m_hDialog, m_hTreeView;
         HTREEITEM m_hRecommend;
@@ -984,13 +1103,22 @@ VOID COpenWithDialog::Init(HWND hwnd)
     m_hDialog = hwnd;
     SetWindowLongPtr(hwnd, DWLP_USER, (LONG_PTR)this);
 
+    UINT fDisallow = 0;
+    PCWSTR pszExt = PathFindExtensionW(m_pInfo->pcszFile);
+    // Don't allow registration for "" nor "." nor ".exe" etc.
+    if (!pszExt || !pszExt[0] || !pszExt[1] || PathIsExeW(m_pInfo->pcszFile))
+        fDisallow |= OAIF_ALLOW_REGISTRATION | OAIF_FORCE_REGISTRATION;
+    if (SHRestricted(REST_NOFILEASSOCIATE))
+        fDisallow |= OAIF_ALLOW_REGISTRATION | OAIF_FORCE_REGISTRATION | OAIF_REGISTER_EXT;
+
     /* Handle register checkbox */
+    m_InFlags = m_pInfo->oaifInFlags & ~fDisallow;
     HWND hRegisterCheckbox = GetDlgItem(hwnd, 14003);
-    if (!(m_pInfo->oaifInFlags & OAIF_ALLOW_REGISTRATION))
+    if (!(m_InFlags & OAIF_ALLOW_REGISTRATION))
         EnableWindow(hRegisterCheckbox, FALSE);
-    if (m_pInfo->oaifInFlags & OAIF_FORCE_REGISTRATION)
+    if (m_InFlags & OAIF_FORCE_REGISTRATION)
         SendMessage(hRegisterCheckbox, BM_SETCHECK, BST_CHECKED, 0);
-    if (m_pInfo->oaifInFlags & OAIF_HIDE_REGISTRATION)
+    if (m_InFlags & OAIF_HIDE_REGISTRATION)
         ShowWindow(hRegisterCheckbox, SW_HIDE);
 
     if (m_pInfo->pcszFile)
@@ -1064,15 +1192,11 @@ VOID COpenWithDialog::Accept()
     if (pApp)
     {
         /* Set programm as default handler */
-        if (IsDlgButtonChecked(m_hDialog, 14003) == BST_CHECKED)
-        {
+        if (IsDlgButtonChecked(m_hDialog, 14003) == BST_CHECKED && (m_InFlags & OAIF_REGISTER_EXT))
             m_pAppList->SetDefaultHandler(pApp, m_pInfo->pcszFile);
-            // FIXME: Update DefaultIcon registry
-            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
-        }
 
         /* Execute program */
-        if (m_pInfo->oaifInFlags & OAIF_EXEC)
+        if (m_InFlags & OAIF_EXEC)
             m_pAppList->Execute(pApp, m_pInfo->pcszFile);
 
         EndDialog(m_hDialog, 1);
@@ -1250,7 +1374,8 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
         m_idCmdLast++;
 }
 
-static const CMVERBMAP g_VerbMap[] = {
+static const CMVERBMAP g_VerbMap[] =
+{
     { "openas", 0 },
     { NULL }
 };
@@ -1346,15 +1471,7 @@ COpenWithMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
         if (m_idCmdFirst + LOWORD(lpici->lpVerb) == idChooseApp)
         {
 DoChooseApp:
-            OPENASINFO info;
-            LPCWSTR pwszExt = PathFindExtensionW(m_wszPath);
-
-            info.pcszFile = m_wszPath;
-            info.oaifInFlags = OAIF_EXEC;
-            if (pwszExt[0])
-                info.oaifInFlags |= OAIF_REGISTER_EXT | OAIF_ALLOW_REGISTRATION;
-            info.pcszClass = NULL;
-            hr = SHOpenWithDialog(lpici->hwnd, &info);
+            hr = SH32_InvokeOpenWith(m_wszPath, lpici, NULL);
         }
         else
         {

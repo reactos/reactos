@@ -118,7 +118,7 @@ CKsClockForwarder::Stop()
 {
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[200];
-    swprintf(Buffer, L"CKsClockForwarder::Stop m_ThreadStarted %u m_PendingStop %u m_hThread %p m_hEvent %p m_Handle %p\n", m_ThreadStarted, m_PendingStop, m_hThread, m_hEvent, m_Handle);
+    _swprintf(Buffer, L"CKsClockForwarder::Stop m_ThreadStarted %u m_PendingStop %u m_hThread %p m_hEvent %p m_Handle %p\n", m_ThreadStarted, m_PendingStop, m_hThread, m_hEvent, m_Handle);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -287,7 +287,7 @@ CKsClockForwarder::SetClockState(KSSTATE State)
 
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CKsClockForwarder::SetClockState m_State %u State %u hr %lx\n", m_State, State, hr);
+    _swprintf(Buffer, L"CKsClockForwarder::SetClockState m_State %u State %u hr %lx\n", m_State, State, hr);
     OutputDebugStringW(Buffer);
 #endif
 

@@ -19,10 +19,6 @@
 
 #pragma once
 
-#define HAS_OPTION_MENU_EDIT_CMDLINE
-#define HAS_OPTION_MENU_CUSTOM_BOOT
-#define HAS_OPTION_MENU_REBOOT
-
 #ifdef HAS_OPTION_MENU_CUSTOM_BOOT
 VOID OptionMenuCustomBoot(VOID);
 #endif
@@ -43,7 +39,3 @@ VOID
 EditCustomBootReactOS(
     IN OUT OperatingSystemItem* OperatingSystem,
     IN BOOLEAN IsSetup);
-
-#ifdef HAS_OPTION_MENU_REBOOT
-VOID OptionMenuReboot(VOID);
-#endif

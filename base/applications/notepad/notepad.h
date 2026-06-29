@@ -89,7 +89,7 @@ typedef struct
 
 extern NOTEPAD_GLOBALS Globals;
 
-BOOL ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln);
+HLOCAL ReadText(HANDLE hFile, ENCODING *pencFile, EOLN *piEoln);
 BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile, EOLN iEoln);
 
 void NOTEPAD_LoadSettingsFromRegistry(PWINDOWPLACEMENT pWP);

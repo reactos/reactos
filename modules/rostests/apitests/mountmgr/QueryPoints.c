@@ -1,68 +1,75 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for QueryPoints IOCTL
- * PROGRAMMER:      Pierre Schweitzer
+ * PROJECT:     ReactOS API Tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Test for IOCTL_MOUNTMGR_QUERY_POINTS
+ * COPYRIGHT:   Copyright 2019 Pierre Schweitzer <pierre@reactos.org>
  */
 
 #include "precomp.h"
 
 VOID
-TraceMountPoint(PMOUNTMGR_MOUNT_POINTS MountPoints,
-                PMOUNTMGR_MOUNT_POINT MountPoint)
+TraceMountPoint(
+    _In_ const MOUNTMGR_MOUNT_POINTS* MountPoints,
+    _In_ const MOUNTMGR_MOUNT_POINT* MountPoint)
 {
     trace("MountPoint: %p\n", MountPoint);
     trace("\tSymbolicOffset: %ld\n", MountPoint->SymbolicLinkNameOffset);
-    trace("\tSymbolicLinkName: %.*S\n", MountPoint->SymbolicLinkNameLength / sizeof(WCHAR), (PWSTR)((ULONG_PTR)MountPoints + MountPoint->SymbolicLinkNameOffset));
+    trace("\tSymbolicLinkName: %.*S\n",
+          MountPoint->SymbolicLinkNameLength / sizeof(WCHAR),
+          (PWCHAR)((ULONG_PTR)MountPoints + MountPoint->SymbolicLinkNameOffset));
     trace("\tDeviceOffset: %ld\n", MountPoint->DeviceNameOffset);
-    trace("\tDeviceName: %.*S\n", MountPoint->DeviceNameLength / sizeof(WCHAR), (PWSTR)((ULONG_PTR)MountPoints + MountPoint->DeviceNameOffset));
+    trace("\tDeviceName: %.*S\n",
+          MountPoint->DeviceNameLength / sizeof(WCHAR),
+          (PWCHAR)((ULONG_PTR)MountPoints + MountPoint->DeviceNameOffset));
 }
 
 START_TEST(QueryPoints)
 {
     BOOL Ret;
     HANDLE MountMgrHandle;
-    DWORD BytesReturned, Drives, i;
-    struct {
+    DWORD LastError, BytesReturned, Drives, i;
+    struct
+    {
         MOUNTMGR_MOUNT_POINT;
-        WCHAR Buffer[sizeof(L"\\DosDevice\\A:")];
+        WCHAR Buffer[sizeof("\\DosDevice\\A:")];
     } SinglePoint;
     MOUNTMGR_MOUNT_POINTS MountPoints;
     PMOUNTMGR_MOUNT_POINTS AllocatedPoints;
 
-    MountMgrHandle = CreateFileW(MOUNTMGR_DOS_DEVICE_NAME, 0,
-                                 FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                                 OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
-                                 INVALID_HANDLE_VALUE);
-    if (MountMgrHandle == INVALID_HANDLE_VALUE)
+    MountMgrHandle = GetMountMgrHandle(FILE_READ_ATTRIBUTES);
+    if (!MountMgrHandle)
     {
-        win_skip("MountMgr unavailable: %lx\n", GetLastError());
+        win_skip("MountMgr unavailable: %lu\n", GetLastError());
         return;
     }
 
     ZeroMemory(&SinglePoint, sizeof(SinglePoint));
 
+    /* Retrieve the size needed to enumerate all the existing mount points */
     Ret = DeviceIoControl(MountMgrHandle, IOCTL_MOUNTMGR_QUERY_POINTS,
-                          &SinglePoint, sizeof(MOUNTMGR_MOUNT_POINT),
-                          &MountPoints, sizeof(MOUNTMGR_MOUNT_POINTS),
+                          &SinglePoint, sizeof(MOUNTMGR_MOUNT_POINT), // Size without the string.
+                          &MountPoints, sizeof(MountPoints),
                           &BytesReturned, NULL);
-    ok(Ret == FALSE, "IOCTL unexpectedly succeed\n");
-    ok(GetLastError() == ERROR_MORE_DATA, "Unexcepted failure: %lx\n", GetLastError());
+    LastError = GetLastError();
+    ok(Ret == FALSE, "IOCTL unexpectedly succeeded\n");
+    ok(LastError == ERROR_MORE_DATA, "Unexpected failure: %lu\n", LastError);
 
+    /* Allocate a suitably-sized buffer for the mount points */
     AllocatedPoints = RtlAllocateHeap(RtlGetProcessHeap(), 0, MountPoints.Size);
     if (AllocatedPoints == NULL)
     {
-        win_skip("Insufficiant memory\n");
+        skip("Insufficient memory\n");
     }
     else
     {
         AllocatedPoints->NumberOfMountPoints = 0;
 
+        /* Retrieve the list of all the existing mount points */
         Ret = DeviceIoControl(MountMgrHandle, IOCTL_MOUNTMGR_QUERY_POINTS,
-                              &SinglePoint, sizeof(MOUNTMGR_MOUNT_POINT),
+                              &SinglePoint, sizeof(MOUNTMGR_MOUNT_POINT), // Size without the string.
                               AllocatedPoints, MountPoints.Size,
                               &BytesReturned, NULL);
-        ok(Ret == TRUE, "IOCTL unexpectedly failed %lx\n", GetLastError());
+        ok(Ret == TRUE, "IOCTL unexpectedly failed: %lu\n", GetLastError());
 
         for (i = 0; i < AllocatedPoints->NumberOfMountPoints; ++i)
         {
@@ -72,40 +79,37 @@ START_TEST(QueryPoints)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AllocatedPoints);
     }
 
+    /* Now, find the first unused drive letter */
     Drives = GetLogicalDrives();
     if (Drives == 0)
     {
-        win_skip("Drives map unavailable: %lx\n", GetLastError());
+        skip("Drives map unavailable: %lu\n", GetLastError());
         goto Done;
     }
-
-    for (i = 0; i < 26; i++)
+    for (i = 0; i <= 'Z'-'A'; ++i)
     {
         if (!(Drives & (1 << i)))
-        {
             break;
-        }
     }
-
-    if (i == 26)
+    if (i > 'Z'-'A')
     {
-        win_skip("All the drive letters are in use, skipping\n");
+        skip("All the drive letters are in use, skipping\n");
         goto Done;
     }
 
-    SinglePoint.SymbolicLinkNameOffset = sizeof(MOUNTMGR_MOUNT_POINT);
-    SinglePoint.SymbolicLinkNameLength = sizeof(L"\\DosDevice\\A:") - sizeof(UNICODE_NULL);
-    StringCbPrintfW((PWSTR)((ULONG_PTR)&SinglePoint + sizeof(MOUNTMGR_MOUNT_POINT)),
-                    sizeof(L"\\DosDevice\\A:"),
-                    L"\\DosDevice\\%C:",
-                    i + L'A');
+    /* Check that this drive letter is not an existing mount point */
+    SinglePoint.SymbolicLinkNameOffset = ((ULONG_PTR)&SinglePoint.Buffer - (ULONG_PTR)&SinglePoint);
+    SinglePoint.SymbolicLinkNameLength = sizeof(SinglePoint.Buffer) - sizeof(UNICODE_NULL);
+    StringCbPrintfW(SinglePoint.Buffer, sizeof(SinglePoint.Buffer),
+                    L"\\DosDevice\\%C:", L'A' + i);
 
     Ret = DeviceIoControl(MountMgrHandle, IOCTL_MOUNTMGR_QUERY_POINTS,
                           &SinglePoint, sizeof(SinglePoint),
-                          &MountPoints, sizeof(MOUNTMGR_MOUNT_POINTS),
+                          &MountPoints, sizeof(MountPoints),
                           &BytesReturned, NULL);
-    ok(Ret == FALSE, "IOCTL unexpectedly succeed\n");
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Unexcepted failure: %lx\n", GetLastError());
+    LastError = GetLastError();
+    ok(Ret == FALSE, "IOCTL unexpectedly succeeded\n");
+    ok(LastError == ERROR_FILE_NOT_FOUND, "Unexpected failure: %lu\n", LastError);
 
 Done:
     CloseHandle(MountMgrHandle);

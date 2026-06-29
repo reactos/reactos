@@ -164,6 +164,12 @@ SystemApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         nPage = _wtoi((PWSTR)lParam);
     }
 
+    if (nPage == -1)
+    {
+        ShowPerformanceOptions(hwnd);
+        return TRUE;
+    }
+
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;

@@ -630,6 +630,12 @@ CDeviceManager::OnCommand(_In_ WPARAM wParam,
             break;
         }
 
+        case IDM_RESBYTYPE:
+        {
+            RefreshView(ResourcesByType, false);
+            break;
+        }
+
         case IDM_SHOWHIDDEN:
         {
             // Get the current state

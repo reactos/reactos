@@ -20,7 +20,7 @@ add_library(shdocvw MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
 
 target_include_directories(shdocvw BEFORE PRIVATE
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/include/wine
 )
 
 set_module_type(shdocvw win32dll UNICODE)
@@ -37,7 +37,8 @@ add_library(shdocvw_sublib OBJECT
     CNSCBand.cpp
     mrulist.cpp
     objects.cpp
-    utility.cpp)
+    utility.cpp
+    winlist.cpp)
 target_link_libraries(shdocvw_sublib PRIVATE atl_classes)
 target_compile_definitions(shdocvw_sublib PRIVATE $<TARGET_PROPERTY:shdocvw,COMPILE_DEFINITIONS>)
 target_compile_options(shdocvw_sublib PRIVATE $<TARGET_PROPERTY:shdocvw,COMPILE_OPTIONS>)

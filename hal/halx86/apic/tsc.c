@@ -115,6 +115,7 @@ HalpInitializeTsc(VOID)
 
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpCalibrateStallExecution(VOID)

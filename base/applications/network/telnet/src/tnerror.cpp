@@ -81,6 +81,47 @@ int printit(const char * it){
 	return 0;
 }
 
+#ifdef __REACTOS__
+int wprintit(LPCWSTR it)
+{
+    DWORD numwritten;
+    if (!ini.get_output_redir())
+    {
+        if (!WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE),
+                           it, wcslen(it), &numwritten, NULL))
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        // calculate the number of bytes needed to store the UTF-8 string
+        int cbMultibyte = WideCharToMultiByte(CP_UTF8, 0, it, -1, NULL, 0, NULL, NULL);
+        if (cbMultibyte == 0)
+            return 0;
+        if (cbMultibyte < 0)
+            return -1;
+        // allocate the buffer for the UTF-8 string
+        char* szBuffer = new char[cbMultibyte];
+        if (!szBuffer)
+            return -1;
+
+        bool bSuccess = false;
+        if (WideCharToMultiByte(CP_UTF8, 0, it, -1, szBuffer, cbMultibyte, NULL, NULL) &&
+            WriteFile(GetStdHandle(STD_OUTPUT_HANDLE),
+                      szBuffer, cbMultibyte, &numwritten, NULL))
+        {
+            bSuccess = true;
+        }
+
+        delete[] szBuffer;
+        if (!bSuccess)
+            return -1;
+    }
+    return 0;
+}
+#endif
+
 int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 {
 	int Result = 0;
@@ -91,7 +132,23 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 
 	va_list Ellipsis;
 	va_start(Ellipsis, dwMessageId);
+#ifdef __REACTOS__
+	LPWSTR pszMessage = NULL;
+	DWORD dwMessage = 0;
 
+	if(fSystem) {
+		dwMessage = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			FORMAT_MESSAGE_FROM_SYSTEM, hModule, dwMessageId,
+			LANG_USER_DEFAULT, (LPWSTR)&pszMessage, 128, &Ellipsis);
+	} else {
+		// we will use a string table.
+		WCHAR wszString[256];
+		if(LoadStringW(0, dwMessageId, wszString, sizeof(wszString) / sizeof(*wszString)))
+			dwMessage = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+				FORMAT_MESSAGE_FROM_STRING, wszString, dwMessageId,
+				LANG_USER_DEFAULT, (LPWSTR)&pszMessage, sizeof(wszString) / sizeof(*wszString), &Ellipsis);
+	}
+#else
 	LPTSTR pszMessage = 0;
 	DWORD dwMessage = 0;
 	if(fSystem) {
@@ -106,6 +163,7 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 				FORMAT_MESSAGE_FROM_STRING, szString, dwMessageId,
 				LANG_USER_DEFAULT, (LPTSTR)&pszMessage, 256, &Ellipsis);
 	}
+#endif
 
 	va_end(Ellipsis);
 
@@ -113,8 +171,11 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 		FreeLibrary(hModule);
 
 	if (dwMessage) {
-
+#ifdef __REACTOS__
+		Result = wprintit(pszMessage);
+#else
 		Result = printit(pszMessage);
+#endif
 		LocalFree(pszMessage);
 	}
 

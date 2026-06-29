@@ -21,17 +21,17 @@
  * PROJECT:     ReactOS Userinit Logon Application
  * FILE:        base/system/userinit/userinit.c
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
- *              Hervé Poussineau (hpoussin@reactos.org)
+ *              HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "userinit.h"
+#include <userenv.h>
 
 #define CMP_MAGIC  0x01234567
 
 /* GLOBALS ******************************************************************/
 
 HINSTANCE hInstance;
-
 
 /* FUNCTIONS ****************************************************************/
 
@@ -45,8 +45,6 @@ ReadRegSzKey(
     DWORD dwType;
     DWORD cbData = 0;
     LPWSTR Value;
-
-    TRACE("(%p, %s, %p)\n", hKey, debugstr_w(pszKey), pValue);
 
     rc = RegQueryValueExW(hKey, pszKey, NULL, &dwType, NULL, &cbData);
     if (rc != ERROR_SUCCESS)
@@ -88,8 +86,6 @@ IsConsoleShell(VOID)
     LONG rc;
     BOOL ret = FALSE;
 
-    TRACE("()\n");
-
     rc = RegOpenKeyEx(
         HKEY_LOCAL_MACHINE,
         REGSTR_PATH_CURRENT_CONTROL_SET,
@@ -129,7 +125,8 @@ cleanup:
     if (ControlKey != NULL)
         RegCloseKey(ControlKey);
     HeapFree(GetProcessHeap(), 0, SystemStartOptions);
-    TRACE("IsConsoleShell() returning %d\n", ret);
+
+    TRACE("IsConsoleShell() returning %u\n", ret);
     return ret;
 }
 
@@ -143,8 +140,6 @@ GetShell(
     WCHAR Shell[MAX_PATH];
     BOOL ConsoleShell = IsConsoleShell();
     LONG rc;
-
-    TRACE("(%p, %p)\n", CommandLine, hRootKey);
 
     rc = RegOpenKeyExW(hRootKey, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                        0, KEY_QUERY_VALUE, &hKey);
@@ -184,13 +179,14 @@ GetShell(
 
 static BOOL
 StartProcess(
-    IN LPCWSTR CommandLine)
+    _In_ PCWSTR CommandLine,
+    _In_opt_ PVOID pEnvironment)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
-    WCHAR ExpandedCmdLine[MAX_PATH];
-
-    TRACE("(%s)\n", debugstr_w(CommandLine));
+    WCHAR ExpandedCmdLine[MAX_PATH], ProfilePath[MAX_PATH];
+    HANDLE hToken;
+    PWCHAR WorkingDir = NULL;
 
     ExpandEnvironmentStringsW(CommandLine, ExpandedCmdLine, ARRAYSIZE(ExpandedCmdLine));
 
@@ -200,14 +196,22 @@ StartProcess(
     si.wShowWindow = SW_SHOWNORMAL;
     ZeroMemory(&pi, sizeof(pi));
 
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+    {
+        DWORD PathSize = _countof(ProfilePath);
+        if (GetUserProfileDirectoryW(hToken, ProfilePath, &PathSize))
+            WorkingDir = ProfilePath;
+        CloseHandle(hToken);
+    }
+
     if (!CreateProcessW(NULL,
                         ExpandedCmdLine,
                         NULL,
                         NULL,
                         FALSE,
-                        NORMAL_PRIORITY_CLASS,
-                        NULL,
-                        NULL,
+                        NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT,
+                        pEnvironment,
+                        WorkingDir,
                         &si,
                         &pi))
     {
@@ -221,16 +225,15 @@ StartProcess(
 }
 
 static BOOL
-StartShell(VOID)
+StartShell(
+    _In_opt_ PVOID pEnvironment)
 {
-    WCHAR Shell[MAX_PATH];
-    WCHAR szMsg[RC_STRING_MAX_SIZE];
     DWORD Type, Size;
     DWORD Value = 0;
     LONG rc;
     HKEY hKey;
-
-    TRACE("()\n");
+    WCHAR Shell[MAX_PATH];
+    WCHAR szMsg[RC_STRING_MAX_SIZE];
 
     /* Safe Mode shell run */
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -267,7 +270,7 @@ StartShell(VOID)
                                 TRACE("Key located - %s\n", debugstr_w(Shell));
 
                                 /* Try to run alternate shell */
-                                if (StartProcess(Shell))
+                                if (StartProcess(Shell, pEnvironment))
                                 {
                                     TRACE("Alternate shell started (Safe Mode)\n");
                                     return TRUE;
@@ -294,14 +297,14 @@ StartShell(VOID)
     }
 
     /* Try to run shell in user key */
-    if (GetShell(Shell, HKEY_CURRENT_USER) && StartProcess(Shell))
+    if (GetShell(Shell, HKEY_CURRENT_USER) && StartProcess(Shell, pEnvironment))
     {
         TRACE("Started shell from HKEY_CURRENT_USER\n");
         return TRUE;
     }
 
     /* Try to run shell in local machine key */
-    if (GetShell(Shell, HKEY_LOCAL_MACHINE) && StartProcess(Shell))
+    if (GetShell(Shell, HKEY_LOCAL_MACHINE) && StartProcess(Shell, pEnvironment))
     {
         TRACE("Started shell from HKEY_LOCAL_MACHINE\n");
         return TRUE;
@@ -323,14 +326,14 @@ StartShell(VOID)
         StringCchCatW(Shell, ARRAYSIZE(Shell), L"explorer.exe");
     }
 
-    if (!StartProcess(Shell))
-    {
-        WARN("Failed to start default shell '%s'\n", debugstr_w(Shell));
-        LoadStringW(GetModuleHandle(NULL), IDS_SHELL_FAIL, szMsg, ARRAYSIZE(szMsg));
-        MessageBoxW(NULL, szMsg, NULL, MB_OK);
-        return FALSE;
-    }
-    return TRUE;
+    if (StartProcess(Shell, pEnvironment))
+        return TRUE;
+
+    /* We failed, display an error message and quit */
+    ERR("Failed to start default shell '%s'\n", debugstr_w(Shell));
+    LoadStringW(GetModuleHandle(NULL), IDS_SHELL_FAIL, szMsg, ARRAYSIZE(szMsg));
+    MessageBoxW(NULL, szMsg, NULL, MB_OK);
+    return FALSE;
 }
 
 const WCHAR g_RegColorNames[][32] = {
@@ -373,8 +376,6 @@ StrToColorref(
 {
     BYTE rgb[3];
 
-    TRACE("(%s)\n", debugstr_w(lpszCol));
-
     rgb[0] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
     rgb[1] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
     rgb[2] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
@@ -390,8 +391,6 @@ SetUserSysColors(VOID)
     DWORD Type, Size;
     COLORREF crColor;
     LONG rc;
-
-    TRACE("()\n");
 
     rc = RegOpenKeyExW(HKEY_CURRENT_USER, REGSTR_PATH_COLORS,
                        0, KEY_QUERY_VALUE, &hKey);
@@ -429,8 +428,6 @@ SetUserWallpaper(VOID)
     WCHAR szWallpaper[MAX_PATH + 1];
     LONG rc;
 
-    TRACE("()\n");
-
     rc = RegOpenKeyExW(HKEY_CURRENT_USER, REGSTR_PATH_DESKTOP,
                        0, KEY_QUERY_VALUE, &hKey);
     if (rc != ERROR_SUCCESS)
@@ -467,8 +464,6 @@ SetUserWallpaper(VOID)
 static VOID
 SetUserSettings(VOID)
 {
-    TRACE("()\n");
-
     UpdatePerUserSystemParameters(1, TRUE);
     SetUserSysColors();
     SetUserWallpaper();
@@ -481,8 +476,6 @@ NotifyLogon(VOID)
 {
     HINSTANCE hModule;
     PCMP_REPORT_LOGON CMP_Report_LogOn;
-
-    TRACE("()\n");
 
     hModule = LoadLibraryW(L"setupapi.dll");
     if (!hModule)
@@ -500,20 +493,26 @@ NotifyLogon(VOID)
     FreeLibrary(hModule);
 }
 
-static BOOL
-StartInstaller(IN LPCTSTR lpInstallerName)
+/*
+ * Expands the path for the ReactOS Installer "reactos.exe".
+ * See also base/setup/welcome/welcome.c!ExpandInstallerPath()
+ */
+BOOL
+ExpandInstallerPath(
+    IN LPCWSTR lpInstallerName,
+    OUT LPWSTR lpInstallerPath,
+    IN SIZE_T PathSize)
 {
     SYSTEM_INFO SystemInfo;
     SIZE_T cchInstallerNameLen;
     PWSTR ptr;
     DWORD dwAttribs;
-    WCHAR Installer[MAX_PATH];
-    WCHAR szMsg[RC_STRING_MAX_SIZE];
 
     cchInstallerNameLen = wcslen(lpInstallerName);
-    if (ARRAYSIZE(Installer) < cchInstallerNameLen)
+    if (PathSize < cchInstallerNameLen)
     {
         /* The buffer is not large enough to contain the installer file name */
+        *lpInstallerPath = UNICODE_NULL;
         return FALSE;
     }
 
@@ -524,52 +523,52 @@ StartInstaller(IN LPCTSTR lpInstallerName)
      */
     GetSystemInfo(&SystemInfo);
 
-    *Installer = UNICODE_NULL;
+    *lpInstallerPath = UNICODE_NULL;
     /* Alternatively one can use SharedUserData->NtSystemRoot */
-    GetSystemWindowsDirectoryW(Installer, ARRAYSIZE(Installer) - cchInstallerNameLen - 1);
-    ptr = wcschr(Installer, L'\\');
+    GetSystemWindowsDirectoryW(lpInstallerPath, PathSize - cchInstallerNameLen - 1);
+    ptr = wcschr(lpInstallerPath, L'\\');
     if (ptr)
         *++ptr = UNICODE_NULL;
     else
-        *Installer = UNICODE_NULL;
+        *lpInstallerPath = UNICODE_NULL;
 
     /* Append the corresponding CPU architecture */
     switch (SystemInfo.wProcessorArchitecture)
     {
         case PROCESSOR_ARCHITECTURE_INTEL:
-            StringCchCatW(Installer, ARRAYSIZE(Installer), L"I386");
+            StringCchCatW(lpInstallerPath, PathSize, L"I386");
             break;
 
         case PROCESSOR_ARCHITECTURE_MIPS:
-            StringCchCatW(Installer, ARRAYSIZE(Installer), L"MIPS");
+            StringCchCatW(lpInstallerPath, PathSize, L"MIPS");
             break;
 
         case PROCESSOR_ARCHITECTURE_ALPHA:
-            StringCchCatW(Installer, ARRAYSIZE(Installer), L"ALPHA");
+            StringCchCatW(lpInstallerPath, PathSize, L"ALPHA");
             break;
 
         case PROCESSOR_ARCHITECTURE_PPC:
-            StringCchCatW(Installer, ARRAYSIZE(Installer), L"PPC");
+            StringCchCatW(lpInstallerPath, PathSize, L"PPC");
             break;
 
         case PROCESSOR_ARCHITECTURE_SHX:
-            StringCchCatW(Installer, ARRAYSIZE(Installer), L"SHX");
+            StringCchCatW(lpInstallerPath, PathSize, L"SHX");
             break;
 
         case PROCESSOR_ARCHITECTURE_ARM:
-            StringCchCatW(Installer, ARRAYSIZE(Installer), L"ARM");
+            StringCchCatW(lpInstallerPath, PathSize, L"ARM");
             break;
 
         case PROCESSOR_ARCHITECTURE_IA64:
-            StringCchCatW(Installer, ARRAYSIZE(Installer), L"IA64");
+            StringCchCatW(lpInstallerPath, PathSize, L"IA64");
             break;
 
         case PROCESSOR_ARCHITECTURE_ALPHA64:
-            StringCchCatW(Installer, ARRAYSIZE(Installer), L"ALPHA64");
+            StringCchCatW(lpInstallerPath, PathSize, L"ALPHA64");
             break;
 
         case PROCESSOR_ARCHITECTURE_AMD64:
-            StringCchCatW(Installer, ARRAYSIZE(Installer), L"AMD64");
+            StringCchCatW(lpInstallerPath, PathSize, L"AMD64");
             break;
 
         // case PROCESSOR_ARCHITECTURE_MSIL: /* .NET CPU-independent code */
@@ -581,41 +580,58 @@ StartInstaller(IN LPCTSTR lpInstallerName)
     }
 
     if (SystemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_UNKNOWN)
-        StringCchCatW(Installer, ARRAYSIZE(Installer), L"\\");
-    StringCchCatW(Installer, ARRAYSIZE(Installer), lpInstallerName);
+        StringCchCatW(lpInstallerPath, PathSize, L"\\");
+    StringCchCatW(lpInstallerPath, PathSize, lpInstallerName);
 
-    dwAttribs = GetFileAttributesW(Installer);
+    dwAttribs = GetFileAttributesW(lpInstallerPath);
     if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
         !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
     {
         /* We have found the installer */
-        if (StartProcess(Installer))
-            return TRUE;
+        return TRUE;
     }
 
-    ERR("Failed to start the installer '%s', trying alternative.\n", debugstr_w(Installer));
+    WARN("Couldn't find the installer '%s', trying alternative.\n", debugstr_w(lpInstallerPath));
 
     /*
      * We failed. Try to find the installer from either the current
      * ReactOS installation directory, or from our current directory.
      */
-    *Installer = UNICODE_NULL;
+    *lpInstallerPath = UNICODE_NULL;
     /* Alternatively one can use SharedUserData->NtSystemRoot */
-    if (GetSystemWindowsDirectoryW(Installer, ARRAYSIZE(Installer) - cchInstallerNameLen - 1))
-        StringCchCatW(Installer, ARRAYSIZE(Installer), L"\\");
-    StringCchCatW(Installer, ARRAYSIZE(Installer), lpInstallerName);
+    if (GetSystemWindowsDirectoryW(lpInstallerPath, PathSize - cchInstallerNameLen - 1))
+        StringCchCatW(lpInstallerPath, PathSize, L"\\");
+    StringCchCatW(lpInstallerPath, PathSize, lpInstallerName);
 
-    dwAttribs = GetFileAttributesW(Installer);
+    dwAttribs = GetFileAttributesW(lpInstallerPath);
     if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
         !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
     {
         /* We have found the installer */
-        if (StartProcess(Installer))
+        return TRUE;
+    }
+
+    /* Installer not found */
+    ERR("Couldn't find the installer '%s'\n", debugstr_w(lpInstallerPath));
+    *lpInstallerPath = UNICODE_NULL;
+    return FALSE;
+}
+
+static BOOL
+StartInstaller(IN LPCWSTR lpInstallerName)
+{
+    WCHAR Installer[MAX_PATH];
+    WCHAR szMsg[RC_STRING_MAX_SIZE];
+
+    if (ExpandInstallerPath(lpInstallerName, Installer, ARRAYSIZE(Installer)))
+    {
+        /* We have found the installer */
+        if (StartProcess(Installer, NULL))
             return TRUE;
     }
 
-    /* We failed. Display an error message and quit. */
-    ERR("Failed to start the installer '%s'.\n", debugstr_w(Installer));
+    /* We failed, display an error message and quit */
+    ERR("Failed to start the installer '%s'\n", debugstr_w(Installer));
     LoadStringW(GetModuleHandle(NULL), IDS_INSTALLER_FAIL, szMsg, ARRAYSIZE(szMsg));
     MessageBoxW(NULL, szMsg, NULL, MB_OK);
     return FALSE;
@@ -685,10 +701,23 @@ Restart:
     switch (State.Run)
     {
         case SHELL:
-            Success = StartShell();
+        {
+            /* In LiveCD mode, create a suitable environment block for the
+             * shell; otherwise, use the current one (built by WinLogon) */
+            PVOID pEnvironment = NULL;
+            if (bIsLiveCD && /* In LiveCD mode we run under the LocalSystem account */
+                !CreateEnvironmentBlock(&pEnvironment, NULL, TRUE))
+            {
+                WARN("CreateEnvironmentBlock() failed, fall back to default (error %lu)\n",
+                     GetLastError());
+            }
+            Success = StartShell(pEnvironment);
+            if (pEnvironment)
+                DestroyEnvironmentBlock(pEnvironment);
             if (Success)
                 NotifyLogon();
             break;
+        }
 
         case INSTALLER:
             Success = StartInstaller(L"reactos.exe");

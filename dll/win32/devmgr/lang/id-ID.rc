@@ -275,7 +275,7 @@ BEGIN
     BEGIN
         MENUITEM "Jenis perangkat",             IDM_DEVBYTYPE
         MENUITEM "Sambungan perangkat",       IDM_DEVBYCONN
-        MENUITEM "Jenis sumber daya",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Jenis sumber daya",           IDM_RESBYTYPE
         MENUITEM "Sambungan sumber daya",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Tunjukkan perangkat tersembunyi",         IDM_SHOWHIDDEN
@@ -314,6 +314,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "Matikan"
   IDS_TOOLTIP_UPDATE        "Perbarui Perangkat Lunak Driver"
   IDS_TOOLTIP_UNINSTALL     "Bongkar"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Memory"
+  IDS_TYPE_PORT             "Input/output (IO)"
+  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
+  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
 END
 
 /* Hints */

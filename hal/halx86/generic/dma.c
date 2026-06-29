@@ -77,8 +77,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define MAX_SG_ELEMENTS 0x10
-
 #ifndef _MINIHAL_
 static KEVENT HalpDmaLock;
 static KSPIN_LOCK HalpDmaAdapterListLock;
@@ -982,6 +980,8 @@ typedef struct _SCATTER_GATHER_CONTEXT {
 	WAIT_CONTEXT_BLOCK Wcb;
 } SCATTER_GATHER_CONTEXT, *PSCATTER_GATHER_CONTEXT;
 
+// FIXME: This value needs to be calculated at runtime
+#define MAX_SG_ELEMENTS 0x30
 
 IO_ALLOCATION_ACTION
 NTAPI
@@ -993,12 +993,27 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	PSCATTER_GATHER_CONTEXT AdapterControlContext = Context;
 	PADAPTER_OBJECT AdapterObject = AdapterControlContext->AdapterObject;
 	PSCATTER_GATHER_LIST ScatterGatherList;
-	SCATTER_GATHER_ELEMENT TempElements[MAX_SG_ELEMENTS];
+	PSCATTER_GATHER_ELEMENT TempElements;
 	ULONG ElementCount = 0, RemainingLength = AdapterControlContext->Length;
 	PUCHAR CurrentVa = AdapterControlContext->CurrentVa;
+    // RemainingLength / PAGE_SIZE + 1 for the remainder of our division
+    // + 1 for a safety cushion gives a good safe value. Using the
+    // min function with MAX_SG_ELEMENTS keeps us from getting too large.
+    ULONG Est_SG_Elements = min(RemainingLength / PAGE_SIZE + 2, MAX_SG_ELEMENTS);
 
 	/* Store the map register base for later in HalPutScatterGatherList */
 	AdapterControlContext->MapRegisterBase = MapRegisterBase;
+
+    // FIXME: HACK Allocate TempElements from pool to minimize stack usage.
+    // A more efficient algorithm should be found to avoid allocations during S/G I/O operations.
+    TempElements = ExAllocatePoolUninitialized(NonPagedPool,
+                                               sizeof(*TempElements) * Est_SG_Elements,
+                                               TAG_DMA);
+    if (!TempElements)
+	{
+		DPRINT1("Scatter/gather list construction failed!\n");
+		return DeallocateObject;
+	}
 
 	while (RemainingLength > 0 && ElementCount < MAX_SG_ELEMENTS)
 	{
@@ -1022,9 +1037,13 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 		ElementCount++;
 	}
 
+    DPRINT("Est_SG_Elements %d\n", Est_SG_Elements);
+    DPRINT("ElementCount is %d\n", ElementCount);
+
 	if (RemainingLength > 0)
 	{
 		DPRINT1("Scatter/gather list construction failed!\n");
+        ExFreePoolWithTag(TempElements, TAG_DMA);
 		return DeallocateObject;
 	}
 
@@ -1038,6 +1057,8 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	RtlCopyMemory(ScatterGatherList->Elements,
 	              TempElements,
 				  sizeof(SCATTER_GATHER_ELEMENT) * ElementCount);
+
+    ExFreePoolWithTag(TempElements, TAG_DMA);
 
 	DPRINT("Initiating S/G DMA with %d element(s)\n", ElementCount);
 

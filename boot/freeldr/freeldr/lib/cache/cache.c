@@ -121,7 +121,7 @@ BOOLEAN CacheReadDiskSectors(UCHAR DiskNumber, ULONGLONG StartSector, ULONG Sect
     ULONG                BlockCount;
     ULONG                Idx;
 
-    TRACE("CacheReadDiskSectors() DiskNumber: 0x%x StartSector: %I64d SectorCount: %d Buffer: 0x%x\n", DiskNumber, StartSector, SectorCount, Buffer);
+    TRACE("CacheReadDiskSectors() DiskNumber: 0x%x StartSector: %I64u SectorCount: %u Buffer: 0x%x\n", DiskNumber, StartSector, SectorCount, Buffer);
 
     // If we aren't initialized yet then they can't do this
     if (CacheManagerInitialized == FALSE)

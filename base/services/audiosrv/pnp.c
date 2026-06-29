@@ -138,9 +138,7 @@ RegisterForDeviceNotifications(VOID)
     device_notification_handle =
         RegisterDeviceNotificationW((HANDLE) service_status_handle,
                                     &notification_filter,
-                                    DEVICE_NOTIFY_SERVICE_HANDLE
-/* |
-                                   DEVICE_NOTIFY_ALL_INTERFACE_CLASSES*/);
+                                    DEVICE_NOTIFY_SERVICE_HANDLE);
     if (!device_notification_handle)
     {
         DPRINT("failed with error %d\n", GetLastError());
@@ -158,12 +156,10 @@ RegisterForDeviceNotifications(VOID)
 VOID
 UnregisterDeviceNotifications(VOID)
 {
-    /* TODO -- NOT IMPLEMENTED! */
-
     if (device_notification_handle)
     {
-        /* TODO */
-        device_notification_handle = NULL;
+        if (UnregisterDeviceNotification(device_notification_handle))
+            device_notification_handle = NULL;
     }
 }
 

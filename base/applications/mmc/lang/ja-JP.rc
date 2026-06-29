@@ -1,0 +1,43 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+IDM_CONSOLE_SMALL MENU
+BEGIN
+    POPUP "ファイル(&F)"
+    BEGIN
+        MENUITEM "新規(&N)\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "開く(&O)...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "終了(&X)\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "ReactOS 管理コンソールについて(&A)", IDM_HELP_ABOUT
+    END
+END
+
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "ファイル(&F)"
+    BEGIN
+        MENUITEM "新規(&N)\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "開く(&O)...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "上書き保存(&S)", IDM_FILE_SAVE
+        MENUITEM "名前を付けて保存(&A)...", IDM_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "終了(&X)\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "ウィンドウ(&W)"
+    BEGIN
+        MENUITEM "リスト", IDM_WINDOWS_LIST
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "ReactOS 管理コンソールについて(&A)", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS 管理コンソール"
+    IDS_CONSOLETITLE "コンソール%1!u!"
+END

@@ -6,7 +6,7 @@
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  * REFERENCES:      https://wiki.osdev.org/RTC
  *                  https://forum.osdev.org/viewtopic.php?f=13&t=20825&start=0
- *                  http://www.bioscentral.com/misc/cmosmap.htm
+ *                  https://web.archive.org/web/20240119203005/http://www.bioscentral.com/misc/cmosmap.htm
  */
 
 /* INCLUDES *******************************************************************/

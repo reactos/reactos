@@ -66,6 +66,7 @@
 #define IDS_DNSTYPESRV           179
 
 #define IDS_USAGE                180
+#define IDS_CMDLINEERROR         181
 
 #define IDS_DNSNORECORD          200
 #define IDS_DNSNONAME            201
@@ -77,3 +78,5 @@
 #define IDS_DHCPRELEASED         207
 #define IDS_DHCPRELEASEERROR     208
 #define IDS_DHCPRENEWERROR       209
+#define IDS_DHCPSETIDERROR       210
+#define IDS_DHCPSETIDSUCCESS     211

@@ -32,28 +32,28 @@ static void test_WICCreateColorTransform_Proxy(void)
     IWICColorTransform *transform;
 
     hr = WICCreateColorTransform_Proxy( NULL );
-    ok( hr == E_INVALIDARG, "got %08x\n", hr );
+    ok( hr == E_INVALIDARG, "got %08lx\n", hr );
 
     transform = NULL;
     hr = WICCreateColorTransform_Proxy( &transform );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     if (transform) IWICColorTransform_Release( transform );
 
     hr = CoInitializeEx( NULL, COINIT_APARTMENTTHREADED );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     transform = NULL;
     hr = WICCreateColorTransform_Proxy( &transform );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     if (transform) IWICColorTransform_Release( transform );
     CoUninitialize();
 
     hr = CoInitializeEx( NULL, COINIT_MULTITHREADED );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     transform = NULL;
     hr = WICCreateColorTransform_Proxy( &transform );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     if (transform) IWICColorTransform_Release( transform );
     CoUninitialize();
 }

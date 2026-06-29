@@ -12,6 +12,7 @@
 
 #include <shellapi.h>
 #include <shlwapi.h>
+#include <windowsx.h>
 
 #define MAX_BACKGROUNDS     100
 
@@ -155,6 +156,9 @@ GdipGetSupportedFileExtensions(VOID)
 
     for (i = 0; i < num; ++i)
     {
+        if (!lstrcmpiW(codecInfo[i].FilenameExtension, L"*.ico"))
+            continue;
+
         StringCbCatW(lpBuffer, size, codecInfo[i].FilenameExtension);
         if (i < (num - 1))
         {
@@ -383,18 +387,17 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
                 }
             }
 
-            SHGetFileInfoW(wallpaperFilename,
-                           0,
-                           &sfi,
-                           sizeof(sfi),
-                           SHGFI_ICON | SHGFI_SMALLICON |
-                           SHGFI_DISPLAYNAME);
-            sfi.iIcon = ImageList_AddIcon(himl, sfi.hIcon);
+            if (!SHGetFileInfoW(wallpaperFilename, 0, &sfi, sizeof(sfi),
+                                SHGFI_ICON | SHGFI_SMALLICON | SHGFI_DISPLAYNAME))
+            {
+                RegCloseKey(regKey);
+                return;
+            }
 
-            i++;
+            sfi.iIcon = ImageList_AddIcon(himl, sfi.hIcon);
+            DestroyIcon(sfi.hIcon);
 
             backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
-
             backgroundItem->bWallpaper = TRUE;
 
             hr = StringCbCopy(backgroundItem->szDisplayName, sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
@@ -413,20 +416,20 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
                 return;
             }
 
-            ZeroMemory(&listItem, sizeof(LV_ITEM));
+            ZeroMemory(&listItem, sizeof(listItem));
             listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
             listItem.state      = 0;
             listItem.pszText    = backgroundItem->szDisplayName;
             listItem.iImage     = sfi.iIcon;
             listItem.iItem      = pData->listViewItemCount;
             listItem.lParam     = pData->listViewItemCount;
-
             (void)ListView_InsertItem(hwndBackgroundList, &listItem);
+
             ListView_SetItemState(hwndBackgroundList,
                                   pData->listViewItemCount,
                                   LVIS_SELECTED,
                                   LVIS_SELECTED);
-
+            i++;
             pData->listViewItemCount++;
         }
 
@@ -567,6 +570,7 @@ OnColorButton(HWND hwndDlg, PBACKGROUND_DATA pData)
 
         /* Window will be updated :) */
         InvalidateRect(GetDlgItem(hwndDlg, IDC_BACKGROUND_PREVIEW), NULL, TRUE);
+        InvalidateRect(GetDlgItem(hwndDlg, IDC_COLOR_BUTTON), NULL, TRUE);
 
         /* Save custom colors to reg. To this moment key must be created already. See above */
         res = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance"), 0,
@@ -1237,14 +1241,10 @@ BackgroundPageProc(HWND hwndDlg,
 
         case WM_DRAWITEM:
             {
-                LPDRAWITEMSTRUCT drawItem;
-                drawItem = (LPDRAWITEMSTRUCT)lParam;
+                LPDRAWITEMSTRUCT drawItem = (LPDRAWITEMSTRUCT)lParam;
 
                 if (drawItem->CtlID == IDC_BACKGROUND_PREVIEW)
-                {
                     DrawBackgroundPreview(drawItem, pData);
-                }
-
             }
             break;
 
@@ -1272,6 +1272,14 @@ BackgroundPageProc(HWND hwndDlg,
                                 return FALSE;
 
                             ListViewItemChanged(hwndDlg, pData, nm->iItem);
+                        }
+                        break;
+
+                    case NM_CUSTOMDRAW:
+                        if (lpnm->idFrom == IDC_COLOR_BUTTON)
+                        {
+                            return SetDlgMsgResult(hwndDlg, 0, ClrBtn_CustomDraw((NMCUSTOMDRAW*)lpnm,
+                                                                                 g_GlobalData.desktop_color));
                         }
                         break;
                 }

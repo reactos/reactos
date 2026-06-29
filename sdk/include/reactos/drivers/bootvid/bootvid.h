@@ -20,17 +20,21 @@ VidInitialize(
 VOID
 NTAPI
 VidResetDisplay(
-    _In_ BOOLEAN HalReset);
+    _In_ BOOLEAN SetMode);
 
-ULONG
+VOID
 NTAPI
-VidSetTextColor(
-    _In_ ULONG Color);
+VidCleanUp(VOID);
+
+VOID
+NTAPI
+VidDisplayString(
+    _In_ PCSTR String);
 
 VOID
 NTAPI
 VidDisplayStringXY(
-    _In_z_ PUCHAR String,
+    _In_ PCSTR String,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ BOOLEAN Transparent);
@@ -43,24 +47,10 @@ VidSetScrollRegion(
     _In_ ULONG Right,
     _In_ ULONG Bottom);
 
-VOID
+ULONG
 NTAPI
-VidCleanUp(VOID);
-
-VOID
-NTAPI
-VidBufferToScreenBlt(
-    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
-    _In_ ULONG Left,
-    _In_ ULONG Top,
-    _In_ ULONG Width,
-    _In_ ULONG Height,
-    _In_ ULONG Delta);
-
-VOID
-NTAPI
-VidDisplayString(
-    _In_z_ PUCHAR String);
+VidSetTextColor(
+    _In_ ULONG Color);
 
 VOID
 NTAPI
@@ -71,13 +61,23 @@ VidBitBlt(
 
 VOID
 NTAPI
-VidScreenToBufferBlt(
-    _Out_writes_bytes_(Delta * Height) PUCHAR Buffer,
+VidBufferToScreenBlt(
+    _In_reads_bytes_(Height * Stride) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ ULONG Delta);
+    _In_ ULONG Stride);
+
+VOID
+NTAPI
+VidScreenToBufferBlt(
+    _Out_writes_bytes_all_(Height * Stride) PUCHAR Buffer,
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Width,
+    _In_ ULONG Height,
+    _In_ ULONG Stride);
 
 VOID
 NTAPI

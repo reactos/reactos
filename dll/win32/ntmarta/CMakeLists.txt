@@ -1,5 +1,4 @@
 
-add_definitions(-D__WINESRC__)
 spec2def(ntmarta.dll ntmarta.spec)
 
 list(APPEND SOURCE

@@ -32,7 +32,7 @@ BEGIN
     IDS_DHCPYES             "\tDHCP Enabled. . . . . . . . . . . : Yes\n"
     IDS_AUTOCONFIGNO        "\tAutoconfiguration Enabled . . . . : No\n"
     IDS_AUTOCONFIGYES       "\tAutoconfiguration Enabled . . . . : Yes\n"
-    IDS_IPADDRESS           "\tIP Address. . . . . . . . . . . . : %hs\n"
+    IDS_IPADDRESS           "\tIPv4 Address. . . . . . . . . . . : %hs\n"
     IDS_SUBNETMASK          "\tSubnet Mask . . . . . . . . . . . : %hs\n"
     IDS_DEFAULTGATEWAY      "\tDefault Gateway . . . . . . . . . : %hs\n"
     IDS_DHCPSERVER          "\tDHCP Server . . . . . . . . . . . : %hs\n"
@@ -89,51 +89,54 @@ BEGIN
     IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
     IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
     IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
-    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
+    IDS_DHCPRELEASED        "IP address for adapter %ls has already been released.\n"
     IDS_DHCPRELEASEERROR    "An error occurred while releasing interface %ls: "
     IDS_DHCPRENEWERROR      "An error occurred while renewing interface %ls: "
+    IDS_DHCPSETIDERROR      "Attempt to set the class id for adapter %ls failed: "
+    IDS_DHCPSETIDSUCCESS    "Successfully set the class id for adapter %ls.\n"
 END
 
 STRINGTABLE
 BEGIN
-/* Please keep the spacing/formatting as per En.rc when translating */
+/* Please keep the spacing/formatting as per en-US.rc when translating */
     IDS_USAGE
-    "\nKULLANIM:\n\
-        ipconfig [/? | /all | /renew [bağdaştırıcı] | /release [bağdaştırıcı] |\n\
-                  /flushdns | /displaydns | /registerdns |\n\
-                  /showclassid bağdaştırıcı |\n\
-                  /setclassid bağdaştırıcı [sınıf kimliği] ]\n\
+"\nKULLANIM:\n\
+    ipconfig [/? | /all | /renew [bağdaştırıcı] | /release [bağdaştırıcı] |\n\
+              /flushdns | /displaydns | /registerdns |\n\
+              /showclassid bağdaştırıcı |\n\
+              /setclassid bağdaştırıcı [sınıf kimliği] ]\n\
 \n\
-    nereye\n\
-        bağdaştırıcı     Bağlantı adı\n\
-                       (* ve ? özel karakterlerine  bakınız)\n\
+    nereye:\n\
+    bağdaştırıcı    Bağlantı adı\n\
+                    (* ve ? özel karakterlerine bakınız)\n\
 \n\
-        Seçenekler:\n\
-           /?           Bu yardım iletisini görüntüler.\n\
-           /all         Tüm yapılandırma bilgisini görüntüler.\n\
-           /release     Belirtilen bağdaştırıcı için IP adresini bırakır.\n\
-           /renew       Belirtilen bağdaştırıcı için IP adresini yeniler.\n\
-           /flushdns    DNS Çözücü ön belleğini siler.\n\
-           /registerdns Tüm DHCP kiralarını yeniler ve DNS adlarını yeniden kaydettirir.\n\
-           /displaydns  DNS Çözücü ön belleğinin içeriğini görüntüle.\n\
-           /showclassid Bağdaştırıcı için izin verilen tüm DHCP sınıf kimliklerini görüntüler.\n\
-           /setclassid  DHCP sınıf kimliğini değiştirir.\n\
+Seçenekler:\n\
+    /?              Bu yardım iletisini görüntüler.\n\
+    /all            Tüm yapılandırma bilgisini görüntüler.\n\
+    /release        Belirtilen bağdaştırıcı için IPv4 adresini bırakır.\n\
+    /renew          Belirtilen bağdaştırıcı için IPv4 adresini yeniler.\n\
+    /flushdns       DNS Çözücü ön belleğini siler.\n\
+    /registerdns    Tüm DHCP kiralarını yeniler ve DNS adlarını yeniden kaydettirir.\n\
+    /displaydns     DNS Çözücü ön belleğinin içeriğini görüntüle.\n\
+    /showclassid    Bağdaştırıcı için izin verilen tüm DHCP sınıf kimliklerini görüntüler.\n\
+    /setclassid     DHCP sınıf kimliğini değiştirir.\n\
 \n\
-    Varsayılan, TCP/IP için tüm kayıtlı bağdaştırıcılar için yalnızca\n\
-    IP adresini, alt ağ maskesini ve varsayılan geçidi görüntülemektir.\n\
+Varsayılan, TCP/IP için tüm kayıtlı bağdaştırıcılar için yalnızca\n\
+IP adresini, alt ağ maskesini ve varsayılan geçidi görüntülemektir.\n\
 \n\
-    release ve renew için, bir bağdaştırıcı adı belirtilmemişse TCP/IP için tüm kayıtlı\n\
-    bağdaştırıcılar için yapılmış IP adres tahsisi bırakılacak veya yenilenecektir.\n\
+release ve renew için, bir bağdaştırıcı adı belirtilmemişse TCP/IP için tüm kayıtlı\n\
+bağdaştırıcılar için yapılmış IP adres tahsisi bırakılacak veya yenilenecektir.\n\
 \n\
-    setclassid için, bir sınıf kimliği belirtilmemişse sınıf kimliği silinmiş olacaktır.\n\
+setclassid için, bir sınıf kimliği belirtilmemişse sınıf kimliği silinmiş olacaktır.\n\
 \n\
-    Örnekler:\n\
-        > ipconfig                   ... Bilgi gösterir.\n\
-        > ipconfig /all              ... Ayrıntılı bilgi gösterir.\n\
-        > ipconfig /renew            ... Tüm bağdaştırıcıları yeniler.\n\
-        > ipconfig /renew EL*        ... EL ile başlayan adı olan tüm\n\
-                                         bağlantıları yeniler.\n\
-        > ipconfig /release *Bağ*    ... Eşleşen tüm bağlantıları bırakır.\n\
-                                         Ör: ""Yerel Ağ Bağlantısı 1"" veya\n\
-                                             ""Yerel Ağ Bağlantısı 2""\n"
+Örnekler:\n\
+    > ipconfig                   ... Bilgi gösterir.\n\
+    > ipconfig /all              ... Ayrıntılı bilgi gösterir.\n\
+    > ipconfig /renew            ... Tüm bağdaştırıcıları yeniler.\n\
+    > ipconfig /renew EL*        ... EL ile başlayan adı olan tüm\n\
+                                     bağlantıları yeniler.\n\
+    > ipconfig /release *Bağ*    ... Eşleşen tüm bağlantıları bırakır.\n\
+                                     Ör: ""Yerel Ağ Bağlantısı 1"" veya\n\
+                                         ""Yerel Ağ Bağlantısı 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

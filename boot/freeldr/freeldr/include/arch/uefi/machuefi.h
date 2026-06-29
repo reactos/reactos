@@ -6,6 +6,7 @@
  */
 
 #include <machine.h>
+#include <drivers/acpi/acpi.h>
 
 VOID
 UefiConsPutChar(int Ch);
@@ -23,7 +24,7 @@ VOID
 UefiVideoClearScreen(UCHAR Attr);
 
 VIDEODISPLAYMODE
-UefiVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
+UefiVideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init);
 
 VOID
 UefiVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
@@ -58,6 +59,10 @@ UefiVideoSetPaletteColor(UCHAR Color, UCHAR Red,
 VOID
 UefiVideoGetPaletteColor(UCHAR Color, UCHAR* Red,
                          UCHAR* Green, UCHAR* Blue);
+
+PDESCRIPTION_HEADER
+UefiFindAcpiTable(
+    _In_ ULONG Signature);
 
 VOID
 UefiVideoSync(VOID);
@@ -107,6 +112,3 @@ UefiHwIdle(VOID);
 VOID
 UefiInitializeFileSystemSupport(_In_ EFI_HANDLE ImageHandle,
                                 _In_ EFI_SYSTEM_TABLE *SystemTable);
-
-VOID
-UefiVideoScrollUp(VOID);

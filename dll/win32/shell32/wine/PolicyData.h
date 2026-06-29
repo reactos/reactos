@@ -10,7 +10,7 @@
  * NOTE: Up to date as of SHELL32 v6.00 (Win2k3).
  * References:
  * https://www.geoffchappell.com/studies/windows/shell/shell32/api/util/restrictions.htm
- * https://docs.microsoft.com/en-us/windows/win32/api/shlobj_core/ne-shlobj_core-restrictions
+ * https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ne-shlobj_core-restrictions
  * https://abi-laboratory.pro/compatibility/Windows_5.0_to_Windows_6.0/x86_64/headers_diff/shell32.dll/diff.html
  */
 
@@ -305,3 +305,8 @@ DEFINE_POLICY( REST_USEDESKTOPINICACHE,             "Explorer",         "UseDesk
 
 // NOTE: This is a SHDOCVW-only policy.
 // DEFINE_POLICY( 0x50000024,   "Explorer",     "NoFileUrl" ),
+
+#if defined(__REACTOS__) && defined(_SHELL32_)
+// Internal SHELL32 policies (keep these at the end of the list)
+DEFINE_POLICY( REST_SH32_ENABLESHELLEXECUTEHOOKS,   "Explorer",         "EnableShellExecuteHooks"          ),
+#endif

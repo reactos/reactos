@@ -297,7 +297,11 @@ IntGetCodePageEntry(UINT CodePage)
     HANDLE SectionHandle = INVALID_HANDLE_VALUE, FileHandle;
     PBYTE SectionMapping;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UCHAR SecurityDescriptor[NLS_SECTION_SECURITY_DESCRIPTOR_SIZE];
+    union
+    {
+        SECURITY_DESCRIPTOR AlignedSd;
+        UCHAR Buffer[NLS_SECTION_SECURITY_DESCRIPTOR_SIZE];
+    } SecurityDescriptor;
     ANSI_STRING AnsiName;
     UNICODE_STRING UnicodeName;
     WCHAR FileName[MAX_PATH + 1];
@@ -389,7 +393,7 @@ IntGetCodePageEntry(UINT CodePage)
                                &UnicodeName,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
-                               SecurityDescriptor);
+                               &SecurityDescriptor);
 
     /* Try to open the section first */
     Status = NtOpenSection(&SectionHandle,
@@ -495,7 +499,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
 {
     LPCSTR MbsEnd, MbsPtrSave;
     UCHAR Char, TrailLength;
-    WCHAR WideChar;
+    UINT WideChar;
     LONG Count;
     BOOL CharIsValid, StringIsValid = TRUE;
     const WCHAR InvalidChar = 0xFFFD;
@@ -552,6 +556,12 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
             if (!CharIsValid || WideChar < UTF8LBound[UTF8Length[Char - 0x80]])
             {
                 MultiByteString = MbsPtrSave;
+            }
+
+            if (WideChar > 0xFFFF)
+            {
+                /* UTF-16 surrogate pair */
+                WideCharCount++;
             }
         }
 
@@ -615,7 +625,26 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
 
         if (CharIsValid && UTF8LBound[UTF8Length[Char - 0x80]] <= WideChar)
         {
-            *WideCharString++ = WideChar;
+            /* Check for UTF-16 surrogate pair */
+            if (WideChar > 0xFFFF)
+            {
+                WideChar -= 0x10000;
+                *WideCharString++ = 0xD800 | (WideChar >> 10);
+                Count++;
+
+                /* Check if we have space for the second surrogate */
+                if (Count >= WideCharCount)
+                {
+                    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                    return 0;
+                }
+
+                *WideCharString++ = 0xDC00 | (WideChar & 0x3FF);
+            }
+            else
+            {
+                *WideCharString++ = WideChar;
+            }
         }
         else
         {
@@ -2054,6 +2083,7 @@ GetCPInfo(UINT CodePage,
         {
             case CP_UTF7:
             case CP_UTF8:
+                RtlZeroMemory(CodePageInfo, sizeof(*CodePageInfo));
                 CodePageInfo->DefaultChar[0] = 0x3f;
                 CodePageInfo->DefaultChar[1] = 0;
                 CodePageInfo->LeadByte[0] = CodePageInfo->LeadByte[1] = 0;
@@ -2066,6 +2096,7 @@ GetCPInfo(UINT CodePage,
         return FALSE;
     }
 
+    RtlZeroMemory(CodePageInfo, sizeof(*CodePageInfo));
     if (CodePageEntry->CodePageTable.DefaultChar & 0xff00)
     {
         CodePageInfo->DefaultChar[0] = (CodePageEntry->CodePageTable.DefaultChar & 0xff00) >> 8;

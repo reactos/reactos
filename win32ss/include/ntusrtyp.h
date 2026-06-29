@@ -18,7 +18,7 @@
 /* TYPES *********************************************************************/
 
 /* Bitfields for UserpreferencesMask SPI_ values (with defaults) */
-/* See also http://technet.microsoft.com/nl-nl/library/cc957204(en-us).aspx */
+/* See also https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc957204(v=technet.10) */
 typedef struct {
     DWORD bActiveWindowTracking:1;      //0 SPI_GETACTIVEWINDOWTRACKING
     DWORD bMenuAnimation:1;             //1 SPI_GETMENUANIMATION

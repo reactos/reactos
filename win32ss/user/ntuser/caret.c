@@ -66,7 +66,7 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
                                 0,
                                 0,
                                 SRCINVERT,
-                                0,
+                                CLR_INVALID,
                                 0);
             NtGdiSelectBitmap(hdcMem, hbmOld);
             GreDeleteObject(hdcMem);
@@ -182,11 +182,10 @@ co_IntDestroyCaret(PTHREADINFO Win32Thread)
 BOOL FASTCALL
 IntSetCaretBlinkTime(UINT uMSeconds)
 {
-   /* Don't save the new value to the registry! */
-
-   gpsi->dtCaretBlink = uMSeconds;
-
-   return TRUE;
+    /* Don't save the new value to the registry! */
+    ASSERT(gpsi);
+    gpsi->dtCaretBlink = uMSeconds;
+    return TRUE;
 }
 
 BOOL FASTCALL
@@ -222,7 +221,6 @@ co_IntSetCaretPos(int X, int Y)
    return FALSE;
 }
 
-/* Win: zzzHideCaret */
 BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
 {
    PTHREADINFO pti;
@@ -258,7 +256,6 @@ BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
    return TRUE;
 }
 
-/* Win: zzzShowCaret */
 BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
 {
    PTHREADINFO pti;
@@ -288,7 +285,7 @@ BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
       pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo.hWnd);
       if (!ThreadQueue->CaretInfo.Showing && pWnd)
       {
-         IntNotifyWinEvent(EVENT_OBJECT_SHOW, pWnd, OBJID_CARET, OBJID_CARET, 0);
+         IntNotifyWinEvent(EVENT_OBJECT_SHOW, pWnd, OBJID_CARET, CHILDID_SELF, 0);
       }
       if ((INT)gpsi->dtCaretBlink > 0)
       {
@@ -380,15 +377,16 @@ UINT
 APIENTRY
 NtUserGetCaretBlinkTime(VOID)
 {
-   UINT ret;
+    UINT ret;
 
-   UserEnterShared();
+    UserEnterShared();
 
-   ret = gpsi->dtCaretBlink;
+    ASSERT(gpsi);
+    ret = gpsi->dtCaretBlink;
 
-   UserLeave();
+    UserLeave();
 
-   return ret;
+    return ret;
 }
 
 BOOL

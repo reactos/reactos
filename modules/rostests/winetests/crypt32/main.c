@@ -42,7 +42,7 @@ static void test_findAttribute(void)
     SetLastError(0xdeadbeef);
     ret = CertFindAttribute(NULL, 0, NULL);
     ok(ret == NULL, "Expected failure\n");
-    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08x\n",
+    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08lx\n",
      GetLastError());
     if (0)
     {
@@ -54,25 +54,25 @@ static void test_findAttribute(void)
         SetLastError(0xdeadbeef);
         ret = CertFindAttribute(NULL, 1, &attr);
         ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-         "Expected ERROR_INVALID_PARAMETER, got %d (%08x)\n", GetLastError(),
+         "Expected ERROR_INVALID_PARAMETER, got %ld (%08lx)\n", GetLastError(),
          GetLastError());
     }
     /* returns NULL, last error not set */
     SetLastError(0xdeadbeef);
     ret = CertFindAttribute("bogus", 1, &attr);
     ok(ret == NULL, "Expected failure\n");
-    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08x\n",
+    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08lx\n",
      GetLastError());
     /* returns NULL, last error not set */
     SetLastError(0xdeadbeef);
     ret = CertFindAttribute("1.2.4", 1, &attr);
     ok(ret == NULL, "Expected failure\n");
-    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08x\n",
+    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08lx\n",
      GetLastError());
     /* succeeds, last error not set */
     SetLastError(0xdeadbeef);
     ret = CertFindAttribute("1.2.3", 1, &attr);
-    ok(ret != NULL, "CertFindAttribute failed: %08x\n", GetLastError());
+    ok(ret != NULL, "CertFindAttribute failed: %08lx\n", GetLastError());
 }
 
 static void test_findExtension(void)
@@ -86,7 +86,7 @@ static void test_findExtension(void)
     SetLastError(0xdeadbeef);
     ret = CertFindExtension(NULL, 0, NULL);
     ok(ret == NULL, "Expected failure\n");
-    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08x\n",
+    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08lx\n",
      GetLastError());
     if (0)
     {
@@ -99,25 +99,25 @@ static void test_findExtension(void)
         SetLastError(0xdeadbeef);
         ret = CertFindExtension(NULL, 1, &ext);
         ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-         "Expected ERROR_INVALID_PARAMETER, got %d (%08x)\n", GetLastError(),
+         "Expected ERROR_INVALID_PARAMETER, got %ld (%08lx)\n", GetLastError(),
          GetLastError());
     }
     /* returns NULL, last error not set */
     SetLastError(0xdeadbeef);
     ret = CertFindExtension("bogus", 1, &ext);
     ok(ret == NULL, "Expected failure\n");
-    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08x\n",
+    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08lx\n",
      GetLastError());
     /* returns NULL, last error not set */
     SetLastError(0xdeadbeef);
     ret = CertFindExtension("1.2.4", 1, &ext);
     ok(ret == NULL, "Expected failure\n");
-    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08x\n",
+    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08lx\n",
      GetLastError());
     /* succeeds, last error not set */
     SetLastError(0xdeadbeef);
     ret = CertFindExtension("1.2.3", 1, &ext);
-    ok(ret != NULL, "CertFindExtension failed: %08x\n", GetLastError());
+    ok(ret != NULL, "CertFindExtension failed: %08lx\n", GetLastError());
 }
 
 static void test_findRDNAttr(void)
@@ -142,25 +142,25 @@ static void test_findRDNAttr(void)
         SetLastError(0xdeadbeef);
         ret = CertFindRDNAttr(NULL, &nameInfo);
         ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-         "Expected ERROR_INVALID_PARAMETER, got %d (%08x)\n", GetLastError(),
+         "Expected ERROR_INVALID_PARAMETER, got %ld (%08lx)\n", GetLastError(),
          GetLastError());
     }
     /* returns NULL, last error not set */
     SetLastError(0xdeadbeef);
     ret = CertFindRDNAttr("bogus", &nameInfo);
     ok(ret == NULL, "Expected failure\n");
-    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08x\n",
+    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08lx\n",
      GetLastError());
     /* returns NULL, last error not set */
     SetLastError(0xdeadbeef);
     ret = CertFindRDNAttr("1.2.4", &nameInfo);
     ok(ret == NULL, "Expected failure\n");
-    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08x\n",
+    ok(GetLastError() == 0xdeadbeef, "Last error was set to %08lx\n",
      GetLastError());
     /* succeeds, last error not set */
     SetLastError(0xdeadbeef);
     ret = CertFindRDNAttr("1.2.3", &nameInfo);
-    ok(ret != NULL, "CertFindRDNAttr failed: %08x\n", GetLastError());
+    ok(ret != NULL, "CertFindRDNAttr failed: %08lx\n", GetLastError());
 }
 
 static void test_verifyTimeValidity(void)
@@ -178,16 +178,16 @@ static void test_verifyTimeValidity(void)
      */
     /* Check with 0 NotBefore and NotAfter */
     ret = CertVerifyTimeValidity(&fileTime, &info);
-    ok(ret == 1, "Expected 1, got %d\n", ret);
+    ok(ret == 1, "Expected 1, got %ld\n", ret);
     info.NotAfter = fileTime;
     /* Check with NotAfter equal to comparison time */
     ret = CertVerifyTimeValidity(&fileTime, &info);
-    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ok(ret == 0, "Expected 0, got %ld\n", ret);
     /* Check with NotBefore after comparison time */
     info.NotBefore = fileTime;
     info.NotBefore.dwLowDateTime += 5000;
     ret = CertVerifyTimeValidity(&fileTime, &info);
-    ok(ret == -1, "Expected -1, got %d\n", ret);
+    ok(ret == -1, "Expected -1, got %ld\n", ret);
 }
 
 static void test_cryptAllocate(void)
@@ -195,12 +195,12 @@ static void test_cryptAllocate(void)
     LPVOID buf;
 
     buf = CryptMemAlloc(0);
-    ok(buf != NULL, "CryptMemAlloc failed: %08x\n", GetLastError());
+    ok(buf != NULL, "CryptMemAlloc failed: %08lx\n", GetLastError());
     CryptMemFree(buf);
     /* CryptMemRealloc(NULL, 0) fails pre-Vista */
     buf = CryptMemAlloc(0);
     buf = CryptMemRealloc(buf, 1);
-    ok(buf != NULL, "CryptMemRealloc failed: %08x\n", GetLastError());
+    ok(buf != NULL, "CryptMemRealloc failed: %08lx\n", GetLastError());
     CryptMemFree(buf);
 }
 
@@ -223,7 +223,7 @@ static void test_cryptTls(void)
 
     /* One normal pass */
     index = pI_CryptAllocTls();
-    ok(index, "I_CryptAllocTls failed: %08x\n", GetLastError());
+    ok(index, "I_CryptAllocTls failed: %08lx\n", GetLastError());
     if (index)
     {
         LPVOID ptr;
@@ -231,22 +231,22 @@ static void test_cryptTls(void)
         ptr = pI_CryptGetTls(index);
         ok(!ptr, "Expected NULL\n");
         ret = pI_CryptSetTls(index, (LPVOID)0xdeadbeef);
-        ok(ret, "I_CryptSetTls failed: %08x\n", GetLastError());
+        ok(ret, "I_CryptSetTls failed: %08lx\n", GetLastError());
         ptr = pI_CryptGetTls(index);
         ok(ptr == (LPVOID)0xdeadbeef, "Expected 0xdeadbeef, got %p\n", ptr);
         /* This crashes
         ret = pI_CryptFreeTls(index, 1);
          */
         ret = pI_CryptFreeTls(index, 0);
-        ok(ret, "I_CryptFreeTls failed: %08x\n", GetLastError());
+        ok(ret, "I_CryptFreeTls failed: %08lx\n", GetLastError());
         ret = pI_CryptFreeTls(index, 0);
         ok(!ret, "I_CryptFreeTls succeeded\n");
         ok(GetLastError() == E_INVALIDARG,
-         "Expected E_INVALIDARG, got %08x\n", GetLastError());
+         "Expected E_INVALIDARG, got %08lx\n", GetLastError());
     }
     /* Similar pass, check I_CryptDetachTls */
     index = pI_CryptAllocTls();
-    ok(index, "I_CryptAllocTls failed: %08x\n", GetLastError());
+    ok(index, "I_CryptAllocTls failed: %08lx\n", GetLastError());
     if (index)
     {
         LPVOID ptr;
@@ -254,7 +254,7 @@ static void test_cryptTls(void)
         ptr = pI_CryptGetTls(index);
         ok(!ptr, "Expected NULL\n");
         ret = pI_CryptSetTls(index, (LPVOID)0xdeadbeef);
-        ok(ret, "I_CryptSetTls failed: %08x\n", GetLastError());
+        ok(ret, "I_CryptSetTls failed: %08lx\n", GetLastError());
         ptr = pI_CryptGetTls(index);
         ok(ptr == (LPVOID)0xdeadbeef, "Expected 0xdeadbeef, got %p\n", ptr);
         ptr = pI_CryptDetachTls(index);
@@ -272,34 +272,26 @@ static void test_readTrustedPublisherDWORD(void)
     pReadDWORD = (void *)GetProcAddress(hCrypt, "I_CryptReadTrustedPublisherDWORDValueFromRegistry");
     if (pReadDWORD)
     {
-        static const WCHAR safer[] = { 
-         'S','o','f','t','w','a','r','e','\\',
-         'P','o','l','i','c','i','e','s','\\',
-         'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m',
-         'C','e','r','t','i','f','i','c','a','t','e','s','\\',
-         'T','r','u','s','t','e','d','P','u','b','l','i','s','h','e','r',
-         '\\','S','a','f','e','r',0 };
-        static const WCHAR authenticodeFlags[] = { 'A','u','t','h','e','n',
-         't','i','c','o','d','e','F','l','a','g','s',0 };
         BOOL ret, exists = FALSE;
         DWORD size, readFlags = 0, returnedFlags;
         HKEY key;
         LONG rc;
 
-        rc = RegOpenKeyW(HKEY_LOCAL_MACHINE, safer, &key);
+        rc = RegOpenKeyW(HKEY_LOCAL_MACHINE,
+                         L"Software\\Policies\\Microsoft\\SystemCertificates\\TrustedPublisher\\Safer", &key);
         if (rc == ERROR_SUCCESS)
         {
             size = sizeof(readFlags);
-            rc = RegQueryValueExW(key, authenticodeFlags, NULL, NULL,
+            rc = RegQueryValueExW(key, L"AuthenticodeFlags", NULL, NULL,
              (LPBYTE)&readFlags, &size);
             if (rc == ERROR_SUCCESS)
                 exists = TRUE;
         }
         returnedFlags = 0xdeadbeef;
-        ret = pReadDWORD(authenticodeFlags, &returnedFlags);
+        ret = pReadDWORD(L"AuthenticodeFlags", &returnedFlags);
         ok(ret == exists, "Unexpected return value\n");
         ok(readFlags == returnedFlags,
-         "Expected flags %08x, got %08x\n", readFlags, returnedFlags);
+         "Expected flags %08lx, got %08lx\n", readFlags, returnedFlags);
     }
 }
 
@@ -337,28 +329,28 @@ static void test_getDefaultCryptProv(void)
 
     prov = pI_CryptGetDefaultCryptProv(0xdeadbeef);
     ok(prov == 0 && GetLastError() == E_INVALIDARG,
-     "Expected E_INVALIDARG, got %08x\n", GetLastError());
+     "Expected E_INVALIDARG, got %08lx\n", GetLastError());
     prov = pI_CryptGetDefaultCryptProv(PROV_RSA_FULL);
     ok(prov == 0 && GetLastError() == E_INVALIDARG,
-     "Expected E_INVALIDARG, got %08x\n", GetLastError());
+     "Expected E_INVALIDARG, got %08lx\n", GetLastError());
     prov = pI_CryptGetDefaultCryptProv(1);
     ok(prov == 0 && GetLastError() == E_INVALIDARG,
-     "Expected E_INVALIDARG, got %08x\n", GetLastError());
+     "Expected E_INVALIDARG, got %08lx\n", GetLastError());
     prov = pI_CryptGetDefaultCryptProv(0);
-    ok(prov != 0, "I_CryptGetDefaultCryptProv failed: %08x\n", GetLastError());
+    ok(prov != 0, "I_CryptGetDefaultCryptProv failed: %08lx\n", GetLastError());
     CryptReleaseContext(prov, 0);
 
     for (i = 0; i < ARRAY_SIZE(test_prov); i++)
     {
         if (winetest_debug > 1)
-            trace("%u: algid %#x (%s): class %u, type %u, sid %u\n", i, test_prov[i].algid, test_prov[i].name,
+            trace("%lu: algid %#x (%s): class %u, type %u, sid %u\n", i, test_prov[i].algid, test_prov[i].name,
                   GET_ALG_CLASS(test_prov[i].algid) >> 13, GET_ALG_TYPE(test_prov[i].algid) >> 9, GET_ALG_SID(test_prov[i].algid));
 
         prov = pI_CryptGetDefaultCryptProv(test_prov[i].algid);
         if (!prov)
         {
-todo_wine_if(test_prov[i].algid == CALG_DSS_SIGN || test_prov[i].algid == CALG_NO_SIGN)
-            ok(test_prov[i].optional, "%u: I_CryptGetDefaultCryptProv(%#x) failed\n", i, test_prov[i].algid);
+            todo_wine_if(test_prov[i].algid == CALG_DSS_SIGN || test_prov[i].algid == CALG_NO_SIGN)
+            ok(test_prov[i].optional, "%lu: I_CryptGetDefaultCryptProv(%#x) failed\n", i, test_prov[i].algid);
             continue;
         }
 
@@ -367,9 +359,9 @@ todo_wine_if(test_prov[i].algid == CALG_DSS_SIGN || test_prov[i].algid == CALG_N
         {
             name = CryptMemAlloc(size);
             ret = CryptGetProvParam(prov, PP_NAME, (BYTE *)name, &size, 0);
-            ok(ret, "%u: CryptGetProvParam failed %#x\n", i, GetLastError());
+            ok(ret, "%lu: CryptGetProvParam failed %#lx\n", i, GetLastError());
             if (winetest_debug > 1)
-                trace("%u: algid %#x, name %s\n", i, test_prov[i].algid, name);
+                trace("%lu: algid %#x, name %s\n", i, test_prov[i].algid, name);
             CryptMemFree(name);
         }
 
@@ -393,119 +385,92 @@ static void test_CryptInstallOssGlobal(void)
     }
 }
 
-static const BYTE encodedInt[] = { 0x02,0x01,0x01 };
-static const WCHAR encodedIntStr[] = { '0','2',' ','0','1',' ','0','1',0 };
-static const BYTE encodedBigInt[] = { 0x02,0x1f,0x01,0x02,0x03,0x04,0x05,0x06,
- 0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10,0x11,0x12,0x13,0x14,0x15,
- 0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f };
-static const WCHAR encodedBigIntStr[] = { '0','2',' ','1','f',' ','0','1',' ',
- '0','2',' ','0','3',' ','0','4',' ','0','5',' ','0','6',' ','0','7',' ','0',
- '8',' ','0','9',' ','0','a',' ','0','b',' ','0','c',' ','0','d',' ','0','e',
- ' ','0','f',' ','1','0',' ','1','1',' ','1','2',' ','1','3',' ','1','4',' ',
- '1','5',' ','1','6',' ','1','7',' ','1','8',' ','1','9',' ','1','a',' ','1',
- 'b',' ','1','c',' ','1','d',' ','1','e',' ','1','f',0 };
-
 static void test_format_object(void)
 {
-    BOOL (WINAPI *pCryptFormatObject)(DWORD dwEncoding, DWORD dwFormatType,
-        DWORD dwFormatStrType, void *pFormatStruct, LPCSTR lpszStructType,
-        const BYTE *pbEncoded, DWORD dwEncoded, void *pbFormat,
-        DWORD *pcbFormat);
+    static const BYTE encodedInt[] = {0x02,0x01,0x01};
+    static const BYTE encodedBigInt[] = {0x02,0x1f,0x01,0x02,0x03,0x04,0x05,
+            0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10,0x11,0x12,
+            0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f};
+    static const WCHAR encodedBigIntStr[] = L"02 1f 01 02 03 04 05 06 07 08 09 "
+            "0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f";
+
     BOOL ret;
     DWORD size;
-    LPWSTR str;
+    WCHAR str[100];
 
-    pCryptFormatObject = (void *)GetProcAddress(hCrypt, "CryptFormatObject");
-    if (!pCryptFormatObject)
-    {
-        skip("No CryptFormatObject\n");
-        return;
-    }
     /* Crash */
     if (0)
     {
-        pCryptFormatObject(0, 0, 0, NULL, NULL, NULL, 0, NULL, NULL);
+        CryptFormatObject(0, 0, 0, NULL, NULL, NULL, 0, NULL, NULL);
     }
     /* When called with any but the default encoding, it fails to find a
      * formatting function.
      */
     SetLastError(0xdeadbeef);
-    ret = pCryptFormatObject(0, 0, 0, NULL, NULL, NULL, 0, NULL, &size);
-    ok(!ret && GetLastError() == ERROR_FILE_NOT_FOUND,
-     "expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+    ret = CryptFormatObject(0, 0, 0, NULL, NULL, NULL, 0, NULL, &size);
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %lu\n", GetLastError());
+
     /* When called with the default encoding type for any undefined struct type
      * (including none), it succeeds:  the default encoding is a hex string
      * encoding.
      */
     SetLastError(0xdeadbeef);
-    ret = pCryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL, NULL, 0,
-     NULL, &size);
-    ok(ret, "CryptFormatObject failed: %d\n", GetLastError());
-    if (ret)
-    {
-        if (size == 0 && GetLastError() == ERROR_FILE_NOT_FOUND)
-        {
-            win_skip("CryptFormatObject has no default implementation\n");
-            return;
-        }
-        ok(size == sizeof(WCHAR), "unexpected size %d\n", size);
-        str = HeapAlloc(GetProcessHeap(), 0, size);
-        SetLastError(0xdeadbeef);
-        size = 0;
-        ret = pCryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL, NULL, 0,
-         str, &size);
-        ok(!ret && GetLastError() == ERROR_MORE_DATA,
-         "expected ERROR_MORE_DATA, got %d\n", GetLastError());
-        size = sizeof(WCHAR);
-        ret = pCryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL, NULL, 0,
-         str, &size);
-        ok(ret, "CryptFormatObject failed: %d\n", GetLastError());
-        ok(!str[0], "expected empty string\n");
-        HeapFree(GetProcessHeap(), 0, str);
-    }
-    ret = pCryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL, encodedInt,
-     sizeof(encodedInt), NULL, &size);
-    ok(ret, "CryptFormatObject failed: %d\n", GetLastError());
-    if (ret)
-    {
-        str = HeapAlloc(GetProcessHeap(), 0, size);
-        ret = pCryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL,
-         encodedInt, sizeof(encodedInt), str, &size);
-        ok(ret, "CryptFormatObject failed: %d\n", GetLastError());
-        ok(!lstrcmpW(str, encodedIntStr), "unexpected format string\n");
-        HeapFree(GetProcessHeap(), 0, str);
-    }
-    ret = pCryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL,
-     encodedBigInt, sizeof(encodedBigInt), NULL, &size);
-    ok(ret, "CryptFormatObject failed: %d\n", GetLastError());
-    if (ret)
-    {
-        str = HeapAlloc(GetProcessHeap(), 0, size);
-        ret = pCryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL,
-         encodedBigInt, sizeof(encodedBigInt), str, &size);
-        ok(ret, "CryptFormatObject failed: %d\n", GetLastError());
-        ok(!lstrcmpiW(str, encodedBigIntStr), "unexpected format string\n");
-        HeapFree(GetProcessHeap(), 0, str);
-    }
+    ret = CryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL, NULL, 0, NULL, &size);
+    ok(ret, "CryptFormatObject failed: %ld\n", GetLastError());
+    ok(size == sizeof(WCHAR) || broken(!size) /* Win10 1709+ */, "wrong size %ld\n", size);
+
+    SetLastError(0xdeadbeef);
+    size = 0;
+    ret = CryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL, NULL, 0, str, &size);
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_MORE_DATA, "wrong error %lu\n", GetLastError());
+
+    size = sizeof(WCHAR);
+    ret = CryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL, NULL, 0, str, &size);
+    ok(ret, "CryptFormatObject failed, error %lu\n", GetLastError());
+    ok(!str[0], "expected empty string\n");
+
+    ret = CryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL, encodedInt,
+            sizeof(encodedInt), NULL, &size);
+    ok(ret, "CryptFormatObject failed, error %lu\n", GetLastError());
+    ok(size >= sizeof(L"02 01 01"), "wrong size %lu\n", size);
+
+    ret = CryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL, encodedInt,
+            sizeof(encodedInt), str, &size);
+    ok(ret, "CryptFormatObject failed, error %lu\n", GetLastError());
+    ok(!wcscmp(str, L"02 01 01"), "wrong string %s\n", wine_dbgstr_w(str));
+
+    ret = CryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL, encodedBigInt,
+            sizeof(encodedBigInt), NULL, &size);
+    ok(ret, "CryptFormatObject failed, error %lu\n", GetLastError());
+    ok(size >= sizeof(encodedBigIntStr), "wrong size %lu\n", size);
+
+    ret = CryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL, NULL,
+     encodedBigInt, sizeof(encodedBigInt), str, &size);
+    ok(ret, "CryptFormatObject failed: %ld\n", GetLastError());
+    ok(!wcsicmp(str, encodedBigIntStr), "wrong string %s\n", wine_dbgstr_w(str));
+
     /* When called with the default encoding type for any undefined struct
      * type but CRYPT_FORMAT_STR_NO_HEX specified, it fails to find a
      * formatting function.
      */
     SetLastError(0xdeadbeef);
-    ret = pCryptFormatObject(X509_ASN_ENCODING, 0, CRYPT_FORMAT_STR_NO_HEX,
-     NULL, NULL, NULL, 0, NULL, &size);
+    ret = CryptFormatObject(X509_ASN_ENCODING, 0, CRYPT_FORMAT_STR_NO_HEX,
+            NULL, NULL, NULL, 0, NULL, &size);
     ok(!ret, "CryptFormatObject succeeded\n");
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND ||
-     GetLastError() == 0xdeadbeef, /* Vista, W2K8 */
-     "expected ERROR_FILE_NOT_FOUND or no change, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND
+            || GetLastError() == 0xdeadbeef, /* Vista, W2K8 */
+            "wrong error %lu\n", GetLastError());
+
     /* When called to format an AUTHORITY_KEY_ID2_INFO, it fails when no
      * data are given.
      */
     SetLastError(0xdeadbeef);
-    ret = pCryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL,
-     szOID_AUTHORITY_KEY_IDENTIFIER2, NULL, 0, NULL, &size);
-    ok(!ret && GetLastError() == E_INVALIDARG,
-     "expected E_INVALIDARG, got %d\n", GetLastError());
+    ret = CryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL,
+            szOID_AUTHORITY_KEY_IDENTIFIER2, NULL, 0, NULL, &size);
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == E_INVALIDARG, "wrong error %lu\n", GetLastError());
 }
 
 START_TEST(main)

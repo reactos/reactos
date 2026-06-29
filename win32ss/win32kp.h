@@ -53,6 +53,7 @@ typedef struct _DC *PDC;
 #include "gdi/ntgdi/path.h"
 #include "gdi/dib/dib.h"
 #include "reactx/ntddraw/intddraw.h"
+#include "reactx/ntdxvista/dxprivate.h"
 
 /* Internal NtUser Headers */
 #include "user/ntuser/win32kdebug.h"

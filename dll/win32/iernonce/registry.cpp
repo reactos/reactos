@@ -311,8 +311,11 @@ BOOL RunOnceExInstance::Exec(_In_opt_ HWND hwnd)
         m_SectionList[i].CloseAndDelete(m_RegKey);
     }
 
-    m_RegKey.DeleteValue(L"Title");
-    m_RegKey.DeleteValue(L"Flags");
+    if (m_RegKey)
+    {
+        m_RegKey.DeleteValue(L"Title");
+        m_RegKey.DeleteValue(L"Flags");
+    }
 
     // Notify the dialog all sections are handled.
     if (hwnd)

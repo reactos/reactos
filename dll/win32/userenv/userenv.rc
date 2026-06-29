@@ -1,4 +1,5 @@
-/* Copyright (C) 2004 Eric Kohl
+/*
+ * Copyright (C) 2004 Eric Kohl
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +17,7 @@
  */
 
 #include <windef.h>
+#include <winuser.rh>
 
 #include "resources.h"
 
@@ -29,6 +31,8 @@
 #include <reactos/version.rc>
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDI_USERENV ICON "res/userenv.ico"
 
 /*
  * Everything specific to any language goes in one of the specific

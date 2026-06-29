@@ -380,3 +380,119 @@ RegWriteUserSetting(
     return NT_SUCCESS(Status);
 }
 
+static inline BOOL
+IsStringType(ULONG Type)
+{
+    return (Type == REG_SZ) || (Type == REG_EXPAND_SZ) || (Type == REG_MULTI_SZ);
+}
+
+NTSTATUS
+NTAPI
+RegEnumValueW(
+    _In_ HKEY hKey,
+    _In_ ULONG Index,
+    _Out_opt_ LPWSTR Name,
+    _Out_opt_ PULONG NameLength,
+    _Out_opt_ PULONG Type,
+    _Out_opt_ PVOID Data,
+    _Out_opt_ PULONG DataLength)
+{
+    PKEY_VALUE_FULL_INFORMATION ValueInfo = NULL;
+    ULONG BufferLength = 0;
+    ULONG ReturnedLength;
+    NTSTATUS Status;
+
+    /* Calculate the required buffer length */
+    BufferLength = FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name);
+    BufferLength += (MAX_PATH + 1) * sizeof(WCHAR);
+    if (Data != NULL)
+        BufferLength += *DataLength;
+
+    /* Allocate the value buffer */
+    ValueInfo = ExAllocatePoolWithTag(PagedPool, BufferLength, TAG_TEMP);
+    if (ValueInfo == NULL)
+        return STATUS_NO_MEMORY;
+
+    /* Enumerate the value*/
+    Status = ZwEnumerateValueKey(hKey,
+                                 Index,
+                                 KeyValueFullInformation,
+                                 ValueInfo,
+                                 BufferLength,
+                                 &ReturnedLength);
+    if (NT_SUCCESS(Status))
+    {
+        if (Name)
+        {
+            /* Check if the name fits */
+            if ((ValueInfo->NameLength + sizeof(WCHAR)) <= (*NameLength * sizeof(WCHAR)))
+            {
+                /* Copy it */
+                RtlMoveMemory(Name, ValueInfo->Name, ValueInfo->NameLength);
+
+                /* Terminate the string */
+                Name[ValueInfo->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
+            }
+            else
+            {
+                /* Otherwise, we ran out of buffer space */
+                Status = STATUS_BUFFER_OVERFLOW;
+                goto done;
+            }
+        }
+
+        if (Data)
+        {
+            /* Check if the data fits */
+            if (ValueInfo->DataLength <= *DataLength)
+            {
+                /* Copy it */
+                RtlMoveMemory(Data,
+                              (PVOID)((ULONG_PTR)ValueInfo + ValueInfo->DataOffset),
+                              ValueInfo->DataLength);
+
+                /* if the type is REG_SZ and data is not 0-terminated
+                 * and there is enough space in the buffer NT appends a \0 */
+                if (IsStringType(ValueInfo->Type) &&
+                    ValueInfo->DataLength <= *DataLength - sizeof(WCHAR))
+                {
+                    WCHAR *ptr = (WCHAR *)((ULONG_PTR)Data + ValueInfo->DataLength);
+                    if ((ptr > (WCHAR *)Data) && ptr[-1])
+                        *ptr = UNICODE_NULL;
+                }
+            }
+            else
+            {
+                Status = STATUS_BUFFER_OVERFLOW;
+                goto done;
+            }
+        }
+    }
+
+done:
+    if ((NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_OVERFLOW))
+    {
+        if (Type)
+            *Type = ValueInfo->Type;
+
+        if (NameLength)
+            *NameLength = ValueInfo->NameLength;
+
+        if (DataLength)
+            *DataLength = ValueInfo->DataLength;
+    }
+
+    /* Free the buffer and return status */
+    if (ValueInfo)
+        ExFreePoolWithTag(ValueInfo, TAG_TEMP);
+
+    return Status;
+}
+
+NTSTATUS NTAPI
+RegDeleteValueW(_In_ HKEY hKey, _In_ LPCWSTR pszValueName)
+{
+    UNICODE_STRING ustrName;
+    RtlInitUnicodeString(&ustrName, pszValueName);
+    return ZwDeleteValueKey(hKey, &ustrName);
+}

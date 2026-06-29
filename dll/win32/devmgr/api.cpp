@@ -9,7 +9,7 @@
 * NOTES:
 *                  Some helpful resources:
 *                    http://support.microsoft.com/default.aspx?scid=kb;%5BLN%5D;815320
-*                    http://www.jsiinc.com/SUBO/tip7400/rh7482.htm
+*                    https://web.archive.org/web/20050321020634/http://www.jsifaq.com/SUBO/tip7400/rh7482.htm
 *                    http://www.jsiinc.com/SUBM/tip6400/rh6490.htm
 *
 * UPDATE HISTORY:

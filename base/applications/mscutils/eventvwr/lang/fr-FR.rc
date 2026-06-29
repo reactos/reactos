@@ -50,12 +50,12 @@ IDM_EVENTWR_CTX MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Open Event Log...", IDM_OPEN_EVENTLOG
-        MENUITEM "&Save Event Log as...", IDM_SAVE_EVENTLOG
+        MENUITEM "&Ouvrir le journal d'événements...", IDM_OPEN_EVENTLOG
+        MENUITEM "Enregistrer le journal d'événements &sous...", IDM_SAVE_EVENTLOG
         MENUITEM SEPARATOR
-        MENUITEM "&Clear all Events", IDM_CLEAR_EVENTS
-        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "&Effacer tous les événements", IDM_CLEAR_EVENTS
+        MENUITEM "&Renommer\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "&Paramètres du journal...", IDM_EVENTLOG_SETTINGS
     END
 END
 
@@ -82,21 +82,21 @@ IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Date :", IDC_STATIC, 8, 5, 31, 8
+    LTEXT "D&ate :", IDC_STATIC, 8, 5, 31, 8
     EDITTEXT IDC_EVENTDATESTATIC, 46, 5, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Source :", IDC_STATIC, 103, 5, 36, 8
+    LTEXT "&Source :", IDC_STATIC, 103, 5, 36, 8
     EDITTEXT IDC_EVENTSOURCESTATIC, 140, 5, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Heure :", IDC_STATIC, 8, 15, 31, 8
+    LTEXT "&Heure :", IDC_STATIC, 8, 15, 31, 8
     EDITTEXT IDC_EVENTTIMESTATIC, 46, 15, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Catégorie :", IDC_STATIC, 103, 15, 36, 8
+    LTEXT "&Catégorie :", IDC_STATIC, 103, 15, 36, 8
     EDITTEXT IDC_EVENTCATEGORYSTATIC, 140, 15, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Type :", IDC_STATIC, 8, 25, 31, 8
+    LTEXT "&Type :", IDC_STATIC, 8, 25, 31, 8
     EDITTEXT IDC_EVENTTYPESTATIC, 46, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Événement :", IDC_STATIC, 103, 25, 36, 8
+    LTEXT "É&vénement :", IDC_STATIC, 103, 25, 36, 8
     EDITTEXT IDC_EVENTIDSTATIC, 140, 25, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Utilisateur :", IDC_STATIC, 8, 35, 36, 8
     EDITTEXT IDC_EVENTUSERSTATIC, 46, 35, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Ordinateur :", IDC_STATIC, 8, 45, 36, 8
+    LTEXT "O&rdinateur :", IDC_STATIC, 8, 45, 36, 8
     EDITTEXT IDC_EVENTCOMPUTERSTATIC, 46, 45, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
 
     PUSHBUTTON "", IDC_PREVIOUS, 230, 5, 28, 14, BS_ICON
@@ -106,9 +106,9 @@ BEGIN
     LTEXT "&Description :", IDC_STATIC, 8, 65, 45, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "Données :", IDC_DETAILS_STATIC, 8, 140, 35, 8//FIXME: add accel
     AUTORADIOBUTTON "&Octets", IDC_BYTESRADIO, 50, 140, 34, 8
-    AUTORADIOBUTTON "&Mots", IDC_WORDRADIO, 88, 140, 34, 8
+    AUTORADIOBUTTON "&Mots", IDC_WORDSRADIO, 88, 140, 34, 8
+    LTEXT "Do&nnées :", IDC_DETAILS_STATIC, 8, 140, 35, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -149,7 +149,7 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS, 210, 165, 10, 14
     LTEXT "jours", IDC_STATIC, 215, 168, 20, 8
     PUSHBUTTON "Paramètres par &défaut", IDC_RESTOREDEFAULTS, 156, 183, 80, 14
-    AUTOCHECKBOX "Utiliser une connection à &basse vitesse", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
+    AUTOCHECKBOX "Utiliser une connexion à &basse vitesse", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Effacer le journal", ID_CLEARLOG, 180, 213, 65, 14
 END
 
@@ -168,6 +168,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Voulez-vous enregistrer ce journal d'événements avant de l'effacer ?"
     IDS_RESTOREDEFAULTS "Voulez-vous vraiment réinitialiser tous les paramètres pour ce journal aux valeurs par défaut ?"
     IDS_EVENTSTRINGIDNOTFOUND "La description pour l'événement d'ID ( %lu ) dans la source ( %s ) ne peut être trouvée. L'ordinateur local pourrait ne pas avoir les informations registres nécessaires ou les fichiers DLL de message pour afficher les messages depuis un ordinateur distant.\n\nLes informations suivantes font partie de l'événement :\n\n"
+    IDS_CONTFROMBEGINNING "Vous avez atteint la fin du journal d'événements. Voulez-vous continuer depuis le début ?"
+    IDS_CONTFROMEND "Vous avez atteint le début du journal d'événements. Voulez-vous continuer depuis la fin ?"
 END
 
 STRINGTABLE
@@ -220,16 +222,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Type d'événement :          %s\r\n\
-Source de l'événement :     %s\r\n\
-Catégorie de l'événement :  %s\r\n\
-ID de l'événement :         %s\r\n\
-Date :                      %s\r\n\
-Heure :                     %s\r\n\
-Utilisateur :               %s\r\n\
-Ordinateur :                %s\r\n\
-Description :\r\n%s"
+    IDS_COPY_EVTTYPE "Type de l'événement :"
+    IDS_COPY_EVTSRC  "Source de l'événement :"
+    IDS_COPY_EVTCAT  "Catégorie de l'événement :"
+    IDS_COPY_EVTID   "ID de l'événement :"
+    IDS_COPY_EVTDATE "Date :"
+    IDS_COPY_EVTTIME "Heure :"
+    IDS_COPY_EVTUSER "Utilisateur :"
+    IDS_COPY_EVTCOMP "Ordinateur :"
+    IDS_COPY_EVTTEXT "Description :"
+    IDS_COPY_EVTDATA "Données :"
 END
 
 STRINGTABLE

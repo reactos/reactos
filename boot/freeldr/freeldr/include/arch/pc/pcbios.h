@@ -81,7 +81,9 @@ typedef struct _ACPI_BIOS_DATA
 
 typedef struct _DOCKING_STATE_INFORMATION
 {
-    USHORT Unused[5];
+    ULONG DockLocationID;
+    ULONG SerialNumber;
+    USHORT Capabilities;
     USHORT ReturnCode;
 } DOCKING_STATE_INFORMATION, *PDOCKING_STATE_INFORMATION;
 
@@ -182,6 +184,7 @@ VOID __cdecl ChainLoadBiosBootSectorCode(
     IN UCHAR BootDrive OPTIONAL,
     IN ULONG BootPartition OPTIONAL);
 
+DECLSPEC_NORETURN
 VOID __cdecl Relocator16Boot(
     IN REGS*  In,
     IN USHORT StackSegment,
@@ -189,7 +192,9 @@ VOID __cdecl Relocator16Boot(
     IN USHORT CodeSegment,
     IN USHORT CodePointer);
 
+DECLSPEC_NORETURN
 VOID __cdecl Reboot(VOID);
+
 VOID DetectHardware(VOID);
 
 #endif /* ! __ASM__ */

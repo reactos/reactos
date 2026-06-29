@@ -2,7 +2,6 @@
 spec2def(shell32_apitest.exe shell32_apitest.spec)
 
 list(APPEND SOURCE
-    closewnd.cpp
     AddCommas.cpp
     CFSFolder.cpp
     CheckEscapes.cpp
@@ -11,19 +10,22 @@ list(APPEND SOURCE
     CommandLineToArgvW.cpp
     CShellDesktop.cpp
     CShellLink.cpp
-    CUserNotification.cpp
+    #CUserNotification.cpp # Test is broken on Win 2003
     Control_RunDLLW.cpp
     DragDrop.cpp
     ExtractIconEx.cpp
     FindExecutable.cpp
     GetDisplayNameOf.cpp
     GUIDFromString.cpp
+    LockServer.cpp
     Int64ToString.cpp
     IShellFolderViewCB.cpp
     ItemIDList.cpp
-    OpenAs_RunDLL.cpp
+    #OpenAs_RunDLL.cpp # Test hangs on Win 2003
     PathIsEqualOrSubFolder.cpp
     PathIsTemporary.cpp
+    PathMakeUniqueName.cpp
+    PathProcessCommand.cpp
     PathResolve.cpp
     RealShellExecuteEx.cpp
     SHAppBarMessage.cpp
@@ -31,17 +33,27 @@ list(APPEND SOURCE
     SHCreateDataObject.cpp
     SHCreateFileDataObject.cpp
     SHCreateFileExtractIconW.cpp
+    SHEvaluateSystemCommandTemplate.cpp
+    SHGetComputerDisplayNameW.cpp
+    SHGetUnreadMailCountW.cpp
+    SHIsBadInterfacePtr.cpp
     SHParseDisplayName.cpp
     SHRestricted.cpp
+    SHShouldShowWizards.cpp
+    SHEnumerateUnreadMailAccountsW.cpp
     She.cpp
-    ShellExecCmdLine.cpp
-    ShellExecuteEx.cpp
-    ShellExecuteW.cpp
+    #ShellExec_RunDLL.cpp # Broke on Windows
+    #ShellExecCmdLine.cpp # Broke on Windows
+    #ShellExecuteEx.cpp # Broke on Windows
+    #ShellExecuteW.cpp # Broke on Windows
     ShellHook.cpp
     ShellInfo.cpp
     ShellState.cpp
     SHGetAttributesFromDataObject.cpp
+    SHGetUserDisplayName.cpp
     SHLimitInputEdit.cpp
+    SHSetUnreadMailCountW.cpp
+    StrRStr.cpp
     menu.cpp
     shelltest.cpp)
 
@@ -72,3 +84,4 @@ target_link_libraries(shell32_apitest_sub cpprt atl_classes)
 set_module_type(shell32_apitest_sub win32gui UNICODE)
 add_importlibs(shell32_apitest_sub msvcrt kernel32 user32 shell32 shlwapi ole32)
 add_rostests_file(TARGET shell32_apitest_sub SUBDIR testdata)
+add_dependencies(shell32_apitest shell32_apitest_sub)

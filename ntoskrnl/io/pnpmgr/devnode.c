@@ -27,7 +27,7 @@ FASTCALL
 IopGetDeviceNode(
     _In_ PDEVICE_OBJECT DeviceObject)
 {
-    return ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
+    return IoGetDevObjExtension(DeviceObject)->DeviceNode;
 }
 
 PDEVICE_NODE
@@ -66,7 +66,7 @@ PipAllocateDeviceNode(
     {
         /* Link it and remove the init flag */
         DeviceNode->PhysicalDeviceObject = PhysicalDeviceObject;
-        ((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode = DeviceNode;
+        IoGetDevObjExtension(PhysicalDeviceObject)->DeviceNode = DeviceNode;
         PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
     }
 
@@ -294,7 +294,7 @@ IopCreateDeviceNode(
 
     Node->PhysicalDeviceObject = PhysicalDeviceObject;
 
-    ((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode = Node;
+    IoGetDevObjExtension(PhysicalDeviceObject)->DeviceNode = Node;
 
     if (ParentNode)
     {
@@ -391,7 +391,7 @@ IopFreeDeviceNode(
         ExFreePool(DeviceNode->BootResources);
     }
 
-    ((PEXTENDED_DEVOBJ_EXTENSION)DeviceNode->PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode = NULL;
+    IoGetDevObjExtension(DeviceNode->PhysicalDeviceObject)->DeviceNode = NULL;
     ExFreePoolWithTag(DeviceNode, TAG_IO_DEVNODE);
 
     return STATUS_SUCCESS;

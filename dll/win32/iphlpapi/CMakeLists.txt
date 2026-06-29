@@ -1,6 +1,6 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/include/wine
     ${REACTOS_SOURCE_DIR}/dll/win32/dhcpcsvc/include
     ${REACTOS_SOURCE_DIR}/sdk/lib/tdilib)
 

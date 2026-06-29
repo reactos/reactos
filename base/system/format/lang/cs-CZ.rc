@@ -27,7 +27,7 @@ BEGIN
     STRING_FMIFS_FAIL "Nelze najít vstupní body FMIFS.\n\n"
     STRING_UNKNOW_ARG "Neznámý agrument: %s\n"
     STRING_DRIVE_PARM "Schází nutný parametr disku.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Nelze zjistit typ disku"
+    STRING_ERROR_DRIVE_TYPE "Nelze zjistit typ disku.\n"
     STRING_INSERT_DISK "Vložte novou disketu do jednotky %C:\na poté stiskněte klávesu ENTER..."
     STRING_NO_VOLUME "Nelze zjistit svazek"
     STRING_NO_VOLUME_SIZE "Nelze zjistit velikost svazku"

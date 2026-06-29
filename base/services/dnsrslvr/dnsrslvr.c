@@ -59,6 +59,10 @@ ServiceControlHandler(
             UpdateServiceStatus(ServiceStatusHandle, SERVICE_STOPPED, 0);
             break;
 
+        case SERVICE_CONTROL_PARAMCHANGE:
+            DPRINT1("SERVICE_CONTROL_PARAMCHANGE!\n");
+            return NO_ERROR;
+
         case SERVICE_CONTROL_INTERROGATE:
             return NO_ERROR;
 
@@ -83,7 +87,7 @@ ServiceMain(
 
     SvcStatus.dwServiceType             = SERVICE_WIN32_OWN_PROCESS;
     SvcStatus.dwCurrentState            = SERVICE_START_PENDING;
-    SvcStatus.dwControlsAccepted        = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+    SvcStatus.dwControlsAccepted        = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_PARAMCHANGE;
     SvcStatus.dwCheckPoint              = 0;
     SvcStatus.dwWin32ExitCode           = NO_ERROR;
     SvcStatus.dwServiceSpecificExitCode = 0;

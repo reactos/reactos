@@ -17,8 +17,13 @@
 #define T_WIN8    0x20
 #define T_WIN10   0x40
 
-#define T_PRE_VISTA T_WIN2K|T_WINXP|T_WIN2K3
-#define T_VISTA_PLUS T_VISTA|T_WIN7|T_WIN8|T_WIN10
+#define T_PRE_VISTA  (T_WIN2K | T_WINXP | T_WIN2K3)
+#define T_PRE_WIN7   (T_PRE_VISTA | T_VISTA)
+#define T_PRE_WIN8   (T_PRE_WIN7 | T_WIN7)
+
+#define T_WIN8_PLUS  (T_WIN8 | T_WIN10)
+#define T_WIN7_PLUS  (T_WIN7 | T_WIN8_PLUS)
+#define T_VISTA_PLUS (T_VISTA | T_WIN7_PLUS)
 
 struct test_data
 {
@@ -37,19 +42,19 @@ struct test_data Tests[] =
     {__LINE__, NULL, NULL, 0, E_INVALIDARG, T_VISTA_PLUS},
     {__LINE__, L"", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
     {__LINE__, L" ", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), T_PRE_VISTA},
-    {__LINE__, L" ", NULL, 0, E_INVALIDARG, T_VISTA_PLUS},
-    {__LINE__, L":", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L": ", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L" :", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L"/", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L"//", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L" ", NULL, 0, E_INVALIDARG, T_WIN8_PLUS},
+    {__LINE__, L":", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
+    {__LINE__, L": ", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
+    {__LINE__, L" :", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
+    {__LINE__, L"/", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
+    {__LINE__, L"//", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
     /* This opens C:\ from Win+R and address bar */
-    {__LINE__, L"\\", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"\\", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
     /* These two opens "C:\Program Files" from Win+R and address bar */
-    {__LINE__, L"\\Program Files", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L"\\Program Files\\", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L"\\\\?", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L"\\\\?\\", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"\\Program Files", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
+    {__LINE__, L"\\Program Files\\", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
+    {__LINE__, L"\\\\?", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
+    {__LINE__, L"\\\\?\\", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
     /* Tests for the shell: protocol */
     {__LINE__, L"shell:", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},
     {__LINE__, L"shell::", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},
@@ -82,13 +87,13 @@ struct test_data Tests[] =
     {__LINE__, L"ftp://", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
     {__LINE__, L"ftp://a", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
     {__LINE__, L"ftp://ftp.gnu.org/gnu/octave/", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
-    {__LINE__, L"aa:", L"aa:", 0, S_OK, T_VISTA_PLUS},
-    {__LINE__, L"garbage:", L"garbage:", 0, S_OK, T_VISTA_PLUS},
-    {__LINE__, L"ftp:", L"ftp:", 0, S_OK, T_VISTA_PLUS},
-    {__LINE__, L"ftp:/", L"ftp:/", 0, S_OK, T_VISTA_PLUS},
-    {__LINE__, L"ftp://", L"ftp:///", 0, S_OK, T_VISTA_PLUS},
-    {__LINE__, L"ftp://a", L"ftp://a/", 0, S_OK, T_VISTA_PLUS},
-    {__LINE__, L"ftp://ftp.gnu.org/gnu/octave/", L"ftp://ftp.gnu.org/gnu/octave/", 0, S_OK, T_VISTA_PLUS},
+    {__LINE__, L"aa:", L"aa:", 0, S_OK, T_WIN10},
+    {__LINE__, L"garbage:", L"garbage:", 0, S_OK, T_WIN10},
+    {__LINE__, L"ftp:", L"ftp:", 0, S_OK, T_WIN10},
+    {__LINE__, L"ftp:/", L"ftp:/", 0, S_OK, T_WIN10},
+    {__LINE__, L"ftp://", L"ftp:///", 0, S_OK, T_WIN10},
+    {__LINE__, L"ftp://a", L"ftp://a/", 0, S_OK, T_WIN10},
+    {__LINE__, L"ftp://ftp.gnu.org/gnu/octave/", L"ftp://ftp.gnu.org/gnu/octave/", 0, S_OK, T_WIN10},
     /* Tests for CRegFolder */
     {__LINE__, L"::", NULL, 0, CO_E_CLASSSTRING, 0},
     {__LINE__, L"::{", NULL, 0, CO_E_CLASSSTRING, 0},
@@ -109,17 +114,17 @@ struct test_data Tests[] =
     {__LINE__, L"y:\\", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_PRE_VISTA},
     {__LINE__, L"y:\\", NULL, 0, HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE), T_VISTA_PLUS},
     {__LINE__, L"C:\\ ", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), T_PRE_VISTA},
-    {__LINE__, L"C:\\ ", NULL, 0, E_INVALIDARG, T_VISTA_PLUS},
+    {__LINE__, L"C:\\ ", NULL, 0, E_INVALIDARG, T_WIN8_PLUS},
     /* Tests for CFSFolder */
     {__LINE__, L"$", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},
     {__LINE__, L"c:\\Program Files", L"C:\\Program Files", 0, S_OK, 0},
     {__LINE__, L"c:\\Program Files\\", L"C:\\Program Files", 0, S_OK, 0},
     /* Paths with . are valid for win+r dialog or address bar but not for ParseDisplayName */
-    {__LINE__, L"c:\\Program Files\\.", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L"c:\\Program Files\\..", NULL, 0, E_INVALIDARG, 0}, /* This gives C:\ when entered in address bar */
-    {__LINE__, L".", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L"..", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L"C:\\.", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"c:\\Program Files\\.", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
+    {__LINE__, L"c:\\Program Files\\..", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS}, /* This gives C:\ when entered in address bar */
+    {__LINE__, L".", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
+    {__LINE__, L"..", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
+    {__LINE__, L"C:\\.", NULL, 0, E_INVALIDARG, T_PRE_WIN7|T_WIN8_PLUS},
     {__LINE__, L"fonts", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},  /* These three work for ShellExecute */
     {__LINE__, L"winsxs", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},
     {__LINE__, L"system32", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0}
@@ -127,15 +132,16 @@ struct test_data Tests[] =
 
 UINT get_host_os_flag()
 {
-    switch (LOWORD(GetVersion()))
+    switch (GetNTVersion())
     {
-    case 5: return T_WIN2K;
-    case (5 | (1 << 8)): return T_WINXP;
-    case (5 | (2 << 8)): return T_WIN2K3;
-    case 6: return T_VISTA;
-    case (6 | (1 << 8)): return T_WIN7;
-    case (6 | (2 << 8)): return T_WIN8;
-    case 10: return T_WIN10;
+        case _WIN32_WINNT_WIN2K:   return T_WIN2K;
+        case _WIN32_WINNT_WINXP:   return T_WINXP;
+        case _WIN32_WINNT_WS03:    return T_WIN2K3;
+        case _WIN32_WINNT_VISTA:   return T_VISTA;
+        case _WIN32_WINNT_WIN7:    return T_WIN7;
+        case _WIN32_WINNT_WIN8:    return T_WIN8;
+        case _WIN32_WINNT_WINBLUE: return T_WIN8;
+        case _WIN32_WINNT_WIN10:   return T_WIN10;
     }
 
     return 0;

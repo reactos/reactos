@@ -139,8 +139,8 @@ ScmReadDependencies(HKEY hServiceKey,
 
 DWORD
 ScmSetServicePassword(
-    IN PCWSTR pszServiceName,
-    IN PCWSTR pszPassword);
+    _In_ PCWSTR pszServiceName,
+    _In_ PCWSTR pszPassword);
 
 DWORD
 ScmWriteSecurityDescriptor(
@@ -201,6 +201,24 @@ DWORD ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
                                 DWORD dwStartType);
 VOID ScmDeleteServiceRecord(PSERVICE lpService);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
+
+DWORD
+ScmSendControlPacket(
+    _In_ HANDLE hControlPipe,
+    _In_ PCWSTR pServiceName,
+    _In_ DWORD dwControl,
+    _In_ DWORD dwControlpacketSize,
+    _In_ PVOID pControlPacket);
+
+DWORD
+ScmControlServiceEx(
+    _In_ HANDLE hControlPipe,
+    _In_ PCWSTR pServiceName,
+    _In_ DWORD dwControl,
+    _In_ SERVICE_STATUS_HANDLE hServiceStatus,
+    _In_opt_ DWORD dwServiceTag,
+    _In_opt_ DWORD argc,
+    _In_reads_opt_(argc) const PCWSTR* argv);
 
 DWORD
 ScmControlService(

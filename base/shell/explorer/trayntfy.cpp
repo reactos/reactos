@@ -139,8 +139,9 @@ public:
         SIZE clockSize = { 0, 0 };
         SIZE traySize = { 0, 0 };
         SIZE showDesktopSize = { 0, 0 };
+        BOOL bHideClock = GetHideClock();
 
-        if (!g_TaskbarSettings.sr.HideClock)
+        if (!bHideClock)
         {
             if (IsHorizontal)
             {
@@ -197,7 +198,7 @@ public:
         {
             pSize->cx = 2 * TRAY_NOTIFY_WND_SPACING_X;
 
-            if (!g_TaskbarSettings.sr.HideClock)
+            if (!bHideClock)
                 pSize->cx += TRAY_NOTIFY_WND_SPACING_X + trayClockMinSize.cx;
 
             if (g_TaskbarSettings.bShowDesktopButton)
@@ -210,7 +211,7 @@ public:
         {
             pSize->cy = 2 * TRAY_NOTIFY_WND_SPACING_Y;
 
-            if (!g_TaskbarSettings.sr.HideClock)
+            if (!bHideClock)
                 pSize->cy += TRAY_NOTIFY_WND_SPACING_Y + trayClockMinSize.cy;
 
             if (g_TaskbarSettings.bShowDesktopButton)
@@ -303,7 +304,7 @@ public:
                 swpFlags);
         }
 
-        if (!g_TaskbarSettings.sr.HideClock)
+        if (!GetHideClock())
         {
             POINT ptClock = { rcClient.left, rcClient.top };
             SIZE clockSize = { rcClient.right - rcClient.left, rcClient.bottom - rcClient.top };
@@ -482,6 +483,8 @@ public:
             SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
         }
 
+        g_TaskbarSettings.bHideInactiveIcons = newSettings->bHideInactiveIcons;
+
         return OnClockMessage(uMsg, wParam, lParam, bHandled);
     }
 
@@ -496,7 +499,10 @@ public:
         return GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM)hdr);
     }
 
-    HRESULT WINAPI GetWindow(HWND* phwnd)
+    // *** IOleWindow methods ***
+
+    STDMETHODIMP
+    GetWindow(HWND* phwnd) override
     {
         if (!phwnd)
             return E_INVALIDARG;
@@ -504,7 +510,8 @@ public:
         return S_OK;
     }
 
-    HRESULT WINAPI ContextSensitiveHelp(BOOL fEnterMode)
+    STDMETHODIMP
+    ContextSensitiveHelp(BOOL fEnterMode) override
     {
         return E_NOTIMPL;
     }

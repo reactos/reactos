@@ -1,7 +1,7 @@
 
 spec2def(avicap32.dll avicap32.spec ADD_IMPORTLIB)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
 
 add_library(avicap32 MODULE
     avicap32.c

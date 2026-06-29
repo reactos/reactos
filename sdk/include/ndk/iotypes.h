@@ -151,6 +151,7 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define DOE_REMOVE_PENDING                      0x4
 #define DOE_REMOVE_PROCESSED                    0x8
 #define DOE_START_PENDING                       0x10
+#define DOE_DEFAULT_SD_PRESENT                  0x800
 
 //
 // Device Object StartIo Flags
@@ -892,6 +893,11 @@ typedef struct _FILE_PIPE_PEEK_BUFFER
     CHAR Data[1];
 } FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
 
+typedef struct _FILE_MODE_INFORMATION
+{
+    ULONG Mode;
+} FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
+
 //
 // I/O Error Log Structures
 //
@@ -1167,6 +1173,8 @@ typedef VOID
     _In_ PVOID ApcContext,
     _In_ PIO_STATUS_BLOCK IoStatusBlock,
     _In_ ULONG Reserved);
+
+#define PIO_APC_ROUTINE_DEFINED
 
 //
 // Mailslot IOCTL Codes

@@ -804,10 +804,10 @@ PciGetBiosConfig(IN PPCI_PDO_EXTENSION DeviceExtension,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Create the key value based on the device and function number */
-    swprintf(Buffer,
-             L"DEV_%02x&FUN_%02x",
-             DeviceExtension->Slot.u.bits.DeviceNumber,
-             DeviceExtension->Slot.u.bits.FunctionNumber);
+    _swprintf(Buffer,
+              L"DEV_%02x&FUN_%02x",
+              DeviceExtension->Slot.u.bits.DeviceNumber,
+              DeviceExtension->Slot.u.bits.FunctionNumber);
     RtlInitUnicodeString(&KeyValue, Buffer);
 
     /* Query the value information (PCI BIOS configuration header) */
@@ -864,10 +864,10 @@ PciSaveBiosConfig(IN PPCI_PDO_EXTENSION DeviceExtension,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Create the key value based on the device and function number */
-    swprintf(Buffer,
-             L"DEV_%02x&FUN_%02x",
-             DeviceExtension->Slot.u.bits.DeviceNumber,
-             DeviceExtension->Slot.u.bits.FunctionNumber);
+    _swprintf(Buffer,
+              L"DEV_%02x&FUN_%02x",
+              DeviceExtension->Slot.u.bits.DeviceNumber,
+              DeviceExtension->Slot.u.bits.FunctionNumber);
     RtlInitUnicodeString(&KeyValue, Buffer);
 
     /* Set the value data (the PCI BIOS configuration header) */
@@ -1314,11 +1314,9 @@ PciDecodeEnable(IN PPCI_PDO_EXTENSION PdoExtension,
 NTSTATUS
 NTAPI
 PciQueryBusInformation(IN PPCI_PDO_EXTENSION PdoExtension,
-                       IN PPNP_BUS_INFORMATION* Buffer)
+                       OUT PPNP_BUS_INFORMATION* Buffer)
 {
     PPNP_BUS_INFORMATION BusInfo;
-
-    UNREFERENCED_PARAMETER(Buffer);
 
     /* Allocate a structure for the bus information */
     BusInfo = ExAllocatePoolWithTag(PagedPool,
@@ -1330,6 +1328,9 @@ PciQueryBusInformation(IN PPCI_PDO_EXTENSION PdoExtension,
     BusInfo->BusTypeGuid = GUID_BUS_TYPE_PCI;
     BusInfo->LegacyBusType = PCIBus;
     BusInfo->BusNumber = PdoExtension->ParentFdoExtension->BaseBus;
+
+    *Buffer = BusInfo;
+
     return STATUS_SUCCESS;
 }
 

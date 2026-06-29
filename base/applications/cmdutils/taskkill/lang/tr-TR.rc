@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "Kullanım: taskkill [/?] [/f] [/im işlem adı | /pid işlem kimliği]\n"
+    STRING_USAGE, "Kullanım: taskkill [/?] [/f] [/im işlem adı | /pid işlem kimliği] [/t]\n"
     STRING_INVALID_OPTION, "Hata: Bilinmeyen veya geçersiz komut satırı seçeneği belirtildi.\n"
     STRING_INVALID_PARAM, "Hata: Geçersiz komut satırı değişkeni belirtildi.\n"
     STRING_MISSING_OPTION, "Hata: /im ve /pid seçeneklerinden biri belirtilmeli.\n"
@@ -18,6 +18,10 @@ STRINGTABLE
     STRING_ENUM_FAILED, "Hata: İşlem numaralandırılamıyor.\n"
     STRING_TERMINATE_FAILED, "Hata: ""%1"" işlemi sonlandırılamıyor.\n"
     STRING_SELF_TERMINATION, "Hata: İşlemi kendi kendine sonlandırmaya izin verilmedi.\n"
+    // STRING_CLOSE_CHILD, "Sent termination signal to process with PID %1!u!, child of PID %2!u!.\n"
+    STRING_CLOSE_CHILD, "Close message sent to top-level windows of process with PID %1!u!, child of PID %2!u!.\n"
+    STRING_TERM_CHILD, "The process with PID %1!u! (child process of PID %2!u!) has been terminated.\n"
+    STRING_TERM_CHILD_FAILED, "Error: Unable to terminate process with PID %1!u!, child of PID %2!u!.\n"
     STRING_PARAM_TOO_MUCH, "Hata: Geçersiz sözdizimi. '%1' seçeneğine '%2!d!'den fazla kez izin verilmiyor..\n"
     STRING_INVALID_SYNTAX, "Hata: Geçersiz sözdizimi.\n"
 }

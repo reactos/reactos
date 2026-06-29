@@ -541,9 +541,7 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
                     RECT rcText;
                     SIZE TextSize;
 
-                    szDayLen = swprintf(szDay,
-                                         L"%lu",
-                                         Day);
+                    szDayLen = _swprintf(szDay, L"%lu", Day);
 
                     if (GetTextExtentPoint32W(hDC,
                                               szDay,

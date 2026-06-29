@@ -531,14 +531,14 @@ do {                                              \
 
 /* Use inline functions on GCC/Clang */
 
-#if !HAS_BUILTIN(_mm_getcsr)
+#if !HAS_BUILTIN(_mm_getcsr) && !defined(_MSC_VER)
 __INTRIN_INLINE_SSE unsigned int _mm_getcsr(void)
 {
     return __builtin_ia32_stmxcsr();
 }
 #endif
 
-#if !HAS_BUILTIN(_mm_setcsr)
+#if !HAS_BUILTIN(_mm_setcsr) && !defined(_MSC_VER)
 __INTRIN_INLINE_SSE void _mm_setcsr(unsigned int a)
 {
     __builtin_ia32_ldmxcsr(a);
@@ -1136,7 +1136,7 @@ __INTRIN_INLINE_SSE void _mm_stream_ps(float *__p, __m128 __a)
 #endif
 }
 
-#if !HAS_BUILTIN(_mm_sfence)
+#if !HAS_BUILTIN(_mm_sfence) && !defined(_MSC_VER)
 __INTRIN_INLINE_SSE void _mm_sfence(void)
 {
     __builtin_ia32_sfence();

@@ -10,6 +10,9 @@
 /* Cursors */
 #define IDC_HANDDRAG 100
 
+/* Control IDs */
+#define IDC_TOOLBAR     40
+
 /* Toolbar images */
 #define IDB_PREV_PIC    50
 #define IDB_NEXT_PIC    51
@@ -30,6 +33,11 @@
 
 /* ToolBar buttons */
 #define IDC_TOOL_BASE   500
+#define IDC_ACCEL_BASE (IDC_TOOL_BASE + 100) /* Accelerator commands not on the toolbar */
+
+#define IDC_TOGGLEFULLSCREEN (IDC_ACCEL_BASE + 0)
+#define IDC_INCTIMER    (IDC_ACCEL_BASE + 1)
+#define IDC_DECTIMER    (IDC_ACCEL_BASE + 2)
 
 #define IDC_PREV_PIC    (IDC_TOOL_BASE + 0)
 #define IDC_NEXT_PIC    (IDC_TOOL_BASE + 1)

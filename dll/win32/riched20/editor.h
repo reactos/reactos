@@ -24,7 +24,7 @@
 
 struct _RTF_Info;
 
-extern HANDLE me_heap DECLSPEC_HIDDEN;
+extern HINSTANCE dll_instance;
 
 #define RUN_IS_HIDDEN(run) ((run)->style->fmt.dwMask & CFM_HIDDEN \
                              && (run)->style->fmt.dwEffects & CFE_HIDDEN)
@@ -49,54 +49,51 @@ static inline const char *debugstr_run( const ME_Run *run )
 }
 
 /* style.c */
-ME_Style *ME_MakeStyle(CHARFORMAT2W *style) DECLSPEC_HIDDEN;
-void ME_AddRefStyle(ME_Style *item) DECLSPEC_HIDDEN;
-void ME_DestroyStyle(ME_Style *item) DECLSPEC_HIDDEN;
-void ME_ReleaseStyle(ME_Style *item) DECLSPEC_HIDDEN;
-ME_Style *ME_GetInsertStyle(ME_TextEditor *editor, int nCursor) DECLSPEC_HIDDEN;
-ME_Style *ME_ApplyStyle(ME_TextEditor *ed, ME_Style *sSrc, CHARFORMAT2W *style) DECLSPEC_HIDDEN;
-void select_style(ME_Context *c, ME_Style *s) DECLSPEC_HIDDEN;
-void ME_InitCharFormat2W(CHARFORMAT2W *pFmt) DECLSPEC_HIDDEN;
-void ME_SaveTempStyle(ME_TextEditor *editor, ME_Style *style) DECLSPEC_HIDDEN;
-void ME_ClearTempStyle(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_DumpStyleToBuf(CHARFORMAT2W *pFmt, char buf[2048]) DECLSPEC_HIDDEN;
-void ME_DumpStyle(ME_Style *s) DECLSPEC_HIDDEN;
-BOOL cfany_to_cf2w(CHARFORMAT2W *to, const CHARFORMAT2W *from) DECLSPEC_HIDDEN;
-BOOL cf2w_to_cfany(CHARFORMAT2W *to, const CHARFORMAT2W *from) DECLSPEC_HIDDEN;
-void ME_CopyCharFormat(CHARFORMAT2W *pDest, const CHARFORMAT2W *pSrc) DECLSPEC_HIDDEN; /* only works with 2W structs */
-void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt) DECLSPEC_HIDDEN; /* ditto */
+ME_Style *style_get_insert_style( ME_TextEditor *editor, ME_Cursor *cursor );
+ME_Style *ME_MakeStyle(CHARFORMAT2W *style);
+void ME_AddRefStyle(ME_Style *item);
+void ME_DestroyStyle(ME_Style *item);
+void ME_ReleaseStyle(ME_Style *item);
+ME_Style *ME_ApplyStyle(ME_TextEditor *ed, ME_Style *sSrc, CHARFORMAT2W *style);
+void select_style(ME_Context *c, ME_Style *s);
+void ME_InitCharFormat2W(CHARFORMAT2W *pFmt);
+void ME_SaveTempStyle(ME_TextEditor *editor, ME_Style *style);
+void ME_ClearTempStyle(ME_TextEditor *editor);
+void ME_DumpStyleToBuf(CHARFORMAT2W *pFmt, char buf[2048]);
+void ME_DumpStyle(ME_Style *s);
+BOOL cfany_to_cf2w(CHARFORMAT2W *to, const CHARFORMAT2W *from);
+BOOL cf2w_to_cfany(CHARFORMAT2W *to, const CHARFORMAT2W *from);
+void ME_CopyCharFormat(CHARFORMAT2W *pDest, const CHARFORMAT2W *pSrc); /* only works with 2W structs */
+void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt); /* ditto */
 
 /* list.c */
-void ME_InsertBefore(ME_DisplayItem *diWhere, ME_DisplayItem *diWhat) DECLSPEC_HIDDEN;
-void ME_Remove(ME_DisplayItem *diWhere) DECLSPEC_HIDDEN;
-BOOL ME_NextRun(ME_DisplayItem **para, ME_DisplayItem **run, BOOL all_para) DECLSPEC_HIDDEN;
-BOOL ME_PrevRun(ME_DisplayItem **para, ME_DisplayItem **run, BOOL all_para) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_FindItemBack(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_FindItemFwd(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_FindItemBackOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_MakeDI(ME_DIType type) DECLSPEC_HIDDEN;
-void ME_DestroyDisplayItem(ME_DisplayItem *item) DECLSPEC_HIDDEN;
-void ME_DumpDocument(ME_TextBuffer *buffer) DECLSPEC_HIDDEN;
-void destroy_para(ME_TextEditor *editor, ME_DisplayItem *item) DECLSPEC_HIDDEN;
+void ME_InsertBefore(ME_DisplayItem *diWhere, ME_DisplayItem *diWhat);
+void ME_Remove(ME_DisplayItem *diWhere);
+ME_DisplayItem *ME_FindItemBack(ME_DisplayItem *di, ME_DIType nTypeOrClass);
+ME_DisplayItem *ME_FindItemFwd(ME_DisplayItem *di, ME_DIType nTypeOrClass);
+ME_DisplayItem *ME_FindItemBackOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass);
+ME_DisplayItem *ME_MakeDI(ME_DIType type);
+void ME_DestroyDisplayItem(ME_DisplayItem *item);
+void ME_DumpDocument(ME_TextBuffer *buffer);
 
 /* string.c */
-ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars) DECLSPEC_HIDDEN;
-ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars) DECLSPEC_HIDDEN;
-ME_String *ME_MakeStringConst(const WCHAR *str, int len) DECLSPEC_HIDDEN;
-ME_String *ME_MakeStringEmpty(int len) DECLSPEC_HIDDEN;
-void ME_DestroyString(ME_String *s) DECLSPEC_HIDDEN;
-BOOL ME_AppendString(ME_String *s, const WCHAR *append, int len) DECLSPEC_HIDDEN;
-ME_String *ME_VSplitString(ME_String *orig, int nVPos) DECLSPEC_HIDDEN;
-int ME_FindNonWhitespaceV(const ME_String *s, int nVChar) DECLSPEC_HIDDEN;
-int ME_CallWordBreakProc(ME_TextEditor *editor, WCHAR *str, INT len, INT start, INT code) DECLSPEC_HIDDEN;
-void ME_StrDeleteV(ME_String *s, int nVChar, int nChars) DECLSPEC_HIDDEN;
-BOOL ME_InsertString(ME_String *s, int ofs, const WCHAR *insert, int len) DECLSPEC_HIDDEN;
+ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars);
+ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars);
+ME_String *ME_MakeStringConst(const WCHAR *str, int len);
+ME_String *ME_MakeStringEmpty(int len);
+void ME_DestroyString(ME_String *s);
+BOOL ME_AppendString(ME_String *s, const WCHAR *append, int len);
+ME_String *ME_VSplitString(ME_String *orig, int nVPos);
+int ME_FindNonWhitespaceV(const ME_String *s, int nVChar);
+int ME_CallWordBreakProc(ME_TextEditor *editor, WCHAR *str, INT len, INT start, INT code);
+void ME_StrDeleteV(ME_String *s, int nVChar, int nChars);
+BOOL ME_InsertString(ME_String *s, int ofs, const WCHAR *insert, int len);
 
 #define CP_UNICODE 1200
 
 /* smart helpers for A<->W conversions, they reserve/free memory and call MultiByte<->WideChar functions */
-LPWSTR ME_ToUnicode(LONG codepage, LPVOID psz, INT *len) DECLSPEC_HIDDEN;
-void ME_EndToUnicode(LONG codepage, LPVOID psz) DECLSPEC_HIDDEN;
+LPWSTR ME_ToUnicode(LONG codepage, LPVOID psz, INT *len);
+void ME_EndToUnicode(LONG codepage, LPVOID psz);
 
 static inline int ME_IsWSpace(WCHAR ch)
 {
@@ -110,179 +107,227 @@ static inline int ME_CharCompare(WCHAR a, WCHAR b, int caseSensitive)
 
 /* note: those two really return the first matching offset (starting from EOS)+1 
  * in other words, an offset of the first trailing white/black */
-int ME_ReverseFindNonWhitespaceV(const ME_String *s, int nVChar) DECLSPEC_HIDDEN;
-int ME_ReverseFindWhitespaceV(const ME_String *s, int nVChar) DECLSPEC_HIDDEN;
+int ME_ReverseFindNonWhitespaceV(const ME_String *s, int nVChar);
+int ME_ReverseFindWhitespaceV(const ME_String *s, int nVChar);
 
 /* row.c */
-ME_DisplayItem *ME_RowStart(ME_DisplayItem *item) DECLSPEC_HIDDEN;
-/* ME_DisplayItem *ME_RowEnd(ME_DisplayItem *item); */
-ME_DisplayItem *ME_FindRowWithNumber(ME_TextEditor *editor, int nRow) DECLSPEC_HIDDEN;
-int ME_RowNumberFromCharOfs(ME_TextEditor *editor, int nOfs) DECLSPEC_HIDDEN;
+void row_end_cursor( ME_Row *row, ME_Cursor *cursor, BOOL include_eop );
+void row_first_cursor( ME_Row *row, ME_Cursor *cursor );
+ME_Run *row_first_run( ME_Row *row );
+ME_Row *row_from_cursor( ME_Cursor *cursor );
+ME_Row *row_from_row_number( ME_TextEditor *editor, int row_num );
+ME_Row *row_next( ME_Row *row );
+ME_Row *row_next_all_paras( ME_Row *row );
+ME_Run *row_next_run( ME_Row *row, ME_Run *run );
+int row_number_from_char_ofs( ME_TextEditor *editor, int ofs );
+ME_Paragraph *row_para( ME_Row *row );
+ME_Row *row_prev_all_paras( ME_Row *row );
+static inline ME_DisplayItem *row_get_di( ME_Row *row )
+{
+    return (ME_DisplayItem *)((ptrdiff_t)row - offsetof(ME_DisplayItem, member));
+}
 
 /* run.c */
-ME_DisplayItem *ME_MakeRun(ME_Style *s, int nFlags) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_InsertRunAtCursor(ME_TextEditor *editor, ME_Cursor *cursor,
-                                     ME_Style *style, const WCHAR *str, int len, int flags) DECLSPEC_HIDDEN;
-void ME_CheckCharOffsets(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_PropagateCharOffset(ME_DisplayItem *p, int shift) DECLSPEC_HIDDEN;
+void cursor_from_char_ofs( ME_TextEditor *editor, int char_ofs, ME_Cursor *cursor );
+BOOL cursor_next_run( ME_Cursor *cursor, BOOL all_para );
+BOOL cursor_prev_run( ME_Cursor *cursor, BOOL all_para );
+void editor_propagate_char_ofs( ME_TextEditor *editor, ME_Paragraph *para, ME_Run *run, int shift );
+int run_char_ofs( ME_Run *run, int ofs );
+ME_Run *run_create( ME_Style *s, int nFlags );
+ME_Run *run_insert( ME_TextEditor *editor, ME_Cursor *cursor,
+                    ME_Style *style, const WCHAR *str, int len, int flags );
+void ME_CheckCharOffsets(ME_TextEditor *editor);
 /* this one accounts for 1/2 char tolerance */
-int ME_CharFromPointContext(ME_Context *c, int cx, ME_Run *run, BOOL closest, BOOL visual_order) DECLSPEC_HIDDEN;
-int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run, BOOL closest, BOOL visual_order) DECLSPEC_HIDDEN;
-int ME_PointFromCharContext(ME_Context *c, ME_Run *pRun, int nOffset, BOOL visual_order) DECLSPEC_HIDDEN;
-int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset, BOOL visual_order) DECLSPEC_HIDDEN;
-BOOL ME_CanJoinRuns(const ME_Run *run1, const ME_Run *run2) DECLSPEC_HIDDEN;
-void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_Cursor *cursor) DECLSPEC_HIDDEN;
-void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run) DECLSPEC_HIDDEN;
+int ME_CharFromPointContext(ME_Context *c, int cx, ME_Run *run, BOOL closest, BOOL visual_order);
+int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run, BOOL closest, BOOL visual_order);
+int ME_PointFromCharContext(ME_Context *c, ME_Run *pRun, int nOffset, BOOL visual_order);
+int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset, BOOL visual_order);
+BOOL ME_CanJoinRuns(const ME_Run *run1, const ME_Run *run2);
+void run_join( ME_TextEditor *editor, ME_Run *run );
+ME_Run *run_next( ME_Run *run );
+ME_Run *run_next_all_paras( ME_Run *run );
+ME_Run *run_prev( ME_Run *run );
+ME_Run *run_prev_all_paras( ME_Run *run );
+ME_Run *run_split( ME_TextEditor *editor, ME_Cursor *cursor );
+void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run);
 SIZE ME_GetRunSizeCommon(ME_Context *c, const ME_Paragraph *para, ME_Run *run, int nLen,
-                         int startx, int *pAscent, int *pDescent) DECLSPEC_HIDDEN;
-void ME_CursorFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_Cursor *pCursor) DECLSPEC_HIDDEN;
-void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **ppPara, ME_DisplayItem **ppRun, int *pOfs) DECLSPEC_HIDDEN;
-int ME_CharOfsFromRunOfs(ME_TextEditor *editor, const ME_DisplayItem *pPara, const ME_DisplayItem *pRun, int nOfs) DECLSPEC_HIDDEN;
-void ME_SkipAndPropagateCharOffset(ME_DisplayItem *p, int shift) DECLSPEC_HIDDEN;
-void ME_SetCharFormat(ME_TextEditor *editor, ME_Cursor *start, ME_Cursor *end, CHARFORMAT2W *pFmt) DECLSPEC_HIDDEN;
-void ME_SetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt) DECLSPEC_HIDDEN;
+                         int startx, int *pAscent, int *pDescent);
+void ME_SetCharFormat(ME_TextEditor *editor, ME_Cursor *start, ME_Cursor *end, CHARFORMAT2W *pFmt);
+void ME_SetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt);
 void ME_GetCharFormat(ME_TextEditor *editor, const ME_Cursor *from,
-                      const ME_Cursor *to, CHARFORMAT2W *pFmt) DECLSPEC_HIDDEN;
-void ME_GetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt) DECLSPEC_HIDDEN;
-void ME_GetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt) DECLSPEC_HIDDEN;
-void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod) DECLSPEC_HIDDEN;
+                      const ME_Cursor *to, CHARFORMAT2W *pFmt);
+void ME_GetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt);
+void ME_GetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt);
+void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod);
+static inline ME_DisplayItem *run_get_di( ME_Run *run )
+{
+    return (ME_DisplayItem *)((ptrdiff_t)run - offsetof(ME_DisplayItem, member));
+}
 
 /* caret.c */
-void ME_SetCursorToStart(ME_TextEditor *editor, ME_Cursor *cursor) DECLSPEC_HIDDEN;
-int set_selection_cursors(ME_TextEditor *editor, int from, int to) DECLSPEC_HIDDEN;
-BOOL ME_MoveCursorWords(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs) DECLSPEC_HIDDEN;
-void hide_caret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
-void show_caret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
-void update_caret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
-void create_caret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
-BOOL ME_CharFromPos(ME_TextEditor *editor, int x, int y, ME_Cursor *cursor, BOOL *isExact) DECLSPEC_HIDDEN;
-void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum) DECLSPEC_HIDDEN;
-void ME_MouseMove(ME_TextEditor *editor, int x, int y) DECLSPEC_HIDDEN;
-BOOL ME_DeleteTextAtCursor(ME_TextEditor *editor, int nCursor, int nChars) DECLSPEC_HIDDEN;
-void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor, 
-                             const WCHAR *str, int len, ME_Style *style) DECLSPEC_HIDDEN;
-void ME_InsertEndRowFromCursor(ME_TextEditor *editor, int nCursor) DECLSPEC_HIDDEN;
-int ME_MoveCursorChars(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs, BOOL final_eop) DECLSPEC_HIDDEN;
-BOOL ME_ArrowKey(ME_TextEditor *ed, int nVKey, BOOL extend, BOOL ctrl) DECLSPEC_HIDDEN;
+void cursor_coords( ME_TextEditor *editor, ME_Cursor *cursor, int *x, int *y, int *height );
+BOOL cursor_from_coords( ME_TextEditor *editor, int x, int y, ME_Cursor *cursor );
+void ME_SetCursorToStart(ME_TextEditor *editor, ME_Cursor *cursor);
+int set_selection_cursors(ME_TextEditor *editor, int from, int to);
+BOOL ME_MoveCursorWords(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs);
+void hide_caret(ME_TextEditor *ed);
+void show_caret(ME_TextEditor *ed);
+void update_caret(ME_TextEditor *ed);
+void create_caret(ME_TextEditor *ed);
+void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum);
+void ME_MouseMove(ME_TextEditor *editor, int x, int y);
+BOOL ME_DeleteTextAtCursor(ME_TextEditor *editor, int nCursor, int nChars);
+void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
+                             const WCHAR *str, int len, ME_Style *style);
+void ME_InsertEndRowFromCursor(ME_TextEditor *editor, int nCursor);
+int ME_MoveCursorChars(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs, BOOL final_eop);
+BOOL ME_ArrowKey(ME_TextEditor *ed, int nVKey, BOOL extend, BOOL ctrl);
 
-int ME_GetCursorOfs(const ME_Cursor *cursor) DECLSPEC_HIDDEN;
-int ME_GetSelectionOfs(ME_TextEditor *editor, int *from, int *to) DECLSPEC_HIDDEN;
-int ME_GetSelection(ME_TextEditor *editor, ME_Cursor **from, ME_Cursor **to) DECLSPEC_HIDDEN;
-BOOL ME_IsSelection(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_DeleteSelection(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_SendSelChange(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_InsertOLEFromCursor(ME_TextEditor *editor, const REOBJECT* reo, int nCursor) DECLSPEC_HIDDEN;
-BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start, int nChars, BOOL bForce) DECLSPEC_HIDDEN;
-int ME_GetTextLength(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-int ME_GetTextLengthEx(ME_TextEditor *editor, const GETTEXTLENGTHEX *how) DECLSPEC_HIDDEN;
-ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor, int *x, int *y, int *height) DECLSPEC_HIDDEN;
+int ME_GetCursorOfs(const ME_Cursor *cursor);
+int ME_GetSelectionOfs(ME_TextEditor *editor, LONG *from, LONG *to);
+int ME_GetSelection(ME_TextEditor *editor, ME_Cursor **from, ME_Cursor **to);
+BOOL ME_IsSelection(ME_TextEditor *editor);
+void ME_DeleteSelection(ME_TextEditor *editor);
+void ME_SendSelChange(ME_TextEditor *editor);
+HRESULT editor_insert_oleobj( ME_TextEditor *editor, const REOBJECT *reo );
+BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start, int nChars, BOOL bForce);
+int ME_GetTextLength(ME_TextEditor *editor);
+int ME_GetTextLengthEx(ME_TextEditor *editor, const GETTEXTLENGTHEX *how);
+ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor);
 
 /* context.c */
-void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC) DECLSPEC_HIDDEN;
-void ME_DestroyContext(ME_Context *c) DECLSPEC_HIDDEN;
+void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC);
+void ME_DestroyContext(ME_Context *c);
 
 /* wrap.c */
-BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_InvalidateParagraphRange(ME_TextEditor *editor, ME_DisplayItem *start_para, ME_DisplayItem *last_para) DECLSPEC_HIDDEN;
-void ME_SendRequestResize(ME_TextEditor *editor, BOOL force) DECLSPEC_HIDDEN;
+BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor);
+void para_range_invalidate( ME_TextEditor *editor, ME_Paragraph *start_para, ME_Paragraph *last_para );
+void ME_SendRequestResize(ME_TextEditor *editor, BOOL force);
+BOOL wrap_marked_paras_dc( ME_TextEditor *editor, HDC hdc, BOOL invalidate );
 
 /* para.c */
-ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run) DECLSPEC_HIDDEN;
-void ME_GetSelectionParas(ME_TextEditor *editor, ME_DisplayItem **para, ME_DisplayItem **para_end) DECLSPEC_HIDDEN;
-void ME_MakeFirstParagraph(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *rp, ME_Style *style, const WCHAR *eol_str, int eol_len, int paraFlags) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
-                                  BOOL keepFirstParaFormat) DECLSPEC_HIDDEN;
-void ME_DumpParaStyle(ME_Paragraph *s) DECLSPEC_HIDDEN;
-void ME_DumpParaStyleToBuf(const PARAFORMAT2 *pFmt, char buf[2048]) DECLSPEC_HIDDEN;
-BOOL ME_SetSelectionParaFormat(ME_TextEditor *editor, const PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
-void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
-void ME_MarkAllForWrapping(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_SetDefaultParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
-void para_num_init( ME_Context *c, ME_Paragraph *para ) DECLSPEC_HIDDEN;
-void para_num_clear( struct para_num *pn ) DECLSPEC_HIDDEN;
-int get_total_width(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void mark_para_rewrap(ME_TextEditor *editor, ME_DisplayItem *para) DECLSPEC_HIDDEN;
-ME_DisplayItem *get_di_from_para(ME_Paragraph *para) DECLSPEC_HIDDEN;
-void add_marked_para(ME_TextEditor *editor, ME_DisplayItem *para) DECLSPEC_HIDDEN;
-void remove_marked_para(ME_TextEditor *editor, ME_DisplayItem *para) DECLSPEC_HIDDEN;
+void editor_get_selection_paras(ME_TextEditor *editor, ME_Paragraph **para, ME_Paragraph **para_end );
+void editor_get_selection_para_fmt( ME_TextEditor *editor, PARAFORMAT2 *fmt );
+void editor_mark_rewrap_all( ME_TextEditor *editor );
+void editor_set_default_para_fmt(ME_TextEditor *editor, PARAFORMAT2 *pFmt);
+BOOL editor_set_selection_para_fmt( ME_TextEditor *editor, const PARAFORMAT2 *fmt );
+void ME_MakeFirstParagraph(ME_TextEditor *editor, HDC hdc);
+void ME_DumpParaStyle(ME_Paragraph *s);
+void ME_DumpParaStyleToBuf(const PARAFORMAT2 *pFmt, char buf[2048]);
+int get_total_width(ME_TextEditor *editor);
+ME_Cell *para_cell( ME_Paragraph *para );
+void para_destroy( ME_TextEditor *editor, ME_Paragraph *item );
+ME_Row *para_end_row( ME_Paragraph *para );
+ME_Run *para_end_run( ME_Paragraph *para );
+ME_Row *para_first_row( ME_Paragraph *para );
+ME_Run *para_first_run( ME_Paragraph *para );
+BOOL para_in_table( ME_Paragraph *para );
+ME_Paragraph *para_join( ME_TextEditor *editor, ME_Paragraph *para, BOOL use_first_fmt );
+void para_mark_add( ME_TextEditor *editor, ME_Paragraph *para );
+void para_mark_remove( ME_TextEditor *editor, ME_Paragraph *para );
+void para_mark_rewrap( ME_TextEditor *editor, ME_Paragraph *para );
+ME_Paragraph *para_next( ME_Paragraph *para );
+void para_num_clear( struct para_num *pn );
+void para_num_init( ME_Context *c, ME_Paragraph *para );
+ME_Paragraph *para_prev( ME_Paragraph *para );
+ME_Paragraph *para_split( ME_TextEditor *editor, ME_Run *run, ME_Style *style,
+                          const WCHAR *eol_str, int eol_len, int paraFlags );
+
+static inline ME_DisplayItem *para_get_di(ME_Paragraph *para)
+{
+    return (ME_DisplayItem *)((ptrdiff_t)para - offsetof(ME_DisplayItem, member));
+}
 
 /* paint.c */
-void ME_PaintContent(ME_TextEditor *editor, HDC hDC, const RECT *rcUpdate) DECLSPEC_HIDDEN;
-void ME_Repaint(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_RewrapRepaint(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_UpdateRepaint(ME_TextEditor *editor, BOOL update_now) DECLSPEC_HIDDEN;
-void ME_EnsureVisible(ME_TextEditor *editor, ME_Cursor *pCursor) DECLSPEC_HIDDEN;
-void ME_InvalidateSelection(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-BOOL ME_SetZoom(ME_TextEditor *editor, int numerator, int denominator) DECLSPEC_HIDDEN;
-int  ME_twips2pointsX(const ME_Context *c, int x) DECLSPEC_HIDDEN;
-int  ME_twips2pointsY(const ME_Context *c, int y) DECLSPEC_HIDDEN;
+void editor_draw( ME_TextEditor *editor, HDC hDC, const RECT *update );
+void ME_Repaint(ME_TextEditor *editor);
+void ME_RewrapRepaint(ME_TextEditor *editor);
+void ME_UpdateRepaint(ME_TextEditor *editor, BOOL update_now);
+void editor_ensure_visible( ME_TextEditor *editor, ME_Cursor *cursor );
+void ME_InvalidateSelection(ME_TextEditor *editor);
+BOOL ME_SetZoom(ME_TextEditor *editor, int numerator, int denominator);
+int  ME_twips2pointsX(const ME_Context *c, int x);
+int  ME_twips2pointsY(const ME_Context *c, int y);
 
 /* scroll functions in paint.c */
 
-void ME_ScrollAbs(ME_TextEditor *editor, int x, int y) DECLSPEC_HIDDEN;
-void ME_HScrollAbs(ME_TextEditor *editor, int x) DECLSPEC_HIDDEN;
-void ME_VScrollAbs(ME_TextEditor *editor, int y) DECLSPEC_HIDDEN;
-void ME_ScrollUp(ME_TextEditor *editor, int cy) DECLSPEC_HIDDEN;
-void ME_ScrollDown(ME_TextEditor *editor, int cy) DECLSPEC_HIDDEN;
-void ME_ScrollLeft(ME_TextEditor *editor, int cx) DECLSPEC_HIDDEN;
-void ME_ScrollRight(ME_TextEditor *editor, int cx) DECLSPEC_HIDDEN;
-void ME_UpdateScrollBar(ME_TextEditor *editor) DECLSPEC_HIDDEN;
+void scroll_abs( ME_TextEditor *editor, int x, int y, BOOL notify );
+void scroll_h_abs( ME_TextEditor *editor, int x, BOOL notify );
+void scroll_v_abs( ME_TextEditor *editor, int y, BOOL notify );
+void ME_ScrollUp(ME_TextEditor *editor, int cy);
+void ME_ScrollDown(ME_TextEditor *editor, int cy);
+void ME_ScrollLeft(ME_TextEditor *editor, int cx);
+void ME_ScrollRight(ME_TextEditor *editor, int cx);
+void ME_UpdateScrollBar(ME_TextEditor *editor);
 
 /* other functions in paint.c */
-int ME_GetParaBorderWidth(const ME_Context *c, int flags) DECLSPEC_HIDDEN;
+int ME_GetParaBorderWidth(const ME_Context *c, int flags);
 
 /* richole.c */
-LRESULT CreateIRichEditOle(IUnknown *outer_unk, ME_TextEditor *editor, LPVOID *ppvObj) DECLSPEC_HIDDEN;
-void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run* run, BOOL selected) DECLSPEC_HIDDEN;
-void ME_GetOLEObjectSize(const ME_Context *c, ME_Run *run, SIZE *pSize) DECLSPEC_HIDDEN;
-void ME_CopyReObject(REOBJECT *dst, const REOBJECT *src, DWORD flags) DECLSPEC_HIDDEN;
-void ME_DeleteReObject(struct re_object *re_object) DECLSPEC_HIDDEN;
+void draw_ole( ME_Context *c, int x, int y, ME_Run* run, BOOL selected );
+void ME_GetOLEObjectSize(const ME_Context *c, ME_Run *run, SIZE *pSize);
+void ME_CopyReObject(REOBJECT *dst, const REOBJECT *src, DWORD flags);
+void ME_DeleteReObject(struct re_object *re_object);
+void richole_release_children( struct text_services *services );
+extern const IRichEditOleVtbl re_ole_vtbl;
+extern const ITextDocument2OldVtbl text_doc2old_vtbl;
 
 /* editor.c */
-ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10) DECLSPEC_HIDDEN;
-void ME_DestroyEditor(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
-                         LPARAM lParam, BOOL unicode, HRESULT* phresult) DECLSPEC_HIDDEN;
-void ME_SendOldNotify(ME_TextEditor *editor, int nCode) DECLSPEC_HIDDEN;
+ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10);
+void ME_DestroyEditor(ME_TextEditor *editor);
+LRESULT editor_handle_message( ME_TextEditor *editor, UINT msg, WPARAM wParam,
+                               LPARAM lParam, HRESULT* phresult );
 int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int buflen,
-                const ME_Cursor *start, int srcChars, BOOL bCRLF, BOOL bEOP) DECLSPEC_HIDDEN;
-void ME_RTFCharAttrHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
-void ME_RTFParAttrHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
-void ME_RTFTblAttrHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
-void ME_RTFSpecialCharHook(struct _RTF_Info *info) DECLSPEC_HIDDEN;
-void ME_StreamInFill(ME_InStream *stream) DECLSPEC_HIDDEN;
-extern BOOL me_debug DECLSPEC_HIDDEN;
-void ME_ReplaceSel(ME_TextEditor *editor, BOOL can_undo, const WCHAR *str, int len) DECLSPEC_HIDDEN;
-int set_selection( ME_TextEditor *editor, int to, int from ) DECLSPEC_HIDDEN;
+                const ME_Cursor *start, int srcChars, BOOL bCRLF, BOOL bEOP);
+void ME_RTFCharAttrHook(struct _RTF_Info *info);
+void ME_RTFParAttrHook(struct _RTF_Info *info);
+void ME_RTFTblAttrHook(struct _RTF_Info *info);
+void ME_RTFSpecialCharHook(struct _RTF_Info *info);
+void ME_StreamInFill(ME_InStream *stream);
+extern BOOL me_debug;
+void ME_ReplaceSel(ME_TextEditor *editor, BOOL can_undo, const WCHAR *str, int len);
+int set_selection( ME_TextEditor *editor, int to, int from );
+HRESULT editor_copy_or_cut( ME_TextEditor *editor, BOOL cut, ME_Cursor *start, int count,
+                            IDataObject **data_out );
+ME_Paragraph *editor_end_para( ME_TextEditor *editor );
+ME_Paragraph *editor_first_para( ME_TextEditor *editor );
+void editor_set_cursor( ME_TextEditor *editor, int x, int y );
+void link_notify( ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM lParam );
 
 /* table.c */
-BOOL ME_IsInTable(ME_DisplayItem *pItem) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_InsertTableRowStartFromCursor(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_InsertTableRowStartAtParagraph(ME_TextEditor *editor,
-                                                  ME_DisplayItem *para) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_InsertTableCellFromCursor(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_InsertTableRowEndFromCursor(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_GetTableRowEnd(ME_DisplayItem *para) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_GetTableRowStart(ME_DisplayItem *para) DECLSPEC_HIDDEN;
-ME_DisplayItem *ME_GetOuterParagraph(ME_DisplayItem *para) DECLSPEC_HIDDEN;
-void ME_CheckTablesForCorruption(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, ME_Cursor *c, int *nChars) DECLSPEC_HIDDEN;
-ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor, ME_DisplayItem *table_row) DECLSPEC_HIDDEN;
-void ME_TabPressedInTable(ME_TextEditor *editor, BOOL bSelectedRow) DECLSPEC_HIDDEN;
-void ME_MoveCursorFromTableRowStartParagraph(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-struct RTFTable *ME_MakeTableDef(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_InitTableDef(ME_TextEditor *editor, struct RTFTable *tableDef) DECLSPEC_HIDDEN;
+ME_Cell *cell_create( void );
+ME_Paragraph *cell_end_para( ME_Cell *cell );
+ME_Paragraph *cell_first_para( ME_Cell *cell );
+ME_Cell *cell_next( ME_Cell *cell );
+ME_Cell *cell_prev( ME_Cell *cell );
+ME_Paragraph *table_append_row( ME_TextEditor *editor, ME_Paragraph *table_row );
+void table_handle_tab( ME_TextEditor *editor, BOOL selected_row );
+ME_Paragraph *table_insert_cell( ME_TextEditor *editor, ME_Cursor *cursor );
+ME_Paragraph *table_insert_row_end( ME_TextEditor *editor, ME_Cursor *cursor );
+ME_Paragraph *table_insert_row_start( ME_TextEditor *editor, ME_Cursor *cursor );
+ME_Paragraph *table_insert_row_start_at_para( ME_TextEditor *editor, ME_Paragraph *para );
+void table_move_from_row_start( ME_TextEditor *editor );
+ME_Paragraph *table_outer_para( ME_Paragraph *para );
+void table_protect_partial_deletion( ME_TextEditor *editor, ME_Cursor *c, int *num_chars );
+ME_Paragraph *table_row_end( ME_Paragraph *para );
+ME_Cell *table_row_end_cell( ME_Paragraph *para );
+ME_Cell *table_row_first_cell( ME_Paragraph *para );
+ME_Paragraph *table_row_start( ME_Paragraph *para );
+struct RTFTable *ME_MakeTableDef(ME_TextEditor *editor);
+void ME_InitTableDef(ME_TextEditor *editor, struct RTFTable *tableDef);
+static inline ME_DisplayItem *cell_get_di(ME_Cell *cell)
+{
+    return (ME_DisplayItem *)((ptrdiff_t)cell - offsetof(ME_DisplayItem, member));
+}
+
 
 /* txthost.c */
-ITextHost *ME_CreateTextHost(HWND hwnd, CREATESTRUCTW *cs, BOOL bEmulateVersion10) DECLSPEC_HIDDEN;
-#if defined(__i386__) && !defined(__MINGW32__)  /* Use wrappers to perform thiscall on i386 */
-#define TXTHOST_VTABLE(This) (&itextHostStdcallVtbl)
-#else /* __i386__ */
+#ifdef __ASM_USE_THISCALL_WRAPPER
+extern const struct ITextHost2Vtbl text_host2_stdcall_vtbl;
+#define TXTHOST_VTABLE(This) (&text_host2_stdcall_vtbl)
+#else
 #define TXTHOST_VTABLE(This) (This)->lpVtbl
-#endif /* __i386__ */
+#endif
  /*** ITextHost methods ***/
 #define ITextHost_TxGetDC(This) TXTHOST_VTABLE(This)->TxGetDC(This)
 #define ITextHost_TxReleaseDC(This,a) TXTHOST_VTABLE(This)->TxReleaseDC(This,a)
@@ -323,26 +368,74 @@ ITextHost *ME_CreateTextHost(HWND hwnd, CREATESTRUCTW *cs, BOOL bEmulateVersion1
 #define ITextHost_TxImmGetContext(This) TXTHOST_VTABLE(This)->TxImmGetContext(This)
 #define ITextHost_TxImmReleaseContext(This,a) TXTHOST_VTABLE(This)->TxImmReleaseContext(This,a)
 #define ITextHost_TxGetSelectionBarWidth(This,a) TXTHOST_VTABLE(This)->TxGetSelectionBarWidth(This,a)
+/* ITextHost2 */
+#define ITextHost2_TxIsDoubleClickPending(This) TXTHOST_VTABLE(This)->TxIsDoubleClickPending(This)
+#define ITextHost2_TxGetWindow(This,a) TXTHOST_VTABLE(This)->TxGetWindow(This,a)
+#define ITextHost2_TxSetForegroundWindow(This) TXTHOST_VTABLE(This)->TxSetForegroundWindow(This)
+#define ITextHost2_TxGetPalette(This) TXTHOST_VTABLE(This)->TxGetPalette(This)
+#define ITextHost2_TxGetEastAsianFlags(This,a) TXTHOST_VTABLE(This)->TxGetEastAsianFlags(This,a)
+#define ITextHost2_TxSetCursor2(This,a,b) TXTHOST_VTABLE(This)->TxSetCursor2(This,a,b)
+#define ITextHost2_TxFreeTextServicesNotification(This) TXTHOST_VTABLE(This)->TxFreeTextServicesNotification(This)
+#define ITextHost2_TxGetEditStyle(This,a,b) TXTHOST_VTABLE(This)->TxGetEditStyle(This,a,b)
+#define ITextHost2_TxGetWindowStyles(This,a,b) TXTHOST_VTABLE(This)->TxGetWindowStyles(This,a,b)
+#define ITextHost2_TxShowDropCaret(This,a,b,c) TXTHOST_VTABLE(This)->TxShowDropCaret(This,a,b,c)
+#define ITextHost2_TxDestroyCaret(This) TXTHOST_VTABLE(This)->TxDestroyCaret(This)
+#define ITextHost2_TxGetHorzExtent(This,a) TXTHOST_VTABLE(This)->TxGetHorzExtent(This,a)
 
 /* undo.c */
-BOOL add_undo_insert_run( ME_TextEditor *, int pos, const WCHAR *str, int len, int flags, ME_Style *style ) DECLSPEC_HIDDEN;
-BOOL add_undo_delete_run( ME_TextEditor *, int pos, int len ) DECLSPEC_HIDDEN;
-BOOL add_undo_set_para_fmt( ME_TextEditor *, const ME_Paragraph *para ) DECLSPEC_HIDDEN;
-BOOL add_undo_set_char_fmt( ME_TextEditor *, int pos, int len, const CHARFORMAT2W *fmt ) DECLSPEC_HIDDEN;
-BOOL add_undo_join_paras( ME_TextEditor *, int pos ) DECLSPEC_HIDDEN;
-BOOL add_undo_split_para( ME_TextEditor *, const ME_Paragraph *para, ME_String *eol_str, const ME_Cell *cell) DECLSPEC_HIDDEN;
-void ME_CommitUndo(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_ContinueCoalescingTransaction(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_CommitCoalescingUndo(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-BOOL ME_Undo(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-BOOL ME_Redo(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_EmptyUndoStack(ME_TextEditor *editor) DECLSPEC_HIDDEN;
+BOOL add_undo_insert_run( ME_TextEditor *, int pos, const WCHAR *str, int len, int flags, ME_Style *style );
+BOOL add_undo_delete_run( ME_TextEditor *, int pos, int len );
+BOOL add_undo_set_para_fmt( ME_TextEditor *, const ME_Paragraph *para );
+BOOL add_undo_set_char_fmt( ME_TextEditor *, int pos, int len, const CHARFORMAT2W *fmt );
+BOOL add_undo_join_paras( ME_TextEditor *, int pos );
+BOOL add_undo_split_para( ME_TextEditor *, const ME_Paragraph *para, ME_String *eol_str, const ME_Cell *cell);
+void ME_CommitUndo(ME_TextEditor *editor);
+void ME_ContinueCoalescingTransaction(ME_TextEditor *editor);
+void ME_CommitCoalescingUndo(ME_TextEditor *editor);
+BOOL ME_Undo(ME_TextEditor *editor);
+BOOL ME_Redo(ME_TextEditor *editor);
+void ME_EmptyUndoStack(ME_TextEditor *editor);
+void editor_disable_undo(ME_TextEditor *editor);
+void editor_enable_undo(ME_TextEditor *editor);
+
+static inline BOOL editor_undo_ignored(ME_TextEditor *editor)
+{
+    return editor->undo_ctl_state != undoActive || editor->nUndoMode == umIgnore;
+}
+
+/* txtsrv.c */
+HRESULT create_text_services( IUnknown *outer, ITextHost *text_host, IUnknown **unk, BOOL emulate_10 );
+#ifdef __ASM_USE_THISCALL_WRAPPER
+extern const struct ITextServicesVtbl text_services_stdcall_vtbl;
+#define TXTSERV_VTABLE(This) (&text_services_stdcall_vtbl)
+#else
+#define TXTSERV_VTABLE(This) (This)->lpVtbl
+#endif
+#define ITextServices_TxSendMessage(This,a,b,c,d) TXTSERV_VTABLE(This)->TxSendMessage(This,a,b,c,d)
+#define ITextServices_TxDraw(This,a,b,c,d,e,f,g,h,i,j,k,l) TXTSERV_VTABLE(This)->TxDraw(This,a,b,c,d,e,f,g,h,i,j,k,l)
+#define ITextServices_TxGetHScroll(This,a,b,c,d,e) TXTSERV_VTABLE(This)->TxGetHScroll(This,a,b,c,d,e)
+#define ITextServices_TxGetVScroll(This,a,b,c,d,e) TXTSERV_VTABLE(This)->TxGetVScroll(This,a,b,c,d,e)
+#define ITextServices_OnTxSetCursor(This,a,b,c,d,e,f,g,h,i) TXTSERV_VTABLE(This)->OnTxSetCursor(This,a,b,c,d,e,f,g,h,i)
+#define ITextServices_TxQueryHitPoint(This,a,b,c,d,e,f,g,h,i,j) TXTSERV_VTABLE(This)->TxQueryHitPoint(This,a,b,c,d,e,f,g,h,i,j)
+#define ITextServices_OnTxInPlaceActivate(This,a) TXTSERV_VTABLE(This)->OnTxInPlaceActivate(This,a)
+#define ITextServices_OnTxInPlaceDeactivate(This) TXTSERV_VTABLE(This)->OnTxInPlaceDeactivate(This)
+#define ITextServices_OnTxUIActivate(This) TXTSERV_VTABLE(This)->OnTxUIActivate(This)
+#define ITextServices_OnTxUIDeactivate(This) TXTSERV_VTABLE(This)->OnTxUIDeactivate(This)
+#define ITextServices_TxGetText(This,a) TXTSERV_VTABLE(This)->TxGetText(This,a)
+#define ITextServices_TxSetText(This,a) TXTSERV_VTABLE(This)->TxSetText(This,a)
+#define ITextServices_TxGetCurTargetX(This,a) TXTSERV_VTABLE(This)->TxGetCurTargetX(This,a)
+#define ITextServices_TxGetBaseLinePos(This,a) TXTSERV_VTABLE(This)->TxGetBaseLinePos(This,a)
+#define ITextServices_TxGetNaturalSize(This,a,b,c,d,e,f,g,h) TXTSERV_VTABLE(This)->TxGetNaturalSize(This,a,b,c,d,e,f,g,h)
+#define ITextServices_TxGetDropTarget(This,a) TXTSERV_VTABLE(This)->TxGetDropTarget(This,a)
+#define ITextServices_OnTxPropertyBitsChange(This,a,b) TXTSERV_VTABLE(This)->OnTxPropertyBitsChange(This,a,b)
+#define ITextServices_TxGetCachedSize(This,a,b) TXTSERV_VTABLE(This)->TxGetCachedSize(This,a,b)
 
 /* writer.c */
-LRESULT ME_StreamOutRange(ME_TextEditor *editor, DWORD dwFormat, const ME_Cursor *start, int nChars, EDITSTREAM *stream) DECLSPEC_HIDDEN;
-LRESULT ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream) DECLSPEC_HIDDEN;
+LRESULT ME_StreamOutRange(ME_TextEditor *editor, DWORD dwFormat, const ME_Cursor *start, int nChars, EDITSTREAM *stream);
+LRESULT ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream);
 
 /* clipboard.c */
-HRESULT ME_GetDataObject(ME_TextEditor *editor, const ME_Cursor *start, int nChars, LPDATAOBJECT *lplpdataobj) DECLSPEC_HIDDEN;
+HRESULT ME_GetDataObject(ME_TextEditor *editor, const ME_Cursor *start, int nChars, LPDATAOBJECT *lplpdataobj);
 
-void release_typelib(void) DECLSPEC_HIDDEN;
+void release_typelib(void);
+

@@ -25,7 +25,7 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "載入登入使用者介面的 DLL 檔案 %s 載入失敗。", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "請與系統管理員聯繫，以更換 DLL 檔案，或還原初始的 DLL。", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "重新開機(&R)", 1, 80, 91, 68, 14
+    DEFPUSHBUTTON "重新開機(&R)", IDOK, 80, 91, 68, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
@@ -34,10 +34,10 @@ CAPTION "系統關閉"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "系統關機程序已啟動。請儲存所有工作並登出。所有未儲存的工作都會在關機時遺失。", -1, 38, 7, 135, 40
-    LTEXT "關機前剩餘時間︰", -1, 38, 50, 90, 8
+    LTEXT "系統關機程序已啟動。請儲存所有工作並登出。所有未儲存的工作都會在關機時遺失。", IDC_STATIC, 38, 7, 135, 40
+    LTEXT "關機前剩餘時間︰", IDC_STATIC, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "附加訊息：", -1, 38, 65, 135, 8
+    LTEXT "附加訊息：", IDC_STATIC, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
@@ -58,6 +58,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "正在準備休眠..."
     IDS_SAVEYOURSETTINGS "正在儲存設定..."
     IDS_REACTOSISSTARTINGUP "ReactOS 正在啟動..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d 日"
 END

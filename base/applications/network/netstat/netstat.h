@@ -3,7 +3,7 @@
 /* Maximum string lengths for ASCII ip address and port names */
 #define HOSTNAMELEN     256
 #define PORTNAMELEN     256
-#define ADDRESSLEN      HOSTNAMELEN+PORTNAMELEN
+#define ADDRESSLEN      (HOSTNAMELEN + PORTNAMELEN)
 
 /* command line options */
 BOOL bNoOptions        = FALSE; // print default

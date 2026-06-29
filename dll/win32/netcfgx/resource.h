@@ -31,6 +31,14 @@
 #define IDC_DNS2       1008
 #define IDC_ADVANCED   1009
 
+#define IDC_ALTAPIPA      1050
+#define IDC_ALTSTATIC     1051
+#define IDC_ALTIPADDR     1052
+#define IDC_ALTSUBNETMASK 1053
+#define IDC_ALTDEFGATEWAY 1054
+#define IDC_ALTDNS1       1057
+#define IDC_ALTDNS2       1058
+
 #define IDC_IPLIST     2000
 #define IDC_IPADD      2001
 #define IDC_IPMOD      2002
@@ -39,11 +47,12 @@
 #define IDC_GWADD      2005
 #define IDC_GWMOD      2006
 #define IDC_GWDEL      2007
-#define IDC_AUTOMETRIC 2008
-#define IDC_METRIC     2009
-#define IDC_METRICTXT  2010
-#define IDC_USEMETRIC  2011
-#define IDC_OK         2012
+#define IDC_IFAUTOMETRIC  2008
+#define IDC_IFMETRIC      2009
+#define IDC_GWAUTOMETRIC  2010
+#define IDC_GWMETRICTXT   2011
+#define IDC_GWMETRIC      2012
+#define IDC_OK            2013
 
 #define IDC_DNSADDRLIST   3000
 #define IDC_DNSADDRUP     3001
@@ -123,3 +132,4 @@
 #define IDS_DUP_SUFFIX     8025
 #define IDS_DUP_IPADDR     8026
 #define IDS_DUP_GW         8027
+#define IDS_METRIC_RANGE   8028

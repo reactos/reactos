@@ -30,6 +30,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 %lex-param { parser_ctx_t *ctx }
 %parse-param { parser_ctx_t *ctx }
+%define api.prefix {cc_parser_}
 %define api.pure
 %start CCExpr
 
@@ -143,7 +144,9 @@ static int cc_parser_lex(void *lval, parser_ctx_t *ctx)
 /* FIXME: Implement missing expressions. */
 
 CCExpr
-    : CCUnaryExpression { ctx->ccval = $1; YYACCEPT; }
+    : CCUnaryExpression { ctx->ccval = $1;
+                          (void)cc_parser_nerrs; /* avoid unused variable warning */
+                          YYACCEPT; }
 
 CCUnaryExpression
     : tCCValue                      { $$ = $1; }
@@ -161,7 +164,7 @@ CCLogicalORExpression
 CCLogicalANDExpression
     : CCBitwiseORExpression         { $$ = $1; }
     | CCBitwiseANDExpression tAND CCBitwiseORExpression
-                                    { FIXME("'&&' expression not implemented\n"); ctx->hres = E_NOTIMPL; YYABORT; }
+                                    { $$ = ccval_bool(get_ccbool($1) && get_ccbool($3)); }
 
 CCBitwiseORExpression
     : CCBitwiseXORExpression        { $$ = $1; }

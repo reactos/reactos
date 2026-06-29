@@ -1,9 +1,8 @@
 
 add_definitions(
-    -D__WINESRC__
+    -D_CRT_NON_CONFORMING_SWPRINTFS
     -D_WINE)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(mpr.dll mpr.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -26,3 +25,4 @@ target_link_libraries(mpr wine)
 add_importlibs(mpr advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(mpr precomp.h SOURCE)
 add_cd_file(TARGET mpr DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(mpr) # CORE-5743: No ARRAY_SIZE macro

@@ -84,17 +84,17 @@ IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fecha:", IDC_STATIC, 8, 5, 31, 8
+    LTEXT "&Fecha:", IDC_STATIC, 8, 5, 31, 8
     EDITTEXT IDC_EVENTDATESTATIC, 46, 5, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Origen:", IDC_STATIC, 103, 5, 36, 8
+    LTEXT "&Origen:", IDC_STATIC, 103, 5, 36, 8
     EDITTEXT IDC_EVENTSOURCESTATIC, 140, 5, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Hora:", IDC_STATIC, 8, 15, 31, 8
+    LTEXT "&Hora:", IDC_STATIC, 8, 15, 31, 8
     EDITTEXT IDC_EVENTTIMESTATIC, 46, 15, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Categoría:", IDC_STATIC, 103, 15, 36, 8
+    LTEXT "&Categoría:", IDC_STATIC, 103, 15, 36, 8
     EDITTEXT IDC_EVENTCATEGORYSTATIC, 140, 15, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Tipo:", IDC_STATIC, 8, 25, 31, 8
+    LTEXT "&Tipo:", IDC_STATIC, 8, 25, 31, 8
     EDITTEXT IDC_EVENTTYPESTATIC, 46, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "ID de evento:", IDC_STATIC, 103, 25, 36, 8
+    LTEXT "&ID de evento:", IDC_STATIC, 103, 25, 36, 8
     EDITTEXT IDC_EVENTIDSTATIC, 140, 25, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Usuario:", IDC_STATIC, 8, 35, 36, 8
     EDITTEXT IDC_EVENTUSERSTATIC, 46, 35, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -108,9 +108,9 @@ BEGIN
     LTEXT "&Descripción:", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "D&atos:", IDC_DETAILS_STATIC, 8, 140, 25, 8
     AUTORADIOBUTTON "&Bytes", IDC_BYTESRADIO, 39, 140, 34, 8
-    AUTORADIOBUTTON "&Word", IDC_WORDRADIO, 77, 140, 34, 8
+    AUTORADIOBUTTON "&Words", IDC_WORDSRADIO, 77, 140, 34, 8
+    LTEXT "D&atos:", IDC_DETAILS_STATIC, 8, 140, 25, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -170,6 +170,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "¿Desea guardar este registro de eventos antes de borrarlo?"
     IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
     IDS_EVENTSTRINGIDNOTFOUND "No se pudo recuperar la descripción para el evento con ID ( %lu ) y origen ( %s ). El equipo local puede no tener la información necesaria en el registro o las DLLs necesarias para mostrar los mensajes de un equipo remoto.\n\nLa siguiente información es parte del evento:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -222,16 +224,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Tipo de evento:     %s\r\n\
-Fuente del evento:  %s\r\n\
-Categ. del evento:  %s\r\n\
-ID del evento:      %s\r\n\
-Fecha:              %s\r\n\
-Hora:               %s\r\n\
-Usuario:            %s\r\n\
-Equipo:             %s\r\n\
-Descripción:\r\n%s"
+    IDS_COPY_EVTTYPE "Tipo de evento:"
+    IDS_COPY_EVTSRC  "Fuente del evento:"
+    IDS_COPY_EVTCAT  "Categ. del evento:"
+    IDS_COPY_EVTID   "ID de evento:"
+    IDS_COPY_EVTDATE "Fecha:"
+    IDS_COPY_EVTTIME "Hora:"
+    IDS_COPY_EVTUSER "Usuario:"
+    IDS_COPY_EVTCOMP "Equipo:"
+    IDS_COPY_EVTTEXT "Descripción:"
+    IDS_COPY_EVTDATA "Datos:"
 END
 
 STRINGTABLE

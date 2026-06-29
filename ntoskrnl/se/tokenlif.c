@@ -417,6 +417,8 @@ SepCreateToken(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ObInsertObject() failed (Status 0x%lx)\n", Status);
+            /* Note: ObInsertObject dereferences AccessToken on failure */
+            return Status;
         }
     }
     else
@@ -1859,7 +1861,7 @@ Cleanup:
  * this is certainly NOT true, although I can't say for sure that EffectiveOnly
  * is correct either. -Gunnar
  * This is true. EffectiveOnly overrides SQOS.EffectiveOnly. - IAI
- * NOTE for readers: http://hex.pp.ua/nt/NtDuplicateToken.php is therefore
+ * NOTE for readers: https://hex.pp.ua/nt/NtDuplicateToken.php is therefore
  * wrong in that regard, while MSDN documentation is correct.
  */
 _Must_inspect_result_
@@ -2243,6 +2245,7 @@ NtFilterToken(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtFilterToken(): Failed to insert the filtered token (Status 0x%lx)\n", Status);
+        /* Note: ObInsertObject dereferences FilteredToken on failure */
         goto Quit;
     }
 

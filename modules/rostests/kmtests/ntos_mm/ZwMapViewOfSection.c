@@ -10,6 +10,10 @@
 #define IGNORE -99
 #define NEW_CONTENT "NewContent"
 #define NEW_CONTENT_LEN sizeof(NEW_CONTENT)
+#define IsInvalidParamStatus(Status) \
+    (Status == STATUS_INVALID_PARAMETER || Status == STATUS_INVALID_PARAMETER_MIX || \
+    (Status >= STATUS_INVALID_PARAMETER_1 && Status <= STATUS_INVALID_PARAMETER_12))
+#define ok_invalid_parameter(Status) ok(IsInvalidParamStatus(Status), "Invalid status code (0x%X)\n", Status)
 
 static UNICODE_STRING FileReadOnlyPath = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
 static UNICODE_STRING NtosImgPath = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntoskrnl.exe");
@@ -24,7 +28,10 @@ static OBJECT_ATTRIBUTES NtoskrnlFileObject;
 #define TestMapView(SectionHandle, ProcessHandle, BaseAddress2, ZeroBits, CommitSize, SectionOffset, ViewSize2, InheritDisposition, AllocationType, Win32Protect, MapStatus, UnmapStatus) do    \
     {                                                                                                                                                                                           \
         Status = ZwMapViewOfSection(SectionHandle, ProcessHandle, BaseAddress2, ZeroBits, CommitSize, SectionOffset, ViewSize2, InheritDisposition, AllocationType, Win32Protect);              \
-        ok_eq_hex(Status, MapStatus);                                               \
+        if (GetNTVersion() >= _WIN32_WINNT_WIN10 && IsInvalidParamStatus(MapStatus))                                                                                                            \
+            ok_invalid_parameter(MapStatus);                                        \
+        else                                                                        \
+            ok_eq_hex(Status, MapStatus);                                           \
         if (NT_SUCCESS(Status))                                                     \
         {                                                                           \
             Status = ZwUnmapViewOfSection(ProcessHandle, BaseAddress);              \
@@ -161,9 +168,15 @@ SimpleErrorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly, HANDLE 
     }
 
     //zero bits
+#ifdef _M_IX86
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 1, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 5, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, -1, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_PARAMETER_4, IGNORE);
+#else
+    TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 1, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, GetNTVersion() >= _WIN32_WINNT_WIN8 ? STATUS_INVALID_PARAMETER_4 : STATUS_SUCCESS, STATUS_SUCCESS);
+    TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 5, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, GetNTVersion() >= _WIN32_WINNT_WIN8 ? STATUS_INVALID_PARAMETER_4 : STATUS_SUCCESS, STATUS_SUCCESS);
+    TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, -1, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_SUCCESS, IGNORE);
+#endif
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 20, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_NO_MEMORY, IGNORE);
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 21, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_NO_MEMORY, IGNORE);
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 22, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_PARAMETER_4, IGNORE);
@@ -207,7 +220,7 @@ SimpleErrorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly, HANDLE 
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, MEM_RESERVE, PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
     TestMapView(PageFileSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, MEM_RESERVE, PAGE_READWRITE, STATUS_INVALID_PARAMETER_9, STATUS_SUCCESS);
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, (MEM_RESERVE | MEM_COMMIT), PAGE_READWRITE, STATUS_INVALID_PARAMETER_9, IGNORE);
-    TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, (MEM_LARGE_PAGES | MEM_RESERVE), PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
+    TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, (MEM_LARGE_PAGES | MEM_RESERVE), PAGE_READWRITE, (NTSTATUS)(GetNTVersion() >= _WIN32_WINNT_WIN10 ? STATUS_INVALID_PARAMETER : STATUS_SUCCESS), STATUS_SUCCESS);
 
     //win32protect
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READONLY, STATUS_SUCCESS, STATUS_SUCCESS);
@@ -258,7 +271,29 @@ AdvancedErrorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
 
     //test first conditional branch
     ViewSize = -1;
-    MmTestMapView(SectionObject, PsGetCurrentProcess(), &BaseAddress, 0, TestStringSize, &SectionOffset, &ViewSize, ViewUnmap, MEM_RESERVE, PAGE_READWRITE, STATUS_INVALID_VIEW_SIZE, IGNORE);
+#ifdef _M_IX86
+    NTSTATUS MapStatus;
+
+    switch (GetNTVersion())
+    {
+        case _WIN32_WINNT_WIN8:
+        case _WIN32_WINNT_WINBLUE:
+            MapStatus = STATUS_INVALID_VIEW_SIZE;
+            break;
+        case _WIN32_WINNT_WIN10:
+            MapStatus = STATUS_CONFLICTING_ADDRESSES;
+            break;
+        default:
+            MapStatus = STATUS_SUCCESS;
+            break;
+    }
+
+    MmTestMapView(SectionObject, PsGetCurrentProcess(), &BaseAddress, 0, TestStringSize,
+                  &SectionOffset, &ViewSize, ViewUnmap, MEM_RESERVE, PAGE_READWRITE, MapStatus, IGNORE);
+#else
+    MmTestMapView(SectionObject, PsGetCurrentProcess(), &BaseAddress, 0, TestStringSize,
+                  &SectionOffset, &ViewSize, ViewUnmap, MEM_RESERVE, PAGE_READWRITE, STATUS_INVALID_VIEW_SIZE, IGNORE);
+#endif
 
     //test second conditional branch
     ViewSize = 1;
@@ -286,7 +321,7 @@ CompareFileContents(HANDLE FileHandle, ULONG BufferLength, PVOID Buffer)
     if (!skip((FileContent != NULL), "Error allocating memory for FileContent\n"))
     {
         Status = ZwReadFile(FileHandle, NULL, NULL, NULL, &IoStatusBlock, FileContent, BufferLength, &ByteOffset, NULL);
-        ok_eq_hex(Status, STATUS_SUCCESS);
+        ok(Status == STATUS_SUCCESS || Status == STATUS_PENDING, "Unexpected status (0x%X).\n", Status);
         ok_eq_ulongptr(IoStatusBlock.Information, BufferLength);
 
         Match = 0;
@@ -310,8 +345,18 @@ SystemProcessWorker(PVOID StartContext)
     SIZE_T Match;
     LARGE_INTEGER SectionOffset;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG PtrCnt;
 
     UNREFERENCED_PARAMETER(StartContext);
+
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
+#ifdef _M_IX86
+        PtrCnt = 64;
+#else
+        PtrCnt = 65536;
+#endif
+    else
+        PtrCnt = 4;
 
     BaseAddress = NULL;
     ViewSize = TestStringSize;
@@ -321,11 +366,15 @@ SystemProcessWorker(PVOID StartContext)
     Status = ZwOpenSection(&SectionHandle, SECTION_ALL_ACCESS, &ObjectAttributes);
     if (!skip(NT_SUCCESS(Status), "Error acquiring handle to section. Error = %p\n", Status))
     {
-        CheckObject(SectionHandle, 4, 2);
+        CheckObject(SectionHandle, PtrCnt, 2);
         Status = ZwMapViewOfSection(SectionHandle, NtCurrentProcess(), &BaseAddress, 0, TestStringSize, &SectionOffset, &ViewSize, ViewUnmap, 0, PAGE_READWRITE);
+        if (GetNTVersion() >= _WIN32_WINNT_WIN8)
+            PtrCnt -= 2;
 
         //make sure ZwMapViewofSection doesn't touch the section ref counts.
-        CheckObject(SectionHandle, 4, 2);
+        CheckObject(SectionHandle, PtrCnt, 2);
+        if (GetNTVersion() >= _WIN32_WINNT_WIN8)
+            PtrCnt--;
 
         if (!skip(NT_SUCCESS(Status), "Error mapping page file view in system process. Error = %p\n", Status))
         {
@@ -336,7 +385,7 @@ SystemProcessWorker(PVOID StartContext)
             ZwUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
 
             //make sure ZwMapViewofSection doesn't touch the section ref counts.
-            CheckObject(SectionHandle, 4, 2);
+            CheckObject(SectionHandle, PtrCnt, 2);
         }
 
         ZwClose(SectionHandle);
@@ -360,18 +409,30 @@ BehaviorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
     LARGE_INTEGER MaximumSize;
     SIZE_T Match;
     SIZE_T ViewSize = 0;
+    ULONG PtrCnt;
+
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
+#ifdef _M_IX86
+        PtrCnt = 34;
+#else
+        PtrCnt = 32770;
+#endif
+    else
+        PtrCnt = 3;
 
     InitializeObjectAttributes(&ObjectAttributes, &SharedSectionName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
     MaximumSize.QuadPart = TestStringSize;
     SectionOffset.QuadPart = 0;
 
     Status = ZwCreateSection(&WriteSectionHandle, SECTION_ALL_ACCESS, &ObjectAttributes, &MaximumSize, PAGE_READWRITE, SEC_COMMIT, FileHandleWriteOnly);
-    CheckObject(WriteSectionHandle, 3, 1);
+    CheckObject(WriteSectionHandle, PtrCnt, 1);
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
+        PtrCnt -= 2;
     ok(NT_SUCCESS(Status), "Error creating write section from file. Error = %p\n", Status);
 
     //check for section reading/writing by comparing section content to a well-known value.
     Status = ZwMapViewOfSection(WriteSectionHandle, NtCurrentProcess() ,&BaseAddress, 0, 0, &SectionOffset, &ViewSize, ViewUnmap, 0, PAGE_READWRITE);
-    CheckObject(WriteSectionHandle, 3, 1);
+    CheckObject(WriteSectionHandle, PtrCnt, 1);
     if (!skip(NT_SUCCESS(Status), "Error mapping view with READ/WRITE priv. Error = %p\n", Status))
     {
         Match = RtlCompareMemory(BaseAddress, TestString, TestStringSize);
@@ -479,7 +540,7 @@ BehaviorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
         {
             //check also the SEC_COMMIT flag
             /* This test proves that MSDN is once again wrong
-             *  msdn.microsoft.com/en-us/library/windows/hardware/aa366537.aspx states that SEC_RESERVE
+             *  https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-createfilemappingw states that SEC_RESERVE
              *  should cause the allocated memory for the view to be reserved but in fact it is always committed.
              *  It fails also on windows.
              */
@@ -505,6 +566,16 @@ PageFileBehaviorChecks()
     SIZE_T Match;
     PVOID ThreadObject;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG PtrCnt;
+
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
+#ifdef _M_IX86
+        PtrCnt = 34;
+#else
+        PtrCnt = 32770;
+#endif
+    else
+        PtrCnt = 3;
 
     MaxSectionSize.QuadPart = TestStringSize;
     SectionOffset.QuadPart = 0;
@@ -517,13 +588,15 @@ PageFileBehaviorChecks()
     Status = ZwCreateSection(&PageFileSectionHandle, SECTION_ALL_ACCESS, &ObjectAttributes, &MaxSectionSize, PAGE_READWRITE, SEC_COMMIT, NULL);
     if (!skip(NT_SUCCESS(Status), "Error creating page file section. Error = %p\n", Status))
     {
-        CheckObject(PageFileSectionHandle, 3, 1);
+        CheckObject(PageFileSectionHandle, PtrCnt, 1);
         Status = ZwMapViewOfSection(PageFileSectionHandle, NtCurrentProcess(), &BaseAddress, 0, TestStringSize, &SectionOffset, &ViewSize, ViewUnmap, 0, PAGE_READWRITE);
+        if (GetNTVersion() >= _WIN32_WINNT_WIN8)
+            PtrCnt -= 2;
         if (!skip(NT_SUCCESS(Status), "Error mapping page file view. Error = %p\n", Status))
         {
             HANDLE SysThreadHandle;
 
-            CheckObject(PageFileSectionHandle, 3, 1);
+            CheckObject(PageFileSectionHandle, PtrCnt, 1);
 
             //check also the SEC_COMMIT flag
             Test_NtQueryVirtualMemory(BaseAddress, PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);

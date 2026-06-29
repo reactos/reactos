@@ -9,7 +9,26 @@
  * daniel@veillard.com
  */
 
-#include "precomp.h"
+#define IN_LIBXSLT
+#include "libxslt.h"
+
+#include <string.h>
+
+#include <libxml/xmlmemory.h>
+#include <libxml/tree.h>
+#include <libxml/hash.h>
+#include <libxml/xmlerror.h>
+#include <libxml/uri.h>
+#include <libxml/parserInternals.h>
+#include "xslt.h"
+#include "xsltInternals.h"
+#include "xsltutils.h"
+#include "attributes.h"
+#include "namespaces.h"
+#include "templates.h"
+#include "imports.h"
+#include "transform.h"
+#include "preproc.h"
 
 #define WITH_XSLT_DEBUG_ATTRIBUTES
 #ifdef WITH_XSLT_DEBUG
@@ -68,6 +87,7 @@ typedef xsltAttrSetContext *xsltAttrSetContextPtr;
 struct _xsltAttrSetContext {
     xsltStylesheetPtr topStyle;
     xsltStylesheetPtr style;
+    int error;
 };
 
 static void
@@ -255,7 +275,7 @@ xsltAddUseAttrSetList(xsltUseAttrSetPtr list, const xmlChar *ncname,
  * Returns the newly allocated xsltAttrSetPtr or NULL in case of error.
  */
 static xsltAttrSetPtr
-xsltNewAttrSet() {
+xsltNewAttrSet(void) {
     xsltAttrSetPtr cur;
 
     cur = (xsltAttrSetPtr) xmlMalloc(sizeof(xsltAttrSet));
@@ -402,9 +422,12 @@ xsltParseStylesheetAttributeSet(xsltStylesheetPtr style, xmlNodePtr cur) {
     set = xmlHashLookup2(style->attributeSets, ncname, nsUri);
     if (set == NULL) {
         set = xsltNewAttrSet();
-        if (set == NULL)
+        if ((set == NULL) ||
+            (xmlHashAddEntry2(style->attributeSets, ncname, nsUri, set) < 0)) {
+	    xsltGenericError(xsltGenericErrorContext, "memory error\n");
+            xsltFreeAttrSet(set);
             return;
-        xmlHashAddEntry2(style->attributeSets, ncname, nsUri, set);
+        }
     }
 
     /*
@@ -644,6 +667,12 @@ xsltResolveSASCallback(void *payload, void *data,
     xsltStylesheetPtr topStyle = asctx->topStyle;
     xsltStylesheetPtr style = asctx->style;
 
+    if (asctx->error) {
+        if (style != topStyle)
+            xsltFreeAttrSet(set);
+        return;
+    }
+
     xsltResolveAttrSet(set, topStyle, style, name, ns, 1);
 
     /* Move attribute sets to top stylesheet. */
@@ -656,6 +685,8 @@ xsltResolveSASCallback(void *payload, void *data,
 	    xsltGenericError(xsltGenericErrorContext,
                 "xsl:attribute-set : internal error, can't move imported "
                 " attribute set %s\n", name);
+            asctx->error = 1;
+            xsltFreeAttrSet(set);
         }
     }
 }
@@ -676,6 +707,7 @@ xsltResolveStylesheetAttributeSet(xsltStylesheetPtr style) {
 	    "Resolving attribute sets references\n");
 #endif
     asctx.topStyle = style;
+    asctx.error = 0;
     cur = style;
     while (cur != NULL) {
 	if (cur->attributeSets != NULL) {

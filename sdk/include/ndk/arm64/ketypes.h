@@ -55,6 +55,11 @@ extern "C" {
 #define DOUBLE_FAULT_STACK_SIZE 0x8000
 
 //
+// Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
+//
+#define KSEG0_BASE 0xfffff80000000000ULL
+
+//
 // Structure for CPUID info
 //
 typedef union _CPU_INFO

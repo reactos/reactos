@@ -82,6 +82,16 @@ BEGIN
     PUSHBUTTON "&बंद करे", IDC_CLOSE, 120, 155, 60, 14
 END
 
+IDD_NETWORKINITPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Please wait while ReactOS installs networking components.", IDC_STATIC, 53, 7, 240, 20
+    CONTROL "", IDC_INSTALL_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 58, 275, 11
+END
+
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "रिऐक्ट ओएस सेटअप"
@@ -159,6 +169,7 @@ BEGIN
     IDS_NET_DELETE "हटाए"
     IDS_NET_RENAME "नाम बदलें"
     IDS_NET_PROPERTIES "गुण"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u बिट/सेकंड"
     IDS_FORMAT_KBIT "%u किलोबिट/सेकंड"
     IDS_FORMAT_MBIT "%u मेगाबिट/सेकंड"
@@ -171,6 +182,8 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_NETWORKINITTITLE "Network Install"
+    IDS_NETWORKINITSUBTITLE "Installs required networking components."
     IDS_NETWORKSETTINGSTITLE "नेटवर्क सेटिंग"
     IDS_NETWORKSETTINGSSUBTITLE "अन्य नेटवर्क, कंप्यूटर और इंटरनेट से कनेक्ट करने के लिए उपयोग किया जाने वाला नेटवर्क सॉफ़्टवेयर इंस्टॉल करता है।"
     IDS_NETWORKCOMPONENTTITLE "नेटवर्क कम्पोनेन्ट"

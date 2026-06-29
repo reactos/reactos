@@ -12,7 +12,7 @@ BEGIN
    PUSHBUTTON "N&uovo...", IDC_USERS_ADD, 87, 98, 50, 14
    PUSHBUTTON "&Rimuovi", IDC_USERS_REMOVE, 141, 98, 50, 14
    PUSHBUTTON "Pr&oprietà", IDC_USERS_PROPERTIES, 195, 98, 50, 14
-   AUTOCHECKBOX "Richiesta la password all'avvio del sistema.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 200, 14, WS_DISABLED
+   AUTOCHECKBOX "Richiesta la password all'avvio del sistema.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 200, 14
    PUSHBUTTON "Resetta Password", IDC_USERS_RESET, 165, 200, 80, 14, WS_DISABLED
 END
 

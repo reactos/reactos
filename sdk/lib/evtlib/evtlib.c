@@ -16,12 +16,14 @@
 #define NDEBUG
 #include <debug.h>
 
-#define EVTLTRACE(...)  DPRINT("EvtLib: " __VA_ARGS__)
+#define EVTLTRACE(fmt, ...) DPRINT("EvtLib: " fmt, ##__VA_ARGS__)
 // Once things become stabilized enough, replace all the EVTLTRACE1 by EVTLTRACE
-#define EVTLTRACE1(...)  DPRINT1("EvtLib: " __VA_ARGS__)
+#define EVTLTRACE1(fmt, ...) DPRINT1("EvtLib: " fmt, ##__VA_ARGS__)
 
 
 /* GLOBALS *******************************************************************/
+
+#define EVENTLOG_FILE_GRANULARITY   (64 * 1024)
 
 static const EVENTLOGEOF EOFRecord =
 {
@@ -304,6 +306,7 @@ ElfpInitNewFile(
     LARGE_INTEGER FileOffset;
     SIZE_T WrittenLength;
     EVENTLOGEOF EofRec;
+    ULONG InitialSize;
 
     /* Initialize the event log header */
     RtlZeroMemory(&LogFile->Header, sizeof(EVENTLOGHEADER));
@@ -322,13 +325,23 @@ ElfpInitNewFile(
     /* The event log is empty, there is no record so far */
     LogFile->Header.OldestRecordNumber = 0;
 
-    // FIXME: Windows' EventLog log file sizes are always multiple of 64kB
-    // but that does not mean the real log size is == file size.
+    /*
+     * Windows keeps the file size in 64 kB chunks. The used log area is tracked
+     * by the header offsets and the EOF record, not by the physical file EOF.
+     */
+    InitialSize = sizeof(EVENTLOGHEADER) + sizeof(EVENTLOGEOF); // TODO: Consider FileSize as well.
+    InitialSize = ROUND_UP(InitialSize, EVENTLOG_FILE_GRANULARITY);
+    LogFile->CurrentSize = InitialSize;
+    Status = LogFile->FileSetSize(LogFile, LogFile->CurrentSize, FileSize);
+    if (!NT_SUCCESS(Status))
+    {
+        EVTLTRACE1("FileSetSize() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
 
-    /* Round MaxSize to be a multiple of ULONG (normally on Windows: multiple of 64 kB) */
-    LogFile->Header.MaxSize = ROUND_UP(MaxSize, sizeof(ULONG));
-    LogFile->CurrentSize = LogFile->Header.MaxSize; // or: FileSize ??
-    LogFile->FileSetSize(LogFile, LogFile->CurrentSize, 0);
+    /* Ensure that the log maximum size is greater than the initial file size */
+    MaxSize = max(MaxSize, InitialSize);
+    LogFile->Header.MaxSize = ROUND_UP(MaxSize, EVENTLOG_FILE_GRANULARITY);
 
     LogFile->Header.Flags = 0;
     LogFile->Header.Retention = Retention;
@@ -1488,11 +1501,25 @@ ElfWriteRecord(
      */
     if (LogFile->CurrentSize < LogFile->Header.MaxSize)
     {
-        EVTLTRACE1("Expanding the log file from %lu to %lu\n",
-                LogFile->CurrentSize, LogFile->Header.MaxSize);
+        ULONG NewSize = WriteOffset + BufSize + sizeof(EofRec);
 
-        LogFile->CurrentSize = LogFile->Header.MaxSize;
-        LogFile->FileSetSize(LogFile, LogFile->CurrentSize, 0);
+        if (WriteOffset < LogFile->Header.EndOffset || NewSize > LogFile->Header.MaxSize)
+            NewSize = LogFile->Header.MaxSize;
+        else
+            NewSize = ROUND_UP(NewSize, EVENTLOG_FILE_GRANULARITY);
+
+        if (NewSize > LogFile->CurrentSize)
+        {
+            EVTLTRACE1("Expanding the log file from %lu to %lu\n",
+                    LogFile->CurrentSize, NewSize);
+            Status = LogFile->FileSetSize(LogFile, NewSize, LogFile->CurrentSize);
+            if (!NT_SUCCESS(Status))
+            {
+                EVTLTRACE1("FileSetSize() failed (Status 0x%08lx)\n", Status);
+                return Status;
+            }
+            LogFile->CurrentSize = NewSize;
+        }
     }
 
     /* Since we can write events in the log, clear the log full flag */

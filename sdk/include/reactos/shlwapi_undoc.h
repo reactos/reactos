@@ -1,29 +1,22 @@
 /*
- * ReactOS shlwapi
- *
- * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * PROJECT:     ReactOS header
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Undocumented SHLWAPI definitions
+ * COPYRIGHT:   Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
+ *              Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#ifndef __SHLWAPI_UNDOC_H
-#define __SHLWAPI_UNDOC_H
+#pragma once
+
+#include <winreg.h> // For REGSAM
+
+#if !defined(_INC_SHLWAPI) && !defined(__WINE_SHLWAPI_H)
+#error Please #include <shlwapi.h> first
+#endif
 
 #ifdef __cplusplus
 extern "C" {
-#endif /* defined(__cplusplus) */
+#endif
 
 #define SHELL_NO_POLICY ((DWORD)-1)
 
@@ -69,14 +62,38 @@ SHRestrictionLookup(
     _In_ const POLICYDATA *polTable,
     _Inout_ LPDWORD polArr);
 
+INT WINAPI SHRestrictedMessageBox(_In_ HWND hWnd);
+
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
+
+PSTR WINAPI
+NextPathA(
+    _In_ PCSTR pszStart,
+    _Out_writes_(cchDest) PSTR pszDest,
+    _In_ UINT cchDest);
+
+PWSTR WINAPI
+NextPathW(
+    _In_ PCWSTR pszStart,
+    _Out_writes_(cchDest) PWSTR pszDest,
+    _In_ UINT cchDest);
+
 #ifdef UNICODE
 #define SHAboutInfo SHAboutInfoW
+#define NextPath NextPathW
 #else
 #define SHAboutInfo SHAboutInfoA
+#define NextPath NextPathA
 #endif
 
+HRESULT WINAPI
+IUnknown_ShowBrowserBar(
+    _In_ IUnknown* punk,
+    _In_ REFGUID rguid,
+    _In_ BOOL bShow);
+
+HRESULT WINAPI CLSIDFromStringWrap(_In_ LPCWSTR idstr, _Out_ CLSID *id);
 HMODULE WINAPI SHPinDllOfCLSID(REFIID refiid);
 HRESULT WINAPI IUnknown_QueryStatus(IUnknown *lpUnknown, REFGUID pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT* pCmdText);
 HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT* pvaIn, VARIANT* pvaOut);
@@ -99,15 +116,50 @@ DWORD WINAPI SHSendMessageBroadcastW(UINT uMsg, WPARAM wParam, LPARAM lParam);
 HRESULT WINAPI SHIsExpandableFolder(LPSHELLFOLDER lpFolder, LPCITEMIDLIST pidl);
 DWORD WINAPI SHFillRectClr(HDC hDC, LPCRECT pRect, COLORREF cRef);
 int WINAPI SHSearchMapInt(const int *lpKeys, const int *lpValues, int iLen, int iKey);
-VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown);
-HRESULT WINAPI MayQSForward(IUnknown* lpUnknown, PVOID lpReserved, REFGUID riidCmdGrp, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText);
-HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
-HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds);
+
+HRESULT WINAPI
+SHInvokeCommandsOnContextMenu(
+    _In_opt_ HWND hwnd,
+    _In_opt_ IUnknown *punkSite,
+    _In_ IContextMenu *pCM,
+    _In_ DWORD fMask,
+    _In_reads_opt_(cVerbs) PCSTR *pVerbs,
+    _In_ UINT cVerbs);
+
+HRESULT WINAPI
+MayQSForward(
+    _In_ IUnknown *lpUnknown,
+    _In_ INT nUnknown,
+    _In_opt_ REFGUID riidCmdGrp,
+    _In_ ULONG cCmds,
+    _Inout_ OLECMD *prgCmds,
+    _Inout_ OLECMDTEXT *pCmdText);
+
+HRESULT WINAPI
+MayExecForward(
+    _In_ IUnknown *lpUnknown,
+    _In_ INT nUnknown,
+    _In_opt_ REFGUID pguidCmdGroup,
+    _In_ DWORD nCmdID,
+    _In_ DWORD nCmdexecopt,
+    _In_ VARIANT *pvaIn,
+    _Inout_ VARIANT *pvaOut);
+
+HRESULT WINAPI IsQSForward(_In_opt_ REFGUID pguidCmdGroup, _In_ ULONG cCmds, _In_ OLECMD *prgCmds);
 BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
 HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
 VOID WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id);
+EXTERN_C BOOL WINAPI SHBoolSystemParametersInfo(UINT uiAction, PVOID pvParam);
 
 HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU, BOOL bCreate, PHKEY phKey);
+
+HRESULT WINAPI
+QuerySourceCreateFromKey(
+    _In_ HKEY hKey,
+    _In_opt_ PCWSTR lpSubKey,
+    _In_ BOOL bCreate,
+    _In_ REFIID riid,
+    _Outptr_ PVOID *ppv);
 
 BOOL WINAPI SHAddDataBlock(LPDBLIST* lppList, const DATABLOCK_HEADER *lpNewItem);
 BOOL WINAPI SHRemoveDataBlock(LPDBLIST* lppList, DWORD dwSignature);
@@ -115,6 +167,9 @@ DATABLOCK_HEADER* WINAPI SHFindDataBlock(LPDBLIST lpList, DWORD dwSignature);
 HRESULT WINAPI SHWriteDataBlockList(IStream* lpStream, LPDBLIST lpList);
 HRESULT WINAPI SHReadDataBlockList(IStream* lpStream, LPDBLIST* lppList);
 VOID WINAPI SHFreeDataBlockList(LPDBLIST lpList);
+
+HRESULT WINAPI IStream_ReadPidl(_In_ IStream *pstm, _Out_ LPITEMIDLIST *ppidlOut);
+HRESULT WINAPI IStream_WritePidl(_In_ IStream *pstm, _In_ LPCITEMIDLIST pidlWrite);
 
 LONG
 WINAPI
@@ -151,7 +206,6 @@ BOOL WINAPI SHExpandEnvironmentStringsForUserW(HANDLE, LPCWSTR, LPWSTR, DWORD);
 
 
 BOOL WINAPI SHIsEmptyStream(IStream*);
-HRESULT WINAPI IStream_Size(IStream *lpStream, ULARGE_INTEGER* lpulSize);
 HRESULT WINAPI SHInvokeDefaultCommand(HWND,IShellFolder*,LPCITEMIDLIST);
 HRESULT WINAPI SHPropertyBag_ReadType(IPropertyBag *ppb, LPCWSTR pszPropName, VARIANTARG *pvarg, VARTYPE vt);
 HRESULT WINAPI SHPropertyBag_ReadBOOL(IPropertyBag *ppb, LPCWSTR pszPropName, BOOL *pbValue);
@@ -349,11 +403,64 @@ PathFileExistsDefExtAndAttributesW(
     _In_ DWORD dwWhich,
     _Out_opt_ LPDWORD pdwFileAttributes);
 
+BOOL WINAPI
+PathUnExpandEnvStringsForUserA(
+    _In_ HANDLE hUserToken,
+    _In_ PCSTR pszPath,
+    _Out_writes_(cchBuff) PSTR pszBuff,
+    _In_ INT cchBuff);
+
+BOOL WINAPI
+PathUnExpandEnvStringsForUserW(
+    _In_ HANDLE hUserToken,
+    _In_ PCWSTR pwszPath,
+    _Out_writes_(cchBuff) PWSTR pszBuff,
+    _In_ INT cchBuff);
+
 BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
-VOID WINAPI FixSlashesAndColonW(LPWSTR);
+VOID WINAPI FixSlashesAndColonA(_Inout_ LPSTR lpstr);
+VOID WINAPI FixSlashesAndColonW(_Inout_ LPWSTR lpwstr);
 BOOL WINAPI PathIsValidCharA(char c, DWORD dwClass);
 BOOL WINAPI PathIsValidCharW(WCHAR c, DWORD dwClass);
 BOOL WINAPI SHGetPathFromIDListWrapW(LPCITEMIDLIST pidl, LPWSTR pszPath);
+#ifndef _SHLWAPI_
+DECLSPEC_IMPORT BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR lpszPath, DWORD* dwAttr);
+DECLSPEC_IMPORT BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR lpszPath, DWORD* dwAttr);
+#else
+BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR lpszPath, DWORD* dwAttr);
+BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR lpszPath, DWORD* dwAttr);
+#endif
+
+VOID WINAPI PrettifyFileDescriptionW(_Inout_ PWSTR pszTarget, _In_opt_ PCWSTR pszCutList);
+
+BOOL WINAPI SHGetFileDescriptionA(
+    _In_ PCSTR pszPath,
+    _In_opt_ PCSTR pszVerKey,
+    _In_opt_ PCSTR pszDisplayName,
+    _Out_opt_ PSTR pszOut,
+    _Inout_ PUINT pcchOut);
+
+BOOL WINAPI SHGetFileDescriptionW(
+    _In_ PCWSTR pszPath,
+    _In_opt_ PCWSTR pszVerKey,
+    _In_opt_ PCWSTR pszDisplayName,
+    _Out_opt_ PWSTR pszOut,
+    _Inout_ PUINT pcchOut);
+
+LPSTR  WINAPI StrCpyNXA(LPSTR lpszDest, LPCSTR lpszSrc, int iLen);
+LPWSTR WINAPI StrCpyNXW(LPWSTR lpszDest, LPCWSTR lpszSrc, int iLen);
+
+#ifdef UNICODE
+    #define PathIsValidChar PathIsValidCharW
+    #define StrCpyNX StrCpyNXW
+    #define FixSlashesAndColon FixSlashesAndColonW
+    #define SHGetFileDescription SHGetFileDescriptionW
+#else
+    #define PathIsValidChar PathIsValidCharA
+    #define StrCpyNX StrCpyNXA
+    #define FixSlashesAndColon FixSlashesAndColonA
+    #define SHGetFileDescription SHGetFileDescriptionA
+#endif
 
 BOOL WINAPI
 IContextMenu_Invoke(
@@ -362,45 +469,204 @@ IContextMenu_Invoke(
     _In_ LPCSTR lpVerb,
     _In_ UINT uFlags);
 
+HRESULT WINAPI RunRegCommand(_In_opt_ HWND hWnd, _In_ HKEY hKey, _In_opt_ PCWSTR pszSubKey);
+HRESULT WINAPI RunIndirectRegCommand(_In_opt_ HWND hWnd, _In_ HKEY hKey, _In_opt_ PCWSTR pszSubKey, _In_ PCWSTR pszVerb);
+HRESULT WINAPI SHRunIndirectRegClientCommand(_In_ HWND hWnd, _In_ PCWSTR pszClientType);
+
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
-/*
- * HACK! These functions are conflicting with <shobjidl.h> inline functions...
- * We provide a macro option SHLWAPI_ISHELLFOLDER_HELPERS for using these functions.
+/* Flags for SHGetAppCompatFlags */
+#define SHACF_CONTEXTMENU           0x00000001
+#define SHACF_FLUSHNOWAITALWAYS     SHACF_CONTEXTMENU
+#define SHACF_DOCOBJECT             0x00000002
+#define SHACF_CORELINTERNETENUM     0x00000004
+#define SHACF_OLDCREATEVIEWWND      SHACF_CORELINTERNETENUM
+#define SHACF_WIN95DEFVIEW          SHACF_CORELINTERNETENUM
+#define SHACF_MYCOMPUTERFIRST       0x00000008
+#define SHACF_OLDREGITEMGDN         0x00000010
+// 0x00000020
+#define SHACF_LOADCOLUMNHANDLER     0x00000040
+#define SHACF_ANSI                  0x00000080
+#define SHACF_UNKNOWN1              0x00000100
+#define SHACF_WIN95SHLEXEC          0x00000200
+#define SHACF_STAROFFICE5PRINTER    0x00000400
+#define SHACF_NOVALIDATEFSIDS       0x00000800
+#define SHACF_FILEOPENNEEDSEXT      0x00001000
+#define SHACF_WIN95BINDTOOBJECT     0x00002000
+#define SHACF_IGNOREENUMRESET       0x00004000
+// 0x00008000
+#define SHACF_ANSIDISPLAYNAMES      0x00010000
+#define SHACF_FILEOPENBOGUSCTRLID   0x00020000
+#define SHACF_FORCELFNIDLIST        0x00040000
+// 0x00080000
+#define SHACF_UNKNOWN2              0x01000000
+#define SHACF_UNKNOWN3              0x80000000
+
+DWORD WINAPI SHGetAppCompatFlags(_In_ DWORD dwMask);
+
+HRESULT WINAPI
+IUnknown_QueryServiceForWebBrowserApp(
+    _In_ IUnknown* lpUnknown,
+    _In_ REFGUID riid,
+    _Out_ LPVOID *lppOut);
+
+typedef INT_PTR (CALLBACK *SHDIALOGPROC)(
+    PVOID  pThis,
+    HWND   hWnd,
+    UINT   uMsg,
+    WPARAM wParam,
+    LPARAM lParam);
+
+INT_PTR WINAPI
+SHDialogBox(
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCSTR lpTemplateName,
+    _In_opt_ HWND hWndParent,
+    _In_opt_ SHDIALOGPROC fn,
+    _In_opt_ PVOID pThis);
+
+HRESULT WINAPI MapWin32ErrorToSTG(_In_ HRESULT hr);
+
+PSTR WINAPI CharLowerNoDBCSA(_Inout_ PSTR lpString);
+PWSTR WINAPI CharLowerNoDBCSW(_Inout_ PWSTR lpString);
+PSTR WINAPI CharUpperNoDBCSA(_Inout_ PSTR lpString);
+PWSTR WINAPI CharUpperNoDBCSW(_Inout_ PWSTR lpString);
+
+HRESULT WINAPI
+SHWindowsPolicyGetValue(
+    _In_ REFGUID rpolid,
+    _Out_opt_ PVOID pvValue,
+    _Out_opt_ PDWORD pcbValue);
+
+#define E_DATATYPE_MISMATCH HRESULT_FROM_WIN32(ERROR_DATATYPE_MISMATCH)
+
+static inline BOOL
+PathIsAbsolute(_In_ PCWSTR pszPath)
+{
+    return (PathGetDriveNumberW(pszPath) != -1 && pszPath[2] == L'\\') || PathIsUNCW(pszPath);
+}
+
+static inline HRESULT
+SHCoAlloc(_In_ SIZE_T cb, _Outptr_ PVOID* ppData)
+{
+    *ppData = CoTaskMemAlloc(cb);
+    return *ppData ? S_OK : E_OUTOFMEMORY;
+}
+
+static inline DWORD
+SHWindowsPolicyEx(_In_ REFGUID rpolid, _In_ DWORD dwDefaultValue)
+{
+    DWORD dwData, cbData = sizeof(dwData);
+    HRESULT hr = SHWindowsPolicyGetValue(rpolid, &dwData, &cbData);
+    return (SUCCEEDED(hr) ? dwData : dwDefaultValue);
+}
+
+/*****************************************************************************
+ * ZoneCheck*
  */
-#ifdef SHLWAPI_ISHELLFOLDER_HELPERS
-HRESULT WINAPI
-IShellFolder_GetDisplayNameOf(
-    _In_ IShellFolder *psf,
-    _In_ LPCITEMIDLIST pidl,
-    _In_ SHGDNF uFlags,
-    _Out_ LPSTRRET lpName,
-    _In_ DWORD dwRetryFlags);
-
-/* Flags for IShellFolder_GetDisplayNameOf */
-#define SFGDNO_RETRYWITHFORPARSING  0x00000001
-#define SFGDNO_RETRYALWAYS          0x80000000
 
 HRESULT WINAPI
-IShellFolder_ParseDisplayName(
-    _In_ IShellFolder *psf,
-    _In_ HWND hwndOwner,
-    _In_ LPBC pbcReserved,
-    _In_ LPOLESTR lpszDisplayName,
-    _Out_ ULONG *pchEaten,
-    _Out_ PIDLIST_RELATIVE *ppidl,
-    _Out_ ULONG *pdwAttributes);
+ZoneCheckUrlExCacheA(
+    _In_                             PCSTR                     pszUrl,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE                     pbPolicy,
+    _In_                             DWORD                     cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE                     pbContext,
+    _In_                             DWORD                     cbContext,
+    _In_                             DWORD                     dwAction,
+    _In_                             DWORD                     dwFlags,
+    _In_opt_                         IInternetSecurityMgrSite *pSecuritySite,
+    _In_opt_                         IInternetSecurityManager *pISM);
 
-EXTERN_C HRESULT WINAPI
-IShellFolder_CompareIDs(
-    _In_ IShellFolder *psf,
-    _In_ LPARAM lParam,
-    _In_ PCUIDLIST_RELATIVE pidl1,
-    _In_ PCUIDLIST_RELATIVE pidl2);
-#endif /* SHLWAPI_ISHELLFOLDER_HELPERS */
+HRESULT WINAPI
+ZoneCheckUrlExCacheW(
+    _In_                             PCWSTR                    pszUrl,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE                     pbPolicy,
+    _In_                             DWORD                     cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE                     pbContext,
+    _In_                             DWORD                     cbContext,
+    _In_                             DWORD                     dwAction,
+    _In_                             DWORD                     dwFlags,
+    _In_opt_                         IInternetSecurityMgrSite *pSecuritySite,
+    _In_opt_                         IInternetSecurityManager *pISM);
+
+HRESULT WINAPI
+ZoneCheckPathA(
+    _In_     PCSTR pszPath,
+    _In_     DWORD dwAction,
+    _In_     DWORD dwFlags,
+    _In_opt_ IInternetSecurityMgrSite *pSecuritySite);
+
+HRESULT WINAPI
+ZoneCheckPathW(
+    _In_     PCWSTR pszPath,
+    _In_     DWORD dwAction,
+    _In_     DWORD dwFlags,
+    _In_opt_ IInternetSecurityMgrSite *pSecuritySite);
+
+HRESULT WINAPI
+ZoneCheckUrlA(
+    _In_     PCSTR   pszUrl,
+    _In_     DWORD   dwAction,
+    _In_     DWORD   dwFlags,
+    _In_opt_ IInternetSecurityMgrSite *pSecuritySite);
+
+HRESULT WINAPI
+ZoneCheckUrlW(
+    _In_     PCWSTR  pszUrl,
+    _In_     DWORD   dwAction,
+    _In_     DWORD   dwFlags,
+    _In_opt_ IInternetSecurityMgrSite *pSecuritySite);
+
+HRESULT WINAPI
+ZoneCheckUrlExA(
+    _In_                             PCSTR   pszUrl,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE   pbPolicy,
+    _In_                             DWORD   cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE   pbContext,
+    _In_                             DWORD   cbContext,
+    _In_                             DWORD   dwAction,
+    _In_                             DWORD   dwFlags,
+    _In_opt_                         IInternetSecurityMgrSite *pSecuritySite);
+
+HRESULT WINAPI
+ZoneCheckUrlExW(
+    _In_                             PCWSTR  pszUrl,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE   pbPolicy,
+    _In_                             DWORD   cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE   pbContext,
+    _In_                             DWORD   cbContext,
+    _In_                             DWORD   dwAction,
+    _In_                             DWORD   dwFlags,
+    _In_opt_                         IInternetSecurityMgrSite *pSecuritySite);
+
+HRESULT WINAPI
+ZoneCheckHost(
+    _In_   IInternetSecurityManager  *pISM,
+    _In_   PCWSTR                     pszUrl,
+    _In_   DWORD                      dwAction);
+
+HRESULT WINAPI
+ZoneCheckHostEx(
+    _In_                             IInternetSecurityManager *pISM,
+    _Out_writes_bytes_opt_(cbPolicy) PBYTE                     pbPolicy,
+    _In_                             DWORD                     cbPolicy,
+    _In_reads_bytes_opt_(cbContext)  PBYTE                     pbContext,
+    _In_                             DWORD                     cbContext,
+    _In_                             PCWSTR                    pszUrl,
+    _In_                             DWORD                     dwAction);
+
+#ifdef UNICODE
+    #define ZoneCheckUrlExCache ZoneCheckUrlExCacheW
+    #define ZoneCheckPath ZoneCheckPathW
+    #define ZoneCheckUrl ZoneCheckUrlW
+    #define ZoneCheckUrlEx ZoneCheckUrlExW
+#else
+    #define ZoneCheckUrlExCache ZoneCheckUrlExCacheA
+    #define ZoneCheckPath ZoneCheckPathA
+    #define ZoneCheckUrl ZoneCheckUrlA
+    #define ZoneCheckUrlEx ZoneCheckUrlExA
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
-#endif /* defined(__cplusplus) */
-
-#endif /* __SHLWAPI_UNDOC_H */
+#endif

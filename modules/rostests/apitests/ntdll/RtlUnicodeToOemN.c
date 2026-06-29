@@ -110,7 +110,7 @@ static const struct
 
 START_TEST(RtlUnicodeToOemN)
 {
-    ULONG Length;
+    SIZE_T Length;
     LPSTR StrOem;
     ULONG ResultSize;
     NTSTATUS Status;
@@ -216,7 +216,7 @@ START_TEST(RtlUnicodeToOemN)
                                       Length,
                                       &ResultSize,
                                       TestData[i].Test[j].StrW,
-                                      wcslen(TestData[i].Test[j].StrW) * sizeof(WCHAR));
+                                      (ULONG)wcslen(TestData[i].Test[j].StrW) * sizeof(WCHAR));
 
             ok_ntstatus(Status, TestData[i].Test[j].Status);
             ok_long(ResultSize, TestData[i].Test[j].ReturnedSize);

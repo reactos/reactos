@@ -64,7 +64,7 @@ LPWSTR WhoamiGetUser(EXTENDED_NAME_FORMAT NameFormat)
 
     if (GetUserNameExW(NameFormat, UsrBuf, &UsrSiz))
     {
-        CharLowerW(UsrBuf);
+        LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_LOWERCASE, UsrBuf, UsrSiz, UsrBuf, MAX_PATH);
         return UsrBuf;
     }
 
@@ -97,7 +97,7 @@ VOID* WhoamiGetTokenInfo(TOKEN_INFORMATION_CLASS TokenType)
             pTokenInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
             if (pTokenInfo == NULL)
             {
-                wprintf(L"ERROR: not enough memory to allocate the token structure.\n");
+                ConPuts(StdErr, L"ERROR: not enough memory to allocate the token structure.\n");
                 exit(1);
             }
         }
@@ -107,7 +107,7 @@ VOID* WhoamiGetTokenInfo(TOKEN_INFORMATION_CLASS TokenType)
                                  dwLength,
                                  &dwLength))
         {
-            wprintf(L"ERROR 0x%x: could not get token information.\n", GetLastError());
+            ConPrintf(StdErr, L"ERROR 0x%x: could not get token information.\n", GetLastError());
             WhoamiFree(pTokenInfo);
             exit(1);
         }
@@ -118,25 +118,28 @@ VOID* WhoamiGetTokenInfo(TOKEN_INFORMATION_CLASS TokenType)
     return pTokenInfo;
 }
 
-LPWSTR WhoamiLoadRcString(INT ResId)
+LPWSTR WhoamiLoadRcString(UINT ResId)
 {
-    #define RC_STRING_MAX_SIZE 850
+#define RC_STRING_MAX_SIZE 850
     static WCHAR TmpBuffer[RC_STRING_MAX_SIZE];
 
-    LoadStringW(GetModuleHandleW(NULL), ResId, TmpBuffer, RC_STRING_MAX_SIZE);
-
+    LoadStringW(NULL, ResId, TmpBuffer, _countof(TmpBuffer));
     return TmpBuffer;
 }
 
-void WhoamiPrintHeader(int HeaderId)
+void WhoamiPrintHeader(UINT HeaderId)
 {
-    PWSTR Header = WhoamiLoadRcString(HeaderId);
-    DWORD Length = wcslen(Header);
+    PCWSTR Header;
+    DWORD Length;
 
     if (NoHeader || PrintFormat == csv)
         return;
 
-    wprintf(L"\n%s\n", Header);
+    Length = (DWORD)LoadStringW(NULL, HeaderId, (LPWSTR)&Header, 0);
+    if (!Length || !Header)
+        return;
+
+    wprintf(L"\n%.*s\n", Length, Header);
 
     while (Length--)
         wprintf(L"-");
@@ -151,18 +154,15 @@ typedef struct
     LPWSTR Content[1];
 } WhoamiTable;
 
-/* create and prepare a new table for printing */
+/* Create and prepare a new table for printing */
 WhoamiTable *WhoamiAllocTable(UINT Rows, UINT Cols)
 {
     WhoamiTable *pTable = HeapAlloc(GetProcessHeap(),
                                     HEAP_ZERO_MEMORY,
                                     sizeof(WhoamiTable) + sizeof(LPWSTR) * Rows * Cols);
-
-    // wprintf(L"DEBUG: Allocating %dx%d elem table for printing.\n\n", Rows, Cols);
-
     if (!pTable)
     {
-        wprintf(L"ERROR: Not enough memory for displaying the table.\n");
+        ConPuts(StdErr, L"ERROR: Not enough memory for displaying the table.\n");
         exit(1);
     }
 
@@ -172,74 +172,91 @@ WhoamiTable *WhoamiAllocTable(UINT Rows, UINT Cols)
     return pTable;
 }
 
-/* allocate and fill a new entry in the table */
+/* Allocate and fill a new entry in the table */
 void WhoamiSetTable(WhoamiTable *pTable, WCHAR *Entry, UINT Row, UINT Col)
 {
     LPWSTR Target = HeapAlloc(GetProcessHeap(),
                               HEAP_ZERO_MEMORY,
-                              1 + wcslen(Entry) * sizeof(Entry[0]));
-
-    // wprintf(L"DEBUG: Setting table value '%lp' '%ls' for %lu %lu.\n", entry, entry, row, col);
-
+                              (wcslen(Entry) + 1) * sizeof(Entry[0]));
     if (!Target)
+    {
+        ConPuts(StdErr, L"ERROR: Not enough memory for adding a table entry.\n");
         exit(1);
+    }
 
     wcscpy(Target, Entry);
 
     pTable->Content[Row * pTable->Cols + Col] = Target;
 }
 
-/* fill a new entry in the table */
+/* Fill a new entry in the table */
 void WhoamiSetTableDyn(WhoamiTable *pTable, WCHAR *Entry, UINT Row, UINT Col)
 {
     pTable->Content[Row * pTable->Cols + Col] = Entry;
 }
 
-/* print and deallocate the table */
+/* Deallocate the table */
+void WhoamiFreeTable(WhoamiTable *pTable)
+{
+    UINT i, j;
+
+    for (i = 0; i < pTable->Rows; i++)
+    {
+        for (j = 0; j < pTable->Cols; j++)
+        {
+            if (!pTable->Content[i * pTable->Cols + j])
+                continue;
+            WhoamiFree(pTable->Content[i * pTable->Cols + j]);
+        }
+    }
+
+    WhoamiFree(pTable);
+}
+
+/* Print the table */
 void WhoamiPrintTable(WhoamiTable *pTable)
 {
     UINT i, j;
     UINT CurRow, CurCol;
-    UINT *ColLength;
-
+    UINT SingleColLen = 0;
+    PUINT ColLength = &SingleColLen;
 
     if (!pTable)
     {
-        wprintf(L"ERROR: The table passed for display is empty.\n");
+        ConPuts(StdErr, L"ERROR: The table passed for display is empty.\n");
         exit(1);
     }
 
-    /* if we are going to print a *list* or *table*; take note of the total
-       column size, as we will need it later on when printing them in a tabular
-       fashion, according to their windows counterparts */
-
-    if (PrintFormat != csv)
+    /*
+     * If we are going to print a *list* or *table*; take note of the total
+     * column size, as we will need it later on when printing them in a tabular
+     * fashion, similarly to their Windows counterparts.
+     */
+    if (PrintFormat == list)
+    {
+        for (j = 0; j < pTable->Cols; j++)
+        {
+            if (pTable->Content[j])
+            {
+                UINT ThisLength = (UINT)wcslen(pTable->Content[j]);
+                ColLength[0] = max(ThisLength, ColLength[0]);
+            }
+        }
+    }
+    else if (PrintFormat != csv) // So, == table
     {
         ColLength = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(UINT) * pTable->Cols);
 
-        if (PrintFormat == list)
+        for (j = 0; j < pTable->Cols; j++)
         {
-            for (j = 0; j < pTable->Cols; j++)
-                if (pTable->Content[j])
+            for (i = 0; i < pTable->Rows; i++)
+            {
+                if (pTable->Content[i * pTable->Cols + j])
                 {
-                    UINT ThisLength = wcslen(pTable->Content[j]);
-
-                    /* now that we're here, seize the opportunity and add those pesky ":" */
-                    pTable->Content[j][ThisLength++] = L':';
-                    pTable->Content[j][ThisLength] = UNICODE_NULL;
-
-                    ColLength[0] = max(ThisLength, ColLength[0]);
+                    UINT ThisLength = (UINT)wcslen(pTable->Content[i * pTable->Cols + j]);
+                    ColLength[j] = max(ThisLength, ColLength[j]);
                 }
-        }
-        else
-        {
-            for (j = 0; j < pTable->Cols; j++)
-                for (i = 0; i < pTable->Rows; i++)
-                    if (pTable->Content[i * pTable->Cols + j])
-                    {
-                        UINT ThisLength = wcslen(pTable->Content[i * pTable->Cols + j]);
-                        ColLength[j] = max(ThisLength, ColLength[j]);
-                    }
+            }
         }
     }
 
@@ -252,7 +269,7 @@ void WhoamiPrintTable(WhoamiTable *pTable)
                 if (!pTable->Content[i * pTable->Cols])
                     continue;
 
-                /* if the user especified /nh then skip the column labels */
+                /* If the user specified /nh then skip the column labels */
                 if (NoHeader && i == 0)
                     continue;
 
@@ -267,19 +284,17 @@ void WhoamiPrintTable(WhoamiTable *pTable)
                 }
                 wprintf(L"\n");
             }
-
             break;
-
         }
 
         case list:
         {
             UINT FinalRow = 0;
 
-            /* fixme: we need to do two passes to find out which entry is the last one shown, or not null this is not exactly optimal */
+            // FIXME: we need to do two passes to find out which entry is the last one shown, or not null this is not exactly optimal
             for (CurRow = 1; CurRow < pTable->Rows; CurRow++)
             {
-                /* if the first member of this row isn't available, then forget it */
+                /* If the first member of this row isn't available, skip it */
                 if (!pTable->Content[CurRow * pTable->Cols])
                     continue;
 
@@ -288,23 +303,33 @@ void WhoamiPrintTable(WhoamiTable *pTable)
 
             for (CurRow = 1; CurRow < pTable->Rows; CurRow++)
             {
-                /* if the first member of this row isn't available, then forget it */
+                /* If the first member of this row isn't available, skip it */
                 if (!pTable->Content[CurRow * pTable->Cols])
                     continue;
 
-                /* if the user especified /nh then skip the column labels */
+                /* If the user specified /nh then skip the column labels */
                 if (NoHeader && i == 0)
                     continue;
 
                 for (CurCol = 0; CurCol < pTable->Cols; CurCol++)
                 {
-                    wprintf(L"%-*s %s\n",
-                            ColLength[0],
+#if 0 // Looks better with the ':' aligned, but it's not what Windows does.
+                    /* ItemName<indent>: ItemValue */
+                    wprintf(L"%-*s: %s\n",
+                            ColLength[0] + 1,
                             pTable->Content[CurCol],
                             pTable->Content[CurRow * pTable->Cols + CurCol]);
+#else // The ':' immediately follows the ItemName.
+                    /* ItemName:<indent> ItemValue */
+                    UINT nIndent = ColLength[0] - (UINT)wcslen(pTable->Content[CurCol]);
+                    wprintf(L"%s:%*s %s\n",
+                            pTable->Content[CurCol],
+                            nIndent, L"",
+                            pTable->Content[CurRow * pTable->Cols + CurCol]);
+#endif
                 }
 
-                /* don't add two carriage returns at the very end */
+                /* Don't add two carriage returns at the very end */
                 if (CurRow != FinalRow)
                     wprintf(L"\n");
             }
@@ -312,17 +337,16 @@ void WhoamiPrintTable(WhoamiTable *pTable)
             break;
         }
 
-
         case table:
         default:
         {
             for (i = 0; i < pTable->Rows; i++)
             {
-                /* if the first member of this row isn't available, then forget it */
+                /* If the first member of this row isn't available, skip it */
                 if (!pTable->Content[i * pTable->Cols])
                     continue;
 
-                /* if the user especified /nh then skip the column labels too */
+                /* If the user specified /nh then skip the column labels too */
                 if (NoHeader && i == 0)
                     continue;
 
@@ -335,17 +359,17 @@ void WhoamiPrintTable(WhoamiTable *pTable)
                 }
                 wprintf(L"\n");
 
-                /* add the cute underline thingie for the table header */
+                /* Add the underline separators for the table headers */
                 if (i == 0)
                 {
                     for (j = 0; j < pTable->Cols; j++)
                     {
-                        DWORD Length = ColLength[j];
+                        UINT Length = ColLength[j];
 
                         while (Length--)
                             wprintf(L"=");
 
-                        /* a spacing between all the columns except for the last one */
+                        /* A spacing between all the columns except for the last one */
                         if (pTable->Cols != (i + 1))
                             wprintf(L" ");
                     }
@@ -353,7 +377,6 @@ void WhoamiPrintTable(WhoamiTable *pTable)
                     wprintf(L"\n");
                 }
             }
-
         }
     }
 
@@ -362,19 +385,13 @@ void WhoamiPrintTable(WhoamiTable *pTable)
     // if (!final_entry)
         wprintf(L"\n");
 
-    for (i = 0; i < pTable->Rows; i++)
-        for (j = 0; j < pTable->Cols; j++)
-            WhoamiFree(pTable->Content[i * pTable->Cols + j]);
-
-    WhoamiFree(pTable);
-
-    if (PrintFormat != csv)
+    if (ColLength != &SingleColLen)
         HeapFree(GetProcessHeap(), 0, ColLength);
 }
 
 int WhoamiLogonId(void)
 {
-    PTOKEN_GROUPS pGroupInfo = (PTOKEN_GROUPS) WhoamiGetTokenInfo(TokenGroups);
+    PTOKEN_GROUPS pGroupInfo = (PTOKEN_GROUPS)WhoamiGetTokenInfo(TokenGroups);
     DWORD dwIndex = 0;
     LPWSTR pSidStr = 0;
     PSID pSid = 0;
@@ -394,13 +411,13 @@ int WhoamiLogonId(void)
     if (pSid == 0)
     {
         WhoamiFree(pGroupInfo);
-        wprintf(L"ERROR: Couldn't find the logon SID.\n");
+        ConPuts(StdErr, L"ERROR: Couldn't find the logon SID.\n");
         return 1;
     }
     if (!ConvertSidToStringSidW(pSid, &pSidStr))
     {
         WhoamiFree(pGroupInfo);
-        wprintf(L"ERROR: Couldn't convert the logon SID to a string.\n");
+        ConPuts(StdErr, L"ERROR: Couldn't convert the logon SID to a string.\n");
         return 1;
     }
     else
@@ -418,7 +435,7 @@ int WhoamiLogonId(void)
 
 int WhoamiUser(void)
 {
-    PTOKEN_USER pUserInfo = (PTOKEN_USER) WhoamiGetTokenInfo(TokenUser);
+    PTOKEN_USER pUserInfo = (PTOKEN_USER)WhoamiGetTokenInfo(TokenUser);
     LPWSTR pUserStr = NULL;
     LPWSTR pSidStr = NULL;
     WhoamiTable *UserTable = NULL;
@@ -452,6 +469,7 @@ int WhoamiUser(void)
     WhoamiPrintTable(UserTable);
 
     /* cleanup our allocations */
+    WhoamiFreeTable(UserTable);
     LocalFree(pSidStr);
     WhoamiFree(pUserInfo);
     WhoamiFree(pUserStr);
@@ -466,9 +484,7 @@ int WhoamiGroups(void)
 
     static WCHAR szGroupName[255] = {0};
     static WCHAR szDomainName[255] = {0};
-
-    DWORD cchGroupName  = _countof(szGroupName);
-    DWORD cchDomainName = _countof(szGroupName);
+    DWORD cchGroupName, cchDomainName;
 
     SID_NAME_USE Use = 0;
     BYTE SidNameUseStr[12] =
@@ -509,6 +525,11 @@ int WhoamiGroups(void)
 
     for (dwIndex = 0; dwIndex < pGroupInfo->GroupCount; dwIndex++)
     {
+        /* Reset the buffers so that we can reuse them */
+        *szGroupName = *szDomainName = UNICODE_NULL;
+        cchGroupName  = _countof(szGroupName);
+        cchDomainName = _countof(szDomainName);
+
         LookupAccountSidW(NULL,
                           pGroupInfo->Groups[dwIndex].Sid,
                           (LPWSTR)&szGroupName,
@@ -521,9 +542,9 @@ int WhoamiGroups(void)
         if ((Use == SidTypeWellKnownGroup || Use == SidTypeAlias ||
             Use == SidTypeLabel) && !(pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_LOGON_ID))
         {
-                wchar_t tmpBuffer[666];
+            WCHAR tmpBuffer[666];
 
-            /* looks like windows treats 0x60 as 0x7 for some reason, let's just nod and call it a day:
+            /* looks like Windows treats 0x60 as 0x7 for some reason, let's just nod and call it a day:
                0x60 is SE_GROUP_INTEGRITY | SE_GROUP_INTEGRITY_ENABLED
                0x07 is SE_GROUP_MANDATORY | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_ENABLED */
 
@@ -531,7 +552,7 @@ int WhoamiGroups(void)
                 pGroupInfo->Groups[dwIndex].Attributes = 0x07;
 
             /* 1- format it as DOMAIN\GROUP if the domain exists, or just GROUP if not */
-            _snwprintf((LPWSTR)&tmpBuffer,
+            _snwprintf(tmpBuffer,
                        _countof(tmpBuffer),
                        L"%s%s%s",
                        szDomainName,
@@ -569,26 +590,20 @@ int WhoamiGroups(void)
 
             PrintingRow++;
         }
-
-        /* reset the buffers so that we can reuse them */
-        ZeroMemory(szGroupName, sizeof(szGroupName));
-        ZeroMemory(szDomainName, sizeof(szDomainName));
-
-        cchGroupName = 255;
-        cchDomainName = 255;
     }
 
     WhoamiPrintTable(GroupTable);
 
     /* cleanup our allocations */
-    WhoamiFree((LPVOID)pGroupInfo);
+    WhoamiFreeTable(GroupTable);
+    WhoamiFree(pGroupInfo);
 
     return 0;
 }
 
 int WhoamiPriv(void)
 {
-    PTOKEN_PRIVILEGES pPrivInfo = (PTOKEN_PRIVILEGES) WhoamiGetTokenInfo(TokenPrivileges);
+    PTOKEN_PRIVILEGES pPrivInfo = (PTOKEN_PRIVILEGES)WhoamiGetTokenInfo(TokenPrivileges);
     DWORD dwResult = 0, dwIndex = 0;
     WhoamiTable *PrivTable = NULL;
 
@@ -616,7 +631,7 @@ int WhoamiPriv(void)
                                    NULL,
                                    &PrivNameSize);
 
-        PrivName = HeapAlloc(GetProcessHeap(), 0, ++PrivNameSize*sizeof(WCHAR));
+        PrivName = HeapAlloc(GetProcessHeap(), 0, ++PrivNameSize * sizeof(WCHAR));
 
         LookupPrivilegeNameW(NULL,
                              &pPrivInfo->Privileges[dwIndex].Luid,
@@ -657,6 +672,7 @@ int WhoamiPriv(void)
     WhoamiPrintTable(PrivTable);
 
     /* cleanup our allocations */
+    WhoamiFreeTable(PrivTable);
     WhoamiFree(pPrivInfo);
 
     return 0;
@@ -664,16 +680,15 @@ int WhoamiPriv(void)
 
 int wmain(int argc, WCHAR* argv[])
 {
-    #define WAM_USER   1<<0
-    #define WAM_GROUPS 1<<1
-    #define WAM_PRIV   1<<2
+#define WAM_USER   (1 << 0)
+#define WAM_GROUPS (1 << 1)
+#define WAM_PRIV   (1 << 2)
 
     INT i;
     BYTE WamBit = 0;
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
-
 
     /* * * * * * * * * * * * * * * *
      * A: no parameters whatsoever */
@@ -682,7 +697,6 @@ int wmain(int argc, WCHAR* argv[])
     {
         /* if there's no arguments just choose the simple path and display the user's identity in lowercase */
         LPWSTR UserBuffer = WhoamiGetUser(NameSamCompatible);
-
         if (UserBuffer)
         {
             wprintf(L"%s\n", UserBuffer);
@@ -705,7 +719,6 @@ int wmain(int argc, WCHAR* argv[])
             if (NoHeader == FALSE)
             {
                 NoHeader = TRUE;
-                // wprintf(L"Headers disabled!\n");
                 BlankArgument(i, argv);
             }
         }
@@ -717,21 +730,17 @@ int wmain(int argc, WCHAR* argv[])
         {
             if ((i + 1) < argc)
             {
-                // wprintf(L"exists another param after /fo\n");
-
                 PrintFormatArgCount++;
 
                 if (_wcsicmp(argv[i + 1], L"table") == 0 && PrintFormat != table)
                 {
                     PrintFormat = table;
-                    // wprintf(L"Changed to table format\n");
                     BlankArgument(i, argv);
                     BlankArgument(i + 1, argv);
                 }
                 else if (_wcsicmp(argv[i + 1], L"list") == 0 && PrintFormat != list)
                 {
                     PrintFormat = list;
-                    // wprintf(L"Changed to list format\n");
                     BlankArgument(i, argv);
                     BlankArgument(i + 1, argv);
 
@@ -739,20 +748,18 @@ int wmain(int argc, WCHAR* argv[])
                        for some stupid reason */
                     if (PrintFormat == list && NoHeader != FALSE)
                     {
-                        wprintf(WhoamiLoadRcString(IDS_ERROR_NH_LIST));
+                        ConResPuts(StdErr, IDS_ERROR_NH_LIST);
                         return 1;
                     }
                 }
                 else if (_wcsicmp(argv[i + 1], L"csv") == 0 && PrintFormat != csv)
                 {
                     PrintFormat = csv;
-                    // wprintf(L"Changed to csv format\n");
                     BlankArgument(i, argv);
                     BlankArgument(i + 1, argv);
                 }
                 /* /nh or /fo after /fo isn't parsed as a value */
                 else if (_wcsicmp(argv[i + 1], L"/nh") == 0 || _wcsicmp(argv[i + 1], L"/fo") == 0
-
                 /* same goes for the other named options, not ideal, but works */
                          || _wcsicmp(argv[i + 1], L"/priv") == 0
                          || _wcsicmp(argv[i + 1], L"/groups") == 0
@@ -764,15 +771,14 @@ int wmain(int argc, WCHAR* argv[])
                 }
                 else
                 {
-                    wprintf(WhoamiLoadRcString(IDS_ERROR_VALUENOTALLOWED), argv[i + 1]);
+                    ConResPrintf(StdErr, IDS_ERROR_VALUENOTALLOWED, argv[i + 1]);
                     return 1;
                 }
             }
             else
             {
-                FoValueExpected:
-
-                wprintf(WhoamiLoadRcString(IDS_ERROR_VALUEXPECTED));
+            FoValueExpected:
+                ConResPuts(StdErr, IDS_ERROR_VALUEXPECTED);
                 return 1;
             }
         }
@@ -780,7 +786,7 @@ int wmain(int argc, WCHAR* argv[])
 
     if (NoHeaderArgCount >= 2)
     {
-        wprintf(WhoamiLoadRcString(IDS_ERROR_1TIMES), L"/nh");
+        ConResPrintf(StdErr, IDS_ERROR_1TIMES, L"/nh");
         return 1;
     }
     /* special case when there's just a /nh as argument; it outputs nothing */
@@ -791,7 +797,7 @@ int wmain(int argc, WCHAR* argv[])
 
     if (PrintFormatArgCount >= 2)
     {
-        wprintf(WhoamiLoadRcString(IDS_ERROR_1TIMES), L"/fo");
+        ConResPrintf(StdErr, IDS_ERROR_1TIMES, L"/fo");
         return 1;
     }
     /* if there's just /fo <format>... call it invalid */
@@ -808,10 +814,9 @@ int wmain(int argc, WCHAR* argv[])
         /* now let's try to parse the triumvirate of simpler, single (1) arguments... plus help */
         if (_wcsicmp(argv[1], L"/?") == 0)
         {
-            wprintf(WhoamiLoadRcString(IDS_HELP));
+            ConResPuts(StdOut, IDS_HELP);
             return 0;
         }
-
         else if (_wcsicmp(argv[1], L"/upn") == 0)
         {
             LPWSTR UserBuffer = WhoamiGetUser(NameUserPrincipal);
@@ -824,11 +829,10 @@ int wmain(int argc, WCHAR* argv[])
             }
             else
             {
-                wprintf(WhoamiLoadRcString(IDS_ERROR_UPN));
+                ConResPuts(StdErr, IDS_ERROR_UPN);
                 return 1;
             }
         }
-
         else if (_wcsicmp(argv[1], L"/fqdn") == 0)
         {
             LPWSTR UserBuffer = WhoamiGetUser(NameFullyQualifiedDN);
@@ -841,11 +845,10 @@ int wmain(int argc, WCHAR* argv[])
             }
             else
             {
-                wprintf(WhoamiLoadRcString(IDS_ERROR_FQDN));
+                ConResPuts(StdErr, IDS_ERROR_FQDN);
                 return 1;
             }
         }
-
         else if (_wcsicmp(argv[1], L"/logonid") == 0)
         {
             return WhoamiLogonId();
@@ -856,7 +859,7 @@ int wmain(int argc, WCHAR* argv[])
      * C: One main parameter with extra tasty modifiers to play with */
 
     /* sometimes is just easier to whitelist for lack of a better method */
-    for (i=1; i<argc; i++)
+    for (i = 1; i < argc; i++)
     {
         if ((_wcsicmp(argv[i], L"/user") != 0) &&
             (_wcsicmp(argv[i], L"/groups") != 0) &&
@@ -864,7 +867,7 @@ int wmain(int argc, WCHAR* argv[])
             (_wcsicmp(argv[i], L"/all") != 0) &&
             (_wcsicmp(argv[i], L"") != 0))
         {
-            wprintf(WhoamiLoadRcString(IDS_ERROR_INVALIDARG), argv[i]);
+            ConResPrintf(StdErr, IDS_ERROR_INVALIDARG, argv[i]);
             return 1;
         }
     }
@@ -873,17 +876,14 @@ int wmain(int argc, WCHAR* argv[])
     {
         WamBit |= WAM_USER;
     }
-
     if (GetArgument(L"/groups", argc, argv))
     {
         WamBit |= WAM_GROUPS;
     }
-
     if (GetArgument(L"/priv", argc, argv))
     {
         WamBit |= WAM_PRIV;
     }
-
     if (GetArgument(L"/all", argc, argv))
     {
         /* one can't have it /all and any of the other options at the same time */
@@ -913,6 +913,6 @@ int wmain(int argc, WCHAR* argv[])
     return 0;
 
 InvalidSyntax:
-    wprintf(WhoamiLoadRcString(IDS_ERROR_INVALIDSYNTAX));
+    ConResPuts(StdErr, IDS_ERROR_INVALIDSYNTAX);
     return 1;
 }

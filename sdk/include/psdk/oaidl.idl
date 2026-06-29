@@ -230,6 +230,17 @@ typedef VARIANT *LPVARIANT;
 typedef VARIANT VARIANTARG;
 typedef VARIANTARG *LPVARIANTARG;
 
+cpp_quote("#ifdef MIDL_PASS")
+typedef const VARIANT *REFVARIANT;
+cpp_quote("#elif !defined(_REFVARIANT_DEFINED)")
+cpp_quote("#define _REFVARIANT_DEFINED")
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("#define REFVARIANT const VARIANT &")
+cpp_quote("#else")
+cpp_quote("#define REFVARIANT const VARIANT *__MIDL_CONST")
+cpp_quote("#endif")
+cpp_quote("#endif")
+
 struct _wireBRECORD {
   ULONG fFlags;
   ULONG clSize;

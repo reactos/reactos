@@ -34,6 +34,8 @@ STRINGTABLE
     IDS_TB_FORMAT "%s TB"
     IDS_PB_FORMAT "%s PB"
     IDS_EB_FORMAT "%s EB"
+    IDS_RESTRICTED "Operacja została anulowana ze względu na ograniczenia nałożone na ten komputer. Skontaktuj się z administratorem systemu."
+    IDS_RESTRICTIONS "Ograniczenia"
 #endif
 }
 

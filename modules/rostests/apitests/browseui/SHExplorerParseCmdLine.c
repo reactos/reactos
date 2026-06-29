@@ -260,8 +260,28 @@ _Out_opt_ PUINT PWriteEnd)
     }
 }
 
+static WCHAR s_szSystem32[MAX_PATH];
+static WCHAR s_szDriveCSelectSystem32[MAX_PATH];
+static WCHAR s_szSlashSelectSystem32[MAX_PATH];
+static WCHAR s_szEqualSlashSelectSystem32[MAX_PATH];
+
 START_TEST(SHExplorerParseCmdLine)
 {
+    // "C:\\Windows\\system32"
+    GetSystemDirectoryW(s_szSystem32, _countof(s_szSystem32));
+
+    // "c:\\=/select=c:\\windows\\system32"
+    StringCchCopyW(s_szDriveCSelectSystem32, _countof(s_szDriveCSelectSystem32), L"c:\\=/select=");
+    StringCchCatW(s_szDriveCSelectSystem32, _countof(s_szDriveCSelectSystem32), s_szSystem32);
+
+    // "/select=c:\\windows\\system32"
+    StringCchCopyW(s_szSlashSelectSystem32, _countof(s_szSlashSelectSystem32), L"/select=");
+    StringCchCatW(s_szSlashSelectSystem32, _countof(s_szSlashSelectSystem32), s_szSystem32);
+
+    // "=/select=c:\\windows\\system32"
+    StringCchCopyW(s_szEqualSlashSelectSystem32, _countof(s_szEqualSlashSelectSystem32), L"=/select=");
+    StringCchCatW(s_szEqualSlashSelectSystem32, _countof(s_szEqualSlashSelectSystem32), s_szSystem32);
+
     static struct
     {
         INT TestLine;
@@ -390,9 +410,9 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"/select=c:\\Program files", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\Program Files" },
         { __LINE__, L"=,/select,c:\\", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\" },
         { __LINE__, L"/select,c:\\,=", TRUE, CSIDL_DRIVES, 0x00000240 },
-        { __LINE__, L"c:\\=/select=c:\\windows\\system32", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\WINDOWS\\system32" },
-        { __LINE__, L"/select=c:\\windows\\system32", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\WINDOWS\\system32" },
-        { __LINE__, L"=/select=c:\\windows\\system32", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\WINDOWS\\system32" },
+        { __LINE__, s_szDriveCSelectSystem32, TRUE, PIDL_IS_PATH, 0x00000240, NULL, s_szSystem32 },
+        { __LINE__, s_szSlashSelectSystem32, TRUE, PIDL_IS_PATH, 0x00000200, NULL, s_szSystem32 },
+        { __LINE__, s_szEqualSlashSelectSystem32, TRUE, PIDL_IS_PATH, 0x00000240, NULL, s_szSystem32 },
         { __LINE__, L"/e,=", TRUE, CSIDL_DRIVES, 0x00000208 },
         { __LINE__, L"/e=", TRUE, CSIDL_DRIVES, 0x00000200 },
         { __LINE__, L"/e=\"", TRUE, CSIDL_DRIVES, 0x00000200 },

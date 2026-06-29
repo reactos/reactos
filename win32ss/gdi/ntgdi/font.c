@@ -1,11 +1,10 @@
 /*
- * PROJECT:         ReactOS win32 kernel mode subsystem
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/gdi/ntgdi/font.c
- * PURPOSE:         Font
- * PROGRAMMERS:     James Tabor <james.tabor@reactos.org>
- *                  Timo Kreuzer <timo.kreuzer@reactos.org>
- *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * PROJECT:     ReactOS win32 kernel mode subsystem
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Font
+ * COPYRIGHT:   Copyright (C) James Tabor <james.tabor@reactos.org>
+ *              Copyright (C) Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright (C) Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 /** Includes ******************************************************************/
@@ -15,12 +14,20 @@
 #define NDEBUG
 #include <debug.h>
 
-HFONT APIENTRY HfontCreate( IN PENUMLOGFONTEXDVW pelfw,IN ULONG cjElfw,IN LFTYPE lft,IN FLONG fl,IN PVOID pvCliData );
+#define MAX_TEXT_BUFFER 0x2710000
+
+HFONT APIENTRY
+HfontCreate(
+    _In_ const ENUMLOGFONTEXDVW *pelfw,
+    _In_ ULONG cjElfw,
+    _In_ LFTYPE lft,
+    _In_ FLONG fl,
+    _In_opt_ PVOID pvCliData);
 
 /** Internal ******************************************************************/
 
 HFONT FASTCALL
-GreCreateFontIndirectW( LOGFONTW *lplf )
+GreCreateFontIndirectW(_In_ const LOGFONTW *lplf)
 {
     if (lplf)
     {
@@ -38,7 +45,7 @@ GreCreateFontIndirectW( LOGFONTW *lplf )
 
         RtlZeroMemory( &Logfont.elfDesignVector, sizeof(DESIGNVECTOR));
 
-        return HfontCreate((PENUMLOGFONTEXDVW)&Logfont, 0, 0, 0, NULL );
+        return HfontCreate(&Logfont, 0, 0, 0, NULL);
     }
     else return NULL;
 }
@@ -46,9 +53,9 @@ GreCreateFontIndirectW( LOGFONTW *lplf )
 DWORD
 FASTCALL
 GreGetKerningPairs(
-    HDC hDC,
-    ULONG NumPairs,
-    LPKERNINGPAIR krnpair)
+    _In_ HDC hDC,
+    _In_ ULONG NumPairs,
+    _Out_writes_(NumPairs) LPKERNINGPAIR krnpair)
 {
   PDC dc;
   PDC_ATTR pdcattr;
@@ -102,7 +109,6 @@ GreGetKerningPairs(
 }
 
 /*
-
   It is recommended that an application use the GetFontLanguageInfo function
   to determine whether the GCP_DIACRITIC, GCP_DBCS, GCP_USEKERNING, GCP_LIGATE,
   GCP_REORDER, GCP_GLYPHSHAPE, and GCP_KASHIDA values are valid for the
@@ -112,18 +118,17 @@ GreGetKerningPairs(
   MS must use a preset "compiled in" support for each language based releases.
   ReactOS uses FreeType, this will need to be supported. ATM this is hard coded
   for GCPCLASS_LATIN!
-
  */
 #if 0
 DWORD
 FASTCALL
 GreGetCharacterPlacementW(
-    HDC hdc,
-    LPCWSTR pwsz,
-    INT nCount,
-    INT nMaxExtent,
-    LPGCP_RESULTSW pgcpw,
-    DWORD dwFlags)
+    _In_ HDC hdc,
+    _In_reads_(nCount) PCWCH pwsz,
+    _In_ INT nCount,
+    _In_ INT nMaxExtent,
+    _Inout_opt_ LPGCP_RESULTSW pgcpw,
+    _In_ DWORD dwFlags)
 {
   GCP_RESULTSW gcpwSave;
   UINT i, nSet, cSet;
@@ -290,7 +295,10 @@ GreGetCharacterPlacementW(
 
 ULONG
 FASTCALL
-FontGetObject(PTEXTOBJ plfont, ULONG cjBuffer, PVOID pvBuffer)
+FontGetObject(
+    _Inout_ PTEXTOBJ plfont,
+    _In_ ULONG cjBuffer,
+    _Out_ PVOID pvBuffer)
 {
     ULONG cjMaxSize;
     ENUMLOGFONTEXDVW *plf;
@@ -326,7 +334,10 @@ FontGetObject(PTEXTOBJ plfont, ULONG cjBuffer, PVOID pvBuffer)
 
 DWORD
 FASTCALL
-IntGetCharDimensions(HDC hdc, PTEXTMETRICW ptm, PDWORD height)
+IntGetCharDimensions(
+    _In_ HDC hdc,
+    _Out_opt_ PTEXTMETRICW ptm,
+    _Out_opt_ PDWORD height)
 {
   PDC pdc;
   PDC_ATTR pdcattr;
@@ -354,7 +365,7 @@ IntGetCharDimensions(HDC hdc, PTEXTMETRICW ptm, PDWORD height)
      DC_UnlockDc(pdc);
      return 0;
   }
-  Good = TextIntGetTextExtentPoint(pdc, TextObj, alphabet, 52, 0, NULL, 0, &sz, 0);
+  Good = TextIntGetTextExtentPoint(pdc, TextObj, alphabet, 52, 0, NULL, NULL, &sz, 0);
   TEXTOBJ_UnlockText(TextObj);
   DC_UnlockDc(pdc);
 
@@ -368,7 +379,7 @@ IntGetCharDimensions(HDC hdc, PTEXTMETRICW ptm, PDWORD height)
 
 DWORD
 FASTCALL
-IntGetFontLanguageInfo(PDC Dc)
+IntGetFontLanguageInfo(_In_ PDC Dc)
 {
   PDC_ATTR pdcattr;
   FONTSIGNATURE fontsig;
@@ -419,7 +430,7 @@ IntGetFontLanguageInfo(PDC Dc)
 
 PTEXTOBJ
 FASTCALL
-RealizeFontInit(HFONT hFont)
+RealizeFontInit(_In_ HFONT hFont)
 {
   NTSTATUS Status = STATUS_SUCCESS;
   PTEXTOBJ pTextObj;
@@ -438,23 +449,41 @@ RealizeFontInit(HFONT hFont)
   return pTextObj;
 }
 
+static BOOL
+IntCheckFontPathNames(
+    _In_reads_(cwc) PCWCH pwcFiles,
+    _In_ ULONG cFiles,
+    _In_ ULONG cwc)
+{
+    ULONG ich, cRealFiles;
+
+    if (pwcFiles[cwc - 1] != UNICODE_NULL)
+        return FALSE;
+
+    for (ich = cRealFiles = 0; ich < cwc; ++ich)
+    {
+        if (!pwcFiles[ich])
+            ++cRealFiles;
+    }
+
+    return cRealFiles >= cFiles;
+}
 
 /** Functions ******************************************************************/
 
 INT
 APIENTRY
 NtGdiAddFontResourceW(
-    IN WCHAR *pwcFiles,
-    IN ULONG cwc,
-    IN ULONG cFiles,
-    IN FLONG fl,
-    IN DWORD dwPidTid,
-    IN OPTIONAL DESIGNVECTOR *pdv)
+    _In_reads_(cwc) PCWCH pwcFiles,
+    _In_ ULONG cwc,
+    _In_ ULONG cFiles,
+    _In_ FLONG fl,
+    _In_ DWORD dwPidTid,
+    _In_opt_ const DESIGNVECTOR *pdv)
 {
     UNICODE_STRING SafeFileName;
     INT Ret;
 
-    DBG_UNREFERENCED_PARAMETER(cFiles);
     DBG_UNREFERENCED_PARAMETER(dwPidTid);
     DBG_UNREFERENCED_PARAMETER(pdv);
 
@@ -464,19 +493,21 @@ NtGdiAddFontResourceW(
     if ((cwc <= 1) || (cwc > UNICODE_STRING_MAX_CHARS))
         return 0;
 
-    SafeFileName.MaximumLength = (USHORT)(cwc * sizeof(WCHAR));
-    SafeFileName.Length = SafeFileName.MaximumLength - sizeof(UNICODE_NULL);
+    SafeFileName.Length = (USHORT)((cwc - 1) * sizeof(WCHAR));
+    SafeFileName.MaximumLength = SafeFileName.Length + sizeof(UNICODE_NULL);
     SafeFileName.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                 SafeFileName.MaximumLength,
                                                 TAG_STRING);
     if (!SafeFileName.Buffer)
-    {
         return 0;
-    }
 
     _SEH2_TRY
     {
         ProbeForRead(pwcFiles, cwc * sizeof(WCHAR), sizeof(WCHAR));
+
+        if (!IntCheckFontPathNames(pwcFiles, cFiles, cwc))
+            return 0;
+ 
         RtlCopyMemory(SafeFileName.Buffer, pwcFiles, SafeFileName.Length);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -487,7 +518,62 @@ NtGdiAddFontResourceW(
     _SEH2_END;
 
     SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    Ret = IntGdiAddFontResource(&SafeFileName, fl);
+
+    Ret = IntGdiAddFontResourceEx(&SafeFileName, cFiles, fl, 0);
+
+    ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
+    return Ret;
+}
+
+BOOL
+APIENTRY
+NtGdiRemoveFontResourceW(
+    _In_reads_(cwc) PCWCH pwszFiles,
+    _In_ ULONG cwc,
+    _In_ ULONG cFiles,
+    _In_ ULONG fl,
+    _In_ DWORD dwPidTid,
+    _In_opt_ const DESIGNVECTOR *pdv)
+{
+    UNICODE_STRING SafeFileName;
+    BOOL Ret;
+
+    DBG_UNREFERENCED_PARAMETER(dwPidTid);
+    DBG_UNREFERENCED_PARAMETER(pdv);
+
+    DPRINT("NtGdiRemoveFontResourceW\n");
+
+    /* cwc = Length + trailing zero. */
+    if ((cwc <= 1) || (cwc > UNICODE_STRING_MAX_CHARS))
+        return FALSE;
+
+    SafeFileName.Length = (USHORT)((cwc - 1) * sizeof(WCHAR));
+    SafeFileName.MaximumLength = SafeFileName.Length + sizeof(UNICODE_NULL);
+    SafeFileName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                SafeFileName.MaximumLength,
+                                                TAG_STRING);
+    if (!SafeFileName.Buffer)
+        return FALSE;
+
+    _SEH2_TRY
+    {
+        ProbeForRead(pwszFiles, cwc * sizeof(WCHAR), sizeof(WCHAR));
+
+        if (!IntCheckFontPathNames(pwszFiles, cFiles, cwc))
+            return FALSE;
+
+        RtlCopyMemory(SafeFileName.Buffer, pwszFiles, SafeFileName.Length);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    Ret = IntGdiRemoveFontResource(&SafeFileName, cFiles, fl);
 
     ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
     return Ret;
@@ -496,11 +582,11 @@ NtGdiAddFontResourceW(
 HANDLE
 APIENTRY
 NtGdiAddFontMemResourceEx(
-    IN PVOID pvBuffer,
-    IN DWORD cjBuffer,
-    IN DESIGNVECTOR *pdv,
-    IN ULONG cjDV,
-    OUT DWORD *pNumFonts)
+    _In_reads_bytes_(cjBuffer) const VOID *pvBuffer,
+    _In_ DWORD cjBuffer,
+    _In_reads_bytes_opt_(cjDV) const DESIGNVECTOR *pdv,
+    _In_ ULONG cjDV,
+    _Out_ PDWORD pNumFonts)
 {
     _SEH2_VOLATILE PVOID Buffer = NULL;
     HANDLE Ret;
@@ -552,7 +638,7 @@ NtGdiAddFontMemResourceEx(
 BOOL
 APIENTRY
 NtGdiRemoveFontMemResourceEx(
-    IN HANDLE hMMFont)
+    _In_ HANDLE hMMFont)
 {
     return IntGdiRemoveFontMemResource(hMMFont);
 }
@@ -564,12 +650,12 @@ NtGdiRemoveFontMemResourceEx(
 DWORD
 APIENTRY
 NtGdiGetCharacterPlacementW(
-    IN HDC hdc,
-    IN LPWSTR pwsz,
-    IN INT nCount,
-    IN INT nMaxExtent,
-    IN OUT LPGCP_RESULTSW pgcpw,
-    IN DWORD dwFlags)
+    _In_ HDC hdc,
+    _In_reads_(nCount) PCWCH pwsz,
+    _In_ INT nCount,
+    _In_ INT nMaxExtent,
+    _Inout_opt_ LPGCP_RESULTSW pgcpw,
+    _In_ DWORD dwFlags)
 {
     UNIMPLEMENTED;
     return 0;
@@ -586,11 +672,11 @@ NtGdiGetCharacterPlacementW(
 DWORD
 APIENTRY
 NtGdiGetFontData(
-   HDC hDC,
-   DWORD Table,
-   DWORD Offset,
-   LPVOID Buffer,
-   DWORD Size)
+    _In_ HDC hDC,
+    _In_ DWORD Table,
+    _In_ DWORD Offset,
+    _Out_writes_bytes_(Size) PVOID Buffer,
+    _In_ DWORD Size)
 {
   PDC Dc;
   PDC_ATTR pdcattr;
@@ -642,14 +728,12 @@ NtGdiGetFontData(
   return Result;
 }
 
- /*
- * @implemented
- */
+/* @implemented */
 DWORD
 APIENTRY
 NtGdiGetFontUnicodeRanges(
-    IN HDC hdc,
-    OUT OPTIONAL LPGLYPHSET pgs)
+    _In_ HDC hdc,
+    _Out_opt_ LPGLYPHSET pgs)
 {
   PDC pDc;
   PDC_ATTR pdcattr;
@@ -719,14 +803,14 @@ Exit:
 ULONG
 APIENTRY
 NtGdiGetGlyphOutline(
-    IN HDC hdc,
-    IN WCHAR wch,
-    IN UINT iFormat,
-    OUT LPGLYPHMETRICS pgm,
-    IN ULONG cjBuf,
-    OUT OPTIONAL PVOID UnsafeBuf,
-    IN LPMAT2 pmat2,
-    IN BOOL bIgnoreRotation)
+    _In_ HDC hdc,
+    _In_ WCHAR wch,
+    _In_ UINT iFormat,
+    _Out_ LPGLYPHMETRICS pgm,
+    _In_ ULONG cjBuf,
+    _Out_writes_bytes_opt_(cjBuf) PVOID UnsafeBuf,
+    _In_opt_ const MAT2 *pmat2,
+    _In_ BOOL bIgnoreRotation)
 {
   ULONG Ret = GDI_ERROR;
   PDC dc;
@@ -803,9 +887,10 @@ Exit:
 
 DWORD
 APIENTRY
-NtGdiGetKerningPairs(HDC  hDC,
-                     ULONG  NumPairs,
-                     LPKERNINGPAIR  krnpair)
+NtGdiGetKerningPairs(
+    _In_ HDC  hDC,
+    _In_ ULONG NumPairs,
+    _Out_writes_(NumPairs) LPKERNINGPAIR krnpair)
 {
   PDC dc;
   PDC_ATTR pdcattr;
@@ -877,10 +962,11 @@ NtGdiGetKerningPairs(HDC  hDC,
  */
 ULONG
 APIENTRY
-NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
-                                   ULONG  Data,
-                      OUTLINETEXTMETRICW  *otm,
-                                   TMDIFF *Tmd)
+NtGdiGetOutlineTextMetricsInternalW(
+    _In_ HDC hDC,
+    _In_ ULONG Data,
+    _Out_opt_ POUTLINETEXTMETRICW otm,
+    _In_ PTMDIFF Tmd)
 {
   PDC dc;
   PDC_ATTR pdcattr;
@@ -912,7 +998,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
      TEXTOBJ_UnlockText(TextObj);
      return 0;
   }
-  TextIntUpdateSize(dc, TextObj, FontGDI, TRUE);
+  TextIntUpdateSize(TextObj, FontGDI, TRUE);
   TEXTOBJ_UnlockText(TextObj);
   Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL, FALSE);
   if (!otm) return Size;
@@ -955,13 +1041,13 @@ W32KAPI
 BOOL
 APIENTRY
 NtGdiGetFontResourceInfoInternalW(
-    IN LPWSTR       pwszFiles,
-    IN ULONG        cwc,
-    IN ULONG        cFiles,
-    IN UINT         cjIn,
-    IN OUT LPDWORD  pdwBytes,
-    OUT LPVOID      pvBuf,
-    IN DWORD        dwType)
+    _In_reads_(cwc) PCWCH pwszFiles,
+    _In_ ULONG cwc,
+    _In_ ULONG cFiles,
+    _In_ UINT cjIn,
+    _Inout_ PDWORD pdwBytes,
+    _Out_writes_bytes_(*pdwBytes) PVOID pvBuf,
+    _In_ DWORD dwType)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     DWORD dwBytes, dwBytesRequested;
@@ -1063,15 +1149,13 @@ NtGdiGetFontResourceInfoInternalW(
     return bRet;
 }
 
- /*
- * @unimplemented
- */
+/* @unimplemented */
 BOOL
 APIENTRY
 NtGdiGetRealizationInfo(
-    IN HDC hdc,
-    OUT PREALIZATION_INFO pri,
-    IN HFONT hf)
+    _In_ HDC hdc,
+    _Out_ PREALIZATION_INFO pri,
+    _In_ HFONT hf)
 {
   PDC pDc;
   PTEXTOBJ pTextObj;
@@ -1134,15 +1218,14 @@ NtGdiGetRealizationInfo(
   return Ret;
 }
 
-
 HFONT
 APIENTRY
 HfontCreate(
-  IN PENUMLOGFONTEXDVW pelfw,
-  IN ULONG cjElfw,
-  IN LFTYPE lft,
-  IN FLONG  fl,
-  IN PVOID pvCliData )
+    const ENUMLOGFONTEXDVW *pelfw,
+    _In_ ULONG cjElfw,
+    _In_ LFTYPE lft,
+    _In_ FLONG  fl,
+    _In_opt_ PVOID pvCliData)
 {
   HFONT hNewFont;
   PLFONT plfont;
@@ -1192,11 +1275,11 @@ HfontCreate(
 HFONT
 APIENTRY
 NtGdiHfontCreate(
-  IN PENUMLOGFONTEXDVW pelfw,
-  IN ULONG cjElfw,
-  IN LFTYPE lft,
-  IN FLONG  fl,
-  IN PVOID pvCliData )
+    _In_reads_bytes_(cjElfw) const ENUMLOGFONTEXDVW *pelfw,
+    _In_ ULONG cjElfw,
+    _In_ LFTYPE lft,
+    _In_ FLONG  fl,
+    _In_opt_ PVOID pvCliData)
 {
   ENUMLOGFONTEXDVW SafeLogfont;
   NTSTATUS Status = STATUS_SUCCESS;
@@ -1230,4 +1313,197 @@ NtGdiHfontCreate(
 }
 
 
-/* EOF */
+/* This function is called from GetCharWidthA/W/I, GetCharWidth32A/W, and GetCharWidthFloatA/W. */
+BOOL NTAPI
+NtGdiGetCharWidthW(
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ UINT Count,
+    _In_reads_opt_(Count) PCWCH UnSafepwc,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(INT)) PVOID Buffer)
+{
+    BOOL ret = FALSE;
+    PVOID pTmpBuffer = NULL;
+    PWCHAR pSafePwc = NULL;
+    NTSTATUS Status;
+    WCHAR StackPwc[40];
+    INT StackBuffer[40];
+
+    if (!Count || Count > MAX_TEXT_BUFFER / sizeof(INT))
+        return FALSE;
+
+    if (UnSafepwc)
+    {
+        if (Count <= _countof(StackPwc))
+            pSafePwc = StackPwc;
+        else
+            pSafePwc = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), GDITAG_TEXT);
+
+        if (!pSafePwc)
+            return FALSE;
+
+        Status = MmCopyFromCaller(pSafePwc, UnSafepwc, Count * sizeof(WCHAR));
+        if (!NT_SUCCESS(Status))
+            goto Cleanup;
+    }
+
+    if (Count <= _countof(StackBuffer))
+        pTmpBuffer = StackBuffer;
+    else
+        pTmpBuffer = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), GDITAG_TEXT);
+
+    if (!pTmpBuffer)
+        goto Cleanup;
+
+    ret = GreGetCharWidthW(hDC, FirstChar, Count, pSafePwc, fl, pTmpBuffer);
+    if (ret)
+    {
+        Status = MmCopyToCaller(Buffer, pTmpBuffer, Count * sizeof(INT));
+        ret = NT_SUCCESS(Status);
+    }
+
+Cleanup:
+    if (pTmpBuffer && pTmpBuffer != StackBuffer)
+        ExFreePoolWithTag(pTmpBuffer, GDITAG_TEXT);
+    if (pSafePwc && pSafePwc != StackPwc)
+        ExFreePoolWithTag(pSafePwc, GDITAG_TEXT);
+    return ret;
+}
+
+/* This function is called from GetCharABCWidthsA/W/I and GetCharABCWidthsFloatA/W. */
+BOOL NTAPI
+NtGdiGetCharABCWidthsW(
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ UINT Count,
+    _In_reads_opt_(Count) PCWCH UnSafepwch,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(ABC)) PVOID Buffer)
+{
+    BOOL ret = FALSE;
+    PVOID SafeBuff = NULL;
+    PWCHAR Safepwch = NULL;
+    ULONG cbABCs;
+    NTSTATUS Status;
+    WCHAR Stackpwch[28];
+    ABC StackABCs[28];
+
+    if (!Buffer || (UnSafepwch && !Count) || Count > MAX_TEXT_BUFFER / sizeof(ABC))
+        return FALSE;
+
+    if (UnSafepwch)
+    {
+        UINT pwchSize = Count * sizeof(WCHAR);
+        if (Count <= _countof(Stackpwch))
+            Safepwch = Stackpwch;
+        else
+            Safepwch = ExAllocatePoolWithTag(PagedPool, pwchSize, GDITAG_TEXT);
+
+        if (!Safepwch)
+            return FALSE;
+
+        Status = MmCopyFromCaller(Safepwch, UnSafepwch, pwchSize);
+        if (!NT_SUCCESS(Status))
+            goto Cleanup;
+    }
+
+    cbABCs = Count * sizeof(ABC);
+    if (Count <= _countof(StackABCs))
+        SafeBuff = StackABCs;
+    else
+        SafeBuff = ExAllocatePoolWithTag(PagedPool, cbABCs, GDITAG_TEXT);
+
+    if (!SafeBuff)
+        goto Cleanup;
+
+    ret = GreGetCharABCWidthsW(hDC, FirstChar, Count, Safepwch, fl, SafeBuff);
+    if (ret)
+    {
+        Status = MmCopyToCaller(Buffer, SafeBuff, cbABCs);
+        ret = NT_SUCCESS(Status);
+    }
+
+Cleanup:
+    if (SafeBuff && SafeBuff != StackABCs)
+        ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
+    if (Safepwch && Safepwch != Stackpwch)
+        ExFreePoolWithTag(Safepwch, GDITAG_TEXT);
+    return ret;
+}
+
+/* This function is called from GetGlyphIndicesA/W */
+__kernel_entry
+W32KAPI
+DWORD
+APIENTRY
+NtGdiGetGlyphIndicesW(
+    _In_ HDC hdc,
+    _In_reads_opt_(cwc) PCWCH pwc,
+    _In_ INT cwc,
+    _Out_writes_opt_(cwc) PWORD pgi,
+    _In_ DWORD iMode)
+{
+    return NtGdiGetGlyphIndicesWInternal(hdc, pwc, cwc, pgi, iMode, FALSE);
+}
+
+__kernel_entry
+W32KAPI
+DWORD
+APIENTRY
+NtGdiGetGlyphIndicesWInternal(
+    _In_ HDC hdc,
+    _In_reads_opt_(cwc) PCWCH pwc,
+    _In_ INT cwc,
+    _Out_writes_opt_(cwc) PWORD pgi,
+    _In_ DWORD iMode,
+    _In_ BOOL bSubset)
+{
+    if (cwc < 0)
+        return GDI_ERROR;
+
+    if (!cwc && !pwc && !pgi && !iMode)
+        return GreGetGlyphIndicesW(hdc, NULL, 0, NULL, 0, bSubset);
+
+    if (cwc == 0)
+        return GDI_ERROR;
+
+    const SIZE_T elemSize = sizeof(WORD) + sizeof(WCHAR);
+    if ((SIZE_T)cwc > (MAX_TEXT_BUFFER / elemSize))
+        return GDI_ERROR;
+
+    // Allocate a working buffer (for pgi and pwc)
+    WORD stackBuf[80];
+    PWORD workBuf = NULL;
+    if ((SIZE_T)cwc <= (sizeof(stackBuf) / elemSize))
+    {
+        workBuf = stackBuf;
+    }
+    else
+    {
+        SIZE_T workBufSize = cwc * elemSize;
+        workBuf = ExAllocatePoolWithTag(PagedPool, workBufSize, GDITAG_TEXT);
+        if (!workBuf)
+            return GDI_ERROR;
+    }
+
+    DWORD ret = GDI_ERROR;
+    PWCHAR safePwc = (PWCHAR)&workBuf[cwc];
+    NTSTATUS Status = MmCopyFromCaller(safePwc, pwc, cwc * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
+
+    ret = GreGetGlyphIndicesW(hdc, safePwc, cwc, workBuf, iMode, bSubset);
+    if (ret == GDI_ERROR)
+        goto Cleanup;
+
+    Status = MmCopyToCaller(pgi, workBuf, cwc * sizeof(WORD));
+    if (!NT_SUCCESS(Status))
+        ret = GDI_ERROR;
+
+Cleanup:
+    if (workBuf != stackBuf)
+        ExFreePoolWithTag(workBuf, GDITAG_TEXT);
+
+    return ret;
+}

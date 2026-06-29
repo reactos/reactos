@@ -3,8 +3,8 @@ include_directories(BEFORE Common
                     ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/virtio)
 
 add_definitions(
-   -DNDIS_MINIPORT_DRIVER
-   -DNDIS51_MINIPORT=1)
+   -DNDIS51_MINIPORT
+   -DNDIS_MINIPORT_DRIVER)
 
 list(APPEND SOURCE
     Common/ParaNdis-Common.c

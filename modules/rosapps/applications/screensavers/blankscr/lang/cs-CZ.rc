@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     ReactOS Blank ScreenSaver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATOR:  Copyright 2025 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_DESCRIPTION "Prázdná obrazovka"
+    IDS_TEXT        "Žádná nastavení nejsou potřeba."
+END

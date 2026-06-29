@@ -32,6 +32,7 @@
 #include <initguid.h>
 
 #include "wscript.h"
+#include "resource.h"
 
 #include <wine/debug.h>
 
@@ -50,18 +51,19 @@
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(wscript);
-
-static const WCHAR wscriptW[] = {'W','S','c','r','i','p','t',0};
-static const WCHAR wshW[] = {'W','S','H',0};
 WCHAR scriptFullName[MAX_PATH];
 
 ITypeInfo *host_ti;
 ITypeInfo *arguments_ti;
 
+static BOOL nologo;
+
 static HRESULT query_interface(REFIID,void**);
 
 #ifdef __REACTOS__
 #include <commctrl.h>
+
+PCWSTR g_force_engine = NULL;
 
 typedef struct {
     UINT itemsize, count;
@@ -222,7 +224,7 @@ static HRESULT WINAPI ActiveScriptSite_GetLCID(IActiveScriptSite *iface, LCID *p
 static HRESULT WINAPI ActiveScriptSite_GetItemInfo(IActiveScriptSite *iface,
         LPCOLESTR pstrName, DWORD dwReturnMask, IUnknown **ppunkItem, ITypeInfo **ppti)
 {
-    WINE_TRACE("(%s %x %p %p)\n", wine_dbgstr_w(pstrName), dwReturnMask, ppunkItem, ppti);
+    WINE_TRACE("(%s %lx %p %p)\n", wine_dbgstr_w(pstrName), dwReturnMask, ppunkItem, ppti);
 
 #ifdef __REACTOS__
     {
@@ -233,7 +235,7 @@ static HRESULT WINAPI ActiveScriptSite_GetItemInfo(IActiveScriptSite *iface,
     }
 #endif
 
-    if(lstrcmpW(pstrName, wshW) && lstrcmpW(pstrName, wscriptW))
+    if(lstrcmpW(pstrName, L"WSH") && lstrcmpW(pstrName, L"WScript"))
         return E_FAIL;
 
     if(dwReturnMask & SCRIPTINFO_ITYPEINFO) {
@@ -270,11 +272,214 @@ static HRESULT WINAPI ActiveScriptSite_OnStateChange(IActiveScriptSite *iface,
     return S_OK;
 }
 
+static void write_to_handle(HANDLE handle, const WCHAR *string)
+{
+    DWORD count, ret, len, lena;
+    char *buf;
+
+    len = lstrlenW(string);
+    ret = WriteConsoleW(handle, string, len, &count, NULL);
+    if(ret) {
+        WriteConsoleW(handle, L"\r\n", 2, &count, NULL);
+        return;
+    }
+
+    lena = WideCharToMultiByte(GetOEMCP(), 0, string, len, NULL, 0, NULL, NULL);
+    buf = malloc(lena);
+    if(!buf)
+        return;
+
+    WideCharToMultiByte(GetOEMCP(), 0, string, len, buf, lena, NULL, NULL);
+    WriteFile(handle, buf, lena, &count, FALSE);
+    free(buf);
+    WriteFile(handle, "\r\n", 2, &count, FALSE);
+}
+
+static void print_error(const WCHAR *string)
+{
+    if(wshInteractive) {
+        MessageBoxW(NULL, string, L"Windows Script Host", MB_OK);
+        return;
+    }
+
+    write_to_handle(GetStdHandle(STD_ERROR_HANDLE), string);
+}
+
+static void print_string(const WCHAR *string)
+{
+    write_to_handle(GetStdHandle(STD_OUTPUT_HANDLE), string);
+}
+
+static void output_writeconsole(const WCHAR *str, DWORD wlen)
+{
+    DWORD count;
+
+    if(!WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), str, wlen, &count, NULL)) {
+        DWORD len;
+        char *buf;
+
+        /* On Windows WriteConsoleW() fails if the output is redirected. So fall
+         * back to WriteFile() with OEM code page. */
+        len = WideCharToMultiByte(GetOEMCP(), 0, str, wlen, NULL, 0, NULL, NULL);
+        buf = malloc(len);
+
+        WideCharToMultiByte(GetOEMCP(), 0, str, wlen, buf, len, NULL, NULL);
+        WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), buf, len, &count, FALSE);
+        free(buf);
+    }
+}
+
+static void output_formatstring(const WCHAR *fmt, va_list va_args)
+{
+    WCHAR *str;
+    DWORD len;
+
+    len = FormatMessageW(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+                         fmt, 0, 0, (WCHAR *)&str, 0, &va_args);
+    if(len == 0 && GetLastError() != ERROR_NO_WORK_DONE) {
+        WINE_FIXME("Could not format string: le=%lu, fmt=%s\n", GetLastError(), wine_dbgstr_w(fmt));
+        return;
+    }
+    if(wshInteractive) {
+        MessageBoxW(NULL, str, L"Windows Script Host", MB_OK);
+    }else {
+        output_writeconsole(str, len);
+    }
+    LocalFree(str);
+}
+
+static void WINAPIV print_resource(unsigned int id, ...)
+{
+    WCHAR *fmt = NULL;
+    int len;
+    va_list va_args;
+
+#ifdef __REACTOS__
+    #ifndef CSCRIPT_BUILD
+    #define APPNAME L"WScript"
+    #else
+    #define APPNAME L"CScript"
+    #endif
+    const WCHAR *str = NULL;
+    switch (id)
+    {
+        case IDS_USAGE: str = L"Usage: " APPNAME L" scriptname.extension [option...] [arguments...]\n"; break;
+        case IDS_NO_SCRIPT_FILE: str = L"Input Error: There is no script file specified.\n"; break;
+        case IDS_FILE_NOT_FOUND: str = L"Input Error: Can not find script file ""%1"".\n"; break;
+        case IDS_SCRIPT_LOAD_ERROR: str = APPNAME L" Error: Loading script ""%1"" failed (%2).\n"; break;
+        case IDS_TIMEOUT_EXCEEDED: str = L"Script execution time was exceeded on script ""%1"".\n\nScript execution was terminated.\n"; break;
+    }
+    if(!str)
+    {
+        WINE_FIXME("Missing string %u\n", id);
+        return;
+    }
+    len = lstrlenW(str);
+    fmt = malloc(++len * sizeof(WCHAR));
+    if(!fmt)
+        return;
+    lstrcpyW(fmt, str);
+#else
+    if(!(len = LoadStringW(GetModuleHandleW(NULL), id, (WCHAR *)&fmt, 0))) {
+        WINE_FIXME("LoadString failed with %ld\n", GetLastError());
+        return;
+    }
+
+    len++;
+    fmt = malloc(len * sizeof(WCHAR));
+    if(!fmt)
+        return;
+
+    LoadStringW(GetModuleHandleW(NULL), id, fmt, len);
+#endif
+
+    va_start(va_args, id);
+    output_formatstring(fmt, va_args);
+    va_end(va_args);
+
+    free(fmt);
+}
+
+static HANDLE timeout_cancel_event;
+static HANDLE timeout_thread;
+
+static DWORD WINAPI timeout_thread_proc(void *arg)
+{
+    DWORD ms = (DWORD)(DWORD_PTR)arg;
+    if(WaitForSingleObject(timeout_cancel_event, ms) == WAIT_TIMEOUT) {
+        print_resource(IDS_TIMEOUT_EXCEEDED, scriptFullName);
+        ExitProcess(1);
+    }
+    return 0;
+}
+
+void schedule_timeout(LONG seconds)
+{
+    if(timeout_thread) {
+        SetEvent(timeout_cancel_event);
+        WaitForSingleObject(timeout_thread, INFINITE);
+        CloseHandle(timeout_thread);
+        timeout_thread = NULL;
+    }
+    if(seconds <= 0)
+        return;
+    if(!timeout_cancel_event)
+        timeout_cancel_event = CreateEventW(NULL, TRUE, FALSE, NULL);
+    else
+        ResetEvent(timeout_cancel_event);
+    timeout_thread = CreateThread(NULL, 0, timeout_thread_proc,
+                                  (void *)(DWORD_PTR)(seconds * 1000), 0, NULL);
+}
+
+static void print_banner(void)
+{
+#ifdef __REACTOS__
+    const WCHAR *header = L"ReactOS Script Host";
+#else
+    const char * (CDECL *wine_get_version)(void);
+    WCHAR header[64];
+
+    wine_get_version = (void *)GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "wine_get_version");
+    if(wine_get_version)
+        swprintf(header, ARRAY_SIZE(header), L"Wine %S Script Host", wine_get_version());
+    else
+        swprintf(header, ARRAY_SIZE(header), L"Wine Script Host");
+#endif
+    print_string(header);
+    print_string(L"");
+}
+
 static HRESULT WINAPI ActiveScriptSite_OnScriptError(IActiveScriptSite *iface,
         IActiveScriptError *pscripterror)
 {
-    WINE_FIXME("()\n");
-    return E_NOTIMPL;
+    EXCEPINFO excepinfo;
+    ULONG line;
+    LONG character;
+    HRESULT hres;
+    WCHAR buf[1024];
+
+    WINE_TRACE("()\n");
+
+    memset(&excepinfo, 0, sizeof(excepinfo));
+    hres = IActiveScriptError_GetExceptionInfo(pscripterror, &excepinfo);
+    if(SUCCEEDED(hres)) {
+        line = 0;
+        character = 0;
+        IActiveScriptError_GetSourcePosition(pscripterror, NULL, &line, &character);
+
+        swprintf(buf, ARRAY_SIZE(buf), L"%s(%lu, %ld) %s: %s",
+                scriptFullName, line + 1, character + 1,
+                excepinfo.bstrSource ? excepinfo.bstrSource : L"",
+                excepinfo.bstrDescription ? excepinfo.bstrDescription : L"");
+
+        print_error(buf);
+
+        SysFreeString(excepinfo.bstrSource);
+        SysFreeString(excepinfo.bstrDescription);
+        SysFreeString(excepinfo.bstrHelpFile);
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI ActiveScriptSite_OnEnterScript(IActiveScriptSite *iface)
@@ -370,9 +575,7 @@ static BOOL load_typelib(void)
     ITypeLib *typelib;
     HRESULT hres;
 
-    static const WCHAR wscript_exeW[] = {'w','s','c','r','i','p','t','.','e','x','e',0};
-
-    hres = LoadTypeLib(wscript_exeW, &typelib);
+    hres = LoadTypeLib(L"wscript.exe", &typelib);
     if(FAILED(hres))
         return FALSE;
 
@@ -392,9 +595,6 @@ static BOOL get_engine_clsid(const WCHAR *ext, CLSID *clsid)
     HKEY hkey;
     HRESULT hres;
 
-    static const WCHAR script_engineW[] =
-        {'\\','S','c','r','i','p','t','E','n','g','i','n','e',0};
-
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, ext, &hkey);
     if(res != ERROR_SUCCESS)
         return FALSE;
@@ -407,7 +607,7 @@ static BOOL get_engine_clsid(const WCHAR *ext, CLSID *clsid)
 
     WINE_TRACE("fileid is %s\n", wine_dbgstr_w(fileid));
 
-    lstrcatW(fileid, script_engineW);
+    lstrcatW(fileid, L"\\ScriptEngine");
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, fileid, &hkey);
     if(res != ERROR_SUCCESS)
         return FALSE;
@@ -466,11 +666,11 @@ static BOOL init_engine(IActiveScript *script, IActiveScriptParse *parser)
     if(FAILED(hres))
         return FALSE;
 
-    hres = IActiveScript_AddNamedItem(script, wscriptW, SCRIPTITEM_ISVISIBLE);
+    hres = IActiveScript_AddNamedItem(script, L"WScript", SCRIPTITEM_ISVISIBLE);
     if(FAILED(hres))
         return FALSE;
 
-    hres = IActiveScript_AddNamedItem(script, wshW, SCRIPTITEM_ISVISIBLE);
+    hres = IActiveScript_AddNamedItem(script, L"WSH", SCRIPTITEM_ISVISIBLE);
     if(FAILED(hres))
         return FALSE;
 
@@ -490,6 +690,11 @@ static BSTR get_script_str(const WCHAR *filename)
         return NULL;
 
     size = GetFileSize(file, NULL);
+    if(!size) {
+        CloseHandle(file);
+        return SysAllocStringLen(NULL, 0);
+    }
+
     map = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL);
     CloseHandle(file);
     if(map == INVALID_HANDLE_VALUE)
@@ -500,6 +705,17 @@ static BSTR get_script_str(const WCHAR *filename)
     if(!file_map)
         return NULL;
 
+#ifdef __REACTOS__
+    if(size >= 2 && (BYTE)file_map[0] == 0xFF && (BYTE)file_map[1] == 0xFE) // UTF-16LE
+    {
+        ret = SysAllocStringLen(NULL, size - 2);
+        if (ret)
+            CopyMemory(ret, file_map + 2, size - 2);
+        UnmapViewOfFile(file_map);
+        return ret;
+    }
+#endif
+
     len = MultiByteToWideChar(CP_ACP, 0, file_map, size, NULL, 0);
     ret = SysAllocStringLen(NULL, len);
     MultiByteToWideChar(CP_ACP, 0, file_map, size, ret, len);
@@ -508,28 +724,25 @@ static BSTR get_script_str(const WCHAR *filename)
     return ret;
 }
 
-static void run_script(const WCHAR *filename, IActiveScript *script, IActiveScriptParse *parser)
+static BOOL run_script(BSTR text, IActiveScript *script, IActiveScriptParse *parser)
 {
-    BSTR text;
     HRESULT hres;
 
-    text = get_script_str(filename);
-    if(!text) {
-        WINE_FIXME("Could not get script text\n");
-        return;
-    }
-
-    hres = IActiveScriptParse_ParseScriptText(parser, text, NULL, NULL, NULL, 1, 1,
+    hres = IActiveScriptParse_ParseScriptText(parser, text, NULL, NULL, NULL, 1, 0,
             SCRIPTTEXT_HOSTMANAGESSOURCE|SCRIPTITEM_ISVISIBLE, NULL, NULL);
-    SysFreeString(text);
     if(FAILED(hres)) {
-        WINE_FIXME("ParseScriptText failed: %08x\n", hres);
-        return;
+        if(hres != SCRIPT_E_REPORTED)
+            WINE_WARN("ParseScriptText failed: %08lx\n", hres);
+        return FALSE;
     }
 
     hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_STARTED);
-    if(FAILED(hres))
-        WINE_FIXME("SetScriptState failed: %08x\n", hres);
+    if(FAILED(hres)) {
+        if(hres != SCRIPT_E_REPORTED)
+            WINE_WARN("SetScriptState failed: %08lx\n", hres);
+    }
+
+    return TRUE;
 }
 
 #ifdef __REACTOS__
@@ -759,10 +972,6 @@ static HRESULT run_wsf(LPCWSTR xmlpath)
 
 static BOOL set_host_properties(const WCHAR *prop)
 {
-    static const WCHAR nologoW[] = {'n','o','l','o','g','o',0};
-    static const WCHAR iactive[] = {'i',0};
-    static const WCHAR batch[] = {'b',0};
-
     if(*prop == '/') {
         ++prop;
         if(*prop == '/')
@@ -771,17 +980,41 @@ static BOOL set_host_properties(const WCHAR *prop)
     else
         ++prop;
 
-    if(wcsicmp(prop, iactive) == 0)
+    if(wcsicmp(prop, L"i") == 0)
         wshInteractive = VARIANT_TRUE;
-    else if(wcsicmp(prop, batch) == 0)
+    else if(wcsicmp(prop, L"b") == 0)
         wshInteractive = VARIANT_FALSE;
-    else if(wcsicmp(prop, nologoW) == 0)
-        WINE_FIXME("ignored %s switch\n", debugstr_w(nologoW));
-    else
-    {
-        WINE_FIXME("unsupported switch %s\n", debugstr_w(prop));
-        return FALSE;
+    else if(wcsicmp(prop, L"nologo") == 0)
+        nologo = TRUE;
+    else if(wcsicmp(prop, L"logo") == 0)
+        nologo = FALSE;
+    else if(wcsicmp(prop, L"d") == 0)
+        WINE_FIXME("ignoring //d\n");
+    else if(wcsicmp(prop, L"x") == 0)
+        WINE_FIXME("ignoring //x\n");
+    else if(wcsicmp(prop, L"u") == 0)
+        WINE_FIXME("ignoring //u\n");
+    else if(wcsicmp(prop, L"s") == 0)
+        WINE_FIXME("ignoring //s\n");
+    else if(wcsnicmp(prop, L"e:", 2) == 0)
+#ifdef __REACTOS__
+        g_force_engine = &prop[2];
+#else
+        WINE_FIXME("ignoring //e:\n");
+#endif
+    else if(wcsnicmp(prop, L"h:", 2) == 0)
+        WINE_FIXME("ignoring //h:\n");
+    else if(wcsnicmp(prop, L"job:", 4) == 0)
+        WINE_FIXME("ignoring //job:\n");
+    else if(wcsnicmp(prop, L"t:", 2) == 0) {
+        WCHAR *end;
+        LONG t = wcstol(prop + 2, &end, 10);
+        if(end == prop + 2 || *end || t < 0)
+            return FALSE;
+        wshTimeout = t;
     }
+    else
+        return FALSE;
     return TRUE;
 }
 
@@ -790,9 +1023,11 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int cm
     WCHAR *ext, *filepart, *filename = NULL;
     IActiveScriptParse *parser;
     IActiveScript *script;
+    BSTR script_text;
     WCHAR **argv;
     CLSID clsid;
     int argc, i;
+    int ret = 0;
     DWORD res;
 
     WINE_TRACE("(%p %p %s %x)\n", hInst, hPrevInst, wine_dbgstr_w(cmdline), cmdshow);
@@ -801,31 +1036,97 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int cm
     if(!argv)
         return 1;
 
+    /* Pass 1: consume // host options from all positions. */
     for(i=1; i<argc; i++) {
-        if(*argv[i] == '/' || *argv[i] == '-') {
-            if(!set_host_properties(argv[i]))
-                return 1;
-        }else {
-            filename = argv[i];
-            argums = argv+i+1;
-            numOfArgs = argc-i-1;
-            break;
-        }
+        if(argv[i][0] == '/' && argv[i][1] == '/' && set_host_properties(argv[i]))
+            argv[i] = NULL;
     }
 
+    /* Pass 2: find filename, consuming single-/ and - options before it. */
+    for(i=1; i<argc; i++) {
+        if(!argv[i])
+            continue;
+        if(argv[i][0] == '-' && argv[i][1] == '-' && !argv[i][2])
+            continue; /* -- separator */
+        if((*argv[i] == '/' || *argv[i] == '-') && set_host_properties(argv[i]))
+            continue;
+        filename = argv[i];
+        i++;
+        break;
+    }
+
+    /* Pass 3: compact script args, skipping consumed // options. */
+    if(filename) {
+        int j = 0, first_arg = i;
+        for(; i<argc; i++) {
+            if(!argv[i])
+                continue;
+            argv[first_arg + j] = argv[i];
+            j++;
+        }
+        argums = argv + first_arg;
+        numOfArgs = j;
+    }
+
+    if(!filename && argc == 1) {
+        if(wshInteractive) {
+            WINE_FIXME("Settings dialog not implemented\n");
+            return 0;
+        }
+        if(!nologo)
+            print_banner();
+        print_resource(IDS_USAGE);
+        return 0;
+    }
+
+    if(!nologo)
+        print_banner();
+
     if(!filename) {
-        WINE_FIXME("No file name specified\n");
+        print_resource(IDS_NO_SCRIPT_FILE);
         return 1;
     }
+
     res = GetFullPathNameW(filename, ARRAY_SIZE(scriptFullName), scriptFullName, &filepart);
     if(!res || res > ARRAY_SIZE(scriptFullName))
         return 1;
 
-    ext = wcsrchr(filepart, '.');
 #ifdef __REACTOS__
-    if (ext && !lstrcmpiW(ext, L".wsf")) {
+    ext = wcsrchr(filepart, '.');
+    if(ext && !lstrcmpiW(ext, L".wsf")) {
         return run_wsf(scriptFullName);
     }
+#endif
+
+    script_text = get_script_str(scriptFullName);
+    if(!script_text) {
+        DWORD err = GetLastError();
+        if(err == ERROR_FILE_NOT_FOUND || err == ERROR_PATH_NOT_FOUND) {
+            print_resource(IDS_FILE_NOT_FOUND, scriptFullName);
+        }else {
+            WCHAR *syserr = NULL;
+            FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                           NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (WCHAR *)&syserr, 0, NULL);
+            if(syserr) {
+                /* Trim trailing whitespace from system error message. */
+                int len = lstrlenW(syserr);
+                while(len > 0 && (syserr[len - 1] == '\r' || syserr[len - 1] == '\n' || syserr[len - 1] == ' '))
+                    syserr[--len] = 0;
+                print_resource(IDS_SCRIPT_LOAD_ERROR, scriptFullName, syserr);
+                LocalFree(syserr);
+            }else {
+                print_resource(IDS_SCRIPT_LOAD_ERROR, scriptFullName, L"");
+            }
+        }
+        return 1;
+    }
+
+    ext = wcsrchr(filepart, '.');
+#ifdef __REACTOS__
+    if(g_force_engine) {
+        CLSIDFromProgID(g_force_engine, &clsid);
+    }
+    else
 #endif
     if(!ext || !get_engine_clsid(ext, &clsid)) {
         WINE_FIXME("Could not find engine for %s\n", wine_dbgstr_w(ext));
@@ -841,13 +1142,17 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int cm
     }
 
     if(init_engine(script, parser)) {
-        run_script(filename, script, parser);
+        schedule_timeout(wshTimeout);
+        if(!run_script(script_text, script, parser))
+            ret = 1;
+        schedule_timeout(0);
         IActiveScript_Close(script);
         ITypeInfo_Release(host_ti);
     }else {
         WINE_FIXME("Script initialization failed\n");
     }
 
+    SysFreeString(script_text);
     IActiveScript_Release(script);
     IActiveScriptParse_Release(parser);
 
@@ -857,5 +1162,5 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int cm
 
     CoUninitialize();
 
-    return 0;
+    return ret;
 }

@@ -120,10 +120,10 @@ pSetupDebugPrint(
             goto done;
 
         va_start(args, pszMessage);
-        vsnwprintf(pszFormatBuffer,
-                   FORMAT_BUFFER_SIZE,
-                   pszMessage,
-                   args);
+        _vsnwprintf(pszFormatBuffer,
+                    FORMAT_BUFFER_SIZE,
+                    pszMessage,
+                    args);
         va_end(args);
     }
 

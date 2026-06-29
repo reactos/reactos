@@ -4,11 +4,10 @@
  * PURPOSE:     Event Details Control.
  * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>
  *              Copyright 2008-2016 Eric Kohl <eric.kohl@reactos.org>
- *              Copyright 2016-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2016-2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
-#ifndef _EVTDETCTL_H_
-#define _EVTDETCTL_H_
+#pragma once
 
 /* Optional structure passed by pointer
  * as LPARAM to CreateEventDetailsCtrl() */
@@ -25,5 +24,3 @@ HWND
 CreateEventDetailsCtrl(HINSTANCE hInstance,
                        HWND hParentWnd,
                        LPARAM lParam);
-
-#endif /* _EVTDETCTL_H_ */

@@ -52,6 +52,7 @@ static DWORD   (WINAPI *pStrCatChainW)(LPWSTR,DWORD,DWORD,LPCWSTR);
 static LPSTR   (WINAPI *pStrCpyNXA)(LPSTR,LPCSTR,int);
 static LPWSTR  (WINAPI *pStrCpyNXW)(LPWSTR,LPCWSTR,int);
 static LPSTR   (WINAPI *pStrFormatByteSize64A)(LONGLONG,LPSTR,UINT);
+static HRESULT (WINAPI *pStrFormatByteSizeEx)(LONGLONG,SFBS_FLAGS,LPWSTR,UINT);
 static LPSTR   (WINAPI *pStrFormatKBSizeA)(LONGLONG,LPSTR,UINT);
 static LPWSTR  (WINAPI *pStrFormatKBSizeW)(LONGLONG,LPWSTR,UINT);
 static BOOL    (WINAPI *pStrIsIntlEqualA)(BOOL,LPCSTR,LPCSTR,int);
@@ -69,12 +70,6 @@ static LPWSTR  (WINAPI *pStrChrNW)(LPCWSTR,WCHAR,UINT);
 static BOOL    (WINAPI *pStrToInt64ExA)(LPCSTR,DWORD,LONGLONG*);
 static BOOL    (WINAPI *pStrToInt64ExW)(LPCWSTR,DWORD,LONGLONG*);
 
-static int strcmpW(const WCHAR *str1, const WCHAR *str2)
-{
-    while (*str1 && (*str1 == *str2)) { str1++; str2++; }
-    return *str1 - *str2;
-}
-
 /* StrToInt/StrToIntEx results */
 typedef struct tagStrToIntResult
 {
@@ -82,6 +77,7 @@ typedef struct tagStrToIntResult
   int str_to_int;
   LONGLONG str_to_int64_ex;
   LONGLONG str_to_int64_hex;
+  BOOL failure;
 } StrToIntResult;
 
 static const StrToIntResult StrToInt_results[] = {
@@ -95,11 +91,12 @@ static const StrToIntResult StrToInt_results[] = {
      { "0x2bdc546291f4b1", 0, 0, ((LONGLONG)0x2bdc54 << 32) | 0x6291f4b1 },
      { "+0x44f4", 0, 0, 0x44f4 },
      { "-0x44fd", 0, 0, 0x44fd },
-     { "+ 88987", 0, 0, 0 },
-     { "- 55", 0, 0, 0 },
-     { "- 0", 0, 0, 0 },
-     { "+ 0x44f4", 0, 0, 0 },
-     { "--0x44fd", 0, 0, 0 },
+     { "+ 88987", 0, 0, 0, TRUE },
+
+     { "- 55", 0, 0, 0, TRUE },
+     { "- 0", 0, 0, 0, TRUE },
+     { "+ 0x44f4", 0, 0, 0, TRUE },
+     { "--0x44fd", 0, 0, 0, TRUE },
      { " 1999", 0, 1999, 1999 },
      { " +88987", 0, 88987, 88987 },
      { " 012", 0, 12, 12 },
@@ -107,6 +104,10 @@ static const StrToIntResult StrToInt_results[] = {
      { " 0x44ff", 0, 0, 0x44ff },
      { " +0x44f4", 0, 0, 0x44f4 },
      { " -0x44fd", 0, 0, 0x44fd },
+     { "\t\n +3", 0, 3, 3 },
+     { "\v+4", 0, 0, 0, TRUE },
+     { "\f+5", 0, 0, 0, TRUE },
+     { "\r+6", 0, 0, 0, TRUE },
      { NULL, 0, 0, 0 }
 };
 
@@ -494,8 +495,10 @@ static void test_StrToIntExA(void)
   {
     return_val = -1;
     bRet = StrToIntExA(result->string,0,&return_val);
-    ok(!bRet || return_val != -1, "No result returned from '%s'\n",
-       result->string);
+    if (result->failure)
+        ok(!bRet, "Got %d instead of failure for '%s'\n", return_val, result->string);
+    else
+        ok(bRet, "Failed for '%s'\n", result->string);
     if (bRet)
       ok(return_val == (int)result->str_to_int64_ex, "converted '%s' wrong (%d)\n",
          result->string, return_val);
@@ -507,8 +510,10 @@ static void test_StrToIntExA(void)
   {
     return_val = -1;
     bRet = StrToIntExA(result->string,STIF_SUPPORT_HEX,&return_val);
-    ok(!bRet || return_val != -1, "No result returned from '%s'\n",
-       result->string);
+    if (result->failure)
+        ok(!bRet, "Got %d instead of failure for '%s'\n", return_val, result->string);
+    else
+        ok(bRet, "Failed for '%s'\n", result->string);
     if (bRet)
       ok(return_val == (int)result->str_to_int64_hex, "converted '%s' wrong (%d)\n",
          result->string, return_val);
@@ -528,8 +533,10 @@ static void test_StrToIntExW(void)
     return_val = -1;
     MultiByteToWideChar(CP_ACP, 0, result->string, -1, szBuff, ARRAY_SIZE(szBuff));
     bRet = StrToIntExW(szBuff, 0, &return_val);
-    ok(!bRet || return_val != -1, "No result returned from '%s'\n",
-       result->string);
+    if (result->failure)
+        ok(!bRet, "Got %d instead of failure for '%s'\n", return_val, result->string);
+    else
+        ok(bRet, "Failed for '%s'\n", result->string);
     if (bRet)
       ok(return_val == (int)result->str_to_int64_ex, "converted '%s' wrong (%d)\n",
          result->string, return_val);
@@ -542,13 +549,23 @@ static void test_StrToIntExW(void)
     return_val = -1;
     MultiByteToWideChar(CP_ACP, 0, result->string, -1, szBuff, ARRAY_SIZE(szBuff));
     bRet = StrToIntExW(szBuff, STIF_SUPPORT_HEX, &return_val);
-    ok(!bRet || return_val != -1, "No result returned from '%s'\n",
-       result->string);
+    if (result->failure)
+        ok(!bRet, "Got %d instead of failure for '%s'\n", return_val, result->string);
+    else
+        ok(bRet, "Failed for '%s'\n", result->string);
     if (bRet)
       ok(return_val == (int)result->str_to_int64_hex, "converted '%s' wrong (%d)\n",
          result->string, return_val);
     result++;
   }
+
+  return_val = -1;
+  bRet = StrToIntExW(L"\x0661\x0662", 0, &return_val);
+  ok( !bRet, "Returned %d for Unicode digits\n", return_val );
+  bRet = StrToIntExW(L"\x07c3\x07c4", 0, &return_val);
+  ok( !bRet, "Returned %d for Unicode digits\n", return_val );
+  bRet = StrToIntExW(L"\xa0-2", 0, &return_val);
+  ok( !bRet, "Returned %d for Unicode space\n", return_val );
 }
 
 static void test_StrToInt64ExA(void)
@@ -567,8 +584,11 @@ static void test_StrToInt64ExA(void)
   {
     return_val = -1;
     bRet = pStrToInt64ExA(result->string,0,&return_val);
-    ok(!bRet || return_val != -1, "No result returned from '%s'\n",
-       result->string);
+    if (result->failure)
+        ok(!bRet, "Got %s instead of failure for '%s'\n",
+           wine_dbgstr_longlong(return_val), result->string);
+    else
+        ok(bRet, "Failed for '%s'\n", result->string);
     if (bRet)
       ok(return_val == result->str_to_int64_ex, "converted '%s' wrong (%s)\n",
          result->string, wine_dbgstr_longlong(return_val));
@@ -580,8 +600,11 @@ static void test_StrToInt64ExA(void)
   {
     return_val = -1;
     bRet = pStrToInt64ExA(result->string,STIF_SUPPORT_HEX,&return_val);
-    ok(!bRet || return_val != -1, "No result returned from '%s'\n",
-       result->string);
+    if (result->failure)
+        ok(!bRet, "Got %s instead of failure for '%s'\n",
+           wine_dbgstr_longlong(return_val), result->string);
+    else
+        ok(bRet, "Failed for '%s'\n", result->string);
     if (bRet)
       ok(return_val == result->str_to_int64_hex, "converted '%s' wrong (%s)\n",
          result->string, wine_dbgstr_longlong(return_val));
@@ -607,8 +630,11 @@ static void test_StrToInt64ExW(void)
     return_val = -1;
     MultiByteToWideChar(CP_ACP, 0, result->string, -1, szBuff, ARRAY_SIZE(szBuff));
     bRet = pStrToInt64ExW(szBuff, 0, &return_val);
-    ok(!bRet || return_val != -1, "No result returned from '%s'\n",
-       result->string);
+    if (result->failure)
+        ok(!bRet, "Got %s instead of failure for '%s'\n",
+           wine_dbgstr_longlong(return_val), result->string);
+    else
+        ok(bRet, "Failed for '%s'\n", result->string);
     if (bRet)
       ok(return_val == result->str_to_int64_ex, "converted '%s' wrong (%s)\n",
          result->string, wine_dbgstr_longlong(return_val));
@@ -621,13 +647,24 @@ static void test_StrToInt64ExW(void)
     return_val = -1;
     MultiByteToWideChar(CP_ACP, 0, result->string, -1, szBuff, ARRAY_SIZE(szBuff));
     bRet = pStrToInt64ExW(szBuff, STIF_SUPPORT_HEX, &return_val);
-    ok(!bRet || return_val != -1, "No result returned from '%s'\n",
-       result->string);
+    if (result->failure)
+        ok(!bRet, "Got %s instead of failure for '%s'\n",
+           wine_dbgstr_longlong(return_val), result->string);
+    else
+        ok(bRet, "Failed for '%s'\n", result->string);
     if (bRet)
       ok(return_val == result->str_to_int64_hex, "converted '%s' wrong (%s)\n",
          result->string, wine_dbgstr_longlong(return_val));
     result++;
   }
+
+  return_val = -1;
+  bRet = pStrToInt64ExW(L"\x0661\x0662", 0, &return_val);
+  ok( !bRet, "Returned %s for Unicode digits\n", wine_dbgstr_longlong(return_val) );
+  bRet = pStrToInt64ExW(L"\x07c3\x07c4", 0, &return_val);
+  ok( !bRet, "Returned %s for Unicode digits\n", wine_dbgstr_longlong(return_val) );
+  bRet = pStrToInt64ExW(L"\xa0-2", 0, &return_val);
+  ok( !bRet, "Returned %s for Unicode space\n", wine_dbgstr_longlong(return_val) );
 }
 
 static void test_StrDupA(void)
@@ -677,6 +714,38 @@ static void test_StrFormatByteSize64A(void)
 
     result++;
   }
+}
+
+static void test_StrFormatByteSizeEx(void)
+{
+  WCHAR szBuff[256];
+  HRESULT hr;
+  LONGLONG test_value = 2147483647;
+
+  if (!pStrFormatByteSizeEx)
+  {
+    win_skip("StrFormatByteSizeEx is not available \n");
+    return;
+  }
+
+  hr = pStrFormatByteSizeEx(0xdeadbeef,
+                            SFBS_FLAGS_TRUNCATE_UNDISPLAYED_DECIMAL_DIGITS, szBuff, 0);
+  ok(hr == E_INVALIDARG, "Unexpected hr: %#lx expected: %#lx\n", hr, E_INVALIDARG);
+
+  hr = pStrFormatByteSizeEx(0xdeadbeef, 10, szBuff, 256);
+  ok(hr == E_INVALIDARG, "Unexpected hr: %#lx expected: %#lx\n", hr, E_INVALIDARG);
+
+  hr = pStrFormatByteSizeEx(test_value, SFBS_FLAGS_ROUND_TO_NEAREST_DISPLAYED_DIGIT,
+                            szBuff, 256);
+  ok(hr == S_OK, "Invalid arguments \n");
+  ok(!wcscmp(szBuff, L"2.00 GB"), "Formatted %s wrong: got %ls, expected 2.00 GB\n",
+     wine_dbgstr_longlong(test_value), szBuff);
+
+  hr = pStrFormatByteSizeEx(test_value, SFBS_FLAGS_TRUNCATE_UNDISPLAYED_DECIMAL_DIGITS,
+                            szBuff, 256);
+  ok(hr == S_OK, "Invalid arguments \n");
+  ok(!wcscmp(szBuff, L"1.99 GB"), "Formatted %s wrong: got %ls, expected 1.99 GB\n",
+     wine_dbgstr_longlong(test_value), szBuff);
 }
 
 static void test_StrFormatKBSizeW(void)
@@ -736,7 +805,7 @@ static void test_StrFromTimeIntervalA(void)
   {
     StrFromTimeIntervalA(szBuff, 256, result->ms, result->digits);
 
-    ok(!strcmp(result->time_interval, szBuff), "Formatted %d %d wrong: %s\n",
+    ok(!strcmp(result->time_interval, szBuff), "Formatted %ld %d wrong: %s\n",
        result->ms, result->digits, szBuff);
     result++;
   }
@@ -827,26 +896,26 @@ static void test_StrRetToBSTR(void)
     }
 
     strret.uType = STRRET_WSTR;
-    U(strret).pOleStr = CoDupStrW("Test");
+    strret.pOleStr = CoDupStrW("Test");
     bstr = 0;
     ret = pStrRetToBSTR(&strret, NULL, &bstr);
-    ok(ret == S_OK && bstr && !strcmpW(bstr, szTestW),
-       "STRRET_WSTR: dup failed, ret=0x%08x, bstr %p\n", ret, bstr);
+    ok(ret == S_OK && bstr && !wcscmp(bstr, szTestW),
+       "STRRET_WSTR: dup failed, ret=0x%08lx, bstr %p\n", ret, bstr);
     SysFreeString(bstr);
 
     strret.uType = STRRET_CSTR;
-    lstrcpyA(U(strret).cStr, "Test");
+    lstrcpyA(strret.cStr, "Test");
     ret = pStrRetToBSTR(&strret, NULL, &bstr);
-    ok(ret == S_OK && bstr && !strcmpW(bstr, szTestW),
-       "STRRET_CSTR: dup failed, ret=0x%08x, bstr %p\n", ret, bstr);
+    ok(ret == S_OK && bstr && !wcscmp(bstr, szTestW),
+       "STRRET_CSTR: dup failed, ret=0x%08lx, bstr %p\n", ret, bstr);
     SysFreeString(bstr);
 
     strret.uType = STRRET_OFFSET;
-    U(strret).uOffset = 1;
+    strret.uOffset = 1;
     strcpy((char*)&iidl, " Test");
     ret = pStrRetToBSTR(&strret, iidl, &bstr);
-    ok(ret == S_OK && bstr && !strcmpW(bstr, szTestW),
-       "STRRET_OFFSET: dup failed, ret=0x%08x, bstr %p\n", ret, bstr);
+    ok(ret == S_OK && bstr && !wcscmp(bstr, szTestW),
+       "STRRET_OFFSET: dup failed, ret=0x%08lx, bstr %p\n", ret, bstr);
     SysFreeString(bstr);
 
     /* Native crashes if str is NULL */
@@ -951,7 +1020,7 @@ static void test_SHAnsiToAnsi(void)
   memset(dest, '\n', sizeof(dest));
   dwRet = pSHAnsiToAnsi("hello", dest, ARRAY_SIZE(dest));
   ok(dwRet == 6 && !memcmp(dest, "hello\0\n\n", sizeof(dest)),
-     "SHAnsiToAnsi: expected 6, \"hello\\0\\n\\n\", got %d, \"%d,%d,%d,%d,%d,%d,%d,%d\"\n",
+     "SHAnsiToAnsi: expected 6, \"hello\\0\\n\\n\", got %ld, \"%d,%d,%d,%d,%d,%d,%d,%d\"\n",
      dwRet, dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
 }
 
@@ -978,7 +1047,7 @@ static void test_SHUnicodeToUnicode(void)
   memcpy(dest, lpInit, sizeof(lpInit));
   dwRet = pSHUnicodeToUnicode(lpSrc, dest, ARRAY_SIZE(dest));
   ok(dwRet == 6 && !memcmp(dest, lpRes, sizeof(dest)),
-     "SHUnicodeToUnicode: expected 6, \"hello\\0\\n\\n\", got %d, \"%d,%d,%d,%d,%d,%d,%d,%d\"\n",
+     "SHUnicodeToUnicode: expected 6, \"hello\\0\\n\\n\", got %ld, \"%d,%d,%d,%d,%d,%d,%d,%d\"\n",
      dwRet, dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
 }
 
@@ -1059,10 +1128,10 @@ if (0)
     {
         memset(wbuf, 0xbf, sizeof(wbuf));
         strret.uType = STRRET_WSTR;
-        U(strret).pOleStr = StrDupW(wstr1);
+        strret.pOleStr = StrDupW(wstr1);
         hres = pStrRetToBufW(&strret, NULL, wbuf, 10);
         ok(hres == E_NOT_SUFFICIENT_BUFFER || broken(hres == S_OK) /* winxp */,
-           "StrRetToBufW returned %08x\n", hres);
+           "StrRetToBufW returned %08lx\n", hres);
         if (hres == E_NOT_SUFFICIENT_BUFFER)
             expect_eq(wbuf[0], 0, WCHAR, "%x");
         expect_eq(wbuf[9], 0, WCHAR, "%x");
@@ -1070,16 +1139,16 @@ if (0)
 
         memset(wbuf, 0xbf, sizeof(wbuf));
         strret.uType = STRRET_CSTR;
-        StrCpyNA(U(strret).cStr, str1, MAX_PATH);
+        StrCpyNA(strret.cStr, str1, MAX_PATH);
         hres = pStrRetToBufW(&strret, NULL, wbuf, 10);
-        ok(hres == S_OK, "StrRetToBufW returned %08x\n", hres);
+        ok(hres == S_OK, "StrRetToBufW returned %08lx\n", hres);
         ok(!memcmp(wbuf, wstr1, 9*sizeof(WCHAR)) && !wbuf[9], "StrRetToBuf returned %s\n", wine_dbgstr_w(wbuf));
 
         memset(wbuf, 0xbf, sizeof(wbuf));
         strret.uType = STRRET_WSTR;
-        U(strret).pOleStr = NULL;
+        strret.pOleStr = NULL;
         hres = pStrRetToBufW(&strret, NULL, wbuf, 10);
-        ok(hres == E_FAIL, "StrRetToBufW returned %08x\n", hres);
+        ok(hres == E_FAIL, "StrRetToBufW returned %08lx\n", hres);
         ok(!wbuf[0], "StrRetToBuf returned %s\n", wine_dbgstr_w(wbuf));
     }
     else
@@ -1089,8 +1158,8 @@ if (0)
     {
         memset(buf, 0xbf, sizeof(buf));
         strret.uType = STRRET_CSTR;
-        StrCpyNA(U(strret).cStr, str1, MAX_PATH);
-        expect_eq2(pStrRetToBufA(&strret, NULL, buf, 10), S_OK, E_NOT_SUFFICIENT_BUFFER /* Vista */, HRESULT, "%x");
+        StrCpyNA(strret.cStr, str1, MAX_PATH);
+        expect_eq2(pStrRetToBufA(&strret, NULL, buf, 10), S_OK, E_NOT_SUFFICIENT_BUFFER /* Vista */, HRESULT, "%lx");
         expect_eq(buf[9], 0, CHAR, "%x");
         expect_eq(buf[10], (CHAR)0xbf, CHAR, "%x");
     }
@@ -1104,6 +1173,37 @@ if (0)
         ok(broken(ret == 9) || ret == -1 /* Vista */, "Unexpected wnsprintfA return %d, expected 9 or -1\n", ret);
         expect_eq(buf[9], 0, CHAR, "%x");
         expect_eq(buf[10], (CHAR)0xbf, CHAR, "%x");
+
+        memset(buf, 0xbf, sizeof(buf));
+        ret = pwnsprintfA(buf + 1, -1, "%s", str1);
+#ifdef __REACTOS__
+        ok(ret == -1 || broken(ret == 0) /* WS03 */, "got %d.\n", ret);
+#else
+        ok(ret == -1, "got %d.\n", ret);
+#endif
+        expect_eq(buf[0], (CHAR)0xbf, CHAR, "%x");
+        if (!broken(1))
+        {
+            /* This is 0xbf before Win8. */
+            expect_eq(buf[1], 0, CHAR, "%x");
+        }
+        expect_eq(buf[2], (CHAR)0xbf, CHAR, "%x");
+
+        memset(buf, 0xbf, sizeof(buf));
+        ret = pwnsprintfA(buf + 1, 0, "%s", str1);
+#ifdef __REACTOS__
+        ok(ret == -1 || broken(ret == 0) /* WS03 */, "got %d.\n", ret);
+#else
+        ok(ret == -1, "got %d.\n", ret);
+#endif
+        expect_eq(buf[0], (CHAR)0xbf, CHAR, "%x");
+        expect_eq(buf[1], (CHAR)0xbf, CHAR, "%x");
+
+        memset(buf, 0xbf, sizeof(buf));
+        ret = pwnsprintfA(buf, 1, "");
+        ok(!ret, "got %d.\n", ret);
+        expect_eq(buf[0], 0, CHAR, "%x");
+        expect_eq(buf[1], (CHAR)0xbf, CHAR, "%x");
     }
     else
         win_skip("wnsprintfA() is not available\n");
@@ -1115,6 +1215,37 @@ if (0)
         ok(broken(ret == 9) || ret == -1 /* Vista */, "Unexpected wnsprintfW return %d, expected 9 or -1\n", ret);
         expect_eq(wbuf[9], 0, WCHAR, "%x");
         expect_eq(wbuf[10], (WCHAR)0xbfbf, WCHAR, "%x");
+
+        memset(wbuf, 0xbf, sizeof(wbuf));
+        ret = pwnsprintfW(wbuf + 1, -1, fmt, wstr1);
+#ifdef __REACTOS__
+        ok(ret == -1 || broken(ret == 0) /* WS03 */, "got %d.\n", ret);
+#else
+        ok(ret == -1, "got %d.\n", ret);
+#endif
+        expect_eq(wbuf[0], (WCHAR)0xbfbf, WCHAR, "%x");
+        if (!broken(1))
+        {
+            /* This is 0xbfbf before Win8. */
+            expect_eq(wbuf[1], 0, WCHAR, "%x");
+        }
+        expect_eq(wbuf[2], (WCHAR)0xbfbf, WCHAR, "%x");
+
+        memset(wbuf, 0xbf, sizeof(wbuf));
+        ret = pwnsprintfW(wbuf + 1, 0, fmt, wstr1);
+#ifdef __REACTOS__
+        ok(ret == -1 || broken(ret == 0) /* WS03 */, "got %d.\n", ret);
+#else
+        ok(ret == -1, "got %d.\n", ret);
+#endif
+        expect_eq(wbuf[0], (WCHAR)0xbfbf, WCHAR, "%x");
+        expect_eq(wbuf[1], (WCHAR)0xbfbf, WCHAR, "%x");
+
+        memset(wbuf, 0xbf, sizeof(wbuf));
+        ret = pwnsprintfW(wbuf, 1, L"");
+        ok(!ret, "got %d.\n", ret);
+        expect_eq(wbuf[0], 0, WCHAR, "%x");
+        expect_eq(wbuf[1], (WCHAR)0xbfbf, WCHAR, "%x");
     }
     else
         win_skip("wnsprintfW() is not available\n");
@@ -1518,43 +1649,43 @@ static void test_StrCatChainW(void)
 
     /* Test with NULL buffer */
     ret = pStrCatChainW(NULL, 0, 0, beefW);
-    ok(ret == 0, "Expected StrCatChainW to return 0, got %u\n", ret);
+    ok(ret == 0, "Expected StrCatChainW to return 0, got %lu\n", ret);
 
     /* Test with empty buffer */
     memset(buf, 0x11, sizeof(buf));
     ret = pStrCatChainW(buf, 0, 0, beefW);
-    ok(ret == 0, "Expected StrCatChainW to return 0, got %u\n", ret);
+    ok(ret == 0, "Expected StrCatChainW to return 0, got %lu\n", ret);
     ok(buf[0] == 0x1111, "Expected buf[0] = 0x1111, got %x\n", buf[0]);
 
     memcpy(buf, deadbeefW, sizeof(deadbeefW));
     ret = pStrCatChainW(buf, 0, -1, beefW);
-    ok(ret == 8, "Expected StrCatChainW to return 8, got %u\n", ret);
+    ok(ret == 8, "Expected StrCatChainW to return 8, got %lu\n", ret);
     ok(!memcmp(buf, deadbeefW, sizeof(deadbeefW)), "Buffer contains wrong data\n");
 
     /* Append data to existing string with offset = -1 */
     memset(buf, 0x11, sizeof(buf));
     ret = pStrCatChainW(buf, 32, 0, deadW);
-    ok(ret == 4, "Expected StrCatChainW to return 4, got %u\n", ret);
+    ok(ret == 4, "Expected StrCatChainW to return 4, got %lu\n", ret);
     ok(!memcmp(buf, deadW, sizeof(deadW)), "Buffer contains wrong data\n");
 
     ret = pStrCatChainW(buf, 32, -1, beefW);
-    ok(ret == 8, "Expected StrCatChainW to return 8, got %u\n", ret);
+    ok(ret == 8, "Expected StrCatChainW to return 8, got %lu\n", ret);
     ok(!memcmp(buf, deadbeefW, sizeof(deadbeefW)), "Buffer contains wrong data\n");
 
     /* Append data at a fixed offset */
     memset(buf, 0x11, sizeof(buf));
     ret = pStrCatChainW(buf, 32, 0, deadW);
-    ok(ret == 4, "Expected StrCatChainW to return 4, got %u\n", ret);
+    ok(ret == 4, "Expected StrCatChainW to return 4, got %lu\n", ret);
     ok(!memcmp(buf, deadW, sizeof(deadW)), "Buffer contains wrong data\n");
 
     ret = pStrCatChainW(buf, 32, 4, beefW);
-    ok(ret == 8, "Expected StrCatChainW to return 8, got %u\n", ret);
+    ok(ret == 8, "Expected StrCatChainW to return 8, got %lu\n", ret);
     ok(!memcmp(buf, deadbeefW, sizeof(deadbeefW)), "Buffer contains wrong data\n");
 
     /* Buffer exactly sufficient for string + terminating null */
     memset(buf, 0x11, sizeof(buf));
     ret = pStrCatChainW(buf, 5, 0, deadW);
-    ok(ret == 4, "Expected StrCatChainW to return 4, got %u\n", ret);
+    ok(ret == 4, "Expected StrCatChainW to return 4, got %lu\n", ret);
     ok(!memcmp(buf, deadW, sizeof(deadW)), "Buffer contains wrong data\n");
 
     /* Buffer too small, string will be truncated */
@@ -1568,14 +1699,14 @@ static void test_StrCatChainW(void)
         win_skip("Windows2000/XP behaviour detected for StrCatChainW, skipping tests\n");
         return;
     }
-    ok(ret == 3, "Expected StrCatChainW to return 3, got %u\n", ret);
+    ok(ret == 3, "Expected StrCatChainW to return 3, got %lu\n", ret);
     ok(!memcmp(buf, deadW, 3 * sizeof(WCHAR)), "Buffer contains wrong data\n");
     ok(!buf[3], "String is not nullterminated\n");
     ok(buf[4] == 0x1111, "Expected buf[4] = 0x1111, got %x\n", buf[4]);
 
     /* Overwrite part of an existing string */
     ret = pStrCatChainW(buf, 4, 1, beefW);
-    ok(ret == 3, "Expected StrCatChainW to return 3, got %u\n", ret);
+    ok(ret == 3, "Expected StrCatChainW to return 3, got %lu\n", ret);
     ok(buf[0] == 'D', "Expected buf[0] = 'D', got %x\n", buf[0]);
     ok(buf[1] == 'B', "Expected buf[1] = 'B', got %x\n", buf[1]);
     ok(buf[2] == 'e', "Expected buf[2] = 'e', got %x\n", buf[2]);
@@ -1587,37 +1718,215 @@ static void test_StrCatChainW(void)
     memcpy(buf, deadbeefW, sizeof(deadbeefW));
     memcpy(buf + 9, deadW, sizeof(deadW));
     ret = pStrCatChainW(buf, 9, 8, beefW);
-    ok(ret == 8, "Expected StrCatChainW to return 8, got %u\n", ret);
+    ok(ret == 8, "Expected StrCatChainW to return 8, got %lu\n", ret);
     ok(!memcmp(buf, deadbeefW, sizeof(deadbeefW)), "Buffer contains wrong data\n");
     ok(!memcmp(buf + 9, deadW, sizeof(deadW)), "Buffer contains wrong data\n");
 
     /* Offset points at the end of the buffer */
     ret = pStrCatChainW(buf, 9, 9, beefW);
-    ok(ret == 8, "Expected StrCatChainW to return 8, got %u\n", ret);
+    ok(ret == 8, "Expected StrCatChainW to return 8, got %lu\n", ret);
     ok(!memcmp(buf, deadbeefW, sizeof(deadbeefW)), "Buffer contains wrong data\n");
     ok(!memcmp(buf + 9, deadW, sizeof(deadW)), "Buffer contains wrong data\n");
 
     /* Offset points outside of the buffer */
     ret = pStrCatChainW(buf, 9, 10, beefW);
-    ok(ret == 10, "Expected StrCatChainW to return 10, got %u\n", ret);
+    ok(ret == 10, "Expected StrCatChainW to return 10, got %lu\n", ret);
     ok(!memcmp(buf, deadbeefW, sizeof(deadbeefW)), "Buffer contains wrong data\n");
     ok(!memcmp(buf + 9, deadW, sizeof(deadW)), "Buffer contains wrong data\n");
 
     /* The same but without nullterminated string */
     memcpy(buf, deadbeefW, sizeof(deadbeefW));
     ret = pStrCatChainW(buf, 5, -1, deadW);
-    ok(ret == 8, "Expected StrCatChainW to return 8, got %u\n", ret);
+    ok(ret == 8, "Expected StrCatChainW to return 8, got %lu\n", ret);
     ok(!memcmp(buf, deadbeefW, sizeof(deadbeefW)), "Buffer contains wrong data\n");
 
     ret = pStrCatChainW(buf, 5, 5, deadW);
-    ok(ret == 4, "Expected StrCatChainW to return 4, got %u\n", ret);
+    ok(ret == 4, "Expected StrCatChainW to return 4, got %lu\n", ret);
     ok(!memcmp(buf, deadW, sizeof(deadW)), "Buffer contains wrong data\n");
     ok(buf[5] == 'e', "Expected buf[5] = 'e', got %x\n", buf[5]);
 
     ret = pStrCatChainW(buf, 5, 6, deadW);
-    ok(ret == 6, "Expected StrCatChainW to return 6, got %u\n", ret);
+    ok(ret == 6, "Expected StrCatChainW to return 6, got %lu\n", ret);
     ok(!memcmp(buf, deadW, sizeof(deadW)), "Buffer contains wrong data\n");
     ok(buf[5] == 'e', "Expected buf[5] = 'e', got %x\n", buf[5]);
+}
+
+static void test_printf_format(void)
+{
+    const struct
+    {
+        const char *spec;
+        unsigned int arg_size;
+        ULONG64 arg;
+        const void *argw;
+    }
+    tests[] =
+    {
+        { "%qu", 0, 10 },
+        { "%ll", 0, 10 },
+        { "%lu", sizeof(ULONG), 65537 },
+        { "%llu", sizeof(ULONG64), 10 },
+        { "%lllllllu", sizeof(ULONG64), 10 },
+        { "%#lx", sizeof(ULONG), 10 },
+        { "%#llx", sizeof(ULONG64), 0x1000000000 },
+        { "%#lllx", sizeof(ULONG64), 0x1000000000 },
+        { "%hu", sizeof(ULONG), 65537 },
+        { "%hlu", sizeof(ULONG), 65537 },
+        { "%hllx", sizeof(ULONG64), 0x100000010 },
+        { "%hlllx", sizeof(ULONG64), 0x100000010 },
+        { "%llhx", sizeof(ULONG64), 0x100000010 },
+        { "%lllhx", sizeof(ULONG64), 0x100000010 },
+        { "%lhu", sizeof(ULONG), 65537 },
+        { "%hhu", sizeof(ULONG), 65537 },
+        { "%hwu", sizeof(ULONG), 65537 },
+        { "%whu", sizeof(ULONG), 65537 },
+        { "%##lhllwlx", sizeof(ULONG64), 0x1000000010 },
+        { "%##lhlwlx", sizeof(ULONG), 0x1000000010 },
+        { "%04lhlwllx", sizeof(ULONG64), 0x1000000010 },
+        { "%s", sizeof(ULONG_PTR), (ULONG_PTR)"str", L"str" },
+        { "%S", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%ls", sizeof(ULONG_PTR), (ULONG_PTR)L"str" },
+        { "%lS", sizeof(ULONG_PTR), (ULONG_PTR)L"str" },
+        { "%lls", sizeof(ULONG_PTR), (ULONG_PTR)"str", L"str" },
+        { "%llS", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%llls", sizeof(ULONG_PTR), (ULONG_PTR)L"str" },
+        { "%lllS", sizeof(ULONG_PTR), (ULONG_PTR)L"str" },
+        { "%lllls", sizeof(ULONG_PTR), (ULONG_PTR)"str", L"str" },
+        { "%llllS", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%hs", sizeof(ULONG_PTR), (ULONG_PTR)"str" },
+        { "%hS", sizeof(ULONG_PTR), (ULONG_PTR)"str" },
+        { "%ws", sizeof(ULONG_PTR), (ULONG_PTR)L"str" },
+        { "%wS", sizeof(ULONG_PTR), (ULONG_PTR)L"str" },
+        { "%hhs", sizeof(ULONG_PTR), (ULONG_PTR)"str" },
+        { "%hhS", sizeof(ULONG_PTR), (ULONG_PTR)"str" },
+        { "%wws", sizeof(ULONG_PTR), (ULONG_PTR)L"str" },
+        { "%wwS", sizeof(ULONG_PTR), (ULONG_PTR)L"str" },
+        { "%wwws", sizeof(ULONG_PTR), (ULONG_PTR)L"str" },
+        { "%wwwS", sizeof(ULONG_PTR), (ULONG_PTR)L"str" },
+        { "%hws", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%hwS", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%whs", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%whS", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%hwls", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%hwlls", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%hwlS", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%hwllS", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%lhws", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%llhws", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%lhwS", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%llhwS", sizeof(ULONG_PTR), (ULONG_PTR)L"str", "str" },
+        { "%c", sizeof(SHORT), 0x95c8 },
+        { "%lc", sizeof(SHORT), 0x95c8 },
+        { "%llc", sizeof(SHORT), 0x95c8 },
+        { "%lllc", sizeof(SHORT), 0x95c8 },
+        { "%llllc", sizeof(SHORT), 0x95c8 },
+        { "%lllllc", sizeof(SHORT), 0x95c8 },
+        { "%C", sizeof(SHORT), 0x95c8 },
+        { "%lC", sizeof(SHORT), 0x95c8 },
+        { "%llC", sizeof(SHORT), 0x95c8 },
+        { "%lllC", sizeof(SHORT), 0x95c8 },
+        { "%llllC", sizeof(SHORT), 0x95c8 },
+        { "%lllllC", sizeof(SHORT), 0x95c8 },
+        { "%hc", sizeof(BYTE), 0x95c8 },
+        { "%hhc", sizeof(BYTE), 0x95c8 },
+        { "%hhhc", sizeof(BYTE), 0x95c8 },
+        { "%wc", sizeof(BYTE), 0x95c8 },
+        { "%wC", sizeof(BYTE), 0x95c8 },
+        { "%hwc", sizeof(BYTE), 0x95c8 },
+        { "%whc", sizeof(BYTE), 0x95c8 },
+        { "%hwC", sizeof(BYTE), 0x95c8 },
+        { "%whC", sizeof(BYTE), 0x95c8 },
+        { "%I64u", sizeof(ULONG64), 10 },
+        { "%llI64u", sizeof(ULONG64), 10 },
+        { "%I64llu", sizeof(ULONG64), 10 },
+        { "%I64s", sizeof(ULONG_PTR), (ULONG_PTR)"str", L"str" },
+        { "%q%u", sizeof(ULONG), 10 },
+        { "%lhw%u", 0, 10 },
+        { "%u% ", sizeof(ULONG), 10 },
+        { "%u% %u", sizeof(ULONG), 10 },
+        { "%  ll u", 0, 10 },
+        { "% llu", sizeof(ULONG64), 10 },
+        { "%# llx", sizeof(ULONG64), 10 },
+        { "%  #llx", sizeof(ULONG64), 10 },
+    };
+    int (WINAPIV *ntdll__snprintf)(char *str, size_t len, const char *format, ...);
+    int (WINAPIV *ntdll__snwprintf)( WCHAR *str, size_t len, const WCHAR *format, ... );
+    WCHAR ws[256], expectedw[256], specw[256];
+    unsigned int i, j;
+    char expected[256], spec[256], s[256];
+    int len_a, len_w = 0, expected_len_a, expected_len_w = 0;
+    HANDLE hntdll = GetModuleHandleW(L"ntdll.dll");
+
+    ntdll__snprintf = (void *)GetProcAddress(hntdll, "_snprintf");
+    ok(!!ntdll__snprintf, "_snprintf not found.\n");
+    ntdll__snwprintf = (void *)GetProcAddress(hntdll, "_snwprintf");
+    ok(!!ntdll__snwprintf, "_snwprintf not found.\n");
+#ifdef __REACTOS__
+    DWORD _ntVersion = GetVersion();
+    BYTE _ntMajor = LOBYTE(LOWORD(_ntVersion));
+    BYTE _ntMinor = HIBYTE(LOWORD(_ntVersion));
+
+    if (_ntMajor < 6 || (_ntMajor == 6 && _ntMinor == 0)) {
+      skip("These tests are broken on WS03 and Vista.\n");
+      return;
+    }
+#endif
+
+    for (i = 0; i < ARRAY_SIZE(tests); ++i)
+    {
+        strcpy(spec, tests[i].spec);
+        winetest_push_context("%s", spec);
+        strcat(spec,"|%s");
+        *s = 0;
+        *ws = 0;
+        j = 0;
+        do
+            specw[j] = spec[j];
+        while (specw[j++]);
+        if (tests[i].argw)
+        {
+            len_w = pwnsprintfW(ws, ARRAY_SIZE(ws), specw, tests[i].argw, L"end");
+            expected_len_w = ntdll__snwprintf(expectedw, ARRAY_SIZE(expectedw), specw, tests[i].argw, L"end");
+        }
+        switch (tests[i].arg_size)
+        {
+            case 0:
+                len_a = pwnsprintfA(s, ARRAY_SIZE(s), spec, "end");
+                expected_len_a = ntdll__snprintf(expected, ARRAY_SIZE(expected), spec, "end");
+                len_w = pwnsprintfW(ws, ARRAY_SIZE(ws), specw, L"end");
+                expected_len_w = ntdll__snwprintf(expectedw, ARRAY_SIZE(expectedw), specw, L"end");
+                break;
+            case 1:
+            case 2:
+            case 4:
+                len_a = pwnsprintfA(s, ARRAY_SIZE(s), spec, (ULONG)tests[i].arg, "end");
+                expected_len_a = ntdll__snprintf(expected, ARRAY_SIZE(expected), spec, (ULONG)tests[i].arg, "end");
+                if (!tests[i].argw)
+                {
+                    len_w = pwnsprintfW(ws, ARRAY_SIZE(ws), specw, (ULONG)tests[i].arg, L"end");
+                    expected_len_w = ntdll__snwprintf(expectedw, ARRAY_SIZE(expectedw), specw, (ULONG)tests[i].arg, L"end");
+                }
+                break;
+            case 8:
+                len_a = pwnsprintfA(s, ARRAY_SIZE(s), spec, (ULONG64)tests[i].arg, "end");
+                expected_len_a = ntdll__snprintf(expected, ARRAY_SIZE(s), spec, (ULONG64)tests[i].arg, "end");
+                if (!tests[i].argw)
+                {
+                    len_w = pwnsprintfW(ws, ARRAY_SIZE(ws), specw, (ULONG64)tests[i].arg, L"end");
+                    expected_len_w = ntdll__snwprintf(expectedw, ARRAY_SIZE(expectedw), specw, (ULONG64)tests[i].arg, L"end");
+                }
+                break;
+            default:
+                len_a = len_w = expected_len_a = expected_len_w = 0;
+                ok(0, "unknown length %u.\n", tests[i].arg_size);
+                break;
+        }
+        ok(len_a == expected_len_a, "got len %d, expected %d.\n", len_a, expected_len_a);
+        ok(!strcmp(s, expected), "got %s, expected %s.\n", debugstr_a(s), debugstr_a(expected));
+        ok(len_w == expected_len_w, "got len %d, expected %d.\n", len_a, expected_len_a);
+        ok(!wcscmp(ws, expectedw), "got %s, expected %s.\n", debugstr_w(ws), debugstr_w(expectedw));
+        winetest_pop_context();
+    }
 }
 
 START_TEST(string)
@@ -1644,6 +1953,7 @@ START_TEST(string)
   pStrCpyNXW = (void *)GetProcAddress(hShlwapi, (LPSTR)400);
   pStrChrNW = (void *)GetProcAddress(hShlwapi, "StrChrNW");
   pStrFormatByteSize64A = (void *)GetProcAddress(hShlwapi, "StrFormatByteSize64A");
+  pStrFormatByteSizeEx = (void *)GetProcAddress(hShlwapi, "StrFormatByteSizeEx");
   pStrFormatKBSizeA = (void *)GetProcAddress(hShlwapi, "StrFormatKBSizeA");
   pStrFormatKBSizeW = (void *)GetProcAddress(hShlwapi, "StrFormatKBSizeW");
   pStrIsIntlEqualA = (void *)GetProcAddress(hShlwapi, "StrIsIntlEqualA");
@@ -1680,6 +1990,7 @@ START_TEST(string)
   if (is_lang_english() && is_locale_english())
   {
     test_StrFormatByteSize64A();
+    test_StrFormatByteSizeEx();
     test_StrFormatKBSizeA();
     test_StrFormatKBSizeW();
   }
@@ -1706,6 +2017,7 @@ START_TEST(string)
   test_StrStrNW();
   test_StrStrNIW();
   test_StrCatChainW();
+  test_printf_format();
 
   CoUninitialize();
 }

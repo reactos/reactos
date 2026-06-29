@@ -14,8 +14,6 @@
  * they behave slightly different in terms of error codes due to the involved RPC and routing.
  */
 
-#define __ROS_LONG64__
-
 #define STANDALONE
 #include <apitest.h>
 

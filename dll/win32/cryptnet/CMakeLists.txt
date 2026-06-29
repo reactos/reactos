@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(cryptnet.dll cryptnet.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -10,7 +8,8 @@ list(APPEND SOURCE
 
 add_library(cryptnet MODULE ${SOURCE})
 set_module_type(cryptnet win32dll)
-target_link_libraries(cryptnet wine)
+target_link_libraries(cryptnet wine wine_dll_register)
 add_delay_importlibs(cryptnet wininet)
-add_importlibs(cryptnet crypt32 msvcrt kernel32 ntdll)
+add_importlibs(cryptnet crypt32 shell32 shlwapi advapi32 ole32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET cryptnet DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(cryptnet) # CORE-5743: No ARRAY_SIZE macro

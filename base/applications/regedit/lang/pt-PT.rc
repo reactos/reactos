@@ -442,6 +442,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Adiciona um novo valor texto"
     ID_EDIT_NEW_BINARYVALUE "Adiciona um novo valor binário"
     ID_EDIT_NEW_DWORDVALUE "Adiciona um novo valor DWORD"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importa um ficheiro de texto para o registo"
     ID_REGISTRY_EXPORTREGISTRYFILE "Exporta todo ou parte do registo para um ficheiro de texto"
     ID_REGISTRY_LOADHIVE "Carrega um ficheiro de secção no registo"

@@ -33,7 +33,7 @@ PFN_NUMBER MmMaximumNonPagedPoolInPages;
 // These numbers describe the discrete equation components of the nonpaged
 // pool sizing algorithm.
 //
-// They are described on http://support.microsoft.com/default.aspx/kb/126402/ja
+// They are described on http://support.microsoft.com/default.aspx/kb/126402/ja (DEAD_LINK)
 // along with the algorithm that uses them, which is implemented later below.
 //
 SIZE_T MmMinimumNonPagedPoolSize = 256 * 1024;
@@ -91,9 +91,10 @@ ULONG MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
 // The following URLs, valid as of April 23rd, 2008, support this evidence:
 //
 // http://www.cs.miami.edu/~burt/journal/NT/memory.html
-// http://www.ditii.com/2007/09/28/windows-memory-management-x86-virtual-address-space/
+// https://web.archive.org/web/20130412053421/http://www.ditii.com/2007/09/28/windows-memory-management-x86-virtual-address-space/
 //
 PVOID MmNonPagedSystemStart;
+PVOID MmSystemPteSpaceStart;
 PVOID MmNonPagedPoolStart;
 PVOID MmNonPagedPoolExpansionStart;
 PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END;
@@ -1787,7 +1788,7 @@ MiBuildPagedPool(VOID)
     // By default, it should be twice as big as nonpaged pool.
     //
     MmSizeOfPagedPoolInBytes = 2 * MmMaximumNonPagedPoolInBytes;
-    if (MmSizeOfPagedPoolInBytes > ((ULONG_PTR)MmNonPagedSystemStart -
+    if (MmSizeOfPagedPoolInBytes > ((ULONG_PTR)MmNonPagedPoolExpansionStart -
                                     (ULONG_PTR)MmPagedPoolStart))
     {
         //
@@ -1795,7 +1796,7 @@ MiBuildPagedPool(VOID)
         // for paged pool doesn't overflow into nonpaged pool VA. Otherwise, set
         // whatever maximum is possible.
         //
-        MmSizeOfPagedPoolInBytes = (ULONG_PTR)MmNonPagedSystemStart -
+        MmSizeOfPagedPoolInBytes = (ULONG_PTR)MmNonPagedPoolExpansionStart -
                                    (ULONG_PTR)MmPagedPoolStart;
     }
 #endif // _M_IX86
@@ -1812,6 +1813,17 @@ MiBuildPagedPool(VOID)
     //
     NumberOfPdes = (NumberOfPages + (PTE_PER_PAGE - 1)) / PTE_PER_PAGE;
 
+#ifdef _M_IX86
+    SIZE_T MaxNumberOfPdes;
+    SIZE_T MaxBytes;
+
+    MaxBytes = (ULONG_PTR)MmNonPagedPoolExpansionStart - (ULONG_PTR)MmPagedPoolStart;
+    MaxNumberOfPdes = MaxBytes / PDE_MAPPED_VA;
+
+    ASSERT(MaxNumberOfPdes != 0);
+    NumberOfPdes = min(NumberOfPdes, MaxNumberOfPdes);
+#endif // _M_IX86
+
     //
     // Recompute the PDE-aligned size of the paged pool, in bytes and pages.
     //
@@ -1820,10 +1832,10 @@ MiBuildPagedPool(VOID)
 
 #ifdef _M_IX86
     //
-    // Let's be really sure this doesn't overflow into nonpaged system VA
+    // Let's be really sure this doesn't overflow into nonpaged pool expansion VA
     //
     ASSERT((MmSizeOfPagedPoolInBytes + (ULONG_PTR)MmPagedPoolStart) <=
-           (ULONG_PTR)MmNonPagedSystemStart);
+           (ULONG_PTR)MmNonPagedPoolExpansionStart);
 #endif // _M_IX86
 
     //
@@ -2293,6 +2305,12 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Initialize the platform-specific parts */
         MiInitMachineDependent(LoaderBlock);
+
+        //
+        // x86 uses the loader-gap region
+        //
+        if (!MmSystemPteSpaceStart)
+            MmSystemPteSpaceStart = MmNonPagedSystemStart;
 
 #if DBG
         /* Prototype PTEs are assumed to be in paged pool, so check if the math works */

@@ -17,6 +17,11 @@ EXTERN LdrpInit:PROC
 EXTERN ZwCallbackReturn:PROC
 EXTERN RtlRaiseStatus:PROC
 
+.data
+
+Wow64PrepareForException:
+    .quad 0
+
 .code
 
 PUBLIC LdrInitializeThunk
@@ -195,7 +200,21 @@ PUBLIC KiUserExceptionDispatcher
     /* Clear direction flag */
     cld
 
+    /* Check the WOW64 callback */
+    mov rax, qword ptr Wow64PrepareForException[rip]
+    test rax, rax
+    jz .NoWow64
+
+    /* Prepare for WOW64 exception dispatching */
+    lea rcx, [rsp + CONTEXT_FRAME_LENGTH] /* ExceptionRecord */
+    lea rdx, [rsp] /* ContextRecord */
+    call rax
+
+.NoWow64:
+
     /* Dispatch the exception */
+    lea rcx, [rsp + CONTEXT_FRAME_LENGTH] /* ExceptionRecord */
+    lea rdx, [rsp] /* ContextRecord */
     call RtlDispatchException
 
     /* Check for success */

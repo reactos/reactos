@@ -2,14 +2,16 @@
 #ifndef __DDRAW_INCLUDED__
 #define __DDRAW_INCLUDED__
 
-#if defined(_WIN32) && !defined(_NO_COM )
-#define COM_NO_WINDOWS_H
-#include <objbase.h>
+#if defined(_WIN32) && !defined(_NO_COM)
+  #define COM_NO_WINDOWS_H
+  #include <objbase.h>
 #else
-#define IUnknown void
-#if !defined(NT_BUILD_ENVIRONMENT) && !defined(WINNT)
-        #define CO_E_NOTINITIALIZED 0x800401F0L
-#endif
+  #define IUnknown void
+  #if !defined(NT_BUILD_ENVIRONMENT) && !defined(WINNT)
+    #ifndef CO_E_NOTINITIALIZED /* Avoid conflict warning with _HRESULT_TYPEDEF_(0x800401F0L) in winerror.h */
+      #define CO_E_NOTINITIALIZED 0x800401F0L
+    #endif
+  #endif
 #endif
 
 #define _FACDD        0x876

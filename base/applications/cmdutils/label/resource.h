@@ -12,4 +12,3 @@
 
 #define STRING_ERROR_INVALID_DRIVE        106
 #define STRING_ERROR_INVALID_LABEL        107
-

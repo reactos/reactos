@@ -20,12 +20,14 @@ DEBUG_CHANNEL(kernel32file);
 /*
  * @implemented
  */
-BOOL WINAPI
-WriteFile(IN HANDLE hFile,
-          IN LPCVOID lpBuffer,
-          IN DWORD nNumberOfBytesToWrite OPTIONAL,
-          OUT LPDWORD lpNumberOfBytesWritten,
-          IN LPOVERLAPPED lpOverlapped OPTIONAL)
+BOOL
+WINAPI
+WriteFile(
+    _In_ HANDLE hFile,
+    _In_reads_bytes_opt_(nNumberOfBytesToWrite) LPCVOID lpBuffer,
+    _In_ DWORD nNumberOfBytesToWrite,
+    _Out_opt_ LPDWORD lpNumberOfBytesWritten,
+    _Inout_opt_ LPOVERLAPPED lpOverlapped)
 {
     NTSTATUS Status;
 
@@ -76,7 +78,7 @@ WriteFile(IN HANDLE hFile,
     }
     else
     {
-        IO_STATUS_BLOCK Iosb;
+        IO_STATUS_BLOCK Iosb = { 0 };
 
         Status = NtWriteFile(hFile,
                              NULL,
@@ -95,16 +97,16 @@ WriteFile(IN HANDLE hFile,
             if (NT_SUCCESS(Status)) Status = Iosb.Status;
         }
 
-        if (NT_SUCCESS(Status))
-        {
-            /*
-             * lpNumberOfBytesWritten must not be NULL here, in fact Win doesn't
-             * check that case either and crashes (only after the operation
-             * completed).
-             */
+        /*
+         * Windows 2003 and Vista do not check for lpNumberOfBytesWritten == NULL,
+         * but Windows 8+ does and Wine code (crypt32) relies on this.
+         * We ignore Hyrum's Law and assume that crashing here is not a
+         * behavior that software relies on.
+         */
+        if (lpNumberOfBytesWritten != NULL)
             *lpNumberOfBytesWritten = Iosb.Information;
-        }
-        else
+
+        if (!NT_SUCCESS(Status))
         {
             BaseSetLastNTError(Status);
             return FALSE;
@@ -119,12 +121,14 @@ WriteFile(IN HANDLE hFile,
 /*
  * @implemented
  */
-BOOL WINAPI
-ReadFile(IN HANDLE hFile,
-         IN LPVOID lpBuffer,
-         IN DWORD nNumberOfBytesToRead,
-         OUT LPDWORD lpNumberOfBytesRead OPTIONAL,
-         IN LPOVERLAPPED lpOverlapped OPTIONAL)
+BOOL
+WINAPI
+ReadFile(
+    _In_ HANDLE hFile,
+    _Out_writes_bytes_to_opt_(nNumberOfBytesToRead, *lpNumberOfBytesRead) __out_data_source(FILE) LPVOID lpBuffer,
+    _In_ DWORD nNumberOfBytesToRead,
+    _Out_opt_ LPDWORD lpNumberOfBytesRead,
+    _Inout_opt_ LPOVERLAPPED lpOverlapped)
 {
     NTSTATUS Status;
 
@@ -189,7 +193,7 @@ ReadFile(IN HANDLE hFile,
     }
     else
     {
-        IO_STATUS_BLOCK Iosb;
+        IO_STATUS_BLOCK Iosb = { 0 };
 
         Status = NtReadFile(hFile,
                             NULL,
@@ -211,24 +215,22 @@ ReadFile(IN HANDLE hFile,
         if (Status == STATUS_END_OF_FILE)
         {
             /*
-             * lpNumberOfBytesRead must not be NULL here, in fact Win doesn't
-             * check that case either and crashes (only after the operation
-             * completed).
+             * Windows 2003 and Vista do not check for lpNumberOfBytesRead == NULL,
+             * but Windows 8+ does. Avoid crashing.
              */
-            *lpNumberOfBytesRead = 0;
+            if (lpNumberOfBytesRead != NULL)
+                *lpNumberOfBytesRead = 0;
             return TRUE;
         }
 
-        if (NT_SUCCESS(Status))
-        {
-            /*
-             * lpNumberOfBytesRead must not be NULL here, in fact Win doesn't
-             * check that case either and crashes (only after the operation
-             * completed).
-             */
+        /*
+         * Windows 2003 and Vista do not check for lpNumberOfBytesRead == NULL,
+         * but Windows 8+ does. Avoid crashing.
+         */
+        if (lpNumberOfBytesRead != NULL)
             *lpNumberOfBytesRead = Iosb.Information;
-        }
-        else
+
+        if (!NT_SUCCESS(Status))
         {
             BaseSetLastNTError(Status);
             return FALSE;

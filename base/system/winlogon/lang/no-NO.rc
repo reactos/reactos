@@ -17,7 +17,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Logg på bruker Interface DLL %s mislykkes å laste.", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "Kontakt din system administrator for å erstatte DLL, eller få tilbake orginale DLL.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "&Restart", 1, 80, 91, 68, 14
+    DEFPUSHBUTTON "&Restart", IDOK, 80, 91, 68, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
@@ -26,10 +26,10 @@ CAPTION "System Shutdown"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "A system shutdown has been initiated. Please save all your work and terminate your session. All unsaved work will be lost when the system shuts down.", -1, 38, 7, 135, 40
-    LTEXT "The system shuts down in:", -1, 38, 50, 90, 8
+    LTEXT "A system shutdown has been initiated. Please save all your work and terminate your session. All unsaved work will be lost when the system shuts down.", IDC_STATIC, 38, 7, 135, 40
+    LTEXT "The system shuts down in:", IDC_STATIC, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Message:", -1, 38, 65, 135, 8
+    LTEXT "Message:", IDC_STATIC, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
@@ -50,6 +50,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Forbreder dvalemodus..."
     IDS_SAVEYOURSETTINGS "Lagrer innstillingene..."
     IDS_REACTOSISSTARTINGUP "ReactOS starter opp..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d days"
 END

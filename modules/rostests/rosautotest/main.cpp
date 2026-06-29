@@ -10,6 +10,8 @@
 #include <ndk/setypes.h>
 #include <ndk/exfuncs.h>
 
+WCHAR TestName[MAX_PATH];
+
 CConfiguration Configuration;
 
 /**
@@ -87,6 +89,14 @@ extern "C" int
 wmain(int argc, wchar_t* argv[])
 {
     int ReturnValue = 1;
+    DWORD TestStartTime, TestEndTime;
+
+    GetModuleFileNameW(NULL, TestName, _countof(TestName));
+//    printf("Full TestName is '%S'\n", TestName);
+    WCHAR* Name = wcsrchr(TestName, '\\');
+    if (Name)
+        memmove(TestName, Name + 1, (wcslen(Name + 1) + 1) * sizeof(WCHAR));
+//    printf("Short TestName is '%S'.\n", TestName);
 
     SetNtGlobalFlags();
 
@@ -99,10 +109,11 @@ wmain(int argc, wchar_t* argv[])
         Configuration.GetSystemInformation();
         Configuration.GetConfigurationFromFile();
 
+        TestStartTime = GetTickCount();
         ss << endl
            << endl
            << "[ROSAUTOTEST] System uptime " << setprecision(2) << fixed;
-        ss << ((float)GetTickCount()/1000) << " seconds" << endl;
+        ss << (float)TestStartTime / 1000 << " seconds" << endl;
         StringOut(ss.str());
 
         /* Report tests startup */
@@ -138,6 +149,23 @@ wmain(int argc, wchar_t* argv[])
             }
             WineTest.Run();
         }
+
+        /* Clear the stringstream */
+        ss.str("");
+        ss.clear();
+
+        /* Show the beginning time again */
+        ss << "[ROSAUTOTEST] System uptime at start was " << setprecision(2) << fixed;
+        ss << (float)TestStartTime / 1000 << " seconds" << endl;
+
+        /* Show the time now so that we can see how long the tests took */
+        TestEndTime = GetTickCount();
+        ss << endl
+           << "[ROSAUTOTEST] System uptime at end was " << setprecision(2) << fixed;
+        ss << ((float)TestEndTime / 1000) << " seconds" << endl;
+        ss << "[ROSAUTOTEST] Duration was " << (float)(TestEndTime - TestStartTime) / (60 * 1000);
+        ss << " minutes" << endl;
+        StringOut(ss.str());
 
         /* For sysreg2 */
         DbgPrint("SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");

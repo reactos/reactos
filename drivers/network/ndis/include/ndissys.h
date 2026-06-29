@@ -26,13 +26,15 @@
 /* the version of NDIS we claim to be */
 #define NDIS_VERSION 0x00050001
 
-#define NDIS_TAG  0x4e4d4953
+#define NDIS_TAG 'SIDN' // "NDIS"
 
 #define MIN(value1, value2) \
     ((value1 < value2)? value1 : value2)
 
 #define MAX(value1, value2) \
     ((value1 > value2)? value1 : value2)
+
+#define RTL_CONSTANT_LARGE_INTEGER(quad_part) {{(quad_part), (quad_part) >> 32}}
 
 #define ExInterlockedRemoveEntryList(_List,_Lock) \
  { KIRQL OldIrql; \

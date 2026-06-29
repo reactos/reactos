@@ -196,7 +196,7 @@ PsLocateSystemDll(VOID)
     /* Locate and open NTDLL to determine ImageBase and LdrStartup */
     InitializeObjectAttributes(&ObjectAttributes,
                                &PsNtDllPathName,
-                               0,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenFile(&FileHandle,
@@ -212,8 +212,8 @@ PsLocateSystemDll(VOID)
     }
 
     /* Check if the image is valid */
-    Status = MmCheckSystemImage(FileHandle, TRUE);
-    if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH)
+    Status = MmCheckSystemImage(FileHandle);
+    if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH || Status == STATUS_INVALID_IMAGE_PROTECT)
     {
         /* Raise a hard error */
         HardErrorParameters = (ULONG_PTR)&PsNtDllPathName;

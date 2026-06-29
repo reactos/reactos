@@ -1,8 +1,9 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Sound Volume Control
- * FILE:        base/applications/sndvol32/tray.c
- * PROGRAMMERS: Eric Kohl <eric.kohl@reactos.org>
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Tray pop-up for adjusting master volume and muting
+ * COPYRIGHT:   Copyright 2018-2019 Eric Kohl <eric.kohl@reactos.org>
+ *              Copyright 2026 Vitaly Orekhov <vkvo2000@vivaldi.net>
  */
 
 #include "sndvol32.h"
@@ -255,7 +256,68 @@ OnVScroll(
     }
 }
 
+static
+VOID
+OnMixerControlChange(
+    PDIALOG_DATA pDialogData,
+    HWND hwndDlg,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    HMIXER hMixer = (HMIXER)wParam;
+    DWORD dwControlID = lParam;
 
+    if (hMixer != pDialogData->hMixer)
+        return;
+    
+    MIXERCONTROLDETAILS mxcd;
+    mxcd.cbStruct = sizeof(mxcd);
+    mxcd.dwControlID = dwControlID;
+    mxcd.cMultipleItems = 0;
+    
+    if (dwControlID == pDialogData->muteControlID)
+    {
+        MIXERCONTROLDETAILS_BOOLEAN mxcdBool;
+
+        mxcd.cChannels = 1;
+        mxcd.cbDetails = sizeof(mxcdBool);
+        mxcd.paDetails = &mxcdBool;
+
+        if (mixerGetControlDetails((HMIXEROBJ)hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE) == MMSYSERR_NOERROR)
+            SendDlgItemMessageW(hwndDlg, IDC_LINE_SWITCH, BM_SETCHECK, (WPARAM)(mxcdBool.fValue ? BST_CHECKED : BST_UNCHECKED), 0);
+    }
+    else if (dwControlID == pDialogData->volumeControlID)
+    {
+        PMIXERCONTROLDETAILS_UNSIGNED mxcdVolume;
+        
+        mxcdVolume = HeapAlloc(GetProcessHeap(), 0, pDialogData->volumeChannels * sizeof(*mxcdVolume));
+        if (mxcdVolume == NULL)
+            return;
+
+        mxcd.cChannels = pDialogData->volumeChannels;
+        mxcd.cbDetails = sizeof(*mxcdVolume);
+        mxcd.paDetails = mxcdVolume;
+
+        if (mixerGetControlDetails((HMIXEROBJ)hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE) != MMSYSERR_NOERROR)
+            return;
+        
+        /* The Volume trackbar always shows the maximum volume value of all channels.
+         * Changing volume balance in "full" sndvol32 view must not affect it. */
+        DWORD dwVolume = 0;
+        for (int i = 0; i < pDialogData->volumeChannels; ++i)
+        {
+            if (mxcdVolume[i].dwValue <= dwVolume)
+                continue;
+
+            dwVolume = mxcdVolume[i].dwValue;
+        }
+        
+        DWORD dwNewPosition = VOLUME_MAX - dwVolume / pDialogData->volumeStep;
+        SendDlgItemMessageW(hwndDlg, IDC_LINE_SLIDER_VERT, TBM_SETPOS, TRUE, dwNewPosition);
+
+        HeapFree(GetProcessHeap(), 0, mxcdVolume);
+    }
+}
 
 INT_PTR
 CALLBACK
@@ -312,6 +374,11 @@ TrayDlgProc(
         case WM_ACTIVATE:
             if (LOWORD(wParam) == WA_INACTIVE)
                 EndDialog(hwndDlg, IDOK);
+            break;
+
+        case MM_MIXM_CONTROL_CHANGE:
+            if (pDialogData)
+                OnMixerControlChange(pDialogData, hwndDlg, wParam, lParam);
             break;
     }
 

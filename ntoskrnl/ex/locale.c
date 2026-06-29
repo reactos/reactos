@@ -134,9 +134,7 @@ ExpValidateNlsLocaleId(
                                NULL);
 
     /* Copy the locale ID into a buffer */
-    swprintf(LocaleIdBuffer,
-             L"%08lx",
-             (ULONG)LocaleId);
+    _swprintf(LocaleIdBuffer, L"%08lx", (ULONG)LocaleId);
 
     /* And build the LCID string */
     RtlInitUnicodeString(&LocaleIdString, LocaleIdBuffer);
@@ -366,9 +364,7 @@ ExpSetCurrentUserUILanguage(IN PCWSTR MuiName,
         if (NT_SUCCESS(Status))
         {
             /* Setup the value name */
-            ValueLength = swprintf(ValueBuffer,
-                                   L"%04lX",
-                                   (ULONG)LanguageId);
+            ValueLength = _swprintf(ValueBuffer, L"%04lX", (ULONG)LanguageId);
 
             /* Set the length for the call and set the value */
             ValueLength = (ValueLength + 1) * sizeof(WCHAR);
@@ -543,16 +539,16 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
                 if (UserProfile)
                 {
                     /* Fill in the buffer */
-                    ValueLength = swprintf(ValueBuffer,
-                                           L"%08lx",
-                                           (ULONG)DefaultLocaleId);
+                    ValueLength = _swprintf(ValueBuffer,
+                                            L"%08lx",
+                                            (ULONG)DefaultLocaleId);
                 }
                 else
                 {
                     /* Fill in the buffer */
-                    ValueLength = swprintf(ValueBuffer,
-                                           L"%04lx",
-                                           (ULONG)DefaultLocaleId & 0xFFFF);
+                    ValueLength = _swprintf(ValueBuffer,
+                                            L"%04lx",
+                                            (ULONG)DefaultLocaleId & 0xFFFF);
                 }
 
                 /* Set the length for the registry call */

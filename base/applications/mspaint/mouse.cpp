@@ -611,30 +611,34 @@ struct FillTool : ToolBase
 // TOOL_COLOR
 struct ColorTool : ToolBase
 {
-    void fetchColor(BOOL bLeftButton, LONG x, LONG y)
+    COLORREF fetchColor(LONG x, LONG y)
     {
-        COLORREF rgbColor;
-
         if (0 <= x && x < imageModel.GetWidth() && 0 <= y && y < imageModel.GetHeight())
-            rgbColor = GetPixel(m_hdc, x, y);
-        else
-            rgbColor = RGB(255, 255, 255); // Outside is white
+            return GetPixel(m_hdc, x, y);
+        return RGB(255, 255, 255); // Outside is white
+    }
 
-        if (bLeftButton)
-            paletteModel.SetFgColor(rgbColor);
-        else
-            paletteModel.SetBgColor(rgbColor);
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
+    {
+        COLORREF rgbColor = fetchColor(x, y);
+        toolSettingsWindow.SendMessage(WM_TOOLSMODELCOLORPICKED, rgbColor, 0);
     }
 
     BOOL OnMouseMove(BOOL bLeftButton, LONG& x, LONG& y) override
     {
-        fetchColor(bLeftButton, x, y);
+        COLORREF rgbColor = fetchColor(x, y);
+        toolSettingsWindow.SendMessage(WM_TOOLSMODELCOLORPICKED, rgbColor, 0);
         return TRUE;
     }
 
     BOOL OnButtonUp(BOOL bLeftButton, LONG& x, LONG& y) override
     {
-        fetchColor(bLeftButton, x, y);
+        COLORREF rgbColor = fetchColor(x, y);
+        if (bLeftButton)
+            paletteModel.SetFgColor(rgbColor);
+        else
+            paletteModel.SetBgColor(rgbColor);
+
         toolsModel.SetActiveTool(toolsModel.GetOldActiveTool());
         return TRUE;
     }

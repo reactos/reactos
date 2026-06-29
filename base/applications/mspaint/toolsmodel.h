@@ -28,7 +28,7 @@ enum TOOLTYPE
     TOOL_MAX = TOOL_RRECT,
 };
 
-enum BrushStyle
+enum BrushStyle : int
 {
     BrushStyleRound,
     BrushStyleSquare,
@@ -81,6 +81,7 @@ private:
     ToolBase *m_pToolObject;
 
     ToolBase *GetOrCreateTool(TOOLTYPE nTool);
+    void SendSetCursor();
 
 public:
     ToolsModel();
@@ -149,12 +150,12 @@ extern ToolsModel toolsModel;
 
 static inline int Zoomed(int xy)
 {
-    return xy * toolsModel.GetZoom() / 1000;
+    return MulDiv(xy, toolsModel.GetZoom(), DEFAULT_ZOOM);
 }
 
 static inline int UnZoomed(int xy)
 {
-    return xy * 1000 / toolsModel.GetZoom();
+    return MulDiv(xy, DEFAULT_ZOOM, toolsModel.GetZoom());
 }
 
 static inline void Zoomed(POINT& pt)

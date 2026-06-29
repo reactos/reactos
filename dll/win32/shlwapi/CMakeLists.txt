@@ -1,15 +1,22 @@
 
 project(SHELL)
 
+remove_definitions(-D_WIN32_WINNT=0x502)
+add_definitions(-D_WIN32_WINNT=0x600)
+
 add_definitions(
     -D__WINESRC__
-    -D_SHLWAPI_)
+    -D_SHLWAPI_
+    -Dwcsicmp=strcmpiW
+)
 
 spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    appcompat.c
     clist.c
     istream.c
+    kernelbase.c
     msgbox.c
     ordinal.c
     path.c
@@ -24,9 +31,12 @@ list(APPEND SOURCE
 
 list(APPEND PCH_SKIP_SOURCE
     assoc.c
+    policy.cpp
     propbag.cpp
+    querysrc.cpp
     utils.cpp
     wsprintf.c
+    zonechk.c
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi_stubs.c)
 
 add_library(shlwapi MODULE
@@ -36,10 +46,19 @@ add_library(shlwapi MODULE
     shlwapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    # FIXME: This is some nonsense that triggers GCC 13+ warnings
+    target_compile_options(shlwapi PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-Wno-overloaded-virtual>")
+endif()
+
+if(MSVC)
+    target_compile_options(shlwapi PRIVATE /wd4267) # warning C4267: 'function': conversion from 'size_t' to 'DWORD', possible loss of data
+endif()
+
 # our C++ atlbase.h conflicts with the one from wine, so only use wine includes for C
 # Unfortunately, we can't use different includes for C & C++ in VS generator, so use an object library to achieve this
 target_include_directories(shlwapi BEFORE PRIVATE
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/include/wine
     ${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 add_library(shlwapi_autocomp OBJECT autocomp.cpp)
@@ -49,8 +68,11 @@ target_compile_options(shlwapi_autocomp PRIVATE $<TARGET_PROPERTY:shlwapi,COMPIL
 add_dependencies(shlwapi_autocomp psdk)
 
 set_module_type(shlwapi win32dll UNICODE)
-target_link_libraries(shlwapi uuid wine cpprt)
-add_delay_importlibs(shlwapi userenv oleaut32 ole32 comdlg32 mpr mlang urlmon shell32 winmm version)
-add_importlibs(shlwapi user32 gdi32 advapi32 wininet msvcrt kernel32 ntdll)
-add_pch(shlwapi precomp.h "${PCH_SKIP_SOURCE}")
+target_link_libraries(shlwapi uuid wine crtheap cppstl)
+if(DLL_EXPORT_VERSION LESS 0x600)
+    target_link_libraries(shlwapi evalcmd)
+endif()
+add_delay_importlibs(shlwapi userenv oleaut32 ole32 comctl32 comdlg32 mpr mlang urlmon shell32 winmm version)
+add_importlibs(shlwapi shcore user32 gdi32 advapi32 wininet msvcrt kernelbase kernel32 kernel32_vista ntdll)
+#add_pch(shlwapi precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET shlwapi DESTINATION reactos/system32 FOR all)

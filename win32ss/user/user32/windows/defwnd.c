@@ -327,21 +327,6 @@ User32DefWindowProc(HWND hWnd,
         case WM_DEVICECHANGE:
             return TRUE;
 
-        case WM_POPUPSYSTEMMENU:
-        {
-            /* This is an undocumented message used by the windows taskbar to
-               display the system menu of windows that belong to other processes. */
-            HMENU menu = GetSystemMenu(hWnd, FALSE);
-            ERR("WM_POPUPSYSTEMMENU\n");
-            if (menu)
-            {
-                SetForegroundWindow(hWnd);
-                TrackPopupMenu(menu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_SYSTEM_MENU,
-                               LOWORD(lParam), HIWORD(lParam), 0, hWnd, NULL);
-            }
-            return 0;
-        }
-
         case WM_RBUTTONUP:
         {
             POINT Pt;
@@ -798,6 +783,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_WINDOWPOSCHANGED:
         case WM_APPCOMMAND:
         case WM_SETCURSOR:
+        case WM_POPUPSYSTEMMENU:
 GoSS:
         {
             LRESULT lResult;

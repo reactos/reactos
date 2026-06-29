@@ -14,8 +14,6 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
-extern ULONG LoaderPagesSpanned;
-
 static const PCSTR MemTypeDesc[] = {
     "ExceptionBlock    ", // ?
     "SystemBlock       ", // ?
@@ -46,11 +44,6 @@ static const PCSTR MemTypeDesc[] = {
 static VOID
 WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                        IN PMEMORY_ALLOCATION_DESCRIPTOR NewDescriptor);
-
-extern PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
-extern ULONG BiosMemoryMapEntryCount;
-extern PFN_NUMBER MmLowestPhysicalPage;
-extern PFN_NUMBER MmHighestPhysicalPage;
 
 /* GLOBALS ***************************************************************/
 
@@ -114,7 +107,7 @@ MempSetupPagingForRegion(
           BasePage, PageCount, Type);
 
     /* Make sure we don't map too high */
-    if (BasePage + PageCount > LoaderPagesSpanned) return;
+    if (BasePage + PageCount > MmGetLoaderPagesSpanned()) return;
 
     switch (Type)
     {
@@ -310,12 +303,16 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
         MadCount++;
     }
 #endif
+    PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
+    ULONG BiosMemoryMapEntryCount;
+
+    BiosMemoryMapEntryCount = MmGetBiosMemoryMap(&BiosMemoryMap);
 
     /* Now we need to add high descriptors from the bios memory map */
     for (i = 0; i < BiosMemoryMapEntryCount; i++)
     {
         /* Check if its higher than the lookup table */
-        if (BiosMemoryMap->BasePage > MmHighestPhysicalPage)
+        if (BiosMemoryMap->BasePage > MmGetHighestPhysicalPage())
         {
             /* Copy this descriptor */
             MempAddMemoryBlock(LoaderBlock,
@@ -328,6 +325,13 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
     TRACE("MadCount: %d\n", MadCount);
 
     WinLdrpDumpMemoryDescriptors(LoaderBlock); //FIXME: Delete!
+
+#ifdef UEFIBOOT
+    extern PVOID OsLoaderBase;
+    extern SIZE_T OsLoaderSize;
+    /* UEFILDR can be above the 2GB-ish range, we don't want to map the whole area */
+    Status = MempSetupPaging((ULONG_PTR)OsLoaderBase / PAGE_SIZE, OsLoaderSize / PAGE_SIZE, FALSE);
+#endif
 
     // Map our loader image, so we can continue running
     /*Status = MempSetupPaging(OsLoaderBase >> MM_PAGE_SHIFT, OsLoaderSize >> MM_PAGE_SHIFT);

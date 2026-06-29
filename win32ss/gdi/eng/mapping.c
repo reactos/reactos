@@ -385,7 +385,7 @@ EngLoadModuleEx(
                           0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open file, hFile=%p, Status=0x%x\n", hFile, Status);
+        DPRINT1("Failed to open file '%S' Status=0x%x\n", pwsz, Status);
         EngFreeMem(pFileView);
         return NULL;
     }

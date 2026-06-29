@@ -4579,10 +4579,13 @@ NTSTATUS nfs41_QueryVolumeInformation(
         status = STATUS_SUCCESS;
         goto out;
     }
+#ifndef __REACTOS__
+    // FileAccessInformation isn't the correct enum type!
+    // It has the value 8, which is FileFsObjectIdInformation
     case FileAccessInformation:
         status = STATUS_NOT_SUPPORTED;
         goto out;
-
+#endif
     case FileFsAttributeInformation:
         if (RxContext->Info.LengthRemaining < FS_ATTR_LEN) {
             RxContext->InformationToReturn = FS_ATTR_LEN;

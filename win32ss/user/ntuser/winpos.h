@@ -77,6 +77,13 @@ VOID FASTCALL co_IntCalculateSnapPosition(PWND Wnd, UINT Edge, OUT RECT *Pos);
 VOID FASTCALL co_IntSnapWindow(PWND Wnd, UINT Edge);
 VOID FASTCALL IntSetSnapEdge(PWND Wnd, UINT Edge);
 VOID FASTCALL IntSetSnapInfo(PWND Wnd, UINT Edge, IN const RECT *Pos OPTIONAL);
+#define GetSnapSetting(gspvmember) (IsSnapEnabled() ? (gspv.gspvmember) : 0)
+
+FORCEINLINE BOOL
+IsSnapEnabled(VOID)
+{
+    return g_bWindowSnapEnabled;
+}
 
 FORCEINLINE VOID
 co_IntUnsnapWindow(PWND Wnd)

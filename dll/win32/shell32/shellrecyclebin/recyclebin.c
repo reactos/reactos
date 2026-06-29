@@ -93,7 +93,7 @@ BOOL WINAPI
 DeleteFileInRecycleBin(
     IN HDELFILE hDeletedFile)
 {
-    IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
+    IRecycleBinFile *rbf = IRecycleBinFileFromHDELFILE(hDeletedFile);
     HRESULT hr;
 
     TRACE("(%p)\n", hDeletedFile);
@@ -283,11 +283,26 @@ GetRecycleBinFileHandle(
     return context.hDelFile;
 }
 
+EXTERN_C BOOL
+RemoveFromRecycleBinDatabase(
+    IN const RECYCLEBINFILEIDENTITY *pFI)
+{
+    BOOL ret = FALSE;
+    HDELFILE hDelFile = GetRecycleBinFileHandle(NULL, pFI);
+    if (hDelFile)
+    {
+        IRecycleBinFile *rbf = IRecycleBinFileFromHDELFILE(hDelFile);
+        ret = SUCCEEDED(IRecycleBinFile_RemoveFromDatabase(rbf));
+        CloseRecycleBinHandle(hDelFile);
+    }
+    return ret;
+}
+
 BOOL WINAPI
 RestoreFileFromRecycleBin(
     IN HDELFILE hDeletedFile)
 {
-    IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
+    IRecycleBinFile *rbf = IRecycleBinFileFromHDELFILE(hDeletedFile);
     HRESULT hr;
 
     TRACE("(%p)\n", hDeletedFile);

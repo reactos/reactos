@@ -18,32 +18,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+%option bison-bridge
+%option bison-locations
 %option stack
 %option noinput nounput noyy_top_state
+%option noyywrap
 %option 8bit never-interactive prefix="parser_"
 
-nl	\r?\n
-ws	[ \f\t\r]
-cident	[a-zA-Z_][0-9a-zA-Z_]*
-u_suffix	(u|U)
-l_suffix	(l|L)
-int	[0-9]+({l_suffix}?{u_suffix}?|{u_suffix}?{l_suffix}?)?
-hexd	[0-9a-fA-F]
-hex	0(x|X){hexd}+({l_suffix}?{u_suffix}?|{u_suffix}?{l_suffix}?)?
-uuid	{hexd}{8}-{hexd}{4}-{hexd}{4}-{hexd}{4}-{hexd}{12}
-double	[0-9]+\.[0-9]+([eE][+-]?[0-9]+)*
+ws    [ \f\t\r]
+hd    [0-9a-fA-F]
+uuid  {hd}{8}-{hd}{4}-{hd}{4}-{hd}{4}-{hd}{12}
 
-%x QUOTE
-%x WSTRQUOTE
 %x ATTR
 %x PP_LINE
+%x PP_FILE
 %x PP_PRAGMA
-%x SQUOTE
 
 %{
 
 #include "config.h"
-#include "wine/port.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,42 +45,49 @@ double	[0-9]+\.[0-9]+([eE][+-]?[0-9]+)*
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#else
 #define YY_NO_UNISTD_H
-#endif
 
 #include "widl.h"
 #include "utils.h"
 #include "parser.h"
-#include "wine/wpp.h"
+#include "wpp_private.h"
+
+#define YYerror PARSER_error
+#define YYSTYPE PARSER_STYPE
+#define YYLTYPE PARSER_LTYPE
+#define YYUNDEF PARSER_UNDEF
+#define yyerror parser_error
 
 #include "parser.tab.h"
 
-static void addcchar(char c);
-static char *get_buffered_cstring(void);
+static void reset_location( struct location *where, const char *input_name );
+static void update_location( struct location *where, const char *yytext );
+static void end_of_line( struct location *where );
 
-static char *cbuffer;
-static int cbufidx;
-static int cbufalloc = 0;
-
-static int kw_token(const char *kw);
-static int attr_token(const char *kw);
+#define YY_USER_INIT    reset_location( yylloc, input_name )
+#define YY_USER_ACTION  update_location( yylloc, yytext );
 
 static void switch_to_acf(void);
 
 static warning_list_t *disabled_warnings = NULL;
 
-#define MAX_IMPORT_DEPTH 20
-struct {
-  YY_BUFFER_STATE state;
-  char *input_name;
-  int   line_number;
-  char *temp_name;
-} import_stack[MAX_IMPORT_DEPTH];
-int import_stack_ptr = 0;
+struct import_state
+{
+    YY_BUFFER_STATE buffer;
+    char *input_name;
+    struct location where;
+    struct list entry;
+};
+static struct list import_stack = LIST_INIT( import_stack );
+int parse_only = 0;
+
+struct import
+{
+    const char *name;
+    struct list entry;
+};
+static struct list imports = LIST_INIT( imports );
+static struct location previous_location;
 
 /* converts an integer in string form to an unsigned long and prints an error
  * on overflow */
@@ -102,24 +102,84 @@ static unsigned int xstrtoul(const char *nptr, char **endptr, int base)
     return val;
 }
 
-UUID *parse_uuid(const char *u)
+static int token_uuid( const char *str, YYSTYPE *yylval )
 {
-  UUID* uuid = xmalloc(sizeof(UUID));
-  char b[3];
-  /* it would be nice to use UuidFromStringA */
-  uuid->Data1 = strtoul(u, NULL, 16);
-  uuid->Data2 = strtoul(u+9, NULL, 16);
-  uuid->Data3 = strtoul(u+14, NULL, 16);
-  b[2] = 0;
-  memcpy(b, u+19, 2); uuid->Data4[0] = strtoul(b, NULL, 16);
-  memcpy(b, u+21, 2); uuid->Data4[1] = strtoul(b, NULL, 16);
-  memcpy(b, u+24, 2); uuid->Data4[2] = strtoul(b, NULL, 16);
-  memcpy(b, u+26, 2); uuid->Data4[3] = strtoul(b, NULL, 16);
-  memcpy(b, u+28, 2); uuid->Data4[4] = strtoul(b, NULL, 16);
-  memcpy(b, u+30, 2); uuid->Data4[5] = strtoul(b, NULL, 16);
-  memcpy(b, u+32, 2); uuid->Data4[6] = strtoul(b, NULL, 16);
-  memcpy(b, u+34, 2); uuid->Data4[7] = strtoul(b, NULL, 16);
-  return uuid;
+    struct uuid *uuid;
+    char tmp[3] = {0};
+
+    if (*str == '\"') str++;
+
+    uuid = xmalloc( sizeof(*uuid) );
+    uuid->Data1 = strtoul( str , NULL, 16 );
+    uuid->Data2 = strtoul( str + 9, NULL, 16 );
+    uuid->Data3 = strtoul( str + 14, NULL, 16 );
+    memcpy( tmp, str + 19, 2 );
+    uuid->Data4[0] = strtoul( tmp, NULL, 16 );
+    memcpy( tmp, str + 21, 2 );
+    uuid->Data4[1] = strtoul( tmp, NULL, 16 );
+    memcpy( tmp, str + 24, 2 );
+    uuid->Data4[2] = strtoul( tmp, NULL, 16 );
+    memcpy( tmp, str + 26, 2 );
+    uuid->Data4[3] = strtoul( tmp, NULL, 16 );
+    memcpy( tmp, str + 28, 2 );
+    uuid->Data4[4] = strtoul( tmp, NULL, 16 );
+    memcpy( tmp, str + 30, 2 );
+    uuid->Data4[5] = strtoul( tmp, NULL, 16 );
+    memcpy( tmp, str + 32, 2 );
+    uuid->Data4[6] = strtoul( tmp, NULL, 16 );
+    memcpy( tmp, str + 34, 2 );
+    uuid->Data4[7] = strtoul( tmp, NULL, 16 );
+
+    yylval->uuid = uuid;
+    return aUUID;
+}
+
+static int token_str( int token, const char *str, YYSTYPE *yylval )
+{
+    char *tmp = xstrdup( str );
+
+    if (token == aWSTRING || token == aSTRING || token == aSQSTRING)
+    {
+        char *src, *dst;
+        src = dst = ++tmp; /* skip first quote */
+        while (*src)
+        {
+            if (*src == '\\') src++;
+            *dst++ = *src++;
+        }
+        dst[-1] = 0; /* strip last quote */
+    }
+
+    yylval->str = tmp;
+    return token;
+}
+
+static int token_num( const char *yytext, YYSTYPE *yylval, int is_hex )
+{
+    yylval->integer.value = xstrtoul( yytext, NULL, 0 );
+    yylval->integer.is_hex = is_hex;
+    yylval->integer.is_long = !!strchr(yytext, 'l');
+    yylval->integer.is_unsigned = !!strchr(yytext, 'u');
+    return is_hex ? aHEXNUM : aNUM;
+}
+
+static int token_ident( const char *str, YYSTYPE *yylval )
+{
+    return token_str( is_type( str ) ? aKNOWNTYPE : aIDENTIFIER, str, yylval );
+}
+
+static int token_winrt( int token, const char *str, YYSTYPE *yylval )
+{
+    if (winrt_mode) return token;
+    return token_ident( str, yylval );
+}
+
+static void winrt_enable( int ns_prefix )
+{
+    if (!list_empty( &import_stack ) && !winrt_mode) error_loc( "WinRT IDL file imported in non-winrt mode.\n" );
+
+    use_abi_namespace = ns_prefix;
+    winrt_mode = TRUE;
 }
 
 %}
@@ -130,104 +190,274 @@ UUID *parse_uuid(const char *u)
  **************************************************************************
  */
 %%
-<INITIAL>^{ws}*\#{ws}*pragma{ws}+ yy_push_state(PP_PRAGMA);
-<INITIAL,ATTR>^{ws}*\#{ws}*	yy_push_state(PP_LINE);
-<PP_LINE>[^\n]*         {
-                            int lineno;
-                            char *cptr, *fname;
-                            yy_pop_state();
-                            lineno = (int)strtol(yytext, &cptr, 10);
-                            if(!lineno)
-                                error_loc("Malformed '#...' line-directive; invalid linenumber\n");
-                            fname = strchr(cptr, '"');
-                            if(!fname)
-                                error_loc("Malformed '#...' line-directive; missing filename\n");
-                            fname++;
-                            cptr = strchr(fname, '"');
-                            if(!cptr)
-                                error_loc("Malformed '#...' line-directive; missing terminating \"\n");
-                            *cptr = '\0';
-                            line_number = lineno - 1;  /* We didn't read the newline */
-                            input_name = xstrdup(fname);
-                        }
-<PP_PRAGMA>midl_echo[^\n]*  yyless(9); yy_pop_state(); return tCPPQUOTE;
-<PP_PRAGMA>winrt[^\n]*  {
-                            if(import_stack_ptr) {
-                                if(!winrt_mode)
-                                    error_loc("winrt IDL file imported in non-winrt mode\n");
-                            }else {
-                                const char *ptr = yytext+5;
+<PP_PRAGMA>{
+    midl_echo/"("                               {
+                                                    yy_pop_state();
+                                                    yylloc->first_line -= 1;
+                                                    return tCPPQUOTE;
+                                                }
+    winrt{ws}+ns_prefix[^\n]*                   {
+                                                    yy_pop_state();
+                                                    yylloc->first_line -= 1;
+                                                    winrt_enable( TRUE );
+                                                }
+    winrt[^\n]*                                 {
+                                                    yy_pop_state();
+                                                    yylloc->first_line -= 1;
+                                                    winrt_enable( FALSE );
+                                                }
+    [^\n]*                                      {
+                                                    yy_pop_state();
+                                                    yylloc->first_line -= 1;
+                                                    return token_str( aPRAGMA, yytext, yylval );
+                                                }
+}
+<PP_LINE>[0-9]+{ws}*                            {
+                                                    yylloc->first_line = strtoul( yytext, NULL, 10 ) - 1;
+                                                    yylloc->last_line = yylloc->first_line;
+                                                    yy_pop_state();
+                                                    yy_push_state(PP_FILE);
+                                                }
+<PP_FILE>\"(\\[^n]|[^"\\\n])*\"{ws}*            {
+                                                    input_name = xstrdup( yytext + 1 );
+                                                    *strchr( input_name, '"' ) = 0;
+                                                    yylloc->input_name = input_name;
+                                                }
+<PP_FILE>[^"][^\n]*                             { yy_pop_state(); }
 
-                                winrt_mode = TRUE;
+<ATTR>{
+    \]                                          { yy_pop_state(); return ']'; }
 
-                                while(isspace(*ptr))
-                                    ptr++;
-                                if(!strncmp(ptr, "ns_prefix", 9) && (!*(ptr += 9) || isspace(*ptr)))
-                                    use_abi_namespace = TRUE;
-                            }
-                            yy_pop_state();
-                        }
-<PP_PRAGMA>[^\n]*       parser_lval.str = xstrdup(yytext); yy_pop_state(); return aPRAGMA;
-<INITIAL>^{ws}*midl_pragma{ws}+warning return tPRAGMA_WARNING;
-<INITIAL,ATTR>\"	yy_push_state(QUOTE); cbufidx = 0;
-<QUOTE>\"		{
-				yy_pop_state();
-				parser_lval.str = get_buffered_cstring();
-				return aSTRING;
-			}
-<INITIAL,ATTR>L\"	yy_push_state(WSTRQUOTE); cbufidx = 0;
-<WSTRQUOTE>\"		{
-				yy_pop_state();
-				parser_lval.str = get_buffered_cstring();
-				return aWSTRING;
-			}
-<INITIAL,ATTR>\'	yy_push_state(SQUOTE); cbufidx = 0;
-<SQUOTE>\'		{
-				yy_pop_state();
-				parser_lval.str = get_buffered_cstring();
-				return aSQSTRING;
-			}
-<QUOTE,WSTRQUOTE,SQUOTE>\\\\	|
-<QUOTE,WSTRQUOTE>\\\"	addcchar(yytext[1]);
-<SQUOTE>\\\'	addcchar(yytext[1]);
-<QUOTE,WSTRQUOTE,SQUOTE>\\.	addcchar('\\'); addcchar(yytext[1]);
-<QUOTE,WSTRQUOTE,SQUOTE>.	addcchar(yytext[0]);
-<INITIAL,ATTR>\[	yy_push_state(ATTR); return '[';
-<ATTR>\]		yy_pop_state(); return ']';
-<ATTR>{cident}		return attr_token(yytext);
-<ATTR>{uuid}			{
-				parser_lval.uuid = parse_uuid(yytext);
-				return aUUID;
-			}
-<INITIAL,ATTR>{hex}	{
-				parser_lval.num = xstrtoul(yytext, NULL, 0);
-				return aHEXNUM;
-			}
-<INITIAL,ATTR>{int}	{
-				parser_lval.num = xstrtoul(yytext, NULL, 0);
-				return aNUM;
-			}
-<INITIAL>{double}	{
-				parser_lval.dbl = strtod(yytext, NULL);
-				return aDOUBLE;
-			}
+    ({uuid}|\"{uuid}\")                         { return token_uuid( yytext, yylval ); }
+    activatable                                 { return token_winrt( tACTIVATABLE, yytext, yylval ); }
+    aggregatable                                { return tAGGREGATABLE; }
+    agile                                       { return token_winrt( tAGILE, yytext, yylval ); }
+    all_nodes                                   { return tALLNODES; }
+    allocate                                    { return tALLOCATE; }
+    annotation                                  { return tANNOTATION; }
+    apartment                                   { return tAPARTMENT; }
+    appobject                                   { return tAPPOBJECT; }
+    async                                       { return tASYNC; }
+    async_uuid                                  { return tASYNCUUID; }
+    auto_handle                                 { return tAUTOHANDLE; }
+    bindable                                    { return tBINDABLE; }
+    both                                        { return tBOTH; }
+    broadcast                                   { return tBROADCAST; }
+    byte_count                                  { return tBYTECOUNT; }
+    call_as                                     { return tCALLAS; }
+    callback                                    { return tCALLBACK; }
+    code                                        { return tCODE; }
+    comm_status                                 { return tCOMMSTATUS; }
+    composable                                  { return token_winrt( tCOMPOSABLE, yytext, yylval ); }
+    context_handle                              { return tCONTEXTHANDLE; }
+    context_handle_noserialize                  { return tCONTEXTHANDLENOSERIALIZE; }
+    context_handle_serialize                    { return tCONTEXTHANDLENOSERIALIZE; }
+    contract                                    { return token_winrt( tCONTRACT, yytext, yylval ); }
+    contractversion                             { return token_winrt( tCONTRACTVERSION, yytext, yylval ); }
+    control                                     { return tCONTROL; }
+    custom                                      { return tCUSTOM; }
+    decode                                      { return tDECODE; }
+    default_overload                            { return tDEFAULT_OVERLOAD; }
+    defaultbind                                 { return tDEFAULTBIND; }
+    defaultcollelem                             { return tDEFAULTCOLLELEM; }
+    defaultvalue                                { return tDEFAULTVALUE; }
+    defaultvtable                               { return tDEFAULTVTABLE; }
+    deprecated                                  { return token_winrt( tDEPRECATED, yytext, yylval ); }
+    disable_consistency_check                   { return tDISABLECONSISTENCYCHECK; }
+    displaybind                                 { return tDISPLAYBIND; }
+    dllname                                     { return tDLLNAME; }
+    dont_free                                   { return tDONTFREE; }
+    dual                                        { return tDUAL; }
+    enable_allocate                             { return tENABLEALLOCATE; }
+    encode                                      { return tENCODE; }
+    endpoint                                    { return tENDPOINT; }
+    entry                                       { return tENTRY; }
+    eventadd                                    { return token_winrt( tEVENTADD, yytext, yylval ); }
+    eventremove                                 { return token_winrt( tEVENTREMOVE, yytext, yylval ); }
+    exclusiveto                                 { return token_winrt( tEXCLUSIVETO, yytext, yylval ); }
+    explicit_handle                             { return tEXPLICITHANDLE; }
+    fault_status                                { return tFAULTSTATUS; }
+    flags                                       { return token_winrt( tFLAGS, yytext, yylval ); }
+    force_allocate                              { return tFORCEALLOCATE; }
+    free                                        { return tFREE; }
+    handle                                      { return tHANDLE; }
+    helpcontext                                 { return tHELPCONTEXT; }
+    helpfile                                    { return tHELPFILE; }
+    helpstring                                  { return tHELPSTRING; }
+    helpstringcontext                           { return tHELPSTRINGCONTEXT; }
+    helpstringdll                               { return tHELPSTRINGDLL; }
+    hidden                                      { return tHIDDEN; }
+    id                                          { return tID; }
+    idempotent                                  { return tIDEMPOTENT; }
+    ignore                                      { return tIGNORE; }
+    iid_is                                      { return tIIDIS; }
+    immediatebind                               { return tIMMEDIATEBIND; }
+    implicit_handle                             { return tIMPLICITHANDLE; }
+    in                                          { return tIN; }
+    in_line                                     { return tIN_LINE; }
+    input_sync                                  { return tINPUTSYNC; }
+    lcid                                        { return tLCID; }
+    length_is                                   { return tLENGTHIS; }
+    licensed                                    { return tLICENSED; }
+    local                                       { return tLOCAL; }
+    marshaling_behavior                         { return token_winrt( tMARSHALINGBEHAVIOR, yytext, yylval ); }
+    maybe                                       { return tMAYBE; }
+    message                                     { return tMESSAGE; }
+    mta                                         { return tMTA; }
+    neutral                                     { return tNEUTRAL; }
+    nocode                                      { return tNOCODE; }
+    nonbrowsable                                { return tNONBROWSABLE; }
+    noncreatable                                { return tNONCREATABLE; }
+    none                                        { return token_winrt( tNONE, yytext, yylval ); }
+    nonextensible                               { return tNONEXTENSIBLE; }
+    notify                                      { return tNOTIFY; }
+    notify_flag                                 { return tNOTIFYFLAG; }
+    object                                      { return tOBJECT; }
+    odl                                         { return tODL; }
+    oleautomation                               { return tOLEAUTOMATION; }
+    optimize                                    { return tOPTIMIZE; }
+    optional                                    { return tOPTIONAL; }
+    out                                         { return tOUT; }
+    overload                                    { return tOVERLOAD; }
+    partial_ignore                              { return tPARTIALIGNORE; }
+    pointer_default                             { return tPOINTERDEFAULT; }
+    progid                                      { return tPROGID; }
+    propget                                     { return tPROPGET; }
+    propput                                     { return tPROPPUT; }
+    propputref                                  { return tPROPPUTREF; }
+    protected                                   { return tPROTECTED; }
+    proxy                                       { return tPROXY; }
+    ptr                                         { return tPTR; }
+    public                                      { return tPUBLIC; }
+    range                                       { return tRANGE; }
+    readonly                                    { return tREADONLY; }
+    ref                                         { return tREF; }
+    represent_as                                { return tREPRESENTAS; }
+    requestedit                                 { return tREQUESTEDIT; }
+    restricted                                  { return tRESTRICTED; }
+    retval                                      { return tRETVAL; }
+    single                                      { return tSINGLE; }
+    single_node                                 { return tSINGLENODE; }
+    size_is                                     { return tSIZEIS; }
+    source                                      { return tSOURCE; }
+    standard                                    { return token_winrt( tSTANDARD, yytext, yylval ); }
+    static                                      { return token_winrt( tSTATIC, yytext, yylval ); }
+    strict_context_handle                       { return tSTRICTCONTEXTHANDLE; }
+    string                                      { return tSTRING; }
+    switch_is                                   { return tSWITCHIS; }
+    switch_type                                 { return tSWITCHTYPE; }
+    threading                                   { return tTHREADING; }
+    transmit_as                                 { return tTRANSMITAS; }
+    uidefault                                   { return tUIDEFAULT; }
+    unique                                      { return tUNIQUE; }
+    user_marshal                                { return tUSERMARSHAL; }
+    usesgetlasterror                            { return tUSESGETLASTERROR; }
+    uuid                                        { return tUUID; }
+    v1_enum                                     { return tV1ENUM; }
+    vararg                                      { return tVARARG; }
+    version                                     { return tVERSION; }
+    vi_progid                                   { return tVIPROGID; }
+    wire_marshal                                { return tWIREMARSHAL; }
+}
+
+<INITIAL>{
+    ^{ws}*\#{ws}*pragma{ws}+                    { yy_push_state( PP_PRAGMA ); }
+    ^{ws}*midl_pragma{ws}+warning               { return tPRAGMA_WARNING; }
+
+    [0-9]+\.[0-9]+([eE][+-]?[0-9]+)*            {
+                                                    yylval->dbl = strtod( yytext, NULL );
+                                                    return aDOUBLE;
+                                                }
+}
+
 SAFEARRAY{ws}*/\(	return tSAFEARRAY;
-{cident}		return kw_token(yytext);
-<INITIAL,ATTR>\n	line_number++;
-<INITIAL,ATTR>{ws}
-<INITIAL,ATTR>\<\<	return SHL;
-<INITIAL,ATTR>\>\>	return SHR;
-<INITIAL,ATTR>\-\>	return MEMBERPTR;
-<INITIAL,ATTR>==	return EQUALITY;
-<INITIAL,ATTR>!=	return INEQUALITY;
-<INITIAL,ATTR>\>=	return GREATEREQUAL;
-<INITIAL,ATTR>\<=	return LESSEQUAL;
-<INITIAL,ATTR>\|\|	return LOGICALOR;
-<INITIAL,ATTR>&&	return LOGICALAND;
-<INITIAL,ATTR>\.\.\.	return ELLIPSIS;
-<INITIAL,ATTR>.		return yytext[0];
+
+<INITIAL,ATTR>{
+    ^{ws}*\#{ws}*                               { yy_push_state(PP_LINE); }
+    \[                                          { yy_push_state(ATTR); return '['; }
+
+    FALSE                                       { return tFALSE; }
+    NULL                                        { return tNULL; }
+    TRUE                                        { return tTRUE; }
+    _?_?cdecl                                   { return token_str( tCDECL, "__cdecl", yylval ); }
+    _?_?pascal                                  { return token_str( tPASCAL, "__pascal", yylval ); }
+    _?_?stdcall                                 { return token_str( tSTDCALL, "__stdcall", yylval ); }
+    __?fastcall                                 { return token_str( tFASTCALL, "__fastcall", yylval ); }
+    __int32                                     { return tINT32; }
+    __int3264                                   { return tINT3264; }
+    __int64                                     { return tINT64; }
+    apicontract                                 { return token_winrt( tAPICONTRACT, yytext, yylval ); }
+    boolean                                     { return tBOOLEAN; }
+    byte                                        { return tBYTE; }
+    case                                        { return tCASE; }
+    char                                        { return tCHAR; }
+    coclass                                     { return tCOCLASS; }
+    const                                       { return tCONST; }
+    cpp_quote                                   { return tCPPQUOTE; }
+    declare                                     { return token_winrt( tDECLARE, yytext, yylval ); }
+    default                                     { return tDEFAULT; }
+    delegate                                    { return token_winrt( tDELEGATE, yytext, yylval ); }
+    dispinterface                               { return tDISPINTERFACE; }
+    double                                      { return tDOUBLE; }
+    enum                                        { return tENUM; }
+    error_status_t                              { return tERRORSTATUST; }
+    extern                                      { return tEXTERN; }
+    float                                       { return tFLOAT; }
+    handle_t                                    { return tHANDLET; }
+    hyper                                       { return tHYPER; }
+    import                                      { return tIMPORT; }
+    importlib                                   { return tIMPORTLIB; }
+    inline                                      { return tINLINE; }
+    int                                         { return tINT; }
+    interface                                   { return tINTERFACE; }
+    library                                     { return tLIBRARY; }
+    long                                        { return tLONG; }
+    methods                                     { return tMETHODS; }
+    module                                      { return tMODULE; }
+    namespace                                   { return token_winrt( tNAMESPACE, yytext, yylval ); }
+    properties                                  { return tPROPERTIES; }
+    register                                    { return tREGISTER; }
+    requires                                    { return token_winrt( tREQUIRES, yytext, yylval ); }
+    runtimeclass                                { return token_winrt( tRUNTIMECLASS, yytext, yylval ); }
+    short                                       { return tSHORT; }
+    signed                                      { return tSIGNED; }
+    sizeof                                      { return tSIZEOF; }
+    small                                       { return tSMALL; }
+    static                                      { return tSTATIC; }
+    struct                                      { return tSTRUCT; }
+    switch                                      { return tSWITCH; }
+    typedef                                     { return tTYPEDEF; }
+    union                                       { return tUNION; }
+    unsigned                                    { return tUNSIGNED; }
+    void                                        { return tVOID; }
+    wchar_t                                     { return tWCHAR; }
+
+    [a-zA-Z_][0-9a-zA-Z_]*                      { return token_ident( yytext, yylval ); }
+
+    0[xX]{hd}+[uU]?[lL]?                        { return token_num( yytext, yylval, TRUE ); }
+    [0-9]+[uU]?[lL]?                            { return token_num( yytext, yylval, FALSE ); }
+
+    L\"(\\.|[^"\\])*\"                          { return token_str( aWSTRING, yytext + 1, yylval ); }
+    \"(\\.|[^"\\])*\"                           { return token_str( aSTRING, yytext, yylval ); }
+    \'(\\.|[^'\\])*\'                           { return token_str( aSQSTRING, yytext, yylval ); }
+
+    \n                                          { end_of_line( yylloc ); }
+    {ws}                                        {}
+    \<\<                                        { return SHL; }
+    \>\>                                        { return SHR; }
+    \-\>                                        { return MEMBERPTR; }
+    ==                                          { return EQUALITY; }
+    !=                                          { return INEQUALITY; }
+    \>=                                         { return GREATEREQUAL; }
+    \<=                                         { return LESSEQUAL; }
+    \|\|                                        { return LOGICALOR; }
+    &&                                          { return LOGICALAND; }
+    \.\.\.                                      { return ELLIPSIS; }
+    .                                           { return yytext[0]; }
+}
+
 <<EOF>>			{
-                            if (import_stack_ptr)
+                            if (!list_empty( &import_stack ))
                                 return aEOF;
                             if (acf_name)
                             {
@@ -238,371 +468,172 @@ SAFEARRAY{ws}*/\(	return tSAFEARRAY;
 			}
 %%
 
-#ifndef parser_wrap
-int parser_wrap(void)
+static void print_imports(void)
 {
-	return 1;
-}
-#endif
+    struct import_state *state, *next;
 
-struct keyword {
-	const char *kw;
-	int token;
-};
+    if (list_empty( &import_stack )) return;
 
-/* This table MUST be alphabetically sorted on the kw field */
-static const struct keyword keywords[] = {
-	{"FALSE",			tFALSE},
-	{"NULL",			tNULL},
-	{"TRUE",			tTRUE},
-	{"__cdecl",			tCDECL},
-	{"__fastcall",			tFASTCALL},
-	{"__int32",			tINT32},
-	{"__int3264",			tINT3264},
-	{"__int64",			tINT64},
-	{"__pascal",			tPASCAL},
-	{"__stdcall",			tSTDCALL},
-	{"_cdecl",			tCDECL},
-	{"_fastcall",			tFASTCALL},
-	{"_pascal",			tPASCAL},
-	{"_stdcall",			tSTDCALL},
-	{"boolean",			tBOOLEAN},
-	{"byte",			tBYTE},
-	{"case",			tCASE},
-	{"cdecl",			tCDECL},
-	{"char",			tCHAR},
-	{"coclass",			tCOCLASS},
-	{"const",			tCONST},
-	{"cpp_quote",			tCPPQUOTE},
-	{"default",			tDEFAULT},
-	{"dispinterface",		tDISPINTERFACE},
-	{"double",			tDOUBLE},
-	{"enum",			tENUM},
-	{"error_status_t",		tERRORSTATUST},
-	{"extern",			tEXTERN},
-	{"float",			tFLOAT},
-	{"handle_t",			tHANDLET},
-	{"hyper",			tHYPER},
-	{"import",			tIMPORT},
-	{"importlib",			tIMPORTLIB},
-	{"inline",			tINLINE},
-	{"int",				tINT},
-	{"interface",			tINTERFACE},
-	{"library",			tLIBRARY},
-	{"long",			tLONG},
-	{"methods",			tMETHODS},
-	{"module",			tMODULE},
-	{"namespace",			tNAMESPACE},
-	{"pascal",			tPASCAL},
-	{"properties",			tPROPERTIES},
-	{"register",			tREGISTER},
-	{"short",			tSHORT},
-	{"signed",			tSIGNED},
-	{"sizeof",			tSIZEOF},
-        {"small",			tSMALL},
-	{"static",			tSTATIC},
-	{"stdcall",			tSTDCALL},
-	{"struct",			tSTRUCT},
-	{"switch",			tSWITCH},
-	{"typedef",			tTYPEDEF},
-	{"union",			tUNION},
-	{"unsigned",			tUNSIGNED},
-	{"void",			tVOID},
-	{"wchar_t",			tWCHAR},
-};
-#define NKEYWORDS (sizeof(keywords)/sizeof(keywords[0]))
-
-/* keywords only recognized in attribute lists
- * This table MUST be alphabetically sorted on the kw field
- */
-static const struct keyword attr_keywords[] =
-{
-        {"aggregatable",                tAGGREGATABLE},
-        {"all_nodes",                   tALLNODES},
-        {"allocate",                    tALLOCATE},
-        {"annotation",                  tANNOTATION},
-        {"apartment",                   tAPARTMENT},
-        {"appobject",                   tAPPOBJECT},
-        {"async",                       tASYNC},
-        {"async_uuid",                  tASYNCUUID},
-        {"auto_handle",                 tAUTOHANDLE},
-        {"bindable",                    tBINDABLE},
-        {"both",                        tBOTH},
-        {"broadcast",                   tBROADCAST},
-        {"byte_count",                  tBYTECOUNT},
-        {"call_as",                     tCALLAS},
-        {"callback",                    tCALLBACK},
-        {"code",                        tCODE},
-        {"comm_status",                 tCOMMSTATUS},
-        {"context_handle",              tCONTEXTHANDLE},
-        {"context_handle_noserialize",  tCONTEXTHANDLENOSERIALIZE},
-        {"context_handle_serialize",    tCONTEXTHANDLENOSERIALIZE},
-        {"control",                     tCONTROL},
-        {"decode",                      tDECODE},
-        {"defaultbind",                 tDEFAULTBIND},
-        {"defaultcollelem",             tDEFAULTCOLLELEM},
-        {"defaultvalue",                tDEFAULTVALUE},
-        {"defaultvtable",               tDEFAULTVTABLE},
-        {"disable_consistency_check",   tDISABLECONSISTENCYCHECK},
-        {"displaybind",                 tDISPLAYBIND},
-        {"dllname",                     tDLLNAME},
-        {"dont_free",                   tDONTFREE},
-        {"dual",                        tDUAL},
-        {"enable_allocate",             tENABLEALLOCATE},
-        {"encode",                      tENCODE},
-        {"endpoint",                    tENDPOINT},
-        {"entry",                       tENTRY},
-        {"explicit_handle",             tEXPLICITHANDLE},
-        {"fault_status",                tFAULTSTATUS},
-        {"force_allocate",              tFORCEALLOCATE},
-        {"free",                        tFREE},
-        {"handle",                      tHANDLE},
-        {"helpcontext",                 tHELPCONTEXT},
-        {"helpfile",                    tHELPFILE},
-        {"helpstring",                  tHELPSTRING},
-        {"helpstringcontext",           tHELPSTRINGCONTEXT},
-        {"helpstringdll",               tHELPSTRINGDLL},
-        {"hidden",                      tHIDDEN},
-        {"id",                          tID},
-        {"idempotent",                  tIDEMPOTENT},
-        {"ignore",                      tIGNORE},
-        {"iid_is",                      tIIDIS},
-        {"immediatebind",               tIMMEDIATEBIND},
-        {"implicit_handle",             tIMPLICITHANDLE},
-        {"in",                          tIN},
-        {"in_line",                     tIN_LINE},
-        {"input_sync",                  tINPUTSYNC},
-        {"lcid",                        tLCID},
-        {"length_is",                   tLENGTHIS},
-        {"licensed",                    tLICENSED},
-        {"local",                       tLOCAL},
-        {"maybe",                       tMAYBE},
-        {"message",                     tMESSAGE},
-        {"neutral",                     tNEUTRAL},
-        {"nocode",                      tNOCODE},
-        {"nonbrowsable",                tNONBROWSABLE},
-        {"noncreatable",                tNONCREATABLE},
-        {"nonextensible",               tNONEXTENSIBLE},
-        {"notify",                      tNOTIFY},
-        {"notify_flag",                 tNOTIFYFLAG},
-        {"object",                      tOBJECT},
-        {"odl",                         tODL},
-        {"oleautomation",               tOLEAUTOMATION},
-        {"optimize",                    tOPTIMIZE},
-        {"optional",                    tOPTIONAL},
-        {"out",                         tOUT},
-        {"partial_ignore",              tPARTIALIGNORE},
-        {"pointer_default",             tPOINTERDEFAULT},
-        {"progid",                      tPROGID},
-        {"propget",                     tPROPGET},
-        {"propput",                     tPROPPUT},
-        {"propputref",                  tPROPPUTREF},
-        {"proxy",                       tPROXY},
-        {"ptr",                         tPTR},
-        {"public",                      tPUBLIC},
-        {"range",                       tRANGE},
-        {"readonly",                    tREADONLY},
-        {"ref",                         tREF},
-        {"represent_as",                tREPRESENTAS},
-        {"requestedit",                 tREQUESTEDIT},
-        {"restricted",                  tRESTRICTED},
-        {"retval",                      tRETVAL},
-        {"single",                      tSINGLE},
-        {"single_node",                 tSINGLENODE},
-        {"size_is",                     tSIZEIS},
-        {"source",                      tSOURCE},
-        {"strict_context_handle",       tSTRICTCONTEXTHANDLE},
-        {"string",                      tSTRING},
-        {"switch_is",                   tSWITCHIS},
-        {"switch_type",                 tSWITCHTYPE},
-        {"threading",                   tTHREADING},
-        {"transmit_as",                 tTRANSMITAS},
-        {"uidefault",                   tUIDEFAULT},
-        {"unique",                      tUNIQUE},
-        {"user_marshal",                tUSERMARSHAL},
-        {"usesgetlasterror",            tUSESGETLASTERROR},
-        {"uuid",                        tUUID},
-        {"v1_enum",                     tV1ENUM},
-        {"vararg",                      tVARARG},
-        {"version",                     tVERSION},
-        {"vi_progid",                   tVIPROGID},
-        {"wire_marshal",                tWIREMARSHAL},
-};
-
-/* attributes TODO:
-    custom
-    first_is
-    last_is
-    max_is
-    min_is
-*/
-
-#define KWP(p) ((const struct keyword *)(p))
-
-static int kw_cmp_func(const void *s1, const void *s2)
-{
-	return strcmp(KWP(s1)->kw, KWP(s2)->kw);
+    fprintf( stderr, "In file included from " );
+    LIST_FOR_EACH_ENTRY_SAFE_REV( state, next, &import_stack, struct import_state, entry )
+    {
+        if (&next->entry == &import_stack) break;
+        fprintf( stderr, "%s:%d,\n", state->input_name, state->where.first_line );
+        fprintf( stderr, "                 from ");
+    }
+    fprintf( stderr, "%s:%d:\n", state->input_name, state->where.first_line );
 }
 
-static int kw_token(const char *kw)
+struct location pop_import(void)
 {
-	struct keyword key, *kwp;
-	key.kw = kw;
-	kwp = bsearch(&key, keywords, NKEYWORDS, sizeof(keywords[0]), kw_cmp_func);
-	if (kwp && (winrt_mode || kwp->token != tNAMESPACE)) {
-		parser_lval.str = xstrdup(kwp->kw);
-		return kwp->token;
-	}
-	parser_lval.str = xstrdup(kw);
-	return is_type(kw) ? aKNOWNTYPE : aIDENTIFIER;
+    struct list *entry = list_head( &import_stack );
+    struct import_state *state;
+    struct location where;
+    assert( entry );
+
+    state = LIST_ENTRY( entry, struct import_state, entry );
+    list_remove( &state->entry );
+    parse_only = !list_empty( &import_stack );
+
+    if (yyin) fclose( yyin );
+    yy_delete_buffer( YY_CURRENT_BUFFER );
+    yy_switch_to_buffer( state->buffer );
+
+    input_name = state->input_name;
+    where = state->where;
+    free( state );
+    return where;
 }
 
-static int attr_token(const char *kw)
+void push_import( const char *import_name, struct location *where )
 {
-        struct keyword key, *kwp;
-        key.kw = kw;
-        kwp = bsearch(&key, attr_keywords, sizeof(attr_keywords)/sizeof(attr_keywords[0]),
-                      sizeof(attr_keywords[0]), kw_cmp_func);
-        if (kwp) {
-            parser_lval.str = xstrdup(kwp->kw);
-            return kwp->token;
-        }
-        return kw_token(kw);
-}
+    struct import_state *state;
+    struct import *import;
+    FILE *file;
 
-static void addcchar(char c)
-{
-	if(cbufidx >= cbufalloc)
-	{
-		cbufalloc += 1024;
-		cbuffer = xrealloc(cbuffer, cbufalloc * sizeof(cbuffer[0]));
-		if(cbufalloc > 65536)
-			parser_warning("Reallocating string buffer larger than 64kB\n");
-	}
-	cbuffer[cbufidx++] = c;
-}
+    state = xmalloc( sizeof(struct import_state ));
+    list_add_head( &import_stack, &state->entry );
+    parse_only = !list_empty( &import_stack );
 
-static char *get_buffered_cstring(void)
-{
-	addcchar(0);
-	return xstrdup(cbuffer);
-}
+    state->buffer = YY_CURRENT_BUFFER;
+    state->input_name = input_name;
+    state->where = *where;
+    input_name = NULL;
 
-void pop_import(void)
-{
-	int ptr = import_stack_ptr-1;
+    /* reset buffer for <<EOF>>, in case import fails or already imported */
+    yy_scan_string( "" );
 
-	fclose(yyin);
-	yy_delete_buffer( YY_CURRENT_BUFFER );
-	yy_switch_to_buffer( import_stack[ptr].state );
-	if (temp_name) {
-		unlink(temp_name);
-		free(temp_name);
-	}
-	temp_name = import_stack[ptr].temp_name;
-	input_name = import_stack[ptr].input_name;
-	line_number = import_stack[ptr].line_number;
-	import_stack_ptr--;
-}
+    LIST_FOR_EACH_ENTRY( import, &imports, struct import, entry )
+        if (!strcmp( import->name, import_name )) return;  /* already imported */
+    if (!strcmp( idl_name, import_name )) return;  /* already imported */
 
-struct imports {
-    char *name;
-    struct imports *next;
-} *first_import;
+    import = xmalloc( sizeof(struct import) );
+    import->name = xstrdup( import_name );
+    list_add_tail( &imports, &import->entry );
 
-int do_import(char *fname)
-{
-    FILE *f;
-    char *path, *name;
-    struct imports *import;
-    int ptr = import_stack_ptr;
-    int ret, fd;
+    input_name = find_input_file( import_name, state->input_name );
+    file = open_input_file( input_name );
+    reset_location( where, input_name );
 
-    import = first_import;
-    while (import && strcmp(import->name, fname))
-        import = import->next;
-    if (import) return 0; /* already imported */
-
-    import = xmalloc(sizeof(struct imports));
-    import->name = xstrdup(fname);
-    import->next = first_import;
-    first_import = import;
-
-    /* don't search for a file name with a path in the include directories,
-     * for compatibility with MIDL */
-    if (strchr( fname, '/' ) || strchr( fname, '\\' ))
-        path = xstrdup( fname );
-    else if (!(path = wpp_find_include( fname, input_name )))
-        error_loc("Unable to open include file %s\n", fname);
-
-    if (import_stack_ptr == MAX_IMPORT_DEPTH)
-        error_loc("Exceeded max import depth\n");
-
-    import_stack[ptr].temp_name = temp_name;
-    import_stack[ptr].input_name = input_name;
-    import_stack[ptr].line_number = line_number;
-    import_stack_ptr++;
-    input_name = path;
-    line_number = 1;
-
-    name = xstrdup( "widl.XXXXXX" );
-    if((fd = mkstemps( name, 0 )) == -1)
-        error("Could not generate a temp name from %s\n", name);
-
-    temp_name = name;
-    if (!(f = fdopen(fd, "wt")))
-        error("Could not open fd %s for writing\n", name);
-
-    ret = wpp_parse( path, f );
-    fclose( f );
-    if (ret) exit(1);
-
-    if((f = fopen(temp_name, "r")) == NULL)
-        error_loc("Unable to open %s\n", temp_name);
-
-    import_stack[ptr].state = YY_CURRENT_BUFFER;
-    yy_switch_to_buffer(yy_create_buffer(f, YY_BUF_SIZE));
-    return 1;
-}
-
-void abort_import(void)
-{
-	int ptr;
-
-	for (ptr=0; ptr<import_stack_ptr; ptr++)
-		unlink(import_stack[ptr].temp_name);
+    yy_switch_to_buffer( yy_create_buffer( file, YY_BUF_SIZE ) );
 }
 
 static void switch_to_acf(void)
 {
-    int ptr = import_stack_ptr;
-    int ret, fd;
-    char *name;
-    FILE *f;
+    FILE *file;
 
-    assert(import_stack_ptr == 0);
+    if (yyin) fclose( yyin );
+    yy_delete_buffer( YY_CURRENT_BUFFER );
 
-    input_name = acf_name;
+    input_name = xstrdup( acf_name );
+    file = open_input_file( input_name );
     acf_name = NULL;
-    line_number = 1;
 
-    name = xstrdup( "widl.XXXXXX" );
-    if((fd = mkstemps( name, 0 )) == -1)
-        error("Could not generate a temp name from %s\n", name);
+    yy_switch_to_buffer( yy_create_buffer( file, YY_BUF_SIZE ) );
+}
 
-    temp_name = name;
-    if (!(f = fdopen(fd, "wt")))
-        error("Could not open fd %s for writing\n", name);
+void close_all_inputs(void)
+{
+    while (!list_empty( &import_stack )) pop_import();
+    if (yyin) fclose( yyin );
+}
 
-    ret = wpp_parse(input_name, f);
-    fclose(f);
-    if (ret) exit(1);
+static void reset_location( struct location *where, const char *input_name )
+{
+    where->first_line = 1;
+    where->last_line = 1;
+    where->first_column = 1;
+    where->last_column = 1;
+    where->input_name = xstrdup( input_name );
+}
 
-    if((f = fopen(temp_name, "r")) == NULL)
-        error_loc("Unable to open %s\n", temp_name);
+static void update_location( struct location *where, const char *yytext )
+{
+    int len = strlen( yytext );
+    previous_location = *where;
+    where->first_column = where->last_column;
+    where->last_column += len;
+}
 
-    import_stack[ptr].state = YY_CURRENT_BUFFER;
-    yy_switch_to_buffer(yy_create_buffer(f, YY_BUF_SIZE));
+static void end_of_line( struct location *where )
+{
+    where->first_line++;
+    where->last_line++;
+    where->first_column = 1;
+    where->last_column = 1;
+}
+
+void init_location( struct location *where, const struct location *begin, const struct location *end )
+{
+    if (!begin) begin = &previous_location;
+    *where = *begin;
+
+    if (end)
+    {
+        where->last_line   = end->last_line;
+        where->last_column = end->last_column;
+    }
+    else
+    {
+        where->first_line   = begin->last_line;
+        where->first_column = begin->last_column;
+    }
+}
+
+static void diagnostic( const struct location *where, const char *type, const char *message )
+{
+    char buffer[1024], *line = NULL;
+    FILE *file;
+    int i;
+
+    if (!where) where = &previous_location;
+
+    print_imports();
+
+    fprintf( stderr, "%s:%d:%d: %s: %s\n", where->input_name, where->first_line, where->first_column, type, message );
+
+    if (!where->input_name || !(file = fopen( where->input_name, "r" ))) return;
+    for (i = 0; i < where->first_line; i++) if (!(line = fgets( buffer, sizeof(buffer), file ))) break;
+    fclose( file );
+    if (!line) return;
+    fprintf( stderr, "%s", line );
+
+    line = buffer;
+    for (i = 0; i < where->first_column - 1; i++) *line++ = ' ';
+    *line++ = '^';
+    for (i = where->first_column + 1; i < where->last_column; i++) *line++ = '~';
+    *line = '\0';
+    fprintf( stderr, "%s\n", buffer );
+}
+
+void parser_error( const struct location *where, const char *message )
+{
+    diagnostic( where, "error", message );
+}
+
+void parser_warning( const struct location *where, const char *message )
+{
+    diagnostic( where, "warning", message );
 }
 
 static void warning_disable(int warning)
@@ -628,7 +659,7 @@ static void warning_enable(int warning)
         }
 }
 
-int do_warning(char *toggle, warning_list_t *wnum)
+int do_warning(const char *toggle, warning_list_t *wnum)
 {
     warning_t *warning, *next;
     int ret = 1;
@@ -641,7 +672,7 @@ int do_warning(char *toggle, warning_list_t *wnum)
     if(!strcmp(toggle, "disable"))
         LIST_FOR_EACH_ENTRY(warning, wnum, warning_t, entry)
             warning_disable(warning->num);
-    else if(!strcmp(toggle, "enable"))
+    else if(!strcmp(toggle, "enable") || !strcmp(toggle, "default"))
         LIST_FOR_EACH_ENTRY(warning, wnum, warning_t, entry)
             warning_enable(warning->num);
     else

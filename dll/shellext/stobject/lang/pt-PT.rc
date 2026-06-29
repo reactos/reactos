@@ -24,6 +24,7 @@ BEGIN
     IDS_PWR_AC "Energia AC"
     IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! horas (%3!u!%%) remanescente"
     IDS_PWR_MINUTES_REMAINING "%1!u! min (%2!u!%%) remanescente"
+    IDS_PWR_FULLY_CHARGED "Fully charged"
 
     //Hotplug related strings
     IDS_HOTPLUG_REMOVE_1 "&Remover Hardware em segurança"

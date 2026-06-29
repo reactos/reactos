@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 
@@ -39,7 +38,7 @@
 #define STRBUF 1024
 
 /* getline: read a line, return length */
-INT GetBuff(PBYTE buff, FILE* in)
+size_t GetBuff(PBYTE buff, FILE* in)
 {
     return fread(buff, sizeof(BYTE), STRBUF, in);
 }
@@ -58,23 +57,18 @@ INT FileSize(FILE* fd)
 
 int wmain(int argc, WCHAR* argv[])
 {
-    INT i;
-
     /* File pointers */
-    FILE *fp1 = NULL;
-    FILE *fp2 = NULL;
+    FILE *fp1 = NULL, *fp2 = NULL;
 
-    INT BufLen1, BufLen2;
-    PBYTE Buff1 = NULL;
-    PBYTE Buff2 = NULL;
+    size_t i;
+    size_t BufLen1, BufLen2;
+    PBYTE Buff1 = NULL, Buff2 = NULL;
     WCHAR File1[_MAX_PATH + 1], // File paths
           File2[_MAX_PATH + 1];
     BOOL bAscii = FALSE,        // /A switch
          bLineNos = FALSE;      // /L switch
-    UINT LineNumber;
-    UINT Offset;
-    INT  FileSizeFile1;
-    INT  FileSizeFile2;
+    UINT LineNumber, Offset;
+    INT  FileSizeFile1, FileSizeFile2;
     INT  NumberOfOptions = 0;
     INT  FilesOK = 1;
     INT  Status = EXIT_SUCCESS;

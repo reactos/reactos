@@ -27,7 +27,7 @@ Pc98ConsPutChar(int Ch)
     /* If scrolling is needed */
     if (CursorPosition >= TextCols * TextLines)
     {
-        RtlCopyMemory((PUSHORT)VramText,
+        RtlMoveMemory((PUSHORT)VramText,
                       (PUSHORT)(VramText + TextCols * TEXT_CHAR_SIZE),
                       TextCols * TextLines * TEXT_CHAR_SIZE);
 

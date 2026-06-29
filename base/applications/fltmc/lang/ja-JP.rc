@@ -1,0 +1,31 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n有効なコマンド:\n\
+               load        フィルタードライバーを読み込む\n\
+               unload      フィルタードライバーを解放する\n\
+               filters     システムに現在登録済みのフィルターを列挙する\n\
+               volumes     すべてのボリュームを列挙する\n\n"
+
+    IDS_USAGE_LOAD      "フィルタードライバーを読み込む\n"
+    IDS_USAGE_UNLOAD    "フィルタードライバーを解放する\n"
+    IDS_USAGE_FILTERS   "すべての登録済みフィルターを列挙する\n"
+    IDS_USAGE_VOLUMES   "すべてのボリュームを列挙する\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DISPLAY_FILTERS1    "フィルター名                    インスタンス数  高度    フレーム\n"
+    IDS_DISPLAY_FILTERS2    "フィルター名                    インスタンス数  フレーム\n"
+    IDS_DISPLAY_VOLUMES     "DOSの名前                       ボリューム名                            ファイルシステム 状態\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_PRIV      "ドライバー読み込み権限を設定するのに失敗した (0x%X)\n"
+    IDS_ERROR_FILTERS   "フィルターを列挙するのに失敗した (0x%X)\n"
+    IDS_ERROR_LOAD      "フィルターを読み込むのに失敗した (0x%X)\n"
+    IDS_ERROR_UNLOAD    "フィルターを解放するのに失敗した (0x%X)\n"
+    IDS_ERROR_VOLUMES   "ボリュームを列挙するのに失敗した (0x%X)\n"
+END

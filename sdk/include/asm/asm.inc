@@ -172,6 +172,9 @@ ENDM
     .skip size, fill
 ENDM
 
+/* OFFset macro */
+#define OFF(x) offset x
+
 #define lXdtPrefix fword ptr
 
 ljmp MACRO segment, offset
@@ -316,11 +319,16 @@ ENDM
 .endm
 
 /* MASM compatible ALIGN */
-#define ALIGN .align
+.macro align x
+    .align x
+.endm
 
 /* MASM compatible REPEAT, additional ENDR */
 #define REPEAT .rept
 #define ENDR .endr
+
+/* OFFset macro */
+#define OFF(x) x
 
 #define lXdtPrefix
 
@@ -350,7 +358,8 @@ ENDM
 .endm
 
 /* MASM needs an END tag */
-#define END
+.macro END
+.endm
 
 .macro .MODEL model
 .endm

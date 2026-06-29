@@ -112,7 +112,21 @@ typedef union
         CPUID_EXTENDED_STATE_SUB_LEAF_ECX Ecx;
         UINT32 Edx; // Reports the supported bits of the upper 32 bits of the IA32_XSS MSR. IA32_XSS[n + 32] can be set to 1 only if EDX[n] is 1.
     };
-} CPUID_EXTENDED_STATE_SUB_LEAF_EAX_REGS;
+} CPUID_EXTENDED_STATE_SUB_LEAF_REGS;
+
+// CPUID_EXTENDED_STATE (0x0D)
+// CPUID_EXTENDED_STATE_SIZE_OFFSET (0x02 .. 0x1F)
+typedef union
+{
+    INT32 AsInt32[4];
+    struct
+    {
+        UINT32 Size;
+        UINT32 Offset;
+        CPUID_EXTENDED_STATE_SIZE_OFFSET_ECX Ecx;
+        UINT32 Edx;
+    };
+} CPUID_EXTENDED_STATE_SIZE_OFFSET_REGS;
 
 // CPUID_EXTENDED_CPU_SIG (0x80000001)
 typedef union

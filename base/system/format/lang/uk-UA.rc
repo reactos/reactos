@@ -27,7 +27,7 @@ BEGIN
     STRING_FMIFS_FAIL "Не зміг знацти FMIFS точки входу.\n\n"
     STRING_UNKNOW_ARG "Невідомий аргумент: %s\n"
     STRING_DRIVE_PARM "Необхідний параметр операції відсутній.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Не вдалося втсанвити тип пристрою"
+    STRING_ERROR_DRIVE_TYPE "Не вдалося втсанвити тип пристрою.\n"
     STRING_INSERT_DISK "Вставте чистий диск в пристрій %C:\nі натисніть Enter щоб продовжити..."
     STRING_NO_VOLUME "Не вдалося виконати запит до пристрою"
     STRING_NO_VOLUME_SIZE "Не вдалося визначити розмір диску"

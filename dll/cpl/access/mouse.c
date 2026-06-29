@@ -162,6 +162,11 @@ MousePageProc(HWND hwndDlg,
             CheckDlgButton(hwndDlg,
                            IDC_MOUSE_BOX,
                            pGlobalData->mouseKeys.dwFlags & MKF_MOUSEKEYSON ? BST_CHECKED : BST_UNCHECKED);
+
+#if 1       // FIXME: Feature not implemented, disable the UI
+            EnableWindow(GetDlgItem(hwndDlg, IDC_MOUSE_BOX), pGlobalData->mouseKeys.dwFlags & MKF_MOUSEKEYSON);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_MOUSE_BUTTON), pGlobalData->mouseKeys.dwFlags & MKF_MOUSEKEYSON);
+#endif
             return TRUE;
 
 

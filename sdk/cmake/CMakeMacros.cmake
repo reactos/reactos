@@ -53,34 +53,45 @@ function(add_message_headers _type)
     endforeach()
 endfunction()
 
-function(add_link)
-    cmake_parse_arguments(_LINK "MINIMIZE" "NAME;PATH;CMD_LINE_ARGS;ICON;GUID" "" ${ARGN})
-    if(NOT _LINK_NAME OR NOT _LINK_PATH)
-        message(FATAL_ERROR "You must provide name and path")
+function(add_link name path)
+    cmake_parse_arguments(_LINK "MINIMIZE" "WORKDIR;CMDLINE_ARGS;ICON;ICON_INDEX;GUID" "" ${ARGN})
+
+    if(DEFINED _LINK_WORKDIR)
+        set(_LINK_WORKDIR -w "${_LINK_WORKDIR}")
+    endif()
+    if(DEFINED _LINK_CMDLINE_ARGS)
+        set(_LINK_CMDLINE_ARGS -c "${_LINK_CMDLINE_ARGS}")
     endif()
 
-    if(_LINK_CMD_LINE_ARGS)
-        set(_LINK_CMD_LINE_ARGS -c ${_LINK_CMD_LINE_ARGS})
+    if(DEFINED _LINK_ICON)
+        #set(_LINK_ICON -i "${_LINK_ICON}")
+        #if(DEFINED _LINK_ICON_INDEX)
+        #    set(_LINK_ICON "${_LINK_ICON},${_LINK_ICON_INDEX}")
+        #endif()
+        if(DEFINED _LINK_ICON_INDEX)
+            set(_LINK_ICON -i "${_LINK_ICON},${_LINK_ICON_INDEX}")
+        else()
+            set(_LINK_ICON -i "${_LINK_ICON}")
+        endif()
+    elseif(DEFINED _LINK_ICON_INDEX)
+        set(_LINK_ICON -i ${_LINK_ICON_INDEX})
     endif()
 
-    if(_LINK_ICON)
-        set(_LINK_ICON -i ${_LINK_ICON})
-    endif()
-
-    if(_LINK_GUID)
-        set(_LINK_GUID -g ${_LINK_GUID})
+    if(DEFINED _LINK_GUID)
+        set(_LINK_GUID -g "${_LINK_GUID}")
     endif()
 
     if(_LINK_MINIMIZE)
-        set(_LINK_MINIMIZE "-m")
+        set(_LINK_MINIMIZE -m)
+    else()
+        set(_LINK_MINIMIZE)
     endif()
 
     add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk
-        COMMAND native-mkshelllink -o ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk ${_LINK_CMD_LINE_ARGS} ${_LINK_ICON} ${_LINK_GUID} ${_LINK_MINIMIZE} ${_LINK_PATH}
-        DEPENDS native-mkshelllink)
-    set_source_files_properties(
-        ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk PROPERTIES GENERATED TRUE)
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk
+        COMMAND native-mkshelllink -o ${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk ${_LINK_WORKDIR} ${_LINK_CMDLINE_ARGS} ${_LINK_ICON} ${_LINK_GUID} ${_LINK_MINIMIZE} ${path}
+        DEPENDS native-mkshelllink
+        VERBATIM)
 endfunction()
 
 #
@@ -246,14 +257,13 @@ macro(dir_to_num dir var)
     elseif(${dir} STREQUAL reactos/winsxs/arm64_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef)
         set(${var} 81)
 
-
     else()
         message(FATAL_ERROR "Wrong destination: ${dir}")
     endif()
 endmacro()
 
 function(add_cd_file)
-    cmake_parse_arguments(_CD "NO_CAB;NOT_IN_HYBRIDCD" "DESTINATION;NAME_ON_CD;TARGET" "FILE;FOR" ${ARGN})
+    cmake_parse_arguments(_CD "NO_CAB" "DESTINATION;NAME_ON_CD;TARGET" "FILE;FOR" ${ARGN})
     if(NOT (_CD_TARGET OR _CD_FILE))
         message(FATAL_ERROR "You must provide a target or a file to install!")
     endif()
@@ -288,7 +298,9 @@ function(add_cd_file)
     if(NOT __cd EQUAL -1)
         # whether or not we should put it in reactos.cab or directly on cd
         if(_CD_NO_CAB)
-            # directly on cd
+            # directly on cd - replace the "reactos/" directory name by the current build architecture name
+            # WARNING: CMake REGEXes are always case-sensitive!
+            string(REGEX REPLACE "^reactos([\\\\/]+|$)" "${ARCH}\\1" _CD_ARCH_DESTINATION "${_CD_DESTINATION}")
             foreach(item ${_CD_FILE})
                 if(_CD_NAME_ON_CD)
                     # rename it in the cd tree
@@ -296,11 +308,7 @@ function(add_cd_file)
                 else()
                     get_filename_component(__file ${item} NAME)
                 endif()
-                set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-                # add it also into the hybridcd if not specified otherwise
-                if(NOT _CD_NOT_IN_HYBRIDCD)
-                    set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
-                endif()
+                set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_ARCH_DESTINATION}/${__file}=${item}")
             endforeach()
             # manage dependency
             if(_CD_TARGET)
@@ -338,37 +346,17 @@ function(add_cd_file)
                 get_filename_component(__file ${item} NAME)
             endif()
             set_property(GLOBAL APPEND PROPERTY LIVECD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-            # add it also into the hybridcd if not specified otherwise
-            if(NOT _CD_NOT_IN_HYBRIDCD)
-                set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
-            endif()
         endforeach()
     endif() #end livecd
-
-    # do we need also to add it to hybridcd?
-    list(FIND _CD_FOR hybridcd __cd)
-    if(NOT __cd EQUAL -1)
-        # manage dependency
-        if(_CD_TARGET)
-            add_dependencies(hybridcd ${_CD_TARGET})
-        endif()
-        foreach(item ${_CD_FILE})
-            if(_CD_NAME_ON_CD)
-                # rename it in the cd tree
-                set(__file ${_CD_NAME_ON_CD})
-            else()
-                get_filename_component(__file ${item} NAME)
-            endif()
-            set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-        endforeach()
-    endif() #end hybridcd
 
     # do we add it to regtest?
     list(FIND _CD_FOR regtest __cd)
     if(NOT __cd EQUAL -1)
         # whether or not we should put it in reactos.cab or directly on cd
         if(_CD_NO_CAB)
-            # directly on cd
+            # directly on cd - replace the "reactos/" directory name by the current build architecture name
+            # WARNING: CMake REGEXes are always case-sensitive!
+            string(REGEX REPLACE "^reactos([\\\\/]+|$)" "${ARCH}\\1" _CD_ARCH_DESTINATION "${_CD_DESTINATION}")
             foreach(item ${_CD_FILE})
                 if(_CD_NAME_ON_CD)
                     # rename it in the cd tree
@@ -376,7 +364,7 @@ function(add_cd_file)
                 else()
                     get_filename_component(__file ${item} NAME)
                 endif()
-                set_property(GLOBAL APPEND PROPERTY BOOTCDREGTEST_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+                set_property(GLOBAL APPEND PROPERTY BOOTCDREGTEST_FILE_LIST "${_CD_ARCH_DESTINATION}/${__file}=${item}")
             endforeach()
             # manage dependency
             if(_CD_TARGET)
@@ -395,15 +383,16 @@ function(add_cd_file)
 endfunction()
 
 function(create_iso_lists)
-    # generate reactos.cab before anything else
+    # Generate reactos.cab before anything else
     get_property(_filelist GLOBAL PROPERTY REACTOS_CAB_DEPENDS)
 
-    # begin with reactos.inf. We want this command to be always executed, so we pretend it generates another file although it will never do.
+    # Begin with reactos.inf. We want this command to be always executed, so we pretend it generates another file although it will never do.
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/__some_non_existent_file
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
         DEPENDS ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf reactos_cab_inf)
 
+    # Now build reactos.cab itself
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
         COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff -RC ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf -N -P ${REACTOS_SOURCE_DIR}
@@ -412,25 +401,23 @@ function(create_iso_lists)
     add_custom_target(reactos_cab DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab)
     add_dependencies(reactos_cab reactos_cab_inf)
 
+    # Add reactos.cab into the BootCD
     add_cd_file(
         TARGET reactos_cab
         FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
         DESTINATION reactos
         NO_CAB FOR bootcd regtest)
 
+if(FALSE) ## Disabled until we want a RAMDISK ISO
+    # Add the LiveImage into the BootCD
     add_cd_file(
-        FILE ${CMAKE_CURRENT_BINARY_DIR}/livecd.iso
-        DESTINATION livecd
-        FOR hybridcd)
+        TARGET livecd
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/liveimg.iso
+        DESTINATION root
+        NO_CAB FOR bootcd)
+endif()
 
-    get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst "${_filelist}")
-    unset(_filelist)
-    file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd.$<CONFIG>.lst
-         INPUT ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst)
-
+    # Write the LiveImage file list
     get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
     file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst "${_filelist}")
@@ -439,14 +426,21 @@ function(create_iso_lists)
          OUTPUT ${REACTOS_BINARY_DIR}/boot/livecd.$<CONFIG>.lst
          INPUT ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst)
 
-    get_property(_filelist GLOBAL PROPERTY HYBRIDCD_FILE_LIST)
+    # Write the BootCD file list
+    get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst "${_filelist}")
+    unset(_filelist)
+    # Also, append the file contents list of the LiveImage to the BootCD file list
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst "\n")
+    file(READ ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst _filelist)
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst "${_filelist}")
     unset(_filelist)
     file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.$<CONFIG>.lst
-         INPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst)
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd.$<CONFIG>.lst
+         INPUT ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst)
 
+    # Write the BootCDRegTest file list
     get_property(_filelist GLOBAL PROPERTY BOOTCDREGTEST_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
     file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst "${_filelist}")
@@ -563,9 +557,42 @@ function(add_importlibs _module)
 endfunction()
 
 # Some helper lists
-list(APPEND VALID_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll win32cui win32gui win32dll win32ocx cpl module)
-list(APPEND KERNEL_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver)
-list(APPEND NATIVE_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll)
+list(APPEND VALID_MODULE_TYPES kernel kerneldll kernelmodedriver kmdfdriver wdmdriver nativecui nativedll win32cui win32gui win32dll win32ocx cpl module)
+list(APPEND KERNEL_MODULE_TYPES kernel kerneldll kernelmodedriver kmdfdriver wdmdriver)
+list(APPEND NATIVE_MODULE_TYPES kernel kerneldll kernelmodedriver kmdfdriver wdmdriver nativecui nativedll)
+
+# Signs a driver if it is kernelmodedriver or wdmdriver if the cert exists
+function(sign_driver_if_needed TARGET)
+    get_target_property(_type ${TARGET} REACTOS_MODULE_TYPE)
+    if(NOT _type)
+        message(STATUS "sign_driver_if_needed: No REACTOS_MODULE_TYPE for ${TARGET}")
+        return()
+    endif()
+    if(NOT (_type STREQUAL "kernelmodedriver" OR _type STREQUAL "wdmdriver"))
+        return()
+    endif()
+    if(NOT MSVC)
+        return()
+    endif()
+    if(NOT EXISTS "C:/ReactOSCerts/ReactOSDevCert.cer")
+        return()
+    endif()
+    # Get output file name
+    get_target_property(_output_name ${TARGET} OUTPUT_NAME)
+    if(NOT _output_name)
+        set(_output_name ${TARGET})
+    endif()
+    set(_driver_path "${CMAKE_CURRENT_BINARY_DIR}/${_output_name}.sys")
+    set(_driver_path "$<TARGET_FILE:${TARGET}>")
+    add_custom_command(TARGET ${TARGET} POST_BUILD
+        COMMAND SignTool sign /v /fd sha1 /s PrivateCertStore /n reactos.org /t http://timestamp.digicert.com "${_driver_path}"
+        COMMENT "Signing driver: ${_driver_path}")
+endfunction()
+
+# Example usage after driver target creation:
+# add_library(my_driver ...)
+# set_module_type(my_driver kernelmodedriver)
+# sign_driver_if_needed(my_driver)
 
 function(set_module_type MODULE TYPE)
     cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
@@ -623,6 +650,8 @@ function(set_module_type MODULE TYPE)
         set_entrypoint(${MODULE} DllMainCRTStartup 12)
     elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
         set_entrypoint(${MODULE} DriverEntry 8)
+    elseif(${TYPE} STREQUAL kmdfdriver)
+        set_entrypoint(${MODULE} FxDriverEntry 8)
     elseif(${TYPE} STREQUAL nativedll)
         set_entrypoint(${MODULE} DllMain 12)
     elseif(TYPE STREQUAL kernel)
@@ -655,8 +684,11 @@ function(set_module_type MODULE TYPE)
     # Now do some stuff which is specific to each type
     if(TYPE IN_LIST KERNEL_MODULE_TYPES)
         add_dependencies(${MODULE} bugcodes xdk)
-        if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
+        if((${TYPE} STREQUAL kernelmodedriver) OR
+           (${TYPE} STREQUAL kmdfdriver) OR
+           (${TYPE} STREQUAL wdmdriver))
             set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
+            sign_driver_if_needed(${MODULE})
         endif()
     endif()
 
@@ -666,6 +698,12 @@ function(set_module_type MODULE TYPE)
             PROPERTIES
             ENABLE_EXPORTS TRUE
             DEFINE_SYMBOL "")
+    endif()
+
+    if(TYPE STREQUAL kmdfdriver)
+        target_include_directories(${MODULE} PUBLIC ${REACTOS_SOURCE_DIR}/sdk/include/wdf/kmdf/1.17)
+        add_importlibs(${MODULE} wdfldr)
+        target_link_libraries(${MODULE} wdfdriverentry)
     endif()
 
     if(${TYPE} STREQUAL win32ocx)
@@ -772,8 +810,7 @@ function(create_registry_hives)
     add_cd_file(TARGET registry_inf
                 FILE ${_registry_inf}
                 DESTINATION reactos
-                NO_CAB
-                FOR bootcd regtest)
+                NO_CAB FOR bootcd regtest)
 
     # BootCD setup system hive
     add_custom_command(
@@ -788,8 +825,7 @@ function(create_registry_hives)
         FILE ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
         TARGET bootcd_hives
         DESTINATION reactos
-        NO_CAB
-        FOR bootcd regtest)
+        NO_CAB FOR bootcd regtest)
 
     # LiveCD hives
     list(APPEND _livecd_inf_files
@@ -833,21 +869,22 @@ function(create_registry_hives)
         DESTINATION reactos/system32/config
         FOR livecd)
 
-    # BCD Hive
-    add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
-        COMMAND native-mkhive -h:BCD -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf
-        DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf)
+    # BCD hive (for EFI-compatible platforms)
+    if(NOT ARCH STREQUAL "i386" OR NOT (SARCH STREQUAL "pc98" OR SARCH STREQUAL "xbox"))
+        add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
+            COMMAND native-mkhive -h:BCD -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf
+            DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf)
 
-    add_custom_target(bcd_hive
-        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/BCD)
+        add_custom_target(bcd_hive
+            DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/BCD)
 
-    add_cd_file(
-        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
-        TARGET bcd_hive
-        DESTINATION efi/boot
-        NO_CAB
-        FOR bootcd regtest livecd)
+        add_cd_file(
+            FILE ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
+            TARGET bcd_hive
+            DESTINATION efi/boot
+            NO_CAB FOR bootcd regtest)
+    endif()
 
 endfunction()
 

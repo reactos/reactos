@@ -58,10 +58,8 @@ PspGetOrSetContextKernelRoutine(
     }
     else
     {
-        /* Convert the trap frame to a context */
-        KeTrapFrameToContext(TrapFrame,
-                             NULL,
-                             &GetSetContext->Context);
+        /* Get the nonvolatiles from the stack */
+        KiGetTrapContext(TrapFrame, &GetSetContext->Context);
     }
 
     /* Notify the Native API that we are done */

@@ -210,7 +210,7 @@ IopCleanupIrp(IN PIRP Irp,
     if (Irp->Flags & IRP_DEALLOCATE_BUFFER)
     {
         /* Free the buffer */
-        ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer, TAG_SYS_BUF);
+        ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer, TAG_IOBUF);
     }
 
     /* Check if this IRP has a user event, a file object, and is async */
@@ -778,7 +778,7 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
         {
             /* Allocate the System Buffer */
             Irp->AssociatedIrp.SystemBuffer =
-                ExAllocatePoolWithTag(NonPagedPool, Length, TAG_SYS_BUF);
+                ExAllocatePoolWithTag(NonPagedPool, Length, TAG_IOBUF);
             if (!Irp->AssociatedIrp.SystemBuffer)
             {
                 /* Free the IRP and fail */
@@ -927,7 +927,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                 Irp->AssociatedIrp.SystemBuffer =
                     ExAllocatePoolWithTag(NonPagedPool,
                                           BufferLength,
-                                          TAG_SYS_BUF);
+                                          TAG_IOBUF);
                 if (!Irp->AssociatedIrp.SystemBuffer)
                 {
                     /* Free the IRP and fail */
@@ -970,7 +970,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                 Irp->AssociatedIrp.SystemBuffer =
                     ExAllocatePoolWithTag(NonPagedPool,
                                           InputBufferLength,
-                                          TAG_SYS_BUF);
+                                          TAG_IOBUF);
                 if (!Irp->AssociatedIrp.SystemBuffer)
                 {
                     /* Free the IRP and fail */

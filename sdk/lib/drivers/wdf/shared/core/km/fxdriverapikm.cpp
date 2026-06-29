@@ -38,7 +38,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfDriverOpenParametersRegistryKey)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -118,7 +118,7 @@ WDFEXPORT(WdfDriverOpenParametersRegistryKey)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PDRIVER_OBJECT
-STDCALL
+NTAPI
 WDFEXPORT(WdfDriverWdmGetDriverObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -138,7 +138,7 @@ WDFEXPORT(WdfDriverWdmGetDriverObject)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDRIVER
-STDCALL
+NTAPI
 WDFEXPORT(WdfWdmDriverGetWdfDriverHandle)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -152,7 +152,7 @@ WDFEXPORT(WdfWdmDriverGetWdfDriverHandle)(
 }
 
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfDriverMiniportUnload)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -173,7 +173,7 @@ WDFEXPORT(WdfDriverMiniportUnload)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfDeviceMiniportCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

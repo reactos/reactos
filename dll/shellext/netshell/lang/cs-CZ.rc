@@ -76,6 +76,16 @@ BEGIN
     PUSHBUTTON "&zavřít", IDC_CLOSE, 120, 155, 60, 14
 END
 
+IDD_NETWORKINITPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Please wait while ReactOS installs networking components.", IDC_STATIC, 53, 7, 240, 20
+    CONTROL "", IDC_INSTALL_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 58, 275, 11
+END
+
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Instalátor ReactOS"
@@ -153,6 +163,7 @@ BEGIN
     IDS_NET_DELETE "Smazat"
     IDS_NET_RENAME "Přejmenovat"
     IDS_NET_PROPERTIES "Vlasnosti"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u Bit/s"
     IDS_FORMAT_KBIT "%u KBit/s"
     IDS_FORMAT_MBIT "%u MBit/s"
@@ -165,6 +176,8 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_NETWORKINITTITLE "Network Install"
+    IDS_NETWORKINITSUBTITLE "Installs required networking components."
     IDS_NETWORKSETTINGSTITLE "Síťová nastavení"
     IDS_NETWORKSETTINGSSUBTITLE "Instaluje síťový software používaný k připojení k dalším sítím, počítačům a k Internetu."
     IDS_NETWORKCOMPONENTTITLE "Síťové součásti"

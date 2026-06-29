@@ -28,7 +28,7 @@ BEGIN
     STRING_FMIFS_FAIL "Nuk alokohet FMIFS pika hyrjes.\n\n"
     STRING_UNKNOW_ARG "Argument i panjohur: %s\n"
     STRING_DRIVE_PARM "Parametra e duhura te driverit mungojne.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Nuk dihet tipi i driverit"
+    STRING_ERROR_DRIVE_TYPE "Nuk dihet tipi i driverit.\n"
     STRING_INSERT_DISK "Fusni nje floppy ne drive %C:\nadhe shtypni Enter kur te jeni gati..."
     STRING_NO_VOLUME "Nuk mund te pyesi nje volum"
     STRING_NO_VOLUME_SIZE "Nuk mund te pyesi masen e nje volumi"

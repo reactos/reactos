@@ -100,7 +100,7 @@ CBDAPinControl::GetPinID(ULONG *pulPinID)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAPinControl::GetPinID: hr %lx pulPinID %lu BytesReturned %lx\n", hr, *pulPinID, BytesReturned);
+    _swprintf(Buffer, L"CBDAPinControl::GetPinID: hr %lx pulPinID %lu BytesReturned %lx\n", hr, *pulPinID, BytesReturned);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -125,7 +125,7 @@ CBDAPinControl::GetPinType(ULONG *pulPinType)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAPinControl::GetPinType: hr %lx pulPinType %lu BytesReturned %lx\n", hr, *pulPinType, BytesReturned);
+    _swprintf(Buffer, L"CBDAPinControl::GetPinType: hr %lx pulPinType %lu BytesReturned %lx\n", hr, *pulPinType, BytesReturned);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -360,7 +360,7 @@ CBDAPinControl_fnConstructor(
                 else
                 {
                     WCHAR Buffer[100];
-                    swprintf(Buffer, L"CBDAPinControl_fnConstructor failed to register filter with %lx\n", hr);
+                    _swprintf(Buffer, L"CBDAPinControl_fnConstructor failed to register filter with %lx\n", hr);
                     OutputDebugStringW(Buffer);
                 }
             }

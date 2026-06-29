@@ -49,8 +49,10 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
 
     switch (fdwReason)
     {
+#ifndef __REACTOS__
     case DLL_WINE_PREATTACH:
         return FALSE;  /* prefer native version */
+#endif
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinst);
         break;

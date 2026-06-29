@@ -343,7 +343,7 @@ CKsProxy::QueryInterface(
                 WCHAR Buffer[100];
                 LPOLESTR lpstr;
                 StringFromCLSID(refiid, &lpstr);
-                swprintf(Buffer, L"CKsProxy::QueryInterface plugin %lu supports interface %s\n", Index, lpstr);
+                _swprintf(Buffer, L"CKsProxy::QueryInterface plugin %lu supports interface %s\n", Index, lpstr);
                 OutputDebugStringW(Buffer);
                 CoTaskMemFree(lpstr);
 #endif
@@ -355,7 +355,7 @@ CKsProxy::QueryInterface(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CKsProxy::QueryInterface: NoInterface for %s !!!\n", lpstr);
+    _swprintf(Buffer, L"CKsProxy::QueryInterface: NoInterface for %s !!!\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 #endif
@@ -968,7 +968,7 @@ CKsProxy::IsFormatSupported(
     WCHAR Buffer[100];
     LPOLESTR pstr;
     StringFromCLSID(*pFormat, &pstr);
-    swprintf(Buffer, L"CKsProxy::IsFormatSupported %s\n",pstr);
+    _swprintf(Buffer, L"CKsProxy::IsFormatSupported %s\n",pstr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -980,7 +980,7 @@ CKsProxy::IsFormatSupported(
     if (SUCCEEDED(hr))
     {
 #ifdef KSPROXY_TRACE
-        swprintf(Buffer, L"CKsProxy::IsFormatSupported NumFormat %lu\n",FormatList->Count);
+        _swprintf(Buffer, L"CKsProxy::IsFormatSupported NumFormat %lu\n",FormatList->Count);
         OutputDebugStringW(Buffer);
 #endif
 
@@ -1694,7 +1694,7 @@ CKsProxy::GetMiscFlags()
 
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CKsProxy::GetMiscFlags stub Flags %x\n", Flags);
+    _swprintf(Buffer, L"CKsProxy::GetMiscFlags stub Flags %x\n", Flags);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -1975,13 +1975,13 @@ CKsProxy::Load(
 #endif
 
     hr = pStm->Read(&Length, sizeof(ULONG), &BytesReturned);
-    swprintf(Buffer, L"Length hr %x hr length %lu\n", hr, Length);
+    _swprintf(Buffer, L"Length hr %x hr length %lu\n", hr, Length);
     OutputDebugStringW(Buffer);
 
     do
     {
         hr = pStm->Read(&PinId, sizeof(ULONG), &BytesReturned);
-        swprintf(Buffer, L"Read: hr %08x PinId %lx BytesReturned %lu\n", hr, PinId, BytesReturned);
+        _swprintf(Buffer, L"Read: hr %08x PinId %lx BytesReturned %lu\n", hr, PinId, BytesReturned);
         OutputDebugStringW(Buffer);
 
         if (FAILED(hr) || !BytesReturned)
@@ -1992,7 +1992,7 @@ CKsProxy::Load(
         hr = pStm->Read(&MediaType, sizeof(AM_MEDIA_TYPE), &BytesReturned);
         if (FAILED(hr) || BytesReturned != sizeof(AM_MEDIA_TYPE))
         {
-            swprintf(Buffer, L"Read failed with %lx\n", hr);
+            _swprintf(Buffer, L"Read failed with %lx\n", hr);
             OutputDebugStringW(Buffer);
             break;
         }
@@ -2002,7 +2002,7 @@ CKsProxy::Load(
         StringFromIID(MediaType.subtype , &pSub);
         StringFromIID(MediaType.formattype, &pFormat);
 
-        swprintf(Buffer, L"BytesReturned %lu majortype %s subtype %s bFixedSizeSamples %u bTemporalCompression %u lSampleSize %u formattype %s, pUnk %p cbFormat %u pbFormat %p\n", BytesReturned, pMajor, pSub, MediaType.bFixedSizeSamples, MediaType.bTemporalCompression, MediaType.lSampleSize, pFormat, MediaType.pUnk, MediaType.cbFormat, MediaType.pbFormat);
+        _swprintf(Buffer, L"BytesReturned %lu majortype %s subtype %s bFixedSizeSamples %u bTemporalCompression %u lSampleSize %u formattype %s, pUnk %p cbFormat %u pbFormat %p\n", BytesReturned, pMajor, pSub, MediaType.bFixedSizeSamples, MediaType.bTemporalCompression, MediaType.lSampleSize, pFormat, MediaType.pUnk, MediaType.cbFormat, MediaType.pbFormat);
         OutputDebugStringW(Buffer);
 
         Length -= BytesReturned;
@@ -2017,7 +2017,7 @@ CKsProxy::Load(
             hr = pStm->Read(&MediaType.pbFormat, sizeof(MediaType.cbFormat), &BytesReturned);
             if (FAILED(hr))
             {
-                swprintf(Buffer, L"ReadFormat failed with %lx\n", hr);
+                _swprintf(Buffer, L"ReadFormat failed with %lx\n", hr);
                 OutputDebugStringW(Buffer);
                 break;
             }
@@ -2243,7 +2243,7 @@ CKsProxy::GetSupportedSets(
 
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[200];
-    swprintf(Buffer, L"NumProperty %lu NumMethods %lu NumEvents %lu\n", NumProperty, NumMethods, NumEvents);
+    _swprintf(Buffer, L"NumProperty %lu NumMethods %lu NumEvents %lu\n", NumProperty, NumMethods, NumEvents);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -2424,11 +2424,11 @@ CKsProxy::GetPinName(
 
     if (DataFlow == KSPIN_DATAFLOW_IN)
     {
-        swprintf(Buffer, L"Input%lu", PinCount);
+        _swprintf(Buffer, L"Input%lu", PinCount);
     }
     else
     {
-        swprintf(Buffer, L"Output%lu", PinCount);
+        _swprintf(Buffer, L"Output%lu", PinCount);
     }
 
     // allocate pin name
@@ -2472,7 +2472,7 @@ CKsProxy::CreatePins()
         {
 #ifdef KSPROXY_TRACE
             WCHAR Buffer[100];
-            swprintf(Buffer, L"CKsProxy::CreatePins GetPinInstanceCount failed with %lx\n", hr);
+            _swprintf(Buffer, L"CKsProxy::CreatePins GetPinInstanceCount failed with %lx\n", hr);
             OutputDebugStringW(Buffer);
 #endif
             continue;
@@ -2485,7 +2485,7 @@ CKsProxy::CreatePins()
         {
 #ifdef KSPROXY_TRACE
             WCHAR Buffer[100];
-            swprintf(Buffer, L"CKsProxy::CreatePins GetPinCommunication failed with %lx\n", hr);
+            _swprintf(Buffer, L"CKsProxy::CreatePins GetPinCommunication failed with %lx\n", hr);
             OutputDebugStringW(Buffer);
 #endif
             continue;
@@ -2496,7 +2496,7 @@ CKsProxy::CreatePins()
             // already maximum reached for this pin
 #ifdef KSPROXY_TRACE
             WCHAR Buffer[100];
-            swprintf(Buffer, L"CKsProxy::CreatePins Instances.CurrentCount == Instances.PossibleCount\n");
+            _swprintf(Buffer, L"CKsProxy::CreatePins Instances.CurrentCount == Instances.PossibleCount\n");
             OutputDebugStringW(Buffer);
 #endif
             continue;
@@ -2508,7 +2508,7 @@ CKsProxy::CreatePins()
         {
 #ifdef KSPROXY_TRACE
             WCHAR Buffer[100];
-            swprintf(Buffer, L"CKsProxy::CreatePins GetPinDataflow failed with %lx\n", hr);
+            _swprintf(Buffer, L"CKsProxy::CreatePins GetPinDataflow failed with %lx\n", hr);
             OutputDebugStringW(Buffer);
 #endif
             continue;
@@ -2523,7 +2523,7 @@ CKsProxy::CreatePins()
         {
 #ifdef KSPROXY_TRACE
             WCHAR Buffer[100];
-            swprintf(Buffer, L"CKsProxy::CreatePins GetPinName failed with %lx\n", hr);
+            _swprintf(Buffer, L"CKsProxy::CreatePins GetPinName failed with %lx\n", hr);
             OutputDebugStringW(Buffer);
 #endif
             continue;
@@ -2537,7 +2537,7 @@ CKsProxy::CreatePins()
             {
 #ifdef KSPROXY_TRACE
                 WCHAR Buffer[100];
-                swprintf(Buffer, L"CKsProxy::CreatePins CInputPin_Constructor failed with %lx\n", hr);
+                _swprintf(Buffer, L"CKsProxy::CreatePins CInputPin_Constructor failed with %lx\n", hr);
                 OutputDebugStringW(Buffer);
 #endif
                 CoTaskMemFree(PinName);
@@ -2552,7 +2552,7 @@ CKsProxy::CreatePins()
             {
 #ifdef KSPROXY_TRACE
                 WCHAR Buffer[100];
-                swprintf(Buffer, L"CKsProxy::CreatePins COutputPin_Constructor failed with %lx\n", hr);
+                _swprintf(Buffer, L"CKsProxy::CreatePins COutputPin_Constructor failed with %lx\n", hr);
                 OutputDebugStringW(Buffer);
 #endif
                 CoTaskMemFree(PinName);
@@ -2566,7 +2566,7 @@ CKsProxy::CreatePins()
 
 #ifdef KSPROXY_TRACE
         WCHAR Buffer[100];
-        swprintf(Buffer, L"Index %lu DataFlow %lu Name %s\n", Index, DataFlow, PinName);
+        _swprintf(Buffer, L"Index %lu DataFlow %lu Name %s\n", Index, DataFlow, PinName);
         OutputDebugStringW(Buffer);
 #endif
 
@@ -2598,7 +2598,7 @@ CKsProxy::Load(IPropertyBag *pPropBag, IErrorLog *pErrorLog)
     if (FAILED(hr))
     {
 #ifdef KSPROXY_TRACE
-        swprintf(Buffer, L"CKsProxy::Load Read %lx\n", hr);
+        _swprintf(Buffer, L"CKsProxy::Load Read %lx\n", hr);
         OutputDebugStringW(Buffer);
 #endif
         return MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, GetLastError());
@@ -2638,7 +2638,7 @@ CKsProxy::Load(IPropertyBag *pPropBag, IErrorLog *pErrorLog)
     {
         // failed to open device
 #ifdef KSPROXY_TRACE
-        swprintf(Buffer, L"CKsProxy:: failed to open device with %lx\n", GetLastError());
+        _swprintf(Buffer, L"CKsProxy:: failed to open device with %lx\n", GetLastError());
         OutputDebugStringW(Buffer);
 #endif
         return MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, GetLastError());
@@ -2675,7 +2675,7 @@ CKsProxy::Load(IPropertyBag *pPropBag, IErrorLog *pErrorLog)
     hr = CreatePins();
 
 #ifdef KSPROXY_TRACE
-    swprintf(Buffer, L"CKsProxy::Load CreatePins %lx\n", hr);
+    _swprintf(Buffer, L"CKsProxy::Load CreatePins %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -2866,7 +2866,7 @@ CKsProxy::SetPinState(
 
 #ifdef KSPROXY_TRACE
         WCHAR Buffer[100];
-        swprintf(Buffer, L"CKsProxy::SetPinState Index %u State %u hr %lx\n", Index, State, hr);
+        _swprintf(Buffer, L"CKsProxy::SetPinState Index %u State %u hr %lx\n", Index, State, hr);
         OutputDebugStringW(Buffer);
 #endif
 
@@ -2967,7 +2967,7 @@ CKsProxy::SetSyncSource(
                         // failed to set master clock
                         pObject->Release();
                         WCHAR Buffer[100];
-                        swprintf(Buffer, L"CKsProxy::SetSyncSource KSPROPERTY_STREAM_MASTERCLOCK failed with %lx\n", hr);
+                        _swprintf(Buffer, L"CKsProxy::SetSyncSource KSPROPERTY_STREAM_MASTERCLOCK failed with %lx\n", hr);
                         OutputDebugStringW(Buffer);
                         return hr;
                     }
@@ -3099,7 +3099,7 @@ CKsProxy::JoinFilterGraph(
 {
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CKsProxy::JoinFilterGraph pName %s pGraph %p m_Ref %u\n", pName, pGraph, m_Ref);
+    _swprintf(Buffer, L"CKsProxy::JoinFilterGraph pName %s pGraph %p m_Ref %u\n", pName, pGraph, m_Ref);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -3165,7 +3165,7 @@ CKsProxy_Constructor(
     WCHAR Buffer[100];
     LPOLESTR pstr;
     StringFromCLSID(riid, &pstr);
-    swprintf(Buffer, L"CKsProxy_Constructor pUnkOuter %p riid %s\n", pUnkOuter, pstr);
+    _swprintf(Buffer, L"CKsProxy_Constructor pUnkOuter %p riid %s\n", pUnkOuter, pstr);
     OutputDebugStringW(Buffer);
 #endif
 

@@ -79,6 +79,7 @@ BEGIN
     IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
     IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
     IDS_UNKNOWNERROR "Unknown error 0x%08x."
+    IDS_CANTDELETEFILE "Failed to delete the file(s)."
 
     IDS_WIZ_TITLE "Assistant d'extraction"
     IDS_WIZ_DEST_TITLE "Choisir une destination"
@@ -90,6 +91,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Ce répertoire contient déjà un fichier nommé '%1'.\nVoulez-vous le remplacer ?"
     IDS_PASSWORD_FILE_TEXT "The file '%1' is password protected. Please enter the password."
     IDS_PASSWORD_ZIP_TEXT "Please specify the password to use when extracting this zip file."
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "&Tout extraire..."
     IDS_HELPTEXT "Extrait le contenu du répertoire"

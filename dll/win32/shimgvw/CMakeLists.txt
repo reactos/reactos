@@ -3,9 +3,11 @@ spec2def(shimgvw.dll shimgvw.spec)
 
 list(APPEND SOURCE
     anime.c
+    loader.cpp
     shimgvw.c
     comsup.c
     shimgvw.rc
+    util.c
     ${CMAKE_CURRENT_BINARY_DIR}/shimgvw_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shimgvw.def)
 

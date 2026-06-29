@@ -2,7 +2,7 @@
  * jcparam.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modified 2003-2019 by Guido Vollbeding.
+ * Modified 2003-2025 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -62,8 +62,9 @@ jpeg_add_quant_table (j_compress_ptr cinfo, int which_tbl,
 
 
 /* These are the sample quantization tables given in JPEG spec section K.1.
- * The spec says that the values given produce "good" quality, and
- * when divided by 2, "very good" quality.
+ * NOTE: chrominance DC value is changed from 17 to 16 for lossless support.
+ * The spec says that the values given produce "good" quality,
+ * and when divided by 2, "very good" quality.
  */
 static const unsigned int std_luminance_quant_tbl[DCTSIZE2] = {
   16,  11,  10,  16,  24,  40,  51,  61,
@@ -76,7 +77,7 @@ static const unsigned int std_luminance_quant_tbl[DCTSIZE2] = {
   72,  92,  95,  98, 112, 100, 103,  99
 };
 static const unsigned int std_chrominance_quant_tbl[DCTSIZE2] = {
-  17,  18,  24,  47,  99,  99,  99,  99,
+  16,  18,  24,  47,  99,  99,  99,  99,
   18,  21,  26,  66,  99,  99,  99,  99,
   24,  26,  56,  99,  99,  99,  99,  99,
   47,  66,  99,  99,  99,  99,  99,  99,
@@ -214,7 +215,7 @@ jpeg_set_defaults (j_compress_ptr cinfo)
 
   cinfo->scale_num = 1;		/* 1:1 scaling */
   cinfo->scale_denom = 1;
-  cinfo->data_precision = BITS_IN_JSAMPLE;
+  cinfo->data_precision = JPEG_DATA_PRECISION;
   /* Set up two quantization tables using default quality of 75 */
   jpeg_set_quality(cinfo, 75, TRUE);
   /* Reset standard Huffman tables */
@@ -282,6 +283,7 @@ jpeg_set_defaults (j_compress_ptr cinfo)
 
   /* No color transform */
   cinfo->color_transform = JCT_NONE;
+  cinfo->LSE_maxtrans = MAXJSAMPLE; /* Default LSE MAXTRANS value */
 
   /* Choose JPEG colorspace based on input space, set defaults accordingly */
 
@@ -379,11 +381,13 @@ jpeg_set_colorspace (j_compress_ptr cinfo, J_COLOR_SPACE colorspace)
   case JCS_RGB:
     cinfo->write_Adobe_marker = TRUE; /* write Adobe marker to flag RGB */
     cinfo->num_components = 3;
-    SET_COMP(0, 0x52 /* 'R' */, 1,1, 0,
+    SET_COMP(0, 0x52 /* 'R' */, 1,1,
+		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0,
 		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0,
 		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0);
     SET_COMP(1, 0x47 /* 'G' */, 1,1, 0, 0,0);
-    SET_COMP(2, 0x42 /* 'B' */, 1,1, 0,
+    SET_COMP(2, 0x42 /* 'B' */, 1,1,
+		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0,
 		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0,
 		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0);
     break;
@@ -417,11 +421,13 @@ jpeg_set_colorspace (j_compress_ptr cinfo, J_COLOR_SPACE colorspace)
     cinfo->JFIF_major_version = 2;   /* Set JFIF major version = 2 */
     cinfo->num_components = 3;
     /* Add offset 0x20 to the normal R/G/B component IDs */
-    SET_COMP(0, 0x72 /* 'r' */, 1,1, 0,
+    SET_COMP(0, 0x72 /* 'r' */, 1,1,
+		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0,
 		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0,
 		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0);
     SET_COMP(1, 0x67 /* 'g' */, 1,1, 0, 0,0);
-    SET_COMP(2, 0x62 /* 'b' */, 1,1, 0,
+    SET_COMP(2, 0x62 /* 'b' */, 1,1,
+		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0,
 		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0,
 		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0);
     break;

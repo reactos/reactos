@@ -1,26 +1,32 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+ /*
+ * PROJECT:     Maze ScreenSaver
+ * LICENSE:     HPND (https://spdx.org/licenses/HPND)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 IDD_DLG_SCREEN DIALOGEX 0, 0, 276, 112
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Configurație animație de inactivitate „Labirint”"
+CAPTION "Setări pentru economizorul de ecran Labirint"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Mărime labirint:",IDC_STATIC,7,7,90,12,SS_CENTERIMAGE
+    LTEXT           "Mărimea Labirintului:",IDC_STATIC,7,7,90,12,SS_CENTERIMAGE
     CONTROL         "Slider1",IDC_SLIDER_SIZE,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,101,7,140,12
     CTEXT           "Static",IDC_TEXT_SIZE,245,7,24,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
-    LTEXT           "Timp ante-rezolvare:",IDC_STATIC,7,28,90,12,SS_CENTERIMAGE
+    LTEXT           "Înt. pre-rezolvare:",IDC_STATIC,7,28,90,12,SS_CENTERIMAGE
     CONTROL         "Slider2",IDC_SLIDER_PRESD,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,101,28,140,12
     CTEXT           "Static",IDC_TEXT_PRESD,245,28,24,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
-    LTEXT           "Timp post-rezolvare:",IDC_STATIC,7,49,90,12,SS_CENTERIMAGE
+    LTEXT           "Înt. după rezolvare:",IDC_STATIC,7,49,90,12,SS_CENTERIMAGE
     CONTROL         "Slider3",IDC_SLIDER_POSTSD,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,101,49,140,12
     CTEXT           "Static",IDC_TEXT_POSTSD,245,49,24,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
-    LTEXT           "Timp de rezolvare:",IDC_STATIC,7,70,90,12,SS_CENTERIMAGE
+    LTEXT           "Întârz. rezolvare:",IDC_STATIC,7,70,90,12,SS_CENTERIMAGE
     CONTROL         "Slider4",IDC_SLIDER_SD,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,101,70,140,12
     CTEXT           "Static",IDC_TEXT_SD,245,70,24,12,SS_CENTERIMAGE,WS_EX_STATICEDGE
-    DEFPUSHBUTTON   "Con&firmă",IDOK,59,91,50,14
-    PUSHBUTTON      "A&nulează",IDCANCEL,113,91,50,14
+    DEFPUSHBUTTON   "OK",IDOK,59,91,50,14
+    PUSHBUTTON      "Revocare",IDCANCEL,113,91,50,14
     PUSHBUTTON      "&Despre",IDABOUT,167,91,50,14
 END
 
@@ -29,19 +35,19 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Despre"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CTEXT           "Animație de inactivitate „Labirint” versiune 1.0",IDC_STATIC,7,7,215,9
+    CTEXT           "Economizorul de ecran Labirint” versiune 1.0",IDC_STATIC,7,7,215,9
     LTEXT           "[06-21-85] Martin Weiss - Cod Original",IDC_STATIC,7,20,215,8
-    LTEXT           "[01-29-88] Dave Lemke - Specializare pentru X11",IDC_STATIC,7,29,215,8
-    LTEXT           "[10-04-88] Richard Hess - Generalizare de la X11",IDC_STATIC,7,38,215,8
+    LTEXT           "[01-29-88] Dave Lemke - Spart pentru X11",IDC_STATIC,7,29,215,8
+    LTEXT           "[10-04-88] Richard Hess - Nespart de la X11",IDC_STATIC,7,38,215,8
     LTEXT           "[03-03-93] Jim Randell - Generalizare de la X11",IDC_STATIC,7,47,215,8
-    LTEXT           "[03-07-93] Jamie Zawinski - Refactorizare și alte îmbunătățiri",IDC_STATIC,7,56,215,8
-    LTEXT           "[10-08-94] Ge van Geldorp - Portat în Windows",IDC_STATIC,7,65,215,8
-    LTEXT           "[08-15-03] Ge van Geldorp - Portat în ReactOS",IDC_STATIC,7,74,215,8
-    CTEXT           "R.I.P. Ge van Geldorp, we miss you!",IDC_STATIC,7,87,215,10,SS_SUNKEN
-    DEFPUSHBUTTON   "Î&nchide",IDOK,87,100,56,14
+    LTEXT           "[03-07-93] Jamie Zawinski - Curățenie și ordine a codului",IDC_STATIC,7,56,215,8
+    LTEXT           "[10-08-94] Ge van Geldorp - Portat pe Windows",IDC_STATIC,7,65,215,8
+    LTEXT           "[08-15-03] Ge van Geldorp - Portat pe ReactOS",IDC_STATIC,7,74,215,8
+    CTEXT           "R.I.P. Ge van Geldorp, ne e dor de tine!",IDC_STATIC,7,87,215,10,SS_SUNKEN
+    DEFPUSHBUTTON   "OK",IDOK,87,100,56,14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DESCRIPTION         "Labirint (animație de inactivitate)"
+    IDS_DESCRIPTION         "Economizorul de ecran Labirint"
 END

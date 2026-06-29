@@ -111,7 +111,7 @@ PrintFileDacl(IN LPTSTR FilePath,
                         LPTSTR Name = NULL;
                         LPTSTR Domain = NULL;
                         LPTSTR SidString = NULL;
-                        DWORD IndentAccess;
+                        size_t IndentAccess;
                         DWORD AccessMask = Ace->Mask;
                         PSID Sid = (PSID)&Ace->SidStart;
 
@@ -183,7 +183,7 @@ BuildSidString:
                         /* attempt to map the SID to a user name */
                         if (AceIndex == 0)
                         {
-                            DWORD i = 0;
+                            size_t i = 0;
 
                             /* overwrite the full file name with spaces so we
                                only print the file name once */
@@ -195,28 +195,28 @@ BuildSidString:
                         if (Name != NULL && Domain[0] != _T('\0'))
                         {
                             ConPrintf(StdOut, L"%s\\%s:", Domain, Name);
-                            IndentAccess = (DWORD)_tcslen(Domain) + _tcslen(Name);
+                            IndentAccess = _tcslen(Domain) + _tcslen(Name);
                         }
                         else
                         {
                             LPTSTR DisplayString = (Name != NULL ? Name : SidString);
 
                             ConPrintf(StdOut, L"%s:", DisplayString);
-                            IndentAccess = (DWORD)_tcslen(DisplayString);
+                            IndentAccess = _tcslen(DisplayString);
                         }
 
                         /* print the ACE Flags */
                         if (Ace->Header.AceFlags & CONTAINER_INHERIT_ACE)
                         {
-                            IndentAccess += ConResPuts(StdOut, IDS_ABBR_CI);
+                            IndentAccess += (size_t)ConResPuts(StdOut, IDS_ABBR_CI);
                         }
                         if (Ace->Header.AceFlags & OBJECT_INHERIT_ACE)
                         {
-                            IndentAccess += ConResPuts(StdOut, IDS_ABBR_OI);
+                            IndentAccess += (size_t)ConResPuts(StdOut, IDS_ABBR_OI);
                         }
                         if (Ace->Header.AceFlags & INHERIT_ONLY_ACE)
                         {
-                            IndentAccess += ConResPuts(StdOut, IDS_ABBR_IO);
+                            IndentAccess += (size_t)ConResPuts(StdOut, IDS_ABBR_IO);
                         }
 
                         IndentAccess += 2;
@@ -257,7 +257,7 @@ BuildSidString:
                             }
                             else
                             {
-                                DWORD x, x2;
+                                DWORD x;
                                 static const struct
                                 {
                                     DWORD Access;
@@ -305,11 +305,7 @@ PrintSpecialAccess:
                                     if ((Ace->Mask & AccessRights[x].Access) == AccessRights[x].Access)
                                     {
                                         ConPrintf(StdOut, L"\n%s ", FullFileName);
-                                        for (x2 = 0; x2 < IndentAccess; x2++)
-                                        {
-                                            ConPuts(StdOut, L" ");
-                                        }
-
+                                        ConPrintf(StdOut, L"%*s", IndentAccess, L"");
                                         ConResPuts(StdOut, AccessRights[x].uID);
                                     }
                                 }
@@ -358,14 +354,15 @@ PrintSpecialAccess:
     return Ret;
 }
 
-/* add a backslash at end to a path string if necessary */
+/* Add a backslash at the end of a path string if necessary */
 static VOID
 AddBackslash(LPTSTR FilePath)
 {
-    INT len = lstrlen(FilePath);
-    LPTSTR pch = CharPrev(FilePath, FilePath + len);
-    if (*pch != _T('\\'))
-        lstrcat(pch, _T("\\"));
+    /* Find the last backslash. If there is none, or if it doesn't
+     * terminate the string, then append a backslash. */
+    LPTSTR pch = _tcsrchr(FilePath, _T('\\'));
+    if (!pch || *(pch+1))
+        _tcscat(FilePath, _T("\\"));
 }
 
 static BOOL
@@ -375,7 +372,7 @@ GetPathOfFile(LPTSTR FilePath, LPCTSTR pszFiles)
     LPTSTR pch;
     DWORD attrs;
 
-    lstrcpyn(FilePath, pszFiles, MAX_PATH);
+    _tcsncpy(FilePath, pszFiles, MAX_PATH);
     pch = _tcsrchr(FilePath, _T('\\'));
     if (pch != NULL)
     {
@@ -385,7 +382,7 @@ GetPathOfFile(LPTSTR FilePath, LPCTSTR pszFiles)
             PrintError(GetLastError());
             return FALSE;
         }
-        lstrcpyn(FilePath, FullPath, MAX_PATH);
+        _tcsncpy(FilePath, FullPath, MAX_PATH);
 
         attrs = GetFileAttributes(FilePath);
         if (attrs == 0xFFFFFFFF || !(attrs & FILE_ATTRIBUTE_DIRECTORY))
@@ -421,7 +418,6 @@ PrintDaclsOfFiles(LPCTSTR pszFiles)
     hFind = FindFirstFile(pszFiles, &FindData);
     if (hFind == INVALID_HANDLE_VALUE)
         return FALSE;
-
     do
     {
         if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -448,7 +444,7 @@ PrintDaclsOfFiles(LPCTSTR pszFiles)
         {
             ConPuts(StdOut, L"\n");
         }
-    } while(FindNextFile(hFind, &FindData));
+    } while (FindNextFile(hFind, &FindData));
     LastError = GetLastError();
     FindClose(hFind);
 
@@ -605,7 +601,6 @@ ChangeACLsOfFiles(LPCTSTR pszFiles)
     hFind = FindFirstFile(pszFiles, &FindData);
     if (hFind == INVALID_HANDLE_VALUE)
         return FALSE;
-
     do
     {
         if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -626,8 +621,7 @@ ChangeACLsOfFiles(LPCTSTR pszFiles)
             else
                 break;
         }
-    } while(FindNextFile(hFind, &FindData));
-
+    } while (FindNextFile(hFind, &FindData));
     LastError = GetLastError();
     FindClose(hFind);
 
@@ -660,7 +654,6 @@ ChangeACLsOfFilesInCurDir(LPCTSTR pszFiles)
     hFind = FindFirstFile(pszFiles, &FindData);
     if (hFind == INVALID_HANDLE_VALUE)
         return FALSE;
-
     do
     {
         if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -681,8 +674,7 @@ ChangeACLsOfFilesInCurDir(LPCTSTR pszFiles)
             else
                 break;
         }
-    } while(FindNextFile(hFind, &FindData));
-
+    } while (FindNextFile(hFind, &FindData));
     LastError = GetLastError();
     FindClose(hFind);
 
@@ -728,7 +720,7 @@ ChangeACLsOfFilesInCurDir(LPCTSTR pszFiles)
                     break;
             }
         }
-    } while(FindNextFile(hFind, &FindData));
+    } while (FindNextFile(hFind, &FindData));
     LastError = GetLastError();
     FindClose(hFind);
 
@@ -762,19 +754,19 @@ int _tmain(int argc, const TCHAR *argv[])
      */
     for (i = 2; i < argc; i++)
     {
-        if (lstrcmpi(argv[i], _T("/T")) == 0)
+        if (_tcsicmp(argv[i], _T("/T")) == 0)
         {
             OptionT = TRUE;
         }
-        else if (lstrcmpi(argv[i], _T("/E")) == 0)
+        else if (_tcsicmp(argv[i], _T("/E")) == 0)
         {
             OptionE = TRUE;
         }
-        else if (lstrcmpi(argv[i], _T("/C")) == 0)
+        else if (_tcsicmp(argv[i], _T("/C")) == 0)
         {
             OptionC = TRUE;
         }
-        else if (lstrcmpi(argv[i], _T("/G")) == 0)
+        else if (_tcsicmp(argv[i], _T("/G")) == 0)
         {
             if (i + 1 < argc)
             {
@@ -791,7 +783,7 @@ int _tmain(int argc, const TCHAR *argv[])
             InvalidParameter = TRUE;
             break;
         }
-        else if (lstrcmpi(argv[i], _T("/R")) == 0)
+        else if (_tcsicmp(argv[i], _T("/R")) == 0)
         {
             if (i + 1 < argc)
             {
@@ -802,7 +794,7 @@ int _tmain(int argc, const TCHAR *argv[])
             InvalidParameter = TRUE;
             break;
         }
-        else if (lstrcmpi(argv[i], _T("/P")) == 0)
+        else if (_tcsicmp(argv[i], _T("/P")) == 0)
         {
             if (i + 1 < argc)
             {
@@ -819,7 +811,7 @@ int _tmain(int argc, const TCHAR *argv[])
             InvalidParameter = TRUE;
             break;
         }
-        else if (lstrcmpi(argv[i], _T("/D")) == 0)
+        else if (_tcsicmp(argv[i], _T("/D")) == 0)
         {
             if (i + 1 < argc)
             {

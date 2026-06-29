@@ -108,9 +108,14 @@ ServerThread(
                                     &Message.Header);
     ok_hex(Status, STATUS_SUCCESS);
 
-    ok(Message.Header.u1.s1.TotalLength == sizeof(Message),
-       "TotalLength = %u, expected %Iu\n",
-       Message.Header.u1.s1.TotalLength, sizeof(Message));
+#ifdef _WIN64
+        /* On 64 bit systems TotalLength does not include the padding bytes in the TEST_MESSAGE structure. */
+        ok_eq_ulong(Message.Header.u1.s1.TotalLength, RTL_SIZEOF_THROUGH_FIELD(TEST_MESSAGE, Message));
+#else
+        /* On native 32 bit systems TotalLength includes the padding that comes from the 8 byte alignment of PORT_MESSAGE */
+        ok_eq_ulong(Message.Header.u1.s1.TotalLength, sizeof(Message));
+#endif
+
     ok(Message.Header.u1.s1.DataLength == sizeof(Message.Message),
        "DataLength = %u\n", Message.Header.u1.s1.DataLength);
     ok(Message.Header.u2.s2.Type == LPC_DATAGRAM,
@@ -140,6 +145,7 @@ ClientThread(
     ULONG ConnectInfoLength;
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
     TEST_MESSAGE Message;
+    ULONG MaxMessageLength;
 
     SecurityQos.Length = sizeof(SecurityQos);
     SecurityQos.ImpersonationLevel = SecurityIdentification;
@@ -150,6 +156,7 @@ ClientThread(
     ConnectInfo.Signature = TEST_CONNECTION_INFO_SIGNATURE1;
     ConnectInfoLength = sizeof(ConnectInfo);
     PortHandle = (PVOID)(ULONG_PTR)0x55555555;
+    MaxMessageLength = 0xAAAAAAAA;
     Status = NtConnectPort(&PortHandle,
                            &PortName,
                            &SecurityQos,
@@ -160,6 +167,7 @@ ClientThread(
                            &ConnectInfoLength);
     ok_hex(Status, STATUS_PORT_CONNECTION_REFUSED);
     ok(PortHandle == (PVOID)(ULONG_PTR)0x55555555, "PortHandle = %p\n", PortHandle);
+    ok_eq_ulong(MaxMessageLength, 0xAAAAAAAA);
 
     /* Try again, this time it will be accepted */
     ConnectInfo.Signature = TEST_CONNECTION_INFO_SIGNATURE2;
@@ -199,6 +207,14 @@ START_TEST(NtAcceptConnectPort)
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE PortHandle;
     HANDLE ThreadHandles[2];
+    BOOL bIsWow64;
+
+    IsWow64Process(GetCurrentProcess(), &bIsWow64);
+    if (bIsWow64)
+    {
+        skip("Skipping NtAcceptConnectPort on WOW64, due to LPC message layout differences.\n");
+        return;
+    }
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &PortName,

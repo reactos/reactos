@@ -50,7 +50,7 @@
 #define IDC_EVENTTEXTEDIT       1011
 #define IDC_DETAILS_STATIC      -2
 #define IDC_BYTESRADIO          1012
-#define IDC_WORDRADIO           1013
+#define IDC_WORDSRADIO          1013
 #define IDC_EVENTDATAEDIT       1014
 #define IDC_DISPLAYNAME         1015
 #define IDC_LOGNAME             1016
@@ -105,6 +105,8 @@
 #define IDS_CLEAREVENTS_MSG             110
 #define IDS_EVENTSTRINGIDNOTFOUND       111
 #define IDS_RESTOREDEFAULTS             112
+#define IDS_CONTFROMBEGINNING           113
+#define IDS_CONTFROMEND                 114
 
 #define IDS_USAGE                       120
 #define IDS_EVENTLOGFILE                121
@@ -128,7 +130,16 @@
 #define IDS_COLUMNUSER      226
 #define IDS_COLUMNCOMPUTER  227
 
-#define IDS_COPY            240
+#define IDS_COPY_EVTTYPE    240
+#define IDS_COPY_EVTSRC     241
+#define IDS_COPY_EVTCAT     242
+#define IDS_COPY_EVTID      243
+#define IDS_COPY_EVTDATE    244
+#define IDS_COPY_EVTTIME    245
+#define IDS_COPY_EVTUSER    246
+#define IDS_COPY_EVTCOMP    247
+#define IDS_COPY_EVTTEXT    248
+#define IDS_COPY_EVTDATA    249
 
 #define IDS_NONE            250
 #define IDS_NOT_AVAILABLE   251

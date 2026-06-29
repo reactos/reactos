@@ -432,7 +432,11 @@ Ping(void)
             exit(1);
         }
 
-        ZeroMemory(SendBuffer, RequestSize);
+        /* Windows ping utility fills the optional data field with
+         * ASCII characters from 'a' to 'w', wrapping back around
+         * until SendBuffer is full. */
+        for (ULONG i = 0; i < RequestSize; i++)
+            ((PUCHAR)SendBuffer)[i] = (UCHAR)('a' + (i % ('w' - 'a' + 1)));
     }
 
     if (Family == AF_INET6)
@@ -483,6 +487,7 @@ Ping(void)
                                ReplyBuffer, ReplySize, Timeout);
     }
 
+    /* TODO: Compare ReplyBuffer data to SendBuffer. */
     free(SendBuffer);
 
     if (Status == 0)

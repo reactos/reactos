@@ -6,7 +6,8 @@
  */
 
 #include "parport.h"
-
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 

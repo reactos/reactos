@@ -238,6 +238,8 @@ EnumerateServerName(
 {
     PIP_ADAPTER_DNS_SERVER_ADDRESS** Ptr = Data;
     PIP_ADAPTER_DNS_SERVER_ADDRESS ServerAddress = **Ptr;
+    PCWSTR Terminator;
+    NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(Interface);
 
@@ -245,15 +247,12 @@ EnumerateServerName(
     ServerAddress->Address.lpSockaddr = (PVOID)(ServerAddress + 1);
     ServerAddress->Address.iSockaddrLength = sizeof(SOCKADDR);
 
+    ServerAddress->Address.lpSockaddr->sa_family = AF_INET;
+    ((LPSOCKADDR_IN)ServerAddress->Address.lpSockaddr)->sin_port = 0;
 
-    /* Get the address from the server name string */
-    //FIXME: Only ipv4 for now...
-    if (WSAStringToAddressW(
-        NameServer,
-        AF_INET,
-        NULL,
-        ServerAddress->Address.lpSockaddr,
-        &ServerAddress->Address.iSockaddrLength))
+    Status = RtlIpv4StringToAddressW(NameServer, FALSE, &Terminator, 
+                                     &((LPSOCKADDR_IN)ServerAddress->Address.lpSockaddr)->sin_addr);
+    if (!NT_SUCCESS(Status))
     {
         /* Pass along, name conversion failed */
         ERR("%S is not a valid IP address\n", NameServer);
@@ -308,6 +307,23 @@ QueryFlags(
     }
 
     // FIXME: handle 0x8 -> 0x20
+}
+
+static
+ULONG
+CountPrefixBits(
+    _In_ ULONG Netmask)
+{
+    ULONG i, BitCount = 0;
+
+    for (i = 0; i < sizeof(ULONG) * 8; i++)
+    {
+        if ((Netmask & (1 << i)) == 0)
+            break;
+        BitCount++;
+    }
+
+    return BitCount;
 }
 
 DWORD
@@ -391,7 +407,8 @@ GetAdaptersAddresses(
     {
         PIP_ADAPTER_ADDRESSES CurrentAA = (PIP_ADAPTER_ADDRESSES)Ptr;
         ULONG CurrentAASize = 0;
-        ULONG FriendlySize = 0;
+        ULONG FriendlySize = 0, DescriptionSize = 0;
+        ULONG DhcpDomainSize = 0, DomainSize = 0;
 
         if (InterfacesList[i].tei_entity == IF_ENTITY)
         {
@@ -421,16 +438,62 @@ GetAdaptersAddresses(
             CurrentAASize += Entry->if_descrlen + sizeof(CHAR);
 
             /* Add the DNS suffix */
+            if (Entry->if_type != IF_TYPE_SOFTWARE_LOOPBACK)
+            {
+                HKEY InterfaceKey;
+                CHAR KeyName[256];
+                DWORD ValueType, ValueSize, Data;
+
+                snprintf(KeyName, 256,
+                    "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%*s",
+                    Entry->if_descrlen, &Entry->if_descr[0]);
+
+                if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &InterfaceKey) == ERROR_SUCCESS)
+                {
+                    ValueSize = sizeof(DWORD);
+                    if (RegQueryValueExW(InterfaceKey, L"EnableDHCP", NULL, &ValueType, (LPBYTE)&Data, &ValueSize) == ERROR_SUCCESS &&
+                        ValueType == REG_DWORD && Data == 1)
+                    {
+                        ValueSize = sizeof(DWORD);
+                        if (RegQueryValueExW(InterfaceKey, L"DhcpDomain", NULL, &ValueType, NULL, &ValueSize) == ERROR_SUCCESS &&
+                            ValueType == REG_SZ)
+                        {
+                            /* We remove the null char, it will be re-added after */
+                            DhcpDomainSize = ValueSize - sizeof(WCHAR);
+                            CurrentAASize += DhcpDomainSize;
+                        }
+                    }
+                    else
+                    {
+                        ValueSize = sizeof(DWORD);
+                        if (RegQueryValueExW(InterfaceKey, L"Domain", NULL, &ValueType, NULL, &ValueSize) == ERROR_SUCCESS &&
+                            ValueType == REG_SZ)
+                        {
+                            /* We remove the null char, it will be re-added after */
+                            DomainSize = ValueSize - sizeof(WCHAR);
+                            CurrentAASize += DomainSize;
+                        }
+                    }
+
+                    RegCloseKey(InterfaceKey);
+                }
+            }
+
             CurrentAASize += sizeof(WCHAR);
 
             /* Add the description. */
-            CurrentAASize += sizeof(WCHAR);
-
-            if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
+            if (Entry->if_type == IF_TYPE_SOFTWARE_LOOPBACK)
             {
-                /* Get the friendly name */
+                DescriptionSize = mbstowcs(NULL, (PCSTR)&Entry->if_descr[0], Entry->if_descrlen) * sizeof(WCHAR);
+                CurrentAASize += DescriptionSize;
+            }
+            else
+            {
                 HKEY ConnectionKey;
                 CHAR KeyName[256];
+                CHAR InstanceID[128];
+                DWORD ValueType = 0;
+                DWORD ValueSize = 0;
 
                 snprintf(KeyName, 256,
                     "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
@@ -438,18 +501,66 @@ GetAdaptersAddresses(
 
                 if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
                 {
-                    DWORD ValueType;
-                    DWORD ValueSize = 0;
-
-                    if (RegQueryValueExW(ConnectionKey, L"Name", NULL, &ValueType, NULL, &ValueSize) == ERROR_SUCCESS &&
-                        ValueType == REG_SZ)
-                    {
-                        /* We remove the null char, it will be re-added after */
-                        FriendlySize = ValueSize - sizeof(WCHAR);
-                        CurrentAASize += FriendlySize;
-                    }
-
+                    ValueSize = 128;
+                    RegQueryValueExA(ConnectionKey, "PnpInstanceID", NULL, &ValueType, (LPBYTE)InstanceID, &ValueSize);
                     RegCloseKey(ConnectionKey);
+                }
+
+                if (ValueSize != 0)
+                {
+                    sprintf(KeyName, "SYSTEM\\CurrentControlSet\\Enum\\%s", InstanceID);
+
+                    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                    {
+                        ValueSize = 0;
+                        if (RegQueryValueExW(ConnectionKey, L"DeviceDesc", NULL, &ValueType, NULL, &ValueSize) == ERROR_SUCCESS &&
+                            ValueType == REG_SZ)
+                        {
+                            /* We remove the null char, it will be re-added after */
+                            DescriptionSize = ValueSize - sizeof(WCHAR);
+                            CurrentAASize += DescriptionSize;
+                        }
+
+                        RegCloseKey(ConnectionKey);
+                    }
+                }
+            }
+
+            /* We always make sure to have enough room for empty string */
+            CurrentAASize += sizeof(WCHAR);
+
+            if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
+            {
+                if (Entry->if_type == IF_TYPE_SOFTWARE_LOOPBACK)
+                {
+                    FriendlySize = mbstowcs(NULL, (PCSTR)&Entry->if_descr[0], Entry->if_descrlen) * sizeof(WCHAR);
+                    CurrentAASize += FriendlySize;
+                }
+                else
+                {
+                    /* Get the friendly name */
+                    HKEY ConnectionKey;
+                    CHAR KeyName[256];
+
+                    snprintf(KeyName, 256,
+                        "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
+                        Entry->if_descrlen, &Entry->if_descr[0]);
+
+                    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                    {
+                        DWORD ValueType;
+                        DWORD ValueSize = 0;
+
+                        if (RegQueryValueExW(ConnectionKey, L"Name", NULL, &ValueType, NULL, &ValueSize) == ERROR_SUCCESS &&
+                            ValueType == REG_SZ)
+                        {
+                            /* We remove the null char, it will be re-added after */
+                            FriendlySize = ValueSize - sizeof(WCHAR);
+                            CurrentAASize += FriendlySize;
+                        }
+
+                        RegCloseKey(ConnectionKey);
+                    }
                 }
 
                 /* We always make sure to have enough room for empty string */
@@ -503,15 +614,131 @@ GetAdaptersAddresses(
 
                 /* The DNS suffix */
                 CurrentAA->DnsSuffix = (PWCHAR)Ptr;
-                CurrentAA->DnsSuffix[0] = L'\0';
-                /* Next items */
-                Ptr = (BYTE*)(CurrentAA->DnsSuffix + 1);
+
+                if (Entry->if_type != IF_TYPE_SOFTWARE_LOOPBACK)
+                {
+                    HKEY InterfaceKey;
+                    CHAR KeyName[256];
+                    DWORD ValueType, ValueSize;
+
+                    snprintf(KeyName, 256,
+                        "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%*s",
+                        Entry->if_descrlen, &Entry->if_descr[0]);
+
+                    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &InterfaceKey) == ERROR_SUCCESS)
+                    {
+                        if (DhcpDomainSize != 0)
+                        {
+                            ValueSize = DhcpDomainSize + sizeof(WCHAR);
+                            if (RegQueryValueExW(InterfaceKey, L"DhcpDomain", NULL, &ValueType, (LPBYTE)CurrentAA->DnsSuffix, &ValueSize) == ERROR_SUCCESS &&
+                                ValueType == REG_SZ && ValueSize == DhcpDomainSize + sizeof(WCHAR))
+                            {
+                                /* We're done, next items */
+                                Ptr = (BYTE*)(CurrentAA->DnsSuffix + (ValueSize / sizeof(WCHAR)));
+                            }
+                            else
+                            {
+                                /* Fail */
+                                ERR("DhcpDomain name changed after probe!\n");
+                                DhcpDomainSize = 0;
+                            }
+                        }
+
+                        if (DomainSize != 0)
+                        {
+                            ValueSize = DomainSize + sizeof(WCHAR);
+                            if (RegQueryValueExW(InterfaceKey, L"Domain", NULL, &ValueType, (LPBYTE)CurrentAA->DnsSuffix, &ValueSize) == ERROR_SUCCESS &&
+                                ValueType == REG_SZ && ValueSize == DomainSize + sizeof(WCHAR))
+                            {
+                                /* We're done, next items */
+                                Ptr = (BYTE*)(CurrentAA->DnsSuffix + (ValueSize / sizeof(WCHAR)));
+                            }
+                            else
+                            {
+                                /* Fail */
+                                ERR("Domain name changed after probe!\n");
+                                DomainSize = 0;
+                            }
+                        }
+
+                        RegCloseKey(InterfaceKey);
+                    }
+                }
+
+                /* In case of failure (or no name) */
+                if ((DhcpDomainSize == 0) && (DomainSize == 0))
+                {
+                    CurrentAA->DnsSuffix[0] = L'\0';
+                    /* Next items */
+                    Ptr = (BYTE*)(CurrentAA->DnsSuffix + 1);
+                }
 
                 /* The description */
                 CurrentAA->Description = (PWCHAR)Ptr;
-                CurrentAA->Description[0] = L'\0';
-                /* Next items */
-                Ptr = (BYTE*)(CurrentAA->Description + 1);
+
+                if (DescriptionSize != 0)
+                {
+                    if (Entry->if_type == IF_TYPE_SOFTWARE_LOOPBACK)
+                    {
+                        size_t size;
+                        size = mbstowcs((PWCHAR)Ptr, (PCSTR)&Entry->if_descr[0], Entry->if_descrlen);
+                        CurrentAA->Description = (PWCHAR)Ptr;
+                        CurrentAA->Description[size] = '\0';
+                        /* Next items */
+                        Ptr = (BYTE*)(CurrentAA->Description + size + 1);
+                    }
+                    else
+                    {
+                        HKEY ConnectionKey;
+                        CHAR KeyName[256];
+                        CHAR InstanceID[128];
+                        DWORD ValueType = 0;
+                        DWORD ValueSize = 0;
+
+                        snprintf(KeyName, 256,
+                            "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
+                            Entry->if_descrlen, &Entry->if_descr[0]);
+
+                        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                        {
+                            ValueSize = 128;
+                            RegQueryValueExA(ConnectionKey, "PnpInstanceID", NULL, &ValueType, (LPBYTE)InstanceID, &ValueSize);
+                            RegCloseKey(ConnectionKey);
+                        }
+
+                        if (ValueSize != 0)
+                        {
+                            sprintf(KeyName, "SYSTEM\\CurrentControlSet\\Enum\\%s", InstanceID);
+
+                            if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                            {
+                                ValueSize = DescriptionSize + sizeof(WCHAR);
+                                if (RegQueryValueExW(ConnectionKey, L"DeviceDesc", NULL, &ValueType, (LPBYTE)CurrentAA->Description, &ValueSize) == ERROR_SUCCESS &&
+                                    ValueType == REG_SZ && ValueSize == DescriptionSize + sizeof(WCHAR))
+                                {
+                                    /* We're done, next items */
+                                    Ptr = (BYTE*)(CurrentAA->Description + (ValueSize / sizeof(WCHAR)));
+                                }
+                                else
+                                {
+                                    /* Fail */
+                                    ERR("Description name changed after probe!\n");
+                                    DescriptionSize = 0;
+                                }
+
+                                RegCloseKey(ConnectionKey);
+                            }
+                        }
+                    }
+                }
+
+                /* In case of failure (or no name) */
+                if (DescriptionSize == 0)
+                {
+                    CurrentAA->Description[0] = L'\0';
+                    /* Next items */
+                    Ptr = (BYTE*)(CurrentAA->Description + 1);
+                }
 
                 /* The friendly name */
                 if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
@@ -521,37 +748,48 @@ GetAdaptersAddresses(
                     if (FriendlySize != 0)
                     {
                         /* Get the friendly name */
-                        HKEY ConnectionKey;
-                        CHAR KeyName[256];
-
-                        snprintf(KeyName, 256,
-                            "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
-                            Entry->if_descrlen, &Entry->if_descr[0]);
-
-                        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                        if (Entry->if_type == IF_TYPE_SOFTWARE_LOOPBACK)
                         {
-                            DWORD ValueType;
-                            DWORD ValueSize = FriendlySize + sizeof(WCHAR);
+                            size_t size;
+                            size = mbstowcs(CurrentAA->FriendlyName, (PCSTR)&Entry->if_descr[0], Entry->if_descrlen);
+                            CurrentAA->FriendlyName[size] = '\0';
+                            /* Next items */
+                            Ptr = (BYTE*)(CurrentAA->FriendlyName + size + 1);
+                        }
+                        else
+                        {
+                            HKEY ConnectionKey;
+                            CHAR KeyName[256];
 
-                            if (RegQueryValueExW(ConnectionKey, L"Name", NULL, &ValueType, (LPBYTE)CurrentAA->FriendlyName, &ValueSize) == ERROR_SUCCESS &&
-                                ValueType == REG_SZ && ValueSize == FriendlySize + sizeof(WCHAR))
+                            snprintf(KeyName, 256,
+                                "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
+                                Entry->if_descrlen, &Entry->if_descr[0]);
+
+                            if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
                             {
-                                /* We're done, next items */
-                                Ptr = (BYTE*)(CurrentAA->FriendlyName + (ValueSize / sizeof(WCHAR)));
+                                DWORD ValueType;
+                                DWORD ValueSize = FriendlySize + sizeof(WCHAR);
+
+                                if (RegQueryValueExW(ConnectionKey, L"Name", NULL, &ValueType, (LPBYTE)CurrentAA->FriendlyName, &ValueSize) == ERROR_SUCCESS &&
+                                    ValueType == REG_SZ && ValueSize == FriendlySize + sizeof(WCHAR))
+                                {
+                                    /* We're done, next items */
+                                    Ptr = (BYTE*)(CurrentAA->FriendlyName + (ValueSize / sizeof(WCHAR)));
+                                }
+                                else
+                                {
+                                    /* Fail */
+                                    ERR("Friendly name changed after probe!\n");
+                                    FriendlySize = 0;
+                                }
+
+                                RegCloseKey(ConnectionKey);
                             }
                             else
                             {
                                 /* Fail */
-                                ERR("Friendly name changed after probe!\n");
                                 FriendlySize = 0;
                             }
-
-                            RegCloseKey(ConnectionKey);
-                        }
-                        else
-                        {
-                            /* Fail */
-                            FriendlySize = 0;
                         }
                     }
 
@@ -702,7 +940,7 @@ GetAdaptersAddresses(
                         UnicastAddress->Address.iSockaddrLength = sizeof(SOCKADDR);
                         UnicastAddress->Address.lpSockaddr->sa_family = AF_INET;
                         ((LPSOCKADDR_IN)UnicastAddress->Address.lpSockaddr)->sin_port = 0;
-                        memcpy(&((LPSOCKADDR_IN)UnicastAddress->Address.lpSockaddr)->sin_addr, &AddrEntries[j].iae_addr, sizeof(AddrEntries[j].iae_addr));
+                        ((LPSOCKADDR_IN)UnicastAddress->Address.lpSockaddr)->sin_addr.S_un.S_addr = AddrEntries[j].iae_addr;
 
                         CurrentAA->FirstUnicastAddress = UnicastAddress;
                         Ptr += Size;
@@ -727,12 +965,13 @@ GetAdaptersAddresses(
                         /* Set the address */
                         //FIXME: ipv4 only (again...)
                         Prefix->Address.lpSockaddr = (LPSOCKADDR)(Prefix + 1);
-                        Prefix->Address.iSockaddrLength = sizeof(AddrEntries[j].iae_mask);
+                        Prefix->Address.iSockaddrLength = sizeof(SOCKADDR);
                         Prefix->Address.lpSockaddr->sa_family = AF_INET;
-                        memcpy(Prefix->Address.lpSockaddr->sa_data, &AddrEntries[j].iae_mask, sizeof(AddrEntries[j].iae_mask));
+                        ((LPSOCKADDR_IN)Prefix->Address.lpSockaddr)->sin_port = 0;
+                        ((LPSOCKADDR_IN)Prefix->Address.lpSockaddr)->sin_addr.S_un.S_addr = AddrEntries[j].iae_addr & AddrEntries[j].iae_mask;
 
                         /* Compute the prefix size */
-                        _BitScanReverse(&Prefix->PrefixLength, AddrEntries[j].iae_mask);
+                        Prefix->PrefixLength = CountPrefixBits(AddrEntries[j].iae_mask);
 
                         CurrentAA->FirstPrefix = Prefix;
                         Ptr += Size;
@@ -762,4 +1001,139 @@ Error:
     NtClose(TcpFile);
     return RtlNtStatusToDosError(Status);
 }
+
+
+DWORD
+WINAPI
+NhpAllocateAndGetInterfaceInfoFromStack(
+    _Inout_ IP_INTERFACE_NAME_INFO **ppTable,
+    _Inout_ PDWORD pdwCount,
+    _In_ BOOL bOrder,
+    _In_ HANDLE hHeap,
+    _In_ DWORD dwFlags)
+{
+    NTSTATUS Status;
+    HANDLE TcpFile;
+    TDIEntityID* InterfacesList;
+    ULONG InterfacesCount;
+    ULONG AdaptersCount = 0;
+    ULONG i, j;
+    IP_INTERFACE_NAME_INFO *pTable = NULL;
+    UNICODE_STRING UnicodeGuidString;
+    ANSI_STRING AnsiGuidString;
+
+    TRACE("ppTable %p, pdwCount %p, bOrder %u, hHeap %p, dwFlags %lu\n",
+          ppTable, pdwCount, bOrder, hHeap, dwFlags);
+
+    /* open the tcpip driver */
+    Status = openTcpFile(&TcpFile, FILE_READ_DATA);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not open handle to tcpip.sys. Status %08x\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    /* Get the interfaces list */
+    Status = GetInterfacesList(TcpFile, &InterfacesList, &InterfacesCount);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not get adapters list. Status %08x\n", Status);
+        NtClose(TcpFile);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    for (i = 0; i < InterfacesCount; i++)
+    {
+        if (InterfacesList[i].tei_entity == IF_ENTITY)
+        {
+            BYTE EntryBuffer[FIELD_OFFSET(IFEntry, if_descr) +
+                             RTL_FIELD_SIZE(IFEntry, if_descr[0]) * (MAX_ADAPTER_DESCRIPTION_LENGTH + 1)];
+            IFEntry* Entry = (IFEntry*)EntryBuffer;
+
+            /* Get the entry */
+            Status = GetInterfaceEntry(TcpFile, InterfacesList[i], Entry);
+            if (!NT_SUCCESS(Status))
+                goto Error;
+
+            if (Entry->if_type != IF_TYPE_SOFTWARE_LOOPBACK)
+                AdaptersCount++;
+        }
+    }
+
+    TRACE("InterfacesCount %lu  AdaptersCount %lu\n", InterfacesCount, AdaptersCount);
+
+    pTable = HeapAlloc(hHeap, dwFlags, AdaptersCount * sizeof(IP_INTERFACE_NAME_INFO));
+    if (pTable == NULL)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Error;
+    }
+
+    for (i = 0, j = 0; i < InterfacesCount; i++)
+    {
+        if (InterfacesList[i].tei_entity == IF_ENTITY)
+        {
+            BYTE EntryBuffer[FIELD_OFFSET(IFEntry, if_descr) +
+                             RTL_FIELD_SIZE(IFEntry, if_descr[0]) * (MAX_ADAPTER_DESCRIPTION_LENGTH + 1)];
+            IFEntry* Entry = (IFEntry*)EntryBuffer;
+
+            /* Get the entry */
+            Status = GetInterfaceEntry(TcpFile, InterfacesList[i], Entry);
+            if (!NT_SUCCESS(Status))
+                goto Error;
+
+            TRACE("Got entity %*s, index %u.\n",
+                  Entry->if_descrlen, &Entry->if_descr[0], Entry->if_index);
+
+            if (Entry->if_type != IF_TYPE_SOFTWARE_LOOPBACK)
+            {
+                pTable[j].Index = Entry->if_index;
+                pTable[j].MediaType = Entry->if_type;
+                pTable[j].ConnectionType = 1; //IF_CONNECTION_DEDICATED;
+                pTable[j].AccessType = 2; //IF_ACCESS_BROADCAST;
+
+                AnsiGuidString.Length = Entry->if_descrlen;
+                AnsiGuidString.MaximumLength = Entry->if_descrlen;
+                AnsiGuidString.Buffer = (PCHAR)Entry->if_descr;
+                Status = RtlAnsiStringToUnicodeString(&UnicodeGuidString,
+                                                      &AnsiGuidString, TRUE);
+                if (!NT_SUCCESS(Status))
+                {
+                    ERR("Status %lx\n", Status);
+                    goto Error;
+                }
+
+                Status = RtlGUIDFromString(&UnicodeGuidString, &pTable[j].DeviceGuid);
+                RtlFreeUnicodeString(&UnicodeGuidString);
+                if (!NT_SUCCESS(Status))
+                {
+                    ERR("Status %lx\n", Status);
+                    goto Error;
+                }
+
+                memset(&pTable[j].InterfaceGuid, 0, sizeof(GUID));
+
+                j++;
+            }
+        }
+    }
+
+    /* We're done */
+    HeapFree(GetProcessHeap(), 0, InterfacesList);
+    NtClose(TcpFile);
+    *ppTable = pTable;
+    *pdwCount = AdaptersCount;
+    return ERROR_SUCCESS;
+
+Error:
+    ERR("Failed! Status 0x%08x\n", Status);
+    if (pTable)
+        HeapFree(hHeap, 0, pTable);
+    *ppTable = NULL;
+    *pdwCount = 0;
+    HeapFree(GetProcessHeap(), 0, InterfacesList);
+    NtClose(TcpFile);
+    return RtlNtStatusToDosError(Status);
+}
+
 #endif

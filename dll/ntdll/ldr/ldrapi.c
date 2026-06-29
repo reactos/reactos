@@ -796,6 +796,20 @@ LdrGetProcedureAddress(
     return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE);
 }
 
+NTSTATUS
+NTAPI
+LdrGetProcedureAddressEx(
+    _In_ PVOID BaseAddress,
+    _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+    _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
+    _Out_ PVOID *ProcedureAddress,
+    _In_ ULONG Flags)
+{
+    /* Call the internal routine and execute DllInit depending of flags */
+    BOOLEAN ExecuteInit = !(Flags & LDR_GET_PROCEDURE_ADDRESS_DONT_RECORD_FORWARDER);
+    return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, ExecuteInit);
+}
+
 /*
  * @implemented
  */
@@ -1497,6 +1511,11 @@ LdrUnloadDll(
             DPRINT1("LDR: Unmapping [%ws]\n", LdrEntry->BaseDllName.Buffer);
         }
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+        /* Send shutdown notification */
+        LdrpSendDllNotifications(CurrentEntry, LDR_DLL_NOTIFICATION_REASON_UNLOADED);
+#endif
+
         /* Check if this is a .NET executable */
         CorImageData = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
                                                     TRUE,
@@ -1519,9 +1538,6 @@ LdrUnloadDll(
 
         /* Unload the alternate resource module, if any */
         LdrUnloadAlternateResourceModule(CurrentEntry->DllBase);
-
-        /* FIXME: Send shutdown notification */
-        //LdrpSendDllNotifications(CurrentEntry, 2, LdrpShutdownInProgress);
 
         /* Check if a Hotpatch is active */
         if (LdrEntry->PatchInformation)
@@ -1573,9 +1589,6 @@ LdrProcessRelocationBlock(
 {
     return LdrProcessRelocationBlockLongLong(Address, Count, TypeOffset, Delta);
 }
-
-/* FIXME: Add to ntstatus.mc */
-#define STATUS_MUI_FILE_NOT_FOUND        ((NTSTATUS)0xC00B0001L)
 
 /*
  * @implemented
@@ -1632,7 +1645,7 @@ LdrFlushAlternateResourceModules(VOID)
 
 /*
  * @unimplemented
- * See https://www.kernelmode.info/forum/viewtopic.php?t=991
+ * See https://web.archive.org/web/20231210142610/https://kernelmode.info/forum/viewtopic3973.html?t=991
  */
 NTSTATUS
 NTAPI

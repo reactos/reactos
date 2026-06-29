@@ -315,23 +315,6 @@ MMixerGetMixerControlById(
     return MM_STATUS_UNSUCCESSFUL;
 }
 
-ULONG
-MMixerGetVolumeControlIndex(
-    LPMIXERVOLUME_DATA VolumeData,
-    LONG Value)
-{
-    ULONG Index;
-
-    for(Index = 0; Index < VolumeData->ValuesCount; Index++)
-    {
-        if (VolumeData->Values[Index] > Value)
-        {
-            return VolumeData->InputSteppingDelta * Index;
-        }
-    }
-    return VolumeData->InputSteppingDelta * (VolumeData->ValuesCount-1);
-}
-
 VOID
 MMixerNotifyControlChange(
     IN PMIXER_CONTEXT MixerContext,
@@ -672,60 +655,50 @@ MMixerSetGetVolumeControlDetails(
     LPMIXERLINE_EXT MixerLine)
 {
     LPMIXERCONTROLDETAILS_UNSIGNED Input;
-    LONG Value;
-    ULONG Index, Channel = 0;
-    ULONG dwValue;
+    LONG MaxRange, Value;
+    ULONG Channel;
     MIXER_STATUS Status;
     LPMIXERVOLUME_DATA VolumeData;
 
-    if (MixerControlDetails->cbDetails != sizeof(MIXERCONTROLDETAILS_SIGNED))
+    if (MixerControlDetails->cbDetails != sizeof(MIXERCONTROLDETAILS_UNSIGNED))
         return MM_STATUS_INVALID_PARAMETER;
 
     VolumeData = (LPMIXERVOLUME_DATA)MixerControl->ExtraData;
     if (!VolumeData)
         return MM_STATUS_UNSUCCESSFUL;
 
-    /* get input */
+    /* Get input */
     Input = (LPMIXERCONTROLDETAILS_UNSIGNED)MixerControlDetails->paDetails;
     if (!Input)
-        return MM_STATUS_UNSUCCESSFUL; /* to prevent dereferencing NULL */
+        return MM_STATUS_UNSUCCESSFUL; /* To prevent dereferencing NULL */
 
-    if (bSet)
+    /* Get maximum available range */
+    MaxRange = VolumeData->SignedMaximum - VolumeData->SignedMinimum;
+
+    /* Loop for each channel */
+    for (Channel = 0; Channel < MixerControlDetails->cChannels; Channel++)
     {
-        /* FIXME SEH */
-        Value = Input->dwValue;
-        Index = Value / VolumeData->InputSteppingDelta;
-
-        if (Index >= VolumeData->ValuesCount)
+        if (bSet)
         {
-            DPRINT1("Index %u out of bounds %u \n", Index, VolumeData->ValuesCount);
-            return MM_STATUS_INVALID_PARAMETER;
+            /* FIXME SEH */
+            /* Convert from logical units to hardware range (DB) */
+            Value = (LONG)((INT64)Input[Channel].dwValue * MaxRange / 0x10000 + VolumeData->SignedMinimum);
         }
 
-        Value = VolumeData->Values[Index];
+        /* Get/set control details */
+        Status = MMixerSetGetControlDetails(MixerContext, MixerControl->hDevice, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, Channel, &Value);
+
+        if (!bSet)
+        {
+            /* FIXME SEH */
+            /* Convert from hardware range (DB) to logical units */
+            Input[Channel].dwValue = (ULONG)(((INT64)Value - VolumeData->SignedMinimum + 1) * 0x10000 / MaxRange);
+        }
     }
 
-    /* set control details */
     if (bSet)
     {
-        /* TODO */
-        Status = MMixerSetGetControlDetails(MixerContext, MixerControl->hDevice, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 0, &Value);
-        Status = MMixerSetGetControlDetails(MixerContext, MixerControl->hDevice, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 1, &Value);
-    }
-    else
-    {
-        Status = MMixerSetGetControlDetails(MixerContext, MixerControl->hDevice, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, Channel, &Value);
-    }
-
-    if (!bSet)
-    {
-        dwValue = MMixerGetVolumeControlIndex(VolumeData, (LONG)Value);
-        /* FIXME SEH */
-        Input->dwValue = dwValue;
-    }
-    else
-    {
-        /* notify clients of a line change  MM_MIXM_CONTROL_CHANGE with MixerControl->dwControlID */
+        /* Notify clients of a line change */
         MMixerNotifyControlChange(MixerContext, MixerInfo, MM_MIXM_CONTROL_CHANGE, MixerControl->Control.dwControlID);
     }
     return Status;

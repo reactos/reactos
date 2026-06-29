@@ -3,6 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Providing the canvas window class
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -11,21 +12,166 @@ CCanvasWindow canvasWindow;
 
 /* FUNCTIONS ********************************************************/
 
+HCURSOR
+CStyledCursor::CreateStyledCursor(BrushStyle style, INT zoom, INT radius, COLORREF color, BOOL is_rubber)
+{
+    const INT diameter = 2 * radius;
+    if (diameter * zoom / DEFAULT_ZOOM <= 2)
+    {
+        HCURSOR hCursor = ::LoadCursor(NULL, IDC_CROSS);
+        return hCursor ? CopyCursor(hCursor) : NULL;
+    }
+
+    const INT crosshair1 = 6, crosshair2 = crosshair1 - 2;
+    const INT width = diameter + 2 * crosshair1, height = diameter + 2 * crosshair1;
+    DWORD hotX = width / 2, hotY = height / 2;
+
+    HDC hdcScreen = ::GetDC(NULL);
+    if (!hdcScreen)
+        return NULL;
+    HDC hdcMem = ::CreateCompatibleDC(hdcScreen);
+    if (!hdcMem)
+    {
+        ::ReleaseDC(NULL, hdcScreen);
+        return NULL;
+    }
+
+    RECT rc = { 0, 0, width, height };
+
+    // Create the AND mask bitmap. This must be monochrome (1bpp):
+    // white bits are transparent, black bits are opaque.
+    HBITMAP hbmMask = ::CreateBitmap(width, height, 1, 1, NULL);
+    if (hbmMask)
+    {
+        HBITMAP hbmOld = (HBITMAP)::SelectObject(hdcMem, hbmMask);
+
+        // Fill with white brush
+        ::FillRect(hdcMem, &rc, (HBRUSH)::GetStockObject(WHITE_BRUSH));
+
+        if (!is_rubber)
+        {
+            // Draw crosshair with white pen
+            ::SelectObject(hdcMem, (HPEN)::GetStockObject(WHITE_PEN));
+            ::MoveToEx(hdcMem, 0, hotY, NULL);
+            ::LineTo(hdcMem, crosshair2, hotY);
+            ::MoveToEx(hdcMem, width - crosshair2, hotY, NULL);
+            ::LineTo(hdcMem, width, hotY);
+            ::MoveToEx(hdcMem, hotX, 0, NULL);
+            ::LineTo(hdcMem, hotX, crosshair2);
+            ::MoveToEx(hdcMem, hotX, height - crosshair2, NULL);
+            ::LineTo(hdcMem, hotX, height);
+        }
+
+        // Draw brush or erase with black color
+        if (is_rubber)
+            Erase(hdcMem, hotX, hotY, hotX, hotY, RGB(0, 0, 0), radius + 1);
+        else
+            Brush(hdcMem, hotX, hotY, hotX, hotY, RGB(0, 0, 0), style, diameter);
+
+        if (is_rubber)
+            InflateRect(&rc, -1, -1);
+
+        ::SelectObject(hdcMem, hbmOld);
+    }
+
+    // Create the color (XOR) bitmap
+    HBITMAP hbmColor = ::CreateCompatibleBitmap(hdcScreen, width, height);
+    if (hbmColor)
+    {
+        HBITMAP hbmOld = (HBITMAP)::SelectObject(hdcMem, hbmColor);
+
+        // Fill with black brush
+        ::FillRect(hdcMem, &rc, (HBRUSH)::GetStockObject(BLACK_BRUSH));
+
+        if (is_rubber)
+        {
+            // Draw for rubber border
+            INT avg = (GetRValue(color) + GetGValue(color) + GetBValue(color)) / 3;
+            COLORREF color2 = (avg > 255 / 2) ? RGB(0, 0, 0) : RGB(255, 255, 255);
+            Erase(hdcMem, hotX, hotY, hotX, hotY, color2, radius + 1);
+        }
+        else
+        {
+            // Draw crosshair with white pen
+            ::SelectObject(hdcMem, (HPEN)::GetStockObject(WHITE_PEN));
+            ::MoveToEx(hdcMem, 0, hotY, NULL);
+            ::LineTo(hdcMem, crosshair2, hotY);
+            ::MoveToEx(hdcMem, width - crosshair2, hotY, NULL);
+            ::LineTo(hdcMem, width, hotY);
+            ::MoveToEx(hdcMem, hotX, 0, NULL);
+            ::LineTo(hdcMem, hotX, crosshair2);
+            ::MoveToEx(hdcMem, hotX, height - crosshair2, NULL);
+            ::LineTo(hdcMem, hotX, height);
+        }
+
+        // Draw brush or erase with color
+        if (is_rubber)
+            Erase(hdcMem, hotX, hotY, hotX, hotY, color, radius);
+        else
+            Brush(hdcMem, hotX, hotY, hotX, hotY, color, style, diameter);
+
+        ::SelectObject(hdcMem, hbmOld);
+    }
+
+    ::ReleaseDC(NULL, hdcScreen);
+    ::DeleteDC(hdcMem);
+
+    if (zoom != DEFAULT_ZOOM)
+    {
+        INT newWidth = width * zoom / DEFAULT_ZOOM;
+        INT newHeight = height * zoom / DEFAULT_ZOOM;
+        HBITMAP hbmMaskNew = CopyMonoImage(hbmMask, newWidth, newHeight, STRETCH_DELETESCANS);
+        HBITMAP hbmColorNew = CopyDIBImage(hbmColor, newWidth, newHeight, STRETCH_DELETESCANS);
+        ::DeleteObject(hbmMask);
+        ::DeleteObject(hbmColor);
+        hbmMask = hbmMaskNew;
+        hbmColor = hbmColorNew;
+        hotX = width * zoom / (2 * DEFAULT_ZOOM);
+        hotY = height * zoom / (2 * DEFAULT_ZOOM);
+    }
+
+    ICONINFO ii = { FALSE, hotX, hotY, hbmMask, hbmColor };
+    HCURSOR hCursor = (HCURSOR)::CreateIconIndirect(&ii);
+
+    ::DeleteObject(hbmMask);
+    ::DeleteObject(hbmColor);
+
+    return hCursor;
+}
+
+void CStyledCursor::SetStyle(BrushStyle style, INT zoom, INT radius, COLORREF color, BOOL is_rubber)
+{
+    if (m_hCursor &&
+        m_style == style &&
+        m_zoom == zoom &&
+        m_radius == radius &&
+        m_color == color &&
+        m_is_rubber == is_rubber)
+    {
+        return;
+    }
+
+    if (m_hCursor)
+        DestroyCursor(m_hCursor);
+
+    m_hCursor = CreateStyledCursor(style, zoom, radius, color, is_rubber);
+    m_style = style;
+    m_zoom = zoom;
+    m_radius = radius;
+    m_color = color;
+    m_is_rubber = is_rubber;
+}
+
 CCanvasWindow::CCanvasWindow()
     : m_drawing(FALSE)
     , m_hitCanvasSizeBox(HIT_NONE)
     , m_ptOrig { -1, -1 }
 {
-    m_ahbmCached[0] = m_ahbmCached[1] = NULL;
     m_rcResizing.SetRectEmpty();
 }
 
 CCanvasWindow::~CCanvasWindow()
 {
-    if (m_ahbmCached[0])
-        ::DeleteObject(m_ahbmCached[0]);
-    if (m_ahbmCached[1])
-        ::DeleteObject(m_ahbmCached[1]);
 }
 
 RECT CCanvasWindow::GetBaseRect()
@@ -119,16 +265,30 @@ VOID CCanvasWindow::zoomTo(INT newZoom, LONG left, LONG top)
     Invalidate(TRUE);
 }
 
-VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
+BOOL CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
     // This is the target area we have to draw on
     CRect rcCanvasDraw;
     rcCanvasDraw.IntersectRect(&rcClient, &rcPaint);
 
+    // Calculate image size
+    CRect rcImage;
+    GetImageRect(rcImage);
+    SIZE sizeImage = { imageModel.GetWidth(), imageModel.GetHeight() };
+
     // We use a memory bitmap to reduce flickering
+    HBITMAP hbmCache1 = CreateDIBWithProperties(rcClient.right, rcClient.bottom);
+    if (!hbmCache1)
+        return FALSE; // Out of memory
+    HBITMAP hbmCache2 = CreateDIBWithProperties(sizeImage.cx, sizeImage.cy);
+    if (!hbmCache2)
+    {
+        ::DeleteObject(hbmCache1);
+        return FALSE; // Out of memory
+    }
+
     HDC hdcMem0 = ::CreateCompatibleDC(hDC);
-    m_ahbmCached[0] = CachedBufferDIB(m_ahbmCached[0], rcClient.right, rcClient.bottom);
-    HGDIOBJ hbm0Old = ::SelectObject(hdcMem0, m_ahbmCached[0]);
+    HGDIOBJ hbm0Old = ::SelectObject(hdcMem0, hbmCache1);
 
     // Fill the background on hdcMem0
     ::FillRect(hdcMem0, &rcCanvasDraw, (HBRUSH)(COLOR_APPWORKSPACE + 1));
@@ -137,11 +297,6 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     RECT rcBase = GetBaseRect();
     if (!selectionModel.m_bShow && !::IsWindowVisible(textEditWindow))
         drawSizeBoxes(hdcMem0, &rcBase, FALSE, &rcCanvasDraw);
-
-    // Calculate image size
-    CRect rcImage;
-    GetImageRect(rcImage);
-    SIZE sizeImage = { imageModel.GetWidth(), imageModel.GetHeight() };
 
     // Calculate the target area on the image
     CRect rcImageDraw = rcCanvasDraw;
@@ -154,8 +309,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 
     // hdcMem1 <-- imageModel
     HDC hdcMem1 = ::CreateCompatibleDC(hDC);
-    m_ahbmCached[1] = CachedBufferDIB(m_ahbmCached[1], sizeImage.cx, sizeImage.cy);
-    HGDIOBJ hbm1Old = ::SelectObject(hdcMem1, m_ahbmCached[1]);
+    HGDIOBJ hbm1Old = ::SelectObject(hdcMem1, hbmCache2);
     ::BitBlt(hdcMem1, rcImageDraw.left, rcImageDraw.top, rcImageDraw.Width(), rcImageDraw.Height(),
              imageModel.GetDC(), rcImageDraw.left, rcImageDraw.top, SRCCOPY);
 
@@ -208,6 +362,10 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // Clean up hdcMem0
     ::SelectObject(hdcMem0, hbm0Old);
     ::DeleteDC(hdcMem0);
+    ::DeleteObject(hbmCache2);
+    ::DeleteObject(hbmCache1);
+
+    return TRUE;
 }
 
 VOID CCanvasWindow::updateScrollRange()
@@ -258,25 +416,26 @@ LRESULT CCanvasWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
 {
     SCROLLINFO si;
-    si.cbSize = sizeof(SCROLLINFO);
+    si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
     GetScrollInfo(fnBar, &si);
+
     switch (LOWORD(wParam))
     {
         case SB_THUMBTRACK:
         case SB_THUMBPOSITION:
             si.nPos = (SHORT)HIWORD(wParam);
             break;
-        case SB_LINELEFT:
-            si.nPos -= 5;
+        case SB_LINELEFT: // SB_LINEUP
+            si.nPos -= 15;
             break;
-        case SB_LINERIGHT:
-            si.nPos += 5;
+        case SB_LINERIGHT: // SB_LINEDOWN
+            si.nPos += 15;
             break;
-        case SB_PAGELEFT:
+        case SB_PAGELEFT: // SB_PAGEUP
             si.nPos -= si.nPage;
             break;
-        case SB_PAGERIGHT:
+        case SB_PAGERIGHT: // SB_PAGEDOWN
             si.nPos += si.nPage;
             break;
     }
@@ -634,6 +793,24 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             case TOOL_AIRBRUSH:
                 ::SetCursor(::LoadCursorW(g_hinstExe, MAKEINTRESOURCEW(IDC_AIRBRUSH)));
                 break;
+            case TOOL_RUBBER:
+            {
+                m_hRubberCursor.SetStyle(BrushStyleSquare,
+                                         toolsModel.GetZoom(),
+                                         toolsModel.GetRubberRadius(),
+                                         paletteModel.GetBgColor(), TRUE);
+                m_hRubberCursor.SetCursor();
+                break;
+            }
+            case TOOL_BRUSH:
+            {
+                m_hBrushCursor.SetStyle(toolsModel.GetBrushStyle(),
+                                        toolsModel.GetZoom(),
+                                        toolsModel.GetBrushWidth() / 2,
+                                        paletteModel.GetFgColor(), FALSE);
+                m_hBrushCursor.SetCursor();
+                break;
+            }
             default:
                 ::SetCursor(::LoadCursorW(NULL, (LPCWSTR)IDC_CROSS));
         }
@@ -691,9 +868,22 @@ LRESULT CCanvasWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     RECT rcClient;
     GetClientRect(&rcClient);
 
+    static BOOL s_bShowedOutOfMemory = FALSE; // Don't show "Out Of Memory" message multiple time
+
     PAINTSTRUCT ps;
     HDC hDC = BeginPaint(&ps);
-    DoDraw(hDC, rcClient, ps.rcPaint);
+
+    if (DoDraw(hDC, rcClient, ps.rcPaint))
+    {
+        s_bShowedOutOfMemory = FALSE;
+    }
+    else if (!s_bShowedOutOfMemory)
+    {
+        ShowOutOfMemory();
+        s_bShowedOutOfMemory = TRUE;
+        imageModel.ClearHistory(); // Reduce memory usage
+    }
+
     EndPaint(&ps);
     return 0;
 }

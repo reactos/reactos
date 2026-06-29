@@ -29,6 +29,62 @@ static int cxSource, cySource;
 PTIMEZONE_ENTRY TimeZoneListHead = NULL;
 PTIMEZONE_ENTRY TimeZoneListTail = NULL;
 
+static PTIMEZONE_ENTRY
+GetSelectedTimeZoneEntry(HWND hwndCombo)
+{
+    PTIMEZONE_ENTRY Entry;
+    DWORD dwIndex;
+    DWORD i;
+
+    dwIndex = (DWORD)SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);
+    if (dwIndex == CB_ERR)
+        return NULL;
+
+    for (Entry = TimeZoneListHead, i = 0; i < dwIndex; i++, Entry = Entry->Next)
+    {
+        if (Entry == NULL)
+            return NULL;
+    }
+
+    return Entry;
+}
+
+static BOOL
+HasDaylightSaving(PTIMEZONE_ENTRY Entry)
+{
+    /* If StandardDate.wMonth is 0, DST does not apply to this timezone */
+    return (Entry != NULL && Entry->TimezoneInfo.StandardDate.wMonth != 0);
+}
+
+static VOID
+UpdateDstCheckbox(HWND hwndDlg)
+{
+    HWND hwndCombo = GetDlgItem(hwndDlg, IDC_TIMEZONELIST);
+    HWND hwndCheckbox = GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT);
+    PTIMEZONE_ENTRY Entry;
+    BOOL bHasDst;
+
+    Entry = GetSelectedTimeZoneEntry(hwndCombo);
+    bHasDst = HasDaylightSaving(Entry);
+
+    /* Enable or disable the checkbox based on DST support, and respect user preference when DST is supported */
+    if (bHasDst)
+    {
+        BOOL bAutoDaylight = GetAutoDaylight();
+
+        EnableWindow(hwndCheckbox, TRUE);
+        SendMessageW(hwndCheckbox,
+                     BM_SETCHECK,
+                     bAutoDaylight ? BST_CHECKED : BST_UNCHECKED,
+                     0);
+    }
+    else
+    {
+        EnableWindow(hwndCheckbox, FALSE);
+        SendMessageW(hwndCheckbox, BM_SETCHECK, BST_UNCHECKED, 0);
+    }
+}
+
 static
 PTIMEZONE_ENTRY
 GetLargerTimeZoneEntry(
@@ -42,7 +98,6 @@ GetLargerTimeZoneEntry(
     {
         if (Entry->TimezoneInfo.Bias < Bias)
             return Entry;
-
         if (Entry->TimezoneInfo.Bias == Bias)
         {
             if (_wcsicmp(Entry->Description, lpDescription) > 0)
@@ -227,24 +282,10 @@ SetLocalTimeZone(HWND hwnd)
 {
     TIME_ZONE_INFORMATION TimeZoneInformation;
     PTIMEZONE_ENTRY Entry;
-    DWORD dwIndex;
-    DWORD i;
 
-    dwIndex = (DWORD)SendMessageW(hwnd,
-                                  CB_GETCURSEL,
-                                  0,
-                                  0);
-
-    i = 0;
-    Entry = TimeZoneListHead;
-    while (i < dwIndex)
-    {
-        if (Entry == NULL)
-            return;
-
-        i++;
-        Entry = Entry->Next;
-    }
+    Entry = GetSelectedTimeZoneEntry(hwnd);
+    if (Entry == NULL)
+        return;
 
     wcscpy(TimeZoneInformation.StandardName,
            Entry->StandardName);
@@ -283,8 +324,8 @@ TimeZonePageProc(HWND hwndDlg,
             CreateTimeZoneList();
             ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST));
 
-            SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK,
-                               (WPARAM)(GetAutoDaylight() ? BST_CHECKED : BST_UNCHECKED), 0);
+            /* Update DST checkbox based on the selected timezone's DST support */
+            UpdateDstCheckbox(hwndDlg);
 
             hBitmap = LoadImageW(hApplet, MAKEINTRESOURCEW(IDC_WORLD), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
             if (hBitmap != NULL)
@@ -319,8 +360,14 @@ TimeZonePageProc(HWND hwndDlg,
         break;
 
         case WM_COMMAND:
-            if ((LOWORD(wParam) == IDC_TIMEZONELIST && HIWORD(wParam) == CBN_SELCHANGE) ||
-                (LOWORD(wParam) == IDC_AUTODAYLIGHT && HIWORD(wParam) == BN_CLICKED))
+            if (LOWORD(wParam) == IDC_TIMEZONELIST && HIWORD(wParam) == CBN_SELCHANGE)
+            {
+                /* Update DST checkbox based on the selected timezone's DST support */
+                UpdateDstCheckbox(hwndDlg);
+                /* Enable the 'Apply' button */
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            }
+            else if (LOWORD(wParam) == IDC_AUTODAYLIGHT && HIWORD(wParam) == BN_CLICKED)
             {
                 /* Enable the 'Apply' button */
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);

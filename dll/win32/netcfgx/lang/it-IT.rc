@@ -32,18 +32,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Se questo computer viene utilizzato in più di una rete indicare di seguito le configurazioni di rete alternative", -1, 9, 9, 220, 20
     GROUPBOX "", -1, 9, 57, 228, 125, BS_GROUPBOX
-    CONTROL "Indirizzo IP privato &automatico", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
-    CONTROL "Configurato dall'&utente", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 70, 12
+    CONTROL "Indirizzo IP privato &automatico", IDC_ALTAPIPA, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    CONTROL "Configurato dall'&utente", IDC_ALTSTATIC, "BUTTON", BS_AUTORADIOBUTTON, 14, 55, 70, 12
     LTEXT "&Indirizzo IP:", -1, 14, 75, 135, 8
-    CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
+    CONTROL "", IDC_ALTIPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75, 85, 12
     LTEXT "S&ubnet mask:", -1, 14, 95, 135, 8
-    CONTROL "", IDC_SUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 95, 85, 12
+    CONTROL "", IDC_ALTSUBNETMASK, "SysIPAddress32", WS_TABSTOP, 144, 95, 85, 12
     LTEXT "&Default gateway:", -1, 14, 115, 135, 8
-    CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 115, 85, 12
+    CONTROL "", IDC_ALTDEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 144, 115, 85, 12
     LTEXT "&DNS server preferenziale:", -1, 14, 150, 135, 8
-    CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 150, 85, 12
+    CONTROL "", IDC_ALTDNS1, "SysIPAddress32", WS_TABSTOP, 144, 150, 85, 12
     LTEXT "DNS server alternativo:", -1, 14, 165, 180, 8
-    CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 165, 85, 12
+    CONTROL "", IDC_ALTDNS2, "SysIPAddress32", WS_TABSTOP, 144, 165, 85, 12
 END
 
 IDD_TCPIP_ADVIP_DLG DIALOGEX 0, 0, 247, 220
@@ -62,9 +62,9 @@ BEGIN
     PUSHBUTTON "Modifica...", IDC_GWMOD, 120, 155, 50, 14
     PUSHBUTTON "Rimuovi", IDC_GWDEL, 180, 155, 50, 14
     GROUPBOX "", -1, 5, 181, 240, 30
-    CHECKBOX "Metriche automatiche", IDC_AUTOMETRIC, 9, 179, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Metriche automatiche", IDC_IFAUTOMETRIC, 9, 179, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "Metriche sull'interfaccia:", -1, 15, 195, 90, 12
-    EDITTEXT IDC_METRIC, 110, 193, 50, 12, WS_TABSTOP | ES_NUMBER
+    EDITTEXT IDC_IFMETRIC, 110, 193, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
 IDD_TCPIP_ADVDNS_DLG DIALOGEX 0, 0, 247, 220
@@ -127,9 +127,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 96, 15, 85, 12
     LTEXT "Gateway:", -1, 5, 15, 70, 12
-    CHECKBOX "Metriche automatiche", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "&Metrica:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
-    EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
+    CHECKBOX "Metriche automatiche", IDC_GWAUTOMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "&Metrica:", IDC_GWMETRICTXT, 5, 45, 45, 12, WS_DISABLED
+    EDITTEXT IDC_GWMETRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
     DEFPUSHBUTTON "", IDC_OK, 50, 60, 50, 14
     PUSHBUTTON "Annulla", IDCANCEL, 110, 60, 50, 14
 END
@@ -241,4 +241,5 @@ BEGIN
     IDS_DUP_SUFFIX "Il suffisso è già nella lista."
     IDS_DUP_IPADDR "L'indirizzo IP è già nella lista."
     IDS_DUP_GW "Il default gateway è già nella lista."
+    IDS_METRIC_RANGE "Please enter a metric value between 1 and 9999."
 END

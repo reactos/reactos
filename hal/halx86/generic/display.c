@@ -7,8 +7,6 @@
  */
 
 #include <hal.h>
-#define NDEBUG
-#include <debug.h>
 #include <ndk/inbvfuncs.h>
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -18,7 +16,8 @@
  */
 VOID
 NTAPI
-HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters)
+HalAcquireDisplayOwnership(
+    _In_ PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters)
 {
     /* Stub since Windows XP implemented Inbv */
     return;
@@ -29,7 +28,8 @@ HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParamete
  */
 VOID
 NTAPI
-HalDisplayString(IN PCH String)
+HalDisplayString(
+    _In_ PCSTR String)
 {
     /* Call the Inbv driver */
     InbvDisplayString(String);
@@ -40,10 +40,11 @@ HalDisplayString(IN PCH String)
  */
 VOID
 NTAPI
-HalQueryDisplayParameters(OUT PULONG DispSizeX,
-                          OUT PULONG DispSizeY,
-                          OUT PULONG CursorPosX,
-                          OUT PULONG CursorPosY)
+HalQueryDisplayParameters(
+    _Out_ PULONG DispSizeX,
+    _Out_ PULONG DispSizeY,
+    _Out_ PULONG CursorPosX,
+    _Out_ PULONG CursorPosY)
 {
     /* Stub since Windows XP implemented Inbv */
     return;
@@ -54,8 +55,9 @@ HalQueryDisplayParameters(OUT PULONG DispSizeX,
  */
 VOID
 NTAPI
-HalSetDisplayParameters(IN ULONG CursorPosX,
-                        IN ULONG CursorPosY)
+HalSetDisplayParameters(
+    _In_ ULONG CursorPosX,
+    _In_ ULONG CursorPosY)
 {
     /* Stub since Windows XP implemented Inbv */
     return;

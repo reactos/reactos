@@ -48,7 +48,7 @@ BOOLEAN
 typedef
 VOID
 (NTAPI *INBV_DISPLAY_STRING_FILTER)(
-    _Inout_ PCHAR* String
+    _Inout_ PCSTR* String
 );
 
 #endif

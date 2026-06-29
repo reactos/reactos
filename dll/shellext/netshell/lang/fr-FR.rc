@@ -76,6 +76,16 @@ BEGIN
     PUSHBUTTON "Fermer", IDC_CLOSE, 120, 155, 60, 14
 END
 
+IDD_NETWORKINITPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation de ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Veuillez patienter pendant que ReactOS installe les composants réseau.", IDC_STATIC, 53, 7, 240, 20
+    CONTROL "", IDC_INSTALL_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 58, 275, 11
+END
+
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installation de ReactOS"
@@ -153,6 +163,7 @@ BEGIN
     IDS_NET_DELETE "Supprimer"
     IDS_NET_RENAME "Renommer"
     IDS_NET_PROPERTIES "Propriétés"
+    IDS_NET_OPEN_CONNECTIONS "Ouvrir les connexions réseau"
     IDS_FORMAT_BIT "%u Bit/s"
     IDS_FORMAT_KBIT "%u KBit/s"
     IDS_FORMAT_MBIT "%u MBit/s"
@@ -165,12 +176,14 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_NETWORKINITTITLE "Installation du réseau"
+    IDS_NETWORKINITSUBTITLE "Installe les composants réseau requis."
     IDS_NETWORKSETTINGSTITLE "Paramètres réseau"
     IDS_NETWORKSETTINGSSUBTITLE "Installe les logiciels réseau utilisés pour se connecter à d'autres réseaux, ordinateurs et à l'Internet."
     IDS_NETWORKCOMPONENTTITLE "Composants réseau"
-    IDS_NETWORKCOMPONENTSUBTITLE "Détermine quels composants réseaux sont utilisés sur votre ordinateur. Pour ajouter de nouveaux composants, cliquez sur Installer."
+    IDS_NETWORKCOMPONENTSUBTITLE "Détermine quels composants réseau sont utilisés sur votre ordinateur. Pour ajouter de nouveaux composants, cliquez sur Installer."
     IDS_NETWORKDOMAINTITLE "Groupe de travail ou domaine réseau"
-    IDS_NETWORKDOMAINSUBTITLE "Specifie comment l'ordinateur sera utilisé - comme membre d'un groupe de travail ou d'un domaine réseau."
+    IDS_NETWORKDOMAINSUBTITLE "Spécifie comment l'ordinateur sera utilisé - comme membre d'un groupe de travail ou d'un domaine réseau."
     IDS_REACTOS_SETUP "Installation de ReactOS"
     IDS_WZD_DOMAIN_NAME "L'installation ne peut pas continuer tant que\nvous n'entrez pas le nom du domaine\nou celui du groupe de travail."
 END

@@ -71,14 +71,12 @@ IopBootLog(PUNICODE_STRING DriverName,
            Success ? L"Loaded driver" : L"Did not load driver",
            DriverName);
 
-    swprintf(Buffer,
-             L"%ws %wZ",
-             Success ? L"Loaded driver" : L"Did not load driver",
-             DriverName);
+    _swprintf(Buffer,
+              L"%ws %wZ",
+              Success ? L"Loaded driver" : L"Did not load driver",
+              DriverName);
 
-    swprintf(ValueNameBuffer,
-             L"%lu",
-             IopLogEntryCount);
+    _swprintf(ValueNameBuffer, L"%lu", IopLogEntryCount);
 
     RtlInitUnicodeString(&KeyName,
                          L"\\Registry\\Machine\\System\\CurrentControlSet");
@@ -359,8 +357,7 @@ IopSaveBootLogToFile(VOID)
 
     for (i = 0; ; i++)
     {
-        swprintf(ValueNameBuffer,
-                 L"%lu", i);
+        _swprintf(ValueNameBuffer, L"%lu", i);
 
         RtlInitUnicodeString(&ValueName,
                              ValueNameBuffer);

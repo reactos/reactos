@@ -954,9 +954,56 @@ VOID SeiBuildInclExclList(PDB pdb, TAGID ShimTag, PSHIMINFO pShimInfo)
     SeiReadInExclude(pdb, ShimTag, &pShimInfo->InExclude);
 }
 
+DWORD SeiPatchImportsByName(PIMAGE_THUNK_DATA OriginalThunk, PIMAGE_THUNK_DATA FirstThunk, PHOOKAPIEX HookApi, PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    DWORD dwFound = 0;
+
+    for (; OriginalThunk->u1.AddressOfData && FirstThunk->u1.Function; OriginalThunk++, FirstThunk++)
+    {
+        if (!IMAGE_SNAP_BY_ORDINAL(OriginalThunk->u1.Function) && !SeiIsOrdinalName(HookApi->FunctionName))
+        {
+            PIMAGE_IMPORT_BY_NAME ImportName;
+
+            ImportName = (PIMAGE_IMPORT_BY_NAME)((PBYTE)LdrEntry->DllBase + OriginalThunk->u1.Function);
+            if (!strcmp((PCSTR)ImportName->Name, HookApi->FunctionName))
+            {
+                SeiPatchNewImport(FirstThunk, HookApi, LdrEntry);
+                dwFound++;
+            }
+        }
+        else
+        {
+            if (SeiIsOrdinalName(HookApi->FunctionName) && ((PCSTR)IMAGE_ORDINAL(OriginalThunk->u1.Function) == HookApi->FunctionName))
+            {
+                SeiPatchNewImport(FirstThunk, HookApi, LdrEntry);
+                dwFound++;
+            }
+        }
+    }
+
+    return dwFound;
+}
+
+DWORD SeiPatchImportsByAddress(PIMAGE_THUNK_DATA FirstThunk, PHOOKAPIEX HookApi, PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    DWORD dwFound = 0;
+
+    for (; FirstThunk->u1.Function; FirstThunk++)
+    {
+        if ((PULONG_PTR)FirstThunk->u1.Function == HookApi->OriginalFunction)
+        {
+            SeiPatchNewImport(FirstThunk, HookApi, LdrEntry);
+            dwFound++;
+        }
+    }
+
+    return dwFound;
+}
+
 /* Given one loaded module, redirect (hook) all functions from the iat that are registered by shims */
 VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
+    BOOLEAN HasImportNameTable;
     ULONG Size;
     PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor;
     PBYTE DllBase = LdrEntry->DllBase;
@@ -984,7 +1031,15 @@ VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
 
     SHIMENG_INFO("Hooking module 0x%p \"%wZ\"\n", LdrEntry->DllBase, &LdrEntry->BaseDllName);
 
-    for ( ;ImportDescriptor->Name && ImportDescriptor->OriginalFirstThunk; ImportDescriptor++)
+    HasImportNameTable = ImportDescriptor->OriginalFirstThunk;
+    if (!HasImportNameTable)
+    {
+        /* Some PEs (eg. built with Borland toolchain or compressed with UPX) may not have an import name table.
+         * In that case we have to rely solely on an import address table. */
+        SHIMENG_INFO("Module 0x%p \"%wZ\" does not have an import name table\n", LdrEntry->DllBase, &LdrEntry->BaseDllName);
+    }
+
+    for ( ;ImportDescriptor->Name && (HasImportNameTable ? ImportDescriptor->OriginalFirstThunk : ImportDescriptor->FirstThunk); ImportDescriptor++)
     {
         PHOOKMODULEINFO HookModuleInfo;
 
@@ -998,7 +1053,7 @@ VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
 
             for (n = 0; n < ARRAY_Size(&HookModuleInfo->HookApis); ++n)
             {
-                DWORD dwFound = 0;
+                DWORD dwFound;
                 PHOOKAPIEX HookApi = *ARRAY_At(&HookModuleInfo->HookApis, PHOOKAPIEX, n);
 
                 /* Check if this module should be excluded from being hooked (system32/winsxs, global or shim exclude) */
@@ -1007,41 +1062,19 @@ VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
                     continue;
                 }
 
-                OriginalThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->OriginalFirstThunk);
                 FirstThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->FirstThunk);
 
-                /* Walk all imports */
-                for (;OriginalThunk->u1.AddressOfData && FirstThunk->u1.Function; OriginalThunk++, FirstThunk++)
+                if (HasImportNameTable)
                 {
-                    if (!IMAGE_SNAP_BY_ORDINAL(OriginalThunk->u1.Function))
-                    {
-                        if (!SeiIsOrdinalName(HookApi->FunctionName))
-                        {
-                            PIMAGE_IMPORT_BY_NAME ImportName;
-
-                            ImportName = (PIMAGE_IMPORT_BY_NAME)(DllBase + OriginalThunk->u1.Function);
-                            if (!strcmp((PCSTR)ImportName->Name, HookApi->FunctionName))
-                            {
-                                SeiPatchNewImport(FirstThunk, HookApi, LdrEntry);
-
-                                /* Sadly, iat does not have to be sorted, and can even contain duplicate entries. */
-                                dwFound++;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (SeiIsOrdinalName(HookApi->FunctionName))
-                        {
-                            if ((PCSTR)IMAGE_ORDINAL(OriginalThunk->u1.Function) == HookApi->FunctionName)
-                            {
-                                SeiPatchNewImport(FirstThunk, HookApi, LdrEntry);
-                                dwFound++;
-                            }
-                        }
-                    }
+                    OriginalThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->OriginalFirstThunk);
+                    dwFound = SeiPatchImportsByName(OriginalThunk, FirstThunk, HookApi, LdrEntry);
+                }
+                else
+                {
+                    dwFound = SeiPatchImportsByAddress(FirstThunk, HookApi, LdrEntry);
                 }
 
+                /* Sadly, IAT does not have to be sorted, and can even contain duplicate entries. */
                 if (dwFound != 1)
                 {
                     char szOrdProcFmt[10];
@@ -1219,12 +1252,12 @@ VOID SeiInit(LPCWSTR ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery, BOOLEAN Pr
     SeiBuildShimRefArray(hsdb, pQuery, &ShimRefArray, &ShimFlags);
     if (ShimFlags.AppCompatFlags.QuadPart)
     {
-        SeiDbgPrint(SEI_MSG, NULL, "Using KERNEL apphack flags 0x%I64x\n", ShimFlags.AppCompatFlags.QuadPart);
+        SeiDbgPrint(SEI_MSG, NULL, "Using KERNEL apphack flags 0x%llx\n", ShimFlags.AppCompatFlags.QuadPart);
         Peb->AppCompatFlags.QuadPart |= ShimFlags.AppCompatFlags.QuadPart;
     }
     if (ShimFlags.AppCompatFlagsUser.QuadPart)
     {
-        SeiDbgPrint(SEI_MSG, NULL, "Using USER apphack flags 0x%I64x\n", ShimFlags.AppCompatFlagsUser.QuadPart);
+        SeiDbgPrint(SEI_MSG, NULL, "Using USER apphack flags 0x%llx\n", ShimFlags.AppCompatFlagsUser.QuadPart);
         Peb->AppCompatFlagsUser.QuadPart |= ShimFlags.AppCompatFlagsUser.QuadPart;
     }
     if (ShimFlags.ProcessParameters_Flags)

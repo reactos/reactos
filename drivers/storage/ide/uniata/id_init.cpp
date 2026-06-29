@@ -658,11 +658,18 @@ for_ugly_chips:
             }
             break;
         default:
+#ifdef __REACTOS__
+            /* I assume:
+             * - RangeStart == 0LL, "always". (CORE-13346)
+             * - It will be updated by UniataAhciDetect() a few lines below...
+             */
+#else
             if(!ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[5].RangeStart)) {
                 KdPrint2((PRINT_PREFIX "No BAR5, try BM\n"));
                 ChipFlags &= ~UNIATA_AHCI;
                 deviceExtension->HwFlags &= ~UNIATA_AHCI;
             }
+#endif
             break;
         }
     }
@@ -2555,8 +2562,11 @@ AtapiChipInit(
                 * size goes below 32DW.  Setting it to 1 makes the watermark
                 * 64DW.
                 *
-                * https://jira.reactos.org/browse/CORE-5897
+                * http://www.reactos.org/bugzilla/show_bug.cgi?id=6500
                 */
+#ifdef __REACTOS__
+                // New URL is https://jira.reactos.org/browse/CORE-5897
+#endif
 
                 if(DeviceID == 0x3149 || DeviceID == 0x3249) {    //vt6420 or vt6421
                     KdPrint2((PRINT_PREFIX "VIA 642x FIFO\n"));

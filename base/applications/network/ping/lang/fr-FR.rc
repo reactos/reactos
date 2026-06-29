@@ -32,7 +32,7 @@ Options :\n\
     IDS_CTRL_C "Ctrl-C\n"
     IDS_NO_RESOURCES "Ressources libres disponibles insuffisantes.\n"
     IDS_MISSING_ADDRESS "L'adresse IP doit être spécifiée.\n"
-    IDS_MISSING_VALUE "Une valeur doit être spécifie pour l'option %s.\n"
+    IDS_MISSING_VALUE "Une valeur doit être spécifiée pour l'option %s.\n"
     IDS_BAD_OPTION "Option incorrecte %s.\n"
     IDS_BAD_PARAMETER "Paramètre incorrect %s.\n"
     IDS_BAD_VALUE "Valeur incorrecte pour l'option %s, elle doit être entre %u et %u.\n"

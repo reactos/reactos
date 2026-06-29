@@ -19,8 +19,7 @@
 USHORT KeProcessorArchitecture;
 USHORT KeProcessorLevel;
 USHORT KeProcessorRevision;
-ULONG KeFeatureBits;
-KAFFINITY KeActiveProcessors = 1;
+ULONG64 KeFeatureBits;
 
 /* System call count */
 ULONG KiServiceLimit = NUMBER_OF_SYSCALLS;
@@ -30,9 +29,6 @@ PLOADER_PARAMETER_BLOCK KeLoaderBlock;
 
 /* PRCB Array */
 PKPRCB KiProcessorBlock[MAXIMUM_PROCESSORS];
-
-/* Number of processors */
-CCHAR KeNumberProcessors = 0;
 
 /* NUMA Node Support */
 KNODE KiNode0;

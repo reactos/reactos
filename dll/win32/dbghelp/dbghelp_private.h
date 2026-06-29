@@ -605,27 +605,6 @@ struct cpu
 
 extern struct cpu*      dbghelp_current_cpu DECLSPEC_HIDDEN;
 
-/* Abbreviated 32-bit PEB */
-typedef struct _PEB32
-{
-    BOOLEAN InheritedAddressSpace;
-    BOOLEAN ReadImageFileExecOptions;
-    BOOLEAN BeingDebugged;
-    BOOLEAN SpareBool;
-    DWORD   Mutant;
-    DWORD   ImageBaseAddress;
-    DWORD   LdrData;
-    DWORD   ProcessParameters;
-    DWORD   SubSystemData;
-    DWORD   ProcessHeap;
-    DWORD   FastPebLock;
-    DWORD   FastPebLockRoutine;
-    DWORD   FastPebUnlockRoutine;
-    ULONG   EnvironmentUpdateCount;
-    DWORD   KernelCallbackTable;
-    ULONG   Reserved[2];
-} PEB32;
-
 /* dbghelp.c */
 extern struct process* process_find_by_handle(HANDLE hProcess) DECLSPEC_HIDDEN;
 extern BOOL         validate_addr64(DWORD64 addr) DECLSPEC_HIDDEN;

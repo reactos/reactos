@@ -820,7 +820,7 @@ disk_set_information(RDPCLIENT * This, NTHANDLE handle, uint32 info_class, STREA
 			   FileDispositionInformation requests with
 			   DeleteFile set to FALSE should unschedule
 			   the delete. See
-			   http://www.osronline.com/article.cfm?article=245. */
+			   https://www.osronline.com/article.cfm%5earticle=245.htm . */
 
 			in_uint32_le(in, delete_on_close);
 

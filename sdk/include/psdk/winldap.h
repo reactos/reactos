@@ -8,7 +8,7 @@
     http://www.watersprings.org/pub/id/draft-ietf-ldapext-ldap-c-api-05.txt
 
     Lightweight Directory Access Protocol Reference
-    http://msdn.microsoft.com/library/en-us/netdir/ldap/ldap_reference.asp
+    http://msdn.microsoft.com/library/en-us/netdir/ldap/ldap_reference.asp (DEAD_LINK)
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of

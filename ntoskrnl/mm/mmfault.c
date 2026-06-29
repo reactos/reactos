@@ -16,6 +16,8 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include "ARM3/miarm.h"
 
+extern MM_AVL_TABLE MiRosKernelVadRoot;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 NTSTATUS
@@ -220,7 +222,7 @@ MmAccessFault(IN ULONG FaultCode,
               IN KPROCESSOR_MODE Mode,
               IN PVOID TrapInformation)
 {
-    PMEMORY_AREA MemoryArea = NULL;
+    PMMVAD Vad = NULL;
     NTSTATUS Status;
     BOOLEAN IsArm3Fault = FALSE;
 
@@ -253,9 +255,9 @@ MmAccessFault(IN ULONG FaultCode,
         {
             /* Check if this is an ARM3 memory area */
             MiLockWorkingSetShared(PsGetCurrentThread(), &MmSystemCacheWs);
-            MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
+            Vad = MiLocateVad(&MiRosKernelVadRoot, Address);
 
-            if ((MemoryArea != NULL) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3))
+            if ((Vad != NULL) && !MI_IS_ROSMM_VAD(Vad))
             {
                 IsArm3Fault = TRUE;
             }
@@ -266,9 +268,9 @@ MmAccessFault(IN ULONG FaultCode,
         {
             /* Could this be a VAD fault from user-mode? */
             MiLockProcessWorkingSetShared(PsGetCurrentProcess(), PsGetCurrentThread());
-            MemoryArea = MmLocateMemoryAreaByAddress(MmGetCurrentAddressSpace(), Address);
+            Vad = MiLocateVad(&PsGetCurrentProcess()->VadRoot, Address);
 
-            if ((MemoryArea != NULL) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3))
+            if ((Vad != NULL) && !MI_IS_ROSMM_VAD(Vad))
             {
                 IsArm3Fault = TRUE;
             }
@@ -277,15 +279,15 @@ MmAccessFault(IN ULONG FaultCode,
         }
     }
 
-    /* Is this an ARM3 memory area, or is there no address space yet? */
+    /* Is this an ARM3 VAD, or is there no address space yet? */
     if (IsArm3Fault ||
-        ((MemoryArea == NULL) &&
+        ((Vad == NULL) &&
          ((ULONG_PTR)Address >= (ULONG_PTR)MmPagedPoolStart) &&
          ((ULONG_PTR)Address < (ULONG_PTR)MmPagedPoolEnd)) ||
         (!MmGetKernelAddressSpace()))
     {
         /* This is an ARM3 fault */
-        DPRINT("ARM3 fault %p\n", MemoryArea);
+        DPRINT("ARM3 fault %p\n", Vad);
         return MmArmAccessFault(FaultCode, Address, Mode, TrapInformation);
     }
 

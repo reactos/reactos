@@ -240,7 +240,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
     ULONG Flags;
 
     UCHAR NumberOfBuses;
-    ULONG MaxTargedIds;
+    ULONG MaxTargetIds;
     ULONG MaxLunCount;
 
     KSPIN_LOCK IrqLock; /* Used when there are 2 irqs */

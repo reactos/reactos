@@ -2023,7 +2023,8 @@ co_WinPosSetWindowPos(
       Window->state |= WNDS_SENDNCPAINT;
    }
 
-   if (!(WinPos.flags & SWP_NOREDRAW) && ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE))
+   if ((!(WinPos.flags & SWP_NOREDRAW) && ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)) ||
+       ((WinPos.flags & SWP_NOZORDER) && (WinPos.flags & SWP_NOOWNERZORDER)))
    {
       /* Determine the new visible region */
       VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE,
@@ -2037,7 +2038,17 @@ co_WinPosSetWindowPos(
       }
       else if(VisAfter)
       {
-         REGION_bOffsetRgn(VisAfter, -Window->rcWindow.left, -Window->rcWindow.top);
+          /* Clip existing update region to new window size */
+          if (Window->hrgnUpdate != NULL)
+          {
+              PREGION RgnUpdate = REGION_LockRgn(Window->hrgnUpdate);
+              if (RgnUpdate)
+              {
+                  RgnType = IntGdiCombineRgn(RgnUpdate, RgnUpdate, VisAfter, RGN_AND);
+                  REGION_UnlockRgn(RgnUpdate);
+              }
+          }
+          REGION_bOffsetRgn(VisAfter, -Window->rcWindow.left, -Window->rcWindow.top);
       }
 
       /*
@@ -2125,7 +2136,7 @@ co_WinPosSetWindowPos(
                          CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
                          CopyRect.top + (OldWindowRect.top - NewWindowRect.top),
                          SRCCOPY,
-                         0,
+                         CLR_INVALID,
                          0);
 
             UserReleaseDC(Window, Dc, FALSE);
@@ -2576,9 +2587,36 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
    return SwpFlags;
 }
 
+// SW_FORCEMINIMIZE
+void IntForceMinimizeWindow(PWND pWnd)
+{
+    HRGN hRgn;
+    PREGION pRgn;
+
+    if ((pWnd->style & (WS_MINIMIZE | WS_VISIBLE)) != WS_VISIBLE)
+        return;
+
+    if (pWnd->state & WNDS_DESTROYED)
+        return;
+
+    pWnd->ExStyle &= ~WS_EX_MAKEVISIBLEWHENUNGHOSTED;
+
+    IntSetStyle(pWnd, 0, WS_VISIBLE);
+
+    // Invalidate and redraw the window region
+    hRgn = GreCreateRectRgnIndirect(&pWnd->rcWindow);
+    pRgn = REGION_LockRgn(hRgn);
+    co_UserRedrawWindow(UserGetDesktopWindow(), NULL, pRgn, RDW_ALLCHILDREN | RDW_ERASE | RDW_INVALIDATE);
+    REGION_UnlockRgn(pRgn);
+    GreDeleteObject(hRgn);
+
+    // Activate the other window if necessary
+    if (pWnd->spwndParent == pWnd->head.rpdesk->pDeskInfo->spwnd)
+        co_WinPosActivateOtherWindow(pWnd);
+}
+
 /*
    ShowWindow does not set SWP_FRAMECHANGED!!! Fix wine msg test_SetParent:WmSetParentSeq_2:23 wParam bits!
-   Win: xxxShowWindow
  */
 BOOLEAN FASTCALL
 co_WinPosShowWindow(PWND Wnd, INT Cmd)
@@ -2651,7 +2689,10 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
             break;
          }
 
-      case SW_FORCEMINIMIZE: /* FIXME: Does not work if thread is hung. */
+      case SW_FORCEMINIMIZE:
+         IntForceMinimizeWindow(Wnd);
+         return WasVisible;
+
       case SW_SHOWMINNOACTIVE:
          Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          /* Fall through. */
@@ -2980,7 +3021,6 @@ co_WinPosWindowFromPoint(
    return Window;
 }
 
-/* Win: _RealChildWindowFromPoint */
 PWND FASTCALL
 IntRealChildWindowFromPoint(PWND Parent, LONG x, LONG y)
 {
@@ -3023,7 +3063,6 @@ IntRealChildWindowFromPoint(PWND Parent, LONG x, LONG y)
    return pwndHit ? pwndHit : Parent;
 }
 
-/* Win: _ChildWindowFromPointEx */
 PWND APIENTRY
 IntChildWindowFromPointEx(PWND Parent, LONG x, LONG y, UINT uiFlags)
 {
@@ -3075,7 +3114,6 @@ IntChildWindowFromPointEx(PWND Parent, LONG x, LONG y, UINT uiFlags)
    return pwndHit ? pwndHit : Parent;
 }
 
-/* Win: _DeferWindowPos(PSMWP, PWND, PWND, ...) */
 HDWP
 FASTCALL
 IntDeferWindowPos( HDWP hdwp,
@@ -3166,7 +3204,6 @@ END:
     return retvalue;
 }
 
-/* Win: xxxEndDeferWindowPosEx */
 BOOL FASTCALL IntEndDeferWindowPosEx(HDWP hdwp, BOOL bAsync)
 {
     PSMWP pDWP;
@@ -3246,7 +3283,7 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
 {
    PWND pwndParent;
    TRACE("Enter NtUserChildWindowFromPointEx\n");
-   UserEnterExclusive();
+   UserEnterShared();
    if ((pwndParent = UserGetWindowObject(hwndParent)))
    {
       pwndParent = IntChildWindowFromPointEx(pwndParent, x, y, uiFlags);

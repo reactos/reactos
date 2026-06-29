@@ -14,7 +14,6 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
-#include <winuser.h>
 
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>

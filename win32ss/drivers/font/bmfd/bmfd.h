@@ -85,7 +85,7 @@ typedef struct
 #define DFF_256COLOR         0x0040
 #define DFF_RGBCOLOR         0x0080
 
-// see http://msdn.microsoft.com/en-us/library/ms648014(VS.85).aspx
+// see https://learn.microsoft.com/en-us/windows/win32/menurc/fontdirentry
 typedef struct _FONTDIRENTRY
 {
     WORD dfVersion;

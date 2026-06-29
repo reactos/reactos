@@ -29,7 +29,21 @@ extern "C" {
 #define WLAN_AVAILABLE_NETWORK_HOTSPOT2_ROAMING                   0x00000080
 #define WLAN_AVAILABLE_NETWORK_AUTO_CONNECT_FAILED                0x00000100
 
+#define WLAN_READ_ACCESS    (STANDARD_RIGHTS_READ | FILE_READ_DATA)
+#define WLAN_EXECUTE_ACCESS (STANDARD_RIGHTS_EXECUTE | FILE_EXECUTE | WLAN_READ_ACCESS)
+#define WLAN_WRITE_ACCESS   (STANDARD_RIGHTS_WRITE | FILE_WRITE_DATA | DELETE | WRITE_DAC | WLAN_READ_ACCESS | WLAN_EXECUTE_ACCESS)
+
 /* Enumerations */
+
+#if defined(__midl) || defined(__WIDL__)
+typedef [v1_enum] enum _DOT11_RADIO_STATE {
+#else
+typedef enum _DOT11_RADIO_STATE {
+#endif
+    dot11_radio_state_unknown = 0,
+    dot11_radio_state_on,
+    dot11_radio_state_off
+} DOT11_RADIO_STATE; /* HACK: WIDL is broken, *PDOT11_RADIO_STATE; */
 
 #if defined(__midl) || defined(__WIDL__)
 typedef [v1_enum] enum _WLAN_OPCODE_VALUE_TYPE {
@@ -174,6 +188,17 @@ typedef struct _WLAN_INTERFACE_CAPABILITY {
     DWORD dwNumberOfSupportedPhys;
     /* enum32 */ long dot11PhyTypes[WLAN_MAX_PHY_INDEX];
 } WLAN_INTERFACE_CAPABILITY, *PWLAN_INTERFACE_CAPABILITY;
+
+typedef struct _WLAN_PHY_RADIO_STATE {
+    DWORD dwPhyIndex;
+    DOT11_RADIO_STATE dot11SoftwareRadioState;
+    DOT11_RADIO_STATE dot11HardwareRadioState;
+} WLAN_PHY_RADIO_STATE, *PWLAN_PHY_RADIO_STATE;
+
+typedef struct _WLAN_RADIO_STATE {
+    DWORD dwNumberOfPhys;
+    WLAN_PHY_RADIO_STATE PhyRadioState[WLAN_MAX_PHY_INDEX];
+} WLAN_RADIO_STATE, *PWLAN_RADIO_STATE;
 
 typedef struct _WLAN_RAW_DATA {
     DWORD dwDataSize;

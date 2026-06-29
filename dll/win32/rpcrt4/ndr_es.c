@@ -20,6 +20,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -55,7 +56,7 @@ RPC_STATUS WINAPI MesEncodeIncrementalHandleCreate(
 
     TRACE("(%p, %p, %p, %p)\n", UserState, AllocFn, WriteFn, pHandle);
 
-    pEsMsg = HeapAlloc(GetProcessHeap(), 0, sizeof(*pEsMsg));
+    pEsMsg = malloc(sizeof(*pEsMsg));
     if (!pEsMsg)
         return RPC_S_OUT_OF_MEMORY;
 
@@ -82,7 +83,7 @@ RPC_STATUS WINAPI MesDecodeIncrementalHandleCreate(
 
     TRACE("(%p, %p, %p)\n", UserState, ReadFn, pHandle);
 
-    pEsMsg = HeapAlloc(GetProcessHeap(), 0, sizeof(*pEsMsg));
+    pEsMsg = malloc(sizeof(*pEsMsg));
     if (!pEsMsg)
         return RPC_S_OUT_OF_MEMORY;
 
@@ -130,7 +131,7 @@ RPC_STATUS WINAPI MesBufferHandleReset(handle_t Handle, ULONG HandleStyle,
 {
     MIDL_ES_MESSAGE *pEsMsg = (MIDL_ES_MESSAGE *)Handle;
 
-    TRACE("(%p, %u, %d, %p, %u, %p)\n", Handle, HandleStyle, Operation, Buffer,
+    TRACE("(%p, %lu, %d, %p, %lu, %p)\n", Handle, HandleStyle, Operation, Buffer,
         BufferSize, EncodedSize);
 
     if (!Handle || !Buffer || !EncodedSize)
@@ -162,7 +163,7 @@ RPC_STATUS WINAPI MesBufferHandleReset(handle_t Handle, ULONG HandleStyle,
 RPC_STATUS WINAPI MesHandleFree(handle_t Handle)
 {
     TRACE("(%p)\n", Handle);
-    HeapFree(GetProcessHeap(), 0, Handle);
+    free(Handle);
     return RPC_S_OK;
 }
 
@@ -186,7 +187,7 @@ RPC_STATUS RPC_ENTRY MesEncodeFixedBufferHandleCreate(
     MIDL_ES_MESSAGE *pEsMsg;
     RPC_STATUS status;
 
-    TRACE("(%p, %d, %p, %p)\n", Buffer, BufferSize, pEncodedSize, pHandle);
+    TRACE("(%p, %ld, %p, %p)\n", Buffer, BufferSize, pEncodedSize, pHandle);
 
     if ((status = validate_mes_buffer_pointer(Buffer)))
         return status;
@@ -196,7 +197,7 @@ RPC_STATUS RPC_ENTRY MesEncodeFixedBufferHandleCreate(
 
     /* FIXME: check BufferSize too */
 
-    pEsMsg = HeapAlloc(GetProcessHeap(), 0, sizeof(*pEsMsg));
+    pEsMsg = malloc(sizeof(*pEsMsg));
     if (!pEsMsg)
         return RPC_S_OUT_OF_MEMORY;
 
@@ -226,7 +227,7 @@ RPC_STATUS RPC_ENTRY MesEncodeDynBufferHandleCreate(char **Buffer,
     if (!pEncodedSize)
         return RPC_S_INVALID_ARG;
 
-    pEsMsg = HeapAlloc(GetProcessHeap(), 0, sizeof(*pEsMsg));
+    pEsMsg = malloc(sizeof(*pEsMsg));
     if (!pEsMsg)
         return RPC_S_OUT_OF_MEMORY;
 
@@ -251,12 +252,12 @@ RPC_STATUS RPC_ENTRY MesDecodeBufferHandleCreate(
     MIDL_ES_MESSAGE *pEsMsg;
     RPC_STATUS status;
 
-    TRACE("(%p, %d, %p)\n", Buffer, BufferSize, pHandle);
+    TRACE("(%p, %ld, %p)\n", Buffer, BufferSize, pHandle);
 
     if ((status = validate_mes_buffer_pointer(Buffer)))
         return status;
 
-    pEsMsg = HeapAlloc(GetProcessHeap(), 0, sizeof(*pEsMsg));
+    pEsMsg = malloc(sizeof(*pEsMsg));
     if (!pEsMsg)
         return RPC_S_OUT_OF_MEMORY;
 
@@ -277,17 +278,17 @@ static void es_data_alloc(MIDL_ES_MESSAGE *pEsMsg, ULONG size)
     if (pEsMsg->HandleStyle == MES_INCREMENTAL_HANDLE)
     {
         unsigned int tmpsize = size;
-        TRACE("%d with incremental handle\n", size);
+        TRACE("%ld with incremental handle\n", size);
         pEsMsg->Alloc(pEsMsg->UserState, (char **)&pEsMsg->StubMsg.Buffer, &tmpsize);
         if (tmpsize < size)
         {
-            ERR("not enough bytes allocated - requested %d, got %d\n", size, tmpsize);
+            ERR("not enough bytes allocated - requested %ld, got %d\n", size, tmpsize);
             RpcRaiseException(RPC_S_OUT_OF_MEMORY);
         }
     }
     else if (pEsMsg->HandleStyle == MES_FIXED_BUFFER_HANDLE)
     {
-        TRACE("%d with fixed buffer handle\n", size);
+        TRACE("%ld with fixed buffer handle\n", size);
         pEsMsg->StubMsg.Buffer = pEsMsg->Buffer;
     }
     pEsMsg->StubMsg.RpcMsg->Buffer = pEsMsg->StubMsg.BufferStart = pEsMsg->StubMsg.Buffer;
@@ -298,17 +299,17 @@ static void es_data_read(MIDL_ES_MESSAGE *pEsMsg, ULONG size)
     if (pEsMsg->HandleStyle == MES_INCREMENTAL_HANDLE)
     {
         unsigned int tmpsize = size;
-        TRACE("%d from incremental handle\n", size);
+        TRACE("%ld from incremental handle\n", size);
         pEsMsg->Read(pEsMsg->UserState, (char **)&pEsMsg->StubMsg.Buffer, &tmpsize);
         if (tmpsize < size)
         {
-            ERR("not enough bytes read - requested %d, got %d\n", size, tmpsize);
+            ERR("not enough bytes read - requested %ld, got %d\n", size, tmpsize);
             RpcRaiseException(RPC_S_OUT_OF_MEMORY);
         }
     }
     else
     {
-        TRACE("%d from fixed or dynamic buffer handle\n", size);
+        TRACE("%ld from fixed or dynamic buffer handle\n", size);
         /* FIXME: validate BufferSize? */
         pEsMsg->StubMsg.Buffer = pEsMsg->Buffer;
         pEsMsg->Buffer += size;
@@ -323,12 +324,12 @@ static void es_data_write(MIDL_ES_MESSAGE *pEsMsg, ULONG size)
 {
     if (pEsMsg->HandleStyle == MES_INCREMENTAL_HANDLE)
     {
-        TRACE("%d to incremental handle\n", size);
+        TRACE("%ld to incremental handle\n", size);
         pEsMsg->Write(pEsMsg->UserState, (char *)pEsMsg->StubMsg.BufferStart, size);
     }
     else
     {
-        TRACE("%d to dynamic or fixed buffer handle\n", size);
+        TRACE("%ld to dynamic or fixed buffer handle\n", size);
         *pEsMsg->pEncodedSize += size;
     }
 }
@@ -386,7 +387,7 @@ static void mes_proc_header_unmarshal(MIDL_ES_MESSAGE *pEsMsg)
     pEsMsg->ProcNumber = *(DWORD *)pEsMsg->StubMsg.Buffer;
     pEsMsg->StubMsg.Buffer += 4;
     if (*(DWORD *)pEsMsg->StubMsg.Buffer != 0x00000001)
-        FIXME("unknown value 0x%08x, expected 0x00000001\n", *(DWORD *)pEsMsg->StubMsg.Buffer);
+        FIXME("unknown value 0x%08lx, expected 0x00000001\n", *(DWORD *)pEsMsg->StubMsg.Buffer);
     pEsMsg->StubMsg.Buffer += 4;
     pEsMsg->ByteCount = *(DWORD *)pEsMsg->StubMsg.Buffer;
     pEsMsg->StubMsg.Buffer += 4;
@@ -407,7 +408,7 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
     /* header for procedure string */
     const NDR_PROC_HEADER *pProcHeader = (const NDR_PROC_HEADER *)&pFormat[0];
     const RPC_CLIENT_INTERFACE *client_interface;
-    __ms_va_list args;
+    va_list args;
     unsigned int number_of_params;
     ULONG_PTR arg_buffer[256];
 
@@ -416,7 +417,7 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
     /* Later NDR language versions probably won't be backwards compatible */
     if (pStubDesc->Version > 0x50002)
     {
-        FIXME("Incompatible stub description version: 0x%x\n", pStubDesc->Version);
+        FIXME("Incompatible stub description version: 0x%lx\n", pStubDesc->Version);
         RpcRaiseException(RPC_X_WRONG_STUB_VERSION);
     }
 
@@ -457,7 +458,7 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
     }
 
     TRACE("stack size: 0x%x\n", stack_size);
-    TRACE("proc num: %d\n", pEsMsg->ProcNumber);
+    TRACE("proc num: %ld\n", pEsMsg->ProcNumber);
 
     memset(&rpcMsg, 0, sizeof(rpcMsg));
     pEsMsg->StubMsg.RpcMsg = &rpcMsg;
@@ -470,13 +471,13 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
         pEsMsg->StubMsg.FullPtrXlatTables = NdrFullPointerXlatInit(0,XLAT_CLIENT);
 
     TRACE("Oi_flags = 0x%02x\n", pProcHeader->Oi_flags);
-    TRACE("stubdesc version = 0x%x\n", pStubDesc->Version);
-    TRACE("MIDL stub version = 0x%x\n", pStubDesc->MIDLVersion);
+    TRACE("stubdesc version = 0x%lx\n", pStubDesc->Version);
+    TRACE("MIDL stub version = 0x%lx\n", pStubDesc->MIDLVersion);
 
     /* needed for conformance of top-level objects */
-    __ms_va_start( args, pFormat );
+    va_start( args, pFormat );
     pEsMsg->StubMsg.StackTop = va_arg( args, unsigned char * );
-    __ms_va_end( args );
+    va_end( args );
 
     pFormat = convert_old_args( &pEsMsg->StubMsg, pFormat, stack_size, FALSE,
                                 arg_buffer, sizeof(arg_buffer), &number_of_params );
@@ -486,14 +487,14 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
     case MES_ENCODE:
         pEsMsg->StubMsg.BufferLength = mes_proc_header_buffer_size();
 
-        client_do_args( &pEsMsg->StubMsg, pFormat, STUBLESS_CALCSIZE, NULL, number_of_params, NULL );
+        client_do_args( &pEsMsg->StubMsg, pFormat, STUBLESS_CALCSIZE, FALSE, number_of_params, NULL );
 
         pEsMsg->ByteCount = pEsMsg->StubMsg.BufferLength - mes_proc_header_buffer_size();
         es_data_alloc(pEsMsg, pEsMsg->StubMsg.BufferLength);
 
         mes_proc_header_marshal(pEsMsg);
 
-        client_do_args( &pEsMsg->StubMsg, pFormat, STUBLESS_MARSHAL, NULL, number_of_params, NULL );
+        client_do_args( &pEsMsg->StubMsg, pFormat, STUBLESS_MARSHAL, FALSE, number_of_params, NULL );
 
         es_data_write(pEsMsg, pEsMsg->ByteCount);
         break;
@@ -502,7 +503,7 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
 
         es_data_read(pEsMsg, pEsMsg->ByteCount);
 
-        client_do_args( &pEsMsg->StubMsg, pFormat, STUBLESS_UNMARSHAL, NULL, number_of_params, NULL );
+        client_do_args( &pEsMsg->StubMsg, pFormat, STUBLESS_UNMARSHAL, FALSE, number_of_params, NULL );
         break;
     default:
         RpcRaiseException(RPC_S_INTERNAL_ERROR);

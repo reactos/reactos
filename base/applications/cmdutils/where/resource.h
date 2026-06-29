@@ -1,3 +1,5 @@
+#pragma once
+
 #define IDS_USAGE 100
 #define IDS_BAD_ARG 101
 #define IDS_NOT_FOUND 103

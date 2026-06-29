@@ -5,7 +5,7 @@
  * PURPOSE:         Logon
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Filip Navara
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -21,27 +21,38 @@ PWLSESSION WLSession = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
+/**
+ * @brief
+ * Duplicates the given string, allocating a buffer on the heap.
+ **/
+PWSTR
+WlStrDup(
+    _In_opt_ PCWSTR String)
+{
+    PWSTR ptr;
+
+    if (!String)
+        return NULL;
+
+    ptr = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                          (wcslen(String) + 1) * sizeof(WCHAR));
+    if (ptr)
+        wcscpy(ptr, String);
+    return ptr;
+}
+
+
 static
 BOOL
 StartServicesManager(VOID)
 {
-    STARTUPINFOW StartupInfo;
+    STARTUPINFOW StartupInfo = { sizeof(StartupInfo) };
     PROCESS_INFORMATION ProcessInformation;
     LPCWSTR ServiceString = L"services.exe";
     BOOL res;
 
     /* Start the service control manager (services.exe) */
-    ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
-    StartupInfo.cb = sizeof(StartupInfo);
-    StartupInfo.lpReserved = NULL;
-    StartupInfo.lpDesktop = NULL;
-    StartupInfo.lpTitle = NULL;
-    StartupInfo.dwFlags = 0;
-    StartupInfo.cbReserved2 = 0;
-    StartupInfo.lpReserved2 = 0;
-
     TRACE("WL: Creating new process - %S\n", ServiceString);
-
     res = CreateProcessW(ServiceString,
                          NULL,
                          NULL,
@@ -73,23 +84,13 @@ static
 BOOL
 StartLsass(VOID)
 {
-    STARTUPINFOW StartupInfo;
+    STARTUPINFOW StartupInfo = { sizeof(StartupInfo) };
     PROCESS_INFORMATION ProcessInformation;
     LPCWSTR ServiceString = L"lsass.exe";
     BOOL res;
 
     /* Start the local security authority subsystem (lsass.exe) */
-    ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
-    StartupInfo.cb = sizeof(StartupInfo);
-    StartupInfo.lpReserved = NULL;
-    StartupInfo.lpDesktop = NULL;
-    StartupInfo.lpTitle = NULL;
-    StartupInfo.dwFlags = 0;
-    StartupInfo.cbReserved2 = 0;
-    StartupInfo.lpReserved2 = 0;
-
     TRACE("WL: Creating new process - %S\n", ServiceString);
-
     res = CreateProcessW(ServiceString,
                          NULL,
                          NULL,
@@ -196,6 +197,7 @@ UpdateTcpIpInformation(VOID)
         else
         {
             ERR("WL: Could not reallocate memory for pszBuffer\n");
+            goto Quit;
         }
     }
     if ((lError == ERROR_SUCCESS) && (dwType == REG_SZ))
@@ -257,6 +259,7 @@ UpdateTcpIpInformation(VOID)
         else
         {
             ERR("WL: Could not reallocate memory for pszBuffer\n");
+            goto Quit;
         }
     }
     if ((lError == ERROR_SUCCESS) && (dwType == REG_SZ))
@@ -276,6 +279,7 @@ UpdateTcpIpInformation(VOID)
     if (pszBuffer != szBuffer)
         HeapFree(GetProcessHeap(), 0, pszBuffer);
 
+Quit:
     RegCloseKey(hKey);
 }
 
@@ -296,7 +300,7 @@ InitKeyboardLayouts(VOID)
         while (TRUE)
         {
             /* Read values with integer names only */
-            swprintf(wszKeyName, L"%d", i++);
+            _swprintf(wszKeyName, L"%d", i++);
             if (RegQueryValueExW(hKey, wszKeyName, NULL, &dwType, (LPBYTE)wszKLID, &dwSize) != ERROR_SUCCESS)
             {
                 /* There is no more entries */
@@ -410,8 +414,6 @@ GinaLoadFailedWindowProc(
                 wsprintfW(text, templateText, (LPWSTR)lParam);
                 SetDlgItemTextW(hwndDlg, IDC_GINALOADFAILED, text);
             }
-
-            SetFocus(GetDlgItem(hwndDlg, IDOK));
             return TRUE;
         }
 
@@ -598,8 +600,6 @@ WinMain(
         PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
     }
 
-    (void)LoadLibraryW(L"sfc_os.dll");
-
     /* Tell kernel that CurrentControlSet is good (needed
      * to support Last good known configuration boot) */
     NtInitializeRegistry(CM_BOOT_FLAG_ACCEPTED | 1);
@@ -614,6 +614,7 @@ WinMain(
     CleanupNotifications();
 
     /* We never go there */
-
+    // TODO: Shutdown if we are in session 0, otherwise let the process terminate.
+    SleepEx(INFINITE, FALSE);
     return 0;
 }

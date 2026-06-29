@@ -105,25 +105,39 @@ typedef enum _CM_SHARE_DISPOSITION
 //
 // Port Resource Descriptor Flags
 //
-#define CM_RESOURCE_PORT_MEMORY                 0x0000
-#define CM_RESOURCE_PORT_IO                     0x0001
-#define CM_RESOURCE_PORT_10_BIT_DECODE          0x0004
-#define CM_RESOURCE_PORT_12_BIT_DECODE          0x0008
-#define CM_RESOURCE_PORT_16_BIT_DECODE          0x0010
-#define CM_RESOURCE_PORT_POSITIVE_DECODE        0x0020
-#define CM_RESOURCE_PORT_PASSIVE_DECODE         0x0040
-#define CM_RESOURCE_PORT_WINDOW_DECODE          0x0080
+#define CM_RESOURCE_PORT_MEMORY           0x0000
+#define CM_RESOURCE_PORT_IO               0x0001
+#define CM_RESOURCE_PORT_10_BIT_DECODE    0x0004
+#define CM_RESOURCE_PORT_12_BIT_DECODE    0x0008
+#define CM_RESOURCE_PORT_16_BIT_DECODE    0x0010
+#define CM_RESOURCE_PORT_POSITIVE_DECODE  0x0020
+#define CM_RESOURCE_PORT_PASSIVE_DECODE   0x0040
+#define CM_RESOURCE_PORT_WINDOW_DECODE    0x0080
+#define CM_RESOURCE_PORT_BAR              0x0100
 
 //
 // Memory Resource Descriptor Flags
 //
-#define CM_RESOURCE_MEMORY_READ_WRITE     0x0000
-#define CM_RESOURCE_MEMORY_READ_ONLY      0x0001
-#define CM_RESOURCE_MEMORY_WRITE_ONLY     0x0002
-#define CM_RESOURCE_MEMORY_PREFETCHABLE   0x0004
-#define CM_RESOURCE_MEMORY_COMBINEDWRITE  0x0008
-#define CM_RESOURCE_MEMORY_24             0x0010
-#define CM_RESOURCE_MEMORY_CACHEABLE      0x0020
+#define CM_RESOURCE_MEMORY_READ_WRITE                    0x0000
+#define CM_RESOURCE_MEMORY_READ_ONLY                     0x0001
+#define CM_RESOURCE_MEMORY_WRITE_ONLY                    0x0002
+#define CM_RESOURCE_MEMORY_WRITEABILITY_MASK             0x0003
+#define CM_RESOURCE_MEMORY_PREFETCHABLE                  0x0004
+#define CM_RESOURCE_MEMORY_COMBINEDWRITE                 0x0008
+#define CM_RESOURCE_MEMORY_24                            0x0010
+#define CM_RESOURCE_MEMORY_CACHEABLE                     0x0020
+#define CM_RESOURCE_MEMORY_WINDOW_DECODE                 0x0040
+#define CM_RESOURCE_MEMORY_BAR                           0x0080
+#define CM_RESOURCE_MEMORY_COMPAT_FOR_INACCESSIBLE_RANGE 0x0100
+
+#define CM_RESOURCE_MEMORY_LARGE                         0x0E00
+#define CM_RESOURCE_MEMORY_LARGE_40                      0x0200
+#define CM_RESOURCE_MEMORY_LARGE_48                      0x0400
+#define CM_RESOURCE_MEMORY_LARGE_64                      0x0800
+
+#define CM_RESOURCE_MEMORY_LARGE_40_MAXLEN               0x000000FFFFFFFF00
+#define CM_RESOURCE_MEMORY_LARGE_48_MAXLEN               0x0000FFFFFFFF0000
+#define CM_RESOURCE_MEMORY_LARGE_64_MAXLEN               0xFFFFFFFF00000000
 
 //
 // DMA Resource Descriptor Flags
@@ -510,6 +524,17 @@ typedef struct _PLUGPLAY_CONTROL_PROPERTY_DATA
     ULONG BufferSize;
 } PLUGPLAY_CONTROL_PROPERTY_DATA, *PPLUGPLAY_CONTROL_PROPERTY_DATA;
 
+// PlugPlayControlDeviceClassAssociation (0x0B)
+typedef struct _PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA
+{
+    UNICODE_STRING DeviceInstance;
+    GUID *InterfaceGuid;
+    UNICODE_STRING Reference;
+    BOOLEAN Register;
+    PWCHAR SymbolicLinkName;
+    ULONG SymbolicLinkNameLength;
+} PLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA, *PPLUGPLAY_CONTROL_CLASS_ASSOCIATION_DATA;
+
 // PlugPlayControlGetRelatedDevice (0x0C)
 typedef struct _PLUGPLAY_CONTROL_RELATED_DEVICE_DATA
 {
@@ -518,6 +543,15 @@ typedef struct _PLUGPLAY_CONTROL_RELATED_DEVICE_DATA
     PWCHAR RelatedDeviceInstance;
     ULONG RelatedDeviceInstanceLength;
 } PLUGPLAY_CONTROL_RELATED_DEVICE_DATA, *PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA;
+
+// PlugPlayControlGetInterfaceDeviceAlias (0x0D)
+typedef struct _PLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA
+{
+    UNICODE_STRING SymbolicLinkName;
+    GUID *AliasInterfaceClassGuid;
+    PWCHAR AliasSymbolicLinkName;
+    ULONG AliasSymbolicLinkNameLength;
+} PLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA, *PPLUGPLAY_CONTROL_INTERFACE_ALIAS_DATA;
 
 // PlugPlayControlDeviceStatus (0x0E)
 typedef struct _PLUGPLAY_CONTOL_STATUS_DATA

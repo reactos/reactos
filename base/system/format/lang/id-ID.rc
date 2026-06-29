@@ -29,7 +29,7 @@ BEGIN
     STRING_FMIFS_FAIL "Tidak bisa menemukan FMIFS entry points.\n\n"
     STRING_UNKNOW_ARG "Argumen tidak dikenal: %s\n"
     STRING_DRIVE_PARM "Parameter drive yang diperlukan hilang.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Tidak bisa mendapatkan jenis drive"
+    STRING_ERROR_DRIVE_TYPE "Tidak bisa mendapatkan jenis drive.\n"
     STRING_INSERT_DISK "Sisipkan disket baru di drive %C:\ndan tekan Enter bila siap..."
     STRING_NO_VOLUME "Tidak bisa memdapatkan volume"
     STRING_NO_VOLUME_SIZE "Tidak bisa mendapatkan ukuran volume"

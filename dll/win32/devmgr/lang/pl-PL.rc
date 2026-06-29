@@ -1,12 +1,14 @@
 /*
- *    Translated by (Sebastian Gasiorek,Wiktor Maryniowski, 2005-12-12)
- *    xxrogers@users.sourceforge.net
- *    https://sourceforge.net/projects/reactospl
- *    Updated by xrogers (13.04.2007)
- *    Updated by Caemyr - Olaf Siejka (Jan 2008, Jan 2010)
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (November, 2011)
- *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
+ * PROJECT:     ReactOS Device Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2005 Sebastian Gąsiorek <zebasoftis@reactos.org>
+ *              Copyright 2005 Wiktor Maryniowski
+ *              Copyright 2007 Lech Groblewicz <xxrogers@users.sourceforge.net>
+ *              Copyright 2008-2011 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2011-2014 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2017-2019 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2020-2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -85,7 +87,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Nie zainstalowano sterownika dla tego urządzenia."
     IDS_DEV_HARDWARE_DISABLED "Urządzenie jest wyłączone, ponieważ BIOS nie przydzielił żadnych zasobów dla tego urządzenia."
     IDS_DEV_CANT_SHARE_IRQ "Urządzenie żąda przerwania (IRQ), którego używa inne urządzenia i którego nie można współdzielić. Musisz zmienić ustawienia lub usunąć sterownik powodujący konflikt."
-    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
+    IDS_DEV_FAILED_ADD "To urządzenie nie działa poprawnie, ponieważ system ReactOS nie może załadować sterowników wymaganych dla tego urządzenia."
     IDS_DEV_DISABLED_SERVICE "ReactOS nie mógł zainstalować sterownika dla urządzenia, ponieważ nie mógł uzyskać dostępu do lokacji zawartej w pliku instalacyjnym."
     IDS_DEV_TRANSLATION_FAILED "Sterownik nie jest przeznaczony dla tego urządzenia."
     IDS_DEV_NO_SOFTCONFIG "ReactOS nie mógł określić ustawień dla tego urządzenia. Poszukaj rozwiązania w dokumentacji urządzenia i użyj ustawień zasobów, aby skonfigurować je ręcznie."
@@ -181,7 +183,7 @@ BEGIN
     EDITTEXT IDC_DRVPROVIDER, 117, 39, 183, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Data sterownika:", -1, 37, 53, 55, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVDATE, 117, 53, 183, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Wersja sterownika:", -1, 37, 67, 61, 8, SS_NOPREFIX
+    LTEXT "Wersja sterownika:", -1, 37, 67, 65, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVVERSION, 117, 67, 183, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Podpis cyfrowy:", -1, 37, 81, 55, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 117, 81, 183, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
@@ -206,14 +208,14 @@ BEGIN
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
-    LTEXT "Dostawca:", -1, 14, 134, 50, 8
-    EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Wersja pliku:", -1, 14, 150, 50, 8
-    EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Prawa autorskie:", -1, 14, 166, 50, 8
-    EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Podpis cyfrowy:", -1, 14, 182, 50, 8
-    EDITTEXT IDC_DIGITALSIGNER, 66, 182, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Dostawca:", -1, 14, 134, 55, 8
+    EDITTEXT IDC_FILEPROVIDER, 70, 134, 150, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Wersja pliku:", -1, 14, 150, 55, 8
+    EDITTEXT IDC_FILEVERSION, 70, 150, 150, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Prawa autorskie:", -1, 14, 166, 55, 8
+    EDITTEXT IDC_FILECOPYRIGHT, 70, 166, 150, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT "Podpis cyfrowy:", -1, 14, 182, 55, 8
+    EDITTEXT IDC_DIGITALSIGNER, 70, 182, 150, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", IDOK, 167, 208, 50, 14
 END
 
@@ -284,7 +286,7 @@ BEGIN
     BEGIN
         MENUITEM "Urządzenia według typów",             IDM_DEVBYTYPE
         MENUITEM "Urządzenia według połączeń",       IDM_DEVBYCONN
-        MENUITEM "Zasoby według typów",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Zasoby według typów",           IDM_RESBYTYPE
         MENUITEM "Zasoby według połączeń",     IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Pokaż ukryte urządzenia",         IDM_SHOWHIDDEN
@@ -323,6 +325,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "Wyłącz"
   IDS_TOOLTIP_UPDATE        "Aktualizuj sterownik"
   IDS_TOOLTIP_UNINSTALL     "Odinstaluj"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Pamięć"
+  IDS_TYPE_PORT             "Wejście/Wyjście (IO)"
+  IDS_TYPE_DMA              "Bezpośredni dostęp do pamięci (DMA)"
+  IDS_TYPE_IRQ              "Żądanie przerwania (IRQ)"
 END
 
 /* Hints */

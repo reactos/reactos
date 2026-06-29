@@ -1,4 +1,3 @@
-#define __ROS_LONG64__
 
 #define STANDALONE
 #include <apitest.h>
@@ -9,13 +8,18 @@ extern void func_CreateProcess(void);
 extern void func_DefaultActCtx(void);
 extern void func_DeviceIoControl(void);
 extern void func_dosdev(void);
+extern void func_EnumSystemCodePages(void);
 extern void func_FindActCtxSectionStringW(void);
 extern void func_FindFiles(void);
 extern void func_FLS(void);
 extern void func_FormatMessage(void);
 extern void func_GetComputerNameEx(void);
+extern void func_GetCPInfo(void);
 extern void func_GetCurrentDirectory(void);
 extern void func_GetDriveType(void);
+extern void func_GetEnvironmentVariable(void);
+extern void func_GetFinalPathNameByHandle(void);
+extern void func_GetLocaleInfo(void);
 extern void func_GetModuleFileName(void);
 extern void func_GetVolumeInformation(void);
 extern void func_InitOnce(void);
@@ -24,10 +28,12 @@ extern void func_IsDBCSLeadByteEx(void);
 extern void func_JapaneseCalendar(void);
 extern void func_LCMapString(void);
 extern void func_LoadLibraryExW(void);
+extern void func_LocaleNameToLCID(void);
 extern void func_lstrcpynW(void);
 extern void func_lstrlen(void);
-extern void func_Mailslot(void);
+extern void func_MailslotRead(void);
 extern void func_MultiByteToWideChar(void);
+extern void func_Pipes(void);
 extern void func_PrivMoveFileIdentityW(void);
 extern void func_QueueUserAPC(void);
 extern void func_SetComputerNameExW(void);
@@ -42,18 +48,24 @@ extern void func_WideCharToMultiByte(void);
 
 const struct test winetest_testlist[] =
 {
+    { "ActCtxWithXmlNamespaces",     func_ActCtxWithXmlNamespaces },
     { "ConsoleCP",                   func_ConsoleCP },
     { "CreateProcess",               func_CreateProcess },
     { "DefaultActCtx",               func_DefaultActCtx },
     { "DeviceIoControl",             func_DeviceIoControl },
     { "dosdev",                      func_dosdev },
+    { "EnumSystemCodePages",         func_EnumSystemCodePages },
     { "FindActCtxSectionStringW",    func_FindActCtxSectionStringW },
     { "FindFiles",                   func_FindFiles },
     { "FLS",                         func_FLS },
     { "FormatMessage",               func_FormatMessage },
     { "GetComputerNameEx",           func_GetComputerNameEx },
+    { "GetCPInfo",                   func_GetCPInfo },
     { "GetCurrentDirectory",         func_GetCurrentDirectory },
     { "GetDriveType",                func_GetDriveType },
+    { "GetEnvironmentVariable",      func_GetEnvironmentVariable },
+    { "GetFinalPathNameByHandle",    func_GetFinalPathNameByHandle },
+    { "GetLocaleInfo",               func_GetLocaleInfo },
     { "GetModuleFileName",           func_GetModuleFileName },
     { "GetVolumeInformation",        func_GetVolumeInformation },
     { "InitOnce",                    func_InitOnce },
@@ -62,10 +74,12 @@ const struct test winetest_testlist[] =
     { "JapaneseCalendar",            func_JapaneseCalendar },
     { "LCMapString",                 func_LCMapString },
     { "LoadLibraryExW",              func_LoadLibraryExW },
+    { "LocaleNameToLCID",            func_LocaleNameToLCID },
     { "lstrcpynW",                   func_lstrcpynW },
     { "lstrlen",                     func_lstrlen },
-    { "MailslotRead",                func_Mailslot },
+    { "MailslotRead",                func_MailslotRead },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },
+    { "Pipes",                       func_Pipes },
     { "PrivMoveFileIdentityW",       func_PrivMoveFileIdentityW },
     { "QueueUserAPC",                func_QueueUserAPC },
     { "SetComputerNameExW",          func_SetComputerNameExW },
@@ -77,6 +91,5 @@ const struct test winetest_testlist[] =
     { "TunnelCache",                 func_TunnelCache },
     { "UEFIFirmware",                func_UEFIFirmware },
     { "WideCharToMultiByte",         func_WideCharToMultiByte },
-    { "ActCtxWithXmlNamespaces",     func_ActCtxWithXmlNamespaces },
     { 0, 0 }
 };

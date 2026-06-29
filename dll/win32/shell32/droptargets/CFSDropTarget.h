@@ -23,6 +23,9 @@
 #ifndef _CFSDROPTARGET_H_
 #define _CFSDROPTARGET_H_
 
+#define DROPIDM_EXTFIRST 100
+#define DROPIDM_EXTLAST  0x7fff
+
 class CFSDropTarget :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDropTarget,
@@ -35,6 +38,7 @@ class CFSDropTarget :
         HWND m_hwndSite;
         DWORD m_grfKeyState;
         DWORD m_dwDefaultEffect;
+        DWORD m_AllowedEffects;
         CComPtr<IUnknown> m_site;
 
         BOOL _QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);

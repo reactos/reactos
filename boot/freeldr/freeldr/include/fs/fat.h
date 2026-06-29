@@ -143,33 +143,39 @@ typedef struct
 } FATX_DIRENTRY, * PFATX_DIRENTRY;
 #include <poppack.h>
 
-typedef struct _FAT_VOLUME_INFO *PFAT_VOLUME_INFO;
+#define FAT_ATTR_NORMAL     0x00
+#define FAT_ATTR_READONLY   0x01
+#define FAT_ATTR_HIDDEN     0x02
+#define FAT_ATTR_SYSTEM     0x04
+#define FAT_ATTR_VOLUMENAME 0x08
+#define FAT_ATTR_DIRECTORY  0x10
+#define FAT_ATTR_ARCHIVE    0x20
+#define FAT_ATTR_LONG_NAME  (FAT_ATTR_READONLY | FAT_ATTR_HIDDEN | FAT_ATTR_SYSTEM | FAT_ATTR_VOLUMENAME)
 
-typedef struct
-{
-    PFAT_VOLUME_INFO    Volume;
-    ULONG    FileSize;        /* File size */
-    ULONG    FilePointer;        /* File pointer */
-    ULONG    CurrentCluster;  /* The cluster for file pointer */
-    ULONG    StartCluster;    /* The first cluster for file */
-    UCHAR    Attributes;      /* File attributes */
-} FAT_FILE_INFO, * PFAT_FILE_INFO;
-
-#define    ATTR_NORMAL        0x00
-#define    ATTR_READONLY    0x01
-#define    ATTR_HIDDEN        0x02
-#define    ATTR_SYSTEM        0x04
-#define    ATTR_VOLUMENAME    0x08
-#define    ATTR_DIRECTORY    0x10
-#define    ATTR_ARCHIVE    0x20
-#define ATTR_LONG_NAME    (ATTR_READONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUMENAME)
-
-#define    FAT12            1
-#define    FAT16            2
-#define    FAT32            3
-#define FATX16            4
-#define FATX32            5
+#define FAT12   1
+#define FAT16   2
+#define FAT32   3
+#define FATX16  4
+#define FATX32  5
 
 #define ISFATX(FT) ((FT) == FATX16 || (FT) == FATX32)
+
+typedef struct _FAT_VOLUME_INFO *PFAT_VOLUME_INFO;
+
+typedef struct _FAT_FILE_INFO
+{
+    PFAT_VOLUME_INFO Volume;
+    ULONG FileSize;         // File size
+    ULONG FilePointer;      // File pointer
+    ULONG CurrentCluster;   // Cluster for file pointer
+    ULONG StartCluster;     // File first cluster
+    ULONG FileNameLength;
+    UCHAR Attributes;
+    CHAR FileName[RTL_FIELD_SIZE(FILEINFORMATION, FileName)];
+} FAT_FILE_INFO, *PFAT_FILE_INFO;
+
+ULONGLONG
+FatGetVolumeSize(
+    _In_ ULONG DeviceId);
 
 const DEVVTBL* FatMount(ULONG DeviceId);

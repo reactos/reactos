@@ -2,8 +2,6 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(mmdevapi.dll mmdevapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -25,3 +23,4 @@ add_importlibs(mmdevapi ole32 oleaut32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(mmdevapi precomp.h SOURCE)
 add_dependencies(mmdevapi dxsdk)
 add_cd_file(TARGET mmdevapi DESTINATION reactos/system32 FOR all)
+set_wine_module(mmdevapi)

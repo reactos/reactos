@@ -84,7 +84,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     IQS_SAME
     (
         HANDLE,
-        ULONG,
+        HANDLE,
         ICIF_SET
     ),
 
@@ -159,7 +159,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     IQS
     (
         BOOLEAN,
-        CHAR,
+        ULONG,
         BOOLEAN,
         CHAR,
         ICIF_SET
@@ -195,7 +195,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     IQS_SAME
     (
         KAFFINITY,
-        ULONG,
+        KAFFINITY,
         ICIF_SET
     ),
 
@@ -229,7 +229,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     IQS
     (
         CHAR,
-        CHAR,
+        ULONG,
         BOOLEAN,
         CHAR,
         ICIF_SET
@@ -341,9 +341,9 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     /* ProcessImageFileNameWin32 */
     IQS_SAME
     (
-        CHAR,
-        CHAR,
-        ICIF_NONE
+        UNICODE_STRING,
+        ULONG_PTR,
+        ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
     ),
 
     /* ProcessImageFileMapping */
@@ -410,17 +410,16 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     ),
 
     /* ThreadDescriptorTableEntry is only implemented in x86 as well as the descriptor entry */
-    #if defined(_X86_)
-        /* ThreadDescriptorTableEntry */
-        IQS_SAME
-        (
-            DESCRIPTOR_TABLE_ENTRY,
-            ULONG,
-            ICIF_QUERY
-        ),
-    #else
-        IQS_NONE,
-    #endif
+#if defined(_X86_)
+    IQS_SAME
+    (
+        DESCRIPTOR_TABLE_ENTRY,
+        ULONG,
+        ICIF_QUERY
+    ),
+#else
+    IQS_NONE,
+#endif
 
     /* ThreadEnableAlignmentFaultFixup */
     IQS
@@ -504,12 +503,20 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     ),
 
     /* ThreadHideFromDebugger */
-    IQS_SAME
-    (
-        CHAR,
-        ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
-    ),
+    {
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        sizeof(BOOLEAN), /* Query support only on Vista and above */
+#else
+        0,
+#endif
+        sizeof(ULONG), // UCHAR
+        0, /* No size for Set */
+        sizeof(ULONG),
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        ICIF_QUERY |
+#endif
+        ICIF_SET
+    },
 
     /* ThreadBreakOnTermination */
     IQS_SAME
@@ -555,4 +562,80 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
 
     /* ThreadCSwitchMon */
     IQS_NONE,
+
+// TODO: Specify the probing info when implementing these classes (see commit 60aad33ed0 PR #8487)
+// and adjust rostests/apitests/ntdll/probelib.c!QuerySetThreadValidator() as necessary.
+#if 1
+    // Windows 7
+    /* ThreadCSwitchPmu */
+    IQS_NONE,
+    /* ThreadWow64Context */
+    IQS_NONE,
+    /* ThreadGroupInformation */
+    IQS_NONE,
+    /* ThreadUmsInformation */
+    IQS_NONE,
+    /* ThreadCounterProfiling */
+    IQS_NONE,
+    /* ThreadIdealProcessorEx */
+    IQS_NONE,
+
+    // Windows 8
+    /* ThreadCpuAccountingInformation */
+    IQS_NONE,
+
+    // Windows 8.1
+    /* ThreadSuspendCount */
+    IQS_NONE,
+
+    // Windows 10
+    /* ThreadHeterogeneousCpuPolicy */
+    IQS_NONE,
+    /* ThreadContainerId */
+    IQS_NONE,
+
+    /* ThreadNameInformation */
+    IQS_SAME
+    (
+        UNICODE_STRING,
+        ULONG_PTR,
+        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+    ),
+
+    /* ThreadSelectedCpuSets */
+    IQS_NONE,
+    /* ThreadSystemThreadInformation */
+    IQS_NONE,
+    /* ThreadActualGroupAffinity */
+    IQS_NONE,
+
+    /* ThreadDynamicCodePolicyInfo */
+    IQS_NONE,
+    /* ThreadExplicitCaseSensitivity */
+    IQS_NONE,
+    /* ThreadWorkOnBehalfTicket */
+    IQS_NONE,
+    /* ThreadSubsystemInformation */
+    IQS_NONE,
+    /* ThreadDbgkWerReportActive */
+    IQS_NONE,
+    /* ThreadAttachContainer */
+    IQS_NONE,
+    /* ThreadManageWritesToExecutableMemory */
+    IQS_NONE,
+    /* ThreadPowerThrottlingState */
+    IQS_NONE,
+    /* ThreadWorkloadClass */
+    IQS_NONE,
+    /* ThreadCreateStateChange */
+    IQS_NONE,
+    /* ThreadApplyStateChange */
+    IQS_NONE,
+    /* ThreadStrongerBadHandleChecks */
+    IQS_NONE,
+    /* ThreadEffectiveIoPriority */
+    IQS_NONE,
+    /* ThreadEffectivePagePriority */
+    IQS_NONE,
+#endif
 };

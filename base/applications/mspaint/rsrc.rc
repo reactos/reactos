@@ -73,6 +73,9 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "mspaint.exe.manifest"
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
 #endif
+#ifdef LANGUAGE_HR_HR
+    #include "lang/hr-HR.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"
 #endif

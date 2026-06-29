@@ -186,7 +186,7 @@ NTSTATUS fs_open(PUNICODE_STRING DriveRoot, int read_write)
                         FILE_GENERIC_READ | (read_write ? FILE_GENERIC_WRITE : 0),
                         &ObjectAttributes,
                         &Iosb,
-                        read_write ? 0 : FILE_SHARE_READ,
+                        read_write ? FILE_SHARE_READ : (FILE_SHARE_READ | FILE_SHARE_WRITE),
                         FILE_SYNCHRONOUS_IO_ALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -347,7 +347,6 @@ void fs_write(off_t pos, int size, void *data)
     int did;
 
 #ifdef __REACTOS__
-    assert(interactive || rw);
 
     if (FsCheckFlags & FSCHECK_IMMEDIATE_WRITE) {
         void *scratch;
@@ -355,6 +354,8 @@ void fs_write(off_t pos, int size, void *data)
         const off_t seekpos_aligned = pos - (pos % 512);
         const size_t seek_delta = (size_t)(pos - seekpos_aligned);
         BOOLEAN use_read = (seek_delta != 0) || ((readsize_aligned-size) != 0);
+
+        assert(interactive || rw);
 
         /* Aloc temp buffer if write is not aligned */
         if (use_read)
@@ -372,6 +373,9 @@ void fs_write(off_t pos, int size, void *data)
 
             /* Patch data in memory */
             memcpy((char *)scratch + seek_delta, data, size);
+
+            /* Seek back to the beginning of our read */ 
+            if (lseek(fd, seekpos_aligned, 0) != seekpos_aligned) pdie("Seek to %lld",seekpos_aligned);
         }
 
         /* Write it back */

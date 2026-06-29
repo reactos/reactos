@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include <stdarg.h>
 
 #define COBJMACROS
@@ -72,7 +70,7 @@ static ULONG WINAPI ColorTransform_AddRef(IWICColorTransform *iface)
     ColorTransform *This = impl_from_IWICColorTransform(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     return ref;
 }
@@ -82,12 +80,12 @@ static ULONG WINAPI ColorTransform_Release(IWICColorTransform *iface)
     ColorTransform *This = impl_from_IWICColorTransform(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     if (ref == 0)
     {
         if (This->dst) IWICBitmapSource_Release(This->dst);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This);
     }
 
     return ref;
@@ -177,7 +175,7 @@ HRESULT ColorTransform_Create(IWICColorTransform **colortransform)
 
     if (!colortransform) return E_INVALIDARG;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(ColorTransform));
+    This = malloc(sizeof(ColorTransform));
     if (!This) return E_OUTOFMEMORY;
 
     This->IWICColorTransform_iface.lpVtbl = &ColorTransform_Vtbl;

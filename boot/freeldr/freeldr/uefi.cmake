@@ -6,7 +6,7 @@
 ##
 
 include_directories(BEFORE
-    ${REACTOS_SOURCE_DIR}/boot/environ/include/efi
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/edk2
     ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr
     ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr/include
     ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr/include/arch/uefi)
@@ -21,6 +21,7 @@ list(APPEND UEFILDR_ARC_SOURCE
     arch/uefi/uefisetup.c
     arch/uefi/uefiutil.c
     arch/uefi/uefivid.c
+    arch/vidfb.c
     arch/vgafont.c)
 
 if(ARCH STREQUAL "i386")
@@ -43,16 +44,50 @@ else()
     #TBD
 endif()
 
+list(APPEND UEFILDR_BOOTMGR_SOURCE
+    ${FREELDR_BOOTMGR_SOURCE}
+    custom.c
+    options.c
+    oslist.c
+)
+
 add_asm_files(uefifreeldr_common_asm ${FREELDR_COMMON_ASM_SOURCE} ${UEFILDR_COMMON_ASM_SOURCE})
+
+list(APPEND FREELDR_NTLDR_SOURCE
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/config.c
+    ntldr/advopts.c
+    ntldr/conversion.c
+    ntldr/headless.c
+    ntldr/inffile.c
+    ntldr/ntldropts.c
+    ntldr/registry.c
+    ntldr/setupldr.c
+    ntldr/winldr.c
+    ntldr/wlmemory.c
+    ntldr/wlregistry.c)
+
+if(ARCH STREQUAL "i386")
+    list(APPEND FREELDR_NTLDR_SOURCE
+        ntldr/arch/i386/winldr.c)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND FREELDR_NTLDR_SOURCE
+        ntldr/arch/amd64/winldr.c)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND FREELDR_NTLDR_SOURCE
+        ntldr/arch/arm/winldr.c)
+else()
+    #TBD
+endif()
 
 add_library(uefifreeldr_common
     ${uefifreeldr_common_asm}
     ${UEFILDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
-    ${FREELDR_BOOTMGR_SOURCE}
+    ${UEFILDR_BOOTMGR_SOURCE}
     ${FREELDR_NTLDR_SOURCE})
 
-target_compile_definitions(uefifreeldr_common PRIVATE UEFIBOOT)
+target_compile_definitions(uefifreeldr_common PRIVATE _FRLDRLIB_ UEFIBOOT)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Prevent using SSE (no support in freeldr)
@@ -62,7 +97,7 @@ endif()
 set(PCH_SOURCE
     ${UEFILDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
-    ${FREELDR_BOOTMGR_SOURCE}
+    ${UEFILDR_BOOTMGR_SOURCE}
     ${FREELDR_NTLDR_SOURCE})
 
 add_pch(uefifreeldr_common include/arch/uefi/uefildr.h PCH_SOURCE)
@@ -79,6 +114,7 @@ spec2def(uefildr.exe freeldr.spec)
 list(APPEND UEFILDR_BASE_SOURCE
     include/arch/uefi/uefildr.h
     arch/uefi/uefildr.c
+    bootmgr.c
     ${FREELDR_BASE_SOURCE})
 
 if(ARCH STREQUAL "i386")
@@ -121,15 +157,14 @@ endif()
 
 set_entrypoint(uefildr EfiEntry)
 
+target_link_libraries(uefildr uefifreeldr_common cportlib blcmlib blrtl libcntpr)
 if(ARCH STREQUAL "i386")
     target_link_libraries(uefildr mini_hal)
 endif()
 
-target_link_libraries(uefildr uefifreeldr_common cportlib blcmlib blrtl libcntpr)
-
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_sources(uefildr PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(uefildr gcc_ssp_nt)
 endif()
 
 if(RUNTIME_CHECKS)

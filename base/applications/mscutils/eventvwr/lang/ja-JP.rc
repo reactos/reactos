@@ -106,9 +106,9 @@ BEGIN
     LTEXT "説明(&D):", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "データ(&A):", IDC_DETAILS_STATIC, 8, 140, 20, 8
     AUTORADIOBUTTON "バイト(&B)", IDC_BYTESRADIO, 39, 140, 34, 8
-    AUTORADIOBUTTON "ワード(&W)", IDC_WORDRADIO, 77, 140, 34, 8
+    AUTORADIOBUTTON "ワード(&W)", IDC_WORDSRADIO, 77, 140, 34, 8
+    LTEXT "データ(&A):", IDC_DETAILS_STATIC, 8, 140, 20, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -168,6 +168,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "このイベントをクリアする前に保存したいですか？"
     IDS_RESTOREDEFAULTS "すべての設定をデフォルトに戻しますか？"
     IDS_EVENTSTRINGIDNOTFOUND "イベント ID (%lu) (ソース %s 内) に関する説明が見つかりませんでした。 リモート コンピュータからメッセージを表示するために必要なレジストリ情報またはメッセージ DLL ファイルがローカル コンピュータにない可能性があります。\n\n次の情報はイベントの一部です:\n\n"
+    IDS_CONTFROMBEGINNING "イベント ログの最後に到達しました。最初から続けますか？"
+    IDS_CONTFROMEND "イベント ログの先頭に到達しました。最後から続けますか？"
 END
 
 STRINGTABLE
@@ -220,16 +222,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-イベントの種類:     %s\r\n\
-イベントのソース:   %s\r\n\
-イベントのカテゴリ: %s\r\n\
-イベント ID:        %s\r\n\
-日付:               %s\r\n\
-時刻:               %s\r\n\
-ユーザー:           %s\r\n\
-コンピューター:     %s\r\n\
-説明:\r\n%s"
+    IDS_COPY_EVTTYPE "イベントの種類:"
+    IDS_COPY_EVTSRC  "イベントのソース:"
+    IDS_COPY_EVTCAT  "イベントのカテゴリ:"
+    IDS_COPY_EVTID   "イベント ID:"
+    IDS_COPY_EVTDATE "日付:"
+    IDS_COPY_EVTTIME "時刻:"
+    IDS_COPY_EVTUSER "ユーザー:"
+    IDS_COPY_EVTCOMP "コンピューター:"
+    IDS_COPY_EVTTEXT "説明:"
+    IDS_COPY_EVTDATA "データ:"
 END
 
 STRINGTABLE

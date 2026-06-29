@@ -103,13 +103,13 @@ coclass ClassMoniker { interface IMoniker; }
     threading(both),
     uuid(00000320-0000-0000-c000-000000000046)
 ]
-coclass PSFactoryBuffer { interface IFactoryBuffer; }
+coclass PSFactoryBuffer { interface IPSFactoryBuffer; }
 
 [
-    threading(apartment),
-    uuid(00000323-0000-0000-c000-000000000046)
+    threading(both),
+    uuid(00000327-0000-0000-c000-000000000046)
 ]
-coclass StdGlobalInterfaceTable { interface IGlobalInterfaceTable; }
+coclass ObjrefMoniker { interface IMoniker; }
 
 [
     helpstring("Component Categories Manager"),

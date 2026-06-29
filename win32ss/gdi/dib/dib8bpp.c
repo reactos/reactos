@@ -36,6 +36,9 @@ DIB_8BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 VOID
 DIB_8BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
+  if (x1 >= x2)
+    return;
+
   memset((PBYTE)SurfObj->pvScan0 + y * SurfObj->lDelta + x1, (BYTE) c, x2 - x1);
 }
 
@@ -320,6 +323,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DPRINT("Flip is bTopToBottom.\n");
 
             DWORD  Index;
+            LONG   SrcDelta;
 
             /* Allocate enough pixels for a column in BYTE's */
             BYTE *store = ExAllocatePoolWithTag(NonPagedPool,
@@ -341,6 +345,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               SourceLine = (PBYTE)BltInfo->DestSurface->pvScan0 +
                 (BltInfo->DestRect.top * BltInfo->DestSurface->lDelta) + BltInfo->DestRect.left  +
                 (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->DestSurface->lDelta;
+              SrcDelta = BltInfo->DestSurface->lDelta;
             }
             else
             {
@@ -349,6 +354,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
                 ((BltInfo->SourcePoint.y + BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1)
                 * BltInfo->SourceSurface->lDelta) +
                 BltInfo->SourcePoint.x;
+              SrcDelta = BltInfo->SourceSurface->lDelta;
             }
 
             /* This set the DestLine to the top line */
@@ -368,9 +374,9 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               /* Read up the column and store the pixels */
               for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
               {
-                store[Index] = (BYTE)XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *SourceBits);
+                store[Index] = OneDone ? *SourceBits : (BYTE)XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *SourceBits);
                 /* Go up a line */
-                SourceBits -= BltInfo->SourceSurface->lDelta;
+                SourceBits -= SrcDelta;
                 Index++;
               }
 
@@ -381,7 +387,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               {
                 *DestBits = store[Index];
                 /* Go down a line */
-                DestBits += BltInfo->SourceSurface->lDelta;
+                DestBits += BltInfo->DestSurface->lDelta;
                 Index++;
               }
               /* Index to next column */

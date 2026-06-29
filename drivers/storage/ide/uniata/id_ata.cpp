@@ -35,7 +35,7 @@ Revision History:
          Chuck Park (ChuckP)
 
     Some parts of code were taken from FreeBSD 4.3-6.1 ATA driver by
-         Søren Schmidt, Copyright (c) 1998-2007
+         SÃ¸ren Schmidt, Copyright (c) 1998-2007
 
     All parts of code are significantly changed/updated by
          Alter, Copyright (c) 2002-2014:
@@ -9610,13 +9610,7 @@ reject_srb:
                             inquiryData->CommandQueue = 1;
 
                             // Fill in vendor identification fields.
-#ifdef __REACTOS__
                             FillDeviceIdentificationString(inquiryData, identifyData);
-#else
-                            for (i = 0; i < 24; i += 2) {
-                                MOV_DW_SWP(inquiryData->DeviceIdentificationString[i], ((PUCHAR)identifyData->ModelNumber)[i]);
-                            }
-#endif
 
                             // Move firmware revision from IDENTIFY data to
                             // product revision in INQUIRY data.
@@ -11412,23 +11406,28 @@ AtapiRegCheckDevValue(
             swprintf(namev, L"\\SATA");
             swprintf(namex, L"Parameters%s", namev);
             val = AtapiRegCheckDevLunValue(
-                HwDeviceExtension, namex, chan, dev, Name, val);
+                HwDeviceExtension, namex, CHAN_NOT_SPECIFIED, dev, Name, val);
         }
         if(HwFlags & UNIATA_AHCI) {
             swprintf(namev, L"\\AHCI");
             swprintf(namex, L"Parameters%s", namev);
             val = AtapiRegCheckDevLunValue(
-                HwDeviceExtension, namex, chan, dev, Name, val);
+                HwDeviceExtension, namex, CHAN_NOT_SPECIFIED, dev, Name, val);
         }
         if(!(HwFlags & (UNIATA_SATA | UNIATA_AHCI))) {
             swprintf(namev, L"\\PATA");
             swprintf(namex, L"Parameters%s", namev);
             val = AtapiRegCheckDevLunValue(
-                HwDeviceExtension, namex, chan, dev, Name, val);
+                HwDeviceExtension, namex, CHAN_NOT_SPECIFIED, dev, Name, val);
         }
 
         if(deviceExtension->AdapterInterfaceType == PCIBus) {
             // PCI
+            swprintf(namev, L"\\PCIIDE");
+            swprintf(namex, L"Parameters%s", namev);
+            val = AtapiRegCheckDevLunValue(
+                HwDeviceExtension, namex, CHAN_NOT_SPECIFIED, dev, Name, val);
+
             swprintf(namev, L"\\IDE_%d", deviceExtension->DevIndex);
             swprintf(namex, L"Parameters%s", namev);
             val = AtapiRegCheckDevLunValue(
@@ -11453,6 +11452,11 @@ AtapiRegCheckDevValue(
         } else
         if(deviceExtension->AdapterInterfaceType == Isa) {
             // Isa
+            swprintf(namev, L"\\ISAIDE");
+            swprintf(namex, L"Parameters%s", namev);
+            val = AtapiRegCheckDevLunValue(
+                HwDeviceExtension, namex, CHAN_NOT_SPECIFIED, dev, Name, val);
+
             swprintf(namev, L"\\IDE_%d", deviceExtension->DevIndex+BMListLen);
             swprintf(namex, L"Parameters%s", namev);
             val = AtapiRegCheckDevLunValue(
@@ -11466,6 +11470,11 @@ AtapiRegCheckDevValue(
         } else
         if(deviceExtension->AdapterInterfaceType == MicroChannel) {
             // MicroChannel
+            swprintf(namev, L"\\MCA");
+            swprintf(namex, L"Parameters%s", namev);
+            val = AtapiRegCheckDevLunValue(
+                HwDeviceExtension, namex, CHAN_NOT_SPECIFIED, dev, Name, val);
+
             swprintf(namev, L"\\IDE_%d", deviceExtension->DevIndex+BMListLen+IsaCount);
             swprintf(namex, L"Parameters%s", namev);
             val = AtapiRegCheckDevLunValue(

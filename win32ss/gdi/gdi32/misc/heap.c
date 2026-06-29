@@ -30,17 +30,8 @@
 // global variables in a dll are process-global
 HANDLE hProcessHeap = NULL;
 
-
-PVOID
-HEAP_alloc ( DWORD len )
-{
-    /* make sure hProcessHeap gets initialized by GdiProcessSetup before we get here */
-    assert(hProcessHeap);
-    return RtlAllocateHeap ( hProcessHeap, 0, len );
-}
-
-NTSTATUS
-HEAP_strdupA2W ( LPWSTR* ppszW, LPCSTR lpszA )
+NTSTATUS FASTCALL
+HEAP_strdupA2W(_Outptr_ PWSTR* ppszW, _In_ PCSTR lpszA)
 {
     ULONG len;
     NTSTATUS Status;
@@ -54,16 +45,24 @@ HEAP_strdupA2W ( LPWSTR* ppszW, LPCSTR lpszA )
     if ( !*ppszW )
         return STATUS_NO_MEMORY;
     Status = RtlMultiByteToUnicodeN ( *ppszW, len*sizeof(WCHAR), NULL, (PCHAR)lpszA, len );
-    (*ppszW)[len] = L'\0';
+    (*ppszW)[len] = UNICODE_NULL;
     return Status;
 }
 
-
-VOID
-HEAP_free ( LPVOID memory )
+PWSTR FASTCALL
+HEAP_strdupA2W_buf(
+    _In_ PCSTR lpszA,
+    _In_ PWSTR pszStaticBuff,
+    _In_ SIZE_T cchStaticBuff)
 {
-    /* make sure hProcessHeap gets initialized by GdiProcessSetup before we get here */
-    assert(hProcessHeap);
+    if (!lpszA)
+        return NULL;
 
-    RtlFreeHeap ( hProcessHeap, 0, memory );
+    SIZE_T size = strlen(lpszA) + 1;
+    PWSTR pszW = (size < cchStaticBuff) ? pszStaticBuff : HEAP_alloc(size * sizeof(WCHAR));
+    if (!pszW)
+        return NULL;
+
+    RtlMultiByteToUnicodeN(pszW, size * sizeof(WCHAR), NULL, lpszA, size);
+    return pszW;
 }

@@ -1993,9 +1993,16 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
     StringAnalysis *analysis = NULL;
     SCRIPT_CONTROL sControl;
     SCRIPT_STATE sState;
+#ifdef __REACTOS__  // CORE-20176 & CORE-20177
+    int i, num_items = cString + 1;
+#else
     int i, num_items = 255;
+#endif
     BYTE   *BidiLevel;
     WCHAR *iString = NULL;
+#ifdef __REACTOS__  // CORE-20176 & CORE-20177
+    SCRIPT_ITEM *items;
+#endif
 
     TRACE("(%p,%p,%d,%d,%d,0x%x,%d,%p,%p,%p,%p,%p,%p)\n",
           hdc, pString, cString, cGlyphs, iCharset, dwFlags, iReqWidth,
@@ -2011,7 +2018,11 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
 
     if (!(analysis = heap_alloc_zero(sizeof(*analysis))))
         return E_OUTOFMEMORY;
+#ifdef __REACTOS__  // CORE-20176 & CORE-20177
+    if (!(analysis->pItem = heap_calloc(num_items, sizeof(*analysis->pItem))))
+#else
     if (!(analysis->pItem = heap_calloc(num_items + 1, sizeof(*analysis->pItem))))
+#endif
         goto error;
 
     /* FIXME: handle clipping */
@@ -2045,11 +2056,21 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
                        &analysis->numItems);
 
     if (FAILED(hr))
+#ifdef __REACTOS__  // CORE-20176 & CORE-20177
+        goto error;
+#else
     {
         if (hr == E_OUTOFMEMORY)
             hr = E_INVALIDARG;
         goto error;
     }
+#endif
+
+#ifdef __REACTOS__  // CORE-20176 & CORE-20177
+    /* Having as many items as codepoints is the worst case scenario, try to reclaim some memory. */
+    if ((items = heap_realloc(analysis->pItem, (analysis->numItems + 1) * sizeof(*analysis->pItem))))
+        analysis->pItem = items;
+#endif
 
     /* set back to out of memory for default goto error behaviour */
     hr = E_OUTOFMEMORY;

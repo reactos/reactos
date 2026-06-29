@@ -4,6 +4,7 @@
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
 #include <corecrt.h>
+#include <intrin.h>
 
 #ifndef _INC_CRTDBG
 #define _INC_CRTDBG

@@ -146,93 +146,275 @@ ExpDebuggerWorker(
     }
 }
 
-/*++
- * @name NtSystemDebugControl
- * @implemented
+/**
+ * @brief
+ * Perform various queries to the kernel debugger.
  *
- * Perform various queries to debugger.
- * This API is subject to test-case creation to further evaluate its
- * abilities (if needed to at all)
+ * @param[in]   Command
+ * A SYSDBG_COMMAND value describing the kernel debugger command to perform.
  *
- * See: http://www.osronline.com/showthread.cfm?link=93915
- *      http://void.ru/files/Ntexapi.h
- *      http://www.codeguru.com/code/legacy/system/ntexapi.zip
- *      http://www.securityfocus.com/bid/9694
+ * @param[in]   InputBuffer
+ * Pointer to a user-provided input command-specific buffer, whose length
+ * is given by InputBufferLength.
  *
- * @param ControlCode
- *        Description of the parameter. Wrapped to more lines on ~70th
- *        column.
+ * @param[in]   InputBufferLength
+ * The size (in bytes) of the buffer pointed by InputBuffer.
  *
- * @param InputBuffer
- *        FILLME
+ * @param[out]  OutputBuffer
+ * Pointer to a user-provided command-specific output buffer, whose length
+ * is given by OutputBufferLength.
  *
- * @param InputBufferLength
- *        FILLME
+ * @param[in]   OutputBufferLength
+ * The size (in bytes) of the buffer pointed by OutputBuffer.
  *
- * @param OutputBuffer
- *        FILLME
+ * @param[out]  ReturnLength
+ * Optional pointer to a ULONG variable that receives the actual length of
+ * data written written in the output buffer. It is always zero, except for
+ * the live dump commands where an actual non-zero length is returned.
  *
- * @param OutputBufferLength
- *        FILLME
+ * @return
+ * STATUS_SUCCESS in case of success, or a proper error code otherwise.
  *
-  * @param ReturnLength
- *        FILLME
+ * @remarks
  *
- * @return STATUS_SUCCESS in case of success, proper error code otherwise
+ * - The caller must have SeDebugPrivilege, otherwise the function fails
+ *   with STATUS_ACCESS_DENIED.
  *
- * @remarks None
+ * - Only the live dump commands: SysDbgGetTriageDump, and SysDbgGetLiveKernelDump
+ *   (Win8.1+) are available even if the debugger is disabled or absent.
  *
- *--*/
+ * - The following system-critical commands are not accessible anymore
+ *   for user-mode usage with this API on NT 5.2+ (Windows 2003 SP1 and later)
+ *   systems:
+ *
+ *   SysDbgQueryVersion,
+ *   SysDbgReadVirtual and SysDbgWriteVirtual,
+ *   SysDbgReadPhysical and SysDbgWritePhysical,
+ *   SysDbgReadControlSpace and SysDbgWriteControlSpace,
+ *   SysDbgReadIoSpace and SysDbgWriteIoSpace,
+ *   SysDbgReadMsr and SysDbgWriteMsr,
+ *   SysDbgReadBusData and SysDbgWriteBusData,
+ *   SysDbgCheckLowMemory.
+ *
+ *   For these, NtSystemDebugControl() will return STATUS_NOT_IMPLEMENTED.
+ *   They are now available from kernel-mode only with KdSystemDebugControl().
+ *
+ * @note
+ * See: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2004-2339
+ *
+ * @see KdSystemDebugControl()
+ **/
 NTSTATUS
 NTAPI
-NtSystemDebugControl(SYSDBG_COMMAND ControlCode,
-                     PVOID InputBuffer,
-                     ULONG InputBufferLength,
-                     PVOID OutputBuffer,
-                     ULONG OutputBufferLength,
-                     PULONG ReturnLength)
+NtSystemDebugControl(
+    _In_ SYSDBG_COMMAND Command,
+    _In_reads_bytes_(InputBufferLength) PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_writes_bytes_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _Out_opt_ PULONG ReturnLength)
 {
-    switch (ControlCode)
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    /* Debugger controlling requires the debug privilege */
+    if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
+        return STATUS_ACCESS_DENIED;
+
+    _SEH2_TRY
     {
-        case SysDbgQueryModuleInformation:
-        case SysDbgQueryTraceInformation:
-        case SysDbgSetTracepoint:
-        case SysDbgSetSpecialCall:
-        case SysDbgClearSpecialCalls:
-        case SysDbgQuerySpecialCalls:
-        case SysDbgQueryVersion:
-        case SysDbgReadVirtual:
-        case SysDbgWriteVirtual:
-        case SysDbgReadPhysical:
-        case SysDbgWritePhysical:
-        case SysDbgReadControlSpace:
-        case SysDbgWriteControlSpace:
-        case SysDbgReadIoSpace:
-        case SysDbgWriteIoSpace:
-        case SysDbgReadMsr:
-        case SysDbgWriteMsr:
-        case SysDbgReadBusData:
-        case SysDbgWriteBusData:
-        case SysDbgCheckLowMemory:
-        case SysDbgGetTriageDump:
-            return STATUS_NOT_IMPLEMENTED;
-        case SysDbgBreakPoint:
-        case SysDbgEnableKernelDebugger:
-        case SysDbgDisableKernelDebugger:
-        case SysDbgGetAutoKdEnable:
-        case SysDbgSetAutoKdEnable:
-        case SysDbgGetPrintBufferSize:
-        case SysDbgSetPrintBufferSize:
-        case SysDbgGetKdUmExceptionEnable:
-        case SysDbgSetKdUmExceptionEnable:
-        case SysDbgGetKdBlockEnable:
-        case SysDbgSetKdBlockEnable:
-            return KdSystemDebugControl(
-                ControlCode,
-                InputBuffer, InputBufferLength,
-                OutputBuffer, OutputBufferLength,
-                ReturnLength, KeGetPreviousMode());
-        default:
-            return STATUS_INVALID_INFO_CLASS;
+        if (PreviousMode != KernelMode)
+        {
+            if (InputBufferLength)
+                ProbeForRead(InputBuffer, InputBufferLength, sizeof(ULONG));
+            if (OutputBufferLength)
+                ProbeForWrite(OutputBuffer, OutputBufferLength, sizeof(ULONG));
+            if (ReturnLength)
+                ProbeForWriteUlong(ReturnLength);
+        }
+
+        switch (Command)
+        {
+            case SysDbgQueryModuleInformation:
+                /* Removed in WinNT4 */
+                Status = STATUS_INVALID_INFO_CLASS;
+                break;
+
+#ifdef _M_IX86
+            case SysDbgQueryTraceInformation:
+            case SysDbgSetTracepoint:
+            case SysDbgSetSpecialCall:
+            case SysDbgClearSpecialCalls:
+            case SysDbgQuerySpecialCalls:
+                UNIMPLEMENTED;
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
+#endif
+
+            case SysDbgQueryVersion:
+            case SysDbgReadVirtual:
+            case SysDbgWriteVirtual:
+            case SysDbgReadPhysical:
+            case SysDbgWritePhysical:
+            case SysDbgReadControlSpace:
+            case SysDbgWriteControlSpace:
+            case SysDbgReadIoSpace:
+            case SysDbgWriteIoSpace:
+            case SysDbgReadMsr:
+            case SysDbgWriteMsr:
+            case SysDbgReadBusData:
+            case SysDbgWriteBusData:
+            case SysDbgCheckLowMemory:
+                /* Those are implemented in KdSystemDebugControl */
+                if (InitIsWinPEMode)
+                {
+                    Status = KdSystemDebugControl(Command,
+                                                  InputBuffer, InputBufferLength,
+                                                  OutputBuffer, OutputBufferLength,
+                                                  &Length, PreviousMode);
+                }
+                else
+                {
+                    Status = STATUS_NOT_IMPLEMENTED;
+                }
+                break;
+
+            case SysDbgBreakPoint:
+                if (KdDebuggerEnabled)
+                {
+                    DbgBreakPointWithStatus(DBG_STATUS_DEBUG_CONTROL);
+                    Status = STATUS_SUCCESS;
+                }
+                else
+                {
+                    Status = STATUS_UNSUCCESSFUL;
+                }
+                break;
+
+            case SysDbgEnableKernelDebugger:
+                Status = KdEnableDebugger();
+                break;
+
+            case SysDbgDisableKernelDebugger:
+                Status = KdDisableDebugger();
+                break;
+
+            case SysDbgGetAutoKdEnable:
+                if (OutputBufferLength != sizeof(BOOLEAN))
+                {
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                }
+                else
+                {
+                    *(PBOOLEAN)OutputBuffer = KdAutoEnableOnEvent;
+                    Status = STATUS_SUCCESS;
+                }
+                break;
+
+            case SysDbgSetAutoKdEnable:
+                if (InputBufferLength != sizeof(BOOLEAN))
+                {
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                }
+                else if (KdPitchDebugger)
+                {
+                    Status = STATUS_ACCESS_DENIED;
+                }
+                else
+                {
+                    KdAutoEnableOnEvent = *(PBOOLEAN)InputBuffer;
+                    Status = STATUS_SUCCESS;
+                }
+                break;
+
+            case SysDbgGetPrintBufferSize:
+                if (OutputBufferLength != sizeof(ULONG))
+                {
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                }
+                else
+                {
+                    /* Return buffer size only if KD is enabled */
+                    *(PULONG)OutputBuffer = KdPitchDebugger ? 0 : KdPrintBufferSize;
+                    Status = STATUS_SUCCESS;
+                }
+                break;
+
+            case SysDbgSetPrintBufferSize:
+                UNIMPLEMENTED;
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
+
+            case SysDbgGetKdUmExceptionEnable:
+                if (OutputBufferLength != sizeof(BOOLEAN))
+                {
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                }
+                else
+                {
+                    /* Unfortunately, the internal flag says if UM exceptions are disabled */
+                    *(PBOOLEAN)OutputBuffer = !KdIgnoreUmExceptions;
+                    Status = STATUS_SUCCESS;
+                }
+                break;
+
+            case SysDbgSetKdUmExceptionEnable:
+                if (InputBufferLength != sizeof(BOOLEAN))
+                {
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                }
+                else if (KdPitchDebugger)
+                {
+                    Status = STATUS_ACCESS_DENIED;
+                }
+                else
+                {
+                    /* Unfortunately, the internal flag says if UM exceptions are disabled */
+                    KdIgnoreUmExceptions = !*(PBOOLEAN)InputBuffer;
+                    Status = STATUS_SUCCESS;
+                }
+                break;
+
+            case SysDbgGetTriageDump:
+                UNIMPLEMENTED;
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
+
+            case SysDbgGetKdBlockEnable:
+                if (OutputBufferLength != sizeof(BOOLEAN))
+                {
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                }
+                else
+                {
+                    *(PBOOLEAN)OutputBuffer = KdBlockEnable;
+                    Status = STATUS_SUCCESS;
+                }
+                break;
+
+            case SysDbgSetKdBlockEnable:
+                Status = KdChangeOption(KD_OPTION_SET_BLOCK_ENABLE,
+                                        InputBufferLength,
+                                        InputBuffer,
+                                        OutputBufferLength,
+                                        OutputBuffer,
+                                        &Length);
+                break;
+
+            default:
+                Status = STATUS_INVALID_INFO_CLASS;
+                break;
+        }
+
+        if (ReturnLength)
+            *ReturnLength = Length;
+
+        _SEH2_YIELD(return Status);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 }

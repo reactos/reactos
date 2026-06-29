@@ -79,11 +79,11 @@ _dump_context(PCONTEXT pc)
     DbgPrint("R12: %I64x   R13: %I64x   R14: %I64x   R15: %I64x\n", pc->R12, pc->R13, pc->R14, pc->R15);
     DbgPrint("EFLAGS: %.8x\n", pc->EFlags);
 #elif defined(_M_ARM)
-    DbgPrint("PC:  %08lx   LR:  %08lx   SP:  %08lx\n", pc->Pc);
+    DbgPrint("PC:  %08lx   LR:  %08lx   SP:  %08lx\n", pc->Pc, pc->Lr, pc->Sp);
     DbgPrint("R0:  %08lx   R1:  %08lx   R2:  %08lx   R3:  %08lx\n", pc->R0, pc->R1, pc->R2, pc->R3);
     DbgPrint("R4:  %08lx   R5:  %08lx   R6:  %08lx   R7:  %08lx\n", pc->R4, pc->R5, pc->R6, pc->R7);
     DbgPrint("R8:  %08lx   R9:  %08lx   R10: %08lx   R11: %08lx\n", pc->R8, pc->R9, pc->R10, pc->R11);
-    DbgPrint("R12: %08lx   CPSR: %08lx  FPSCR: %08lx\n", pc->R12, pc->Cpsr, pc->R1, pc->Fpscr, pc->R3);
+    DbgPrint("R12: %08lx   CPSR: %08lx  FPSCR: %08lx\n", pc->R12, pc->Cpsr, pc->Fpscr);
 #else
     #error "Unknown architecture"
 #endif
@@ -489,8 +489,8 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
     //
     // Since Windows XP/2003, we have the ReportFault API available.
     // See http://www.clausbrod.de/twiki/pub/Blog/DefinePrivatePublic20070616/reportfault.cpp
-    // and https://msdn.microsoft.com/en-us/library/windows/desktop/bb513616(v=vs.85).aspx
-    // and the legacy ReportFault API: https://msdn.microsoft.com/en-us/library/windows/desktop/bb513615(v=vs.85).aspx
+    // and https://learn.microsoft.com/en-us/windows/win32/wer/using-wer
+    // and the legacy ReportFault API: https://learn.microsoft.com/en-us/windows/win32/api/errorrep/nf-errorrep-reportfault
     //
     // NOTE: Starting Vista+, the fault API is constituted of the WerXXX functions.
     //
@@ -541,7 +541,7 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
      * so that we can give it control over the process being debugged,
      * by passing it the exception.
      *
-     * See https://msdn.microsoft.com/en-us/library/ms809754.aspx
+     * See https://learn.microsoft.com/en-us/previous-versions/ms809754(v=msdn.10)
      * and http://www.debuginfo.com/articles/ntsdwatson.html
      * and https://sourceware.org/ml/gdb-patches/2012-08/msg00893.html
      * for more details.

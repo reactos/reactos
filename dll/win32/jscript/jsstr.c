@@ -45,7 +45,7 @@ void jsstr_free(jsstr_t *str)
 {
     switch(jsstr_tag(str)) {
     case JSSTR_HEAP:
-        heap_free(jsstr_as_heap(str)->buf);
+        free(jsstr_as_heap(str)->buf);
         break;
     case JSSTR_ROPE: {
         jsstr_rope_t *rope = jsstr_as_rope(str);
@@ -57,7 +57,7 @@ void jsstr_free(jsstr_t *str)
         break;
     }
 
-    heap_free(str);
+    free(str);
 }
 
 static inline void jsstr_init(jsstr_t *str, unsigned len, jsstr_tag_t tag)
@@ -73,7 +73,7 @@ jsstr_t *jsstr_alloc_buf(unsigned len, WCHAR **buf)
     if(len > JSSTR_MAX_LENGTH)
         return NULL;
 
-    ret = heap_alloc(FIELD_OFFSET(jsstr_inline_t, buf[len+1]));
+    ret = malloc(FIELD_OFFSET(jsstr_inline_t, buf[len+1]));
     if(!ret)
         return NULL;
 
@@ -120,8 +120,11 @@ void jsstr_extract(jsstr_t *str, unsigned off, unsigned len, WCHAR *buf)
         memcpy(buf, jsstr_as_heap(str)->buf+off, len*sizeof(WCHAR));
         return;
     case JSSTR_ROPE:
+#ifdef __REACTOS__
         jsstr_rope_extract(jsstr_as_rope(str), off, len, buf);
-        return;
+#else
+        return jsstr_rope_extract(jsstr_as_rope(str), off, len, buf);
+#endif
     }
 }
 
@@ -235,7 +238,7 @@ jsstr_t *jsstr_concat(jsstr_t *str1, jsstr_t *str2)
             if(len1+len2 > JSSTR_MAX_LENGTH)
                 return NULL;
 
-            rope = heap_alloc(sizeof(*rope));
+            rope = malloc(sizeof(*rope));
             if(!rope)
                 return NULL;
 
@@ -263,7 +266,7 @@ const WCHAR *jsstr_rope_flatten(jsstr_rope_t *str)
 {
     WCHAR *buf;
 
-    buf = heap_alloc((jsstr_length(&str->str)+1) * sizeof(WCHAR));
+    buf = malloc((jsstr_length(&str->str)+1) * sizeof(WCHAR));
     if(!buf)
         return NULL;
 
@@ -300,22 +303,29 @@ jsstr_t *jsstr_null_bstr(void)
     return jsstr_addref(null_bstr_str);
 }
 
-BOOL is_null_bstr(jsstr_t *str)
+HRESULT jsstr_to_bstr(jsstr_t *str, BSTR *r)
 {
-    return str == null_bstr_str;
+    if(str == null_bstr_str) {
+        *r = NULL;
+        return S_OK;
+    }
+
+    if(!(*r = SysAllocStringLen(NULL, jsstr_length(str))))
+        return E_OUTOFMEMORY;
+
+    jsstr_flush(str, *r);
+    return S_OK;
 }
 
 BOOL init_strings(void)
 {
-    static const WCHAR NaNW[] = { 'N','a','N',0 };
-    static const WCHAR undefinedW[] = {'u','n','d','e','f','i','n','e','d',0};
     WCHAR *ptr;
 
     if(!(empty_str = jsstr_alloc_buf(0, &ptr)))
         return FALSE;
-    if(!(nan_str = jsstr_alloc(NaNW)))
+    if(!(nan_str = jsstr_alloc(L"NaN")))
         return FALSE;
-    if(!(undefined_str = jsstr_alloc(undefinedW)))
+    if(!(undefined_str = jsstr_alloc(L"undefined")))
         return FALSE;
     if(!(null_bstr_str = jsstr_alloc_buf(0, &ptr)))
         return FALSE;

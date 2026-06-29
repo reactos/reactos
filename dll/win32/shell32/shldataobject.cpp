@@ -28,7 +28,7 @@ static_assert(sizeof(DataObjectAttributes) == 0xc, "Unexpected struct size!");
 static
 HRESULT _BindToObject(PCUIDLIST_ABSOLUTE pidl, CComPtr<IShellFolder>& spFolder)
 {
-    return SHBindToObject(NULL, pidl, IID_PPV_ARG(IShellFolder, &spFolder));
+    return SHBindToObject(NULL, pidl, NULL, IID_PPV_ARG(IShellFolder, &spFolder));
 }
 
 EXTERN_C
@@ -77,8 +77,9 @@ HRESULT WINAPI SHGetAttributesFromDataObject(IDataObject* pDataObject, DWORD dwA
                     data.dwAttributes = rgfInOut & dwQueryAttributes;
                     data.cItems = apidl.GetSize();
 
-                    hr = DataObject_SetData(pDataObject, g_DataObjectAttributes, &data, sizeof(data));
-                    FAILED_UNEXPECTEDLY(hr);
+                    HRESULT hr2;
+                    hr2 = DataObject_SetData(pDataObject, g_DataObjectAttributes, &data, sizeof(data));
+                    FAILED_UNEXPECTEDLY(hr2); // Report cache failure but don't fail the function
                 }
             }
         }
@@ -97,6 +98,15 @@ HRESULT WINAPI SHGetAttributesFromDataObject(IDataObject* pDataObject, DWORD dwA
     return hr;
 }
 
+HRESULT DataObject_GetHIDACount(IDataObject *pdo)
+{
+    if (!pdo)
+        return E_INVALIDARG;
+    CDataObjectHIDA cida(pdo);
+    HRESULT hr = cida.hr();
+    return SUCCEEDED(hr) ? cida->cidl : hr;
+}
+
 PIDLIST_ABSOLUTE SHELL_CIDA_ILCloneFull(_In_ const CIDA *pCIDA, _In_ UINT Index)
 {
     if (Index < pCIDA->cidl)
@@ -110,4 +120,25 @@ PIDLIST_ABSOLUTE SHELL_DataObject_ILCloneFullItem(_In_ IDataObject *pDO, _In_ UI
         return NULL;
     CDataObjectHIDA cida(pDO);
     return SUCCEEDED(cida.hr()) ? SHELL_CIDA_ILCloneFull(cida, Index) : NULL;
+}
+
+HRESULT SHELL_CloneDataObject(_In_ IDataObject *pDO, _Out_ IDataObject **ppDO)
+{
+    *ppDO = NULL;
+    CDataObjectHIDA cida(pDO);
+    HRESULT hr = cida.hr();
+    if (SUCCEEDED(hr))
+    {
+        CCidaChildArrayHelper items(cida);
+        if (FAILED(hr = items.hr()))
+            return hr;
+        hr = SHCreateFileDataObject(HIDA_GetPIDLFolder(cida), cida->cidl, items.GetItems(), NULL, ppDO);
+        if (SUCCEEDED(hr))
+        {
+            POINT pt;
+            if (SUCCEEDED(DataObject_GetOffset(pDO, &pt)))
+                DataObject_SetOffset(*ppDO, &pt);
+        }
+    }
+    return hr;
 }

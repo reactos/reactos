@@ -541,7 +541,7 @@ VOID CmosInitialize(VOID)
 
     /*
      * Conventional memory size is 640 kB,
-     * see: http://webpages.charter.net/danrollins/techhelp/0184.HTM
+     * see: http://www.techhelpmanual.com/184-int_12h__conventional_memory_size.html
      * and see Ralf Brown: http://www.ctyme.com/intr/rb-0598.htm
      * for more information.
      */

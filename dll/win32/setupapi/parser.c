@@ -2,7 +2,7 @@
  * INF file parsing
  *
  * Copyright 2002 Alexandre Julliard for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1235,11 +1235,18 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
 
     TRACE("%s %s %lx %p\n", debugstr_w(name), debugstr_w(class), style, error);
 
+#ifdef __REACTOS__
     if (style & ~(INF_STYLE_OLDNT | INF_STYLE_WIN4))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return (HINF)INVALID_HANDLE_VALUE;
     }
+    if (!name)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return (HINF)INVALID_HANDLE_VALUE;
+    }
+#endif // __REACTOS__
 
     if (strchrW( name, '\\' ) || strchrW( name, '/' ))
     {
@@ -1995,6 +2002,16 @@ BOOL WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer,
     field = &file->fields[line->first_field + index];
     for (i = index; i < line->nb_fields; i++, field++)
     {
+#ifdef __REACTOS__ /* The HEX parser from Wine is broken */
+        errno = 0;
+        ULONG value = wcstoul(field->text, NULL, 16);
+        if (value > 255 || errno != 0)
+        {
+            SetLastError( ERROR_INVALID_DATA );
+            return FALSE;
+        }
+        buffer[i - index] = (BYTE)value;
+#else
         const WCHAR *p;
         DWORD value = 0;
         for (p = field->text; *p && isxdigitW(*p); p++)
@@ -2008,6 +2025,7 @@ BOOL WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer,
             else value |= (tolowerW(*p) - 'a' + 10);
         }
         buffer[i - index] = value;
+#endif
     }
     if (TRACE_ON(setupapi))
     {
@@ -2325,6 +2343,12 @@ SetupDiGetINFClassW(
 
     TRACE("%s %p %p %ld %p\n", debugstr_w(InfName), ClassGuid,
         ClassName, ClassNameSize, RequiredSize);
+
+    if (!InfName || !ClassGuid || !ClassName || ClassNameSize == 0)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     /* Open .inf file */
     hInf = SetupOpenInfFileW(InfName, NULL, INF_STYLE_WIN4, NULL);

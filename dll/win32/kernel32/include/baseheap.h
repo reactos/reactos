@@ -24,7 +24,7 @@
 //
 // Apart from MSDN, a wonderful source of information about how this works is
 // available on Raymond's blog, in a 4-parter series starting at:
-// http://blogs.msdn.com/oldnewthing/archive/2004/11/04/252258.aspx.
+// https://devblogs.microsoft.com/oldnewthing/20041104-00/?p=37393 .
 //
 // Finally, as Raymond points out, be aware that some applications depend on
 // the way this implementation was done, since global memory handles are a

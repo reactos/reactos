@@ -4,7 +4,10 @@ include(ExternalProject)
 function(setup_host_tools)
     list(APPEND HOST_TOOLS asmpp bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink txt2nls utf16le xml2sdb)
     if(NOT MSVC)
-        list(APPEND HOST_TOOLS rsym pefixup)
+        list(APPEND HOST_TOOLS pefixup)
+        if (ARCH STREQUAL "i386")
+            list(APPEND HOST_TOOLS rsym)
+        endif()
     endif()
     if ((ARCH STREQUAL "amd64") AND (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
         execute_process(
@@ -91,6 +94,10 @@ function(setup_host_tools)
             )
     endif()
 
+    if(NOT DEFINED HOST_BUILD_TYPE)
+        set(HOST_BUILD_TYPE Debug)
+    endif()
+
     ExternalProject_Add(host-tools
         SOURCE_DIR ${REACTOS_SOURCE_DIR}
         PREFIX ${REACTOS_BINARY_DIR}/host-tools
@@ -102,6 +109,8 @@ function(setup_host_tools)
             -DCMAKE_INSTALL_PREFIX=${REACTOS_BINARY_DIR}/host-tools
             -DTOOLS_FOLDER=${REACTOS_BINARY_DIR}/host-tools/bin
             -DTARGET_COMPILER_ID=${CMAKE_C_COMPILER_ID}
+            -DTARGET_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_BUILD_TYPE=${HOST_BUILD_TYPE}
             ${CMAKE_HOST_TOOLS_EXTRA_ARGS}
         BUILD_ALWAYS TRUE
         INSTALL_COMMAND ${CMAKE_COMMAND} -E true

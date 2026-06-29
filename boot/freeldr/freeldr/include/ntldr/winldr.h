@@ -43,6 +43,43 @@ typedef struct _ARC_DISK_SIGNATURE_EX
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+/* The boot options are mutually exclusive */
+enum SAFEBOOT_MODE
+{
+    NO_OPTION = 0,
+
+    SAFEBOOT,
+    SAFEBOOT_NETWORK,
+    SAFEBOOT_ALTSHELL,
+    SAFEBOOT_DSREPAIR,
+
+    LKG_CONFIG, // TODO: Make it exclusive? Or allow it to be combined with SafeBoot?
+};
+extern enum SAFEBOOT_MODE BootOptionChoice;
+
+#if DBG && defined(_M_IX86) // x86 *ONLY*: HAL/Kernel auto-detection override
+#define BOOT_AUTODETECT 0
+#define BOOT_ACPI_APIC  1
+#define BOOT_ACPI_SMP   2
+extern UCHAR HALAutoDetectMode;
+#endif
+
+#define BOOT_LOGGING    (1 << 0)
+#define BOOT_VGA_MODE   (1 << 1)
+#define BOOT_DEBUGGING  (1 << 2)
+extern LOGICAL BootFlags;
+
+VOID
+MenuNTOptions(
+    _Inout_ OperatingSystemItem* OperatingSystem);
+
+VOID
+AppendBootTimeOptions(
+    _Inout_z_bytecount_(BootOptionsSize)
+         PSTR BootOptions,
+    _In_ SIZE_T BootOptionsSize);
+
+
 ARC_STATUS
 LoadAndBootWindows(
     IN ULONG Argc,

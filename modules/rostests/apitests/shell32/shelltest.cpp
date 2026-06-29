@@ -1,6 +1,6 @@
 #include "shelltest.h"
 
-// + Adapted from https://blogs.msdn.microsoft.com/oldnewthing/20130503-00/?p=4463/
+// + Adapted from https://devblogs.microsoft.com/oldnewthing/20130503-00/?p=4463
 // In short: We want to create an IDLIST from an item that does not exist,
 // so we have to provide WIN32_FIND_DATAW in a bind context.
 // If we don't, the FS will be queried, and we do not get a valid IDLIST for a non-existing path.
@@ -92,4 +92,4 @@ PathToIDList(LPCWSTR pszPath, ITEMIDLIST** ppidl)
     }
 }
 
-// - Adapted from https://blogs.msdn.microsoft.com/oldnewthing/20130503-00/?p=4463/
+// - Adapted from https://devblogs.microsoft.com/oldnewthing/20130503-00/?p=4463

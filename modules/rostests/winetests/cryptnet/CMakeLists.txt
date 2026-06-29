@@ -1,5 +1,7 @@
 
-add_executable(cryptnet_winetest cryptnet.c testlist.c)
+add_executable(cryptnet_winetest cryptnet.c)
 set_module_type(cryptnet_winetest win32cui)
+target_compile_definitions(cryptnet_winetest PRIVATE USE_WINE_TODOS)
+target_link_libraries(cryptnet_winetest winetestlib)
 add_importlibs(cryptnet_winetest cryptnet crypt32 msvcrt kernel32)
 add_rostests_file(TARGET cryptnet_winetest)

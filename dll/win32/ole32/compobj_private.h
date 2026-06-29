@@ -35,310 +35,115 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wtypes.h"
+#ifdef __REACTOS__
+#include <ole2.h>
+#endif
 #include "dcom.h"
 #include "winreg.h"
 #include "winternl.h"
 
-struct apartment;
-typedef struct apartment APARTMENT;
-typedef struct LocalServer LocalServer;
-
 DEFINE_OLEGUID( CLSID_DfMarshal, 0x0000030b, 0, 0 );
-
-/* signal to stub manager that this is a rem unknown object */
-#define MSHLFLAGSP_REMUNKNOWN   0x80000000
-
-/* Thread-safety Annotation Legend:
- *
- * RO    - The value is read only. It never changes after creation, so no
- *         locking is required.
- * LOCK  - The value is written to only using Interlocked* functions.
- * CS    - The value is read or written to inside a critical section.
- *         The identifier following "CS" is the specific critical section that
- *         must be used.
- * MUTEX - The value is read or written to with a mutex held.
- *         The identifier following "MUTEX" is the specific mutex that
- *         must be used.
- */
-
-typedef enum ifstub_state
-{
-    STUBSTATE_NORMAL_MARSHALED,
-    STUBSTATE_NORMAL_UNMARSHALED,
-    STUBSTATE_TABLE_WEAK_MARSHALED,
-    STUBSTATE_TABLE_WEAK_UNMARSHALED,
-    STUBSTATE_TABLE_STRONG,
-} STUB_STATE;
-
-/* an interface stub */
-struct ifstub   
-{
-    struct list       entry;      /* entry in stub_manager->ifstubs list (CS stub_manager->lock) */
-    IRpcStubBuffer   *stubbuffer; /* RO */
-    IID               iid;        /* RO */
-    IPID              ipid;       /* RO */
-    IUnknown         *iface;      /* RO */
-    MSHLFLAGS         flags;      /* so we can enforce process-local marshalling rules (RO) */
-    IRpcChannelBuffer*chan;       /* channel passed to IRpcStubBuffer::Invoke (RO) */
-};
-
-
-/* stub managers hold refs on the object and each interface stub */
-struct stub_manager
-{
-    struct list       entry;      /* entry in apartment stubmgr list (CS apt->cs) */
-    struct list       ifstubs;    /* list of active ifstubs for the object (CS lock) */
-    CRITICAL_SECTION  lock;
-    APARTMENT        *apt;        /* owning apt (RO) */
-
-    ULONG             extrefs;    /* number of 'external' references (CS lock) */
-    ULONG             refs;       /* internal reference count (CS apt->cs) */
-    ULONG             weakrefs;   /* number of weak references (CS lock) */
-    OID               oid;        /* apartment-scoped unique identifier (RO) */
-    IUnknown         *object;     /* the object we are managing the stub for (RO) */
-    ULONG             next_ipid;  /* currently unused (LOCK) */
-    OXID_INFO         oxid_info;  /* string binding, ipid of rem unknown and other information (RO) */
-
-    IExternalConnection *extern_conn;
-
-    /* We need to keep a count of the outstanding marshals, so we can enforce the
-     * marshalling rules (ie, you can only unmarshal normal marshals once). Note
-     * that these counts do NOT include unmarshalled interfaces, once a stream is
-     * unmarshalled and a proxy set up, this count is decremented.
-     */
-
-    ULONG             norm_refs;  /* refcount of normal marshals (CS lock) */
-    BOOL              disconnected; /* CoDisconnectObject has been called (CS lock) */
-};
-
-/* imported interface proxy */
-struct ifproxy
-{
-  struct list entry;       /* entry in proxy_manager list (CS parent->cs) */
-  struct proxy_manager *parent; /* owning proxy_manager (RO) */
-  LPVOID iface;            /* interface pointer (RO) */
-  STDOBJREF stdobjref;     /* marshal data that represents this object (RO) */
-  IID iid;                 /* interface ID (RO) */
-  LPRPCPROXYBUFFER proxy;  /* interface proxy (RO) */
-  ULONG refs;              /* imported (public) references (LOCK) */
-  IRpcChannelBuffer *chan; /* channel to object (CS parent->cs) */
-};
-
-struct apartment
-{
-  struct list entry;
-
-  LONG  refs;              /* refcount of the apartment (LOCK) */
-  BOOL multi_threaded;     /* multi-threaded or single-threaded apartment? (RO) */
-  DWORD tid;               /* thread id (RO) */
-  OXID oxid;               /* object exporter ID (RO) */
-  LONG ipidc;              /* interface pointer ID counter, starts at 1 (LOCK) */
-  CRITICAL_SECTION cs;     /* thread safety */
-  struct list proxies;     /* imported objects (CS cs) */
-  struct list stubmgrs;    /* stub managers for exported objects (CS cs) */
-  BOOL remunk_exported;    /* has the IRemUnknown interface for this apartment been created yet? (CS cs) */
-  LONG remoting_started;   /* has the RPC system been started for this apartment? (LOCK) */
-  struct list loaded_dlls; /* list of dlls loaded by this apartment (CS cs) */
-  DWORD host_apt_tid;      /* thread ID of apartment hosting objects of differing threading model (CS cs) */
-  HWND host_apt_hwnd;      /* handle to apartment window of host apartment (CS cs) */
-  LocalServer *local_server; /* A marshallable object exposing local servers (CS cs) */
-  BOOL being_destroyed;    /* is currently being destroyed */
-
-  /* FIXME: OIDs should be given out by RPCSS */
-  OID oidc;                /* object ID counter, starts at 1, zero is invalid OID (CS cs) */
-
-  /* STA-only fields */
-  HWND win;                /* message window (LOCK) */
-  LPMESSAGEFILTER filter;  /* message filter (CS cs) */
-  BOOL main;               /* is this a main-threaded-apartment? (RO) */
-};
-
-struct init_spy
-{
-    struct list entry;
-    IInitializeSpy *spy;
-    unsigned int id;
-};
 
 /* this is what is stored in TEB->ReservedForOle */
 struct oletls
 {
     struct apartment *apt;
-    IErrorInfo       *errorinfo;   /* see errorinfo.c */
-    IUnknown         *state;       /* see CoSetState */
-    DWORD             apt_mask;    /* apartment mask (+0Ch on x86) */
-    void            *unknown0;
-    DWORD            inits;        /* number of times CoInitializeEx called */
-    DWORD            ole_inits;    /* number of times OleInitialize called */
-    GUID             causality_id; /* unique identifier for each COM call */
-    LONG             pending_call_count_client; /* number of client calls pending */
-    LONG             pending_call_count_server; /* number of server calls pending */
-    DWORD            unknown;
-    IObjContext     *context_token; /* (+38h on x86) */
-    IUnknown        *call_state;    /* current call context (+3Ch on x86) */
-    DWORD            unknown2[46];
-    IUnknown        *cancel_object; /* cancel object set by CoSetCancelObject (+F8h on x86) */
-    struct list      spies;         /* Spies installed with CoRegisterInitializeSpy */
-    DWORD            spies_lock;
+    IErrorInfo       *errorinfo;     /* see errorinfo.c */
+    DWORD             thread_seqid;  /* returned with CoGetCurrentProcess */
+    DWORD             flags;         /* tlsdata_flags (+0Ch on x86) */
+    void             *unknown0;
+    DWORD             inits;         /* number of times CoInitializeEx called */
+    DWORD             ole_inits;     /* number of times OleInitialize called */
+    GUID              causality_id;  /* unique identifier for each COM call */
+    LONG              pending_call_count_client; /* number of client calls pending */
+    LONG              pending_call_count_server; /* number of server calls pending */
+    DWORD             unknown;
+    IObjContext      *context_token; /* (+38h on x86) */
+    IUnknown         *call_state;    /* current call context (+3Ch on x86) */
+    DWORD             unknown2[46];
+    IUnknown         *cancel_object; /* cancel object set by CoSetCancelObject (+F8h on x86) */
+    IUnknown         *state;         /* see CoSetState */
+    struct list       spies;         /* Spies installed with CoRegisterInitializeSpy */
+    DWORD             spies_lock;
+    DWORD             cancelcount;
+    CO_MTA_USAGE_COOKIE implicit_mta_cookie; /* mta referenced by roapi from sta thread */
 };
 
-
 /* Global Interface Table Functions */
-extern IGlobalInterfaceTable *get_std_git(void) DECLSPEC_HIDDEN;
-extern void release_std_git(void) DECLSPEC_HIDDEN;
-extern HRESULT StdGlobalInterfaceTable_GetFactory(LPVOID *ppv) DECLSPEC_HIDDEN;
+extern void release_std_git(void);
+extern HRESULT StdGlobalInterfaceTable_GetFactory(LPVOID *ppv);
 
-HRESULT COM_OpenKeyForCLSID(REFCLSID clsid, LPCWSTR keyname, REGSAM access, HKEY *key) DECLSPEC_HIDDEN;
-HRESULT COM_OpenKeyForAppIdFromCLSID(REFCLSID clsid, REGSAM access, HKEY *subkey) DECLSPEC_HIDDEN;
-HRESULT MARSHAL_GetStandardMarshalCF(LPVOID *ppv) DECLSPEC_HIDDEN;
-HRESULT FTMarshalCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
-
-/* Stub Manager */
-
-ULONG stub_manager_int_release(struct stub_manager *This) DECLSPEC_HIDDEN;
-ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs, BOOL tableweak) DECLSPEC_HIDDEN;
-ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tableweak, BOOL last_unlock_releases) DECLSPEC_HIDDEN;
-struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, REFIID iid,
-     DWORD dest_context, void *dest_context_data, MSHLFLAGS flags) DECLSPEC_HIDDEN;
-struct ifstub *stub_manager_find_ifstub(struct stub_manager *m, REFIID iid, MSHLFLAGS flags) DECLSPEC_HIDDEN;
-struct stub_manager *get_stub_manager(APARTMENT *apt, OID oid) DECLSPEC_HIDDEN;
-struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, IUnknown *object, BOOL alloc) DECLSPEC_HIDDEN;
-BOOL stub_manager_notify_unmarshal(struct stub_manager *m, const IPID *ipid) DECLSPEC_HIDDEN;
-BOOL stub_manager_is_table_marshaled(struct stub_manager *m, const IPID *ipid) DECLSPEC_HIDDEN;
-void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const IPID *ipid, BOOL tableweak) DECLSPEC_HIDDEN;
-void stub_manager_disconnect(struct stub_manager *m) DECLSPEC_HIDDEN;
-HRESULT ipid_get_dispatch_params(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **manager, IRpcStubBuffer **stub,
-                                 IRpcChannelBuffer **chan, IID *iid, IUnknown **iface) DECLSPEC_HIDDEN;
-HRESULT start_apartment_remote_unknown(APARTMENT *apt) DECLSPEC_HIDDEN;
-
-HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, DWORD dest_context, void *dest_context_data, MSHLFLAGS mshlflags) DECLSPEC_HIDDEN;
-
-/* RPC Backend */
-
-struct dispatch_params;
-
-void    RPC_StartRemoting(struct apartment *apt) DECLSPEC_HIDDEN;
-HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid,
-                                const OXID_INFO *oxid_info, const IID *iid,
-                                DWORD dest_context, void *dest_context_data,
-                                IRpcChannelBuffer **chan, APARTMENT *apt) DECLSPEC_HIDDEN;
-HRESULT RPC_CreateServerChannel(DWORD dest_context, void *dest_context_data, IRpcChannelBuffer **chan) DECLSPEC_HIDDEN;
-void    RPC_ExecuteCall(struct dispatch_params *params) DECLSPEC_HIDDEN;
-HRESULT RPC_RegisterInterface(REFIID riid) DECLSPEC_HIDDEN;
-void    RPC_UnregisterInterface(REFIID riid, BOOL wait) DECLSPEC_HIDDEN;
-HRESULT RPC_StartLocalServer(REFCLSID clsid, IStream *stream, BOOL multi_use, void **registration) DECLSPEC_HIDDEN;
-void    RPC_StopLocalServer(void *registration) DECLSPEC_HIDDEN;
-HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv) DECLSPEC_HIDDEN;
-HRESULT RPC_RegisterChannelHook(REFGUID rguid, IChannelHook *hook) DECLSPEC_HIDDEN;
-void    RPC_UnregisterAllChannelHooks(void) DECLSPEC_HIDDEN;
-HRESULT RPC_ResolveOxid(OXID oxid, OXID_INFO *oxid_info) DECLSPEC_HIDDEN;
-
-/* This function initialize the Running Object Table */
-HRESULT WINAPI RunningObjectTableImpl_Initialize(void) DECLSPEC_HIDDEN;
-
-/* This function uninitialize the Running Object Table */
-HRESULT WINAPI RunningObjectTableImpl_UnInitialize(void) DECLSPEC_HIDDEN;
+HRESULT COM_OpenKeyForCLSID(REFCLSID clsid, LPCWSTR keyname, REGSAM access, HKEY *key);
+HRESULT MARSHAL_GetStandardMarshalCF(LPVOID *ppv);
+HRESULT FTMarshalCF_Create(REFIID riid, LPVOID *ppv);
 
 /* Drag and drop */
-void OLEDD_UnInitialize(void) DECLSPEC_HIDDEN;
+void OLEDD_UnInitialize(void);
 
-/* Apartment Functions */
-
-APARTMENT *apartment_findfromoxid(OXID oxid, BOOL ref) DECLSPEC_HIDDEN;
-APARTMENT *apartment_findfromtid(DWORD tid) DECLSPEC_HIDDEN;
-DWORD apartment_release(struct apartment *apt) DECLSPEC_HIDDEN;
-HRESULT apartment_disconnectproxies(struct apartment *apt) DECLSPEC_HIDDEN;
-static inline HRESULT apartment_getoxid(const struct apartment *apt, OXID *oxid)
-{
-    *oxid = apt->oxid;
-    return S_OK;
-}
-HRESULT apartment_createwindowifneeded(struct apartment *apt) DECLSPEC_HIDDEN;
-HWND apartment_getwindow(const struct apartment *apt) DECLSPEC_HIDDEN;
-HRESULT enter_apartment(struct oletls *info, DWORD model) DECLSPEC_HIDDEN;
-void leave_apartment(struct oletls *info) DECLSPEC_HIDDEN;
-APARTMENT *apartment_get_current_or_mta(void) DECLSPEC_HIDDEN;
-
-/* DCOM messages used by the apartment window (not compatible with native) */
-#define DM_EXECUTERPC   (WM_USER + 0) /* WPARAM = 0, LPARAM = (struct dispatch_params *) */
-#define DM_HOSTOBJECT   (WM_USER + 1) /* WPARAM = 0, LPARAM = (struct host_object_params *) */
-
-/*
- * Per-thread values are stored in the TEB on offset 0xF80
- */
+extern HRESULT WINAPI InternalTlsAllocData(struct oletls **tlsdata);
 
 /* will create if necessary */
 static inline struct oletls *COM_CurrentInfo(void)
 {
+    struct oletls *oletls;
+
     if (!NtCurrentTeb()->ReservedForOle)
-    {
-        struct oletls *oletls = heap_alloc_zero(sizeof(*oletls));
-        if (oletls)
-            list_init(&oletls->spies);
-        NtCurrentTeb()->ReservedForOle = oletls;
-    }
+        InternalTlsAllocData(&oletls);
 
     return NtCurrentTeb()->ReservedForOle;
 }
 
-static inline APARTMENT* COM_CurrentApt(void)
+static inline struct apartment * COM_CurrentApt(void)
 {  
     return COM_CurrentInfo()->apt;
 }
 
-static inline GUID COM_CurrentCausalityId(void)
-{
-    struct oletls *info = COM_CurrentInfo();
-    if (!info)
-        return GUID_NULL;
-    if (IsEqualGUID(&info->causality_id, &GUID_NULL))
-        CoCreateGuid(&info->causality_id);
-    return info->causality_id;
-}
-
-/* helpers for debugging */
-# define DEBUG_SET_CRITSEC_NAME(cs, name) (cs)->DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": " name)
-# define DEBUG_CLEAR_CRITSEC_NAME(cs) (cs)->DebugInfo->Spare[0] = 0
-
 #define CHARS_IN_GUID 39 /* including NULL */
 
-#define WINE_CLSCTX_DONT_HOST   0x80000000
-
 /* from dlldata.c */
-extern HINSTANCE hProxyDll DECLSPEC_HIDDEN;
-extern HRESULT WINAPI OLE32_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI OLE32_DllRegisterServer(void) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI OLE32_DllUnregisterServer(void) DECLSPEC_HIDDEN;
+extern HINSTANCE hProxyDll;
+extern HRESULT WINAPI OLE32_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv);
+extern HRESULT WINAPI OLE32_DllRegisterServer(void);
+extern HRESULT WINAPI OLE32_DllUnregisterServer(void);
 
-extern HRESULT Handler_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
-extern HRESULT HandlerCF_Create(REFCLSID rclsid, REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+extern HRESULT Handler_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv);
+extern HRESULT HandlerCF_Create(REFCLSID rclsid, REFIID riid, LPVOID *ppv);
 
 extern HRESULT WINAPI GlobalOptions_CreateInstance(IClassFactory *iface, IUnknown *pUnk,
-                                                   REFIID riid, void **ppv) DECLSPEC_HIDDEN;
-extern IClassFactory GlobalOptionsCF DECLSPEC_HIDDEN;
+                                                   REFIID riid, void **ppv);
+extern IClassFactory GlobalOptionsCF;
+extern HRESULT WINAPI GlobalInterfaceTable_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID riid,
+        void **obj);
+extern IClassFactory GlobalInterfaceTableCF;
+extern HRESULT WINAPI ManualResetEvent_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID riid,
+        void **obj);
+extern IClassFactory ManualResetEventCF;
+extern HRESULT WINAPI Ole32DllGetClassObject(REFCLSID clsid, REFIID riid, void **obj);
 
 /* Exported non-interface Data Advise Holder functions */
-HRESULT DataAdviseHolder_OnConnect(IDataAdviseHolder *iface, IDataObject *pDelegate) DECLSPEC_HIDDEN;
-void DataAdviseHolder_OnDisconnect(IDataAdviseHolder *iface) DECLSPEC_HIDDEN;
+HRESULT DataAdviseHolder_OnConnect(IDataAdviseHolder *iface, IDataObject *pDelegate);
+void DataAdviseHolder_OnDisconnect(IDataAdviseHolder *iface);
 
-extern UINT ownerlink_clipboard_format DECLSPEC_HIDDEN;
-extern UINT filename_clipboard_format DECLSPEC_HIDDEN;
-extern UINT filenameW_clipboard_format DECLSPEC_HIDDEN;
-extern UINT dataobject_clipboard_format DECLSPEC_HIDDEN;
-extern UINT embedded_object_clipboard_format DECLSPEC_HIDDEN;
-extern UINT embed_source_clipboard_format DECLSPEC_HIDDEN;
-extern UINT custom_link_source_clipboard_format DECLSPEC_HIDDEN;
-extern UINT link_source_clipboard_format DECLSPEC_HIDDEN;
-extern UINT object_descriptor_clipboard_format DECLSPEC_HIDDEN;
-extern UINT link_source_descriptor_clipboard_format DECLSPEC_HIDDEN;
-extern UINT ole_private_data_clipboard_format DECLSPEC_HIDDEN;
+extern UINT ownerlink_clipboard_format;
+extern UINT filename_clipboard_format;
+extern UINT filenameW_clipboard_format;
+extern UINT dataobject_clipboard_format;
+extern UINT embedded_object_clipboard_format;
+extern UINT embed_source_clipboard_format;
+extern UINT custom_link_source_clipboard_format;
+extern UINT link_source_clipboard_format;
+extern UINT object_descriptor_clipboard_format;
+extern UINT link_source_descriptor_clipboard_format;
+extern UINT ole_private_data_clipboard_format;
 
-extern LSTATUS create_classes_key(HKEY, const WCHAR *, REGSAM, HKEY *) DECLSPEC_HIDDEN;
-extern LSTATUS open_classes_key(HKEY, const WCHAR *, REGSAM, HKEY *) DECLSPEC_HIDDEN;
+void clipbrd_destroy(void);
 
-extern BOOL actctx_get_miscstatus(const CLSID*, DWORD, DWORD*) DECLSPEC_HIDDEN;
+extern LSTATUS create_classes_key(HKEY, const WCHAR *, REGSAM, HKEY *);
+extern LSTATUS open_classes_key(HKEY, const WCHAR *, REGSAM, HKEY *);
 
-extern const char *debugstr_formatetc(const FORMATETC *formatetc) DECLSPEC_HIDDEN;
+extern BOOL actctx_get_miscstatus(const CLSID*, DWORD, DWORD*);
+
+extern const char *debugstr_formatetc(const FORMATETC *formatetc);
 
 static inline HRESULT copy_formatetc(FORMATETC *dst, const FORMATETC *src)
 {
@@ -353,6 +158,6 @@ static inline HRESULT copy_formatetc(FORMATETC *dst, const FORMATETC *src)
 }
 
 extern HRESULT EnumSTATDATA_Construct(IUnknown *holder, ULONG index, DWORD array_len, STATDATA *data,
-                                      BOOL copy, IEnumSTATDATA **ppenum) DECLSPEC_HIDDEN;
+                                      BOOL copy, IEnumSTATDATA **ppenum);
 
 #endif /* __WINE_OLE_COMPOBJ_H */

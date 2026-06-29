@@ -53,6 +53,9 @@ public:
     bool UninstallDevice(
         );
 
+    bool HasResources(
+        );
+
 private:
     void Cleanup(
         );

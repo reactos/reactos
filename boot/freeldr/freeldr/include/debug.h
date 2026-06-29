@@ -85,7 +85,7 @@
     //
     // You may have as many BREAKPOINT()'s as you like but you may only
     // have up to four of any of the others.
-#define    BREAKPOINT()                __asm__ ("int $3");
+#define    BREAKPOINT()                __debugbreak()
 void    INSTRUCTION_BREAKPOINT1(unsigned long addr);
 void    MEMORY_READWRITE_BREAKPOINT1(unsigned long addr);
 void    MEMORY_WRITE_BREAKPOINT1(unsigned long addr);
@@ -125,16 +125,28 @@ void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
 #endif // DBG
 
+#define __STRING2__(x) #x
+#define __STRING__(x) __STRING2__(x)
+#define __STRLINE__ __STRING__(__LINE__)
+
+#if !defined(_MSC_VER) && !defined(__pragma)
+#define __pragma(x) _Pragma(#x)
+#endif
+#define _WARN(msg) __pragma(message("WARNING! Line " __STRLINE__ ": " msg))
+
+
+DECLSPEC_NORETURN
 void
 NTAPI
 FrLdrBugCheck(ULONG BugCode);
 
+DECLSPEC_NORETURN
 VOID
 FrLdrBugCheckWithMessage(
     ULONG BugCode,
     PCHAR File,
     ULONG Line,
-    PSTR Format,
+    PCSTR Format,
     ...);
 
 /* Bugcheck codes */
@@ -144,6 +156,7 @@ enum _FRLDR_BUGCHECK_CODES
     MISSING_HARDWARE_REQUIREMENTS,
     FREELDR_IMAGE_CORRUPTION,
     MEMORY_INIT_FAILURE,
+    ASSERT_FAILURE,
 #ifdef UEFIBOOT
     EXIT_BOOTSERVICES_FAILURE,
 #endif

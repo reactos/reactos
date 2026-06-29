@@ -105,9 +105,9 @@ BOOL WINAPI _SHDesktopMessageLoop(HANDLE hDesktop)
     return FALSE;
 }
 
-typedef DWORD(WINAPI* PWINLIST_INIT)(void);
+typedef BOOL (WINAPI *PWINLIST_INIT)(void);
 
-DWORD WINAPI _WinList_Init(void)
+BOOL WINAPI _WinList_Init(void)
 {
     HINSTANCE hFallback;
 
@@ -131,7 +131,7 @@ DWORD WINAPI _WinList_Init(void)
         }
     }
 
-    return 0;
+    return FALSE;
 }
 
 typedef void (WINAPI *PSHELLDDEINIT)(BOOL bInit);

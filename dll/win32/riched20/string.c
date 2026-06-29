@@ -29,7 +29,7 @@ static int ME_GetOptimalBuffer(int nLen)
 
 static ME_String *make_string( void (*free)(ME_String *) )
 {
-  ME_String *s = heap_alloc( sizeof(*s) );
+  ME_String *s = malloc( sizeof(*s) );
 
   if (s) s->free = free;
   return s;
@@ -49,23 +49,23 @@ ME_String *ME_MakeStringConst(const WCHAR *str, int len)
   return s;
 }
 
-static void heap_string_free(ME_String *s)
+static void string_free(ME_String *s)
 {
-  heap_free( s->szData );
+  free( s->szData );
 }
 
 /* Create a buffer (uninitialized string) of size nMaxChars */
 ME_String *ME_MakeStringEmpty(int nMaxChars)
 {
-  ME_String *s = make_string( heap_string_free );
+  ME_String *s = make_string( string_free );
 
   if (!s) return NULL;
   s->nLen = nMaxChars;
   s->nBuffer = ME_GetOptimalBuffer(s->nLen + 1);
-  s->szData = heap_alloc( s->nBuffer * sizeof(WCHAR) );
+  s->szData = malloc( s->nBuffer * sizeof(WCHAR) );
   if (!s->szData)
   {
-    heap_free( s );
+    free( s );
     return NULL;
   }
   s->szData[s->nLen] = 0;
@@ -97,7 +97,7 @@ void ME_DestroyString(ME_String *s)
 {
   if (!s) return;
   if (s->free) s->free( s );
-  heap_free( s );
+  free( s );
 }
 
 BOOL ME_InsertString(ME_String *s, int ofs, const WCHAR *insert, int len)
@@ -111,7 +111,7 @@ BOOL ME_InsertString(ME_String *s, int ofs, const WCHAR *insert, int len)
     if( new_len > s->nBuffer )
     {
         s->nBuffer = ME_GetOptimalBuffer( new_len );
-        new = heap_realloc( s->szData, s->nBuffer * sizeof(WCHAR) );
+        new = realloc( s->szData, s->nBuffer * sizeof(WCHAR) );
         if (!new) return FALSE;
         s->szData = new;
     }
@@ -213,12 +213,12 @@ ME_CallWordBreakProc(ME_TextEditor *editor, WCHAR *str, INT len, INT start, INT 
     int result;
     int buffer_size = WideCharToMultiByte(CP_ACP, 0, str, len,
                                           NULL, 0, NULL, NULL);
-    char *buffer = heap_alloc(buffer_size);
+    char *buffer = malloc(buffer_size);
     if (!buffer) return 0;
     WideCharToMultiByte(CP_ACP, 0, str, len,
                         buffer, buffer_size, NULL, NULL);
     result = editor->pfnWordBreak((WCHAR*)buffer, start, buffer_size, code);
-    heap_free(buffer);
+    free(buffer);
     return result;
   }
 }
@@ -239,7 +239,7 @@ LPWSTR ME_ToUnicode(LONG codepage, LPVOID psz, INT *len)
 
     if(!nChars) return NULL;
 
-    if((tmp = heap_alloc( nChars * sizeof(WCHAR) )) != NULL)
+    if((tmp = malloc(nChars * sizeof(WCHAR))) != NULL)
       *len = MultiByteToWideChar(codepage, 0, psz, -1, tmp, nChars) - 1;
     return tmp;
   }
@@ -248,5 +248,5 @@ LPWSTR ME_ToUnicode(LONG codepage, LPVOID psz, INT *len)
 void ME_EndToUnicode(LONG codepage, LPVOID psz)
 {
   if (codepage != CP_UNICODE)
-    heap_free( psz );
+    free(psz);
 }

@@ -5,36 +5,36 @@
 # PURPOSE:     dhcpcsvc exports
 # COPYRIGHT:   Copyright 2006 Ge van Geldorp <gvg@reactos.org>
 #
-@ stub DhcpAcquireParameters
-@ stub DhcpAcquireParametersByBroadcast
+@ stdcall DhcpAcquireParameters(wstr)
+@ stdcall DhcpAcquireParametersByBroadcast(wstr)
 @ stdcall DhcpCApiCleanup()
 @ stdcall DhcpCApiInitialize(ptr)
 @ stub DhcpDelPersistentRequestParams
 @ stub DhcpDeRegisterOptions
-@ stub DhcpDeRegisterParamChange
-@ stub DhcpEnumClasses
-@ stub DhcpFallbackRefreshParams
-@ stub DhcpHandlePnPEvent
-@ stdcall DhcpLeaseIpAddress(long)
+@ stdcall DhcpDeRegisterParamChange(long ptr ptr)
+@ stdcall DhcpEnumClasses(long wstr long long)
+@ stdcall DhcpFallbackRefreshParams(wstr)
+@ stdcall DhcpHandlePnPEvent(long long wstr long long)
+@ stub DhcpLeaseIpAddress
 @ stub DhcpLeaseIpAddressEx
 @ stdcall DhcpNotifyConfigChange(ptr ptr long long long long long)
-@ stub DhcpNotifyConfigChangeEx
+@ stdcall DhcpNotifyConfigChangeEx(ptr ptr long long long long long long)
 @ stub DhcpNotifyMediaReconnected
 @ stub DhcpOpenGlobalEvent
 @ stub DhcpPersistentRequestParams
-@ stdcall DhcpQueryHWInfo(long ptr ptr ptr)
+@ stub DhcpQueryHWInfo
 @ stub DhcpRegisterOptions
-@ stub DhcpRegisterParamChange
-@ stdcall DhcpReleaseIpAddressLease(long)
+@ stdcall DhcpRegisterParamChange(long ptr wstr ptr long ptr ptr)
+@ stub DhcpReleaseIpAddressLease
 @ stub DhcpReleaseIpAddressLeaseEx
-@ stub DhcpReleaseParameters
-@ stub DhcpRemoveDNSRegistrations
-@ stdcall DhcpRenewIpAddressLease(long)
+@ stdcall DhcpReleaseParameters(wstr)
+@ stdcall DhcpRemoveDNSRegistrations()
+@ stub DhcpRenewIpAddressLease
 @ stub DhcpRenewIpAddressLeaseEx
 @ stub DhcpRequestOptions
 @ stdcall DhcpRequestParams(long ptr ptr ptr long ptr long ptr ptr ptr ptr)
 @ stdcall DhcpStaticRefreshParams(long long long)
-@ stub DhcpUndoRequestParams
+@ stdcall DhcpUndoRequestParams(long ptr wstr wstr)
 @ stub McastApiCleanup
 @ stub McastApiStartup
 @ stub McastEnumerateScopes
@@ -42,5 +42,4 @@
 @ stub McastReleaseAddress
 @ stub McastRenewAddress
 @ stub McastRequestAddress
-@ stdcall DhcpRosGetAdapterInfo(long ptr ptr ptr ptr)
 @ stdcall ServiceMain(long ptr)

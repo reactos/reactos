@@ -54,10 +54,13 @@ DpcHandler(
     ok_eq_pointer(Dpc->SystemArgument2, SystemArgument2);
     ok_eq_pointer(Dpc->DpcData, NULL);
 
-    ok_eq_uint(Prcb->DpcRoutineActive, 1);
-    /* this DPC is not in the list anymore, but it was at the head! */
-    ok_eq_pointer(Prcb->DpcData[DPC_NORMAL].DpcListHead.Flink, Dpc->DpcListEntry.Flink);
-    ok_eq_pointer(Prcb->DpcData[DPC_NORMAL].DpcListHead.Blink, Dpc->DpcListEntry.Blink);
+    if (GetNTVersion() == _WIN32_WINNT_WS03)
+    {
+        ok_eq_uint(Prcb->DpcRoutineActive, 1);
+        /* this DPC is not in the list anymore, but it was at the head! */
+        ok_eq_pointer(Prcb->DpcData[DPC_NORMAL].DpcListHead.Flink, Dpc->DpcListEntry.Flink);
+        ok_eq_pointer(Prcb->DpcData[DPC_NORMAL].DpcListHead.Blink, Dpc->DpcListEntry.Blink);
+    }
 }
 
 START_TEST(KeDpc)
@@ -81,68 +84,74 @@ START_TEST(KeDpc)
     ok_eq_uint(Dpc.Importance, DpcImportance);
     ok_eq_uint(Dpc.Number, 0);
     ok_eq_pointer(Dpc.DpcListEntry.Flink, (LIST_ENTRY *)0x5555555555555555LL);
-    ok_eq_pointer(Dpc.DpcListEntry.Blink, (LIST_ENTRY *)0x5555555555555555LL);
+    if (Dpc.DpcListEntry.Blink)
+        ok_eq_pointer(Dpc.DpcListEntry.Blink, (LIST_ENTRY *)0x5555555555555555LL);
     ok_eq_pointer(Dpc.DeferredRoutine, DpcHandler);
     ok_eq_pointer(Dpc.DeferredContext, &Dpc);
     ok_eq_pointer(Dpc.SystemArgument1, (PVOID)0x5555555555555555LL);
     ok_eq_pointer(Dpc.SystemArgument2, (PVOID)0x5555555555555555LL);
     ok_eq_pointer(Dpc.DpcData, NULL);
 
-    /* simply run the Dpc a few times */
-    for (i = 0; i < 5; ++i)
+    if (GetNTVersion() < _WIN32_WINNT_WIN8)
     {
-        ok_dpccount();
-        Ret = KeInsertQueueDpc(&Dpc, (PVOID)0xabc123, (PVOID)0x5678);
-        ok_bool_true(Ret, "KeInsertQueueDpc returned");
-        ++ExpectedDpcCount;
-        ok_dpccount();
-    }
+        // Windows 8+ is stricter about misusing DPC, these tests bugcheck there.
 
-    /* insert into queue at high irql
-     * -> should only run when lowered to APC_LEVEL,
-     *    inserting a second time should fail
-     */
-    KeRaiseIrql(APC_LEVEL, &Irql);
-    for (i = 0; i < 5; ++i)
-    {
-        KeRaiseIrql(DISPATCH_LEVEL, &Irql2);
-          ok_dpccount();
-          Ret = KeInsertQueueDpc(&Dpc, (PVOID)0xabc123, (PVOID)0x5678);
-          ok_bool_true(Ret, "KeInsertQueueDpc returned");
-          Ret = KeInsertQueueDpc(&Dpc, (PVOID)0xdef, (PVOID)0x123);
-          ok_bool_false(Ret, "KeInsertQueueDpc returned");
-          ok_dpccount();
-          KeRaiseIrql(HIGH_LEVEL, &Irql3);
+        /* simply run the Dpc a few times */
+        for (i = 0; i < 5; ++i)
+        {
             ok_dpccount();
-          KeLowerIrql(Irql3);
-          ok_dpccount();
-        KeLowerIrql(Irql2);
-        ++ExpectedDpcCount;
-        ok_dpccount();
-    }
-    KeLowerIrql(Irql);
+            Ret = KeInsertQueueDpc(&Dpc, (PVOID)0xabc123, (PVOID)0x5678);
+            ok_bool_true(Ret, "KeInsertQueueDpc returned");
+            ++ExpectedDpcCount;
+            ok_dpccount();
+        }
 
-    /* now test removing from the queue */
-    KeRaiseIrql(APC_LEVEL, &Irql);
-    for (i = 0; i < 5; ++i)
-    {
-        KeRaiseIrql(DISPATCH_LEVEL, &Irql2);
-          ok_dpccount();
-          Ret = KeRemoveQueueDpc(&Dpc);
-          ok_bool_false(Ret, "KeRemoveQueueDpc returned");
-          Ret = KeInsertQueueDpc(&Dpc, (PVOID)0xabc123, (PVOID)0x5678);
-          ok_bool_true(Ret, "KeInsertQueueDpc returned");
-          ok_dpccount();
-          KeRaiseIrql(HIGH_LEVEL, &Irql3);
+        /* insert into queue at high irql
+         * -> should only run when lowered to APC_LEVEL,
+         *    inserting a second time should fail
+         */
+        KeRaiseIrql(APC_LEVEL, &Irql);
+        for (i = 0; i < 5; ++i)
+        {
+            KeRaiseIrql(DISPATCH_LEVEL, &Irql2);
             ok_dpccount();
-          KeLowerIrql(Irql3);
-          ok_dpccount();
-          Ret = KeRemoveQueueDpc(&Dpc);
-          ok_bool_true(Ret, "KeRemoveQueueDpc returned");
-        KeLowerIrql(Irql2);
-        ok_dpccount();
+            Ret = KeInsertQueueDpc(&Dpc, (PVOID)0xabc123, (PVOID)0x5678);
+            ok_bool_true(Ret, "KeInsertQueueDpc returned");
+            Ret = KeInsertQueueDpc(&Dpc, (PVOID)0xdef, (PVOID)0x123);
+            ok_bool_false(Ret, "KeInsertQueueDpc returned");
+            ok_dpccount();
+            KeRaiseIrql(HIGH_LEVEL, &Irql3);
+            ok_dpccount();
+            KeLowerIrql(Irql3);
+            ok_dpccount();
+            KeLowerIrql(Irql2);
+            ++ExpectedDpcCount;
+            ok_dpccount();
+        }
+        KeLowerIrql(Irql);
+
+        /* now test removing from the queue */
+        KeRaiseIrql(APC_LEVEL, &Irql);
+        for (i = 0; i < 5; ++i)
+        {
+            KeRaiseIrql(DISPATCH_LEVEL, &Irql2);
+            ok_dpccount();
+            Ret = KeRemoveQueueDpc(&Dpc);
+            ok_bool_false(Ret, "KeRemoveQueueDpc returned");
+            Ret = KeInsertQueueDpc(&Dpc, (PVOID)0xabc123, (PVOID)0x5678);
+            ok_bool_true(Ret, "KeInsertQueueDpc returned");
+            ok_dpccount();
+            KeRaiseIrql(HIGH_LEVEL, &Irql3);
+            ok_dpccount();
+            KeLowerIrql(Irql3);
+            ok_dpccount();
+            Ret = KeRemoveQueueDpc(&Dpc);
+            ok_bool_true(Ret, "KeRemoveQueueDpc returned");
+            KeLowerIrql(Irql2);
+            ok_dpccount();
+        }
+        KeLowerIrql(Irql);
     }
-    KeLowerIrql(Irql);
 
     /* parameter checks */
     Status = STATUS_SUCCESS;
@@ -153,8 +162,10 @@ START_TEST(KeDpc)
     } _SEH2_END;
     ok_eq_hex(Status, STATUS_SUCCESS);
 
-    if (!skip(Status == STATUS_SUCCESS, "KeInitializeDpc failed\n"))
+    if (!skip(Status == STATUS_SUCCESS, "KeInitializeDpc failed\n") &&
+        GetNTVersion() < _WIN32_WINNT_WIN8)
     {
+        // Inserting NULL in a DPC gives a TIMER_OR_DPC_INVALID bugcheck on Windows 8+.
         KeRaiseIrql(HIGH_LEVEL, &Irql);
           Ret = KeInsertQueueDpc(&Dpc, NULL, NULL);
           ok_bool_true(Ret, "KeInsertQueueDpc returned");

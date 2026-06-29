@@ -24,7 +24,7 @@ extern ULONG ExpInitializationPhase;
 /* DATA **********************************************************************/
 
 PDRIVER_OBJECT IopRootDriverObject;
-PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList = NULL;
+IO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -410,67 +410,67 @@ USHORT
 NTAPI
 IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
 {
-    USHORT i = 0, FoundIndex = 0xFFFF;
-    ULONG NewSize;
-    PVOID NewList;
+    USHORT i, FoundIndex = 0xFFFF;
+    ULONG NewAllocatedCount;
+    PGUID NewList;
 
     /* Acquire the lock */
-    ExAcquireFastMutex(&PnpBusTypeGuidList->Lock);
+    ExAcquireFastMutex(&PnpBusTypeGuidList.Lock);
 
     /* Loop all entries */
-    while (i < PnpBusTypeGuidList->GuidCount)
+    for (i = 0; i < PnpBusTypeGuidList.GuidCount; i++)
     {
          /* Try to find a match */
-         if (RtlCompareMemory(BusTypeGuid,
-                              &PnpBusTypeGuidList->Guids[i],
-                              sizeof(GUID)) == sizeof(GUID))
+         if (IsEqualGUID(BusTypeGuid, &PnpBusTypeGuidList.Guids[i]))
          {
               /* Found it */
               FoundIndex = i;
               goto Quickie;
          }
-         i++;
     }
 
     /* Check if we have to grow the list */
-    if (PnpBusTypeGuidList->GuidCount)
+    ASSERT(PnpBusTypeGuidList.GuidCount <= PnpBusTypeGuidList.AllocatedCount);
+    if (PnpBusTypeGuidList.GuidCount == PnpBusTypeGuidList.AllocatedCount)
     {
         /* Calculate the new size */
-        NewSize = sizeof(IO_BUS_TYPE_GUID_LIST) +
-                 (sizeof(GUID) * PnpBusTypeGuidList->GuidCount);
+        NewAllocatedCount = PnpBusTypeGuidList.AllocatedCount + 8;
 
         /* Allocate the new copy */
-        NewList = ExAllocatePool(PagedPool, NewSize);
-
+        NewList = ExAllocatePoolWithTag(PagedPool,
+                                        NewAllocatedCount * sizeof(GUID),
+                                        TAG_PNP_GUIDS);
         if (!NewList)
         {
             /* Fail */
-            ExFreePool(PnpBusTypeGuidList);
             goto Quickie;
         }
 
-        /* Now copy them, decrease the size too */
-        NewSize -= sizeof(GUID);
-        RtlCopyMemory(NewList, PnpBusTypeGuidList, NewSize);
+        /* Copy the existing GUIDs to the new list and zero the rest */
+        RtlCopyMemory(NewList,
+                      PnpBusTypeGuidList.Guids,
+                      PnpBusTypeGuidList.GuidCount * sizeof(GUID));
+        RtlZeroMemory(&NewList[PnpBusTypeGuidList.GuidCount],
+                      (NewAllocatedCount - PnpBusTypeGuidList.GuidCount) * sizeof(GUID));
 
         /* Free the old list */
-        ExFreePool(PnpBusTypeGuidList);
+        ExFreePool(PnpBusTypeGuidList.Guids);
 
         /* Use the new buffer */
-        PnpBusTypeGuidList = NewList;
+        PnpBusTypeGuidList.Guids = NewList;
+        PnpBusTypeGuidList.AllocatedCount = NewAllocatedCount;
     }
 
     /* Copy the new GUID */
-    RtlCopyMemory(&PnpBusTypeGuidList->Guids[PnpBusTypeGuidList->GuidCount],
-                  BusTypeGuid,
-                  sizeof(GUID));
+    PnpBusTypeGuidList.Guids[PnpBusTypeGuidList.GuidCount] = *BusTypeGuid;
 
     /* The new entry is the index */
-    FoundIndex = (USHORT)PnpBusTypeGuidList->GuidCount;
-    PnpBusTypeGuidList->GuidCount++;
+    ASSERT(PnpBusTypeGuidList.GuidCount < MAXUSHORT);
+    FoundIndex = (USHORT)PnpBusTypeGuidList.GuidCount;
+    PnpBusTypeGuidList.GuidCount++;
 
 Quickie:
-    ExReleaseFastMutex(&PnpBusTypeGuidList->Lock);
+    ExReleaseFastMutex(&PnpBusTypeGuidList.Lock);
     return FoundIndex;
 }
 
@@ -1173,13 +1173,13 @@ PnpBusTypeGuidGet(IN USHORT Index,
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Acquire the lock */
-    ExAcquireFastMutex(&PnpBusTypeGuidList->Lock);
+    ExAcquireFastMutex(&PnpBusTypeGuidList.Lock);
 
     /* Validate size */
-    if (Index < PnpBusTypeGuidList->GuidCount)
+    if (Index < PnpBusTypeGuidList.GuidCount)
     {
         /* Copy the data */
-        RtlCopyMemory(BusTypeGuid, &PnpBusTypeGuidList->Guids[Index], sizeof(GUID));
+        RtlCopyMemory(BusTypeGuid, &PnpBusTypeGuidList.Guids[Index], sizeof(GUID));
     }
     else
     {
@@ -1188,7 +1188,7 @@ PnpBusTypeGuidGet(IN USHORT Index,
     }
 
     /* Release lock and return status */
-    ExReleaseFastMutex(&PnpBusTypeGuidList->Lock);
+    ExReleaseFastMutex(&PnpBusTypeGuidList.Lock);
     return Status;
 }
 

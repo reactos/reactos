@@ -238,14 +238,12 @@ VOID FASTCALL CleanupUserImpl(VOID)
     ExDeleteResourceLite(&UserLock);
 }
 
-// Win: EnterSharedCrit
 VOID FASTCALL UserEnterShared(VOID)
 {
     KeEnterCriticalRegion();
     ExAcquireResourceSharedLite(&UserLock, TRUE);
 }
 
-// Win: EnterCrit
 VOID FASTCALL UserEnterExclusive(VOID)
 {
     ASSERT_NOGDILOCKS();
@@ -254,7 +252,6 @@ VOID FASTCALL UserEnterExclusive(VOID)
     gptiCurrent = PsGetCurrentThreadWin32Thread();
 }
 
-// Win: LeaveCrit
 VOID FASTCALL UserLeave(VOID)
 {
     ASSERT_NOGDILOCKS();

@@ -52,6 +52,10 @@ static void TEST_LCMapStringW(void)
 
     LCMapStringW(0, LCMAP_TRADITIONAL_CHINESE, c_target, -1, results, _countof(results));
     ok_wstr(results, L"ABab12\xff21\xff22\xff41\xff42\xff11\xff12\x3042\x30a2\x3070\x30d0\xff8a\xff9f\x842c\x842c");
+
+    // Test broken reactos behavior
+    LCMapStringW(LOCALE_INVARIANT, LCMAP_LOWERCASE, L"\x0104", -1, results, _countof(results));
+    ok_wstr(results,L"\x0105");
 }
 
 START_TEST(LCMapString)

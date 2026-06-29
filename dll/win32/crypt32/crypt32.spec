@@ -39,6 +39,7 @@
 @ stdcall CertEnumCertificatesInStore(ptr ptr)
 @ stdcall CertEnumPhysicalStore(ptr long ptr ptr)
 @ stdcall CertEnumSystemStore(long ptr ptr ptr)
+@ stdcall CertEnumSystemStoreLocation(long ptr ptr)
 @ stdcall CertFindAttribute(str long ptr)
 @ stdcall CertFindCRLInStore(ptr long long long ptr ptr)
 @ stdcall CertFindCTLInStore(ptr long long long ptr ptr)
@@ -136,12 +137,14 @@
 @ stdcall CryptGetOIDFunctionAddress(long long str long ptr ptr)
 @ stdcall CryptGetOIDFunctionValue(long str str wstr ptr ptr ptr)
 @ stdcall CryptHashCertificate(long long long ptr long ptr ptr)
+@ stdcall -version=0x600+ CryptHashCertificate2(wstr long ptr ptr long ptr ptr)
 @ stdcall CryptHashMessage(ptr long long ptr ptr ptr ptr ptr ptr)
 @ stdcall CryptHashPublicKeyInfo(long long long long ptr ptr ptr)
 @ stdcall CryptHashToBeSigned(ptr long ptr long ptr ptr)
 @ stub CryptImportPKCS8
 @ stdcall CryptImportPublicKeyInfo(long long ptr ptr)
 @ stdcall CryptImportPublicKeyInfoEx(long long ptr long long ptr ptr)
+@ stdcall -version=0x600+ CryptImportPublicKeyInfoEx2(long ptr long ptr ptr)
 @ stdcall CryptInitOIDFunctionSet(str long)
 @ stdcall CryptInstallOIDFunctionAddress(ptr long str long ptr long)
 @ stub CryptLoadSip

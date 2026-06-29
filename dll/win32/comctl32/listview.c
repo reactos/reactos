@@ -426,6 +426,13 @@ typedef struct tagLISTVIEW_INFO
 
 static const WCHAR themeClass[] = {'L','i','s','t','V','i','e','w',0};
 
+enum key_state
+{
+    SHIFT_KEY = 0x1,
+    CTRL_KEY = 0x2,
+    SPACE_KEY = 0x4,
+};
+
 /*
  * forward declarations
  */
@@ -439,7 +446,7 @@ static BOOL LISTVIEW_GetViewRect(const LISTVIEW_INFO *, LPRECT);
 static void LISTVIEW_UpdateSize(LISTVIEW_INFO *);
 static LRESULT LISTVIEW_Command(LISTVIEW_INFO *, WPARAM, LPARAM);
 static INT LISTVIEW_GetStringWidthT(const LISTVIEW_INFO *, LPCWSTR, BOOL);
-static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *, INT, BOOL);
+static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *, INT, DWORD);
 static UINT LISTVIEW_GetItemState(const LISTVIEW_INFO *, INT, UINT);
 static BOOL LISTVIEW_SetItemState(LISTVIEW_INFO *, INT, const LVITEMW *);
 static LRESULT LISTVIEW_VScroll(LISTVIEW_INFO *, INT, INT);
@@ -1989,7 +1996,7 @@ static INT LISTVIEW_ProcessLetterKeys(LISTVIEW_INFO *infoPtr, WPARAM charCode, L
     }
 
     if (nItem != -1)
-        LISTVIEW_KeySelection(infoPtr, nItem, FALSE);
+        LISTVIEW_KeySelection(infoPtr, nItem, 0);
 
     return 0;
 }
@@ -2270,11 +2277,7 @@ static void LISTVIEW_InvalidateSelectedItems(const LISTVIEW_INFO *infoPtr)
     iterator_frameditems(&i, infoPtr, &infoPtr->rcList); 
     while(iterator_next(&i))
     {
-#ifdef __REACTOS__
-	if (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED | LVIS_CUT))
-#else
 	if (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED))
-#endif
 	    LISTVIEW_InvalidateItem(infoPtr, i.nItem);
     }
     iterator_destroy(&i);
@@ -3729,8 +3732,10 @@ static void LISTVIEW_SetGroupSelection(LISTVIEW_INFO *infoPtr, INT nItem)
     item.state = LVIS_SELECTED; 
     item.stateMask = LVIS_SELECTED;
 
+#ifndef __REACTOS__
     if ((infoPtr->uView == LV_VIEW_LIST) || (infoPtr->uView == LV_VIEW_DETAILS))
     {
+#endif
 	if (infoPtr->nSelectionMark == -1)
 	{
 	    infoPtr->nSelectionMark = nItem;
@@ -3744,6 +3749,7 @@ static void LISTVIEW_SetGroupSelection(LISTVIEW_INFO *infoPtr, INT nItem)
 	    sel.upper = max(infoPtr->nSelectionMark, nItem) + 1;
 	    ranges_add(selection, sel);
 	}
+#ifndef __REACTOS__
     }
     else
     {
@@ -3769,6 +3775,7 @@ static void LISTVIEW_SetGroupSelection(LISTVIEW_INFO *infoPtr, INT nItem)
 	}
 	iterator_destroy(&i);
     }
+#endif
 
     /* disable per item notifications on LVS_OWNERDATA style
        FIXME: single LVN_ODSTATECHANGED should be used */
@@ -3815,24 +3822,11 @@ static void LISTVIEW_SetSelection(LISTVIEW_INFO *infoPtr, INT nItem)
     infoPtr->nSelectionMark = nItem;
 }
 
-/***
- * DESCRIPTION:
- * Set selection(s) with keyboard.
- *
- * PARAMETER(S):
- * [I] infoPtr : valid pointer to the listview structure
- * [I] nItem : item index
- * [I] space : VK_SPACE code sent
- *
- * RETURN:
- *   SUCCESS : TRUE (needs to be repainted)
- *   FAILURE : FALSE (nothing has changed)
- */
-static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *infoPtr, INT nItem, BOOL space)
+/* Change item selection with key input. */
+static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *infoPtr, INT nItem, DWORD keys)
 {
-  /* FIXME: pass in the state */
-  WORD wShift = GetKeyState(VK_SHIFT) & 0x8000;
-  WORD wCtrl = GetKeyState(VK_CONTROL) & 0x8000;
+  WORD wShift = !!(keys & SHIFT_KEY);
+  WORD wCtrl = !!(keys & CTRL_KEY);
   BOOL bResult = FALSE;
 
   TRACE("nItem=%d, wShift=%d, wCtrl=%d\n", nItem, wShift, wCtrl);
@@ -3851,7 +3845,7 @@ static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *infoPtr, INT nItem, BOOL space)
         LVITEMW lvItem;
         lvItem.state = ~LISTVIEW_GetItemState(infoPtr, nItem, LVIS_SELECTED);
         lvItem.stateMask = LVIS_SELECTED;
-        if (space)
+        if (keys & SPACE_KEY)
         {
             LISTVIEW_SetItemState(infoPtr, nItem, &lvItem);
             if (lvItem.state & LVIS_SELECTED)
@@ -4782,7 +4776,11 @@ static void LISTVIEW_DrawItemPart(LISTVIEW_INFO *infoPtr, LVITEMW *item, const N
 
         TRACE("iImage=%d\n", item->iImage);
 
+#ifdef __REACTOS__
+        if (item->state & (LVIS_CUT | (infoPtr->bFocus ? LVIS_SELECTED : 0)))
+#else
         if (item->state & (LVIS_SELECTED | LVIS_CUT) && infoPtr->bFocus)
+#endif
             style = ILD_SELECTED;
         else
             style = ILD_NORMAL;
@@ -8552,8 +8550,13 @@ static BOOL LISTVIEW_SetColumnWidth(LISTVIEW_INFO *infoPtr, INT nColumn, INT cx)
 	if (infoPtr->himlSmall && (nColumn == 0 || (LISTVIEW_GetColumnInfo(infoPtr, nColumn)->fmt & LVCFMT_IMAGE)))
 	    max_cx += infoPtr->iconSize.cx;
 	max_cx += TRAILING_LABEL_PADDING;
+#ifdef __REACTOS__
+        if (nColumn == 0 && infoPtr->himlState)
+            max_cx += infoPtr->iconStateSize.cx;
+#else
         if (nColumn == 0 && (infoPtr->dwLvExStyle & LVS_EX_CHECKBOXES))
             max_cx += GetSystemMetrics(SM_CXSMICON);
+#endif
     }
 
     /* autosize based on listview items width */
@@ -10214,7 +10217,18 @@ static LRESULT LISTVIEW_KeyDown(LISTVIEW_INFO *infoPtr, INT nVirtualKey, LONG lK
   }
 
   if ((nItem != -1) && (nItem != infoPtr->nFocusedItem || nVirtualKey == VK_SPACE))
-      LISTVIEW_KeySelection(infoPtr, nItem, nVirtualKey == VK_SPACE);
+  {
+      DWORD keys = 0;
+
+      if (GetKeyState(VK_SHIFT) & 0x8000)
+          keys |= SHIFT_KEY;
+      if (GetKeyState(VK_CONTROL) & 0x8000)
+          keys |= CTRL_KEY;
+      if (nVirtualKey == VK_SPACE)
+          keys |= SPACE_KEY;
+
+      LISTVIEW_KeySelection(infoPtr, nItem, keys);
+  }
 
   return 0;
 }
@@ -11997,7 +12011,42 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       }
       return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 
+#ifdef __REACTOS__
+  case WM_SETTINGCHANGE: /* Same as WM_WININICHANGE */
+    if (wParam == SPI_SETICONMETRICS ||
+        wParam == SPI_SETICONTITLELOGFONT ||
+        wParam == SPI_SETNONCLIENTMETRICS ||
+        (!wParam && !lParam))
+    {
+      HFONT hOldDefaultFont = infoPtr->hDefaultFont;
+      BOOL bDefaultOrNullFont = (infoPtr->hDefaultFont == infoPtr->hFont || !infoPtr->hFont);
+      LOGFONTW logFont;
+      SystemParametersInfoW(SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
+
+      if (infoPtr->autoSpacing)
+        LISTVIEW_SetIconSpacing(infoPtr, -1, -1);
+
+      if (infoPtr->hDefaultFont)
+        DeleteObject(infoPtr->hDefaultFont);
+      infoPtr->hDefaultFont = CreateFontIndirectW(&logFont);
+
+      if (bDefaultOrNullFont)
+      {
+        infoPtr->hFont = infoPtr->hDefaultFont;
+        // Check if we just deleted the font the header is using
+        if (infoPtr->hwndHeader && hOldDefaultFont == GetWindowFont(infoPtr->hwndHeader))
+            SendMessageW(infoPtr->hwndHeader, WM_SETFONT, (WPARAM)infoPtr->hFont, TRUE);
+      }
+
+      LISTVIEW_SaveTextMetrics(infoPtr);
+      LISTVIEW_UpdateItemSize(infoPtr);
+      LISTVIEW_UpdateScroll(infoPtr);
+      LISTVIEW_InvalidateRect(infoPtr, NULL);
+    }
+    return 0;
+#else
 /*	case WM_WININICHANGE: */
+#endif
 
   default:
     if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))

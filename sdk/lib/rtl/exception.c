@@ -87,7 +87,7 @@ RtlRaiseStatus(IN NTSTATUS Status)
     EXCEPTION_RECORD ExceptionRecord;
     CONTEXT Context;
 
-     /* Capture the context */
+    /* Capture the context */
     RtlCaptureContext(&Context);
 
     /* Create an exception record */
@@ -234,14 +234,14 @@ static VOID
 }
 
 static VOID
-    PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
+PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
     PVOID StartAddr;
     CHAR szMod[128] = "";
     PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
     PCONTEXT ContextRecord = ExceptionInfo->ContextRecord;
 
-    /* Print a stack trace. */
+    /* Print a stack trace */
     DbgPrint("Unhandled exception\n");
     DbgPrint("ExceptionCode:    %8x\n", ExceptionRecord->ExceptionCode);
 
@@ -310,12 +310,10 @@ static VOID
  */
 LONG
 NTAPI
-RtlUnhandledExceptionFilter(IN struct _EXCEPTION_POINTERS* ExceptionInfo)
+RtlUnhandledExceptionFilter(
+    _In_ PEXCEPTION_POINTERS ExceptionInfo)
 {
-    /* This is used by the security cookie checks, and also called externally */
-    UNIMPLEMENTED;
-    PrintStackTrace(ExceptionInfo);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return RtlUnhandledExceptionFilter2(ExceptionInfo, "");
 }
 
 /*
@@ -325,12 +323,17 @@ LONG
 NTAPI
 RtlUnhandledExceptionFilter2(
     _In_ PEXCEPTION_POINTERS ExceptionInfo,
-    _In_ ULONG Flags)
+    _In_ PCSTR Function)
 {
     /* This is used by the security cookie checks, and also called externally */
     UNIMPLEMENTED;
+    ASSERT(ExceptionInfo && ExceptionInfo->ExceptionRecord);
+
     PrintStackTrace(ExceptionInfo);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_POSSIBLE_DEADLOCK)
+        return EXCEPTION_CONTINUE_EXECUTION;
+    return EXCEPTION_CONTINUE_SEARCH;
 }
 
 /*

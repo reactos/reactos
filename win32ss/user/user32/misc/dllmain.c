@@ -497,11 +497,11 @@ DllMain(
             else
             {
                 /* Use the session path */
-                swprintf(SessionDir,
-                         L"%ws\\%ld%ws",
-                         SESSION_DIR,
-                         SessionId,
-                         WIN_OBJ_DIR);
+                _swprintf(SessionDir,
+                          L"%ws\\%ld%ws",
+                          SESSION_DIR,
+                          SessionId,
+                          WIN_OBJ_DIR);
             }
 
             TRACE("Checkpoint (call CSR)\n");
@@ -537,7 +537,7 @@ DllMain(
                 {
                     WCHAR szImmFile[MAX_PATH];
                     InitializeImmEntryTable();
-                    User32GetImmFileName(szImmFile, _countof(szImmFile));
+                    User32GetSystemFilePath(szImmFile, _countof(szImmFile), L"imm32.dll");
                     hImm32 = GetModuleHandleW(szImmFile);
                 }
 

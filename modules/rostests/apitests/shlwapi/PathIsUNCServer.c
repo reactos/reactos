@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Documentation: https://msdn.microsoft.com/en-us/library/windows/desktop/bb773722(v=vs.85).aspx */
+/* Documentation: https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-pathisuncservera */
 
 #include <apitest.h>
 #include <shlwapi.h>
@@ -27,7 +27,7 @@ do { \
     ok(ret == (exp), "Expected %s to be %d, was %d\n", wine_dbgstr_w((str)), (exp), ret); \
 } while (0)
 
-START_TEST(isuncpathserver)
+START_TEST(PathIsUNCServer)
 {
     DO_TEST(TRUE, L"\\\\server");
     DO_TEST(TRUE, L"\\\\");
@@ -39,6 +39,8 @@ START_TEST(isuncpathserver)
     DO_TEST(FALSE, L"");
     DO_TEST(FALSE, L" ");
 
-    /* The test shows TRUE on Windows 2003, but returns FALSE on Windows 7 */
-    DO_TEST(TRUE, L"\\\\?");
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+        DO_TEST(FALSE, L"\\\\?");
+    else
+        DO_TEST(TRUE, L"\\\\?");
 }

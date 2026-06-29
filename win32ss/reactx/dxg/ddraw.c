@@ -189,6 +189,49 @@ VOID intDdEnableDriver(PEDD_DIRECTDRAW_GLOBAL peDdGl)
 
             intDdGetAllDriverInfo(peDdGl);
 
+            /*
+             * Initialize video memory heaps for surface allocation.
+             * This is done specifically for vmware, nothing else is likely to use it yet.
+             * But it's done well enough that native ddraw.dll seems happy.
+             */
+            if (peDdGl->pvmList && peDdGl->dwNumHeaps > 0)
+            {
+                VIDEOMEMORY *VidMemEntry;
+                LPVMEMHEAP HeapStruct;
+                DWORD HeapIndex;
+                DWORD DisplayPitch = peDdGl->ddHalInfo.vmiData.lDisplayPitch;
+
+                for (HeapIndex = 0, VidMemEntry = peDdGl->pvmList;
+                     HeapIndex < peDdGl->dwNumHeaps;
+                     HeapIndex++, VidMemEntry++)
+                {
+                    if (VidMemEntry->dwFlags & (VIDMEM_ISHEAP | VIDMEM_HEAPDISABLED))
+                        continue;
+
+                    HeapStruct = (LPVMEMHEAP)EngAllocMem(FL_ZERO_MEMORY, sizeof(*HeapStruct), TAG_GDDV);
+                    if (!HeapStruct)
+                    {
+                        VidMemEntry->dwFlags |= VIDMEM_HEAPDISABLED;
+                        continue;
+                    }
+
+                    if (VidMemEntry->dwFlags & VIDMEM_ISLINEAR)
+                    {
+                        HeapStruct->dwFlags = VMEMHEAP_LINEAR;
+                        HeapStruct->dwTotalSize = VidMemEntry->fpEnd - VidMemEntry->fpStart + 1;
+                    }
+                    else
+                    {
+                        HeapStruct->dwFlags = VMEMHEAP_RECTANGULAR;
+                        HeapStruct->stride = DisplayPitch ? DisplayPitch : VidMemEntry->dwWidth;
+                        HeapStruct->dwTotalSize = HeapStruct->stride * VidMemEntry->dwHeight;
+                    }
+
+                    VidMemEntry->lpHeap = HeapStruct;
+                    VidMemEntry->dwFlags |= VIDMEM_ISHEAP;
+                }
+            }
+
             // enable DirectDraw acceleration
             peDdGl->fl |= 1;
         }

@@ -161,6 +161,7 @@ CopyQueryInterfaceToIrpStack(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 SendDeviceUsageNotification(
     __in MxDeviceObject* RelatedDevice,
     __in FxIrp* RelatedIrp,
@@ -171,6 +172,7 @@ SendDeviceUsageNotification(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 GetStackCapabilities(
     __in PFX_DRIVER_GLOBALS DriverGlobals,
     __in MxDeviceObject* DeviceInStack,
@@ -179,6 +181,7 @@ GetStackCapabilities(
     );
 
 VOID
+NTAPI
 SetD3ColdSupport(
     __in PFX_DRIVER_GLOBALS DriverGlobals,
     __in MxDeviceObject* DeviceInStack,

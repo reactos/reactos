@@ -391,7 +391,7 @@ Cleanup1:
  */
 NTSTATUS
 NTAPI
-RtlCreateAndSetSD(IN PVOID AceData,
+RtlCreateAndSetSD(IN PRTL_ACE_DATA AceData,
                   IN ULONG AceCount,
                   IN PSID OwnerSid OPTIONAL,
                   IN PSID GroupSid OPTIONAL,
@@ -556,7 +556,7 @@ RtlNewInstanceSecurityObject(IN BOOLEAN ParentDescriptorChanged,
  */
 NTSTATUS
 NTAPI
-RtlCreateUserSecurityObject(IN PVOID AceData,
+RtlCreateUserSecurityObject(IN PRTL_ACE_DATA AceData,
                             IN ULONG AceCount,
                             IN PSID OwnerSid,
                             IN PSID GroupSid,

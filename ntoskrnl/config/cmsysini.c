@@ -409,8 +409,7 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Setup attributes for loader options */
     RtlInitUnicodeString(&KeyName,
-                         L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\"
-                         L"Control");
+                         L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -431,18 +430,40 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!NT_SUCCESS(Status))
         goto Quit;
 
-    /* Setup the value for the system boot device in ARC format */
+    /* Setup the value for the OS boot device in ARC format */
     RtlInitUnicodeString(&KeyName, L"SystemBootDevice");
-    RtlCreateUnicodeStringFromAsciiz(&ValueName, LoaderBlock->ArcBootDeviceName);
+    if (!RtlCreateUnicodeStringFromAsciiz(&ValueName, LoaderBlock->ArcBootDeviceName))
+    {
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quit;
+    }
     Status = NtSetValueKey(KeyHandle,
                            &KeyName,
                            0,
                            REG_SZ,
                            ValueName.Buffer,
                            ValueName.Length);
-
-    /* Free the temporary string */
     RtlFreeUnicodeString(&ValueName);
+
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
+    /* Setup the value for the firmware boot (i.e. system partition) device in ARC format */
+    RtlInitUnicodeString(&KeyName, L"FirmwareBootDevice");
+    if (!RtlCreateUnicodeStringFromAsciiz(&ValueName, LoaderBlock->ArcHalDeviceName))
+    {
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quit;
+    }
+    Status = NtSetValueKey(KeyHandle,
+                           &KeyName,
+                           0,
+                           REG_SZ,
+                           ValueName.Buffer,
+                           ValueName.Length);
+    RtlFreeUnicodeString(&ValueName);
+#endif
 
 Quit:
     /* Close the key and return */

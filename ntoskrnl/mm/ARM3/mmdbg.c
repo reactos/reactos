@@ -132,7 +132,15 @@ MmDbgCopyMemory(IN ULONG64 Address,
     PVOID CopyDestination, CopySource;
 
     /* No local kernel debugging support yet, so don't worry about locking */
-    ASSERT(Flags & MMDBG_COPY_UNSAFE);
+    if (!(Flags & MMDBG_COPY_UNSAFE))
+    {
+        static BOOLEAN Warned = FALSE;
+        if (!Warned)
+        {
+            KdpDprintf("MmDbgCopyMemory: not providing MMDBG_COPY_UNSAFE is UNIMPLEMENTED\n");
+            Warned = TRUE;
+        }
+    }
 
     /* We only handle 1, 2, 4 and 8 byte requests */
     if ((Size != 1) &&

@@ -25,6 +25,7 @@ BEGIN
     IDS_PWR_AC "En corriente alterna"
     IDS_PWR_HOURS_REMAINING "Quedan %1!u!:%2!02u! horas (%3!u!%%)"
     IDS_PWR_MINUTES_REMAINING "Quedan %1!u! minutos (%2!u!%%)"
+    IDS_PWR_FULLY_CHARGED "Fully charged"
 
     //Hotplug related strings
     IDS_HOTPLUG_REMOVE_1 "Desconectar de forma segura"

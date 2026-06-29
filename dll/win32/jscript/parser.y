@@ -26,16 +26,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
-static int parser_error(parser_ctx_t*,const char*);
-static void set_error(parser_ctx_t*,UINT);
+static int parser_error(unsigned*,parser_ctx_t*,const char*);
+static void set_error(parser_ctx_t*,unsigned,HRESULT);
 static BOOL explicit_error(parser_ctx_t*,void*,WCHAR);
 static BOOL allow_auto_semicolon(parser_ctx_t*);
-static void program_parsed(parser_ctx_t*,source_elements_t*);
-
-typedef struct _statement_list_t {
-    statement_t *head;
-    statement_t *tail;
-} statement_list_t;
 
 static literal_t *new_string_literal(parser_ctx_t*,jsstr_t*);
 static literal_t *new_null_literal(parser_ctx_t*);
@@ -71,8 +65,13 @@ typedef struct _case_list_t {
     case_clausule_t *tail;
 } case_list_t;
 
+typedef struct _statement_list_t {
+   statement_t *head;
+   statement_t *tail;
+} statement_list_t;
+
 static catch_block_t *new_catch_block(parser_ctx_t*,const WCHAR*,statement_t*);
-static case_clausule_t *new_case_clausule(parser_ctx_t*,expression_t*,statement_list_t*);
+static case_clausule_t *new_case_clausule(parser_ctx_t*,unsigned,expression_t*,statement_list_t*);
 static case_list_t *new_case_list(parser_ctx_t*,case_clausule_t*);
 static case_list_t *case_list_add(parser_ctx_t*,case_list_t*,case_clausule_t*);
 static case_clausule_t *new_case_block(parser_ctx_t*,case_list_t*,case_clausule_t*,case_list_t*);
@@ -86,28 +85,23 @@ static variable_declaration_t *new_variable_declaration(parser_ctx_t*,const WCHA
 static variable_list_t *new_variable_list(parser_ctx_t*,variable_declaration_t*);
 static variable_list_t *variable_list_add(parser_ctx_t*,variable_list_t*,variable_declaration_t*);
 
-static void *new_statement(parser_ctx_t*,statement_type_t,size_t);
-static statement_t *new_block_statement(parser_ctx_t*,statement_list_t*);
-static statement_t *new_var_statement(parser_ctx_t*,variable_list_t*);
-static statement_t *new_expression_statement(parser_ctx_t*,expression_t*);
-static statement_t *new_if_statement(parser_ctx_t*,expression_t*,statement_t*,statement_t*);
-static statement_t *new_while_statement(parser_ctx_t*,BOOL,expression_t*,statement_t*);
-static statement_t *new_for_statement(parser_ctx_t*,variable_list_t*,expression_t*,expression_t*,
-        expression_t*,statement_t*);
-static statement_t *new_forin_statement(parser_ctx_t*,variable_declaration_t*,expression_t*,expression_t*,statement_t*);
-static statement_t *new_continue_statement(parser_ctx_t*,const WCHAR*);
-static statement_t *new_break_statement(parser_ctx_t*,const WCHAR*);
-static statement_t *new_return_statement(parser_ctx_t*,expression_t*);
-static statement_t *new_with_statement(parser_ctx_t*,expression_t*,statement_t*);
-static statement_t *new_labelled_statement(parser_ctx_t*,const WCHAR*,statement_t*);
-static statement_t *new_switch_statement(parser_ctx_t*,expression_t*,case_clausule_t*);
-static statement_t *new_throw_statement(parser_ctx_t*,expression_t*);
-static statement_t *new_try_statement(parser_ctx_t*,statement_t*,catch_block_t*,statement_t*);
-
-struct statement_list_t {
-   statement_t *head;
-   statement_t *tail;
-};
+static void *new_statement(parser_ctx_t*,statement_type_t,size_t,unsigned);
+static statement_t *new_block_statement(parser_ctx_t*,unsigned,statement_list_t*);
+static statement_t *new_var_statement(parser_ctx_t*,BOOL,BOOL,unsigned,variable_list_t*);
+static statement_t *new_expression_statement(parser_ctx_t*,unsigned,expression_t*);
+static statement_t *new_if_statement(parser_ctx_t*,unsigned,expression_t*,statement_t*,statement_t*);
+static statement_t *new_while_statement(parser_ctx_t*,unsigned,BOOL,expression_t*,statement_t*);
+static statement_t *new_for_statement(parser_ctx_t*,unsigned,variable_declaration_t*,expression_t*,expression_t*,unsigned,
+                                      expression_t*,unsigned,statement_t*);
+static statement_t *new_forin_statement(parser_ctx_t*,unsigned,variable_declaration_t*,expression_t*,expression_t*,statement_t*);
+static statement_t *new_continue_statement(parser_ctx_t*,unsigned,const WCHAR*);
+static statement_t *new_break_statement(parser_ctx_t*,unsigned,const WCHAR*);
+static statement_t *new_return_statement(parser_ctx_t*,unsigned,expression_t*);
+static statement_t *new_with_statement(parser_ctx_t*,unsigned,expression_t*,statement_t*);
+static statement_t *new_labelled_statement(parser_ctx_t*,unsigned,const WCHAR*,statement_t*);
+static statement_t *new_switch_statement(parser_ctx_t*,unsigned,expression_t*,case_clausule_t*);
+static statement_t *new_throw_statement(parser_ctx_t*,unsigned,expression_t*);
+static statement_t *new_try_statement(parser_ctx_t*,statement_t*,catch_block_t*,statement_t*,unsigned);
 
 static statement_list_t *new_statement_list(parser_ctx_t*,statement_t*);
 static statement_list_t *statement_list_add(statement_list_t*,statement_t*);
@@ -122,7 +116,7 @@ static parameter_list_t *parameter_list_add(parser_ctx_t*,parameter_list_t*,cons
 
 static void *new_expression(parser_ctx_t *ctx,expression_type_t,size_t);
 static expression_t *new_function_expression(parser_ctx_t*,const WCHAR*,parameter_list_t*,
-        source_elements_t*,const WCHAR*,const WCHAR*,DWORD);
+        statement_list_t*,const WCHAR*,const WCHAR*,DWORD);
 static expression_t *new_binary_expression(parser_ctx_t*,expression_type_t,expression_t*,expression_t*);
 static expression_t *new_unary_expression(parser_ctx_t*,expression_type_t,expression_t*);
 static expression_t *new_conditional_expression(parser_ctx_t*,expression_t*,expression_t*,expression_t*);
@@ -134,19 +128,19 @@ static expression_t *new_literal_expression(parser_ctx_t*,literal_t*);
 static expression_t *new_array_literal_expression(parser_ctx_t*,element_list_t*,int);
 static expression_t *new_prop_and_value_expression(parser_ctx_t*,property_list_t*);
 
-static source_elements_t *new_source_elements(parser_ctx_t*);
-static source_elements_t *source_elements_add_statement(source_elements_t*,statement_t*);
+#define PARSER_LTYPE unsigned
+#define YYLLOC_DEFAULT(Cur, Rhs, N) Cur = YYRHSLOC((Rhs), (N) ? 1 : 0)
 
 %}
 
 %lex-param { parser_ctx_t *ctx }
 %parse-param { parser_ctx_t *ctx }
+%define api.prefix {parser_}
 %define api.pure
-%start Program
+%start Script
 
 %union {
     int                     ival;
-    const WCHAR             *srcptr;
     jsstr_t                 *str;
     literal_t               *literal;
     struct _argument_list_t *argument_list;
@@ -159,7 +153,6 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
     struct _parameter_list_t *parameter_list;
     struct _property_list_t *property_list;
     property_definition_t   *property_definition;
-    source_elements_t       *source_elements;
     statement_t             *statement;
     struct _statement_list_t *statement_list;
     struct _variable_list_t *variable_list;
@@ -167,23 +160,25 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 }
 
 /* keywords */
-%token <identifier> kBREAK kCASE kCATCH kCONTINUE kDEFAULT kDELETE kDO kELSE kFUNCTION kIF kFINALLY kFOR kGET kIN kSET
-%token <identifier> kINSTANCEOF kNEW kNULL kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE kTRY kTYPEOF kVAR kVOID kWHILE kWITH
+%token <identifier> kBREAK kCASE kCATCH kCONST kCONTINUE kDEFAULT kDELETE kDO kELSE kFUNCTION kIF kFINALLY kFOR
+%token <identifier> kGET kIN kLET kSET kINSTANCEOF kNEW kNULL kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE
+%token <identifier> kTRY kTYPEOF kVAR kVOID kWHILE kWITH
 %token tANDAND tOROR tINC tDEC tHTMLCOMMENT kDIVEQ kDCOL
-
-%token <srcptr> '}'
 
 /* tokens */
 %token <identifier> tIdentifier
 %token <ival> tAssignOper tEqOper tShiftOper tRelOper
 %token <literal> tNumericLiteral tBooleanLiteral
 %token <str> tStringLiteral
-%token tEOF
 
-%type <source_elements> SourceElements
-%type <source_elements> FunctionBody
+%type <statement_list> FunctionBody
+%type <statement_list> ScriptBody
+%type <statement_list> FunctionStatementList
 %type <statement> Statement
+%type <statement> Declaration
 %type <statement> Block
+%type <statement> LexicalDeclaration
+%type <statement> LexicalDeclarationNoIn
 %type <statement> VariableStatement
 %type <statement> EmptyStatement
 %type <statement> ExpressionStatement
@@ -198,6 +193,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 %type <statement> ThrowStatement
 %type <statement> TryStatement
 %type <statement> Finally
+%type <statement> StatementListItem
 %type <statement_list> StatementList StatementList_opt
 %type <parameter_list> FormalParameterList FormalParameterList_opt
 %type <expr> Expression Expression_opt Expression_err
@@ -225,7 +221,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 %type <expr> MemberExpression
 %type <expr> PrimaryExpression
 %type <expr> GetterSetterMethod
-%type <identifier> Identifier_opt
+%type <identifier> Identifier Identifier_opt
 %type <variable_list> VariableDeclarationList
 %type <variable_list> VariableDeclarationListNoIn
 %type <variable_declaration> VariableDeclaration
@@ -244,50 +240,49 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 %type <property_definition> PropertyDefinition
 %type <literal> PropertyName
 %type <literal> BooleanLiteral
-%type <srcptr> KFunction left_bracket
 %type <ival> AssignOper
-%type <identifier> IdentifierName ReservedAsIdentifier
+%type <identifier> IdentifierName ReservedAsIdentifier ES5Keyword
 
 %nonassoc LOWER_THAN_ELSE
-%nonassoc kELSE
+%nonassoc kELSE kIN kINSTANCEOF ':'
+%nonassoc kGET kLET kSET
 
 %%
 
-/* ECMA-262 3rd Edition    14 */
-Program
-       : SourceElements HtmlComment tEOF
-                                { program_parsed(ctx, $1); }
+/* ECMA-262 10th Edition    15.1 */
+Script
+       : ScriptBody HtmlComment { ctx->source = $1 ? $1->head : NULL;
+                                  (void)parser_nerrs; /* avoid unused variable warning */ }
+
+/* ECMA-262 10th Edition    15.1 */
+ScriptBody
+        : StatementList_opt     { $$ = $1; }
 
 HtmlComment
-        : tHTMLCOMMENT          {}
-        | /* empty */           {}
+        : tHTMLCOMMENT
+        | /* empty */
 
-/* ECMA-262 3rd Edition    14 */
-SourceElements
-        : /* empty */           { $$ = new_source_elements(ctx); }
-        | SourceElements Statement
-                                { $$ = source_elements_add_statement($1, $2); }
+/* ECMA-262 10th Edition   14.1 */
+FunctionStatementList
+        : StatementList_opt     { $$ = $1; }
 
 /* ECMA-262 3rd Edition    13 */
 FunctionExpression
-        : KFunction left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
-                                { $$ = new_function_expression(ctx, NULL, $3, $6, NULL, $1, $7-$1+1); }
-        | KFunction tIdentifier left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
-                                { $$ = new_function_expression(ctx, $2, $4, $7, NULL, $1, $8-$1+1); }
-        | KFunction tIdentifier kDCOL tIdentifier left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
-                                { $$ = new_function_expression(ctx, $4, $6, $9, $2, $1, $10-$1+1); }
+        : kFUNCTION left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
+                                { $$ = new_function_expression(ctx, NULL, $3, $6, NULL, ctx->begin + @1, @7 - @1 + 1); }
+        | kFUNCTION Identifier left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
+                                { $$ = new_function_expression(ctx, $2, $4, $7, NULL, ctx->begin + @1, @8 - @1 + 1); }
+        | kFUNCTION Identifier kDCOL Identifier left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
+                                { $$ = new_function_expression(ctx, $4, $6, $9, $2, ctx->begin + @1, @10 - @1 + 1); }
 
-KFunction
-        : kFUNCTION             { $$ = ctx->ptr - 8; }
-
-/* ECMA-262 3rd Edition    13 */
+/* ECMA-262 10th Edition   14.1 */
 FunctionBody
-        : SourceElements        { $$ = $1; }
+        : FunctionStatementList { $$ = $1; }
 
 /* ECMA-262 3rd Edition    13 */
 FormalParameterList
-        : tIdentifier           { $$ = new_parameter_list(ctx, $1); }
-        | FormalParameterList ',' tIdentifier
+        : Identifier            { $$ = new_parameter_list(ctx, $1); }
+        | FormalParameterList ',' Identifier
                                 { $$ = parameter_list_add(ctx, $1, $3); }
 
 /* ECMA-262 3rd Edition    13 */
@@ -300,7 +295,7 @@ Statement
         : Block                 { $$ = $1; }
         | VariableStatement     { $$ = $1; }
         | EmptyStatement        { $$ = $1; }
-        | FunctionExpression    { $$ = new_expression_statement(ctx, $1); }
+        | FunctionExpression    { $$ = new_expression_statement(ctx, @$, $1); }
         | ExpressionStatement   { $$ = $1; }
         | IfStatement           { $$ = $1; }
         | IterationStatement    { $$ = $1; }
@@ -313,10 +308,19 @@ Statement
         | ThrowStatement        { $$ = $1; }
         | TryStatement          { $$ = $1; }
 
-/* ECMA-262 3rd Edition    12.2 */
+/* ECMA-262 10th Edition   13. TODO: HoistableDeclaration */
+Declaration
+        : LexicalDeclaration    { $$ = $1; }
+
+/* ECMA-262 10th Edition    13.2 */
+StatementListItem
+        : Statement             { $$ = $1; }
+        | Declaration           { $$ = $1; }
+
+/* ECMA-262 10th Edition    13.2 */
 StatementList
-        : Statement             { $$ = new_statement_list(ctx, $1); }
-        | StatementList Statement
+        : StatementListItem     { $$ = new_statement_list(ctx, $1); }
+        | StatementList StatementListItem
                                 { $$ = statement_list_add($1, $2); }
 
 /* ECMA-262 3rd Edition    12.2 */
@@ -326,13 +330,43 @@ StatementList_opt
 
 /* ECMA-262 3rd Edition    12.1 */
 Block
-        : '{' StatementList '}' { $$ = new_block_statement(ctx, $2); }
-        | '{' '}'               { $$ = new_block_statement(ctx, NULL); }
+        : '{' StatementList '}' { $$ = new_block_statement(ctx, @2, $2); }
+        | '{' '}'               { $$ = new_block_statement(ctx, @$, NULL); }
+
+/* ECMA-262 10th Edition   13.3.1, TODO:  BindingList*/
+LexicalDeclaration
+        : kLET VariableDeclarationList semicolon_opt
+                                { $$ = new_var_statement(ctx, TRUE, FALSE, @$, $2); }
+        | kCONST VariableDeclarationList semicolon_opt
+                                {
+                                    if(ctx->script->version < SCRIPTLANGUAGEVERSION_ES5) {
+                                        WARN("const var declaration %s in legacy mode.\n",
+                                                debugstr_w($1));
+                                        set_error(ctx, @$, JS_E_SYNTAX);
+                                        YYABORT;
+                                    }
+                                    $$ = new_var_statement(ctx, TRUE, TRUE, @$, $2);
+                                }
+
+/* ECMA-262 10th Edition   13.3.1, TODO:  BindingList*/
+LexicalDeclarationNoIn
+        : kLET VariableDeclarationListNoIn semicolon_opt
+                                { $$ = new_var_statement(ctx, TRUE, FALSE, @$, $2); }
+        | kCONST VariableDeclarationListNoIn semicolon_opt
+                                {
+                                    if(ctx->script->version < SCRIPTLANGUAGEVERSION_ES5) {
+                                        WARN("const var declaration %s in legacy mode.\n",
+                                                debugstr_w($1));
+                                        set_error(ctx, @$, JS_E_SYNTAX);
+                                        YYABORT;
+                                    }
+                                    $$ = new_var_statement(ctx, TRUE, TRUE, @$, $2);
+                                }
 
 /* ECMA-262 3rd Edition    12.2 */
 VariableStatement
         : kVAR VariableDeclarationList semicolon_opt
-                                { $$ = new_var_statement(ctx, $2); }
+                                { $$ = new_var_statement(ctx, FALSE, FALSE, @$, $2); }
 
 /* ECMA-262 3rd Edition    12.2 */
 VariableDeclarationList
@@ -349,12 +383,12 @@ VariableDeclarationListNoIn
 
 /* ECMA-262 3rd Edition    12.2 */
 VariableDeclaration
-        : tIdentifier Initialiser_opt
+        : Identifier Initialiser_opt
                                 { $$ = new_variable_declaration(ctx, $1, $2); }
 
 /* ECMA-262 3rd Edition    12.2 */
 VariableDeclarationNoIn
-        : tIdentifier InitialiserNoIn_opt
+        : Identifier InitialiserNoIn_opt
                                 { $$ = new_variable_declaration(ctx, $1, $2); }
 
 /* ECMA-262 3rd Edition    12.2 */
@@ -379,72 +413,87 @@ InitialiserNoIn
 
 /* ECMA-262 3rd Edition    12.3 */
 EmptyStatement
-        : ';'                   { $$ = new_statement(ctx, STAT_EMPTY, 0); }
+        : ';'                   { $$ = new_statement(ctx, STAT_EMPTY, 0, @$); }
 
 /* ECMA-262 3rd Edition    12.4 */
 ExpressionStatement
         : Expression semicolon_opt
-                                { $$ = new_expression_statement(ctx, $1); }
+                                { $$ = new_expression_statement(ctx, @$,  $1); }
 
 /* ECMA-262 3rd Edition    12.5 */
 IfStatement
         : kIF left_bracket Expression_err right_bracket Statement kELSE Statement
-                                { $$ = new_if_statement(ctx, $3, $5, $7); }
+                                { $$ = new_if_statement(ctx, @$, $3, $5, $7); }
         | kIF left_bracket Expression_err right_bracket Statement %prec LOWER_THAN_ELSE
-                                { $$ = new_if_statement(ctx, $3, $5, NULL); }
+                                { $$ = new_if_statement(ctx, @$, $3, $5, NULL); }
 
-/* ECMA-262 3rd Edition    12.6 */
+/* ECMA-262 10th Edition   13.7 */
 IterationStatement
         : kDO Statement kWHILE left_bracket Expression_err right_bracket semicolon_opt
-                                { $$ = new_while_statement(ctx, TRUE, $5, $2); }
+                                { $$ = new_while_statement(ctx, @3, TRUE, $5, $2); }
         | kWHILE left_bracket Expression_err right_bracket Statement
-                                { $$ = new_while_statement(ctx, FALSE, $3, $5); }
+                                { $$ = new_while_statement(ctx, @$, FALSE, $3, $5); }
         | kFOR left_bracket ExpressionNoIn_opt
                                 { if(!explicit_error(ctx, $3, ';')) YYABORT; }
-        semicolon  Expression_opt
+          semicolon  Expression_opt
                                 { if(!explicit_error(ctx, $6, ';')) YYABORT; }
-        semicolon Expression_opt right_bracket Statement
-                                { $$ = new_for_statement(ctx, NULL, $3, $6, $9, $11); }
+          semicolon Expression_opt right_bracket Statement
+                                { $$ = new_for_statement(ctx, @3, NULL, $3, $6, @6, $9, @9, $11); }
         | kFOR left_bracket kVAR VariableDeclarationListNoIn
                                 { if(!explicit_error(ctx, $4, ';')) YYABORT; }
-        semicolon Expression_opt
+          semicolon Expression_opt
                                 { if(!explicit_error(ctx, $7, ';')) YYABORT; }
-        semicolon Expression_opt right_bracket Statement
-                                { $$ = new_for_statement(ctx, $4, NULL, $7, $10, $12); }
+          semicolon Expression_opt right_bracket Statement
+                                { $$ = new_for_statement(ctx, @3, $4 ? $4->head : NULL, NULL, $7, @7, $10, @10, $12); }
         | kFOR left_bracket LeftHandSideExpression kIN Expression_err right_bracket Statement
-                                { $$ = new_forin_statement(ctx, NULL, $3, $5, $7); }
+                                { $$ = new_forin_statement(ctx, @$, NULL, $3, $5, $7); }
         | kFOR left_bracket kVAR VariableDeclarationNoIn kIN Expression_err right_bracket Statement
-                                { $$ = new_forin_statement(ctx, $4, NULL, $6, $8); }
+                                { $$ = new_forin_statement(ctx, @$,  $4, NULL, $6, $8); }
+        | kFOR left_bracket LexicalDeclarationNoIn
+                                { if(!explicit_error(ctx, $3, ';')) YYABORT; }
+          Expression_opt
+                                { if(!explicit_error(ctx, $5, ';')) YYABORT; }
+          semicolon Expression_opt right_bracket Statement
+                                { $$ = new_for_statement(ctx, @3, ((var_statement_t *)$3)->variable_list,
+                                  NULL, $5, @5, $8, @8, $10); }
 
 /* ECMA-262 3rd Edition    12.7 */
 ContinueStatement
         : kCONTINUE /* NONL */ Identifier_opt semicolon_opt
-                                { $$ = new_continue_statement(ctx, $2); }
+                                { $$ = new_continue_statement(ctx, @$, $2); }
 
 /* ECMA-262 3rd Edition    12.8 */
 BreakStatement
         : kBREAK /* NONL */ Identifier_opt semicolon_opt
-                                { $$ = new_break_statement(ctx, $2); }
+                                { $$ = new_break_statement(ctx, @$, $2); }
 
 /* ECMA-262 3rd Edition    12.9 */
 ReturnStatement
         : kRETURN /* NONL */ Expression_opt semicolon_opt
-                                { $$ = new_return_statement(ctx, $2); }
+                                { $$ = new_return_statement(ctx, @$, $2); }
 
 /* ECMA-262 3rd Edition    12.10 */
 WithStatement
         : kWITH left_bracket Expression right_bracket Statement
-                                { $$ = new_with_statement(ctx, $3, $5); }
+                                { $$ = new_with_statement(ctx, @$, $3, $5); }
 
 /* ECMA-262 3rd Edition    12.12 */
 LabelledStatement
         : tIdentifier ':' Statement
-                                { $$ = new_labelled_statement(ctx, $1, $3); }
+                                { $$ = new_labelled_statement(ctx, @$, $1, $3); }
+
+        /* We have to lay out the keywords explicitly instead of using Identifier, as otherwise bison's parser
+         * wouldn't be able to figure out whether to reduce the Identifier or shift the colon (following the
+         * label and thus treating it as a label). This happens because the parser has only one lookahead token
+         * that can be used to decide a shift/reduce and would introduce a conflict in this case... */
+        | kGET ':' Statement    { $$ = new_labelled_statement(ctx, @$, $1, $3); }
+        | kSET ':' Statement    { $$ = new_labelled_statement(ctx, @$, $1, $3); }
+        | kLET ':' Statement    { $$ = new_labelled_statement(ctx, @$, $1, $3); }
 
 /* ECMA-262 3rd Edition    12.11 */
 SwitchStatement
         : kSWITCH left_bracket Expression right_bracket CaseBlock
-                                { $$ = new_switch_statement(ctx, $3, $5); }
+                                { $$ = new_switch_statement(ctx, @$, $3, $5); }
 
 /* ECMA-262 3rd Edition    12.11 */
 CaseBlock
@@ -467,33 +516,33 @@ CaseClausules
 /* ECMA-262 3rd Edition    12.11 */
 CaseClausule
         : kCASE Expression ':' StatementList_opt
-                                 { $$ = new_case_clausule(ctx, $2, $4); }
+                                 { $$ = new_case_clausule(ctx, @$, $2, $4); }
 
 /* ECMA-262 3rd Edition    12.11 */
 DefaultClausule
         : kDEFAULT ':' StatementList_opt
-                                 { $$ = new_case_clausule(ctx, NULL, $3); }
+                                 { $$ = new_case_clausule(ctx, @$, NULL, $3); }
 
 /* ECMA-262 3rd Edition    12.13 */
 ThrowStatement
         : kTHROW /* NONL */ Expression semicolon_opt
-                                { $$ = new_throw_statement(ctx, $2); }
+                                { $$ = new_throw_statement(ctx, @$, $2); }
 
 /* ECMA-262 3rd Edition    12.14 */
 TryStatement
-        : kTRY Block Catch      { $$ = new_try_statement(ctx, $2, $3, NULL); }
-        | kTRY Block Finally    { $$ = new_try_statement(ctx, $2, NULL, $3); }
+        : kTRY Block Catch      { $$ = new_try_statement(ctx, $2, $3, NULL, 0); }
+        | kTRY Block Finally    { $$ = new_try_statement(ctx, $2, NULL, $3, @3); }
         | kTRY Block Catch Finally
-                                { $$ = new_try_statement(ctx, $2, $3, $4); }
+                                { $$ = new_try_statement(ctx, $2, $3, $4, @4); }
 
 /* ECMA-262 3rd Edition    12.14 */
 Catch
-        : kCATCH left_bracket tIdentifier right_bracket Block
+        : kCATCH left_bracket Identifier right_bracket Block
                                 { $$ = new_catch_block(ctx, $3, $5); }
 
 /* ECMA-262 3rd Edition    12.14 */
 Finally
-        : kFINALLY Block        { $$ = $2; }
+        : kFINALLY Block        { @$ = @2; $$ = $2; }
 
 /* ECMA-262 3rd Edition    11.14 */
 Expression_opt
@@ -502,7 +551,7 @@ Expression_opt
 
 Expression_err
         : Expression            { $$ = $1; }
-        | error                 { set_error(ctx, JS_E_SYNTAX); YYABORT; }
+        | error                 { set_error(ctx, @$, JS_E_SYNTAX); YYABORT; }
 
 /* ECMA-262 3rd Edition    11.14 */
 Expression
@@ -747,7 +796,11 @@ ArgumentList
 /* ECMA-262 3rd Edition    11.1 */
 PrimaryExpression
         : kTHIS                 { $$ = new_expression(ctx, EXPR_THIS, 0); }
+        /* We have to lay out the keywords explicitly instead of using Identifier, see LabelledStatement. */
         | tIdentifier           { $$ = new_identifier_expression(ctx, $1); }
+        | kGET                  { $$ = new_identifier_expression(ctx, $1); }
+        | kSET                  { $$ = new_identifier_expression(ctx, $1); }
+        | kLET                  { $$ = new_identifier_expression(ctx, $1); }
         | Literal               { $$ = new_literal_expression(ctx, $1); }
         | ArrayLiteral          { $$ = $1; }
         | ObjectLiteral         { $$ = $1; }
@@ -787,6 +840,7 @@ ObjectLiteral
         {
             if(ctx->script->version < 2) {
                 WARN("Trailing comma in object literal is illegal in legacy mode.\n");
+                set_error(ctx, @3, JS_E_SYNTAX);
                 YYABORT;
             }
             $$ = new_prop_and_value_expression(ctx, $2);
@@ -809,7 +863,7 @@ PropertyDefinition
 
 GetterSetterMethod
         : left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
-                                { $$ = new_function_expression(ctx, NULL, $2, $5, NULL, $1, $6-$1); }
+                                { $$ = new_function_expression(ctx, NULL, $2, $5, NULL, ctx->begin + @1, @6 - @1 + 1); }
 
 /* Ecma-262 3rd Edition    11.1.5 */
 PropertyName
@@ -820,7 +874,11 @@ PropertyName
 /* ECMA-262 3rd Edition    7.6 */
 Identifier_opt
         : /* empty*/            { $$ = NULL; }
-        | tIdentifier           { $$ = $1; }
+        | Identifier            { $$ = $1; }
+
+Identifier
+        : tIdentifier           { $$ = $1; }
+        | ES5Keyword            { $$ = $1; }
 
 /* ECMA-262 5.1 Edition    7.6 */
 IdentifierName
@@ -830,6 +888,7 @@ IdentifierName
             if(ctx->script->version < SCRIPTLANGUAGEVERSION_ES5) {
                 WARN("%s keyword used as an identifier in legacy mode.\n",
                      debugstr_w($1));
+                set_error(ctx, @$, JS_E_SYNTAX);
                 YYABORT;
             }
             $$ = $1;
@@ -839,6 +898,7 @@ ReservedAsIdentifier
         : kBREAK                { $$ = $1; }
         | kCASE                 { $$ = $1; }
         | kCATCH                { $$ = $1; }
+        | kCONST                { $$ = $1; }
         | kCONTINUE             { $$ = $1; }
         | kDEFAULT              { $$ = $1; }
         | kDELETE               { $$ = $1; }
@@ -848,14 +908,12 @@ ReservedAsIdentifier
         | kFINALLY              { $$ = $1; }
         | kFOR                  { $$ = $1; }
         | kFUNCTION             { $$ = $1; }
-        | kGET                  { $$ = $1; }
         | kIF                   { $$ = $1; }
         | kIN                   { $$ = $1; }
         | kINSTANCEOF           { $$ = $1; }
         | kNEW                  { $$ = $1; }
         | kNULL                 { $$ = $1; }
         | kRETURN               { $$ = $1; }
-        | kSET                  { $$ = $1; }
         | kSWITCH               { $$ = $1; }
         | kTHIS                 { $$ = $1; }
         | kTHROW                { $$ = $1; }
@@ -866,6 +924,12 @@ ReservedAsIdentifier
         | kVOID                 { $$ = $1; }
         | kWHILE                { $$ = $1; }
         | kWITH                 { $$ = $1; }
+        | ES5Keyword            { $$ = $1; }
+
+ES5Keyword
+        : kGET                  { $$ = $1; }
+        | kLET                  { $$ = $1; }
+        | kSET                  { $$ = $1; }
 
 /* ECMA-262 3rd Edition    7.8 */
 Literal
@@ -886,19 +950,19 @@ BooleanLiteral
 
 semicolon_opt
         : ';'
-        | error                 { if(!allow_auto_semicolon(ctx)) {YYABORT;} }
+        | error                 { if(!allow_auto_semicolon(ctx)) {YYABORT;} else { ctx->hres = S_OK; ctx->error_loc = -1; } }
 
 left_bracket
-        : '('                   { $$ = ctx->ptr; }
-        | error                 { set_error(ctx, JS_E_MISSING_LBRACKET); YYABORT; }
+        : '('
+        | error                 { set_error(ctx, @$, JS_E_MISSING_LBRACKET); YYABORT; }
 
 right_bracket
         : ')'
-        | error                 { set_error(ctx, JS_E_MISSING_RBRACKET); YYABORT; }
+        | error                 { set_error(ctx, @$, JS_E_MISSING_RBRACKET); YYABORT; }
 
 semicolon
         : ';'
-        | error                 { set_error(ctx, JS_E_MISSING_SEMICOLON); YYABORT; }
+        | error                 { set_error(ctx,  @$, JS_E_MISSING_SEMICOLON); YYABORT; }
 
 %%
 
@@ -907,7 +971,7 @@ static BOOL allow_auto_semicolon(parser_ctx_t *ctx)
     return ctx->nl || ctx->ptr == ctx->end || *(ctx->ptr-1) == '}';
 }
 
-static void *new_statement(parser_ctx_t *ctx, statement_type_t type, size_t size)
+static void *new_statement(parser_ctx_t *ctx, statement_type_t type, size_t size, unsigned loc)
 {
     statement_t *stat;
 
@@ -916,6 +980,7 @@ static void *new_statement(parser_ctx_t *ctx, statement_type_t type, size_t size
         return NULL;
 
     stat->type = type;
+    stat->loc  = loc;
     stat->next = NULL;
 
     return stat;
@@ -1029,12 +1094,13 @@ static catch_block_t *new_catch_block(parser_ctx_t *ctx, const WCHAR *identifier
     return ret;
 }
 
-static case_clausule_t *new_case_clausule(parser_ctx_t *ctx, expression_t *expr, statement_list_t *stat_list)
+static case_clausule_t *new_case_clausule(parser_ctx_t *ctx, unsigned loc, expression_t *expr, statement_list_t *stat_list)
 {
     case_clausule_t *ret = parser_alloc(ctx, sizeof(case_clausule_t));
 
     ret->expr = expr;
     ret->stat = stat_list ? stat_list->head : NULL;
+    ret->loc = loc;
     ret->next = NULL;
 
     return ret;
@@ -1106,14 +1172,15 @@ static case_clausule_t *new_case_block(parser_ctx_t *ctx, case_list_t *case_list
     return ret;
 }
 
-static statement_t *new_block_statement(parser_ctx_t *ctx, statement_list_t *list)
+static statement_t *new_block_statement(parser_ctx_t *ctx, unsigned loc, statement_list_t *list)
 {
     block_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_BLOCK, sizeof(*ret));
+    ret = new_statement(ctx, STAT_BLOCK, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
+    ret->scope_index = 0;
     ret->stat_list = list ? list->head : NULL;
 
     return &ret->stat;
@@ -1127,6 +1194,8 @@ static variable_declaration_t *new_variable_declaration(parser_ctx_t *ctx, const
     ret->expr = expr;
     ret->next = NULL;
     ret->global_next = NULL;
+    ret->block_scope = FALSE;
+    ret->constant = FALSE;
 
     return ret;
 }
@@ -1147,24 +1216,31 @@ static variable_list_t *variable_list_add(parser_ctx_t *ctx, variable_list_t *li
     return list;
 }
 
-static statement_t *new_var_statement(parser_ctx_t *ctx, variable_list_t *variable_list)
+static statement_t *new_var_statement(parser_ctx_t *ctx, BOOL block_scope, BOOL constant, unsigned loc,
+        variable_list_t *variable_list)
 {
+    variable_declaration_t *var;
     var_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_VAR, sizeof(*ret));
+    ret = new_statement(ctx, STAT_VAR, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
     ret->variable_list = variable_list->head;
+    for (var = ret->variable_list; var; var = var->next)
+    {
+        var->block_scope = block_scope;
+        var->constant = constant;
+    }
 
     return &ret->stat;
 }
 
-static statement_t *new_expression_statement(parser_ctx_t *ctx, expression_t *expr)
+static statement_t *new_expression_statement(parser_ctx_t *ctx, unsigned loc, expression_t *expr)
 {
     expression_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_EXPR, sizeof(*ret));
+    ret = new_statement(ctx, STAT_EXPR, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
@@ -1173,11 +1249,12 @@ static statement_t *new_expression_statement(parser_ctx_t *ctx, expression_t *ex
     return &ret->stat;
 }
 
-static statement_t *new_if_statement(parser_ctx_t *ctx, expression_t *expr, statement_t *if_stat, statement_t *else_stat)
+static statement_t *new_if_statement(parser_ctx_t *ctx, unsigned loc, expression_t *expr,
+                                     statement_t *if_stat, statement_t *else_stat)
 {
     if_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_IF, sizeof(*ret));
+    ret = new_statement(ctx, STAT_IF, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
@@ -1188,11 +1265,11 @@ static statement_t *new_if_statement(parser_ctx_t *ctx, expression_t *expr, stat
     return &ret->stat;
 }
 
-static statement_t *new_while_statement(parser_ctx_t *ctx, BOOL dowhile, expression_t *expr, statement_t *stat)
+static statement_t *new_while_statement(parser_ctx_t *ctx, unsigned loc, BOOL dowhile, expression_t *expr, statement_t *stat)
 {
     while_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_WHILE, sizeof(*ret));
+    ret = new_statement(ctx, STAT_WHILE, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
@@ -1203,30 +1280,33 @@ static statement_t *new_while_statement(parser_ctx_t *ctx, BOOL dowhile, express
     return &ret->stat;
 }
 
-static statement_t *new_for_statement(parser_ctx_t *ctx, variable_list_t *variable_list, expression_t *begin_expr,
-        expression_t *expr, expression_t *end_expr, statement_t *statement)
+static statement_t *new_for_statement(parser_ctx_t *ctx, unsigned loc, variable_declaration_t *variable_list, expression_t *begin_expr,
+        expression_t *expr, unsigned expr_loc, expression_t *end_expr, unsigned end_loc, statement_t *statement)
 {
     for_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_FOR, sizeof(*ret));
+    ret = new_statement(ctx, STAT_FOR, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
-    ret->variable_list = variable_list ? variable_list->head : NULL;
+    ret->variable_list = variable_list;
     ret->begin_expr = begin_expr;
     ret->expr = expr;
+    ret->expr_loc = expr_loc;
     ret->end_expr = end_expr;
+    ret->end_loc = end_loc;
     ret->statement = statement;
+    ret->scope_index = 0;
 
     return &ret->stat;
 }
 
-static statement_t *new_forin_statement(parser_ctx_t *ctx, variable_declaration_t *variable, expression_t *expr,
+static statement_t *new_forin_statement(parser_ctx_t *ctx, unsigned loc, variable_declaration_t *variable, expression_t *expr,
         expression_t *in_expr, statement_t *statement)
 {
     forin_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_FORIN, sizeof(*ret));
+    ret = new_statement(ctx, STAT_FORIN, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
@@ -1238,11 +1318,11 @@ static statement_t *new_forin_statement(parser_ctx_t *ctx, variable_declaration_
     return &ret->stat;
 }
 
-static statement_t *new_continue_statement(parser_ctx_t *ctx, const WCHAR *identifier)
+static statement_t *new_continue_statement(parser_ctx_t *ctx, unsigned loc, const WCHAR *identifier)
 {
     branch_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_CONTINUE, sizeof(*ret));
+    ret = new_statement(ctx, STAT_CONTINUE, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
@@ -1251,11 +1331,11 @@ static statement_t *new_continue_statement(parser_ctx_t *ctx, const WCHAR *ident
     return &ret->stat;
 }
 
-static statement_t *new_break_statement(parser_ctx_t *ctx, const WCHAR *identifier)
+static statement_t *new_break_statement(parser_ctx_t *ctx, unsigned loc, const WCHAR *identifier)
 {
     branch_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_BREAK, sizeof(*ret));
+    ret = new_statement(ctx, STAT_BREAK, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
@@ -1264,11 +1344,11 @@ static statement_t *new_break_statement(parser_ctx_t *ctx, const WCHAR *identifi
     return &ret->stat;
 }
 
-static statement_t *new_return_statement(parser_ctx_t *ctx, expression_t *expr)
+static statement_t *new_return_statement(parser_ctx_t *ctx, unsigned loc, expression_t *expr)
 {
     expression_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_RETURN, sizeof(*ret));
+    ret = new_statement(ctx, STAT_RETURN, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
@@ -1277,11 +1357,11 @@ static statement_t *new_return_statement(parser_ctx_t *ctx, expression_t *expr)
     return &ret->stat;
 }
 
-static statement_t *new_with_statement(parser_ctx_t *ctx, expression_t *expr, statement_t *statement)
+static statement_t *new_with_statement(parser_ctx_t *ctx, unsigned loc, expression_t *expr, statement_t *statement)
 {
     with_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_WITH, sizeof(*ret));
+    ret = new_statement(ctx, STAT_WITH, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
@@ -1291,11 +1371,11 @@ static statement_t *new_with_statement(parser_ctx_t *ctx, expression_t *expr, st
     return &ret->stat;
 }
 
-static statement_t *new_labelled_statement(parser_ctx_t *ctx, const WCHAR *identifier, statement_t *statement)
+static statement_t *new_labelled_statement(parser_ctx_t *ctx, unsigned loc, const WCHAR *identifier, statement_t *statement)
 {
     labelled_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_LABEL, sizeof(*ret));
+    ret = new_statement(ctx, STAT_LABEL, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
@@ -1305,11 +1385,11 @@ static statement_t *new_labelled_statement(parser_ctx_t *ctx, const WCHAR *ident
     return &ret->stat;
 }
 
-static statement_t *new_switch_statement(parser_ctx_t *ctx, expression_t *expr, case_clausule_t *case_list)
+static statement_t *new_switch_statement(parser_ctx_t *ctx, unsigned loc, expression_t *expr, case_clausule_t *case_list)
 {
     switch_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_SWITCH, sizeof(*ret));
+    ret = new_statement(ctx, STAT_SWITCH, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
@@ -1319,11 +1399,11 @@ static statement_t *new_switch_statement(parser_ctx_t *ctx, expression_t *expr, 
     return &ret->stat;
 }
 
-static statement_t *new_throw_statement(parser_ctx_t *ctx, expression_t *expr)
+static statement_t *new_throw_statement(parser_ctx_t *ctx, unsigned loc, expression_t *expr)
 {
     expression_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_THROW, sizeof(*ret));
+    ret = new_statement(ctx, STAT_THROW, sizeof(*ret), loc);
     if(!ret)
         return NULL;
 
@@ -1333,17 +1413,18 @@ static statement_t *new_throw_statement(parser_ctx_t *ctx, expression_t *expr)
 }
 
 static statement_t *new_try_statement(parser_ctx_t *ctx, statement_t *try_statement,
-       catch_block_t *catch_block, statement_t *finally_statement)
+        catch_block_t *catch_block, statement_t *finally_statement, unsigned finally_loc)
 {
     try_statement_t *ret;
 
-    ret = new_statement(ctx, STAT_TRY, sizeof(*ret));
+    ret = new_statement(ctx, STAT_TRY, sizeof(*ret), try_statement->loc);
     if(!ret)
         return NULL;
 
     ret->try_statement = try_statement;
     ret->catch_block = catch_block;
     ret->finally_statement = finally_statement;
+    ret->finally_loc = finally_loc;
 
     return &ret->stat;
 }
@@ -1375,16 +1456,18 @@ static parameter_list_t *parameter_list_add(parser_ctx_t *ctx, parameter_list_t 
 }
 
 static expression_t *new_function_expression(parser_ctx_t *ctx, const WCHAR *identifier, parameter_list_t *parameter_list,
-    source_elements_t *source_elements, const WCHAR *event_target, const WCHAR *src_str, DWORD src_len)
+    statement_list_t *statement_list, const WCHAR *event_target, const WCHAR *src_str, DWORD src_len)
 {
     function_expression_t *ret = new_expression(ctx, EXPR_FUNC, sizeof(*ret));
 
     ret->identifier = identifier;
     ret->parameter_list = parameter_list ? parameter_list->head : NULL;
-    ret->source_elements = source_elements;
+    ret->statement_list = statement_list ? statement_list->head : NULL;
     ret->event_target = event_target;
     ret->src_str = src_str;
     ret->src_len = src_len;
+    ret->is_statement = FALSE;
+    ret->scope_index = 0;
     ret->next = NULL;
 
     return &ret->expr;
@@ -1461,21 +1544,26 @@ static expression_t *new_call_expression(parser_ctx_t *ctx, expression_t *expres
     return &ret->expr;
 }
 
-static int parser_error(parser_ctx_t *ctx, const char *str)
+static int parser_error(unsigned *loc, parser_ctx_t *ctx, const char *str)
 {
+    if(ctx->error_loc == -1)
+        ctx->error_loc = *loc;
+    if(ctx->hres == S_OK)
+        ctx->hres = JS_E_SYNTAX;
     return 0;
 }
 
-static void set_error(parser_ctx_t *ctx, UINT error)
+static void set_error(parser_ctx_t *ctx, unsigned loc, HRESULT error)
 {
     ctx->hres = error;
+    ctx->error_loc = loc;
 }
 
 static BOOL explicit_error(parser_ctx_t *ctx, void *obj, WCHAR next)
 {
     if(obj || *(ctx->ptr-1)==next) return TRUE;
 
-    set_error(ctx, JS_E_SYNTAX);
+    set_error(ctx, ctx->ptr - ctx->begin /* FIXME */, JS_E_SYNTAX);
     return FALSE;
 }
 
@@ -1517,25 +1605,6 @@ static expression_t *new_literal_expression(parser_ctx_t *ctx, literal_t *litera
     return &ret->expr;
 }
 
-static source_elements_t *new_source_elements(parser_ctx_t *ctx)
-{
-    source_elements_t *ret = parser_alloc(ctx, sizeof(source_elements_t));
-
-    memset(ret, 0, sizeof(*ret));
-
-    return ret;
-}
-
-static source_elements_t *source_elements_add_statement(source_elements_t *source_elements, statement_t *statement)
-{
-    if(source_elements->statement_tail)
-        source_elements->statement_tail = source_elements->statement_tail->next = statement;
-    else
-        source_elements->statement = source_elements->statement_tail = statement;
-
-    return source_elements;
-}
-
 static statement_list_t *new_statement_list(parser_ctx_t *ctx, statement_t *statement)
 {
     statement_list_t *ret =  parser_alloc_tmp(ctx, sizeof(statement_list_t));
@@ -1552,37 +1621,28 @@ static statement_list_t *statement_list_add(statement_list_t *list, statement_t 
     return list;
 }
 
-static void program_parsed(parser_ctx_t *ctx, source_elements_t *source)
-{
-    ctx->source = source;
-    if(!ctx->lexer_error)
-        ctx->hres = S_OK;
-}
-
 void parser_release(parser_ctx_t *ctx)
 {
     script_release(ctx->script);
     heap_pool_free(&ctx->heap);
-    heap_free(ctx);
+    free(ctx);
 }
 
-HRESULT script_parse(script_ctx_t *ctx, struct _compiler_ctx_t *compiler, const WCHAR *code, const WCHAR *delimiter, BOOL from_eval,
+HRESULT script_parse(script_ctx_t *ctx, struct _compiler_ctx_t *compiler, bytecode_t *code, const WCHAR *delimiter, BOOL from_eval,
         parser_ctx_t **ret)
 {
     parser_ctx_t *parser_ctx;
     heap_pool_t *mark;
     HRESULT hres;
 
-    const WCHAR html_tagW[] = {'<','/','s','c','r','i','p','t','>',0};
-
-    parser_ctx = heap_alloc_zero(sizeof(parser_ctx_t));
+    parser_ctx = calloc(1, sizeof(parser_ctx_t));
     if(!parser_ctx)
         return E_OUTOFMEMORY;
 
-    parser_ctx->hres = JS_E_SYNTAX;
-    parser_ctx->is_html = delimiter && !wcsicmp(delimiter, html_tagW);
+    parser_ctx->error_loc = -1;
+    parser_ctx->is_html = delimiter && !wcsicmp(delimiter, L"</script>");
 
-    parser_ctx->begin = parser_ctx->ptr = code;
+    parser_ctx->begin = parser_ctx->ptr = code->source;
     parser_ctx->end = parser_ctx->begin + lstrlenW(parser_ctx->begin);
 
     script_addref(ctx);
@@ -1598,10 +1658,26 @@ HRESULT script_parse(script_ctx_t *ctx, struct _compiler_ctx_t *compiler, const 
     heap_pool_clear(mark);
     hres = parser_ctx->hres;
     if(FAILED(hres)) {
-        WARN("parser failed around %s\n",
-            debugstr_w(parser_ctx->begin+20 > parser_ctx->ptr ? parser_ctx->begin : parser_ctx->ptr-20));
+        unsigned int error_loc = parser_ctx->error_loc == -1 ? 0 : parser_ctx->error_loc;
+        const WCHAR *line_start = code->source + error_loc, *line_end = line_start;
+        jsstr_t *line_str;
+
+        while(line_start > code->source && line_start[-1] != '\n')
+            line_start--;
+        while(*line_end && *line_end != '\n')
+            line_end++;
+        line_str = jsstr_alloc_len(line_start, line_end - line_start);
+
+        WARN("parser failed around %s in line %s\n",
+             debugstr_w(parser_ctx->begin+20 > parser_ctx->ptr ? parser_ctx->begin : parser_ctx->ptr-20),
+             debugstr_jsstr(line_str));
+
+        throw_error(ctx, hres, NULL);
+        set_error_location(ctx->ei, code, error_loc, IDS_COMPILATION_ERROR, line_str);
         parser_release(parser_ctx);
-        return hres;
+        if(line_str)
+            jsstr_release(line_str);
+        return DISP_E_EXCEPTION;
     }
 
     *ret = parser_ctx;

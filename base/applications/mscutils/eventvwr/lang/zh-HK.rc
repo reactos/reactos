@@ -106,9 +106,9 @@ BEGIN
     LTEXT "描述(&D)：", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "資料(&A)：", IDC_DETAILS_STATIC, 8, 140, 25, 8
     AUTORADIOBUTTON "位元組(&B)", IDC_BYTESRADIO, 39, 140, 34, 8
-    AUTORADIOBUTTON "位元(&W)", IDC_WORDRADIO, 77, 140, 34, 8
+    AUTORADIOBUTTON "字(&W)", IDC_WORDSRADIO, 77, 140, 34, 8
+    LTEXT "資料(&A)：", IDC_DETAILS_STATIC, 8, 140, 25, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -117,7 +117,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "一般"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "顯示名稱(&D):", IDC_STATIC, 7, 9, 60, 8
+    LTEXT "顯示名稱(&D)：", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "記錄檔名稱(&L)：", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
@@ -126,7 +126,7 @@ BEGIN
 // The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
 // Translation note: First fill out ALL accels that MS has in this dialog for your language,
 // and only then as a final step use some remaining unused letters for those 4 controls!
-    LTEXT "大小(&S)；", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "大小(&S)：", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "建立日期(&C)：", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -168,6 +168,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "您想在清除之前儲存這個事件記錄嗎？"
     IDS_RESTOREDEFAULTS "您要將這個記錄的所有設定還原至預設值嗎？"
     IDS_EVENTSTRINGIDNOTFOUND "找不到來源（%s）中的事件 ID（%lu）的描述。本地電腦可能沒有顯示來自遠端電腦訊息所需的註冊表資訊或訊息 DLL 檔。\n\n下列資訊是部分事件：\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -177,14 +179,14 @@ BEGIN
 \n\
 EventVwr [電腦名稱] [/L:<事件記錄檔案>] [/?]\n\
 \n\
-""電腦名稱"" : 指定要連線的遠端電腦\n\
+""電腦名稱"" ：指定要連線的遠端電腦\n\
 \t以擷取要顯示的事件。如果未指定名稱，\n\
 \t則使用本地電腦。\n\
 \n\
-/L:<事件記錄檔案> : 指定要開啟的事件記錄檔案。\n\
+/L:<事件記錄檔案> ：指定要開啟的事件記錄檔案。\n\
 \t只支援 .evt 格式檔案 (NT ≤ 5.2)。\n\
 \n\
-/? : 顯示這個説明訊息。\n\
+/? ：顯示這個説明訊息。\n\
 "
     IDS_EVENTLOGFILE "事件記錄檔案"
 END
@@ -220,16 +222,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-事件種類:   %s\r\n\
-事件源:    %s\r\n\
-事件種類:   %s\r\n\
-事件 ID:  %s\r\n\
-日期:     %s\r\n\
-時間:     %s\r\n\
-使用者:    %s\r\n\
-電腦:     %s\r\n\
-描述:\r\n%s"
+    IDS_COPY_EVTTYPE "事件種類："
+    IDS_COPY_EVTSRC  "事件源："
+    IDS_COPY_EVTCAT  "事件種類："
+    IDS_COPY_EVTID   "事件 ID："
+    IDS_COPY_EVTDATE "日期："
+    IDS_COPY_EVTTIME "時間："
+    IDS_COPY_EVTUSER "使用者："
+    IDS_COPY_EVTCOMP "電腦："
+    IDS_COPY_EVTTEXT "描述："
+    IDS_COPY_EVTDATA "資料："
 END
 
 STRINGTABLE

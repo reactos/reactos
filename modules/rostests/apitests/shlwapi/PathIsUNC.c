@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Documentation: https://msdn.microsoft.com/en-us/library/windows/desktop/bb773712(v=vs.85).aspx */
+/* Documentation: https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-pathisunca */
 
 #include <apitest.h>
 #include <shlwapi.h>
@@ -27,7 +27,7 @@ do { \
     ok(ret == (exp), "Expected %s to be %d, was %d\n", wine_dbgstr_w((str)), (exp), ret); \
 } while (0)
 
-START_TEST(isuncpath)
+START_TEST(PathIsUNC)
 {
     DO_TEST(TRUE, L"\\\\path1\\path2");
     DO_TEST(TRUE, L"\\\\path1");
@@ -40,8 +40,10 @@ START_TEST(isuncpath)
     DO_TEST(FALSE, L"path1");
     DO_TEST(FALSE, L"c:\\path1");
 
-    /* MSDN says FALSE but the test shows TRUE on Windows 2003, but returns FALSE on Windows 7 */
-    DO_TEST(TRUE, L"\\\\?\\c:\\path1");
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+        DO_TEST(FALSE, L"\\\\?\\c:\\path1");
+    else
+        DO_TEST(TRUE, L"\\\\?\\c:\\path1");
 
     DO_TEST(TRUE, L"\\\\path1\\");
     DO_TEST(FALSE, L"//");
@@ -53,6 +55,8 @@ START_TEST(isuncpath)
     DO_TEST(FALSE, (wchar_t*)NULL);
     DO_TEST(FALSE, L" ");
 
-    /* The test shows TRUE on Windows 2003, but returns FALSE on Windows 7 */
-    DO_TEST(TRUE, L"\\\\?\\");
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+        DO_TEST(FALSE, L"\\\\?\\");
+    else
+        DO_TEST(TRUE, L"\\\\?\\");
 }

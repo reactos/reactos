@@ -92,7 +92,7 @@ UIVTBL UiVtbl =
 BOOLEAN UiInitialize(BOOLEAN ShowUi)
 {
     VIDEODISPLAYMODE UiDisplayMode; // Tells us if we are in text or graphics mode
-    BOOLEAN UiMinimal = FALSE;      // Tells us if we are using a minimal console-like UI
+    BOOLEAN UiMinimal = TRUE;       // Tells us if we are using a minimal console-like UI
     ULONG_PTR SectionId;
     ULONG Depth;
     CHAR  SettingText[260];
@@ -223,16 +223,16 @@ BOOLEAN UiInitialize(BOOLEAN ShowUi)
 
 VOID UiUnInitialize(PCSTR BootText)
 {
-    UiDrawBackdrop();
+    UiDrawBackdrop(UiGetScreenHeight());
     UiDrawStatusText(BootText);
     UiInfoBox(BootText);
 
     UiVtbl.UnInitialize();
 }
 
-VOID UiDrawBackdrop(VOID)
+VOID UiDrawBackdrop(ULONG DrawHeight)
 {
-    UiVtbl.DrawBackdrop();
+    UiVtbl.DrawBackdrop(DrawHeight);
 }
 
 VOID UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */)
@@ -605,7 +605,6 @@ BOOLEAN
 UiDisplayMenu(
     IN PCSTR MenuHeader,
     IN PCSTR MenuFooter OPTIONAL,
-    IN BOOLEAN ShowBootOptions,
     IN PCSTR MenuItemList[],
     IN ULONG MenuItemCount,
     IN ULONG DefaultMenuItem,
@@ -615,7 +614,7 @@ UiDisplayMenu(
     IN UiMenuKeyPressFilterCallback KeyPressFilter OPTIONAL,
     IN PVOID Context OPTIONAL)
 {
-    return UiVtbl.DisplayMenu(MenuHeader, MenuFooter, ShowBootOptions,
+    return UiVtbl.DisplayMenu(MenuHeader, MenuFooter,
                               MenuItemList, MenuItemCount, DefaultMenuItem,
                               MenuTimeOut, SelectedMenuItem, CanEscape,
                               KeyPressFilter, Context);
@@ -634,6 +633,34 @@ VOID UiFadeOut(VOID)
 BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
     return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
+}
+
+VOID
+UiResetForSOS(VOID)
+{
+#ifdef _M_ARM
+    /* Re-initialize the UI */
+    UiInitialize(TRUE);
+#else
+    /* Reset the UI and switch to MiniTui */
+    UiVtbl.UnInitialize();
+    UiVtbl = MiniTuiVtbl;
+    UiVtbl.Initialize();
+#endif
+    /* Disable the progress bar */
+    UiProgressBar.Show = FALSE;
+}
+
+ULONG
+UiGetScreenHeight(VOID)
+{
+    return UiScreenHeight;
+}
+
+UCHAR
+UiGetMenuBgColor(VOID)
+{
+    return UiMenuBgColor;
 }
 
 /* EOF */

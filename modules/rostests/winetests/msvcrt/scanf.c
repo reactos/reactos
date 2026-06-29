@@ -22,6 +22,41 @@
 
 #include "wine/test.h"
 
+static void test_fscanf( void )
+{
+    static const char file_name[] = "fscanf.tst";
+    static const char contents[] =
+        "line1\n"
+        "line2 "
+    ;
+    char buf[1024];
+    FILE *fp;
+    int ret;
+
+    fp = fopen(file_name, "wb");
+    ok(fp != NULL, "fp = %p\n", fp);
+    if(!fp) {
+        skip("failed to create temporary test file\n");
+        return;
+    }
+
+    ret = fprintf(fp, contents);
+    fclose(fp);
+
+    fp = fopen(file_name, "rb");
+    ret = fscanf(fp, "%s", buf);
+    ok(ret == 1, "ret = %d\n", ret);
+    ok(strcmp(buf, "line1") == 0, "buf = %s\n", buf);
+    ret = fscanf(fp, "%s", buf);
+    ok(ret == 1, "ret = %d\n", ret);
+    ok(strcmp(buf, "line2") == 0, "buf = %s\n", buf);
+    ret = fscanf(fp, "%s", buf);
+    ok(ret == EOF, "ret = %d\n", ret);
+    fclose(fp);
+
+    unlink(file_name);
+}
+
 static void test_sscanf( void )
 {
     /* use function pointers to bypass gcc builtin */
@@ -47,6 +82,14 @@ static void test_sscanf( void )
     strcpy(buffer,"");
     ret = p_sscanf(buffer, "%d", &result);
     ok( ret == EOF,"sscanf returns %x instead of %x\n", ret, EOF );
+
+    ret = p_sscanf(" \t\n\n", "%s", buffer);
+    ok( ret == EOF, "ret = %d\n", ret );
+
+    buffer1[0] = 'a';
+    ret = p_sscanf("test\n", "%s%c", buffer, buffer1);
+    ok( ret == 2, "ret = %d\n", ret );
+    ok( buffer1[0] == '\n', "buffer1[0] = %d\n", buffer1[0] );
 
     /* check %p */
     ok( p_sscanf("000000000046F170", "%p", &ptr) == 1, "sscanf failed\n"  );
@@ -122,6 +165,12 @@ static void test_sscanf( void )
     ok(double_res >= 1.1e-30-1e-45 && double_res <= 1.1e-30+1e-45,
             "Got %.18le, expected %.18le\n", double_res, 1.1e-30);
 
+    buffer[0] = 0;
+    double_res = 1;
+    ret = p_sscanf(buffer, "%lf", &double_res);
+    ok(ret == -1, "expected 0, got %u\n", ret);
+    ok(double_res == 1, "Got %lf, expected 1\n", double_res);
+
     /* check strings */
     ret = p_sprintf(buffer," %s", pname);
     ok( ret == 26, "expected 26, got %u\n", ret);
@@ -136,6 +185,22 @@ static void test_sscanf( void )
     ret = p_sscanf("abcefgdh","%*[a-cd-dg-e]%c",&buffer[0]);
     ok( ret == 1, "Error with format \"%s\"\n","%*[a-cd-dg-e]%c");
     ok( buffer[0] == 'h', "Error with \"abcefgdh\" \"%c\"\n", buffer[0]);
+
+    ret = p_sscanf("-123", "%[-0-9]", buffer);
+    ok( ret == 1, "Error with format \"%s\"\n", "%[-0-9]");
+    ok( strcmp("-123", buffer) == 0, "Error with \"-123\" \"%s\"\n", buffer);
+
+    ret = p_sscanf("-321", "%[0-9-]", buffer);
+    ok( ret == 1, "Error with format \"%s\"\n", "%[0-9-]");
+    ok( strcmp("-321", buffer) == 0, "Error with \"-321\" \"%s\"\n", buffer);
+
+    ret = p_sscanf("-4123", "%[1-2-4]", buffer);
+    ok( ret == 1, "Error with format \"%s\"\n", "%[1-2-4]");
+    ok( strcmp("-412", buffer) == 0, "Error with \"-412\" \"%s\"\n", buffer);
+
+    ret = p_sscanf("-456123", "%[1-2-45-6]", buffer);
+    ok( ret == 1, "Error with format \"%s\"\n", "%[1-2-45-6]");
+    ok( strcmp("-45612", buffer) == 0, "Error with \"-45612\" \"%s\"\n", buffer);
 
     buffer1[0] = 'b';
     ret = p_sscanf("a","%s%s", buffer, buffer1);
@@ -159,6 +224,30 @@ static void test_sscanf( void )
     result = 0xdeadbeef;
     strcpy(buffer,"12345678");
     ret = p_sscanf(buffer, "%hd", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(result == 0xdead614e, "Wrong number read (%x)\n", result);
+
+    result = 0xdeadbeef;
+    strcpy(buffer,"12345678");
+    ret = p_sscanf(buffer, "%02hd", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(result == 0xdead000c, "Wrong number read (%x)\n", result);
+
+    result = 0xdeadbeef;
+    strcpy(buffer,"12345678");
+    ret = p_sscanf(buffer, "%h02d", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(result == 0xdead000c, "Wrong number read (%x)\n", result);
+
+    result = 0xdeadbeef;
+    strcpy(buffer,"12345678");
+    ret = p_sscanf(buffer, "%000h02d", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(result == 0xdead000c, "Wrong number read (%x)\n", result);
+
+    result = 0xdeadbeef;
+    strcpy(buffer,"12345678");
+    ret = p_sscanf(buffer, "%2h0d", &result);
     ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
     ok(result == 0xdead614e, "Wrong number read (%x)\n", result);
 
@@ -313,35 +402,34 @@ static void test_sscanf_s(void)
 
 static void test_swscanf( void )
 {
-    wchar_t buffer[100];
+    wchar_t buffer[100], results[100];
     int result, ret;
-    static const WCHAR formatd[] = {'%','d',0};
-    const WCHAR format2[] = {'a',0x1234,'%',0x1234,'%','c',0};
     WCHAR c;
 
     /* check WEOF */
     /* WEOF is an unsigned short -1 but swscanf returns int
        so it should be sign-extended */
     buffer[0] = 0;
-    ret = swscanf(buffer, formatd, &result);
+    ret = swscanf(buffer, L"%d", &result);
     /* msvcrt returns 0 but should return -1 (later versions do) */
     ok( ret == (short)WEOF || broken(ret == 0),
         "swscanf returns %x instead of %x\n", ret, WEOF );
+
+    ret = swscanf(L" \t\n\n", L"%s", results);
+    /* sscanf returns EOF under this case, but swscanf does not return WEOF */
+    ok( ret == 0, "ret = %d\n", ret );
 
     buffer[0] = 'a';
     buffer[1] = 0x1234;
     buffer[2] = 0x1234;
     buffer[3] = 'b';
-    ret = swscanf(buffer, format2, &c);
+    ret = swscanf(buffer, L"a\x1234%\x1234%c", &c);
     ok(ret == 1, "swscanf returned %d\n", ret);
     ok(c == 'b', "c = %x\n", c);
 }
 
 static void test_swscanf_s(void)
 {
-    static const wchar_t fmt1[] = {'%','c',0};
-    static const wchar_t fmt2[] = {'%','[','a','-','z',']',0};
-
     int (WINAPIV *pswscanf_s)(const wchar_t*,const wchar_t*,...);
     HMODULE hmod = GetModuleHandleA("msvcrt.dll");
     wchar_t buf[2], out[2];
@@ -356,15 +444,15 @@ static void test_swscanf_s(void)
     buf[0] = 'a';
     buf[1] = '1';
     out[1] = 'b';
-    ret = pswscanf_s(buf, fmt1, out, 1);
+    ret = pswscanf_s(buf, L"%c", out, 1);
     ok(ret == 1, "swscanf_s returned %d\n", ret);
     ok(out[0] == 'a', "out[0] = %x\n", out[0]);
     ok(out[1] == 'b', "out[1] = %x\n", out[1]);
 
-    ret = pswscanf_s(buf, fmt2, out, 1);
+    ret = pswscanf_s(buf, L"%[a-z]", out, 1);
     ok(!ret, "swscanf_s returned %d\n", ret);
 
-    ret = pswscanf_s(buf, fmt2, out, 2);
+    ret = pswscanf_s(buf, L"%[a-z]", out, 2);
     ok(ret == 1, "swscanf_s returned %d\n", ret);
     ok(out[0] == 'a', "out[0] = %x\n", out[0]);
     ok(!out[1], "out[1] = %x\n", out[1]);
@@ -372,6 +460,7 @@ static void test_swscanf_s(void)
 
 START_TEST(scanf)
 {
+    test_fscanf();
     test_sscanf();
     test_sscanf_s();
     test_swscanf();

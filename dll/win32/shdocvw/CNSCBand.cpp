@@ -45,33 +45,6 @@ SHDOCVW_GetPathOfShortcut(
     return S_OK;
 }
 
-HRESULT
-SHDOCVW_CreateShortcut(
-    _In_ LPCWSTR pszLnkFileName, 
-    _In_ PCIDLIST_ABSOLUTE pidlTarget,
-    _In_opt_ LPCWSTR pszDescription)
-{
-    HRESULT hr;
-
-    CComPtr<IShellLink> psl;
-    hr = CoCreateInstance(CLSID_ShellLink, NULL,  CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IShellLink, &psl));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    psl->SetIDList(pidlTarget);
-
-    if (pszDescription)
-        psl->SetDescription(pszDescription);
-
-    CComPtr<IPersistFile> ppf;
-    hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return ppf->Save(pszLnkFileName, TRUE);
-}
-
 CNSCBand::CNSCBand()
 {
     SHDOCVW_LockModule();
@@ -87,18 +60,20 @@ CNSCBand::~CNSCBand()
         ImageList_Destroy(m_hToolbarImageList);
         m_hToolbarImageList = NULL;
     }
+    SHFree(m_OriginalRename);
     SHDOCVW_UnlockModule();
 }
 
 VOID CNSCBand::OnFinalMessage(HWND)
 {
     // The message loop is finished, now we can safely destruct!
-    static_cast<IDeskBand *>(this)->Release();
+    // HACKFIX: Who did this AddRef? Commenting out Release...
+    //static_cast<IDeskBand *>(this)->Release();
 }
 
 // *** helper methods ***
 
-CNSCBand::CItemData* CNSCBand::GetItemData(_In_ HTREEITEM hItem)
+CNSCBand::CItemData* CNSCBand::_GetItemData(_In_ HTREEITEM hItem)
 {
     if (hItem == TVI_ROOT)
         return NULL;
@@ -108,6 +83,44 @@ CNSCBand::CItemData* CNSCBand::GetItemData(_In_ HTREEITEM hItem)
         return NULL;
 
     return reinterpret_cast<CItemData*>(tvItem.lParam);
+}
+
+CNSCBand::CItemData* CNSCBand::_GetItemData(_In_ UINT ItemSpec)
+{
+    HTREEITEM hItem = m_hwndTreeView.GetNextItem(NULL, ItemSpec);
+    return hItem ? _GetItemData(hItem) : NULL;
+}
+
+SFGAOF CNSCBand::_GetAttributesOfItem(_In_ CItemData *pData, _In_ SFGAOF Query)
+{
+    if (!pData)
+        return 0;
+    CComPtr<IShellFolder> pFolder;
+    LPCITEMIDLIST pidlChild;
+    HRESULT hr = SHBindToParent(pData->absolutePidl, IID_PPV_ARG(IShellFolder, &pFolder), &pidlChild);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+    SFGAOF Attributes = Query;
+    if (FAILED_UNEXPECTEDLY(hr = pFolder->GetAttributesOf(1, &pidlChild, &Attributes)))
+        return 0;
+    return Attributes & Query;
+}
+
+HRESULT CNSCBand::_GetNameOfItem(IShellFolder *pSF, PCUITEMID_CHILD pidl, UINT Flags, PWSTR Name)
+{
+    STRRET strret;
+    HRESULT hr = pSF->GetDisplayNameOf(pidl, Flags, &strret);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    hr = StrRetToBufW(&strret, pidl, Name, MAX_PATH);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return hr;
+}
+
+HRESULT CNSCBand::_GetNameOfItem(IShellFolder *pSF, PCUITEMID_CHILD pidl, PWSTR Name)
+{
+    return _GetNameOfItem(pSF, pidl, SHGDN_NORMAL | SHGDN_INFOLDER, Name);
 }
 
 static HRESULT
@@ -259,7 +272,7 @@ CNSCBand::_IsTreeItemInEnum(
     _In_ HTREEITEM hItem,
     _In_ IEnumIDList *pEnum)
 {
-    CItemData* pItemData = GetItemData(hItem);
+    CItemData* pItemData = _GetItemData(hItem);
     if (!pItemData)
         return FALSE;
 
@@ -285,7 +298,7 @@ CNSCBand::_TreeItemHasThisChild(
     for (hItem = TreeView_GetChild(m_hwndTreeView, hItem); hItem;
          hItem = TreeView_GetNextSibling(m_hwndTreeView, hItem))
     {
-        CItemData* pItemData = GetItemData(hItem);
+        CItemData* pItemData = _GetItemData(hItem);
         if (ILIsEqual(pItemData->relativePidl, pidlChild))
             return TRUE;
     }
@@ -315,7 +328,7 @@ CNSCBand::_GetItemEnum(
     }
     else
     {
-        CItemData* pItemData = GetItemData(hItem);
+        CItemData* pItemData = _GetItemData(hItem);
         if (!pItemData && hItem == TVI_ROOT && !_WantsRootItem())
             hr = psfDesktop->BindToObject(m_pidlRoot, NULL, IID_PPV_ARG(IShellFolder, ppFolder));
         else
@@ -357,7 +370,7 @@ void CNSCBand::_RefreshRecurse(_In_ HTREEITEM hTarget)
     pEnum = NULL;
     hrEnum = _GetItemEnum(pEnum, hTarget);
 
-    CItemData* pItemData = ((hTarget == TVI_ROOT) ? NULL : GetItemData(hTarget));
+    CItemData* pItemData = ((hTarget == TVI_ROOT) ? NULL : _GetItemData(hTarget));
 
     // Insert new items and update items
     if (SUCCEEDED(hrEnum))
@@ -460,19 +473,12 @@ CNSCBand::_InsertItem(
     if (FAILED_UNEXPECTEDLY(hr))
         return NULL;
 
-    /* Get the name of the node */
     WCHAR wszDisplayName[MAX_PATH];
-    STRRET strret;
-    hr = psfParent->GetDisplayNameOf(pEltRelative, SHGDN_INFOLDER, &strret);
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (FAILED_UNEXPECTEDLY(hr = _GetNameOfItem(psfParent, pEltRelative, wszDisplayName)))
         return NULL;
 
-    hr = StrRetToBufW(&strret, pEltRelative, wszDisplayName, MAX_PATH);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return NULL;
-
-    /* Get the icon of the node */
-    INT iIcon = SHMapPIDLToSystemImageListIndex(psfParent, pEltRelative, NULL);
+    INT iSelIcon = -1;
+    INT iIcon = SHMapPIDLToSystemImageListIndex(psfParent, pEltRelative, &iSelIcon);
 
     CItemData* pChildInfo = new CItemData;
     if (!pChildInfo)
@@ -488,7 +494,8 @@ CNSCBand::_InsertItem(
     tvInsert.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN;
     tvInsert.item.cchTextMax = MAX_PATH;
     tvInsert.item.pszText = wszDisplayName;
-    tvInsert.item.iImage = tvInsert.item.iSelectedImage = iIcon;
+    tvInsert.item.iImage = iIcon;
+    tvInsert.item.iSelectedImage = iSelIcon >= 0 ? iSelIcon : iIcon;
     tvInsert.item.lParam = (LPARAM)pChildInfo;
 
     if (!(attrs & SFGAO_STREAM) && (attrs & SFGAO_HASSUBFOLDER))
@@ -614,31 +621,23 @@ HRESULT CNSCBand::_AddFavorite()
     CComHeapPtr<ITEMIDLIST> pidlCurrent;
     _GetCurrentLocation(&pidlCurrent);
 
-    WCHAR szCurDir[MAX_PATH];
-    if (!ILGetDisplayName(pidlCurrent, szCurDir))
-    {
-        FIXME("\n");
-        return E_FAIL;
-    }
+    CComPtr<IShellFolder> pParent;
+    LPCITEMIDLIST pidlLast;
+    HRESULT hr = SHBindToParent(pidlCurrent, IID_PPV_ARG(IShellFolder, &pParent), &pidlLast);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    WCHAR szPath[MAX_PATH], szSuffix[32];
-    SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
-    PathAppendW(szPath, PathFindFileNameW(szCurDir));
+    STRRET strret;
+    hr = pParent->GetDisplayNameOf(pidlLast, SHGDN_FORPARSING, &strret);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    const INT ich = lstrlenW(szPath);
-    for (INT iTry = 2; iTry <= 9999; ++iTry)
-    {
-        PathAddExtensionW(szPath, L".lnk");
-        if (!PathFileExistsW(szPath))
-            break;
-        szPath[ich] = UNICODE_NULL;
-        wsprintfW(szSuffix, L" (%d)", iTry);
-        lstrcatW(szPath, szSuffix);
-    }
+    CComHeapPtr<WCHAR> pszURL;
+    hr = StrRetToStrW(&strret, NULL, &pszURL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    TRACE("%S, %S\n", szCurDir, szPath);
-
-    return SHDOCVW_CreateShortcut(szPath, pidlCurrent, NULL);
+    return AddUrlToFavorites(m_hWnd, pszURL, NULL, TRUE);
 }
 
 LRESULT CNSCBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -683,7 +682,7 @@ BOOL CNSCBand::OnTreeItemExpanding(_In_ LPNMTREEVIEW pnmtv)
     if (pnmtv->action == TVE_EXPAND)
     {
         // Grab our directory PIDL
-        pItemData = GetItemData(pnmtv->itemNew.hItem);
+        pItemData = _GetItemData(pnmtv->itemNew.hItem);
         // We have it, let's try
         if (pItemData && !pItemData->expanded)
         {
@@ -712,7 +711,7 @@ BOOL CNSCBand::OnTreeItemDeleted(_In_ LPNMTREEVIEW pnmtv)
         TreeView_SelectItem(m_hwndTreeView, hParent);
 
     /* Destroy memory associated to our node */
-    CItemData* pItemData = GetItemData(hItem);
+    CItemData* pItemData = _GetItemData(hItem);
     if (!pItemData)
         return FALSE;
 
@@ -726,14 +725,14 @@ void CNSCBand::_OnSelectionChanged(_In_ LPNMTREEVIEW pnmtv)
     HTREEITEM hItem = pnmtv->itemNew.hItem;
     if (!hItem)
         return;
-    CItemData* pItemData = GetItemData(hItem);
+    CItemData* pItemData = _GetItemData(hItem);
     if (pItemData)
         OnSelectionChanged(pItemData->absolutePidl);
 }
 
 void CNSCBand::OnTreeItemDragging(_In_ LPNMTREEVIEW pnmtv, _In_ BOOL isRightClick)
 {
-    CItemData* pItemData = GetItemData(pnmtv->itemNew.hItem);
+    CItemData* pItemData = _GetItemData(pnmtv->itemNew.hItem);
     if (!pItemData)
         return;
 
@@ -770,27 +769,35 @@ LRESULT CNSCBand::OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
     CComPtr<IShellFolder> pParent;
     LPCITEMIDLIST pChild;
     HRESULT hr;
+    HWND hWndEdit = TreeView_GetEditControl(dispInfo->hdr.hwndFrom);
 
-    CItemData *info = GetItemData(dispInfo->item.hItem);
-    if (!info)
-        return FALSE;
+    SHFree(m_OriginalRename);
+    m_OriginalRename = NULL;
+    CItemData *info = _GetItemData(dispInfo->item.hItem);
+    if (!info || !hWndEdit)
+        return TRUE;
 
     hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pParent), &pChild);
     if (FAILED_UNEXPECTEDLY(hr))
-        return FALSE;
+        return TRUE;
 
     hr = pParent->GetAttributesOf(1, &pChild, &dwAttr);
     if (SUCCEEDED(hr) && (dwAttr & SFGAO_CANRENAME))
     {
+        WCHAR szName[MAX_PATH];
+        if (SUCCEEDED(_GetNameOfItem(pParent, pChild, SHGDN_FOREDITING | SHGDN_INFOLDER, szName)))
+        {
+            ::SetWindowTextW(hWndEdit, szName);
+            SHStrDupW(szName, &m_OriginalRename);
+        }
         m_isEditing = TRUE;
         m_oldSelected = NULL;
         return FALSE;
     }
-
     return TRUE;
 }
 
-HRESULT CNSCBand::_UpdateBrowser(LPCITEMIDLIST pidlGoto)
+HRESULT CNSCBand::_UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL IgnoreSelfNavigation)
 {
     CComPtr<IShellBrowser> pBrowserService;
     HRESULT hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser,
@@ -798,6 +805,17 @@ HRESULT CNSCBand::_UpdateBrowser(LPCITEMIDLIST pidlGoto)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    if (_IsCurrentLocation(pidlGoto) == S_OK) // Don't add duplicates to the travel log
+    {
+        if (IgnoreSelfNavigation)
+            return S_FALSE;
+
+        CComPtr<IShellView> psv;
+        if (SUCCEEDED(hr = pBrowserService->QueryActiveShellView(&psv)))
+            hr = psv->Refresh();
+        if (SUCCEEDED(hr))
+            return hr;
+    }
     hr = pBrowserService->BrowseObject(pidlGoto, SBSP_SAMEBROWSER | SBSP_ABSOLUTE);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -807,8 +825,9 @@ HRESULT CNSCBand::_UpdateBrowser(LPCITEMIDLIST pidlGoto)
 
 LRESULT CNSCBand::OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
 {
-    CItemData *info = GetItemData(dispInfo->item.hItem);
+    CItemData *info = _GetItemData(dispInfo->item.hItem);
     HRESULT hr;
+    BOOL AllowTreeSetNewName = TRUE;
 
     m_isEditing = FALSE;
     if (m_oldSelected)
@@ -820,6 +839,15 @@ LRESULT CNSCBand::OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
 
     if (!dispInfo->item.pszText)
         return FALSE;
+
+    if (m_OriginalRename)
+    {
+        BOOL same = !lstrcmpW(m_OriginalRename, dispInfo->item.pszText); // Case-sensitive
+        SHFree(m_OriginalRename);
+        m_OriginalRename = NULL;
+        if (same)
+            return FALSE;
+    }
 
     CComPtr<IShellFolder> pParent;
     LPCITEMIDLIST pidlChild;
@@ -846,7 +874,19 @@ LRESULT CNSCBand::OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
         CComHeapPtr<ITEMIDLIST> pidlNewAbs(ILCombine(pidlParent, pidlNew));
         if (RenamedCurrent)
         {
-            _UpdateBrowser(pidlNewAbs);
+            // Get the new item name from the folder because RegItems can be renamed to their
+            // default name by the folder (which is not the string we have in NMTVDISPINFO).
+            WCHAR wszDisplayName[MAX_PATH];
+            if (SUCCEEDED(_GetNameOfItem(pParent, pidlNew, wszDisplayName)))
+            {
+                TVITEMW tvi;
+                tvi.mask = TVIF_TEXT;
+                tvi.hItem = dispInfo->item.hItem;
+                tvi.pszText = wszDisplayName;
+                AllowTreeSetNewName = !m_hwndTreeView.SetItem(&tvi);
+            }
+
+            _UpdateBrowser(pidlNewAbs, TRUE);
         }
         else
         {
@@ -854,7 +894,7 @@ LRESULT CNSCBand::OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
             SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_IDLIST, info->absolutePidl, pidlNewAbs);
         }
 
-        return TRUE;
+        return AllowTreeSetNewName;
     }
 
     return FALSE;
@@ -933,6 +973,17 @@ struct CMenuTemp
     }
 };
 
+static LRESULT CALLBACK MenuMessageForwarderWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT ret = 0;
+    IContextMenu *pCM = (IContextMenu*)GetWindowLongPtrW(hWnd, 0);
+    if (uMsg == WM_DESTROY)
+        SetWindowLongPtrW(hWnd, 0, 0);
+    else if (pCM && SHForwardContextMenuMsg(pCM, uMsg, wParam, lParam, &ret, TRUE) == S_OK)
+        return ret;
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+}
+
 // *** ATL event handlers ***
 LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
@@ -960,7 +1011,7 @@ LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         ClientToScreen(&pt);
     }
 
-    CItemData *info = GetItemData(hItem);
+    CItemData *info = _GetItemData(hItem);
     if (!info)
     {
         ERR("No node data, something has gone wrong\n");
@@ -991,9 +1042,15 @@ LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     hr = contextMenu->QueryContextMenu(menuTemp, 0, idCmdFirst, FCIDM_SHVIEWLAST, cmf);
     if (FAILED_UNEXPECTEDLY(hr))
         return 0;
+    SHELL_RemoveVerb(contextMenu, idCmdFirst, menuTemp, L"link");
+
+    HWND hWndWorker = SHCreateWorkerWindowW(MenuMessageForwarderWndProc, m_hWnd, 0,
+                                            WS_CHILD | WS_VISIBLE, NULL,
+                                            (LONG_PTR)static_cast<IContextMenu*>(contextMenu));
+    HWND hWndMenuOwner = hWndWorker ? hWndWorker : m_hWnd;
 
     enum { flags = TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON };
-    UINT uCommand = ::TrackPopupMenu(menuTemp, flags, pt.x, pt.y, 0, m_hWnd, NULL);
+    UINT uCommand = ::TrackPopupMenu(menuTemp, flags, pt.x, pt.y, 0, hWndMenuOwner, NULL);
     if (uCommand)
     {
         uCommand -= idCmdFirst;
@@ -1009,6 +1066,8 @@ LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
         hr = _ExecuteCommand(contextMenu, uCommand);
     }
+    if (hWndWorker)
+        ::DestroyWindow(hWndWorker);
 
     return TRUE;
 }
@@ -1244,14 +1303,46 @@ STDMETHODIMP CNSCBand::HasFocusIO()
 
 STDMETHODIMP CNSCBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
+    BOOL SkipAccelerators = m_isEditing || (!IsChild(lpMsg->hwnd) && lpMsg->hwnd != m_hWnd);
+    if (lpMsg->message == WM_KEYDOWN && lpMsg->wParam == VK_F2 && !SkipAccelerators)
+    {
+        if (HTREEITEM hItem = m_hwndTreeView.GetNextItem(NULL, TVGN_CARET))
+        {
+            if (_GetAttributesOfItem(_GetItemData(hItem), SFGAO_CANRENAME))
+            {
+                m_hwndTreeView.SetFocus();
+                m_hwndTreeView.EditLabel(hItem);
+                return S_OK;
+            }
+        }
+    }
+
+    if (lpMsg->message == WM_SYSKEYDOWN && lpMsg->wParam == VK_RETURN && !SkipAccelerators)
+    {
+        CItemData *pItem = _GetItemData(TVGN_CARET);
+        if (pItem && _GetAttributesOfItem(pItem, SFGAO_HASPROPSHEET))
+        {
+            SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_INVOKEIDLIST, m_hwndTreeView };
+            sei.lpVerb = L"properties";
+            sei.lpIDList = pItem->absolutePidl;
+            sei.nShow = SW_SHOW;
+            ShellExecuteExW(&sei);
+            return S_OK;
+        }
+        else
+        {
+            MessageBeep(0xFFFFFFFF);
+        }
+    }
+
     if (lpMsg->hwnd == m_hWnd ||
         (m_isEditing && IsChild(lpMsg->hwnd)))
     {
+        // TODO: Why is it doing this for m_hWnd for all messages?!
         TranslateMessage(lpMsg);
         DispatchMessage(lpMsg);
         return S_OK;
     }
-
     return S_FALSE;
 }
 
@@ -1411,7 +1502,7 @@ STDMETHODIMP CNSCBand::DragOver(DWORD glfKeyState, POINTL pt, DWORD *pdwEffect)
 
     if (info.hItem != m_childTargetNode)
     {
-        CItemData *pItemData = GetItemData(info.hItem);
+        CItemData *pItemData = _GetItemData(info.hItem);
         if (!pItemData)
             return E_FAIL;
 

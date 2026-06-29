@@ -34,8 +34,10 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID reserved)
 
     switch(reason)
     {
+#ifndef __REACTOS__
     case DLL_WINE_PREATTACH:
         return FALSE;  /* prefer native version */
+#endif
 
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls( hinst );
@@ -78,4 +80,21 @@ BOOL APIENTRY MprAdminIsServiceRunning(LPWSTR server)
     FIXME("(%s): stub!\n", debugstr_w(server));
 
     return FALSE;
+}
+
+/***********************************************************************
+ *      MprConfigServerConnect (MPRAPI.@)
+ */
+DWORD
+APIENTRY
+MprConfigServerConnect(
+    _In_ LPWSTR lpwsServerName,
+    _Out_ HANDLE *phMprConfig)
+{
+    FIXME("(%s %p): stub!\n", debugstr_w(lpwsServerName), phMprConfig);
+
+    if (phMprConfig == NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    return ERROR_SUCCESS;
 }

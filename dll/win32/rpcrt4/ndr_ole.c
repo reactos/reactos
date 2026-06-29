@@ -26,8 +26,6 @@
 #include <string.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -43,33 +41,6 @@
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
-
-static HMODULE hOLE;
-
-static HRESULT (WINAPI *COM_GetMarshalSizeMax)(ULONG *,REFIID,LPUNKNOWN,DWORD,LPVOID,DWORD);
-static HRESULT (WINAPI *COM_MarshalInterface)(LPSTREAM,REFIID,LPUNKNOWN,DWORD,LPVOID,DWORD);
-static HRESULT (WINAPI *COM_UnmarshalInterface)(LPSTREAM,REFIID,LPVOID*);
-static HRESULT (WINAPI *COM_ReleaseMarshalData)(LPSTREAM);
-static HRESULT (WINAPI *COM_GetClassObject)(REFCLSID,DWORD,COSERVERINFO *,REFIID,LPVOID *);
-static HRESULT (WINAPI *COM_GetPSClsid)(REFIID,CLSID *);
-static LPVOID (WINAPI *COM_MemAlloc)(ULONG);
-static void (WINAPI *COM_MemFree)(LPVOID);
-
-static HMODULE LoadCOM(void)
-{
-  if (hOLE) return hOLE;
-  hOLE = LoadLibraryA("OLE32.DLL");
-  if (!hOLE) return 0;
-  COM_GetMarshalSizeMax  = (LPVOID)GetProcAddress(hOLE, "CoGetMarshalSizeMax");
-  COM_MarshalInterface   = (LPVOID)GetProcAddress(hOLE, "CoMarshalInterface");
-  COM_UnmarshalInterface = (LPVOID)GetProcAddress(hOLE, "CoUnmarshalInterface");
-  COM_ReleaseMarshalData = (LPVOID)GetProcAddress(hOLE, "CoReleaseMarshalData");
-  COM_GetClassObject     = (LPVOID)GetProcAddress(hOLE, "CoGetClassObject");
-  COM_GetPSClsid         = (LPVOID)GetProcAddress(hOLE, "CoGetPSClsid");
-  COM_MemAlloc = (LPVOID)GetProcAddress(hOLE, "CoTaskMemAlloc");
-  COM_MemFree  = (LPVOID)GetProcAddress(hOLE, "CoTaskMemFree");
-  return hOLE;
-}
 
 /* CoMarshalInterface/CoUnmarshalInterface works on streams,
  * so implement a simple stream on top of the RPC buffer
@@ -116,9 +87,9 @@ static ULONG WINAPI RpcStream_Release(LPSTREAM iface)
   RpcStreamImpl *This = impl_from_IStream(iface);
   ULONG ref = InterlockedDecrement( &This->RefCount );
   if (!ref) {
-    TRACE("size=%d\n", *This->size);
+    TRACE("size=%ld\n", *This->size);
     This->pMsg->Buffer = This->data + *This->size;
-    HeapFree(GetProcessHeap(),0,This);
+    free(This);
   }
   return ref;
 }
@@ -166,13 +137,13 @@ static HRESULT WINAPI RpcStream_Seek(LPSTREAM iface,
   RpcStreamImpl *This = impl_from_IStream(iface);
   switch (origin) {
   case STREAM_SEEK_SET:
-    This->pos = move.u.LowPart;
+    This->pos = move.LowPart;
     break;
   case STREAM_SEEK_CUR:
-    This->pos = This->pos + move.u.LowPart;
+    This->pos = This->pos + move.LowPart;
     break;
   case STREAM_SEEK_END:
-    This->pos = *This->size + move.u.LowPart;
+    This->pos = *This->size + move.LowPart;
     break;
   default:
     return STG_E_INVALIDFUNCTION;
@@ -188,7 +159,7 @@ static HRESULT WINAPI RpcStream_SetSize(LPSTREAM iface,
                                        ULARGE_INTEGER newSize)
 {
   RpcStreamImpl *This = impl_from_IStream(iface);
-  *This->size = newSize.u.LowPart;
+  *This->size = newSize.LowPart;
   return S_OK;
 }
 
@@ -203,7 +174,7 @@ static HRESULT WINAPI RpcStream_CopyTo(IStream *iface, IStream *dest,
 static HRESULT WINAPI RpcStream_Commit(IStream *iface, DWORD flags)
 {
   RpcStreamImpl *This = impl_from_IStream(iface);
-  FIXME("(%p)->(0x%08x): stub\n", This, flags);
+  FIXME("(%p)->(0x%08lx): stub\n", This, flags);
   return E_NOTIMPL;
 }
 
@@ -267,7 +238,7 @@ static HRESULT RpcStream_Create(PMIDL_STUB_MESSAGE pStubMsg, BOOL init, ULONG *s
   RpcStreamImpl *This;
 
   *stream = NULL;
-  This = HeapAlloc(GetProcessHeap(), 0, sizeof(RpcStreamImpl));
+  This = malloc(sizeof(RpcStreamImpl));
   if (!This) return E_OUTOFMEMORY;
   This->IStream_iface.lpVtbl = &RpcStream_Vtbl;
   This->RefCount = 1;
@@ -276,7 +247,7 @@ static HRESULT RpcStream_Create(PMIDL_STUB_MESSAGE pStubMsg, BOOL init, ULONG *s
   This->data = pStubMsg->Buffer + sizeof(DWORD);
   This->pos = 0;
   if (init) *This->size = 0;
-  TRACE("init size=%d\n", *This->size);
+  TRACE("init size=%ld\n", *This->size);
 
   if (size) *size = *This->size;
   *stream = &This->IStream_iface;
@@ -313,14 +284,13 @@ unsigned char * WINAPI NdrInterfacePointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
 
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
   pStubMsg->MaxCount = 0;
-  if (!LoadCOM()) return NULL;
   if (pStubMsg->Buffer + sizeof(DWORD) <= (unsigned char *)pStubMsg->RpcMsg->Buffer + pStubMsg->BufferLength) {
     hr = RpcStream_Create(pStubMsg, TRUE, NULL, &stream);
     if (hr == S_OK) {
       if (pMemory)
-        hr = COM_MarshalInterface(stream, riid, (LPUNKNOWN)pMemory,
-                                  pStubMsg->dwDestContext, pStubMsg->pvDestContext,
-                                  MSHLFLAGS_NORMAL);
+        hr = CoMarshalInterface(stream, riid, (IUnknown *)pMemory,
+                                pStubMsg->dwDestContext, pStubMsg->pvDestContext,
+                                MSHLFLAGS_NORMAL);
       IStream_Release(stream);
     }
 
@@ -343,7 +313,6 @@ unsigned char * WINAPI NdrInterfacePointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg
   HRESULT hr;
 
   TRACE("(%p,%p,%p,%d)\n", pStubMsg, ppMemory, pFormat, fMustAlloc);
-  if (!LoadCOM()) return NULL;
 
   /* Avoid reference leaks for [in, out] pointers. */
   if (pStubMsg->IsClient && *unk)
@@ -356,7 +325,7 @@ unsigned char * WINAPI NdrInterfacePointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg
     hr = RpcStream_Create(pStubMsg, FALSE, &size, &stream);
     if (hr == S_OK) {
       if (size != 0)
-        hr = COM_UnmarshalInterface(stream, &IID_NULL, (void **)unk);
+        hr = CoUnmarshalInterface(stream, &IID_NULL, (void **)unk);
 
       IStream_Release(stream);
     }
@@ -378,11 +347,10 @@ void WINAPI NdrInterfacePointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
   ULONG size = 0;
 
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
-  if (!LoadCOM()) return;
-  COM_GetMarshalSizeMax(&size, riid, (LPUNKNOWN)pMemory,
-                        pStubMsg->dwDestContext, pStubMsg->pvDestContext,
-                        MSHLFLAGS_NORMAL);
-  TRACE("size=%d\n", size);
+  CoGetMarshalSizeMax(&size, riid, (IUnknown *)pMemory,
+                      pStubMsg->dwDestContext, pStubMsg->pvDestContext,
+                      MSHLFLAGS_NORMAL);
+  TRACE("size=%ld\n", size);
   pStubMsg->BufferLength += sizeof(DWORD) + size;
 }
 
@@ -422,8 +390,7 @@ void WINAPI NdrInterfacePointerFree(PMIDL_STUB_MESSAGE pStubMsg,
  */
 void * WINAPI NdrOleAllocate(SIZE_T Size)
 {
-  if (!LoadCOM()) return NULL;
-  return COM_MemAlloc(Size);
+  return CoTaskMemAlloc(Size);
 }
 
 /***********************************************************************
@@ -431,8 +398,7 @@ void * WINAPI NdrOleAllocate(SIZE_T Size)
  */
 void WINAPI NdrOleFree(void *NodeToFree)
 {
-  if (!LoadCOM()) return;
-  COM_MemFree(NodeToFree);
+  CoTaskMemFree(NodeToFree);
 }
 
 /***********************************************************************
@@ -445,12 +411,10 @@ HRESULT create_proxy(REFIID iid, IUnknown *pUnkOuter, IRpcProxyBuffer **pproxy, 
     IPSFactoryBuffer *psfac;
     HRESULT r;
 
-    if(!LoadCOM()) return E_FAIL;
-
-    r = COM_GetPSClsid( iid, &clsid );
+    r = CoGetPSClsid(iid, &clsid);
     if(FAILED(r)) return r;
 
-    r = COM_GetClassObject( &clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IPSFactoryBuffer, (void**)&psfac );
+    r = CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IPSFactoryBuffer, (void **)&psfac);
     if(FAILED(r)) return r;
 
     r = IPSFactoryBuffer_CreateProxy(psfac, pUnkOuter, iid, pproxy, ppv);
@@ -469,12 +433,10 @@ HRESULT create_stub(REFIID iid, IUnknown *pUnk, IRpcStubBuffer **ppstub)
     IPSFactoryBuffer *psfac;
     HRESULT r;
 
-    if(!LoadCOM()) return E_FAIL;
-
-    r = COM_GetPSClsid( iid, &clsid );
+    r = CoGetPSClsid(iid, &clsid);
     if(FAILED(r)) return r;
 
-    r = COM_GetClassObject( &clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IPSFactoryBuffer, (void**)&psfac );
+    r = CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IPSFactoryBuffer, (void **)&psfac);
     if(FAILED(r)) return r;
 
     r = IPSFactoryBuffer_CreateStub(psfac, iid, pUnk, ppstub);

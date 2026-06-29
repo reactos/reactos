@@ -37,7 +37,7 @@ TuiTruncateStringEllipsis(
 BOOLEAN    TuiInitialize(VOID);                                    // Initialize User-Interface
 VOID    TuiUnInitialize(VOID);                                    // Un-initialize User-Interface
 
-VOID    TuiDrawBackdrop(VOID);                                    // Fills the entire screen with a backdrop
+VOID    TuiDrawBackdrop(ULONG DrawHeight);                        // Fills the entire screen with a backdrop
 VOID    TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);    // Fills the area specified with FillChar and Attr
 VOID    TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);    // Draws a shadow on the bottom and right sides of the area specified
 
@@ -149,7 +149,6 @@ BOOLEAN
 TuiDisplayMenu(
     IN PCSTR MenuHeader,
     IN PCSTR MenuFooter OPTIONAL,
-    IN BOOLEAN ShowBootOptions,
     IN PCSTR MenuItemList[],
     IN ULONG MenuItemCount,
     IN ULONG DefaultMenuItem,

@@ -24,16 +24,18 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct _VIDEO_PORT_FUNCTION_TABLE {
-    PVOID Address;
+typedef struct _VIDEO_PORT_FUNCTION_TABLE
+{
     PCSZ Name;
-} *PVIDEO_PORT_FUNCTION_TABLE, VIDEO_PORT_FUNCTION_TABLE;
+    PVOID Address;
+} VIDEO_PORT_FUNCTION_TABLE, *PVIDEO_PORT_FUNCTION_TABLE;
 
 /* GLOBAL VARIABLES ***********************************************************/
 
-/* Create an array of entries with pfn, psz, for IntVideoPortGetProcAddress */
-#define MAKE_ENTRY(FUNCTIONNAME) { FUNCTIONNAME, #FUNCTIONNAME }
-const VIDEO_PORT_FUNCTION_TABLE VideoPortExports[] = {
+/* Create an array of entries {Name, Address} for IntVideoPortGetProcAddress */
+#define MAKE_ENTRY(FUNCTIONNAME) { #FUNCTIONNAME, FUNCTIONNAME }
+const VIDEO_PORT_FUNCTION_TABLE VideoPortExports[] =
+{
     MAKE_ENTRY(VideoPortDDCMonitorHelper),
     MAKE_ENTRY(VideoPortDoDma),
     MAKE_ENTRY(VideoPortGetCommonBuffer),
@@ -93,28 +95,29 @@ const VIDEO_PORT_FUNCTION_TABLE VideoPortExports[] = {
     MAKE_ENTRY(VideoPortQueryPerformanceCounter),
     MAKE_ENTRY(VideoPortGetVersion),
     MAKE_ENTRY(VideoPortRegisterBugcheckCallback),
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    MAKE_ENTRY(VideoPortQuerySystemTime),
+#endif
 };
 #undef MAKE_ENTRY
 
-PVOID NTAPI
+PVOID
+NTAPI
 IntVideoPortGetProcAddress(
-    IN PVOID HwDeviceExtension,
-    IN PUCHAR FunctionName)
+    _In_ PVOID HwDeviceExtension,
+    _In_ PUCHAR FunctionName)
 {
     ULONG i;
 
     TRACE_(VIDEOPRT, "VideoPortGetProcAddress(%s)\n", FunctionName);
 
-   /* Search by name */
+    /* Search by name */
     for (i = 0; i < ARRAYSIZE(VideoPortExports); i++)
     {
         if (!strcmp((PCHAR)FunctionName, VideoPortExports[i].Name))
-        {
-            return (PVOID)VideoPortExports[i].Address;
-        }
+            return VideoPortExports[i].Address;
     }
 
     ERR_(VIDEOPRT, "VideoPortGetProcAddress: Can't resolve symbol %s\n", FunctionName);
-
     return NULL;
 }

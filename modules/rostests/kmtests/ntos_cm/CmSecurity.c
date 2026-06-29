@@ -103,33 +103,36 @@ CheckKeySecurity__(
         VCheckAcl__(Dacl, AceCount, FileAndLine, Arguments);
         va_end(Arguments);
 
-        Sacl = NULL;
-        Status = RtlGetSaclSecurityDescriptor(SecurityDescriptor,
-                                              &Present,
-                                              &Sacl,
-                                              &Defaulted);
-        ok_eq_hex(Status, STATUS_SUCCESS);
-        ok(Present == FALSE, "SACL present for %ls\n", KeyName);
-        ok(Defaulted == FALSE, "SACL defaulted for %ls\n", KeyName);
-        ok(Sacl == NULL, "Sacl is %p for %ls\n", Sacl, KeyName);
+        /* Windows 8+ has SACLs for:
+         * \REGISTRY\MACHINE\SAM
+         * \REGISTRY\MACHINE\SECURITY
+         * \REGISTRY\MACHINE\SOFTWARE
+         * \REGISTRY\MACHINE\SYSTEM
+         * \REGISTRY\USER\.DEFAULT
+         * \REGISTRY\USER\S-1-5-18
+         * \REGISTRY\USER\S-1-5-20
+         *
+         * TODO: Investigate these SACLs and test accordingly.
+         */
+        if (GetNTVersion() < _WIN32_WINNT_WIN8)
+        {
+            Sacl = NULL;
+            Status = RtlGetSaclSecurityDescriptor(SecurityDescriptor,
+                                                &Present,
+                                                &Sacl,
+                                                &Defaulted);
+            ok_eq_hex(Status, STATUS_SUCCESS);
+            ok(Present == FALSE, "SACL present for %ls\n", KeyName);
+            ok(Defaulted == FALSE, "SACL defaulted for %ls\n", KeyName);
+            ok(Sacl == NULL, "Sacl is %p for %ls\n", Sacl, KeyName);
+        }
     }
     ExFreePoolWithTag(SecurityDescriptor, 'dSmK');
     ObCloseHandle(KeyHandle, KernelMode);
 }
 
-START_TEST(CmSecurity)
+static void CmSecurity_WS03(PSID TerminalServerSid)
 {
-    SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
-    PSID TerminalServerSid;
-
-    TerminalServerSid = ExAllocatePoolWithTag(PagedPool,
-                                              RtlLengthRequiredSid(1),
-                                              'iSmK');
-    if (TerminalServerSid != NULL)
-    {
-        RtlInitializeSid(TerminalServerSid, &NtSidAuthority, 1);
-        *RtlSubAuthoritySid(TerminalServerSid, 0) = SECURITY_TERMINAL_SERVER_RID;
-    }
     CheckKeySecurity(L"\\REGISTRY",
                      4, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid, KEY_ALL_ACCESS,
                         ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid, KEY_ALL_ACCESS,
@@ -252,6 +255,241 @@ START_TEST(CmSecurity)
                         ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
                                                  CONTAINER_INHERIT_ACE |
                                                  OBJECT_INHERIT_ACE,    SeExports->SeRestrictedSid,      GENERIC_READ);
+}
+
+static void CmSecurity_Vista(PSID TerminalServerSid)
+{
+    CheckKeySecurity(L"\\REGISTRY",
+                     4, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid, KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid, KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeWorldSid,       KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeRestrictedSid,  KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE",
+                     4, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid, KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid, KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeWorldSid,       KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeRestrictedSid,  KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE\\HARDWARE",
+                     4, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid, KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid, KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeWorldSid,       KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeRestrictedSid,  KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE\\SAM",
+                     8, ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasUsersSid,   KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE | 
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasUsersSid,   GENERIC_READ,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasAdminsSid,  KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE | 
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,  GENERIC_ALL,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeLocalSystemSid,  KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE | 
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,  GENERIC_ALL,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasAdminsSid,  KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE | 
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeCreatorOwnerSid, GENERIC_ALL);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE\\SECURITY",
+                     2, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid, KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid, WRITE_DAC | READ_CONTROL);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE\\SOFTWARE",
+                     8, ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasUsersSid,   KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasUsersSid,   GENERIC_READ,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasAdminsSid,  KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,  GENERIC_ALL,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeLocalSystemSid,  KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,  GENERIC_ALL,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasAdminsSid,  KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeCreatorOwnerSid,  GENERIC_ALL);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE\\SYSTEM",
+                     8, ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasUsersSid,      KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasUsersSid,      GENERIC_READ,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasAdminsSid,     KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,     GENERIC_ALL,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeLocalSystemSid,     KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,     GENERIC_ALL,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasAdminsSid,     KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeCreatorOwnerSid,    GENERIC_ALL);
+
+    CheckKeySecurity(L"\\REGISTRY\\USER",
+                     4, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid, KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid, KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeWorldSid,       KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeRestrictedSid,  KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\USER\\.DEFAULT",
+                     8, ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasUsersSid,      KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasUsersSid,      GENERIC_READ,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasAdminsSid,     KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,     GENERIC_ALL,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeLocalSystemSid,     KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,     GENERIC_ALL,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasAdminsSid,     KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeCreatorOwnerSid,    GENERIC_ALL);
+
+    CheckKeySecurity(L"\\REGISTRY\\USER\\S-1-5-18",
+                     8, ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasUsersSid,      KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasUsersSid,      GENERIC_READ,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasAdminsSid,     KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,     GENERIC_ALL,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeLocalSystemSid,     KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,     GENERIC_ALL,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAliasAdminsSid,     KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, INHERIT_ONLY_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeCreatorOwnerSid,    GENERIC_ALL);
+
+    CheckKeySecurity(L"\\REGISTRY\\USER\\S-1-5-20",
+                     4, ACCESS_ALLOWED_ACE_TYPE, OBJECT_INHERIT_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeNetworkServiceSid,  KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, OBJECT_INHERIT_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,     KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, OBJECT_INHERIT_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,     KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, OBJECT_INHERIT_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeRestrictedSid,      KEY_READ);
+}
+
+static void CmSecurity_Win8(PSID TerminalServerSid)
+{
+    CheckKeySecurity(L"\\REGISTRY",
+                     5, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeWorldSid,          KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeRestrictedSid,     KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAllAppPackagesSid, KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE",
+                     5, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeWorldSid,          KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeRestrictedSid,     KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAllAppPackagesSid, KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE\\HARDWARE",
+                     5, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeWorldSid,          KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeRestrictedSid,     KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAllAppPackagesSid, KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE\\SAM",
+                     5, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasUsersSid,     KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeCreatorOwnerSid,   KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAllAppPackagesSid, KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE\\SECURITY",
+                     2, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid, KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid, WRITE_DAC | READ_CONTROL);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE\\SOFTWARE",
+                     5, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasUsersSid,     KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeCreatorOwnerSid,   KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAllAppPackagesSid, KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\MACHINE\\SYSTEM",
+                     5, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasUsersSid,     KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeCreatorOwnerSid,   KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAllAppPackagesSid, KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\USER",
+                     5, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeWorldSid,          KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeRestrictedSid,     KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAllAppPackagesSid, KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\USER\\.DEFAULT",
+                     5, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasUsersSid,     KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeCreatorOwnerSid,   KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAllAppPackagesSid, KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\USER\\S-1-5-18",
+                     5, ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasUsersSid,     KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeCreatorOwnerSid,   KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, CONTAINER_INHERIT_ACE, SeExports->SeAllAppPackagesSid, KEY_READ);
+
+    CheckKeySecurity(L"\\REGISTRY\\USER\\S-1-5-20",
+                     5, ACCESS_ALLOWED_ACE_TYPE, OBJECT_INHERIT_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeNetworkServiceSid, KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, OBJECT_INHERIT_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeLocalSystemSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, OBJECT_INHERIT_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeAliasAdminsSid,    KEY_ALL_ACCESS,
+                        ACCESS_ALLOWED_ACE_TYPE, OBJECT_INHERIT_ACE |
+                                                 CONTAINER_INHERIT_ACE, SeExports->SeRestrictedSid,     KEY_READ,
+                        ACCESS_ALLOWED_ACE_TYPE,                     0, SeExports->SeAllAppPackagesSid, KEY_READ);
+}
+
+START_TEST(CmSecurity)
+{
+    SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
+    PSID TerminalServerSid;
+
+    TerminalServerSid = ExAllocatePoolWithTag(PagedPool,
+                                              RtlLengthRequiredSid(1),
+                                              'iSmK');
+    if (TerminalServerSid != NULL)
+    {
+        RtlInitializeSid(TerminalServerSid, &NtSidAuthority, 1);
+        *RtlSubAuthoritySid(TerminalServerSid, 0) = SECURITY_TERMINAL_SERVER_RID;
+    }
+
+    switch (GetNTVersion())
+    {
+        case _WIN32_WINNT_WS03:
+            CmSecurity_WS03(TerminalServerSid);
+            break;
+        case _WIN32_WINNT_VISTA:
+        case _WIN32_WINNT_WIN7:
+            CmSecurity_Vista(TerminalServerSid);
+            break;
+        case _WIN32_WINNT_WIN8:
+        case _WIN32_WINNT_WINBLUE:
+        case _WIN32_WINNT_WIN10:
+            CmSecurity_Win8(TerminalServerSid);
+            break;
+        default:
+            if (GetNTVersion() < _WIN32_WINNT_WS03)
+            {
+                trace("Unknown NT version (0x%X < 0x%X), running WS03 tests...\n", GetNTVersion(), _WIN32_WINNT_WS03);
+                CmSecurity_WS03(TerminalServerSid);
+            }
+            else
+            {
+                trace("Unknown NT version (0x%X > 0x%X), running latest tests...\n", GetNTVersion(), _WIN32_WINNT_WIN10);
+                CmSecurity_Win8(TerminalServerSid);
+            }
+            break;
+    }
 
     if (TerminalServerSid != NULL)
     {

@@ -2,7 +2,7 @@
  * jerror.h
  *
  * Copyright (C) 1994-1997, Thomas G. Lane.
- * Modified 1997-2018 by Guido Vollbeding.
+ * Modified 1997-2026 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -130,7 +130,7 @@ JMESSAGE(JTRC_ADOBE,
 	 "Adobe APP14 marker: version %d, flags 0x%04x 0x%04x, transform %d")
 JMESSAGE(JTRC_APP0, "Unknown APP0 marker (not JFIF), length %u")
 JMESSAGE(JTRC_APP14, "Unknown APP14 marker (not Adobe), length %u")
-JMESSAGE(JTRC_DAC, "Define Arithmetic Table 0x%02x: 0x%02x")
+JMESSAGE(JTRC_DAC, "Define Arithmetic Conditioning 0x%02x: 0x%02x")
 JMESSAGE(JTRC_DHT, "Define Huffman Table 0x%02x")
 JMESSAGE(JTRC_DQT, "Define Quantization Table %d  precision %d")
 JMESSAGE(JTRC_DRI, "Define Restart Interval %u")
@@ -156,7 +156,7 @@ JMESSAGE(JTRC_SMOOTH_NOTIMPL,
 	 "Smoothing not supported with nonstandard sampling ratios")
 JMESSAGE(JTRC_SOF, "Start Of Frame 0x%02x: width=%u, height=%u, components=%d")
 JMESSAGE(JTRC_SOF_COMPONENT, "    Component %d: %dhx%dv q=%d")
-JMESSAGE(JTRC_SOI, "Start of Image")
+JMESSAGE(JTRC_SOI, "Start Of Image")
 JMESSAGE(JTRC_SOS, "Start Of Scan: %d components")
 JMESSAGE(JTRC_SOS_COMPONENT, "    Component %d: dc=%d ac=%d")
 JMESSAGE(JTRC_SOS_PARAMS, "  Ss=%d, Se=%d, Ah=%d, Al=%d")

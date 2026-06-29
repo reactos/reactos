@@ -20,7 +20,7 @@ static void testScancodeExtendedKey(BYTE wVk, BYTE scanCode)
     ok(!(winKeyState & 0x8000), "VK=%x should be detected as key up.\n", wVk);
 }
 
-/* https://docs.microsoft.com/en-us/windows/win32/inputdev/about-keyboard-input#extended-key-flag */
+/* https://learn.microsoft.com/en-us/windows/win32/inputdev/about-keyboard-input#extended-key-flag */
 START_TEST(keybd_event)
 {
     testScancodeExtendedKey(VK_RWIN, 0x5C);

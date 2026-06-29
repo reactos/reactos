@@ -79,20 +79,23 @@ typedef struct _GEN_ADDR
 //
 typedef struct  _RSDP
 {
+    // ACPI v1.0 (Rev=0)
     ULONGLONG Signature;
     UCHAR Checksum;
     UCHAR OEMID[6];
-    UCHAR Revision;
+    UCHAR Revision; // Was reserved before ACPI v2.0 (Rev=2).
     ULONG RsdtAddress;
+    // ACPI v2.0 (Rev=2)
     ULONG Length;
     PHYSICAL_ADDRESS XsdtAddress;
     UCHAR XChecksum;
-    UCHAR Reserved[3];
+    UCHAR Reserved33[3];
 } RSDP;
 typedef RSDP *PRSDP;
 
 typedef struct _DESCRIPTION_HEADER
 {
+    // ACPI v1.0
     ULONG Signature;
     ULONG Length;
     UCHAR Revision;
@@ -107,24 +110,28 @@ typedef DESCRIPTION_HEADER *PDESCRIPTION_HEADER;
 
 typedef struct _FACS
 {
+    // ACPI v1.0 (Ver=0)
     ULONG Signature;
     ULONG Length;
     ULONG HardwareSignature;
     ULONG pFirmwareWakingVector;
     ULONG GlobalLock;
     ULONG Flags;
-    PHYSICAL_ADDRESS x_FirmwareWakingVector;
-    UCHAR version;
-    UCHAR Reserved[32];
+    PHYSICAL_ADDRESS x_FirmwareWakingVector; // Was reserved before ACPI v2.0 (Ver=1).
+    UCHAR Version; // Was reserved before ACPI v2.0 (Ver=1).
+    UCHAR Reserved33[3];
+    ULONG OsFlags; // Was reserved before ACPI v4.0 (Ver=2).
+    UCHAR Reserved40[24];
 } FACS;
 typedef FACS *PFACS;
 
 typedef struct _FADT
 {
+    // ACPI v1.0 (H.Rev=1)
     DESCRIPTION_HEADER Header;
     ULONG facs;
     ULONG dsdt;
-    UCHAR int_model;
+    UCHAR reserved44[1]; // Was int_model before ACPI v2.0.
     UCHAR pm_profile;
     USHORT sci_int_vector;
     ULONG smi_cmd_io_port;
@@ -158,11 +165,13 @@ typedef struct _FADT
     UCHAR month_alarm_index;
     UCHAR century_alarm_index;
     USHORT boot_arch;
-    UCHAR reserved3[1];
+    UCHAR reserved111[1];
     ULONG flags;
+    // ACPI v1.5 (H.Rev=3)
     GEN_ADDR reset_reg;
     UCHAR reset_val;
-    UCHAR reserved4[3];
+    USHORT arm_boot_arch; // Was reserved before ACPI v5.1.
+    UCHAR minor_revision; // Was reserved before ACPI v5.1.
     PHYSICAL_ADDRESS x_firmware_ctrl;
     PHYSICAL_ADDRESS x_dsdt;
     GEN_ADDR x_pm1a_evt_blk;
@@ -173,6 +182,11 @@ typedef struct _FADT
     GEN_ADDR x_pm_tmr_blk;
     GEN_ADDR x_gp0_blk;
     GEN_ADDR x_gp1_blk;
+    // ACPI v5.0 (H.Rev=5)
+    GEN_ADDR sleep_control;
+    GEN_ADDR sleep_status;
+    // ACPI v6.0 (H.Rev=6)
+    ULONGLONG hypervisor_id;
 } FADT;
 typedef FADT *PFADT;
 
@@ -185,6 +199,7 @@ typedef DSDT *PDSDT;
 
 typedef struct _RSDT
 {
+    // ACPI v1.0 (H.Rev=1)
     DESCRIPTION_HEADER Header;
     ULONG Tables[ANYSIZE_ARRAY];
 } RSDT;
@@ -192,6 +207,7 @@ typedef RSDT *PRSDT;
 
 typedef struct _XSDT
 {
+    // ACPI v2.0 (H.Rev=1)
     DESCRIPTION_HEADER Header;
     PHYSICAL_ADDRESS Tables[ANYSIZE_ARRAY];
 } XSDT;

@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Encoding, charsets and codepages for Chinese, Japanese and Korean (CJK)
  * COPYRIGHT:   Copyright 2017-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
-                Copyright 2017-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+                Copyright 2017-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
@@ -45,3 +45,10 @@
     ((CharSet) == SHIFTJIS_CHARSET || (CharSet) == HANGUL_CHARSET || \
   /* (CharSet) == JOHAB_CHARSET || */ \
      (CharSet) == GB2312_CHARSET   || (CharSet) == CHINESEBIG5_CHARSET)
+
+/* Language IDs for CJK */
+#define LANGID_CHINESE_SIMPLIFIED   MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_SIMPLIFIED)  // Chinese (Simplified)
+#define LANGID_CHINESE_TRADITIONAL  MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_TRADITIONAL) // Chinese (Traditional)
+#define LANGID_JAPANESE             MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT) // Japanese
+#define LANGID_KOREAN               MAKELANGID(LANG_KOREAN,   SUBLANG_KOREAN)  // Korean
+#define LANGID_NEUTRAL              MAKELANGID(LANG_NEUTRAL,  SUBLANG_NEUTRAL) // Neutral

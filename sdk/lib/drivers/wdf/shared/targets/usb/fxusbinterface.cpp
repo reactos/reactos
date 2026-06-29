@@ -21,7 +21,9 @@ Revision History:
 #include "fxusbpch.hpp"
 
 extern "C" {
+#if defined(EVENT_TRACING)
 #include "FxUsbInterface.tmh"
+#endif
 }
 
 FxUsbInterface::FxUsbInterface(
@@ -883,6 +885,7 @@ Return Value:
     pInterfaceDesc = NULL;
     curEndpointIndex = 0;
     endPointFound = FALSE;
+    UNREFERENCED_PARAMETER(endPointFound);
 
     //
     // Extract the interface descriptor for the alternate setting for the interface

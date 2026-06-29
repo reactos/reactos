@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -225,7 +226,7 @@ SeRmInitPhase1(VOID)
                           2 * PAGE_SIZE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Security: Rm Create Command Port failed 0x%lx\n", Status);
+        DPRINT1("Security: Rm Command Port creation failed: 0x%lx\n", Status);
         return FALSE;
     }
 
@@ -239,7 +240,7 @@ SeRmInitPhase1(VOID)
                            FALSE);
     if (!NT_VERIFY((NT_SUCCESS(Status))))
     {
-        DPRINT1("Security: LSA init event creation failed.0x%xl\n", Status);
+        DPRINT1("Security: LSA Init Event creation failed: 0x%lx\n", Status);
         return FALSE;
     }
 
@@ -253,7 +254,7 @@ SeRmInitPhase1(VOID)
                                   NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Security: Rm Server Thread creation failed 0x%lx\n", Status);
+        DPRINT1("Security: Rm Command Server Thread creation failed: 0x%lx\n", Status);
         return FALSE;
     }
 
@@ -297,8 +298,7 @@ SepAdtInitializeBounds(VOID)
         (ListBounds.MinLength < 16) ||
         (ListBounds.MaxLength - ListBounds.MinLength < 16))
     {
-        DPRINT1("ListBounds are invalid: %u, %u\n",
-                ListBounds.MinLength, ListBounds.MaxLength);
+        DPRINT1("ListBounds invalid: %lu, %lu\n", ListBounds.MinLength, ListBounds.MaxLength);
         return;
     }
 
@@ -1149,7 +1149,7 @@ SepRmCommandServerThreadInit(VOID)
                              NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Security Rm Init: Create Memory Section for LSA port failed: %X\n", Status);
+        DPRINT1("Security Rm Init: Create Memory Section for LSA port failed: 0x%lx\n", Status);
         goto Cleanup;
     }
 
@@ -1251,7 +1251,7 @@ SepRmCommandServerThread(
                                         &Message.Header);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to get message: 0x%lx", Status);
+            DPRINT1("Failed to get message: 0x%lx\n", Status);
             ReplyMessage = NULL;
             continue;
         }
@@ -1283,7 +1283,7 @@ SepRmCommandServerThread(
         /* Check if this is an actual request */
         if (Message.Header.u2.s2.Type != LPC_REQUEST)
         {
-            DPRINT1("SepRmCommandServerThread: unexpected message type: 0x%lx\n",
+            DPRINT1("SepRmCommandServerThread: unexpected message type: 0x%x\n",
                     Message.Header.u2.s2.Type);
 
             /* Restart without replying */

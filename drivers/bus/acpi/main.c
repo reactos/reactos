@@ -243,36 +243,16 @@ ACPIDispatchDeviceControl(
             {
                 ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
-                if (KeGetCurrentIrql() == DISPATCH_LEVEL)
-                {
-                    PEVAL_WORKITEM_DATA workItemData;
-
-                    workItemData = ExAllocatePoolUninitialized(NonPagedPool,
-                                                               sizeof(*workItemData),
-                                                               'ipcA');
-                    if (!workItemData)
-                    {
-                        status = STATUS_INSUFFICIENT_RESOURCES;
-                        break;
-                    }
-                    workItemData->Irp = Irp;
-                    workItemData->DeviceData = (PPDO_DEVICE_DATA)commonData;
-
-                    ExInitializeWorkItem(&workItemData->WorkQueueItem,
-                                         Bus_PDO_EvalMethodWorker,
-                                         workItemData);
-                    ExQueueWorkItem(&workItemData->WorkQueueItem, DelayedWorkQueue);
-
-                    status = STATUS_PENDING;
-                    break;
-                }
-                __fallthrough;
+                status = Bus_PDO_EvalMethod((PPDO_DEVICE_DATA)commonData, Irp);
+                break;
             }
-           case IOCTL_ACPI_EVAL_METHOD:
+
+            case IOCTL_ACPI_EVAL_METHOD:
             {
-              status = Bus_PDO_EvalMethod((PPDO_DEVICE_DATA)commonData,
-                                          Irp);
-              break;
+                ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+
+                status = Bus_PDO_EvalMethod((PPDO_DEVICE_DATA)commonData, Irp);
+                break;
             }
 
            case IOCTL_GET_SYS_BUTTON_CAPS:
@@ -654,22 +634,22 @@ GetProcessorInformation(VOID)
     }
 
     Length = 0;
-    Length += swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
-    Length += swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
-    Length += swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level2Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level2Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
-    Length += swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level2Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level2Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
-    Length += swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level3Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level3Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
-    Length += swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level3Length, ProcessorIdentifier);
+    Length += _swprintf(&HardwareIdsBuffer[Length], L"*%s_-_%.*s", ProcessorVendorIdentifier, Level3Length, ProcessorIdentifier);
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
     HardwareIdsBuffer[Length++] = UNICODE_NULL;
 
@@ -684,7 +664,7 @@ GetProcessorInformation(VOID)
     ProcessorIdString = ExAllocatePoolWithTag(PagedPool, Length, 'IpcA');
     if (ProcessorIdString != NULL)
     {
-        Length = swprintf(ProcessorIdString, L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
+        Length = _swprintf(ProcessorIdString, L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
         ProcessorIdString[Length++] = UNICODE_NULL;
         DPRINT("ProcessorIdString: %S\n", ProcessorIdString);
     }

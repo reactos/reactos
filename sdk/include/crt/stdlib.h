@@ -1428,7 +1428,7 @@ extern "C" {
 
   __MINGW_EXTENSION _Check_return_ lldiv_t __cdecl lldiv(_In_ long long, _In_ long long);
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
   _Check_return_ long long __cdecl llabs(_In_ long long _j);
   #pragma function(llabs)
 #endif

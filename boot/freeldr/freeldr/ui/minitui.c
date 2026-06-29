@@ -13,6 +13,20 @@
 // #define NTLDR_PROGRESSBAR
 // #define BTMGR_PROGRESSBAR /* Default style */
 
+#ifdef NTLDR_PROGRESSBAR
+#define MINITUI_PROGRESS_TEXT_ATTR      ATTR(UiTextColor, UiMenuBgColor)
+#define MINITUI_PROGRESS_FILL_CHAR      '\xDB'
+#define MINITUI_PROGRESS_FILL_ATTR      ATTR(UiTextColor, UiMenuBgColor)
+#define MINITUI_PROGRESS_REMAINING_CHAR ' '
+#define MINITUI_PROGRESS_REMAINING_ATTR ATTR(UiTextColor, UiMenuBgColor)
+#else // BTMGR_PROGRESSBAR
+#define MINITUI_PROGRESS_TEXT_ATTR      ATTR(COLOR_GRAY, COLOR_BLACK)
+#define MINITUI_PROGRESS_FILL_CHAR      ' '
+#define MINITUI_PROGRESS_FILL_ATTR      ATTR(COLOR_WHITE, COLOR_WHITE)
+#define MINITUI_PROGRESS_REMAINING_CHAR ' '
+#define MINITUI_PROGRESS_REMAINING_ATTR ATTR(COLOR_GRAY, COLOR_GRAY)
+#endif
+
 BOOLEAN MiniTuiInitialize(VOID)
 {
     /* Initialize main TUI */
@@ -21,7 +35,11 @@ BOOLEAN MiniTuiInitialize(VOID)
 
     /* Override default settings with "Mini" TUI Theme */
 
+#ifdef NTLDR_PROGRESSBAR
     UiTextColor = TuiTextToColor("Default");
+#else // BTMGR_PROGRESSBAR
+    UiTextColor = COLOR_GRAY;
+#endif
 
     UiStatusBarFgColor    = UiTextColor;
     UiStatusBarBgColor    = COLOR_BLACK;
@@ -53,15 +71,21 @@ BOOLEAN MiniTuiInitialize(VOID)
     return TRUE;
 }
 
-VOID MiniTuiDrawBackdrop(VOID)
+VOID MiniTuiDrawBackdrop(ULONG DrawHeight)
 {
     /* Fill in a black background */
-    TuiFillArea(0, 0, UiScreenWidth - 1, UiScreenHeight - 1,
+    TuiFillArea(0, 0, UiScreenWidth - 1, DrawHeight - 1,
                 UiBackdropFillStyle,
                 ATTR(UiBackdropFgColor, UiBackdropBgColor));
 
     /* Update the screen buffer */
     VideoCopyOffScreenBufferToVRAM();
+}
+
+VOID MiniTuiFadeInBackdrop(VOID)
+{
+    /* No fade-in effect in MiniTui */
+    MiniTuiDrawBackdrop(UiScreenHeight);
 }
 
 VOID MiniTuiDrawStatusText(PCSTR StatusText)
@@ -94,7 +118,7 @@ MiniTuiSetProgressBarText(
 #else // BTMGR_PROGRESSBAR
                 UiProgressBar.Bottom - 2, // One empty line between text and bar.
 #endif
-                ' ', ATTR(UiTextColor, UiMenuBgColor));
+                ' ', MINITUI_PROGRESS_TEXT_ATTR);
 
     /* Draw the "Loading..." text */
     TuiDrawCenteredText(UiProgressBar.Left, UiProgressBar.Top,
@@ -104,7 +128,7 @@ MiniTuiSetProgressBarText(
 #else // BTMGR_PROGRESSBAR
                         UiProgressBar.Bottom - 2, // One empty line between text and bar.
 #endif
-                        ProgressString, ATTR(UiTextColor, UiMenuBgColor));
+                        ProgressString, MINITUI_PROGRESS_TEXT_ATTR);
 }
 
 /*static*/ VOID
@@ -132,12 +156,11 @@ MiniTuiTickProgressBar(
     {
         TuiFillArea(UiProgressBar.Left, UiProgressBar.Bottom,
                     UiProgressBar.Left + FillCount - 1, UiProgressBar.Bottom,
-                    '\xDB', ATTR(UiTextColor, UiMenuBgColor));
+                    MINITUI_PROGRESS_FILL_CHAR, MINITUI_PROGRESS_FILL_ATTR);
     }
-    /* Fill the remaining with blanks */
     TuiFillArea(UiProgressBar.Left + FillCount, UiProgressBar.Bottom,
                 UiProgressBar.Right, UiProgressBar.Bottom,
-                ' ', ATTR(UiTextColor, UiMenuBgColor));
+                MINITUI_PROGRESS_REMAINING_CHAR, MINITUI_PROGRESS_REMAINING_ATTR);
 
     TuiUpdateDateTime();
     VideoCopyOffScreenBufferToVRAM();
@@ -186,7 +209,7 @@ MiniTuiDrawMenu(
     ULONG i;
 
     /* Draw the backdrop */
-    UiDrawBackdrop();
+    UiDrawBackdrop(UiGetScreenHeight());
 
     /* No GUI status bar text, just minimal text. Show the menu header. */
     if (MenuInfo->MenuHeader)
@@ -225,12 +248,6 @@ MiniTuiDrawMenu(
                         ATTR(UiMenuFgColor, UiMenuBgColor));
     }
 
-    /* Display the boot options if needed */
-    if (MenuInfo->ShowBootOptions)
-    {
-        DisplayBootTimeOptions();
-    }
-
     VideoCopyOffScreenBufferToVRAM();
 }
 
@@ -256,9 +273,8 @@ const UIVTBL MiniTuiVtbl =
     TuiEditBox,
     TuiTextToColor,
     TuiTextToFillStyle,
-    MiniTuiDrawBackdrop, /* no FadeIn */
+    MiniTuiFadeInBackdrop,
     TuiFadeOut,
     TuiDisplayMenu,
     MiniTuiDrawMenu,
 };
-

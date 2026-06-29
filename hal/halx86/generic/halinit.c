@@ -14,28 +14,39 @@
 
 /* GLOBALS *******************************************************************/
 
+//#ifdef CONFIG_SMP // FIXME: Reenable conditional once HAL is consistently compiled for SMP mode
+BOOLEAN HalpOnlyBootProcessor;
+//#endif
 BOOLEAN HalpPciLockSettings;
+BOOLEAN HalBootViaEfi;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+static
 CODE_SEG("INIT")
 VOID
-NTAPI
-HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalpGetParameters(
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PCHAR CommandLine;
-
     /* Make sure we have a loader block and command line */
-    if ((LoaderBlock) && (LoaderBlock->LoadOptions))
+    if (LoaderBlock && LoaderBlock->LoadOptions)
     {
         /* Read the command line */
-        CommandLine = LoaderBlock->LoadOptions;
+        PCSTR CommandLine = LoaderBlock->LoadOptions;
+
+//#ifdef CONFIG_SMP // FIXME: Reenable conditional once HAL is consistently compiled for SMP mode
+        /* Check whether we should only start one CPU */
+        if (strstr(CommandLine, "ONECPU"))
+            HalpOnlyBootProcessor = TRUE;
+//#endif
 
         /* Check if PCI is locked */
-        if (strstr(CommandLine, "PCILOCK")) HalpPciLockSettings = TRUE;
+        if (strstr(CommandLine, "PCILOCK"))
+            HalpPciLockSettings = TRUE;
 
         /* Check for initial breakpoint */
-        if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
+        if (strstr(CommandLine, "BREAK"))
+            DbgBreakPoint();
     }
 }
 
@@ -70,8 +81,9 @@ HalInitializeProcessor(
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
-HalInitSystem(IN ULONG BootPhase,
-              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalInitSystem(
+    _In_ ULONG BootPhase,
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     NTSTATUS Status;
@@ -79,11 +91,22 @@ HalInitSystem(IN ULONG BootPhase,
     /* Check the boot phase */
     if (BootPhase == 0)
     {
-        /* Phase 0... save bus type */
+        /* Save bus type */
         HalpBusType = LoaderBlock->u.I386.MachineType & 0xFF;
 
         /* Get command-line parameters */
         HalpGetParameters(LoaderBlock);
+
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+        HalBootViaEfi = LoaderBlock->FirmwareInformation.FirmwareTypeEfi;
+#else
+        HalBootViaEfi = FALSE;
+#ifdef __REACTOS__
+        ASSERT(LoaderBlock->Extension != NULL);
+        if (LoaderBlock->Extension->Size >= FIELD_OFFSET(LOADER_PARAMETER_EXTENSION, LoaderPerformanceData))
+            HalBootViaEfi = LoaderBlock->Extension->BootViaEFI;
+#endif
+#endif
 
         /* Check for PRCB version mismatch */
         if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)

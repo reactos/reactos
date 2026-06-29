@@ -115,7 +115,7 @@ typedef enum _CONSRV_API_NUMBER
 } CONSRV_API_NUMBER, *PCONSRV_API_NUMBER;
 
 //
-// See http://msdn.microsoft.com/en-us/library/windows/desktop/bb773359(v=vs.85).aspx
+// See https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ns-shlobj_core-nt_console_props
 //
 typedef struct _CONSOLE_PROPERTIES
 {

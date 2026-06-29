@@ -31,7 +31,7 @@ BEGIN
     IDS_DHCPYES             "\tDHCP Enabled. . . . . . . . . . . : Yes\n"
     IDS_AUTOCONFIGNO        "\tAutoconfiguration Enabled . . . . : No\n"
     IDS_AUTOCONFIGYES       "\tAutoconfiguration Enabled . . . . : Yes\n"
-    IDS_IPADDRESS           "\tIP Address. . . . . . . . . . . . : %hs\n"
+    IDS_IPADDRESS           "\tIPv4 Address. . . . . . . . . . . : %hs\n"
     IDS_SUBNETMASK          "\tSubnet Mask . . . . . . . . . . . : %hs\n"
     IDS_DEFAULTGATEWAY      "\tDefault Gateway . . . . . . . . . : %hs\n"
     IDS_DHCPSERVER          "\tDHCP Server . . . . . . . . . . . : %hs\n"
@@ -88,51 +88,54 @@ BEGIN
     IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
     IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
     IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
-    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
+    IDS_DHCPRELEASED        "IP address for adapter %ls has already been released.\n"
     IDS_DHCPRELEASEERROR    "An error occurred while releasing interface %ls: "
     IDS_DHCPRENEWERROR      "An error occurred while renewing interface %ls: "
+    IDS_DHCPSETIDERROR      "Attempt to set the class id for adapter %ls failed: "
+    IDS_DHCPSETIDSUCCESS    "Successfully set the class id for adapter %ls.\n"
 END
 
 STRINGTABLE
 BEGIN
-/* Please keep the spacing/formatting as per En.rc when translating */
+/* Please keep the spacing/formatting as per en-US.rc when translating */
     IDS_USAGE
-    "\nPOUŽITIE:\n\
-        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n\
-                  /flushdns | /displaydns | /registerdns |\n\
-                  /showclassid adapter |\n\
-                  /setclassid adapter [classid] ]\n\
+"\nPOUŽITIE:\n\
+    ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n\
+              /flushdns | /displaydns | /registerdns |\n\
+              /showclassid adapter |\n\
+              /setclassid adapter [classid] ]\n\
 \n\
-    where\n\
-        adapter         Connection name\n\
-                       (wildcard characters * and ? allowed, see examples)\n\
+    where:\n\
+    adapter         Connection name\n\
+                    (wildcard characters * and ? allowed, see examples)\n\
 \n\
-        Options:\n\
-           /?           Display this help message\n\
-           /all         Display full configuration information.\n\
-           /release     Release the IP address for the specified adapter.\n\
-           /renew       Renew the IP address for the specified adapter.\n\
-           /flushdns    Purges the DNS Resolver cache.\n\
-           /registerdns Refreshes all DHCP leases and re-registers DNS names.\n\
-           /displaydns  Display the contents of the DNS Resolver Cache.\n\
-           /showclassid Displays all the dhcp class IDs allowed for adapter.\n\
-           /setclassid  Modifies the dhcp class id.\n\
+Options:\n\
+    /?              Display this help message.\n\
+    /all            Display full configuration information.\n\
+    /release        Release the IPv4 address for the specified adapter.\n\
+    /renew          Renew the IPv4 address for the specified adapter.\n\
+    /flushdns       Purges the DNS Resolver cache.\n\
+    /registerdns    Refreshes all DHCP leases and re-registers DNS names.\n\
+    /displaydns     Display the contents of the DNS Resolver Cache.\n\
+    /showclassid    Displays all the DHCP class IDs allowed for adapter.\n\
+    /setclassid     Modifies the DHCP class ID.\n\
 \n\
-    The default is to display only the IP address, subnet mask and\n\
-    default gateway for each adapter bound to TCP/IP.\n\
+The default is to display only the IP address, subnet mask and\n\
+default gateway for each adapter bound to TCP/IP.\n\
 \n\
-    For Release and Renew, if no adapter name is specified, then the IP address\n\
-    leases for all adapters bound to TCP/IP will be released or renewed.\n\
+For Release and Renew, if no adapter name is specified, then the IP address\n\
+leases for all adapters bound to TCP/IP will be released or renewed.\n\
 \n\
-    For Setclassid, if no ClassId is specified, then the ClassId is removed.\n\
+For Setclassid, if no ClassId is specified, then the ClassId is removed.\n\
 \n\
-    Príklady:\n\
-        > ipconfig                   ... Show information.\n\
-        > ipconfig /all              ... Show detailed information\n\
-        > ipconfig /renew            ... renew all adapters\n\
-        > ipconfig /renew EL*        ... renew any connection that has its\n\
-                                         name starting with EL\n\
-        > ipconfig /release *Con*    ... release all matching connections,\n\
-                                         napr. ""Lokálne pripojenie 1"" alebo\n\
-                                               ""Lokálne pripojenie 2""\n"
+Príklady:\n\
+    > ipconfig                   ... Show information.\n\
+    > ipconfig /all              ... Show detailed information\n\
+    > ipconfig /renew            ... renew all adapters\n\
+    > ipconfig /renew EL*        ... renew any connection that has its\n\
+                                     name starting with EL\n\
+    > ipconfig /release *Con*    ... release all matching connections,\n\
+                                     napr. ""Lokálne pripojenie 1""\n\
+                                     alebo ""Lokálne pripojenie 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

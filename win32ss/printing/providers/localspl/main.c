@@ -138,7 +138,7 @@ _InitializeLocalSpooler(void)
     // On startup, always create a volatile symbolic link in the registry if it doesn't exist yet.
     //   "SYSTEM\CurrentControlSet\Control\Print\Printers" -> "SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers"
     //
-    // According to https://social.technet.microsoft.com/Forums/windowsserver/en-US/a683ab54-c43c-4ebe-af8f-1f7a65af2a51
+    // According to https://learn.microsoft.com/en-us/archive/msdn-technet-forums/a683ab54-c43c-4ebe-af8f-1f7a65af2a51
     // this is needed when having >900 printers to work around a size limit of the SYSTEM registry hive.
     dwErrorCode = (DWORD)RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Print\\Printers", 0, NULL, REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK, KEY_CREATE_LINK | KEY_SET_VALUE, NULL, &hKey, NULL);
     if (dwErrorCode == ERROR_SUCCESS)

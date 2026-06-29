@@ -1,21 +1,21 @@
 /*
  * PROJECT:     ReactOS Setup Library
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     MBR and GPT Partition types
- * COPYRIGHT:   Copyright 2018-2020 Hermes Belusca-Maito
+ * COPYRIGHT:   Copyright 2018-2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #include "precomp.h"
 #include "partinfo.h"
 
-/* MBR PARTITION TYPES ******************************************************/
+/* MBR PARTITION TYPES *******************************************************/
 
 /*
  * This partition type list is based from:
  * - the kernelDisk.c module of the Visopsys Operating System (see license below),
  * - Paragon Hard-Disk Manager,
  * - Haiku OS (Copyright 2003-2011, Haiku, Inc., under the terms of the MIT License)
- *   https://git.haiku-os.org/haiku/tree/src/add-ons/kernel/partitioning_systems/intel/PartitionMap.cpp#n52
+ *   https://git.haiku-os.org/haiku/tree/src/add-ons/kernel/partitioning_systems/intel/PartitionMap.cpp#n52 (DEAD_LINK)
  * - and the following websites:
  *   http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
  *   https://en.wikipedia.org/wiki/Partition_type#List_of_partition_IDs
@@ -42,8 +42,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+typedef struct _MBR_PARTITION_TYPE
+{
+    UCHAR Type;
+    PCSTR Description;
+} MBR_PARTITION_TYPE, *PMBR_PARTITION_TYPE;
+
 /* Known MBR partition type codes and descriptions */
-const MBR_PARTITION_TYPE MbrPartitionTypes[NUM_MBR_PARTITION_TYPES] =
+const MBR_PARTITION_TYPE MbrPartitionTypes[] =
 {
     { 0x00, "(Empty)" },                                    // PARTITION_ENTRY_UNUSED
     { 0x01, "FAT12" },                                      // PARTITION_FAT_12
@@ -201,7 +207,7 @@ const MBR_PARTITION_TYPE MbrPartitionTypes[NUM_MBR_PARTITION_TYPES] =
 };
 
 
-/* GPT PARTITION TYPES ******************************************************/
+/* GPT PARTITION TYPES *******************************************************/
 
 #define GUID_CONST(l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
     { l, w1, w2, { b1, b2, b3, b4, b5, b6, b7, b8 } }
@@ -267,8 +273,14 @@ DEFINE_GUID(PARTITION_DPP_GUID,              0x57434F53, 0x94CB, 0x43F0, 0xA5, 0
  *   https://www.magnumdb.com/search?q=PARTITION_*
  */
 
+typedef struct _GPT_PARTITION_TYPE
+{
+    GUID Guid;
+    PCSTR Description;
+} GPT_PARTITION_TYPE, *PGPT_PARTITION_TYPE;
+
 /* Known GPT partition type GUIDs and descriptions */
-const GPT_PARTITION_TYPE GptPartitionTypes[NUM_GPT_PARTITION_TYPES] =
+const GPT_PARTITION_TYPE GptPartitionTypes[] =
 {
     /*
      * EFI specification
@@ -783,5 +795,45 @@ const GPT_PARTITION_TYPE GptPartitionTypes[NUM_GPT_PARTITION_TYPES] =
     { GUID_CONST(0x90B6FF38, 0xB98F, 0x4358, 0xA2, 0x1F, 0x48, 0xF3, 0x5B, 0x4A, 0x8A, 0xD3),
         "ArcaOS Type 1" },
 };
+
+
+/* PARTITION TYPES LOOKUP ****************************************************/
+
+PCSTR
+NTAPI
+LookupPartitionTypeString(
+    _In_ PARTITION_STYLE PartitionStyle,
+    _In_ PVOID PartitionType)
+{
+    UINT i;
+
+    /* Do the table lookup */
+    if (PartitionStyle == PARTITION_STYLE_MBR)
+    {
+        for (i = 0; i < _countof(MbrPartitionTypes); ++i)
+        {
+            if (*(PUCHAR)PartitionType == MbrPartitionTypes[i].Type)
+            {
+                return MbrPartitionTypes[i].Description;
+            }
+        }
+    }
+#if 0 // TODO: GPT support!
+    else if (PartitionStyle == PARTITION_STYLE_GPT)
+    {
+        for (i = 0; i < _countof(GptPartitionTypes); ++i)
+        {
+            if (IsEqualPartitionType((PGUID)PartitionType,
+                                     &GptPartitionTypes[i].Guid))
+            {
+                return GptPartitionTypes[i].Description;
+            }
+        }
+    }
+#endif
+
+    /* The partition type is unknown */
+    return NULL;
+}
 
 /* EOF */

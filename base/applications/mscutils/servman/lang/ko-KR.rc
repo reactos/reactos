@@ -159,6 +159,7 @@ BEGIN
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "일부 서비스는 다른 서비스나 시스템 드라이버, 그룹 등에 종속되어 있습니다. 만약 시스템 컴포넌트가 정지되었거나 제대로 동작하지 않는다면, 종속된 서비스에 영향을 끼칠 수 있습니다.", IDC_STATIC, 8, 7, 238, 26
     LTEXT "이 서비스는 다음 컴포넌트에 종속되어 있습니다.", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "The following components depend on this service:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 

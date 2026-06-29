@@ -26,7 +26,11 @@ extern "C" {
 
 
 extern "C" {
+#if defined(EVENT_TRACING)
 #include "FxUsbDevice.tmh"
+#endif
+
+#define RtlSizeTToULong RtlULongPtrToULong
 }
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
@@ -996,6 +1000,7 @@ FxUsbDevice::CreateInterfaces(
     RtlZeroMemory(descCountBitMap, sizeof(descCountBitMap));
     iInterface = 0;
     numFound = 0;
+    UNREFERENCED_PARAMETER(numFound);
 
     pInterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR) FxUsbFindDescriptorType(
         m_ConfigDescriptor,

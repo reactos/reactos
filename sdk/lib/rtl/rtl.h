@@ -56,6 +56,7 @@
 
 /* Use intrinsics for x86 and x64 */
 #if defined(_M_IX86) || defined(_M_AMD64)
+#ifndef InterlockedCompareExchange
 #define InterlockedCompareExchange _InterlockedCompareExchange
 #define InterlockedIncrement _InterlockedIncrement
 #define InterlockedDecrement _InterlockedDecrement
@@ -63,6 +64,7 @@
 #define InterlockedExchange _InterlockedExchange
 #define InterlockedBitTestAndSet _interlockedbittestandset
 #define InterlockedBitTestAndSet64 _interlockedbittestandset64
+#endif
 #endif
 
 #endif /* RTL_H */

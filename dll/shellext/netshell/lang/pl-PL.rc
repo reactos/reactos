@@ -1,4 +1,13 @@
-// COPYRIGHT: 2008 Maciej Białas, 2011 Caemyr
+/*
+ * PROJECT:     ReactOS Network Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2008 Maciej Białas <bjauy@tlen.pl>
+ *              Copyright 2011 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2015 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2017-2019 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2020-2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -78,14 +87,24 @@ BEGIN
     PUSHBUTTON "&Zamknij", IDC_CLOSE, 120, 155, 60, 14
 END
 
+IDD_NETWORKINITPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalator systemu ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Proszę czekać, system ReactOS instaluje składniki sieciowe.", IDC_STATIC, 53, 7, 240, 20
+    CONTROL "", IDC_INSTALL_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 58, 275, 11
+END
+
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Wybierz, czy mają zostać użyte ustawienia standardowe czy niestandardowe:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Ustawienia standardowe", IDC_NETWORK_TYPICAL, 53, 27, 253, 10, WS_TABSTOP | WS_GROUP
+    LTEXT "Wybierz, czy mają zostać użyte ustawienia typowe czy niestandardowe:", IDC_STATIC, 53, 7, 255, 20
+    AUTORADIOBUTTON "Ustawienia typowe", IDC_NETWORK_TYPICAL, 53, 27, 253, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Ustawienia niestandardowe", IDC_NETWORK_CUSTOM, 53, 73, 253, 10, WS_TABSTOP
     LTEXT "Tworzy połączenia sieciowe, używając protokołu Klient sieci ReactOS Networks, Udostępniania plików i drukarek w sieciach ReactOS Networks i protokołu transportowego TCP/IP z automatycznym adresowaniem.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Pozwala na ręczne konfigurowanie składników sieciowych.", IDC_STATIC, 65, 90, 243, 20
@@ -155,6 +174,7 @@ BEGIN
     IDS_NET_DELETE "Usuń"
     IDS_NET_RENAME "Zmień nazwę"
     IDS_NET_PROPERTIES "Właściwości"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u Bit/s"
     IDS_FORMAT_KBIT "%u KBit/s"
     IDS_FORMAT_MBIT "%u MBit/s"
@@ -167,6 +187,8 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_NETWORKINITTITLE "Instalacja sieciowa"
+    IDS_NETWORKINITSUBTITLE "Instaluje wymagane składniki sieciowe."
     IDS_NETWORKSETTINGSTITLE "Ustawienia sieciowe"
     IDS_NETWORKSETTINGSSUBTITLE "Zainstalowanie oprogramowania sieciowego pozwala na nawiązywanie połączeń z innymi komputerami, sieciami i Internetem."
     IDS_NETWORKCOMPONENTTITLE "Składniki sieciowe"

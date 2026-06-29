@@ -48,7 +48,7 @@ OnProfileTypeInit(
     if (pszCookedBuffer == NULL)
         goto done;
 
-    swprintf(pszCookedBuffer, pszRawBuffer, pProfileData->pszFullName);
+    _swprintf(pszCookedBuffer, pszRawBuffer, pProfileData->pszFullName);
 
     /* Set the full text */
     SetDlgItemText(hwndDlg, IDC_USERPROFILE_TYPE_TEXT, pszCookedBuffer);

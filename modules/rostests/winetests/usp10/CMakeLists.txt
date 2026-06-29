@@ -1,4 +1,5 @@
 
+add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(usp10_winetest usp10.c testlist.c)
 set_module_type(usp10_winetest win32cui)

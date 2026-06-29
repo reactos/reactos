@@ -14,6 +14,8 @@
 
 #include <pseh/pseh2.h>
 
+#define STATUS_ACCESS_VIOLATION ((DWORD)0xC0000005)
+
 START_TEST(ReallocSplStr)
 {
     const WCHAR wszTestString1[] = L"Test";

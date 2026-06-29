@@ -151,7 +151,7 @@ W32KAPI
 BOOL
 APIENTRY
 NtGdiGetFontResourceInfoInternalW(
-    _In_reads_z_(cwc) LPWSTR pwszFiles,
+    _In_reads_z_(cwc) PCWCH pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ UINT cjBuf,
@@ -165,9 +165,9 @@ DWORD
 APIENTRY
 NtGdiGetGlyphIndicesW(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPCWSTR pwc,
+    _In_reads_opt_(cwc) PCWCH pwc,
     _In_ INT cwc,
-    _Out_writes_opt_(cwc) LPWORD pgi,
+    _Out_writes_opt_(cwc) PWORD pgi,
     _In_ DWORD iMode);
 
 __kernel_entry
@@ -176,9 +176,9 @@ DWORD
 APIENTRY
 NtGdiGetGlyphIndicesWInternal(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPWSTR pwc,
+    _In_reads_opt_(cwc) PCWCH pwc,
     _In_ INT cwc,
-    _Out_writes_opt_(cwc) LPWORD pgi,
+    _Out_writes_opt_(cwc) PWORD pgi,
     _In_ DWORD iMode,
     _In_ BOOL bSubset);
 
@@ -235,8 +235,8 @@ APIENTRY
 NtGdiGetOutlineTextMetricsInternalW(
     _In_ HDC hdc,
     _In_ ULONG cjotm,
-    _Out_writes_bytes_opt_(cjotm) OUTLINETEXTMETRICW *potmw,
-    _Out_ TMDIFF *ptmd);
+    _Out_writes_bytes_opt_(cjotm) POUTLINETEXTMETRICW potmw,
+    _Out_ PTMDIFF ptmd);
 
 _Success_(return != FALSE)
 __kernel_entry
@@ -342,11 +342,11 @@ W32KAPI
 HANDLE
 APIENTRY
 NtGdiAddFontMemResourceEx(
-    _In_reads_bytes_(cjBuffer) PVOID pvBuffer,
+    _In_reads_bytes_(cjBuffer) const VOID *pvBuffer,
     _In_ DWORD cjBuffer,
-    _In_reads_bytes_opt_(cjDV) DESIGNVECTOR *pdv,
+    _In_reads_bytes_opt_(cjDV) const DESIGNVECTOR *pdv,
     _In_ ULONG cjDV,
-    _Out_ DWORD *pNumFonts);
+    _Out_ PDWORD pNumFonts);
 
 __kernel_entry
 W32KAPI
@@ -1598,12 +1598,12 @@ W32KAPI
 BOOL
 APIENTRY
 NtGdiRemoveFontResourceW(
-    _In_reads_(cwc) WCHAR *pwszFiles,
+    _In_reads_(cwc) PCWCH pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ ULONG fl,
     _In_ DWORD dwPidTid,
-    _In_opt_ DESIGNVECTOR *pdv);
+    _In_opt_ const DESIGNVECTOR *pdv);
 
 __kernel_entry
 W32KAPI
@@ -1663,12 +1663,12 @@ BOOL
 APIENTRY
 NtGdiGetTextExtentExW(
     _In_ HDC hdc,
-    _In_reads_opt_(cwc) LPWSTR pwsz,
+    _In_reads_opt_(cwc) PCWCH pwsz,
     _In_ ULONG cwc,
     _In_ ULONG dxMax,
-    _Out_opt_ ULONG *pcCh,
+    _Out_opt_ PULONG pcCh,
     _Out_writes_to_opt_(cwc, *pcCh) PULONG pdxOut,
-    _Out_ LPSIZE psize,
+    _Out_ PSIZE psize,
     _In_ FLONG fl);
 
 __kernel_entry
@@ -1678,8 +1678,8 @@ APIENTRY
 NtGdiGetCharABCWidthsW(
     _In_ HDC hdc,
     _In_ UINT wchFirst,
-    _In_ ULONG cwch,
-    _In_reads_opt_(cwch) PWCHAR pwch,
+    _In_ UINT cwch,
+    _In_reads_opt_(cwch) PCWCH pwch,
     _In_ FLONG fl,
     _Out_writes_bytes_(cwch * sizeof(ABC)) PVOID pvBuf);
 
@@ -1689,10 +1689,10 @@ DWORD
 APIENTRY
 NtGdiGetCharacterPlacementW(
     _In_ HDC hdc,
-    _In_reads_z_(nCount) LPWSTR pwsz,
+    _In_reads_(nCount) PCWCH pwsz,
     _In_ INT nCount,
     _In_ INT nMaxExtent,
-    _Inout_ LPGCP_RESULTSW pgcpw,
+    _Inout_opt_ LPGCP_RESULTSW pgcpw,
     _In_ DWORD dwFlags);
 
 __kernel_entry
@@ -1986,7 +1986,7 @@ NtGdiGetCharWidthW(
     _In_ HDC hdc,
     _In_ UINT wcFirst,
     _In_ UINT cwc,
-    _In_reads_opt_(cwc) PWCHAR pwc,
+    _In_reads_opt_(cwc) PCWCH pwc,
     _In_ FLONG fl,
     _Out_writes_bytes_(cwc * sizeof(ULONG)) PVOID pvBuf);
 
@@ -2069,7 +2069,7 @@ NtGdiGetGlyphOutline(
     _Out_ LPGLYPHMETRICS pgm,
     _In_ ULONG cjBuf,
     _Out_writes_bytes_opt_(cjBuf) PVOID pvBuf,
-    _In_ LPMAT2 pmat2,
+    _In_ const MAT2 *pmat2,
     _In_ BOOL bIgnoreRotation);
 
 __kernel_entry
@@ -2457,9 +2457,9 @@ BOOL
 APIENTRY
 NtGdiGetTextExtent(
     _In_ HDC hdc,
-    _In_reads_(cwc) LPWSTR lpwsz,
+    _In_reads_(cwc) PCWCH lpwsz,
     _In_ INT cwc,
-    _Out_ LPSIZE psize,
+    _Out_ PSIZE psize,
     _In_ UINT flOpts);
 
 _Success_(return != FALSE)
@@ -2469,7 +2469,7 @@ BOOL
 APIENTRY
 NtGdiGetTextMetricsW(
     _In_ HDC hdc,
-    _Out_writes_bytes_(cj) TMW_INTERNAL *ptm,
+    _Out_writes_bytes_(cj) PTMW_INTERNAL ptm,
     _In_ ULONG cj);
 
 __kernel_entry
@@ -2477,9 +2477,9 @@ W32KAPI
 INT
 APIENTRY
 NtGdiGetTextFaceW(
-    _In_ HDC hdc,
-    _In_ INT cChar,
-    _Out_writes_to_opt_(cChar, return) LPWSTR pszOut,
+    _In_ HDC hDC,
+    _In_ INT Count,
+    _Out_writes_to_opt_(Count, return) PWSTR FaceName,
     _In_ BOOL bAliasName);
 
 __kernel_entry
@@ -2500,10 +2500,10 @@ NtGdiExtTextOutW(
     _In_ INT x,
     _In_ INT y,
     _In_ UINT flOpts,
-    _In_opt_ LPRECT prcl,
-    _In_reads_opt_(cwc) LPWSTR pwsz,
-    _In_range_(0, 0xffff) INT cwc,
-    _In_reads_opt_(_Inexpressible_(cwc)) LPINT pdx,
+    _In_opt_ LPCRECT prcl,
+    _In_reads_opt_(cwc) PCWCH pwsz,
+    _In_range_(0, 0xffff) UINT cwc,
+    _In_reads_opt_(_Inexpressible_(cwc)) const INT *pdx,
     _In_ DWORD dwCodePage);
 
 __kernel_entry
@@ -2873,23 +2873,23 @@ INT
 W32KAPI
 APIENTRY
 NtGdiAddFontResourceW(
-    _In_reads_(cwc) WCHAR *pwszFiles,
+    _In_reads_(cwc) PCWCH pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ FLONG f,
     _In_ DWORD dwPidTid,
-    _In_opt_ DESIGNVECTOR *pdv);
+    _In_opt_ const DESIGNVECTOR *pdv);
 
 __kernel_entry
 W32KAPI
 HFONT
 APIENTRY
 NtGdiHfontCreate(
-    _In_reads_bytes_(cjElfw) ENUMLOGFONTEXDVW *pelfw,
+    _In_reads_bytes_(cjElfw) const ENUMLOGFONTEXDVW *pelfw,
     _In_ ULONG cjElfw,
     _In_ LFTYPE lft,
     _In_ FLONG fl,
-    _In_ PVOID pvCliData);
+    _In_opt_ PVOID pvCliData);
 
 __kernel_entry
 W32KAPI
@@ -3922,5 +3922,393 @@ NtGdiGetCurrentDpiInfo(
     _Out_ PVOID pvStruct);
 
 #endif /* PRIVATE_DWM_INTERFACE */
+
+
+/* ReactOS Display Driver Model */
+__kernel_entry
+W32KAPI
+BOOLEAN
+APIENTRY
+NtGdiDdDDICheckExclusiveOwnership(VOID);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICreateAllocation(
+    _Inout_ D3DKMT_CREATEALLOCATION* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICheckMonitorPowerState(
+    _In_ const D3DKMT_CHECKMONITORPOWERSTATE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICheckOcclusion(
+    _In_ const D3DKMT_CHECKOCCLUSION* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICloseAdapter(
+    _In_ const D3DKMT_CLOSEADAPTER* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+WINAPI
+NtGdiDdDDICreateContext(
+    _Inout_ D3DKMT_CREATECONTEXT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICreateDevice(
+    _Inout_ D3DKMT_CREATEDEVICE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICreateOverlay(
+    _Inout_ D3DKMT_CREATEOVERLAY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICreateSynchronizationObject(
+    _Inout_ D3DKMT_CREATESYNCHRONIZATIONOBJECT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIWaitForVerticalBlankEvent(
+    _In_ const D3DKMT_WAITFORVERTICALBLANKEVENT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIWaitForIdle(
+    _In_ const D3DKMT_WAITFORIDLE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIUpdateOverlay(
+    _In_ const D3DKMT_UPDATEOVERLAY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+WINAPI
+NtGdiDdDDIUnlock(
+    _In_ const D3DKMT_UNLOCK* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIDestroyAllocation(
+    _In_ const D3DKMT_DESTROYALLOCATION* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIDestroyContext(
+    _In_ const D3DKMT_DESTROYCONTEXT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIDestroyDevice(
+    _In_ const D3DKMT_DESTROYDEVICE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIDestroyOverlay(
+    _In_ const D3DKMT_DESTROYOVERLAY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIDestroySynchronizationObject(
+    _In_ const D3DKMT_DESTROYSYNCHRONIZATIONOBJECT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIEscape(
+    _In_ const D3DKMT_ESCAPE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIFlipOverlay(
+    _In_ const D3DKMT_FLIPOVERLAY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetContextSchedulingPriority(
+    _Inout_ D3DKMT_GETCONTEXTSCHEDULINGPRIORITY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetDeviceState(
+    _Inout_ D3DKMT_GETDEVICESTATE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetDisplayModeList(
+    _Inout_ D3DKMT_GETDISPLAYMODELIST* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetMultisampleMethodList(
+    _Inout_ D3DKMT_GETMULTISAMPLEMETHODLIST* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetPresentHistory(
+    _Inout_ D3DKMT_GETPRESENTHISTORY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetProcessSchedulingPriorityClass(
+    _In_  HANDLE unnamedParam1,
+    _Out_ D3DKMT_SCHEDULINGPRIORITYCLASS *unnamedParam2);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetRuntimeData(
+    _In_ const D3DKMT_GETRUNTIMEDATA* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetScanLine(
+    _In_ D3DKMT_GETSCANLINE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetSharedPrimaryHandle(
+    _Inout_ D3DKMT_GETSHAREDPRIMARYHANDLE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIInvalidateActiveVidPn(
+    _In_ const D3DKMT_INVALIDATEACTIVEVIDPN* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDILock(
+    _Inout_ D3DKMT_LOCK* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIOpenAdapterFromDeviceName(
+    _Inout_ D3DKMT_OPENADAPTERFROMDEVICENAME* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIOpenAdapterFromGdiDisplayName(
+    _Inout_ D3DKMT_OPENADAPTERFROMGDIDISPLAYNAME* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIOpenAdapterFromHdc(
+    _Inout_ D3DKMT_OPENADAPTERFROMHDC* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIOpenResource(
+    _Inout_ D3DKMT_OPENRESOURCE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIPollDisplayChildren(
+    _In_ const D3DKMT_POLLDISPLAYCHILDREN* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIPresent(
+    _In_ D3DKMT_PRESENT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIQueryAdapterInfo(
+    _Inout_ const D3DKMT_QUERYADAPTERINFO* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIQueryAllocationResidency(
+    _In_ const D3DKMT_QUERYALLOCATIONRESIDENCY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIQueryResourceInfo(
+    _Inout_ D3DKMT_QUERYRESOURCEINFO* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIQueryStatistics(
+    _Inout_ const D3DKMT_QUERYSTATISTICS* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIReleaseProcessVidPnSourceOwners(
+    _In_ HANDLE unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIRender(
+    _In_ D3DKMT_RENDER* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetAllocationPriority(
+    _In_ const D3DKMT_SETALLOCATIONPRIORITY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetContextSchedulingPriority(
+    _In_ const D3DKMT_SETCONTEXTSCHEDULINGPRIORITY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetDisplayMode(
+    _In_ const D3DKMT_SETDISPLAYMODE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetDisplayPrivateDriverFormat(
+    _In_ const D3DKMT_SETDISPLAYPRIVATEDRIVERFORMAT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetGammaRamp(
+    _In_ const D3DKMT_SETGAMMARAMP* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetProcessSchedulingPriorityClass(
+    _In_ HANDLE unnamedParam1,
+    _In_ D3DKMT_SCHEDULINGPRIORITYCLASS unnamedParam2);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetQueuedLimit(
+    _Inout_ const D3DKMT_SETQUEUEDLIMIT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetVidPnSourceOwner(
+    _In_ const D3DKMT_SETVIDPNSOURCEOWNER* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISharedPrimaryLockNotification(
+    _In_ const D3DKMT_SHAREDPRIMARYLOCKNOTIFICATION* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISharedPrimaryUnLockNotification(
+    _In_ const D3DKMT_SHAREDPRIMARYUNLOCKNOTIFICATION* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISignalSynchronizationObject(
+    _In_ const D3DKMT_SIGNALSYNCHRONIZATIONOBJECT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIWaitForSynchronizationObject(
+    _In_ const D3DKMT_WAITFORSYNCHRONIZATIONOBJECT* unnamedParam1);
 
 #endif /* _NTGDI_ */

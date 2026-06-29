@@ -1,6 +1,5 @@
 
-add_definitions(-D__WINESRC__ -DDIRECTINPUT_VERSION=0x0700)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+add_definitions(-DDIRECTINPUT_VERSION=0x0700)
 spec2def(dinput.dll dinput.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -22,9 +21,12 @@ add_library(dinput MODULE
     dinput.rc
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dinput.def)
+set_wine_module_FIXME(dinput) # CORE-5743: No ARRAY_SIZE macro
 
 add_library(dinput_data_formats data_formats.c)
 add_dependencies(dinput_data_formats psdk)
+set_wine_module_FIXME(dinput_data_formats) # CORE-5743: No ARRAY_SIZE macro
+
 set_module_type(dinput win32dll)
 target_link_libraries(dinput dxguid uuid wine)
 add_importlibs(dinput comctl32 ole32 user32 advapi32 msvcrt kernel32 ntdll)

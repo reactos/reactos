@@ -13,7 +13,6 @@
 #define WINE_NO_TRACE_MSGS
 #include <wine/debug.h>
 #include <wine/exception.h>
-#include <internal/wine/msvcrt.h>
 #include <internal/wine/cppexcept.h>
 
 extern DWORD CDECL CallCxxFrameHandler(PEXCEPTION_RECORD rec, EXCEPTION_REGISTRATION_RECORD *frame,

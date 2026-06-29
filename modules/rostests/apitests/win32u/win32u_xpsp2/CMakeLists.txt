@@ -9,3 +9,4 @@ add_library(win32u_xpsp2 MODULE
 
 set_module_type(win32u_xpsp2 module)
 add_dependencies(win32u_xpsp2 psdk)
+add_rostests_file(TARGET win32u_xpsp2)

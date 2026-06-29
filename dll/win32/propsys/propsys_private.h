@@ -20,4 +20,4 @@
 
 #pragma once
 
-HRESULT PropertyStore_CreateInstance(IUnknown *outer, REFIID riid, void **ppv) DECLSPEC_HIDDEN;
+HRESULT PropertyStore_CreateInstance(IUnknown *outer, REFIID riid, void **ppv);

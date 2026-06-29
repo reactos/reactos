@@ -27,7 +27,7 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #endif
 
 #define ROUND_DOWN(n, align) \
-    (((ULONG_PTR)(n)) & ~((align) - 1l))
+    (((ULONG_PTR)(n)) & ~((ULONG_PTR)(align) - 1))
 
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG_PTR)(n)) + (align) - 1, (align))
@@ -184,7 +184,6 @@ RtlpExecuteHandlerForException(PEXCEPTION_RECORD ExceptionRecord,
                                PCONTEXT Context,
                                PVOID DispatcherContext,
                                PEXCEPTION_ROUTINE ExceptionHandler);
-#endif
 
 EXCEPTION_DISPOSITION
 NTAPI
@@ -193,6 +192,16 @@ RtlpExecuteHandlerForUnwind(PEXCEPTION_RECORD ExceptionRecord,
                             PCONTEXT Context,
                             PVOID DispatcherContext,
                             PEXCEPTION_ROUTINE ExceptionHandler);
+#else
+EXCEPTION_DISPOSITION
+NTAPI
+RtlpExecuteHandlerForUnwind(
+    _Inout_ struct _EXCEPTION_RECORD *ExceptionRecord,
+    _In_ PVOID EstablisherFrame,
+    _Inout_ struct _CONTEXT *ContextRecord,
+    _In_ PVOID DispatcherContext);
+
+#endif
 
 VOID
 NTAPI

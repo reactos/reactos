@@ -191,35 +191,35 @@ static HRESULT WINAPI IMAPTransport_Capability(IIMAPTransport *iface,
 static HRESULT WINAPI IMAPTransport_Select(IIMAPTransport *iface,
     WPARAM wParam, LPARAM lParam, IIMAPCallback *pCBHandler, LPSTR lpszMailboxName)
 {
-    FIXME("(%ld, %ld, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
+    FIXME("(%Id, %Id, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IMAPTransport_Examine(IIMAPTransport *iface,
     WPARAM wParam, LPARAM lParam, IIMAPCallback *pCBHandler, LPSTR lpszMailboxName)
 {
-    FIXME("(%ld, %ld, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
+    FIXME("(%Id, %Id, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IMAPTransport_Create(IIMAPTransport *iface,
     WPARAM wParam, LPARAM lParam, IIMAPCallback *pCBHandler, LPSTR lpszMailboxName)
 {
-    FIXME("(%ld, %ld, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
+    FIXME("(%Id, %Id, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IMAPTransport_Delete(IIMAPTransport *iface,
     WPARAM wParam, LPARAM lParam, IIMAPCallback *pCBHandler, LPSTR lpszMailboxName)
 {
-    FIXME("(%ld, %ld, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
+    FIXME("(%Id, %Id, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IMAPTransport_Rename(IIMAPTransport *iface, WPARAM wParam, LPARAM lParam,
     IIMAPCallback *pCBHandler, LPSTR lpszMailboxName, LPSTR lpszNewMailboxName)
 {
-    FIXME("(%ld, %ld, %p, %s, %s): stub\n", wParam, lParam, pCBHandler,
+    FIXME("(%Id, %Id, %p, %s, %s): stub\n", wParam, lParam, pCBHandler,
           debugstr_a(lpszMailboxName), debugstr_a(lpszNewMailboxName));
     return E_NOTIMPL;
 }
@@ -227,21 +227,21 @@ static HRESULT WINAPI IMAPTransport_Rename(IIMAPTransport *iface, WPARAM wParam,
 static HRESULT WINAPI IMAPTransport_Subscribe(IIMAPTransport *iface,
     WPARAM wParam, LPARAM lParam, IIMAPCallback *pCBHandler, LPSTR lpszMailboxName)
 {
-    FIXME("(%ld, %ld, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
+    FIXME("(%Id, %Id, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IMAPTransport_Unsubscribe(IIMAPTransport *iface,
     WPARAM wParam, LPARAM lParam, IIMAPCallback *pCBHandler, LPSTR lpszMailboxName)
 {
-    FIXME("(%ld, %ld, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
+    FIXME("(%Id, %Id, %p, %s): stub\n", wParam, lParam, pCBHandler, debugstr_a(lpszMailboxName));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IMAPTransport_List(IIMAPTransport *iface, WPARAM wParam, LPARAM lParam,
     IIMAPCallback *pCBHandler, LPSTR lpszMailboxNameReference, LPSTR lpszMailboxNamePattern)
 {
-    FIXME("(%ld, %ld, %p, %s, %s): stub\n", wParam, lParam, pCBHandler,
+    FIXME("(%Id, %Id, %p, %s, %s): stub\n", wParam, lParam, pCBHandler,
           debugstr_a(lpszMailboxNameReference), debugstr_a(lpszMailboxNamePattern));
     return E_NOTIMPL;
 }
@@ -249,7 +249,7 @@ static HRESULT WINAPI IMAPTransport_List(IIMAPTransport *iface, WPARAM wParam, L
 static HRESULT WINAPI IMAPTransport_Lsub(IIMAPTransport *iface, WPARAM wParam, LPARAM lParam,
     IIMAPCallback *pCBHandler, LPSTR lpszMailboxNameReference, LPSTR lpszMailboxNamePattern)
 {
-    FIXME("(%ld, %ld, %p, %s, %s): stub\n", wParam, lParam, pCBHandler,
+    FIXME("(%Id, %Id, %p, %s, %s): stub\n", wParam, lParam, pCBHandler,
           debugstr_a(lpszMailboxNameReference), debugstr_a(lpszMailboxNamePattern));
     return E_NOTIMPL;
 }
@@ -258,7 +258,7 @@ static HRESULT WINAPI IMAPTransport_Append(IIMAPTransport *iface,
     WPARAM wParam, LPARAM lParam, IIMAPCallback *pCBHandler, LPSTR lpszMailboxName,
     LPSTR lpszMessageFlags, FILETIME ftMessageDateTime, LPSTREAM lpstmMessageToSave)
 {
-    FIXME("(%ld, %ld, %p, %s, %s, %p): stub\n", wParam, lParam, pCBHandler,
+    FIXME("(%Id, %Id, %p, %s, %s, %p): stub\n", wParam, lParam, pCBHandler,
           debugstr_a(lpszMailboxName), debugstr_a(lpszMessageFlags), lpstmMessageToSave);
     return E_NOTIMPL;
 }
@@ -266,14 +266,14 @@ static HRESULT WINAPI IMAPTransport_Append(IIMAPTransport *iface,
 static HRESULT WINAPI IMAPTransport_Close(IIMAPTransport *iface,
     WPARAM wParam, LPARAM lParam, IIMAPCallback *pCBHandler)
 {
-    FIXME("(%ld, %ld, %p): stub\n", wParam, lParam, pCBHandler);
+    FIXME("(%Id, %Id, %p): stub\n", wParam, lParam, pCBHandler);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IMAPTransport_Expunge(IIMAPTransport *iface,
     WPARAM wParam, LPARAM lParam, IIMAPCallback *pCBHandler)
 {
-    FIXME("(%ld, %ld, %p): stub\n", wParam, lParam, pCBHandler);
+    FIXME("(%Id, %Id, %p): stub\n", wParam, lParam, pCBHandler);
     return E_NOTIMPL;
 }
 
@@ -281,7 +281,7 @@ static HRESULT WINAPI IMAPTransport_Search(IIMAPTransport *iface,
     WPARAM wParam, LPARAM lParam, IIMAPCallback *pCBHandler, LPSTR lpszSearchCriteria,
     boolean bReturnUIDs, IRangeList *pMsgRange, boolean bUIDRangeList)
 {
-    FIXME("(%ld, %ld, %p, %s, %d, %p, %d): stub\n", wParam, lParam, pCBHandler,
+    FIXME("(%Id, %Id, %p, %s, %d, %p, %d): stub\n", wParam, lParam, pCBHandler,
           debugstr_a(lpszSearchCriteria), bReturnUIDs, pMsgRange, bUIDRangeList);
     return E_NOTIMPL;
 }
@@ -289,7 +289,7 @@ static HRESULT WINAPI IMAPTransport_Search(IIMAPTransport *iface,
 static HRESULT WINAPI IMAPTransport_Fetch(IIMAPTransport *iface, WPARAM wParam, LPARAM lParam,
     IIMAPCallback *pCBHandler, IRangeList *pMsgRange, boolean bUIDMsgRange, LPSTR lpszFetchArgs)
 {
-    FIXME("(%ld, %ld, %p, %p, %d, %s): stub\n", wParam, lParam, pCBHandler, pMsgRange,
+    FIXME("(%Id, %Id, %p, %p, %d, %s): stub\n", wParam, lParam, pCBHandler, pMsgRange,
           bUIDMsgRange, debugstr_a(lpszFetchArgs));
     return E_NOTIMPL;
 }
@@ -297,7 +297,7 @@ static HRESULT WINAPI IMAPTransport_Fetch(IIMAPTransport *iface, WPARAM wParam, 
 static HRESULT WINAPI IMAPTransport_Store(IIMAPTransport *iface, WPARAM wParam, LPARAM lParam,
     IIMAPCallback *pCBHandler, IRangeList *pMsgRange, boolean bUIDRangeList, LPSTR lpszStoreArgs)
 {
-    FIXME("(%ld, %ld, %p, %p, %d, %s): stub\n", wParam, lParam, pCBHandler, pMsgRange,
+    FIXME("(%Id, %Id, %p, %p, %d, %s): stub\n", wParam, lParam, pCBHandler, pMsgRange,
           bUIDRangeList, debugstr_a(lpszStoreArgs));
     return E_NOTIMPL;
 }
@@ -305,7 +305,7 @@ static HRESULT WINAPI IMAPTransport_Store(IIMAPTransport *iface, WPARAM wParam, 
 static HRESULT WINAPI IMAPTransport_Copy(IIMAPTransport *iface, WPARAM wParam, LPARAM lParam,
     IIMAPCallback *pCBHandler, IRangeList *pMsgRange, boolean bUIDRangeList, LPSTR lpszMailboxName)
 {
-    FIXME("(%ld, %ld, %p, %p, %d, %s): stub\n", wParam, lParam, pCBHandler, pMsgRange,
+    FIXME("(%Id, %Id, %p, %p, %d, %s): stub\n", wParam, lParam, pCBHandler, pMsgRange,
           bUIDRangeList, debugstr_a(lpszMailboxName));
     return E_NOTIMPL;
 }
@@ -313,33 +313,33 @@ static HRESULT WINAPI IMAPTransport_Copy(IIMAPTransport *iface, WPARAM wParam, L
 static HRESULT WINAPI IMAPTransport_Noop(IIMAPTransport *iface,
     WPARAM wParam, LPARAM lParam, IIMAPCallback *pCBHandler)
 {
-    FIXME("(%ld, %ld, %p): stub\n", wParam, lParam, pCBHandler);
+    FIXME("(%Id, %Id, %p): stub\n", wParam, lParam, pCBHandler);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IMAPTransport_ResizeMsgSeqNumTable(IIMAPTransport *iface, DWORD dwSizeOfMbox)
 {
-    FIXME("(%u): stub\n", dwSizeOfMbox);
+    FIXME("(%lu): stub\n", dwSizeOfMbox);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IMAPTransport_UpdateSeqNumToUID(IIMAPTransport *iface,
     DWORD dwMsgSeqNum, DWORD dwUID)
 {
-    FIXME("(%u, %u): stub\n", dwMsgSeqNum, dwUID);
+    FIXME("(%lu, %lu): stub\n", dwMsgSeqNum, dwUID);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IMAPTransport_RemoveSequenceNum(IIMAPTransport *iface, DWORD dwDeletedMsgSeqNum)
 {
-    FIXME("(%u): stub\n", dwDeletedMsgSeqNum);
+    FIXME("(%lu): stub\n", dwDeletedMsgSeqNum);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IMAPTransport_MsgSeqNumToUID(IIMAPTransport *iface, DWORD dwMsgSeqNum,
     DWORD *pdwUID)
 {
-    FIXME("(%u, %p): stub\n", dwMsgSeqNum, pdwUID);
+    FIXME("(%lu, %p): stub\n", dwMsgSeqNum, pdwUID);
     return E_NOTIMPL;
 }
 
@@ -371,7 +371,7 @@ static HRESULT WINAPI IMAPTransport_SetDefaultCBHandler(IIMAPTransport *iface, I
 static HRESULT WINAPI IMAPTransport_Status(IIMAPTransport *iface, WPARAM wParam, LPARAM lParam,
     IIMAPCallback *pCBHandler, LPSTR pszMailboxName, LPSTR pszStatusCmdArgs)
 {
-    FIXME("(%ld, %ld, %p, %s, %s): stub\n", wParam, lParam, pCBHandler,
+    FIXME("(%Id, %Id, %p, %s, %s): stub\n", wParam, lParam, pCBHandler,
           debugstr_a(pszMailboxName), debugstr_a(pszStatusCmdArgs));
     return E_NOTIMPL;
 }

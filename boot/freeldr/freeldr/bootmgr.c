@@ -30,6 +30,10 @@ typedef VOID
 (*EDIT_OS_ENTRY_PROC)(
     _Inout_ OperatingSystemItem* OperatingSystem);
 
+typedef VOID
+(*OS_MENU_PROC)(
+    _Inout_ OperatingSystemItem* OperatingSystem);
+
 static VOID
 EditCustomBootReactOSSetup(
     _Inout_ OperatingSystemItem* OperatingSystem)
@@ -48,26 +52,26 @@ typedef struct _OS_LOADING_METHOD
 {
     PCSTR BootType;
     EDIT_OS_ENTRY_PROC EditOsEntry;
+    OS_MENU_PROC OsMenu OPTIONAL;
     ARC_ENTRY_POINT OsLoader;
 } OS_LOADING_METHOD, *POS_LOADING_METHOD;
 
 static const OS_LOADING_METHOD
 OSLoadingMethods[] =
 {
-    {"ReactOSSetup", EditCustomBootReactOSSetup, LoadReactOSSetup},
-
 #if defined(_M_IX86) || defined(_M_AMD64)
 #ifndef UEFIBOOT
-    {"BootSector", EditCustomBootSector, LoadAndBootSector},
-    {"Linux"     , EditCustomBootLinux , LoadAndBootLinux },
+    {"BootSector", EditCustomBootSector, NULL, LoadAndBootSector},
+    {"Linux"     , EditCustomBootLinux , NULL, LoadAndBootLinux },
 #endif
 #endif
 #ifdef _M_IX86
-    {"WindowsNT40" , EditCustomBootNTOS, LoadAndBootWindows},
+    {"WindowsNT40" , EditCustomBootNTOS, NULL, LoadAndBootWindows},
 #endif
-    {"Windows"     , EditCustomBootNTOS, LoadAndBootWindows},
-    {"Windows2003" , EditCustomBootNTOS, LoadAndBootWindows},
-    {"WindowsVista", EditCustomBootNTOS, LoadAndBootWindows},
+    {"Windows"     , EditCustomBootNTOS, MenuNTOptions, LoadAndBootWindows},
+    {"Windows2003" , EditCustomBootNTOS, MenuNTOptions, LoadAndBootWindows},
+    {"WindowsVista", EditCustomBootNTOS, MenuNTOptions, LoadAndBootWindows},
+    {"ReactOSSetup", EditCustomBootReactOSSetup, MenuNTOptions, LoadReactOSSetup},
 };
 
 /* FUNCTIONS ******************************************************************/
@@ -85,7 +89,7 @@ WarnDeprecated(
     CHAR msgString[300];
 
     /* If the user didn't cancel the timeout, don't display the warning */
-    if (BootMgrInfo.TimeOut >= 0)
+    if (GetBootMgrInfo()->TimeOut >= 0)
         return;
 
     va_start(ap, MsgFmt);
@@ -183,6 +187,7 @@ BuildArgvForOsLoader(
     PCHAR* Argv;
     PCHAR* Args;
     PCHAR SettingName, SettingValue;
+    PCCHAR BootPath = FrLdrGetBootPath();
 
     *pArgc = 0;
 
@@ -208,7 +213,7 @@ BuildArgvForOsLoader(
     /* i == 0: Program name */
     // TODO: Provide one in the future...
     /* i == 1: SystemPartition : from where FreeLdr has been started */
-    Size += (strlen("SystemPartition=") + strlen(FrLdrBootPath) + 1) * sizeof(CHAR);
+    Size += (strlen("SystemPartition=") + strlen(BootPath) + 1) * sizeof(CHAR);
     /* i == 2: LoadIdentifier  : ASCII string that may be used
      * to associate an identifier with a set of load parameters */
     if (LoadIdentifier)
@@ -236,7 +241,7 @@ BuildArgvForOsLoader(
     /* i == 1: SystemPartition */
     {
         strcpy(SettingName, "SystemPartition=");
-        strcat(SettingName, FrLdrBootPath);
+        strcat(SettingName, BootPath);
 
         *Args++ = SettingName;
         SettingName += (strlen(SettingName) + 1);
@@ -332,18 +337,43 @@ MainBootMenuKeyPressFilter(
     IN ULONG SelectedMenuItem,
     IN PVOID Context OPTIONAL)
 {
+    OperatingSystemItem* OperatingSystem =
+        &((OperatingSystemItem*)Context)[SelectedMenuItem];
+
     /* Any key-press cancels the global timeout */
-    BootMgrInfo.TimeOut = -1;
+    GetBootMgrInfo()->TimeOut = -1;
 
     switch (KeyPress)
     {
-    case KEY_F8:
-        DoOptionsMenu(&((OperatingSystemItem*)Context)[SelectedMenuItem]);
+#if 0
+    /* Help */
+    case KEY_F1:
+        DoHelp();
+        return TRUE;
+#endif
+
+    /* FreeLdr Setup menu */
+    case KEY_F2:
+        FreeLdrSetupMenu(OperatingSystem);
         return TRUE;
 
+    /* Boot entry-specific advanced boot menu */
+    case KEY_F5:
+    case KEY_F8:
+    {
+        /* Find the suitable OS menu procedure and display it */
+        const OS_LOADING_METHOD* OSLoadingMethod =
+            GetOSLoadingMethod(OperatingSystem->SectionId);
+        if (OSLoadingMethod && OSLoadingMethod->OsMenu)
+            OSLoadingMethod->OsMenu(OperatingSystem);
+        DisplayBootTimeOptions(OperatingSystem); // TODO: Do this also elsewhere
+        return TRUE;
+    }
+
 #ifdef HAS_OPTION_MENU_EDIT_CMDLINE
+    /* Boot entry editor */
     case KEY_F10:
-        EditOperatingSystemEntry(&((OperatingSystemItem*)Context)[SelectedMenuItem]);
+        EditOperatingSystemEntry(OperatingSystem);
         return TRUE;
 #endif
 
@@ -358,91 +388,75 @@ VOID RunLoader(VOID)
     OperatingSystemItem* OperatingSystemList;
     PCSTR* OperatingSystemDisplayNames;
     ULONG OperatingSystemCount;
-    ULONG DefaultOperatingSystem;
     ULONG SelectedOperatingSystem;
     ULONG i;
-
-    if (!MachInitializeBootDevices())
-    {
-        UiMessageBoxCritical("Error when detecting hardware.");
-        return;
-    }
 
 #ifdef _M_IX86
 #ifndef UEFIBOOT
     /* Load additional SCSI driver (if any) */
     if (LoadBootDeviceDriver() != ESUCCESS)
-    {
         UiMessageBoxCritical("Unable to load additional boot device drivers.");
-    }
 #endif
 #endif
 
     /* Open FREELDR.INI and load the global FreeLoader settings */
     if (!IniFileInitialize())
-    {
         UiMessageBoxCritical("Error initializing .ini file.");
-        return;
-    }
     LoadSettings(NULL);
 #if 0
     if (FALSE)
-    {
         UiMessageBoxCritical("Could not load global FreeLoader settings.");
-        return;
-    }
 #endif
 
     /* Debugger main initialization */
-    DebugInit(BootMgrInfo.DebugString);
+    DebugInit(GetBootMgrInfo()->DebugString);
 
-    /* UI main initialization */
+    /* UI main initialization. If it fails, fall back to default UI. */
     if (!UiInitialize(TRUE))
-    {
         UiMessageBoxCritical("Unable to initialize UI.");
-        return;
-    }
 
+    /* If no FREELDR.INI, skip everything else and fall back to the FreeLdr setup menu */
+    if (IsListEmpty(IniGetFileSectionListHead()))
+        goto Fallback;
+
+    /* Find all the message box settings and run them */
+    UiShowMessageBoxesInSection(GetBootMgrInfo()->FrLdrSection);
+
+    /* Retrieve the list of boot entries */
     OperatingSystemList = InitOperatingSystemList(&OperatingSystemCount,
-                                                  &DefaultOperatingSystem);
+                                                  &SelectedOperatingSystem);
     if (!OperatingSystemList)
     {
-        UiMessageBox("Unable to read operating systems section in freeldr.ini.\nPress ENTER to reboot.");
-        goto Reboot;
+        UiMessageBox("There are no operating systems listed in freeldr.ini.");
+        goto Fallback;
     }
-    if (OperatingSystemCount == 0)
-    {
-        UiMessageBox("There were no operating systems listed in freeldr.ini.\nPress ENTER to reboot.");
-        goto Reboot;
-    }
+    ASSERT(OperatingSystemCount != 0);
 
     /* Create list of display names */
     OperatingSystemDisplayNames = FrLdrTempAlloc(sizeof(PCSTR) * OperatingSystemCount, 'mNSO');
     if (!OperatingSystemDisplayNames)
-        goto Reboot;
+        goto Fallback;
 
     for (i = 0; i < OperatingSystemCount; i++)
     {
         OperatingSystemDisplayNames[i] = OperatingSystemList[i].LoadIdentifier;
     }
 
-    /* Find all the message box settings and run them */
-    UiShowMessageBoxesInSection(BootMgrInfo.FrLdrSection);
-
     for (;;)
     {
-        /* Redraw the backdrop */
-        UiDrawBackdrop();
+        /* Redraw the backdrop, but don't overwrite boot options */
+        UiDrawBackdrop(UiGetScreenHeight() - 2);
+        DisplayBootTimeOptions(&OperatingSystemList[SelectedOperatingSystem]);
 
         /* Show the operating system list menu */
         if (!UiDisplayMenu("Please select the operating system to start:",
-                           "For troubleshooting and advanced startup options for "
-                               "ReactOS, press F8.",
-                           TRUE,
+                           /* The string is 80 characters long; don't make it longer! */
+                           "Press F8 for troubleshooting and advanced startup options."
+                           "     F2: FreeLdr SETUP",
                            OperatingSystemDisplayNames,
                            OperatingSystemCount,
-                           DefaultOperatingSystem,
-                           BootMgrInfo.TimeOut,
+                           SelectedOperatingSystem,
+                           GetBootMgrInfo()->TimeOut,
                            &SelectedOperatingSystem,
                            FALSE,
                            MainBootMenuKeyPressFilter,
@@ -455,15 +469,20 @@ VOID RunLoader(VOID)
         /* Load the chosen operating system */
         LoadOperatingSystem(&OperatingSystemList[SelectedOperatingSystem]);
 
-        BootMgrInfo.TimeOut = -1;
+        GetBootMgrInfo()->TimeOut = -1;
 
         /* If we get there, the OS loader failed. As it may have
          * messed up the display, re-initialize the UI. */
 #ifndef _M_ARM
-        UiVtbl.UnInitialize();
+        UiUnInitialize("");
 #endif
         UiInitialize(TRUE);
     }
+
+Fallback:
+    /* Fall back to the FreeLdr setup menu */
+    FreeLdrSetupMenu(NULL);
+    UiMessageBox("The system will now reboot.");
 
 Reboot:
     UiUnInitialize("Rebooting...");

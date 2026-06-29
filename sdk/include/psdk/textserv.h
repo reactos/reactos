@@ -33,9 +33,9 @@ extern "C" {
 #define THISCALLMETHOD_(type,method)  type (__thiscall *method)
 #endif
 
-DEFINE_GUID(IID_ITextServices,0x8d33f740,0xcf58,0x11ce,0xa8,0x9d,0x00,0xaa,0x00,0x6c,0xad,0xc5);
-DEFINE_GUID(IID_ITextHost,    0xc5bdd8d0,0xd26e,0x11ce,0xa8,0x9e,0x00,0xaa,0x00,0x6c,0xad,0xc5);
-DEFINE_GUID(IID_ITextHost2,   0xc5bdd8d0,0xd26e,0x11ce,0xa8,0x9e,0x00,0xaa,0x00,0x6c,0xad,0xc5);
+EXTERN_C const IID IID_ITextServices;
+EXTERN_C const IID IID_ITextHost;
+EXTERN_C const IID IID_ITextHost2;
 
 /*****************************************************************************
  * ITextServices interface
@@ -108,10 +108,10 @@ DECLARE_INTERFACE_(ITextServices,IUnknown)
         INT y,
         DWORD* pHitResult) PURE;
 
-    THISCALLMETHOD_(HRESULT,OnTxInplaceActivate)( THIS_
+    THISCALLMETHOD_(HRESULT,OnTxInPlaceActivate)( THIS_
         LPCRECT prcClient) PURE;
 
-    THISCALLMETHOD_(HRESULT,OnTxInplaceDeactivate)( THIS ) PURE;
+    THISCALLMETHOD_(HRESULT,OnTxInPlaceDeactivate)( THIS ) PURE;
 
     THISCALLMETHOD_(HRESULT,OnTxUIActivate)( THIS ) PURE;
 
@@ -151,6 +151,7 @@ DECLARE_INTERFACE_(ITextServices,IUnknown)
         DWORD* pdwHeight) PURE;
 
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 /*** IUnknown methods ***/
@@ -158,8 +159,6 @@ DECLARE_INTERFACE_(ITextServices,IUnknown)
 #define ITextServices_AddRef(p) (p)->lpVtbl->AddRef(p)
 #define ITextServices_Release(p) (p)->lpVtbl->Release(p)
 #endif
-
-#undef INTERFACE
 
 typedef enum _TXTBACKSTYLE {
     TXTBACK_TRANSPARENT = 0,
@@ -180,7 +179,7 @@ enum TXTNATURALSIZE {
 
 enum TXTVIEW {
     TXTVIEW_ACTIVE = 0,
-    TXTVIEW_INACTIVE = 1
+    TXTVIEW_INACTIVE = -1
 };
 
 #define TXTBIT_RICHTEXT         0x000001
@@ -361,6 +360,7 @@ DECLARE_INTERFACE_(ITextHost,IUnknown)
         LONG* lSelBarWidth) PURE;
 
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 /*** IUnknown methods ***/
@@ -369,7 +369,79 @@ DECLARE_INTERFACE_(ITextHost,IUnknown)
 #define ITextHost_Release(p) (p)->lpVtbl->Release(p)
 #endif
 
+/*****************************************************************************
+ * ITextHost2 interface
+ */
+#define INTERFACE ITextHost2
+DECLARE_INTERFACE_(ITextHost2,ITextHost)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD(QueryInterface)( THIS_ REFIID riid, void** ppvObject ) PURE;
+    STDMETHOD_(ULONG,AddRef)( THIS ) PURE;
+    STDMETHOD_(ULONG,Release)( THIS ) PURE;
+    /*** ITextHost methods ***/
+    THISCALLMETHOD_(HDC,TxGetDC)( THIS ) PURE;
+    THISCALLMETHOD_(INT,TxReleaseDC)( THIS_ HDC hdc ) PURE;
+    THISCALLMETHOD_(BOOL,TxShowScrollBar)( THIS_ INT fnBar, BOOL fShow ) PURE;
+    THISCALLMETHOD_(BOOL,TxEnableScrollBar)( THIS_ INT fuSBFlags, INT fuArrowflags ) PURE;
+    THISCALLMETHOD_(BOOL,TxSetScrollRange)( THIS_ INT fnBar, LONG nMinPos, INT nMaxPos, BOOL fRedraw ) PURE;
+    THISCALLMETHOD_(BOOL,TxSetScrollPos)( THIS_ INT fnBar, INT nPos, BOOL fRedraw ) PURE;
+    THISCALLMETHOD_(void,TxInvalidateRect)( THIS_ LPCRECT prc, BOOL fMode ) PURE;
+    THISCALLMETHOD_(void,TxViewChange)( THIS_ BOOL fUpdate ) PURE;
+    THISCALLMETHOD_(BOOL,TxCreateCaret)( THIS_ HBITMAP hbmp, INT xWidth, INT yHeight ) PURE;
+    THISCALLMETHOD_(BOOL,TxShowCaret)( THIS_ BOOL fShow ) PURE;
+    THISCALLMETHOD_(BOOL,TxSetCaretPos)( THIS_ INT x, INT y ) PURE;
+    THISCALLMETHOD_(BOOL,TxSetTimer)( THIS_ UINT idTimer, UINT uTimeout ) PURE;
+    THISCALLMETHOD_(void,TxKillTimer)( THIS_ UINT idTimer ) PURE;
+    THISCALLMETHOD_(void,TxScrollWindowEx)( THIS_ INT dx, INT dy, LPCRECT lprcScroll, LPCRECT lprcClip,
+                                            HRGN hRgnUpdate, LPRECT lprcUpdate, UINT fuScroll ) PURE;
+    THISCALLMETHOD_(void,TxSetCapture)( THIS_ BOOL fCapture ) PURE;
+    THISCALLMETHOD_(void,TxSetFocus)( THIS ) PURE;
+    THISCALLMETHOD_(void,TxSetCursor)( THIS_ HCURSOR hcur, BOOL fText ) PURE;
+    THISCALLMETHOD_(BOOL,TxScreenToClient)( THIS_ LPPOINT lppt ) PURE;
+    THISCALLMETHOD_(BOOL,TxClientToScreen)( THIS_ LPPOINT lppt ) PURE;
+    THISCALLMETHOD_(HRESULT,TxActivate)( THIS_ LONG* plOldState ) PURE;
+    THISCALLMETHOD_(HRESULT,TxDeactivate)( THIS_ LONG lNewState ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetClientRect)( THIS_ LPRECT prc ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetViewInset)( THIS_ LPRECT prc ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetCharFormat)( THIS_ const CHARFORMATW** ppCF ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetParaFormat)( THIS_ const PARAFORMAT** ppPF ) PURE;
+    THISCALLMETHOD_(COLORREF,TxGetSysColor)( THIS_ int nIndex ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetBackStyle)( THIS_ TXTBACKSTYLE* pStyle ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetMaxLength)( THIS_ DWORD* plength ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetScrollBars)( THIS_ DWORD* pdwScrollBar ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetPasswordChar)( THIS_ WCHAR* pch ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetAcceleratorPos)( THIS_ LONG* pch ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetExtent)( THIS_ LPSIZEL lpExtent ) PURE;
+    THISCALLMETHOD_(HRESULT,OnTxCharFormatChange)( THIS_ const CHARFORMATW* pcf ) PURE;
+    THISCALLMETHOD_(HRESULT,OnTxParaFormatChange)( THIS_ const PARAFORMAT* ppf ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetPropertyBits)( THIS_ DWORD dwMask, DWORD* pdwBits ) PURE;
+    THISCALLMETHOD_(HRESULT,TxNotify)( THIS_ DWORD iNotify, void* pv ) PURE;
+    THISCALLMETHOD_(HIMC,TxImmGetContext)( THIS ) PURE;
+    THISCALLMETHOD_(void,TxImmReleaseContext)( THIS_ HIMC himc ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetSelectionBarWidth)( THIS_ LONG* lSelBarWidth ) PURE;
+    /* ITextHost2 methods */
+    THISCALLMETHOD_(BOOL,TxIsDoubleClickPending)( THIS ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetWindow)( THIS_ HWND *hwnd ) PURE;
+    THISCALLMETHOD_(HRESULT,TxSetForegroundWindow)( THIS ) PURE;
+    THISCALLMETHOD_(HPALETTE,TxGetPalette)( THIS ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetEastAsianFlags)( THIS_ LONG *flags ) PURE;
+    THISCALLMETHOD_(HCURSOR,TxSetCursor2)( THIS_ HCURSOR cursor, BOOL text ) PURE;
+    THISCALLMETHOD_(void,TxFreeTextServicesNotification)( THIS ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetEditStyle)( THIS_ DWORD item, DWORD *data ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetWindowStyles)( THIS_ DWORD *style, DWORD *ex_style ) PURE;
+    THISCALLMETHOD_(HRESULT,TxShowDropCaret)( THIS_ BOOL show, HDC hdc, const RECT *rect ) PURE;
+    THISCALLMETHOD_(HRESULT,TxDestroyCaret)( THIS ) PURE;
+    THISCALLMETHOD_(HRESULT,TxGetHorzExtent)( THIS_ LONG *horz_extent ) PURE;
+};
 #undef INTERFACE
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define ITextHost2_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define ITextHost2_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define ITextHost2_Release(p) (p)->lpVtbl->Release(p)
+#endif
 
 HRESULT WINAPI CreateTextServices(IUnknown*,ITextHost*,IUnknown**);
 

@@ -61,10 +61,16 @@ DefaultDestDir = 12
 [E1000_Inst.ndi.NT]
 Characteristics = 0x4 ; NCF_PHYSICAL
 BusType = 5 ; PCIBus
+AddReg = E1000_AddReg.NT
 CopyFiles = E1000_CopyFiles.NT
 
 [E1000_CopyFiles.NT]
 e1000.sys
+
+[E1000_AddReg.NT]
+HKR, Ndi,            Service,    0, "e1000"
+HKR, Ndi\Interfaces, UpperRange, 0, "ndis5"
+HKR, Ndi\Interfaces, LowerRange, 0, "ethernet"
 
 [E1000_Inst.ndi.NT.Services]
 AddService = e1000, 0x00000002, E1000_Service_Inst

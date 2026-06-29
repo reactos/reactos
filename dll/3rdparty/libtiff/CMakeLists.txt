@@ -6,8 +6,11 @@ add_definitions(
     -DTIF_PLATFORM_CONSOLE)
 
 include_directories(
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libjpeg
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libtiff
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
+
+spec2def(libtiff.dll libtiff.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     #mkg3states.c
@@ -27,8 +30,9 @@ list(APPEND SOURCE
     tif_fax3sm.c
     tif_flush.c
     tif_getimage.c
+    tif_hash_set.c
     #tif_jbig.c
-    #tif_jpeg.c
+    tif_jpeg.c
     tif_luv.c
     #tif_lzma.c
     tif_lzw.c
@@ -54,11 +58,11 @@ list(APPEND SOURCE
     #tif_zstd.c
     precomp.h)
 
-add_library(libtiff MODULE ${SOURCE} libtiff.def)
+add_library(libtiff MODULE ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/libtiff.def)
 
 set_module_type(libtiff win32dll)
-target_link_libraries(libtiff zlib getopt)
-add_importlibs(libtiff user32 msvcrt kernel32 ntdll)
+target_link_libraries(libtiff zlib getopt ${PSEH_LIB})
+add_importlibs(libtiff libjpeg user32 msvcrt kernel32 ntdll)
 add_pch(libtiff precomp.h SOURCE)
 add_cd_file(TARGET libtiff DESTINATION reactos/system32 FOR all)
 
@@ -70,5 +74,8 @@ if(MSVC)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(libtiff PRIVATE -Wno-unused-but-set-variable)
+    target_compile_options(libtiff PRIVATE
+        -Wno-unused-but-set-variable
+        -Wno-array-parameter
+    )
 endif()

@@ -432,6 +432,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Fügt eine neue Zeichenkette hinzu"
     ID_EDIT_NEW_BINARYVALUE "Fügt einen neuen Binärwärt hinzu"
     ID_EDIT_NEW_DWORDVALUE "Fügt einen neuen DWORD-Wert hinzu"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Fügt eine neue Mehrfachzeichenkette hinzu"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Fügt eine neue erweiterbare Zeichenkette hinzu"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importiert eine Textddatei in die Registry"
     ID_REGISTRY_EXPORTREGISTRYFILE "Exportiert Teile oder die ganze Registry in eine Textdatei"
     ID_REGISTRY_LOADHIVE "Lädt einen Hive in die Registry"

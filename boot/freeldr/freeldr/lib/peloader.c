@@ -13,7 +13,7 @@
  *              (creating a native EFI loader for Windows).
  *
  *              This article was very handy during development:
- *              http://msdn.microsoft.com/msdnmag/issues/02/03/PE2/
+ *              https://web.archive.org/web/20131202091645/http://msdn.microsoft.com/en-us/magazine/cc301808.aspx
  */
 
 /* INCLUDES ******************************************************************/
@@ -51,12 +51,11 @@ PeLdrpFetchAddressOfSecurityCookie(PVOID BaseAddress, ULONG SizeOfImage)
                                              TRUE,
                                              IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
                                              &DirSize);
-
-    /* Check for sanity */
+    /* Validate it */
     if (!ConfigDir ||
         DirSize < RTL_SIZEOF_THROUGH_FIELD(IMAGE_LOAD_CONFIG_DIRECTORY, SecurityCookie))
     {
-        /* Invalid directory*/
+        /* Invalid directory */
         return NULL;
     }
 
@@ -329,11 +328,9 @@ PeLdrpBindImportName(
         /* Get pointer to the export directory of loaded DLL */
         RefExportDirectory = (PIMAGE_EXPORT_DIRECTORY)
             RtlImageDirectoryEntryToData(VaToPa(DataTableEntry->DllBase),
-            TRUE,
-            IMAGE_DIRECTORY_ENTRY_EXPORT,
-            &RefExportSize);
-
-        /* Fail if it's NULL */
+                                         TRUE,
+                                         IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                         &RefExportSize);
         if (RefExportDirectory)
         {
             UCHAR Buffer[128];
@@ -476,11 +473,11 @@ PeLdrpScanImportAddressTable(
     }
     else
     {
-        ExportDirectory =
-            (PIMAGE_EXPORT_DIRECTORY)RtlImageDirectoryEntryToData(VaToPa(DllBase),
-                TRUE,
-                IMAGE_DIRECTORY_ENTRY_EXPORT,
-                &ExportSize);
+        ExportDirectory = (PIMAGE_EXPORT_DIRECTORY)
+            RtlImageDirectoryEntryToData(VaToPa(DllBase),
+                                         TRUE,
+                                         IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                         &ExportSize);
     }
     TRACE("PeLdrpScanImportAddressTable(): ExportDirectory 0x%p\n", ExportDirectory);
 
@@ -528,10 +525,9 @@ PeLdrInitializeModuleList(VOID)
 
     InitializeListHead(&FrLdrModuleList);
 
-    /* Allocate a data table entry for freeldr.sys.
-       The base name is scsiport.sys for imports from ntbootdd.sys */
+    /* Allocate a data table entry for freeldr.sys */
     if (!PeLdrAllocateDataTableEntry(&FrLdrModuleList,
-                                     "scsiport.sys",
+                                     "freeldr.sys",
                                      "freeldr.sys",
                                      &__ImageBase,
                                      &FreeldrDTE))
@@ -552,13 +548,11 @@ PeLdrInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
 
     /* Fetch address of the cookie */
     Cookie = PeLdrpFetchAddressOfSecurityCookie(VaToPa(LdrEntry->DllBase), LdrEntry->SizeOfImage);
-
     if (!Cookie)
         return NULL;
 
     /* Check if it's a default one */
-    if ((*Cookie == DEFAULT_SECURITY_COOKIE) ||
-        (*Cookie == 0))
+    if ((*Cookie == DEFAULT_SECURITY_COOKIE) || (*Cookie == 0))
     {
         /* Generate new cookie using cookie address and time as seed */
         NewCookie = (ULONG_PTR)Cookie ^ (ULONG_PTR)ArcGetRelativeTime();
@@ -639,8 +633,11 @@ PeLdrScanImportDescriptorTable(
     BOOLEAN Success;
 
     /* Get a pointer to the import table of this image */
-    ImportTable = (PIMAGE_IMPORT_DESCRIPTOR)RtlImageDirectoryEntryToData(VaToPa(ScanDTE->DllBase),
-        TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ImportTableSize);
+    ImportTable = (PIMAGE_IMPORT_DESCRIPTOR)
+        RtlImageDirectoryEntryToData(VaToPa(ScanDTE->DllBase),
+                                     TRUE,
+                                     IMAGE_DIRECTORY_ENTRY_IMPORT,
+                                     &ImportTableSize);
 
 #if DBG
     {
@@ -694,7 +691,6 @@ PeLdrScanImportDescriptorTable(
                                                ThunkData,
                                                DirectoryPath,
                                                &ScanDTE->InLoadOrderLinks);
-
         if (!Success)
         {
             ERR("PeLdrpScanImportAddressTable() failed: ImportName = '%s', DirectoryPath = '%s'\n",
@@ -910,12 +906,10 @@ PeLdrLoadImageEx(
     PhysicalBase = MmAllocateMemoryAtAddress(NtHeaders->OptionalHeader.SizeOfImage,
                        (PVOID)((ULONG)NtHeaders->OptionalHeader.ImageBase & (KSEG0_BASE - 1)),
                        MemoryType);
-
     if (PhysicalBase == NULL)
     {
         /* Don't fail, allocate again at any other "low" place */
         PhysicalBase = MmAllocateMemoryWithType(NtHeaders->OptionalHeader.SizeOfImage, MemoryType);
-
         if (PhysicalBase == NULL)
         {
             ERR("Failed to alloc %lu bytes for image %s\n", NtHeaders->OptionalHeader.SizeOfImage, FilePath);

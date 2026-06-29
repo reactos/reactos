@@ -20,6 +20,7 @@
 ULONG MmProcessColorSeed = 0x12345678;
 ULONG MmMaximumDeadKernelStacks = 5;
 SLIST_HEADER MmDeadStackSListHead;
+ULONG MmRotatingUniprocessorNumber = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -526,7 +527,6 @@ MmCreatePeb(IN PEPROCESS Process,
     PIMAGE_LOAD_CONFIG_DIRECTORY ImageConfigData;
     NTSTATUS Status;
     USHORT Characteristics;
-    KAFFINITY ProcessAffinityMask = 0;
     SectionOffset.QuadPart = (ULONGLONG)0;
     *BasePeb = NULL;
 
@@ -606,6 +606,7 @@ MmCreatePeb(IN PEPROCESS Process,
         // Heap and Debug Data
         //
         Peb->NumberOfProcessors = KeNumberProcessors;
+        Peb->ImageProcessAffinityMask = KeActiveProcessors;
         Peb->BeingDebugged = (BOOLEAN)(Process->DebugPort != NULL);
         Peb->NtGlobalFlag = NtGlobalFlag;
         Peb->HeapSegmentReserve = MmHeapSegmentReserve;
@@ -712,7 +713,7 @@ MmCreatePeb(IN PEPROCESS Process,
             if ((ImageConfigData) && (ImageConfigData->ProcessAffinityMask))
             {
                 /* Take the value from the image configuration directory */
-                ProcessAffinityMask = ImageConfigData->ProcessAffinityMask;
+                Peb->ImageProcessAffinityMask = ImageConfigData->ProcessAffinityMask;
             }
 
             //
@@ -720,17 +721,12 @@ MmCreatePeb(IN PEPROCESS Process,
             if (Characteristics & IMAGE_FILE_UP_SYSTEM_ONLY)
             {
                 //
-                // Force it to use CPU 0
+                // Set single processor rotating affinity.
+                // See https://www.microsoftpressstore.com/articles/article.aspx?p=2233328&seqNum=3
                 //
-                /* FIXME: this should use the MmRotatingUniprocessorNumber */
-                Peb->ImageProcessAffinityMask = 0;
-            }
-            else
-            {
-                //
-                // Whatever was configured
-                //
-                Peb->ImageProcessAffinityMask = ProcessAffinityMask;
+                Peb->ImageProcessAffinityMask = AFFINITY_MASK(MmRotatingUniprocessorNumber);
+                ASSERT(Peb->ImageProcessAffinityMask & KeActiveProcessors);
+                MmRotatingUniprocessorNumber = (MmRotatingUniprocessorNumber + 1) % KeNumberProcessors;
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1297,8 +1293,11 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         Vad = (PMMVAD)VadTree->BalancedRoot.RightChild;
 
         /* Check for old-style memory areas */
-        if (Vad->u.VadFlags.Spare == 1)
+        if (MI_IS_MEMORY_AREA_VAD(Vad))
         {
+            /* We do not expect ARM3 memory areas here, those are kernel only */
+            ASSERT(MI_IS_ROSMM_VAD(Vad));
+
             /* Let RosMm handle this */
             MiRosCleanupMemoryArea(Process, Vad);
             continue;
@@ -1329,14 +1328,6 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
 
             /* Release the working set */
             MiUnlockProcessWorkingSetUnsafe(Process, Thread);
-        }
-
-         /* Skip ARM3 fake VADs, they'll be freed by MmDeleteProcessAddresSpace */
-        if (Vad->u.VadFlags.Spare == 1)
-        {
-            /* Set a flag so MmDeleteMemoryArea knows to free, but not to remove */
-            Vad->u.VadFlags.Spare = 2;
-            continue;
         }
 
         /* Free the VAD memory */

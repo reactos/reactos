@@ -273,8 +273,12 @@ START_TEST(GetExtendedTcpTable)
         {
             ok(TcpTableOwnerMod->table[i].dwOwningPid == Pid, "Invalid owner\n");
 
-            ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart >= CreationTime.QuadPart, "Invalid time\n");
-            ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart <= CreationTime.QuadPart + 60000000000LL, "Invalid time\n");
+            // liCreateTimestamp may not be populated on Vista, 7, and 8.1
+            if (TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart != 0)
+            {
+                ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart >= CreationTime.QuadPart, "Invalid time\n");
+                ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart <= CreationTime.QuadPart + 60000000000LL, "Invalid time\n");
+            }
         }
 
         HeapFree(GetProcessHeap(), 0, TcpTableOwnerMod);
@@ -332,8 +336,12 @@ START_TEST(GetExtendedTcpTable)
         {
             ok(TcpTableOwnerMod->table[i].dwOwningPid == Pid, "Invalid owner\n");
 
-            ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart >= CreationTime.QuadPart, "Invalid time\n");
-            ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart <= CreationTime.QuadPart + 60000000000LL, "Invalid time\n");
+            // liCreateTimestamp may not be populated on Vista, 7, and 8.1
+            if (TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart != 0)
+            {
+                ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart >= CreationTime.QuadPart, "Invalid time\n");
+                ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart <= CreationTime.QuadPart + 60000000000LL, "Invalid time\n");
+            }
         }
 
         HeapFree(GetProcessHeap(), 0, TcpTableOwnerMod);

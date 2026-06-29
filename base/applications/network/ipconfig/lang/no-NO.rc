@@ -31,7 +31,7 @@ BEGIN
     IDS_DHCPYES             "\tDHCP Enabled. . . . . . . . . . . : Yes\n"
     IDS_AUTOCONFIGNO        "\tAutoconfiguration Enabled . . . . : No\n"
     IDS_AUTOCONFIGYES       "\tAutoconfiguration Enabled . . . . : Yes\n"
-    IDS_IPADDRESS           "\tIP Address. . . . . . . . . . . . : %hs\n"
+    IDS_IPADDRESS           "\tIPv4 Address. . . . . . . . . . . : %hs\n"
     IDS_SUBNETMASK          "\tSubnet Mask . . . . . . . . . . . : %hs\n"
     IDS_DEFAULTGATEWAY      "\tDefault Gateway . . . . . . . . . : %hs\n"
     IDS_DHCPSERVER          "\tDHCP Server . . . . . . . . . . . : %hs\n"
@@ -88,51 +88,54 @@ BEGIN
     IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
     IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
     IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
-    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
+    IDS_DHCPRELEASED        "IP address for adapter %ls has already been released.\n"
     IDS_DHCPRELEASEERROR    "An error occurred while releasing interface %ls: "
     IDS_DHCPRENEWERROR      "An error occurred while renewing interface %ls: "
+    IDS_DHCPSETIDERROR      "Attempt to set the class id for adapter %ls failed: "
+    IDS_DHCPSETIDSUCCESS    "Successfully set the class id for adapter %ls.\n"
 END
 
 STRINGTABLE
 BEGIN
-/* Please keep the spacing/formatting as per En.rc when translating */
+/* Please keep the spacing/formatting as per en-US.rc when translating */
     IDS_USAGE
-    "\nUSAGE:\n\
-        ipconfig [/? | /all | /renew [kort] | /release [kort] |\n\
-                  /flushdns | /displaydns | /registerdns |\n\
-                  /showclassid kort |\n\
-                  /setclassid kort [classid] ]\n\
+"\nUSAGE:\n\
+    ipconfig [/? | /all | /renew [kort] | /release [kort] |\n\
+              /flushdns | /displaydns | /registerdns |\n\
+              /showclassid kort |\n\
+              /setclassid kort [classid] ]\n\
 \n\
-    der\n\
-        kort            Tilkoblingsnavn\n\
-                       (jokertegnene * og ? er tillatt, se eksemplene)\n\
+    der:\n\
+    kort            Tilkoblingsnavn\n\
+                    (jokertegnene * og ? er tillatt, se eksemplene)\n\
 \n\
-        Eksempler:\n\
-           /?           Viser denne hjelpe meldingen\n\
-           /all         Viser detaljert informasjon.\n\
-           /release     Frigir IP addressen for det angitte kortet.\n\
-           /renew       Forny alle IP addresser for alle valgte kort.\n\
-           /flushdns    Tømmer DNS Resolver-bufferen.\n\
-           /registerdns Oppdaterer alle DHCP leieavtaler og registerer DNS navn på nytt.\n\
-           /displaydns  Viser innhold av DNS Resolver-bufferen.\n\
-           /showclassid Viser alle klasse IDene for DHCP som er tillatt for kortet.\n\
-           /setclassid  Endrer klasse-IDene for DHCP.\n\
+Eksempler:\n\
+    /?              Viser denne hjelpe meldingen.\n\
+    /all            Viser detaljert informasjon.\n\
+    /release        Frigir IPv4 addressen for det angitte kortet.\n\
+    /renew          Forny alle IPv4 addresser for alle valgte kort.\n\
+    /flushdns       Tømmer DNS Resolver-bufferen.\n\
+    /registerdns    Oppdaterer alle DHCP leieavtaler og registerer DNS navn på nytt.\n\
+    /displaydns     Viser innhold av DNS Resolver-bufferen.\n\
+    /showclassid    Viser alle klasse IDene for DHCP som er tillatt for kortet.\n\
+    /setclassid     Endrer klasse-IDene for DHCP.\n\
 \n\
-    Standardverdien er å bare vise IP-addressen, nettverksmasken og\n\
-    standard gatewayen for hver kort knyttet til TCP/IP.\n\
+Standardverdien er å bare vise IP-addressen, nettverksmasken og\n\
+standard gatewayen for hver kort knyttet til TCP/IP.\n\
 \n\
-    For Release og Renew, hvis ingen kortnavn er angitt, vil IP addressen\n\
-    for alle kort knyttet til TCP/IP frigis eller fornyes hvis det ikke angis et kortnavn.\n\
+For Release og Renew, hvis ingen kortnavn er angitt, vil IP addressen\n\
+for alle kort knyttet til TCP/IP frigis eller fornyes hvis det ikke angis et kortnavn.\n\
 \n\
-    For Setclassid, fjernes ClassId hvis det ikke angis en ClassId.\n\
+For Setclassid, fjernes ClassId hvis det ikke angis en ClassId.\n\
 \n\
-    Eksempler:\n\
-        > ipconfig                   ... Vis informasjon.\n\
-        > ipconfig /all              ... Vis detaljert informasjon\n\
-        > ipconfig /renew            ... Forny alle kort\n\
-        > ipconfig /renew EL*        ... Forny alle kort med navn som\n\
-                                         begynner med EL\n\
-        > ipconfig /release *Til*    ... Frigi alle samsvarende tilkoblinger,\n\
-                                         for eksempel ""Lokal tilkobling 1"" eller\n\
-                                                      ""Lokaltilkobling 2""\n"
+Eksempler:\n\
+    > ipconfig                   ... Vis informasjon.\n\
+    > ipconfig /all              ... Vis detaljert informasjon\n\
+    > ipconfig /renew            ... Forny alle kort\n\
+    > ipconfig /renew EL*        ... Forny alle kort med navn som\n\
+                                     begynner med EL\n\
+    > ipconfig /release *Til*    ... Frigi alle samsvarende tilkoblinger,\n\
+                                     for eksempel ""Lokal tilkobling 1""\n\
+                                            eller ""Lokaltilkobling 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

@@ -404,6 +404,7 @@ union _DL_EUI48 {
     DL_EI48 Ei48;
   };
 };
+typedef union _DL_EUI48 DL_EUI48, *PDL_EUI48;
 
 C_ASSERT(DL_ADDRESS_LENGTH_MAXIMUM >= sizeof(DL_EUI48));
 

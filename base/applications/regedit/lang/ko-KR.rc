@@ -434,6 +434,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "새 문자열 값을 추가합니다"
     ID_EDIT_NEW_BINARYVALUE "새 바이너리 값을 추가합니다"
     ID_EDIT_NEW_DWORDVALUE "새 DWORD값을 추가합니다"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "텍스트 파일을 레지스트리로 불러 옵니다"
     ID_REGISTRY_EXPORTREGISTRYFILE "텍스트 파일로 레지스트리의 전체나 일부를 내보냅니다"
     ID_REGISTRY_LOADHIVE "Loads a hive file into the registry"

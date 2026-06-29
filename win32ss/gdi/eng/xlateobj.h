@@ -40,6 +40,13 @@ typedef struct _EXLATEOBJ
             ULONG ulGreenShift;
             ULONG ulBlueShift;
         };
+        struct
+        {
+            LONG lDeltaR;
+            LONG lDeltaG;
+            LONG lDeltaB;
+            LONG lHalfDist;
+        } ToMono;
     };
 } EXLATEOBJ, *PEXLATEOBJ;
 
@@ -70,6 +77,14 @@ EXLATEOBJ_vInitXlateFromDCs(
     _Out_ PEXLATEOBJ pexlo,
     _In_ PDC pdcSrc,
     _In_ PDC pdcDst);
+
+VOID
+NTAPI
+EXLATEOBJ_vInitXlateFromDCsEx(
+    _Out_ EXLATEOBJ* pexlo,
+    _In_ PDC pdcSrc,
+    _In_ PDC pdcDst,
+    _In_ COLORREF crBackColor);
 
 VOID
 NTAPI

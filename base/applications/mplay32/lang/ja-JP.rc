@@ -9,23 +9,23 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "終了(&E)", IDM_EXIT
     END
-    POPUP "&Play"
+    POPUP "再生(&P)"
     BEGIN
-        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
-        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM "再生/再開(&P)\tCtrl+P", IDC_PLAY
+        MENUITEM "停止(&O)\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+        MENUITEM "リピート(&T)\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "表示(&V)"
     BEGIN
-        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+        MENUITEM "単一ウィンドウモード(&M)", IDM_SWITCHVIEW
     END
-    POPUP "&Device"
+    POPUP "デバイス(&D)"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM "プロパティ(&P)", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&Volume Control", IDM_VOLUMECTL
+        MENUITEM "音量調節(&V)", IDM_VOLUMECTL
     END
     POPUP "ヘルプ(&H)"
     BEGIN
@@ -44,14 +44,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Unknown"
-    IDS_MODE_OPEN "Opened"
-    IDS_MODE_STOP "Stopped"
-    IDS_MODE_PLAY "Playing"
-    IDS_MODE_PAUSE "Paused"
-    IDS_MODE_RECORD "Recording"
-    IDS_MODE_SEEK "Seeking"
-    IDS_MODE_NOT_READY "Not ready"
+    IDS_MODE_UNKNOWN "不明"
+    IDS_MODE_OPEN "開きました"
+    IDS_MODE_STOP "停止中"
+    IDS_MODE_PLAY "再生中"
+    IDS_MODE_PAUSE "一時停止中"
+    IDS_MODE_RECORD "録音中"
+    IDS_MODE_SEEK "シーク中"
+    IDS_MODE_NOT_READY "準備ができていません"
     IDS_ALL_TYPES_FILTER "すべてのサポートされたファイル"
     IDS_TOOLTIP_PLAY "再生"
     IDS_TOOLTIP_STOP "停止"
@@ -60,8 +60,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "後ろへシーク"
     IDS_TOOLTIP_SEEKFORW "前へシーク"
     IDS_TOOLTIP_FORWARD "前へスキップ"
-    IDS_TOOLTIP_PAUSE "Pause"
+    IDS_TOOLTIP_PAUSE "一時停止"
     IDS_APPTITLE "ReactOS マルチメディア プレーヤー"
     IDS_PLAY "再生"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error."
+    IDS_DEFAULTMCIERRMSG "このエラーの説明はありません。"
 END

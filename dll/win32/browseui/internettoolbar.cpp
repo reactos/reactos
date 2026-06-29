@@ -167,7 +167,7 @@ private:
     STDMETHOD(GetWindow)(HWND *lphwnd) override;
     STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
-    // *** IDockingWindow methods ***
+    // *** IDockingWindowSite methods ***
     STDMETHOD(GetBorderDW)(IUnknown* punkObj, LPRECT prcBorder) override;
     STDMETHOD(RequestBorderSpaceDW)(IUnknown* punkObj, LPCBORDERWIDTHS pbw) override;
     STDMETHOD(SetBorderSpaceDW)(IUnknown* punkObj, LPCBORDERWIDTHS pbw) override;
@@ -656,6 +656,16 @@ HRESULT CInternetToolbar::EnumBands(UINT Index, int *pBandId, IUnknown **ppUnkBa
         return E_UNEXPECTED;
     *ppUnkBand = ((CDockSite*)(rbbi.lParam))->GetContainedBand(); // Not ref. counted
     return *ppUnkBand ? S_OK : S_FALSE;
+}
+
+HRESULT CInternetToolbar::QIBand(int BandID, REFIID riid, void **ppv)
+{
+    IUnknown *pUnk; // Not ref. counted
+    int temp = (UINT) SendMessageW(fMainReBar, RB_IDTOINDEX, BandID, 0);
+    if (EnumBands(temp, &temp, &pUnk) == S_OK)
+        return pUnk->QueryInterface(riid, ppv);
+    *ppv = NULL;
+    return E_NOINTERFACE;
 }
 
 HRESULT CInternetToolbar::ReserveBorderSpace(LONG maxHeight)
@@ -1182,7 +1192,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGrou
                     break;
                 case ITID_MENUBANDSHOWN:    // Menubar band visibility
                     prgCmds->cmdf = OLECMDF_SUPPORTED;
-                    if (fMenuBar)
+                    if (IsBandVisible(ITBBID_MENUBAND) == S_OK)
                         prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case ITID_AUTOHIDEENABLED:  // Auto hide enabled/disabled
@@ -1223,6 +1233,8 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::Exec(const GUID *pguidCmdGroup, DWOR
                 return S_OK;
             case ITID_TOOLBARBANDSHOWN:
                 return ToggleBandVisibility(ITBBID_TOOLSBAND);
+            case ITID_MENUBANDSHOWN:
+                return ToggleBandVisibility(ITBBID_MENUBAND);
             case ITID_ADDRESSBANDSHOWN:
                 return ToggleBandVisibility(ITBBID_ADDRESSBAND);
             case ITID_LINKSBANDSHOWN:
@@ -1746,6 +1758,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     RBHITTESTINFO                           hitTestInfo;
     REBARBANDINFOW                          rebarBandInfo;
     int                                     bandID;
+    CComPtr<IAddressBand>                   pAddress;
 
     clickLocation.x = LOWORD(lParam);
     clickLocation.y = HIWORD(lParam);
@@ -1780,6 +1793,8 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
         case ITBBID_ADDRESSBAND:    // navigation band
             DeleteMenu(contextMenu, IDM_TOOLBARS_CUSTOMIZE, MF_BYCOMMAND);
             DeleteMenu(contextMenu, IDM_TOOLBARS_TEXTLABELS, MF_BYCOMMAND);
+            QIBand(ITBBID_ADDRESSBAND, IID_PPV_ARG(IAddressBand, &pAddress));
+            pSettings->fShowGoButton = CAddressBand::IsGoButtonVisible(pAddress);
             break;
         default:
             break;

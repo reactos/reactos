@@ -65,6 +65,9 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     AppsCategories SelectedEnumType;
 
   public:
+    static HWND m_hLastFocus;
+    static bool m_PendingInstalledViewRefresh;
+
     explicit CMainWindow(CAppDB *db, BOOL bAppwiz = FALSE);
 
     ~CMainWindow();

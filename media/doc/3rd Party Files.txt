@@ -28,21 +28,24 @@ URL: http://www.geocities.com/dborca/opengl/tc.html
 
 Title: libjpeg
 Path: dll/3rdparty/libjpeg
-Used Version: 9d
+Used Version: 10
 License: custom, BSD-like
 URL: http://www.ijg.org/
+Modifications: added .spec file
 
 Title: libpng
 Path: dll/3rdparty/libpng
-Used Version: 1.6.39
+Used Version: 1.6.51
 License: PNG Reference Library version 2
 URL: http://libpng.sourceforge.net/
+Modifications: added .spec file
 
 Title: libtiff
 Path: dll/3rdparty/libtiff
-Used Version: 4.1.0
+Used Version: 4.7.1
 License: libtiff (https://spdx.org/licenses/libtiff.html)
 URL: http://www.simplesystems.org/libtiff/
+Modifications: added .spec file
 
 Title: Libxslt
 Path: dll/3rdparty/libxslt
@@ -149,9 +152,9 @@ URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/sfl
 
 Title: Universal ATA driver for Windows
 Path: drivers/storage/ide/uniata
-Used Version: 0.47a
+Used Version: 0.47b
 License: BSD-like
-URL: http://alter.org.ua/soft/win/uni_ata/
+URL: https://alter.org.ua/soft/win/uni_ata/
 
 Title: Miniport driver for the Buslogic BT 958 SCSI Controller
 Path: drivers/storage/port/buslogic
@@ -171,10 +174,16 @@ Used Version: 1.2.6
 License: BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
 URL: https://code.google.com/archive/p/cmediadrivers/
 
+Title: HD Audio Driver for Windows 10 / 11 with Skylake -> Raptor Lake DSP support
+Path: drivers/wdm/audio/hdaudbus
+Used Version: git commit 5477b93
+License: BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
+URL: https://github.com/coolstar/sklhdaudbus/tree/master
+
 Title: PCI hardware IDs database
 Path: hal/halx86/legacy/bus/pci_classes.ids
 Path: hal/halx86/legacy/bus/pci_vendors.ids
-Used Version: 2023.06.19
+Used Version: 2026.01.31
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
 URL: https://pci-ids.ucw.cz/
 URL: https://github.com/pciutils/pciids
@@ -217,9 +226,9 @@ URL: https://savannah.nongnu.org/projects/lwip/
 
 Title: FreeType
 Path: sdk/lib/3rdparty/freetype
-Used Version: 2.9.0
+Used Version: 2.10.0
 License: FTL (https://spdx.org/licenses/FTL.html)
-URL: http://www.freetype.org
+URL: https://freetype.org/
 
 Title: dosfstools
 Path: sdk/lib/fslib/vfatlib/check

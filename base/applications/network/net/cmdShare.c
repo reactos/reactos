@@ -53,7 +53,7 @@ DisplayShare(
     PWSTR pShareName)
 {
     PSHARE_INFO_2 pBuffer = NULL;
-    INT nPaddedLength = 22;
+    const DWORD nPaddedLength = 22;
     NET_API_STATUS Status;
 
     Status = NetShareGetInfo(NULL,
@@ -100,7 +100,7 @@ cmdShare(
     PWSTR pszSharePath = NULL;
     PWSTR ptr;
     BOOL bDelete = FALSE;
-    INT len;
+    size_t len;
     INT i, result = 0;
     NET_API_STATUS Status;
 
@@ -125,7 +125,7 @@ cmdShare(
                 wcscpy(pszSharePath, &ptr[1]);
             }
 
-            len = ((INT_PTR)ptr - (INT_PTR)argv[i]) / sizeof(WCHAR);
+            len = ((UINT_PTR)ptr - (UINT_PTR)argv[i]) / sizeof(WCHAR);
             pszShareName = HeapAlloc(GetProcessHeap(),
                                      HEAP_ZERO_MEMORY,
                                      (len + 1) * sizeof(WCHAR));

@@ -130,9 +130,11 @@ MyLogonUser(
     AuthInfo->UserName.MaximumLength = UserName.MaximumLength;
     AuthInfo->UserName.Buffer = (PWCHAR)Ptr;
     if (UserName.MaximumLength > 0)
+    {
         RtlCopyMemory(AuthInfo->UserName.Buffer,
                       UserName.Buffer,
                       UserName.MaximumLength);
+    }
 
     Ptr += UserName.MaximumLength;
 
@@ -140,9 +142,11 @@ MyLogonUser(
     AuthInfo->Password.MaximumLength = Password.MaximumLength;
     AuthInfo->Password.Buffer = (PWCHAR)Ptr;
     if (Password.MaximumLength > 0)
+    {
         RtlCopyMemory(AuthInfo->Password.Buffer,
                       Password.Buffer,
                       Password.MaximumLength);
+    }
 
     /* Create the Logon SID*/
     AllocateLocallyUniqueId(&LogonId);
@@ -232,21 +236,18 @@ MyLogonUser(
     TRACE("Luid: 0x%08lx%08lx\n", Luid.HighPart, Luid.LowPart);
 
     if (TokenHandle != NULL)
-    {
         TRACE("TokenHandle: %p\n", TokenHandle);
-    }
 
     *phToken = TokenHandle;
 
 done:
+    SecureZeroMemory(&Password, sizeof(Password));
+
     if (ProfileBuffer != NULL)
         LsaFreeReturnBuffer(ProfileBuffer);
 
-    if (!NT_SUCCESS(Status))
-    {
-        if (TokenHandle != NULL)
-            CloseHandle(TokenHandle);
-    }
+    if (!NT_SUCCESS(Status) && (TokenHandle != NULL))
+        CloseHandle(TokenHandle);
 
     if (TokenGroups != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, TokenGroups);
@@ -258,7 +259,12 @@ done:
         RtlFreeSid(LogonSid);
 
     if (AuthInfo != NULL)
+    {
+        /* Zero out the password buffers before freeing */
+        SecureZeroMemory(AuthInfo->Password.Buffer, AuthInfo->Password.MaximumLength);
+        SecureZeroMemory(&AuthInfo->Password, sizeof(AuthInfo->Password));
         RtlFreeHeap(RtlGetProcessHeap(), 0, AuthInfo);
+    }
 
     return Status;
 }

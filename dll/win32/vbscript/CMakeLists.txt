@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(vbscript.dll vbscript.spec)
 
 list(APPEND SOURCE
@@ -15,23 +13,17 @@ list(APPEND SOURCE
     vbscript.c
     vbscript_main.c)
 
-BISON_TARGET(parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.c COMPILE_FLAGS "-p parser_")
+BISON_TARGET(parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    guid.c
     ${BISON_parser_OUTPUTS})
 
 list(APPEND vbscript_rc_deps
-    ${CMAKE_CURRENT_SOURCE_DIR}/vbscript_classes.rgs
-    ${CMAKE_CURRENT_SOURCE_DIR}/vbsglobal.rgs
-    ${CMAKE_CURRENT_SOURCE_DIR}/vbsregexp10.rgs
-    ${CMAKE_CURRENT_SOURCE_DIR}/vbsregexp55.rgs
-    ${CMAKE_CURRENT_BINARY_DIR}/vbsglobal.tlb
-    ${CMAKE_CURRENT_BINARY_DIR}/vbsregexp10.tlb
-    ${CMAKE_CURRENT_BINARY_DIR}/vbsregexp55.tlb)
+    ${CMAKE_CURRENT_SOURCE_DIR}/vbscript.rgs)
 
 set_source_files_properties(vbscript.rc PROPERTIES OBJECT_DEPENDS "${vbscript_rc_deps}")
 add_idl_headers(vbscript_idlheader vbscript_classes.idl vbsglobal.idl vbsregexp55.idl)
-add_typelib(vbsglobal.idl vbsregexp10.idl vbsregexp55.idl)
 
 add_library(vbscript MODULE
     ${SOURCE}
@@ -44,9 +36,12 @@ if(MSVC)
     target_compile_options(vbscript PRIVATE /wd4267)
 endif()
 
+add_idl_reg_scripts(vbscript registry vbscript_classes.idl)
+add_idl_reg_scripts(vbscript regtypelib vbsglobal.idl vbsregexp10.idl vbsregexp55.idl)
 set_module_type(vbscript win32dll)
-target_link_libraries(vbscript uuid wine oldnames)
-add_importlibs(vbscript oleaut32 ole32 user32 msvcrt kernel32 ntdll)
+target_link_libraries(vbscript uuid wine oldnames wine_dll_register wine_dll_canunload)
+add_importlibs(vbscript oleaut32 ole32 user32 msvcrt kernelbase kernel32_vista kernel32 ntdll)
 add_dependencies(vbscript vbscript_idlheader stdole2)
 add_pch(vbscript precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET vbscript DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(vbscript) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

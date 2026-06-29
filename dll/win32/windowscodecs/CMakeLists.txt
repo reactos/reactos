@@ -1,7 +1,5 @@
 
 add_definitions(
-    -D__WINESRC__
-    -D__ROS_LONG64__
     -DENTRY_PREFIX=WIC_
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL)
@@ -10,7 +8,6 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(
-    BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libjpeg
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng
@@ -27,13 +24,17 @@ list(APPEND SOURCE
     colorcontext.c
     colortransform.c
     converter.c
+    ddsformat.c
+    decoder.c
+    encoder.c
     fliprotate.c
     gifformat.c
-    icnsformat.c
     icoformat.c
     imgfactory.c
     info.c
-    jpegformat.c
+    libjpeg.c
+    libpng.c
+    libtiff.c
     main.c
     metadatahandler.c
     metadataquery.c
@@ -45,8 +46,9 @@ list(APPEND SOURCE
     scaler.c
     stream.c
     tgaformat.c
-    tiffformat.c
-    ungif.c)
+    ungif.c
+    uuid.c
+    wincodecs_common.c)
 
 if(MSVC)
     if(ARCH STREQUAL "i386")
@@ -79,7 +81,9 @@ if(MSVC)
 endif()
 
 set_module_type(windowscodecs win32dll)
-target_link_libraries(windowscodecs wine uuid ${PSEH_LIB})
-add_importlibs(windowscodecs ole32 oleaut32 rpcrt4 shlwapi user32 gdi32 advapi32 advapi32_vista propsys msvcrt kernel32 ntdll)
+add_idl_reg_scripts(windowscodecs registry windowscodecs_wincodec.idl)
+target_link_libraries(windowscodecs wine uuid ${PSEH_LIB} oldnames)
+add_importlibs(windowscodecs libjpeg libpng libtiff ole32 oleaut32 rpcrt4 shlwapi user32 gdi32 advapi32 advapi32_vista propsys msvcrt kernel32 ntdll)
 add_pch(windowscodecs precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET windowscodecs DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(windowscodecs) # CORE-5743: No CONST_VTABLE

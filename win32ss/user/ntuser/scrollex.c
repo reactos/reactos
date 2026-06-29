@@ -146,7 +146,7 @@ UserScrollDC(
                      rcDst.left - dx,
                      rcDst.top - dy,
                      SRCCOPY,
-                     0,
+                     CLR_INVALID,
                      0))
    {
       return ERROR;

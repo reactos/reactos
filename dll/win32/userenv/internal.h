@@ -80,6 +80,47 @@ AppendBackslash(LPWSTR String);
 PSECURITY_DESCRIPTOR
 CreateDefaultSecurityDescriptor(VOID);
 
+
+typedef struct _POLICY_VALUES
+{
+    PCWSTR ValueName;
+    DWORD Type;
+    PVOID Data;
+    DWORD Length;
+} POLICY_VALUES, *PPOLICY_VALUES;
+
+LONG
+GetPolicyValues(
+    _In_ HKEY hRootKey,
+    _Inout_ PPOLICY_VALUES QueryTable);
+
+LONG
+GetPolicyValue(
+    _In_ HKEY hRootKey,
+    _In_ PCWSTR ValueName,
+    _In_ DWORD Type,
+    _Out_opt_ PVOID pData,
+    _Inout_opt_ PDWORD pcbData);
+
+
+VOID
+ReportErrorWorker(
+    _In_ DWORD dwFlags,
+    _In_ PCWSTR pszStr);
+
+VOID
+ReportErrorV(
+    _In_ DWORD dwFlags,
+    _In_ PCWSTR pszStr,
+    _In_ va_list args);
+
+VOID
+__cdecl
+ReportError(
+    _In_ DWORD dwFlags,
+    _In_ PCWSTR pszStr,
+    ...);
+
 /* profile.c */
 BOOL
 AppendSystemPostfix(LPWSTR lpName,

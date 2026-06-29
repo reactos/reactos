@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
- *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2020-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -50,9 +50,7 @@ CAPTION "設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "一般", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "儲存視窗位置(&S)", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "啟動時更新可獲得的程式列表(&U)", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "記錄程式的安裝和解除安裝過程(&L)", IDC_LOG_ENABLED, 15, 46, 219, 12
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "正在下載", -1, 4, 65, 240, 51
     LTEXT "下載資料夾：", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -87,7 +85,7 @@ BEGIN
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
-STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "正在下載 %ls…"
 FONT 9, "新細明體"
 BEGIN
@@ -177,9 +175,9 @@ BEGIN
     IDS_WELCOME_TEXT "從左側欄目選擇一個類別，然後選擇要安裝或解除安裝的程式。\nReactOS 網站︰"
     IDS_WELCOME_URL "https://reactos.org"
 
-    IDS_APPWIZ_TITLE "Add/Remove Programs"
-    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
-    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+    IDS_APPWIZ_TITLE "新增／移除程式"
+    IDS_APPWIZ_TEXT1 "選擇「應用程式」或「更新」來列出已安裝或有更新版本的應用程式。"
+    IDS_APPWIZ_TEXT2 "要移除程式或修改其已安裝的元件，請從列表中選擇該應用程式，然後按「解除安裝」或「修改」。"
 END
 
 STRINGTABLE
@@ -213,6 +211,10 @@ BEGIN
     IDS_APP_DISPLAY_LIST "列表"
     IDS_APP_DISPLAY_TILE "並排"
     IDS_NO_SEARCH_RESULTS "沒有搜尋結果"
+    IDS_CFG_SAVE_WINDOW_POS "儲存視窗位置"
+    IDS_CFG_UPDATE_AVLIST "啟動時更新可獲得的程式列表"
+    IDS_CFG_LOG_ENABLED "記錄程式的安裝和解除安裝過程"
+    IDS_CFG_SMALL_ICONS "小圖示"
 END
 
 STRINGTABLE
@@ -265,5 +267,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMUNINST "您確定要解除安裝 %s 嗎？"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "安裝完成，要立即執行 %s 嗎？"
 END

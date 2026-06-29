@@ -105,7 +105,7 @@ BOOL JapaneseEra_IsFirstYearGannen(void)
 /*
  * SEE ALSO:
  * https://en.wikipedia.org/wiki/Japanese_era_name
- * https://docs.microsoft.com/en-us/windows/desktop/Intl/era-handling-for-the-japanese-calendar
+ * https://learn.microsoft.com/en-us/windows/win32/intl/era-handling-for-the-japanese-calendar
  */
 static PCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
 {

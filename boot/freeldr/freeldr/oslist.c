@@ -62,12 +62,20 @@ InitOperatingSystemList(
     CHAR BootType[80];
     CHAR TempBuffer[_countof(SettingValue)];
 
+    /* Default with an empty list */
+    *OperatingSystemCount = 0;
+
     /* Open the [Operating Systems] section */
     if (!IniOpenSection("Operating Systems", &OsSectionId))
+    {
+        UiMessageBox("Operating Systems section not found in freeldr.ini");
         return NULL;
+    }
 
     /* Count the number of operating systems in the section */
     Count = IniGetNumSectionItems(OsSectionId);
+    if (Count == 0) /* Fail if no operating systems are found */
+        return NULL;
 
     /* Allocate memory to hold operating system lists */
     Items = FrLdrHeapAlloc(Count * sizeof(OperatingSystemItem), TAG_OS_ITEM);
@@ -75,7 +83,7 @@ InitOperatingSystemList(
         return NULL;
 
     /* Retrieve the default OS */
-    DefaultOSName = BootMgrInfo.DefaultOs;
+    DefaultOSName = GetBootMgrInfo()->DefaultOs;
 
     /* Now loop through the operating system section and load each item */
     for (i = 0; i < Count; ++i)
@@ -85,7 +93,7 @@ InitOperatingSystemList(
                                SettingValue, sizeof(SettingValue));
         if (!*SettingName)
         {
-            ERR("Invalid OS entry %lu, skipping.\n", i);
+            TRACE("Unkeyed OS entry %lu: separator.\n", i);
             continue;
         }
 
@@ -153,6 +161,7 @@ InitOperatingSystemList(
         if (HadSection)
         {
             /* This is a new OS entry: try to read the boot type */
+            *BootType = ANSI_NULL;
             IniReadSettingByName(SectionId, "BootType", BootType, sizeof(BootType));
         }
         else

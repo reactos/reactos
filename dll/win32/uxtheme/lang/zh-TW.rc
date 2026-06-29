@@ -1,0 +1,19 @@
+/*
+ * PROJECT:     ReactOS uxtheme.dll
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATOR:  Copyright 2026 Chan Chilung <eason066@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_MESSAGEBOX "訊息方塊"
+    IDS_ACTIVEWIN "使用中視窗"
+    IDS_INACTIVEWIN "非使用中視窗"
+    IDS_OK "確定"
+    IDS_WINTEXT "視窗內的文字"
+END

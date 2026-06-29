@@ -432,7 +432,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
         ProbeForRead(UnsafePoints, Count * sizeof(POINT), 1);
         ProbeForRead(UnsafeCounts, Count * sizeof(ULONG), 1);
 
-        /* Count points and validate poligons */
+        /* Count points and validate polygons */
         for (i = 0; i < Count; i++)
         {
             if (UnsafeCounts[i] < 2)
@@ -544,7 +544,18 @@ NtGdiPolyPolyDraw( IN HDC hDC,
             Ret = IntGdiPolylineTo(dc, SafePoints, *SafeCounts);
             break;
         case GdiPolyBezierTo:
-            Ret = IntGdiPolyBezierTo(dc, SafePoints, *SafeCounts);
+            /* From Wine 10.0 dlls/win32u/painting.c NtGdiPolyPolyDraw
+             * UnsafeCounts[0] must be 3 * n + 1 (where n >= 1) */
+            if (Count == 1 && UnsafeCounts[0] != 1 && UnsafeCounts[0] % 3 == 1)
+            {
+                SafeCounts[0]--;
+                Ret = IntGdiPolyBezierTo(dc, SafePoints, *SafeCounts);
+            }
+            else
+            {
+                EngSetLastError(ERROR_INVALID_PARAMETER);
+                Ret = FALSE;
+            }
             break;
         default:
             EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -954,7 +965,7 @@ GreGradientFill(
     BOOL bRet;
 
     /* Check parameters */
-    if (ulMode & GRADIENT_FILL_TRIANGLE)
+    if (ulMode == GRADIENT_FILL_TRIANGLE)
     {
         PGRADIENT_TRIANGLE pTriangle = (PGRADIENT_TRIANGLE)pMesh;
 
@@ -1018,6 +1029,18 @@ GreGradientFill(
     {
         DC_UnlockDc(pdc);
         return TRUE;
+    }
+
+    /* Offset vertex for rectangles */
+    if (ulMode == GRADIENT_FILL_RECT_H ||
+        ulMode == GRADIENT_FILL_RECT_V)
+    {
+        for (i = 0; i < nVertex; i++)
+        {
+            IntLPtoDP(pdc, (LPPOINT)&pVertex[i], 1);
+            pVertex[i].x += pdc->ptlDCOrig.x;
+            pVertex[i].y += pdc->ptlDCOrig.y;
+        }
     }
 
     ptlDitherOrg.x = ptlDitherOrg.y = 0;

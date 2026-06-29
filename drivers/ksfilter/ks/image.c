@@ -38,7 +38,7 @@ KsLoadResource(
     /* set up resource info */
     ResourceInfo.Type = ResourceType;
     ResourceInfo.Name = ResourceName;
-    ResourceInfo.Language = 0;
+    ResourceInfo.Language = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
 
     _SEH2_TRY
     {

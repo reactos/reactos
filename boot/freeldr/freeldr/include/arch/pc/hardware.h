@@ -23,6 +23,17 @@
 #define TAG_HW_RESOURCE_LIST    'lRwH'
 #define TAG_HW_DISK_CONTEXT     'cDwH'
 
+/*
+ * These aren't defined in the ioaccess.h header.
+ * Because of that we manually define the symbols we need to make use of I/O ports.
+ */
+#define READ_PORT_BUFFER_UCHAR(port, buffer, count)   __inbytestring(H2I(port), buffer, count)
+#define READ_PORT_BUFFER_USHORT(port, buffer, count)  __inwordstring(H2I(port), buffer, count)
+#define READ_PORT_BUFFER_ULONG(port, buffer, count)   __indwordstring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_UCHAR(port, buffer, count)  __outbytestring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_USHORT(port, buffer, count) __outwordstring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_ULONG(port, buffer, count)  __outdwordstring(H2I(port), buffer, count)
+
 /* PROTOTYPES ***************************************************************/
 
 /* hardware.c */
@@ -62,8 +73,6 @@ typedef
 BOOLEAN
 (*FIND_PCI_BIOS)(PPCI_REGISTRY_INFO BusData);
 
-extern FIND_PCI_BIOS FindPciBios;
-
 typedef
 ULONG
 (*GET_SERIAL_PORT)(ULONG Index, PULONG Irq);
@@ -79,7 +88,11 @@ VOID DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 VOID DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 
 /* hwpci.c */
-VOID DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
+VOID
+DetectPciBios(
+    _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Inout_ PULONG BusNumber,
+    _In_ FIND_PCI_BIOS MachFindPciBios);
 
 /* i386pnp.S */
 ULONG_PTR __cdecl PnpBiosSupported(VOID);

@@ -48,8 +48,6 @@
 #include <string.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -215,7 +213,7 @@ static inline DataCache *impl_from_IAdviseSink( IAdviseSink *iface )
 
 const char *debugstr_formatetc(const FORMATETC *formatetc)
 {
-    return wine_dbg_sprintf("{ cfFormat = 0x%x, ptd = %p, dwAspect = %d, lindex = %d, tymed = %d }",
+    return wine_dbg_sprintf("{ cfFormat = 0x%x, ptd = %p, dwAspect = %ld, lindex = %ld, tymed = %ld }",
         formatetc->cfFormat, formatetc->ptd, formatetc->dwAspect,
         formatetc->lindex, formatetc->tymed);
 }
@@ -353,7 +351,7 @@ static HRESULT check_valid_formatetc( const FORMATETC *fmt )
         return CACHE_S_FORMATETC_NOTSUPPORTED;
     else
     {
-        WARN("invalid clipformat/tymed combination: %d/%d\n", fmt->cfFormat, fmt->tymed);
+        WARN("invalid clipformat/tymed combination: %d/%ld\n", fmt->cfFormat, fmt->tymed);
         return DV_E_TYMED;
     }
 }
@@ -427,7 +425,7 @@ static void DataCache_FireOnViewChange(
   DWORD      aspect,
   LONG       lindex)
 {
-  TRACE("(%p, %x, %d)\n", this, aspect, lindex);
+  TRACE("%p, %lx, %ld.\n", this, aspect, lindex);
 
   /*
    * The sink supplies a filter when it registers
@@ -530,8 +528,6 @@ static HRESULT write_clipformat(IStream *stream, CLIPFORMAT clipformat)
     return hr;
 }
 
-static const WCHAR CONTENTS[] = {'C','O','N','T','E','N','T','S',0};
-
 static HRESULT open_pres_stream( IStorage *stg, int stream_number, IStream **stm )
 {
     WCHAR pres[] = {2,'O','l','e','P','r','e','s',
@@ -541,7 +537,7 @@ static HRESULT open_pres_stream( IStorage *stg, int stream_number, IStream **stm
     const WCHAR *name = pres;
 
     if (stream_number == STREAM_NUMBER_NOT_SET) return E_FAIL;
-    if (stream_number == STREAM_NUMBER_CONTENTS) name = CONTENTS;
+    if (stream_number == STREAM_NUMBER_CONTENTS) name = L"CONTENTS";
 
     return IStorage_OpenStream( stg, name, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
 }
@@ -559,7 +555,7 @@ static HRESULT synthesize_emf( HMETAFILEPICT data, STGMEDIUM *med )
     if ((bits = HeapAlloc( GetProcessHeap(), 0, size )))
     {
         GetMetaFileBitsEx( pict->hMF, size, bits );
-        med->u.hEnhMetaFile = SetWinMetaFileBits( size, bits, NULL, pict );
+        med->hEnhMetaFile = SetWinMetaFileBits( size, bits, NULL, pict );
         HeapFree( GetProcessHeap(), 0, bits );
         med->tymed = TYMED_ENHMF;
         med->pUnkForRelease = NULL;
@@ -619,14 +615,14 @@ static HRESULT load_mf_pict( DataCacheEntry *cache_entry, IStream *stm )
     if (!hmfpict) return E_OUTOFMEMORY;
     mfpict = GlobalLock( hmfpict );
 
-    bits = HeapAlloc( GetProcessHeap(), 0, stat.cbSize.u.LowPart);
+    bits = HeapAlloc( GetProcessHeap(), 0, stat.cbSize.LowPart);
     if (!bits)
     {
         GlobalFree( hmfpict );
         return E_OUTOFMEMORY;
     }
 
-    hr = IStream_Read( stm, bits, stat.cbSize.u.LowPart, &read );
+    hr = IStream_Read( stm, bits, stat.cbSize.LowPart, &read );
 
     if (SUCCEEDED( hr ))
     {
@@ -644,7 +640,7 @@ static HRESULT load_mf_pict( DataCacheEntry *cache_entry, IStream *stm )
             mfpict->yExt = ((mf_place.bounding_box[3] - mf_place.bounding_box[1])
                             * 2540) / mf_place.inch;
         }
-        mfpict->hMF = SetMetaFileBitsEx( stat.cbSize.u.LowPart, bits );
+        mfpict->hMF = SetMetaFileBitsEx( stat.cbSize.LowPart, bits );
         if (!mfpict->hMF)
             hr = E_FAIL;
     }
@@ -653,7 +649,7 @@ static HRESULT load_mf_pict( DataCacheEntry *cache_entry, IStream *stm )
     if (SUCCEEDED( hr ))
     {
         cache_entry->stgmedium.tymed = TYMED_MFPICT;
-        cache_entry->stgmedium.u.hMetaFilePict = hmfpict;
+        cache_entry->stgmedium.hMetaFilePict = hmfpict;
     }
     else
         GlobalFree( hmfpict );
@@ -697,7 +693,7 @@ static HRESULT load_dib( DataCacheEntry *cache_entry, IStream *stm )
     if (FAILED( hr )) return hr;
     stat.cbSize.QuadPart -= current_pos.QuadPart;
 
-    hglobal = GlobalAlloc( GMEM_MOVEABLE, stat.cbSize.u.LowPart );
+    hglobal = GlobalAlloc( GMEM_MOVEABLE, stat.cbSize.LowPart );
     if (!hglobal) return E_OUTOFMEMORY;
     dib = GlobalLock( hglobal );
 
@@ -732,7 +728,7 @@ static HRESULT load_dib( DataCacheEntry *cache_entry, IStream *stm )
         stat.cbSize.QuadPart -= skip.QuadPart;
     }
 
-    hr = IStream_Read( stm, dib + info_size, stat.cbSize.u.LowPart, &read );
+    hr = IStream_Read( stm, dib + info_size, stat.cbSize.LowPart, &read );
     if (hr != S_OK) goto fail;
 
     if (bi_size >= sizeof(*info))
@@ -750,7 +746,7 @@ static HRESULT load_dib( DataCacheEntry *cache_entry, IStream *stm )
     GlobalUnlock( hglobal );
 
     cache_entry->stgmedium.tymed = TYMED_HGLOBAL;
-    cache_entry->stgmedium.u.hGlobal = hglobal;
+    cache_entry->stgmedium.hGlobal = hglobal;
 
     return hr;
 
@@ -772,7 +768,7 @@ static HRESULT load_emf( DataCacheEntry *cache_entry, IStream *stm )
         hr = load_mf_pict( cache_entry, stm );
         if (SUCCEEDED( hr ))
         {
-            hr = synthesize_emf( cache_entry->stgmedium.u.hMetaFilePict, &stgmed );
+            hr = synthesize_emf( cache_entry->stgmedium.hMetaFilePict, &stgmed );
             ReleaseStgMedium( &cache_entry->stgmedium );
         }
         if (SUCCEEDED( hr ))
@@ -788,10 +784,10 @@ static HRESULT load_emf( DataCacheEntry *cache_entry, IStream *stm )
 
         if (SUCCEEDED( hr ))
         {
-            data = HeapAlloc( GetProcessHeap(), 0, stat.cbSize.u.LowPart );
+            data = HeapAlloc( GetProcessHeap(), 0, stat.cbSize.LowPart );
             if (!data) return E_OUTOFMEMORY;
 
-            hr = IStream_Read( stm, data, stat.cbSize.u.LowPart, &read );
+            hr = IStream_Read( stm, data, stat.cbSize.LowPart, &read );
             if (hr != S_OK)
             {
                 HeapFree( GetProcessHeap(), 0, data );
@@ -804,7 +800,7 @@ static HRESULT load_emf( DataCacheEntry *cache_entry, IStream *stm )
                 return E_FAIL;
             }
             size_bits = read - sizeof(DWORD) - sizeof(ENHMETAHEADER);
-            cache_entry->stgmedium.u.hEnhMetaFile = SetEnhMetaFileBits( size_bits, data + (read - size_bits) );
+            cache_entry->stgmedium.hEnhMetaFile = SetEnhMetaFileBits( size_bits, data + (read - size_bits) );
             cache_entry->stgmedium.tymed = TYMED_ENHMF;
             cache_entry->stgmedium.pUnkForRelease = NULL;
 
@@ -882,8 +878,8 @@ static HRESULT save_dib(DataCacheEntry *entry, BOOL contents, IStream *stream)
 
     if (entry->stgmedium.tymed != TYMED_NULL)
     {
-        data_size = GlobalSize(entry->stgmedium.u.hGlobal);
-        bmi = GlobalLock(entry->stgmedium.u.hGlobal);
+        data_size = GlobalSize(entry->stgmedium.hGlobal);
+        bmi = GlobalLock(entry->stgmedium.hGlobal);
     }
 
     if (!contents)
@@ -928,7 +924,7 @@ static HRESULT save_dib(DataCacheEntry *entry, BOOL contents, IStream *stream)
     }
 
 end:
-    if (bmi) GlobalUnlock(entry->stgmedium.u.hGlobal);
+    if (bmi) GlobalUnlock(entry->stgmedium.hGlobal);
     return hr;
 }
 
@@ -948,7 +944,7 @@ static HRESULT save_mfpict(DataCacheEntry *entry, BOOL contents, IStream *stream
         if (FAILED(hr)) return hr;
         if (entry->stgmedium.tymed != TYMED_NULL)
         {
-            mfpict = GlobalLock(entry->stgmedium.u.hMetaFilePict);
+            mfpict = GlobalLock(entry->stgmedium.hMetaFilePict);
             if (!mfpict)
                 return DV_E_STGMEDIUM;
             data_size = GetMetaFileBitsEx(mfpict->hMF, 0, NULL);
@@ -958,11 +954,11 @@ static HRESULT save_mfpict(DataCacheEntry *entry, BOOL contents, IStream *stream
             data = HeapAlloc(GetProcessHeap(), 0, header.dwSize);
             if (!data)
             {
-                GlobalUnlock(entry->stgmedium.u.hMetaFilePict);
+                GlobalUnlock(entry->stgmedium.hMetaFilePict);
                 return E_OUTOFMEMORY;
             }
             GetMetaFileBitsEx(mfpict->hMF, header.dwSize, data);
-            GlobalUnlock(entry->stgmedium.u.hMetaFilePict);
+            GlobalUnlock(entry->stgmedium.hMetaFilePict);
         }
         hr = IStream_Write(stream, &header, sizeof(PresentationDataHeader), NULL);
         if (hr == S_OK && data_size)
@@ -974,14 +970,14 @@ static HRESULT save_mfpict(DataCacheEntry *entry, BOOL contents, IStream *stream
         struct meta_placeable meta_place_rec;
         WORD *check;
 
-        mfpict = GlobalLock(entry->stgmedium.u.hMetaFilePict);
+        mfpict = GlobalLock(entry->stgmedium.hMetaFilePict);
         if (!mfpict)
             return DV_E_STGMEDIUM;
         data_size = GetMetaFileBitsEx(mfpict->hMF, 0, NULL);
         data = HeapAlloc(GetProcessHeap(), 0, data_size);
         if (!data)
         {
-            GlobalUnlock(entry->stgmedium.u.hMetaFilePict);
+            GlobalUnlock(entry->stgmedium.hMetaFilePict);
             return E_OUTOFMEMORY;
         }
         GetMetaFileBitsEx(mfpict->hMF, data_size, data);
@@ -1000,7 +996,7 @@ static HRESULT save_mfpict(DataCacheEntry *entry, BOOL contents, IStream *stream
         /* These values are rounded down so MulDiv won't do the right thing */
         meta_place_rec.bounding_box[2] = (LONGLONG)mfpict->xExt * meta_place_rec.inch / 2540;
         meta_place_rec.bounding_box[3] = (LONGLONG)mfpict->yExt * meta_place_rec.inch / 2540;
-        GlobalUnlock(entry->stgmedium.u.hMetaFilePict);
+        GlobalUnlock(entry->stgmedium.hMetaFilePict);
 
         for (check = (WORD *)&meta_place_rec; check != &meta_place_rec.checksum; check++)
             meta_place_rec.checksum ^= *check;
@@ -1032,7 +1028,7 @@ static HRESULT save_emf(DataCacheEntry *entry, BOOL contents, IStream *stream)
             ReleaseDC(0, hdc);
             return hr;
         }
-        data_size = GetWinMetaFileBits(entry->stgmedium.u.hEnhMetaFile, 0, NULL, MM_ANISOTROPIC, hdc);
+        data_size = GetWinMetaFileBits(entry->stgmedium.hEnhMetaFile, 0, NULL, MM_ANISOTROPIC, hdc);
         header.dwSize = data_size;
         data = HeapAlloc(GetProcessHeap(), 0, header.dwSize);
         if (!data)
@@ -1040,7 +1036,7 @@ static HRESULT save_emf(DataCacheEntry *entry, BOOL contents, IStream *stream)
             ReleaseDC(0, hdc);
             return E_OUTOFMEMORY;
         }
-        GetWinMetaFileBits(entry->stgmedium.u.hEnhMetaFile, header.dwSize, data, MM_ANISOTROPIC, hdc);
+        GetWinMetaFileBits(entry->stgmedium.hEnhMetaFile, header.dwSize, data, MM_ANISOTROPIC, hdc);
         ReleaseDC(0, hdc);
         mfpict = (METAFILEPICT *)data;
         header.dwObjectExtentX = mfpict->xExt;
@@ -1052,11 +1048,11 @@ static HRESULT save_emf(DataCacheEntry *entry, BOOL contents, IStream *stream)
     }
     else if (entry->stgmedium.tymed != TYMED_NULL)
     {
-        data_size = GetEnhMetaFileBits(entry->stgmedium.u.hEnhMetaFile, 0, NULL);
+        data_size = GetEnhMetaFileBits(entry->stgmedium.hEnhMetaFile, 0, NULL);
         data = HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD) + sizeof(ENHMETAHEADER) + data_size);
         if (!data) return E_OUTOFMEMORY;
         *((DWORD *)data) = sizeof(ENHMETAHEADER);
-        GetEnhMetaFileBits(entry->stgmedium.u.hEnhMetaFile, data_size, data + sizeof(DWORD) + sizeof(ENHMETAHEADER));
+        GetEnhMetaFileBits(entry->stgmedium.hEnhMetaFile, data_size, data + sizeof(DWORD) + sizeof(ENHMETAHEADER));
         memcpy(data + sizeof(DWORD), data + sizeof(DWORD) + sizeof(ENHMETAHEADER), sizeof(ENHMETAHEADER));
         data_size += sizeof(DWORD) + sizeof(ENHMETAHEADER);
         hr = IStream_Write(stream, data, data_size, NULL);
@@ -1089,7 +1085,7 @@ static HRESULT create_stream(DataCacheEntry *cache_entry, IStorage *storage,
     const WCHAR *name;
 
     if (contents)
-        name = CONTENTS;
+        name = L"CONTENTS";
     else
         name = pres;
 
@@ -1141,28 +1137,27 @@ static HRESULT copy_stg_medium(CLIPFORMAT cf, STGMEDIUM *dest_stgm,
 {
     if (src_stgm->tymed == TYMED_MFPICT)
     {
-        const METAFILEPICT *src_mfpict = GlobalLock(src_stgm->u.hMetaFilePict);
+        const METAFILEPICT *src_mfpict = GlobalLock(src_stgm->hMetaFilePict);
         METAFILEPICT *dest_mfpict;
 
         if (!src_mfpict)
             return DV_E_STGMEDIUM;
-        dest_stgm->u.hMetaFilePict = GlobalAlloc(GMEM_MOVEABLE, sizeof(METAFILEPICT));
-        dest_mfpict = GlobalLock(dest_stgm->u.hMetaFilePict);
+        dest_stgm->hMetaFilePict = GlobalAlloc(GMEM_MOVEABLE, sizeof(METAFILEPICT));
+        dest_mfpict = GlobalLock(dest_stgm->hMetaFilePict);
         if (!dest_mfpict)
         {
-            GlobalUnlock(src_stgm->u.hMetaFilePict);
+            GlobalUnlock(src_stgm->hMetaFilePict);
             return E_OUTOFMEMORY;
         }
         *dest_mfpict = *src_mfpict;
         dest_mfpict->hMF = CopyMetaFileW(src_mfpict->hMF, NULL);
-        GlobalUnlock(src_stgm->u.hMetaFilePict);
-        GlobalUnlock(dest_stgm->u.hMetaFilePict);
+        GlobalUnlock(src_stgm->hMetaFilePict);
+        GlobalUnlock(dest_stgm->hMetaFilePict);
     }
     else if (src_stgm->tymed != TYMED_NULL)
     {
-        dest_stgm->u.hGlobal = OleDuplicateData(src_stgm->u.hGlobal, cf,
-                                                GMEM_MOVEABLE);
-        if (!dest_stgm->u.hGlobal)
+        dest_stgm->hGlobal = OleDuplicateData(src_stgm->hGlobal, cf, GMEM_MOVEABLE);
+        if (!dest_stgm->hGlobal)
             return E_OUTOFMEMORY;
     }
     dest_stgm->tymed = src_stgm->tymed;
@@ -1185,12 +1180,12 @@ static HRESULT synthesize_dib( HBITMAP bm, STGMEDIUM *med )
     if (!GetDIBits( hdc, bm, 0, 0, NULL, (BITMAPINFO *)&header, DIB_RGB_COLORS )) goto done;
 
     header_size = bitmap_info_size( (BITMAPINFO *)&header, DIB_RGB_COLORS );
-    if (!(med->u.hGlobal = GlobalAlloc( GMEM_MOVEABLE, header_size + header.biSizeImage ))) goto done;
-    bmi = GlobalLock( med->u.hGlobal );
+    if (!(med->hGlobal = GlobalAlloc( GMEM_MOVEABLE, header_size + header.biSizeImage ))) goto done;
+    bmi = GlobalLock( med->hGlobal );
     memset( bmi, 0, header_size );
     memcpy( bmi, &header, header.biSize );
     GetDIBits( hdc, bm, 0, abs(header.biHeight), (char *)bmi + header_size, bmi, DIB_RGB_COLORS );
-    GlobalUnlock( med->u.hGlobal );
+    GlobalUnlock( med->hGlobal );
     med->tymed = TYMED_HGLOBAL;
     med->pUnkForRelease = NULL;
     hr = S_OK;
@@ -1209,9 +1204,9 @@ static HRESULT synthesize_bitmap( HGLOBAL dib, STGMEDIUM *med )
     if ((bmi = GlobalLock( dib )))
     {
         /* FIXME: validate data size */
-        med->u.hBitmap = CreateDIBitmap( hdc, &bmi->bmiHeader, CBM_INIT,
-                                         (char *)bmi + bitmap_info_size( bmi, DIB_RGB_COLORS ),
-                                         bmi, DIB_RGB_COLORS );
+        med->hBitmap = CreateDIBitmap( hdc, &bmi->bmiHeader, CBM_INIT,
+                                       (char *)bmi + bitmap_info_size( bmi, DIB_RGB_COLORS ),
+                                       bmi, DIB_RGB_COLORS );
         GlobalUnlock( dib );
         med->tymed = TYMED_GDI;
         med->pUnkForRelease = NULL;
@@ -1242,7 +1237,7 @@ static HRESULT DataCacheEntry_SetData(DataCacheEntry *cache_entry,
 
     if (formatetc->cfFormat == CF_BITMAP)
     {
-        hr = synthesize_dib( stgmedium->u.hBitmap, &copy );
+        hr = synthesize_dib( stgmedium->hBitmap, &copy );
         if (FAILED(hr)) return hr;
         if (fRelease) ReleaseStgMedium(stgmedium);
         stgmedium = &copy;
@@ -1250,7 +1245,7 @@ static HRESULT DataCacheEntry_SetData(DataCacheEntry *cache_entry,
     }
     else if (formatetc->cfFormat == CF_METAFILEPICT && cache_entry->fmtetc.cfFormat == CF_ENHMETAFILE)
     {
-        hr = synthesize_emf( stgmedium->u.hMetaFilePict, &copy );
+        hr = synthesize_emf( stgmedium->hMetaFilePict, &copy );
         if (FAILED(hr)) return hr;
         if (fRelease) ReleaseStgMedium(stgmedium);
         stgmedium = &copy;
@@ -1278,7 +1273,7 @@ static HRESULT DataCacheEntry_GetData(DataCacheEntry *cache_entry, IStorage *stg
         return OLE_E_BLANK;
 
     if (fmt->cfFormat == CF_BITMAP)
-        return synthesize_bitmap( cache_entry->stgmedium.u.hGlobal, stgmedium );
+        return synthesize_bitmap( cache_entry->stgmedium.hGlobal, stgmedium );
 
     return copy_stg_medium(cache_entry->fmtetc.cfFormat, stgmedium, &cache_entry->stgmedium);
 }
@@ -2020,7 +2015,7 @@ static HRESULT WINAPI DataCache_Draw(
   HRESULT                hres;
   DataCacheEntry        *cache_entry;
 
-  TRACE("(%p, %x, %d, %p, %p, %p, %p, %p, %p, %lx)\n",
+  TRACE("%p, %lx, %ld, %p, %p, %p, %p, %p, %p, %Ix.\n",
 	iface,
 	dwDrawAspect,
 	lindex,
@@ -2071,7 +2066,7 @@ static HRESULT WINAPI DataCache_Draw(
         METAFILEPICT *mfpict;
 
         if ((cache_entry->stgmedium.tymed != TYMED_MFPICT) ||
-            !((mfpict = GlobalLock(cache_entry->stgmedium.u.hMetaFilePict))))
+            !((mfpict = GlobalLock(cache_entry->stgmedium.hMetaFilePict))))
           continue;
 
         prevMapMode = SetMapMode(hdcDraw, mfpict->mm);
@@ -2110,7 +2105,7 @@ static HRESULT WINAPI DataCache_Draw(
 
         SetMapMode(hdcDraw, prevMapMode);
 
-        GlobalUnlock(cache_entry->stgmedium.u.hMetaFilePict);
+        GlobalUnlock(cache_entry->stgmedium.hMetaFilePict);
 
         return S_OK;
       }
@@ -2120,7 +2115,7 @@ static HRESULT WINAPI DataCache_Draw(
           BYTE *bits;
 
           if ((cache_entry->stgmedium.tymed != TYMED_HGLOBAL) ||
-              !((info = GlobalLock( cache_entry->stgmedium.u.hGlobal ))))
+              !((info = GlobalLock( cache_entry->stgmedium.hGlobal ))))
               continue;
 
           bits = (BYTE *) info + bitmap_info_size( info, DIB_RGB_COLORS );
@@ -2129,7 +2124,7 @@ static HRESULT WINAPI DataCache_Draw(
                          0, 0, info->bmiHeader.biWidth, info->bmiHeader.biHeight,
                          bits, info, DIB_RGB_COLORS, SRCCOPY );
 
-          GlobalUnlock( cache_entry->stgmedium.u.hGlobal );
+          GlobalUnlock( cache_entry->stgmedium.hGlobal );
           return S_OK;
       }
     }
@@ -2186,7 +2181,7 @@ static HRESULT WINAPI DataCache_SetAdvise(
 {
   DataCache *this = impl_from_IViewObject2(iface);
 
-  TRACE("(%p, %x, %x, %p)\n", iface, aspects, advf, pAdvSink);
+  TRACE("%p, %lx, %lx, %p.\n", iface, aspects, advf, pAdvSink);
 
   /*
    * A call to this function removes the previous sink
@@ -2276,8 +2271,7 @@ static HRESULT WINAPI DataCache_GetExtent(
   HRESULT                hres = E_FAIL;
   DataCacheEntry        *cache_entry;
 
-  TRACE("(%p, %x, %d, %p, %p)\n",
-	iface, dwDrawAspect, lindex, ptd, lpsizel);
+  TRACE("%p, %lx, %ld, %p, %p.\n", iface, dwDrawAspect, lindex, ptd, lpsizel);
 
   if (lpsizel==NULL)
     return E_POINTER;
@@ -2286,7 +2280,7 @@ static HRESULT WINAPI DataCache_GetExtent(
   lpsizel->cy = 0;
 
   if (lindex!=-1)
-    FIXME("Unimplemented flag lindex = %d\n", lindex);
+    FIXME("Unimplemented flag lindex = %ld\n", lindex);
 
   /*
    * Right now, we support only the callback from
@@ -2322,13 +2316,13 @@ static HRESULT WINAPI DataCache_GetExtent(
           METAFILEPICT *mfpict;
 
           if ((cache_entry->stgmedium.tymed != TYMED_MFPICT) ||
-              !((mfpict = GlobalLock(cache_entry->stgmedium.u.hMetaFilePict))))
+              !((mfpict = GlobalLock(cache_entry->stgmedium.hMetaFilePict))))
             continue;
 
         lpsizel->cx = mfpict->xExt;
         lpsizel->cy = mfpict->yExt;
 
-        GlobalUnlock(cache_entry->stgmedium.u.hMetaFilePict);
+        GlobalUnlock(cache_entry->stgmedium.hMetaFilePict);
 
         return S_OK;
       }
@@ -2339,7 +2333,7 @@ static HRESULT WINAPI DataCache_GetExtent(
 
 
           if ((cache_entry->stgmedium.tymed != TYMED_HGLOBAL) ||
-              !((info = GlobalLock( cache_entry->stgmedium.u.hGlobal ))))
+              !((info = GlobalLock( cache_entry->stgmedium.hGlobal ))))
               continue;
 
           x_pels_m = info->biXPelsPerMeter;
@@ -2360,7 +2354,7 @@ static HRESULT WINAPI DataCache_GetExtent(
               ReleaseDC( 0, hdc );
           }
 
-          GlobalUnlock( cache_entry->stgmedium.u.hGlobal );
+          GlobalUnlock( cache_entry->stgmedium.hGlobal );
 
           return S_OK;
       }
@@ -2447,7 +2441,7 @@ static HRESULT WINAPI DataCache_Cache(
     HRESULT hr;
     FORMATETC fmt_cpy;
 
-    TRACE("(%p, 0x%x, %p)\n", pformatetc, advf, pdwConnection);
+    TRACE("%p, %#lx, %p.\n", pformatetc, advf, pdwConnection);
 
     if (!pformatetc || !pdwConnection)
         return E_INVALIDARG;
@@ -2498,7 +2492,7 @@ static HRESULT WINAPI DataCache_Uncache(
     DataCache *This = impl_from_IOleCache2(iface);
     DataCacheEntry *cache_entry;
 
-    TRACE("(%d)\n", dwConnection);
+    TRACE("%ld\n", dwConnection);
 
     LIST_FOR_EACH_ENTRY(cache_entry, &This->cache_list, DataCacheEntry, entry)
         if (cache_entry->id == dwConnection)
@@ -2507,7 +2501,7 @@ static HRESULT WINAPI DataCache_Uncache(
             return S_OK;
         }
 
-    WARN("no connection found for %d\n", dwConnection);
+    WARN("no connection found for %ld\n", dwConnection);
 
     return OLE_E_NOCONNECTION;
 }
@@ -2530,7 +2524,7 @@ static HRESULT WINAPI DataCache_EnumCache(IOleCache2 *iface,
             count++;
     }
 
-    data = CoTaskMemAlloc( count * sizeof(*data) );
+    data = HeapAlloc( GetProcessHeap(), 0, count * sizeof(*data) );
     if (!data) return E_OUTOFMEMORY;
 
     LIST_FOR_EACH_ENTRY( cache_entry, &This->cache_list, DataCacheEntry, entry )
@@ -2562,7 +2556,7 @@ static HRESULT WINAPI DataCache_EnumCache(IOleCache2 *iface,
 
 fail:
     while (i--) CoTaskMemFree( data[i].formatetc.ptd );
-    CoTaskMemFree( data );
+    HeapFree( GetProcessHeap(), 0, data );
     return hr;
 }
 
@@ -2628,7 +2622,7 @@ static HRESULT WINAPI DataCache_UpdateCache( IOleCache2 *iface, IDataObject *dat
     int i, slots = 0;
     BOOL done_one = FALSE;
 
-    TRACE( "(%p %p %08x %p)\n", iface, data, mode, reserved );
+    TRACE("%p, %p, %#lx, %p.\n", iface, data, mode, reserved );
 
     LIST_FOR_EACH_ENTRY( cache_entry, &This->cache_list, DataCacheEntry, entry )
     {
@@ -2707,7 +2701,7 @@ static HRESULT WINAPI DataCache_DiscardCache(
     DataCacheEntry *cache_entry;
     HRESULT hr = S_OK;
 
-    TRACE("(%d)\n", dwDiscardOptions);
+    TRACE("%ld\n", dwDiscardOptions);
 
     if (dwDiscardOptions == DISCARDCACHE_SAVEIFDIRTY)
         hr = DataCache_Save(&This->IPersistStorage_iface, This->presentationStorage, TRUE);

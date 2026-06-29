@@ -10,6 +10,14 @@
 #include "rapps.h"
 #include "appview.h"
 
+static inline AppsCategories
+ClampAvailableCategory(AppsCategories Category)
+{
+    if (Category <= ENUM_LASTCATEGORY)
+        return Category;
+    return ENUM_CAT_OTHER; // Treat future categories we don't know as Other
+}
+
 CAppInfo::CAppInfo(const CStringW &Identifier, AppsCategories Category)
     : szIdentifier(Identifier), iCategory(Category)
 {
@@ -24,7 +32,7 @@ CAvailableApplicationInfo::CAvailableApplicationInfo(
     const CStringW &PkgName,
     AppsCategories Category,
     const CPathW &BasePath)
-    : CAppInfo(PkgName, Category), m_Parser(Parser), m_ScrnshotRetrieved(false), m_LanguagesLoaded(false)
+    : CAppInfo(PkgName, ClampAvailableCategory(Category)), m_Parser(Parser), m_ScrnshotRetrieved(false), m_LanguagesLoaded(false)
 {
     m_Parser->GetString(L"Name", szDisplayName);
     m_Parser->GetString(L"Version", szDisplayVersion);
@@ -112,6 +120,22 @@ CompareVersion(const CStringW &left, const CStringW &right)
     }
 }
 
+bool
+CAvailableApplicationInfo::IsInstalled(CStringW *pOutKeyName) const
+{
+    LPCWSTR pszKeyName = NULL;
+    CStringW szRegName;
+    m_Parser->GetString(DB_REGNAME, szRegName);
+    if (::GetInstalledVersion(NULL, szRegName))
+        pszKeyName = szRegName.GetString();
+    else if (::GetInstalledVersion(NULL, szDisplayName))
+        pszKeyName = szDisplayName.GetString();
+
+    if (pszKeyName && pOutKeyName)
+        *pOutKeyName = pszKeyName;
+    return pszKeyName != NULL;
+}
+
 VOID
 CAvailableApplicationInfo::InsertVersionInfo(CAppRichEdit *RichEdit)
 {
@@ -163,16 +187,16 @@ CAvailableApplicationInfo::LicenseString()
     LicenseType licenseType;
 
     if (IsKnownLicenseType(IntBuffer))
-    {
         licenseType = static_cast<LicenseType>(IntBuffer);
-    }
     else
-    {
         licenseType = LICENSE_NONE;
+
+    if (licenseType == LICENSE_NONE || licenseType == LICENSE_FREEWARE)
+    {
         if (szLicenseString.CompareNoCase(L"Freeware") == 0)
         {
             licenseType = LICENSE_FREEWARE;
-            szLicenseString = L"";
+            szLicenseString = L""; // Don't display as "Freeware (Freeware)"
         }
     }
 
@@ -287,10 +311,37 @@ CAvailableApplicationInfo::RetrieveLanguages()
     }
 }
 
+bool
+CAvailableApplicationInfo::IsCompatible() const
+{
+    CStringW szBuffer;
+    if (m_Parser->GetString(DB_NTVER, szBuffer))
+    {
+        LPWSTR start = szBuffer.GetString();
+        LPWSTR p;
+        ULONG MinNTVer = wcstoul(start, &p, 0);
+        if (p > start)
+        {
+            ULONG NTVersion = GetNTVersion();
+            // Treat as range if we have '-', otherwise treat it as XXX+
+            ULONG MaxNTVer = (*p == '-') ? wcstoul(++p, NULL, 0) : UINT_MAX;
+            // Handle the XXX- case (That version or lower)
+            if (MaxNTVer == 0)
+            {
+                MaxNTVer = MinNTVer;
+                MinNTVer = 0;
+            }
+
+            return NTVersion >= MinNTVer && NTVersion <= MaxNTVer;
+        }
+    }
+    return true;
+}
+
 BOOL
 CAvailableApplicationInfo::Valid() const
 {
-    return !szDisplayName.IsEmpty() && !m_szUrlDownload.IsEmpty();
+    return !szDisplayName.IsEmpty() && !m_szUrlDownload.IsEmpty() && IsCompatible();
 }
 
 BOOL
@@ -367,15 +418,46 @@ CAvailableApplicationInfo::GetDisplayInfo(CStringW &License, CStringW &Size, CSt
     UrlDownload = m_szUrlDownload;
 }
 
+static InstallerType
+GetInstallerTypeFromString(const CStringW &Installer)
+{
+    if (Installer.CompareNoCase(L"Inno") == 0)
+        return INSTALLER_INNO;
+    if (Installer.CompareNoCase(L"NSIS") == 0)
+        return INSTALLER_NSIS;
+    return INSTALLER_UNKNOWN;
+}
+
 InstallerType
-CAvailableApplicationInfo::GetInstallerType() const
+CAvailableApplicationInfo::GetInstallerType(bool NestedType) const
 {
     CStringW str;
     m_Parser->GetString(DB_INSTALLER, str);
-    if (str.CompareNoCase(DB_GENINSTSECTION) == 0)
+    if (str.CompareNoCase(DB_INSTALLER_GENERATE) == 0)
+    {
         return INSTALLER_GENERATE;
-    else
-        return INSTALLER_UNKNOWN;
+    }
+    else if (str.CompareNoCase(DB_INSTALLER_EXEINZIP) == 0)
+    {
+        if (NestedType)
+        {
+            CStringW nested;
+            m_Parser->GetSectionString(DB_EXEINZIPSECTION, DB_INSTALLER, nested);
+            InstallerType it = GetInstallerTypeFromString(nested);
+            if (it != INSTALLER_UNKNOWN)
+                return it;
+        }
+        return INSTALLER_EXEINZIP;
+    }
+    return INSTALLER_UNKNOWN;
+}
+
+InstallerType
+CAvailableApplicationInfo::GetInstallerInfo(CStringW &SilentParameters) const
+{
+    InstallerType it = GetInstallerType(true);
+    m_Parser->GetString(DB_SILENTARGS, SilentParameters);
+    return it;
 }
 
 BOOL
@@ -575,7 +657,7 @@ CInstalledApplicationInfo::GetDisplayInfo(CStringW &License, CStringW &Size, CSt
 }
 
 InstallerType
-CInstalledApplicationInfo::GetInstallerType() const
+CInstalledApplicationInfo::GetInstallerType(bool NestedType) const
 {
     CRegKey reg;
     if (reg.Open(m_hKey, GENERATE_ARPSUBKEY, KEY_READ) == ERROR_SUCCESS)
@@ -588,7 +670,7 @@ CInstalledApplicationInfo::GetInstallerType() const
 BOOL
 CInstalledApplicationInfo::UninstallApplication(UninstallCommandFlags Flags)
 {
-    if (GetInstallerType() == INSTALLER_GENERATE)
+    if (GetInstallerType() == INSTALLER_GENERATE && (Flags & UCF_SAMEPROCESS))
     {
         return UninstallGenerated(*this, Flags);
     }

@@ -18,6 +18,13 @@ QuerySetProcessValidator(
 {
     NTSTATUS Status, SpecialStatus = STATUS_SUCCESS;
 
+    if ((PsProcessInfoClass[InfoClassIndex].RequiredSizeQUERY == 0) &&
+        (PsProcessInfoClass[InfoClassIndex].RequiredSizeSET == 0))
+    {
+        skip("FIXME: Skipping test for InfoClass %lu, because PsProcessInfoClass[] doesn't have it.\n", InfoClassIndex);
+        return;
+    }
+
     /* Before doing anything, check if we want query or set validation */
     switch (ValidationMode)
     {
@@ -42,24 +49,20 @@ QuerySetProcessValidator(
                  * which equates to the image filename of the process. Such status
                  * is returned in an invalid address query (STATUS_ACCESS_VIOLATION)
                  * where the function expects STATUS_INFO_LENGTH_MISMATCH instead.
-                */
+                 */
                 case ProcessImageFileName:
                 {
                     SpecialStatus = STATUS_INFO_LENGTH_MISMATCH;
                     break;
                 }
 
-                /* This one works different from the others */
+                /* This one works differently from the others */
                 case ProcessUserModeIOPL:
                 {
                     if (ExpectedStatus == STATUS_INFO_LENGTH_MISMATCH)
-                    {
                         SpecialStatus = STATUS_ACCESS_VIOLATION;
-                    }
                     else
-                    {
                         SpecialStatus = STATUS_INVALID_INFO_CLASS;
-                    }
                     break;
                 }
 
@@ -72,13 +75,26 @@ QuerySetProcessValidator(
                 case ProcessIoPortHandlers:
                 case ProcessEnableAlignmentFaultFixup:
                 case ProcessAffinityMask:
-                case ProcessForegroundInformation:
                 {
                     SpecialStatus = STATUS_INVALID_INFO_CLASS;
                     break;
                 }
 
+                case ProcessForegroundInformation:
+                {
+                    if (ExpectedStatus != STATUS_DATATYPE_MISALIGNMENT)
+                        SpecialStatus = STATUS_INVALID_INFO_CLASS;
+                    break;
+                }
+
                 /* These classes don't exist in Server 2003 */
+                case ProcessImageFileNameWin32:
+                {
+                    /* Need to fix up the length */
+                    if (InfoLength == sizeof(UNICODE_STRING))
+                        InfoLength += MAX_PATH * sizeof(WCHAR);
+                    /* Fall through */
+                }
                 case ProcessIoPriority:
                 case ProcessTlsInformation:
                 case ProcessCycleTime:
@@ -86,14 +102,22 @@ QuerySetProcessValidator(
                 case ProcessInstrumentationCallback:
                 case ProcessThreadStackAllocation:
                 case ProcessWorkingSetWatchEx:
-                case ProcessImageFileNameWin32:
                 case ProcessImageFileMapping:
                 case ProcessAffinityUpdateMode:
                 case ProcessMemoryAllocationMode:
                 {
-                    SpecialStatus = STATUS_INVALID_INFO_CLASS;
+                    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+                        SpecialStatus = STATUS_INVALID_INFO_CLASS;
                     break;
                 }
+
+#ifndef _M_IX86
+                case ProcessLdtInformation:
+                {
+                    SpecialStatus = STATUS_NOT_IMPLEMENTED;
+                    break;
+                }
+#endif
             }
 
             /* Query the information */
@@ -104,7 +128,7 @@ QuerySetProcessValidator(
                                                NULL);
 
             /* And probe the results we've got */
-            ok(Status == ExpectedStatus || Status == SpecialStatus || Status == STATUS_DATATYPE_MISALIGNMENT,
+            ok(Status == ExpectedStatus || Status == SpecialStatus,
                 "0x%lx or special status (0x%lx) expected but got 0x%lx for class information %lu in query information process operation!\n", ExpectedStatus, SpecialStatus, Status, InfoClassIndex);
             break;
         }
@@ -115,7 +139,11 @@ QuerySetProcessValidator(
             {
                 case ProcessIoPortHandlers:
                 {
+#ifndef _M_IX86
+                    SpecialStatus = STATUS_NOT_IMPLEMENTED;
+#else
                     SpecialStatus = STATUS_INVALID_PARAMETER;
+#endif
                     break;
                 }
 
@@ -125,21 +153,19 @@ QuerySetProcessValidator(
                  */
                 case ProcessWorkingSetWatch:
                 {
+                    if (ExpectedStatus == STATUS_ACCESS_VIOLATION)
+                        ExpectedStatus = STATUS_SUCCESS;
                     SpecialStatus = STATUS_PORT_ALREADY_SET;
                     break;
                 }
 
-                /* This one works different from the others */
+                /* This one works differently from the others */
                 case ProcessUserModeIOPL:
                 {
                     if (ExpectedStatus == STATUS_INFO_LENGTH_MISMATCH)
-                    {
                         SpecialStatus = STATUS_ACCESS_VIOLATION;
-                    }
                     else
-                    {
                         SpecialStatus = STATUS_PRIVILEGE_NOT_HELD;
-                    }
                     break;
                 }
 
@@ -187,6 +213,15 @@ QuerySetProcessValidator(
                     SpecialStatus = STATUS_ACCESS_VIOLATION;
                     break;
                 }
+
+#ifndef _M_IX86
+                case ProcessLdtInformation:
+                case ProcessLdtSize:
+                {
+                    SpecialStatus = STATUS_NOT_IMPLEMENTED;
+                    break;
+                }
+#endif
             }
 
             /* Set the information */
@@ -196,7 +231,7 @@ QuerySetProcessValidator(
                                              InfoLength);
 
             /* And probe the results we've got */
-            ok(Status == ExpectedStatus || Status == SpecialStatus || Status == STATUS_DATATYPE_MISALIGNMENT || Status == STATUS_SUCCESS,
+            ok(Status == ExpectedStatus || Status == SpecialStatus,
                 "0x%lx or special status (0x%lx) expected but got 0x%lx for class information %lu in set information process operation!\n", ExpectedStatus, SpecialStatus, Status, InfoClassIndex);
             break;
         }
@@ -232,10 +267,17 @@ QuerySetThreadValidator(
                 case ThreadZeroTlsCell:
                 case ThreadIdealProcessor:
                 case ThreadSetTlsArrayAddress:
-                case ThreadHideFromDebugger:
                 case ThreadSwitchLegacyState:
                 {
                     SpecialStatus = STATUS_INVALID_INFO_CLASS;
+                    break;
+                }
+
+                /* This class supports queries only on Vista and above */
+                case ThreadHideFromDebugger:
+                {
+                    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+                        SpecialStatus = STATUS_INVALID_INFO_CLASS;
                     break;
                 }
 
@@ -251,6 +293,37 @@ QuerySetThreadValidator(
                 {
                     SpecialStatus = STATUS_INVALID_INFO_CLASS;
                     break;
+                }
+
+                /* ThreadNameInformation is Windows 10+, but
+                 * ReactOS supports this class, so don't exclude it */
+                case ThreadNameInformation:
+                {
+#ifndef __REACTOS__
+                    if (GetNTVersion() < _WIN32_WINNT_WIN10)
+                        SpecialStatus = STATUS_INVALID_INFO_CLASS;
+#else
+                    /* This one works differently from the others */
+                    if (ExpectedStatus == STATUS_INFO_LENGTH_MISMATCH)
+                        ExpectedStatus = STATUS_BUFFER_TOO_SMALL;
+#endif
+                    break;
+                }
+
+                default:
+                {
+                    /* All of these classes only exist on Windows 7 and above */
+                    if ( ((InfoClassIndex >= ThreadCSwitchPmu) &&
+                          (GetNTVersion() < _WIN32_WINNT_WIN7)) ||
+                         ((InfoClassIndex >= ThreadCpuAccountingInformation) &&
+                          (GetNTVersion() < _WIN32_WINNT_WIN8)) ||
+                         ((InfoClassIndex >= ThreadSuspendCount) &&
+                          (GetNTVersion() < _WIN32_WINNT_WINBLUE)) ||
+                         ((InfoClassIndex >= ThreadHeterogeneousCpuPolicy) &&
+                          (GetNTVersion() < _WIN32_WINNT_WIN10)) )
+                    {
+                        SpecialStatus = STATUS_INVALID_INFO_CLASS;
+                    }
                 }
             }
 
@@ -280,7 +353,7 @@ QuerySetThreadValidator(
 
                 /*
                  * This class doesn't take a strict type for size length.
-                 * The function happily succeds on an information length
+                 * The function happily succeeds on an information length
                  * mismatch scenario with STATUS_SUCCESS.
                  */
                 case ThreadHideFromDebugger:
@@ -321,6 +394,33 @@ QuerySetThreadValidator(
                 {
                     SpecialStatus = STATUS_ACCESS_VIOLATION;
                     break;
+                }
+
+                /* ThreadNameInformation is Windows 10+, but
+                 * ReactOS supports this class, so don't exclude it */
+                case ThreadNameInformation:
+                {
+#ifndef __REACTOS__
+                    if (GetNTVersion() < _WIN32_WINNT_WIN10)
+                        SpecialStatus = STATUS_INVALID_INFO_CLASS;
+#endif
+                    break;
+                }
+
+                default:
+                {
+                    /* All of these classes only exist on Windows 7 and above */
+                    if ( ((InfoClassIndex >= ThreadCSwitchPmu) &&
+                          (GetNTVersion() < _WIN32_WINNT_WIN7)) ||
+                         ((InfoClassIndex >= ThreadCpuAccountingInformation) &&
+                          (GetNTVersion() < _WIN32_WINNT_WIN8)) ||
+                         ((InfoClassIndex >= ThreadSuspendCount) &&
+                          (GetNTVersion() < _WIN32_WINNT_WINBLUE)) ||
+                         ((InfoClassIndex >= ThreadHeterogeneousCpuPolicy) &&
+                          (GetNTVersion() < _WIN32_WINNT_WIN10)) )
+                    {
+                        SpecialStatus = STATUS_INVALID_INFO_CLASS;
+                    }
                 }
             }
 

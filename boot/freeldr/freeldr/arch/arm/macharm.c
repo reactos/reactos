@@ -127,7 +127,7 @@ ArmHwDetect(
     RamDiskInitialize(TRUE, NULL, NULL);
 
     /* Fill out the ARC disk block */
-    AddReactOSArcDiskInfo("ramdisk(0)", 0xBADAB00F, 0xDEADBABE, TRUE);
+    AddReactOSArcDiskInfo("ramdisk(0)", NULL, 0xBADAB00F, 0xDEADBABE, TRUE);
     ASSERT(reactos_disk_count == 1);
 
     /* Return the root node */

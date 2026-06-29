@@ -5,6 +5,7 @@
  *    Updated by Caemyr - Olaf Siejka (Jan, 2008)
  *    UTF-8 conversion by Caemyr (May, 2011)
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (January, 2022)
+ *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (June, 2025)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -58,13 +59,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Aby móc przeprowadzić większość tych zmian, musisz zalogować się jako administrator.", IDC_STATIC, 12, 5, 236, 17
     GROUPBOX "Wydajność", IDC_STATIC, 6, 28, 244, 50
-    LTEXT "Efekty wizualne, planowanie użycia procesora, wykorzystanie pamięci i pamięć wirtualna.", IDC_STATIC, 16, 39, 210, 17
+    LTEXT "Efekty wizualne, planowanie użycia procesora, wykorzystanie pamięci i pamięć wirtualna.", IDC_STATIC, 16, 39, 226, 17
     PUSHBUTTON "&Ustawienia", IDC_PERFOR, 194, 58, 50, 15
     GROUPBOX "Profile użytkownika", IDC_STATIC, 6, 85, 244, 48
-    LTEXT "Ustawienia pulpitu powiązane z logowaniem użytkownika.", IDC_STATIC, 16, 98, 210, 20
+    LTEXT "Ustawienia pulpitu powiązane z logowaniem użytkownika.", IDC_STATIC, 16, 98, 226, 20
     PUSHBUTTON "U&stawienia", IDC_USERPROFILE, 194, 113, 50, 15
     GROUPBOX "Uruchamianie i odzyskiwanie", IDC_STATIC, 6, 141, 244, 52
-    LTEXT "Informacje o uruchamianiu systemu, awariach systemu i debugowaniu.", IDC_STATIC, 16, 154, 210, 19
+    LTEXT "Informacje o uruchamianiu systemu, awariach systemu i debugowaniu.", IDC_STATIC, 16, 154, 226, 19
     PUSHBUTTON "Us&tawienia", IDC_STAREC, 194, 172, 50, 15
     PUSHBUTTON "Ustawienia systemowe", IDC_SYSSETTINGS, 6, 202, 80, 15
     PUSHBUTTON "Z&mienne środowiskowe", IDC_ENVVAR, 88, 202, 80, 15
@@ -332,10 +333,34 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 106, 140, 54, 15
 END
 
+IDD_VISUALEFFECTS DIALOGEX 6, 18, 227, 204
+CAPTION "Efekty wizualne"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+   LTEXT "Wybierz ustawienia wyglądu i wydajności systemu ReactOS, których chcesz używać na tym komputerze.", IDC_STATIC, 7, 6, 208, 18
+   CONTROL "", IDC_TREE, "SysTreeView32", TVS_LINESATROOT | TVS_DISABLEDRAGDROP | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 32, 213, 168
+END
+
+IDD_ADVANCEDPERF DIALOGEX 6, 18, 227, 128
+CAPTION "Zaawansowane"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+   GROUPBOX "Planowanie użycia procesora", IDC_STATIC, 7, 8, 213, 46
+   LTEXT "Dopasuj w celu uzyskania najlepszej wydajności przez:", IDC_STATIC, 14, 23, 199, 8
+   AUTORADIOBUTTON "&Programy", IDC_CPUCLIENT, 14, 36, 75, 12
+   AUTORADIOBUTTON "&Usługi działające w tle", IDC_CPUSERVER, 96, 36, 85, 12
+   GROUPBOX "Pamięć wirtualna", IDC_STATIC, 7, 60, 213, 57
+   LTEXT "Plik stronicowania to obszar twardego dysku używany przez system ReactOS tak, jakby była to pamięć RAM.", IDC_STATIC, 14, 74, 199, 16
+   PUSHBUTTON "Z&mień...", IDC_CHANGESWAP, 163, 97, 50, 14
+END
+
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "System"
     IDS_CPLSYSTEMDESCRIPTION "Wyświetl informacje o Twoim systemie komputerowym, zmień ustawienia dotyczące sprzętu i wydajności"
+    IDS_PERFORMANCEOPTIONS "Opcje wydajności"
     IDS_MEGABYTE "MB RAM"
     IDS_GIGABYTE "GB RAM"
     IDS_TERABYTE "TB RAM"
@@ -365,8 +390,8 @@ BEGIN
     IDS_MESSAGEBOXTITLE "System"
     IDS_WARNINITIALSIZE "Wprowadź wielkość dla początkowego rozmiaru pliku stronicowania."
     IDS_WARNMAXIMUMSIZE "Wprowadź wielkość dla maksymalnego rozmiaru pliku stronicowania."
-    IDS_WARNINITIALRANGE "The initial paging file size must be between 2 MB and %lu MB on the selected drive."
-    IDS_WARNMAXIMUMRANGE "The maximum paging file size must be larger than or equal to its initial size, and less than %lu MB on the selected drive."
+    IDS_WARNINITIALRANGE "Początkowy rozmiar pliku stronicowania musi się zawierać pomiędzy 2 MB i %lu MB na wybranym dysku."
+    IDS_WARNMAXIMUMRANGE "Maksymalny rozmiar pliku stronicowania musi być większy lub równy jego rozmiarowi początkowemu oraz mniejszy niż %lu MB na wybranym dysku."
     IDS_PAGEFILE_MB "%lu MB"
     IDS_PAGEFILE_NONE "Brak"
     IDS_PAGEFILE_SYSTEM "Kontrolowany przez system"

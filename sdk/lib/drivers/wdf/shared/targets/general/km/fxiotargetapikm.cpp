@@ -33,7 +33,7 @@ extern "C" {
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PDEVICE_OBJECT
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoTargetWdmGetTargetDeviceObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -77,7 +77,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PDEVICE_OBJECT
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoTargetWdmGetTargetPhysicalDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -123,7 +123,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PFILE_OBJECT
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoTargetWdmGetTargetFileObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -168,7 +168,7 @@ Return Value:
 __drv_maxIRQL(PASSIVE_LEVEL)
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoTargetQueryForInterface)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -246,7 +246,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoTargetQueryTargetProperty)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -338,7 +338,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoTargetAllocAndQueryTargetProperty)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

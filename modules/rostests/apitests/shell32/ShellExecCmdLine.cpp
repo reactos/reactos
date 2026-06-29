@@ -9,6 +9,7 @@
 #include <strsafe.h>
 #include <versionhelpers.h>
 #include "shell32_apitest_sub.h"
+#include "closewnd.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -27,7 +28,6 @@
 #define shell32_hInstance   GetModuleHandle(NULL)
 #define IDS_FILE_NOT_FOUND  (-1)
 
-static const WCHAR wszOpen[] = L"open";
 static const WCHAR wszExe[] = L".exe";
 static const WCHAR wszCom[] = L".com";
 
@@ -457,7 +457,7 @@ static const TEST_ENTRY s_entries_1[] =
     { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", L"." },
     { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", L"system32" },
     { __LINE__, FALSE, TRUE, L"Test File 1.txt", NULL },
-    { __LINE__, TRUE, TRUE, L"Test File 1.txt", L"." },
+    // { __LINE__, TRUE, TRUE, L"Test File 1.txt", L"." }, // Fails on Vista, 7, 8.1
     { __LINE__, FALSE, TRUE, L"Test File 1.txt", L"system32" },
     { __LINE__, TRUE, TRUE, L"Test File 1.txt", s_cur_dir },
     { __LINE__, FALSE, TRUE, L"\"Test File 1.txt\"", NULL },
@@ -511,7 +511,7 @@ static const TEST_ENTRY s_entries_2[] =
     { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", L"system32" },
     { __LINE__, FALSE, FALSE, L"\"Test File 1.txt\" \"Test File.txt\"", s_cur_dir },
     { __LINE__, FALSE, TRUE, L"Test File 1.txt", NULL },
-    { __LINE__, TRUE, TRUE, L"Test File 1.txt", L"." },
+    // { __LINE__, TRUE, TRUE, L"Test File 1.txt", L"." }, // Fails on Vista, 7, 8.1
     { __LINE__, FALSE, TRUE, L"Test File 1.txt", L"system32" },
     { __LINE__, TRUE, TRUE, L"Test File 1.txt", s_cur_dir },
     { __LINE__, TRUE, TRUE, L"\"Test File 1.txt\"", NULL },
@@ -548,46 +548,6 @@ static const TEST_ENTRY s_entries_2[] =
     { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\" \"Test File.txt\"", L"system32" },
     { __LINE__, FALSE, TRUE, L"\"Test File 2.bat\" \"Test File.txt\"", s_cur_dir },
 };
-
-typedef struct OPENWNDS
-{
-    UINT count;
-    HWND *phwnd;
-} OPENWNDS;
-
-static OPENWNDS s_wi0 = { 0 }, s_wi1 = { 0 };
-
-static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
-{
-    OPENWNDS *info = (OPENWNDS *)lParam;
-    info->phwnd = (HWND *)realloc(info->phwnd, (info->count + 1) * sizeof(HWND));
-    if (!info->phwnd)
-        return FALSE;
-    info->phwnd[info->count] = hwnd;
-    ++(info->count);
-    return TRUE;
-}
-
-static void CleanupNewlyCreatedWindows(void)
-{
-    EnumWindows(EnumWindowsProc, (LPARAM)&s_wi1);
-    for (UINT i1 = 0; i1 < s_wi1.count; ++i1)
-    {
-        BOOL bFound = FALSE;
-        for (UINT i0 = 0; i0 < s_wi0.count; ++i0)
-        {
-            if (s_wi1.phwnd[i1] == s_wi0.phwnd[i0])
-            {
-                bFound = TRUE;
-                break;
-            }
-        }
-        if (!bFound)
-            PostMessageW(s_wi1.phwnd[i1], WM_CLOSE, 0, 0);
-    }
-    free(s_wi1.phwnd);
-    ZeroMemory(&s_wi1, sizeof(s_wi1));
-}
 
 static void DoEntry(const TEST_ENTRY *pEntry)
 {
@@ -626,8 +586,33 @@ static void DoEntry(const TEST_ENTRY *pEntry)
 
     ok(result == pEntry->result, "Line %d: result expected %d, was %d\n",
        pEntry->lineno, pEntry->result, result);
+}
 
-    CleanupNewlyCreatedWindows();
+static WINDOW_LIST s_List1, s_List2;
+
+static VOID TEST_ShellExecCmdLine(VOID)
+{
+    GetWindowList(&s_List1);
+
+    // do tests
+    for (size_t i = 0; i < _countof(s_entries_1); ++i)
+    {
+        DoEntry(&s_entries_1[i]);
+    }
+    SetEnvironmentVariableW(L"PATH", s_cur_dir);
+    for (size_t i = 0; i < _countof(s_entries_2); ++i)
+    {
+        DoEntry(&s_entries_2[i]);
+    }
+
+    // Execution can be asynchronous; you have to wait for it to finish.
+    Sleep(2000);
+
+    // Close newly-opened window(s)
+    GetWindowList(&s_List2);
+    CloseNewWindows(&s_List1, &s_List2);
+    FreeWindowList(&s_List1);
+    FreeWindowList(&s_List2);
 }
 
 START_TEST(ShellExecCmdLine)
@@ -657,22 +642,14 @@ START_TEST(ShellExecCmdLine)
         return;
     }
 
-    // record open windows
-    if (!EnumWindows(EnumWindowsProc, (LPARAM)&s_wi0))
-    {
-        skip("EnumWindows failed\n");
-        free(s_wi0.phwnd);
-        return;
-    }
-
     // s_win_test_exe
     GetWindowsDirectoryW(s_win_test_exe, _countof(s_win_test_exe));
     PathAppendW(s_win_test_exe, L"test program.exe");
+    SetFileAttributesW(s_win_test_exe, FILE_ATTRIBUTE_NORMAL); // Clear readonly flag if it exists.
     BOOL ret = CopyFileW(s_sub_program, s_win_test_exe, FALSE);
     if (!ret)
     {
-        skip("Please retry with admin rights\n");
-        free(s_wi0.phwnd);
+        skip("Cannot copy test files to the system root directory. (Error: %lu)\n", GetLastError());
         return;
     }
 
@@ -700,27 +677,15 @@ START_TEST(ShellExecCmdLine)
     // s_cur_dir
     GetCurrentDirectoryW(_countof(s_cur_dir), s_cur_dir);
 
-    // do tests
-    for (size_t i = 0; i < _countof(s_entries_1); ++i)
-    {
-        DoEntry(&s_entries_1[i]);
-    }
-    SetEnvironmentVariableW(L"PATH", s_cur_dir);
-    for (size_t i = 0; i < _countof(s_entries_2); ++i)
-    {
-        DoEntry(&s_entries_2[i]);
-    }
+    TEST_ShellExecCmdLine();
 
-    Sleep(2000);
-    CleanupNewlyCreatedWindows();
+    // Some process can lock the file of s_win_test_exe
+    Sleep(1000);
 
     // clean up
-    ok(DeleteFileW(s_win_test_exe), "failed to delete the test file\n");
-    ok(DeleteFileW(s_sys_bat_file), "failed to delete the test file\n");
-    ok(DeleteFileA("Test File 1.txt"), "failed to delete the test file\n");
-    ok(DeleteFileA("Test File 2.bat"), "failed to delete the test file\n");
-    free(s_wi0.phwnd);
-
-    DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, TRUE, TRUE);
-    Sleep(100);
+    SetFileAttributesW(s_win_test_exe, FILE_ATTRIBUTE_NORMAL); // Clear readonly flag
+    ok(DeleteFileW(s_win_test_exe), "Failed to delete \"%S\".\n", s_win_test_exe);
+    ok(DeleteFileW(s_sys_bat_file), "Failed to delete \"%S\".\n", s_sys_bat_file);
+    ok(DeleteFileA("Test File 1.txt"), "Failed to delete \"Test File 1.txt\".\n");
+    ok(DeleteFileA("Test File 2.bat"), "Failed to delete \"Test File 2.bat\".\n");
 }

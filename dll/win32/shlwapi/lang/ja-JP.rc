@@ -33,6 +33,8 @@ STRINGTABLE
     IDS_TB_FORMAT "%s TB"
     IDS_PB_FORMAT "%s PB"
     IDS_EB_FORMAT "%s EB"
+    IDS_RESTRICTED "このコンピューターの制限により、この操作は取り消されました。システム管理者にお問い合わせください。"
+    IDS_RESTRICTIONS "システムの制限"
 #endif
 }
 

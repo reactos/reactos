@@ -116,13 +116,15 @@ add_library(glu32 MODULE
     ${PCH_SKIP_SOURCE}
     glu32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
-target_link_libraries(glu32 cpprt)
+target_link_libraries(glu32 cpprt ${PSEH_LIB})
 
 set_module_type(glu32 win32dll)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(glu32 PRIVATE -Wno-write-strings)
     target_compile_options(glu32 PRIVATE -Wno-unused-but-set-variable)
+    target_compile_options(glu32 PRIVATE -Wno-uninitialized)
+    target_compile_options(glu32 PRIVATE -Wno-stringop-overflow)
     # Prevent a warning when comparing 'this' against 0
     set_source_files_properties(src/libnurbs/internals/arc.cc PROPERTIES COMPILE_OPTIONS "-Wno-nonnull-compare")
 endif()

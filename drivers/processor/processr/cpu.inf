@@ -59,6 +59,23 @@ HKR, , Icon,           0, "-28"
 %IntelAtomProcessor.DeviceDesc%   = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_28
 %IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_30
 %IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_37
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_125
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_126
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_140
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_141
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_142
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_151
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_154
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_158
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_165
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_166
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_167
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_170
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_173
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_183
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_186
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_189
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_191
 %IntelP4Processor.DeviceDesc%     = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_15
 %IntelProcessor.DeviceDesc%       = Processr_Inst,ACPI\GenuineIntel_-_x86
 

@@ -10,10 +10,9 @@
 
 #include "lsasrv.h"
 #include <winsvc.h>
+#include <winsvc_undoc.h>
 
 typedef VOID (WINAPI *PNETLOGONMAIN)(INT ArgCount, PWSTR *ArgVector);
-
-VOID WINAPI I_ScIsSecurityProcess(VOID);
 
 static VOID WINAPI NetlogonServiceMain(DWORD dwArgc, PWSTR *pszArgv);
 static VOID WINAPI SamSsServiceMain(DWORD dwArgc, PWSTR *pszArgv);

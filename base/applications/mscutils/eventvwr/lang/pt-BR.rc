@@ -81,21 +81,21 @@ IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Data:", IDC_STATIC, 8, 5, 31, 8
+    LTEXT "D&ata:", IDC_STATIC, 8, 5, 31, 8
     EDITTEXT IDC_EVENTDATESTATIC, 46, 5, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Fonte:", IDC_STATIC, 103, 5, 36, 8
+    LTEXT "&Fonte:", IDC_STATIC, 103, 5, 36, 8
     EDITTEXT IDC_EVENTSOURCESTATIC, 140, 5, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Tempo:", IDC_STATIC, 8, 15, 31, 8
+    LTEXT "T&empo:", IDC_STATIC, 8, 15, 31, 8
     EDITTEXT IDC_EVENTTIMESTATIC, 46, 15, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Categoria:", IDC_STATIC, 103, 15, 36, 8
+    LTEXT "&Categoria:", IDC_STATIC, 103, 15, 36, 8
     EDITTEXT IDC_EVENTCATEGORYSTATIC, 140, 15, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Tipo:", IDC_STATIC, 8, 25, 31, 8
+    LTEXT "&Tipo:", IDC_STATIC, 8, 25, 31, 8
     EDITTEXT IDC_EVENTTYPESTATIC, 46, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "EventID:", IDC_STATIC, 103, 25, 36, 8
+    LTEXT "Event &ID:", IDC_STATIC, 103, 25, 36, 8
     EDITTEXT IDC_EVENTIDSTATIC, 140, 25, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Usuário:", IDC_STATIC, 8, 35, 36, 8
     EDITTEXT IDC_EVENTUSERSTATIC, 46, 35, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Computador:", IDC_STATIC, 8, 45, 36, 8
+    LTEXT "Co&mputador:", IDC_STATIC, 8, 45, 36, 8
     EDITTEXT IDC_EVENTCOMPUTERSTATIC, 46, 45, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
 
     PUSHBUTTON "", IDC_PREVIOUS, 230, 5, 28, 14, BS_ICON
@@ -105,9 +105,9 @@ BEGIN
     LTEXT "&Descrição:", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "Dad&os:", IDC_DETAILS_STATIC, 8, 140, 25, 8
     AUTORADIOBUTTON "&Bytes", IDC_BYTESRADIO, 39, 140, 34, 8
-    AUTORADIOBUTTON "&Word", IDC_WORDRADIO, 77, 140, 34, 8
+    AUTORADIOBUTTON "&Words", IDC_WORDSRADIO, 77, 140, 34, 8
+    LTEXT "Dad&os:", IDC_DETAILS_STATIC, 8, 140, 25, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -167,6 +167,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
     IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
     IDS_EVENTSTRINGIDNOTFOUND "A descrição para Event ID ( %lu ) em Fonte ( %s ) não foi encontrado. O computador local talvez não possua a informação de registro necessária ou mensagem de arquivos DLL para exibir mensagens de um computador remoto.\n\nThe following information is part of the event:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
@@ -209,7 +211,7 @@ STRINGTABLE
 BEGIN
     IDS_COLUMNTYPE "Tipo"
     IDS_COLUMNDATE "Data"
-    IDS_COLUMNTIME "Hora"
+    IDS_COLUMNTIME "Tempo"
     IDS_COLUMNSOURCE "Fonte"
     IDS_COLUMNCATEGORY "Categoria"
     IDS_COLUMNEVENT "Evento"
@@ -219,16 +221,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "\
-Event Type:     %s\r\n\
-Event Source:   %s\r\n\
-Event Category: %s\r\n\
-Event ID:       %s\r\n\
-Date:           %s\r\n\
-Time:           %s\r\n\
-User:           %s\r\n\
-Computer:       %s\r\n\
-Description:\r\n%s"
+    IDS_COPY_EVTTYPE "Tipo de evento:"
+    IDS_COPY_EVTSRC  "Fonte do evento:"
+    IDS_COPY_EVTCAT  "Categoria:"
+    IDS_COPY_EVTID   "ID do evento:"
+    IDS_COPY_EVTDATE "Data:"
+    IDS_COPY_EVTTIME "Tempo:"
+    IDS_COPY_EVTUSER "Usuário:"
+    IDS_COPY_EVTCOMP "Computador:"
+    IDS_COPY_EVTTEXT "Descrição:"
+    IDS_COPY_EVTDATA "Dados:"
 END
 
 STRINGTABLE

@@ -59,8 +59,8 @@ Support for multiple screen sizes.
                               ----------------
 
 Since version 2.0, Console Telnet's new home page is
-http://www.musc.edu/~brannanp/telnet/.  You can get the latest version from
-ftp://argeas.cs-net.gr/Telnet-Win32 or from the web page.  Telnet is
+https://web.archive.org/web/20010126035900/http://www.musc.edu/~brannanp/telnet/ .  You can get the latest version from
+ftp://argeas.cs-net.gr/Telnet-Win32 (DEAD_LINK) or from the web page.  Telnet is
 available as full project (sources included) or as binaries only.  If you
 would like to help to the development check the /devel directory on the ftp
 site for a recent alpha version.
@@ -72,7 +72,7 @@ Telnet has it's own mailing list for announcements, bug reports, support,
 suggestions etc. To subscribe send e-mail to majordomo@argeas.cs-net.gr
 with empty Subject, and the word subscribe in the body. List's address is
 telnet-win32@argeas.cs-net.gr You can find the old archives at
-http://www.cs-net.gr/lists
+http://www.cs-net.gr/lists (DEAD_LINK)
 
 If you are only interested in announcements, follow the above procedures to
 subscribe to telnet-win32-announce.  The development list is
@@ -172,7 +172,7 @@ included to the next version.
 
 Telnet compiles with a variety of compilers.  You will need at least
 Borland 4.x or newer compiler, or MSVC 2.0 or newer, or download a version
-of gcc for Win32 (see http://www.musc.edu/~brannanp/telnet/gccwin32.html).
+of gcc for Win32 (see https://web.archive.org/web/20010126054500/http://www.musc.edu/~brannanp/telnet/gccwin32.html).
 Copy the files from the directories BORLAND or MSVC to the main directory,
 change them to fit to your system, and recompile.  The project comes with
 IDE files and makefiles.

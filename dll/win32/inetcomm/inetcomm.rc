@@ -18,5 +18,3 @@
 
 /* @makedep: inetcomm.rgs */
 1 WINE_REGISTRY inetcomm.rgs
-
-2 WINE_REGISTRY inetcomm_r.rgs

@@ -19,9 +19,6 @@
  */
 
 #define COBJMACROS
-#ifdef __REACTOS__
-#define CONST_VTABLE
-#endif
 
 #include "windows.h"
 #include "wtypes.h"
@@ -165,17 +162,17 @@ static void expect(HRESULT hr, VARTYPE vt, BOOL copy, int line)
     if(flags == PROP_INV)
     {
         if (copy && (vt & VT_VECTOR))
-            ok(hr == DISP_E_BADVARTYPE || hr == STG_E_INVALIDPARAMETER, "%s (%s): got %08x (line %d)\n", wine_vtypes[idx], modifier, hr, line);
+            ok(hr == DISP_E_BADVARTYPE || hr == STG_E_INVALIDPARAMETER, "%s (%s): got %08lx (line %d)\n", wine_vtypes[idx], modifier, hr, line);
         else
-            ok(hr == (copy ? DISP_E_BADVARTYPE : STG_E_INVALIDPARAMETER), "%s (%s): got %08x (line %d)\n", wine_vtypes[idx], modifier, hr, line);
+            ok(hr == (copy ? DISP_E_BADVARTYPE : STG_E_INVALIDPARAMETER), "%s (%s): got %08lx (line %d)\n", wine_vtypes[idx], modifier, hr, line);
     }
     else if(flags == PROP_V0)
-        ok(hr == S_OK, "%s (%s): got %08x\n", wine_vtypes[idx], modifier, hr);
+        ok(hr == S_OK, "%s (%s): got %08lx\n", wine_vtypes[idx], modifier, hr);
     else todo_wine_if(flags & PROP_TODO)
     {
         if(hr != S_OK)
             win_skip("%s (%s): unsupported\n", wine_vtypes[idx], modifier);
-        else ok(hr == S_OK, "%s (%s): got %08x\n", wine_vtypes[idx], modifier, hr);
+        else ok(hr == S_OK, "%s (%s): got %08lx\n", wine_vtypes[idx], modifier, hr);
     }
 }
 
@@ -189,10 +186,10 @@ static void test_validtypes(void)
 
     memset(&propvar, 0x55, sizeof(propvar));
     hr = PropVariantClear(&propvar);
-    ok(hr == STG_E_INVALIDPARAMETER, "expected STG_E_INVALIDPARAMETER, got %08x\n", hr);
+    ok(hr == STG_E_INVALIDPARAMETER, "expected STG_E_INVALIDPARAMETER, got %08lx\n", hr);
     ok(propvar.vt == 0, "expected 0, got %d\n", propvar.vt);
-    ok(U(propvar).uhVal.QuadPart == 0, "expected 0, got %#x/%#x\n",
-       U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart);
+    ok(propvar.uhVal.QuadPart == 0, "expected 0, got %#lx/%#lx\n",
+       propvar.uhVal.u.LowPart, propvar.uhVal.u.HighPart);
 
     for (i = 0; i < ARRAY_SIZE(valid_types); i++)
     {
@@ -203,11 +200,11 @@ static void test_validtypes(void)
             memset(&propvar, 0, sizeof(propvar));
         else if (i == VT_BLOB || i == VT_BLOB_OBJECT)
         {
-            U(propvar).blob.cbSize = 0;
-            U(propvar).blob.pBlobData = NULL;
+            propvar.blob.cbSize = 0;
+            propvar.blob.pBlobData = NULL;
         }
         else
-            U(propvar).pszVal = NULL;
+            propvar.pszVal = NULL;
         vt = propvar.vt = i;
         memset(&copy, 0x77, sizeof(copy));
         hr = PropVariantCopy(&copy, &propvar);
@@ -215,9 +212,9 @@ static void test_validtypes(void)
         if (hr == S_OK)
         {
             ok(copy.vt == propvar.vt, "expected %d, got %d\n", propvar.vt, copy.vt);
-            ok(U(copy).uhVal.QuadPart == U(propvar).uhVal.QuadPart, "%u: expected %#x/%#x, got %#x/%#x\n",
-               i, U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart,
-               U(copy).uhVal.u.LowPart, U(copy).uhVal.u.HighPart);
+            ok(copy.uhVal.QuadPart == propvar.uhVal.QuadPart, "%u: expected %#lx/%#lx, got %#lx/%#lx\n",
+               i, propvar.uhVal.u.LowPart, propvar.uhVal.u.HighPart,
+               copy.uhVal.u.LowPart, copy.uhVal.u.HighPart);
         }
         else
         {
@@ -227,11 +224,11 @@ static void test_validtypes(void)
         hr = PropVariantClear(&propvar);
         expect(hr, vt, FALSE, __LINE__);
         ok(propvar.vt == 0, "expected 0, got %d\n", propvar.vt);
-        ok(U(propvar).uhVal.QuadPart == 0, "%u: expected 0, got %#x/%#x\n",
-           i, U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart);
+        ok(propvar.uhVal.QuadPart == 0, "%u: expected 0, got %#lx/%#lx\n",
+           i, propvar.uhVal.u.LowPart, propvar.uhVal.u.HighPart);
 
         memset(&propvar, 0x55, sizeof(propvar));
-        U(propvar).pszVal = NULL;
+        propvar.pszVal = NULL;
         vt = propvar.vt = i | VT_ARRAY;
         memset(&copy, 0x77, sizeof(copy));
         hr = PropVariantCopy(&copy, &propvar);
@@ -239,8 +236,8 @@ static void test_validtypes(void)
         if (hr == S_OK)
         {
             ok(copy.vt == propvar.vt, "expected %d, got %d\n", propvar.vt, copy.vt);
-            ok(U(copy).uhVal.QuadPart == 0, "%u: expected 0, got %#x/%#x\n",
-               i, U(copy).uhVal.u.LowPart, U(copy).uhVal.u.HighPart);
+            ok(copy.uhVal.QuadPart == 0, "%u: expected 0, got %#lx/%#lx\n",
+               i, copy.uhVal.u.LowPart, copy.uhVal.u.HighPart);
         }
         else
         {
@@ -250,12 +247,12 @@ static void test_validtypes(void)
         hr = PropVariantClear(&propvar);
         expect(hr, vt, FALSE, __LINE__);
         ok(propvar.vt == 0, "expected 0, got %d\n", propvar.vt);
-        ok(U(propvar).uhVal.QuadPart == 0, "%u: expected 0, got %#x/%#x\n",
-           i, U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart);
+        ok(propvar.uhVal.QuadPart == 0, "%u: expected 0, got %#lx/%#lx\n",
+           i, propvar.uhVal.u.LowPart, propvar.uhVal.u.HighPart);
 
         memset(&propvar, 0x55, sizeof(propvar));
-        U(propvar).caub.cElems = 0;
-        U(propvar).caub.pElems = NULL;
+        propvar.caub.cElems = 0;
+        propvar.caub.pElems = NULL;
         vt = propvar.vt = i | VT_VECTOR;
         memset(&copy, 0x77, sizeof(copy));
         hr = PropVariantCopy(&copy, &propvar);
@@ -263,8 +260,8 @@ static void test_validtypes(void)
         if (hr == S_OK)
         {
             ok(copy.vt == propvar.vt, "expected %d, got %d\n", propvar.vt, copy.vt);
-            ok(!U(copy).caub.cElems, "%u: expected 0, got %d\n", i, U(copy).caub.cElems);
-            ok(!U(copy).caub.pElems, "%u: expected NULL, got %p\n", i, U(copy).caub.pElems);
+            ok(!copy.caub.cElems, "%u: expected 0, got %ld\n", i, copy.caub.cElems);
+            ok(!copy.caub.pElems, "%u: expected NULL, got %p\n", i, copy.caub.pElems);
         }
         else
         {
@@ -274,11 +271,11 @@ static void test_validtypes(void)
         hr = PropVariantClear(&propvar);
         expect(hr, vt, FALSE, __LINE__);
         ok(propvar.vt == 0, "expected 0, got %d\n", propvar.vt);
-        ok(U(propvar).uhVal.QuadPart == 0, "%u: expected 0, got %#x/%#x\n",
-           i, U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart);
+        ok(propvar.uhVal.QuadPart == 0, "%u: expected 0, got %#lx/%#lx\n",
+           i, propvar.uhVal.u.LowPart, propvar.uhVal.u.HighPart);
 
         memset(&propvar, 0x55, sizeof(propvar));
-        U(propvar).pszVal = NULL;
+        propvar.pszVal = NULL;
         vt = propvar.vt = i | VT_BYREF;
         memset(&copy, 0x77, sizeof(copy));
         hr = PropVariantCopy(&copy, &propvar);
@@ -286,9 +283,9 @@ static void test_validtypes(void)
         if (hr == S_OK)
         {
             ok(copy.vt == propvar.vt, "expected %d, got %d\n", propvar.vt, copy.vt);
-            ok(U(copy).uhVal.QuadPart == U(propvar).uhVal.QuadPart, "%u: expected %#x/%#x, got %#x/%#x\n",
-               i, U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart,
-               U(copy).uhVal.u.LowPart, U(copy).uhVal.u.HighPart);
+            ok(copy.uhVal.QuadPart == propvar.uhVal.QuadPart, "%u: expected %#lx/%#lx, got %#lx/%#lx\n",
+               i, propvar.uhVal.u.LowPart, propvar.uhVal.u.HighPart,
+               copy.uhVal.u.LowPart, copy.uhVal.u.HighPart);
         }
         else
         {
@@ -298,8 +295,8 @@ static void test_validtypes(void)
         hr = PropVariantClear(&propvar);
         expect(hr, vt, FALSE, __LINE__);
         ok(propvar.vt == 0, "expected 0, got %d\n", propvar.vt);
-        ok(U(propvar).uhVal.QuadPart == 0, "%u: expected 0, got %#x/%#x\n",
-           i, U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart);
+        ok(propvar.uhVal.QuadPart == 0, "%u: expected 0, got %#lx/%#lx\n",
+           i, propvar.uhVal.u.LowPart, propvar.uhVal.u.HighPart);
     }
 }
 
@@ -360,43 +357,56 @@ static void test_copy(void)
     HRESULT hr;
 
     propvarSrc.vt = VT_BSTR;
-    U(propvarSrc).bstrVal = SysAllocString(wszTestString);
+    propvarSrc.bstrVal = SysAllocString(wszTestString);
 
     hr = PropVariantCopy(&propvarDst, &propvarSrc);
     ok(hr == S_OK, "PropVariantCopy(...VT_BSTR...) failed\n");
-    ok(!lstrcmpW(U(propvarSrc).bstrVal, U(propvarDst).bstrVal), "BSTR not copied properly\n");
+    ok(!lstrcmpW(propvarSrc.bstrVal, propvarDst.bstrVal), "BSTR not copied properly\n");
     hr = PropVariantClear(&propvarSrc);
     ok(hr == S_OK, "PropVariantClear(...VT_BSTR...) failed\n");
     hr = PropVariantClear(&propvarDst);
     ok(hr == S_OK, "PropVariantClear(...VT_BSTR...) failed\n");
 
+    /* BSTR with embedded null */
+    propvarSrc.vt = VT_BSTR;
+    propvarSrc.bstrVal = SysAllocStringLen(L"Test Str\0ing", 12);
+    hr = PropVariantCopy(&propvarDst, &propvarSrc);
+    ok(hr == S_OK, "Failed to copy propvar, hr %#lx.\n", hr);
+    ok(SysStringLen(propvarDst.bstrVal) == 8, "Unexpected copy length.\n");
+    ok(SysStringLen(propvarSrc.bstrVal) == 12, "Unexpected source length.\n");
+    ok(!lstrcmpW(propvarSrc.bstrVal, propvarDst.bstrVal), "BSTR not copied properly\n");
+    hr = PropVariantClear(&propvarSrc);
+    ok(hr == S_OK, "Failed to clear propvar, hr %#lx.\n", hr);
+    hr = PropVariantClear(&propvarDst);
+    ok(hr == S_OK, "Failed to clear propvar, hr %#lx.\n", hr);
+
     propvarSrc.vt = VT_LPWSTR;
-    U(propvarSrc).pwszVal = wszTestString;
+    propvarSrc.pwszVal = wszTestString;
     hr = PropVariantCopy(&propvarDst, &propvarSrc);
     ok(hr == S_OK, "PropVariantCopy(...VT_LPWSTR...) failed\n");
-    ok(!lstrcmpW(U(propvarSrc).pwszVal, U(propvarDst).pwszVal), "Wide string not copied properly\n");
+    ok(!lstrcmpW(propvarSrc.pwszVal, propvarDst.pwszVal), "Wide string not copied properly\n");
     hr = PropVariantClear(&propvarDst);
     ok(hr == S_OK, "PropVariantClear(...VT_LPWSTR...) failed\n");
     memset(&propvarSrc, 0, sizeof(propvarSrc));
 
     propvarSrc.vt = VT_LPSTR;
-    U(propvarSrc).pszVal = szTestString;
+    propvarSrc.pszVal = szTestString;
     hr = PropVariantCopy(&propvarDst, &propvarSrc);
     ok(hr == S_OK, "PropVariantCopy(...VT_LPSTR...) failed\n");
-    ok(!strcmp(U(propvarSrc).pszVal, U(propvarDst).pszVal), "String not copied properly\n");
+    ok(!strcmp(propvarSrc.pszVal, propvarDst.pszVal), "String not copied properly\n");
     hr = PropVariantClear(&propvarDst);
     ok(hr == S_OK, "PropVariantClear(...VT_LPSTR...) failed\n");
     memset(&propvarSrc, 0, sizeof(propvarSrc));
 
     propvarSrc.vt = VT_UNKNOWN;
-    U(propvarSrc).punkVal = &unk_obj.IUnknown_iface;
+    propvarSrc.punkVal = &unk_obj.IUnknown_iface;
     hr = PropVariantCopy(&propvarDst, &propvarSrc);
-    ok(hr == S_OK, "PropVariantCopy(...VT_UNKNOWN...) failed: 0x%08x.\n", hr);
-    ok(U(propvarDst).punkVal == &unk_obj.IUnknown_iface, "Got wrong IUnknown pointer\n");
-    ok(unk_obj.ref == 2, "got wrong refcount: %d.\n", unk_obj.ref);
+    ok(hr == S_OK, "PropVariantCopy(...VT_UNKNOWN...) failed: 0x%08lx.\n", hr);
+    ok(propvarDst.punkVal == &unk_obj.IUnknown_iface, "Got wrong IUnknown pointer\n");
+    ok(unk_obj.ref == 2, "got wrong refcount: %ld.\n", unk_obj.ref);
     hr = PropVariantClear(&propvarDst);
-    ok(hr == S_OK, "PropVariantClear(...VT_UNKNOWN...) failed: 0x%08x.\n", hr);
-    ok(unk_obj.ref == 1, "got wrong refcount: %d.\n", unk_obj.ref);
+    ok(hr == S_OK, "PropVariantClear(...VT_UNKNOWN...) failed: 0x%08lx.\n", hr);
+    ok(unk_obj.ref == 1, "got wrong refcount: %ld.\n", unk_obj.ref);
     memset(&propvarSrc, 0, sizeof(propvarSrc));
 
     sabound.lLbound = 0;
@@ -406,19 +416,19 @@ static void test_copy(void)
     SafeArrayPutElement(sa, &saindex, &unk_obj.IUnknown_iface);
     saindex = 1;
     SafeArrayPutElement(sa, &saindex, &unk_obj.IUnknown_iface);
-    ok(unk_obj.ref == 3, "got wrong refcount: %d.\n", unk_obj.ref);
+    ok(unk_obj.ref == 3, "got wrong refcount: %ld.\n", unk_obj.ref);
 
     propvarSrc.vt = VT_ARRAY | VT_UNKNOWN;
-    U(propvarSrc).parray = sa;
+    propvarSrc.parray = sa;
     hr = PropVariantCopy(&propvarDst, &propvarSrc);
-    ok(hr == S_OK, "PropVariantCopy(...VT_ARRAY|VT_UNKNOWN...) failed: 0x%08x.\n", hr);
-    ok(unk_obj.ref == 5, "got wrong refcount: %d.\n", unk_obj.ref);
+    ok(hr == S_OK, "PropVariantCopy(...VT_ARRAY|VT_UNKNOWN...) failed: 0x%08lx.\n", hr);
+    ok(unk_obj.ref == 5, "got wrong refcount: %ld.\n", unk_obj.ref);
     hr = PropVariantClear(&propvarDst);
-    ok(hr == S_OK, "PropVariantClear(...VT_ARRAY|VT_UNKNOWN...) failed: 0x%08x.\n", hr);
-    ok(unk_obj.ref == 3, "got wrong refcount: %d.\n", unk_obj.ref);
+    ok(hr == S_OK, "PropVariantClear(...VT_ARRAY|VT_UNKNOWN...) failed: 0x%08lx.\n", hr);
+    ok(unk_obj.ref == 3, "got wrong refcount: %ld.\n", unk_obj.ref);
     hr = PropVariantClear(&propvarSrc);
-    ok(hr == S_OK, "PropVariantClear(...VT_ARRAY|VT_UNKNOWN...) failed: 0x%08x.\n", hr);
-    ok(unk_obj.ref == 1, "got wrong refcount: %d.\n", unk_obj.ref);
+    ok(hr == S_OK, "PropVariantClear(...VT_ARRAY|VT_UNKNOWN...) failed: 0x%08lx.\n", hr);
+    ok(unk_obj.ref == 1, "got wrong refcount: %ld.\n", unk_obj.ref);
     memset(&propvarSrc, 0, sizeof(propvarSrc));
 }
 
@@ -560,14 +570,14 @@ static void test_propertytovariant(void)
 
     ok(ret == 0, "StgConvertPropertyToVariant returned %i\n", ret);
     ok(propvar.vt == VT_I4, "unexpected vt %x\n", propvar.vt);
-    ok(U(propvar).lVal == 0xfeabcdef, "unexpected lVal %x\n", U(propvar).lVal);
+    ok(propvar.lVal == 0xfeabcdef, "unexpected lVal %lx\n", propvar.lVal);
 
     ret = pStgConvertPropertyToVariant((SERIALIZEDPROPERTYVALUE*)serialized_bstr_wc,
         CP_WINUNICODE, &propvar, &allocator);
 
     ok(ret == 0, "StgConvertPropertyToVariant returned %i\n", ret);
     ok(propvar.vt == VT_BSTR, "unexpected vt %x\n", propvar.vt);
-    ok(!lstrcmpW(U(propvar).bstrVal, test_string), "unexpected string value\n");
+    ok(!lstrcmpW(propvar.bstrVal, test_string), "unexpected string value\n");
     PropVariantClear(&propvar);
 
     ret = pStgConvertPropertyToVariant((SERIALIZEDPROPERTYVALUE*)serialized_bstr_mb,
@@ -575,7 +585,7 @@ static void test_propertytovariant(void)
 
     ok(ret == 0, "StgConvertPropertyToVariant returned %i\n", ret);
     ok(propvar.vt == VT_BSTR, "unexpected vt %x\n", propvar.vt);
-    ok(!lstrcmpW(U(propvar).bstrVal, test_string), "unexpected string value\n");
+    ok(!lstrcmpW(propvar.bstrVal, test_string), "unexpected string value\n");
     PropVariantClear(&propvar);
 }
 
@@ -600,23 +610,23 @@ static void test_varianttoproperty(void)
         return;
     }
 
-    own_propvalue = HeapAlloc(GetProcessHeap(), 0, sizeof(SERIALIZEDPROPERTYVALUE) + 20);
+    own_propvalue = malloc(sizeof(SERIALIZEDPROPERTYVALUE) + 20);
 
     PropVariantInit(&propvar);
 
     propvar.vt = VT_I4;
-    U(propvar).lVal = 0xfeabcdef;
+    propvar.lVal = 0xfeabcdef;
 
     len = 0xdeadbeef;
     propvalue = pStgConvertVariantToProperty(&propvar, CP_WINUNICODE, NULL, &len,
         0, FALSE, 0);
 
     ok(propvalue == NULL, "got nonnull propvalue\n");
-    todo_wine ok(len == 8, "unexpected length %d\n", len);
+    todo_wine ok(len == 8, "unexpected length %ld\n", len);
 
     if (len == 0xdeadbeef)
     {
-        HeapFree(GetProcessHeap(), 0, own_propvalue);
+        free(own_propvalue);
         return;
     }
 
@@ -625,7 +635,7 @@ static void test_varianttoproperty(void)
         0, FALSE, 0);
 
     ok(propvalue == own_propvalue, "unexpected propvalue %p\n", propvalue);
-    ok(len == 8, "unexpected length %d\n", len);
+    ok(len == 8, "unexpected length %ld\n", len);
     ok(!memcmp(propvalue, serialized_i4, 8), "got wrong data\n");
 
     propvar.vt = VT_EMPTY;
@@ -635,9 +645,9 @@ static void test_varianttoproperty(void)
         0, FALSE, 0);
 
     ok(propvalue == own_propvalue, "unexpected propvalue %p\n", propvalue);
-    ok(len == 4 || broken(len == 0) /* before Vista */, "unexpected length %d\n", len);
+    ok(len == 4 || broken(len == 0) /* before Vista */, "unexpected length %ld\n", len);
     if (len) ok(!memcmp(propvalue, serialized_empty, 4), "got wrong data\n");
-    else ok(propvalue->dwType == 0xdeadbeef, "unexpected type %d\n", propvalue->dwType);
+    else ok(propvalue->dwType == 0xdeadbeef, "unexpected type %ld\n", propvalue->dwType);
 
     propvar.vt = VT_NULL;
     len = 20;
@@ -645,19 +655,19 @@ static void test_varianttoproperty(void)
         0, FALSE, 0);
 
     ok(propvalue == own_propvalue, "unexpected propvalue %p\n", propvalue);
-    ok(len == 4, "unexpected length %d\n", len);
+    ok(len == 4, "unexpected length %ld\n", len);
     ok(!memcmp(propvalue, serialized_null, 4), "got wrong data\n");
 
     test_string_bstr = SysAllocString(test_string);
 
     propvar.vt = VT_BSTR;
-    U(propvar).bstrVal = test_string_bstr;
+    propvar.bstrVal = test_string_bstr;
     len = 20;
     propvalue = pStgConvertVariantToProperty(&propvar, CP_WINUNICODE, own_propvalue, &len,
         0, FALSE, 0);
 
     ok(propvalue == own_propvalue, "unexpected propvalue %p\n", propvalue);
-    ok(len == 20, "unexpected length %d\n", len);
+    ok(len == 20, "unexpected length %ld\n", len);
     ok(!memcmp(propvalue, serialized_bstr_wc, 20), "got wrong data\n");
 
     len = 20;
@@ -665,12 +675,12 @@ static void test_varianttoproperty(void)
         0, FALSE, 0);
 
     ok(propvalue == own_propvalue, "unexpected propvalue %p\n", propvalue);
-    ok(len == 16, "unexpected length %d\n", len);
+    ok(len == 16, "unexpected length %ld\n", len);
     ok(!memcmp(propvalue, serialized_bstr_mb, 16), "got wrong data\n");
 
     SysFreeString(test_string_bstr);
 
-    HeapFree(GetProcessHeap(), 0, own_propvalue);
+    free(own_propvalue);
 }
 
 START_TEST(propvariant)

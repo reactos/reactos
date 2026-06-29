@@ -12,7 +12,7 @@ BEGIN
     PUSHBUTTON "Добавить...", IDC_USERS_ADD, 87, 98, 50, 14
     PUSHBUTTON "Удалить", IDC_USERS_REMOVE, 141, 98, 50, 14
     PUSHBUTTON "Свойства", IDC_USERS_PROPERTIES, 195, 98, 50, 14
-    AUTOCHECKBOX "Требуется имя пользователя и пароль при загрузке системы", IDC_USERS_STARTUP_REQUIRE, 10, 118, 220, 14, WS_DISABLED
+    AUTOCHECKBOX "Требуется имя пользователя и пароль при загрузке системы", IDC_USERS_STARTUP_REQUIRE, 10, 118, 220, 14
     PUSHBUTTON "Сбросить пароль", IDC_USERS_RESET, 165, 200, 80, 14, WS_DISABLED
 END
 

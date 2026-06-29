@@ -118,16 +118,22 @@ ULONG FASTCALL FontGetObject(PTEXTOBJ TextObj, ULONG Count, PVOID Buffer);
 VOID FASTCALL IntLoadSystemFonts(VOID);
 BOOL FASTCALL IntLoadFontsInRegistry(VOID);
 VOID FASTCALL IntGdiCleanupPrivateFontsForProcess(VOID);
-INT FASTCALL IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
-INT FASTCALL IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
-                                     DWORD dwFlags);
+INT FASTCALL IntGdiAddFontResourceEx(
+    _In_ PCUNICODE_STRING FileName,
+    _In_ DWORD cFiles,
+    _In_ DWORD Characteristics,
+    _In_ DWORD dwFlags);
+BOOL FASTCALL IntGdiRemoveFontResource(
+    _In_ PCUNICODE_STRING FileName,
+    _In_ DWORD cFiles,
+    _In_ DWORD dwFlags);
 HANDLE FASTCALL IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded);
 BOOL FASTCALL IntGdiRemoveFontMemResource(HANDLE hMMFont);
-ULONG FASTCALL ftGdiGetGlyphOutline(PDC,WCHAR,UINT,LPGLYPHMETRICS,ULONG,PVOID,LPMAT2,BOOL);
+ULONG FASTCALL ftGdiGetGlyphOutline(PDC, WCHAR, UINT, LPGLYPHMETRICS, ULONG, PVOID, const MAT2*, BOOL);
 INT FASTCALL IntGetOutlineTextMetrics(PFONTGDI, UINT, OUTLINETEXTMETRICW*, BOOL);
-BOOL FASTCALL TextIntUpdateSize(PDC,PTEXTOBJ,PFONTGDI,BOOL);
+BOOL FASTCALL TextIntUpdateSize(PTEXTOBJ,PFONTGDI,BOOL);
 BOOL FASTCALL ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS);
-BOOL FASTCALL TextIntGetTextExtentPoint(PDC,PTEXTOBJ,LPCWSTR,INT,ULONG,LPINT,LPINT,LPSIZE,FLONG);
+BOOL FASTCALL TextIntGetTextExtentPoint(PDC, PTEXTOBJ, PCWCH, INT, ULONG, PINT, PINT, PSIZE, FLONG);
 BOOL FASTCALL ftGdiGetTextMetricsW(HDC,PTMW_INTERNAL);
 DWORD FASTCALL IntGetFontLanguageInfo(PDC);
 INT FASTCALL ftGdiGetTextCharsetInfo(PDC,PFONTSIGNATURE,DWORD);
@@ -136,13 +142,23 @@ DWORD FASTCALL ftGdiGetFontData(PFONTGDI,DWORD,DWORD,PVOID,DWORD);
 BOOL FASTCALL IntGdiGetFontResourceInfo(PUNICODE_STRING,PVOID,DWORD*,DWORD);
 BOOL FASTCALL ftGdiRealizationInfo(PFONTGDI,PREALIZATION_INFO);
 DWORD FASTCALL ftGdiGetKerningPairs(PFONTGDI,DWORD,LPKERNINGPAIR);
-BOOL NTAPI GreExtTextOutW(IN HDC,IN INT,IN INT,IN UINT,IN OPTIONAL RECTL*,
-    IN LPCWSTR, IN INT, IN OPTIONAL LPINT, IN DWORD);
+BOOL
+APIENTRY
+GreExtTextOutW(
+    _In_ HDC hDC,
+    _In_ INT XStart,
+    _In_ INT YStart,
+    _In_ UINT fuOptions,
+    _In_opt_ PRECTL lprc,
+    _In_reads_opt_(Count) PCWCH String,
+    _In_ INT Count,
+    _In_opt_ const INT *Dx,
+    _In_ DWORD dwCodePage);
 DWORD FASTCALL IntGetCharDimensions(HDC, PTEXTMETRICW, PDWORD);
-BOOL FASTCALL GreGetTextExtentW(HDC,LPCWSTR,INT,LPSIZE,UINT);
-BOOL FASTCALL GreGetTextExtentExW(HDC,LPCWSTR,ULONG,ULONG,PULONG,PULONG,LPSIZE,FLONG);
-BOOL FASTCALL GreTextOutW(HDC,int,int,LPCWSTR,int);
-HFONT FASTCALL GreCreateFontIndirectW( LOGFONTW * );
+BOOL FASTCALL GreGetTextExtentW(HDC, PCWCH, INT, PSIZE, UINT);
+BOOL FASTCALL GreGetTextExtentExW(HDC, PCWCH, ULONG, ULONG, PULONG, PULONG, PSIZE, FLONG);
+BOOL FASTCALL GreTextOutW(HDC, INT, INT, PCWCH, INT);
+HFONT FASTCALL GreCreateFontIndirectW(_In_ const LOGFONTW *lplf);
 BOOL WINAPI GreGetTextMetricsW( _In_  HDC hdc, _Out_ LPTEXTMETRICW lptm);
 
 #define IntLockProcessPrivateFonts(W32Process) \
@@ -150,3 +166,30 @@ BOOL WINAPI GreGetTextMetricsW( _In_  HDC hdc, _Out_ LPTEXTMETRICW lptm);
 
 #define IntUnLockProcessPrivateFonts(W32Process) \
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&W32Process->PrivateFontListLock)
+
+BOOL APIENTRY
+GreGetCharWidthW(
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ UINT Count,
+    _In_reads_opt_(Count) PCWCH Safepwc,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(INT)) PVOID pTmpBuffer);
+
+BOOL APIENTRY
+GreGetCharABCWidthsW(
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ UINT Count,
+    _In_reads_opt_(Count) PCWCH Safepwch,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(ABC)) PVOID SafeBuffer);
+
+DWORD APIENTRY
+GreGetGlyphIndicesW(
+    _In_ HDC hdc,
+    _In_reads_opt_(cwc) PCWCH pwc,
+    _In_ INT cwc,
+    _Out_writes_opt_(cwc) PWORD pgi,
+    _In_ DWORD iMode,
+    _In_ BOOL bSubset);

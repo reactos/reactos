@@ -73,6 +73,11 @@ Author:
 #define KF_SSE4_1               0x0001000000000000ULL
 #define KF_SSE4_2               0x0002000000000000ULL
 
+// ReactOS specific
+#define KF_AVX                  0x1000000000000000ULL
+#define KF_AVX2                 0x2000000000000000ULL
+#define KF_AVX512F              0x4000000000000000ULL
+
 #define KF_XSAVEOPT_BIT                 15 // From ksamd64.inc (0x0F -> 0x8000)
 #define KF_XSTATE_BIT                   23 // From ksamd64.inc (0x17 -> 0x800000)
 #define KF_RDWRFSGSBASE_BIT             28 // From ksamd64.inc (0x1C -> 0x10000000)
@@ -127,6 +132,21 @@ typedef enum
 #define KGDT64_SYS_TSS          0x0040
 #define KGDT64_R3_CMTEB         0x0050
 #define KGDT64_R0_LDT           0x0060
+
+//
+// CR0
+//
+#define CR0_PE                  0x00000001
+#define CR0_MP                  0x00000002
+#define CR0_EM                  0x00000004
+#define CR0_TS                  0x00000008
+#define CR0_ET                  0x00000010
+#define CR0_NE                  0x00000020
+#define CR0_WP                  0x00010000
+#define CR0_AM                  0x00040000
+#define CR0_NW                  0x20000000
+#define CR0_CD                  0x40000000
+#define CR0_PG                  0x80000000
 
 //
 // CR4
@@ -322,6 +342,8 @@ typedef enum
 //
 // HAL Variables
 //
+#define PRIMARY_VECTOR_BASE     0x30
+#define MAXIMUM_IDTVECTOR       0xFF
 #define INITIAL_STALL_COUNT     100
 #define MM_HAL_VA_START         0xFFFFFFFFFFC00000ULL /* This is Vista+ */
 #define MM_HAL_VA_END           0xFFFFFFFFFFFFFFFFULL
@@ -344,6 +366,9 @@ typedef enum
 
 #define NMI_STACK_SIZE 0x2000
 #define ISR_STACK_SIZE 0x6000
+
+/* Number of bytes reserved for syscall parameters */
+#define MAX_SYSCALL_PARAM_SIZE (16 * 8)
 
 //
 // Synchronization-level IRQL
@@ -919,7 +944,10 @@ typedef struct _KPRCB
     ULONG CacheCount;
 #endif
 #ifdef __REACTOS__
+#if  (NTDDI_VERSION < NTDDI_WINBLUE)
+    // On Win 8.1+ the FeatureBits field is extended to 64 bits
     ULONG FeatureBitsHigh;
+#endif
 #endif
 } KPRCB, *PKPRCB;
 

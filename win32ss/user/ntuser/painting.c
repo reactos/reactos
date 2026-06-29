@@ -285,9 +285,11 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
          return HRGN_WINDOW;
       }
 
-      NcType = IntGdiGetRgnBox(hRgnNonClient, &update);
+      NcType = IntGdiGetRgnBox(Window->hrgnUpdate, &update);
 
       RgnType = NtGdiCombineRgn(hRgnNonClient, hRgnNonClient, hRgnWindow, RGN_DIFF);
+      if ((RgnType != ERROR) && (RgnType != NULLREGION))
+         RgnType = NtGdiCombineRgn(hRgnNonClient, hRgnNonClient, Window->hrgnUpdate, RGN_AND);
 
       if (RgnType == ERROR)
       {
@@ -1296,7 +1298,7 @@ IntPrintWindow(
                  xSrc,
                  ySrc,
                  SRCCOPY,
-                 0,
+                 CLR_INVALID,
                  0);
 
     UserReleaseDC( pwnd, hdcSrc, FALSE);
@@ -1437,7 +1439,6 @@ IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
    return Ret;
 }
 
-// Win: xxxBeginPaint
 HDC FASTCALL
 IntBeginPaint(PWND Window, PPAINTSTRUCT Ps)
 {
@@ -1534,7 +1535,6 @@ IntBeginPaint(PWND Window, PPAINTSTRUCT Ps)
    return Ps->hdc;
 }
 
-// Win: xxxEndPaint
 BOOL FASTCALL
 IntEndPaint(PWND Wnd, PPAINTSTRUCT Ps)
 {
@@ -1557,7 +1557,6 @@ IntEndPaint(PWND Wnd, PPAINTSTRUCT Ps)
    return TRUE;
 }
 
-// Win: xxxFillWindow
 BOOL FASTCALL
 IntFillWindow(PWND pWndParent,
               PWND pWnd,
@@ -2603,7 +2602,7 @@ Exit:
 }
 
 /* ValidateRect gets redirected to NtUserValidateRect:
-   http://blog.csdn.net/ntdll/archive/2005/10/19/509299.aspx */
+   https://blog.csdn.net/ntdll/article/details/509299 */
 BOOL
 APIENTRY
 NtUserValidateRect(

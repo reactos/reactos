@@ -6,7 +6,8 @@ include_directories(
 spec2def(gdi32_vista.dll gdi32_vista.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    dc.c)
+    dc.c
+    d3dkmt.c)
 
 add_library(gdi32_vista MODULE
     ${SOURCE}
@@ -14,6 +15,10 @@ add_library(gdi32_vista MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/gdi32_vista.def)
 
 set_module_type(gdi32_vista win32dll UNICODE ENTRYPOINT 0)
+
+add_library(gdi32_vista_static ${SOURCE})
+target_link_libraries(gdi32_vista_static win32ksys)
+add_dependencies(gdi32_vista_static psdk)
 
 target_link_libraries(gdi32_vista win32ksys)
 

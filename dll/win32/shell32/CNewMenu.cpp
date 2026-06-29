@@ -93,8 +93,21 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
 
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
-        TRACE("Failed to open key\n");
-        return NULL;
+        WCHAR wszValue[MAX_PATH];
+        cbData = sizeof(wszValue);
+        if (RegGetValueW(HKEY_CLASSES_ROOT, pwszExt, NULL, RRF_RT_REG_SZ, NULL, wszValue,
+                         &cbData) != ERROR_SUCCESS || !wszValue[0])
+        {
+            TRACE("Failed to open key\n");
+            return NULL;
+        }
+        wszValue[_countof(wszValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+        StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s\\%s\\ShellNew", pwszExt, wszValue);
+        if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        {
+            TRACE("Failed to open key\n");
+            return NULL;
+        }
     }
 
     /* Find first valid value */
@@ -430,7 +443,7 @@ HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL
         return S_OK;
 
     /* Get a pointer to the shell view */
-    hr = IUnknown_QueryService(m_pSite, SID_IFolderView, IID_PPV_ARG(IShellView, &lpSV));
+    hr = IUnknown_QueryService(m_pSite, SID_SFolderView, IID_PPV_ARG(IShellView, &lpSV));
     if (FAILED_UNEXPECTEDLY(hr))
         return S_OK;
 
@@ -704,7 +717,7 @@ HRESULT
 WINAPI
 CNewMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    return S_OK;
+    return HandleMenuMsg2(uMsg, wParam, lParam, NULL);
 }
 
 HRESULT
@@ -734,19 +747,19 @@ CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plRes
             if (!lpdis || lpdis->CtlType != ODT_MENU)
                 break;
 
-            DWORD id = LOWORD(lpdis->itemID);
+            DWORD id = lpdis->itemID;
             HICON hIcon = NULL;
-            if (m_idCmdFirst + id == m_idCmdFolder)
+            if (id == m_idCmdFolder)
             {
                 hIcon = m_hIconFolder;
             }
-            else if (m_idCmdFirst + id == m_idCmdLink)
+            else if (id == m_idCmdLink)
             {
                 hIcon = m_hIconLink;
             }
             else
             {
-                SHELLNEW_ITEM *pItem = FindItemFromIdOffset(id);
+                SHELLNEW_ITEM *pItem = FindItemFromIdOffset(id - m_idCmdFirst);
                 if (pItem)
                     hIcon = pItem->hIcon;
             }

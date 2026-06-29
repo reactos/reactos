@@ -15,28 +15,7 @@
 #include <winbase.h>
 #include <winuser.h>
 #include <wincon.h>
-
-/* Console API functions which are absent from wincon.h */
-#define EXENAME_LENGTH (255 + 1)
-
-VOID
-WINAPI
-ExpungeConsoleCommandHistoryW(LPCWSTR lpExeName);
-
-DWORD
-WINAPI
-GetConsoleCommandHistoryW(LPWSTR lpHistory,
-                          DWORD cbHistory,
-                          LPCWSTR lpExeName);
-
-DWORD
-WINAPI
-GetConsoleCommandHistoryLengthW(LPCWSTR lpExeName);
-
-BOOL
-WINAPI
-SetConsoleNumberOfCommandsW(DWORD dwNumCommands,
-                            LPCWSTR lpExeName);
+#include <wincon_undoc.h>
 
 #include "doskey.h"
 

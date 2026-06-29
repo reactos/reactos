@@ -5,8 +5,7 @@
  * COPYRIGHT:  Copyright 2023 Eric Kohl <eric.kohl@reactos.org>
  */
 
-#ifndef PRECOMP_H
-#define PRECOMP_H
+#pragma once
 
 /* INCLUDES ******************************************************************/
 
@@ -20,11 +19,14 @@
 #include <winreg.h>
 #include <wincon.h>
 #include <winuser.h>
+#include <iphlpapi.h>
+#include <iphlpapi_undoc.h>
 
-#include <errno.h>
+#include <ndk/rtlfuncs.h>
 
 #include <conutils.h>
 #include <netsh.h>
+#include <netsh_undoc.h>
 
 #include "resource.h"
 
@@ -58,6 +60,7 @@ typedef struct _HELPER_ENTRY
     struct _HELPER_ENTRY *pNext;
 
     NS_HELPER_ATTRIBUTES Attributes;
+    GUID ParentHelperGuid;
 
     PDLL_LIST_ENTRY pDllEntry;
     BOOL bStarted;
@@ -67,14 +70,12 @@ typedef struct _HELPER_ENTRY
 
 } HELPER_ENTRY, *PHELPER_ENTRY;
 
-
-
 typedef struct _COMMAND_ENTRY
 {
     struct _COMMAND_ENTRY *pPrev;
     struct _COMMAND_ENTRY *pNext;
 
-    LPCWSTR pwszCmdToken;
+    PWSTR pwszCmdToken;
     PFN_HANDLE_CMD pfnCmdHandler;
     DWORD dwShortCmdHelpToken;
     DWORD dwCmdHlpToken;
@@ -86,7 +87,7 @@ typedef struct _COMMAND_GROUP
     struct _COMMAND_GROUP *pPrev;
     struct _COMMAND_GROUP *pNext;
 
-    LPCWSTR pwszCmdGroupToken;
+    PWSTR pwszCmdGroupToken;
     DWORD dwShortCmdHelpToken;
     DWORD dwFlags;
 
@@ -100,10 +101,15 @@ typedef struct _CONTEXT_ENTRY
     struct _CONTEXT_ENTRY *pNext;
 
     struct _CONTEXT_ENTRY *pParentContext;
+//    PHELPER_ENTRY pHelper;
 
     PWSTR pszContextName;
     GUID Guid;
     HMODULE hModule;
+    ULONG ulPriority;
+    PNS_CONTEXT_COMMIT_FN pfnCommitFn;
+    PNS_CONTEXT_DUMP_FN pfnDumpFn;
+    PNS_CONTEXT_CONNECT_FN pfnConnectFn;
 
     PCOMMAND_ENTRY pCommandListHead;
     PCOMMAND_ENTRY pCommandListTail;
@@ -121,39 +127,99 @@ typedef struct _CONTEXT_ENTRY
 extern PCONTEXT_ENTRY pRootContext;
 extern PCONTEXT_ENTRY pCurrentContext;
 
+extern PHELPER_ENTRY pHelperListHead;
+
+extern HMODULE g_hModule;
+extern PWSTR pszMachine;
 
 /* PROTOTYPES *****************************************************************/
 
-/* context.c */
+/* alias.c */
 
-BOOL
-CreateRootContext(VOID);
+VOID
+InitAliases(VOID);
 
+VOID
+DestroyAliases(VOID);
 
-/* help.c */
 DWORD
 WINAPI
-HelpCommand(
+AliasCommand(
     LPCWSTR pwszMachine,
-    LPWSTR *ppwcArguments,
+    LPWSTR *argv,
     DWORD dwCurrentIndex,
     DWORD dwArgCount,
     DWORD dwFlags,
     LPCVOID pvData,
     BOOL *pbDone);
 
-VOID
-HelpGroup(
-    PCOMMAND_GROUP pGroup);
+DWORD
+WINAPI
+ShowAliasCommand(
+    LPCWSTR pwszMachine,
+    LPWSTR *argv,
+    DWORD dwCurrentIndex,
+    DWORD dwArgCount,
+    DWORD dwFlags,
+    LPCVOID pvData,
+    BOOL *pbDone);
 
+DWORD
+WINAPI
+UnaliasCommand(
+    LPCWSTR pwszMachine,
+    LPWSTR *argv,
+    DWORD dwCurrentIndex,
+    DWORD dwArgCount,
+    DWORD dwFlags,
+    LPCVOID pvData,
+    BOOL *pbDone);
+
+/* context.c */
+
+BOOL
+CreateRootContext(VOID);
+
+VOID
+CleanupContext(VOID);
+
+PCONTEXT_ENTRY
+FindContextByGuid(
+    _In_ const GUID *pGuid);
+
+/* help.c */
+
+VOID
+PrintCommandHelp(
+    _In_ PCONTEXT_ENTRY pContext,
+    _In_ PCOMMAND_GROUP pGroup,
+    _In_ PCOMMAND_ENTRY pCommand);
+
+VOID
+PrintGroupHelp(
+    _In_ PCONTEXT_ENTRY pContext,
+    _In_ LPWSTR pszGroupName,
+    _In_ BOOL bRecurse);
+
+VOID
+PrintContextHelp(
+    _In_ PCONTEXT_ENTRY pContext);
 
 /* helper.c */
+
+DWORD
+CreateRootHelper(VOID);
+
 VOID
 LoadHelpers(VOID);
 
 VOID
 UnloadHelpers(VOID);
 
+PHELPER_ENTRY
+FindHelper(
+    _In_ const GUID *pguidHelper,
+    _In_ PHELPER_ENTRY pHelper);
 
 DWORD
 WINAPI
@@ -188,18 +254,22 @@ ShowHelperCommand(
     LPCVOID pvData,
     BOOL *pbDone);
 
-
 /* interpreter.c */
-BOOL
-InterpretScript(
-    LPWSTR pszFileName);
 
-BOOL
-InterpretCommand(
-    LPWSTR *argv,
-    DWORD dwArgCount);
+DWORD
+InterpretLine(
+    _In_ LPWSTR pszFileName);
 
 VOID
 InterpretInteractive(VOID);
 
-#endif /* PRECOMP_H */
+/* netsh.c */
+
+DWORD
+RunScript(
+    _In_ LPCWSTR filename);
+
+LPWSTR
+MergeStrings(
+    _In_ LPWSTR pszStringArray[],
+    _In_ UINT nCount);

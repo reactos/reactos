@@ -49,9 +49,9 @@ QuickLaunchShortcuts=26, Microsoft\Internet Explorer\Quick Launch
 %SystemRoot%\system32\dxdiag.exe, %DXDIAG_TITLE%, %DXDIAG_DESC%, 0
 
 [AccessibilityShortcuts]
-%SystemRoot%\system32\magnify.exe, %MAGNIFY_TITLE%, %MAGNIFY_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
-%SystemRoot%\system32\osk.exe, %OSK_TITLE%, %OSK_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
-%SystemRoot%\system32\utilman.exe, %UTILMAN_TITLE%, %UTILMAN_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
+%SystemRoot%\system32\magnify.exe, %MAGNIFY_TITLE%, %MAGNIFY_DESC%, 0
+%SystemRoot%\system32\osk.exe, %OSK_TITLE%, %OSK_DESC%, 0
+%SystemRoot%\system32\utilman.exe, %UTILMAN_TITLE%, %UTILMAN_DESC%, 0
 
 [EntertainmentShortcuts]
 %SystemRoot%\system32\mplay32.exe, %MPLAY_TITLE%, %MPLAY_DESC%, 0, %HOMEDRIVE%%HOMEPATH%

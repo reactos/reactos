@@ -1373,6 +1373,12 @@ WDF_DEVICE_POWER_POLICY_IDLE_SETTINGS_INIT(
     case IdleCannotWakeFromS0:
         Settings->DxState = PowerDeviceD3;
         break;
+#ifdef __REACTOS__
+    /* Just to make GCC Happy */
+    case IdleCapsInvalid:
+        Settings->DxState = PowerDeviceUnspecified;
+        break;
+#endif
     }
 }
 

@@ -43,10 +43,16 @@ DefaultDestDir = 12
 [RTL8139_Inst.ndi.NT]
 Characteristics = 0x4 ; NCF_PHYSICAL
 BusType = 5 ; PCIBus
+AddReg = RTL8139_AddReg.NT
 CopyFiles = RTL8139_CopyFiles.NT
 
 [RTL8139_CopyFiles.NT]
 rtl8139.sys
+
+[RTL8139_AddReg.NT]
+HKR, Ndi,            Service,    0, "rtl8139"
+HKR, Ndi\Interfaces, UpperRange, 0, "ndis5"
+HKR, Ndi\Interfaces, LowerRange, 0, "ethernet"
 
 [RTL8139_Inst.ndi.NT.Services]
 AddService = rtl8139, 0x00000002, RTL8139_Service_Inst

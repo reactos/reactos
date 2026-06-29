@@ -24,6 +24,13 @@
  * that will be removed in a future FreeLdr version */
 #define HAS_DEPRECATED_OPTIONS
 
+#ifndef _FRLDRLIB_
+#define FLDRAPI DECLSPEC_IMPORT
+#else
+#define FLDRAPI
+#endif
+
+
 #define UINT64_C(val) val##ULL
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 
@@ -49,7 +56,6 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <ntdddisk.h>
-#include <internal/hal.h>
 #include <drivers/pci/pci.h>
 #include <winerror.h>
 #include <ntstrsafe.h>
@@ -69,12 +75,12 @@
 #include <inifile.h>
 #include <keycodes.h>
 #include <linux.h>
+#include <options.h>
 #include <custom.h>
 #include <miscboot.h>
 #include <machine.h>
 #include <mm.h>
 #include <multiboot.h>
-#include <options.h>
 #include <oslist.h>
 #include <ramdisk.h>
 #include <settings.h>
@@ -86,7 +92,7 @@
 #include <peloader.h>
 
 /* File system headers */
-#include <fs/ext2.h>
+#include <fs/ext.h>
 #include <fs/fat.h>
 #include <fs/ntfs.h>
 #include <fs/iso.h>

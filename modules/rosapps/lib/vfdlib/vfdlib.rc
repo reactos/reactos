@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Æ­°Ä×Ù resources
+// resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
 #ifdef _WIN32
@@ -199,7 +199,7 @@ IDI_VFD_ICON            ICON    DISCARDABLE     "res/vfd.ico"
 IDI_IMAGE_ICON          ICON    DISCARDABLE     "res/image.ico"
 IDI_CONFIG_ICON         ICON    DISCARDABLE     "res/config.ico"
 #endif
-#endif    // Æ­°Ä×Ù resources
+#endif    // resources
 /////////////////////////////////////////////////////////////////////////////
 
 

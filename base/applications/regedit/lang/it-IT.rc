@@ -440,6 +440,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Aggiunge un nuovo valore stringa"
     ID_EDIT_NEW_BINARYVALUE "Aggiunge un nuovo valore binario"
     ID_EDIT_NEW_DWORDVALUE "Aggiunge un nuovo valore DWORD"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importa un file di testo nel Registro"
     ID_REGISTRY_EXPORTREGISTRYFILE "Esporta tutto o parte del Registro in un file di testo"
     ID_REGISTRY_LOADHIVE "Carica un file hive nel Registro di sistema"

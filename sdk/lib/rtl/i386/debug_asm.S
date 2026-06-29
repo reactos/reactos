@@ -12,17 +12,6 @@
 
 .code
 
-PUBLIC _DbgBreakPointNoBugCheck@0
-FUNC _DbgBreakPointNoBugCheck@0
-    FPO 0, 0, 0, 0, 0, FRAME_FPO
-
-    /* Do breakpoint */
-    int 3
-    ret
-
-ENDFUNC
-
-
 PUBLIC _DbgUserBreakPoint@0
 _DbgUserBreakPoint@0:
 PUBLIC _DbgBreakPoint@0

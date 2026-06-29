@@ -56,9 +56,6 @@
 #define __EXCEPT_PAGE_FAULT _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION)
 #define __ENDTRY _SEH2_END
 
-/* Undocumented CreateProcess flag */
-#define STARTF_SHELLPRIVATE         0x400
-
 typedef struct _CODEPAGE_ENTRY
 {
     LIST_ENTRY Entry;

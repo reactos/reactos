@@ -91,57 +91,54 @@ KdpSetContextState(IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
 
 NTSTATUS
 NTAPI
-KdpSysReadMsr(IN ULONG Msr,
-              OUT PLARGE_INTEGER MsrValue)
+KdpSysReadMsr(
+    _In_ ULONG Msr,
+    _Out_ PULONGLONG MsrValue)
 {
-    /* Wrap this in SEH in case the MSR doesn't exist */
+    /* Use SEH to protect from invalid MSRs */
     _SEH2_TRY
     {
-        /* Read from the MSR */
-        MsrValue->QuadPart = __readmsr(Msr);
+        *MsrValue = __readmsr(Msr);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Invalid MSR */
         _SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
     }
     _SEH2_END;
 
-    /* Success */
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
-KdpSysWriteMsr(IN ULONG Msr,
-               IN PLARGE_INTEGER MsrValue)
+KdpSysWriteMsr(
+    _In_ ULONG Msr,
+    _In_ PULONGLONG MsrValue)
 {
-    /* Wrap this in SEH in case the MSR doesn't exist */
+    /* Use SEH to protect from invalid MSRs */
     _SEH2_TRY
     {
-        /* Write to the MSR */
-        __writemsr(Msr, MsrValue->QuadPart);
+        __writemsr(Msr, *MsrValue);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Invalid MSR */
         _SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
     }
     _SEH2_END;
 
-    /* Success */
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
-KdpSysReadBusData(IN ULONG BusDataType,
-                  IN ULONG BusNumber,
-                  IN ULONG SlotNumber,
-                  IN ULONG Offset,
-                  IN PVOID Buffer,
-                  IN ULONG Length,
-                  OUT PULONG ActualLength)
+KdpSysReadBusData(
+    _In_ BUS_DATA_TYPE BusDataType,
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber,
+    _In_ ULONG Offset,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _Out_ PULONG ActualLength)
 {
     /* Just forward to HAL */
     *ActualLength = HalGetBusDataByOffset(BusDataType,
@@ -152,18 +149,19 @@ KdpSysReadBusData(IN ULONG BusDataType,
                                           Length);
 
     /* Return status */
-    return *ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    return (*ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 NTSTATUS
 NTAPI
-KdpSysWriteBusData(IN ULONG BusDataType,
-                   IN ULONG BusNumber,
-                   IN ULONG SlotNumber,
-                   IN ULONG Offset,
-                   IN PVOID Buffer,
-                   IN ULONG Length,
-                   OUT PULONG ActualLength)
+KdpSysWriteBusData(
+    _In_ BUS_DATA_TYPE BusDataType,
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber,
+    _In_ ULONG Offset,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _Out_ PULONG ActualLength)
 {
     /* Just forward to HAL */
     *ActualLength = HalSetBusDataByOffset(BusDataType,
@@ -174,16 +172,17 @@ KdpSysWriteBusData(IN ULONG BusDataType,
                                           Length);
 
     /* Return status */
-    return *ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    return (*ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 NTSTATUS
 NTAPI
-KdpSysReadControlSpace(IN ULONG Processor,
-                       IN ULONG64 BaseAddress,
-                       IN PVOID Buffer,
-                       IN ULONG Length,
-                       OUT PULONG ActualLength)
+KdpSysReadControlSpace(
+    _In_ ULONG Processor,
+    _In_ ULONG64 BaseAddress,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _Out_ PULONG ActualLength)
 {
     PVOID ControlStart;
     ULONG RealLength;
@@ -219,11 +218,12 @@ KdpSysReadControlSpace(IN ULONG Processor,
 
 NTSTATUS
 NTAPI
-KdpSysWriteControlSpace(IN ULONG Processor,
-                        IN ULONG64 BaseAddress,
-                        IN PVOID Buffer,
-                        IN ULONG Length,
-                        OUT PULONG ActualLength)
+KdpSysWriteControlSpace(
+    _In_ ULONG Processor,
+    _In_ ULONG64 BaseAddress,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _Out_ PULONG ActualLength)
 {
     PVOID ControlStart;
 
@@ -254,20 +254,19 @@ KdpSysWriteControlSpace(IN ULONG Processor,
 
 NTSTATUS
 NTAPI
-KdpSysReadIoSpace(IN ULONG InterfaceType,
-                  IN ULONG BusNumber,
-                  IN ULONG AddressSpace,
-                  IN ULONG64 IoAddress,
-                  IN PVOID DataValue,
-                  IN ULONG DataSize,
-                  OUT PULONG ActualDataSize)
+KdpSysReadIoSpace(
+    _In_ INTERFACE_TYPE InterfaceType,
+    _In_ ULONG BusNumber,
+    _In_ ULONG AddressSpace,
+    _In_ ULONG64 IoAddress,
+    _Out_writes_bytes_(DataSize) PVOID DataValue,
+    _In_ ULONG DataSize,
+    _Out_ PULONG ActualDataSize)
 {
     NTSTATUS Status;
 
     /* Verify parameters */
-    if ((InterfaceType != Isa) ||
-        (BusNumber != 0) ||
-        (AddressSpace != 1))
+    if ((InterfaceType != Isa) || (BusNumber != 0) || (AddressSpace != 1))
     {
         /* Fail, we don't support this */
         *ActualDataSize = 0;
@@ -278,16 +277,17 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
     switch (DataSize)
     {
         case sizeof(UCHAR):
-
+        {
             /* Read 1 byte */
             *(PUCHAR)DataValue =
                 READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)IoAddress);
             *ActualDataSize = sizeof(UCHAR);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         case sizeof(USHORT):
-
+        {
             /* Make sure the address is aligned */
             if ((IoAddress & (sizeof(USHORT) - 1)) != 0)
             {
@@ -303,9 +303,10 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
             *ActualDataSize = sizeof(USHORT);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         case sizeof(ULONG):
-
+        {
             /* Make sure the address is aligned */
             if ((IoAddress & (sizeof(ULONG) - 1)) != 0)
             {
@@ -321,9 +322,9 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
             *ActualDataSize = sizeof(ULONG);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         default:
-
             /* Invalid size, fail */
             *ActualDataSize = 0;
             Status = STATUS_INVALID_PARAMETER;
@@ -335,20 +336,19 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
 
 NTSTATUS
 NTAPI
-KdpSysWriteIoSpace(IN ULONG InterfaceType,
-                   IN ULONG BusNumber,
-                   IN ULONG AddressSpace,
-                   IN ULONG64 IoAddress,
-                   IN PVOID DataValue,
-                   IN ULONG DataSize,
-                   OUT PULONG ActualDataSize)
+KdpSysWriteIoSpace(
+    _In_ INTERFACE_TYPE InterfaceType,
+    _In_ ULONG BusNumber,
+    _In_ ULONG AddressSpace,
+    _In_ ULONG64 IoAddress,
+    _In_reads_bytes_(DataSize) PVOID DataValue,
+    _In_ ULONG DataSize,
+    _Out_ PULONG ActualDataSize)
 {
     NTSTATUS Status;
 
     /* Verify parameters */
-    if ((InterfaceType != Isa) ||
-        (BusNumber != 0) ||
-        (AddressSpace != 1))
+    if ((InterfaceType != Isa) || (BusNumber != 0) || (AddressSpace != 1))
     {
         /* Fail, we don't support this */
         *ActualDataSize = 0;
@@ -359,16 +359,17 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
     switch (DataSize)
     {
         case sizeof(UCHAR):
-
+        {
             /* Write 1 byte */
             WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)IoAddress,
                              *(PUCHAR)DataValue);
             *ActualDataSize = sizeof(UCHAR);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         case sizeof(USHORT):
-
+        {
             /* Make sure the address is aligned */
             if ((IoAddress & (sizeof(USHORT) - 1)) != 0)
             {
@@ -384,9 +385,10 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
             *ActualDataSize = sizeof(USHORT);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         case sizeof(ULONG):
-
+        {
             /* Make sure the address is aligned */
             if ((IoAddress & (sizeof(ULONG) - 1)) != 0)
             {
@@ -402,9 +404,9 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
             *ActualDataSize = sizeof(ULONG);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         default:
-
             /* Invalid size, fail */
             *ActualDataSize = 0;
             Status = STATUS_INVALID_PARAMETER;

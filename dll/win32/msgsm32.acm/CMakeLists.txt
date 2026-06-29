@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(msgsm32.acm msgsm32.acm.spec)
 
 list(APPEND SOURCE
@@ -13,3 +11,4 @@ set_target_properties(msgsm32.acm PROPERTIES SUFFIX "")
 target_link_libraries(msgsm32.acm wine)
 add_importlibs(msgsm32.acm winmm user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET msgsm32.acm DESTINATION reactos/system32 FOR all)
+set_wine_module_FIXME(msgsm32.acm) # CORE-5743: No ARRAY_SIZE macro

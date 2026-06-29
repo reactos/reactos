@@ -35,11 +35,7 @@
 #include "objsafe.h"
 #include "mshtml.h"
 
-#include "wine/heap.h"
 #include "wine/test.h"
-
-#define EXPECT_HR(hr,hr_exp) \
-    ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)
 
 #define EXPECT_REF(node,ref) _expect_ref((IUnknown*)node, ref, __LINE__)
 static void _expect_ref(IUnknown* obj, ULONG ref, int line)
@@ -47,7 +43,22 @@ static void _expect_ref(IUnknown* obj, ULONG ref, int line)
     ULONG rc;
     IUnknown_AddRef(obj);
     rc = IUnknown_Release(obj);
-    ok_(__FILE__, line)(rc == ref, "expected refcount %d, got %d\n", ref, rc);
+    ok_(__FILE__, line)(rc == ref, "expected refcount %ld, got %ld.\n", ref, rc);
+}
+
+#define check_interface(a, b, c) check_interface_(__LINE__, a, b, c)
+static void check_interface_(unsigned int line, void *iface_ptr, REFIID iid, BOOL supported)
+{
+    IUnknown *iface = iface_ptr;
+    HRESULT hr, expected_hr;
+    IUnknown *unk;
+
+    expected_hr = supported ? S_OK : E_NOINTERFACE;
+
+    hr = IUnknown_QueryInterface(iface, iid, (void **)&unk);
+    ok_(__FILE__, line)(hr == expected_hr, "Got hr %#lx, expected %#lx.\n", hr, expected_hr);
+    if (SUCCEEDED(hr))
+        IUnknown_Release(unk);
 }
 
 static const char xmltestA[] = "http://test.winehq.org/tests/xmltest.xml";
@@ -128,21 +139,6 @@ static void free_bstrs(void)
     for (i = 0; i < alloced_bstrs_count; i++)
         SysFreeString(alloced_bstrs[i]);
     alloced_bstrs_count = 0;
-}
-
-static BSTR a2bstr(const char *str)
-{
-    BSTR ret;
-    int len;
-
-    if(!str)
-        return NULL;
-
-    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-    ret = SysAllocStringLen(NULL, len);
-    MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
-
-    return ret;
 }
 
 
@@ -250,7 +246,6 @@ static IHTMLElementCollection htmlecoll = { &TestHTMLECollectionVtbl };
 /* test IHTMLDocument2 */
 static HRESULT WINAPI htmldoc2_QueryInterface(IHTMLDocument2 *iface, REFIID riid, void **ppvObject)
 {
-   trace("\n");
    *ppvObject = NULL;
    return E_NOINTERFACE;
 }
@@ -496,7 +491,7 @@ static HRESULT WINAPI htmldoc2_put_URL(IHTMLDocument2 *iface, BSTR v)
 static HRESULT WINAPI htmldoc2_get_URL(IHTMLDocument2 *iface, BSTR *p)
 {
     CHECK_EXPECT2(htmldoc2_get_url);
-    *p = a2bstr("http://test.winehq.org/");
+    *p = SysAllocString(L"http://test.winehq.org/");
     return S_OK;
 }
 
@@ -1254,7 +1249,7 @@ static ULONG WINAPI dispevent_Release(IDispatch *iface)
     ULONG ref = InterlockedDecrement( &This->ref );
 
     if (ref == 0)
-        heap_free(This);
+        free(This);
 
     return ref;
 }
@@ -1287,8 +1282,8 @@ static HRESULT WINAPI dispevent_Invoke(IDispatch *iface, DISPID member, REFIID r
     LONG state;
     HRESULT hr;
 
-    ok(member == 0, "expected 0 member, got %d\n", member);
-    ok(lcid == LOCALE_SYSTEM_DEFAULT, "expected LOCALE_SYSTEM_DEFAULT, got lcid %x\n", lcid);
+    ok(!member, "expected 0 member, got %ld.\n", member);
+    ok(lcid == LOCALE_SYSTEM_DEFAULT, "expected LOCALE_SYSTEM_DEFAULT, got lcid %lx.\n", lcid);
     ok(flags == DISPATCH_METHOD, "expected DISPATCH_METHOD, got %d\n", flags);
 
     ok(params->cArgs == 0, "got %d\n", params->cArgs);
@@ -1304,14 +1299,13 @@ static HRESULT WINAPI dispevent_Invoke(IDispatch *iface, DISPID member, REFIID r
 
     state = READYSTATE_UNINITIALIZED;
     hr = IXMLHttpRequest_get_readyState(httpreq, &state);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     if (state == READYSTATE_COMPLETE)
     {
         BSTR text = NULL;
 
         hr = IXMLHttpRequest_get_responseText(httpreq, &text);
-        ok(hr == S_OK, "got 0x%08x\n", hr);
-        ok(*text != 0, "got %s\n", wine_dbgstr_w(text));
+        ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
         SysFreeString(text);
     }
 
@@ -1331,7 +1325,7 @@ static const IDispatchVtbl dispeventVtbl =
 
 static IDispatch* create_dispevent(void)
 {
-    dispevent *event = heap_alloc(sizeof(*event));
+    dispevent *event = malloc(sizeof(*event));
 
     event->IDispatch_iface.lpVtbl = &dispeventVtbl;
     event->ref = 1;
@@ -1366,10 +1360,10 @@ static void set_safety_opt(IUnknown *unk, DWORD mask, DWORD opts)
     HRESULT hr;
 
     hr = IUnknown_QueryInterface(unk, &IID_IObjectSafety, (void**)&obj_safety);
-    ok(hr == S_OK, "Could not get IObjectSafety iface: %08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     hr = IObjectSafety_SetInterfaceSafetyOptions(obj_safety, &IID_IDispatch, mask, mask&opts);
-    ok(hr == S_OK, "SetInterfaceSafetyOptions failed: %08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     IObjectSafety_Release(obj_safety);
 }
@@ -1380,7 +1374,7 @@ static void set_xhr_site(IXMLHttpRequest *xhr)
     HRESULT hr;
 
     hr = IXMLHttpRequest_QueryInterface(xhr, &IID_IObjectWithSite, (void**)&obj_site);
-    ok(hr == S_OK, "Could not get IObjectWithSite iface: %08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     g_enablecallchecks = TRUE;
 
@@ -1400,14 +1394,14 @@ static void set_xhr_site(IXMLHttpRequest *xhr)
     SET_EXPECT(site_qi_IOleClientSite);
 
     hr = IObjectWithSite_SetSite(obj_site, &testsite);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     CHECK_CALLED(site_qi_IServiceProvider);
-todo_wine
+    todo_wine
     CHECK_CALLED(sp_queryservice_SID_SBindHost);
     CHECK_CALLED(sp_queryservice_SID_SContainerDispatch_htmldoc2);
     CHECK_CALLED(sp_queryservice_SID_secmgr_htmldoc2);
-todo_wine
+    todo_wine
     CHECK_CALLED(sp_queryservice_SID_secmgr_xmldomdoc);
     /* this one isn't very reliable
     CHECK_CALLED(sp_queryservice_SID_secmgr_secmgr); */
@@ -1438,7 +1432,7 @@ static void _test_open(unsigned line, IXMLHttpRequest *xhr, const char *method, 
     V_BOOL(&vfalse) = VARIANT_FALSE;
 
     hr = IXMLHttpRequest_open(xhr, _bstr_(method), _bstr_(url), vfalse, empty, empty);
-    ok_(__FILE__,line)(hr == exhres, "open(%s %s) failed: %08x, expected %08x\n", method, url, hr, exhres);
+    ok_(__FILE__,line)(hr == exhres, "open(%s %s) failed: %#lx, expected %#lx.\n", method, url, hr, exhres);
 }
 
 #define test_server_open(a,b,c,d) _test_server_open(__LINE__,a,b,c,d)
@@ -1452,7 +1446,7 @@ static void _test_server_open(unsigned line, IServerXMLHTTPRequest *xhr, const c
     V_BOOL(&vfalse) = VARIANT_FALSE;
 
     hr = IServerXMLHTTPRequest_open(xhr, _bstr_(method), _bstr_(url), vfalse, empty, empty);
-    ok_(__FILE__,line)(hr == exhres, "open(%s %s) failed: %08x, expected %08x\n", method, url, hr, exhres);
+    ok_(__FILE__,line)(hr == exhres, "open(%s %s) failed: %#lx, expected %#lx.\n", method, url, hr, exhres);
 }
 
 static void test_XMLHTTP(void)
@@ -1460,8 +1454,6 @@ static void test_XMLHTTP(void)
     static const char bodyA[] = "mode=Test";
     static const char urlA[] = "http://test.winehq.org/tests/post.php";
     static const char referertesturl[] = "http://test.winehq.org/tests/referer.php";
-    static const WCHAR wszExpectedResponse[] = {'F','A','I','L','E','D',0};
-    static const WCHAR norefererW[] = {'n','o',' ','r','e','f','e','r','e','r',' ','s','e','t',0};
 
     IXMLHttpRequest *xhr;
     IObjectWithSite *obj_site, *obj_site2;
@@ -1476,43 +1468,47 @@ static void test_XMLHTTP(void)
 
     xhr = create_xhr();
 
+    check_interface(xhr, &IID_IXMLHttpRequest, TRUE);
+    check_interface(xhr, &IID_IDispatch, TRUE);
+    check_interface(xhr, &IID_IDispatchEx, FALSE);
+
     VariantInit(&dummy);
     V_VT(&dummy) = VT_ERROR;
     V_ERROR(&dummy) = DISP_E_MEMBERNOTFOUND;
 
     hr = IXMLHttpRequest_put_onreadystatechange(xhr, NULL);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_abort(xhr);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     V_VT(&varbody) = VT_I2;
     V_I2(&varbody) = 1;
     hr = IXMLHttpRequest_get_responseBody(xhr, &varbody);
-    EXPECT_HR(hr, E_PENDING);
+    ok(hr == E_PENDING, "Unexpected hr %#lx.\n", hr);
     ok(V_VT(&varbody) == VT_EMPTY, "got type %d\n", V_VT(&varbody));
 
     V_VT(&varbody) = VT_I2;
     V_I2(&varbody) = 1;
     hr = IXMLHttpRequest_get_responseStream(xhr, &varbody);
-    EXPECT_HR(hr, E_PENDING);
+    ok(hr == E_PENDING, "Unexpected hr %#lx.\n", hr);
     ok(V_VT(&varbody) == VT_EMPTY, "got type %d\n", V_VT(&varbody));
 
     /* send before open */
     hr = IXMLHttpRequest_send(xhr, dummy);
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
+    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "Unexpected hr %#lx.\n", hr);
 
     /* initial status code */
     hr = IXMLHttpRequest_get_status(xhr, NULL);
-    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "got 0x%08x\n", hr);
+    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "Unexpected hr %#lx.\n", hr);
 
     status = 0xdeadbeef;
     hr = IXMLHttpRequest_get_status(xhr, &status);
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
-    ok(status == READYSTATE_UNINITIALIZED || broken(status == 0xdeadbeef) /* <win8 */, "got %d\n", status);
+    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "Unexpected hr %#lx.\n", hr);
+    ok(status == READYSTATE_UNINITIALIZED || broken(status == 0xdeadbeef) /* <win8 */, "Unexpected state %ld.\n", status);
 
     hr = IXMLHttpRequest_get_statusText(xhr, &str);
-    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+    ok(hr == E_FAIL, "Unexpected hr %#lx.\n", hr);
 
     /* invalid parameters */
     test_open(xhr, NULL, NULL, E_INVALIDARG);
@@ -1520,31 +1516,31 @@ static void test_XMLHTTP(void)
     test_open(xhr, NULL, urlA, E_INVALIDARG);
 
     hr = IXMLHttpRequest_setRequestHeader(xhr, NULL, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_setRequestHeader(xhr, _bstr_("header1"), NULL);
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
+    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_setRequestHeader(xhr, NULL, _bstr_("value1"));
-    EXPECT_HR(hr, E_INVALIDARG);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_setRequestHeader(xhr, _bstr_("header1"), _bstr_("value1"));
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
+    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_get_readyState(xhr, NULL);
-    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "got 0x%08x\n", hr);
+    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "Unexpected hr %#lx.\n", hr);
 
     state = -1;
     hr = IXMLHttpRequest_get_readyState(xhr, &state);
-    EXPECT_HR(hr, S_OK);
-    ok(state == READYSTATE_UNINITIALIZED, "got %d, expected READYSTATE_UNINITIALIZED\n", state);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(state == READYSTATE_UNINITIALIZED, "Unexpected state %ld.\n", state);
 
     httpreq = xhr;
     event = create_dispevent();
 
     EXPECT_REF(event, 1);
     hr = IXMLHttpRequest_put_onreadystatechange(xhr, event);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     EXPECT_REF(event, 2);
 
     g_unexpectedcall = g_expectedcall = 0;
@@ -1557,33 +1553,33 @@ static void test_XMLHTTP(void)
     /* status code after ::open() */
     status = 0xdeadbeef;
     hr = IXMLHttpRequest_get_status(xhr, &status);
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
-    ok(status == READYSTATE_UNINITIALIZED || broken(status == 0xdeadbeef) /* <win8 */, "got %d\n", status);
+    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "Unexpected hr %#lx.\n", hr);
+    ok(status == READYSTATE_UNINITIALIZED || broken(status == 0xdeadbeef) /* <win8 */, "Unexpected state %ld.\n", status);
 
     state = -1;
     hr = IXMLHttpRequest_get_readyState(xhr, &state);
-    EXPECT_HR(hr, S_OK);
-    ok(state == READYSTATE_LOADING, "got %d, expected READYSTATE_LOADING\n", state);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(state == READYSTATE_LOADING, "Unexpected state %ld.\n", state);
 
     hr = IXMLHttpRequest_abort(xhr);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     state = -1;
     hr = IXMLHttpRequest_get_readyState(xhr, &state);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(state == READYSTATE_UNINITIALIZED || broken(state == READYSTATE_LOADING) /* win2k */,
-        "got %d, expected READYSTATE_UNINITIALIZED\n", state);
+        "Unexpected state %ld.\n", state);
 
     test_open(xhr, "POST", urlA, S_OK);
 
     hr = IXMLHttpRequest_setRequestHeader(xhr, _bstr_("header1"), _bstr_("value1"));
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_setRequestHeader(xhr, NULL, _bstr_("value1"));
-    EXPECT_HR(hr, E_INVALIDARG);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_setRequestHeader(xhr, _bstr_(""), _bstr_("value1"));
-    EXPECT_HR(hr, E_INVALIDARG);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#lx.\n", hr);
 
     V_VT(&varbody) = VT_BSTR;
     V_BSTR(&varbody) = _bstr_(bodyA);
@@ -1595,43 +1591,43 @@ static void test_XMLHTTP(void)
         IXMLHttpRequest_Release(xhr);
         return;
     }
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     /* response headers */
     hr = IXMLHttpRequest_getAllResponseHeaders(xhr, NULL);
-    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "got 0x%08x\n", hr);
+    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "Unexpected hr %#lx.\n", hr);
     hr = IXMLHttpRequest_getAllResponseHeaders(xhr, &str);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     /* status line is stripped already */
-    ok(memcmp(str, _bstr_("HTTP"), 4*sizeof(WCHAR)), "got response headers %s\n", wine_dbgstr_w(str));
+    ok(memcmp(str, L"HTTP", 4*sizeof(WCHAR)), "got response headers %s\n", wine_dbgstr_w(str));
     ok(*str, "got empty headers\n");
     hr = IXMLHttpRequest_getAllResponseHeaders(xhr, &str1);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(str1 != str, "got %p\n", str1);
     SysFreeString(str1);
     SysFreeString(str);
 
     hr = IXMLHttpRequest_getResponseHeader(xhr, NULL, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#lx.\n", hr);
     hr = IXMLHttpRequest_getResponseHeader(xhr, _bstr_("Date"), NULL);
-    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "got 0x%08x\n", hr);
+    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "Unexpected hr %#lx.\n", hr);
     hr = IXMLHttpRequest_getResponseHeader(xhr, _bstr_("Date"), &str);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(*str != ' ', "got leading space in header %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
 
     /* status code after ::send() */
-    status = 0xdeadbeef;
+    status = 0;
     hr = IXMLHttpRequest_get_status(xhr, &status);
-    EXPECT_HR(hr, S_OK);
-    ok(status == 200, "got %d\n", status);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(status == 200, "Unexpected status %ld.\n", status);
 
     hr = IXMLHttpRequest_get_statusText(xhr, NULL);
-    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "got 0x%08x\n", hr);
+    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_get_statusText(xhr, &str);
-    EXPECT_HR(hr, S_OK);
-    ok(!lstrcmpW(str, _bstr_("OK")), "got status %s\n", wine_dbgstr_w(str));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(!lstrcmpW(str, L"OK"), "got status %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
 
     /* another ::send() after completed request */
@@ -1639,16 +1635,15 @@ static void test_XMLHTTP(void)
     V_BSTR(&varbody) = _bstr_(bodyA);
 
     hr = IXMLHttpRequest_send(xhr, varbody);
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
+    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_get_responseText(xhr, &bstrResponse);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     /* the server currently returns "FAILED" because the Content-Type header is
      * not what the server expects */
     if(hr == S_OK)
     {
-        ok(!memcmp(bstrResponse, wszExpectedResponse, sizeof(wszExpectedResponse)),
-            "expected %s, got %s\n", wine_dbgstr_w(wszExpectedResponse), wine_dbgstr_w(bstrResponse));
+        ok(!memcmp(bstrResponse, L"FAILED", 7 * sizeof(WCHAR)), "Unexpected response %s.\n", wine_dbgstr_w(bstrResponse));
         SysFreeString(bstrResponse);
     }
 
@@ -1657,7 +1652,7 @@ static void test_XMLHTTP(void)
     test_open(xhr, "POST", urlA, S_OK);
 
     hr = IXMLHttpRequest_send(xhr, varbody);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     /* GET request */
     test_open(xhr, "GET", xmltestA, S_OK);
@@ -1671,33 +1666,33 @@ static void test_XMLHTTP(void)
         IXMLHttpRequest_Release(xhr);
         return;
     }
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_get_responseText(xhr, NULL);
-    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "got 0x%08x\n", hr);
+    ok(hr == E_POINTER || broken(hr == E_INVALIDARG) /* <win8 */, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_get_responseText(xhr, &bstrResponse);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(!memcmp(bstrResponse, _bstr_(xmltestbodyA), sizeof(xmltestbodyA)*sizeof(WCHAR)),
         "expected %s, got %s\n", xmltestbodyA, wine_dbgstr_w(bstrResponse));
     SysFreeString(bstrResponse);
 
     hr = IXMLHttpRequest_get_responseBody(xhr, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#lx.\n", hr);
 
     V_VT(&varbody) = VT_EMPTY;
     hr = IXMLHttpRequest_get_responseBody(xhr, &varbody);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(V_VT(&varbody) == (VT_ARRAY|VT_UI1), "got type %d, expected %d\n", V_VT(&varbody), VT_ARRAY|VT_UI1);
     ok(SafeArrayGetDim(V_ARRAY(&varbody)) == 1, "got %d, expected one dimension\n", SafeArrayGetDim(V_ARRAY(&varbody)));
 
     bound = -1;
     hr = SafeArrayGetLBound(V_ARRAY(&varbody), 1, &bound);
-    EXPECT_HR(hr, S_OK);
-    ok(bound == 0, "got %d, expected zero bound\n", bound);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(!bound, "Unexpected bound %ld.\n", bound);
 
     hr = SafeArrayAccessData(V_ARRAY(&varbody), &ptr);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(memcmp(ptr, xmltestbodyA, sizeof(xmltestbodyA)-1) == 0, "got wrong body data\n");
     SafeArrayUnaccessData(V_ARRAY(&varbody));
 
@@ -1705,17 +1700,17 @@ static void test_XMLHTTP(void)
 
     /* get_responseStream */
     hr = IXMLHttpRequest_get_responseStream(xhr, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#lx.\n", hr);
 
     V_VT(&varbody) = VT_EMPTY;
     hr = IXMLHttpRequest_get_responseStream(xhr, &varbody);
     ok(V_VT(&varbody) == VT_UNKNOWN, "got type %d\n", V_VT(&varbody));
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     EXPECT_REF(V_UNKNOWN(&varbody), 1);
 
     g = NULL;
     hr = GetHGlobalFromStream((IStream*)V_UNKNOWN(&varbody), &g);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(g != NULL, "got %p\n", g);
     VariantClear(&varbody);
 
@@ -1726,63 +1721,63 @@ static void test_XMLHTTP(void)
 
     V_VT(&varbody) = VT_EMPTY;
     hr = IXMLHttpRequest_send(xhr, varbody);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     hr = IXMLHttpRequest_get_responseText(xhr, &str);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(!lstrcmpW(str, norefererW), "got response text %s\n", wine_dbgstr_w(str));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(!lstrcmpW(str, L"no referer set"), "got response text %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
 
     /* interaction with object site */
     hr = IXMLHttpRequest_QueryInterface(xhr, &IID_IObjectWithSite, (void**)&obj_site);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     hr = IObjectWithSite_SetSite(obj_site, NULL);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_QueryInterface(xhr, &IID_IObjectWithSite, (void**)&obj_site2);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(obj_site == obj_site2 || broken(obj_site != obj_site2), "got new instance\n");
     IObjectWithSite_Release(obj_site2);
 
     set_xhr_site(xhr);
 
     test_open(xhr, "GET", "tests/referer.php", S_OK);
-    str1 = a2bstr("http://test.winehq.org/");
+    str1 = SysAllocString(L"http://test.winehq.org/");
 
     V_VT(&varbody) = VT_EMPTY;
     hr = IXMLHttpRequest_send(xhr, varbody);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLHttpRequest_get_responseText(xhr, &str);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(!lstrcmpW(str, str1), "got response text %s, expected %s\n", wine_dbgstr_w(str), wine_dbgstr_w(str1));
     SysFreeString(str);
     SysFreeString(str1);
 
     /* try to set site another time */
     hr = IObjectWithSite_SetSite(obj_site, &testsite);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     IObjectWithSite_Release(obj_site);
 
     /* HEAD request */
     hr = IXMLHttpRequest_put_onreadystatechange(xhr, NULL);
-    ok(hr == S_OK, "Failed to reset state change handler, hr %#x.\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     test_open(xhr, "HEAD", xmltestA, S_OK);
 
     V_VT(&varbody) = VT_EMPTY;
     hr = IXMLHttpRequest_send(xhr, varbody);
-    ok(hr == S_OK, "Failed to send HEAD request, hr %#x.\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     str = NULL;
     hr = IXMLHttpRequest_get_responseText(xhr, &str);
-    ok(hr == S_OK, "Failed to get response text, hr %#x.\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(!*str, "Unexpected text %s.\n", wine_dbgstr_w(str));
     SysFreeString(str);
 
     hr = IXMLHttpRequest_getAllResponseHeaders(xhr, &str);
-    ok(hr == S_OK, "Failed to get response headers, hr %#x.\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(str && *str, "Expected response headers.\n");
     SysFreeString(str);
 
@@ -1796,7 +1791,7 @@ static void test_XMLHTTP(void)
     V_VT(&varbody) = VT_EMPTY;
     hr = IXMLHttpRequest_send(xhr, varbody);
     todo_wine
-    ok(hr == INET_E_RESOURCE_NOT_FOUND, "send to invalid host returned %#x.\n", hr);
+    ok(hr == INET_E_RESOURCE_NOT_FOUND, "Unexpected hr %#lx.\n", hr);
 
     IXMLHttpRequest_Release(xhr);
     free_bstrs();
@@ -1817,16 +1812,16 @@ static void test_server_xhr(void)
     V_VT(&body) = VT_EMPTY;
 
     hr = IServerXMLHTTPRequest_send(xhr, body);
-    if (hr == INET_E_RESOURCE_NOT_FOUND)
+    if (hr == INET_E_RESOURCE_NOT_FOUND || hr == WININET_E_NAME_NOT_RESOLVED)
     {
         skip("No connection could be made with test.winehq.org\n");
         IServerXMLHTTPRequest_Release(xhr);
         return;
     }
-    ok(hr == S_OK, "send failed: %08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     hr = IServerXMLHTTPRequest_get_responseText(xhr, &response);
-    ok(hr == S_OK, "get_responseText failed: %08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(!strcmp_wa(response, xmltestbodyA), "got %s\n", wine_dbgstr_w(response));
     SysFreeString(response);
 
@@ -1840,7 +1835,7 @@ static void test_server_xhr(void)
     V_VT(&body) = VT_EMPTY;
     hr = IServerXMLHTTPRequest_send(xhr, body);
     todo_wine
-    ok(hr == WININET_E_NAME_NOT_RESOLVED, "send to invalid host returned %#x.\n", hr);
+    ok(hr == WININET_E_NAME_NOT_RESOLVED, "Unexpected hr %#lx.\n", hr);
 
     IServerXMLHTTPRequest_Release(xhr);
     free_bstrs();
@@ -1877,11 +1872,11 @@ static void test_supporterrorinfo(void)
 
     EXPECT_REF(xhr, 1);
     hr = IXMLHttpRequest_QueryInterface(xhr, &IID_ISupportErrorInfo, (void **)&errorinfo);
-    ok(hr == S_OK, "Failed to get ISupportErrorInfo, hr %#x.\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     EXPECT_REF(xhr, 2);
 
     hr = IXMLHttpRequest_QueryInterface(xhr, &IID_ISupportErrorInfo, (void **)&errorinfo2);
-    ok(hr == S_OK, "Failed to get ISupportErrorInfo, hr %#x.\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(errorinfo == errorinfo2, "Unexpected error info instance.\n");
     EXPECT_REF(xhr, 3);
 
@@ -1895,11 +1890,11 @@ static void test_supporterrorinfo(void)
 
     EXPECT_REF(server_xhr, 1);
     hr = IServerXMLHTTPRequest_QueryInterface(server_xhr, &IID_ISupportErrorInfo, (void **)&errorinfo);
-    ok(hr == S_OK, "Failed to get ISupportErrorInfo, hr %#x.\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     EXPECT_REF(server_xhr, 2);
 
     hr = IServerXMLHTTPRequest_QueryInterface(server_xhr, &IID_ISupportErrorInfo, (void **)&errorinfo2);
-    ok(hr == S_OK, "Failed to get ISupportErrorInfo, hr %#x.\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(errorinfo == errorinfo2, "Unexpected error info instance.\n");
     EXPECT_REF(server_xhr, 3);
 

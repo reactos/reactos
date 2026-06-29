@@ -123,3 +123,20 @@ MouseKeys_Update(_In_ CSysTray *pSysTray)
 
     return pSysTray->NotifyIcon(uId, ID_ICON_MOUSE, g_MkStateIcon, L"MouseKeys");
 }
+
+HRESULT STDMETHODCALLTYPE MouseKeys_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult)
+{
+    switch (uMsg)
+    {
+        case ID_ICON_MOUSE:
+            switch (lParam)
+            {
+                case WM_LBUTTONDBLCLK:
+                case WM_RBUTTONDBLCLK:
+                    pSysTray->RunAccessCpl(",,4");
+                    return S_OK;
+            }
+            break;
+    }
+    return S_FALSE;
+}

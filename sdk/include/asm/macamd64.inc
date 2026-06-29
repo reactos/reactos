@@ -75,52 +75,52 @@ MACRO(BEGIN_EPILOGUE)
 ENDM
 
 MACRO(LEAF_ENTRY, Name, Section, NoPad)
-    Section segment para 'CODE'
-    ifb <NoPad>
-        db 6 dup HEX(CC)
-    endif
+//Section segment para 'CODE'
+//ifb <NoPad>
+//    db 6 dup (0cch)
+//endif
     align 16
-    public  Name
-Name    proc    frame
+    public Name
+.PROC Name
     END_PROLOGUE
 ENDM
 
 MACRO(LEAF_ENTRY_ARG1, Name, Section, Arg1, NoPad)
-    Section segment para 'CODE'
-    ifb <NoPad>
-        db 6 dup HEX(CC)
-    endif
+//Section segment para 'CODE'
+//ifb <NoPad>
+//    db 6 dup (0cch)
+//endif
     align 16
-    public  Name
-Name    proc    frame
+    public Name
+.PROC Name
     END_PROLOGUE
 ENDM
 
 MACRO(LEAF_ENTRY_ARG2, Name, Section, Arg1, Arg2, NoPad)
-    Section segment para 'CODE'
-    ifb <NoPad>
-        db 6 dup HEX(CC)
-    endif
+//Section segment para 'CODE'
+//ifb <NoPad>
+//    db 6 dup (0cch)
+//endif
     align 16
-    public  Name
-Name    proc    frame
+    public Name
+.PROC Name
     END_PROLOGUE
 ENDM
 
 MACRO(LEAF_ENTRY_ARG3, Name, Section, Arg1, Arg2, Arg3, NoPad)
-    Section segment para 'CODE'
-    ifb <NoPad>
-        db 6 dup HEX(CC)
-    endif
+//Section segment para 'CODE'
+//ifb <NoPad>
+//    db 6 dup (0cch)
+//endif
     align 16
-    public  Name
-Name    proc    frame
+    public Name
+.PROC Name
     END_PROLOGUE
 ENDM
 
-MACRO(LEAF_END, Name, section)
-    Name    endp
-    Section ends
+MACRO(LEAF_END, Name, Section)
+.ENDP
+//Section ends
 ENDM
 
 MACRO(NESTED_ENTR, Name, Section, Handler, NoPad)

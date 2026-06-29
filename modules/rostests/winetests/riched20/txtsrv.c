@@ -38,6 +38,27 @@
 #include <oleauto.h>
 #include <limits.h>
 
+#define DEFINE_EXPECT(func) \
+    static UINT called_count_ ## func = 0
+
+#define INCREASE_CALL_COUNTER(func) \
+    do { \
+        called_count_ ## func++;     \
+    }while(0)
+
+#define CHECK_CALLED(func) \
+    do { \
+        ok(called_count_ ## func, "expected " #func "\n"); \
+    }while(0)
+
+#define CHECK_NOT_CALLED(func) \
+    do { \
+        ok(!called_count_ ## func, "unexpected " #func "\n"); \
+    }while(0)
+
+#define CLEAR_COUNTER(func) \
+    called_count_ ## func = 0
+
 static HMODULE hmoduleRichEdit;
 static IID *pIID_ITextServices;
 static IID *pIID_ITextHost;
@@ -48,7 +69,7 @@ static PCreateTextServices pCreateTextServices;
 
 /* Use a special table for x86 machines to convert the thiscall
  * calling convention.  This isn't needed on other platforms. */
-#if defined(__i386__) && !defined(__MINGW32__)
+#if  defined(__i386__) && !defined(__MINGW32__) && (!defined(_MSC_VER) || !defined(__clang__))
 static ITextServicesVtbl itextServicesStdcallVtbl;
 #define TXTSERV_VTABLE(This) (&itextServicesStdcallVtbl)
 #else /* __i386__ */
@@ -61,8 +82,8 @@ static ITextServicesVtbl itextServicesStdcallVtbl;
 #define ITextServices_TxGetVScroll(This,a,b,c,d,e) TXTSERV_VTABLE(This)->TxGetVScroll(This,a,b,c,d,e)
 #define ITextServices_OnTxSetCursor(This,a,b,c,d,e,f,g,h,i) TXTSERV_VTABLE(This)->OnTxSetCursor(This,a,b,c,d,e,f,g,h,i)
 #define ITextServices_TxQueryHitPoint(This,a,b,c,d,e,f,g,h,i,j) TXTSERV_VTABLE(This)->TxQueryHitPoint(This,a,b,c,d,e,f,g,h,i,j)
-#define ITextServices_OnTxInplaceActivate(This,a) TXTSERV_VTABLE(This)->OnTxInplaceActivate(This,a)
-#define ITextServices_OnTxInplaceDeactivate(This) TXTSERV_VTABLE(This)->OnTxInplaceDeactivate(This)
+#define ITextServices_OnTxInPlaceActivate(This,a) TXTSERV_VTABLE(This)->OnTxInPlaceActivate(This,a)
+#define ITextServices_OnTxInPlaceDeactivate(This) TXTSERV_VTABLE(This)->OnTxInPlaceDeactivate(This)
 #define ITextServices_OnTxUIActivate(This) TXTSERV_VTABLE(This)->OnTxUIActivate(This)
 #define ITextServices_OnTxUIDeactivate(This) TXTSERV_VTABLE(This)->OnTxUIDeactivate(This)
 #define ITextServices_TxGetText(This,a) TXTSERV_VTABLE(This)->TxGetText(This,a)
@@ -81,17 +102,29 @@ static ITextServicesVtbl itextServicesStdcallVtbl;
 /************************************************************************/
 /* ITextHost implementation for conformance testing. */
 
+DEFINE_EXPECT(ITextHostImpl_TxViewChange);
+DEFINE_EXPECT(ITextHostImpl_TxScrollWindowEx);
+DEFINE_EXPECT(ITextHostImpl_TxGetClientRect);
+
 typedef struct ITextHostTestImpl
 {
     ITextHost ITextHost_iface;
     LONG refCount;
+    HWND window;
+    RECT client_rect;
     CHARFORMAT2W char_format;
+    DWORD scrollbars, props;
 } ITextHostTestImpl;
 
 static inline ITextHostTestImpl *impl_from_ITextHost(ITextHost *iface)
 {
     return CONTAINING_RECORD(iface, ITextHostTestImpl, ITextHost_iface);
 }
+
+static const WCHAR lorem[] = L"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
+    "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+    "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
+    "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
 static HRESULT WINAPI ITextHostImpl_QueryInterface(ITextHost *iface,
                                                    REFIID riid,
@@ -133,6 +166,7 @@ static HDC __thiscall ITextHostImpl_TxGetDC(ITextHost *iface)
 {
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetDC(%p)\n", This);
+    if (This->window) return GetDC( This->window );
     return NULL;
 }
 
@@ -140,6 +174,7 @@ static INT __thiscall ITextHostImpl_TxReleaseDC(ITextHost *iface, HDC hdc)
 {
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxReleaseDC(%p)\n", This);
+    if (This->window) return ReleaseDC( This->window, hdc );
     return 0;
 }
 
@@ -163,7 +198,7 @@ static BOOL __thiscall ITextHostImpl_TxSetScrollRange(ITextHost *iface, INT fnBa
                                                       INT nMaxPos, BOOL fRedraw)
 {
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
-    TRACECALL("Call to TxSetScrollRange(%p, fnBar=%d, nMinPos=%d, nMaxPos=%d, fRedraw=%d)\n",
+    TRACECALL("Call to TxSetScrollRange(%p, fnBar=%d, nMinPos=%ld, nMaxPos=%d, fRedraw=%d)\n",
                This, fnBar, nMinPos, nMaxPos, fRedraw);
     return FALSE;
 }
@@ -188,6 +223,7 @@ static void __thiscall ITextHostImpl_TxViewChange(ITextHost *iface, BOOL fUpdate
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxViewChange(%p, fUpdate=%d)\n",
                This, fUpdate);
+    INCREASE_CALL_COUNTER(ITextHostImpl_TxViewChange);
 }
 
 static BOOL __thiscall ITextHostImpl_TxCreateCaret(ITextHost *iface, HBITMAP hbmp, INT xWidth, INT yHeight)
@@ -234,6 +270,7 @@ static void __thiscall ITextHostImpl_TxScrollWindowEx(ITextHost *iface, INT dx, 
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxScrollWindowEx(%p, %d, %d, %p, %p, %p, %p, %d)\n",
               This, dx, dy, lprcScroll, lprcClip, hRgnUpdate, lprcUpdate, fuScroll);
+    INCREASE_CALL_COUNTER(ITextHostImpl_TxScrollWindowEx);
 }
 
 static void __thiscall ITextHostImpl_TxSetCapture(ITextHost *iface, BOOL fCapture)
@@ -279,7 +316,7 @@ static HRESULT __thiscall ITextHostImpl_TxActivate(ITextHost *iface, LONG *plOld
 static HRESULT __thiscall ITextHostImpl_TxDeactivate(ITextHost *iface, LONG lNewState)
 {
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
-    TRACECALL("Call to TxDeactivate(%p, lNewState=%d)\n", This, lNewState);
+    TRACECALL("Call to TxDeactivate(%p, lNewState=%ld)\n", This, lNewState);
     return E_NOTIMPL;
 }
 
@@ -287,7 +324,9 @@ static HRESULT __thiscall ITextHostImpl_TxGetClientRect(ITextHost *iface, LPRECT
 {
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
     TRACECALL("Call to TxGetClientRect(%p, prc=%p)\n", This, prc);
-    return E_NOTIMPL;
+    INCREASE_CALL_COUNTER(ITextHostImpl_TxGetClientRect);
+    *prc = This->client_rect;
+    return S_OK;
 }
 
 static HRESULT __thiscall ITextHostImpl_TxGetViewInset(ITextHost *iface, LPRECT prc)
@@ -333,12 +372,12 @@ static HRESULT __thiscall ITextHostImpl_TxGetMaxLength(ITextHost *iface, DWORD *
     return E_NOTIMPL;
 }
 
-static HRESULT __thiscall ITextHostImpl_TxGetScrollBars(ITextHost *iface, DWORD *pdwScrollBar)
+static HRESULT __thiscall ITextHostImpl_TxGetScrollBars(ITextHost *iface, DWORD *scrollbars)
 {
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
-    TRACECALL("Call to TxGetScrollBars(%p, pdwScrollBar=%p)\n",
-               This, pdwScrollBar);
-    return E_NOTIMPL;
+    TRACECALL("Call to TxGetScrollBars(%p, scrollbars=%p)\n", This, scrollbars);
+    *scrollbars = This->scrollbars;
+    return S_OK;
 }
 
 static HRESULT __thiscall ITextHostImpl_TxGetPasswordChar(ITextHost *iface, WCHAR *pch)
@@ -381,17 +420,41 @@ static HRESULT __thiscall ITextHostImpl_OnTxParaFormatChange(ITextHost *iface, c
 static HRESULT __thiscall ITextHostImpl_TxGetPropertyBits(ITextHost *iface, DWORD dwMask, DWORD *pdwBits)
 {
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
-    TRACECALL("Call to TxGetPropertyBits(%p, dwMask=0x%08x, pdwBits=%p)\n",
+    TRACECALL("Call to TxGetPropertyBits(%p, dwMask=0x%08lx, pdwBits=%p)\n",
               This, dwMask, pdwBits);
-    *pdwBits = 0;
+    *pdwBits = This->props & dwMask;
     return S_OK;
 }
 
-static HRESULT __thiscall ITextHostImpl_TxNotify(ITextHost *iface, DWORD iNotify, void *pv)
+static int en_vscroll_sent;
+static int en_update_sent;
+static int en_change_sent;
+static int en_selchange_sent;
+static HRESULT __thiscall ITextHostImpl_TxNotify( ITextHost *iface, DWORD code, void *data )
 {
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
-    TRACECALL("Call to TxNotify(%p, iNotify=%d, pv=%p)\n", This, iNotify, pv);
-    return E_NOTIMPL;
+    TRACECALL( "Call to TxNotify(%p, code = %#lx, data = %p)\n", This, code, data );
+    switch (code)
+    {
+    case EN_VSCROLL:
+        en_vscroll_sent++;
+        ok( !data, "got %p\n", data );
+        break;
+    case EN_UPDATE:
+        en_update_sent++;
+        ok( !data, "got %p\n", data );
+        break;
+    case EN_CHANGE:
+        en_change_sent++;
+        todo_wine
+        ok( data != NULL, "got %p\n", data );
+        break;
+    case EN_SELCHANGE:
+        en_selchange_sent++;
+        ok( data != NULL, "got %p\n", data );
+        break;
+    }
+    return S_OK;
 }
 
 static HIMC __thiscall ITextHostImpl_TxImmGetContext(ITextHost *iface)
@@ -492,7 +555,7 @@ typedef struct
 
 static void setup_thiscall_wrappers(void)
 {
-#if defined(__i386__) && !defined(__MINGW32__)
+#if defined(__i386__) && !defined(__MINGW32__) && (!defined(_MSC_VER) || !defined(__clang__))
     void** pVtable;
     void** pVtableEnd;
     THISCALL_TO_STDCALL_THUNK *thunk;
@@ -591,9 +654,13 @@ static BOOL init_texthost(ITextServices **txtserv, ITextHost **ret)
     }
     dummyTextHost->ITextHost_iface.lpVtbl = &itextHostVtbl;
     dummyTextHost->refCount = 1;
+    dummyTextHost->window = NULL;
+    SetRectEmpty( &dummyTextHost->client_rect );
     memset(&dummyTextHost->char_format, 0, sizeof(dummyTextHost->char_format));
     dummyTextHost->char_format.cbSize = sizeof(dummyTextHost->char_format);
     dummyTextHost->char_format.dwMask = CFM_ALL2;
+    dummyTextHost->scrollbars = ES_AUTOVSCROLL;
+    dummyTextHost->props = 0;
     hf = GetStockObject(DEFAULT_GUI_FONT);
     hf_to_cf(hf, &dummyTextHost->char_format);
 
@@ -601,7 +668,8 @@ static BOOL init_texthost(ITextServices **txtserv, ITextHost **ret)
        CreateTextServices which is then queried to obtain a
        ITextServices object. */
     result = pCreateTextServices(NULL, &dummyTextHost->ITextHost_iface, &init);
-    ok(result == S_OK, "Did not return S_OK when created (result =  %x)\n", result);
+    ok(result == S_OK, "Did not return S_OK when created (result =  %lx)\n", result);
+    ok(dummyTextHost->refCount == 1, "host ref %ld\n", dummyTextHost->refCount);
     if (result != S_OK) {
         CoTaskMemFree(dummyTextHost);
         win_skip("CreateTextServices failed.\n");
@@ -609,7 +677,7 @@ static BOOL init_texthost(ITextServices **txtserv, ITextHost **ret)
     }
 
     result = IUnknown_QueryInterface(init, pIID_ITextServices, (void**)txtserv);
-    ok((result == S_OK) && (*txtserv != NULL), "Querying interface failed (result = %x, txtserv = %p)\n", result, *txtserv);
+    ok((result == S_OK) && (*txtserv != NULL), "Querying interface failed (result = %lx, txtserv = %p)\n", result, *txtserv);
     IUnknown_Release(init);
     if (!((result == S_OK) && (*txtserv != NULL))) {
         CoTaskMemFree(dummyTextHost);
@@ -621,9 +689,30 @@ static BOOL init_texthost(ITextServices **txtserv, ITextHost **ret)
     return TRUE;
 }
 
+static void fill_reobject_struct(REOBJECT *reobj, LONG cp, LPOLEOBJECT poleobj,
+        LPSTORAGE pstg, LPOLECLIENTSITE polesite, LONG sizel_cx,
+        LONG sizel_cy, DWORD aspect, DWORD flags, DWORD user)
+{
+    reobj->cbStruct = sizeof(*reobj);
+    reobj->clsid = CLSID_NULL;
+    reobj->cp = cp;
+    reobj->poleobj = poleobj;
+    reobj->pstg = pstg;
+    reobj->polesite = polesite;
+    reobj->sizel.cx = sizel_cx;
+    reobj->sizel.cy = sizel_cy;
+    reobj->dvaspect = aspect;
+    reobj->dwFlags = flags;
+    reobj->dwUser = user;
+}
+
 static void test_TxGetText(void)
 {
+    const WCHAR *expected_string;
+    IOleClientSite *clientsite;
     ITextServices *txtserv;
+    IRichEditOle *reole;
+    REOBJECT reobject;
     ITextHost *host;
     HRESULT hres;
     BSTR rettext;
@@ -632,8 +721,26 @@ static void test_TxGetText(void)
         return;
 
     hres = ITextServices_TxGetText(txtserv, &rettext);
-    ok(hres == S_OK, "ITextServices_TxGetText failed (result = %x)\n", hres);
+    ok(hres == S_OK, "ITextServices_TxGetText failed (result = %lx)\n", hres);
     SysFreeString(rettext);
+
+    hres = ITextServices_TxSetText(txtserv, L"abcdefg");
+    ok(hres == S_OK, "Got hres: %#lx.\n", hres);
+    hres = ITextServices_QueryInterface(txtserv, &IID_IRichEditOle, (void **)&reole);
+    ok(hres == S_OK, "Got hres: %#lx.\n", hres);
+    hres = IRichEditOle_GetClientSite(reole, &clientsite);
+    ok(hres == S_OK, "Got hres: %#lx.\n", hres);
+    expected_string = L"abc\xfffc""defg";
+    fill_reobject_struct(&reobject, 3, NULL, NULL, clientsite, 10, 10, DVASPECT_CONTENT, 0, 1);
+    hres = IRichEditOle_InsertObject(reole, &reobject);
+    ok(hres == S_OK, "Got hres: %#lx.\n", hres);
+    hres = ITextServices_TxGetText(txtserv, &rettext);
+    ok(hres == S_OK, "Got hres: %#lx.\n", hres);
+    ok(lstrlenW(rettext) == lstrlenW(expected_string), "Got wrong length: %d.\n", lstrlenW(rettext));
+    todo_wine ok(!lstrcmpW(rettext, expected_string), "Got wrong content: %s.\n", debugstr_w(rettext));
+    SysFreeString(rettext);
+    IOleClientSite_Release(clientsite);
+    IRichEditOle_Release(reole);
 
     ITextServices_Release(txtserv);
     ITextHost_Release(host);
@@ -651,10 +758,10 @@ static void test_TxSetText(void)
         return;
 
     hres = ITextServices_TxSetText(txtserv, settext);
-    ok(hres == S_OK, "ITextServices_TxSetText failed (result = %x)\n", hres);
+    ok(hres == S_OK, "ITextServices_TxSetText failed (result = %lx)\n", hres);
 
     hres = ITextServices_TxGetText(txtserv, &rettext);
-    ok(hres == S_OK, "ITextServices_TxGetText failed (result = %x)\n", hres);
+    ok(hres == S_OK, "ITextServices_TxGetText failed (result = %lx)\n", hres);
 
     ok(SysStringLen(rettext) == 4,
                  "String returned of wrong length (expected 4, got %d)\n", SysStringLen(rettext));
@@ -666,10 +773,10 @@ static void test_TxSetText(void)
     /* Null-pointer should behave the same as empty-string */
 
     hres = ITextServices_TxSetText(txtserv, 0);
-    ok(hres == S_OK, "ITextServices_TxSetText failed (result = %x)\n", hres);
+    ok(hres == S_OK, "ITextServices_TxSetText failed (result = %lx)\n", hres);
 
     hres = ITextServices_TxGetText(txtserv, &rettext);
-    ok(hres == S_OK, "ITextServices_TxGetText failed (result = %x)\n", hres);
+    ok(hres == S_OK, "ITextServices_TxGetText failed (result = %lx)\n", hres);
     ok(SysStringLen(rettext) == 0,
                  "String returned of wrong length (expected 0, got %d)\n", SysStringLen(rettext));
 
@@ -685,13 +792,13 @@ static void _check_txgetnaturalsize(HRESULT res, LONG width, LONG height, HDC hd
     RECT expected_rect = rect;
     LONG expected_width, expected_height;
 
-    DrawTextW(hdc, string, -1, &expected_rect, DT_LEFT | DT_CALCRECT | DT_NOCLIP | DT_EDITCONTROL | DT_WORDBREAK);
+    DrawTextW(hdc, string, -1, &expected_rect, DT_LEFT | DT_CALCRECT | DT_NOCLIP | DT_EDITCONTROL);
     expected_width = expected_rect.right - expected_rect.left;
     expected_height = expected_rect.bottom - expected_rect.top;
-    ok_(__FILE__,line)(res == S_OK, "ITextServices_TxGetNaturalSize failed: 0x%08x.\n", res);
-    ok_(__FILE__,line)(width >= expected_width && width <= expected_width + 1,
-                       "got wrong width: %d, expected: %d {+1}.\n", width, expected_width);
-    ok_(__FILE__,line)(height == expected_height, "got wrong height: %d, expected: %d.\n",
+    ok_(__FILE__,line)(res == S_OK, "ITextServices_TxGetNaturalSize failed: 0x%08lx.\n", res);
+    todo_wine ok_(__FILE__,line)(width >= expected_width && width <= expected_width + 1,
+                       "got wrong width: %ld, expected: %ld {+1}.\n", width, expected_width);
+    ok_(__FILE__,line)(height == expected_height, "got wrong height: %ld, expected: %ld.\n",
                        height, expected_height);
 }
 
@@ -701,7 +808,7 @@ static void test_TxGetNaturalSize(void)
     ITextHost *host;
     HRESULT result;
     SIZEL extent;
-    static const WCHAR test_text[] = {'T','e','s','t','S','o','m','e','T','e','x','t',0};
+    static const WCHAR test_text[] = L"TestSomeText";
     LONG width, height;
     HDC hdcDraw;
     HWND hwnd;
@@ -725,18 +832,18 @@ static void test_TxGetNaturalSize(void)
     hf = GetStockObject(DEFAULT_GUI_FONT);
     hf_to_cf(hf, &cf);
     result = ITextServices_TxSendMessage(txtserv, EM_SETCHARFORMAT, SCF_DEFAULT, (LPARAM)&cf, &lresult);
-    ok(result == S_OK, "ITextServices_TxSendMessage failed: 0x%08x.\n", result);
+    ok(result == S_OK, "ITextServices_TxSendMessage failed: 0x%08lx.\n", result);
     SelectObject(hdcDraw, hf);
 
     result = ITextServices_TxSetText(txtserv, test_text);
-    ok(result == S_OK, "ITextServices_TxSetText failed: 0x%08x.\n", result);
+    ok(result == S_OK, "ITextServices_TxSetText failed: 0x%08lx.\n", result);
 
     extent.cx = -1; extent.cy = -1;
     width = rect.right - rect.left;
     height = 0;
     result = ITextServices_TxGetNaturalSize(txtserv, DVASPECT_CONTENT, hdcDraw, NULL, NULL,
                                             TXTNS_FITTOCONTENT, &extent, &width, &height);
-    todo_wine CHECK_TXGETNATURALSIZE(result, width, height, hdcDraw, rect, test_text);
+    CHECK_TXGETNATURALSIZE(result, width, height, hdcDraw, rect, test_text);
 
     ReleaseDC(hwnd, hdcDraw);
     DestroyWindow(hwnd);
@@ -747,27 +854,75 @@ static void test_TxGetNaturalSize(void)
 static void test_TxDraw(void)
 {
     ITextServices *txtserv;
+    ITextDocument *txtdoc;
     ITextHost *host;
-    HDC tmphdc = GetDC(NULL);
-    DWORD dwAspect = DVASPECT_CONTENT;
-    HDC hicTargetDev = NULL; /* Means "default" device */
-    DVTARGETDEVICE *ptd = NULL;
-    void *pvAspect = NULL;
-    HRESULT result;
-    RECTL client = {0,0,100,100};
-
+    HRESULT hr;
+    RECT client = {0, 0, 100, 100};
+    ITextHostTestImpl *host_impl;
+    LONG freeze_count;
+    HDC hdc;
 
     if (!init_texthost(&txtserv, &host))
         return;
 
-    todo_wine {
-        result = ITextServices_TxDraw(txtserv, dwAspect, 0, pvAspect, ptd,
-                                      tmphdc, hicTargetDev, &client, NULL,
-                                      NULL, NULL, 0, 0);
-        ok(result == S_OK, "TxDraw failed (result = %x)\n", result);
-    }
+    hr = ITextServices_QueryInterface( txtserv, &IID_ITextDocument, (void **)&txtdoc );
+    ok( hr == S_OK, "ITextServices_QueryInterface (ITextDocument) returned %#lx\n", hr );
 
+    host_impl = impl_from_ITextHost( host );
+    host_impl->window = CreateWindowExA( 0, "static", NULL, WS_POPUP | WS_VISIBLE,
+                                         0, 0, 400, 400, 0, 0, 0, NULL );
+    host_impl->client_rect = client;
+    host_impl->props = TXTBIT_MULTILINE | TXTBIT_RICHTEXT | TXTBIT_WORDWRAP;
+    ITextServices_OnTxPropertyBitsChange( txtserv, TXTBIT_CLIENTRECTCHANGE | TXTBIT_MULTILINE | TXTBIT_RICHTEXT | TXTBIT_WORDWRAP,
+                                          host_impl->props );
+    hdc = GetDC( host_impl->window );
+
+    hr = ITextServices_TxDraw( txtserv, DVASPECT_CONTENT, 0, NULL, NULL, NULL, NULL, NULL, NULL,
+                               NULL, NULL, 0, TXTVIEW_INACTIVE );
+    ok( hr == E_INVALIDARG, "got %08lx\n", hr );
+    hr = ITextServices_TxDraw( txtserv, DVASPECT_CONTENT, 0, NULL, NULL, hdc, NULL, NULL, NULL,
+                               NULL, NULL, 0, TXTVIEW_INACTIVE );
+    ok( hr == E_INVALIDARG, "got %08lx\n", hr );
+    hr = ITextServices_TxDraw( txtserv, DVASPECT_CONTENT, 0, NULL, NULL, NULL, NULL, (RECTL *)&client, NULL,
+                               NULL, NULL, 0, TXTVIEW_INACTIVE );
+    ok( hr == E_FAIL, "got %08lx\n", hr );
+    hr = ITextServices_TxDraw( txtserv, DVASPECT_CONTENT, 0, NULL, NULL, hdc, NULL, (RECTL *)&client, NULL,
+                               NULL, NULL, 0, TXTVIEW_INACTIVE );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    hr = ITextServices_TxDraw( txtserv, DVASPECT_CONTENT, 0, NULL, NULL, hdc, NULL, (RECTL *)&client, NULL,
+                               NULL, NULL, 0, TXTVIEW_ACTIVE );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    hr = ITextServices_OnTxInPlaceActivate( txtserv, &client );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    hr = ITextServices_TxDraw( txtserv, DVASPECT_CONTENT, 0, NULL, NULL, NULL, NULL, NULL, NULL,
+                               NULL, NULL, 0, TXTVIEW_INACTIVE );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    freeze_count = 0xdeadbeef;
+    hr = ITextDocument_Freeze( txtdoc, &freeze_count );
+    ok( hr == S_OK, "ITextDocument_Freeze returned %#lx\n", hr );
+    ok( freeze_count == 1, "expected count to be %d, got %ld\n", 1, freeze_count );
+
+    hr = ITextServices_TxDraw( txtserv, DVASPECT_CONTENT, 0, NULL, NULL, hdc, NULL, (RECTL *)&client, NULL,
+                               NULL, NULL, 0, TXTVIEW_INACTIVE );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    hr = ITextServices_TxDraw( txtserv, DVASPECT_CONTENT, 0, NULL, NULL, hdc, NULL, (RECTL *)&client, NULL,
+                               NULL, NULL, 0, TXTVIEW_ACTIVE );
+    ok( hr == E_UNEXPECTED, "got %08lx\n", hr );
+
+    freeze_count = 0xdeadbeef;
+    hr = ITextDocument_Unfreeze( txtdoc, &freeze_count );
+    ok( hr == S_OK, "ITextDocument_Unfreeze returned %#lx\n", hr );
+    ok( freeze_count == 0, "expected count to be %d, got %ld\n", 0, freeze_count );
+
+    hr = ITextServices_OnTxInPlaceDeactivate( txtserv );
+
+    ReleaseDC( host_impl->window, hdc );
+    ITextDocument_Release(txtdoc);
     ITextServices_Release(txtserv);
+    DestroyWindow( host_impl->window );
     ITextHost_Release(host);
 }
 
@@ -836,15 +991,15 @@ static void test_COM(void)
     /* COM aggregation */
     hr = pCreateTextServices(&unk_obj.IUnknown_iface, &texthost.ITextHost_iface,
                              &unk_obj.inner_unk);
-    ok(hr == S_OK, "CreateTextServices failed: %08x\n", hr);
+    ok(hr == S_OK, "CreateTextServices failed: %08lx\n", hr);
     hr = IUnknown_QueryInterface(unk_obj.inner_unk, pIID_ITextServices, (void**)&textsrv);
-    ok(hr == S_OK, "QueryInterface for IID_ITextServices failed: %08x\n", hr);
+    ok(hr == S_OK, "QueryInterface for IID_ITextServices failed: %08lx\n", hr);
     refcount = ITextServices_AddRef(textsrv);
     ok(refcount == unk_obj.ref, "CreateTextServices just pretends to support COM aggregation\n");
     refcount = ITextServices_Release(textsrv);
     ok(refcount == unk_obj.ref, "CreateTextServices just pretends to support COM aggregation\n");
     refcount = ITextServices_Release(textsrv);
-    ok(refcount == 19, "Refcount should be back at 19 but is %u\n", refcount);
+    ok(refcount == 19, "Refcount should be back at 19 but is %lu\n", refcount);
 
     IUnknown_Release(unk_obj.inner_unk);
 }
@@ -863,90 +1018,99 @@ static void test_QueryInterface(void)
     IRichEditOle *reole, *txtsrv_reole;
     ITextDocument *txtdoc, *txtsrv_txtdoc;
     ITextDocument2Old *txtdoc2old, *txtsrv_txtdoc2old;
+    IUnknown *unk, *unk2;
     ULONG refcount;
 
     if(!init_texthost(&txtserv, &host))
         return;
 
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 1, "got wrong ref count: %ld\n", refcount);
 
     /* IID_IRichEditOle */
     hres = ITextServices_QueryInterface(txtserv, &IID_IRichEditOle, (void **)&txtsrv_reole);
-    ok(hres == S_OK, "ITextServices_QueryInterface: 0x%08x\n", hres);
+    ok(hres == S_OK, "ITextServices_QueryInterface: 0x%08lx\n", hres);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 2, "got wrong ref count: %ld\n", refcount);
     refcount = get_refcount((IUnknown *)txtsrv_reole);
-    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 2, "got wrong ref count: %ld\n", refcount);
+
+    hres = ITextServices_QueryInterface( txtserv, &IID_IUnknown, (void **)&unk );
+    ok( hres == S_OK, "got 0x%08lx\n", hres );
+    hres = IRichEditOle_QueryInterface( txtsrv_reole, &IID_IUnknown, (void **)&unk2 );
+    ok( hres == S_OK, "got 0x%08lx\n", hres );
+    ok( unk == unk2, "unknowns differ\n" );
+    IUnknown_Release( unk2 );
+    IUnknown_Release( unk );
 
     hres = IRichEditOle_QueryInterface(txtsrv_reole, &IID_ITextDocument, (void **)&txtdoc);
-    ok(hres == S_OK, "IRichEditOle_QueryInterface: 0x%08x\n", hres);
+    ok(hres == S_OK, "IRichEditOle_QueryInterface: 0x%08lx\n", hres);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 3, "got wrong ref count: %ld\n", refcount);
     refcount = get_refcount((IUnknown *)txtsrv_reole);
-    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 3, "got wrong ref count: %ld\n", refcount);
 
     ITextDocument_Release(txtdoc);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 2, "got wrong ref count: %ld\n", refcount);
 
     hres = IRichEditOle_QueryInterface(txtsrv_reole, &IID_ITextDocument2Old, (void **)&txtdoc2old);
-    ok(hres == S_OK, "IRichEditOle_QueryInterface: 0x%08x\n", hres);
+    ok(hres == S_OK, "IRichEditOle_QueryInterface: 0x%08lx\n", hres);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 3, "got wrong ref count: %ld\n", refcount);
     refcount = get_refcount((IUnknown *)txtsrv_reole);
-    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 3, "got wrong ref count: %ld\n", refcount);
 
     ITextDocument2Old_Release(txtdoc2old);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 2, "got wrong ref count: %ld\n", refcount);
     IRichEditOle_Release(txtsrv_reole);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 1, "got wrong ref count: %ld\n", refcount);
 
     /* IID_ITextDocument */
     hres = ITextServices_QueryInterface(txtserv, &IID_ITextDocument, (void **)&txtsrv_txtdoc);
-    ok(hres == S_OK, "ITextServices_QueryInterface: 0x%08x\n", hres);
+    ok(hres == S_OK, "ITextServices_QueryInterface: 0x%08lx\n", hres);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 2, "got wrong ref count: %ld\n", refcount);
     refcount = get_refcount((IUnknown *)txtsrv_txtdoc);
-    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 2, "got wrong ref count: %ld\n", refcount);
 
     hres = ITextDocument_QueryInterface(txtsrv_txtdoc, &IID_IRichEditOle, (void **)&reole);
-    ok(hres == S_OK, "ITextDocument_QueryInterface: 0x%08x\n", hres);
+    ok(hres == S_OK, "ITextDocument_QueryInterface: 0x%08lx\n", hres);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 3, "got wrong ref count: %ld\n", refcount);
     refcount = get_refcount((IUnknown *)txtsrv_txtdoc);
-    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 3, "got wrong ref count: %ld\n", refcount);
 
     IRichEditOle_Release(reole);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 2, "got wrong ref count: %ld\n", refcount);
     ITextDocument_Release(txtsrv_txtdoc);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 1, "got wrong ref count: %ld\n", refcount);
 
     /* ITextDocument2Old */
     hres = ITextServices_QueryInterface(txtserv, &IID_ITextDocument2Old, (void **)&txtsrv_txtdoc2old);
-    ok(hres == S_OK, "ITextServices_QueryInterface: 0x%08x\n", hres);
+    ok(hres == S_OK, "ITextServices_QueryInterface: 0x%08lx\n", hres);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 2, "got wrong ref count: %ld\n", refcount);
     refcount = get_refcount((IUnknown *)txtsrv_txtdoc2old);
-    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 2, "got wrong ref count: %ld\n", refcount);
 
     hres = ITextDocument2Old_QueryInterface(txtsrv_txtdoc2old, &IID_IRichEditOle, (void **)&reole);
-    ok(hres == S_OK, "ITextDocument2Old_QueryInterface: 0x%08x\n", hres);
+    ok(hres == S_OK, "ITextDocument2Old_QueryInterface: 0x%08lx\n", hres);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 3, "got wrong ref count: %ld\n", refcount);
     refcount = get_refcount((IUnknown *)txtsrv_txtdoc2old);
-    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 3, "got wrong ref count: %ld\n", refcount);
 
     IRichEditOle_Release(reole);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 2, "got wrong ref count: %ld\n", refcount);
     ITextDocument2Old_Release(txtsrv_txtdoc2old);
     refcount = get_refcount((IUnknown *)txtserv);
-    ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+    ok(refcount == 1, "got wrong ref count: %ld\n", refcount);
 
     ITextServices_Release(txtserv);
     ITextHost_Release(host);
@@ -967,13 +1131,13 @@ static void test_default_format(void)
 
     cf2.cbSize = sizeof(CHARFORMAT2W);
     result = ITextServices_TxSendMessage(txtserv, EM_GETCHARFORMAT, SCF_DEFAULT, (LPARAM)&cf2, &lresult);
-    ok(result == S_OK, "ITextServices_TxSendMessage failed: 0x%08x.\n", result);
+    ok(result == S_OK, "ITextServices_TxSendMessage failed: 0x%08lx.\n", result);
 
     ITextHostImpl_TxGetCharFormat(host, &host_cf);
     ok(!lstrcmpW(host_cf->szFaceName, cf2.szFaceName), "got wrong font name: %s.\n", wine_dbgstr_w(cf2.szFaceName));
-    ok(cf2.yHeight == host_cf->yHeight, "got wrong yHeight: %d, expected %d.\n", cf2.yHeight, host_cf->yHeight);
+    ok(cf2.yHeight == host_cf->yHeight, "got wrong yHeight: %ld, expected %ld.\n", cf2.yHeight, host_cf->yHeight);
     expected_effects = (cf2.dwEffects & ~(CFE_AUTOCOLOR | CFE_AUTOBACKCOLOR));
-    ok(host_cf->dwEffects == expected_effects, "got wrong dwEffects: %x, expected %x.\n", cf2.dwEffects, expected_effects);
+    ok(host_cf->dwEffects == expected_effects, "got wrong dwEffects: %lx, expected %lx.\n", cf2.dwEffects, expected_effects);
     ok(cf2.bPitchAndFamily == host_cf->bPitchAndFamily, "got wrong bPitchAndFamily: %x, expected %x.\n",
        cf2.bPitchAndFamily, host_cf->bPitchAndFamily);
     ok(cf2.bCharSet == host_cf->bCharSet, "got wrong bCharSet: %x, expected %x.\n", cf2.bCharSet, host_cf->bCharSet);
@@ -987,18 +1151,307 @@ static void test_TxGetScroll(void)
     ITextServices *txtserv;
     ITextHost *host;
     HRESULT ret;
+    LONG min_pos, max_pos, pos, page;
+    BOOL enabled;
+    ITextHostTestImpl *host_impl;
+    RECT client = {0, 0, 100, 100};
 
     if (!init_texthost(&txtserv, &host))
         return;
 
+    host_impl = impl_from_ITextHost( host );
+
     ret = ITextServices_TxGetHScroll(txtserv, NULL, NULL, NULL, NULL, NULL);
-    ok(ret == S_OK, "ITextSerHices_GetVScroll failed: 0x%08x.\n", ret);
+    ok(ret == S_OK, "ITextServices_TxGetHScroll failed: 0x%08lx.\n", ret);
 
     ret = ITextServices_TxGetVScroll(txtserv, NULL, NULL, NULL, NULL, NULL);
-    ok(ret == S_OK, "ITextServices_GetVScroll failed: 0x%08x.\n", ret);
+    ok(ret == S_OK, "ITextServices_TxGetVScroll failed: 0x%08lx.\n", ret);
 
+    ret = ITextServices_TxGetVScroll( txtserv, &min_pos, &max_pos, &pos, &page, &enabled );
+    ok( ret == S_OK, "ITextServices_TxGetHScroll failed: 0x%08lx.\n", ret );
+    ok( min_pos == 0, "got %ld\n", min_pos );
+    ok( max_pos == 0, "got %ld\n", max_pos );
+    ok( pos == 0, "got %ld\n", pos );
+    ok( page == 0, "got %ld\n", page );
+    ok( !enabled, "got %d\n", enabled );
+
+    host_impl->scrollbars = WS_VSCROLL;
+    host_impl->props = TXTBIT_MULTILINE | TXTBIT_RICHTEXT | TXTBIT_WORDWRAP;
+    ITextServices_OnTxPropertyBitsChange( txtserv, TXTBIT_SCROLLBARCHANGE | TXTBIT_MULTILINE | TXTBIT_RICHTEXT | TXTBIT_WORDWRAP, host_impl->props );
+
+    host_impl->window = CreateWindowExA( 0, "static", NULL, WS_POPUP | WS_VISIBLE,
+                                         0, 0, 400, 400, 0, 0, 0, NULL );
+    host_impl->client_rect = client;
+    ret = ITextServices_OnTxInPlaceActivate( txtserv, &client );
+    ok( ret == S_OK, "got 0x%08lx.\n", ret );
+
+    ret = ITextServices_TxGetVScroll( txtserv, &min_pos, &max_pos, &pos, &page, &enabled );
+    ok( ret == S_OK, "ITextServices_TxGetHScroll failed: 0x%08lx.\n", ret );
+    ok( min_pos == 0, "got %ld\n", min_pos );
+    todo_wine
+    ok( max_pos == 0, "got %ld\n", max_pos );
+    ok( pos == 0, "got %ld\n", pos );
+    ok( page == client.bottom, "got %ld\n", page );
+    ok( !enabled, "got %d\n", enabled );
+
+    ret = ITextServices_TxSetText( txtserv, lorem );
+    ok( ret == S_OK, "got 0x%08lx.\n", ret );
+
+    ret = ITextServices_TxGetVScroll( txtserv, &min_pos, &max_pos, &pos, &page, &enabled );
+    ok( ret == S_OK, "ITextServices_TxGetHScroll failed: 0x%08lx.\n", ret );
+    ok( min_pos == 0, "got %ld\n", min_pos );
+    ok( max_pos > client.bottom, "got %ld\n", max_pos );
+    ok( pos == 0, "got %ld\n", pos );
+    ok( page == client.bottom, "got %ld\n", page );
+    ok( enabled, "got %d\n", enabled );
+
+    host_impl->scrollbars = WS_VSCROLL | ES_DISABLENOSCROLL;
+    ITextServices_OnTxPropertyBitsChange( txtserv, TXTBIT_SCROLLBARCHANGE, host_impl->props );
+    ITextServices_TxSetText( txtserv, L"short" );
+
+    ret = ITextServices_TxGetVScroll( txtserv, &min_pos, &max_pos, &pos, &page, &enabled );
+    ok( ret == S_OK, "ITextServices_TxGetHScroll failed: 0x%08lx.\n", ret );
+    ok( min_pos == 0, "got %ld\n", min_pos );
+    todo_wine
+    ok( max_pos == 0, "got %ld\n", max_pos );
+    ok( pos == 0, "got %ld\n", pos );
+    ok( page == client.bottom, "got %ld\n", page );
+    ok( !enabled, "got %d\n", enabled );
+
+    DestroyWindow( host_impl->window );
     ITextServices_Release(txtserv);
     ITextHost_Release(host);
+}
+
+static void test_notifications( void )
+{
+    ITextServices *txtserv;
+    ITextHost *host;
+    LRESULT res;
+    HRESULT hr;
+    RECT client = { 0, 0, 100, 100 };
+    ITextHostTestImpl *host_impl;
+
+    init_texthost( &txtserv, &host );
+    host_impl = impl_from_ITextHost( host );
+
+    host_impl->scrollbars = WS_VSCROLL;
+    host_impl->props = TXTBIT_MULTILINE | TXTBIT_RICHTEXT | TXTBIT_WORDWRAP;
+    ITextServices_OnTxPropertyBitsChange( txtserv, TXTBIT_SCROLLBARCHANGE | TXTBIT_MULTILINE | TXTBIT_RICHTEXT | TXTBIT_WORDWRAP, host_impl->props );
+
+    ITextServices_TxSetText( txtserv, lorem );
+
+    host_impl->window = CreateWindowExA( 0, "static", NULL, WS_POPUP | WS_VISIBLE,
+                                         0, 0, 400, 400, 0, 0, 0, NULL );
+    host_impl->client_rect = client;
+    hr = ITextServices_OnTxInPlaceActivate( txtserv, &client );
+    ok( hr == S_OK, "got 0x%08lx.\n", hr );
+
+    hr = ITextServices_TxSendMessage( txtserv, EM_SETEVENTMASK, 0, ENM_SCROLL, &res );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    /* check EN_VSCROLL notification is sent */
+    en_vscroll_sent = 0;
+    hr = ITextServices_TxSendMessage( txtserv, WM_VSCROLL, SB_LINEDOWN, 0, &res );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( en_vscroll_sent == 1, "got %d\n", en_vscroll_sent );
+
+    hr = ITextServices_TxSendMessage( txtserv, WM_VSCROLL, SB_BOTTOM, 0, &res );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( en_vscroll_sent == 2, "got %d\n", en_vscroll_sent );
+
+    /* but not when the thumb is moved */
+    hr = ITextServices_TxSendMessage( txtserv, WM_VSCROLL, MAKEWPARAM( SB_THUMBTRACK, 0 ), 0, &res );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    hr = ITextServices_TxSendMessage( txtserv, WM_VSCROLL, MAKEWPARAM( SB_THUMBPOSITION, 0 ), 0, &res );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( en_vscroll_sent == 2, "got %d\n", en_vscroll_sent );
+
+    /* EN_UPDATE is sent by TxDraw() */
+    en_update_sent = 0;
+    hr = ITextServices_TxDraw( txtserv, DVASPECT_CONTENT, 0, NULL, NULL, NULL, NULL, NULL, NULL,
+                               NULL, NULL, 0, TXTVIEW_ACTIVE );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( en_update_sent == 1, "got %d\n", en_update_sent );
+
+    DestroyWindow( host_impl->window );
+    ITextServices_Release( txtserv );
+    ITextHost_Release( host );
+}
+
+static void test_set_selection_message( void )
+{
+    ITextServices *txtserv;
+    ITextHost *host;
+    CHARRANGE range;
+    LRESULT result;
+    HRESULT hr;
+
+    if (!init_texthost(&txtserv, &host))
+        return;
+
+    ITextServices_TxSetText(txtserv, L"");
+
+    if (winetest_debug > 1) trace("TxSendMessage EM_SETEVENTMASK");
+
+    hr = ITextServices_TxSendMessage( txtserv, EM_SETEVENTMASK, 0, ENM_CHANGE | ENM_SELCHANGE, &result );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    if (winetest_debug > 1) trace("TxSendMessage EM_SETSEL 0 20");
+
+    CLEAR_COUNTER(ITextHostImpl_TxViewChange);
+    en_change_sent = 0;
+    en_selchange_sent = 0;
+
+    hr = ITextServices_TxSendMessage(txtserv, EM_SETSEL, 0, 20, &result);
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    CHECK_CALLED(ITextHostImpl_TxViewChange);
+    ok(en_change_sent == 0, "got %d\n", en_change_sent);
+    todo_wine
+    ok(en_selchange_sent == 0, "got %d\n", en_selchange_sent);
+
+    hr = ITextServices_TxSendMessage(txtserv, EM_EXGETSEL, 0, (LPARAM)&range, &result); ok( hr == S_OK, "got %08lx\n", hr ); trace("getsel: %lu, %lu\n", range.cpMin, range.cpMax);
+
+    if (winetest_debug > 1) trace("TxSendMessage EM_SETSELEX 0 20");
+
+    CLEAR_COUNTER(ITextHostImpl_TxViewChange);
+    en_change_sent = 0;
+    en_selchange_sent = 0;
+
+    range.cpMin = 0;
+    range.cpMax = 20;
+    hr = ITextServices_TxSendMessage(txtserv, EM_EXSETSEL, 0, (LPARAM)&range, &result);
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    CHECK_CALLED(ITextHostImpl_TxViewChange);
+    ok(en_change_sent == 0, "got %d\n", en_change_sent);
+    ok(en_selchange_sent == 0, "got %d\n", en_selchange_sent);
+
+    if (winetest_debug > 1) trace("TxSetText");
+
+    CLEAR_COUNTER(ITextHostImpl_TxViewChange);
+    en_change_sent = 0;
+    en_selchange_sent = 0;
+
+    hr = ITextServices_TxSendMessage(txtserv, EM_EXGETSEL, 0, (LPARAM)&range, &result); ok( hr == S_OK, "got %08lx\n", hr ); trace("getsel: %lu, %lu\n", range.cpMin, range.cpMax);
+
+    ITextServices_TxSetText(txtserv, lorem);
+
+    hr = ITextServices_TxSendMessage(txtserv, EM_EXGETSEL, 0, (LPARAM)&range, &result); ok( hr == S_OK, "got %08lx\n", hr ); trace("getsel: %lu, %lu\n", range.cpMin, range.cpMax);
+
+    CHECK_CALLED(ITextHostImpl_TxViewChange);
+    ok(en_change_sent == 1, "got %d\n", en_change_sent);
+    todo_wine
+    ok(en_selchange_sent == 0, "got %d\n", en_selchange_sent);
+
+    if (winetest_debug > 1) trace("TxSendMessage EM_SETSEL 0 20");
+
+    CLEAR_COUNTER(ITextHostImpl_TxViewChange);
+    en_change_sent = 0;
+    en_selchange_sent = 0;
+
+    hr = ITextServices_TxSendMessage(txtserv, EM_SETSEL, 0, 20, &result);
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    CHECK_CALLED(ITextHostImpl_TxViewChange);
+    ok(en_change_sent == 0, "got %d\n", en_change_sent);
+    ok(en_selchange_sent == 1, "got %d\n", en_selchange_sent);
+
+    hr = ITextServices_TxSendMessage(txtserv, EM_EXGETSEL, 0, (LPARAM)&range, &result); ok( hr == S_OK, "got %08lx\n", hr ); trace("getsel: %lu, %lu\n", range.cpMin, range.cpMax);
+
+    if (winetest_debug > 1) trace("TxSendMessage EM_SETSELEX 0 20");
+
+    CLEAR_COUNTER(ITextHostImpl_TxViewChange);
+    en_change_sent = 0;
+    en_selchange_sent = 0;
+
+    range.cpMin = 0;
+    range.cpMax = 20;
+    hr = ITextServices_TxSendMessage(txtserv, EM_EXSETSEL, 0, (LPARAM)&range, &result);
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    CHECK_CALLED(ITextHostImpl_TxViewChange);
+    ok(en_change_sent == 0, "got %d\n", en_change_sent);
+    ok(en_selchange_sent == 0, "got %d\n", en_selchange_sent);
+
+    hr = ITextServices_TxSendMessage(txtserv, EM_EXGETSEL, 0, (LPARAM)&range, &result); ok( hr == S_OK, "got %08lx\n", hr ); trace("getsel: %lu, %lu\n", range.cpMin, range.cpMax);
+
+    if (winetest_debug > 1) trace("release interfaces");
+
+    ITextServices_Release( txtserv );
+    ITextHost_Release( host );
+}
+
+static void test_scrollcaret( void )
+{
+    ITextServices *txtserv;
+    ITextHost *host;
+    LRESULT result;
+    HRESULT hr;
+
+    if (!init_texthost(&txtserv, &host))
+        return;
+
+    hr = ITextServices_TxSendMessage(txtserv, EM_SCROLLCARET, 0, 0, &result);
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    ITextServices_Release( txtserv );
+    ITextHost_Release( host );
+}
+
+static void test_inplace_active( BOOL active )
+{
+    ITextServices *txtserv;
+    ITextHost *host;
+    LRESULT result;
+    HRESULT hr;
+
+    ITextHostTestImpl *host_impl;
+    if (!init_texthost(&txtserv, &host))
+        return;
+
+    host_impl = impl_from_ITextHost( host );
+    host_impl->window = CreateWindowExA( 0, "static", NULL, WS_POPUP|WS_VISIBLE, 0, 0, 100, 100, 0, 0, 0, NULL );
+    host_impl->client_rect = (RECT) { 0, 0, 150, 150 };
+    host_impl->scrollbars = WS_VSCROLL | ES_AUTOVSCROLL;
+    host_impl->props = TXTBIT_MULTILINE | TXTBIT_RICHTEXT | TXTBIT_WORDWRAP;
+    ITextServices_OnTxPropertyBitsChange( txtserv, TXTBIT_SCROLLBARCHANGE | TXTBIT_MULTILINE | TXTBIT_RICHTEXT | TXTBIT_WORDWRAP, host_impl->props );
+
+    CLEAR_COUNTER(ITextHostImpl_TxScrollWindowEx);
+    CLEAR_COUNTER(ITextHostImpl_TxGetClientRect);
+
+    if (active) {
+        hr = ITextServices_OnTxInPlaceActivate( txtserv, &host_impl->client_rect );
+        ok( hr == S_OK, "got %08lx\n", hr );
+    }
+
+    hr = ITextServices_TxSendMessage(txtserv, EM_SETEVENTMASK, 0, ENM_REQUESTRESIZE, &result);
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    hr = ITextServices_TxDraw( txtserv, DVASPECT_CONTENT, 0, NULL, NULL, GetDC(host_impl->window), NULL, (RECTL *)&host_impl->client_rect, NULL, NULL, NULL, 0, TXTVIEW_INACTIVE );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    hr = ITextServices_TxSendMessage(txtserv, EM_SETSEL, 0, -1, &result);
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    hr = ITextServices_TxSendMessage(txtserv, EM_REPLACESEL, TRUE, (LPARAM) lorem, &result);
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    hr = ITextServices_TxDraw( txtserv, DVASPECT_CONTENT, 0, NULL, NULL, GetDC(host_impl->window), NULL, (RECTL *)&host_impl->client_rect, NULL, NULL, NULL, 0, TXTVIEW_INACTIVE );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    if (active) {
+        CHECK_CALLED(ITextHostImpl_TxScrollWindowEx);
+        CHECK_CALLED(ITextHostImpl_TxGetClientRect);
+    } else {
+        CHECK_NOT_CALLED(ITextHostImpl_TxScrollWindowEx);
+        CHECK_NOT_CALLED(ITextHostImpl_TxGetClientRect);
+    }
+
+    DestroyWindow( host_impl->window );
+    ITextServices_Release( txtserv );
+    ITextHost_Release( host );
 }
 
 START_TEST( txtsrv )
@@ -1033,6 +1486,11 @@ START_TEST( txtsrv )
         test_QueryInterface();
         test_default_format();
         test_TxGetScroll();
+        test_notifications();
+        test_set_selection_message();
+        test_scrollcaret();
+        test_inplace_active(TRUE);
+        test_inplace_active(FALSE);
     }
     if (wrapperCodeMem) VirtualFree(wrapperCodeMem, 0, MEM_RELEASE);
 }

@@ -99,8 +99,8 @@ KdpPrintBanner(VOID)
     {
         DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
         DPRINT1("ARC Paths: %s %s %s %s\n",
-                KeLoaderBlock->ArcBootDeviceName, KeLoaderBlock->NtHalPathName,
-                KeLoaderBlock->ArcHalDeviceName, KeLoaderBlock->NtBootPathName);
+                KeLoaderBlock->ArcHalDeviceName, KeLoaderBlock->NtHalPathName,
+                KeLoaderBlock->ArcBootDeviceName, KeLoaderBlock->NtBootPathName);
     }
 }
 

@@ -299,7 +299,8 @@ GetFilterFromEvents(DWORD fEvents)
     return (FILE_NOTIFY_CHANGE_FILE_NAME |
             FILE_NOTIFY_CHANGE_DIR_NAME |
             FILE_NOTIFY_CHANGE_CREATION |
-            FILE_NOTIFY_CHANGE_SIZE);
+            FILE_NOTIFY_CHANGE_SIZE |
+            FILE_NOTIFY_CHANGE_ATTRIBUTES);
 }
 
 // Restart a watch by using ReadDirectoryChangesW function

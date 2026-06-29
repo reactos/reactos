@@ -104,7 +104,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
     }
 
     /* lpTempFileName must be able to contain: PathName, Prefix (3), number(4), .tmp(4) & \0(1)
-     * See: http://msdn.microsoft.com/en-us/library/aa364991%28v=vs.85%29.aspx
+     * See: https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-gettempfilenamea
      */
     if (PathNameString.Length > (MAX_PATH - 3 - 4 - 4 - 1) * sizeof(WCHAR))
     {

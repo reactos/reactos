@@ -7,9 +7,24 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
+IDD_INSTALL DIALOG 0, 0, 205, 60
+CAPTION "Installing fonts..."
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Installing fonts...", IDC_INSTALL_TEXT, 5, 10, 195, 10
+    CONTROL "", IDC_INSTALL_PROGRESS, "msctls_progress32", 0, 5, 25, 195, 10
+    PUSHBUTTON "Cancel", IDCANCEL, 65, 40, 70, 15
+END
+
 STRINGTABLE
 BEGIN
     IDS_REACTOS_FONTS_FOLDER "ReactOS Schriftartenordner"
+    IDS_INSTALL_OK "The font(s) have been installed successfully."
+    IDS_INSTALL_FAILED "Failed to install the font(s)."
+    IDS_CONFIRM_DELETE_FONT "Do you want to delete the font(s)?"
+    IDS_PROPERTIES "P&roperties"
+    IDS_CANTDELETEFONT "Failed to delete the font(s)."
 END
 
 STRINGTABLE
@@ -23,9 +38,7 @@ BEGIN
     IDS_COL_SIZE "Größe"
     IDS_COL_MODIFIED "Geändert"
     IDS_COL_ATTR "Attribute"
-    IDS_COL_ATTR_LETTERS "RHSAC"
 END
-
 
 STRINGTABLE
 BEGIN

@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Xbox specific disk access routines
  * COPYRIGHT:   Copyright 2004 Gé van Geldorp (gvg@reactos.com)
- *              Copyright 2019 Dmitry Borisov (di.sean@protonmail.com)
+ *              Copyright 2019-2025 Dmitry Borisov (di.sean@protonmail.com)
  */
 
 /* INCLUDES *******************************************************************/
@@ -20,41 +20,51 @@ static PDEVICE_UNIT HardDrive = NULL;
 static PDEVICE_UNIT CdDrive = NULL;
 static BOOLEAN AtaInitialized = FALSE;
 
+/* DISK IO ERROR SUPPORT *****************************************************/
+
+/* For disk.c!DiskError() */
+PCSTR
+DiskGetErrorCodeString(
+    _In_ ULONG ErrorCode)
+{
+#if 0 // TODO: ATA/IDE error code descriptions.
+    switch (ErrorCode)
+    {
+    default: return "Unknown error code";
+    }
+#endif
+    return NULL;
+}
+
 /* FUNCTIONS ******************************************************************/
 
+static
 VOID
-XboxDiskInit(BOOLEAN Init)
+XboxDiskInit(VOID)
 {
-    UCHAR DetectedCount;
-    UCHAR UnitNumber;
-    PDEVICE_UNIT DeviceUnit = NULL;
+    UCHAR DetectedCount, UnitNumber;
 
-    if (Init & !AtaInitialized)
+    ASSERT(!AtaInitialized);
+    AtaInitialized = TRUE;
+
+    /* Find first HDD and CD */
+    AtaInit(&DetectedCount);
+    for (UnitNumber = 0; UnitNumber < DetectedCount; UnitNumber++)
     {
-        /* Find first HDD and CD */
-        AtaInit(&DetectedCount);
-        for (UnitNumber = 0; UnitNumber <= DetectedCount; UnitNumber++)
+        PDEVICE_UNIT DeviceUnit = AtaGetDevice(UnitNumber);
+        if (!DeviceUnit)
+            continue;
+
+        if (DeviceUnit->Flags & ATA_DEVICE_ATAPI)
         {
-            DeviceUnit = AtaGetDevice(UnitNumber);
-            if (DeviceUnit)
-            {
-                if (DeviceUnit->Flags & ATA_DEVICE_ATAPI)
-                {
-                    if (!CdDrive)
-                        CdDrive = DeviceUnit;
-                }
-                else
-                {
-                    if (!HardDrive)
-                        HardDrive = DeviceUnit;
-                }
-            }
+            if (!CdDrive)
+                CdDrive = DeviceUnit;
         }
-        AtaInitialized = TRUE;
-    }
-    else
-    {
-        AtaFree();
+        else
+        {
+            if (!HardDrive)
+                HardDrive = DeviceUnit;
+        }
     }
 }
 
@@ -67,7 +77,7 @@ XboxDiskDriveNumberToDeviceUnit(UCHAR DriveNumber)
         return NULL;
 
     if (!AtaInitialized)
-        XboxDiskInit(TRUE);
+        XboxDiskInit();
 
     /* HDD */
     if ((DriveNumber == 0x80) && HardDrive)
@@ -80,6 +90,35 @@ XboxDiskDriveNumberToDeviceUnit(UCHAR DriveNumber)
     return NULL;
 }
 
+BOOLEAN DiskResetController(UCHAR DriveNumber)
+{
+    WARN("DiskResetController(0x%x) DISK OPERATION FAILED -- RESETTING CONTROLLER\n", DriveNumber);
+    /* No-op on XBOX */
+    return TRUE;
+}
+
+CONFIGURATION_TYPE
+DiskGetConfigType(
+    _In_ UCHAR DriveNumber)
+{
+    PDEVICE_UNIT DeviceUnit;
+
+    DeviceUnit = XboxDiskDriveNumberToDeviceUnit(DriveNumber);
+    if (!DeviceUnit)
+        return -1; // MaximumType;
+
+    if (DeviceUnit == CdDrive) // (DeviceUnit->Flags & ATA_DEVICE_ATAPI)
+        return CdromController;
+    else // if (DeviceUnit == HardDrive)
+        return DiskPeripheral;
+}
+
+// FIXME: Dummy for entry.S/linux.S
+VOID __cdecl DiskStopFloppyMotor(VOID)
+{
+    /* No-op on XBOX */
+}
+
 BOOLEAN
 XboxDiskReadLogicalSectors(
     IN UCHAR DriveNumber,
@@ -88,15 +127,19 @@ XboxDiskReadLogicalSectors(
     OUT PVOID Buffer)
 {
     PDEVICE_UNIT DeviceUnit;
+    BOOLEAN Success;
 
-    TRACE("XboxDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n",
+    TRACE("XboxDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u Buffer: 0x%x\n",
           DriveNumber, SectorNumber, SectorCount, Buffer);
 
     DeviceUnit = XboxDiskDriveNumberToDeviceUnit(DriveNumber);
     if (!DeviceUnit)
         return FALSE;
 
-    return AtaAtapiReadLogicalSectorsLBA(DeviceUnit, SectorNumber, SectorCount, Buffer);
+    Success = AtaReadLogicalSectors(DeviceUnit, SectorNumber, SectorCount, Buffer);
+    if (!Success)
+        DiskError("Disk Read Failed", -1);
+    return Success;
 }
 
 BOOLEAN
@@ -112,7 +155,7 @@ XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 
     Geometry->Cylinders = DeviceUnit->Cylinders;
     Geometry->Heads = DeviceUnit->Heads;
-    Geometry->SectorsPerTrack = DeviceUnit->Sectors;
+    Geometry->SectorsPerTrack = DeviceUnit->SectorsPerTrack;
     Geometry->BytesPerSector = DeviceUnit->SectorSize;
     Geometry->Sectors = DeviceUnit->TotalSectors;
 
@@ -135,7 +178,7 @@ XboxDiskGetCacheableBlockCount(UCHAR DriveNumber)
     if (DeviceUnit->Flags & ATA_DEVICE_LBA)
         return 64;
     else
-        return DeviceUnit->Sectors;
+        return DeviceUnit->SectorsPerTrack;
 }
 
 /* EOF */

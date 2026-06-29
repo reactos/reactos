@@ -34,7 +34,7 @@ extern "C" {
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxDriver::AddDevice(
     __in MdDriverObject DriverObject,
     __in MdDeviceObject PhysicalDeviceObject
