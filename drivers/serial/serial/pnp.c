@@ -435,7 +435,6 @@ SerialPnp(
 			RtlInitUnicodeString(&LinkName, LinkNameBuffer);
 			IoDeleteSymbolicLink(&LinkName);
 
-			Status = STATUS_SUCCESS;
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 		default:
