@@ -220,21 +220,6 @@ GetAccCursorInfo ( PCURSORINFO pci )
 /*
  * @unimplemented
  */
-UINT
-WINAPI
-GetRawInputDeviceInfoW(
-    HANDLE hDevice,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-/*
- * @unimplemented
- */
 LONG
 WINAPI
 CsrBroadcastSystemMessageExW(
@@ -250,7 +235,7 @@ CsrBroadcastSystemMessageExW(
 }
 
 /*
- * @unimplemented
+ * @ implemented
  */
 UINT
 WINAPI
@@ -260,8 +245,36 @@ GetRawInputDeviceInfoA(
     LPVOID pData,
     PUINT pcbSize)
 {
-  UNIMPLEMENTED;
-  return 0;
+    TRACE( "device %p, command %#x, data %p, size %p.\n", hDevice, uiCommand, pData, pcbSize );
+
+    /* RIDI_DEVICENAME size is in chars, not bytes */
+    if (uiCommand == RIDI_DEVICENAME)
+    {
+        WCHAR *nameW;
+        UINT ret, sizeW;
+
+        if (!pcbSize) return ~0U;
+
+        sizeW = *pcbSize;
+
+        if (pData && sizeW > 0)
+            nameW = HeapAlloc( GetProcessHeap(), 0, sizeof(WCHAR) * sizeW );
+        else
+            nameW = NULL;
+
+        ret = NtUserGetRawInputDeviceInfo( hDevice, uiCommand, nameW, &sizeW );
+
+        if (ret && ret != ~0U)
+            WideCharToMultiByte( CP_ACP, 0, nameW, -1, pData, *pcbSize, NULL, NULL );
+
+        *pcbSize = sizeW;
+
+        HeapFree( GetProcessHeap(), 0, nameW );
+
+        return ret;
+    }
+
+    return NtUserGetRawInputDeviceInfo( hDevice, uiCommand, pData, pcbSize );
 }
 
 /*
@@ -288,86 +301,6 @@ DefRawInputProc(
   if (cbSizeHeader == sizeof(RAWINPUTHEADER))
      return S_OK;
   return 1;
-}
-
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-DECLSPEC_HOTPATCH
-GetRawInputBuffer(
-    PRAWINPUT pData,
-    PUINT pcbSize,
-    UINT cbSizeHeader)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-GetRawInputData(
-    HRAWINPUT hRawInput,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize,
-    UINT cbSizeHeader)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-GetRawInputDeviceList(
-    PRAWINPUTDEVICELIST pRawInputDeviceList,
-    PUINT puiNumDevices,
-    UINT cbSize)
-{
-    if(pRawInputDeviceList)
-        memset(pRawInputDeviceList, 0, sizeof *pRawInputDeviceList);
-    if(puiNumDevices)
-       *puiNumDevices = 0;
-
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-DECLSPEC_HOTPATCH
-GetRegisteredRawInputDevices(
-    PRAWINPUTDEVICE pRawInputDevices,
-    PUINT puiNumDevices,
-    UINT cbSize)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-DECLSPEC_HOTPATCH
-RegisterRawInputDevices(
-    PCRAWINPUTDEVICE pRawInputDevices,
-    UINT uiNumDevices,
-    UINT cbSize)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 /*
