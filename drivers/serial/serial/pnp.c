@@ -416,7 +416,11 @@ SerialPnp(
 		case IRP_MN_SURPRISE_REMOVAL: /* 0x17 */
 		{
 			WCHAR LinkNameBuffer[32];
+			WCHAR DeviceNameBuffer[32];
 			UNICODE_STRING LinkName;
+			UNICODE_STRING DeviceName;
+			OBJECT_ATTRIBUTES ObjectAttributes;
+			HANDLE hKey;
 
 			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_SURPRISE_REMOVAL\n");
 
@@ -434,6 +438,17 @@ SerialPnp(
 			_swprintf(LinkNameBuffer, L"\\DosDevices\\COM%lu", DeviceExtension->ComPort);
 			RtlInitUnicodeString(&LinkName, LinkNameBuffer);
 			IoDeleteSymbolicLink(&LinkName);
+
+			_swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", DeviceExtension->SerialPortNumber);
+			RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
+			RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\HARDWARE\\DeviceMap\\SERIALCOMM");
+			InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+
+			if (NT_SUCCESS(ZwOpenKey(&hKey, KEY_SET_VALUE, &ObjectAttributes)))
+			{
+					ZwDeleteValueKey(hKey, &DeviceName);
+					ZwClose(hKey);
+			}
 
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
