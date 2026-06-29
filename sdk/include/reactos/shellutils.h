@@ -469,7 +469,7 @@ template<class P, class R> static HRESULT SHILCloneParent(P pidl, R *ppOut)
 {
     R r = *ppOut = (R)ILClone((PIDLIST_RELATIVE)pidl);
     if (r)
-        ILRemoveLastID(r);
+        ILRemoveLastID(r); // "c:\folder\thisitem" => "c:\folder"
     return r ? S_OK : E_OUTOFMEMORY;
 }
 
