@@ -29,6 +29,7 @@ extern void func_GetUserObjectInformation(void);
 extern void func_GetWindowPlacement(void);
 extern void func_GW_ENABLEDPOPUP(void);
 extern void func_InitializeLpkHooks(void);
+extern void func_IsServerSideWindow(void);
 extern void func_KbdLayout(void);
 extern void func_keybd_event(void);
 extern void func_LoadImage(void);
@@ -94,6 +95,7 @@ const struct test winetest_testlist[] =
     { "GetWindowPlacement", func_GetWindowPlacement },
     { "GW_ENABLEDPOPUP", func_GW_ENABLEDPOPUP },
     { "InitializeLpkHooks", func_InitializeLpkHooks },
+    { "IsServerSideWindow", func_IsServerSideWindow },
     { "KbdLayout", func_KbdLayout },
     { "keybd_event", func_keybd_event },
     { "LoadImage", func_LoadImage },

@@ -7,18 +7,13 @@
 
 /* This testapp tests behaviour of IsServerSideWindow() function in user32. */
 
-#include <windows.h>
-#include <stdio.h>
-#include <undocuser.h>
-
-#include <debug.h>
+#include "precomp.h"
 
 WCHAR WndClass[] = L"window class";
 
-LRESULT CALLBACK WndProc(HWND hWnd,
-                         UINT msg,
-                         WPARAM wParam,
-                         LPARAM lParam)
+LRESULT
+CALLBACK
+Test_IsServerSideWindow_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
@@ -33,46 +28,50 @@ LRESULT CALLBACK WndProc(HWND hWnd,
     return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
-int APIENTRY wWinMain(HINSTANCE hInst,
-                      HINSTANCE hPrevInstance,
-                      LPWSTR lpCmdLine,
-                      int nCmdShow)
+START_TEST(IsServerSideWindow)
 {
     HWND hWnd;
     WNDCLASSEXW wcx;
     UINT result;
-    BOOL ret;
 
     ZeroMemory(&wcx, sizeof(wcx));
     wcx.cbSize = sizeof(wcx);
-    wcx.lpfnWndProc = (WNDPROC)WndProc;
-    wcx.hInstance = hInst;
+    wcx.lpfnWndProc = (WNDPROC)Test_IsServerSideWindow_WndProc;
+    wcx.hInstance = GetModuleHandleW(NULL);
     wcx.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wcx.lpszClassName = WndClass;
 
     if (!(result = RegisterClassExW(&wcx)))
-        return 1;
+    {
+        skip(FALSE, "RegisterClassExW failed with error %lu\n", GetLastError());
+        return;
+    }
 
-    /* 1. Window with a valid wndproc */
+    /* 1. Invalid window */
+    hWnd = (HWND)0xdeadbeef;
+    ok(!IsServerSideWindow(hWnd), "The window %p is invalid but IsServerSideWindow() returned TRUE", hWnd);
+    ok(GetLastError() == ERROR_INVALID_WINDOW_HANDLE, "GetLastError() returned %lu instead of ERROR_INVALID_WINDOW_HANDLE", GetLastError());
+
+    /* 2. Window with a kernel-mode WndProc */
+    /* ScrollBar is an example of a server-side window that can be created from user-mode code */
     hWnd = CreateWindowExW(0,
-                           WndClass,
+                           L"ScrollBar",
                            NULL,
-                           WS_CAPTION | WS_SYSMENU,
+                           SBS_HORZ | WS_VISIBLE,
                            CW_USEDEFAULT, CW_USEDEFAULT,
                            400, 100,
                            NULL, 0,
-                           hInst, NULL);
+                           wcx.hInstance, NULL);
     if (!hWnd)
-        return 1;
+    {
+        skip(FALSE, "CreateWindowExW failed with error %lu\n", GetLastError());
+        return;
+    }
 
     ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
 
-    ret = IsServerSideWindow(hWnd);
-    if (ret)
-        DPRINT("OK: the window %p has a valid kernel mode wndproc\n", hWnd);
-    else
-        DPRINT("FAIL: the window %p is not valid or has no valid kernel mode wndproc\n", hWnd);
+    ok(IsServerSideWindow(hWnd), "The window %p is invalid or doesn't have a valid kernel-mode WndProc", hWnd);
 
     // TODO: this seems to be not a correct test condition.
     //       Find a valid condition to test a kernel mode wmdproc existence correctly!
@@ -81,7 +80,7 @@ int APIENTRY wWinMain(HINSTANCE hInst,
 
     DestroyWindow(hWnd);
 
-    /* 2. Window without a valid wndproc */
+    /* 3. Window without a user-mode WndProc */
     hWnd = CreateWindowExW(0,
                            WndClass,
                            NULL,
@@ -89,22 +88,21 @@ int APIENTRY wWinMain(HINSTANCE hInst,
                            CW_USEDEFAULT, CW_USEDEFAULT,
                            400, 100,
                            NULL, 0,
-                           hInst, NULL);
+                           wcx.hInstance, NULL);
 
     if (!hWnd)
-        return 1;
+    {
+        skip(FALSE, "CreateWindowExW failed with error %lu\n", GetLastError());
+        return;
+    }
 
     ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
 
-    ret = IsServerSideWindow(hWnd);
-    if (ret)
-        DPRINT("FAIL: the window %p has a valid kernel mode wndproc when it shouldn't\n", hWnd);
-    else
-        DPRINT("OK: the window %p has no valid kernel mode wndproc\n", hWnd);
+    ok(!IsServerSideWindow(hWnd), "The window %p has a valid kernel-mode WndProc when it should not", hWnd);
 
     DestroyWindow(hWnd);
 
-    UnregisterClassW(WndClass, hInst);
-    return 0;
+    UnregisterClassW(WndClass, wcx.hInstance);
+    return;
 }
