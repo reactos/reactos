@@ -7,10 +7,9 @@
 
 /* This testapp tests behaviour of IsServerSideWindow() function in user32. */
 
-#define _WINE
-
 #include <windows.h>
 #include <stdio.h>
+#include <undocuser.h>
 
 #include <debug.h>
 
