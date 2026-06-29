@@ -1533,11 +1533,7 @@ IsServerSideWindow(
     _In_ HWND hWnd)
 {
     PWND Wnd = ValidateHwnd(hWnd);
-
-    if (Wnd != NULL)
-        return (Wnd->state & WNDS_SERVERSIDEWINDOWPROC) != 0;
-
-    return FALSE;
+    return (Wnd ? !!(Wnd->state & WNDS_SERVERSIDEWINDOWPROC) : FALSE);
 }
 
 
