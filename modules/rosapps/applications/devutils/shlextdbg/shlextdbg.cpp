@@ -213,21 +213,21 @@ static void DumpBytes(const void *Data, SIZE_T cb)
 
 static inline CHAR SafeDumpChar(UINT Ch)
 {
-    return Ch >= ' ' && Ch < 127 ? Ch : '.';
+    return Ch <= 255 && isprint(static_cast<BYTE>(Ch)) ? (BYTE)Ch : '.';
 }
 
 static void DumpHexBytes(LPCVOID Buffer, SIZE_T cb)
 {
-	UINT cbPerLine = 16, cbLine;
-	for (SIZE_T i = 0, j; i < cb; i += cbLine)
-	{
-		cbLine = min(cbPerLine, cb - i);
-		for (j = 0; j < cbLine; ++j) wprintf(L" %.2X", ((BYTE*)Buffer)[i + j]);
-		for (j = 0; j < cbPerLine - cbLine; ++j) wprintf(L" __");
-		for (j = 0; j < cbLine; ++j) wprintf(L"%s%c", !j ? L" " : L"", SafeDumpChar(((BYTE*)Buffer)[i + j]));
-		for (j = 0; j < cbPerLine - cbLine; ++j) wprintf(L"_");
-		wprintf(L"\n");
-	}
+    UINT cbPerLine = 16, cbLine;
+    for (SIZE_T i = 0, j; i < cb; i += cbLine)
+    {
+        cbLine = min(cbPerLine, cb - i);
+        for (j = 0; j < cbLine; ++j) wprintf(L" %.2X", ((BYTE*)Buffer)[i + j]);
+        for (j = 0; j < cbPerLine - cbLine; ++j) wprintf(L"   ");
+        for (j = 0; j < cbLine; ++j) wprintf(L"%s%c", !j ? L" " : L"", SafeDumpChar(((BYTE*)Buffer)[i + j]));
+        for (j = 0; j < cbPerLine - cbLine; ++j) wprintf(L" ");
+        wprintf(L"\n");
+    }
 }
 
 static HRESULT GetCommandString(IContextMenu& CM, UINT Id, UINT Type, LPWSTR buf, UINT cchMax)
@@ -430,10 +430,10 @@ static HRESULT DumpFolderColumns(PCWSTR Path)
     if (SUCCEEDED(sf->GetDefaultColumn(0, &defSort, &defDisp)))
         wprintf(L"%d is the default sort column and %d is the default display column.\n", defSort, defDisp);
 
-    HRESULT (WINAPI*PSGNFPK)(SHCOLUMNID*, PWSTR*) = NULL;
+    HRESULT (WINAPI* PSGNFPK)(SHCOLUMNID*, PWSTR*) = NULL;
     if (HMODULE hPS = LoadLibraryW(L"propsys.dll"))
     {
-        HRESULT (WINAPI*PSGPD)(SHCOLUMNID*, REFIID, void**);
+        HRESULT (WINAPI* PSGPD)(SHCOLUMNID*, REFIID, void**);
         (FARPROC&)PSGPD = GetProcAddress(hPS, "PSGetPropertyDescription");
         // HACKFIX: PSGetNameFromPropertyKey is a stub in ROS, we will crash if we call it
         CComPtr<IShellFolder2> dummy;
