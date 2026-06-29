@@ -546,7 +546,6 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::GetSetting(LONG setting, VARIANT_BOOL 
 {
     TRACE("(%p, %lu, %p)\n", this, setting, result);
 
-    HRESULT hr = S_OK;
     int flag;
     SHELLSTATE ss = { };
     SHGetSetSettings(&ss, setting, FALSE);
@@ -561,10 +560,10 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::GetSetting(LONG setting, VARIANT_BOOL 
         case SSF_SEPPROCESS:       flag = ss.fSepProcess;         break;
         case SSF_STARTPANELON:     flag = ss.fStartPanelOn;       break;
         case SSF_SERVERADMINUI:    flag = IsOS(OS_SERVERADMINUI); break;
-        default: hr = S_FALSE;
+        default: *result = VARIANT_FALSE; return S_FALSE;
     }
-    *result = flag && hr == S_OK ? VARIANT_TRUE : VARIANT_FALSE;
-    return hr;
+    *result = flag ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 
