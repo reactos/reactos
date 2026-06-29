@@ -1,8 +1,7 @@
 /*
- * PROJECT:     ReactOS Setup
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/setup/reactos/lang/tr-TR.rc
- * PURPOSE:     Turkish Setup Resource File
+ * PROJECT:     ReactOS Setup Wizard
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
  * TRANSLATORS: 2012 Arda Tanrıkulu <ardatanrikulu@gmail.com>
  *              2013-2016 Erdem Ersoy <erdemersoy@erdemersoy.net>
  *              2018 Ercan Ersoy <ercanersoy@ercanersoy.net>
