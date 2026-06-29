@@ -546,7 +546,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::GetSetting(LONG setting, VARIANT_BOOL 
 {
     TRACE("(%p, %lu, %p)\n", this, setting, result);
 
-    int flag;
+    int flag = 0;
     SHELLSTATE ss = { };
     SHGetSetSettings(&ss, setting, FALSE);
     switch (setting)
