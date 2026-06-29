@@ -588,7 +588,7 @@ BaseInitializeContext(IN PCONTEXT Context,
     /* Setup the Initial Win32 Thread Context */
     Context->Rcx = (ULONG_PTR)StartAddress;
     Context->Rdx = (ULONG_PTR)Parameter;
-    Context->Rsp = (ULONG_PTR)StackAddress - 5 * sizeof(PVOID);
+    Context->Rsp = (ULONG_PTR)StackAddress;
 
     /* Setup the Segments */
     Context->SegGs = KGDT64_R3_DATA | RPL_MASK;
