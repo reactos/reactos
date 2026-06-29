@@ -212,6 +212,15 @@ AcpiOsTerminate(void)
 {
     DPRINT("AcpiOsTerminate() called\n");
 
+    /* Release the synthetic RSDP built from the loader-provided ACPI tables.
+     * ACPICA has already torn down its table mappings (AcpiUtSubsystemShutdown)
+     * by the time it calls us, so nothing references this buffer anymore. */
+    if (AcpiLoaderRsdp != NULL)
+    {
+        ExFreePoolWithTag(AcpiLoaderRsdp, TAG_ACPI_LOADER_RSDP_TABLE);
+        AcpiLoaderRsdp = NULL;
+    }
+
     return AE_OK;
 }
 
