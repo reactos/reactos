@@ -419,6 +419,7 @@ SerialPnp(
 			WCHAR DeviceNameBuffer[32];
 			UNICODE_STRING LinkName;
 			UNICODE_STRING DeviceName;
+            UNICODE_STRING KeyName;
 			OBJECT_ATTRIBUTES ObjectAttributes;
 			HANDLE hKey;
 
