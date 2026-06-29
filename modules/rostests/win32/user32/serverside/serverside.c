@@ -43,7 +43,7 @@ int APIENTRY wWinMain(HINSTANCE hInst,
     UINT result;
     BOOL ret;
 
-    memset(&wcx, 0, sizeof(wcx));
+    ZeroMemory(&wcx, sizeof(wcx));
     wcx.cbSize = sizeof(wcx);
     wcx.lpfnWndProc = (WNDPROC)WndProc;
     wcx.hInstance = hInst;
