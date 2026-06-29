@@ -187,13 +187,11 @@ DefWndStartSizeMove(PWND Wnd, WPARAM wParam, POINT *capturePoint)
        while (!hittest)
        {
           if (!co_IntGetPeekMessage(&msg, 0, 0, 0, PM_REMOVE, TRUE)) return 0;
-
           if (msg.message == WM_QUIT)
           {
              MsqPostQuitMessage(pti, (ULONG)msg.wParam);
              return 0;
           }
-
           if (IntCallMsgFilter( &msg, MSGF_SIZE )) continue;
 
 	  switch(msg.message)
@@ -415,13 +413,11 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       int dx = 0, dy = 0;
 
       if (!co_IntGetPeekMessage(&msg, 0, 0, 0, PM_REMOVE, TRUE)) break;
-
       if (msg.message == WM_QUIT)
       {
          MsqPostQuitMessage(pti, (ULONG)msg.wParam);
          break;
       }
-
       if (IntCallMsgFilter( &msg, MSGF_SIZE )) continue;
 
       if (msg.message == WM_KEYDOWN && (msg.wParam == VK_RETURN || msg.wParam == VK_ESCAPE))
