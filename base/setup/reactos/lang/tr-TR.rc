@@ -1,12 +1,12 @@
 /*
- * PROJECT:     ReactOS Setup Wizard
+ * PROJECT:     ReactOS GUI first stage setup application
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Turkish resource file
- * TRANSLATORS: 2012 Arda Tanrıkulu <ardatanrikulu@gmail.com>
- *              2013-2016 Erdem Ersoy <erdemersoy@erdemersoy.net>
- *              2018 Ercan Ersoy <ercanersoy@ercanersoy.net>
- *              2021 Süleyman Poyraz <zaryob.dev@gmail.com>
- *              2026 Hasan Eliküçük <hasanelk101@gmail.com>
+ * TRANSLATORS: Copyright 2012 Arda Tanrıkulu <ardatanrikulu@gmail.com>
+ *              Copyright 2013-2016 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              Copyright 2018 Ercan Ersoy <ercanersoy@ercanersoy.net>
+ *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2026 Hasan Eliküçük <hasanelk101@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
