@@ -13,6 +13,8 @@
 #include <ndk/halfuncs.h>
 #include <drivers/bootvid/bootvid.h>
 
+#define InitializePalette() InitPaletteWithTable(VidpDefaultPalette, BV_MAX_COLORS)
+
 /* Module-specific header */
 #ifdef MODULE_HEADER
 #include MODULE_HEADER
@@ -69,8 +71,6 @@ extern const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS];
 #define GetRValue(quad)     ((UCHAR)(((quad)>>16) & 0xFF))
 #define GetGValue(quad)     ((UCHAR)(((quad)>>8) & 0xFF))
 #define GetBValue(quad)     ((UCHAR)((quad) & 0xFF))
-
-#define InitializePalette() InitPaletteWithTable((PULONG)VidpDefaultPalette, BV_MAX_COLORS)
 
 #ifdef CHAR_GEN_UPSIDE_DOWN
 # define GetFontPtr(_Char)  (&VidpFontData[(_Char) * BOOTCHAR_HEIGHT] + BOOTCHAR_HEIGHT - 1)
