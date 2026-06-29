@@ -1796,72 +1796,84 @@ NtQueryObject(IN HANDLE ObjectHandle,
     return Status;
 }
 
-/*++
-* @name NtSetInformationObject
-* @implemented NT4
-*
-*     The NtSetInformationObject routine <FILLMEIN>
-*
-* @param ObjectHandle
-*        <FILLMEIN>
-*
-* @param ObjectInformationClass
-*        <FILLMEIN>
-*
-* @param ObjectInformation
-*        <FILLMEIN>
-*
-* @param Length
-*        <FILLMEIN>
-*
-* @return STATUS_SUCCESS or appropriate error value.
-*
-* @remarks None.
-*
-*--*/
+/**
+ * @brief
+ * Sets information for an object or for a handle to an object.
+ *
+ * @param[in]   ObjectHandle
+ * Handle to the target object.
+ * For the @p ObjectHandleFlagInformation class, this is the handle
+ * whose attributes are to be modified.
+ * For the @p ObjectSessionInformation class, this must be a handle
+ * to a directory object.
+ *
+ * @param[in]   ObjectInformationClass
+ * Specifies the type of information to set. The only supported classes
+ * are: ObjectHandleFlagInformation and ObjectSessionInformation.
+ * (Windows 10 RS2 added support for ObjectSessionObjectInformation.
+ *  Windows 11 25H2 added support for ObjectSetRefTraceInformation.)
+ *
+ * @param[in]   ObjectInformation
+ * Pointer to a caller-supplied buffer containing the information to set.
+ * For the @p ObjectHandleFlagInformation class, this buffer must point
+ * to an @p OBJECT_HANDLE_ATTRIBUTE_INFORMATION structure describing the
+ * desired handle attributes (inherit and protect-from-close).
+ * For the @p ObjectSessionInformation class, this parameter is ignored.
+ *
+ * @param[in]   Length
+ * The size in bytes, of the buffer pointed to by @p ObjectInformation.
+ * For the @p ObjectHandleFlagInformation class, this must be
+ * sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION).
+ * For the @p ObjectSessionInformation class, this parameter is ignored.
+ *
+ * @return
+ * STATUS_SUCCESS or an appropriate error value.
+ *
+ * @remarks
+ * This routine only supports the following classes:
+ * - @p ObjectHandleFlagInformation, to set the @p OBJ_INHERIT and
+ *   @p OBJ_PROTECT_CLOSE attributes of a handle.
+ * - @p ObjectSessionInformation, to associate a directory object with the
+ *   caller's current session identifier; this requires the SeTcbPrivilege.
+ *
+ * @p ObjectHandleFlagInformation operates on per-handle state rather than
+ * on the underlying object itself.
+ **/
 NTSTATUS
 NTAPI
-NtSetInformationObject(IN HANDLE ObjectHandle,
-                       IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
-                       IN PVOID ObjectInformation,
-                       IN ULONG Length)
+NtSetInformationObject(
+    _In_ HANDLE ObjectHandle,
+    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
+    _In_reads_bytes_(Length) PVOID ObjectInformation,
+    _In_ ULONG Length)
 {
     NTSTATUS Status;
-    OBP_SET_HANDLE_ATTRIBUTES_CONTEXT Context;
-    PVOID ObjectTable;
-    KAPC_STATE ApcState;
-    POBJECT_DIRECTORY Directory;
     KPROCESSOR_MODE PreviousMode;
-    BOOLEAN AttachedToProcess = FALSE;
+
     PAGED_CODE();
 
     /* Validate the information class */
     switch (ObjectInformationClass)
     {
         case ObjectHandleFlagInformation:
+        {
+            OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags;
 
             /* Validate the length */
-            if (Length != sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
-            {
-                /* Invalid length */
+            if (Length != sizeof(HandleFlags))
                 return STATUS_INFO_LENGTH_MISMATCH;
-            }
 
             /* Save the previous mode */
-            Context.PreviousMode = ExGetPreviousMode();
+            PreviousMode = ExGetPreviousMode();
 
-            /* Check if we were called from user mode */
-            if (Context.PreviousMode != KernelMode)
+            /* If we were called from user mode, probe and capture the
+             * attribute buffer, otherwise just copy it directly. */
+            if (PreviousMode != KernelMode)
             {
-                /* Enter SEH */
                 _SEH2_TRY
                 {
-                    /* Probe and capture the attribute buffer */
-                    ProbeForRead(ObjectInformation,
-                                 sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
-                                 sizeof(BOOLEAN));
-                    Context.Information = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
-                                            ObjectInformation;
+                    ProbeForRead(ObjectInformation, sizeof(HandleFlags), sizeof(BOOLEAN));
+                    HandleFlags = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)ObjectInformation;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -1872,87 +1884,52 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
             }
             else
             {
-                /* Just copy the buffer directly */
-                Context.Information = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
-                                        ObjectInformation;
+                HandleFlags = *(POBJECT_HANDLE_ATTRIBUTE_INFORMATION)ObjectInformation;
             }
 
-            /* Check if this is a kernel handle */
-            if (ObpIsKernelHandle(ObjectHandle, Context.PreviousMode))
-            {
-                /* Get the actual handle */
-                ObjectHandle = ObKernelHandleToHandle(ObjectHandle);
-                ObjectTable = ObpKernelHandleTable;
-
-                /* Check if we're not in the system process */
-                if (PsGetCurrentProcess() != PsInitialSystemProcess)
-                {
-                    /* Attach to it */
-                    KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
-                    AttachedToProcess = TRUE;
-                }
-            }
-            else
-            {
-                /* Use the current table */
-                ObjectTable = PsGetCurrentProcess()->ObjectTable;
-            }
-
-            /* Change the handle attributes */
-            if (!ExChangeHandle(ObjectTable,
-                                ObjectHandle,
-                                ObpSetHandleAttributes,
-                                (ULONG_PTR)&Context))
-            {
-                /* Some failure */
-                Status = STATUS_ACCESS_DENIED;
-            }
-            else
-            {
-                /* We are done */
-                Status = STATUS_SUCCESS;
-            }
-
-            /* De-attach if we were attached, and return status */
-            if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
+            Status = ObSetHandleAttributes(ObjectHandle, &HandleFlags, PreviousMode);
             break;
+        }
 
         case ObjectSessionInformation:
+        {
+            POBJECT_DIRECTORY Directory;
+
+            UNREFERENCED_PARAMETER(ObjectInformation);
+            UNREFERENCED_PARAMETER(Length);
 
             /* Only a system process can do this */
             PreviousMode = ExGetPreviousMode();
             if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
             {
-                /* Fail */
                 DPRINT1("Privilege not held\n");
-                Status = STATUS_PRIVILEGE_NOT_HELD;
+                return STATUS_PRIVILEGE_NOT_HELD;
             }
-            else
+
+            /* Get the object directory */
+            Status = ObReferenceObjectByHandle(ObjectHandle,
+                                               0,
+                                               ObpDirectoryObjectType,
+                                               PreviousMode,
+                                               (PVOID*)&Directory,
+                                               NULL);
+            if (NT_SUCCESS(Status))
             {
-                /* Get the object directory */
-                Status = ObReferenceObjectByHandle(ObjectHandle,
-                                                   0,
-                                                   ObpDirectoryObjectType,
-                                                   PreviousMode,
-                                                   (PVOID*)&Directory,
-                                                   NULL);
-                if (NT_SUCCESS(Status))
-                {
-                    /* Setup a lookup context */
-                    OBP_LOOKUP_CONTEXT LookupContext;
-                    ObpInitializeLookupContext(&LookupContext);
+                /* Setup a lookup context */
+                OBP_LOOKUP_CONTEXT LookupContext;
+                ObpInitializeLookupContext(&LookupContext);
 
-                    /* Set the directory session ID */
-                    ObpAcquireDirectoryLockExclusive(Directory, &LookupContext);
-                    Directory->SessionId = PsGetCurrentProcessSessionId();
-                    ObpReleaseDirectoryLock(Directory, &LookupContext);
+                /* Set the directory session ID */
+                ObpAcquireDirectoryLockExclusive(Directory, &LookupContext);
+                Directory->SessionId = PsGetCurrentProcessSessionId();
+                ObpReleaseDirectoryLock(Directory, &LookupContext);
 
-                    /* We're done, release the context and dereference the directory */
-                    ObpReleaseLookupContext(&LookupContext);
-                    ObDereferenceObject(Directory);
-                }
+                /* We're done, release the context and dereference the directory */
+                ObpReleaseLookupContext(&LookupContext);
+                ObDereferenceObject(Directory);
             }
             break;
+        }
 
         default:
             /* Unsupported class */

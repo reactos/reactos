@@ -416,25 +416,26 @@ LRESULT CCanvasWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
 {
     SCROLLINFO si;
-    si.cbSize = sizeof(SCROLLINFO);
+    si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
     GetScrollInfo(fnBar, &si);
+
     switch (LOWORD(wParam))
     {
         case SB_THUMBTRACK:
         case SB_THUMBPOSITION:
             si.nPos = (SHORT)HIWORD(wParam);
             break;
-        case SB_LINELEFT:
-            si.nPos -= 5;
+        case SB_LINELEFT: // SB_LINEUP
+            si.nPos -= 15;
             break;
-        case SB_LINERIGHT:
-            si.nPos += 5;
+        case SB_LINERIGHT: // SB_LINEDOWN
+            si.nPos += 15;
             break;
-        case SB_PAGELEFT:
+        case SB_PAGELEFT: // SB_PAGEUP
             si.nPos -= si.nPage;
             break;
-        case SB_PAGERIGHT:
+        case SB_PAGERIGHT: // SB_PAGEDOWN
             si.nPos += si.nPage;
             break;
     }

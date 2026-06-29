@@ -145,13 +145,10 @@ MediaMiiCheckLink(
     BOOLEAN FullDuplex, Speed100;
 
     /* The link status is a latched-low bit, read it twice */
+    MiiRead(Adapter, Adapter->PhyAddress, MII_STATUS, &MiiStatus);
     if (!MiiRead(Adapter, Adapter->PhyAddress, MII_STATUS, &MiiStatus))
     {
         goto NoLink;
-    }
-    if (!(MiiStatus & MII_SR_LINK_STATUS))
-    {
-        MiiRead(Adapter, Adapter->PhyAddress, MII_STATUS, &MiiStatus);
     }
     TRACE("MII Status %04lx\n", MiiStatus);
 

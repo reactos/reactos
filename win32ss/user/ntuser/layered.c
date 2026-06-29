@@ -249,7 +249,7 @@ NtUserGetLayeredWindowAttributes(
    BOOL Ret = FALSE;
 
    TRACE("Enter NtUserGetLayeredWindowAttributes\n");
-   UserEnterExclusive();
+   UserEnterShared();
 
    if (!(pWnd = UserGetWindowObject(hwnd)) ||
        !(pWnd->ExStyle & WS_EX_LAYERED) )

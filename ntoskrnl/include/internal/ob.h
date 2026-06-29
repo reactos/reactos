@@ -293,24 +293,6 @@ ObpLookupObjectName(
 );
 
 //
-// Object Attribute Functions
-//
-BOOLEAN
-NTAPI
-ObpSetHandleAttributes(
-    IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
-    IN ULONG_PTR Context
-);
-
-NTSTATUS
-NTAPI
-ObQueryDeviceMapInformation(
-    _In_opt_ PEPROCESS Process,
-    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
-    _In_ ULONG Flags
-);
-
-//
 // Object Lifetime Functions
 //
 VOID
@@ -408,6 +390,14 @@ ObReferenceFileObjectForWrite(
 //
 // DOS Devices Functions
 //
+NTSTATUS
+NTAPI
+ObQueryDeviceMapInformation(
+    _In_opt_ PEPROCESS Process,
+    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
+    _In_ ULONG Flags
+);
+
 NTSTATUS
 NTAPI
 ObSetDeviceMap(

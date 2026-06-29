@@ -174,6 +174,20 @@ typedef enum _PROCESS_INFORMATION_CLASS
     ProcessInformationClassMax
 } PROCESS_INFORMATION_CLASS;
 
+#define PROCESS_MACHINE_ATTRIBUTE_KERNEL_ENABLED 0x00000001
+#define PROCESS_MACHINE_ATTRIBUTE_USER_ENABLED   0x00000002
+#define PROCESS_MACHINE_ATTRIBUTE_NATIVE_OS        0x00000004
+#define PROCESS_MACHINE_ATTRIBUTE_WOW64_CONTAINER  0x00000008
+
+typedef enum _THREAD_INFORMATION_CLASS
+{
+    ThreadMemoryPriority,
+    ThreadAbsoluteCpuPriority,
+    ThreadDynamicCodePolicy,
+    ThreadPowerThrottling,
+    ThreadInformationClassMax
+} THREAD_INFORMATION_CLASS;
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

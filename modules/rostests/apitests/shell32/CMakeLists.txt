@@ -17,6 +17,7 @@ list(APPEND SOURCE
     FindExecutable.cpp
     GetDisplayNameOf.cpp
     GUIDFromString.cpp
+    LockServer.cpp
     Int64ToString.cpp
     IShellFolderViewCB.cpp
     ItemIDList.cpp
@@ -32,6 +33,7 @@ list(APPEND SOURCE
     SHCreateDataObject.cpp
     SHCreateFileDataObject.cpp
     SHCreateFileExtractIconW.cpp
+    SHEvaluateSystemCommandTemplate.cpp
     SHGetComputerDisplayNameW.cpp
     SHGetUnreadMailCountW.cpp
     SHIsBadInterfacePtr.cpp

@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include "undocgdi.h"
 
 typedef struct TEST_ENTRY
 {
@@ -298,11 +299,10 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, L"Marlett", -14, 36, 0xDEADBEEF, WCH5, GGO_BITMAP, TRUE, { 6, 9, { 0, 9 }, 7, 0 }, 512, s_ab },
 };
 
-void DoEntry(const TEST_ENTRY *pEntry)
+static void DoEntryW(HDC hDC, const TEST_ENTRY *pEntry)
 {
     LOGFONTW lf;
     HFONT hFont;
-    HDC hDC;
     HGDIOBJ hFontOld;
 
     ZeroMemory(&lf, sizeof(lf));
@@ -316,15 +316,6 @@ void DoEntry(const TEST_ENTRY *pEntry)
     if (hFont == NULL)
     {
         skip("Line %d: skipped because hFont == NULL\n", pEntry->line);
-        return;
-    }
-
-    hDC = CreateCompatibleDC(NULL);
-    ok(hDC != NULL, "hDC was NULL\n");
-    if (hDC == NULL)
-    {
-        skip("Line %d: skipped because hDC == NULL\n", pEntry->line);
-        DeleteObject(hFont);
         return;
     }
 
@@ -368,14 +359,93 @@ void DoEntry(const TEST_ENTRY *pEntry)
     }
 
     DeleteObject(hFont);
-    DeleteDC(hDC);
 }
 
-START_TEST(GetGlyphOutline)
+static void TEST_GetGlyphOutlineW(HDC hDC)
 {
     SIZE_T i, count = ARRAYSIZE(s_entries);
     for (i = 0; i < count; ++i)
     {
-        DoEntry(&s_entries[i]);
+        DoEntryW(hDC, &s_entries[i]);
     }
+}
+
+static void TEST_GetGlyphOutlineA(HDC hDC)
+{
+    LOGFONTW lf;
+    ZeroMemory(&lf, sizeof(lf));
+    lf.lfHeight = 100;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lstrcpynW(lf.lfFaceName, L"Arial", _countof(lf.lfFaceName));
+    HFONT hFont = CreateFontIndirectW(&lf);
+    ok(hFont != NULL, "hFont was NULL\n");
+
+    HGDIOBJ hFontOld = SelectObject(hDC, hFont);
+
+    GLYPHMETRICS gm;
+    ZeroMemory(&gm, sizeof(gm));
+ 
+    DWORD ret;
+
+    ret = GetGlyphOutlineA(hDC, 'A', GGO_NATIVE, &gm, 0, NULL, &s_mat);
+    ok(ret != GDI_ERROR && ret != 0, "ret was 0x%lX\n", ret);
+
+    ret = GetGlyphOutlineA(hDC, 'A', GGO_BITMAP, &gm, 0, NULL, &s_mat);
+    ok(ret != GDI_ERROR && ret != 0, "ret was 0x%lX\n", ret);
+
+    ret = GetGlyphOutlineA(hDC, 'A', GGO_METRICS, &gm, 0, NULL, &s_mat);
+    ok(ret != GDI_ERROR, "ret was 0x%lX\n", ret);
+
+    SelectObject(hDC, hFontOld);
+    DeleteObject(hFont);
+}
+
+typedef DWORD (WINAPI *FN_GetGlyphOutlineWow)(HDC, UINT, UINT, LPGLYPHMETRICS, DWORD, LPVOID, CONST MAT2 *);
+
+static void TEST_GetGlyphOutlineWow(HDC hDC)
+{
+    HINSTANCE hGDI32 = GetModuleHandleA("gdi32");
+    FN_GetGlyphOutlineWow fnGetGlyphOutlineWow =
+        (FN_GetGlyphOutlineWow)GetProcAddress(hGDI32, "GetGlyphOutlineWow");
+    if (!fnGetGlyphOutlineWow)
+    {
+        skip("GetGlyphOutlineWow not found\n");
+        return;
+    }
+
+    LOGFONTW lf;
+    ZeroMemory(&lf, sizeof(lf));
+    lf.lfHeight = 100;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lstrcpynW(lf.lfFaceName, L"Arial", _countof(lf.lfFaceName));
+    HFONT hFont = CreateFontIndirectW(&lf);
+    ok(hFont != NULL, "hFont was NULL\n");
+
+    HGDIOBJ hFontOld = SelectObject(hDC, hFont);
+
+    GLYPHMETRICS gm;
+    ZeroMemory(&gm, sizeof(gm));
+ 
+    DWORD ret;
+
+    ret = fnGetGlyphOutlineWow(hDC, 'A', GGO_NATIVE, &gm, 0, NULL, &s_mat);
+    ok(ret != GDI_ERROR && ret != 0, "ret was 0x%lX\n", ret);
+
+    ret = fnGetGlyphOutlineWow(hDC, 'A', GGO_BITMAP, &gm, 0, NULL, &s_mat);
+    ok(ret != GDI_ERROR && ret != 0, "ret was 0x%lX\n", ret);
+
+    ret = fnGetGlyphOutlineWow(hDC, 'A', GGO_METRICS, &gm, 0, NULL, &s_mat);
+    ok(ret != GDI_ERROR, "ret was 0x%lX\n", ret);
+
+    SelectObject(hDC, hFontOld);
+    DeleteObject(hFont);
+}
+
+START_TEST(GetGlyphOutline)
+{
+    HDC hDC = CreateCompatibleDC(NULL);
+    TEST_GetGlyphOutlineW(hDC);
+    TEST_GetGlyphOutlineA(hDC);
+    TEST_GetGlyphOutlineWow(hDC);
+    DeleteDC(hDC);
 }
