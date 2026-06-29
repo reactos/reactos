@@ -38,7 +38,7 @@ int APIENTRY wWinMain(HINSTANCE hInst,
                       LPWSTR lpCmdLine,
                       int nCmdShow)
 {
-    HWND hWnd1a, hWnd1b;
+    HWND hWnd;
     WNDCLASSEXW wcx;
     UINT result;
     BOOL ret;
@@ -54,52 +54,56 @@ int APIENTRY wWinMain(HINSTANCE hInst,
         return 1;
 
     /* 1. Window with a valid wndproc */
-    hWnd1a = CreateWindowExW(0,
-                             WndClass,
-                             NULL,
-                             WS_CAPTION | WS_SYSMENU,
-                             CW_USEDEFAULT, CW_USEDEFAULT,
-                             400, 100,
-                             NULL, 0,
-                             hInst, NULL);
-    if (!hWnd1a)
+    hWnd = CreateWindowExW(0,
+                           WndClass,
+                           NULL,
+                           WS_CAPTION | WS_SYSMENU,
+                           CW_USEDEFAULT, CW_USEDEFAULT,
+                           400, 100,
+                           NULL, 0,
+                           hInst, NULL);
+    if (!hWnd)
         return 1;
 
-    ShowWindow(hWnd1a, SW_SHOW);
-    UpdateWindow(hWnd1a);
+    ShowWindow(hWnd, SW_SHOW);
+    UpdateWindow(hWnd);
 
-    ret = IsServerSideWindow(hWnd1a);
+    ret = IsServerSideWindow(hWnd);
     if (ret)
-        DPRINT("OK: the window %p has a valid kernel mode wndproc\n", hWnd1a);
+        DPRINT("OK: the window %p has a valid kernel mode wndproc\n", hWnd);
     else
-        DPRINT("FAIL: the window %p is not valid or has no valid kernel mode wndproc\n", hWnd1a);
+        DPRINT("FAIL: the window %p is not valid or has no valid kernel mode wndproc\n", hWnd);
 
     // TODO: this seems to be not a correct test condition.
     //       Find a valid condition to test a kernel mode wmdproc existence correctly!
 
     //wcx.lpfnWndProc = NULL;
 
-    /* 2. Window without a valid wndproc */
-    hWnd1b = CreateWindowExW(0,
-                             WndClass,
-                             NULL,
-                             WS_CAPTION | WS_SYSMENU,
-                             CW_USEDEFAULT, CW_USEDEFAULT,
-                             400, 100,
-                             NULL, 0,
-                             hInst, NULL);
+    DestroyWindow(hWnd);
 
-    if (!hWnd1b)
+    /* 2. Window without a valid wndproc */
+    hWnd = CreateWindowExW(0,
+                           WndClass,
+                           NULL,
+                           WS_CAPTION | WS_SYSMENU,
+                           CW_USEDEFAULT, CW_USEDEFAULT,
+                           400, 100,
+                           NULL, 0,
+                           hInst, NULL);
+
+    if (!hWnd)
         return 1;
 
-    ShowWindow(hWnd1b, SW_SHOW);
-    UpdateWindow(hWnd1b);
+    ShowWindow(hWnd, SW_SHOW);
+    UpdateWindow(hWnd);
 
-    ret = IsServerSideWindow(hWnd1b);
+    ret = IsServerSideWindow(hWnd);
     if (ret)
-        DPRINT("FAIL: the window %p has a valid kernel mode wndproc when it shouldn't\n", hWnd1b);
+        DPRINT("FAIL: the window %p has a valid kernel mode wndproc when it shouldn't\n", hWnd);
     else
-        DPRINT("OK: the window %p has no valid kernel mode wndproc\n", hWnd1b);
+        DPRINT("OK: the window %p has no valid kernel mode wndproc\n", hWnd);
+
+    DestroyWindow(hWnd);
 
     UnregisterClassW(WndClass, hInst);
     return 0;
