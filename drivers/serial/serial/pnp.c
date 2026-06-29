@@ -446,8 +446,8 @@ SerialPnp(
 
 			if (NT_SUCCESS(ZwOpenKey(&hKey, KEY_SET_VALUE, &ObjectAttributes)))
 			{
-					ZwDeleteValueKey(hKey, &DeviceName);
-					ZwClose(hKey);
+				ZwDeleteValueKey(hKey, &DeviceName);
+				ZwClose(hKey);
 			}
 
 			return ForwardIrpAndForget(DeviceObject, Irp);
