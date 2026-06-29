@@ -727,10 +727,10 @@ SHSetFolderPathA(
  *                PathIsSlowW (SHELL32.239)
  *
  * @param[in] pszFile
- * Path to check for slowness
+ * Path to check for slowness.
  *
  * @param[in] dwAttr
- * File attributes of pszFile or INVALID_FILE_ATTRIBUTES to get them
+ * File attributes of pszFile or INVALID_FILE_ATTRIBUTES to get them.
  *
  * @return
  * TRUE if the path is considered slow, FALSE if not.
