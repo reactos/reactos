@@ -387,18 +387,12 @@ __INTRIN_INLINE unsigned char _InterlockedCompareExchange128(
           [xl] "r"((unsigned __int64)ExchangeLow),
           [xh] "r"((unsigned __int64)ExchangeHigh)
         : "cc", "memory");
+    __asm__ __volatile__("dmb ish" ::: "memory");
     if (status == 0)
         return 1;
     ComparandResult[0] = (__int64)old_lo;
     ComparandResult[1] = (__int64)old_hi;
     return 0;
-}
-#endif
-
-#if !HAS_BUILTIN(_mm_pause)
-__INTRIN_INLINE void _mm_pause(void)
-{
-    __asm__ __volatile__("yield" : : : "memory");
 }
 #endif
 
@@ -632,49 +626,18 @@ __INTRIN_INLINE unsigned long __cdecl _lrotr(unsigned long value, int shift)
 }
 #endif
 
-/*** 64-bit shifts ***/
-#if !HAS_BUILTIN(__ll_lshift)
-__INTRIN_INLINE unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
-{
-    return Mask << (Bit & 0x3F);
-}
-#endif
-
-#if !HAS_BUILTIN(__ll_rshift)
-__INTRIN_INLINE long long __ll_rshift(long long Mask, int Bit)
-{
-    return Mask >> (Bit & 0x3F);
-}
-#endif
-
-#if !HAS_BUILTIN(__ull_rshift)
-__INTRIN_INLINE unsigned long long __ull_rshift(unsigned long long Mask, int Bit)
-{
-    return Mask >> (Bit & 0x3F);
-}
-#endif
-
-/*** Leading zero count and population count ***/
-#if !HAS_BUILTIN(__lzcnt)
-__INTRIN_INLINE unsigned int __lzcnt(unsigned int value)
+/*** Bit count ***/
+#if !HAS_BUILTIN(_CountLeadingZeros)
+__INTRIN_INLINE unsigned int _CountLeadingZeros(unsigned long value)
 {
     if (!value)
-        return 32;
-    return __builtin_clz(value);
+        return sizeof(value) * 8;
+    return __builtin_clzl(value);
 }
 #endif
 
-#if !HAS_BUILTIN(__lzcnt16)
-__INTRIN_INLINE unsigned short __lzcnt16(unsigned short value)
-{
-    if (!value)
-        return 16;
-    return (unsigned short)(__builtin_clz((unsigned int)value) - 16);
-}
-#endif
-
-#if !HAS_BUILTIN(__lzcnt64)
-__INTRIN_INLINE unsigned long long __lzcnt64(unsigned long long value)
+#if !HAS_BUILTIN(_CountLeadingZeros64)
+__INTRIN_INLINE unsigned int _CountLeadingZeros64(unsigned __int64 value)
 {
     if (!value)
         return 64;
@@ -682,22 +645,15 @@ __INTRIN_INLINE unsigned long long __lzcnt64(unsigned long long value)
 }
 #endif
 
-#if !HAS_BUILTIN(__popcnt)
-__INTRIN_INLINE unsigned int __popcnt(unsigned int value)
+#if !HAS_BUILTIN(_CountOneBits)
+__INTRIN_INLINE unsigned int _CountOneBits(unsigned long value)
 {
-    return __builtin_popcount(value);
+    return __builtin_popcountl(value);
 }
 #endif
 
-#if !HAS_BUILTIN(__popcnt16)
-__INTRIN_INLINE unsigned short __popcnt16(unsigned short value)
-{
-    return __builtin_popcount(value);
-}
-#endif
-
-#if !HAS_BUILTIN(__popcnt64)
-__INTRIN_INLINE unsigned long long __popcnt64(unsigned long long value)
+#if !HAS_BUILTIN(_CountOneBits64)
+__INTRIN_INLINE unsigned int _CountOneBits64(unsigned __int64 value)
 {
     return __builtin_popcountll(value);
 }
@@ -794,18 +750,14 @@ __INTRIN_INLINE void __isb(unsigned int type)
    should use named MSR/MRS asm wrappers instead. */
 
 #if !HAS_BUILTIN(__getReg)
-__INTRIN_INLINE unsigned __int64 __getReg(int reg)
-{
-    unsigned __int64 value;
-
-    if (reg == 18)
-    {
-        __asm__ __volatile__("mov %0, x18" : "=r"(value));
-        return value;
-    }
-
-    __builtin_trap();
-}
+#define __getReg(reg) \
+    __extension__({ \
+        _Static_assert((unsigned long long)(reg) <= 31ULL, \
+                       "__getReg: register index out of range"); \
+        unsigned __int64 _value; \
+        __asm__ __volatile__("mov %0, x%c1" : "=r"(_value) : "i"(reg)); \
+        _value; \
+    })
 #endif
 
 /*** _InterlockedAdd (returns the new, post-add value) ***/
