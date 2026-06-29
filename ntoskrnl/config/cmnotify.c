@@ -14,6 +14,17 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+/**
+ * @brief Report a change in registry to a listener represented by the post block
+ * 
+ * This function signals the listener that a change has occurred in the registry,
+ * then releases the resources used by the @p PostBlock as the notification session
+ * has finished.
+ * This is an utility function used by CmpReportNotify to report changes to each
+ * CMP_POST_BLOCK attached to a CM_NOTIFY_BLOCK.
+ * 
+ * @param[in] PostBlock The change notification receiver
+ */
 VOID
 NTAPI
 CmpReportNotifyToPostBlock(_In_ PCMP_POST_BLOCK PostBlock)
@@ -78,6 +89,18 @@ CmpReportNotifyToPostBlock(_In_ PCMP_POST_BLOCK PostBlock)
     ExFreePoolWithTag(PostBlock, TAG_CM_NOTIFY);
 }
 
+/**
+ * @brief Check if @p SubKey is part of @p ParentKey's subtree
+ * 
+ * This is an utility function used by CmpReportNotify to check
+ * if a notification should be send or not when WatchTree flag is set.
+ * 
+ * @param[in] ParentKey The parent key to check against
+ * 
+ * @param[in] SubKey The target key
+ * 
+ * @return TRUE if @p SubKey is a subkey of @p ParentKey, FALSE otherwise
+ */
 BOOLEAN
 NTAPI
 CmpIsKcbSubKey(_In_ PCM_KEY_CONTROL_BLOCK ParentKey,
@@ -101,6 +124,22 @@ CmpIsKcbSubKey(_In_ PCM_KEY_CONTROL_BLOCK ParentKey,
 
 /* FUNCTIONS *****************************************************************/
 
+/**
+ * @brief Report a change in a registry key
+ * 
+ * This function is called by CM functions whenever a change occurs in a registry key.
+ * It iterates through all attached CM_NOTIFY_BLOCKs to find one that matches the change
+ * then reports the change to all attached CMP_POST_BLOCKs.
+ * 
+ * @param[in] Kcb The changed registry key
+ * 
+ * @param[in] Hive The registry hive containing the changed key
+ * 
+ * @param[in] Cell Unused
+ * 
+ * @param[in] Filter The type of change, can be REG_NOTIFY_CHANGE_NAME, REG_NOTIFY_CHANGE_ATTRIBUTES, REG_NOTIFY_CHANGE_LAST_SET, or REG_NOTIFY_CHANGE_SECURITY
+ * 
+ */
 VOID
 NTAPI
 CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
@@ -164,6 +203,18 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
     }
 }
 
+/**
+ * @brief Terminates a notification session and releases all the resources used by the attached CM_NOTIFY_BLOCK
+ * 
+ * This function is called when the system is releasing a registry key object,
+ * to signal the listeners that the notification session has ended, then releases
+ * all the resources used for the notification session.
+ * 
+ * @param[in] KeyBody The registry key object being released
+ * 
+ * @param[in] LockHeld TRUE if the KCB lock is already held by the caller, FALSE otherwise
+ * 
+ */
 VOID
 NTAPI
 CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
