@@ -701,7 +701,7 @@ co_IntGetScrollBarInfo(PWND Window, LONG idObject, PSCROLLBARINFO psbi)
    IntGetScrollBarRect(Window, Bar, &(sbi->rcScrollBar));
    IntCalculateThumb(Window, Bar, sbi, pSBData);
 
-   RtlCopyMemory(psbi, sbi, sizeof(SCROLLBARINFO));
+   RtlCopyMemory(psbi, sbi, sizeof(*psbi));
 
     // Scrollbar state
     psbi->rgstate[0] = 0;
