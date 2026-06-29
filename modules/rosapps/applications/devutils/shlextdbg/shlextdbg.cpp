@@ -60,8 +60,8 @@ Examples:
 /openwindows /shellexec=c: /invoke properties
 /dumpmenu=%windir%\explorer.exe /extended
 /dumpmenu {D969A300-E7FF-11d0-A93B-00A0C90F2719}c:
-/dumpfoldercolumns=%windir%
-/dumppidl=%windir%
+/dumpfoldercolumns=c:\
+/dumppidl=c:\
 
 */
 
@@ -423,19 +423,19 @@ static HRESULT DumpFolderColumns(PCWSTR Path)
         SHCOLSTATEF flags;
         if (FAILED(sf->GetDefaultColumnState(columns, &flags)))
             flags = 0;
-        wprintf(L"%d:%s 0x%.4x %d 0x%.8x\n", columns, str ? str : L"", sd.fmt, sd.cxChar, flags);
+        wprintf(L"%lu: %s 0x%.4x %d 0x%.8x\n", columns, str ? str : L"", (UINT)sd.fmt, sd.cxChar, flags);
         SHFree(str);
     }
 
     if (SUCCEEDED(sf->GetDefaultColumn(0, &defSort, &defDisp)))
-        wprintf(L"%d is the default sort column and %d is the default display column.\n", defSort, defDisp);
+        wprintf(L"%lu is the default sort column and %lu is the default display column.\n", defSort, defDisp);
 
     HRESULT (WINAPI* PSGNFPK)(SHCOLUMNID*, PWSTR*) = NULL;
     if (HMODULE hPS = LoadLibraryW(L"propsys.dll"))
     {
+        // HACKFIX: PSGetNameFromPropertyKey is a stub in ROS, we will crash if we call it
         HRESULT (WINAPI* PSGPD)(SHCOLUMNID*, REFIID, void**);
         (FARPROC&)PSGPD = GetProcAddress(hPS, "PSGetPropertyDescription");
-        // HACKFIX: PSGetNameFromPropertyKey is a stub in ROS, we will crash if we call it
         CComPtr<IShellFolder2> dummy;
         SHCOLUMNID scid = {};
         if (PSGPD && PSGPD(&scid, IID_PPV_ARG(IShellFolder2, &dummy)) != E_NOTIMPL)
@@ -448,7 +448,7 @@ static HRESULT DumpFolderColumns(PCWSTR Path)
             continue;
         WCHAR Buffer[100];
         StringFromGUID2(scid.fmtid, Buffer, _countof(Buffer));
-        wprintf(L"%d:%s,%-3d", i, Buffer, scid.pid);
+        wprintf(L"%lu: %s,%-3lu", i, Buffer, scid.pid);
         CComHeapPtr<WCHAR> str;
         if (PSGNFPK && SUCCEEDED(PSGNFPK(&scid, &str)) && str)
             wprintf(L" %s", (PWSTR)str);
