@@ -116,10 +116,15 @@ KiInitializeContextThread(IN PKTHREAD Thread,
                              CONTEXT_AMD64 | ContextFlags,
                              UserMode);
 
-        /* Set SS, DS, ES's RPL Mask properly */
-        TrapFrame->SegSs |= RPL_MASK;
-        TrapFrame->SegDs |= RPL_MASK;
-        TrapFrame->SegEs |= RPL_MASK;
+        /* Set user mode segment selectors */
+        TrapFrame->SegDs = KGDT64_R3_DATA | RPL_MASK;
+        TrapFrame->SegEs = KGDT64_R3_DATA | RPL_MASK;
+        TrapFrame->SegFs = KGDT64_R3_CMTEB | RPL_MASK;
+        TrapFrame->SegGs = KGDT64_R3_DATA | RPL_MASK;
+        TrapFrame->SegCs = KGDT64_R3_CODE | RPL_MASK;
+        TrapFrame->SegSs = KGDT64_R3_DATA | RPL_MASK;
+
+        /* Clear DR7 */
         TrapFrame->Dr7 = 0;
 
         /* Set the previous mode as user */
@@ -133,6 +138,9 @@ KiInitializeContextThread(IN PKTHREAD Thread,
 
         /* KiUserThreadStartupExit returns to KiServiceExit3 */
         InitFrame->ExceptionFrame.Return = (ULONG64)KiServiceExit3;
+
+        /* Allocate home space on the stack */
+        TrapFrame->Rsp -= 5 * sizeof(PVOID);
     }
     else
     {
