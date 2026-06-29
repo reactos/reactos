@@ -34,27 +34,37 @@ CmpReportNotifyToPostBlock(_In_ PCMP_POST_BLOCK PostBlock)
     /* Report the operation result using caller-allocated IO_STATUS_BLOCK buffer  */
     if (PostBlock->IoStatusBlock)
     {
-        /* Attach to caller's context if necessary */
-        KAPC_STATE ApcState;
-        BOOLEAN IsSameProcess = PostBlock->OwnerProcess == &PsGetCurrentProcess()->Pcb;
-        if (!IsSameProcess)
-            KeStackAttachProcess(PostBlock->OwnerProcess, &ApcState);
-
-        /* Try to write status to buffer */
-        _SEH2_TRY
+        /* Write to an IO_STATUS_BLOCK allocated by an user-mode caller */
+        if (PostBlock->OwnerProcess != NULL)
         {
+            /* Attach to caller's context if necessary */
+            KAPC_STATE ApcState;
+            BOOLEAN IsSameProcess = PostBlock->OwnerProcess == &PsGetCurrentProcess()->Pcb;
+            if (!IsSameProcess)
+                KeStackAttachProcess(PostBlock->OwnerProcess, &ApcState);
+
+            /* Try to write status to buffer */
+            _SEH2_TRY
+            {
+                PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_ENUM_DIR;
+                PostBlock->IoStatusBlock->Information = 0;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                NTSTATUS Status = _SEH2_GetExceptionCode();
+                DPRINT1("CmpReportNotifyToPostBlock: Writing to IO_STATUS_BLOCK failed with %lx. Process=0x%lx, IoStatusBlock=0x%lx\n", Status, PostBlock->OwnerProcess, PostBlock->IoStatusBlock);
+            }
+            _SEH2_END;
+
+            if (!IsSameProcess)
+                KeUnstackDetachProcess(&ApcState);
+        }
+        else
+        {
+            /* PostBlock->OwnerProcess should be set to NULL for kernel-mode callers */
             PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_ENUM_DIR;
             PostBlock->IoStatusBlock->Information = 0;
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            NTSTATUS Status = _SEH2_GetExceptionCode();
-            DPRINT1("CmpReportNotifyToPostBlock: Writing to IO_STATUS_BLOCK failed with %lx. Process=0x%lx, IoStatusBlock=0x%lx\n", Status, PostBlock->OwnerProcess, PostBlock->IoStatusBlock);
-        }
-        _SEH2_END;
-
-        if (!IsSameProcess)
-            KeUnstackDetachProcess(&ApcState);
     }
 
     /* Signal the event object provided by the user-mode or kernel-mode callers */
