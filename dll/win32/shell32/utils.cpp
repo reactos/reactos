@@ -726,11 +726,17 @@ SHSetFolderPathA(
 /*************************************************************************
  *                PathIsSlowW (SHELL32.239)
  *
- * @param pszFile Path to check for slowness
- * @param dwAttr  File attributes of pszFile or INVALID_FILE_ATTRIBUTES to get them
- * @return TRUE if the path is considered slow, FALSE if not.
+ * @param[in] pszFile
+ * Path to check for slowness
+ *
+ * @param[in] dwAttr
+ * File attributes of pszFile or INVALID_FILE_ATTRIBUTES to get them
+ *
+ * @return
+ * TRUE if the path is considered slow, FALSE if not.
+ *
  * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-pathissloww
- */
+ **/
 EXTERN_C BOOL
 WINAPI
 PathIsSlowW(
