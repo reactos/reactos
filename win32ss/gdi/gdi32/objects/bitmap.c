@@ -73,6 +73,10 @@ FASTCALL DIB_BitmapInfoSize(
     {
         const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *) info;
         size = sizeof(BITMAPCOREHEADER);
+        if (core->bcBitCount == 0)
+        {
+            return size;
+        }
         if (core->bcBitCount <= 8)
         {
             colors = 1 << core->bcBitCount;
@@ -85,6 +89,10 @@ FASTCALL DIB_BitmapInfoSize(
     }
     else /* assume BITMAPINFOHEADER */
     {
+        if (info->bmiHeader.biBitCount == 0)
+        {
+            return info->bmiHeader.biSize;
+        }
         colors = max ? (1 << info->bmiHeader.biBitCount) : info->bmiHeader.biClrUsed;
         if (colors > 256)
             colors = 256;
@@ -410,7 +418,7 @@ GetDIBits(
     LPBITMAPINFO lpbmi,
     UINT uUsage)
 {
-    UINT cjBmpScanSize;
+    UINT cjMaxBits;
     UINT cjInfoSize;
 
     if (!hDC || !GdiValidateHandle((HGDIOBJ) hDC) || !lpbmi)
@@ -419,7 +427,6 @@ GetDIBits(
         return 0;
     }
 
-    cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
     /* Caller must provide maximum size possible */
     cjInfoSize = DIB_BitmapInfoSize(lpbmi, uUsage, TRUE);
 
@@ -434,10 +441,23 @@ GetDIBits(
                 return 0;
             }
         }
+
+        cjMaxBits = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
+    }
+    else
+    {
+        cjMaxBits = 0;
     }
 
-    return NtGdiGetDIBitsInternal(hDC, hbmp, uStartScan, cScanLines, lpvBits, lpbmi, uUsage,
-        cjBmpScanSize, cjInfoSize);
+    return NtGdiGetDIBitsInternal(hDC,
+                                  hbmp,
+                                  uStartScan,
+                                  cScanLines,
+                                  lpvBits,
+                                  lpbmi,
+                                  uUsage,
+                                  cjMaxBits,
+                                  cjInfoSize);
 }
 
 /*
