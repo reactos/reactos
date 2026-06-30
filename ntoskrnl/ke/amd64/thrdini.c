@@ -109,12 +109,31 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         RtlZeroMemory(TrapFrame, sizeof(KTRAP_FRAME));
         RtlZeroMemory(&InitFrame->ExceptionFrame, sizeof(KEXCEPTION_FRAME));
 
-        /* Set up a trap frame from the context. */
-        KeContextToTrapFrame(Context,
-                             &InitFrame->ExceptionFrame,
-                             TrapFrame,
-                             CONTEXT_AMD64 | ContextFlags,
-                             UserMode);
+        /* Copy integer registers */
+        TrapFrame->Rax = Context->Rax;
+        TrapFrame->Rcx = Context->Rcx;
+        TrapFrame->Rdx = Context->Rdx;
+        TrapFrame->Rbp = Context->Rbp;
+        TrapFrame->R8 = Context->R8;
+        TrapFrame->R9 = Context->R9;
+        TrapFrame->R10 = Context->R10;
+        TrapFrame->R11 = Context->R11;
+        InitFrame->ExceptionFrame.Rbx = Context->Rbx;
+        InitFrame->ExceptionFrame.Rsi = Context->Rsi;
+        InitFrame->ExceptionFrame.Rdi = Context->Rdi;
+        InitFrame->ExceptionFrame.R12 = Context->R12;
+        InitFrame->ExceptionFrame.R13 = Context->R13;
+        InitFrame->ExceptionFrame.R14 = Context->R14;
+        InitFrame->ExceptionFrame.R15 = Context->R15;
+
+        /* Copy RIP, RSP, EFLAGS */
+        TrapFrame->Rip = Context->Rip;
+        TrapFrame->Rsp = Context->Rsp;
+        TrapFrame->EFlags = Context->EFlags;
+
+        /* Set valid EFLAGS */
+        TrapFrame->EFlags &= 0x200FD7;
+        TrapFrame->EFlags |= EFLAGS_INTERRUPT_MASK;
 
         /* Set user mode segment selectors */
         TrapFrame->SegDs = KGDT64_R3_DATA | RPL_MASK;
@@ -126,6 +145,9 @@ KiInitializeContextThread(IN PKTHREAD Thread,
 
         /* Clear DR7 */
         TrapFrame->Dr7 = 0;
+
+        /* Initialize floating point state */
+        TrapFrame->MxCsr = INITIAL_MXCSR;
 
         /* Set the previous mode as user */
         TrapFrame->PreviousMode = UserMode;
