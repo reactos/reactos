@@ -121,7 +121,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS'u kurmak istediğiniz &dizini seçin:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
-    GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
+    GROUPBOX "Önyükleyici", IDC_STATIC, 7, 45, 291, 60
     LTEXT "FreeLoader önyükleyicisinin kurulacağı konumu seçin\nÖnyükleyici yüklenmelidir.\n\nVarsayılan olarak, önyükleme diskinin sistem bölümüne (ve BIOS tabanlı bilgisayarlar için Ana Disk veya Birim Önyükleme Kaydı'na) yüklenir.", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "Tamam", IDOK, 193, 113, 50, 14
