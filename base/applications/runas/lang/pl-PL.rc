@@ -34,5 +34,5 @@ BEGIN
     IDS_RUN_ERROR "BŁĄD RUNAS: Nie można uruchomić %s\n"
     IDS_INTERNAL_ERROR "BŁĄD RUNAS: Błąd wewnętrzny %ld\n"
 
-    IDS_PASSWORD  "Wprowadź hasło dla ""%s\\%s"": "
+    IDS_PASSWORD  "Wprowadź hasło do ""%s\\%s"": "
 END
