@@ -25,7 +25,7 @@ BEGIN
     IDS_USAGE14 "   /savecred       Nie zaimplementowano.\n"
     IDS_USAGE15 "   /smartcard      Nie zaimplementowano.\n"
     IDS_USAGE16 "   /user           <NazwaUżytkownika> powinna być w formie UŻYTKOWNIK@DOMENA lub DOMENA\\UŻYTKOWNIK\n"
-    IDS_USAGE17 "   program         linia komend dla EXE. Patrz niżej aby zobaczyć przykłady.\n\n"
+    IDS_USAGE17 "   program         wiersz polecenia dla pliku wykonywalnego. Patrz na przykłady poniżej.\n\n"
     IDS_USAGE18 "Przykład:\n"
     IDS_USAGE19 "> runas /noprofile /user:mojamaszyna\\administrator cmd\n\n"
     IDS_USAGE20 "UWAGA: Opcja /profile nie jest zgodna z opcją /netonly.\n"
