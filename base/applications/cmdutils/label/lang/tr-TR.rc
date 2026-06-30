@@ -7,7 +7,7 @@ BEGIN
 //    STRING_LABEL_HELP "Sürücü etiketini görüntüler ya da değiştirir.\n\nLABEL [sürücü:][etiket]\n"
     STRING_LABEL_HELP "Sürücü etiketini görüntüler ya da değiştirir.\n\n\
 LABEL [sürücü:][etiket]\n\n\
-  drive:          Bir sürücünün sürücü harfini belirtir..\n\
+  drive:          Bir sürücünün sürücü harfini belirtir.\n\
   label           Sürücünün etiketini belirtir."
     STRING_LABEL_TEXT1 "%c sürücüsünün birim etiketi %s\n"
     STRING_LABEL_TEXT2 "%c sürücüsünde birimin etiketi yok\n"

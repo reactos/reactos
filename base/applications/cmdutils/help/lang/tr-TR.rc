@@ -1,4 +1,10 @@
-/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/*
+ * PROJECT:     ReactOS Help Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish Resource File
+ * TRANSLATORS: Copyright 2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2026 Hasan Eliküçük (Random Developer 31) <hasanelk101@gmail.com>
+*/
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -30,7 +36,7 @@ COPY     Bir ya da daha çok dosyayı başka bir konuma kopyalar.\n\
 DATE     Tarihi görüntüler ya da ayarlar.\n\
 DELETE   Bir ya da daha çok dosya siler.\n\
 DIR      Bir dizindeki dosyaların ve alt dizinlerin bir listesini görüntüler.\n\
-ECHO     İletileri görüntüler ya da komut yankılanmasını açar ya da kapatır.\n\
+ECHO     İletileri görüntüler ya da komut yankılamasını açar ya da kapatır.\n\
 ERASE    Bir ya da daha çok dosyayı siler.\n\
 EXIT     CMD.EXE programından (komut yorumcusundan) çıkarır.\n\
 FOR      Bir takım dosyalar içinde tüm dosyalar için belirtilen bir komut\n\
