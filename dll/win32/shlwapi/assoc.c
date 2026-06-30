@@ -30,6 +30,7 @@
 #include "shlwapi.h"
 #ifdef __REACTOS__
 #include "shlwapi_undoc.h"
+#include "evalcmd.h"
 #endif
 #include "wine/unicode.h"
 #include "wine/debug.h"

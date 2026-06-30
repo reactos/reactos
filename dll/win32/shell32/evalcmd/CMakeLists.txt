@@ -5,6 +5,7 @@ list(APPEND SOURCE
 
 add_library(evalcmd STATIC ${SOURCE})
 add_dependencies(evalcmd psdk)
+target_include_directories(evalcmd INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(evalcmd PRIVATE wine uuid pathcch_static cppstl)
 target_compile_definitions(evalcmd PRIVATE STATIC_PATHCCH)
 

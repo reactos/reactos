@@ -565,8 +565,10 @@ SHWindowsPolicyEx(_In_ REFGUID rpolid, _In_ DWORD dwDefaultValue)
     return (SUCCEEDED(hr) ? dwData : dwDefaultValue);
 }
 
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(_SHELL32_)
 HRESULT WINAPI
 AssocCreateElement(_In_ REFCLSID rclsid, _In_ REFIID riid, _Outptr_ PVOID* ppvObj);
+#endif
 
 /*****************************************************************************
  * ZoneCheck*

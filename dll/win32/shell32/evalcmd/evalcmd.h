@@ -17,6 +17,9 @@ HRESULT _PathFindInFolder(_In_ INT csidl, _In_ PCWSTR pszSrc, _Out_ PWSTR pszPat
                           _In_ UINT cchPath);
 HRESULT _PathFindInSystem(_Inout_ PWSTR pszPath, _In_ UINT cchPath);
 
+HRESULT WINAPI
+AssocCreateElement(_In_ REFCLSID rclsid, _In_ REFIID riid, _Outptr_ PVOID* ppvObj);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
