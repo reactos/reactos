@@ -3,6 +3,7 @@
 #include <wine/test.h>
 
 extern void func_AddCommas(void);
+extern void func_AssocCreateElement(void);
 extern void func_Control_RunDLLW(void);
 extern void func_CFSFolder(void);
 extern void func_CheckEscapes(void);
@@ -63,6 +64,7 @@ extern void func_StrRStr(void);
 const struct test winetest_testlist[] =
 {
     { "AddCommas", func_AddCommas },
+    { "AssocCreateElement", func_AssocCreateElement },
     { "Control_RunDLLW", func_Control_RunDLLW },
     { "CFSFolder", func_CFSFolder },
     { "CheckEscapes", func_CheckEscapes },

@@ -36,6 +36,9 @@ STRINGTABLE
     IDS_EB_FORMAT "%s EB"
     IDS_RESTRICTED "Operacja została anulowana ze względu na ograniczenia nałożone na ten komputer. Skontaktuj się z administratorem systemu."
     IDS_RESTRICTIONS "Ograniczenia"
+    IDS_ANY_FILE "%s File"
+    IDS_FILE "File"
+    IDS_FOLDER "Folder"
 #endif
 }
 

@@ -14,6 +14,10 @@
 #include <strsafe.h>
 #include <pathcch.h>
 #include <assert.h>
+#include "evalcmd.h"
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(evalcmd);
 
 #define PATH_VALID_CHARS \
     (PATH_CHAR_CLASS_DOT | PATH_CHAR_CLASS_SEMICOLON | PATH_CHAR_CLASS_COMMA | \
@@ -45,7 +49,7 @@ static PCWSTR _PathGetArgsLikeCreateProcess(PCWSTR lpString)
     return &lpString[lstrlenW(lpString)];
 }
 
-static HRESULT
+EXTERN_C HRESULT
 _PathCopyExeAndTrimWhiteSpaces(PWSTR pszBuff, size_t cchBuff, PCWSTR pszSrc, size_t cchSrc)
 {
     HRESULT hr = StringCchCopyNW(pszBuff, cchBuff, pszSrc, cchSrc);
@@ -140,7 +144,7 @@ static HRESULT _PathExeExists(_In_ PCWSTR pszPath)
     return S_OK;
 }
 
-static HRESULT
+EXTERN_C HRESULT
 _PathFindInFolder(_In_ INT csidl, _In_ PCWSTR pszSrc, _Out_ PWSTR pszPath, _In_ UINT cchPath)
 {
     WCHAR szDir[MAX_PATH];
@@ -155,7 +159,7 @@ _PathFindInFolder(_In_ INT csidl, _In_ PCWSTR pszSrc, _Out_ PWSTR pszPath, _In_ 
     return _PathExeExists(pszPath);
 }
 
-static HRESULT _PathFindInSystem(_Inout_ PWSTR pszPath, _In_ UINT cchPath)
+EXTERN_C HRESULT _PathFindInSystem(_Inout_ PWSTR pszPath, _In_ UINT cchPath)
 {
     WCHAR szPath[MAX_PATH];
     HRESULT hr = _PathFindInFolder(CSIDL_SYSTEM, pszPath, szPath, _countof(szPath));

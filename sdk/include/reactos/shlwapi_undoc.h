@@ -358,6 +358,10 @@ enum _shellkey_flags
 };
 
 HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create);
+HRESULT WINAPI SKGetValueW(DWORD flags, LPCWSTR subkey, LPCWSTR value, DWORD *type,
+                           void *data, DWORD *count);
+HRESULT WINAPI SKSetValueW(DWORD flags, LPCWSTR subkey, LPCWSTR value,
+                           DWORD type, void *data, DWORD count);
 
 int
 WINAPIV
@@ -560,6 +564,9 @@ SHWindowsPolicyEx(_In_ REFGUID rpolid, _In_ DWORD dwDefaultValue)
     HRESULT hr = SHWindowsPolicyGetValue(rpolid, &dwData, &cbData);
     return (SUCCEEDED(hr) ? dwData : dwDefaultValue);
 }
+
+HRESULT WINAPI
+AssocCreateElement(_In_ REFCLSID rclsid, _In_ REFIID riid, _Outptr_ PVOID* ppvObj);
 
 /*****************************************************************************
  * ZoneCheck*

@@ -28,6 +28,9 @@
 #include "shlguid.h"
 #include "shlobj.h"
 #include "shlwapi.h"
+#ifdef __REACTOS__
+#include "shlwapi_undoc.h"
+#endif
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
@@ -41,6 +44,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 #else
 #define SHLWAPI_DEF_ASSOCF (ASSOCF_INIT_BYEXENAME|ASSOCF_INIT_DEFAULTTOSTAR| \
                             ASSOCF_INIT_DEFAULTTOFOLDER)
+#endif
+
+#ifdef __REACTOS__
+EXTERN_C ULONG WINAPI GetProcessOsVersion(void); // FIXME: Move or delete
 #endif
 
 /*************************************************************************
@@ -87,9 +94,11 @@ static BOOL SHLWAPI_ParamAToW(LPCSTR lpszParam, LPWSTR lpszBuff, DWORD dwLen,
  *  Success: S_OK. lpInterface contains the new object.
  *  Failure: An HRESULT error code indicating the error.
  *
+#ifndef __REACTOS__ // WRONG NOTES!
  * NOTES
  *  clsid  must be equal to CLSID_QueryAssociations and
  *  refiid must be equal to IID_IQueryAssociations, IID_IUnknown or this function will fail
+#endif
  */
 HRESULT WINAPI AssocCreate(CLSID clsid, REFIID refiid, void **lpInterface)
 {
@@ -99,10 +108,24 @@ HRESULT WINAPI AssocCreate(CLSID clsid, REFIID refiid, void **lpInterface)
   if (!lpInterface)
     return E_INVALIDARG;
 
+#ifdef __REACTOS__
+  *(PVOID*)lpInterface = NULL;
+#else
   *(DWORD*)lpInterface = 0;
+#endif
 
+#ifdef __REACTOS__
+  if (!IsEqualGUID(&clsid, &CLSID_QueryAssociations) &&
+      !IsEqualGUID(&clsid, &IID_IQueryAssociations))
+  {
+    if (GetProcessOsVersion() < _WIN32_WINNT_VISTA)
+      return AssocCreateElement(&clsid, refiid, lpInterface);
+    return CLASS_E_CLASSNOTAVAILABLE;
+  }
+#else
   if (!IsEqualGUID(&clsid,  &CLSID_QueryAssociations))
     return CLASS_E_CLASSNOTAVAILABLE;
+#endif
 
   return SHCoCreateInstance( NULL, &clsid, NULL, refiid, lpInterface );
 }
