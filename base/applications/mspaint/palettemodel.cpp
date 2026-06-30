@@ -12,6 +12,34 @@ PaletteModel paletteModel;
 
 /* FUNCTIONS ********************************************************/
 
+VirtualBrush::~VirtualBrush()
+{
+    if (m_hBrush)
+        DeleteObject(m_hBrush);
+}
+
+HBRUSH VirtualBrush::GetVirtualBrush(PAL_TYPE palette, COLORREF rgbColor)
+{
+    if (m_hBrush &&
+        m_palette == palette &&
+        m_rgbColor == rgbColor)
+    {
+        return m_hBrush;
+    }
+
+    if (m_hBrush)
+        ::DeleteObject(m_hBrush);
+
+    if (palette == PAL_MONOCHROME)
+        m_hBrush = CreateDitherBrush(rgbColor, RGB(0, 0, 0), RGB(255, 255, 255));
+    else
+        m_hBrush = CreateSolidBrush(rgbColor);
+
+    m_palette = palette;
+    m_rgbColor = rgbColor;
+    return m_hBrush;
+}
+
 PaletteModel::PaletteModel()
 {
     m_fgColor = RGB(0, 0, 0);
@@ -119,79 +147,4 @@ void PaletteModel::NotifyPaletteChanged()
 {
     if (paletteWindow.IsWindow())
         paletteWindow.Invalidate(FALSE);
-}
-
-HBRUSH
-PaletteModel::CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF monoColor1)
-{
-    // 8x8 Bayer ordered dithering matrix (0 to 63)
-    static const BYTE s_bayerMatrix[8][8] =
-    {
-        {  0, 32,  8, 40,  2, 34, 10, 42 },
-        { 48, 16, 56, 24, 50, 18, 58, 26 },
-        { 12, 44,  4, 36, 14, 46,  6, 38 },
-        { 60, 28, 52, 20, 62, 30, 54, 22 },
-        {  3, 35, 11, 43,  1, 33,  9, 41 },
-        { 51, 19, 59, 27, 49, 17, 57, 25 },
-        { 15, 47,  7, 39, 13, 45,  5, 37 },
-        { 63, 31, 55, 23, 61, 29, 53, 21 },
-    };
-    INT sum = GetRValue(color) + GetGValue(color) + GetBValue(color);
-    INT brightness = sum / 3;
-    if (brightness < 0)
-        brightness = 0;
-    if (brightness >= 255)
-        brightness = 256; // White out
-
-    BITMAPINFO bmi = {};
-    bmi.bmiHeader.biSize     = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth    = 8;
-    bmi.bmiHeader.biHeight   = -8; // Top-down
-    bmi.bmiHeader.biPlanes   = 1;
-    bmi.bmiHeader.biBitCount = 24;
-
-    const BYTE b0 = GetBValue(monoColor0), g0 = GetGValue(monoColor0), r0 = GetRValue(monoColor0);
-    const BYTE b1 = GetBValue(monoColor1), g1 = GetGValue(monoColor1), r1 = GetRValue(monoColor1);
-
-    BYTE pixels[8 * 8 * 3];
-    for (INT y = 0; y < 8; ++y)
-    {
-        INT index = y * (3 * CHAR_BIT);
-        for (INT x = 0; x < 8; ++x)
-        {
-            const INT threshold = s_bayerMatrix[y][x] * 255 / 63;
-            if (brightness > threshold)
-            {
-                pixels[index++] = b1; // Blue
-                pixels[index++] = g1; // Green
-                pixels[index++] = r1; // Red
-            }
-            else
-            {
-                pixels[index++] = b0; // Blue
-                pixels[index++] = g0; // Green
-                pixels[index++] = r0; // Red
-            }
-        }
-    }
-
-    HDC hdc = GetDC(NULL);
-    HBITMAP hBitmap = CreateDIBitmap(hdc, &bmi.bmiHeader, CBM_INIT, pixels, &bmi, DIB_RGB_COLORS);
-    ReleaseDC(NULL, hdc);
-
-    if (!hBitmap)
-        return NULL;
-
-    HBRUSH hBrush = CreatePatternBrush(hBitmap);
-    DeleteObject(hBitmap);
-
-    return hBrush;
-}
-
-HBRUSH PaletteModel::CreateColorBrush(COLORREF color)
-{
-    if (m_nSelectedPalette == PAL_MONOCHROME)
-        return CreateDitherBrush(color, RGB(0, 0, 0), RGB(255, 255, 255));
-    else
-        return CreateSolidBrush(color);
 }
