@@ -28,7 +28,7 @@ BEGIN
     IDS_USAGE17 "   program         linia komend dla EXE. Patrz niżej aby zobaczyć przykłady.\n\n"
     IDS_USAGE18 "Przykład:\n"
     IDS_USAGE19 "> runas /noprofile /user:mojamaszyna\\administrator cmd\n\n"
-    IDS_USAGE20 "NOTATKA:  /profile nie jest kompatybilna z /netonly.\n"
+    IDS_USAGE20 "UWAGA: Opcja /profile nie jest zgodna z opcją /netonly.\n"
 
     IDS_START     "Próba uruchomienia %s jako użytkownik ""%s\\%s""...\n"
     IDS_RUN_ERROR "BŁĄD RUNAS: Nie można uruchomić %s\n"
