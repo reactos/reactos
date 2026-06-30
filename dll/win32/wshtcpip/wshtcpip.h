@@ -21,6 +21,7 @@
 #include <tdilib.h>
 #include <ws2tcpip.h>
 #include <rtlfuncs.h>
+#include <mstcpip.h>
 
 #define EXPORT WINAPI
 
@@ -58,6 +59,12 @@ WSHIoctl_GetInterfaceList(
     IN  DWORD OutputBufferLength,
     OUT LPDWORD NumberOfBytesReturned,
     OUT LPBOOL NeedsCompletion);
+
+INT
+SendRequest(
+    IN PVOID Request,
+    IN DWORD RequestSize,
+    IN DWORD IOCTL);
 
 #endif /* __WSHTCPIP_H */
 

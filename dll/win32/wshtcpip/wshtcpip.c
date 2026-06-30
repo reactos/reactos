@@ -167,12 +167,11 @@ GetTdiTypeId(
     switch (Level)
     {
        case SOL_SOCKET:
-          *TdiType = INFO_TYPE_ADDRESS_OBJECT;
+          *TdiType = INFO_TYPE_CONNECTION;
           switch (OptionName)
           {
              case SO_KEEPALIVE:
-                /* FIXME: Return proper option */
-                ASSERT(FALSE);
+                *TdiId = TCP_SOCKET_KEEPALIVE;
                 break;
              default:
                 break;
@@ -352,6 +351,9 @@ WSHIoctl(
     OUT LPBOOL NeedsCompletion)
 {
     INT res;
+    PSOCKET_CONTEXT Context = HelperDllSocketContext;
+    PTCP_REQUEST_SET_INFORMATION_EX Info;
+    PQUEUED_REQUEST Queued, NextQueued;
 
     if (IoControlCode == SIO_GET_INTERFACE_LIST)
     {
@@ -360,6 +362,67 @@ WSHIoctl(
             OutputBufferLength,
             NumberOfBytesReturned,
             NeedsCompletion);
+        return res;
+    }
+    else if (IoControlCode == SIO_KEEPALIVE_VALS)
+    {
+        if (!InputBuffer || InputBufferLength != sizeof(struct tcp_keepalive))
+        {
+            return WSAEINVAL;
+        }
+
+        Info = HeapAlloc(GetProcessHeap(), 0, sizeof(*Info) + InputBufferLength);
+        if (!Info)
+            return WSAENOBUFS;
+
+        Info->ID.toi_entity.tei_entity = Context->AddrFileEntityType;
+        Info->ID.toi_entity.tei_instance = Context->AddrFileInstance;
+        Info->ID.toi_class = INFO_CLASS_PROTOCOL;
+        Info->ID.toi_type = INFO_TYPE_CONNECTION;
+        Info->ID.toi_id = TCP_SOCKET_KEEPALIVEVALS;
+        Info->BufferSize = InputBufferLength;
+        memcpy(Info->Buffer, InputBuffer, InputBufferLength);
+
+        if (Context->SocketState == SocketStateCreated)
+        {
+            if (Context->RequestQueue)
+            {
+                Queued = Context->RequestQueue;
+                while ((NextQueued = Queued->Next))
+                {
+                    Queued = NextQueued;
+                }
+
+                Queued->Next = HeapAlloc(GetProcessHeap(), 0, sizeof(QUEUED_REQUEST));
+                if (!Queued->Next)
+                {
+                    HeapFree(GetProcessHeap(), 0, Info);
+                    return WSAENOBUFS;
+                }
+
+                NextQueued = Queued->Next;
+                NextQueued->Next = NULL;
+                NextQueued->Info = Info;
+            }
+            else
+            {
+                Context->RequestQueue = HeapAlloc(GetProcessHeap(), 0, sizeof(QUEUED_REQUEST));
+                if (!Context->RequestQueue)
+                {
+                    HeapFree(GetProcessHeap(), 0, Info);
+                    return WSAENOBUFS;
+                }
+
+                Context->RequestQueue->Next = NULL;
+                Context->RequestQueue->Info = Info;
+            }
+
+            return 0;
+        }
+
+        res = SendRequest(Info, sizeof(*Info) + Info->BufferSize, IOCTL_TCP_SET_INFORMATION_EX);
+
+        HeapFree(GetProcessHeap(), 0, Info);
         return res;
     }
 
@@ -690,9 +753,11 @@ WSHSetSocketInformation(
                     return 0;
 
                 case SO_KEEPALIVE:
-                    /* FIXME -- We'll send this to TCPIP */
-                    DPRINT1("Set: SO_KEEPALIVE not yet supported\n");
-                    return 0;
+                    if (OptionLength < sizeof(DWORD))
+                    {
+                        return WSAEFAULT;
+                    }
+                    break;
 
                 default:
                     /* Invalid option */
