@@ -108,9 +108,8 @@ KiInitializeUserApc(
     TrapFrame->SegGs = KGDT64_R3_DATA | RPL_MASK;
     TrapFrame->SegSs = KGDT64_R3_DATA | RPL_MASK;
 
-    /* Sanitize EFLAGS, enable interrupts */
-    TrapFrame->EFlags &= EFLAGS_USER_SANITIZE;
-    TrapFrame->EFlags |= EFLAGS_INTERRUPT_MASK;
+    /* Initialize EFLAGS */
+    TrapFrame->EFlags = EFLAGS_INTERRUPT_MASK;
 }
 
 /*
