@@ -20,7 +20,7 @@ BEGIN
     IDS_USAGE09 "   /profile        określa że profil użytkownika powinien być załadowany.\n"
     IDS_USAGE10 "                   Jest to opcja domyślna.\n" 
     IDS_USAGE11 "   /env            aby użyć tego środowiska zamiast środowiska użytkownika.\n"
-    IDS_USAGE12 "   /netonly        użyj jeżeli określone poświadczenia są przeznaczone tylko dla\n"
+    IDS_USAGE12 "   /netonly        należy użyć, jeżeli określone poświadczenia są przeznaczone tylko do\n"
     IDS_USAGE13 "                   zdalnego dostępu.\n"
     IDS_USAGE14 "   /savecred       Nie zaimplementowano.\n"
     IDS_USAGE15 "   /smartcard      Nie zaimplementowano.\n"
