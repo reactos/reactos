@@ -1182,6 +1182,78 @@ static const struct message ttn_show_parent_seq[] =
     { 0 }
 };
 
+static void get_tracked_size(HWND tt, TTTOOLINFOW *info, SIZE *sz)
+{
+    RECT rc;
+    SendMessageW(tt, TTM_TRACKACTIVATE, TRUE, (LPARAM)info);
+    SendMessageW(tt, TTM_TRACKPOSITION, 0, MAKELPARAM(10, 10));
+    flush_events(100);
+    GetWindowRect(tt, &rc);
+    sz->cx = rc.right - rc.left;
+    sz->cy = rc.bottom - rc.top;
+    SendMessageW(tt, TTM_TRACKACTIVATE, FALSE, (LPARAM)info);
+    flush_events(50);
+}
+
+/* regression test for CORE-20197 */
+static void test_TTM_SETTITLE(void)
+{
+    HWND parent, tt;
+    TTTOOLINFOW info = { 0 };
+    SIZE sz_no_title, sz_null_icon, sz_empty_icon;
+    LRESULT res;
+
+    parent = CreateWindowExW(0, WC_STATICW, NULL, WS_CAPTION | WS_VISIBLE,
+                             50, 50, 400, 400, NULL, NULL, GetModuleHandleW(NULL), 0);
+    ok(parent != NULL, "failed to create parent window\n");
+    ShowWindow(parent, SW_SHOWNORMAL);
+    flush_events(100);
+
+    tt = CreateWindowExW(WS_EX_TOPMOST, TOOLTIPS_CLASSW, NULL,
+                         TTS_NOPREFIX | TTS_ALWAYSTIP,
+                         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                         parent, NULL, GetModuleHandleW(NULL), 0);
+    ok(tt != NULL, "failed to create tooltip window\n");
+
+    info.cbSize   = TTTOOLINFOW_V1_SIZE;
+    info.uFlags   = TTF_IDISHWND | TTF_TRACK | TTF_ABSOLUTE;
+    info.hwnd     = parent;
+    info.hinst    = GetModuleHandleW(NULL);
+    info.lpszText = (WCHAR *)L"x";
+    info.uId      = (UINT_PTR)parent;
+    GetClientRect(parent, &info.rect);
+
+    res = SendMessageW(tt, TTM_ADDTOOLW, 0, (LPARAM)&info);
+    ok(res, "TTM_ADDTOOLW failed\n");
+
+    /* Baseline: no title, no icon */
+    SendMessageW(tt, TTM_SETTITLEW, TTI_NONE, (LPARAM)NULL);
+    get_tracked_size(tt, &info, &sz_no_title);
+
+    /* Icon requested with NULL title — must be suppressed */
+    SendMessageW(tt, TTM_SETTITLEW, TTI_WARNING, (LPARAM)NULL);
+    get_tracked_size(tt, &info, &sz_null_icon);
+    ok(sz_null_icon.cy == sz_no_title.cy,
+       "NULL title + icon: height %d, expected %d (same as no-title)\n",
+       sz_null_icon.cy, sz_no_title.cy);
+    ok(sz_null_icon.cx == sz_no_title.cx,
+       "NULL title + icon: width %d, expected %d (same as no-title)\n",
+       sz_null_icon.cx, sz_no_title.cx);
+
+    /* Icon requested with empty string title — must also be suppressed */
+    SendMessageW(tt, TTM_SETTITLEW, TTI_WARNING, (LPARAM)L"");
+    get_tracked_size(tt, &info, &sz_empty_icon);
+    ok(sz_empty_icon.cy == sz_no_title.cy,
+       "empty title + icon: height %d, expected %d (same as no-title)\n",
+       sz_empty_icon.cy, sz_no_title.cy);
+    ok(sz_empty_icon.cx == sz_no_title.cx,
+       "empty title + icon: width %d, expected %d (same as no-title)\n",
+       sz_empty_icon.cx, sz_no_title.cx);
+
+    DestroyWindow(tt);
+    DestroyWindow(parent);
+}
+
 static void test_TTN_SHOW(void)
 {
     HWND hwndTip, hwnd;
@@ -1255,6 +1327,7 @@ START_TEST(tooltips)
     test_margin();
     test_TTM_ADDTOOL(FALSE);
     test_TTN_SHOW();
+    test_TTM_SETTITLE();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
         return;
@@ -1267,6 +1340,7 @@ START_TEST(tooltips)
     test_margin();
     test_TTM_ADDTOOL(TRUE);
     test_TTN_SHOW();
+    test_TTM_SETTITLE();
 
     unload_v6_module(ctx_cookie, hCtx);
 }
