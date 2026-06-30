@@ -3028,12 +3028,12 @@ ProcessUnattendSection(
         {
             pSetupData->DisableAutoDaylightTimeSet = _wtoi(szValue);
         }
-        else if (!_wcsicmp(szName, L"DisableAddonsInst"))
+        else if (!_wcsicmp(szName, L"RappsDownload"))
         {
             if (!_wcsicmp(szValue, L"yes"))
-                pSetupData->DisableAddonsInst = TRUE;
+                pSetupData->RappsDownload = TRUE;
             else
-                pSetupData->DisableAddonsInst = FALSE;
+                pSetupData->RappsDownload = FALSE;
         }
         else if (!_wcsicmp(szName, L"InstallationType"))
         {

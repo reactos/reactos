@@ -148,11 +148,8 @@ InstallOptionalComponents(
     SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 3, (LPARAM)(ARRAYSIZE(Addons) - 1));
     pSetupData = (PSETUPDATA)GetWindowLongPtr(pItemsData->hwndDlg, GWLP_USERDATA);
 
-    if (pSetupData->UnattendSetup && pSetupData->DisableAddonsInst)
-    {
-        hr = S_OK;
-        goto done;
-    }
+    if (pSetupData->UnattendSetup)
+        Consent = pSetupData->RappsDownload ? APPROVED : DENIED;
 
     for (DWORD i = 0; i < ARRAYSIZE(Addons); i++)
     {
@@ -181,7 +178,6 @@ InstallOptionalComponents(
         }
     }
 
-done:
     SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 3, HRESULT_CODE(hr));
     return hr;
 }
