@@ -191,10 +191,15 @@ typedef enum
 // EFlags
 //
 #define EFLAGS_CF               0x01L
+#define EFLAGS_RESERVED1        0x02L
+#define EFLAGS_PF               0x04L
+#define EFLAGS_AF               0x10L
 #define EFLAGS_ZF               0x40L
+#define EFLAGS_SF               0x80L
 #define EFLAGS_TF               0x100L
 #define EFLAGS_INTERRUPT_MASK   0x200L
 #define EFLAGS_DF               0x400L
+#define EFLAGS_OF               0x800L
 #define EFLAGS_IOPL             0x3000L
 #define EFLAGS_NESTED_TASK      0x4000L
 //#define EFLAGS_NF               0x4000
@@ -212,6 +217,7 @@ typedef enum
 #define EFLAGS_ID_MASK          0x200000
 #define EFLAGS_IF_MASK          0x0200
 #define EFLAGS_IF_SHIFT         0x0009
+#define EFLAGS_USER_THREAD_SANITIZE 0x200FD5 /* Allowed flags: ID|OF|DF|IF|TF|SF|ZF|AF|PF|CF */
 
 //
 // MXCSR Floating Control/Status Bit Masks
