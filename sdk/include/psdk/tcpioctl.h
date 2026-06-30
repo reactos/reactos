@@ -106,6 +106,10 @@
 /* TCP connection options */
 #define TCP_SOCKET_NODELAY 1
 
+/* ReactOS specific */
+#define TCP_SOCKET_KEEPALIVE 2
+#define TCP_SOCKET_KEEPALIVEVALS 3
+
 typedef struct IFEntry
 {
     ULONG if_index;

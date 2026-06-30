@@ -114,6 +114,8 @@ err_t       LibTCPGetPeerName(PTCP_PCB pcb, ip4_addr_t *const ipaddr, u16_t *con
 err_t       LibTCPGetHostName(PTCP_PCB pcb, ip4_addr_t *const ipaddr, u16_t *const port);
 void        LibTCPAccept(PTCP_PCB pcb, struct tcp_pcb *listen_pcb, void *arg);
 void        LibTCPSetNoDelay(PTCP_PCB pcb, BOOLEAN Set);
+void        LibTCPSetKeepAlive(PTCP_PCB pcb, BOOLEAN Set);
+void        LibTcpSetKeepAliveValues(PTCP_PCB pcb, u32_t KeepAliveTime, u32_t KeepAliveInterval);
 void        LibTCPGetSocketStatus(PTCP_PCB pcb, PULONG State);
 
 /* IP functions */

@@ -876,6 +876,29 @@ LibTCPSetNoDelay(
 }
 
 void
+LibTCPSetKeepAlive(
+    PTCP_PCB pcb,
+    BOOLEAN Set)
+{
+    if (Set)
+        pcb->so_options |= SOF_KEEPALIVE;
+    else
+        pcb->so_options &= ~SOF_KEEPALIVE;
+}
+
+void
+LibTcpSetKeepAliveValues(
+    PTCP_PCB pcb,
+    u32_t KeepAliveTime,
+    u32_t KeepAliveInterval
+)
+{
+    pcb->keep_idle = KeepAliveTime;
+    pcb->keep_intvl = KeepAliveInterval;
+    pcb->keep_cnt = 10;
+}
+
+void
 LibTCPGetSocketStatus(
     PTCP_PCB pcb,
     PULONG State)
