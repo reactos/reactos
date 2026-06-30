@@ -30,7 +30,7 @@ BEGIN
     IDS_USAGE19 "> runas /noprofile /user:mojamaszyna\\administrator cmd\n\n"
     IDS_USAGE20 "NOTATKA:  /profile nie jest kompatybilna z /netonly.\n"
 
-    IDS_START     "Próba uruchomienia %s jako użytkownika ""%s\\%s""...\n"
+    IDS_START     "Próba uruchomienia %s jako użytkownik ""%s\\%s""...\n"
     IDS_RUN_ERROR "BŁĄD RUNAS: Nie można uruchomić %s\n"
     IDS_INTERNAL_ERROR "BŁĄD RUNAS: Błąd wewnętrzny %ld\n"
 
