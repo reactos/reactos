@@ -46,6 +46,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     PKSTART_FRAME StartFrame;
     PKSWITCH_FRAME CtxSwitchFrame;
     PKTRAP_FRAME TrapFrame;
+    PKEXCEPTION_FRAME ExceptionFrame;
     ULONG ContextFlags;
     PVOID InitialStack;
 
@@ -102,19 +103,37 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         ASSERT((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL);
         ContextFlags = Context->ContextFlags & ~CONTEXT_DEBUG_REGISTERS;
 
-        /* Setup the Trap Frame */
+        /* Zero-initialize the Trap Frame and exception frame */
         TrapFrame = &InitFrame->TrapFrame;
-
-        /* Zero out the trap frame */
         RtlZeroMemory(TrapFrame, sizeof(KTRAP_FRAME));
-        RtlZeroMemory(&InitFrame->ExceptionFrame, sizeof(KEXCEPTION_FRAME));
+        ExceptionFrame = &InitFrame->ExceptionFrame;
+        RtlZeroMemory(ExceptionFrame, sizeof(KEXCEPTION_FRAME));
 
-        /* Set up a trap frame from the context. */
-        KeContextToTrapFrame(Context,
-                             &InitFrame->ExceptionFrame,
-                             TrapFrame,
-                             CONTEXT_AMD64 | ContextFlags,
-                             UserMode);
+        /* Copy integer registers */
+        TrapFrame->Rax = Context->Rax;
+        TrapFrame->Rcx = Context->Rcx;
+        TrapFrame->Rdx = Context->Rdx;
+        TrapFrame->Rbp = 0; // Context->Rbp; // 0 on Vista, copied on Win 10
+        TrapFrame->R8 = Context->R8;
+        TrapFrame->R9 = Context->R9;
+        TrapFrame->R10 = Context->R10;
+        TrapFrame->R11 = Context->R11;
+        ExceptionFrame->Rbx = Context->Rbx;
+        ExceptionFrame->Rsi = Context->Rsi;
+        ExceptionFrame->Rdi = Context->Rdi;
+        ExceptionFrame->R12 = Context->R12;
+        ExceptionFrame->R13 = Context->R13;
+        ExceptionFrame->R14 = Context->R14;
+        ExceptionFrame->R15 = Context->R15;
+
+        /* Copy RIP, RSP, EFLAGS */
+        TrapFrame->Rip = Context->Rip;
+        TrapFrame->Rsp = Context->Rsp;
+        TrapFrame->EFlags = Context->EFlags;
+
+        /* Sanitize EFLAGS */
+        TrapFrame->EFlags &= EFLAGS_USER_THREAD_SANITIZE;
+        TrapFrame->EFlags |= EFLAGS_INTERRUPT_MASK;
 
         /* Set user mode segment selectors */
         TrapFrame->SegDs = KGDT64_R3_DATA | RPL_MASK;
@@ -127,6 +146,9 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         /* Clear DR7 */
         TrapFrame->Dr7 = 0;
 
+        /* Initialize floating point state */
+        TrapFrame->MxCsr = INITIAL_MXCSR;
+
         /* Set the previous mode as user */
         TrapFrame->PreviousMode = UserMode;
 
@@ -137,7 +159,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         StartFrame->Return = (ULONG64)KiUserThreadStartupExit;
 
         /* KiUserThreadStartupExit returns to KiServiceExit3 */
-        InitFrame->ExceptionFrame.Return = (ULONG64)KiServiceExit3;
+        ExceptionFrame->Return = (ULONG64)KiServiceExit3;
 
         /* Allocate home space on the stack */
         TrapFrame->Rsp -= 5 * sizeof(PVOID);
