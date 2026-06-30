@@ -2989,10 +2989,81 @@ DWORD WINAPI UnenableRouter(OVERLAPPED * pOverlapped, LPDWORD lpdwEnableCount)
 /*
  * @unimplemented
  */
-DWORD WINAPI GetIpErrorString(IP_STATUS ErrorCode,PWCHAR Buffer,PDWORD Size)
+DWORD WINAPI GetIpErrorString(IP_STATUS ErrorCode, PWCHAR Buffer, PDWORD Size)
 {
-    FIXME(":stub\n");
-    return 0L;
+    unsigned int i;
+
+    static const struct
+    {
+        IP_STATUS Code;
+        const WCHAR *Text;
+    } IpStatusTable[] =
+    {
+        { IP_SUCCESS, L"The request succeeded." },
+        { IP_BUF_TOO_SMALL, L"The reply buffer was too small." },
+        { IP_DEST_NET_UNREACHABLE, L"The destination network was unreachable." },
+        { IP_DEST_HOST_UNREACHABLE, L"The destination host was unreachable." },
+        { IP_DEST_PROT_UNREACHABLE, L"The destination protocol was unreachable." },
+        { IP_DEST_PORT_UNREACHABLE, L"The destination port was unreachable." },
+        { IP_NO_RESOURCES, L"Insufficient IP resources were available." },
+        { IP_BAD_OPTION, L"A bad IP option was specified." },
+        { IP_HW_ERROR, L"A hardware error occurred." },
+        { IP_PACKET_TOO_BIG, L"The packet was too big." },
+        { IP_REQ_TIMED_OUT, L"The request timed out." },
+        { IP_BAD_REQ, L"A bad request was specified." },
+        { IP_BAD_ROUTE, L"A bad route was specified." },
+        { IP_TTL_EXPIRED_TRANSIT, L"The TTL expired in transit." },
+        { IP_TTL_EXPIRED_REASSEM, L"The TTL expired during fragment reassembly." },
+        { IP_PARAM_PROBLEM, L"A parameter problem was specified." },
+        { IP_SOURCE_QUENCH, L"A source quench occurred." },
+        { IP_OPTION_TOO_BIG, L"An IP option was too big." },
+        { IP_BAD_DESTINATION, L"A bad destination was specified." },
+        { IP_ADDR_DELETED, L"The address was deleted." },
+        { IP_SPEC_MTU_CHANGE, L"The MTU changed." },
+        { IP_MTU_CHANGE, L"The interface MTU changed." },
+        { IP_UNLOAD, L"The transport is being unloaded." },
+        { IP_ADDR_ADDED, L"The address was added." },
+        { IP_MEDIA_CONNECT, L"The media connected." },
+        { IP_MEDIA_DISCONNECT, L"The media disconnected." },
+        { IP_BIND_ADAPTER, L"The adapter was bound." },
+        { IP_UNBIND_ADAPTER, L"The adapter was unbound." },
+        { IP_DEVICE_DOES_NOT_EXIST, L"The device does not exist." },
+        { IP_DUPLICATE_ADDRESS, L"A duplicate address was detected." },
+        { IP_INTERFACE_METRIC_CHANGE, L"The interface metric changed." },
+        { IP_RECONFIG_SECFLTR, L"The security filter was reconfigured." },
+        { IP_NEGOTIATING_IPSEC, L"IPsec is being negotiated." },
+        { IP_INTERFACE_WOL_CAPABILITY_CHANGE, L"The interface wake-on-LAN capability changed." },
+        { IP_DUPLICATE_IPADD, L"A duplicate IP address was detected." },
+        { IP_GENERAL_FAILURE, L"A general failure occurred that is not covered by a specific error code." },
+        { IP_PENDING, L"The operation is pending." },
+    };
+
+    TRACE("ErrorCode %lu, Buffer %p, Size %p\n", ErrorCode, Buffer, Size);
+
+    if (!Buffer || !Size)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    for (i = 0; i < sizeof(IpStatusTable) / sizeof(IpStatusTable[0]); i++)
+    {
+        if (IpStatusTable[i].Code == ErrorCode)
+        {
+            size_t len = wcslen(IpStatusTable[i].Text);
+
+            if (len > *Size)
+            {
+                *Size = (DWORD)len;
+                return ERROR_INSUFFICIENT_BUFFER;
+            }
+
+            StringCchCopyW(Buffer, *Size + 1, IpStatusTable[i].Text);
+            *Size = (DWORD)len;
+            return NO_ERROR;
+        }
+    }
+
+    return ERROR_INVALID_PARAMETER;
 }
 
 
