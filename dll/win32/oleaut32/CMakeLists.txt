@@ -3,14 +3,11 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__ROS_LONG64__
-    -DCOM_NO_WINDOWS_H
     -D_OLEAUT32_
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL
     -DENTRY_PREFIX=OLEAUTPS_
-    -DPROXY_CLSID=CLSID_PSFactoryBuffer
-    -D_CRT_NON_CONFORMING_SWPRINTFS)
+    -DPROXY_CLSID=CLSID_PSFactoryBuffer)
 
 spec2def(oleaut32.dll oleaut32.spec ADD_IMPORTLIB)
 add_rpcproxy_files(oleaut32_oaidl.idl oleaut32_ocidl.idl)
@@ -25,6 +22,7 @@ list(APPEND SOURCE
     olepropframe.c
     recinfo.c
     safearray.c
+    thunks.c
     typelib.c
     usrmarshal.c
     varformat.c
@@ -60,8 +58,9 @@ endif()
 
 add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
 add_dependencies(oleaut32 oleaut32_idlheader)
+add_idl_reg_scripts(oleaut32 registry oleaut32_oaidl.idl oleaut32_ocidl.idl)
 set_module_type(oleaut32 win32dll)
-target_link_libraries(oleaut32 wine wineldr uuid ${PSEH_LIB} oldnames)
+target_link_libraries(oleaut32 wine wineldr uuid ${PSEH_LIB} oldnames wine_dll_canunload)
 add_delay_importlibs(oleaut32 comctl32 urlmon windowscodecs)
 add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
 add_pch(oleaut32 precomp.h "${PCH_SKIP_SOURCE}")
