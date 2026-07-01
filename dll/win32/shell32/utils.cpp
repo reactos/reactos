@@ -714,6 +714,64 @@ SHSetFolderPathA(
 }
 
 /*************************************************************************
+ *                PathIsSlowW (SHELL32.239)
+ *
+ * @param[in] pszFile
+ * Path to check for slowness.
+ *
+ * @param[in] dwAttr
+ * File attributes of pszFile or INVALID_FILE_ATTRIBUTES to get them.
+ *
+ * @return
+ * TRUE if the path is considered slow, FALSE if not.
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-pathissloww
+ **/
+EXTERN_C BOOL
+WINAPI
+PathIsSlowW(
+    _In_ LPCWSTR pszFile,
+    _In_ DWORD dwAttr)
+{
+    TRACE("PathIsSlowW(%s, %lx)\n", debugstr_w(pszFile), dwAttr);
+
+    /* If we didn't get attributes, get them */
+    if (dwAttr == INVALID_FILE_ATTRIBUTES)
+        dwAttr = GetFileAttributesW(pszFile);
+
+    /* Offline files are always considered slow */
+    if (dwAttr != INVALID_FILE_ATTRIBUTES &&
+        (dwAttr & FILE_ATTRIBUTE_OFFLINE))
+    {
+        return TRUE;
+    }
+
+    /* Only network paths can be slow bandwidth-wise */
+    if (!PathIsNetworkPathW(pszFile))
+        return FALSE;
+
+    /* Query connection speed with MPR */
+    NETRESOURCEW nr = {0};
+    NETCONNECTINFOSTRUCT nci = { sizeof(nci) };
+
+    WCHAR szRoot[MAX_PATH];
+    if (FAILED(StringCchCopyW(szRoot, _countof(szRoot), pszFile)))
+        return FALSE;
+    PathStripToRootW(szRoot);
+
+    nr.lpRemoteName = szRoot;
+    nr.dwType = RESOURCETYPE_DISK;
+
+    if (MultinetGetConnectionPerformanceW(&nr, &nci) == NO_ERROR)
+    {
+        if (nci.dwSpeed <= 400)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+/*************************************************************************
  *                PathIsSlowA (SHELL32.240)
  *
  * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-pathisslowa
