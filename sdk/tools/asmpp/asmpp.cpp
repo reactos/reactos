@@ -18,6 +18,11 @@
 #include <cstdio>
 #include <sstream>
 #include <ctime>
+#include <cstring>
+
+#ifndef _WIN32
+#define _stricmp strcasecmp
+#endif
 
 #define PROFILING_ENABLED 0
 
@@ -45,6 +50,8 @@ enum TOKEN_TYPE
     StringDef,
 
     KW_include,
+    KW_option,
+    KW_model,
     KW_const,
     KW_code,
     KW_endprolog,
@@ -79,6 +86,7 @@ enum TOKEN_TYPE
     KW_ERRDEF,
 
     Filename,
+    InstPrefix,
     Instruction,
     Reg8,
     Reg16,
@@ -112,6 +120,9 @@ int fake_printf(const char* format, ...)
 #define WS_OR_NL R"((?:)" WHITESPACE "|" NEWLINE R"()+)"
 #define SEPARATOR R"([\s,\=\+\-\*\/\:\~\[\]])"
 
+#define INST_PREFIX \
+    "REX|REXW|REXR|REXX|REXB|LOCK|REP|REPE|REPZ|REPNE|REPNZ"
+
 #define INSTRUCTION \
     "AAA|AAD|AAM|AAS|ADC|ADCX|ADD|ADDPD|ADDPS|ADDSD|ADDSS|ADDSUBPD|ADDSUBPS|" \
     "ADOX|AESDEC|AESDECLAST|AESENC|AESENCLAST|AESIMC|AESKEYGENASSIST|AND|ANDN|" \
@@ -140,7 +151,7 @@ int fake_printf(const char* format, ...)
     "KORTESTW|KORW|KSHIFTLB|KSHIFTLD|KSHIFTLQ|KSHIFTLW|KSHIFTRB|KSHIFTRD|" \
     "KSHIFTRQ|KSHIFTRW|KTESTB|KTESTD|KTESTQ|KTESTW|KUNPCKBW|KUNPCKDQ|KUNPCKWD|" \
     "KXNORB|KXNORD|KXNORQ|KXNORW|KXORB|KXORD|KXORQ|KXORW|LAHF|LAR|LDDQU|" \
-    "LDMXCSR|LDS|LEA|LEAVE|LES|LFENCE|LFS|LGDT|LGS|LIDT|LLDT|LMSW|LOCK|LODS|" \
+    "LDMXCSR|LDS|LEA|LEAVE|LES|LFENCE|LFS|LGDT|LGS|LIDT|LLDT|LMSW|LODS|" \
     "LODSB|LODSD|LODSQ|LODSW|LOOP|LOOPcc|LSL|LSS|LTR|LZCNT|MASKMOVDQU|MASKMOVQ|" \
     "MAXPD|MAXPS|MAXSD|MAXSS|MFENCE|MINPD|MINPS|MINSD|MINSS|MONITOR|MOV|MOVAPD|" \
     "MOVAPS|MOVBE|MOVD|MOVDDUP|MOVDIR64B|MOVDIRI|MOVDQ2Q|MOVDQA|MOVDQU|MOVHLPS|" \
@@ -163,7 +174,7 @@ int fake_printf(const char* format, ...)
     "PSUBSW|PSUBUSB|PSUBUSW|PSUBW|PTEST|PTWRITE|PUNPCKHBW|PUNPCKHDQ|PUNPCKHQDQ|" \
     "PUNPCKHWD|PUNPCKLBW|PUNPCKLDQ|PUNPCKLQDQ|PUNPCKLWD|PUSH|PUSHA|PUSHAD|" \
     "PUSHF|PUSHFD|PUSHFQ|PXOR|RCL|RCPPS|RCPSS|RCR|RDFSBASE|RDGSBASE|RDMSR|" \
-    "RDPID|RDPKRU|RDPMC|RDRAND|RDSEED|RDTSC|RDTSCP|REP|REPE|REPNE|REPNZ|REPZ|" \
+    "RDPID|RDPKRU|RDPMC|RDRAND|RDSEED|RDTSC|RDTSCP|" \
     "RET|ROL|ROR|RORX|ROUNDPD|ROUNDPS|ROUNDSD|ROUNDSS|RSM|RSQRTPS|RSQRTSS|SAHF|" \
     "SAL|SAR|SARX|SBB|SCAS|SCASB|SCASD|SCASW|SETcc|SFENCE|SGDT|SHA1MSG1|" \
     "SHA1MSG2|SHA1NEXTE|SHA1RNDS4|SHA256MSG1|SHA256MSG2|SHA256RNDS2|SHL|SHLD|" \
@@ -241,6 +252,8 @@ vector<TOKEN_DEF> g_TokenList =
     { TOKEN_TYPE::StringDef, R"((<.+>))" },
 
     { TOKEN_TYPE::KW_include, R"((include))" FOLLOWED_BY(R"([\s])") },
+    { TOKEN_TYPE::KW_option, R"((\option))" FOLLOWED_BY(R"([\s])") },
+    { TOKEN_TYPE::KW_model, R"((\.model))" FOLLOWED_BY(R"([\s])") },
     { TOKEN_TYPE::KW_const, R"((\.const))" FOLLOWED_BY(R"([\s])") },
     { TOKEN_TYPE::KW_code, R"((\.code))" FOLLOWED_BY(R"([\s])") },
     { TOKEN_TYPE::KW_endprolog, R"((\.endprolog))" FOLLOWED_BY(R"([\s])") },
@@ -275,6 +288,7 @@ vector<TOKEN_DEF> g_TokenList =
     { TOKEN_TYPE::KW_ERRDEF, R"((\.ERRDEF))" FOLLOWED_BY(R"([\s\;])")},
 
     { TOKEN_TYPE::Filename, R"(([a-z_][a-z0-9_]*\.inc))" FOLLOWED_BY(R"([\s])") },
+    { TOKEN_TYPE::InstPrefix, "(" INST_PREFIX ")" FOLLOWED_BY(R"([\s])") },
     { TOKEN_TYPE::Instruction, "(" INSTRUCTION ")" FOLLOWED_BY(R"([\s])") },
     { TOKEN_TYPE::Reg8, R"((al|ah|bl|bh|cl|ch|dl|dh|sil|dil|bpl|spl|r8b|r9b|r10b|r11b|r12b|r13b|r14b|r15b))" FOLLOWED_BY(R"([\s\,])") },
     { TOKEN_TYPE::Reg16, R"((ax|bx|cx|dx|si|di|bp|sp|r8w|r9w|r10w|r11w|r12w|r13w|r14w|r15w))" FOLLOWED_BY(R"([\s\,])") },
@@ -884,8 +898,17 @@ translate_data_def(TokenList& tokens, size_t index, const vector<string>& macro_
 
         have = need;
 
-        // The item itself
-        index = translate_item(tokens, index, macro_params);
+        // Check if this is an identifier
+        if ((tokens[index].type() == TOKEN_TYPE::Identifier))
+        {
+            // Assume this is a memory reference or a constant
+            index = translate_token(tokens, index, macro_params);
+        }
+        else
+        {
+            // The item itself
+            index = translate_item(tokens, index, macro_params);
+        }
 
         // Optional white space
         if (tokens[index].type() == TOKEN_TYPE::WhiteSpace)
@@ -913,6 +936,18 @@ translate_data_def(TokenList& tokens, size_t index, const vector<string>& macro_
         {
             index++;
         }
+
+        // Check if the list continues after a line break
+        if ((tokens[index].type() == TOKEN_TYPE::NewLine) ||
+            (tokens[index].type() == TOKEN_TYPE::Comment))
+        {
+            index++;
+            if (tokens[index].type() == TOKEN_TYPE::WhiteSpace)
+            {
+                index++;
+            }
+        }
+
     }
 
     throw "Failed to translate list";
@@ -1235,6 +1270,48 @@ translate_construct(TokenList& tokens, size_t index, const vector<string> &macro
             break;
         }
 
+        case TOKEN_TYPE::KW_option:
+        {
+            // The next token should be white space, followed by an identifier
+            Token tok1 = get_ws(tokens[index + 1]);
+            Token tok2 = get_expected_token(tokens[index + 2], TOKEN_TYPE::Identifier);
+
+            // We just ignore this for now and just print it as a comment
+            printf("//");
+            return complete_line(tokens, index, macro_params);
+        }
+
+        case TOKEN_TYPE::KW_model:
+        {
+            // The next token should be white space, followed by an identifier
+            Token tok1 = get_ws(tokens[index + 1]);
+            Token tok2 = get_expected_token(tokens[index + 2], TOKEN_TYPE::Identifier);
+
+            // Check if the model is valid (we only support flat)
+            if (_stricmp(tok2.str().c_str(), "FLAT") != 0)
+            {
+                throw "Invalid model";
+            }
+
+            index += 3;
+
+            // Skip optional white space
+            if (tokens[index].type() == TOKEN_TYPE::WhiteSpace)
+            {
+                index++;
+            }
+
+            // Check if it is followed by a comma and another identifier
+            if (tokens[index].type() == TOKEN_TYPE::Operator &&
+                tokens[index].str() == ",")
+            {
+                // This could be "C" or "STDCALL", but we don't handle those yet
+                throw "Invalid model";
+            }
+
+            return complete_line(tokens, index, macro_params);
+        }
+
         case TOKEN_TYPE::KW_PUBLIC:
             index = translate_construct_one_param(".global", tokens, index, macro_params);
             break;
@@ -1247,6 +1324,15 @@ translate_construct(TokenList& tokens, size_t index, const vector<string> &macro
             printf(".seh_savexmm");
             return complete_line(tokens, index + 1, macro_params);
 
+        case TOKEN_TYPE::InstPrefix:
+        {
+            // The next token should be white space, followed by an instruction
+            Token tok1 = get_ws(tokens[index + 1]);
+            Token tok2 = get_expected_token(tokens[index + 2], TOKEN_TYPE::Instruction);
+            printf("%s%s", tok.str().c_str(), tok1.str().c_str());
+            index += 2;
+            /* Fall through */
+        }
         case TOKEN_TYPE::Instruction:
             index = translate_instruction(tokens, index, macro_params);
             break;
