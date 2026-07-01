@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS test suite
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         Test for existense of the kernel mode wndproc in the window
+ * PURPOSE:         Test for existence of the kernel-mode WndProc in the window
  * COPYRIGHT:       Copyright 2024 Oleg Dubinskiy (oleg.dubinskiy@reactos.org)
  */
 
@@ -9,7 +9,7 @@
 
 #include "precomp.h"
 
-WCHAR WndClass[] = L"window class";
+static const WCHAR WndClass[] = L"window class";
 
 LRESULT
 CALLBACK
@@ -43,14 +43,15 @@ START_TEST(IsServerSideWindow)
 
     if (!(result = RegisterClassExW(&wcx)))
     {
-        skip(FALSE, "RegisterClassExW failed with error %lu\n", GetLastError());
+        skip("RegisterClassExW failed with error %lu\n", GetLastError());
         return;
     }
 
     /* 1. Invalid window */
     hWnd = (HWND)0xdeadbeef;
-    ok(!IsServerSideWindow(hWnd), "The window %p is invalid but IsServerSideWindow() returned TRUE", hWnd);
-    ok(GetLastError() == ERROR_INVALID_WINDOW_HANDLE, "GetLastError() returned %lu instead of ERROR_INVALID_WINDOW_HANDLE", GetLastError());
+    SetLastError(0xfeedfab1);
+    ok(!IsServerSideWindow(hWnd), "The window %p is invalid but IsServerSideWindow() returned TRUE\n", hWnd);
+    ok(GetLastError() == ERROR_INVALID_WINDOW_HANDLE, "GetLastError() returned %lu instead of ERROR_INVALID_WINDOW_HANDLE\n", GetLastError());
 
     /* 2. Window with a kernel-mode WndProc */
     /* ScrollBar is an example of a server-side window that can be created from user-mode code */
@@ -64,14 +65,15 @@ START_TEST(IsServerSideWindow)
                            wcx.hInstance, NULL);
     if (!hWnd)
     {
-        skip(FALSE, "CreateWindowExW failed with error %lu\n", GetLastError());
+        skip("CreateWindowExW failed with error %lu\n", GetLastError());
+        UnregisterClassW(WndClass, wcx.hInstance);
         return;
     }
 
     ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
 
-    ok(IsServerSideWindow(hWnd), "The window %p is invalid or doesn't have a valid kernel-mode WndProc", hWnd);
+    ok(IsServerSideWindow(hWnd), "The window %p is invalid or doesn't have a valid kernel-mode WndProc\n", hWnd);
 
     // TODO: this seems to be not a correct test condition.
     //       Find a valid condition to test a kernel mode wmdproc existence correctly!
@@ -80,7 +82,7 @@ START_TEST(IsServerSideWindow)
 
     DestroyWindow(hWnd);
 
-    /* 3. Window without a user-mode WndProc */
+    /* 3. Window with a user-mode WndProc */
     hWnd = CreateWindowExW(0,
                            WndClass,
                            NULL,
@@ -92,14 +94,15 @@ START_TEST(IsServerSideWindow)
 
     if (!hWnd)
     {
-        skip(FALSE, "CreateWindowExW failed with error %lu\n", GetLastError());
+        skip("CreateWindowExW failed with error %lu\n", GetLastError());
+        UnregisterClassW(WndClass, wcx.hInstance);
         return;
     }
 
     ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
 
-    ok(!IsServerSideWindow(hWnd), "The window %p has a valid kernel-mode WndProc when it should not", hWnd);
+    ok(!IsServerSideWindow(hWnd), "The window %p has a valid kernel-mode WndProc when it should not\n", hWnd);
 
     DestroyWindow(hWnd);
 
