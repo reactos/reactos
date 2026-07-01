@@ -376,7 +376,10 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     BOOLEAN NeedsPeb = FALSE;
     INITIAL_PEB InitialPeb;
+    PEJOB ParentJob;
+
     PAGED_CODE();
+
     PSTRACE(PS_PROCESS_DEBUG,
             "ProcessHandle: %p Parent: %p\n", ProcessHandle, ParentProcess);
 
@@ -709,11 +712,43 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Check if we need to audit */
     if (SeDetailedAuditingWithToken(NULL)) SeAuditProcessCreate(Process);
 
-    /* Check if the parent had a job */
-    if ((Parent) && (Parent->Job))
+    /*
+     * Attach the process to parent's job if:
+     *  a) parent exists,
+     *  b) parent has a job,
+     *  c) parent's job does NOT allow silent breakaway
+     */
+    if (Parent && Parent->Job &&
+        !(Parent->Job->LimitFlags & JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK))
     {
-        /* FIXME: We need to insert this process */
-        DPRINT1("Jobs not yet supported\n");
+        ParentJob = Parent->Job;
+
+        /* If caller explicitly requested breakaway from the job */
+        if (Flags & PROCESS_CREATE_FLAGS_BREAKAWAY)
+        {
+            /* Deny if the job forbids breakaway */
+            if (!(ParentJob->LimitFlags & JOB_OBJECT_LIMIT_BREAKAWAY_OK))
+            {
+                Status = STATUS_ACCESS_DENIED;
+                goto CleanupWithRef;
+            }
+        }
+        else
+        {
+            /* Under normal conditions, child should join a parent's job */
+
+            ObReferenceObject(ParentJob);
+
+            Process->Job = ParentJob;
+
+            Status = PspAssignProcessToJob(Process, ParentJob);
+            if (!NT_SUCCESS(Status))
+            {
+                ObDereferenceObject(ParentJob);
+                Process->Job = NULL;
+                goto CleanupWithRef;
+            }
+        }
     }
 
     /* Create PEB only for User-Mode Processes */

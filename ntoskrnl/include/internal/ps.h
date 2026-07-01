@@ -77,6 +77,27 @@
 #define PSP_PAGED_POOL_QUOTA_THRESHOLD                  0x80000
 
 //
+// Flags for JobStatus in EPROCESS
+//
+// These are based on the layout of bit fields in the Flags2 set introduced in
+// version 6.0
+//
+// More information:
+// https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/ntos/ps/eprocess/flags2.htm
+//
+#define JOB_NOT_REALLY_ACTIVE   0x00000001
+#define ACCOUNTING_FOLDED       0x00000002
+
+//
+// Job Flags
+//
+// More information:
+// https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/ntos/ps/ejob/jobflags.htm
+//
+#define JOB_OBJECT_CLOSE_DONE                   0x00000001
+#define JOB_OBJECT_TERMINATING                  0x00000080
+
+//
 // Thread "Set/Get Context" Context Structure
 //
 typedef struct _GET_SET_CTX_CONTEXT
@@ -371,18 +392,40 @@ PspQueryDescriptorThread(
 //
 // Job Routines
 //
+typedef NTSTATUS
+(*PJOB_ENUMERATOR_CALLBACK)(
+    _In_ PEPROCESS Process,
+    _In_opt_ PVOID Context
+);
+
+NTSTATUS
+NTAPI
+PspEnumerateProcessesInJob(
+    _In_ PEJOB Job,
+    _In_ PJOB_ENUMERATOR_CALLBACK Callback,
+    _In_opt_ PVOID Context,
+    _In_ BOOLEAN BreakOnCallbackFailure
+);
+
+NTSTATUS
+NTAPI
+PspAssignProcessToJob(
+    _In_ PEPROCESS Process,
+    _In_ PEJOB Job
+);
+
 VOID
 NTAPI
 PspExitProcessFromJob(
-    IN PEJOB Job,
-    IN PEPROCESS Process
+    _In_ PEJOB Job,
+    _In_ PEPROCESS Process
 );
 
 VOID
 NTAPI
 PspRemoveProcessFromJob(
-    IN PEPROCESS Process,
-    IN PEJOB Job
+    _In_ PEPROCESS Process,
+    _In_ PEJOB Job
 );
 
 CODE_SEG("INIT")
@@ -394,8 +437,18 @@ PspInitializeJobStructures(
 
 VOID
 NTAPI
+PspCloseJob(
+    _In_ PEPROCESS Process,
+    _In_ PVOID ObjectBody,
+    _In_ ACCESS_MASK GrantedAccess,
+    _In_ ULONG HandleCount,
+    _In_ ULONG SystemHandleCount
+);
+
+VOID
+NTAPI
 PspDeleteJob(
-    IN PVOID ObjectBody
+    _In_ PVOID ObjectBody
 );
 
 //
