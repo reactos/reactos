@@ -341,16 +341,6 @@ SerialPnp(
 	{
 		/* FIXME: do all these minor functions
 		IRP_MN_QUERY_REMOVE_DEVICE 0x1
-		IRP_MN_REMOVE_DEVICE 0x2
-		{
-			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
-			IoAcquireRemoveLock
-			IoReleaseRemoveLockAndWait
-			pass request to DeviceExtension-LowerDriver
-			disable interface
-			IoDeleteDevice(Fdo) and/or IoDetachDevice
-			break;
-		}
 		IRP_MN_CANCEL_REMOVE_DEVICE 0x3
 		IRP_MN_STOP_DEVICE 0x4
 		IRP_MN_QUERY_STOP_DEVICE 0x5
@@ -387,6 +377,45 @@ SerialPnp(
 			}
 
 			break;
+		}
+		case IRP_MN_REMOVE_DEVICE: /* 0x2 */
+		{
+			WCHAR LinkNameBuffer[32];
+			UNICODE_STRING LinkName;
+
+			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+
+			DeviceExtension = DeviceObject->DeviceExtension;
+
+			IoAcquireRemoveLock(&DeviceExtension->RemoveLock, Irp);
+
+			if (DeviceExtension->PnpState == dsStarted)
+			{
+				IoSetDeviceInterfaceState(&DeviceExtension->SerialInterfaceName, FALSE);
+
+				if (DeviceExtension->Interrupt)
+				{
+					IoDisconnectInterrupt(DeviceExtension->Interrupt);
+					DeviceExtension->Interrupt = NULL;
+				}
+
+				_swprintf(LinkNameBuffer, L"\\DosDevices\\COM%lu", DeviceExtension->ComPort);
+				RtlInitUnicodeString(&LinkName, LinkNameBuffer);
+				IoDeleteSymbolicLink(&LinkName);
+			}
+
+			DeviceExtension->PnpState = dsRemoved;
+
+			Irp->IoStatus.Status = STATUS_SUCCESS;
+			IoSkipCurrentIrpStackLocation(Irp);
+			Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
+
+			IoReleaseRemoveLockAndWait(&DeviceExtension->RemoveLock, Irp);
+
+			IoDetachDevice(DeviceExtension->LowerDevice);
+			IoDeleteDevice(DeviceObject);
+
+			return Status;
 		}
 		case IRP_MN_QUERY_DEVICE_RELATIONS: /* (optional) 0x7 */
 		{
