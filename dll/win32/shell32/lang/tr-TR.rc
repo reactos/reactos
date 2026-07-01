@@ -5,6 +5,7 @@
  * TRANSLATORS: Copyright 2006 Fatih Aşıcı <fasici@linux-sevenler.org>
  *              Copyright 2012 Arda Tanrıkulu (ardatan) <ardatanrikulu@gmail.com>
  *              Copyright 2015-2020 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2026 Ethem Çılgın (associan) <JaggedZenith@proton.me>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -814,7 +815,7 @@ BEGIN
     IDS_DISCONNECT "Bağlantıyı kes"
     IDS_OPENFILELOCATION "&Dosya konumunu aç"
     IDS_SENDTO_MENU "&Gönder"
-    IDS_COPYASPATHMENU "Copy as path"
+    IDS_COPYASPATHMENU "Yol olarak kopyala"
 
     IDS_MOVEERRORTITLE "Dosya veya Dizin Taşıma Hatası"
     IDS_COPYERRORTITLE "Dosya veya Dizin Kopyalama Hatası"
@@ -823,11 +824,11 @@ BEGIN
     IDS_COPYERRORSAME "'%s' kopyalanamıyor: Kaynak ve hedef dosya adları aynı."
     IDS_MOVEERRORSUBFOLDER "'%s' taşınamıyor: Hedef dizin, kaynak dizinin bir alt dizinidir."
     IDS_COPYERRORSUBFOLDER "'%s' kopyalanamıyor: Hedef dizin, kaynak dizinin bir alt dizinidir."
-    IDS_MOVEERROR "Cannot move '%s': %s"
-    IDS_COPYERROR "Cannot copy '%s': %s"
+    IDS_MOVEERROR "'%s' taşınamıyor: %s"
+    IDS_COPYERROR "'%s' kopyalanamıyor: %s"
 
-    IDS_CREATEFILE_DENIED "Could not create file %1"
-    IDS_CREATEFILE_CAPTION "Error creating file"
+    IDS_CREATEFILE_DENIED "%1 dosyası oluşturulamadı"
+    IDS_CREATEFILE_CAPTION "Dosya Oluşturma Hatası"
     IDS_CREATEFOLDER_DENIED """%1"" dizini oluşturulamıyor."
     IDS_CREATEFOLDER_CAPTION "Dizin Oluşturulamıyor"
     IDS_DELETEITEM_CAPTION "Dosya Silmeyi Onayla"
@@ -872,9 +873,9 @@ BEGIN
     IDS_RUNDLG_BROWSE_FILTER "Çalıştırılabilir Dosyalar (*.exe)\0*.exe\0Tüm Dosyalar (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
-    IDS_SHORTCUT_RUN_NORMAL "Normal window"
-    IDS_SHORTCUT_RUN_MIN "Minimized"
-    IDS_SHORTCUT_RUN_MAX "Maximized"
+    IDS_SHORTCUT_RUN_NORMAL "Normal pencere"
+    IDS_SHORTCUT_RUN_MIN "Simge durumuna küçültülmüş"
+    IDS_SHORTCUT_RUN_MAX "Ekranı kapla"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Başlat Menüsü\\Programlar"
@@ -907,7 +908,7 @@ BEGIN
     IDS_NETWORKPLACE "Ağ Bağlantılarım"
 
     IDS_NEWFOLDER "Yeni Dizin"
-    IDS_NEWITEMFORMAT "New %s"
+    IDS_NEWITEMFORMAT "Yeni %s"
 
     IDS_DRIVE_FIXED "Yerel Disk"
     IDS_DRIVE_CDROM "CD-ROM"
@@ -924,12 +925,12 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Yazarlar"
     IDS_SHELL_ABOUT_BACK "< &Geri"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "Yen&i" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Yeni &Dizin"
     FCIDM_SHVIEW_NEWLINK "Yeni &Kısayol"
     IDS_FOLDER_OPTIONS "Dizin Seçenekleri"
-    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
-    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
+    IDS_TASKBAR_OPTIONS "Görev Çubuğu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Görev çubuğunun ekrandaki konumunu, simgelerin nasıl görüntüleneceğini ve diğer ayarlarını özelleştirin."
     IDS_RECYCLEBIN_LOCATION "Geri Dönüşüm Kutusu Konumu"
     IDS_RECYCLEBIN_DISKSPACE "Kullanılabilir Alan"
     IDS_EMPTY_BITBUCKET "&Geri Dönüşüm Kutusu'nu Boşalt"
@@ -944,8 +945,8 @@ BEGIN
     IDS_CANTDISCONNECT "Bağlanılamıyor (Hata Kodu: %lu)."
     IDS_NONE "(Hiçbir Şey)"
 
-    IDS_EXPAND "Exp&and"
-    IDS_COLLAPSE "Coll&apse"
+    IDS_EXPAND "Genişle&t"
+    IDS_COLLAPSE "&Daralt"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dizin"
@@ -984,8 +985,8 @@ BEGIN
     IDS_PRINT_VERB "Yazdır"
     IDS_CMD_VERB "Burada komut istemi aç"
 
-    IDS_MULTIPLETYPES   "Multiple Types"
-    IDS_VARIOUSFOLDERS  "Various Folders"
+    IDS_MULTIPLETYPES   "Çoklu Türler"
+    IDS_VARIOUSFOLDERS  "Çeşitli Klasörler"
     IDS_FILE_FOLDER "%u Dosya, %u Dizin"
 
     IDS_PRINTERS "Yazıcılar"
@@ -1012,14 +1013,14 @@ BEGIN
 
     IDS_SEARCH_BROWSEITEM "Gözat..."
 
-    IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
-    IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
-    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
+    IDS_RECYCLE_CLEANER_DISPLAYNAME "Geri Dönüşüm Kutusu"
+    IDS_RECYCLE_CLEANER_DESCRIPTION "Geri Dönüşüm Kutusu, bilgisayarınızdan sildiğiniz dosyaları içerir. Geri Dönüşüm Kutusu'nu boşaltana kadar bu dosyalar kalıcı olarak silinmez."
+    IDS_RECYCLE_CLEANER_BUTTON_TEXT "Dosyaları &Görüntüle"
 
     IDS_TITLE_MYCOMP "Bilgisayarım"
     IDS_TITLE_MYNET "Ağ Bağlantılarım"
-    IDS_TITLE_BIN_1 "Recycle Bin (full)"
-    IDS_TITLE_BIN_0 "Recycle Bin (empty)"
+    IDS_TITLE_BIN_1 "Geri Dönüşüm Kutusu (dolu)"
+    IDS_TITLE_BIN_0 "Geri Dönüşüm Kutusu (boş)"
 
     IDS_ADVANCED_FOLDER "Dosyalar ve Dizinler"
     IDS_ADVANCED_NET_CRAWLER "Ağ dizinlerini ve yazıcıları otomatik ara"
@@ -1040,20 +1041,20 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Bilgisayarım'da Denetim Masası'nı göster"
     IDS_ADVANCED_SHOW_COMP_COLOR "Şifrelenmiş veya sıkıştırılmış NTFS dosyalarını renkli göster"
     IDS_ADVANCED_SHOW_INFO_TIP "Dizin ve masaüstü ögeleri için açılan tanım göster"
-    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
-    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_ADVANCED_EXPAND_CONTROL_PANEL "Expand Control Panel"
-    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Expand My Documents"
-    IDS_ADVANCED_EXPAND_PRINTERS "Expand Printers"
-    IDS_ADVANCED_EXPAND_MY_PICTURES "Expand My Pictures"
-    IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Expand Network Connections"
-    IDS_ADVANCED_DISPLAY_RUN "Display Run"
-    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
-    IDS_ADVANCED_SMALL_START_MENU "Show Small Icons in Start menu"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Sık Kullanılanları Göster"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Oturumu Kapat'ı Göster"
+    IDS_ADVANCED_EXPAND_CONTROL_PANEL "Denetim Masası'nı Genişlet"
+    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Belgelerim'i Genişlet"
+    IDS_ADVANCED_EXPAND_PRINTERS "Yazıcıları Genişlet"
+    IDS_ADVANCED_EXPAND_MY_PICTURES "Resimlerim'i Genişlet"
+    IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Ağ Bağlantıları'nı Genişlet"
+    IDS_ADVANCED_DISPLAY_RUN "Çalıştır'ı Göster"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Yönetim Araçları'nı Göster"
+    IDS_ADVANCED_SMALL_START_MENU "Başlat menüsünde küçük simgeler göster"
 
-    IDS_VISEFFECT_DRAGFULL "Show window contents while dragging"
-    IDS_VISEFFECT_FONTSMOOTHING "Smooth edges of screen fonts"
-    IDS_VISEFFECT_LISTVIEWSHADOW "Use drop shadows for icon labels on the desktop"
+    IDS_VISEFFECT_DRAGFULL "Sürüklerken pencere içeriğini göster"
+    IDS_VISEFFECT_FONTSMOOTHING "Ekran yazı tipi kenarlarını düzelt"
+    IDS_VISEFFECT_LISTVIEWSHADOW "Masaüstündeki simge etiketleri için bırakma gölgesi kullan"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< G&elişmiş"
     IDS_NEWEXT_ADVANCED_RIGHT "Ge&lişmiş >>"
@@ -1076,7 +1077,7 @@ BEGIN
     IDS_COPYTOTITLE "'%s'i' kopyalamak istediğiniz yeri seçin. Ardından Kopyala butonuna tıklayın."
     IDS_COPYITEMS "Ögeleri Kopyala"
     IDS_COPYBUTTON "Kopyala"
-    IDS_MOVETOMENU "Di&zini kopyala..."
+    IDS_MOVETOMENU "Di&zine taşı..."
     IDS_MOVETOTITLE "'%s'i taşımak istediğiniz yeri seçin. Ardından Taşı butonuna tıklayın."
     IDS_MOVEITEMS "Ögeleri Taşı"
     IDS_MOVEBUTTON "Taşı"
