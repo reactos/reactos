@@ -75,11 +75,6 @@ START_TEST(IsServerSideWindow)
 
     ok(IsServerSideWindow(hWnd), "The window %p is invalid or doesn't have a valid kernel-mode WndProc\n", hWnd);
 
-    // TODO: this seems to be not a correct test condition.
-    //       Find a valid condition to test a kernel mode wmdproc existence correctly!
-
-    //wcx.lpfnWndProc = NULL;
-
     DestroyWindow(hWnd);
 
     /* 3. Window with a user-mode WndProc */
