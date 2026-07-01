@@ -215,9 +215,14 @@ GetDisplayConfigBufferSizes(
     UINT32 *numPathArrayElements,
     UINT32 *numModeInfoArrayElements)
 {
-  *numPathArrayElements = 0;
-  *numModeInfoArrayElements = 0;
-  return 0;
+    /* Validate parameters */
+    if ((numPathArrayElements == NULL) || (numModeInfoArrayElements == NULL))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* We don't support WDDM yet */
+    return ERROR_NOT_SUPPORTED;
 }
 
 LONG
