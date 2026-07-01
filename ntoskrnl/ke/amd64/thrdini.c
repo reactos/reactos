@@ -16,6 +16,9 @@
 extern void KiInvalidSystemThreadStartupExit(void);
 extern void KiUserThreadStartupExit(void);
 extern void KiServiceExit3(void);
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
+extern void KiReloadWow64Fs();
+#endif
 
 typedef struct _KUINIT_FRAME
 {
@@ -210,6 +213,25 @@ KiSwapContextResume(
     {
        /* This will switch the usermode gs */
        __writemsr(MSR_GS_SWAP, (ULONG64)NewThread->Teb);
+
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
+       PEPROCESS ENewProcess = (PEPROCESS)NewProcess;
+       
+       if (ENewProcess->Wow64Process != NULL)
+       {
+          ULONG_PTR Base = (ULONG_PTR)PS_GET_TEB32_FROM_TEB(NewThread->Teb);
+
+          PKGDTENTRY64 CmTebEntry = KiGetGdtEntry(Pcr->GdtBase, KGDT64_R3_CMTEB);
+          CmTebEntry->LimitLow = 0xFFFF;
+          CmTebEntry->Bits.LimitHigh = 0xFFFF;
+
+          CmTebEntry->BaseLow = Base & 0xFFFF;
+          CmTebEntry->Bits.BaseMiddle = (Base & 0xFF0000) >> 16;
+          CmTebEntry->Bits.BaseHigh = (Base & 0xFF000000) >> 24;
+
+          KiReloadWow64Fs();
+       }
+#endif
     }
 
     /* Increase context switch count */

@@ -929,6 +929,18 @@ typedef enum _APPCOMPAT_USERFLAGS_HIGHPART
 #define EXPLICIT_64BIT
 #include "peb_teb.h"
 #undef EXPLICIT_64BIT
+
+// 
+// WOW64 Macros
+//
+#if defined(BUILD_WOW64_ENABLED)
+
+#define PS_GET_TEB32_FROM_TEB(Teb) ((PTEB32)(ROUND_TO_PAGES((Teb) + 1)))
+#define PS_GET_PEB32_FROM_PEB(Peb) ((PPEB32)(ROUND_TO_PAGES((Peb) + 1)))
+
+#define IS_WOW64_PROCESS_INITIALIZING(Process) ((Process)->Wow64Process == UlongToPtr(1))
+#endif
+
 #endif
 
 #ifdef NTOS_MODE_USER
