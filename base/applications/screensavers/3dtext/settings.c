@@ -22,17 +22,17 @@
 
 #include <winreg.h>
 
-TCHAR m_Text[MAX_PATH] = _T("ReactOS Rocks!");
+TCHAR g_Text[MAX_TEXT_LENGTH + 1] = _T("ReactOS Rocks!");
 
 VOID LoadSettings(VOID)
 {
 	HKEY hkey;
-	DWORD len = MAX_PATH * sizeof(TCHAR);
+	DWORD len = (MAX_TEXT_LENGTH + 1) * sizeof(TCHAR);
 
 	if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\ScreenSavers\\Text3D"), 0,
 		_T(""), 0, KEY_READ, NULL, &hkey, NULL) == ERROR_SUCCESS)
     {
-        RegQueryValueEx(hkey, _T("DisplayString"), NULL, NULL, (LPBYTE)m_Text, &len);
+        RegQueryValueEx(hkey, _T("DisplayString"), NULL, NULL, (LPBYTE)g_Text, &len);
         RegCloseKey(hkey);
     }
 }
@@ -44,7 +44,7 @@ VOID SaveSettings(VOID)
 	if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\ScreenSavers\\Text3D"), 0,
 		_T(""), 0, KEY_WRITE, NULL, &hkey, NULL) == ERROR_SUCCESS)
     {
-        RegSetValueEx(hkey, _T("DisplayString"), 0, REG_SZ, (LPBYTE)m_Text, (_tcslen(m_Text) + 1) * sizeof(TCHAR));
+        RegSetValueEx(hkey, _T("DisplayString"), 0, REG_SZ, (LPBYTE)g_Text, (_tcslen(g_Text) + 1) * sizeof(TCHAR));
         RegCloseKey(hkey);
     }
 }
