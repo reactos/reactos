@@ -36,7 +36,7 @@ START_TEST(IsServerSideWindow)
 
     ZeroMemory(&wcx, sizeof(wcx));
     wcx.cbSize = sizeof(wcx);
-    wcx.lpfnWndProc = (WNDPROC)Test_IsServerSideWindow_WndProc;
+    wcx.lpfnWndProc = Test_IsServerSideWindow_WndProc;
     wcx.hInstance = GetModuleHandleW(NULL);
     wcx.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wcx.lpszClassName = WndClass;
