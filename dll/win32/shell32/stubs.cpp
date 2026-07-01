@@ -774,3 +774,52 @@ DWORD WINAPI CheckStagingArea(VOID)
     /* Called by native explorer */
     return 0;
 }
+
+/*
+ * Unimplemented
+ */
+
+EXTERN_C HRESULT
+WINAPI
+GetAppPathFromLink(IShellItem* pItem,
+                   LPWSTR pwszPathBuffer,
+                   DWORD dwBufferLen)
+{
+    FIXME("GetAppPathFromLink() stub\n");
+    return S_OK;
+}
+
+/*
+ * Unimplemented
+ */
+EXTERN_C HRESULT
+WINAPI
+GetCurrentProcessExplicitAppUserModelID(PWSTR *AppID)
+{
+    return SHStrDupW(L"ROS FixMe", AppID);
+}
+
+/*
+ * Unimplemented
+ */
+EXTERN_C DWORD
+WINAPI
+RunInstallUninstallStubs(VOID)
+{
+    FIXME("RunInstallUninstallStubs() stub!\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+EXTERN_C HRESULT
+WINAPI
+SHQueryUserNotificationState(QUERY_USER_NOTIFICATION_STATE *pquns)
+{
+    FIXME("SHQueryUserNotificationState() stub\n");
+    if (!pquns)
+        return E_INVALIDARG;
+    *pquns = QUNS_ACCEPTS_NOTIFICATIONS;
+    return S_OK;
+}

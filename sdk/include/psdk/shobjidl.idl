@@ -4799,7 +4799,6 @@ interface IFolderBandPriv : IUnknown
 }
 
 
-#ifdef __REACTOS__
 /*****************************************************************************
  * IQueryContinue interface
  */
@@ -4814,6 +4813,166 @@ interface IQueryContinue : IUnknown
     // Returns S_OK if the operation should continue, and S_FALSE if not.
     HRESULT QueryContinue();
 }
+
+
+typedef [v1_enum] enum LIBRARYFOLDERFILTER
+    {
+    LFF_FORCEFILESYSTEM       = 1,
+    LFF_STORAGEITEMS          = 2,
+    LFF_ALLITEMS              = 3,
+} LIBRARYFOLDERFILTER;
+
+typedef [v1_enum] enum LIBRARYOPTIONFLAGS
+{
+    LOF_DEFAULT          = 0x00000000,
+    LOF_PINNEDTONAVPANE  = 0x00000001,
+    LOF_MASK_ALL         = 0x00000001,
+} LIBRARYOPTIONFLAGS;
+
+cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(LIBRARYOPTIONFLAGS)")
+
+typedef [v1_enum] enum DEFAULTSAVEFOLDERTYPE
+{
+    DSFT_DETECT = 1,
+    DSFT_PRIVATE,
+    DSFT_PUBLIC,
+} DEFAULTSAVEFOLDERTYPE;
+
+typedef [v1_enum] enum LIBRARYSAVEFLAGS
+{
+    LSF_FAILIFTHERE         = 0x00000000,
+    LSF_OVERRIDEEXISTING    = 0x00000001,
+    LSF_MAKEUNIQUENAME      = 0x00000002,
+} LIBRARYSAVEFLAGS;
+
+cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(LIBRARYSAVEFLAGS)")
+
+
+/*****************************************************************************
+ * IShellLibrary interface
+ */
+[
+    helpstring("Shell Library API"),
+    uuid(11a66efa-382e-451a-9234-1e0e12ef3085),
+    object,
+    pointer_default(unique)
+]
+interface IShellLibrary : IUnknown
+{
+    HRESULT AddFolder(
+        [in] IShellItem *psiLocation);
+
+    HRESULT Commit();
+
+    HRESULT GetDefaultSaveFolder(
+        [in] DEFAULTSAVEFOLDERTYPE dsft,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppv);
+
+    HRESULT GetFolders(
+        [in] LIBRARYFOLDERFILTER lff,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppv);
+
+    HRESULT GetFolderType(
+        [out] FOLDERTYPEID *pftid);
+
+    HRESULT GetIcon(
+        [out, string] LPWSTR *ppszIcon);
+
+    HRESULT GetOptions(
+        [out] LIBRARYOPTIONFLAGS *plofOptions);
+
+    HRESULT LoadLibraryFromItem(
+        [in] IShellItem *psiLibrary,
+        [in] DWORD grfMode);
+
+    HRESULT LoadLibraryFromKnownFolder(
+        [in] REFKNOWNFOLDERID kfidLibrary,
+        [in] DWORD grfMode);
+
+    HRESULT RemoveFolder(
+        [in] IShellItem *psiLocation);
+
+    HRESULT ResolveFolder(
+        [in] IShellItem *psiFolderToResolve,
+        [in] DWORD dwTimeout,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppv);
+
+    HRESULT Save(
+        [in] IShellItem *psiFolderToSaveIn,
+        [in, string] LPCWSTR pszLibraryName,
+        [in] LIBRARYSAVEFLAGS lsf,
+        [out] IShellItem **ppsiSavedTo);
+
+    HRESULT SaveInKnownFolder(
+        [in] REFKNOWNFOLDERID kfidToSaveIn,
+        [in, string] LPCWSTR pszLibraryName,
+        [in] LIBRARYSAVEFLAGS lsf,
+        [out] IShellItem **ppsiSavedTo);
+
+    HRESULT SetDefaultSaveFolder(
+        [in] DEFAULTSAVEFOLDERTYPE dsft,
+        [in] IShellItem *psi);
+
+    HRESULT SetFolderType(
+        [in] REFFOLDERTYPEID ftid);
+
+    HRESULT SetIcon(
+        [in, string] LPCWSTR pszIcon);
+
+    HRESULT SetOptions(
+        [in] LIBRARYOPTIONFLAGS lofMask,
+        [in] LIBRARYOPTIONFLAGS lofOptions);
+};
+
+
+/*****************************************************************************
+ * IUserEventTimerCallback interface
+ */
+[
+    uuid(e9ead8e6-2a25-410e-9b58-a9fbef1dd1a2),
+    object,
+    pointer_default(unique)
+]
+interface IUserEventTimerCallback : IUnknown
+{
+    HRESULT UserEventTimerProc(
+        ULONG uUserEventTimerID,
+        UINT uTimerElapse);
+};
+
+
+/*****************************************************************************
+ * IUserEventTimer interface
+ */
+[
+    uuid(0f504b94-6e42-42e6-99e0-e20fafe52ab4),
+    object,
+    pointer_default(unique)
+]
+interface IUserEventTimer : IUserEventTimerCallback
+{
+    HRESULT SetUserEventTimer(
+        HWND hWnd,
+        UINT uCallbackMsg,
+        UINT uTimerElapse,
+        IUserEventTimerCallback *pUserEventTimerCallback,
+        ULONG *puUserEventTimerID);
+
+    HRESULT KillUserEventTimer(
+        HWND hWnd,
+        ULONG uUserEventTimerID);
+
+    HRESULT GetUserEventTimerElapsed(
+        HWND hWnd,
+        ULONG uUserEventTimerID,
+        UINT *puTimerElapsed);
+
+    HRESULT InitTimerTickInterval(
+        UINT uTimerTickIntervalMs);
+};
 
 
 /*****************************************************************************
@@ -4956,4 +5115,3 @@ interface IUserAssist : IUnknown
         BOOL bEnable);
 };
 
-#endif // __REACTOS__
