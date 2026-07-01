@@ -3212,13 +3212,176 @@ BOOL WINAPI CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped)
     return 0L;
 }
 
-/*
- * @unimplemented
- */
-DWORD WINAPI GetBestInterfaceEx(struct sockaddr *pDestAddr,PDWORD pdwBestIfIndex)
+static DWORD
+FindIfIndexForIPv6Source(const struct in6_addr *pSrc)
 {
-    FIXME(":stub\n");
-    return 0L;
+    IP_ADAPTER_ADDRESSES stackBuf[0];
+    PIP_ADAPTER_ADDRESSES pBuf = stackBuf;
+    ULONG bufLen = sizeof(stackBuf);
+    DWORD ret;
+    DWORD ifIndex = 0;
+
+    ret = GetAdaptersAddresses(AF_INET6,
+                               GAA_FLAG_SKIP_ANYCAST |
+                               GAA_FLAG_SKIP_MULTICAST |
+                               GAA_FLAG_SKIP_DNS_SERVER |
+                               GAA_FLAG_SKIP_FRIENDLY_NAME,
+                               NULL,
+                               pBuf,
+                               &bufLen);
+
+    if (ret == ERROR_BUFFER_OVERFLOW)
+    {
+        pBuf = HeapAlloc(GetProcessHeap(), 0, bufLen);
+
+        if (!pBuf)
+        {
+            return 0;
+        }
+
+        ret = GetAdaptersAddresses(AF_INET6,
+                                   GAA_FLAG_SKIP_ANYCAST |
+                                   GAA_FLAG_SKIP_MULTICAST |
+                                   GAA_FLAG_SKIP_DNS_SERVER |
+                                   GAA_FLAG_SKIP_FRIENDLY_NAME,
+                                   NULL,
+                                   pBuf,
+                                   &bufLen);
+    }
+
+    if (ret == NO_ERROR)
+    {
+        PIP_ADAPTER_ADDRESSES pAdapter;
+
+        for (pAdapter = pBuf; pAdapter != NULL; pAdapter = pAdapter->Next)
+        {
+            PIP_ADAPTER_UNICAST_ADDRESS pUnicast;
+
+            for (pUnicast = pAdapter->FirstUnicastAddress; pUnicast != NULL; pUnicast = pUnicast->Next)
+            {
+                const struct sockaddr_in6 *pSin6;
+
+                if (pUnicast->Address.lpSockaddr->sa_family != AF_INET6)
+                {
+                    continue;
+                }
+
+                pSin6 = (const struct sockaddr_in6 *)pUnicast->Address.lpSockaddr;
+
+                if (memcmp(&pSin6->sin6_addr, pSrc, sizeof(*pSrc)) == 0)
+                {
+                    ifIndex = (pAdapter->Ipv6IfIndex != 0)
+                               ? pAdapter->Ipv6IfIndex
+                               : pAdapter->IfIndex;
+                    goto done;
+                }
+            }
+        }
+    }
+
+done:
+    if (pBuf != stackBuf)
+    {
+        HeapFree(GetProcessHeap(), 0, pBuf);
+    }
+
+    return ifIndex;
+}
+
+static DWORD
+GetBestIPv6Interface(const struct sockaddr_in6 *pDest, PDWORD pdwBestIfIndex)
+{
+    SOCKET sock = INVALID_SOCKET;
+    struct sockaddr_in6 src;
+    int srcLen = sizeof(src);
+    DWORD ret = ERROR_NOT_SUPPORTED;
+    WSADATA wsaData;
+    BOOL wsaStarted = FALSE;
+
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) == 0)
+    {
+        wsaStarted = TRUE;
+    }
+
+    sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+
+    if (sock == INVALID_SOCKET)
+    {
+        ret = WSAGetLastError();
+        goto cleanup;
+    }
+
+    if (connect(sock, (const struct sockaddr *)pDest, sizeof(*pDest)) != 0)
+    {
+        ret = WSAGetLastError();
+        goto cleanup;
+    }
+
+    ZeroMemory(&src, sizeof(src));
+    if (getsockname(sock, (struct sockaddr *)&src, &srcLen) != 0)
+    {
+        ret = WSAGetLastError();
+        goto cleanup;
+    }
+
+    *pdwBestIfIndex = FindIfIndexForIPv6Source(&src.sin6_addr);
+
+    ret = (*pdwBestIfIndex != 0) ? NO_ERROR : ERROR_NOT_FOUND;
+
+cleanup:
+    if (sock != INVALID_SOCKET)
+    {
+        closesocket(sock);
+    }
+
+    if (wsaStarted)
+    {
+        WSACleanup();
+    }
+
+    return ret;
+}
+
+/*
+ * @implemented
+ */
+DWORD WINAPI
+GetBestInterfaceEx(struct sockaddr *pDestAddr, PDWORD pdwBestIfIndex)
+{
+    TRACE("pDestAddr %p, pdwBestIfIndex %p\n", pDestAddr, pdwBestIfIndex);
+
+    /* Both pointers must be valid */
+    if (!pDestAddr || !pdwBestIfIndex)
+    {
+        TRACE("returning ERROR_INVALID_PARAMETER\n");
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    switch (pDestAddr->sa_family)
+    {
+        case AF_INET:
+        {
+            const struct sockaddr_in *pSin4 = (const struct sockaddr_in *)pDestAddr;
+            DWORD ret = GetBestInterface(pSin4->sin_addr.s_addr, pdwBestIfIndex);
+
+            TRACE("AF_INET returning %lu, ifIndex=%lu\n", ret, (ret == NO_ERROR) ? *pdwBestIfIndex : 0);
+
+            return ret;
+        }
+
+        case AF_INET6:
+        {
+            DWORD ret = GetBestIPv6Interface((const struct sockaddr_in6 *)pDestAddr, pdwBestIfIndex);
+
+            TRACE("AF_INET6 returning %lu, ifIndex=%lu\n", ret, (ret == NO_ERROR) ? *pdwBestIfIndex : 0);
+
+            return ret;
+        }
+
+        default:
+            WARN("unsupported address family %d\n", pDestAddr->sa_family);
+            return ERROR_INVALID_PARAMETER;
+    }
 }
 
 #ifdef GetAdaptersAddressesV1
