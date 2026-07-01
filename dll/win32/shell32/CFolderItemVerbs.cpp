@@ -89,7 +89,7 @@ CFolderItemVerbs::~CFolderItemVerbs()
     DestroyMenu(m_menu);
 }
 
-HRESULT CFolderItemVerbs::Init(LPITEMIDLIST idlist)
+HRESULT CFolderItemVerbs::Init(LPCITEMIDLIST idlist)
 {
     HRESULT hr = SHELL_GetUIObjectOfAbsoluteItem(NULL, idlist, IID_PPV_ARG(IContextMenu, &m_contextmenu));
     if (FAILED_UNEXPECTEDLY(hr))

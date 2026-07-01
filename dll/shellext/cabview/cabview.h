@@ -49,7 +49,8 @@ public:
     }
 
     int FindNamedItem(PCUITEMID_CHILD pidl) const;
-    HRESULT Fill(LPCWSTR path, HWND hwnd = NULL, SHCONTF contf = 0);
+    static HRESULT Enumerate(PCIDLIST_ABSOLUTE pidl, HWND hwnd, EXTRACTCALLBACK Callback, LPVOID cookie);
+
     HRESULT Fill(PCIDLIST_ABSOLUTE pidl, HWND hwnd = NULL, SHCONTF contf = 0);
 
     HRESULT Append(LPCITEMIDLIST pidl)
@@ -159,11 +160,7 @@ public:
 
     IFACEMETHODIMP MapColumnToSCID(UINT column, SHCOLUMNID *pscid) override;
 
-    IFACEMETHODIMP ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes) override
-    {
-        UNIMPLEMENTED;
-        return E_NOTIMPL;
-    }
+    IFACEMETHODIMP ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes) override;
 
     IFACEMETHODIMP EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override;
 

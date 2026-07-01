@@ -8,6 +8,32 @@
 
 #include "precomp.h"
 
+static inline bool IncludeInEnumIDList(SHCONTF contf, SFGAOF att) // Borrowed from cabview
+{
+    const SHCONTF both = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
+    const SFGAOF superbits = SFGAO_HIDDEN | SFGAO_READONLY | SFGAO_SYSTEM;
+    const bool isfile = (att & (SFGAO_STREAM | SFGAO_FOLDER)) != SFGAO_FOLDER;
+    if ((contf & both) != both && !(contf & SHCONTF_STORAGE))
+    {
+        if (isfile && (contf & SHCONTF_FOLDERS))
+            return false;
+        if ((att & SFGAO_FOLDER) && (contf & SHCONTF_NONFOLDERS))
+            return false;
+    }
+    if ((att & SFGAO_HIDDEN) && !(contf & (SHCONTF_INCLUDEHIDDEN | SHCONTF_STORAGE)))
+        return false;
+    if ((att & superbits) > SFGAO_HIDDEN && !(contf & (SHCONTF_INCLUDESUPERHIDDEN | SHCONTF_STORAGE)))
+        return false;
+    return true;
+}
+
+static inline bool IncludeInEnumIDList(SHCONTF contf, bool dir, unz_file_info64 &zfi)
+{
+    SFGAOF att = dir ? SFGAO_FOLDER : SFGAO_STREAM;
+    // TODO: SFGAO_HIDDEN,READONLY,SYSTEM from zfi.external_fa? (Use MapFSToSFAttributes)
+    return IncludeInEnumIDList(contf, att);
+}
+
 class CEnumZipContents :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IEnumIDList
@@ -48,6 +74,9 @@ public:
         {
             if (mEnumerator.NextUnique(m_Prefix, name, dir, info))
             {
+                if (!IncludeInEnumIDList(dwFlags, dir, info))
+                    continue;
+
                 item = _ILCreateZipItem(dir ? ZIP_PIDL_DIRECTORY : ZIP_PIDL_FILE, name, info);
                 if (!item)
                 {

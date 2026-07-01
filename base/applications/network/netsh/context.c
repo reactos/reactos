@@ -104,7 +104,8 @@ AddContextCommand(
     PFN_HANDLE_CMD pfnCmdHandler,
     DWORD dwShortCmdHelpToken,
     DWORD dwCmdHlpToken,
-    DWORD dwFlags)
+    DWORD dwFlags,
+    PNS_OSVERSIONCHECK pfnOsVersionCheck)
 {
     PCOMMAND_ENTRY pEntry;
 
@@ -131,6 +132,7 @@ AddContextCommand(
     pEntry->dwShortCmdHelpToken = dwShortCmdHelpToken;
     pEntry->dwCmdHlpToken = dwCmdHlpToken;
     pEntry->dwFlags = dwFlags;
+    pEntry->pfnOsVersionCheck = pfnOsVersionCheck;
 
     if (pContext->pCommandListHead == NULL && pContext->pCommandListTail == NULL)
     {
@@ -153,7 +155,8 @@ AddCommandGroup(
     PCONTEXT_ENTRY pContext,
     LPCWSTR pwszCmdGroupToken,
     DWORD dwShortCmdHelpToken,
-    DWORD dwFlags)
+    DWORD dwFlags,
+    PNS_OSVERSIONCHECK pfnOsVersionCheck)
 {
     PCOMMAND_GROUP pEntry;
 
@@ -176,6 +179,7 @@ AddCommandGroup(
     wcscpy((LPWSTR)pEntry->pwszCmdGroupToken, pwszCmdGroupToken);
     pEntry->dwShortCmdHelpToken = dwShortCmdHelpToken;
     pEntry->dwFlags = dwFlags;
+    pEntry->pfnOsVersionCheck = pfnOsVersionCheck;
 
     if (pContext->pGroupListHead == NULL && pContext->pGroupListTail == NULL)
     {
@@ -200,7 +204,8 @@ AddGroupCommand(
     PFN_HANDLE_CMD pfnCmdHandler,
     DWORD dwShortCmdHelpToken,
     DWORD dwCmdHlpToken,
-    DWORD dwFlags)
+    DWORD dwFlags,
+    PNS_OSVERSIONCHECK pfnOsVersionCheck)
 {
     PCOMMAND_ENTRY pEntry;
 
@@ -227,6 +232,7 @@ AddGroupCommand(
     pEntry->dwShortCmdHelpToken = dwShortCmdHelpToken;
     pEntry->dwCmdHlpToken = dwCmdHlpToken;
     pEntry->dwFlags = dwFlags;
+    pEntry->pfnOsVersionCheck = pfnOsVersionCheck;
 
     if (pGroup->pCommandListHead == NULL && pGroup->pCommandListTail == NULL)
     {
@@ -813,48 +819,48 @@ CreateRootContext(VOID)
 
     pRootContext->hModule = g_hModule;
 
-    AddContextCommand(pRootContext, L"..",      UpCommand,      IDS_HLP_UP,      IDS_HLP_UP_EX, 0);
-    AddContextCommand(pRootContext, L"?",       NULL,           IDS_HLP_HELP,    IDS_HLP_HELP_EX, 0);
-    AddContextCommand(pRootContext, L"abort",   AbortCommand,   IDS_HLP_ABORT,   IDS_HLP_ABORT_EX, 0);
-    AddContextCommand(pRootContext, L"alias",   AliasCommand,   IDS_HLP_ALIAS,   IDS_HLP_ALIAS_EX, 0);
-    AddContextCommand(pRootContext, L"bye",     ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0);
-    AddContextCommand(pRootContext, L"commit",  CommitCommand,  IDS_HLP_COMMIT,  IDS_HLP_COMMIT_EX, 0);
-    AddContextCommand(pRootContext, L"dump",    DumpCommand,    IDS_HLP_DUMP,    IDS_HLP_DUMP_EX, 0);
-    AddContextCommand(pRootContext, L"exec",    ExecCommand,    IDS_HLP_EXEC,    IDS_HLP_EXEC_EX, 0);
-    AddContextCommand(pRootContext, L"exit",    ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0);
-    AddContextCommand(pRootContext, L"help",    NULL,           IDS_HLP_HELP,    IDS_HLP_HELP_EX, 0);
-    AddContextCommand(pRootContext, L"offline", OfflineCommand, IDS_HLP_OFFLINE, IDS_HLP_OFFLINE_EX, 0);
-    AddContextCommand(pRootContext, L"online",  OnlineCommand,  IDS_HLP_ONLINE,  IDS_HLP_ONLINE_EX, 0);
-    AddContextCommand(pRootContext, L"popd",    PopdCommand,    IDS_HLP_POPD,    IDS_HLP_POPD_EX, 0);
-    AddContextCommand(pRootContext, L"pushd",   PushdCommand,   IDS_HLP_PUSHD,   IDS_HLP_PUSHD_EX, 0);
-    AddContextCommand(pRootContext, L"quit",    ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0);
-    AddContextCommand(pRootContext, L"unalias", UnaliasCommand, IDS_HLP_UNALIAS, IDS_HLP_UNALIAS_EX, 0);
+    AddContextCommand(pRootContext, L"..",      UpCommand,      IDS_HLP_UP,      IDS_HLP_UP_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"?",       NULL,           IDS_HLP_HELP,    IDS_HLP_HELP_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"abort",   AbortCommand,   IDS_HLP_ABORT,   IDS_HLP_ABORT_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"alias",   AliasCommand,   IDS_HLP_ALIAS,   IDS_HLP_ALIAS_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"bye",     ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"commit",  CommitCommand,  IDS_HLP_COMMIT,  IDS_HLP_COMMIT_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"dump",    DumpCommand,    IDS_HLP_DUMP,    IDS_HLP_DUMP_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"exec",    ExecCommand,    IDS_HLP_EXEC,    IDS_HLP_EXEC_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"exit",    ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"help",    NULL,           IDS_HLP_HELP,    IDS_HLP_HELP_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"offline", OfflineCommand, IDS_HLP_OFFLINE, IDS_HLP_OFFLINE_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"online",  OnlineCommand,  IDS_HLP_ONLINE,  IDS_HLP_ONLINE_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"popd",    PopdCommand,    IDS_HLP_POPD,    IDS_HLP_POPD_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"pushd",   PushdCommand,   IDS_HLP_PUSHD,   IDS_HLP_PUSHD_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"quit",    ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"unalias", UnaliasCommand, IDS_HLP_UNALIAS, IDS_HLP_UNALIAS_EX, 0, NULL);
 
-    pGroup = AddCommandGroup(pRootContext, L"add", IDS_HLP_GROUP_ADD, 0);
+    pGroup = AddCommandGroup(pRootContext, L"add", IDS_HLP_GROUP_ADD, 0, NULL);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"helper", AddHelperCommand, IDS_HLP_ADD_HELPER, IDS_HLP_ADD_HELPER_EX, 0);
+        AddGroupCommand(pGroup, L"helper", AddHelperCommand, IDS_HLP_ADD_HELPER, IDS_HLP_ADD_HELPER_EX, 0, NULL);
     }
 
-    pGroup = AddCommandGroup(pRootContext, L"delete", IDS_HLP_GROUP_DELETE, 0);
+    pGroup = AddCommandGroup(pRootContext, L"delete", IDS_HLP_GROUP_DELETE, 0, NULL);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"helper", DeleteHelperCommand, IDS_HLP_DEL_HELPER, IDS_HLP_DEL_HELPER_EX, 0);
+        AddGroupCommand(pGroup, L"helper", DeleteHelperCommand, IDS_HLP_DEL_HELPER, IDS_HLP_DEL_HELPER_EX, 0, NULL);
     }
 
-    pGroup = AddCommandGroup(pRootContext, L"set", IDS_HLP_GROUP_SET, 0);
+    pGroup = AddCommandGroup(pRootContext, L"set", IDS_HLP_GROUP_SET, 0, NULL);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"machine", SetMachineCommand, IDS_HLP_SET_MACHINE, IDS_HLP_SET_MACHINE_EX, 0);
-        AddGroupCommand(pGroup, L"mode",    SetModeCommand,    IDS_HLP_SET_MODE,    IDS_HLP_SET_MODE_EX, 0);
+        AddGroupCommand(pGroup, L"machine", SetMachineCommand, IDS_HLP_SET_MACHINE, IDS_HLP_SET_MACHINE_EX, 0, NULL);
+        AddGroupCommand(pGroup, L"mode",    SetModeCommand,    IDS_HLP_SET_MODE,    IDS_HLP_SET_MODE_EX, 0, NULL);
     }
 
-    pGroup = AddCommandGroup(pRootContext, L"show", IDS_HLP_GROUP_SHOW, 0);
+    pGroup = AddCommandGroup(pRootContext, L"show", IDS_HLP_GROUP_SHOW, 0, NULL);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"alias",  ShowAliasCommand,  IDS_HLP_SHOW_ALIAS,  IDS_HLP_SHOW_ALIAS_EX, 0);
-        AddGroupCommand(pGroup, L"helper", ShowHelperCommand, IDS_HLP_SHOW_HELPER, IDS_HLP_SHOW_HELPER_EX, 0);
-        AddGroupCommand(pGroup, L"mode",   ShowModeCommand,   IDS_HLP_SHOW_MODE,   IDS_HLP_SHOW_MODE_EX, 0);
+        AddGroupCommand(pGroup, L"alias",  ShowAliasCommand,  IDS_HLP_SHOW_ALIAS,  IDS_HLP_SHOW_ALIAS_EX, 0, NULL);
+        AddGroupCommand(pGroup, L"helper", ShowHelperCommand, IDS_HLP_SHOW_HELPER, IDS_HLP_SHOW_HELPER_EX, 0, NULL);
+        AddGroupCommand(pGroup, L"mode",   ShowModeCommand,   IDS_HLP_SHOW_MODE,   IDS_HLP_SHOW_MODE_EX, 0, NULL);
     }
 
     pCurrentContext = pRootContext;
@@ -952,6 +958,7 @@ RegisterContext(
         pContext->pfnCommitFn = pChildContext->pfnCommitFn;
         pContext->pfnDumpFn = pChildContext->pfnDumpFn;
         pContext->pfnConnectFn = pChildContext->pfnConnectFn;
+        pContext->pfnOsVersionCheck = pChildContext->pfnOsVersionCheck;
         pContext->ulPriority = (pChildContext->dwFlags & CMD_FLAG_PRIORITY) ?
                                pChildContext->ulPriority : DEFAULT_CONTEXT_PRIORITY;
 
@@ -967,7 +974,8 @@ RegisterContext(
                               pChildContext->pTopCmds[i].pfnCmdHandler,
                               pChildContext->pTopCmds[i].dwShortCmdHelpToken,
                               pChildContext->pTopCmds[i].dwCmdHlpToken,
-                              pChildContext->pTopCmds[i].dwFlags);
+                              pChildContext->pTopCmds[i].dwFlags,
+                              pChildContext->pTopCmds[i].pOsVersionCheck);
         }
 
         /* Add command groups */
@@ -976,7 +984,8 @@ RegisterContext(
             pGroup = AddCommandGroup(pContext,
                                      pChildContext->pCmdGroups[i].pwszCmdGroupToken,
                                      pChildContext->pCmdGroups[i].dwShortCmdHelpToken,
-                                     pChildContext->pCmdGroups[i].dwFlags);
+                                     pChildContext->pCmdGroups[i].dwFlags,
+                                     pChildContext->pCmdGroups[i].pOsVersionCheck);
             if (pGroup != NULL)
             {
                 for (j = 0; j < pChildContext->pCmdGroups[i].ulCmdGroupSize; j++)
@@ -986,7 +995,8 @@ RegisterContext(
                                     pChildContext->pCmdGroups[i].pCmdGroup[j].pfnCmdHandler,
                                     pChildContext->pCmdGroups[i].pCmdGroup[j].dwShortCmdHelpToken,
                                     pChildContext->pCmdGroups[i].pCmdGroup[j].dwCmdHlpToken,
-                                    pChildContext->pCmdGroups[i].pCmdGroup[j].dwFlags);
+                                    pChildContext->pCmdGroups[i].pCmdGroup[j].dwFlags,
+                                    pChildContext->pCmdGroups[i].pCmdGroup[j].pOsVersionCheck);
                 }
             }
         }

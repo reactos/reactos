@@ -9,6 +9,7 @@ list(APPEND SOURCE
     CMyComputer.cpp
     CommandLineToArgvW.cpp
     CShellDesktop.cpp
+    CShellDispatch.cpp
     CShellLink.cpp
     #CUserNotification.cpp # Test is broken on Win 2003
     Control_RunDLLW.cpp
