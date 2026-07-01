@@ -19,16 +19,19 @@ private:
     HRESULT CopyMoveOperation(VARIANT &vItem, VARIANT vOptions, BOOL bCopy);
 
     CComHeapPtr<ITEMIDLIST> m_idlist;
-    CComPtr<IShellDispatch> m_Application;
+    CComPtr<IDispatch> m_Application;
 
 public:
     CFolder();
     ~CFolder();
 
-    HRESULT Initialize(LPCITEMIDLIST idlist);
+    enum { INFOTIPCOLUMN = -1 }; // learn.microsoft.com/en-us/windows/win32/shell/folder-getdetailsof
+
+    HRESULT Initialize(LPCITEMIDLIST idlist, IDispatch *pDispatch);
     LPCITEMIDLIST GetAbsoluteIDList() { return m_idlist; }
     HWND GetHwnd() { return NULL; }
     IUnknown* GetSite() { return NULL; }
+    static HRESULT GetUIObjectFromVariant(VARIANT &vItem, REFIID riid, void **ppv);
 
     // *** Folder methods ***
     STDMETHOD(get_Title)(BSTR *pbs) override;
@@ -48,6 +51,17 @@ public:
     STDMETHOD(Synchronize)() override;
     STDMETHOD(get_HaveToShowWebViewBarricade)(VARIANT_BOOL *pbHaveToShowWebViewBarricade) override;
     STDMETHOD(DismissedWebViewBarricade)() override;
+
+    static HRESULT CreateInstance(LPCITEMIDLIST pidl, IDispatch *pDispatch, REFIID riid, void **ppv)
+    {
+        return ShellObjectCreatorInit<CFolder>(pidl, pDispatch, riid, ppv);
+    }
+    static HRESULT CreateInstance(LPCITEMIDLIST pidl, Folder &Instance, REFIID riid, void **ppv)
+    {
+        CComPtr<IDispatch> pDisp;
+        HRESULT hr = Instance.get_Application(&pDisp);
+        return SUCCEEDED(hr) ? CreateInstance(pidl, pDisp, riid, ppv) : hr;
+    }
 
 DECLARE_NOT_AGGREGATABLE(CFolder)
 DECLARE_PROTECT_FINAL_CONSTRUCT()

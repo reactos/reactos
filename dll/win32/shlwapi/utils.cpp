@@ -343,7 +343,7 @@ SHInvokeCommandOnContextMenuInternal(
     {
         if (GetVersionMajorMinor() >= _WIN32_WINNT_WIN7)
         {
-            info.fMask |= CMF_OPTIMIZEFORINVOKE;
+            fCMF |= CMF_OPTIMIZEFORINVOKE;
         }
         if (pszVerb && SHAnsiToUnicode(pszVerb, wideverb, _countof(wideverb)))
         {

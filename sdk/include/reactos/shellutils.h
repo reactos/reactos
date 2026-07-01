@@ -459,23 +459,23 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 
 }
 #endif // DECLARE_CLASSFACTORY (ATL)
 
-template<class P, class R> static HRESULT SHILClone(P pidl, R *ppOut)
+static inline HRESULT SHILClone(LPCITEMIDLIST pidl, LPITEMIDLIST *ppOut)
 {
-    R r = *ppOut = (R)ILClone((PIDLIST_RELATIVE)pidl);
+    LPITEMIDLIST r = *ppOut = ILClone((PIDLIST_RELATIVE)pidl);
     return r ? S_OK : E_OUTOFMEMORY;
 }
 
-template<class P, class R> static HRESULT SHILCloneParent(P pidl, R *ppOut)
+static inline HRESULT SHILCloneParent(LPCITEMIDLIST pidl, LPITEMIDLIST *ppOut)
 {
-    R r = *ppOut = (R)ILClone((PIDLIST_RELATIVE)pidl);
+    LPITEMIDLIST r = *ppOut = ILClone((PIDLIST_RELATIVE)pidl);
     if (r)
         ILRemoveLastID(r); // "c:\folder\thisitem" => "c:\folder"
     return r ? S_OK : E_OUTOFMEMORY;
 }
 
-template<class B, class R> static HRESULT SHILCombine(B base, PCUIDLIST_RELATIVE sub, R *ppOut)
+static inline HRESULT SHILCombine(LPCITEMIDLIST base, PCUIDLIST_RELATIVE sub, LPITEMIDLIST *ppOut)
 {
-    R r = *ppOut = (R)ILCombine((PCIDLIST_ABSOLUTE)base, sub);
+    LPITEMIDLIST r = *ppOut = ILCombine((PCIDLIST_ABSOLUTE)base, sub);
     return r ? S_OK : E_OUTOFMEMORY;
 }
 
@@ -919,7 +919,7 @@ static inline void DumpIdListOneLine(LPCITEMIDLIST pidl)
         {
             if (!depth)
             {
-                wsprintfA(buf, "%p [] (%s)\n", pidl, pidl ? "Empty/Desktop" : "NULL");
+                wsprintfA(buf, "%p [] (%s)", pidl, pidl ? "Empty/Desktop" : "NULL");
                 OutputDebugStringA(buf);
             }
             break;

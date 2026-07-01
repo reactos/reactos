@@ -597,7 +597,7 @@ SHOpenFolderAndSelectItems(PCIDLIST_ABSOLUTE pidlFolder,
         }
         else
         {
-            HRESULT hr = SHILCombine(pidlFolder, apidl[0], &pidlItem);
+            HRESULT hr = SHILCombine(pidlFolder, apidl[0], const_cast<LPITEMIDLIST*>(&pidlItem));
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
             freeItem.Attach(const_cast<PIDLIST_ABSOLUTE>(pidlItem));

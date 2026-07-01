@@ -360,6 +360,20 @@ interface IShellFolder2 : IShellFolder
 }
 
 /*****************************************************************************
+ * IParentAndItem interface
+ */
+[
+    object,
+    uuid(b3a4b685-b685-4805-99d9-5dead2873236),
+    pointer_default(unique)
+]
+interface IParentAndItem : IUnknown
+{
+    HRESULT SetParentAndItem([in] PCIDLIST_ABSOLUTE pidlParent, [in] IShellFolder*psf, [in] PCUITEMID_CHILD pidlChild);
+    HRESULT GetParentAndItem([out, optional] PIDLIST_ABSOLUTE *ppidlParent, [out, optional] IShellFolder **ppsf, [out, optional] PITEMID_CHILD *ppidlChild);
+}
+
+/*****************************************************************************
  * IShellItem interface
  */
 [
@@ -481,6 +495,23 @@ interface IShellItem2 : IShellItem
         [out] BOOL *pf);
 }
 
+/*****************************************************************************
+ * IRelatedItem interface
+ */
+[
+    object,
+    uuid(a73ce67a-8ab1-44f1-8d43-d2fcbf6b1cd0),
+    pointer_default(unique)
+]
+interface IRelatedItem : IUnknown
+{
+    HRESULT GetItemIDList([out] PIDLIST_ABSOLUTE *ppidl);
+    HRESULT GetItem([out] IShellItem **ppsi);
+}
+
+/*****************************************************************************
+ * INewWindowManager interface
+ */
 typedef enum tagNWMF {
     NWMF_UNLOADING        = 0x0001,
     NWMF_USERINITED       = 0x0002,

@@ -82,7 +82,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::NameSpace(VARIANT vDir, Folder **ppsdf
     if (!SUCCEEDED(hr))
         return S_FALSE;
 
-    return ShellObjectCreatorInit<CFolder>(static_cast<LPITEMIDLIST>(idlist), IID_PPV_ARG(Folder, ppsdf));
+    return CFolder::CreateInstance(idlist, this, IID_PPV_ARG(Folder, ppsdf));
 }
 
 static BOOL is_optional_argument(const VARIANT *arg)
@@ -110,7 +110,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::BrowseForFolder(LONG Hwnd, BSTR Title,
     if (!selection)
         return S_FALSE;
 
-    return ShellObjectCreatorInit<CFolder>(static_cast<LPITEMIDLIST>(selection), IID_PPV_ARG(Folder, ppsdf));
+    return CFolder::CreateInstance(selection, this, IID_PPV_ARG(Folder, ppsdf));
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::Windows(IDispatch **ppid)
