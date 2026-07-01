@@ -70,13 +70,22 @@ static void GetDefaultCopyMoveEffect()
     // FIXME: When the source is on a different volume than the target, change default from move to copy
 }
 
+UINT g_cf_FileOpFlags = 0;
+
+static inline DWORD GetDefaultFileOpFlags(IDataObject *pDO, DWORD fDefault = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR)
+{
+	if (!g_cf_FileOpFlags)
+		g_cf_FileOpFlags = RegisterClipboardFormatW(L"FileOpFlags"); // github.com/dotnet/winforms/issues/5884?timeline_page=1
+	return DataObj_GetDWORD(pDO, g_cf_FileOpFlags, fDefault);
+}
+
 /****************************************************************************
  * CFSDropTarget::_CopyItems
  *
  * copies or moves items to this folder
  */
-HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
-                                  LPCITEMIDLIST * apidl, BOOL bCopy)
+HRESULT CFSDropTarget::_CopyItems(IDataObject *pDO, IShellFolder * pSFFrom,
+                                  UINT cidl, LPCITEMIDLIST * apidl, BOOL bCopy)
 {
     HRESULT ret;
     WCHAR wszDstPath[MAX_PATH + 1] = {0};
@@ -128,7 +137,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     fop.wFunc = bCopy ? FO_COPY : FO_MOVE;
     fop.pFrom = pwszSrcPathsList;
     fop.pTo = wszDstPath;
-    fop.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+    fop.fFlags = GetDefaultFileOpFlags(pDO);
     if (bRenameOnCollision)
         fop.fFlags |= FOF_RENAMEONCOLLISION;
 
@@ -725,7 +734,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
         }
         else
         {
-            hr = _CopyItems(psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl, bCopy);
+            hr = _CopyItems(pDataObject, psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl, bCopy);
         }
 
         SHFree(pidl);
@@ -760,7 +769,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             op.pTo = wszTargetPath;
             op.hwnd = m_hwndSite;
             op.wFunc = bCopy ? FO_COPY : FO_MOVE;
-            op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+            op.fFlags = GetDefaultFileOpFlags(pDataObject);
             int res = SHFileOperationW(&op);
             if (res)
             {

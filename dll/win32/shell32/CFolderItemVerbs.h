@@ -67,7 +67,7 @@ public:
     CFolderItemVerbs();
     virtual ~CFolderItemVerbs();
 
-    HRESULT Init(LPITEMIDLIST idlist);
+    HRESULT Init(LPCITEMIDLIST idlist);
 
     // *** FolderItemVerbs methods ***
     STDMETHOD(get_Count)(LONG *plCount) override;
@@ -83,6 +83,8 @@ BEGIN_COM_MAP(CFolderItemVerbs)
     COM_INTERFACE_ENTRY_IID(IID_FolderItemVerbs, FolderItemVerbs)
     COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
 END_COM_MAP()
+
+    static HRESULT CreateInstance(CComPtr<CFolderItemVerbs> &objref) { return ShellObjectCreator(objref); }
 };
 
 #endif
