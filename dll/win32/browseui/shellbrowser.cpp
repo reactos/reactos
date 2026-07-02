@@ -1049,7 +1049,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    if (FAILED_UNEXPECTEDLY(hResult = SHILClone(absolutePIDL, &absolutePIDL)))
+    if (FAILED_UNEXPECTEDLY(hResult = SHILClone(absolutePIDL, const_cast<LPITEMIDLIST*>(&absolutePIDL))))
         return hResult;
     CComHeapPtr<ITEMIDLIST> pidlAbsoluteClone(const_cast<LPITEMIDLIST>(absolutePIDL));
 

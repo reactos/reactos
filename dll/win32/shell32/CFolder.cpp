@@ -13,6 +13,26 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 EXTERN_C BOOL WINAPI Win32CreateDirectoryW(LPCWSTR path, LPSECURITY_ATTRIBUTES sec);
 
+static inline HRESULT GetFolderItem(FolderItems *pItems, UINT Index, FolderItem **ppItem)
+{
+    VARIANT v;
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = Index;
+    return pItems->Item(v, ppItem);
+}
+
+static HRESULT GetFolderItem(FolderItems *pItems, UINT Index, IShellFolder **ppsf, PITEMID_CHILD *ppidlChild)
+{
+    CComPtr<FolderItem> pFI;
+    HRESULT hr = GetFolderItem(pItems, Index, &pFI);
+    if (FAILED(hr))
+        return hr;
+    CComPtr<IParentAndItem> pPAI;
+    if (SUCCEEDED(hr = pFI->QueryInterface(IID_PPV_ARG(IParentAndItem, &pPAI))))
+        return pPAI->GetParentAndItem(NULL, ppsf, ppidlChild);
+    return hr;
+}
+
 CFolder::CFolder()
 {
 }
@@ -21,12 +41,10 @@ CFolder::~CFolder()
 {
 }
 
-HRESULT CFolder::Initialize(LPCITEMIDLIST idlist)
+HRESULT CFolder::Initialize(LPCITEMIDLIST idlist, IDispatch *pDispatch)
 {
-    m_idlist.Attach(ILClone(idlist));
-    if (!m_idlist)
-        return E_OUTOFMEMORY;
-    return CShellDispatch_Constructor(IID_PPV_ARG(IShellDispatch, &m_Application));
+    m_Application = pDispatch;
+    return SHILClone(idlist, &m_idlist);
 }
 
 HRESULT CFolder::GetShellFolder(CComPtr<IShellFolder>& psfCurrent)
@@ -83,7 +101,7 @@ HRESULT STDMETHODCALLTYPE CFolder::get_ParentFolder(Folder **ppsf)
     CComHeapPtr<ITEMIDLIST> pidlParent;
     if (FAILED(SHILCloneParent(pidlAbsSelf, &pidlParent)))
         return E_OUTOFMEMORY;
-    return ShellObjectCreatorInit<CFolder>(static_cast<LPITEMIDLIST>(pidlParent), IID_PPV_ARG(Folder, ppsf));
+    return CFolder::CreateInstance(pidlParent, m_Application, IID_PPV_ARG(Folder, ppsf));
 }
 
 HRESULT STDMETHODCALLTYPE CFolder::Items(FolderItems **ppid)
@@ -117,7 +135,7 @@ HRESULT STDMETHODCALLTYPE CFolder::ParseName(BSTR bName, FolderItem **ppid)
     if (FAILED(hr = SHILCloneParent((LPCITEMIDLIST)combined, &parentPidl)))
         return hr;
     CComPtr<Folder> pParent; // The parent Folder of the thing we just parsed
-    hr = ShellObjectCreatorInit<CFolder>(parentPidl, IID_PPV_ARG(Folder, &pParent));
+    hr = CFolder::CreateInstance(parentPidl, m_Application, IID_PPV_ARG(Folder, &pParent));
     if (FAILED(hr))
         return hr;
 
@@ -158,14 +176,40 @@ tryfs: // HACKFIX: Our CFSFolder does not yet support IStorage, try it directly
     return hr;
 }
 
-static HRESULT GetUIObjectFromVariant(VARIANT &vItem, REFIID riid, void **ppv)
+HRESULT CFolder::GetUIObjectFromVariant(VARIANT &vItem, REFIID riid, void **ppv)
 {
+    HWND hWnd = NULL;
     CComHeapPtr<ITEMIDLIST> pidlOneItem;
     if (SUCCEEDED(VariantToIdlist(&vItem, &pidlOneItem)))
-        return SHELL_GetUIObjectOfAbsoluteItem(NULL, pidlOneItem, riid, ppv);
+        return SHELL_GetUIObjectOfAbsoluteItem(hWnd, pidlOneItem, riid, ppv);
 
-    // TODO: CFolderItems array
-    return E_NOTIMPL;
+    HRESULT hr = E_NOTIMPL;
+    CComPtr<FolderItems> pItems;
+    if (SUCCEEDED(VariantQueryInterface(&vItem, IID_PPV_ARG(FolderItems, &pItems))))
+    {
+        long count;
+        if (FAILED(hr = pItems->get_Count(&count)))
+            return hr;
+        if (count <= 0)
+            return HRESULT_FROM_WIN32(ERROR_NO_DATA);
+
+        LPITEMIDLIST *ppidls = (LPITEMIDLIST*)SHAlloc(sizeof(*ppidls) * count);
+        if (!ppidls)
+            return E_OUTOFMEMORY;
+        CComPtr<IShellFolder> pFolder;
+        for (UINT i = 0; i < (UINT)count; ++i)
+        {
+            if (SUCCEEDED(hr = GetFolderItem(pItems, i, i == 0 ? &pFolder : NULL, &ppidls[i])))
+                continue;
+            ppidls[i] = NULL;
+            count = i; // Don't free undefined items. Stop the loop.
+        }
+
+        if (SUCCEEDED(hr))
+            hr = pFolder->GetUIObjectOf(hWnd, count, const_cast<LPCITEMIDLIST*>(ppidls), riid, NULL, ppv);
+        _ILFreeaPidl(ppidls, count);
+    }
+    return hr;
 }
 
 HRESULT CFolder::CopyMoveOperation(VARIANT &vItem, VARIANT vOptions, BOOL bCopy)
@@ -180,7 +224,10 @@ HRESULT CFolder::CopyMoveOperation(VARIANT &vItem, VARIANT vOptions, BOOL bCopy)
         return hr;
 
     CComPtr<IDataObject> pDO;
-    if (FAILED_UNEXPECTEDLY(hr = GetUIObjectFromVariant(vItem, IID_PPV_ARG(IDataObject, &pDO))))
+    hr = GetUIObjectFromVariant(vItem, IID_PPV_ARG(IDataObject, &pDO));
+    if (hr == HRESULT_FROM_WIN32(ERROR_NO_DATA))
+        return S_FALSE;
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (SUCCEEDED(VariantChangeType(&vOptions, &vOptions, 0, VT_I4)))
@@ -219,8 +266,8 @@ HRESULT STDMETHODCALLTYPE CFolder::GetDetailsOf(VARIANT vItem, int iColumn, BSTR
     if (FAILED(hr))
         return hr;
 
-    PCUITEMID_CHILD pidlItem = CFolderItem::GetLeafPidlRef(&vItem);
-    if (pidlItem && iColumn == -1)
+    CComHeapPtr<ITEMIDLIST> pidlItem(CFolderItem::CloneLeafPidl(&vItem));
+    if (pidlItem && iColumn == INFOTIPCOLUMN)
     {
         PWSTR pszTip = NULL;
         if (SUCCEEDED(hr = SHELL_QueryInfoTipAlloc(psf, QITIPF_DEFAULT, pidlItem, &pszTip)))

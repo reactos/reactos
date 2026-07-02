@@ -366,14 +366,14 @@ CCopyMoveToMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, H
     HRESULT hr = E_FAIL;
     if (pidlFolder)
     {
-        hr = SHILClone(pidlFolder, &pidlFolder);
+        hr = SHILClone(pidlFolder, const_cast<PIDLIST_ABSOLUTE*>(&pidlFolder));
     }
     else
     {
         pidlFolder = SHELL_DataObject_ILCloneFullItem(pdtobj, 0);
         if (pidlFolder)
         {
-            ILRemoveLastID((LPITEMIDLIST)pidlFolder);
+            ILRemoveLastID(const_cast<PIDLIST_ABSOLUTE>(pidlFolder));
             hr = S_OK;
         }
     }

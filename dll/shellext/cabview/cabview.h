@@ -69,7 +69,7 @@ public:
         UINT count = GetCount(), fetched = 0;
         if (m_Pos < count && fetched < celt)
         {
-            if (SUCCEEDED(hr = SHILClone(DPA_FastGetPtr(m_Items, m_Pos), &rgelt[fetched])))
+            if (SUCCEEDED(hr = SHILClone((LPITEMIDLIST)DPA_FastGetPtr(m_Items, m_Pos), &rgelt[fetched])))
                 fetched++;
         }
         if (pceltFetched)

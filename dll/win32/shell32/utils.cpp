@@ -211,20 +211,6 @@ CStubWindow32::CreateStub(UINT Type, LPCWSTR Path, const POINT *pPt)
     return S_OK;
 }
 
-HRESULT
-SHILClone(
-    _In_opt_ LPCITEMIDLIST pidl,
-    _Outptr_ LPITEMIDLIST *ppidl)
-{
-    if (!pidl)
-    {
-        *ppidl = NULL;
-        return S_OK;
-    }
-    *ppidl = ILClone(pidl);
-    return (*ppidl ? S_OK : E_OUTOFMEMORY);
-}
-
 BOOL PathIsDotOrDotDotW(_In_ LPCWSTR pszPath)
 {
     if (pszPath[0] != L'.')
