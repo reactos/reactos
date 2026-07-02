@@ -2801,7 +2801,7 @@ RtlInitializeContext(
     _Out_ PCONTEXT ThreadContext,
     _In_opt_ PVOID ThreadStartParam,
     _In_ PTHREAD_START_ROUTINE ThreadStartAddress,
-    _In_ PINITIAL_TEB InitialTeb
+    _In_ PVOID StackBase
 );
 
 #ifdef _M_AMD64
