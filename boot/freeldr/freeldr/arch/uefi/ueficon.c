@@ -49,6 +49,11 @@ UefiConsPutChar(int c)
     else if (c == '\t')
     {
         CurrentCursorX = (CurrentCursorX + 8) & ~7;
+        if (CurrentCursorX >= Width)
+        {
+            CurrentCursorX = 0;
+            CurrentCursorY++;
+        }
     }
     else
     {
@@ -59,6 +64,13 @@ UefiConsPutChar(int c)
     {
         CurrentCursorX = 0;
         CurrentCursorY++;
+        
+        /* If wrapping onto a line beyond the screen display limits, scroll instantly */
+        if (CurrentCursorY >= Height)
+        {
+            FbConsScrollUp(CurrentAttr);
+            CurrentCursorY = Height - 1;
+        }
     }
 }
 
