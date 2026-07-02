@@ -70,7 +70,7 @@ CMD [/[C|K] komut][/P][/Q][/T:bf]\n\n\
 COLOR [attr [/-F]]\n\n\
   attr        Komut satırı çıktısının renk öz niteliğini belirtir.\n\
   /-F         Komut satırının boş alanını renk özelliği ile doldurmaz.\n\n\
-Renkleri belirtlemek için üç yol vardır:\n\
+Renkleri belirtmek için üç yol vardır:\n\
 1) renk belirtecindeki [parlaklık] değerleri (belirteçteki ilk üç harftir)\n\
 2) renklerin ondalıklı ifadeleri (decimal on decimal)\n\
 3) renk değerlerinin onaltılık rakam formu\n\n\
@@ -140,7 +140,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]öznitellikler]] hedef ...\n\n\
     STRING_DELAY_HELP "n saniye ya da milisaniye duraklat.\n\
 DELAY [/m]n\n\n\
   /m          n değerini milisaniye olarak tanımla,\n\
-              aksi taktirde n saniye olarak tanımlar.\n"
+              aksi takdirde n saniye olarak tanımlar.\n"
     STRING_DIR_HELP1 "DIR [sürücü:][yol][dosya adı] [/A[[:]öznitellikler]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]sıralama düzeni]] [/P] [/Q] [/R] [/S] [/T[[:]zaman alanı]] [/W] [/X] [/4]\n\n\
   [sürücü:][yol][dosya adı]\n\
@@ -273,11 +273,12 @@ Bir veya daha fazla dosyayı taşımak için:\n\
 MOVE [/N][/Y|/-Y][sürücü:][yol]dosya_adi[1,2,...] hedef\n\n\
 Bir dizini yeniden adlandırmak için:\n\
 MOVE [/N][/Y|/-Y][sürücü:][yol]dizin_adi1 dizin_adi2\n\n\
-  [sürücü:][yol]dosya1     Taşımak istediğiniz dosya veya dosyaların\n\
-                           konumunu ve adını belirtir.\n\
-  /N                       Hiçbir şey değil. Her şeyi yapar ama dosyaları veya dizinleri taşımaz.\n\n\
+  [sürücü:][yol]dosya1      Taşımak istediğiniz dosya veya dosyaların\n\
+                            konumunu ve adını belirtir.\n\
+  /N                        Hiçbir şey yapmaz. Her şeyi simüle eder ama dosyaları veya dizinleri taşımaz.\n\n\
 Mevcut sınırlamalar:\n\
-  - Bir dosyayı veya dizini bir sürücüden diğerine taşıyamazsınız.\n"
+  - Bir dosyayı veya dizini bir sürücüden diğerine taşıyamazsınız.\n\
+  - Gizli veya salt okunur dosyaları/dizinleri taşıyamazsınız.\n"
     STRING_MSGBOX_HELP "bir mesaj kutusu görüntüler ve kullanıcı yanıtını döndürür\n\n\
 MSGBOX tip ['başlık'] komut_metni\n\n\
 tip           görüntülenecek tuş,\n\
@@ -425,7 +426,7 @@ WINDOW [/POS[=]sol,üst,genişlik,yükseklik]\n\
               [MIN|MAX|RESTORE] ['başlık']\n\n\
 /POS          pencere konumu ve boyutlarını belirtir\n\
 MIN           pencereyi küçültür\n\
-MAX           pencereyi büyütğr\n\
+MAX           pencereyi büyütür\n\
 RESTORE       pencereyi eski haline dönüştürür"
     STRING_WINDOW_HELP2 "konsol penceresi açısını değiştirir\n\n\
 ACTIVATE 'pencere' [/POS[=]left,top,width,height]\n\
@@ -447,7 +448,7 @@ başlık        pencere için yeni başlık\n"
     STRING_CMD_ERROR1 "Girdi %s dosyasından yeniden yönlendirilemiyor\n"
     STRING_CMD_ERROR2 "Borulama verileri için geçici dosya oluşturulamadı\n"
     STRING_CMD_ERROR3 "%s dosyasına yönlendirilemedi\n"
-    STRING_CMD_ERROR4 "%s çalışıtırılıyor...\n"
+    STRING_CMD_ERROR4 "%s çalıştırılıyor...\n"
     STRING_CMD_ERROR5 "cmdexit.bat çalıştırılıyor...\n"
     STRING_COLOR_ERROR1 "Aynı renk hatası! (Arka plan ve ön plan aynı renk olamaz)\n"
     STRING_COLOR_ERROR2 "Renk özelliklerinde hata\n"
@@ -491,13 +492,12 @@ başlık        pencere için yeni başlık\n"
     STRING_ERROR_CANNOTPIPE "Hata! Borulanamadı! Geçici dosya açılamıyor!\n"
     STRING_ERROR_D_PAUSEMSG "Devam etmek için herhangi bir tuşa basın . . . "
     STRING_ERROR_DRIVER_NOT_READY "Sürücü hazır değil"
-    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
-    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
-    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
-    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
-    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
-    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
-    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
+    STRING_ERROR_INVALID_NUMBER1 "Geçersiz sayı. Sayısal sabitler ondalık (42), onaltılık (0x2A) veya sekizlik (052) olmalıdır.\n"
+    STRING_ERROR_INVALID_NUMBER2 "Geçersiz sayı. Sayılar en fazla 32 bitlik hassasiyetle sınırlıdır.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Sıfıra bölme hatası.\n"
+    STRING_ERROR_CALL_BAD_LABEL "Toplu iş betiği dışından etiket çağırmak için geçersiz girişim.\n"
+    STRING_ERROR_UNEXPECTED "Beklenmeyen ifade: %s.\n"
+    STRING_ERROR_WHILE_PROCESSING "İşlem sırasında hata oluştu: %s.\n"
     STRING_SET_ENV_ERROR "'%s' çevresel değişkeni tanımlanmadı.\n"
     STRING_CMD_INFOLINE "  ReactOS Komut Satırı                                 Yardım için, HELP yazın"
     STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
