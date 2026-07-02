@@ -2481,7 +2481,10 @@ ItemCompletionThread(
     /* Step 2 - Saving Settings */
     SaveSettings(pItemsData);
 
-    /* Step 3 - Removing temporary files */
+    /* Step 3 - Install optional components */
+    InstallOptionalComponents(pItemsData);
+
+    /* Step 4 - Removing temporary files */
 //    RemoveTempFiles(pItemsData);
 
     // FIXME: Move this call to a separate cleanup page!
@@ -2633,8 +2636,8 @@ ProcessPageDlgProc(HWND hwndDlg,
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
-            ShowDlgItem(hwndDlg, IDC_TASKTEXT4, SW_HIDE);
-            ShowDlgItem(hwndDlg, IDC_CHECK4, SW_HIDE);
+            ShowDlgItem(hwndDlg, IDC_TASKTEXT5, SW_HIDE);
+            ShowDlgItem(hwndDlg, IDC_CHECK5, SW_HIDE);
             s_hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON), IMAGE_ICON, 16, 16, 0);
             s_hArrowIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_ARROWICON), IMAGE_ICON, 16, 16, 0);
             s_hCrossIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CROSSICON), IMAGE_ICON, 16, 16, 0);
@@ -2772,12 +2775,6 @@ FinishDlgProc(HWND hwndDlg,
         {
             /* Get pointer to the global setup data */
             PSETUPDATA SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-
-            if (!SetupData->UnattendSetup || !SetupData->DisableGeckoInst)
-            {
-                /* Run the Wine Gecko prompt */
-                Control_RunDLLW(hwndDlg, 0, L"appwiz.cpl,,install_gecko", SW_SHOW);
-            }
 
             /* Set title font */
             SendDlgItemMessage(hwndDlg,
@@ -3031,12 +3028,12 @@ ProcessUnattendSection(
         {
             pSetupData->DisableAutoDaylightTimeSet = _wtoi(szValue);
         }
-        else if (!_wcsicmp(szName, L"DisableGeckoInst"))
+        else if (!_wcsicmp(szName, L"RappsDownload"))
         {
             if (!_wcsicmp(szValue, L"yes"))
-                pSetupData->DisableGeckoInst = TRUE;
+                pSetupData->RappsDownload = TRUE;
             else
-                pSetupData->DisableGeckoInst = FALSE;
+                pSetupData->RappsDownload = FALSE;
         }
         else if (!_wcsicmp(szName, L"InstallationType"))
         {

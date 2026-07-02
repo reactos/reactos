@@ -43,10 +43,10 @@ AutoPartition = 1
 ; 1 - BtrFS
 FsType = 0
 
-; Enable this setting to disable Gecko install.
-; yes - disabled
-; no  - enabled
-DisableGeckoInst = no
+; Choose if RAPPS can download optional components during setup.
+; yes - Download addons from RAPPS
+; no  - Don't download addons from RAPPS
+RappsDownload = no
 
 ; Set this option to automatically specify language in 2nd mode setup.
 ; See hivesys.inf for available languages.

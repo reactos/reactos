@@ -68,6 +68,11 @@ extern HINSTANCE hDllInstance;
 extern HINF hSysSetupInf;
 extern ADMIN_INFO AdminInfo;
 
+/* addons.c */
+HRESULT
+InstallOptionalComponents(
+    _In_ PITEMSDATA pItemsData);
+
 /* install */
 
 BOOL

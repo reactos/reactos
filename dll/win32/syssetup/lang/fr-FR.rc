@@ -114,13 +114,15 @@ BEGIN
     LTEXT "Enregistrement des composants", IDC_TASKTEXT1, 65, 27, 232, 8
     LTEXT "Installation des éléments du menu Démarrer", IDC_TASKTEXT2, 65, 39, 232, 8
     LTEXT "Enregistrement des paramètres", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Suppression des fichiers temporaires", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Installation des composants optionnels", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Suppression des fichiers temporaires", IDC_TASKTEXT5, 65, 75, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
     ICON "", IDC_CHECK1, 48, 26, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
     ICON "", IDC_CHECK2, 48, 38, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
     ICON "", IDC_CHECK3, 48, 50, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
     ICON "", IDC_CHECK4, 48, 62, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
+    ICON "", IDC_CHECK5, 48, 74, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -265,4 +267,11 @@ BEGIN
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."
      */
     IDS_DEFAULT "(Défaut)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALLADDONSCAPTION "Composants optionnels"
+    IDS_INSTALLADDONSMESSAGE "Les composants optionnels sont disponibles pour améliorer la compatibilité des applications.\n\nVoulez-vous les télécharger et les installer ?"
+    IDS_INSTALLADDONSFAILEDMESSAGE "L'installation de l'un ou plusieurs composants optionnels a échoué."
 END
