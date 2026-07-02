@@ -10,6 +10,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+typedef unsigned int UINT;
+#include <x86x64/Cpuid.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -48,6 +51,47 @@ HaliHandlePCIConfigSpaceAccess(_In_ BOOLEAN IsRead,
     DPRINT1("HaliHandlePCIConfigSpaceAccess: IsRead %X, Port 0x%X, Length %u, Buffer %p\n", IsRead, Port, Length, Buffer);
     //ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
+}
+
+static
+NTSTATUS
+HaliQueryProcessorBrandString(
+    _Out_writes_(BrandStringLength) PCHAR BrandString,
+    _In_ ULONG BrandStringLength,
+    _Out_ PULONG ReturnedLength)
+{
+    CPUID_EXTENDED_FUNCTION_REGS ExtendedFunction;
+    union
+    {
+        INT AsInt[3 * 4];
+        CHAR Chars[49];
+    } BrandStringUnion;
+
+    *ReturnedLength = sizeof(BrandStringUnion.Chars);
+    if (BrandStringLength < *ReturnedLength)
+    {
+        DPRINT1("HaliQueryProcessorBrandString: Buffer too small (%u < %u)\n", BrandStringLength, *ReturnedLength);
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Check if we can query the brand string */
+    __cpuid(ExtendedFunction.AsInt32, CPUID_EXTENDED_FUNCTION);
+    if (ExtendedFunction.MaxLeaf < CPUID_BRAND_STRING3)
+    {
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    __cpuid(&BrandStringUnion.AsInt[0], CPUID_BRAND_STRING1);
+    __cpuid(&BrandStringUnion.AsInt[4], CPUID_BRAND_STRING2);
+    __cpuid(&BrandStringUnion.AsInt[8], CPUID_BRAND_STRING3);
+    BrandStringUnion.Chars[48] = '\0'; // Ensure null-termination
+
+    /* Copy the brand string to the output buffer */
+    RtlCopyMemory(BrandString,
+                  BrandStringUnion.Chars,
+                  sizeof(BrandStringUnion.Chars));
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -102,7 +146,10 @@ HaliQuerySystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
         REPORT_THIS_CASE(HalQueryProfileSourceList);
         REPORT_THIS_CASE(HalInitLogInformation);
         REPORT_THIS_CASE(HalFrequencyInformation);
-        REPORT_THIS_CASE(HalProcessorBrandString);
+        case HalProcessorBrandString:
+        {
+            return HaliQueryProcessorBrandString((PCHAR)Buffer, BufferSize, ReturnedLength);
+        }
         REPORT_THIS_CASE(HalHypervisorInformation);
         REPORT_THIS_CASE(HalPlatformTimerInformation);
         REPORT_THIS_CASE(HalAcpiAuditInformation);

@@ -1063,6 +1063,25 @@ typedef struct _SYSTEM_THREAD_INFORMATION
 C_ASSERT(sizeof(SYSTEM_THREAD_INFORMATION) == 0x40); // Must be 8-byte aligned
 #endif
 
+// Class 5
+typedef struct _SYSTEM_EXTENDED_THREAD_INFORMATION
+{
+    SYSTEM_THREAD_INFORMATION ThreadInfo;
+    PVOID StackBase;
+    PVOID StackLimit;
+    PVOID Win32StartAddress;
+    PVOID TebBase;
+    ULONG_PTR Reserved2;
+    ULONG_PTR Reserved3;
+    ULONG_PTR Reserved4;
+    // x86: ULONG Padding;
+} SYSTEM_EXTENDED_THREAD_INFORMATION, *PSYSTEM_EXTENDED_THREAD_INFORMATION;
+#ifdef _WIN64
+C_ASSERT(sizeof(SYSTEM_EXTENDED_THREAD_INFORMATION) == 0x88);
+#else
+C_ASSERT(sizeof(SYSTEM_EXTENDED_THREAD_INFORMATION) == 0x60);
+#endif
+
 typedef struct _SYSTEM_PROCESS_INFORMATION
 {
     ULONG NextEntryOffset;

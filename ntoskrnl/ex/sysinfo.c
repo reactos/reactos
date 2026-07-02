@@ -881,11 +881,19 @@ QSI_DEF(SystemPathInformation)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* Class 5 - Process Information */
-QSI_DEF(SystemProcessInformation)
+/* Class 5 - Process Information / 57 - SystemExtendedProcessInformation  */
+static
+NTSTATUS
+ExpQuerySystemProcessInformation(
+    _Out_writes_bytes_(Size) PVOID Buffer,
+    _In_ ULONG Size,
+    _Out_ PULONG ReqSize,
+    _In_ BOOLEAN Extended)
 {
+    const ULONG ThreadInfoSize = Extended ? sizeof(SYSTEM_EXTENDED_THREAD_INFORMATION) : sizeof(SYSTEM_THREAD_INFORMATION);
     PSYSTEM_PROCESS_INFORMATION SpiCurrent;
     PSYSTEM_THREAD_INFORMATION ThreadInfo;
+    PSYSTEM_EXTENDED_THREAD_INFORMATION ThreadInfoEx;
     PEPROCESS Process = NULL, SystemProcess;
     PETHREAD CurrentThread;
     ANSI_STRING ImageName;
@@ -952,12 +960,13 @@ QSI_DEF(SystemProcessInformation)
             CurrentEntry = Process->Pcb.ThreadListHead.Flink;
             while (CurrentEntry != &Process->Pcb.ThreadListHead)
             {
+                CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, Tcb.ThreadListEntry);
                 ThreadsCount++;
                 CurrentEntry = CurrentEntry->Flink;
             }
 
             // size of the structure for every process
-            CurrentSize = sizeof(SYSTEM_PROCESS_INFORMATION) + sizeof(SYSTEM_THREAD_INFORMATION) * ThreadsCount;
+            CurrentSize = sizeof(SYSTEM_PROCESS_INFORMATION) + ThreadInfoSize * ThreadsCount;
             ImageNameLength = 0;
             Status = SeLocateProcessImageName(Process, &TempProcessImageName);
             ProcessImageName = TempProcessImageName;
@@ -1051,10 +1060,12 @@ QSI_DEF(SystemProcessInformation)
                 SpiCurrent->PagefileUsage = Process->QuotaUsage[PsPageFile];
                 SpiCurrent->PeakPagefileUsage = Process->QuotaPeak[PsPageFile];
                 SpiCurrent->PrivatePageCount = Process->CommitCharge;
-                ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
 
-                CurrentEntry = Process->Pcb.ThreadListHead.Flink;
-                while (CurrentEntry != &Process->Pcb.ThreadListHead)
+                /* Now do the threads */
+                ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
+                for (CurrentEntry = Process->Pcb.ThreadListHead.Flink;
+                     CurrentEntry != &Process->Pcb.ThreadListHead;
+                     CurrentEntry = CurrentEntry->Flink)
                 {
                     CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD, Tcb.ThreadListEntry);
 
@@ -1069,9 +1080,17 @@ QSI_DEF(SystemProcessInformation)
                     ThreadInfo->ContextSwitches = CurrentThread->Tcb.ContextSwitches;
                     ThreadInfo->ThreadState = CurrentThread->Tcb.State;
                     ThreadInfo->WaitReason = CurrentThread->Tcb.WaitReason;
+                    if (Extended)
+                    {
+                        ThreadInfoEx = (PSYSTEM_EXTENDED_THREAD_INFORMATION)ThreadInfo;
+                        ThreadInfoEx->StackBase = CurrentThread->Tcb.StackBase;
+                        ThreadInfoEx->StackLimit = (PVOID)CurrentThread->Tcb.StackLimit;
+                        ThreadInfoEx->Win32StartAddress = (CurrentThread->Win32StartAddress ?
+                            CurrentThread->Win32StartAddress : CurrentThread->StartAddress);
+                        ThreadInfoEx->TebBase = CurrentThread->Tcb.Teb;
+                    }
 
-                    ThreadInfo++;
-                    CurrentEntry = CurrentEntry->Flink;
+                    ThreadInfo = (PSYSTEM_THREAD_INFORMATION)((PUCHAR)ThreadInfo + ThreadInfoSize);
                 }
 
                 /* Query total user/kernel times of a process */
@@ -1130,6 +1149,12 @@ Skip:
 
     *ReqSize = TotalSize;
     return Status;
+}
+
+/* Class 5 - Process Information */
+QSI_DEF(SystemProcessInformation)
+{
+    return ExpQuerySystemProcessInformation(Buffer, Size, ReqSize, FALSE);
 }
 
 /* Class 6 - Call Count Information */
@@ -1536,7 +1561,8 @@ QSI_DEF(SystemInterruptInformation)
     ULONG ti;
     PSYSTEM_INTERRUPT_INFORMATION sii = (PSYSTEM_INTERRUPT_INFORMATION)Buffer;
 
-    if(Size < KeNumberProcessors * sizeof(SYSTEM_INTERRUPT_INFORMATION))
+    *ReqSize = KeNumberProcessors * sizeof(SYSTEM_INTERRUPT_INFORMATION);
+    if (Size < *ReqSize)
     {
         return STATUS_INFO_LENGTH_MISMATCH;
     }
@@ -1547,7 +1573,7 @@ QSI_DEF(SystemInterruptInformation)
     {
         Prcb = KiProcessorBlock[i];
         sii->ContextSwitches = KeGetContextSwitches(Prcb);
-        sii->DpcCount = Prcb->DpcData[0].DpcCount;
+        sii->DpcCount = Prcb->DpcData[DPC_NORMAL].DpcCount;
         sii->DpcRate = Prcb->DpcRequestRate;
         sii->TimeIncrement = ti;
         sii->DpcBypassCount = 0;
@@ -1693,9 +1719,9 @@ QSI_DEF(SystemTimeAdjustmentInformation)
         (PSYSTEM_QUERY_TIME_ADJUST_INFORMATION)Buffer;
 
     /* Check if enough storage was provided */
-    if (sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION) > Size)
+    *ReqSize = sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION);
+    if (Size != *ReqSize)
     {
-        * ReqSize = sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION);
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
@@ -2424,17 +2450,23 @@ QSI_DEF(SystemPrefetcherInformation)
 /* Class 57 - Extended process information */
 QSI_DEF(SystemExtendedProcessInformation)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemExtendedProcessInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    return ExpQuerySystemProcessInformation(Buffer, Size, ReqSize, TRUE);
 }
 
 /* Class 58 - Recommended shared data alignment */
 QSI_DEF(SystemRecommendedSharedDataAlignment)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemRecommendedSharedDataAlignment not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PULONG Alignment = (PULONG)Buffer;
+
+    /* Check user buffer's size */
+    *ReqSize = sizeof(ULONG);
+    if (Size < *ReqSize)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    *Alignment = KeGetRecommendedSharedDataAlignment();
+    return STATUS_SUCCESS;
 }
 
 /* Class 60 - NUMA memory information */
@@ -2489,6 +2521,34 @@ QSI_DEF(SystemNumaAvailableMemory)
     }
 
     return STATUS_SUCCESS;
+}
+
+/* Class 62 - Emulation Basic Information */
+QSI_DEF(SystemEmulationBasicInformation)
+{
+    return QSISystemBasicInformation(Buffer, Size, ReqSize);
+}
+
+/* Class 63 - Emulation Processor Information */
+QSI_DEF(SystemEmulationProcessorInformation)
+{
+    NTSTATUS Status;
+
+    /* Query native information */
+    Status = QSISystemProcessorInformation(Buffer, Size, ReqSize);
+#if defined(_M_AMD64) | defined(_M_ARM64)
+    if (NT_SUCCESS(Status))
+    {
+        PSYSTEM_PROCESSOR_INFORMATION Spi = (PSYSTEM_PROCESSOR_INFORMATION)Buffer;
+#if defined(_M_AMD64)
+        Spi->ProcessorArchitecture = PROCESSOR_ARCHITECTURE_INTEL;
+#elif defined(_M_ARM64)
+        Spi->ProcessorArchitecture = PROCESSOR_ARCHITECTURE_ARM;
+#endif /* _M_AMD64 | _M_ARM64 */
+    }
+#endif /* defined(_M_AMD64) | defined(_M_ARM64) */
+
+    return Status;
 }
 
 /* Class 64 - Extended handle information */
@@ -2824,6 +2884,35 @@ QSI_DEF(SystemFirmwareTableInformation)
     return Status;
 }
 
+/* Class 105 - Processor Brand String */
+QSI_DEF(SystemProcessorBrandString)
+{
+    CHAR BrandString[128];
+    NTSTATUS Status;
+
+    /* Call hal to query the brand string */
+    Status = HalQuerySystemInformation(HalProcessorBrandString,
+                                       sizeof(BrandString),
+                                       BrandString,
+                                       ReqSize);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HalQuerySystemInformation failed: 0x%lx\n", Status);
+        return Status;
+    }
+
+    if (Size < *ReqSize)
+    {
+        DPRINT1("Buffer too small for processor brand string\n");
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Copy the brand string to the user buffer */
+    RtlCopyMemory(Buffer, BrandString, *ReqSize);
+
+    return STATUS_SUCCESS;
+}
+
 /* Query/Set Calls Table */
 typedef
 struct _QSSI_CALLS
@@ -2908,8 +2997,8 @@ CallQS[] =
     SI_XX(SystemComPlusPackage),
     SI_QX(SystemNumaAvailableMemory),
     SI_XX(SystemProcessorPowerInformation), /* FIXME: not implemented */
-    SI_XX(SystemEmulationBasicInformation), /* FIXME: not implemented */
-    SI_XX(SystemEmulationProcessorInformation), /* FIXME: not implemented */
+    SI_QX(SystemEmulationBasicInformation),
+    SI_QX(SystemEmulationProcessorInformation),
     SI_QX(SystemExtendedHandleInformation),
     SI_XX(SystemLostDelayedWriteInformation), /* FIXME: not implemented */
     SI_XX(SystemBigPoolInformation), /* FIXME: not implemented */
@@ -2923,6 +3012,9 @@ CallQS[] =
     SI_XX(SystemWow64SharedInformationObsolete), /* FIXME: not implemented */
     SI_XX(SystemRegisterFirmwareTableInformationHandler), /* FIXME: not implemented */
     SI_QX(SystemFirmwareTableInformation),
+
+    // Vista and later
+    SI_QX(SystemProcessorBrandString),
 };
 
 C_ASSERT(SystemBasicInformation == 0);
