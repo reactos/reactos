@@ -1846,6 +1846,7 @@ static UINT check_product_patches(const WCHAR *prodcode, const WCHAR *usersid, M
                 RegOpenKeyExW(localprod, L"Patches", 0, KEY_READ, &localpatch) == ERROR_SUCCESS &&
                 RegOpenKeyExW(localpatch, ptr, 0, KEY_READ, &patchkey) == ERROR_SUCCESS)
             {
+                size = sizeof(state);
                 res = RegGetValueW(patchkey, NULL, L"State", RRF_RT_REG_DWORD,
                                    &type, &state, &size);
 
