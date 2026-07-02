@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D_CRT_NON_CONFORMING_SWPRINTFS
     -DENTRY_PREFIX=OLEACC_
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL)
@@ -22,13 +21,6 @@ add_idl_headers(oleacc_idlheader oleacc_classes.idl)
 add_typelib(oleacc_classes.idl)
 add_rpcproxy_files(oleacc_classes.idl)
 
-list(APPEND oleacc_rc_deps
-    ${CMAKE_CURRENT_SOURCE_DIR}/oleacc_classes_r.rgs
-    ${CMAKE_CURRENT_SOURCE_DIR}/oleacc_classes_t.rgs
-    ${CMAKE_CURRENT_BINARY_DIR}/oleacc_classes.tlb)
-
-set_source_files_properties(oleacc.rc PROPERTIES OBJECT_DEPENDS "${oleacc_rc_deps}")
-
 add_library(oleacc MODULE
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
@@ -38,6 +30,8 @@ add_library(oleacc MODULE
 
 add_dependencies(oleacc oleacc_idlheader stdole2)
 set_module_type(oleacc win32dll)
+add_idl_reg_scripts(oleacc registry oleacc_classes.idl)
+add_idl_reg_scripts(oleacc regtypelib oleacc_classes.idl)
 target_link_libraries(oleacc uuid wine ${PSEH_LIB} oldnames)
 add_importlibs(oleacc oleaut32 ole32 user32 rpcrt4 msvcrt kernel32 ntdll)
 add_pch(oleacc precomp.h "${PCH_SKIP_SOURCE}")

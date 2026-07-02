@@ -112,6 +112,7 @@ AddReg=Classes
 11,,softpub.dll,1
 11,,sti.dll,1
 11,,stobject.dll,1
+11,,uiautomationcore.dll,1
 11,,urlmon.dll,3
 11,,vbscript.dll,1
 11,,w32time.dll,1
