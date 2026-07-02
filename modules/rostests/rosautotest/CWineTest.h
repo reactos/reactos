@@ -9,6 +9,7 @@ class CWineTest : public CTest
 {
 private:
     HANDLE m_hFind;
+    std::string m_ListString;
     PCHAR m_ListBuffer;
     string m_CurrentTest;
     wstring m_CurrentFile;
