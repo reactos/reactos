@@ -157,17 +157,17 @@ SURFACE_AllocSurface(
     /* Is this an uncompressed format? */
     if (iFormat <= BMF_32BPP)
     {
-        /* Calculate the correct bitmap size in bytes */
-        if (!NT_SUCCESS(RtlULongMult(cjWidth, cy, &cjBits)))
-        {
-            DPRINT1("Overflow calculating size: cjWidth %lu, cy %lu\n",
-                    cjWidth, cy);
-            return NULL;
-        }
-
         /* Did we get a buffer and size? */
         if ((pvBits != NULL) && (cjBufSize != 0))
         {
+            /* Calculate and validate the bitmap size in bytes */
+            if (!NT_SUCCESS(RtlULongMult(cjWidth, cy, &cjBits)))
+            {
+                DPRINT1("Overflow calculating size: cjWidth %lu, cy %lu\n",
+                        cjWidth, cy);
+                return NULL;
+            }
+
             /* Make sure the buffer is large enough */
             if (cjBufSize < cjBits)
             {
@@ -175,6 +175,13 @@ SURFACE_AllocSurface(
                         cjBits, cjBufSize);
                 return NULL;
             }
+        }
+        else
+        {
+            /* Do a dumb calculation. Windows doesn't validate this either and
+               some drivers (e.g. Radeon IGP 320M) eplicitly pass bogus values.
+               See CORE-13036. */
+            cjBits = cjWidth * cy;
         }
     }
     else
