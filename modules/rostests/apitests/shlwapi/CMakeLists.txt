@@ -9,6 +9,7 @@ list(APPEND SOURCE
     AssocQueryString.c
     CharUpperNoDBCS.cpp
     IShellFolderHelpers.cpp
+    IsOS.c
     IsQSForward.cpp
     IStreamPidl.cpp
     MapWin32ErrorToSTG.c

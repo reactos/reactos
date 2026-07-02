@@ -27,6 +27,7 @@ extern void func_SHPropertyBag(void);
 extern void func_StrDup(void);
 extern void func_StrFormatByteSizeW(void);
 extern void func_StrToInt(void);
+extern void func_IsOS(void);
 
 const struct test winetest_testlist[] =
 {
@@ -36,6 +37,7 @@ const struct test winetest_testlist[] =
     { "PathFileExistsDefExtAndAttributesW", func_PathFileExistsDefExtAndAttributesW },
     { "PathFindOnPath", func_PathFindOnPath },
     { "IShellFolderHelpers", func_IShellFolderHelpers },
+    { "IsOS", func_IsOS },
     { "IsQSForward", func_IsQSForward },
     { "IStreamPidl", func_IStreamPidl },
     { "MapWin32ErrorToSTG", func_MapWin32ErrorToSTG },
