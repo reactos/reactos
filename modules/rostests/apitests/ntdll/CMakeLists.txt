@@ -99,6 +99,7 @@ list(APPEND SOURCE
     RtlAllocateHeap.c
     RtlBitmap.c
     RtlComputePrivatizedDllName_U.c
+    RtlCopyContext.c
     RtlCopyMappedMemory.c
     RtlCriticalSection.c
     RtlDebugInformation.c
@@ -109,6 +110,7 @@ list(APPEND SOURCE
     RtlDosPathNameToNtPathName_U.c
     RtlDosSearchPath_U.c
     RtlDosSearchPath_Ustr.c
+    RtlExtendedContext.c
     RtlFirstFreeAce.c
     RtlGenerate8dot3Name.c
     RtlGetFullPathName_U.c
@@ -180,7 +182,7 @@ set_target_properties(ntdll_apitest
     ENABLE_EXPORTS TRUE
     DEFINE_SYMBOL "")
 
-target_link_libraries(ntdll_apitest ntdll_crt_test_lib rtl_test_lib wine uuid ${PSEH_LIB})
+target_link_libraries(ntdll_apitest ntdll_crt_test_lib rtl_test_lib testutils wine uuid ${PSEH_LIB})
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)
 add_pch(ntdll_apitest precomp.h "${PCH_SKIP_SOURCE}")

@@ -3825,7 +3825,15 @@ InitOnceExecuteOnce(
     _Inout_opt_ PVOID Parameter,
     _Outptr_opt_result_maybenull_ LPVOID *Context);
 
-typedef VOID (NTAPI *PTP_WIN32_IO_CALLBACK)(PTP_CALLBACK_INSTANCE,PVOID,PVOID,ULONG,ULONG_PTR,PTP_IO);
+typedef
+VOID
+(WINAPI *PTP_WIN32_IO_CALLBACK)(
+    _Inout_ PTP_CALLBACK_INSTANCE Instance,
+    _Inout_opt_ PVOID Context,
+    _Inout_opt_ PVOID Overlapped,
+    _In_ ULONG IoResult,
+    _In_ ULONG_PTR NumberOfBytesTransferred,
+    _Inout_ PTP_IO Io);
 
 #if defined(_SLIST_HEADER_) && !defined(_NTOS_) && !defined(_NTOSP_)
 
