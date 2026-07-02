@@ -23,6 +23,7 @@ extern "C" {
 #define PAGESETUPDLGORDMOTIF 1550
 #define COLORMGMTDLGORD 1551
 #define NEWFILEOPENV2ORD 1552
+#define NEWFILEOPENV3ORD 1553
 #endif /* (WINVER >= 0x0400) */
 
 #define ctlFirst 0x400
