@@ -1,6 +1,6 @@
 #pragma once
 
-static MUI_ENTRY bnBDSetupInitPageEntries[] =
+static MUI_ENTRY bnINSetupInitPageEntries[] =
 {
     {
         4,
@@ -38,7 +38,7 @@ static MUI_ENTRY bnBDSetupInitPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDLanguagePageEntries[] =
+static MUI_ENTRY bnINLanguagePageEntries[] =
 {
     {
         4,
@@ -90,7 +90,7 @@ static MUI_ENTRY bnBDLanguagePageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDWelcomePageEntries[] =
+static MUI_ENTRY bnINWelcomePageEntries[] =
 {
     {
         4,
@@ -178,7 +178,7 @@ static MUI_ENTRY bnBDWelcomePageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDIntroPageEntries[] =
+static MUI_ENTRY bnINIntroPageEntries[] =
 {
     {
         4,
@@ -258,7 +258,7 @@ static MUI_ENTRY bnBDIntroPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDLicensePageEntries[] =
+static MUI_ENTRY bnINLicensePageEntries[] =
 {
     {
         4,
@@ -401,7 +401,7 @@ static MUI_ENTRY bnBDLicensePageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDDevicePageEntries[] =
+static MUI_ENTRY bnINDevicePageEntries[] =
 {
     {
         4,
@@ -508,7 +508,7 @@ static MUI_ENTRY bnBDDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDRepairPageEntries[] =
+static MUI_ENTRY bnINRepairPageEntries[] =
 {
     {
         4,
@@ -581,7 +581,7 @@ static MUI_ENTRY bnBDRepairPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDUpgradePageEntries[] =
+static MUI_ENTRY bnINUpgradePageEntries[] =
 {
     {
         4,
@@ -661,7 +661,7 @@ static MUI_ENTRY bnBDUpgradePageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDComputerPageEntries[] =
+static MUI_ENTRY bnINComputerPageEntries[] =
 {
     {
         4,
@@ -720,7 +720,7 @@ static MUI_ENTRY bnBDComputerPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDFlushPageEntries[] =
+static MUI_ENTRY bnINFlushPageEntries[] =
 {
     {
         4,
@@ -765,7 +765,7 @@ static MUI_ENTRY bnBDFlushPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDQuitPageEntries[] =
+static MUI_ENTRY bnINQuitPageEntries[] =
 {
     {
         4,
@@ -817,7 +817,7 @@ static MUI_ENTRY bnBDQuitPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDDisplayPageEntries[] =
+static MUI_ENTRY bnINDisplayPageEntries[] =
 {
     {
         4,
@@ -876,7 +876,7 @@ static MUI_ENTRY bnBDDisplayPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDSuccessPageEntries[] =
+static MUI_ENTRY bnINSuccessPageEntries[] =
 {
     {
         4,
@@ -928,7 +928,7 @@ static MUI_ENTRY bnBDSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDSelectPartitionEntries[] =
+static MUI_ENTRY bnINSelectPartitionEntries[] =
 {
     {
         4,
@@ -1001,7 +1001,7 @@ static MUI_ENTRY bnBDSelectPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDChangeSystemPartition[] =
+static MUI_ENTRY bnINChangeSystemPartition[] =
 {
     {
         4,
@@ -1123,7 +1123,7 @@ static MUI_ENTRY bnBDChangeSystemPartition[] =
     }
 };
 
-static MUI_ENTRY bnBDConfirmDeleteSystemPartitionEntries[] =
+static MUI_ENTRY bnINConfirmDeleteSystemPartitionEntries[] =
 {
     {
         4,
@@ -1231,7 +1231,7 @@ static MUI_ENTRY bnBDConfirmDeleteSystemPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDFormatPartitionEntries[] =
+static MUI_ENTRY bnINFormatPartitionEntries[] =
 {
     {
         4,
@@ -1269,7 +1269,7 @@ static MUI_ENTRY bnBDFormatPartitionEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDCheckFSEntries[] =
+static MUI_ENTRY bnINCheckFSEntries[] =
 {
     {
         4,
@@ -1300,7 +1300,7 @@ static MUI_ENTRY bnBDCheckFSEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDInstallDirectoryEntries[] =
+static MUI_ENTRY bnINInstallDirectoryEntries[] =
 {
     {
         4,
@@ -1359,7 +1359,7 @@ static MUI_ENTRY bnBDInstallDirectoryEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDFileCopyEntries[] =
+static MUI_ENTRY bnINFileCopyEntries[] =
 {
     {
         4,
@@ -1404,7 +1404,7 @@ static MUI_ENTRY bnBDFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDBootLoaderSelectPageEntries[] =
+static MUI_ENTRY bnINBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1463,7 +1463,7 @@ static MUI_ENTRY bnBDBootLoaderSelectPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDBootLoaderInstallPageEntries[] =
+static MUI_ENTRY bnINBootLoaderInstallPageEntries[] =
 {
     {
         4,
@@ -1494,7 +1494,7 @@ static MUI_ENTRY bnBDBootLoaderInstallPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDBootLoaderRemovableDiskPageEntries[] =
+static MUI_ENTRY bnINBootLoaderRemovableDiskPageEntries[] =
 {
     {
         4,
@@ -1540,7 +1540,7 @@ static MUI_ENTRY bnBDBootLoaderRemovableDiskPageEntries[] =
 
 };
 
-static MUI_ENTRY bnBDKeyboardSettingsEntries[] =
+static MUI_ENTRY bnINKeyboardSettingsEntries[] =
 {
     {
         4,
@@ -1599,7 +1599,7 @@ static MUI_ENTRY bnBDKeyboardSettingsEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDLayoutSettingsEntries[] =
+static MUI_ENTRY bnINLayoutSettingsEntries[] =
 {
     {
         4,
@@ -1659,7 +1659,7 @@ static MUI_ENTRY bnBDLayoutSettingsEntries[] =
 
 };
 
-static MUI_ENTRY bnBDPrepareCopyEntries[] =
+static MUI_ENTRY bnINPrepareCopyEntries[] =
 {
     {
         4,
@@ -1691,7 +1691,7 @@ static MUI_ENTRY bnBDPrepareCopyEntries[] =
 
 };
 
-static MUI_ENTRY bnBDSelectFSEntries[] =
+static MUI_ENTRY bnINSelectFSEntries[] =
 {
     {
         4,
@@ -1739,7 +1739,7 @@ static MUI_ENTRY bnBDSelectFSEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDDeletePartitionEntries[] =
+static MUI_ENTRY bnINDeletePartitionEntries[] =
 {
     {
         4,
@@ -1791,7 +1791,7 @@ static MUI_ENTRY bnBDDeletePartitionEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDRegistryEntries[] =
+static MUI_ENTRY bnINRegistryEntries[] =
 {
     {
         4,
@@ -1823,7 +1823,7 @@ static MUI_ENTRY bnBDRegistryEntries[] =
 
 };
 
-MUI_ERROR bnBDErrorEntries[] =
+MUI_ERROR bnINErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
@@ -1841,17 +1841,17 @@ MUI_ERROR bnBDErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "ReactOS ইনস্টলেশন ডিরেক্টরির জন্য ইনস্টলেশন পাথ তৈরি করতে ব্যর্থ হয়েছে!\n"
+        "ReactOS ইনস্টলেশন ডিরেক্টরির জন্য ইনস্টলেশন পাথ তৈরি করতে ব্যর্থ হয়েছে!\n",
         "ENTER = কম্পিউটার রিবুট করুন"
     },
     {
         // ERROR_SOURCE_PATH
-        "ইনস্টলেশন সোর্স ধারণ করা পার্টিশনটি আপনি মুছতে পারবেন না!\n"
+        "ইনস্টলেশন সোর্স ধারণ করা পার্টিশনটি আপনি মুছতে পারবেন না!\n",
         "ENTER = কম্পিউটার রিবুট করুন"
     },
     {
         // ERROR_SOURCE_DIR
-        "আপনি ইনস্টলেশন সোর্স ডিরেক্টরির মধ্যে ReactOS ইনস্টল করতে পারবেন না!\n"
+        "আপনি ইনস্টলেশন সোর্স ডিরেক্টরির মধ্যে ReactOS ইনস্টল করতে পারবেন না!\n",
         "ENTER = কম্পিউটার রিবুট করুন"
     },
     {
@@ -2075,123 +2075,123 @@ MUI_ERROR bnBDErrorEntries[] =
     }
 };
 
-MUI_PAGE bnBDPages[] =
+MUI_PAGE bnINPages[] =
 {
     {
         SETUP_INIT_PAGE,
-        bnBDSetupInitPageEntries
+        bnINSetupInitPageEntries
     },
     {
         LANGUAGE_PAGE,
-        bnBDLanguagePageEntries
+        bnINLanguagePageEntries
     },
     {
         WELCOME_PAGE,
-        bnBDWelcomePageEntries
+        bnINWelcomePageEntries
     },
     {
         INSTALL_INTRO_PAGE,
-        bnBDIntroPageEntries
+        bnINIntroPageEntries
     },
     {
         LICENSE_PAGE,
-        bnBDLicensePageEntries
+        bnINLicensePageEntries
     },
     {
         DEVICE_SETTINGS_PAGE,
-        bnBDDevicePageEntries
+        bnINDevicePageEntries
     },
     {
         REPAIR_INTRO_PAGE,
-        bnBDRepairPageEntries
+        bnINRepairPageEntries
     },
     {
         UPGRADE_REPAIR_PAGE,
-        bnBDUpgradePageEntries
+        bnINUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
-        bnBDComputerPageEntries
+        bnINComputerPageEntries
     },
     {
         DISPLAY_SETTINGS_PAGE,
-        bnBDDisplayPageEntries
+        bnINDisplayPageEntries
     },
     {
         FLUSH_PAGE,
-        bnBDFlushPageEntries
+        bnINFlushPageEntries
     },
     {
         SELECT_PARTITION_PAGE,
-        bnBDSelectPartitionEntries
+        bnINSelectPartitionEntries
     },
     {
         CHANGE_SYSTEM_PARTITION,
-        bnBDChangeSystemPartition
+        bnINChangeSystemPartition
     },
     {
         CONFIRM_DELETE_SYSTEM_PARTITION_PAGE,
-        bnBDConfirmDeleteSystemPartitionEntries
+        bnINConfirmDeleteSystemPartitionEntries
     },
     {
         SELECT_FILE_SYSTEM_PAGE,
-        bnBDSelectFSEntries
+        bnINSelectFSEntries
     },
     {
         FORMAT_PARTITION_PAGE,
-        bnBDFormatPartitionEntries
+        bnINFormatPartitionEntries
     },
     {
         CHECK_FILE_SYSTEM_PAGE,
-        bnBDCheckFSEntries
+        bnINCheckFSEntries
     },
     {
         DELETE_PARTITION_PAGE,
-        bnBDDeletePartitionEntries
+        bnINDeletePartitionEntries
     },
     {
         INSTALL_DIRECTORY_PAGE,
-        bnBDInstallDirectoryEntries
+        bnINInstallDirectoryEntries
     },
     {
         PREPARE_COPY_PAGE,
-        bnBDPrepareCopyEntries
+        bnINPrepareCopyEntries
     },
     {
         FILE_COPY_PAGE,
-        bnBDFileCopyEntries
+        bnINFileCopyEntries
     },
     {
         KEYBOARD_SETTINGS_PAGE,
-        bnBDKeyboardSettingsEntries
+        bnINKeyboardSettingsEntries
     },
     {
         BOOTLOADER_SELECT_PAGE,
-        bnBDBootLoaderSelectPageEntries
+        bnINBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
-        bnBDLayoutSettingsEntries
+        bnINLayoutSettingsEntries
     },
     {
         QUIT_PAGE,
-        bnBDQuitPageEntries
+        bnINQuitPageEntries
     },
     {
         SUCCESS_PAGE,
-        bnBDSuccessPageEntries
+        bnINSuccessPageEntries
     },
     {
         BOOTLOADER_INSTALL_PAGE,
-        bnBDBootLoaderInstallPageEntries
+        bnINBootLoaderInstallPageEntries
     },
     {
         BOOTLOADER_REMOVABLE_DISK_PAGE,
-        bnBDBootLoaderRemovableDiskPageEntries
+        bnINBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
-        bnBDRegistryEntries
+        bnINRegistryEntries
     },
     {
         -1,
@@ -2199,7 +2199,7 @@ MUI_PAGE bnBDPages[] =
     }
 };
 
-MUI_STRING bnBDStrings[] =
+MUI_STRING bnINStrings[] =
 {
     {STRING_PLEASEWAIT,
      "   অনুগ্রহ করে অপেক্ষা করুন..."},
@@ -2293,10 +2293,10 @@ MUI_STRING bnBDStrings[] =
     "ধরন 0x%02x"},
     {STRING_HDDINFO1,
     // "হার্ডডিস্ক %lu (%I64u %s), পোর্ট=%hu, বাস=%hu, আইডি=%hu (%wZ) [%s]"
-    "হার্ডডিস্ক %lu (%I64u %s), পোর্ট=%hu, বাস=%hu, আইডি=%hu (%wZ) [%s]"},
+    "%I64u %s হার্ডডিস্ক %lu (পোর্ট=%hu, বাস=%hu, আইডি=%hu) %wZ-এ [%s]"},
     {STRING_HDDINFO2,
     // "হার্ডডিস্ক %lu (%I64u %s), পোর্ট=%hu, বাস=%hu, আইডি=%hu [%s]"
-    "হার্ডডিস্ক %lu (%I64u %s), পোর্ট=%hu, বাস=%hu, আইডি=%hu [%s]"},
+    "%I64u %s হার্ডডিস্ক %lu (পোর্ট=%hu, বাস=%hu, আইডি=%hu) [%s]"},
     {STRING_UNPSPACE,
     "পার্টিশনহীন স্থান"},
     {STRING_MAXSIZE,
