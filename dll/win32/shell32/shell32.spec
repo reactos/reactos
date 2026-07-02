@@ -326,7 +326,7 @@
 761 stub -version=0x600+ -noname SHChangeNotifyDeregisterWindow
 762 stub -version=0x600+ -noname Create_IUICommandFromDef
 763 stub -version=0x600+ -noname Create_IEnumUICommandFromDefArray
-764 stub -version=0x600+ -noname AssocCreateElement
+764 stdcall -version=0x600+ -noname AssocCreateElement(ptr ptr ptr)
 766 stub -version=0x600+ -noname SHCopyStreamWithProgress
 777 stub -version=0x600+ -noname SHGetAssocKeys
 778 stub -version=0x600+ -noname AssocGetPropListForExt

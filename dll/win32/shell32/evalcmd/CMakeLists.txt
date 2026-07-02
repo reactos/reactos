@@ -1,7 +1,11 @@
 
-add_library(evalcmd STATIC evalcmd.cpp)
+list(APPEND SOURCE
+    evalcmd.cpp
+    elements.cpp)
+
+add_library(evalcmd STATIC ${SOURCE})
 add_dependencies(evalcmd psdk)
-target_link_libraries(evalcmd PRIVATE pathcch_static)
+target_link_libraries(evalcmd PRIVATE wine uuid pathcch_static cppstl)
 target_compile_definitions(evalcmd PRIVATE STATIC_PATHCCH)
 
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
