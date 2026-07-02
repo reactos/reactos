@@ -1510,6 +1510,33 @@ IsIconic(HWND hWnd)
 }
 
 
+/**
+ * @brief
+ * IsServerSideWindow
+ *
+ * Checks whether a window has a window procedure that resides in kernel mode.
+ *
+ * @param[in] hWnd
+ * A handle to the window to be checked.
+ *
+ * @return
+ * TRUE if the window has a window procedure that resides in kernel mode,
+ * FALSE otherwise.
+ *
+ * @remarks
+ * Undocumented, see http://undoc.airesoft.co.uk/user32.dll/IsServerSideWindow.php
+ * (unofficial documentation).
+ */
+BOOL
+WINAPI
+IsServerSideWindow(
+    _In_ HWND hWnd)
+{
+    PWND Wnd = ValidateHwnd(hWnd);
+    return Wnd && (Wnd->state & WNDS_SERVERSIDEWINDOWPROC);
+}
+
+
 /*
  * @implemented
  */
