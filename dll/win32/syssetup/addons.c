@@ -72,7 +72,6 @@ InstallAddon(
 {
     HRESULT hr;
     WCHAR Command[MAX_PATH], ExpandedAddonPath[MAX_PATH];
-    WCHAR szMessage[256], szCaption[64];
 
     pNotify->Progress++;
     pNotify->CurrentItem = pInstallData->Title;
@@ -103,13 +102,11 @@ rapps_install:
     /* Local installer doesn't exist or failed. Try installing through Rapps. */
     if (*Consent == NOT_ASKED)
     {
+        WCHAR szMessage[256], szCaption[64];
         LoadStringW(hDllInstance, IDS_INSTALLADDONSMESSAGE, szMessage, ARRAYSIZE(szMessage));
         LoadStringW(hDllInstance, IDS_INSTALLADDONSCAPTION, szCaption, ARRAYSIZE(szCaption));
-        int MsgBox = MessageBoxW(NULL,
-                                 szMessage,
-                                 szCaption,
+        int MsgBox = MessageBoxW(NULL, szMessage, szCaption,
                                  MB_YESNO | MB_ICONINFORMATION);
-
         *Consent = (MsgBox == IDYES) ? APPROVED : DENIED;
     }
 
@@ -140,7 +137,6 @@ InstallOptionalComponents(
 {
     HRESULT hr;
     PSETUPDATA pSetupData;
-    WCHAR szMessage[256], szCaption[64];
     REGISTRATIONNOTIFY Notify = { 0 };
     RappsConsent Consent = NOT_ASKED;
 
@@ -166,14 +162,11 @@ InstallOptionalComponents(
 
         if (!SUCCEEDED(hr))
         {
+            WCHAR szMessage[256], szCaption[64];
             LoadStringW(hDllInstance, IDS_INSTALLADDONSFAILEDMESSAGE, szMessage, ARRAYSIZE(szMessage));
             LoadStringW(hDllInstance, IDS_INSTALLADDONSCAPTION, szCaption, ARRAYSIZE(szCaption));
-
-            MessageBoxW(NULL,
-                        szMessage,
-                        szCaption,
+            MessageBoxW(NULL, szMessage, szCaption,
                         MB_OK | MB_ICONWARNING | MB_TOPMOST);
-
             break;
         }
     }
