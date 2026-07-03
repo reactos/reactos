@@ -248,12 +248,6 @@ Used Version: 1.26.1
 License: LGPL-2.1 (https://spdx.org/licenses/LGPL-2.1.html)
 URL: http://www.mpg123.de/
 
-Title: libsamplerate
-Path: sdk/lib/3rdparty/libsamplerate
-Used Version: 0.1.9
-License: BSD-2-Clause (https://spdx.org/licenses/BSD-2-Clause.html)
-URL: http://www.mega-nerd.com/SRC/download.html
-
 Title: resampler
 Path: sdk/lib/3rdparty/resampler
 Used Version: git commit 38c1a2f
