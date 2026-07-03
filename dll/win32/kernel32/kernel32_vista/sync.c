@@ -104,18 +104,17 @@ WakeConditionVariable(PCONDITION_VARIABLE ConditionVariable)
 /*
 * @implemented
 */
-BOOL WINAPI InitializeCriticalSectionEx(OUT LPCRITICAL_SECTION lpCriticalSection,
-                                        IN DWORD dwSpinCount,
-                                        IN DWORD flags)
+BOOL
+WINAPI
+InitializeCriticalSectionEx(_Out_ LPCRITICAL_SECTION lpCriticalSection,
+                             _In_ DWORD dwSpinCount,
+                             _In_ DWORD dwFlags)
 {
     NTSTATUS Status;
 
-    /* FIXME: Flags ignored */
-
-    /* Initialize the critical section */
-    Status = RtlInitializeCriticalSectionAndSpinCount(
-        (PRTL_CRITICAL_SECTION)lpCriticalSection,
-        dwSpinCount);
+    Status = RtlInitializeCriticalSectionEx((PRTL_CRITICAL_SECTION)lpCriticalSection,
+                                             dwSpinCount,
+                                             dwFlags);
     if (!NT_SUCCESS(Status))
     {
         /* Set failure code */

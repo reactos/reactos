@@ -3195,6 +3195,15 @@ RtlInitializeCriticalSection(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlInitializeCriticalSectionEx(
+    _Out_ PRTL_CRITICAL_SECTION CriticalSection,
+    _In_ ULONG SpinCount,
+    _In_ ULONG Flags
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlInitializeCriticalSectionAndSpinCount(
     _In_ PRTL_CRITICAL_SECTION CriticalSection,
     _In_ ULONG SpinCount
