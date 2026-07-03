@@ -3772,6 +3772,37 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 #endif
 
+#ifdef __REACTOS__
+    case WM_ENABLE:
+    case WM_QUERYENDSESSION:
+    case WM_ENDSESSION:
+    case WM_DEVICECHANGE:
+    {
+        /* Send to the tab control, before forwarding it to the active page */
+        SendDlgItemMessageW(hwnd, IDC_TABCONTROL, uMsg, wParam, lParam);
+        __fallthrough;
+    }
+    case WM_ACTIVATE:
+    case WM_ACTIVATEAPP:
+    {
+        PropSheetInfo* psInfo = GetPropW(hwnd, PropSheetInfoStr);
+        if (!psInfo)
+            return FALSE;
+
+        /* Forward notification to active page */
+        if (psInfo->activeValid && psInfo->active_page != -1)
+        {
+            HWND hwndPage = psInfo->proppage[psInfo->active_page].hwndPage;
+            LRESULT msgResult = SendMessageW(hwndPage, uMsg, wParam, lParam);
+            /* The message is handled, set the dialog return value
+             * to whatever the page returned */
+            SetWindowLongPtrW(hwnd, DWLP_MSGRESULT, msgResult);
+            return TRUE;
+        }
+        return FALSE;
+    }
+#endif // __REACTOS__
+
     case PSM_GETCURRENTPAGEHWND:
     {
       PropSheetInfo* psInfo = GetPropW(hwnd, PropSheetInfoStr);
