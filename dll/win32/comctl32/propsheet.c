@@ -3767,6 +3767,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
          HWND hwndPage = psInfo->proppage[i].hwndPage;
          SendMessageW(hwndPage, uMsg, wParam, lParam);
       }
+      SendDlgItemMessageW(hwnd, IDC_TABCONTROL, uMsg, wParam, lParam);
       return FALSE;
     }
 #endif
