@@ -2884,6 +2884,13 @@ QSI_DEF(SystemFirmwareTableInformation)
     return Status;
 }
 
+/* Class 77 - Extended module information */
+QSI_DEF(SystemModuleInformationEx)
+{
+    /* For now return STATUS_INVALID_INFO_CLASS to avoid crashing in wine tests */
+    return STATUS_INVALID_INFO_CLASS;
+}
+
 /* Class 105 - Processor Brand String */
 QSI_DEF(SystemProcessorBrandString)
 {
@@ -3014,6 +3021,7 @@ CallQS[] =
     SI_QX(SystemFirmwareTableInformation),
 
     // Vista and later
+    SI_QX(SystemModuleInformationEx),
     SI_QX(SystemProcessorBrandString),
 };
 
