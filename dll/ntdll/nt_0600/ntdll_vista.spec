@@ -2,6 +2,7 @@
 @ stdcall LdrUnregisterDllNotification(ptr)
 
 @ stdcall RtlInitializeConditionVariable(ptr)
+@ stdcall RtlInitializeCriticalSectionEx(ptr long long)
 @ stdcall RtlWakeConditionVariable(ptr)
 @ stdcall RtlWakeAllConditionVariable(ptr)
 @ stdcall RtlSleepConditionVariableCS(ptr ptr ptr)
