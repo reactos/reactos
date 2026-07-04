@@ -6652,6 +6652,16 @@ TOOLBAR_Notify (TOOLBAR_INFO *infoPtr, LPNMHDR lpnmh)
         FIXME("TTN_GETDISPINFOA - should not be received; please report\n");
         return 0;
 
+#ifdef __REACTOS__ /* wine-10.9 */
+    case CBEN_ENDEDITW:
+        if (infoPtr->bUnicode)
+            return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, lpnmh->idFrom, (LPARAM)lpnmh);
+        return COMCTL32_forward_notify_to_ansi_window(infoPtr->hwndNotify, lpnmh, NULL, NULL);
+
+    case CBEN_ENDEDITA:
+        return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, lpnmh->idFrom, (LPARAM)lpnmh);
+
+#endif
     default:
         return 0;
     }
