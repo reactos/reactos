@@ -221,6 +221,12 @@ typedef struct
    int running;
 } SUBCLASS_INFO, *LPSUBCLASS_INFO;
 
+#ifdef __REACTOS__ /* wine-10.9 */
+/* WM_NOTIFY unicode to ansi conversion and forwarding stuff */
+
+BOOL COMCTL32_array_reserve(void **array, DWORD *size, DWORD count, DWORD item_size);
+#endif
+
 /* undocumented functions */
 
 LPVOID WINAPI Alloc (DWORD) __WINE_ALLOC_SIZE(1);
