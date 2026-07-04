@@ -436,66 +436,66 @@ END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "View"
+CAPTION "عرض"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Folder views", -1, 7, 10, 249, 60
+    GROUPBOX "عروض المجلدات", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
-    LTEXT "You can apply the view (such as Details or Tiles) that you are using for this folder to all folders.", -1, 40, 20, 213, 20
-    PUSHBUTTON "Apply to A&ll Folders", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14
-    PUSHBUTTON "&Reset All Folders", IDC_VIEW_RESET_ALL, 135, 50, 115, 14
-    LTEXT "Advanced settings:", -1, 7, 80, 100, 10
+    LTEXT "يمكنك تطبيق العرض (مثل التفاصيل أو المربعات) الذي تستخدمه لهذا المجلد على جميع المجلدات.", -1, 40, 20, 213, 20
+    PUSHBUTTON "تطبيق على &جميع المجلدات", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14
+    PUSHBUTTON "&إعادة تعيين جميع المجلدات", IDC_VIEW_RESET_ALL, 135, 50, 115, 14
+    LTEXT "الإعدادات المتقدمة:", -1, 7, 80, 100, 10
     CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 111
-    PUSHBUTTON "Restore &Defaults", IDC_VIEW_RESTORE_DEFAULTS, 167, 204, 90, 14
+    PUSHBUTTON "استعادة الإعدادات &الافتراضية", IDC_VIEW_RESTORE_DEFAULTS, 167, 204, 90, 14
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 220
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "File Types"
+CAPTION "أنواع الملفات"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Registered file &types:", -1, 7, 10, 180, 10
+    LTEXT "أنواع &الملفات المسجلة:", -1, 7, 10, 180, 10
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 99
-    PUSHBUTTON "&New", IDC_FILETYPES_NEW, 140, 123, 55, 14
-    PUSHBUTTON "&Delete", IDC_FILETYPES_DELETE, 200, 123, 55, 14
-    GROUPBOX "Details for '%s' extension", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 143, 249, 70
-    LTEXT "Opens with:", -1, 12, 153, 40, 10
+    PUSHBUTTON "&جديد", IDC_FILETYPES_NEW, 140, 123, 55, 14
+    PUSHBUTTON "&حذف", IDC_FILETYPES_DELETE, 200, 123, 55, 14
+    GROUPBOX "تفاصيل الامتداد '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 143, 249, 70
+    LTEXT "يفتح بـ:", -1, 12, 153, 40, 10
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 153, 10, 10
     LTEXT "", IDC_FILETYPES_APPNAME, 100, 153, 80, 10
-    PUSHBUTTON "&Change...", IDC_FILETYPES_CHANGE, 200, 153, 50, 14
+    PUSHBUTTON "&تغيير...", IDC_FILETYPES_CHANGE, 200, 153, 50, 14
     LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 168, 160, 40
-    PUSHBUTTON "Ad&vanced", IDC_FILETYPES_ADVANCED, 200, 188, 50, 14
+    PUSHBUTTON "&خيارات متقدمة", IDC_FILETYPES_ADVANCED, 200, 188, 50, 14
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Confirm File Replace"
+CAPTION "تأكيد استبدال الملف"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Yes", IDYES, 20, 122, 60, 14
-    PUSHBUTTON "نعم  &للكل", 12807, 85, 122, 60, 14
+    DEFPUSHBUTTON "&نعم", IDYES, 20, 122, 60, 14
+    PUSHBUTTON "نعم &للكل", 12807, 85, 122, 60, 14
     PUSHBUTTON "&لا", IDNO, 150, 122, 60, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 215, 122, 60, 14
     ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "This folder already contains a file named '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
-    LTEXT "This folder already contains a read-only file named '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
-    LTEXT "This folder already contains a system file named '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
-    LTEXT "Would you like to replace the existing file", -1, 44, 35, 228, 10, SS_NOPREFIX
-    LTEXT "(unknown date and size)", 12302, 79, 51, 198, 20, SS_NOPREFIX
+    LTEXT "يحتوي هذا المجلد بالفعل على ملف باسم '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
+    LTEXT "يحتوي هذا المجلد بالفعل على ملف للقراءة فقط باسم '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "يحتوي هذا المجلد بالفعل على ملف نظام باسم '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "هل تريد استبدال الملف الموجود", -1, 44, 35, 228, 10, SS_NOPREFIX
+    LTEXT "(تاريخ وحجم غير معروفين)", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
-    LTEXT "with this one?", -1, 44, 75, 228, 10, SS_NOPREFIX
-    LTEXT "(unknown date and size)", 12303, 79, 91, 198, 20, SS_NOPREFIX
+    LTEXT "بهذا الملف؟", -1, 44, 75, 228, 10, SS_NOPREFIX
+    LTEXT "(تاريخ وحجم غير معروفين)", 12303, 79, 91, 198, 20, SS_NOPREFIX
     ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
 IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Log Off ReactOS"
+CAPTION "تسجيل الخروج من ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Are you sure you want to log off?", -1, 49, 15, 132, 8
-    DEFPUSHBUTTON "&Log Off", IDOK, 49, 38, 43, 14
+    LTEXT "هل أنت متأكد من رغبتك في تسجيل الخروج؟", -1, 49, 15, 132, 8
+    DEFPUSHBUTTON "تسجيل &الخروج", IDOK, 49, 38, 43, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 99, 38, 43, 14
 END
 
@@ -505,12 +505,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
-    PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
-    PUSHBUTTON "&Log Off", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "&تبديل المستخدم", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "تسجيل &الخروج", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "إلغاء", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
-    LTEXT "Log Off ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
-    CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
-    CTEXT "Log Off", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
+    LTEXT "تسجيل الخروج من ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
+    CTEXT "تبديل المستخدم", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "تسجيل الخروج", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
@@ -526,44 +526,44 @@ END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "AutoPlay"
+CAPTION "التشغيل التلقائي"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Select a content type, then choose an action for ReactOS to perform automatically when that type is used in this device:", 1000, 7, 7, 215, 20
+    LTEXT "&حدد نوع محتوى, ثم اختر إجراء ليقوم به ReactOS تلقائياً عند استخدام هذا النوع في هذا الجهاز:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-    GROUPBOX "Actions", -1, 7, 45, 212, 146
-    AUTORADIOBUTTON "Select an action to &perform:", 1005, 14, 54, 202, 10, WS_GROUP
+    GROUPBOX "الإجراءات", -1, 7, 45, 212, 146
+    AUTORADIOBUTTON "حدد إجراءً &لتنفيذه:", 1005, 14, 54, 202, 10, WS_GROUP
     CONTROL "", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
-    AUTORADIOBUTTON "Prompt me each time to &choose an action", 1006, 14, 177, 202, 10
-    PUSHBUTTON "&Restore Defaults", 1008, 108, 197, 110, 14, WS_DISABLED
+    AUTORADIOBUTTON "اطلب مني في كل مرة &اختيار إجراء", 1006, 14, 177, 202, 10
+    PUSHBUTTON "&استعادة الإعدادات الافتراضية", 1008, 108, 197, 110, 14, WS_DISABLED
 END
 
 IDD_MIXED_CONTENT1 DIALOGEX 0, 0, 227, 207
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "محتوى مختلط"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "This disk or device contains more than one type of content.", 1001, 32, 7, 191, 20
-    LTEXT "What do you want ReactOS to do?", 1002, 32, 31, 188, 8
+    LTEXT "يحتوي هذا القرص أو الجهاز على أكثر من نوع واحد من المحتوى.", 1001, 32, 7, 191, 20
+    LTEXT "ماذا تريد أن يفعل ReactOS؟", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
-    DEFPUSHBUTTON "حسناً", IDOK, 96, 186, 60, 14
+    DEFPUSHBUTTON "موافق", IDOK, 96, 186, 60, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 160, 186, 60, 14
 END
 
 IDD_MIXED_CONTENT2 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "محتوى مختلط"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS can perform the same action each time you insert a disk or connect a device with this kind of file:", 1001, 30, 7, 193, 20
+    LTEXT "يمكن لـ ReactOS تنفيذ الإجراء نفسه في كل مرة تقوم فيها بإدخال قرص أو توصيل جهاز يحتوي على هذا النوع من الملفات:", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "What do you want ReactOS to do?", 1002, 32, 41, 190, 8
+    LTEXT "ماذا تريد أن يفعل ReactOS؟", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
-    AUTOCHECKBOX "Always do the selected action.", 1004, 32, 171, 190, 10
-    DEFPUSHBUTTON "حسناً", IDOK, 96, 185, 60, 14
+    AUTOCHECKBOX "تنفيذ الإجراء المحدد دائماً.", 1004, 32, 171, 190, 10
+    DEFPUSHBUTTON "موافق", IDOK, 96, 185, 60, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 160, 185, 60, 14
 END
 
@@ -572,13 +572,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | W
 CAPTION "التشغيل التلقائي"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON ""، 1000، 5، 7، 21، 20
-    LTEXT "يمكن لـ ReactOS تنفيذ الإجراء نفسه في كل مرة تقوم فيها بتوصيل هذا الجهاز."، 1001، 32، 7، 190، 22
-    LTEXT "&ماذا تريد أن يفعل ReactOS؟"، 1002، 32، 31، 190، 8
-    CONTROL ""، 1003، "SYSLISTVIEW32"، WS_BORDER | WS_TABSTOP | 0x0000C04D، 32، 43، 187، 96
-    AUTOCHECKBOX "&تنفيذ الإجراء المحدد دائماً"، 1004، 32، 143، 190، 8
-    DEFPUSHBUTTON "موافق"، IDOK، 94، 160، 60، 14
-    PUSHBUTTON "إلغاء"، IDCANCEL، 159، 160، 60، 14
+    ICON "", 1000, 5, 7, 21, 20
+    LTEXT "يمكن لـ ReactOS تنفيذ الإجراء نفسه في كل مرة تقوم فيها بتوصيل هذا الجهاز.", 1001, 32, 7, 190, 22
+    LTEXT "&ماذا تريد أن يفعل ReactOS؟", 1002, 32, 31, 190, 8
+    CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
+    AUTOCHECKBOX "&تنفيذ الإجراء المحدد دائماً", 1004, 32, 143, 190, 8
+    DEFPUSHBUTTON "موافق", IDOK, 94, 160, 60, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 159, 160, 60, 14
 END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
@@ -587,12 +587,12 @@ CAPTION "إيقاف تشغيل ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-    LTEXT "ماذا تريد أن يفعل الكمبيوتر؟"، -1, 39, 7, 167, 10
+    LTEXT "ماذا تريد أن يفعل الكمبيوتر؟", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-    LTEXT "يحافظ على جلستك، مع إبقاء الكمبيوتر يعمل بطاقة منخفضة مع بقاء البيانات في الذاكرة. يستيقظ الكمبيوتر عند الضغط على مفتاح أو تحريك الماوس."، 8225, 39, 40, 167, 37
-    DEFPUSHBUTTON "موافق"، 1, 7, 82, 60, 14, WS_GROUP
-    PUSHBUTTON "إلغاء"، IDCANCEL, 75, 82, 60, 14
-    PUSHBUTTON "&مساعدة"، IDHELP, 144, 82, 60, 14
+    LTEXT "يحافظ على جلستك, مع إبقاء الكمبيوتر يعمل بطاقة منخفضة مع بقاء البيانات في الذاكرة. يستيقظ الكمبيوتر عند الضغط على مفتاح أو تحريك الماوس.", 8225, 39, 40, 167, 37
+    DEFPUSHBUTTON "موافق", 1, 7, 82, 60, 14, WS_GROUP
+    PUSHBUTTON "إلغاء", IDCANCEL, 75, 82, 60, 14
+    PUSHBUTTON "&مساعدة", IDHELP, 144, 82, 60, 14
 END
 
 IDD_FORMAT_DRIVE DIALOGEX 50, 50, 184, 218
@@ -600,21 +600,21 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "تنسيق"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&بدء"، IDOK، 53، 198، 60، 14
-    PUSHBUTTON "&إغلاق"، IDCANCEL، 118، 198، 60، 14
-    LTEXT "&السعة:"، -1، 7، 6، 169، 9
-    COMBOBOX 28673، 7، 17، 170، 200، CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "نظام &الملفات"، -1، 7، 35، 170، 9
-    COMBOBOX 28677، 7، 46، 170، 200، CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL ""، 28678، "MSCTLS_PROGRESS32"، 0، 7، 181، 170، 8
-    LTEXT "حجم &وحدة التخصيص"، -1، 7، 64، 170، 9
-    COMBOBOX 28680، 7، 75، 170، 200، CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&تسمية المجلد"، -1، 7، 93، 170، 9
-    EDITTEXT 28679، 7، 103، 170، 13، ES_AUTOHSCROLL
-    GROUPBOX "خيارات &التنسيق"، 4610، 7، 121، 170، 49
-    AUTOCHECKBOX "تنسيق &سريع"، 28674، 16، 135، 155، 10
-    AUTOCHECKBOX "&تمكين الضغط"، 28675، 16، 152، 155، 10
-    CONTROL ""، 30000، "STATIC"، SS_ICON | WS_TABSTOP | SS_CENTERIMAGE | SS_NOTIFY، 7، 198، 15، 14
+    DEFPUSHBUTTON "&بدء", IDOK, 53, 198, 60, 14
+    PUSHBUTTON "&إغلاق", IDCANCEL, 118, 198, 60, 14
+    LTEXT "&السعة:", -1, 7, 6, 169, 9
+    COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "نظام &الملفات", -1, 7, 35, 170, 9
+    COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
+    LTEXT "حجم &وحدة التخصيص", -1, 7, 64, 170, 9
+    COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&تسمية المجلد", -1, 7, 93, 170, 9
+    EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
+    GROUPBOX "خيارات &التنسيق", 4610, 7, 121, 170, 49
+    AUTOCHECKBOX "تنسيق &سريع", 28674, 16, 135, 155, 10
+    AUTOCHECKBOX "&تمكين الضغط", 28675, 16, 152, 155, 10
+    CONTROL "", 30000, "STATIC", SS_ICON | WS_TABSTOP | SS_CENTERIMAGE | SS_NOTIFY, 7, 198, 15, 14
 END
 
 IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
@@ -622,13 +622,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "فحص القرص"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "بدء"، IDOK، 63، 95، 60، 14
-    GROUPBOX "خيارات فحص القرص"، -1، 7، 6، 179، 40
-    PUSHBUTTON "إلغاء"، IDCANCEL، 128، 95، 60، 14
-    AUTOCHECKBOX "إصلاح أخطاء نظام الملفات تلقائياً"، 14000، 12، 15، 155، 10
-    AUTOCHECKBOX "&فحص ومحاولة استعادة القطاعات التالفة"، 14001، 12، 30، 165، 10
-    CONTROL ""، 14002، "MSCTLS_PROGRESS32"، 16، 7، 50، 179، 8
-    LTEXT ""، 14003، 60، 80، 170، 10
+    DEFPUSHBUTTON "بدء", IDOK, 63, 95, 60, 14
+    GROUPBOX "خيارات فحص القرص", -1, 7, 6, 179, 40
+    PUSHBUTTON "إلغاء", IDCANCEL, 128, 95, 60, 14
+    AUTOCHECKBOX "إصلاح أخطاء نظام الملفات تلقائياً", 14000, 12, 15, 155, 10
+    AUTOCHECKBOX "&فحص ومحاولة استعادة القطاعات التالفة", 14001, 12, 30, 165, 10
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
+    LTEXT "", 14003, 60, 80, 170, 10
 END
 
 IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
@@ -636,13 +636,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "تغيير الأيقونة"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "ابحث عن الأيقونات في هذا الملف:"، -1، 7، 7، 179، 10
-    EDITTEXT IDC_EDIT_PATH، 7، 17، 123، 14، ES_AUTOHSCROLL
-    PUSHBUTTON "استعراض..."، IDC_BUTTON_PATH، 135، 17، 50، 14
-    LTEXT "حدد أيقونة من القائمة أدناه:"، -1، 7، 36، 179، 10
-    LISTBOX IDC_PICKICON_LIST، 7، 47، 181، 122، LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON "موافق"، IDOK، 81، 179، 50، 14
-    PUSHBUTTON "إلغاء"، IDCANCEL، 135، 179، 50، 14
+    LTEXT "ابحث عن الأيقونات في هذا الملف:", -1, 7, 7, 179, 10
+    EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "استعراض...", IDC_BUTTON_PATH, 135, 17, 50, 14
+    LTEXT "حدد أيقونة من القائمة أدناه:", -1, 7, 36, 179, 10
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "موافق", IDOK, 81, 179, 50, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
@@ -654,9 +654,9 @@ BEGIN
     LTEXT "قد يكون هذا الملف قيد الاستخدام من قبل نظام التشغيل أو من قبل\n\
 تطبيق آخر. قد يؤدي تعديل هذا الملف إلى إتلاف نظامك\n\
 أو تقليل وظائفه.\n\n\
-هل أنت متأكد من رغبتك في فتح هذا الملف؟"، IDC_STATIC، 35، 5، 230، 60
-    DEFPUSHBUTTON "نعم"، IDYES، 125، 55، 50، 14
-    PUSHBUTTON "لا"، IDNO، 180، 55، 50، 14
+هل أنت متأكد من رغبتك في فتح هذا الملف؟", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "نعم", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "لا", IDNO, 180, 55, 50, 14
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
@@ -666,8 +666,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&File Extension:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< &خيارات متقدمة"، IDC_NEWEXT_ADVANCED، 185، 8، 65، 15
-    LTEXT "&نوع الملف المرتبط:"، IDC_NEWEXT_ASSOC، 10، 34، 85، 14
+    PUSHBUTTON "<< &خيارات متقدمة", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    LTEXT "&نوع الملف المرتبط:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "حسناً", IDOK, 125, 55, 60, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 190, 55, 60, 14
@@ -680,18 +680,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_EDITTYPE_ICON, 5, 8, 20, 20
     EDITTEXT IDC_EDITTYPE_TEXT, 30, 10, 115, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "تغيير &أيقونة..."، IDC_EDITTYPE_CHANGE_ICON، 150، 10، 70، 14
-    LTEXT "&الإجراءات:"، -1، 5، 37، 70، 10
-    LISTBOX IDC_EDITTYPE_LISTBOX، 5، 50، 140، 60، LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&جديد..."، IDC_EDITTYPE_NEW، 150، 50، 70، 14
-    PUSHBUTTON "&تحرير..."، IDC_EDITTYPE_EDIT_BUTTON، 150، 65، 70، 14
-    PUSHBUTTON "&إزالة"، IDC_EDITTYPE_REMOVE، 150، 80، 70، 14
-    PUSHBUTTON "تعيين كـ &افتراضي"، IDC_EDITTYPE_SET_DEFAULT، 150، 95، 70، 14
-    AUTOCHECKBOX "تأكيد &الفتح بعد التنزيل"، IDC_EDITTYPE_CONFIRM_OPEN، 5، 115، 150، 14
-    AUTOCHECKBOX "&عرض الامتداد دائماً"، IDC_EDITTYPE_SHOW_EXT، 5، 130، 150، 14
-    AUTOCHECKBOX "&استعراض في نفس النافذة"، IDC_EDITTYPE_SAME_WINDOW، 5، 145، 150، 14
-    DEFPUSHBUTTON "موافق"، IDOK، 95، 170، 60، 14
-    PUSHBUTTON "إلغاء"، IDCANCEL، 160، 170، 60، 14
+    PUSHBUTTON "تغيير &أيقونة...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
+    LTEXT "&الإجراءات:", -1, 5, 37, 70, 10
+    LISTBOX IDC_EDITTYPE_LISTBOX, 5, 50, 140, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "&جديد...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
+    PUSHBUTTON "&تحرير...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
+    PUSHBUTTON "&إزالة", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
+    PUSHBUTTON "تعيين كـ &افتراضي", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
+    AUTOCHECKBOX "تأكيد &الفتح بعد التنزيل", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
+    AUTOCHECKBOX "&عرض الامتداد دائماً", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
+    AUTOCHECKBOX "&استعراض في نفس النافذة", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
+    DEFPUSHBUTTON "موافق", IDOK, 95, 170, 60, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 160, 170, 60, 14
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
@@ -699,14 +699,14 @@ CAPTION "New Action"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&الإجراء:"، -1، 5، 7، 150، 10
-    EDITTEXT IDC_ACTION_ACTION، 5، 20، 150، 14، ES_AUTOHSCROLL
-    LTEXT "&التطبيق المستخدم لتنفيذ الإجراء:"، -1، 5، 42، 150، 10
-    EDITTEXT IDC_ACTION_APP، 5، 55، 150، 14، ES_AUTOHSCROLL
-    PUSHBUTTON "اس&تعرض..."، IDC_ACTION_BROWSE، 160، 60، 60، 14
-    AUTOCHECKBOX "استخدام &DDE"، IDC_ACTION_USE_DDE، 10، 75، 103، 14
-    DEFPUSHBUTTON "موافق"، IDOK، 160، 20، 60، 14
-    PUSHBUTTON "إلغاء"، IDCANCEL، 160، 40، 60، 14
+    LTEXT "&الإجراء:", -1, 5, 7, 150, 10
+    EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
+    LTEXT "&التطبيق المستخدم لتنفيذ الإجراء:", -1, 5, 42, 150, 10
+    EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "اس&تعرض...", IDC_ACTION_BROWSE, 160, 60, 60, 14
+    AUTOCHECKBOX "استخدام &DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
+    DEFPUSHBUTTON "موافق", IDOK, 160, 20, 60, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 160, 40, 60, 14
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 220
@@ -714,20 +714,20 @@ CAPTION "تخصيص"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "أي نوع من المجلدات تريد؟"، IDC_STATIC، 5، 5، 230، 65، WS_TABSTOP
-    LTEXT "استخدم &نوع المجلد هذا كقالب:"، IDC_STATIC، 15، 20، 210، 12
-    COMBOBOX IDC_FOLDERCUST_COMBOBOX، 15، 35، 210، 300، CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "تطبيق هذا القالب أيضاً على جميع &المجلدات الفرعية"، IDC_FOLDERCUST_CHECKBOX، 15، 50، 210، 15
-    GROUPBOX "صور المجلدات"، IDC_STATIC، 5، 75، 230، 85، WS_TABSTOP
-    LTEXT "في عرض الصور المصغرة، يمكنك وضع صورة على هذا المجلد لتذكيرك بالمحتويات."، IDC_STATIC، 15، 87، 115، 33
-    PUSHBUTTON "اختيار &صورة..."، IDC_FOLDERCUST_CHOOSE_PIC، 15، 120، 115، 15
-    PUSHBUTTON "&استعادة الافتراضي"، IDC_FOLDERCUST_RESTORE_DEFAULTS، 15، 139، 115، 15
-    LTEXT "معاينة:"، IDC_STATIC، 139، 85، 81، 11
-    CONTROL ""، IDC_FOLDERCUST_PREVIEW_BITMAP، "STATIC"، SS_BITMAP | WS_GROUP، 150، 100، 60، 60
-    GROUPBOX "أيقونات المجلدات"، IDC_STATIC، 5، 165، 230، 50، WS_TABSTOP
-    LTEXT "بالنسبة لجميع العروض باستثناء الصور المصغرة، يمكنك تغيير الأيقونة القياسية ""مجلد"" إلى أيقونة أخرى."، IDC_STATIC، 15، 175، 210، 25
-    ICON 0، IDC_FOLDERCUST_ICON، 175، 194، 32، 30
-    PUSHBUTTON "تغيير &أيقونة..."، IDC_FOLDERCUST_CHANGE_ICON، 15، 195، 75، 15
+    GROUPBOX "أي نوع من المجلدات تريد؟", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
+    LTEXT "استخدم &نوع المجلد هذا كقالب:", IDC_STATIC, 15, 20, 210, 12
+    COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "تطبيق هذا القالب أيضاً على جميع &المجلدات الفرعية", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
+    GROUPBOX "صور المجلدات", IDC_STATIC, 5, 75, 230, 85, WS_TABSTOP
+    LTEXT "في عرض الصور المصغرة, يمكنك وضع صورة على هذا المجلد لتذكيرك بالمحتويات.", IDC_STATIC, 15, 87, 115, 33
+    PUSHBUTTON "اختيار &صورة...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 120, 115, 15
+    PUSHBUTTON "&استعادة الافتراضي", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 139, 115, 15
+    LTEXT "معاينة:", IDC_STATIC, 139, 85, 81, 11
+    CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
+    GROUPBOX "أيقونات المجلدات", IDC_STATIC, 5, 165, 230, 50, WS_TABSTOP
+    LTEXT "بالنسبة لجميع العروض باستثناء الصور المصغرة, يمكنك تغيير الأيقونة القياسية ""مجلد"" إلى أيقونة أخرى.", IDC_STATIC, 15, 175, 210, 25
+    ICON 0, IDC_FOLDERCUST_ICON, 175, 194, 32, 30
+    PUSHBUTTON "تغيير &أيقونة...", IDC_FOLDERCUST_CHANGE_ICON, 15, 195, 75, 15
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
@@ -832,7 +832,7 @@ IDS_VIEW_LARGE "أيقونات &كبيرة"
     IDS_CANTTRASH_TEXT "لا يمكن نقل العنصر '%1' إلى سلة المحذوفات. هل تريد حذفه بدلاً من ذلك؟"
     IDS_OVERWRITEFILE_TEXT "يحتوي هذا المجلد بالفعل على ملف باسم '%1'.\n\nهل تريد استبداله؟"
     IDS_OVERWRITEFILE_CAPTION "تأكيد استبدال الملف"
-    IDS_OVERWRITEFOLDER_TEXT "يحتوي هذا المجلد بالفعل على مجلد باسم '%1'.\n\nإذا كانت الملفات في المجلد الوجهة تحمل الأسماء نفسها الموجودة في\nالمجلد المحدد، فسيتم استبدالها. هل ما زلت تريد نقل أو نسخ\nالمجلد؟"
+    IDS_OVERWRITEFOLDER_TEXT "يحتوي هذا المجلد بالفعل على مجلد باسم '%1'.\n\nإذا كانت الملفات في المجلد الوجهة تحمل الأسماء نفسها الموجودة في\nالمجلد المحدد, فسيتم استبدالها. هل ما زلت تريد نقل أو نسخ\nالمجلد؟"
 
     IDS_FILEOOP_COPYING "جاري النسخ..."
     IDS_FILEOOP_MOVING "جاري النقل..."
@@ -849,7 +849,7 @@ IDS_VIEW_LARGE "أيقونات &كبيرة"
 
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "تنسيق القرص المحلي"
-    IDS_FORMAT_WARNING "تحذير: سيؤدي التنسيق إلى مسح كافة البيانات الموجودة على هذا القرص.\nلتنسيق القرص، انقر فوق موافق. للإلغاء، انقر فوق إلغاء."
+    IDS_FORMAT_WARNING "تحذير: سيؤدي التنسيق إلى مسح كافة البيانات الموجودة على هذا القرص.\nلتنسيق القرص, انقر فوق موافق. للإلغاء, انقر فوق إلغاء."
     IDS_FORMAT_COMPLETE "اكتمل التنسيق."
 
     /* Warning format system drive dialog strings */
@@ -1053,7 +1053,7 @@ IDS_VIEW_LARGE "أيقونات &كبيرة"
     IDS_NEWEXT_ALREADY_ASSOC "الامتداد %s مرتبط بالفعل بنوع الملف %s. هل تريد إلغاء ربط %s بـ %s وإنشاء نوع ملف جديد له؟"
     IDS_NEWEXT_EXT_IN_USE "الامتداد قيد الاستخدام"
 
-    IDS_REMOVE_EXT "إذا قمت بإزالة امتداد اسم ملف مسجل، فلن تتمكن من فتح الملفات التي تحمل هذا الامتداد بالنقر المزدوج على أيقوناتها.\n\nهل أنت متأكد من رغبتك في إزالة هذا الامتداد؟"
+    IDS_REMOVE_EXT "إذا قمت بإزالة امتداد اسم ملف مسجل, فلن تتمكن من فتح الملفات التي تحمل هذا الامتداد بالنقر المزدوج على أيقوناتها.\n\nهل أنت متأكد من رغبتك في إزالة هذا الامتداد؟"
     IDS_SPECIFY_ACTION "يجب عليك تحديد إجراء."
     IDS_INVALID_PROGRAM "تعذر العثور على البرنامج المحدد. تأكد من صحة اسم الملف ومساره."
     IDS_REMOVE_ACTION "هل أنت متأكد من رغبتك في إلغاء هذا الإجراء؟"
@@ -1062,7 +1062,7 @@ IDS_VIEW_LARGE "أيقونات &كبيرة"
     IDS_EDITING_ACTION "إجراء تعديل على النوع: "
     IDS_NO_ICONS "لا يحتوي الملف '%s' على أي رموز.\n\nاختر رمزًا من القائمة أو حدد ملفًا آخر."
     IDS_FILE_NOT_FOUND "لم يتم العثور على الملف '%s'."
-    IDS_LINK_INVALID "تم تغيير أو نقل العنصر '%s' الذي يشير إليه هذا الاختصار، لذا لن يعمل هذا الاختصار بشكل صحيح بعد الآن."
+    IDS_LINK_INVALID "تم تغيير أو نقل العنصر '%s' الذي يشير إليه هذا الاختصار, لذا لن يعمل هذا الاختصار بشكل صحيح بعد الآن."
     IDS_COPYTOMENU "نسخ إلى &مجلد..."
     IDS_COPYTOTITLE "حدد المكان الذي تريد نسخ '%s'. إليه. ثم انقر على زر «نسخ»."
     IDS_COPYITEMS "نسخ العناصر"
