@@ -90,18 +90,29 @@ CWineTest::GetNextFile()
     {
         /* Start searching for test files */
         wstring FindPath = m_TestPath;
+        wstring Module = Configuration.GetModule();
 
         /* Did the user specify a module? */
-        if(Configuration.GetModule().empty())
+        if(Module.empty())
         {
-            /* No module, so search for all files in that directory */
-            FindPath += L"*.exe";
+            /* No module, so search for all "*test.exe" files in that directory */
+            FindPath += L"*test.exe";
         }
         else
         {
-            /* Search for files with the pattern "modulename_*" */
-            FindPath += Configuration.GetModule();
-            FindPath += L"_*.exe";
+            /* Check for 'special' tests (e.g. "kmtest") or full test name ("ntdll_winetest") */
+            if (Module.substr(Module.length() - 4, 4) == L"test")
+            {
+                /* Search for files with the pattern "modulename.exe" */
+                FindPath += Configuration.GetModule();
+                FindPath += L".exe";
+            }
+            else
+            {
+                /* Search for files with the pattern "modulename_*test.exe" */
+                FindPath += Configuration.GetModule();
+                FindPath += L"_*test.exe";
+            }
         }
 
         /* Search for the first file and check whether we got one */
