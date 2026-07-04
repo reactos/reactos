@@ -110,7 +110,7 @@ END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION ”البحث عن مجلد“
+CAPTION "البحث عن مجلد"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
@@ -569,105 +569,105 @@ END
 
 IDD_AUTOPLAY2 DIALOGEX 0, 0, 227, 181
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Autoplay"
+CAPTION "التشغيل التلقائي"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS can perform the same action each time you connect this device.", 1001, 32, 7, 190, 22
-    LTEXT "&What do you want ReactOS to do?", 1002, 32, 31, 190, 8
-    CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
-    AUTOCHECKBOX "&Always perform the selected action", 1004, 32, 143, 190, 8
-    DEFPUSHBUTTON "حسناً", IDOK, 94, 160, 60, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 159, 160, 60, 14
+    ICON ""، 1000، 5، 7، 21، 20
+    LTEXT "يمكن لـ ReactOS تنفيذ الإجراء نفسه في كل مرة تقوم فيها بتوصيل هذا الجهاز."، 1001، 32، 7، 190، 22
+    LTEXT "&ماذا تريد أن يفعل ReactOS؟"، 1002، 32، 31، 190، 8
+    CONTROL ""، 1003، "SYSLISTVIEW32"، WS_BORDER | WS_TABSTOP | 0x0000C04D، 32، 43، 187، 96
+    AUTOCHECKBOX "&تنفيذ الإجراء المحدد دائماً"، 1004، 32، 143، 190، 8
+    DEFPUSHBUTTON "موافق"، IDOK، 94، 160، 60، 14
+    PUSHBUTTON "إلغاء"، IDCANCEL، 159، 160، 60، 14
 END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Shut Down ReactOS"
+CAPTION "إيقاف تشغيل ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-    LTEXT "What do you want the computer to do?", -1, 39, 7, 167, 10
+    LTEXT "ماذا تريد أن يفعل الكمبيوتر؟"، -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-    LTEXT "Maintains your session, keeping the computer running on low power with data still in memory. The computer wakes up when you press a key or move the mouse.", 8225, 39, 40, 167, 37
-    DEFPUSHBUTTON "حسناً", 1, 7, 82, 60, 14, WS_GROUP
-    PUSHBUTTON "إلغاء", IDCANCEL, 75, 82, 60, 14
-    PUSHBUTTON "&Help", IDHELP, 144, 82, 60, 14
+    LTEXT "يحافظ على جلستك، مع إبقاء الكمبيوتر يعمل بطاقة منخفضة مع بقاء البيانات في الذاكرة. يستيقظ الكمبيوتر عند الضغط على مفتاح أو تحريك الماوس."، 8225, 39, 40, 167, 37
+    DEFPUSHBUTTON "موافق"، 1, 7, 82, 60, 14, WS_GROUP
+    PUSHBUTTON "إلغاء"، IDCANCEL, 75, 82, 60, 14
+    PUSHBUTTON "&مساعدة"، IDHELP, 144, 82, 60, 14
 END
 
 IDD_FORMAT_DRIVE DIALOGEX 50, 50, 184, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Format"
+CAPTION "تنسيق"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Start", IDOK, 53, 198, 60, 14
-    PUSHBUTTON "&Close", IDCANCEL, 118, 198, 60, 14
-    LTEXT "Ca&pacity:", -1, 7, 6, 169, 9
-    COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&File system", -1, 7, 35, 170, 9
-    COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-    LTEXT "&Allocation unit size", -1, 7, 64, 170, 9
-    COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Volume &label", -1, 7, 93, 170, 9
-    EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-    GROUPBOX "Format &options", 4610, 7, 121, 170, 49
-    AUTOCHECKBOX "&Quick Format", 28674, 16, 135, 155, 10
-    AUTOCHECKBOX "&Enable Compression", 28675, 16, 152, 155, 10
-    CONTROL "", 30000, "STATIC", SS_ICON | WS_TABSTOP | SS_CENTERIMAGE | SS_NOTIFY, 7, 198, 15, 14
+    DEFPUSHBUTTON "&بدء"، IDOK، 53، 198، 60، 14
+    PUSHBUTTON "&إغلاق"، IDCANCEL، 118، 198، 60، 14
+    LTEXT "&السعة:"، -1، 7، 6، 169، 9
+    COMBOBOX 28673، 7، 17، 170، 200، CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "نظام &الملفات"، -1، 7، 35، 170، 9
+    COMBOBOX 28677، 7، 46، 170، 200، CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL ""، 28678، "MSCTLS_PROGRESS32"، 0، 7، 181، 170، 8
+    LTEXT "حجم &وحدة التخصيص"، -1، 7، 64، 170، 9
+    COMBOBOX 28680، 7، 75، 170، 200، CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&تسمية المجلد"، -1، 7، 93، 170، 9
+    EDITTEXT 28679، 7، 103، 170، 13، ES_AUTOHSCROLL
+    GROUPBOX "خيارات &التنسيق"، 4610، 7، 121، 170، 49
+    AUTOCHECKBOX "تنسيق &سريع"، 28674، 16، 135، 155، 10
+    AUTOCHECKBOX "&تمكين الضغط"، 28675، 16، 152، 155، 10
+    CONTROL ""، 30000، "STATIC"، SS_ICON | WS_TABSTOP | SS_CENTERIMAGE | SS_NOTIFY، 7، 198، 15، 14
 END
 
 IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Check Disk"
+CAPTION "فحص القرص"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
-    GROUPBOX "Check disk options", -1, 7, 6, 179, 40
-    PUSHBUTTON "إلغاء", IDCANCEL, 128, 95, 60, 14
-    AUTOCHECKBOX "Automatically fix file system errors", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 12, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
-    LTEXT "", 14003, 60, 80, 170, 10
+    DEFPUSHBUTTON "بدء"، IDOK، 63، 95، 60، 14
+    GROUPBOX "خيارات فحص القرص"، -1، 7، 6، 179، 40
+    PUSHBUTTON "إلغاء"، IDCANCEL، 128، 95، 60، 14
+    AUTOCHECKBOX "إصلاح أخطاء نظام الملفات تلقائياً"، 14000، 12، 15، 155، 10
+    AUTOCHECKBOX "&فحص ومحاولة استعادة القطاعات التالفة"، 14001، 12، 30، 165، 10
+    CONTROL ""، 14002، "MSCTLS_PROGRESS32"، 16، 7، 50، 179، 8
+    LTEXT ""، 14003، 60، 80، 170، 10
 END
 
 IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Icon"
+CAPTION "تغيير الأيقونة"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
-    EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Browse...", IDC_BUTTON_PATH, 135, 17, 50, 14
-    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON "حسناً", IDOK, 81, 179, 50, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 135, 179, 50, 14
+    LTEXT "ابحث عن الأيقونات في هذا الملف:"، -1، 7، 7، 179، 10
+    EDITTEXT IDC_EDIT_PATH، 7، 17، 123، 14، ES_AUTOHSCROLL
+    PUSHBUTTON "استعراض..."، IDC_BUTTON_PATH، 135، 17، 50، 14
+    LTEXT "حدد أيقونة من القائمة أدناه:"، -1، 7، 36، 179، 10
+    LISTBOX IDC_PICKICON_LIST، 7، 47، 181، 122، LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "موافق"، IDOK، 81، 179، 50، 14
+    PUSHBUTTON "إلغاء"، IDCANCEL، 135، 179، 50، 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Caution"
+CAPTION "تحذير"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "This file could either be used by the operating system or by\n\
-another application. Modifying this file might damage your\n\
-system or make it less functional.\n\n\
-Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
+    LTEXT "قد يكون هذا الملف قيد الاستخدام من قبل نظام التشغيل أو من قبل\n\
+تطبيق آخر. قد يؤدي تعديل هذا الملف إلى إتلاف نظامك\n\
+أو تقليل وظائفه.\n\n\
+هل أنت متأكد من رغبتك في فتح هذا الملف؟"، IDC_STATIC، 35، 5، 230، 60
+    DEFPUSHBUTTON "نعم"، IDYES، 125، 55، 50، 14
+    PUSHBUTTON "لا"، IDNO، 180، 55، 50، 14
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Create New Extension"
+CAPTION "إنشاء امتداد جديد"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&File Extension:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< Ad&vanced", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    PUSHBUTTON "<< &خيارات متقدمة"، IDC_NEWEXT_ADVANCED، 185، 8، 65، 15
+    LTEXT "&نوع الملف المرتبط:"، IDC_NEWEXT_ASSOC، 10، 34، 85، 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "حسناً", IDOK, 125, 55, 60, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 190, 55, 60, 14
@@ -680,18 +680,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_EDITTYPE_ICON, 5, 8, 20, 20
     EDITTEXT IDC_EDITTYPE_TEXT, 30, 10, 115, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Change &Icon...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
-    LTEXT "&Actions:", -1, 5, 37, 70, 10
-    LISTBOX IDC_EDITTYPE_LISTBOX, 5, 50, 140, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&New...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
-    PUSHBUTTON "&Edit...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
-    PUSHBUTTON "&Remove", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
-    PUSHBUTTON "&Set Default", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
-    AUTOCHECKBOX "Confirm &open after download", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
-    AUTOCHECKBOX "Al&ways show extension", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
-    AUTOCHECKBOX "&Browse in same window", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
-    DEFPUSHBUTTON "حسناً", IDOK, 95, 170, 60, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 160, 170, 60, 14
+    PUSHBUTTON "تغيير &أيقونة..."، IDC_EDITTYPE_CHANGE_ICON، 150، 10، 70، 14
+    LTEXT "&الإجراءات:"، -1، 5، 37، 70، 10
+    LISTBOX IDC_EDITTYPE_LISTBOX، 5، 50، 140، 60، LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "&جديد..."، IDC_EDITTYPE_NEW، 150، 50، 70، 14
+    PUSHBUTTON "&تحرير..."، IDC_EDITTYPE_EDIT_BUTTON، 150، 65، 70، 14
+    PUSHBUTTON "&إزالة"، IDC_EDITTYPE_REMOVE، 150، 80، 70، 14
+    PUSHBUTTON "تعيين كـ &افتراضي"، IDC_EDITTYPE_SET_DEFAULT، 150، 95، 70، 14
+    AUTOCHECKBOX "تأكيد &الفتح بعد التنزيل"، IDC_EDITTYPE_CONFIRM_OPEN، 5، 115، 150، 14
+    AUTOCHECKBOX "&عرض الامتداد دائماً"، IDC_EDITTYPE_SHOW_EXT، 5، 130، 150، 14
+    AUTOCHECKBOX "&استعراض في نفس النافذة"، IDC_EDITTYPE_SAME_WINDOW، 5، 145، 150، 14
+    DEFPUSHBUTTON "موافق"، IDOK، 95، 170، 60، 14
+    PUSHBUTTON "إلغاء"، IDCANCEL، 160، 170، 60، 14
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
@@ -699,35 +699,35 @@ CAPTION "New Action"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Action:", -1, 5, 7, 150, 10
-    EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
-    LTEXT "App&lication used to perform action:", -1, 5, 42, 150, 10
-    EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "B&rowse...", IDC_ACTION_BROWSE, 160, 60, 60, 14
-    AUTOCHECKBOX "&Use DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
-    DEFPUSHBUTTON "حسناً", IDOK, 160, 20, 60, 14
-    PUSHBUTTON "إلغاء", IDCANCEL, 160, 40, 60, 14
+    LTEXT "&الإجراء:"، -1، 5، 7، 150، 10
+    EDITTEXT IDC_ACTION_ACTION، 5، 20، 150، 14، ES_AUTOHSCROLL
+    LTEXT "&التطبيق المستخدم لتنفيذ الإجراء:"، -1، 5، 42، 150، 10
+    EDITTEXT IDC_ACTION_APP، 5، 55، 150، 14، ES_AUTOHSCROLL
+    PUSHBUTTON "اس&تعرض..."، IDC_ACTION_BROWSE، 160، 60، 60، 14
+    AUTOCHECKBOX "استخدام &DDE"، IDC_ACTION_USE_DDE، 10، 75، 103، 14
+    DEFPUSHBUTTON "موافق"، IDOK، 160، 20، 60، 14
+    PUSHBUTTON "إلغاء"، IDCANCEL، 160، 40، 60، 14
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 220
-CAPTION "Customize"
+CAPTION "تخصيص"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "What kind of folder do you want?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "Use this &folder type as a template:", IDC_STATIC, 15, 20, 210, 12
-    COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Also apply this template to all &subfolders", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Folder pictures", IDC_STATIC, 5, 75, 230, 85, WS_TABSTOP
-    LTEXT "For Thumbnails view, you can put a picture on this folder to remind you of the contents.", IDC_STATIC, 15, 87, 115, 33
-    PUSHBUTTON "Choose &Picture...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 120, 115, 15
-    PUSHBUTTON "&Restore Default", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 139, 115, 15
-    LTEXT "Preview:", IDC_STATIC, 139, 85, 81, 11
-    CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Folder icons", IDC_STATIC, 5, 165, 230, 50, WS_TABSTOP
-    LTEXT "For all views except Thumbnails, you can change the standard ""folder"" icon to another icon.", IDC_STATIC, 15, 175, 210, 25
-    ICON 0, IDC_FOLDERCUST_ICON, 175, 194, 32, 30
-    PUSHBUTTON "Change &Icon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 195, 75, 15
+    GROUPBOX "أي نوع من المجلدات تريد؟"، IDC_STATIC، 5، 5، 230، 65، WS_TABSTOP
+    LTEXT "استخدم &نوع المجلد هذا كقالب:"، IDC_STATIC، 15، 20، 210، 12
+    COMBOBOX IDC_FOLDERCUST_COMBOBOX، 15، 35، 210، 300، CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "تطبيق هذا القالب أيضاً على جميع &المجلدات الفرعية"، IDC_FOLDERCUST_CHECKBOX، 15، 50، 210، 15
+    GROUPBOX "صور المجلدات"، IDC_STATIC، 5، 75، 230، 85، WS_TABSTOP
+    LTEXT "في عرض الصور المصغرة، يمكنك وضع صورة على هذا المجلد لتذكيرك بالمحتويات."، IDC_STATIC، 15، 87، 115، 33
+    PUSHBUTTON "اختيار &صورة..."، IDC_FOLDERCUST_CHOOSE_PIC، 15، 120، 115، 15
+    PUSHBUTTON "&استعادة الافتراضي"، IDC_FOLDERCUST_RESTORE_DEFAULTS، 15، 139، 115، 15
+    LTEXT "معاينة:"، IDC_STATIC، 139، 85، 81، 11
+    CONTROL ""، IDC_FOLDERCUST_PREVIEW_BITMAP، "STATIC"، SS_BITMAP | WS_GROUP، 150، 100، 60، 60
+    GROUPBOX "أيقونات المجلدات"، IDC_STATIC، 5، 165، 230، 50، WS_TABSTOP
+    LTEXT "بالنسبة لجميع العروض باستثناء الصور المصغرة، يمكنك تغيير الأيقونة القياسية ""مجلد"" إلى أيقونة أخرى."، IDC_STATIC، 15، 175، 210، 25
+    ICON 0، IDC_FOLDERCUST_ICON، 175، 194، 32، 30
+    PUSHBUTTON "تغيير &أيقونة..."، IDC_FOLDERCUST_CHANGE_ICON، 15، 195، 75، 15
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
@@ -747,155 +747,155 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN_NAME "Name"
-    IDS_SHV_COLUMN_SIZE "Size"
-    IDS_SHV_COLUMN_TYPE "Type"
-    IDS_SHV_COLUMN_MODIFIED "Modified"
-    IDS_SHV_COLUMN_ATTRIBUTES "Attributes"
-    IDS_SHV_COLUMN_DISK_CAPACITY "Total Size"
-    IDS_SHV_COLUMN_DISK_AVAILABLE "Free Space"
-    IDS_SHV_COLUMN_OWNER "Owner"
-    IDS_SHV_COLUMN_GROUP "Group"
-    IDS_SHV_COLUMN_FILENAME "Filename"
-    IDS_SHV_COLUMN_CATEGORY "Category"
-    IDS_SHV_COLUMN_DELFROM "Original location"
-    IDS_SHV_COLUMN_DELDATE "Date deleted"
-    IDS_SHV_COLUMN_FONTTYPE "Fonttype"
-    IDS_SHV_COLUMN_WORKGROUP "Workgroup"
-    IDS_SHV_COLUMN_NETLOCATION "Network Location"
-    IDS_SHV_COLUMN_DOCUMENTS "Documents"
-    IDS_SHV_COLUMN_STATUS "Status"
-    IDS_SHV_COLUMN_COMMENTS "Comments"
-    IDS_SHV_COLUMN_LOCATION "Location"
-    IDS_SHV_COLUMN_MODEL "Model"
+    IDS_SHV_COLUMN_NAME "الاسم"
+    IDS_SHV_COLUMN_SIZE "الحجم"
+    IDS_SHV_COLUMN_TYPE "النوع"
+    IDS_SHV_COLUMN_MODIFIED "تاريخ التعديل"
+    IDS_SHV_COLUMN_ATTRIBUTES "السمات"
+    IDS_SHV_COLUMN_DISK_CAPACITY "الحجم الإجمالي"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "المساحة الحرة"
+    IDS_SHV_COLUMN_OWNER "المالك"
+    IDS_SHV_COLUMN_GROUP "المجموعة"
+    IDS_SHV_COLUMN_FILENAME "اسم الملف"
+    IDS_SHV_COLUMN_CATEGORY "الفئة"
+    IDS_SHV_COLUMN_DELFROM "الموقع الأصلي"
+    IDS_SHV_COLUMN_DELDATE "تاريخ الحذف"
+    IDS_SHV_COLUMN_FONTTYPE "نوع الخط"
+    IDS_SHV_COLUMN_WORKGROUP "مجموعة العمل"
+    IDS_SHV_COLUMN_NETLOCATION "موقع الشبكة"
+    IDS_SHV_COLUMN_DOCUMENTS "المستندات"
+    IDS_SHV_COLUMN_STATUS "الحالة"
+    IDS_SHV_COLUMN_COMMENTS "التعليقات"
+    IDS_SHV_COLUMN_LOCATION "الموقع"
+    IDS_SHV_COLUMN_MODEL "الطراز"
 
     /* special folders */
-    IDS_DESKTOP "Desktop"
-    IDS_MYCOMPUTER "My Computer"
-    IDS_RECYCLEBIN_FOLDER_NAME "Recycle Bin"
-    IDS_CONTROLPANEL "Control Panel"
-    IDS_ADMINISTRATIVETOOLS "Administrative Tools"
+    IDS_DESKTOP "سطح المكتب"
+    IDS_MYCOMPUTER "جهاز الكمبيوتر"
+    IDS_RECYCLEBIN_FOLDER_NAME "سلة المحذوفات"
+    IDS_CONTROLPANEL "لوحة التحكم"
+    IDS_ADMINISTRATIVETOOLS "الأدوات الإدارية"
 
     /* special folders descriptions */
-    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
-    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
-    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "تكوين الإعدادات الإدارية لجهاز الكمبيوتر الخاص بك."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "تخصيص عرض الملفات والمجلدات وتغيير ارتباطات الملفات."
+    IDS_FONTS_DESCRIPTION "إضافة وتغيير وإدارة الخطوط على جهاز الكمبيوتر الخاص بك."
+    IDS_PRINTERS_DESCRIPTION "يعرض الطابعات المثبتة وطابعات الفاكس ويساعدك في إضافة طابعات جديدة."
 
     /* About shell dialog version string */
-    IDS_ABOUT_VERSION_STRING "Version %S (%S)"
+    IDS_ABOUT_VERSION_STRING "الإصدار %S (%S)"
 
     /* context menus */
-    IDS_VIEW_LARGE "Lar&ge Icons"
-    IDS_VIEW_SMALL "S&mall Icons"
-    IDS_VIEW_LIST "&List"
-    IDS_VIEW_DETAILS "&Details"
-    IDS_SELECT "Select"
-    IDS_OPEN "Open"
-    IDS_CREATELINK "Create &Link"
-    IDS_COPY "&Copy"
-    IDS_DELETE "Delete"
-    IDS_PROPERTIES "Properties" //FIXME: 3rd: must be changed to &R for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_PROPERTIES. This will free &P for 4th step for &Paste
-    IDS_CUT "C&ut" //FIXME: 1st: This must be changed FIRST to &T for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). It must match IDM_CUT and is already offsync.
-    IDS_RESTORE "Restore"
-    IDS_FORMATDRIVE "Format..."
-    IDS_RENAME "Rename" //FIXME: 2nd: This must be changed to &M for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_RENAME. This will free &R for P&roperties.
-    IDS_PASTE "Paste" //FIXME: 4th: must be changed to &P for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_INSERT.
-    IDS_EJECT "Eject"
-    IDS_DISCONNECT "Disconnect"
-    IDS_OPENFILELOCATION "Open f&ile location"
-    IDS_SENDTO_MENU "Se&nd To"
-    IDS_COPYASPATHMENU "Copy as path"
+IDS_VIEW_LARGE "أيقونات &كبيرة"
+    IDS_VIEW_SMALL "أيقونات &صغيرة"
+    IDS_VIEW_LIST "&قائمة"
+    IDS_VIEW_DETAILS "&تفاصيل"
+    IDS_SELECT "تحديد"
+    IDS_OPEN "فتح"
+    IDS_CREATELINK "إنشاء &رابط"
+    IDS_COPY "&نسخ"
+    IDS_DELETE "حذف"
+    IDS_PROPERTIES "خصائص"
+    IDS_CUT "&قص"
+    IDS_RESTORE "استعادة"
+    IDS_FORMATDRIVE "تنسيق..."
+    IDS_RENAME "إعادة تسمية"
+    IDS_PASTE "لصق"
+    IDS_EJECT "إخراج"
+    IDS_DISCONNECT "قطع الاتصال"
+    IDS_OPENFILELOCATION "فتح &موقع الملف"
+    IDS_SENDTO_MENU "إ&رسال إلى"
+    IDS_COPYASPATHMENU "نسخ كمسار"
 
-    IDS_MOVEERRORTITLE "Error Moving File or Folder"
-    IDS_COPYERRORTITLE "Error Copying File or Folder"
-    IDS_MOVEERRORSAMEFOLDER "Cannot move '%s': The destination folder is the same as the source folder."
-    IDS_MOVEERRORSAME "Cannot move '%s': The source and destination file names are the same."
-    IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
-    IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
-    IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
-    IDS_MOVEERROR "Cannot move '%s': %s"
-    IDS_COPYERROR "Cannot copy '%s': %s"
+    IDS_MOVEERRORTITLE "خطأ في نقل الملف أو المجلد"
+    IDS_COPYERRORTITLE "خطأ في نسخ الملف أو المجلد"
+    IDS_MOVEERRORSAMEFOLDER "لا يمكن نقل '%s': المجلد الوجهة هو نفسه المجلد المصدر."
+    IDS_MOVEERRORSAME "لا يمكن نقل '%s': اسم الملف المصدر واسم الملف الوجهة متطابقان."
+    IDS_COPYERRORSAME "لا يمكن نسخ '%s': اسم الملف المصدر واسم الملف الوجهة متطابقان."
+    IDS_MOVEERRORSUBFOLDER "لا يمكن نقل '%s': المجلد الوجهة هو مجلد فرعي من المجلد المصدر."
+    IDS_COPYERRORSUBFOLDER "لا يمكن نسخ '%s': المجلد الوجهة هو مجلد فرعي من المجلد المصدر."
+    IDS_MOVEERROR "لا يمكن نقل '%s': %s"
+    IDS_COPYERROR "لا يمكن نسخ '%s': %s"
 
-    IDS_CREATEFILE_DENIED "Could not create file %1"
-    IDS_CREATEFILE_CAPTION "Error creating file"
-    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
-    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
-    IDS_DELETEITEM_CAPTION "Confirm File Deletion"
-    IDS_DELETEFOLDER_CAPTION "Confirm Folder Deletion"
-    IDS_DELETEITEM_TEXT "Are you sure you want to delete '%1'?"
-    IDS_DELETEMULTIPLE_TEXT "Are you sure you want to delete these %1 items?"
-    IDS_DELETESELECTED_TEXT "Are you sure you want to delete the selected item(s)?"
-    IDS_TRASHITEM_TEXT "Are you sure that you want to send '%1' to the Recycle Bin?"
-    IDS_TRASHFOLDER_TEXT "Are you sure that you want to send '%1' and all its contents to the Recycle Bin?"
-    IDS_TRASHMULTIPLE_TEXT "Are you sure that you want to send these %1 items to the Recycle Bin?"
-    IDS_CANTTRASH_TEXT "The item '%1' can't be sent to Recycle Bin. Do you want to delete it instead?"
-    IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
-    IDS_OVERWRITEFILE_CAPTION "Confirm File Overwrite"
-    IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
+    IDS_CREATEFILE_DENIED "تعذر إنشاء الملف %1"
+    IDS_CREATEFILE_CAPTION "خطأ في إنشاء الملف"
+    IDS_CREATEFOLDER_DENIED "تعذر إنشاء المجلد '%1'"
+    IDS_CREATEFOLDER_CAPTION "تعذر إنشاء المجلد"
+    IDS_DELETEITEM_CAPTION "تأكيد حذف الملف"
+    IDS_DELETEFOLDER_CAPTION "تأكيد حذف المجلد"
+    IDS_DELETEITEM_TEXT "هل أنت متأكد من رغبتك في حذف '%1'؟"
+    IDS_DELETEMULTIPLE_TEXT "هل أنت متأكد من رغبتك في حذف هذه العناصر %1؟"
+    IDS_DELETESELECTED_TEXT "هل أنت متأكد من رغبتك في حذف العنصر (العناصر) المحددة؟"
+    IDS_TRASHITEM_TEXT "هل أنت متأكد من رغبتك في نقل '%1' إلى سلة المحذوفات؟"
+    IDS_TRASHFOLDER_TEXT "هل أنت متأكد من رغبتك في نقل '%1' وجميع محتوياته إلى سلة المحذوفات؟"
+    IDS_TRASHMULTIPLE_TEXT "هل أنت متأكد من رغبتك في نقل هذه العناصر %1 إلى سلة المحذوفات؟"
+    IDS_CANTTRASH_TEXT "لا يمكن نقل العنصر '%1' إلى سلة المحذوفات. هل تريد حذفه بدلاً من ذلك؟"
+    IDS_OVERWRITEFILE_TEXT "يحتوي هذا المجلد بالفعل على ملف باسم '%1'.\n\nهل تريد استبداله؟"
+    IDS_OVERWRITEFILE_CAPTION "تأكيد استبدال الملف"
+    IDS_OVERWRITEFOLDER_TEXT "يحتوي هذا المجلد بالفعل على مجلد باسم '%1'.\n\nإذا كانت الملفات في المجلد الوجهة تحمل الأسماء نفسها الموجودة في\nالمجلد المحدد، فسيتم استبدالها. هل ما زلت تريد نقل أو نسخ\nالمجلد؟"
 
-    IDS_FILEOOP_COPYING "Copying..."
-    IDS_FILEOOP_MOVING "Moving..."
-    IDS_FILEOOP_DELETING "Deleting..."
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
-    IDS_FILEOOP_PREFLIGHT "Preflight"
+    IDS_FILEOOP_COPYING "جاري النسخ..."
+    IDS_FILEOOP_MOVING "جاري النقل..."
+    IDS_FILEOOP_DELETING "جاري الحذف..."
+    IDS_FILEOOP_FROM_TO "من %1 إلى %2"
+    IDS_FILEOOP_FROM "من %1"
+    IDS_FILEOOP_PREFLIGHT "الفحص المبدئي"
 
     /* message box strings */
-    IDS_RESTART_TITLE "Restart"
-    IDS_RESTART_PROMPT "Do you want to restart the system?"
-    IDS_SHUTDOWN_TITLE "Shutdown"
-    IDS_SHUTDOWN_PROMPT "Do you want to shutdown?"
+    IDS_RESTART_TITLE "إعادة التشغيل"
+    IDS_RESTART_PROMPT "هل تريد إعادة تشغيل النظام؟"
+    IDS_SHUTDOWN_TITLE "إيقاف التشغيل"
+    IDS_SHUTDOWN_PROMPT "هل تريد إيقاف تشغيل النظام؟"
 
     /* Format Dialog Strings */
-    IDS_FORMAT_TITLE "Format Local Disk"
-    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
-    IDS_FORMAT_COMPLETE "Format Complete."
+    IDS_FORMAT_TITLE "تنسيق القرص المحلي"
+    IDS_FORMAT_WARNING "تحذير: سيؤدي التنسيق إلى مسح كافة البيانات الموجودة على هذا القرص.\nلتنسيق القرص، انقر فوق موافق. للإلغاء، انقر فوق إلغاء."
+    IDS_FORMAT_COMPLETE "اكتمل التنسيق."
 
     /* Warning format system drive dialog strings */
-    IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+    IDS_NO_FORMAT_TITLE "تعذر تنسيق هذا المجلد"
+    IDS_NO_FORMAT "لا يمكن تنسيق هذا المجلد! يحتوي على ملفات نظام مهمة ضرورية لتشغيل ReactOS."
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION "Browse"
-    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_ERROR "تعذر عرض مربع حوار ’تشغيل ملف‘ (خطأ داخلي)"
+    IDS_RUNDLG_BROWSE_ERROR "تعذر عرض مربع حوار ’استعراض‘ (خطأ داخلي)"
+    IDS_RUNDLG_BROWSE_CAPTION "استعراض"
+    IDS_RUNDLG_BROWSE_FILTER "الملفات القابلة للتنفيذ (*.exe)\0*.exe\0جميع الملفات (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
-    IDS_SHORTCUT_RUN_NORMAL "Normal window"
-    IDS_SHORTCUT_RUN_MIN "Minimized"
-    IDS_SHORTCUT_RUN_MAX "Maximized"
+    IDS_SHORTCUT_RUN_NORMAL "نافذة عادية"
+    IDS_SHORTCUT_RUN_MIN "مصغرة"
+    IDS_SHORTCUT_RUN_MAX "موسعة"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
-    IDS_PROGRAMS "Start Menu\\Programs"
-    IDS_PERSONAL "My Documents"
-    IDS_FAVORITES "Favorites"
-    IDS_STARTUP "Start Menu\\Programs\\StartUp"
-    IDS_RECENT "Recent"
-    IDS_SENDTO "SendTo"
-    IDS_STARTMENU "Start Menu"
-    IDS_MYMUSIC "My Music"
-    IDS_MYVIDEO "My Videos"
-    IDS_DESKTOPDIRECTORY "Desktop"
+    IDS_PROGRAMS "قائمة ابدأ\\البرامج"
+    IDS_PERSONAL "مستنداتي"
+    IDS_FAVORITES "المفضلة"
+    IDS_STARTUP "قائمة ابدأ\\البرامج\\التشغيل التلقائي"
+    IDS_RECENT "الأخيرة"
+    IDS_SENDTO "إرسال إلى"
+    IDS_STARTMENU "قائمة ابدأ"
+    IDS_MYMUSIC "موسيقاي"
+    IDS_MYVIDEO "مقاطع الفيديو الخاصة بي"
+    IDS_DESKTOPDIRECTORY "سطح المكتب"
     IDS_NETHOOD "NetHood"
-    IDS_TEMPLATES "Templates"
-    IDS_APPDATA "Application Data"
+    IDS_TEMPLATES "القوالب"
+    IDS_APPDATA "بيانات التطبيق"
     IDS_PRINTHOOD "PrintHood"
-    IDS_LOCAL_APPDATA "Local Settings\\Application Data"
-    IDS_INTERNET_CACHE "Local Settings\\Temporary Internet Files"
-    IDS_COOKIES "Cookies"
-    IDS_HISTORY "Local Settings\\History"
-    IDS_PROGRAM_FILES "Program Files"
-    IDS_MYPICTURES "My Pictures"
-    IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
-    IDS_COMMON_DOCUMENTS "Documents"
-    IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools"
-    IDS_COMMON_MUSIC "Documents\\My Music"
-    IDS_COMMON_PICTURES "Documents\\My Pictures"
-    IDS_COMMON_VIDEO "Documents\\My Videos"
-    IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
-    IDS_NETWORKPLACE "My Network Places"
+    IDS_LOCAL_APPDATA "الإعدادات المحلية\\بيانات التطبيق"
+    IDS_INTERNET_CACHE "الإعدادات المحلية\\ملفات الإنترنت المؤقتة"
+    IDS_COOKIES "ملفات تعريف الارتباط"
+    IDS_HISTORY "الإعدادات المحلية\\السجل"
+    IDS_PROGRAM_FILES "ملفات البرامج"
+    IDS_MYPICTURES "صورتي"
+    IDS_PROGRAM_FILES_COMMON "ملفات البرامج\\الملفات المشتركة"
+    IDS_COMMON_DOCUMENTS "المستندات"
+    IDS_ADMINTOOLS "قائمة ابدأ\\البرامج\\أدوات إدارية"
+    IDS_COMMON_MUSIC "المستندات\\موسيقاي"
+    IDS_COMMON_PICTURES "المستندات\\صورتي"
+    IDS_COMMON_VIDEO "المستندات\\مقاطع الفيديو الخاصة بي"
+    IDS_CDBURN_AREA "الإعدادات المحلية\\بيانات التطبيق\\Microsoft\\نسخ الأقراص المضغوطة"
+    IDS_NETWORKPLACE "أماكن الشبكة الخاصة بي"
 
     IDS_NEWFOLDER "New Folder"
     IDS_NEWITEMFORMAT "New %s"
