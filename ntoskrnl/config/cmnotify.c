@@ -213,12 +213,85 @@ CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
     }
 }
 
+/**
+ * @brief Terminates a notification session and releases all the resources used by the attached CM_NOTIFY_BLOCK
+ * 
+ * This function is called when the system is releasing a registry key object,
+ * to signal the listeners that the notification session has ended, then releases
+ * all the resources used for the notification session.
+ * 
+ * @param[in] KeyBody The registry key object being released
+ * 
+ * @param[in] LockHeld TRUE if the KCB lock is already held by the caller, FALSE otherwise
+ * 
+ */
 VOID
 NTAPI
 CmpFlushNotify(IN PCM_KEY_BODY KeyBody,
                IN BOOLEAN LockHeld)
 {
-    /* FIXME: TODO */
-    return;
+    PLIST_ENTRY ListHead, NextEntry;
+    PCMP_POST_BLOCK PostBlock, SecondaryPostBlock;
+
+    /* Lock the KCB so no one would try to make changes
+     * to NotifyBlock while we are releasing its resources */
+    if (!LockHeld)
+        CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);
+
+    ListHead = &(KeyBody->NotifyBlock->PostList);
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        PostBlock = CONTAINING_RECORD(NextEntry, CMP_POST_BLOCK, NotifyList);
+        NextEntry = NextEntry->Flink;
+
+        /* This shouldn't happen, We don't assign subordinate NotifyBlocks to a KeyBody */
+        ASSERT(PostBlock->IsPrimary);
+
+        if (PostBlock->IoStatusBlock)
+        {
+            _SEH2_TRY
+            {
+                /* We are ending the notification session without signalling the caller for any change */
+                PostBlock->IoStatusBlock->Status = STATUS_NOTIFY_CLEANUP;
+                PostBlock->IoStatusBlock->Information = 0;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                NTSTATUS Status = _SEH2_GetExceptionCode();
+                DPRINT1("CmpFlushNotify: Writing to IO_STATUS_BLOCK failed with %lx. Process=0x%lx, IoStatusBlock=0x%lx\n", Status, PostBlock->OwnerProcess, PostBlock->IoStatusBlock);
+            }
+            _SEH2_END;
+        }
+
+        if (PostBlock->Event)
+        {
+            KeSetEvent(PostBlock->Event, 1, FALSE);
+            ObDereferenceObject(PostBlock->Event);
+        }
+
+        if (PostBlock->UserApc)
+            ExFreePoolWithTag(PostBlock->UserApc, TAG_CM_NOTIFY);
+
+        if (PostBlock->SecondaryBlock)
+        {
+            SecondaryPostBlock = CONTAINING_RECORD(PostBlock->SecondaryBlock->PostList.Flink, CMP_POST_BLOCK, NotifyList);
+            RemoveEntryList(&SecondaryPostBlock->NotifyList);
+            ExFreePoolWithTag(SecondaryPostBlock, TAG_CM_NOTIFY);
+            ExFreePoolWithTag(PostBlock->SecondaryBlock, TAG_CM_NOTIFY);
+        }
+
+        RemoveEntryList(&(PostBlock->NotifyList));
+        ExFreePoolWithTag(PostBlock, TAG_CM_NOTIFY);
+    }
+
+    /* Free the NotifyBlock */
+    RemoveEntryList(&(KeyBody->NotifyBlock->HiveList));
+    ExFreePoolWithTag(KeyBody->NotifyBlock, TAG_CM_NOTIFY);
+    KeyBody->NotifyBlock = NULL;
+
+    /* Unlock the Kcb if we locked it previously */
+    if (!LockHeld)
+        CmpReleaseKcbLock(KeyBody->KeyControlBlock);
 }
 
