@@ -97,6 +97,8 @@ typedef struct
 #define INITIAL_DELAY    500
 #define REPEAT_DELAY     50
 
+#ifdef __REACTOS__ /* wine-10.9 */
+#else
 /* Text field conversion behavior flags for PAGER_SendConvertedNotify() */
 enum conversion_flags
 {
@@ -112,6 +114,7 @@ enum conversion_flags
     ZERO_SEND = 0x10
 };
 
+#endif
 static void
 PAGER_GetButtonRects(const PAGER_INFO* infoPtr, RECT* prcTopLeft, RECT* prcBottomRight, BOOL bClientCoords)
 {
@@ -1042,6 +1045,8 @@ static LRESULT PAGER_NotifyFormat(PAGER_INFO *infoPtr, INT command)
     }
 }
 
+#ifdef __REACTOS__ /* wine-10.9 */
+#else
 static UINT PAGER_GetAnsiNtfCode(UINT code)
 {
     switch (code)
@@ -1095,8 +1100,6 @@ static UINT PAGER_GetAnsiNtfCode(UINT code)
     return code;
 }
 
-#ifdef __REACTOS__ /* wine-10.9 */
-#else
 static BOOL PAGER_AdjustBuffer(PAGER_INFO *infoPtr, INT size)
 {
     if (!infoPtr->pwszBuffer)
@@ -1109,7 +1112,6 @@ static BOOL PAGER_AdjustBuffer(PAGER_INFO *infoPtr, INT size)
 
     return TRUE;
 }
-#endif
 
 /* Convert text to Unicode and return the original text address */
 static WCHAR *PAGER_ConvertText(WCHAR **text)
@@ -1185,8 +1187,14 @@ done:
     return ret;
 }
 
+#endif
 static LRESULT PAGER_Notify(PAGER_INFO *infoPtr, NMHDR *hdr)
 {
+#ifdef __REACTOS__ /* wine-10.9 */
+    if (infoPtr->bUnicode)
+        return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, hdr->idFrom, (LPARAM)hdr);
+    return COMCTL32_forward_notify_to_ansi_window(infoPtr->hwndNotify, hdr, &infoPtr->pwszBuffer, &infoPtr->nBufferSize);
+#else
     LRESULT ret;
 
     if (infoPtr->bUnicode) return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, hdr->idFrom, (LPARAM)hdr);
@@ -1474,6 +1482,7 @@ static LRESULT PAGER_Notify(PAGER_INFO *infoPtr, NMHDR *hdr)
     }
     /* Other notifications, no need to convert */
     return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, hdr->idFrom, (LPARAM)hdr);
+#endif
 }
 
 static LRESULT WINAPI
