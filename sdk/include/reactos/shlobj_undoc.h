@@ -947,8 +947,36 @@ DECLARE_INTERFACE_(IQuerySource, IUnknown) // {7BC28AC2-0D9C-4941-BB9A-72BECB184
 #endif
 
 /*****************************************************************************
+ * IObjectWithQuerySourceOld interface
+ *
+ * @see IObjectWithQuerySource
+ * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/iobjectwithquerysource.htm
+ */
+#define INTERFACE IObjectWithQuerySourceOld
+DECLARE_INTERFACE_(IObjectWithQuerySourceOld, IUnknown) // {B3DCB623-4280-4EB1-84B3-8D07E84F299A}
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IObjectWithQuerySourceOld ***/
+    STDMETHOD(SetSource)(THIS_ IQuerySourceOld *pSource) PURE;
+    STDMETHOD(GetSource)(THIS_ REFIID riid, PVOID *ppSource) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IObjectWithQuerySourceOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IObjectWithQuerySourceOld_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IObjectWithQuerySourceOld_Release(T) (T)->lpVtbl->Release(T)
+#define IObjectWithQuerySourceOld_SetSource(T,a) (T)->lpVtbl->SetSource(T,a)
+#define IObjectWithQuerySourceOld_GetSource(T,a,b) (T)->lpVtbl->GetSource(T,a,b)
+#endif
+
+/*****************************************************************************
  * IObjectWithQuerySource interface
  *
+ * @see IObjectWithQuerySourceOld
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/iobjectwithquerysource.htm
  */
 #define INTERFACE IObjectWithQuerySource

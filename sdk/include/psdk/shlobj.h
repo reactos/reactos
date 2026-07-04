@@ -696,6 +696,15 @@ DECLARE_INTERFACE_(IQueryInfo,IUnknown)
 #define IQueryInfo_GetInfoFlags(p,a)          (p)->lpVtbl->GetInfoFlags(p,a)
 #endif
 
+#define QITIPF_DEFAULT       0x00000000
+#define QITIPF_USENAME       0x00000001
+#define QITIPF_LINKNOTARGET  0x00000002
+#define QITIPF_LINKUSETARGET 0x00000004
+#define QITIPF_USESLOWTIP    0x00000008 // (NTDDI_VERSION >= NTDDI_WINXP)
+#define QITIPF_SINGLELINE    0x00000010 // (NTDDI_VERSION >= NTDDI_VISTA)
+#define QIF_CACHED           0x00000001
+#define QIF_DONTEXPANDFOLDER 0x00000002
+
 /* IInputObject interface */
 #define INTERFACE IInputObject
 DECLARE_INTERFACE_(IInputObject,IUnknown)

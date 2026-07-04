@@ -209,8 +209,34 @@ HRESULT WINAPI IDefClFImpl::CreateInstance(IUnknown * pUnkOuter, REFIID riid, LP
  */
 HRESULT WINAPI IDefClFImpl::LockServer(BOOL fLock)
 {
-    TRACE("%p->(0x%x), not implemented\n", this, fLock);
-    return E_NOTIMPL;
+    TRACE("%p->(0x%x)\n", this, fLock);
+
+    if (fLock)
+    {
+        if (pcRefDll)
+        {
+            if (*pcRefDll == LONG_MAX)
+                ERR("pcRefDll is pinned, not incrementing\n");
+            else
+                InterlockedIncrement(pcRefDll);
+        }
+        _pAtlModule->Lock();
+    }
+    else
+    {
+        _pAtlModule->Unlock();
+        if (pcRefDll)
+        {
+            if (*pcRefDll == LONG_MAX)
+                ERR("pcRefDll is pinned, not decrementing\n");
+            else if (*pcRefDll > 0)
+                InterlockedDecrement(pcRefDll);
+            else
+                ERR("pcRefDll underflow\n");
+        }
+    }
+
+    return S_OK;
 }
 
 /**************************************************************************

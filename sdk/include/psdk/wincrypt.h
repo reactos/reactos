@@ -5802,6 +5802,16 @@ CryptImportPublicKeyInfoEx(
   _In_opt_ void *pvAuxInfo,
   _Out_ HCRYPTKEY *phKey);
 
+WINCRYPT32API
+BOOL
+WINAPI
+CryptImportPublicKeyInfoEx2(
+  _In_ DWORD dwCertEncodingType,
+  _In_ PCERT_PUBLIC_KEY_INFO pInfo,
+  _In_ DWORD dwFlags,
+  _In_opt_ void *pvAuxInfo,
+  _Out_ BCRYPT_KEY_HANDLE *phKey);
+
 BOOL
 WINAPI
 CryptAcquireCertificatePrivateKey(

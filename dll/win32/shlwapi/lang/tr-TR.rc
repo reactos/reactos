@@ -35,6 +35,9 @@ STRINGTABLE
     IDS_EB_FORMAT "%s EB"
     IDS_RESTRICTED "This operation has been cancelled due to restrictions on this computer. Please contact your system administrator."
     IDS_RESTRICTIONS "Restrictions"
+    IDS_ANY_FILE "%s File"
+    IDS_FILE "File"
+    IDS_FOLDER "Folder"
 #endif
 }
 

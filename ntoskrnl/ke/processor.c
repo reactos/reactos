@@ -42,3 +42,31 @@ KeQueryActiveProcessors(VOID)
 {
     return KeActiveProcessors;
 }
+
+/**
+ * Retrieves the number of the current processor.
+ *
+ * \param ProcessorNumber Pointer to a PROCESSOR_NUMBER structure that receives the processor number.
+ * 
+ * \return NTSTATUS The status of the operation.
+ */
+NTSTATUS
+NTAPI
+NtGetCurrentProcessorNumberEx(
+    _Out_ PPROCESSOR_NUMBER ProcessorNumber)
+{
+    _SEH2_TRY
+    {
+        ProbeForWrite(ProcessorNumber, sizeof(PROCESSOR_NUMBER), __alignof(PROCESSOR_NUMBER));
+        ProcessorNumber->Group = 0; // TODO: Support processor groups
+        ProcessorNumber->Number = (UCHAR)KeGetCurrentProcessorNumber();
+        ProcessorNumber->Reserved = 0;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    return STATUS_SUCCESS;
+}

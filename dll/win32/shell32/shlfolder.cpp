@@ -91,8 +91,8 @@ SHELL_MapSCIDToColumn(IShellFolder2 *pSF, const SHCOLUMNID *pscid)
     return E_FAIL;
 }
 
-HRESULT
-SHELL_GetDetailsOfAsStringVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARIANT *pVar)
+template<class T> static inline HRESULT
+GetDetailsOfAsStringVariant(T &pSF, PCUITEMID_CHILD pidl, UINT Column, VARIANT *pVar)
 {
     V_VT(pVar) = VT_EMPTY;
     SHELLDETAILS sd;
@@ -103,6 +103,25 @@ SHELL_GetDetailsOfAsStringVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT
     if (FAILED(hr = StrRetToBSTR(&sd.str, pidl, &V_BSTR(pVar))))
         return hr;
     V_VT(pVar) = VT_BSTR;
+    return hr;
+}
+
+HRESULT
+SHELL_GetDetailsOfAsStringVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, UINT Column, VARIANT *pVar)
+{
+    return GetDetailsOfAsStringVariant(pSF, pidl, Column, pVar);
+}
+
+HRESULT
+SHELL_GetDetailsOfAsStringVariant(IShellFolder *pSF, PCUITEMID_CHILD pidl, UINT Column, VARIANT *pVar)
+{
+    HRESULT hr;
+    CComPtr<IShellFolder2> pSF2;
+    if (SUCCEEDED(hr = pSF->QueryInterface(IID_PPV_ARG(IShellFolder2, &pSF2))))
+        return SHELL_GetDetailsOfAsStringVariant(pSF2, pidl, Column, pVar);
+    CComPtr<IShellDetails> pSD;
+    if (SUCCEEDED(hr = pSF->CreateViewObject(NULL, IID_PPV_ARG(IShellDetails, &pSD))))
+        return GetDetailsOfAsStringVariant(pSD, pidl, Column, pVar);
     return hr;
 }
 
@@ -137,6 +156,19 @@ SH32_GetDetailsOfPKeyAsVariant(IShellFolder2 *pSF, PCUITEMID_CHILD pidl, const S
     VARTYPE vt = VT_EMPTY;
     HRESULT hr = UseFsColMap ? MapSCIDToShell32FsColumn(pscid, vt) : SHELL_MapSCIDToColumn(pSF, pscid);
     return SUCCEEDED(hr) ? SHELL_GetDetailsOfColumnAsVariant(pSF, pidl, hr, vt, pVar) : hr;
+}
+
+HRESULT
+SHELL_QueryInfoTipAlloc(_In_ IShellFolder* pSF, _In_ DWORD dwFlags, _In_ LPCITEMIDLIST pidl, _Out_ PWSTR *ppTip)
+{
+    if (!pidl)
+        return E_INVALIDARG;
+    CComPtr<IQueryInfo> pQI;
+    HRESULT hr = pSF->GetUIObjectOf(NULL, 1, &pidl, IID_NULL_PPV_ARG(IQueryInfo, &pQI));
+    if (FAILED(hr))
+        return hr;
+    hr = pQI->GetInfoTip(dwFlags, ppTip); // Note: *ppTip can be NULL if there is no tip
+    return SUCCEEDED(hr) && !*ppTip ? S_FALSE : hr;
 }
 
 HRESULT SHELL_CreateAbsolutePidl(IShellFolder *pSF, PCUIDLIST_RELATIVE pidlChild, PIDLIST_ABSOLUTE *ppPidl)

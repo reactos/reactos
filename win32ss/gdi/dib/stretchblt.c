@@ -174,7 +174,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
           sx = SourceRect->left+(DesX - DestRect->left) * SrcWidth / DstWidth;
         }
         if (sx < 0 || sy < 0 ||
-          MaskSurf->sizlBitmap.cx < sx || MaskCy < sy ||
+          MaskSurf->sizlBitmap.cx <= sx || MaskCy <= sy ||
           fnMask_GetPixel(MaskSurf, sx, sy) != 0)
         {
           CanDraw = FALSE;

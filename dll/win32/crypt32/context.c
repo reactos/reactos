@@ -79,7 +79,7 @@ void Context_AddRef(context_t *context)
 {
     LONG ref = InterlockedIncrement(&context->ref);
 
-    TRACE("(%p) ref=%d\n", context, context->ref);
+    TRACE("(%p) ref=%ld\n", context, context->ref);
 
     if(ref == 1) {
         /* This is the first external (non-store) reference. Increase store ref cnt. */
@@ -107,7 +107,7 @@ void Context_Release(context_t *context)
 {
     LONG ref = InterlockedDecrement(&context->ref);
 
-    TRACE("(%p) ref=%d\n", context, ref);
+    TRACE("(%p) ref=%ld\n", context, ref);
     assert(ref >= 0);
 
     if (!ref) {

@@ -15,7 +15,7 @@
 
 #ifndef SHSTDAPI
 #if defined(_SHELL32_) /* DECLSPEC_IMPORT disabled because of CORE-6504: */ || TRUE
-#define SHSTDAPI_(type) type WINAPI
+#define SHSTDAPI_(type) EXTERN_C type WINAPI
 #else
 #define SHSTDAPI_(type) EXTERN_C DECLSPEC_IMPORT type WINAPI
 #endif

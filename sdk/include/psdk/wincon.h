@@ -973,12 +973,36 @@ WriteConsoleOutputCharacterW(
   _Out_ LPDWORD lpNumberOfCharsWritten);
 
 
-#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
-// typedef VOID *HPCON;
-// CreatePseudoConsole()
-// ResizePseudoConsole()
-// ClosePseudoConsole()
-#endif // (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5) || defined(_KERNELBASE_)
+
+typedef VOID *HPCON;
+
+#define PSEUDOCONSOLE_INHERIT_CURSOR 0x00000001
+
+WINBASEAPI
+HRESULT
+WINAPI
+CreatePseudoConsole(
+  _In_ COORD size,
+  _In_ HANDLE hInput,
+  _In_ HANDLE hOutput,
+  _In_ DWORD dwFlags,
+  _Out_ HPCON *phPC);
+
+WINBASEAPI
+void
+WINAPI
+ClosePseudoConsole(
+  _In_ HPCON hPC);
+
+WINBASEAPI
+HRESULT
+WINAPI
+ResizePseudoConsole(
+  _In_ HPCON hPC,
+  _In_ COORD size);
+
+#endif // (NTDDI_VERSION >= NTDDI_WIN10_RS5) || _KERNELBASE_
 
 #if (NTDDI_VERSION >= NTDDI_WIN11_GE)
 /* See https://github.com/microsoft/terminal/blob/main/doc/specs/%237335%20-%20Console%20Allocation%20Policy.md

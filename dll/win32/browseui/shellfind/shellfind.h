@@ -79,7 +79,7 @@ static inline BOOL PathIsOnUnc(PCWSTR Path)
     return PathIsUNCW(Path); // FIXME: Verify the path starts with <\\Server\Share>[\]
 }
 
-static inline bool PathIsAbsolute(PCWSTR Path)
+static inline bool FindFiles_PathIsAbsolute(PCWSTR Path)
 {
     // Note: PathIsRelativeW is too forgiving
     return PathIsOnDrive(Path) || PathIsOnUnc(Path);

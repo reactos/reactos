@@ -535,11 +535,10 @@ typedef enum _PSW32THREADCALLOUTTYPE
 } PSW32THREADCALLOUTTYPE;
 
 //
-// Declare empty structure definitions so that they may be referenced by
-// routines before they are defined
+// Declare empty structure definitions so that they may be
+// referenced by routines before they are defined.
 //
-struct _W32THREAD;
-struct _W32PROCESS;
+//struct _EPROCESS;
 //struct _ETHREAD;
 struct _WIN32_POWEREVENT_PARAMETERS;
 struct _WIN32_POWERSTATE_PARAMETERS;

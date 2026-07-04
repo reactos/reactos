@@ -8,6 +8,7 @@
  */
 
 #include "precomp.h"
+#include "prop.h"
 #include "winsvc.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -59,20 +60,6 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::get_Parent(IDispatch **ppid)
     }
 
     return S_OK;
-}
-
-HRESULT VariantToIdlist(VARIANT* var, LPITEMIDLIST* idlist)
-{
-    HRESULT hr = E_FAIL;
-    if(V_VT(var) == VT_I4)
-    {
-        hr = SHGetSpecialFolderLocation(NULL, V_I4(var), idlist);
-    }
-    else if(V_VT(var) == VT_BSTR)
-    {
-        hr = SHILCreateFromPathW(V_BSTR(var), idlist, NULL);
-    }
-    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::NameSpace(VARIANT vDir, Folder **ppsdf)
@@ -336,6 +323,27 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::GetSystemInformation(BSTR name, VARIAN
         V_UI4(ret) = si.wProcessorArchitecture;
         return S_OK;
     }
+    else if (!lstrcmpiW(name, L"ProcessorSpeed"))
+    {
+        DWORD cb = sizeof(DWORD);
+        V_VT(ret) = VT_EMPTY;
+        if (RegGetValueW(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\CentralProcessor\\0",
+                         L"~Mhz", RRF_RT_REG_DWORD, NULL, &V_UI4(ret), &cb))
+        {
+            return S_FALSE;
+        }
+        V_VT(ret) = VT_I4;
+        return S_OK;
+    }
+    else if (!lstrcmpiW(name, L"PhysicalMemoryInstalled"))
+    {
+        MEMORYSTATUSEX mems;
+        mems.dwLength = sizeof(mems);
+        GlobalMemoryStatusEx(&mems);
+        V_VT(ret) = VT_UI8;
+        V_UI8(ret) = mems.ullTotalPhys;
+        return S_OK;
+    }
 
     UINT os = 0;
     if (!lstrcmpiW(name, L"IsOS_Professional"))
@@ -538,7 +546,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::GetSetting(LONG setting, VARIANT_BOOL 
 {
     TRACE("(%p, %lu, %p)\n", this, setting, result);
 
-    int flag = -1;
+    int flag = 0;
     SHELLSTATE ss = { };
     SHGetSetSettings(&ss, setting, FALSE);
     switch (setting)
@@ -552,14 +560,10 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::GetSetting(LONG setting, VARIANT_BOOL 
         case SSF_SEPPROCESS:       flag = ss.fSepProcess;         break;
         case SSF_STARTPANELON:     flag = ss.fStartPanelOn;       break;
         case SSF_SERVERADMINUI:    flag = IsOS(OS_SERVERADMINUI); break;
+        default: *result = VARIANT_FALSE; return S_FALSE;
     }
-    if (flag >= 0)
-    {
-        *result = flag ? VARIANT_TRUE : VARIANT_FALSE;
-        return S_OK;
-    }
-
-    return S_FALSE;
+    *result = flag ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 

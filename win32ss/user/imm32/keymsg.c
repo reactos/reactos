@@ -403,7 +403,7 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
         return 0; /* Out of range */
     }
 
-    dwSize = acbData[bAnsiAPI * 7 + dwCommand - 1];
+    dwSize = (DWORD)acbData[bAnsiAPI * 7 + dwCommand - 1];
     if (pData && IsBadWritePtr(pData, dwSize))
     {
         ERR("\n");

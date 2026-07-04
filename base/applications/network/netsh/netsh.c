@@ -101,6 +101,8 @@ wmain(
 
     DPRINT("wmain(%S)\n", GetCommandLineW());
 
+    GetWmiVersionInfo();
+
     g_hModule = GetModuleHandle(NULL);
 
     /* Initialize the Console Standard Streams */

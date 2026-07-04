@@ -167,7 +167,7 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallback *iface, ULONG ulP
             ok(szStatusText != NULL, "szStatusText == NULL\n");
             break;
         default:
-            todo_wine { ok(0, "unexpected code %d\n", ulStatusCode); }
+            todo_wine { ok(0, "unexpected code %ld\n", ulStatusCode); }
     };
     return S_OK;
 }
@@ -179,7 +179,7 @@ static HRESULT WINAPI statusclb_OnStopBinding(IBindStatusCallback *iface, HRESUL
     /* ignore DNS failure */
     if (hresult != HRESULT_FROM_WIN32(ERROR_INTERNET_NAME_NOT_RESOLVED))
     {
-        ok(SUCCEEDED(hresult), "Download failed: %08x\n", hresult);
+        ok(SUCCEEDED(hresult), "Download failed: %08lx\n", hresult);
         ok(szError == NULL, "szError should be NULL\n");
     }
 
@@ -204,7 +204,7 @@ static HRESULT WINAPI statusclb_OnDataAvailable(IBindStatusCallback *iface, DWOR
                                                 DWORD dwSize, FORMATETC* pformatetc, STGMEDIUM* pstgmed)
 {
     HRESULT hres;
-    DWORD readed;
+    DWORD read;
     BYTE buf[512];
 
     CHECK_EXPECT2(OnDataAvailable);
@@ -212,27 +212,27 @@ static HRESULT WINAPI statusclb_OnDataAvailable(IBindStatusCallback *iface, DWOR
     if (0)
     {
         /* FIXME: Uncomment after removing BindToStorage hack. */
-        ok(pformatetc != NULL, "pformatetx == NULL\n");
+        ok(pformatetc != NULL, "pformatetc == NULL\n");
         if(pformatetc) {
             ok(pformatetc->cfFormat == 0xc02d, "clipformat=%x\n", pformatetc->cfFormat);
             ok(pformatetc->ptd == NULL, "ptd = %p\n", pformatetc->ptd);
-            ok(pformatetc->dwAspect == 1, "dwAspect=%u\n", pformatetc->dwAspect);
-            ok(pformatetc->lindex == -1, "lindex=%d\n", pformatetc->lindex);
-            ok(pformatetc->tymed == TYMED_ISTREAM, "tymed=%u\n", pformatetc->tymed);
+            ok(pformatetc->dwAspect == 1, "dwAspect=%lu\n", pformatetc->dwAspect);
+            ok(pformatetc->lindex == -1, "lindex=%ld\n", pformatetc->lindex);
+            ok(pformatetc->tymed == TYMED_ISTREAM, "tymed=%lu\n", pformatetc->tymed);
         }
 
         ok(pstgmed != NULL, "stgmeg == NULL\n");
         if(pstgmed) {
-            ok(pstgmed->tymed == TYMED_ISTREAM, "tymed=%u\n", pstgmed->tymed);
-            ok(U(*pstgmed).pstm != NULL, "pstm == NULL\n");
+            ok(pstgmed->tymed == TYMED_ISTREAM, "tymed=%lu\n", pstgmed->tymed);
+            ok(pstgmed->pstm != NULL, "pstm == NULL\n");
             ok(pstgmed->pUnkForRelease != NULL, "pUnkForRelease == NULL\n");
         }
     }
 
-    if(U(*pstgmed).pstm) {
-        do hres = IStream_Read(U(*pstgmed).pstm, buf, 512, &readed);
+    if(pstgmed->pstm) {
+        do hres = IStream_Read(pstgmed->pstm, buf, 512, &read);
         while(hres == S_OK);
-        ok(hres == S_FALSE || hres == E_PENDING, "IStream_Read returned %08x\n", hres);
+        ok(hres == S_FALSE || hres == E_PENDING, "IStream_Read returned %08lx\n", hres);
     }
 
     return S_OK;
@@ -297,11 +297,11 @@ static void test_URLOpenBlockingStreamW(void)
     char buffer[256];
 
     hr = URLOpenBlockingStreamW(NULL, NULL, &pStream, 0, &BindStatusCallback);
-    ok(hr == E_INVALIDARG, "URLOpenBlockingStreamW should have failed with E_INVALIDARG instead of 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "URLOpenBlockingStreamW should have failed with E_INVALIDARG instead of 0x%08lx\n", hr);
     if (0)  /* crashes on Win2k */
     {
         hr = URLOpenBlockingStreamW(NULL, INDEX_HTML, NULL, 0, &BindStatusCallback);
-        ok(hr == E_INVALIDARG, "URLOpenBlockingStreamW should have failed with E_INVALIDARG instead of 0x%08x\n", hr);
+        ok(hr == E_INVALIDARG, "URLOpenBlockingStreamW should have failed with E_INVALIDARG instead of 0x%08lx\n", hr);
     }
 
     SET_EXPECT(GetBindInfo);
@@ -314,7 +314,7 @@ static void test_URLOpenBlockingStreamW(void)
     SET_EXPECT(OnStopBinding);
 
     hr = URLOpenBlockingStreamW(NULL, INDEX_HTML, &pStream, 0, &BindStatusCallback);
-    ok(hr == S_OK, "URLOpenBlockingStreamW failed with error 0x%08x\n", hr);
+    ok(hr == S_OK, "URLOpenBlockingStreamW failed with error 0x%08lx\n", hr);
 
     CHECK_CALLED(GetBindInfo);
     todo_wine CHECK_CALLED(QueryInterface_IServiceProvider);
@@ -330,21 +330,21 @@ static void test_URLOpenBlockingStreamW(void)
     {
         buffer[0] = 0;
         hr = IStream_Read(pStream, buffer, sizeof(buffer), NULL);
-        ok(hr == S_OK, "IStream_Read failed with error 0x%08x\n", hr);
+        ok(hr == S_OK, "IStream_Read failed with error 0x%08lx\n", hr);
         ok(!memcmp(buffer, szHtmlDoc, sizeof(szHtmlDoc)-1), "read data differs from file\n");
 
         IStream_Release(pStream);
     }
 
     hr = URLOpenBlockingStreamW(NULL, INDEX_HTML, &pStream, 0, NULL);
-    ok(hr == S_OK, "URLOpenBlockingStreamW failed with error 0x%08x\n", hr);
+    ok(hr == S_OK, "URLOpenBlockingStreamW failed with error 0x%08lx\n", hr);
 
     ok(pStream != NULL, "pStream is NULL\n");
     if(pStream)
     {
         buffer[0] = 0;
         hr = IStream_Read(pStream, buffer, sizeof(buffer), NULL);
-        ok(hr == S_OK, "IStream_Read failed with error 0x%08x\n", hr);
+        ok(hr == S_OK, "IStream_Read failed with error 0x%08lx\n", hr);
         ok(!memcmp(buffer, szHtmlDoc, sizeof(szHtmlDoc)-1), "read data differs from file\n");
 
         IStream_Release(pStream);
@@ -356,7 +356,7 @@ static void test_URLOpenStreamW(void)
     HRESULT hr;
 
     hr = URLOpenStreamW(NULL, NULL, 0, &BindStatusCallback);
-    ok(hr == E_INVALIDARG, "URLOpenStreamW should have failed with E_INVALIDARG instead of 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "URLOpenStreamW should have failed with E_INVALIDARG instead of 0x%08lx\n", hr);
 
     SET_EXPECT(GetBindInfo);
     SET_EXPECT(QueryInterface_IServiceProvider);
@@ -369,7 +369,7 @@ static void test_URLOpenStreamW(void)
     SET_EXPECT(OnStopBinding);
 
     hr = URLOpenStreamW(NULL, INDEX_HTML, 0, &BindStatusCallback);
-    ok(hr == S_OK, "URLOpenStreamW failed with error 0x%08x\n", hr);
+    ok(hr == S_OK, "URLOpenStreamW failed with error 0x%08lx\n", hr);
 
     CHECK_CALLED(GetBindInfo);
     todo_wine CHECK_CALLED(QueryInterface_IServiceProvider);
@@ -382,7 +382,7 @@ static void test_URLOpenStreamW(void)
     CHECK_CALLED(OnStopBinding);
 
     hr = URLOpenStreamW(NULL, INDEX_HTML, 0, NULL);
-    ok(hr == S_OK, "URLOpenStreamW failed with error 0x%08x\n", hr);
+    ok(hr == S_OK, "URLOpenStreamW failed with error 0x%08lx\n", hr);
 }
 
 START_TEST(stream)

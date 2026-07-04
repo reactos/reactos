@@ -572,6 +572,14 @@ ShellExecuteW(
 
 BOOL WINAPI ShellExecuteExA(_Inout_ LPSHELLEXECUTEINFOA);
 BOOL WINAPI ShellExecuteExW(_Inout_ LPSHELLEXECUTEINFOW);
+
+HRESULT WINAPI
+SHEvaluateSystemCommandTemplate(
+    _In_ PCWSTR pszCmdTemplate,
+    _Outptr_ PWSTR *ppszApplication,
+    _Outptr_opt_ PWSTR *ppszCommandLine,
+    _Outptr_opt_ PWSTR *ppszParameters);
+
 int WINAPI SHFileOperationA(_Inout_ LPSHFILEOPSTRUCTA);
 int WINAPI SHFileOperationW(_Inout_ LPSHFILEOPSTRUCTW);
 void WINAPI SHFreeNameMappings(_In_opt_ HANDLE);

@@ -982,7 +982,7 @@ static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, 
     // It currently does not so we have to ask the outer folder ourself so
     // that we get the correct attributes for My Computer etc.
     CComPtr<IShellFolder> pOuterSF;
-    SHBindToObject(NULL, pidlFolder, IID_PPV_ARG(IShellFolder, &pOuterSF));
+    SHBindToObject(NULL, pidlFolder, NULL, IID_PPV_ARG(IShellFolder, &pOuterSF));
 
     SFGAOF att = (psf && cidl) ? SHGetAttributes(pOuterSF ? pOuterSF.p : psf, apidl[0], SFGAO_FOLDER) : 0;
     if ((att & SFGAO_FOLDER) && (!pGuid || !HasCLSIDShellFolderValue(*pGuid, L"HideFolderVerbs")))

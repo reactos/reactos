@@ -12,17 +12,29 @@
 class CFolderItem:
     public CComCoClass<CFolderItem>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IDispatchImpl<FolderItem, &IID_FolderItem>
+    public IDispatchImpl<FolderItem2, &IID_FolderItem2>
 {
 private:
     CComHeapPtr<ITEMIDLIST> m_idlist;
     CComPtr<Folder> m_Folder;
 
+    inline HRESULT GetParentShellFolderAndItem(REFIID riid, void**ppv, PCUITEMID_CHILD &pidlLast);
+
+    static LPCITEMIDLIST GetInternalPidlRef(IUnknown *pUnk);
+    static LPCITEMIDLIST GetInternalPidlRef(const VARIANT *pV);
+
 public:
     CFolderItem();
     ~CFolderItem();
 
-    HRESULT Initialize(Folder* folder, LPITEMIDLIST idlist);
+    HRESULT Initialize(Folder* folder, LPCITEMIDLIST idlist);
+    LPCITEMIDLIST GetAbsoluteIDList() { return m_idlist; }
+    HWND GetHwnd() { return NULL; }
+    HRESULT GetFindDataFromIDList(WIN32_FIND_DATA &wfd);
+    HRESULT HasAttribute(DWORD sfgaof, VARIANT_BOOL *pB);
+    HRESULT GetExtendedProperty(REFPROPERTYKEY pkey, VARIANT *pv);
+
+    static PCUITEMID_CHILD GetLeafPidlRef(const VARIANT *pV);
 
     // *** FolderItem methods ***
     STDMETHOD(get_Application)(IDispatch **ppid) override;
@@ -43,12 +55,16 @@ public:
     STDMETHOD(Verbs)(FolderItemVerbs **ppfic) override;
     STDMETHOD(InvokeVerb)(VARIANT vVerb) override;
 
+    // *** FolderItem2 methods ***
+    STDMETHOD(InvokeVerbEx)(VARIANT vVerb, VARIANT vArgs) override;
+    STDMETHOD(ExtendedProperty)(BSTR bsPropName, VARIANT *pv) override;
 
 DECLARE_NOT_AGGREGATABLE(CFolderItem)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CFolderItem)
     COM_INTERFACE_ENTRY_IID(IID_FolderItem, FolderItem)
+    COM_INTERFACE_ENTRY_IID(IID_FolderItem2, FolderItem2)
     COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
 END_COM_MAP()
 };
@@ -69,7 +85,7 @@ public:
     ~CFolderItems();
 
     // Please note: CFolderItems takes ownership of idlist.
-    HRESULT Initialize(LPITEMIDLIST idlist, Folder* parent);
+    HRESULT Initialize(LPCITEMIDLIST idlist, Folder* parent);
 
     // *** FolderItems methods ***
     STDMETHOD(get_Count)(long *plCount) override;

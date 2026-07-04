@@ -701,6 +701,8 @@ co_IntGetScrollBarInfo(PWND Window, LONG idObject, PSCROLLBARINFO psbi)
    IntGetScrollBarRect(Window, Bar, &(sbi->rcScrollBar));
    IntCalculateThumb(Window, Bar, sbi, pSBData);
 
+   RtlCopyMemory(psbi, sbi, sizeof(*psbi));
+
     // Scrollbar state
     psbi->rgstate[0] = 0;
     if ((Bar == SB_HORZ && !(Window->style & WS_HSCROLL))
@@ -713,10 +715,8 @@ co_IntGetScrollBarInfo(PWND Window, LONG idObject, PSCROLLBARINFO psbi)
         else
             psbi->rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
     }
-    if (Bar == SB_CTL && !(Window->style & WS_DISABLED))
+    if (Bar == SB_CTL && (Window->style & WS_DISABLED))
         psbi->rgstate[0] |= STATE_SYSTEM_UNAVAILABLE;
-
-   RtlCopyMemory(psbi, sbi, sizeof(SCROLLBARINFO));
 
    return TRUE;
 }

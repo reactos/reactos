@@ -46,7 +46,7 @@ typedef struct _WINE_PROVIDERSTORE
 static void ProvStore_addref(WINECRYPT_CERTSTORE *store)
 {
     LONG ref = InterlockedIncrement(&store->ref);
-    TRACE("ref = %d\n", ref);
+    TRACE("ref = %ld\n", ref);
 }
 
 static DWORD ProvStore_release(WINECRYPT_CERTSTORE *cert_store, DWORD flags)
@@ -55,10 +55,10 @@ static DWORD ProvStore_release(WINECRYPT_CERTSTORE *cert_store, DWORD flags)
     LONG ref;
 
     if(flags)
-        FIXME("Unimplemented flags %x\n", flags);
+        FIXME("Unimplemented flags %lx\n", flags);
 
     ref = InterlockedDecrement(&store->hdr.ref);
-    TRACE("(%p) ref=%d\n", store, ref);
+    TRACE("(%p) ref=%ld\n", store, ref);
 
     if(ref)
         return ERROR_SUCCESS;
@@ -275,7 +275,7 @@ static BOOL ProvStore_control(WINECRYPT_CERTSTORE *cert_store, DWORD dwFlags, DW
     WINE_PROVIDERSTORE *store = (WINE_PROVIDERSTORE*)cert_store;
     BOOL ret = TRUE;
 
-    TRACE("(%p, %08x, %d, %p)\n", store, dwFlags, dwCtrlType,
+    TRACE("(%p, %08lx, %ld, %p)\n", store, dwFlags, dwCtrlType,
      pvCtrlPara);
 
     if (store->provControl)

@@ -15,7 +15,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-INT WINAPI Shell_GetCachedImageIndexW(LPCWSTR szPath, INT nIndex, UINT Flags);
+EXTERN_C INT WINAPI Shell_GetCachedImageIndexW(LPCWSTR szPath, INT nIndex, UINT Flags);
 
 #define SHV_CHANGE_NOTIFY (WM_USER + 0x1111)
 enum { SHGDN_TREE = SHGDN_NORMAL | SHGDN_INFOLDER };
@@ -190,7 +190,7 @@ BrFolder_InitTreeView(BrFolder *info)
     PCIDLIST_RELATIVE pidlChild = ILFindLastID(pidlRoot);
 
     CComPtr<IShellFolder> lpsfParent;
-    hr = SHBindToObject(NULL, pidlParent, /*NULL, */ IID_PPV_ARG(IShellFolder, &lpsfParent));
+    hr = SHBindToObject(NULL, pidlParent, NULL, IID_PPV_ARG(IShellFolder, &lpsfParent));
     if (FAILED_UNEXPECTEDLY(hr))
         return;
 

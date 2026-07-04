@@ -25,6 +25,8 @@ struct ZipPidlEntry
     ULONG DosDate;
 
     WCHAR Name[1];
+
+    bool IsDirectory() const { return ZipType == ZIP_PIDL_DIRECTORY; }
 };
 #include <poppack.h>
 

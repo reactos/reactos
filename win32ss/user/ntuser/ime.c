@@ -434,7 +434,7 @@ NtUserGetImeHotKey(
 {
     PIMEHOTKEY pNode = NULL;
 
-    UserEnterExclusive();
+    UserEnterShared();
 
     _SEH2_TRY
     {
@@ -1897,7 +1897,7 @@ NtUserQueryInputContext(HIMC hIMC, DWORD dwType)
     PTHREADINFO ptiIMC;
     DWORD_PTR ret = 0;
 
-    UserEnterExclusive();
+    UserEnterShared();
 
     if (!IS_IMM_MODE())
         goto Quit;

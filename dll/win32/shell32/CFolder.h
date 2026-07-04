@@ -16,6 +16,7 @@ class CFolder:
 {
 private:
     HRESULT GetShellFolder(CComPtr<IShellFolder>& psfCurrent);
+    HRESULT CopyMoveOperation(VARIANT &vItem, VARIANT vOptions, BOOL bCopy);
 
     CComHeapPtr<ITEMIDLIST> m_idlist;
     CComPtr<IShellDispatch> m_Application;
@@ -24,7 +25,10 @@ public:
     CFolder();
     ~CFolder();
 
-    HRESULT Initialize(LPITEMIDLIST idlist);
+    HRESULT Initialize(LPCITEMIDLIST idlist);
+    LPCITEMIDLIST GetAbsoluteIDList() { return m_idlist; }
+    HWND GetHwnd() { return NULL; }
+    IUnknown* GetSite() { return NULL; }
 
     // *** Folder methods ***
     STDMETHOD(get_Title)(BSTR *pbs) override;

@@ -405,6 +405,37 @@ interface IAuthenticate : IUnknown
 }
 
 /*****************************************************************************
+ * IAuthenticateEx interface
+ */
+[
+    object,
+    uuid(2ad1edaf-d83d-48b5-9adf-03dbe19f53bd),
+    pointer_default(unique)
+]
+
+interface IAuthenticateEx : IAuthenticate
+{
+    typedef [unique] IAuthenticateEx *LPAUTHENTICATIONEX;
+
+    typedef enum {
+        AUTHENTICATEF_PROXY = 0x00000001,
+        AUTHENTICATEF_BASIC = 0x00000002,
+        AUTHENTICATEF_HTTP  = 0x00000004
+    } AUTHENTICATEF;
+
+    typedef struct _tagAUTHENTICATEINFO {
+        DWORD dwFlags;
+        DWORD dwReserved;
+    } AUTHENTICATEINFO;
+
+    HRESULT AuthenticateEx(
+            [out] HWND *phwnd,
+            [out] LPWSTR *pszUsername,
+            [out] LPWSTR *pszPassword,
+            [in]  AUTHENTICATEINFO *pauthinfo);
+}
+
+/*****************************************************************************
  * IHttpNegotiate interface
  */
 [
@@ -555,6 +586,23 @@ interface IWinInetHttpInfo : IWinInetInfo
         [in, out] DWORD *pcbBuf,
         [in, out] DWORD *pdwFlags,
         [in, out] DWORD *pdwReserved);
+}
+
+/*****************************************************************************
+ * IWinInetHttpTimeouts interface
+ */
+[
+    local,
+    object,
+    uuid(f286fa56-c1fd-4270-8e67-b3eb790a81e8),
+    pointer_default(unique)
+]
+interface IWinInetHttpTimeouts : IUnknown
+{
+    HRESULT GetRequestTimeouts(
+        [out] DWORD *connect_timeout,
+        [out] DWORD *send_timeout,
+        [out] DWORD *receive_timeout);
 }
 
 /*****************************************************************************
@@ -749,7 +797,9 @@ interface IInternetBindInfo : IUnknown
         BINDSTRING_INITIAL_FILENAME,
         BINDSTRING_PROXY_USERNAME,
         BINDSTRING_PROXY_PASSWORD,
-        BINDSTRING_ENTERPRISE_ID
+        BINDSTRING_ENTERPRISE_ID,
+        BINDSTRING_DOC_URL,
+        BINDSTRING_SAMESITE_COOKIE_LEVEL
     } BINDSTRING;
 
     HRESULT GetBindInfo(
@@ -1998,7 +2048,7 @@ interface IUriBuilder: IUnknown
 
     HRESULT HasBeenModified(
         [out] BOOL *pfModified);
-};
+}
 
 cpp_quote("HRESULT WINAPI CreateIUriBuilder(IUri*,DWORD,DWORD_PTR,IUriBuilder**);")
 
@@ -2093,6 +2143,8 @@ struct CONFIRMSAFETY
     IUnknown *pUnk;
     DWORD dwFlags;
 };
+
+cpp_quote("#define UAS_EXACTLEGACY 0x1000")
 
 cpp_quote("EXTERN_C const GUID GUID_CUSTOM_CONFIRMOBJECTSAFETY;")
 

@@ -31,7 +31,7 @@ HCERTSTORE WINAPI CryptGetMessageCertificates(DWORD dwMsgAndCertEncodingType,
 {
     CRYPT_DATA_BLOB blob = { cbSignedBlob, (LPBYTE)pbSignedBlob };
 
-    TRACE("(%08x, %ld, %d08x %p, %d)\n", dwMsgAndCertEncodingType, hCryptProv,
+    TRACE("(%08lx, %Id, %ld08x %p, %ld)\n", dwMsgAndCertEncodingType, hCryptProv,
      dwFlags, pbSignedBlob, cbSignedBlob);
 
     return CertOpenStore(CERT_STORE_PROV_PKCS7, dwMsgAndCertEncodingType,
@@ -44,7 +44,7 @@ LONG WINAPI CryptGetMessageSignerCount(DWORD dwMsgEncodingType,
     HCRYPTMSG msg;
     LONG count = -1;
 
-    TRACE("(%08x, %p, %d)\n", dwMsgEncodingType, pbSignedBlob, cbSignedBlob);
+    TRACE("(%08lx, %p, %ld)\n", dwMsgEncodingType, pbSignedBlob, cbSignedBlob);
 
     msg = CryptMsgOpenToDecode(dwMsgEncodingType, 0, 0, 0, NULL, NULL);
     if (msg)
@@ -114,7 +114,7 @@ BOOL WINAPI CryptVerifyDetachedMessageSignature(
     BOOL ret = FALSE;
     HCRYPTMSG msg;
 
-    TRACE("(%p, %d, %p, %d, %d, %p, %p, %p)\n", pVerifyPara, dwSignerIndex,
+    TRACE("(%p, %ld, %p, %ld, %ld, %p, %p, %p)\n", pVerifyPara, dwSignerIndex,
      pbDetachedSignBlob, cbDetachedSignBlob, cToBeSigned, rgpbToBeSigned,
      rgcbToBeSigned, ppSignerCert);
 
@@ -188,7 +188,7 @@ BOOL WINAPI CryptVerifyMessageSignature(PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara,
     BOOL ret = FALSE;
     HCRYPTMSG msg;
 
-    TRACE("(%p, %d, %p, %d, %p, %p, %p)\n",
+    TRACE("(%p, %ld, %p, %ld, %p, %p, %p)\n",
      pVerifyPara, dwSignerIndex, pbSignedBlob, cbSignedBlob,
      pbDecoded, pcbDecoded, ppSignerCert);
 
@@ -262,7 +262,7 @@ BOOL WINAPI CryptHashMessage(PCRYPT_HASH_MESSAGE_PARA pHashPara,
     HCRYPTMSG msg;
     CMSG_HASHED_ENCODE_INFO info;
 
-    TRACE("(%p, %d, %d, %p, %p, %p, %p, %p, %p)\n", pHashPara, fDetachedHash,
+    TRACE("(%p, %d, %ld, %p, %p, %p, %p, %p, %p)\n", pHashPara, fDetachedHash,
      cToBeHashed, rgpbToBeHashed, rgcbToBeHashed, pbHashedBlob, pcbHashedBlob,
      pbComputedHash, pcbComputedHash);
 
@@ -314,7 +314,7 @@ BOOL WINAPI CryptVerifyDetachedMessageHash(PCRYPT_HASH_MESSAGE_PARA pHashPara,
     HCRYPTMSG msg;
     BOOL ret = FALSE;
 
-    TRACE("(%p, %p, %d, %d, %p, %p, %p, %p)\n", pHashPara, pbDetachedHashBlob,
+    TRACE("(%p, %p, %ld, %ld, %p, %p, %p, %p)\n", pHashPara, pbDetachedHashBlob,
      cbDetachedHashBlob, cToBeHashed, rgpbToBeHashed, rgcbToBeHashed,
      pbComputedHash, pcbComputedHash);
 
@@ -368,7 +368,7 @@ BOOL WINAPI CryptVerifyMessageHash(PCRYPT_HASH_MESSAGE_PARA pHashPara,
     HCRYPTMSG msg;
     BOOL ret = FALSE;
 
-    TRACE("(%p, %p, %d, %p, %p, %p, %p)\n", pHashPara, pbHashedBlob,
+    TRACE("(%p, %p, %ld, %p, %p, %p, %p)\n", pHashPara, pbHashedBlob,
      cbHashedBlob, pbToBeHashed, pcbToBeHashed, pbComputedHash,
      pcbComputedHash);
 
@@ -416,7 +416,7 @@ BOOL WINAPI CryptSignMessage(PCRYPT_SIGN_MESSAGE_PARA pSignPara,
     CMSG_SIGNER_ENCODE_INFO signer;
     HCRYPTMSG msg = 0;
 
-    TRACE("(%p, %d, %d, %p, %p, %p, %p)\n", pSignPara, fDetachedSignature,
+    TRACE("(%p, %d, %ld, %p, %p, %p, %p)\n", pSignPara, fDetachedSignature,
      cToBeSigned, rgpbToBeSigned, rgcbToBeSigned, pbSignedBlob, pcbSignedBlob);
 
     if (pSignPara->cbSize != sizeof(CRYPT_SIGN_MESSAGE_PARA) ||
@@ -529,7 +529,7 @@ BOOL WINAPI CryptEncryptMessage(PCRYPT_ENCRYPT_MESSAGE_PARA pEncryptPara,
     CMSG_ENVELOPED_ENCODE_INFO envelopedInfo;
     HCRYPTMSG msg = 0;
 
-    TRACE("(%p, %d, %p, %p, %d, %p, %p)\n", pEncryptPara, cRecipientCert,
+    TRACE("(%p, %ld, %p, %p, %ld, %p, %p)\n", pEncryptPara, cRecipientCert,
      rgpRecipientCert, pbToBeEncrypted, cbToBeEncrypted, pbEncryptedBlob,
      pcbEncryptedBlob);
 

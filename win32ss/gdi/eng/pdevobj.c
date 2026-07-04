@@ -805,7 +805,7 @@ EngpGetPDEV(
     ULONG i;
 
     /* Acquire PDEV lock */
-    EngAcquireSemaphore(ghsemPDEV);
+    EngAcquireSemaphoreShared(ghsemPDEV);
 
     /* Did the caller pass a device name? */
     if (pustrDeviceName)

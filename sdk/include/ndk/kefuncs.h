@@ -524,10 +524,18 @@ NtDelayExecution(
     _In_ LARGE_INTEGER *Interval
 );
 
+NTSYSCALLAPI
 ULONG
 NTAPI
 NtGetCurrentProcessorNumber(
     VOID
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtGetCurrentProcessorNumberEx(
+    _Out_ PPROCESSOR_NUMBER ProcessorNumber
 );
 
 NTSYSCALLAPI

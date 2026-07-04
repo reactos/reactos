@@ -2,16 +2,6 @@
 
 typedef struct
 {
-    const INetCfgComponent *lpVtbl;
-    const INetCfgComponentBindings *lpVtblBindings;
-    const INetCfgComponentPrivate  *lpVtblPrivate;
-    LONG  ref;
-    NetCfgComponentItem * pItem;
-    INetCfg * pNCfg;
-} INetCfgComponentImpl;
-
-typedef struct
-{
     const IEnumNetCfgComponent * lpVtbl;
     LONG  ref;
     NetCfgComponentItem * pCurrent;

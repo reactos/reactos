@@ -8,6 +8,7 @@
  */
 #include "kbswitch.h"
 #include <shlobj.h>
+#include <shlwapi.h>
 #include <shlwapi_undoc.h>
 #include <undocuser.h>
 #include <imm.h>

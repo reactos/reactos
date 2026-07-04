@@ -480,7 +480,7 @@ LOCATIONITEM* CSearchBar::GetAddressEditBoxLocations(WCHAR *szPath)
 
     DWORD dwAttributes = GetFileAttributesW(pszPath);
     if (dwAttributes != INVALID_FILE_ATTRIBUTES && (dwAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
-        PathIsAbsolute(pszPath))
+        FindFiles_PathIsAbsolute(pszPath))
     {
         return BuildLocationList(&pszPath, 1);
     }

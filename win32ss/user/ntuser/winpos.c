@@ -3283,7 +3283,7 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
 {
    PWND pwndParent;
    TRACE("Enter NtUserChildWindowFromPointEx\n");
-   UserEnterExclusive();
+   UserEnterShared();
    if ((pwndParent = UserGetWindowObject(hwndParent)))
    {
       pwndParent = IntChildWindowFromPointEx(pwndParent, x, y, uiFlags);

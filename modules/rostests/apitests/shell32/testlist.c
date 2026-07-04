@@ -3,6 +3,7 @@
 #include <wine/test.h>
 
 extern void func_AddCommas(void);
+extern void func_AssocCreateElement(void);
 extern void func_Control_RunDLLW(void);
 extern void func_CFSFolder(void);
 extern void func_CheckEscapes(void);
@@ -10,6 +11,7 @@ extern void func_CIDLData(void);
 extern void func_CMyComputer(void);
 extern void func_CommandLineToArgvW(void);
 extern void func_CShellDesktop(void);
+extern void func_CShellDispatch(void);
 extern void func_CShellLink(void);
 extern void func_CUserNotification(void);
 extern void func_DragDrop(void);
@@ -21,6 +23,7 @@ extern void func_ILCreateFromPath(void);
 extern void func_ILIsEqual(void);
 extern void func_Int64ToString(void);
 extern void func_IShellFolderViewCB(void);
+extern void func_LockServer(void);
 extern void func_menu(void);
 extern void func_OpenAs_RunDLL(void);
 extern void func_PathIsEqualOrSubFolder(void);
@@ -37,6 +40,7 @@ extern void func_SHCreateFileDataObject(void);
 extern void func_SHCreateFileExtractIconW(void);
 extern void func_SHDefExtractIcon(void);
 extern void func_SHEnumerateUnreadMailAccountsW(void);
+extern void func_SHEvaluateSystemCommandTemplate(void);
 extern void func_She(void);
 extern void func_ShellExec_RunDLL(void);
 extern void func_ShellExecCmdLine(void);
@@ -61,6 +65,7 @@ extern void func_StrRStr(void);
 const struct test winetest_testlist[] =
 {
     { "AddCommas", func_AddCommas },
+    { "AssocCreateElement", func_AssocCreateElement },
     { "Control_RunDLLW", func_Control_RunDLLW },
     { "CFSFolder", func_CFSFolder },
     { "CheckEscapes", func_CheckEscapes },
@@ -68,6 +73,7 @@ const struct test winetest_testlist[] =
     { "CMyComputer", func_CMyComputer },
     { "CommandLineToArgvW", func_CommandLineToArgvW },
     { "CShellDesktop", func_CShellDesktop },
+    { "CShellDispatch", func_CShellDispatch },
     { "CShellLink", func_CShellLink },
     //{ "CUserNotification", func_CUserNotification }, // Test is broken on Win 2003
     { "DragDrop", func_DragDrop },
@@ -79,6 +85,7 @@ const struct test winetest_testlist[] =
     { "ILIsEqual", func_ILIsEqual },
     { "Int64ToString", func_Int64ToString },
     { "IShellFolderViewCB", func_IShellFolderViewCB },
+    { "LockServer", func_LockServer },
     { "menu", func_menu },
     //{ "OpenAs_RunDLL", func_OpenAs_RunDLL }, // Test hangs on Win 2003
     { "PathIsEqualOrSubFolder", func_PathIsEqualOrSubFolder },
@@ -95,6 +102,7 @@ const struct test winetest_testlist[] =
     { "SHCreateFileExtractIconW", func_SHCreateFileExtractIconW },
     { "SHDefExtractIcon", func_SHDefExtractIcon },
     { "SHEnumerateUnreadMailAccountsW", func_SHEnumerateUnreadMailAccountsW },
+    { "SHEvaluateSystemCommandTemplate", func_SHEvaluateSystemCommandTemplate },
     { "She", func_She },
     //{ "ShellExec_RunDLL", func_ShellExec_RunDLL }, Broke on Windows
     //{ "ShellExecCmdLine", func_ShellExecCmdLine }, Broke on Windows

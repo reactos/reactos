@@ -263,8 +263,7 @@ ObReferenceFileObjectForWrite(IN HANDLE Handle,
 
             HandleInformation->GrantedAccess = GrantedAccess;
 
-            /* FIXME: Get handle attributes */
-            HandleInformation->HandleAttributes = 0;
+            HandleInformation->HandleAttributes = HandleEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
 
             /* Do granted and desired access match? */
             if (GrantedAccess & DesiredAccess)

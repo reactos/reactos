@@ -36,6 +36,10 @@
 #define IDS_EB_FORMAT 73
 #define IDS_RESTRICTED 283
 #define IDS_RESTRICTIONS 284
+/* The following three values must match dll/win32/shell32/evalcmd/resource.h's ones */
+#define IDS_ANY_FILE 4864
+#define IDS_FILE 4865
+#define IDS_FOLDER 4866
 #endif
 
 /* These numbers match native IDs and shouldn't be arbitrarily changed */
