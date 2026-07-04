@@ -279,10 +279,10 @@ CWineTest::GetNextTestInfo()
 
                     if(UnderscorePosition == m_CurrentFile.npos)
                     {
-                        stringstream ss;
-
-                        ss << "Invalid test file name: " << UnicodeToAscii(m_CurrentFile) << endl;
-                        SSEXCEPTION;
+                        /* Use the entire name (without .exe extendion) */
+                        UnderscorePosition = m_CurrentFile.find_first_of('.');
+                        if(UnderscorePosition == m_CurrentFile.npos)
+                            UnderscorePosition = m_CurrentFile.length();
                     }
 
                     TestInfo->Module = UnicodeToAscii(m_CurrentFile.substr(0, UnderscorePosition));
