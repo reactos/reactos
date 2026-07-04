@@ -721,6 +721,17 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             /* Check flags */
             if (!(LdrEntry->Flags & LDRP_ENTRY_PROCESSED))
             {
+                Status = LdrpHandleTlsData(LdrEntry);
+                if (!NT_SUCCESS(Status))
+                {
+                    if (LdrRootEntry != LocalArray)
+                    {
+                        RtlFreeHeap(LdrpHeap, 0, LdrRootEntry);
+                    }
+
+                    return Status;
+                }
+
                 /* Setup the Cookie for the DLL */
                 LdrpInitSecurityCookie(LdrEntry);
 
@@ -1264,20 +1275,97 @@ LdrShutdownThread(VOID)
     return STATUS_SUCCESS;
 }
 
+/*
+ * Register a module's TLS directory and, when the current thread already has
+ * a TLS vector, make the new slot usable before the module initializer runs.
+ */
+NTSTATUS
+NTAPI
+LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PIMAGE_TLS_DIRECTORY TlsDirectory;
+    PLDRP_TLS_DATA TlsData;
+    PTEB Teb = NtCurrentTeb();
+    PVOID *TlsVector;
+    SIZE_T RawDataSize, BlockSize;
+    ULONG Index, Size;
+
+    /* Nothing to do if this module is already registered */
+    if (LdrEntry->TlsIndex)
+        return STATUS_SUCCESS;
+
+    /* Check for a TLS directory */
+    TlsDirectory = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
+                                                TRUE,
+                                                IMAGE_DIRECTORY_ENTRY_TLS,
+                                                &Size);
+    if (!TlsDirectory)
+        return STATUS_SUCCESS;
+
+    /* Remember that the process uses TLS */
+    if (!LdrpImageHasTls) LdrpImageHasTls = TRUE;
+
+    /* Show debug message */
+    if (ShowSnaps)
+    {
+        DPRINT1("LDR: Tls Found in %wZ at %p\n",
+                &LdrEntry->BaseDllName,
+                TlsDirectory);
+    }
+
+    /* Cache the directory and assign the module its TLS index */
+    TlsData = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LDRP_TLS_DATA));
+    if (!TlsData) return STATUS_NO_MEMORY;
+
+    LdrEntry->LoadCount = -1;
+    LdrEntry->TlsIndex = -1;
+    TlsData->TlsDirectory = *TlsDirectory;
+    InsertTailList(&LdrpTlsList, &TlsData->TlsLinks);
+
+    Index = LdrpNumberOfTlsEntries++;
+    *(PLONG)TlsData->TlsDirectory.AddressOfIndex = Index;
+    TlsData->TlsDirectory.Characteristics = Index;
+
+    /* LdrpAllocateTls() will allocate the vector during process startup. */
+    if (!Teb->ThreadLocalStoragePointer)
+        return STATUS_SUCCESS;
+
+    /* Grow the running thread's vector so the new index is addressable */
+    TlsVector = RtlReAllocateHeap(RtlGetProcessHeap(),
+                                  0,
+                                  Teb->ThreadLocalStoragePointer,
+                                  LdrpNumberOfTlsEntries * sizeof(PVOID));
+    if (!TlsVector) return STATUS_NO_MEMORY;
+    Teb->ThreadLocalStoragePointer = TlsVector;
+
+    /* Allocate the raw TLS data plus the image's zero-fill area. */
+    RawDataSize = TlsDirectory->EndAddressOfRawData -
+                  TlsDirectory->StartAddressOfRawData;
+    BlockSize = RawDataSize + TlsDirectory->SizeOfZeroFill;
+    TlsVector[Index] = RtlAllocateHeap(RtlGetProcessHeap(),
+                                       HEAP_ZERO_MEMORY,
+                                       BlockSize);
+    if (!TlsVector[Index]) return STATUS_NO_MEMORY;
+
+    RtlCopyMemory(TlsVector[Index],
+                  (PVOID)TlsDirectory->StartAddressOfRawData,
+                  RawDataSize);
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 LdrpInitializeTls(VOID)
 {
     PLIST_ENTRY NextEntry, ListHead;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    PIMAGE_TLS_DIRECTORY TlsDirectory;
-    PLDRP_TLS_DATA TlsData;
-    ULONG Size;
+    NTSTATUS Status;
 
     /* Initialize the TLS List */
     InitializeListHead(&LdrpTlsList);
 
-    /* Loop all the modules */
+    /* Register the TLS of every module already loaded */
     ListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
     NextEntry = ListHead->Flink;
     while (ListHead != NextEntry)
@@ -1286,41 +1374,8 @@ LdrpInitializeTls(VOID)
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
         NextEntry = NextEntry->Flink;
 
-        /* Get the TLS directory */
-        TlsDirectory = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
-                                                    TRUE,
-                                                    IMAGE_DIRECTORY_ENTRY_TLS,
-                                                    &Size);
-
-        /* Check if we have a directory */
-        if (!TlsDirectory) continue;
-
-        /* Check if the image has TLS */
-        if (!LdrpImageHasTls) LdrpImageHasTls = TRUE;
-
-        /* Show debug message */
-        if (ShowSnaps)
-        {
-            DPRINT1("LDR: Tls Found in %wZ at %p\n",
-                    &LdrEntry->BaseDllName,
-                    TlsDirectory);
-        }
-
-        /* Allocate an entry */
-        TlsData = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LDRP_TLS_DATA));
-        if (!TlsData) return STATUS_NO_MEMORY;
-
-        /* Lock the DLL and mark it for TLS Usage */
-        LdrEntry->LoadCount = -1;
-        LdrEntry->TlsIndex = -1;
-
-        /* Save the cached TLS data */
-        TlsData->TlsDirectory = *TlsDirectory;
-        InsertTailList(&LdrpTlsList, &TlsData->TlsLinks);
-
-        /* Update the index */
-        *(PLONG)TlsData->TlsDirectory.AddressOfIndex = LdrpNumberOfTlsEntries;
-        TlsData->TlsDirectory.Characteristics = LdrpNumberOfTlsEntries++;
+        Status = LdrpHandleTlsData(LdrEntry);
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Done setting up TLS, allocate entries */
@@ -1334,7 +1389,7 @@ LdrpAllocateTls(VOID)
     PTEB Teb = NtCurrentTeb();
     PLIST_ENTRY NextEntry, ListHead;
     PLDRP_TLS_DATA TlsData;
-    SIZE_T TlsDataSize;
+    SIZE_T RawDataSize, TlsDataSize;
     PVOID *TlsVector;
 
     /* Check if we have any entries */
@@ -1357,11 +1412,12 @@ LdrpAllocateTls(VOID)
         TlsData = CONTAINING_RECORD(NextEntry, LDRP_TLS_DATA, TlsLinks);
         NextEntry = NextEntry->Flink;
 
-        /* Allocate this vector */
-        TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData -
+        /* Allocate the initial TLS data and zero-fill tail. */
+        RawDataSize = TlsData->TlsDirectory.EndAddressOfRawData -
                       TlsData->TlsDirectory.StartAddressOfRawData;
+        TlsDataSize = RawDataSize + TlsData->TlsDirectory.SizeOfZeroFill;
         TlsVector[TlsData->TlsDirectory.Characteristics] = RtlAllocateHeap(RtlGetProcessHeap(),
-                                                                           0,
+                                                                           HEAP_ZERO_MEMORY,
                                                                            TlsDataSize);
         if (!TlsVector[TlsData->TlsDirectory.Characteristics])
         {
@@ -1380,10 +1436,10 @@ LdrpAllocateTls(VOID)
                     TlsVector[TlsData->TlsDirectory.Characteristics]);
         }
 
-        /* Copy the data */
+        /* Copy the initialized raw data */
         RtlCopyMemory(TlsVector[TlsData->TlsDirectory.Characteristics],
                       (PVOID)TlsData->TlsDirectory.StartAddressOfRawData,
-                      TlsDataSize);
+                      RawDataSize);
     }
 
     /* Done */
