@@ -177,8 +177,9 @@ CmpCloseKeyObject(IN PEPROCESS Process OPTIONAL,
         /* Don't do anything if we don't have a notify block */
         if (!KeyBody->NotifyBlock) return;
 
-        /* This shouldn't happen yet */
-        ASSERT(FALSE);
+        /* Flush NotifyBlock */
+        CmpFlushNotify(KeyBody, FALSE);
+        ASSERT(KeyBody->NotifyBlock == NULL);
     }
 }
 
