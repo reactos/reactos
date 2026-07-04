@@ -1,17 +1,17 @@
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_EG
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "Lar&ge Icons", FCIDM_SHVIEW_BIGICON
-    MENUITEM "S&mall Icons", FCIDM_SHVIEW_SMALLICON
-    MENUITEM "&List", FCIDM_SHVIEW_LISTVIEW
-    MENUITEM "&Details", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "أيقونات &كبيرة", FCIDM_SHVIEW_BIGICON
+    MENUITEM "أيقونات &صغيرة", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&قائمة", FCIDM_SHVIEW_LISTVIEW
+    MENUITEM "&تفاصيل", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
-    POPUP "Arrange &Icons By", FCIDM_SHVIEW_ARRANGE
+    POPUP "ترتيب &الأيقونات حسب", FCIDM_SHVIEW_ARRANGE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "&Auto Arrange", FCIDM_SHVIEW_AUTOARRANGE
-        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+        MENUITEM "ترتيب &تلقائي", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "محاذاة إلى &شبكة", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -20,42 +20,42 @@ MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&View", FCIDM_SHVIEW_VIEW
+        POPUP "&عرض", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "Lar&ge Icons", FCIDM_SHVIEW_BIGICON
-            MENUITEM "S&mall Icons", FCIDM_SHVIEW_SMALLICON
-            MENUITEM "&List", FCIDM_SHVIEW_LISTVIEW
-            MENUITEM "&Details", FCIDM_SHVIEW_REPORTVIEW
+            MENUITEM "أيقونات &كبيرة", FCIDM_SHVIEW_BIGICON
+            MENUITEM "أيقونات &صغيرة", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&قائمة", FCIDM_SHVIEW_LISTVIEW
+            MENUITEM "&تفاصيل", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM "", -1, MFT_SEPARATOR
-        POPUP "Arrange &Icons By", FCIDM_SHVIEW_ARRANGE
+        POPUP "ترتيب &الأيقونات حسب", FCIDM_SHVIEW_ARRANGE
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Auto Arrange", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "ترتيب &تلقائي", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "محاذاة إلى &شبكة", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "R&efresh", FCIDM_SHVIEW_REFRESH
+        MENUITEM "ت&حديث", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "&Paste", FCIDM_SHVIEW_INSERT
-        MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "&لصق", FCIDM_SHVIEW_INSERT
+        MENUITEM "لصق &اختصار", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
 /* menubar EDIT menu */
 MENU_003 MENU
 BEGIN
-    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM "&تراجع\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
-    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "&قص\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&نسخ\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&لصق\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "لصق &اختصار", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "نسخ إلى &مجلد...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "&نقل إلى مجلد...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &All\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "تحديد &الكل\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&عكس التحديد", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -64,15 +64,15 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "Cu&t", IDM_CUT
+        MENUITEM "&قص", IDM_CUT
         MENUITEM "&نسخ", IDM_COPY
-        MENUITEM "لصق", IDM_INSERT //FIXME: accel is missing, check the comment in "context menus" comment-section on how to proceed
+        MENUITEM "لصق", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "إنشاء &رابط", IDM_CREATELINK
         MENUITEM "&حذف", IDM_DELETE
-        MENUITEM "&تسمية", IDM_RENAME //FIXME: accel is wrong, check the comment in "context menus" comment-section on how to proceed
+        MENUITEM "إعادة &تسمية", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Properties", IDM_PROPERTIES  //FIXME: accel is wrong, check the comment in "context menus" comment-section on how to proceed
+        MENUITEM "&خصائص", IDM_PROPERTIES
     END
 END
 
@@ -92,7 +92,7 @@ IDM_DVSELECT MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Se&lect", 0
+        MENUITEM "ت&حديد", 0
     END
 END
 
@@ -104,7 +104,7 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
-    DEFPUSHBUTTON "حسناً", IDOK, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "موافق", IDOK, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "إلغاء", IDCANCEL, 125, 175, 60, 15
 END
 
@@ -117,18 +117,18 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
-    PUSHBUTTON "&Make New Folder", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "حسناً", IDOK, 102, 174, 50, 14
+    PUSHBUTTON "&إنشاء مجلد جديد", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "موافق", IDOK, 102, 174, 50, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 156, 174, 50, 14
 END
 
 IDD_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Message"
+CAPTION "رسالة"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Yes", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "نعم  &للكل", IDC_YESTOALL, 92, 69, 65, 14
+    DEFPUSHBUTTON "&نعم", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "نعم &للكل", IDC_YESTOALL, 92, 69, 65, 14
     PUSHBUTTON "&لا", IDNO, 162, 69, 53, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 220, 69, 53, 14
     ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
@@ -137,23 +137,23 @@ END
 
 IDD_ABOUT DIALOGEX 20, 20, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About %s"
+CAPTION "حول %s"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
     LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10, SS_NOPREFIX
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
-    LTEXT "Copyright 1996-", IDC_STATIC, 35, 75, 53, 10
+    LTEXT "حقوق النشر 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
-    LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
+    LTEXT " فريق ReactOS\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
-    LTEXT "This ReactOS version is registered to:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
+    LTEXT "نسخة ReactOS هذه مسجلة لـ:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
-    LTEXT "Installed physical memory:", IDC_STATIC, 35, 152, 130, 10
+    LTEXT "الذاكرة المادية المثبتة:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
-    DEFPUSHBUTTON "حسناً", IDOK, 220, 178, 50, 14
+    DEFPUSHBUTTON "موافق", IDOK, 220, 178, 50, 14
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
 END
 
@@ -161,7 +161,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS was brought to you by:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "تم تقديم ReactOS بواسطة:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -171,53 +171,53 @@ CAPTION "تشغيل"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 185, 18
-    LTEXT "&Open:", 12305, 7, 39, 24, 10
+    LTEXT "اكتب اسم برنامج أو مجلد أو مستند أو مورد إنترنت، وسيقوم ReactOS بفتحه لك.", 12289, 36, 11, 185, 18
+    LTEXT "&فتح:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
-    DEFPUSHBUTTON "حسناً", IDOK, 36, 70, 59, 14
+    DEFPUSHBUTTON "موافق", IDOK, 36, 70, 59, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 98, 70, 59, 14
-    PUSHBUTTON "&Browse...", 12288, 160, 70, 59, 14
+    PUSHBUTTON "&استعراض...", 12288, 160, 70, 59, 14
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Shortcut"
+CAPTION "اختصار"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON "", IDC_SHORTCUT_ICON, 8, 8, 21, 20, WS_VISIBLE
     EDITTEXT IDC_SHORTCUT_TEXT, 49, 10, 180, 14, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 31, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Target type:", IDC_SHORTCUT_TYPE, 8, 38, 68, 10
+    LTEXT "نوع الهدف:", IDC_SHORTCUT_TYPE, 8, 38, 68, 10
     EDITTEXT IDC_SHORTCUT_TYPE_EDIT, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Target location:", IDC_SHORTCUT_LOCATION, 8, 55, 68, 10
+    LTEXT "موقع الهدف:", IDC_SHORTCUT_LOCATION, 8, 55, 68, 10
     EDITTEXT IDC_SHORTCUT_LOCATION_EDIT, 79, 53, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Target:", IDC_SHORTCUT_TARGET, 8, 71, 68, 10
+    LTEXT "&الهدف:", IDC_SHORTCUT_TARGET, 8, 71, 68, 10
     EDITTEXT IDC_SHORTCUT_TARGET_TEXT, 79, 69, 150, 14, ES_AUTOHSCROLL
     LTEXT "", -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "&Start in:", IDC_SHORTCUT_START_IN, 8, 98, 68, 10
+    LTEXT "&بدء التشغيل في:", IDC_SHORTCUT_START_IN, 8, 98, 68, 10
     EDITTEXT IDC_SHORTCUT_START_IN_EDIT, 79, 96, 150, 14, ES_AUTOHSCROLL
-    LTEXT "Shortcut &key:", IDC_SHORTCUT_KEY, 8, 117, 68, 10
+    LTEXT "مفتاح &الاختصار:", IDC_SHORTCUT_KEY, 8, 117, 68, 10
     CONTROL "", IDC_SHORTCUT_KEY_HOTKEY, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
-    LTEXT "&Run:", IDC_SHORTCUT_RUN, 8, 136, 68, 10
+    LTEXT "&تشغيل:", IDC_SHORTCUT_RUN, 8, 136, 68, 10
     COMBOBOX IDC_SHORTCUT_RUN_COMBO, 79, 134, 150, 54, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
-    LTEXT "C&omment:", IDC_SHORTCUT_COMMENT, 8, 154, 68, 10
+    LTEXT "&تعليق:", IDC_SHORTCUT_COMMENT, 8, 154, 68, 10
     EDITTEXT IDC_SHORTCUT_COMMENT_EDIT, 79, 152, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Find Target...", IDC_SHORTCUT_FIND, 9, 172, 70, 14, ES_LEFT
-    PUSHBUTTON "&Change Icon...", IDC_SHORTCUT_CHANGE_ICON, 84, 172, 70, 14, ES_LEFT
-    PUSHBUTTON "A&dvanced...", IDC_SHORTCUT_ADVANCED, 159, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "&البحث عن الهدف...", IDC_SHORTCUT_FIND, 9, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "&تغيير الأيقونة...", IDC_SHORTCUT_CHANGE_ICON, 84, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "خيارات &متقدمة...", IDC_SHORTCUT_ADVANCED, 159, 172, 70, 14, ES_LEFT
 END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Extended Properties"
+CAPTION "خصائص متقدمة"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
-    LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
-    CHECKBOX "Run with different credentials", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
-    LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
-    CHECKBOX "Run in separate memory space", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
-    PUSHBUTTON "حسناً", IDOK, 63, 124, 50, 15, WS_VISIBLE
+    LTEXT "اختر الخصائص المتقدمة التي تريدها لهذا الاختصار.", -1, 5, 30, 210, 10
+    CHECKBOX "تشغيل ببيانات اعتماد مختلفة", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
+    LTEXT "يمكن لهذا الخيار أن يسمح لك بتشغيل هذا الاختصار كمستخدم آخر، أو الاستمرار بنفس هويتك مع حماية جهاز الكمبيوتر والبيانات من نشاط البرنامج غير المصرح به.", -1, 50, 60, 175, 40
+    CHECKBOX "تشغيل في مساحة ذاكرة منفصلة", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
+    PUSHBUTTON "موافق", IDOK, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "إلغاء", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
 
@@ -228,26 +228,26 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT
-    LTEXT "Type:", 14004, 8, 40, 55, 10 //FIXME: Reminder to myself when overhauling that dlg: In the next line we do keep the type in the CONTROL name. Is shown! Harmonize all the left-column 55 width IDD_FOLDER_PROPERTIES (which is too large) with the all 45 width in IDD_FILE_PROPERTIES. The 170 width in right-column is non-negotiable! Increase both dlgs heights to restore vertical arrangement of the Attributes like on 2k3sp2. Make all the Attributes 70 wide each. That will also unbreak the "Advanced"-buttons.
+    LTEXT "النوع:", 14004, 8, 40, 55, 10
     CONTROL "Folder", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Location:", 14008, 8, 56, 55, 10
+    LTEXT "الموقع:", 14008, 8, 56, 55, 10
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
-    LTEXT "Size:", 14010, 8, 72, 55, 10
+    LTEXT "الحجم:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Size on disk:", 140101, 8, 88, 55, 10
+    LTEXT "الحجم على القرص:", 140101, 8, 88, 55, 10
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Contains:", 14026, 8, 104, 55, 10
+    LTEXT "يحتوي على:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 120, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "تم إنشاؤه:", 14014, 8, 128, 55, 10
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Attributes:", 14020, 8, 152, 46, 10
-    AUTOCHECKBOX "&Read-only", 14021, 58, 151, 68, 10
-    AUTOCHECKBOX "&Hidden", 14022, 126, 151, 55, 10
-    AUTOCHECKBOX "&Archive", 14023, 181, 151, 59, 10
-    PUSHBUTTON "A&dvanced...", 14028, 158, 170, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "السمات:", 14020, 8, 152, 46, 10
+    AUTOCHECKBOX "&للقراءة فقط", 14021, 58, 151, 68, 10
+    AUTOCHECKBOX "&مخفي", 14022, 126, 151, 55, 10
+    AUTOCHECKBOX "&أرشيف", 14023, 181, 151, 59, 10
+    PUSHBUTTON "خيارات &متقدمة...", 14028, 158, 170, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -258,48 +258,48 @@ BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT | WS_TABSTOP
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Type of file:", 14004, 8, 35, 50, 10
+    LTEXT "نوع الملف:", 14004, 8, 35, 50, 10
     CONTROL "File", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
-    LTEXT "Opens with:", 14006, 8, 53, 50, 10
+    LTEXT "يفتح بـ:", 14006, 8, 53, 50, 10
     ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "&Change...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&تغيير...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 58, 53, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Location:", 14008, 8, 75, 45, 10
+    LTEXT "الموقع:", 14008, 8, 75, 45, 10
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
-    LTEXT "Size:", 14010, 8, 91, 45, 10
+    LTEXT "الحجم:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Size on disk:", 140112, 8, 107, 55, 10
+    LTEXT "الحجم على القرص:", 140112, 8, 107, 55, 10
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "تم إنشاؤه:", 14014, 8, 131, 45, 10
     EDITTEXT 14015, 58, 131, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Modified:", 14016, 8, 147, 45, 10
+    LTEXT "تاريخ التعديل:", 14016, 8, 147, 45, 10
     EDITTEXT 14017, 58, 147, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Accessed:", 14018, 8, 163, 45, 10
+    LTEXT "تاريخ الوصول:", 14018, 8, 163, 45, 10
     EDITTEXT 14019, 58, 163, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Attributes:", 14020, 8, 189, 45, 10
-    AUTOCHECKBOX "&Read-only", 14021, 58, 188, 67, 10
-    AUTOCHECKBOX "&Hidden", 14022, 126, 188, 50, 10
-    AUTOCHECKBOX "&Archive", 14023, 181, 188, 49, 10
-    PUSHBUTTON "A&dvanced...", 14028, 180, 185, 50, 15
+    LTEXT "السمات:", 14020, 8, 189, 45, 10
+    AUTOCHECKBOX "&للقراءة فقط", 14021, 58, 188, 67, 10
+    AUTOCHECKBOX "&مخفي", 14022, 126, 188, 50, 10
+    AUTOCHECKBOX "&أرشيف", 14023, 181, 188, 49, 10
+    PUSHBUTTON "خيارات &متقدمة...", 14028, 180, 185, 50, 15
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Version"
+CAPTION "الإصدار"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "File version:", 14000, 10, 10, 55, 10
+    LTEXT "إصدار الملف:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Description:", 14002, 10, 27, 45, 10
+    LTEXT "الوصف:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Copyright:", 14004, 10, 46, 66, 10
+    LTEXT "حقوق النشر:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Other version information", 14006, 6, 70, 222, 115
-    LTEXT "Item name:", 14007, 13, 82, 50, 10
-    LTEXT "Value:", 14008, 112, 82, 45, 10
+    GROUPBOX "معلومات إصدار أخرى", 14006, 6, 70, 222, 115
+    LTEXT "اسم العنصر:", 14007, 13, 82, 50, 10
+    LTEXT "القيمة:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
@@ -312,103 +312,103 @@ BEGIN
     ICON "", 14016, 10, 9, 32, 32, WS_VISIBLE
     EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Type:", -1, 8, 38, 95, 10
+    LTEXT "النوع:", -1, 8, 38, 95, 10
     EDITTEXT 14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "File system:", -1, 8, 51, 95, 10
+    LTEXT "نظام الملفات:", -1, 8, 51, 95, 10
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
-    LTEXT "Used space:", -1, 25, 69, 80, 10
+    LTEXT "المساحة المستخدمة:", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14004, 197, 69, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14014, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 82, 10, 10
-    LTEXT "Free space:", -1, 25, 82, 80, 10
+    LTEXT "المساحة الحرة:", -1, 25, 82, 80, 10
     EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Capacity:", -1, 25, 103, 80, 10
+    LTEXT "السعة:", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
-    CTEXT "Drive %c", 14009, 95, 162, 50, 10
-    PUSHBUTTON "&Disk Cleanup", 14010, 160, 159, 70, 15
+    CTEXT "القرص %c", 14009, 95, 162, 50, 10
+    PUSHBUTTON "تنظيف &القرص", 14010, 160, 159, 70, 15
     LTEXT "", -1, 8, 176, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "Compress drive to save disk space", 14011, 8, 190, 222, 10, WS_DISABLED
-    CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 8, 204, 222, 10, WS_DISABLED
+    CHECKBOX "ضغط القرص لتوفير مساحة على القرص", 14011, 8, 190, 222, 10, WS_DISABLED
+    CHECKBOX "السماح لخدمة الفهرسة بفهرسة هذا القرص للبحث السريع عن الملفات", 14012, 8, 204, 222, 10, WS_DISABLED
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Tools"
+CAPTION "أدوات"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Error-checking", -1, 5, 5, 230, 60
+    GROUPBOX "التحقق من الأخطاء", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "This option will check the volume for errors.", -1, 40, 25, 160, 20
-    PUSHBUTTON "Check Now...", 14000, 130, 45, 90, 15
-    GROUPBOX "Defragmentation", -1, 5, 65, 230, 60
+    LTEXT "سيتحقق هذا الخيار من وجود أخطاء في المجلد.", -1, 40, 25, 160, 20
+    PUSHBUTTON "فحص الآن...", 14000, 130, 45, 90, 15
+    GROUPBOX "إلغاء التجزئة", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "This option will defragment files on the volume.", -1, 40, 85, 160, 20
-    PUSHBUTTON "Defragment Now...", 14001, 130, 105, 90, 15
-    GROUPBOX "Backup", -1, 5, 130, 230, 60
+    LTEXT "سيعمل هذا الخيار على إلغاء تجزئة الملفات في المجلد.", -1, 40, 85, 160, 20
+    PUSHBUTTON "إلغاء التجزئة الآن...", 14001, 130, 105, 90, 15
+    GROUPBOX "نسخ احتياطي", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
-    LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
-    PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15
+    LTEXT "سيعمل هذا الخيار على نسخ الملفات في المجلد احتياطياً.", -1, 40, 150, 160, 20
+    PUSHBUTTON "نسخ احتياطي الآن...", 14002, 130, 170, 90, 15
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Hardware"
+CAPTION "الأجهزة"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 182
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Run As"
+CAPTION "تشغيل كـ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_SECURITY, -1, 7, 7, 21, 20
-    LTEXT "Which user account do you want to use to run this program?", -1, 32, 12, 200, 16
-    AUTORADIOBUTTON "&Current user %s", IDC_RUNAS_CURRENT, 7, 35, 226, 10, WS_GROUP
-    AUTOCHECKBOX "&Protect my computer and data from unauthorized program activity\n\nThis option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
-    AUTORADIOBUTTON "The &following user:", IDC_RUNAS_OTHER, 7, 110, 226, 10
-    LTEXT "&User name:", -1, 18, 124, 54, 10
+    LTEXT "حساب المستخدم الذي تريد استخدامه لتشغيل هذا البرنامج؟", -1, 32, 12, 200, 16
+    AUTORADIOBUTTON "المستخدم &الحالي %s", IDC_RUNAS_CURRENT, 7, 35, 226, 10, WS_GROUP
+    AUTOCHECKBOX "&حماية جهاز الكمبيوتر والبيانات من نشاط البرنامج غير المصرح به\n\nيمكن لهذا الخيار منع فيروسات الكمبيوتر من الإضرار بجهازك أو بياناتك الشخصية، ولكن قد يتسبب في عمل البرنامج بشكل غير صحيح.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
+    AUTORADIOBUTTON "المستخدم &التالي:", IDC_RUNAS_OTHER, 7, 110, 226, 10
+    LTEXT "اسم &المستخدم:", -1, 18, 124, 54, 10
     COMBOBOX IDC_RUNAS_NAME, 75, 122, 134, 40, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "...", IDC_RUNAS_BROWSE, 213, 122, 20, 14, WS_TABSTOP
-    LTEXT "&Password:", -1, 18, 142, 53, 10
+    LTEXT "كلمة &المرور:", -1, 18, 142, 53, 10
     EDITTEXT IDC_RUNAS_PWD, 75, 140, 134, 14, ES_LEFT | ES_PASSWORD | WS_BORDER | WS_TABSTOP
-    DEFPUSHBUTTON "حسناً", IDOK, 129, 161, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON "موافق", IDOK, 129, 161, 50, 14, WS_TABSTOP
     PUSHBUTTON "إلغاء", IDCANCEL, 183, 161, 50, 14, WS_TABSTOP
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Recycle Bin Properties"
+CAPTION "خصائص سلة المحذوفات"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-    GROUPBOX "Settings for selected location", -1, 10, 72, 220, 70
-    RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10
+    GROUPBOX "إعدادات الموقع المحدد", -1, 10, 72, 220, 70
+    RADIOBUTTON "حجم &مخصص:", 14001, 20, 90, 80, 10
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "M&aximum size(MB):", -1, 20, 105, 70, 10
-    RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "&Display delete confirmation dialog", 14004, 20, 155, 140, 10
+    LTEXT "الحد الأ&قصى للحجم (م.ب):", -1, 20, 105, 70, 10
+    RADIOBUTTON "لا تنقل الملفات إلى &سلة المحذوفات. احذف الملفات فوراً عند حذفها.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+    AUTOCHECKBOX "&إظهار مربع حوار تأكيد الحذف", 14004, 20, 155, 140, 10
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Open With"
+CAPTION "فتح بـ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
-    LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
-    LTEXT "File:    ", 14001, 44, 25, 188, 20
-    GROUPBOX "&Programs", -1, 7, 42, 249, 187
-    CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 16, 193, 232, 10
-    PUSHBUTTON "&Browse...", 14004, 188, 207, 60, 14
-    DEFPUSHBUTTON "حسناً", IDOK, 150, 236, 50, 14
+    LTEXT "اختر البرنامج الذي تريد استخدامه لفتح هذا الملف:", -1, 44, 12, 211, 10
+    LTEXT "الملف:    ", 14001, 44, 25, 188, 20
+    GROUPBOX "&البرامج", -1, 7, 42, 249, 187
+    CONTROL "البرامج", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    AUTOCHECKBOX "استخدام البرنامج المحدد &دائماً لفتح هذا النوع من الملفات", 14003, 16, 193, 232, 10
+    PUSHBUTTON "&استعراض...", 14004, 188, 207, 60, 14
+    DEFPUSHBUTTON "موافق", IDOK, 150, 236, 50, 14
     PUSHBUTTON "إلغاء", IDCANCEL, 206, 236, 50, 14
 END
 
@@ -417,21 +417,21 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "عام"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Tasks", -1, 7, 10, 249, 40
+    GROUPBOX "المهام", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
-    AUTORADIOBUTTON "Show common tasks in &folders", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Use ReactOS class&ic folders", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
-    GROUPBOX "Browse folders", -1, 7, 60, 249, 40, WS_TABSTOP
+    AUTORADIOBUTTON "إظهار المهام الشائعة في &المجلدات", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "استخدام مجلدات ReactOS &التقليدية", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    GROUPBOX "استعراض المجلدات", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
-    AUTORADIOBUTTON "Open each folder in the sa&me window", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Open each folder in its own &window", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
-    GROUPBOX "Click items as follows", -1, 7, 110, 249, 64
+    AUTORADIOBUTTON "فتح كل مجلد في &نفس النافذة", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "فتح كل مجلد في &نافذة منفصلة", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
+    GROUPBOX "النقر على العناصر كما يلي", -1, 7, 110, 249, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "&Single-click to open an item (point to select)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
-    AUTORADIOBUTTON "Underline icon titles consistent with my &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Underline icon titles only when I &point at them", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
-    PUSHBUTTON "&Restore Defaults", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14
+    AUTORADIOBUTTON "&نقرة واحدة لفتح عنصر (تحديد بالإشارة)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&نقرتان لفتح عنصر (نقرة واحدة للتحديد)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
+    AUTORADIOBUTTON "تسطير عناوين الأيقونات بما يتوافق مع &المتصفح الخاص بي", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "تسطير عناوين الأيقونات فقط عند &الإشارة إليها", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    PUSHBUTTON "&استعادة الإعدادات الافتراضية", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 220
