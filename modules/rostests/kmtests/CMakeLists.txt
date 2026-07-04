@@ -189,7 +189,6 @@ target_link_libraries(kmtest ${PSEH_LIB})
 add_importlibs(kmtest fltlib advapi32 ws2_32 msvcrt kernel32 ntdll)
 target_compile_definitions(kmtest PRIVATE KMT_USER_MODE NTDDI_VERSION=NTDDI_WS03SP1)
 #add_pch(kmtest include/kmt_test.h)
-set_target_properties(kmtest PROPERTIES OUTPUT_NAME "kmtest_")
 add_rostests_file(TARGET kmtest)
 
 #
