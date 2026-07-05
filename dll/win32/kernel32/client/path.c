@@ -80,6 +80,8 @@ BASE_SEARCH_PATH_TYPE BaseProcessOrder[BaseSearchPathMax] =
 
 BASE_CURRENT_DIR_PLACEMENT BasepDllCurrentDirPlacement = BaseCurrentDirPlacementInvalid;
 
+DWORD BasepSearchPathModeFlags = BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE;
+
 extern UNICODE_STRING BasePathVariableName;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -394,10 +396,14 @@ LPWSTR
 WINAPI
 BaseComputeProcessSearchPath(VOID)
 {
+    BASE_CURRENT_DIR_PLACEMENT CurDirPlacement;
     DPRINT("Computing Process Search path\n");
 
+    CurDirPlacement = BasepSearchPathModeFlags & BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE ?
+                      BaseCurrentDirPlacementSafe : BaseCurrentDirPlacementDefault;
+
     /* Compute the path using default process order */
-    return BasepComputeProcessPath(BaseProcessOrder, NULL, NULL);
+    return BasepComputeProcessPath(BaseDllOrderCurrent[CurDirPlacement], NULL, NULL);
 }
 
 LPWSTR
@@ -1113,6 +1119,35 @@ GetFullPathNameW(IN LPCWSTR lpFileName,
                                 nBufferLength * sizeof(WCHAR),
                                 lpBuffer,
                                 lpFilePart) / sizeof(WCHAR);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetSearchPathMode(_In_ DWORD dwFlags)
+{
+    switch (dwFlags)
+    {
+        /* There are only 3 valid parameters */
+        case BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE:
+        case BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE:
+            if (BasepSearchPathModeFlags & BASE_SEARCH_PATH_PERMANENT)
+            {
+                /* Return with ERROR_ACCESS_DENIED if permanent flag is set */
+                SetLastError(ERROR_ACCESS_DENIED);
+                return FALSE;
+            }
+            __fallthrough;
+        case BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT:
+            BasepSearchPathModeFlags = dwFlags;
+            return TRUE;
+
+        default:
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+    }
 }
 
 /*
