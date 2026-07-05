@@ -851,8 +851,12 @@
 @ stdcall RtlFindSetBitsAndClear(ptr long long)
 @ stdcall RtlFirstEntrySList(ptr)
 @ stdcall RtlFirstFreeAce(ptr ptr)
-@ stdcall -stub -version=0x600+ RtlFlsAlloc(long long long long)
-@ stdcall -stub -version=0x600+ RtlFlsFree(long)
+@ stdcall -version=0x600+ RtlFlsAlloc(ptr ptr)
+@ stdcall -version=0xA00+ RtlFlsAllocEx(ptr ptr ptr) # Windows 11
+@ stdcall -version=0x600+ RtlFlsFree(long)
+@ stdcall -version=0xA00+ RtlFlsGetValue(long ptr)
+@ stdcall -version=0xA00+ RtlFlsGetValue2(long) # Windows 11
+@ stdcall -version=0xA00+ RtlFlsSetValue(long ptr)
 @ stdcall RtlFlushSecureMemoryCache(ptr ptr)
 @ stdcall RtlFormatCurrentUserKeyPath(ptr)
 @ stdcall RtlFormatMessage(ptr long long long long ptr ptr long ptr)
@@ -1073,7 +1077,7 @@
 @ stdcall RtlPrefixString(ptr ptr long)
 @ stdcall RtlPrefixUnicodeString(ptr ptr long)
 @ stdcall -stub -version=0x600+ -arch=x86_64 RtlPrepareForProcessCloning()
-@ stdcall -stub -version=0x600+ RtlProcessFlsData(long long)
+@ stdcall -version=0x600+ RtlProcessFlsData(ptr)
 @ stdcall RtlProtectHeap(ptr long)
 @ stdcall RtlPushFrame(ptr)
 @ stdcall -version=0x600+ RtlQueryActivationContextApplicationSettings(long ptr wstr wstr ptr ptr ptr)
