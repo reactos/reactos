@@ -322,7 +322,7 @@ void ToolsModel::selectAll()
     OnButtonUp(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
 }
 
-HBRUSH ToolsModel::CreateVirtualBrush(COLORREF color)
+HBRUSH ToolsModel::CreateBrush(COLORREF color)
 {
     if (paletteModel.SelectedPalette() == PAL_MONOCHROME)
         return CreateDitherBrush(color, RGB(0, 0, 0), RGB(255, 255, 255));

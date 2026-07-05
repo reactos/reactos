@@ -149,7 +149,7 @@ public:
 
     HBRUSH GetFgBrush();
     HBRUSH GetBgBrush();
-    HBRUSH CreateVirtualBrush(COLORREF color);
+    HBRUSH CreateBrush(COLORREF color);
 };
 
 extern ToolsModel toolsModel;
