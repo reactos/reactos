@@ -12,34 +12,6 @@ PaletteModel paletteModel;
 
 /* FUNCTIONS ********************************************************/
 
-VirtualBrush::~VirtualBrush()
-{
-    if (m_hBrush)
-        DeleteObject(m_hBrush);
-}
-
-HBRUSH VirtualBrush::GetBrush(PAL_TYPE palette, COLORREF rgbColor)
-{
-    if (m_hBrush &&
-        m_palette == palette &&
-        m_rgbColor == rgbColor)
-    {
-        return m_hBrush;
-    }
-
-    if (m_hBrush)
-        ::DeleteObject(m_hBrush);
-
-    if (palette == PAL_MONOCHROME)
-        m_hBrush = CreateDitherBrush(rgbColor, RGB(0, 0, 0), RGB(255, 255, 255));
-    else
-        m_hBrush = CreateSolidBrush(rgbColor);
-
-    m_palette = palette;
-    m_rgbColor = rgbColor;
-    return m_hBrush;
-}
-
 PaletteModel::PaletteModel()
 {
     m_fgColor = RGB(0, 0, 0);
