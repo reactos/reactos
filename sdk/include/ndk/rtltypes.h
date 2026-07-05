@@ -81,6 +81,14 @@ extern "C" {
 #define RTL_RANGE_LIST_ADD_IF_CONFLICT                      0x00000001
 #define RTL_RANGE_LIST_ADD_SHARED                           0x00000002
 
+//
+// Undocumented RtlRange Behaviors
+//
+// both are viewable through PCI.sys's behaviors on ROM space and Shared IRQs
+//
+#define RTL_RANGE_SHARED_IS_VALID                           0x00000001
+#define RTL_RANGE_NULL_CONFLICT_IS_VALID                    0x00000002
+
 #define RTL_RANGE_SHARED                                    0x01
 #define RTL_RANGE_CONFLICT                                  0x02
 

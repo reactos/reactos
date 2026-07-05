@@ -21,6 +21,138 @@ typedef struct _RTL_RANGE_ENTRY
     RTL_RANGE Range;
 } RTL_RANGE_ENTRY, *PRTL_RANGE_ENTRY;
 
+/* PRIVATE FUNCTIONS ********************************************************/
+
+/**********************************************************************
+ * NAME							PRIVATE
+ * 	RtlpOverlaps
+ *
+ * DESCRIPTION
+ *	Returns whether the closed interval [Start1, End1] intersects the
+ *	closed interval [Start2, End2].
+ */
+static
+BOOLEAN
+RtlpOverlaps(
+    _In_ ULONGLONG Start1,
+    _In_ ULONGLONG End1,
+    _In_ ULONGLONG Start2,
+    _In_ ULONGLONG End2)
+{
+    return (Start1 <= End2 && Start2 <= End1);
+}
+
+/**********************************************************************
+ * NAME							PRIVATE
+ * 	RtlpWindowIsAvailable
+ *
+ * DESCRIPTION
+ *	Shared availability test used by RtlIsRangeAvailable and RtlFindRange.
+ *	Walks every entry that overlaps [Start, End] and decides whether the
+ *	window is free.  An overlapping entry does NOT cause a conflict when:
+ *	  - the caller passed RTL_RANGE_SHARED_IS_VALID and the entry is shared,
+ *	  - the entry carries an attribute present in AttributeAvailableMask,
+ *	  - the caller passed RTL_RANGE_NULL_CONFLICT_IS_VALID and the entry has
+ *	    a NULL owner, or
+ *	  - the conflict Callback returns TRUE (asking us to ignore it).
+ *	When the window is not available, *ConflictStart (if supplied) receives
+ *	the lowest Start among the conflicting entries so a caller searching
+ *	top-down can jump past them.
+ */
+static
+BOOLEAN
+RtlpWindowIsAvailable(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End,
+    _In_ ULONG Flags,
+    _In_ UCHAR AttributeAvailableMask,
+    _In_opt_ PVOID Context,
+    _In_opt_ PRTL_CONFLICT_RANGE_CALLBACK Callback,
+    _Out_opt_ PULONGLONG ConflictStart)
+{
+    PRTL_RANGE_ENTRY Current;
+    PLIST_ENTRY Entry;
+    BOOLEAN Available = TRUE;
+    ULONGLONG Lowest = 0;
+
+    for (Entry = RangeList->ListHead.Flink;
+         Entry != &RangeList->ListHead;
+         Entry = Entry->Flink)
+    {
+        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+
+        /* Ignore entries that do not overlap the requested window */
+        if (!RtlpOverlaps(Start, End, Current->Range.Start, Current->Range.End))
+            continue;
+
+        /* An overlapping entry that is treated as available is not a conflict */
+        if ((Flags & RTL_RANGE_SHARED_IS_VALID) &&
+            (Current->Range.Flags & RTL_RANGE_SHARED))
+            continue;
+
+        if (AttributeAvailableMask & Current->Range.Attributes)
+            continue;
+
+        if ((Flags & RTL_RANGE_NULL_CONFLICT_IS_VALID) &&
+            Current->Range.Owner == NULL)
+            continue;
+
+        if (Callback != NULL && Callback(Context, &Current->Range))
+            continue;
+
+        /* This is a real conflict */
+        if (Available || Current->Range.Start < Lowest)
+            Lowest = Current->Range.Start;
+        Available = FALSE;
+    }
+
+    if (ConflictStart != NULL && !Available)
+        *ConflictStart = Lowest;
+
+    return Available;
+}
+
+/**********************************************************************
+ * NAME							PRIVATE
+ * 	RtlpConflictsOnAdd
+ *
+ * DESCRIPTION
+ *	Returns whether inserting [Start, End] would conflict with an existing
+ *	entry.  Two shared ranges (the caller passing RTL_RANGE_LIST_ADD_SHARED
+ *	against an already-shared entry) are allowed to coexist.
+ */
+static
+BOOLEAN
+RtlpConflictsOnAdd(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End,
+    _In_ ULONG Flags)
+{
+    PRTL_RANGE_ENTRY Current;
+    PLIST_ENTRY Entry;
+
+    for (Entry = RangeList->ListHead.Flink;
+         Entry != &RangeList->ListHead;
+         Entry = Entry->Flink)
+    {
+        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+
+        if (!RtlpOverlaps(Start, End, Current->Range.Start, Current->Range.End))
+            continue;
+
+        /* Overlapping shared ranges may coexist */
+        if ((Flags & RTL_RANGE_LIST_ADD_SHARED) &&
+            (Current->Range.Flags & RTL_RANGE_SHARED))
+            continue;
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 /* FUNCTIONS ***************************************************************/
 
 /**********************************************************************
@@ -42,9 +174,6 @@ typedef struct _RTL_RANGE_ENTRY
  * RETURN VALUE
  *	Status
  *
- * TODO:
- *   - Support shared ranges.
- *
  * @implemented
  */
 NTSTATUS
@@ -64,6 +193,16 @@ RtlAddRange(IN OUT PRTL_RANGE_LIST RangeList,
 
     if (Start > End)
         return STATUS_INVALID_PARAMETER;
+
+    /*
+     * Unless the caller explicitly allows adding on top of a conflict, reject
+     * a range that overlaps an incompatible existing entry.
+     */
+    if (!(Flags & RTL_RANGE_LIST_ADD_IF_CONFLICT) &&
+        RtlpConflictsOnAdd(RangeList, Start, End, Flags))
+    {
+        return STATUS_RANGE_LIST_CONFLICT;
+    }
 
     /* Create new range entry */
     RangeEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 'elRR');
@@ -205,21 +344,25 @@ RtlDeleteOwnersRanges(IN OUT PRTL_RANGE_LIST RangeList,
 {
     PRTL_RANGE_ENTRY Current;
     PLIST_ENTRY Entry;
+    PLIST_ENTRY Next;
 
     Entry = RangeList->ListHead.Flink;
     while (Entry != &RangeList->ListHead)
     {
+        /* Capture the next link before we possibly free this entry */
+        Next = Entry->Flink;
+
         Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
         if (Current->Range.Owner == Owner)
         {
-            RemoveEntryList (Entry);
+            RemoveEntryList(Entry);
             RtlpFreeMemory(Current, 0);
 
             RangeList->Count--;
             RangeList->Stamp++;
         }
 
-        Entry = Entry->Flink;
+        Entry = Next;
     }
 
     return STATUS_SUCCESS;
@@ -283,7 +426,9 @@ RtlDeleteRange(IN OUT PRTL_RANGE_LIST RangeList,
  * 	RtlFindRange
  *
  * DESCRIPTION
- *	Searches for an unused range.
+ *	Searches (top-down) for an unused range, honoring the shared,
+ *	null-conflict and attribute-availability rules and the conflict
+ *	callback.
  *
  * ARGUMENTS
  *	RangeList		Pointer to the range list.
@@ -300,9 +445,6 @@ RtlDeleteRange(IN OUT PRTL_RANGE_LIST RangeList,
  * RETURN VALUE
  *	Status
  *
- * TODO
- *	Support shared ranges and callback.
- *
  * @implemented
  */
 NTSTATUS
@@ -318,74 +460,64 @@ RtlFindRange(IN PRTL_RANGE_LIST RangeList,
              IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
              OUT PULONGLONG Start)
 {
-    PRTL_RANGE_ENTRY CurrentEntry;
-    PRTL_RANGE_ENTRY NextEntry;
-    PLIST_ENTRY Entry;
-    ULONGLONG RangeMin;
-    ULONGLONG RangeMax;
+    ULONGLONG Candidate;
+    ULONGLONG CandidateEnd;
+    ULONGLONG ConflictStart = 0;
 
     if (Alignment == 0 || Length == 0)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (IsListEmpty(&RangeList->ListHead))
+    /* A window of Length can only end at Maximum if it also fits below it */
+    if ((ULONGLONG)(Length - 1) > Maximum)
     {
-        *Start = ROUND_DOWN(Maximum - (Length - 1), Alignment);
-        return STATUS_SUCCESS;
+        return STATUS_RANGE_NOT_FOUND;
     }
 
-    NextEntry = NULL;
-    Entry = RangeList->ListHead.Blink;
-    while (Entry != &RangeList->ListHead)
+    /* Highest aligned start such that Candidate + Length - 1 <= Maximum */
+    Candidate = ROUND_DOWN(Maximum - (Length - 1), Alignment);
+
+    for (;;)
     {
-        CurrentEntry = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
-
-        RangeMax = NextEntry ? (NextEntry->Range.Start - 1) : Maximum;
-        if (RangeMax + (Length - 1) < Minimum)
+        if (Candidate < Minimum)
         {
             return STATUS_RANGE_NOT_FOUND;
         }
 
-        RangeMin = ROUND_DOWN(RangeMax - (Length - 1), Alignment);
-        if (RangeMin < Minimum ||
-            (RangeMax - RangeMin) < (Length - 1))
-        {
-            return STATUS_RANGE_NOT_FOUND;
-        }
+        CandidateEnd = Candidate + (Length - 1);
 
-        DPRINT("RangeMax: %I64x\n", RangeMax);
-        DPRINT("RangeMin: %I64x\n", RangeMin);
-
-        if (RangeMin > CurrentEntry->Range.End)
+        if (RtlpWindowIsAvailable(RangeList,
+                                  Candidate,
+                                  CandidateEnd,
+                                  Flags,
+                                  AttributeAvailableMask,
+                                  Context,
+                                  Callback,
+                                  &ConflictStart))
         {
-            *Start = RangeMin;
+            DPRINT("Found range: %I64x\n", Candidate);
+            *Start = Candidate;
             return STATUS_SUCCESS;
         }
 
-        NextEntry = CurrentEntry;
-        Entry = Entry->Blink;
+        /*
+         * Jump the window entirely below the lowest conflicting entry.
+         * Because that entry overlaps the current window this strictly
+         * decreases Candidate, so the loop always terminates.
+         */
+        if (ConflictStart == 0)
+        {
+            return STATUS_RANGE_NOT_FOUND;
+        }
+
+        if ((ULONGLONG)(Length - 1) > ConflictStart - 1)
+        {
+            return STATUS_RANGE_NOT_FOUND;
+        }
+
+        Candidate = ROUND_DOWN((ConflictStart - 1) - (Length - 1), Alignment);
     }
-
-    RangeMax = NextEntry ? (NextEntry->Range.Start - 1) : Maximum;
-    if (RangeMax + (Length - 1) < Minimum)
-    {
-        return STATUS_RANGE_NOT_FOUND;
-    }
-
-    RangeMin = ROUND_DOWN(RangeMax - (Length - 1), Alignment);
-    if (RangeMin < Minimum ||
-        (RangeMax - RangeMin) < (Length - 1))
-    {
-        return STATUS_RANGE_NOT_FOUND;
-    }
-
-    DPRINT("RangeMax: %I64x\n", RangeMax);
-    DPRINT("RangeMin: %I64x\n", RangeMin);
-
-    *Start = RangeMin;
-
-    return STATUS_SUCCESS;
 }
 
 
@@ -462,6 +594,48 @@ RtlGetFirstRange(IN PRTL_RANGE_LIST RangeList,
     }
 
     Iterator->Current = RangeList->ListHead.Flink;
+    *Range = &((PRTL_RANGE_ENTRY)Iterator->Current)->Range;
+
+    return STATUS_SUCCESS;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlGetLastRange
+ *
+ * DESCRIPTION
+ *	Retrieves the last range of a range list.  Combine with
+ *	RtlGetNextRange(..., MoveForwards = FALSE) to walk a list backwards.
+ *
+ * ARGUMENTS
+ *	RangeList	Pointer to the range list.
+ *	Iterator	Pointer to a user supplied list state buffer.
+ *	Range		Pointer to the last range.
+ *
+ * RETURN VALUE
+ *	Status
+ *
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlGetLastRange(IN PRTL_RANGE_LIST RangeList,
+                OUT PRTL_RANGE_LIST_ITERATOR Iterator,
+                OUT PRTL_RANGE *Range)
+{
+    Iterator->RangeListHead = &RangeList->ListHead;
+    Iterator->MergedHead = NULL;
+    Iterator->Stamp = RangeList->Stamp;
+
+    if (IsListEmpty(&RangeList->ListHead))
+    {
+        Iterator->Current = NULL;
+        *Range = NULL;
+        return STATUS_NO_MORE_ENTRIES;
+    }
+
+    Iterator->Current = RangeList->ListHead.Blink;
     *Range = &((PRTL_RANGE_ENTRY)Iterator->Current)->Range;
 
     return STATUS_SUCCESS;
@@ -556,14 +730,18 @@ RtlInitializeRangeList(IN OUT PRTL_RANGE_LIST RangeList)
 
 /**********************************************************************
  * NAME							EXPORTED
- * 	RtlInvertRangeList
+ * 	RtlInvertRangeListEx
  *
  * DESCRIPTION
- *	Inverts a range list.
+ *	Inverts a range list, tagging the newly created gap ranges with the
+ *	supplied Attributes / UserData / Owner.
  *
  * ARGUMENTS
  *	InvertedRangeList	Inverted range list.
  *	RangeList		Range list.
+ *	Attributes		Attributes for the created gap ranges.
+ *	UserData		UserData for the created gap ranges.
+ *	Owner			Owner for the created gap ranges.
  *
  * RETURN VALUE
  *	Status
@@ -572,8 +750,11 @@ RtlInitializeRangeList(IN OUT PRTL_RANGE_LIST RangeList)
  */
 NTSTATUS
 NTAPI
-RtlInvertRangeList(OUT PRTL_RANGE_LIST InvertedRangeList,
-                   IN PRTL_RANGE_LIST RangeList)
+RtlInvertRangeListEx(OUT PRTL_RANGE_LIST InvertedRangeList,
+                     IN PRTL_RANGE_LIST RangeList,
+                     IN UCHAR Attributes,
+                     IN PVOID UserData OPTIONAL,
+                     IN PVOID Owner OPTIONAL)
 {
     PRTL_RANGE_ENTRY Previous;
     PRTL_RANGE_ENTRY Current;
@@ -594,10 +775,10 @@ RtlInvertRangeList(OUT PRTL_RANGE_LIST InvertedRangeList,
                 Status = RtlAddRange(InvertedRangeList,
                                      (ULONGLONG)0,
                                      Current->Range.Start - 1,
-                                     0,
-                                     0,
-                                     NULL,
-                                     NULL);
+                                     Attributes,
+                                     RTL_RANGE_LIST_ADD_IF_CONFLICT,
+                                     UserData,
+                                     Owner);
                 if (!NT_SUCCESS(Status))
                     return Status;
             }
@@ -609,10 +790,10 @@ RtlInvertRangeList(OUT PRTL_RANGE_LIST InvertedRangeList,
                 Status = RtlAddRange(InvertedRangeList,
                                      Previous->Range.End + 1,
                                      Current->Range.Start - 1,
-                                     0,
-                                     0,
-                                     NULL,
-                                     NULL);
+                                     Attributes,
+                                     RTL_RANGE_LIST_ADD_IF_CONFLICT,
+                                     UserData,
+                                     Owner);
                 if (!NT_SUCCESS(Status))
                     return Status;
             }
@@ -625,25 +806,61 @@ RtlInvertRangeList(OUT PRTL_RANGE_LIST InvertedRangeList,
     /* Check if the list was empty */
     if (Previous == NULL)
     {
-        /* We're done */
-        return STATUS_SUCCESS;
+        /* The whole address space is a single gap */
+        Status = RtlAddRange(InvertedRangeList,
+                             (ULONGLONG)0,
+                             (ULONGLONG)-1,
+                             Attributes,
+                             RTL_RANGE_LIST_ADD_IF_CONFLICT,
+                             UserData,
+                             Owner);
+        return Status;
     }
 
     /* Add trailing range */
-    if (Previous->Range.End + 1 != (ULONGLONG)-1)
+    if (Previous->Range.End != (ULONGLONG)-1)
     {
         Status = RtlAddRange(InvertedRangeList,
                              Previous->Range.End + 1,
                              (ULONGLONG)-1,
-                             0,
-                             0,
-                             NULL,
-                             NULL);
+                             Attributes,
+                             RTL_RANGE_LIST_ADD_IF_CONFLICT,
+                             UserData,
+                             Owner);
         if (!NT_SUCCESS(Status))
             return Status;
     }
 
     return STATUS_SUCCESS;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlInvertRangeList
+ *
+ * DESCRIPTION
+ *	Inverts a range list.
+ *
+ * ARGUMENTS
+ *	InvertedRangeList	Inverted range list.
+ *	RangeList		Range list.
+ *
+ * RETURN VALUE
+ *	Status
+ *
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlInvertRangeList(OUT PRTL_RANGE_LIST InvertedRangeList,
+                   IN PRTL_RANGE_LIST RangeList)
+{
+    return RtlInvertRangeListEx(InvertedRangeList,
+                                RangeList,
+                                0,
+                                NULL,
+                                NULL);
 }
 
 
@@ -667,9 +884,6 @@ RtlInvertRangeList(OUT PRTL_RANGE_LIST InvertedRangeList,
  * RETURN VALUE
  *	Status
  *
- * TODO:
- *   - honor Flags and AttributeAvailableMask.
- *
  * @implemented
  */
 NTSTATUS
@@ -683,34 +897,14 @@ RtlIsRangeAvailable(IN PRTL_RANGE_LIST RangeList,
                     IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
                     OUT PBOOLEAN Available)
 {
-    PRTL_RANGE_ENTRY Current;
-    PLIST_ENTRY Entry;
-
-    *Available = TRUE;
-
-    Entry = RangeList->ListHead.Flink;
-    while (Entry != &RangeList->ListHead)
-    {
-        Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
-
-        if (!((Current->Range.Start >= End && Current->Range.End > End) ||
-              (Current->Range.Start <= Start && Current->Range.End < Start &&
-               (!(Flags & RTL_RANGE_SHARED) ||
-                !(Current->Range.Flags & RTL_RANGE_SHARED)))))
-        {
-            if (Callback != NULL)
-            {
-                *Available = Callback(Context,
-                                      &Current->Range);
-            }
-            else
-            {
-                *Available = FALSE;
-            }
-        }
-
-        Entry = Entry->Flink;
-    }
+    *Available = RtlpWindowIsAvailable(RangeList,
+                                       Start,
+                                       End,
+                                       Flags,
+                                       AttributeAvailableMask,
+                                       Context,
+                                       Callback,
+                                       NULL);
 
     return STATUS_SUCCESS;
 }

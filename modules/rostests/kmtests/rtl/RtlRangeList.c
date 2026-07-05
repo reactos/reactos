@@ -11,6 +11,35 @@
 static UCHAR MyUserData1, MyUserData2;
 static UCHAR MyOwner1, MyOwner2;
 
+#ifndef MAXULONGLONG
+#define MAXULONGLONG ((ULONGLONG)~((ULONGLONG)0))
+#endif
+
+/* Conflict callbacks: return TRUE to tell the range list to ignore the conflict. */
+static
+BOOLEAN
+NTAPI
+IgnoreConflictCallback(
+    _In_ PVOID Context,
+    _In_ struct _RTL_RANGE *Range)
+{
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(Range);
+    return TRUE;
+}
+
+static
+BOOLEAN
+NTAPI
+KeepConflictCallback(
+    _In_ PVOID Context,
+    _In_ struct _RTL_RANGE *Range)
+{
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(Range);
+    return FALSE;
+}
+
 /* Helpers *******************************************************************/
 static
 NTSTATUS
@@ -408,6 +437,345 @@ TestIsAvailable(
     ok_eq_ulong(RangeList->Stamp, StartStamp);
 }
 
+static
+void
+TestAddConflict(
+    _Inout_ PRTL_RANGE_LIST RangeList,
+    _Inout_ PRTL_RANGE Ranges)
+{
+    NTSTATUS Status;
+    ULONG StartStamp = RangeList->Stamp;
+
+    /* A range overlapping our [0x100, 0x200] entry */
+    Ranges[1].Start = 0x180;
+    Ranges[1].End = 0x280;
+    Ranges[1].Attributes = 0;
+    Ranges[1].Flags = 0;
+    Ranges[1].UserData = &MyUserData2;
+    Ranges[1].Owner = &MyOwner2;
+
+    /* Without RTL_RANGE_LIST_ADD_IF_CONFLICT the add is rejected */
+    Status = RtlAddRangeWrapper(RangeList, &Ranges[1], 0);
+    ok_eq_hex(Status, STATUS_RANGE_LIST_CONFLICT);
+    ok_eq_ulong(RangeList->Count, 1UL);
+    ok_eq_ulong(RangeList->Stamp, StartStamp);
+    expect_range_entries(RangeList, 1, &Ranges[0]);
+
+    /* With the flag it succeeds */
+    Status = RtlAddRangeWrapper(RangeList, &Ranges[1], RTL_RANGE_LIST_ADD_IF_CONFLICT);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulong(RangeList->Count, 2UL);
+
+    /* Restore the single-entry list */
+    Status = RtlDeleteRange(RangeList, Ranges[1].Start, Ranges[1].End, Ranges[1].Owner);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulong(RangeList->Count, 1UL);
+    expect_range_entries(RangeList, 1, &Ranges[0]);
+}
+
+static
+void
+TestFindRange(
+    _Inout_ PRTL_RANGE_LIST RangeList,
+    _Inout_ PRTL_RANGE Ranges)
+{
+    NTSTATUS Status;
+    ULONGLONG Start;
+    RTL_RANGE_LIST EmptyList;
+
+    /* Invalid parameters */
+    Start = 0x55;
+    Status = RtlFindRange(RangeList, 0x0, 0x1000, 0 /* Length */, 1, 0, 0, NULL, NULL, &Start);
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
+    Status = RtlFindRange(RangeList, 0x0, 0x1000, 0x10, 0 /* Alignment */, 0, 0, NULL, NULL, &Start);
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
+
+    /* Top-down search finds the highest aligned hole below Maximum */
+    Start = 0x55;
+    Status = RtlFindRange(RangeList, 0x0, 0x1000, 0x10, 1, 0, 0, NULL, NULL, &Start);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulonglong(Start, 0xFF1ULL);
+
+    /* Alignment is honored */
+    Start = 0x55;
+    Status = RtlFindRange(RangeList, 0x0, 0x1000, 0x10, 0x100, 0, 0, NULL, NULL, &Start);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulonglong(Start, 0xF00ULL);
+
+    /* Capping Maximum at the occupied range forces the search below it */
+    Start = 0x55;
+    Status = RtlFindRange(RangeList, 0x0, 0x200, 0x10, 1, 0, 0, NULL, NULL, &Start);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulonglong(Start, 0xF0ULL);
+
+    /* No room below and the range is opaque -> not found */
+    Start = 0x55;
+    Status = RtlFindRange(RangeList, 0x100, 0x200, 0x10, 1, 0, 0, NULL, NULL, &Start);
+    ok_eq_hex(Status, STATUS_RANGE_NOT_FOUND);
+
+    /* AttributeAvailableMask makes the occupied range transparent -> place on top of it */
+    Start = 0x55;
+    Status = RtlFindRange(RangeList, 0x0, 0x200, 0x10, 1, 0, Ranges[0].Attributes, NULL, NULL, &Start);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulonglong(Start, 0x1F1ULL);
+
+    /* Empty list: the whole [Minimum, Maximum] window is free */
+    RtlInitializeRangeList(&EmptyList);
+    Start = 0x55;
+    Status = RtlFindRange(&EmptyList, 0x0, 0xFFF, 0x10, 1, 0, 0, NULL, NULL, &Start);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulonglong(Start, 0xFF0ULL);
+    RtlFreeRangeList(&EmptyList);
+
+    /* Searching never mutates the list */
+    expect_range_entries(RangeList, 1, &Ranges[0]);
+}
+
+static
+void
+TestGetLastRange(
+    _Inout_ PRTL_RANGE_LIST RangeList,
+    _Inout_ PRTL_RANGE Ranges)
+{
+    NTSTATUS Status;
+    RTL_RANGE_LIST_ITERATOR Iterator;
+    PRTL_RANGE Range;
+    RTL_RANGE_LIST EmptyList;
+
+    /* Single entry: last == first */
+    Range = KmtInvalidPointer;
+    Status = RtlGetLastRange(RangeList, &Iterator, &Range);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (Range != NULL && Range != KmtInvalidPointer)
+    {
+        ok_eq_ulonglong(Range->Start, Ranges[0].Start);
+        ok_eq_ulonglong(Range->End, Ranges[0].End);
+    }
+    ok_eq_pointer(Iterator.RangeListHead, &RangeList->ListHead);
+    ok_eq_pointer(Iterator.MergedHead, NULL);
+
+    /* Add a higher second entry */
+    Ranges[1].Start = 0x300;
+    Ranges[1].End = 0x400;
+    Ranges[1].Attributes = 2;
+    Ranges[1].Flags = 0;
+    Ranges[1].UserData = &MyUserData2;
+    Ranges[1].Owner = &MyOwner2;
+    Status = RtlAddRangeWrapper(RangeList, &Ranges[1], 0);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    /* GetLastRange returns the higher entry */
+    Range = KmtInvalidPointer;
+    Status = RtlGetLastRange(RangeList, &Iterator, &Range);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (Range != NULL && Range != KmtInvalidPointer)
+    {
+        ok_eq_ulonglong(Range->Start, Ranges[1].Start);
+        ok_eq_ulonglong(Range->End, Ranges[1].End);
+    }
+
+    /* Walking backwards reaches the first entry, then stops */
+    Range = KmtInvalidPointer;
+    Status = RtlGetNextRange(&Iterator, &Range, FALSE);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (Range != NULL && Range != KmtInvalidPointer)
+    {
+        ok_eq_ulonglong(Range->Start, Ranges[0].Start);
+        ok_eq_ulonglong(Range->End, Ranges[0].End);
+    }
+    Range = KmtInvalidPointer;
+    Status = RtlGetNextRange(&Iterator, &Range, FALSE);
+    ok_eq_hex(Status, STATUS_NO_MORE_ENTRIES);
+    ok_eq_pointer(Range, NULL);
+
+    /* Restore the single-entry list */
+    Status = RtlDeleteRange(RangeList, Ranges[1].Start, Ranges[1].End, Ranges[1].Owner);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    expect_range_entries(RangeList, 1, &Ranges[0]);
+
+    /* Empty list */
+    RtlInitializeRangeList(&EmptyList);
+    Range = KmtInvalidPointer;
+    Status = RtlGetLastRange(&EmptyList, &Iterator, &Range);
+    ok_eq_hex(Status, STATUS_NO_MORE_ENTRIES);
+    ok_eq_pointer(Range, NULL);
+    ok_eq_pointer(Iterator.Current, NULL);
+    RtlFreeRangeList(&EmptyList);
+}
+
+static
+void
+TestSharedNullCallback(
+    _Inout_ PRTL_RANGE_LIST RangeList,
+    _Inout_ PRTL_RANGE Ranges)
+{
+    NTSTATUS Status;
+    BOOLEAN Available;
+
+    /* A shared range */
+    Ranges[1].Start = 0x300;
+    Ranges[1].End = 0x400;
+    Ranges[1].Attributes = 0;
+    Ranges[1].Flags = RTL_RANGE_SHARED;
+    Ranges[1].UserData = &MyUserData2;
+    Ranges[1].Owner = &MyOwner2;
+    Status = RtlAddRangeWrapper(RangeList, &Ranges[1], RTL_RANGE_LIST_ADD_SHARED);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    /* Not available without RTL_RANGE_SHARED_IS_VALID */
+    Status = RtlIsRangeAvailable(RangeList, 0x300, 0x400, 0, 0, NULL, NULL, &Available);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_bool(Available, FALSE);
+
+    /* Available with RTL_RANGE_SHARED_IS_VALID */
+    Status = RtlIsRangeAvailable(RangeList, 0x300, 0x400, RTL_RANGE_SHARED_IS_VALID, 0, NULL, NULL, &Available);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_bool(Available, TRUE);
+
+    /* A callback that ignores the conflict makes it available */
+    Status = RtlIsRangeAvailable(RangeList, 0x300, 0x400, 0, 0, NULL, IgnoreConflictCallback, &Available);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_bool(Available, TRUE);
+
+    /* A callback that keeps the conflict leaves it unavailable */
+    Status = RtlIsRangeAvailable(RangeList, 0x300, 0x400, 0, 0, NULL, KeepConflictCallback, &Available);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_bool(Available, FALSE);
+
+    Status = RtlDeleteRange(RangeList, Ranges[1].Start, Ranges[1].End, Ranges[1].Owner);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    /* A NULL-owner range */
+    Ranges[1].Start = 0x500;
+    Ranges[1].End = 0x600;
+    Ranges[1].Attributes = 0;
+    Ranges[1].Flags = 0;
+    Ranges[1].UserData = NULL;
+    Ranges[1].Owner = NULL;
+    Status = RtlAddRangeWrapper(RangeList, &Ranges[1], 0);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    /* Not available without RTL_RANGE_NULL_CONFLICT_IS_VALID */
+    Status = RtlIsRangeAvailable(RangeList, 0x500, 0x600, 0, 0, NULL, NULL, &Available);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_bool(Available, FALSE);
+
+    /* Available with RTL_RANGE_NULL_CONFLICT_IS_VALID */
+    Status = RtlIsRangeAvailable(RangeList, 0x500, 0x600, RTL_RANGE_NULL_CONFLICT_IS_VALID, 0, NULL, NULL, &Available);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_bool(Available, TRUE);
+
+    Status = RtlDeleteRange(RangeList, 0x500, 0x600, NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    expect_range_entries(RangeList, 1, &Ranges[0]);
+}
+
+static
+void
+TestDeleteOwnersRanges(
+    _Inout_ PRTL_RANGE_LIST RangeList,
+    _Inout_ PRTL_RANGE Ranges)
+{
+    NTSTATUS Status;
+
+    /* Two entries owned by MyOwner2, adjacent in iteration order */
+    Ranges[1].Start = 0x300;
+    Ranges[1].End = 0x400;
+    Ranges[1].Attributes = 0;
+    Ranges[1].Flags = 0;
+    Ranges[1].UserData = &MyUserData2;
+    Ranges[1].Owner = &MyOwner2;
+    Status = RtlAddRangeWrapper(RangeList, &Ranges[1], 0);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    Ranges[2].Start = 0x500;
+    Ranges[2].End = 0x600;
+    Ranges[2].Attributes = 0;
+    Ranges[2].Flags = 0;
+    Ranges[2].UserData = &MyUserData2;
+    Ranges[2].Owner = &MyOwner2;
+    Status = RtlAddRangeWrapper(RangeList, &Ranges[2], 0);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulong(RangeList->Count, 3UL);
+
+    /*
+     * Deleting MyOwner2 removes both entries in a single pass. Deleting two
+     * consecutively-matched entries exercises the delete-during-iteration path
+     * (which must capture Flink before freeing the current entry).
+     */
+    Status = RtlDeleteOwnersRanges(RangeList, &MyOwner2);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulong(RangeList->Count, 1UL);
+    expect_range_entries(RangeList, 1, &Ranges[0]);
+
+    /* Deleting an owner with no ranges changes nothing */
+    Status = RtlDeleteOwnersRanges(RangeList, &MyOwner2);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulong(RangeList->Count, 1UL);
+    expect_range_entries(RangeList, 1, &Ranges[0]);
+}
+
+static
+void
+TestInvertRangeList(void)
+{
+    NTSTATUS Status;
+    RTL_RANGE_LIST List;
+    RTL_RANGE_LIST Inverted;
+    RTL_RANGE Expected[3];
+
+    RtlInitializeRangeList(&List);
+    Status = RtlAddRange(&List, 0x100, 0x200, 0, RTL_RANGE_LIST_ADD_IF_CONFLICT, NULL, NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = RtlAddRange(&List, 0x400, 0x500, 0, RTL_RANGE_LIST_ADD_IF_CONFLICT, NULL, NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    /* Plain invert: leading, middle and trailing gaps, Attributes 0 / Owner NULL */
+    RtlInitializeRangeList(&Inverted);
+    Status = RtlInvertRangeList(&Inverted, &List);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulong(Inverted.Count, 3UL);
+    Expected[0].Start = 0x0;   Expected[0].End = 0xFF;
+    Expected[1].Start = 0x201; Expected[1].End = 0x3FF;
+    Expected[2].Start = 0x501; Expected[2].End = MAXULONGLONG;
+    Expected[0].Attributes = Expected[1].Attributes = Expected[2].Attributes = 0;
+    Expected[0].Flags = Expected[1].Flags = Expected[2].Flags = 0;
+    Expected[0].UserData = Expected[1].UserData = Expected[2].UserData = NULL;
+    Expected[0].Owner = Expected[1].Owner = Expected[2].Owner = NULL;
+    expect_range_entries(&Inverted, 3, Expected);
+    RtlFreeRangeList(&Inverted);
+
+    /* Ex invert: the gap ranges carry the supplied Attributes / UserData / Owner */
+    RtlInitializeRangeList(&Inverted);
+    Status = RtlInvertRangeListEx(&Inverted, &List, 0x5, &MyUserData1, &MyOwner1);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulong(Inverted.Count, 3UL);
+    Expected[0].Attributes = Expected[1].Attributes = Expected[2].Attributes = 0x5;
+    Expected[0].UserData = Expected[1].UserData = Expected[2].UserData = &MyUserData1;
+    Expected[0].Owner = Expected[1].Owner = Expected[2].Owner = &MyOwner1;
+    expect_range_entries(&Inverted, 3, Expected);
+    RtlFreeRangeList(&Inverted);
+
+    RtlFreeRangeList(&List);
+
+    /* Inverting an empty list yields the whole address space */
+    RtlInitializeRangeList(&List);
+    RtlInitializeRangeList(&Inverted);
+    Status = RtlInvertRangeList(&Inverted, &List);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulong(Inverted.Count, 1UL);
+    Expected[0].Start = 0x0;
+    Expected[0].End = MAXULONGLONG;
+    Expected[0].Attributes = 0;
+    Expected[0].Flags = 0;
+    Expected[0].UserData = NULL;
+    Expected[0].Owner = NULL;
+    expect_range_entries(&Inverted, 1, Expected);
+    RtlFreeRangeList(&Inverted);
+    RtlFreeRangeList(&List);
+}
+
 /* Entry point ***************************************************************/
 START_TEST(RtlRangeList)
 {
@@ -453,6 +821,12 @@ START_TEST(RtlRangeList)
     TestStartEqualsEnd(&RangeList, Ranges);
     TestSharedFlag(&RangeList, Ranges);
     TestIsAvailable(&RangeList, Ranges);
+    TestAddConflict(&RangeList, Ranges);
+    TestFindRange(&RangeList, Ranges);
+    TestGetLastRange(&RangeList, Ranges);
+    TestSharedNullCallback(&RangeList, Ranges);
+    TestDeleteOwnersRanges(&RangeList, Ranges);
+    TestInvertRangeList();
 
     Stamp = RangeList.Stamp;
 

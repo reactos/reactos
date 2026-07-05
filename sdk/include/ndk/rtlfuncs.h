@@ -3726,6 +3726,17 @@ RtlInvertRangeList(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlInvertRangeListEx(
+    _Out_ PRTL_RANGE_LIST InvertedRangeList,
+    _In_ PRTL_RANGE_LIST RangeList,
+    _In_ UCHAR Attributes,
+    _In_opt_ PVOID UserData,
+    _In_opt_ PVOID Owner
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlAddRange(
     _Inout_ PRTL_RANGE_LIST RangeList,
     _In_ ULONGLONG Start,
@@ -3788,6 +3799,15 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGetFirstRange(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _Out_ PRTL_RANGE_LIST_ITERATOR Iterator,
+    _Outptr_ PRTL_RANGE *Range
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetLastRange(
     _In_ PRTL_RANGE_LIST RangeList,
     _Out_ PRTL_RANGE_LIST_ITERATOR Iterator,
     _Outptr_ PRTL_RANGE *Range
