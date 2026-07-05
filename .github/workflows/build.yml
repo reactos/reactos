@@ -102,7 +102,7 @@ jobs:
       run: choco install -y ninja
     - name: Install Flex & Bison
       run: |
-        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z||curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z || curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
         echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -163,7 +163,7 @@ jobs:
       run: choco install -y ninja
     - name: Install Flex & Bison
       run: |
-        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z||curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z || curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
         echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -267,7 +267,7 @@ jobs:
         echo "LLVM_PATH=${env:PROGRAMFILES}\llvm\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - name: Install Flex & Bison
       run: |
-        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z||curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z || curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
         echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -315,7 +315,7 @@ jobs:
     steps:
     - name: Install Flex and Bison
       run: |
-        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z||curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z || curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
         echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
