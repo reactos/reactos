@@ -593,8 +593,8 @@ RtlGetFirstRange(IN PRTL_RANGE_LIST RangeList,
         return STATUS_NO_MORE_ENTRIES;
     }
 
-    Iterator->Current = RangeList->ListHead.Flink;
-    *Range = &((PRTL_RANGE_ENTRY)Iterator->Current)->Range;
+    *Range = &CONTAINING_RECORD(RangeList->ListHead.Flink, RTL_RANGE_ENTRY, Entry)->Range;
+    Iterator->Current = *Range;
 
     return STATUS_SUCCESS;
 }
@@ -635,8 +635,8 @@ RtlGetLastRange(IN PRTL_RANGE_LIST RangeList,
         return STATUS_NO_MORE_ENTRIES;
     }
 
-    Iterator->Current = RangeList->ListHead.Blink;
-    *Range = &((PRTL_RANGE_ENTRY)Iterator->Current)->Range;
+    *Range = &CONTAINING_RECORD(RangeList->ListHead.Blink, RTL_RANGE_ENTRY, Entry)->Range;
+    Iterator->Current = *Range;
 
     return STATUS_SUCCESS;
 }
@@ -667,6 +667,7 @@ RtlGetNextRange(IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
                 IN BOOLEAN MoveForwards)
 {
     PRTL_RANGE_LIST RangeList;
+    PRTL_RANGE_ENTRY Current;
     PLIST_ENTRY Next;
 
     RangeList = CONTAINING_RECORD(Iterator->RangeListHead, RTL_RANGE_LIST, ListHead);
@@ -679,13 +680,15 @@ RtlGetNextRange(IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
         return STATUS_NO_MORE_ENTRIES;
     }
 
+    /* Iterator->Current points at the RTL_RANGE; recover its entry */
+    Current = CONTAINING_RECORD(Iterator->Current, RTL_RANGE_ENTRY, Range);
     if (MoveForwards)
     {
-        Next = ((PRTL_RANGE_ENTRY)Iterator->Current)->Entry.Flink;
+        Next = Current->Entry.Flink;
     }
     else
     {
-        Next = ((PRTL_RANGE_ENTRY)Iterator->Current)->Entry.Blink;
+        Next = Current->Entry.Blink;
     }
 
     if (Next == Iterator->RangeListHead)
@@ -695,8 +698,8 @@ RtlGetNextRange(IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
         return STATUS_NO_MORE_ENTRIES;
     }
 
-    Iterator->Current = Next;
-    *Range = &((PRTL_RANGE_ENTRY)Next)->Range;
+    *Range = &CONTAINING_RECORD(Next, RTL_RANGE_ENTRY, Entry)->Range;
+    Iterator->Current = *Range;
 
     return STATUS_SUCCESS;
 }

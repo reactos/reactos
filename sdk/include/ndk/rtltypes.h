@@ -82,7 +82,7 @@ extern "C" {
 #define RTL_RANGE_LIST_ADD_SHARED                           0x00000002
 
 //
-// Undocumented RtlRange Behaviors
+// Flags for RtlIsRangeAvailable
 //
 // both are viewable through PCI.sys's behaviors on ROM space and Shared IRQs
 //
