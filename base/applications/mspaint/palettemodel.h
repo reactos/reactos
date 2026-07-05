@@ -29,7 +29,7 @@ protected:
 public:
     ~VirtualBrush();
 
-    HBRUSH GetVirtualBrush(PAL_TYPE palette, COLORREF rgbColor);
+    HBRUSH GetBrush(PAL_TYPE palette, COLORREF rgbColor);
 };
 
 class PaletteModel

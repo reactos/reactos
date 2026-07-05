@@ -18,7 +18,7 @@ VirtualBrush::~VirtualBrush()
         DeleteObject(m_hBrush);
 }
 
-HBRUSH VirtualBrush::GetVirtualBrush(PAL_TYPE palette, COLORREF rgbColor)
+HBRUSH VirtualBrush::GetBrush(PAL_TYPE palette, COLORREF rgbColor)
 {
     if (m_hBrush &&
         m_palette == palette &&

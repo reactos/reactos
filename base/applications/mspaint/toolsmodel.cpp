@@ -332,10 +332,10 @@ HBRUSH ToolsModel::CreateBrush(COLORREF color)
 
 HBRUSH ToolsModel::GetFgBrush()
 {
-    return m_fgBrush.GetVirtualBrush(paletteModel.SelectedPalette(), paletteModel.GetFgColor());
+    return m_fgBrush.GetBrush(paletteModel.SelectedPalette(), paletteModel.GetFgColor());
 }
 
 HBRUSH ToolsModel::GetBgBrush()
 {
-    return m_bgBrush.GetVirtualBrush(paletteModel.SelectedPalette(), paletteModel.GetBgColor());
+    return m_bgBrush.GetBrush(paletteModel.SelectedPalette(), paletteModel.GetBgColor());
 }
