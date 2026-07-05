@@ -11,7 +11,8 @@
 /* FUNCTIONS ********************************************************/
 
 // WidenPath requires a geometric pen
-HPEN CreateGeometricPen(COLORREF rgbColor, INT thickness)
+static HPEN
+CreateGeometricPen(COLORREF rgbColor, INT thickness)
 {
     LOGBRUSH logbrush;
     logbrush.lbStyle = BS_SOLID;
