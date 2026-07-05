@@ -119,10 +119,11 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     drawColorBox(hMemDC, &rc, toolsModel.GetFgBrush(), BDR_RAISEDINNER);
 
     /* Draw the normal color boxes */
+    const PAL_TYPE palette = paletteModel.SelectedPalette();
     for (INT i = 0; i < COLOR_COUNT; i++)
     {
         getColorBoxRect(&rc, rcClient, i);
-        HBRUSH hbr = toolsModel.CreateBrush(paletteModel.GetColor(i));
+        HBRUSH hbr = toolsModel.CreateBrush(palette, paletteModel.GetColor(i));
         drawColorBox(hMemDC, &rc, hbr, BDR_SUNKENOUTER);
         DeleteObject(hbr);
     }

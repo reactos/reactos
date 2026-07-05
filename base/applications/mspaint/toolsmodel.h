@@ -162,7 +162,7 @@ public:
 
     HBRUSH GetFgBrush();
     HBRUSH GetBgBrush();
-    HBRUSH CreateBrush(COLORREF color);
+    static HBRUSH CreateBrush(PAL_TYPE palette, COLORREF color);
 };
 
 extern ToolsModel toolsModel;
