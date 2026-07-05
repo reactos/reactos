@@ -135,7 +135,7 @@ HRESULT
 InstallOptionalComponents(
     _In_ PITEMSDATA pItemsData)
 {
-    HRESULT hr;
+    HRESULT hr = S_OK;
     PSETUPDATA pSetupData;
     REGISTRATIONNOTIFY Notify = { 0 };
     RappsConsent Consent = NOT_ASKED;
