@@ -14,8 +14,8 @@ add_library(mciavi32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/mciavi32.def)
 
 set_module_type(mciavi32 win32dll)
-target_link_libraries(mciavi32 wine)
-add_importlibs(mciavi32 msvfw32 winmm user32 gdi32 msvcrt kernel32 ntdll)
+target_link_libraries(mciavi32 wine oldnames)
+add_importlibs(mciavi32 msvfw32 winmm user32 gdi32 msvcrt kernel32_vista kernel32 ntdll)
 add_pch(mciavi32 precomp.h SOURCE)
 add_cd_file(TARGET mciavi32 DESTINATION reactos/system32 FOR all)
 set_wine_module(mciavi32)
