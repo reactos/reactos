@@ -6,7 +6,7 @@
  * PROGRAMMERS: Copyright Victor Kirhenshtein (sauros@iname.com)
                 Copyright Jason Filby (jasonfilby@yahoo.com)
                 Copyright Martijn Vernooij (o112w8r02@sneakemail.com)
-                Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
+                Copyright 2006-2007 Hervï¿½ Poussineau (hpoussin@reactos.org)
                 Copyright 2008 Colin Finck (mail@colinfinck.de)
  */
 
@@ -128,8 +128,11 @@ i8042MouHandle(
 			else
 				MouseInput->LastY = (LONG)Output;
 
-			/* Windows wants it the other way around */
-			MouseInput->LastY = -MouseInput->LastY;
+			/* Windows wants it the other way around, except when the
+			 * host's PS/2 emulation already reports it that way
+			 * (Hyper-V on Windows 11 24H2+, see CORE-20561) */
+			if (!(i8042HwFlags & FL_HYPERV_SKIP_Y_NEGATION))
+				MouseInput->LastY = -MouseInput->LastY;
 
 			if (DeviceExtension->MouseType == GenericPS2 ||
 			    DeviceExtension->MouseType == Ps2pp)
