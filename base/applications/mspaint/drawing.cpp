@@ -395,7 +395,7 @@ Airbrush(HDC hdc, LONG x, LONG y, HBRUSH hBrush, LONG r)
 }
 
 static void
-BrushInternal(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, LONG style, INT thickness, BOOL bOnePixelOff)
+BrushInternal(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, LONG style, INT thickness)
 {
     LONG a, b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
     switch ((BrushStyle)style)
@@ -406,8 +406,8 @@ BrushInternal(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, LONG style, INT thick
                 Ellipse(hdc,
                         (x1 * (b - a) + x2 * a) / b - (thickness / 2),
                         (y1 * (b - a) + y2 * a) / b - (thickness / 2),
-                        (x1 * (b - a) + x2 * a) / b + (thickness / 2) + bOnePixelOff,
-                        (y1 * (b - a) + y2 * a) / b + (thickness / 2) + bOnePixelOff);
+                        (x1 * (b - a) + x2 * a) / b + (thickness / 2) + 1,
+                        (y1 * (b - a) + y2 * a) / b + (thickness / 2) + 1);
             }
             break;
 
@@ -417,8 +417,8 @@ BrushInternal(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, LONG style, INT thick
                 Rectangle(hdc,
                           (x1 * (b - a) + x2 * a) / b - (thickness / 2),
                           (y1 * (b - a) + y2 * a) / b - (thickness / 2),
-                          (x1 * (b - a) + x2 * a) / b + (thickness / 2) + bOnePixelOff,
-                          (y1 * (b - a) + y2 * a) / b + (thickness / 2) + bOnePixelOff);
+                          (x1 * (b - a) + x2 * a) / b + (thickness / 2) + 1,
+                          (y1 * (b - a) + y2 * a) / b + (thickness / 2) + 1);
             }
             break;
 
@@ -428,15 +428,15 @@ BrushInternal(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, LONG style, INT thick
             POINT offsetTop, offsetBottom;
             if ((BrushStyle)style == BrushStyleForeSlash)
             {
-                offsetTop    = { (thickness - 1) / 2 + bOnePixelOff, -(thickness - 1) / 2                };
-                offsetBottom = { -thickness      / 2               ,   thickness      / 2 + bOnePixelOff };
+                offsetTop    = { (thickness - 1) / 2 + 1, -(thickness - 1) / 2     };
+                offsetBottom = { -thickness      / 2    ,   thickness      / 2 + 1 };
             }
             else
             {
-                offsetTop =    { -thickness      / 2               , -thickness      / 2                };
-                offsetBottom = { (thickness - 1) / 2 + bOnePixelOff, (thickness - 1) / 2 + bOnePixelOff };
+                offsetTop =    { -thickness      / 2    , -thickness      / 2     };
+                offsetBottom = { (thickness - 1) / 2 + 1, (thickness - 1) / 2 + 1 };
             }
-            if (bOnePixelOff && x1 == x2 && y1 == y2)
+            if (x1 == x2 && y1 == y2)
             {
                 ++x2;
             }
@@ -470,22 +470,9 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hBrush, LONG style, IN
         return;
     }
 
-    LOGBRUSH lb;
-    GetObjectW(hBrush, sizeof(lb), &lb);
-    if (lb.lbStyle == BS_SOLID) // It's a solid brush. Do quick draw
-    {
-        HGDIOBJ oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 1, lb.lbColor));
-        HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
-        BrushInternal(hdc, x1, y1, x2, y2, style, thickness, FALSE);
-        SelectObject(hdc, oldBrush);
-        DeleteObject(SelectObject(hdc, oldPen));
-        return;
-    }
-    // Otherwise a dither brush
-
     HGDIOBJ oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0)); // 1px off
     HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
-    BrushInternal(hdc, x1, y1, x2, y2, style, thickness, TRUE);
+    BrushInternal(hdc, x1, y1, x2, y2, style, thickness);
     SelectObject(hdc, oldBrush);
     DeleteObject(SelectObject(hdc, oldPen));
 }
