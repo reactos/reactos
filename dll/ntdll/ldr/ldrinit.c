@@ -721,7 +721,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             /* Check flags */
             if (!(LdrEntry->Flags & LDRP_ENTRY_PROCESSED))
             {
-                Status = LdrpHandleTlsData(LdrEntry);
+                Status = LdrpHandleTlsData(LdrEntry, Context != NULL);
                 if (!NT_SUCCESS(Status))
                 {
                     if (LdrRootEntry != LocalArray)
@@ -853,7 +853,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             _SEH2_TRY
             {
                 /* Check if it has TLS */
-                if (LdrEntry->TlsIndex && Context)
+                if (LdrEntry->TlsIndex)
                 {
                     /* Call TLS */
                     LdrpCallTlsInitializers(LdrEntry, DLL_PROCESS_ATTACH);
@@ -1275,19 +1275,295 @@ LdrShutdownThread(VOID)
     return STATUS_SUCCESS;
 }
 
-/*
- * Register a module's TLS directory and, when the current thread already has
- * a TLS vector, make the new slot usable before the module initializer runs.
- */
+typedef struct _LDRP_TEB_TLS_BLOCK
+{
+    PTEB Teb;
+    PVOID TlsBlock;
+} LDRP_TEB_TLS_BLOCK, *PLDRP_TEB_TLS_BLOCK;
+
+static
 NTSTATUS
 NTAPI
-LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+LdrpAllocateTlsBlock(IN PIMAGE_TLS_DIRECTORY TlsDirectory,
+                     OUT PVOID *TlsBlock)
+{
+    SIZE_T RawDataSize, TlsDataSize;
+
+    RawDataSize = TlsDirectory->EndAddressOfRawData -
+                  TlsDirectory->StartAddressOfRawData;
+    TlsDataSize = RawDataSize + TlsDirectory->SizeOfZeroFill;
+
+    *TlsBlock = RtlAllocateHeap(RtlGetProcessHeap(),
+                                HEAP_ZERO_MEMORY,
+                                TlsDataSize);
+    if (!*TlsBlock) return STATUS_NO_MEMORY;
+
+    RtlCopyMemory(*TlsBlock,
+                  (PVOID)TlsDirectory->StartAddressOfRawData,
+                  RawDataSize);
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NTAPI
+LdrpGetCurrentProcessTebs(OUT PTEB **ThreadTebs,
+                          OUT PULONG ThreadCount)
+{
+    HANDLE ThreadHandle;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PSYSTEM_PROCESS_INFORMATION ProcessInfo, CurrentProcessInfo;
+    PSYSTEM_THREAD_INFORMATION ThreadInfo;
+    THREAD_BASIC_INFORMATION ThreadBasicInfo;
+    PTEB *Tebs;
+    ULONG BufferSize = 0x8000, ReturnLength = 0;
+    ULONG i, Count = 0;
+
+    *ThreadTebs = NULL;
+    *ThreadCount = 0;
+
+    do
+    {
+        ProcessInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+        if (!ProcessInfo) return STATUS_NO_MEMORY;
+
+        Status = NtQuerySystemInformation(SystemProcessInformation,
+                                          ProcessInfo,
+                                          BufferSize,
+                                          &ReturnLength);
+        if ((Status == STATUS_INFO_LENGTH_MISMATCH) ||
+            (Status == STATUS_BUFFER_OVERFLOW) ||
+            (Status == STATUS_BUFFER_TOO_SMALL))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ProcessInfo);
+            BufferSize = ReturnLength ? ReturnLength + PAGE_SIZE : BufferSize * 2;
+        }
+    } while ((Status == STATUS_INFO_LENGTH_MISMATCH) ||
+             (Status == STATUS_BUFFER_OVERFLOW) ||
+             (Status == STATUS_BUFFER_TOO_SMALL));
+
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ProcessInfo);
+        return Status;
+    }
+
+    CurrentProcessInfo = ProcessInfo;
+    while (CurrentProcessInfo->UniqueProcessId != NtCurrentTeb()->ClientId.UniqueProcess)
+    {
+        if (!CurrentProcessInfo->NextEntryOffset)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ProcessInfo);
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        CurrentProcessInfo = (PSYSTEM_PROCESS_INFORMATION)
+                             ((ULONG_PTR)CurrentProcessInfo +
+                              CurrentProcessInfo->NextEntryOffset);
+    }
+
+    Tebs = RtlAllocateHeap(RtlGetProcessHeap(),
+                           0,
+                           CurrentProcessInfo->NumberOfThreads * sizeof(*Tebs));
+    if (!Tebs)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ProcessInfo);
+        return STATUS_NO_MEMORY;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+    ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(CurrentProcessInfo + 1);
+    for (i = 0; i < CurrentProcessInfo->NumberOfThreads; i++, ThreadInfo++)
+    {
+        if (ThreadInfo->ClientId.UniqueThread == NtCurrentTeb()->ClientId.UniqueThread)
+        {
+            Tebs[Count++] = NtCurrentTeb();
+            continue;
+        }
+
+        Status = NtOpenThread(&ThreadHandle,
+                              THREAD_QUERY_INFORMATION,
+                              &ObjectAttributes,
+                              &ThreadInfo->ClientId);
+        if (!NT_SUCCESS(Status))
+        {
+            if ((Status == STATUS_INVALID_CID) ||
+                (Status == STATUS_THREAD_IS_TERMINATING))
+            {
+                continue;
+            }
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Tebs);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ProcessInfo);
+            return Status;
+        }
+
+        Status = NtQueryInformationThread(ThreadHandle,
+                                          ThreadBasicInformation,
+                                          &ThreadBasicInfo,
+                                          sizeof(ThreadBasicInfo),
+                                          NULL);
+        NtClose(ThreadHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            if ((Status == STATUS_INVALID_CID) ||
+                (Status == STATUS_THREAD_IS_TERMINATING))
+            {
+                continue;
+            }
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Tebs);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ProcessInfo);
+            return Status;
+        }
+
+        if (ThreadBasicInfo.TebBaseAddress)
+        {
+            Tebs[Count++] = ThreadBasicInfo.TebBaseAddress;
+        }
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, ProcessInfo);
+
+    *ThreadTebs = Tebs;
+    *ThreadCount = Count;
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NTAPI
+LdrpAppendTlsDataToThread(IN PTEB Teb,
+                          IN PLDRP_TLS_DATA TlsData,
+                          IN ULONG Index,
+                          OUT PVOID *TlsBlock)
+{
+    NTSTATUS Status;
+    PVOID Block;
+    PVOID *OldTlsVector, *TlsVector;
+    SIZE_T TlsVectorSize = (Index + 1) * sizeof(PVOID);
+
+    *TlsBlock = NULL;
+
+    Status = LdrpAllocateTlsBlock(&TlsData->TlsDirectory, &Block);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    OldTlsVector = Teb->ThreadLocalStoragePointer;
+    if (OldTlsVector)
+    {
+        if (Teb == NtCurrentTeb())
+        {
+            TlsVector = RtlReAllocateHeap(RtlGetProcessHeap(),
+                                          0,
+                                          OldTlsVector,
+                                          TlsVectorSize);
+        }
+        else
+        {
+            TlsVector = RtlReAllocateHeap(RtlGetProcessHeap(),
+                                          HEAP_REALLOC_IN_PLACE_ONLY,
+                                          OldTlsVector,
+                                          TlsVectorSize);
+            if (!TlsVector)
+            {
+                /*
+                 * Static TLS reads do not take the loader lock, so keep the old
+                 * vector valid if the target thread needs a moved vector.
+                 */
+                TlsVector = RtlAllocateHeap(RtlGetProcessHeap(),
+                                            HEAP_ZERO_MEMORY,
+                                            TlsVectorSize);
+                if (TlsVector)
+                {
+                    RtlCopyMemory(TlsVector, OldTlsVector, Index * sizeof(PVOID));
+                }
+            }
+        }
+    }
+    else
+    {
+        TlsVector = RtlAllocateHeap(RtlGetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    TlsVectorSize);
+    }
+
+    if (!TlsVector)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Block);
+        return STATUS_NO_MEMORY;
+    }
+
+    TlsVector[Index] = Block;
+    Teb->ThreadLocalStoragePointer = TlsVector;
+    *TlsBlock = Block;
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NTAPI
+LdrpAppendTlsDataToProcessThreads(IN PLDRP_TLS_DATA TlsData,
+                                  IN ULONG Index)
+{
+    NTSTATUS Status;
+    PTEB *Tebs;
+    PLDRP_TEB_TLS_BLOCK Blocks;
+    ULONG i, Count, BlockCount = 0;
+
+    Status = LdrpGetCurrentProcessTebs(&Tebs, &Count);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Blocks = RtlAllocateHeap(RtlGetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             Count * sizeof(*Blocks));
+    if (!Blocks)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Tebs);
+        return STATUS_NO_MEMORY;
+    }
+
+    for (i = 0; i < Count; i++)
+    {
+        Blocks[BlockCount].Teb = Tebs[i];
+        Status = LdrpAppendTlsDataToThread(Tebs[i],
+                                           TlsData,
+                                           Index,
+                                           &Blocks[BlockCount].TlsBlock);
+        if (!NT_SUCCESS(Status))
+        {
+            while (BlockCount)
+            {
+                PVOID *TlsVector;
+
+                BlockCount--;
+                TlsVector = Blocks[BlockCount].Teb->ThreadLocalStoragePointer;
+                if (TlsVector) TlsVector[Index] = NULL;
+                RtlFreeHeap(RtlGetProcessHeap(), 0, Blocks[BlockCount].TlsBlock);
+            }
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Blocks);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Tebs);
+            return Status;
+        }
+
+        BlockCount++;
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Blocks);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Tebs);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
+                  IN BOOLEAN ProcessInit)
 {
     PIMAGE_TLS_DIRECTORY TlsDirectory;
     PLDRP_TLS_DATA TlsData;
-    PTEB Teb = NtCurrentTeb();
-    PVOID *TlsVector;
-    SIZE_T RawDataSize, BlockSize;
     ULONG Index, Size;
 
     /* Nothing to do if this module is already registered */
@@ -1302,9 +1578,6 @@ LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     if (!TlsDirectory)
         return STATUS_SUCCESS;
 
-    /* Remember that the process uses TLS */
-    if (!LdrpImageHasTls) LdrpImageHasTls = TRUE;
-
     /* Show debug message */
     if (ShowSnaps)
     {
@@ -1317,41 +1590,91 @@ LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     TlsData = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LDRP_TLS_DATA));
     if (!TlsData) return STATUS_NO_MEMORY;
 
-    LdrEntry->LoadCount = -1;
-    LdrEntry->TlsIndex = -1;
+    TlsData->LdrEntry = LdrEntry;
     TlsData->TlsDirectory = *TlsDirectory;
+    TlsData->TlsDirectory.Characteristics = LdrpNumberOfTlsEntries;
+
+    Index = TlsData->TlsDirectory.Characteristics;
+    if (!ProcessInit)
+    {
+        NTSTATUS Status;
+
+        Status = LdrpAppendTlsDataToProcessThreads(TlsData, Index);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
+            return Status;
+        }
+    }
+    else
+    {
+        LdrEntry->LoadCount = -1;
+    }
+
+    LdrEntry->TlsIndex = -1;
     InsertTailList(&LdrpTlsList, &TlsData->TlsLinks);
-
-    Index = LdrpNumberOfTlsEntries++;
     *(PLONG)TlsData->TlsDirectory.AddressOfIndex = Index;
-    TlsData->TlsDirectory.Characteristics = Index;
+    LdrpNumberOfTlsEntries++;
 
-    /* LdrpAllocateTls() will allocate the vector during process startup. */
-    if (!Teb->ThreadLocalStoragePointer)
-        return STATUS_SUCCESS;
-
-    /* Grow the running thread's vector so the new index is addressable */
-    TlsVector = RtlReAllocateHeap(RtlGetProcessHeap(),
-                                  0,
-                                  Teb->ThreadLocalStoragePointer,
-                                  LdrpNumberOfTlsEntries * sizeof(PVOID));
-    if (!TlsVector) return STATUS_NO_MEMORY;
-    Teb->ThreadLocalStoragePointer = TlsVector;
-
-    /* Allocate the raw TLS data plus the image's zero-fill area. */
-    RawDataSize = TlsDirectory->EndAddressOfRawData -
-                  TlsDirectory->StartAddressOfRawData;
-    BlockSize = RawDataSize + TlsDirectory->SizeOfZeroFill;
-    TlsVector[Index] = RtlAllocateHeap(RtlGetProcessHeap(),
-                                       HEAP_ZERO_MEMORY,
-                                       BlockSize);
-    if (!TlsVector[Index]) return STATUS_NO_MEMORY;
-
-    RtlCopyMemory(TlsVector[Index],
-                  (PVOID)TlsDirectory->StartAddressOfRawData,
-                  RawDataSize);
+    if (!LdrpImageHasTls) LdrpImageHasTls = TRUE;
 
     return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+LdrpReleaseTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PLIST_ENTRY ListHead, NextEntry;
+    PLDRP_TLS_DATA TlsData;
+    PTEB *Tebs;
+    ULONG i, Count;
+
+    if (!LdrEntry->TlsIndex) return;
+
+    ListHead = &LdrpTlsList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        TlsData = CONTAINING_RECORD(NextEntry, LDRP_TLS_DATA, TlsLinks);
+        NextEntry = NextEntry->Flink;
+
+        if (TlsData->LdrEntry == LdrEntry)
+        {
+            ULONG Index = TlsData->TlsDirectory.Characteristics;
+
+            if (NT_SUCCESS(LdrpGetCurrentProcessTebs(&Tebs, &Count)))
+            {
+                for (i = 0; i < Count; i++)
+                {
+                    PVOID *TlsVector = Tebs[i]->ThreadLocalStoragePointer;
+
+                    if (TlsVector && TlsVector[Index])
+                    {
+                        RtlFreeHeap(RtlGetProcessHeap(), 0, TlsVector[Index]);
+                        TlsVector[Index] = NULL;
+                    }
+                }
+
+                RtlFreeHeap(RtlGetProcessHeap(), 0, Tebs);
+            }
+            else
+            {
+                PVOID *TlsVector = NtCurrentTeb()->ThreadLocalStoragePointer;
+
+                if (TlsVector && TlsVector[Index])
+                {
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, TlsVector[Index]);
+                    TlsVector[Index] = NULL;
+                }
+            }
+
+            RemoveEntryList(&TlsData->TlsLinks);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
+            LdrEntry->TlsIndex = 0;
+            return;
+        }
+    }
 }
 
 NTSTATUS
@@ -1374,7 +1697,7 @@ LdrpInitializeTls(VOID)
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
         NextEntry = NextEntry->Flink;
 
-        Status = LdrpHandleTlsData(LdrEntry);
+        Status = LdrpHandleTlsData(LdrEntry, TRUE);
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -1398,7 +1721,7 @@ LdrpAllocateTls(VOID)
 
     /* Allocate the vector array */
     TlsVector = RtlAllocateHeap(RtlGetProcessHeap(),
-                                    0,
+                                    HEAP_ZERO_MEMORY,
                                     LdrpNumberOfTlsEntries * sizeof(PVOID));
     if (!TlsVector) return STATUS_NO_MEMORY;
     Teb->ThreadLocalStoragePointer = TlsVector;

@@ -26,6 +26,7 @@
 typedef struct _LDRP_TLS_DATA
 {
     LIST_ENTRY TlsLinks;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
     IMAGE_TLS_DIRECTORY TlsDirectory;
 } LDRP_TLS_DATA, *PLDRP_TLS_DATA;
 
@@ -71,7 +72,8 @@ extern PVOID g_pfnSE_ProcessDying;
 NTSTATUS NTAPI LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL);
 VOID NTAPI LdrpInitializeThread(IN PCONTEXT Context);
 NTSTATUS NTAPI LdrpInitializeTls(VOID);
-NTSTATUS NTAPI LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry);
+NTSTATUS NTAPI LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry, IN BOOLEAN ProcessInit);
+VOID NTAPI LdrpReleaseTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry);
 NTSTATUS NTAPI LdrpAllocateTls(VOID);
 VOID NTAPI LdrpFreeTls(VOID);
 VOID NTAPI LdrpCallTlsInitializers(IN PLDR_DATA_TABLE_ENTRY LdrEntry, IN ULONG Reason);
