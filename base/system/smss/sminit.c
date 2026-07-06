@@ -928,9 +928,12 @@ SmpTranslateSystemPartitionInformation(VOID)
          * NOTE: This has been introduced in a post-SP1 Windows 7 update. */
         if (Status != STATUS_NO_MORE_ENTRIES)
             return;
-        DirInfo->Name.Buffer = DirInfoBuffer.Buffer;
-        DirInfo->Name.Buffer[0] = SharedUserData->NtSystemRoot[0];
-        DirInfo->Name.Buffer[1] = SharedUserData->NtSystemRoot[1]; // == L':';
+        if (DirInfo)
+        {
+            DirInfo->Name.Buffer = DirInfoBuffer.Buffer;
+            DirInfo->Name.Buffer[0] = SharedUserData->NtSystemRoot[0];
+            DirInfo->Name.Buffer[1] = SharedUserData->NtSystemRoot[1]; // == L':';
+        }
 #else
         return;
 #endif
