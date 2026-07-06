@@ -80,7 +80,7 @@ BASE_SEARCH_PATH_TYPE BaseProcessOrder[BaseSearchPathMax] =
 
 BASE_CURRENT_DIR_PLACEMENT BasepDllCurrentDirPlacement = BaseCurrentDirPlacementInvalid;
 
-DWORD BasepSearchPathModeFlags = BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE;
+DWORD BasepSearchPathModeFlags = BASE_SEARCH_PATH_INVALID_FLAGS;
 
 extern UNICODE_STRING BasePathVariableName;
 
@@ -397,7 +397,50 @@ WINAPI
 BaseComputeProcessSearchPath(VOID)
 {
     BASE_CURRENT_DIR_PLACEMENT CurDirPlacement;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\MACHINE\\System\\CurrentControlSet\\Control\\Session Manager");
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SafeProcessSearchMode");
+    OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&KeyName, OBJ_CASE_INSENSITIVE);
+    CHAR PartialInfoBuffer[FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + sizeof(DWORD)];
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    ULONG ResultLength;
+
     DPRINT("Computing Process Search path\n");
+
+    /* No flag is set, read from registry */
+    if (BasepSearchPathModeFlags == BASE_SEARCH_PATH_INVALID_FLAGS)
+    {
+        /* Open the configuration key */
+        Status = NtOpenKey(&KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
+        if (NT_SUCCESS(Status))
+        {
+            /* Query if safe search is enabled */
+            Status = NtQueryValueKey(KeyHandle,
+                                     &ValueName,
+                                     KeyValuePartialInformation,
+                                     PartialInfoBuffer,
+                                     sizeof(PartialInfoBuffer),
+                                     &ResultLength);
+            if (NT_SUCCESS(Status))
+            {
+                /* Read the value if the size is OK */
+                if (ResultLength == sizeof(PartialInfoBuffer))
+                {
+                    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)PartialInfoBuffer;
+                    /* 0 means disabled and 1 means enabled */
+                    BasepSearchPathModeFlags = *(PDWORD)PartialInfo->Data == 1 ? 
+                                               BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE : BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE;
+                }
+            }
+            /* Close the handle */
+            NtClose(KeyHandle);
+        }
+    }
+    /* Fallback to default value if couldn't read from registry */
+    if (BasepSearchPathModeFlags == BASE_SEARCH_PATH_INVALID_FLAGS)
+    {
+        BasepSearchPathModeFlags = BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE;
+    }
 
     CurDirPlacement = BasepSearchPathModeFlags & BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE ?
                       BaseCurrentDirPlacementSafe : BaseCurrentDirPlacementDefault;
