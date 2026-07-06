@@ -483,23 +483,10 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hBrush, LONG style, IN
     }
     // Otherwise a dither brush
 
-    // Fill inner
     HGDIOBJ oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0)); // 1px off
     HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
     BrushInternal(hdc, x1, y1, x2, y2, style, thickness, TRUE);
     SelectObject(hdc, oldBrush);
-    DeleteObject(SelectObject(hdc, oldPen));
-
-    // Fill border
-    oldPen = SelectObject(hdc, CreateGeometricPen(RGB(255, 255, 255), 1));
-    oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-    BeginPath(hdc);
-    BrushInternal(hdc, x1, y1, x2, y2, style, thickness, TRUE);
-    EndPath(hdc);
-    HRGN hRgn = PathToRegion(hdc);
-    SelectObject(hdc, oldBrush);
-    FillRgn(hdc, hRgn, hBrush);
-    DeleteObject(hRgn);
     DeleteObject(SelectObject(hdc, oldPen));
 }
 
