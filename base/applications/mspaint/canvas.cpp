@@ -475,7 +475,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     if (hitSelection != HIT_NONE)
     {
         m_drawing = TRUE;
-        CanvasToImage(pt);
+        CanvasToImage(pt, TRUE);
         SetCapture();
         toolsModel.OnButtonDown(bLeftButton, pt.x, pt.y, FALSE);
         Invalidate();
@@ -507,7 +507,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         return 0;
     }
 
-    CanvasToImage(pt);
+    CanvasToImage(pt, TRUE);
 
     if (hit == HIT_INNER)
     {
