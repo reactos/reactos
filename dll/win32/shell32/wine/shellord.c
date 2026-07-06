@@ -73,6 +73,10 @@ extern INT    WINAPI FindMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData, LPI
 extern INT    WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, LPVOID lpBuffer, DWORD nBufferSize);
 #endif
 
+static HIMAGELIST DAD_himlTrack = NULL;
+static POINT DAD_ptHotspot;
+static BOOL DAD_bDragging = FALSE;
+
 /*************************************************************************
  * ParseFieldA					[internal]
  *
@@ -1742,63 +1746,147 @@ BOOL WINAPI DAD_AutoScroll(HWND hwnd, AUTO_SCROLL_DATA *samples, const POINT * p
 /*************************************************************************
  * DAD_DragEnter				[SHELL32.130]
  *
+ * @param[in] hwnd
+ * Window to receive the drag image.
+ *
+ * @return
+ * TRUE on success, FALSE on failure.
+ *
  */
-BOOL WINAPI DAD_DragEnter(HWND hwnd)
+BOOL WINAPI DAD_DragEnter(_In_ HWND hwnd)
 {
-    FIXME("hwnd = %p\n",hwnd);
-    return FALSE;
+    POINT p;
+
+    GetCursorPos(&p);
+    return DAD_DragEnterEx(hwnd, p);
 }
+
 /*************************************************************************
  * DAD_DragEnterEx				[SHELL32.131]
  *
+ * @param[in] hwnd
+ * Window to receive the drag image
+ *
+ * @param[in] p
+ * Initial position of the drag image
+ *
+ * @return
+ * TRUE on success, FALSE on failure
  */
-BOOL WINAPI DAD_DragEnterEx(HWND hwnd, POINT p)
+BOOL WINAPI DAD_DragEnterEx(_In_ HWND hwnd, _In_ POINT p)
 {
-    FIXME("hwnd = %p (%d,%d)\n",hwnd,p.x,p.y);
-    return FALSE;
+    if (!DAD_himlTrack)
+        return FALSE;
+
+    if (!ImageList_BeginDrag(DAD_himlTrack, 0, DAD_ptHotspot.x, DAD_ptHotspot.y))
+        return FALSE;
+
+    if (!ImageList_DragEnter(hwnd, p.x, p.y))
+    {
+        ImageList_EndDrag();
+        return FALSE;
+    }
+
+    DAD_bDragging = TRUE;
+    return TRUE;
 }
+
 /*************************************************************************
  * DAD_DragMove				[SHELL32.134]
  *
+ * @param[in] p
+ * New position of the drag image
+ *
+ * @return
+ * TRUE on success, FALSE on failure.
+ *
  */
-BOOL WINAPI DAD_DragMove(POINT p)
+BOOL WINAPI DAD_DragMove(_In_ POINT p)
 {
-    FIXME("(%d,%d)\n",p.x,p.y);
-    return FALSE;
+    if (!DAD_bDragging)
+        return FALSE;
+
+    return ImageList_DragMove(p.x, p.y);
 }
+
 /*************************************************************************
  * DAD_DragLeave				[SHELL32.132]
+ *
+ * @return
+ * TRUE on success, FALSE on failure
  *
  */
 BOOL WINAPI DAD_DragLeave(VOID)
 {
-    FIXME("\n");
-    return FALSE;
+    if (!DAD_bDragging)
+        return FALSE;
+
+    ImageList_DragLeave(NULL);
+    ImageList_EndDrag();
+    DAD_bDragging = FALSE;
+    return TRUE;
 }
+
 /*************************************************************************
  * DAD_SetDragImage				[SHELL32.136]
  *
- * NOTES
- *  exported by name
+ * @param[in] himlTrack
+ * Image list containing the drag image or (HIMAGELIST)-1 to clear it
+ *
+ * @param[in] lppt
+ * Hotspot offset within the image or NULL for (0,0)
+ *
+ * @return
+ * TRUE on success, FALSE on failure
+ *
+ * @note
+ * Exported by name
+ *
  */
 BOOL WINAPI DAD_SetDragImage(
-	HIMAGELIST himlTrack,
-	LPPOINT lppt)
+	_In_ HIMAGELIST himlTrack,
+	_In_opt_ LPPOINT lppt)
 {
-    FIXME("%p %p stub\n",himlTrack, lppt);
-    return FALSE;
+    if (himlTrack == (HIMAGELIST)(ULONG_PTR)-1)
+    {
+        if (DAD_bDragging)
+            DAD_DragLeave();
+        DAD_himlTrack = NULL;
+        return TRUE;
+    }
+
+    if (!himlTrack)
+        return FALSE;
+
+    DAD_himlTrack = himlTrack;
+    if (lppt)
+        DAD_ptHotspot = *lppt;
+    else
+        DAD_ptHotspot.x = DAD_ptHotspot.y = 0;
+
+    return TRUE;
 }
+
 /*************************************************************************
  * DAD_ShowDragImage				[SHELL32.137]
  *
- * NOTES
- *  exported by name
+ * @param[in] bShow
+ * TRUE to show the drag image, FALSE to hide it
+ *
+ * @return
+ * TRUE on success, FALSE on failure
+ *
+ * @note
+ * Exported by name
+ *
  */
-BOOL WINAPI DAD_ShowDragImage(BOOL bShow)
+BOOL WINAPI DAD_ShowDragImage(_In_ BOOL bShow)
 {
-    FIXME("0x%08x stub\n",bShow);
-    return FALSE;
-}
+    if (!DAD_bDragging)
+        return FALSE;
+
+    return ImageList_DragShowNolock(bShow);
+} 
 
 /*************************************************************************
  * ReadCabinetState				[SHELL32.651] NT 4.0
