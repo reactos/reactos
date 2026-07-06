@@ -80,7 +80,7 @@ BASE_SEARCH_PATH_TYPE BaseProcessOrder[BaseSearchPathMax] =
 
 BASE_CURRENT_DIR_PLACEMENT BasepDllCurrentDirPlacement = BaseCurrentDirPlacementInvalid;
 
-DWORD BasepSearchPathModeFlags = BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE;
+DWORD BasepSearchPathModeFlags = BASE_SEARCH_PATH_INVALID_FLAGS;
 
 extern UNICODE_STRING BasePathVariableName;
 
@@ -397,9 +397,61 @@ WINAPI
 BaseComputeProcessSearchPath(VOID)
 {
     BASE_CURRENT_DIR_PLACEMENT CurDirPlacement;
+    DWORD CurrentModeFlags, OldCurrentModeFlags;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\MACHINE\\System\\CurrentControlSet\\Control\\Session Manager");
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SafeProcessSearchMode");
+    OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&KeyName, OBJ_CASE_INSENSITIVE);
+    CHAR PartialInfoBuffer[FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + sizeof(DWORD)];
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    ULONG ResultLength;
+
     DPRINT("Computing Process Search path\n");
 
-    CurDirPlacement = BasepSearchPathModeFlags & BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE ?
+    CurrentModeFlags = BasepSearchPathModeFlags;
+    /* No flag is set, read from registry */
+    if (CurrentModeFlags == BASE_SEARCH_PATH_INVALID_FLAGS)
+    {
+        /* Open the configuration key */
+        Status = NtOpenKey(&KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
+        if (NT_SUCCESS(Status))
+        {
+            /* Query if safe search is enabled */
+            Status = NtQueryValueKey(KeyHandle,
+                                     &ValueName,
+                                     KeyValuePartialInformation,
+                                     PartialInfoBuffer,
+                                     sizeof(PartialInfoBuffer),
+                                     &ResultLength);
+            if (NT_SUCCESS(Status))
+            {
+                /* Read the value if the size is OK */
+                if (ResultLength == sizeof(PartialInfoBuffer))
+                {
+                    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)PartialInfoBuffer;
+                    /* 0 means disabled and 1 means enabled */
+                    CurrentModeFlags = *(PDWORD)PartialInfo->Data == 1
+                                       ? BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE
+                                       : BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE;
+                }
+            }
+            /* Close the handle */
+            NtClose(KeyHandle);
+        }
+
+        /* Fallback to default value if couldn't read from registry */
+        if (CurrentModeFlags == BASE_SEARCH_PATH_INVALID_FLAGS)
+            CurrentModeFlags = BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE;
+
+        /* Update the flag and read the old one */
+        OldCurrentModeFlags = InterlockedCompareExchange((PLONG)&BasepSearchPathModeFlags,
+                                                         CurrentModeFlags,
+                                                         BASE_SEARCH_PATH_INVALID_FLAGS);
+        if (OldCurrentModeFlags != BASE_SEARCH_PATH_INVALID_FLAGS)
+            CurrentModeFlags = OldCurrentModeFlags;
+    }
+
+    CurDirPlacement = CurrentModeFlags & BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE ?
                       BaseCurrentDirPlacementSafe : BaseCurrentDirPlacementDefault;
 
     /* Compute the path using default process order */
@@ -1126,7 +1178,8 @@ GetFullPathNameW(IN LPCWSTR lpFileName,
  */
 BOOL
 WINAPI
-SetSearchPathMode(_In_ DWORD dwFlags)
+SetSearchPathMode(
+    _In_ DWORD dwFlags)
 {
     switch (dwFlags)
     {
