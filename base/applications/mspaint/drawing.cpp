@@ -474,7 +474,7 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hBrush, LONG style, IN
     HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
     BrushInternal(hdc, x1, y1, x2, y2, style, thickness);
     SelectObject(hdc, oldBrush);
-    DeleteObject(SelectObject(hdc, oldPen));
+    SelectObject(hdc, oldPen);
 }
 
 void
