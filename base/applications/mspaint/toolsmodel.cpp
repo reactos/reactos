@@ -14,7 +14,7 @@ ToolsModel toolsModel;
 ToolsModel::VirtualBrush::~VirtualBrush()
 {
     if (m_hBrush)
-        DeleteObject(m_hBrush);
+        ::DeleteObject(m_hBrush);
 }
 
 HBRUSH ToolsModel::VirtualBrush::GetBrush(PAL_TYPE palette, COLORREF rgbColor)
