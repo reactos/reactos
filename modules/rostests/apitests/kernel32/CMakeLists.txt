@@ -41,6 +41,7 @@ list(APPEND SOURCE
     SetComputerNameExW.c
     SetConsoleWindowInfo.c
     SetCurrentDirectory.c
+    SetSearchPathMode.c
     SetUnhandledExceptionFilter.c
     SystemFirmware.c
     TerminateProcess.c
