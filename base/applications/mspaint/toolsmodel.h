@@ -196,5 +196,6 @@ static inline void UnZoomed(POINT& pt, BOOL bRound = FALSE)
 
 static inline void UnZoomed(RECT& rc, BOOL bRound = FALSE)
 {
-    rc = { UnZoomed(rc.left, bRound), UnZoomed(rc.top, bRound), UnZoomed(rc.right, bRound), UnZoomed(rc.bottom, bRound) };
+    rc = { UnZoomed(rc.left, bRound), UnZoomed(rc.top, bRound),
+           UnZoomed(rc.right, bRound), UnZoomed(rc.bottom, bRound) };
 }
