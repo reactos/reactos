@@ -13,6 +13,7 @@
 #include <wmidata.h>
 #include <wmistr.h>
 #include <dmilib.h>
+#include <intrin.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -108,8 +109,9 @@ i8042ParseSMBiosTables(
 
         if (j == MAX_MATCH_ENTRIES)
         {
-            /* All items matched! */
-            i8042HwFlags = i8042HardwareTable[i].Flags;
+            /* All items matched!
+             * Use |= so as not to clobber flags set by other detections */
+            i8042HwFlags |= i8042HardwareTable[i].Flags;
             DPRINT("Found match for hw table index %u\n", i);
             break;
         }
@@ -180,6 +182,44 @@ i8042StoreSMBiosTables(
     ZwClose(KeyHandle);
 }
 
+static
+VOID
+i8042DetectHyperVInvertedY(
+    VOID)
+{
+#if defined(_M_IX86) || defined(_M_AMD64)
+    INT CpuInfo[4];
+    ULONG MaxHvLeaf;
+
+    /* Check if we are running under a hypervisor */
+    __cpuid(CpuInfo, 1);
+    if (!(CpuInfo[2] & 0x80000000))
+        return;
+
+    /* Check for the Hyper-V signature "Microsoft Hv" */
+    __cpuid(CpuInfo, 0x40000000);
+    MaxHvLeaf = (ULONG)CpuInfo[0];
+    if (CpuInfo[1] != 0x7263694D || /* "Micr" */
+        CpuInfo[2] != 0x666F736F || /* "osof" */
+        CpuInfo[3] != 0x76482074)   /* "t Hv" */
+        return;
+
+    if (MaxHvLeaf < 0x40000002)
+        return;
+
+    /* Hypervisor system identity: EAX holds the host OS build number.
+     * Since Windows 11 24H2 (build 26100) the emulated PS/2 mouse reports
+     * vertical movement already in Windows orientation, see CORE-20561. */
+    __cpuid(CpuInfo, 0x40000002);
+    if ((ULONG)CpuInfo[0] >= 26100)
+    {
+        DPRINT1("Hyper-V host build %lu reports an inverted PS/2 Y-axis, enabling workaround\n",
+                (ULONG)CpuInfo[0]);
+        i8042HwFlags |= FL_HYPERV_INVERTED_Y;
+    }
+#endif
+}
+
 VOID
 NTAPI
 i8042InitializeHwHacks(
@@ -189,6 +229,8 @@ i8042InitializeHwHacks(
     PVOID DataBlockObject;
     PWNODE_ALL_DATA AllData;
     ULONG BufferSize;
+
+    i8042DetectHyperVInvertedY();
 
     /* Open the data block object for the SMBIOS table */
     Status = IoWMIOpenBlock(&MSSmBios_RawSMBiosTables_GUID,

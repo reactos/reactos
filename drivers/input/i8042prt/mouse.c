@@ -128,8 +128,11 @@ i8042MouHandle(
 			else
 				MouseInput->LastY = (LONG)Output;
 
-			/* Windows wants it the other way around */
-			MouseInput->LastY = -MouseInput->LastY;
+			/* Windows wants it the other way around, except when the
+			 * host's PS/2 emulation already reports it that way
+			 * (Hyper-V on Windows 11 24H2+, see CORE-20561) */
+			if (!(i8042HwFlags & FL_HYPERV_INVERTED_Y))
+				MouseInput->LastY = -MouseInput->LastY;
 
 			if (DeviceExtension->MouseType == GenericPS2 ||
 			    DeviceExtension->MouseType == Ps2pp)
