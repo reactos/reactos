@@ -395,7 +395,7 @@ Airbrush(HDC hdc, LONG x, LONG y, HBRUSH hBrush, LONG r)
 }
 
 static void
-BrushInternal(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, LONG style, INT thickness)
+BrushInternal(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, LONG style, INT thickness, BOOL bOnePixelOff)
 {
     LONG a, b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
     switch ((BrushStyle)style)
@@ -406,8 +406,8 @@ BrushInternal(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, LONG style, INT thick
                 Ellipse(hdc,
                         (x1 * (b - a) + x2 * a) / b - (thickness / 2),
                         (y1 * (b - a) + y2 * a) / b - (thickness / 2),
-                        (x1 * (b - a) + x2 * a) / b + (thickness / 2),
-                        (y1 * (b - a) + y2 * a) / b + (thickness / 2));
+                        (x1 * (b - a) + x2 * a) / b + (thickness / 2) + bOnePixelOff,
+                        (y1 * (b - a) + y2 * a) / b + (thickness / 2) + bOnePixelOff);
             }
             break;
 
@@ -417,8 +417,8 @@ BrushInternal(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, LONG style, INT thick
                 Rectangle(hdc,
                           (x1 * (b - a) + x2 * a) / b - (thickness / 2),
                           (y1 * (b - a) + y2 * a) / b - (thickness / 2),
-                          (x1 * (b - a) + x2 * a) / b + (thickness / 2),
-                          (y1 * (b - a) + y2 * a) / b + (thickness / 2));
+                          (x1 * (b - a) + x2 * a) / b + (thickness / 2) + bOnePixelOff,
+                          (y1 * (b - a) + y2 * a) / b + (thickness / 2) + bOnePixelOff);
             }
             break;
 
@@ -428,13 +428,17 @@ BrushInternal(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, LONG style, INT thick
             POINT offsetTop, offsetBottom;
             if ((BrushStyle)style == BrushStyleForeSlash)
             {
-                offsetTop    = { (thickness - 1) / 2, -(thickness - 1) / 2 };
-                offsetBottom = { -thickness      / 2,   thickness      / 2 };
+                offsetTop    = { (thickness - 1) / 2 + bOnePixelOff, -(thickness - 1) / 2                };
+                offsetBottom = { -thickness      / 2               ,   thickness      / 2 + bOnePixelOff };
             }
             else
             {
-                offsetTop =    { -thickness      / 2, -thickness      / 2 };
-                offsetBottom = { (thickness - 1) / 2, (thickness - 1) / 2 };
+                offsetTop =    { -thickness      / 2               , -thickness      / 2                };
+                offsetBottom = { (thickness - 1) / 2 + bOnePixelOff, (thickness - 1) / 2 + bOnePixelOff };
+            }
+            if (bOnePixelOff && x1 == x2 && y1 == y2)
+            {
+                ++x2;
             }
             POINT points[4] =
             {
@@ -472,40 +476,31 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hBrush, LONG style, IN
     {
         HGDIOBJ oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 1, lb.lbColor));
         HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
-        BrushInternal(hdc, x1, y1, x2, y2, style, thickness);
+        BrushInternal(hdc, x1, y1, x2, y2, style, thickness, FALSE);
         SelectObject(hdc, oldBrush);
         DeleteObject(SelectObject(hdc, oldPen));
         return;
     }
+    // Otherwise a dither brush
 
-    // NOTE: There appears to be a misalignment between the line stroke region and the fill
-    //       region in Windows path rendering. Detailed region calculation required.
-
-    // Create inner region
-    BeginPath(hdc);
-    BrushInternal(hdc, x1, y1, x2, y2, style, thickness);
-    EndPath(hdc);
-    SetPolyFillMode(hdc, WINDING);
-    HRGN hRgnInner = PathToRegion(hdc);
-
-    // Create border region
-    HGDIOBJ oldPen = SelectObject(hdc, CreateGeometricPen(0, 1));
-    BeginPath(hdc);
-    BrushInternal(hdc, x1, y1, x2, y2, style, thickness);
-    EndPath(hdc);
-    WidenPath(hdc);
-    HRGN hRgnOuter = PathToRegion(hdc);
+    // Fill inner
+    HGDIOBJ oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0)); // 1px off
+    HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
+    BrushInternal(hdc, x1, y1, x2, y2, style, thickness, TRUE);
+    SelectObject(hdc, oldBrush);
     DeleteObject(SelectObject(hdc, oldPen));
 
-    // Create combined region
-    HRGN hRgnCombined = CreateRectRgn(0, 0, 0, 0);
-    CombineRgn(hRgnCombined, hRgnOuter, hRgnInner, RGN_OR);
-
-    FillRgn(hdc, hRgnCombined, hBrush);
-
-    DeleteObject(hRgnOuter);
-    DeleteObject(hRgnInner);
-    DeleteObject(hRgnCombined);
+    // Fill border
+    oldPen = SelectObject(hdc, CreateGeometricPen(RGB(255, 255, 255), 1));
+    oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    BeginPath(hdc);
+    BrushInternal(hdc, x1, y1, x2, y2, style, thickness, TRUE);
+    EndPath(hdc);
+    HRGN hRgn = PathToRegion(hdc);
+    SelectObject(hdc, oldBrush);
+    FillRgn(hdc, hRgn, hBrush);
+    DeleteObject(hRgn);
+    DeleteObject(SelectObject(hdc, oldPen));
 }
 
 void
