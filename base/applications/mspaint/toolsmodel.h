@@ -172,9 +172,11 @@ static inline int Zoomed(int xy)
     return MulDiv(xy, toolsModel.GetZoom(), DEFAULT_ZOOM);
 }
 
-static inline int UnZoomed(int xy)
+static inline int UnZoomed(int xy, BOOL bRound = FALSE)
 {
-    return MulDiv(xy, DEFAULT_ZOOM, toolsModel.GetZoom());
+    if (bRound)
+        return MulDiv(xy, DEFAULT_ZOOM, toolsModel.GetZoom());
+    return xy * DEFAULT_ZOOM / toolsModel.GetZoom();
 }
 
 static inline void Zoomed(POINT& pt)
@@ -187,12 +189,12 @@ static inline void Zoomed(RECT& rc)
     rc = { Zoomed(rc.left), Zoomed(rc.top), Zoomed(rc.right), Zoomed(rc.bottom) };
 }
 
-static inline void UnZoomed(POINT& pt)
+static inline void UnZoomed(POINT& pt, BOOL bRound = FALSE)
 {
-    pt = { UnZoomed(pt.x), UnZoomed(pt.y) };
+    pt = { UnZoomed(pt.x, bRound), UnZoomed(pt.y, bRound) };
 }
 
-static inline void UnZoomed(RECT& rc)
+static inline void UnZoomed(RECT& rc, BOOL bRound = FALSE)
 {
-    rc = { UnZoomed(rc.left), UnZoomed(rc.top), UnZoomed(rc.right), UnZoomed(rc.bottom) };
+    rc = { UnZoomed(rc.left, bRound), UnZoomed(rc.top, bRound), UnZoomed(rc.right, bRound), UnZoomed(rc.bottom, bRound) };
 }
