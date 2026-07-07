@@ -2623,11 +2623,20 @@ int WINAPI LookupIconIdFromDirectoryEx(
 
     TRACE("%p, %x, %i, %i, %x.\n", presbits, fIcon, cxDesired, cyDesired, Flags);
 
-    if(!(dir && !dir->idReserved && (dir->idType & 3)))
+    _SEH2_TRY
     {
-        WARN("Invalid resource.\n");
+        if(!(dir && !dir->idReserved && (dir->idType & 3)))
+        {
+            WARN("Invalid resource.\n");
+            return 0;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("Invalid resource (%p).\n", presbits);
         return 0;
     }
+    _SEH2_END;
 
     if(Flags & LR_MONOCHROME)
         bppDesired = 1;
