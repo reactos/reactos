@@ -10,10 +10,10 @@
 PKDNET_EXTENSIBILITY_IMPORTS KdNetExtensibilityImports;
 
 VOID
+NTAPI
 DriverEntry(
     _In_ PDRIVER_OBJECT DriverObject,
-    _In_ PUNICODE_STRING RegistryPath
-    )
+    _In_ PUNICODE_STRING RegistryPath)
 {
     UNREFERENCED_PARAMETER(DriverObject);
     UNREFERENCED_PARAMETER(RegistryPath);
@@ -22,8 +22,7 @@ DriverEntry(
 VOID
 NTAPI
 KdNicSetHibernateRange(
-    VOID
-    )
+    VOID)
 {
     //TODO:
 }
@@ -31,18 +30,17 @@ KdNicSetHibernateRange(
 ULONG
 NTAPI
 KdNicGetHardwareContextSize(
-    _In_ struct _DEBUG_DEVICE_DESCRIPTOR *Device
-)
+    _In_ struct _DEBUG_DEVICE_DESCRIPTOR *Device)
 {
     return E1000GetHardwareContextSize();
 }
+
 NTSTATUS
 NTAPI
 KdInitializeLibrary(
     _In_ PKDNET_EXTENSIBILITY_IMPORTS ImportTable,
     _In_opt_ PCHAR LoaderOptions,
-    _Inout_ struct _DEBUG_DEVICE_DESCRIPTOR *Device
-    )
+    _Inout_ struct _DEBUG_DEVICE_DESCRIPTOR *Device)
 {
     PKDNET_EXTENSIBILITY_EXPORTS Exports;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -54,11 +52,11 @@ KdInitializeLibrary(
         return STATUS_INVALID_PARAMETER;
 
     KdNetDbgPrintf("KdInitializeLibrary: ExportsFnCount=%lu Expected=%lu\n",
-                                                      ImportTable->Exports->FunctionCount,
-                                                      KDNET_EXT_EXPORTS);
+                   ImportTable->Exports->FunctionCount,
+                   KDNET_EXT_EXPORTS);
     KdNetDbgPrintf("KdInitializeLibrary: ImportFnCount=%lu Expected=%lu\n",
-                                                  ImportTable ? ImportTable->FunctionCount : 0,
-                                                  (ULONG)KDNET_EXT_IMPORTS);
+                   ImportTable ? ImportTable->FunctionCount : 0,
+                   KDNET_EXT_IMPORTS);
 
     Exports->KdInitializeController =   E1000InitializeController;
     Exports->KdShutdownController =     E1000ShutdownController;

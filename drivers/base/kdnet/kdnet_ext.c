@@ -6,30 +6,28 @@
  */
 
 #include "kdnet.h"
-
-PKDNET_EXTENSIBILITY_EXPORTS KdNetExtensibilityExports = NULL;
-
 #include <ndk/haltypes.h>
 #include <ndk/halfuncs.h>
+
+PKDNET_EXTENSIBILITY_EXPORTS KdNetExtensibilityExports = NULL;
 
 static NTSTATUS g_KdNetErrorStatus = STATUS_SUCCESS;
 static PWCHAR   g_KdNetErrorString = NULL;
 static ULONG    g_KdNetHardwareId  = 0;
 
-static UCHAR  NTAPI KdNetRrUchar(PUCHAR r)            { return READ_REGISTER_UCHAR(r); }
-static USHORT NTAPI KdNetRrUshort(PUSHORT r)          { return READ_REGISTER_USHORT(r); }
-static ULONG  NTAPI KdNetRrUlong(PULONG r)            { return READ_REGISTER_ULONG(r); }
-static VOID   NTAPI KdNetWrUchar(PUCHAR r, UCHAR v)   { WRITE_REGISTER_UCHAR(r, v); }
-static VOID   NTAPI KdNetWrUshort(PUSHORT r, USHORT v){ WRITE_REGISTER_USHORT(r, v); }
-static VOID   NTAPI KdNetWrUlong(PULONG r, ULONG v)   { WRITE_REGISTER_ULONG(r, v); }
-static UCHAR  NTAPI KdNetRpUchar(PUCHAR p)            { return READ_PORT_UCHAR(p); }
-static USHORT NTAPI KdNetRpUshort(PUSHORT p)          { return READ_PORT_USHORT(p); }
-static ULONG  NTAPI KdNetRpUlong(PULONG p)            { return READ_PORT_ULONG(p); }
-static VOID   NTAPI KdNetWpUchar(PUCHAR p, UCHAR v)   { WRITE_PORT_UCHAR(p, v); }
-static VOID   NTAPI KdNetWpUshort(PUSHORT p, USHORT v){ WRITE_PORT_USHORT(p, v); }
-static VOID   NTAPI KdNetWpUlong(PULONG p, ULONG v)   { WRITE_PORT_ULONG(p, v); }
-static VOID   NTAPI KdNetStall(ULONG us)              { KeStallExecutionProcessor(us); }
-
+static UCHAR  NTAPI KdNetRrUchar(PUCHAR r)              { return READ_REGISTER_UCHAR(r); }
+static USHORT NTAPI KdNetRrUshort(PUSHORT r)            { return READ_REGISTER_USHORT(r); }
+static ULONG  NTAPI KdNetRrUlong(PULONG r)              { return READ_REGISTER_ULONG(r); }
+static VOID   NTAPI KdNetWrUchar(PUCHAR r, UCHAR v)     { WRITE_REGISTER_UCHAR(r, v); }
+static VOID   NTAPI KdNetWrUshort(PUSHORT r, USHORT v)  { WRITE_REGISTER_USHORT(r, v); }
+static VOID   NTAPI KdNetWrUlong(PULONG r, ULONG v)     { WRITE_REGISTER_ULONG(r, v); }
+static UCHAR  NTAPI KdNetRpUchar(PUCHAR p)              { return READ_PORT_UCHAR(p); }
+static USHORT NTAPI KdNetRpUshort(PUSHORT p)            { return READ_PORT_USHORT(p); }
+static ULONG  NTAPI KdNetRpUlong(PULONG p)              { return READ_PORT_ULONG(p); }
+static VOID   NTAPI KdNetWpUchar(PUCHAR p, UCHAR v)     { WRITE_PORT_UCHAR(p, v); }
+static VOID   NTAPI KdNetWpUshort(PUSHORT p, USHORT v)  { WRITE_PORT_USHORT(p, v); }
+static VOID   NTAPI KdNetWpUlong(PULONG p, ULONG v)     { WRITE_PORT_ULONG(p, v); }
+static VOID   NTAPI KdNetStall(ULONG us)                { KeStallExecutionProcessor(us); }
 
 NTSTATUS
 KdNetInitializeExtensibility(
@@ -37,7 +35,7 @@ KdNetInitializeExtensibility(
     _Inout_ struct _DEBUG_DEVICE_DESCRIPTOR *Device,
     _In_opt_ PKDNET_INITIALIZE_LIBRARY KdInitializeLibrary,
     _Out_ PKDNET_EXTENSIBILITY_EXPORTS ExtensibilityExports,
-    _Out_opt_ void *SerialExtensibility)
+    _Out_opt_ PVOID SerialExtensibility)
 {
     NTSTATUS Status;
     PKDNET_INITIALIZE_LIBRARY InitLib;

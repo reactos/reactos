@@ -11,7 +11,6 @@ NTSTATUS
 NTAPI
 KdD0Transition(VOID)
 {
-
     if (KdNetInitialized &&
         KdNetExtensibilityExports &&
         KdNetExtensibilityExports->KdInitializeController)

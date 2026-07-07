@@ -44,4 +44,4 @@ KdNetInitializeExtensibility(
     _Inout_ struct _DEBUG_DEVICE_DESCRIPTOR *Device,
     _In_opt_ PKDNET_INITIALIZE_LIBRARY KdInitializeLibrary,
     _Out_ PKDNET_EXTENSIBILITY_EXPORTS ExtensibilityExports,
-    _Out_opt_ void *SerialExtensibility);
+    _Out_opt_ PVOID SerialExtensibility);

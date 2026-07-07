@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Intel KDNET Extension
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     global header for kd_02_8086
+ * PURPOSE:     Global header for kd_02_8086
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 

@@ -19,6 +19,7 @@ KdReceivePacket(
     FrLdrDbgPrint("KdReceivePacket called with PacketType %lu\n", PacketType);
     return KdPacketTimedOut;
 }
+
 VOID
 NTAPI
 KdSendPacket(

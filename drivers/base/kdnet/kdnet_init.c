@@ -13,8 +13,6 @@ KDNET_SHARED_DATA KdNetSharedData = {0};
 BOOLEAN KdNetInitialized = FALSE;
 PVOID KdNetHardwareContext = NULL;
 
-ULONG (*FrLdrDbgPrint)(const char *Format, ...);
-
 NTSTATUS
 NTAPI
 KdDebuggerInitialize0(_In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)

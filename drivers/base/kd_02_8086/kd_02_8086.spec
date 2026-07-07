@@ -1,1 +1,1 @@
-@ stdcall KdInitializeLibrary(ptr ptr ptr)
+@ stdcall KdInitializeLibrary(ptr str ptr)

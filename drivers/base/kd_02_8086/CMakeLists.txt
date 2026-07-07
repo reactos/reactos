@@ -1,4 +1,4 @@
-spec2def(kd_02_8086.dll kd_02_8086.spec ADD_IMPORTLIB)
+spec2def(kd_02_8086.dll kd_02_8086.spec)
 add_definitions(-D_KDNET_EXTENSION_MACROS_)
 
 list(APPEND SOURCE
@@ -12,8 +12,6 @@ add_library(kd_02_8086 MODULE
 
 set_module_type(kd_02_8086 kerneldll ENTRYPOINT 0)
 set_subsystem(kd_02_8086 native)
-
 add_importlibs(kd_02_8086 ntoskrnl hal)
-
 add_dependencies(kd_02_8086 psdk bugcodes)
 add_cd_file(TARGET kd_02_8086 DESTINATION reactos/system32 NO_CAB FOR all)

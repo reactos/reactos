@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Networking Debugging Module
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     Misc. Functions for kdnet
+ * PURPOSE:     Misc. functions for kdnet
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 

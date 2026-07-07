@@ -411,10 +411,7 @@ E1000InitializeController(PKDNET_SHARED_DATA KdNet)
     base = (PUCHAR)KdNet->Hardware;
 
     /* Zero only the adapter header (kdnet already zeroed the whole context). */
-    {
-        PUCHAR z = (PUCHAR)E1kAdapter; ULONG n = sizeof(*E1kAdapter);
-        while (n--) *z++ = 0;
-    }
+    RtlZeroMemory(E1kAdapter, sizeof(*E1kAdapter));
 
     E1kAdapter->RegBase = KdNet->Device->BaseAddress[0].TranslatedAddress;
     E1kAdapter->Shared = KdNet;
@@ -465,7 +462,6 @@ E1000InitializeController(PKDNET_SHARED_DATA KdNet)
     E1kWrite(E1kAdapter, E1000_IMC, 0xFFFFFFFF);
     (void)E1kRead(E1kAdapter, E1000_ICR);
 
-
     E1kWrite(E1kAdapter, E1000_CTRL, E1000_CTRL_SLU | E1000_CTRL_ASDE);
     E1kWrite(E1kAdapter, E1000_FCAL, 0);
     E1kWrite(E1kAdapter, E1000_FCAH, 0);
@@ -473,8 +469,8 @@ E1000InitializeController(PKDNET_SHARED_DATA KdNet)
     E1kWrite(E1kAdapter, E1000_FCTTV, 0);
 
     /* Read the MAC from the receive address registers. If they weren't
-     * auto-loaded from the EEPROM (RA0 empty — happens on some real hardware /
-     * after certain resets), read the MAC straight out of the EEPROM. */
+     * auto-loaded from the EEPROM (RA0 empty; happens on some real hardware,
+     * or after certain resets), read the MAC straight out of the EEPROM. */
     {
         ULONG ral = E1kRead(E1kAdapter, E1000_RAL0);
         ULONG rah = E1kRead(E1kAdapter, E1000_RAH0);
@@ -493,9 +489,9 @@ E1000InitializeController(PKDNET_SHARED_DATA KdNet)
             USHORT w2 = E1kEepromRead(E1kAdapter, 2, newF);
             if (!(w0 == 0xFFFF && w1 == 0xFFFF && w2 == 0xFFFF))
             {
-                E1kAdapter->Mac[0] = (UCHAR)w0;       E1kAdapter->Mac[1] = (UCHAR)(w0 >> 8);
-                E1kAdapter->Mac[2] = (UCHAR)w1;       E1kAdapter->Mac[3] = (UCHAR)(w1 >> 8);
-                E1kAdapter->Mac[4] = (UCHAR)w2;       E1kAdapter->Mac[5] = (UCHAR)(w2 >> 8);
+                E1kAdapter->Mac[0] = (UCHAR)w0; E1kAdapter->Mac[1] = (UCHAR)(w0 >> 8);
+                E1kAdapter->Mac[2] = (UCHAR)w1; E1kAdapter->Mac[3] = (UCHAR)(w1 >> 8);
+                E1kAdapter->Mac[4] = (UCHAR)w2; E1kAdapter->Mac[5] = (UCHAR)(w2 >> 8);
                 /* Program it back into RA0 so the hardware filters on it. */
                 E1kWrite(E1kAdapter, E1000_RAL0,
                          (ULONG)E1kAdapter->Mac[0] | ((ULONG)E1kAdapter->Mac[1] << 8) |
