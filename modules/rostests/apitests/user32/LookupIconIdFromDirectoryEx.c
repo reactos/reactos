@@ -12,6 +12,14 @@ START_TEST(LookupIconIdFromDirectoryEx)
     UINT i;
     BYTE* lpResource;
 
+    /* Test invalid directory */
+    SetLastError(0xdeadbeef);
+    StartSeh();
+    wResId = LookupIconIdFromDirectoryEx((PBYTE)(LONG_PTR)0xdeadbeef, TRUE, 0, 0, LR_DEFAULTSIZE);
+    EndSeh(STATUS_SUCCESS);
+    ok_eq_int(wResId, 0);
+    ok_eq_ulong(GetLastError(), 0xdeadbeef);
+
     /* This tests assumes that default icon size is 32x32 */
 
     struct
