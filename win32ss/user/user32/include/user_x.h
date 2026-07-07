@@ -119,11 +119,14 @@ static __inline void LoadUserApiHook()
 /* NtUserx to NtUser map */
 #define NtUserReleaseDC(HWND, HDC) NtUserxReleaseDC((HDC))
 #define NtUserReleaseCapture() NtUserxReleaseCapture()
+#define NtUserKillSystemTimer(HWND, ID) NtUserxKillSystemTimer((HWND), (ID))
+#define NtUserSetSystemTimer(HWND, ID, TIMEOUT) NtUserSetSystemTimer((HWND), (ID), (TIMEOUT), NULL)
 
 #define NtUserGetPrivateData(HWND, OFFSET, SIZE) GetWindowLongPtrW((HWND), (OFFSET))
 #define NtUserSetPrivateData(HWND, OFFSET, SIZE, VALUE) SetWindowLongPtrW((HWND), (OFFSET), (VALUE))
 
 /* MAKE_FNID */
 #define NTUSER_WNDPROC_BUTTON       FNID_BUTTON
+#define NTUSER_WNDPROC_LISTBOX      FNID_LISTBOX
 
 #define MAKE_FNID(index) (index)
