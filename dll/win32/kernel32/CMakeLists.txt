@@ -2,7 +2,8 @@
 add_subdirectory(kernel32_vista)
 
 add_definitions(-D_KERNEL32_)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
+                    ${REACTOS_SOURCE_DIR}/dll/win32/kernelbase/wine)
 spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
 # Shared between kernel32 and kernel32_vista
@@ -104,6 +105,7 @@ list(APPEND SOURCE
     winnls/string/lstring.c
     winnls/string/nls.c
     winnls/string/sortkey.c
+    dep.c
     k32.h)
 
 if(MSVC)
