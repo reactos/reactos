@@ -59,6 +59,15 @@ LocaleID = 409
 ; 3 - ReactOS Nano Server (Reserved)
 InstallationType = 0
 
+;[GuiUnattended]
+; Run a program early in 2nd-stage setup.
+;DetachedProgram=%SystemRoot%\system32\cmd.exe
+;Arguments="/C echo.Early 2nd-stage setup...&choice>nul /N /T:Y,5"
+
+;[SetupParams]
+; Run a program at the end of 2nd-stage setup.
+;UserExecute="cmd.exe /C echo.End of 2nd-stage setup...&choice>nul /N /T:Y,5"
+
 ; Enable this section to automatically launch programs after 3rd boot.
 ;[GuiRunOnce]
 ;%SystemRoot%\system32\cmd.exe
