@@ -2989,7 +2989,7 @@ DWORD WINAPI UnenableRouter(OVERLAPPED * pOverlapped, LPDWORD lpdwEnableCount)
 /*
  * @unimplemented
  */
-DWORD WINAPI GetIpErrorString(IP_STATUS ErrorCode, PWCHAR Buffer, PDWORD Size)
+DWORD WINAPI GetIpErrorString(_In_ IP_STATUS ErrorCode, _Out_ PWSTR Buffer, _Inout_ PDWORD Size)
 {
     unsigned int i;
 
