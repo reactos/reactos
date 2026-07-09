@@ -1355,6 +1355,66 @@ static void test_device_interface_key(void)
     SetupDiDestroyDeviceInfoList(set);
 }
 
+#ifdef __REACTOS__
+static void test_open_device_interface_key(void)
+{
+    SP_DEVICE_INTERFACE_DATA iface;
+    SP_DEVINFO_DATA device;
+    CHAR buffer[5];
+    HDEVINFO set;
+    LSTATUS lr;
+    LONG size;
+    HKEY key;
+    BOOL ret;
+
+    set = SetupDiCreateDeviceInfoList(&guid, NULL);
+    ok(set != INVALID_HANDLE_VALUE, "Failed to create device list, error %#lx\n", GetLastError());
+
+    device.cbSize = sizeof(device);
+    ret = SetupDiCreateDeviceInfoA(set, "ROOT\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
+    ok(ret, "Failed to create device, error %#lx.\n", GetLastError());
+
+    iface.cbSize = sizeof(iface);
+    ret = SetupDiCreateDeviceInterfaceA(set, &device, &guid, NULL, 0, &iface);
+    ok(ret, "Failed to create interface, error %#lx.\n", GetLastError());
+
+    /* Test open before creation */
+    key = SetupDiOpenDeviceInterfaceRegKey(set, &iface, 0, KEY_ALL_ACCESS);
+    ok(key == INVALID_HANDLE_VALUE, "Expect open interface registry key failure\n");
+
+    /* Test opened key is from SetupDiCreateDeviceInterfaceRegKey */
+    key = SetupDiCreateDeviceInterfaceRegKeyW(set, &iface, 0, KEY_ALL_ACCESS, NULL, NULL);
+    ok(key != INVALID_HANDLE_VALUE, "Failed to create interface registry key, error %#lx\n", GetLastError());
+
+    lr = RegSetValueA(key, NULL, REG_SZ, "test", 5);
+    ok(!lr, "RegSetValue failed, error %#lx\n", lr);
+
+    RegCloseKey(key);
+
+    key = SetupDiOpenDeviceInterfaceRegKey(set, &iface, 0, KEY_ALL_ACCESS);
+    ok(key != INVALID_HANDLE_VALUE, "Failed to open interface registry key, error %#lx\n", GetLastError());
+
+    size = sizeof(buffer);
+    lr = RegQueryValueA(key, NULL, buffer, &size);
+    ok(!lr, "RegQueryValue failed, error %#lx\n", lr);
+    ok(!strcmp(buffer, "test"), "got wrong data %s\n", buffer);
+
+    RegCloseKey(key);
+
+    /* Test open after removal */
+    ret = SetupDiRemoveDeviceInterface(set, &iface);
+    ok(ret, "Failed to remove device interface, error %#lx.\n", GetLastError());
+
+    key = SetupDiOpenDeviceInterfaceRegKey(set, &iface, 0, KEY_ALL_ACCESS);
+    ok(key == INVALID_HANDLE_VALUE, "Expect open interface registry key failure\n");
+
+    ret = SetupDiRemoveDevice(set, &device);
+    ok(ret, "Failed to remove device, error %#lx.\n", GetLastError());
+    ret = SetupDiDestroyDeviceInfoList(set);
+    ok(ret, "Failed to destroy device list, error %#lx.\n", GetLastError());
+}
+#endif
+
 static void testSetupDiGetClassDevsA(void)
 {
     static GUID displayguid = {0x4d36e968, 0xe325, 0x11ce, {0xbf,0xc1,0x08,0x00,0x2b,0xe1,0x03,0x18}};
@@ -1404,4 +1464,7 @@ START_TEST(devinst)
     testSetupDiGetClassDevsA();
     test_devnode();
     test_device_interface_key();
+#ifdef __REACTOS__
+    test_open_device_interface_key();
+#endif
 }
