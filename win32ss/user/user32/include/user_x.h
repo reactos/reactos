@@ -128,5 +128,6 @@ static __inline void LoadUserApiHook()
 /* MAKE_FNID */
 #define NTUSER_WNDPROC_BUTTON       FNID_BUTTON
 #define NTUSER_WNDPROC_LISTBOX      FNID_LISTBOX
+#define NTUSER_WNDPROC_STATIC       FNID_STATIC
 
 #define MAKE_FNID(index) (index)
