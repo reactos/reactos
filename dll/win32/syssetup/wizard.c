@@ -8,6 +8,7 @@
  *                  Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *                  Oleg Dubinskiy <oleg.dubinskij30@gmail.com>
+ *                  Whindmar Saksit <whindsaks@proton.me>
  */
 
 /* INCLUDES *****************************************************************/
@@ -1160,9 +1161,13 @@ ComputerPageDlgProc(HWND hwndDlg,
             SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
             if (pSetupData->UnattendSetup)
             {
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMPUTERNAME), WM_SETTEXT, 0, (LPARAM)pSetupData->ComputerName);
-                SendMessage(GetDlgItem(hwndDlg, IDC_ADMINPASSWORD1), WM_SETTEXT, 0, (LPARAM)pSetupData->AdminPassword);
-                SendMessage(GetDlgItem(hwndDlg, IDC_ADMINPASSWORD2), WM_SETTEXT, 0, (LPARAM)pSetupData->AdminPassword);
+                /* "*" means use random name (we have already generated it above) */
+                if (pSetupData->ComputerName[0] == L'*' && !pSetupData->ComputerName[1])
+                    wcscpy(pSetupData->ComputerName, ComputerName);
+                else
+                    SetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, pSetupData->ComputerName);
+                SetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD1, pSetupData->AdminPassword);
+                SetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD2, pSetupData->AdminPassword);
                 WriteComputerSettings(pSetupData->ComputerName, NULL);
                 SetAdministratorPassword(pSetupData->AdminPassword);
             }
