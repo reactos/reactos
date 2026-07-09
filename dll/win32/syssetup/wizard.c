@@ -1162,7 +1162,7 @@ ComputerPageDlgProc(HWND hwndDlg,
             if (pSetupData->UnattendSetup)
             {
                 /* "*" means use random name (we have already generated it above) */
-                if (!_wcsicmp(pSetupData->ComputerName, L"*"))
+                if (pSetupData->ComputerName[0] == L'*' && !pSetupData->ComputerName[1])
                     wcscpy(pSetupData->ComputerName, ComputerName);
                 else
                     SetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, pSetupData->ComputerName);
