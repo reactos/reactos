@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Kernel
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     PnP manager Root Port Arbiter
- * COPYRIGHT:   Copyright 2025 Justin Miller <justin.miller@reactos.org>
+ * COPYRIGHT:   Copyright 2025-2026 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -23,8 +23,8 @@ IopPortMemUnpackRequirements(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
     _Out_ PUINT64 OutMinimumAddress,
     _Out_ PUINT64 OutMaximumAddress,
-    _Out_ PUINT32 OutLength,
-    _Out_ PUINT32 OutAlignment)
+    _Out_ PUINT64 OutLength,
+    _Out_ PUINT64 OutAlignment)
 {
     PAGED_CODE();
     DPRINT("IopPortMemUnpackRequirements: IoDescriptor: %p, OutMinimumAddress: %p, OutMaximumAddress: %p, OutLength: %p, OutAlignment: %p\n",
@@ -60,7 +60,7 @@ NTAPI
 IopPortMemUnpackResource(
     _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor,
     _Out_ PUINT64 Start,
-    _Out_ PUINT32 OutLength)
+    _Out_ PUINT64 OutLength)
 {
     PAGED_CODE();
     DPRINT("IopPortMemUnpackResource: CmDescriptor: %p, Start: %p, OutLength: %p\n",
