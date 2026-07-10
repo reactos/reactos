@@ -945,7 +945,6 @@
 @ stdcall RtlInitializeContext(ptr ptr ptr ptr ptr)
 @ stdcall RtlInitializeCriticalSection(ptr)
 @ stdcall RtlInitializeCriticalSectionAndSpinCount(ptr long)
-@ stdcall -version=0x600+ RtlInitializeCriticalSectionEx(ptr long long) ntdll_vista.RtlInitializeCriticalSectionEx
 @ stdcall -stub -version=0x600+ -arch=i386 RtlInitializeExceptionChain(ptr)
 @ stdcall RtlInitializeGenericTable(ptr ptr ptr ptr ptr)
 @ stdcall RtlInitializeGenericTableAvl(ptr ptr ptr ptr ptr)
