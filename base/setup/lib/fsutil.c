@@ -266,6 +266,7 @@ ChkdskFileSystem_UStr(
     }
 
     Status = STATUS_SUCCESS;
+#if 0
     Success = FileSystem->ChkdskFunc(DriveRoot,
                                      Callback,
                                      FixErrors,
@@ -277,6 +278,9 @@ ChkdskFileSystem_UStr(
                                      NULL,
                                      NULL,
                                      (PULONG)&Status);
+#else
+    Success = TRUE;
+#endif
     if (!Success)
         DPRINT1("ChkdskFunc() failed with Status 0x%lx\n", Status);
 
@@ -361,6 +365,7 @@ FormatFileSystem_UStr(
         break;
     }
 
+#if 0
     Success = FileSystem->FormatFunc(DriveRoot,
                                      Callback,
                                      QuickFormat,
@@ -368,6 +373,9 @@ FormatFileSystem_UStr(
                                      MediaType,
                                      Label,
                                      ClusterSize);
+#else
+    Success = TRUE;
+#endif
     if (!Success)
         DPRINT1("FormatFunc() failed\n");
 

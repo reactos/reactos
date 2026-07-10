@@ -3681,6 +3681,7 @@ WritePartitions(
 
     DPRINT("WritePartitions() Disk: %lu\n", DiskEntry->DiskNumber);
 
+__debugbreak();
     /* If the disk is not dirty, there is nothing to do */
     if (!DiskEntry->Dirty)
         return STATUS_SUCCESS;
@@ -3695,7 +3696,7 @@ WritePartitions(
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-
+#if 0
     Status = NtOpenFile(&FileHandle,
                         GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
@@ -3707,7 +3708,7 @@ WritePartitions(
         DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
         return Status;
     }
-
+#endif
 #ifdef DUMP_PARTITION_TABLE
     DumpPartitionTable(DiskEntry);
 #endif
@@ -3726,6 +3727,7 @@ WritePartitions(
      * automatically notify the MOUNTMGR of new or deleted volumes. */
     BufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
                  ((PartitionCount - 1) * sizeof(PARTITION_INFORMATION));
+#if 0
     Status = NtDeviceIoControlFile(FileHandle,
                                    NULL,
                                    NULL,
@@ -3737,6 +3739,11 @@ WritePartitions(
                                    DiskEntry->LayoutBuffer,
                                    BufferSize);
     NtClose(FileHandle);
+#else
+    DBG_UNREFERENCED_LOCAL_VARIABLE(FileHandle);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(Iosb);
+    Status = STATUS_SUCCESS;
+#endif
 
     /*
      * IOCTL_DISK_SET_DRIVE_LAYOUT calls IoWritePartitionTable(), which converts
@@ -3838,6 +3845,7 @@ WritePartitionsToDisk(
     if (!List)
         return TRUE;
 
+__debugbreak();
     /* Unmount all the pending volumes */
     Status = STATUS_SUCCESS;
     while (!IsListEmpty(&List->PendingUnmountVolumesList))
@@ -3898,6 +3906,7 @@ WritePartitionsToDisk(
  * Assign a "\DosDevices\#:" mount point drive letter to a disk partition or
  * volume, specified by a given disk signature and starting partition offset.
  **/
+#if 0
 static BOOLEAN
 SetMountedDeviceValue(
     _In_ PVOLENTRY Volume)
@@ -3962,6 +3971,7 @@ SetMountedDeviceValue(
 
     return TRUE;
 }
+#endif
 
 BOOLEAN
 SetMountedDeviceValues(
@@ -3980,8 +3990,8 @@ SetMountedDeviceValues(
         Volume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
 
         /* Assign a "\DosDevices\#:" mount point to this volume */
-        if (!SetMountedDeviceValue(Volume))
-            return FALSE;
+        //if (!SetMountedDeviceValue(Volume))
+        //    return FALSE;
     }
 
     return TRUE;
