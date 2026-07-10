@@ -1251,25 +1251,25 @@ static void test_QueryInitialFocus(void)
     tab_ctrl = (HWND)SendMessageA(hp, PSM_GETTABCONTROL, 0, 0);
 
     /* Test PSN_QUERYINITIALFOCUS gets sent on start */
-    todo_wine ok(query_initial_focus == 1, "Did not recieve PSN_QUERYINITIALFOCUS on start.\n");
-    todo_wine ok(GetDlgCtrlID(GetFocus()) == IDC_PS_EDIT2, "Focus not set to IDC_PS_EDIT2.\n");
+    ok(query_initial_focus == 1, "Did not recieve PSN_QUERYINITIALFOCUS on start.\n");
+    ok(GetDlgCtrlID(GetFocus()) == IDC_PS_EDIT2, "Focus not set to IDC_PS_EDIT2.\n");
 
     /* Test changing of tabs */
     edit_test_ID = IDC_PS_EDIT1;
     query_initial_focus = 0;
-    todo_wine ok(tab_ctrl != 0, "Could not test changing tabs. No tab control found.\n");
+    ok(tab_ctrl != 0, "Could not test changing tabs. No tab control found.\n");
     SendMessageA(tab_ctrl, TCM_GETITEMRECT, 1, (LPARAM) &rc);
     lp = MAKELPARAM(rc.left + ((rc.right - rc.left) / 2), rc.top + ((rc.bottom - rc.top) / 2));
     SendMessageA(tab_ctrl, WM_LBUTTONDOWN, MK_LBUTTON, lp);
-    todo_wine ok(query_initial_focus == 1, "Did not recieve PSN_QUERYINITIALFOCUS from changing tabs.\n");
-    todo_wine ok(GetDlgCtrlID(GetFocus()) == IDC_PS_EDIT1, "Focus not set to IDC_PS_EDIT1.\n");
+    ok(query_initial_focus == 1, "Did not recieve PSN_QUERYINITIALFOCUS from changing tabs.\n");
+    ok(GetDlgCtrlID(GetFocus()) == IDC_PS_EDIT1, "Focus not set to IDC_PS_EDIT1.\n");
 
     /* Test Apply Button */
     edit_test_ID = IDC_PS_EDIT2;
     query_initial_focus = 0;
     SendMessageA(hp, PSM_PRESSBUTTON, PSBTN_APPLYNOW, 0);
-    todo_wine ok(query_initial_focus == 1, "Did not recieve PSN_QUERYINITIALFOCUS from apply button.\n");
-    todo_wine ok(GetDlgCtrlID(GetFocus()) == IDC_PS_EDIT2, "Focus not set to IDC_PS_EDIT2.\n");
+    ok(query_initial_focus == 1, "Did not recieve PSN_QUERYINITIALFOCUS from apply button.\n");
+    ok(GetDlgCtrlID(GetFocus()) == IDC_PS_EDIT2, "Focus not set to IDC_PS_EDIT2.\n");
 
     DestroyWindow(hp);
 
@@ -1280,15 +1280,15 @@ static void test_QueryInitialFocus(void)
     hp = (HWND)pPropertySheetA(&psh);
 
     /* Test PSN_QUERYINITIALFOCUS gets sent on start */
-    todo_wine ok(query_initial_focus == 1, "Did not recieve PSN_QUERYINITIALFOCUS on start.\n");
-    todo_wine ok(GetDlgCtrlID(GetFocus()) == IDC_PS_EDIT1, "Focus not set to IDC_PS_EDIT1.\n");
+    ok(query_initial_focus == 1, "Did not recieve PSN_QUERYINITIALFOCUS on start.\n");
+    ok(GetDlgCtrlID(GetFocus()) == IDC_PS_EDIT1, "Focus not set to IDC_PS_EDIT1.\n");
 
     /* Test Next Button */
     edit_test_ID = IDC_PS_EDIT2;
     query_initial_focus = 0;
     SendMessageA(hp, PSM_PRESSBUTTON, PSBTN_NEXT, 0);
-    todo_wine ok(query_initial_focus == 1, "Did not recieve PSN_QUERYINITIALFOCUS from next button.\n");
-    todo_wine ok(GetDlgCtrlID(GetFocus()) == IDC_PS_EDIT2, "Focus not set to IDC_PS_EDIT2.\n");
+    ok(query_initial_focus == 1, "Did not recieve PSN_QUERYINITIALFOCUS from next button.\n");
+    ok(GetDlgCtrlID(GetFocus()) == IDC_PS_EDIT2, "Focus not set to IDC_PS_EDIT2.\n");
 
     DestroyWindow(hp);
 }
