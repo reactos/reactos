@@ -974,6 +974,7 @@
 @ stdcall -arch=x86_64 RtlDeleteFunctionTable(ptr) ntdll.RtlDeleteFunctionTable
 @ stdcall RtlFillMemory(ptr long long) ntdll.RtlFillMemory
 @ stdcall -arch=x86_64 RtlInstallFunctionTableCallback(double double long ptr ptr ptr) ntdll.RtlInstallFunctionTableCallback
+@ stdcall -version=0x600+ RtlInitializeCriticalSectionEx(ptr long long) kernel32_vista.RtlInitializeCriticalSectionEx
 @ stdcall -arch=x86_64 RtlLookupFunctionEntry(ptr ptr ptr) ntdll.RtlLookupFunctionEntry
 @ stdcall RtlMoveMemory(ptr ptr long) ntdll.RtlMoveMemory
 @ stdcall -arch=x86_64 RtlPcToFileHeader(ptr ptr) ntdll.RtlPcToFileHeader
