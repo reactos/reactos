@@ -194,7 +194,7 @@ GetRegisteredFileSystems(
 
 
 /** GetProvider() **/
-static PFILE_SYSTEM
+/*static*/ PFILE_SYSTEM
 GetFileSystemByName(
     IN PCWSTR FileSystemName)
 {
@@ -252,10 +252,11 @@ ChkdskFileSystem_UStr(
     _In_ BOOLEAN ScanDrive,
     _In_opt_ PFMIFSCALLBACK Callback)
 {
-    PFILE_SYSTEM FileSystem;
+    //PFILE_SYSTEM FileSystem;
     NTSTATUS Status;
     BOOLEAN Success;
 
+#if 0
     FileSystem = GetFileSystemByName(FileSystemName);
 
     if (!FileSystem || !FileSystem->ChkdskFunc)
@@ -277,6 +278,10 @@ ChkdskFileSystem_UStr(
                                      NULL,
                                      NULL,
                                      (PULONG)&Status);
+#else
+    Success = TRUE;
+    Status = STATUS_SUCCESS;
+#endif
     if (!Success)
         DPRINT1("ChkdskFunc() failed with Status 0x%lx\n", Status);
 
@@ -321,8 +326,9 @@ FormatFileSystem_UStr(
     _In_ ULONG ClusterSize,
     _In_opt_ PFMIFSCALLBACK Callback)
 {
-    PFILE_SYSTEM FileSystem;
+    //PFILE_SYSTEM FileSystem;
     BOOLEAN Success;
+#if 0
     BOOLEAN BackwardCompatible = FALSE; // Default to latest FS versions.
     MEDIA_TYPE MediaType;
 
@@ -368,6 +374,9 @@ FormatFileSystem_UStr(
                                      MediaType,
                                      Label,
                                      ClusterSize);
+#else
+    Success = TRUE;
+#endif
     if (!Success)
         DPRINT1("FormatFunc() failed\n");
 

@@ -3672,7 +3672,7 @@ WritePartitions(
     UNICODE_STRING Name;
     HANDLE FileHandle;
     IO_STATUS_BLOCK Iosb;
-    ULONG BufferSize;
+    //ULONG BufferSize;
     PPARTITION_INFORMATION PartitionInfo;
     ULONG PartitionCount;
     PLIST_ENTRY ListEntry;
@@ -3681,6 +3681,7 @@ WritePartitions(
 
     DPRINT("WritePartitions() Disk: %lu\n", DiskEntry->DiskNumber);
 
+__debugbreak();
     /* If the disk is not dirty, there is nothing to do */
     if (!DiskEntry->Dirty)
         return STATUS_SUCCESS;
@@ -3695,7 +3696,7 @@ WritePartitions(
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-
+#if 0
     Status = NtOpenFile(&FileHandle,
                         GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
@@ -3707,7 +3708,7 @@ WritePartitions(
         DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
         return Status;
     }
-
+#endif
 #ifdef DUMP_PARTITION_TABLE
     DumpPartitionTable(DiskEntry);
 #endif
@@ -3721,6 +3722,7 @@ WritePartitions(
     /* Save the original partition count to be restored later (see comment below) */
     PartitionCount = DiskEntry->LayoutBuffer->PartitionCount;
 
+#if 0
     /* Set the new disk layout and retrieve its updated version with
      * new partition numbers for the new partitions. The PARTMGR will
      * automatically notify the MOUNTMGR of new or deleted volumes. */
@@ -3737,6 +3739,11 @@ WritePartitions(
                                    DiskEntry->LayoutBuffer,
                                    BufferSize);
     NtClose(FileHandle);
+#else
+    DBG_UNREFERENCED_LOCAL_VARIABLE(FileHandle);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(Iosb);
+    Status = STATUS_SUCCESS;
+#endif
 
     /*
      * IOCTL_DISK_SET_DRIVE_LAYOUT calls IoWritePartitionTable(), which converts
@@ -3838,6 +3845,7 @@ WritePartitionsToDisk(
     if (!List)
         return TRUE;
 
+__debugbreak();
     /* Unmount all the pending volumes */
     Status = STATUS_SUCCESS;
     while (!IsListEmpty(&List->PendingUnmountVolumesList))
@@ -3898,6 +3906,7 @@ WritePartitionsToDisk(
  * Assign a "\DosDevices\#:" mount point drive letter to a disk partition or
  * volume, specified by a given disk signature and starting partition offset.
  **/
+#if 0
 static BOOLEAN
 SetMountedDeviceValue(
     _In_ PVOLENTRY Volume)
@@ -3962,17 +3971,18 @@ SetMountedDeviceValue(
 
     return TRUE;
 }
+#endif
 
 BOOLEAN
 SetMountedDeviceValues(
     _In_ PPARTLIST List)
 {
-    PLIST_ENTRY Entry;
-    PVOLENTRY Volume;
+    //PLIST_ENTRY Entry;
+    //PVOLENTRY Volume;
 
     if (!List)
         return FALSE;
-
+#if 0
     for (Entry = List->VolumesList.Flink;
          Entry != &List->VolumesList;
          Entry = Entry->Flink)
@@ -3983,7 +3993,7 @@ SetMountedDeviceValues(
         if (!SetMountedDeviceValue(Volume))
             return FALSE;
     }
-
+#endif
     return TRUE;
 }
 
