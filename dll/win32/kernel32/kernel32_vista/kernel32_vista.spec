@@ -19,6 +19,7 @@
 @ stdcall WakeAllConditionVariable(ptr)
 @ stdcall WakeConditionVariable(ptr)
 
+@ stdcall RtlInitializeCriticalSectionEx(ptr long long)
 @ stdcall InitializeCriticalSectionEx(ptr long long)
 
 @ stdcall GetFirmwareEnvironmentVariableExA(str str ptr long long)
