@@ -259,7 +259,7 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "Station de travail ReactOS"
     IDS_INSTALLATIONWORKSTATIONINFO "Le système sera reconnu comme une station de travail. Les dossiers privés ""Mes images"", ""Mes vidéos"" et ""Ma musique"" sont dans ""Mes Documents""."
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "Le système sera reconnu comme un serveur. L'interface graphique n'est pas installée et le système démarre dans l'invite de commande pour réduire la consommation des ressources système et la surface d'attaque."
+    IDS_INSTALLATIONSERVERCOREINFO "Le système sera reconnu comme un serveur. L'interface graphique n'est pas installée et le système démarre dans l'invite de commande pour réduire la consommation des ressources et la surface d'attaque."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "Le système sera reconnu comme un serveur. Le système est entièrement en mode texte. vous êtes attendu de gérer ce système à distance."
