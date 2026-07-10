@@ -27,15 +27,13 @@ IopArbIrqUnpackRequirements(
     _Out_ PUINT64 OutAlignment)
 {
     PAGED_CODE();
-    DPRINT("IopArbIrqUnpackRequirements: IoDescriptor: %p, OutMinimumAddress: %p, OutMaximumAddress: %p, OutLength: %p, OutAlignment: %p\n",
-           IoDescriptor,
-           OutMinimumAddress,
-           OutMaximumAddress,
-           OutLength,
-           OutAlignment);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    *OutMinimumAddress = IoDescriptor->u.Interrupt.MinimumVector;
+    *OutMaximumAddress = IoDescriptor->u.Interrupt.MaximumVector;
+    *OutLength = 1;
+    *OutAlignment = 1;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -46,13 +44,16 @@ IopArbIrqPackResource(
     _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor)
 {
     PAGED_CODE();
-    DPRINT("IopArbIrqPackResource: IoDescriptor: %p, Start: %p, CmDescriptor: %p\n",
-           IoDescriptor,
-           Start,
-           CmDescriptor);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    CmDescriptor->Type = CmResourceTypeInterrupt;
+    CmDescriptor->ShareDisposition = IoDescriptor->ShareDisposition;
+    CmDescriptor->Flags = IoDescriptor->Flags;
+
+    CmDescriptor->u.Interrupt.Level = (ULONG)Start;
+    CmDescriptor->u.Interrupt.Vector = (ULONG)Start;
+    CmDescriptor->u.Interrupt.Affinity = (KAFFINITY)-1;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -63,13 +64,11 @@ IopArbIrqUnpackResource(
     _Out_ PUINT64 OutLength)
 {
     PAGED_CODE();
-    DPRINT("IopArbIrqUnpackResource: CmDescriptor: %p, Start: %p, OutLength: %p\n",
-           CmDescriptor,
-           Start,
-           OutLength);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    *Start = CmDescriptor->u.Interrupt.Vector;
+    *OutLength = 1;
+
+    return STATUS_SUCCESS;
 }
 
 INT32
@@ -78,20 +77,81 @@ IopArbIrqScoreRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
     PAGED_CODE();
-    DPRINT("IopArbIrqScoreRequirement: IoDescriptor: %p\n",
-           IoDescriptor);
 
-    UNIMPLEMENTED;
-    return 0;
+    return (INT32)(IoDescriptor->u.Interrupt.MaximumVector -
+                   IoDescriptor->u.Interrupt.MinimumVector + 1);
 }
 
 NTSTATUS
 NTAPI
-IopArbIrqInitialize(VOID)
+IopArbIrqTranslateOrdering(
+    _Out_ PIO_RESOURCE_DESCRIPTOR OutIoDescriptor,
+    _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    KIRQL Irql;
+    KAFFINITY Affinity = 0;
 
     PAGED_CODE();
+
+    *OutIoDescriptor = *IoDescriptor;
+
+    if (IoDescriptor->Type != CmResourceTypeInterrupt)
+        return STATUS_SUCCESS;
+
+    OutIoDescriptor->u.Interrupt.MinimumVector =
+        HalGetInterruptVector(Isa,
+                              0,
+                              IoDescriptor->u.Interrupt.MinimumVector,
+                              IoDescriptor->u.Interrupt.MinimumVector,
+                              &Irql,
+                              &Affinity);
+
+    if (Affinity != 0)
+    {
+        Affinity = 0;
+        OutIoDescriptor->u.Interrupt.MaximumVector =
+            HalGetInterruptVector(Isa,
+                                  0,
+                                  IoDescriptor->u.Interrupt.MaximumVector,
+                                  IoDescriptor->u.Interrupt.MaximumVector,
+                                  &Irql,
+                                  &Affinity);
+    }
+
+    if (Affinity == 0)
+        *OutIoDescriptor = *IoDescriptor;
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief Initialize the root IRQ arbiter.
+ *
+ * This is the fallback that sits at the top of the tree and takes
+ * over when no closer arbiter claims the request, e.g
+ * root-enumerated / HAL legacy devices (ISA-style, directly under the root),
+ * and platforms or boot paths where no bus driver above the device provides an
+ * interrupt arbiter (e.g. no ACPI _PRT routing in effect).
+ *
+ * In those cases the arbitrated "vectors" are the legacy ISA IRQ lines, which is
+ * why IopArbIrqTranslateOrdering maps the ordering table through
+ * HalGetInterruptVector for the ISA bus. Otherwise, such devices
+ * would have nowhere to arbitrate their interrupts. 
+ * (So this is purely for legacy PIC + No ACPI)
+ *
+ * @return NTSTATUS
+ * @retval STATUS_SUCCESS
+ * @retval STATUS_UNSUCCESSFUL
+ * @retval STATUS_INSUFFICIENT_RESOURCES
+ */
+NTSTATUS
+NTAPI
+IopArbIrqInitialize(VOID)
+{
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
     IopRootIrqArbiter.Name = L"RootIRQ";
     IopRootIrqArbiter.UnpackRequirement = IopArbIrqUnpackRequirements;
     IopRootIrqArbiter.PackResource = IopArbIrqPackResource;
@@ -100,13 +160,13 @@ IopArbIrqInitialize(VOID)
 
     Status = ArbInitializeArbiterInstance(&IopRootIrqArbiter,
                                           NULL,
-                                          CmResourceTypeBusNumber,
+                                          CmResourceTypeInterrupt,
                                           IopRootIrqArbiter.Name,
                                           L"Root",
-                                          NULL);
+                                          IopArbIrqTranslateOrdering);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopArbDmaInitialize: Failed with %X", Status);
+        DPRINT1("IopArbIrqInitialize: Failed with %X\n", Status);
     }
 
     return Status;
