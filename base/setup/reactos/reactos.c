@@ -2005,6 +2005,7 @@ PrepareAndDoCopyThread(
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Find or set the active system partition before starting formatting */
+__debugbreak();
     Success = InitSystemPartition(pSetupData->PartitionList,
                                   InstallPartition,
                                   &SystemPartition,
@@ -2183,6 +2184,7 @@ PrepareAndDoCopyThread(
     RtlCreateUnicodeString(&pSetupData->USetupData.SystemRootPath, PathBuffer);
     DPRINT1("SystemRootPath: %wZ\n", &pSetupData->USetupData.SystemRootPath);
 
+__debugbreak();
     switch (pSetupData->USetupData.BootLoaderLocation)
     {
         /* Install on removable disk */
@@ -3898,7 +3900,7 @@ Quit:
     /* System rebooting will be done by Winlogon if necessary */
     if (SetupData.bMustReboot)
     {
-#if 1 // TESTING: Disable for testing the installer locally.
+#if 0 // TESTING: Disable for testing the installer locally.
         EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
         ExitWindowsEx(EWX_REBOOT, 0);
         EnablePrivilege(SE_SHUTDOWN_NAME, FALSE);
