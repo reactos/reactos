@@ -10,6 +10,32 @@
 #include "reactos.h"
 #include <winnls.h> // For GetUserDefaultLCID()
 
+//// FIXME: Missing in our prsht.h!
+// #define PSM_HWNDTOINDEX            (WM_USER + 129)
+// #define PropSheet_HwndToIndex(hDlg, hwnd) \
+//         (int)SNDMSG(hDlg, PSM_HWNDTOINDEX, (WPARAM)(hwnd), 0)
+
+// #define PSM_INDEXTOHWND            (WM_USER + 130)
+#define PropSheet_IndexToHwnd(hDlg, i) \
+        (HWND)SNDMSG(hDlg, PSM_INDEXTOHWND, (WPARAM)(i), 0)
+
+// #define PSM_PAGETOINDEX            (WM_USER + 131)
+#define PropSheet_PageToIndex(hDlg, hpage) \
+        (int)SNDMSG(hDlg, PSM_PAGETOINDEX, 0, (LPARAM)(hpage))
+
+// #define PSM_INDEXTOPAGE            (WM_USER + 132)
+#define PropSheet_IndexToPage(hDlg, i) \
+        (HPROPSHEETPAGE)SNDMSG(hDlg, PSM_INDEXTOPAGE, (WPARAM)(i), 0)
+
+// #define PSM_IDTOINDEX              (WM_USER + 133)
+#define PropSheet_IdToIndex(hDlg, id) \
+        (int)SNDMSG(hDlg, PSM_IDTOINDEX, 0, (LPARAM)(id))
+
+// #define PSM_INDEXTOID              (WM_USER + 134)
+#define PropSheet_IndexToId(hDlg, i) \
+        SNDMSG(hDlg, PSM_INDEXTOID, (WPARAM)(i), 0)
+////
+
 #define NTOS_MODE_USER
 #include <ndk/obfuncs.h>
 
@@ -39,6 +65,38 @@ HCURSOR hWaitCursor;
 
 
 /* FUNCTIONS ****************************************************************/
+
+void
+DumpCurrentPageIds(HWND hwndPage, PCSTR FromMessageStr)
+{
+    DPRINT1("\n**** Dumping current page IDS -- From %s ****\n", FromMessageStr);
+
+    HWND hMainPrsht = GetParent(hwndPage);
+    DPRINT1("* Main property sheet dialog: 0x%p\n", hMainPrsht);
+
+    HWND hCurrWnd = PropSheet_GetCurrentPageHwnd(hMainPrsht);
+    DPRINT1("* Current page HWND: 0x%p vs. 0x%p\n", hCurrWnd, hwndPage);
+    // --> Compare whether hCurrWnd == hwndPage.
+
+    UINT CurrPage1 = PropSheet_HwndToIndex(hMainPrsht, hCurrWnd);
+    DPRINT1("* Current page Idx from HWND: %lu\n", CurrPage1);
+
+    HWND hCurrWnd1 = PropSheet_IndexToHwnd(hMainPrsht, CurrPage1);
+    DPRINT1("* Current page HWND from Idx: 0x%p\n", hCurrWnd1);
+    // --> Compare hCurrWnd and hCurrWnd1.
+
+    UINT CurrPage1ID = PropSheet_IndexToId(hMainPrsht, CurrPage1);
+    DPRINT1("* Current page ResID: %lu\n", CurrPage1ID);
+
+    UINT CurrPage2 = PropSheet_IdToIndex(hMainPrsht, CurrPage1ID);
+    DPRINT1("* Current page Idx from ResID: %lu\n", CurrPage2);
+    // --> Compare CurrPage1 and 2.
+
+    UINT BackOrNextPage = PropSheet_IdToIndex(hMainPrsht, 0);
+    DPRINT1("* ID of back or next page: %lu\n", BackOrNextPage);
+
+    DPRINT1("********************\n");
+}
 
 // See also setupapi!pSetupCenterWindowRelativeToParent()
 static VOID
@@ -370,6 +428,8 @@ StartDlgProc(
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGEW)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
+DumpCurrentPageIds(hwndDlg, "WM_INITDIALOG");
+
             /* Set title font */
             SetDlgItemFont(hwndDlg, IDC_STARTTITLE, pSetupData->hTitleFont, TRUE);
 
@@ -392,6 +452,7 @@ StartDlgProc(
             {
                 case PSN_SETACTIVE:
                 {
+DumpCurrentPageIds(hwndDlg, "PSN_SETACTIVE");
                     /* Only "Next" and "Cancel" for the first page and hide "Back".
                      * Don't use the PropSheet_SetWizButtons() macro, because its
                      * posted message could interfere with the hidden button. */
@@ -403,6 +464,7 @@ StartDlgProc(
 
                 case PSN_KILLACTIVE:
                 {
+DumpCurrentPageIds(hwndDlg, "PSN_KILLACTIVE");
                     /* Show "Back" button */
                     // PropSheet_ShowWizButtons(GetParent(hwndDlg), PSWIZB_BACK, PSWIZB_BACK);
                     ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_SHOW);
@@ -476,6 +538,8 @@ TypeDlgProc(
             // TODO: Consider handling existing install upgrade in unattended mode
             // (currently unsupported in text-mode setup also).
 
+DumpCurrentPageIds(hwndDlg, "WM_INITDIALOG");
+
             /* Check the "Install ReactOS" radio button and ensure it is initially focused */
             CheckRadioButton(hwndDlg, IDC_INSTALL, IDC_UPDATE, IDC_INSTALL);
             SetFocus(GetDlgItem(hwndDlg, IDC_INSTALL));
@@ -515,9 +579,13 @@ TypeDlgProc(
                     else
                         CheckRadioButton(hwndDlg, IDC_INSTALL, IDC_UPDATE, IDC_UPDATE);
 
+DumpCurrentPageIds(hwndDlg, "PSN_SETACTIVE");
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     break;
                 }
+                case PSN_KILLACTIVE:
+DumpCurrentPageIds(hwndDlg, "PSN_KILLACTIVE");
+                    break;
 
                 case PSN_QUERYCANCEL:
                 {
@@ -535,7 +603,7 @@ TypeDlgProc(
                     return TRUE;
                 }
 
-                case PSN_WIZNEXT: /* Set the selected data */
+                case PSN_WIZNEXT:
                 {
                     /*
                      * Go update only if we have available NT installations
@@ -545,40 +613,17 @@ TypeDlgProc(
                         GetNumberOfListEntries(pSetupData->NtOsInstallsList) != 0 &&
                         IsDlgButtonChecked(hwndDlg, IDC_UPDATE) == BST_CHECKED)
                     {
+                        /* Start the repair/upgrade workflow */
                         pSetupData->RepairUpdateFlag = TRUE;
-
-                        /*
-                         * Display the existing NT installations page only
-                         * if we have more than one available NT installations.
-                         */
-                        if (GetNumberOfListEntries(pSetupData->NtOsInstallsList) > 1)
-                        {
-                            /* pSetupData->CurrentInstallation will be set from within IDD_UPDATEREPAIRPAGE */
-
-                            /* Actually the best would be to dynamically insert the page only when needed */
-                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
-                        }
-                        else
-                        {
-                            /* Retrieve the current installation */
-                            pSetupData->CurrentInstallation =
-                                (PNTOS_INSTALLATION)GetListEntryData(GetCurrentListEntry(pSetupData->NtOsInstallsList));
-                            InstallPartition = pSetupData->CurrentInstallation->Volume->PartEntry;
-                            StringCchCopyW(pSetupData->USetupData.InstallationDirectory,
-                                           _countof(pSetupData->USetupData.InstallationDirectory),
-                                           pSetupData->CurrentInstallation->PathComponent);
-
-                            /* Jump to the Summary page during repair/upgrade */
-                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
-                        }
+                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
                     }
                     else
                     {
+                        /* Start the new-installation workflow */
                         pSetupData->CurrentInstallation = NULL;
                         pSetupData->RepairUpdateFlag = FALSE;
                         SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_DEVICEPAGE);
                     }
-
                     return TRUE;
                 }
 
@@ -875,6 +920,7 @@ UpgradeRepairDlgProc(
             ListView_SetImageList(hList, hSmall, LVSIL_SMALL);
 
             InitGenericListView(hList, pSetupData->NtOsInstallsList, AddNTOSInstallationItem);
+DumpCurrentPageIds(hwndDlg, "WM_INITDIALOG");
             break;
         }
 
@@ -891,7 +937,7 @@ UpgradeRepairDlgProc(
         {
             if (HIWORD(wParam) == BN_CLICKED && LOWORD(wParam) == IDC_SKIPUPGRADE)
             {
-                /* Skip the upgrade and do the usual new-installation workflow */
+                /* Skip the upgrade and start the new-installation workflow */
                 pSetupData->CurrentInstallation = NULL;
                 pSetupData->RepairUpdateFlag = FALSE;
                 PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_DEVICEPAGE);
@@ -939,9 +985,84 @@ UpgradeRepairDlgProc(
                 {
                     /* Keep the "Next" button disabled. It will be enabled only
                      * when the user selects an installation to upgrade. */
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+                    //PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+DumpCurrentPageIds(hwndDlg, "PSN_SETACTIVE");
+
+                    /* If we don't have any available NT installations,
+                     * we shouldn't be on that page: skip it. */
+                    if (!pSetupData->NtOsInstallsList ||
+                        GetNumberOfListEntries(pSetupData->NtOsInstallsList) == 0)
+                    {
+                        // TODO: Do a default skip? Explicitly start new-install workflow?
+                        // Or block moving to a next page, and only stay on that page or go back?
+                        pSetupData->CurrentInstallation = NULL;
+                        pSetupData->RepairUpdateFlag = FALSE;
+                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1);
+                        return TRUE;
+                    }
+
+
+                    /* Return to the Upgrade/Repair selection page, when the user is
+                     * upgrading and there are more than one installation available */
+                    ////
+                    /* Return to the Install type selection page, when the user is
+                     * upgrading and there is at most one installation available */
+
+
+                    /*
+                     * Display the existing NT installations page only
+                     * if we have more than one available NT installations.
+                     */
+                    if (GetNumberOfListEntries(pSetupData->NtOsInstallsList) > 1)
+                    {
+                        /* We can stay on the page */
+                        break;
+                    }
+                    else
+                    {
+                        /* Retrieve our own page index (uCurrIdx), and the
+                         * index of the previously active page (uPrevIdx) */
+                        HWND hWndParent = GetParent(hwndDlg);
+                        HWND hPrevWnd = PropSheet_GetCurrentPageHwnd(hWndParent);
+                        UINT uCurrIdx = PropSheet_HwndToIndex(hWndParent, hwndDlg);
+                        UINT uPrevIdx = (hPrevWnd ? PropSheet_HwndToIndex(hWndParent, hPrevWnd) : 0);
+
+                        /*
+                         * - If uPrevIdx < uCurrIdx, we came here via "Next",
+                         *   so we retrieve the current installation and we
+                         *   directly jump to the Summary page.
+                         *
+                         * - If uCurrIdx < uPrevIdx, we came here via "Back",
+                         *   typically from the Summary page, and we return
+                         *   back to the Install type selection page.
+                         */
+                        if (uPrevIdx <= uCurrIdx)
+                        {
+                            /* Retrieve the current installation */
+                            pSetupData->CurrentInstallation =
+                                (PNTOS_INSTALLATION)GetListEntryData(GetCurrentListEntry(pSetupData->NtOsInstallsList));
+                            InstallPartition = pSetupData->CurrentInstallation->Volume->PartEntry;
+                            StringCchCopyW(pSetupData->USetupData.InstallationDirectory,
+                                           _countof(pSetupData->USetupData.InstallationDirectory),
+                                           pSetupData->CurrentInstallation->PathComponent);
+
+                            /* We perform a repair/upgrade, skip the page and jump to the Summary page */
+                            pSetupData->RepairUpdateFlag = TRUE;
+                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
+                        }
+                        else
+                        {
+                            /* Skip the page and return back to the
+                             * Install type selection page */
+                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1); // IDD_TYPEPAGE
+                        }
+                        return TRUE;
+                    }
                     break;
                 }
+                case PSN_KILLACTIVE:
+DumpCurrentPageIds(hwndDlg, "PSN_KILLACTIVE");
+                    break;
 
                 case PSN_QUERYINITIALFOCUS:
                 {
@@ -982,7 +1103,7 @@ UpgradeRepairDlgProc(
                     return TRUE;
                 }
 
-                case PSN_WIZNEXT: /* Set the selected data */
+                case PSN_WIZNEXT:
                 {
                     /*
                      * Go update only if we have available NT installations
@@ -991,6 +1112,8 @@ UpgradeRepairDlgProc(
                     if (!pSetupData->NtOsInstallsList ||
                         GetNumberOfListEntries(pSetupData->NtOsInstallsList) == 0)
                     {
+                        // TODO: Do a default skip? Explicitly start new-install workflow?
+                        // Or block moving to a next page, and only stay on that page or go back?
                         pSetupData->CurrentInstallation = NULL;
                         pSetupData->RepairUpdateFlag = FALSE;
                         break;
@@ -1008,9 +1131,8 @@ UpgradeRepairDlgProc(
                                    _countof(pSetupData->USetupData.InstallationDirectory),
                                    pSetupData->CurrentInstallation->PathComponent);
 
-                    /* We perform an upgrade */
+                    /* We perform a repair/upgrade, jump to the Summary page */
                     pSetupData->RepairUpdateFlag = TRUE;
-                    /* Jump to the Summary page during repair/upgrade */
                     SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
                     return TRUE;
                 }
@@ -1064,6 +1186,7 @@ DeviceDlgProc(
             // TODO: Consider doing here the list selections in unattended mode
             // (for now they are done in LoadSetupData()).
 
+DumpCurrentPageIds(hwndDlg, "WM_INITDIALOG");
             return TRUE;
         }
 
@@ -1083,6 +1206,8 @@ DeviceDlgProc(
                     else
                         PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
 
+DumpCurrentPageIds(hwndDlg, "PSN_SETACTIVE");
+
                     /* In unattended mode, switch directly to the next page.
                      * TODO: *UNLESS* there are inconsistencies in the data,
                      * in which case we should stay on the page! */
@@ -1093,6 +1218,9 @@ DeviceDlgProc(
                     }
                     break;
                 }
+                case PSN_KILLACTIVE:
+DumpCurrentPageIds(hwndDlg, "PSN_KILLACTIVE");
+                    break;
 
                 case PSN_QUERYCANCEL:
                 {
@@ -1172,6 +1300,7 @@ SummaryDlgProc(
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGEW)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
+DumpCurrentPageIds(hwndDlg, "WM_INITDIALOG");
             break;
         }
 
@@ -1200,6 +1329,7 @@ SummaryDlgProc(
                     WCHAR CurrentItemText[256];
 
                     ASSERT(InstallPartition);
+DumpCurrentPageIds(hwndDlg, "PSN_SETACTIVE");
 
                     /* Skip the Summary page in unattended setup */
                     if (pSetupData->bUnattend)
@@ -1304,6 +1434,7 @@ SummaryDlgProc(
                 {
                     /* Restore the original "Next" button text */
                     SetDlgItemTextW(GetParent(hwndDlg), ID_WIZNEXT, szOrgWizNextBtnText);
+DumpCurrentPageIds(hwndDlg, "PSN_KILLACTIVE");
                     break;
                 }
 
@@ -1325,22 +1456,11 @@ SummaryDlgProc(
 
                 case PSN_WIZBACK:
                 {
-                    /* When the user performs a regular installation, go back to the previous page */
+                    /* When the user performs a regular installation, go back to the
+                     * previous page; otherwise, return to the Upgrade/Repair selection page */
                     if (!pSetupData->RepairUpdateFlag)
                         break;
-
-                    if (GetNumberOfListEntries(pSetupData->NtOsInstallsList) > 1)
-                    {
-                        /* Return to the Upgrade/Repair selection page, when the user is
-                         * upgrading and there are more than one installation available */
-                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
-                    }
-                    else
-                    {
-                        /* Return to the Install type selection page, when the user is
-                         * upgrading and there is at most one installation available */
-                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_TYPEPAGE);
-                    }
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
                     return TRUE;
                 }
 
