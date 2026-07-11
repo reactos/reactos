@@ -74,7 +74,7 @@ typedef struct
    INT            droppedIndex;
    INT            fixedOwnerDrawHeight;
    INT            droppedWidth;   /* last two are not used unless set */
-   INT            editHeight;     /* explicitly */
+   INT            item_height;
    LONG           UIState;
 } HEADCOMBO,*LPHEADCOMBO;
 
