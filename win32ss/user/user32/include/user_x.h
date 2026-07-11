@@ -121,6 +121,7 @@ static __inline void LoadUserApiHook()
 #define NtUserReleaseCapture() NtUserxReleaseCapture()
 #define NtUserKillSystemTimer(HWND, ID) NtUserxKillSystemTimer((HWND), (ID))
 #define NtUserSetSystemTimer(HWND, ID, TIMEOUT) NtUserSetSystemTimer((HWND), (ID), (TIMEOUT), NULL)
+#define NtUserEnableWindow(HWND, ENABLE) NtUserxEnableWindow((HWND), (ENABLE))
 
 #define NtUserGetPrivateData(HWND, OFFSET, SIZE) GetWindowLongPtrW((HWND), (OFFSET))
 #define NtUserSetPrivateData(HWND, OFFSET, SIZE, VALUE) SetWindowLongPtrW((HWND), (OFFSET), (VALUE))
