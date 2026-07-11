@@ -60,6 +60,10 @@ CWineTest::GetNextFile()
     bool FoundFile = false;
     WIN32_FIND_DATAW fd;
 
+    /* Reset the test list */
+    m_ListBuffer = NULL;
+    m_ListString.clear();
+
     /* Did we already begin searching for files? */
     if (m_hFind)
     {
@@ -210,6 +214,13 @@ CWineTest::GetNextTest()
     {
         /* Perform the --list command */
         BufferSize = DoListCommand();
+
+        if ((BufferSize == 0) || (m_ListBuffer == NULL))
+        {
+            stringstream ss;
+            ss << "The --list command did not return any data for " << UnicodeToAscii(m_CurrentFile) << endl;
+            TESTEXCEPTION(ss.str());
+        }
 
         /* Move the pointer to the first test */
         pStart = strchr(m_ListBuffer, '\n');
