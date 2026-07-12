@@ -991,17 +991,17 @@ ProcessDetachedProgram(
     _In_ PCWSTR pszInf)
 {
     WCHAR szInfApp[MAX_PATH], szInfArg[MAX_PATH * 3];
-    WCHAR szCmd[ARRAYSIZE(szInfApp) + ARRAYSIZE(szInfArg)];
+    WCHAR szCmd[_countof(szInfApp) + _countof(szInfArg)];
     UINT cch;
 
     if (!GetPrivateProfileStringW(L"GuiUnattended", L"DetachedProgram", L"", szInfApp, _countof(szInfApp), pszInf) || !*szInfApp)
         return;
-    cch = ExpandEnvironmentStrings(szInfApp, szCmd, ARRAYSIZE(szCmd) - 1);
+    cch = ExpandEnvironmentStrings(szInfApp, szCmd, _countof(szCmd) - 1);
     if (GetPrivateProfileStringW(L"GuiUnattended", L"Arguments", L"", szInfArg, _countof(szInfArg), pszInf) && cch)
     {
         szCmd[cch - 1] = L' ';
         szCmd[cch] = UNICODE_NULL;
-        ExpandEnvironmentStrings(szInfArg, szCmd + cch, ARRAYSIZE(szCmd) - cch);
+        ExpandEnvironmentStrings(szInfArg, szCmd + cch, _countof(szCmd) - cch);
     }
     RunCommandAndWait(szCmd);
 }
@@ -1029,10 +1029,9 @@ PreprocessUnattend(
 
     if (IsInstall)
     {
-        /* See also wizard.c!ProcessSetupInf()
+        /* See also wizard.c!GetSetupInfPath()
          * Retrieve the path of the setup INF */
-        GetSystemDirectoryW(szPath, _countof(szPath));
-        wcscat(szPath, L"\\$winnt$.inf");
+        GetSetupInfPath(szPath, _countof(szPath));
     }
     else
     {

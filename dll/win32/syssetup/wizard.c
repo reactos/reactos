@@ -53,7 +53,7 @@ typedef struct _TIMEZONE_ENTRY
 
 extern void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
 
-static VOID
+VOID
 GetSetupInfPath(PWSTR szPath, UINT cchMax)
 {
     GetSystemDirectoryW(szPath, cchMax);
@@ -2749,39 +2749,32 @@ SetInstallationCompleted(IN BOOL Unattended)
     DWORD InProgress = 0;
     DWORD InstallDate;
 
-    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
-                       L"Software\\Microsoft\\Windows NT\\CurrentVersion",
-                       0,
-                       KEY_WRITE,
-                       &hKey ) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion",
+                      0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
     {
         InstallDate = (DWORD)time(NULL);
-        RegSetValueExW( hKey, L"InstallDate", 0, REG_DWORD, (LPBYTE)&InstallDate, sizeof(InstallDate) );
-        RegCloseKey( hKey );
+        RegSetValueExW(hKey, L"InstallDate", 0, REG_DWORD, (LPBYTE)&InstallDate, sizeof(InstallDate));
+        RegCloseKey(hKey);
     }
 
     if (Unattended)
     {
         WCHAR szInf[MAX_PATH];
-        WCHAR szInfCmd[MAX_PATH * 4], szCmd[ARRAYSIZE(szInfCmd)];
+        WCHAR szInfCmd[MAX_PATH * 4], szCmd[_countof(szInfCmd)];
 
         GetSetupInfPath(szInf, _countof(szInf));
         if (GetPrivateProfileStringW(L"SetupParams", L"UserExecute", L"", szInfCmd, _countof(szInfCmd), szInf) && *szInfCmd)
         {
             *szCmd = UNICODE_NULL;
-            ExpandEnvironmentStringsW(szInfCmd, szCmd, ARRAYSIZE(szInfCmd));
+            ExpandEnvironmentStringsW(szInfCmd, szCmd, _countof(szInfCmd));
             RunCommandAndWait(szCmd);
         }
     }
 
-    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
-                       L"SYSTEM\\Setup",
-                       0,
-                       KEY_WRITE,
-                       &hKey ) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\Setup", 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
     {
-        RegSetValueExW( hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress) );
-        RegCloseKey( hKey );
+        RegSetValueExW(hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress));
+        RegCloseKey(hKey);
     }
 }
 

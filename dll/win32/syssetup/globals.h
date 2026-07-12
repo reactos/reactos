@@ -113,6 +113,10 @@ VOID
 SetAutoAdminLogon(VOID);
 
 /* wizard.c */
-VOID InstallWizard (VOID);
+VOID
+InstallWizard(VOID);
+
+VOID
+GetSetupInfPath(PWSTR szPath, UINT cchMax);
 
 /* EOF */
