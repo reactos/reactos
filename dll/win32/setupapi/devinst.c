@@ -2716,8 +2716,8 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
      * as we don't need a ref part in key name. */
     SymbolicLink[Index + 1] = UNICODE_NULL;
 
-    /* Open device instance key */
-    rc = RegOpenKeyExW(hKey, SymbolicLink, 0, samDesired, &hDevKey);
+    /* Create device instance key */
+    rc = RegCreateKeyExW(hKey, SymbolicLink, 0, NULL, 0, samDesired, NULL, &hDevKey, NULL);
     HeapFree(GetProcessHeap(), 0, SymbolicLink);
     RegCloseKey(hKey);
     if (rc != ERROR_SUCCESS)
@@ -2727,8 +2727,8 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
         return INVALID_HANDLE_VALUE;
     }
 
-    /* Open reference key */
-    rc = RegOpenKeyExW(hDevKey, ReferenceString, 0, samDesired, &hRefKey);
+    /* Create reference key */
+    rc = RegCreateKeyExW(hDevKey, ReferenceString, 0, NULL, 0, samDesired, NULL, &hRefKey, NULL);
     HeapFree(GetProcessHeap(), 0, ReferenceString);
     RegCloseKey(hDevKey);
     if (rc != ERROR_SUCCESS)
