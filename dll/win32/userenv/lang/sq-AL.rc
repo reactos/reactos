@@ -22,18 +22,18 @@ BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Dokumente dhe Cilësime"
     IDS_APPDATA "Aplikation Data"
     IDS_DESKTOP "Desktop"
-    IDS_FAVORITES "Preferuara"
+    IDS_FAVORITES "Preferuarat"
     IDS_MYDOCUMENTS "Dokumentet e'mi"
     IDS_NETHOOD "NetKapuç"
     IDS_PRINTHOOD "PrintoKapuç"
     IDS_RECENT "Fundit"
-    IDS_SENDTO "DërguarTe"
+    IDS_SENDTO "DërguarTe" // FIXME: or "...Tek"?
     IDS_TEMPLATES "Shabllone"
     IDS_STARTMENU "Fillo Menu"
     IDS_PROGRAMS "Fillo Menu\\Programe"
-    IDS_STARTUP "Fillo Menu\\Programe\\Fillimi"
+    IDS_STARTUP "Fillo Menu\\Programe\\Fillimi" // FIXME: or: "...\\FilloTani"?
     IDS_LOCALSETTINGS "Cilësimet lokale"
-    IDS_LOCALAPPDATA "Cilësimet lokale\\Aplikacion Data"
+    IDS_LOCALAPPDATA "Cilësimet lokale\\Aplikacion Data" // FIXME: or "...\\Aplikimi i të dhënave"?
     IDS_TEMP "Cilësimet lokale\\Përk" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Cilësimet lokale\\Dokumente Interneti Përkohshëm"
     IDS_HISTORY "Cilësimet lokale\\Historia"

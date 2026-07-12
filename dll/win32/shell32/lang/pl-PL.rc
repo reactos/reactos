@@ -894,7 +894,7 @@ BEGIN
     IDS_LOCAL_APPDATA "Ustawienia lokalne\\Dane aplikacji"
     IDS_INTERNET_CACHE "Ustawienia lokalne\\Temporary Internet Files"
     IDS_COOKIES "Ciasteczka"
-    IDS_HISTORY "Ustawienia Lokalne\\Historia"
+    IDS_HISTORY "Ustawienia lokalne\\Historia"
     IDS_PROGRAM_FILES "Program Files"
     IDS_MYPICTURES "Moje obrazy"
     IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"

@@ -879,7 +879,7 @@ BEGIN
     IDS_MYVIDEO "Videá"
     IDS_DESKTOPDIRECTORY "Pracovná plocha"
     IDS_NETHOOD "NetHood"
-    IDS_TEMPLATES "Templates"
+    IDS_TEMPLATES "Šablóny"
     IDS_APPDATA "Application Data"
     IDS_PRINTHOOD "PrintHood"
     IDS_LOCAL_APPDATA "Local Settings\\Application Data"
