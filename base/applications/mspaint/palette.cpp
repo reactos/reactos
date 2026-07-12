@@ -156,6 +156,9 @@ LRESULT CPaletteWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 
 LRESULT CPaletteWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    if (paletteModel.GetBpp() == 1)
+        return 0;
+
     INT iColor = DoHitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     COLORREF rgbColor = paletteModel.GetFgColor();
     if (iColor != -1 && mainWindow.ChooseColor(&rgbColor))
@@ -168,6 +171,9 @@ LRESULT CPaletteWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CPaletteWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    if (paletteModel.GetBpp() == 1)
+        return 0;
+
     INT iColor = DoHitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     COLORREF rgbColor = paletteModel.GetBgColor();
     if (iColor != -1 && mainWindow.ChooseColor(&rgbColor))

@@ -59,8 +59,8 @@ void getBoundaryOfPoints(RECT& rcBoundary, SIZE_T cPoints, const POINT *pPoints)
     while (cPoints-- > 0)
     {
         LONG x = pPoints->x, y = pPoints->y;
-        ptMin = { min(x, ptMin.x), min(y, ptMin.y) };
-        ptMax = { max(x, ptMax.x), max(y, ptMax.y) };
+        ptMin = { __min(x, ptMin.x), __min(y, ptMin.y) };
+        ptMax = { __max(x, ptMax.x), __max(y, ptMax.y) };
         ++pPoints;
     }
 
@@ -363,6 +363,7 @@ struct SmoothDrawTool : ToolBase
 
     void OnDrawOverlayOnImage(HDC hdc) override
     {
+        ToolBase::OnDrawOverlayOnImage(hdc);
         for (SIZE_T i = 1; i < s_cPoints; ++i)
         {
             OnDraw(hdc, m_bLeftButton, s_pPoints[i - 1], s_pPoints[i]);
@@ -386,6 +387,8 @@ struct SelectionBaseTool : ToolBase
 
     void OnDrawOverlayOnImage(HDC hdc) override
     {
+        ToolBase::OnDrawOverlayOnImage(hdc);
+
         if (selectionModel.IsLanded() || !selectionModel.m_bShow)
             return;
 
@@ -749,6 +752,7 @@ struct AirBrushTool : SmoothDrawTool
 
     void OnDrawOverlayOnImage(HDC hdc) override
     {
+        ToolBase::OnDrawOverlayOnImage(hdc);
         srand(m_dwTick);
         SmoothDrawTool::OnDrawOverlayOnImage(hdc);
     }
@@ -770,6 +774,7 @@ struct TextTool : ToolBase
 {
     void OnDrawOverlayOnImage(HDC hdc) override
     {
+        ToolBase::OnDrawOverlayOnImage(hdc);
         if (canvasWindow.m_drawing)
         {
             CRect& rc = selectionModel.m_rc;
@@ -899,6 +904,7 @@ struct LineTool : TwoPointDrawTool
 {
     void OnDrawOverlayOnImage(HDC hdc) override
     {
+        ToolBase::OnDrawOverlayOnImage(hdc);
         if (!m_bDrawing)
             return;
         if (GetAsyncKeyState(VK_SHIFT) < 0)
@@ -989,6 +995,7 @@ struct RectTool : TwoPointDrawTool
 {
     void OnDrawOverlayOnImage(HDC hdc) override
     {
+        ToolBase::OnDrawOverlayOnImage(hdc);
         if (!m_bDrawing)
             return;
         if (GetAsyncKeyState(VK_SHIFT) < 0)
@@ -1100,6 +1107,7 @@ struct EllipseTool : TwoPointDrawTool
 {
     void OnDrawOverlayOnImage(HDC hdc) override
     {
+        ToolBase::OnDrawOverlayOnImage(hdc);
         if (!m_bDrawing)
             return;
         if (GetAsyncKeyState(VK_SHIFT) < 0)
@@ -1116,6 +1124,7 @@ struct RRectTool : TwoPointDrawTool
 {
     void OnDrawOverlayOnImage(HDC hdc) override
     {
+        ToolBase::OnDrawOverlayOnImage(hdc);
         if (!m_bDrawing)
             return;
         if (GetAsyncKeyState(VK_SHIFT) < 0)

@@ -314,6 +314,8 @@ BOOL CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
              imageModel.GetDC(), rcImageDraw.left, rcImageDraw.top, SRCCOPY);
 
     // Draw overlay #1 on hdcMem1
+    SetTextColor(hdcMem1, RGB(255, 255, 255));
+    SetBkColor(hdcMem1, RGB(0, 0, 0));
     toolsModel.OnDrawOverlayOnImage(hdcMem1);
 
     // Transfer the bits with stretch (hdcMem0 <-- hdcMem1)
@@ -439,7 +441,7 @@ VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
             si.nPos += si.nPage;
             break;
     }
-    si.nPos = max(min(si.nPos, si.nMax), si.nMin);
+    si.nPos = __max(__min(si.nPos, si.nMax), si.nMin);
     SetScrollInfo(fnBar, &si);
     Invalidate();
 }
@@ -630,10 +632,10 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     }
 
     // Limit bitmap size
-    cxImage = max(1, cxImage);
-    cyImage = max(1, cyImage);
-    cxImage = min(MAXWORD, cxImage);
-    cyImage = min(MAXWORD, cyImage);
+    cxImage = __max(1, cxImage);
+    cyImage = __max(1, cyImage);
+    cxImage = __min(MAXWORD, cxImage);
+    cyImage = __min(MAXWORD, cyImage);
 
     // Display new size
     CStringW strSize;

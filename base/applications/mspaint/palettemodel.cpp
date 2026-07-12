@@ -12,6 +12,11 @@ PaletteModel paletteModel;
 
 /* FUNCTIONS ********************************************************/
 
+static inline COLORREF QuadToRGB(const RGBQUAD& quad)
+{
+    return RGB(quad.rgbRed, quad.rgbGreen, quad.rgbBlue);
+}
+
 PaletteModel::PaletteModel()
 {
     m_fgColor = RGB(0, 0, 0);
@@ -119,4 +124,48 @@ void PaletteModel::NotifyPaletteChanged()
 {
     if (paletteWindow.IsWindow())
         paletteWindow.Invalidate(FALSE);
+}
+
+void PaletteModel::SetColorInfo(HBITMAP hbm)
+{
+    static RGBQUAD colors[256];
+
+    if (hbm == NULL)
+    {
+        SetColorTable(24, 0, nullptr);
+    }
+
+    BITMAP bm;
+    GetObjectW(hbm, sizeof(bm), &bm);
+
+    HDC hDC = CreateCompatibleDC(NULL);
+    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
+    UINT cColors = GetDIBColorTable(hDC, 0, (UINT)_countof(colors), colors);
+    SelectObject(hDC, hbmOld);
+    DeleteDC(hDC);
+
+    SetColorTable(bm.bmBitsPixel, cColors, colors);
+    if (bm.bmBitsPixel == 1)
+        SetPrimaryColors(QuadToRGB(colors[0]), QuadToRGB(colors[1]));
+    else
+        SetPrimaryColors(RGB(0, 0, 0), RGB(255, 255, 255));
+}
+
+void PaletteModel::SetColorTable(UINT bpp, UINT cColors, RGBQUAD* colors)
+{
+    m_bpp = bpp;
+    SelectPalette((bpp == 1) ? PAL_MONOCHROME : PAL_MODERN);
+}
+
+UINT PaletteModel::GetBpp() const
+{
+    return m_bpp;
+}
+
+void PaletteModel::SetPrimaryColors(COLORREF color0, COLORREF color1)
+{
+    m_primaryColor = color0;
+    m_secondaryColor = color1;
+    toolsModel.DeleteBrushes();
+    paletteWindow.Invalidate(TRUE);
 }

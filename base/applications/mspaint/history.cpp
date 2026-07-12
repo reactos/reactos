@@ -124,7 +124,7 @@ void ImageModel::ClearHistory()
 
 void ImageModel::PushImageForUndo()
 {
-    HBITMAP hbm = CopyBitmap();
+    HBITMAP hbm = CloneDIB();
     if (hbm == NULL)
     {
         ShowOutOfMemory();
@@ -196,8 +196,8 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     if (nHeight <= 0)
         nHeight = 1;
 
-    // Create a white HBITMAP
-    HBITMAP hbmNew = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
+    // Create new HBITMAP
+    HBITMAP hbmNew = CloneDIB(nWidth, nHeight, paletteModel.GetBgColor());
     if (!hbmNew)
     {
         ShowOutOfMemory();
@@ -207,9 +207,9 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
 
     // Put the master image as a sub-image
     RECT rcPart = { -nOffsetX, -nOffsetY, GetWidth() - nOffsetX, GetHeight() - nOffsetY };
-    HBITMAP hbmOld = imageModel.LockBitmap();
+    HBITMAP hbmOld = LockBitmap();
     putSubImage(hbmNew, rcPart, hbmOld);
-    imageModel.UnlockBitmap(hbmOld);
+    UnlockBitmap(hbmOld);
 
     // Push it
     PushImageForUndo(hbmNew);
@@ -235,7 +235,7 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
     INT newHeight = oldHeight * nStretchPercentY / 100;
     if (oldWidth != newWidth || oldHeight != newHeight)
     {
-        HBITMAP hbm0 = CopyDIBImage(m_hbmMaster, newWidth, newHeight);
+        HBITMAP hbm0 = CloneDIB(newWidth, newHeight, paletteModel.GetBgColor());
         PushImageForUndo(hbm0);
     }
     if (nSkewDegX)
@@ -297,8 +297,10 @@ void ImageModel::RotateNTimes90Degrees(int iN)
         case 1:
         case 3:
         {
-            HBITMAP hbm = Rotate90DegreeBlt(m_hDrawingDC, GetWidth(), GetHeight(), iN == 1, FALSE);
-            PushImageForUndo(hbm);
+            HBITMAP hbmOld = LockBitmap();
+            HBITMAP hbmNew = Rotate90DegreeBitmap(hbmOld, iN == 1);
+            UnlockBitmap(hbmOld);
+            PushImageForUndo(hbmNew);
             break;
         }
         case 2:
@@ -314,16 +316,16 @@ void ImageModel::RotateNTimes90Degrees(int iN)
 
 void ImageModel::Clamp(POINT& pt) const
 {
-    pt.x = max(0, min(pt.x, GetWidth()));
-    pt.y = max(0, min(pt.y, GetHeight()));
+    pt.x = __max(0, __min(pt.x, GetWidth()));
+    pt.y = __max(0, __min(pt.y, GetHeight()));
 }
 
-HBITMAP ImageModel::CopyBitmap()
+HBITMAP ImageModel::CloneDIB(INT width, INT height, COLORREF rgbColor)
 {
-    HBITMAP hBitmap = LockBitmap();
-    HBITMAP ret = CopyDIBImage(hBitmap);
-    UnlockBitmap(hBitmap);
-    return ret;
+    HBITMAP hbmOld = imageModel.LockBitmap();
+    HBITMAP hbmNew = CopyDIBImage(hbmOld, width, height, STRETCH_DELETESCANS, rgbColor);
+    imageModel.UnlockBitmap(hbmOld);
+    return hbmNew;
 }
 
 BOOL ImageModel::IsBlackAndWhite()

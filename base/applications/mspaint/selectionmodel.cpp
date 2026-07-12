@@ -97,9 +97,11 @@ HBITMAP SelectionModel::GetSelectionContents()
         return NULL;
 
     CRect rc = { 0, 0, m_rc.Width(), m_rc.Height() };
+    HBITMAP hbmNew = imageModel.CloneDIB(rc.Width(), rc.Height(), paletteModel.GetBgColor());
+    if (!hbmNew)
+        return NULL;
 
     HDC hdcMem = ::CreateCompatibleDC(NULL);
-    HBITMAP hbmNew = CreateColorDIB(rc.Width(), rc.Height(), paletteModel.GetBgColor());
     HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbmNew);
     selectionModel.DrawSelection(hdcMem, paletteModel.GetBgColor(), TRUE, rc, hbmPart);
     ::SelectObject(hdcMem, hbmOld);
@@ -240,19 +242,21 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
 
             if (m_hbmColor)
             {
-                hbmOld = ::SelectObject(hdcMem, m_hbmColor);
-                hbm = Rotate90DegreeBlt(hdcMem, m_rc.Width(), m_rc.Height(), iN == 1, FALSE);
-                ::SelectObject(hdcMem, hbmOld);
-                ::DeleteObject(m_hbmColor);
-                m_hbmColor = hbm;
+                hbm = Rotate90DegreeBitmap(m_hbmColor, iN == 1);
+                if (hbm)
+                {
+                    ::DeleteObject(m_hbmColor);
+                    m_hbmColor = hbm;
+                }
             }
             if (m_hbmMask)
             {
-                hbmOld = ::SelectObject(hdcMem, m_hbmMask);
-                hbm = Rotate90DegreeBlt(hdcMem, m_rc.Width(), m_rc.Height(), iN == 1, TRUE);
-                ::SelectObject(hdcMem, hbmOld);
-                ::DeleteObject(m_hbmMask);
-                m_hbmMask = hbm;
+                hbm = Rotate90DegreeBitmap(m_hbmMask, iN == 1);
+                if (hbm)
+                {
+                    ::DeleteObject(m_hbmMask);
+                    m_hbmMask = hbm;
+                }
             }
 
             SwapWidthAndHeight();

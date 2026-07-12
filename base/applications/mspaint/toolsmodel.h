@@ -78,6 +78,7 @@ private:
         ~VirtualBrush();
 
         HBRUSH GetBrush(PAL_TYPE palette, COLORREF rgbColor);
+        void Delete();
     };
 
     int m_lineWidth;
@@ -163,6 +164,7 @@ public:
     HBRUSH GetFgBrush();
     HBRUSH GetBgBrush();
     static HBRUSH CreateBrush(PAL_TYPE palette, COLORREF color);
+    void DeleteBrushes();
 };
 
 extern ToolsModel toolsModel;

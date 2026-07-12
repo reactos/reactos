@@ -147,7 +147,7 @@ BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName)
             }
         }
 
-        // Use the temporary file 
+        // Use the temporary file
         pszPathName = g_szMailTempFile;
     }
 
@@ -203,6 +203,14 @@ BOOL OpenMailer(HWND hWnd, LPCWSTR pszPathName)
     return FALSE; // Failure
 }
 
+BOOL CMainWindow::ConfirmLoseColor()
+{
+    CStringW strText(MAKEINTRESOURCEW(IDS_LOSECOLOR));
+    CStringW strTitle(MAKEINTRESOURCEW(IDS_PROGRAMNAME));
+    INT id = MessageBox(strText, strTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
+    return (id == IDYES);
+}
+
 BOOL CMainWindow::GetOpenFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
 {
     static OPENFILENAMEW ofn = { 0 };
@@ -235,18 +243,32 @@ BOOL CMainWindow::GetOpenFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
     return ::GetOpenFileNameW(&ofn);
 }
 
-BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
+BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pnBpp)
 {
     static OPENFILENAMEW sfn = { 0 };
     static CStringW strFilter;
+    static DWORD cNonBmpFilters = 0;
+
+    if (pnBpp)
+        *pnBpp = -1;
 
     if (sfn.lStructSize == 0)
     {
         // Get the export filter
         CSimpleArray<GUID> aguidFileTypesE;
-        CImage::GetExporterFilterString(strFilter, aguidFileTypesE, NULL,
-                                        CImage::excludeDefaultSave, L'|');
+        DWORD dwExclude = CImage::excludeDefaultSave | CImage::excludeBMP;
+        CImage::GetExporterFilterString(strFilter, aguidFileTypesE, NULL, dwExclude, L'|');
+
+        strFilter.Replace(L"||", L"|");
+
+        // FIXME: Add more
+        strFilter += CStringW(MAKEINTRESOURCEW(IDS_MONOBMP));
+        strFilter += L"|*.bmp;*.dib|";
+        strFilter += CStringW(MAKEINTRESOURCEW(IDS_24BPPBMP));
+        strFilter += L"|*.bmp;*.dib||";
+
         strFilter.Replace(L'|', UNICODE_NULL);
+        cNonBmpFilters = aguidFileTypesE.GetSize();
 
         // Initializing the OPENFILENAME structure for GetSaveFileName
         ZeroMemory(&sfn, sizeof(sfn));
@@ -276,7 +298,25 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile)
 
     sfn.lpstrFile = pszFile;
     sfn.nMaxFile  = cchMaxFile;
-    return ::GetSaveFileNameW(&sfn);
+    if (!::GetSaveFileNameW(&sfn))
+        return FALSE;
+
+    if (pnBpp && sfn.nFilterIndex - 1 >= cNonBmpFilters)
+    {
+        INT delta = (sfn.nFilterIndex - 1) - cNonBmpFilters;
+        // FIXME: Add more
+        switch (delta)
+        {
+            case 0: // Mono (IDS_MONOBMP)
+                *pnBpp = 1;
+                break;
+            case 1: // 24-bpp Color (IDS_24BPPBMP)
+                *pnBpp = 24;
+                break;
+        }
+    }
+
+    return TRUE;
 }
 
 BOOL CMainWindow::ChooseColor(IN OUT COLORREF *prgbColor)
@@ -421,9 +461,32 @@ void CMainWindow::saveImage(BOOL overwrite)
     if (g_isAFile && overwrite)
     {
         imageModel.SaveImage(g_szFileName);
+        return;
     }
-    else if (GetSaveFileName(g_szFileName, _countof(g_szFileName)))
+
+    INT nBpp;
+    if (GetSaveFileName(g_szFileName, _countof(g_szFileName), &nBpp))
     {
+        if (nBpp != -1)
+        {
+            HBITMAP hbmNew = nullptr;
+            HBITMAP hbmOld = imageModel.LockBitmap();
+            BITMAP bm;
+            GetObjectW(hbmOld, sizeof(bm), &bm);
+            BOOL bDiffer = (bm.bmBitsPixel != nBpp);
+            if (bDiffer)
+                hbmNew = CreateNBppBitmap(hbmOld, nBpp);
+            imageModel.UnlockBitmap(hbmOld);
+
+            if (bDiffer && hbmNew)
+            {
+                if (nBpp < bm.bmBitsPixel && !mainWindow.ConfirmLoseColor())
+                    return;
+
+                imageModel.PushImageForUndo(hbmNew);
+            }
+        }
+
         imageModel.SaveImage(g_szFileName);
     }
 }
@@ -763,6 +826,13 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     CheckMenuItem(menu, IDM_COLORSOLDPALETTE,    CHECKED_IF(paletteModel.SelectedPalette() == PAL_OLDTYPE));
     CheckMenuItem(menu, IDM_COLORSGRAYSCALE,     CHECKED_IF(paletteModel.SelectedPalette() == PAL_GRAYSCALE));
     CheckMenuItem(menu, IDM_COLORSMONOCHROME,    CHECKED_IF(paletteModel.SelectedPalette() == PAL_MONOCHROME));
+
+    BOOL bMono = (paletteModel.GetBpp() == 1);
+    EnableMenuItem(menu, IDM_COLORSEDITPALETTE, ENABLED_IF(!bMono));
+    EnableMenuItem(menu, IDM_COLORSMODERNPALETTE, ENABLED_IF(!bMono));
+    EnableMenuItem(menu, IDM_COLORSOLDPALETTE, ENABLED_IF(!bMono));
+    EnableMenuItem(menu, IDM_COLORSGRAYSCALE, ENABLED_IF(!bMono));
+
     return 0;
 }
 
@@ -1094,7 +1164,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             WCHAR szFileName[MAX_LONG_PATH];
             ::LoadStringW(g_hinstExe, IDS_DEFAULTFILENAME, szFileName, _countof(szFileName));
-            if (GetSaveFileName(szFileName, _countof(szFileName)))
+
+            INT nBpp;
+            if (GetSaveFileName(szFileName, _countof(szFileName), &nBpp))
             {
                 HBITMAP hbmSelection = selectionModel.GetSelectionContents();
                 if (!hbmSelection)
@@ -1102,6 +1174,17 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     ShowOutOfMemory();
                     imageModel.ClearHistory();
                     break;
+                }
+                if (nBpp != -1)
+                {
+                    BITMAP bm;
+                    GetObjectW(hbmSelection, sizeof(bm), &bm);
+                    if (bm.bmBitsPixel != nBpp)
+                    {
+                        HBITMAP hbmNew = CreateNBppBitmap(hbmSelection, nBpp);
+                        DeleteObject(hbmSelection);
+                        hbmSelection = hbmNew;
+                    }
                 }
                 SaveDIBToFile(hbmSelection, szFileName, FALSE);
                 DeleteObject(hbmSelection);
@@ -1207,13 +1290,26 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 CWaitCursor waitCursor;
                 if (attributesDialog.m_bBlackAndWhite && !imageModel.IsBlackAndWhite())
                 {
-                    CStringW strText(MAKEINTRESOURCEW(IDS_LOSECOLOR));
-                    CStringW strTitle(MAKEINTRESOURCEW(IDS_PROGRAMNAME));
-                    INT id = MessageBox(strText, strTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
-                    if (id != IDYES)
-                        break;
+                    if (mainWindow.ConfirmLoseColor())
+                    {
+                        HBITMAP hbmOld = imageModel.LockBitmap();
+                        HBITMAP hbmNew = CreateNBppBitmap(hbmOld, 1);
+                        imageModel.UnlockBitmap(hbmOld);
 
-                    imageModel.PushBlackAndWhite();
+                        imageModel.PushImageForUndo(hbmNew);
+                        paletteModel.SetColorInfo(hbmNew);
+                        imageModel.ClearHistory();
+                    }
+                }
+                else if (!attributesDialog.m_bBlackAndWhite && imageModel.IsBlackAndWhite())
+                {
+                    HBITMAP hbmOld = imageModel.LockBitmap();
+                    HBITMAP hbmNew = CreateNBppBitmap(hbmOld, 24);
+                    imageModel.UnlockBitmap(hbmOld);
+
+                    imageModel.PushImageForUndo(hbmNew);
+                    paletteModel.SetColorInfo(hbmNew);
+                    imageModel.ClearHistory();
                 }
 
                 if (imageModel.GetWidth() != attributesDialog.newWidth ||

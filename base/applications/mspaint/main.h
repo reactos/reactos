@@ -31,7 +31,7 @@ public:
 
     HWND DoCreate();
     BOOL GetOpenFileName(IN OUT LPWSTR pszFile, INT cchMaxFile);
-    BOOL GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile);
+    BOOL GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pnBpp = nullptr);
     BOOL ChooseColor(IN OUT COLORREF *prgbColor);
     VOID TrackPopupMenu(POINT ptScreen, INT iSubMenu);
     BOOL CanUndo() const;
@@ -57,5 +57,6 @@ private:
     void saveImage(BOOL overwrite);
     void InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window);
     BOOL ConfirmSave();
+    BOOL ConfirmLoseColor();
     void ProcessFileMenu(HMENU hPopupMenu);
 };

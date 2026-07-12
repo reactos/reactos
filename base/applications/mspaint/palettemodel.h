@@ -26,9 +26,13 @@ private:
     PAL_TYPE m_nSelectedPalette;
     COLORREF m_fgColor;
     COLORREF m_bgColor;
+    UINT m_bpp = 24;
+    COLORREF m_primaryColor = RGB(0, 0, 0);
+    COLORREF m_secondaryColor = RGB(255, 255, 255);
 
     void NotifyColorChanged();
     void NotifyPaletteChanged();
+    void SetColorTable(UINT bpp, UINT cColors, RGBQUAD* colors);
 
 public:
     PaletteModel();
@@ -40,4 +44,9 @@ public:
     void SetFgColor(COLORREF newColor);
     COLORREF GetBgColor() const;
     void SetBgColor(COLORREF newColor);
+    UINT GetBpp() const;
+    void SetColorInfo(HBITMAP hbm);
+    void SetPrimaryColors(COLORREF color0, COLORREF color1);
+    COLORREF GetPrimaryColor() const { return m_primaryColor; }
+    COLORREF GetSecondaryColor() const { return m_secondaryColor; }
 };
