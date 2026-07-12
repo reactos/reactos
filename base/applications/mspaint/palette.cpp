@@ -3,7 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Window procedure of the palette window
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
- *             Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2023-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -156,7 +156,7 @@ LRESULT CPaletteWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 
 LRESULT CPaletteWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (paletteModel.GetBpp() == 1)
+    if (!paletteModel.IsEditable())
         return 0;
 
     INT iColor = DoHitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -171,7 +171,7 @@ LRESULT CPaletteWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CPaletteWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (paletteModel.GetBpp() == 1)
+    if (!paletteModel.IsEditable())
         return 0;
 
     INT iColor = DoHitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));

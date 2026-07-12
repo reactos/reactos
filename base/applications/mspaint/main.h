@@ -3,7 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    The main window
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
- *             Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2023-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once

@@ -43,9 +43,7 @@ static inline INT FindNearestColor(INT r, INT g, INT b, const RGBQUAD* palette, 
 
 typedef struct tagERR_RGB
 {
-    float r;
-    float g;
-    float b;
+    float r, g, b;
 } ERR_RGB, *PERR_RGB;
 
 /**

@@ -3,7 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Undo and redo functionality
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
- *             Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2023-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -80,6 +80,7 @@ void ImageModel::Undo(BOOL bClearRedo)
     m_currInd = (m_currInd + HISTORYSIZE - 1) % HISTORYSIZE; // Go previous
     ATLASSERT(m_hbmMaster != NULL);
     SwapPart();
+    paletteModel.SetColorInfo(m_hbmMaster);
     ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
     m_undoSteps--;
@@ -102,6 +103,7 @@ void ImageModel::Redo()
     ATLASSERT(m_hbmMaster != NULL);
     SwapPart();
     m_currInd = (m_currInd + 1) % HISTORYSIZE; // Go next
+    paletteModel.SetColorInfo(m_hbmMaster);
     ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
     m_redoSteps--;
@@ -150,6 +152,8 @@ void ImageModel::PushImageForUndo(HBITMAP hbm)
     part.clear();
     part.m_hbmImage = m_hbmMaster;
     m_hbmMaster = hbm;
+    paletteModel.SetColorInfo(hbm);
+
     ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
     PushDone();

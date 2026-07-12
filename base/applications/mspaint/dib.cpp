@@ -21,6 +21,11 @@ struct BITMAPINFOEX : BITMAPINFO
 
 /* FUNCTIONS ********************************************************/
 
+COLORREF QuadToRGBValue(const RGBQUAD& quad)
+{
+    return RGB(quad.rgbRed, quad.rgbGreen, quad.rgbBlue);
+}
+
 // Convert DPI (dots per inch) into PPCM (pixels per centimeter)
 float PpcmFromDpi(float dpi)
 {
@@ -49,14 +54,7 @@ CreateMonoBitmap(int width, int height, BOOL bWhite)
         return NULL;
 
     if (bWhite)
-    {
-        HDC hdc = CreateCompatibleDC(NULL);
-        HGDIOBJ hbmOld = SelectObject(hdc, hbm);
-        RECT rc = { 0, 0, width, height };
-        FillRect(hdc, &rc, (HBRUSH)GetStockObject(WHITE_BRUSH));
-        SelectObject(hdc, hbmOld);
-        DeleteDC(hdc);
-    }
+        FillDIBByColor(hbm, RGB(255, 255, 255));
 
     return hbm;
 }
@@ -69,17 +67,7 @@ CreateColorDIB(int width, int height, COLORREF rgb)
         return NULL;
 
     if (rgb)
-    {
-        HDC hdc = CreateCompatibleDC(NULL);
-        HGDIOBJ hbmOld = SelectObject(hdc, ret);
-        RECT rc;
-        SetRect(&rc, 0, 0, width, height);
-        HBRUSH hbr = CreateSolidBrush(rgb);
-        FillRect(hdc, &rc, hbr);
-        DeleteObject(hbr);
-        SelectObject(hdc, hbmOld);
-        DeleteDC(hdc);
-    }
+        FillDIBByColor(ret, rgb);
 
     return ret;
 }
@@ -115,10 +103,10 @@ HBITMAP CopyDIBImage(HBITMAP hbm, INT cx, INT cy, INT stretchMode, COLORREF rgbC
     HBITMAP hbmNew = (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, cx, cy, LR_CREATEDIBSECTION);
     if (!hbmNew)
         return NULL;
+
     if (stretchMode == STRETCH_HALFTONE)
     {
-        if (rgbColor != CLR_INVALID)
-            FillDIBByColor(hbmNew, rgbColor);
+        FillDIBByColor(hbmNew, rgbColor);
         return hbmNew;
     }
 
@@ -143,9 +131,7 @@ HBITMAP CopyDIBImage(HBITMAP hbm, INT cx, INT cy, INT stretchMode, COLORREF rgbC
     ::DeleteDC(hdc1);
     ::DeleteDC(hdc2);
 
-    if (rgbColor != CLR_INVALID)
-        FillDIBByColor(hbmNew, rgbColor);
-
+    FillDIBByColor(hbmNew, rgbColor);
     return hbmNew;
 }
 
@@ -320,32 +306,33 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile)
     // load the image
     HBITMAP hBitmap;
     float xDpi = 0, yDpi = 0;
+    HRESULT hr;
     if (bBMP)
     {
-        hBitmap = LoadBitmapFromFile(name, &xDpi, &yDpi);
-        if (!hBitmap)
+        hr = LoadBitmapFromFile(&hBitmap, name, &xDpi, &yDpi);
+        if (FAILED(hr) && fIsMainFile)
         {
-            ShowError(IDS_LOADERRORTEXT, name);
-            return NULL;
+            imageModel.ClearHistory();
+            hr = LoadBitmapFromFile(&hBitmap, name, &xDpi, &yDpi);
         }
     }
     else
     {
         CImageDx img;
-        HRESULT hr = img.LoadDx(name, &xDpi, &yDpi);
+        hr = img.LoadDx(name, &xDpi, &yDpi);
         if (FAILED(hr) && fIsMainFile)
         {
             imageModel.ClearHistory();
             hr = img.LoadDx(name, &xDpi, &yDpi);
         }
-        if (FAILED(hr))
-        {
-            ATLTRACE("hr: 0x%08lX\n", hr);
-            ShowError(IDS_LOADERRORTEXT, name);
-            return NULL;
-        }
-
         hBitmap = img.Detach();
+    }
+
+    if (FAILED(hr))
+    {
+        ATLTRACE("hr: 0x%08lX\n", hr);
+        ShowError(IDS_LOADERRORTEXT, name);
+        return NULL;
     }
 
     if (!fIsMainFile)
@@ -410,7 +397,7 @@ HBITMAP Rotate90DegreeBitmap(HBITMAP hbm, BOOL bRight)
     return hbm2;
 }
 
-HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical, BOOL bMono)
+HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
 {
     CWaitCursor waitCursor;
 
@@ -501,18 +488,16 @@ void putSubImage(HBITMAP hbmWhole, const RECT& rcPartial, HBITMAP hbmPart)
 void FillDIBByColor(HBITMAP hbm, COLORREF rgbColor)
 {
     BITMAP bm;
-    if (!GetObjectW(hbm, sizeof(bm), &bm))
+    if (rgbColor == CLR_INVALID || !GetObjectW(hbm, sizeof(bm), &bm))
         return;
 
     HDC hDC = CreateCompatibleDC(NULL);
     HGDIOBJ hbmOld = SelectObject(hDC, hbm);
-    for (LONG y = 0; y < bm.bmHeight; ++y)
-    {
-        for (LONG x = 0; x < bm.bmWidth; ++x)
-        {
-            SetPixelV(hDC, x, y, rgbColor);
-        }
-    }
+    HBRUSH hbr = CreateSolidBrush(rgbColor);
+    HGDIOBJ hbrOld = SelectObject(hDC, hbr);
+    RECT rc = { 0, 0, bm.bmWidth, bm.bmHeight };
+    FillRect(hDC, &rc, hbr);
+    SelectObject(hDC, hbrOld);
     SelectObject(hDC, hbmOld);
     DeleteDC(hDC);
 }
@@ -524,35 +509,34 @@ struct BITMAPINFODX : BITMAPINFO
 
 const float INCHES_PER_METER = 0.0254f;
 
-HBITMAP LoadBitmapFromFile(LPCWSTR filename, float* xDpi, float* yDpi)
+HRESULT LoadBitmapFromFile(HBITMAP* phBitmap, LPCWSTR filename, float* xDpi, float* yDpi)
 {
+    *phBitmap = nullptr;
     if (!filename)
-        return nullptr;
+        return E_UNEXPECTED;
 
     HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, nullptr,
                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE)
-        return nullptr;
+        return HRESULT_FROM_WIN32(GetLastError());
 
     HBITMAP hBitmap = nullptr;
-    DWORD bytesRead = 0;
 
-    // Load BITMAPFILEHEADER
     BITMAPFILEHEADER bfh;
-    if (!ReadFile(hFile, &bfh, sizeof(bfh), &bytesRead, nullptr) || bytesRead != sizeof(bfh) ||
-        bfh.bfType != 0x4D42)
+    DWORD bytesRead;
+    if (!ReadFile(hFile, &bfh, sizeof(bfh), &bytesRead, nullptr) ||
+        bytesRead != sizeof(bfh) || bfh.bfType != 0x4D42)
     {
         CloseHandle(hFile);
-        return nullptr;
+        return E_FAIL;
     }
 
-    // Load header size
     DWORD headerSize = 0;
     if (!ReadFile(hFile, &headerSize, sizeof(headerSize), &bytesRead, nullptr) ||
         bytesRead != sizeof(headerSize))
     {
         CloseHandle(hFile);
-        return nullptr;
+        return E_FAIL;
     }
 
     SetFilePointer(hFile, sizeof(BITMAPFILEHEADER), nullptr, FILE_BEGIN);
@@ -562,14 +546,14 @@ HBITMAP LoadBitmapFromFile(LPCWSTR filename, float* xDpi, float* yDpi)
     if (!pBi)
     {
         CloseHandle(hFile);
-        return nullptr;
+        return E_OUTOFMEMORY;
     }
 
     if (!ReadFile(hFile, pBi, infoSize, &bytesRead, nullptr) || bytesRead != infoSize)
     {
         free(pBi);
         CloseHandle(hFile);
-        return nullptr;
+        return E_FAIL;
     }
 
     float localXDpi = 96.0f;
@@ -590,29 +574,35 @@ HBITMAP LoadBitmapFromFile(LPCWSTR filename, float* xDpi, float* yDpi)
 
     PVOID pBits = nullptr;
     HDC hDC = GetDC(nullptr);
-    hBitmap = CreateDIBSection(hDC, pBi, DIB_RGB_COLORS, &pBits, nullptr, 0);
+    *phBitmap = hBitmap = CreateDIBSection(hDC, pBi, DIB_RGB_COLORS, &pBits, nullptr, 0);
     ReleaseDC(nullptr, hDC);
 
-    if (hBitmap && pBits)
+    BOOL bOK = FALSE;
+    if (hBitmap)
     {
         SetFilePointer(hFile, bfh.bfOffBits, nullptr, FILE_BEGIN);
         DWORD bitsSize = bfh.bfSize - bfh.bfOffBits;
-        ReadFile(hFile, pBits, bitsSize, &bytesRead, nullptr);
+        bOK = ReadFile(hFile, pBits, bitsSize, &bytesRead, nullptr) && bitsSize == bytesRead;
+        if (!bOK)
+        {
+            DeleteObject(hBitmap);
+            *phBitmap = NULL;
+        }
     }
 
     free(pBi);
     CloseHandle(hFile);
-    return hBitmap;
+    return (bOK ? S_OK : E_FAIL);
 }
 
-BOOL SaveBitmapToFile(HBITMAP hBitmap, LPCWSTR filename, float xDpi, float yDpi)
+HRESULT SaveBitmapToFile(HBITMAP hBitmap, LPCWSTR filename, float xDpi, float yDpi)
 {
     if (!hBitmap || !filename)
-        return FALSE;
+        return E_INVALIDARG;
 
     BITMAP bm;
     if (!GetObject(hBitmap, sizeof(BITMAP), &bm))
-        return FALSE;
+        return E_FAIL;
 
     BITMAPINFOHEADER bih = { 0 };
     bih.biSize = sizeof(BITMAPINFOHEADER);
@@ -622,8 +612,8 @@ BOOL SaveBitmapToFile(HBITMAP hBitmap, LPCWSTR filename, float xDpi, float yDpi)
     bih.biBitCount = bm.bmBitsPixel;
     bih.biCompression = BI_RGB;
 
-    bih.biXPelsPerMeter = static_cast<LONG>(std::round(xDpi / INCHES_PER_METER));
-    bih.biYPelsPerMeter = static_cast<LONG>(std::round(yDpi / INCHES_PER_METER));
+    bih.biXPelsPerMeter = static_cast<LONG>(round(xDpi / INCHES_PER_METER));
+    bih.biYPelsPerMeter = static_cast<LONG>(round(yDpi / INCHES_PER_METER));
 
     DWORD rowSize = ((bm.bmWidth * bm.bmBitsPixel + 31) / 32) * 4;
     bih.biSizeImage = rowSize * bm.bmHeight;
@@ -635,14 +625,14 @@ BOOL SaveBitmapToFile(HBITMAP hBitmap, LPCWSTR filename, float xDpi, float yDpi)
 
     PVOID pBits = malloc(bih.biSizeImage);
     if (!pBits)
-        return FALSE;
+        return E_OUTOFMEMORY;
 
     HDC hDC = GetDC(nullptr);
     if (!GetDIBits(hDC, hBitmap, 0, bm.bmHeight, pBits, (PBITMAPINFO)&bih, DIB_RGB_COLORS))
     {
         ReleaseDC(nullptr, hDC);
         free(pBits);
-        return FALSE;
+        return E_FAIL;
     }
     ReleaseDC(nullptr, hDC);
 
@@ -650,11 +640,12 @@ BOOL SaveBitmapToFile(HBITMAP hBitmap, LPCWSTR filename, float xDpi, float yDpi)
                                FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE)
     {
+        DWORD error = GetLastError();
         free(pBits);
-        return FALSE;
+        return HRESULT_FROM_WIN32(error);
     }
 
-    DWORD bytesWritten = 0;
+    DWORD bytesWritten;
     BOOL bOK = WriteFile(hFile, &bfh, sizeof(bfh), &bytesWritten, nullptr) &&
                WriteFile(hFile, &bih, sizeof(bih), &bytesWritten, nullptr) &&
                WriteFile(hFile, pBits, bih.biSizeImage, &bytesWritten, nullptr);
@@ -664,7 +655,7 @@ BOOL SaveBitmapToFile(HBITMAP hBitmap, LPCWSTR filename, float xDpi, float yDpi)
     if (!bOK)
         DeleteFileW(filename);
 
-    return bOK;
+    return (bOK ? S_OK : E_FAIL);
 }
 
 HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
@@ -800,16 +791,6 @@ HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF)
     return hbm;
 }
 
-static inline BOOL IsPerfectBlack(const RGBQUAD* color)
-{
-    return !color->rgbBlue && !color->rgbGreen && !color->rgbRed;
-}
-
-static inline BOOL IsPerfectWhite(const RGBQUAD* color)
-{
-    return color->rgbBlue + color->rgbGreen + color->rgbRed == 255 * 3;
-}
-
 BOOL IsBitmapBlackAndWhite(HBITMAP hbm)
 {
     BITMAP bm;
@@ -826,8 +807,9 @@ BOOL IsBitmapBlackAndWhite(HBITMAP hbm)
     if (ret != 2)
         return FALSE;
 
-    return ((IsPerfectBlack(&colors[0]) || IsPerfectWhite(&colors[0])) &&
-            (IsPerfectBlack(&colors[1]) || IsPerfectWhite(&colors[1])));
+    const COLORREF clr0 = QuadToRGBValue(colors[0]), clr1 = QuadToRGBValue(colors[1]);
+    return (clr0 == RGB(0, 0, 0) || clr0 == RGB(255, 255, 255)) &&
+           (clr1 == RGB(0, 0, 0) || clr1 == RGB(255, 255, 255));
 }
 
 /**
@@ -903,7 +885,8 @@ static void BuildPalette(INT nBpp, RGBQUAD* palette)
     else if (nBpp == 4)
     {
         // Windows standard 16 colors (BGRA)
-        static const RGBQUAD win16[16] = {
+        static const RGBQUAD win16[16] =
+        {
             {   0,   0,   0, 0 }, {   0,   0, 128, 0 }, {   0, 128,   0, 0 }, {   0, 128, 128, 0 },
             { 128,   0,   0, 0 }, { 128,   0, 128, 0 }, { 128, 128,   0, 0 }, { 192, 192, 192, 0 },
             { 128, 128, 128, 0 }, {   0,   0, 255, 0 }, {   0, 255,   0, 0 }, {   0, 255, 255, 0 },
@@ -935,6 +918,11 @@ static void BuildPalette(INT nBpp, RGBQUAD* palette)
             palette[idx] = { v, v, v, 0 };
         }
     }
+}
+
+HBITMAP ConvertToBlackAndWhite(HBITMAP hbm)
+{
+    return CreateNBppBitmap(hbm, 1);
 }
 
 /**
@@ -1055,9 +1043,4 @@ HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp)
         CopyMemory(pBits, dstBuf, (size_t)dstStride * H);
 
     return hbmResult;
-}
-
-HBITMAP ConvertToBlackAndWhite(HBITMAP hbm)
-{
-    return CreateNBppBitmap(hbm, 1);
 }

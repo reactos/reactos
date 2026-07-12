@@ -3,7 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    The main window and wWinMain etc.
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
- *             Copyright 2017-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2017-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *             Copyright 2018 Stanislav Motylkov <x86corez@gmail.com>
  */
 
@@ -207,7 +207,7 @@ BOOL CMainWindow::ConfirmLoseColor()
 {
     CStringW strText(MAKEINTRESOURCEW(IDS_LOSECOLOR));
     CStringW strTitle(MAKEINTRESOURCEW(IDS_PROGRAMNAME));
-    INT id = MessageBox(strText, strTitle, MB_ICONINFORMATION | MB_YESNOCANCEL);
+    INT id = MessageBox(strText, strTitle, MB_ICONWARNING | MB_YESNOCANCEL);
     return (id == IDYES);
 }
 
@@ -819,13 +819,26 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     EnableMenuItem(menu, IDM_IMAGEDELETEIMAGE, ENABLED_IF(!selectionModel.m_bShow));
     CheckMenuItem(menu, IDM_IMAGEDRAWOPAQUE, CHECKED_IF(!toolsModel.IsBackgroundTransparent()));
 
-    //
     // Palette menu
-    //
-    CheckMenuItem(menu, IDM_COLORSMODERNPALETTE, CHECKED_IF(paletteModel.SelectedPalette() == PAL_MODERN));
-    CheckMenuItem(menu, IDM_COLORSOLDPALETTE,    CHECKED_IF(paletteModel.SelectedPalette() == PAL_OLDTYPE));
-    CheckMenuItem(menu, IDM_COLORSGRAYSCALE,     CHECKED_IF(paletteModel.SelectedPalette() == PAL_GRAYSCALE));
-    CheckMenuItem(menu, IDM_COLORSMONOCHROME,    CHECKED_IF(paletteModel.SelectedPalette() == PAL_MONOCHROME));
+    switch (paletteModel.SelectedPalette())
+    {
+        case PAL_MODERN:
+            CheckMenuRadioItem(menu, IDM_COLORSMODERNPALETTE, IDM_COLORSMONOCHROME,
+                               IDM_COLORSMODERNPALETTE, MF_BYCOMMAND);
+            break;
+        case PAL_OLDTYPE:
+            CheckMenuRadioItem(menu, IDM_COLORSMODERNPALETTE, IDM_COLORSMONOCHROME,
+                               IDM_COLORSOLDPALETTE, MF_BYCOMMAND);
+            break;
+        case PAL_GRAYSCALE:
+            CheckMenuRadioItem(menu, IDM_COLORSMODERNPALETTE, IDM_COLORSMONOCHROME,
+                               IDM_COLORSGRAYSCALE, MF_BYCOMMAND);
+            break;
+        case PAL_MONOCHROME:
+            CheckMenuRadioItem(menu, IDM_COLORSMODERNPALETTE, IDM_COLORSMONOCHROME,
+                               IDM_COLORSMONOCHROME, MF_BYCOMMAND);
+            break;
+    }
 
     BOOL bMono = (paletteModel.GetBpp() == 1);
     EnableMenuItem(menu, IDM_COLORSEDITPALETTE, ENABLED_IF(!bMono));
@@ -1297,8 +1310,6 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                         imageModel.UnlockBitmap(hbmOld);
 
                         imageModel.PushImageForUndo(hbmNew);
-                        paletteModel.SetColorInfo(hbmNew);
-                        imageModel.ClearHistory();
                     }
                 }
                 else if (!attributesDialog.m_bBlackAndWhite && imageModel.IsBlackAndWhite())
@@ -1308,8 +1319,6 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     imageModel.UnlockBitmap(hbmOld);
 
                     imageModel.PushImageForUndo(hbmNew);
-                    paletteModel.SetColorInfo(hbmNew);
-                    imageModel.ClearHistory();
                 }
 
                 if (imageModel.GetWidth() != attributesDialog.newWidth ||

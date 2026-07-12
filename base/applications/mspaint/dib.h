@@ -25,8 +25,8 @@ int GetDIBHeight(HBITMAP hbm);
 BOOL SaveDIBToFile(HBITMAP hBitmap, LPCWSTR FileName, BOOL fIsMainFile,
                    REFGUID guidFileType = GUID_NULL);
 
-HBITMAP LoadBitmapFromFile(LPCWSTR filename, float* xDpi, float* yDpi);
-BOOL SaveBitmapToFile(HBITMAP hBitmap, LPCWSTR filename, float xDpi, float yDpi);
+HRESULT LoadBitmapFromFile(HBITMAP* phBitmap, LPCWSTR filename, float* xDpi, float* yDpi);
+HRESULT SaveBitmapToFile(HBITMAP hBitmap, LPCWSTR filename, float xDpi, float yDpi);
 
 HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile);
 
@@ -37,7 +37,7 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCWSTR name, LPWIN32_FIND_DATAW pFoun
 
 HBITMAP Rotate90DegreeBitmap(HBITMAP hbm, BOOL bRight);
 
-HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical, BOOL bMono = FALSE);
+HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical);
 
 float PpcmFromDpi(float dpi);
 
@@ -49,3 +49,4 @@ HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF);
 HBITMAP getSubImage(HBITMAP hbmWhole, const RECT& rcPartial);
 void putSubImage(HBITMAP hbmWhole, const RECT& rcPartial, HBITMAP hbmPart);
 void FillDIBByColor(HBITMAP hbm, COLORREF rgbColor);
+COLORREF QuadToRGBValue(const RGBQUAD& quad);

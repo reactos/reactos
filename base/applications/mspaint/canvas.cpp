@@ -314,8 +314,6 @@ BOOL CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
              imageModel.GetDC(), rcImageDraw.left, rcImageDraw.top, SRCCOPY);
 
     // Draw overlay #1 on hdcMem1
-    SetTextColor(hdcMem1, RGB(255, 255, 255));
-    SetBkColor(hdcMem1, RGB(0, 0, 0));
     toolsModel.OnDrawOverlayOnImage(hdcMem1);
 
     // Transfer the bits with stretch (hdcMem0 <-- hdcMem1)

@@ -324,7 +324,7 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
         hbmOld = ::SelectObject(hDC, hbmColor);
         AttachHBITMAP(&hbmColor, SkewDIB(hDC, hbmColor, nSkewDegX, FALSE));
         ::SelectObject(hDC, hbmMask);
-        AttachHBITMAP(&hbmMask, SkewDIB(hDC, hbmMask, nSkewDegX, FALSE, TRUE));
+        AttachHBITMAP(&hbmMask, SkewDIB(hDC, hbmMask, nSkewDegX, FALSE));
         ::SelectObject(hDC, hbmOld);
     }
 
@@ -333,7 +333,7 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
         hbmOld = ::SelectObject(hDC, hbmColor);
         AttachHBITMAP(&hbmColor, SkewDIB(hDC, hbmColor, nSkewDegY, TRUE));
         ::SelectObject(hDC, hbmMask);
-        AttachHBITMAP(&hbmMask, SkewDIB(hDC, hbmMask, nSkewDegY, TRUE, TRUE));
+        AttachHBITMAP(&hbmMask, SkewDIB(hDC, hbmMask, nSkewDegY, TRUE));
         ::SelectObject(hDC, hbmOld);
     }
 

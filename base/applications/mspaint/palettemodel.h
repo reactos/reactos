@@ -3,6 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Keep track of palette data, notify listeners
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2021-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
@@ -44,9 +45,10 @@ public:
     void SetFgColor(COLORREF newColor);
     COLORREF GetBgColor() const;
     void SetBgColor(COLORREF newColor);
-    UINT GetBpp() const;
     void SetColorInfo(HBITMAP hbm);
     void SetPrimaryColors(COLORREF color0, COLORREF color1);
+    UINT GetBpp() const { return m_bpp; }
     COLORREF GetPrimaryColor() const { return m_primaryColor; }
     COLORREF GetSecondaryColor() const { return m_secondaryColor; }
+    BOOL IsEditable() const;
 };

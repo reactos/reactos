@@ -18,14 +18,15 @@ CreateGeometricPen(COLORREF rgbColor, INT thickness)
     logbrush.lbStyle = BS_SOLID;
     logbrush.lbColor = rgbColor;
     logbrush.lbHatch = 0;
-    return ExtCreatePen(PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_ROUND | PS_JOIN_ROUND, thickness, &logbrush, 0, nullptr);
+    return ExtCreatePen(PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_ROUND | PS_JOIN_ROUND, thickness,
+                        &logbrush, 0, nullptr);
 }
 
 void
 Line(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, int thickness)
 {
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, thickness, color));
-    MoveToEx(hdc, x1, y1, nullptr);
+    MoveToEx(hdc, x1, y1, NULL);
     LineTo(hdc, x2, y2);
     SetPixelV(hdc, x2, y2, color);
     DeleteObject(SelectObject(hdc, oldPen));
@@ -36,7 +37,7 @@ Line(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, HBRUSH hBrush, INT thickness)
 {
     HGDIOBJ oldPen = SelectObject(hdc, CreateGeometricPen(0, thickness));
     BeginPath(hdc);
-    MoveToEx(hdc, x1, y1, nullptr);
+    MoveToEx(hdc, x1, y1, NULL);
     LineTo(hdc, x2, y2);
     EndPath(hdc);
     SetPolyFillMode(hdc, WINDING);
@@ -569,7 +570,7 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
     HBITMAP hbmTempColor, hbmTempMask;
     HGDIOBJ hbmOld1, hbmOld2;
 
-    if (hbmMask == nullptr)
+    if (!hbmMask)
     {
         if (keyColor == CLR_INVALID)
         {
@@ -592,7 +593,7 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
 
     hTempDC1 = ::CreateCompatibleDC(hdcDest);
     hTempDC2 = ::CreateCompatibleDC(hdcDest);
-    hbmTempMask = ::CreateBitmap(nWidth, nHeight, 1, 1, nullptr);
+    hbmTempMask = ::CreateBitmap(nWidth, nHeight, 1, 1, NULL);
     hbmTempColor = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
 
     // hbmTempMask <-- hbmMask (stretched)
@@ -649,6 +650,7 @@ void DrawXorRect(HDC hdc, const RECT *prc)
 
 HBRUSH CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF monoColor1)
 {
+    // 8x8 Bayer ordered dithering matrix (0 to 63)
     static const BYTE bayer[8][8] =
     {
         {  0, 32,  8, 40,  2, 34, 10, 42 },
