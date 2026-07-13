@@ -82,6 +82,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_io/IoMdl.c
     ntos_io/IoVolume.c
     ntos_kd/KdSystemDebugControl.c
+    ntos_kd/KdvmReceivePacket.c
     ntos_ke/KeApc.c
     ntos_ke/KeDevQueue.c
     ntos_ke/KeDpc.c
@@ -130,6 +131,7 @@ endif()
 
 add_library(kmtest_drv MODULE ${KMTEST_DRV_SOURCE})
 set_module_type(kmtest_drv kernelmodedriver)
+target_include_directories(kmtest_drv PRIVATE ${REACTOS_SOURCE_DIR}/drivers/base/kdvm)
 target_link_libraries(kmtest_drv kmtest_printf chkstk memcmp ntoskrnl_vista ${PSEH_LIB})
 add_importlibs(kmtest_drv ntoskrnl hal)
 add_dependencies(kmtest_drv bugcodes xdk)

@@ -501,6 +501,13 @@ KdReceivePacket(
         return KDP_PACKET_RESEND;
     }
 
+    if (RecvPktResult->HeaderSize > MAXULONG - RecvPktResult->DataSize ||
+        RecvPktResult->HeaderSize + RecvPktResult->DataSize > MAXULONG - (ULONG)sizeof(*RecvPktResult))
+    {
+        KDDBGPRINT("KdReceivePacket: Integer overflow in HeaderSize + DataSize\n");
+        return KDP_PACKET_RESEND;
+    }
+
     ExpectedSize = sizeof(*RecvPktResult) +
                    RecvPktResult->HeaderSize +
                    RecvPktResult->DataSize;
