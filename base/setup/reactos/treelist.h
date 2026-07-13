@@ -505,6 +505,8 @@ extern BOOL	TreeListUnregister(HINSTANCE hInstance);
     _ms_tvi.cChildren   = (iSubItem_); \
     TreeList_SetItem((hwndLV), &_ms_tvi); \
 }
+
+#define TreeList_SetItemState(hwndTV,hti,data,_mask)    TreeView_SetItemState(hwndTV,hti,data,_mask)
 #endif // __REACTOS__
 
 #endif

@@ -36,10 +36,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "&Instalează ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Instalarea unei noi copii a ReactOS. Fișierele, configurațiile și programele existente nu vor fi păstrate. Sunt posibile ajustări asupra discurilor și partițiilor.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "&Instalează ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP
     AUTORADIOBUTTON "&Repară sau actualizează ReactOS", IDC_UPDATE, 7, 80, 277, 10
-    LTEXT "Repararea sau actualizarea ReactOS. Această opțiune menține fișierele, configurațiile și programele existente. Opțiune validă doar dacă ReactOS e deja instalat în calculator.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
+    LTEXT "Instalarea unei noi copii a ReactOS. Fișierele, configurațiile și programele existente nu vor fi păstrate. Sunt posibile ajustări asupra discurilor și partițiilor.", IDC_INSTALLTEXT, 19, 36, 279, 27
+    LTEXT "Repararea sau actualizarea ReactOS. Această opțiune menține fișierele, configurațiile și programele existente. Opțiune validă doar dacă ReactOS e deja instalat în calculator.", IDC_UPDATETEXT, 19, 96, 279, 27
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -58,11 +58,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Computer:", IDC_STATIC, 20, 15, 80, 10
+    LTEXT "&Computer:", IDC_STATIC, 20, 15, 80, 10
     COMBOBOX IDC_COMPUTER, 100, 15, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Ecran:", IDC_STATIC, 20, 35, 80, 10
+    LTEXT "&Ecran:", IDC_STATIC, 20, 35, 80, 10
     COMBOBOX IDC_DISPLAY, 100, 35, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Tastatură:", IDC_STATIC, 20, 55, 80, 10
+    LTEXT "&Tastatură:", IDC_STATIC, 20, 55, 80, 10
     COMBOBOX IDC_KEYBOARD, 100, 55, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Apăsați pe Înainte pentru configurarea dispozitivului de instalare.", IDC_STATIC, 7, 128, 297, 8
 END
@@ -73,7 +73,7 @@ CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "&Initializare", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Initializare", IDC_INITDISK, 7, 122, 50, 14, WS_GROUP // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Creare", IDC_PARTCREATE, 7, 122, 50, 14
     PUSHBUTTON "&Formatare", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "Șt&ergere", IDC_PARTDELETE, 63, 122, 50, 14
@@ -132,23 +132,23 @@ CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tip de instalare:", IDC_STATIC, 18, 5, 74, 11
-    EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Surse de instalare:", IDC_STATIC, 18, 17, 74, 11
-    EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Arhitectură:", IDC_STATIC, 18, 29, 74, 11
-    EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Computer:", IDC_STATIC, 18, 41, 74, 11
-    EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Ecran:", IDC_STATIC, 18, 53, 74, 11
-    EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Tastatură:", IDC_STATIC, 18, 65, 74, 11
-    EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Volum de destinație:", IDC_STATIC, 18, 77, 74, 11
-    EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Director de destinație:", IDC_STATIC, 18, 89, 74, 11
-    EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
     AUTOCHECKBOX "Confirm că toate setările de instalare sunt corecte. Recunosc, de asemenea, că\nReactOS este un software de calitate alfa și se poate deteriora pe computerul meu sau îmi poate deteriora datele.",
-        IDC_CONFIRM_INSTALL, 7, 104, 310, 18, BS_MULTILINE | WS_TABSTOP
+        IDC_CONFIRM_INSTALL, 7, 104, 310, 18, BS_MULTILINE | WS_GROUP | WS_TABSTOP
     LTEXT "Vă rugăm să confirmați că toate setările de instalare sunt corecte,\nfaceți clic pe Instalare pentru a începe procesul de instalare.", IDC_STATIC, 7, 124, 303, 18
 END
 
