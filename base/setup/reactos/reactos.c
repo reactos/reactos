@@ -4,7 +4,7 @@
  * PURPOSE:     Main file
  * COPYRIGHT:   Copyright 2008-2010 Matthias Kupfer <mkupfer@reactos.org>
  *              Copyright 2008-2009 Dmitry Chapyshev <dmitry@reactos.org>
- *              Copyright 2018-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2018-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #include "reactos.h"
@@ -366,7 +366,7 @@ StartDlgProc(
         case WM_INITDIALOG:
         {
             /* Save pointer to the global setup data */
-            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGEW)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             /* Set title font */
@@ -411,8 +411,8 @@ StartDlgProc(
                 default:
                     break;
             }
+            break;
         }
-        break;
 
         default:
             break;
@@ -438,7 +438,7 @@ TypeDlgProc(
         case WM_INITDIALOG:
         {
             /* Save pointer to the global setup data */
-            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGEW)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             /* Set the options in bold */
@@ -455,13 +455,13 @@ TypeDlgProc(
             if (pSetupData->NtOsInstallsList &&
                 GetNumberOfListEntries(pSetupData->NtOsInstallsList) != 0)
             {
-                EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATE), TRUE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATETEXT), TRUE);
+                EnableDlgItem(hwndDlg, IDC_UPDATE, TRUE);
+                EnableDlgItem(hwndDlg, IDC_UPDATETEXT, TRUE);
             }
             else
             {
-                EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATE), FALSE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATETEXT), FALSE);
+                EnableDlgItem(hwndDlg, IDC_UPDATE, FALSE);
+                EnableDlgItem(hwndDlg, IDC_UPDATETEXT, FALSE);
             }
 
             /* Ensure "Install ReactOS" is initially focused */
@@ -545,8 +545,8 @@ TypeDlgProc(
                 default:
                     break;
             }
+            break;
         }
-        break;
 
         default:
             break;
@@ -807,7 +807,7 @@ UpgradeRepairDlgProc(
         case WM_INITDIALOG:
         {
             /* Save pointer to the global setup data */
-            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGEW)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             hList = GetDlgItem(hwndDlg, IDC_NTOSLIST);
@@ -970,8 +970,8 @@ UpgradeRepairDlgProc(
                 default:
                     break;
             }
+            break;
         }
-        break;
 
         default:
             break;
@@ -998,7 +998,7 @@ DeviceDlgProc(
         case WM_INITDIALOG:
         {
             /* Save pointer to the global setup data */
-            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGEW)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             hList = GetDlgItem(hwndDlg, IDC_COMPUTER);
@@ -1073,8 +1073,8 @@ DeviceDlgProc(
                 default:
                     break;
             }
+            break;
         }
-        break;
 
         default:
             break;
@@ -1102,7 +1102,7 @@ SummaryDlgProc(
         case WM_INITDIALOG:
         {
             /* Save pointer to the global setup data */
-            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGEW)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
             break;
         }
@@ -1889,6 +1889,7 @@ PrepareAndDoCopyThread(
 {
     PSETUPDATA pSetupData;
     HWND hwndDlg = (HWND)Param;
+    HWND hWndParent = GetParent(hwndDlg);
     HWND hWndProgress;
     LONG_PTR dwStyle;
     ERROR_NUMBER ErrorNumber;
@@ -1914,8 +1915,8 @@ PrepareAndDoCopyThread(
     /* Disable the Close/Cancel buttons during all partition operations */
     // TODO: Consider, alternatively, to just show an info-box saying
     // that the installation process cannot be canceled at this stage?
-    // PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
-    PropSheet_SetCloseCancel(GetParent(hwndDlg), FALSE);
+    // PropSheet_SetWizButtons(hWndParent, 0);
+    PropSheet_SetCloseCancel(hWndParent, FALSE);
 
 
     /*
@@ -1945,16 +1946,16 @@ PrepareAndDoCopyThread(
     if (!Success)
     {
         /* Display an error if an unexpected failure happened */
-        MessageBoxW(GetParent(hwndDlg), L"Failed to find or set the system partition!", L"Error", MB_ICONERROR);
+        MessageBoxW(hWndParent, L"Failed to find or set the system partition!", NULL, MB_ICONERROR);
 
         /* Re-enable the Close/Cancel buttons */
-        PropSheet_SetCloseCancel(GetParent(hwndDlg), TRUE);
+        PropSheet_SetCloseCancel(hWndParent, TRUE);
 
         /*
          * We failed due to an unexpected error, keep on the copy page to view the current state,
          * but enable the "Next" button to allow the user to continue to the Abort page.
          */
-        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+        PropSheet_SetWizButtons(hWndParent, PSWIZB_NEXT);
         return 1;
     }
 
@@ -1974,22 +1975,22 @@ PrepareAndDoCopyThread(
     if (!Success)
     {
         /* Display an error if an unexpected failure happened */
-        MessageBoxW(GetParent(hwndDlg), L"Failed to prepare the partitions!", L"Error", MB_ICONERROR);
+        MessageBoxW(hWndParent, L"Failed to prepare the partitions!", NULL, MB_ICONERROR);
 
         /* Re-enable the Close/Cancel buttons */
-        PropSheet_SetCloseCancel(GetParent(hwndDlg), TRUE);
+        PropSheet_SetCloseCancel(hWndParent, TRUE);
 
         /*
          * We failed due to an unexpected error, keep on the copy page to view the current state,
          * but enable the "Next" button to allow the user to continue to the Abort page.
          */
-        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+        PropSheet_SetWizButtons(hWndParent, PSWIZB_NEXT);
         return 1;
     }
 
 
     /* Re-enable the Close/Cancel buttons */
-    PropSheet_SetCloseCancel(GetParent(hwndDlg), TRUE);
+    PropSheet_SetCloseCancel(hWndParent, TRUE);
 
 
 
@@ -2000,13 +2001,13 @@ PrepareAndDoCopyThread(
                                   InstallVolume);
     if (!NT_SUCCESS(Status))
     {
-        DisplayMessage(GetParent(hwndDlg), MB_ICONERROR, L"Error", L"InitDestinationPaths() failed with status 0x%08lx\n", Status);
+        DisplayMessage(hWndParent, MB_ICONERROR, NULL, L"InitDestinationPaths() failed with status 0x%08lx\n", Status);
 
         /*
          * We failed due to an unexpected error, keep on the copy page to view the current state,
          * but enable the "Next" button to allow the user to continue to the Abort page.
          */
-        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+        PropSheet_SetWizButtons(hWndParent, PSWIZB_NEXT);
         return 1;
     }
 
@@ -2038,7 +2039,7 @@ PrepareAndDoCopyThread(
     {
         /* Display an error only if an unexpected failure happened, and not because the user cancelled the installation */
         if (!pSetupData->bStopInstall)
-            MessageBoxW(GetParent(hwndDlg), L"Failed to prepare the list of files!", L"Error", MB_ICONERROR);
+            MessageBoxW(hWndParent, L"Failed to prepare the list of files!", NULL, MB_ICONERROR);
 
         /*
          * If we failed due to an unexpected error, keep on the copy page to view the current state,
@@ -2046,7 +2047,7 @@ PrepareAndDoCopyThread(
          * Otherwise we have been cancelled by the user, who has already switched to the Abort page.
          */
         if (!pSetupData->bStopInstall)
-            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+            PropSheet_SetWizButtons(hWndParent, PSWIZB_NEXT);
         return 1;
     }
 
@@ -2071,7 +2072,7 @@ PrepareAndDoCopyThread(
     {
         /* Display an error only if an unexpected failure happened, and not because the user cancelled the installation */
         if (!pSetupData->bStopInstall)
-            MessageBoxW(GetParent(hwndDlg), L"Failed to copy the files!", L"Error", MB_ICONERROR);
+            MessageBoxW(hWndParent, L"Failed to copy the files!", NULL, MB_ICONERROR);
 
         /*
          * If we failed due to an unexpected error, keep on the copy page to view the current state,
@@ -2079,7 +2080,7 @@ PrepareAndDoCopyThread(
          * Otherwise we have been cancelled by the user, who has already switched to the Abort page.
          */
         if (!pSetupData->bStopInstall)
-            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+            PropSheet_SetWizButtons(hWndParent, PSWIZB_NEXT);
         return 1;
     }
 
@@ -2152,7 +2153,7 @@ PrepareAndDoCopyThread(
 
             INT nRet;
         RetryCancel:
-            nRet = DisplayMessage(GetParent(hwndDlg),
+            nRet = DisplayMessage(hWndParent,
                                   MB_ICONINFORMATION | MB_OKCANCEL,
                                   L"Bootloader installation",
                                   L"Please insert a blank floppy disk in drive %c: .\n"
@@ -2174,7 +2175,7 @@ PrepareAndDoCopyThread(
             if (Status == STATUS_DEVICE_NOT_READY)
             {
                 // ERROR_NO_FLOPPY
-                nRet = DisplayMessage(GetParent(hwndDlg),
+                nRet = DisplayMessage(hWndParent,
                                       MB_ICONWARNING | MB_RETRYCANCEL,
                                       NULL, // Default to "Error"
                                       L"No disk detected in drive %c: .",
@@ -2186,7 +2187,7 @@ PrepareAndDoCopyThread(
                      (Status == ERROR_INSTALL_BOOTCODE))
             {
                 /* Error when writing the boot code */
-                DisplayError(GetParent(hwndDlg),
+                DisplayError(hWndParent,
                              0, // Default to "Error"
                              IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE);
             }
@@ -2194,7 +2195,7 @@ PrepareAndDoCopyThread(
             {
                 /* Any other NTSTATUS failure code */
                 DPRINT1("InstallBootcodeToRemovable() failed: Status 0x%lx\n", Status);
-                DisplayError(GetParent(hwndDlg),
+                DisplayError(hWndParent,
                              0, // Default to "Error"
                              IDS_ERROR_BOOTLDR_FAILED,
                              Status);
@@ -2221,7 +2222,7 @@ PrepareAndDoCopyThread(
             if (Status == ERROR_WRITE_BOOT)
             {
                 /* Error when writing the VBR */
-                DisplayError(GetParent(hwndDlg),
+                DisplayError(hWndParent,
                              0, // Default to "Error"
                              IDS_ERROR_WRITE_BOOT,
                              SystemVolume->Info.FileSystem);
@@ -2229,14 +2230,14 @@ PrepareAndDoCopyThread(
             else if (Status == ERROR_INSTALL_BOOTCODE)
             {
                 /* Error when writing the MBR */
-                DisplayError(GetParent(hwndDlg),
+                DisplayError(hWndParent,
                              0, // Default to "Error"
                              IDS_ERROR_INSTALL_BOOTCODE,
                              L"MBR");
             }
             else if (Status == STATUS_NOT_SUPPORTED)
             {
-                DisplayError(GetParent(hwndDlg),
+                DisplayError(hWndParent,
                              0, // Default to "Error"
                              IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED);
             }
@@ -2244,7 +2245,7 @@ PrepareAndDoCopyThread(
             {
                 /* Any other NTSTATUS failure code */
                 DPRINT1("InstallBootManagerAndBootEntries() failed: Status 0x%lx\n", Status);
-                DisplayError(GetParent(hwndDlg),
+                DisplayError(hWndParent,
                              0, // Default to "Error"
                              IDS_ERROR_BOOTLDR_FAILED,
                              Status);
@@ -2260,7 +2261,7 @@ PrepareAndDoCopyThread(
 
 
     /* We are done! Switch to the Finish page */
-    PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_FINISHPAGE);
+    PropSheet_SetCurSelByID(hWndParent, IDD_FINISHPAGE);
     return 0;
 }
 
@@ -2282,7 +2283,7 @@ ProcessDlgProc(
         case WM_INITDIALOG:
         {
             /* Save pointer to the global setup data */
-            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGEW)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             /* Reset the status text and set the main label in bold */
@@ -2300,6 +2301,8 @@ ProcessDlgProc(
             {
                 case PSN_SETACTIVE:
                 {
+                    HWND hWndParent = GetParent(hwndDlg);
+
                     /* Create the file-copy halt (manual-reset) event */
                     pSetupData->hHaltInstallEvent = CreateEventW(NULL, TRUE, TRUE, NULL);
                     if (!pSetupData->hHaltInstallEvent)
@@ -2317,16 +2320,15 @@ ProcessDlgProc(
                     {
                         CloseHandle(pSetupData->hHaltInstallEvent);
                         pSetupData->hHaltInstallEvent = NULL;
-
-                        MessageBoxW(GetParent(hwndDlg), L"Cannot create the prepare-and-copy files thread!", L"Error", MB_ICONERROR);
+                        MessageBoxW(hWndParent, L"Cannot create the prepare-and-copy files thread!", NULL, MB_ICONERROR);
                         break;
                     }
 
                     /* Disable all buttons during installation, they will be
                      * re-enabled by the installation thread; hide "Back" */
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
-                    // PropSheet_ShowWizButtons(GetParent(hwndDlg), 0, PSWIZB_BACK);
-                    ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_HIDE);
+                    PropSheet_SetWizButtons(hWndParent, 0);
+                    // PropSheet_ShowWizButtons(hWndParent, 0, PSWIZB_BACK);
+                    ShowDlgItem(hWndParent, ID_WIZBACK, SW_HIDE);
 
                     /* Resume the installation thread */
                     ResumeThread(pSetupData->hInstallThread);
@@ -2481,6 +2483,7 @@ FinishDlgProc(
     {
         case WM_INITDIALOG:
         {
+            HWND hWndParent = GetParent(hwndDlg);
             LPPROPSHEETPAGEW ppsp = (LPPROPSHEETPAGEW)lParam;
 
             /* Save pointer to the global setup data */
@@ -2528,19 +2531,16 @@ FinishDlgProc(
             /* If the installation is aborted, change the "Cancel" button text to "Close" */
             if (pSetupData->bStopInstall)
             {
-                SetWindowResTextW(GetDlgItem(GetParent(hwndDlg), IDCANCEL),
+                SetWindowResTextW(GetDlgItem(hWndParent, IDCANCEL),
                                   GetModuleHandleW(L"comctl32.dll"),
                                   IDS_CLOSE);
             }
 
             /* Ensure that the installer wizard window is made visible and focused */
-            ShowWindow(GetParent(hwndDlg), SW_SHOW);
-            SwitchToThisWindow(GetParent(hwndDlg), TRUE);
+            ShowWindow(hWndParent, SW_SHOW);
+            SwitchToThisWindow(hWndParent, TRUE);
             return TRUE;
         }
-
-        case WM_DESTROY:
-            return TRUE;
 
         case WM_ACTIVATE:
         {
@@ -3261,9 +3261,9 @@ _tWinMain(HINSTANCE hInst,
     ULONG Error;
     HANDLE hHotkeyThread;
     INITCOMMONCONTROLSEX iccx;
-    PROPSHEETHEADER psh;
+    PROPSHEETHEADERW psh;
     HPROPSHEETPAGE ahpsp[9];
-    PROPSHEETPAGE psp = {0};
+    PROPSHEETPAGEW psp = {0};
     UINT nPages = 0;
 
     ProcessHeap = GetProcessHeap();
@@ -3285,11 +3285,11 @@ _tWinMain(HINSTANCE hInst,
         // TODO: Write an error mapper (much like the MUIDisplayError of USETUP)
         //
         if (Error == ERROR_NO_SOURCE_DRIVE)
-            MessageBoxW(NULL, L"GetSourcePaths failed!", L"Error", MB_ICONERROR);
+            MessageBoxW(NULL, L"GetSourcePaths failed!", NULL, MB_ICONERROR);
         else if (Error == ERROR_LOAD_TXTSETUPSIF)
             DisplayError(NULL, IDS_CAPTION, IDS_NO_TXTSETUP_SIF);
         else // FIXME!!
-            MessageBoxW(NULL, L"Unknown error!", L"Error", MB_ICONERROR);
+            MessageBoxW(NULL, L"Unknown error!", NULL, MB_ICONERROR);
 
         goto Quit;
     }
@@ -3426,7 +3426,7 @@ _tWinMain(HINSTANCE hInst,
     psh.pszbmHeader = MAKEINTRESOURCEW(IDB_HEADER);
 
     /* Display the wizard */
-    PropertySheet(&psh);
+    PropertySheetW(&psh);
 
     /* Wait for any pending installation */
     WaitForSingleObject(SetupData.hInstallThread, INFINITE);

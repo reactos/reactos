@@ -1,10 +1,10 @@
 /*
  * PROJECT:     ReactOS GUI first stage setup application
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Resource header
+ * PURPOSE:     Disk partitions/Volumes page
  * COPYRIGHT:   Copyright 2008-2010 Matthias Kupfer <mkupfer@reactos.org>
  *              Copyright 2008-2009 Dmitry Chapyshev <dmitry@reactos.org>
- *              Copyright 2018-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2018-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #include "reactos.h"
@@ -1107,13 +1107,12 @@ PrintPartitionData(
     if (PartEntry == DiskEntry->ExtendedPartition)
     {
         PLIST_ENTRY LogicalEntry;
-        PPARTENTRY LogicalPartEntry;
 
         for (LogicalEntry = DiskEntry->LogicalPartListHead.Flink;
              LogicalEntry != &DiskEntry->LogicalPartListHead;
              LogicalEntry = LogicalEntry->Flink)
         {
-            LogicalPartEntry = CONTAINING_RECORD(LogicalEntry, PARTENTRY, ListEntry);
+            PPARTENTRY LogicalPartEntry = CONTAINING_RECORD(LogicalEntry, PARTENTRY, ListEntry);
             PrintPartitionData(hWndList, htiPart, NULL, LogicalPartEntry);
         }
 
@@ -1161,7 +1160,6 @@ PrintDiskData(
     HANDLE hDevice;
     PCHAR DiskName = NULL;
     ULONG Length = 0;
-    PPARTENTRY PrimaryPartEntry;
     PLIST_ENTRY PrimaryEntry;
     ULONGLONG DiskSize;
     HTLITEM htiDisk;
@@ -1291,10 +1289,9 @@ PrintDiskData(
          PrimaryEntry != &DiskEntry->PrimaryPartListHead;
          PrimaryEntry = PrimaryEntry->Flink)
     {
-        PrimaryPartEntry = CONTAINING_RECORD(PrimaryEntry, PARTENTRY, ListEntry);
-
         /* If this is an extended partition, recursively print the logical partitions */
-        PrintPartitionData(hWndList, htiDisk, NULL, PrimaryPartEntry);
+        PPARTENTRY PartEntry = CONTAINING_RECORD(PrimaryEntry, PARTENTRY, ListEntry);
+        PrintPartitionData(hWndList, htiDisk, NULL, PartEntry);
     }
 
     /* Expand the disk node */
@@ -1344,7 +1341,6 @@ DrawPartitionList(
     _In_ PPARTLIST List)
 {
     PLIST_ENTRY Entry;
-    PDISKENTRY DiskEntry;
 
     /* Clear the list first */
     TreeList_DeleteAllItems(hWndList);
@@ -1354,9 +1350,8 @@ DrawPartitionList(
          Entry != &List->DiskListHead;
          Entry = Entry->Flink)
     {
-        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
-
         /* Print disk entry */
+        PDISKENTRY DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
         PrintDiskData(hWndList, NULL, DiskEntry);
     }
 
@@ -1590,6 +1585,120 @@ DoDeletePartition(
 }
 
 
+static BOOLEAN
+SelectInstallPartition(
+    _In_ PSETUPDATA pSetupData,
+    _In_ HWND hwndDlg)
+{
+    HWND hList;
+    HTLITEM hItem;
+    PPARTITEM PartItem;
+    PPARTENTRY PartEntry;
+
+    hList = GetDlgItem(hwndDlg, IDC_PARTITION);
+    PartItem = GetSelectedPartition(hList, &hItem);
+    if (!PartItem)
+        return FALSE; // Fail
+    PartEntry = PartItem->PartEntry;
+    ASSERT(PartEntry);
+
+    /*
+     * Check whether the user wants to install ReactOS on a disk that
+     * is not recognized by the computer's firmware and if so, display
+     * a warning since such disks may not be bootable.
+     */
+    if (PartEntry->DiskEntry->MediaType == FixedMedia &&
+        !PartEntry->DiskEntry->BiosFound)
+    {
+        INT nRet;
+
+        nRet = DisplayMessage(hwndDlg,
+                              MB_ICONWARNING | MB_OKCANCEL,
+                              L"Warning",
+                              L"The disk you have selected for installing ReactOS\n"
+                              L"is not visible by the firmware of your computer,\n"
+                              L"and so may not be bootable.\n"
+                              L"\nClick on OK to continue anyway."
+                              L"\nClick on CANCEL to go back to the partitions list.");
+        if (nRet != IDOK)
+            return FALSE; // Fail
+    }
+
+    /* If this is an empty region, auto-create the partition if conditions are OK */
+    if (!PartEntry->IsPartitioned)
+    {
+        ULONG Error;
+
+        Error = PartitionCreateChecks(PartEntry, 0ULL, 0);
+        if (Error != NOT_AN_ERROR)
+        {
+            // MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+            DisplayMessage(hwndDlg, MB_ICONERROR | MB_OK, NULL,
+                           L"Could not create a partition on the selected disk region.");
+            return FALSE; // Fail
+        }
+
+        /* Automatically create the partition on the whole empty space;
+         * it will be formatted later with default parameters */
+        if (!DoCreatePartition(hList, pSetupData->PartitionList,
+                               &hItem, &PartItem,
+                               0ULL, 0))
+        {
+            DisplayError(GetParent(hwndDlg),
+                         IDS_ERROR_CREATE_PARTITION_TITLE,
+                         IDS_ERROR_CREATE_PARTITION);
+            return FALSE; // Fail
+        }
+        /* Update PartEntry */
+        PartEntry = PartItem->PartEntry;
+    }
+
+    ASSERT(PartEntry->IsPartitioned);
+    // ASSERT(PartEntry != PartEntry->DiskEntry->ExtendedPartition);
+    ASSERT(!IsContainerPartition(PartEntry->PartitionType));
+    ASSERT(PartEntry->Volume);
+
+#if 0 // TODO: Implement!
+    if (!IsPartitionLargeEnough(PartEntry))
+    {
+        MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
+                        USetupData.RequiredPartitionDiskSpace);
+        return FALSE; // Fail
+    }
+#endif
+
+    /* Force formatting only if the partition doesn't have a volume (may or may not be formatted) */
+    if (PartEntry->Volume &&
+        ((PartEntry->Volume->FormatState == Formatted) ||
+         (PartItem->VolCreate && *PartItem->VolCreate->FileSystemName)))
+    {
+        /*NOTHING*/;
+    }
+    else /* Request formatting of the selected region if it's not already formatted */
+    {
+        INT_PTR ret;
+        PARTCREATE_CTX PartCreateCtx = {0};
+
+        /* Show the formatting dialog */
+        PartCreateCtx.PartItem = PartItem;
+        ret = DialogBoxParamW(pSetupData->hInstance,
+                              MAKEINTRESOURCEW(IDD_FORMAT),
+                              hwndDlg,
+                              FormatDlgProc,
+                              (LPARAM)&PartCreateCtx);
+
+        /* If the user refuses to format the partition, fail */
+        if (ret != IDOK)
+            return FALSE;
+
+        /* The partition will be formatted */
+    }
+
+    /* The install partition has been found */
+    InstallPartition = PartEntry;
+    return TRUE;
+}
+
 INT_PTR
 CALLBACK
 DriveDlgProc(
@@ -1609,7 +1718,7 @@ DriveDlgProc(
         case WM_INITDIALOG:
         {
             /* Save pointer to the global setup data */
-            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGEW)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pSetupData);
 
             /* Initially hide and disable all partitioning buttons */
@@ -1738,14 +1847,13 @@ DriveDlgProc(
 
                 case IDC_PARTFORMAT:
                 {
-                    HTLITEM hItem;
                     PPARTITEM PartItem;
                     PPARTENTRY PartEntry;
                     INT_PTR ret;
                     PARTCREATE_CTX PartCreateCtx = {0};
 
                     hList = GetDlgItem(hwndDlg, IDC_PARTITION);
-                    PartItem = GetSelectedPartition(hList, &hItem);
+                    PartItem = GetSelectedPartition(hList, NULL);
                     if (!PartItem)
                     {
                         /* If the button was clicked, an empty disk
@@ -1774,9 +1882,9 @@ DriveDlgProc(
 
                 case IDC_PARTDELETE:
                 {
+                    HTLITEM hItem;
                     PPARTITEM PartItem;
                     PPARTENTRY PartEntry;
-                    HTLITEM hItem;
                     UINT uIDWarnMsg;
 
                     hList = GetDlgItem(hwndDlg, IDC_PARTITION);
@@ -2014,135 +2122,14 @@ DisableWizNext:
                     return TRUE;
                 }
 
-                case PSN_WIZNEXT: /* Set the selected data */
+                case PSN_WIZNEXT:
                 {
-                    HTLITEM hItem;
-                    PPARTITEM PartItem;
-                    PPARTENTRY PartEntry;
-
-                    hList = GetDlgItem(hwndDlg, IDC_PARTITION);
-                    PartItem = GetSelectedPartition(hList, &hItem);
-                    if (!PartItem)
-                    {
-                        /* Fail and don't continue the installation */
-                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1);
-                        return TRUE;
-                    }
-                    PartEntry = PartItem->PartEntry;
-                    ASSERT(PartEntry);
-
-                    /*
-                     * Check whether the user wants to install ReactOS on a disk that
-                     * is not recognized by the computer's firmware and if so, display
-                     * a warning since such disks may not be bootable.
-                     */
-                    if (PartEntry->DiskEntry->MediaType == FixedMedia &&
-                        !PartEntry->DiskEntry->BiosFound)
-                    {
-                        INT nRet;
-
-                        nRet = DisplayMessage(hwndDlg,
-                                              MB_ICONWARNING | MB_OKCANCEL,
-                                              L"Warning",
-                                              L"The disk you have selected for installing ReactOS\n"
-                                              L"is not visible by the firmware of your computer,\n"
-                                              L"and so may not be bootable.\n"
-                                              L"\nClick on OK to continue anyway."
-                                              L"\nClick on CANCEL to go back to the partitions list.");
-                        if (nRet != IDOK)
-                        {
-                            /* Fail and don't continue the installation */
-                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1);
-                            return TRUE;
-                        }
-                    }
-
-                    /* If this is an empty region, auto-create the partition if conditions are OK */
-                    if (!PartEntry->IsPartitioned)
-                    {
-                        ULONG Error;
-
-                        Error = PartitionCreateChecks(PartEntry, 0ULL, 0);
-                        if (Error != NOT_AN_ERROR)
-                        {
-                            // MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
-                            DisplayMessage(hwndDlg, MB_ICONERROR | MB_OK, NULL,
-                                           L"Could not create a partition on the selected disk region.");
-
-                            /* Fail and don't continue the installation */
-                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1);
-                            return TRUE;
-                        }
-
-                        /* Automatically create the partition on the whole empty space;
-                         * it will be formatted later with default parameters */
-                        if (!DoCreatePartition(hList, pSetupData->PartitionList,
-                                               &hItem, &PartItem,
-                                               0ULL,
-                                               0))
-                        {
-                            DisplayError(GetParent(hwndDlg),
-                                         IDS_ERROR_CREATE_PARTITION_TITLE,
-                                         IDS_ERROR_CREATE_PARTITION);
-
-                            /* Fail and don't continue the installation */
-                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1);
-                            return TRUE;
-                        }
-                        /* Update PartEntry */
-                        PartEntry = PartItem->PartEntry;
-                    }
-
-                    ASSERT(PartEntry->IsPartitioned);
-                    // ASSERT(PartEntry != PartEntry->DiskEntry->ExtendedPartition);
-                    ASSERT(!IsContainerPartition(PartEntry->PartitionType));
-                    ASSERT(PartEntry->Volume);
-
-#if 0 // TODO: Implement!
-                    if (!IsPartitionLargeEnough(PartEntry))
-                    {
-                        MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
-                                        USetupData.RequiredPartitionDiskSpace);
-
-                        /* Fail and don't continue the installation */
-                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1);
-                        return TRUE;
-                    }
-#endif
-
-                    /* Force formatting only if the partition doesn't have a volume (may or may not be formatted) */
-                    if (PartEntry->Volume &&
-                        ((PartEntry->Volume->FormatState == Formatted) ||
-                         (PartItem->VolCreate && *PartItem->VolCreate->FileSystemName)))
-                    {
-                        /*NOTHING*/;
-                    }
-                    else /* Request formatting of the selected region if it's not already formatted */
-                    {
-                        INT_PTR ret;
-                        PARTCREATE_CTX PartCreateCtx = {0};
-
-                        /* Show the formatting dialog */
-                        PartCreateCtx.PartItem = PartItem;
-                        ret = DialogBoxParamW(pSetupData->hInstance,
-                                              MAKEINTRESOURCEW(IDD_FORMAT),
-                                              hwndDlg,
-                                              FormatDlgProc,
-                                              (LPARAM)&PartCreateCtx);
-
-                        /* If the user refuses to format the partition,
-                         * fail and don't continue the installation */
-                        if (ret != IDOK)
-                        {
-                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1);
-                            return TRUE;
-                        }
-
-                        /* The partition will be formatted */
-                    }
-
-                    InstallPartition = PartEntry;
-                    break;
+                    /* Select the install partition and if success, go to the next page */
+                    if (SelectInstallPartition(pSetupData, hwndDlg))
+                        break;
+                    /* Failed, stay on the page */
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1);
+                    return TRUE;
                 }
 
                 default:
