@@ -511,7 +511,7 @@ struct BITMAPINFODX : BITMAPINFO
     RGBQUAD bmiColorsAdditional[256 - 1];
 };
 
-const float INCHES_PER_METER = 0.0254f;
+#define INCHES_PER_METER 0.0254f
 
 HRESULT LoadBitmapFromFile(HBITMAP* phBitmap, LPCWSTR filename, float* xDpi, float* yDpi)
 {
