@@ -529,13 +529,14 @@ HRESULT LoadBitmapFromFile(HBITMAP* phBitmap, LPCWSTR filename, float* xDpi, flo
     BITMAPFILEHEADER bfh;
     DWORD bytesRead;
     if (!ReadFile(hFile, &bfh, sizeof(bfh), &bytesRead, nullptr) ||
-        bytesRead != sizeof(bfh) || bfh.bfType != 0x4D42)
+        bytesRead != sizeof(bfh) || bfh.bfType != 0x4D42 ||
+        bfh.bfOffBits < sizeof(bfh) || bfh.bfSize < bfh.bfOffBits)
     {
         CloseHandle(hFile);
         return E_FAIL;
     }
 
-    DWORD headerSize = 0;
+    DWORD headerSize;
     if (!ReadFile(hFile, &headerSize, sizeof(headerSize), &bytesRead, nullptr) ||
         bytesRead != sizeof(headerSize))
     {
@@ -560,8 +561,7 @@ HRESULT LoadBitmapFromFile(HBITMAP* phBitmap, LPCWSTR filename, float* xDpi, flo
         return E_FAIL;
     }
 
-    float localXDpi = 96.0f;
-    float localYDpi = 96.0f;
+    float localXDpi = 96.0f, localYDpi = 96.0f;
     if (headerSize >= sizeof(BITMAPINFOHEADER))
     {
         PBITMAPINFOHEADER pBih = &(pBi->bmiHeader);
@@ -798,7 +798,7 @@ HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF)
 BOOL IsBitmapBlackAndWhite(HBITMAP hbm)
 {
     BITMAP bm;
-    if (!::GetObjectW(hbm, sizeof(bm), &bm) && (bm.bmBitsPixel != 1))
+    if (!::GetObjectW(hbm, sizeof(bm), &bm) || (bm.bmBitsPixel != 1))
         return FALSE;
 
     RGBQUAD colors[2];
