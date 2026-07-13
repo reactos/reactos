@@ -1192,6 +1192,7 @@ void ToolsModel::OnDrawOverlayOnImage(HDC hdc)
     SetTextColor(hdc, paletteModel.GetPrimaryColor());
     SetBkColor(hdc, paletteModel.GetSecondaryColor());
     m_pToolObject->OnDrawOverlayOnImage(hdc);
+    GdiFlush();
 }
 
 void ToolsModel::OnDrawOverlayOnCanvas(HDC hdc)

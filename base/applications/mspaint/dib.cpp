@@ -397,7 +397,7 @@ HBITMAP Rotate90DegreeBitmap(HBITMAP hbm, BOOL bRight)
     return hbm2;
 }
 
-HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
+HBITMAP SkewDIB(HBITMAP hbm, INT nDegree, BOOL bVertical)
 {
     CWaitCursor waitCursor;
 
@@ -422,7 +422,9 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
     if (!hbmNew)
         return NULL;
 
+    HDC hDC1 = CreateCompatibleDC(NULL);
     HDC hDC2 = CreateCompatibleDC(NULL);
+    HGDIOBJ hbm1Old = SelectObject(hDC1, hbm);
     HGDIOBJ hbm2Old = SelectObject(hDC2, hbmNew);
     if (bVertical)
     {
@@ -448,7 +450,9 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
     }
 
     SelectObject(hDC2, hbm2Old);
+    SelectObject(hDC1, hbm1Old);
     DeleteDC(hDC2);
+    DeleteDC(hDC1);
     return hbmNew;
 }
 

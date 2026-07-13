@@ -37,7 +37,7 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCWSTR name, LPWIN32_FIND_DATAW pFoun
 
 HBITMAP Rotate90DegreeBitmap(HBITMAP hbm, BOOL bRight);
 
-HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical);
+HBITMAP SkewDIB(HBITMAP hbm, INT nDegree, BOOL bVertical);
 
 float PpcmFromDpi(float dpi);
 

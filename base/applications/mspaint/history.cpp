@@ -239,17 +239,21 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
     INT newHeight = oldHeight * nStretchPercentY / 100;
     if (oldWidth != newWidth || oldHeight != newHeight)
     {
-        HBITMAP hbm0 = CloneDIB(newWidth, newHeight, paletteModel.GetBgColor());
+        HBITMAP hbm0 = CloneDIB(newWidth, newHeight);
         PushImageForUndo(hbm0);
     }
     if (nSkewDegX)
     {
-        HBITMAP hbm1 = SkewDIB(m_hDrawingDC, m_hbmMaster, nSkewDegX, FALSE);
+        HBITMAP hbmOld = LockBitmap();
+        HBITMAP hbm1 = SkewDIB(hbmOld, nSkewDegX, FALSE);
+        UnlockBitmap(hbmOld);
         PushImageForUndo(hbm1);
     }
     if (nSkewDegY)
     {
-        HBITMAP hbm2 = SkewDIB(m_hDrawingDC, m_hbmMaster, nSkewDegY, TRUE);
+        HBITMAP hbmOld = LockBitmap();
+        HBITMAP hbm2 = SkewDIB(hbmOld, nSkewDegY, TRUE);
+        UnlockBitmap(hbmOld);
         PushImageForUndo(hbm2);
     }
     NotifyImageChanged();
@@ -326,9 +330,9 @@ void ImageModel::Clamp(POINT& pt) const
 
 HBITMAP ImageModel::CloneDIB(INT width, INT height, COLORREF rgbColor)
 {
-    HBITMAP hbmOld = imageModel.LockBitmap();
+    HBITMAP hbmOld = LockBitmap();
     HBITMAP hbmNew = CopyDIBImage(hbmOld, width, height, STRETCH_DELETESCANS, rgbColor);
-    imageModel.UnlockBitmap(hbmOld);
+    UnlockBitmap(hbmOld);
     return hbmNew;
 }
 
