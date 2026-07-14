@@ -301,6 +301,9 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
     if (!::GetSaveFileNameW(&sfn))
         return FALSE;
 
+    // extension is lowercase
+    ::CharLowerW(PathFindExtensionW(sfn.lpstrFile));
+
     if (pnBpp)
     {
         if (sfn.nFilterIndex - 1 >= cNonBmpFilters)
