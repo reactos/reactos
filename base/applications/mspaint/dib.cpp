@@ -926,11 +926,6 @@ static void BuildPalette(INT nBpp, RGBQUAD* palette)
     }
 }
 
-HBITMAP ConvertToBlackAndWhite(HBITMAP hbm)
-{
-    return CreateNBppBitmap(hbm, 1);
-}
-
 /**
  * @brief Creates a new DIB with a reduced color depth from an existing bitmap.
  *

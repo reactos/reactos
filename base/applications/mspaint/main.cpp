@@ -298,6 +298,8 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
 
     sfn.lpstrFile = pszFile;
     sfn.nMaxFile  = cchMaxFile;
+
+
     if (!::GetSaveFileNameW(&sfn))
         return FALSE;
 

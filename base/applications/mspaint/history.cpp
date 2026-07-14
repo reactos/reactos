@@ -347,7 +347,7 @@ BOOL ImageModel::IsBlackAndWhite()
 void ImageModel::PushBlackAndWhite()
 {
     HBITMAP hBitmap = LockBitmap();
-    HBITMAP hNewBitmap = ConvertToBlackAndWhite(hBitmap);
+    HBITMAP hNewBitmap = CreateNBppBitmap(hBitmap, 1);
     UnlockBitmap(hBitmap);
 
     PushImageForUndo(hNewBitmap);

@@ -12,7 +12,6 @@ HBITMAP CreateDIBWithProperties(int width, int height);
 HBITMAP CreateMonoBitmap(int width, int height, BOOL bWhite);
 HBITMAP CreateColorDIB(int width, int height, COLORREF rgb);
 HBITMAP CachedBufferDIB(HBITMAP hbm, int minimalWidth, int minimalHeight);
-HBITMAP ConvertToBlackAndWhite(HBITMAP hbm);
 HBITMAP CreateNBppBitmap(HBITMAP hBitmap, INT nBpp);
 
 HBITMAP CopyMonoImage(HBITMAP hbm, INT cx = 0, INT cy = 0, INT stretchMode = STRETCH_HALFTONE);
