@@ -66,9 +66,7 @@ CreateColorDIB(int width, int height, COLORREF rgb)
     if (!ret)
         return NULL;
 
-    if (rgb)
-        FillDIBByColor(ret, rgb);
-
+    FillDIBByColor(ret, rgb);
     return ret;
 }
 
@@ -112,7 +110,10 @@ HBITMAP CopyDIBImage(HBITMAP hbm, INT cx, INT cy, INT stretchMode, COLORREF rgbC
 
     BITMAP bm;
     if (!::GetObjectW(hbm, sizeof(bm), &bm))
+    {
+        ::DeleteObject(hbmNew);
         return NULL;
+    }
 
     if (cx == 0 || cy == 0)
     {
