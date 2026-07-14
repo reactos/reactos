@@ -323,9 +323,9 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
         {
             switch ((sfn.nFilterIndex - 1) - cNonBmpFilters)
             {
-                case 0: *pnBpp = 1;  break; // Mono
-                case 1: *pnBpp = 4;  break; // 4-bpp Color
-                case 2: *pnBpp = 8;  break; // 8-bpp Color
+                case 0: *pnBpp =  1; break; // Mono
+                case 1: *pnBpp =  4; break; // 4-bpp Color
+                case 2: *pnBpp =  8; break; // 8-bpp Color
                 case 3: *pnBpp = 24; break; // 24-bpp Color
             }
         }
