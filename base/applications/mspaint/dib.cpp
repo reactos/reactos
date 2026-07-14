@@ -304,7 +304,8 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile)
     LPCWSTR pchDotExt = PathFindExtensionW(name);
     BOOL bBMP = !lstrcmpiW(pchDotExt, L".bmp") || !lstrcmpiW(pchDotExt, L".dib");
 
-    // load the image
+    // Load the image
+    // NOTE: CImageDx::LoadDx won't keep BMP color info.
     HBITMAP hBitmap;
     float xDpi = 0, yDpi = 0;
     HRESULT hr;
