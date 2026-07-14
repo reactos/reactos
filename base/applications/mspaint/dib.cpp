@@ -55,12 +55,30 @@ CreateDIBWithProperties(int width, int height)
 HBITMAP
 CreateMonoBitmap(int width, int height, BOOL bWhite)
 {
-    HBITMAP hbm = CreateBitmap(width, height, 1, 1, NULL);
-    if (hbm == NULL)
+    struct MONO_DIB
+    {
+        BITMAPINFOHEADER bih;
+        RGBQUAD          colors[2];
+    } dib = {};
+
+    dib.bih.biSize         = sizeof(dib.bih);
+    dib.bih.biWidth        = width;
+    dib.bih.biHeight       = height;
+    dib.bih.biPlanes       = 1;
+    dib.bih.biBitCount     = 1;
+    dib.bih.biCompression  = BI_RGB;
+    dib.bih.biClrUsed      = 2;
+    dib.bih.biClrImportant = 2;
+    dib.colors[0] = RGBValueToQuad(paletteModel.GetPrimaryColor());
+    dib.colors[1] = RGBValueToQuad(paletteModel.GetSecondaryColor());
+
+    PVOID pvBits;
+    HBITMAP hbm = CreateDIBSection(NULL, (PBITMAPINFO)&dib, DIB_RGB_COLORS, &pvBits, NULL, 0);
+    if (!hbm)
         return NULL;
 
     if (bWhite)
-        FillBitmapByColor(hbm, RGB(255, 255, 255));
+        FillBitmapByColor(hbm, paletteModel.GetSecondaryColor());
 
     return hbm;
 }
