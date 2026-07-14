@@ -112,16 +112,19 @@ HBITMAP CopyDIBImage(HBITMAP hbm, INT cx, INT cy, INT stretchMode, COLORREF rgbC
         cy = bm.bmHeight;
     }
 
-    HDC hdc1 = ::CreateCompatibleDC(NULL);
-    HDC hdc2 = ::CreateCompatibleDC(NULL);
-    HGDIOBJ hbm1Old = ::SelectObject(hdc1, hbm);
-    HGDIOBJ hbm2Old = ::SelectObject(hdc2, hbmNew);
-    ::SetStretchBltMode(hdc2, stretchMode);
-    ::StretchBlt(hdc2, 0, 0, cx, cy, hdc1, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
-    ::SelectObject(hdc1, hbm1Old);
-    ::SelectObject(hdc2, hbm2Old);
-    ::DeleteDC(hdc1);
-    ::DeleteDC(hdc2);
+    if (rgbColor == CLR_INVALID && (cx != bm.bmWidth || cy != bm.bmHeight))
+    {
+        HDC hdc1 = ::CreateCompatibleDC(NULL);
+        HDC hdc2 = ::CreateCompatibleDC(NULL);
+        HGDIOBJ hbm1Old = ::SelectObject(hdc1, hbm);
+        HGDIOBJ hbm2Old = ::SelectObject(hdc2, hbmNew);
+        ::SetStretchBltMode(hdc2, stretchMode);
+        ::StretchBlt(hdc2, 0, 0, cx, cy, hdc1, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+        ::SelectObject(hdc1, hbm1Old);
+        ::SelectObject(hdc2, hbm2Old);
+        ::DeleteDC(hdc1);
+        ::DeleteDC(hdc2);
+    }
 
     FillDIBByColor(hbmNew, rgbColor);
     return hbmNew;
