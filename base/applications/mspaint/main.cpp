@@ -259,17 +259,17 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
         CSimpleArray<GUID> aguidFileTypesE;
         DWORD dwExclude = CImage::excludeDefaultSave | CImage::excludeBMP;
         CImage::GetExporterFilterString(strFilter, aguidFileTypesE, NULL, dwExclude, L'|');
+        cNonBmpFilters = aguidFileTypesE.GetSize();
         strFilter.Replace(L"||", L"|");
 
+        // Append BMP filters
         for (auto ids : strings)
         {
             strFilter += CStringW(MAKEINTRESOURCEW(ids));
             strFilter += L"|*.bmp;*.dib|";
         }
-        strFilter += L'|';
 
         strFilter.Replace(L'|', UNICODE_NULL);
-        cNonBmpFilters = aguidFileTypesE.GetSize();
 
         // Initializing the OPENFILENAME structure for GetSaveFileName
         ZeroMemory(&sfn, sizeof(sfn));
