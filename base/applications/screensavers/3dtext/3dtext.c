@@ -32,10 +32,11 @@
 static HGLRC hRC;       // Permanent Rendering Context
 static HDC hDC;         // Private GDI Device Context
 
-GLuint base;            // Base Display List For The Characters
-GLfloat rot;            // Used To Rotate The Text
-GLfloat extentX = 0.0f;
-GLfloat extentY = 0.0f;
+static GLuint base;                               // Base Display List For The Characters
+static GLuint text_display_list[MAX_TEXT_LENGTH]; // The Display List IDs For The Characters
+static GLfloat rot;                               // Used To Rotate The Text
+static GLfloat extentX = 0.0f;
+static GLfloat extentY = 0.0f;
 
 #define APPNAME _T("3DText")
 
@@ -83,6 +84,8 @@ GLvoid Build3DCharacters(GLvoid)
     // Calculate the string extent
     for (i = 0; i < text_length; i++)
     {
+        text_display_list[i] = base + i;
+
         wglUseFontOutlines(hDC,                     // Select The Current DC
                            g_Text[i],               // Starting Character
                            1,                       // Number Of Display Lists To Build
@@ -121,10 +124,7 @@ GLvoid glPrint(GLvoid)
     size_t text_length = _tcslen(g_Text);
 
     // Draws The Display List Text
-    for (size_t i = 0; i < text_length; i++)
-    {
-        glCallList(base + i);
-    }
+    glCallLists(text_length, GL_UNSIGNED_INT, text_display_list);
 }
 
 // Will Be Called Right After The GL Window Is Created
