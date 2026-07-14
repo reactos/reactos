@@ -301,18 +301,26 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
     if (!::GetSaveFileNameW(&sfn))
         return FALSE;
 
-    if (pnBpp && sfn.nFilterIndex - 1 >= cNonBmpFilters)
+    if (pnBpp)
     {
-        INT delta = (sfn.nFilterIndex - 1) - cNonBmpFilters;
-        // FIXME: Add more
-        switch (delta)
+        if (sfn.nFilterIndex - 1 >= cNonBmpFilters)
         {
-            case 0: // Mono (IDS_MONOBMP)
-                *pnBpp = 1;
-                break;
-            case 1: // 24-bpp Color (IDS_24BPPBMP)
-                *pnBpp = 24;
-                break;
+            INT delta = (sfn.nFilterIndex - 1) - cNonBmpFilters;
+            // FIXME: Add more
+            switch (delta)
+            {
+                case 0: // Mono (IDS_MONOBMP)
+                    *pnBpp = 1;
+                    break;
+                case 1: // 24-bpp Color (IDS_24BPPBMP)
+                    *pnBpp = 24;
+                    break;
+            }
+        }
+        else
+        {
+            if (!lstrcmpiW(PathFindExtensionW(sfn.lpstrFile), L".gif")) // GIF
+                *pnBpp = 8;
         }
     }
 
