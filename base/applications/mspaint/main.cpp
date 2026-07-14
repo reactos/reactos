@@ -248,7 +248,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
     static OPENFILENAMEW sfn = { 0 };
     static CStringW strFilter;
     static DWORD cNonBmpFilters = 0;
-    static const INT strings[] = { IDS_MONOBMP, IDS_4BPPBMP, IDS_8BPPBMP, IDS_24BPPBMP };
+    static const INT bmpFilters[] = { IDS_MONOBMP, IDS_4BPPBMP, IDS_8BPPBMP, IDS_24BPPBMP };
 
     if (pnBpp)
         *pnBpp = -1;
@@ -263,7 +263,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
         strFilter.Replace(L"||", L"|");
 
         // Append BMP filters
-        for (auto ids : strings)
+        for (auto ids : bmpFilters)
         {
             strFilter += CStringW(MAKEINTRESOURCEW(ids));
             strFilter += L"|*.bmp;*.dib|";
