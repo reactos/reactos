@@ -115,6 +115,12 @@ typedef struct _KBLAYOUT
 } KBLAYOUT, *PKBLAYOUT;
 #endif
 
+#define InterlockedFlagsTestAndSet8(Target, Flags) \
+    !!(InterlockedOr8((PCHAR)(Target), (Flags)) & (Flags))
+
+#define InterlockedFlagsTestAndReset8(Target, Flags) \
+    !!(InterlockedAnd8((PCHAR)(Target), ~(Flags)) & (Flags))
+
 typedef struct _SETUPDATA
 {
     /* General */
@@ -127,7 +133,23 @@ typedef struct _SETUPDATA
 
     HANDLE hInstallThread;
     HANDLE hHaltInstallEvent;
-    BOOL bStopInstall;
+    union
+    {
+        struct
+        {
+#define SETUP_ABORT_INSTALL     1
+            UCHAR bAbortInstall  :2; /**< TRUE if the installation is to be aborted;
+                                      **  FALSE if not (regular termination). */
+#define SETUP_IS_CANCELLING     4
+            UCHAR bIsCancelling  :2; /**< TRUE if the installation is being cancelled
+                                      **  (via PSN_QUERYCANCEL); FALSE if not. */
+#define SETUP_PAGE_SWITCHING    16
+            UCHAR bPageSwitching :2; /**< TRUE if a page switch is occurring
+                                      **  (PSN_KILLACTIVE running); FALSE if not. */
+            UCHAR bReserved      :2;
+        };
+        BOOLEAN bStopInstall;
+    };
 
     NT_WIN32_PATH_MAPPING_LIST MappingList;
 
