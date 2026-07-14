@@ -3,9 +3,8 @@
  * FILE:            dll\win32\getuname\lang\ro-RO.rc
  * PURPOSE:         Unicode Description Strings
  * PROGRAMMERS:     Baruch Rutman (peterooch at gmail dot com)
- * TRANSLATORS:     Copyright 2011-2018 Ştefan Fulea <stefan.fulea@mail.com>
+ * TRANSLATORS:     Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
  *                  Copyright 2022-2026 Andrei-Valentin Miloiu <miloiuandrei@gmail.com>
- *
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
