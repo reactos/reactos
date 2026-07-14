@@ -248,6 +248,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
     static OPENFILENAMEW sfn = { 0 };
     static CStringW strFilter;
     static DWORD cNonBmpFilters = 0;
+    static const INT strings[] = { IDS_MONOBMP, IDS_4BPPBMP, IDS_8BPPBMP, IDS_24BPPBMP };
 
     if (pnBpp)
         *pnBpp = -1;
@@ -258,14 +259,14 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
         CSimpleArray<GUID> aguidFileTypesE;
         DWORD dwExclude = CImage::excludeDefaultSave | CImage::excludeBMP;
         CImage::GetExporterFilterString(strFilter, aguidFileTypesE, NULL, dwExclude, L'|');
-
         strFilter.Replace(L"||", L"|");
 
-        // FIXME: Add more
-        strFilter += CStringW(MAKEINTRESOURCEW(IDS_MONOBMP));
-        strFilter += L"|*.bmp;*.dib|";
-        strFilter += CStringW(MAKEINTRESOURCEW(IDS_24BPPBMP));
-        strFilter += L"|*.bmp;*.dib||";
+        for (auto ids : strings)
+        {
+            strFilter += CStringW(MAKEINTRESOURCEW(ids));
+            strFilter += L"|*.bmp;*.dib|";
+        }
+        strFilter += L'|';
 
         strFilter.Replace(L'|', UNICODE_NULL);
         cNonBmpFilters = aguidFileTypesE.GetSize();
@@ -299,26 +300,33 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
     sfn.lpstrFile = pszFile;
     sfn.nMaxFile  = cchMaxFile;
 
+    PWSTR dotext = PathFindExtensionW(pszFile);
+    if (!lstrcmpiW(dotext, L".bmp") || !lstrcmpiW(dotext, L".dib")) // BMP format?
+    {
+        switch (paletteModel.GetBpp())
+        {
+            case  1: sfn.nFilterIndex = cNonBmpFilters + 1; break;
+            case  4: sfn.nFilterIndex = cNonBmpFilters + 2; break;
+            case  8: sfn.nFilterIndex = cNonBmpFilters + 3; break;
+            case 24: sfn.nFilterIndex = cNonBmpFilters + 4; break;
+        }
+    }
+
     if (!::GetSaveFileNameW(&sfn))
         return FALSE;
 
-    // extension is lowercase
-    ::CharLowerW(PathFindExtensionW(sfn.lpstrFile));
+    ::CharLowerW(PathFindExtensionW(sfn.lpstrFile)); // lowercase extension
 
     if (pnBpp)
     {
         if (sfn.nFilterIndex - 1 >= cNonBmpFilters)
         {
-            INT delta = (sfn.nFilterIndex - 1) - cNonBmpFilters;
-            // FIXME: Add more
-            switch (delta)
+            switch ((sfn.nFilterIndex - 1) - cNonBmpFilters)
             {
-                case 0: // Mono (IDS_MONOBMP)
-                    *pnBpp = 1;
-                    break;
-                case 1: // 24-bpp Color (IDS_24BPPBMP)
-                    *pnBpp = 24;
-                    break;
+                case 0: *pnBpp = 1;  break; // Mono
+                case 1: *pnBpp = 4;  break; // 4-bpp Color
+                case 2: *pnBpp = 8;  break; // 8-bpp Color
+                case 3: *pnBpp = 24; break; // 24-bpp Color
             }
         }
         else
