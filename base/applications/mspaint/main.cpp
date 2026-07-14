@@ -300,6 +300,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
     sfn.lpstrFile = pszFile;
     sfn.nMaxFile  = cchMaxFile;
 
+    // Set filter index
     PWSTR dotext = PathFindExtensionW(pszFile);
     if (!lstrcmpiW(dotext, L".bmp") || !lstrcmpiW(dotext, L".dib")) // BMP format?
     {
@@ -317,6 +318,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
 
     ::CharLowerW(PathFindExtensionW(sfn.lpstrFile)); // lowercase extension
 
+    // Set BPP
     if (pnBpp)
     {
         if (sfn.nFilterIndex - 1 >= cNonBmpFilters) // BMP
