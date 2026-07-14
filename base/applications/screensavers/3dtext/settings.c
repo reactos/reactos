@@ -27,7 +27,7 @@ TCHAR g_Text[MAX_TEXT_LENGTH + 1] = _T("ReactOS Rocks!");
 VOID LoadSettings(VOID)
 {
 	HKEY hkey;
-	DWORD len = (MAX_TEXT_LENGTH + 1) * sizeof(TCHAR);
+	DWORD len = sizeof(g_Text);
 
 	if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\ScreenSavers\\Text3D"), 0,
 		_T(""), 0, KEY_READ, NULL, &hkey, NULL) == ERROR_SUCCESS)
