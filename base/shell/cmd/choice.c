@@ -141,26 +141,26 @@ CommandChoice (LPTSTR param)
             if (_tcsnicmp (arg[i], _T("/c"), 2) == 0)
             {
                 if (arg[i][2] == _T(':'))
-                    lpOptions = &arg[i][3];                 /* "/c:XYZ" (DOS and NT6) */
+                    lpOptions = &arg[i][3];                 /* "/c:XYZ" (DOS and NT) */
                 else if (arg[i][2])
                     lpOptions = &arg[i][2];                 /* "/cXYZ" (DOS) */
                 else if (i + 1 < argc && *arg[i + 1] != _T('/'))
-                    lpOptions = arg[iSkipTextIndex = ++i];  /* "/c XYZ" (NT6) */
+                    lpOptions = arg[iSkipTextIndex = ++i];  /* "/c XYZ" (NT) */
 
                 if (!*lpOptions)
                 {
                     ConErrResPuts(STRING_CHOICE_ERROR);
-                    freep (arg);
+                    freep(arg);
                     return 1;
                 }
             }
-            else if (_tcsnicmp (arg[i], _T("/m"), 2) == 0)  /* "/m msg" (NT6) */
+            else if (_tcsnicmp (arg[i], _T("/m"), 2) == 0)  /* "/m msg" (NT) */
             {
                 lpText = lpTextParam = arg[++i];
                 if (i >= argc || *lpTextParam == _T('/'))
                 {
                     ConErrResPrintf(STRING_CHOICE_ERROR_OPTION, arg[--i]);
-                    freep (arg);
+                    freep(arg);
                     return 1;
                 }
             }
@@ -172,16 +172,18 @@ CommandChoice (LPTSTR param)
             {
                 bCaseSensitive = TRUE;
             }
-            else if (_tcsnicmp (arg[i], _T("/cs"), 3) == 0) /* NT6 */
+            else if (_tcsnicmp (arg[i], _T("/cs"), 3) == 0) /* NT */
             {
                 bCaseSensitive = TRUE;
             }
-            else if (_tcsnicmp (arg[i], _T("/d"), 2) == 0)  /* "/d:X" and "/d X" (NT6) */
+            else if (_tcsnicmp (arg[i], _T("/d"), 2) == 0)  /* "/d:X" and "/d X" (NT) */
             {
                 if (arg[i][2] == _T(':'))
                     cDefault = cDefParam = arg[i][3];
                 else if (i + 1 < argc)
                     cDefault = cDefParam = arg[iSkipTextIndex = ++i][0];
+                else
+                    goto invalid_parameter_format;
             }
             else if (_tcsnicmp (arg[i], _T("/t"), 2) == 0)
             {
@@ -201,7 +203,7 @@ CommandChoice (LPTSTR param)
 
                 if (*s != _T(','))
                 {
-                    /* Just a number (NT6 syntax) */
+                    /* Just a number (NT syntax) */
                     cDefault = cSaveDefault;
                     if (arg[i][2] == _T(':'))
                         s = &arg[i][3];
@@ -225,6 +227,7 @@ CommandChoice (LPTSTR param)
             }
             else if (arg[i][0] == _T('/'))
             {
+            invalid_parameter_format:
                 ConErrResPrintf(STRING_CHOICE_ERROR_OPTION, arg[i]);
                 freep (arg);
                 return 1;
@@ -234,11 +237,11 @@ CommandChoice (LPTSTR param)
 
     if (bTimeout)
     {
-        if (!cDefault) /* NT6 /t synax used without /d */
+        if (!cDefault) /* NT /t synax used without /d */
             goto failed_parse_timeout;
         if (nTimeout < 0 || (cDefParam && nTimeout > 9999)) /* DOS seems to be limited to 99, no ">" validation */
             goto failed_parse_timeout;
-        if (IsKeyInString(lpOptions, cDefault, bCaseSensitive) < 0) /* cDefault must exist in lpOptions */
+        if (IsKeyInString(lpOptions, cDefault, bCaseSensitive) < 0) /* The default must exist in the list of options */
             goto failed_parse_timeout;
     }
 
