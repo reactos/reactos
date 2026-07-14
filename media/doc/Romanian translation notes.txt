@@ -1,6 +1,6 @@
 The following material is addressed (in Romanian) to Romanian translators.
 
-Copyright 2023-2024 Miloiu Andrei
+Copyright 2023-2026 Miloiu Andrei
 
 ------------------------------------------------------------------------------
 
