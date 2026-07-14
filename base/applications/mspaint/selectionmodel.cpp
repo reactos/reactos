@@ -118,7 +118,7 @@ HBITMAP SelectionModel::GetSelectionContents()
 
     HDC hdcMem = ::CreateCompatibleDC(NULL);
     HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbmNew);
-    selectionModel.DrawSelection(hdcMem, paletteModel.GetBgColor(), TRUE, rc, hbmPart);
+    DrawSelection(hdcMem, paletteModel.GetBgColor(), TRUE, rc, hbmPart);
     ::SelectObject(hdcMem, hbmOld);
     ::DeleteDC(hdcMem);
 
