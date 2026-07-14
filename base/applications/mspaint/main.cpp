@@ -319,7 +319,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
 
     if (pnBpp)
     {
-        if (sfn.nFilterIndex - 1 >= cNonBmpFilters)
+        if (sfn.nFilterIndex - 1 >= cNonBmpFilters) // BMP
         {
             switch ((sfn.nFilterIndex - 1) - cNonBmpFilters)
             {
