@@ -60,7 +60,7 @@ CreateMonoBitmap(int width, int height, BOOL bWhite)
         return NULL;
 
     if (bWhite)
-        FillDIBByColor(hbm, RGB(255, 255, 255));
+        FillBitmapByColor(hbm, RGB(255, 255, 255));
 
     return hbm;
 }
@@ -72,7 +72,7 @@ CreateColorDIB(int width, int height, COLORREF rgb)
     if (!ret)
         return NULL;
 
-    FillDIBByColor(ret, rgb);
+    FillBitmapByColor(ret, rgb);
     return ret;
 }
 
@@ -132,7 +132,7 @@ HBITMAP CopyDIBImage(HBITMAP hbm, INT cx, INT cy, INT stretchMode, COLORREF rgbC
         ::DeleteDC(hdc2);
     }
 
-    FillDIBByColor(hbmNew, rgbColor);
+    FillBitmapByColor(hbmNew, rgbColor);
     return hbmNew;
 }
 
@@ -491,7 +491,7 @@ void putSubImage(HBITMAP hbmWhole, const RECT& rcPartial, HBITMAP hbmPart)
     ::DeleteDC(hDC2);
 }
 
-void FillDIBByColor(HBITMAP hbm, COLORREF rgbColor)
+void FillBitmapByColor(HBITMAP hbm, COLORREF rgbColor)
 {
     BITMAP bm;
     if (rgbColor == CLR_INVALID || !GetObjectW(hbm, sizeof(bm), &bm))

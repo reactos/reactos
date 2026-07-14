@@ -50,4 +50,4 @@ HBITMAP BitmapFromClipboardDIB(HGLOBAL hGlobal);
 HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF);
 HBITMAP getSubImage(HBITMAP hbmWhole, const RECT& rcPartial);
 void putSubImage(HBITMAP hbmWhole, const RECT& rcPartial, HBITMAP hbmPart);
-void FillDIBByColor(HBITMAP hbm, COLORREF rgbColor);
+void FillBitmapByColor(HBITMAP hbm, COLORREF rgbColor);
