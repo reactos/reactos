@@ -299,7 +299,6 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
     sfn.lpstrFile = pszFile;
     sfn.nMaxFile  = cchMaxFile;
 
-
     if (!::GetSaveFileNameW(&sfn))
         return FALSE;
 
@@ -1201,16 +1200,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     imageModel.ClearHistory();
                     break;
                 }
-                if (nBpp != -1)
+                if (nBpp != -1 && GetBitmapBpp(hbmSelection) != nBpp)
                 {
-                    BITMAP bm;
-                    GetObjectW(hbmSelection, sizeof(bm), &bm);
-                    if (bm.bmBitsPixel != nBpp)
-                    {
-                        HBITMAP hbmNew = CreateNBppBitmap(hbmSelection, nBpp);
-                        DeleteObject(hbmSelection);
-                        hbmSelection = hbmNew;
-                    }
+                    HBITMAP hbmNew = CreateNBppBitmap(hbmSelection, nBpp);
+                    DeleteObject(hbmSelection);
+                    hbmSelection = hbmNew;
                 }
                 SaveDIBToFile(hbmSelection, szFileName, FALSE);
                 DeleteObject(hbmSelection);

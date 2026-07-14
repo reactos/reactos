@@ -98,22 +98,13 @@ HBITMAP CopyMonoImage(HBITMAP hbm, INT cx, INT cy, INT stretchMode)
 
 HBITMAP CopyDIBImage(HBITMAP hbm, INT cx, INT cy, INT stretchMode, COLORREF rgbColor)
 {
+    BITMAP bm;
+    if (!::GetObjectW(hbm, sizeof(bm), &bm))
+        return NULL;
+ 
     HBITMAP hbmNew = (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, cx, cy, LR_CREATEDIBSECTION);
     if (!hbmNew)
         return NULL;
-
-    if (stretchMode == STRETCH_HALFTONE)
-    {
-        FillDIBByColor(hbmNew, rgbColor);
-        return hbmNew;
-    }
-
-    BITMAP bm;
-    if (!::GetObjectW(hbm, sizeof(bm), &bm))
-    {
-        ::DeleteObject(hbmNew);
-        return NULL;
-    }
 
     if (cx == 0 || cy == 0)
     {
@@ -669,7 +660,7 @@ HGLOBAL BitmapToClipboardDIB(HBITMAP hBitmap)
     CWaitCursor waitCursor;
 
     BITMAP bm;
-    if (!GetObjectW(hBitmap, sizeof(BITMAP), &bm))
+    if (!GetObjectW(hBitmap, sizeof(bm), &bm))
         return NULL;
 
     BITMAPINFODX bmi;
@@ -797,10 +788,17 @@ HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF)
     return hbm;
 }
 
-BOOL IsBitmapBlackAndWhite(HBITMAP hbm)
+INT GetBitmapBpp(HBITMAP hbm)
 {
     BITMAP bm;
-    if (!::GetObjectW(hbm, sizeof(bm), &bm) || (bm.bmBitsPixel != 1))
+    if (!::GetObjectW(hbm, sizeof(bm), &bm))
+        return 0;
+    return bm.bmBitsPixel;
+}
+
+BOOL IsBitmapBlackAndWhite(HBITMAP hbm)
+{
+    if (GetBitmapBpp(hbm) != 1)
         return FALSE;
 
     RGBQUAD colors[2];
