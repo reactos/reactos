@@ -305,10 +305,10 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
     {
         switch (paletteModel.GetBpp())
         {
-            case  1: sfn.nFilterIndex = cNonBmpFilters + 1; break;
-            case  4: sfn.nFilterIndex = cNonBmpFilters + 2; break;
-            case  8: sfn.nFilterIndex = cNonBmpFilters + 3; break;
-            case 24: sfn.nFilterIndex = cNonBmpFilters + 4; break;
+            case  1: sfn.nFilterIndex = (cNonBmpFilters + 1) + 0; break;
+            case  4: sfn.nFilterIndex = (cNonBmpFilters + 1) + 1; break;
+            case  8: sfn.nFilterIndex = (cNonBmpFilters + 1) + 2; break;
+            case 24: sfn.nFilterIndex = (cNonBmpFilters + 1) + 3; break;
         }
     }
 
