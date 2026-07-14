@@ -388,14 +388,14 @@ BOOL CALLBACK ScreenSaverConfigureDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LP
         case WM_INITDIALOG:
             LoadSettings();
             SetDlgItemText(hDlg, IDC_MESSAGE_TEXT, g_Text);
-            SendDlgItemMessage(hDlg, IDC_MESSAGE_TEXT, EM_LIMITTEXT, MAX_TEXT_LENGTH, 0);
+            SendDlgItemMessage(hDlg, IDC_MESSAGE_TEXT, EM_LIMITTEXT, ARRAYSIZE(g_Text) - 1, 0);
             return TRUE;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    GetDlgItemText(hDlg, IDC_MESSAGE_TEXT, g_Text, MAX_PATH);
+                    GetDlgItemText(hDlg, IDC_MESSAGE_TEXT, g_Text, ARRAYSIZE(g_Text));
                     SaveSettings();
 
                     /* Fall through */
