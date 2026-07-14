@@ -331,10 +331,9 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
                 case 3: *pnBpp = 24; break; // 24-bpp Color
             }
         }
-        else
+        else if (!lstrcmpiW(PathFindExtensionW(sfn.lpstrFile), L".gif")) // GIF
         {
-            if (!lstrcmpiW(PathFindExtensionW(sfn.lpstrFile), L".gif")) // GIF
-                *pnBpp = 8;
+            *pnBpp = 8;
         }
     }
 
