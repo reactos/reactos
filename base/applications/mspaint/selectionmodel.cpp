@@ -96,6 +96,21 @@ HBITMAP SelectionModel::GetSelectionContents()
     if (!hbmPart)
         return NULL;
 
+    BITMAP bm;
+    GetObject(hbmPart, sizeof(bm), &bm);
+    if (bm.bmBitsPixel == 1) // Monochrome?
+    {
+        HDC hdc = CreateCompatibleDC(NULL);
+        HGDIOBJ old = SelectObject(hdc, hbmPart);
+        RGBQUAD colors[2];
+        colors[0] = RGBValueToQuad(paletteModel.GetPrimaryColor());
+        colors[1] = RGBValueToQuad(paletteModel.GetSecondaryColor());
+        SetDIBColorTable(hdc, 0, 2, colors);
+        SelectObject(hdc, old);
+        DeleteDC(hdc);
+        return hbmPart;
+    }
+
     CRect rc = { 0, 0, m_rc.Width(), m_rc.Height() };
     HBITMAP hbmNew = imageModel.CloneDIB(rc.Width(), rc.Height(), paletteModel.GetBgColor());
     if (!hbmNew)

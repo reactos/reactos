@@ -7,6 +7,8 @@
 
 #pragma once
 
+COLORREF QuadToRGBValue(const RGBQUAD& quad);
+RGBQUAD RGBValueToQuad(COLORREF rgbColor);
 BOOL IsBitmapBlackAndWhite(HBITMAP hbm);
 HBITMAP CreateDIBWithProperties(int width, int height);
 HBITMAP CreateMonoBitmap(int width, int height, BOOL bWhite);
@@ -49,4 +51,3 @@ HBITMAP BitmapFromHEMF(HENHMETAFILE hEMF);
 HBITMAP getSubImage(HBITMAP hbmWhole, const RECT& rcPartial);
 void putSubImage(HBITMAP hbmWhole, const RECT& rcPartial, HBITMAP hbmPart);
 void FillDIBByColor(HBITMAP hbm, COLORREF rgbColor);
-COLORREF QuadToRGBValue(const RGBQUAD& quad);

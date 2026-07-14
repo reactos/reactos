@@ -26,6 +26,12 @@ COLORREF QuadToRGBValue(const RGBQUAD& quad)
     return RGB(quad.rgbRed, quad.rgbGreen, quad.rgbBlue);
 }
 
+RGBQUAD RGBValueToQuad(COLORREF rgbColor)
+{
+    RGBQUAD quad = { GetBValue(rgbColor), GetGValue(rgbColor), GetRValue(rgbColor) };
+    return quad;
+}
+
 // Convert DPI (dots per inch) into PPCM (pixels per centimeter)
 float PpcmFromDpi(float dpi)
 {
