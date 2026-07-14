@@ -11,6 +11,9 @@
 #include <windows.h>
 //#include <stringapiset.h>
 
+//
+// For flags documentation, see https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-widechartomultibyte
+//
 _Success_(return != 0)
 int
 __cdecl
@@ -24,6 +27,21 @@ __acrt_WideCharToMultiByte (
     _In_opt_ LPCSTR  _LpDefaultChar,
     _Out_opt_ LPBOOL  _LpUsedDefaultChar)
 {
+    /* For UTF-8 and CP 54936 only MB_ERR_INVALID_CHARS is allowed */
+    if ((_CodePage == CP_UTF8) || (_CodePage == 54936))
+    {
+        _DWFlags &= MB_ERR_INVALID_CHARS;
+    }
+
+    /* The following code pages require _DWFlags to be 0 */
+    else if ((_CodePage == 50220) || (_CodePage == 50221) || (_CodePage == 50222) ||
+             (_CodePage == 50225) || (_CodePage == 50227) || (_CodePage == 50229) ||
+             ((_CodePage >= 57002) && (_CodePage <= 57011)) ||
+             (_CodePage == CP_UTF7) || (_CodePage == CP_SYMBOL))
+    {
+        _DWFlags = 0;
+    }
+
     return WideCharToMultiByte(_CodePage,
                                _DWFlags,
                                _LpWideCharStr,
