@@ -300,7 +300,7 @@ BOOL CMainWindow::GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pn
     sfn.lpstrFile = pszFile;
     sfn.nMaxFile  = cchMaxFile;
 
-    // Set filter index
+    // Set filter index (1-base)
     PWSTR dotext = PathFindExtensionW(pszFile);
     if (!lstrcmpiW(dotext, L".bmp") || !lstrcmpiW(dotext, L".dib")) // BMP format?
     {
