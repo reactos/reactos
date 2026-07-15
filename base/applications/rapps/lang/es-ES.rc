@@ -206,7 +206,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "No se ha podido escribir en el disco duro, es posible que no quede espacio libre."
     IDS_INSTALL_SELECTED "Instalar selección"
     IDS_SELECTEDFORINST "Seleccionados para instalar"
-    IDS_MISMATCH_CERT_INFO "El certificado que usa es desconocido:\nSujeto: %s\nEmisor: %s\n¿Quiere continuar a pesar de ello?"
+    IDS_MISMATCH_CERT_INFO "El certificado que usa es desconocido:\nSujeto: %s\nEmisor root: %s\n¿Quiere continuar a pesar de ello?"
     IDS_UNABLE_PATH "Formato de ruta incorrecto."
     IDS_APP_DISPLAY_DETAILS "Detalles"
     IDS_APP_DISPLAY_LIST "Lista"

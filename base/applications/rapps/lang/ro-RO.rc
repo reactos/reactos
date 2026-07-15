@@ -206,7 +206,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Nu se poate scrie pe disc. Discul poate fi la capacitate maximă."
     IDS_INSTALL_SELECTED "Instalare aplicații selectate"
     IDS_SELECTEDFORINST "Selectate pentru instalare"
-    IDS_MISMATCH_CERT_INFO "Certificatul în uz este necunoscut:\nSubiect: %s\nEmitent: %s\nVreți să continuați oricum?"
+    IDS_MISMATCH_CERT_INFO "Certificatul în uz este necunoscut:\nSubiect: %s\nEmitent root: %s\nVreți să continuați oricum?"
     IDS_UNABLE_PATH "Formatul căii specificate nu este corect."
     IDS_APP_DISPLAY_DETAILS "Detalii"
     IDS_APP_DISPLAY_LIST "Listă"

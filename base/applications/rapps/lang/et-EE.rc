@@ -204,7 +204,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Kettale kirjutamine ebaõnnetus. Ketas võib täis olla."
     IDS_INSTALL_SELECTED "Installi valitud"
     IDS_SELECTEDFORINST "Installimiseks valitud"
-    IDS_MISMATCH_CERT_INFO "Kasutatud sertifikaat on tundmatu:\nSubject: %s\nIssuer: %s\nKas soovid siiski jätkata?"
+    IDS_MISMATCH_CERT_INFO "Kasutatud sertifikaat on tundmatu:\nSubject: %s\nIssuer root: %s\nKas soovid siiski jätkata?"
     IDS_UNABLE_PATH "Incorrect path format."
     IDS_APP_DISPLAY_DETAILS "Details"
     IDS_APP_DISPLAY_LIST "List"
