@@ -145,7 +145,8 @@ list(APPEND SOURCE_VISTA
     srw.c
     threadpool.c
     unicode_vista.c
-    utf8.c)
+    utf8.c
+    wow64.c)
 
 add_library(rtl_vista ${SOURCE_VISTA})
 add_pch(rtl_vista rtl_vista.h SOURCE_VISTA)
