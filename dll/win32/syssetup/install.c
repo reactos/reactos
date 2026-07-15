@@ -1029,7 +1029,7 @@ PreprocessUnattend(
 
     if (IsInstall)
     {
-        /* See also wizard.c!GetSetupInfPath()
+        /* See also wizard.c!ProcessSetupInf()
          * Retrieve the path of the setup INF */
         GetSetupInfPath(szPath, _countof(szPath));
     }
