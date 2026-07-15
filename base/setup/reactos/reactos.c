@@ -1798,10 +1798,21 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                SetWindowResPrintfW(UiContext.hWndItem,
-                                    SetupData.hInstance,
-                                    IDS_COPYING, // STRING_COPYING
-                                    DstFileName);
+                /* Whereas the repair/upgrade procedure may move, rename, or
+                 * delete files, the regular installation only copies files.
+                 * Therefore, display only the file name instead of the full
+                 * "Copying..." message in this case. */
+                if (SetupData.RepairUpdateFlag)
+                {
+                    SetWindowResPrintfW(UiContext.hWndItem,
+                                        SetupData.hInstance,
+                                        IDS_COPYING, // STRING_COPYING
+                                        DstFileName);
+                }
+                else
+                {
+                    SetWindowTextW(UiContext.hWndItem, DstFileName);
+                }
             }
             break;
         }
@@ -2286,9 +2297,10 @@ ProcessDlgProc(
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
-            /* Reset status text */
+            /* Reset the status text and set the main label in bold */
             SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"");
             SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+            SetDlgItemFont(hwndDlg, IDC_ACTIVITY, pSetupData->hBoldFont, TRUE);
             break;
         }
 

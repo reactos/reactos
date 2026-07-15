@@ -148,9 +148,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fichiers d'installation...", IDC_ACTIVITY, 20, 50, 277, 10
-    LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
+    LTEXT "Fichiers d'installation...", IDC_ACTIVITY, 20, 35, 277, 10
+    LTEXT "test.txt", IDC_ITEM, 20, 83, 277, 10
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 97, 277, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -247,11 +247,11 @@ BEGIN
     IDS_DELETING "Supprime %s"
 
     IDS_CONFIG_SYSTEM_PARTITION "Configuration de la partition système..."
-    IDS_PREPARE_PARTITIONS "Prépare les partitions..."
-    IDS_PREPARE_FILES "Prépare la liste de fichiers à copier, veuillez patienter..."
-    IDS_COPYING_FILES "Copie les fichiers..."
+    IDS_PREPARE_PARTITIONS "Préparation des partitions..."
+    IDS_PREPARE_FILES "Préparation de la liste de fichiers à copier, veuillez patienter..."
+    IDS_COPYING_FILES "Copie des fichiers..."
 
-    IDS_CREATE_REGISTRY "Crée la base de registres..."
+    IDS_CREATE_REGISTRY "Création de la base de registres..."
     IDS_UPDATE_REGISTRY "Mise à jour de la base de registres..."
 
     // IDS_INSTALL_FINALIZE "Finalisation de l'installation..."
