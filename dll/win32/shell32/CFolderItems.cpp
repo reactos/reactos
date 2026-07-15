@@ -20,7 +20,7 @@ HRESULT SHELL_InvokeCommandOnContextMenu(_In_opt_ HWND hWnd, _In_ IContextMenu *
     HRESULT hr = S_OK;
     int iDefItem = 0;
     HMENU hMenu = NULL;
-    HCURSOR hOldCursor = SetCursor(LoadCursorW(NULL, (LPCWSTR)IDC_WAIT));
+    HCURSOR hOldCursor = SetCursor(LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_WAIT)));
     CMINVOKECOMMANDINFOEX ici = { sizeof(ici), fCMIC, hWnd, NULL, NULL, NULL, SW_SHOWNORMAL };
     CHAR szVerb[MAX_PATH], szArgs[MAX_PATH * 3];
 
