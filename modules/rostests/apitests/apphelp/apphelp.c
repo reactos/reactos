@@ -867,6 +867,24 @@ static void test_crc_imp(size_t len, DWORD expected)
     }
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);
+
+    /* Test with a fake NT path */
+    WCHAR prefixed_path[MAX_PATH];
+    wcscpy(prefixed_path, L"\\??\\");
+    wcscat(prefixed_path, path);
+    ret = pSdbGetFileAttributes(prefixed_path, &pattrinfo, &num);
+    winetest_ok(ret == FALSE, "expected SdbGetFileAttributes to fail.\n");
+    if (ret)
+        pSdbFreeFileAttributes(pattrinfo);
+
+    /* Test with a full NT path */
+    GetCurrentDirectoryW(ARRAYSIZE(prefixed_path) - 4, prefixed_path + 4);
+    wcscat(prefixed_path, L"\\");
+    wcscat(prefixed_path, path);
+    ret = pSdbGetFileAttributes(prefixed_path, &pattrinfo, &num);
+    winetest_ok(ret != FALSE || broken(ret == FALSE) /* 2k3/Vista */, "expected SdbGetFileAttributes to succeed.\n");
+    if (ret)
+        pSdbFreeFileAttributes(pattrinfo);
 }
 
 static void test_crc2_imp(DWORD len, int fill, DWORD expected)
