@@ -205,7 +205,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "無法寫入到儲存裝置。儲存裝置可能已滿。"
     IDS_INSTALL_SELECTED "安裝選中的軟件"
     IDS_SELECTEDFORINST "選中以安裝"
-    IDS_MISMATCH_CERT_INFO "使用了不明的證書：\n主題：%s\n發行方：%s\n您是否仍然要繼續？"
+    IDS_MISMATCH_CERT_INFO "使用了不明的證書：\n主題：%s\n發行方 root：%s\n您是否仍然要繼續？"
     IDS_UNABLE_PATH "不正確的 URL 格式。"
     IDS_APP_DISPLAY_DETAILS "詳細資料"
     IDS_APP_DISPLAY_LIST "列表"

@@ -45,6 +45,7 @@
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
 #include <process.h>
+#include <wincrypt.h>
 #undef SubclassWindow
 
 #include "rosui.h"
@@ -53,22 +54,68 @@
 #include "unattended.h"
 
 #ifdef USE_CERT_PINNING
-#define CERT_ISSUER_INFO_PREFIX "US\r\nLet's Encrypt\r\nR"
-#define CERT_ISSUER_INFO_PREFIX2 "US\r\nLet's Encrypt\r\nYR"
-#define CERT_ISSUER_INFO_OLD "US\r\nLet's Encrypt\r\nR3"
-#define CERT_ISSUER_INFO_NEW "US\r\nLet's Encrypt\r\nR11"
-#define CERT_SUBJECT_INFO "rapps.reactos.org"
+#include <cryptuiapi.h>
+
+struct RappsCertInfo
+{
+    PCCERT_CHAIN_CONTEXT pChainContext = nullptr;
+    CLocalPtr<char> subjectInfo;
+    CLocalPtr<char> issuerInfo;
+
+    ~RappsCertInfo()
+    {
+        if (pChainContext)
+            ::CertFreeCertificateChain(pChainContext);
+    }
+
+};
+
+// Allowlisted certificates from Let's encrypt.
+// Their root certificates are the ones we added here.
+// See https://letsencrypt.org/certificates/ for more details
+static const wchar_t *wszAllowedCertificates[] = {
+    L"96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6",    // ISRG Root X1
+    L"69729b8e15a86efc177a57afb7171dfc64add28c2fca8cf1507e34453ccb1470",    // ISRG Root X2
+};
+
+static void
+ExtractCertDetails(CLocalPtr<char> &output, PCCERT_CONTEXT cert, DWORD type)
+{
+    DWORD dwLen = CertGetNameStringA(cert, CERT_NAME_RDN_TYPE, type, NULL, nullptr, 0);
+    output.Allocate(dwLen);
+    CertGetNameStringA(cert, CERT_NAME_RDN_TYPE, type, NULL, output.m_pData, dwLen);
+}
 
 static bool
-IsTrustedPinnedCert(LPCSTR Subject, LPCSTR Issuer)
+IsTrustedPinnedCert(const RappsCertInfo &certInfo)
 {
-    if (strcmp(Subject, CERT_SUBJECT_INFO))
+    CERT_SIMPLE_CHAIN *chain = certInfo.pChainContext->rgpChain[0];
+    if (chain->cElement < 2)
+    {
+        DPRINT1("Certificate chain is too short, cElement = %d\n", chain->cElement);
         return false;
-#ifdef CERT_ISSUER_INFO_PREFIX
-    return Issuer == StrStrA(Issuer, CERT_ISSUER_INFO_PREFIX) || Issuer == StrStrA(Issuer, CERT_ISSUER_INFO_PREFIX2);
-#else
-    return !strcmp(Issuer, CERT_ISSUER_INFO_OLD) || !strcmp(Issuer, CERT_ISSUER_INFO_NEW);
-#endif
+    }
+    PCCERT_CONTEXT root = chain->rgpElement[chain->cElement - 1]->pCertContext;
+
+    BYTE hash[64];
+    DWORD hash_size = sizeof(hash);
+    if (!CryptHashCertificate(0, CALG_SHA_256, 0, root->pbCertEncoded, root->cbCertEncoded, hash, &hash_size))
+    {
+        DPRINT1("CryptHashCertificate failed with error %d\n", GetLastError());
+        return false;
+    }
+
+    WCHAR buf[(sizeof(hash) * 2) + 1]{};
+    for (UINT i = 0; i < hash_size; i++)
+        _swprintf(buf + 2 * i, L"%02x", ((unsigned char *)hash)[i]);
+
+    for (SIZE_T n = 0; n < _countof(wszAllowedCertificates); ++n)
+    {
+        if (!_wcsicmp(wszAllowedCertificates[n], buf))
+            return true;
+    }
+
+    return false;
 }
 #endif // USE_CERT_PINNING
 
@@ -400,10 +447,8 @@ class CDowloadingAppsListView : public CListView
 
 #ifdef USE_CERT_PINNING
 static BOOL
-CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char> &subjectInfo, CLocalPtr<char> &issuerInfo)
+CertGetSubjectAndIssuer(HINTERNET hFile, RappsCertInfo& certInfo)
 {
-    DWORD certInfoLength;
-    INTERNET_CERTIFICATE_INFOA certInfo;
     DWORD size, flags;
 
     size = sizeof(flags);
@@ -417,24 +462,90 @@ CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char> &subjectInfo, CLocalPtr
         return FALSE;
     }
 
-    /* Despite what the header indicates, the implementation of INTERNET_CERTIFICATE_INFO is not Unicode-aware. */
-    certInfoLength = sizeof(certInfo);
-    if (!InternetQueryOptionA(hFile, INTERNET_OPTION_SECURITY_CERTIFICATE_STRUCT, &certInfo, &certInfoLength))
+    certInfo.pChainContext = nullptr;
+    DWORD cbSize = sizeof(certInfo.pChainContext);
+    if (InternetQueryOptionA(hFile, INTERNET_OPTION_SERVER_CERT_CHAIN_CONTEXT, &certInfo.pChainContext, &cbSize))
     {
-        return FALSE;
+        // pChainContext->rgpChain[0] is the chain for the end-entity cert
+        CERT_SIMPLE_CHAIN *chain = certInfo.pChainContext->rgpChain[0];
+
+        if (chain->cElement >= 2)
+        {
+            // This is the root of the chain, which is the cert we checked.
+            PCCERT_CONTEXT leaf = chain->rgpElement[0]->pCertContext;
+            // This is our leaf cert, used for the ssl connection
+            PCCERT_CONTEXT root = chain->rgpElement[chain->cElement - 1]->pCertContext;
+            ExtractCertDetails(certInfo.subjectInfo, leaf, 0);
+            ExtractCertDetails(certInfo.issuerInfo, root, 0);
+            return TRUE;
+        }
+        else
+        {
+            DPRINT1("Certificate chain is too short, cElement = %d\n", chain->cElement);
+            return FALSE;
+        }
     }
 
-    subjectInfo.Attach(certInfo.lpszSubjectInfo);
-    issuerInfo.Attach(certInfo.lpszIssuerInfo);
+    return FALSE;
+}
 
-    if (certInfo.lpszProtocolName)
-        LocalFree(certInfo.lpszProtocolName);
-    if (certInfo.lpszSignatureAlgName)
-        LocalFree(certInfo.lpszSignatureAlgName);
-    if (certInfo.lpszEncryptionAlgName)
-        LocalFree(certInfo.lpszEncryptionAlgName);
+static void
+ShowCertChain(HWND hwndParent, const CERT_SIMPLE_CHAIN *pSimpleChain)
+{
+    HCERTSTORE hMemStore = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, NULL);
+    if (!hMemStore)
+        return;
 
-    return certInfo.lpszSubjectInfo && certInfo.lpszIssuerInfo;
+    for (DWORD i = 0; i < pSimpleChain->cElement; i++)
+    {
+        CertAddCertificateContextToStore(
+            hMemStore, pSimpleChain->rgpElement[i]->pCertContext, CERT_STORE_ADD_ALWAYS, NULL);
+    }
+
+    CRYPTUI_VIEWCERTIFICATE_STRUCTW view = {0};
+    view.dwSize = sizeof(view);
+    view.hwndParent = hwndParent;
+    view.dwFlags = 0;
+    view.pCertContext = pSimpleChain->rgpElement[0]->pCertContext; // leaf
+    view.cStores = 1;
+    view.rghStores = &hMemStore;
+
+    BOOL fPropertiesChanged = FALSE;
+    CryptUIDlgViewCertificateW(&view, &fPropertiesChanged);
+
+    CertCloseStore(hMemStore, 0);
+}
+
+// The message box callback has no usable context parameter, and the message box
+// is modal on the calling thread, so pass the chain through a static.
+static const CERT_SIMPLE_CHAIN *g_pMismatchCertChain = NULL;
+
+static VOID CALLBACK
+CertMismatchHelpCallback(LPHELPINFO lpHelpInfo)
+{
+    // The help button keeps the message box open, so use it to show the certificate
+    if (g_pMismatchCertChain)
+        ShowCertChain(GetParent((HWND)lpHelpInfo->hItemHandle), g_pMismatchCertChain);
+}
+
+static BOOL
+AskContinueWithCert(HWND hwndOwner, LPCSTR pszText, const CERT_SIMPLE_CHAIN *pSimpleChain)
+{
+    MSGBOXPARAMSA params = { sizeof(params) };
+    params.hwndOwner = hwndOwner;
+    params.lpszText = pszText;
+    params.dwStyle = MB_YESNO | MB_ICONERROR;
+    if (pSimpleChain)
+    {
+        params.dwStyle |= MB_HELP;
+        params.lpfnMsgBoxCallback = CertMismatchHelpCallback;
+    }
+
+    g_pMismatchCertChain = pSimpleChain;
+    int Result = MessageBoxIndirectA(&params);
+    g_pMismatchCertChain = NULL;
+
+    return Result == IDYES;
 }
 #endif
 
@@ -1007,23 +1118,25 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
     // are we using HTTPS to download the RAPPS update package? check if the certificate is original
     if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) && (Info.DLType == DLTYPE_DBUPDATE))
     {
-        CLocalPtr<char> subjectName, issuerName;
         CStringA szMsgText;
+        RappsCertInfo certInfo;
         bool bAskQuestion = false;
-        if (!CertGetSubjectAndIssuer(hFile, subjectName, issuerName))
+        const CERT_SIMPLE_CHAIN *pSimpleChain = NULL;
+        if (!CertGetSubjectAndIssuer(hFile, certInfo))
         {
             szMsgText.LoadStringW(IDS_UNABLE_TO_QUERY_CERT);
             bAskQuestion = true;
         }
-        else if (!IsTrustedPinnedCert(subjectName, issuerName))
+        else if (!IsTrustedPinnedCert(certInfo))
         {
-            szMsgText.Format(IDS_MISMATCH_CERT_INFO, (LPCSTR)subjectName, (LPCSTR)issuerName);
+            szMsgText.Format(IDS_MISMATCH_CERT_INFO, (LPCSTR)certInfo.subjectInfo, (LPCSTR)certInfo.issuerInfo);
+            pSimpleChain = certInfo.pChainContext->rgpChain[0];
             bAskQuestion = true;
         }
 
         if (bAskQuestion)
         {
-            if (MessageBoxA(hDlg, szMsgText, NULL, MB_YESNO | MB_ICONERROR) != IDYES)
+            if (!AskContinueWithCert(hDlg, szMsgText, pSimpleChain))
             {
                 goto end;
             }
