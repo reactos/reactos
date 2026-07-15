@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS Arbitrartion Library
- * LICENSE:     MIT License (https://spdx.org/licenses/MIT.html)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Generic Arbiter Library
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
@@ -160,7 +160,7 @@ typedef NTSTATUS
     _In_opt_ PIO_RESOURCE_DESCRIPTOR Requirement,
     _In_opt_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Resource
 );
-#endif
+#endif // (NTDDI_VERSION >= NTDDI_VISTA)
 
 typedef NTSTATUS
 (NTAPI * PARB_COMMIT_ALLOCATION)(

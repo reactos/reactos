@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS Arbitrartion Library
- * LICENSE:     MIT License (https://spdx.org/licenses/MIT.html)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Generic Arbiter Library
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
