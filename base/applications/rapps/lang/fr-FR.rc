@@ -207,7 +207,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Impossible d'écrire sur le disque. Votre disque pourrait être plein."
     IDS_INSTALL_SELECTED "Installer la sélection"
     IDS_SELECTEDFORINST "Sélectionnées pour installation"
-    IDS_MISMATCH_CERT_INFO "Certificat inconnu:\nSujet: %s\nEmetteur: %s\nVoulez-vous continuer ?"
+    IDS_MISMATCH_CERT_INFO "Certificat inconnu:\nSujet: %s\nEmetteur root: %s\nVoulez-vous continuer ?"
     IDS_UNABLE_PATH "Format de chemin invalide."
     IDS_APP_DISPLAY_DETAILS "Détails"
     IDS_APP_DISPLAY_LIST "Liste"

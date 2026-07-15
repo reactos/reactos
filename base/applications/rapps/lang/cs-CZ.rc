@@ -205,7 +205,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Ukládání na disk se nepodařilo. Disk může být zaplněn."
     IDS_INSTALL_SELECTED "Nainstalovat vybrané"
     IDS_SELECTEDFORINST "Vybráno k instalaci"
-    IDS_MISMATCH_CERT_INFO "Neznámý certifikát:\nSubjekt: %s\nVydavatel: %s\nChcete i přesto pokračovat?"
+    IDS_MISMATCH_CERT_INFO "Neznámý certifikát:\nSubjekt: %s\nVydavatel root: %s\nChcete i přesto pokračovat?"
     IDS_UNABLE_PATH "Neplatný formát cesty."
     IDS_APP_DISPLAY_DETAILS "Podrobnosti"
     IDS_APP_DISPLAY_LIST "Seznam"

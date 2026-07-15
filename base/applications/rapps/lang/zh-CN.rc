@@ -208,7 +208,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "无法写入磁盘。磁盘可能已满。"
     IDS_INSTALL_SELECTED "安装已选中的"
     IDS_SELECTEDFORINST "选中以安装"
-    IDS_MISMATCH_CERT_INFO "所使用的证书未知：\n主题：%s\n发行方：%s\n是否仍要继续？"
+    IDS_MISMATCH_CERT_INFO "所使用的证书未知：\n主题：%s\n发行方 root：%s\n是否仍要继续？"
     IDS_UNABLE_PATH "不正确的URL格式。"
     IDS_APP_DISPLAY_DETAILS "细节"
     IDS_APP_DISPLAY_LIST "列表"
