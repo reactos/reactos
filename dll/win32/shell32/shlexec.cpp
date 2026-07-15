@@ -1080,7 +1080,16 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
         search_paths[0] = curdir;
     }
 
-    lstrcpyW(xlpFile, lpFile);
+    /* Handle lpFile name that begins with a dot followed by a backslash like CORE-20508
+     * by ignoring the beginning 2 characters and continuing */
+    if (lpFile[0] == '.' && lpFile[1] == '\\')
+    {
+        lstrcpyW(xlpFile, &lpFile[2]);
+        lpFile = xlpFile;
+    }
+    else
+        lstrcpyW(xlpFile, lpFile);
+
     if (PathResolveW(xlpFile, search_paths, PRF_TRYPROGRAMEXTENSIONS | PRF_VERIFYEXISTS) ||
         PathFindOnPathW(xlpFile, search_paths))
     {
