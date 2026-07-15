@@ -83,7 +83,7 @@ IopArbBusNumberScoreRequirement(
  * @brief Initialize the RootBusArbiter
  *
  * The root bus-number arbiter owns the flat 0..255 bus-number space and hands 
- * each bridge a sub-range
+ * each bridge a sub-range.
  *
  * @return NTSTATUS
  * @retval STATUS_SUCCESS

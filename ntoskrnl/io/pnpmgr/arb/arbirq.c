@@ -17,7 +17,6 @@ extern ARBITER_INSTANCE IopRootIrqArbiter;
 
 /* FUNCTIONS *****************************************************************/
 
-
 NTSTATUS
 NTAPI
 IopArbIrqUnpackRequirements(
@@ -126,16 +125,17 @@ IopArbIrqTranslateOrdering(
 }
 
 /**
- * @brief Initialize the root IRQ arbiter
- * this is the fallback that sits at the top of the tree and takes
+ * @brief Initialize the root IRQ arbiter.
+ *
+ * This is the fallback that sits at the top of the tree and takes
  * over when no closer arbiter claims the request, e.g
  * root-enumerated / HAL legacy devices (ISA-style, directly under the root),
  * and platforms or boot paths where no bus driver above the device provides an
- *   interrupt arbiter (e.g. no ACPI _PRT routing in effect).
+ * interrupt arbiter (e.g. no ACPI _PRT routing in effect).
  *
  * In those cases the arbitrated "vectors" are the legacy ISA IRQ lines, which is
  * why IopArbIrqTranslateOrdering maps the ordering table through
- * HalGetInterruptVector for the ISA bus. otherwise such devices
+ * HalGetInterruptVector for the ISA bus. Otherwise, such devices
  * would have nowhere to arbitrate their interrupts. 
  * (So this is purely for legacy PIC + No ACPI)
  *

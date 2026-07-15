@@ -66,7 +66,6 @@ IopArbDmaPackResource(
     CmDescriptor->u.Dma.Channel = (ULONG)Start;
     CmDescriptor->u.Dma.Port    = 0;
 
-
     return STATUS_SUCCESS;
 }
 
@@ -95,7 +94,7 @@ IopArbDmaScoreRequirement(
 }
 
 /**
- * @brief Initialize the RootDmaArbiter
+ * @brief Initialize the RootDmaArbiter.
  *
  * @return NTSTATUS
  * @retval STATUS_SUCCESS
