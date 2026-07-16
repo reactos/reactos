@@ -231,11 +231,7 @@ WelcomeDlgProc(HWND hwndDlg,
             EnableWindow(hwndControl, FALSE);
 
             /* Set title font */
-            SendDlgItemMessage(hwndDlg,
-                               IDC_WELCOMETITLE,
-                               WM_SETFONT,
-                               (WPARAM)pSetupData->hTitleFont,
-                               (LPARAM)TRUE);
+            SetDlgItemFont(hwndDlg, IDC_WELCOMETITLE, pSetupData->hTitleFont, TRUE);
         }
         break;
 
@@ -2696,13 +2692,13 @@ ProcessPageDlgProc(HWND hwndDlg,
             DPRINT("PM_ITEM_START %lu\n", (ULONG)lParam);
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, (ULONG)lParam));
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, 0, 0);
-            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
+            SetDlgItemFont(hwndDlg, IDC_TASKTEXT1 + wParam, SetupData->hBoldFont, TRUE);
             SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hArrowIcon);
             break;
 
         case PM_ITEM_END:
             DPRINT("PM_ITEM_END\n");
-            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)s_hNormalFont, (LPARAM)TRUE);
+            SetDlgItemFont(hwndDlg, IDC_TASKTEXT1 + wParam, s_hNormalFont, TRUE);
             if (lParam == ERROR_SUCCESS)
             {
                 SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hCheckIcon);
@@ -2796,11 +2792,7 @@ FinishDlgProc(HWND hwndDlg,
             PSETUPDATA SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
 
             /* Set title font */
-            SendDlgItemMessage(hwndDlg,
-                               IDC_FINISHTITLE,
-                               WM_SETFONT,
-                               (WPARAM)SetupData->hTitleFont,
-                               (LPARAM)TRUE);
+            SetDlgItemFont(hwndDlg, IDC_FINISHTITLE, SetupData->hTitleFont, TRUE);
             if (SetupData->UnattendSetup)
             {
                 KillTimer(hwndDlg, 1);

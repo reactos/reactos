@@ -28,6 +28,9 @@
 #define ShowDlgItem(hDlg, nID, nCmdShow)    \
     ShowWindow(GetDlgItem((hDlg), (nID)), (nCmdShow))
 
+#define SetDlgItemFont(hDlg, nID, hFont, bRedraw)   \
+    SetWindowFont(GetDlgItem((hDlg), (nID)), (hFont), (bRedraw))
+
 /* These are public names and values determined from MFC, and compatible with Windows */
 // Property Sheet control IDs (determined with Spy++)
 #define IDC_TAB_CONTROL                 0x3020
