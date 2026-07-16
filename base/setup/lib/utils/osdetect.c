@@ -119,6 +119,7 @@ EnumerateInstallations(
 
     // TODO: Normalize the ARC path.
 
+#if 0 // TODO: TEST
     /*
      * Check whether we already have an installation with this ARC path.
      * If this is the case, stop there.
@@ -131,6 +132,7 @@ EnumerateInstallations(
         /* Continue the enumeration */
         return STATUS_SUCCESS;
     }
+#endif
 
     /*
      * Convert the ARC path into an NT path, from which we will deduce the
@@ -148,6 +150,7 @@ EnumerateInstallations(
     DPRINT("ArcPathToNtPath() succeeded: '%S' --> '%wZ'\n",
            Options->OsLoadPath, &SystemRootPath);
 
+#if 0 // TODO: TEST
     /*
      * Check whether we already have an installation with this NT path.
      * If this is the case, stop there.
@@ -160,6 +163,7 @@ EnumerateInstallations(
         /* Continue the enumeration */
         return STATUS_SUCCESS;
     }
+#endif
 
     DPRINT("EnumerateInstallations: SystemRootPath: '%wZ'\n", &SystemRootPath);
 
@@ -204,6 +208,28 @@ EnumerateInstallations(
         }
         NtOsInstall->Volume = (PartEntry ? PartEntry->Volume : NULL);
     }
+
+#if 1 // TODO: TESTS: Add the install a second time
+    /* Add the discovered NTOS installation into the list */
+    NtOsInstall = AddNTOSInstallation(Data->List,
+                                      L"Test install",
+                                      Machine,
+                                      VendorName.Buffer, // FIXME: What if it's not NULL-terminated?
+                                      Options->OsLoadPath,
+                                      &SystemRootPath, PathComponent,
+                                      DiskNumber, PartitionNumber);
+    if (NtOsInstall)
+    {
+        /* Retrieve the volume corresponding to the disk and partition numbers */
+        PPARTENTRY PartEntry = SelectPartition(Data->PartList, DiskNumber, PartitionNumber);
+        if (!PartEntry)
+        {
+            DPRINT1("SelectPartition(disk #%d, partition #%d) failed\n",
+                    DiskNumber, PartitionNumber);
+        }
+        NtOsInstall->Volume = (PartEntry ? PartEntry->Volume : NULL);
+    }
+#endif
 
     /* Continue the enumeration */
     return STATUS_SUCCESS;
@@ -624,6 +650,7 @@ AddNTOSInstallation(
     PNTOS_INSTALLATION NtOsInstall;
     SIZE_T ArcPathLength, NtPathLength;
 
+#if 0
     /* Is there already any installation with these settings? */
     NtOsInstall = FindExistingNTOSInstall(List, SystemRootArcPath, SystemRootNtPath);
     if (NtOsInstall)
@@ -637,6 +664,7 @@ AddNTOSInstallation(
         //
         return NtOsInstall;
     }
+#endif
 
     ArcPathLength = (wcslen(SystemRootArcPath) + 1) * sizeof(WCHAR);
     // NtPathLength  = ROUND_UP(SystemRootNtPath->Length + sizeof(UNICODE_NULL), sizeof(WCHAR));
