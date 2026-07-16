@@ -4,6 +4,7 @@
  * PURPOSE:           System setup
  * FILE:              dll/win32/syssetup/install.c
  * PROGRAMER:         Eric Kohl
+ *                    Whindmar Saksit <whindsaks@proton.me>
  */
 
 /* INCLUDES *****************************************************************/
@@ -985,6 +986,26 @@ cleanup:
     return bConsoleBoot;
 }
 
+static VOID
+ProcessDetachedProgram(
+    _In_ PCWSTR pszInf)
+{
+    WCHAR szInfApp[MAX_PATH], szInfArg[MAX_PATH * 3];
+    WCHAR szCmd[_countof(szInfApp) + _countof(szInfArg)];
+    UINT cch;
+
+    if (!GetPrivateProfileStringW(L"GuiUnattended", L"DetachedProgram", L"", szInfApp, _countof(szInfApp), pszInf) || !*szInfApp)
+        return;
+    cch = ExpandEnvironmentStrings(szInfApp, szCmd, _countof(szCmd) - 1);
+    if (GetPrivateProfileStringW(L"GuiUnattended", L"Arguments", L"", szInfArg, _countof(szInfArg), pszInf) && cch)
+    {
+        szCmd[cch - 1] = L' ';
+        szCmd[cch] = UNICODE_NULL;
+        ExpandEnvironmentStrings(szInfArg, szCmd + cch, _countof(szCmd) - cch);
+    }
+    RunCommandAndWait(szCmd);
+}
+
 extern VOID
 EnableVisualTheme(
     _In_opt_ HWND hwndParent,
@@ -1010,8 +1031,7 @@ PreprocessUnattend(
     {
         /* See also wizard.c!ProcessSetupInf()
          * Retrieve the path of the setup INF */
-        GetSystemDirectoryW(szPath, _countof(szPath));
-        wcscat(szPath, L"\\$winnt$.inf");
+        GetSetupInfPath(szPath, _countof(szPath));
     }
     else
     {
@@ -1038,6 +1058,9 @@ PreprocessUnattend(
 
     /* Enable the chosen theme, or use the classic theme */
     EnableVisualTheme(NULL, bDefaultThemesOff ? NULL : szValue);
+
+    if (IsInstall)
+        ProcessDetachedProgram(szPath);
 }
 
 static BOOL

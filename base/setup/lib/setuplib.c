@@ -235,6 +235,7 @@ InstallSetupInfFile(
     if (!IniCache)
         return;
 
+#if 0 /* If you need to put something in this section, do it after the merge with Unattend.inf */
     IniSection = IniAddSection(IniCache, L"SetupParams");
     if (IniSection)
     {
@@ -243,6 +244,7 @@ InstallSetupInfFile(
                             // L"\"%s\"", L"WinNt5.2");
         // IniAddKey(IniSection, L"Version", PathBuffer);
     }
+#endif
 
     IniSection = IniAddSection(IniCache, L"Data");
     if (IniSection)

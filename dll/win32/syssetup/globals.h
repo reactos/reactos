@@ -73,6 +73,10 @@ HRESULT
 InstallOptionalComponents(
     _In_ PITEMSDATA pItemsData);
 
+HRESULT
+RunCommandAndWait(
+    _In_ PWCHAR Command);
+
 /* install */
 
 BOOL
@@ -109,6 +113,10 @@ VOID
 SetAutoAdminLogon(VOID);
 
 /* wizard.c */
-VOID InstallWizard (VOID);
+VOID
+InstallWizard(VOID);
+
+VOID
+GetSetupInfPath(PWSTR szPath, UINT cchMax);
 
 /* EOF */

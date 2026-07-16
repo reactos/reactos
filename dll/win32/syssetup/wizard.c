@@ -53,6 +53,13 @@ typedef struct _TIMEZONE_ENTRY
 
 extern void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
 
+VOID
+GetSetupInfPath(PWSTR szPath, UINT cchMax)
+{
+    GetSystemDirectoryW(szPath, cchMax);
+    wcscat(szPath, L"\\$winnt$.inf");
+}
+
 static VOID
 CenterWindow(HWND hWnd)
 {
@@ -2740,31 +2747,38 @@ ProcessPageDlgProc(HWND hwndDlg,
 
 
 static VOID
-SetInstallationCompleted(VOID)
+SetInstallationCompleted(IN BOOL Unattended)
 {
     HKEY hKey = 0;
     DWORD InProgress = 0;
     DWORD InstallDate;
 
-    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
-                       L"SYSTEM\\Setup",
-                       0,
-                       KEY_WRITE,
-                       &hKey ) == ERROR_SUCCESS)
-    {
-        RegSetValueExW( hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress) );
-        RegCloseKey( hKey );
-    }
-
-    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
-                       L"Software\\Microsoft\\Windows NT\\CurrentVersion",
-                       0,
-                       KEY_WRITE,
-                       &hKey ) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion",
+                      0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
     {
         InstallDate = (DWORD)time(NULL);
-        RegSetValueExW( hKey, L"InstallDate", 0, REG_DWORD, (LPBYTE)&InstallDate, sizeof(InstallDate) );
-        RegCloseKey( hKey );
+        RegSetValueExW(hKey, L"InstallDate", 0, REG_DWORD, (LPBYTE)&InstallDate, sizeof(InstallDate));
+        RegCloseKey(hKey);
+    }
+
+    if (Unattended)
+    {
+        WCHAR szInf[MAX_PATH];
+        WCHAR szInfCmd[MAX_PATH * 4], szCmd[_countof(szInfCmd)];
+
+        GetSetupInfPath(szInf, _countof(szInf));
+        if (GetPrivateProfileStringW(L"SetupParams", L"UserExecute", L"", szInfCmd, _countof(szInfCmd), szInf) && *szInfCmd)
+        {
+            *szCmd = UNICODE_NULL;
+            ExpandEnvironmentStringsW(szInfCmd, szCmd, _countof(szInfCmd));
+            RunCommandAndWait(szCmd);
+        }
+    }
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\Setup", 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
+    {
+        RegSetValueExW(hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress));
+        RegCloseKey(hKey);
     }
 }
 
@@ -2790,7 +2804,7 @@ FinishDlgProc(HWND hwndDlg,
             if (SetupData->UnattendSetup)
             {
                 KillTimer(hwndDlg, 1);
-                SetInstallationCompleted();
+                SetInstallationCompleted(TRUE);
                 PostQuitMessage(0);
             }
 
@@ -2802,7 +2816,7 @@ FinishDlgProc(HWND hwndDlg,
 
         case WM_DESTROY:
         {
-            SetInstallationCompleted();
+            SetInstallationCompleted(FALSE);
             PostQuitMessage(0);
             return TRUE;
         }
@@ -3335,8 +3349,7 @@ ProcessSetupInf(
     pSetupData->hSetupInf = INVALID_HANDLE_VALUE;
 
     /* Retrieve the path of the setup INF */
-    GetSystemDirectoryW(szPath, _countof(szPath));
-    wcscat(szPath, L"\\$winnt$.inf");
+    GetSetupInfPath(szPath, _countof(szPath));
 
     /* Open the setup INF */
     pSetupData->hSetupInf = SetupOpenInfFileW(szPath,
