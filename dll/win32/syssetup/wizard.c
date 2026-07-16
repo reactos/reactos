@@ -2784,34 +2784,50 @@ FinishDlgProc(HWND hwndDlg,
               WPARAM wParam,
               LPARAM lParam)
 {
+    PSETUPDATA SetupData;
+
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
+            HWND hWndParent = GetParent(hwndDlg);
+
             /* Get pointer to the global setup data */
-            PSETUPDATA SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)SetupData);
 
             /* Set title font */
             SetDlgItemFont(hwndDlg, IDC_FINISHTITLE, SetupData->hTitleFont, TRUE);
+#if 0 // FIXME: Added in commit 49496ddec6 (r47011) claiming to fix CORE-4580
             if (SetupData->UnattendSetup)
             {
                 KillTimer(hwndDlg, 1);
                 SetInstallationCompleted(TRUE);
                 PostQuitMessage(0);
             }
+#endif
 
-            /* Ensure that the installer wizard window is made visible and focused */
-            ShowWindow(GetParent(hwndDlg), SW_SHOW);
-            SwitchToThisWindow(GetParent(hwndDlg), TRUE);
-            break;
+            /* Ensure that the wizard window is centered, made visible, and focused */
+            CenterWindow(hWndParent);
+            ShowWindow(hWndParent, SW_SHOW);
+            SwitchToThisWindow(hWndParent, TRUE);
+            return TRUE;
         }
 
+#if 1 // FIXME: Added in commit 49496ddec6 (r47011) claiming to fix CORE-4580
         case WM_DESTROY:
         {
             SetInstallationCompleted(FALSE);
             PostQuitMessage(0);
             return TRUE;
         }
+#endif
+
+        case WM_APP: // TODO: Change name
+            PropSheet_PressButton(GetParent(hwndDlg), wParam);
+            break;
 
         case WM_TIMER:
         {
@@ -2848,6 +2864,17 @@ FinishDlgProc(HWND hwndDlg,
                     ShowDlgItem(hWndParent, ID_WIZBACK, SW_HIDE);
                     ShowDlgItem(hWndParent, ID_WIZNEXT, SW_HIDE);
 
+                    /* Skip the Finish page in unattended setup */
+                    // TODO: Check the unattend.inf "WaitForReboot" value.
+                    if (SetupData->UnattendSetup)
+                    {
+                        PostMessageW(hwndDlg, WM_APP, PSBTN_FINISH, 0);
+                        /* We need to "stay" on the page so that we can
+                         * receive the PSN_WIZFINISH notification */
+                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, 0);
+                        return TRUE;
+                    }
+
                     /* Set up the reboot progress bar and countdown timer.
                      * 300 steps at 50 ms each: 15 seconds */
                     SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, 300));
@@ -2856,9 +2883,17 @@ FinishDlgProc(HWND hwndDlg,
                     break;
                 }
 
+                case PSN_KILLACTIVE:
+                    KillTimer(hwndDlg, 1);
+                    break;
+
+#if 1
+                // FIXME: Added in commit 49496ddec6 (r47011) claiming to fix CORE-4580
+                // See WM_DESTROY above
                 case PSN_WIZFINISH:
                     DestroyWindow(GetParent(hwndDlg));
                     break;
+#endif
 
                 default:
                     break;
