@@ -2529,15 +2529,8 @@ FinishDlgProc(
                 ShowDlgItem(hwndDlg, IDC_RESTART_PROGRESS, SW_HIDE);
             }
 
-            /* If the installation is aborted, change the "Cancel" button text to "Close" */
-            if (pSetupData->bStopInstall)
-            {
-                SetWindowResTextW(GetDlgItem(hWndParent, IDCANCEL),
-                                  GetModuleHandleW(L"comctl32.dll"),
-                                  IDS_CLOSE);
-            }
-
-            /* Ensure that the installer wizard window is made visible and focused */
+            /* Ensure that the wizard window is centered, made visible, and focused */
+            CenterWindow(hWndParent);
             ShowWindow(hWndParent, SW_SHOW);
             SwitchToThisWindow(hWndParent, TRUE);
             return TRUE;
@@ -2610,11 +2603,15 @@ FinishDlgProc(
                                       pSetupData->hInstance,
                                       IDS_RESTARTBTN);
 
+                    /* Re-enable the Close/Cancel buttons if we won't reboot */
+                    if (!pSetupData->bMustReboot)
+                        PropSheet_SetCloseCancel(hWndParent, TRUE);
+
                     if (pSetupData->bMustReboot)
                     {
                         RECT rcBtn1, rcBtn2;
 
-                        /* Move the "Finish"/"Restart" button to where the "Close"/"Cancel" button is */
+                        /* Move the "Finish"/"Restart" button to where the "Cancel" button is */
                         GetWindowRect(GetDlgItem(hWndParent, ID_WIZFINISH), &rcBtn1);
                         MapWindowPoints(HWND_DESKTOP /*NULL*/, hWndParent, (LPPOINT)&rcBtn1, sizeof(RECT)/sizeof(POINT));
                         GetWindowRect(GetDlgItem(hWndParent, IDCANCEL), &rcBtn2);
@@ -2626,7 +2623,7 @@ FinishDlgProc(
                                      0, 0,
                                      SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
 
-                        /* Hide and disable also the "Close"/"Cancel" buttons since we can only finish now */
+                        /* Hide and disable also the "Cancel" buttons since we can only finish now */
                         ShowDlgItem(hWndParent, IDCANCEL, SW_HIDE);
                         PropSheet_SetCloseCancel(hWndParent, FALSE);
 
@@ -2639,14 +2636,28 @@ FinishDlgProc(
                     else if (!pSetupData->bStopInstall)
                     {
                         /* Keep the "Cancel" button shown and change its text to "Postpone" */
-                        // PropSheet_ShowWizButtons(hWndParent, 0, PSWIZB_BACK | PSWIZB_NEXT);
                         SetWindowResTextW(GetDlgItem(hWndParent, IDCANCEL),
                                           pSetupData->hInstance,
                                           IDS_POSTPONEBTN);
                     }
-
+                    else // (!bMustReboot && bStopInstall)
+                    {
+                        /* The installation is aborted, change the "Cancel" button text to "Close" */
+                        SetWindowResTextW(GetDlgItem(hWndParent, IDCANCEL),
+                                          GetModuleHandleW(L"comctl32.dll"),
+                                          IDS_CLOSE);
+                    }
                     break;
                 }
+
+                case PSN_KILLACTIVE:
+                    KillTimer(hwndDlg, 1);
+                    break;
+
+                case PSN_WIZBACK:
+                    /* Always disable going back */
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1);
+                    return TRUE;
 
                 case PSN_WIZNEXT:
                 case PSN_WIZFINISH:
