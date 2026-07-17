@@ -64,6 +64,11 @@ ULONGLONG MiLastPoolDumpTime;
 #define POOL_NEXT_BLOCK(x)  POOL_BLOCK((x), (x)->BlockSize)
 #define POOL_PREV_BLOCK(x)  POOL_BLOCK((x), -((x)->PreviousSize))
 
+/* Special pool flags */
+#define SPECIAL_POOL_PAGED_PTE    0x2000
+#define SPECIAL_POOL_NONPAGED_PTE 0x4000
+#define SPECIAL_POOL_PAGED        0x8000
+
 /*
  * Pool list access debug macros, similar to Arthur's pfnlist.c work.
  * Microsoft actually implements similar checks in the Windows Server 2003 SP1
@@ -2926,18 +2931,89 @@ ExFreePool(PVOID P)
 }
 
 /*
- * @unimplemented
+ * @implemented
+ *
+ * @param[in] PoolBlock
+ * Pointer to the start of a pool allocation that is returned by
+ * ExAllocatePoolWithTag
+ *
+ * @param[out] QuotaCharged
+ * Gets TRUE if the allocation was charged against the calling
+ * process pool quota, FALSE otherwise.
+ *
+ * @return
+ * The size in bytes of the pool block. Returns 0 if the block is a
+ * big page allocation that could not be found
  */
 SIZE_T
 NTAPI
-ExQueryPoolBlockSize(IN PVOID PoolBlock,
-                     OUT PBOOLEAN QuotaCharged)
+ExQueryPoolBlockSize(_In_ PVOID PoolBlock,
+                     _Out_ PBOOLEAN QuotaCharged)
 {
-    //
-    // Not implemented
-    //
-    UNIMPLEMENTED;
-    return FALSE;
+    PPOOL_HEADER Entry;
+    KIRQL OldIrql;
+    ULONG i;
+
+    /*
+     * Special pool blocks don't have a normal pool header next to them
+     * and can be page-aligned or not depending on whether they are under/overrun
+     * catched, so they need to be checked before anything else
+     */
+    if ((ExpPoolFlags & POOL_FLAG_SPECIAL_POOL) && MmIsSpecialPoolAddress(PoolBlock))
+    {
+        PPOOL_HEADER Header;
+
+        if (PAGE_ALIGN(PoolBlock) == PoolBlock)
+        {
+            Header = (PPOOL_HEADER)((PUCHAR)PoolBlock + PAGE_SIZE - sizeof(POOL_HEADER));
+        }
+        else
+        {
+            Header = PAGE_ALIGN(PoolBlock);
+        }
+
+        /* Special pool allocations are never quota charged */
+        *QuotaCharged = FALSE;
+        return Header->Ulong1 & ~SPECIAL_POOL_PAGED & 0xFFFF;
+    }
+
+    /*
+     * Since big page allocations are page-aligned and have no pool header,
+     * look them up in the big page tracking table instead
+     */
+    if (PAGE_ALIGN(PoolBlock) == PoolBlock)
+    {
+        KeAcquireSpinLock(&ExpLargePoolTableLock, &OldIrql);
+        for (i = 0; i < PoolBigPageTableSize; i++)
+        {
+            if (PoolBigPageTable[i].Va == PoolBlock)
+            {
+                SIZE_T NumberOfPages = PoolBigPageTable[i].NumberOfPages;
+                KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+
+                /*
+                 * Big page allocations are never quota charged
+                 */
+                *QuotaCharged = FALSE;
+                return NumberOfPages * PAGE_SIZE;
+            }
+        }
+        KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+
+        /*
+         * It isn't tracked so we can't find out its size
+         */
+        *QuotaCharged = FALSE;
+        return 0;
+    }
+
+    /*
+     * Regular pool block. The size lives in the header right before it
+     */
+    Entry = PoolBlock;
+    Entry--;
+    *QuotaCharged = ((Entry->PoolType - 1) & QUOTA_POOL_MASK) ? TRUE : FALSE;
+    return Entry->BlockSize * POOL_BLOCK_SIZE;
 }
 
 /*
