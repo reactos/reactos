@@ -3254,16 +3254,14 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
         m_hMenu = NULL;
     }
 
+    if (m_hWnd)
+        _DoFolderViewCB(SFVM_WINDOWCLOSING, (WPARAM)m_hWnd, 0);
+
     if (m_ListView)
-    {
         m_ListView.DestroyWindow();
-    }
 
     if (m_hWnd)
-    {
-        _DoFolderViewCB(SFVM_WINDOWCLOSING, (WPARAM)m_hWnd, 0);
         DestroyWindow();
-    }
 
     m_pShellBrowser.Release();
     m_pCommDlgBrowser.Release();
