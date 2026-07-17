@@ -130,5 +130,9 @@ static __inline void LoadUserApiHook()
 #define NTUSER_WNDPROC_BUTTON       FNID_BUTTON
 #define NTUSER_WNDPROC_LISTBOX      FNID_LISTBOX
 #define NTUSER_WNDPROC_STATIC       FNID_STATIC
+#define NTUSER_WNDPROC_EDIT         FNID_EDIT
 
 #define MAKE_FNID(index) (index)
+
+/* Imported from dlls/user32/user_private.h */
+extern DWORD get_input_codepage( void );
