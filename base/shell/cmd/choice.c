@@ -140,11 +140,20 @@ CommandChoice (LPTSTR param)
     arg = split (param, &argc, FALSE, FALSE);
 
     /* evaluate arguments */
+    nErrorLevel = 255;
     if (argc > 0)
     {
         for (i = 0; i < argc; i++)
         {
-            if (_tcsnicmp (arg[i], _T("/c"), 2) == 0)
+            if (_tcsnicmp (arg[i], _T("/s"), 2) == 0) /* DOS */
+            {
+                bCaseSensitive = TRUE;
+            }
+            else if (_tcsnicmp (arg[i], _T("/cs"), 3) == 0) /* NT */
+            {
+                bCaseSensitive = TRUE;
+            }
+            else if (_tcsnicmp (arg[i], _T("/c"), 2) == 0) /* Note: This eats /CS so it must come after */
             {
                 if (arg[i][2] == _T(':'))
                     lpOptions = &arg[i][3];                 /* "/c:XYZ" (DOS and NT) */
@@ -155,32 +164,28 @@ CommandChoice (LPTSTR param)
 
                 if (!*lpOptions)
                 {
+                invalid_choice_characters:
                     ConErrResPuts(STRING_CHOICE_ERROR);
                     freep(arg);
-                    return 1;
+                    return nErrorLevel;
                 }
             }
             else if (_tcsnicmp (arg[i], _T("/m"), 2) == 0)  /* "/m msg" (NT) */
             {
-                lpText = lpTextParam = arg[++i];
-                if (i >= argc || *lpTextParam == _T('/'))
+                if (arg[i][2] == _T(':'))
+                    lpText = lpTextParam = &arg[i][3];
+                else if (i + 1 < argc && *arg[i + 1] != _T('/'))
+                    lpText = lpTextParam = arg[++i];
+                else
                 {
-                    ConErrResPrintf(STRING_CHOICE_ERROR_OPTION, arg[--i]);
+                    ConErrResPrintf(STRING_CHOICE_ERROR_OPTION, arg[i]);
                     freep(arg);
-                    return 1;
+                    return nErrorLevel;
                 }
             }
             else if (_tcsnicmp (arg[i], _T("/n"), 2) == 0)
             {
                 bNoPrompt = TRUE;
-            }
-            else if (_tcsnicmp (arg[i], _T("/s"), 2) == 0) /* DOS */
-            {
-                bCaseSensitive = TRUE;
-            }
-            else if (_tcsnicmp (arg[i], _T("/cs"), 3) == 0) /* NT */
-            {
-                bCaseSensitive = TRUE;
             }
             else if (_tcsnicmp (arg[i], _T("/d"), 2) == 0)  /* "/d:X" and "/d X" (NT) */
             {
@@ -223,7 +228,7 @@ CommandChoice (LPTSTR param)
                 failed_parse_timeout:
                     ConErrResPuts(STRING_CHOICE_ERROR_TXT);
                     freep (arg);
-                    return 1;
+                    return nErrorLevel;
                 }
 
                 s++;
@@ -236,20 +241,31 @@ CommandChoice (LPTSTR param)
             invalid_parameter_format:
                 ConErrResPrintf(STRING_CHOICE_ERROR_OPTION, arg[i]);
                 freep (arg);
-                return 1;
+                return nErrorLevel;
             }
         }
     }
 
     if (bTimeout)
     {
-        if (!cDefault) /* NT /t synax used without /d */
+        if (!cDefault) /* NT /t syntax used without /d */
             goto failed_parse_timeout;
         if (nTimeout < 0 || (cDefParam && nTimeout > 9999)) /* DOS seems to be limited to 99, no ">" validation */
             goto failed_parse_timeout;
         if (IsKeyInString(lpOptions, cDefault, bCaseSensitive) < 0) /* The default must exist in the list of options */
             goto failed_parse_timeout;
+
+        /* Duplicate choice characters are not allowed */
+        for (p = lpOptions; *p; ++p)
+        {
+            if (IsKeyInString(p + 1, *p, bCaseSensitive) >= 0)
+                goto invalid_choice_characters;
+        }
     }
+
+    /* The choice characters are printed uppercase when case-insensitive */
+    if (!bCaseSensitive)
+        _wcsupr(lpOptions);
 
     /* retrieve text */
     for (p = param, iTextIndex = 0; !lpTextParam; ++iTextIndex)
@@ -314,7 +330,7 @@ CommandChoice (LPTSTR param)
 
         freep (arg);
         TRACE ("ErrorLevel: %d\n", nErrorLevel);
-        return 0;
+        return nErrorLevel;
     }
 
     clk = GetTickCount ();
@@ -364,7 +380,7 @@ loop:
 
     TRACE ("ErrorLevel: %d\n", nErrorLevel);
 
-    return 0;
+    return nErrorLevel;
 }
 #endif /* INCLUDE_CMD_CHOICE */
 
