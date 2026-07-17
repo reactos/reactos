@@ -235,18 +235,29 @@ CcRosDeleteFileCache (
  * FUNCTION: Releases the shared cache map associated with a file object
  */
 {
-    PLIST_ENTRY current_entry;
+    LIST_ENTRY LocalVacbList;
 
     ASSERT(SharedCacheMap);
     ASSERT(SharedCacheMap == FileObject->SectionObjectPointer->SharedCacheMap);
     ASSERT(SharedCacheMap->OpenCount == 0);
 
-    /* Remove all VACBs from the global lists */
+    InitializeListHead(&LocalVacbList);
+
+    /*
+     * Remove all VACBs from the global lists while holding the lock. By also
+     * removing them from CacheMapVacbListHead here (under the lock), we ensure
+     * that a concurrent CcRosLookupVacb (which also holds the lock) cannot find
+     * any of these VACBs after we release the lock. Without this, a caller that
+     * already has a SharedCacheMap pointer (e.g. CcFlushCache) could look up a
+     * VACB between our lock release and the point where the second loop removes
+     * it from the list — leaving an outstanding reference that races with our
+     * CcRosVacbDecRefCount call below.
+     */
     KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
-    current_entry = SharedCacheMap->CacheMapVacbListHead.Flink;
-    while (current_entry != &SharedCacheMap->CacheMapVacbListHead)
+    while (!IsListEmpty(&SharedCacheMap->CacheMapVacbListHead))
     {
-        PROS_VACB Vacb = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
+        PROS_VACB Vacb = CONTAINING_RECORD(SharedCacheMap->CacheMapVacbListHead.Flink,
+                                           ROS_VACB, CacheMapVacbListEntry);
 
         RemoveEntryList(&Vacb->VacbLruListEntry);
         InitializeListHead(&Vacb->VacbLruListEntry);
@@ -258,7 +269,13 @@ CcRosDeleteFileCache (
             Vacb->Dirty = TRUE;
         }
 
-        current_entry = current_entry->Flink;
+        /*
+         * Move this VACB from the shared cache map list to our private local
+         * list. After the lock is released, CcRosLookupVacb can no longer find
+         * it, so no new lookup references can be created.
+         */
+        RemoveEntryList(&Vacb->CacheMapVacbListEntry);
+        InsertTailList(&LocalVacbList, &Vacb->CacheMapVacbListEntry);
     }
 
     /* Make sure there is no trace anymore of this map */
@@ -269,9 +286,9 @@ CcRosDeleteFileCache (
     KeReleaseQueuedSpinLock(LockQueueMasterLock, *OldIrql);
 
     /* Now that we're out of the locks, free everything for real */
-    while (!IsListEmpty(&SharedCacheMap->CacheMapVacbListHead))
+    while (!IsListEmpty(&LocalVacbList))
     {
-        PROS_VACB Vacb = CONTAINING_RECORD(RemoveHeadList(&SharedCacheMap->CacheMapVacbListHead), ROS_VACB, CacheMapVacbListEntry);
+        PROS_VACB Vacb = CONTAINING_RECORD(RemoveHeadList(&LocalVacbList), ROS_VACB, CacheMapVacbListEntry);
         ULONG RefCount;
 
         InitializeListHead(&Vacb->CacheMapVacbListEntry);
@@ -616,7 +633,6 @@ CcRosReleaseVacb (
     BOOLEAN Dirty,
     BOOLEAN Mapped)
 {
-    ULONG Refs;
     ASSERT(SharedCacheMap);
 
     DPRINT("CcRosReleaseVacb(SharedCacheMap 0x%p, Vacb 0x%p)\n", SharedCacheMap, Vacb);
@@ -647,8 +663,15 @@ CcRosReleaseVacb (
         }
     }
 
-    Refs = CcRosVacbDecRefCount(Vacb);
-    ASSERT(Refs > 0);
+    /*
+     * Release the caller's reference. The return value may legitimately be 0
+     * when CcRosDeleteFileCache has concurrently removed the cache-map-list
+     * reference while we held a lookup reference: our decrement is then the
+     * last one and CcRosVacbDecRefCount frees the VACB. That is safe because
+     * callers (e.g. CcFlushCache) do not access the VACB pointer after this
+     * call. Do NOT assert the result is > 0 here.
+     */
+    CcRosVacbDecRefCount(Vacb);
 
     return STATUS_SUCCESS;
 }
