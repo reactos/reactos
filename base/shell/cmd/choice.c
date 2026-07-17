@@ -52,7 +52,13 @@ GetCharacterTimeout (LPTCH ch, DWORD dwMilliseconds)
         return GC_TIMEOUT;
 
     //otherwise get the event
-    ReadConsoleInput (hInput, &lpBuffer, 1, &dwRead);
+    lpBuffer.EventType = !KEY_EVENT;
+    if (!ReadConsoleInput (hInput, &lpBuffer, 1, &dwRead) && GetLastError () == ERROR_INVALID_HANDLE)
+    {
+        *ch = '\0';
+        if (ReadFile(hInput, ch, 1, &dwRead, NULL))
+            return GC_KEYREAD;
+    }
 
     //if the event is a key pressed
     if ((lpBuffer.EventType == KEY_EVENT) &&
@@ -315,7 +321,11 @@ CommandChoice (LPTSTR param)
     amount = nTimeout*1000;
 
 loop:
-    GCret = GetCharacterTimeout (&Ch, amount - (GetTickCount () - clk));
+    nTimeout = amount - (GetTickCount () - clk);
+    if (nTimeout < 0)
+        GCret = GC_TIMEOUT;
+    else
+        GCret = GetCharacterTimeout (&Ch, nTimeout);
 
     switch (GCret)
     {
