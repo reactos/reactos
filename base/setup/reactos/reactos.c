@@ -40,6 +40,7 @@ UI_CONTEXT UiContext;
 
 /* FUNCTIONS ****************************************************************/
 
+// See also setupapi!pSetupCenterWindowRelativeToParent()
 static VOID
 CenterWindow(HWND hWnd)
 {
@@ -378,8 +379,8 @@ StartDlgProc(
             SetDlgItemFont(hwndDlg, IDC_WARNTEXT2, pSetupData->hBoldFont, TRUE);
             SetDlgItemFont(hwndDlg, IDC_WARNTEXT3, pSetupData->hBoldFont, TRUE);
 
-            /* Center the wizard window */
-            CenterWindow(GetParent(hwndDlg));
+            ///* Center the wizard window */
+            //CenterWindow(GetParent(hwndDlg));
             return TRUE;
         }
 
@@ -3252,6 +3253,171 @@ WINAPI setupDelayHook(unsigned dliNotify, PDelayLoadInfo pdli)
 /*ExternC*/ PfnDliHook __pfnDliFailureHook2 = setupDelayHook;
 
 
+#include <pshpack1.h>
+typedef struct DLGTEMPLATEEX
+{
+    WORD dlgVer;
+    WORD signature;
+    DWORD helpID;
+    DWORD exStyle;
+    DWORD style;
+    WORD cDlgItems;
+    short x;
+    short y;
+    short cx;
+    short cy;
+} DLGTEMPLATEEX, *LPDLGTEMPLATEEX;
+#include <poppack.h>
+
+WNDPROC wpOrgPrshtProc = NULL;
+
+/* Message handler for property sheet dialog */
+static LRESULT
+CALLBACK
+PrshtWndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMessage)
+    {
+        case DM_REPOSITION:
+        {
+            /* Center the wizard window */
+            CenterWindow(hWnd);
+            // FIXME: HACK: See hack in PropSheetCallback()::PSCB_INITIALIZED
+            ShowWindow(hWnd, SW_SHOWNORMAL);
+            break;
+        }
+
+        case WM_DESTROY:
+        {
+            /* Restore the original dialog procedure */
+            ASSERT(wpOrgPrshtProc);
+            SetWindowLongPtrW(hWnd, DWLP_DLGPROC, (LONG_PTR)wpOrgPrshtProc);
+        }
+
+        default:
+            break;
+    }
+
+    /* Invoke the original dialog procedure */
+    return CallWindowProc(wpOrgPrshtProc, hWnd, uMessage, wParam, lParam);
+}
+
+static int
+CALLBACK
+PropSheetCallback(
+    _In_ HWND hDlg,
+    _In_ UINT message,
+    _In_ LPARAM lParam)
+{
+    switch (message)
+    {
+        case PSCB_PRECREATE:
+        {
+            LPDLGTEMPLATE   dlgTemplate   =   (LPDLGTEMPLATE)lParam;
+            LPDLGTEMPLATEEX dlgTemplateEx = (LPDLGTEMPLATEEX)lParam;
+            DWORD dwStyle = 0, dwStyleMask = 0;
+
+            // FIXME: HACK: See hack in PropSheetCallback()::PSCB_INITIALIZED
+            // Hide the dialog by default; DM_REPOSITION will center it on screen then show it.
+            dwStyleMask |= WS_VISIBLE;
+
+            dwStyle |= DS_CENTER; // Center the dialog -- But propsheet code repositions it afterwards...
+            //dwStyleMask |= DS_CONTEXTHELP; // TODO: Enable if you want context help.
+            dwStyle |= DS_SETFOREGROUND; // Ensure we are initially set to the foreground.
+            dwStyleMask |= dwStyle;
+
+            /* Set the property sheet dialog styles */
+            if (dlgTemplateEx->signature == 0xFFFF)
+                dlgTemplateEx->style = (dlgTemplateEx->style & ~dwStyleMask) | (dwStyle & dwStyleMask);
+            else
+                dlgTemplate->style = (dlgTemplate->style & ~dwStyleMask) | (dwStyle & dwStyleMask);
+            break;
+        }
+
+        // NOTE: This callback is needed to set large icon correctly.
+        case PSCB_INITIALIZED:
+        {
+            HICON hIcon = LoadIconW(SetupData.hInstance, MAKEINTRESOURCEW(IDI_MAIN));
+            SendMessageW(hDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+
+            /* Sub-class the property sheet window procedure */
+            wpOrgPrshtProc = (WNDPROC)SetWindowLongPtrW(hDlg, DWLP_DLGPROC, (LONG_PTR)PrshtWndProc);
+
+            // FIXME: HACK: Wine comctl32 propsheet.c doesn't send DM_REPOSITION
+            // after creating, initializing and resizing the property sheet dialog,
+            // so we simulate its call there...
+            PostMessageW(hDlg, DM_REPOSITION, 0, 0);
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
+static const struct
+{
+    BOOL IncludeForUnattended;
+    DWORD dwFlags;
+    PCWSTR pszTemplate;
+    PCWSTR pszHeaderTitle;
+    PCWSTR pszHeaderSubTitle;
+    DLGPROC pfnDlgProc;
+} WizardPages[] =
+{
+    /* Start page */
+    {FALSE, PSP_HIDEHEADER,
+     MAKEINTRESOURCEW(IDD_STARTPAGE), NULL, NULL, StartDlgProc},
+
+    /* Install type selection page */
+    {FALSE, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE,
+     MAKEINTRESOURCEW(IDD_TYPEPAGE),
+     MAKEINTRESOURCEW(IDS_TYPETITLE), MAKEINTRESOURCEW(IDS_TYPESUBTITLE),
+     TypeDlgProc},
+
+    /* Upgrade/Repair selection page */
+    {FALSE, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE,
+     MAKEINTRESOURCEW(IDD_UPDATEREPAIRPAGE),
+     MAKEINTRESOURCEW(IDS_UPDATETITLE), MAKEINTRESOURCEW(IDS_UPDATESUBTITLE),
+     UpgradeRepairDlgProc},
+
+    /* Device Settings page */
+    {FALSE, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE,
+     MAKEINTRESOURCEW(IDD_DEVICEPAGE),
+     MAKEINTRESOURCEW(IDS_DEVICETITLE), MAKEINTRESOURCEW(IDS_DEVICESUBTITLE),
+     DeviceDlgProc},
+
+    /* Install device settings page / boot method / install directory */
+    {FALSE, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE,
+     MAKEINTRESOURCEW(IDD_DRIVEPAGE),
+     MAKEINTRESOURCEW(IDS_DRIVETITLE), MAKEINTRESOURCEW(IDS_DRIVESUBTITLE),
+     DriveDlgProc},
+
+    /* Summary page */
+    {FALSE, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE,
+     MAKEINTRESOURCEW(IDD_SUMMARYPAGE),
+     MAKEINTRESOURCEW(IDS_SUMMARYTITLE), MAKEINTRESOURCEW(IDS_SUMMARYSUBTITLE),
+     SummaryDlgProc},
+
+    /* Installation Progress page */
+    {TRUE, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE,
+     MAKEINTRESOURCEW(IDD_PROCESSPAGE),
+     MAKEINTRESOURCEW(IDS_PROCESSTITLE), MAKEINTRESOURCEW(IDS_PROCESSSUBTITLE),
+     ProcessDlgProc},
+
+    /* Finish page */
+    {TRUE, PSP_HIDEHEADER,
+     MAKEINTRESOURCEW(IDD_FINISHPAGE), NULL, NULL,
+     FinishDlgProc},
+
+    /* Abort page */
+    {TRUE, PSP_HIDEHEADER,
+     MAKEINTRESOURCEW(IDD_ABORTPAGE), NULL, NULL,
+     FinishDlgProc}, // Same dialog procedure as the Finish page.
+};
+
 int WINAPI
 _tWinMain(HINSTANCE hInst,
           HINSTANCE hPrevInstance,
@@ -3261,10 +3427,10 @@ _tWinMain(HINSTANCE hInst,
     ULONG Error;
     HANDLE hHotkeyThread;
     INITCOMMONCONTROLSEX iccx;
-    PROPSHEETHEADERW psh;
-    HPROPSHEETPAGE ahpsp[9];
+    PROPSHEETHEADERW psh = {0};
     PROPSHEETPAGEW psp = {0};
-    UINT nPages = 0;
+    HPROPSHEETPAGE ahpsp[_countof(WizardPages)];
+    UINT nPages, i;
 
     ProcessHeap = GetProcessHeap();
 
@@ -3318,110 +3484,34 @@ _tWinMain(HINSTANCE hInst,
     SetupData.hTitleFont = CreateTitleFont(NULL);
     SetupData.hBoldFont  = CreateBoldFont(NULL, 0);
 
-    if (!SetupData.bUnattend)
+    /* Create each page */
+    psp.dwSize = sizeof(psp);
+    psp.hInstance = hInst;
+    psp.lParam = (LPARAM)&SetupData;
+    for (nPages = 0, i = 0; i < _countof(WizardPages); ++i)
     {
-        /* Create the Start page */
-        psp.dwSize = sizeof(psp);
-        psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
-        psp.hInstance = hInst;
-        psp.lParam = (LPARAM)&SetupData;
-        psp.pfnDlgProc = StartDlgProc;
-        psp.pszTemplate = MAKEINTRESOURCEW(IDD_STARTPAGE);
-        ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+        /* Skip pages that don't apply to unattended mode */
+        if (SetupData.bUnattend && !WizardPages[i].IncludeForUnattended)
+            continue;
 
-        /* Create the Install type selection page */
-        psp.dwSize = sizeof(psp);
-        psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-        psp.pszHeaderTitle = MAKEINTRESOURCEW(IDS_TYPETITLE);
-        psp.pszHeaderSubTitle = MAKEINTRESOURCEW(IDS_TYPESUBTITLE);
-        psp.hInstance = hInst;
-        psp.lParam = (LPARAM)&SetupData;
-        psp.pfnDlgProc = TypeDlgProc;
-        psp.pszTemplate = MAKEINTRESOURCEW(IDD_TYPEPAGE);
-        ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-
-        /* Create the Upgrade/Repair selection page */
-        psp.dwSize = sizeof(psp);
-        psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-        psp.pszHeaderTitle = MAKEINTRESOURCEW(IDS_UPDATETITLE);
-        psp.pszHeaderSubTitle = MAKEINTRESOURCEW(IDS_UPDATESUBTITLE);
-        psp.hInstance = hInst;
-        psp.lParam = (LPARAM)&SetupData;
-        psp.pfnDlgProc = UpgradeRepairDlgProc;
-        psp.pszTemplate = MAKEINTRESOURCEW(IDD_UPDATEREPAIRPAGE);
-        ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-
-        /* Create the Device Settings page */
-        psp.dwSize = sizeof(psp);
-        psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-        psp.pszHeaderTitle = MAKEINTRESOURCEW(IDS_DEVICETITLE);
-        psp.pszHeaderSubTitle = MAKEINTRESOURCEW(IDS_DEVICESUBTITLE);
-        psp.hInstance = hInst;
-        psp.lParam = (LPARAM)&SetupData;
-        psp.pfnDlgProc = DeviceDlgProc;
-        psp.pszTemplate = MAKEINTRESOURCEW(IDD_DEVICEPAGE);
-        ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-
-        /* Create the Install device settings page / boot method / install directory */
-        psp.dwSize = sizeof(psp);
-        psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-        psp.pszHeaderTitle = MAKEINTRESOURCEW(IDS_DRIVETITLE);
-        psp.pszHeaderSubTitle = MAKEINTRESOURCEW(IDS_DRIVESUBTITLE);
-        psp.hInstance = hInst;
-        psp.lParam = (LPARAM)&SetupData;
-        psp.pfnDlgProc = DriveDlgProc;
-        psp.pszTemplate = MAKEINTRESOURCEW(IDD_DRIVEPAGE);
-        ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-
-        /* Create the Summary page */
-        psp.dwSize = sizeof(psp);
-        psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-        psp.pszHeaderTitle = MAKEINTRESOURCEW(IDS_SUMMARYTITLE);
-        psp.pszHeaderSubTitle = MAKEINTRESOURCEW(IDS_SUMMARYSUBTITLE);
-        psp.hInstance = hInst;
-        psp.lParam = (LPARAM)&SetupData;
-        psp.pfnDlgProc = SummaryDlgProc;
-        psp.pszTemplate = MAKEINTRESOURCEW(IDD_SUMMARYPAGE);
+        psp.dwFlags = PSP_DEFAULT | WizardPages[i].dwFlags;
+        psp.pszTemplate = WizardPages[i].pszTemplate;
+        psp.pfnDlgProc = WizardPages[i].pfnDlgProc;
+        psp.pszHeaderTitle = WizardPages[i].pszHeaderTitle;
+        psp.pszHeaderSubTitle = WizardPages[i].pszHeaderSubTitle;
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
     }
 
-    /* Create the Installation Progress page */
-    psp.dwSize = sizeof(psp);
-    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle = MAKEINTRESOURCEW(IDS_PROCESSTITLE);
-    psp.pszHeaderSubTitle = MAKEINTRESOURCEW(IDS_PROCESSSUBTITLE);
-    psp.hInstance = hInst;
-    psp.lParam = (LPARAM)&SetupData;
-    psp.pfnDlgProc = ProcessDlgProc;
-    psp.pszTemplate = MAKEINTRESOURCEW(IDD_PROCESSPAGE);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-
-    /* Create the Finish page */
-    psp.dwSize = sizeof(psp);
-    psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
-    psp.hInstance = hInst;
-    psp.lParam = (LPARAM)&SetupData;
-    psp.pfnDlgProc = FinishDlgProc;
-    psp.pszTemplate = MAKEINTRESOURCEW(IDD_FINISHPAGE);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-
-    /* Create the Abort page */
-    psp.dwSize = sizeof(psp);
-    psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
-    psp.hInstance = hInst;
-    psp.lParam = (LPARAM)&SetupData;
-    psp.pfnDlgProc = FinishDlgProc; // Same dialog procedure as the Finish page.
-    psp.pszTemplate = MAKEINTRESOURCEW(IDD_ABORTPAGE);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-
     /* Create the property sheet */
     psh.dwSize = sizeof(psh);
-    psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
+    psh.dwFlags = PSH_WIZARD97 | PSH_USEICONID | PSH_USECALLBACK | PSH_WATERMARK | PSH_HEADER;
     psh.hInstance = hInst;
     psh.hwndParent = NULL;
+    psh.pszIcon = MAKEINTRESOURCEW(IDI_MAIN);
     psh.nPages = nPages;
     psh.nStartPage = 0;
     psh.phpage = ahpsp;
+    psh.pfnCallback = PropSheetCallback;
     psh.pszbmWatermark = MAKEINTRESOURCEW(IDB_WATERMARK);
     psh.pszbmHeader = MAKEINTRESOURCEW(IDB_HEADER);
 
