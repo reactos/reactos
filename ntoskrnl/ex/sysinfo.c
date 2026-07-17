@@ -2891,6 +2891,30 @@ QSI_DEF(SystemModuleInformationEx)
     return STATUS_INVALID_INFO_CLASS;
 }
 
+/* Class 83 - Processor Idle Cycles */
+QSI_DEF(SystemProcessorIdleCycleTimeInformation)
+{
+    PSYSTEM_PROCESSOR_IDLE_CYCLE_TIME_INFORMATION Info =
+            (PSYSTEM_PROCESSOR_IDLE_CYCLE_TIME_INFORMATION)Buffer;
+    ULONG ProcessorIndex;
+    PKPRCB Prcb;
+
+    *ReqSize = KeNumberProcessors * sizeof(*Info);
+    if (Size < *ReqSize)
+    {
+        DPRINT1("Buffer too small for SystemProcessorIdleCycleTimeInformation\n");
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    for (ProcessorIndex = 0; ProcessorIndex < KeNumberProcessors; ++ProcessorIndex)
+    {
+        Prcb = KiProcessorBlock[ProcessorIndex];
+        Info[ProcessorIndex].CycleTime = KeQueryTotalCycleTimeThread(Prcb->IdleThread, NULL);
+    }
+
+    return STATUS_SUCCESS;
+}
+
 /* Class 105 - Processor Brand String */
 QSI_DEF(SystemProcessorBrandString)
 {
@@ -3022,6 +3046,7 @@ CallQS[] =
 
     // Vista and later
     SI_QX(SystemModuleInformationEx),
+    SI_QX(SystemProcessorIdleCycleTimeInformation),
     SI_QX(SystemProcessorBrandString),
 };
 
