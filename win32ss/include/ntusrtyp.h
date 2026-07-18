@@ -102,6 +102,34 @@ typedef struct
     CURSORICONDIRENTRY  idEntries[1];
 } CURSORICONDIR;
 
+typedef struct _CURSORICONFILEDIRENTRY
+{
+    BYTE bWidth;
+    BYTE bHeight;
+    BYTE bColorCount;
+    BYTE bReserved;
+    union
+    {
+        WORD wPlanes; /* For icons */
+        WORD xHotspot; /* For cursors */
+    };
+    union
+    {
+        WORD wBitCount; /* For icons */
+        WORD yHotspot; /* For cursors */
+    };
+    DWORD dwDIBSize;
+    DWORD dwDIBOffset;
+} CURSORICONFILEDIRENTRY;
+
+typedef struct _CURSORICONFILEDIR
+{
+    WORD idReserved;
+    WORD idType;
+    WORD idCount;
+    CURSORICONFILEDIRENTRY idEntries[1];
+} CURSORICONFILEDIR;
+
 typedef struct
 {
     union

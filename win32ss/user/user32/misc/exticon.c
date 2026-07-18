@@ -32,7 +32,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(icon);
 
+#ifdef __REACTOS__
 #include <pshpack1.h>
+#else
+#pragma pack(push,1)
+#endif
 
 typedef struct
 {
@@ -91,10 +95,14 @@ typedef struct taganiheader
 #define NE_RSCTYPE_ICON        0x8003
 #define NE_RSCTYPE_GROUP_ICON  0x800e
 
+#ifdef __REACTOS__
 #include <poppack.h>
+#else
+#pragma pack(pop)
+#endif
 
 #if 0
-static void dumpIcoDirEnty ( LPicoICONDIRENTRY entry )
+static void dumpIcoDirEntry ( LPicoICONDIRENTRY entry )
 {
 	TRACE("width = 0x%08x height = 0x%08x\n", entry->bWidth, entry->bHeight);
 	TRACE("colors = 0x%08x planes = 0x%08x\n", entry->bColorCount, entry->wPlanes);
@@ -107,7 +115,7 @@ static void dumpIcoDir ( LPicoICONDIR entry )
 }
 #endif
 
-#ifndef WINE
+#ifdef __REACTOS__
 DWORD get_best_icon_file_offset(const LPBYTE dir,
                                 DWORD dwFileSize,
                                 int cxDesired,
@@ -233,13 +241,13 @@ static BYTE * ICO_LoadIcon( LPBYTE peimage, LPicoICONDIRENTRY lpiIDE, ULONG *uSi
  */
 static BYTE * ICO_GetIconDirectory( LPBYTE peimage, LPicoICONDIR* lplpiID, ULONG *uSize )
 {
-	CURSORICONDIR	* lpcid;	/* icon resource in resource-dir format */
+	CURSORICONFILEDIR *lpcid;	/* icon resource in resource-dir format */
 	CURSORICONDIR	* lpID;		/* icon resource in resource format */
 	int		i;
 
 	TRACE("%p %p\n", peimage, lplpiID);
 
-	lpcid = (CURSORICONDIR*)peimage;
+	lpcid = (CURSORICONFILEDIR*)peimage;
 
 	if( lpcid->idReserved || (lpcid->idType != 1) || (!lpcid->idCount) )
 	  return 0;
@@ -292,7 +300,7 @@ static UINT ICO_ExtractIconExW(
      * The other is from User32 using PrivateExtractIcons.
      * Based on W2K3SP2 testing, the count of icons returned
      * is zero (0) for PNG ones using ExtractIconEx and
-     * one (1) for PNG icons using PrivateExtractIcons. 
+     * one (1) for PNG icons using PrivateExtractIcons.
      * We can handle the difference using the fIconEx flag.*/
     BOOL fIconEx)
 #else
@@ -389,7 +397,7 @@ static UINT ICO_ExtractIconExW(
             goto end;
 
         /* Look though the reported size less search string length */
-        anihMax = uSize - strlen("anih"); 
+        anihMax = uSize - strlen("anih");
         /* Search for 'anih' indicating animation header */
         for (anihOffset = 0; anihOffset < anihMax; anihOffset++)
         {
@@ -439,7 +447,7 @@ static UINT ICO_ExtractIconExW(
 	  LPicoICONDIR	lpiID = NULL;
 	  ULONG		uSize = 0;
 
-          TRACE("-- OS2/icon Signature (0x%08x)\n", sig);
+          TRACE("-- OS2/icon Signature (0x%08lx)\n", sig);
 
 	  if (pData == (BYTE*)-1)
 	  {
@@ -447,7 +455,7 @@ static UINT ICO_ExtractIconExW(
 	    if (pCIDir)
 	    {
 	      iconDirCount = 1; iconCount = lpiID->idCount;
-              TRACE("-- icon found %p 0x%08x 0x%08x 0x%08x\n", pCIDir, uSize, iconDirCount, iconCount);
+              TRACE("-- icon found %p 0x%08lx 0x%08x 0x%08x\n", pCIDir, uSize, iconDirCount, iconCount);
 	    }
 	  }
 	  else while (pTInfo->type_id && !(pIconStorage && pIconDir))
