@@ -130,6 +130,14 @@ KeGetTrapFrameFrameRegister(PKTRAP_FRAME TrapFrame)
     return TrapFrame->Ebp;
 }
 
+FORCEINLINE
+ULONG64
+KxQueryProcessorCycleTime(VOID)
+{
+    /* Read the time stamp counter */
+    return __rdtsc();
+}
+
 //
 // Macro to get trap and exception frame from a thread stack
 //

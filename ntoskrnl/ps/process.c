@@ -1615,4 +1615,47 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+ULONG64
+PsQueryTotalCycleTimeProcess(
+    _Inout_ PEPROCESS Process,
+    _Out_ PULONG64 CycleTimeStamp)
+{
+    ULONG64 CurrentCycleTime, TotalCycleTime;
+    KIRQL OldIrql;
+
+    /* Raise IRQL, so we stay on the same processor */
+    OldIrql = KeRaiseIrqlToDpcLevel();
+
+#ifdef CONFIG_SMP
+    // FIXME should send an IPI to all processors running this process to update
+    // their cycle times.
+#endif
+
+    /* Get the current cycle time */
+    CurrentCycleTime = KxQueryProcessorCycleTime();
+
+    /* Get the process' cycle time */
+    TotalCycleTime = Process->CycleTime;
+
+    /* Check if this is the current process */
+    if (Process == PsGetCurrentProcess())
+    {
+        /* Add the additional cycle time from the current thread */
+        TotalCycleTime += CurrentCycleTime - KeGetCurrentPrcb()->StartCycles;
+    }
+
+    /* Lower IRQL */
+    KeLowerIrql(OldIrql);
+
+    /* Return the current cycle time as the time stamp */
+    if (CycleTimeStamp)
+    {
+        *CycleTimeStamp = CurrentCycleTime;
+    }
+
+    /* Return the total cycle time */
+    return TotalCycleTime;
+}
+
 /* EOF */
