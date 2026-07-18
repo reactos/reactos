@@ -353,6 +353,7 @@ typedef struct _SOUND_DEVICE_INSTANCE
 
     BOOL ResetInProgress;
     BOOL bPaused;
+    BOOL bStarted;
 
     HANDLE hSoundThread;
 
