@@ -329,6 +329,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     PKPROCESS OldProcess, NewProcess;
     PKTHREAD NewThread;
+    ULONG64 CurrentCycleTime, ElapsedCycles, NewCycleTime;
 
     /* We are on the new thread stack now */
     NewThread = Pcr->PrcbData.CurrentThread;
@@ -357,6 +358,14 @@ KiSwapContextExit(IN PKTHREAD OldThread,
         /* Switch address space and flush TLB */
         __writecr3(NewProcess->DirectoryTableBase[0]);
     }
+
+    /* Update the old thread's cycle time */
+    CurrentCycleTime = __rdtsc();
+    ElapsedCycles = CurrentCycleTime - Pcr->PrcbData.StartCycles;
+    NewCycleTime = ((PETHREAD)OldThread)->CycleTime + ElapsedCycles;
+    KiWriteThreadCycleTime(OldThread, NewCycleTime);
+    InterlockedAdd64((PLONG64)&((PEPROCESS)OldProcess)->CycleTime, ElapsedCycles);
+    Pcr->PrcbData.StartCycles = CurrentCycleTime;
 
     /* Clear GS */
     Ke386SetGs(0);
