@@ -1,0 +1,59 @@
+/*
+ * PROJECT:     Star field screensaver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     French resource file
+ * TRANSLATOR:  Copyright 2026 Thomas Anderson <thomasanderson531@hotmail.com>
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+// Dialog
+
+DLG_SCRNSAVECONFIGURE DIALOGEX 0, 0, 292, 282
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Configuration de l'écran de veille Starfield"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Options",IDC_STATIC,16,100,260,76
+    RTEXT           "Nombre d'étoiles:",IDC_STATIC,24,116,68,12,
+                    SS_CENTERIMAGE
+    CONTROL         "Slider1",IDC_SLIDER_NUM_OF_STARS,"msctls_trackbar32",
+                    TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,96,116,140,12
+    CTEXT           "Static",IDC_TEXT_NUM_OF_STARS,240,116,24,12,
+                    SS_CENTERIMAGE,WS_EX_STATICEDGE
+    RTEXT           "Vitesse:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
+    CONTROL         "Slider1",IDC_SLIDER_SPEED,"msctls_trackbar32",TBS_BOTH |
+                    TBS_NOTICKS | WS_TABSTOP,96,137,140,12
+    CTEXT           "Static",IDC_TEXT_SPEED,240,137,24,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    RTEXT           "Rotation:",IDC_STATIC,24,156,68,12,SS_CENTERIMAGE
+    COMBOBOX        IDC_COMBO_ROTATION,100,156,80,60,CBS_DROPDOWNLIST |
+                    WS_TABSTOP
+    CONTROL         "",IDC_IMAGE_COSMOS,"Static",SS_BITMAP | SS_CENTERIMAGE,
+                    4,4,284,92
+    GROUPBOX        "Avancé",IDC_STATIC,16,180,260,72
+    CONTROL         "Activer la fusion d'arrièr-plan",IDC_CHECK_DOBLENDING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,160,10
+    CONTROL         "Activer la correction de perspective",
+                    IDC_CHECK_PERSPECTIVE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,24,208,160,10
+    CONTROL         "Activer le filtrage de texture",IDC_CHECK_FILTERING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,160,10
+    CONTROL         "Activer le lissage",IDC_CHECK_SHADING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,24,232,160,10
+    PUSHBUTTON      "OK",IDOK,60,260,52,16
+    PUSHBUTTON      "Annuler",IDCANCEL,120,260,52,16
+    PUSHBUTTON      "A propos",IDC_BUTTON_ABOUT,179,260,52,16
+END
+
+// String Tables
+
+STRINGTABLE
+BEGIN
+    IDS_DESCRIPTION         "Starfield"
+    IDS_ROTATION_NONE       "Aucune"
+    IDS_ROTATION_LINEAR     "Linéaire"
+    IDS_ROTATION_PERIODIC   "Periodique"
+    IDS_LICENSE             "Starfield est un programme gratuit distribué sous la licence GNU GPL."
+    IDS_AUTHOR              "Écrite par Carlo Bramini"
+END
