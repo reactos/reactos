@@ -662,10 +662,19 @@ WdmAudCloseSoundDeviceByMMixer(
                                              SoundDeviceInstance->Handle,
                                              SoundDeviceInstance->hNotifyRTStreamingEvent);
             CloseHandle(SoundDeviceInstance->hNotifyRTStreamingEvent);
+            SoundDeviceInstance->hNotifyRTStreamingEvent = NULL;
+            CloseHandle(SoundDeviceInstance->hNotifyRTStreamingCompletionEvent);
+            SoundDeviceInstance->hNotifyRTStreamingCompletionEvent = NULL;
             CloseHandle(SoundDeviceInstance->hRTStreamingThread);
+            SoundDeviceInstance->hRTStreamingThread = NULL;
+            CloseHandle(SoundDeviceInstance->hRTStreamingCompletionThread);
+            SoundDeviceInstance->hRTStreamingCompletionThread = NULL;
             HeapFree(GetProcessHeap(), 0, SoundDeviceInstance->RTStreamingShadowBuffer);
             SoundDeviceInstance->RTStreamingShadowBuffer = NULL;
             CloseHandle(SoundDeviceInstance->hNotifyRTStreamingStopEvent);
+            SoundDeviceInstance->hNotifyRTStreamingStopEvent = NULL;
+            CloseHandle(SoundDeviceInstance->hNotifyRTStreamingCompletionStopEvent);
+            SoundDeviceInstance->hNotifyRTStreamingCompletionEvent = NULL;
         }
         CloseHandle(Handle);
         return MMSYSERR_NOERROR;
@@ -801,6 +810,10 @@ WdmAudSetWaveStateByMMixer(
 
     if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
+        if (SoundDeviceInstance->RTStreamingEnabled)
+        {
+            SoundDeviceInstance->bStarted = bStart;
+        }
         if (bStart)
         {
             MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
@@ -858,6 +871,7 @@ WdmAudResetStreamByMMixer(
     {
         SoundDeviceInstance->ResetInProgress = bStartReset;
         SoundDeviceInstance->RTStreamingBufferBytesWritten = 0;
+        SoundDeviceInstance->bStarted = FALSE;
 
         MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
         MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
