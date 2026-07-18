@@ -311,7 +311,7 @@ CAdapterCommon::TransferInitVerbs(IN PDEVICE_OBJECT DeviceObject)
             }
             Status = Key->QueryValueKey(
                 &KeyName, KeyValuePartialInformation, PartialInformation, ResultLength, &ResultLength);
-            if (NT_SUCCESS(Status))
+            if (NT_SUCCESS(Status) && PartialInformation->DataLength == sizeof(ULONG))
             {
                 ULONG Verb = 0;
                 Verb |= PartialInformation->Data[0] << 0;
