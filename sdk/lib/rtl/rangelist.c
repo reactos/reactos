@@ -205,10 +205,14 @@ RtlDeleteOwnersRanges(IN OUT PRTL_RANGE_LIST RangeList,
 {
     PRTL_RANGE_ENTRY Current;
     PLIST_ENTRY Entry;
+    PLIST_ENTRY NextEntry;
 
     Entry = RangeList->ListHead.Flink;
     while (Entry != &RangeList->ListHead)
     {
+        /* Capture the successor before a removal frees this entry */
+        NextEntry = Entry->Flink;
+
         Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
         if (Current->Range.Owner == Owner)
         {
@@ -219,7 +223,7 @@ RtlDeleteOwnersRanges(IN OUT PRTL_RANGE_LIST RangeList,
             RangeList->Stamp++;
         }
 
-        Entry = Entry->Flink;
+        Entry = NextEntry;
     }
 
     return STATUS_SUCCESS;

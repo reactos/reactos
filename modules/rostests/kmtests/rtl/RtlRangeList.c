@@ -408,6 +408,49 @@ TestIsAvailable(
     ok_eq_ulong(RangeList->Stamp, StartStamp);
 }
 
+static
+void
+TestDeleteOwnersRanges(void)
+{
+    NTSTATUS Status;
+    RTL_RANGE_LIST RangeList;
+    RTL_RANGE Ranges[4];
+    ULONG Index, StartStamp;
+
+    RtlInitializeRangeList(&RangeList);
+    for (Index = 0; Index < RTL_NUMBER_OF(Ranges); Index++)
+    {
+        Ranges[Index].Start = 0x100 * (Index + 1);
+        Ranges[Index].End = Ranges[Index].Start + 0xff;
+        Ranges[Index].Attributes = 0;
+        Ranges[Index].Flags = 0;
+        Ranges[Index].UserData = &MyUserData1;
+        Ranges[Index].Owner = Index == 1 ? &MyOwner2 : &MyOwner1;
+        Status = RtlAddRangeWrapper(&RangeList, &Ranges[Index], 0);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+    }
+
+    StartStamp = RangeList.Stamp;
+    Status = RtlDeleteOwnersRanges(&RangeList, &MyOwner1);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulong(RangeList.Count, 1UL);
+    ok_eq_ulong(RangeList.Stamp, StartStamp + 3);
+    expect_range_entries(&RangeList, 1, &Ranges[1]);
+
+    Status = RtlDeleteOwnersRanges(&RangeList, &MyOwner1);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulong(RangeList.Count, 1UL);
+    ok_eq_ulong(RangeList.Stamp, StartStamp + 3);
+
+    Status = RtlDeleteOwnersRanges(&RangeList, &MyOwner2);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulong(RangeList.Count, 0UL);
+    ok_eq_ulong(RangeList.Stamp, StartStamp + 4);
+    expect_range_entries(&RangeList, 0, NULL);
+
+    RtlFreeRangeList(&RangeList);
+}
+
 /* Entry point ***************************************************************/
 START_TEST(RtlRangeList)
 {
@@ -453,6 +496,7 @@ START_TEST(RtlRangeList)
     TestStartEqualsEnd(&RangeList, Ranges);
     TestSharedFlag(&RangeList, Ranges);
     TestIsAvailable(&RangeList, Ranges);
+    TestDeleteOwnersRanges();
 
     Stamp = RangeList.Stamp;
 
