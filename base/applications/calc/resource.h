@@ -4,7 +4,9 @@
 #define IDC_STATIC  -1
 #endif
 
-#define CW_USEDEFAULT16 0x8000
+/* Same bit pattern as 0x8000: dialog coordinates are 16-bit signed and
+ * llvm-rc rejects values above 32767 */
+#define CW_USEDEFAULT16 (-32768)
 
 #define IDS_CALC_NAME                   1
 #define IDS_MATH_ERROR                  2

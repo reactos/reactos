@@ -253,7 +253,7 @@ Arguments:
 }
 
 
-__inline
+static __inline
 TRACK_MODE_TYPE
 CdFileTrackMode (
     _In_ PFCB Fcb
