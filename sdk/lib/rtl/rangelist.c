@@ -475,8 +475,7 @@ RtlFindRange(IN PRTL_RANGE_LIST RangeList,
         return STATUS_RANGE_NOT_FOUND;
     }
 
-    /* Highest aligned start such that Candidate + Length - 1 <= Maximum */
-    Candidate = ROUND_DOWN(Maximum - (Length - 1), Alignment);
+    Candidate = (Maximum - (Length - 1)) & ~((ULONGLONG)Alignment - 1);
 
     for (;;)
     {
@@ -516,7 +515,7 @@ RtlFindRange(IN PRTL_RANGE_LIST RangeList,
             return STATUS_RANGE_NOT_FOUND;
         }
 
-        Candidate = ROUND_DOWN((ConflictStart - 1) - (Length - 1), Alignment);
+        Candidate = ((ConflictStart - 1) - (Length - 1)) & ~((ULONGLONG)Alignment - 1);
     }
 }
 
