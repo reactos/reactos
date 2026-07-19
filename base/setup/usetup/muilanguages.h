@@ -65,9 +65,9 @@
 #ifdef LANGUAGE_BN_BD
     #include "lang/bn-BD.h"
 #endif
-// #ifdef LANGUAGE_BN_IN
-    // #include "lang/bn-IN.h"
-// #endif
+#ifdef LANGUAGE_BN_IN
+    #include "lang/bn-IN.h"
+#endif
 // #ifdef LANGUAGE_CA_ES
     // #include "lang/ca-ES.h"
 // #endif
@@ -116,6 +116,9 @@
 // #ifdef LANGUAGE_EN_IE
     // #include "lang/en-IE.h"
 // #endif
+#ifdef LANGUAGE_EN_IN
+    #include "lang/en-IN.h"
+#endif
 // #ifdef LANGUAGE_EN_JM
     // #include "lang/en-JM.h"
 // #endif
@@ -239,9 +242,9 @@
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.h"
 #endif
-// #ifdef LANGUAGE_HI_IN
-    // #include "lang/hi-IN.h"
-// #endif
+#ifdef LANGUAGE_HI_IN
+    #include "lang/hi-IN.h"
+#endif
 #ifdef LANGUAGE_HR_HR
     #include "lang/hr-HR.h"
 #endif
@@ -487,7 +490,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"00000845", L"Bengali (Bangladesh)", bnBDPages, bnBDErrorEntries, bnBDStrings},
 #endif
 #ifdef LANGUAGE_BN_IN
-    {L"00000445", L"Bengali (India)", bnBDPages, bnBDErrorEntries, bnBDStrings},
+    {L"00000445", L"Bengali (India)", bnINPages, bnINErrorEntries, bnINStrings},
 #endif
 #ifdef LANGUAGE_BG_BG
     {L"00000402", L"Bulgarian", bgBGPages, bgBGErrorEntries, bgBGStrings},
@@ -548,6 +551,9 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
 #endif
 #ifdef LANGUAGE_EN_IE
     {L"00001809", L"English (Ireland)", enUSPages, enUSErrorEntries, enUSStrings},
+#endif
+#ifdef LANGUAGE_EN_IN
+    {L"00004009", L"English (India)", enINPages, enINErrorEntries, enINStrings},
 #endif
 #ifdef LANGUAGE_EN_ZA
     {L"00001C09", L"English (South Africa)", enUSPages, enUSErrorEntries, enUSStrings},
@@ -634,7 +640,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"0000040D", L"Hebrew", heILPages, heILErrorEntries, heILStrings},
 #endif
 #ifdef LANGUAGE_HI_IN
-    {L"00000439", L"Hindi", enUSPages, enUSErrorEntries, enUSStrings},
+    {L"00000439", L"Hindi", hiINPages, hiINErrorEntries, hiINStrings},
 #endif
 #ifdef LANGUAGE_HU_HU
     {L"0000040E", L"Hungarian", huHUPages, huHUErrorEntries, huHUStrings},
