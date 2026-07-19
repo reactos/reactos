@@ -758,82 +758,93 @@ RtlInvertRangeListEx(OUT PRTL_RANGE_LIST InvertedRangeList,
                      IN PVOID UserData OPTIONAL,
                      IN PVOID Owner OPTIONAL)
 {
-    PRTL_RANGE_ENTRY Previous;
     PRTL_RANGE_ENTRY Current;
     PLIST_ENTRY Entry;
+    ULONGLONG GapStart;
     NTSTATUS Status;
 
-    /* Add leading and intermediate ranges */
-    Previous = NULL;
-    Entry = RangeList->ListHead.Flink;
-    while (Entry != &RangeList->ListHead)
-    {
-        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+    /*
+     * RtlAddRange permits
+     * overlapping entries (RTL_RANGE_LIST_ADD_IF_CONFLICT) and does not keep
+     * the list strictly ordered by Start. 
+     * 
+     * Whenever two ranges overlap:
+     * walk the covered address space upward from 0: grab every range that
+     * covers the current position... so we can emit the gap up to the next range that
+     * starts beyond it.
+     */
+    GapStart = (ULONGLONG)0;
 
-        if (Previous == NULL)
+    for (;;)
+    {
+        ULONGLONG NextStart;
+        BOOLEAN Absorbed;
+        BOOLEAN Found;
+
+        /* Advance GapStart past every range that covers it (handles overlaps). */
+        do
         {
-            if (Current->Range.Start != (ULONGLONG)0)
+            Absorbed = FALSE;
+            Entry = RangeList->ListHead.Flink;
+            while (Entry != &RangeList->ListHead)
             {
-                Status = RtlAddRange(InvertedRangeList,
-                                     (ULONGLONG)0,
-                                     Current->Range.Start - 1,
-                                     Attributes,
-                                     RTL_RANGE_LIST_ADD_IF_CONFLICT,
-                                     UserData,
-                                     Owner);
-                if (!NT_SUCCESS(Status))
-                    return Status;
+                Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+                if (Current->Range.Start <= GapStart &&
+                    Current->Range.End >= GapStart)
+                {
+                    /* Covered all the way to the top: no gap remains. */
+                    if (Current->Range.End == (ULONGLONG)-1)
+                        return STATUS_SUCCESS;
+
+                    GapStart = Current->Range.End + 1;
+                    Absorbed = TRUE;
+                }
+                Entry = Entry->Flink;
             }
         }
-        else
+        while (Absorbed);
+
+        /* GapStart is now uncovered; find the nearest range starting above it. */
+        NextStart = (ULONGLONG)-1;
+        Found = FALSE;
+        Entry = RangeList->ListHead.Flink;
+        while (Entry != &RangeList->ListHead)
         {
-            if (Previous->Range.End + 1 != Current->Range.Start)
+            Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+            if (Current->Range.Start > GapStart &&
+                Current->Range.Start <= NextStart)
             {
-                Status = RtlAddRange(InvertedRangeList,
-                                     Previous->Range.End + 1,
-                                     Current->Range.Start - 1,
-                                     Attributes,
-                                     RTL_RANGE_LIST_ADD_IF_CONFLICT,
-                                     UserData,
-                                     Owner);
-                if (!NT_SUCCESS(Status))
-                    return Status;
+                NextStart = Current->Range.Start;
+                Found = TRUE;
             }
+            Entry = Entry->Flink;
         }
 
-        Previous = Current;
-        Entry = Entry->Flink;
-    }
+        /* No further ranges: the gap runs to the top of the address space. */
+        if (!Found)
+        {
+            return RtlAddRange(InvertedRangeList,
+                               GapStart,
+                               (ULONGLONG)-1,
+                               Attributes,
+                               RTL_RANGE_LIST_ADD_IF_CONFLICT,
+                               UserData,
+                               Owner);
+        }
 
-    /* Check if the list was empty */
-    if (Previous == NULL)
-    {
-        /* The whole address space is a single gap */
         Status = RtlAddRange(InvertedRangeList,
-                             (ULONGLONG)0,
-                             (ULONGLONG)-1,
-                             Attributes,
-                             RTL_RANGE_LIST_ADD_IF_CONFLICT,
-                             UserData,
-                             Owner);
-        return Status;
-    }
-
-    /* Add trailing range */
-    if (Previous->Range.End != (ULONGLONG)-1)
-    {
-        Status = RtlAddRange(InvertedRangeList,
-                             Previous->Range.End + 1,
-                             (ULONGLONG)-1,
+                             GapStart,
+                             NextStart - 1,
                              Attributes,
                              RTL_RANGE_LIST_ADD_IF_CONFLICT,
                              UserData,
                              Owner);
         if (!NT_SUCCESS(Status))
             return Status;
-    }
 
-    return STATUS_SUCCESS;
+        /* Resume from the next covered region. */
+        GapStart = NextStart;
+    }
 }
 
 
