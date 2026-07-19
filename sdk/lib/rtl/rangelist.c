@@ -82,6 +82,9 @@ RtlpWindowIsAvailable(
     {
         Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
 
+        if (Current->Range.Start > End)
+            break;
+
         /* Ignore entries that do not overlap the requested window */
         if (!RtlpOverlaps(Start, End, Current->Range.Start, Current->Range.End))
             continue;
@@ -138,6 +141,9 @@ RtlpConflictsOnAdd(
          Entry = Entry->Flink)
     {
         Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+
+        if (Current->Range.Start > End)
+            break;
 
         if (!RtlpOverlaps(Start, End, Current->Range.Start, Current->Range.End))
             continue;
@@ -236,7 +242,7 @@ RtlAddRange(IN OUT PRTL_RANGE_LIST RangeList,
         while (Entry != &RangeList->ListHead)
         {
             Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
-            if (Current->Range.Start > RangeEntry->Range.End)
+            if (Current->Range.Start > RangeEntry->Range.Start)
             {
                 /* Insert before current */
                 DPRINT("Insert before current\n");
@@ -764,10 +770,9 @@ RtlInvertRangeListEx(OUT PRTL_RANGE_LIST InvertedRangeList,
     NTSTATUS Status;
 
     /*
-     * RtlAddRange permits
-     * overlapping entries (RTL_RANGE_LIST_ADD_IF_CONFLICT) and does not keep
-     * the list strictly ordered by Start. 
-     * 
+     * The list is sorted by ascending Start, but RtlAddRange permits
+     * overlapping entries (RTL_RANGE_LIST_ADD_IF_CONFLICT)
+     *
      * Whenever two ranges overlap:
      * walk the covered address space upward from 0: grab every range that
      * covers the current position... so we can emit the gap up to the next range that
@@ -910,6 +915,9 @@ RtlIsRangeAvailable(IN PRTL_RANGE_LIST RangeList,
                     IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
                     OUT PBOOLEAN Available)
 {
+    if (Start > End)
+        return STATUS_INVALID_PARAMETER;
+
     *Available = RtlpWindowIsAvailable(RangeList,
                                        Start,
                                        End,
