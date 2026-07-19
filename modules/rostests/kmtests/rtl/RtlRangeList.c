@@ -622,13 +622,13 @@ TestSharedNullCallback(
     Status = RtlAddRangeWrapper(RangeList, &Ranges[1], RTL_RANGE_LIST_ADD_SHARED);
     ok_eq_hex(Status, STATUS_SUCCESS);
 
-    /* Not available without RTL_RANGE_SHARED_IS_VALID */
+    /* Not available without RTL_RANGE_LIST_SHARED_OK */
     Status = RtlIsRangeAvailable(RangeList, 0x300, 0x400, 0, 0, NULL, NULL, &Available);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_bool(Available, FALSE);
 
-    /* Available with RTL_RANGE_SHARED_IS_VALID */
-    Status = RtlIsRangeAvailable(RangeList, 0x300, 0x400, RTL_RANGE_SHARED_IS_VALID, 0, NULL, NULL, &Available);
+    /* Available with RTL_RANGE_LIST_SHARED_OK */
+    Status = RtlIsRangeAvailable(RangeList, 0x300, 0x400, RTL_RANGE_LIST_SHARED_OK, 0, NULL, NULL, &Available);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_bool(Available, TRUE);
 
@@ -655,13 +655,13 @@ TestSharedNullCallback(
     Status = RtlAddRangeWrapper(RangeList, &Ranges[1], 0);
     ok_eq_hex(Status, STATUS_SUCCESS);
 
-    /* Not available without RTL_RANGE_NULL_CONFLICT_IS_VALID */
+    /* Not available without RTL_RANGE_LIST_NULL_CONFLICT_OK */
     Status = RtlIsRangeAvailable(RangeList, 0x500, 0x600, 0, 0, NULL, NULL, &Available);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_bool(Available, FALSE);
 
-    /* Available with RTL_RANGE_NULL_CONFLICT_IS_VALID */
-    Status = RtlIsRangeAvailable(RangeList, 0x500, 0x600, RTL_RANGE_NULL_CONFLICT_IS_VALID, 0, NULL, NULL, &Available);
+    /* Available with RTL_RANGE_LIST_NULL_CONFLICT_OK */
+    Status = RtlIsRangeAvailable(RangeList, 0x500, 0x600, RTL_RANGE_LIST_NULL_CONFLICT_OK, 0, NULL, NULL, &Available);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_bool(Available, TRUE);
 

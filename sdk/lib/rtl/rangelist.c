@@ -50,9 +50,9 @@ RtlpOverlaps(
  *	Shared availability test used by RtlIsRangeAvailable and RtlFindRange.
  *	Walks every entry that overlaps [Start, End] and decides whether the
  *	window is free.  An overlapping entry does NOT cause a conflict when:
- *	  - the caller passed RTL_RANGE_SHARED_IS_VALID and the entry is shared,
+ *	  - the caller passed RTL_RANGE_LIST_SHARED_OK and the entry is shared,
  *	  - the entry carries an attribute present in AttributeAvailableMask,
- *	  - the caller passed RTL_RANGE_NULL_CONFLICT_IS_VALID and the entry has
+ *	  - the caller passed RTL_RANGE_LIST_NULL_CONFLICT_OK and the entry has
  *	    a NULL owner, or
  *	  - the conflict Callback returns TRUE (asking us to ignore it).
  *	When the window is not available, *ConflictStart (if supplied) receives
@@ -87,14 +87,14 @@ RtlpWindowIsAvailable(
             continue;
 
         /* An overlapping entry that is treated as available is not a conflict */
-        if ((Flags & RTL_RANGE_SHARED_IS_VALID) &&
+        if ((Flags & RTL_RANGE_LIST_SHARED_OK) &&
             (Current->Range.Flags & RTL_RANGE_SHARED))
             continue;
 
         if (AttributeAvailableMask & Current->Range.Attributes)
             continue;
 
-        if ((Flags & RTL_RANGE_NULL_CONFLICT_IS_VALID) &&
+        if ((Flags & RTL_RANGE_LIST_NULL_CONFLICT_OK) &&
             Current->Range.Owner == NULL)
             continue;
 
