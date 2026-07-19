@@ -15,7 +15,7 @@
 
 PUBLIC fmod
 fmod:
-    UNIMPLEMENTED fmod
+    UNIMPLEMENTED(fmod)
     ret
 
 END

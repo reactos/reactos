@@ -15,7 +15,7 @@
 
 PUBLIC fmodf
 fmodf:
-    UNIMPLEMENTED fmodf
+    UNIMPLEMENTED(fmodf)
     ret
 
 END

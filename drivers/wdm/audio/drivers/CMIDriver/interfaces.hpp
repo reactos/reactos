@@ -75,8 +75,11 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define UInt8	BYTE
 #define Int32   LONG
 
-#define KSSTATE_STOP_AC3  (KSSTATE)5
-#define KSSTATE_RUN_AC3   (KSSTATE)6
+/* Values outside the KSSTATE enumeration range: keep them as plain integers,
+ * casting 5/6 to KSSTATE in a constant expression (case labels) is ill-formed
+ * and rejected by Clang. Cast at the call sites that need a KSSTATE. */
+#define KSSTATE_STOP_AC3  5
+#define KSSTATE_RUN_AC3   6
 
 // Interface ICMITopology
 DECLARE_INTERFACE_(ICMITopology,IMiniportTopology)
