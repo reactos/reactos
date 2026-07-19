@@ -10,6 +10,8 @@
 #define NDEBUG
 #include <debug.h>
 #include <stdio.h>
+#include <shellapi.h>
+#include <versionhelpers.h>
 #include <shellutils.h>
 
 /* Test IShellLink::SetPath with environment-variables, existing, non-existing, ...*/
@@ -473,11 +475,58 @@ TestIconLocation(void)
 
 START_TEST(CShellLink)
 {
-    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    CCoInit ComInit;
 
     TestShellLink();
     TestDescription();
     TestIconLocation();
+}
 
-    CoUninitialize();
+START_TEST(SHGetNewLinkInfo)
+{
+    CCoInit ComInit;
+    LPCWSTR DotUrlOn7 = IsReactOS() || GetNTVersion() >= _WIN32_WINNT_WIN7 ? L".url" : L".lnk";
+    WCHAR FullTarget[MAX_PATH], Dir[MAX_PATH];
+
+    SHGetSpecialFolderPathW(NULL, Dir, CSIDL_PROFILE, TRUE);
+
+    GetModuleFileNameW(GetModuleHandleW(L"KERNEL32"), FullTarget, _countof(FullTarget));
+    LPWSTR TargetFile = PathFindFileNameW(FullTarget);
+
+    #define Test_SHGNLI(path, dir, rdir, rfile, rext, flags, ret, mustcopy) do \
+    { \
+        WCHAR Result[MAX_PATH], Buf[MAX_PATH]; \
+        BOOL MustCopy, Success = SHGetNewLinkInfoW((path), (dir), lstrcpyW(Result, L"?"), &MustCopy, (flags)); \
+        ok(Success == (ret), "Return (%#x)\n", UINT(flags)); \
+        ok(MustCopy == (mustcopy), "MustCopy (%#x)\n", UINT(flags)); \
+        lstrcpyW(Buf, (rdir)); \
+        if (*Buf) PathAddBackslashW(Buf); \
+        lstrcatW(Buf, (rfile)); \
+        lstrcatW(Buf, (rext)); \
+        ok((!(ret) && !Success) || !_wcsicmp(Result, Buf), "%ls should be %ls (%#x)\n", Result, Buf, UINT(flags)); \
+    } while(0)
+
+    Test_SHGNLI(FullTarget, Dir, Dir, TargetFile, L".lnk", 0, 1, 0);
+
+    CComHeapPtr<ITEMIDLIST> pidl(SHELL_SimpleIDListFromPath(FullTarget));
+    Test_SHGNLI((LPWSTR)(LPITEMIDLIST)pidl, Dir, Dir, TargetFile, L".lnk", SHGNLI_PIDL, 1, 0);
+
+    Test_SHGNLI(FullTarget, Dir, L"", TargetFile, L".lnk", SHGNLI_NOUNIQUE, 1, 0);
+
+    Test_SHGNLI(FullTarget, Dir, Dir, TargetFile, L"", SHGNLI_NOLNK, 1, 0);
+    Test_SHGNLI(FullTarget, Dir, L"", TargetFile, L"", SHGNLI_NOLNK | SHGNLI_NOUNIQUE, 1, 0);
+    Test_SHGNLI(FullTarget, Dir, Dir, TargetFile, L"", SHGNLI_NOLNK | SHGNLI_USEURLEXT, 1, 0);
+
+    Test_SHGNLI(FullTarget, Dir, Dir, TargetFile, DotUrlOn7, SHGNLI_USEURLEXT, 1, 0);
+
+    PathRemoveExtensionW(FullTarget);
+    Test_SHGNLI(FullTarget, Dir, L"", L"", L"", 0, 0, 0); // Target does not exist
+
+    #define SHGNLIFileName L"ROS_Test_Shell32"
+    PathAppendW(lstrcpyW(FullTarget, Dir), SHGNLIFileName L".lnk");
+    CloseHandle(CreateFileW(FullTarget, 0, 7, NULL, OPEN_ALWAYS, 0, NULL));
+    Test_SHGNLI(FullTarget, Dir, Dir, SHGNLIFileName L" (2)", L".lnk", 0, 1, 1);
+    Test_SHGNLI(FullTarget, Dir, L"", SHGNLIFileName, L".lnk", SHGNLI_NOUNIQUE, 1, 1);
+    Test_SHGNLI(FullTarget, Dir, Dir, SHGNLIFileName L" (2)", L".lnk", SHGNLI_NOLNK, 1, 1); // SFGAO_LINK ignores SHGNLI_NOLNK
+    DeleteFileW(FullTarget);
 }

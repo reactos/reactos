@@ -185,6 +185,88 @@ SHDOCVW_CreateShortcut(
     return ppf->Save(pszLnkFileName, TRUE);
 }
 
+struct ADDFAVORITEDIALOGDATA
+{
+    PWSTR pszName;
+    PCWSTR pszCaption;
+    WNDPROC pOrgProc;
+    HWND hEdit;
+    BOOL IgnoreChanges;
+};
+
+static LRESULT AddFavoriteDialogProc(
+   _In_ HWND hwnd,
+   _In_ UINT uMsg,
+   _In_ WPARAM wParam,
+   _In_ LPARAM lParam)
+{
+    ADDFAVORITEDIALOGDATA &data = *(ADDFAVORITEDIALOGDATA*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    NMHDR *pHdr = (NMHDR*)lParam;
+    if (uMsg == WM_NOTIFY)
+        data.IgnoreChanges |= pHdr->code == NM_CLICK || pHdr->code == NM_SETFOCUS; // Ignore changes from the tree
+    if (uMsg == WM_COMMAND && HIWORD(wParam) == EN_SETFOCUS)
+        data.IgnoreChanges = FALSE;
+    if (uMsg == WM_COMMAND && HIWORD(wParam) == EN_UPDATE && !data.IgnoreChanges)
+    {
+        SendMessageW(data.hEdit, WM_GETTEXT, MAX_PATH, (LPARAM)data.pszName); // Save user input
+        BOOL bad = FALSE;
+        for (PWSTR p = data.pszName; *p; ++p)
+            bad |= !PathIsValidCharW(*p, PATH_VALID_ELEMENT);
+        SendMessageW(hwnd, BFFM_ENABLEOK, 0, !bad);
+    }
+    return CallWindowProcW(data.pOrgProc, hwnd, uMsg, wParam, lParam);
+}
+
+static int CALLBACK AddFavoriteDialogCallback(
+   _In_ HWND hwnd,
+   _In_ UINT uMsg,
+   _In_ LPARAM lParam,
+   _In_ LPARAM lpData)
+{
+    ADDFAVORITEDIALOGDATA &data = *(ADDFAVORITEDIALOGDATA*)lpData;
+    switch (uMsg)
+    {
+    case BFFM_INITIALIZED:
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)&data);
+        data.pOrgProc = (WNDPROC)SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)AddFavoriteDialogProc);
+        data.hEdit = FindWindowExW(hwnd, NULL, L"EDIT", NULL);
+        SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)data.pszCaption);
+        SendMessageW(hwnd, WM_NEXTDLGCTL, (WPARAM)data.hEdit, TRUE);
+        SendMessageW(data.hEdit, WM_SETTEXT, 0, (LPARAM)data.pszName); // Initialize
+        break;
+    case BFFM_SELCHANGED:
+        SendMessageW(data.hEdit, WM_SETTEXT, 0, (LPARAM)data.pszName); // Restore
+        break;
+    case BFFM_VALIDATEFAILED:
+        return TRUE;
+    }
+    return 0;
+}
+
+static HRESULT
+AddFavoriteDialog(
+    _In_ HWND hwnd,
+    _Inout_ PWSTR pszDir,
+    _Inout_ PWSTR pszTitle,
+    _In_ PCWSTR pszText)
+{
+    CComHeapPtr<ITEMIDLIST> pidlBaseDir, pidl;
+    HRESULT hr = SHParseDisplayName(pszDir, NULL, &pidlBaseDir, 0, NULL);
+    if (FAILED(hr))
+        return hr;
+
+    ADDFAVORITEDIALOGDATA data = { pszTitle, PathFindFileNameW(pszDir) };
+    UINT bif = BIF_RETURNONLYFSDIRS | BIF_EDITBOX | BIF_USENEWUI;
+    WCHAR szBuf[MAX_PATH];
+    *szBuf = UNICODE_NULL;
+    BROWSEINFOW info = { hwnd, pidlBaseDir, szBuf, pszText, bif, AddFavoriteDialogCallback, (LPARAM)&data };
+    PIDLIST_ABSOLUTE pidlResult = SHBrowseForFolderW(&info);
+    if (!pidlResult)
+        return S_FALSE;
+    pidl.Attach(pidlResult);
+    return SHGetPathFromIDListW(pidl, pszDir) ? S_OK : E_FAIL;
+}
+
 /*************************************************************************
  *      AddUrlToFavorites [SHDOCVW.106]
  */
@@ -197,33 +279,50 @@ AddUrlToFavorites(
 {
     TRACE("%p, %s, %s, %d\n", hwnd, wine_dbgstr_w(pszUrlW), wine_dbgstr_w(pszTitleW), fDisplayUI);
 
-    if (fDisplayUI)
-        FIXME("fDisplayUI\n"); // NOTE: Use SHBrowseForFolder callback
+    if (!pszUrlW || !pszTitleW)
+        return E_INVALIDARG;
 
-    if (PathIsURLW(pszUrlW))
-        FIXME("Internet Shortcut\n");
-
-    CComHeapPtr<ITEMIDLIST> pidl;
-    HRESULT hr = SHParseDisplayName(pszUrlW, NULL, &pidl, 0, NULL);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    // Get title
+    CCoInit CoInit;
+    HRESULT hr = S_OK;
+    BOOL IsUrl = PathIsURLW(pszUrlW);
+    LPCWSTR pszExt = IsUrl ? L".url" : L".lnk";
     WCHAR szTitle[MAX_PATH];
-    if (pszTitleW)
-        StringCchCopyW(szTitle, _countof(szTitle), pszTitleW);
-    else
-        ILGetDisplayNameEx(NULL, pidl, szTitle, ILGDN_NORMAL);
+    StringCchCopyW(szTitle, _countof(szTitle), pszTitleW);
 
-    // Delete invalid characters
-    SHDOCVW_PathDeleteInvalidChars(szTitle);
-
-    // Build shortcut pathname
-    WCHAR szPath[MAX_PATH];
-    if (!SHGetSpecialFolderPathW(hwnd, szPath, CSIDL_FAVORITES, TRUE))
+    WCHAR szDir[MAX_PATH];
+    if (!SHGetSpecialFolderPathW(hwnd, szDir, CSIDL_FAVORITES, TRUE))
         return E_FAIL;
-    PathAppendW(szPath, szTitle);
-    PathAddExtensionW(szPath, L".lnk");
 
-    return SHDOCVW_CreateShortcut(szPath, pidl, NULL);
+    if (fDisplayUI)
+    {
+        PCWSTR pszText = IsUrl ? pszUrlW : PathFindFileNameW(pszUrlW);
+        if ((hr = AddFavoriteDialog(hwnd, szDir, szTitle, pszText)) == S_FALSE)
+            return hr;
+    }
+    SHDOCVW_PathDeleteInvalidChars(szTitle);
+    
+    WCHAR szLnk[MAX_PATH * 2];
+    if (SUCCEEDED(hr))
+        hr = StringCchPrintfW(szLnk, _countof(szLnk), L"%s\\%s%s", szDir, szTitle, pszExt);
+
+    if (IsUrl && SUCCEEDED(hr))
+    {
+        hr = WritePrivateProfileStringW(L"InternetShortcut", L"URL", pszUrlW, szLnk) ? S_OK : E_FAIL;
+    }
+    else if (SUCCEEDED(hr))
+    {
+        BOOL bMustCopy;
+        if (!fDisplayUI)
+            hr = SHGetNewLinkInfoW(pszUrlW, szDir, szLnk, &bMustCopy, 0) ? S_OK : E_FAIL;
+
+        CComHeapPtr<ITEMIDLIST> pidl;
+        if (!FAILED_UNEXPECTEDLY(hr))
+            hr = SHParseDisplayName(pszUrlW, NULL, &pidl, 0, NULL);
+        if (!FAILED_UNEXPECTEDLY(hr))
+            hr = SHDOCVW_CreateShortcut(szLnk, pidl, NULL);
+    }
+
+    if (FAILED(hr) && fDisplayUI)
+        SHELL_ErrorBox(hwnd, hr);
+    return hr;
 }
