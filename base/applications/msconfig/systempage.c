@@ -92,7 +92,6 @@ SystemPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_INITDIALOG:
         {
             HWND hTree;
-            LONG_PTR style;
             hSystemDialog = hDlg;
             SetWindowPos(hDlg, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
             InitializeSystemDialog(hDlg);
@@ -100,10 +99,9 @@ SystemPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             hTree = GetDlgItem(hDlg, IDC_SYSTEM_TREE);
             if (hTree)
             {
-                style = GetWindowLongPtrW(hTree, GWL_STYLE);
+                LONG_PTR style = GetWindowLongPtrW(hTree, GWL_STYLE);
                 style &= ~TVS_EDITLABELS;
                 SetWindowLongPtrW(hTree, GWL_STYLE, style);
-                SetWindowPos(hTree, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
             }
             return TRUE;
         }
