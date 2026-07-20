@@ -1,0 +1,85 @@
+diff --git a/base/applications/sndvol32/sndvol32.c b/base/applications/sndvol32/sndvol32.c
+index 0000000..0000000 100644
+--- a/base/applications/sndvol32/sndvol32.c
++++ b/base/applications/sndvol32/sndvol32.c
+@@ -1126,6 +1126,73 @@ MainWindowProc(HWND hwnd,
+             break;
+ 
+         case WM_HSCROLL:
++            if (lParam == NULL)
++            {
++                /* Horizontal window scrollbar */
++                MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
++                if (MixerWindow != NULL && MixerWindow->ContentWidth > MixerWindow->ClientWidth)
++                {
++                    INT MinPos = 0;
++                    INT MaxPos = MixerWindow->ContentWidth - MixerWindow->ClientWidth;
++                    INT OldPos = MixerWindow->ScrollPos;
++                    INT NewPos = OldPos;
++                    INT PageSize = MixerWindow->ClientWidth;
++                    INT LineStep;
++
++                    if (MixerWindow->DialogCount > 0)
++                        LineStep = max(10, MixerWindow->ContentWidth / MixerWindow->DialogCount);
++                    else
++                        LineStep = 10;
++
++                    switch (LOWORD(wParam))
++                    {
++                        case SB_LINELEFT:
++                            NewPos = max(MinPos, OldPos - LineStep);
++                            break;
++                        case SB_LINERIGHT:
++                            NewPos = min(MaxPos, OldPos + LineStep);
++                            break;
++                        case SB_PAGELEFT:
++                            NewPos = max(MinPos, OldPos - PageSize);
++                            break;
++                        case SB_PAGERIGHT:
++                            NewPos = min(MaxPos, OldPos + PageSize);
++                            break;
++                        case SB_THUMBPOSITION:
++                        case SB_THUMBTRACK:
++                        {
++                            SCROLLINFO si;
++                            si.cbSize = sizeof(si);
++                            si.fMask = SIF_TRACKPOS;
++                            if (GetScrollInfo(hwnd, SB_HORZ, &si))
++                                NewPos = si.nTrackPos;
++                            else
++                                NewPos = (INT)HIWORD(wParam);
++                            NewPos = max(MinPos, min(MaxPos, NewPos));
++                            break;
++                        }
++                        case SB_LEFT:
++                            NewPos = MinPos;
++                            break;
++                        case SB_RIGHT:
++                            NewPos = MaxPos;
++                            break;
++                    }
++
++                    if (NewPos != OldPos)
++                    {
++                        UINT i;
++                        INT dx = OldPos - NewPos;
++                        MixerWindow->ScrollPos = NewPos;
++                        SetScrollPos(hwnd, SB_HORZ, NewPos, TRUE);
++
++                        for (i = 0; i < MixerWindow->WindowCount; i++)
++                        {
++                            HWND hCtrl = MixerWindow->Window[i];
++                            RECT rc;
++                            if (GetWindowRect(hCtrl, &rc))
++                            {
++                                MapWindowPoints(NULL, hwnd, (LPPOINT)&rc, 2);
++                                SetWindowPos(hCtrl, NULL, rc.left + dx, rc.top, 0, 0,
++                                             SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
++                            }
++                        }
++                    }
++                }
++                break;
++            }
+             switch (LOWORD(wParam))
+             {
