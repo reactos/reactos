@@ -8,7 +8,6 @@
 #include <stdexcept>
 #include <cstdarg>
 #include <cstring>
-#include <stdio.h>
 #include <malloc.h>
 
 namespace std {

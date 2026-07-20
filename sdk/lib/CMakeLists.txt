@@ -18,7 +18,7 @@ add_subdirectory(cpprt)
 
 if(MSVC)
     add_subdirectory(RunTmChk)
-else()
+elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_subdirectory(gcc-compat)
 endif()
 
