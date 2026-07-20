@@ -1178,6 +1178,10 @@ MainWindowProc(HWND hwnd,
                             }
                         }
                     }
+
+                    /* Force a full repaint of the client area */
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    UpdateWindow(hwnd);
                 }
                 break;
             }
