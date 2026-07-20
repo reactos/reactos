@@ -700,7 +700,7 @@ LoadDialogCtrls(
     /* Calculate total content width */
     ContentWidth = PrefContext->MixerWindow->rect.right - PrefContext->MixerWindow->rect.left;
 
-    /* Determine the maximum client width */
+    /* Determine whether a horizontal scrollbar is needed */
     if (SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0))
         MaxClientWidth = (workArea.right - workArea.left) - 40;
     else
@@ -714,15 +714,20 @@ LoadDialogCtrls(
 
     if (ContentWidth > MaxClientWidth)
     {
+        /* Need horizontal scrollbar */
         WindowStyle |= WS_HSCROLL;
+
         PrefContext->MixerWindow->ContentWidth = ContentWidth;
         PrefContext->MixerWindow->ClientWidth  = MaxClientWidth;
+
+        /* Limit the visible client width */
         PrefContext->MixerWindow->rect.right = PrefContext->MixerWindow->rect.left + MaxClientWidth;
-        PrefContext->MixerWindow->rect.bottom += GetSystemMetrics(SM_CYHSCROLL);
     }
     else
     {
+        /* No horizontal scrollbar needed */
         WindowStyle &= ~WS_HSCROLL;
+
         PrefContext->MixerWindow->ContentWidth = ContentWidth;
         PrefContext->MixerWindow->ClientWidth  = ContentWidth;
     }
