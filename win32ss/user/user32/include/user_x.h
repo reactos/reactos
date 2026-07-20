@@ -122,17 +122,25 @@ static __inline void LoadUserApiHook()
 #define NtUserKillSystemTimer(HWND, ID) NtUserxKillSystemTimer((HWND), (ID))
 #define NtUserSetSystemTimer(HWND, ID, TIMEOUT) NtUserSetSystemTimer((HWND), (ID), (TIMEOUT), NULL)
 #define NtUserEnableWindow(HWND, ENABLE) NtUserxEnableWindow((HWND), (ENABLE))
+#define NtUserArrangeIconicWindows(HWND) NtUserxArrangeIconicWindows((HWND))
+#define NtUserDrawMenuBar(HWND) NtUserxDrawMenuBar((HWND))
 
+#define NtUserGetWindowSysSubMenu(HWND) GetSubMenu(GetMenu((HWND)), 0)
+
+/* GetWindowLongPtr wrappers */
 #define NtUserGetPrivateData(HWND, OFFSET, SIZE) GetWindowLongPtrW((HWND), (OFFSET))
 #define NtUserSetPrivateData(HWND, OFFSET, SIZE, VALUE) SetWindowLongPtrW((HWND), (OFFSET), (VALUE))
+#define NtUserGetMDIClientInfo(HWND) (MDICLIENTINFO *)GetWindowLongPtr((HWND), GWLP_MDIWND)
+#define NtUserSetMDIClientInfo(HWND, INFO) SetWindowLongPtr((HWND), GWLP_MDIWND, (LONG_PTR)(INFO))
 
 /* MAKE_FNID */
 #define NTUSER_WNDPROC_BUTTON       FNID_BUTTON
 #define NTUSER_WNDPROC_LISTBOX      FNID_LISTBOX
 #define NTUSER_WNDPROC_STATIC       FNID_STATIC
 #define NTUSER_WNDPROC_EDIT         FNID_EDIT
+#define NTUSER_WNDPROC_MDICLIENT    FNID_MDICLIENT
 
 #define MAKE_FNID(index) (index)
 
 /* Imported from dlls/user32/user_private.h */
-extern DWORD get_input_codepage( void );
+DWORD FASTCALL get_input_codepage( void );
