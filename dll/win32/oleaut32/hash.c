@@ -509,7 +509,7 @@ ULONG WINAPI LHashValOfNameSysA( SYSKIND skind, LCID lcid, LPCSTR lpStr)
   ULONG nHiWord, nLoWord = 0x0deadbee;
   const unsigned char *str = (const unsigned char *)lpStr, *pnLookup = NULL;
 
-  TRACE("(%d, 0x%x, %s) %s\n", skind, lcid, debugstr_a(lpStr),
+  TRACE("%d, %#lx, %s, %s.\n", skind, lcid, debugstr_a(lpStr),
     (skind == SYS_WIN16) ? "SYS_WIN16" : (skind == SYS_WIN32) ? "SYS_WIN32" : "");
 
   if (!str)
@@ -520,34 +520,6 @@ ULONG WINAPI LHashValOfNameSysA( SYSKIND skind, LCID lcid, LPCSTR lpStr)
   switch (PRIMARYLANGID(LANGIDFROMLCID(lcid)))
   {
   default:
-    ERR("Unknown lcid %x, treating as latin-based, please report\n", lcid);
-    /* .. Fall Through .. */
-  case LANG_AFRIKAANS:  case LANG_ALBANIAN:   case LANG_ARMENIAN:
-  case LANG_ASSAMESE:   case LANG_AZERI:      case LANG_BASQUE:
-  case LANG_BELARUSIAN: case LANG_BENGALI:    case LANG_BULGARIAN:
-  case LANG_CATALAN:    case LANG_DANISH:     case LANG_DIVEHI:
-  case LANG_DUTCH:      case LANG_ENGLISH:    case LANG_ESTONIAN:
-  case LANG_FAEROESE:   case LANG_FINNISH:    case LANG_FRENCH:
-  case LANG_GALICIAN:   case LANG_GEORGIAN:   case LANG_GERMAN:
-  case LANG_GUJARATI:   case LANG_HINDI:      case LANG_INDONESIAN:
-  case LANG_ITALIAN:    case LANG_KANNADA:    case LANG_KASHMIRI:
-  case LANG_KAZAK:      case LANG_KONKANI:    case LANG_KYRGYZ:
-  case LANG_LATVIAN:    case LANG_LITHUANIAN: case LANG_MACEDONIAN:
-  case LANG_MALAY:      case LANG_MALAYALAM:  case LANG_MANIPURI:
-  case LANG_MARATHI:    case LANG_MONGOLIAN:  case LANG_NEPALI:
-  case LANG_ORIYA:      case LANG_PORTUGUESE: case LANG_PUNJABI:
-  case LANG_ROMANIAN:   case LANG_SANSKRIT:   case LANG_SERBIAN:
-  case LANG_SINDHI:     case LANG_SLOVENIAN:  case LANG_SWAHILI:
-  case LANG_SWEDISH:    case LANG_SYRIAC:     case LANG_TAMIL:
-  case LANG_TATAR:      case LANG_TELUGU:     case LANG_THAI:
-  case LANG_UKRAINIAN:  case LANG_URDU:       case LANG_UZBEK:
-  case LANG_VIETNAMESE: case LANG_SCOTTISH_GAELIC: case LANG_MALTESE:
-  case LANG_MAORI:      case LANG_ROMANSH:    case LANG_IRISH:
-  case LANG_SAMI:       case LANG_UPPER_SORBIAN: case LANG_SUTU:
-  case LANG_TSONGA:     case LANG_TSWANA:     case LANG_VENDA:
-  case LANG_XHOSA:      case LANG_ZULU:       case LANG_ESPERANTO:
-  case LANG_WALON:      case LANG_CORNISH:    case LANG_WELSH:
-  case LANG_BRETON:     case LANG_MANX_GAELIC:
     nOffset = 16;
     pnLookup = Lookup_16;
     break;
@@ -633,9 +605,9 @@ ULONG WINAPI LHashValOfNameSys(SYSKIND skind, LCID lcid, LPCOLESTR str)
 
     if (!str) return 0;
     len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL );
-    strA = HeapAlloc( GetProcessHeap(), 0, len );
+    strA = malloc(len);
     WideCharToMultiByte( CP_ACP, 0, str, -1, strA, len, NULL, NULL );
     res = LHashValOfNameSysA(skind, lcid, strA);
-    HeapFree(GetProcessHeap(), 0, strA);
+    free(strA);
     return res;
 }

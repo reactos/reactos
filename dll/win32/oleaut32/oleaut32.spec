@@ -140,14 +140,12 @@
 141 stdcall VarAdd(ptr ptr ptr)
 142 stdcall VarAnd(ptr ptr ptr)
 143 stdcall VarDiv(ptr ptr ptr)
-@ stdcall -private DllCanUnloadNow()
-@ stdcall -private DllGetClassObject(ptr ptr ptr)
+144 stub OACreateTypeLib2
 146 stdcall DispCallFunc(ptr long long long long ptr ptr ptr)
 147 stdcall VariantChangeTypeEx(ptr ptr long long long)
 148 stdcall SafeArrayPtrOfIndex(ptr ptr ptr)
 149 stdcall SysStringByteLen(ptr)
 150 stdcall SysAllocStringByteLen(ptr long)
-@ stdcall -private DllRegisterServer()
 152 stdcall VarEqv(ptr ptr ptr)
 153 stdcall VarIdiv(ptr ptr ptr)
 154 stdcall VarImp(ptr ptr ptr)
@@ -196,9 +194,9 @@
 197 stdcall VarDecFromStr(wstr long long ptr)
 198 stdcall VarDecFromDisp(ptr long ptr)
 199 stdcall VarDecFromBool(long ptr)
-200 stdcall GetErrorInfo(long ptr) ole32.GetErrorInfo
-201 stdcall SetErrorInfo(long ptr) ole32.SetErrorInfo
-202 stdcall CreateErrorInfo(ptr) ole32.CreateErrorInfo
+200 stdcall -import GetErrorInfo(long ptr)
+201 stdcall -import SetErrorInfo(long ptr)
+202 stdcall -import CreateErrorInfo(ptr)
 203 stdcall VarDecRound(ptr long ptr)
 204 stdcall VarDecCmp(ptr ptr)
 205 stdcall VarI2FromI1(long ptr)
@@ -296,8 +294,6 @@
 297 stub LPSAFEARRAY_Unmarshal
 298 stdcall VarDecCmpR8(ptr double)
 299 stdcall VarCyAdd(int64 int64 ptr)
-@ stdcall -private DllUnregisterServer()
-301 stub OACreateTypeLib2
 303 stdcall VarCyMul(int64 int64 ptr)
 304 stdcall VarCyMulI4(int64 long ptr)
 305 stdcall VarCySub(int64 int64 ptr)
@@ -361,6 +357,26 @@
 377 stdcall VarI1FromUI8(int64 ptr)
 378 stdcall VarUI2FromI8(int64 ptr)
 379 stdcall VarUI2FromUI8(int64 ptr)
+380 stub UserHWND_from_local
+381 stub UserHWND_to_local
+382 stub UserHWND_free_inst
+383 stub UserHWND_free_local
+384 stub UserBSTR_from_local
+385 stub UserBSTR_to_local
+386 stub UserBSTR_free_inst
+387 stub UserBSTR_free_local
+388 stub UserVARIANT_from_local
+389 stub UserVARIANT_to_local
+390 stub UserVARIANT_free_inst
+391 stub UserVARIANT_free_local
+392 stub UserEXCEPINFO_from_local
+393 stub UserEXCEPINFO_to_local
+394 stub UserEXCEPINFO_free_inst
+395 stub UserEXCEPINFO_free_local
+396 stub UserMSG_from_local
+397 stub UserMSG_to_local
+398 stub UserMSG_free_inst
+399 stub UserMSG_free_local
 401 stdcall OleLoadPictureEx(ptr long long ptr long long long ptr)
 402 stub OleLoadPictureFileEx
 411 stdcall SafeArrayCreateVector(long long long)
@@ -396,3 +412,8 @@
 441 stdcall VarUI8FromDec(long ptr)
 442 stdcall RegisterTypeLibForUser(ptr wstr wstr)
 443 stdcall UnRegisterTypeLibForUser(ptr long long long long)
+
+@ stdcall -private DllCanUnloadNow()
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
