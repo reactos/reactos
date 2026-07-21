@@ -998,6 +998,7 @@
 @ stdcall RtlIsDosDeviceName_U(wstr)
 @ stdcall RtlIsGenericTableEmpty(ptr)
 @ stdcall RtlIsGenericTableEmptyAvl(ptr)
+@ stdcall -version=0x601+ RtlIsNameInExpression(ptr ptr long ptr)
 @ stdcall RtlIsNameLegalDOS8Dot3(ptr ptr ptr)
 @ stdcall -stub -version=0x600+ RtlIsNormalizedString(long ptr long ptr)
 @ stdcall -version=0xA00+ RtlIsProcessorFeaturePresent(long)

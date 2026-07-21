@@ -34,6 +34,8 @@
 @ stdcall RtlUnicodeToUTF8N(ptr long ptr wstr long)
 @ stdcall RtlUTF8ToUnicodeN(ptr long ptr str long)
 
+@ stdcall RtlIsNameInExpression(ptr ptr long ptr)
+
 @ stdcall TpAllocCleanupGroup(ptr)
 @ stdcall TpAllocIoCompletion(ptr ptr ptr ptr ptr)
 @ stdcall TpAllocPool(ptr ptr)
