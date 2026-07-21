@@ -111,6 +111,7 @@ extern void func_RtlHandle(void);
 extern void func_RtlImageDirectoryEntryToData(void);
 extern void func_RtlImageRvaToVa(void);
 extern void func_RtlIntSafe(void);
+extern void func_RtlIsNameInExpression(void);
 extern void func_RtlIsNameLegalDOS8Dot3(void);
 extern void func_RtlLocale(void);
 extern void func_RtlMemoryStream(void);
@@ -248,6 +249,7 @@ const struct test winetest_testlist[] =
     { "RtlImageDirectoryEntryToData",   func_RtlImageDirectoryEntryToData },
     { "RtlImageRvaToVa",                func_RtlImageRvaToVa },
     { "RtlIntSafe",                     func_RtlIntSafe },
+    { "RtlIsNameInExpression",          func_RtlIsNameInExpression},
     { "RtlIsNameLegalDOS8Dot3",         func_RtlIsNameLegalDOS8Dot3 },
     { "RtlLocale",                      func_RtlLocale },
     { "RtlMemoryStream",                func_RtlMemoryStream },
