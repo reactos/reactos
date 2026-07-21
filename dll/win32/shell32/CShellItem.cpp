@@ -24,9 +24,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-EXTERN_C HRESULT WINAPI SHCreateShellItem(PCIDLIST_ABSOLUTE pidlParent,
-    IShellFolder *psfParent, PCUITEMID_CHILD pidl, IShellItem **ppsi);
-
 CShellItem::CShellItem() :
     m_pidl(NULL)
 {

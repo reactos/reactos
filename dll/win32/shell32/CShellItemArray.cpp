@@ -4,12 +4,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-EXTERN_C HRESULT WINAPI SHCreateShellItem(
-    _In_opt_ PCIDLIST_ABSOLUTE pidlParent,
-    _In_opt_ IShellFolder *psfParent,
-    _In_ PCUITEMID_CHILD pidl,
-    _Out_ IShellItem **ppsi);
-
 /***********************************************************************
  *   CShellItemArray
  */
