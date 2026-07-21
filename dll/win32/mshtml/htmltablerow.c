@@ -18,13 +18,21 @@
 
 #include "mshtml_private.h"
 
+#ifdef __REACTOS__
+struct HTMLTableRow {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLTableRow IHTMLTableRow_iface;
 
     nsIDOMHTMLTableRowElement *nsrow;
+#ifdef __REACTOS__
+};
+#else
 } HTMLTableRow;
+#endif
 
 static inline HTMLTableRow *impl_from_IHTMLTableRow(IHTMLTableRow *iface)
 {
