@@ -54,5 +54,5 @@ if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND (ARCH STREQUAL "amd64" OR ARCH STREQU
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(freetype PRIVATE -fno-builtin-malloc)
+    target_compile_options(freetype PRIVATE -fno-builtin-malloc -Wno-array-parameter)
 endif()
