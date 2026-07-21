@@ -275,10 +275,10 @@ Bir dizini yeniden adlandırmak için:\n\
 MOVE [/N][/Y|/-Y][sürücü:][yol]dizin_adi1 dizin_adi2\n\n\
   [sürücü:][yol]dosya1      Taşımak istediğiniz dosya veya dosyaların\n\
                             konumunu ve adını belirtir.\n\
-  /N                        Hiçbir şey yapmaz. Her şeyi simüle eder ama dosyaları veya dizinleri taşımaz.\n\n\
+  /N                        Hiçbir şey yapmaz. Her şeyi simüle eder ama dosyaları\n\
+                            veya dizinleri taşımaz.\n\n\
 Mevcut sınırlamalar:\n\
-  - Bir dosyayı veya dizini bir sürücüden diğerine taşıyamazsınız.\n\
-  - Gizli veya salt okunur dosyaları/dizinleri taşıyamazsınız.\n"
+  - Bir dosyayı veya dizini bir sürücüden diğerine taşıyamazsınız.\n"
     STRING_MSGBOX_HELP "bir mesaj kutusu görüntüler ve kullanıcı yanıtını döndürür\n\n\
 MSGBOX tip ['başlık'] komut_metni\n\n\
 tip           görüntülenecek tuş,\n\
