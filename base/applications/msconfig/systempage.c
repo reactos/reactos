@@ -91,18 +91,10 @@ SystemPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message) {
         case WM_INITDIALOG:
         {
-            HWND hTree;
             hSystemDialog = hDlg;
             SetWindowPos(hDlg, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
             InitializeSystemDialog(hDlg);
             DisableAllExcept(hDlg, IDC_SYSTEM_TREE); // FIXME: Implement saving
-            hTree = GetDlgItem(hDlg, IDC_SYSTEM_TREE);
-            if (hTree)
-            {
-                LONG_PTR style = GetWindowLongPtrW(hTree, GWL_STYLE);
-                style &= ~TVS_EDITLABELS;
-                SetWindowLongPtrW(hTree, GWL_STYLE, style);
-            }
             return TRUE;
         }
     }
