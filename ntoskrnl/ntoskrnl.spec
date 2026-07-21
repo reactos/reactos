@@ -237,7 +237,7 @@
 @ stdcall FsRtlIsDbcsInExpression(ptr ptr)
 @ stdcall FsRtlIsFatDbcsLegal(long ptr long long long)
 @ stdcall FsRtlIsHpfsDbcsLegal(long ptr long long long)
-@ stdcall FsRtlIsNameInExpression(ptr ptr long wstr)
+@ stdcall FsRtlIsNameInExpression(ptr ptr long wstr) RtlIsNameInExpression
 @ stdcall FsRtlIsNtstatusExpected(long)
 @ stdcall FsRtlIsPagingFile(ptr)
 @ stdcall FsRtlIsTotalDeviceFailure(ptr)
