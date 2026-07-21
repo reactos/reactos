@@ -1432,7 +1432,7 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
     PropSheet_SetWizButtons(MainWindow, 0);
     EnableWindow(MainWindow, FALSE);
 
-    while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
+    while (MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE) == (WAIT_OBJECT_0 + 1))
     {
        /* We still need to process main window messages to avoid freeze */
        while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
@@ -2729,7 +2729,7 @@ ProcessPageDlgProc(HWND hwndDlg,
 
         case PM_ITEMS_DONE:
             DPRINT("PM_ITEMS_DONE\n");
-            /* Enable the Back and Next buttons */
+            /* Enable the Next button */
             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
             PropSheet_PressButton(GetParent(hwndDlg), PSBTN_NEXT);
             break;
