@@ -11,6 +11,12 @@
 #define NDEBUG
 #include <debug.h>
 
+ULONG MaximumChannels = 2;
+ULONG MinimumBitsPerSample = 16;
+ULONG MaximumBitsPerSample = 16;
+ULONG MinimumSampleFrequency = 44100;
+ULONG MaximumSampleFrequency = 44100;
+
 PVOID
 __cdecl
 operator new(size_t Size, POOL_TYPE PoolType, ULONG Tag)
@@ -593,11 +599,6 @@ CAdapterCommon::BuildWaveFormat(
 {
     CFunctionGroupNode *OutNode = (CFunctionGroupNode *)Node;
 
-    ULONG ChannelCount = 0;
-    ULONG MinimumBitsPerSample = (ULONG)-1;
-    ULONG MaximumBitsPerSample = 0;
-    ULONG MinimumSampleFrequency = (ULONG)-1;
-    ULONG MaximumSampleFrequency = 0;
     UCHAR FormatPCMSupported = 0;
     UCHAR FormatFloatSupported = 0;
     UCHAR FormatAC3Supported = 0;
@@ -607,7 +608,7 @@ CAdapterCommon::BuildWaveFormat(
     {
         PNODE_CONTEXT ConnectedNode = OutNode->FindNodeId(TargetWidgets[NodeIndex]);
         ASSERT(ConnectedNode);
-        ChannelCount += ConnectedNode->ChannelCount;
+        MaximumChannels += ConnectedNode->ChannelCount;
 
         NODE_PCM_RATES NodePcmRates;
         Status = OutNode->GetSupportedPCMSizeRates(ConnectedNode->NodeId, &NodePcmRates);
@@ -744,7 +745,7 @@ CAdapterCommon::BuildWaveFormat(
 
     DPRINT1("Digital %x\n", Digital);
     DPRINT1("NodeType %u\n", NodeType);
-    DPRINT1("ChannelCount %u\n", ChannelCount);
+    DPRINT1("MaximumChannels %u\n", MaximumChannels);
     DPRINT1("MinimumBitsPerSample %u\n", MinimumBitsPerSample);
     DPRINT1("MaximumBitsPerSample %u\n", MaximumBitsPerSample);
     DPRINT1("MinimumSampleFrequency %u\n", MinimumSampleFrequency);

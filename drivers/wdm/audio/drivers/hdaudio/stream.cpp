@@ -242,7 +242,7 @@ HDAUDIO_AllocateStream(
                 PKSDATARANGE_AUDIO PinRange = (PKSDATARANGE_AUDIO)PinDataRange;
                 PKSDATAFORMAT_WAVEFORMATEX RequestFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
 
-                if (RequestFormat->WaveFormatEx.nChannels > MaxChannels)
+                if (RequestFormat->WaveFormatEx.nChannels > MaximumChannels)
                 {
                     DPRINT1(
                         "ChannelsCount %u not supported, MaxChannels %u\n", RequestFormat->WaveFormatEx.nChannels,
@@ -250,25 +250,25 @@ HDAUDIO_AllocateStream(
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.nSamplesPerSec < MinSampleFrequency)
+                if (RequestFormat->WaveFormatEx.nSamplesPerSec < MinimumSampleFrequency)
                 {
                     DPRINT1("SampleRate %u not supported\n", RequestFormat->WaveFormatEx.nSamplesPerSec);
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.nSamplesPerSec > MaxSampleFrequency)
+                if (RequestFormat->WaveFormatEx.nSamplesPerSec > MaximumSampleFrequency)
                 {
                     DPRINT1("SampleRate %u not supported\n", RequestFormat->WaveFormatEx.nSamplesPerSec);
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.wBitsPerSample < MinBitsPerSample)
+                if (RequestFormat->WaveFormatEx.wBitsPerSample < MinimumBitsPerSample)
                 {
                     DPRINT1("wBitsPerSample %u not supported\n", RequestFormat->WaveFormatEx.wBitsPerSample);
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.wBitsPerSample > MaxBitsPerSample)
+                if (RequestFormat->WaveFormatEx.wBitsPerSample > MaximumBitsPerSample)
                 {
                     DPRINT1("wBitsPerSample %u not supported\n", RequestFormat->WaveFormatEx.wBitsPerSample);
                     return STATUS_NOT_SUPPORTED;

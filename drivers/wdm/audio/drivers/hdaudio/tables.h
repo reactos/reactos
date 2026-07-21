@@ -9,11 +9,11 @@
 #define _TABLES_H_
 
 // default formats range
-const ULONG MaxChannels = 2;
-const ULONG MinBitsPerSample = 16;
-const ULONG MaxBitsPerSample = 16;
-const ULONG MinSampleFrequency = 44100;
-const ULONG MaxSampleFrequency = 44100;
+extern ULONG MaximumChannels;
+extern ULONG MinimumBitsPerSample;
+extern ULONG MaximumBitsPerSample;
+extern ULONG MinimumSampleFrequency;
+extern ULONG MaximumSampleFrequency;
 
 static GUID KSCATEGORY_RangeAudio = {STATIC_KSCATEGORY_AUDIO};
 static GUID KSCATEGORY_Audio = {STATIC_KSCATEGORY_AUDIO};
@@ -160,11 +160,11 @@ static KSDATARANGE_AUDIO DataRange[] =
        STATICGUIDOF(KSDATAFORMAT_SUBTYPE_PCM), // PCM is default
        STATICGUIDOF(KSDATAFORMAT_SPECIFIER_WAVEFORMATEX)
     },
-    MaxChannels,
-    MinBitsPerSample,
-    MaxBitsPerSample,
-    MinSampleFrequency,
-    MaxSampleFrequency
+    MaximumChannels,
+    MinimumBitsPerSample,
+    MaximumBitsPerSample,
+    MinimumSampleFrequency,
+    MaximumSampleFrequency
 };
 
 static PKSDATARANGE_AUDIO DataRanges[] =
