@@ -117,22 +117,69 @@ CcShutdownSystem(VOID)
     /* NOTHING TO DO */
 }
 
-/*
- * @unimplemented
+/*************************************************************************
+ *                CcGetFlushedValidData
+ *
+ * @param[in] SectionObjectPointer
+ * Pointer to a structure containing the file object's section object
+ * pointers.
+ *
+ * @param[in] BcbListHeld
+ * Reserved for system use. Must be FALSE
+ *
+ * @return
+ * The valid data length for the file if it's entirely flushed, the
+ * starting byte offset of the lowest dirty page if some data is still
+ * dirty, or MAXLONGLONG if the file isn't / is no longer cached.
  */
 LARGE_INTEGER
 NTAPI
-CcGetFlushedValidData (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN BOOLEAN BcbListHeld
-    )
+CcGetFlushedValidData(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ BOOLEAN BcbListHeld)
 {
-	LARGE_INTEGER i;
+    KIRQL OldIrql;
+    LARGE_INTEGER FlushedValidData;
+    PLIST_ENTRY ListEntry;
+    PROS_VACB Vacb;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
 
-	UNIMPLEMENTED;
+    UNREFERENCED_PARAMETER(BcbListHeld);
 
-	i.QuadPart = 0;
-	return i;
+    SharedCacheMap = SectionObjectPointer->SharedCacheMap;
+
+    /* Not cached or no longer cached. There's nothing we can report */
+    if (SharedCacheMap == NULL)
+    {
+        FlushedValidData.QuadPart = MAXLONGLONG;
+        return FlushedValidData;
+    }
+
+    /* Assume everything is flushed up to the current valid data length */
+    FlushedValidData = SharedCacheMap->ValidDataLength;
+
+    /* Look for the lowest dirty VACB. List is kept sorted by file offset */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
+
+    for (ListEntry = SharedCacheMap->CacheMapVacbListHead.Flink;
+         ListEntry != &SharedCacheMap->CacheMapVacbListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        Vacb = CONTAINING_RECORD(ListEntry, ROS_VACB, CacheMapVacbListEntry);
+
+        /* Found it. Whatever comes before this offset is flushed */
+        if (Vacb->Dirty)
+        {
+            FlushedValidData = Vacb->FileOffset;
+            break;
+        }
+    }
+
+    KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
+    return FlushedValidData;
 }
 
 /*
