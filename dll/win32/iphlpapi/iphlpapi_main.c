@@ -3215,11 +3215,16 @@ BOOL WINAPI CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped)
 static DWORD
 FindIfIndexForIPv6Source(const struct in6_addr *pSrc)
 {
-    IP_ADAPTER_ADDRESSES stackBuf[0];
-    PIP_ADAPTER_ADDRESSES pBuf = stackBuf;
-    ULONG bufLen = sizeof(stackBuf);
+    PIP_ADAPTER_ADDRESSES pBuf;
+    ULONG bufLen = 15 * 1024;
     DWORD ret;
     DWORD ifIndex = 0;
+
+    pBuf = HeapAlloc(GetProcessHeap(), 0, bufLen);
+    if (!pBuf)
+    {
+        return 0;
+    }
 
     ret = GetAdaptersAddresses(AF_INET6,
                                GAA_FLAG_SKIP_ANYCAST |
@@ -3232,8 +3237,8 @@ FindIfIndexForIPv6Source(const struct in6_addr *pSrc)
 
     if (ret == ERROR_BUFFER_OVERFLOW)
     {
+        HeapFree(GetProcessHeap(), 0, pBuf);
         pBuf = HeapAlloc(GetProcessHeap(), 0, bufLen);
-
         if (!pBuf)
         {
             return 0;
@@ -3257,7 +3262,9 @@ FindIfIndexForIPv6Source(const struct in6_addr *pSrc)
         {
             PIP_ADAPTER_UNICAST_ADDRESS pUnicast;
 
-            for (pUnicast = pAdapter->FirstUnicastAddress; pUnicast != NULL; pUnicast = pUnicast->Next)
+            for (pUnicast = pAdapter->FirstUnicastAddress;
+                 pUnicast != NULL;
+                 pUnicast = pUnicast->Next)
             {
                 const struct sockaddr_in6 *pSin6;
 
@@ -3271,8 +3278,8 @@ FindIfIndexForIPv6Source(const struct in6_addr *pSrc)
                 if (memcmp(&pSin6->sin6_addr, pSrc, sizeof(*pSrc)) == 0)
                 {
                     ifIndex = (pAdapter->Ipv6IfIndex != 0)
-                               ? pAdapter->Ipv6IfIndex
-                               : pAdapter->IfIndex;
+                                ? pAdapter->Ipv6IfIndex
+                                : pAdapter->IfIndex;
                     goto done;
                 }
             }
@@ -3280,11 +3287,7 @@ FindIfIndexForIPv6Source(const struct in6_addr *pSrc)
     }
 
 done:
-    if (pBuf != stackBuf)
-    {
-        HeapFree(GetProcessHeap(), 0, pBuf);
-    }
-
+    HeapFree(GetProcessHeap(), 0, pBuf);
     return ifIndex;
 }
 
