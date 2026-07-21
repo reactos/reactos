@@ -802,6 +802,16 @@ GetCurrentProcessExplicitAppUserModelID(PWSTR *AppID)
 /*
  * Unimplemented
  */
+HRESULT WINAPI
+SetCurrentProcessExplicitAppUserModelID(PCWSTR AppID)
+{
+    FIXME("SetCurrentProcessExplicitAppUserModelID stub\n");
+    return S_OK;
+}
+
+/*
+ * Unimplemented
+ */
 EXTERN_C DWORD
 WINAPI
 RunInstallUninstallStubs(VOID)

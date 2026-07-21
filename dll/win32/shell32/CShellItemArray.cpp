@@ -225,3 +225,135 @@ CreateShellItemArrayFromItems(_In_reads_(cidl) IShellItem **items, _In_ UINT cid
 {
     return ShellObjectCreatorInit<CSimpleShellItemArray>(items, cidl, riid, ppv);
 }
+
+/***********************************************************************
+ *   SHCreateShellItemArray [SHELL32.@]
+ */
+EXTERN_C HRESULT WINAPI
+SHCreateShellItemArray(
+    _In_opt_ PCIDLIST_ABSOLUTE pidlParent,
+    _In_opt_ IShellFolder *psf,
+    _In_ UINT cidl,
+    _In_reads_opt_(cidl) PCUITEMID_CHILD_ARRAY ppidl,
+    _Out_ IShellItemArray **ppsiItemArray)
+{
+    CComHeapPtr<IShellItem *> array;
+    HRESULT hr = E_FAIL;
+
+    TRACE("(%p,%p,%u,%p,%p)\n", pidlParent, psf, cidl, ppidl, ppsiItemArray);
+
+    if (!ppsiItemArray)
+        return E_POINTER;
+    *ppsiItemArray = NULL;
+
+    if (!pidlParent && !psf)
+        return E_POINTER;
+
+    if (!ppidl)
+        return E_INVALIDARG;
+
+    array.Allocate(cidl);
+    if (!array)
+        return E_OUTOFMEMORY;
+
+    for (UINT i = 0; i < cidl; ++i)
+        array[i] = NULL;
+
+    for (UINT i = 0; i < cidl; ++i)
+    {
+        hr = SHCreateShellItem(pidlParent, psf, ppidl[i], &array[i]);
+        if (FAILED_UNEXPECTEDLY(hr))
+            break;
+    }
+
+    if (SUCCEEDED(hr))
+    {
+        hr = CreateShellItemArrayFromItems(array, cidl, IID_PPV_ARG(IShellItemArray, ppsiItemArray));
+    }
+
+    for (UINT i = 0; i < cidl; ++i)
+    {
+        if (array[i])
+            array[i]->Release();
+    }
+
+    return hr;
+}
+
+/***********************************************************************
+ *   SHCreateShellItemArrayFromIDLists [SHELL32.@]
+ */
+EXTERN_C HRESULT WINAPI
+SHCreateShellItemArrayFromIDLists(
+    _In_ UINT cidl,
+    _In_reads_(cidl) PCIDLIST_ABSOLUTE_ARRAY pidlArray,
+    _Out_ IShellItemArray **ppsiItemArray)
+{
+    CComHeapPtr<IShellItem *> array;
+    HRESULT hr;
+
+    TRACE("(%u,%p,%p)\n", cidl, pidlArray, ppsiItemArray);
+
+    if (!ppsiItemArray)
+        return E_POINTER;
+    *ppsiItemArray = NULL;
+
+    if (cidl == 0 || !pidlArray)
+        return E_INVALIDARG;
+
+    array.Allocate(cidl);
+    if (!array)
+        return E_OUTOFMEMORY;
+
+    for (UINT i = 0; i < cidl; ++i)
+        array[i] = NULL;
+
+    for (UINT i = 0; i < cidl; ++i)
+    {
+        hr = SHCreateShellItem(NULL, NULL, pidlArray[i], &array[i]);
+        if (FAILED_UNEXPECTEDLY(hr))
+            break;
+    }
+
+    if (SUCCEEDED(hr))
+    {
+        hr = CreateShellItemArrayFromItems(array, cidl, IID_PPV_ARG(IShellItemArray, ppsiItemArray));
+    }
+
+    for (UINT i = 0; i < cidl; ++i)
+    {
+        if (array[i])
+            array[i]->Release();
+    }
+
+    return hr;
+}
+
+/***********************************************************************
+ *   SHCreateShellItemArrayFromShellItem [SHELL32.@]
+ */
+EXTERN_C HRESULT WINAPI
+SHCreateShellItemArrayFromShellItem(_In_ IShellItem *psi, _In_ REFIID riid, _Out_ void **ppv)
+{
+    IShellItem *items[1] = { psi };
+
+    TRACE("(%p,%s,%p)\n", psi, debugstr_guid(&riid), ppv);
+
+    if (!ppv)
+        return E_POINTER;
+    *ppv = NULL;
+
+    if (!psi)
+        return E_INVALIDARG;
+
+    return CreateShellItemArrayFromItems(items, 1, riid, ppv);
+}
+
+/***********************************************************************
+ *   SHCreateShellItemArrayFromDataObject [SHELL32.@]
+ */
+EXTERN_C HRESULT WINAPI
+SHCreateShellItemArrayFromDataObject(_In_ IDataObject *pdo, _In_ REFIID riid, _Out_ void **ppv)
+{
+    return ShellObjectCreatorInit<CShellItemArray>(pdo, riid, ppv);
+}

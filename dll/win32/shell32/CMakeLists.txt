@@ -47,7 +47,6 @@ list(APPEND SOURCE
     utils.cpp
     CShellItem.cpp
     CShellItemArray.cpp
-    shellitem_vista.cpp
     CShellLink.cpp
     CFolderOptions.cpp
     folders/CDesktopFolder.cpp
