@@ -830,6 +830,12 @@ NTAPI
 MmIsSpecialPoolAddressFree(
     IN PVOID P);
 
+SIZE_T
+NTAPI
+MmGetSpecialPoolBlockSize(
+    _In_ PVOID PoolBlock,
+    _Out_ PBOOLEAN QuotaCharged);
+
 PVOID
 NTAPI
 MmAllocateSpecialPool(
