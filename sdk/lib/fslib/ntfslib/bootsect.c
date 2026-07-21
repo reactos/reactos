@@ -45,10 +45,7 @@ FillBiosParametersBlock(OUT PBIOS_PARAMETERS_BLOCK BiosParametersBlock)
 
     BiosParametersBlock->SectorsPerTrack = (USHORT)SECTORS_PER_TRACK;
     BiosParametersBlock->Heads           = DISK_HEADS;
-
-    // Number of sectors preceding the partition. This is only relevant for
-    // booting (the VBR uses it); a mounting driver ignores it. We leave it 0.
-    BiosParametersBlock->HiddenSectorsCount = 0;
+    BiosParametersBlock->HiddenSectorsCount = HIDDEN_SECTORS;
 }
 
 static

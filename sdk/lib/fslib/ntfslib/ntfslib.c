@@ -147,8 +147,15 @@ ComputeLayout(IN ULONG ClusterSize)
     // $Boot is exactly the first 8192 bytes of the volume.
     LAYOUT.BootClusters = (ULONG)CEIL_DIV(8192ULL, (ULONGLONG)C);
 
-    // $MFT: reserve headroom beyond the reserved system records.
-    LAYOUT.MftAllocRecords = 64;
+    // $MFT: reserve a large MFT.
+    ULONGLONG MftBytes = VolumeBytes / 128;
+
+    if (MftBytes < (4ULL * 1024 * 1024))
+        MftBytes = 4ULL * 1024 * 1024;     // 4 MB min (~4096 records)
+    if (MftBytes > (32ULL * 1024 * 1024))
+        MftBytes = 32ULL * 1024 * 1024;    // 32 MB cap (~32768 records)
+
+    LAYOUT.MftAllocRecords = (ULONG)(MftBytes / MFT_RECORD_SIZE);
     LAYOUT.MftClusters = (ULONG)CEIL_DIV((ULONGLONG)LAYOUT.MftAllocRecords * MFT_RECORD_SIZE, (ULONGLONG)C);
 
     // $MFTMirr: the first four system records.
@@ -315,6 +322,24 @@ NtfsFormat(
     DISK_GEO    = &DiskGeometry;
     DISK_LEN    = &LengthInformation;
     LABEL       = Label;
+
+
+    NtfsFormatData.HiddenSectors = 0;
+    PARTITION_INFORMATION_EX PartitionInfo;
+    NTSTATUS PartStatus =
+        NtDeviceIoControlFile(DiskHandle, NULL, NULL, NULL, &Iosb,
+                              IOCTL_DISK_GET_PARTITION_INFO_EX,
+                              NULL, 0,
+                              &PartitionInfo, sizeof(PartitionInfo));
+    if (NT_SUCCESS(PartStatus) && DiskGeometry.BytesPerSector != 0)
+    {
+        NtfsFormatData.HiddenSectors =
+                (ULONG)(PartitionInfo.StartingOffset.QuadPart / DiskGeometry.BytesPerSector);
+    }
+    else
+    {
+        DPRINT1("IOCTL_DISK_GET_PARTITION_INFO_EX failed (0x%.08x); HiddenSectors=0\n", PartStatus);
+    }
 
     // Capture a single timestamp used for every record, so a file's timestamps
     // match the copies stored in its parent directory's index entries.

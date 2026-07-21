@@ -244,10 +244,13 @@ typedef struct _NTFS_FORMAT_DATA
     PDISK_GEOMETRY          DiskGeometry;
     PUNICODE_STRING         Label;
     ULONGLONG               FormatTime;   // Single timestamp stamped on every record
+    ULONG                   HiddenSectors;// Partition start LBA (BPB field; the VBR needs it to boot)
     NTFS_LAYOUT             Layout;
 } NTFS_FORMAT_DATA;
 
 extern NTFS_FORMAT_DATA NtfsFormatData;
+
+#define HIDDEN_SECTORS (NtfsFormatData.HiddenSectors)
 
 #define FORMAT_TIME (NtfsFormatData.FormatTime)
 
