@@ -5,6 +5,7 @@
  * TRANSLATORS: Copyright 2015 Erdem Ersoy <erdemersoy@erdemersoy.net>
  *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
  *              Copyright 2026 Hasan Eliküçük <hasanelk101@gmail.com>
+ *              Copyright 2026 Ethem Çılgın (associan) <JaggedZenith@proton.me>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -334,7 +335,7 @@ REN [/E /N /P /Q /S /T] eski_isim ... yeni_isim\n\n\
   /N    Hiçbir şey yapmaz.\n\
   /P    Her dosyayı yeniden adlandırmadan önce onay ister.\n\
         (Henüz çalışır halde değil!)\n\
-  /Q    Sessizce çalıştır.\n\
+  /Q    Sessizce çalışır.\n\
   /S    Alt dizinleri yeniden adlandır.\n\
   /T    Yeniden adlandırılan dosyaların sayısını gösterir\n\n\
 Hedefiniz için yeni bir sürücü veya yol belirtemeyeceğinizi unutmayın.\n\
