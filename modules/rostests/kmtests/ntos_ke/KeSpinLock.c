@@ -239,8 +239,10 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
         ExpectedIrql = (CheckData)->SelfRaisingIrql                                 \
                         ? max((CheckData)->OriginalIrql, DISPATCH_LEVEL)            \
                         : (CheckData)->IrqlWhenAcquired;                            \
-        else                                                                        \
-            ExpectedIrql = (CheckData)->IrqlWhenAcquired;                           \
+    }                                                                               \
+    else                                                                            \
+    {                                                                               \
+        ExpectedIrql = (CheckData)->IrqlWhenAcquired;                               \
     }                                                                               \
     if (GetNTVersion() < _WIN32_WINNT_WIN8)                                         \
         ok_irql(ExpectedIrql);                                                      \
