@@ -3496,6 +3496,15 @@ _tWinMain(HINSTANCE hInst,
 
         psp.dwFlags = PSP_DEFAULT | WizardPages[i].dwFlags;
         psp.pszTemplate = WizardPages[i].pszTemplate;
+#if 1
+        // FIXME: HACK: Wine comctl32 propsheet.c doesn't correctly set the wizard
+        // dialog title when the pages don't have captions, even if the user sends
+        // an initial PSM_SETTITLE message via the callback -- see CORE-20687.
+        // To avert this problem, force-set the same title to each page, before
+        // creating the wizard.
+        psp.dwFlags |= PSP_USETITLE;
+        psp.pszTitle = MAKEINTRESOURCEW(IDS_CAPTION);
+#endif
         psp.pfnDlgProc = WizardPages[i].pfnDlgProc;
         psp.pszHeaderTitle = WizardPages[i].pszHeaderTitle;
         psp.pszHeaderSubTitle = WizardPages[i].pszHeaderSubTitle;
