@@ -416,26 +416,63 @@ KeReleaseInStackQueuedSpinLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
     KxReleaseSpinLock(LockHandle->LockQueue.Lock); // HACK
 }
 
-/*
- * @unimplemented
+/*************************************************************************
+ *                KeAcquireSpinLockForDpc
+ *
+ * @param[in,out] SpinLock
+ * Pointer to an initialized spin lock
+ *
+ * @return
+ * The IRQL at the time this routine was called, to be restored via
+ * KeReleaseSpinLockForDpc
  */
 KIRQL
 FASTCALL
-KeAcquireSpinLockForDpc(IN PKSPIN_LOCK SpinLock)
+KeAcquireSpinLockForDpc(_Inout_ PKSPIN_LOCK SpinLock)
 {
-    UNIMPLEMENTED;
-    return 0;
+    KIRQL OldIrql;
+
+    OldIrql = KeGetCurrentIrql();
+
+    if (OldIrql < DISPATCH_LEVEL)
+    {
+        /* Raise to DPC level and acquire normally */
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+        KxAcquireSpinLock(SpinLock);
+    }
+    else
+    {
+        /* Already at DPC level or above, just grab the lock */
+        KxAcquireSpinLock(SpinLock);
+    }
+
+    return OldIrql;
 }
 
-/*
- * @unimplemented
+/*************************************************************************
+ *                KeReleaseSpinLockForDpc
+ *
+ * @param[in,out] SpinLock
+ * Pointer to the spin lock acquired by KeAcquireSpinLockForDpc
+ *
+ * @param[in] OldIrql
+ * The IRQL value returned by KeAcquireSpinLockForDpc
+ *
+ * @return
+ * None
  */
 VOID
 FASTCALL
-KeReleaseSpinLockForDpc(IN PKSPIN_LOCK SpinLock,
-                        IN KIRQL OldIrql)
+KeReleaseSpinLockForDpc(_Inout_ PKSPIN_LOCK SpinLock,
+                        _In_ _IRQL_restores_ KIRQL OldIrql)
 {
-    UNIMPLEMENTED;
+    KxReleaseSpinLock(SpinLock);
+
+    if (OldIrql < DISPATCH_LEVEL)
+    {
+        /* We had raised IRQL, lower it back down */
+        KeLowerIrql(OldIrql);
+    }
 }
 
 /*
