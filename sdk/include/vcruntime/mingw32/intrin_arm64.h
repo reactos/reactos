@@ -104,7 +104,7 @@ __INTRIN_INLINE unsigned char _BitScanReverse(unsigned long *Index, unsigned lon
     if (!Mask)
         return 0;
 
-    *Index = (sizeof(Mask) * 8 - 1) - __builtin_clzl(Mask);
+    *Index = 31 - __builtin_clzl(Mask);
     return 1;
 }
 #endif
@@ -407,16 +407,16 @@ __INTRIN_INLINE void __nop(void)
 #if !HAS_BUILTIN(_bittest)
 __INTRIN_INLINE unsigned char _bittest(const long *a, long b)
 {
-    return (a[b / (sizeof(long) * 8)] >> (b % (sizeof(long) * 8))) & 1;
+    return (a[b / 32] >> (b % 32)) & 1;
 }
 #endif
 
 #if !HAS_BUILTIN(_bittestandset)
 __INTRIN_INLINE unsigned char _bittestandset(long *a, long b)
 {
-    long bit = 1L << (b % (sizeof(long) * 8));
-    long *ptr = &a[b / (sizeof(long) * 8)];
-    unsigned char retval = (*ptr >> (b % (sizeof(long) * 8))) & 1;
+    long bit = 1L << (b % 32);
+    long *ptr = &a[b / 32];
+    unsigned char retval = (*ptr >> (b % 32)) & 1;
     *ptr |= bit;
     return retval;
 }
@@ -425,9 +425,9 @@ __INTRIN_INLINE unsigned char _bittestandset(long *a, long b)
 #if !HAS_BUILTIN(_bittestandreset)
 __INTRIN_INLINE unsigned char _bittestandreset(long *a, long b)
 {
-    long bit = 1L << (b % (sizeof(long) * 8));
-    long *ptr = &a[b / (sizeof(long) * 8)];
-    unsigned char retval = (*ptr >> (b % (sizeof(long) * 8))) & 1;
+    long bit = 1L << (b % 32);
+    long *ptr = &a[b / 32];
+    unsigned char retval = (*ptr >> (b % 32)) & 1;
     *ptr &= ~bit;
     return retval;
 }
@@ -436,9 +436,9 @@ __INTRIN_INLINE unsigned char _bittestandreset(long *a, long b)
 #if !HAS_BUILTIN(_bittestandcomplement)
 __INTRIN_INLINE unsigned char _bittestandcomplement(long *a, long b)
 {
-    long bit = 1L << (b % (sizeof(long) * 8));
-    long *ptr = &a[b / (sizeof(long) * 8)];
-    unsigned char retval = (*ptr >> (b % (sizeof(long) * 8))) & 1;
+    long bit = 1L << (b % 32);
+    long *ptr = &a[b / 32];
+    unsigned char retval = (*ptr >> (b % 32)) & 1;
     *ptr ^= bit;
     return retval;
 }
