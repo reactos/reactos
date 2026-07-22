@@ -349,9 +349,14 @@ static void PROPSHEET_CollectSheetInfoA(LPCPROPSHEETHEADERA lppsh,
 	lppsh->dwSize, lppsh->dwFlags, lppsh->hwndParent, lppsh->hInstance,
 	debugstr_a(lppsh->pszCaption), lppsh->nPages, lppsh->pfnCallback);
 
+#ifndef __REACTOS__
+  // FIXME Wine bug: Aero wizards *DO* use pszCaption
   if (lppsh->dwFlags & INTRNL_ANY_WIZARD)
      psInfo->ppshheader.pszCaption = NULL;
   else
+#else
+  if (!(lppsh->dwFlags & INTRNL_ANY_WIZARD))
+#endif
   {
      if (!IS_INTRESOURCE(lppsh->pszCaption))
      {
@@ -392,9 +397,14 @@ static void PROPSHEET_CollectSheetInfoW(LPCPROPSHEETHEADERW lppsh,
   TRACE("\n** PROPSHEETHEADER **\ndwSize\t\t%d\ndwFlags\t\t%08x\nhwndParent\t%p\nhInstance\t%p\npszCaption\t%s\nnPages\t\t%d\npfnCallback\t%p\n",
       lppsh->dwSize, lppsh->dwFlags, lppsh->hwndParent, lppsh->hInstance, debugstr_w(lppsh->pszCaption), lppsh->nPages, lppsh->pfnCallback);
 
+#ifndef __REACTOS__
+  // FIXME Wine bug: Aero wizards *DO* use pszCaption
   if (lppsh->dwFlags & INTRNL_ANY_WIZARD)
      psInfo->ppshheader.pszCaption = NULL;
   else
+#else
+  if (!(lppsh->dwFlags & INTRNL_ANY_WIZARD))
+#endif
   {
      if (!IS_INTRESOURCE(lppsh->pszCaption))
        psInfo->ppshheader.pszCaption = heap_strdupW( lppsh->pszCaption );
@@ -1567,6 +1577,12 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
 
   if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD)
   {
+#ifdef __REACTOS__
+    // FIXME Wine bug: Change the wizard dialog title on page change
+    // *ONLY* if pszText is NOT the empty string.
+    if (!IS_INTRESOURCE(psInfo->proppage[index].pszText) &&
+        psInfo->proppage[index].pszText[0])
+#endif
      PROPSHEET_SetTitleW(hwndDlg, psInfo->ppshheader.dwFlags,
                          psInfo->proppage[index].pszText);
 #ifndef __REACTOS__
@@ -2193,6 +2209,10 @@ static void PROPSHEET_SetTitleW(HWND hwndDlg, DWORD dwStyle, LPCWSTR lpszText)
     int lentitle = lstrlenW(lpszText);
     int lenprop  = lstrlenW(psInfo->strPropertiesFor);
 
+#ifdef __REACTOS__
+    // FIXME Wine bug: If lpszText is the empty string, only use
+    // "Properties" title instead of "Properties for" prefix/suffix.
+#endif
     dest = Alloc( (lentitle + lenprop + 1)*sizeof (WCHAR));
     wsprintfW(dest, psInfo->strPropertiesFor, lpszText);
 
@@ -3698,6 +3718,9 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       }
 #endif
 
+#ifndef __REACTOS__
+// FIXME Wine: That special case is useless since PROPSHEET_SetTitleW()
+// can already deal with strings passed via resource ID.
       if (IS_INTRESOURCE(psInfo->ppshheader.pszCaption) &&
               psInfo->ppshheader.hInstance)
       {
@@ -3708,6 +3731,11 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             PROPSHEET_SetTitleW(hwnd, psInfo->ppshheader.dwFlags, szText);
       }
       else
+#else
+      // This is done only for property sheets, not wizards.
+      // (NOTE: Aero wizard unconditionally sets the title.)
+      if (!(psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD))
+#endif
       {
          PROPSHEET_SetTitleW(hwnd, psInfo->ppshheader.dwFlags,
                          psInfo->ppshheader.pszCaption);
