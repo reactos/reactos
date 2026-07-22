@@ -205,8 +205,8 @@ static LRESULT AddFavoriteDialogProc(
     if (uMsg == WM_NOTIFY)
         data.IgnoreChanges |= pHdr->code == NM_CLICK || pHdr->code == NM_SETFOCUS; // Ignore changes from the tree
     if (uMsg == WM_COMMAND && HIWORD(wParam) == EN_SETFOCUS)
-        data.IgnoreChanges = FALSE;
-    if (uMsg == WM_COMMAND && HIWORD(wParam) == EN_UPDATE && !data.IgnoreChanges)
+        data.IgnoreChanges = (HWND)lParam != data.hEdit; // Ignore changes in the tree rename edit
+    if (uMsg == WM_COMMAND && HIWORD(wParam) == EN_UPDATE && (HWND)lParam == data.hEdit && !data.IgnoreChanges)
     {
         SendMessageW(data.hEdit, WM_GETTEXT, MAX_PATH, (LPARAM)data.pszName); // Save user input
         BOOL bad = FALSE;
