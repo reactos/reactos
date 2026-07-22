@@ -290,7 +290,7 @@ KeIsWaitListEmpty(_In_ PVOID Object)
     /* Check if the object's wait list is empty */
     ListEmpty = IsListEmpty(&Header->WaitListHead);
 
-    /* Release the lock and release the result */
+    /* Release the lock and return the result */
     KiReleaseDispatcherLock(OldIrql);
     return ListEmpty;
 }
