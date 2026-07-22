@@ -267,12 +267,32 @@ Quickie:
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+/*************************************************************************
+ *                KeIsWaitListEmpty
+ *
+ * @param[in] Object
+ * Pointer to a dispatcher object.
+ *
+ * @return
+ * TRUE if no thread is currently waiting on the object, FALSE otherwise.
+ */
 BOOLEAN
 NTAPI
-KeIsWaitListEmpty(IN PVOID Object)
+KeIsWaitListEmpty(_In_ PVOID Object)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    KIRQL OldIrql;
+    BOOLEAN ListEmpty;
+    PDISPATCHER_HEADER Header = Object;
+
+    /* Lock the dispatcher database */
+    OldIrql = KiAcquireDispatcherLock();
+
+    /* Check if the object's wait list is empty */
+    ListEmpty = IsListEmpty(&Header->WaitListHead);
+
+    /* Release the lock and release the result */
+    KiReleaseDispatcherLock(OldIrql);
+    return ListEmpty;
 }
 
 /*
