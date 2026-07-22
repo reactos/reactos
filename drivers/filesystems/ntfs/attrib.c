@@ -643,8 +643,15 @@ AddRun(PNTFS_VCB Vcb,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    // Convert the map control block back to encoded data runs
-    ConvertLargeMCBToDataRuns(&AttrContext->DataRunsMCB, RunBuffer, Vcb->NtfsInfo.BytesPerCluster, &RunBufferSize);
+    // Convert the map control block back to encoded data runs.
+    Status = ConvertLargeMCBToDataRuns(&AttrContext->DataRunsMCB, RunBuffer, Vcb->NtfsInfo.BytesPerFileRecord, &RunBufferSize);
+    if (!NT_SUCCESS(Status))
+    {
+        // Runs won't fit in a single record; migrating to an $ATTRIBUTE_LIST isn't supported yet.
+        DPRINT1("Data runs too large for one file record - $ATTRIBUTE_LIST needed (not implemented)\n");
+        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+        return STATUS_NOT_IMPLEMENTED;
+    }
 
     // Get the amount of free space between the start of the of the first data run and the attribute end
     DataRunMaxLength = AttrContext->pRecord->Length - AttrContext->pRecord->NonResident.MappingPairsOffset;
@@ -1172,8 +1179,9 @@ FreeClusters(PNTFS_VCB Vcb,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    // Convert the map control block back to encoded data runs
-    ConvertLargeMCBToDataRuns(&AttrContext->DataRunsMCB, RunBuffer, Vcb->NtfsInfo.BytesPerCluster, &RunBufferSize);
+    // Convert the map control block back to encoded data runs.
+    // RunBuffer is one file record long (not one cluster) - see AddRun().
+    ConvertLargeMCBToDataRuns(&AttrContext->DataRunsMCB, RunBuffer, Vcb->NtfsInfo.BytesPerFileRecord, &RunBufferSize);
 
     // Update HighestVCN
     DestinationAttribute->NonResident.HighestVCN = AttrContext->pRecord->NonResident.HighestVCN;
