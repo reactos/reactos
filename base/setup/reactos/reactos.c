@@ -3610,6 +3610,9 @@ PropSheetCallback(
             HICON hIcon = LoadIconW(SetupData.hInstance, MAKEINTRESOURCEW(IDI_MAIN));
             SendMessageW(hDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
 
+            /* Set the wizard window title (PSH_WIZARD97 doesn't use psh.pszCaption) */
+            PropSheet_SetTitle(hDlg, 0, MAKEINTRESOURCEW(IDS_CAPTION));
+
             /* Sub-class the property sheet window procedure */
             wpOrgPrshtProc = (WNDPROC)SetWindowLongPtrW(hDlg, DWLP_DLGPROC, (LONG_PTR)PrshtWndProc);
 
@@ -3777,15 +3780,6 @@ _tWinMain(HINSTANCE hInst,
 
         psp.dwFlags = PSP_DEFAULT | WizardPages[i].dwFlags;
         psp.pszTemplate = WizardPages[i].pszTemplate;
-#if 1
-        // FIXME: HACK: Wine comctl32 propsheet.c doesn't correctly set the wizard
-        // dialog title when the pages don't have captions, even if the user sends
-        // an initial PSM_SETTITLE message via the callback -- see CORE-20687.
-        // To avert this problem, force-set the same title to each page, before
-        // creating the wizard.
-        psp.dwFlags |= PSP_USETITLE;
-        psp.pszTitle = MAKEINTRESOURCEW(IDS_CAPTION);
-#endif
         psp.pfnDlgProc = WizardPages[i].pfnDlgProc;
         psp.pszHeaderTitle = WizardPages[i].pszHeaderTitle;
         psp.pszHeaderSubTitle = WizardPages[i].pszHeaderSubTitle;
@@ -3798,6 +3792,7 @@ _tWinMain(HINSTANCE hInst,
     psh.hInstance = hInst;
     psh.hwndParent = NULL;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_MAIN);
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CAPTION); // For Aero compatibility.
     psh.nPages = nPages;
     psh.nStartPage = 0;
     psh.phpage = ahpsp;
