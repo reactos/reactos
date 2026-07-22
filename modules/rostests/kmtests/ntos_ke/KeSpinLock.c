@@ -236,10 +236,9 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
                                                                                     \
     if ((CheckData)->IsAcquired)                                                    \
     {                                                                               \
-        if ((CheckData)->SelfRaisingIrql)                                           \
-            ExpectedIrql = (CheckData)->SelfRaisingIrql                             \
-            ? max((CheckData)->OriginalIrql, DISPATCH_LEVEL)                        \
-            : (CheckData)->IrqlWhenAcquired;                                        \
+        ExpectedIrql = (CheckData)->SelfRaisingIrql                                 \
+                        ? max((CheckData)->OriginalIrql, DISPATCH_LEVEL)            \
+                        : (CheckData)->IrqlWhenAcquired;                            \
         else                                                                        \
             ExpectedIrql = (CheckData)->IrqlWhenAcquired;                           \
     }                                                                               \

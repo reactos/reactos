@@ -434,17 +434,13 @@ KeAcquireSpinLockForDpc(_Inout_ PKSPIN_LOCK SpinLock)
 
     OldIrql = KeGetCurrentIrql();
 
+    /* Only raise if we're not already at DPC level or above */
     if (OldIrql < DISPATCH_LEVEL)
     {
-        /* Raise to DPC level and acquire normally */
         KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-        KxAcquireSpinLock(SpinLock);
     }
-    else
-    {
-        /* Already at DPC level or above, just grab the lock */
-        KxAcquireSpinLock(SpinLock);
-    }
+
+    KxAcquireSpinLock(SpinLock);
 
     return OldIrql;
 }
