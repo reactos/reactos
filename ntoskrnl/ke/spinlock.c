@@ -463,8 +463,9 @@ KeAcquireSpinLockForDpc(
  **/
 VOID
 FASTCALL
-KeReleaseSpinLockForDpc(_Inout_ PKSPIN_LOCK SpinLock,
-                        _In_ _IRQL_restores_ KIRQL OldIrql)
+KeReleaseSpinLockForDpc(
+    _Inout_ PKSPIN_LOCK SpinLock,
+    _In_ _IRQL_restores_ KIRQL OldIrql)
 {
     KxReleaseSpinLock(SpinLock);
 
