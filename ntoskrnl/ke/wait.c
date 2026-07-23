@@ -267,15 +267,17 @@ Quickie:
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-/*************************************************************************
- *                KeIsWaitListEmpty
+/**
+ * @brief
+ * Determines whether there are waiters waiting on the specified
+ * dispatcher object.
  *
  * @param[in] Object
  * Pointer to a dispatcher object.
  *
  * @return
  * TRUE if no thread is currently waiting on the object, FALSE otherwise.
- */
+ **/
 BOOLEAN
 NTAPI
 KeIsWaitListEmpty(
