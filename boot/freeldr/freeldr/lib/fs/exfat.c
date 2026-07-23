@@ -1,6 +1,6 @@
 /*
  * PROJECT:     FreeLoader
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Read-only exFAT filesystem support using FatFs
  * COPYRIGHT:   Copyright 2026 Ahmed ARIF <arif.ing@outlook.com>
  */

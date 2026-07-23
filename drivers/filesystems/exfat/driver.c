@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS exFAT filesystem driver
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Driver entry point and IRP dispatch
  * COPYRIGHT:   Copyright 2026 Ahmed ARIF <arif.ing@outlook.com>
  */
