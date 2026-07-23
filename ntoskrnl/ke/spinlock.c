@@ -429,7 +429,8 @@ KeReleaseInStackQueuedSpinLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
  **/
 KIRQL
 FASTCALL
-KeAcquireSpinLockForDpc(_Inout_ PKSPIN_LOCK SpinLock)
+KeAcquireSpinLockForDpc(
+    _Inout_ PKSPIN_LOCK SpinLock)
 {
     KIRQL OldIrql;
 
