@@ -1,0 +1,62 @@
+FatFs in ReactOS
+================
+
+This directory contains FatFs R0.16 with the upstream patch 2 applied.
+It is the common FAT/exFAT implementation used by the image host tool,
+FreeLdr, and the exFAT filesystem driver. Each consumer supplies only the
+FatFs media-access and allocation callbacks appropriate to its environment.
+
+Upstream: https://elm-chan.org/fsw/ff/
+Archive:  https://elm-chan.org/fsw/ff/arc/ff16.zip
+Archive SHA-256: 99f7dc1f7e095356e4a9e3dbe29959090d8b948afe2bbc5441e52fdf4b85449e
+Release: R0.16, July 22, 2025
+
+Applied upstream patches, in order:
+
+1. https://elm-chan.org/fsw/ff/patch/ff16p1.diff
+   SHA-256: 7996ddc3135f3d534a8153f7d75d587030e5c8551b003c3b7ee823ffb7fc64bf
+2. https://elm-chan.org/fsw/ff/patch/ff16p2.diff
+   SHA-256: 5cd39f1fc299f0f1dec9fa1ce544dc0bc048b2f6eb3b8161476ed20f9cf1e290
+
+ReactOS changes are intentionally limited to:
+
+* ffconf.h enables exFAT, UTF-8 long names, formatting, 64-bit LBA, and
+  the media geometry needed by all three consumers. FF_LFN_UNICODE remains
+  overridable so the kernel exFAT driver can use UTF-16 without a second copy
+  of the configuration file.
+* ff.h accepts FF_USE_REACTOS_TYPES so target builds use the SDK's fixed-width
+  Windows types without including the user-mode Windows umbrella header.
+* CMakeLists.txt defines the target-side static library.
+* ff.c provides ReactOS-only replacements for selected exFAT optimizations
+  identified in "Patent-related changes" below.
+
+Patent-related changes
+----------------------
+
+The __REACTOS__ branches replace selected upstream NameHash and NoFatChain
+optimization bodies. Where upstream contains an implementation, the #else
+branch contains only a patent and expiration-date placeholder.
+
+1. Directory lookup by NameHash: US8321439B2 (adjusted expiration date
+   2027-03-09) and US10614032B2 (adjusted expiration date 2028-01-27).
+   dir_find() compares candidate name lengths and characters without using
+   the on-disk NameHash as a pre-filter.
+
+2. NoFatChain state and flag handling: US8725772B2 (anticipated expiration
+   date 2027-05-23). remove_chain(), f_mkdir(), and f_expand() keep locally
+   modified chains on the FAT instead of marking them contiguous.
+
+3. NoFatChain extension: US9122695B2 and US9558223B2 (anticipated expiration
+   date 2027-05-23), and US7873596B2 (adjusted expiration date 2028-03-27).
+   create_chain() records new and extended chains in the FAT.
+
+These dates and statuses were checked in Google Patents on 2026-07-24.
+Google's status data is an estimate, not a legal conclusion. Recheck the
+USPTO file history before replacing any placeholder.
+
+The kernel driver and FreeLoader do not select data I/O paths from exFAT
+allocation flags or construct file extents. File data is accessed through
+FatFs.
+
+The media-access implementation is not kept in this directory. This preserves
+the upstream separation between the filesystem core and platform I/O.

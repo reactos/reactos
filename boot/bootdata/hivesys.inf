@@ -1763,6 +1763,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","ImagePath",0x00020000,"%Syste
 HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","Type",0x00010001,0x00000020
 
+; exFAT filesystem driver
+HKLM,"SYSTEM\CurrentControlSet\Services\ExFat","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\ExFat","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\ExFat","ImagePath",0x00020000,"system32\drivers\exfat.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ExFat","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\ExFat","Type",0x00010001,0x00000002
+
 ; NTFS filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Group",0x00000000,"File System"
