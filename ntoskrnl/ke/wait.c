@@ -278,7 +278,8 @@ Quickie:
  */
 BOOLEAN
 NTAPI
-KeIsWaitListEmpty(_In_ PVOID Object)
+KeIsWaitListEmpty(
+    _In_ PVOID Object)
 {
     KIRQL OldIrql;
     BOOLEAN ListEmpty;
