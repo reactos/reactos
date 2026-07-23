@@ -446,18 +446,20 @@ KeAcquireSpinLockForDpc(_Inout_ PKSPIN_LOCK SpinLock)
     return OldIrql;
 }
 
-/*************************************************************************
- *                KeReleaseSpinLockForDpc
+/**
+ * @brief
+ * Releases a spin lock previously acquired at DPC level,
+ * and restores the original IRQL.
  *
  * @param[in,out] SpinLock
- * Pointer to the spin lock acquired by KeAcquireSpinLockForDpc
+ * Pointer to the spin lock acquired by KeAcquireSpinLockForDpc().
  *
  * @param[in] OldIrql
- * The IRQL value returned by KeAcquireSpinLockForDpc
+ * The IRQL value returned by KeAcquireSpinLockForDpc().
  *
  * @return
  * None
- */
+ **/
 VOID
 FASTCALL
 KeReleaseSpinLockForDpc(_Inout_ PKSPIN_LOCK SpinLock,
