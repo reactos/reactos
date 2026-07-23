@@ -183,7 +183,7 @@ Cleanup:
 *                  the advanced device property dialog
 *
 * RETURN VALUE
-*   1:  if bShowDevMgr is non-zero and no error occured
+*   1:  if bShowDevMgr is non-zero and no error occurred
 *   -1: a call to GetLastError returns 0 if successful
 *
 * @implemented
@@ -262,7 +262,7 @@ Cleanup:
 *                  the advanced device property dialog
 *
 * RETURN VALUE
-*   1:  if bShowDevMgr is non-zero and no error occured
+*   1:  if bShowDevMgr is non-zero and no error occurred
 *   -1: a call to GetLastError returns 0 if successful
 *
 * @implemented
@@ -354,8 +354,8 @@ DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
 *                  the device property dialog
 *
 * RETURN VALUE
-*   >=0: if no errors occured
-*   -1:  if errors occured
+*   >=0: if no errors occurred
+*   -1:  if errors occurred
 *
 * REVISIONS
 *
@@ -391,8 +391,8 @@ DevicePropertiesA(HWND hWndParent,
 *                  the device property dialog
 *
 * RETURN VALUE
-*   >=0: if no errors occured
-*   -1:  if errors occured
+*   >=0: if no errors occurred
+*   -1:  if errors occurred
 *
 * REVISIONS
 *
@@ -534,7 +534,7 @@ DeviceProperties_RunDLLW(HWND hWndParent,
 *   nCmdShow:      Specifies how the window should be shown
 *
 * RETURN VALUE
-*   TRUE:  if no errors occured
+*   TRUE:  if no errors occurred
 *   FALSE: if the device manager could not be executed
 *
 * REVISIONS
@@ -595,7 +595,7 @@ DeviceManager_ExecuteA(HWND hWndParent,
 *   nCmdShow:      Specifies how the window should be shown
 *
 * RETURN VALUE
-*   TRUE:  if no errors occured
+*   TRUE:  if no errors occurred
 *   FALSE: if the device manager could not be executed
 *
 * REVISIONS
@@ -718,8 +718,8 @@ DeviceProblemWizard_RunDLLW(HWND hWndParent,
 *                   nPrintMode is DEV_PRINT_SELECTED
 *
 * RETURN VALUE
-*   TRUE:  if no errors occured
-*   FALSE: if errors occured
+*   TRUE:  if no errors occurred
+*   FALSE: if errors occurred
 *
 * REVISIONS
 *
@@ -762,8 +762,8 @@ DeviceManagerPrintA(LPCSTR lpMachineName,
 *                   nPrintMode is DEV_PRINT_SELECTED
 *
 * RETURN VALUE
-*   TRUE:  if no errors occured
-*   FALSE: if errors occured
+*   TRUE:  if no errors occurred
+*   FALSE: if errors occurred
 *
 * REVISIONS
 *
