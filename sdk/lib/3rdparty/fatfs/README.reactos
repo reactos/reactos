@@ -27,6 +27,41 @@ ReactOS changes are intentionally limited to:
 * ff.h accepts FF_USE_REACTOS_TYPES so target builds use the SDK's fixed-width
   Windows types without including the user-mode Windows umbrella header.
 * CMakeLists.txt defines the target-side static library.
+* ff.c avoids two exFAT techniques covered by Microsoft patents that are
+  still in force (see "Patent avoidance" below).
+
+Patent avoidance
+----------------
+
+Two optional exFAT techniques are covered by Microsoft patents that, unlike
+the core exFAT format patents (US8583708, expired January 2026), have not
+yet expired. ff.c is locally modified to not practice them. Volumes written
+this way remain fully spec-compliant and interoperate with Windows; both
+features are still honored when reading volumes created by other systems.
+
+1. Directory lookup by NameHash — US8321439 (est. expiry 2027-03-09) and
+   US10614032 (est. expiry 2028-01-27), "Quick filename lookup using name
+   hash". dir_find() no longer pre-filters candidates with the on-disk
+   NameHash field; it compares name length and characters only. The
+   NameHash field is still written on entry creation, as the specification
+   requires and as chkdsk verifies.
+
+2. NoFatChain (contiguous) allocation — US7873596 (est. expiry 2028-03-27),
+   "Extending cluster allocations in an extensible file system". Cluster
+   chains created or extended by this code are always recorded in the FAT
+   and never marked NoFatChain in GeneralSecondaryFlags: create_chain()
+   starts new chains FAT-linked and converts a contiguous chain to a FAT
+   chain before extending it, remove_chain() no longer promotes chains back
+   to 'contiguous', f_mkdir() and f_expand() write FAT chains for the
+   clusters they allocate. Reading NoFatChain files and directories created
+   by other implementations is unaffected, as is shrinking them in place.
+
+The sites deviating from upstream are wrapped in __REACTOS__ preprocessor
+blocks with the pristine upstream code in the #else branch, so a plain
+build of these sources without __REACTOS__ behaves exactly like upstream.
+Once the patents above have lapsed (verify against USPTO Patent Center,
+the dates here are Google Patents estimates), the __REACTOS__ blocks can
+simply be removed.
 
 The media-access implementation is not kept in this directory. This preserves
 the upstream separation between the filesystem core and platform I/O.

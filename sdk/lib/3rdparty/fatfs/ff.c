@@ -1509,6 +1509,13 @@ static FRESULT remove_chain (	/* FR_OK(0):succeeded, !=0:error */
 		if (pclst == 0) {	/* Has the entire chain been removed? */
 			obj->stat = 0;		/* Change the chain status 'initial' */
 		} else {
+#ifdef __REACTOS__
+			/* A chain is never changed back to 'contiguous' here. Chains created or
+			/  modified by this driver are always kept on the FAT (see README.reactos). */
+			if (obj->stat == 3 && pclst >= obj->sclust && pclst <= obj->sclust + obj->n_cont) {	/* Was the chain truncated within the pending first fragment? */
+				obj->n_cont = pclst - obj->sclust;	/* Shrink the pending part so fill_first_frag() stops at the new last cluster (its EOC has been set above) */
+			}
+#else
 			if (obj->stat == 0) {	/* Is it a fragmented chain from the beginning of this session? */
 				clst = obj->sclust;		/* Follow the chain to check if it gets contiguous */
 				while (clst != pclst) {
@@ -1526,6 +1533,7 @@ static FRESULT remove_chain (	/* FR_OK(0):succeeded, !=0:error */
 					obj->stat = 2;	/* Change the chain status 'contiguous' */
 				}
 			}
+#endif
 		}
 	}
 #endif
@@ -1569,6 +1577,26 @@ static DWORD create_chain (	/* 0:No free cluster, 1:Internal error, 0xFFFFFFFF:D
 		res = change_bitmap(fs, ncl, 1, 1);			/* Mark the cluster 'in use' */
 		if (res == FR_INT_ERR) return 1;
 		if (res == FR_DISK_ERR) return 0xFFFFFFFF;
+#ifdef __REACTOS__
+		/* Chains are always kept on the FAT and never marked 'contiguous'
+		/  (NoFatChain), so the status never becomes 2 here (see README.reactos). */
+		if (clst == 0) {							/* Is it a new chain? */
+			obj->stat = 0;							/* Set status 'FAT chain is valid' */
+			obj->n_frag = 1;						/* FAT entry of the new cluster is set at the next fill_last_frag() */
+		} else {									/* It is a stretched chain */
+			if (obj->stat == 2) {					/* Is the chain contiguous (NoFatChain)? */
+				obj->n_cont = scl - obj->sclust;	/* Set size of the part to be filled on the FAT later */
+				obj->stat = 3;						/* Change status 'just fragmented' to get the chain on the FAT */
+			}
+			if (ncl == clst + 1) {	/* Is the cluster next to previous one? */
+				obj->n_frag = obj->n_frag ? obj->n_frag + 1 : 2;	/* Increment size of last framgent */
+			} else {				/* New fragment */
+				if (obj->n_frag == 0) obj->n_frag = 1;
+				res = fill_last_frag(obj, clst, ncl);	/* Fill last fragment on the FAT and link it to new one */
+				if (res == FR_OK) obj->n_frag = 1;
+			}
+		}
+#else
 		if (clst == 0) {							/* Is it a new chain? */
 			obj->stat = 2;							/* Set status 'contiguous' */
 		} else {									/* It is a stretched chain */
@@ -1586,6 +1614,7 @@ static DWORD create_chain (	/* 0:No free cluster, 1:Internal error, 0xFFFFFFFF:D
 				if (res == FR_OK) obj->n_frag = 1;
 			}
 		}
+#endif
 	} else
 #endif
 	{	/* On the FAT/FAT32 volume */
@@ -2429,13 +2458,26 @@ static FRESULT dir_find (	/* FR_OK(0):succeeded, !=0:error */
 	if (fs->fs_type == FS_EXFAT) {	/* On the exFAT volume */
 		BYTE nc;
 		UINT di, ni;
+#ifdef __REACTOS__
+		UINT len;
+
+		/* The NameHash field is set on entry creation but is not used to
+		/  pre-filter the search; every candidate is compared by name length
+		/  and characters only (see README.reactos). */
+		for (len = 0; fs->lfnbuf[len]; len++) ;	/* Length of the name to find */
+#else
 		WORD hash = xname_sum(fs->lfnbuf);		/* Hash value of the name to find */
+#endif
 
 		while ((res = DIR_READ_FILE(dp)) == FR_OK) {	/* Read an item */
 #if FF_MAX_LFN < 255
 			if (fs->dirbuf[XDIR_NumName] > FF_MAX_LFN) continue;		/* Skip comparison if inaccessible object name */
 #endif
+#ifdef __REACTOS__
+			if (fs->dirbuf[XDIR_NumName] != len) continue;	/* Skip comparison if name length mismatched */
+#else
 			if (ld_16(fs->dirbuf + XDIR_NameHash) != hash) continue;	/* Skip comparison if hash mismatched */
+#endif
 			for (nc = fs->dirbuf[XDIR_NumName], di = SZDIRE * 2, ni = 0; nc; nc--, di += 2, ni++) {	/* Compare the name */
 				if ((di % SZDIRE) == 0) di += 2;
 				if (ff_wtoupper(ld_16(fs->dirbuf + di)) != ff_wtoupper(fs->lfnbuf[ni])) break;
@@ -5207,7 +5249,14 @@ FRESULT f_mkdir (
 			if (dcl == 0xFFFFFFFF) res = FR_DISK_ERR;	/* Disk error? */
 			tm = GET_FATTIME();
 			if (res == FR_OK) {
+#if defined(__REACTOS__) && FF_FS_EXFAT
+				if (fs->fs_type == FS_EXFAT) {	/* Keep the new directory chain on the FAT (see README.reactos) */
+					res = fill_last_frag(&sobj, dcl, 0xFFFFFFFF);	/* Set 'EOC' to the allocated cluster */
+				}
+				if (res == FR_OK) res = dir_clear(fs, dcl);	/* Clear the allocated cluster as new direcotry table */
+#else
 				res = dir_clear(fs, dcl);		/* Clear the allocated cluster as new direcotry table */
+#endif
 				if (res == FR_OK) {
 					if (!FF_FS_EXFAT || fs->fs_type != FS_EXFAT) {	/* Create dot entries (FAT only) */
 						memset(fs->win + DIR_Name, ' ', 11);	/* Create "." entry */
@@ -5231,7 +5280,11 @@ FRESULT f_mkdir (
 					st_32(fs->dirbuf + XDIR_FstClus, dcl);	/* Table start cluster */
 					st_32(fs->dirbuf + XDIR_FileSize, (DWORD)fs->csize * SS(fs));	/* Directory size needs to be valid */
 					st_32(fs->dirbuf + XDIR_ValidFileSize, (DWORD)fs->csize * SS(fs));
+#ifdef __REACTOS__
+					fs->dirbuf[XDIR_GenFlags] = 1;			/* Initialize the object flag (NoFatChain is not set, the chain is on the FAT) */
+#else
 					fs->dirbuf[XDIR_GenFlags] = 3;			/* Initialize the object flag */
+#endif
 					fs->dirbuf[XDIR_Attr] = AM_DIR;			/* Attribute */
 					res = store_xdir(&dj);
 				} else
@@ -5758,6 +5811,11 @@ FRESULT f_expand (
 		if (res == FR_OK) {	/* A contiguous free area is found */
 			if (opt) {		/* Allocate it now */
 				res = change_bitmap(fs, scl, tcl, 1);	/* Mark the cluster block 'in use' */
+#ifdef __REACTOS__
+				for (clst = scl, n = tcl; res == FR_OK && n; clst++, n--) {	/* Create a cluster chain on the FAT (NoFatChain is not used) */
+					res = put_fat(fs, clst, (n == 1) ? 0xFFFFFFFF : clst + 1);
+				}
+#endif
 				lclst = scl + tcl - 1;
 			} else {		/* Set it as suggested point for next allocation */
 				lclst = scl - 1;
@@ -5803,7 +5861,11 @@ FRESULT f_expand (
 		if (opt) {	/* Is it allocated now? */
 			fp->obj.sclust = scl;		/* Update object allocation information */
 			fp->obj.objsize = fsz;
+#ifdef __REACTOS__
+			if (FF_FS_EXFAT) fp->obj.stat = 0;	/* Set status 'FAT chain is valid' (the chain has been put on the FAT above) */
+#else
 			if (FF_FS_EXFAT) fp->obj.stat = 2;	/* Set status 'contiguous chain' */
+#endif
 			fp->flag |= FA_MODIFIED;
 			if (fs->free_clst <= fs->n_fatent - 2) {	/* Update FSINFO */
 				fs->free_clst -= tcl;
