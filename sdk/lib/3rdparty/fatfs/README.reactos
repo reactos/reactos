@@ -1,0 +1,32 @@
+FatFs in ReactOS
+================
+
+This directory contains FatFs R0.16 with the upstream patch 2 applied.
+It is the common FAT/exFAT implementation used by the image host tool,
+FreeLdr, and the exFAT filesystem driver. Each consumer supplies only the
+FatFs media-access and allocation callbacks appropriate to its environment.
+
+Upstream: https://elm-chan.org/fsw/ff/
+Archive:  https://elm-chan.org/fsw/ff/arc/ff16.zip
+Archive SHA-256: 99f7dc1f7e095356e4a9e3dbe29959090d8b948afe2bbc5441e52fdf4b85449e
+Release: R0.16, July 22, 2025
+
+Applied upstream patches, in order:
+
+1. https://elm-chan.org/fsw/ff/patch/ff16p1.diff
+   SHA-256: 7996ddc3135f3d534a8153f7d75d587030e5c8551b003c3b7ee823ffb7fc64bf
+2. https://elm-chan.org/fsw/ff/patch/ff16p2.diff
+   SHA-256: 5cd39f1fc299f0f1dec9fa1ce544dc0bc048b2f6eb3b8161476ed20f9cf1e290
+
+ReactOS changes are intentionally limited to:
+
+* ffconf.h enables exFAT, UTF-8 long names, formatting, 64-bit LBA, and
+  the media geometry needed by all three consumers. FF_LFN_UNICODE remains
+  overridable so the kernel exFAT driver can use UTF-16 without a second copy
+  of the configuration file.
+* ff.h accepts FF_USE_REACTOS_TYPES so target builds use the SDK's fixed-width
+  Windows types without including the user-mode Windows umbrella header.
+* CMakeLists.txt defines the target-side static library.
+
+The media-access implementation is not kept in this directory. This preserves
+the upstream separation between the filesystem core and platform I/O.
