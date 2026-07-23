@@ -333,102 +333,26 @@ VOID
 NTAPI
 KiGetCacheInformation(VOID)
 {
+    PKPRCB Prcb = KeGetCurrentPrcb();
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
-    ULONG CacheRequests = 0, i;
-    ULONG CurrentRegister;
-    UCHAR RegisterByte;
-    BOOLEAN FirstPass = TRUE;
-    CPU_INFO CpuInfo;
 
     /* Set default L2 size */
     Pcr->SecondLevelCacheSize = 0;
 
-    /* Check the Vendor ID */
-    switch (Pcr->Prcb.CpuVendor)
+    /* Retrieve the cache descriptors */
+    Prcb->CacheCount = KiGetCpuCacheDescriptors(Prcb->Cache,
+                                                ARRAYSIZE(Prcb->Cache),
+                                                Pcr->Prcb.CpuVendor);
+
+    /* Loop the descriptors to find the L2 cache size */
+    for (ULONG i = 0; i < Prcb->CacheCount; i++)
     {
-        /* Handle Intel case */
-        case CPU_INTEL:
-
-            /*Check if we support CPUID 2 */
-            KiCpuId(&CpuInfo, 0);
-            if (CpuInfo.Eax >= 2)
-            {
-                /* We need to loop for the number of times CPUID will tell us to */
-                do
-                {
-                    /* Do the CPUID call */
-                    KiCpuId(&CpuInfo, 2);
-
-                    /* Check if it was the first call */
-                    if (FirstPass)
-                    {
-                        /*
-                         * The number of times to loop is the first byte. Read
-                         * it and then destroy it so we don't get confused.
-                         */
-                        CacheRequests = CpuInfo.Eax & 0xFF;
-                        CpuInfo.Eax &= 0xFFFFFF00;
-
-                        /* Don't go over this again */
-                        FirstPass = FALSE;
-                    }
-
-                    /* Loop all 4 registers */
-                    for (i = 0; i < 4; i++)
-                    {
-                        /* Get the current register */
-                        CurrentRegister = CpuInfo.AsUINT32[i];
-
-                        /*
-                         * If the upper bit is set, then this register should
-                         * be skipped.
-                         */
-                        if (CurrentRegister & 0x80000000) continue;
-
-                        /* Keep looping for every byte inside this register */
-                        while (CurrentRegister)
-                        {
-                            /* Read a byte, skip a byte. */
-                            RegisterByte = (UCHAR)(CurrentRegister & 0xFF);
-                            CurrentRegister >>= 8;
-                            if (!RegisterByte) continue;
-
-                            /*
-                             * Valid values are from 0x40 (0 bytes) to 0x49
-                             * (32MB), or from 0x80 to 0x89 (same size but
-                             * 8-way associative.
-                             */
-                            if (((RegisterByte > 0x40) &&
-                                 (RegisterByte <= 0x49)) ||
-                                ((RegisterByte > 0x80) &&
-                                (RegisterByte <= 0x89)))
-                            {
-                                /* Mask out only the first nibble */
-                                RegisterByte &= 0x0F;
-
-                                /* Set the L2 Cache Size */
-                                Pcr->SecondLevelCacheSize = 0x10000 <<
-                                                            RegisterByte;
-                            }
-                        }
-                    }
-                } while (--CacheRequests);
-            }
+        if (Prcb->Cache[i].Level == 2)
+        {
+            Pcr->SecondLevelCacheSize = Prcb->Cache[i].Size;
+            Pcr->SecondLevelCacheAssociativity = Prcb->Cache[i].Associativity;
             break;
-
-        case CPU_AMD:
-
-            /* Check if we support CPUID 0x80000006 */
-            KiCpuId(&CpuInfo, 0x80000000);
-            if (CpuInfo.Eax >= 6)
-            {
-                /* Get 2nd level cache and tlb size */
-                KiCpuId(&CpuInfo, 0x80000006);
-
-                /* Set the L2 Cache Size */
-                Pcr->SecondLevelCacheSize = (CpuInfo.Ecx & 0xFFFF0000) >> 6;
-            }
-            break;
+        }
     }
 }
 
