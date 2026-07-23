@@ -416,16 +416,17 @@ KeReleaseInStackQueuedSpinLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
     KxReleaseSpinLock(LockHandle->LockQueue.Lock); // HACK
 }
 
-/*************************************************************************
- *                KeAcquireSpinLockForDpc
+/**
+ * @brief
+ * Acquires the specified spin lock at DPC level.
  *
  * @param[in,out] SpinLock
- * Pointer to an initialized spin lock
+ * Pointer to an initialized spin lock.
  *
  * @return
  * The IRQL at the time this routine was called, to be restored via
- * KeReleaseSpinLockForDpc
- */
+ * KeReleaseSpinLockForDpc().
+ **/
 KIRQL
 FASTCALL
 KeAcquireSpinLockForDpc(_Inout_ PKSPIN_LOCK SpinLock)
