@@ -443,7 +443,6 @@ KeAcquireSpinLockForDpc(
     }
 
     KxAcquireSpinLock(SpinLock);
-
     return OldIrql;
 }
 
