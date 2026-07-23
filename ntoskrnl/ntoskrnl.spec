@@ -1305,6 +1305,7 @@
 @ stdcall RtlTraceDatabaseLock(ptr)
 @ stdcall RtlTraceDatabaseUnlock(ptr)
 @ stdcall RtlTraceDatabaseValidate(ptr)
+@ stdcall -version=0x601+ RtlUTF8ToUnicodeN(ptr long ptr str long)
 @ fastcall -arch=i386,arm RtlUlongByteSwap(long)
 @ fastcall -arch=i386,arm RtlUlonglongByteSwap(long long)
 @ stdcall RtlUnicodeStringToAnsiSize(ptr) RtlxUnicodeStringToAnsiSize
@@ -1317,6 +1318,7 @@
 @ stdcall RtlUnicodeToMultiByteN(ptr long ptr wstr long)
 @ stdcall RtlUnicodeToMultiByteSize(ptr wstr long)
 @ stdcall RtlUnicodeToOemN(ptr long ptr wstr long)
+@ stdcall -version=0x601+ RtlUnicodeToUTF8N(ptr long ptr wstr long)
 @ stdcall RtlUnlockBootStatusData(ptr)
 @ stdcall RtlUnwind(ptr ptr ptr ptr)
 @ stdcall -arch=x86_64,arm RtlUnwindEx(ptr ptr ptr ptr ptr ptr)
