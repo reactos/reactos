@@ -1049,11 +1049,13 @@ CAdapterCommon::ProcessOutputNodes(
                     DPRINT1("HDAUDIO: PinNode %u DevicePresent %x\n", PinNodes[NodeIndex], DevicePresent);
                     if (!DevicePresent)
                     {
+#if 0
                         // FIXME ignoring device
                         // setup unsolicited response pinnode to activate ondemand
                         DPRINT1("HDAUDIO: Ignoring PinNode %u\n", PinNodes[NodeIndex]);
                         PinNodes[NodeIndex] = (ULONG)-1;
                         continue;
+#endif
                     }
                 }
             }
@@ -1237,8 +1239,10 @@ CAdapterCommon::ProcessInputNodes(
                 DPRINT1("HDAUDIO: PinNode %u DevicePresent %x\n", PinNodes[NodeIndex], DevicePresent);
                 if (!DevicePresent)
                 {
+#if 0
                     DPRINT1("Ignoring Pin %u\n", PinNodes[NodeIndex]);
                     continue;
+#endif
                 }
             }
         }

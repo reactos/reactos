@@ -64,7 +64,7 @@ PropertyHandler_JackDescription(IN PPCPROPERTY_REQUEST PropertyRequest)
     }
 
     PIN_CONFIGURATION_DEFAULT PinConfiguration;
-    Status = Node->GetPinConfigurationDefault(Node->GetStartNodeId(), &PinConfiguration);
+    Status = Node->GetPinConfigurationDefault(PropertyRequest->Node, &PinConfiguration);
     if (NT_SUCCESS(Status))
     {
         PKSMULTIPLE_ITEM MultipleItem = (PKSMULTIPLE_ITEM)PropertyRequest->Value;
@@ -175,32 +175,20 @@ PropertyHandler_Volume(IN PPCPROPERTY_REQUEST PropertyRequest)
         return STATUS_INVALID_PARAMETER;
     }
 
-    AMPLIFIER_CAPABILITIES AmplifierDetails;
-    Status = Node->GetAmplifierDetails(Node->GetStartNodeId(), FALSE /* FIXME */, &AmplifierDetails);
-    if (!NT_SUCCESS(Status))
-    {
-        Miniport->Release();
-        return Status;
-    }
-
     PLONG Value = (PLONG)PropertyRequest->Value;
     if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
     {
         LONG Volume;
         UCHAR Direct;
-        Status = Node->GetVolume(Node->GetStartNodeId(), &Direct, &Volume);
-        *Value = AmplifierDetails.Offset - AmplifierDetails.Steps * Volume;
+        Status = Node->GetVolume(PropertyRequest->Node, &Direct, &Volume);
+        *Value = Volume;
         Miniport->Release();
         return Status;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET)
     {
         LONG Volume = *Value;
-        if (Volume > AmplifierDetails.Offset)
-            Volume = AmplifierDetails.Offset;
-        if (Volume < AmplifierDetails.Offset - AmplifierDetails.Steps * AmplifierDetails.NumSteps)
-            Volume = AmplifierDetails.Offset - AmplifierDetails.Steps * AmplifierDetails.NumSteps;
-        Status = Node->SetVolume(Node->GetStartNodeId(), 1 /* FIXME */, Volume);
+        Status = Node->SetVolume(PropertyRequest->Node, 0 /* FIXME */, Volume);
         Miniport->Release();
         return Status;
     }
