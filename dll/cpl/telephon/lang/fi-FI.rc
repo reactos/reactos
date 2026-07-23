@@ -1,0 +1,7 @@
+LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Puhelin- ja modeemiasetukset"
+    IDS_CPLSYSTEMDESCRIPTION "Määrittää puhelunvalintasäännöt ja modeemiasetukset."
+END

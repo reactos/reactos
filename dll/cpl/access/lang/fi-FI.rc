@@ -1,0 +1,291 @@
+LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+
+IDD_PROPPAGEKEYBOARD DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Näppäimisto"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "Tahmeanäppäimet", -1, 6, 11, 234, 57
+    LTEXT "Käytä tahmeanäppäimiä, jos haluat käyttää Shift-, Ctrl- tai Alt-näppäintä painamalla yhden näppäimen kerrallaan.",
+          -1, 12, 20, 222, 29
+    AUTOCHECKBOX "&Käytä tahmeanäppäimiä", IDC_STICKY_BOX, 12, 49, 126, 14
+    PUSHBUTTON "&Asetukset", IDC_STICKY_BUTTON, 144, 49, 90, 14
+    GROUPBOX "Suodatinnäppäimet", -1, 6, 79, 234, 62
+    LTEXT "Käytä suodatinnäppäimiä, jos haluat ReactOSin ohittavan lyhyet tai toistuvat painallukset tai hidastavan toistonopeutta.",
+          -1, 12, 89, 222, 29
+    AUTOCHECKBOX "Käytä s&uodatinnäppäimiä", IDC_FILTER_BOX, 12, 121, 126, 14
+    PUSHBUTTON "A&setukset", IDC_FILTER_BUTTON, 144, 121, 90, 14
+    GROUPBOX "Vaihtonäppäimet", -1, 6, 148, 234, 55
+    LTEXT "Käytä vaihtonäppäimiä, jos haluat kuulla äänimerkin, kun painat Caps Lock-, Num Lock- tai Scroll Lock -näppäintä.",
+          -1, 12, 161, 222, 20
+    AUTOCHECKBOX "Käytä &vaihtonäppäimiä", IDC_TOGGLE_BOX, 12, 184, 126, 14
+    PUSHBUTTON "Aset&ukset", IDC_TOGGLE_BUTTON, 144, 184, 90, 14
+    AUTOCHECKBOX "Näytä ohjelmissa lisäohjeita näppäimistolle", IDC_KEYBOARD_EXTRA,
+                 6, 207, 234, 14
+END
+
+IDD_PROPPAGESOUND DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Ääni"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "Äänivahvistus", -1, 6, 11, 234, 98
+    LTEXT "Käytä Äänivahvistusta, jos haluat ReactOSin näyttävän visuaalisen varoituksen aina, kun järjestelmästä kuuluu ääni.",
+          -1, 12, 20, 222, 29
+    AUTOCHECKBOX "Käytä &Äänivahvistusta", IDC_SENTRY_BOX, 12, 49, 120, 14
+    LTEXT "Käytä seuraavaa varoitusta:", IDC_SENTRY_TEXT, 12, 72, 222, 11
+    COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    GROUPBOX "Äänien näyttäminen", -1, 6, 115, 234, 67
+    LTEXT "Käytä Äänien näyttämistä, jos haluat ohjelmien näyttävän tekstityksen puheelle ja äänille.",
+          -1, 12, 125, 222, 29
+    AUTOCHECKBOX "Käytä Ää&nien näyttämistä", IDC_SSHOW_BOX, 12, 148, 222, 14
+END
+
+IDD_PROPPAGEDISPLAY DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Näyttö"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "Suuri kontrasti", -1, 6, 11, 234, 62
+    LTEXT "Käytä tätä asetusta, jos haluat ReactOSin käyttävän helppolukuisia värejä ja fontteja.",
+          -1, 12, 20, 222, 29
+    AUTOCHECKBOX "&Käytä suurta kontrastia", IDC_CONTRAST_BOX, 12, 49, 126, 14
+    PUSHBUTTON "&Asetukset", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
+    GROUPBOX "Kohdistimen asetukset", -1, 6, 79, 234, 115
+    LTEXT "Säädä liukusäätimillä kohdistimen vilkkumisnopeutta ja leveyttä.",
+          -1, 12, 88, 222, 20
+    CTEXT "Vilkkumisn&opeus:", -1, 12, 115, 222, 11
+    LTEXT "Ei", -1, 18, 130, 36, 11
+    LTEXT "Nopea", -1, 192, 130, 36, 11
+    CONTROL "", IDC_CURSOR_BLINK_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
+            60, 124, 126, 20
+      CTEXT "Kohdistimen &leveys:", -1, 12, 151, 222, 11
+      LTEXT "Kapea", -1, 18, 171, 36, 11
+      LTEXT "Leveä", -1, 192, 171, 36, 11
+    CONTROL "", IDC_CURSOR_WIDTH_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
+            60, 169, 126, 20
+    LTEXT "", IDC_CURSOR_WIDTH_TEXT, 18, 142, 24, 16
+END
+
+IDD_PROPPAGEMOUSE DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Hiiri"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+      GROUPBOX "Hiirinäppäimet", -1, 6, 11, 234, 62
+      LTEXT "Käytä tätä asetusta, jos haluat ohjata osoitinta näppäimiston numeronäppäimistolla.",
+          -1, 12, 20, 222, 29
+      AUTOCHECKBOX "Käytä &hiirinäppäimiä", IDC_MOUSE_BOX, 12, 49, 126, 14
+      PUSHBUTTON "&Asetukset", IDC_MOUSE_BUTTON, 144, 49, 90, 14
+END
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Yleiset"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+      GROUPBOX "Automaattinen nollaus", -1, 6, 11, 234, 47
+      AUTOCHECKBOX "P&oista helppokäyttöominaisuudet käytöstä toimettomuuden jälkeen:",
+                 IDC_RESET_BOX, 12, 18, 222, 14
+    COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    GROUPBOX "Ilmoitus", -1, 6, 63, 234, 47
+    AUTOCHECKBOX "N&äytä varoitusviesti, kun ominaisuus otetaan käyttöön", IDC_NOTIFICATION_MESSAGE,
+                 12, 72, 222, 14
+    AUTOCHECKBOX "Anna &äänimerkki, kun ominaisuus otetaan käyttöön tai poistetaan", IDC_NOTIFICATION_SOUND,
+                 12, 90, 222, 14
+    GROUPBOX "Sarjaporttilaitteet", -1, 6, 115, 234, 47
+    LTEXT "Sarjaporttilaitteet tarjoavat vaihtoehtoisen tavan käyttää näppäimistön ja hiiren toimintoja.",
+          -1, 12, 124, 222, 20
+    AUTOCHECKBOX "Käytä &sarjaporttilaitteita", IDC_SERIAL_BOX, 12, 142, 126, 14
+    PUSHBUTTON "A&setukset", IDC_SERIAL_BUTTON, 144, 142, 90, 14
+
+    GROUPBOX "Järjestelmänvalvojan asetukset", -1, 6, 169, 234, 47
+    AUTOCHECKBOX "Käytä kaikkia asetuksia k&irjautumistyöpöydällä", IDC_ADMIN_LOGON_BOX,
+                 12, 178, 222, 14
+    AUTOCHECKBOX "Käytä kaikkia asetuksia uusien käyttäjien &oletuksina", IDC_ADMIN_USERS_BOX,
+                 12, 196, 222, 14
+END
+
+IDD_STICKYKEYSOPTIONS DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sulkunäppäinten asetukset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Pikanäppäin", -1, 6, 11, 234, 62
+    LTEXT "Sulkunäppäimet otetaan käyttöön painamalla VAIHTO-näppäintä (Shift) viisi kertaa.",
+          -1, 12, 20, 222, 29
+    AUTOCHECKBOX "Ota pikanäppäin käyt&töön", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
+    GROUPBOX "Asetukset", -1, 6, 83, 234, 44
+    AUTOCHECKBOX "Lukitse &muunnosnäppäin, kun sitä painetaan kahdesti peräkkäin", IDC_STICKY_LOCK_CHECK,
+                 12, 94, 222, 14
+    AUTOCHECKBOX "&Poista sulkunäppäimet käytöstä, jos kahta näppäintä painetaan samanaikaisesti", IDC_STICKY_UNLOCK_CHECK,
+                 12, 106, 222, 14
+    GROUPBOX "Ilmoitus", -1, 6, 133, 234, 44
+    AUTOCHECKBOX "Anna äänimerkki, &kun muunnosnäppäintä painetaan", IDC_STICKY_SOUND_CHECK,
+                 12, 148, 222, 14
+    AUTOCHECKBOX "Näytä sulkunäppäinten &tila näytössä", IDC_STICKY_STATUS_CHECK,
+                 12, 160, 222, 14
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 189, 207, 50, 14
+END
+
+IDD_FILTERKEYSOPTIONS DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Suodatinnäppäinten asetukset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Pikanäppäin", -1, 6, 11, 234, 62
+    LTEXT "Suodatinnäppäinten pikanäppäin on:\nPidä oikeaa VAIHTO-näppäintä (Shift) painettuna 8 sekuntia.",
+          -1, 12, 20, 222, 29
+    AUTOCHECKBOX "&Käytä pikanäppäintä", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
+    GROUPBOX "Suodatusasetukset", -1, 6, 79, 234, 79
+    AUTORADIOBUTTON "Ohita to&istuvat painallukset", IDC_FILTER_BOUNCE_RADIO,
+                    12, 91, 130, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Ohita n&opeat painallukset ja\nhidasta toistonopeutta", IDC_FILTER_REPEAT_RADIO,
+                    12, 106, 130, 20, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "&Asetukset...", IDC_FILTER_BOUNCE_BUTTON, 148, 88, 86, 14, WS_GROUP
+    PUSHBUTTON "A&setukset...", IDC_FILTER_REPEAT_BUTTON, 148, 108, 86, 14, WS_GROUP
+    LTEXT "Testaa asetuksia napsauttamalla tähän ja &kirjoittamalla:", -1, 12, 129, 222, 11
+    EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
+    GROUPBOX "Ilmoitus", -1, 6, 161, 234, 41
+    AUTOCHECKBOX "Anna äänimerkki, kun näppäintä painetaan tai se hyväksytään", IDC_FILTER_SOUND_CHECK,
+                 12, 170, 222, 10
+    AUTOCHECKBOX "Näytä suodatinnäppäinten &tila näytössä", IDC_FILTER_STATUS_CHECK,
+                 12, 186, 222, 10
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 189, 207, 50, 14
+END
+
+IDD_TOGGLEKEYSOPTIONS DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Lukitusnäppäinten asetukset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Pikanäppäin", -1, 6, 11, 234, 62
+    LTEXT "Lukitusnäppäinten pikanäppäin on:\nPidä NUM LOCK -näppäintä painettuna viisi sekuntia.",
+          -1, 12, 20, 222, 29
+    AUTOCHECKBOX "Käytä &pikanäppäintä", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 189, 207, 50, 14
+END
+
+IDD_CONTRASTOPTIONS DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Suuren kontrastin asetukset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Pikanäppäin", -1, 6, 11, 234, 62
+    LTEXT "Suuren kontrastin pikanäppäin on:\nPaina vasen ALT + vasen VAIHTO + PRINT SCREEN.",
+          -1, 12, 20, 222, 29
+    AUTOCHECKBOX "&Käytä pikanäppäintä", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
+    GROUPBOX "Suuren kontrastin teema", -1, 6, 83, 234, 44
+    LTEXT "&Nykyinen teema:", -1, 12, 94, 222, 11
+    COMBOBOX IDC_CONTRAST_COMBO, 12, 103, 222, 56,
+             CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 189, 207, 50, 14
+END
+
+IDD_MOUSEKEYSOPTIONS DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Hiirinäppäinten asetukset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Pikanäppäin", -1, 6, 11, 234, 62
+    LTEXT "Hiirinäppäinten pikanäppäin on:\nPaina vasen ALT + vasen VAIHTO + NUM LOCK.",
+          -1, 12, 20, 222, 29
+    AUTOCHECKBOX "&Käytä pikanäppäintä", IDC_MOUSEKEYS_ACTIVATE_CHECK, 12, 49, 222, 14
+    GROUPBOX "Osoittimen nopeus", -1, 6, 83, 234, 83
+    LTEXT "Huippunopeus:", -1, 12, 96, 54, 11
+    LTEXT "Hidas", -1, 70, 96, 18, 11
+    CONTROL "", IDC_MOUSEKEYS_SPEED_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
+            90, 94, 114, 20
+    LTEXT "Suuri", -1, 208, 96, 18, 11
+    LTEXT "Kiihtyvyys:", -1, 12, 123, 54, 11
+    LTEXT "Hidas", -1, 70, 123, 18, 11
+    CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
+            90, 121, 114, 20
+    LTEXT "Nopea", -1, 208, 123, 18, 11
+    AUTOCHECKBOX "Pidä CTRL painettuna nopeuttaaksesi ja VAIHTO hidastaaksesi", IDC_MOUSEKEYS_SPEED_CHECK,
+                 12, 144, 222, 14
+    LTEXT "Käytä hiirinäppäimiä, kun NUM LOCK on:", -1, 12, 171, 135, 11
+    AUTORADIOBUTTON "P&äällä", IDC_MOUSEKEYS_ON_RADIO, 152, 171, 35, 11
+    AUTORADIOBUTTON "P&ois", IDC_MOUSEKEYS_OFF_RADIO, 192, 171, 35, 11
+    AUTOCHECKBOX "Näytä hiirinäppäinten &tila näytössä", IDC_MOUSEKEYS_STATUS_CHECK,
+                 12, 186, 222, 14
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 189, 207, 50, 14
+END
+
+IDD_BOUNCEKEYSOPTIONS DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Värinänvaimennuksen asetukset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Värinänvaimennus", -1, 6, 11, 234, 47
+    LTEXT "&Ohita painallukset, jotka toistuvat nopeammin kuin:", -1, 12, 21, 222, 20
+    COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    LTEXT "&Testialue:", -1, 12, 68, 42, 11
+    EDITTEXT IDC_BOUNCE_TEST_EDIT, 58, 65, 176, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 189, 207, 50, 14
+END
+
+IDD_REPEATKEYSOPTIONS DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Näppäintoiston ja hitaiden näppäinten asetukset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Näppäintoisto", -1, 6, 11, 234, 106
+    LTEXT "Ohita Ohjauspaneelin näppäimistöasetukset:",
+          -1, 12, 20, 222, 11
+    AUTORADIOBUTTON "&Ei näppäimistön toistoa", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 210, 11, WS_GROUP
+    AUTORADIOBUTTON "&Hidasta näppäimistön toistonopeutta", IDC_REPEAT_REPEAT_RADIO, 12, 45, 210, 11
+    LTEXT "Toiston &viive:", -1, 24, 60, 60, 11
+    COMBOBOX IDC_REPEAT_DELAY_COMBO, 24, 71, 210, 56,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    LTEXT "Toiston &nopeus:", -1, 24, 89, 60, 11
+    COMBOBOX IDC_REPEAT_REPEAT_COMBO, 24, 100, 210, 65,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    GROUPBOX "Hitaat näppäimet", -1, 6, 124, 234, 42
+    LTEXT "&Näppäimiä on pidettävä painettuna vähintään:", -1, 12, 135, 222, 11
+    COMBOBOX IDC_REPEAT_WAIT_COMBO, 12, 148, 222, 74,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    LTEXT "&Testialue:", -1, 12, 178, 42, 11
+    EDITTEXT IDC_REPEAT_TEST_EDIT, 58, 175, 176, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 189, 207, 50, 14
+END
+
+IDD_SERIALKEYSOPTIONS DIALOGEX 0, 0, 246, 220
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sarjaporttilaitteiden asetukset"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Sarjaporttilaitteet", -1, 6, 11, 234, 92
+    LTEXT "Valitse portti, johon vaihtoehtoinen syötelaite liitetään.",
+          -1, 12, 20, 222, 20
+    LTEXT "&Sarjaportti:", -1, 12, 42, 222, 11
+    COMBOBOX IDC_SERIAL_PORT_COMBO, 12, 53, 222, 56,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    LTEXT "&Siirtonopeus (baudia):", -1, 12, 72, 222, 11
+    COMBOBOX IDC_SERIAL_BAUD_COMBO, 12, 83, 222, 74,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 189, 207, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Helppokäyttötoiminnot"
+    IDS_CPLSYSTEMDESCRIPTION "Mukauttaa tietokoneen helppokäyttötoimintoja."
+    IDS_SENTRY_NONE "[Ei mikään]"
+    IDS_SENTRY_TITLE "Vilkuta otsikkoriviä"
+    IDS_SENTRY_WINDOW "Vilkuta aktiivista ikkunaa"
+    IDS_SENTRY_DISPLAY "Vilkuta työpöytää"
+    IDS_SECONDS "sekuntia"
+    IDS_MINUTES "minuuttia"
+END

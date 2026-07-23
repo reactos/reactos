@@ -34,7 +34,7 @@ Haluatko ylikirjoitaa sen?"
 / : < > |"
     IDS_PATHNOTEXISTING     "Kansiota ei ole"
     IDS_FILENOTEXISTING     "Tiedostoa ei ole"
-    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
+    IDS_INVALID_FOLDERNAME  "Valinta sisältää kohteen, joka ei ole kansio"
 }
 
 STRINGTABLE
@@ -137,7 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Tallenna"
     IDS_SAVE_AS     "Tallenna nimellä"
     IDS_OPEN_FILE   "Avaa tiedosto"
-    IDS_SELECT_FOLDER "Select Folder"
+    IDS_SELECT_FOLDER "Valitse kansio"
     IDS_FONT_SIZE_INPUT "Font size has to be a number."
 }
 
@@ -474,7 +474,7 @@ FONT 8, "MS Shell Dlg"
 
 NEWFILEOPENV2ORD DIALOG 0, 0, 370, 237
 STYLE DS_MODALFRAME | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
-CAPTION "Open"
+CAPTION "Avaa"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT "Look &in:", IDC_LOOKINSTATIC, 28, 6, 43, 8, SS_NOTIFY
@@ -491,9 +491,9 @@ FONT 8, "MS Shell Dlg"
     LTEXT "&Tyyppi:", IDC_FILETYPESTATIC, 65, 200, 56, 16, SS_NOTIFY
     COMBOBOX IDC_FILETYPE, 123, 198, 180, 53, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL "Open as &read-only", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 218, 150, 10
+    CONTROL "Avaa &vain lukuoikeuksilla", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 218, 150, 10
 
-    DEFPUSHBUTTON "&Open", IDOK, 310, 180, 54, 14
+    DEFPUSHBUTTON "&Avaa", IDOK, 310, 180, 54, 14
     PUSHBUTTON "Peruuta", IDCANCEL, 310, 198, 54, 14
     PUSHBUTTON "&Apua", pshHelp, 310, 215, 54, 14
 }

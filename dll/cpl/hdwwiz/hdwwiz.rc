@@ -34,6 +34,9 @@ IDB_HEADER BITMAP "resources/header.bmp"
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
+#ifdef LANGUAGE_FI_FI
+    #include "lang/fi-FI.rc"
+#endif
 #ifdef LANGUAGE_EL_GR
     #include "lang/el-GR.rc"
 #endif
