@@ -140,7 +140,7 @@ typedef struct _DISKENTRY
 
     UNICODE_STRING DriverName;
 
-    PDRIVE_LAYOUT_INFORMATION LayoutBuffer;
+    PDRIVE_LAYOUT_INFORMATION_EX LayoutBuffer;
     // TODO: When adding support for GPT disks:
     // Use PDRIVE_LAYOUT_INFORMATION_EX which indicates whether
     // the disk is MBR, GPT, or unknown (uninitialized).
@@ -263,11 +263,11 @@ BOOLEAN
 IsDiskSuperFloppy2(
     _In_ const DISK_PARTITION_INFO* DiskInfo,
     _In_opt_ const ULONGLONG* DiskSize,
-    _In_ const PARTITION_INFORMATION* PartitionInfo);
+    _In_ const PARTITION_INFORMATION_EX* PartitionInfo);
 
 BOOLEAN
 IsDiskSuperFloppy(
-    _In_ const DRIVE_LAYOUT_INFORMATION* Layout,
+    _In_ const DRIVE_LAYOUT_INFORMATION_EX* Layout,
     _In_opt_ const ULONGLONG* DiskSize);
 
 BOOLEAN
