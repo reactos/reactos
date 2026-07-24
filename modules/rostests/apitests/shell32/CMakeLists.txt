@@ -46,7 +46,7 @@ list(APPEND SOURCE
     She.cpp
     #ShellExec_RunDLL.cpp # Broke on Windows
     #ShellExecCmdLine.cpp # Broke on Windows
-    #ShellExecuteEx.cpp # Broke on Windows
+    ShellExecuteEx.cpp
     #ShellExecuteW.cpp # Broke on Windows
     ShellHook.cpp
     ShellInfo.cpp

@@ -17,6 +17,19 @@ CCopyMoveToMenu::CCopyMoveToMenu() :
 {
 }
 
+static BOOL
+IsValidTarget(CCopyMoveToMenu *pThis, LPCITEMIDLIST pidl)
+{
+    WCHAR szPath[MAX_PATH];
+
+    if (ILIsEqual(pidl, pThis->m_pidlFolder))
+        return pThis->GetFileOp() == FO_COPY;
+
+    szPath[0] = UNICODE_NULL;
+    SHGetPathFromIDListW(pidl, szPath);
+    return _ILIsDesktop(pidl) || PathFileExistsW(szPath);
+}
+
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -62,20 +75,12 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static INT CALLBACK
 BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
-    CCopyMoveToMenu *this_ =
-        reinterpret_cast<CCopyMoveToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    CCopyMoveToMenu *this_ = reinterpret_cast<CCopyMoveToMenu*>(lpData);
 
     switch (uMsg)
     {
         case BFFM_INITIALIZED:
         {
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, lpData);
-            this_ = reinterpret_cast<CCopyMoveToMenu *>(lpData);
-
-            // Select initial directory
-            SendMessageW(hwnd, BFFM_SETSELECTION, FALSE,
-                reinterpret_cast<LPARAM>(static_cast<LPCITEMIDLIST>(this_->m_pidlFolder)));
-
             // Set caption
             CString strCaption(MAKEINTRESOURCEW(this_->GetCaptionStringID()));
             SetWindowTextW(hwnd, strCaption);
@@ -85,31 +90,30 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             SetDlgItemText(hwnd, IDOK, strCopyOrMove);
 
             // Subclassing
+            // TODO: Replace this with BIF_VALIDATE
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, lpData);
             this_->m_fnOldWndProc =
                 reinterpret_cast<WNDPROC>(
                     SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc)));
 
-            // Disable OK
-            PostMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
+            // Expand "My Computer"
+            CComHeapPtr<ITEMIDLIST> drivesPidl(SHCloneSpecialIDList(hwnd, CSIDL_DRIVES, TRUE));
+            if (drivesPidl)
+                SendMessageW(hwnd, BFFM_SETEXPANDED, FALSE, (LPARAM)(LPITEMIDLIST)drivesPidl);
+
+            // Select initial directory
+            // TODO: Remember the last directory used by the user
+            CComHeapPtr<ITEMIDLIST> pidl(SHCloneSpecialIDList(hwnd, CSIDL_PERSONAL, TRUE));
+            if (pidl)
+                SendMessageW(hwnd, BFFM_SETSELECTION, FALSE, (LPARAM)(LPITEMIDLIST)pidl);
+
+            SendMessageW(hwnd, BFFM_ENABLEOK, 0, pidl && IsValidTarget(this_, pidl));
             break;
         }
         case BFFM_SELCHANGED:
         {
-            if (!this_)
-                break;
-
-            WCHAR szPath[MAX_PATH];
             LPCITEMIDLIST pidl = reinterpret_cast<LPCITEMIDLIST>(lParam);
-
-            szPath[0] = 0;
-            SHGetPathFromIDListW(pidl, szPath);
-
-            if (ILIsEqual(pidl, this_->m_pidlFolder))
-                PostMessageW(hwnd, BFFM_ENABLEOK, 0, this_->GetFileOp() == FO_COPY);
-            else if (PathFileExistsW(szPath) || _ILIsDesktop(pidl))
-                PostMessageW(hwnd, BFFM_ENABLEOK, 0, TRUE);
-            else
-                PostMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
+            PostMessageW(hwnd, BFFM_ENABLEOK, 0, IsValidTarget(this_, pidl));
 
             // the text box will be updated later soon, ignore it
             this_->m_bIgnoreTextBoxChange = TRUE;
@@ -123,6 +127,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 HRESULT
 CCopyMoveToMenu::DoRealFileOp(const CIDA *pCIDA, LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidlDestination)
 {
+    // TODO: Use SH32_SimulateDropWithSite instead
     CStringW strFiles;
     WCHAR szPath[MAX_PATH];
     for (UINT n = 0; n < pCIDA->cidl; ++n)
@@ -340,15 +345,13 @@ CCopyMoveToMenu::GetCommandString(
     LPSTR pszName,
     UINT cchMax)
 {
+#if 1 // Windows does not implement any of these but we will continue to do so as long as we (incorrectly) show them in the context menu
     if ((uType | GCS_UNICODE) == GCS_VALIDATEW)
         return idCmd == IDC_ACTION ? S_OK : S_FALSE;
 
     if (uType == GCS_VERBW && idCmd == IDC_ACTION)
         return SHAnsiToUnicode(GetVerb(), (LPWSTR)pszName, cchMax);
-
-    FIXME("%p %lu %u %p %p %u\n", this,
-          idCmd, uType, pwReserved, pszName, cchMax);
-
+#endif
     return E_NOTIMPL;
 }
 
@@ -397,4 +400,31 @@ CCopyMoveToMenu::GetSite(REFIID riid, void **ppvSite)
         return E_FAIL;
 
     return m_pSite->QueryInterface(riid, ppvSite);
+}
+
+HRESULT
+CCopyMoveToMenu::DoCopyMoveToFolder(BOOL Copy, HWND hWnd, IUnknown *pSite,
+                                    IShellFolder *pSF, UINT cidl, PCUITEMID_CHILD_ARRAY pidls)
+{
+    SFGAOF attr = SFGAO_CANCOPY | SFGAO_CANMOVE;
+    HRESULT hr = pSF->GetAttributesOf(cidl, pidls, &attr);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    if (!(attr & (Copy ? SFGAO_CANCOPY : SFGAO_CANMOVE)))
+        return E_INVALIDARG;
+
+    CComPtr<IDataObject> pDO;
+    hr = pSF->GetUIObjectOf(hWnd, cidl, pidls, IID_NULL_PPV_ARG(IDataObject, &pDO));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    REFCLSID clsid = Copy ? CLSID_CopyToMenu : CLSID_MoveToMenu;
+    CComPtr<IContextMenu> pCM;
+    hr = SHELL_InitializeExtension(clsid, NULL, pDO, NULL, IID_PPV_ARG(IContextMenu, &pCM));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    IUnknown_SetSite(pCM, pSite);
+
+    CMINVOKECOMMANDINFO ici = { sizeof(ici), 0, hWnd, MAKEINTRESOURCEA(IDC_ACTION), NULL, NULL, SW_SHOW };
+    return pCM->InvokeCommand(&ici);
 }
