@@ -175,6 +175,12 @@ struct _EXFAT_VCB
     ULONG SectorCacheSets;
     ULONG SectorCacheBlockSectors;
     ULONG SectorCacheDirtyCount;
+    PVOID StreamCacheAllocation;
+    PVOID StreamCacheBuffer;
+    LBA_t StreamCacheSector;
+    LBA_t StreamReadNextSector;
+    ULONG StreamCacheCount;
+    UCHAR StreamCacheMode;
     PVOID ZeroBuffer;
 };
 

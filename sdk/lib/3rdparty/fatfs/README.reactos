@@ -58,5 +58,10 @@ The kernel driver and FreeLoader do not select data I/O paths from exFAT
 allocation flags or construct file extents. File data is accessed through
 FatFs.
 
+The driver's additional large-transfer batching operates below FatFs allocation
+logic. It uses bounded adaptive read-ahead and write combining for consecutive
+sector requests; the batching path does not inspect directory allocation flags
+or derive file extents.
+
 The media-access implementation is not kept in this directory. This preserves
 the upstream separation between the filesystem core and platform I/O.

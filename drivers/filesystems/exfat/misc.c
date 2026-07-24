@@ -26,6 +26,12 @@ C_ASSERT(FFCONF_DEF == 80386);
 #define EXFAT_SECTOR_CACHE_WAYS  4
 #define EXFAT_SECTOR_CACHE_EMPTY ((LBA_t)~0ULL)
 
+#define EXFAT_STREAM_CACHE_SIZE  (1024 * 1024)
+#define EXFAT_STREAM_CACHE_EMPTY 0
+#define EXFAT_STREAM_CACHE_READ  1
+#define EXFAT_STREAM_CACHE_WRITE 2
+#define EXFAT_STREAM_READ_NONE   ((LBA_t)~0ULL)
+
 typedef struct _EXFAT_IO_CONTEXT
 {
     KEVENT Event;
@@ -37,6 +43,7 @@ typedef struct _EXFAT_IO_CONTEXT
 static VOID ExFatInvalidateSectorCache(PEXFAT_VCB Vcb);
 static VOID ExFatInvalidateSectorCacheRange(PEXFAT_VCB Vcb, LBA_t Sector, UINT Count);
 static NTSTATUS ExFatFlushSectorCacheRange(PEXFAT_VCB Vcb, LBA_t Sector, UINT Count);
+static NTSTATUS ExFatFlushStreamCache(PEXFAT_VCB Vcb);
 
 NTSTATUS
 ExFatMapResult(
@@ -1696,6 +1703,91 @@ disk_status(
     return disk_initialize(PhysicalDrive);
 }
 
+static BOOLEAN
+ExFatSectorRangeContains(
+    LBA_t RangeSector,
+    ULONG RangeCount,
+    LBA_t Sector,
+    ULONG Count)
+{
+    LBA_t Offset;
+
+    if (!RangeCount || Sector < RangeSector)
+        return FALSE;
+    Offset = Sector - RangeSector;
+    return Offset <= RangeCount && Count <= RangeCount - (ULONG)Offset;
+}
+
+static BOOLEAN
+ExFatSectorRangesOverlap(
+    LBA_t FirstSector,
+    ULONG FirstCount,
+    LBA_t SecondSector,
+    ULONG SecondCount)
+{
+    if (!FirstCount || !SecondCount)
+        return FALSE;
+    if (FirstSector <= SecondSector)
+        return SecondSector - FirstSector < FirstCount;
+    return FirstSector - SecondSector < SecondCount;
+}
+
+static BOOLEAN
+ExFatEnsureStreamCache(
+    PEXFAT_VCB Vcb)
+{
+    ULONG AlignmentMask;
+
+    if (Vcb->StreamCacheBuffer)
+        return TRUE;
+
+    AlignmentMask = Vcb->StorageDevice->AlignmentRequirement;
+    if (EXFAT_STREAM_CACHE_SIZE > MAXULONG - AlignmentMask)
+        return FALSE;
+    Vcb->StreamCacheAllocation = ExAllocatePoolWithTag(NonPagedPool,
+                                                        EXFAT_STREAM_CACHE_SIZE +
+                                                            AlignmentMask,
+                                                        TAG_EXFAT_IO);
+    if (!Vcb->StreamCacheAllocation)
+        return FALSE;
+
+    Vcb->StreamCacheBuffer = ALIGN_UP_POINTER_BY(Vcb->StreamCacheAllocation,
+                                                  AlignmentMask + 1);
+    Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
+    Vcb->StreamCacheCount = 0;
+    return TRUE;
+}
+
+static NTSTATUS
+ExFatFlushStreamCache(
+    PEXFAT_VCB Vcb)
+{
+    LARGE_INTEGER Offset;
+    ULONG Length;
+    NTSTATUS Status;
+
+    if (Vcb->StreamCacheMode != EXFAT_STREAM_CACHE_WRITE ||
+        !Vcb->StreamCacheCount)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    Offset.QuadPart = Vcb->StreamCacheSector * Vcb->BytesPerSector;
+    Length = Vcb->StreamCacheCount * Vcb->BytesPerSector;
+    Status = ExFatPoolReadWriteDevice(Vcb->StorageDevice,
+                                      IRP_MJ_WRITE,
+                                      Vcb->StreamCacheBuffer,
+                                      Length,
+                                      &Offset,
+                                      TRUE);
+    if (NT_SUCCESS(Status))
+    {
+        Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
+        Vcb->StreamCacheCount = 0;
+    }
+    return Status;
+}
+
 static VOID
 ExFatInvalidateSectorCache(
     PEXFAT_VCB Vcb)
@@ -1708,6 +1800,12 @@ ExFatInvalidateSectorCache(
         Vcb->SectorCacheDirty[Index] = FALSE;
     }
     Vcb->SectorCacheDirtyCount = 0;
+    if (Vcb->StreamCacheMode == EXFAT_STREAM_CACHE_READ)
+    {
+        Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
+        Vcb->StreamCacheCount = 0;
+    }
+    Vcb->StreamReadNextSector = EXFAT_STREAM_READ_NONE;
 }
 
 static ULONG
@@ -1806,6 +1904,9 @@ ExFatFlushSectorCache(
     ULONG Slot;
     NTSTATUS Status;
 
+    Status = ExFatFlushStreamCache(Vcb);
+    if (!NT_SUCCESS(Status))
+        return Status;
     if (!Vcb->SectorCacheDirtyCount)
         return STATUS_SUCCESS;
 
@@ -1860,7 +1961,19 @@ ExFatInvalidateSectorCacheRange(
     LBA_t Block;
     ULONG Slot;
 
-    if (!Vcb->SectorCacheEntries || !Count)
+    if (!Count)
+        return;
+    if (Vcb->StreamCacheMode == EXFAT_STREAM_CACHE_READ &&
+        ExFatSectorRangesOverlap(Vcb->StreamCacheSector,
+                                 Vcb->StreamCacheCount,
+                                 Sector,
+                                 Count))
+    {
+        Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
+        Vcb->StreamCacheCount = 0;
+    }
+    Vcb->StreamReadNextSector = EXFAT_STREAM_READ_NONE;
+    if (!Vcb->SectorCacheEntries)
         return;
 
     FirstBlock = Sector / Vcb->SectorCacheBlockSectors;
@@ -1943,6 +2056,8 @@ ExFatFreeSectorCache(
 {
     if (Vcb->SectorCacheAllocation)
         ExFreePoolWithTag(Vcb->SectorCacheAllocation, TAG_EXFAT_IO);
+    if (Vcb->StreamCacheAllocation)
+        ExFreePoolWithTag(Vcb->StreamCacheAllocation, TAG_EXFAT_IO);
     Vcb->SectorCacheAllocation = NULL;
     Vcb->SectorCacheBuffer = NULL;
     Vcb->SectorCacheTags = NULL;
@@ -1952,6 +2067,12 @@ ExFatFreeSectorCache(
     Vcb->SectorCacheSets = 0;
     Vcb->SectorCacheBlockSectors = 0;
     Vcb->SectorCacheDirtyCount = 0;
+    Vcb->StreamCacheAllocation = NULL;
+    Vcb->StreamCacheBuffer = NULL;
+    Vcb->StreamCacheSector = 0;
+    Vcb->StreamReadNextSector = EXFAT_STREAM_READ_NONE;
+    Vcb->StreamCacheCount = 0;
+    Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
 }
 
 DRESULT
@@ -1965,9 +2086,12 @@ disk_read(
     LARGE_INTEGER Offset;
     PUCHAR CacheBlock;
     LBA_t Block;
+    UINT ReadCount;
     ULONG Slot;
     ULONG BlockBytes;
+    ULONG CacheCapacity;
     ULONG Length;
+    NTSTATUS Status;
 
     if (!ExFatGlobalData || PhysicalDrive >= FF_VOLUMES || !Buffer || !Count)
         return RES_PARERR;
@@ -1978,6 +2102,87 @@ disk_read(
         Count > MAXULONG / Vcb->BytesPerSector)
     {
         return RES_PARERR;
+    }
+
+    if (Vcb->StreamCacheMode != EXFAT_STREAM_CACHE_EMPTY &&
+        ExFatSectorRangeContains(Vcb->StreamCacheSector,
+                                 Vcb->StreamCacheCount,
+                                 Sector,
+                                 Count))
+    {
+        RtlCopyMemory(Buffer,
+                      (PUCHAR)Vcb->StreamCacheBuffer +
+                          (SIZE_T)(Sector - Vcb->StreamCacheSector) *
+                              Vcb->BytesPerSector,
+                      Count * Vcb->BytesPerSector);
+        if (Count > 1)
+            Vcb->StreamReadNextSector = Sector + Count;
+        return RES_OK;
+    }
+
+    if (Count > 1)
+    {
+        if (Vcb->StreamCacheMode == EXFAT_STREAM_CACHE_WRITE)
+        {
+            Status = ExFatFlushStreamCache(Vcb);
+            if (!NT_SUCCESS(Status))
+                return RES_ERROR;
+        }
+        if (Vcb->StreamCacheMode == EXFAT_STREAM_CACHE_READ)
+        {
+            Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
+            Vcb->StreamCacheCount = 0;
+        }
+
+        CacheCapacity = EXFAT_STREAM_CACHE_SIZE / Vcb->BytesPerSector;
+        if (Count <= CacheCapacity &&
+            Vcb->StreamReadNextSector != 0 &&
+            Vcb->StreamReadNextSector != EXFAT_STREAM_READ_NONE &&
+            Vcb->StreamReadNextSector == Sector &&
+            ExFatEnsureStreamCache(Vcb))
+        {
+            ReadCount = (UINT)min((LBA_t)CacheCapacity,
+                                  Vcb->SectorCount - Sector);
+            if (!NT_SUCCESS(ExFatFlushSectorCacheRange(Vcb,
+                                                       Sector,
+                                                       ReadCount)))
+            {
+                return RES_ERROR;
+            }
+            Offset.QuadPart = Sector * Vcb->BytesPerSector;
+            Length = ReadCount * Vcb->BytesPerSector;
+            Status = ExFatPoolReadWriteDevice(Vcb->StorageDevice,
+                                               IRP_MJ_READ,
+                                               Vcb->StreamCacheBuffer,
+                                               Length,
+                                               &Offset,
+                                               TRUE);
+            if (NT_SUCCESS(Status))
+            {
+                Vcb->StreamCacheSector = Sector;
+                Vcb->StreamCacheCount = ReadCount;
+                Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_READ;
+                RtlCopyMemory(Buffer,
+                              Vcb->StreamCacheBuffer,
+                              Count * Vcb->BytesPerSector);
+                Vcb->StreamReadNextSector = Sector + Count;
+                return RES_OK;
+            }
+        }
+
+        if (!NT_SUCCESS(ExFatFlushSectorCacheRange(Vcb, Sector, Count)))
+            return RES_ERROR;
+        Offset.QuadPart = Sector * Vcb->BytesPerSector;
+        Length = Count * Vcb->BytesPerSector;
+        Status = ExFatReadWriteDevice(Vcb->StorageDevice,
+                                      IRP_MJ_READ,
+                                      Buffer,
+                                      Length,
+                                      &Offset,
+                                      TRUE);
+        Vcb->StreamReadNextSector = NT_SUCCESS(Status) ?
+                                        Sector + Count : EXFAT_STREAM_READ_NONE;
+        return NT_SUCCESS(Status) ? RES_OK : RES_ERROR;
     }
 
     if (Count == 1 && ExFatEnsureSectorCache(Vcb))
@@ -2042,7 +2247,10 @@ disk_write(
     LBA_t Block;
     ULONG Slot;
     ULONG BlockBytes;
+    ULONG CacheCapacity;
     ULONG Length;
+    LBA_t StreamOffset;
+    NTSTATUS Status;
 
     if (!ExFatGlobalData || PhysicalDrive >= FF_VOLUMES || !Buffer || !Count)
         return RES_PARERR;
@@ -2060,11 +2268,70 @@ disk_write(
     Offset.QuadPart = Sector * Vcb->BytesPerSector;
     Length = Count * Vcb->BytesPerSector;
 
+    if (Vcb->StreamCacheMode == EXFAT_STREAM_CACHE_WRITE &&
+        ExFatSectorRangeContains(Vcb->StreamCacheSector,
+                                 Vcb->StreamCacheCount,
+                                 Sector,
+                                 Count))
+    {
+        RtlCopyMemory((PUCHAR)Vcb->StreamCacheBuffer +
+                          (SIZE_T)(Sector - Vcb->StreamCacheSector) *
+                              Vcb->BytesPerSector,
+                      Buffer,
+                      Length);
+        Vcb->StreamReadNextSector = EXFAT_STREAM_READ_NONE;
+        return RES_OK;
+    }
+
     if (Count > 1)
     {
         if (!NT_SUCCESS(ExFatFlushSectorCacheRange(Vcb, Sector, Count)))
             return RES_ERROR;
         ExFatInvalidateSectorCacheRange(Vcb, Sector, Count);
+
+        CacheCapacity = EXFAT_STREAM_CACHE_SIZE / Vcb->BytesPerSector;
+        if (Count <= CacheCapacity && ExFatEnsureStreamCache(Vcb))
+        {
+            if (Vcb->StreamCacheMode == EXFAT_STREAM_CACHE_READ)
+            {
+                Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
+                Vcb->StreamCacheCount = 0;
+            }
+            if (Vcb->StreamCacheMode == EXFAT_STREAM_CACHE_WRITE)
+            {
+                if (Sector >= Vcb->StreamCacheSector)
+                {
+                    StreamOffset = Sector - Vcb->StreamCacheSector;
+                    if (StreamOffset <= Vcb->StreamCacheCount &&
+                        StreamOffset <= CacheCapacity &&
+                        Count <= CacheCapacity - (ULONG)StreamOffset)
+                    {
+                        RtlCopyMemory((PUCHAR)Vcb->StreamCacheBuffer +
+                                          (SIZE_T)StreamOffset *
+                                              Vcb->BytesPerSector,
+                                      Buffer,
+                                      Length);
+                        Vcb->StreamCacheCount = max(Vcb->StreamCacheCount,
+                                                    (ULONG)StreamOffset + Count);
+                        return RES_OK;
+                    }
+                }
+
+                Status = ExFatFlushStreamCache(Vcb);
+                if (!NT_SUCCESS(Status))
+                    return RES_ERROR;
+            }
+
+            RtlCopyMemory(Vcb->StreamCacheBuffer, Buffer, Length);
+            Vcb->StreamCacheSector = Sector;
+            Vcb->StreamCacheCount = Count;
+            Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_WRITE;
+            return RES_OK;
+        }
+
+        Status = ExFatFlushStreamCache(Vcb);
+        if (!NT_SUCCESS(Status))
+            return RES_ERROR;
         return NT_SUCCESS(ExFatReadWriteDevice(Vcb->StorageDevice,
                                                IRP_MJ_WRITE,
                                                (PVOID)Buffer,
@@ -2072,6 +2339,17 @@ disk_write(
                                                &Offset,
                                                TRUE)) ? RES_OK : RES_ERROR;
     }
+
+    if (Vcb->StreamCacheMode == EXFAT_STREAM_CACHE_READ &&
+        ExFatSectorRangesOverlap(Vcb->StreamCacheSector,
+                                 Vcb->StreamCacheCount,
+                                 Sector,
+                                 Count))
+    {
+        Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
+        Vcb->StreamCacheCount = 0;
+    }
+    Vcb->StreamReadNextSector = EXFAT_STREAM_READ_NONE;
 
     if (ExFatEnsureSectorCache(Vcb))
     {
@@ -2142,11 +2420,11 @@ disk_ioctl(
     {
         case CTRL_SYNC:
             /*
-             * FatFs raises this after every metadata update. Keep dirty blocks
-             * in the filesystem cache until write-through, explicit flush,
-             * eviction, volume lock, or shutdown.
+             * Complete accumulated file data now. Dirty metadata blocks remain
+             * cached until write-through, explicit flush, eviction, volume
+             * lock, or shutdown.
              */
-            return RES_OK;
+            return NT_SUCCESS(ExFatFlushStreamCache(Vcb)) ? RES_OK : RES_ERROR;
         case GET_SECTOR_COUNT:
             if (!Buffer)
                 return RES_PARERR;
