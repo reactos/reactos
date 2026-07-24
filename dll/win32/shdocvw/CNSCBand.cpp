@@ -281,7 +281,7 @@ CNSCBand::_IsTreeItemInEnum(
     CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
     while (pEnum->Next(1, &pidlTemp, NULL) == S_OK)
     {
-        if (ILIsEqual(pidlTemp, pItemData->relativePidl))
+        if (ILIsEqual(pidlTemp, pItemData->GetLeaf()))
             return TRUE;
 
         pidlTemp.Free();
@@ -299,11 +299,83 @@ CNSCBand::_TreeItemHasThisChild(
          hItem = TreeView_GetNextSibling(m_hwndTreeView, hItem))
     {
         CItemData* pItemData = _GetItemData(hItem);
-        if (ILIsEqual(pItemData->relativePidl, pidlChild))
+        if (ILIsEqual(pItemData->GetLeaf(), pidlChild))
             return TRUE;
     }
 
     return FALSE;
+}
+
+HTREEITEM
+CNSCBand::_FindItem(
+    _In_ PCIDLIST_ABSOLUTE pidl,
+    _Out_opt_ CItemData **ppData,
+    _In_ HTREEITEM hBase)
+{
+    HTREEITEM hItem = hBase ? hBase : TreeView_GetRoot(m_hwndTreeView);
+    for (; hItem; hItem = TreeView_GetNextSibling(m_hwndTreeView, hItem))
+    {
+        CItemData *pData = _GetItemData(hItem);
+        if (ILIsEqual(pData->absolutePidl, pidl))
+        {
+            if (ppData)
+                *ppData = pData;
+            return hItem;
+        }
+        HTREEITEM hChild = TreeView_GetChild(m_hwndTreeView, hItem);
+        if (hChild && (hChild = _FindItem(pidl, ppData, hChild)) != NULL)
+            return hChild;
+    }
+    return NULL;
+}
+
+HRESULT
+CNSCBand::_UpdateItem(
+    _In_ HTREEITEM hItem,
+    _In_ CItemData *pData,
+    _In_ PCIDLIST_ABSOLUTE pidl,
+    _In_ UINT UIF)
+{
+    HRESULT hr = S_OK;
+    CComPtr<IShellFolder> pSF;
+    PCUITEMID_CHILD pidlItem;
+    CComHeapPtr<ITEMIDLIST> absolutePidl, childPidl, tempPidl;
+    if (FAILED(hr = SHILClone(pidl, &absolutePidl)))
+        return hr;
+    if (UIF & (UIF_TEXT | UIF_IMAGE | UIF_GETREAL))
+        hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pSF), &pidlItem);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    if (UIF & UIF_GETREAL)
+    {
+        if (FAILED_UNEXPECTEDLY(hr = SHGetRealIDL(pSF, pidlItem, &childPidl)))
+            return hr;
+        ILRemoveLastID(absolutePidl);
+        if (FAILED(hr = SHILCombine(absolutePidl, childPidl, &tempPidl)))
+            return hr;
+        absolutePidl = tempPidl;
+        pidlItem = childPidl;
+    }
+
+    WCHAR szName[MAX_PATH];
+    if ((UIF & UIF_TEXT) && FAILED_UNEXPECTEDLY(hr = _GetNameOfItem(pSF, pidlItem, szName)))
+        return hr;
+    TVITEM tvi;
+    tvi.hItem = hItem;
+    tvi.mask = TVIF_HANDLE | (UIF & (TVIF_TEXT));
+    tvi.pszText = szName;
+    if (UIF & UIF_IMAGE)
+    {
+        tvi.iImage = SHMapPIDLToSystemImageListIndex(pSF, pidlItem, &tvi.iSelectedImage);
+        tvi.iSelectedImage = tvi.iSelectedImage >= 0 ? tvi.iSelectedImage : tvi.iImage;
+        if (tvi.iImage >= 0)
+            tvi.mask |= TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+    }
+    if (!TreeView_SetItem(m_hwndTreeView, &tvi))
+        return E_FAIL;
+    pData->Attach(absolutePidl.Detach());
+    _SortItems(TreeView_GetParent(m_hwndTreeView, hItem));
+    return S_OK;
 }
 
 HRESULT
@@ -433,6 +505,26 @@ CNSCBand::OnChangeNotify(
     _In_opt_ LPCITEMIDLIST pidl1,
     _In_ LONG lEvent)
 {
+    HTREEITEM hItem;
+    CItemData* pID;
+    switch (lEvent) // Try to handle events without doing a full refresh
+    {
+        case SHCNE_UPDATEITEM:
+        case SHCNE_UPDATEDIR:
+            pidl1 = pidl0;
+            // fallthrough
+        case SHCNE_RENAMEFOLDER:
+            if ((hItem = _FindItem(pidl0, &pID)) != NULL && SUCCEEDED(_UpdateItem(hItem, pID, pidl1, UIF_ALL | UIF_GETREAL)))
+                return;
+            break;
+        case SHCNE_DRIVEREMOVED:
+        case SHCNE_RMDIR:
+            if ((hItem = _FindItem(pidl0, &pID)) != NULL && TreeView_DeleteItem(m_hwndTreeView, hItem))
+                return;
+            break;
+        // TODO: SHCNE_DRIVEADD, SHCNE_MKDIR
+        // TODO: SHCNE_UPDATEIMAGE
+    }
     switch (lEvent)
     {
         case SHCNE_DRIVEADD:
@@ -486,8 +578,12 @@ CNSCBand::_InsertItem(
         ERR("Failed to allocate CItemData\n");
         return NULL;
     }
-    pChildInfo->absolutePidl.Attach(ILClone(pElt));
-    pChildInfo->relativePidl.Attach(ILClone(pEltRelative));
+    pChildInfo->expanded = FALSE;
+    if (FAILED(pChildInfo->Set(pElt))) // TODO: Optimize this by taking ownership of pElt and call Attach
+    {
+        delete pChildInfo;
+        return NULL;
+    }
 
     // Set up our treeview template
     TV_INSERTSTRUCT tvInsert = { hParent, TVI_LAST };
@@ -797,7 +893,7 @@ LRESULT CNSCBand::OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
     return TRUE;
 }
 
-HRESULT CNSCBand::_UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL IgnoreSelfNavigation)
+HRESULT CNSCBand::_UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL IgnoreSelfNavigation, UINT SBSP)
 {
     CComPtr<IShellBrowser> pBrowserService;
     HRESULT hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser,
@@ -816,7 +912,7 @@ HRESULT CNSCBand::_UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL IgnoreSelfNavigati
         if (SUCCEEDED(hr))
             return hr;
     }
-    hr = pBrowserService->BrowseObject(pidlGoto, SBSP_SAMEBROWSER | SBSP_ABSOLUTE);
+    hr = pBrowserService->BrowseObject(pidlGoto, SBSP_SAMEBROWSER | SBSP_ABSOLUTE | SBSP);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -872,31 +968,21 @@ LRESULT CNSCBand::OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
             return FALSE;
 
         CComHeapPtr<ITEMIDLIST> pidlNewAbs(ILCombine(pidlParent, pidlNew));
+
+        // RegItems can be renamed to their default name (not the string we have in NMTVDISPINFO) by IShellFolder.
+        // We should therefore try to manually update the name instead of letting the treeview do it for us.
+        AllowTreeSetNewName = FAILED(_UpdateItem(dispInfo->item.hItem, info, pidlNewAbs));
         if (RenamedCurrent)
         {
-            // Get the new item name from the folder because RegItems can be renamed to their
-            // default name by the folder (which is not the string we have in NMTVDISPINFO).
-            WCHAR wszDisplayName[MAX_PATH];
-            if (SUCCEEDED(_GetNameOfItem(pParent, pidlNew, wszDisplayName)))
-            {
-                TVITEMW tvi;
-                tvi.mask = TVIF_TEXT;
-                tvi.hItem = dispInfo->item.hItem;
-                tvi.pszText = wszDisplayName;
-                AllowTreeSetNewName = !m_hwndTreeView.SetItem(&tvi);
-            }
-
-            _UpdateBrowser(pidlNewAbs, TRUE);
+            _UpdateBrowser(pidlNewAbs, TRUE, SBSP_ACTIVATE_NOFOCUS); // The PIDL changed, the view needs to update
         }
         else
         {
             // Tell everyone if SetNameOf forgot, this causes IShellView to update itself when we rename a child
             SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_IDLIST, info->absolutePidl, pidlNewAbs);
         }
-
         return AllowTreeSetNewName;
     }
-
     return FALSE;
 }
 
@@ -930,13 +1016,15 @@ LRESULT CNSCBand::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 if (HitTest.flags & TVHT_ONITEMBUTTON) // [+] / [-]
                     break; // Do default processing
 
+                HTREEITEM hCurrent = TreeView_GetSelection(m_hwndTreeView);
                 // Generate selection notification even if same item
                 m_hwndTreeView.SendMessage(WM_SETREDRAW, FALSE, 0);
+                // FIXME: This is incorrect, it's legal to right-click another item without causing a navigation
                 TreeView_SelectItem(m_hwndTreeView, NULL);
                 TreeView_SelectItem(m_hwndTreeView, HitTest.hItem);
                 m_hwndTreeView.SendMessage(WM_SETREDRAW, TRUE, 0);
 
-                if (pnmhdr->code == NM_CLICK)
+                if (pnmhdr->code == NM_CLICK && HitTest.hItem != hCurrent)
                     return TRUE; // Prevents click processing
             }
             break;
@@ -1395,8 +1483,7 @@ STDMETHODIMP CNSCBand::IsWindowOwner(HWND hWnd)
 
 STDMETHODIMP CNSCBand::Select(LPCITEMIDLIST pidl)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    return _UpdateBrowser(pidl, TRUE);
 }
 
 // *** INamespaceProxy ***
