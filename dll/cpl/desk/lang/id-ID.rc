@@ -114,7 +114,7 @@ BEGIN
     AUTOCHECKBOX "Gu&nakan cara berikut untuk menghaluskan tepi fon pada layar:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "&Gunakan ikon besar", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "&Gunakan ikon besar", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP
     AUTOCHECKBOX "Tampilkan &bayangan di bawah menu", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
     AUTOCHECKBOX "&Tampilkan konten jendela ketika digeser", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
     AUTOCHECKBOX "&Sembunyikan huruf yang digarisbawahi untuk navigasi papan ketik sampai tombol Alt tertekan", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 23

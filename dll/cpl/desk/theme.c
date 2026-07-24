@@ -361,6 +361,21 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
         RegCloseKey(hKey);
     }
 
+    /* Write the icon size to registry */
+    Result = RegCreateKeyW(HKEY_CURRENT_USER, g_CPMetrics, &hKey);
+    if (Result == ERROR_SUCCESS)
+    {
+        wsprintf(clText, L"%d", scheme->iIconSize);
+
+        RegSetValueExW(hKey,
+                       L"Shell Icon Size",
+                       0,
+                       REG_SZ,
+                       (BYTE *)clText,
+                       (lstrlen(clText) + 1) * sizeof(WCHAR));
+        RegCloseKey(hKey);
+    }
+
     /* Apply non client metrics */
     SystemParametersInfoW(SPI_SETNONCLIENTMETRICS,
                           sizeof(NONCLIENTMETRICS),

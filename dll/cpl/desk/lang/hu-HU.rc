@@ -116,7 +116,7 @@ BEGIN
     AUTOCHECKBOX "Az alábbi módszert használja a képernyőn megjelenő &betűtípusok simítására:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Nagy &ikonok használata", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Nagy &ikonok használata", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP
     AUTOCHECKBOX "Árnyékok megjelenítése a &menük alatt", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
     AUTOCHECKBOX "&Ablakok tartalmának mutatása mozgatás közben", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
     AUTOCHECKBOX "Alá&húzott betűk elrejtése a billentyűzet navigációhoz az ALT megnyomásáig", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19

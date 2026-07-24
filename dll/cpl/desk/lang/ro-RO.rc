@@ -123,7 +123,7 @@ BEGIN
     AUTOCHECKBOX "&Folosire a următoarei metode pentru a netezi marginile fonturilor de pe ecran:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Se folosesc &pictograme mari", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Se folosesc &pictograme mari", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP
     AUTOCHECKBOX "Afişare a &umbrelor sub meniuri", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
     AUTOCHECKBOX "Afișare a conținutului &ferestrei în timpul tragerii", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
     AUTOCHECKBOX "&Ascunde litere subliniate pentru navigarea din tastatură până se apasă tasta Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
