@@ -873,6 +873,7 @@ WriteMetafiles(VOID)
 {
     NTSTATUS  Status;
     PBYTE     Mft;
+    PBYTE     Val;
     ULONG     C = BYTES_PER_CLUSTER;
     ULONGLONG Now = FORMAT_TIME;
     ULONGLONG ClusterCount = LAYOUT.ClusterCount;
@@ -910,9 +911,16 @@ WriteMetafiles(VOID)
     }
     RtlZeroMemory(Mft, MREC_COUNT * MFT_RECORD_SIZE);
 
+    Val = RtlAllocateHeap(RtlGetProcessHeap(), 0, 2048);
+    if (!Val)
+    {
+        DPRINT1("ERROR: Unable to allocate attribute scratch buffer!\n");
+        FREE(Mft);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
     {
         MK_REC Rec;
-        BYTE   Val[2048];
         ULONG  Len;
         MK_RUN Runs[1];
 
@@ -1515,6 +1523,7 @@ WriteMetafiles(VOID)
     if (!NT_SUCCESS(Status)) { DPRINT1("ERROR: zero TxF payloads (Status %lx)\n", Status); goto done; }
 
 done:
+    FREE(Val);
     FREE(Mft);
     return Status;
 }
