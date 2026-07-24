@@ -25,15 +25,13 @@
  */
 
 #include "mntmgr.h"
+#include <diskguid.h>
 
 #define NDEBUG
 #include <debug.h>
 
 /* FIXME */
 GUID MountedDevicesGuid = {0x53F5630D, 0xB6BF, 0x11D0, {0x94, 0xF2, 0x00, 0xA0, 0xC9, 0x1E, 0xFB, 0x8B}};
-static const GUID MountMgrEfiSystemPartitionGuid = {0xC12A7328, 0xF81F, 0x11D2, {0xBA, 0x4B, 0x00, 0xA0, 0xC9, 0x3E, 0xC9, 0x3B}};
-/* ntdddisk.h currently truncates this GPT attribute to 32 bits. */
-static const ULONGLONG MountMgrGptNoDriveLetterAttribute = ((ULONGLONG)1 << 63);
 
 PDEVICE_OBJECT gdeviceObject;
 KEVENT UnloadEvent;
@@ -345,10 +343,10 @@ QueryDeviceInformation(
         if (PartitionInfo.PartitionStyle == PARTITION_STYLE_MBR)
             IsEfiSystemPartition = (PartitionInfo.Mbr.PartitionType == PARTITION_SYSTEM);
         else if (PartitionInfo.PartitionStyle == PARTITION_STYLE_GPT)
-            IsEfiSystemPartition = IsEqualGUID(&PartitionInfo.Gpt.PartitionType, &MountMgrEfiSystemPartitionGuid);
+            IsEfiSystemPartition = IsEqualGUID(&PartitionInfo.Gpt.PartitionType, &PARTITION_SYSTEM_GUID);
 
         /* EFI system partitions and fixed GPT volumes marked no-drive-letter stay unassigned. */
-        if (IsEfiSystemPartition || (!IsRemovable && PartitionInfo.PartitionStyle == PARTITION_STYLE_GPT && (PartitionInfo.Gpt.Attributes & MountMgrGptNoDriveLetterAttribute)))
+        if (IsEfiSystemPartition || (!IsRemovable && PartitionInfo.PartitionStyle == PARTITION_STYLE_GPT && (PartitionInfo.Gpt.Attributes & GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER)))
             *DriveLetterAllowed = FALSE;
     }
 
