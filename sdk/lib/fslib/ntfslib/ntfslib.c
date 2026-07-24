@@ -232,6 +232,61 @@ ComputeLayout(IN ULONG ClusterSize)
     return STATUS_SUCCESS;
 }
 
+//
+// Zeroes the primary and backup boot sectors (the latter one sector past the
+// addressable area). Called first, right after lock/dismount: from that moment
+// the volume reads as RAW, so an interrupted format cannot leave a partially
+// recognizable mix of stale and new metadata. The new boot sector is written
+// last, once all metadata is complete.
+//
+static
+NTSTATUS
+InvalidateStaleBootSectors(VOID)
+{
+    NTSTATUS        Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER   Offset;
+    PBYTE           Sector;
+    ULONG           Bps = BYTES_PER_SECTOR;
+
+    Sector = RtlAllocateHeap(RtlGetProcessHeap(), 0, Bps);
+    if (!Sector)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlZeroMemory(Sector, Bps);
+
+    // Primary boot sector
+    Offset.QuadPart = 0LL;
+    Status = NtWriteFile(DISK_HANDLE,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         Sector,
+                         Bps,
+                         &Offset,
+                         NULL);
+
+    // Backup boot sector
+    if (NT_SUCCESS(Status))
+    {
+        Offset.QuadPart = (LONGLONG)TOTAL_SECTORS * Bps;
+        Status = NtWriteFile(DISK_HANDLE,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             Sector,
+                             Bps,
+                             &Offset,
+                             NULL);
+    }
+
+    FREE(Sector);
+
+    return Status;
+}
+
 BOOLEAN
 NTAPI
 NtfsFormat(
@@ -357,23 +412,15 @@ NtfsFormat(
         goto end;
     }
 
-    // Lock volume
-    NtFsControlFile(DiskHandle,
-                    NULL,
-                    NULL,
-                    NULL,
-                    &Iosb,
-                    FSCTL_LOCK_VOLUME,
-                    NULL,
-                    0,
-                    NULL,
-                    0);
+    NtFsControlFile(DiskHandle, NULL, NULL, NULL, &Iosb, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0);
+    NtFsControlFile(DiskHandle, NULL, NULL, NULL, &Iosb, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0);
 
-    // Write boot sector
-    Status = WriteBootSector();
+    // Kill any stale boot sectors FIRST: the volume reads as RAW from here on,
+    // so no partially-formatted state is ever recognizable as a filesystem.
+    Status = InvalidateStaleBootSectors();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("WriteBootSector() failed with status 0x%.08x\n", Status);
+        DPRINT1("InvalidateStaleBootSectors() failed with status 0x%.08x\n", Status);
         goto end;
     }
 
@@ -382,6 +429,15 @@ NtfsFormat(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("WriteMetafiles() failed with status 0x%.08x\n", Status);
+        goto end;
+    }
+
+    // Write the boot sector LAST - only now, with all metadata complete behind
+    // it, does the volume become recognizable as NTFS.
+    Status = WriteBootSector();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("WriteBootSector() failed with status 0x%.08x\n", Status);
         goto end;
     }
 

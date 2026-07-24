@@ -957,25 +957,29 @@ CreateExtend()
 }
 
 //
-// Reserved MFT records (12..15) are formatted FILE records that are NOT in use
-// and carry no attributes. chkdsk treats records 0..15 as reserved system
-// segments and expects 12..15 to stay empty.
+// Reserved MFT records (12..15). Windows formats these as in-use stubs holding
+// $STANDARD_INFORMATION and an empty resident unnamed $DATA - no $FILE_NAME,
+// zero hard links, and their bits set in the $MFT bitmap. chkdsk repairs any
+// other shape.
 //
 static
 PFILE_RECORD_HEADER
 CreateStub(IN DWORD32 MftRecordNumber)
 {
     PFILE_RECORD_HEADER FileRecord;
+    PATTR_RECORD        NextAttribute;
 
-    FileRecord = NtfsCreateEmptyFileRecord(MftRecordNumber);
+    // In-use record with $STANDARD_INFORMATION; no name, so no $FILE_NAME is
+    // added and HardLinkCount stays 0.
+    FileRecord = NtfsCreateBlankFileRecord(MftRecordNumber, &NextAttribute);
     if (!FileRecord)
     {
         DPRINT1("ERROR: Unable to allocate memory for stub #%d file record!\n", MftRecordNumber);
         return NULL;
     }
 
-    // Not in use: clear the in-use flag; leave only the attribute-end marker.
-    FileRecord->Flags = 0;
+    // Empty resident unnamed $DATA
+    AddEmptyDataAttribute(FileRecord, NextAttribute);
 
     return FileRecord;
 }
@@ -1005,9 +1009,9 @@ static NTSTATUS WriteMftBitmap()
 
     RtlZeroMemory(Data, Size);
 
-    // Mark the in-use system records (0..11) as allocated. Records 12..15 are
-    // reserved-but-not-in-use, so they are left free here.
-    for (i = 0; i <= METAFILE_EXTEND; i++)
+    // Mark all system records (0..15) as allocated, including the reserved
+    // stubs 12..15, which Windows keeps in-use.
+    for (i = 0; i <= 15; i++)
     {
         Data[i / 8] |= (1 << (i % 8));
     }
