@@ -1752,7 +1752,7 @@ InstallBootManagerAndBootEntries(
         } DISK_GEOMETRY_EX_INTERNAL, *PDISK_GEOMETRY_EX_INTERNAL;
 
         DISK_GEOMETRY_EX_INTERNAL DiskGeoEx;
-        PARTITION_INFORMATION_EX PartitionInfo;
+        PARTITION_INFORMATION PartitionInfo;
 
         /* Retrieve the disk number. NOTE: Fails for floppy disks. */
         Status = NtDeviceIoControlFile(DeviceHandle,
@@ -1798,7 +1798,7 @@ InstallBootManagerAndBootEntries(
         Status = NtDeviceIoControlFile(DeviceHandle,
                                        NULL, NULL, NULL,
                                        &IoStatusBlock,
-                                       IOCTL_DISK_GET_PARTITION_INFO_EX,
+                                       IOCTL_DISK_GET_PARTITION_INFO,
                                        NULL, 0,
                                        &PartitionInfo,
                                        sizeof(PartitionInfo));

@@ -493,7 +493,7 @@ BOOLEAN
 IsDiskSuperFloppy2(
     _In_ const DISK_PARTITION_INFO* DiskInfo,
     _In_opt_ const ULONGLONG* DiskSize,
-    _In_ const PARTITION_INFORMATION_EX* PartitionInfo)
+    _In_ const PARTITION_INFORMATION* PartitionInfo)
 {
     /* Structure size must be valid */
     if (DiskInfo->SizeOfPartitionInfo < RTL_SIZEOF_THROUGH_FIELD(DISK_PARTITION_INFO, Mbr))
@@ -505,7 +505,7 @@ IsDiskSuperFloppy2(
 
     /* The single partition must start at the beginning of the disk */
     if (!(PartitionInfo->StartingOffset.QuadPart == 0 &&
-          PartitionInfo->Mbr.HiddenSectors == 0))
+          PartitionInfo->HiddenSectors == 0))
     {
         return FALSE;
     }
@@ -517,17 +517,17 @@ IsDiskSuperFloppy2(
     }
 
     /* The partition must be recognized and report as FAT16 non-bootable */
-    if ((PartitionInfo->Mbr.RecognizedPartition != TRUE) ||
-        (PartitionInfo->Mbr.PartitionType != PARTITION_FAT_16) ||
-        (PartitionInfo->Mbr.BootIndicator != FALSE))
+    if ((PartitionInfo->RecognizedPartition != TRUE) ||
+        (PartitionInfo->PartitionType != PARTITION_FAT_16) ||
+        (PartitionInfo->BootIndicator != FALSE))
     {
         DPRINT1("Super-Floppy does not return default settings:\n"
                 "    RecognizedPartition = %s, expected TRUE\n"
                 "    PartitionType = 0x%02x, expected 0x04 (PARTITION_FAT_16)\n"
                 "    BootIndicator = %s, expected FALSE\n",
-                PartitionInfo->Mbr.RecognizedPartition ? "TRUE" : "FALSE",
-                PartitionInfo->Mbr.PartitionType,
-                PartitionInfo->Mbr.BootIndicator ? "TRUE" : "FALSE");
+                PartitionInfo->RecognizedPartition ? "TRUE" : "FALSE",
+                PartitionInfo->PartitionType,
+                PartitionInfo->BootIndicator ? "TRUE" : "FALSE");
     }
 
     /* The partition and disk sizes should agree */
@@ -542,7 +542,7 @@ IsDiskSuperFloppy2(
 
 BOOLEAN
 IsDiskSuperFloppy(
-    _In_ const DRIVE_LAYOUT_INFORMATION_EX* Layout,
+    _In_ const DRIVE_LAYOUT_INFORMATION* Layout,
     _In_opt_ const ULONGLONG* DiskSize)
 {
     DISK_PARTITION_INFO DiskInfo;
@@ -554,7 +554,7 @@ IsDiskSuperFloppy(
     /* Build the disk partition info */
     DiskInfo.SizeOfPartitionInfo = RTL_SIZEOF_THROUGH_FIELD(DISK_PARTITION_INFO, Mbr);
     DiskInfo.PartitionStyle = PARTITION_STYLE_MBR;
-    DiskInfo.Mbr.Signature = Layout->Mbr.Signature;
+    DiskInfo.Mbr.Signature = Layout->Signature;
     DiskInfo.Mbr.CheckSum = 0; // Dummy value
 
     /* Call the helper on the single partition entry */
@@ -568,7 +568,7 @@ IsDiskSuperFloppyEx(
 {
     DISK_PARTITION_INFO DiskInfo;
     const PARTITION_INFORMATION_EX* PartitionInfoEx;
-    PARTITION_INFORMATION_EX PartitionInfo;
+    PARTITION_INFORMATION PartitionInfo;
 
     /* The layout must be MBR and contain only one partition */
     if (LayoutEx->PartitionStyle != PARTITION_STYLE_MBR)
@@ -587,11 +587,11 @@ IsDiskSuperFloppyEx(
 
     PartitionInfo.StartingOffset = PartitionInfoEx->StartingOffset;
     PartitionInfo.PartitionLength = PartitionInfoEx->PartitionLength;
-    PartitionInfo.Mbr.HiddenSectors = PartitionInfoEx->Mbr.HiddenSectors;
+    PartitionInfo.HiddenSectors = PartitionInfoEx->Mbr.HiddenSectors;
     PartitionInfo.PartitionNumber = PartitionInfoEx->PartitionNumber;
-    PartitionInfo.Mbr.PartitionType = PartitionInfoEx->Mbr.PartitionType;
-    PartitionInfo.Mbr.BootIndicator = PartitionInfoEx->Mbr.BootIndicator;
-    PartitionInfo.Mbr.RecognizedPartition = PartitionInfoEx->Mbr.RecognizedPartition;
+    PartitionInfo.PartitionType = PartitionInfoEx->Mbr.PartitionType;
+    PartitionInfo.BootIndicator = PartitionInfoEx->Mbr.BootIndicator;
+    PartitionInfo.RecognizedPartition = PartitionInfoEx->Mbr.RecognizedPartition;
     PartitionInfo.RewritePartition = PartitionInfoEx->RewritePartition;
 
     /* Call the helper on the single partition entry */
@@ -1043,16 +1043,16 @@ AddPartitionToDisk(
     IN ULONG PartitionIndex,
     IN BOOLEAN LogicalPartition)
 {
-    PPARTITION_INFORMATION_EX PartitionInfo;
+    PPARTITION_INFORMATION PartitionInfo;
     PPARTENTRY PartEntry;
 
     PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartitionIndex];
 
     /* Ignore empty partitions */
-    if (PartitionInfo->Mbr.PartitionType == PARTITION_ENTRY_UNUSED)
+    if (PartitionInfo->PartitionType == PARTITION_ENTRY_UNUSED)
         return;
     /* Request must be consistent, though! */
-    ASSERT(!(LogicalPartition && IsContainerPartition(PartitionInfo->Mbr.PartitionType)));
+    ASSERT(!(LogicalPartition && IsContainerPartition(PartitionInfo->PartitionType)));
 
     PartEntry = RtlAllocateHeap(ProcessHeap,
                                 HEAP_ZERO_MEMORY,
@@ -1065,8 +1065,8 @@ AddPartitionToDisk(
     PartEntry->StartSector.QuadPart = (ULONGLONG)PartitionInfo->StartingOffset.QuadPart / DiskEntry->BytesPerSector;
     PartEntry->SectorCount.QuadPart = (ULONGLONG)PartitionInfo->PartitionLength.QuadPart / DiskEntry->BytesPerSector;
 
-    PartEntry->BootIndicator = PartitionInfo->Mbr.BootIndicator;
-    PartEntry->PartitionType = PartitionInfo->Mbr.PartitionType;
+    PartEntry->BootIndicator = PartitionInfo->BootIndicator;
+    PartEntry->PartitionType = PartitionInfo->PartitionType;
 
     PartEntry->LogicalPartition = LogicalPartition;
     PartEntry->IsPartitioned = TRUE;
@@ -1360,7 +1360,7 @@ SetDiskSignature(
         return;
     }
 
-    Buffer = (PUCHAR)&DiskEntry->LayoutBuffer->Mbr.Signature;
+    Buffer = (PUCHAR)&DiskEntry->LayoutBuffer->Signature;
 
     while (TRUE)
     {
@@ -1372,7 +1372,7 @@ SetDiskSignature(
         Buffer[2] = (UCHAR)(TimeFields.Month & 0xFF) + (UCHAR)(TimeFields.Second & 0xFF);
         Buffer[3] = (UCHAR)(TimeFields.Day & 0xFF) + (UCHAR)(TimeFields.Milliseconds & 0xFF);
 
-        if (DiskEntry->LayoutBuffer->Mbr.Signature == 0)
+        if (DiskEntry->LayoutBuffer->Signature == 0)
         {
             continue;
         }
@@ -1395,7 +1395,7 @@ SetDiskSignature(
             }
 
             if (DiskEntry != DiskEntry2 &&
-                DiskEntry->LayoutBuffer->Mbr.Signature == DiskEntry2->LayoutBuffer->Mbr.Signature)
+                DiskEntry->LayoutBuffer->Signature == DiskEntry2->LayoutBuffer->Signature)
                 break;
         }
 
@@ -1426,7 +1426,7 @@ UpdateDiskSignatures(
         }
 
         if (DiskEntry->LayoutBuffer &&
-            DiskEntry->LayoutBuffer->Mbr.Signature == 0)
+            DiskEntry->LayoutBuffer->Signature == 0)
         {
             SetDiskSignature(List, DiskEntry);
             DiskEntry->LayoutBuffer->PartitionEntry[0].RewritePartition = TRUE;
@@ -1517,7 +1517,7 @@ AddDiskToList(
     PLIST_ENTRY ListEntry;
     PBIOSDISKENTRY BiosDiskEntry;
     ULONG LayoutBufferSize;
-    PDRIVE_LAYOUT_INFORMATION_EX NewLayoutBuffer;
+    PDRIVE_LAYOUT_INFORMATION NewLayoutBuffer;
 
     /* Retrieve the drive geometry */
     Status = NtDeviceIoControlFile(FileHandle,
@@ -1814,7 +1814,7 @@ AddDiskToList(
                                        NULL,
                                        NULL,
                                        &Iosb,
-                                       IOCTL_DISK_GET_DRIVE_LAYOUT_EX,
+                                       IOCTL_DISK_GET_DRIVE_LAYOUT,
                                        NULL,
                                        0,
                                        DiskEntry->LayoutBuffer,
@@ -1853,7 +1853,7 @@ AddDiskToList(
 
     if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart != 0 &&
         DiskEntry->LayoutBuffer->PartitionEntry[0].PartitionLength.QuadPart != 0 &&
-        DiskEntry->LayoutBuffer->PartitionEntry[0].Mbr.PartitionType != PARTITION_ENTRY_UNUSED)
+        DiskEntry->LayoutBuffer->PartitionEntry[0].PartitionType != PARTITION_ENTRY_UNUSED)
     {
         if ((DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector) % DiskEntry->SectorsPerTrack == 0)
         {
@@ -2280,7 +2280,7 @@ GetDiskBySignature(
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
-        if (DiskEntry->LayoutBuffer->Mbr.Signature == Signature)
+        if (DiskEntry->LayoutBuffer->Signature == Signature)
             return DiskEntry; /* Disk found, return it */
     }
 
@@ -2546,7 +2546,7 @@ GetPrevPartition(
 static inline
 BOOLEAN
 IsEmptyLayoutEntry(
-    _In_ PPARTITION_INFORMATION_EX PartitionInfo)
+    _In_ PPARTITION_INFORMATION PartitionInfo)
 {
     return (PartitionInfo->StartingOffset.QuadPart == 0 &&
             PartitionInfo->PartitionLength.QuadPart == 0);
@@ -2555,7 +2555,7 @@ IsEmptyLayoutEntry(
 static inline
 BOOLEAN
 IsSamePrimaryLayoutEntry(
-    _In_ PPARTITION_INFORMATION_EX PartitionInfo,
+    _In_ PPARTITION_INFORMATION PartitionInfo,
     _In_ PPARTENTRY PartEntry)
 {
     return ((PartitionInfo->StartingOffset.QuadPart == GetPartEntryOffsetInBytes(PartEntry)) &&
@@ -2602,7 +2602,7 @@ BOOLEAN
 ReAllocateLayoutBuffer(
     IN PDISKENTRY DiskEntry)
 {
-    PDRIVE_LAYOUT_INFORMATION_EX NewLayoutBuffer;
+    PDRIVE_LAYOUT_INFORMATION NewLayoutBuffer;
     ULONG NewPartitionCount;
     ULONG CurrentPartitionCount = 0;
     ULONG LayoutBufferSize;
@@ -2654,8 +2654,8 @@ VOID
 UpdateDiskLayout(
     IN PDISKENTRY DiskEntry)
 {
-    PPARTITION_INFORMATION_EX PartitionInfo;
-    PPARTITION_INFORMATION_EX LinkInfo;
+    PPARTITION_INFORMATION PartitionInfo;
+    PPARTITION_INFORMATION LinkInfo;
     PLIST_ENTRY ListEntry;
     PPARTENTRY PartEntry;
     LARGE_INTEGER HiddenSectors64;
@@ -2704,11 +2704,11 @@ UpdateDiskLayout(
 
                 PartitionInfo->StartingOffset.QuadPart = GetPartEntryOffsetInBytes(PartEntry);
                 PartitionInfo->PartitionLength.QuadPart = GetPartEntrySizeInBytes(PartEntry);
-                PartitionInfo->Mbr.HiddenSectors = PartEntry->StartSector.LowPart;
+                PartitionInfo->HiddenSectors = PartEntry->StartSector.LowPart;
                 PartitionInfo->PartitionNumber = PartEntry->PartitionNumber;
-                PartitionInfo->Mbr.PartitionType = PartEntry->PartitionType;
-                PartitionInfo->Mbr.BootIndicator = PartEntry->BootIndicator;
-                PartitionInfo->Mbr.RecognizedPartition = IsRecognizedPartition(PartEntry->PartitionType);
+                PartitionInfo->PartitionType = PartEntry->PartitionType;
+                PartitionInfo->BootIndicator = PartEntry->BootIndicator;
+                PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartEntry->PartitionType);
                 PartitionInfo->RewritePartition = TRUE;
             }
 
@@ -2747,11 +2747,11 @@ UpdateDiskLayout(
 
             PartitionInfo->StartingOffset.QuadPart = GetPartEntryOffsetInBytes(PartEntry);
             PartitionInfo->PartitionLength.QuadPart = GetPartEntrySizeInBytes(PartEntry);
-            PartitionInfo->Mbr.HiddenSectors = DiskEntry->SectorAlignment;
+            PartitionInfo->HiddenSectors = DiskEntry->SectorAlignment;
             PartitionInfo->PartitionNumber = PartEntry->PartitionNumber;
-            PartitionInfo->Mbr.PartitionType = PartEntry->PartitionType;
-            PartitionInfo->Mbr.BootIndicator = FALSE;
-            PartitionInfo->Mbr.RecognizedPartition = IsRecognizedPartition(PartEntry->PartitionType);
+            PartitionInfo->PartitionType = PartEntry->PartitionType;
+            PartitionInfo->BootIndicator = FALSE;
+            PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartEntry->PartitionType);
             PartitionInfo->RewritePartition = TRUE;
 
             /* Fill the link entry of the previous partition entry */
@@ -2760,16 +2760,16 @@ UpdateDiskLayout(
                 LinkInfo->StartingOffset.QuadPart = (PartEntry->StartSector.QuadPart - DiskEntry->SectorAlignment) * DiskEntry->BytesPerSector;
                 LinkInfo->PartitionLength.QuadPart = (PartEntry->StartSector.QuadPart + DiskEntry->SectorAlignment) * DiskEntry->BytesPerSector;
                 HiddenSectors64.QuadPart = PartEntry->StartSector.QuadPart - DiskEntry->SectorAlignment - DiskEntry->ExtendedPartition->StartSector.QuadPart;
-                LinkInfo->Mbr.HiddenSectors = HiddenSectors64.LowPart;
+                LinkInfo->HiddenSectors = HiddenSectors64.LowPart;
                 LinkInfo->PartitionNumber = 0;
 
                 /* Extended partition links only use type 0x05, as observed
                  * on Windows NT. Alternatively they could inherit the type
                  * of the main extended container. */
-                LinkInfo->Mbr.PartitionType = PARTITION_EXTENDED; // DiskEntry->ExtendedPartition->PartitionType;
+                LinkInfo->PartitionType = PARTITION_EXTENDED; // DiskEntry->ExtendedPartition->PartitionType;
 
-                LinkInfo->Mbr.BootIndicator = FALSE;
-                LinkInfo->Mbr.RecognizedPartition = FALSE;
+                LinkInfo->BootIndicator = FALSE;
+                LinkInfo->RecognizedPartition = FALSE;
                 LinkInfo->RewritePartition = TRUE;
             }
 
@@ -2794,11 +2794,11 @@ UpdateDiskLayout(
 
             PartitionInfo->StartingOffset.QuadPart = 0;
             PartitionInfo->PartitionLength.QuadPart = 0;
-            PartitionInfo->Mbr.HiddenSectors = 0;
+            PartitionInfo->HiddenSectors = 0;
             PartitionInfo->PartitionNumber = 0;
-            PartitionInfo->Mbr.PartitionType = PARTITION_ENTRY_UNUSED;
-            PartitionInfo->Mbr.BootIndicator = FALSE;
-            PartitionInfo->Mbr.RecognizedPartition = FALSE;
+            PartitionInfo->PartitionType = PARTITION_ENTRY_UNUSED;
+            PartitionInfo->BootIndicator = FALSE;
+            PartitionInfo->RecognizedPartition = FALSE;
             PartitionInfo->RewritePartition = TRUE;
         }
     }
@@ -2818,11 +2818,11 @@ UpdateDiskLayout(
 
                 PartitionInfo->StartingOffset.QuadPart = 0;
                 PartitionInfo->PartitionLength.QuadPart = 0;
-                PartitionInfo->Mbr.HiddenSectors = 0;
+                PartitionInfo->HiddenSectors = 0;
                 PartitionInfo->PartitionNumber = 0;
-                PartitionInfo->Mbr.PartitionType = PARTITION_ENTRY_UNUSED;
-                PartitionInfo->Mbr.BootIndicator = FALSE;
-                PartitionInfo->Mbr.RecognizedPartition = FALSE;
+                PartitionInfo->PartitionType = PARTITION_ENTRY_UNUSED;
+                PartitionInfo->BootIndicator = FALSE;
+                PartitionInfo->RecognizedPartition = FALSE;
                 PartitionInfo->RewritePartition = TRUE;
             }
         }
@@ -3645,7 +3645,7 @@ SetActivePartition(
     if (OldActivePart)
     {
         OldActivePart->BootIndicator = FALSE;
-        OldActivePart->DiskEntry->LayoutBuffer->PartitionEntry[OldActivePart->PartitionIndex].Mbr.BootIndicator = FALSE;
+        OldActivePart->DiskEntry->LayoutBuffer->PartitionEntry[OldActivePart->PartitionIndex].BootIndicator = FALSE;
         OldActivePart->DiskEntry->LayoutBuffer->PartitionEntry[OldActivePart->PartitionIndex].RewritePartition = TRUE;
         OldActivePart->DiskEntry->Dirty = TRUE;
     }
@@ -3656,7 +3656,7 @@ SetActivePartition(
 
     /* Set the new active partition */
     PartEntry->BootIndicator = TRUE;
-    PartEntry->DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].Mbr.BootIndicator = TRUE;
+    PartEntry->DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].BootIndicator = TRUE;
     PartEntry->DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RewritePartition = TRUE;
     PartEntry->DiskEntry->Dirty = TRUE;
 
@@ -3673,7 +3673,7 @@ WritePartitions(
     HANDLE FileHandle;
     IO_STATUS_BLOCK Iosb;
     ULONG BufferSize;
-    PPARTITION_INFORMATION_EX PartitionInfo;
+    PPARTITION_INFORMATION PartitionInfo;
     ULONG PartitionCount;
     PLIST_ENTRY ListEntry;
     PPARTENTRY PartEntry;
@@ -3945,7 +3945,7 @@ SetMountedDeviceValue(
         return FALSE;
     }
 
-    MountInfo.Signature = PartEntry->DiskEntry->LayoutBuffer->Mbr.Signature;
+    MountInfo.Signature = PartEntry->DiskEntry->LayoutBuffer->Signature;
     MountInfo.StartingOffset = GetPartEntryOffsetInBytes(PartEntry);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
@@ -4005,8 +4005,8 @@ SetMBRPartitionType(
     PartEntry->PartitionType = PartitionType;
 
     DiskEntry->Dirty = TRUE;
-    DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].Mbr.PartitionType = PartitionType;
-    DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].Mbr.RecognizedPartition = IsRecognizedPartition(PartitionType);
+    DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartitionType;
+    DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RecognizedPartition = IsRecognizedPartition(PartitionType);
     DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RewritePartition = TRUE;
 }
 
