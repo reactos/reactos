@@ -2920,7 +2920,10 @@ BOOL LoadSetupData(
          ListEntry = GetNextListEntry(ListEntry))
     {
         PCWSTR pszLayoutId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-        if (!_wcsicmp(pSetupData->DefaultKBLayout, pszLayoutId))
+        // FIXME: Temporary "fix" to set the best keyboard entry depending on the
+        // selected language in unattended setup; see also usetup!SetupStartPage().
+        if (( pSetupData->bUnattend && !_wcsicmp(pSetupData->DefaultLanguage, pszLayoutId)) ||
+            (!pSetupData->bUnattend && !_wcsicmp(pSetupData->DefaultKBLayout, pszLayoutId)))
         {
             DPRINT("Found %S in LayoutList\n", pszLayoutId);
             SetCurrentListEntry(LayoutList, ListEntry);
