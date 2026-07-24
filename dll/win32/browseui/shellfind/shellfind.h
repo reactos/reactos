@@ -26,10 +26,11 @@
 
 #include "../resource.h"
 
-#define WM_SEARCH_START          WM_USER + 0
-#define WM_SEARCH_STOP           WM_USER + 1
-#define WM_SEARCH_ADD_RESULT     WM_USER + 2
-#define WM_SEARCH_UPDATE_STATUS  WM_USER + 3
+#define WM_SEARCH_START         (WM_USER + 0) // Must be ordered before any message with a payload
+#define WM_SEARCH_STOP          (WM_USER + 1)
+#define WM_SEARCH_ADD_RESULT    (WM_USER + 2)
+#define WM_SEARCH_UPDATE_STATUS (WM_USER + 3)
+#define WM_SEARCH_STOPPED       (WM_USER + 9) // Must be ordered after any message with a payload
 
 typedef struct tagLOCATIONITEM
 {

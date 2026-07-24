@@ -281,7 +281,9 @@ struct _SearchData
     CStringA szQueryU8;
     BOOL SearchHidden;
     CComPtr<CFindFolder> pFindFolder;
+    UINT SearchId;
 
+    explicit _SearchData(UINT InitSearchId) : SearchId(InitSearchId) {}
     ~_SearchData()
     {
         FreeList(pPaths);
@@ -528,6 +530,15 @@ static BOOL AttribHiddenMatch(DWORD FileAttributes, _SearchData *pSearchData)
     return FALSE;
 }
 
+static inline void PostUpdate(UINT Msg, LPCWSTR pszText, const _SearchData &Data)
+{
+    LPWSTR pszDup;
+    if (FAILED(SHStrDupW(pszText, &pszDup)))
+        return;
+    if (!PostMessageW(Data.hwnd, Msg, Data.SearchId, (LPARAM)pszDup))
+        SHFree(pszDup);
+}
+
 static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
 {
     if (WaitForSingleObject(pSearchData->hStopEvent, 0) != WAIT_TIMEOUT)
@@ -558,15 +569,11 @@ static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
                 FileNameMatch(FindData.cFileName, pSearchData) &&
                 AttribHiddenMatch(FindData.dwFileAttributes, pSearchData))
             {
-                LPWSTR pszPathDup;
-                SHStrDupW(szPath, &pszPathDup);
-                PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM)pszPathDup);
+                PostUpdate(WM_SEARCH_ADD_RESULT, szPath, *pSearchData);
                 uTotalFound++;
             }
             status.Format(IDS_SEARCH_FOLDER, FindData.cFileName);
-            LPWSTR pszStatusDup;
-            SHStrDupW(status.GetBuffer(), &pszStatusDup);
-            PostMessageW(pSearchData->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM)pszStatusDup);
+            PostUpdate(WM_SEARCH_UPDATE_STATUS, status.GetBuffer(), *pSearchData);
 
             uTotalFound += RecursiveFind(szPath, pSearchData);
         }
@@ -574,10 +581,8 @@ static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
                 && AttribHiddenMatch(FindData.dwFileAttributes, pSearchData)
                 && ContentsMatch(szPath, pSearchData))
         {
+            PostUpdate(WM_SEARCH_ADD_RESULT, szPath, *pSearchData);
             uTotalFound++;
-            LPWSTR pszPathDup;
-            SHStrDupW(szPath, &pszPathDup);
-            PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM)pszPathDup);
         }
     }
 
@@ -607,9 +612,7 @@ DWORD WINAPI CFindFolder::SearchThreadProc(LPVOID lpParameter)
 
     CStringW status;
     status.Format(IDS_SEARCH_FILES_FOUND, uTotalFound);
-    LPWSTR pszStatusDup;
-    SHStrDupW(status.GetBuffer(), &pszStatusDup);
-    ::PostMessageW(data->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM)pszStatusDup);
+    PostUpdate(WM_SEARCH_UPDATE_STATUS, status.GetBuffer(), *data);
     ::SendMessageW(data->hwnd, WM_SEARCH_STOP, 0, 0);
 
     CloseHandle(data->hStopEvent);
@@ -652,7 +655,7 @@ LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     UINT uItemIndex;
     m_shellFolderView->RemoveObject(NULL, &uItemIndex);
 
-    _SearchData* pSearchData = new _SearchData();
+    _SearchData* pSearchData = new _SearchData(++m_SearchId);
     pSearchData->pFindFolder = this;
     pSearchData->hwnd = m_hWnd;
 
@@ -743,6 +746,16 @@ LRESULT CFindFolder::StopSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     {
         SetEvent(m_hStopEvent);
         m_hStopEvent = NULL;
+
+        // Wait for all in-flight messages with data we need to free
+        PostMessageW(WM_SEARCH_STOPPED, 0, 0);
+        for (MSG msg; PeekMessageW(&msg, m_hWnd, WM_SEARCH_START, WM_SEARCH_STOPPED, PM_REMOVE);)
+        {
+            if (msg.message == WM_SEARCH_STOPPED)
+                break;
+            if (msg.message == WM_SEARCH_ADD_RESULT || msg.message == WM_SEARCH_UPDATE_STATUS)
+                SHFree((void*)msg.lParam);
+        }
     }
     return 0;
 }
@@ -753,6 +766,8 @@ LRESULT CFindFolder::AddResult(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         return 0;
 
     CComHeapPtr<WCHAR> lpPath((LPWSTR) lParam);
+    if (wParam != m_SearchId)
+        return 0;
 
     CComHeapPtr<ITEMIDLIST> lpSearchPidl(_ILCreate(lpPath));
     if (lpSearchPidl)
@@ -767,11 +782,8 @@ LRESULT CFindFolder::AddResult(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 LRESULT CFindFolder::UpdateStatus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     CComHeapPtr<WCHAR> status((LPWSTR) lParam);
-    if (m_shellBrowser)
-    {
+    if (m_shellBrowser && wParam == m_SearchId)
         m_shellBrowser->SetStatusTextSB(status);
-    }
-
     return 0;
 }
 
@@ -1211,6 +1223,11 @@ STDMETHODIMP CFindFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case SFVM_WINDOWCLOSING:
         {
+            SendMessage(WM_SEARCH_STOP, 0, 0);
+
+            // [CORE-20504] LVN_ITEMACTIVATE in the DefView ListView can trigger a navigation that destroys this IShellFolder,
+            // unsubclass now so we don't get a message after our "this" is dead.
+            UnsubclassWindow();
             m_shellFolderView = NULL;
             m_shellBrowser = NULL;
             return S_OK;
