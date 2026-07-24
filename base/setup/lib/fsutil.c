@@ -26,7 +26,7 @@
 // #include <fslib/ext2lib.h>
 // #include <fslib/ntfslib.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 

@@ -24,7 +24,7 @@ extern BOOLEAN IsUnattendedSetup; // HACK
 
 #include "bootsup.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /*
@@ -1808,11 +1808,21 @@ InstallBootManagerAndBootEntries(
             goto Quit;
         }
 
+        PARTITION_INFORMATION PartitionInfoLegacy;
+        RtlZeroMemory(&PartitionInfoLegacy, sizeof(PartitionInfoLegacy));
+        PartitionInfoLegacy.StartingOffset = PartitionInfo.StartingOffset;
+        PartitionInfoLegacy.PartitionLength = PartitionInfo.PartitionLength;
+        PartitionInfoLegacy.HiddenSectors = PartitionInfo.Mbr.HiddenSectors;
+        PartitionInfoLegacy.PartitionNumber = PartitionInfo.PartitionNumber;
+        PartitionInfoLegacy.PartitionType = PartitionInfo.Mbr.PartitionType;
+        PartitionInfoLegacy.BootIndicator = PartitionInfo.Mbr.BootIndicator;
+        PartitionInfoLegacy.RecognizedPartition = PartitionInfo.Mbr.RecognizedPartition;
+        PartitionInfoLegacy.RewritePartition = PartitionInfo.RewritePartition;
         DiskNumber = DeviceNumber.DeviceNumber;
         PartitionStyle = DiskGeoEx.Partition.PartitionStyle;
         IsSuperFloppy = IsDiskSuperFloppy2(&DiskGeoEx.Partition,
                                            (PULONGLONG)&DiskGeoEx.DiskSize.QuadPart,
-                                           &PartitionInfo);
+                                           &PartitionInfoLegacy);
     }
 
     Status = InstallBootManagerAndBootEntriesWorker(
