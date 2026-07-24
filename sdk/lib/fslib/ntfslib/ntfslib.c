@@ -173,9 +173,13 @@ ComputeLayout(IN ULONG ClusterSize)
         LAYOUT.LogFileClusters = (ULONG)CEIL_DIV(LogBytes, (ULONGLONG)C);
     }
 
-    // $Bitmap: one bit per cluster of the whole volume.
+    // $Bitmap: one bit per cluster. The stream length must be a multiple of
+    // 8 bytes (NTFS tracks the bitmap in 64-bit groups). If it isn't, the OS
+    // rounds it up on first write and zero-fills the gap, leaving phantom
+    // trailing clusters marked free. Round up here; WriteMetafiles matches.
     {
         ULONGLONG BitmapBytes = CEIL_DIV(LAYOUT.ClusterCount, 8ULL);
+        BitmapBytes = (BitmapBytes + 7) & ~7ULL;
         LAYOUT.BitmapClusters = (ULONG)CEIL_DIV(BitmapBytes, (ULONGLONG)C);
     }
 
@@ -194,8 +198,19 @@ ComputeLayout(IN ULONG ClusterSize)
     // Root directory $I30 index: one INDX block.
     LAYOUT.RootIdxClusters = (ULONG)CEIL_DIV((ULONGLONG)INDEX_RECORD_SIZE, (ULONGLONG)C);
 
-    // $Secure:$SDS: the descriptor entry plus its mirror 256 KiB later.
+    // $Secure:$SDS: the 8 default descriptors plus their mirror 256 KiB later.
     LAYOUT.SdsClusters = (ULONG)CEIL_DIV((ULONGLONG)NTFS_SDS_MIRROR + C, (ULONGLONG)C);
+
+    // $Secure:$SDH: one INDX block (large view index).
+    LAYOUT.SdhIdxClusters = (ULONG)CEIL_DIV((ULONGLONG)INDEX_RECORD_SIZE, (ULONGLONG)C);
+
+    // $Extend / TxF payload streams (contents zero-initialized on a fresh volume;
+    // chkdsk validates the metadata, not the CLFS log data).
+    LAYOUT.TopsTClusters   = (ULONG)CEIL_DIV(1024ULL * 1024,     (ULONGLONG)C);  // 1 MiB
+    LAYOUT.BlfClusters     = (ULONG)CEIL_DIV(64ULL * 1024,       (ULONGLONG)C);  // 64 KiB
+    LAYOUT.Cont1Clusters   = (ULONG)CEIL_DIV(2ULL * 1024 * 1024, (ULONGLONG)C);  // 2 MiB
+    LAYOUT.Cont2Clusters   = (ULONG)CEIL_DIV(2ULL * 1024 * 1024, (ULONGLONG)C);  // 2 MiB
+    LAYOUT.DeletedIdxClusters = (ULONG)CEIL_DIV(64ULL * 1024,    (ULONGLONG)C);  // 64 KiB
 
     //
     // Placement: everything contiguous from the start of the volume.
@@ -211,6 +226,12 @@ ComputeLayout(IN ULONG ClusterSize)
     LAYOUT.MftBitmapLcn = Lcn; Lcn += LAYOUT.MftBitmapClusters;
     LAYOUT.RootIdxLcn   = Lcn; Lcn += LAYOUT.RootIdxClusters;
     LAYOUT.SdsLcn       = Lcn; Lcn += LAYOUT.SdsClusters;
+    LAYOUT.SdhIdxLcn    = Lcn; Lcn += LAYOUT.SdhIdxClusters;
+    LAYOUT.TopsTLcn     = Lcn; Lcn += LAYOUT.TopsTClusters;
+    LAYOUT.BlfLcn       = Lcn; Lcn += LAYOUT.BlfClusters;
+    LAYOUT.Cont1Lcn     = Lcn; Lcn += LAYOUT.Cont1Clusters;
+    LAYOUT.Cont2Lcn     = Lcn; Lcn += LAYOUT.Cont2Clusters;
+    LAYOUT.DeletedIdxLcn = Lcn; Lcn += LAYOUT.DeletedIdxClusters;
     LAYOUT.FirstFreeLcn = Lcn;
 
     // The volume must be large enough to hold the metadata (plus slack).

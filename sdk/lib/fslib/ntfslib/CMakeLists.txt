@@ -1,4 +1,4 @@
-add_library(ntfslib ntfslib.c bootsect.c attrib.c files.c ntfslib.h data.h)
+add_library(ntfslib ntfslib.c bootsect.c files.c ntfslib.h data.h refdata.h)
 add_dependencies(ntfslib psdk)
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(ntfslib PRIVATE -Wno-shift-overflow)

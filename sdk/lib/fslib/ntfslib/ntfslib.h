@@ -167,9 +167,12 @@
 // Index node header flags
 #define INDEX_NODE_LARGE  0x01   // Node has an $INDEX_ALLOCATION
 
-// A metadata record's sequence number: Windows sets it equal to the record
-// number, except record 0 (sequence 0 would mean "unused", so it uses 1).
-#define RECORD_SEQUENCE(rec)  ((USHORT)(((rec) == 0) ? 1 : (rec)))
+// A metadata record's sequence number. Windows uses sequence == record number
+// only for the reserved system range 1..15 (record 0 uses 1, since sequence 0
+// means "unused"); every other record - including the $Extend children at 24+ -
+// is a normal first allocation with sequence 1. chkdsk rejects references to
+// records >= 16 whose sequence isn't 1 (it reads as an impossibly-reused record).
+#define RECORD_SEQUENCE(rec)  ((USHORT)(((rec) >= 1 && (rec) <= 15) ? (rec) : 1))
 
 // Build an MFT file reference: record number in the low 48 bits, sequence
 // number in the high 16 bits.
@@ -227,7 +230,15 @@ typedef struct _NTFS_LAYOUT
     ULONGLONG  AttrDefLcn;     ULONG AttrDefClusters;
     ULONGLONG  MftBitmapLcn;   ULONG MftBitmapClusters;
     ULONGLONG  RootIdxLcn;     ULONG RootIdxClusters;   // One INDX block for the root $I30 index
-    ULONGLONG  SdsLcn;         ULONG SdsClusters;       // $Secure:$SDS (descriptor + 256 KiB mirror)
+    ULONGLONG  SdsLcn;         ULONG SdsClusters;       // $Secure:$SDS (8 descriptors + 256 KiB mirror)
+    ULONGLONG  SdhIdxLcn;      ULONG SdhIdxClusters;    // $Secure:$SDH INDX block (large view index)
+
+    // $Extend / Transactional-NTFS (TxF) payload streams (zero-initialized).
+    ULONGLONG  TopsTLcn;       ULONG TopsTClusters;     // $RmMetadata/$TxfLog/$Tops:$T (1 MiB)
+    ULONGLONG  BlfLcn;         ULONG BlfClusters;       // $TxfLog/$TxfLog.blf (64 KiB)
+    ULONGLONG  Cont1Lcn;       ULONG Cont1Clusters;     // $TxfLogContainer...0001 (2 MiB)
+    ULONGLONG  Cont2Lcn;       ULONG Cont2Clusters;     // $TxfLogContainer...0002 (2 MiB)
+    ULONGLONG  DeletedIdxLcn;  ULONG DeletedIdxClusters;// $Extend/$Deleted:$I30 allocation (64 KiB)
 
     ULONGLONG  FirstFreeLcn;   // Count of clusters used by metadata == first free cluster
 } NTFS_LAYOUT, *PNTFS_LAYOUT;
@@ -504,129 +515,6 @@ ComputeLayout(IN ULONG ClusterSize);
 
 NTSTATUS
 WriteBootSector(VOID);
-
-// attrib.c
-
-VOID
-AddStandardInformationAttribute(OUT PFILE_RECORD_HEADER FileRecord,
-                                OUT PATTR_RECORD        Attribute);
-
-VOID
-AddFileNameAttribute(OUT PFILE_RECORD_HEADER FileRecord,
-                     OUT PATTR_RECORD        Attribute,
-                     IN  LPCWSTR             FileName,
-                     IN  DWORD32             MftRecordNumber);
-
-VOID
-AddEmptyDataAttribute(OUT PFILE_RECORD_HEADER FileRecord,
-                      OUT PATTR_RECORD        Attribute);
-
-VOID
-AddNonResidentDataAttribute(OUT PFILE_RECORD_HEADER     FileRecord,
-                            OUT PATTR_RECORD            Attribute,
-                            IN  ULONGLONG               Lcn,
-                            IN  ULONG                   ClustersCount,
-                            OPTIONAL IN  ULONGLONG      DataSize);
-
-VOID
-AddMftBitmapAttribute(OUT PFILE_RECORD_HEADER     FileRecord,
-                      OUT PATTR_RECORD            Attribute);
-
-VOID
-AddVolumeNameAttribute(OUT PFILE_RECORD_HEADER FileRecord,
-                       OUT PATTR_RECORD        Attribute,
-                       OPTIONAL IN PUNICODE_STRING Label);
-
-VOID
-AddVolumeInformationAttribute(OUT PFILE_RECORD_HEADER FileRecord,
-                              OUT PATTR_RECORD        Attribute,
-                              IN  BYTE                MajorVersion,
-                              IN  BYTE                MinorVersion);
-
-// Builds an empty resident $INDEX_ROOT containing only the end-of-index marker.
-// IndexedType is the attribute type being indexed (AttributeFileName for a
-// directory "$I30", 0 for a view index such as "$SII"/"$SDH").
-VOID
-AddEmptyIndexRoot(OUT PFILE_RECORD_HEADER FileRecord,
-                  OUT PATTR_RECORD        Attribute,
-                  IN  LPCWSTR             Name,
-                  IN  ULONG               IndexedType,
-                  IN  ULONG               CollationRule);
-
-// Builds an empty directory index ($INDEX_ROOT, named "$I30").
-VOID
-AddIndexRoot(OUT PFILE_RECORD_HEADER FileRecord,
-             OUT PATTR_RECORD        Attribute);
-
-// Builds the $FILE_NAME value (used both by the file record's $FILE_NAME
-// attribute and by the parent directory's index entries, so they stay
-// byte-identical). Returns the value length.
-ULONG
-BuildFileNameValue(OUT PBYTE     Out,
-                   IN  LPCWSTR   Name,
-                   IN  DWORD32   ParentRecordNumber,
-                   IN  ULONG     FileAttributes,
-                   IN  ULONGLONG AllocatedSize,
-                   IN  ULONGLONG RealSize);
-
-// The standard NTFS file attributes for the system metafiles / a directory.
-#define METAFILE_FILE_ATTRIBUTES(isDir) \
-    (RA_METAFILES_ATTRIBUTES | ((isDir) ? FILE_TYPE_DIRECTORY : 0))
-
-// Builds a "large" directory $INDEX_ROOT ("$I30"): no inline entries, just the
-// end marker flagged LAST|HAS_SUBNODE pointing at INDX VCN 0. Used when the
-// directory's entries live in an $INDEX_ALLOCATION.
-VOID
-AddIndexRootLarge(OUT PFILE_RECORD_HEADER FileRecord,
-                  OUT PATTR_RECORD        Attribute);
-
-// Builds a non-resident $INDEX_ALLOCATION attribute named "$I30".
-VOID
-AddIndexAllocationAttribute(OUT PFILE_RECORD_HEADER FileRecord,
-                            OUT PATTR_RECORD        Attribute,
-                            IN  ULONGLONG           Lcn,
-                            IN  ULONG               Clusters);
-
-// Builds a resident named $BITMAP attribute holding the given bytes.
-VOID
-AddIndexBitmapAttribute(OUT PFILE_RECORD_HEADER FileRecord,
-                        OUT PATTR_RECORD        Attribute,
-                        IN  LPCWSTR             Name,
-                        IN  PVOID               Bits,
-                        IN  ULONG               BitsLength);
-
-// Builds a non-resident named $DATA stream (e.g. $Secure:$SDS).
-VOID
-AddNamedNonResidentDataAttribute(OUT PFILE_RECORD_HEADER FileRecord,
-                                 OUT PATTR_RECORD        Attribute,
-                                 IN  LPCWSTR             Name,
-                                 IN  ULONGLONG           Lcn,
-                                 IN  ULONG               Clusters,
-                                 IN  ULONGLONG           DataSize);
-
-// Builds a resident named view-index $INDEX_ROOT holding one entry (key+data)
-// plus the end marker (used for $Secure's $SDH and $SII).
-VOID
-AddViewIndexRoot(OUT PFILE_RECORD_HEADER FileRecord,
-                 OUT PATTR_RECORD        Attribute,
-                 IN  LPCWSTR             Name,
-                 IN  ULONG               CollationRule,
-                 IN  PVOID               Key,
-                 IN  USHORT              KeyLength,
-                 IN  PVOID               Data,
-                 IN  USHORT              DataLength);
-
-// Adds an empty resident named $DATA stream (e.g. $Secure:$SDS).
-VOID
-AddNamedEmptyDataAttribute(OUT PFILE_RECORD_HEADER FileRecord,
-                           OUT PATTR_RECORD        Attribute,
-                           IN  LPCWSTR             Name);
-
-// Adds the $BadClus:$Bad stream: a sparse, whole-volume $DATA stream with no
-// clusters allocated (i.e. no bad clusters).
-VOID
-AddBadClusterDataAttribute(OUT PFILE_RECORD_HEADER FileRecord,
-                           OUT PATTR_RECORD        Attribute);
 
 // files.c
 
