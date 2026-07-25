@@ -23,6 +23,10 @@
 #include "ff.h"			/* Basic definitions and declarations of API */
 #include "diskio.h"		/* Declarations of MAI */
 
+#ifndef __REACTOS__
+#error This modified FatFs core requires __REACTOS__; see README.reactos.
+#endif
+
 /*--------------------------------------------------------------------------
 
    Module Private Definitions
@@ -1056,6 +1060,10 @@ static void clear_share (	/* Clear all lock entries of the volume */
 /*-----------------------------------------------------------------------*/
 /* Move/Flush disk access window in the filesystem object                */
 /*-----------------------------------------------------------------------*/
+#if defined(__REACTOS__) && FF_FS_EXFAT && !FF_FS_READONLY
+static FRESULT sync_bitmap_window (FATFS* fs);
+#endif
+
 #if !FF_FS_READONLY
 static FRESULT sync_window (	/* Returns FR_OK or FR_DISK_ERR */
 	FATFS* fs			/* Filesystem object */
@@ -1064,6 +1072,12 @@ static FRESULT sync_window (	/* Returns FR_OK or FR_DISK_ERR */
 	FRESULT res = FR_OK;
 
 
+#if defined(__REACTOS__) && FF_FS_EXFAT
+	if (fs->fs_type == FS_EXFAT) {
+		res = sync_bitmap_window(fs);	/* Persist allocations before dependent FAT and directory updates */
+	}
+#endif
+	if (res != FR_OK) return res;
 	if (fs->wflag) {	/* Is the disk access window dirty? */
 		if (disk_write(fs->pdrv, fs->win, fs->winsect, 1) == RES_OK) {	/* Write it back into the volume */
 			fs->wflag = 0;	/* Clear window dirty flag */
@@ -1101,6 +1115,148 @@ static FRESULT move_window (	/* Returns FR_OK or FR_DISK_ERR */
 	}
 	return res;
 }
+
+
+#if defined(__REACTOS__) && FF_FS_EXFAT && FF_USE_LFN == 3
+/*-----------------------------------------------------------------------*/
+/* FAT linearity digest                                                  */
+/*                                                                       */
+/* Two bits per FAT sector (b0: examined, b1: strictly linear) recording */
+/* whether every in-range entry e of that sector holds exactly e + 1.    */
+/* It describes the content of the allocation table itself, indexed by   */
+/* FAT sector; it holds no file identity, no logical offset and no       */
+/* per-object run, so it is not a file allocation map. Chain following   */
+/* over a sector known linear needs neither the sector nor a per-cluster */
+/* step. Any write to a FAT sector discards its entry.                   */
+/*-----------------------------------------------------------------------*/
+
+#define FSEQ_UNKNOWN	0	/* Sector not examined yet */
+#define FSEQ_IRREGULAR	1	/* Examined, not strictly linear */
+#define FSEQ_LINEAR		3	/* Examined, every in-range entry is e + 1 */
+#define FSEQ_MAX_SECTORS 0x400000	/* Cap the digest at 1 MiB of memory */
+
+static UINT fseq_get (		/* Returns FSEQ_* for the given FAT sector index */
+	FATFS* fs,	/* Filesystem object */
+	DWORD fsi	/* FAT sector index (0 = fs->fatbase) */
+)
+{
+	if (fs->fseq == 0 || fsi >= fs->fseq_count) return FSEQ_UNKNOWN;
+	return (fs->fseq[fsi / 4] >> ((fsi % 4) * 2)) & 3;
+}
+
+
+static void fseq_put (
+	FATFS* fs,	/* Filesystem object */
+	DWORD fsi,	/* FAT sector index */
+	UINT val	/* FSEQ_* value to record */
+)
+{
+	UINT shift;
+
+	if (fs->fseq == 0 || fsi >= fs->fseq_count) return;
+	shift = (fsi % 4) * 2;
+	fs->fseq[fsi / 4] = (BYTE)((fs->fseq[fsi / 4] & ~(3 << shift)) | (val << shift));
+}
+
+
+static void fseq_init (		/* Allocate the digest on first use (best effort) */
+	FATFS* fs	/* Filesystem object */
+)
+{
+	DWORD nsect, nbyte;
+
+	if (fs->fseq != 0 || fs->fs_type != FS_EXFAT) return;
+	nsect = (fs->n_fatent + (SS(fs) / 4) - 1) / (SS(fs) / 4);
+	if (nsect == 0 || nsect > FSEQ_MAX_SECTORS) return;
+	nbyte = (nsect + 3) / 4;
+	fs->fseq = ff_memalloc(nbyte);
+	if (fs->fseq != 0) {
+		memset(fs->fseq, 0, nbyte);
+		fs->fseq_count = nsect;
+	}
+}
+
+
+static void fseq_free (
+	FATFS* fs	/* Filesystem object */
+)
+{
+	if (fs->fseq != 0) {
+		ff_memfree(fs->fseq);
+		fs->fseq = 0;
+	}
+	fs->fseq_count = 0;
+}
+
+
+static void fseq_examine (	/* Classify the FAT sector currently in fs->win */
+	FATFS* fs,	/* Filesystem object */
+	DWORD fsi	/* FAT sector index held by the window */
+)
+{
+	UINT eps = SS(fs) / 4;	/* Entries per FAT sector */
+	DWORD base = fsi * eps;	/* First entry described by the sector */
+	UINT i;
+
+	for (i = 0; i < eps; i++) {
+		DWORD e = base + i;
+		if (e < 2) continue;						/* Reserved entries carry markers */
+		if (e >= fs->n_fatent) break;				/* Beyond the last cluster */
+		if (e + 1 >= fs->n_fatent || (ld_32(fs->win + i * 4) & 0x7FFFFFFF) != e + 1) {
+			fseq_put(fs, fsi, FSEQ_IRREGULAR);
+			return;
+		}
+	}
+	fseq_put(fs, fsi, FSEQ_LINEAR);
+}
+#endif
+
+
+#if defined(__REACTOS__) && FF_FS_EXFAT && !FF_FS_READONLY
+/*-----------------------------------------------------------------------*/
+/* Allocation bitmap window: keeps bitmap traffic out of fs->win so      */
+/* cluster allocation does not thrash between FAT and bitmap sectors     */
+/*-----------------------------------------------------------------------*/
+
+static FRESULT sync_bitmap_window (	/* Returns FR_OK or FR_DISK_ERR */
+	FATFS* fs			/* Filesystem object */
+)
+{
+	FRESULT res = FR_OK;
+
+
+	if (fs->bwflag) {	/* Is the bitmap window dirty? */
+		if (disk_write(fs->pdrv, fs->bwin, fs->bwinsect, 1) == RES_OK) {
+			fs->bwflag = 0;	/* Clear window dirty flag */
+		} else {
+			res = FR_DISK_ERR;
+		}
+	}
+	return res;
+}
+
+
+static FRESULT move_bitmap_window (	/* Returns FR_OK or FR_DISK_ERR */
+	FATFS* fs,		/* Filesystem object */
+	LBA_t sect		/* Sector LBA to make appearance in the fs->bwin[] */
+)
+{
+	FRESULT res = FR_OK;
+
+
+	if (sect != fs->bwinsect) {	/* Window offset changed? */
+		res = sync_bitmap_window(fs);	/* Flush the window */
+		if (res == FR_OK) {			/* Fill sector window with new data */
+			if (disk_read(fs->pdrv, fs->bwin, sect, 1) != RES_OK) {
+				sect = (LBA_t)0 - 1;	/* Invalidate window if read data is not valid */
+				res = FR_DISK_ERR;
+			}
+			fs->bwinsect = sect;
+		}
+	}
+	return res;
+}
+#endif
 
 
 
@@ -1221,15 +1377,23 @@ static DWORD get_fat (		/* 0xFFFFFFFF:Disk error, 1:Internal error, 2..0x7FFFFFF
 					val = (cofs == clen) ? 0x7FFFFFFF : clst + 1;	/* No data on the FAT, generate the value */
 					break;
 				}
-				if (obj->stat == 3 && cofs < obj->n_cont) {	/* Is it in the 1st fragment? */
-					val = clst + 1; 	/* Generate the value */
-					break;
-				}
 				if (obj->stat != 2) {	/* Get value from FAT if FAT chain is valid */
 					if (obj->n_frag != 0) {	/* Is it on the growing edge? */
 						val = 0x7FFFFFFF;	/* Generate EOC */
 					} else {
+#if defined(__REACTOS__) && FF_USE_LFN == 3
+						DWORD fsi = clst / (SS(fs) / 4);	/* FAT sector holding the entry */
+
+						fseq_init(fs);
+						if (fseq_get(fs, fsi) == FSEQ_LINEAR) {	/* Sector is known to hold e + 1 */
+							val = clst + 1;
+							break;
+						}
+						if (move_window(fs, fs->fatbase + fsi) != FR_OK) break;
+						if (fseq_get(fs, fsi) == FSEQ_UNKNOWN) fseq_examine(fs, fsi);
+#else
 						if (move_window(fs, fs->fatbase + (clst / (SS(fs) / 4))) != FR_OK) break;
+#endif
 						val = ld_32(fs->win + clst * 4 % SS(fs)) & 0x7FFFFFFF;
 					}
 					break;
@@ -1299,6 +1463,9 @@ static FRESULT put_fat (	/* FR_OK(0):succeeded, !=0:error */
 			}
 			st_32(fs->win + clst * 4 % SS(fs), val);
 			fs->wflag = 1;
+#if defined(__REACTOS__) && FF_FS_EXFAT && FF_USE_LFN == 3
+			fseq_put(fs, clst / (SS(fs) / 4), FSEQ_UNKNOWN);	/* Digest of this sector is stale */
+#endif
 			break;
 		}
 	}
@@ -1334,11 +1501,19 @@ static DWORD find_bitmap (	/* 0:Not found, 2..:Cluster block found, 0xFFFFFFFF:D
 	if (clst >= fs->n_fatent - 2) clst = 0;
 	scl = val = clst; ctr = 0;
 	for (;;) {
+#ifdef __REACTOS__
+		if (move_bitmap_window(fs, fs->bitbase + val / 8 / SS(fs)) != FR_OK) return 0xFFFFFFFF;
+#else
 		if (move_window(fs, fs->bitbase + val / 8 / SS(fs)) != FR_OK) return 0xFFFFFFFF;
+#endif
 		i = val / 8 % SS(fs); bm = 1 << (val % 8);
 		do {
 			do {
+#ifdef __REACTOS__
+				bv = fs->bwin[i] & bm; bm <<= 1;	/* Get bit value */
+#else
 				bv = fs->win[i] & bm; bm <<= 1;		/* Get bit value */
+#endif
 				if (++val >= fs->n_fatent - 2) {	/* Next cluster (with wrap-around) */
 					val = 0; bm = 0; i = SS(fs);
 				}
@@ -1371,46 +1546,36 @@ static FRESULT change_bitmap (
 	LBA_t sect;
 
 
+#ifdef __REACTOS__
+	if (!bv && sync_window(fs) != FR_OK) return FR_DISK_ERR;	/* Persist removed FAT links before freeing their clusters */
+#endif
 	clst -= 2;	/* The first bit corresponds to cluster #2 */
 	sect = fs->bitbase + clst / 8 / SS(fs);	/* Sector address */
 	i = clst / 8 % SS(fs);					/* Byte offset in the sector */
 	bm = 1 << (clst % 8);					/* Bit mask in the byte */
 	for (;;) {
+#ifdef __REACTOS__
+		if (move_bitmap_window(fs, sect++) != FR_OK) return FR_DISK_ERR;
+#else
 		if (move_window(fs, sect++) != FR_OK) return FR_DISK_ERR;
+#endif
 		do {
 			do {
+#ifdef __REACTOS__
+				if (bv == (int)((fs->bwin[i] & bm) != 0)) return FR_INT_ERR;	/* Is the bit expected value? */
+				fs->bwin[i] ^= bm;	/* Flip the bit */
+				fs->bwflag = 1;
+#else
 				if (bv == (int)((fs->win[i] & bm) != 0)) return FR_INT_ERR;	/* Is the bit expected value? */
 				fs->win[i] ^= bm;	/* Flip the bit */
 				fs->wflag = 1;
+#endif
 				if (--ncl == 0) return FR_OK;	/* All bits processed? */
 			} while (bm <<= 1);		/* Next bit */
 			bm = 1;
 		} while (++i < SS(fs));		/* Next byte */
 		i = 0;
 	}
-}
-
-
-/*---------------------------------------------*/
-/* Fill the first fragment of the FAT chain    */
-/*---------------------------------------------*/
-
-static FRESULT fill_first_frag (
-	FFOBJID* obj	/* Pointer to the corresponding object */
-)
-{
-	FRESULT res;
-	DWORD cl, n;
-
-
-	if (obj->stat == 3) {	/* Has the object been changed 'fragmented' in this session? */
-		for (cl = obj->sclust, n = obj->n_cont; n; cl++, n--) {	/* Create cluster chain on the FAT */
-			res = put_fat(obj->fs, cl, cl + 1);
-			if (res != FR_OK) return res;
-		}
-		obj->stat = 0;	/* Change status 'FAT chain is valid' */
-	}
-	return FR_OK;
 }
 
 
@@ -1510,11 +1675,8 @@ static FRESULT remove_chain (	/* FR_OK(0):succeeded, !=0:error */
 			obj->stat = 0;		/* Change the chain status 'initial' */
 		} else {
 #ifdef __REACTOS__
-			/* A chain is never changed back to 'contiguous' here. Chains created or
-			/  modified by this driver are always kept on the FAT (see README.reactos). */
-			if (obj->stat == 3 && pclst >= obj->sclust && pclst <= obj->sclust + obj->n_cont) {	/* Was the chain truncated within the pending first fragment? */
-				obj->n_cont = pclst - obj->sclust;	/* Shrink the pending part so fill_first_frag() stops at the new last cluster (its EOC has been set above) */
-			}
+			/* FAT-backed chains remain FAT-backed. Imported NoFatChain chains
+			/  are never stretched or converted (see README.reactos). */
 #else
 			/* This comment will be replaced by optimized code after Patent
 			/  US8725772B2 (anticipated expiration date 2027-05-23) has expired. */
@@ -1551,6 +1713,9 @@ static DWORD create_chain (	/* 0:No free cluster, 1:Internal error, 0xFFFFFFFF:D
 		if (cs < 2) return 1;				/* Test for insanity */
 		if (cs == 0xFFFFFFFF) return cs;	/* Test for disk error */
 		if (cs < fs->n_fatent) return cs;	/* It is already followed by next cluster */
+#ifdef __REACTOS__
+		if (FF_FS_EXFAT && fs->fs_type == FS_EXFAT && obj->stat == 2) return 1;	/* Imported NoFatChain objects must not be stretched or converted */
+#endif
 		scl = clst;							/* Cluster to start to find */
 	}
 	if (fs->free_clst == 0) return 0;		/* No free cluster */
@@ -1569,10 +1734,6 @@ static DWORD create_chain (	/* 0:No free cluster, 1:Internal error, 0xFFFFFFFF:D
 			obj->stat = 0;							/* Set status 'FAT chain is valid' */
 			obj->n_frag = 1;						/* FAT entry of the new cluster is set at the next fill_last_frag() */
 		} else {									/* It is a stretched chain */
-			if (obj->stat == 2) {					/* Is the chain contiguous (NoFatChain)? */
-				obj->n_cont = scl - obj->sclust;	/* Set size of the part to be filled on the FAT later */
-				obj->stat = 3;						/* Change status 'just fragmented' to get the chain on the FAT */
-			}
 			if (ncl == clst + 1) {	/* Is the cluster next to previous one? */
 				obj->n_frag = obj->n_frag ? obj->n_frag + 1 : 2;	/* Increment size of last framgent */
 			} else {				/* New fragment */
@@ -1794,6 +1955,9 @@ static FRESULT dir_next (	/* FR_OK(0):succeeded, FR_NO_FILE:End of table, FR_DEN
 					if (!stretch) {								/* If no stretch, report EOT */
 						dp->sect = 0; return FR_NO_FILE;
 					}
+#ifdef __REACTOS__
+					if (FF_FS_EXFAT && fs->fs_type == FS_EXFAT && dp->obj.stat == 2) return FR_DENIED;	/* Do not stretch or convert an imported NoFatChain directory */
+#endif
 					clst = create_chain(&dp->obj, dp->clust);	/* Allocate a cluster */
 					if (clst == 0) return FR_DENIED;			/* No free cluster */
 					if (clst == 1) return FR_INT_ERR;			/* Internal error */
@@ -2535,8 +2699,6 @@ static FRESULT dir_register (	/* FR_OK:succeeded, FR_DENIED:no free entry or too
 
 		if (dp->obj.stat & 4) {			/* Has the directory been stretched by new allocation? */
 			dp->obj.stat &= ~4;
-			res = fill_first_frag(&dp->obj);	/* Fill the first fragment on the FAT if needed */
-			if (res != FR_OK) return res;
 			res = fill_last_frag(&dp->obj, dp->clust, 0xFFFFFFFF);	/* Fill the last fragment on the FAT if needed */
 			if (res != FR_OK) return res;
 			if (dp->obj.sclust != 0) {		/* Is it a sub-directory? */
@@ -3395,6 +3557,9 @@ static UINT check_fs (	/* 0:FAT/FAT32 VBR, 1:exFAT VBR, 2:Not FAT and valid BS, 
 
 
 	fs->wflag = 0; fs->winsect = (LBA_t)0 - 1;		/* Invaidate window */
+#if defined(__REACTOS__) && FF_FS_EXFAT && !FF_FS_READONLY
+	fs->bwflag = 0; fs->bwinsect = (LBA_t)0 - 1;	/* Invaidate bitmap window */
+#endif
 	if (move_window(fs, sect) != FR_OK) return 4;	/* Load the boot sector */
 	sign = ld_16(fs->win + BS_55AA);
 #if FF_FS_EXFAT
@@ -3519,6 +3684,9 @@ static FRESULT mount_volume (	/* FR_OK(0): successful, !=0: an error occurred */
 	/* The filesystem object is not valid. */
 	/* Following code attempts to mount the volume. (find an FAT volume, analyze the BPB and initialize the filesystem object) */
 
+#if defined(__REACTOS__) && FF_FS_EXFAT && FF_USE_LFN == 3
+	fseq_free(fs);						/* Discard classifications from the previous medium */
+#endif
 	fs->fs_type = 0;					/* Invalidate the filesystem object */
 	stat = disk_initialize(fs->pdrv);	/* Initialize the volume hosting physical drive */
 	if (stat & STA_NOINIT) { 			/* Check if the initialization succeeded */
@@ -3785,6 +3953,9 @@ FRESULT f_mount (
 		ff_mutex_delete(vol);
 #endif
 		cfs->fs_type = 0;		/* Invalidate the filesystem object to be unregistered */
+#if defined(__REACTOS__) && FF_FS_EXFAT && FF_USE_LFN == 3
+		fseq_free(cfs);			/* Release the FAT linearity digest */
+#endif
 	}
 
 	if (fs) {					/* Register new filesystem object */
@@ -3803,6 +3974,9 @@ FRESULT f_mount (
 #endif
 #endif
 		fs->fs_type = 0;		/* Invalidate the new filesystem object */
+#if defined(__REACTOS__) && FF_FS_EXFAT && FF_USE_LFN == 3
+		fs->fseq = 0; fs->fseq_count = 0;	/* No digest for the new volume yet */
+#endif
 		FatFs[vol] = fs;		/* Register it */
 	}
 
@@ -3847,6 +4021,11 @@ FRESULT f_open (
 			if (dj.fn[NSFLAG] & NS_NONAME) {	/* Origin directory itself? */
 				res = FR_INVALID_NAME;
 			}
+#if defined(__REACTOS__) && FF_FS_EXFAT
+			else if (fs->fs_type == FS_EXFAT && (mode & FA_WRITE) && !(mode & FA_CREATE_NEW) && (fs->dirbuf[XDIR_GenFlags] & 2)) {
+				res = FR_DENIED;	/* Imported NoFatChain files are read-only */
+			}
+#endif
 #if FF_FS_LOCK
 			else {
 				res = chk_share(&dj, (mode & ~FA_READ) ? 1 : 0);	/* Check if the file can be used */
@@ -4258,10 +4437,7 @@ FRESULT f_sync (
 			/* Update the directory entry */
 #if FF_FS_EXFAT
 			if (fs->fs_type == FS_EXFAT) {
-				res = fill_first_frag(&fp->obj);	/* Fill first fragment on the FAT if needed */
-				if (res == FR_OK) {
-					res = fill_last_frag(&fp->obj, fp->clust, 0xFFFFFFFF);	/* Fill last fragment on the FAT if needed */
-				}
+				res = fill_last_frag(&fp->obj, fp->clust, 0xFFFFFFFF);	/* Fill last fragment on the FAT if needed */
 				if (res == FR_OK) {
 					DIR dj;
 					DEF_NAMEBUFF
@@ -4682,6 +4858,48 @@ FRESULT f_lseek (
 				fp->clust = clst;
 			}
 			if (clst != 0) {
+#if defined(__REACTOS__) && FF_FS_EXFAT
+				if (fs->fs_type == FS_EXFAT && !(fp->flag & FA_WRITE) && ofs > bcs) {
+					/* Only chains recorded on the FAT are batched here. Objects
+					/  carrying the on-disk NoFatChain flag fall through to the
+					/  generic loop below, so no code added by this port selects
+					/  an access path from an exFAT allocation flag. */
+					if (fp->obj.stat == 0) {			/* FAT-recorded chain: batch the walk */
+						UINT epsect = SS(fs) / 4;		/* FAT entries per sector */
+#if FF_USE_LFN == 3
+						fseq_init(fs);
+#endif
+						while (ofs > bcs) {				/* One window load per FAT sector */
+							DWORD fsi = clst / epsect;	/* FAT sector holding the current entry */
+							DWORD sbase = fsi * epsect;	/* First entry in that sector */
+#if FF_USE_LFN == 3
+							if (fseq_get(fs, fsi) == FSEQ_LINEAR) {	/* Whole sector is e + 1 */
+								DWORD avail = sbase + epsect - clst;	/* Steps available here */
+								DWORD need = (DWORD)((ofs - 1) / bcs);	/* Steps still required */
+								DWORD step = (need < avail) ? need : avail;
+
+								if (step == 0) break;
+								if (clst + step >= fs->n_fatent) ABORT(fs, FR_INT_ERR);
+								clst += step;
+								ofs -= (FSIZE_t)step * bcs; fp->fptr += (FSIZE_t)step * bcs;
+								fp->clust = clst;
+								continue;				/* No sector load, no per-cluster step */
+							}
+#endif
+							if (move_window(fs, fs->fatbase + fsi) != FR_OK) ABORT(fs, FR_DISK_ERR);
+#if FF_USE_LFN == 3
+							if (fseq_get(fs, fsi) == FSEQ_UNKNOWN) fseq_examine(fs, fsi);
+#endif
+							do {						/* Same loads and checks as get_fat() */
+								DWORD val = ld_32(fs->win + (clst - sbase) * 4) & 0x7FFFFFFF;
+								if (val <= 1 || val >= fs->n_fatent) ABORT(fs, FR_INT_ERR);
+								clst = val; ofs -= bcs; fp->fptr += bcs;
+							} while (ofs > bcs && clst - sbase < epsect);	/* Still in this sector */
+							fp->clust = clst;
+						}
+					}
+				}
+#endif
 				while (ofs > bcs) {						/* Cluster following loop */
 					ofs -= bcs; fp->fptr += bcs;
 #if !FF_FS_READONLY
@@ -5007,10 +5225,18 @@ FRESULT f_getfree (
 					i = 0;						/* Offset in the sector */
 					do {	/* Counts numbuer of clear bits (free clusters) in the bitmap */
 						if (i == 0) {	/* New sector? */
+#ifdef __REACTOS__
+							res = move_bitmap_window(fs, sect++);
+#else
 							res = move_window(fs, sect++);
+#endif
 							if (res != FR_OK) break;
 						}
+#ifdef __REACTOS__
+						for (b = 8, bm = ~fs->bwin[i]; b && clst; b--, clst--) {	/* Count clear bits in a byte */
+#else
 						for (b = 8, bm = ~fs->win[i]; b && clst; b--, clst--) {	/* Count clear bits in a byte */
+#endif
 							nfree += bm & 1;
 							bm >>= 1;
 						}
@@ -6110,7 +6336,12 @@ FRESULT f_mkfs (
 	/* Check mounted drive and clear work area */
 	vol = get_ldnumber(&path);					/* Get logical drive number to be formatted */
 	if (vol < 0) return FR_INVALID_DRIVE;
-	if (FatFs[vol]) FatFs[vol]->fs_type = 0;	/* Clear the fs object if mounted */
+	if (FatFs[vol]) {
+#if defined(__REACTOS__) && FF_FS_EXFAT && FF_USE_LFN == 3
+		fseq_free(FatFs[vol]);
+#endif
+		FatFs[vol]->fs_type = 0;	/* Clear the fs object if mounted */
+	}
 	pdrv = LD2PD(vol);		/* Hosting physical drive */
 	ipart = LD2PT(vol);		/* Hosting partition (0:create as new, 1..:existing partition) */
 

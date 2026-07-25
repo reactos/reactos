@@ -12,7 +12,16 @@
 
 #define EXFAT_STACK_PATH_CHARACTERS 260
 
-static BOOLEAN
+FORCEINLINE BOOLEAN
+ExFatDispositionOverwrites(
+    ULONG Disposition)
+{
+    return Disposition == FILE_OVERWRITE ||
+           Disposition == FILE_OVERWRITE_IF ||
+           Disposition == FILE_SUPERSEDE;
+}
+
+FORCEINLINE BOOLEAN
 ExFatDispositionCreatesFile(
     ULONG Disposition)
 {
@@ -20,17 +29,6 @@ ExFatDispositionCreatesFile(
            Disposition == FILE_OPEN_IF ||
            Disposition == FILE_OVERWRITE_IF ||
            Disposition == FILE_SUPERSEDE;
-}
-
-static NTSTATUS
-ExFatEnsureFatPath(
-    PEXFAT_VCB Vcb,
-    PUNICODE_STRING FullPath,
-    TCHAR** FatPath)
-{
-    if (!*FatPath)
-        *FatPath = ExFatBuildFatPath(Vcb, FullPath);
-    return *FatPath ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
 
 /*
@@ -183,6 +181,13 @@ ExFatCompleteDelete(
         ExFatDirIndexRemove(Vcb, &Fcb->PathName);
     }
     ExFatReleaseFatFs(Vcb);
+    if (Result == FR_OK)
+    {
+        ExFatReportChange(Vcb,
+                          &Fcb->PathName,
+                          ExFatNameChangeFilter(Fcb->IsDirectory),
+                          FILE_ACTION_REMOVED);
+    }
 }
 
 NTSTATUS
@@ -200,8 +205,6 @@ ExFatCreate(
     ULONGLONG FullPathHash;
     UNICODE_STRING ParentPath;
     UNICODE_STRING LeafName;
-    PEXFAT_DIR_INDEX DirIndex;
-    PEXFAT_DIR_CHILD Child;
     TCHAR* FatPath = NULL;
     FIL NewFile;
     FILINFO Information;
@@ -217,6 +220,10 @@ ExFatCreate(
     BOOLEAN IsDirectory;
     BOOLEAN DirectoryRequested;
     BOOLEAN DeleteOnClose;
+    PWCHAR TargetLeaf = NULL;
+    USHORT TargetLeafLength = 0;
+    BOOLEAN OpenTargetDirectory;
+    BOOLEAN TargetExists = FALSE;
     BOOLEAN ShareSet = FALSE;
     BOOLEAN FcbResourceAcquired = FALSE;
     BOOLEAN NewFileOpen = FALSE;
@@ -265,7 +272,8 @@ ExFatCreate(
 
     DeleteOnClose = !!(Options & FILE_DELETE_ON_CLOSE);
     DirectoryRequested = !!(Options & FILE_DIRECTORY_FILE);
-    IsRoot = (FullPath.Length == sizeof(WCHAR) && FullPath.Buffer[0] == L'\\');
+    OpenTargetDirectory = BooleanFlagOn(Stack->Flags, SL_OPEN_TARGET_DIRECTORY);
+    IsRoot = ExFatIsRootPath(&FullPath);
 
     ExAcquireResourceExclusiveLite(&Vcb->Resource, TRUE);
     if (Vcb->Locked && Vcb->LockOwner != FileObject)
@@ -284,6 +292,50 @@ ExFatCreate(
     RtlZeroMemory(&Information, sizeof(Information));
     Result = FR_OK;
 
+    /*
+     * Rename/link target open: report whether the final component exists,
+     * then open its parent directory as this file object. The name is
+     * trimmed to the final component on success.
+     */
+    if (OpenTargetDirectory)
+    {
+        ExFatSplitPath(&FullPath, &ParentPath, &LeafName);
+        if (!LeafName.Length)
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            goto Failure;
+        }
+        TargetLeaf = LeafName.Buffer;
+        TargetLeafLength = LeafName.Length;
+
+        Fcb = ExFatFindFcb(Vcb, &FullPath, FullPathHash);
+        if (Fcb)
+        {
+            TargetExists = TRUE;
+            ExFatDereferenceFcb(Fcb);
+            Fcb = NULL;
+        }
+        else
+        {
+            Status = ExFatProbePath(Vcb, &FullPath, FullPathHash, NULL,
+                                    &Information, &Result);
+            if (!NT_SUCCESS(Status))
+                goto Failure;
+            TargetExists = (Result == FR_OK);
+        }
+
+        RtlZeroMemory(&Information, sizeof(Information));
+        Result = FR_OK;
+
+        FullPath.Length = ParentPath.Length;
+        FullPath.MaximumLength = ParentPath.Length;
+        FullPathHash = ExFatHashPath(&FullPath);
+        IsRoot = ExFatIsRootPath(&FullPath);
+        DirectoryRequested = TRUE;
+        DeleteOnClose = FALSE;
+        Disposition = FILE_OPEN;
+    }
+
     /* A live FCB answers the existence probe without a FatFs path walk. */
     Fcb = ExFatFindFcb(Vcb, &FullPath, FullPathHash);
     if (Fcb)
@@ -297,54 +349,13 @@ ExFatCreate(
         IsDirectory = TRUE;
         Information.fattrib = AM_DIR;
     }
-    else if (ExFatLookupNegative(Vcb, &FullPath, FullPathHash, &Result))
-    {
-        Exists = FALSE;
-        IsDirectory = FALSE;
-    }
     else
     {
-        ExFatSplitPath(&FullPath, &ParentPath, &LeafName);
-        DirIndex = LeafName.Length ? ExFatEnsureDirIndex(Vcb, &ParentPath) : NULL;
-        if (DirIndex)
-        {
-            /* The parent's one-sweep index answers without a FatFs scan. */
-            Child = ExFatDirIndexLookup(DirIndex, &LeafName);
-            Exists = (Child != NULL);
-            if (Child)
-            {
-                Information.fattrib = Child->Attributes;
-                Information.fsize = (FSIZE_t)Child->FileSize.QuadPart;
-                Information.fdate = Child->ModDate;
-                Information.ftime = Child->ModTime;
-                Information.crdate = Child->CrtDate;
-                Information.crtime = Child->CrtTime;
-            }
-            else
-            {
-                Result = FR_NO_FILE;
-            }
-        }
-        else
-        {
-            Status = ExFatEnsureFatPath(Vcb, &FullPath, &FatPath);
-            if (!NT_SUCCESS(Status))
-                goto Failure;
-            ExFatAcquireFatFs(Vcb);
-            Result = f_stat(FatPath, &Information);
-            ExFatReleaseFatFs(Vcb);
-            Exists = (Result == FR_OK);
-            if (!Exists)
-            {
-                if (Result != FR_NO_FILE && Result != FR_NO_PATH)
-                {
-                    Status = ExFatMapResult(Result);
-                    goto Failure;
-                }
-                /* Loader search-order probes hammer the same missing names. */
-                ExFatRememberNegative(Vcb, &FullPath, FullPathHash, Result);
-            }
-        }
+        Status = ExFatProbePath(Vcb, &FullPath, FullPathHash, NULL,
+                                &Information, &Result);
+        if (!NT_SUCCESS(Status))
+            goto Failure;
+        Exists = (Result == FR_OK);
         IsDirectory = Exists && !!(Information.fattrib & AM_DIR);
     }
 
@@ -434,8 +445,7 @@ ExFatCreate(
     {
         OpenMode = FA_READ;
         if (ExFatIsWriteAccess(DesiredAccess) || !Exists ||
-            Disposition == FILE_OVERWRITE || Disposition == FILE_OVERWRITE_IF ||
-            Disposition == FILE_SUPERSEDE)
+            ExFatDispositionOverwrites(Disposition))
         {
             OpenMode |= FA_WRITE;
         }
@@ -471,9 +481,14 @@ ExFatCreate(
                 goto Failure;
         }
 
-        /* f_open would refuse FA_WRITE on a read-only entry; keep parity. */
-        if (Exists && (OpenMode & FA_WRITE) &&
-            (Fcb->FileAttributes & FILE_ATTRIBUTE_READONLY))
+        /*
+         * A read-only entry denies data access and deletion, but not
+         * attribute-only opens: clearing the bit needs one of those.
+         */
+        if (Exists && (Fcb->FileAttributes & FILE_ATTRIBUTE_READONLY) &&
+            (ExFatIsDataWriteAccess(DesiredAccess) ||
+             DeleteOnClose ||
+             ExFatDispositionOverwrites(Disposition)))
         {
             Status = STATUS_ACCESS_DENIED;
             goto Failure;
@@ -608,7 +623,35 @@ ExFatCreate(
         else
             FileObject->Flags |= FO_CACHE_SUPPORTED;
     }
+    if (CreateInformation == FILE_CREATED)
+    {
+        ExFatReportChange(Vcb,
+                          &FullPath,
+                          ExFatNameChangeFilter(Fcb->IsDirectory),
+                          FILE_ACTION_ADDED);
+    }
+    else if (CreateInformation == FILE_OVERWRITTEN ||
+             CreateInformation == FILE_SUPERSEDED)
+    {
+        ExFatReportChange(Vcb,
+                          &FullPath,
+                          FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE |
+                              FILE_NOTIFY_CHANGE_ATTRIBUTES,
+                          FILE_ACTION_MODIFIED);
+    }
     ExReleaseResourceLite(&Vcb->Resource);
+
+    if (OpenTargetDirectory)
+    {
+        /*
+         * Hand back only the final component. It is the leaf the split
+         * already isolated, which is never longer than the name it came from.
+         */
+        NT_ASSERT(TargetLeafLength <= FileObject->FileName.Length);
+        RtlMoveMemory(FileObject->FileName.Buffer, TargetLeaf, TargetLeafLength);
+        FileObject->FileName.Length = TargetLeafLength;
+        CreateInformation = TargetExists ? FILE_EXISTS : FILE_DOES_NOT_EXIST;
+    }
 
     Irp->IoStatus.Information = CreateInformation;
     if (FatPath)
@@ -665,6 +708,10 @@ ExFatCleanup(
     if (!Fcb || !Ccb || Ccb->CleanedUp)
         return STATUS_SUCCESS;
 
+    /* Only directory handles can carry a registered change notification. */
+    if (Vcb->NotifySync && Fcb->IsDirectory && !Fcb->IsVolume)
+        FsRtlNotifyCleanup(Vcb->NotifySync, &Vcb->NotifyListHead, Ccb);
+
     if (!Fcb->IsDirectory && !Fcb->IsVolume && FileObject->PrivateCacheMap)
         CcUninitializeCacheMap(FileObject, NULL, NULL);
 
@@ -690,6 +737,21 @@ ExFatCleanup(
                            IoGetRequestorProcess(Irp),
                            NULL);
     }
+    /*
+     * Every write flavour (cached, non-cached, MDL, and page writes through a
+     * mapped section) lands on FO_FILE_MODIFIED, so one report here covers
+     * them all instead of four inside the write paths.
+     */
+    if (!Fcb->IsDirectory && !Fcb->IsVolume &&
+        (FileObject->Flags & FO_FILE_MODIFIED) && !Fcb->DeletePending)
+    {
+        ExFatReportChange(Vcb,
+                          &Fcb->PathName,
+                          FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_SIZE |
+                              FILE_NOTIFY_CHANGE_ATTRIBUTES,
+                          FILE_ACTION_MODIFIED);
+    }
+
     if (Fcb->DeletePending && !Fcb->IsVolume && Fcb->OpenHandleCount == 0)
         ExFatCompleteDelete(Vcb, Fcb);
     Ccb->CleanedUp = TRUE;
@@ -739,6 +801,10 @@ ExFatClose(
     if (Fcb->DeletePending && !Fcb->DeleteCompleted &&
         !Fcb->IsVolume && Fcb->OpenHandleCount == 0)
         ExFatCompleteDelete(Vcb, Fcb);
+
+    /* Teardown is tied to the CCB: close can arrive without a cleanup. */
+    if (Vcb->NotifySync && Fcb->IsDirectory && !Fcb->IsVolume)
+        FsRtlNotifyCleanup(Vcb->NotifySync, &Vcb->NotifyListHead, Ccb);
 
     RtlFreeUnicodeString(&Ccb->SearchPattern);
     FileObject->FsContext = NULL;

@@ -34,14 +34,20 @@ ExFatReadFileData(
 
     if (!Buffer)
     {
-        Buffer = ExFatGetUserBuffer(Irp, FALSE);
+        Buffer = ExFatGetDirectIoBuffer(Irp);
         if (!Buffer)
             return FR_NOT_ENOUGH_CORE;
     }
     Result = f_lseek(&Fcb->FatFile, (FSIZE_t)ByteOffset);
     if (Result != FR_OK)
         return Result;
+
+    /* The window is keyed on the MDL's address, which is where FatFs writes. */
+    NT_ASSERT(!Irp || !Irp->MdlAddress ||
+              Buffer == MmGetMdlVirtualAddress(Irp->MdlAddress));
+    ExFatBeginDataRead(Fcb->Vcb, Irp ? Irp->MdlAddress : NULL, Length);
     Result = f_read(&Fcb->FatFile, Buffer, Length, &Bytes);
+    ExFatEndDataRead(Fcb->Vcb);
     *BytesRead += Bytes;
     return Result;
 }
@@ -85,8 +91,12 @@ ExFatWriteFileData(
     Result = f_lseek(&Fcb->FatFile, (FSIZE_t)ByteOffset);
     if (Result != FR_OK)
         return Result;
+
     Result = f_write(&Fcb->FatFile, Buffer, Length, &Bytes);
     *BytesWritten += Bytes;
+    /* FatFs signals a full volume as a short transfer with FR_OK. */
+    if (Result == FR_OK && Bytes < Length)
+        Result = EXFAT_FR_DISK_FULL;
     return Result;
 }
 
@@ -603,6 +613,9 @@ ExFatWrite(
                 }
             }
             ExReleaseResourceLite(PagingIo ? &Fcb->PagingIoResource : &Fcb->MainResource);
+            /* Volume lock precedes FCB locks, so refresh the index here. */
+            if (NT_SUCCESS(Status) && !PagingIo)
+                ExFatCommitFcbMetadata(Fcb);
         }
     }
 

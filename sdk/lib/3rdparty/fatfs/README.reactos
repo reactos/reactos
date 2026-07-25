@@ -36,6 +36,8 @@ Patent-related changes
 The __REACTOS__ branches replace selected upstream NameHash and NoFatChain
 optimization bodies. Where upstream contains an implementation, the #else
 branch contains only a patent and expiration-date placeholder.
+All in-tree consumers define __REACTOS__; ff.c intentionally rejects a build
+without it rather than compiling the incomplete placeholder paths.
 
 1. Directory lookup by NameHash: US8321439B2 (adjusted expiration date
    2027-03-09) and US10614032B2 (adjusted expiration date 2028-01-27).
@@ -54,14 +56,75 @@ These dates and statuses were checked in Google Patents on 2026-07-24.
 Google's status data is an estimate, not a legal conclusion. Recheck the
 USPTO file history before replacing any placeholder.
 
+Reading volumes written elsewhere
+---------------------------------
+
+None of the above removes the NoFatChain flag from the on-disk format. A
+volume written by another implementation may hold objects whose allocation is
+described only by that flag, and for those upstream get_fat() generates the
+cluster numbers arithmetically instead of reading the FAT. That path is kept
+deliberately: without it such objects cannot be read at all. The line this
+port maintains is that the flag is honoured only for format-required access
+and is never produced, set, extended, or converted:
+
+* No code assigns the contiguous state. Its only source is the on-disk flag,
+  loaded by load_obj_xdir() as (XDIR_GenFlags & 2).
+* Objects created here are recorded on the FAT and stored with GenFlags = 1,
+  including those from f_expand(), f_mkdir() and f_mkfs().
+* Files carrying the flag can be opened for reading but not writing.
+* A directory carrying the flag can be traversed, but dir_next() refuses to
+  stretch it. create_chain() rejects any missed attempt to stretch or convert
+  such a chain before allocating a cluster.
+* No code added by this port selects an access path from the flag. The
+  f_lseek() batching described below applies only to FAT-recorded chains;
+  objects carrying the flag take the generic loop.
+
+The NameHash field is likewise still written on entry creation, because a
+volume without it is not readable by other implementations. It is never used
+for lookup; f_rename() only preserves the value generated for the new name.
+
 The kernel driver and FreeLoader do not select data I/O paths from exFAT
 allocation flags or construct file extents. File data is accessed through
-FatFs.
+FatFs. The driver's directory index keys on a hash of the path string that
+the driver computes itself (ExFatHashPath); it does not read the on-disk
+NameHash field.
 
 The driver's additional large-transfer batching operates below FatFs allocation
 logic. It uses bounded adaptive read-ahead and write combining for consecutive
 sector requests; the batching path does not inspect directory allocation flags
 or derive file extents.
+
+Performance changes
+-------------------
+
+These local paths are compiled only when __REACTOS__ is defined.
+
+* ff.c f_lseek(): for exFAT objects opened read-only whose chain is recorded
+  on the FAT, the seek follows the chain with one sector-window load per FAT
+  sector instead of one get_fat() call per cluster. The walk
+  tracks the first entry of the loaded sector, so the inner loop indexes the
+  window and tests the sector boundary without the runtime divisions by the
+  sector size that get_fat() performs per call. The loads, value checks, and
+  error paths are identical to the generic loop; no chain information is
+  retained across calls.
+* ff.h/ff.c: exFAT builds keep a FAT linearity digest — two bits per FAT
+  sector recording whether every in-range entry e of that sector holds
+  exactly e + 1. It is indexed by FAT sector and describes the content of
+  the allocation table itself; it stores no file identity, no logical
+  offset, and no per-object run, so it is not a file allocation map. It is
+  filled from sectors that are read anyway, discarded for a sector whenever
+  put_fat() modifies it, and released at unmount, remount, or format.
+  get_fat() and the f_lseek chain walk answer from it without loading the
+  sector, so following a chain through a linear region costs neither a
+  sector load nor a per-cluster step. Values returned are identical to
+  reading the FAT.
+* ff.h/ff.c: exFAT write builds give the allocation bitmap its own sector
+  window (bwin/bwinsect/bwflag with move_bitmap_window/sync_bitmap_window).
+  find_bitmap(), change_bitmap(), and the f_getfree() bitmap scan use it
+  exclusively, so per-cluster allocation no longer evicts the FAT sector
+  from fs->win between every FAT and bitmap update. A dirty bitmap window
+  is written before dependent FAT or directory updates, while removal
+  flushes the FAT update before clearing its allocation bits.
 
 The media-access implementation is not kept in this directory. This preserves
 the upstream separation between the filesystem core and platform I/O.

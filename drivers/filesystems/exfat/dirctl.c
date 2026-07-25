@@ -26,6 +26,11 @@ ExFatSetSearchPattern(
     {
         Source = *Pattern;
     }
+    else if (Ccb->SearchPattern.Buffer)
+    {
+        /* A restart without a new pattern keeps the established one. */
+        return STATUS_SUCCESS;
+    }
     else
     {
         RtlInitUnicodeString(&Source, MatchAll);
@@ -361,7 +366,7 @@ ExFatQueryDirectory(
                                           Child->FileSize,
                                           Child->AllocationSize,
                                           Child->FileAttributes,
-                                          Child->NameHash,
+                                          Child->PathHash,
                                           &Name);
             Found = TRUE;
             Offset += Emitted;
@@ -455,6 +460,44 @@ Done:
     return Status;
 }
 
+/*
+ * The IRP is pended inside the FsRtl notify package and completed when a
+ * matching change is reported (or the handle is cleaned up). The CCB is the
+ * identity token shared with FsRtlNotifyCleanup.
+ */
+static NTSTATUS
+ExFatNotifyChangeDirectory(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+    PFILE_OBJECT FileObject = Stack->FileObject;
+    PEXFAT_VCB Vcb = DeviceObject->DeviceExtension;
+    PEXFAT_FCB Fcb;
+    PEXFAT_CCB Ccb;
+
+    if (!FileObject)
+        return STATUS_INVALID_PARAMETER;
+    Fcb = FileObject->FsContext;
+    Ccb = FileObject->FsContext2;
+    if (!Fcb || !Ccb || !Fcb->IsDirectory || Fcb->IsVolume || !Vcb->NotifySync)
+        return STATUS_INVALID_PARAMETER;
+    if (Fcb->DeletePending)
+        return STATUS_DELETE_PENDING;
+
+    FsRtlNotifyFullChangeDirectory(Vcb->NotifySync,
+                                   &Vcb->NotifyListHead,
+                                   Ccb,
+                                   (PSTRING)&Fcb->PathName,
+                                   BooleanFlagOn(Stack->Flags, SL_WATCH_TREE),
+                                   FALSE,
+                                   Stack->Parameters.NotifyDirectory.CompletionFilter,
+                                   Irp,
+                                   NULL,
+                                   NULL);
+    return STATUS_PENDING;
+}
+
 NTSTATUS
 ExFatDirectoryControl(
     PDEVICE_OBJECT DeviceObject,
@@ -467,6 +510,6 @@ ExFatDirectoryControl(
     if (Stack->MinorFunction == IRP_MN_QUERY_DIRECTORY)
         return ExFatQueryDirectory(DeviceObject, Irp);
     if (Stack->MinorFunction == IRP_MN_NOTIFY_CHANGE_DIRECTORY)
-        return STATUS_NOT_SUPPORTED;
+        return ExFatNotifyChangeDirectory(DeviceObject, Irp);
     return STATUS_INVALID_DEVICE_REQUEST;
 }

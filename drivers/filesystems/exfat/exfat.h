@@ -42,12 +42,30 @@ typedef union _EXFAT_FATFS_ALLOCATION_HEADER
     ULONG_PTR Alignment[2];
 } EXFAT_FATFS_ALLOCATION_HEADER, *PEXFAT_FATFS_ALLOCATION_HEADER;
 
+/*
+ * FatFs reports a full volume as a short transfer with FR_OK. The wrappers
+ * around it translate that into this driver-private result so the mapping to
+ * STATUS_DISK_FULL lives in ExFatMapResult() alone.
+ */
+#define EXFAT_FR_DISK_FULL ((FRESULT)0x7F)
+
+#define ExFatIsRootPath(Path) \
+    ((Path)->Length == sizeof(WCHAR) && (Path)->Buffer[0] == L'\\')
+
+#define ExFatNameChangeFilter(IsDir) \
+    ((IsDir) ? FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME)
+
+#define ExFatIsDataWriteAccess(Access) \
+    BooleanFlagOn((Access), FILE_WRITE_DATA | FILE_APPEND_DATA | FILE_WRITE_EA)
+
 #define EXFAT_FCB_SIGNATURE 0x5846
 
 #define EXFAT_NAME_OFFSET           3
 #define EXFAT_NAME_LENGTH           8
 #define EXFAT_SECTOR_SHIFT_OFFSET   108
 #define EXFAT_BOOT_SIGNATURE_OFFSET 510
+/* Returned by ExFatWindowOffset() when the buffer is outside the window. */
+#define EXFAT_WINDOW_NONE           MAXULONG
 #define EXFAT_MIN_SECTOR_SHIFT      9
 #define EXFAT_MAX_SECTOR_SHIFT      12
 
@@ -62,7 +80,7 @@ typedef struct _EXFAT_NEGATIVE_ENTRY
 
 typedef struct _EXFAT_DIR_CHILD
 {
-    ULONGLONG NameHash;
+    ULONGLONG PathHash;
     ULONG NextHash;
     ULONG NameOffset;
     USHORT NameLength;
@@ -144,10 +162,13 @@ struct _EXFAT_VCB
 {
     PDEVICE_OBJECT DeviceObject;
     PDEVICE_OBJECT StorageDevice;
+    PIRP FatFsIoIrp;
+    PMDL PoolIoMdl;
     PVPB Vpb;
     FATFS FileSystem;
     BYTE DriveNumber;
     ULONG BytesPerSector;
+    ULONG SectorShift;      /* BytesPerSector == 1 << SectorShift */
     ULONG BytesPerCluster;
     ULONGLONG SectorCount;
     ULONG SerialNumber;
@@ -157,6 +178,8 @@ struct _EXFAT_VCB
     PFILE_OBJECT LockOwner;
     ERESOURCE Resource;
     ERESOURCE FatFsResource;
+    PNOTIFY_SYNC NotifySync;
+    LIST_ENTRY NotifyListHead;
     LIST_ENTRY FcbListHead;
     ULONG CachedFcbCount;
     ULONG NamespaceGeneration;
@@ -174,6 +197,8 @@ struct _EXFAT_VCB
     ULONG SectorCacheEntries;
     ULONG SectorCacheSets;
     ULONG SectorCacheBlockSectors;
+    ULONG SectorCacheBlockShift;
+    ULONG SectorCacheSetsMask;
     ULONG SectorCacheDirtyCount;
     PVOID StreamCacheAllocation;
     PVOID StreamCacheBuffer;
@@ -181,6 +206,11 @@ struct _EXFAT_VCB
     LBA_t StreamReadNextSector;
     ULONG StreamCacheCount;
     UCHAR StreamCacheMode;
+    PMDL ActiveReadMdl;
+    ULONG ActiveReadLength;
+    LBA_t PreReadSector;
+    ULONG PreReadCount;
+    PUCHAR PreReadBuffer;
     PVOID ZeroBuffer;
 };
 
@@ -218,9 +248,14 @@ NTSTATUS ExFatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS ExFatMapResult(FRESULT Result);
 PVOID ExFatGetUserBuffer(PIRP Irp, BOOLEAN PagingIo);
+PVOID ExFatGetDirectIoBuffer(PIRP Irp);
+ULONG ExFatWindowOffset(PEXFAT_VCB Vcb, PVOID Buffer, ULONG Length);
+VOID ExFatBeginDataRead(PEXFAT_VCB Vcb, PMDL Mdl, ULONG Length);
+VOID ExFatEndDataRead(PEXFAT_VCB Vcb);
 NTSTATUS ExFatLockUserBuffer(PIRP Irp, ULONG Length, LOCK_OPERATION Operation);
 NTSTATUS ExFatReadWriteDevice(PDEVICE_OBJECT DeviceObject, UCHAR MajorFunction, PVOID Buffer, ULONG Length, PLARGE_INTEGER Offset, BOOLEAN OverrideVerify);
 NTSTATUS ExFatRawWriteDevice(PEXFAT_VCB Vcb, PVOID Buffer, ULONG Length, PLARGE_INTEGER Offset);
+NTSTATUS ExFatInitializeVcbIo(PEXFAT_VCB Vcb);
 NTSTATUS ExFatFlushStorageDevice(PEXFAT_VCB Vcb);
 NTSTATUS ExFatFlushSectorCache(PEXFAT_VCB Vcb);
 VOID ExFatFreeSectorCache(PEXFAT_VCB Vcb);
@@ -240,6 +275,8 @@ PEXFAT_FCB ExFatFindFcb(PEXFAT_VCB Vcb, PUNICODE_STRING PathName, ULONGLONG Path
 VOID ExFatReferenceFcb(PEXFAT_FCB Fcb);
 VOID ExFatDereferenceFcb(PEXFAT_FCB Fcb);
 VOID ExFatPurgeCachedFcbs(PEXFAT_VCB Vcb);
+NTSTATUS ExFatEnsureFatPath(PEXFAT_VCB Vcb, PUNICODE_STRING FullPath, TCHAR** FatPath);
+NTSTATUS ExFatProbePath(PEXFAT_VCB Vcb, PUNICODE_STRING FullPath, ULONGLONG PathHash, TCHAR* FatPath, FILINFO* Information, FRESULT* Result);
 BOOLEAN ExFatLookupNegative(PEXFAT_VCB Vcb, PUNICODE_STRING PathName, ULONGLONG PathHash, FRESULT* Result);
 VOID ExFatRememberNegative(PEXFAT_VCB Vcb, PUNICODE_STRING PathName, ULONGLONG PathHash, FRESULT Result);
 VOID ExFatSplitPath(PUNICODE_STRING FullPath, PUNICODE_STRING ParentPath, PUNICODE_STRING LeafName);
@@ -251,7 +288,11 @@ VOID ExFatDirIndexRemove(PEXFAT_VCB Vcb, PUNICODE_STRING PathName);
 VOID ExFatDirIndexUpdateFromFcb(PEXFAT_FCB Fcb);
 VOID ExFatDropDirIndexes(PEXFAT_VCB Vcb);
 VOID ExFatUpdateFcbFromInfo(PEXFAT_FCB Fcb, FILINFO* Information);
+VOID ExFatCommitFcbMetadata(PEXFAT_FCB Fcb);
 ULONGLONG ExFatHashPath(PUNICODE_STRING PathName);
+ULONGLONG ExFatNormalizePath(PUNICODE_STRING Path);
+NTSTATUS ExFatSetFcbPath(PEXFAT_FCB Fcb, PUNICODE_STRING PathName);
+VOID ExFatReportChange(PEXFAT_VCB Vcb, PUNICODE_STRING PathName, ULONG FilterMatch, ULONG Action);
 
 VOID ExFatAcquireFatFs(PEXFAT_VCB Vcb);
 VOID ExFatReleaseFatFs(PEXFAT_VCB Vcb);

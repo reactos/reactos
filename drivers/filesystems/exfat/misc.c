@@ -27,6 +27,8 @@ C_ASSERT(FFCONF_DEF == 80386);
 #define EXFAT_SECTOR_CACHE_EMPTY ((LBA_t)~0ULL)
 
 #define EXFAT_STREAM_CACHE_SIZE  (1024 * 1024)
+/* One persistent MDL serves every pool transfer, so it must cover the largest. */
+C_ASSERT(EXFAT_SECTOR_CACHE_BLOCK <= EXFAT_STREAM_CACHE_SIZE);
 #define EXFAT_STREAM_CACHE_EMPTY 0
 #define EXFAT_STREAM_CACHE_READ  1
 #define EXFAT_STREAM_CACHE_WRITE 2
@@ -36,6 +38,7 @@ typedef struct _EXFAT_IO_CONTEXT
 {
     KEVENT Event;
     IO_STATUS_BLOCK IoStatus;
+    BOOLEAN ReusableIrp;
     BOOLEAN OwnMdl;
     BOOLEAN UnlockPages;
 } EXFAT_IO_CONTEXT, *PEXFAT_IO_CONTEXT;
@@ -49,6 +52,9 @@ NTSTATUS
 ExFatMapResult(
     FRESULT Result)
 {
+    if (Result == EXFAT_FR_DISK_FULL)
+        return STATUS_DISK_FULL;
+
     switch (Result)
     {
         case FR_OK:
@@ -184,7 +190,7 @@ ExFatZeroFileRange(
         Written = 0;
         Result = f_write(&Fcb->FatFile, Vcb->ZeroBuffer, Chunk, &Written);
         if (Result == FR_OK && Written != Chunk)
-            Result = FR_DISK_ERR;
+            Result = EXFAT_FR_DISK_FULL;
         Remaining -= Written;
     }
 
@@ -263,7 +269,8 @@ ExFatReadWriteCompletion(
         IoFreeMdl(Mdl);
     }
 
-    IoFreeIrp(Irp);
+    if (!IoContext->ReusableIrp)
+        IoFreeIrp(Irp);
     KeSetEvent(&IoContext->Event, IO_NO_INCREMENT, FALSE);
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
@@ -278,6 +285,7 @@ ExFatReadWriteCompletion(
 static NTSTATUS
 ExFatSubmitDeviceIo(
     PDEVICE_OBJECT DeviceObject,
+    PIRP ReusableIrp,
     UCHAR MajorFunction,
     PMDL Mdl,
     BOOLEAN OwnMdl,
@@ -293,10 +301,19 @@ ExFatSubmitDeviceIo(
     KeInitializeEvent(&IoContext.Event, NotificationEvent, FALSE);
     IoContext.IoStatus.Status = STATUS_UNSUCCESSFUL;
     IoContext.IoStatus.Information = 0;
+    IoContext.ReusableIrp = (ReusableIrp != NULL);
     IoContext.OwnMdl = OwnMdl;
     IoContext.UnlockPages = UnlockPages;
 
-    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    Irp = ReusableIrp;
+    if (Irp)
+    {
+        IoReuseIrp(Irp, STATUS_UNSUCCESSFUL);
+    }
+    else
+    {
+        Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    }
     if (!Irp)
     {
         while (OwnMdl && Mdl)
@@ -346,26 +363,48 @@ ExFatSubmitDeviceIo(
     return IoContext.IoStatus.Status;
 }
 
+/*
+ * The reusable child IRP and the persistent MDL that every serialized FatFs
+ * pool transfer runs on. Allocated here so that the matching teardown in
+ * ExFatFreeSectorCache() is the only other place that knows about them.
+ */
+NTSTATUS
+ExFatInitializeVcbIo(
+    PEXFAT_VCB Vcb)
+{
+    Vcb->FatFsIoIrp = IoAllocateIrp(Vcb->StorageDevice->StackSize, FALSE);
+    Vcb->PoolIoMdl = ExAllocatePoolWithTag(NonPagedPool,
+                                           MmSizeOfMdl((PVOID)(PAGE_SIZE - 1),
+                                                       EXFAT_STREAM_CACHE_SIZE),
+                                           TAG_EXFAT_IO);
+    if (!Vcb->FatFsIoIrp || !Vcb->PoolIoMdl)
+        return STATUS_INSUFFICIENT_RESOURCES;
+    return STATUS_SUCCESS;
+}
+
 /* For buffers known to be nonpaged: no PFN-lock probe/unlock cycle. */
 static NTSTATUS
 ExFatPoolReadWriteDevice(
-    PDEVICE_OBJECT DeviceObject,
+    PEXFAT_VCB Vcb,
     UCHAR MajorFunction,
     PVOID PoolBuffer,
     ULONG Length,
     PLARGE_INTEGER Offset,
     BOOLEAN OverrideVerify)
 {
-    PMDL Mdl;
+    PMDL Mdl = Vcb->PoolIoMdl;
 
-    Mdl = IoAllocateMdl(PoolBuffer, Length, FALSE, FALSE, NULL);
-    if (!Mdl)
-        return STATUS_INSUFFICIENT_RESOURCES;
+    /* Mounting fails without these, and every caller stays within the cap. */
+    NT_ASSERT(Mdl != NULL);
+    NT_ASSERT(Length <= EXFAT_STREAM_CACHE_SIZE);
+
+    MmInitializeMdl(Mdl, PoolBuffer, Length);
     MmBuildMdlForNonPagedPool(Mdl);
-    return ExFatSubmitDeviceIo(DeviceObject,
+    return ExFatSubmitDeviceIo(Vcb->StorageDevice,
+                               Vcb->FatFsIoIrp,
                                MajorFunction,
                                Mdl,
-                               TRUE,
+                               FALSE,
                                FALSE,
                                Length,
                                Offset,
@@ -439,6 +478,7 @@ ExFatReadWriteDevice(
     }
 
     Status = ExFatSubmitDeviceIo(DeviceObject,
+                                 NULL,
                                  MajorFunction,
                                  Mdl,
                                  TRUE,
@@ -455,6 +495,137 @@ Cleanup:
         ExFreePoolWithTag(Allocation, TAG_EXFAT_IO);
     }
     return Status;
+}
+
+/*
+ * Buffer for a request whose pages are already probed and locked and which
+ * runs in the requestor's context: the caller's own mapping serves both the
+ * DMA path and the copy paths, so no system mapping is built.
+ */
+PVOID
+ExFatGetDirectIoBuffer(
+    PIRP Irp)
+{
+    if (Irp && Irp->MdlAddress)
+        return MmGetMdlVirtualAddress(Irp->MdlAddress);
+    return ExFatGetUserBuffer(Irp, FALSE);
+}
+
+/*
+ * Publish the request's locked master MDL for the duration of one FatFs
+ * transfer, and retract it afterwards. The window and everything derived
+ * from it (the delivered pre-read range) are owned here, not by the caller.
+ */
+VOID
+ExFatBeginDataRead(
+    PEXFAT_VCB Vcb,
+    PMDL Mdl,
+    ULONG Length)
+{
+    NT_ASSERT(Vcb->ActiveReadMdl == NULL);
+    if (!Mdl)
+        return;
+    Vcb->ActiveReadMdl = Mdl;
+    Vcb->ActiveReadLength = Length;
+}
+
+VOID
+ExFatEndDataRead(
+    PEXFAT_VCB Vcb)
+{
+    Vcb->ActiveReadMdl = NULL;
+    Vcb->ActiveReadLength = 0;
+    Vcb->PreReadSector = 0;
+    Vcb->PreReadCount = 0;
+    Vcb->PreReadBuffer = NULL;
+}
+
+/*
+ * Offset of Buffer within the published read window, or EXFAT_WINDOW_NONE if
+ * no window is open or [Buffer, Buffer + Length) does not fit inside it. Both
+ * window consumers derive their offset here so they cannot disagree on it.
+ */
+ULONG
+ExFatWindowOffset(
+    PEXFAT_VCB Vcb,
+    PVOID Buffer,
+    ULONG Length)
+{
+    ULONG_PTR WindowBase;
+    SIZE_T Offset;
+
+    if (!Vcb->ActiveReadMdl || !Length)
+        return EXFAT_WINDOW_NONE;
+    WindowBase = (ULONG_PTR)MmGetMdlVirtualAddress(Vcb->ActiveReadMdl);
+    if ((ULONG_PTR)Buffer < WindowBase)
+        return EXFAT_WINDOW_NONE;
+    Offset = (ULONG_PTR)Buffer - WindowBase;
+    if (Offset >= Vcb->ActiveReadLength ||
+        Length > Vcb->ActiveReadLength - Offset)
+    {
+        return EXFAT_WINDOW_NONE;
+    }
+    return (ULONG)Offset;
+}
+
+/*
+ * Non-cached requests arrive with a locked master MDL. Reuse its pages for
+ * FatFs data subreads; metadata and cache buffers retain the generic path.
+ */
+static NTSTATUS
+ExFatReadDataDevice(
+    PEXFAT_VCB Vcb,
+    PVOID Buffer,
+    ULONG Length,
+    PLARGE_INTEGER Offset)
+{
+    PMDL SourceMdl = Vcb->ActiveReadMdl;
+    PMDL PartialMdl;
+    PVOID SourceAddress;
+    ULONG BufferOffset;
+    BOOLEAN OwnMdl;
+
+    if (((ULONG_PTR)Buffer & Vcb->StorageDevice->AlignmentRequirement) != 0)
+        goto Fallback;
+
+    BufferOffset = ExFatWindowOffset(Vcb, Buffer, Length);
+    if (BufferOffset == EXFAT_WINDOW_NONE)
+        goto Fallback;
+    /* IoBuildPartialMdl only maps the head link, so stay inside it. */
+    if (BufferOffset > MmGetMdlByteCount(SourceMdl) ||
+        Length > MmGetMdlByteCount(SourceMdl) - BufferOffset)
+    {
+        goto Fallback;
+    }
+
+    PartialMdl = SourceMdl;
+    OwnMdl = FALSE;
+    if (BufferOffset != 0 || SourceMdl->Next != NULL)
+    {
+        SourceAddress = (PUCHAR)MmGetMdlVirtualAddress(SourceMdl) + BufferOffset;
+        PartialMdl = IoAllocateMdl(SourceAddress, Length, FALSE, FALSE, NULL);
+        if (!PartialMdl)
+            goto Fallback;
+        IoBuildPartialMdl(SourceMdl, PartialMdl, SourceAddress, Length);
+        OwnMdl = TRUE;
+    }
+    return ExFatSubmitDeviceIo(Vcb->StorageDevice,
+                               Vcb->FatFsIoIrp,
+                               IRP_MJ_READ,
+                               PartialMdl,
+                               OwnMdl,
+                               FALSE,
+                               Length,
+                               Offset,
+                               TRUE);
+
+Fallback:
+    return ExFatReadWriteDevice(Vcb->StorageDevice,
+                                IRP_MJ_READ,
+                                Buffer,
+                                Length,
+                                Offset,
+                                TRUE);
 }
 
 NTSTATUS
@@ -565,6 +736,44 @@ ExFatUpcasePathCharacter(
     return RtlUpcaseUnicodeChar(Character);
 }
 
+/*
+ * Fold '/' onto '\', drop any trailing separators, and return the hash of
+ * the result. Every path that reaches the FCB cache passes through here, so
+ * two spellings of one path always agree on their hash.
+ */
+ULONGLONG
+ExFatNormalizePath(
+    PUNICODE_STRING Path)
+{
+    ULONGLONG Hash = 1469598103934665603ULL;
+    ULONG Characters = Path->Length / sizeof(WCHAR);
+    ULONG Index;
+    BOOLEAN Trimmed = FALSE;
+
+    /* Fold and hash in one pass: this runs on every create. */
+    for (Index = 0; Index < Characters; ++Index)
+    {
+        if (Path->Buffer[Index] == L'/')
+            Path->Buffer[Index] = L'\\';
+        Hash ^= ExFatUpcasePathCharacter(Path->Buffer[Index]);
+        Hash *= 1099511628211ULL;
+    }
+
+    while (Path->Length > sizeof(WCHAR) &&
+           Path->Buffer[Path->Length / sizeof(WCHAR) - 1] == L'\\')
+    {
+        Trimmed = TRUE;
+        Path->Length -= sizeof(WCHAR);
+        if (Path->MaximumLength > Path->Length)
+            Path->Buffer[Path->Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    /* Only a trim invalidates the hash, and trailing separators are rare. */
+    if (Trimmed)
+        Hash = ExFatHashPath(Path);
+    return Hash;
+}
+
 NTSTATUS
 ExFatBuildFullPath(
     PFILE_OBJECT FileObject,
@@ -580,10 +789,6 @@ ExFatBuildFullPath(
     USHORT PrefixLength = 0;
     ULONG TotalLength;
     PWCHAR Destination;
-    ULONG Index;
-    ULONGLONG Hash = 1469598103934665603ULL;
-    BOOLEAN Trimmed = FALSE;
-    WCHAR Character;
 
     RtlZeroMemory(FullPath, sizeof(*FullPath));
 
@@ -641,34 +846,7 @@ ExFatBuildFullPath(
 
     FullPath->Length = (USHORT)TotalLength;
     FullPath->MaximumLength = (USHORT)(TotalLength + sizeof(WCHAR));
-    for (Index = 0; Index < FullPath->Length / sizeof(WCHAR); ++Index)
-    {
-        if (FullPath->Buffer[Index] == L'/')
-            FullPath->Buffer[Index] = L'\\';
-        Character = ExFatUpcasePathCharacter(FullPath->Buffer[Index]);
-        Hash ^= Character;
-        Hash *= 1099511628211ULL;
-    }
-
-    while (FullPath->Length > sizeof(WCHAR) &&
-           FullPath->Buffer[FullPath->Length / sizeof(WCHAR) - 1] == L'\\')
-    {
-        Trimmed = TRUE;
-        FullPath->Length -= sizeof(WCHAR);
-        FullPath->Buffer[FullPath->Length / sizeof(WCHAR)] = UNICODE_NULL;
-    }
-
-    if (Trimmed)
-    {
-        Hash = 1469598103934665603ULL;
-        for (Index = 0; Index < FullPath->Length / sizeof(WCHAR); ++Index)
-        {
-            Character = ExFatUpcasePathCharacter(FullPath->Buffer[Index]);
-            Hash ^= Character;
-            Hash *= 1099511628211ULL;
-        }
-    }
-    *PathHash = Hash;
+    *PathHash = ExFatNormalizePath(FullPath);
     return STATUS_SUCCESS;
 }
 
@@ -814,7 +992,102 @@ ExFatHashPath(
     return Hash;
 }
 
-static NTSTATUS
+NTSTATUS
+ExFatEnsureFatPath(
+    PEXFAT_VCB Vcb,
+    PUNICODE_STRING FullPath,
+    TCHAR** FatPath)
+{
+    if (!*FatPath)
+        *FatPath = ExFatBuildFatPath(Vcb, FullPath);
+    return *FatPath ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
+}
+
+/*
+ * Existence probe for a path with no live FCB, in ascending cost: the
+ * negative cache, the parent's directory index, then a FatFs stat. Result
+ * reports FR_OK when the entry exists (with Information filled) and
+ * otherwise why it does not, which the caller maps to NAME/PATH_NOT_FOUND.
+ * FatPath is optional and lets a caller that already built one reuse it.
+ * Requires Vcb->Resource; must not be called with the FatFs lock held.
+ */
+NTSTATUS
+ExFatProbePath(
+    PEXFAT_VCB Vcb,
+    PUNICODE_STRING FullPath,
+    ULONGLONG PathHash,
+    TCHAR* FatPath,
+    FILINFO* Information,
+    FRESULT* Result)
+{
+    UNICODE_STRING ParentPath;
+    UNICODE_STRING LeafName;
+    PEXFAT_DIR_INDEX DirIndex;
+    PEXFAT_DIR_CHILD Child;
+    TCHAR* OwnPath = NULL;
+    NTSTATUS Status;
+
+    /*
+     * Only the metadata callers read, not the 512-byte name buffers: this
+     * runs on the negative-lookup fast path, where a full FILINFO memset
+     * would cost more than the lookup it serves.
+     */
+    Information->fsize = 0;
+    Information->fdate = 0;
+    Information->ftime = 0;
+    Information->crdate = 0;
+    Information->crtime = 0;
+    Information->fattrib = 0;
+    Information->fname[0] = 0;
+    Information->altname[0] = 0;
+    *Result = FR_OK;
+
+    if (ExFatLookupNegative(Vcb, FullPath, PathHash, Result))
+        return STATUS_SUCCESS;
+
+    ExFatSplitPath(FullPath, &ParentPath, &LeafName);
+    DirIndex = LeafName.Length ? ExFatEnsureDirIndex(Vcb, &ParentPath) : NULL;
+    if (DirIndex)
+    {
+        /* The parent's one-sweep index answers without a FatFs scan. */
+        Child = ExFatDirIndexLookup(DirIndex, &LeafName);
+        if (!Child)
+        {
+            *Result = FR_NO_FILE;
+            return STATUS_SUCCESS;
+        }
+        Information->fattrib = Child->Attributes;
+        Information->fsize = (FSIZE_t)Child->FileSize.QuadPart;
+        Information->fdate = Child->ModDate;
+        Information->ftime = Child->ModTime;
+        Information->crdate = Child->CrtDate;
+        Information->crtime = Child->CrtTime;
+        return STATUS_SUCCESS;
+    }
+
+    if (!FatPath)
+    {
+        Status = ExFatEnsureFatPath(Vcb, FullPath, &OwnPath);
+        if (!NT_SUCCESS(Status))
+            return Status;
+        FatPath = OwnPath;
+    }
+    ExFatAcquireFatFs(Vcb);
+    *Result = f_stat(FatPath, Information);
+    ExFatReleaseFatFs(Vcb);
+    if (OwnPath)
+        ExFreePoolWithTag(OwnPath, TAG_EXFAT_PATH);
+
+    if (*Result == FR_OK)
+        return STATUS_SUCCESS;
+    if (*Result != FR_NO_FILE && *Result != FR_NO_PATH)
+        return ExFatMapResult(*Result);
+    /* Loader search-order probes hammer the same missing names. */
+    ExFatRememberNegative(Vcb, FullPath, PathHash, *Result);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 ExFatSetFcbPath(
     PEXFAT_FCB Fcb,
     PUNICODE_STRING PathName)
@@ -847,6 +1120,22 @@ ExFatSetFcbPath(
     Fcb->FatPath = FatPath;
     Fcb->IndexNumber = ExFatHashPath(PathName);
     return STATUS_SUCCESS;
+}
+
+/*
+ * Publish the FCB's cached size/time fields to its parent's directory index.
+ * Every mutator of Fcb->Header calls this so enumerations cannot serve a
+ * stale snapshot while the file is still open.
+ */
+VOID
+ExFatCommitFcbMetadata(
+    PEXFAT_FCB Fcb)
+{
+    PEXFAT_VCB Vcb = Fcb->Vcb;
+
+    ExAcquireResourceExclusiveLite(&Vcb->Resource, TRUE);
+    ExFatDirIndexUpdateFromFcb(Fcb);
+    ExReleaseResourceLite(&Vcb->Resource);
 }
 
 VOID
@@ -1119,6 +1408,33 @@ ExFatSplitPath(
     LeafName->MaximumLength = LeafName->Length;
 }
 
+VOID
+ExFatReportChange(
+    PEXFAT_VCB Vcb,
+    PUNICODE_STRING PathName,
+    ULONG FilterMatch,
+    ULONG Action)
+{
+    UNICODE_STRING ParentPath;
+    UNICODE_STRING LeafName;
+
+    if (!Vcb->NotifySync)
+        return;
+    ExFatSplitPath(PathName, &ParentPath, &LeafName);
+    if (!LeafName.Length)
+        return;
+    FsRtlNotifyFullReportChange(Vcb->NotifySync,
+                                &Vcb->NotifyListHead,
+                                (PSTRING)PathName,
+                                (USHORT)((ULONG_PTR)LeafName.Buffer -
+                                         (ULONG_PTR)PathName->Buffer),
+                                NULL,
+                                NULL,
+                                FilterMatch,
+                                Action,
+                                NULL);
+}
+
 static VOID
 ExFatFreeDirIndexHash(
     PEXFAT_DIR_INDEX Index)
@@ -1250,7 +1566,7 @@ ExFatDirIndexAppend(
     NameString.MaximumLength = NameLength;
 
     Child = &Index->Children[Index->Count];
-    Child->NameHash = ExFatHashPath(&NameString);
+    Child->PathHash = ExFatHashPath(&NameString);
     Child->NextHash = 0;
     Child->NameOffset = Index->PoolUsed;
     Child->NameLength = NameLength;
@@ -1281,7 +1597,7 @@ ExFatDirIndexAppend(
     }
     if (Index->HashBuckets)
     {
-        ULONG Bucket = (ULONG)(Child->NameHash & (Index->HashBucketCount - 1));
+        ULONG Bucket = (ULONG)(Child->PathHash & (Index->HashBucketCount - 1));
 
         Child->NextHash = Index->HashBuckets[Bucket];
         Index->HashBuckets[Bucket] = Index->Count + 1;
@@ -1316,7 +1632,7 @@ ExFatBuildDirIndexHash(
     for (Position = 0; Position < Index->Count; Position++)
     {
         Child = &Index->Children[Position];
-        Bucket = (ULONG)(Child->NameHash & (BucketCount - 1));
+        Bucket = (ULONG)(Child->PathHash & (BucketCount - 1));
         Child->NextHash = Buckets[Bucket];
         Buckets[Bucket] = Position + 1;
     }
@@ -1451,7 +1767,7 @@ ExFatDirIndexLookup(
         if (Position >= Index->Count)
             return NULL;
         Child = &Index->Children[Position];
-        if (Child->NameHash == Hash && Child->NameLength == LeafName->Length)
+        if (Child->PathHash == Hash && Child->NameLength == LeafName->Length)
         {
             ChildName.Buffer = Index->NamePool + Child->NameOffset;
             ChildName.Length = Child->NameLength;
@@ -1774,7 +2090,7 @@ ExFatFlushStreamCache(
 
     Offset.QuadPart = Vcb->StreamCacheSector * Vcb->BytesPerSector;
     Length = Vcb->StreamCacheCount * Vcb->BytesPerSector;
-    Status = ExFatPoolReadWriteDevice(Vcb->StorageDevice,
+    Status = ExFatPoolReadWriteDevice(Vcb,
                                       IRP_MJ_WRITE,
                                       Vcb->StreamCacheBuffer,
                                       Length,
@@ -1805,6 +2121,7 @@ ExFatInvalidateSectorCache(
         Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
         Vcb->StreamCacheCount = 0;
     }
+    Vcb->PreReadCount = 0;
     Vcb->StreamReadNextSector = EXFAT_STREAM_READ_NONE;
 }
 
@@ -1819,7 +2136,7 @@ ExFatSectorCacheSet(
     Hash ^= Hash >> 32;
     Hash ^= Hash >> 16;
     Hash ^= Hash >> 8;
-    return (ULONG)(Hash % Vcb->SectorCacheSets);
+    return (ULONG)Hash & Vcb->SectorCacheSetsMask;
 }
 
 static BOOLEAN
@@ -1880,7 +2197,7 @@ ExFatFlushSectorCacheSlot(
     Offset.QuadPart = Vcb->SectorCacheTags[Slot] *
                       Vcb->SectorCacheBlockSectors *
                       Vcb->BytesPerSector;
-    if (!NT_SUCCESS(ExFatPoolReadWriteDevice(Vcb->StorageDevice,
+    if (!NT_SUCCESS(ExFatPoolReadWriteDevice(Vcb,
                                              IRP_MJ_WRITE,
                                              (PUCHAR)Vcb->SectorCacheBuffer +
                                                  (SIZE_T)Slot * BlockBytes,
@@ -1934,8 +2251,8 @@ ExFatFlushSectorCacheRange(
     if (!Vcb->SectorCacheEntries || !Vcb->SectorCacheDirtyCount || !Count)
         return STATUS_SUCCESS;
 
-    FirstBlock = Sector / Vcb->SectorCacheBlockSectors;
-    LastBlock = (Sector + Count - 1) / Vcb->SectorCacheBlockSectors;
+    FirstBlock = Sector >> Vcb->SectorCacheBlockShift;
+    LastBlock = (Sector + Count - 1) >> Vcb->SectorCacheBlockShift;
     if (LastBlock - FirstBlock >= Vcb->SectorCacheEntries)
         return ExFatFlushSectorCache(Vcb);
 
@@ -1972,12 +2289,19 @@ ExFatInvalidateSectorCacheRange(
         Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
         Vcb->StreamCacheCount = 0;
     }
+    if (ExFatSectorRangesOverlap(Vcb->PreReadSector,
+                                 Vcb->PreReadCount,
+                                 Sector,
+                                 Count))
+    {
+        Vcb->PreReadCount = 0;
+    }
     Vcb->StreamReadNextSector = EXFAT_STREAM_READ_NONE;
     if (!Vcb->SectorCacheEntries)
         return;
 
-    FirstBlock = Sector / Vcb->SectorCacheBlockSectors;
-    LastBlock = (Sector + Count - 1) / Vcb->SectorCacheBlockSectors;
+    FirstBlock = Sector >> Vcb->SectorCacheBlockShift;
+    LastBlock = (Sector + Count - 1) >> Vcb->SectorCacheBlockShift;
     if (LastBlock - FirstBlock >= Vcb->SectorCacheEntries)
     {
         ExFatInvalidateSectorCache(Vcb);
@@ -2046,6 +2370,12 @@ ExFatEnsureSectorCache(
     Vcb->SectorCacheBlockSectors = BlockSize / Vcb->BytesPerSector;
     Vcb->SectorCacheEntries = Blocks;
     Vcb->SectorCacheSets = ReplacementSize;
+    /* Both geometries are powers of two, so block and set selection below
+     * are shifts and masks rather than 64-bit divisions. */
+    NT_ASSERT((Vcb->SectorCacheBlockSectors & (Vcb->SectorCacheBlockSectors - 1)) == 0);
+    NT_ASSERT((Vcb->SectorCacheSets & (Vcb->SectorCacheSets - 1)) == 0);
+    Vcb->SectorCacheBlockShift = RtlFindLeastSignificantBit(Vcb->SectorCacheBlockSectors);
+    Vcb->SectorCacheSetsMask = Vcb->SectorCacheSets - 1;
     Vcb->SectorCacheDirtyCount = 0;
     return TRUE;
 }
@@ -2058,6 +2388,10 @@ ExFatFreeSectorCache(
         ExFreePoolWithTag(Vcb->SectorCacheAllocation, TAG_EXFAT_IO);
     if (Vcb->StreamCacheAllocation)
         ExFreePoolWithTag(Vcb->StreamCacheAllocation, TAG_EXFAT_IO);
+    if (Vcb->FatFsIoIrp)
+        IoFreeIrp(Vcb->FatFsIoIrp);
+    if (Vcb->PoolIoMdl)
+        ExFreePoolWithTag(Vcb->PoolIoMdl, TAG_EXFAT_IO);
     Vcb->SectorCacheAllocation = NULL;
     Vcb->SectorCacheBuffer = NULL;
     Vcb->SectorCacheTags = NULL;
@@ -2065,7 +2399,9 @@ ExFatFreeSectorCache(
     Vcb->SectorCacheNextWay = NULL;
     Vcb->SectorCacheEntries = 0;
     Vcb->SectorCacheSets = 0;
+    Vcb->SectorCacheSetsMask = 0;
     Vcb->SectorCacheBlockSectors = 0;
+    Vcb->SectorCacheBlockShift = 0;
     Vcb->SectorCacheDirtyCount = 0;
     Vcb->StreamCacheAllocation = NULL;
     Vcb->StreamCacheBuffer = NULL;
@@ -2073,6 +2409,120 @@ ExFatFreeSectorCache(
     Vcb->StreamReadNextSector = EXFAT_STREAM_READ_NONE;
     Vcb->StreamCacheCount = 0;
     Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
+    Vcb->FatFsIoIrp = NULL;
+    Vcb->PoolIoMdl = NULL;
+}
+
+/*
+ * Locate (filling on miss) the metadata cache block containing Sector.
+ * STATUS_NOT_SUPPORTED means the sector is not cacheable (volume tail or
+ * no cache) and the caller must fall back to uncached device I/O.
+ */
+static NTSTATUS
+ExFatGetSectorCacheBlock(
+    PEXFAT_VCB Vcb,
+    LBA_t Sector,
+    PUCHAR* SectorOut,
+    PULONG SlotOut)
+{
+    LARGE_INTEGER Offset;
+    PUCHAR CacheBlock;
+    LBA_t Block;
+    LBA_t Base;
+    ULONG Slot;
+    ULONG BlockBytes;
+
+    if (!ExFatEnsureSectorCache(Vcb))
+        return STATUS_NOT_SUPPORTED;
+    Block = Sector >> Vcb->SectorCacheBlockShift;
+    Base = Block << Vcb->SectorCacheBlockShift;
+    if (Vcb->SectorCount - Base < Vcb->SectorCacheBlockSectors)
+        return STATUS_NOT_SUPPORTED; /* Volume tail shorter than a block. */
+    if (!ExFatFindSectorCacheSlot(Vcb, Block, &Slot))
+        Slot = ExFatSelectSectorCacheSlot(Vcb, Block);
+    BlockBytes = Vcb->SectorCacheBlockSectors * Vcb->BytesPerSector;
+    CacheBlock = (PUCHAR)Vcb->SectorCacheBuffer + (SIZE_T)Slot * BlockBytes;
+
+    if (Vcb->SectorCacheTags[Slot] != Block)
+    {
+        NTSTATUS Status;
+
+        Status = ExFatFlushSectorCacheSlot(Vcb, Slot);
+        if (!NT_SUCCESS(Status))
+            return Status;
+        Vcb->SectorCacheTags[Slot] = EXFAT_SECTOR_CACHE_EMPTY;
+        Offset.QuadPart = Base * Vcb->BytesPerSector;
+        Status = ExFatPoolReadWriteDevice(Vcb,
+                                          IRP_MJ_READ,
+                                          CacheBlock,
+                                          BlockBytes,
+                                          &Offset,
+                                          TRUE);
+        if (!NT_SUCCESS(Status))
+            return Status;
+        Vcb->SectorCacheTags[Slot] = Block;
+    }
+    *SectorOut = CacheBlock + (ULONG)(Sector - Base) * Vcb->BytesPerSector;
+    if (SlotOut)
+        *SlotOut = Slot;
+    return STATUS_SUCCESS;
+}
+
+/*
+ * Bounded look-ahead over the cached FAT to size one contiguous device
+ * request. The walk is transient: nothing derived from it outlives this
+ * call, so it is not a cluster/extent map. A garbage or EOC entry merely
+ * ends the run; for contiguous files a false "next" match still addresses
+ * exactly the file's data. With FatFs's sector window dirty the on-disk
+ * FAT may lag the in-memory chain, so no extension happens then.
+ */
+static ULONG
+ExFatContiguousRunBytes(
+    PEXFAT_VCB Vcb,
+    LBA_t Sector,
+    UINT Count,
+    ULONG MaxBytes)
+{
+    FATFS* FileSystem = &Vcb->FileSystem;
+    ULONG RunBytes = Count * Vcb->BytesPerSector;
+    ULONG EntryOffset;
+    LBA_t EndSector;
+    LBA_t DataOffset;
+    LBA_t FatSector;
+    LBA_t CachedSector = 0;
+    DWORD Cluster;
+    DWORD NextCluster;
+    PUCHAR EntrySector = NULL;
+
+    if (RunBytes >= MaxBytes || FileSystem->wflag || !FileSystem->csize)
+        return RunBytes;
+    EndSector = Sector + Count;
+    if (EndSector <= FileSystem->database)
+        return RunBytes;
+    DataOffset = EndSector - FileSystem->database;
+    if (DataOffset % FileSystem->csize)
+        return RunBytes; /* A run can only grow at a cluster edge. */
+    Cluster = (DWORD)(DataOffset / FileSystem->csize) + 1;
+
+    while (RunBytes < MaxBytes && Cluster + 1 < FileSystem->n_fatent)
+    {
+        FatSector = FileSystem->fatbase +
+                    (((LBA_t)Cluster * sizeof(DWORD)) >> Vcb->SectorShift);
+        EntryOffset = ((ULONG)Cluster * sizeof(DWORD)) & (Vcb->BytesPerSector - 1);
+        /* Consecutive entries share a sector; only re-resolve when it changes. */
+        if (!EntrySector || FatSector != CachedSector)
+        {
+            if (!NT_SUCCESS(ExFatGetSectorCacheBlock(Vcb, FatSector, &EntrySector, NULL)))
+                break;
+            CachedSector = FatSector;
+        }
+        NextCluster = *(DWORD*)(EntrySector + EntryOffset);
+        if (NextCluster != Cluster + 1)
+            break;
+        RunBytes += min(Vcb->BytesPerCluster, MaxBytes - RunBytes);
+        Cluster++;
+    }
+    return RunBytes;
 }
 
 DRESULT
@@ -2084,12 +2534,10 @@ disk_read(
 {
     PEXFAT_VCB Vcb;
     LARGE_INTEGER Offset;
-    PUCHAR CacheBlock;
-    LBA_t Block;
+    PUCHAR CacheSector;
     UINT ReadCount;
-    ULONG Slot;
-    ULONG BlockBytes;
     ULONG CacheCapacity;
+    ULONG WindowOffset;
     ULONG Length;
     NTSTATUS Status;
 
@@ -2099,9 +2547,22 @@ disk_read(
     if (!Vcb || !Vcb->Mounted)
         return RES_NOTRDY;
     if (Sector >= Vcb->SectorCount || Count > Vcb->SectorCount - Sector ||
-        Count > MAXULONG / Vcb->BytesPerSector)
+        Count > MAXULONG >> Vcb->SectorShift)
     {
         return RES_PARERR;
+    }
+
+    /* Data already delivered into the caller's buffer by a batched read. */
+    if (Vcb->PreReadCount &&
+        ExFatSectorRangeContains(Vcb->PreReadSector,
+                                 Vcb->PreReadCount,
+                                 Sector,
+                                 Count) &&
+        Buffer == Vcb->PreReadBuffer +
+                  (SIZE_T)(Sector - Vcb->PreReadSector) * Vcb->BytesPerSector)
+    {
+        Vcb->StreamReadNextSector = Sector + Count;
+        return RES_OK;
     }
 
     if (Vcb->StreamCacheMode != EXFAT_STREAM_CACHE_EMPTY &&
@@ -2134,7 +2595,45 @@ disk_read(
             Vcb->StreamCacheCount = 0;
         }
 
-        CacheCapacity = EXFAT_STREAM_CACHE_SIZE / Vcb->BytesPerSector;
+        /*
+         * When one contiguous device read can finish the caller's whole
+         * remaining request, DMA it straight into the caller's pages and
+         * satisfy FatFs's follow-up per-cluster reads from the recorded
+         * range. Fragmented or windowless requests keep the stream cache.
+         */
+        WindowOffset = ExFatWindowOffset(Vcb, Buffer, Count << Vcb->SectorShift);
+        if (WindowOffset != EXFAT_WINDOW_NONE)
+        {
+            ULONG WindowRemaining = Vcb->ActiveReadLength - WindowOffset;
+            ULONG RunBytes = ExFatContiguousRunBytes(Vcb,
+                                                     Sector,
+                                                     Count,
+                                                     WindowRemaining);
+
+            if (RunBytes == WindowRemaining)
+            {
+                if (!NT_SUCCESS(ExFatFlushSectorCacheRange(Vcb,
+                                                           Sector,
+                                                           RunBytes >> Vcb->SectorShift)))
+                {
+                    return RES_ERROR;
+                }
+                Offset.QuadPart = Sector * Vcb->BytesPerSector;
+                Status = ExFatReadDataDevice(Vcb, Buffer, RunBytes, &Offset);
+                if (!NT_SUCCESS(Status))
+                {
+                    Vcb->StreamReadNextSector = EXFAT_STREAM_READ_NONE;
+                    return RES_ERROR;
+                }
+                Vcb->PreReadSector = Sector;
+                Vcb->PreReadCount = RunBytes >> Vcb->SectorShift;
+                Vcb->PreReadBuffer = Buffer;
+                Vcb->StreamReadNextSector = Sector + Count;
+                return RES_OK;
+            }
+        }
+
+        CacheCapacity = EXFAT_STREAM_CACHE_SIZE >> Vcb->SectorShift;
         if (Count <= CacheCapacity &&
             Vcb->StreamReadNextSector != 0 &&
             Vcb->StreamReadNextSector != EXFAT_STREAM_READ_NONE &&
@@ -2151,8 +2650,8 @@ disk_read(
             }
             Offset.QuadPart = Sector * Vcb->BytesPerSector;
             Length = ReadCount * Vcb->BytesPerSector;
-            Status = ExFatPoolReadWriteDevice(Vcb->StorageDevice,
-                                               IRP_MJ_READ,
+            Status = ExFatPoolReadWriteDevice(Vcb,
+                                              IRP_MJ_READ,
                                                Vcb->StreamCacheBuffer,
                                                Length,
                                                &Offset,
@@ -2174,64 +2673,33 @@ disk_read(
             return RES_ERROR;
         Offset.QuadPart = Sector * Vcb->BytesPerSector;
         Length = Count * Vcb->BytesPerSector;
-        Status = ExFatReadWriteDevice(Vcb->StorageDevice,
-                                      IRP_MJ_READ,
-                                      Buffer,
-                                      Length,
-                                      &Offset,
-                                      TRUE);
+        Status = ExFatReadDataDevice(Vcb,
+                                     Buffer,
+                                     Length,
+                                     &Offset);
         Vcb->StreamReadNextSector = NT_SUCCESS(Status) ?
                                         Sector + Count : EXFAT_STREAM_READ_NONE;
         return NT_SUCCESS(Status) ? RES_OK : RES_ERROR;
     }
 
-    if (Count == 1 && ExFatEnsureSectorCache(Vcb))
+    if (Count == 1)
     {
-        Block = Sector / Vcb->SectorCacheBlockSectors;
-        if (!ExFatFindSectorCacheSlot(Vcb, Block, &Slot))
-            Slot = ExFatSelectSectorCacheSlot(Vcb, Block);
-        BlockBytes = Vcb->SectorCacheBlockSectors * Vcb->BytesPerSector;
-        CacheBlock = (PUCHAR)Vcb->SectorCacheBuffer + (SIZE_T)Slot * BlockBytes;
-
-        if (Vcb->SectorCacheTags[Slot] != Block)
+        Status = ExFatGetSectorCacheBlock(Vcb, Sector, &CacheSector, NULL);
+        if (NT_SUCCESS(Status))
         {
-            LBA_t Base = Block * Vcb->SectorCacheBlockSectors;
-
-            if (Vcb->SectorCount - Base < Vcb->SectorCacheBlockSectors)
-                goto Uncached; /* Volume tail shorter than a block. */
-
-            if (!NT_SUCCESS(ExFatFlushSectorCacheSlot(Vcb, Slot)))
-                return RES_ERROR;
-            Vcb->SectorCacheTags[Slot] = EXFAT_SECTOR_CACHE_EMPTY;
-            Offset.QuadPart = Base * Vcb->BytesPerSector;
-            if (!NT_SUCCESS(ExFatPoolReadWriteDevice(Vcb->StorageDevice,
-                                                     IRP_MJ_READ,
-                                                     CacheBlock,
-                                                     BlockBytes,
-                                                     &Offset,
-                                                     TRUE)))
-            {
-                return RES_ERROR;
-            }
-            Vcb->SectorCacheTags[Slot] = Block;
+            RtlCopyMemory(Buffer, CacheSector, Vcb->BytesPerSector);
+            return RES_OK;
         }
-
-        RtlCopyMemory(Buffer,
-                      CacheBlock + (ULONG)(Sector - Block * Vcb->SectorCacheBlockSectors) *
-                          Vcb->BytesPerSector,
-                      Vcb->BytesPerSector);
-        return RES_OK;
+        if (Status != STATUS_NOT_SUPPORTED)
+            return RES_ERROR;
     }
 
-Uncached:
     Offset.QuadPart = Sector * Vcb->BytesPerSector;
     Length = Count * Vcb->BytesPerSector;
-    return NT_SUCCESS(ExFatReadWriteDevice(Vcb->StorageDevice,
-                                           IRP_MJ_READ,
-                                           Buffer,
-                                           Length,
-                                           &Offset,
-                                           TRUE)) ? RES_OK : RES_ERROR;
+    return NT_SUCCESS(ExFatReadDataDevice(Vcb,
+                                          Buffer,
+                                          Length,
+                                          &Offset)) ? RES_OK : RES_ERROR;
 }
 
 DRESULT
@@ -2243,10 +2711,8 @@ disk_write(
 {
     PEXFAT_VCB Vcb;
     LARGE_INTEGER Offset;
-    PUCHAR CacheBlock;
-    LBA_t Block;
+    PUCHAR CacheSector;
     ULONG Slot;
-    ULONG BlockBytes;
     ULONG CacheCapacity;
     ULONG Length;
     LBA_t StreamOffset;
@@ -2260,7 +2726,7 @@ disk_write(
     if (Vcb->ReadOnly)
         return RES_WRPRT;
     if (Sector >= Vcb->SectorCount || Count > Vcb->SectorCount - Sector ||
-        Count > MAXULONG / Vcb->BytesPerSector)
+        Count > MAXULONG >> Vcb->SectorShift)
     {
         return RES_PARERR;
     }
@@ -2289,7 +2755,7 @@ disk_write(
             return RES_ERROR;
         ExFatInvalidateSectorCacheRange(Vcb, Sector, Count);
 
-        CacheCapacity = EXFAT_STREAM_CACHE_SIZE / Vcb->BytesPerSector;
+        CacheCapacity = EXFAT_STREAM_CACHE_SIZE >> Vcb->SectorShift;
         if (Count <= CacheCapacity && ExFatEnsureStreamCache(Vcb))
         {
             if (Vcb->StreamCacheMode == EXFAT_STREAM_CACHE_READ)
@@ -2349,42 +2815,19 @@ disk_write(
         Vcb->StreamCacheMode = EXFAT_STREAM_CACHE_EMPTY;
         Vcb->StreamCacheCount = 0;
     }
+    if (ExFatSectorRangesOverlap(Vcb->PreReadSector,
+                                 Vcb->PreReadCount,
+                                 Sector,
+                                 Count))
+    {
+        Vcb->PreReadCount = 0;
+    }
     Vcb->StreamReadNextSector = EXFAT_STREAM_READ_NONE;
 
-    if (ExFatEnsureSectorCache(Vcb))
+    Status = ExFatGetSectorCacheBlock(Vcb, Sector, &CacheSector, &Slot);
+    if (NT_SUCCESS(Status))
     {
-        Block = Sector / Vcb->SectorCacheBlockSectors;
-        if (!ExFatFindSectorCacheSlot(Vcb, Block, &Slot))
-        {
-            LBA_t Base = Block * Vcb->SectorCacheBlockSectors;
-
-            if (Vcb->SectorCount - Base < Vcb->SectorCacheBlockSectors)
-                goto Uncached;
-            Slot = ExFatSelectSectorCacheSlot(Vcb, Block);
-            if (!NT_SUCCESS(ExFatFlushSectorCacheSlot(Vcb, Slot)))
-                return RES_ERROR;
-            Vcb->SectorCacheTags[Slot] = EXFAT_SECTOR_CACHE_EMPTY;
-            BlockBytes = Vcb->SectorCacheBlockSectors * Vcb->BytesPerSector;
-            CacheBlock = (PUCHAR)Vcb->SectorCacheBuffer + (SIZE_T)Slot * BlockBytes;
-            Offset.QuadPart = Base * Vcb->BytesPerSector;
-            if (!NT_SUCCESS(ExFatPoolReadWriteDevice(Vcb->StorageDevice,
-                                                     IRP_MJ_READ,
-                                                     CacheBlock,
-                                                     BlockBytes,
-                                                     &Offset,
-                                                     TRUE)))
-            {
-                return RES_ERROR;
-            }
-            Vcb->SectorCacheTags[Slot] = Block;
-        }
-
-        RtlCopyMemory((PUCHAR)Vcb->SectorCacheBuffer +
-                          (SIZE_T)Slot * Vcb->SectorCacheBlockSectors * Vcb->BytesPerSector +
-                          (ULONG)(Sector - Block * Vcb->SectorCacheBlockSectors) *
-                              Vcb->BytesPerSector,
-                      Buffer,
-                      Vcb->BytesPerSector);
+        RtlCopyMemory(CacheSector, Buffer, Vcb->BytesPerSector);
         if (!Vcb->SectorCacheDirty[Slot])
         {
             Vcb->SectorCacheDirty[Slot] = TRUE;
@@ -2392,8 +2835,9 @@ disk_write(
         }
         return RES_OK;
     }
+    if (Status != STATUS_NOT_SUPPORTED)
+        return RES_ERROR;
 
-Uncached:
     return NT_SUCCESS(ExFatReadWriteDevice(Vcb->StorageDevice,
                                            IRP_MJ_WRITE,
                                            (PVOID)Buffer,

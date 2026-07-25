@@ -117,8 +117,14 @@ ExFatMountVolume(
     ExInitializeResourceLite(&Vcb->Resource);
     ExInitializeResourceLite(&Vcb->FatFsResource);
     InitializeListHead(&Vcb->FcbListHead);
+    InitializeListHead(&Vcb->NotifyListHead);
+    FsRtlNotifyInitializeSync(&Vcb->NotifySync);
+    Status = ExFatInitializeVcbIo(Vcb);
+    if (!NT_SUCCESS(Status))
+        goto Failure;
 
     Vcb->BytesPerSector = 1UL << SectorShift;
+    Vcb->SectorShift = SectorShift;
     Vcb->SectorCount = LengthInformation.Length.QuadPart / Vcb->BytesPerSector;
     if (!Vcb->SectorCount ||
         LengthInformation.Length.QuadPart % Vcb->BytesPerSector)
@@ -251,6 +257,8 @@ Failure:
         ExFatDereferenceFcb(Vcb->VolumeFcb);
     if (Vcb)
     {
+        if (Vcb->NotifySync)
+            FsRtlNotifyUninitializeSync(&Vcb->NotifySync);
         ExFatFreeSectorCache(Vcb);
         ExDeleteResourceLite(&Vcb->FatFsResource);
         ExDeleteResourceLite(&Vcb->Resource);

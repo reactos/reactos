@@ -280,7 +280,12 @@ ExFatSetBasicInformation(
     if (Result == FR_OK)
     {
         if (Information->FileAttributes)
-            Fcb->FileAttributes = Information->FileAttributes;
+        {
+            /* Mirror what f_chmod actually wrote, through the shared mapping. */
+            Fcb->FileAttributes =
+                ExFatFatAttributesToNt(Attributes |
+                                       (Fcb->IsDirectory ? AM_DIR : 0));
+        }
         if (Information->CreationTime.QuadPart)
             Fcb->CreationTime = Information->CreationTime;
         if (Information->LastAccessTime.QuadPart)
@@ -352,6 +357,18 @@ ExFatSetEndOfFile(
     ExFatReleaseFatFs(Fcb->Vcb);
     ExReleaseResourceLite(&Fcb->PagingIoResource);
 
+    if (Result == FR_OK)
+    {
+        /* The size report belongs here, next to the size change. The
+         * matching index refresh does not: it needs Vcb->Resource, which
+         * must never be taken under an FCB resource, so ExFatSetInformation
+         * performs it once this FCB's resources are released. */
+        ExFatReportChange(Fcb->Vcb,
+                          &Fcb->PathName,
+                          FILE_NOTIFY_CHANGE_SIZE,
+                          FILE_ACTION_MODIFIED);
+    }
+
     if (Result == FR_OK && Fcb->SectionObjectPointers.SharedCacheMap)
     {
         CcSetFileSizes(Ccb->FileObject,
@@ -367,6 +384,290 @@ ExFatSetEndOfFile(
     return ExFatMapResult(Result);
 }
 
+/*
+ * Renaming a directory does not move its children's directory entries, so
+ * open child FatFs handles stay valid; only the cached path strings of
+ * descendant FCBs go stale and are rewritten afterwards. The renamed FCB's
+ * own FatFs handle must be closed first: an open FIL caches the directory
+ * entry location that f_rename moves.
+ */
+static VOID
+ExFatRenameDescendants(
+    PEXFAT_VCB Vcb,
+    PEXFAT_FCB Fcb,
+    PUNICODE_STRING OldPath)
+{
+    PLIST_ENTRY Entry;
+    PEXFAT_FCB WalkFcb;
+    UNICODE_STRING NewChildPath;
+    ULONG SuffixLength;
+
+    for (Entry = Vcb->FcbListHead.Flink;
+         Entry != &Vcb->FcbListHead;
+         Entry = Entry->Flink)
+    {
+        WalkFcb = CONTAINING_RECORD(Entry, EXFAT_FCB, ListEntry);
+        if (WalkFcb == Fcb || WalkFcb->DeleteCompleted)
+            continue;
+        if (WalkFcb->PathName.Length <= OldPath->Length ||
+            WalkFcb->PathName.Buffer[OldPath->Length / sizeof(WCHAR)] != L'\\' ||
+            !RtlPrefixUnicodeString(OldPath, &WalkFcb->PathName, TRUE))
+        {
+            continue;
+        }
+
+        SuffixLength = WalkFcb->PathName.Length - OldPath->Length;
+        NewChildPath.Length = Fcb->PathName.Length + (USHORT)SuffixLength;
+        NewChildPath.MaximumLength = NewChildPath.Length;
+        NewChildPath.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                    NewChildPath.Length,
+                                                    TAG_EXFAT_PATH);
+        if (!NewChildPath.Buffer)
+        {
+            /* Unrenameable stale path: drop the FCB from future lookups. */
+            WalkFcb->DeleteCompleted = TRUE;
+            continue;
+        }
+        RtlCopyMemory(NewChildPath.Buffer,
+                      Fcb->PathName.Buffer,
+                      Fcb->PathName.Length);
+        RtlCopyMemory((PUCHAR)NewChildPath.Buffer + Fcb->PathName.Length,
+                      (PUCHAR)WalkFcb->PathName.Buffer + OldPath->Length,
+                      SuffixLength);
+        if (!NT_SUCCESS(ExFatSetFcbPath(WalkFcb, &NewChildPath)))
+            WalkFcb->DeleteCompleted = TRUE;
+        ExFreePoolWithTag(NewChildPath.Buffer, TAG_EXFAT_PATH);
+    }
+}
+
+static NTSTATUS
+ExFatSetRenameInformation(
+    PEXFAT_FCB Fcb,
+    PIO_STACK_LOCATION Stack,
+    PFILE_RENAME_INFORMATION RenameInfo,
+    ULONG Length)
+{
+    PEXFAT_VCB Vcb = Fcb->Vcb;
+    PFILE_OBJECT TargetFileObject = Stack->Parameters.SetFile.FileObject;
+    BOOLEAN ReplaceIfExists = Stack->Parameters.SetFile.ReplaceIfExists;
+    PEXFAT_FCB TargetFcb = NULL;
+    UNICODE_STRING NewParent;
+    UNICODE_STRING NewLeaf;
+    UNICODE_STRING NewPath;
+    UNICODE_STRING OldPath;
+    TCHAR* NewFatPath = NULL;
+    FILINFO Information;
+    FRESULT Result;
+    NTSTATUS Status;
+    ULONG NameFilter;
+    ULONG Index;
+    ULONGLONG NewPathHash;
+    BOOLEAN SamePathExactly;
+    BOOLEAN SamePathAnyCase;
+    USHORT PrefixLength;
+    BOOLEAN UnlinkTarget = FALSE;
+    BOOLEAN RootParent;
+
+    OldPath.Buffer = NULL;
+    if (Length < sizeof(FILE_RENAME_INFORMATION) ||
+        !RenameInfo->FileNameLength ||
+        (RenameInfo->FileNameLength & 1))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+    if (Fcb->IsVolume || ExFatIsRootPath(&Fcb->PathName))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+    if (Fcb->DeletePending)
+        return STATUS_DELETE_PENDING;
+
+    if (TargetFileObject)
+    {
+        TargetFcb = TargetFileObject->FsContext;
+        if (!TargetFcb || !TargetFcb->IsDirectory || TargetFcb->Vcb != Vcb)
+            return STATUS_INVALID_PARAMETER;
+        NewParent = TargetFcb->PathName;
+        NewLeaf = TargetFileObject->FileName;
+        TargetFcb = NULL;
+    }
+    else
+    {
+        ExFatSplitPath(&Fcb->PathName, &NewParent, &NewLeaf);
+        NewLeaf.Buffer = RenameInfo->FileName;
+        NewLeaf.Length = (USHORT)RenameInfo->FileNameLength;
+        NewLeaf.MaximumLength = NewLeaf.Length;
+    }
+    if (!NewLeaf.Length)
+        return STATUS_OBJECT_NAME_INVALID;
+    for (Index = 0; Index < NewLeaf.Length / sizeof(WCHAR); Index++)
+    {
+        if (NewLeaf.Buffer[Index] == L'\\' || NewLeaf.Buffer[Index] == L'/')
+            return STATUS_OBJECT_NAME_INVALID;
+    }
+
+    RootParent = ExFatIsRootPath(&NewParent);
+    NewPath.Length = (RootParent ? sizeof(WCHAR) : NewParent.Length + sizeof(WCHAR)) +
+                     NewLeaf.Length;
+    NewPath.MaximumLength = NewPath.Length;
+    NewPath.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                           NewPath.Length,
+                                           TAG_EXFAT_PATH);
+    if (!NewPath.Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+    PrefixLength = RootParent ? 0 : NewParent.Length;
+    RtlCopyMemory(NewPath.Buffer, NewParent.Buffer, PrefixLength);
+    NewPath.Buffer[PrefixLength / sizeof(WCHAR)] = L'\\';
+    RtlCopyMemory((PUCHAR)NewPath.Buffer + PrefixLength + sizeof(WCHAR),
+                  NewLeaf.Buffer,
+                  NewLeaf.Length);
+
+    NewPathHash = ExFatNormalizePath(&NewPath);
+    SamePathExactly = RtlEqualUnicodeString(&NewPath, &Fcb->PathName, FALSE);
+    SamePathAnyCase = RtlEqualUnicodeString(&NewPath, &Fcb->PathName, TRUE);
+    if (SamePathExactly)
+    {
+        Status = STATUS_SUCCESS;
+        goto Cleanup;
+    }
+
+    NewFatPath = ExFatBuildFatPath(Vcb, &NewPath);
+    if (!NewFatPath)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Cleanup;
+    }
+
+    if (!SamePathAnyCase)
+    {
+        TargetFcb = ExFatFindFcb(Vcb, &NewPath, NewPathHash);
+        if (TargetFcb == Fcb)
+        {
+            ExFatDereferenceFcb(TargetFcb);
+            TargetFcb = NULL;
+        }
+        if (TargetFcb)
+        {
+            if (!ReplaceIfExists)
+            {
+                Status = STATUS_OBJECT_NAME_COLLISION;
+                goto Cleanup;
+            }
+            if (TargetFcb->IsDirectory ||
+                TargetFcb->OpenHandleCount != 0 ||
+                TargetFcb->DeletePending)
+            {
+                Status = STATUS_ACCESS_DENIED;
+                goto Cleanup;
+            }
+            if (TargetFcb->FileAttributes & FILE_ATTRIBUTE_READONLY)
+            {
+                /* Replacing a target deletes it, so honour the same rule. */
+                Status = STATUS_ACCESS_DENIED;
+                goto Cleanup;
+            }
+            if (TargetFcb->SectionObjectPointers.DataSectionObject &&
+                !MmFlushImageSection(&TargetFcb->SectionObjectPointers,
+                                     MmFlushForDelete))
+            {
+                Status = STATUS_ACCESS_DENIED;
+                goto Cleanup;
+            }
+            UnlinkTarget = TRUE;
+        }
+        else
+        {
+            Status = ExFatProbePath(Vcb, &NewPath, NewPathHash, NewFatPath,
+                                    &Information, &Result);
+            if (!NT_SUCCESS(Status))
+                goto Cleanup;
+            if (Result == FR_OK)
+            {
+                if (!ReplaceIfExists)
+                {
+                    Status = STATUS_OBJECT_NAME_COLLISION;
+                    goto Cleanup;
+                }
+                if ((Information.fattrib & (AM_DIR | AM_RDO)) != 0)
+                {
+                    Status = STATUS_ACCESS_DENIED;
+                    goto Cleanup;
+                }
+                UnlinkTarget = TRUE;
+            }
+        }
+    }
+
+    /*
+     * The FatFs lock is held from the close through the FCB path swap:
+     * a concurrent paging write would otherwise reopen the file by its
+     * stale path between the rename and the path update.
+     */
+    ExFatAcquireFatFs(Vcb);
+    ExFatCloseFcbFile(Fcb);
+    Result = FR_OK;
+    if (UnlinkTarget)
+        Result = f_unlink(NewFatPath);
+    if (Result == FR_OK)
+        Result = f_rename(Fcb->FatPath, NewFatPath);
+    if (Result != FR_OK)
+    {
+        ExFatReleaseFatFs(Vcb);
+        Status = (Result == FR_EXIST && SamePathAnyCase) ? STATUS_SUCCESS
+                                                         : ExFatMapResult(Result);
+        goto Cleanup;
+    }
+
+    Vcb->NamespaceGeneration++;
+    if (UnlinkTarget && TargetFcb)
+        TargetFcb->DeleteCompleted = TRUE;
+    ExFatDirIndexRemove(Vcb, &Fcb->PathName);
+    ExFatDirIndexRemove(Vcb, &NewPath);
+    if (Fcb->IsDirectory)
+        ExFatDropDirIndexes(Vcb);
+
+    OldPath = Fcb->PathName;
+    Fcb->PathName.Buffer = NULL;
+    Fcb->PathName.Length = 0;
+    Fcb->PathName.MaximumLength = 0;
+    Status = ExFatSetFcbPath(Fcb, &NewPath);
+    if (!NT_SUCCESS(Status))
+    {
+        /* The on-disk rename happened; drop the stale FCB from lookups. */
+        Fcb->PathName = OldPath;
+        OldPath.Buffer = NULL;
+        Fcb->DeleteCompleted = TRUE;
+        ExFatReleaseFatFs(Vcb);
+        goto Cleanup;
+    }
+
+    if (Fcb->IsDirectory)
+        ExFatRenameDescendants(Vcb, Fcb, &OldPath);
+
+    /* ExFatDirIndexAppend takes the live values from the FCB when one is
+     * supplied, so only the attribute byte has to be handed over here. */
+    RtlZeroMemory(&Information, sizeof(Information));
+    Information.fattrib = ExFatNtAttributesToFat(Fcb->FileAttributes) |
+                          (Fcb->IsDirectory ? AM_DIR : 0);
+    ExFatDirIndexInsert(Vcb, &NewParent, &NewLeaf, &Information, Fcb);
+    ExFatReleaseFatFs(Vcb);
+
+    NameFilter = ExFatNameChangeFilter(Fcb->IsDirectory);
+    ExFatReportChange(Vcb, &OldPath, NameFilter, FILE_ACTION_RENAMED_OLD_NAME);
+    ExFatReportChange(Vcb, &Fcb->PathName, NameFilter, FILE_ACTION_RENAMED_NEW_NAME);
+    Status = STATUS_SUCCESS;
+
+Cleanup:
+    if (OldPath.Buffer)
+        ExFreePoolWithTag(OldPath.Buffer, TAG_EXFAT_PATH);
+    if (TargetFcb)
+        ExFatDereferenceFcb(TargetFcb);
+    if (NewFatPath)
+        ExFreePoolWithTag(NewFatPath, TAG_EXFAT_PATH);
+    ExFreePoolWithTag(NewPath.Buffer, TAG_EXFAT_PATH);
+    return Status;
+}
+
 NTSTATUS
 ExFatSetInformation(
     PDEVICE_OBJECT DeviceObject,
@@ -378,6 +679,7 @@ ExFatSetInformation(
     PEXFAT_CCB Ccb;
     PVOID Buffer = Irp->AssociatedIrp.SystemBuffer;
     ULONG Length = Stack->Parameters.SetFile.Length;
+    FILE_INFORMATION_CLASS InfoClass;
     NTSTATUS Status;
 
     if (DeviceObject == ExFatGlobalData->DeviceObject || !FileObject || !Buffer)
@@ -389,8 +691,18 @@ ExFatSetInformation(
     if (Fcb->Vcb->ReadOnly)
         return STATUS_MEDIA_WRITE_PROTECTED;
 
+    InfoClass = Stack->Parameters.SetFile.FileInformationClass;
+
+    /*
+     * Renaming walks the FCB list and the directory indexes, so it needs the
+     * volume before the file. Everything else takes the file alone; the one
+     * piece of shared state an attribute change touches is refreshed after
+     * the file is released, so the volume is never held across FatFs I/O.
+     */
+    if (InfoClass == FileRenameInformation)
+        ExAcquireResourceExclusiveLite(&Fcb->Vcb->Resource, TRUE);
     ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
-    switch (Stack->Parameters.SetFile.FileInformationClass)
+    switch (InfoClass)
     {
         case FilePositionInformation:
             if (Length < sizeof(FILE_POSITION_INFORMATION))
@@ -410,7 +722,19 @@ ExFatSetInformation(
             else if (Fcb->IsVolume)
                 Status = STATUS_INVALID_DEVICE_REQUEST;
             else
+            {
                 Status = ExFatSetBasicInformation(Fcb, Buffer);
+                if (NT_SUCCESS(Status))
+                {
+                    ExFatReportChange(Fcb->Vcb,
+                                      &Fcb->PathName,
+                                      FILE_NOTIFY_CHANGE_ATTRIBUTES |
+                                          FILE_NOTIFY_CHANGE_CREATION |
+                                          FILE_NOTIFY_CHANGE_LAST_ACCESS |
+                                          FILE_NOTIFY_CHANGE_LAST_WRITE,
+                                      FILE_ACTION_MODIFIED);
+                }
+            }
             break;
 
         case FileEndOfFileInformation:
@@ -418,10 +742,24 @@ ExFatSetInformation(
                 Status = STATUS_INFO_LENGTH_MISMATCH;
             else if (Fcb->IsDirectory || Fcb->IsVolume)
                 Status = STATUS_INVALID_DEVICE_REQUEST;
+            else if (Stack->Parameters.SetFile.AdvanceOnly)
+            {
+                /* Lazy-writer valid-data advance; f_write sizes eagerly. */
+                Status = STATUS_SUCCESS;
+            }
             else
+            {
                 Status = ExFatSetEndOfFile(Fcb,
                                            Ccb,
                                            &((PFILE_END_OF_FILE_INFORMATION)Buffer)->EndOfFile);
+            }
+            break;
+
+        case FileRenameInformation:
+            Status = ExFatSetRenameInformation(Fcb,
+                                               Stack,
+                                               Buffer,
+                                               Length);
             break;
 
         case FileAllocationInformation:
@@ -443,7 +781,8 @@ ExFatSetInformation(
             else if (Fcb->IsVolume)
                 Status = STATUS_CANNOT_DELETE;
             else if (((PFILE_DISPOSITION_INFORMATION)Buffer)->DeleteFile &&
-                     !MmFlushImageSection(&Fcb->SectionObjectPointers, MmFlushForDelete))
+                     ((Fcb->FileAttributes & FILE_ATTRIBUTE_READONLY) ||
+                      !MmFlushImageSection(&Fcb->SectionObjectPointers, MmFlushForDelete)))
                 Status = STATUS_CANNOT_DELETE;
             else
             {
@@ -457,6 +796,18 @@ ExFatSetInformation(
             break;
     }
     ExReleaseResourceLite(&Fcb->MainResource);
+    if (InfoClass == FileRenameInformation)
+    {
+        ExReleaseResourceLite(&Fcb->Vcb->Resource);
+    }
+    else if (NT_SUCCESS(Status) &&
+             (InfoClass == FileBasicInformation ||
+              InfoClass == FileEndOfFileInformation ||
+              InfoClass == FileAllocationInformation))
+    {
+        /* Publish the new attributes/size to the parent's index. */
+        ExFatCommitFcbMetadata(Fcb);
+    }
     return Status;
 }
 

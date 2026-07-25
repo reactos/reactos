@@ -112,7 +112,8 @@ ExFatFsdDispatch(
             break;
     }
 
-    if (CompleteIrp)
+    /* A handler that pended the request no longer owns it. */
+    if (CompleteIrp && Status != STATUS_PENDING)
     {
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
