@@ -131,7 +131,7 @@ BEGIN
 （您可向您的網絡管理員取得這方面的資訊。）", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "否，這台電腦將成為工作羣組的成員之一。", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "是，這台電腦將成為網域的成員之一。", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "工作羣組或網域名稱：", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "工作羣組或網域名稱：", IDC_STATIC, 33, 72, 126, 10
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "注意：如果這台電腦不會成為網絡的一部份、您沒有足夠的權限加入網域、或您不知道要輸入什麼，您應該先選擇加入工作羣組。這些選項可以在稍後更改。", IDC_STATIC, 33, 107, 263, 50
 END

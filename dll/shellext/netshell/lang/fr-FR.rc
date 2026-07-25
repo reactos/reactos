@@ -123,7 +123,7 @@ BEGIN
 (Vous pouvez obtenir cette information de votre administrateur réseau).", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "Non, cet ordinateur fera partie d'un groupe de travail.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Oui, cet ordinateur fera partie d'un domaine.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "Nom du groupe de travail ou du domaine :", IDC_STATIC, 33, 72, 150, 14
+    LTEXT "Nom du groupe de travail ou du domaine :", IDC_STATIC, 33, 72, 150, 10
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "NOTE : Si cet ordinateur ne fera pas partie d'un réseau, si vous n'avez pas assez de droits pour rejoindre un réseau, ou si vous ne savez pas quoi entrer, choisissez groupe de travail pour l'instant. Ces options peuvent être changées ultérieurement.", IDC_STATIC, 33, 107, 263, 50
 END

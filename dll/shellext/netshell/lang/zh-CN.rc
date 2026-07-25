@@ -131,7 +131,7 @@ BEGIN
 （您可以从网络管理员处获取此信息。）", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "不，这台计算机将成为工作组的一部分。", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "是的，这台计算机将成为域的一部分。", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "工作组或域名称：", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "工作组或域名称：", IDC_STATIC, 33, 72, 126, 10
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "注意：如果此计算机不是网络的一部分，您没有足够的权限加入域，或者您不知道要输入什么，那么现在就选择工作组。这些选项可以在以后更改。", IDC_STATIC, 33, 107, 263, 50
 END

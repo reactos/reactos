@@ -122,7 +122,7 @@ BEGIN
     LTEXT "このコンピュータをドメインのメンバーにしたいですか? (あなたはこの情報をネットワーク管理者から取得できます)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "いいえ、このコンピュータはワークグループの一部になります。", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "はい、このコンピュータはドメインの一部になります。", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "ワークグループかドメイン名:", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "ワークグループかドメイン名:", IDC_STATIC, 33, 72, 126, 10
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "注意: もし、あなたがドメインに参加する充分な権限がないか、ドメインに入る方法を知らなければ、今はワークグループを選択するだけです。このオプションは、後で変更できます。", IDC_STATIC, 33, 107, 263, 50
 END
