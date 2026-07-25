@@ -2017,7 +2017,7 @@ MUI_ERROR sqALErrorEntries[] =
         "\211NT\211R = Ristarto kompjuterin"
     },
     {
-        //�RROR_FIND_S�TUPDATA,
+        //ERROR_FIND_SETUPDATA,
         "Instalimi d\211shtoi p\211r t\211 gjetur seksionin e 'SetupData'\n"
         "ne TXTSETUP.SIF.\n",
         "ENTER = Ristarto kompjuterin"

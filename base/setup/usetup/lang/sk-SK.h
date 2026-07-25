@@ -1885,7 +1885,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup found an invalid signature in TXTSETUP.SIF.\n", //chybnï¿½ (neplatnï¿½) podpis (znak, zna\237ka, \347ifra)
+        "Setup found an invalid signature in TXTSETUP.SIF.\n", //chybnì (neplatnì) podpis (znak, zna\237ka, \347ifra)
         "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
@@ -1921,7 +1921,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         // ERROR_WARN_PARTITION,
-//          "In\347talï¿½tor zistil, ï¿½e najmenej jeden pevnï¿½ disk obsahuje nekompatibilnï¿½\n"
+//          "In\347tal tor zistil, §e najmenej jeden pevnì disk obsahuje nekompatibiln£\n"
           "In\347tal\240tor na\347iel najmenej na jednom pevnom disku nekompatibiln\243\n"
           "tabu\226ku oblast\241, s ktorou sa ned\240 spr\240vne zaobch\240dza\234!\n"
           "\n"

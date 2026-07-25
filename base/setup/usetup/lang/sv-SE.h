@@ -2224,7 +2224,7 @@ MUI_STRING svSEStrings[] =
      "Storlek p\206 den nya partitionen:"},
     {STRING_CHOOSE_NEW_PARTITION,
      "You have chosen to create a primary partition on"},
-//     "Du har valt att skapa en ny partition pï¿½"},
+//     "Du har valt att skapa en ny partition p†"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
