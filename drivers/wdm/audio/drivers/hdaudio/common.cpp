@@ -1082,6 +1082,7 @@ CAdapterCommon::ProcessOutputNodes(
         Status = OutNode->GetPinConfigurationDefault(PinNodes[NodeIndex], &PinConfiguration);
         if (NT_SUCCESS(Status))
         {
+#if 0
             if (PinConfiguration.PortConnectivity == 0x1)
             {
                 // no connection
@@ -1089,6 +1090,7 @@ CAdapterCommon::ProcessOutputNodes(
                 ClearRef(PinNodes[NodeIndex], PinNodeCount, PinNodes);
                 continue;
             }
+#endif
 
             if (PinConfiguration.DefaultDevice > 7)
             {
