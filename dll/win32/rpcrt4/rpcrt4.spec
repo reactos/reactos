@@ -12,7 +12,6 @@
 @ stdcall CStdStubBuffer_QueryInterface(ptr ptr ptr)
 @ stdcall DceErrorInqTextA (long ptr)
 @ stdcall DceErrorInqTextW (long ptr)
-#@ stub DllGetClassObject
 @ stub DllInstall
 @ stdcall -private DllRegisterServer()
 @ stub GlobalMutexClearExternal
@@ -38,6 +37,8 @@
 @ stdcall I_RpcBindingInqTransportType(ptr ptr)
 @ stub I_RpcBindingInqWireIdForSnego
 @ stub I_RpcBindingIsClientLocal
+# 9x version of I_RpcBindingSetAsync has 3 arguments, not 2
+@ stdcall I_RpcBindingSetAsync(ptr ptr)
 @ stub I_RpcBindingToStaticStringBindingW
 @ stub I_RpcClearMutex
 @ stub I_RpcConnectionInqSockBuffSize
@@ -82,6 +83,8 @@
 @ stub I_RpcServerIsClientDisconnected
 @ stub I_RpcServerRegisterForwardFunction
 @ stub I_RpcServerSetAddressChangeFn
+@ stdcall I_RpcServerStartListening(ptr)
+@ stdcall I_RpcServerStopListening()
 @ stub I_RpcServerUseProtseq2A
 @ stub I_RpcServerUseProtseq2W
 @ stub I_RpcServerUseProtseqEp2A
@@ -100,6 +103,7 @@
 @ stub I_RpcTransIoCancelled
 @ stub I_RpcTransServerNewConnection
 @ stub I_RpcTurnOnEEInfoPropagation
+@ stdcall I_RpcWindowProc(ptr long long long)
 @ stdcall I_UuidCreate(ptr)
 @ stub MIDL_wchar_strcpy
 @ stub MIDL_wchar_strlen
@@ -126,6 +130,7 @@
 @ stdcall NdrAllocate(ptr long)
 @ varargs NdrAsyncClientCall(ptr ptr)
 @ stdcall NdrAsyncServerCall(ptr)
+@ stdcall NdrAsyncStubCall(ptr ptr ptr ptr)
 @ stdcall NdrByteCountPointerBufferSize(ptr ptr ptr)
 @ stdcall NdrByteCountPointerFree(ptr ptr ptr)
 @ stdcall NdrByteCountPointerMarshall(ptr ptr ptr)
@@ -133,8 +138,8 @@
 @ stdcall NdrCStdStubBuffer2_Release(ptr ptr)
 @ stdcall NdrCStdStubBuffer_Release(ptr ptr)
 @ stdcall NdrClearOutParameters(ptr ptr ptr)
-@ varargs -arch=i386 NdrClientCall(ptr ptr) NdrClientCall2
 @ varargs NdrClientCall2(ptr ptr)
+@ varargs -arch=i386 NdrClientCall(ptr ptr) NdrClientCall2
 @ varargs -arch=win64 NdrClientCall3(ptr long ptr)
 @ stdcall NdrClientContextMarshall(ptr ptr long)
 @ stdcall NdrClientContextUnmarshall(ptr ptr ptr)
@@ -207,19 +212,28 @@
 @ stdcall NdrFullPointerXlatInit(long long)
 @ stdcall NdrGetBuffer(ptr long ptr)
 @ stub NdrGetDcomProtocolVersion
+@ stub NdrGetPartialBuffer
+@ stub NdrGetPipeBuffer
 @ stub NdrGetSimpleTypeBufferAlignment
 @ stub NdrGetSimpleTypeBufferSize
 @ stub NdrGetSimpleTypeMemorySize
 @ stub NdrGetTypeFlags
 @ stdcall NdrGetUserMarshalInfo(ptr long ptr)
+@ stub NdrHardStructBufferSize #(ptr ptr ptr)
+@ stub NdrHardStructFree #(ptr ptr ptr)
+@ stub NdrHardStructMarshall #(ptr ptr ptr)
+@ stub NdrHardStructMemorySize #(ptr ptr)
+@ stub NdrHardStructUnmarshall #(ptr ptr ptr long)
 @ stdcall NdrInterfacePointerBufferSize(ptr ptr ptr)
 @ stdcall NdrInterfacePointerFree(ptr ptr ptr)
 @ stdcall NdrInterfacePointerMarshall(ptr ptr ptr)
 @ stdcall NdrInterfacePointerMemorySize(ptr ptr)
 @ stdcall NdrInterfacePointerUnmarshall(ptr ptr ptr long)
+@ stub NdrIsAppDoneWithPipes
 @ stdcall NdrMapCommAndFaultStatus(ptr ptr ptr long)
-@ varargs NdrMesProcEncodeDecode(ptr ptr ptr)
+@ stub NdrMarkNextActivePipe
 @ stub NdrMesProcEncodeDecode2
+@ varargs NdrMesProcEncodeDecode(ptr ptr ptr)
 @ stub NdrMesSimpleTypeAlignSize
 @ stub NdrMesSimpleTypeDecode
 @ stub NdrMesSimpleTypeEncode
@@ -248,6 +262,11 @@
 @ stub NdrPartialIgnoreClientMarshall
 @ stub NdrPartialIgnoreServerInitialize
 @ stub NdrPartialIgnoreServerUnmarshall
+@ stub NdrPipePull
+@ stub NdrPipePush
+@ stub NdrPipeSendReceive
+@ stub NdrPipesDone
+@ stub NdrPipesInitialize
 @ stdcall NdrPointerBufferSize(ptr ptr ptr)
 @ stdcall NdrPointerFree(ptr ptr ptr)
 @ stdcall NdrPointerMarshall(ptr ptr ptr)
@@ -377,6 +396,7 @@
 @ stdcall RpcErrorGetNextRecord(ptr long ptr)
 @ stub RpcErrorGetNumberOfRecords
 @ stdcall RpcErrorLoadErrorInfo(ptr long ptr)
+@ stub RpcErrorNumberOfRecords
 @ stub RpcErrorResetEnumeration
 @ stdcall RpcErrorSaveErrorInfo(ptr ptr ptr)
 @ stdcall RpcErrorStartEnumeration(ptr)
@@ -433,6 +453,7 @@
 @ stdcall RpcServerRegisterAuthInfoA(str  long ptr ptr)
 @ stdcall RpcServerRegisterAuthInfoW(wstr long ptr ptr)
 @ stdcall RpcServerRegisterIf2(ptr ptr ptr long long long ptr)
+@ stdcall RpcServerRegisterIf3(ptr ptr ptr long long long ptr ptr)
 @ stdcall RpcServerRegisterIf(ptr ptr ptr)
 @ stdcall RpcServerRegisterIfEx(ptr ptr ptr long long ptr)
 @ stub RpcServerTestCancel
