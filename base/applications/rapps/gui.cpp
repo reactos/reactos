@@ -620,6 +620,9 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                 CUpdateDatabaseMutex lock;
                 m_Db->RemoveCached();
                 UpdateApplicationsList(SelectedEnumType, bReload);
+                /* Force database update even if "Available apps" view is not active */
+                if (!IsAvailableEnum(SelectedEnumType))
+                    m_Db->UpdateAvailable();
                 break;
             }
 
