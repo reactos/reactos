@@ -164,7 +164,7 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
         }
         else
         {
-            /* When not paging-out agressively, just reset the accessed bit */
+            /* When not paging-out aggressively, just reset the accessed bit */
             PEPROCESS Process = NULL;
             PVOID Address = NULL;
             BOOLEAN Accessed = FALSE;
@@ -251,6 +251,7 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
                 Status = MmPageOutPhysicalAddress(CurrentPage);
                 if (NT_SUCCESS(Status))
                 {
+                    (*NrFreedPages)++;
                     if (CurrentPage == FirstPage)
                     {
                         FirstPage = 0;
@@ -388,11 +389,12 @@ MiBalancerThread(PVOID Unused)
                 }
 
                 /* Trim cache */
-                Target = max(InitialTarget, abs(MiMinimumAvailablePages - MmAvailablePages));
+                Target = max(InitialTarget, MiMinimumAvailablePages > MmAvailablePages ? MiMinimumAvailablePages - MmAvailablePages : 0);
                 if (Target)
                 {
                     CcRosTrimCache(Target, &NrFreedPages);
-                    InitialTarget -= min(NrFreedPages, InitialTarget);
+                    /* Track against the actual target passed to CcRosTrimCache. */
+                    InitialTarget = Target > NrFreedPages ? Target - NrFreedPages : 0;
                 }
 
                 /* No pages left to swap! */
