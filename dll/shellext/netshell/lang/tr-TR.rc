@@ -125,7 +125,7 @@ BEGIN
 (Ağ yöneticinizden bu bilgiyi edinebilirsiniz.)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "Hayır, bu bilgisayar bir çalışma grubunun parçası olacak.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Evet, bu bilgisayar bir etki alanının parçası olacak.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "Çalışma Takımı ya da Etki Alanı Adı:", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "Çalışma Takımı ya da Etki Alanı Adı:", IDC_STATIC, 33, 72, 126, 10
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "ÖNEMLİ: Bu bilgisayar bir ağın parçası olmayacaksa bir etki alanına katılmak için yeterli haklarınız olmaz, ya da ne gireceğinizi bilmiyorsanız yalnızca şu an için çalışma grubunu seçiniz. Bu seçenekler ileriki bir zamanda değiştirilebilir.", IDC_STATIC, 33, 107, 263, 50
 END

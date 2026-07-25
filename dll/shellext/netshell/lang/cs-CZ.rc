@@ -123,7 +123,7 @@ BEGIN
 (Tuto informaci můžete obdržet od Vašeho správce sítě.)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "Ne, tento počítáč bude součástí pracovní skupiny.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Ano, tento počítáč bude součástí domény.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "Název skupiny nebo domény:", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "Název skupiny nebo domény:", IDC_STATIC, 33, 72, 126, 10
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Poznámka: Pokud tento počítač nebude součástí sítě, nemáte dostatečná oprávnění pro připojení k doméně, nebo nevíte, jakou možnost zvolit, vyberte zatím možnost síťová skupina. Tato nastavení mohou být později změněna.", IDC_STATIC, 33, 107, 263, 50
 END

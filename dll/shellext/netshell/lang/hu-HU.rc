@@ -123,7 +123,7 @@ BEGIN
 (Ezt az információt a hálózati rendszergazdától kaphatja meg.)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "Nem, ez a számítógép egy munkacsoport tagja lesz.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Igen, ez a számítógép egy tartomány tagja lesz.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "Munkacsoport vagy tartomány név:", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "Munkacsoport vagy tartomány név:", IDC_STATIC, 33, 72, 126, 10
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Megjegyzés: Ha a számítógép nem lesz egy hálózat része, nincs megfelelő jogosultsága tartományhoz csatlakozáshoz, vagy nem tudja mit adjon meg, akkor egyelőre válassza a munkacsoportot. Később meg lehet változtatni ezeket a beállításokat.", IDC_STATIC, 33, 107, 263, 50
 END

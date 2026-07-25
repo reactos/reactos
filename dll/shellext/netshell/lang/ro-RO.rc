@@ -133,7 +133,7 @@ BEGIN
 (Puteți afla aceste informații de la administratorul de rețea.)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "Nu, acest calculator va fi în schimb, parte a unui grup de lucru.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Da, acest calculator va fi parte a unui domeniu.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "Grup de Lucru sau Nume de domeniu:", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "Grup de Lucru sau Nume de domeniu:", IDC_STATIC, 33, 72, 126, 10
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "NOTĂ: Dacă acest calculator nu va fi parte a unei rețele, nu aveți suficiente drepturi de a vă alătura unui domeniu sau nu știți ce să introduceți, atunci alegeți deocamdată grupul de lucru. Aceste opțiuni pot fi schimbate mai târziu.", IDC_STATIC, 33, 107, 263, 50
 END
