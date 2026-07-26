@@ -7,13 +7,10 @@
 
 #include <kmt_test.h>
 #include <ndk/rtlfuncs.h>
+#include <stdint.h>
 
 static UCHAR MyUserData1, MyUserData2;
 static UCHAR MyOwner1, MyOwner2;
-
-#ifndef MAXULONGLONG
-#define MAXULONGLONG ((ULONGLONG)~((ULONGLONG)0))
-#endif
 
 /* Conflict callbacks: return TRUE to tell the range list to ignore the conflict. */
 static
@@ -738,7 +735,7 @@ TestInvertRangeList(void)
     ok_eq_ulong(Inverted.Count, 3UL);
     Expected[0].Start = 0x0;   Expected[0].End = 0xFF;
     Expected[1].Start = 0x201; Expected[1].End = 0x3FF;
-    Expected[2].Start = 0x501; Expected[2].End = MAXULONGLONG;
+    Expected[2].Start = 0x501; Expected[2].End = ULLONG_MAX;
     Expected[0].Attributes = Expected[1].Attributes = Expected[2].Attributes = 0;
     Expected[0].Flags = Expected[1].Flags = Expected[2].Flags = 0;
     Expected[0].UserData = Expected[1].UserData = Expected[2].UserData = NULL;
@@ -766,7 +763,7 @@ TestInvertRangeList(void)
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_ulong(Inverted.Count, 1UL);
     Expected[0].Start = 0x0;
-    Expected[0].End = MAXULONGLONG;
+    Expected[0].End = ULLONG_MAX;
     Expected[0].Attributes = 0;
     Expected[0].Flags = 0;
     Expected[0].UserData = NULL;
