@@ -361,7 +361,7 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
         RegCloseKey(hKey);
     }
 
-    /* Write the icon size to registry */
+    /* Save the icon size to registry */
     Result = RegCreateKeyW(HKEY_CURRENT_USER, g_CPMetrics, &hKey);
     if (Result == ERROR_SUCCESS)
     {
@@ -413,9 +413,6 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
      * Not everyone listens for this WM_SETTINGCHANGE, including the shell and most third party programs.
      */
     InvalidateRect(NULL, NULL, TRUE);
-
-    /* Use large icons */
-    //SYS_CONFIG(SPI_GETDRAGFULLWINDOWS,   (PVOID) g->SchemeAdv.Effects.bMenuFade);
 
     /* Show shadows under windows */
     SYS_CONFIG(SPI_SETDROPSHADOW,                0, IntToPtr(scheme->Effects.bDropShadow));

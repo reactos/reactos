@@ -49,7 +49,7 @@ do { \
     /* Large icons */
     state = SendDlgItemMessageW(hwndDlg, IDC_EFFAPPEARANCE_LARGEICONS, BM_GETCHECK, 0, 0);
     g->SchemeAdv.iIconSize = (state == BST_UNCHECKED ? NORMAL_ICON_SIZE :
-                              (state == BST_CHECKED ? LARGE_ICON_SIZE : g_CustomIconSize));
+                             (state == BST_CHECKED ? LARGE_ICON_SIZE : g_CustomIconSize));
 
     /* Other checkboxes */
     SAVE_CHECKBOX(IDC_EFFAPPEARANCE_SETDROPSHADOW,   bDropShadow);
@@ -123,9 +123,13 @@ do { \
 
     /* Large icons */
     if (g->SchemeAdv.iIconSize == NORMAL_ICON_SIZE)
+    {
         state = BST_UNCHECKED;
+    }
     else if (g->SchemeAdv.iIconSize == LARGE_ICON_SIZE)
+    {
         state = BST_CHECKED;
+    }
     else
     {
         state = BST_INDETERMINATE;
