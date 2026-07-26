@@ -220,7 +220,9 @@ MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
  * backing the image, and returns the system PTEs it had reserved.
  *
  * @param[in]   ImageBase
- * The base address of the image, as returned by MiLoadImageSection().
+ * The base address of the image located in the system PTE space,
+ * as returned by MiLoadImageSection().
+ * Do not pass the original base addresses of the boot-start drivers here.
  *
  * @param[in]   ImageSize
  * The size of the image, in bytes.
@@ -1018,7 +1020,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
      * Delete the image mapping and return its system PTEs. Only images that
      * MiLoadImageSection or MiReloadBootLoadedDrivers put into system PTE
      * space can be released this way; the boot drivers that the latter had
-     * to skip still sit wherever the boot loader placed them.
+     * to skip still sit wherever the bootloader placed them.
      */
     if (LdrEntry->Flags & LDRP_SYSTEM_MAPPED)
     {
