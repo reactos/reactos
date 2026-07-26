@@ -1021,6 +1021,9 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
             HWND focus = GetNextDlgTabItem( hwnd, 0, FALSE );
             if (!focus) focus = GetNextDlgGroupItem( hwnd, 0, FALSE );
             if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)focus, param ) && IsWindow( hwnd ) &&
+#ifdef __REACTOS__
+                !(dlgInfo->flags & DF_END) && /* Ensure EndDialog wasn't called in WM_INITDIALOG */
+#endif
                 ((~template.style & DS_CONTROL) || (template.style & WS_VISIBLE)))
             {
                 /* By returning TRUE, app has requested a default focus assignment.
@@ -1048,12 +1051,21 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         }
 
 #ifdef __REACTOS__
+        /* Don't continue if the dialog has been destroyed in WM_INITDIALOG */
+        if (!IsWindow(hwnd))
+            return NULL;
+
 //// ReactOS Rev 30613 & 30644
         if (!(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_CHILD))
             SendMessageW( hwnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_INITIALIZE, 0), 0);
-#endif
 
+        // TODO: Handle DS_SETFOREGROUND
+
+        /* Ensure EndDialog wasn't called in WM_INITDIALOG before making the dialog visible */
+        if (!(dlgInfo->flags & DF_END) && (template.style & WS_VISIBLE) && !(GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_VISIBLE))
+#else
         if (template.style & WS_VISIBLE && !(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_VISIBLE))
+#endif
         {
            ShowWindow( hwnd, SW_SHOWNORMAL ); /* SW_SHOW doesn't always work */
            UpdateWindow( hwnd );
