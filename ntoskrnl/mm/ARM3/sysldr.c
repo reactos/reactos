@@ -1014,8 +1014,20 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
         }
     }
 
-    /* Delete the image mapping and return its system PTEs */
-    MiUnloadImageSection(LdrEntry->DllBase, LdrEntry->SizeOfImage);
+    /*
+     * Delete the image mapping and return its system PTEs. Only images that
+     * MiLoadImageSection or MiReloadBootLoadedDrivers put into system PTE
+     * space can be released this way; the boot drivers that the latter had
+     * to skip still sit wherever the boot loader placed them.
+     */
+    if (LdrEntry->Flags & LDRP_SYSTEM_MAPPED)
+    {
+        MiUnloadImageSection(LdrEntry->DllBase, LdrEntry->SizeOfImage);
+    }
+    else
+    {
+        DPRINT1("Leaking non system-mapped image: %wZ\n", &LdrEntry->BaseDllName);
+    }
 
     /* Check if we're linked in */
     if (LdrEntry->InLoadOrderLinks.Flink)
