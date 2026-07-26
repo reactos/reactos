@@ -193,9 +193,21 @@ NtfsReleaseFCB(PNTFS_VCB Vcb,
     Fcb->RefCount--;
     if (Fcb->RefCount <= 0 && !NtfsFCBIsDirectory(Fcb))
     {
+        KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
+
+        CcUninitializeCacheMap(Fcb->FileObject, NULL, NULL);
+
+        if (Fcb->SectionObjectPointers.DataSectionObject != NULL ||
+            Fcb->SectionObjectPointers.ImageSectionObject != NULL)
+        {
+            DPRINT("Keeping FCB %p (%S): still mapped\n", Fcb, Fcb->PathName);
+            return;
+        }
+
+        KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
         RemoveEntryList(&Fcb->FcbListEntry);
         KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
-        CcUninitializeCacheMap(Fcb->FileObject, NULL, NULL);
+
         NtfsDestroyFCB(Fcb);
     }
     else
