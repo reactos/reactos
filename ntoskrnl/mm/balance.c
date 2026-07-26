@@ -106,21 +106,16 @@ MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
         return InitialTarget;
     }
 
-    if (MmAvailablePages < MiMinimumAvailablePages)
-    {
-        /* Global page limit exceeded */
-        Target = (ULONG)max(Target, MiMinimumAvailablePages - MmAvailablePages);
-    }
-    else if (MiMemoryConsumers[Consumer].PagesUsed > MiMemoryConsumers[Consumer].PagesTarget)
+    if (!Target && MiMemoryConsumers[Consumer].PagesUsed > MiMemoryConsumers[Consumer].PagesTarget)
     {
         /* Consumer page limit exceeded */
-        Target = max(Target, MiMemoryConsumers[Consumer].PagesUsed - MiMemoryConsumers[Consumer].PagesTarget);
+        Target = MiMemoryConsumers[Consumer].PagesUsed - MiMemoryConsumers[Consumer].PagesTarget;
     }
 
     if (Target)
     {
         /* Now swap the pages out */
-        Status = MiMemoryConsumers[Consumer].Trim(Target, MmAvailablePages < MiMinimumAvailablePages, &NrFreedPages);
+        Status = MiMemoryConsumers[Consumer].Trim(Target, InitialTarget, &NrFreedPages);
 
         DPRINT("Trimming consumer %lu: Freed %lu pages with a target of %lu pages\n", Consumer, NrFreedPages, Target);
 
@@ -374,38 +369,29 @@ MiBalancerThread(PVOID Unused)
 
         if (Status == STATUS_WAIT_0 || Status == STATUS_WAIT_1)
         {
-            ULONG InitialTarget = 0;
-            ULONG Target;
+            ULONG Target = MiMinimumAvailablePages > MmAvailablePages ? MiMinimumAvailablePages - MmAvailablePages : 0;
+            ULONG StepTarget;
             ULONG NrFreedPages;
 
             do
             {
-                ULONG OldTarget = InitialTarget;
+                /* Track if we're making progress. */
+                StepTarget = Target;
 
                 /* Trim each consumer */
                 for (ULONG i = 0; i < MC_MAXIMUM; i++)
                 {
-                    InitialTarget = MiTrimMemoryConsumer(i, InitialTarget);
+                    Target = MiTrimMemoryConsumer(i, Target);
                 }
 
-                /* Trim cache */
-                Target = max(InitialTarget, MiMinimumAvailablePages > MmAvailablePages ? MiMinimumAvailablePages - MmAvailablePages : 0);
+                /* Trim Cache if we're still over. */
                 if (Target)
                 {
                     CcRosTrimCache(Target, &NrFreedPages);
-                    /* Track against the actual target passed to CcRosTrimCache. */
-                    InitialTarget = Target > NrFreedPages ? Target - NrFreedPages : 0;
-                }
-
-                /* No pages left to swap! */
-                if (InitialTarget != 0 &&
-                    InitialTarget == OldTarget)
-                {
-                    /* Game over */
-                    KeBugCheck(NO_PAGES_AVAILABLE);
+                    Target = Target > NrFreedPages ? Target - NrFreedPages : 0;
                 }
             }
-            while (InitialTarget != 0);
+            while (Target && Target != StepTarget);
 
             if (Status == STATUS_WAIT_0)
             {
