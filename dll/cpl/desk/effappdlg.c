@@ -125,8 +125,8 @@ do { \
         state = BST_CHECKED;
     else
     {
-        g_CustomIconSize = g->SchemeAdv.iIconSize;
         state = BST_INDETERMINATE;
+        g_CustomIconSize = g->SchemeAdv.iIconSize;
         SendDlgItemMessageW(hwndDlg, IDC_EFFAPPEARANCE_LARGEICONS, BM_SETSTYLE, BS_AUTO3STATE, TRUE);
     }
     SendDlgItemMessageW(hwndDlg, IDC_EFFAPPEARANCE_LARGEICONS, BM_SETCHECK, state, 0);
