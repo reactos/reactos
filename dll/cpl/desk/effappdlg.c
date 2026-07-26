@@ -8,6 +8,9 @@
 
 #include "desk.h"
 
+#define NORMAL_ICON_SIZE  32
+#define LARGE_ICON_SIZE   48
+
 INT g_CustomIconSize;
 
 /* Update all the controls with the current values for the selected screen element */
@@ -45,8 +48,8 @@ do { \
 
     /* Large icons */
     state = SendDlgItemMessageW(hwndDlg, IDC_EFFAPPEARANCE_LARGEICONS, BM_GETCHECK, 0, 0);
-    g->SchemeAdv.iIconSize = (state == BST_UNCHECKED ? 32 :
-                              (state == BST_CHECKED ? 48 : g_CustomIconSize));
+    g->SchemeAdv.iIconSize = (state == BST_UNCHECKED ? NORMAL_ICON_SIZE :
+                              (state == BST_CHECKED ? LARGE_ICON_SIZE : g_CustomIconSize));
 
     /* Other checkboxes */
     SAVE_CHECKBOX(IDC_EFFAPPEARANCE_SETDROPSHADOW,   bDropShadow);
@@ -119,9 +122,9 @@ do { \
                                                      IDS_CLEARTYPEEFFECT);
 
     /* Large icons */
-    if (g->SchemeAdv.iIconSize == 32)
+    if (g->SchemeAdv.iIconSize == NORMAL_ICON_SIZE)
         state = BST_UNCHECKED;
-    else if (g->SchemeAdv.iIconSize == 48)
+    else if (g->SchemeAdv.iIconSize == LARGE_ICON_SIZE)
         state = BST_CHECKED;
     else
     {
