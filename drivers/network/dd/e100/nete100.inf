@@ -1,0 +1,263 @@
+; NETE100.INF
+
+; Installation file for Intel PRO/100 NICs
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = Net
+ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 06/11/2026,1.00
+
+[DestinationDirs]
+DefaultDestDir=12
+
+[Manufacturer]
+%IntelMfg%=IntelMfg
+
+[ControlFlags]
+ExcludeFromSelect=*
+
+[IntelMfg]
+%i8255x%=E100.ndi,PCI\VEN_8086&DEV_1229
+%i82559ER%=E100.ndi,PCI\VEN_8086&DEV_1209
+%i82559CB%=E100.ndi,PCI\VEN_8086&DEV_1029
+%i82559%=E100.ndi,PCI\VEN_8086&DEV_1030
+%i82551QM%=E100.ndi,PCI\VEN_8086&DEV_1059
+%i82552%=ICH.ndi,PCI\VEN_8086&DEV_10FE
+%ICH2%=ICH.ndi,PCI\VEN_8086&DEV_2449
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1031
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1032
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1033
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1034
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1035
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1036
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1037
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1038
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_1039
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_103A
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_103B
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_103C
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_103D
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_103E
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1050
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1051
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1052
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1053
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1054
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1055
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1056
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1057
+%CICH%=ICH.ndi,PCI\VEN_8086&DEV_2459
+%CICH%=ICH.ndi,PCI\VEN_8086&DEV_245D
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1064
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1065
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1066
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1067
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1068
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1069
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_106A
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_106B
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_266C
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_1091
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_1092
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_1093
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_1094
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_1095
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_27DC
+
+[E100.ndi.NT]
+Characteristics=0x84
+BusType=5
+CopyFiles=E100_CopyFiles.NT
+AddReg=E100_COMMON, E100_UCODE, E100_VLAN
+
+[ICH.ndi.NT]
+Characteristics=0x84
+BusType=5
+CopyFiles=E100_CopyFiles.NT
+AddReg=E100_COMMON
+
+[E100_CopyFiles.NT]
+e100.sys
+
+[E100.ndi.NT.Services]
+AddService=e100, 2, E100_Service_Inst, E100_EventLog
+
+[ICH.ndi.NT.Services]
+AddService=e100, 2, E100_Service_Inst, E100_EventLog
+
+[E100_COMMON]
+HKR,Ndi,            Service,    0, "e100"
+HKR,Ndi\Interfaces, UpperRange, 0, "ndis5"
+HKR,Ndi\Interfaces, LowerRange, 0, "ethernet"
+
+HKR,Ndi\params\NetworkAddress, ParamDesc, 0, %NA%
+HKR,Ndi\params\NetworkAddress, type,      0, "edit"
+HKR,Ndi\params\NetworkAddress, LimitText, 0, "12"
+HKR,Ndi\params\NetworkAddress, UpperCase, 0, "1"
+HKR,Ndi\params\NetworkAddress, default,   0, " "
+HKR,Ndi\params\NetworkAddress, optional,  0, "1"
+
+HKR,Ndi\params\SpeedDuplex,      ParamDesc, 0, %SD%
+HKR,Ndi\params\SpeedDuplex,      type,      0, "enum"
+HKR,Ndi\params\SpeedDuplex,      default,   0, "0"
+HKR,Ndi\params\SpeedDuplex\enum, "0",       0, "%Auto%"
+HKR,Ndi\params\SpeedDuplex\enum, "1",       0, "10HD"
+HKR,Ndi\params\SpeedDuplex\enum, "2",       0, "10FD"
+HKR,Ndi\params\SpeedDuplex\enum, "3",       0, "100HD"
+HKR,Ndi\params\SpeedDuplex\enum, "4",       0, "100FD"
+
+HKR,Ndi\params\FlowControl,      ParamDesc, 0, %FC%
+HKR,Ndi\params\FlowControl,      type,      0, "enum"
+HKR,Ndi\params\FlowControl,      default,   0, "1"
+HKR,Ndi\params\FlowControl\enum, "0",       0, "%No%"
+HKR,Ndi\params\FlowControl\enum, "1",       0, "%Auto%"
+HKR,Ndi\params\FlowControl\enum, "2",       0, "%FRx%"
+HKR,Ndi\params\FlowControl\enum, "3",       0, "%FTx%"
+HKR,Ndi\params\FlowControl\enum, "4",       0, "%FBoth%"
+
+HKR,Ndi\params\TcbNum, ParamDesc, 0, %TCB%
+HKR,Ndi\params\TcbNum, type,      0, "int"
+HKR,Ndi\params\TcbNum, default,   0, "128"
+HKR,Ndi\params\TcbNum, min,       0, "8"
+HKR,Ndi\params\TcbNum, max,       0, "128"
+HKR,Ndi\params\TcbNum, step,      0, "1"
+HKR,Ndi\params\TcbNum, base,      0, "10"
+
+HKR,Ndi\params\RfdNum, ParamDesc, 0, %RFD%
+HKR,Ndi\params\RfdNum, type,      0, "int"
+HKR,Ndi\params\RfdNum, default,   0, "64"
+HKR,Ndi\params\RfdNum, min,       0, "8"
+HKR,Ndi\params\RfdNum, max,       0, "128"
+HKR,Ndi\params\RfdNum, step,      0, "1"
+HKR,Ndi\params\RfdNum, base,      0, "10"
+
+[E100_UCODE]
+HKR,Ndi\params\IntDelay, ParamDesc, 0, %IDEL%
+HKR,Ndi\params\IntDelay, type,      0, "int"
+HKR,Ndi\params\IntDelay, default,   0, "1536"
+HKR,Ndi\params\IntDelay, min,       0, "0"
+HKR,Ndi\params\IntDelay, max,       0, "65535"
+HKR,Ndi\params\IntDelay, step,      0, "1"
+HKR,Ndi\params\IntDelay, base,      0, "10"
+
+HKR,Ndi\params\BundleMax, ParamDesc, 0, %BMAX%
+HKR,Ndi\params\BundleMax, type,      0, "int"
+HKR,Ndi\params\BundleMax, default,   0, "6"
+HKR,Ndi\params\BundleMax, min,       0, "1"
+HKR,Ndi\params\BundleMax, max,       0, "65535"
+HKR,Ndi\params\BundleMax, step,      0, "1"
+HKR,Ndi\params\BundleMax, base,      0, "10"
+
+HKR,Ndi\params\BundleSmall,      ParamDesc, 0, %BSML%
+HKR,Ndi\params\BundleSmall,      type,      0, "enum"
+HKR,Ndi\params\BundleSmall,      default,   0, "1"
+HKR,Ndi\params\BundleSmall\enum, "0",       0, "%No%"
+HKR,Ndi\params\BundleSmall\enum, "1",       0, "%Yes%"
+
+[E100_VLAN]
+HKR,Ndi\params\Priority,      ParamDesc, 0, %PP%
+HKR,Ndi\params\Priority,      type,      0, "enum"
+HKR,Ndi\params\Priority,      default,   0, "1"
+HKR,Ndi\params\Priority\enum, "0",       0, "%No%"
+HKR,Ndi\params\Priority\enum, "1",       0, "%Yes%"
+
+HKR,Ndi\params\VlanTag,      ParamDesc, 0, %VT%
+HKR,Ndi\params\VlanTag,      type,      0, "enum"
+HKR,Ndi\params\VlanTag,      default,   0, "1"
+HKR,Ndi\params\VlanTag\enum, "0",       0, "%No%"
+HKR,Ndi\params\VlanTag\enum, "1",       0, "%Yes%"
+
+HKR,Ndi\params\VlanID, ParamDesc, 0, %VI%
+HKR,Ndi\params\VlanID, type,      0, "long"
+HKR,Ndi\params\VlanID, default,   0, "0"
+HKR,Ndi\params\VlanID, min,       0, "0"
+HKR,Ndi\params\VlanID, max,       0, "4095"
+HKR,Ndi\params\VlanID, step,      0, "1"
+HKR,Ndi\params\VlanID, base,      0, "10"
+
+[E100_Service_Inst]
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%12%\e100.sys
+LoadOrderGroup=NDIS
+
+[E100_EventLog]
+AddReg=E100_EventLog_AddReg
+
+[E100_EventLog_AddReg]
+HKR,,EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\netevent.dll"
+HKR,,TypesSupported,   0x00010001, 7
+
+[Strings]
+; Non-localizable
+ReactOS="ReactOS Team"
+IntelMfg="Intel"
+VI="VLAN ID"
+
+NA="Network Address"
+SD="Speed & Duplex"
+Auto="Auto"
+No="No"
+Yes="Yes"
+FC="Flow Control"
+FRx="Rx Pause"
+FTx="Tx Pause"
+FBoth="Rx & Tx Pause"
+IDEL="Interrupt Delay"
+BMAX="Max Frames Per Interrupt"
+BSML="Bundle Small Frames"
+TCB="Transmit Buffers"
+RFD="Receive Buffers"
+PP="Packet Priority"
+VT="VLAN Tagging"
+
+i8255x="Intel 8255x PRO/100 Ethernet Controller"
+i82559ER="Intel 82559ER Embedded PRO/100 Ethernet Controller"
+i82559CB="Intel 82559 PCI/CardBus PRO/100 Ethernet Controller"
+i82559="Intel 82559 PRO/100 Ethernet Controller"
+i82551QM="Intel 82551QM PRO/100 M Mobile Ethernet Controller"
+i82552="Intel 82552 PRO/100 Ethernet Controller"
+ICH2="Intel ICH2 PRO/100 Ethernet Controller"
+ICH3="Intel ICH3 PRO/100 Ethernet Controller"
+ICH4="Intel ICH4 PRO/100 Ethernet Controller"
+ICH5="Intel ICH5 PRO/100 Ethernet Controller"
+CICH="Intel C-ICH PRO/100 Ethernet Controller"
+ICH6="Intel ICH6 PRO/100 Ethernet Controller"
+ICH7="Intel ICH7 PRO/100 Ethernet Controller"
+
+[Strings.0419]
+NA="Сетевой адрес"
+SD="Скорость и дуплекс"
+Auto="Авто"
+No="Нет"
+Yes="Да"
+FC="Управление потоком"
+FRx="Кадры паузы приема"
+FTx="Кадры паузы передачи"
+FBoth="Кадры паузы приема и передачи"
+IDEL="Задержка прерывания"
+BMAX="Максимальное число кадров на прерывание"
+BSML="Компоновать короткие кадры"
+TCB="Буферы передачи"
+RFD="Буферы приема"
+PP="Приоритет кадров"
+VT="Маркировка кадров"
+
+i8255x="Intel 8255x PRO/100 сетевой контроллер"
+i82559ER="Intel 82559ER Embedded PRO/100 сетевой контроллер"
+i82559CB="Intel 82559 PCI/CardBus PRO/100 сетевой контроллер"
+i82559="Intel 82559 PRO/100 сетевой контроллер"
+i82551QM="Intel 82551QM PRO/100 M Mobile сетевой контроллер"
+i82552="Intel 82552 PRO/100 сетевой контроллер"
+ICH2="Intel ICH2 PRO/100 сетевой контроллер"
+ICH3="Intel ICH3 PRO/100 сетевой контроллер"
+ICH4="Intel ICH4 PRO/100 сетевой контроллер"
+ICH5="Intel ICH5 PRO/100 сетевой контроллер"
+CICH="Intel C-ICH PRO/100 сетевой контроллер"
+ICH6="Intel ICH6 PRO/100 сетевой контроллер"
+ICH7="Intel ICH7 PRO/100 сетевой контроллер"
