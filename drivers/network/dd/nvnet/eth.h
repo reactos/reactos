@@ -20,8 +20,8 @@ typedef struct _ETH_HEADER
     (BOOLEAN)(((PUCHAR)(Address))[0] & ((UCHAR)0x02))
 
 #define ETH_IS_EMPTY(Address) \
-    (BOOLEAN)((((PUCHAR)(Address))[0] | ((PUCHAR)(Address))[1] | ((PUCHAR)(Address))[2] | \
-               ((PUCHAR)(Address))[3] | ((PUCHAR)(Address))[5] | ((PUCHAR)(Address))[5]) == 0)
+    ((BOOLEAN)((((PUCHAR)(Address))[0] | ((PUCHAR)(Address))[1] | ((PUCHAR)(Address))[2] | \
+                ((PUCHAR)(Address))[3] | ((PUCHAR)(Address))[4] | ((PUCHAR)(Address))[5]) == 0))
 
 typedef struct IPv4_HEADER
 {
