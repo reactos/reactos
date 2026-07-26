@@ -562,8 +562,6 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
     CHAR Buffer[200] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
     CHAR AddressBuffer[32];
     struct in_addr addr;
-    ULONG Netmask;
-    ULONG Router;
     HKEY hkey;
 
     strcat(Buffer, Adapter->DhclientInfo.name);
@@ -580,7 +578,8 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
     /* Set up our default router if we got one from the DHCP server */
     if( new_lease->options[DHO_SUBNET_MASK].len == (int)sizeof(ULONG) )
     {
-        NTSTATUS Status;
+        ULONG Netmask;
+        DWORD Status;
 
         memcpy( &Netmask, new_lease->options[DHO_SUBNET_MASK].data, sizeof(Netmask) );
         Status = AddIPAddress
@@ -589,7 +588,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
               Adapter->IfMib.dwIndex,
               &Adapter->NteContext,
               &Adapter->NteInstance );
-        if (hkey)
+        if (hkey && Status == ERROR_SUCCESS)
         {
             RegSetValueExA(hkey, "DhcpIPAddress", 0, REG_SZ, (LPBYTE)piaddr(new_lease->address), strlen(piaddr(new_lease->address))+1);
             addr.S_un.S_addr = Netmask;
@@ -606,7 +605,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
             RegSetValueExA(hkey, "AddressType", 0, REG_DWORD, (LPBYTE)&dwAddressType, sizeof(DWORD));
         }
 
-        if( !NT_SUCCESS(Status) )
+        if( Status != ERROR_SUCCESS )
             warning("AddIPAddress: %lx\n", Status);
     }
     else if( new_lease->options[DHO_SUBNET_MASK].len )
@@ -616,7 +615,8 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
 
     if( new_lease->options[DHO_ROUTERS].len >= (int)sizeof(ULONG) && new_lease->options[DHO_ROUTERS].len % (int)sizeof(ULONG) == 0 )
     {
-        NTSTATUS Status;
+        ULONG Router;
+        DWORD Status;
 
         Adapter->RouterMib.dwForwardDest = 0; /* Default route */
         Adapter->RouterMib.dwForwardMask = 0;
@@ -634,10 +634,10 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
 
         Status = CreateIpForwardEntry( &Adapter->RouterMib );
 
-        if( !NT_SUCCESS(Status) )
+        if( Status != ERROR_SUCCESS )
             warning("CreateIpForwardEntry: %lx\n", Status);
 
-        if (hkey)
+        if (hkey && Status == ERROR_SUCCESS)
         {
             addr.S_un.S_addr = Router;
             RtlIpv4AddressToStringA(&addr, AddressBuffer);
@@ -2219,10 +2219,10 @@ check_option(struct client_lease *l, int option)
 		}
 		if (!ipv4addrs(opbuf))
 		{
-                        warning("Invalid IP address in option(%d): %s", option, opbuf);
+			warning("Invalid IP address in option(%d): %s", option, opbuf);
 			return (0);
 		}
-		return (1)  ;
+		return (1);
 	case DHO_ROUTERS:
 		if (l->options[option].len % (int)sizeof(ULONG))
 		{
@@ -2231,10 +2231,10 @@ check_option(struct client_lease *l, int option)
 		}
 		if (!ipv4addrs(opbuf))
 		{
-                        warning("Invalid IP address in option(%d): %s", option, opbuf);
+			warning("Invalid IP address in option(%d): %s", option, opbuf);
 			return (0);
 		}
-		return (1)  ;
+		return (1);
 	case DHO_TIME_SERVERS:
 	case DHO_NAME_SERVERS:
 	case DHO_DOMAIN_NAME_SERVERS:
