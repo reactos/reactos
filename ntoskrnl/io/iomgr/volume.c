@@ -192,7 +192,7 @@ IopDereferenceVpbAndFree(IN PVPB Vpb)
     Vpb->ReferenceCount--;
 
     /* Check if we're out of references */
-    if (!Vpb->ReferenceCount && Vpb->RealDevice->Vpb == Vpb &&
+    if (!Vpb->ReferenceCount && Vpb->RealDevice->Vpb != Vpb &&
         !(Vpb->Flags & VPB_PERSISTENT))
     {
         /* Release VPB lock */
