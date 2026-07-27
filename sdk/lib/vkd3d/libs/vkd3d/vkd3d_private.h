@@ -815,6 +815,18 @@ struct d3d12_descriptor_heap_vk_set
     VkDescriptorType vk_type;
 };
 
+#ifdef __REACTOS__
+#ifdef _MSC_VER
+# ifdef _WIN64
+#  define VKD3D_DESCRIPTOR_HEAP_ALIGN 8
+# else
+#  define VKD3D_DESCRIPTOR_HEAP_ALIGN 4
+# endif
+#else
+# define VKD3D_DESCRIPTOR_HEAP_ALIGN sizeof(void *)
+#endif
+#endif
+
 /* ID3D12DescriptorHeap */
 struct d3d12_descriptor_heap
 {
@@ -835,7 +847,7 @@ struct d3d12_descriptor_heap
 
     unsigned int volatile dirty_list_head;
 
-    uint8_t DECLSPEC_ALIGN(sizeof(void *)) descriptors[];
+    uint8_t DECLSPEC_ALIGN(VKD3D_DESCRIPTOR_HEAP_ALIGN) descriptors[];
 };
 
 void d3d12_desc_flush_vk_heap_updates_locked(struct d3d12_descriptor_heap *descriptor_heap, struct d3d12_device *device);

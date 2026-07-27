@@ -3,6 +3,13 @@
 
 #include <psdk/winnt.h>
 
+/* Wine's own <winnt.h> exposes ARRAY_SIZE to modules built with __WINESRC__ */
+#ifdef __WINESRC__
+# ifndef ARRAY_SIZE
+#  define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+# endif
+#endif
+
 #define CONTEXT_i386 0x10000
 #define CONTEXT_i486 0x10000
 

@@ -611,19 +611,20 @@
 
 ; ReactOS Display Driver Model
 @ stdcall -version=0x600+ D3DKMTCheckExclusiveOwnership() NtGdiDdDDICheckExclusiveOwnership
+@ stdcall -version=0x600+ D3DKMTCheckVidPnExclusiveOwnership(ptr)
 @ stdcall -version=0x600+ D3DKMTCheckMonitorPowerState(ptr) NtGdiDdDDICheckMonitorPowerState
 @ stdcall -version=0x600+ D3DKMTCheckOcclusion(ptr) NtGdiDdDDICheckOcclusion
-@ stdcall -version=0x600+ D3DKMTCloseAdapter(ptr) NtGdiDdDDICloseAdapter
+@ stdcall -version=0x600+ D3DKMTCloseAdapter(ptr)
 @ stdcall -version=0x600+ D3DKMTCreateAllocation(ptr) NtGdiDdDDICreateAllocation
 @ stdcall -version=0x600+ D3DKMTCreateContext(ptr) NtGdiDdDDICreateContext
 @ stdcall -version=0x600+ D3DKMTCreateDCFromMemory(ptr)
-@ stdcall -version=0x600+ D3DKMTCreateDevice(ptr) NtGdiDdDDICreateDevice
+@ stdcall -version=0x600+ D3DKMTCreateDevice(ptr)
 @ stdcall -version=0x600+ D3DKMTCreateOverlay(ptr) NtGdiDdDDICreateOverlay
 @ stdcall -version=0x600+ D3DKMTCreateSynchronizationObject(ptr) NtGdiDdDDICreateSynchronizationObject
 @ stdcall -version=0x600+ D3DKMTDestroyAllocation(ptr) NtGdiDdDDIDestroyAllocation
 @ stdcall -version=0x600+ D3DKMTDestroyContext(ptr) NtGdiDdDDIDestroyContext
 @ stdcall -version=0x600+ D3DKMTDestroyDCFromMemory(ptr)
-@ stdcall -version=0x600+ D3DKMTDestroyDevice(ptr) NtGdiDdDDIDestroyDevice
+@ stdcall -version=0x600+ D3DKMTDestroyDevice(ptr)
 @ stdcall -version=0x600+ D3DKMTDestroyOverlay(ptr) NtGdiDdDDIDestroyOverlay
 @ stdcall -version=0x600+ D3DKMTDestroySynchronizationObject(ptr) NtGdiDdDDIDestroySynchronizationObject
 @ stdcall -version=0x600+ D3DKMTEscape(ptr) NtGdiDdDDIEscape
@@ -642,6 +643,7 @@
 @ stdcall -version=0x600+ D3DKMTOpenAdapterFromDeviceName(ptr) NtGdiDdDDIOpenAdapterFromDeviceName
 @ stdcall -version=0x600+ D3DKMTOpenAdapterFromGdiDisplayName(ptr)
 @ stdcall -version=0x600+ D3DKMTOpenAdapterFromHdc(ptr) NtGdiDdDDIOpenAdapterFromHdc
+@ stdcall -version=0x600+ D3DKMTOpenAdapterFromLuid(ptr)
 @ stdcall -version=0x600+ D3DKMTOpenResource(ptr) NtGdiDdDDIOpenResource
 @ stdcall -version=0x600+ D3DKMTPollDisplayChildren(ptr) NtGdiDdDDIPollDisplayChildren
 @ stdcall -version=0x600+ D3DKMTPresent(ptr) NtGdiDdDDIPresent
@@ -649,6 +651,7 @@
 @ stdcall -version=0x600+ D3DKMTQueryAllocationResidency(ptr) NtGdiDdDDIQueryAllocationResidency
 @ stdcall -version=0x600+ D3DKMTQueryResourceInfo(ptr) NtGdiDdDDIQueryResourceInfo
 @ stdcall -version=0x600+ D3DKMTQueryStatistics(ptr) NtGdiDdDDIQueryStatistics
+@ stdcall -version=0x600+ D3DKMTQueryVideoMemoryInfo(ptr)
 @ stdcall -version=0x600+ D3DKMTReleaseProcessVidPnSourceOwners(ptr) NtGdiDdDDIReleaseProcessVidPnSourceOwners
 @ stdcall -version=0x600+ D3DKMTRender(ptr) NtGdiDdDDIRender
 @ stdcall -version=0x600+ D3DKMTSetAllocationPriority(ptr) NtGdiDdDDISetAllocationPriority
@@ -658,7 +661,7 @@
 @ stdcall -version=0x600+ D3DKMTSetGammaRamp(ptr) NtGdiDdDDISetGammaRamp
 @ stdcall -version=0x600+ D3DKMTSetProcessSchedulingPriorityClass(ptr ptr) NtGdiDdDDISetProcessSchedulingPriorityClass
 @ stdcall -version=0x600+ D3DKMTSetQueuedLimit(ptr) NtGdiDdDDISetQueuedLimit
-@ stdcall -version=0x600+ D3DKMTSetVidPnSourceOwner(ptr) NtGdiDdDDISetVidPnSourceOwner
+@ stdcall -version=0x600+ D3DKMTSetVidPnSourceOwner(ptr)
 @ stdcall -version=0x600+ D3DKMTSharedPrimaryLockNotification(ptr) NtGdiDdDDISharedPrimaryLockNotification
 @ stdcall -version=0x600+ D3DKMTSharedPrimaryUnLockNotification(ptr) NtGdiDdDDISharedPrimaryUnLockNotification
 @ stdcall -version=0x600+ D3DKMTSignalSynchronizationObject(ptr) NtGdiDdDDISignalSynchronizationObject

@@ -103,6 +103,14 @@ static inline uint64_t align(uint64_t addr, size_t alignment)
 # endif
 # define VKD3D_UNUSED __attribute__((unused))
 # define VKD3D_UNREACHABLE __builtin_unreachable()
+#ifdef __REACTOS__
+#elif defined(_MSC_VER)
+# define VKD3D_NORETURN __declspec(noreturn)
+# define VKD3D_PRINTF_FUNC(fmt, args)
+# define VKD3D_UNUSED
+# define VKD3D_UNREACHABLE __assume(0)
+# define __alignof__(type) __alignof(type)
+#endif
 #else
 # define VKD3D_NORETURN
 # define VKD3D_PRINTF_FUNC(fmt, args)
