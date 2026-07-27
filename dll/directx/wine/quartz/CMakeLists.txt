@@ -43,6 +43,9 @@ add_library(quartz MODULE
     quartz.rc
     ${CMAKE_CURRENT_BINARY_DIR}/quartz.def)
 
+add_idl_reg_scripts(quartz registry quartz_strmif.idl)
+add_idl_reg_scripts(quartz regtypelib control_tlb.idl)
+
 set_source_files_properties(quartz.rc PROPERTIES OBJECT_DEPENDS
     "${CMAKE_CURRENT_BINARY_DIR}/control_tlb.tlb;${CMAKE_CURRENT_SOURCE_DIR}/quartz.rgs")
 
