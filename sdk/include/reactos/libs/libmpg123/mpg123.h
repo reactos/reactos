@@ -55,8 +55,16 @@ typedef ptrdiff_t ssize_t;
 #include <sys/types.h>
 
 #ifdef __REACTOS__
-#ifndef ssize_t
-typedef long ssize_t;
+/* <sys/types.h> above normally provides this; the guard has to be
+ *  _SSIZE_T_DEFINED rather than "ssize_t", which is a typedef and not a macro
+ */
+#ifndef _SSIZE_T_DEFINED
+#define _SSIZE_T_DEFINED
+#ifdef _WIN64
+__MINGW_EXTENSION typedef __int64 ssize_t;
+#else
+typedef int ssize_t;
+#endif
 #endif
 #endif /* __REACTOS__ */
 

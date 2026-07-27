@@ -21,6 +21,7 @@
 #ifndef __WINE_DEBUG_H
 #define __WINE_DEBUG_H
 
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <windef.h>
@@ -32,9 +33,10 @@
 #define __RELFILE__ __FILE__
 #endif
 
-#ifdef __WINE_WINE_TEST_H
-#error This file should not be used in Wine tests
-#endif
+/* Tests are not supposed to pull this in, but current Wine tests reach it
+ * through wine/strmbase.h, which needs wine_dbg_sprintf() for debugstr_time().
+ * When wine/test.h got here first it already supplies every debugstr_*/
+/* helper below, so defer to it rather than declaring them a second time. */
 
 #ifdef __cplusplus
 extern "C" {
@@ -143,6 +145,7 @@ extern const char *wine_dbgstr_wn( const WCHAR *s, int n );
 extern const char *wine_dbg_sprintf( const char *format, ... ) __WINE_PRINTF_ATTR(1,2);
 
 extern int wine_dbg_printf( const char *format, ... ) __WINE_PRINTF_ATTR(1,2);
+extern int __cdecl __wine_dbg_output( const char *str );
 extern int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *ch, const char *func,
                          const char *format, ... ) __WINE_PRINTF_ATTR(4,5);
 /* ReactOS compliant debug format */
@@ -372,9 +375,13 @@ static inline const char *wine_dbgstr_variant( const VARIANT *v )
 static __inline const char *debugstr_an( const char * s, int n ) { return wine_dbgstr_an( s, n ); }
 static __inline const char *debugstr_wn( const WCHAR *s, int n ) { return wine_dbgstr_wn( s, n ); }
 static __inline const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
+<<<<<<< HEAD
 #ifdef __REACTOS__ /* wine-8.18 */
 static inline const char *debugstr_fourcc( unsigned int cc ) { return wine_dbgstr_fourcc( cc ); }
 #endif
+=======
+static __inline const char *debugstr_fourcc( unsigned int cc ) { return wine_dbgstr_fourcc( cc ); }
+>>>>>>> dd6c348432c ([DIRECTX:WINE][SDK][WIN32S] pass at building Wine-10.0)
 static __inline const char *debugstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
 static __inline const char *debugstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 

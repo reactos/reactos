@@ -20,196 +20,49 @@
  */
 /* FIXME: critical sections */
 
-#define COBJMACROS
+#include "strmbase_private.h"
 
-#include "dshow.h"
-#include "uuids.h"
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
-#include "wine/debug.h"
-#include "wine/strmbase.h"
-
-#include <assert.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(strmbase);
-
-static const IMediaSeekingVtbl IMediaSeekingPassThru_Vtbl;
-static const IMediaPositionVtbl IMediaPositionPassThru_Vtbl;
-
-typedef struct PassThruImpl {
-    IUnknown  IUnknown_inner;
-    ISeekingPassThru ISeekingPassThru_iface;
-    IMediaSeeking IMediaSeeking_iface;
-    IMediaPosition IMediaPosition_iface;
-    BaseDispatch baseDispatch;
-
-    LONG ref;
-    IUnknown * outer_unk;
-    IPin * pin;
-    BOOL bUnkOuterValid;
-    BOOL bAggregatable;
-    BOOL renderer;
-    CRITICAL_SECTION time_cs;
-    BOOL timevalid;
-    REFERENCE_TIME time_earliest;
-} PassThruImpl;
-
-static inline PassThruImpl *impl_from_IUnknown_inner(IUnknown *iface)
+static struct strmbase_passthrough *impl_from_ISeekingPassThru(ISeekingPassThru *iface)
 {
-    return CONTAINING_RECORD(iface, PassThruImpl, IUnknown_inner);
+    return CONTAINING_RECORD(iface, struct strmbase_passthrough, ISeekingPassThru_iface);
 }
 
-static inline PassThruImpl *impl_from_ISeekingPassThru(ISeekingPassThru *iface)
+static struct strmbase_passthrough *impl_from_IMediaSeeking(IMediaSeeking *iface)
 {
-    return CONTAINING_RECORD(iface, PassThruImpl, ISeekingPassThru_iface);
+    return CONTAINING_RECORD(iface, struct strmbase_passthrough, IMediaSeeking_iface);
 }
 
-static inline PassThruImpl *impl_from_IMediaSeeking(IMediaSeeking *iface)
+static struct strmbase_passthrough *impl_from_IMediaPosition(IMediaPosition *iface)
 {
-    return CONTAINING_RECORD(iface, PassThruImpl, IMediaSeeking_iface);
+    return CONTAINING_RECORD(iface, struct strmbase_passthrough, IMediaPosition_iface);
 }
 
-static inline PassThruImpl *impl_from_IMediaPosition(IMediaPosition *iface)
+static HRESULT WINAPI SeekingPassThru_QueryInterface(ISeekingPassThru *iface, REFIID iid, void **out)
 {
-    return CONTAINING_RECORD(iface, PassThruImpl, IMediaPosition_iface);
-}
+    struct strmbase_passthrough *passthrough = impl_from_ISeekingPassThru(iface);
 
-static HRESULT WINAPI SeekInner_QueryInterface(IUnknown * iface,
-					  REFIID riid,
-					  LPVOID *ppvObj) {
-    PassThruImpl *This = impl_from_IUnknown_inner(iface);
-    TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), ppvObj);
-
-    if (This->bAggregatable)
-        This->bUnkOuterValid = TRUE;
-
-    if (IsEqualGUID(&IID_IUnknown, riid))
-    {
-        *ppvObj = &(This->IUnknown_inner);
-        TRACE("   returning IUnknown interface (%p)\n", *ppvObj);
-    } else if (IsEqualGUID(&IID_ISeekingPassThru, riid)) {
-        *ppvObj = &(This->ISeekingPassThru_iface);
-        TRACE("   returning ISeekingPassThru interface (%p)\n", *ppvObj);
-    } else if (IsEqualGUID(&IID_IMediaSeeking, riid)) {
-        *ppvObj = &(This->IMediaSeeking_iface);
-        TRACE("   returning IMediaSeeking interface (%p)\n", *ppvObj);
-    } else if (IsEqualGUID(&IID_IMediaPosition, riid)) {
-        *ppvObj = &(This->IMediaPosition_iface);
-        TRACE("   returning IMediaPosition interface (%p)\n", *ppvObj);
-    } else {
-        *ppvObj = NULL;
-        FIXME("unknown interface %s\n", debugstr_guid(riid));
-        return E_NOINTERFACE;
-    }
-
-    IUnknown_AddRef((IUnknown *)(*ppvObj));
-    return S_OK;
-}
-
-static ULONG WINAPI SeekInner_AddRef(IUnknown * iface) {
-    PassThruImpl *This = impl_from_IUnknown_inner(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
-
-    TRACE("(%p)->(): new ref = %d\n", This, ref);
-
-    return ref;
-}
-
-static ULONG WINAPI SeekInner_Release(IUnknown * iface) {
-    PassThruImpl *This = impl_from_IUnknown_inner(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
-
-    TRACE("(%p)->(): new ref = %d\n", This, ref);
-
-    if (ref == 0)
-    {
-        BaseDispatch_Destroy(&This->baseDispatch);
-        This->time_cs.DebugInfo->Spare[0] = 0;
-        DeleteCriticalSection(&This->time_cs);
-        CoTaskMemFree(This);
-    }
-    return ref;
-}
-
-static const IUnknownVtbl IInner_VTable =
-{
-    SeekInner_QueryInterface,
-    SeekInner_AddRef,
-    SeekInner_Release
-};
-
-/* Generic functions for aggregation */
-static HRESULT SeekOuter_QueryInterface(PassThruImpl *This, REFIID riid, LPVOID *ppv)
-{
-    if (This->bAggregatable)
-        This->bUnkOuterValid = TRUE;
-
-    if (This->outer_unk)
-    {
-        if (This->bAggregatable)
-            return IUnknown_QueryInterface(This->outer_unk, riid, ppv);
-
-        if (IsEqualIID(riid, &IID_IUnknown))
-        {
-            HRESULT hr;
-
-            IUnknown_AddRef(&This->IUnknown_inner);
-            hr = IUnknown_QueryInterface(&This->IUnknown_inner, riid, ppv);
-            IUnknown_Release(&This->IUnknown_inner);
-            This->bAggregatable = TRUE;
-            return hr;
-        }
-
-        *ppv = NULL;
-        return E_NOINTERFACE;
-    }
-
-    return IUnknown_QueryInterface(&This->IUnknown_inner, riid, ppv);
-}
-
-static ULONG SeekOuter_AddRef(PassThruImpl *This)
-{
-    if (This->outer_unk && This->bUnkOuterValid)
-        return IUnknown_AddRef(This->outer_unk);
-    return IUnknown_AddRef(&This->IUnknown_inner);
-}
-
-static ULONG SeekOuter_Release(PassThruImpl *This)
-{
-    if (This->outer_unk && This->bUnkOuterValid)
-        return IUnknown_Release(This->outer_unk);
-    return IUnknown_Release(&This->IUnknown_inner);
-}
-
-static HRESULT WINAPI SeekingPassThru_QueryInterface(ISeekingPassThru *iface, REFIID riid, LPVOID *ppvObj)
-{
-    PassThruImpl *This = impl_from_ISeekingPassThru(iface);
-
-    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
-
-    return SeekOuter_QueryInterface(This, riid, ppvObj);
+    return IUnknown_QueryInterface(passthrough->outer_unk, iid, out);
 }
 
 static ULONG WINAPI SeekingPassThru_AddRef(ISeekingPassThru *iface)
 {
-    PassThruImpl *This = impl_from_ISeekingPassThru(iface);
+    struct strmbase_passthrough *passthrough = impl_from_ISeekingPassThru(iface);
 
-    TRACE("(%p/%p)->()\n", This, iface);
-
-    return SeekOuter_AddRef(This);
+    return IUnknown_AddRef(passthrough->outer_unk);
 }
 
 static ULONG WINAPI SeekingPassThru_Release(ISeekingPassThru *iface)
 {
-    PassThruImpl *This = impl_from_ISeekingPassThru(iface);
+    struct strmbase_passthrough *passthrough = impl_from_ISeekingPassThru(iface);
 
-    TRACE("(%p/%p)->()\n", This, iface);
-
-    return SeekOuter_Release(This);
+    return IUnknown_Release(passthrough->outer_unk);
 }
 
 static HRESULT WINAPI SeekingPassThru_Init(ISeekingPassThru *iface, BOOL renderer, IPin *pin)
 {
-    PassThruImpl *This = impl_from_ISeekingPassThru(iface);
+    struct strmbase_passthrough *This = impl_from_ISeekingPassThru(iface);
 
     TRACE("(%p/%p)->(%d, %p)\n", This, iface, renderer, pin);
 
@@ -230,76 +83,29 @@ static const ISeekingPassThruVtbl ISeekingPassThru_Vtbl =
     SeekingPassThru_Init
 };
 
-HRESULT WINAPI CreatePosPassThru(IUnknown* pUnkOuter, BOOL bRenderer, IPin *pPin, IUnknown **ppPassThru)
+static HRESULT WINAPI MediaSeekingPassThru_QueryInterface(IMediaSeeking *iface, REFIID iid, void **out)
 {
-    HRESULT hr;
-    ISeekingPassThru *passthru;
+    struct strmbase_passthrough *passthrough = impl_from_IMediaSeeking(iface);
 
-    hr = CoCreateInstance(&CLSID_SeekingPassThru, pUnkOuter, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void**)ppPassThru);
-    if (FAILED(hr))
-        return hr;
-
-    IUnknown_QueryInterface(*ppPassThru, &IID_ISeekingPassThru, (void**)&passthru);
-    hr = ISeekingPassThru_Init(passthru, bRenderer, pPin);
-    ISeekingPassThru_Release(passthru);
-
-    return hr;
-}
-
-HRESULT WINAPI PosPassThru_Construct(IUnknown *pUnkOuter, LPVOID *ppPassThru)
-{
-    PassThruImpl *fimpl;
-
-    TRACE("(%p,%p)\n", pUnkOuter, ppPassThru);
-
-    *ppPassThru = fimpl = CoTaskMemAlloc(sizeof(*fimpl));
-    if (!fimpl)
-        return E_OUTOFMEMORY;
-
-    fimpl->outer_unk = pUnkOuter;
-    fimpl->bUnkOuterValid = FALSE;
-    fimpl->bAggregatable = FALSE;
-    fimpl->IUnknown_inner.lpVtbl = &IInner_VTable;
-    fimpl->ISeekingPassThru_iface.lpVtbl = &ISeekingPassThru_Vtbl;
-    fimpl->IMediaSeeking_iface.lpVtbl = &IMediaSeekingPassThru_Vtbl;
-    fimpl->IMediaPosition_iface.lpVtbl = &IMediaPositionPassThru_Vtbl;
-    fimpl->ref = 1;
-    fimpl->pin = NULL;
-    fimpl->timevalid = FALSE;
-    InitializeCriticalSection(&fimpl->time_cs);
-    fimpl->time_cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": PassThruImpl.time_cs");
-    BaseDispatch_Init(&fimpl->baseDispatch, &IID_IMediaPosition);
-    return S_OK;
-}
-
-static HRESULT WINAPI MediaSeekingPassThru_QueryInterface(IMediaSeeking *iface, REFIID riid, LPVOID *ppvObj)
-{
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
-
-    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
-
-    return SeekOuter_QueryInterface(This, riid, ppvObj);
+    return IUnknown_QueryInterface(passthrough->outer_unk, iid, out);
 }
 
 static ULONG WINAPI MediaSeekingPassThru_AddRef(IMediaSeeking *iface)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *passthrough = impl_from_IMediaSeeking(iface);
 
-    TRACE("(%p/%p)->()\n", iface, This);
-
-    return SeekOuter_AddRef(This);
+    return IUnknown_AddRef(passthrough->outer_unk);
 }
 
 static ULONG WINAPI MediaSeekingPassThru_Release(IMediaSeeking *iface)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *passthrough = impl_from_IMediaSeeking(iface);
 
-    TRACE("(%p/%p)->()\n", iface, This);
-
-    return SeekOuter_Release(This);
+    return IUnknown_Release(passthrough->outer_unk);
 }
 
-static HRESULT get_connected(PassThruImpl *This, REFIID riid, LPVOID *ppvObj) {
+static HRESULT get_connected(struct strmbase_passthrough *This, REFIID riid, void **ppvObj)
+{
     HRESULT hr;
     IPin *pin;
     *ppvObj = NULL;
@@ -315,7 +121,7 @@ static HRESULT get_connected(PassThruImpl *This, REFIID riid, LPVOID *ppvObj) {
 
 static HRESULT WINAPI MediaSeekingPassThru_GetCapabilities(IMediaSeeking * iface, DWORD * pCapabilities)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%p)\n", iface, This, pCapabilities);
@@ -331,7 +137,7 @@ static HRESULT WINAPI MediaSeekingPassThru_GetCapabilities(IMediaSeeking * iface
 
 static HRESULT WINAPI MediaSeekingPassThru_CheckCapabilities(IMediaSeeking * iface, DWORD * pCapabilities)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%p)\n", iface, This, pCapabilities);
@@ -347,7 +153,7 @@ static HRESULT WINAPI MediaSeekingPassThru_CheckCapabilities(IMediaSeeking * ifa
 
 static HRESULT WINAPI MediaSeekingPassThru_IsFormatSupported(IMediaSeeking * iface, const GUID * pFormat)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%s)\n", iface, This, debugstr_guid(pFormat));
@@ -363,7 +169,7 @@ static HRESULT WINAPI MediaSeekingPassThru_IsFormatSupported(IMediaSeeking * ifa
 
 static HRESULT WINAPI MediaSeekingPassThru_QueryPreferredFormat(IMediaSeeking * iface, GUID * pFormat)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%p)\n", iface, This, pFormat);
@@ -379,7 +185,7 @@ static HRESULT WINAPI MediaSeekingPassThru_QueryPreferredFormat(IMediaSeeking * 
 
 static HRESULT WINAPI MediaSeekingPassThru_GetTimeFormat(IMediaSeeking * iface, GUID * pFormat)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%p)\n", iface, This, pFormat);
@@ -395,7 +201,7 @@ static HRESULT WINAPI MediaSeekingPassThru_GetTimeFormat(IMediaSeeking * iface, 
 
 static HRESULT WINAPI MediaSeekingPassThru_IsUsingTimeFormat(IMediaSeeking * iface, const GUID * pFormat)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%s)\n", iface, This, debugstr_guid(pFormat));
@@ -411,7 +217,7 @@ static HRESULT WINAPI MediaSeekingPassThru_IsUsingTimeFormat(IMediaSeeking * ifa
 
 static HRESULT WINAPI MediaSeekingPassThru_SetTimeFormat(IMediaSeeking * iface, const GUID * pFormat)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%s)\n", iface, This, debugstr_guid(pFormat));
@@ -427,7 +233,7 @@ static HRESULT WINAPI MediaSeekingPassThru_SetTimeFormat(IMediaSeeking * iface, 
 
 static HRESULT WINAPI MediaSeekingPassThru_GetDuration(IMediaSeeking * iface, LONGLONG * pDuration)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%p)\n", iface, This, pDuration);
@@ -443,7 +249,7 @@ static HRESULT WINAPI MediaSeekingPassThru_GetDuration(IMediaSeeking * iface, LO
 
 static HRESULT WINAPI MediaSeekingPassThru_GetStopPosition(IMediaSeeking * iface, LONGLONG * pStop)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%p)\n", iface, This, pStop);
@@ -459,7 +265,7 @@ static HRESULT WINAPI MediaSeekingPassThru_GetStopPosition(IMediaSeeking * iface
 
 static HRESULT WINAPI MediaSeekingPassThru_GetCurrentPosition(IMediaSeeking * iface, LONGLONG * pCurrent)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr = S_OK;
     TRACE("(%p/%p)->(%p)\n", iface, This, pCurrent);
@@ -487,10 +293,14 @@ static HRESULT WINAPI MediaSeekingPassThru_GetCurrentPosition(IMediaSeeking * if
 
 static HRESULT WINAPI MediaSeekingPassThru_ConvertTimeFormat(IMediaSeeking * iface, LONGLONG * pTarget, const GUID * pTargetFormat, LONGLONG Source, const GUID * pSourceFormat)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
-    TRACE("(%p/%p)->(%p,%s,%x%08x,%s)\n", iface, This, pTarget, debugstr_guid(pTargetFormat), (DWORD)(Source>>32), (DWORD)Source, debugstr_guid(pSourceFormat));
+
+    TRACE("iface %p, target %p, target_format %s, source %s, source_format %s.\n",
+            iface, pTarget, debugstr_guid(pTargetFormat),
+            wine_dbgstr_longlong(Source), debugstr_guid(pSourceFormat));
+
     hr = get_connected(This, &IID_IMediaSeeking, (LPVOID*)&seek);
     if (SUCCEEDED(hr)) {
         hr = IMediaSeeking_ConvertTimeFormat(seek, pTarget, pTargetFormat, Source, pSourceFormat);
@@ -503,10 +313,13 @@ static HRESULT WINAPI MediaSeekingPassThru_ConvertTimeFormat(IMediaSeeking * ifa
 
 static HRESULT WINAPI MediaSeekingPassThru_SetPositions(IMediaSeeking * iface, LONGLONG * pCurrent, DWORD dwCurrentFlags, LONGLONG * pStop, DWORD dwStopFlags)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
-    TRACE("(%p/%p)->(%p,%x,%p,%x)\n", iface, This, pCurrent, dwCurrentFlags, pStop, dwStopFlags);
+
+    TRACE("iface %p, current %p, current_flags %#lx, stop %p, stop_flags %#lx.\n",
+            iface, pCurrent, dwCurrentFlags, pStop, dwStopFlags);
+
     hr = get_connected(This, &IID_IMediaSeeking, (LPVOID*)&seek);
     if (SUCCEEDED(hr)) {
         hr = IMediaSeeking_SetPositions(seek, pCurrent, dwCurrentFlags, pStop, dwStopFlags);
@@ -518,7 +331,7 @@ static HRESULT WINAPI MediaSeekingPassThru_SetPositions(IMediaSeeking * iface, L
 
 static HRESULT WINAPI MediaSeekingPassThru_GetPositions(IMediaSeeking * iface, LONGLONG * pCurrent, LONGLONG * pStop)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%p, %p)\n", iface, This, pCurrent, pStop);
@@ -526,17 +339,15 @@ static HRESULT WINAPI MediaSeekingPassThru_GetPositions(IMediaSeeking * iface, L
     if (SUCCEEDED(hr)) {
         hr = IMediaSeeking_GetPositions(seek, pCurrent, pStop);
         IMediaSeeking_Release(seek);
-    } else if (hr == VFW_E_NOT_CONNECTED) {
-        *pCurrent = 0;
-        *pStop = 0;
-        hr = S_OK;
     }
+    else
+        return E_NOTIMPL;
     return hr;
 }
 
 static HRESULT WINAPI MediaSeekingPassThru_GetAvailable(IMediaSeeking * iface, LONGLONG * pEarliest, LONGLONG * pLatest)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%p,%p)\n", iface, This, pEarliest, pLatest);
@@ -552,7 +363,7 @@ static HRESULT WINAPI MediaSeekingPassThru_GetAvailable(IMediaSeeking * iface, L
 
 static HRESULT WINAPI MediaSeekingPassThru_SetRate(IMediaSeeking * iface, double dRate)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%e)\n", iface, This, dRate);
@@ -568,7 +379,7 @@ static HRESULT WINAPI MediaSeekingPassThru_SetRate(IMediaSeeking * iface, double
 
 static HRESULT WINAPI MediaSeekingPassThru_GetRate(IMediaSeeking * iface, double * dRate)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p/%p)->(%p)\n", iface, This, dRate);
@@ -584,7 +395,7 @@ static HRESULT WINAPI MediaSeekingPassThru_GetRate(IMediaSeeking * iface, double
 
 static HRESULT WINAPI MediaSeekingPassThru_GetPreroll(IMediaSeeking * iface, LONGLONG * pPreroll)
 {
-    PassThruImpl *This = impl_from_IMediaSeeking(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaSeeking(iface);
     IMediaSeeking *seek;
     HRESULT hr;
     TRACE("(%p)\n", pPreroll);
@@ -595,41 +406,6 @@ static HRESULT WINAPI MediaSeekingPassThru_GetPreroll(IMediaSeeking * iface, LON
     }
     else
         return E_NOTIMPL;
-    return hr;
-}
-
-HRESULT WINAPI RendererPosPassThru_RegisterMediaTime(IUnknown *iface, REFERENCE_TIME start)
-{
-    PassThruImpl *This = impl_from_IUnknown_inner(iface);
-    EnterCriticalSection(&This->time_cs);
-    This->time_earliest = start;
-    This->timevalid = TRUE;
-    LeaveCriticalSection(&This->time_cs);
-    return S_OK;
-}
-
-HRESULT WINAPI RendererPosPassThru_ResetMediaTime(IUnknown *iface)
-{
-    PassThruImpl *This = impl_from_IUnknown_inner(iface);
-    EnterCriticalSection(&This->time_cs);
-    This->timevalid = FALSE;
-    LeaveCriticalSection(&This->time_cs);
-    return S_OK;
-}
-
-HRESULT WINAPI RendererPosPassThru_EOS(IUnknown *iface)
-{
-    PassThruImpl *This = impl_from_IUnknown_inner(iface);
-    REFERENCE_TIME time;
-    HRESULT hr;
-    hr = IMediaSeeking_GetStopPosition(&This->IMediaSeeking_iface, &time);
-    EnterCriticalSection(&This->time_cs);
-    if (SUCCEEDED(hr)) {
-        This->timevalid = TRUE;
-        This->time_earliest = time;
-    } else
-        This->timevalid = FALSE;
-    LeaveCriticalSection(&This->time_cs);
     return hr;
 }
 
@@ -657,73 +433,78 @@ static const IMediaSeekingVtbl IMediaSeekingPassThru_Vtbl =
     MediaSeekingPassThru_GetPreroll
 };
 
-static HRESULT WINAPI MediaPositionPassThru_QueryInterface(IMediaPosition *iface, REFIID riid, LPVOID *ppvObj)
+static HRESULT WINAPI MediaPositionPassThru_QueryInterface(IMediaPosition *iface, REFIID iid, void **out)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *passthrough = impl_from_IMediaPosition(iface);
 
-    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
-
-    return SeekOuter_QueryInterface(This, riid, ppvObj);
+    return IUnknown_QueryInterface(passthrough->outer_unk, iid, out);
 }
 
 static ULONG WINAPI MediaPositionPassThru_AddRef(IMediaPosition *iface)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *passthrough = impl_from_IMediaPosition(iface);
 
-    TRACE("(%p/%p)->()\n", iface, This);
-
-    return SeekOuter_AddRef(This);
+    return IUnknown_AddRef(passthrough->outer_unk);
 }
 
 static ULONG WINAPI MediaPositionPassThru_Release(IMediaPosition *iface)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *passthrough = impl_from_IMediaPosition(iface);
 
-    TRACE("(%p/%p)->()\n", iface, This);
-
-    return SeekOuter_Release(This);
+    return IUnknown_Release(passthrough->outer_unk);
 }
 
-static HRESULT WINAPI MediaPositionPassThru_GetTypeInfoCount(IMediaPosition *iface, UINT*pctinfo)
+static HRESULT WINAPI MediaPositionPassThru_GetTypeInfoCount(IMediaPosition *iface, UINT *count)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
-
-    return BaseDispatchImpl_GetTypeInfoCount(&This->baseDispatch, pctinfo);
+    TRACE("iface %p, count %p.\n", iface, count);
+    *count = 1;
+    return S_OK;
 }
 
-static HRESULT WINAPI MediaPositionPassThru_GetTypeInfo(IMediaPosition *iface, UINT iTInfo, LCID lcid, ITypeInfo**ppTInfo)
+static HRESULT WINAPI MediaPositionPassThru_GetTypeInfo(IMediaPosition *iface, UINT index,
+        LCID lcid, ITypeInfo **typeinfo)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
-
-    return BaseDispatchImpl_GetTypeInfo(&This->baseDispatch, &IID_NULL, iTInfo, lcid, ppTInfo);
+    TRACE("iface %p, index %u, lcid %#lx, typeinfo %p.\n", iface, index, lcid, typeinfo);
+    return strmbase_get_typeinfo(IMediaPosition_tid, typeinfo);
 }
 
-static HRESULT WINAPI MediaPositionPassThru_GetIDsOfNames(IMediaPosition *iface, REFIID riid, LPOLESTR*rgszNames, UINT cNames, LCID lcid, DISPID*rgDispId)
+static HRESULT WINAPI MediaPositionPassThru_GetIDsOfNames(IMediaPosition *iface, REFIID iid,
+        LPOLESTR *names, UINT count, LCID lcid, DISPID *ids)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    ITypeInfo *typeinfo;
+    HRESULT hr;
 
-    return BaseDispatchImpl_GetIDsOfNames(&This->baseDispatch, riid, rgszNames, cNames, lcid, rgDispId);
-}
+    TRACE("iface %p, iid %s, names %p, count %u, lcid %#lx, ids %p.\n",
+            iface, debugstr_guid(iid), names, count, lcid, ids);
 
-static HRESULT WINAPI MediaPositionPassThru_Invoke(IMediaPosition *iface, DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS*pDispParams, VARIANT*pVarResult, EXCEPINFO*pExepInfo, UINT*puArgErr)
-{
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
-    HRESULT hr = S_OK;
-    ITypeInfo *pTypeInfo;
-
-    hr = BaseDispatchImpl_GetTypeInfo(&This->baseDispatch, riid, 1, lcid, &pTypeInfo);
-    if (SUCCEEDED(hr))
+    if (SUCCEEDED(hr = strmbase_get_typeinfo(IMediaPosition_tid, &typeinfo)))
     {
-        hr = ITypeInfo_Invoke(pTypeInfo, &This->IMediaPosition_iface, dispIdMember, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
-        ITypeInfo_Release(pTypeInfo);
+        hr = ITypeInfo_GetIDsOfNames(typeinfo, names, count, ids);
+        ITypeInfo_Release(typeinfo);
     }
+    return hr;
+}
 
+static HRESULT WINAPI MediaPositionPassThru_Invoke(IMediaPosition *iface, DISPID id, REFIID iid, LCID lcid,
+        WORD flags, DISPPARAMS *params, VARIANT *result, EXCEPINFO *excepinfo, UINT *error_arg)
+{
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("iface %p, id %ld, iid %s, lcid %#lx, flags %#x, params %p, result %p, excepinfo %p, error_arg %p.\n",
+            iface, id, debugstr_guid(iid), lcid, flags, params, result, excepinfo, error_arg);
+
+    if (SUCCEEDED(hr = strmbase_get_typeinfo(IMediaPosition_tid, &typeinfo)))
+    {
+        hr = ITypeInfo_Invoke(typeinfo, iface, id, flags, params, result, excepinfo, error_arg);
+        ITypeInfo_Release(typeinfo);
+    }
     return hr;
 }
 
 static HRESULT WINAPI MediaPositionPassThru_get_Duration(IMediaPosition *iface, REFTIME *plength)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaPosition(iface);
     IMediaPosition *pos;
     HRESULT hr;
 
@@ -741,11 +522,11 @@ static HRESULT WINAPI MediaPositionPassThru_get_Duration(IMediaPosition *iface, 
 
 static HRESULT WINAPI MediaPositionPassThru_put_CurrentPosition(IMediaPosition *iface, REFTIME llTime)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaPosition(iface);
     IMediaPosition *pos;
     HRESULT hr;
 
-    TRACE("(%s)\n", wine_dbgstr_longlong(llTime));
+    TRACE("iface %p, time %.16e.\n", iface, llTime);
 
     hr = get_connected(This, &IID_IMediaPosition, (LPVOID*)&pos);
     if (SUCCEEDED(hr)) {
@@ -759,7 +540,7 @@ static HRESULT WINAPI MediaPositionPassThru_put_CurrentPosition(IMediaPosition *
 
 static HRESULT WINAPI MediaPositionPassThru_get_CurrentPosition(IMediaPosition *iface, REFTIME *pllTime)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaPosition(iface);
     IMediaPosition *pos;
     HRESULT hr;
 
@@ -777,7 +558,7 @@ static HRESULT WINAPI MediaPositionPassThru_get_CurrentPosition(IMediaPosition *
 
 static HRESULT WINAPI MediaPositionPassThru_get_StopTime(IMediaPosition *iface, REFTIME *pllTime)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaPosition(iface);
     IMediaPosition *pos;
     HRESULT hr;
 
@@ -795,11 +576,11 @@ static HRESULT WINAPI MediaPositionPassThru_get_StopTime(IMediaPosition *iface, 
 
 static HRESULT WINAPI MediaPositionPassThru_put_StopTime(IMediaPosition *iface, REFTIME llTime)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaPosition(iface);
     IMediaPosition *pos;
     HRESULT hr;
 
-    TRACE("(%s)\n", wine_dbgstr_longlong(llTime));
+    TRACE("iface %p, time %.16e.\n", iface, llTime);
 
     hr = get_connected(This, &IID_IMediaPosition, (LPVOID*)&pos);
     if (SUCCEEDED(hr)) {
@@ -813,7 +594,7 @@ static HRESULT WINAPI MediaPositionPassThru_put_StopTime(IMediaPosition *iface, 
 
 static HRESULT WINAPI MediaPositionPassThru_get_PrerollTime(IMediaPosition *iface, REFTIME *pllTime)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaPosition(iface);
     IMediaPosition *pos;
     HRESULT hr;
 
@@ -831,11 +612,11 @@ static HRESULT WINAPI MediaPositionPassThru_get_PrerollTime(IMediaPosition *ifac
 
 static HRESULT WINAPI MediaPositionPassThru_put_PrerollTime(IMediaPosition *iface, REFTIME llTime)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaPosition(iface);
     IMediaPosition *pos;
     HRESULT hr;
 
-    TRACE("(%s)\n", wine_dbgstr_longlong(llTime));
+    TRACE("iface %p, time %.16e.\n", iface, llTime);
 
     hr = get_connected(This, &IID_IMediaPosition, (LPVOID*)&pos);
     if (SUCCEEDED(hr)) {
@@ -849,7 +630,7 @@ static HRESULT WINAPI MediaPositionPassThru_put_PrerollTime(IMediaPosition *ifac
 
 static HRESULT WINAPI MediaPositionPassThru_put_Rate(IMediaPosition *iface, double dRate)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaPosition(iface);
     IMediaPosition *pos;
     HRESULT hr;
 
@@ -867,7 +648,7 @@ static HRESULT WINAPI MediaPositionPassThru_put_Rate(IMediaPosition *iface, doub
 
 static HRESULT WINAPI MediaPositionPassThru_get_Rate(IMediaPosition *iface, double *pdRate)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaPosition(iface);
     IMediaPosition *pos;
     HRESULT hr;
 
@@ -885,7 +666,7 @@ static HRESULT WINAPI MediaPositionPassThru_get_Rate(IMediaPosition *iface, doub
 
 static HRESULT WINAPI MediaPositionPassThru_CanSeekForward(IMediaPosition *iface, LONG *pCanSeekForward)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaPosition(iface);
     IMediaPosition *pos;
     HRESULT hr;
 
@@ -903,7 +684,7 @@ static HRESULT WINAPI MediaPositionPassThru_CanSeekForward(IMediaPosition *iface
 
 static HRESULT WINAPI MediaPositionPassThru_CanSeekBackward(IMediaPosition *iface, LONG *pCanSeekBackward)
 {
-    PassThruImpl *This = impl_from_IMediaPosition(iface);
+    struct strmbase_passthrough *This = impl_from_IMediaPosition(iface);
     IMediaPosition *pos;
     HRESULT hr;
 
@@ -940,3 +721,54 @@ static const IMediaPositionVtbl IMediaPositionPassThru_Vtbl =
     MediaPositionPassThru_CanSeekForward,
     MediaPositionPassThru_CanSeekBackward
 };
+
+void strmbase_passthrough_init(struct strmbase_passthrough *passthrough, IUnknown *outer)
+{
+    memset(passthrough, 0, sizeof(*passthrough));
+
+    passthrough->outer_unk = outer;
+    passthrough->IMediaPosition_iface.lpVtbl = &IMediaPositionPassThru_Vtbl;
+    passthrough->IMediaSeeking_iface.lpVtbl = &IMediaSeekingPassThru_Vtbl;
+    passthrough->ISeekingPassThru_iface.lpVtbl = &ISeekingPassThru_Vtbl;
+    if (!InitializeCriticalSectionEx(&passthrough->time_cs, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO))
+        InitializeCriticalSection(&passthrough->time_cs);
+    passthrough->time_cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": strmbase_passthrough.time_cs" );
+}
+
+void strmbase_passthrough_cleanup(struct strmbase_passthrough *passthrough)
+{
+    passthrough->time_cs.DebugInfo->Spare[0] = 0;
+    DeleteCriticalSection(&passthrough->time_cs);
+}
+
+void strmbase_passthrough_update_time(struct strmbase_passthrough *passthrough, REFERENCE_TIME time)
+{
+    EnterCriticalSection(&passthrough->time_cs);
+    passthrough->time_earliest = time;
+    passthrough->timevalid = TRUE;
+    LeaveCriticalSection(&passthrough->time_cs);
+}
+
+void strmbase_passthrough_invalidate_time(struct strmbase_passthrough *passthrough)
+{
+    EnterCriticalSection(&passthrough->time_cs);
+    passthrough->timevalid = FALSE;
+    LeaveCriticalSection(&passthrough->time_cs);
+}
+
+void strmbase_passthrough_eos(struct strmbase_passthrough *passthrough)
+{
+    REFERENCE_TIME time;
+    HRESULT hr;
+
+    hr = IMediaSeeking_GetStopPosition(&passthrough->IMediaSeeking_iface, &time);
+    EnterCriticalSection(&passthrough->time_cs);
+    if (SUCCEEDED(hr))
+    {
+        passthrough->timevalid = TRUE;
+        passthrough->time_earliest = time;
+    }
+    else
+        passthrough->timevalid = FALSE;
+    LeaveCriticalSection(&passthrough->time_cs);
+}

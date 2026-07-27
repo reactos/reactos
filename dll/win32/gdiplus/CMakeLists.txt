@@ -6,10 +6,6 @@ add_definitions(
     -D__ROS_LONG64__
     -D_USE_MATH_DEFINES
     -Dwcsicmp=_wcsicmp
-    -Dfmin=min
-    -Dfmax=max
-    -Dfminf=min
-    -Dfmaxf=max
 )
 
 spec2def(gdiplus.dll gdiplus.spec ADD_IMPORTLIB)

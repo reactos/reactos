@@ -16,8 +16,7 @@ list(APPEND SOURCE
     download.c
     instrument.c
     port.c
-    wave.c
-    precomp.h)
+    wave.c)
 
 add_library(dmusic MODULE
     ${SOURCE}
@@ -30,6 +29,5 @@ set_module_type(dmusic win32dll)
 target_link_libraries(dmusic wine wine_dll_register wine_dll_canunload dxguid uuid oldnames)
 add_importlibs(dmusic ole32 advapi32 winmm dsound user32 ucrtbase msvcrt kernel32 ntdll)
 add_dependencies(dmusic wineheaders)
-add_pch(dmusic precomp.h SOURCE)
 add_cd_file(TARGET dmusic DESTINATION reactos/system32 FOR all)
 set_wine_module(dmusic)

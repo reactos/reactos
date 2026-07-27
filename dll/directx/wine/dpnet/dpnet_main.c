@@ -81,7 +81,11 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 /***********************************************************************
  *             DirectPlay8Create (DPNET.@)
  */
+#ifdef __REACTOS__
+HRESULT WINAPI DirectPlay8Create(const GUID *lpGUID, LPVOID *ppvInt, LPUNKNOWN punkOuter)
+#else
 HRESULT WINAPI DirectPlay8Create(REFGUID lpGUID, LPVOID *ppvInt, LPUNKNOWN punkOuter)
+#endif
 {
     TRACE("(%s, %p, %p): stub\n", debugstr_guid(lpGUID), ppvInt, punkOuter);
     return S_OK;

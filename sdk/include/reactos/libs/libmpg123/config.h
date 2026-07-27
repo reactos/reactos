@@ -514,7 +514,7 @@
 /* #undef size_t */
 
 /* Define to `long' if <sys/types.h> does not define. */
-#define ssize_t long
+/* #undef ssize_t */
 
 /* Define to `unsigned short' if <sys/types.h> does not define. */
 /* #undef uint16_t */

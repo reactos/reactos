@@ -46,12 +46,26 @@ typedef struct {
         BYTE data[1];
     } *strf;
     AVISUPERINDEX *indx;
+#ifdef __REACTOS__
+    /* MSVC does not accept FIELD_OFFSET with a subscript as an array bound
+       in C (C2057). offsetof() to the member plus the element size is the
+       same value and is a constant expression for both compilers. */
+    BYTE indx_data[offsetof(AVISUPERINDEX, aIndex) + AVISUPERINDEX_ENTRIES * sizeof(((AVISUPERINDEX *)0)->aIndex[0])];
+#else
     BYTE indx_data[FIELD_OFFSET(AVISUPERINDEX, aIndex[AVISUPERINDEX_ENTRIES])];
+#endif
 
     /* movi chunk */
     int ix_off;
     AVISTDINDEX *ix;
+#ifdef __REACTOS__
+    /* MSVC does not accept FIELD_OFFSET with a subscript as an array bound
+       in C (C2057). offsetof() to the member plus the element size is the
+       same value and is a constant expression for both compilers. */
+    BYTE ix_data[offsetof(AVISTDINDEX, aIndex) + AVISTDINDEX_ENTRIES * sizeof(((AVISTDINDEX *)0)->aIndex[0])];
+#else
     BYTE ix_data[FIELD_OFFSET(AVISTDINDEX, aIndex[AVISTDINDEX_ENTRIES])];
+#endif
 
     IMediaSample *samples_head;
     IMemAllocator *samples_allocator;

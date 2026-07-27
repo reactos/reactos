@@ -49,4 +49,14 @@ typedef _pid_t	pid_t;
 #endif
 #endif	/* Not _PID_T_ */
 
+#ifndef _SSIZE_T_DEFINED
+#define _SSIZE_T_DEFINED
+#undef ssize_t
+#ifdef _WIN64
+  __MINGW_EXTENSION typedef __int64 ssize_t;
+#else
+  typedef int ssize_t;
+#endif
+#endif /* _SSIZE_T_DEFINED */
+
 #endif /* !_INC_TYPES */

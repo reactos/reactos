@@ -26,8 +26,12 @@
 #define NONAMELESSUNION
 #include <stdbool.h>
 #include "dshow.h"
-#include "winternl.h"
+#ifdef __REACTOS__
+#include <windows.h>
+#else
 #include "wine/unixlib.h"
+#include "winternl.h"
+#endif
 #include "wine/debug.h"
 #include "wine/strmbase.h"
 

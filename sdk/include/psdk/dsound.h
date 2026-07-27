@@ -653,6 +653,8 @@ DECLARE_INTERFACE_(IDirectSoundBuffer8,IUnknown)
 };
 #undef INTERFACE
 
+DEFINE_GUID(GUID_All_Objects, 0xaa114de5, 0xc262, 0x4169, 0xa1, 0xc8, 0x23, 0xd6, 0x98, 0xcc, 0x73, 0xb5);
+
 #if !defined(__cplusplus) || defined(CINTERFACE)
 /*** IUnknown methods ***/
 #define IDirectSoundBuffer8_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)

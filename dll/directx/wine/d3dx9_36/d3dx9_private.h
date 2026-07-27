@@ -600,7 +600,14 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx_parameters_store *store
 
 #define SET_D3D_STATE_(manager, device, method, ...) (manager ? manager->lpVtbl->method(manager, __VA_ARGS__) \
         : device->lpVtbl->method(device, __VA_ARGS__))
+#ifdef __REACTOS__
+/* VS19.24 build hack */
+#define EXPAND_VA_(x) x
+#define SET_D3D_STATE(base_effect, ...) \
+        EXPAND_VA_(SET_D3D_STATE_(base_effect->manager, base_effect->device, __VA_ARGS__))
+#else
 #define SET_D3D_STATE(base_effect, ...) SET_D3D_STATE_(base_effect->manager, base_effect->device, __VA_ARGS__)
+#endif
 
 HRESULT d3dx_create_param_eval(struct d3dx_parameters_store *parameters, void *byte_code,
         unsigned int byte_code_size, D3DXPARAMETER_TYPE type,

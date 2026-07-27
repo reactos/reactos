@@ -270,6 +270,11 @@ int wine_dbg_printf( const char *format, ... )
     return ret;
 }
 
+int __wine_dbg_output( const char *str )
+{
+    return wine_dbg_printf( "%s", str );
+}
+
 /* printf with temp buffer allocation */
 const char *wine_dbg_sprintf( const char *format, ... )
 {

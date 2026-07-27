@@ -223,7 +223,11 @@ static HRESULT vmr_render(struct strmbase_renderer *iface, IMediaSample *sample)
     unsigned int data_size, width, depth, src_pitch;
     const BITMAPINFOHEADER *bitmap_header;
     REFERENCE_TIME start_time, end_time;
+#ifdef __REACTOS__ /* '{}' initializer is C23; MSVC before 19.32 rejects it */
+    VMR9PresentationInfo info = {0};
+#else
     VMR9PresentationInfo info = {};
+#endif
     D3DLOCKED_RECT locked_rect;
     D3DSURFACE_DESC dst_desc;
     BYTE *data = NULL;
@@ -380,7 +384,11 @@ static HRESULT initialize_device(struct quartz_vmr *filter, VMR9AllocationInfo *
 
 static HRESULT allocate_surfaces(struct quartz_vmr *filter, const AM_MEDIA_TYPE *mt)
 {
+#ifdef __REACTOS__ /* '{}' initializer is C23; MSVC before 19.32 rejects it */
+    VMR9AllocationInfo info = {0};
+#else
     VMR9AllocationInfo info = {};
+#endif
     HRESULT hr = E_FAIL;
     DWORD count = 1;
     unsigned int i;
