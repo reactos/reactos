@@ -1,3 +1,4 @@
+# Source list mirrors dlls/dplayx/Makefile.in upstream; keep them in sync on resync.
 
 add_definitions(
     -D__WINESRC__
