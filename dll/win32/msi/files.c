@@ -71,7 +71,43 @@ static BOOL copy_file( MSIPACKAGE *package, const WCHAR *src, const WCHAR *dst, 
 {
     BOOL ret;
     msi_disable_fs_redirection( package );
+#ifdef __REACTOS__
+    /* HACK: Protect Tahoma.ttf and Tahomabd.ttf from overwrites
+     * until next reboot. See CORE-19789. */
+    WCHAR PathWin[MAX_PATH];
+    WCHAR PathTahoma[MAX_PATH] = { 0 };
+    WCHAR PathTahomabd[MAX_PATH] = { 0 };
+    WCHAR PathTmp[MAX_PATH];
+
+    GetSystemWindowsDirectoryW(PathWin, MAX_PATH);
+    wcscat(PathTahoma, PathWin);
+    wcscat(PathTahoma, L"\\Fonts\\TAHOMA.TTF");
+    wcscat(PathTahomabd, PathWin);
+    wcscat(PathTahomabd, L"\\Fonts\\TAHOMABD.TTF");
+
+    if (_wcsicmp(dst, PathTahoma) == 0)
+    {
+        ERR("HACK. Should be using WFP or SFC\n");
+        wcscpy(PathTmp, PathWin);
+        wcscat(PathTmp, L"\\Fonts\\TAHOMA.tmp");
+        ret = CopyFileW( src, PathTmp, FALSE);
+        MoveFileExW(PathTahoma, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+        MoveFileExW(PathTmp, PathTahoma, MOVEFILE_DELAY_UNTIL_REBOOT);
+    }
+    else if (_wcsicmp(dst, PathTahomabd) == 0)
+    {
+        ERR("HACK. Should be using WFP or SFC\n");
+        wcscpy(PathTmp, PathWin);
+        wcscat(PathTmp, L"\\Fonts\\TAHOMABD.tmp");
+        ret = CopyFileW( src, PathTmp, FALSE);
+        MoveFileExW(PathTahomabd, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+        MoveFileExW(PathTmp, PathTahomabd, MOVEFILE_DELAY_UNTIL_REBOOT);
+    }
+    else
+        ret = CopyFileW( src, dst, fail_if_exists );
+#else
     ret = CopyFileW( src, dst, fail_if_exists );
+#endif
     msi_revert_fs_redirection( package );
     return ret;
 }
