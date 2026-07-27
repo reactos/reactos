@@ -49,8 +49,6 @@
 #define IDC_DETAILSGATEWAY 1203
 #define IDC_DETAILS        1204
 
-#define IDC_CLOSE 1300
-
 /* Network right click menu defines */
 #define IDM_NETICON_CONTEXT_BASE        1400
 #define IDM_NETICON_ENABLE              (IDM_NETICON_CONTEXT_BASE + 0)
