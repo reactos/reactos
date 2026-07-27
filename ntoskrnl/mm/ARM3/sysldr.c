@@ -214,6 +214,37 @@ MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
     return Status;
 }
 
+/**
+ * @brief
+ * Undoes the mapping performed by MiLoadImageSection(): frees the pages
+ * backing the image, and returns the system PTEs it had reserved.
+ *
+ * @param[in]   ImageBase
+ * The base address of the image located in the system PTE space,
+ * as returned by MiLoadImageSection().
+ * Do not pass the original base addresses of the boot-start drivers here.
+ *
+ * @param[in]   ImageSize
+ * The size of the image, in bytes.
+ **/
+static
+VOID
+MiUnmapSystemImage(
+    _In_ PVOID ImageBase,
+    _In_ ULONG ImageSize)
+{
+    PMMPTE BasePte = MiAddressToPte(ImageBase);
+    PFN_COUNT NumberOfPages = BYTES_TO_PAGES(ImageSize);
+
+    /* TODO: Support large-page and session image mappings */
+    NT_ASSERT(!MI_IS_PHYSICAL_ADDRESS(ImageBase));
+    NT_ASSERT(!MI_IS_SESSION_ADDRESS(ImageBase));
+
+    /* Free the pages, then give the reserved PTEs back */
+    MiDeleteSystemPageableVm(BasePte, NumberOfPages, 0, NULL);
+    MiReleaseSystemPtes(BasePte, NumberOfPages, SystemPteSpace);
+}
+
 #ifndef RVA
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 #endif
@@ -985,9 +1016,20 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
         }
     }
 
-    /* FIXME: Free the driver */
-    DPRINT1("Leaking driver: %wZ\n", &LdrEntry->BaseDllName);
-    //MmFreeSection(LdrEntry->DllBase);
+    /*
+     * Delete the image mapping and return its system PTEs. Only images that
+     * MiLoadImageSection or MiReloadBootLoadedDrivers put into system PTE
+     * space can be released this way; the boot drivers that the latter had
+     * to skip still sit wherever the bootloader placed them.
+     */
+    if (LdrEntry->Flags & LDRP_SYSTEM_MAPPED)
+    {
+        MiUnmapSystemImage(LdrEntry->DllBase, LdrEntry->SizeOfImage);
+    }
+    else
+    {
+        DPRINT1("Leaking non system-mapped image: %wZ\n", &LdrEntry->BaseDllName);
+    }
 
     /* Check if we're linked in */
     if (LdrEntry->InLoadOrderLinks.Flink)
@@ -2961,7 +3003,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     PIMAGE_NT_HEADERS NtHeader;
     UNICODE_STRING BaseName, BaseDirectory, PrefixName;
     PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
-    ULONG EntrySize, DriverSize;
+    ULONG EntrySize, DriverSize = 0;
     PLOAD_IMPORTS LoadedImports = MM_SYSLDR_NO_IMPORTS;
     PCHAR MissingApiName, Buffer;
     PWCHAR MissingDriverName, PrefixedBuffer = NULL;
@@ -3503,6 +3545,18 @@ LoaderScan:
     *ImageBaseAddress = LdrEntry->DllBase;
 
 Quickie:
+    /*
+     * If we failed after the image had been mapped, tear the mapping down.
+     * ModuleLoadBase is only set once MiLoadImageSection() has reserved the
+     * system PTEs for it, and the load lock is still held at that point.
+     */
+    if (!NT_SUCCESS(Status) && (ModuleLoadBase != NULL))
+    {
+        ASSERT(LockOwned);
+        MiUnmapSystemImage(ModuleLoadBase, DriverSize);
+        ModuleLoadBase = NULL;
+    }
+
     /* Check if we have the lock acquired */
     if (LockOwned)
     {
