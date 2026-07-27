@@ -791,7 +791,7 @@ PNP_ReportLogOn(
            hBinding, Admin, ProcessId);
 
     /* Fail, if the caller is not an interactive user */
-    if ((g_IsLiveMedium == FALSE) && (IsCallerInteractive(hBinding) == FALSE))
+    if ((g_IsMiniNT == FALSE) && (IsCallerInteractive(hBinding) == FALSE))
         goto cleanup;
 
     /* Get the users token */
