@@ -55,7 +55,7 @@ add_library(d3dwine MODULE
 if(MSVC)
     # C4098: 'void' function returning a void expression
     # C4319: context_vk.c masks a 64-bit VkDeviceSize with a size_t-wide
-    target_compile_options(d3dwine PRIVATE /wd4098 /wd4319)
+    target_compile_options(d3dwine PRIVATE /wd4312 /wd4098 /wd4319)
 endif()
 
 set_module_type(d3dwine win32dll)
