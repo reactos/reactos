@@ -1117,6 +1117,20 @@ static void fixup_extensions(struct wined3d_gl_info *gl_info, struct wined3d_cap
         },
     };
 
+#ifdef __REACTOS__
+    /*
+    * WINE's timing here is completely broken,
+    * This allows us to fallback to the NO_3D fallback though.
+    */
+    if (!gl_info->supported[EXT_FRAMEBUFFER_OBJECT]
+            || !gl_info->supported[ARB_VERTEX_SHADER]
+            || !gl_info->supported[ARB_FRAGMENT_SHADER])
+    {
+        ERR("Driver \"%s\" is missing extensions wined3d requires; skipping quirk detection.\n", gl_renderer);
+        return;
+    }
+#endif
+
     for (i = 0; i < ARRAY_SIZE(quirk_table); ++i)
     {
         if (!quirk_table[i].match(gl_info, ctx, gl_renderer, gl_vendor, card_vendor, device)) continue;
@@ -4988,6 +5002,27 @@ static float wined3d_adapter_find_fill_offset(struct wined3d_caps_gl_ctx *ctx)
     return -1.0f / 64.0f;
 }
 
+#ifdef __REACTOS__
+static DWORD WINAPI wined3d_no_3d_warning_proc(void *param)
+{
+    MessageBoxW(NULL,
+            L"ReactOS DirectX Needs at least OpenGL 2.0 or better\n\n"
+            L"Install a display driver that provides an OpenGL ICD to enable 3D "
+            L"acceleration. Or install Mesa3D from RAPPS",
+            L"ReactOS - no 3D acceleration",
+            MB_OK | MB_ICONWARNING | MB_SETFOREGROUND | MB_TOPMOST);
+    return 0;
+}
+
+static void wined3d_warn_no_3d(void)
+{
+    HANDLE thread;
+
+    if ((thread = CreateThread(NULL, 0, wined3d_no_3d_warning_proc, NULL, 0, NULL)))
+        CloseHandle(thread);
+}
+#endif /* __REACTOS__ */
+
 static BOOL wined3d_adapter_gl_init(struct wined3d_adapter_gl *adapter_gl,
         unsigned int ordinal, unsigned int wined3d_creation_flags)
 {
@@ -5079,6 +5114,9 @@ static BOOL wined3d_adapter_gl_init(struct wined3d_adapter_gl *adapter_gl,
         if (!gl_info->supported[required_extensions[i].extension])
         {
             ERR("Required extension %s is not supported.\n", required_extensions[i].string);
+#ifdef __REACTOS__
+            wined3d_warn_no_3d();
+#endif
             wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
             return FALSE;
         }
@@ -5087,6 +5125,9 @@ static BOOL wined3d_adapter_gl_init(struct wined3d_adapter_gl *adapter_gl,
     if (!gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO] && !gl_info->supported[WINED3D_GL_NORMALIZED_TEXRECT])
     {
         ERR("Required extension ARB_texture_non_power_of_two is not supported.\n");
+#ifdef __REACTOS__
+        wined3d_warn_no_3d();
+#endif
         wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
         return FALSE;
     }
@@ -5095,6 +5136,9 @@ static BOOL wined3d_adapter_gl_init(struct wined3d_adapter_gl *adapter_gl,
     {
         ERR("GLSL version %s is too low; 1.20 is required.\n",
                 (const char *)gl_info->gl_ops.gl.p_glGetString(GL_SHADING_LANGUAGE_VERSION_ARB));
+#ifdef __REACTOS__
+        wined3d_warn_no_3d();
+#endif
         wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
         return FALSE;
     }
