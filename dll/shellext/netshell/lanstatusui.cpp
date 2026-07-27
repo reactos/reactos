@@ -429,11 +429,10 @@ LANStatusUiDetailsDlg(
             pContext = (LANSTATUSUI_CONTEXT*)lParam;
 
             hDlgCtrl = GetDlgItem(hwndDlg, IDC_DETAILS);
+            ListView_SetExtendedListViewStyleEx(hDlgCtrl, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 
-            /* get client rect */
+            /* Calculate column width */
             GetClientRect(hDlgCtrl, &rect);
-
-            /* calculate column width */
             dwSize = rect.right / 2;
 
             InsertColumnToListView(hDlgCtrl, IDS_PROPERTY, 0, dwSize);
@@ -550,7 +549,7 @@ LANStatusUiDetailsDlg(
             break;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_CLOSE)
+            if (LOWORD(wParam) == IDCANCEL)
             {
                 EndDialog(hwndDlg, FALSE);
                 break;
