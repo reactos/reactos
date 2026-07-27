@@ -229,14 +229,14 @@ MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
  **/
 static
 VOID
-MiUnloadImageSection(
+MiUnmapSystemImage(
     _In_ PVOID ImageBase,
     _In_ ULONG ImageSize)
 {
     PMMPTE BasePte = MiAddressToPte(ImageBase);
     PFN_COUNT NumberOfPages = BYTES_TO_PAGES(ImageSize);
 
-    /* Large-page and session images are not supported */
+    /* TODO: Support large-page and session image mappings */
     NT_ASSERT(!MI_IS_PHYSICAL_ADDRESS(ImageBase));
     NT_ASSERT(!MI_IS_SESSION_ADDRESS(ImageBase));
 
@@ -1024,7 +1024,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
      */
     if (LdrEntry->Flags & LDRP_SYSTEM_MAPPED)
     {
-        MiUnloadImageSection(LdrEntry->DllBase, LdrEntry->SizeOfImage);
+        MiUnmapSystemImage(LdrEntry->DllBase, LdrEntry->SizeOfImage);
     }
     else
     {
@@ -3553,7 +3553,7 @@ Quickie:
     if (!NT_SUCCESS(Status) && (ModuleLoadBase != NULL))
     {
         ASSERT(LockOwned);
-        MiUnloadImageSection(ModuleLoadBase, DriverSize);
+        MiUnmapSystemImage(ModuleLoadBase, DriverSize);
         ModuleLoadBase = NULL;
     }
 
