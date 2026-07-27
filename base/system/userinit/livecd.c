@@ -101,57 +101,25 @@ Cleanup:
     if (hDC != NULL) ReleaseDC(hwndDlg, hDC);
 }
 
-
+/**
+ * @brief   Check whether we are running in MiniNT mode (e.g. live medium).
+ **/
 BOOL
-IsLiveCD(VOID)
+IsMiniNT(VOID)
 {
-    HKEY ControlKey = NULL;
-    LPWSTR SystemStartOptions = NULL;
-    LPWSTR CurrentOption, NextOption; /* Pointers into SystemStartOptions */
+    HKEY hKey;
     LONG rc;
-    BOOL ret = FALSE;
 
+    /* Check for the presence of the "MiniNT" registry key */
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                       REGSTR_PATH_CURRENT_CONTROL_SET,
+                       L"SYSTEM\\CurrentControlSet\\Control\\MiniNT",
                        0,
                        KEY_QUERY_VALUE,
-                       &ControlKey);
-    if (rc != ERROR_SUCCESS)
-    {
-        WARN("RegOpenKeyEx() failed with error %lu\n", rc);
-        goto cleanup;
-    }
+                       &hKey);
+    if (rc == ERROR_SUCCESS)
+        RegCloseKey(hKey);
 
-    rc = ReadRegSzKey(ControlKey, L"SystemStartOptions", &SystemStartOptions);
-    if (rc != ERROR_SUCCESS)
-    {
-        WARN("ReadRegSzKey() failed with error %lu\n", rc);
-        goto cleanup;
-    }
-
-    /* Check for CONSOLE switch in SystemStartOptions */
-    CurrentOption = SystemStartOptions;
-    while (CurrentOption)
-    {
-        NextOption = wcschr(CurrentOption, L' ');
-        if (NextOption)
-            *NextOption = L'\0';
-        if (_wcsicmp(CurrentOption, L"MININT") == 0)
-        {
-            TRACE("Found 'MININT' boot option\n");
-            ret = TRUE;
-            goto cleanup;
-        }
-        CurrentOption = NextOption ? NextOption + 1 : NULL;
-    }
-
-cleanup:
-    if (ControlKey != NULL)
-        RegCloseKey(ControlKey);
-    HeapFree(GetProcessHeap(), 0, SystemStartOptions);
-
-    TRACE("IsLiveCD() returning %u\n", ret);
-    return ret;
+    return (rc == ERROR_SUCCESS);
 }
 
 
