@@ -22,7 +22,7 @@ add_idl_reg_scripts(qedit registry qedit_classes.idl)
 
 set_module_type(qedit win32dll)
 target_link_libraries(qedit wine wine_dll_canunload strmbase strmiids uuid oldnames)
-add_importlibs(qedit ole32 oleaut32 advapi32 user32 msvcrt kernel32 ntdll)
+add_importlibs(qedit ole32 oleaut32 advapi32 user32 kernel32_vista msvcrt kernel32 ntdll)
 add_dependencies(qedit wineheaders)
 add_cd_file(TARGET qedit DESTINATION reactos/system32 FOR all)
 set_wine_module(qedit)

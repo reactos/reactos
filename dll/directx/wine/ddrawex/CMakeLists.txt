@@ -1,4 +1,3 @@
-# Source list mirrors dlls/ddrawex/Makefile.in upstream; keep them in sync on resync.
 
 add_definitions(
     -D__WINESRC__

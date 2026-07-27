@@ -53,7 +53,7 @@ set_module_type(quartz win32dll)
 target_link_libraries(quartz wine wine_dll_canunload strmbase strmiids uuid dxguid oldnames ${PSEH_LIB})
 add_delay_importlibs(quartz ddraw)
 add_importlibs(quartz
-    dsound msacm32 msvfw32 ole32 oleaut32 rpcrt4 user32 gdi32 advapi32 winmm
+    dsound msacm32 msvfw32 ole32 oleaut32 rpcrt4 user32 gdi32 advapi32 advapi32_vista winmm
     kernel32_vista msvcrt kernel32 ntdll)
 add_dependencies(quartz wineheaders dxsdk stdole2)
 add_cd_file(TARGET quartz DESTINATION reactos/system32 FOR all)

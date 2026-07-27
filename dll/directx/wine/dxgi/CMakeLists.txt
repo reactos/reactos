@@ -33,7 +33,7 @@ endif()
 
 set_module_type(dxgi win32dll UNICODE)
 target_link_libraries(dxgi wine dxguid dx10guid uuid)
-add_importlibs(dxgi d3dwine gdi32 user32 win32u msvcrt kernel32 ntdll)
+add_importlibs(dxgi d3dwine gdi32 user32 win32u kernel32_vista msvcrt kernel32 ntdll)
 add_dependencies(dxgi wineheaders d3d_idl_headers)
 add_cd_file(TARGET dxgi DESTINATION reactos/system32 FOR all)
 set_wine_module(dxgi)
