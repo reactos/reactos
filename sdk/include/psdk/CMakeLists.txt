@@ -72,6 +72,7 @@ list(APPEND SOURCE
     devicetopology.idl
     dimm.idl
     dispex.idl
+    dmodshow.idl
     docobj.idl
     docobjectservice.idl
     downloadmgr.idl
@@ -194,6 +195,7 @@ list(APPEND SOURCE
     wincodec.idl
     wincodecsdk.idl
     winsxs.idl
+    wmcodecdsp.idl
     wmdrmsdk.idl
     wmiutils.idl
     wmsbuffer.idl

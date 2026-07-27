@@ -27,7 +27,11 @@ struct sample
     WLOOP loops[];
 };
 
+#ifdef __REACTOS__
+C_ASSERT(sizeof(struct sample) == offsetof(struct sample, loops));
+#else
 C_ASSERT(sizeof(struct sample) == offsetof(struct sample, loops[0]));
+#endif
 
 struct wave
 {

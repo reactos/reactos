@@ -38,6 +38,17 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 
+#ifdef __REACTOS__
+/* wcsnlen is only exported from msvcrt for NT6+ */
+static inline size_t compat_wcsnlen(const WCHAR *str, size_t size)
+{
+    size_t i;
+    for (i = 0; i < size && str[i]; ++i);
+    return i;
+}
+#define wcsnlen compat_wcsnlen
+#endif
+
 /* NS specific structures */
 struct NSCacheData
 {

@@ -30,6 +30,23 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
+#ifdef __REACTOS__
+#include "winternl.h"
+static BOOL WINAPI CancelIoEx_(HANDLE handle, LPOVERLAPPED lpOverlapped)
+{
+    IO_STATUS_BLOCK io_status;
+
+    NtCancelIoFile(handle, &io_status);
+    if (io_status.Status)
+    {
+        SetLastError(RtlNtStatusToDosError(io_status.Status));
+        return FALSE;
+    }
+    return TRUE;
+}
+#define CancelIoEx CancelIoEx_
+#endif
+
 static const AM_MEDIA_TYPE default_mt =
 {
     {0xe436eb83,0x524f,0x11ce,{0x9f,0x53,0x00,0x20,0xaf,0x0b,0xa7,0x70}},   /* MEDIATYPE_Stream */

@@ -41,7 +41,11 @@ struct articulation
     CONNECTION connections[];
 };
 
+#ifdef __REACTOS__
+C_ASSERT(sizeof(struct articulation) == offsetof(struct articulation, connections));
+#else
 C_ASSERT(sizeof(struct articulation) == offsetof(struct articulation, connections[0]));
+#endif
 
 struct region
 {
@@ -736,7 +740,14 @@ struct download_buffer
     ULONG offsets[];
 };
 
+#ifdef __REACTOS__
+/* MSVC does not fold offsetof() with a subscript into a constant expression
+   in C (C2057). Element zero lives at the array base, so naming the member
+   alone is the same value and is constant for both compilers. */
+C_ASSERT(sizeof(struct download_buffer) == offsetof(struct download_buffer, offsets));
+#else
 C_ASSERT(sizeof(struct download_buffer) == offsetof(struct download_buffer, offsets[0]));
+#endif
 
 HRESULT instrument_download_to_port(IDirectMusicInstrument *iface, IDirectMusicPortDownload *port,
         IDirectMusicDownloadedInstrument **downloaded)

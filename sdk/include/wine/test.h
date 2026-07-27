@@ -45,11 +45,13 @@
 #error wine/debug.h should not be used in Wine tests
 #endif
 
+#ifndef __WINE_PRINTF_ATTR /* wine/debug.h defines this too; either may come first */
 #ifdef __GNUC__
 # define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
 #else /* __GNUC__ */
 # define __WINE_PRINTF_ATTR(fmt,args)
 #endif /* __GNUC__ */
+#endif /* !__WINE_PRINTF_ATTR */
 
 #ifdef __cplusplus
 extern "C" {
@@ -908,6 +910,7 @@ int main( int argc, char **argv )
 #endif
 
 // FIXME: Should include wine/debug.h instead
+#ifndef __WINE_DEBUG_H
 extern const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n );
 extern const char *wine_dbgstr_an( const CHAR *str, intptr_t n );
 extern const char *wine_dbgstr_guid( const GUID *guid );
@@ -928,6 +931,7 @@ static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_w
 extern const char *wine_dbgstr_variant(const VARIANT *var);
 static inline const char *debugstr_variant( const VARIANT *v ) { return wine_dbgstr_variant( v ); }
 #endif
+#endif /* !__WINE_DEBUG_H */
 extern const char * __cdecl __wine_dbg_strdup( const char *str );
 
 /* strcmpW is available for tests compiled under Wine, but not in standalone
