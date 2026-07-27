@@ -23,7 +23,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
+#ifdef __REACTOS__
+#define V4L_CALL( func, params ) E_NOTIMPL
+#else
 #define V4L_CALL( func, params ) WINE_UNIX_CALL( unix_ ## func, params )
+#endif
 
 struct vfw_capture
 {
@@ -96,8 +100,10 @@ static void vfw_capture_destroy(struct strmbase_filter *iface)
 
     if (filter->init)
     {
+#ifndef __REACTOS__
         struct destroy_params params = { filter->device };
         V4L_CALL( destroy, &params );
+#endif
     }
 
     if (filter->source.pin.peer)
@@ -174,11 +180,17 @@ static DWORD WINAPI stream_thread(void *arg)
 
         params.device = filter->device;
         params.data = data;
+#ifndef __REACTOS__
         if (!V4L_CALL( read_frame, &params ))
         {
             IMediaSample_Release(sample);
             break;
         }
+#else
+        ERR("libv4l not implemented: read_frame\n");
+        (void)params;
+        break;
+#endif
 
         hr = IMemInputPin_Receive(filter->source.pMemInputPin, sample);
         IMediaSample_Release(sample);
@@ -222,11 +234,18 @@ static HRESULT vfw_capture_start_stream(struct strmbase_filter *iface, REFERENCE
         return S_OK;
 
     params.device = filter->device;
+#ifndef __REACTOS__
     if (FAILED(hr = V4L_CALL( start, &params )))
     {
         ERR("start stream failed.\n");
         return hr;
     }
+#else
+        hr = E_NOTIMPL;
+        (void)params;
+        ERR("libv4l not implemented: start\n");
+        return hr;
+#endif
 
     EnterCriticalSection(&filter->state_cs);
     filter->state = State_Running;
@@ -346,7 +365,14 @@ AMStreamConfig_SetFormat(IAMStreamConfig *iface, AM_MEDIA_TYPE *pmt)
 
     params.device = This->device;
     params.mt = pmt;
+#ifndef __REACTOS__
     hr = V4L_CALL( set_format, &params );
+#else
+    hr = E_NOTIMPL;
+    (void)params;
+    ERR("libv4l not implemented: start\n");
+#endif
+
     if (SUCCEEDED(hr) && This->filter.graph && This->source.pin.peer)
     {
         hr = IFilterGraph_Reconnect(This->filter.graph, &This->source.pin.IPin_iface);
@@ -379,7 +405,13 @@ static HRESULT WINAPI AMStreamConfig_GetFormat(IAMStreamConfig *iface, AM_MEDIA_
         if ((format = CoTaskMemAlloc(sizeof(VIDEOINFOHEADER))))
         {
             struct get_format_params params = { filter->device, *mt, format };
+#ifndef __REACTOS__
             V4L_CALL( get_format, &params );
+#else
+            hr = E_NOTIMPL;
+            (void)params;
+            ERR("libv4l not implemented: get_format\n");
+#endif
             (*mt)->cbFormat = sizeof(VIDEOINFOHEADER);
             (*mt)->pbFormat = (BYTE *)format;
             hr = S_OK;
@@ -410,7 +442,14 @@ static HRESULT WINAPI AMStreamConfig_GetNumberOfCapabilities(IAMStreamConfig *if
     if (!count || !size)
         return E_POINTER;
 
-    V4L_CALL( get_caps_count, &params );
+#ifdef __REACTOS__
+        *size = sizeof(VIDEO_STREAM_CONFIG_CAPS);
+        (void)params;
+        ERR("libv4l not implemented: get_caps_count\n");
+#else
+        V4L_CALL( get_caps_count, &params );
+#endif
+    
     *size = sizeof(VIDEO_STREAM_CONFIG_CAPS);
 
     return S_OK;
@@ -428,7 +467,14 @@ static HRESULT WINAPI AMStreamConfig_GetStreamCaps(IAMStreamConfig *iface,
 
     TRACE("filter %p, index %d, pmt %p, vscc %p.\n", filter, index, pmt, vscc);
 
-    V4L_CALL( get_caps_count, &count_params );
+#ifdef __REACTOS__
+        (void)count_params;
+        ERR("libv4l not implemented: get_caps_count\n");
+        *pmt = NULL;
+        return E_NOTIMPL;
+#else
+         V4L_CALL( get_caps_count, &count_params );
+#endif
     if (index > count)
         return S_FALSE;
 
@@ -446,7 +492,12 @@ static HRESULT WINAPI AMStreamConfig_GetStreamCaps(IAMStreamConfig *iface,
     caps_params.mt     = mt;
     caps_params.format = format;
     caps_params.caps   = (VIDEO_STREAM_CONFIG_CAPS *)vscc;
-    V4L_CALL( get_caps, &caps_params );
+#ifdef __REACTOS__
+        (void)caps_params;
+        ERR("libv4l not implemented: get_caps\n");
+#else
+        V4L_CALL( get_caps, &caps_params );
+#endif
     mt->cbFormat = sizeof(VIDEOINFOHEADER);
     mt->pbFormat = (BYTE *)format;
     *pmt = mt;
@@ -491,7 +542,13 @@ static HRESULT WINAPI AMVideoProcAmp_GetRange(IAMVideoProcAmp *iface, LONG prope
     TRACE("filter %p, property %#lx, min %p, max %p, step %p, default_value %p, flags %p.\n",
             filter, property, min, max, step, default_value, flags);
 
+#ifdef __REACTOS__
+    (void)params;
+    ERR("libv4l not implemented: get_prop_range\n");
+    return E_NOTIMPL;
+#else
     return V4L_CALL( get_prop_range, &params );
+#endif
 }
 
 static HRESULT WINAPI AMVideoProcAmp_Set(IAMVideoProcAmp *iface, LONG property,
@@ -502,7 +559,13 @@ static HRESULT WINAPI AMVideoProcAmp_Set(IAMVideoProcAmp *iface, LONG property,
 
     TRACE("filter %p, property %#lx, value %ld, flags %#lx.\n", filter, property, value, flags);
 
+#ifdef __REACTOS__
+    (void)params;
+    ERR("libv4l not implemented: set_prop\n");
+    return E_NOTIMPL;
+#else
     return V4L_CALL( set_prop, &params );
+#endif
 }
 
 static HRESULT WINAPI AMVideoProcAmp_Get(IAMVideoProcAmp *iface, LONG property,
@@ -513,7 +576,13 @@ static HRESULT WINAPI AMVideoProcAmp_Get(IAMVideoProcAmp *iface, LONG property,
 
     TRACE("filter %p, property %#lx, value %p, flags %p.\n", filter, property, value, flags);
 
+#ifdef __REACTOS__
+    (void)params;
+    ERR("libv4l not implemented: get_prop\n");
+    return E_NOTIMPL;
+#else
     return V4L_CALL( get_prop, &params );
+#endif
 }
 
 static const IAMVideoProcAmpVtbl IAMVideoProcAmp_VTable =
@@ -578,7 +647,13 @@ static HRESULT WINAPI PPB_Load(IPersistPropertyBag *iface, IPropertyBag *bag, IE
 
     params.index = V_I4(&var);
     params.device = &filter->device;
+#ifdef __REACTOS__
+    (void)params;
+    ERR("libv4l not implemented: create\n");
+    hr = E_NOTIMPL;
+#else
     hr = V4L_CALL( create, &params );
+#endif
 
     if (SUCCEEDED(hr)) filter->init = TRUE;
     return hr;
@@ -691,7 +766,14 @@ static HRESULT source_query_accept(struct strmbase_pin *pin, const AM_MEDIA_TYPE
     struct check_format_params params = { filter->device, mt };
 
     if (!mt) return E_POINTER;
+
+#ifdef __REACTOS__
+    (void)params;
+    ERR("libv4l not implemented: check_format\n");
+    return E_NOTIMPL;
+#else
     return V4L_CALL( check_format, &params );
+#endif
 }
 
 static HRESULT source_get_media_type(struct strmbase_pin *pin,
@@ -709,6 +791,14 @@ static HRESULT source_get_media_type(struct strmbase_pin *pin,
     params.index  = index;
     params.mt     = mt;
     params.format = format;
+#ifdef __REACTOS__
+    (void)params;
+    ERR("libv4l not implemented: get_media_type\n");
+    hr = E_NOTIMPL;
+    if (TRUE)
+#else
+    if ((hr = V4L_CALL( get_media_type, &params )) != S_OK)
+#endif
     if ((hr = V4L_CALL( get_media_type, &params )) != S_OK)
     {
         CoTaskMemFree(format);
@@ -881,6 +971,7 @@ static const IAMVideoControlVtbl IAMVideoControl_VTable =
     video_control_GetFrameRateList
 };
 
+#ifndef __REACTOS__
 static BOOL WINAPI load_capture_funcs(INIT_ONCE *once, void *param, void **context)
 {
     __wine_init_unix_call();
@@ -888,13 +979,16 @@ static BOOL WINAPI load_capture_funcs(INIT_ONCE *once, void *param, void **conte
 }
 
 static INIT_ONCE init_once = INIT_ONCE_STATIC_INIT;
+#endif
 
 HRESULT vfw_capture_create(IUnknown *outer, IUnknown **out)
 {
     struct vfw_capture *object;
 
+#ifndef __REACTOS__
     if (!InitOnceExecuteOnce(&init_once, load_capture_funcs, NULL, NULL) || !__wine_unixlib_handle)
         return E_FAIL;
+#endif
 
     if (!(object = calloc(1, sizeof(*object))))
         return E_OUTOFMEMORY;

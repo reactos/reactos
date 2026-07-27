@@ -47,11 +47,11 @@ set_source_files_properties(quartz.rc PROPERTIES OBJECT_DEPENDS
     "${CMAKE_CURRENT_BINARY_DIR}/control_tlb.tlb;${CMAKE_CURRENT_SOURCE_DIR}/quartz.rgs")
 
 set_module_type(quartz win32dll)
-target_link_libraries(quartz wine strmbase strmiids uuid dxguid ${PSEH_LIB})
+target_link_libraries(quartz wine wine_dll_canunload strmbase strmiids uuid dxguid oldnames ${PSEH_LIB})
 add_delay_importlibs(quartz ddraw)
 add_importlibs(quartz
     dsound msacm32 msvfw32 ole32 oleaut32 rpcrt4 user32 gdi32 advapi32 winmm
-    msvcrt kernel32 ntdll)
+    kernel32_vista msvcrt kernel32 ntdll)
 add_dependencies(quartz wineheaders dxsdk stdole2)
 add_cd_file(TARGET quartz DESTINATION reactos/system32 FOR all)
 set_wine_module(quartz)
