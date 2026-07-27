@@ -4067,11 +4067,7 @@ static bool lower_discard_neg(struct hlsl_ctx *ctx, struct hlsl_ir_node *instr, 
             return false;
 
         if (!(or = hlsl_new_binary_expr(ctx, HLSL_OP2_LOGIC_OR, or, load)))
-#ifdef __REACTOS__
-            return NULL;
-#else
-            return false;
-#endif
+            return false; //__REACTOS__
         hlsl_block_add_instr(&block, or);
     }
 
