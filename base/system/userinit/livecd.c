@@ -594,6 +594,7 @@ LocaleDlgProc(
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             /* Save pointer to the state */
             pState = (PSTATE)lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pState);
@@ -604,17 +605,15 @@ LocaleDlgProc(
             /* Fill the language and keyboard layout lists */
             CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST), pState);
             CreateKeyboardLayoutList(GetDlgItem(hwndDlg, IDC_LAYOUTLIST));
+
+            /* In unattended mode, advance to the next page */
             if (pState->Unattend->bEnabled)
-            {
-                /* Advance to the next page */
-                PostMessageW(hwndDlg, WM_COMMAND, MAKEWPARAM(IDOK, BN_CLICKED), 0L);
-            }
-            return FALSE;
+                SendMessageW(hwndDlg, WM_COMMAND, MAKEWPARAM(IDOK, BN_CLICKED), 0);
+            return TRUE;
+        }
 
         case WM_DRAWITEM:
-            OnDrawItem((LPDRAWITEMSTRUCT)lParam,
-                       pState,
-                       IDC_LOCALELOGO);
+            OnDrawItem((LPDRAWITEMSTRUCT)lParam, pState, IDC_LOCALELOGO);
             return TRUE;
 
         case WM_COMMAND:
@@ -739,23 +738,25 @@ StartDlgProc(
             /* Center the dialog window */
             CenterWindow(hwndDlg);
 
-            /* If the ReactOS Installer could not be located, disable
-             * the "Install" button and directly start the LiveCD. */
+            /* If the ReactOS Installer could not be located, directly start
+             * the LiveCD. Otherwise, directly start the installer if we are
+             * in unattended mode. */
             if (!*Installer)
-                EnableWindow(GetDlgItem(hwndDlg, IDC_INSTALL), FALSE);
-
-            if (pState->Unattend->bEnabled || (*Installer == UNICODE_NULL))
             {
-                /* Click on the 'Run' button */
-                PostMessageW(hwndDlg, WM_COMMAND, MAKEWPARAM(IDC_RUN, BN_CLICKED), 0L);
+                /* Disable the "Install" button and click on "Run LiveCD" */
+                EnableWindow(GetDlgItem(hwndDlg, IDC_INSTALL), FALSE);
+                SendMessageW(hwndDlg, WM_COMMAND, MAKEWPARAM(IDC_RUN, BN_CLICKED), 0);
             }
-            return FALSE;
+            else if (pState->Unattend->bEnabled)
+            {
+                /* Click on "Install" */
+                SendMessageW(hwndDlg, WM_COMMAND, MAKEWPARAM(IDC_INSTALL, BN_CLICKED), 0);
+            }
+            return TRUE;
         }
 
         case WM_DRAWITEM:
-            OnDrawItem((LPDRAWITEMSTRUCT)lParam,
-                       pState,
-                       IDC_STARTLOGO);
+            OnDrawItem((LPDRAWITEMSTRUCT)lParam, pState, IDC_STARTLOGO);
             return TRUE;
 
         case WM_COMMAND:
@@ -809,7 +810,10 @@ StartDlgProc(
     return FALSE;
 }
 
-VOID ParseUnattend(LPCWSTR UnattendInf, LIVECD_UNATTEND* pUnattend)
+static VOID
+ParseUnattend(
+    _In_ LPCWSTR UnattendInf,
+    _Out_ LIVECD_UNATTEND* pUnattend)
 {
     WCHAR Buffer[MAX_PATH];
 
@@ -833,9 +837,15 @@ VOID ParseUnattend(LPCWSTR UnattendInf, LIVECD_UNATTEND* pUnattend)
         return;
     }
 
-    if (_wcsicmp(Buffer, L"yes"))
+    if (_wcsicmp(Buffer, L"yes") != 0)
     {
-        TRACE("Unattended setup is not enabled\n", Buffer);
+        TRACE("Unattended setup is not enabled\n");
+        return;
+    }
+    /* If the user presses Ctrl+Shift+F10, disable unattended setup */
+    if ((GetKeyState(VK_CONTROL) & GetKeyState(VK_SHIFT) & GetKeyState(VK_F10)) < 0)
+    {
+        WARN("Unattended setup is disabled by keypress\n");
         return;
     }
 
@@ -989,8 +999,24 @@ RunLiveCD(
     else
         WARN("Could not find the ReactOS Installer\n");
 
-    GetWindowsDirectoryW(UnattendInf, _countof(UnattendInf));
-    wcscat(UnattendInf, L"\\unattend.inf");
+    /* If the ReactOS Installer was located, use its path for the
+     * unattended file; otherwise, use the current ReactOS directory. */
+    StringCchCopyW(UnattendInf, _countof(UnattendInf), Installer);
+    if (*UnattendInf)
+    {
+        /* Find the last path separator and truncate the path there.
+         * If there is none, NUL the path. */
+        PWCHAR ptr = wcsrchr(UnattendInf, L'\\');
+        if (!ptr)
+            ptr = UnattendInf;
+        *ptr = UNICODE_NULL;
+    }
+    if (!*UnattendInf)
+    {
+        /* No actual path was found, fall back to the ReactOS directory */
+        GetWindowsDirectoryW(UnattendInf, _countof(UnattendInf));
+    }
+    StringCchCatW(UnattendInf, _countof(UnattendInf), L"\\unattend.inf");
     ParseUnattend(UnattendInf, &Unattend);
     pState->Unattend = &Unattend;
 
