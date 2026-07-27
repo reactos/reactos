@@ -1,7 +1,5 @@
 /*
- * Header file for private strmbase implementations
- *
- * Copyright 2012 Aric Stewart, CodeWeavers
+ * Copyright 2014 Michael Müller for Pipelight
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +16,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_STRMBASE_PRIVATE_H
-#define __WINE_STRMBASE_PRIVATE_H
+#ifndef __WINE_PHYSICALMONITORENUMERATIONAPI_H
+#define __WINE_PHYSICALMONITORENUMERATIONAPI_H
 
-#include <assert.h>
-#define COBJMACROS
-#include "dshow.h"
-#include "uuids.h"
-#include "wine/debug.h"
-#include "wine/heap.h"
-#include "wine/list.h"
-#include "wine/strmbase.h"
+#include <d3d9.h>
 
-#endif /* __WINE_STRMBASE_PRIVATE_H */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define PHYSICAL_MONITOR_DESCRIPTION_SIZE 128
+
+typedef struct _PHYSICAL_MONITOR
+{
+    HANDLE hPhysicalMonitor;
+    WCHAR szPhysicalMonitorDescription[PHYSICAL_MONITOR_DESCRIPTION_SIZE];
+} PHYSICAL_MONITOR, *LPPHYSICAL_MONITOR;
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __WINE_PHYSICALMONITORENUMERATIONAPI_H */

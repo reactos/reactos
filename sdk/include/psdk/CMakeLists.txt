@@ -72,6 +72,7 @@ list(APPEND SOURCE
     devicetopology.idl
     dimm.idl
     dispex.idl
+    dmodshow.idl
     docobj.idl
     docobjectservice.idl
     downloadmgr.idl

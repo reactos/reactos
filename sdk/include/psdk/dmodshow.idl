@@ -1,7 +1,5 @@
 /*
- * Header file for private strmbase implementations
- *
- * Copyright 2012 Aric Stewart, CodeWeavers
+ * Copyright (C) 2018 Zebediah Figura
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_STRMBASE_PRIVATE_H
-#define __WINE_STRMBASE_PRIVATE_H
+import "unknwn.idl";
+import "objidl.idl";
+import "mediaobj.idl";
 
-#include <assert.h>
-#define COBJMACROS
-#include "dshow.h"
-#include "uuids.h"
-#include "wine/debug.h"
-#include "wine/heap.h"
-#include "wine/list.h"
-#include "wine/strmbase.h"
+cpp_quote("DEFINE_GUID(CLSID_DMOWrapperFilter, 0x94297043,0xbd82,0x4dfd,0xb0,0xde,0x81,0x77,0x73,0x9c,0x6d,0x20);")
+cpp_quote("DEFINE_GUID(CLSID_DMOFilterCategory,0xbcd5796c,0xbd52,0x4d30,0xab,0x76,0x70,0xf9,0x75,0xb8,0x91,0x99);")
 
-#endif /* __WINE_STRMBASE_PRIVATE_H */
+[
+    object,
+    uuid(52d6f586-9f0f-4824-8fc8-e32ca04930c2),
+]
+interface IDMOWrapperFilter : IUnknown
+{
+    HRESULT Init(REFCLSID clsid, REFCLSID category);
+}

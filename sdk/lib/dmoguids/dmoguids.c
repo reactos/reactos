@@ -1,7 +1,7 @@
 /*
- * Header file for private strmbase implementations
+ * GUID definitions
  *
- * Copyright 2012 Aric Stewart, CodeWeavers
+ * Copyright 2018 Zebediah Figura
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_STRMBASE_PRIVATE_H
-#define __WINE_STRMBASE_PRIVATE_H
+/* Don't define those GUIDs here */
+#include "strmif.h"
 
-#include <assert.h>
-#define COBJMACROS
-#include "dshow.h"
-#include "uuids.h"
-#include "wine/debug.h"
-#include "wine/heap.h"
-#include "wine/list.h"
-#include "wine/strmbase.h"
+#include "initguid.h"
 
-#endif /* __WINE_STRMBASE_PRIVATE_H */
+#include "mediaobj.h"
+#include "dmoreg.h"
+#include "dmodshow.h"
