@@ -18,10 +18,6 @@
 
 #include <stdarg.h>
 #include <math.h>
-#ifdef __REACTOS__
-#include <float.h> // for _isnan
-#define isnan _isnan
-#endif
 #include <limits.h>
 #include <assert.h>
 

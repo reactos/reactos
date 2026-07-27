@@ -6,4 +6,4 @@
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
-@ stub GetProxyDllInfo
+@ stdcall -private GetProxyDllInfo(ptr ptr) # ReactOS: real entry from the rpcproxy dlldata, not a stub

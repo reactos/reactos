@@ -2180,7 +2180,11 @@ out:
 
 void CDECL wined3d_device_context_set_shader_resource_views(struct wined3d_device_context *context,
         enum wined3d_shader_type type, unsigned int start_idx, unsigned int count,
+#ifdef __REACTOS__ /* MSVC C4028: the wined3d.h declaration omits the top-level const */
+        struct wined3d_shader_resource_view *const *views)
+#else
         struct wined3d_shader_resource_view *const *const views)
+#endif
 {
     struct wined3d_shader_resource_view *real_views[MAX_SHADER_RESOURCE_VIEWS];
     struct wined3d_state *state = context->state;
