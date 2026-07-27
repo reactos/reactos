@@ -252,9 +252,9 @@ VBEGetPowerState(
 
 VP_STATUS NTAPI
 VBESetPowerState(
-   PVOID HwDeviceExtension,
-   ULONG HwId,
-   PVIDEO_POWER_MANAGEMENT VideoPowerControl);
+   _In_ PVOID HwDeviceExtension,
+   _In_ ULONG HwId,
+   _In_ PVIDEO_POWER_MANAGEMENT VideoPowerControl);
 
 BOOLEAN FASTCALL
 VBESetCurrentMode(
