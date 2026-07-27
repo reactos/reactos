@@ -224,6 +224,103 @@ ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
 }
 
 NTSTATUS NTAPI
+ConDrvSetConsoleScreenBufferSize(IN PCONSOLE Console, IN PTEXTMODE_SCREEN_BUFFER Buffer, IN PCOORD Size);
+NTSTATUS NTAPI
+ConDrvSetConsoleWindowInfo(IN PCONSOLE Console, IN PTEXTMODE_SCREEN_BUFFER Buffer, IN BOOLEAN Absolute, IN PSMALL_RECT WindowRect);
+NTSTATUS NTAPI
+ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console, IN PTEXTMODE_SCREEN_BUFFER Buffer, IN USHORT NewScreenAttrib, IN USHORT NewPopupAttrib);
+VOID NTAPI
+ConDrvVtRefreshPalette(IN PCONSOLE Console);
+NTSTATUS NTAPI
+ConDrvSetConsoleCursorPosition(IN PCONSOLE Console, IN PTEXTMODE_SCREEN_BUFFER Buffer, IN PCOORD Position);
+
+/*
+ * Apply a whole CONSOLE_SCREEN_BUFFER_INFOEX in one go.
+ *
+ * Everything is validated before anything is applied, so a rejected request
+ * leaves the buffer exactly as it was. The buffer/window ordering rule lives
+ * here rather than in the server: when the backing buffer shrinks, the window
+ * has to be made to fit first, otherwise the resize is rejected for overlapping
+ * a window that is about to move anyway.
+ */
+NTSTATUS NTAPI
+ConDrvSetScreenBufferInfoEx(IN PCONSOLE Console, IN PTEXTMODE_SCREEN_BUFFER Buffer, IN PCOORD ScreenBufferSize, IN PCOORD CursorPosition, IN PSMALL_RECT WindowRect, IN USHORT Attributes, IN USHORT PopupAttributes, IN const COLORREF *ColorTable, IN ULONG ColorCount)
+{
+    NTSTATUS Status;
+    COORD ViewSize;
+    BOOLEAN WindowMoved;
+
+    if (Console == NULL || Buffer == NULL || ScreenBufferSize == NULL ||
+        CursorPosition == NULL || WindowRect == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    ASSERT(Console == Buffer->Header.Console);
+
+    ViewSize.X = WindowRect->Right - WindowRect->Left + 1;
+    ViewSize.Y = WindowRect->Bottom - WindowRect->Top + 1;
+
+    /* Validate everything up front */
+    if (ScreenBufferSize->X <= 0 || ScreenBufferSize->Y <= 0 ||
+        ViewSize.X <= 0 || ViewSize.Y <= 0 ||
+        ViewSize.X > ScreenBufferSize->X || ViewSize.Y > ScreenBufferSize->Y ||
+        WindowRect->Left < 0 || WindowRect->Top < 0 ||
+        WindowRect->Right >= ScreenBufferSize->X ||
+        WindowRect->Bottom >= ScreenBufferSize->Y ||
+        CursorPosition->X < 0 || CursorPosition->Y < 0 ||
+        CursorPosition->X >= ScreenBufferSize->X ||
+        CursorPosition->Y >= ScreenBufferSize->Y)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* The colour table is server-layer state, reached through the TERMINAL vtable */
+    if (ColorTable != NULL && ColorCount != 0 && ColorCount != CONSOLE_COLOR_TABLE_SIZE)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Shrinking: the window must fit the new size before the buffer changes */
+    WindowMoved = FALSE;
+    if (ScreenBufferSize->X < Buffer->ViewSize.X || ScreenBufferSize->Y < Buffer->ViewSize.Y)
+    {
+        Status = ConDrvSetConsoleWindowInfo(Console, Buffer, TRUE, WindowRect);
+        if (!NT_SUCCESS(Status)) return Status;
+        WindowMoved = TRUE;
+    }
+
+    if (Buffer->ScreenBufferSize.X != ScreenBufferSize->X ||
+        Buffer->ScreenBufferSize.Y != ScreenBufferSize->Y)
+    {
+        Status = ConDrvSetConsoleScreenBufferSize(Console, Buffer, ScreenBufferSize);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    if (!WindowMoved)
+    {
+        Status = ConDrvSetConsoleWindowInfo(Console, Buffer, TRUE, WindowRect);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    Status = ConDrvSetConsoleCursorPosition(Console, Buffer, CursorPosition);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    if (Buffer->ScreenDefaultAttrib != Attributes ||
+        Buffer->PopupDefaultAttrib != PopupAttributes)
+    {
+        Status = ConDrvChangeScreenBufferAttributes(Console, Buffer, Attributes, PopupAttributes);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    if (ColorTable != NULL && ColorCount != 0)
+    {
+        if (TermSetColorTable(Console, ColorTable, ColorCount))
+            ConDrvVtRefreshPalette(Console);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS NTAPI
 ConDrvSetConsolePalette(IN PCONSOLE Console,
                         // IN PGRAPHICS_SCREEN_BUFFER Buffer,
                         IN PCONSOLE_SCREEN_BUFFER Buffer,
@@ -316,9 +413,7 @@ ConDrvSetConsoleCursorInfo(IN PCONSOLE Console,
 }
 
 NTSTATUS NTAPI
-ConDrvSetConsoleCursorPosition(IN PCONSOLE Console,
-                               IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                               IN PCOORD Position)
+ConDrvSetConsoleCursorPosition(IN PCONSOLE Console, IN PTEXTMODE_SCREEN_BUFFER Buffer, IN PCOORD Position)
 {
     SHORT OldCursorX, OldCursorY;
 

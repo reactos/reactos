@@ -8,6 +8,15 @@
 
 #pragma once
 
+/*
+ * TRUE when a real terminal is plugged into the console. The dummy terminal
+ * installed by ResetTerminal() pends every operation, so callers that must not
+ * perform side effects before a possible STATUS_PENDING test this first.
+ * Defined in condrv/dummyterm.c.
+ */
+BOOLEAN ConDrvIsTerminalAttached(IN struct _CONSOLE* Console);
+
+
 /* Macros used to call functions in the TERMINAL_VTBL virtual table */
 
 #define TermReadStream(Console, /**/ Unicode, /**/ Buffer, ReadControl, Parameter, NumCharsToRead, NumCharsRead) \

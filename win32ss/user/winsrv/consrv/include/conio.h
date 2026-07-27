@@ -120,6 +120,9 @@ typedef struct _CONSOLE_SCREEN_BUFFER
  * CLR_INVALID in either field means "no extended colour, fall back to the
  * cell's attribute".
  */
+/* Number of entries in the console colour table */
+#define CONSOLE_COLOR_TABLE_SIZE 16
+
 typedef struct _CELL_RGB
 {
     COLORREF Fg;
@@ -151,15 +154,25 @@ typedef struct _TEXTMODE_SCREEN_BUFFER
     {
         BOOLEAN CursorSaved;        /* Whether a cursor position was saved */
         COORD   SavedCursorPos;     /* Last saved cursor position */
-        USHORT  SavedAttributes;    /* Saved SGR attributes */
+        USHORT  SavedAttributes;    /* SGR attributes parked by DECSC (ESC 7 / CSI s) */
         USHORT  CurrentAttributes;  /* Current SGR attributes */
         ULONG   PrivateModes;       /* Bitmask of active DEC private modes */
-        struct _TEXTMODE_SCREEN_BUFFER* AlternateBuffer; /* Alternate screen buffer */
-        struct _TEXTMODE_SCREEN_BUFFER* PrimaryBuffer;   /* Primary buffer when alternate active */
-        CONSOLE_CURSOR_INFO PrimaryCursorInfo;   /* Saved cursor info for primary buffer */
-        COORD   PrimaryCursorPos;                /* Saved cursor position for primary buffer */
-        COORD   PrimaryViewOrigin;               /* Saved viewport origin */
-        USHORT  PrimaryVirtualY;                 /* Saved scrollback origin */
+        /*
+         * Alternate screen (DECSET 1047/1049). The alternate screen is a
+         * content swap inside this same screen-buffer object rather than a
+         * second object: the primary's cells are parked here and restored on
+         * the way out, so the console's active buffer - and every handle to it -
+         * stays valid across the switch.
+         */
+        BOOLEAN AlternateActive;                 /* TRUE while the alternate screen is shown */
+        PCHAR_INFO SavedBuffer;                  /* Primary cells, parked */
+        struct _CELL_RGB* SavedCellRgb;          /* Primary extended colours, parked */
+        USHORT  SavedVirtualY;                   /* Saved scrollback origin */
+        COORD   SavedScreenCursorPos;            /* Saved cursor position */
+        CONSOLE_CURSOR_INFO SavedScreenCursorInfo; /* Saved cursor info */
+        COORD   SavedViewOrigin;                 /* Saved viewport origin */
+        SHORT   SavedScrollTop;                  /* Saved top margin */
+        SHORT   SavedScrollBottom;               /* Saved bottom margin */
         CONSOLE_CURSOR_INFO DefaultCursorInfo;   /* Default cursor info for DECSCUSR reset */
         BOOLEAN UseRgbForeground;                /* TRUE when foreground colour uses 24-bit RGB */
         BOOLEAN UseRgbBackground;                /* TRUE when background colour uses 24-bit RGB */
@@ -183,6 +196,8 @@ typedef struct _TEXTMODE_SCREEN_BUFFER
         ULONG   MouseButtonState;                /* Tracks currently pressed mouse buttons */
         PUCHAR  TabStops;                        /* Dynamic tab-stop bitmap (one byte per column) */
         USHORT  TabStopLength;                   /* Number of columns represented in TabStops */
+        SMALL_RECT DirtyRect;                    /* Region invalidated so far by this write */
+        BOOLEAN DirtyValid;                      /* TRUE when DirtyRect holds anything */
         WCHAR   PendingSequence[VT_PENDING_SEQUENCE_MAX]; /* Unterminated VT sequence kept across writes */
         USHORT  PendingSequenceLength;           /* Number of valid WCHARs in PendingSequence */
     } VtState;

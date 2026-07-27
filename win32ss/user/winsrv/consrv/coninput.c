@@ -228,11 +228,43 @@ ConioProcessInputEvent(PCONSRV_CONSOLE Console,
         }
     }
 
-    return ConioAddInputEvents(Console,
-                               InputEvent,
-                               1,
-                               &NumEventsWritten,
-                               TRUE);
+    /*
+     * Translate to VT input sequences here, at enqueue time, so the queue holds
+     * exactly the records every reader will receive. Doing it on the read path
+     * instead made ReadConsoleInput and PeekConsoleInput disagree, hid VT input
+     * from the cooked ReadConsole/ReadFile path entirely, and left
+     * GetNumberOfConsoleInputEvents reporting untranslated counts.
+     *
+     * ConDrvVtTranslateInput pre-sets the out-parameters to pass-through, so a
+     * console without ENABLE_VIRTUAL_TERMINAL_INPUT costs one mode test.
+     */
+    {
+        PINPUT_RECORD Records;
+        ULONG Count;
+        BOOLEAN Allocated;
+        NTSTATUS Status;
+
+        Status = ConDrvVtTranslateInput((PCONSOLE)Console, InputEvent, 1, &Records, &Count, &Allocated);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Best-effort: enqueue the event untranslated rather than losing it */
+            Records = InputEvent;
+            Count = 1;
+            Allocated = FALSE;
+        }
+
+        /* The VT layer drops some events outright (e.g. key-up records) */
+        if (Count == 0)
+        {
+            if (Allocated) ConsoleFreeHeap(Records);
+            return STATUS_SUCCESS;
+        }
+
+        Status = ConioAddInputEvents(Console, Records, Count, &NumEventsWritten, TRUE);
+
+        if (Allocated) ConsoleFreeHeap(Records);
+        return Status;
+    }
 }
 
 
@@ -562,47 +594,6 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
 
         if (NT_SUCCESS(Status))
         {
-            /* Translate input records to VT sequences if virtual terminal input is enabled */
-            {
-                PINPUT_RECORD TranslatedRecords;
-                ULONG TranslatedCount;
-                BOOLEAN AllocatedBuffer;
-                NTSTATUS VtStatus;
-
-                VtStatus = ConDrvVtTranslateInput(InputBuffer->Header.Console,
-                                                   InputRecord,
-                                                   NumEventsRead,
-                                                   &TranslatedRecords,
-                                                   &TranslatedCount,
-                                                   &AllocatedBuffer);
-                if (NT_SUCCESS(VtStatus) && AllocatedBuffer)
-                {
-                    ULONG CopyCount = min(TranslatedCount, GetInputRequest->NumRecords);
-                    RtlCopyMemory(InputRecord, TranslatedRecords, CopyCount * sizeof(INPUT_RECORD));
-
-                    /*
-                     * If VT translation expanded input records beyond the client
-                     * buffer capacity, re-enqueue the overflow at the front of
-                     * the input queue so it is returned on the next read.
-                     * Only do this when actually consuming events (not peeking).
-                     */
-                    if (TranslatedCount > CopyCount &&
-                        !(GetInputRequest->Flags & CONSOLE_READ_NOREMOVE))
-                    {
-                        ConDrvWriteConsoleInput(InputBuffer->Header.Console,
-                                               &InputBuffer->Header.Console->InputBuffer,
-                                               FALSE, /* Prepend to front */
-                                               &TranslatedRecords[CopyCount],
-                                               TranslatedCount - CopyCount,
-                                               NULL);
-                    }
-
-                    ConsoleFreeHeap(TranslatedRecords);
-                    NumEventsRead = CopyCount;
-                    GetInputRequest->NumRecords = CopyCount;
-                }
-            }
-
             /* Now translate everything to ANSI */
             if (!GetInputRequest->Unicode)
             {

@@ -32,6 +32,11 @@ VOID
 NTAPI
 ConDrvVtInvalidateBufferRgb(PTEXTMODE_SCREEN_BUFFER ScreenBuffer);
 
+/* Owns how a change to the console colour table reaches the screen */
+VOID
+NTAPI
+ConDrvVtRefreshPalette(PCONSOLE Console);
+
 VOID
 NTAPI
 ConDrvVtAdvanceLine(PCONSOLE Console,
@@ -70,5 +75,8 @@ VtHandleTabClear(PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
 
 SHORT
 NTAPI
-VtFindNextTabStop(PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
-                  SHORT StartColumn);
+VtFindNextTabStop(PTEXTMODE_SCREEN_BUFFER ScreenBuffer, SHORT StartColumn);
+
+SHORT
+NTAPI
+VtFindPrevTabStop(PTEXTMODE_SCREEN_BUFFER ScreenBuffer, SHORT StartColumn);

@@ -741,7 +741,14 @@ ConioWriteConsole(PFRONTEND FrontEnd,
 
                 UpdateRect.Left = min(UpdateRect.Left, Buff->CursorPosition.X);
 
-                EndX = (Buff->CursorPosition.X + TAB_WIDTH) & ~(TAB_WIDTH - 1);
+                /*
+                  * With VT active the stop positions are whatever HTS/TBC left in
+                  * the tab-stop table; otherwise keep the fixed 8-column grid.
+                  */
+                if (ConioIsVtActive(Buff))
+                    EndX = (UINT)VtFindNextTabStop(Buff, Buff->CursorPosition.X);
+                else
+                    EndX = (Buff->CursorPosition.X + TAB_WIDTH) & ~(TAB_WIDTH - 1);
                 EndX = min(EndX, (UINT)Buff->ScreenBufferSize.X);
 
                 while ((UINT)Buff->CursorPosition.X < EndX)

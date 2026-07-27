@@ -141,6 +141,10 @@ TEXTMODE_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
 
     ConsoleFreeHeap(Buff->Buffer);
     if (Buff->CellRgb) ConsoleFreeHeap(Buff->CellRgb);
+
+    /* The primary screen is parked here while the alternate screen is shown */
+    if (Buff->VtState.SavedBuffer) ConsoleFreeHeap(Buff->VtState.SavedBuffer);
+    if (Buff->VtState.SavedCellRgb) ConsoleFreeHeap(Buff->VtState.SavedCellRgb);
     if (Buff->VtState.HyperlinkUri.Buffer)
         ConsoleFreeHeap(Buff->VtState.HyperlinkUri.Buffer);
 
@@ -857,6 +861,16 @@ ConDrvWriteConsole(IN PCONSOLE Console,
 
     /* Stop here if the console is paused */
     if (Console->ConsolePaused) return STATUS_PENDING;
+
+    /*
+     * With no terminal attached every write pends, and WriteConsoleThread
+     * replays the entire original request once one is plugged in. The VT parser
+     * is not restartable - sequences it has already executed (erases, scrolls,
+     * cursor moves, an alternate-buffer switch) would be applied a second time -
+     * so pend here, before parsing, exactly as the paused case does. Nothing has
+     * happened yet, which is what makes the replay safe.
+     */
+    if (!ConDrvIsTerminalAttached(Console)) return STATUS_PENDING;
 
     /* Convert the string to UNICODE */
     if (Unicode)

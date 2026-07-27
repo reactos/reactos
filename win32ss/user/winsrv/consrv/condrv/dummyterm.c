@@ -206,6 +206,16 @@ static TERMINAL_VTBL DummyVtbl =
     DummySetClipboardText,
 };
 
+/*
+ * The dummy terminal pends every operation, so callers that must not perform
+ * side effects before a possible STATUS_PENDING can test for it up front.
+ */
+BOOLEAN
+ConDrvIsTerminalAttached(IN PCONSOLE Console)
+{
+    return (Console != NULL && Console->TermIFace.Vtbl != &DummyVtbl);
+}
+
 VOID
 ResetTerminal(IN PCONSOLE Console)
 {
