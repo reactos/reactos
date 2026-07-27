@@ -58,6 +58,8 @@ AddReg=Classes
 11,,cryptnet.dll,1
 11,,d3dxof.dll,1
 11,,ddraw.dll,1
+; order matters here
+11,,quartz.dll,1
 11,,devenum.dll,1
 11,,dinput.dll,1
 11,,dinput8.dll,1
@@ -98,10 +100,10 @@ AddReg=Classes
 11,,olepro32.dll,1
 11,,propsys.dll,1
 11,,pstorec.dll,1
+11,,qcap.dll,1
 11,,qedit.dll,1
 11,,qmgr.dll,1
 11,,qmgrprxy.dll,1
-11,,quartz.dll,1
 11,,rpcrt4.dll,1
 11,,rsabase.dll,1
 11,,rsaenh.dll,1
