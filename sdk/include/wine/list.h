@@ -21,6 +21,8 @@
 #ifndef __WINE_SERVER_LIST_H
 #define __WINE_SERVER_LIST_H
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 #define __WINE_SERVER_LIST_INLINE inline
 #else

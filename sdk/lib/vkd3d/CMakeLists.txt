@@ -89,7 +89,7 @@ if(MSVC)
     # C4267/C4319: align() masks with a size_t-wide value and the SM1 encoder
     #        narrows a token count to 16 bits.
     target_compile_options(vkd3d PRIVATE
-        /wd4090 /wd4098 /wd4146 /wd4200 /wd4245 /wd4267 /wd4305 /wd4309 /wd4319)
+        /wd4715 /wd4090 /wd4098 /wd4146 /wd4200 /wd4245 /wd4267 /wd4305 /wd4309 /wd4319)
 else()
     target_compile_options(vkd3d PRIVATE -Wno-unused-but-set-variable)
 endif()

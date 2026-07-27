@@ -168,6 +168,17 @@ typedef struct _XSTATE
 #ifdef __ROS_LONG64__
 #define ReadAcquire(x) ReadAcquire((volatile long*)(x))
 #define WriteRelease(x, y) WriteRelease((volatile long*)(x), (y))
+
+/* Same shape of problem: __ROS_LONG64__ makes DWORD an "unsigned int", but the
+   _BitScan* intrinsics take "unsigned long *", so any Wine source scanning
+   into a DWORD trips -Werror=incompatible-pointer-types (d3dx9's make_pow2,
+   dwrite's opentype.c). Both types are 32 bits in every configuration we
+   build, so cast the index through. <psdk/winnt.h> above has already defined
+   these as plain aliases; undefine them first so this does not recurse. */
+#undef BitScanForward
+#undef BitScanReverse
+#define BitScanForward(idx, mask) _BitScanForward((unsigned long *)(idx), (mask))
+#define BitScanReverse(idx, mask) _BitScanReverse((unsigned long *)(idx), (mask))
 #endif
 
 #ifndef __WINE_WINNT_EXCEPTION_REGISTRATION_RECORD

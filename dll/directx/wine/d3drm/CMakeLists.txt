@@ -1,5 +1,8 @@
 
-add_definitions(-D__ROS_LONG64__)
+add_definitions(
+    -D__WINESRC__
+    -D__ROS_LONG64__)
+
 spec2def(d3drm.dll d3drm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -13,8 +16,7 @@ list(APPEND SOURCE
     math.c
     meshbuilder.c
     texture.c
-    viewport.c
-    precomp.h)
+    viewport.c)
 
 add_library(d3drm MODULE
     ${SOURCE}
@@ -23,11 +25,11 @@ add_library(d3drm MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/d3drm.def)
 
 set_module_type(d3drm win32dll UNICODE)
-target_link_libraries(d3drm dxguid uuid wine)
+target_link_libraries(d3drm wine wine_dll_canunload dxguid uuid)
 add_importlibs(d3drm ddraw d3dxof msvcrt kernel32 ntdll)
-add_pch(d3drm precomp.h SOURCE)
+add_dependencies(d3drm wineheaders)
 add_cd_file(TARGET d3drm DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(d3drm) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE
+set_wine_module(d3drm)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(d3drm PRIVATE -Wno-incompatible-function-pointer-types)
