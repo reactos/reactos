@@ -45,6 +45,13 @@ SHDOCVW_GetPathOfShortcut(
     return S_OK;
 }
 
+static bool GetImageListIndex(_In_ IShellFolder *pSF, _In_ LPCITEMIDLIST pidlItem, _Out_ TVITEMW &tvi)
+{
+    tvi.iImage = SHMapPIDLToSystemImageListIndex(pSF, pidlItem, &tvi.iSelectedImage);
+    tvi.iSelectedImage = tvi.iSelectedImage >= 0 ? tvi.iSelectedImage : tvi.iImage;
+    return tvi.iImage >= 0;
+}
+
 CNSCBand::CNSCBand()
 {
     SHDOCVW_LockModule();
@@ -364,13 +371,8 @@ CNSCBand::_UpdateItem(
     tvi.hItem = hItem;
     tvi.mask = TVIF_HANDLE | (UIF & (TVIF_TEXT));
     tvi.pszText = szName;
-    if (UIF & UIF_IMAGE)
-    {
-        tvi.iImage = SHMapPIDLToSystemImageListIndex(pSF, pidlItem, &tvi.iSelectedImage);
-        tvi.iSelectedImage = tvi.iSelectedImage >= 0 ? tvi.iSelectedImage : tvi.iImage;
-        if (tvi.iImage >= 0)
-            tvi.mask |= TVIF_IMAGE | TVIF_SELECTEDIMAGE;
-    }
+    if ((UIF & UIF_IMAGE) && GetImageListIndex(pSF, pidlItem, tvi))
+        tvi.mask |= TVIF_IMAGE | TVIF_SELECTEDIMAGE;
     if (!TreeView_SetItem(m_hwndTreeView, &tvi))
         return E_FAIL;
     pData->Attach(absolutePidl.Detach());
@@ -512,7 +514,7 @@ CNSCBand::OnChangeNotify(
         case SHCNE_UPDATEITEM:
         case SHCNE_UPDATEDIR:
             pidl1 = pidl0;
-            // fallthrough
+            __fallthrough;
         case SHCNE_RENAMEFOLDER:
             if ((hItem = _FindItem(pidl0, &pID)) != NULL && SUCCEEDED(_UpdateItem(hItem, pID, pidl1, UIF_ALL | UIF_GETREAL)))
                 return;
