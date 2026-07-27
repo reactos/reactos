@@ -43,7 +43,6 @@ dll/directx/wine/d3dx10_33 => 43 # Synced to wine-10.1-dev (b00c7619f1b)
 dll/directx/wine/d3dx11_42 => 43 # Synced to wine-10.1-dev (b00c7619f1b)
 dll/directx/wine/d3dx9_24 => 43 # Synced to wine-10.1-dev (b00c7619f1b)
 dll/directx/wine/d3dxof         # Synced to wine-10.1-dev (b00c7619f1b)
-dll/directx/wine/dciman32       # Synced to wine-10.1-dev (b00c7619f1b)
 dll/directx/wine/ddraw          # Synced to wine-10.1-dev (b00c7619f1b)
 dll/directx/wine/ddrawex        # Synced to wine-10.1-dev (b00c7619f1b)
 dll/directx/wine/devenum        # Synced to wine-10.1-dev (b00c7619f1b)
@@ -99,7 +98,7 @@ dll/win32/cryptnet            # Synced to Wine-10.0
 dll/win32/cryptui             # Synced to Wine-10.0
 dll/win32/dbgeng              # Synced to WineStaging-4.18
 dll/win32/dbghelp             # Synced to WineStaging-5.16
-dll/win32/dciman32            # Synced to WineStaging-3.3
+dll/win32/dciman32            # Synced to wine-10.1-dev (b00c7619f1b)
 dll/win32/dwmapi              # Synced to Wine-8.14
 dll/win32/faultrep            # Synced to WineStaging-4.18
 dll/win32/feclient            # Synced to Wine-10.0
