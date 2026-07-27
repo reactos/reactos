@@ -210,26 +210,27 @@ VOID TranslateEscapes(IN OUT LPTSTR lpString)
     }
 }
 
-/*
+/**
+ * @brief
  * Expands the path for the ReactOS Installer "reactos.exe".
- * See also base/system/userinit/userinit.c!ExpandInstallerPath()
- */
-BOOL
+ * See also base/system/userinit/livecd.c!ExpandInstallerPath()
+ **/
+static BOOL
 ExpandInstallerPath(
-    IN LPCTSTR lpInstallerName,
-    OUT LPTSTR lpInstallerPath,
-    IN SIZE_T PathSize)
+    _In_ PCTSTR pInstallerName,
+    _Out_writes_z_(PathSize) PTSTR pInstallerPath,
+    _In_ SIZE_T PathSize)
 {
     SYSTEM_INFO SystemInfo;
     SIZE_T cchInstallerNameLen;
     PTSTR ptr;
     DWORD dwAttribs;
 
-    cchInstallerNameLen = _tcslen(lpInstallerName);
+    cchInstallerNameLen = _tcslen(pInstallerName);
     if (PathSize < cchInstallerNameLen)
     {
         /* The buffer is not large enough to contain the installer file name */
-        *lpInstallerPath = 0;
+        *pInstallerPath = 0;
         return FALSE;
     }
 
@@ -240,51 +241,51 @@ ExpandInstallerPath(
      */
     GetSystemInfo(&SystemInfo);
 
-    *lpInstallerPath = 0;
-    GetModuleFileName(NULL, lpInstallerPath, PathSize - cchInstallerNameLen - 1);
-    ptr = _tcschr(lpInstallerPath, _T('\\'));
+    *pInstallerPath = 0;
+    GetModuleFileName(NULL, pInstallerPath, PathSize - cchInstallerNameLen - 1);
+    ptr = _tcschr(pInstallerPath, _T('\\'));
     if (ptr)
         *++ptr = 0;
     else
-        *lpInstallerPath = 0;
+        *pInstallerPath = 0;
 
     /* Append the corresponding CPU architecture */
     switch (SystemInfo.wProcessorArchitecture)
     {
         case PROCESSOR_ARCHITECTURE_INTEL:
-            StringCchCat(lpInstallerPath, PathSize, TEXT("I386"));
+            StringCchCat(pInstallerPath, PathSize, TEXT("I386"));
             break;
 
         case PROCESSOR_ARCHITECTURE_MIPS:
-            StringCchCat(lpInstallerPath, PathSize, TEXT("MIPS"));
+            StringCchCat(pInstallerPath, PathSize, TEXT("MIPS"));
             break;
 
         case PROCESSOR_ARCHITECTURE_ALPHA:
-            StringCchCat(lpInstallerPath, PathSize, TEXT("ALPHA"));
+            StringCchCat(pInstallerPath, PathSize, TEXT("ALPHA"));
             break;
 
         case PROCESSOR_ARCHITECTURE_PPC:
-            StringCchCat(lpInstallerPath, PathSize, TEXT("PPC"));
+            StringCchCat(pInstallerPath, PathSize, TEXT("PPC"));
             break;
 
         case PROCESSOR_ARCHITECTURE_SHX:
-            StringCchCat(lpInstallerPath, PathSize, TEXT("SHX"));
+            StringCchCat(pInstallerPath, PathSize, TEXT("SHX"));
             break;
 
         case PROCESSOR_ARCHITECTURE_ARM:
-            StringCchCat(lpInstallerPath, PathSize, TEXT("ARM"));
+            StringCchCat(pInstallerPath, PathSize, TEXT("ARM"));
             break;
 
         case PROCESSOR_ARCHITECTURE_IA64:
-            StringCchCat(lpInstallerPath, PathSize, TEXT("IA64"));
+            StringCchCat(pInstallerPath, PathSize, TEXT("IA64"));
             break;
 
         case PROCESSOR_ARCHITECTURE_ALPHA64:
-            StringCchCat(lpInstallerPath, PathSize, TEXT("ALPHA64"));
+            StringCchCat(pInstallerPath, PathSize, TEXT("ALPHA64"));
             break;
 
         case PROCESSOR_ARCHITECTURE_AMD64:
-            StringCchCat(lpInstallerPath, PathSize, TEXT("AMD64"));
+            StringCchCat(pInstallerPath, PathSize, TEXT("AMD64"));
             break;
 
         // case PROCESSOR_ARCHITECTURE_MSIL: /* .NET CPU-independent code */
@@ -295,10 +296,10 @@ ExpandInstallerPath(
     }
 
     if (SystemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_UNKNOWN)
-        StringCchCat(lpInstallerPath, PathSize, TEXT("\\"));
-    StringCchCat(lpInstallerPath, PathSize, lpInstallerName);
+        StringCchCat(pInstallerPath, PathSize, TEXT("\\"));
+    StringCchCat(pInstallerPath, PathSize, pInstallerName);
 
-    dwAttribs = GetFileAttributes(lpInstallerPath);
+    dwAttribs = GetFileAttributes(pInstallerPath);
     if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
         !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
     {
@@ -310,12 +311,12 @@ ExpandInstallerPath(
      * We failed. Try to find the installer from either the current
      * ReactOS installation directory, or from our current directory.
      */
-    *lpInstallerPath = 0;
-    if (GetWindowsDirectory(lpInstallerPath, PathSize - cchInstallerNameLen - 1))
-        StringCchCat(lpInstallerPath, PathSize, TEXT("\\"));
-    StringCchCat(lpInstallerPath, PathSize, lpInstallerName);
+    *pInstallerPath = 0;
+    if (GetWindowsDirectory(pInstallerPath, PathSize - cchInstallerNameLen - 1))
+        StringCchCat(pInstallerPath, PathSize, TEXT("\\"));
+    StringCchCat(pInstallerPath, PathSize, pInstallerName);
 
-    dwAttribs = GetFileAttributes(lpInstallerPath);
+    dwAttribs = GetFileAttributes(pInstallerPath);
     if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
         !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
     {
@@ -324,7 +325,7 @@ ExpandInstallerPath(
     }
 
     /* Installer not found */
-    *lpInstallerPath = 0;
+    *pInstallerPath = 0;
     return FALSE;
 }
 
