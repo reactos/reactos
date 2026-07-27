@@ -77,7 +77,7 @@ ExpandInstallerPath(
     IN SIZE_T PathSize);
 
 BOOL
-IsLiveCD(VOID);
+IsMiniNT(VOID);
 
 VOID
 RunLiveCD(

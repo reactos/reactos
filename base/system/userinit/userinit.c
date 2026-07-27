@@ -677,7 +677,7 @@ wWinMain(IN HINSTANCE hInst,
 
     hInstance = hInst;
 
-    bIsLiveCD = IsLiveCD();
+    bIsLiveCD = IsMiniNT();
 
 Restart:
     SetUserSettings();
