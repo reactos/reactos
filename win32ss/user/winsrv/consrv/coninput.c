@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "include/vt.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -561,6 +562,47 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
 
         if (NT_SUCCESS(Status))
         {
+            /* Translate input records to VT sequences if virtual terminal input is enabled */
+            {
+                PINPUT_RECORD TranslatedRecords;
+                ULONG TranslatedCount;
+                BOOLEAN AllocatedBuffer;
+                NTSTATUS VtStatus;
+
+                VtStatus = ConDrvVtTranslateInput(InputBuffer->Header.Console,
+                                                   InputRecord,
+                                                   NumEventsRead,
+                                                   &TranslatedRecords,
+                                                   &TranslatedCount,
+                                                   &AllocatedBuffer);
+                if (NT_SUCCESS(VtStatus) && AllocatedBuffer)
+                {
+                    ULONG CopyCount = min(TranslatedCount, GetInputRequest->NumRecords);
+                    RtlCopyMemory(InputRecord, TranslatedRecords, CopyCount * sizeof(INPUT_RECORD));
+
+                    /*
+                     * If VT translation expanded input records beyond the client
+                     * buffer capacity, re-enqueue the overflow at the front of
+                     * the input queue so it is returned on the next read.
+                     * Only do this when actually consuming events (not peeking).
+                     */
+                    if (TranslatedCount > CopyCount &&
+                        !(GetInputRequest->Flags & CONSOLE_READ_NOREMOVE))
+                    {
+                        ConDrvWriteConsoleInput(InputBuffer->Header.Console,
+                                               &InputBuffer->Header.Console->InputBuffer,
+                                               FALSE, /* Prepend to front */
+                                               &TranslatedRecords[CopyCount],
+                                               TranslatedCount - CopyCount,
+                                               NULL);
+                    }
+
+                    ConsoleFreeHeap(TranslatedRecords);
+                    NumEventsRead = CopyCount;
+                    GetInputRequest->NumRecords = CopyCount;
+                }
+            }
+
             /* Now translate everything to ANSI */
             if (!GetInputRequest->Unicode)
             {

@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <consrv.h>
+#include "../include/vt.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -336,6 +337,7 @@ ConDrvSetConsoleCursorPosition(IN PCONSOLE Console,
     OldCursorX = Buffer->CursorPosition.X;
     OldCursorY = Buffer->CursorPosition.Y;
     Buffer->CursorPosition = *Position;
+    Buffer->VtState.PrivateModes &= ~VT_PRIVMODE_DELAYED_EOL_WRAP;
 
     if ( ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer) &&
          (!TermSetScreenInfo(Console, (PCONSOLE_SCREEN_BUFFER)Buffer, OldCursorX, OldCursorY)) )

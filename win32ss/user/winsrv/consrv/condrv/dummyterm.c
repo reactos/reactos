@@ -140,6 +140,47 @@ DummyShowMouseCursor(IN OUT PTERMINAL This,
     return 0;
 }
 
+static BOOL NTAPI
+DummySetTitle(IN OUT PTERMINAL This,
+              IN PCWSTR Title,
+              IN ULONG Length)
+{
+    return TRUE;
+}
+
+static BOOL NTAPI
+DummyGetColorTable(IN OUT PTERMINAL This,
+                   OUT COLORREF* Colors,
+                   IN ULONG Count)
+{
+    return FALSE;
+}
+
+static BOOL NTAPI
+DummySetColorTable(IN OUT PTERMINAL This,
+                   IN const COLORREF* Colors,
+                   IN ULONG Count)
+{
+    return FALSE;
+}
+
+/* No frontend attached, so there is no window station to reach the clipboard through */
+static BOOL NTAPI
+DummyGetClipboardText(IN OUT PTERMINAL This,
+                      OUT PWCHAR* Text,
+                      OUT PULONG Length)
+{
+    return FALSE;
+}
+
+static BOOL NTAPI
+DummySetClipboardText(IN OUT PTERMINAL This,
+                      IN PCWSTR Text,
+                      IN ULONG Length)
+{
+    return FALSE;
+}
+
 static TERMINAL_VTBL DummyVtbl =
 {
     DummyInitTerminal,
@@ -158,6 +199,11 @@ static TERMINAL_VTBL DummyVtbl =
     DummySetPalette,
     DummySetCodePage,
     DummyShowMouseCursor,
+    DummySetTitle,
+    DummyGetColorTable,
+    DummySetColorTable,
+    DummyGetClipboardText,
+    DummySetClipboardText,
 };
 
 VOID

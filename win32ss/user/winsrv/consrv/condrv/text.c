@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <consrv.h>
+#include "../include/vt.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -88,6 +89,9 @@ TEXTMODE_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* The extended colour array stays NULL until a VT sequence needs it */
+    NewBuffer->CellRgb = NULL;
+
     NewBuffer->ScreenBufferSize = TextModeInfo->ScreenBufferSize;
     NewBuffer->OldScreenBufferSize = NewBuffer->ScreenBufferSize;
 
@@ -116,6 +120,8 @@ TEXTMODE_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
     }
     NewBuffer->CursorPosition.X = NewBuffer->CursorPosition.Y = 0;
 
+    ConDrvVtInitializeBuffer(NewBuffer);
+
     NewBuffer->Mode = ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
 
     *Buffer = (PCONSOLE_SCREEN_BUFFER)NewBuffer;
@@ -134,6 +140,9 @@ TEXTMODE_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
     Buffer->Header.Type = SCREEN_BUFFER;
 
     ConsoleFreeHeap(Buff->Buffer);
+    if (Buff->CellRgb) ConsoleFreeHeap(Buff->CellRgb);
+    if (Buff->VtState.HyperlinkUri.Buffer)
+        ConsoleFreeHeap(Buff->VtState.HyperlinkUri.Buffer);
 
     CONSOLE_SCREEN_BUFFER_Destroy(Buffer);
 }
@@ -142,9 +151,27 @@ TEXTMODE_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
 PCHAR_INFO
 ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y)
 {
-    ASSERT(X < Buff->ScreenBufferSize.X);
-    ASSERT(Y < Buff->ScreenBufferSize.Y);
-    return &Buff->Buffer[((Y + Buff->VirtualY) % Buff->ScreenBufferSize.Y) * Buff->ScreenBufferSize.X + X];
+    /* The addressing formula and its bounds checks live in ConioCoordToIndex,
+     * so the character plane and the colour planes cannot drift apart */
+    return &Buff->Buffer[ConioCoordToIndex(Buff, X, Y)];
+}
+
+BOOLEAN
+ConioEnsureCellColors(PTEXTMODE_SCREEN_BUFFER Buff)
+{
+    SIZE_T Size;
+
+    if (Buff->CellRgb) return TRUE;
+
+    Size = (SIZE_T)Buff->ScreenBufferSize.X * Buff->ScreenBufferSize.Y * sizeof(CELL_RGB);
+    if (Size == 0) return FALSE;
+
+    Buff->CellRgb = ConsoleAllocHeap(0, Size);
+    if (!Buff->CellRgb) return FALSE;
+
+    /* CLR_INVALID is all-ones: every cell starts with no extended colour */
+    RtlFillMemory(Buff->CellRgb, Size, 0xFF);
+    return TRUE;
 }
 
 /*static*/ VOID
@@ -159,6 +186,7 @@ ClearLineBuffer(PTEXTMODE_SCREEN_BUFFER Buff)
         Ptr->Char.UnicodeChar = L' ';
         Ptr->Attributes = Buff->ScreenDefaultAttrib;
     }
+    ConioFillCellColors(Buff, 0, Buff->CursorPosition.Y, Buff->ScreenBufferSize.X, CLR_INVALID, CLR_INVALID);
 }
 
 static VOID
@@ -276,12 +304,14 @@ ConioCopyRegion(
         for (j = 0; j < Width; ++j, SX += XDelta, DX += XDelta)
         {
             *PtrDst = *PtrSrc;
+            ConioSetCellColors(ScreenBuffer, DX, DY, ConioGetCellFgColor(ScreenBuffer, SX, SY), ConioGetCellBgColor(ScreenBuffer, SX, SY));
             PtrSrc += XDelta;
             PtrDst += XDelta;
         }
 #else
         /* RtlMoveMemory() takes into account for the direction of the copy */
         RtlMoveMemory(PtrDst, PtrSrc, Width * sizeof(CHAR_INFO));
+        ConioMoveCellColors(ScreenBuffer, DstOrigin->X, DY, SrcRegion->Left, SY, Width);
 #endif
     }
 }
@@ -325,6 +355,8 @@ ConioFillRegion(
     /* Loop through the destination region */
     for (Y = Region->Top; Y <= Region->Bottom; ++Y)
     {
+        SHORT RunStart = -1;
+
         Ptr = ConioCoordToPointer(ScreenBuffer, Region->Left, Y);
         for (X = Region->Left; X <= Region->Right; ++X)
         {
@@ -337,10 +369,20 @@ ConioFillRegion(
                 /* We are outside the excluded region, fill the destination */
                 *Ptr = FillChar;
                 // Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+                if (RunStart < 0) RunStart = X;
+            }
+            else if (RunStart >= 0)
+            {
+                /* The excluded region interrupts the run: flush the colours so far */
+                ConioFillCellColors(ScreenBuffer, RunStart, Y, X - RunStart, CLR_INVALID, CLR_INVALID);
+                RunStart = -1;
             }
 
             ++Ptr;
         }
+
+        if (RunStart >= 0)
+            ConioFillCellColors(ScreenBuffer, RunStart, Y, Region->Right + 1 - RunStart, CLR_INVALID, CLR_INVALID);
     }
 }
 
@@ -366,6 +408,8 @@ ConioResizeBuffer(PCONSOLE Console,
     WORD CurrentAttribute;
     USHORT CurrentY;
     PCHAR_INFO OldBuffer;
+    PCELL_RGB NewCellRgb;
+    PCELL_RGB OldCellRgb;
     DWORD i;
     DWORD diff;
 
@@ -397,9 +441,26 @@ ConioResizeBuffer(PCONSOLE Console,
     Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Size.X * Size.Y * sizeof(CHAR_INFO));
     if (!Buffer) return STATUS_NO_MEMORY;
 
+    /* Only carry the colour array across if this buffer actually has one */
+    NewCellRgb = NULL;
+    if (ScreenBuffer->CellRgb)
+    {
+        SIZE_T ColorSize = (SIZE_T)Size.X * Size.Y * sizeof(CELL_RGB);
+
+        NewCellRgb = ConsoleAllocHeap(0, ColorSize);
+        if (!NewCellRgb)
+        {
+            ConsoleFreeHeap(Buffer);
+            return STATUS_NO_MEMORY;
+        }
+
+        RtlFillMemory(NewCellRgb, ColorSize, 0xFF);
+    }
+
     DPRINT("Resizing (%d,%d) to (%d,%d)\n", ScreenBuffer->ScreenBufferSize.X, ScreenBuffer->ScreenBufferSize.Y, Size.X, Size.Y);
 
     OldBuffer = ScreenBuffer->Buffer;
+    OldCellRgb = ScreenBuffer->CellRgb;
 
     for (CurrentY = 0; CurrentY < ScreenBuffer->ScreenBufferSize.Y && CurrentY < Size.Y; CurrentY++)
     {
@@ -409,6 +470,8 @@ ConioResizeBuffer(PCONSOLE Console,
         {
             /* Reduce size */
             RtlCopyMemory(Buffer + Offset, Ptr, Size.X * sizeof(CHAR_INFO));
+            if (NewCellRgb)
+                RtlCopyMemory(NewCellRgb + Offset, ScreenBuffer->CellRgb + ConioCoordToIndex(ScreenBuffer, 0, CurrentY), Size.X * sizeof(CELL_RGB));
             Offset += Size.X;
 
             /* If we have cut a trailing full-width character in half, remove it completely */
@@ -418,12 +481,15 @@ ConioResizeBuffer(PCONSOLE Console,
                 Ptr->Char.UnicodeChar = L' ';
                 /* Keep all the other original attributes intact */
                 Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+                if (NewCellRgb) NewCellRgb[Offset - 1].Fg = NewCellRgb[Offset - 1].Bg = CLR_INVALID;
             }
         }
         else
         {
             /* Enlarge size */
             RtlCopyMemory(Buffer + Offset, Ptr, ScreenBuffer->ScreenBufferSize.X * sizeof(CHAR_INFO));
+            if (NewCellRgb)
+                RtlCopyMemory(NewCellRgb + Offset, ScreenBuffer->CellRgb + ConioCoordToIndex(ScreenBuffer, 0, CurrentY), ScreenBuffer->ScreenBufferSize.X * sizeof(CELL_RGB));
             Offset += ScreenBuffer->ScreenBufferSize.X;
 
             /* The attribute to be used is the one of the last cell of the current line */
@@ -460,9 +526,17 @@ ConioResizeBuffer(PCONSOLE Console,
     }
 
     (void)InterlockedExchangePointer((PVOID volatile*)&ScreenBuffer->Buffer, Buffer);
-    ConsoleFreeHeap(OldBuffer);
+    (void)InterlockedExchangePointer((PVOID volatile*)&ScreenBuffer->CellRgb, NewCellRgb);
+    if (OldBuffer) ConsoleFreeHeap(OldBuffer);
+    if (OldCellRgb) ConsoleFreeHeap(OldCellRgb);
     ScreenBuffer->ScreenBufferSize = ScreenBuffer->OldScreenBufferSize = Size;
     ScreenBuffer->VirtualY = 0;
+
+    /* Keep the VT scrolling margins inside the resized buffer (Size.Y is non-zero here) */
+    if (ScreenBuffer->VtState.ScrollTop < 0 || ScreenBuffer->VtState.ScrollTop >= Size.Y)
+        ScreenBuffer->VtState.ScrollTop = 0;
+    if (ScreenBuffer->VtState.ScrollBottom < ScreenBuffer->VtState.ScrollTop || ScreenBuffer->VtState.ScrollBottom >= Size.Y)
+        ScreenBuffer->VtState.ScrollBottom = Size.Y - 1;
 
     /* Ensure the cursor and the view are within the buffer */
     ScreenBuffer->CursorPosition.X = min(ScreenBuffer->CursorPosition.X, Size.X - 1);
@@ -690,6 +764,7 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
             ++Ptr;
             ++CurCharInfo;
         }
+        ConioFillCellColors(Buffer, CapturedWriteRegion.Left, Y, ConioRectWidth(&CapturedWriteRegion), CLR_INVALID, CLR_INVALID);
     }
 
     TermDrawRegion(Console, &CapturedWriteRegion);
@@ -754,6 +829,7 @@ ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
             ++Ptr;
             ++CurCharInfo;
         }
+        ConioFillCellColors(Buffer, CapturedWriteRegion.Left, Y, ConioRectWidth(&CapturedWriteRegion), CLR_INVALID, CLR_INVALID);
     }
 
     return STATUS_SUCCESS;
@@ -786,6 +862,7 @@ ConDrvWriteConsole(IN PCONSOLE Console,
     if (Unicode)
     {
         Buffer = StringBuffer;
+        Length = NumCharsToWrite;
     }
     else
     {
@@ -812,15 +889,17 @@ ConDrvWriteConsole(IN PCONSOLE Console,
     {
         if (NT_SUCCESS(Status))
         {
-            Status = TermWriteStream(Console,
-                                     ScreenBuffer,
-                                     Buffer,
-                                     NumCharsToWrite,
-                                     TRUE);
-            if (NT_SUCCESS(Status))
-            {
-                Written = NumCharsToWrite;
-            }
+            if (ScreenBuffer->Mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+                Status = ConDrvVtWriteConsole(Console, ScreenBuffer, Buffer, Length, &Written, NULL);
+            else
+                Status = TermWriteStream(Console, ScreenBuffer, Buffer, Length, TRUE);
+
+            /*
+             * Report the count in the caller's units: it asked us to write
+             * NumCharsToWrite of its own characters, which may differ from the
+             * number of UNICODE characters we actually pushed.
+             */
+            if (NT_SUCCESS(Status)) Written = NumCharsToWrite;
         }
 
         if (!Unicode) ConsoleFreeHeap(Buffer);

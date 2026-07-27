@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <consrv.h>
+#include "../include/vt.h"
 #include "concfg/font.h"
 
 // #include "frontends/gui/guiterm.h"
@@ -18,6 +19,7 @@
 
 #define NDEBUG
 #include <debug.h>
+
 
 
 
@@ -477,8 +479,23 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
 ClearLineBuffer(PTEXTMODE_SCREEN_BUFFER Buff);
 
 static VOID
-ConioNextLine(PTEXTMODE_SCREEN_BUFFER Buff, PSMALL_RECT UpdateRect, PUINT ScrolledLines)
+ConioNextLine(PCONSRV_CONSOLE Console,
+              PTEXTMODE_SCREEN_BUFFER Buff,
+              PSMALL_RECT UpdateRect,
+              PUINT ScrolledLines)
 {
+    Buff->VtState.PrivateModes &= ~VT_PRIVMODE_DELAYED_EOL_WRAP;
+
+    if (ConioIsVtActive(Buff))
+    {
+        ConDrvVtAdvanceLine((PCONSOLE)Console, Buff);
+        UpdateRect->Left = 0;
+        UpdateRect->Right = Buff->ScreenBufferSize.X - 1;
+        UpdateRect->Top = min(UpdateRect->Top, Buff->CursorPosition.Y);
+        UpdateRect->Bottom = max(UpdateRect->Bottom, Buff->CursorPosition.Y);
+        return;
+    }
+
     /* If we hit bottom, slide the viewable screen */
     if (++Buff->CursorPosition.Y == Buff->ScreenBufferSize.Y)
     {
@@ -499,6 +516,41 @@ ConioNextLine(PTEXTMODE_SCREEN_BUFFER Buff, PSMALL_RECT UpdateRect, PUINT Scroll
     UpdateRect->Bottom = Buff->CursorPosition.Y;
 }
 
+/*
+ * The cursor has run past the last column: decide what that means.
+ *
+ * With DISABLE_NEWLINE_AUTO_RETURN the wrap is deferred - the cursor stays on
+ * the last column and the line only advances when the next printable character
+ * arrives (VT "delayed EOL wrap"). Without wrapping at all, the cursor snaps
+ * back to where this write started.
+ */
+static VOID
+ConioWrapAtEol(PCONSRV_CONSOLE Console,
+               PTEXTMODE_SCREEN_BUFFER Buff,
+               PSMALL_RECT UpdateRect,
+               PUINT ScrolledLines,
+               PSHORT CursorStartX)
+{
+    if (!(Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT))
+    {
+        /* The cursor wraps back to its starting position on the same line */
+        Buff->CursorPosition.X = *CursorStartX;
+        return;
+    }
+
+    if (Buff->Mode & DISABLE_NEWLINE_AUTO_RETURN)
+    {
+        Buff->CursorPosition.X = Buff->ScreenBufferSize.X - 1;
+        Buff->VtState.PrivateModes |= VT_PRIVMODE_DELAYED_EOL_WRAP;
+        return;
+    }
+
+    /* Wrapping mode: Go to next line */
+    Buff->CursorPosition.X = 0;
+    *CursorStartX = Buff->CursorPosition.X;
+    ConioNextLine(Console, Buff, UpdateRect, ScrolledLines);
+}
+
 static NTSTATUS
 ConioWriteConsole(PFRONTEND FrontEnd,
                   PTEXTMODE_SCREEN_BUFFER Buff,
@@ -513,12 +565,27 @@ ConioWriteConsole(PFRONTEND FrontEnd,
     SMALL_RECT UpdateRect;
     SHORT CursorStartX, CursorStartY;
     UINT ScrolledLines;
+    int CellWidth;
     BOOLEAN bFullwidth;
     BOOLEAN bCJK = Console->IsCJK;
+    BOOLEAN bVtActive = ConioIsVtActive(Buff);
+    COLORREF FgColorValue;
+    COLORREF BgColorValue;
 
     /* If nothing to write, bail out now */
     if (Length == 0)
         return STATUS_SUCCESS;
+
+    /*
+     * The current VT colour cannot change while we consume this buffer: the VT
+     * parser applies SGR between calls to us, never during one. Resolve it once.
+     */
+    FgColorValue = (bVtActive && Buff->VtState.UseRgbForeground) ? Buff->VtState.CurrentFgColor : CLR_INVALID;
+    BgColorValue = (bVtActive && Buff->VtState.UseRgbBackground) ? Buff->VtState.CurrentBgColor : CLR_INVALID;
+
+    /* Extended colours are only ever stored while VT is driving the buffer */
+    if (FgColorValue != CLR_INVALID || BgColorValue != CLR_INVALID)
+        ConioEnsureCellColors(Buff);
 
     CursorStartX = Buff->CursorPosition.X;
     CursorStartY = Buff->CursorPosition.Y;
@@ -530,6 +597,22 @@ ConioWriteConsole(PFRONTEND FrontEnd,
 
     for (i = 0; i < Length; i++)
     {
+        if (Buff->VtState.PrivateModes & VT_PRIVMODE_DELAYED_EOL_WRAP)
+        {
+            if (!(Buff->Mode & ENABLE_PROCESSED_OUTPUT) ||
+                (Buffer[i] != L'\r' && Buffer[i] != L'\n' &&
+                 Buffer[i] != L'\b' && Buffer[i] != L'\a'))
+            {
+                Buff->CursorPosition.X = 0;
+                CursorStartX = Buff->CursorPosition.X;
+                ConioNextLine(Console, Buff, &UpdateRect, &ScrolledLines);
+            }
+            else if (Buffer[i] != L'\a')
+            {
+                Buff->VtState.PrivateModes &= ~VT_PRIVMODE_DELAYED_EOL_WRAP;
+            }
+        }
+
         /*
          * If we are in processed mode, interpret special characters and
          * display them correctly. Otherwise, just put them into the buffer.
@@ -548,9 +631,17 @@ ConioWriteConsole(PFRONTEND FrontEnd,
             /* --- LF --- */
             else if (Buffer[i] == L'\n')
             {
-                Buff->CursorPosition.X = 0; // TODO: Make this behaviour optional!
-                CursorStartX = Buff->CursorPosition.X;
-                ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
+                Buff->VtState.PrivateModes &= ~VT_PRIVMODE_DELAYED_EOL_WRAP;
+                if (Buff->Mode & DISABLE_NEWLINE_AUTO_RETURN)
+                {
+                    CursorStartX = Buff->CursorPosition.X;
+                }
+                else
+                {
+                    Buff->CursorPosition.X = 0;
+                    CursorStartX = Buff->CursorPosition.X;
+                }
+                ConioNextLine(Console, Buff, &UpdateRect, &ScrolledLines);
                 continue;
             }
             /* --- BS --- */
@@ -612,6 +703,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                     if (Attrib)
                         Ptr->Attributes = Buff->ScreenDefaultAttrib;
                     Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+                    ConioSetCellColors(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y, CLR_INVALID, CLR_INVALID);
 
                     if (Buff->CursorPosition.X > 0)
                         Buff->CursorPosition.X--;
@@ -623,6 +715,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                 if (Attrib)
                     Ptr->Attributes = Buff->ScreenDefaultAttrib;
                 Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+                ConioSetCellColors(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y, CLR_INVALID, CLR_INVALID);
 
                 UpdateRect.Left  = min(min(UpdateRect.Left , Buff->CursorPosition.X), OldX);
                 UpdateRect.Right = max(max(UpdateRect.Right, Buff->CursorPosition.X), OldX);
@@ -657,6 +750,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                     if (Attrib)
                         Ptr->Attributes = Buff->ScreenDefaultAttrib;
                     Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+                    ConioSetCellColors(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y, CLR_INVALID, CLR_INVALID);
 
                     ++Ptr;
                     Buff->CursorPosition.X++;
@@ -670,24 +764,14 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                         if (Attrib)
                             Ptr->Attributes = Buff->ScreenDefaultAttrib;
                         Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+                        ConioSetCellColors(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y, CLR_INVALID, CLR_INVALID);
                     }
                 }
                 UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
 
                 if (Buff->CursorPosition.X >= Buff->ScreenBufferSize.X)
                 {
-                    if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
-                    {
-                        /* Wrapping mode: Go to next line */
-                        Buff->CursorPosition.X = 0;
-                        CursorStartX = Buff->CursorPosition.X;
-                        ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
-                    }
-                    else
-                    {
-                        /* The cursor wraps back to its starting position on the same line */
-                        Buff->CursorPosition.X = CursorStartX;
-                    }
+                    ConioWrapAtEol(Console, Buff, &UpdateRect, &ScrolledLines, &CursorStartX);
                 }
                 continue;
             }
@@ -698,11 +782,38 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                 continue;
             }
         }
+        /*
+         * Determine the display width. Everything below U+0080 occupies exactly
+         * one cell, so skip the (non-inlined, bisecting) helper for the case
+         * that dominates console output - this is what IS_FULL_WIDTH does too.
+         */
+        if ((USHORT)Buffer[i] < 0x0080)
+        {
+            CellWidth = 1;
+        }
+        else
+        {
+            CellWidth = mk_wcwidth_cjk(Buffer[i]);
+            if (CellWidth < 0)
+                CellWidth = 1;
+
+            /*
+             * Zero-width (combining) characters have no cell of their own.
+             * Dropping them is a terminal-emulation decision, so only do it
+             * while VT is driving this buffer; a plain WriteConsole keeps its
+             * old contract of storing whatever the client wrote.
+             */
+            if (CellWidth == 0)
+            {
+                if (bVtActive) continue;
+                CellWidth = 1;
+            }
+        }
+
         UpdateRect.Left  = min(UpdateRect.Left , Buff->CursorPosition.X);
         UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
 
-        /* For Chinese, Japanese and Korean */
-        bFullwidth = (bCJK && IS_FULL_WIDTH(Buffer[i]));
+        bFullwidth = (bCJK && CellWidth == 2);
 
         /* Check whether we can insert the full-width character */
         if (bFullwidth)
@@ -710,12 +821,18 @@ ConioWriteConsole(PFRONTEND FrontEnd,
             /* It spans two cells and should all fit on the current line */
             if (Buff->CursorPosition.X >= Buff->ScreenBufferSize.X - 1)
             {
+                /*
+                 * Deliberately not ConioWrapAtEol(): a delayed wrap would leave
+                 * the cursor on the last column, where a two-cell character
+                 * still does not fit, and the check below would drop it. A
+                 * full-width character at the right edge must wrap immediately.
+                 */
                 if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
                 {
                     /* Wrapping mode: Go to next line */
                     Buff->CursorPosition.X = 0;
                     CursorStartX = Buff->CursorPosition.X;
-                    ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
+                    ConioNextLine(Console, Buff, &UpdateRect, &ScrolledLines);
                 }
                 else
                 {
@@ -756,6 +873,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                 if (Attrib)
                     Ptr->Attributes = Buff->ScreenDefaultAttrib;
                 Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+                ConioSetCellColors(Buff, Buff->CursorPosition.X - 1, Buff->CursorPosition.Y, CLR_INVALID, CLR_INVALID);
             }
             Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
         }
@@ -771,6 +889,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                 Ptr->Attributes = Buff->ScreenDefaultAttrib;
             Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
             Ptr->Attributes |= COMMON_LVB_LEADING_BYTE;
+            ConioSetCellColors(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y, FgColorValue, BgColorValue);
 
             /* Set the trailing byte */
             Buff->CursorPosition.X++;
@@ -780,6 +899,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                 Ptr->Attributes = Buff->ScreenDefaultAttrib;
             Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
             Ptr->Attributes |= COMMON_LVB_TRAILING_BYTE;
+            ConioSetCellColors(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y, FgColorValue, BgColorValue);
 
             UpdateRect.Right++;
         }
@@ -789,6 +909,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
             if (Attrib)
                 Ptr->Attributes = Buff->ScreenDefaultAttrib;
             Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+            ConioSetCellColors(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y, FgColorValue, BgColorValue);
         }
 
         ++Ptr;
@@ -803,23 +924,13 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                 if (Attrib)
                     Ptr->Attributes = Buff->ScreenDefaultAttrib;
                 Ptr->Attributes &= ~COMMON_LVB_SBCSDBCS;
+                ConioSetCellColors(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y, CLR_INVALID, CLR_INVALID);
             }
         }
 
         if (Buff->CursorPosition.X >= Buff->ScreenBufferSize.X)
         {
-            if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
-            {
-                /* Wrapping mode: Go to next line */
-                Buff->CursorPosition.X = 0;
-                CursorStartX = Buff->CursorPosition.X;
-                ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
-            }
-            else
-            {
-                /* The cursor wraps back to its starting position on the same line */
-                Buff->CursorPosition.X = CursorStartX;
-            }
+            ConioWrapAtEol(Console, Buff, &UpdateRect, &ScrolledLines, &CursorStartX);
         }
     }
 
@@ -959,6 +1070,158 @@ ConSrvTermShowMouseCursor(IN OUT PTERMINAL This,
     return FrontEnd->Vtbl->ShowMouseCursor(FrontEnd, Show);
 }
 
+/*
+ * Console-level state the driver needs but does not own.
+ *
+ * The VT engine lives in condrv/ and only has a PCONSOLE, yet DECSET/OSC
+ * sequences legitimately change the window title, the palette and the
+ * clipboard - all of which belong to CONSRV_CONSOLE or to a frontend. These
+ * entries give it a PCONSOLE-typed way in, so condrv/ never casts to
+ * PCONSRV_CONSOLE nor calls USER32 itself.
+ */
+
+static BOOL NTAPI
+ConSrvTermSetTitle(IN OUT PTERMINAL This,
+                   IN PCWSTR Title,
+                   IN ULONG Length)
+{
+    PFRONTEND FrontEnd = This->Context;
+    PCONSRV_CONSOLE Console = FrontEnd->Console;
+    PWCHAR Buffer;
+
+    if (!Title) return FALSE;
+
+    /* Allocate first, so a failure leaves the existing title untouched */
+    Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Length + sizeof(WCHAR));
+    if (!Buffer) return FALSE;
+
+    RtlCopyMemory(Buffer, Title, Length);
+    Buffer[Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    /* Same ownership rules as SrvSetConsoleTitle */
+    ConsoleFreeUnicodeString(&Console->Title);
+    Console->Title.Buffer = Buffer;
+    Console->Title.Length = Length;
+    Console->Title.MaximumLength = Length + sizeof(WCHAR);
+
+    TermChangeTitle(Console);
+    return TRUE;
+}
+
+static BOOL NTAPI
+ConSrvTermGetColorTable(IN OUT PTERMINAL This,
+                        OUT COLORREF* Colors,
+                        IN ULONG Count)
+{
+    PFRONTEND FrontEnd = This->Context;
+    PCONSRV_CONSOLE Console = FrontEnd->Console;
+
+    if (!Colors || Count == 0 || Count > ARRAYSIZE(Console->Colors))
+        return FALSE;
+
+    RtlCopyMemory(Colors, Console->Colors, Count * sizeof(COLORREF));
+    return TRUE;
+}
+
+static BOOL NTAPI
+ConSrvTermSetColorTable(IN OUT PTERMINAL This,
+                        IN const COLORREF* Colors,
+                        IN ULONG Count)
+{
+    PFRONTEND FrontEnd = This->Context;
+    PCONSRV_CONSOLE Console = FrontEnd->Console;
+
+    if (!Colors || Count == 0 || Count > ARRAYSIZE(Console->Colors))
+        return FALSE;
+
+    RtlCopyMemory(Console->Colors, Colors, Count * sizeof(COLORREF));
+    return TRUE;
+}
+
+static BOOL NTAPI
+ConSrvTermGetClipboardText(IN OUT PTERMINAL This,
+                           OUT PWCHAR* Text,
+                           OUT PULONG Length)
+{
+    PFRONTEND FrontEnd = This->Context;
+    PCONSRV_CONSOLE Console = FrontEnd->Console;
+    HANDLE hData;
+    PCWSTR ClipText;
+    SIZE_T Chars;
+    PWCHAR Copy = NULL;
+
+    *Text = NULL;
+    *Length = 0;
+
+    /*
+     * Use the console window as the clipboard owner: the CSR API thread has no
+     * window of its own and no guaranteed window-station association.
+     */
+    if (!OpenClipboard(TermGetConsoleWindowHandle(Console)))
+        return FALSE;
+
+    hData = GetClipboardData(CF_UNICODETEXT);
+    if (hData)
+    {
+        ClipText = GlobalLock(hData);
+        if (ClipText)
+        {
+            Chars = wcslen(ClipText);
+            Copy = ConsoleAllocHeap(0, (Chars + 1) * sizeof(WCHAR));
+            if (Copy)
+            {
+                RtlCopyMemory(Copy, ClipText, Chars * sizeof(WCHAR));
+                Copy[Chars] = UNICODE_NULL;
+                *Text = Copy;
+                *Length = (ULONG)Chars;
+            }
+            GlobalUnlock(hData);
+        }
+    }
+
+    CloseClipboard();
+    return (Copy != NULL);
+}
+
+static BOOL NTAPI
+ConSrvTermSetClipboardText(IN OUT PTERMINAL This,
+                           IN PCWSTR Text,
+                           IN ULONG Length)
+{
+    PFRONTEND FrontEnd = This->Context;
+    PCONSRV_CONSOLE Console = FrontEnd->Console;
+    HANDLE hData;
+    PWCHAR Dest;
+    BOOL Success = FALSE;
+
+    if (!Text) return FALSE;
+
+    if (!OpenClipboard(TermGetConsoleWindowHandle(Console)))
+        return FALSE;
+
+    hData = GlobalAlloc(GMEM_MOVEABLE, (Length + 1) * sizeof(WCHAR));
+    if (hData)
+    {
+        Dest = GlobalLock(hData);
+        if (Dest)
+        {
+            RtlCopyMemory(Dest, Text, Length * sizeof(WCHAR));
+            Dest[Length] = UNICODE_NULL;
+            GlobalUnlock(hData);
+
+            EmptyClipboard();
+            if (SetClipboardData(CF_UNICODETEXT, hData))
+                Success = TRUE;
+        }
+
+        /* The clipboard owns hData once SetClipboardData succeeds */
+        if (!Success) GlobalFree(hData);
+    }
+
+    CloseClipboard();
+    return Success;
+}
+
 static TERMINAL_VTBL ConSrvTermVtbl =
 {
     ConSrvTermInitTerminal,
@@ -977,6 +1240,11 @@ static TERMINAL_VTBL ConSrvTermVtbl =
     ConSrvTermSetPalette,
     ConSrvTermSetCodePage,
     ConSrvTermShowMouseCursor,
+    ConSrvTermSetTitle,
+    ConSrvTermGetColorTable,
+    ConSrvTermSetColorTable,
+    ConSrvTermGetClipboardText,
+    ConSrvTermSetClipboardText,
 };
 
 #if 0

@@ -26,6 +26,7 @@ list(APPEND CONSRV_SOURCE
     consrv/condrv/dummyterm.c
     consrv/condrv/graphics.c
     consrv/condrv/text.c
+    consrv/condrv/vt.c
     consrv/frontends/input.c
     consrv/frontends/terminal.c
     consrv/frontends/wcwidth.c

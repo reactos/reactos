@@ -39,6 +39,16 @@
     (Console)->TermIFace.Vtbl->SetCodePage(&(Console)->TermIFace, (CodePage))
 #define TermShowMouseCursor(Console, Show) \
     (Console)->TermIFace.Vtbl->ShowMouseCursor(&(Console)->TermIFace, (Show))
+#define TermSetTitle(Console, Title, Length) \
+    (Console)->TermIFace.Vtbl->SetTitle(&(Console)->TermIFace, (Title), (Length))
+#define TermGetColorTable(Console, Colors, Count) \
+    (Console)->TermIFace.Vtbl->GetColorTable(&(Console)->TermIFace, (Colors), (Count))
+#define TermSetColorTable(Console, Colors, Count) \
+    (Console)->TermIFace.Vtbl->SetColorTable(&(Console)->TermIFace, (Colors), (Count))
+#define TermGetClipboardText(Console, Text, Length) \
+    (Console)->TermIFace.Vtbl->GetClipboardText(&(Console)->TermIFace, (Text), (Length))
+#define TermSetClipboardText(Console, Text, Length) \
+    (Console)->TermIFace.Vtbl->SetClipboardText(&(Console)->TermIFace, (Text), (Length))
 
 
 /* Macros used to call functions in the FRONTEND_VTBL virtual table */

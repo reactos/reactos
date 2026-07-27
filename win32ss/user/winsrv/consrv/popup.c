@@ -8,7 +8,7 @@
  * NOTE:            Strongly inspired by the DrawBox function
  *                  from base/setup/usetup/interface/usetup.c, written by:
  *                  Eric Kohl (revision 3753)
- *                  Hervé Poussineau (revision 24718)
+ *                  Hervï¿½ Poussineau (revision 24718)
  *                  and *UiDisplayMenu from FreeLdr.
  */
 
@@ -177,6 +177,36 @@ DrawBox(PTEXTMODE_SCREEN_BUFFER Buffer,
                             &Written);
 }
 
+/*
+ * Copy the extended cell colours of the area the popup covers between the
+ * screen buffer and the popup's saved copy: Restore == FALSE saves the buffer
+ * into the popup, Restore == TRUE puts them back. A row of the covered
+ * rectangle is contiguous in both, so this is one memcpy per row.
+ */
+static VOID
+PopupCopyCellColors(IN PPOPUP_WINDOW Popup, IN BOOLEAN Restore)
+{
+    PTEXTMODE_SCREEN_BUFFER Buffer = Popup->ScreenBuffer;
+    SIZE_T RowBytes = (SIZE_T)Popup->Size.X * sizeof(CELL_RGB);
+    SIZE_T Index = 0;
+    SHORT LocalY;
+
+    if (!Popup->OldCellRgb) return;
+
+    for (LocalY = 0; LocalY < Popup->Size.Y; ++LocalY, Index += Popup->Size.X)
+    {
+        PCELL_RGB Row = ConioCellRgbRow(Buffer, Popup->Origin.Y + LocalY);
+
+        if (!Row) return;
+        Row += Popup->Origin.X;
+
+        if (Restore)
+            RtlCopyMemory(Row, &Popup->OldCellRgb[Index], RowBytes);
+        else
+            RtlCopyMemory(&Popup->OldCellRgb[Index], Row, RowBytes);
+    }
+}
+
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -192,6 +222,7 @@ CreatePopupWindow(
     PTEXTMODE_SCREEN_BUFFER Buffer;
     PPOPUP_WINDOW Popup;
     SMALL_RECT Region;
+    SIZE_T CellCount;
 
     ASSERT((PCONSOLE)Console == ScreenBuffer->Header.Console);
 
@@ -209,16 +240,30 @@ CreatePopupWindow(
     Popup->Origin.Y = yTop;
     Popup->Size.X = Width;
     Popup->Size.Y = Height;
+    Popup->OldCellRgb = NULL;
+    CellCount = (SIZE_T)Popup->Size.X * Popup->Size.Y;
 
     /* Save old contents */
     Popup->OldContents = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
-                                          Popup->Size.X * Popup->Size.Y *
-                                            sizeof(*Popup->OldContents));
+                                          CellCount * sizeof(*Popup->OldContents));
     if (Popup->OldContents == NULL)
     {
         ConsoleFreeHeap(Popup);
         return NULL;
     }
+
+    /* Only mirror the extended colours if the screen buffer has any */
+    if (Buffer->CellRgb)
+    {
+        Popup->OldCellRgb = ConsoleAllocHeap(0, CellCount * sizeof(CELL_RGB));
+        if (!Popup->OldCellRgb)
+        {
+            ConsoleFreeHeap(Popup->OldContents);
+            ConsoleFreeHeap(Popup);
+            return NULL;
+        }
+    }
+
     Region.Left   = Popup->Origin.X;
     Region.Top    = Popup->Origin.Y;
     Region.Right  = Popup->Origin.X + Popup->Size.X - 1;
@@ -228,6 +273,8 @@ CreatePopupWindow(
                             TRUE,
                             Popup->OldContents,
                             &Region);
+
+    PopupCopyCellColors(Popup, FALSE);
 
     /* Draw it */
     DrawBox(Buffer,
@@ -262,7 +309,10 @@ DestroyPopupWindow(
                              Popup->OldContents,
                              &Region);
 
+    PopupCopyCellColors(Popup, TRUE);
+
     /* Free memory */
+    if (Popup->OldCellRgb) ConsoleFreeHeap(Popup->OldCellRgb);
     ConsoleFreeHeap(Popup->OldContents);
     ConsoleFreeHeap(Popup);
 }

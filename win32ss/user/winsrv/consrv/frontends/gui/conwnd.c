@@ -645,12 +645,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     GuiData->IsWindowActive = FALSE;
 
     /* Initialize the fonts */
-    if (!InitFonts(GuiData,
-                   GuiData->GuiInfo.FaceName,
-                   GuiData->GuiInfo.FontWeight,
-                   GuiData->GuiInfo.FontFamily,
-                   GuiData->GuiInfo.FontSize,
-                   0, FALSE))
+    if (!InitFontsFromSettings(GuiData, 0, FALSE))
     {
         /* Reset only the output code page if we don't have a suitable
          * font for it, possibly falling back to "United States (OEM)". */
@@ -666,12 +661,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 
         /* We will use a fallback font if we cannot find
          * anything for this replacement code page. */
-        if (!InitFonts(GuiData,
-                       GuiData->GuiInfo.FaceName,
-                       GuiData->GuiInfo.FontWeight,
-                       GuiData->GuiInfo.FontFamily,
-                       GuiData->GuiInfo.FontSize,
-                       0, TRUE))
+        if (!InitFontsFromSettings(GuiData, 0, TRUE))
         {
             DPRINT1("Failed to initialize font '%S' for code page %d\n",
                     GuiData->GuiInfo.FaceName, Console->OutputCodePage);
