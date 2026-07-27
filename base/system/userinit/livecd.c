@@ -11,6 +11,8 @@ HWND hList;
 HWND hLocaleList;
 BOOL bSpain = FALSE;
 
+WCHAR Installer[MAX_PATH];
+
 typedef struct _LIVECD_UNATTEND
 {
     BOOL bEnabled;
@@ -200,7 +202,6 @@ CreateLanguagesList(HWND hwnd, PSTATE pState)
                  (LPARAM)langSel);
 }
 
-
 static
 BOOL
 GetLayoutName(
@@ -267,7 +268,6 @@ GetLayoutName(
     return FALSE;
 }
 
-
 static
 VOID
 SetKeyboardLayout(
@@ -291,7 +291,6 @@ SetKeyboardLayout(
     hKl = LoadKeyboardLayoutW(szLayoutId, KLF_ACTIVATE | KLF_REPLACELANG | KLF_SETFORPROCESS);
     SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDCHANGE);
 }
-
 
 static
 VOID
@@ -335,7 +334,6 @@ SelectKeyboardForLanguage(
 
     TRACE("No match found!\n");
 }
-
 
 static
 VOID
@@ -394,7 +392,6 @@ CreateKeyboardLayoutList(
 
     RegCloseKey(hKey);
 }
-
 
 static
 VOID
@@ -542,7 +539,6 @@ CenterWindow(HWND hWnd)
                  0,
                  SWP_NOSIZE);
 }
-
 
 static
 VOID
@@ -718,7 +714,6 @@ LocaleDlgProc(
     return FALSE;
 }
 
-
 static
 INT_PTR
 CALLBACK
@@ -737,8 +732,6 @@ StartDlgProc(
     {
         case WM_INITDIALOG:
         {
-            WCHAR Installer[MAX_PATH];
-
             /* Save pointer to the state */
             pState = (PSTATE)lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pState);
@@ -746,10 +739,9 @@ StartDlgProc(
             /* Center the dialog window */
             CenterWindow(hwndDlg);
 
-            /* Check whether we can find the ReactOS installer. If not,
-             * disable the "Install" button and directly start the LiveCD. */
-            *Installer = UNICODE_NULL;
-            if (!ExpandInstallerPath(L"reactos.exe", Installer, ARRAYSIZE(Installer)))
+            /* If the ReactOS Installer could not be located, disable
+             * the "Install" button and directly start the LiveCD. */
+            if (!*Installer)
                 EnableWindow(GetDlgItem(hwndDlg, IDC_INSTALL), FALSE);
 
             if (pState->Unattend->bEnabled || (*Installer == UNICODE_NULL))
@@ -856,6 +848,132 @@ VOID ParseUnattend(LPCWSTR UnattendInf, LIVECD_UNATTEND* pUnattend)
     }
 }
 
+
+/**
+ * @brief
+ * Expands the path for the ReactOS Installer "reactos.exe".
+ * See also base/setup/welcome/welcome.c!ExpandInstallerPath()
+ **/
+static BOOL
+ExpandInstallerPath(
+    _In_ PCWSTR pInstallerName,
+    _Out_writes_z_(PathSize) PWSTR pInstallerPath,
+    _In_ SIZE_T PathSize)
+{
+    SYSTEM_INFO SystemInfo;
+    SIZE_T cchInstallerNameLen;
+    PWSTR ptr;
+    DWORD dwAttribs;
+
+    cchInstallerNameLen = wcslen(pInstallerName);
+    if (PathSize < cchInstallerNameLen)
+    {
+        /* The buffer is not large enough to contain the installer file name */
+        *pInstallerPath = UNICODE_NULL;
+        return FALSE;
+    }
+
+    /*
+     * First, try to find the installer using the default drive, under
+     * the directory whose name corresponds to the currently-running
+     * CPU architecture.
+     */
+    GetSystemInfo(&SystemInfo);
+
+    *pInstallerPath = UNICODE_NULL;
+    /* Alternatively one can use SharedUserData->NtSystemRoot */
+    GetSystemWindowsDirectoryW(pInstallerPath, PathSize - cchInstallerNameLen - 1);
+    ptr = wcschr(pInstallerPath, L'\\');
+    if (ptr)
+        *++ptr = UNICODE_NULL;
+    else
+        *pInstallerPath = UNICODE_NULL;
+
+    /* Append the corresponding CPU architecture */
+    switch (SystemInfo.wProcessorArchitecture)
+    {
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            StringCchCatW(pInstallerPath, PathSize, L"I386");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_MIPS:
+            StringCchCatW(pInstallerPath, PathSize, L"MIPS");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA:
+            StringCchCatW(pInstallerPath, PathSize, L"ALPHA");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_PPC:
+            StringCchCatW(pInstallerPath, PathSize, L"PPC");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_SHX:
+            StringCchCatW(pInstallerPath, PathSize, L"SHX");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ARM:
+            StringCchCatW(pInstallerPath, PathSize, L"ARM");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_IA64:
+            StringCchCatW(pInstallerPath, PathSize, L"IA64");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA64:
+            StringCchCatW(pInstallerPath, PathSize, L"ALPHA64");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            StringCchCatW(pInstallerPath, PathSize, L"AMD64");
+            break;
+
+        // case PROCESSOR_ARCHITECTURE_MSIL: /* .NET CPU-independent code */
+        case PROCESSOR_ARCHITECTURE_UNKNOWN:
+        default:
+            WARN("Unknown processor architecture %lu\n", SystemInfo.wProcessorArchitecture);
+            SystemInfo.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_UNKNOWN;
+            break;
+    }
+
+    if (SystemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_UNKNOWN)
+        StringCchCatW(pInstallerPath, PathSize, L"\\");
+    StringCchCatW(pInstallerPath, PathSize, pInstallerName);
+
+    dwAttribs = GetFileAttributesW(pInstallerPath);
+    if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
+        !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        /* We have found the installer */
+        return TRUE;
+    }
+
+    WARN("Couldn't find the installer '%s', trying alternative.\n", debugstr_w(pInstallerPath));
+
+    /*
+     * We failed. Try to find the installer from either the current
+     * ReactOS installation directory, or from our current directory.
+     */
+    *pInstallerPath = UNICODE_NULL;
+    /* Alternatively one can use SharedUserData->NtSystemRoot */
+    if (GetSystemWindowsDirectoryW(pInstallerPath, PathSize - cchInstallerNameLen - 1))
+        StringCchCatW(pInstallerPath, PathSize, L"\\");
+    StringCchCatW(pInstallerPath, PathSize, pInstallerName);
+
+    dwAttribs = GetFileAttributesW(pInstallerPath);
+    if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
+        !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        /* We have found the installer */
+        return TRUE;
+    }
+
+    /* Installer not found */
+    ERR("Couldn't find the installer '%s'\n", debugstr_w(pInstallerPath));
+    *pInstallerPath = UNICODE_NULL;
+    return FALSE;
+}
+
 VOID
 RunLiveCD(
     PSTATE pState)
@@ -863,12 +981,20 @@ RunLiveCD(
     LIVECD_UNATTEND Unattend = {0};
     WCHAR UnattendInf[MAX_PATH];
 
-    InitLogo(&pState->ImageInfo, NULL);
+    /* Try to locate the ReactOS Installer */
+    if (!ExpandInstallerPath(L"reactos.exe", Installer, _countof(Installer)))
+        *Installer = UNICODE_NULL;
+    if (*Installer)
+        TRACE("ReactOS Installer: '%S'\n", Installer);
+    else
+        WARN("Could not find the ReactOS Installer\n");
 
     GetWindowsDirectoryW(UnattendInf, _countof(UnattendInf));
     wcscat(UnattendInf, L"\\unattend.inf");
     ParseUnattend(UnattendInf, &Unattend);
     pState->Unattend = &Unattend;
+
+    InitLogo(&pState->ImageInfo, NULL);
 
     while (pState->NextPage != DONE)
     {

@@ -64,18 +64,6 @@ typedef struct
 
 extern HINSTANCE hInstance;
 
-LONG
-ReadRegSzKey(
-    IN HKEY hKey,
-    IN LPCWSTR pszKey,
-    OUT LPWSTR *pValue);
-
-BOOL
-ExpandInstallerPath(
-    IN LPCWSTR lpInstallerName,
-    OUT LPWSTR lpInstallerPath,
-    IN SIZE_T PathSize);
-
 BOOL
 IsMiniNT(VOID);
 

@@ -86,12 +86,11 @@ IsConsoleShell(VOID)
     LONG rc;
     BOOL ret = FALSE;
 
-    rc = RegOpenKeyEx(
-        HKEY_LOCAL_MACHINE,
-        REGSTR_PATH_CURRENT_CONTROL_SET,
-        0,
-        KEY_QUERY_VALUE,
-        &ControlKey);
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       REGSTR_PATH_CURRENT_CONTROL_SET,
+                       0,
+                       KEY_QUERY_VALUE,
+                       &ControlKey);
     if (rc != ERROR_SUCCESS)
     {
         WARN("RegOpenKeyEx() failed with error %lu\n", rc);
@@ -493,142 +492,15 @@ NotifyLogon(VOID)
     FreeLibrary(hModule);
 }
 
-/*
- * Expands the path for the ReactOS Installer "reactos.exe".
- * See also base/setup/welcome/welcome.c!ExpandInstallerPath()
- */
-BOOL
-ExpandInstallerPath(
-    IN LPCWSTR lpInstallerName,
-    OUT LPWSTR lpInstallerPath,
-    IN SIZE_T PathSize)
-{
-    SYSTEM_INFO SystemInfo;
-    SIZE_T cchInstallerNameLen;
-    PWSTR ptr;
-    DWORD dwAttribs;
-
-    cchInstallerNameLen = wcslen(lpInstallerName);
-    if (PathSize < cchInstallerNameLen)
-    {
-        /* The buffer is not large enough to contain the installer file name */
-        *lpInstallerPath = UNICODE_NULL;
-        return FALSE;
-    }
-
-    /*
-     * First, try to find the installer using the default drive, under
-     * the directory whose name corresponds to the currently-running
-     * CPU architecture.
-     */
-    GetSystemInfo(&SystemInfo);
-
-    *lpInstallerPath = UNICODE_NULL;
-    /* Alternatively one can use SharedUserData->NtSystemRoot */
-    GetSystemWindowsDirectoryW(lpInstallerPath, PathSize - cchInstallerNameLen - 1);
-    ptr = wcschr(lpInstallerPath, L'\\');
-    if (ptr)
-        *++ptr = UNICODE_NULL;
-    else
-        *lpInstallerPath = UNICODE_NULL;
-
-    /* Append the corresponding CPU architecture */
-    switch (SystemInfo.wProcessorArchitecture)
-    {
-        case PROCESSOR_ARCHITECTURE_INTEL:
-            StringCchCatW(lpInstallerPath, PathSize, L"I386");
-            break;
-
-        case PROCESSOR_ARCHITECTURE_MIPS:
-            StringCchCatW(lpInstallerPath, PathSize, L"MIPS");
-            break;
-
-        case PROCESSOR_ARCHITECTURE_ALPHA:
-            StringCchCatW(lpInstallerPath, PathSize, L"ALPHA");
-            break;
-
-        case PROCESSOR_ARCHITECTURE_PPC:
-            StringCchCatW(lpInstallerPath, PathSize, L"PPC");
-            break;
-
-        case PROCESSOR_ARCHITECTURE_SHX:
-            StringCchCatW(lpInstallerPath, PathSize, L"SHX");
-            break;
-
-        case PROCESSOR_ARCHITECTURE_ARM:
-            StringCchCatW(lpInstallerPath, PathSize, L"ARM");
-            break;
-
-        case PROCESSOR_ARCHITECTURE_IA64:
-            StringCchCatW(lpInstallerPath, PathSize, L"IA64");
-            break;
-
-        case PROCESSOR_ARCHITECTURE_ALPHA64:
-            StringCchCatW(lpInstallerPath, PathSize, L"ALPHA64");
-            break;
-
-        case PROCESSOR_ARCHITECTURE_AMD64:
-            StringCchCatW(lpInstallerPath, PathSize, L"AMD64");
-            break;
-
-        // case PROCESSOR_ARCHITECTURE_MSIL: /* .NET CPU-independent code */
-        case PROCESSOR_ARCHITECTURE_UNKNOWN:
-        default:
-            WARN("Unknown processor architecture %lu\n", SystemInfo.wProcessorArchitecture);
-            SystemInfo.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_UNKNOWN;
-            break;
-    }
-
-    if (SystemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_UNKNOWN)
-        StringCchCatW(lpInstallerPath, PathSize, L"\\");
-    StringCchCatW(lpInstallerPath, PathSize, lpInstallerName);
-
-    dwAttribs = GetFileAttributesW(lpInstallerPath);
-    if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
-        !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
-    {
-        /* We have found the installer */
-        return TRUE;
-    }
-
-    WARN("Couldn't find the installer '%s', trying alternative.\n", debugstr_w(lpInstallerPath));
-
-    /*
-     * We failed. Try to find the installer from either the current
-     * ReactOS installation directory, or from our current directory.
-     */
-    *lpInstallerPath = UNICODE_NULL;
-    /* Alternatively one can use SharedUserData->NtSystemRoot */
-    if (GetSystemWindowsDirectoryW(lpInstallerPath, PathSize - cchInstallerNameLen - 1))
-        StringCchCatW(lpInstallerPath, PathSize, L"\\");
-    StringCchCatW(lpInstallerPath, PathSize, lpInstallerName);
-
-    dwAttribs = GetFileAttributesW(lpInstallerPath);
-    if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
-        !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
-    {
-        /* We have found the installer */
-        return TRUE;
-    }
-
-    /* Installer not found */
-    ERR("Couldn't find the installer '%s'\n", debugstr_w(lpInstallerPath));
-    *lpInstallerPath = UNICODE_NULL;
-    return FALSE;
-}
-
 static BOOL
-StartInstaller(IN LPCWSTR lpInstallerName)
+StartInstaller(VOID)
 {
-    WCHAR Installer[MAX_PATH];
+    extern WCHAR Installer[MAX_PATH]; // In livecd.c
     WCHAR szMsg[RC_STRING_MAX_SIZE];
 
-    if (ExpandInstallerPath(lpInstallerName, Installer, ARRAYSIZE(Installer)))
-    {
-        /* We have found the installer */
-        if (StartProcess(Installer, NULL))
-            return TRUE;
-    }
+    /* If we have found the ReactOS Installer, start it */
+    if (*Installer && StartProcess(Installer, NULL))
+        return TRUE;
 
     /* We failed, display an error message and quit */
     ERR("Failed to start the installer '%s'\n", debugstr_w(Installer));
@@ -720,7 +592,7 @@ Restart:
         }
 
         case INSTALLER:
-            Success = StartInstaller(L"reactos.exe");
+            Success = StartInstaller();
             break;
 
         case REBOOT:
