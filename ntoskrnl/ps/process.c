@@ -442,6 +442,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Setup the Thread List Head */
     InitializeListHead(&Process->ThreadListHead);
 
+    /* Initialize the job process list entry */
+    InitializeListHead(&Process->JobLinks);
+
     /* Set up the Quota Block from the Parent */
     PspInheritQuota(Process, Parent);
 
@@ -736,16 +739,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         else
         {
             /* Under normal conditions, child should join a parent's job */
-
-            ObReferenceObject(ParentJob);
-
-            Process->Job = ParentJob;
-
             Status = PspAssignProcessToJob(Process, ParentJob);
             if (!NT_SUCCESS(Status))
             {
-                ObDereferenceObject(ParentJob);
-                Process->Job = NULL;
                 goto CleanupWithRef;
             }
         }

@@ -282,7 +282,7 @@ PspDeleteProcess(IN PVOID ObjectBody)
     if (Process->Job)
     {
         /* Remove the process from the job */
-        PspRemoveProcessFromJob(Process, Process->Job);
+        PspRemoveProcessFromJob(Process);
 
         /* Dereference it */
         ObDereferenceObject(Process->Job);
@@ -849,7 +849,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
         if (CurrentProcess->Job)
         {
             /* Remove the process from the job */
-            PspExitProcessFromJob(CurrentProcess->Job, CurrentProcess);
+            PspExitProcessFromJob(CurrentProcess);
         }
     }
 
@@ -1120,20 +1120,20 @@ PspExitProcess(IN BOOLEAN LastThread,
             ZwSetTimerResolution(KeMaximumIncrement, 0, &Actual);
         }
 
-        /* Check if we are part of a Job that has a completion port
-           and do I/O completion if needed */
-        if (Process->Job &&
-            Process->Job->CompletionPort &&
-            !(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
+        if (Process->Job)
         {
-            ExEnterCriticalRegionAndAcquireResourceShared(&Process->Job->JobLock);
+            ExEnterCriticalRegionAndAcquireResourceExclusive(&Process->Job->JobLock);
 
-            IoSetIoCompletion(Process->Job->CompletionPort,
-                              Process->Job->CompletionKey,
-                              Process->UniqueProcessId,
-                              STATUS_SUCCESS,
-                              JOB_OBJECT_MSG_EXIT_PROCESS,
-                              FALSE);
+            /* Check if we are part of a Job that has a completion port
+               and do I/O completion if needed */
+            if (Process->Job->CompletionPort &&
+                !(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
+            {
+                (VOID)PspSendJobMessageLocked(Process->Job,
+                                              JOB_OBJECT_MSG_EXIT_PROCESS,
+                                              Process->UniqueProcessId,
+                                              FALSE);
+            }
 
             ExReleaseResourceAndLeaveCriticalRegion(&Process->Job->JobLock);
         }

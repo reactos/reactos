@@ -403,8 +403,7 @@ NTAPI
 PspEnumerateProcessesInJob(
     _In_ PEJOB Job,
     _In_ PJOB_ENUMERATOR_CALLBACK Callback,
-    _In_opt_ PVOID Context,
-    _In_ BOOLEAN BreakOnCallbackFailure
+    _In_opt_ PVOID Context
 );
 
 NTSTATUS
@@ -417,15 +416,13 @@ PspAssignProcessToJob(
 VOID
 NTAPI
 PspExitProcessFromJob(
-    _In_ PEJOB Job,
     _In_ PEPROCESS Process
 );
 
 VOID
 NTAPI
 PspRemoveProcessFromJob(
-    _In_ PEPROCESS Process,
-    _In_ PEJOB Job
+    _In_ PEPROCESS Process
 );
 
 CODE_SEG("INIT")
@@ -449,6 +446,15 @@ VOID
 NTAPI
 PspDeleteJob(
     _In_ PVOID ObjectBody
+);
+
+NTSTATUS
+NTAPI
+PspSendJobMessageLocked(
+    _In_ PEJOB Job,
+    _In_ ULONG Message,
+    _In_opt_ PVOID CompletionValue,
+    _In_ BOOLEAN Quota
 );
 
 //

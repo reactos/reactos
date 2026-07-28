@@ -10,7 +10,7 @@
  *                  2017 Mark Jansen (mark.jansen@reactos.org)
  *                  2018 Pierre Schweitzer (pierre@reactos.org)
  *                  2022 Timo Kreuzer (timo.kreuzer@reactos.org)
- *                  2024 Gleb Surikov (glebs.surikovs@gmail.com)
+ *                  2024-2026 Gleb Surikov (glebs.surikovs@gmail.com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -78,13 +78,34 @@ ULONG PspJobInfoAlign[] =
     sizeof(ULONG),
     sizeof(ULONG),
     sizeof(ULONG),
-    sizeof(ULONG),
+    sizeof(HANDLE),
     sizeof(ULONG),
     sizeof(ULONG),
     sizeof(ULONG)
 };
 
 /* DATA TYPE DEFINITIONS *****************************************************/
+
+/*!
+ * Iterator structure used to enumerate processes directly assigned to a job
+ * while the job lock is held.
+ *
+ * @param[in] Job
+ *     A pointer to the job object being enumerated.
+ *
+ * @param[in] NextEntry
+ *     A pointer to the next process list entry to be returned.
+ *
+ * @remarks
+ *     The iterator does not acquire or release the job lock and does not
+ *     reference returned process objects. The caller must hold the job lock
+ *     for the entire lifetime of the iterator.
+ */
+typedef struct PSP_JOB_ITERATOR
+{
+    PEJOB Job;
+    PLIST_ENTRY NextEntry;
+} PSP_JOB_ITERATOR, *PPSP_JOB_ITERATOR;
 
 /*!
  * Context structure used to pass the job object and exit status to
@@ -96,37 +117,30 @@ ULONG PspJobInfoAlign[] =
  * @param[in] ExitStatus
  *     The exit status to be used for all terminated processes.
  */
-typedef struct TERMINATE_PROCESS_CONTEXT
+typedef struct PSP_TERMINATE_PROCESS_CONTEXT
 {
     PEJOB Job;
     NTSTATUS ExitStatus;
-} TERMINATE_PROCESS_CONTEXT, *PTERMINATE_PROCESS_CONTEXT;
+} PSP_TERMINATE_PROCESS_CONTEXT, *PPSP_TERMINATE_PROCESS_CONTEXT;
 
 /*!
  * Context structure used to collect process IDs for a job object.
  *
- * @param[in, out] ProcIdList
- *     A pointer to the structure that holds the process IDs and the count of
- *     assigned processes.
+ * @param[in, out] ProcessIdList
+ *     A pointer to the output process identifier list.
  *
- * @param[in, out] ListLength
- *     The remaining length of the process ID list buffer, adjusted as process
- *     IDs are added.
+ * @param[in, out] NextProcessId
+ *     A pointer to the next output array entry.
  *
- * @param[in, out] IdListArray
- *     A pointer to the position in the process ID array where the next process
- *     ID will be added.
- *
- * @param[in, out] Status
- *     Holds the status of the process ID collection operation.
+ * @param[in, out] RemainingLength
+ *     The number of bytes remaining in the output array.
  */
-typedef struct QUERY_JOB_PROCESS_ID_CONTEXT
+typedef struct PSP_QUERY_JOB_PROCESS_ID_CONTEXT
 {
-    PJOBOBJECT_BASIC_PROCESS_ID_LIST ProcIdList;
-    ULONG ListLength;
-    ULONG_PTR *IdListArray;
-    NTSTATUS Status;
-} QUERY_JOB_PROCESS_ID_CONTEXT, *PQUERY_JOB_PROCESS_ID_CONTEXT;
+    PJOBOBJECT_BASIC_PROCESS_ID_LIST ProcessIdList;
+    PULONG_PTR NextProcessId;
+    SIZE_T RemainingLength;
+} PSP_QUERY_JOB_PROCESS_ID_CONTEXT, *PPSP_QUERY_JOB_PROCESS_ID_CONTEXT;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -140,18 +154,140 @@ PspInitializeJobStructures(VOID)
 }
 
 /*!
- * Advances the job enumerator to the next process in the job's process list.
+ * Initializes an iterator for the processes directly assigned to a job.
  *
- * @param Job
- *     Pointer to the job object containing the process list.
+ * @param[in] Job
+ *     A pointer to the job object whose process list will be enumerated.
  *
- * @param Process
- *     Pointer to the current process obtained from a previous call to
- *     PspAdvanceJobEnumerator.
+ * @param[in, optional] PreviousProcess
+ *     A pointer to the process after which enumeration should begin, or NULL
+ *     to begin with the first process in the job.
+ *
+ * @param[out] Iterator
+ *     A pointer to the iterator to initialize.
+ *
+ * @remarks
+ *     The caller must hold tje job lock shared or exclusive.
+ *
+ *     PreviousProcess is borrowed and is not referenced or dereferenced by
+ *     this function.
+ */
+static
+VOID
+PspInitializeJobIteratorLocked(
+    _In_ PEJOB Job,
+    _In_opt_ PEPROCESS PreviousProcess,
+    _Out_ PPSP_JOB_ITERATOR Iterator
+)
+{
+    ASSERT(Iterator != NULL);
+
+#if DBG
+    ASSERT(ExIsResourceAcquiredSharedLite(&Job->JobLock) != 0 ||
+           ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
+#endif
+
+    Iterator->Job = Job;
+
+    if (PreviousProcess != NULL)
+    {
+        ASSERT(PreviousProcess->Job == Job);
+        ASSERT(!IsListEmpty(&PreviousProcess->JobLinks));
+
+        Iterator->NextEntry = PreviousProcess->JobLinks.Flink;
+    }
+    else
+    {
+        Iterator->NextEntry = Job->ProcessListHead.Flink;
+    }
+}
+
+/*!
+ * Advances a job process iterator.
+ *
+ * @param[in, out] Iterator
+ *     A pointer to an initialized job process iterator.
  *
  * @return
- *     Pointer to the next valid process, or NULL if no more processes are
- *     available.
+ *     A borrowed pointer to the next directly assigned process, or NULL if
+ *     enumeration has completed.
+ *
+ * @remarks
+ *     The caller must continue holding Iterator->Job->JobLock.
+ *
+ *     The returned process is borrowed and may already be entering object
+ *     deletion. The caller may access only fields that remain valid while the
+ *     process is linked to the job.
+ */
+static
+PEPROCESS
+PspAdvanceJobIteratorLocked(
+    _Inout_ PPSP_JOB_ITERATOR Iterator
+)
+{
+    PEJOB Job;
+    PLIST_ENTRY Entry;
+    PEPROCESS Process;
+
+    ASSERT(Iterator->Job != NULL);
+
+    Job = Iterator->Job;
+
+#if DBG
+    ASSERT(ExIsResourceAcquiredSharedLite(&Job->JobLock) != 0 ||
+           ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
+#endif
+
+    ASSERT(Iterator->NextEntry != NULL);
+
+    Entry = Iterator->NextEntry;
+
+    if (Entry == &Job->ProcessListHead)
+    {
+        return NULL;
+    }
+
+#if DBG
+    ASSERT(Entry->Flink != NULL);
+    ASSERT(Entry->Blink != NULL);
+    ASSERT(Entry->Flink->Blink == Entry);
+    ASSERT(Entry->Blink->Flink == Entry);
+#endif
+
+    /* Advance the cursor before returning the process. This keeps iterator
+       state independent from modifications to non-list process fields made by
+       the callback. */
+    Iterator->NextEntry = Entry->Flink;
+
+    Process = CONTAINING_RECORD(Entry, EPROCESS, JobLinks);
+
+    ASSERT(Process->Job == Job);
+
+    return Process;
+}
+
+/*!
+ * Advances the job enumerator to the next process in the job's process list.
+ *
+ * @param[in] Job
+ *     A pointer to the job object whose directly assigned processes are being
+ *     enumerated.
+ *
+ * @param[in, optional] Process
+ *     A referenced process returned by a previous call to this function, or
+ *     NULL to start the enumeration. When non-NULL, the reference is consumed
+ *     by this function regardless of whether another process is returned.
+ *
+ * @return
+ *     A referenced pointer to the next process, or NULL if no more processes
+ *     are available.
+ *
+ * @remarks
+ *     The returned process reference must either be passed to a subsequent
+ *     call to this function or released with ObDereferenceObject().
+ *
+ *     This implementation relies on job membership remaining fixed
+ *     until process object deletion.
  */
 static
 PEPROCESS
@@ -160,46 +296,35 @@ PspAdvanceJobEnumerator(
     _In_opt_ PEPROCESS Process
 )
 {
-    PLIST_ENTRY Entry;
-    PEPROCESS Next;
+    PSP_JOB_ITERATOR Iterator;
+    PEPROCESS Next = NULL;
+    PEPROCESS Candidate;
 
-    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
-
-    /* If Process is NULL, the enumeration starts from the first process.
-       Otherwise, continue from the next process */
-    if (Process)
+    if (Process != NULL)
     {
-        Entry = Process->JobLinks.Flink;
-    }
-    else
-    {
-        Entry = Job->ProcessListHead.Flink;
+        ASSERT(Process->Job == Job);
+        ASSERT(!IsListEmpty(&Process->JobLinks));
     }
 
-    /* Iterate through the job's process list */
-    while (Entry != &Job->ProcessListHead)
-    {
-        Next = CONTAINING_RECORD(Entry, EPROCESS, JobLinks);
+    ExEnterCriticalRegionAndAcquireResourceShared(&Job->JobLock);
 
-        /* We use the safe variant because it returns FALSE if
-           the object is being deleted */
-        if (ObReferenceObjectSafe(Next))
+    PspInitializeJobIteratorLocked(Job, Process, &Iterator);
+
+    while ((Candidate = PspAdvanceJobIteratorLocked(&Iterator)) != NULL)
+    {
+        /* Skip process objects whose deletion has already begun */
+        if (ObReferenceObjectSafe(Candidate))
         {
-            goto Found;
+            Next = Candidate;
+            break;
         }
-
-        /* Move to the next entry in the lsit */
-        Entry = Entry->Flink;
     }
-
-    /* Reached the end */
-    Next = NULL;
-
-Found:
 
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 
-    if (Process)
+    /* This must occur after releasing the job lock: the dereference can invoke the
+       process delete procedure, which removes JobLinks under the same lock */
+    if (Process != NULL)
     {
         ObDereferenceObject(Process);
     }
@@ -215,36 +340,31 @@ Found:
  *     A pointer to the job object whose processes are to be enumerated.
  *
  * @param[in] Callback
- *     A pointer to the PJOB_ENUMERATOR_CALLBACK callback function to be
- *     called for each process.
+ *     A pointer to the callback invoked for each referenced process.
  *
  * @param[in, optional] Context
- *     An optional pointer to a context to be passed to the callback function.
- *
- * @param[in] BreakOnCallbackFailure
- *     A boolean that, if TRUE, indicates that enumeration should stop early if
- *     the callback function returns an error. If FALSE, the enumeration
- *     continues even if the callback function fails.
+ *     An optional context pointer passed to the callback.
  *
  * @returns
- *     STATUS_SUCCESS if the enumeration completed successfully.
- *     An appropriate NTSTATUS error code otherwise.
+ *     STATUS_SUCCESS if every callback succeeds. Otherwise, the first
+ *     unsuccessful callback status is returned.
  *
  * @remarks
- *     If BreakOnCallbackFailure is TRUE and not all callbacks returned success,
- *     the function may still return STATUS_SUCCESS.
+ *     Enumeration stops when a callback returns an unsuccessful status.
+ *
+ *     The callback is invoked _without_ the job lock held. It borrows the
+ *     enumerator's process reference and must acquire an additional reference
+ *     if it retains the process pointer.
  */
 NTSTATUS
 NTAPI
 PspEnumerateProcessesInJob(
     _In_ PEJOB Job,
     _In_ PJOB_ENUMERATOR_CALLBACK Callback,
-    _In_opt_ PVOID Context,
-    _In_ BOOLEAN BreakOnCallbackFailure
+    _In_opt_ PVOID Context
 )
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    BOOLEAN AnyCallbackFailed = FALSE;
     PEPROCESS Process;
 
     /* Get the first process from the job */
@@ -255,34 +375,138 @@ PspEnumerateProcessesInJob(
     {
         /* Call the provided callback */
         Status = Callback(Process, Context);
+
         if (!NT_SUCCESS(Status))
         {
-            AnyCallbackFailed = TRUE;
-            if (BreakOnCallbackFailure)
-            {
-                ObDereferenceObject(Process);
-                break;
-            }
+            /* On successful iteration, PspAdvanceJobEnumerator consumes this
+               reference. On failure, it must be released explicitly. */
+            ObDereferenceObject(Process);
+            break;
         }
 
         /* Move to the next process */
         Process = PspAdvanceJobEnumerator(Job, Process);
     }
 
-    if (NT_SUCCESS(Status) && AnyCallbackFailed)
+    return Status;
+}
+
+/*!
+ * Enumerates all directly assigned processes while the caller holds the job
+ * lock and invokes a callback for each process.
+ *
+ * @param[in] Job
+ *     A pointer to the job object whose processes are to be enumerated.
+ *
+ * @param[in] Callback
+ *     A pointer to the callback invoked for each process.
+ *
+ * @param[in, optional] Context
+ *     An optional context pointer passed to the callback.
+ *
+ * @return
+ *     STATUS_SUCCESS if every callback succeeds. Otherwise, the first
+ *     unsuccessful callback status is returned.
+ *
+ * @remarks
+ *     Enumeration stops when a callback returns an unsuccessful status.
+ *
+ *     The caller must hold the job lock shared or exclusive for the complete
+ *     call.
+ *
+ *     The callback receives a borrowed process pointer. It must not release
+ *     the job lock, recursively acquire the job lock, modify direct job
+ *     membership, dereference the process object, or retain the process
+ *     pointer after returning.
+ */
+static
+NTSTATUS
+PspEnumerateProcessesInJobLocked(
+    _In_ PEJOB Job,
+    _In_ PJOB_ENUMERATOR_CALLBACK Callback,
+    _In_opt_ PVOID Context
+)
+{
+    PSP_JOB_ITERATOR Iterator;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PEPROCESS Process;
+
+#if DBG
+    ASSERT(ExIsResourceAcquiredSharedLite(&Job->JobLock) != 0 ||
+           ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
+#endif
+
+    PspInitializeJobIteratorLocked(Job, NULL, &Iterator);
+
+    /* Iterate through all processes in the job */
+    while ((Process = PspAdvanceJobIteratorLocked(&Iterator)) != NULL)
     {
-        DPRINT1("PspEnumerateProcessesInJob(Job: %p, Callback: %p, Context: %p,"
-                " BreakOnCallbackFailure: %u) - Partial success report, not all"
-                " callbacks returned success\n",
-                Job, Callback, Context, BreakOnCallbackFailure);
+        /* Call the provided callback */
+        Status = Callback(Process, Context);
+
+        if (!NT_SUCCESS(Status))
+        {
+            break;
+        }
     }
 
     return Status;
 }
 
 /*!
- * Assigns a process to a job object.
+ * Queues a message to a job's completion port.
  *
+ * @param[in] Job
+ *     A pointer to the job receiving the notification.
+ *
+ * @param[in] Message
+ *     The job notification message (JOB_OBJECT_MSG_*).
+ *
+ * @param[in, optional] CompletionValue
+ *     The message specific completion value.
+ *
+ * @param[in] Quota
+ *     Specifies whether the completion packet is charged as quota.
+ *
+ * @return
+ *     STATUS_SUCCESS if the message was queued successfully.
+ *     Otherwise, an appropriate NTSTATUS error code.
+ *
+ * @remarks
+ *     The caller must hold the job lock shared or exclusive.
+ *     The caller must ensure that the job has an associated completion port.
+ */
+NTSTATUS
+NTAPI
+PspSendJobMessageLocked(
+    _In_ PEJOB Job,
+    _In_ ULONG Message,
+    _In_opt_ PVOID CompletionValue,
+    _In_ BOOLEAN Quota
+)
+{
+    NTSTATUS Status;
+
+    ASSERT(Job->CompletionPort != NULL);
+
+#if DBG
+    ASSERT(ExIsResourceAcquiredSharedLite(&Job->JobLock) != 0 ||
+           ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
+#endif
+
+    Status = IoSetIoCompletion(Job->CompletionPort,
+                               Job->CompletionKey,
+                               CompletionValue,
+                               STATUS_SUCCESS,
+                               Message,
+                               Quota);
+
+    return Status;
+}
+
+/*!
+ * Assigns a process to a job object.
+ 
  * @param[in] Process
  *     Pointer to the process to be assigned to the job.
  *
@@ -301,31 +525,14 @@ PspAssignProcessToJob(
 )
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    PVOID PreviousJob;
 
-    DPRINT1("PspAssignProcessToJob(Process: %p, Job: %p)\n", Process, Job);
+    if (!ExAcquireRundownProtection(&Process->RundownProtect))
+    {
+        return STATUS_PROCESS_IS_TERMINATING;
+    }
 
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
-
-    /* Check if the job has a limit on the number of active processes */
-    if (Job->LimitFlags & JOB_OBJECT_LIMIT_ACTIVE_PROCESS &&
-        Job->ActiveProcesses >= Job->ActiveProcessLimit)
-    {
-        /* Check if job limit on active processes has been reached */
-        if (Job->CompletionPort)
-        {
-            /* If the job has a completion port, notify the job that the
-               limit on the number of active processes has been exceeded */
-            IoSetIoCompletion(Job->CompletionPort,
-                              Job->CompletionKey,
-                              NULL,
-                              STATUS_SUCCESS,
-                              JOB_OBJECT_MSG_ACTIVE_PROCESS_LIMIT,
-                              TRUE);
-        }
-
-        Status = STATUS_QUOTA_EXCEEDED;
-        goto Exit;
-    }
 
     /* https://learn.microsoft.com/en-us/windows/win32/api/jobapi2/nf-jobapi2-assignprocesstojobobject:
        "If the job or any of its parent jobs in the job chain is terminating
@@ -345,11 +552,51 @@ PspAssignProcessToJob(
         goto Exit;
     }
 
-    /* Assign the process to the job object by inserting into
-       the job's process list */
+    /* Check if the job has a limit on the number of active processes */
+    if (Job->LimitFlags & JOB_OBJECT_LIMIT_ACTIVE_PROCESS &&
+        Job->ActiveProcesses >= Job->ActiveProcessLimit)
+    {
+        /* Check if job limit on active processes has been reached */
+        if (Job->CompletionPort)
+        {
+            /* If the job has a completion port, notify the job that the
+               limit on the number of active processes has been exceeded */
+            (VOID)PspSendJobMessageLocked(Job,
+                                          JOB_OBJECT_MSG_ACTIVE_PROCESS_LIMIT,
+                                          NULL,
+                                          TRUE);
+        }
+
+        Status = STATUS_QUOTA_EXCEEDED;
+        goto Exit;
+    }
+
+    /* Acquire the reference owned by the process for as long as
+       Process->Job points to Job */
+    ObReferenceObject(Job);
+
+    /* JobLock protects the target job, but another caller may simultaneously
+       hold a different job's lock while trying to assign the same process */
+    PreviousJob = InterlockedCompareExchangePointer((PVOID)&Process->Job,
+                                                    Job,
+                                                    NULL);
+    if (PreviousJob)
+    {
+        ObDereferenceObject(Job);
+        Status = STATUS_ACCESS_DENIED;
+        goto Exit;
+    }
+
+    /* Assignment is committed at this point. No subsequent structural
+       operation may fail.
+
+       Readers of Job->ProcessListHead are blocked by JobLock until the list
+       and counters are complete. */
+
+    ASSERT(IsListEmpty(&Process->JobLinks));
+
     InsertTailList(&Job->ProcessListHead, &Process->JobLinks);
 
-    /* Increment the job's process counters */
     Job->TotalProcesses++;
     Job->ActiveProcesses++;
 
@@ -357,17 +604,17 @@ PspAssignProcessToJob(
     {
         /* If the job has a completion port and the process has a unique ID,
            notify the job of the new process */
-        Status = IoSetIoCompletion(Job->CompletionPort,
-                                   Job->CompletionKey,
-                                   Process->UniqueProcessId,
-                                   STATUS_SUCCESS,
-                                   JOB_OBJECT_MSG_NEW_PROCESS,
-                                   FALSE);
+        (VOID)PspSendJobMessageLocked(Job,
+                                      JOB_OBJECT_MSG_NEW_PROCESS,
+                                      Process->UniqueProcessId,
+                                      FALSE);
     }
 
 Exit:
 
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+
+    ExReleaseRundownProtection(&Process->RundownProtect);
 
     /* TODO: Ensure that job limits are respected */
 
@@ -375,55 +622,93 @@ Exit:
 }
 
 /*!
- * Removes a process from the specified job object.
- *
- * @param[in] Process
- *     A pointer to the process to be removed from the job.
+ * Marks a process inactive in its assigned job.
  *
  * @param[in] Job
- *     A pointer to the job object from which the process is to be removed.
+ *     A pointer to the process's assigned job.
  *
- * @remark This function is called from PspDeleteProcess() as the process
- *         is destroyed.
+ * @param[in] Process
+ *     A pointer to the process being marked inactive.
+ *
+ * @return
+ *     TRUE if this call performed the active-to-inactive transition and
+ *     reduced the job's active process count to zero; otherwise, FALSE.
+ *
+ * @remarks
+ *     The caller must hold the job lock exclusively.
+ */
+static 
+BOOLEAN
+PspDeactivateProcessFromJobLocked(
+    _In_ PEJOB Job,
+    _In_ PEPROCESS Process
+)
+{
+    ASSERT(Process->Job == Job);
+
+#if DBG
+    ASSERT(ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
+#endif
+
+    if (Process->JobStatus & JOB_NOT_REALLY_ACTIVE)
+    {
+        return FALSE;
+    }
+
+    ASSERT(Job->ActiveProcesses != 0);
+
+    Job->ActiveProcesses--;
+
+    InterlockedOr((PLONG)&Process->JobStatus, JOB_NOT_REALLY_ACTIVE);
+
+    return Job->ActiveProcesses == 0;
+}
+
+/*!
+ * Removes a process from its assigned job.
+ *
+ * @param[in] Process
+ *     A pointer to the process being removed from its assigned job.
+ *
+ * @remarks
+ *     This function is called from PspDeleteProcess() during process object
+ *     deletion. The process must still be linked to its assigned job.
  */
 VOID
 NTAPI
 PspRemoveProcessFromJob(
-    _In_ PEPROCESS Process,
-    _In_ PEJOB Job
+    _In_ PEPROCESS Process
 )
 {
-    DPRINT1("PspRemoveProcessFromJob(Process: %p, Job: %p)\n", Process, Job);
+    PEJOB Job;
+    BOOLEAN ActiveProcessZero;
+
+    Job = Process->Job;
+    ASSERT(Job != NULL);
 
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
+    ASSERT(Process->Job == Job);
+    ASSERT(Process->JobLinks.Flink != NULL);
+    ASSERT(Process->JobLinks.Blink != NULL);
+    ASSERT(!IsListEmpty(&Process->JobLinks));
+
     /* Remove the process from the job's process list */
     RemoveEntryList(&Process->JobLinks);
+    InitializeListHead(&Process->JobLinks);
 
     /* Decrement the job's active process count if it is still active */
-    if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
-    {
-        /* Assert that the job's active process count does not underflow */
-        ASSERT((Job->ActiveProcesses - 1) < Job->ActiveProcesses);
-
-        Job->ActiveProcesses--;
-
-        /* Flag this process as inactive to prevent the number of active
-           processes from repeatedly decrementing */
-        InterlockedOr((PLONG)&Process->JobStatus, JOB_NOT_REALLY_ACTIVE);
-    }
+    ActiveProcessZero = PspDeactivateProcessFromJobLocked(Job, Process);
 
     /* TODO: Ensure that job limits are respected */
 
     /* If no active processes remain, notify the job completion port */
-    if (Job->ActiveProcesses == 0 && Job->CompletionPort)
+    if (ActiveProcessZero && Job->CompletionPort)
     {
-        IoSetIoCompletion(Job->CompletionPort,
-                          Job->CompletionKey,
-                          NULL,
-                          STATUS_SUCCESS,
-                          JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO,
-                          FALSE);
+        (VOID)PspSendJobMessageLocked(Job,
+                                      JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO,
+                                      NULL,
+                                      FALSE);
     }
 
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
@@ -432,59 +717,44 @@ PspRemoveProcessFromJob(
 /*!
  * Handles the exit of a process from the specified job object.
  *
- * @param[in] Job
- *     A pointer to the job object from which the process is exiting.
- *
  * @param[in] Process
  *     A pointer to the process that is exiting the job.
  *
- * @remark This function is called from PspExitThread() as the last thread
- *         exits.
+ * @remark
+ *     This function is called from PspExitThread() when the last thread exits.
+ *     The process must be assigned to a job.
  */
 VOID
 NTAPI
 PspExitProcessFromJob(
-    _In_ PEJOB Job,
     _In_ PEPROCESS Process
 )
 {
-    DPRINT1("PspExitProcessFromJob(Job: %p, Process: %p)\n", Job, Process);
+    PEJOB Job;
+    BOOLEAN ActiveProcessZero;
 
-    /* Make sure we are not interrupted */
+    Job = Process->Job;
+    ASSERT(Job != NULL);
+
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
-    /* Check if the process is part of the specified job */
-    if (Process->Job == Job)
+    /* Job membership is immutable in the current implementation */
+    ASSERT(Process->Job == Job);
+
+    /* Decrement the job's active process count if the process is still active */
+    ActiveProcessZero = PspDeactivateProcessFromJobLocked(Job, Process);
+
+    /* If no active processes remain, notify the job completion port */
+    if (ActiveProcessZero && Job->CompletionPort)
     {
-        /* Decrement the job's active process count if the process is still
-           active */
-        if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
-        {
-            /* Assert that the job's active process count does not underflow */
-            ASSERT((Job->ActiveProcesses - 1) < Job->ActiveProcesses);
-
-            Job->ActiveProcesses--;
-
-            /* Flag this process as inactive to prevent the number of active
-               processes from repeatedly decrementing */
-            InterlockedOr((PLONG)&Process->JobStatus, JOB_NOT_REALLY_ACTIVE);
-        }
-
-        /* If no active processes remain, notify the job completion port */
-        if (Job->ActiveProcesses == 0 && Job->CompletionPort)
-        {
-            IoSetIoCompletion(Job->CompletionPort,
-                              Job->CompletionKey,
-                              NULL,
-                              STATUS_SUCCESS,
-                              JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO,
-                              FALSE);
-        }
+        (VOID)PspSendJobMessageLocked(Job,
+                                      JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO,
+                                      NULL,
+                                      FALSE);
     }
 
     /* TODO: Ensure that job limits are respected */
 
-    /* Resume APCs and release lock */
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 }
 
@@ -495,81 +765,78 @@ PspExitProcessFromJob(
  * @param[in] Process
  *     A pointer to the process object to be terminated.
  *
- * @param[in, optional] Context
- *     An optional pointer to a context, in this case, a structure containing
- *     the job object and the exit status.
+ * @param[in] Context
+ *     A pointer to a PSP_TERMINATE_PROCESS_CONTEXT structure.
  *
  * @returns
- *     STATUS_SUCCESS if the process was successfully terminated.
- *     Otherwise, an appropriate NTSTATUS error code.
+ *     STATUS_SUCCESS.
  *
  * @remark
- *     When this callback function is executed, the job lock is held by
- *     PspEnumerateProcessesInJob(). It releases the lock after the callback
- *     returns.
+ *     The callback is invoked _without_ the job lock held. Process carries the
+ *     reference acquired by the job enumerator for the duration of the call.
  */
 static
 NTSTATUS
 PspTerminateProcessCallback(
     _In_ PEPROCESS Process,
-    _In_opt_ PVOID Context
+    _In_ PVOID Context
 )
 {
     NTSTATUS Status;
-    PTERMINATE_PROCESS_CONTEXT TerminateContext = (PTERMINATE_PROCESS_CONTEXT)Context;
+    BOOLEAN ActiveProcessZero;
+    PPSP_TERMINATE_PROCESS_CONTEXT TerminateContext = (PPSP_TERMINATE_PROCESS_CONTEXT)Context;
     PEJOB Job = TerminateContext->Job;
     NTSTATUS ExitStatus = TerminateContext->ExitStatus;
 
-    /* If the process is already inactive, no need to terminate */
+    ASSERT(Job != NULL);
+    ASSERT(Process->Job == Job);
+
+    /* Avoid entering process termination when the process has already
+       completed its active job transition */
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+
     if (Process->JobStatus & JOB_NOT_REALLY_ACTIVE)
     {
-        return STATUS_INVALID_PARAMETER;
+        goto Exit;
     }
-
-    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
     /* Terminate the process */
     Status = PsTerminateProcess(Process, ExitStatus);
 
-    if (NT_SUCCESS(Status))
+    /* PsTerminateProcess can return STATUS_NOTHING_TO_TERMINATE
+       when it finds no threads (the ordinary process exit remains
+       responsible for completing job accounting in that case),
+       that should be treated as a no-op for job traversal */
+    if (!NT_SUCCESS(Status))
     {
-        /* Decrement the job's active process count, but only if the process is
-           still active */
-        if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
+        goto Exit;
+    }
+
+    /* Decrement the job's active process count if the process is still active */
+    ActiveProcessZero = PspDeactivateProcessFromJobLocked(Job, Process);
+
+    /* If there are no active processes left in the job, notify anyone waiting
+       for the job object by signaling completion */
+    if (ActiveProcessZero)
+    {
+        /* It is intended that the event is set to a signaled
+           state only in the termination path */
+        KeSetEvent(&Job->Event, IO_NO_INCREMENT, FALSE);
+
+        if (Job->CompletionPort)
         {
-            Job->ActiveProcesses--;
-
-            /* Flag this process as inactive to prevent the number of active
-               processes from repeatedly decrementing */
-            InterlockedOr((PLONG)&Process->JobStatus,
-                          JOB_NOT_REALLY_ACTIVE);
-
-            /* Check if there are no active processes left in the job */
-            if (Job->ActiveProcesses == 0)
-            {
-                /* If so, notify anyone waiting for the job object
-                   by signaling completion */
-
-                /* It is intended that the event is set to a signaled
-                   state only in the termination path */
-                KeSetEvent(&Job->Event, IO_NO_INCREMENT, FALSE);
-
-                if (Job->CompletionPort)
-                {
-                    IoSetIoCompletion(Job->CompletionPort,
-                                      Job->CompletionKey,
-                                      NULL,
-                                      STATUS_SUCCESS,
-                                      JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO,
-                                      FALSE);
-                }
-            }
+            (VOID)PspSendJobMessageLocked(Job,
+                                          JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO,
+                                          NULL,
+                                          FALSE);
         }
     }
 
+Exit:
+
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /*!
@@ -593,20 +860,27 @@ PspTerminateJobObject(
 )
 {
     NTSTATUS Status;
-    TERMINATE_PROCESS_CONTEXT Context;
+    LONG PreviousFlags;
+    PSP_TERMINATE_PROCESS_CONTEXT Context;
+
+    PreviousFlags = InterlockedOr((PLONG)&Job->JobFlags, JOB_OBJECT_TERMINATING);
+
+    /* Termination is idempotent, another caller already owns the traversal */
+    if (PreviousFlags & JOB_OBJECT_TERMINATING)
+    {
+        return STATUS_SUCCESS;
+    }
+
     Context.Job = Job;
     Context.ExitStatus = ExitStatus;
 
-    DPRINT1("PspTerminateJobObject(Job: %p, ExitStatus: %x)\n",
-            Job,
-            ExitStatus);
-
-    InterlockedOr((PLONG)&Job->JobFlags, JOB_OBJECT_TERMINATING);
-
     Status = PspEnumerateProcessesInJob(Job,
                                         PspTerminateProcessCallback,
-                                        &Context,
-                                        FALSE);
+                                        &Context);
+
+    /* The termination callback always returns STATUS_SUCCESS because
+       per-process termination failures are handled locally */
+    ASSERT(NT_SUCCESS(Status));
 
     InterlockedAnd((PLONG)&Job->JobFlags, ~JOB_OBJECT_TERMINATING);
 
@@ -645,21 +919,15 @@ PspCloseJob(
     _In_ ULONG SystemHandleCount
 )
 {
+    NTSTATUS Status;
     PEJOB Job = (PEJOB)ObjectBody;
+    PVOID CompletionPort = NULL;
 
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER(Process);
     UNREFERENCED_PARAMETER(GrantedAccess);
     UNREFERENCED_PARAMETER(HandleCount);
-
-    DPRINT1("PspCloseJob(Process: %p, ObjectBody: %p, GrantedAccess: %x, "
-            "HandleCount: %u, SystemHandleCount: %u)\n",
-            Process,
-            ObjectBody,
-            GrantedAccess,
-            HandleCount,
-            SystemHandleCount);
 
     /* Proceed only when the last handle is left */
     if (SystemHandleCount != 1)
@@ -672,18 +940,30 @@ PspCloseJob(
     /* Flag the job as closed */
     InterlockedOr((PLONG)&Job->JobFlags, JOB_OBJECT_CLOSE_DONE);
 
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+
     /* If the job is set to kill on close, terminate all associated processes */
     if (Job->LimitFlags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE)
     {
-        NTSTATUS Status = PspTerminateJobObject(Job, STATUS_SUCCESS);
+        /* Keep the completion port associated during termination so that
+           final job messages can still be delivered */
+        ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+
+        Status = PspTerminateJobObject(Job, STATUS_SUCCESS);
         ASSERT(NT_SUCCESS(Status));
+
+        ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
     }
 
-    /* Remove the reference to the completion port if associated */
-    if (Job->CompletionPort)
+    CompletionPort = Job->CompletionPort;
+    Job->CompletionPort = NULL;
+    Job->CompletionKey = NULL;
+
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+
+    if (CompletionPort)
     {
-        ObDereferenceObject(Job->CompletionPort);
-        Job->CompletionPort = NULL;
+        ObDereferenceObject(CompletionPort);
     }
 }
 
@@ -699,14 +979,12 @@ PspDeleteJob(_In_ PVOID ObjectBody)
 {
     PEJOB Job = (PEJOB)ObjectBody;
 
-    DPRINT1("PspDeleteJob(ObjectBody: %p)\n", ObjectBody);
-
     PAGED_CODE();
 
     Job->LimitFlags = 0;
 
     /* Remove the reference to the completion port if associated */
-    if (Job->CompletionPort != NULL)
+    if (Job->CompletionPort)
     {
         ObDereferenceObject(Job->CompletionPort);
         Job->CompletionPort = NULL;
@@ -757,6 +1035,8 @@ PspSetJobLimitsBasicOrExtended(
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG AllowedFlags;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
+    ASSERT(KeAreAllApcsDisabled());
 
     const ULONG AllowedBasicFlags = JOB_OBJECT_LIMIT_WORKINGSET |
         JOB_OBJECT_LIMIT_PROCESS_TIME |
@@ -949,43 +1229,51 @@ ExitFromBasicLimits:
 }
 
 /*!
- * Callback function to associate an I/O completion port with a process.
+ * Queues an initial new-process notification for a process already assigned
+ * to a job.
  *
  * @param[in] Process
- *     A pointer to the process.
+ *     A borrowed pointer to the process being notified.
  *
- * @param[in, optional] Context
- *     A pointer to a context structure containing the I/O completion port and
- *     its associated key. This is passed in by the caller of the enumeration.
+ * @param[in] Context
+ *     A pointer to the job associated with the completion port.
  *
  * @return
- *     STATUS_SUCCESS if the I/O completion port was successfully associated
- *     with the process.
- *     Otherwise, an appropriate NTSTATUS error code.
+ *     STATUS_SUCCESS.
+ *
+ * @remarks
+ *     The callback is invoked while the job lock is held exclusively.
+ *     Notification failures are recorded for diagnostic purposes and do not
+ *     undo the completion port association.
  */
 static
 NTSTATUS
 PspAssociateCompletionPortCallback(
     _In_ PEPROCESS Process,
-    _In_opt_ PVOID Context
-)
+    _In_ PVOID Context)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-    PEJOB Job = (PEJOB)Context;
+    PEJOB Job;
+
+    Job = (PEJOB)Context;
+
+    ASSERT(Process->Job == Job);
+    ASSERT(Job->CompletionPort != NULL);
+
+#if DBG
+    ASSERT(ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
+#endif
 
     /* Ensure the process is active and has a valid unique process ID */
     if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE) &&
         Process->UniqueProcessId)
     {
-        Status = IoSetIoCompletion(Job->CompletionPort,
-                                   Job->CompletionKey,
-                                   Process->UniqueProcessId,
-                                   STATUS_SUCCESS,
-                                   JOB_OBJECT_MSG_NEW_PROCESS,
-                                   FALSE);
+        (VOID)PspSendJobMessageLocked(Job,
+                                      JOB_OBJECT_MSG_NEW_PROCESS,
+                                      Process->UniqueProcessId,
+                                      FALSE);
     }
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /*!
@@ -1001,9 +1289,13 @@ PspAssociateCompletionPortCallback(
  *     with a job (the handle of the I/O completion port and the key).
  *
  * @return
- *     STATUS_SUCCESS if the I/O completion port was successfully associated
- *     with the job and its processes.
+ *     STATUS_SUCCESS if the completion port was associated with the job.
  *     Otherwise, an appropriate NTSTATUS error code.
+ *
+ * @remarks
+ *     Once the completion port is installed, failure to queue an initial
+ *     process notification is recorded diagnostically and does not undo the
+ *     association.
  */
 static
 NTSTATUS
@@ -1012,9 +1304,11 @@ PspAssociateCompletionPortWithJob(
     _In_ PJOBOBJECT_ASSOCIATE_COMPLETION_PORT AssociateCpInfo
 )
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     HANDLE IoCompletion;
+
+    ASSERT(KeAreAllApcsDisabled());
 
     if (!AssociateCpInfo->CompletionPort)
     {
@@ -1027,7 +1321,6 @@ PspAssociateCompletionPortWithJob(
                                        PreviousMode,
                                        &IoCompletion,
                                        NULL);
-
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -1038,23 +1331,28 @@ PspAssociateCompletionPortWithJob(
     /* Check if the job already has a completion port or is in a final state */
     if (Job->CompletionPort || (Job->JobFlags & JOB_OBJECT_CLOSE_DONE) != 0)
     {
-        ObDereferenceObject(IoCompletion);
         ExReleaseResourceLite(&Job->JobLock);
+        ObDereferenceObject(IoCompletion);
         return STATUS_INVALID_PARAMETER;
     }
 
     Job->CompletionKey = AssociateCpInfo->CompletionKey;
     Job->CompletionPort = IoCompletion;
 
-    /* Inform all processes in the job about the association. */
-    Status = PspEnumerateProcessesInJob(Job,
-                                        PspAssociateCompletionPortCallback,
-                                        &Job,
-                                        FALSE);
+    /* Inform all processes in the job about the association
+       N.B. Assignment is serialized by JobLock; a process is therefore covered
+       either by this enumeration or by the normal assignment path */
+    Status = PspEnumerateProcessesInJobLocked(Job,
+                                              PspAssociateCompletionPortCallback,
+                                              Job);
+
+    ASSERT(NT_SUCCESS(Status));
 
     ExReleaseResourceLite(&Job->JobLock);
 
-    return Status;
+    /* The completion port is already associated. A notification allocation
+       failure can't safely roll back the association. */
+    return STATUS_SUCCESS;
 }
 
 /*!
@@ -1210,7 +1508,7 @@ PspQueryLimitInformation(
  * @param[in] Process
  *     A pointer to the process whose ID is being added to the process list.
  *
- * @param[in, out, optional] Context
+ * @param[in, out] Context
  *     A pointer to the context structure that tracks the process ID collection.
  *     This context holds the list of process IDs, the length of the buffer,
  *     and the status of the collection operation.
@@ -1224,10 +1522,10 @@ static
 NTSTATUS
 PspQueryJobProcessIdListCallback(
     _In_ PEPROCESS Process,
-    _In_opt_ PVOID Context
+    _Inout_ PVOID Context
 )
 {
-    PQUERY_JOB_PROCESS_ID_CONTEXT ProcContext = (PQUERY_JOB_PROCESS_ID_CONTEXT)Context;
+    PPSP_QUERY_JOB_PROCESS_ID_CONTEXT QueryContext = (PPSP_QUERY_JOB_PROCESS_ID_CONTEXT)Context;
 
     /* Skip processes that are not really active */
     if (Process->JobStatus & JOB_NOT_REALLY_ACTIVE)
@@ -1236,28 +1534,27 @@ PspQueryJobProcessIdListCallback(
         return STATUS_SUCCESS;
     }
 
-    /* Check if there is enough space in the list to add another process ID */
-    if (ProcContext->ListLength >= sizeof(ULONG_PTR))
+    /* An active process may be linked before its process identifier has been
+       assigned - such a process is not representable in this information class */
+    if (Process->UniqueProcessId == NULL)
     {
-        if (ExAcquireRundownProtection(&Process->RundownProtect))
-        {
-            /* Add the process ID to the list */
-            *ProcContext->IdListArray++ = (ULONG_PTR)Process->UniqueProcessId;
+        ASSERT(QueryContext->ProcessIdList->NumberOfAssignedProcesses != 0);
 
-            /* Adjust the remaining buffer space and increment the process
-               count */
-            ProcContext->ListLength -= sizeof(ULONG_PTR);
-            ProcContext->ProcIdList->NumberOfProcessIdsInList++;
+        QueryContext->ProcessIdList->NumberOfAssignedProcesses--;
 
-            ExReleaseRundownProtection(&Process->RundownProtect);
-        }
+        return STATUS_SUCCESS;
     }
-    else
+
+    if (QueryContext->RemainingLength < sizeof(ULONG_PTR))
     {
-        /* Break the enumeration on buffer overflow */
-        ProcContext->Status = STATUS_BUFFER_OVERFLOW;
-        return ProcContext->Status;
+        return STATUS_BUFFER_OVERFLOW;
     }
+
+    *QueryContext->NextProcessId++ = (ULONG_PTR)Process->UniqueProcessId;
+
+    QueryContext->RemainingLength -= sizeof(ULONG_PTR);
+
+    QueryContext->ProcessIdList->NumberOfProcessIdsInList++;
 
     return STATUS_SUCCESS;
 }
@@ -1295,8 +1592,8 @@ PspQueryJobProcessIdList(
     _Out_ PULONG ReturnRequiredLength
 )
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-    QUERY_JOB_PROCESS_ID_CONTEXT ProcContext;
+    NTSTATUS Status;
+    PSP_QUERY_JOB_PROCESS_ID_CONTEXT QueryContext;
 
     /* Check if the buffer provided is large enough to hold at least the
        fixed portion of JOBOBJECT_BASIC_PROCESS_ID_LIST */
@@ -1305,32 +1602,43 @@ PspQueryJobProcessIdList(
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    /* Initialize the process context */
-    ProcContext.ProcIdList = ProcIdList;
-    ProcContext.ListLength =
-        JobInformationLength - FIELD_OFFSET(JOBOBJECT_BASIC_PROCESS_ID_LIST,
-                                            ProcessIdList);
-    ProcContext.IdListArray = &ProcIdList->ProcessIdList[0];
-    ProcContext.Status = STATUS_SUCCESS;
+    QueryContext.ProcessIdList = ProcIdList;
+    QueryContext.NextProcessId = &ProcIdList->ProcessIdList[0];
+    QueryContext.RemainingLength = JobInformationLength - FIELD_OFFSET(JOBOBJECT_BASIC_PROCESS_ID_LIST,
+                                                                       ProcessIdList);
 
-    /* Fill in the number of assigned processes */
-    ProcIdList->NumberOfAssignedProcesses = Job->ActiveProcesses;
-    ProcIdList->NumberOfProcessIdsInList = 0;
+    Status = STATUS_SUCCESS;
 
-    /* Use the enumerator to collect the process IDs
-       N.B. The enumeration will stop if the callback fails */
-    Status = PspEnumerateProcessesInJob(Job,
-                                        PspQueryJobProcessIdListCallback,
-                                        &ProcContext,
-                                        TRUE);
+    ExEnterCriticalRegionAndAcquireResourceShared(&Job->JobLock);
 
-    /* Calculate how much of the buffer was used */
-    *ReturnRequiredLength = JobInformationLength - ProcContext.ListLength;
+    _SEH2_TRY
+    {
+        ProcIdList->NumberOfAssignedProcesses = Job->ActiveProcesses;
+        ProcIdList->NumberOfProcessIdsInList = 0;
 
-    /* Ensure the right error is propagated if the buffer was too small */
-    return ProcContext.Status == STATUS_BUFFER_OVERFLOW
-               ? STATUS_BUFFER_OVERFLOW
-               : Status;
+        Status = PspEnumerateProcessesInJobLocked(Job,
+                                                  PspQueryJobProcessIdListCallback,
+                                                  &QueryContext);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+
+    if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW)
+    {
+        /* Report the bytes actually written */
+        *ReturnRequiredLength = (ULONG)(JobInformationLength - QueryContext.RemainingLength);
+    }
+    else
+    {
+        *ReturnRequiredLength = 0;
+    }
+
+    return Status;
 }
 
 /*
@@ -1410,8 +1718,6 @@ NtCreateJobObject(
     PEPROCESS CurrentProcess;
     NTSTATUS Status;
 
-    DPRINT1("NtCreateJobObject(JobHandle: %p)\n", JobHandle);
-
     PAGED_CODE();
 
     PreviousMode = ExGetPreviousMode();
@@ -1462,13 +1768,7 @@ NtCreateJobObject(
         KeInitializeGuardedMutex(&Job->MemoryLimitsLock);
 
         /* Initialize the job lock */
-        Status = ExInitializeResource(&Job->JobLock);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to initialize job lock\n");
-            ObDereferenceObject(Job);
-            return Status;
-        }
+        (VOID)ExInitializeResource(&Job->JobLock);
 
         /* Initialize the event object within the job */
         KeInitializeEvent(&Job->Event, NotificationEvent, FALSE);
@@ -1632,11 +1932,10 @@ NtAssignProcessToJobObject(
         return Status;
     }
 
-    /* Reference the process. Make sure we have enough rights, especially to
-       terminate the process. Otherwise, one could abuse job objects to
-       terminate processes without having the rights to do so */
+    /* Reference the process. The handle must have the PROCESS_SET_QUOTA and 
+       PROCESS_TERMINATE access rights. */
     Status = ObReferenceObjectByHandle(ProcessHandle,
-                                       PROCESS_TERMINATE,
+                                       PROCESS_SET_QUOTA | PROCESS_TERMINATE,
                                        PsProcessType,
                                        PreviousMode,
                                        (PVOID *)&Process,
@@ -1659,43 +1958,12 @@ NtAssignProcessToJobObject(
         return STATUS_ACCESS_DENIED;
     }
 
-    if (ExAcquireRundownProtection(&Process->RundownProtect))
+    Status = PspAssignProcessToJob(Process, Job);
+
+    if (Status == STATUS_QUOTA_EXCEEDED)
     {
-        /* Ensure the process is not already assigned to a job */
-        ASSERT(Process->Job == NULL);
-
-        /* Capture a reference for the process lifetime */
-        ObReferenceObject(Job);
-
-        /* Try to atomically compare-and-exchange the job pointer */
-        if (InterlockedCompareExchangePointer((PVOID)&Process->Job, Job, NULL))
-        {
-            ExReleaseRundownProtection(&Process->RundownProtect);
-
-            /* At this point, the job was referenced twice */
-            ObDereferenceObjectEx(Job, 2);
-            ObDereferenceObject(Process);
-
-            return STATUS_ACCESS_DENIED;
-        }
-
-        ExReleaseRundownProtection(&Process->RundownProtect);
-
-        /* Assign the process to the job */
-        Status = PspAssignProcessToJob(Process, Job);
-
-        /* If the assignment causes the active process count to exceed
-           ActiveProcessLimit, the process is terminated */
-        if (Status == STATUS_QUOTA_EXCEEDED)
-        {
-            Status = PsTerminateProcess(Process, STATUS_QUOTA_EXCEEDED);
-        }
-
-        /* TODO: UI restrictions class */
-    }
-    else
-    {
-        Status = STATUS_PROCESS_IS_TERMINATING;
+        /* Preserve the assignment failure */
+        (VOID)PsTerminateProcess(Process, STATUS_QUOTA_EXCEEDED);
     }
 
     ObDereferenceObject(Job);
@@ -1732,10 +2000,6 @@ NtIsProcessInJob(
     PEJOB ProcessJob;
     PEJOB JobObjectFromHandle;
     NTSTATUS Status;
-
-    DPRINT1("NtIsProcessInJob(ProcessHandle: %p, JobHandle: %p)\n",
-            ProcessHandle,
-            JobHandle);
 
     PreviousMode = ExGetPreviousMode();
 
@@ -1958,9 +2222,7 @@ NtQueryInformationJobObject(
             /* Probe the buffer */
             if (JobInformation != NULL)
             {
-                ProbeForWrite(JobInformation,
-                              JobInformationLength,
-                              RequiredAlign);
+                ProbeForWrite(JobInformation, JobInformationLength, RequiredAlign);
             }
 
             /* Probe the return length if required */
@@ -1983,7 +2245,7 @@ NtQueryInformationJobObject(
                                            JOB_OBJECT_QUERY,
                                            PsJobType,
                                            PreviousMode,
-                                           (PVOID*)&Job,
+                                           (PVOID *)&Job,
                                            NULL);
         if (!NT_SUCCESS(Status))
         {
@@ -2159,9 +2421,7 @@ NtSetInformationJobObject(
             /* Probe out buffer for read */
             if (JobInformationLength != 0)
             {
-                ProbeForRead(JobInformation,
-                             JobInformationLength,
-                             RequiredAlign);
+                ProbeForRead(JobInformation, JobInformationLength, RequiredAlign);
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2191,7 +2451,7 @@ NtSetInformationJobObject(
                                        DesiredAccess,
                                        PsJobType,
                                        PreviousMode,
-                                       (PVOID*)&Job,
+                                       (PVOID *)&Job,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
