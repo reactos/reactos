@@ -5095,6 +5095,28 @@ VtFillKeyEvent(PINPUT_RECORD Destination,
     Destination->Event.KeyEvent.uChar.UnicodeChar = Character;
 }
 
+BOOLEAN
+NTAPI
+ConDrvVtIsMouseTrackingEnabled(PCONSOLE Console)
+{
+    PTEXTMODE_SCREEN_BUFFER ScreenBuffer;
+    ULONG PrivateModes;
+
+    if (!Console ||
+        !(Console->InputBuffer.Mode & ENABLE_VIRTUAL_TERMINAL_INPUT) ||
+        !Console->ActiveBuffer ||
+        GetType(Console->ActiveBuffer) != TEXTMODE_BUFFER)
+    {
+        return FALSE;
+    }
+
+    ScreenBuffer = (PTEXTMODE_SCREEN_BUFFER)Console->ActiveBuffer;
+    PrivateModes = ScreenBuffer->VtState.PrivateModes;
+    return !!(PrivateModes & (VT_PRIVMODE_MOUSE_X10 |
+                              VT_PRIVMODE_MOUSE_BUTTON_TRACKING |
+                              VT_PRIVMODE_MOUSE_ANY_EVENT));
+}
+
 NTSTATUS
 NTAPI
 ConDrvVtTranslateInput(PCONSOLE Console,

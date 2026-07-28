@@ -21,6 +21,7 @@
 #include <debug.h>
 
 #include "concfg/font.h"
+#include "../../include/vt.h"
 #include "guiterm.h"
 #include "resource.h"
 
@@ -1798,7 +1799,8 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
         }
     }
-    else if (GetConsoleInputBufferMode(Console) & ENABLE_MOUSE_INPUT)
+    else if ((GetConsoleInputBufferMode(Console) & ENABLE_MOUSE_INPUT) ||
+             ConDrvVtIsMouseTrackingEnabled((PCONSOLE)Console))
     {
         INPUT_RECORD er;
         WORD  wKeyState         = GET_KEYSTATE_WPARAM(wParam);

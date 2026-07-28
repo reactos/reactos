@@ -60,6 +60,10 @@ ConDrvVtTranslateInput(PCONSOLE Console,
                        PULONG TranslatedCount,
                        PBOOLEAN AllocatedBuffer);
 
+BOOLEAN
+NTAPI
+ConDrvVtIsMouseTrackingEnabled(PCONSOLE Console);
+
 VOID
 NTAPI
 VtResetTabStops(PTEXTMODE_SCREEN_BUFFER ScreenBuffer);
