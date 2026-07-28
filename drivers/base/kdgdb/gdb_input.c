@@ -104,7 +104,7 @@ apply_hardware_breakpoints(VOID)
     if (KdDebuggerDataBlock == NULL)
         return FALSE;
 
-#if defined(_M_IX86)
+#if defined(_M_IX86) && (defined(__GNUC__) || defined(__clang__))
     ProcessorBlockAddress = KdDebuggerDataBlock->KiProcessorBlock.ptr;
 #else
     ProcessorBlockAddress = (ULONG_PTR)KdDebuggerDataBlock->KiProcessorBlock;
@@ -1112,7 +1112,7 @@ handle_gdb_search_memory(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING Me
     }
 
     PatternLength = (ULONG)(End - Current);
-    if (PatternLength == 0 || PatternLength > sizeof(SearchPattern) || Address > MAXULONG_PTR || Length > MAXULONGLONG - Address)
+    if (PatternLength == 0 || PatternLength > sizeof(SearchPattern) || Address > MAXULONG_PTR || Length > ~(ULONG64)0 - Address)
         return LOOP_IF_SUCCESS(send_gdb_packet("E01"));
     if (PatternLength > Length)
         return LOOP_IF_SUCCESS(send_gdb_packet("0"));
