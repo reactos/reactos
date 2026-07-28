@@ -132,6 +132,7 @@ void send_gdb_ntstatus(_In_ NTSTATUS Status);
 extern const char hex_chars[];
 
 /* kdcom.c */
+extern BOOLEAN gdb_vctrlc_pending;
 KDSTATUS NTAPI KdpPollBreakIn(VOID);
 VOID NTAPI KdpSendByte(_In_ UCHAR Byte);
 KDSTATUS NTAPI KdpReceiveByte(_Out_ PUCHAR OutByte);

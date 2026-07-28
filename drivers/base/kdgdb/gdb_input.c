@@ -853,9 +853,9 @@ handle_gdb_query(void)
         (strncmp(gdb_input, "qSupported:", 11) == 0))
     {
 #if MONOPROCESS
-        return send_gdb_packet("PacketSize=1000;QStartNoAckMode+;binary-upload+;qXfer:exec-file:read+;qXfer:features:read+;qXfer:libraries:read+;qXfer:threads:read+;vContSupported+;");
+        return send_gdb_packet("PacketSize=1000;QStartNoAckMode+;binary-upload+;qXfer:exec-file:read+;qXfer:features:read+;qXfer:libraries:read+;qXfer:memory-map:read+;qXfer:threads:read+;vContSupported+;");
 #else
-        return send_gdb_packet("PacketSize=1000;QStartNoAckMode+;binary-upload+;multiprocess+;qXfer:exec-file:read+;qXfer:features:read+;qXfer:libraries:read+;qXfer:threads:read+;vContSupported+;");
+        return send_gdb_packet("PacketSize=1000;QStartNoAckMode+;binary-upload+;multiprocess+;qXfer:exec-file:read+;qXfer:features:read+;qXfer:libraries:read+;qXfer:memory-map:read+;qXfer:threads:read+;vContSupported+;");
 #endif
     }
 
@@ -1013,6 +1013,19 @@ handle_gdb_query(void)
         return send_xfer_stream(stream_libraries_xml, Window[0], Window[1]);
     }
 
+    if (strncmp(gdb_input, "qXfer:memory-map:read::", 23) == 0)
+    {
+        static const CHAR MemoryMap[] = "<?xml version=\"1.0\"?><memory-map></memory-map>";
+        const char* End = &gdb_input[gdb_input_length];
+        const char* Rest;
+        ULONG64 Window[2];
+
+        if (!parse_hex_fields(&gdb_input[23], End, ",", Window, RTL_NUMBER_OF(Window), &Rest) || Rest != End)
+            return send_gdb_packet("E01");
+
+        return send_xfer_buffer(MemoryMap, sizeof(MemoryMap) - 1, Window[0], Window[1]);
+    }
+
     if (strncmp(gdb_input, "qXfer:threads:read::", 20) == 0)
     {
         const char* End = &gdb_input[gdb_input_length];
@@ -1030,6 +1043,117 @@ handle_gdb_query(void)
 
     KDDBGPRINT("KDGDB: Unknown query: %s\n", gdb_input);
     return send_gdb_packet("");
+}
+
+static UCHAR SearchPattern[PACKET_MAX_SIZE];
+
+static
+BOOLEAN
+SearchMemorySendHandler(_In_ ULONG PacketType, _In_ PSTRING MessageHeader, _In_ PSTRING MessageData)
+{
+    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
+
+    UNREFERENCED_PARAMETER(MessageData);
+
+    if (PacketType != PACKET_TYPE_KD_STATE_MANIPULATE || State->ApiNumber != DbgKdSearchMemoryApi)
+    {
+        KDDBGPRINT("Wrong packet received after DbgKdSearchMemoryApi request.\n");
+        return FALSE;
+    }
+
+    if (NT_SUCCESS(State->ReturnStatus))
+    {
+        CHAR Reply[2 + sizeof(ULONG64) * 2 + 1];
+
+        _snprintf(Reply, sizeof(Reply), "1,%" PRIx64, State->u.SearchMemory.FoundAddress);
+        send_gdb_packet(Reply);
+    }
+    else if (State->ReturnStatus == STATUS_NOT_FOUND)
+    {
+        send_gdb_packet("0");
+    }
+    else
+    {
+        send_gdb_ntstatus(State->ReturnStatus);
+    }
+
+    KdpSendPacketHandler = NULL;
+    KdpManipulateStateHandler = NULL;
+
+#if MONOPROCESS
+    if (gdb_dbg_tid != 0)
+#else
+    if ((gdb_dbg_pid != 0) && gdb_pid_to_handle(gdb_dbg_pid) != PsGetCurrentProcessId())
+#endif
+    {
+        if (ps_initialized())
+            __writecr3(KdpGetDirectoryTableBase(&PsGetCurrentProcess()->Pcb));
+    }
+
+    return TRUE;
+}
+
+static
+KDSTATUS
+handle_gdb_search_memory(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext)
+{
+    const char* Current = &gdb_input[15];
+    const char* End = &gdb_input[gdb_input_length];
+    ULONG64 Address;
+    ULONG64 Length;
+    ULONG PatternLength;
+
+    UNREFERENCED_PARAMETER(KdContext);
+
+    if (!parse_hex_value(Current, End, &Address, &Current) || Current == End || *Current++ != ';' ||
+        !parse_hex_value(Current, End, &Length, &Current) || Current == End || *Current++ != ';')
+    {
+        return LOOP_IF_SUCCESS(send_gdb_packet("E01"));
+    }
+
+    PatternLength = (ULONG)(End - Current);
+    if (PatternLength == 0 || PatternLength > sizeof(SearchPattern) || Address > MAXULONG_PTR || Length > MAXULONGLONG - Address)
+        return LOOP_IF_SUCCESS(send_gdb_packet("E01"));
+    if (PatternLength > Length)
+        return LOOP_IF_SUCCESS(send_gdb_packet("0"));
+
+    RtlCopyMemory(SearchPattern, Current, PatternLength);
+    State->ApiNumber = DbgKdSearchMemoryApi;
+    State->ReturnStatus = STATUS_SUCCESS;
+    State->Processor = CurrentStateChange.Processor;
+    State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
+    State->u.SearchMemory.SearchAddress = Address;
+    State->u.SearchMemory.SearchLength = Length;
+    State->u.SearchMemory.PatternLength = PatternLength;
+    MessageData->Buffer = (CHAR*)SearchPattern;
+    MessageData->Length = (USHORT)PatternLength;
+    *MessageLength = PatternLength;
+
+#if MONOPROCESS
+    if ((gdb_dbg_tid != 0) && gdb_tid_to_handle(gdb_dbg_tid) != PsGetCurrentThreadId())
+    {
+        PETHREAD AttachedThread = find_thread(0, gdb_dbg_tid);
+        PKPROCESS AttachedProcess;
+
+        if (AttachedThread == NULL || AttachedThread->Tcb.Process == NULL)
+            return LOOP_IF_SUCCESS(send_gdb_packet("E03"));
+        AttachedProcess = AttachedThread->Tcb.Process;
+        __writecr3(KdpGetDirectoryTableBase(AttachedProcess));
+    }
+#else
+    if ((gdb_dbg_pid != 0) && gdb_pid_to_handle(gdb_dbg_pid) != PsGetCurrentProcessId())
+    {
+        PEPROCESS AttachedProcess = find_process(gdb_dbg_pid);
+
+        if (AttachedProcess == NULL)
+            return LOOP_IF_SUCCESS(send_gdb_packet("E03"));
+        if (ps_initialized())
+            __writecr3(KdpGetDirectoryTableBase(&AttachedProcess->Pcb));
+    }
+#endif
+
+    KdpSendPacketHandler = SearchMemorySendHandler;
+    return KdPacketReceived;
 }
 
 static BOOLEAN ReadMemoryBinary;
@@ -1856,6 +1980,9 @@ handle_gdb_v(
     if (strcmp(gdb_input, "vMustReplyEmpty") == 0)
         return LOOP_IF_SUCCESS(send_gdb_packet(""));
 
+    if (strcmp(gdb_input, "vCtrlC") == 0)
+        return LOOP_IF_SUCCESS(send_gdb_packet("OK"));
+
     if (gdb_input_length < 7 || strncmp(gdb_input, "vCont;", 6) != 0)
         return LOOP_IF_SUCCESS(send_gdb_packet(""));
 
@@ -1965,7 +2092,10 @@ gdb_receive_and_interpret_packet(
             Status = handle_gdb_set();
             break;
         case 'q':
-            Status = LOOP_IF_SUCCESS(handle_gdb_query());
+            if (gdb_input_length >= 15 && strncmp(gdb_input, "qSearch:memory:", 15) == 0)
+                Status = handle_gdb_search_memory(State, MessageData, MessageLength, KdContext);
+            else
+                Status = LOOP_IF_SUCCESS(handle_gdb_query());
             break;
         case 's':
         case 'S':

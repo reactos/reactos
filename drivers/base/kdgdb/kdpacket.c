@@ -203,6 +203,11 @@ send_kd_state_change(DBGKD_ANY_WAIT_STATE_CHANGE* StateChange)
 #else
         gdb_dbg_pid = handle_to_gdb_pid(PsGetThreadProcessId(Thread));
 #endif
+        if (gdb_vctrlc_pending)
+        {
+            gdb_vctrlc_pending = FALSE;
+            send_gdb_packet("OK");
+        }
         gdb_send_exception();
         /* Next receive call will ask for the context */
         KdpManipulateStateHandler = GetContextManipulateHandler;
