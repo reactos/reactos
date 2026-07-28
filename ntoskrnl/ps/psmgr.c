@@ -415,6 +415,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EPROCESS);
     ObjectTypeInitializer.GenericMapping = PspProcessMapping;
     ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
+    ObjectTypeInitializer.OpenProcedure = NULL;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
 
@@ -424,6 +425,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(ETHREAD);
     ObjectTypeInitializer.GenericMapping = PspThreadMapping;
     ObjectTypeInitializer.ValidAccessMask = THREAD_ALL_ACCESS;
+    ObjectTypeInitializer.OpenProcedure = PspThreadOpen;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteThread;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsThreadType);
 
@@ -434,6 +436,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.GenericMapping = PspJobMapping;
     ObjectTypeInitializer.InvalidAttributes = 0;
     ObjectTypeInitializer.ValidAccessMask = JOB_OBJECT_ALL_ACCESS;
+    ObjectTypeInitializer.OpenProcedure = NULL;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteJob;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsJobType);
 
