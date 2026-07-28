@@ -11,6 +11,9 @@
 const char hex_chars[] = "0123456789abcdef";
 static CHAR currentChecksum = 0;
 
+/* GLOBALS ********************************************************************/
+BOOLEAN gdb_no_ack_mode = FALSE;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 static
 char*
@@ -80,6 +83,9 @@ finish_gdb_packet(void)
     KdpSendByte('#');
     KdpSendByte(hex_chars[(currentChecksum >> 4) & 0xf]);
     KdpSendByte(hex_chars[currentChecksum & 0xf]);
+
+    if (gdb_no_ack_mode)
+        return KdPacketReceived;
 
     /* Wait for acknowledgement */
     Status = KdpReceiveByte(&ack);

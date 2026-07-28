@@ -4,6 +4,7 @@ spec2def(kdgdb.dll kdgdb.spec)
 list(APPEND SOURCE
     gdb_input.c
     gdb_receive.c
+    gdb_regs.c
     gdb_send.c
     kdcom.c
     kdpacket.c

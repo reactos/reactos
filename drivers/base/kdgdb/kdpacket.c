@@ -96,7 +96,39 @@ SetContextSendHandler(
     {
         /* Should we bugcheck ? */
         KDDBGPRINT("BAD BAD BAD not manipulating state for sending context.\n");
-        return FALSE;
+    }
+
+    KdpSendPacketHandler = NULL;
+    return TRUE;
+}
+
+/*
+ * Same as above, but the GDB packet that triggered the write - 'P' or 'G' -
+ * still owes GDB a reply, which can only be sent once KD has confirmed it.
+ */
+static
+BOOLEAN
+SetContextReplySendHandler(
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_ PSTRING MessageData
+)
+{
+    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
+
+    if ((PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
+            || (State->ApiNumber != DbgKdSetContextApi))
+    {
+        KDDBGPRINT("BAD BAD BAD not manipulating state for sending context.\n");
+        send_gdb_packet("E01");
+    }
+    else if (!NT_SUCCESS(State->ReturnStatus))
+    {
+        send_gdb_ntstatus(State->ReturnStatus);
+    }
+    else
+    {
+        send_gdb_packet("OK");
     }
 
     KdpSendPacketHandler = NULL;
@@ -130,6 +162,20 @@ SetContextManipulateHandler(
     KdpManipulateStateHandler = NULL;
 
     return KdPacketReceived;
+}
+
+KDSTATUS
+SetContextManipulateHandlerWithReply(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
+{
+    KDSTATUS Status;
+
+    Status = SetContextManipulateHandler(State, MessageData, MessageLength, KdContext);
+    KdpSendPacketHandler = SetContextReplySendHandler;
+    return Status;
 }
 
 static
