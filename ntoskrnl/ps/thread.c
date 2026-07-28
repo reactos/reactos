@@ -21,6 +21,29 @@ POBJECT_TYPE PsThreadType = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+NTSTATUS
+NTAPI
+PspThreadOpen(
+    _In_ OB_OPEN_REASON Reason,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_opt_ PEPROCESS Process,
+    _In_ PVOID ObjectBody,
+    _Inout_ PACCESS_MASK GrantedAccess,
+    _In_ ULONG HandleCount)
+{
+    if (*GrantedAccess & THREAD_SET_INFORMATION)
+    {
+        *GrantedAccess |= THREAD_SET_LIMITED_INFORMATION;
+    }
+
+    if (*GrantedAccess & THREAD_QUERY_INFORMATION)
+    {
+        *GrantedAccess |= THREAD_QUERY_LIMITED_INFORMATION;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 VOID
 NTAPI
 PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
@@ -552,10 +575,11 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         /* Remove access if it failed */
         if (!Result) Process->GrantedAccess = 0;
 
-        /* Set least some minimum access */
+        /* Set at least some minimum access */
         Thread->GrantedAccess |= (THREAD_TERMINATE |
                                   THREAD_SET_INFORMATION |
-                                  THREAD_QUERY_INFORMATION);
+                                  THREAD_QUERY_INFORMATION |
+                                  THREAD_QUERY_LIMITED_INFORMATION);
     }
     else
     {
