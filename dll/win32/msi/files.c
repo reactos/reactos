@@ -75,23 +75,22 @@ static BOOL copy_file( MSIPACKAGE *package, const WCHAR *src, const WCHAR *dst, 
     /* HACK: Protect Tahoma.ttf and Tahomabd.ttf from overwrites
      * until next reboot. See CORE-19789. */
     static WCHAR PathWin[MAX_PATH] = { 0 };
-    static WCHAR PathTahoma[MAX_PATH] = { 0 };
-    static WCHAR PathTahomabd[MAX_PATH] = { 0 };
+    static WCHAR PathTahoma[MAX_PATH];
+    static WCHAR PathTahomabd[MAX_PATH];
     WCHAR PathTmp[MAX_PATH];
 
+    /* Initialize check */
     if (PathWin[0] == UNICODE_NULL)
-        GetSystemWindowsDirectoryW(PathWin, ARRAYSIZE(PathWin));
-
-    if (PathTahoma[0] == UNICODE_NULL)
     {
-        wcscat(PathTahoma, PathWin);
-        wcscat(PathTahoma, L"\\Fonts\\TAHOMA.TTF");
-    }
-
-    if (PathTahomabd[0] == UNICODE_NULL)
-    {
-        wcscat(PathTahomabd, PathWin);
-        wcscat(PathTahomabd, L"\\Fonts\\TAHOMABD.TTF");
+        if (GetSystemWindowsDirectoryW(PathWin, ARRAYSIZE(PathWin)))
+        {
+            wcscat(PathTahoma, PathWin);
+            wcscat(PathTahoma, L"\\Fonts\\TAHOMA.TTF");
+            wcscat(PathTahomabd, PathWin);
+            wcscat(PathTahomabd, L"\\Fonts\\TAHOMABD.TTF");
+        }
+        else
+            WARN("Failed to GetSystemWindowsDirectoryW - %lu\n", GetLastError());
     }
 
     if (_wcsicmp(dst, PathTahoma) == 0)
