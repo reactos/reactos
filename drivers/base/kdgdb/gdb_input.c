@@ -14,13 +14,6 @@ static struct
     ULONG_PTR Address;
     ULONG Handle;
 } BreakPointHandles[32];
-typedef struct _GDB_HARDWARE_BREAKPOINT
-{
-    ULONG64 Address;
-    ULONG Kind;
-    UCHAR Type;
-    BOOLEAN Active;
-} GDB_HARDWARE_BREAKPOINT;
 static GDB_HARDWARE_BREAKPOINT HardwareBreakpoints[4];
 static LIST_ENTRY* ThreadInfoProcessEntry;
 static LIST_ENTRY* ThreadInfoThreadEntry;
@@ -33,63 +26,10 @@ static BOOLEAN ThreadInfoIdlePending;
 UINT_PTR gdb_dbg_pid;
 UINT_PTR gdb_dbg_tid;
 
-#define GDB_DR7_GLOBAL_ENABLE(Slot) (2ULL << ((Slot) * 2))
-#define GDB_DR7_CONTROL_SHIFT(Slot) (16 + ((Slot) * 4))
-#define GDB_DR7_RESERVED_BIT 0x400ULL
-
-static ULONG64
-hardware_breakpoint_control(_In_ const GDB_HARDWARE_BREAKPOINT* Breakpoint)
+const GDB_HARDWARE_BREAKPOINT*
+gdb_hardware_breakpoints(VOID)
 {
-    ULONG64 Access;
-    ULONG64 Length;
-
-    if (Breakpoint->Type == 1)
-        return 0;
-
-    /* x86 has no read-only encoding, so Z3 uses read/write to avoid missing reads. */
-    Access = (Breakpoint->Type == 2) ? 1 : 3;
-    switch (Breakpoint->Kind)
-    {
-        case 1: Length = 0; break;
-        case 2: Length = 1; break;
-        case 4: Length = 3; break;
-        case 8: Length = 2; break;
-        default: return ~(ULONG64)0;
-    }
-
-    return Access | (Length << 2);
-}
-
-ULONG64
-gdb_hardware_breakpoint_dr7(VOID)
-{
-    ULONG64 Dr7 = 0;
-    ULONG i;
-
-    for (i = 0; i < RTL_NUMBER_OF(HardwareBreakpoints); i++)
-    {
-        ULONG64 Control;
-
-        if (!HardwareBreakpoints[i].Active)
-            continue;
-
-        Control = hardware_breakpoint_control(&HardwareBreakpoints[i]);
-        Dr7 |= GDB_DR7_GLOBAL_ENABLE(i) | (Control << GDB_DR7_CONTROL_SHIFT(i));
-    }
-
-    return Dr7 ? Dr7 | GDB_DR7_RESERVED_BIT : 0;
-}
-
-static VOID
-set_debug_address(_Inout_ PKSPECIAL_REGISTERS Registers, _In_ ULONG Slot, _In_ ULONG64 Address)
-{
-    switch (Slot)
-    {
-        case 0: Registers->KernelDr0 = (ULONG_PTR)Address; break;
-        case 1: Registers->KernelDr1 = (ULONG_PTR)Address; break;
-        case 2: Registers->KernelDr2 = (ULONG_PTR)Address; break;
-        case 3: Registers->KernelDr3 = (ULONG_PTR)Address; break;
-    }
+    return HardwareBreakpoints;
 }
 
 static BOOLEAN
@@ -97,9 +37,7 @@ apply_hardware_breakpoints(VOID)
 {
     PKPRCB* ProcessorBlock;
     ULONG_PTR ProcessorBlockAddress;
-    ULONG64 Dr7;
     ULONG Processor;
-    ULONG Slot;
 
     if (KdDebuggerDataBlock == NULL)
         return FALSE;
@@ -113,30 +51,23 @@ apply_hardware_breakpoints(VOID)
         return FALSE;
 
     ProcessorBlock = (PKPRCB*)ProcessorBlockAddress;
-    Dr7 = gdb_hardware_breakpoint_dr7();
     for (Processor = 0; Processor < CurrentStateChange.NumberProcessors; Processor++)
     {
-        PKSPECIAL_REGISTERS Registers;
-
         if (ProcessorBlock[Processor] == NULL)
             continue;
 
-        Registers = &ProcessorBlock[Processor]->ProcessorState.SpecialRegisters;
-        for (Slot = 0; Slot < RTL_NUMBER_OF(HardwareBreakpoints); Slot++)
-            set_debug_address(Registers, Slot, HardwareBreakpoints[Slot].Active ? HardwareBreakpoints[Slot].Address : 0);
-        Registers->KernelDr6 = 0;
-        Registers->KernelDr7 = (ULONG_PTR)Dr7;
+        gdb_arch_program_hw_breakpoints(
+            &ProcessorBlock[Processor]->ProcessorState.SpecialRegisters,
+            HardwareBreakpoints);
     }
 
-    CurrentStateChange.ControlReport.Dr6 = 0;
-    CurrentStateChange.ControlReport.Dr7 = Dr7;
+    gdb_arch_report_hw_breakpoints(HardwareBreakpoints);
     return TRUE;
 }
 
 BOOLEAN
 gdb_get_watchpoint_stop(_Out_ const CHAR** Reason, _Out_ PULONG64 Address)
 {
-    ULONG64 Dr6;
     ULONG Slot;
 
     if (CurrentStateChange.NewState != DbgKdExceptionStateChange ||
@@ -145,13 +76,17 @@ gdb_get_watchpoint_stop(_Out_ const CHAR** Reason, _Out_ PULONG64 Address)
         return FALSE;
     }
 
-    Dr6 = CurrentStateChange.ControlReport.Dr6;
-    for (Slot = 0; Slot < RTL_NUMBER_OF(HardwareBreakpoints); Slot++)
+    for (Slot = 0; Slot < gdb_hw_breakpoint_count; Slot++)
     {
-        if (!(Dr6 & (1ULL << Slot)) || !HardwareBreakpoints[Slot].Active || HardwareBreakpoints[Slot].Type == 1)
+        if (!HardwareBreakpoints[Slot].Active ||
+            HardwareBreakpoints[Slot].Type == GDB_HW_EXECUTE ||
+            !gdb_arch_hw_breakpoint_hit(HardwareBreakpoints, Slot))
+        {
             continue;
+        }
 
-        *Reason = HardwareBreakpoints[Slot].Type == 2 ? "watch" : HardwareBreakpoints[Slot].Type == 3 ? "rwatch" : "awatch";
+        *Reason = HardwareBreakpoints[Slot].Type == GDB_HW_WRITE ? "watch" :
+                  HardwareBreakpoints[Slot].Type == GDB_HW_READ ? "rwatch" : "awatch";
         *Address = HardwareBreakpoints[Slot].Address;
         return TRUE;
     }
@@ -1551,17 +1486,19 @@ static KDSTATUS
 handle_gdb_insert_hardware_breakpoint(_In_ ULONG Type, _In_ ULONG64 Address, _In_ ULONG Kind)
 {
     GDB_HARDWARE_BREAKPOINT Breakpoint = {Address, Kind, (UCHAR)Type, TRUE};
-    ULONG FreeSlot = RTL_NUMBER_OF(HardwareBreakpoints);
+    ULONG FreeSlot = gdb_hw_breakpoint_count;
     ULONG Slot;
 
-    if ((Type == 1 && Kind != 1) || hardware_breakpoint_control(&Breakpoint) == ~(ULONG64)0 || (Kind > 1 && (Address & (Kind - 1)) != 0))
+    if (!gdb_arch_hw_breakpoint_valid(&Breakpoint))
+    {
         return LOOP_IF_SUCCESS(send_gdb_packet("E01"));
+    }
 #if defined(_M_IX86)
     if (Kind == 8)
         return LOOP_IF_SUCCESS(send_gdb_packet("E01"));
 #endif
 
-    for (Slot = 0; Slot < RTL_NUMBER_OF(HardwareBreakpoints); Slot++)
+    for (Slot = 0; Slot < gdb_hw_breakpoint_count; Slot++)
     {
         if (HardwareBreakpoints[Slot].Active &&
             HardwareBreakpoints[Slot].Type == Type &&
@@ -1570,11 +1507,11 @@ handle_gdb_insert_hardware_breakpoint(_In_ ULONG Type, _In_ ULONG64 Address, _In
         {
             return LOOP_IF_SUCCESS(send_gdb_packet("OK"));
         }
-        if (!HardwareBreakpoints[Slot].Active && FreeSlot == RTL_NUMBER_OF(HardwareBreakpoints))
+        if (!HardwareBreakpoints[Slot].Active && FreeSlot == gdb_hw_breakpoint_count)
             FreeSlot = Slot;
     }
 
-    if (FreeSlot == RTL_NUMBER_OF(HardwareBreakpoints))
+    if (FreeSlot == gdb_hw_breakpoint_count)
         return LOOP_IF_SUCCESS(send_gdb_packet("E01"));
 
     HardwareBreakpoints[FreeSlot] = Breakpoint;
@@ -1592,7 +1529,7 @@ handle_gdb_remove_hardware_breakpoint(_In_ ULONG Type, _In_ ULONG64 Address, _In
 {
     ULONG Slot;
 
-    for (Slot = 0; Slot < RTL_NUMBER_OF(HardwareBreakpoints); Slot++)
+    for (Slot = 0; Slot < gdb_hw_breakpoint_count; Slot++)
     {
         GDB_HARDWARE_BREAKPOINT Previous;
 

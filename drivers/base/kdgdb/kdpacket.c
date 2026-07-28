@@ -277,8 +277,7 @@ ContinueManipulateStateHandler(
         MessageData->Length = 0;
     *MessageLength = 0;
     State->u.Continue2.ContinueStatus = STATUS_SUCCESS;
-    State->u.Continue2.ControlSet.TraceFlag = (CurrentContext.EFlags & EFLAGS_TF) != 0;
-    State->u.Continue2.ControlSet.Dr7 = gdb_hardware_breakpoint_dr7();
+    gdb_arch_set_continue_control(State, gdb_hardware_breakpoints());
     State->u.Continue2.ControlSet.CurrentSymbolStart = 1;
     State->u.Continue2.ControlSet.CurrentSymbolEnd = 1;
 

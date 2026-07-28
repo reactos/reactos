@@ -13,9 +13,9 @@ list(APPEND SOURCE
 
 # TODO: ARM...
 if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE i386_sup.c)
+    list(APPEND SOURCE i386_sup.c hwbp_x86.c)
 elseif(ARCH STREQUAL "amd64")
-    list(APPEND SOURCE amd64_sup.c)
+    list(APPEND SOURCE amd64_sup.c hwbp_x86.c)
 endif()
 
 add_library(kdgdb MODULE
