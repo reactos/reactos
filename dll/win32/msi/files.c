@@ -74,32 +74,41 @@ static BOOL copy_file( MSIPACKAGE *package, const WCHAR *src, const WCHAR *dst, 
 #ifdef __REACTOS__
     /* HACK: Protect Tahoma.ttf and Tahomabd.ttf from overwrites
      * until next reboot. See CORE-19789. */
-    WCHAR PathWin[MAX_PATH];
-    WCHAR PathTahoma[MAX_PATH] = { 0 };
-    WCHAR PathTahomabd[MAX_PATH] = { 0 };
+    static WCHAR PathWin[MAX_PATH] = { 0 };
+    static WCHAR PathTahoma[MAX_PATH] = { 0 };
+    static WCHAR PathTahomabd[MAX_PATH] = { 0 };
     WCHAR PathTmp[MAX_PATH];
 
-    GetSystemWindowsDirectoryW(PathWin, MAX_PATH);
-    wcscat(PathTahoma, PathWin);
-    wcscat(PathTahoma, L"\\Fonts\\TAHOMA.TTF");
-    wcscat(PathTahomabd, PathWin);
-    wcscat(PathTahomabd, L"\\Fonts\\TAHOMABD.TTF");
+    if (PathWin[0] == UNICODE_NULL)
+        GetSystemWindowsDirectoryW(PathWin, ARRAYSIZE(PathWin));
+
+    if (PathTahoma[0] == UNICODE_NULL)
+    {
+        wcscat(PathTahoma, PathWin);
+        wcscat(PathTahoma, L"\\Fonts\\TAHOMA.TTF");
+    }
+
+    if (PathTahomabd[0] == UNICODE_NULL)
+    {
+        wcscat(PathTahomabd, PathWin);
+        wcscat(PathTahomabd, L"\\Fonts\\TAHOMABD.TTF");
+    }
 
     if (_wcsicmp(dst, PathTahoma) == 0)
     {
-        ERR("HACK. Should be using WFP or SFC\n");
+        ERR("HACK. Should be using Windows File Protection\n");
         wcscpy(PathTmp, PathWin);
         wcscat(PathTmp, L"\\Fonts\\TAHOMA.tmp");
-        ret = CopyFileW( src, PathTmp, FALSE);
+        ret = CopyFileW(src, PathTmp, FALSE);
         MoveFileExW(PathTahoma, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
         MoveFileExW(PathTmp, PathTahoma, MOVEFILE_DELAY_UNTIL_REBOOT);
     }
     else if (_wcsicmp(dst, PathTahomabd) == 0)
     {
-        ERR("HACK. Should be using WFP or SFC\n");
+        ERR("HACK. Should be using Windows File Protection\n");
         wcscpy(PathTmp, PathWin);
         wcscat(PathTmp, L"\\Fonts\\TAHOMABD.tmp");
-        ret = CopyFileW( src, PathTmp, FALSE);
+        ret = CopyFileW(src, PathTmp, FALSE);
         MoveFileExW(PathTahomabd, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
         MoveFileExW(PathTmp, PathTahomabd, MOVEFILE_DELAY_UNTIL_REBOOT);
     }
