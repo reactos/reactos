@@ -539,9 +539,6 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ExplorerPolicy(BSTR policy, VARIANT *v
     return E_NOTIMPL;
 }
 
-#ifndef SSF_SERVERADMINUI
-#define SSF_SERVERADMINUI 4
-#endif
 HRESULT STDMETHODCALLTYPE CShellDispatch::GetSetting(LONG setting, VARIANT_BOOL *result)
 {
     TRACE("(%p, %lu, %p)\n", this, setting, result);
