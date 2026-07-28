@@ -203,7 +203,7 @@ ObtCreateObjectTypes(VOID)
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE ObjectTypeHandle;
     UNICODE_STRING ObjectPath;
-    BOOLEAN UseNT6Callbacks = (GetNTVersion() >= _WIN32_WINNT_VISTA);
+    BOOLEAN UseNT6Callbacks = is_reactos() || (GetNTVersion() >= _WIN32_WINNT_VISTA);
 
     RtlCopyMemory(&Name.DirectoryName, L"\\ObjectTypes\\", sizeof Name.DirectoryName);
 
