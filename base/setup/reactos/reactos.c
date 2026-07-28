@@ -447,8 +447,16 @@ TypeDlgProc(
             SetDlgItemFont(hwndDlg, IDC_INSTALL, pSetupData->hBoldFont, TRUE);
             SetDlgItemFont(hwndDlg, IDC_UPDATE, pSetupData->hBoldFont, TRUE);
 
-            /* Check the "Install" radio button */
-            CheckDlgButton(hwndDlg, IDC_INSTALL, BST_CHECKED);
+            /*
+             * Enable double-click handling with the BS_NOTIFY style for both options.
+             * Idea adapted from: https://devblogs.microsoft.com/oldnewthing/20050804-10/?p=34713
+             */
+            {
+            HWND hRadio = GetDlgItem(hwndDlg, IDC_INSTALL);
+            SetWindowLongPtrW(hRadio, GWL_STYLE, GetWindowLongPtrW(hRadio, GWL_STYLE) | BS_NOTIFY);
+            hRadio = GetDlgItem(hwndDlg, IDC_UPDATE);
+            SetWindowLongPtrW(hRadio, GWL_STYLE, GetWindowLongPtrW(hRadio, GWL_STYLE) | BS_NOTIFY);
+            }
 
             /*
              * Enable the "Update" radio button and text only if we have
@@ -466,9 +474,26 @@ TypeDlgProc(
                 EnableDlgItem(hwndDlg, IDC_UPDATETEXT, FALSE);
             }
 
-            /* Ensure "Install ReactOS" is initially focused */
+            /* Check the "Install ReactOS" radio button and ensure it is initially focused */
+            CheckRadioButton(hwndDlg, IDC_INSTALL, IDC_UPDATE, IDC_INSTALL);
             SetFocus(GetDlgItem(hwndDlg, IDC_INSTALL));
             return FALSE;
+        }
+
+        case WM_COMMAND:
+        {
+            /*
+             * Go to the next page if the user double-clicked one of the options.
+             * Idea adapted from: https://devblogs.microsoft.com/oldnewthing/20050804-10/?p=34713
+             */
+            if (HIWORD(wParam) == BN_DBLCLK) switch (LOWORD(wParam))
+            {
+            case IDC_INSTALL:
+            case IDC_UPDATE:
+                PropSheet_PressButton(GetParent(hwndDlg), PSBTN_NEXT);
+                return TRUE;
+            }
+            break;
         }
 
         case WM_NOTIFY:
@@ -478,8 +503,19 @@ TypeDlgProc(
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
+                {
+                    /* Ensure the "Install ReactOS" radio button is checked if we don't have
+                     * a selected installation (default case), which can also happen if the
+                     * user clicked on the "Do not upgrade" button on the Upgrade/Repair
+                     * selection page, then went back here. */
+                    if (!pSetupData->CurrentInstallation)
+                        CheckRadioButton(hwndDlg, IDC_INSTALL, IDC_UPDATE, IDC_INSTALL);
+                    else
+                        CheckRadioButton(hwndDlg, IDC_INSTALL, IDC_UPDATE, IDC_UPDATE);
+
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     break;
+                }
 
                 case PSN_QUERYCANCEL:
                 {
@@ -865,6 +901,15 @@ UpgradeRepairDlgProc(
         case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            if (lpnm->idFrom == IDC_NTOSLIST && lpnm->code == NM_DBLCLK)
+            {
+                /* Go to the next page if the user double-clicked on an installation */
+                LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lParam;
+                if (pnmv->iItem != -1)
+                    PropSheet_PressButton(GetParent(hwndDlg), PSBTN_NEXT);
+                break;
+            }
 
             if (lpnm->idFrom == IDC_NTOSLIST && lpnm->code == LVN_ITEMCHANGED)
             {

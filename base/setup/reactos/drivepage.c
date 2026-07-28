@@ -1372,12 +1372,12 @@ DoCreatePartition(
     _In_opt_ ULONGLONG SizeBytes,
     _In_opt_ ULONG_PTR PartitionInfo)
 {
-    BOOLEAN Success;
     PPARTITEM PartItem;
     PPARTENTRY PartEntry;
     HTLITEM hParentItem;
     HTLITEM hInsertAfter;
     PPARTENTRY NextPart;
+    BOOLEAN Success;
 
     PartItem = (pPartItem ? *pPartItem : GetItemPartition(hList, *phItem));
     if (!PartItem)
@@ -1870,8 +1870,8 @@ DriveDlgProc(
                 PartItem = GetSelectedPartition(hList, &hItem);
                 if (!PartItem)
                 {
-                    // If the button was clicked, a partition
-                    // should have been selected first...
+                    /* If the button was clicked, a partition
+                     * should have been selected first */
                     ASSERT(FALSE);
                     break;
                 }
@@ -1913,6 +1913,33 @@ DriveDlgProc(
         case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            if (lpnm->idFrom == IDC_PARTITION) switch (lpnm->code)
+            {
+            case NM_RETURN:
+            {
+                /* If the currently selected item is a partition (and so, if
+                 * the wizard "Next" button is enabled), pressing "Next" will
+                 * attempt to select an install partition and go to the next
+                 * page if successful. */
+                HWND hWndParent = GetParent(hwndDlg);
+                if (IsWindowEnabled(GetDlgItem(hWndParent, ID_WIZNEXT)))
+                    PropSheet_PressButton(hWndParent, PSBTN_NEXT);
+                break;
+            }
+
+            case TVN_KEYDOWN:
+            {
+                if (((LPTV_KEYDOWN_EX)lParam)->wVKey == VK_DELETE)
+                {
+                    /* Send the delete command only if IDC_PARTDELETE is
+                     * enabled (i.e. the selected item IS a partition) */
+                    if (IsWindowEnabled(GetDlgItem(hwndDlg, IDC_PARTDELETE)))
+                        PostMessageW(hwndDlg, WM_COMMAND, MAKEWPARAM(IDC_PARTDELETE, BN_CLICKED), 0);
+                }
+                break;
+            }
+            }
 
             // On Vista+ we can use TVN_ITEMCHANGED instead, with NMTVITEMCHANGE* pointer
             if (lpnm->idFrom == IDC_PARTITION && lpnm->code == TVN_SELCHANGED)
@@ -1969,6 +1996,7 @@ DriveDlgProc(
                         /* Partition or unpartitioned space */
                         PPARTITEM PartItem = (PPARTITEM)pnmv->itemNew.lParam;
                         PPARTENTRY PartEntry;
+                        BOOL CanBePartitioned;
                         ASSERT(PartItem);
                         PartEntry = PartItem->PartEntry;
                         ASSERT(PartEntry);
@@ -1977,11 +2005,17 @@ DriveDlgProc(
                         ShowDlgItem(hwndDlg, IDC_INITDISK, SW_HIDE);
                         EnableDlgItem(hwndDlg, IDC_INITDISK, FALSE);
 
+                        /* Check whether the selected disk region is not partitioned, and
+                         * can be partitioned according to the disk's partitioning scheme */
+                        CanBePartitioned = (!PartEntry->IsPartitioned &&
+                                            (PartitionCreateChecks(PartEntry, 0ULL, 0) == NOT_AN_ERROR));
+
                         if (!PartEntry->IsPartitioned)
                         {
-                            /* Show and enable the "Create" partition button */
+                            /* Show the "Create" partition button, but enable it
+                             * only if the selected disk region can be partitioned */
                             ShowDlgItem(hwndDlg, IDC_PARTCREATE, SW_SHOW);
-                            EnableDlgItem(hwndDlg, IDC_PARTCREATE, TRUE);
+                            EnableDlgItem(hwndDlg, IDC_PARTCREATE, CanBePartitioned);
 
                             /* Hide and disable the "Format" button */
                             ShowDlgItem(hwndDlg, IDC_PARTFORMAT, SW_HIDE);
@@ -1993,12 +2027,14 @@ DriveDlgProc(
                             ShowDlgItem(hwndDlg, IDC_PARTCREATE, SW_HIDE);
                             EnableDlgItem(hwndDlg, IDC_PARTCREATE, FALSE);
 
-                            /* Show the "Format" button, but enable or disable it if a formattable volume is present */
+                            /* Show the "Format" button, but enable it only
+                             * if a formattable volume is present */
                             ShowDlgItem(hwndDlg, IDC_PARTFORMAT, SW_SHOW);
                             EnableDlgItem(hwndDlg, IDC_PARTFORMAT, !!PartEntry->Volume);
                         }
 
-                        /* Show the "Delete" partition button, but enable or disable it if the disk region is partitioned */
+                        /* Show the "Delete" partition button, but enable it
+                         * only if the disk region is partitioned */
                         ShowDlgItem(hwndDlg, IDC_PARTDELETE, SW_SHOW);
                         EnableDlgItem(hwndDlg, IDC_PARTDELETE, PartEntry->IsPartitioned);
 
@@ -2011,7 +2047,7 @@ DriveDlgProc(
                          *    or it's not yet formatted (the installer will prompt
                          *    for formatting parameters).
                          *
-                         * 2. Or, the selected disk region is not partitioned but
+                         * 2. Or, the selected disk region is not partitioned, but
                          *    can be partitioned according to the disk's partitioning
                          *    scheme (the installer will auto-partition the region
                          *    and prompt for formatting parameters).
@@ -2021,8 +2057,7 @@ DriveDlgProc(
 
                         // TODO: In the future: first test needs to be augmented with:
                         // (... && PartEntry->Volume->IsSimpleVolume)
-                        if ((PartEntry->IsPartitioned && PartEntry->Volume) ||
-                            (!PartEntry->IsPartitioned && (PartitionCreateChecks(PartEntry, 0ULL, 0) == NOT_AN_ERROR)))
+                        if ((PartEntry->IsPartitioned && PartEntry->Volume) || CanBePartitioned)
                         {
                             // ASSERT(PartEntry != PartEntry->DiskEntry->ExtendedPartition);
                             ASSERT(!IsContainerPartition(PartEntry->PartitionType));
