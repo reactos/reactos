@@ -1715,7 +1715,7 @@ gdb_receive_and_interpret_packet(
             Status = LOOP_IF_SUCCESS(gdb_send_exception());
             break;
         case '!':
-            Status = LOOP_IF_SUCCESS(send_gdb_packet(""));
+            Status = LOOP_IF_SUCCESS(send_gdb_packet("OK"));
             break;
         case 'c':
         case 'C':
