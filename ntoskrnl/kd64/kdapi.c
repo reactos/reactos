@@ -61,7 +61,8 @@ KdpCopyMemoryChunks(
     _Out_opt_ PULONG ActualSize)
 {
     NTSTATUS Status;
-    ULONG RemainingLength, CopyChunk;
+    ULONG64 StartAddress = Address;
+    ULONG RemainingLength, CopyChunk, CopiedLength;
 
     /* Check if we didn't get a chunk size or if it is too big */
     if (ChunkSize == 0)
@@ -117,14 +118,19 @@ KdpCopyMemoryChunks(
         RemainingLength = RemainingLength - CopyChunk;
     }
 
-    /* We may have modified executable code, flush the instruction cache */
-    KeSweepICache((PVOID)(ULONG_PTR)Address, TotalSize);
+    CopiedLength = TotalSize - RemainingLength;
+
+    /* Make debugger writes visible to instruction fetch. */
+    if ((Flags & MMDBG_COPY_WRITE) && CopiedLength != 0)
+    {
+        KeSweepICache((PVOID)(ULONG_PTR)StartAddress, CopiedLength);
+    }
 
     /*
      * Return the size we managed to copy and return
      * success if we could copy the whole range.
      */
-    if (ActualSize) *ActualSize = TotalSize - RemainingLength;
+    if (ActualSize) *ActualSize = CopiedLength;
     return RemainingLength == 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
