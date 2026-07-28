@@ -121,7 +121,7 @@ BEGIN
     AUTOCHECKBOX "Utili&zar o seguinte método para suavizar as arestas dos tipos de letra do ecrã:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Utilizar íco&nes grandes", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Utilizar íco&nes grandes", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP
     AUTOCHECKBOX "Mostr&ar sombras sob os menus", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
     AUTOCHECKBOX "&Mostrar o conteúdo das janelas ao arrastar", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
     AUTOCHECKBOX "&Ocultar letras sublinhadas para navegação por teclado até pressionar a tecla Alt.", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19

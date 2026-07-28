@@ -124,7 +124,7 @@ BEGIN
     AUTOCHECKBOX "З&астосовувати наступний метод згладжування для екранних шрифтів:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Застосовувати &великі значки", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Застосовувати &великі значки", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP
     AUTOCHECKBOX "Відображати тіні від меню", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19//FIXME: add accel. I used "Ві&дображати тіні від меню" for the backport
     AUTOCHECKBOX "Показати &вміст вікна під час перетягування", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
     AUTOCHECKBOX "&Приховувати покажчики виклику з клавіатури до натиснення <Alt>", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19

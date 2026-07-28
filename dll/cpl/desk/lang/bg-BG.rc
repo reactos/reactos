@@ -114,7 +114,7 @@ BEGIN
     AUTOCHECKBOX "&Използване на следния похват за изглаждане ръбовете на екранните шрифтове:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19//FIXME: text truncation. I used "&Изгладете ръбовете на екранните шрифтове чрез" for the backport
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Използван&е на големи значета", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Използван&е на големи значета", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP
     AUTOCHECKBOX "Изобразяване на &сенки под изборницте", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
     AUTOCHECKBOX "Показване на съдържанието на &прозорците по време на влачене", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
     AUTOCHECKBOX "С&криване на подчертаването за клавиатурното насочване, до натискане на Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19//FIXME: text truncation. I used "С&криване на осветяването за клавиатурата, докато не бъде натиснат Alt" for the backport
