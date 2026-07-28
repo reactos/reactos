@@ -204,6 +204,8 @@ gdb_send_exception()
 {
     char gdb_out[1024];
     char* ptr = gdb_out;
+    const CHAR* WatchReason;
+    ULONG64 WatchAddress;
     PETHREAD Thread = (PETHREAD)(ULONG_PTR)CurrentStateChange.Thread;
 
     /* Report to GDB */
@@ -219,6 +221,8 @@ gdb_send_exception()
 
     if (CurrentStateChange.NewState == DbgKdLoadSymbolsStateChange)
         ptr += sprintf(ptr, "library:");
+    else if (gdb_get_watchpoint_stop(&WatchReason, &WatchAddress))
+        ptr += sprintf(ptr, "%s:%" PRIx64 ";", WatchReason, WatchAddress);
 
 #if MONOPROCESS
     ptr += sprintf(ptr, "thread:%" PRIxPTR ";",

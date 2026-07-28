@@ -264,14 +264,18 @@ ContinueManipulateStateHandler(
 )
 {
     /* Let's go on */
-    State->ApiNumber = DbgKdContinueApi;
+    State->ApiNumber = DbgKdContinueApi2;
     State->ReturnStatus = STATUS_SUCCESS; /* ? */
     State->Processor = CurrentStateChange.Processor;
     State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
     if (MessageData)
         MessageData->Length = 0;
     *MessageLength = 0;
-    State->u.Continue.ContinueStatus = STATUS_SUCCESS;
+    State->u.Continue2.ContinueStatus = STATUS_SUCCESS;
+    State->u.Continue2.ControlSet.TraceFlag = (CurrentContext.EFlags & EFLAGS_TF) != 0;
+    State->u.Continue2.ControlSet.Dr7 = gdb_hardware_breakpoint_dr7();
+    State->u.Continue2.ControlSet.CurrentSymbolStart = 1;
+    State->u.Continue2.ControlSet.CurrentSymbolEnd = 1;
 
     /* We definitely are at the end of the send <-> receive loop, if any */
     KdpSendPacketHandler = NULL;

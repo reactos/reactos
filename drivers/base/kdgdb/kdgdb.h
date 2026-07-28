@@ -108,6 +108,8 @@ typedef KDSTATUS (*KDP_MANIPULATESTATE_HANDLER)(
 extern UINT_PTR gdb_dbg_tid;
 extern UINT_PTR gdb_dbg_pid;
 extern KDSTATUS gdb_receive_and_interpret_packet(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
+extern ULONG64 gdb_hardware_breakpoint_dr7(VOID);
+extern BOOLEAN gdb_get_watchpoint_stop(_Out_ const CHAR** Reason, _Out_ PULONG64 Address);
 
 /* gdb_receive.c */
 extern CHAR gdb_input[GDB_PACKET_MAX_SIZE + 1];
