@@ -850,18 +850,17 @@ UpgradeRepairDlgProc(
         }
 
         case WM_COMMAND:
-            switch (LOWORD(wParam))
+        {
+            if (HIWORD(wParam) == BN_CLICKED && LOWORD(wParam) == IDC_SKIPUPGRADE)
             {
-                case IDC_SKIPUPGRADE:
-                {
-                    /* Skip the upgrade and do the usual new-installation workflow */
-                    pSetupData->CurrentInstallation = NULL;
-                    pSetupData->RepairUpdateFlag = FALSE;
-                    PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_DEVICEPAGE);
-                    return TRUE;
-                }
+                /* Skip the upgrade and do the usual new-installation workflow */
+                pSetupData->CurrentInstallation = NULL;
+                pSetupData->RepairUpdateFlag = FALSE;
+                PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_DEVICEPAGE);
+                return TRUE;
             }
             break;
+        }
 
         case WM_NOTIFY:
         {
@@ -1118,6 +1117,7 @@ SummaryDlgProc(
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                 else
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+                return TRUE;
             }
             break;
         }
