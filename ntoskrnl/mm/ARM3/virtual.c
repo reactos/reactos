@@ -4603,6 +4603,14 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         return STATUS_INVALID_PARAMETER_4;
     }
 
+#ifndef _WIN64
+    if (PRegionSize >= MAXULONG)
+    {
+        DPRINT1("Region size is too large\n");
+        return STATUS_INVALID_PARAMETER_4;
+    }
+#endif
+
     /* Make sure there's a size specified */
     if (!PRegionSize)
     {
