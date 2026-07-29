@@ -54,10 +54,12 @@ static inline ULONG GetNTDDIVersion(VOID)
             case 19045: Subversion = 13; break; // 22H2
 
             // Windows 11
-            case 22000: Subversion = 14; break; // 21H2
-            case 22621: Subversion = 15; break; // 22H2
-            case 22631: Subversion = 16; break; // 23H2
-            case 26100: Subversion = 17; break; // 24H2
+            case 22000: Subversion = 11; break; // 21H2 / Cobalt -> NTDDI_WIN11
+            case 22621: Subversion = 12; break; // 22H2 / Nickel -> NTDDI_WIN11_NI
+            case 22631: Subversion = 14; break; // 23H2 / Zinc -> NTDDI_WIN11_ZN
+            case 26100: Subversion = 16; break; // 24H2 / Germanium -> NTDDI_WIN11_GE
+            case 26200: Subversion = 17; break; // 25H2 / Selenium -> NTDDI_WIN11_SE
+            case 26300: Subversion = 17; break; // 26H2 / Selenium -> NTDDI_WIN11_SE (?)
 
             default: Subversion = 0; break;     // Unknown build
         }
