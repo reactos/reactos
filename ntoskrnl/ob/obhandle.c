@@ -954,8 +954,17 @@ ObpIncrementHandleCount(IN PVOID Object,
         /* Check if the caller is trying to access system security */
         if (AccessState->RemainingDesiredAccess & ACCESS_SYSTEM_SECURITY)
         {
-            /* FIXME: TODO */
-            DPRINT1("ACCESS_SYSTEM_SECURITY not validated!\n");
+            /* Client must be warranted SeSecurityPrivilege to touch SACLs */
+            if (!SeSinglePrivilegeCheck(SeSecurityPrivilege, ProbeMode))
+            {
+                /* FIXME: Generate an audit alarm, security manager must be alerted */
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                goto Quickie;
+            }
+
+            /* Privilege held, grant it so the access state reflects reality */
+            AccessState->PreviouslyGrantedAccess |= ACCESS_SYSTEM_SECURITY;
+            AccessState->RemainingDesiredAccess &= ~ACCESS_SYSTEM_SECURITY;
         }
     }
 
