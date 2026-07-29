@@ -1444,7 +1444,7 @@ QSI_DEF(SystemHandleInformation)
             }
 
             /* Go to the next entry */
-            Handle.Value += sizeof(HANDLE);
+            Handle.Index++;
         }
     }
 
