@@ -1079,10 +1079,78 @@ typedef struct _THREAD_BASIC_INFORMATION
     KPRIORITY BasePriority;
 } THREAD_BASIC_INFORMATION, *PTHREAD_BASIC_INFORMATION;
 
+#if defined(_M_IX86)
+typedef struct _THREAD_DESCRIPTOR_INFORMATION
+{
+    ULONG Selector;
+    LDT_ENTRY Entry;
+} THREAD_DESCRIPTOR_INFORMATION, *PTHREAD_DESCRIPTOR_INFORMATION;
+#endif
+
 typedef struct _THREAD_NAME_INFORMATION
 {
     UNICODE_STRING ThreadName;
 } THREAD_NAME_INFORMATION, *PTHREAD_NAME_INFORMATION;
+
+typedef struct _THREAD_LAST_SYSCALL_INFORMATION
+{
+    PVOID FirstArgument;
+    USHORT SystemCallNumber;
+    ULONG64 WaitTime;
+} THREAD_LAST_SYSCALL_INFORMATION, *PTHREAD_LAST_SYSCALL_INFORMATION;
+
+typedef struct _THREAD_CYCLE_TIME_INFORMATION
+{
+    ULONG64 AccumulatedCycles;
+    ULONG64 CurrentCycleCount;
+} THREAD_CYCLE_TIME_INFORMATION, *PTHREAD_CYCLE_TIME_INFORMATION;
+
+typedef struct _THREAD_TEB_INFORMATION
+{
+    PVOID TebInformation;
+    ULONG TebOffset;
+    ULONG BytesToRead;
+} THREAD_TEB_INFORMATION, *PTHREAD_TEB_INFORMATION;
+
+typedef enum _THREAD_UMS_INFORMATION_COMMAND
+{
+    UmsInformationCommandInvalid,
+    UmsInformationCommandAttach,
+    UmsInformationCommandDetach,
+    UmsInformationCommandQuery
+} THREAD_UMS_INFORMATION_COMMAND;
+
+typedef struct _THREAD_UMS_INFORMATION
+{
+    THREAD_UMS_INFORMATION_COMMAND Command;
+    struct _RTL_UMS_COMPLETION_LIST* CompletionList;
+    struct _RTL_UMS_CONTEXT* UmsContext;
+    union
+    {
+        ULONG Flags;
+        struct
+        {
+            ULONG IsUmsSchedulerThread : 1;
+            ULONG IsUmsWorkerThread : 1;
+            ULONG SpareBits : 30;
+        };
+    };
+} THREAD_UMS_INFORMATION, *PTHREAD_UMS_INFORMATION;
+
+typedef struct _THREAD_PROFILING_INFORMATION
+{
+    ULONG64 HardwareCounters;
+    ULONG Flags;
+    ULONG Enable;
+    struct _THREAD_PERFORMANCE_DATA* PerformanceData;
+} THREAD_PROFILING_INFORMATION, *PTHREAD_PROFILING_INFORMATION;
+
+typedef struct _POWER_THROTTLING_THREAD_STATE
+{
+    ULONG Version;
+    ULONG ControlMask;
+    ULONG StateMask;
+} POWER_THROTTLING_THREAD_STATE, *PPOWER_THROTTLING_THREAD_STATE;
 
 #ifndef NTOS_MODE_USER
 
