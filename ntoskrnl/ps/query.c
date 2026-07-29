@@ -3025,7 +3025,6 @@ NtQueryInformationThread(
     PETHREAD Thread;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
-    ULONG Access;
     ULONG Length = 0;
 
     PAGED_CODE();
@@ -3049,9 +3048,6 @@ NtQueryInformationThread(
         return Status;
     }
 
-    /* Check what class this is */
-    Access = THREAD_QUERY_INFORMATION;
-
     /* Check what kind of information class this is */
     switch (ThreadInformationClass)
     {
@@ -3072,7 +3068,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               Access,
+                                               THREAD_QUERY_LIMITED_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
@@ -3119,7 +3115,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               Access,
+                                               THREAD_QUERY_LIMITED_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
@@ -3170,7 +3166,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               Access,
+                                               THREAD_QUERY_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
@@ -3209,7 +3205,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               Access,
+                                               THREAD_QUERY_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
@@ -3248,7 +3244,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               Access,
+                                               THREAD_QUERY_LIMITED_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
@@ -3293,7 +3289,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               Access,
+                                               THREAD_QUERY_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
@@ -3331,7 +3327,7 @@ NtQueryInformationThread(
 #if defined(_X86_)
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               Access,
+                                               THREAD_QUERY_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
@@ -3367,7 +3363,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               Access,
+                                               THREAD_QUERY_LIMITED_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
@@ -3390,7 +3386,7 @@ NtQueryInformationThread(
             break;
         }
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
         case ThreadHideFromDebugger:
         {
             /* Set the return length */
@@ -3404,7 +3400,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               Access,
+                                               THREAD_QUERY_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
@@ -3443,7 +3439,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               Access,
+                                               THREAD_QUERY_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
@@ -3481,7 +3477,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               Access,
+                                               THREAD_QUERY_LIMITED_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
@@ -3513,8 +3509,7 @@ NtQueryInformationThread(
 
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
-            // FIXME: Use THREAD_QUERY_LIMITED_INFORMATION when implemented
-                                               THREAD_QUERY_INFORMATION,
+                                               THREAD_QUERY_LIMITED_INFORMATION,
                                                PsThreadType,
                                                PreviousMode,
                                                (PVOID*)&Thread,
