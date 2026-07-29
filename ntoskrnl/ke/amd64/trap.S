@@ -510,7 +510,7 @@ FUNC KiFloatingErrorFault
     /* Push pseudo error code */
     EnterTrap TF_SAVE_ALL
 
-    UNIMPLEMENTED KiFloatingErrorFault
+    UNIMPLEMENTED(KiFloatingErrorFault)
     int 3
 
     /* Return */

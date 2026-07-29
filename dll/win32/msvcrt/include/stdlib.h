@@ -212,7 +212,11 @@ _ACRTIMP int           __cdecl atoi(const char*);
 _ACRTIMP int           __cdecl _atoi_l(const char*,_locale_t);
 _ACRTIMP __msvcrt_long __cdecl atol(const char*);
 _ACRTIMP __int64       __cdecl atoll(const char*);
-#ifndef __i386__
+#if !defined(__i386__) || defined(__REACTOS__)
+/* On i386 MS msvcrt packs the div_t/ldiv_t result into edx:eax (see the
+ * __wine_msvcrt_div wrappers below); ReactOS' CRT uses the standard struct
+ * return, so the plain prototypes are correct and libc++'s <stdlib.h>
+ * wrapper needs ::div/::ldiv to exist */
 _ACRTIMP div_t  __cdecl div(int,int);
 _ACRTIMP ldiv_t __cdecl ldiv(__msvcrt_long,__msvcrt_long);
 #endif
