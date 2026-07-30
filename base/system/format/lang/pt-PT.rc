@@ -1,0 +1,50 @@
+/*
+ * PROJECT:     ReactOS Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2026 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_HELP "Uso: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+  [drive:]         Especifica a unidade a formatar.\n\
+  -FS:file-system  Especifica o tipo de sistema de ficheiros. (%s).\n\
+  -V:label         Especifica o rótulo do volume.\n\
+  -Q               Executa uma formatação rápida.\n\
+  -A:size          Substitui o tamanho da unidade de alocação predefinido.\n\
+                   Configurações predefinidas são fortemente recomendadas para uso geral.\n\
+                   NTFS suporta 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   FAT suporta 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   NTFS compressão não é suportada para os tamanhos de unidades de alocação.\n\
+                   superiores a 4096.\n\
+  -C               Os ficheiros criados no novo volume serão comprimidos por\n\
+                   predefinição.\n\n"
+    STRING_COMPLETE "%lu%% completo.\r"
+    STRING_FORMAT_FAIL "O FormatEx não pôde ser concluído com êxito.\n\n"
+    STRING_NO_SUPPORT "Operação não suportada"
+    STRING_FMIFS_FAIL "Não foi possível localizar o ponto de entrada do FMIFS.\n\n"
+    STRING_UNKNOW_ARG "Argumento desconhecido: %s\n"
+    STRING_DRIVE_PARM "Um parâmetro necessário está em falta.\n\n"
+    STRING_ERROR_DRIVE_TYPE "Não foi possível obter o tipo de unidade.\n"
+    STRING_INSERT_DISK "Insira uma nova disquete na unidade %C:\ne prima Enter quando estiver pronto..."
+    STRING_NO_VOLUME "Não foi possível consultar o volume."
+    STRING_NO_VOLUME_SIZE "Não foi possível consultar o tamanho do volume."
+    STRING_FILESYSTEM "O tipo do sistema de ficheiros é %s.\n"
+    STRING_LABEL_NAME_EDIT "Introduza o nome para o volume actual na unidade %C:"
+    STRING_ERROR_LABEL "Foi introduzido um nome de volume incorrecto para esta unidade.\n"
+    STRING_YN_FORMAT "\nAVISO: TODOS OS DADOS NO DISCO NÃO REMOVÍVEL\n\
+NA UNIDADE %C: SERÃO PERDIDOS!\nProsseguir com a formatação (S/N)?"
+    STRING_YES_NO_FAQ "SN"
+    STRING_VERIFYING "A verificar"
+    STRING_FAST_FMT "Formatação rápida"
+    STRING_CREATE_FSYS "A criar estruturas para o sistema de ficheiros.\n"
+    STRING_FMT_COMPLETE "Formatação completa.\n"
+    STRING_VOL_COMPRESS "O Volume não suporta compressão.\n"
+    STRING_ENTER_LABEL "Nome do volume (11 caracteres, prima Enter para nenhum)?"
+    STRING_NO_LABEL "Não foi possível rotular o volume"
+    STRING_FREE_SPACE "\n%I64d bytes de espaço total em disco.\n%I64d bytes disponiveis em disco.\n"
+    STRING_SERIAL_NUMBER "\nNumero de série do Volume é %04X-%04X\n"
+END
