@@ -12290,13 +12290,10 @@ START_TEST(dom)
     }
 
 #ifdef __REACTOS__
-    if (is_reactos())
-    {
-        trace("Skipping test_quirks_mode() because it crashes.\n");
-    }
-    else
-#endif
+    trace("Skipping test_quirks_mode() because it crashes.\n");
+#else
     test_quirks_mode();
+#endif
     test_document_mode_lock();
     test_document_mode_after_initnew();
     test_threads();
