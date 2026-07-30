@@ -2991,6 +2991,7 @@ NtQueryInformationThread(
     _Out_opt_ PULONG ReturnLength)
 {
     PETHREAD Thread;
+    PEPROCESS Process;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     ULONG Length = 0;
@@ -3210,25 +3211,15 @@ NtQueryInformationThread(
                 break;
             }
 
-            /* Reference the thread */
-            Status = ObReferenceObjectByHandle(ThreadHandle,
-                                               THREAD_QUERY_LIMITED_INFORMATION,
-                                               PsThreadType,
-                                               PreviousMode,
-                                               (PVOID*)&Thread,
-                                               NULL);
-            if (!NT_SUCCESS(Status))
-                break;
+            /* This info class always refers to the current thread! */
+            Thread = PsGetCurrentThread();
+            Process = PsGetThreadProcess(Thread);
 
             /* Protect write with SEH */
             _SEH2_TRY
             {
                 /* Return whether or not we are the last thread */
-                *(PULONG)ThreadInformation = ((Thread->ThreadsProcess->
-                                               ThreadListHead.Flink->Flink ==
-                                               &Thread->ThreadsProcess->
-                                               ThreadListHead) ?
-                                              TRUE : FALSE);
+                *(PULONG)ThreadInformation = Process->ActiveThreads == 1;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -3237,8 +3228,6 @@ NtQueryInformationThread(
             }
             _SEH2_END;
 
-            /* Dereference the thread */
-            ObDereferenceObject(Thread);
             break;
         }
 
