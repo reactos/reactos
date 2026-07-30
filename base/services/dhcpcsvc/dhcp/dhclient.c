@@ -576,8 +576,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
     }
 
     /* Set up our default router if we got one from the DHCP server */
-    if( new_lease->options[DHO_SUBNET_MASK].len == (int)sizeof(ULONG) )
-    {
+    if( new_lease->options[DHO_SUBNET_MASK].len == (int)sizeof(ULONG) ) {
         DWORD err;
 
         err = AddIPAddress
@@ -586,8 +585,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
               Adapter->IfMib.dwIndex,
               &Adapter->NteContext,
               &Adapter->NteInstance );
-        if (hkey && err == NO_ERROR)
-        {
+        if (hkey && err == NO_ERROR) {
             RegSetValueExA(hkey, "DhcpIPAddress", 0, REG_SZ, (LPBYTE)piaddr(new_lease->address), strlen(piaddr(new_lease->address))+1);
             addr.S_un.S_addr = *((ULONG*)new_lease->options[DHO_SUBNET_MASK].data);
             RtlIpv4AddressToStringA(&addr, AddressBuffer);
@@ -606,13 +604,11 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
         if( err != NO_ERROR )
             warning("AddIPAddress: %d\n", err);
     }
-    else if( new_lease->options[DHO_SUBNET_MASK].len )
-    {
+    else if( new_lease->options[DHO_SUBNET_MASK].len ) {
         warning("Invalid subnet mask option length: %d\n", new_lease->options[DHO_SUBNET_MASK].len);
     }
 
-    if( new_lease->options[DHO_ROUTERS].len > (int)0 && new_lease->options[DHO_ROUTERS].len % (int)sizeof(ULONG) == 0 )
-    {
+    if( new_lease->options[DHO_ROUTERS].len > (int)0 && new_lease->options[DHO_ROUTERS].len % (int)sizeof(ULONG) == 0 ) {
         DWORD err;
 
         Adapter->RouterMib.dwForwardDest = 0; /* Default route */
@@ -625,22 +621,21 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
             DeleteIpForwardEntry( &Adapter->RouterMib );
         }
 
-        Adapter->RouterMib.dwForwardNextHop = *((ULONG*)new_lease->options[DHO_ROUTERS].data);
+        Adapter->RouterMib.dwForwardNextHop =
+            *((ULONG*)new_lease->options[DHO_ROUTERS].data);
 
         err = CreateIpForwardEntry( &Adapter->RouterMib );
 
         if( err != NO_ERROR )
             warning("CreateIpForwardEntry: %d\n", err);
 
-        if (hkey && err == NO_ERROR)
-        {
+        if (hkey && err == NO_ERROR) {
             addr.S_un.S_addr = *((ULONG*)new_lease->options[DHO_ROUTERS].data);
             RtlIpv4AddressToStringA(&addr, AddressBuffer);
             RegSetValueExA(hkey, "DhcpDefaultGateway", 0, REG_SZ, (LPBYTE)AddressBuffer, strlen(AddressBuffer)+1);
         }
     }
-    else if( new_lease->options[DHO_ROUTERS].len )
-    {
+    else if( new_lease->options[DHO_ROUTERS].len ) {
         warning("Invalid routers option length: %d\n", new_lease->options[DHO_ROUTERS].len);
     }
 
