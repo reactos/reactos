@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Czech resource file
  * TRANSLATORS: Copyright 2010-2015 Radek Liška (Black_Fox) <radekliska@gmail.com>
- *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ *              Copyright 2024-2026 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -173,7 +173,7 @@ BEGIN
     IDS_DEVANAGARI_INSCRIPT_LAYOUT "Dévanágarí - INSCRIPT"
     IDS_DIVEHI_PHONETIC_LAYOUT "Divehština (Fonetická)"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehština (Psací stroj)"
-    IDS_DUTCH_LAYOUT "Holandština"
+    IDS_DUTCH_LAYOUT "Nizozemština"
     IDS_ESPERANTO_LAYOUT "Esperanto"
     IDS_ESTONIAN_LAYOUT "Estonština"
     IDS_FAEROESE_LAYOUT "Faerština"
@@ -182,13 +182,13 @@ BEGIN
     IDS_FRENCH_LAYOUT "Francouzština"
     IDS_GAELIC_LAYOUT "Galicijština"
     IDS_GEORGIAN_LAYOUT "Gruzínština"
-    IDS_GERMAN_LAYOUT "Němčima"
-    IDS_GERMAN_DE_ERGO_LAYOUT "Němčima (de_ergo)"
-    IDS_GERMAN_IBM_LAYOUT "Němčima (IBM)"
-    IDS_GERMAN_NEO_11_LAYOUT "Němčima (NEO-1.1)"
-    IDS_GERMAN_RISTOME_LAYOUT "Němčima (RISTOME)"
-    IDS_GERMAN_EXTENDED1_LAYOUT "German Extended (E1)"
-    IDS_GERMAN_EXTENDED2_LAYOUT "German Extended (E2)"
+    IDS_GERMAN_LAYOUT "Němčina"
+    IDS_GERMAN_DE_ERGO_LAYOUT "Němčina (de_ergo)"
+    IDS_GERMAN_IBM_LAYOUT "Němčina (IBM)"
+    IDS_GERMAN_NEO_11_LAYOUT "Němčina (NEO-1.1)"
+    IDS_GERMAN_RISTOME_LAYOUT "Němčina (RISTOME)"
+    IDS_GERMAN_EXTENDED1_LAYOUT "Němčina rozšířená (E1)"
+    IDS_GERMAN_EXTENDED2_LAYOUT "Němčina rozšířená (E2)"
     IDS_GREEK_LAYOUT "Řečtina"
     IDS_GREEK_220_LAYOUT "Řečtina (220)"
     IDS_GREEK_220_LATIN_LAYOUT "Řečtina (220) (Latinka)"
