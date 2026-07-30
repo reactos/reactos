@@ -724,7 +724,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
             return STATUS_HANDLE_NOT_CLOSABLE;
         }
 
-        /* Success, validate callout retrn */
+        /* Success, validate callout return */
         ObpCalloutEnd(CalloutIrql, "NtClose", ObjectType, Body);
     }
 
