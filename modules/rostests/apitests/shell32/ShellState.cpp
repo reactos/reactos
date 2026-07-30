@@ -4,6 +4,7 @@
  * PURPOSE:         Test for SHELLSTATE
  * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
+
 #include "shelltest.h"
 
 #define NDEBUG
@@ -230,20 +231,22 @@ START_TEST(ShellState)
     DUMP_LONG(pss->lParamSort);
     DUMP_LONG(pss->iSortDirection);
     DUMP_LONG(pss->version);
-    DUMP_LONG(pss->lParamSort);
-    DUMP_LONG(pss->iSortDirection);
-    DUMP_LONG(pss->version);
     DUMP_BOOL(pss->fSepProcess);
     DUMP_BOOL(pss->fStartPanelOn);
     DUMP_BOOL(pss->fShowStartPage);
-#if NTDDI_VERSION >= 0x06000000     // for future use
+#if NTDDI_VERSION >= NTDDI_VISTA    // for future use
+    DUMP_BOOL(pss->fAutoCheckSelect);
     DUMP_BOOL(pss->fIconsOnly);
     DUMP_BOOL(pss->fShowTypeOverlay);
+#endif
+#if NTDDI_VERSION >= NTDDI_WIN8     // for future use
     DUMP_BOOL(pss->fShowStatusBar);
 #endif
+#undef DUMP_LONG
+#undef DUMP_BOOL
 
 #define SSF_MASK \
-    (SSF_SHOWALLOBJECTS | SSF_SHOWEXTENSIONS | SSF_NOCONFIRMRECYCLE | \
+    (SSF_SHOWALLOBJECTS | SSF_SHOWEXTENSIONS | SSF_NOCONFIRMRECYCLE | SSF_SHOWSYSFILES | \
      SSF_SHOWCOMPCOLOR | SSF_DOUBLECLICKINWEBVIEW | SSF_DESKTOPHTML | \
      SSF_WIN95CLASSIC | SSF_DONTPRETTYPATH | SSF_SHOWATTRIBCOL | \
      SSF_MAPNETDRVBUTTON | SSF_SHOWINFOTIP | SSF_HIDEICONS)
@@ -257,8 +260,7 @@ START_TEST(ShellState)
     CHECK_REG_FLAG(fShowAllObjects);
     CHECK_REG_FLAG(fShowExtensions);
     CHECK_REG_FLAG(fNoConfirmRecycle);
-    if (GetNTVersion() != _WIN32_WINNT_VISTA)
-        CHECK_REG_FLAG(fShowSysFiles);    // No use, test is broken on Vista
+    CHECK_REG_FLAG(fShowSysFiles);
     CHECK_REG_FLAG(fShowCompColor);
     CHECK_REG_FLAG(fDoubleClickInWebView);
     CHECK_REG_FLAG(fDesktopHTML);
@@ -268,10 +270,15 @@ START_TEST(ShellState)
     CHECK_REG_FLAG(fMapNetDrvBtn);
     CHECK_REG_FLAG(fShowInfoTip);
     CHECK_REG_FLAG(fHideIcons);
-#if NTDDI_VERSION >= 0x06000000     // for future use
+#if NTDDI_VERSION >= NTDDI_VISTA    // for future use
     CHECK_REG_FLAG(fAutoCheckSelect);
     CHECK_REG_FLAG(fIconsOnly);
+    CHECK_REG_FLAG(fShowTypeOverlay);
 #endif
+#if NTDDI_VERSION >= NTDDI_WIN8     // for future use
+    CHECK_REG_FLAG(fShowStatusBar);
+#endif
+#undef CHECK_REG_FLAG
 
     /* Get the flag settings */
     memset(&FlagState, 0, sizeof(FlagState));
@@ -280,7 +287,7 @@ START_TEST(ShellState)
     CHECK_FLAG(fShowAllObjects);
     CHECK_FLAG(fShowExtensions);
     CHECK_FLAG(fNoConfirmRecycle);
-    CHECK_FLAG(fShowSysFiles);    // No use
+    CHECK_FLAG(fShowSysFiles);
     CHECK_FLAG(fShowCompColor);
     CHECK_FLAG(fDoubleClickInWebView);
     CHECK_FLAG(fDesktopHTML);
@@ -290,11 +297,14 @@ START_TEST(ShellState)
     CHECK_FLAG(fMapNetDrvBtn);
     CHECK_FLAG(fShowInfoTip);
     CHECK_FLAG(fHideIcons);
-#if NTDDI_VERSION >= 0x06000000     // for future use
+#if NTDDI_VERSION >= NTDDI_VISTA    // for future use
     CHECK_FLAG(fAutoCheckSelect);
     CHECK_FLAG(fIconsOnly);
 #endif
+#undef CHECK_FLAG
+#undef SSF_MASK
 
+    /* Structure alignment tests */
 #if 1
     #define DO_IT(x) x
 #else
@@ -320,4 +330,5 @@ START_TEST(ShellState)
     DO_IT(memset(pss, 0, sizeof(*pss)));
     DO_IT(pss->fSepProcess = TRUE);
     ok(pb[28] == 0x01 || dump_pss(pss), "Unexpected pss ^\n");
+#undef DO_IT
 }
