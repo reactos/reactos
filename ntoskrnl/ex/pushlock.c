@@ -925,12 +925,19 @@ ExfReleasePushLock(PEX_PUSH_LOCK PushLock)
                     NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                                      NewValue.Ptr,
                                                                      OldValue.Ptr);
-                    if (NewValue.Value != OldValue.Value) continue;
-
-                    /* The write was successful. The pushlock is Unlocked and Waking */
-                    ExfWakePushLock(PushLock, WakeValue);
-                    return;
+                    if (NewValue.Value == OldValue.Value)
+                    {
+                        /* The write was successful. The pushlock is Unlocked and Waking */
+                        ExfWakePushLock(PushLock, WakeValue);
+                        return;
+                    }
                 }
+
+                /*
+                 * The failed CMPXCHG returned the current lock value, use it for
+                 * the next attempt.
+                 */
+                OldValue = NewValue;
             }
         }
     }
@@ -1061,12 +1068,19 @@ ExfReleasePushLockShared(PEX_PUSH_LOCK PushLock)
             NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                              NewValue.Ptr,
                                                              OldValue.Ptr);
-            if (NewValue.Value != OldValue.Value) continue;
-
-            /* The write was successful. The pushlock is Unlocked and Waking */
-            ExfWakePushLock(PushLock, WakeValue);
-            return;
+            if (NewValue.Value == OldValue.Value)
+            {
+                /* The write was successful. The pushlock is Unlocked and Waking */
+                ExfWakePushLock(PushLock, WakeValue);
+                return;
+            }
         }
+
+        /*
+         * The failed CMPXCHG returned the current lock value, use it for
+         * the next attempt.
+         */
+        OldValue = NewValue;
     }
 }
 
