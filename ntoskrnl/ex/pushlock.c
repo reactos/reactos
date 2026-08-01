@@ -866,6 +866,7 @@ ExfReleasePushLock(PEX_PUSH_LOCK PushLock)
             if (NewValue.Value == OldValue.Value) return;
 
             OldValue = NewValue;
+            continue;
         }
         else
         {
