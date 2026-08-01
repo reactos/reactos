@@ -8,13 +8,6 @@
 #ifndef _TABLES_H_
 #define _TABLES_H_
 
-// default formats range
-extern ULONG MaximumChannels;
-extern ULONG MinimumBitsPerSample;
-extern ULONG MaximumBitsPerSample;
-extern ULONG MinimumSampleFrequency;
-extern ULONG MaximumSampleFrequency;
-
 static GUID KSCATEGORY_RangeAudio = {STATIC_KSCATEGORY_AUDIO};
 static GUID KSCATEGORY_Audio = {STATIC_KSCATEGORY_AUDIO};
 static GUID KSAUDFNAME_Pc_Speaker = {STATIC_KSAUDFNAME_PC_SPEAKER};
@@ -148,26 +141,9 @@ static GUID AdcCategories[] = {KSCATEGORY_AUDIO, KSCATEGORY_CAPTURE};
 
 static GUID DacCategories[] = {KSCATEGORY_AUDIO, KSCATEGORY_RENDER};
 
-static KSDATARANGE_AUDIO DataRange[] =
-{
-    {
-       sizeof(KSDATARANGE_AUDIO),
-       0, 0, 0,
-       STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO),
-       STATICGUIDOF(KSDATAFORMAT_SUBTYPE_PCM), // PCM is default
-       STATICGUIDOF(KSDATAFORMAT_SPECIFIER_WAVEFORMATEX)
-    },
-    MaximumChannels,
-    MinimumBitsPerSample,
-    MaximumBitsPerSample,
-    MinimumSampleFrequency,
-    MaximumSampleFrequency
-};
+static KSDATARANGE_AUDIO DataRange[3];
 
-static PKSDATARANGE_AUDIO DataRanges[] =
-{
-    &DataRange[0]
-};
+static PKSDATARANGE DataRanges[3];
 
 static KSDATARANGE DataRangeBridge[] =
 {
@@ -182,7 +158,7 @@ static KSDATARANGE DataRangeBridge[] =
 
 static PKSDATARANGE DataRangesBridge[] =
 {
-    &DataRangeBridge[0]
+    DataRangeBridge
 };
 
 static PCPIN_DESCRIPTOR WaveInPins[] =
@@ -196,7 +172,7 @@ static PCPIN_DESCRIPTOR WaveInPins[] =
             1,                                          // MediumsCount
             &StandardPinMedium,                         // Mediums
             1,                                          // DataRangesCount
-            (PKSDATARANGE *)DataRanges,                 // DataRanges
+            DataRanges,                                 // DataRanges
             KSPIN_DATAFLOW_OUT,                         // DataFlow
             KSPIN_COMMUNICATION_SINK,                   // Communication
             &KSCATEGORY_Audio,                          // Category
@@ -234,7 +210,7 @@ static PCPIN_DESCRIPTOR WaveOutPins[] =
             1,                                          // MediumsCount
             &StandardPinMedium,                         // Mediums
             1,                                          // DataRangesCount
-            (PKSDATARANGE *)DataRanges,                 // DataRanges
+            DataRanges,                                 // DataRanges
             KSPIN_DATAFLOW_IN,                          // DataFlow
             KSPIN_COMMUNICATION_SINK,                   // Communication
             &KSCATEGORY_Audio,                          // Category

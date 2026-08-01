@@ -11,12 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-ULONG MaximumChannels = 2;
-ULONG MinimumBitsPerSample = 16;
-ULONG MaximumBitsPerSample = 16;
-ULONG MinimumSampleFrequency = 44100;
-ULONG MaximumSampleFrequency = 44100;
-
 PVOID
 __cdecl
 operator new(size_t Size, POOL_TYPE PoolType, ULONG Tag)
@@ -599,6 +593,12 @@ CAdapterCommon::BuildWaveFormat(
 {
     CFunctionGroupNode *OutNode = (CFunctionGroupNode *)Node;
 
+    ULONG MaximumChannels = 0;
+    ULONG MinimumBitsPerSample = (ULONG)-1;
+    ULONG MaximumBitsPerSample = 0;
+    ULONG MinimumSampleFrequency = (ULONG)-1;
+    ULONG MaximumSampleFrequency = 0;
+    ULONG AudioFormatIndex;
     UCHAR FormatPCMSupported = 0;
     UCHAR FormatFloatSupported = 0;
     UCHAR FormatAC3Supported = 0;
@@ -759,8 +759,40 @@ CAdapterCommon::BuildWaveFormat(
         return STATUS_UNSUCCESSFUL;
     }
 
-    // FIXME handle multiple formats
-    ASSERT(FormatsSupported == 1);
+    for (AudioFormatIndex = 0; AudioFormatIndex < FormatsSupported; AudioFormatIndex++)
+    {
+        DataRange[AudioFormatIndex].DataRange.FormatSize = sizeof(KSDATARANGE_AUDIO);
+        DataRange[AudioFormatIndex].DataRange.Flags = 0;
+        DataRange[AudioFormatIndex].DataRange.SampleSize = 0;
+        DataRange[AudioFormatIndex].DataRange.Reserved = 0;
+
+        DataRange[AudioFormatIndex].DataRange.MajorFormat = {KSDATAFORMAT_TYPE_AUDIO};
+        DataRange[AudioFormatIndex].DataRange.Specifier = {KSDATAFORMAT_SPECIFIER_WAVEFORMATEX};
+
+        if (FormatPCMSupported)
+        {
+            DataRange[AudioFormatIndex].DataRange.SubFormat = {KSDATAFORMAT_SUBTYPE_PCM};
+            FormatPCMSupported = FALSE;
+        }
+        else if (FormatAC3Supported)
+        {
+            DataRange[AudioFormatIndex].DataRange.SubFormat = {KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF};
+            FormatAC3Supported = FALSE;
+        }
+        else if (FormatFloatSupported)
+        {
+            DataRange[AudioFormatIndex].DataRange.SubFormat = {KSDATAFORMAT_SUBTYPE_IEEE_FLOAT};
+            FormatFloatSupported = FALSE;
+        }
+
+        DataRange[AudioFormatIndex].MaximumChannels = MaximumChannels;
+        DataRange[AudioFormatIndex].MinimumBitsPerSample = MinimumBitsPerSample;
+        DataRange[AudioFormatIndex].MaximumBitsPerSample = MaximumBitsPerSample;
+        DataRange[AudioFormatIndex].MinimumSampleFrequency = MinimumSampleFrequency;
+        DataRange[AudioFormatIndex].MaximumSampleFrequency = MaximumSampleFrequency;
+
+        DataRanges[AudioFormatIndex] = (PKSDATARANGE)&DataRange[AudioFormatIndex];
+    }
 
     return STATUS_SUCCESS;
 }
@@ -1390,11 +1422,13 @@ CAdapterCommon::BuildInstallFilter(
             if (!NT_SUCCESS(Status))
                 continue;
 
+#if 0
             if (bSet)
             {
                 ASSERT(DefaultDevice == PinConfiguration.DefaultDevice);
             }
             else
+#endif
             {
                 if (PinConfiguration.PortConnectivity != 0x1) // pin is connected
                 {

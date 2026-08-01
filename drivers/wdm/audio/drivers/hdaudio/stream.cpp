@@ -85,8 +85,8 @@ CMiniportWaveRTStream::GetHWLatency(
     IN KSRTAUDIO_HWLATENCY* hwLatency)
 {
     hwLatency->FifoSize = m_FifoSize;
-    hwLatency->ChipsetDelay = 250; // FIXME
-    hwLatency->CodecDelay = 3401; // FIXME
+    //hwLatency->ChipsetDelay = 250; // FIXME
+    //hwLatency->CodecDelay = 3401; // FIXME
 }
 
 VOID
@@ -242,7 +242,7 @@ HDAUDIO_AllocateStream(
                 PKSDATARANGE_AUDIO PinRange = (PKSDATARANGE_AUDIO)PinDataRange;
                 PKSDATAFORMAT_WAVEFORMATEX RequestFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
 
-                if (RequestFormat->WaveFormatEx.nChannels > MaximumChannels)
+                if (RequestFormat->WaveFormatEx.nChannels > PinRange->MaximumChannels)
                 {
                     DPRINT1(
                         "ChannelsCount %u not supported, MaxChannels %u\n", RequestFormat->WaveFormatEx.nChannels,
@@ -250,25 +250,25 @@ HDAUDIO_AllocateStream(
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.nSamplesPerSec < MinimumSampleFrequency)
+                if (RequestFormat->WaveFormatEx.nSamplesPerSec < PinRange->MinimumSampleFrequency)
                 {
                     DPRINT1("SampleRate %u not supported\n", RequestFormat->WaveFormatEx.nSamplesPerSec);
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.nSamplesPerSec > MaximumSampleFrequency)
+                if (RequestFormat->WaveFormatEx.nSamplesPerSec > PinRange->MaximumSampleFrequency)
                 {
                     DPRINT1("SampleRate %u not supported\n", RequestFormat->WaveFormatEx.nSamplesPerSec);
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.wBitsPerSample < MinimumBitsPerSample)
+                if (RequestFormat->WaveFormatEx.wBitsPerSample < PinRange->MinimumBitsPerSample)
                 {
                     DPRINT1("wBitsPerSample %u not supported\n", RequestFormat->WaveFormatEx.wBitsPerSample);
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.wBitsPerSample > MaximumBitsPerSample)
+                if (RequestFormat->WaveFormatEx.wBitsPerSample > PinRange->MaximumBitsPerSample)
                 {
                     DPRINT1("wBitsPerSample %u not supported\n", RequestFormat->WaveFormatEx.wBitsPerSample);
                     return STATUS_NOT_SUPPORTED;
@@ -292,7 +292,6 @@ HDAUDIO_AllocateStream(
     {
         return Status;
     }
-
 
     if (Capture)
     {
