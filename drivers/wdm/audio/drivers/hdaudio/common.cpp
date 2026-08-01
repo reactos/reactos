@@ -1049,13 +1049,11 @@ CAdapterCommon::ProcessOutputNodes(
                     DPRINT1("HDAUDIO: PinNode %u DevicePresent %x\n", PinNodes[NodeIndex], DevicePresent);
                     if (!DevicePresent)
                     {
-#if 0
                         // FIXME ignoring device
                         // setup unsolicited response pinnode to activate ondemand
                         DPRINT1("HDAUDIO: Ignoring PinNode %u\n", PinNodes[NodeIndex]);
                         PinNodes[NodeIndex] = (ULONG)-1;
                         continue;
-#endif
                     }
                 }
             }
@@ -1082,7 +1080,6 @@ CAdapterCommon::ProcessOutputNodes(
         Status = OutNode->GetPinConfigurationDefault(PinNodes[NodeIndex], &PinConfiguration);
         if (NT_SUCCESS(Status))
         {
-#if 0
             if (PinConfiguration.PortConnectivity == 0x1)
             {
                 // no connection
@@ -1090,7 +1087,6 @@ CAdapterCommon::ProcessOutputNodes(
                 ClearRef(PinNodes[NodeIndex], PinNodeCount, PinNodes);
                 continue;
             }
-#endif
 
             if (PinConfiguration.DefaultDevice > 7)
             {
@@ -1106,7 +1102,7 @@ CAdapterCommon::ProcessOutputNodes(
             // FIXME support digital pins
             Status = AssociatePins(
                 DeviceObject, Irp, ResourceList, PinConfiguration.DefaultAssociation, (PVOID)OutNode, PinNodeCount, PinNodes,
-                FALSE);
+                NodeContext->Digital);
         }
         else
         {
@@ -1331,7 +1327,7 @@ CAdapterCommon::ProcessInputNodes(
         }
         if (FilteredInputNodeCount && PinsOfSameTypeCount)
         {
-            //PNODE_CONTEXT NodeContext = OutNode->FindNodeId(PinsOfSameType[0]);
+            PNODE_CONTEXT NodeContext = OutNode->FindNodeId(PinsOfSameType[0]);
             Status = BuildInstallFilter(
                 DeviceObject,
                 Irp,
@@ -1340,7 +1336,7 @@ CAdapterCommon::ProcessInputNodes(
                 ResourceList,
                 PinsOfSameTypeCount,
                 PinsOfSameType,
-                FALSE); // digital is unused
+                NodeContext->Digital); // digital is unused
         }
         else
         {

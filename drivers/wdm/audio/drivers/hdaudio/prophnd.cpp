@@ -62,7 +62,7 @@ PropertyHandler_JackDescription(IN PPCPROPERTY_REQUEST PropertyRequest)
         Miniport->Release();
         return STATUS_INVALID_PARAMETER;
     }
-
+#if 0
     PIN_CONFIGURATION_DEFAULT PinConfiguration;
     Status = Node->GetPinConfigurationDefault(PropertyRequest->Node, &PinConfiguration);
     if (NT_SUCCESS(Status))
@@ -79,6 +79,10 @@ PropertyHandler_JackDescription(IN PPCPROPERTY_REQUEST PropertyRequest)
         JackDescription->PortConnection = (EPxcPortConnection)PinConfiguration.PortConnectivity;
         JackDescription->IsConnected = TRUE;
     }
+#else
+    UNIMPLEMENTED_ONCE;
+    Status = STATUS_NOT_IMPLEMENTED;
+#endif
 
     Miniport->Release();
     return Status;
@@ -112,13 +116,14 @@ PropertyHandler_ChannelConfig(IN PPCPROPERTY_REQUEST PropertyRequest)
 
     if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
     {
+        UNIMPLEMENTED_ONCE;
         *(PLONG)PropertyRequest->Value = KSAUDIO_SPEAKER_STEREO;
         Miniport->Release();
         return STATUS_SUCCESS;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET)
     {
-        UNIMPLEMENTED;
+        UNIMPLEMENTED_ONCE;
         Miniport->Release();
         return STATUS_SUCCESS;
     }
@@ -138,12 +143,13 @@ PropertyHandler_SpeakerGeometry(IN PPCPROPERTY_REQUEST PropertyRequest)
 
     if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
     {
+        UNIMPLEMENTED_ONCE;
         *(PLONG)PropertyRequest->Value = -1;
         return STATUS_SUCCESS;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET)
     {
-        UNIMPLEMENTED;
+        UNIMPLEMENTED_ONCE;
         return STATUS_SUCCESS;
     }
     return STATUS_NOT_SUPPORTED;
@@ -178,19 +184,16 @@ PropertyHandler_Volume(IN PPCPROPERTY_REQUEST PropertyRequest)
     PLONG Value = (PLONG)PropertyRequest->Value;
     if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
     {
-        LONG Volume;
-        UCHAR Direct;
-        Status = Node->GetVolume(PropertyRequest->Node, &Direct, &Volume);
-        *Value = Volume;
+        UNIMPLEMENTED_ONCE;
+        *Value = 0xFFFF;
         Miniport->Release();
-        return Status;
+        return STATUS_NOT_IMPLEMENTED;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET)
     {
-        LONG Volume = *Value;
-        Status = Node->SetVolume(PropertyRequest->Node, 0 /* FIXME */, Volume);
+        UNIMPLEMENTED_ONCE;
         Miniport->Release();
-        return Status;
+        return STATUS_NOT_IMPLEMENTED;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_BASICSUPPORT)
     {
@@ -216,13 +219,14 @@ PropertyHandler_Mute(IN PPCPROPERTY_REQUEST PropertyRequest)
 
     if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
     {
+        UNIMPLEMENTED_ONCE;
         *(PBOOL)PropertyRequest->Value = FALSE;
-        return STATUS_SUCCESS;
+        return STATUS_NOT_IMPLEMENTED;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET)
     {
-        UNIMPLEMENTED;
-        return STATUS_SUCCESS;
+        UNIMPLEMENTED_ONCE;
+        return STATUS_NOT_IMPLEMENTED;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_BASICSUPPORT)
     {

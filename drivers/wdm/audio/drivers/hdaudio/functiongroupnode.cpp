@@ -613,7 +613,7 @@ CFunctionGroupNode::GetPinConfigurationDefault(IN ULONG NodeId, IN PPIN_CONFIGUR
         DPRINT1("HDAUDIO: GetPinConfigurationDefault failed with %x\n", Status);
         return Status;
     }
-    PinConfiguration->PortConnectivity = (Response >> 30) & 0x3;
+    PinConfiguration->PortConnectivity = (Response >> 30) & 0x3F;
     PinConfiguration->Location = (Response >> 24) & 0x3F;
     PinConfiguration->DefaultDevice = (Response >> 20) & 0xF;
     PinConfiguration->ConnectionType = (Response >> 16) & 0xF;
@@ -750,7 +750,7 @@ CFunctionGroupNode::GetSupportedPCMSizeRates(IN ULONG NodeId, OUT PNODE_PCM_RATE
     }
     OutRates->AC3FormatSupported = (Response & 0x4) ? 1 : 0;
     OutRates->Float32FormatSupported = (Response & 0x2) ? 1 : 0;
-    OutRates->PCMFormatSupported = (Response & 0x1);
+    OutRates->PCMFormatSupported = (Response & 0x1) ? 1 : 0;
     return STATUS_SUCCESS;
 }
 

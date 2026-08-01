@@ -130,8 +130,6 @@ static PCNODE_DESCRIPTOR AdcNode[] = {{0, NULL, &KSNODETYPE_ADC, NULL}};
 
 static PCNODE_DESCRIPTOR TopoInNodes[] = {{0, NULL, &KSNODETYPE_SUM, NULL},
 	                                      {0, VolumeAutomationTable, &KSNODETYPE_VOLUME, &KSNODETYPE_MICROPHONE},
-	                                      {0, MuteAutomationTable, &KSNODETYPE_MUTE, &KSNODETYPE_MICROPHONE},
-	                                      {0, VolumeAutomationTable, &KSNODETYPE_VOLUME, &KSNODETYPE_MICROPHONE},
 	                                      {0, MuteAutomationTable, &KSNODETYPE_MUTE, &KSNODETYPE_MICROPHONE}};
 
 static PCNODE_DESCRIPTOR TopoOutNodes[] = {{0, VolumeAutomationTable, &KSNODETYPE_VOLUME, &KSAUDFNAME_MASTER_VOLUME},
@@ -142,8 +140,7 @@ static PCCONNECTION_DESCRIPTOR DacConnections[] = {{KSFILTER_NODE, 0, 0, 1}, {0,
 static PCCONNECTION_DESCRIPTOR AdcConnections[] = {{KSFILTER_NODE, 1, 0, 1}, {0, 0, KSFILTER_NODE, 0}};
 
 static PCCONNECTION_DESCRIPTOR TopoInConnections[] = {{0, 0, KSFILTER_NODE, 0}, {KSFILTER_NODE, 1, 1, 1},
-	                                                  {1, 0, 2, 1}, {2, 0, 0, 1},
-	                                                  {KSFILTER_NODE, 2, 3, 1}, {3, 0, 4, 1}, {4, 0, 0, 2}};
+	                                                  {1, 0, 2, 1}, {2, 0, 0, 1}};
 
 static PCCONNECTION_DESCRIPTOR TopoOutConnections[] = {{KSFILTER_NODE, 0, 0, 1}, {0, 0, 1, 1}, {1, 0, KSFILTER_NODE, 1}};
 
@@ -208,7 +205,7 @@ static PCPIN_DESCRIPTOR WaveInPins[] =
         }
     },
     {   // Pin 1 -- WaveIn Bridge
-        0,0,0,  // InstanceCount
+        0,1,0,  // InstanceCount
         NULL,   // AutomationTable
         {       // KsPinDescriptor
             1,                                          // InterfacesCount
@@ -246,7 +243,7 @@ static PCPIN_DESCRIPTOR WaveOutPins[] =
         }
     },
     {   // Pin 1 -- WaveOut Bridge
-        0,0,0,  // InstanceCount
+        0,1,0,  // InstanceCount
         NULL,   // AutomationTable
         {       // KsPinDescriptor
             1,                                          // InterfacesCount
@@ -267,7 +264,7 @@ static PCPIN_DESCRIPTOR WaveOutPins[] =
 static PCPIN_DESCRIPTOR TopoInPins[] =
 {
     {   // Pin 0 -- WaveIn Dest
-        0,0,0,  // InstanceCount
+        0,1,0,  // InstanceCount
         NULL,   // AutomationTable
         {       // KsPinDescriptor
             1,                                          // InterfacesCount
@@ -284,24 +281,7 @@ static PCPIN_DESCRIPTOR TopoInPins[] =
         }
     },
     {   // Pin 1 -- Mic Source
-        0,0,0,  // InstanceCount
-        NULL,   // AutomationTable
-        {       // KsPinDescriptor
-            1,                                          // InterfacesCount
-            &StandardPinInterface,                      // Interfaces
-            1,                                          // MediumsCount
-            &StandardPinMedium,                         // Mediums
-            1,                                          // DataRangesCount
-            DataRangesBridge,                           // DataRanges
-            KSPIN_DATAFLOW_IN,                          // DataFlow
-            KSPIN_COMMUNICATION_NONE,                   // Communication
-            &KSNODETYPE_MICROPHONE,                     // Category
-            &KSNODETYPE_MICROPHONE,                     // Name
-            0                                           // Reserved
-        }
-    },
-    {   // Pin 2 -- Mic 2 Source
-        0,0,0,  // InstanceCount
+        0,1,0,  // InstanceCount
         NULL,   // AutomationTable
         {       // KsPinDescriptor
             1,                                          // InterfacesCount
@@ -322,7 +302,7 @@ static PCPIN_DESCRIPTOR TopoInPins[] =
 static PCPIN_DESCRIPTOR TopoOutPins[] =
 {
     {   // Pin 0 -- WaveOut Source
-        0,0,0,  // InstanceCount
+        0,1,0,  // InstanceCount
         NULL,   // AutomationTable
         {       // KsPinDescriptor
             1,                                          // InterfacesCount
@@ -339,7 +319,7 @@ static PCPIN_DESCRIPTOR TopoOutPins[] =
         }
     },
     {   // Pin 1 -- Speakers Dest
-        0,0,0,  // InstanceCount
+        0,1,0,  // InstanceCount
         NULL,   // AutomationTable
         {       // KsPinDescriptor
             1,                                          // InterfacesCount
@@ -394,12 +374,12 @@ static PCFILTER_DESCRIPTOR TopoInFilterDescription[] =
     0,                                  // Version
     &TopologyAutomationTable,           // AutomationTable
     sizeof(PCPIN_DESCRIPTOR),           // PinSize
-    3,                                  // PinCount
+    2,                                  // PinCount
     TopoInPins,                         // Pins
     sizeof(PCNODE_DESCRIPTOR),          // NodeSize
-    5,                                  // NodeCount
+    3,                                  // NodeCount
     TopoInNodes,                        // Nodes
-    7,                                  // ConnectionCount
+    4,                                  // ConnectionCount
     TopoInConnections,                  // Connections
     0,                                  // CategoryCount
     NULL                                // Categories: NULL->use defaults (audio, render, capture)
