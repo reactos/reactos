@@ -837,108 +837,108 @@ void InteractiveMode()
 
         if (dwArgCount > 0)
         {
-            if (stricmp(args_vector[0], "exit") == 0)
+            if (_stricmp(args_vector[0], "exit") == 0)
             {
                 bDone = TRUE;
             }
-            else if ((!stricmp(args_vector[0], "help")) ||
-                     (!stricmp(args_vector[0], "?")))
+            else if ((!_stricmp(args_vector[0], "help")) ||
+                     (!_stricmp(args_vector[0], "?")))
             {
                 PrintHelp();
             }
-            else if (!stricmp(args_vector[0], "set"))
+            else if (!_stricmp(args_vector[0], "set"))
             {
                 if (dwArgCount > 1)
                 {
-                    if (!stricmp(args_vector[1], "all"))
+                    if (!_stricmp(args_vector[1], "all"))
                     {
                         PrintState();
                     }
-                    else if (!stricmp(args_vector[1], "debug"))
+                    else if (!_stricmp(args_vector[1], "debug"))
                     {
                         State.debug = TRUE;
                     }
-                    else if (!stricmp(args_vector[1], "nodebug"))
+                    else if (!_stricmp(args_vector[1], "nodebug"))
                     {
                         State.debug = FALSE;
                         State.d2 = FALSE;
                     }
-                    else if (!stricmp(args_vector[1], "defname"))
+                    else if (!_stricmp(args_vector[1], "defname"))
                     {
                         State.defname = TRUE;
                     }
-                    else if (!stricmp(args_vector[1], "nodefname"))
+                    else if (!_stricmp(args_vector[1], "nodefname"))
                     {
                         State.defname = FALSE;
                     }
-                    else if (!stricmp(args_vector[1], "search"))
+                    else if (!_stricmp(args_vector[1], "search"))
                     {
                         State.search = TRUE;
                     }
-                    else if (!stricmp(args_vector[1], "nosearch"))
+                    else if (!_stricmp(args_vector[1], "nosearch"))
                     {
                         State.search = FALSE;
                     }
-                    else if (!stricmp(args_vector[1], "recurse"))
+                    else if (!_stricmp(args_vector[1], "recurse"))
                     {
                         State.recurse = TRUE;
                     }
-                    else if (!stricmp(args_vector[1], "norecurse"))
+                    else if (!_stricmp(args_vector[1], "norecurse"))
                     {
                         State.recurse = FALSE;
                     }
-                    else if (!stricmp(args_vector[1], "d2"))
+                    else if (!_stricmp(args_vector[1], "d2"))
                     {
                         State.debug = TRUE;
                         State.d2 = TRUE;
                     }
-                    else if (!stricmp(args_vector[1], "nod2"))
+                    else if (!_stricmp(args_vector[1], "nod2"))
                     {
                         State.d2 = FALSE;
                     }
-                    else if (!stricmp(args_vector[1], "vc"))
+                    else if (!_stricmp(args_vector[1], "vc"))
                     {
                         State.vc = TRUE;
                     }
-                    else if (!stricmp(args_vector[1], "novc"))
+                    else if (!_stricmp(args_vector[1], "novc"))
                     {
                         State.vc = FALSE;
                     }
-                    else if (!stricmp(args_vector[1], "msxfr"))
+                    else if (!_stricmp(args_vector[1], "msxfr"))
                     {
                         State.MSxfr = TRUE;
                     }
-                    else if (!stricmp(args_vector[1], "nomsxfr"))
+                    else if (!_stricmp(args_vector[1], "nomsxfr"))
                     {
                         State.MSxfr = FALSE;
                     }
-                    else if (!strnicmp(args_vector[1], "retry=", strlen("retry=")))
+                    else if (!_strnicmp(args_vector[1], "retry=", strlen("retry=")))
                     {
                         pszValue = &args_vector[1][strlen("retry=")];
                         dwValue = strtoul(pszValue, &pszEnd, 10);
                         if (pszEnd != pszValue)
                             State.retry = dwValue;
                     }
-                    else if (!strnicmp(args_vector[1], "timeout=", strlen("timeout=")))
+                    else if (!_strnicmp(args_vector[1], "timeout=", strlen("timeout=")))
                     {
                         pszValue = &args_vector[1][strlen("timeout=")];
                         dwValue = strtoul(pszValue, &pszEnd, 10);
                         if (pszEnd != pszValue)
                             State.timeout = dwValue;
                     }
-                    else if (!strnicmp(args_vector[1], "domain=", strlen("domain=")))
+                    else if (!_strnicmp(args_vector[1], "domain=", strlen("domain=")))
                     {
                         strcpy(State.domain, &args_vector[1][strlen("domain=")]);
                     }
-                    else if (!strnicmp(args_vector[1], "srchlist=", strlen("srchlist=")))
+                    else if (!_strnicmp(args_vector[1], "srchlist=", strlen("srchlist=")))
                     {
                         _tprintf(_T("Option not implemented: srchlist\n"));
                     }
-                    else if (!strnicmp(args_vector[1], "root=", strlen("root=")))
+                    else if (!_strnicmp(args_vector[1], "root=", strlen("root=")))
                     {
                         _tprintf(_T("Option not implemented: root\n"));
                     }
-                    else if (!strnicmp(args_vector[1], "type=", strlen("type=")))
+                    else if (!_strnicmp(args_vector[1], "type=", strlen("type=")))
                     {
                         if (!strncmp(TypeA, &args_vector[1][6], strlen(TypeA)))
                         {
@@ -985,7 +985,7 @@ void InteractiveMode()
                             _tprintf(_T("unknown query type: %s"), &args_vector[1][6]);
                         }
                     }
-                    else if (!strnicmp(args_vector[1], "querytype=", strlen("querytype=")))
+                    else if (!_strnicmp(args_vector[1], "querytype=", strlen("querytype=")))
                     {
                         if (!strncmp(TypeA, &args_vector[1][11], strlen(TypeA)))
                         {
@@ -1032,7 +1032,7 @@ void InteractiveMode()
                             _tprintf(_T("unknown query type: %s"), &args_vector[1][11]);
                         }
                     }
-                    else if (!strnicmp(args_vector[1], "class=", strlen("class=")))
+                    else if (!_strnicmp(args_vector[1], "class=", strlen("class=")))
                     {
                         if (!strncmp(ClassIN, &args_vector[1][7], strlen(ClassIN)))
                         {
@@ -1047,7 +1047,7 @@ void InteractiveMode()
                             _tprintf(_T("unknown query class: %s"), &args_vector[1][7]);
                         }
                     }
-                    else if (!strnicmp(args_vector[1], "ixfrver=", strlen("ixfrver=")))
+                    else if (!_strnicmp(args_vector[1], "ixfrver=", strlen("ixfrver=")))
                     {
                         _tprintf(_T("Option not implemented: ixfrver\n"));
                     }
@@ -1057,27 +1057,27 @@ void InteractiveMode()
                     }
                 }
             }
-            else if (!stricmp(args_vector[0], "server"))
+            else if (!_stricmp(args_vector[0], "server"))
             {
                 _tprintf(_T("Command not implemented: server\n"));
             }
-            else if (!stricmp(args_vector[0], "lserver"))
+            else if (!_stricmp(args_vector[0], "lserver"))
             {
                 _tprintf(_T("Command not implemented: lserver\n"));
             }
-            else if (!stricmp(args_vector[0], "finger"))
+            else if (!_stricmp(args_vector[0], "finger"))
             {
                 _tprintf(_T("Command not implemented: finger\n"));
             }
-            else if (!stricmp(args_vector[0], "root"))
+            else if (!_stricmp(args_vector[0], "root"))
             {
                 _tprintf(_T("Command not implemented: root\n"));
             }
-            else if (!stricmp(args_vector[0], "ls"))
+            else if (!_stricmp(args_vector[0], "ls"))
             {
                 _tprintf(_T("Command not implemented: ls\n"));
             }
-            else if (!stricmp(args_vector[0], "view"))
+            else if (!_stricmp(args_vector[0], "view"))
             {
                 _tprintf(_T("Command not implemented: view\n"));
             }
