@@ -17,7 +17,9 @@ ULONG   RequestID;
 
 void PrintState()
 {
-    _tprintf( _T("Default Server:  (null)\n\n") );
+    _tprintf( _T("Default Server:  %s\n"), State.DefaultServer );
+    _tprintf( _T("Address:  %s\n\n"), State.DefaultServerAddress );
+
     _tprintf( _T("Set options:\n") );
 
     _tprintf( _T("  ") );
@@ -68,12 +70,43 @@ void PrintState()
 void PrintUsage()
 {
     _tprintf( _T("Usage:\n"
-                 "   nslookup [-opt ...]             # interactive mode using"
-                 " default server\n   nslookup [-opt ...] - server    #"
-                 " interactive mode using 'server'\n   nslookup [-opt ...]"
-                 " host        # just look up 'host' using default server\n"
-                 "   nslookup [-opt ...] host server # just look up 'host'"
-                 " using 'server'\n") );
+                 "   nslookup [-opt ...]             # interactive mode using default server\n"
+                 "   nslookup [-opt ...] - server    # interactive mode using 'server'\n"
+                 "   nslookup [-opt ...] host        # just look up 'host' using default server\n"
+                 "   nslookup [-opt ...] host server # just look up 'host' using 'server'\n") );
+}
+
+void PrintHelp(void)
+{
+    _tprintf(_T("Commands:   (identifiers are shown in uppercase, [] means optional)\n"));
+    _tprintf(_T("NAME1           - print info about host/domain NAME using default server\n"));
+    _tprintf(_T("NAME1 NAME2     - as above, but use NAME2 as server\n"));
+    _tprintf(_T("help or ?       - print info on common commands\n"));
+    _tprintf(_T("set OPTION      - set an option\n"));
+    _tprintf(_T("    all                 - print options, current server and host\n"));
+    _tprintf(_T("    [no]debug           - print debugging information\n"));
+    _tprintf(_T("    [no]d2              - print exhaustive debugging information\n"));
+    _tprintf(_T("    [no]defname         - apend domain name to each query\n"));
+    _tprintf(_T("    [no]recurse         - ask for recursive answer to query\n"));
+    _tprintf(_T("    [no]search          - use domain list query\n"));
+    _tprintf(_T("    [no]vc              - always use virtual circuit\n"));
+    _tprintf(_T("    domain=NAME         - set default domain name to NAME\n"));
+    _tprintf(_T("    srchlist=N1[/N2/.../N6] - set domain to N1 and search list to N1,N2 etc.\n"));
+    _tprintf(_T("    root=NAME           - set root server to NAME\n"));
+    _tprintf(_T("    retry=X             - set number of retries to X\n"));
+    _tprintf(_T("    timeout=X           - set initial time-out interval to X seconds\n"));
+    _tprintf(_T("    type=X              - set query type (ex. A,ANY,CNAME,MX,NS,PTR,SOA,SRV)\n"));
+    _tprintf(_T("    querytype=X         - same as type\n"));
+    _tprintf(_T("    class=X             - set query type (ex. IN (Internet), ANY)\n"));
+    _tprintf(_T("    [no]msxfr           - use MS fast zone transfer\n"));
+    _tprintf(_T("    ixfrver=X           - current version to use in IXFR transfer request\n"));
+    _tprintf(_T("server NAME     - set default server to NAME, using current default server\n"));
+    _tprintf(_T("lserver NAME    - set default server to NAME, using initial server\n"));
+    _tprintf(_T("finger [USER]   - finger the optional NAME at the current default host\n"));
+    _tprintf(_T("root            - set current default server too the root\n"));
+
+    _tprintf(_T("exit            - exit the program\n"));
+    _tprintf(_T("\n"));
 }
 
 BOOL PerformInternalLookup( PCHAR pAddr, PCHAR pResult )
@@ -466,6 +499,8 @@ BOOL ParseCommandLine( int argc, char* argv[] )
     BOOL Interactive = FALSE;
     CHAR AddrToResolve[256];
     CHAR Server[256];
+    DWORD dwValue;
+    PSTR pszEnd, pszValue;
 
     RtlZeroMemory( AddrToResolve, 256 );
     RtlZeroMemory( Server, 256 );
@@ -578,9 +613,17 @@ BOOL ParseCommandLine( int argc, char* argv[] )
                 }
                 else if( !strncmp( "-retry=", argv[i], 7 ) )
                 {
+                    pszValue = &argv[i][7];
+                    dwValue = strtoul(pszValue, &pszEnd, 10);
+                    if (pszEnd != pszValue)
+                        State.retry = dwValue;
                 }
                 else if( !strncmp( "-timeout=", argv[i], 9 ) )
                 {
+                    pszValue = &argv[i][9];
+                    dwValue = strtoul(pszValue, &pszEnd, 10);
+                    if (pszEnd != pszValue)
+                        State.timeout = dwValue;
                 }
                 else if( !strncmp( "-querytype=", argv[i], 11 ) )
                 {
@@ -626,7 +669,7 @@ BOOL ParseCommandLine( int argc, char* argv[] )
                     }
                     else
                     {
-                        _tprintf( _T("unknown query type: %s"), &argv[i][6] );
+                        _tprintf( _T("unknown query type: %s"), &argv[i][11] );
                     }
                 }
                 else if( !strncmp( "-class=", argv[i], 7 ) )
@@ -746,12 +789,348 @@ BOOL ParseCommandLine( int argc, char* argv[] )
 
 void InteractiveMode()
 {
+    CHAR input_line[256];
+    PSTR args_vector[64];
+    DWORD dwArgCount = 0;
+    BOOL bWhiteSpace = TRUE;
+    BOOL bDone = FALSE;
+    BOOL bInQuotes = FALSE;
+    PSTR ptr;
+    DWORD dwValue;
+    PSTR pszEnd, pszValue;
+
     _tprintf( _T("Default Server:  %s\n"), State.DefaultServer );
     _tprintf( _T("Address:  %s\n\n"), State.DefaultServerAddress );
 
-    /* TODO: Implement interactive mode. */
+    for (;;)
+    {
+        dwArgCount = 0;
+        memset(args_vector, 0, sizeof(args_vector));
 
-    _tprintf( _T("ERROR: Feature not implemented.\n") );
+        _tprintf(_T("> "));
+
+        /* Get input from the user. */
+        fgets(input_line, 256, stdin);
+
+        ptr = input_line;
+        while (*ptr != 0)
+        {
+            if (*ptr == _T('\"'))
+                bInQuotes = (bInQuotes) ? FALSE : TRUE;
+
+            if ((_istspace(*ptr) && (bInQuotes == FALSE)) || *ptr == _T('\n'))
+            {
+                *ptr = _T('\0');
+                bWhiteSpace = TRUE;
+            }
+            else
+            {
+                if ((bWhiteSpace != FALSE) && (dwArgCount < 64))
+                {
+                    args_vector[dwArgCount] = ptr;
+                    dwArgCount++;
+                }
+                bWhiteSpace = FALSE;
+            }
+            ptr++;
+        }
+
+        if (dwArgCount > 0)
+        {
+            if (stricmp(args_vector[0], "exit") == 0)
+            {
+                bDone = TRUE;
+            }
+            else if ((!stricmp(args_vector[0], "help")) ||
+                     (!stricmp(args_vector[0], "?")))
+            {
+                PrintHelp();
+            }
+            else if (!stricmp(args_vector[0], "set"))
+            {
+                if (dwArgCount > 1)
+                {
+                    if (!stricmp(args_vector[1], "all"))
+                    {
+                        PrintState();
+                    }
+                    else if (!stricmp(args_vector[1], "debug"))
+                    {
+                        State.debug = TRUE;
+                    }
+                    else if (!stricmp(args_vector[1], "nodebug"))
+                    {
+                        State.debug = FALSE;
+                        State.d2 = FALSE;
+                    }
+                    else if (!stricmp(args_vector[1], "defname"))
+                    {
+                        State.defname = TRUE;
+                    }
+                    else if (!stricmp(args_vector[1], "nodefname"))
+                    {
+                        State.defname = FALSE;
+                    }
+                    else if (!stricmp(args_vector[1], "search"))
+                    {
+                        State.search = TRUE;
+                    }
+                    else if (!stricmp(args_vector[1], "nosearch"))
+                    {
+                        State.search = FALSE;
+                    }
+                    else if (!stricmp(args_vector[1], "recurse"))
+                    {
+                        State.recurse = TRUE;
+                    }
+                    else if (!stricmp(args_vector[1], "norecurse"))
+                    {
+                        State.recurse = FALSE;
+                    }
+                    else if (!stricmp(args_vector[1], "d2"))
+                    {
+                        State.debug = TRUE;
+                        State.d2 = TRUE;
+                    }
+                    else if (!stricmp(args_vector[1], "nod2"))
+                    {
+                        State.d2 = FALSE;
+                    }
+                    else if (!stricmp(args_vector[1], "vc"))
+                    {
+                        State.vc = TRUE;
+                    }
+                    else if (!stricmp(args_vector[1], "novc"))
+                    {
+                        State.vc = FALSE;
+                    }
+                    else if (!stricmp(args_vector[1], "msxfr"))
+                    {
+                        State.MSxfr = TRUE;
+                    }
+                    else if (!stricmp(args_vector[1], "nomsxfr"))
+                    {
+                        State.MSxfr = FALSE;
+                    }
+                    else if (!strnicmp(args_vector[1], "retry=", strlen("retry=")))
+                    {
+                        pszValue = &args_vector[1][strlen("retry=")];
+                        dwValue = strtoul(pszValue, &pszEnd, 10);
+                        if (pszEnd != pszValue)
+                            State.retry = dwValue;
+                    }
+                    else if (!strnicmp(args_vector[1], "timeout=", strlen("timeout=")))
+                    {
+                        pszValue = &args_vector[1][strlen("timeout=")];
+                        dwValue = strtoul(pszValue, &pszEnd, 10);
+                        if (pszEnd != pszValue)
+                            State.timeout = dwValue;
+                    }
+                    else if (!strnicmp(args_vector[1], "domain=", strlen("domain=")))
+                    {
+                        strcpy(State.domain, &args_vector[1][strlen("domain=")]);
+                    }
+                    else if (!strnicmp(args_vector[1], "srchlist=", strlen("srchlist=")))
+                    {
+                        _tprintf(_T("Option not implemented: srchlist\n"));
+                    }
+                    else if (!strnicmp(args_vector[1], "root=", strlen("root=")))
+                    {
+                        _tprintf(_T("Option not implemented: root\n"));
+                    }
+                    else if (!strnicmp(args_vector[1], "type=", strlen("type=")))
+                    {
+                        if (!strncmp(TypeA, &args_vector[1][6], strlen(TypeA)))
+                        {
+                            State.type = TypeA;
+                        }
+                        else if (!strncmp(TypeAAAA, &args_vector[1][6], strlen(TypeAAAA)))
+                        {
+                            State.type = TypeAAAA;
+                        }
+                        else if (!strncmp(TypeBoth, &args_vector[1][6], strlen(TypeBoth)))
+                        {
+                            State.type = TypeBoth;
+                        }
+                        else if (!strncmp(TypeAny, &args_vector[1][6], strlen(TypeAny)))
+                        {
+                            State.type = TypeAny;
+                        }
+                        else if (!strncmp(TypeCNAME, &args_vector[1][6], strlen(TypeCNAME)))
+                        {
+                            State.type = TypeCNAME;
+                        }
+                        else if (!strncmp(TypeMX, &args_vector[1][6], strlen(TypeMX)))
+                        {
+                            State.type = TypeMX;
+                        }
+                        else if (!strncmp(TypeNS, &args_vector[1][6], strlen(TypeNS)))
+                        {
+                            State.type = TypeNS;
+                        }
+                        else if (!strncmp(TypePTR, &args_vector[1][6], strlen(TypePTR)))
+                        {
+                            State.type = TypePTR;
+                        }
+                        else if (!strncmp(TypeSOA, &args_vector[1][6], strlen(TypeSOA)))
+                        {
+                            State.type = TypeSOA;
+                        }
+                        else if (!strncmp(TypeSRV, &args_vector[1][6], strlen(TypeSRV)))
+                        {
+                            State.type = TypeSRV;
+                        }
+                        else
+                        {
+                            _tprintf(_T("unknown query type: %s"), &args_vector[1][6]);
+                        }
+                    }
+                    else if (!strnicmp(args_vector[1], "querytype=", strlen("querytype=")))
+                    {
+                        if (!strncmp(TypeA, &args_vector[1][11], strlen(TypeA)))
+                        {
+                            State.type = TypeA;
+                        }
+                        else if (!strncmp(TypeAAAA, &args_vector[1][11], strlen(TypeAAAA)))
+                        {
+                            State.type = TypeAAAA;
+                        }
+                        else if (!strncmp(TypeBoth, &args_vector[1][11], strlen(TypeBoth)))
+                        {
+                            State.type = TypeBoth;
+                        }
+                        else if (!strncmp(TypeAny, &args_vector[1][11], strlen(TypeAny)))
+                        {
+                            State.type = TypeAny;
+                        }
+                        else if (!strncmp(TypeCNAME, &args_vector[1][11], strlen(TypeCNAME)))
+                        {
+                            State.type = TypeCNAME;
+                        }
+                        else if (!strncmp(TypeMX, &args_vector[1][11], strlen(TypeMX)))
+                        {
+                            State.type = TypeMX;
+                        }
+                        else if (!strncmp(TypeNS, &args_vector[1][11], strlen(TypeNS)))
+                        {
+                            State.type = TypeNS;
+                        }
+                        else if (!strncmp(TypePTR, &args_vector[1][11], strlen(TypePTR)))
+                        {
+                            State.type = TypePTR;
+                        }
+                        else if (!strncmp(TypeSOA, &args_vector[1][11], strlen(TypeSOA)))
+                        {
+                            State.type = TypeSOA;
+                        }
+                        else if (!strncmp(TypeSRV, &args_vector[1][11], strlen(TypeSRV)))
+                        {
+                            State.type = TypeSRV;
+                        }
+                        else
+                        {
+                            _tprintf(_T("unknown query type: %s"), &args_vector[1][11]);
+                        }
+                    }
+                    else if (!strnicmp(args_vector[1], "class=", strlen("class=")))
+                    {
+                        if (!strncmp(ClassIN, &args_vector[1][7], strlen(ClassIN)))
+                        {
+                            State.Class = ClassIN;
+                        }
+                        else if (!strncmp(ClassAny, &args_vector[1][7], strlen(ClassAny)))
+                        {
+                            State.Class = ClassAny;
+                        }
+                        else
+                        {
+                            _tprintf(_T("unknown query class: %s"), &args_vector[1][7]);
+                        }
+                    }
+                    else if (!strnicmp(args_vector[1], "ixfrver=", strlen("ixfrver=")))
+                    {
+                        _tprintf(_T("Option not implemented: ixfrver\n"));
+                    }
+                    else
+                    {
+                        _tprintf(_T("*** Invalid option: %s.\n"), args_vector[1]);
+                    }
+                }
+            }
+            else if (!stricmp(args_vector[0], "server"))
+            {
+                _tprintf(_T("Command not implemented: server\n"));
+            }
+            else if (!stricmp(args_vector[0], "lserver"))
+            {
+                _tprintf(_T("Command not implemented: lserver\n"));
+            }
+            else if (!stricmp(args_vector[0], "finger"))
+            {
+                _tprintf(_T("Command not implemented: finger\n"));
+            }
+            else if (!stricmp(args_vector[0], "root"))
+            {
+                _tprintf(_T("Command not implemented: root\n"));
+            }
+            else if (!stricmp(args_vector[0], "ls"))
+            {
+                _tprintf(_T("Command not implemented: ls\n"));
+            }
+            else if (!stricmp(args_vector[0], "view"))
+            {
+                _tprintf(_T("Command not implemented: view\n"));
+            }
+            else
+            {
+                if (dwArgCount == 1)
+                {
+                    PerformLookup(args_vector[0]);
+                }
+                else if (dwArgCount == 2)
+                {
+                    CHAR BackupServerAddress[16];
+                    CHAR BackupServer[256];
+
+                    CopyMemory(BackupServerAddress, State.DefaultServerAddress, sizeof(BackupServerAddress));
+                    CopyMemory(BackupServer, State.DefaultServer, sizeof(BackupServer));
+
+                    if (IsValidIP(args_vector[1]))
+                    {
+                        strncpy(State.DefaultServerAddress, args_vector[1], min(16, strlen(args_vector[1])));
+                        State.DefaultServerAddress[min(16, strlen(args_vector[1]))] = '\0';
+
+                        PerformInternalLookup(State.DefaultServerAddress,
+                                              State.DefaultServer);
+                    }
+                    else
+                    {
+                        strncpy(State.DefaultServer, args_vector[1], min(255, strlen(args_vector[1])));
+                        State.DefaultServer[min(255, strlen(args_vector[1]))] = '\0';
+
+                        PerformInternalLookup(State.DefaultServer,
+                                              State.DefaultServerAddress);
+                    }
+
+                    PerformLookup(args_vector[0]);
+
+                    CopyMemory(State.DefaultServerAddress, BackupServerAddress, sizeof(BackupServerAddress));
+                    CopyMemory(State.DefaultServer, BackupServer, sizeof(BackupServer));
+                }
+                else
+                {
+                    _tprintf(_T("Unrecognized command:"));
+                    for (DWORD i = 0; i < dwArgCount; i++)
+                        _tprintf(_T(" %s"), args_vector[i]);
+                    _tprintf(_T("\n"));
+                }
+            }
+        }
+
+        if (bDone)
+            break;
+    }
+
 }
 
 int main( int argc, char* argv[] )

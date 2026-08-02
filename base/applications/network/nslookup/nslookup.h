@@ -9,6 +9,7 @@
 #include <winsock2.h>
 #include <tchar.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define TypeA       "A"
 #define TypeAAAA    "AAAA"
