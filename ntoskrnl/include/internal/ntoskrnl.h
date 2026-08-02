@@ -51,6 +51,8 @@
 
 #include "tag.h"
 #include "ke.h"
+#include "spinlock.h"
+#include "ke_x.h"
 #include "ob.h"
 #include "mm.h"
 #include "ex.h"
@@ -69,7 +71,6 @@
 #include "lpc.h"
 #include "rtl.h"
 #include "dbgk.h"
-#include "spinlock.h"
 #include "test.h"
 #include "inbv.h"
 #include "vdm.h"
