@@ -384,12 +384,9 @@ MiBalancerThread(PVOID Unused)
                     Target = MiTrimMemoryConsumer(i, Target);
                 }
 
-                /* Trim Cache if we're still over. */
-                if (Target)
-                {
-                    CcRosTrimCache(Target, &NrFreedPages);
-                    Target = Target > NrFreedPages ? Target - NrFreedPages : 0;
-                }
+                /* Trim the File Cache as well. */
+                CcRosTrimCache(Target, &NrFreedPages);
+                Target = Target > NrFreedPages ? Target - NrFreedPages : 0;
             }
             while (Target && Target != StepTarget);
 
