@@ -401,6 +401,11 @@ BOOLEAN
 UefiFindPciBios(
     _Out_ PPCI_REGISTRY_INFO BusData)
 {
+    PMCFG_TABLE Mcfg;
+    PMCFG_ALLOCATION Alloc;
+    ULONG McfgCount, McfgIndex;
+    UCHAR HighestMcfgBus;
+    BOOLEAN FoundMcfgSegment0 = FALSE;
     BOOLEAN ScannedBuses[PCI_MAX_BUSES];
     UCHAR PendingBuses[PCI_MAX_BUSES];
     ULONG PendingCount = 0;
@@ -409,9 +414,42 @@ UefiFindPciBios(
     ULONG Device, Function, HeaderTypeDword;
     BOOLEAN AnyFound = FALSE;
 
+    /* Prefer MCFG since it lists each segment's bus range directly */
+    Mcfg = (PMCFG_TABLE)UefiFindAcpiTable(MCFG_SIGNATURE);
+    if ((Mcfg != NULL) && (Mcfg->Header.Length >= sizeof(MCFG_TABLE)))
+    {
+        McfgCount = (Mcfg->Header.Length - sizeof(MCFG_TABLE)) / sizeof(MCFG_ALLOCATION) + 1;
+        HighestMcfgBus = 0;
+
+        for (McfgIndex = 0; McfgIndex < McfgCount; McfgIndex++)
+        {
+            Alloc = &Mcfg->Allocation[McfgIndex];
+
+            if (Alloc->PciSegmentGroup != 0)
+                continue;
+
+            if (Alloc->EndBusNumber < Alloc->StartBusNumber)
+                continue; /* malformed entry */
+
+            FoundMcfgSegment0 = TRUE;
+            if (Alloc->EndBusNumber > HighestMcfgBus)
+                HighestMcfgBus = Alloc->EndBusNumber;
+        }
+
+        if (FoundMcfgSegment0)
+        {
+            BusData->MajorRevision = 3;
+            BusData->MinorRevision = 0;
+            BusData->NoBuses = HighestMcfgBus + 1;
+            BusData->HardwareMechanism = 1;
+
+            TRACE("UEFI PCI: %u bus(es) found via MCFG\n", BusData->NoBuses);
+            return TRUE;
+        }
+    }
+
     RtlZeroMemory(ScannedBuses, sizeof(ScannedBuses));
 
-    /* Seed the queue with bus 0 */
     ScannedBuses[0] = TRUE;
     PendingBuses[PendingCount++] = 0;
 
