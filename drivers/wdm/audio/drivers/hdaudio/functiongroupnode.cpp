@@ -435,7 +435,7 @@ CFunctionGroupNode::GetNodesWithType(IN UCHAR NodeType, OUT PULONG NodeCount, OU
 
 NTSTATUS
 NTAPI
-CFunctionGroupNode::GetVolume(
+CFunctionGroupNode::GetVolumeKnob(
     IN ULONG NodeId,
     OUT PUCHAR Direct,
     OUT PLONG Volume)
@@ -448,11 +448,9 @@ CFunctionGroupNode::GetVolume(
     Status = m_Adapter->TransferVerb(Verb, &Response);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("HDAUDIO: GetVolume failed with %x\n", Status);
+        DPRINT1("HDAUDIO: GetVolumeKnob failed with %x\n", Status);
         return Status;
     }
-    if (Response == 0)
-        return STATUS_UNSUCCESSFUL;
     *Direct = (Response >> 7) & 0x1;
     *Volume = (Response & 0x7F);
     return Status;
@@ -460,7 +458,7 @@ CFunctionGroupNode::GetVolume(
 
 NTSTATUS
 NTAPI
-CFunctionGroupNode::SetVolume(
+CFunctionGroupNode::SetVolumeKnob(
     IN ULONG NodeId,
     IN UCHAR Direct,
     IN LONG Volume)
@@ -473,7 +471,7 @@ CFunctionGroupNode::SetVolume(
     Status = m_Adapter->TransferVerb(Verb, &Response);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("HDAUDIO: SetVolume failed with %x\n", Status);
+        DPRINT1("HDAUDIO: SetVolumeKnob failed with %x\n", Status);
     }
     return Status;
 }
@@ -555,6 +553,50 @@ CFunctionGroupNode::GetAmplifierDetails(
     Caps->Steps = (Response >> 16) & 0x7F;
     Caps->NumSteps = (Response >> 8) & 0x7F;
     Caps->Offset = (Response & 0x7F);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+CFunctionGroupNode::GetAmplifierGainMute(
+    IN ULONG NodeId,
+    OUT PUCHAR Mute,
+    OUT PUCHAR Gain)
+{
+    ULONG Verb;
+    ULONG Response = 0;
+    NTSTATUS Status;
+
+    Verb = (m_CodecAddress << 28) | (NodeId << 20) | (AC_VERB_GET_AMP_GAIN_MUTE << 8);
+    Status = m_Adapter->TransferVerb(Verb, &Response);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HDAUDIO: GetAmplifierGainMute failed with %x\n", Status);
+        return Status;
+    }
+    *Mute = (Response >> 7) & 0x1;
+    *Gain = (Response & 0x7F);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+CFunctionGroupNode::SetAmplifierGainMute(
+    IN ULONG NodeId,
+    IN UCHAR Mute,
+    IN UCHAR Gain)
+{
+    ULONG Verb;
+    ULONG Response = 0;
+    NTSTATUS Status;
+
+    Verb = (m_CodecAddress << 28) | (NodeId << 20) | (AC_VERB_SET_AMP_GAIN_MUTE << 8) | Mute | Gain;
+    Status = m_Adapter->TransferVerb(Verb, &Response);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HDAUDIO: GetAmplifierGainMute failed with %x\n", Status);
+        return Status;
+    }
     return STATUS_SUCCESS;
 }
 

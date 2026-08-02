@@ -307,10 +307,12 @@ class CFunctionGroupNode
     NTSTATUS NTAPI AddNode(ULONG NodeId);
     PNODE_CONTEXT NTAPI FindNodeId(ULONG NodeId);
     NTSTATUS NTAPI GetAmplifierDetails(IN ULONG NodeId, IN ULONG Input, OUT PAMPLIFIER_CAPABILITIES Caps);
+    NTSTATUS NTAPI GetAmplifierGainMute(IN ULONG NodeId, OUT PUCHAR Mute, OUT PUCHAR Gain);
+    NTSTATUS NTAPI SetAmplifierGainMute(IN ULONG NodeId, IN UCHAR Mute, IN UCHAR Gain);
     NTSTATUS NTAPI GetPinCapabilities(IN ULONG NodeId, OUT PPIN_CAPABILITIES PinCaps);
     NTSTATUS NTAPI GetPinSense(IN ULONG NodeId, IN PULONG DevicePresent);
-    NTSTATUS NTAPI GetVolume(IN ULONG NodeId, OUT PUCHAR Direct, OUT PLONG Volume);
-    NTSTATUS NTAPI SetVolume(IN ULONG NodeId, IN UCHAR Direct, IN LONG Volume);
+    NTSTATUS NTAPI GetVolumeKnob(IN ULONG NodeId, OUT PUCHAR Direct, OUT PLONG Volume);
+    NTSTATUS NTAPI SetVolumeKnob(IN ULONG NodeId, IN UCHAR Direct, IN LONG Volume);
     NTSTATUS NTAPI GetVolumeCapabilities(IN ULONG NodeId, IN PUCHAR Delta, IN PUCHAR NumSteps);
     NTSTATUS NTAPI GetPinNodesWithDefaultAssociation(IN UCHAR DefaultAssociation, IN UCHAR Digital, OUT PULONG NodeCount, OUT PULONG * Nodes);
     VOID NTAPI ClearVisitedState();

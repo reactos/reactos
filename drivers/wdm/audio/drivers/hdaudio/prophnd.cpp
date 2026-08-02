@@ -62,7 +62,7 @@ PropertyHandler_JackDescription(IN PPCPROPERTY_REQUEST PropertyRequest)
         Miniport->Release();
         return STATUS_INVALID_PARAMETER;
     }
-#if 0
+
     PIN_CONFIGURATION_DEFAULT PinConfiguration;
     Status = Node->GetPinConfigurationDefault(PropertyRequest->Node, &PinConfiguration);
     if (NT_SUCCESS(Status))
@@ -79,10 +79,6 @@ PropertyHandler_JackDescription(IN PPCPROPERTY_REQUEST PropertyRequest)
         JackDescription->PortConnection = (EPxcPortConnection)PinConfiguration.PortConnectivity;
         JackDescription->IsConnected = TRUE;
     }
-#else
-    UNIMPLEMENTED_ONCE;
-    Status = STATUS_NOT_IMPLEMENTED;
-#endif
 
     Miniport->Release();
     return Status;
@@ -184,16 +180,21 @@ PropertyHandler_Volume(IN PPCPROPERTY_REQUEST PropertyRequest)
     PLONG Value = (PLONG)PropertyRequest->Value;
     if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
     {
-        UNIMPLEMENTED_ONCE;
-        *Value = 0xFFFF;
+        UCHAR Direct;
+        LONG Volume;
+        Status = Node->GetVolumeKnob(PropertyRequest->Node, &Direct, &Volume);
+        DPRINT1("GetVolumeKnob Status %x, Node %d, Direct %x Volume %x\n", Status, PropertyRequest->Node, Direct, Volume);
+        *Value = Volume;
         Miniport->Release();
-        return STATUS_NOT_IMPLEMENTED;
+        return Status;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET)
     {
-        UNIMPLEMENTED_ONCE;
+        LONG Volume = *Value;
+        Status = Node->SetVolumeKnob(PropertyRequest->Node, 1, Volume);
+        DPRINT1("SetVolumeKnob Status %x, Node %d, Volume %x\n", Status, PropertyRequest->Node, Volume);
         Miniport->Release();
-        return STATUS_NOT_IMPLEMENTED;
+        return Status;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_BASICSUPPORT)
     {
@@ -217,24 +218,49 @@ PropertyHandler_Mute(IN PPCPROPERTY_REQUEST PropertyRequest)
     if (PropertyRequest->ValueSize < sizeof(BOOL))
         return STATUS_BUFFER_TOO_SMALL;
 
+    PUNKNOWN UnknownMiniport = (PUNKNOWN)PropertyRequest->MajorTarget;
+    if (!UnknownMiniport)
+        return STATUS_INVALID_PARAMETER;
+
+    CMiniportTopology *Miniport = NULL;
+    NTSTATUS Status = UnknownMiniport->QueryInterface(IID_IMiniportTopology, (PVOID*)&Miniport);
+    if (!NT_SUCCESS(Status) || !Miniport)
+        return Status;
+
+    CFunctionGroupNode *Node = (CFunctionGroupNode*)Miniport->GetNode();
+    if (!Node)
+    {
+        Miniport->Release();
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    PBOOL Value = (PBOOL)PropertyRequest->Value;
     if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
     {
-        UNIMPLEMENTED_ONCE;
-        *(PBOOL)PropertyRequest->Value = FALSE;
-        return STATUS_NOT_IMPLEMENTED;
+        UCHAR Gain, Mute;
+        Status = Node->GetAmplifierGainMute(PropertyRequest->Node, &Mute, &Gain);
+        DPRINT1("GetAmplifierGainMute Status %x, Node %d, Mute %x, Gain %x\n", Status, PropertyRequest->Node, Mute, Gain);
+        *Value = Mute;
+        Miniport->Release();
+        return Status;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET)
     {
-        UNIMPLEMENTED_ONCE;
-        return STATUS_NOT_IMPLEMENTED;
+        UCHAR Mute = *Value;
+        Status = Node->SetAmplifierGainMute(PropertyRequest->Node, Mute, 0);
+        DPRINT1("SetAmplifierGainMute Status %x, Node %d, Mute %x\n", Status, PropertyRequest->Node, Mute);
+        Miniport->Release();
+        return Status;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_BASICSUPPORT)
     {
         PULONG AccessFlags = (PULONG)PropertyRequest->Value;
         *AccessFlags = KSPROPERTY_TYPE_BASICSUPPORT | KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET;
         PropertyRequest->ValueSize = sizeof(BOOL);
+        Miniport->Release();
         return STATUS_SUCCESS;
     }
+    Miniport->Release();
     return STATUS_NOT_SUPPORTED;
 }
 
