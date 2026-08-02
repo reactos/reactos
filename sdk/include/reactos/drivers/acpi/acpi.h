@@ -40,12 +40,13 @@ typedef struct _ACPI_BIOS_MULTI_NODE
 #define BOOT_SIGNATURE 'TOOB'
 #define SRAT_SIGNATURE 'TARS'
 #define WDRT_SIGNATURE 'TRDW'
-#define BGRT_SIGNATURE  0x54524742      	// "BGRT"
+#define BGRT_SIGNATURE  0x54524742              // "BGRT"
+#define MCFG_SIGNATURE 'GFCM'
 
 //
 // FADT Flags
 //
-#define ACPI_TMR_VAL_EXT 	0x100
+#define ACPI_TMR_VAL_EXT        0x100
 
 //
 // BGRT Flags
@@ -264,5 +265,21 @@ typedef struct _BGRT_TABLE
     ULONG OffsetX;
     ULONG OffsetY;
 } BGRT_TABLE, *PBGRT_TABLE;
+
+typedef struct _MCFG_ALLOCATION
+{
+    ULONGLONG BaseAddress;
+    USHORT PciSegmentGroup;
+    UCHAR StartBusNumber;
+    UCHAR EndBusNumber;
+    ULONG Reserved;
+} MCFG_ALLOCATION, *PMCFG_ALLOCATION;
+
+typedef struct _MCFG_TABLE
+{
+    DESCRIPTION_HEADER Header;
+    ULONGLONG Reserved;
+    MCFG_ALLOCATION Allocation[ANYSIZE_ARRAY];
+} MCFG_TABLE, *PMCFG_TABLE;
 
 /* EOF */
