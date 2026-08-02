@@ -171,7 +171,7 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
             WaitThread = WaitBlock->Thread;
 
             /* Check to see if the waiting thread is locked */
-            if (KiTryThreadLock(WaitThread))
+            if (!KiTryToAcquireThreadLock(WaitThread))
             {
                 /* Unlock the gate */
                 KiReleaseDispatcherObject(&Gate->Header);

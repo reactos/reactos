@@ -257,10 +257,10 @@ KiReleaseThreadLock(IN PKTHREAD Thread)
 //
 FORCEINLINE
 BOOLEAN
-KiTryThreadLock(IN PKTHREAD Thread)
+KiTryToAcquireThreadLock(IN PKTHREAD Thread)
 {
     UNREFERENCED_PARAMETER(Thread);
-    return FALSE;
+    return TRUE;
 }
 
 FORCEINLINE
@@ -491,18 +491,7 @@ KiAcquireThreadLock(IN PKTHREAD Thread)
     ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 
     /* Start acquire loop */
-    for (;;)
-    {
-        /* Acquire the lock and break out if we acquired it first */
-        if (!InterlockedExchange((PLONG)&Thread->ThreadLock, 1)) break;
-
-        /* Loop until the other CPU releases it */
-        do
-        {
-            /* Let the CPU know that this is a loop */
-            YieldProcessor();
-        } while (Thread->ThreadLock);
-    }
+    KxAcquireSpinLock(&Thread->ThreadLock);
 }
 
 //
@@ -520,24 +509,14 @@ KiReleaseThreadLock(IN PKTHREAD Thread)
     ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 
     /* Release it */
-    InterlockedAnd((PLONG)&Thread->ThreadLock, 0);
+    KxReleaseSpinLock(&Thread->ThreadLock);
 }
 
 FORCEINLINE
 BOOLEAN
-KiTryThreadLock(IN PKTHREAD Thread)
+KiTryToAcquireThreadLock(IN PKTHREAD Thread)
 {
-    LONG Value;
-
-    /* If the lock isn't acquired, return false */
-    if (!Thread->ThreadLock) return FALSE;
-
-    /* Otherwise, try to acquire it and check the result */
-    Value = 1;
-    Value = InterlockedExchange((PLONG)&Thread->ThreadLock, Value);
-
-    /* Return the lock state */
-    return (Value == 1);
+    return KeTryToAcquireSpinLockAtDpcLevel(&Thread->ThreadLock);
 }
 
 FORCEINLINE
