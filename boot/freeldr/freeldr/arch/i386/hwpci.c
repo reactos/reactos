@@ -73,6 +73,7 @@ GetPciIrqRoutingTable(VOID)
     return NULL;
 }
 
+#ifndef UEFIBOOT
 BOOLEAN
 PcFindPciBios(PPCI_REGISTRY_INFO BusData)
 {
@@ -107,6 +108,7 @@ PcFindPciBios(PPCI_REGISTRY_INFO BusData)
 
     return FALSE;
 }
+#endif
 
 static
 VOID
