@@ -402,7 +402,7 @@ UefiFindPciBios(
             for (Function = 1; Function < PCI_MAX_FUNCTIONS; Function++)
             {
                 if (PciScanFunction(Bus, (UCHAR)Device, (UCHAR)Function,
-                                         ScannedBuses, PendingBuses, &PendingCount))
+                                    ScannedBuses, PendingBuses, &PendingCount))
                 {
                     AnyFound = TRUE;
                 }
