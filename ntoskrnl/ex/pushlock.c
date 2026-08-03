@@ -213,8 +213,13 @@ ExfWakePushLock(PEX_PUSH_LOCK PushLock,
 /*++
  * @name ExpOptimizePushLockList
  *
- *     The ExpOptimizePushLockList routine optimizes the list of waiters
- *     associated to a pushlock's wait block.
+ *     The ExpOptimizePushLockList routine completes the links in a push
+ *     lock waiter chain.
+ *
+ *     Wait blocks are inserted at the head using their Next link. This
+ *     routine fills the corresponding Previous links and caches the tail
+ *     pointer in the new head, allowing the wakeup to traverse the
+ *     chain without first scanning it from the head.
  *
  * @param PushLock
  *        Pointer to a pushlock whose waiter list needs to be optimized.
@@ -247,7 +252,11 @@ ExpOptimizePushLockList(PEX_PUSH_LOCK PushLock,
     /* Start main loop */
     for (;;)
     {
-        /* Check if we've been unlocked */
+        /*
+         * A release may have cleared Locked while this thread owned
+         * Waking. In that case, retain responsibility for the chain
+         * and proceed directly to wakeup.
+         */
         if (!OldValue.Locked)
         {
             /* Wake us up and leave */
@@ -255,34 +264,38 @@ ExpOptimizePushLockList(PEX_PUSH_LOCK PushLock,
             break;
         }
 
-        /* Get the wait block */
+        /* Start at the waiter chain head encoded in the lock value. */
         WaitBlock = (PEX_PUSH_LOCK_WAIT_BLOCK)(OldValue.Value &
                                                ~EX_PUSH_LOCK_PTR_BITS);
 
-        /* Loop the blocks */
         FirstWaitBlock = WaitBlock;
+
+        /*
+         * Follow Next links until reaching an already completed part
+         * of the chain. Complete the reverse links along the way.
+         */
         while (TRUE)
         {
-            /* Get the last wait block */
             LastWaitBlock = WaitBlock->Last;
             if (LastWaitBlock)
             {
-                /* Set this as the new last block, we're done */
+                /* Cache the chain tail in the current head. */
                 FirstWaitBlock->Last = LastWaitBlock;
                 break;
             }
 
-            /* Save the block */
             PreviousWaitBlock = WaitBlock;
 
-            /* Get the next block */
             WaitBlock = WaitBlock->Next;
 
-            /* Save the previous */
+            /* Link the older waiter back toward the chain head. */
             WaitBlock->Previous = PreviousWaitBlock;
         }
 
-        /* Remove the wake bit */
+        /*
+         * Release responsibility for the waiter chain now that its
+         * reverse links and cached tail are complete.
+         */
         NewValue.Value = OldValue.Value &~ EX_PUSH_LOCK_WAKING;
 
         /* Sanity checks */
@@ -294,10 +307,13 @@ ExpOptimizePushLockList(PEX_PUSH_LOCK PushLock,
                                                          NewValue.Ptr,
                                                          OldValue.Ptr);
 
-        /* If we updated correctly, leave */
+        /* If waking was cleared successfully, we're done */
         if (NewValue.Value == OldValue.Value) break;
 
-        /* Update value */
+        /*
+         * A waiter was inserted or the lock was released. Retry from
+         * the current lock value while keeping Waking ownership.
+         */
         OldValue = NewValue;
     }
 }
@@ -518,7 +534,7 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
             /* Check if there is already a waiter */
             if (OldValue.Waiting)
             {
-                /* Nobody is the last waiter yet */
+                /* The tail pointer is filled in when the wait list is linked */
                 WaitBlock->Last = NULL;
 
                 /* We are an exclusive waiter */
@@ -540,7 +556,7 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
             }
             else
             {
-                /* We are the first waiter, so loop the wait block */
+                /* The first waiter is both the head and the tail */
                 WaitBlock->Last = WaitBlock;
 
                 /* Set the share count */
@@ -709,7 +725,7 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
                 WaitBlock->Next = (PEX_PUSH_LOCK_WAIT_BLOCK)(
                                    OldValue.Value &~ EX_PUSH_LOCK_PTR_BITS);
 
-                /* Nobody is the last waiter yet */
+                /* The tail pointer is filled in when the wait list is linked */
                 WaitBlock->Last = NULL;
 
                 /* Point to ours */
@@ -724,7 +740,7 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
             }
             else
             {
-                /* We are the first waiter, so loop the wait block */
+                /* The first waiter is both the head and the tail */
                 WaitBlock->Last = WaitBlock;
 
                 /* Point to our wait block */
