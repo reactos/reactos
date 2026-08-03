@@ -441,7 +441,7 @@ setsockopt(IN SOCKET s,
             if (optlen < sizeof(DWORD))
             {
                 /* Fail */
-                SetLastError(WSAEFAULT);
+                WSASetLastError(WSAEFAULT);
                 return SOCKET_ERROR;
             }
 
@@ -454,7 +454,7 @@ setsockopt(IN SOCKET s,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 Status = SOCKET_ERROR;
-                SetLastError(WSAEFAULT);
+                WSASetLastError(WSAEFAULT);
             }
             _SEH2_END;
 
@@ -462,7 +462,7 @@ setsockopt(IN SOCKET s,
         }
         if (!optval && optlen > 0)
         {
-            SetLastError(WSAEFAULT);
+            WSASetLastError(WSAEFAULT);
             return SOCKET_ERROR;
         }
 
