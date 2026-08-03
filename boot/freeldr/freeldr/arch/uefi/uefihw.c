@@ -386,7 +386,7 @@ UefiFindPciBios(
         for (Device = 0; Device < PCI_MAX_DEVICES; Device++)
         {
             if (!PciScanFunction(Bus, (UCHAR)Device, 0,
-                                      ScannedBuses, PendingBuses, &PendingCount))
+                                 ScannedBuses, PendingBuses, &PendingCount))
             {
                 continue;
             }
