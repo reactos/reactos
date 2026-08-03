@@ -219,21 +219,30 @@ ExfWakePushLock(PEX_PUSH_LOCK PushLock,
  * @param PushLock
  *        Pointer to a pushlock whose waiter list needs to be optimized.
  *
- * @param OldValue
- *        Last known value of the pushlock before this routine was called.
+ * @param InitialValue
+ *        Last known value of the pushlock installed by the caller when
+ *        it inserted a new wait block and set the Waking bit.
  *
  * @return None.
  *
- * @remarks At the end of the optimization, the pushlock will also be wakened.
+ * @remarks If the pushlock remains locked, this routine completes
+ *          the wait block links and clears Waking. If the lock has
+ *          been released, the pushlock will be wakened.
  *
  *--*/
 VOID
 FASTCALL
 ExpOptimizePushLockList(PEX_PUSH_LOCK PushLock,
-                        EX_PUSH_LOCK OldValue)
+                        EX_PUSH_LOCK InitialValue)
 {
     PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock, LastWaitBlock, PreviousWaitBlock, FirstWaitBlock;
-    EX_PUSH_LOCK NewValue;
+    EX_PUSH_LOCK OldValue, NewValue;
+
+    ASSERT(InitialValue.Locked);
+    ASSERT(InitialValue.Waiting);
+    ASSERT(InitialValue.Waking);
+
+    OldValue = InitialValue;
 
     /* Start main loop */
     for (;;)
