@@ -73,6 +73,70 @@ GetPciIrqRoutingTable(VOID)
     return NULL;
 }
 
+ULONG
+PciReadConfigDword(
+    _In_ UCHAR Bus,
+    _In_ UCHAR Device,
+    _In_ UCHAR Function,
+    _In_ UCHAR Register)
+{
+    PCI_TYPE1_CFG_BITS Cfg;
+
+    Cfg.u.AsULONG = 0;
+    Cfg.u.bits.Enable = 1;
+    Cfg.u.bits.BusNumber = Bus;
+    Cfg.u.bits.DeviceNumber = Device;
+    Cfg.u.bits.FunctionNumber = Function;
+    Cfg.u.bits.RegisterNumber = Register & ~3;
+
+    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, Cfg.u.AsULONG);
+    return READ_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT);
+}
+
+BOOLEAN
+PciScanFunction(
+    _In_ UCHAR Bus,
+    _In_ UCHAR Device,
+    _In_ UCHAR Function,
+    _Inout_updates_(PCI_MAX_BUSES) BOOLEAN *ScannedBuses,
+    _Inout_updates_(PCI_MAX_BUSES) UCHAR *PendingBuses,
+    _Inout_ ULONG *PendingCount)
+{
+    ULONG VendorDevice, HeaderTypeDword, BridgeBusNumbers;
+    UCHAR HeaderType, SecondaryBus, SubordinateBus, b;
+
+    VendorDevice = PciReadConfigDword(Bus, Device, Function, 0x00);
+    if ((VendorDevice & 0xFFFF) == 0xFFFF)
+        return FALSE;
+
+    HeaderTypeDword = PciReadConfigDword(Bus, Device, Function, 0x0C);
+    HeaderType = (UCHAR)((HeaderTypeDword >> 16) & 0xFF);
+
+    if ((HeaderType & PCI_HEADER_TYPE_MASK) == PCI_HEADER_TYPE_BRIDGE)
+    {
+        BridgeBusNumbers = PciReadConfigDword(Bus, Device, Function, 0x18);
+        SecondaryBus = (UCHAR)((BridgeBusNumbers >> 8) & 0xFF);
+        SubordinateBus = (UCHAR)((BridgeBusNumbers >> 16) & 0xFF);
+
+        if (SecondaryBus != 0 && SecondaryBus != Bus && SubordinateBus >= SecondaryBus)
+        {
+            for (b = SecondaryBus; b <= SubordinateBus; b++)
+            {
+                if (!ScannedBuses[b] && (*PendingCount < PCI_MAX_BUSES))
+                {
+                    ScannedBuses[b] = TRUE;
+                    PendingBuses[(*PendingCount)++] = b;
+                }
+
+                if (b == 255)
+                    break; /* avoid UCHAR wraparound */
+            }
+        }
+    }
+
+    return TRUE;
+}
+
 #ifndef UEFIBOOT
 BOOLEAN
 PcFindPciBios(PPCI_REGISTRY_INFO BusData)

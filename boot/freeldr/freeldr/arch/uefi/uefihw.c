@@ -26,14 +26,6 @@ extern PCM_FRAMEBUF_DEVICE_DATA FrameBufferData;
 BOOLEAN AcpiPresent = FALSE;
 static EFI_EVENT IdleTimerEvent = NULL;
 
-#define PCI_MAX_BUSES 256
-#define PCI_MAX_DEVICES 32
-#define PCI_MAX_FUNCTIONS 8
-
-#define PCI_HEADER_TYPE_MASK 0x7F
-#define PCI_HEADER_TYPE_BRIDGE 0x01
-#define PCI_HEADER_TYPE_MULTIFUNC 0x80
-
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -331,72 +323,6 @@ DetectInternal(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 }
 
 static
-ULONG
-UefiPciReadConfigDword(
-    _In_ UCHAR Bus,
-    _In_ UCHAR Device,
-    _In_ UCHAR Function,
-    _In_ UCHAR Register)
-{
-    PCI_TYPE1_CFG_BITS Cfg;
-
-    Cfg.u.AsULONG = 0;
-    Cfg.u.bits.Enable = 1;
-    Cfg.u.bits.BusNumber = Bus;
-    Cfg.u.bits.DeviceNumber = Device;
-    Cfg.u.bits.FunctionNumber = Function;
-    Cfg.u.bits.RegisterNumber = Register & ~3;
-
-    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, Cfg.u.AsULONG);
-    return READ_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT);
-}
-
-static
-BOOLEAN
-UefiScanPciFunction(
-    _In_ UCHAR Bus,
-    _In_ UCHAR Device,
-    _In_ UCHAR Function,
-    _Inout_updates_(PCI_MAX_BUSES) BOOLEAN *ScannedBuses,
-    _Inout_updates_(PCI_MAX_BUSES) UCHAR *PendingBuses,
-    _Inout_ ULONG *PendingCount)
-{
-    ULONG VendorDevice, HeaderTypeDword, BridgeBusNumbers;
-    UCHAR HeaderType, SecondaryBus, SubordinateBus, b;
-
-    VendorDevice = UefiPciReadConfigDword(Bus, Device, Function, 0x00);
-    if ((VendorDevice & 0xFFFF) == 0xFFFF)
-        return FALSE;
-
-    HeaderTypeDword = UefiPciReadConfigDword(Bus, Device, Function, 0x0C);
-    HeaderType = (UCHAR)((HeaderTypeDword >> 16) & 0xFF);
-
-    if ((HeaderType & PCI_HEADER_TYPE_MASK) == PCI_HEADER_TYPE_BRIDGE)
-    {
-        BridgeBusNumbers = UefiPciReadConfigDword(Bus, Device, Function, 0x18);
-        SecondaryBus = (UCHAR)((BridgeBusNumbers >> 8) & 0xFF);
-        SubordinateBus = (UCHAR)((BridgeBusNumbers >> 16) & 0xFF);
-
-        if (SecondaryBus != 0 && SecondaryBus != Bus && SubordinateBus >= SecondaryBus)
-        {
-            for (b = SecondaryBus; b <= SubordinateBus; b++)
-            {
-                if (!ScannedBuses[b] && (*PendingCount < PCI_MAX_BUSES))
-                {
-                    ScannedBuses[b] = TRUE;
-                    PendingBuses[(*PendingCount)++] = b;
-                }
-
-                if (b == 255)
-                    break; /* avoid UCHAR wraparound */
-            }
-        }
-    }
-
-    return TRUE;
-}
-
-static
 BOOLEAN
 UefiFindPciBios(
     _Out_ PPCI_REGISTRY_INFO BusData)
@@ -459,7 +385,7 @@ UefiFindPciBios(
 
         for (Device = 0; Device < PCI_MAX_DEVICES; Device++)
         {
-            if (!UefiScanPciFunction(Bus, (UCHAR)Device, 0,
+            if (!PciScanFunction(Bus, (UCHAR)Device, 0,
                                       ScannedBuses, PendingBuses, &PendingCount))
             {
                 continue;
@@ -469,13 +395,13 @@ UefiFindPciBios(
             if (Bus > HighestBus)
                 HighestBus = Bus;
 
-            HeaderTypeDword = UefiPciReadConfigDword(Bus, (UCHAR)Device, 0, 0x0C);
+            HeaderTypeDword = PciReadConfigDword(Bus, (UCHAR)Device, 0, 0x0C);
             if (!((HeaderTypeDword >> 16) & PCI_HEADER_TYPE_MULTIFUNC))
                 continue;
 
             for (Function = 1; Function < PCI_MAX_FUNCTIONS; Function++)
             {
-                if (UefiScanPciFunction(Bus, (UCHAR)Device, (UCHAR)Function,
+                if (PciScanFunction(Bus, (UCHAR)Device, (UCHAR)Function,
                                          ScannedBuses, PendingBuses, &PendingCount))
                 {
                     AnyFound = TRUE;
