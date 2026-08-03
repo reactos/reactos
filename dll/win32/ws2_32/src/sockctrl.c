@@ -111,7 +111,7 @@ connect(IN SOCKET s,
     }
 
     /* Return with an Error */
-    SetLastError(ErrorCode);
+    WSASetLastError(ErrorCode);
     return SOCKET_ERROR;
 }
 
@@ -155,7 +155,7 @@ listen(IN SOCKET s,
     }
 
     /* Return with an Error */
-    SetLastError(ErrorCode);
+    WSASetLastError(ErrorCode);
     return SOCKET_ERROR;
 }
 
@@ -201,7 +201,7 @@ getpeername(IN SOCKET s,
     }
 
     /* Return with an Error */
-    SetLastError(ErrorCode);
+    WSASetLastError(ErrorCode);
     return SOCKET_ERROR;
 }
 
@@ -259,7 +259,7 @@ getsockname(IN SOCKET s,
     }
 
     /* Return with an Error */
-    SetLastError(ErrorCode);
+    WSASetLastError(ErrorCode);
     return SOCKET_ERROR;
 }
 
@@ -298,7 +298,7 @@ getsockopt(IN SOCKET s,
                 {
                     /* Fail */
                     Status = SOCKET_ERROR;
-                    SetLastError(WSAEFAULT);
+                    WSASetLastError(WSAEFAULT);
                     _SEH2_LEAVE;
                 }
 
@@ -309,7 +309,7 @@ getsockopt(IN SOCKET s,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 Status = SOCKET_ERROR;
-                SetLastError(WSAEFAULT);
+                WSASetLastError(WSAEFAULT);
             }
             _SEH2_END;
 
@@ -356,7 +356,7 @@ getsockopt(IN SOCKET s,
                 {
                     /* Dereference the socket and fail */
                     WsSockDereference(Socket);
-                    SetLastError(ErrorCode);
+                    WSASetLastError(ErrorCode);
                     return SOCKET_ERROR;
                 }
             }
@@ -409,7 +409,7 @@ getsockopt(IN SOCKET s,
     }
 
     /* Return with an Error */
-    SetLastError(ErrorCode);
+    WSASetLastError(ErrorCode);
     return SOCKET_ERROR;
 }
 
@@ -494,7 +494,7 @@ setsockopt(IN SOCKET s,
     }
 
     /* Return with an Error */
-    SetLastError(ErrorCode);
+    WSASetLastError(ErrorCode);
     return SOCKET_ERROR;
 }
 
@@ -537,7 +537,7 @@ shutdown(IN SOCKET s,
     }
 
     /* Return with an Error */
-    SetLastError(ErrorCode);
+    WSASetLastError(ErrorCode);
     return SOCKET_ERROR;
 }
 
@@ -591,7 +591,7 @@ WSAConnect(IN SOCKET s,
     }
 
     /* Return with an Error */
-    SetLastError(ErrorCode);
+    WSASetLastError(ErrorCode);
     return SOCKET_ERROR;
 }
 
@@ -638,6 +638,6 @@ WSAGetOverlappedResult(IN SOCKET s,
     }
 
     /* Return with an Error */
-    SetLastError(ErrorCode);
+    WSASetLastError(ErrorCode);
     return FALSE;
 }
