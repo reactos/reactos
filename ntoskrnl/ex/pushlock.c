@@ -644,7 +644,7 @@ VOID
 FASTCALL
 ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 {
-    EX_PUSH_LOCK OldValue = *PushLock, NewValue;
+    EX_PUSH_LOCK OldValue = *PushLock, NewValue, TempValue;
     BOOLEAN NeedWake;
     EX_PUSH_LOCK_WAIT_BLOCK Block;
     PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock = &Block;
@@ -736,6 +736,7 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 #endif
 
             /* Write the new value */
+            TempValue = NewValue;
             NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                              NewValue.Ptr,
                                                              OldValue.Ptr);
@@ -746,14 +747,11 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
                 continue;
             }
 
-            /* Update the value now */
-            OldValue = NewValue;
-
             /* Check if the pushlock needed waking */
             if (NeedWake)
             {
                 /* Scan the Waiters and Wake PushLocks */
-                ExpOptimizePushLockList(PushLock, OldValue);
+                ExpOptimizePushLockList(PushLock, TempValue);
             }
 
             /* Set up the Wait Gate */
