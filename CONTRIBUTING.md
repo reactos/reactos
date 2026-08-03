@@ -2,7 +2,7 @@
 There are several ways to contribute to ReactOS. You can [make a donation](https://reactos.org/donate/), [file a bug report](https://jira.reactos.org/), [add documentation to our wiki](https://reactos.org/wiki) or submit a code contribution. This document focuses on our guidelines for submitting code contributions.
 
 > [!CAUTION]
-> If you have worked with private Windows source code, or contributed to projects derived from such code, we cannot accept contributions from you in any area related to that work. **Leaked Windows source code is considered private.**
+> If you have worked with private Windows source code, or contributed to projects derived from such code, we cannot accept contributions from you in any area related to that work. **Leaked Windows source code and the Windows Research Kernel (WRK) are considered private.**
 >
 > Publicly available information, including documentation, headers, and patents, may be used for research purposes.
 
