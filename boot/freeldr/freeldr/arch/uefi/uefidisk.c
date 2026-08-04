@@ -1011,11 +1011,39 @@ UefiSetBootpath(VOID)
         /* If boot handle is a logical partition, we need to determine which partition number */
         if (BootBlockIo->Media->LogicalPartition)
         {
-            /* For logical partitions, we need to find the partition number.
-             * This is tricky - we'll use partition 1 as default for now. */
-            // TODO: Properly determine partition number from boot handle.
-            BootPartition = FIRST_PARTITION;
-            TRACE("Boot handle is logical partition, using partition %lu\n", BootPartition);
+            EFI_GUID DevicePathGuid = EFI_DEVICE_PATH_PROTOCOL_GUID;
+            EFI_DEVICE_PATH_PROTOCOL *DevicePath = NULL;
+            EFI_DEVICE_PATH_PROTOCOL *Node;
+            HARDDRIVE_DEVICE_PATH *HdNode;
+            USHORT NodeLength;
+
+            BootPartition = FIRST_PARTITION; /* Fallback if the walk below fails */
+
+            Status = GlobalSystemTable->BootServices->HandleProtocol(
+                handles[UefiBootRootIndex],
+                &DevicePathGuid,
+                (VOID**)&DevicePath);
+
+            if (!EFI_ERROR(Status) && (DevicePath != NULL))
+            {
+                /* Walk the device path looking for the Hard Drive node */
+                for (Node = DevicePath; !IsDevicePathEnd(Node); Node = NextDevicePathNode(Node))
+                {
+                    if (DevicePathNodeLength(Node) < sizeof(EFI_DEVICE_PATH_PROTOCOL))
+                        break; /* malformed path */
+
+                    if ((DevicePathType(Node) == MEDIA_DEVICE_PATH) &&
+                        (DevicePathSubType(Node) == MEDIA_HARDDRIVE_DP))
+                    {
+                        HdNode = (HARDDRIVE_DEVICE_PATH*)Node;
+                        BootPartition = HdNode->PartitionNumber;
+                        TRACE("Found partition number %lu from device path\n", BootPartition);
+                        break;
+                    }
+                }
+            }
+
+            TRACE("Boot handle is a logical partition. Using partition %lu\n", BootPartition);
         }
         else
         {
