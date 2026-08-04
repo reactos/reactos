@@ -48,6 +48,7 @@ list(APPEND SOURCE
     #ShellExecCmdLine.cpp # Broke on Windows
     ShellExecuteEx.cpp
     #ShellExecuteW.cpp # Broke on Windows
+    ShellFolder.cpp
     ShellHook.cpp
     ShellInfo.cpp
     ShellState.cpp

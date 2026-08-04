@@ -312,12 +312,7 @@ HRESULT WINAPI CNetworkConnections::EnumSearches(IEnumExtraSearch ** ppenum)
 
 HRESULT WINAPI CNetworkConnections::GetDefaultColumn(DWORD dwRes, ULONG * pSort, ULONG * pDisplay)
 {
-    if (pSort)
-        *pSort = 0;
-    if (pDisplay)
-        *pDisplay = 0;
-
-    return S_OK;
+    return E_NOTIMPL; // Not required when column 0 is our default.
 }
 
 HRESULT WINAPI CNetworkConnections::GetDefaultColumnState(UINT iColumn, DWORD * pcsFlags)
