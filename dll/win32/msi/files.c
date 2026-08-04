@@ -84,9 +84,9 @@ static BOOL copy_file( MSIPACKAGE *package, const WCHAR *src, const WCHAR *dst, 
     {
         if (GetSystemWindowsDirectoryW(PathWin, ARRAYSIZE(PathWin)))
         {
-            wcscat(PathTahoma, PathWin);
+            wcscpy(PathTahoma, PathWin);
             wcscat(PathTahoma, L"\\Fonts\\TAHOMA.TTF");
-            wcscat(PathTahomabd, PathWin);
+            wcscpy(PathTahomabd, PathWin);
             wcscat(PathTahomabd, L"\\Fonts\\TAHOMABD.TTF");
         }
         else
