@@ -102,7 +102,8 @@ static BOOL copy_file( MSIPACKAGE *package, const WCHAR *src, const WCHAR *dst, 
         ERR("HACK. Should be using Windows File Protection\n");
         wcscpy(PathTmp, PathWin);
         wcscat(PathTmp, L"\\Fonts\\TAHOMA.tmp");
-        if (CopyFileW(src, PathTmp, FALSE))
+        ret = CopyFileW(src, PathTmp, FALSE);
+        if (ret)
         {
             MoveFileExW(PathTahoma, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
             MoveFileExW(PathTmp, PathTahoma, MOVEFILE_DELAY_UNTIL_REBOOT);
@@ -113,7 +114,8 @@ static BOOL copy_file( MSIPACKAGE *package, const WCHAR *src, const WCHAR *dst, 
         ERR("HACK. Should be using Windows File Protection\n");
         wcscpy(PathTmp, PathWin);
         wcscat(PathTmp, L"\\Fonts\\TAHOMABD.tmp");
-        if (CopyFileW(src, PathTmp, FALSE))
+        ret = CopyFileW(src, PathTmp, FALSE);
+        if (ret)
         {
             MoveFileExW(PathTahomabd, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
             MoveFileExW(PathTmp, PathTahomabd, MOVEFILE_DELAY_UNTIL_REBOOT);
