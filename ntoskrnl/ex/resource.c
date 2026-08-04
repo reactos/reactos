@@ -583,8 +583,8 @@ ExpBoostOwnerThread(IN PKTHREAD Thread,
         if ((OwnerThread->Priority < Thread->Priority) &&
             (OwnerThread->Priority < 14))
         {
-            /* Acquire the thread lock */
-            KiAcquireThreadLock(Thread);
+            /* Acquire the owner thread lock */
+            KiAcquireThreadLock(OwnerThread);
 
             /* Set the new priority */
             OwnerThread->PriorityDecrement += 14 - OwnerThread->Priority;
@@ -595,8 +595,8 @@ ExpBoostOwnerThread(IN PKTHREAD Thread,
             /* Update the kernel state */
             KiSetPriorityThread(OwnerThread, 14);
 
-            /* Release the thread lock */
-            KiReleaseThreadLock(Thread);
+            /* Release the owner thread lock */
+            KiReleaseThreadLock(OwnerThread);
         }
     }
 }
