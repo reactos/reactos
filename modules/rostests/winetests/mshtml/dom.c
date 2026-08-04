@@ -10701,6 +10701,13 @@ static void test_create_stylesheet(IHTMLDocument2 *doc)
     hres = IHTMLStyleElement_QueryInterface(style_elem, &IID_IHTMLStyleElement2, (void**)&style_elem2);
     ok(hres == S_OK, "Could not get IHTMLStyleElement2: %08lx\n", hres);
 
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("This crashes on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     hres = IHTMLStyleElement2_get_sheet(style_elem2, &stylesheet2);
     ok(hres == S_OK, "get_styleSheet failed: %08lx\n", hres);
     ok(stylesheet2 != NULL, "stylesheet2 == NULL\n");
@@ -10708,6 +10715,9 @@ static void test_create_stylesheet(IHTMLDocument2 *doc)
     IHTMLStyleSheet_Release(stylesheet2);
 
     IHTMLStyleElement2_Release(style_elem2);
+#ifdef __REACTOS__
+    }
+#endif
     IHTMLStyleSheet_Release(stylesheet);
 
     IHTMLStyleElement_Release(style_elem);
@@ -11980,13 +11990,22 @@ static void test_document_mode_lock(void)
     IHTMLWindow5_Release(window5);
 
     hres = IHTMLWindow2_QueryInterface(window, &IID_IHTMLWindow7, (void**)&window7);
-    ok(hres == S_OK, "Could not get IHTMLWindow7: %08lx\n", hres);
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("This test crashes on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     hres = IHTMLWindow7_get_performance(window7, &var);
     ok(hres == S_OK, "get_performance failed: %08lx\n", hres);
     ok(V_VT(&var) == VT_DISPATCH, "V_VT(performance) = %d\n", V_VT(&var));
     hres = IDispatch_QueryInterface(V_DISPATCH(&var), &IID_IHTMLPerformance, (void**)&perf);
     ok(hres == S_OK, "Could not get IHTMLPerformance: %08lx\n", hres);
     IHTMLWindow7_Release(window7);
+#ifdef __REACTOS__
+    }
+#endif
     IHTMLWindow2_Release(window);
     VariantClear(&var);
 

@@ -289,41 +289,64 @@ static void test_HTMLStorage(void)
     hres = IHTMLStorage_removeItem(storage, key);
     ok(hres == S_OK, "removeItem failed: %08lx\n", hres);
 
+    trace("Line %d\n", __LINE__);
     V_VT(&var) = 0xdead;
+    trace("Line %d\n", __LINE__);
     hres = IHTMLStorage_getItem(storage, key, &var);
+    trace("Line %d\n", __LINE__);
     ok(hres == S_OK, "getItem failed: %08lx\n", hres);
+    trace("Line %d\n", __LINE__);
     ok(V_VT(&var) == VT_NULL, "got %d\n", V_VT(&var));
 
+    trace("Line %d\n", __LINE__);
     hres = IHTMLStorage_getItem(storage, NULL, NULL);
+    trace("Line %d\n", __LINE__);
     ok(hres == E_POINTER, "getItem returned: %08lx\n", hres);
 
+    trace("Line %d\n", __LINE__);
     hres = IHTMLStorage_getItem(storage, key, NULL);
+    trace("Line %d\n", __LINE__);
     ok(hres == E_POINTER, "getItem failed: %08lx\n", hres);
+    trace("Line %d\n", __LINE__);
     SysFreeString(key);
 
     V_VT(&var) = 0xdead;
+    trace("Line %d\n", __LINE__);
     hres = IHTMLStorage_getItem(storage, NULL, &var);
+    trace("Line %d\n", __LINE__);
     ok(hres == S_OK, "getItem returned: %08lx\n", hres);
+    trace("Line %d\n", __LINE__);
     ok(V_VT(&var) == VT_NULL, "got %d\n", V_VT(&var));
 
+    trace("Line %d\n", __LINE__);
     hres = IHTMLStorage_setItem(storage, NULL, NULL);
+    trace("Line %d\n", __LINE__);
     ok(hres == S_OK, "setItem failed: %08lx\n", hres);
 
+    trace("Line %d\n", __LINE__);
     key = SysAllocString(L"winetest2");
+    trace("Line %d\n", __LINE__);
     hres = IHTMLStorage_setItem(storage, key, NULL);
+    trace("Line %d\n", __LINE__);
     ok(hres == S_OK, "setItem failed: %08lx\n", hres);
 
+    trace("Line %d\n", __LINE__);
     hres = IHTMLStorage_setItem(storage, NULL, key);
+    trace("Line %d\n", __LINE__);
     ok(hres == S_OK, "setItem failed: %08lx\n", hres);
 
+    trace("Line %d\n", __LINE__);
     hres = IHTMLStorage_removeItem(storage, key);
+    trace("Line %d\n", __LINE__);
     ok(hres == S_OK, "removeItem failed: %08lx\n", hres);
+    trace("Line %d\n", __LINE__);
     SysFreeString(key);
 
     hres = IHTMLStorage_removeItem(storage, NULL);
     ok(hres == S_OK, "removeItem failed: %08lx\n", hres);
 
     /* Unicode characters */
+    trace("Line %d\n", __LINE__);
     key = SysAllocString(L"winetest");
     value = SysAllocString(L"\x20ac");
     hres = IHTMLStorage_setItem(storage, key, value);

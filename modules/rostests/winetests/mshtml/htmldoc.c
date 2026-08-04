@@ -9599,30 +9599,47 @@ START_TEST(htmldoc)
     register_protocol();
 
     asynchronous_binding = TRUE;
+    trace("Line %d\n", __LINE__);
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("This test crashes on Windows Server 2003/2008.\n");
+    }
+    else
+#endif
     test_HTMLDocument_hlink(HTTP_STATUS_NOT_FOUND);
 
     asynchronous_binding = FALSE;
+    trace("Line %d\n", __LINE__);
     test_HTMLDocument_hlink(HTTP_STATUS_OK);
+    trace("Line %d\n", __LINE__);
     test_HTMLDocument(FALSE, TRUE);
     test_HTMLDocument(TRUE, FALSE);
     test_HTMLDocument(TRUE, TRUE);
+    trace("Line %d\n", __LINE__);
     test_HTMLDocument_StreamLoad();
     test_HTMLDocument_StreamInitNew();
     test_MHTMLDocument();
+    trace("Line %d\n", __LINE__);
     test_editing_mode(FALSE, FALSE);
     test_editing_mode(TRUE, FALSE);
     test_editing_mode(TRUE, TRUE);
+    trace("Line %d\n", __LINE__);
     test_HTMLDocument_http(FALSE);
     test_HTMLDocument_http(TRUE);
+    trace("Line %d\n", __LINE__);
     test_submit();
+    trace("Line %d\n", __LINE__);
     test_UIActivate(FALSE, FALSE, FALSE);
     test_UIActivate(FALSE, TRUE, FALSE);
     test_UIActivate(FALSE, TRUE, TRUE);
     test_UIActivate(TRUE, FALSE, FALSE);
     test_UIActivate(TRUE, TRUE, FALSE);
     test_UIActivate(TRUE, TRUE, TRUE);
+    trace("Line %d\n", __LINE__);
     test_HTMLDoc_ISupportErrorInfo();
+    trace("Line %d\n", __LINE__);
     test_ServiceProvider();
+    trace("Line %d\n", __LINE__);
     test_com_aggregation(&CLSID_HTMLDocument);
 
     DestroyWindow(container_hwnd);
