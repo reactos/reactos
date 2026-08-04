@@ -512,7 +512,14 @@ NtGdiFlushUserBatch(VOID)
            ULONG Size;
            // Process Gdi Batch!
            Size = GdiFlushUserBatch(pDC, (PGDIBATCHHDR) pHdr);
-           if (!Size) break;
+           if (!Size)
+           {
+               if (pDC)
+               {
+                   DC_UnlockDc(pDC);
+               }
+               break;
+           }
            pHdr += Size;
        }
 
