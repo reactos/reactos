@@ -1043,7 +1043,7 @@ UefiSetBootpath(VOID)
                 }
             }
 
-            TRACE("Boot handle is a logical partition. Using partition %lu\n", BootPartition);
+            TRACE("Boot handle is a logical partition, using partition %lu\n", BootPartition);
         }
         else
         {
