@@ -165,10 +165,11 @@ HGLOBAL RenderSHELLIDLIST (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cid
 HGLOBAL RenderFILENAMEA (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
 HGLOBAL RenderFILENAMEW (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
 
-HRESULT SHELL_GetShellExtensionRegCLSID(
-    HKEY hKey,
-    LPCWSTR KeyName,
-    CLSID *pClsId);
+EXTERN_C HRESULT
+SHELL_GetShellExtensionRegCLSID(HKEY hKey, LPCWSTR KeyName, CLSID *pClsId);
+EXTERN_C HRESULT
+SHELL_InitializeExtension(REFCLSID clsid, PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDO,
+                          HKEY hkeyProgID, REFIID riid, void **ppv);
 
 /* Change Notification */
 void InitChangeNotifications(void) DECLSPEC_HIDDEN;
