@@ -45,6 +45,9 @@
 #include "shlwapi.h"
 #include "patchapi.h"
 #include "wine/debug.h"
+#ifdef __REACTOS__
+#include <assert.h>
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -93,23 +96,28 @@ static BOOL copy_file( MSIPACKAGE *package, const WCHAR *src, const WCHAR *dst, 
             WARN("Failed to GetSystemWindowsDirectoryW - %lu\n", GetLastError());
     }
 
+    assert(*dst);
     if (_wcsicmp(dst, PathTahoma) == 0)
     {
         ERR("HACK. Should be using Windows File Protection\n");
         wcscpy(PathTmp, PathWin);
         wcscat(PathTmp, L"\\Fonts\\TAHOMA.tmp");
-        ret = CopyFileW(src, PathTmp, FALSE);
-        MoveFileExW(PathTahoma, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-        MoveFileExW(PathTmp, PathTahoma, MOVEFILE_DELAY_UNTIL_REBOOT);
+        if (CopyFileW(src, PathTmp, FALSE))
+        {
+            MoveFileExW(PathTahoma, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+            MoveFileExW(PathTmp, PathTahoma, MOVEFILE_DELAY_UNTIL_REBOOT);
+        }
     }
     else if (_wcsicmp(dst, PathTahomabd) == 0)
     {
         ERR("HACK. Should be using Windows File Protection\n");
         wcscpy(PathTmp, PathWin);
         wcscat(PathTmp, L"\\Fonts\\TAHOMABD.tmp");
-        ret = CopyFileW(src, PathTmp, FALSE);
-        MoveFileExW(PathTahomabd, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-        MoveFileExW(PathTmp, PathTahomabd, MOVEFILE_DELAY_UNTIL_REBOOT);
+        if (CopyFileW(src, PathTmp, FALSE))
+        {
+            MoveFileExW(PathTahomabd, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+            MoveFileExW(PathTmp, PathTahomabd, MOVEFILE_DELAY_UNTIL_REBOOT);
+        }
     }
     else
         ret = CopyFileW( src, dst, fail_if_exists );
