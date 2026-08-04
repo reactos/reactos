@@ -1015,7 +1015,6 @@ UefiSetBootpath(VOID)
             EFI_DEVICE_PATH_PROTOCOL *DevicePath = NULL;
             EFI_DEVICE_PATH_PROTOCOL *Node;
             HARDDRIVE_DEVICE_PATH *HdNode;
-            USHORT NodeLength;
 
             BootPartition = FIRST_PARTITION; /* Fallback if the walk below fails */
 
