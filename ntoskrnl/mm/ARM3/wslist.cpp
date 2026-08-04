@@ -94,7 +94,8 @@ static void FreeWsleIndex(PMMWSL WsList, ULONG Index)
 
             PointerPte->u.Long = 0;
 
-            KeInvalidateTlbEntry(Wsle + LastInitializedWsle - 1);
+            /* Flush the TLB entry */
+            KeFlushSingleTb(Wsle + LastInitializedWsle - 1, FALSE);
             LastInitializedWsle -= PAGE_SIZE / sizeof(MMWSLE);
         }
         return;
@@ -245,7 +246,7 @@ TrimWsList(PMMWSL WsList)
         {
             Entry.u1.e1.Age = 0;
             PointerPte->u.Hard.Accessed = 0;
-            KeInvalidateTlbEntry(Entry.u1.VirtualAddress);
+            KeFlushSingleTb(Entry.u1.VirtualAddress, FALSE);
             continue;
         }
 
@@ -293,7 +294,7 @@ TrimWsList(PMMWSL WsList)
 
             /* Make this a transition PTE */
             MI_MAKE_TRANSITION_PTE(PointerPte, Page, Protection);
-            KeInvalidateTlbEntry(MiAddressToPte(PointerPte));
+            KeFlushSingleTb(MiAddressToPte(PointerPte), FALSE);
 
             /* Drop the share count. This will take care of putting it in the standby or modified list. */
             MiDecrementShareCount(Pfn, Page);

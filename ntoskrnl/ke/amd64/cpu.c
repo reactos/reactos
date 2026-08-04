@@ -532,14 +532,6 @@ KiGetCacheInformation(VOID)
 
 VOID
 NTAPI
-KeFlushCurrentTb(VOID)
-{
-    /* Flush the TLB by resetting CR3 */
-    __writecr3(__readcr3());
-}
-
-VOID
-NTAPI
 KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
 {
     /* Restore the CR registers */
@@ -654,26 +646,6 @@ KiRestoreProcessorState(
 
     /* Restore control registers */
     KiRestoreProcessorControlState(&Prcb->ProcessorState);
-}
-
-VOID
-NTAPI
-KeFlushEntireTb(IN BOOLEAN Invalid,
-                IN BOOLEAN AllProcessors)
-{
-    KIRQL OldIrql;
-
-    // FIXME: halfplemented
-    /* Raise the IRQL for the TB Flush */
-    OldIrql = KeRaiseIrqlToSynchLevel();
-
-    /* Flush the TB for the Current CPU, and update the flush stamp */
-    KeFlushCurrentTb();
-
-    /* Update the flush stamp and return to original IRQL */
-    InterlockedExchangeAdd(&KiTbFlushTimeStamp, 1);
-    KeLowerIrql(OldIrql);
-
 }
 
 NTSTATUS
