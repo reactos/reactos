@@ -20,14 +20,22 @@
 
 #include <limits.h>
 
+#ifdef __REACTOS__
+struct HTMLInputElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLInputElement IHTMLInputElement_iface;
     IHTMLInputTextElement IHTMLInputTextElement_iface;
 
     nsIDOMHTMLInputElement *nsinput;
+#ifdef __REACTOS__
+};
+#else
 } HTMLInputElement;
+#endif
 
 static const WCHAR forW[] = {'f','o','r',0};
 
@@ -1351,11 +1359,19 @@ HRESULT HTMLInputElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem
     return S_OK;
 }
 
+#ifdef __REACTOS__
+struct HTMLLabelElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLLabelElement IHTMLLabelElement_iface;
+#ifdef __REACTOS__
+};
+#else
 } HTMLLabelElement;
+#endif
 
 static inline HTMLLabelElement *impl_from_IHTMLLabelElement(IHTMLLabelElement *iface)
 {
@@ -1539,13 +1555,21 @@ HRESULT HTMLLabelElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem
     return S_OK;
 }
 
+#ifdef __REACTOS__
+struct HTMLButtonElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLButtonElement IHTMLButtonElement_iface;
 
     nsIDOMHTMLButtonElement *nsbutton;
+#ifdef __REACTOS__
+};
+#else
 } HTMLButtonElement;
+#endif
 
 static inline HTMLButtonElement *impl_from_IHTMLButtonElement(IHTMLButtonElement *iface)
 {

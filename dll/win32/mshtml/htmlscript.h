@@ -18,7 +18,11 @@
 
 #pragma once
 
+#ifdef __REACTOS__
+struct HTMLScriptElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLScriptElement IHTMLScriptElement_iface;
@@ -28,7 +32,11 @@ typedef struct {
     BOOL parse_on_bind;
     BOOL pending_readystatechange_event;
     READYSTATE readystate;
+#ifdef __REACTOS__
+};
+#else
 } HTMLScriptElement;
+#endif
 
 typedef struct {
     struct list entry;

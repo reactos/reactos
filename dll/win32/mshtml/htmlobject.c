@@ -18,14 +18,22 @@
 
 #include "mshtml_private.h"
 
+#ifdef __REACTOS__
+struct HTMLObjectElement {
+#else
 typedef struct {
+#endif
     HTMLPluginContainer plugin_container;
 
     IHTMLObjectElement IHTMLObjectElement_iface;
     IHTMLObjectElement2 IHTMLObjectElement2_iface;
 
     nsIDOMHTMLObjectElement *nsobject;
+#ifdef __REACTOS__
+};
+#else
 } HTMLObjectElement;
+#endif
 
 static inline HTMLObjectElement *impl_from_IHTMLObjectElement(IHTMLObjectElement *iface)
 {
