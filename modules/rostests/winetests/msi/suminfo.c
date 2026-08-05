@@ -278,6 +278,152 @@ static void test_suminfo(void)
     r = MsiCloseHandle(hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
 
+    /* try persisting on transacted msi */
+    r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_TRANSACT, &hdb);
+    ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
+
+    r = MsiGetSummaryInformationA(hdb, NULL, 1, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation wrong error\n");
+
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Fabian");
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty wrong error\n");
+
+    r = MsiSummaryInfoPersist(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoPersist wrong error %u\n", r);
+
+    r = MsiCloseHandle(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiCloseHandle(hdb);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_READONLY, &hdb);
+    ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
+
+    r = MsiGetSummaryInformationA(hdb, NULL, 1, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation wrong error\n");
+
+    sz = 0x10;
+    strcpy(buf,"x");
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, PID_AUTHOR, &type, NULL, NULL, buf, &sz);
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoGetPropertyA wrong error\n");
+    ok(!strcmp(buf,"Mike"), "buffer was wrong: %s\n", buf);
+
+    r = MsiCloseHandle(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiCloseHandle(hdb);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    /* try persisting on transacted msi with commit */
+    r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_TRANSACT, &hdb);
+    ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
+
+    r = MsiGetSummaryInformationA(hdb, NULL, 1, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation wrong error\n");
+
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Fabian");
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty wrong error\n");
+
+    r = MsiSummaryInfoPersist(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoPersist wrong error %u\n", r);
+
+    r = MsiCloseHandle(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiDatabaseCommit(hdb);
+    ok(r == ERROR_SUCCESS, "MsiDatabaseCommit wrong error %u\n", r);
+
+    r = MsiCloseHandle(hdb);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_READONLY, &hdb);
+    ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
+
+    r = MsiGetSummaryInformationA(hdb, NULL, 1, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation wrong error\n");
+
+    sz = 0x10;
+    strcpy(buf,"x");
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, PID_AUTHOR, &type, NULL, NULL, buf, &sz);
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoGetPropertyA wrong error\n");
+    ok(!strcmp(buf,"Fabian"), "buffer was wrong: %s\n", buf);
+
+    r = MsiCloseHandle(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiCloseHandle(hdb);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    /* try persisting on direct msi */
+    r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_DIRECT, &hdb);
+    ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
+
+    r = MsiGetSummaryInformationA(hdb, NULL, 1, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation wrong error\n");
+
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Fabian2");
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty wrong error\n");
+
+    r = MsiSummaryInfoPersist(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoPersist wrong error %u\n", r);
+
+    r = MsiCloseHandle(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiCloseHandle(hdb);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_READONLY, &hdb);
+    ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
+
+    r = MsiGetSummaryInformationA(hdb, NULL, 1, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation wrong error\n");
+
+    sz = 0x10;
+    strcpy(buf,"x");
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, PID_AUTHOR, &type, NULL, NULL, buf, &sz);
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoGetPropertyA wrong error\n");
+    ok(!strcmp(buf,"Fabian2"), "buffer was wrong: %s\n", buf);
+
+    r = MsiCloseHandle(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiCloseHandle(hdb);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    /* try persisting on indirectly opened msi */
+    r = MsiGetSummaryInformationA(0, msifile, 2, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation wrong error %u\n", r);
+
+    r = MsiSummaryInfoSetPropertyA(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Fabian3");
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoSetProperty wrong error\n");
+
+    r = MsiSummaryInfoPersist(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoPersist wrong error %u\n", r);
+
+    r = MsiCloseHandle(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_READONLY, &hdb);
+    ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
+
+    r = MsiGetSummaryInformationA(hdb, NULL, 1, &hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation wrong error\n");
+
+    sz = 0x10;
+    strcpy(buf,"x");
+    r = MsiSummaryInfoGetPropertyA(hsuminfo, PID_AUTHOR, &type, NULL, NULL, buf, &sz);
+    ok(r == ERROR_SUCCESS, "MsiSummaryInfoGetPropertyA wrong error\n");
+    ok(!strcmp(buf,"Fabian3"), "buffer was wrong: %s\n", buf);
+
+    r = MsiCloseHandle(hsuminfo);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = MsiCloseHandle(hdb);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    /* Cleanup */
     r = DeleteFileA(msifile);
     ok(r, "DeleteFile failed\n");
 }
