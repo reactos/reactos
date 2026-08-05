@@ -116,7 +116,7 @@ BEGIN
     LTEXT "Elija la &carpeta donde desea instalar ReactOS:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Cargador de arranque", IDC_STATIC, 7, 45, 291, 60
-    LTEXT "Seleccione la ubicación donde debe instalarse el cargador de arranque\nFreeLoader.\n\nDe forma predeterminada, se instala en la partición del sistema del disco de arranque (y ya sea en el Registro de Arranque Maestro o en el Registro de Arranque del Volumen para equipos basados en BIOS).", IDC_STATIC, 13, 57, 279, 44
+    LTEXT "Seleccione dónde debe instalarse el\ncargador de arranque FreeLoader.\n\nDe forma predeterminada, se instala en la partición del sistema del disco de arranque (en el Registro de Arranque Maestro o del Volumen para equipos basados en BIOS).", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "Aceptar", IDOK, 193, 113, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 248, 113, 50, 14
@@ -142,7 +142,7 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 77, 210, 12, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Carpeta de destino:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 89, 210, 12, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "Confirmo que las configuraciones de instalación son correctas. También conozco que ReactOS está en un fase de software Alpha y podría romper mi ordenador y corromper mis datos.",
+    AUTOCHECKBOX "Confirmo que las configuraciones de instalación son correctas. También conozco que ReactOS está en un fase de software alfa y podría romper mi ordenador y corromper mis datos.",
         IDC_CONFIRM_INSTALL, 7, 100, 309, 24, BS_MULTILINE | WS_GROUP | WS_TABSTOP
     LTEXT "Por favor, confirme que todas las configuraciones son correctas,\nluego haga clic en Instalar para empezar el Proceso de Instalación.", IDC_STATIC, 7, 124, 303, 18
 END
@@ -263,7 +263,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_REG_DONE "Hecho"
-    IDS_REG_REGHIVEUPDATE "Actualizando subárboles del Registro"
+    IDS_REG_REGHIVEUPDATE "Actualizando subárboles del registro"
     IDS_REG_IMPORTFILE "Importando %s"
     IDS_REG_DISPLAYSETTINGSUPDATE "Actualizando la configuración del registro de pantalla"
     IDS_REG_LOCALESETTINGSUPDATE "Actualizando la configuración regional"
