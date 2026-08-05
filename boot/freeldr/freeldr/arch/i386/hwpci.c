@@ -103,7 +103,8 @@ PciScanFunction(
     _Inout_ ULONG *PendingCount)
 {
     ULONG VendorDevice, HeaderTypeDword, BridgeBusNumbers;
-    UCHAR HeaderType, SecondaryBus, SubordinateBus, b;
+    UCHAR HeaderType, SecondaryBus, SubordinateBus;
+    USHORT b;
 
     VendorDevice = PciReadConfigDword(Bus, Device, Function, 0x00);
     if ((VendorDevice & 0xFFFF) == 0xFFFF)
@@ -120,16 +121,13 @@ PciScanFunction(
 
         if (SecondaryBus != 0 && SecondaryBus != Bus && SubordinateBus >= SecondaryBus)
         {
-            for (b = SecondaryBus; b <= SubordinateBus; b++)
+            for (b = SecondaryBus; b <= SubordinateBus && b < PCI_MAX_BUSES; b++)
             {
                 if (!ScannedBuses[b] && (*PendingCount < PCI_MAX_BUSES))
                 {
                     ScannedBuses[b] = TRUE;
-                    PendingBuses[(*PendingCount)++] = b;
+                    PendingBuses[(*PendingCount)++] = (UCHAR)b;
                 }
-
-                if (b == 255)
-                    break; /* avoid UCHAR wraparound */
             }
         }
     }
