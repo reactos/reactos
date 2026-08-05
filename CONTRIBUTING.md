@@ -17,7 +17,6 @@ There are several ways to contribute to ReactOS. You can [make a donation](https
 
 - **Respect our [Coding Style](https://reactos.org/wiki/Coding_Style) and [Programming Guidelines](https://reactos.org/wiki/Programming_Guidelines).**
 - **Keep your contribution small and focused.** Large pull requests take a long time to review since maintainers must consider all the implications of your changes. It's more effective to contribute several smaller pull requests.
-- **Use an approved license.** We recommend licensing all new code contributions as **[MIT](https://spdx.org/licenses/MIT.html)**. For a list of approved licenses, see [Licenses:Approved Licenses](LICENSES.md#approved-licenses).
 - **AI-assisted contributions must be well understood.** You may use AI to assist your work, but you must be able to explain how your code works. Contributions that appear to be fully AI-generated will be rejected.
 - **Do not be afraid to ask questions.** Ask our developers in our [official chat](https://chat.reactos.org/).
 
