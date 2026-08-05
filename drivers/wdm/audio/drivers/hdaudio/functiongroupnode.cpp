@@ -438,7 +438,7 @@ NTAPI
 CFunctionGroupNode::GetVolumeKnob(
     IN ULONG NodeId,
     OUT PUCHAR Direct,
-    OUT PLONG Volume)
+    OUT PUCHAR Volume)
 {
     ULONG Verb;
     ULONG Response = 0;
@@ -453,7 +453,7 @@ CFunctionGroupNode::GetVolumeKnob(
     }
     *Direct = (Response >> 7) & 0x1;
     *Volume = (Response & 0x7F);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -461,7 +461,7 @@ NTAPI
 CFunctionGroupNode::SetVolumeKnob(
     IN ULONG NodeId,
     IN UCHAR Direct,
-    IN LONG Volume)
+    IN UCHAR Volume)
 {
     ULONG Verb;
     ULONG Response = 0;
@@ -560,6 +560,7 @@ NTSTATUS
 NTAPI
 CFunctionGroupNode::GetAmplifierGainMute(
     IN ULONG NodeId,
+    IN ULONG Input,
     OUT PUCHAR Mute,
     OUT PUCHAR Gain)
 {
@@ -567,7 +568,7 @@ CFunctionGroupNode::GetAmplifierGainMute(
     ULONG Response = 0;
     NTSTATUS Status;
 
-    Verb = (m_CodecAddress << 28) | (NodeId << 20) | (AC_VERB_GET_AMP_GAIN_MUTE << 8);
+    Verb = (m_CodecAddress << 28) | (NodeId << 20) | (AC_VERB_GET_AMP_GAIN_MUTE << 8) | (!Input << 15) | AC_AMP_SET_LEFT | AC_AMP_GET_INDEX;
     Status = m_Adapter->TransferVerb(Verb, &Response);
     if (!NT_SUCCESS(Status))
     {
@@ -583,6 +584,7 @@ NTSTATUS
 NTAPI
 CFunctionGroupNode::SetAmplifierGainMute(
     IN ULONG NodeId,
+    IN ULONG Input,
     IN UCHAR Mute,
     IN UCHAR Gain)
 {

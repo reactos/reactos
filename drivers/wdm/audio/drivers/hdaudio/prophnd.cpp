@@ -64,7 +64,7 @@ PropertyHandler_JackDescription(IN PPCPROPERTY_REQUEST PropertyRequest)
     }
 
     PIN_CONFIGURATION_DEFAULT PinConfiguration;
-    Status = Node->GetPinConfigurationDefault(PropertyRequest->Node, &PinConfiguration);
+    Status = Node->GetPinConfigurationDefault(Node->GetStartNodeId(), &PinConfiguration);
     if (NT_SUCCESS(Status))
     {
         PKSMULTIPLE_ITEM MultipleItem = (PKSMULTIPLE_ITEM)PropertyRequest->Value;
@@ -180,8 +180,7 @@ PropertyHandler_Volume(IN PPCPROPERTY_REQUEST PropertyRequest)
     PLONG Value = (PLONG)PropertyRequest->Value;
     if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
     {
-        UCHAR Direct;
-        LONG Volume;
+        UCHAR Direct, Volume;
         Status = Node->GetVolumeKnob(PropertyRequest->Node, &Direct, &Volume);
         DPRINT1("GetVolumeKnob Status %x, Node %d, Direct %x Volume %x\n", Status, PropertyRequest->Node, Direct, Volume);
         *Value = Volume;
@@ -190,8 +189,8 @@ PropertyHandler_Volume(IN PPCPROPERTY_REQUEST PropertyRequest)
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET)
     {
-        LONG Volume = *Value;
-        Status = Node->SetVolumeKnob(PropertyRequest->Node, 1, Volume);
+        UCHAR Volume = *Value;
+        Status = Node->SetVolumeKnob(PropertyRequest->Node, (Volume << 7), Volume);
         DPRINT1("SetVolumeKnob Status %x, Node %d, Volume %x\n", Status, PropertyRequest->Node, Volume);
         Miniport->Release();
         return Status;
@@ -234,11 +233,27 @@ PropertyHandler_Mute(IN PPCPROPERTY_REQUEST PropertyRequest)
         return STATUS_INVALID_PARAMETER;
     }
 
+    AMPLIFIER_CAPABILITIES AmplifierCapabilities;
+    Status = Node->GetAmplifierDetails(PropertyRequest->Node, 0, &AmplifierCapabilities);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("GetAmplifierDetails Status %x, Node %d\n", Status, PropertyRequest->Node);
+        Miniport->Release();
+        return Status;
+    }
+
+    if (!AmplifierCapabilities.MuteCapable)
+    {
+        DPRINT1("HDAUDIO: Mute bit is not supported by hardware, Node %d\n", PropertyRequest->Node);
+        Miniport->Release();
+        return STATUS_NOT_SUPPORTED;
+    }
+
     PBOOL Value = (PBOOL)PropertyRequest->Value;
     if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
     {
         UCHAR Gain, Mute;
-        Status = Node->GetAmplifierGainMute(PropertyRequest->Node, &Mute, &Gain);
+        Status = Node->GetAmplifierGainMute(PropertyRequest->Node, 0, &Mute, &Gain);
         DPRINT1("GetAmplifierGainMute Status %x, Node %d, Mute %x, Gain %x\n", Status, PropertyRequest->Node, Mute, Gain);
         *Value = Mute;
         Miniport->Release();
@@ -247,7 +262,7 @@ PropertyHandler_Mute(IN PPCPROPERTY_REQUEST PropertyRequest)
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET)
     {
         UCHAR Mute = *Value;
-        Status = Node->SetAmplifierGainMute(PropertyRequest->Node, Mute, 0);
+        Status = Node->SetAmplifierGainMute(PropertyRequest->Node, 0, Mute, AmplifierCapabilities.Offset);
         DPRINT1("SetAmplifierGainMute Status %x, Node %d, Mute %x\n", Status, PropertyRequest->Node, Mute);
         Miniport->Release();
         return Status;
@@ -269,5 +284,5 @@ NTAPI
 EventHandler_Volume(IN PPCEVENT_REQUEST EventRequest)
 {
     UNIMPLEMENTED_ONCE;
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }

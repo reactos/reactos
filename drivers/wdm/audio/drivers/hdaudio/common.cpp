@@ -962,7 +962,7 @@ CAdapterCommon::Initialize(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PRESO
     }
 
     // register waveout connection
-    Status = PcRegisterPhysicalConnection(DeviceObject, m_WaveRTOutPortUnknown, 1, m_TopoOutPortUnknown, 0);
+    Status = PcRegisterPhysicalConnection(DeviceObject, m_WaveRTPortUnknown, 1, m_TopologyPortUnknown, 0);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("HDAUDIO: PcRegisterPhysicalConnection failed with %x\n", Status);
@@ -997,7 +997,7 @@ CAdapterCommon::Initialize(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PRESO
     }
 
     // register wavein connection
-    Status = PcRegisterPhysicalConnection(DeviceObject, m_TopoInPortUnknown, 0, m_WaveRTInPortUnknown, 1);
+    Status = PcRegisterPhysicalConnection(DeviceObject, m_TopologyPortUnknown, 0, m_WaveRTPortUnknown, 1);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("HDAUDIO: PcRegisterPhysicalConnection failed with %x\n", Status);
@@ -1008,14 +1008,10 @@ CAdapterCommon::Initialize(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PRESO
         return Status;
     }
 
-    if (m_TopoInPortUnknown)
-        m_TopoInPortUnknown->Release();
-    if (m_TopoOutPortUnknown)
-        m_TopoOutPortUnknown->Release();
-    if (m_WaveRTInPortUnknown)
-        m_WaveRTInPortUnknown->Release();
-    if (m_WaveRTOutPortUnknown)
-        m_WaveRTOutPortUnknown->Release();
+    if (m_TopologyPortUnknown)
+        m_TopologyPortUnknown->Release();
+    if (m_WaveRTPortUnknown)
+        m_WaveRTPortUnknown->Release();
 
     return Status;
 }
@@ -1449,7 +1445,7 @@ CAdapterCommon::BuildInstallFilter(
                 DPRINT1("HDAUDIO: SubdeviceName %S\n", SubdeviceWave);
                 Status = InstallDevice(
                     DeviceObject, Irp, SubdeviceWave, FALSE, CLSID_PortWaveRT, ResourceList, AssociatedPinCount, AssociatedPins, (PVOID)OutNode,
-                    bOutput ? WaveOutFilterDescription : WaveInFilterDescription, bOutput ? &m_WaveRTOutPortUnknown : &m_WaveRTInPortUnknown);
+                    bOutput ? WaveOutFilterDescription : WaveInFilterDescription, &m_WaveRTPortUnknown);
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("HDAUDIO: InstallDevice failed with %x\n", Status);
@@ -1464,7 +1460,7 @@ CAdapterCommon::BuildInstallFilter(
                     DPRINT1("HDAUDIO: SubdeviceName %S\n", SubdeviceTopology);
                     Status = InstallDevice(
                         DeviceObject, Irp, SubdeviceTopology, TRUE, CLSID_PortTopology, NULL, AssociatedPinCount, AssociatedPins, (PVOID)OutNode,
-                        bOutput ? TopoOutFilterDescription : TopoInFilterDescription, bOutput ? &m_TopoOutPortUnknown : &m_TopoInPortUnknown);
+                        bOutput ? TopoOutFilterDescription : TopoInFilterDescription, &m_TopologyPortUnknown);
                     if (!NT_SUCCESS(Status))
                     {
                         DPRINT1("HDAUDIO: InstallDevice failed with %x\n", Status);
