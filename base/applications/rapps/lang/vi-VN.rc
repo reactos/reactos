@@ -204,7 +204,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Không thể ghi vào đĩa. Đĩa có thể đã đầy."
     IDS_INSTALL_SELECTED "Cài đặt mục đã chọn"
     IDS_SELECTEDFORINST "Đã chọn để cài đặt"
-    IDS_MISMATCH_CERT_INFO "Chứng chỉ được sử dụng không xác định:\nĐối tượng: %s\nNgười cấp: %s\nBạn có muốn tiếp tục không?"
+    IDS_MISMATCH_CERT_INFO "Chứng chỉ được sử dụng không xác định:\nĐối tượng: %s\nNgười cấp root: %s\nBạn có muốn tiếp tục không?"
     IDS_UNABLE_PATH "Định dạng đường dẫn không đúng."
     IDS_APP_DISPLAY_DETAILS "Chi tiết"
     IDS_APP_DISPLAY_LIST "Danh sách"
