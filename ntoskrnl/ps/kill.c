@@ -1127,7 +1127,7 @@ PspExitProcess(IN BOOLEAN LastThread,
             /* Check if we are part of a Job that has a completion port
                and do I/O completion if needed */
             if (Process->Job->CompletionPort &&
-                !BooleanFlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
+                !FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
             {
                 (VOID)PspSendJobMessageLocked(Process->Job,
                                               JOB_OBJECT_MSG_EXIT_PROCESS,

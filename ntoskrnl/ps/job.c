@@ -87,27 +87,6 @@ ULONG PspJobInfoAlign[] =
 /* DATA TYPE DEFINITIONS *****************************************************/
 
 /*!
- * Iterator structure used to enumerate processes directly assigned to a job
- * while the job lock is held.
- *
- * @param[in] Job
- *     A pointer to the job object being enumerated.
- *
- * @param[in] NextEntry
- *     A pointer to the next process list entry to be returned.
- *
- * @remarks
- *     The iterator does not acquire or release the job lock and does not
- *     reference returned process objects. The caller must hold the job lock
- *     for the entire lifetime of the iterator.
- */
-typedef struct PSP_JOB_ITERATOR
-{
-    PEJOB Job;
-    PLIST_ENTRY NextEntry;
-} PSP_JOB_ITERATOR, *PPSP_JOB_ITERATOR;
-
-/*!
  * Context structure used to pass the job object and exit status to
  * the process termination callback.
  *
@@ -154,110 +133,65 @@ PspInitializeJobStructures(VOID)
 }
 
 /*!
- * Initializes an iterator for the processes directly assigned to a job.
+ * Returns the next process directly assigned to a job while the job lock is
+ * held.
  *
  * @param[in] Job
- *     A pointer to the job object whose process list will be enumerated.
+ *     A pointer to the job object being enumerated.
  *
  * @param[in, optional] PreviousProcess
- *     A pointer to the process after which enumeration should begin, or NULL
- *     to begin with the first process in the job.
+ *     A pointer to the process after which enumeration should
+ *     continue, or NULL to return the first process.
  *
- * @param[out] Iterator
- *     A pointer to the iterator to initialize.
+ * @return
+ *     A pointer to the next assigned process, or NULL if enumeration has completed.
  *
  * @remarks
- *     The caller must hold tje job lock shared or exclusive.
+ *     The caller must hold the job lock shared or exclusive.
  *
- *     PreviousProcess is borrowed and is not referenced or dereferenced by
- *     this function.
+ *     Neither PreviousProcess nor the returned process is referenced by this
+ *     function. The caller must ensure that PreviousProcess remains linked to
+ *     the job and that direct job membership isn't modified during the
+ *     enumeration.
  */
 static
-VOID
-PspInitializeJobIteratorLocked(
+PEPROCESS
+PspGetNextProcessInJobLocked(
     _In_ PEJOB Job,
-    _In_opt_ PEPROCESS PreviousProcess,
-    _Out_ PPSP_JOB_ITERATOR Iterator
+    _In_opt_ PEPROCESS PreviousProcess
 )
 {
-    ASSERT(Iterator != NULL);
+    PLIST_ENTRY Entry;
+    PEPROCESS Process;
 
-#if DBG
     ASSERT(ExIsResourceAcquiredSharedLite(&Job->JobLock) != 0 ||
            ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
-#endif
 
-    Iterator->Job = Job;
-
+    /* Check if we're already starting somewhere */
     if (PreviousProcess != NULL)
     {
         ASSERT(PreviousProcess->Job == Job);
         ASSERT(!IsListEmpty(&PreviousProcess->JobLinks));
 
-        Iterator->NextEntry = PreviousProcess->JobLinks.Flink;
+        /* Start where we left off */
+        Entry = PreviousProcess->JobLinks.Flink;
     }
     else
     {
-        Iterator->NextEntry = Job->ProcessListHead.Flink;
+        /* Start at the beginning */
+        Entry = Job->ProcessListHead.Flink;
     }
-}
 
-/*!
- * Advances a job process iterator.
- *
- * @param[in, out] Iterator
- *     A pointer to an initialized job process iterator.
- *
- * @return
- *     A borrowed pointer to the next directly assigned process, or NULL if
- *     enumeration has completed.
- *
- * @remarks
- *     The caller must continue holding Iterator->Job->JobLock.
- *
- *     The returned process is borrowed and may already be entering object
- *     deletion. The caller may access only fields that remain valid while the
- *     process is linked to the job.
- */
-static
-PEPROCESS
-PspAdvanceJobIteratorLocked(
-    _Inout_ PPSP_JOB_ITERATOR Iterator
-)
-{
-    PEJOB Job;
-    PLIST_ENTRY Entry;
-    PEPROCESS Process;
-
-    ASSERT(Iterator->Job != NULL);
-
-    Job = Iterator->Job;
-
-#if DBG
-    ASSERT(ExIsResourceAcquiredSharedLite(&Job->JobLock) != 0 ||
-           ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
-#endif
-
-    ASSERT(Iterator->NextEntry != NULL);
-
-    Entry = Iterator->NextEntry;
-
+    /* Check if enumeration has completed */
     if (Entry == &Job->ProcessListHead)
     {
         return NULL;
     }
 
-#if DBG
     ASSERT(Entry->Flink != NULL);
     ASSERT(Entry->Blink != NULL);
     ASSERT(Entry->Flink->Blink == Entry);
     ASSERT(Entry->Blink->Flink == Entry);
-#endif
-
-    /* Advance the cursor before returning the process. This keeps iterator
-       state independent from modifications to non-list process fields made by
-       the callback. */
-    Iterator->NextEntry = Entry->Flink;
 
     Process = CONTAINING_RECORD(Entry, EPROCESS, JobLinks);
 
@@ -267,74 +201,74 @@ PspAdvanceJobIteratorLocked(
 }
 
 /*!
- * Advances the job enumerator to the next process in the job's process list.
+ * Returns the next referenced process directly assigned to a job.
  *
  * @param[in] Job
- *     A pointer to the job object whose directly assigned processes are being
- *     enumerated.
+ *     A pointer to the job object being enumerated.
  *
- * @param[in, optional] Process
- *     A referenced process returned by a previous call to this function, or
- *     NULL to start the enumeration. When non-NULL, the reference is consumed
- *     by this function regardless of whether another process is returned.
+ * @param[in, optional] PreviousProcess
+ *     A referenced process returned by the previous call, or NULL to start
+ *     enumeration. When non-NULL, its reference is consumed by this function,
+ *     regardless of whether another process is returned.
  *
  * @return
- *     A referenced pointer to the next process, or NULL if no more processes
- *     are available.
+ *     A referenced pointer to the next process, or NULL if enumeration has
+ *     completed.
  *
  * @remarks
- *     The returned process reference must either be passed to a subsequent
- *     call to this function or released with ObDereferenceObject().
+ *     The returned reference must either be passed to the next call or
+ *     released with ObDereferenceObject().
  *
- *     This implementation relies on job membership remaining fixed
- *     until process object deletion.
+ *     The job lock is not held when this function returns.
+ *
+ *     This relies on job membership remaining fixed until process object deletion.
+ *     The reference to PreviousProcess therefore keeps its JobLinks valid until
+ *     the next process has been selected.
  */
 static
 PEPROCESS
-PspAdvanceJobEnumerator(
+PspGetNextProcessInJob(
     _In_ PEJOB Job,
-    _In_opt_ PEPROCESS Process
+    _In_opt_ PEPROCESS PreviousProcess
 )
 {
-    PSP_JOB_ITERATOR Iterator;
-    PEPROCESS Next = NULL;
     PEPROCESS Candidate;
-
-    if (Process != NULL)
-    {
-        ASSERT(Process->Job == Job);
-        ASSERT(!IsListEmpty(&Process->JobLinks));
-    }
+    PEPROCESS NextProcess = NULL;
 
     ExEnterCriticalRegionAndAcquireResourceShared(&Job->JobLock);
 
-    PspInitializeJobIteratorLocked(Job, Process, &Iterator);
+    Candidate = PreviousProcess;
 
-    while ((Candidate = PspAdvanceJobIteratorLocked(&Iterator)) != NULL)
+    while ((Candidate = PspGetNextProcessInJobLocked(Job, Candidate)) != NULL)
     {
-        /* Skip process objects whose deletion has already begun */
+        /*
+         * Skip processes whose deletion has begun. JobLinks remains valid
+         * while the job lock is held, allowing enumeration to continue.
+         */
         if (ObReferenceObjectSafe(Candidate))
         {
-            Next = Candidate;
+            NextProcess = Candidate;
             break;
         }
     }
 
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 
-    /* This must occur after releasing the job lock: the dereference can invoke the
-       process delete procedure, which removes JobLinks under the same lock */
-    if (Process != NULL)
+    /*
+     * This must occur after releasing the job lock. The dereference can invoke
+     * the process delete procedure, which removes JobLinks under the same lock.
+     */
+    if (PreviousProcess != NULL)
     {
-        ObDereferenceObject(Process);
+        ObDereferenceObject(PreviousProcess);
     }
 
-    return Next;
+    return NextProcess;
 }
 
 /*!
  * Enumerates all processes currently associated with the specified job object
- * and calls the provided callback function for each process.
+ * and invokes a callback for each process.
  *
  * @param[in] Job
  *     A pointer to the job object whose processes are to be enumerated.
@@ -345,16 +279,14 @@ PspAdvanceJobEnumerator(
  * @param[in, optional] Context
  *     An optional context pointer passed to the callback.
  *
- * @returns
+ * @return
  *     STATUS_SUCCESS if every callback succeeds. Otherwise, the first
  *     unsuccessful callback status is returned.
  *
  * @remarks
  *     Enumeration stops when a callback returns an unsuccessful status.
  *
- *     The callback is invoked _without_ the job lock held. It borrows the
- *     enumerator's process reference and must acquire an additional reference
- *     if it retains the process pointer.
+ *     The callback is invoked _without_ the job lock held.
  */
 NTSTATUS
 NTAPI
@@ -365,34 +297,35 @@ PspEnumerateProcessesInJob(
 )
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PEPROCESS Process;
+    PEPROCESS Process = NULL;
 
     /* Get the first process from the job */
-    Process = PspAdvanceJobEnumerator(Job, NULL);
+    Process = PspGetNextProcessInJob(Job, NULL);
 
     /* Iterate through all processes in the job */
-    while (Process)
+    while (Process != NULL)
     {
-        /* Call the provided callback */
         Status = Callback(Process, Context);
 
         if (!NT_SUCCESS(Status))
         {
-            /* On successful iteration, PspAdvanceJobEnumerator consumes this
-               reference. On failure, it must be released explicitly. */
+            /*
+             * On successful iteration, PspGetNextProcessInJob consumes this
+             * reference. On failure, it must be released explicitly.
+             */
             ObDereferenceObject(Process);
             break;
         }
 
         /* Move to the next process */
-        Process = PspAdvanceJobEnumerator(Job, Process);
+        Process = PspGetNextProcessInJob(Job, Process);
     }
 
     return Status;
 }
 
 /*!
- * Enumerates all directly assigned processes while the caller holds the job
+ * Enumerates all assigned processes while the caller holds the job
  * lock and invokes a callback for each process.
  *
  * @param[in] Job
@@ -411,13 +344,11 @@ PspEnumerateProcessesInJob(
  * @remarks
  *     Enumeration stops when a callback returns an unsuccessful status.
  *
- *     The caller must hold the job lock shared or exclusive for the complete
- *     call.
+ *     The caller must hold the job lock shared or exclusive.
  *
- *     The callback receives a borrowed process pointer. It must not release
- *     the job lock, recursively acquire the job lock, modify direct job
- *     membership, dereference the process object, or retain the process
- *     pointer after returning.
+ *     The callback must not release or recursively acquire the job lock,
+ *     modify job membership, dereference the process object, or retain
+ *     the process pointer after returning.
  */
 static
 NTSTATUS
@@ -427,21 +358,15 @@ PspEnumerateProcessesInJobLocked(
     _In_opt_ PVOID Context
 )
 {
-    PSP_JOB_ITERATOR Iterator;
     NTSTATUS Status = STATUS_SUCCESS;
-    PEPROCESS Process;
+    PEPROCESS Process = NULL;
 
-#if DBG
     ASSERT(ExIsResourceAcquiredSharedLite(&Job->JobLock) != 0 ||
            ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
-#endif
-
-    PspInitializeJobIteratorLocked(Job, NULL, &Iterator);
 
     /* Iterate through all processes in the job */
-    while ((Process = PspAdvanceJobIteratorLocked(&Iterator)) != NULL)
+    while ((Process = PspGetNextProcessInJobLocked(Job, Process)) != NULL)
     {
-        /* Call the provided callback */
         Status = Callback(Process, Context);
 
         if (!NT_SUCCESS(Status))
@@ -537,7 +462,7 @@ PspAssignProcessToJob(
     /* https://learn.microsoft.com/en-us/windows/win32/api/jobapi2/nf-jobapi2-assignprocesstojobobject:
        "If the job or any of its parent jobs in the job chain is terminating
        when AssignProcessToJob is called, the function fails" */
-    if (BooleanFlagOn(Job->JobFlags, JOB_OBJECT_TERMINATING))
+    if (FlagOn(Job->JobFlags, JOB_OBJECT_TERMINATING))
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Exit;
@@ -545,15 +470,15 @@ PspAssignProcessToJob(
 
     /* Prevent processes from being added to the job if it is flagged
        for closing and has a limit on process termination on closing */
-    if (BooleanFlagOn(Job->LimitFlags, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE) &&
-        BooleanFlagOn(Job->JobFlags, JOB_OBJECT_CLOSE_DONE))
+    if (FlagOn(Job->LimitFlags, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE) &&
+        FlagOn(Job->JobFlags, JOB_OBJECT_CLOSE_DONE))
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Exit;
     }
 
     /* Check if the job has a limit on the number of active processes */
-    if (BooleanFlagOn(Job->LimitFlags, JOB_OBJECT_LIMIT_ACTIVE_PROCESS) &&
+    if (FlagOn(Job->LimitFlags, JOB_OBJECT_LIMIT_ACTIVE_PROCESS) &&
         Job->ActiveProcesses >= Job->ActiveProcessLimit)
     {
         /* Check if job limit on active processes has been reached */
@@ -571,8 +496,10 @@ PspAssignProcessToJob(
         goto Exit;
     }
 
-    /* Acquire the reference owned by the process for as long as
-       Process->Job points to Job */
+    /* Acquire the reference owned by Process->Job before publishing the pointer.
+       This ensures that every observable non-NULL Process->Job is already
+       backed by its lifetime reference. If another assignment wins the race,
+       release the unused reference. */
     ObReferenceObject(Job);
 
     /* JobLock protects the target job, but another caller may simultaneously
@@ -650,7 +577,7 @@ PspDeactivateProcessFromJobLocked(
     ASSERT(ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
 #endif
 
-    if (BooleanFlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
+    if (FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
     {
         return FALSE;
     }
@@ -795,7 +722,7 @@ PspTerminateProcessCallback(
        completed its active job transition */
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
-    if (BooleanFlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
+    if (FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
     {
         goto Exit;
     }
@@ -943,7 +870,7 @@ PspCloseJob(
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
     /* If the job is set to kill on close, terminate all associated processes */
-    if (BooleanFlagOn(Job->LimitFlags, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE))
+    if (FlagOn(Job->LimitFlags, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE))
     {
         /* Keep the completion port associated during termination so that
            final job messages can still be delivered */
@@ -1263,7 +1190,7 @@ PspAssociateCompletionPortCallback(
 #endif
 
     /* Ensure the process is active and has a valid unique process ID */
-    if (!BooleanFlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE) &&
+    if (!FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE) &&
         Process->UniqueProcessId)
     {
         (VOID)PspSendJobMessageLocked(Job,
@@ -1328,7 +1255,7 @@ PspAssociateCompletionPortWithJob(
     ExAcquireResourceExclusiveLite(&Job->JobLock, TRUE);
 
     /* Check if the job already has a completion port or is in a final state */
-    if (Job->CompletionPort || BooleanFlagOn(Job->JobFlags, JOB_OBJECT_CLOSE_DONE))
+    if (Job->CompletionPort || FlagOn(Job->JobFlags, JOB_OBJECT_CLOSE_DONE))
     {
         ExReleaseResourceLite(&Job->JobLock);
         ObDereferenceObject(IoCompletion);
@@ -1371,7 +1298,7 @@ PspAssociateCompletionPortWithJob(
  */
 static
 NTSTATUS
-PspQueryBasicAccountingInfo(
+PspQueryJobBasicAccountingInfo(
     _In_ PEJOB Job,
     _Out_ PJOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION BasicAndIo
 )
@@ -1411,7 +1338,7 @@ PspQueryBasicAccountingInfo(
         PEPROCESS Process = CONTAINING_RECORD(NextEntry, EPROCESS, JobLinks);
 
         /* Skip folded accounting processes */
-        if (!BooleanFlagOn(Process->JobStatus, ACCOUNTING_FOLDED))
+        if (!FlagOn(Process->JobStatus, ACCOUNTING_FOLDED))
         {
             KeQueryValuesProcess(&Process->Pcb, &Values);
 
@@ -1453,7 +1380,7 @@ PspQueryBasicAccountingInfo(
  */
 static
 NTSTATUS
-PspQueryLimitInformation(
+PspQueryJobLimitInformation(
     _In_ PEJOB Job,
     _In_ BOOLEAN Extended,
     _Out_ PJOBOBJECT_EXTENDED_LIMIT_INFORMATION ExtendedLimit
@@ -1526,7 +1453,7 @@ PspQueryJobProcessIdListCallback(
     PPSP_QUERY_JOB_PROCESS_ID_CONTEXT QueryContext = (PPSP_QUERY_JOB_PROCESS_ID_CONTEXT)Context;
 
     /* Skip processes that are not really active */
-    if (BooleanFlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
+    if (FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
     {
         /* Continue to the next process */
         return STATUS_SUCCESS;
@@ -2273,14 +2200,14 @@ NtQueryInformationJobObject(
     case JobObjectBasicAccountingInformation:
     case JobObjectBasicAndIoAccountingInformation:
     {
-        Status = PspQueryBasicAccountingInfo(Job, &BasicAndIo);
+        Status = PspQueryJobBasicAccountingInfo(Job, &BasicAndIo);
         JobInfoBuffer = &BasicAndIo;
         break;
     }
     case JobObjectBasicLimitInformation:
     case JobObjectExtendedLimitInformation:
     {
-        Status = PspQueryLimitInformation(Job,
+        Status = PspQueryJobLimitInformation(Job,
                                           (JobInformationClass == JobObjectExtendedLimitInformation),
                                           &ExtendedLimit);
         JobInfoBuffer = &ExtendedLimit;
