@@ -12,12 +12,14 @@
 class CicArrayBase
 {
 protected:
-    LPBYTE m_pb;
-    size_t m_cItems, m_cbItem, m_cCapacity;
+    LPBYTE m_pb = NULL;
+    size_t m_cItems = 0;
+    size_t m_cbItem = 0;
+    size_t m_cCapacity = 0;
 
 public:
-    CicArrayBase(size_t cbItem);
-    virtual ~CicArrayBase();
+    CicArrayBase(size_t cbItem) : m_cbItem(cbItem) { }
+    virtual ~CicArrayBase() { cicMemFree(m_pb); }
 
     BOOL Insert(size_t iItem, size_t cGrow);
     LPVOID Append(size_t cGrow);

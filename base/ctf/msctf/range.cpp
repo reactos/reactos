@@ -17,10 +17,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 CRange::CRange(
     _In_ ITfContext *context,
     _In_ TfAnchor anchorStart,
-    _In_ TfAnchor anchorEnd
-)
-    : m_cRefs(1)
-    , m_context(context)
+    _In_ TfAnchor anchorEnd)
+    : m_context(context)
     , m_anchorStart(anchorStart)
     , m_anchorEnd(anchorEnd)
 {
@@ -30,7 +28,6 @@ CRange::CRange(
 
 CRange::~CRange()
 {
-    TRACE("destroying %p\n", this);
     if (m_context)
         m_context->Release();
 }

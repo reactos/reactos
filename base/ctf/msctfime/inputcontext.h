@@ -14,7 +14,6 @@ class CInputContextOwnerCallBack;
 class CInputContextOwner;
 class CicInputContext;
 
-
 typedef HRESULT (CALLBACK *FN_IC_OWNER_CALLBACK)(UINT uType, LPVOID args, LPVOID param);
 
 /***********************************************************************
@@ -25,15 +24,15 @@ class CInputContextOwner
     , public ITfMouseTrackerACP
 {
 protected:
-    LONG m_cRefs;
-    IUnknown *m_pContext;
-    DWORD m_dwCookie;
-    FN_IC_OWNER_CALLBACK m_fnCallback;
-    LPVOID m_pCallbackPV;
+    LONG m_cRefs = 1;
+    IUnknown* m_pContext = NULL;
+    DWORD m_dwCookie = (DWORD)-1;
+    FN_IC_OWNER_CALLBACK m_fnCallback = NULL;
+    LPVOID m_pCallbackPV = NULL;
 
 public:
     CInputContextOwner(FN_IC_OWNER_CALLBACK fnCallback, LPVOID pCallbackPV);
-    virtual ~CInputContextOwner();
+    virtual ~CInputContextOwner() { }
 
     HRESULT _Advise(IUnknown *pContext);
     HRESULT _Unadvise();
@@ -77,37 +76,37 @@ class CicInputContext
     , public ITfCompositionSink
 {
 public:
-    LONG m_cRefs;
-    HIMC m_hIMC;
-    ITfDocumentMgr *m_pDocumentMgr;
-    ITfContext *m_pContext;
-    ITfContextOwnerServices *m_pContextOwnerServices;
-    CInputContextOwnerCallBack *m_pICOwnerCallback;
-    CTextEventSink *m_pTextEventSink;
-    CCompartmentEventSink *m_pCompEventSink1;
-    CCompartmentEventSink *m_pCompEventSink2;
-    CInputContextOwner *m_pInputContextOwner;
-    DWORD m_dwUnknown3[3];
-    DWORD m_dwUnknown4[2];
-    DWORD m_dwQueryPos;
-    DWORD m_dwUnknown5;
-    CModeBias m_ModeBias;
-    DWORD m_dwUnknown6;
-    BOOL m_bCandidateOpen;
-    DWORD m_dwUnknown6_5[9];
-    BOOL m_bSelecting;
-    BOOL m_bReconverting;
-    LONG m_cCompLocks;
-    DWORD m_dwUnknown7[5];
-    WORD m_cGuidAtoms;
-    WORD m_padding;
-    DWORD m_adwGuidAtoms[256];
-    DWORD m_dwUnknown8;
-    RECT m_rcCandidate1;
-    CANDIDATEFORM m_CandForm;
-    RECT m_rcCandidate2;
-    TfClientId m_clientId;
-    DWORD m_dwUnknown9;
+    LONG m_cRefs = 1;
+    HIMC m_hIMC = NULL;
+    ITfDocumentMgr* m_pDocumentMgr = NULL;
+    ITfContext* m_pContext = NULL;
+    ITfContextOwnerServices* m_pContextOwnerServices = NULL;
+    CInputContextOwnerCallBack* m_pICOwnerCallback = NULL;
+    CTextEventSink* m_pTextEventSink = NULL;
+    CCompartmentEventSink* m_pCompEventSink1 = NULL;
+    CCompartmentEventSink* m_pCompEventSink2 = NULL;
+    CInputContextOwner* m_pInputContextOwner = NULL;
+    DWORD m_dwUnknown3[3] = { 0 };
+    DWORD m_dwUnknown4[2] = { 0 };
+    DWORD m_dwQueryPos = 0;
+    DWORD m_dwUnknown5 = 0;
+    CModeBias m_ModeBias = {};
+    DWORD m_dwUnknown6 = 0;
+    BOOL m_bCandidateOpen = FALSE;
+    DWORD m_dwUnknown6_5[9] = { 0 };
+    BOOL m_bSelecting = FALSE;
+    BOOL m_bReconverting = FALSE;
+    LONG m_cCompLocks = 0;
+    DWORD m_dwUnknown7[5] = { 0 };
+    WORD m_cGuidAtoms = 0;
+    WORD m_padding = 0;
+    DWORD m_adwGuidAtoms[256] = { 0 };
+    DWORD m_dwUnknown8 = 0;
+    RECT m_rcCandidate1 = {};
+    CANDIDATEFORM m_CandForm = {};
+    RECT m_rcCandidate2 = {};
+    TfClientId m_clientId = 0;
+    DWORD m_dwUnknown9 = 0;
 
 public:
     CicInputContext(

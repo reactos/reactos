@@ -32,9 +32,9 @@ CicProfile::LanguageProfilesCallback(
 template <typename T_IFACE, typename T_DATA>
 class CicEnumValue
 {
-    T_IFACE* m_iface;
-    FN_LanguageProfilesCallback m_callback;
-    LPARAM m_lParam;
+    T_IFACE* m_iface = NULL;
+    FN_LanguageProfilesCallback m_callback = NULL;
+    LPARAM m_lParam = 0;
 
 public:
     CicEnumValue(T_IFACE* iface, FN_LanguageProfilesCallback callback, LPARAM lParam = 0)
@@ -62,19 +62,6 @@ public:
         return ERROR_FILE_NOT_FOUND;
     }
 };
-
-/// @implemented
-CicProfile::CicProfile()
-{
-    m_dwFlags = 0;
-    m_cRefs = 1;
-    m_pIPProfiles = NULL;
-    m_pActiveLanguageProfileNotifySink = NULL;
-    m_LangID1 = 0;
-    m_nCodePage = CP_ACP;
-    m_LangID2 = 0;
-    m_dwUnknown1 = 0;
-}
 
 /// @implemented
 CicProfile::~CicProfile()

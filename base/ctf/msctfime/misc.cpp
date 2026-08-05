@@ -521,15 +521,6 @@ CFunctionProvider::GetFunction(
 
 /***********************************************************************/
 
-CFnDocFeed::CFnDocFeed()
-{
-    m_cRefs = 1;
-}
-
-CFnDocFeed::~CFnDocFeed()
-{
-}
-
 /// @implemented
 STDMETHODIMP CFnDocFeed::QueryInterface(_In_ REFIID riid, _Out_ LPVOID* ppvObj)
 {
