@@ -722,15 +722,15 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
      *  c) parent's job does NOT allow silent breakaway
      */
     if (Parent && Parent->Job &&
-        !(Parent->Job->LimitFlags & JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK))
+        !BooleanFlagOn(Parent->Job->LimitFlags, JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK))
     {
         ParentJob = Parent->Job;
 
         /* If caller explicitly requested breakaway from the job */
-        if (Flags & PROCESS_CREATE_FLAGS_BREAKAWAY)
+        if (BooleanFlagOn(Flags, PROCESS_CREATE_FLAGS_BREAKAWAY))
         {
             /* Deny if the job forbids breakaway */
-            if (!(ParentJob->LimitFlags & JOB_OBJECT_LIMIT_BREAKAWAY_OK))
+            if (!BooleanFlagOn(ParentJob->LimitFlags, JOB_OBJECT_LIMIT_BREAKAWAY_OK))
             {
                 Status = STATUS_ACCESS_DENIED;
                 goto CleanupWithRef;

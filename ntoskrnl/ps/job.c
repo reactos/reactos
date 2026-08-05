@@ -537,7 +537,7 @@ PspAssignProcessToJob(
     /* https://learn.microsoft.com/en-us/windows/win32/api/jobapi2/nf-jobapi2-assignprocesstojobobject:
        "If the job or any of its parent jobs in the job chain is terminating
        when AssignProcessToJob is called, the function fails" */
-    if (Job->JobFlags & JOB_OBJECT_TERMINATING)
+    if (BooleanFlagOn(Job->JobFlags, JOB_OBJECT_TERMINATING))
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Exit;
@@ -545,15 +545,15 @@ PspAssignProcessToJob(
 
     /* Prevent processes from being added to the job if it is flagged
        for closing and has a limit on process termination on closing */
-    if (Job->LimitFlags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE &&
-        Job->JobFlags & JOB_OBJECT_CLOSE_DONE)
+    if (BooleanFlagOn(Job->LimitFlags, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE) &&
+        BooleanFlagOn(Job->JobFlags, JOB_OBJECT_CLOSE_DONE))
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Exit;
     }
 
     /* Check if the job has a limit on the number of active processes */
-    if (Job->LimitFlags & JOB_OBJECT_LIMIT_ACTIVE_PROCESS &&
+    if (BooleanFlagOn(Job->LimitFlags, JOB_OBJECT_LIMIT_ACTIVE_PROCESS) &&
         Job->ActiveProcesses >= Job->ActiveProcessLimit)
     {
         /* Check if job limit on active processes has been reached */
@@ -650,7 +650,7 @@ PspDeactivateProcessFromJobLocked(
     ASSERT(ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
 #endif
 
-    if (Process->JobStatus & JOB_NOT_REALLY_ACTIVE)
+    if (BooleanFlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
     {
         return FALSE;
     }
@@ -795,7 +795,7 @@ PspTerminateProcessCallback(
        completed its active job transition */
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
-    if (Process->JobStatus & JOB_NOT_REALLY_ACTIVE)
+    if (BooleanFlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
     {
         goto Exit;
     }
@@ -943,7 +943,7 @@ PspCloseJob(
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
     /* If the job is set to kill on close, terminate all associated processes */
-    if (Job->LimitFlags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE)
+    if (BooleanFlagOn(Job->LimitFlags, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE))
     {
         /* Keep the completion port associated during termination so that
            final job messages can still be delivered */
@@ -1085,8 +1085,7 @@ PspSetJobLimitsBasicOrExtended(
         /* https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_limit_information:
            "If MaximumWorkingSetSize is nonzero, MinimumWorkingSetSize cannot be zero"
            "If MinimumWorkingSetSize is nonzero, MaximumWorkingSetSize cannot be zero"
-           Also check that the minimum doesn't exceed the maximum or both aren't
-           equal to zero. */
+           Also check that the minimum doesn't exceed the maximum or both aren't equal to zero. */
         if ((ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize > 0 &&
                 ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize <= 0)
             ||
@@ -1264,7 +1263,7 @@ PspAssociateCompletionPortCallback(
 #endif
 
     /* Ensure the process is active and has a valid unique process ID */
-    if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE) &&
+    if (!BooleanFlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE) &&
         Process->UniqueProcessId)
     {
         (VOID)PspSendJobMessageLocked(Job,
@@ -1329,7 +1328,7 @@ PspAssociateCompletionPortWithJob(
     ExAcquireResourceExclusiveLite(&Job->JobLock, TRUE);
 
     /* Check if the job already has a completion port or is in a final state */
-    if (Job->CompletionPort || (Job->JobFlags & JOB_OBJECT_CLOSE_DONE) != 0)
+    if (Job->CompletionPort || BooleanFlagOn(Job->JobFlags, JOB_OBJECT_CLOSE_DONE))
     {
         ExReleaseResourceLite(&Job->JobLock);
         ObDereferenceObject(IoCompletion);
@@ -1381,8 +1380,7 @@ PspQueryBasicAccountingInfo(
     PROCESS_VALUES Values;
 
     /* Zero the basic accounting information */
-    RtlZeroMemory(&BasicAndIo->BasicInfo,
-                  sizeof(JOBOBJECT_BASIC_ACCOUNTING_INFORMATION));
+    RtlZeroMemory(&BasicAndIo->BasicInfo, sizeof(BasicAndIo->BasicInfo));
 
     /* Lock the job object */
     ExEnterCriticalRegionAndAcquireResourceShared(&Job->JobLock);
@@ -1491,7 +1489,7 @@ PspQueryLimitInformation(
         KeReleaseGuardedMutexUnsafe(&Job->MemoryLimitsLock);
 
         /* Zero out IoInfo to avoid kernel memory leaks */
-        RtlZeroMemory(&ExtendedLimit->IoInfo, sizeof(IO_COUNTERS));
+        RtlZeroMemory(&ExtendedLimit->IoInfo, sizeof(ExtendedLimit->IoInfo));
     }
 
     /* Release the job lock */
@@ -1528,7 +1526,7 @@ PspQueryJobProcessIdListCallback(
     PPSP_QUERY_JOB_PROCESS_ID_CONTEXT QueryContext = (PPSP_QUERY_JOB_PROCESS_ID_CONTEXT)Context;
 
     /* Skip processes that are not really active */
-    if (Process->JobStatus & JOB_NOT_REALLY_ACTIVE)
+    if (BooleanFlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
     {
         /* Continue to the next process */
         return STATUS_SUCCESS;
@@ -1752,7 +1750,7 @@ NtCreateJobObject(
     {
         /* Initialize the job object */
 
-        RtlZeroMemory(Job, sizeof(EJOB));
+        RtlZeroMemory(Job, sizeof(*Job));
 
         InitializeListHead(&Job->JobSetLinks);
         InitializeListHead(&Job->ProcessListHead);
