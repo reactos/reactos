@@ -1,7 +1,9 @@
 /*
- * FILE:        base/applications/network/tracert/de-DE.rc
- * PURPOSE:     German translations for ReactOS Tracert Command
- * TRANSLATORS: reactosfanboy <Joachim.Henze@reactos.org>
+ * PROJECT:     ReactOS trace route utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2018 Joachim Henze <Joachim.Henze@reactos.org>
+ *              Copyright 2026 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
@@ -38,7 +40,7 @@ Optionen:\n\
     IDS_HOP_RESPONSE    "  Antwort: "
     IDS_DEST_HOST_UNREACHABLE "Zielhost nicht erreichbar.\n"
     IDS_DEST_NET_UNREACHABLE  "Zielnetz nicht erreichbar.\n"
-    IDS_BAD_OPTION_VALUE      "Bad value for option %1!ls!.\n"
-    IDS_MISSING_OPTION_VALUE  "A value must be supplied for option %1!ls!.\n"
-    IDS_MISSING_TARGET "A target name or address must be specified.\n"
+    IDS_BAD_OPTION_VALUE      "Ungültiger Wert für Befehlsoption %1!ls!.\n"
+    IDS_MISSING_OPTION_VALUE  "Für die Befehlsoption muss ein Wert %1!ls! angegeben werden.\n"
+    IDS_MISSING_TARGET "Ein Zielname oder eine Adresse muss spezifiziert werden.\n"
 END
