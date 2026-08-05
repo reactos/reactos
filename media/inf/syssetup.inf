@@ -63,8 +63,17 @@ AddReg=Classes
 11,,devenum.dll,1
 11,,dinput.dll,1
 11,,dinput8.dll,1
+11,,dmband.dll,1
+11,,dmcompos.dll,1
+11,,dmime.dll,1
+11,,dmloader.dll,1
+11,,dmscript.dll,1
+11,,dmstyle.dll,1
 11,,dmusic.dll,1
 11,,dplayx.dll,1
+11,,dpnet.dll,1
+11,,dpnhupnp.dll,1
+11,,dpvoice.dll,1
 11,,dsound.dll,1
 11,,dxdiagn.dll,1
 11,,fontext.dll,1
