@@ -44,30 +44,23 @@ NtNotifyChangeMultipleKeys_ApcRoutine(PVOID ApcContext, PIO_STATUS_BLOCK IoStatu
 START_TEST(NtNotifyChangeMultipleKeys)
 {
     NTSTATUS Status;
-    IO_STATUS_BLOCK IoStatusBlock;
+    IO_STATUS_BLOCK IoStatusBlock = { 0 };
     OBJECT_ATTRIBUTES SubordinateObjects[1];
-    WATCH_THREAD_STATE WatchThreadState;
+    WATCH_THREAD_STATE WatchThreadState = { 0 };
     BOOLEAN ApcRan = FALSE;
     /* Registry key object attributes */
-    UNICODE_STRING KeyName, SubKeyName,
-                   SecondaryKeyName, ThirdKeyName;
-    OBJECT_ATTRIBUTES ObjectAttributes, SubKeyObjectAttributes,
-                      SecondaryObjectAttributes, ThirdObjectAttributes;
-    UNICODE_STRING ValueName;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SOFTWARE\\TestKey"),
+                   SubKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SOFTWARE\\TestKey\\TestSubKey"),
+                   SecondaryKeyName = RTL_CONSTANT_STRING(L"\\Registry\\User\\.DEFAULT\\SOFTWARE\\TestKey"),
+                   ThirdKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Microsoft\\Windows");
+    OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&KeyName, OBJ_CASE_INSENSITIVE),
+                      SubKeyObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&SubKeyName, OBJ_CASE_INSENSITIVE),
+                      SecondaryObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&SecondaryKeyName, OBJ_CASE_INSENSITIVE);
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"TestValue");
     DWORD Value1 = 0x12345678, Value2 = 0x87654321;
     /* handles */
     HANDLE KeyHandle = NULL, SubKeyHandle = NULL, SecondaryKeyHandle = NULL;
     HANDLE WatchThreadHandle = NULL, EventHandle = NULL;
-
-    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\TestKey");
-    RtlInitUnicodeString(&SubKeyName, L"\\Registry\\Machine\\SOFTWARE\\TestKey\\TestSubKey");
-    RtlInitUnicodeString(&SecondaryKeyName, L"\\Registry\\User\\.DEFAULT\\SOFTWARE\\TestKey");
-    RtlInitUnicodeString(&ThirdKeyName, L"\\Registry\\Machine\\Software\\Microsoft\\Windows");
-    RtlInitUnicodeString(&ValueName, L"TestValue");
-    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    InitializeObjectAttributes(&SubKeyObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    InitializeObjectAttributes(&SecondaryObjectAttributes, &SecondaryKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    InitializeObjectAttributes(&ThirdObjectAttributes, &ThirdKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
     /* Create event */
     EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
