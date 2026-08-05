@@ -4,7 +4,7 @@ There are several ways to contribute to ReactOS. You can [make a donation](https
 > [!CAUTION]
 > If you have worked with private Windows source code, or contributed to projects derived from such code, we cannot accept contributions from you in any area related to that work. **Leaked Windows source code and the Windows Research Kernel (WRK) are considered private.**
 >
-> Publicly available information, including documentation, headers, and patents, may be used for research purposes.
+> Publicly available information, including documentation, headers, and expired patents, may be used for research purposes.
 
 > [!WARNING]
 > In order to comply with international copyright law, we require all code contributions to be made using your legal identity. Using your legal identity allows contributions to be audited against individuals known to have access to Windows source code.
