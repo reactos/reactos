@@ -344,7 +344,7 @@ UefiFindPciBios(
     Mcfg = (PMCFG_TABLE)UefiFindAcpiTable(MCFG_SIGNATURE);
     if ((Mcfg != NULL) && (Mcfg->Header.Length >= sizeof(MCFG_TABLE)))
     {
-        McfgCount = (Mcfg->Header.Length - sizeof(MCFG_TABLE)) / sizeof(MCFG_ALLOCATION) + 1;
+        McfgCount = (Mcfg->Header.Length - FIELD_OFFSET(MCFG_TABLE, Allocation)) / sizeof(MCFG_ALLOCATION);
         HighestMcfgBus = 0;
 
         for (McfgIndex = 0; McfgIndex < McfgCount; McfgIndex++)
