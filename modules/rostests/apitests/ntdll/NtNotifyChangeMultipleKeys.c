@@ -19,7 +19,7 @@ typedef struct _WATCH_THREAD_STATE
 DWORD WINAPI NtNotifyChangeMultipleKeys_WatchThread(LPVOID lpParameter)
 {
     PWATCH_THREAD_STATE State = (PWATCH_THREAD_STATE)lpParameter;
-    
+
     State->Status = NtNotifyChangeMultipleKeys(State->KeyHandle, 0, NULL, NULL, NULL, NULL, State->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, FALSE);
 
     return 0;
@@ -50,7 +50,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
     /* handles */
     HANDLE KeyHandle = NULL, SubKeyHandle = NULL, SecondaryKeyHandle = NULL;
     HANDLE WatchThreadHandle = NULL, EventHandle = NULL;
-    
+
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SOFTWARE\\TestKey");
     RtlInitUnicodeString(&SubKeyName, L"\\Registry\\Machine\\SOFTWARE\\TestKey\\TestSubKey");
     RtlInitUnicodeString(&SecondaryKeyName, L"\\Registry\\User\\.DEFAULT\\SOFTWARE\\TestKey");
@@ -76,7 +76,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
         goto Cleanup;
     }
     NtSetValueKey(KeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
-    
+
     /* Synchronous mode */
 
     /* Create a thread */
@@ -98,6 +98,10 @@ START_TEST(NtNotifyChangeMultipleKeys)
         ok_ntstatus(WatchThreadState.Status, STATUS_NOTIFY_ENUM_DIR);
         ok_ntstatus(WatchThreadState.IoStatusBlock->Status, STATUS_NOTIFY_ENUM_DIR);
         /* cleanup */
+        if (WaitForSingleObject(WatchThreadHandle, 0) == WAIT_TIMEOUT)
+        {
+            TerminateThread(WatchThreadHandle, 0);
+        }
         CloseHandle(WatchThreadHandle);
         WatchThreadHandle = NULL;
         WatchThreadState.Status = 0xdeadbeef;
@@ -120,6 +124,10 @@ START_TEST(NtNotifyChangeMultipleKeys)
         ok_ntstatus(WatchThreadState.Status, STATUS_NOTIFY_CLEANUP);
         ok_ntstatus(WatchThreadState.IoStatusBlock->Status, STATUS_NOTIFY_CLEANUP);
         /* cleanup */
+        if (WaitForSingleObject(WatchThreadHandle, 0) == WAIT_TIMEOUT)
+        {
+            TerminateThread(WatchThreadHandle, 0);
+        }
         CloseHandle(WatchThreadHandle);
         WatchThreadHandle = NULL;
     }
@@ -271,7 +279,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
                                         0,
                                         TRUE);
     ok(!NT_SUCCESS(Status), "NtNotifyChangeMultipleKeys succeeded unexpectedly.\n");
-    
+
     /* APC-based asynchronous mode */
     Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL, NULL, NtNotifyChangeMultipleKeys_ApcRoutine, &ApcRan, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
     ok_ntstatus(Status, STATUS_PENDING);
@@ -308,7 +316,7 @@ Cleanup:
     Status = NtOpenKey(&SecondaryKeyHandle, DELETE, &SecondaryObjectAttributes);
     if (NT_SUCCESS(Status))
     {
-        NtDeleteKey(SecondaryKeyHandle);   
+        NtDeleteKey(SecondaryKeyHandle);
         CloseHandle(SecondaryKeyHandle);
     }
 }
