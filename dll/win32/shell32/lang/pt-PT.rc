@@ -1053,7 +1053,7 @@ BEGIN
 
     IDS_VISEFFECT_DRAGFULL "Mostrar o conteúdo das janelas ao arrastar"
     IDS_VISEFFECT_FONTSMOOTHING "Suavizar os limites dos tipos de letra no ecrã"
-    IDS_VISEFFECT_LISTVIEWSHADOW "Utilizar sombras para nomes de ícones no ambiente de trabalho."
+    IDS_VISEFFECT_LISTVIEWSHADOW "Utilizar sombras para nomes de ícones no ambiente de trabalho"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< A&vançado"
     IDS_NEWEXT_ADVANCED_RIGHT "Avança&do >>"
