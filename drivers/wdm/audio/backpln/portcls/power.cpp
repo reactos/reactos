@@ -39,6 +39,7 @@ PcRegisterAdapterPowerManagement(
         return STATUS_SUCCESS;
     }
 
+    ASSERT(DeviceExt->AdapterPowerManagement == NULL);
     DeviceExt->AdapterPowerManagement = pPower;
     DPRINT("PcRegisterAdapterPowerManagement success %x\n", Status);
     return STATUS_SUCCESS;
