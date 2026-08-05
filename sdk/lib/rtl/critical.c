@@ -874,18 +874,6 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  * @remarks
  * This function is typically called by the loader during thread exit.
  **/
-/*************************************************************************
- *                RtlCheckForOrphanedCriticalSections
- *
- * @param[in] ThreadHandle
- * Handle to the thread to check.
- *
- * @return
- * Nothing.
- *
- * @remarks
- * This function is typically called by the loader during thread exit.
- */
 VOID
 NTAPI
 RtlCheckForOrphanedCriticalSections(
