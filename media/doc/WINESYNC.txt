@@ -291,6 +291,7 @@ iphlpapi -
   modules/rostests/winetests/iphlpapi # Synced to WineStaging-1.9.11
 
 kernel32 -
+  dll/win32/kernel32/dep.c                       # Synced to Wine-11.0
   dll/win32/kernel32/wine/actctx.c               # Synced to wine-3.3
   dll/win32/kernel32/wine/comm.c                 # Synced to wine-3.3
   dll/win32/kernel32/wine/lzexpand.c             # Synced to WineStaging-3.3
