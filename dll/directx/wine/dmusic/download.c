@@ -31,7 +31,7 @@ struct download
     BYTE data[];
 };
 
-C_ASSERT(sizeof(struct download) == offsetof(struct download, data[0]));
+C_ASSERT(sizeof(struct download) == offsetof(struct download, data));
 
 static inline struct download *impl_from_IDirectMusicDownload(IDirectMusicDownload *iface)
 {

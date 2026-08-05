@@ -37,7 +37,7 @@ struct pool
     POOLCUE cues[];
 };
 
-C_ASSERT(sizeof(struct pool) == offsetof(struct pool, cues[0]));
+C_ASSERT(sizeof(struct pool) == offsetof(struct pool, cues));
 
 struct wave_entry
 {

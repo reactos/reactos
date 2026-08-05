@@ -39,7 +39,7 @@ struct audio_path_pchannel_to_buffer
     GUID guids[];
 };
 
-C_ASSERT(sizeof(struct audio_path_pchannel_to_buffer) == offsetof(struct audio_path_pchannel_to_buffer, guids[0]));
+C_ASSERT(sizeof(struct audio_path_pchannel_to_buffer) == offsetof(struct audio_path_pchannel_to_buffer, guids));
 
 struct audio_path_port_config
 {

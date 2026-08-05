@@ -41,7 +41,7 @@ struct articulation
     CONNECTION connections[];
 };
 
-C_ASSERT(sizeof(struct articulation) == offsetof(struct articulation, connections[0]));
+C_ASSERT(sizeof(struct articulation) == offsetof(struct articulation, connections));
 
 struct region
 {
@@ -736,7 +736,7 @@ struct download_buffer
     ULONG offsets[];
 };
 
-C_ASSERT(sizeof(struct download_buffer) == offsetof(struct download_buffer, offsets[0]));
+C_ASSERT(sizeof(struct download_buffer) == offsetof(struct download_buffer, offsets));
 
 HRESULT instrument_download_to_port(IDirectMusicInstrument *iface, IDirectMusicPortDownload *port,
         IDirectMusicDownloadedInstrument **downloaded)
