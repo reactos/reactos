@@ -514,7 +514,7 @@ CNSCBand::OnChangeNotify(
         case SHCNE_UPDATEITEM:
         case SHCNE_UPDATEDIR:
             pidl1 = pidl0;
-            __fallthrough;
+            [[fallthrough]];
         case SHCNE_RENAMEFOLDER:
             if ((hItem = _FindItem(pidl0, &pID)) != NULL && SUCCEEDED(_UpdateItem(hItem, pID, pidl1, UIF_ALL | UIF_GETREAL)))
                 return;
