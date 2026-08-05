@@ -723,8 +723,65 @@ static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
     return (PCUIDLIST_RELATIVE)(((LPBYTE)pida) + (pida)->aoffset[i + 1]);
 }
 
+static inline SFGAOF SHELL_GetAttributesOf(IShellFolder *psf, LPCITEMIDLIST pidlChild, SFGAOF query)
+{
+    SFGAOF attr = query;
+#ifdef __cplusplus
+    HRESULT hr = psf ? psf->GetAttributesOf(1, &pidlChild, &attr) : E_INVALIDARG;
+#else
+    HRESULT hr = psf ? psf->lpVtbl->GetAttributesOf(psf, 1, &pidlChild, &attr) : E_INVALIDARG;
+#endif
+    return SUCCEEDED(hr) ? (attr & query) : 0;
+}
+
+static inline SFGAOF SHELL_GetAttributesOfAbsolute(PCIDLIST_ABSOLUTE pidl, SFGAOF query)
+{
+    IShellFolder *psf;
+    PCUITEMID_CHILD pidlChild;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlChild);
+    if (SUCCEEDED(hr))
+    {
+        SFGAOF attrib = SHELL_GetAttributesOf(psf, pidlChild, query);
+#ifdef __cplusplus
+        psf->Release();
+#else
+        psf->lpVtbl->Release(psf);
+#endif
+        return attrib;
+    }
+    return 0;
+}
+
+#if defined(_INC_SHLWAPI) || defined(_SHLWAPI_)
+static inline HRESULT SHELL_GetDisplayNameOf(IShellFolder *psf, LPCITEMIDLIST pidlChild, SHGDNF Flags, PWSTR *ppStr)
+{
+    STRRET strret;
+#ifdef __cplusplus
+    HRESULT hr = psf->GetDisplayNameOf(pidlChild, Flags, &strret);
+#else
+    HRESULT hr = psf->lpVtbl->GetDisplayNameOf(psf, pidlChild, Flags, &strret);
+#endif
+    *ppStr = NULL;
+    return FAILED_UNEXPECTEDLY(hr) ? hr : StrRetToStrW(&strret, NULL, ppStr);
+}
+
+static inline HRESULT SHELL_GetAbsolutePidl(IShellFolder *psf, LPCITEMIDLIST pidlChild, PIDLIST_ABSOLUTE *ppidl)
+{
+    PWSTR path = NULL;
+    HRESULT hr = SHELL_GetDisplayNameOf(psf, pidlChild, SHGDN_FORPARSING, &path);
+    if (SUCCEEDED(hr))
+        hr = SHParseDisplayName(path, NULL, ppidl, 0, NULL);
+    CoTaskMemFree(path);
+    return hr;
+}
+#endif // _INC_SHLWAPI
 
 #ifdef __cplusplus
+
+static inline SFGAOF SHELL_GetAttributesOf(PCIDLIST_ABSOLUTE pidl, SFGAOF query) // C++ Overload
+{
+    return SHELL_GetAttributesOfAbsolute(pidl, query);
+}
 
 #if defined(CMIC_MASK_UNICODE) && defined(SEE_MASK_UNICODE)
 static inline bool IsUnicode(const CMINVOKECOMMANDINFOEX &ici)

@@ -36,6 +36,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(CMenuToolbars);
 // User-defined timer ID used while hot-tracking around the menu
 #define TIMERID_HOTTRACK 1
 
+static inline SFGAOF GetFolderItemBaseType(UINT sfgao)
+{
+    return (sfgao & SFGAO_STREAM) ? SFGAO_STREAM : (sfgao & SFGAO_FOLDER);
+}
+
+static SFGAOF GetFolderItemBaseType(IShellFolder *psf, LPCITEMIDLIST pidl)
+{
+    return GetFolderItemBaseType(SHELL_GetAttributesOf(psf, pidl, SFGAO_FOLDER | SFGAO_STREAM));
+}
+
 LRESULT CMenuToolbarBase::OnWinEventWrap(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     LRESULT lr;
@@ -1410,20 +1420,13 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
             continue;
         }
 
-        INT indexOpen = 0;
-        INT index = SHMapPIDLToSystemImageListIndex(m_shellFolder, item, &indexOpen);
-
-        LPCITEMIDLIST itemc = item;
-
-        SFGAOF attrs = SFGAO_FOLDER;
-        hr = m_shellFolder->GetAttributesOf(1, &itemc, &attrs);
-
-        DWORD_PTR dwData = reinterpret_cast<DWORD_PTR>(item);
+        INT index = SHMapPIDLToSystemImageListIndex(m_shellFolder, item, NULL);
+        BOOL isPureFolder = GetFolderItemBaseType(m_shellFolder, item) == SFGAO_FOLDER; // Don't expand .cab/.zip
 
         // Fetch next item already, so we know if the current one is the last
         i++;
 
-        AddButton(i, MenuString, attrs & SFGAO_FOLDER, index, dwData, i >= DPA_GetPtrCount(dpaSort));
+        AddButton(i, MenuString, isPureFolder, index, reinterpret_cast<DWORD_PTR>(item), i >= DPA_GetPtrCount(dpaSort));
 
         CoTaskMemFree(MenuString);
     }
@@ -1551,13 +1554,7 @@ HRESULT CMenuSFToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData
 
 HRESULT CMenuSFToolbar::InternalHasSubMenu(INT iItem, INT index, DWORD_PTR dwData)
 {
-    HRESULT hr;
     LPCITEMIDLIST pidl = reinterpret_cast<LPITEMIDLIST>(dwData);
-
-    SFGAOF attrs = SFGAO_FOLDER;
-    hr = m_shellFolder->GetAttributesOf(1, &pidl, &attrs);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return (attrs & SFGAO_FOLDER) ? S_OK : S_FALSE;
+    BOOL isPureFolder = GetFolderItemBaseType(m_shellFolder, pidl) == SFGAO_FOLDER;
+    return isPureFolder ? S_OK : S_FALSE;
 }

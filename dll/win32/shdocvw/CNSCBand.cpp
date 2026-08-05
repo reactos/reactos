@@ -616,6 +616,17 @@ LRESULT CNSCBand::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
     return 0;
 }
 
+static HRESULT AddItemToFavorites(HWND hWnd, IShellFolder *psf, LPCITEMIDLIST pidlLast)
+{
+    CComHeapPtr<WCHAR> pszURL, pszTitle;
+    HRESULT hr = SHELL_GetDisplayNameOf(psf, pidlLast, SHGDN_FORPARSING, &pszURL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    SHELL_GetDisplayNameOf(psf, pidlLast, SHGDN_NORMAL | SHGDN_INFOLDER, &pszTitle);
+    return AddUrlToFavorites(hWnd, pszURL, pszTitle ? pszTitle : PathFindFileNameW(pszURL), TRUE);
+}
+
 HRESULT CNSCBand::_AddFavorite()
 {
     CComHeapPtr<ITEMIDLIST> pidlCurrent;
@@ -626,18 +637,7 @@ HRESULT CNSCBand::_AddFavorite()
     HRESULT hr = SHBindToParent(pidlCurrent, IID_PPV_ARG(IShellFolder, &pParent), &pidlLast);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-
-    STRRET strret;
-    hr = pParent->GetDisplayNameOf(pidlLast, SHGDN_FORPARSING, &strret);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    CComHeapPtr<WCHAR> pszURL;
-    hr = StrRetToStrW(&strret, NULL, &pszURL);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return AddUrlToFavorites(m_hWnd, pszURL, NULL, TRUE);
+    return AddItemToFavorites(m_hWnd, pParent, pidlLast);
 }
 
 LRESULT CNSCBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)

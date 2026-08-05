@@ -88,6 +88,56 @@ struct ITBARSTATE
     // Note: Windows 8/10 stores the Ribbon state in ..\Explorer\Ribbon
 };
 
+static HRESULT SHELL_LoadShellLink(PCIDLIST_ABSOLUTE pidl, IShellLink **ppsl, DWORD stgm = STGM_READ)
+{
+    WCHAR buf[MAX_PATH];
+    if (!SHGetPathFromIDListW(pidl, buf))
+        return E_FAIL;
+    CComPtr<IPersistFile> ppf;
+    HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IPersistFile, &ppf));
+    if (SUCCEEDED(hr))
+        hr = ppf->Load(buf, stgm);
+    return SUCCEEDED(hr) ? ppf->QueryInterface(IID_PPV_ARG(IShellLink, ppsl)) : hr;
+}
+
+static HRESULT SHELL_GetAbsolutePidlTryLinkTarget(IShellFolder *psf, LPCITEMIDLIST pidlChild, PIDLIST_ABSOLUTE *ppidl)
+{
+    CComHeapPtr<ITEMIDLIST> pidl;
+    HRESULT hr = SHELL_GetAbsolutePidl(psf, pidlChild, &pidl);
+    if (FAILED(hr))
+        return hr;
+    // TODO: Use BHID_LinkTargetItem instead when it's implemented
+    if (SHELL_GetAttributesOf(psf, pidlChild, SFGAO_LINK) & SFGAO_LINK)
+    {
+        PIDLIST_ABSOLUTE pidlTarget;
+        CComPtr<IShellLink> psl;
+        if (SUCCEEDED(SHELL_LoadShellLink(pidl, &psl)) && SUCCEEDED(psl->GetIDList(&pidlTarget)))
+            pidl.Attach(pidlTarget);
+    }
+    *ppidl = pidl.Detach();
+    return S_OK;
+}
+
+static HRESULT SHELL_BrowseObject(IShellBrowser *psb, IShellFolder *psf, LPCITEMIDLIST pidlChild, UINT SBSP)
+{
+    CComHeapPtr<ITEMIDLIST> pidl;
+    HRESULT hr = SHELL_GetAbsolutePidlTryLinkTarget(psf, pidlChild, &pidl);
+    if (FAILED(hr))
+        return hr;
+    if (SHELL_GetAttributesOf(pidl, SFGAO_BROWSABLE | SFGAO_FOLDER) & (SFGAO_BROWSABLE | SFGAO_FOLDER))
+        return psb->BrowseObject(pidl, SBSP_ABSOLUTE | (SBSP & ~SBSP_RELATIVE));
+    return HRESULT_FROM_WIN32(ERROR_DIR_NOT_ROOT);
+}
+
+static HRESULT BrowseInplaceOrExecute(HWND hWnd, IShellFolder *psf, LPCITEMIDLIST pidlChild, IUnknown *pSite)
+{
+    CComPtr<IShellBrowser> psb;
+    HRESULT hr = IUnknown_QueryService(pSite, SID_IShellBrowser, IID_PPV_ARG(IShellBrowser, &psb));
+    if (SUCCEEDED(hr))
+        hr = SHELL_BrowseObject(psb, psf, pidlChild, SBSP_SAMEBROWSER);
+    return SUCCEEDED(hr) ? hr : SHInvokeDefaultCommand(hWnd, psf, pidlChild);
+}
+
 HRESULT IUnknown_RelayWinEvent(IUnknown * punk, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
     CComPtr<IWinEventHandler> menuWinEventHandler;
@@ -523,6 +573,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
 
+        // FIXME: Why are SMINIT_ and SMINV_ flags passed here? We perhaps want SMSET_HASEXPANDABLEFOLDERS?
         hResult = newMenu->SetShellFolder(favoritesFolder, favoritesPIDL, orderRegKey, SMSET_BOTTOM | SMINIT_CACHED | SMINV_ID);
         if (favoritesPIDL)
             ILFree(favoritesPIDL);
@@ -578,7 +629,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::CallbackSM(LPSMDATA psmd, UINT uMsg, WP
             PostMessageW(psmd->hwnd, WM_COMMAND, psmd->uId, 0);
             break;
         case SMC_SFEXEC:
-            SHInvokeDefaultCommand(psmd->hwnd, psmd->psf, psmd->pidlItem);
+            BrowseInplaceOrExecute(psmd->hwnd, psmd->psf, psmd->pidlItem, pSite);
             break;
         case SMC_SFSELECTITEM:
             break;
@@ -633,6 +684,7 @@ CInternetToolbar::CInternetToolbar()
 
 CInternetToolbar::~CInternetToolbar()
 {
+    fMenuCallback->SetSite(NULL);
 }
 
 void CInternetToolbar::AddDockItem(IUnknown *newItem, int bandID, int flags)
@@ -705,6 +757,7 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
+    fMenuCallback->SetSite(static_cast<IObjectWithSite*>(this));
     hResult = fMenuCallback->QueryInterface(IID_PPV_ARG(IShellMenuCallback, &callback));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
