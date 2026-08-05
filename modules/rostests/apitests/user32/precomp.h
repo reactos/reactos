@@ -16,6 +16,7 @@
 #include <msgtrace.h>
 #include <user32testhelpers.h>
 #include <undocuser.h>
+#include <ndk/umtypes.h>
 
 #include "resource.h"
 
