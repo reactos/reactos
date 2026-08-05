@@ -3,6 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Keep track of tool parameters, notify listeners
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2021-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -33,6 +34,15 @@ HBRUSH ToolsModel::VirtualBrush::GetBrush(PAL_TYPE palette, COLORREF rgbColor)
     m_palette = palette;
     m_rgbColor = rgbColor;
     return m_hBrush;
+}
+
+void ToolsModel::VirtualBrush::Delete()
+{
+    if (m_hBrush)
+    {
+        ::DeleteObject(m_hBrush);
+        m_hBrush = nullptr;
+    }
 }
 
 ToolsModel::ToolsModel()
@@ -113,31 +123,31 @@ void ToolsModel::SetBrushWidth(INT nBrushWidth)
 void ToolsModel::MakeLineThickerOrThinner(BOOL bThinner)
 {
     INT thickness = GetLineWidth();
-    SetLineWidth(bThinner ? max(1, thickness - 1) : (thickness + 1));
+    SetLineWidth(bThinner ? __max(1, thickness - 1) : (thickness + 1));
 }
 
 void ToolsModel::MakePenThickerOrThinner(BOOL bThinner)
 {
     INT thickness = GetPenWidth();
-    SetPenWidth(bThinner ? max(1, thickness - 1) : (thickness + 1));
+    SetPenWidth(bThinner ? __max(1, thickness - 1) : (thickness + 1));
 }
 
 void ToolsModel::MakeBrushThickerOrThinner(BOOL bThinner)
 {
     INT thickness = GetBrushWidth();
-    SetBrushWidth(bThinner ? max(1, thickness - 1) : (thickness + 1));
+    SetBrushWidth(bThinner ? __max(1, thickness - 1) : (thickness + 1));
 }
 
 void ToolsModel::MakeAirBrushThickerOrThinner(BOOL bThinner)
 {
     INT thickness = GetAirBrushRadius();
-    SetAirBrushRadius(bThinner ? max(1, thickness - 1) : (thickness + 1));
+    SetAirBrushRadius(bThinner ? __max(1, thickness - 1) : (thickness + 1));
 }
 
 void ToolsModel::MakeRubberThickerOrThinner(BOOL bThinner)
 {
     INT thickness = GetRubberRadius();
-    SetRubberRadius(bThinner ? max(1, thickness - 1) : (thickness + 1));
+    SetRubberRadius(bThinner ? __max(1, thickness - 1) : (thickness + 1));
 }
 
 int ToolsModel::GetShapeStyle() const
@@ -349,7 +359,8 @@ void ToolsModel::selectAll()
 HBRUSH ToolsModel::CreateBrush(PAL_TYPE palette, COLORREF color)
 {
     if (palette == PAL_MONOCHROME)
-        return CreateDitherBrush(color, RGB(0, 0, 0), RGB(255, 255, 255));
+        return CreateDitherBrush(color, paletteModel.GetPrimaryColor(),
+                                 paletteModel.GetSecondaryColor());
     else
         return ::CreateSolidBrush(color);
 }
@@ -362,4 +373,10 @@ HBRUSH ToolsModel::GetFgBrush()
 HBRUSH ToolsModel::GetBgBrush()
 {
     return m_bgBrush.GetBrush(paletteModel.SelectedPalette(), paletteModel.GetBgColor());
+}
+
+void ToolsModel::DeleteBrushes()
+{
+    m_fgBrush.Delete();
+    m_bgBrush.Delete();
 }
