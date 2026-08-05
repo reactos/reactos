@@ -16,17 +16,23 @@ typedef struct _WATCH_THREAD_STATE
     PIO_STATUS_BLOCK IoStatusBlock;
 } WATCH_THREAD_STATE, *PWATCH_THREAD_STATE;
 
-DWORD WINAPI NtNotifyChangeMultipleKeys_WatchThread(LPVOID lpParameter)
+DWORD WINAPI
+NtNotifyChangeMultipleKeys_WatchThread(LPVOID lpParameter)
 {
     PWATCH_THREAD_STATE State = (PWATCH_THREAD_STATE)lpParameter;
 
-    State->Status = NtNotifyChangeMultipleKeys(State->KeyHandle, 0, NULL, NULL, NULL, NULL, State->IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, FALSE);
+    State->Status = NtNotifyChangeMultipleKeys(State->KeyHandle, 0,
+                                               NULL, NULL, NULL, NULL,
+                                               State->IoStatusBlock,
+                                               REG_NOTIFY_CHANGE_LAST_SET,
+                                               FALSE, NULL, 0, FALSE);
 
     return 0;
 }
 
 /* APC Routine for testing asynchronous mode */
-VOID WINAPI NtNotifyChangeMultipleKeys_ApcRoutine(PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, ULONG Reserved)
+VOID WINAPI
+NtNotifyChangeMultipleKeys_ApcRoutine(PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, ULONG Reserved)
 {
     UNREFERENCED_PARAMETER(IoStatusBlock);
     UNREFERENCED_PARAMETER(Reserved);
@@ -43,9 +49,11 @@ START_TEST(NtNotifyChangeMultipleKeys)
     WATCH_THREAD_STATE WatchThreadState;
     BOOLEAN ApcRan = FALSE;
     /* Registry key object attributes */
-    UNICODE_STRING KeyName, SubKeyName, SecondaryKeyName, ThirdKeyName;
+    UNICODE_STRING KeyName, SubKeyName,
+                   SecondaryKeyName, ThirdKeyName;
+    OBJECT_ATTRIBUTES ObjectAttributes, SubKeyObjectAttributes,
+                      SecondaryObjectAttributes, ThirdObjectAttributes;
     UNICODE_STRING ValueName;
-    OBJECT_ATTRIBUTES ObjectAttributes, SubKeyObjectAttributes, SecondaryObjectAttributes, ThirdObjectAttributes;
     DWORD Value1 = 0x12345678, Value2 = 0x87654321;
     /* handles */
     HANDLE KeyHandle = NULL, SubKeyHandle = NULL, SecondaryKeyHandle = NULL;
@@ -148,7 +156,11 @@ START_TEST(NtNotifyChangeMultipleKeys)
         }
     }
     /* Start watching for changes */
-    Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL, EventHandle, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
+    Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL,
+                                        EventHandle, NULL, NULL,
+                                        &IoStatusBlock,
+                                        REG_NOTIFY_CHANGE_LAST_SET,
+                                        FALSE, NULL, 0, TRUE);
     ok_ntstatus(Status, STATUS_PENDING);
     /* Check event state */
     Status = WaitForSingleObject(EventHandle, 0);
@@ -164,7 +176,11 @@ START_TEST(NtNotifyChangeMultipleKeys)
     ok_ntstatus(IoStatusBlock.Status, STATUS_NOTIFY_ENUM_DIR);
 
     /* Watch again, but this time close the handle without making any change */
-    Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL, EventHandle, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
+    Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL,
+                                        EventHandle, NULL, NULL,
+                                        &IoStatusBlock,
+                                        REG_NOTIFY_CHANGE_LAST_SET,
+                                        FALSE, NULL, 0, TRUE);
     ok_ntstatus(Status, STATUS_PENDING);
     Status = WaitForSingleObject(EventHandle, 0);
     ok_ntstatus(Status, WAIT_TIMEOUT);
@@ -190,7 +206,11 @@ START_TEST(NtNotifyChangeMultipleKeys)
     if (NT_SUCCESS(Status))
     {
         /* Start watching for changes */
-        Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL, EventHandle, NULL, NULL, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, TRUE, NULL, 0, TRUE);
+        Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL,
+                                            EventHandle, NULL, NULL,
+                                            &IoStatusBlock,
+                                            REG_NOTIFY_CHANGE_LAST_SET,
+                                            TRUE, NULL, 0, TRUE);
         ok_ntstatus(Status, STATUS_PENDING);
         /* Check event state */
         Status = WaitForSingleObject(EventHandle, 0);
@@ -281,7 +301,11 @@ START_TEST(NtNotifyChangeMultipleKeys)
     ok(!NT_SUCCESS(Status), "NtNotifyChangeMultipleKeys succeeded unexpectedly.\n");
 
     /* APC-based asynchronous mode */
-    Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL, NULL, NtNotifyChangeMultipleKeys_ApcRoutine, &ApcRan, &IoStatusBlock, REG_NOTIFY_CHANGE_LAST_SET, FALSE, NULL, 0, TRUE);
+    Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL,
+                                        NULL, NtNotifyChangeMultipleKeys_ApcRoutine, &ApcRan,
+                                        &IoStatusBlock,
+                                        REG_NOTIFY_CHANGE_LAST_SET,
+                                        FALSE, NULL, 0, TRUE);
     ok_ntstatus(Status, STATUS_PENDING);
     /* Make change to the registry key */
     Status = NtSetValueKey(KeyHandle, &ValueName, 0, REG_DWORD, &Value2, sizeof(Value2));
