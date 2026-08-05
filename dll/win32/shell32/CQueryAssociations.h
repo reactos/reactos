@@ -21,6 +21,7 @@ public:
         {
             if (hKeyClose)
                 RegCloseKey(hKeyClose);
+            hKeyClose = NULL;
         }
 
         void Attach(HKEY hNewKey)
