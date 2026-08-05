@@ -34,6 +34,7 @@
 #include <shlwapi.h>
 #include <commdlg.h>
 #include <commoncontrols.h>
+#include <strsafe.h>
 #include "../shellrecyclebin/recyclebin.h"
 
 #include <wine/debug.h>
@@ -2673,7 +2674,7 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
         if ((fi.dwAttributes & SFGAO_LINK) && SUCCEEDED(SHGetNameAndFlagsW(pidl, shgdn | SHGDN_INFOLDER,
                                                                            szTarget, _countof(szTarget), NULL)))
         {
-            lstrcpynW(fi.szDisplayName, szTarget, _countof(fi.szDisplayName)); // Including possible .lnk extension
+            StringCchCopyW(fi.szDisplayName, _countof(fi.szDisplayName), szTarget); // Including possible .lnk extension
         }
 
         if (SUCCEEDED(SHGetNameAndFlagsW(pidl, SHGDN_FORPARSING, szTarget, _countof(szTarget), NULL)))
@@ -2700,7 +2701,7 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
         pszDotForExt = L"";
         UseDisplayName = TRUE;
         if (pszLinkTo != fi.szDisplayName)
-            lstrcpynW(fi.szDisplayName, pszLinkTo, _countof(fi.szDisplayName));
+            StringCchCopyW(fi.szDisplayName, _countof(fi.szDisplayName), pszLinkTo);
         if (*pszExt)
             PathRemoveExtension(fi.szDisplayName);
     }
@@ -2712,7 +2713,7 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
     *pszName = UNICODE_NULL;
     if (!(uFlags & SHGNLI_NOUNIQUE)) // SHGNLI_NOUNIQUE does not prefix the directory
     {
-        lstrcpynW(pszName, pszDir, MAX_PATH);
+        StringCchCopyW(pszName, MAX_PATH, pszDir);
         if (!PathAddBackslashW(pszName))
             return FALSE;
     }
