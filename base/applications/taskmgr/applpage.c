@@ -17,7 +17,6 @@ typedef struct
     BOOL    bHung;
 } APPLICATION_PAGE_LIST_ITEM, *LPAPPLICATION_PAGE_LIST_ITEM;
 
-HWND            hApplicationPage;               /* Application List Property Page */
 HWND            hApplicationPageListCtrl;       /* Application ListCtrl Window */
 HWND            hApplicationPageEndTaskButton;  /* Application End Task button */
 HWND            hApplicationPageSwitchToButton; /* Application Switch To button */
@@ -25,7 +24,7 @@ HWND            hApplicationPageNewTaskButton;  /* Application New Task button *
 static int      nApplicationPageWidth;
 static int      nApplicationPageHeight;
 static BOOL     bSortAscending = TRUE;
-DWORD WINAPI    ApplicationPageRefreshThread(void *lpParameter);
+DWORD WINAPI    ApplicationPageRefreshThread(PVOID Parameter);
 BOOL            noApps;
 BOOL            bApplicationPageSelectionMade = FALSE;
 
@@ -37,11 +36,6 @@ void            ApplicationPageShowContextMenu1(void);
 void            ApplicationPageShowContextMenu2(void);
 int CALLBACK    ApplicationPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int             ProcGetIndexByProcessId(DWORD dwProcessId);
-
-#ifdef RUN_APPS_PAGE
-static HANDLE   hApplicationThread = NULL;
-static DWORD    dwApplicationThread;
-#endif
 
 static INT
 GetSystemColorDepth(VOID)
@@ -131,21 +125,12 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         UpdateApplicationListControlViewSetting();
 
-        /* Start our refresh thread */
-#ifdef RUN_APPS_PAGE
-        hApplicationThread = CreateThread(NULL, 0, ApplicationPageRefreshThread, NULL, 0, &dwApplicationThread);
-#endif
-
         /* Refresh page */
         ApplicationPageUpdate();
 
         return TRUE;
 
     case WM_DESTROY:
-        /* Close refresh thread */
-#ifdef RUN_APPS_PAGE
-        EndLocalThread(&hApplicationThread, dwApplicationThread);
-#endif
         AppPageCleanup();
         break;
 
@@ -154,6 +139,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         switch (LOWORD(wParam))
         {
         case IDC_ENDTASK:
+        // case IDC_ENDPROCESS:
             ApplicationPage_OnEndTask();
             break;
         case IDC_SWITCHTO:
@@ -210,11 +196,6 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_NOTIFY:
         ApplicationPageOnNotify(wParam, lParam);
         break;
-
-    case WM_KEYDOWN:
-        if (wParam == VK_DELETE)
-            ProcessPage_OnEndProcess();
-        break;
     }
 
     return 0;
@@ -222,11 +203,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 void RefreshApplicationPage(void)
 {
-#ifdef RUN_APPS_PAGE
-    /* Signal the event so that our refresh thread
-     * will wake up and refresh the application page */
-    PostThreadMessage(dwApplicationThread, WM_TIMER, 0, 0);
-#endif
+    ApplicationPageRefreshThread(NULL);
 }
 
 void UpdateApplicationListControlViewSetting(void)
@@ -245,9 +222,9 @@ void UpdateApplicationListControlViewSetting(void)
     RefreshApplicationPage();
 }
 
-DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
+DWORD WINAPI ApplicationPageRefreshThread(PVOID Parameter)
 {
-    MSG msg;
+    // MSG msg;
     INT i;
     BOOL                            bItemRemoved = FALSE;
     LV_ITEM                         item;
@@ -255,16 +232,16 @@ DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
     HIMAGELIST                      hImageListLarge;
     HIMAGELIST                      hImageListSmall;
 
-    /* If we couldn't create the event then exit the thread */
-    while (1)
+    ///* If we couldn't create the event then exit the thread */
+    //while (1)
     {
-        /*  Wait for an the event or application close */
-        if (GetMessage(&msg, NULL, 0, 0) <= 0)
-            return 0;
+        ///*  Wait for an the event or application close */
+        //if (GetMessage(&msg, NULL, 0, 0) <= 0)
+        //    return 0;
 
-        if (msg.message == WM_TIMER)
+        //if (msg.message == WM_TIMER)
         {
-             // FIXME: Should this be EnumDesktopWindows() instead?
+            // FIXME: Should this be EnumDesktopWindows() instead?
             noApps = TRUE;
             EnumWindows(EnumWindowsProc, 0);
             if (noApps)
@@ -323,6 +300,8 @@ DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
             ApplicationPageUpdate();
         }
     }
+
+    return 0;
 }
 
 BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
