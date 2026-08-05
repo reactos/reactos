@@ -874,9 +874,22 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  * @remarks
  * This function is typically called by the loader during thread exit.
  **/
+/*************************************************************************
+ *                RtlCheckForOrphanedCriticalSections
+ *
+ * @param[in] ThreadHandle
+ * Handle to the thread to check.
+ *
+ * @return
+ * Nothing.
+ *
+ * @remarks
+ * This function is typically called by the loader during thread exit.
+ */
 VOID
 NTAPI
-RtlCheckForOrphanedCriticalSections(_In_ HANDLE ThreadHandle)
+RtlCheckForOrphanedCriticalSections(
+    _In_ HANDLE ThreadHandle)
 {
     THREAD_BASIC_INFORMATION ThreadInfo;
     NTSTATUS Status;
@@ -901,7 +914,7 @@ RtlCheckForOrphanedCriticalSections(_In_ HANDLE ThreadHandle)
             &ThreadInfo,
             sizeof(ThreadInfo),
             NULL);
-        
+
         if (!NT_SUCCESS(Status))
             return;
     }
@@ -921,8 +934,14 @@ RtlCheckForOrphanedCriticalSections(_In_ HANDLE ThreadHandle)
             ListEntry,
             RTL_CRITICAL_SECTION_DEBUG,
             ProcessLocksList);
-
         CriticalSection = DebugInfo->CriticalSection;
+
+        /* Skip our own lock since we own it right now */
+        if (CriticalSection == &RtlCriticalSectionLock)
+        {
+            ListEntry = ListEntry->Flink;
+            continue;
+        }
 
         /* Check if this critical section is owned by the target thread */
         if (CriticalSection &&
@@ -940,7 +959,6 @@ RtlCheckForOrphanedCriticalSections(_In_ HANDLE ThreadHandle)
                 "Critical section debug info",
                 NULL,
                 NULL);
-            
             /* TODO: Add stack trace information here (CORE-16870) */
         }
 
