@@ -74,14 +74,14 @@ START_TEST(NtNotifyChangeMultipleKeys)
     EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (EventHandle == NULL)
     {
-        skip(FALSE, "Failed to create event");
+        skip("Failed to create event");
         return;
     }
     /* Create registry keys */
     Status = NtCreateKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
     if (!NT_SUCCESS(Status))
     {
-        skip(FALSE, "Failed to create registry key");
+        skip("Failed to create registry key");
         goto Cleanup;
     }
     NtSetValueKey(KeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
@@ -92,7 +92,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
     WatchThread1State = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WATCH_THREAD_CONTEXT));
     if (WatchThread1State == NULL)
     {
-        skip(FALSE, "Failed to allocate memory for watch thread state");
+        skip("Failed to allocate memory for watch thread state");
         goto Cleanup;
     }
     WatchThread1State->KeyHandle = KeyHandle;
@@ -120,7 +120,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
     }
     else
     {
-        skip(FALSE, "Failed to create watch thread");
+        skip("Failed to create watch thread");
     }
     /* Watch again, but this time close the handle without making any change */
     WatchThread2State = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WATCH_THREAD_CONTEXT));
@@ -148,7 +148,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
     }
     else
     {
-        skip(FALSE, "Failed to create watch thread");
+        skip("Failed to create watch thread");
     }
 
     /* Event-based asynchronous mode */
@@ -158,7 +158,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
         Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
-            skip(FALSE, "Failed to open registry key");
+            skip("Failed to open registry key");
             goto Cleanup;
         }
     }
@@ -205,7 +205,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
         Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
-            skip(FALSE, "Failed to open registry key");
+            skip("Failed to open registry key");
             goto Cleanup;
         }
     }
@@ -232,7 +232,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
     }
     else
     {
-        skip(FALSE, "Failed to create subkey");
+        skip("Failed to create subkey");
     }
 
     /* Watching multiple keys */
@@ -273,7 +273,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
     }
     else
     {
-        skip(FALSE, "Failed to create secondary key");
+        skip("Failed to create secondary key");
     }
     /* Test if the function fails if the given subordinate key is same with master key */
     InitializeObjectAttributes(&SubordinateObjects[0], &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
