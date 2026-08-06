@@ -49,7 +49,112 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #ifdef __REACTOS__
 EXTERN_C ULONG WINAPI GetProcessOsVersion(void); // FIXME: Move or delete
-#endif
+
+static HRESULT SHELL_SetRegString(HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszName, UINT Type, LPCWSTR pszData)
+{
+    ULONG err = SHSetValueW(hKey, pszSubKey, pszName, Type, pszData, (lstrlenW(pszData) + 1) * sizeof(*pszData));
+    return HRESULT_FROM_WIN32(err);
+}
+
+/* _AssocOpenRegKey is borrowed from shell32:elements.cpp since that code is only available for NT5 targets here */
+static HRESULT
+_AssocOpenRegKey(HKEY hKey, PCWSTR lpSubKey, PHKEY phkResult, BOOL bCreate)
+{
+    *phkResult = NULL;
+    if (!hKey)
+        return HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION);
+
+    LSTATUS error;
+    if ( bCreate )
+        error = RegCreateKeyExW(hKey, lpSubKey, 0, NULL, 0, MAXIMUM_ALLOWED, NULL,
+                                phkResult, NULL);
+    else
+        error = RegOpenKeyExW(hKey, lpSubKey, 0, MAXIMUM_ALLOWED, phkResult);
+
+    if (error == ERROR_SUCCESS)
+        return S_OK;
+
+    return HRESULT_FROM_WIN32(error);
+}
+
+static void AssocDeleteSubkey(HKEY hBase, LPCWSTR pszSubKey)
+{
+    HKEY hKey;
+    if (*pszSubKey && SUCCEEDED(_AssocOpenRegKey(hBase, pszSubKey, &hKey, FALSE)))
+    {
+        RegCloseKey(hKey);
+        SHDeleteKeyW(hBase, pszSubKey);
+    }
+}
+
+static HRESULT AssocMakeVerbCommand(HKEY hVerb, LPCWSTR pszExeFallback, const ASSOCMAKEVERB *pVerb)
+{
+    UINT Type = REG_SZ;
+    WCHAR szCmd[MAX_PATH * 4];
+    LPCWSTR pszExe = pVerb->pszExe ? pVerb->pszExe : pszExeFallback;
+    LPCWSTR pszOrgArgs = pVerb->pszArgs ? pVerb->pszArgs : L"";
+    LPCWSTR pszArgs = *pszOrgArgs ? pszOrgArgs : L"\"%1\"";
+
+    if (pVerb->pszFriendlyName && *pVerb->pszFriendlyName)
+        SHELL_SetRegString(hVerb, NULL, NULL, REG_SZ, pVerb->pszFriendlyName);
+
+    lstrcpyW(szCmd, pszExe);
+    PathQuoteSpacesW(szCmd);
+    lstrcatW(szCmd, L" ");
+    lstrcatW(szCmd, pszArgs);
+    if (StrStrIW(pszExe, L"%") || StrStrIW(pszOrgArgs, L"%"))
+        Type = REG_EXPAND_SZ;
+    return SHELL_SetRegString(hVerb, L"command", NULL, Type, szCmd);
+}
+
+HRESULT WINAPI AssocMakeShell(SIZE_T Unknown, HKEY hClass, LPCWSTR pszExe, const ASSOCMAKESHELL *pShell)
+{
+    HRESULT hr = E_INVALIDARG;
+    if (!hClass || !pszExe || !pShell)
+        return E_INVALIDARG;
+    for (SIZE_T i = 0; i < pShell->Count; ++i)
+    {
+        HKEY hVerb;
+        WCHAR szVerbKey[sizeof("shell") + MAX_PATH];
+        const ASSOCMAKEVERB *pVerb = &pShell->pVerbs[i];
+        if (!pVerb->pszVerb)
+            continue;
+
+        PathCombineW(szVerbKey, L"shell", pVerb->pszVerb);
+        AssocDeleteSubkey(hClass, szVerbKey); // Delete possibly existing old DDE/Delegate info
+        if (FAILED(_AssocOpenRegKey(hClass, szVerbKey, &hVerb, TRUE)))
+            continue;
+        hr = AssocMakeVerbCommand(hVerb, pszExe, pVerb);
+        RegCloseKey(hVerb);
+        if (i == pShell->DefaultIndex)
+            SHELL_SetRegString(hClass, L"shell", NULL, REG_SZ, pVerb->pszVerb);
+    }
+    return hr;
+}
+
+HRESULT WINAPI AssocMakeProgid(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3, SIZE_T Unknown4)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI AssocMakeApplicationByKeyW(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI AssocMakeApplicationByKeyA(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3)
+{
+    return AssocMakeApplicationByKeyW(Unknown1, Unknown2, Unknown3);
+}
+
+HRESULT WINAPI AssocCopyVerbs(HKEY hSrc, HKEY hDst)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+#endif // __REACTOS__
 
 /*************************************************************************
  * SHLWAPI_ParamAToW
@@ -59,6 +164,10 @@ EXTERN_C ULONG WINAPI GetProcessOsVersion(void); // FIXME: Move or delete
 static BOOL SHLWAPI_ParamAToW(LPCSTR lpszParam, LPWSTR lpszBuff, DWORD dwLen,
                               LPWSTR* lpszOut)
 {
+#ifdef __REACTOS__
+  if (!lpszParam && LOBYTE(GetVersion()) < 6)
+    lpszParam = ""; // NT5 incorrectly converts NULL to L""
+#endif
   if (lpszParam)
   {
     DWORD dwStrLen = MultiByteToWideChar(CP_ACP, 0, lpszParam, -1, NULL, 0);
@@ -516,7 +625,11 @@ HRESULT WINAPI AssocQueryStringA(ASSOCF cfFlags, ASSOCSTR str, LPCSTR pszAssoc,
            SHLWAPI_ParamAToW(pszExtra, szExtraW, MAX_PATH, &lpszExtraW))
   {
     WCHAR szReturnW[MAX_PATH], *lpszReturnW = szReturnW;
+#ifdef __REACTOS__
+    DWORD dwLenOut = IS_INTRESOURCE(pcchOut) && LOBYTE(GetVersion()) < 6 ? PtrToUlong(pcchOut) : *pcchOut; 
+#else
     DWORD dwLenOut = *pcchOut;
+#endif
 
     if (dwLenOut >= MAX_PATH)
       lpszReturnW = malloc((dwLenOut + 1) * sizeof(WCHAR));
@@ -534,6 +647,10 @@ HRESULT WINAPI AssocQueryStringA(ASSOCF cfFlags, ASSOCSTR str, LPCSTR pszAssoc,
         dwLenOut = WideCharToMultiByte(CP_ACP, 0, lpszReturnW, -1,
                                        pszOut, *pcchOut, NULL, NULL);
 
+#ifdef __REACTOS__
+      if (IS_INTRESOURCE(pcchOut))
+        pcchOut = &dwLenOut;
+#endif
       *pcchOut = dwLenOut;
       if (lpszReturnW != szReturnW)
         free(lpszReturnW);
@@ -612,7 +729,11 @@ HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
     hRet = E_INVALIDARG;
   else if (SHLWAPI_ParamAToW(pszExtra, szExtraW, MAX_PATH, &lpszExtraW))
   {
+#ifdef __REACTOS__
+    DWORD dwLenOut = IS_INTRESOURCE(pcchOut) && LOBYTE(GetVersion()) < 6 ? PtrToUlong(pcchOut) : *pcchOut; 
+#else
     DWORD dwLenOut = *pcchOut;
+#endif
     if (dwLenOut >= MAX_PATH)
       lpszReturnW = malloc((dwLenOut + 1) * sizeof(WCHAR));
 
@@ -623,6 +744,10 @@ HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
 
       if (SUCCEEDED(hRet))
         WideCharToMultiByte(CP_ACP,0,szReturnW,-1,pszOut,dwLenOut,0,0);
+#ifdef __REACTOS__
+      if (IS_INTRESOURCE(pcchOut))
+        pcchOut = &dwLenOut;
+#endif
       *pcchOut = dwLenOut;
 
       if (lpszReturnW != szReturnW)

@@ -21,6 +21,7 @@ list(APPEND SOURCE
     GUIDFromString.cpp
     LockServer.cpp
     Int64ToString.cpp
+    IQueryAssociations.cpp
     IShellFolderViewCB.cpp
     ItemIDList.cpp
     #OpenAs_RunDLL.cpp # Test hangs on Win 2003

@@ -184,8 +184,12 @@ BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD l
         *szDest = UNICODE_NULL;
 
         /* then fallback to 'open' */
+#ifdef __REACTOS__
+        if (!RegOpenKeyExW(hkeyClass, L"shell\\open\\command", 0, KEY_READ, &hkey))
+#else
         lstrcpyW(sTemp, L"shell\\open\\command");
         if (!RegOpenKeyExW(hkeyClass, sTemp, 0, KEY_READ, &hkey))
+#endif
         {
             RegCloseKey(hkey);
             lstrcpynW(szDest, L"open", len);
