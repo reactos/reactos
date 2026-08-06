@@ -161,13 +161,13 @@ CAPTION "Paramètres avancés"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "&Taux d'échantillonnage :", -1, 17, 35, 90, 8
-    LTEXT "rapports par seconde", -1, 159, 35, 76, 8
+    RTEXT "&Taux d'échantillonnage :", IDC_STATIC, 17, 35, 90, 8
+    LTEXT "rapports par seconde", IDC_STATIC, 159, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 114, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Détection de roue :", -1, 17, 55, 90, 8
+    RTEXT "&Détection de roue :", IDC_STATIC, 17, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 114, 53, 125, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Taille du tampon :", -1, 17, 75, 90, 8
-    LTEXT "paquets", -1, 159, 75, 26, 8
+    RTEXT "&Taille du tampon :", IDC_STATIC, 17, 75, 90, 8
+    LTEXT "paquets", IDC_STATIC, 159, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 114, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 158, 70, 10, 14
     AUTOCHECKBOX "&Initialisation rapide", IDC_PS2MOUSEFASTINIT, 114, 97, 90, 10
