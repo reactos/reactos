@@ -19,50 +19,25 @@
  */
 
 #include <user32.h>
+#include <wine-compat.h>
 
 static BOOL bMultiLineTitle;
 static HFONT hIconTitleFont;
 
+#ifdef __REACTOS__
 /*********************************************************************
  * icon title class descriptor
  */
 const struct builtin_class_descr ICONTITLE_builtin_class =
 {
-    WC_ICONTITLE,     /* name */
-    0,                /* style */
-    NULL,             /* procA (winproc is Unicode only) */
-    IconTitleWndProc, /* procW */
-    0,                /* extra */
-    IDC_ARROW,        /* cursor */
-    0                 /* brush */
+    WC_ICONTITLE,       /* name */
+    0,                  /* style */
+    IconTitleWndProcW,  /* procA */
+    IconTitleWndProcW,  /* procW */
+    0,                  /* extra */
+    IDC_ARROW,          /* cursor */
+    0                   /* brush */
 };
-
-
-
-#ifndef __REACTOS__
-/***********************************************************************
- *           ICONTITLE_Create
- */
-HWND ICONTITLE_Create( HWND owner )
-{
-    HWND hWnd;
-    HINSTANCE instance = (HINSTANCE)GetWindowLongPtrA( owner, GWLP_HINSTANCE );
-    LONG style = WS_CLIPSIBLINGS;
-
-    if (!IsWindowEnabled(owner)) style |= WS_DISABLED;
-    if( GetWindowLongPtrA( owner, GWL_STYLE ) & WS_CHILD )
-	hWnd = CreateWindowExA( 0, (LPCSTR)ICONTITLE_CLASS_ATOM, NULL,
-                                style | WS_CHILD, 0, 0, 1, 1,
-                                GetParent(owner), 0, instance, NULL );
-    else
-	hWnd = CreateWindowExA( 0, (LPCSTR)ICONTITLE_CLASS_ATOM, NULL,
-                                style, 0, 0, 1, 1,
-                                owner, 0, instance, NULL );
-    WIN_SetOwner( hWnd, owner );  /* MDI depends on this */
-    SetWindowLongPtrW( hWnd, GWL_STYLE,
-                       GetWindowLongPtrW( hWnd, GWL_STYLE ) & ~(WS_CAPTION | WS_BORDER) );
-    return hWnd;
-}
 #endif
 
 /***********************************************************************
@@ -70,7 +45,6 @@ HWND ICONTITLE_Create( HWND owner )
  */
 static BOOL ICONTITLE_SetTitlePos( HWND hwnd, HWND owner )
 {
-    static const WCHAR emptyTitleText[] = {'<','.','.','.','>',0};
     WCHAR str[80];
     HDC hDC;
     HFONT hPrevFont;
@@ -78,18 +52,18 @@ static BOOL ICONTITLE_SetTitlePos( HWND hwnd, HWND owner )
     INT cx, cy;
     POINT pt;
 
-    int length = GetWindowTextW( owner, str, sizeof(str)/sizeof(WCHAR) );
+    int length = GetWindowTextW( owner, str, ARRAY_SIZE( str ));
 
     while (length && str[length - 1] == ' ') /* remove trailing spaces */
         str[--length] = 0;
 
     if( !length )
     {
-        strcpyW( str, emptyTitleText );
-        length = strlenW( str );
+        lstrcpyW( str, L"<...>" );
+        length = lstrlenW( str );
     }
 
-    if (!(hDC = GetDC( hwnd ))) return FALSE;
+    if (!(hDC = NtUserGetDC( hwnd ))) return FALSE;
 
     hPrevFont = SelectObject( hDC, hIconTitleFont );
 
@@ -101,7 +75,7 @@ static BOOL ICONTITLE_SetTitlePos( HWND hwnd, HWND owner )
                (( bMultiLineTitle ) ? 0 : DT_SINGLELINE) );
 
     SelectObject( hDC, hPrevFont );
-    ReleaseDC( hwnd, hDC );
+    NtUserReleaseDC( hwnd, hDC );
 
     cx = rect.right - rect.left +  4 * GetSystemMetrics(SM_CXBORDER);
     cy = rect.bottom - rect.top;
@@ -112,7 +86,7 @@ static BOOL ICONTITLE_SetTitlePos( HWND hwnd, HWND owner )
     /* point is relative to owner, make it relative to parent */
     MapWindowPoints( owner, GetParent(hwnd), &pt, 1 );
 
-    SetWindowPos( hwnd, owner, pt.x, pt.y, cx, cy, SWP_NOACTIVATE );
+    NtUserSetWindowPos( hwnd, owner, pt.x, pt.y, cx, cy, SWP_NOACTIVATE );
     return TRUE;
 }
 
@@ -166,7 +140,7 @@ static BOOL ICONTITLE_Paint( HWND hwnd, HWND owner, HDC hDC, BOOL bActive )
     {
 	WCHAR buffer[80];
 
-        INT length = GetWindowTextW( owner, buffer, sizeof(buffer)/sizeof(buffer[0]) );
+        INT length = GetWindowTextW( owner, buffer, ARRAY_SIZE( buffer ));
         SetTextColor( hDC, textColor );
         SetBkMode( hDC, TRANSPARENT );
 
@@ -179,10 +153,10 @@ static BOOL ICONTITLE_Paint( HWND hwnd, HWND owner, HDC hDC, BOOL bActive )
 }
 
 /***********************************************************************
- *           IconTitleWndProc
+ *           IconTitleWndProc_common
  */
-LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
-                                 WPARAM wParam, LPARAM lParam )
+static LRESULT WINAPI IconTitleWndProc_common( HWND hWnd, UINT msg,
+                                               WPARAM wParam, LPARAM lParam )
 {
     HWND owner = GetWindow( hWnd, GW_OWNER );
 
@@ -205,7 +179,7 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
 	case WM_NCLBUTTONDBLCLK:
 	     return SendMessageW( owner, msg, wParam, lParam );
 	case WM_ACTIVATE:
-	     if( wParam ) SetActiveWindow( owner );
+	     if (wParam) NtUserSetActiveWindow( owner );
              return 0;
 	case WM_CLOSE:
 	     return 0;
@@ -218,8 +192,50 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
             else
                 lParam = (owner == GetActiveWindow());
             if( ICONTITLE_Paint( hWnd, owner, (HDC)wParam, (BOOL)lParam ) )
-                ValidateRect( hWnd, NULL );
+                NtUserValidateRect( hWnd, NULL );
             return 1;
+    }
+    return 0;
+}
+
+/***********************************************************************
+ *           IconTitleWndProcA
+ */
+LRESULT WINAPI IconTitleWndProcA( HWND hWnd, UINT msg,
+                                  WPARAM wParam, LPARAM lParam )
+{
+    switch (msg)
+    {
+    case WM_CREATE:
+    case WM_NCHITTEST:
+    case WM_NCMOUSEMOVE:
+    case WM_NCLBUTTONDBLCLK:
+    case WM_ACTIVATE:
+    case WM_CLOSE:
+    case WM_SHOWWINDOW:
+    case WM_ERASEBKGND:
+        return IconTitleWndProc_common( hWnd, msg, wParam, lParam );
+    }
+    return DefWindowProcA( hWnd, msg, wParam, lParam );
+}
+
+/***********************************************************************
+ *           IconTitleWndProcW
+ */
+LRESULT WINAPI IconTitleWndProcW( HWND hWnd, UINT msg,
+                                  WPARAM wParam, LPARAM lParam )
+{
+    switch (msg)
+    {
+    case WM_CREATE:
+    case WM_NCHITTEST:
+    case WM_NCMOUSEMOVE:
+    case WM_NCLBUTTONDBLCLK:
+    case WM_ACTIVATE:
+    case WM_CLOSE:
+    case WM_SHOWWINDOW:
+    case WM_ERASEBKGND:
+        return IconTitleWndProc_common( hWnd, msg, wParam, lParam );
     }
     return DefWindowProcW( hWnd, msg, wParam, lParam );
 }
