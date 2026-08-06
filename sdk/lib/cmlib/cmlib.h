@@ -214,6 +214,7 @@
 #define TAG_CMHIVE         'vHMC'
 #define TAG_CMSD           'DSMC'
 #define TAG_REGISTRY_STACK 'sRMC'
+#define TAG_CM_NOTIFY      'tNMC'
 
 #define CMAPI NTAPI
 
