@@ -360,13 +360,13 @@
 @ stdcall GetPropA(long str)
 @ stdcall GetPropW(long wstr)
 @ stdcall GetQueueStatus(long)
-@ stdcall GetRawInputBuffer(ptr ptr long)
-@ stdcall GetRawInputData(ptr long ptr ptr long)
+@ stdcall GetRawInputBuffer(ptr ptr long) NtUserGetRawInputBuffer
+@ stdcall GetRawInputData(ptr long ptr ptr long) NtUserGetRawInputData
 @ stdcall GetRawInputDeviceInfoA(ptr long ptr ptr)
-@ stdcall GetRawInputDeviceInfoW(ptr long ptr ptr)
-@ stdcall GetRawInputDeviceList(ptr ptr long)
+@ stdcall GetRawInputDeviceInfoW(ptr long ptr ptr) NtUserGetRawInputDeviceInfo
+@ stdcall GetRawInputDeviceList(ptr ptr long) NtUserGetRawInputDeviceList
 @ stdcall GetReasonTitleFromReasonCode(long long long)
-@ stdcall GetRegisteredRawInputDevices(ptr ptr long)
+@ stdcall GetRegisteredRawInputDevices(ptr ptr long) NtUserGetRegisteredRawInputDevices
 # GetRipFlags
 @ stdcall GetScrollBarInfo(long long ptr) ; NtUserGetScrollBarInfo
 @ stdcall GetScrollInfo(long long ptr)
@@ -590,7 +590,7 @@
 @ stdcall RegisterMessagePumpHook(ptr)
 @ stdcall -version=0x602+ RegisterPointerDeviceNotifications(long long)
 @ stdcall -version=0x600+ RegisterPowerSettingNotification(long ptr long)
-@ stdcall RegisterRawInputDevices(ptr long long)
+@ stdcall RegisterRawInputDevices(ptr long long) NtUserRegisterRawInputDevices
 @ stdcall RegisterServicesProcess(long)
 @ stdcall RegisterShellHookWindow(long)
 @ stdcall RegisterSystemThread(long long)
