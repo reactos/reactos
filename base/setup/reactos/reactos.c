@@ -473,6 +473,9 @@ TypeDlgProc(
                 EnableDlgItem(hwndDlg, IDC_UPDATETEXT, FALSE);
             }
 
+            // TODO: Consider handling existing install upgrade in unattended mode
+            // (currently unsupported in text-mode setup also).
+
             /* Check the "Install ReactOS" radio button and ensure it is initially focused */
             CheckRadioButton(hwndDlg, IDC_INSTALL, IDC_UPDATE, IDC_INSTALL);
             SetFocus(GetDlgItem(hwndDlg, IDC_INSTALL));
@@ -1057,6 +1060,9 @@ DeviceDlgProc(
 
             // hList = GetDlgItem(hwndDlg, IDC_KEYBOARD_LAYOUT);
             // InitGenericComboList(hList, pSetupData->USetupData.LayoutList, GetSettingDescription);
+
+            // TODO: Consider doing here the list selections in unattended mode
+            // (for now they are done in LoadSetupData()).
 
             return TRUE;
         }
@@ -2826,6 +2832,8 @@ FinishDlgProc(
                                       IDS_RESTARTBTN);
 
                     /* Skip the Finish page in unattended setup */
+                    // TODO: But show the Abort page in case something happened?
+                    // TODO: Check the unattend.inf "WaitForReboot" value.
                     if (pSetupData->bUnattend /*&& !pSetupData->bStopInstall*/)
                     {
                         // FIXME: The macro should use PostMessageW, but our
