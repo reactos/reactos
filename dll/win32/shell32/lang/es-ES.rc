@@ -889,7 +889,7 @@ BEGIN
     IDS_DESKTOPDIRECTORY "Escritorio"
     IDS_NETHOOD "Entorno de red"
     IDS_TEMPLATES "Plantillas"
-    IDS_APPDATA "Datos de Programa"
+    IDS_APPDATA "Datos de programa"
     IDS_PRINTHOOD "Impresoras"
     IDS_LOCAL_APPDATA "Configuración local\\Datos de programa"
     IDS_INTERNET_CACHE "Configuración local\\Archivos temporales de Internet"
