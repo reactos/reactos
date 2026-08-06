@@ -6,6 +6,7 @@
  *              Julio Carchi Ruiz 2018
  *              Julen Urizar Compains 2020
  *              Alex Mendoza 2026
+ *              Ismael Ferreras Morezuelas 2026
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -16,7 +17,7 @@ IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenido al Asistente de Instalación de ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Bienvenido al instalador de ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
     LTEXT "Este asistente instalará o actualizará ReactOS en su equipo, \
 y preparará la segunda parte de la instalación.", IDC_STATIC, 115, 40, 195, 27
 ////
@@ -24,8 +25,8 @@ y preparará la segunda parte de la instalación.", IDC_STATIC, 115, 40, 195, 27
     LTEXT "ReactOS está en fase alfa, con limitaciones importantes y \
 todavía en desarrollo. Se recomienda usarlo solo para \
 evaluación y pruebas, y no como su sistema operativo de uso diario.\n\
-Puede corromper sus datos o dañar su hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
-    LTEXT "Haga una copia de seguridad de sus datos o pruebe en un equipo secundario \
+Puede perder sus datos o dañar su equipo.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Asegúrese de tener sus datos bien respaldados y pruébelo en un equipo secundario \
 si intenta ejecutar ReactOS en hardware real.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
 ////
     LTEXT "Pulse Siguiente para continuar con la instalación.", IDC_STATIC, 115, 169, 195, 17
@@ -37,8 +38,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "&Instalar ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP
     AUTORADIOBUTTON "&Actualizar o reparar ReactOS", IDC_UPDATE, 7, 80, 277, 10
-    LTEXT "Instala una nueva copia de ReactOS. Esta opción no protege sus archivos, programas y ajustes. Puede realizar cambios a su disco duro y particiones.", IDC_INSTALLTEXT, 19, 36, 279, 27
-    LTEXT "Actualiza o repara una instalación existente de ReactOS. Esta opción protege sus archivos, programas y ajustes. Esta opción sólo está disponible si ha instalado ReactOS previamente en este equipo.", IDC_UPDATETEXT, 19, 96, 279, 27
+    LTEXT "Instala una nueva copia de ReactOS. Esta opción borrará sus archivos, programas y ajustes. Realizando cambios a su disco duro y particiones.", IDC_INSTALLTEXT, 19, 36, 279, 27
+    LTEXT "Actualiza o repara una instalación existente de ReactOS. Esta opción mantiene sus archivos, programas y ajustes. Y sólo está disponible si ReactOS ya se ha instalado previamente en este equipo.", IDC_UPDATETEXT, 19, 96, 279, 27
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -48,7 +49,7 @@ BEGIN
     LTEXT       "El instalador puede actualizar una de las instalaciones disponibles listadas a continuación o, si la instalación de ReactOS está dañada, intentar repararla.", IDC_STATIC, 6, 6, 303, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&No actualizar", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Haga click en Siguiente para actualizar el SO seleccionado, o en 'No actualizar' para realizar una nueva instalación.", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "Haga clic en Siguiente para actualizar el sistema operativo seleccionado, o en No actualizar para realizar una nueva instalación.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -116,7 +117,7 @@ BEGIN
     LTEXT "Elija la &carpeta donde desea instalar ReactOS:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Cargador de arranque", IDC_STATIC, 7, 45, 291, 60
-    LTEXT "Seleccione dónde debe instalarse el\ncargador de arranque FreeLoader.\n\nDe forma predeterminada, se instala en la partición del sistema del disco de arranque (en el Registro de Arranque Maestro o del Volumen para equipos basados en BIOS).", IDC_STATIC, 13, 57, 279, 44
+    LTEXT "Seleccione dónde instalar el\ncargador de arranque FreeLoader.\n\nDe forma predeterminada se instalará en la partición del sistema del disco de arranque (en el Registro de Arranque Maestro (MBR), o del Volumen (VBR) para equipos con BIOS).", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "Aceptar", IDOK, 193, 113, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 248, 113, 50, 14
@@ -142,9 +143,9 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 77, 210, 12, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Carpeta de destino:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 89, 210, 12, ES_READONLY | ES_AUTOHSCROLL | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "Confirmo que las configuraciones de instalación son correctas. También conozco que ReactOS está en un fase de software alfa y podría romper mi ordenador y corromper mis datos.",
+    AUTOCHECKBOX "Confirmo que todos mis ajustes de instalación son correctos. También sé que ReactOS está en una fase de desarrollo alfa temprana y podría dañar mi equipo y perder mis datos.",
         IDC_CONFIRM_INSTALL, 7, 100, 309, 24, BS_MULTILINE | WS_GROUP | WS_TABSTOP
-    LTEXT "Por favor, confirme que todas las configuraciones son correctas,\nluego haga clic en Instalar para empezar el Proceso de Instalación.", IDC_STATIC, 7, 124, 303, 18
+    LTEXT "Asegúrese de que todos sus ajustes son correctos y\n haga clic en Instalar para empezar el proceso de instalación.", IDC_STATIC, 7, 124, 303, 18
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -160,11 +161,11 @@ IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Restarting your Computer", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Reiniciando el equipo", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "La primera parte de la instalación de ReactOS se ha completado satisfactoriamente.", IDC_STATIC, 115, 40, 195, 24
     // The following text can be replaced by IDS_FINISH_NO_REBOOT at runtime;
     // please ensure it can hold in the text control!
-    LTEXT "Setup will now restart your computer to continue with the second installation step.\n\nYour computer will automatically restart in 15 seconds or when you click on Restart.", IDC_FINISHTEXT, 115, 78, 195, 56
+    LTEXT "El instalador reiniciará su equipo para continuar con el segundo paso de instalación.\n\nSu equipo se reiniciará automáticamente en unos 15 segundos o tras hacer clic en el botón de Reiniciar.", IDC_FINISHTEXT, 115, 78, 195, 56
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
@@ -172,11 +173,11 @@ IDD_ABORTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "The ReactOS Setup Wizard ended prematurely", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "The first ReactOS installation step prematurely ended because of an error or because you have canceled it.\n\nYou will be able to run the Setup Wizard at a later time to install or upgrade ReactOS.", IDC_STATIC, 115, 40, 195, 48
+    LTEXT "El instalador de ReactOS ha cancelado la instalación", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "El primer paso de instalación de ReactOS ha terminado por error o por petición del usuario.\n\nPodrá volver a instalar o actualizar ReactOS más tarde.", IDC_STATIC, 115, 40, 195, 48
     // The following text can be replaced by IDS_ABORT_NO_REBOOT at runtime;
     // please ensure it can hold in the text control!
-    LTEXT "Your computer will automatically restart in 15 seconds or when you click on Restart.", IDC_FINISHTEXT, 115, 110, 195, 24
+    LTEXT "Su equipo se reiniciará automáticamente en unos 15 segundos o tras hacer clic en el botón de Reiniciar.", IDC_FINISHTEXT, 115, 110, 195, 24
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
@@ -197,14 +198,14 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Lista las propiedades de la instalación para su verificación antes de aplicarlas al dispositivo instalado."
     IDS_PROCESSTITLE "Preparar partición, copiar archivos e instalar sistema"
     IDS_PROCESSSUBTITLE "Crear y formatear partición, copiar archivos, instalar e instalar el cargador de arranque."
-    IDS_ABORTSETUP "ReactOS no está completamente instalado en su equipo. Si sale de la instalación ahora, tendrá que ejecutar el instalador otra vez para instalar ReactOS. ¿Realmente quiere salir?"
+    IDS_ABORTSETUP "ReactOS no está completamente instalado en su equipo. Si sale ahora de la instalación tendrá que empezar otra vez de cero para poder instalar ReactOS. ¿Seguro que quiere salir?"
     IDS_ABORTSETUP2 "¿Abortar instalación?"
     IDS_NO_TXTSETUP_SIF "No se pudo encontrar 'txtsetup.sif'.\nLa instalación no puede continuar."
-    IDS_FINISH_NO_REBOOT "Setup needs to restart your computer to continue with the second installation step.\n\nClick on Restart to immediately restart your computer.\nClick on Postpone to quit the installer and restart your computer at a later time."
-    IDS_ABORT_NO_REBOOT "Click on Restart to immediately restart your computer.\nClick on Close to quit the installer."
+    IDS_FINISH_NO_REBOOT "El asistente necesita reiniciar su equipo para seguir con el segundo paso de instalación.\n\nUtilice el botón de Reiniciar para reiniciar ahora mismo el equipo,\no haga clic en Posponer para salir del instalador y reiniciar el equipo en otro momento."
+    IDS_ABORT_NO_REBOOT "Utilice el botón de Reiniciar para reiniciar ahora mismo el equipo,\no haga clic en Cerrar para salir del instalador."
     IDS_INSTALLBTN "&Instalar"
-    IDS_RESTARTBTN "&Restart"
-    IDS_POSTPONEBTN "&Postpone"
+    IDS_RESTARTBTN "&Reiniciar"
+    IDS_POSTPONEBTN "&Posponer"
     IDS_VOLUME_NOFORMAT "Sin formatear"
 END
 
