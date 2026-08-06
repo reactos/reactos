@@ -270,7 +270,7 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "ReactOS como Sobremesa"
     IDS_INSTALLATIONWORKSTATIONINFO "El sistema se mostrará como un PC de sobremesa. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" estarán dentro de ""Mis documentos""."
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command-line environment to reduce resource usage and attack surface."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."

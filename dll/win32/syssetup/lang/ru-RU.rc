@@ -269,7 +269,7 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "Рабочая станция ReactOS"
     IDS_INSTALLATIONWORKSTATIONINFO "Система будет распознаваться как рабочая станция. Приватные папки ""Мои изображения"", ""Мои видеозаписи"" и ""Моя музыка"" будут находиться в папке ""Мои документы""."
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "Система будет распознаваться как сервер. Графическая оболочка не будет установлена, и система будет запускаться в режиме окружения командной строки с целью уменьшения использования ресурсов компьютера и вероятности хакерских атак."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."
