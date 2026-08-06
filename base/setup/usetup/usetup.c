@@ -3959,6 +3959,7 @@ QuitPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetStatusText(MUIGetString(STRING_REBOOTCOMPUTER2));
 
+    // TODO: Check the unattend.inf "WaitForReboot" value.
     if (IsUnattendedSetup)
         return FLUSH_PAGE;
 
@@ -3985,6 +3986,7 @@ SuccessPage(PINPUT_RECORD Ir)
 {
     MUIDisplayPage(SUCCESS_PAGE);
 
+    // TODO: Check the unattend.inf "WaitForReboot" value.
     if (IsUnattendedSetup)
         return FLUSH_PAGE;
 

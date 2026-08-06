@@ -852,6 +852,15 @@ FindPartitionItem(
 {
     PPARTITEM PartItem = NULL;
 
+    // NOTE: we cannot use TreeList_FindItem() directly, because the
+    // partition entry to find isn't directly stored into the item's lParam.
+#if 0
+    TVFIND tlFind;
+    tlFind.uFlags = TVIF_PARAM;
+    tlFind.lParam = ...;
+    hItem = TreeList_FindItem(hTreeList, TVI_ROOT, &tlFind);
+#endif
+
     /* Enumerate every cached data in the TreeList, and for each, check
      * whether its corresponding PPARTENTRY is the one we are looking for */
     HTLITEM hItem = TVI_ROOT;
@@ -1394,6 +1403,7 @@ DrawPartitionList(
     HTLITEM hItem;
     if (!FindPartitionItem(hWndList, NULL, &hItem))
         hItem = (HTLITEM)1; // If none, select the first item, whatever it is.
+    //TreeList_SetFocusItem(hWndList, hItem, 1);
     TreeList_SelectItem(hWndList, hItem);
     }
 }
@@ -1510,6 +1520,7 @@ DoCreatePartition(
         PrintPartitionData(hList, hParentItem, *phItem, NextPart);
 
     /* Select the created partition */
+    //TreeList_SetFocusItem(hList, *phItem, 1);
     TreeList_SelectItem(hList, *phItem);
 
     return TRUE;
@@ -1615,6 +1626,7 @@ DoDeletePartition(
     *phItem = PrintPartitionData(hList, hParentItem, hInsertAfter, PartEntry);
 
     /* Select the unpartitioned space */
+    //TreeList_SetFocusItem(hList, *phItem, 1);
     TreeList_SelectItem(hList, *phItem);
 
     return TRUE;
@@ -1637,7 +1649,10 @@ SelectInstallPartition(
     {
         PartItem = FindPartitionItem(hList, CurrentPartition, &hItem);
         if (hItem)
+        {
+            //TreeList_SetFocusItem(hList, hItem, 1);
             TreeList_SelectItem(hList, hItem);
+        }
     }
     else
     {
@@ -1725,6 +1740,12 @@ SelectInstallPartition(
     {
         INT_PTR ret;
         PARTCREATE_CTX PartCreateCtx = {0};
+
+        /*
+         * TODO:
+         * if (pSetupData->bUnattend && !pSetupData->USetupData.FormatPartition && unattended mode without interaction)
+         * { Popup or log error and exit, since we don't allow regular interaction }
+         */
 
         /* In unattended setup, try auto-formatting if required,
          * otherwise show the dialog to ask the user what to do */
