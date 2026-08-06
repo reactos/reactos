@@ -26,11 +26,14 @@ list(APPEND UEFILDR_ARC_SOURCE
 
 if(ARCH STREQUAL "i386")
     list(APPEND UEFILDR_ARC_SOURCE
-        arch/i386/i386idt.c)
+        arch/i386/i386idt.c
+        arch/i386/hwpci.c)
     list(APPEND UEFILDR_COMMON_ASM_SOURCE
         arch/uefi/i386/uefiasm.S
         arch/i386/i386trap.S)
 elseif(ARCH STREQUAL "amd64")
+    list(APPEND UEFILDR_ARC_SOURCE
+        arch/i386/hwpci.c)
     list(APPEND UEFILDR_COMMON_ASM_SOURCE
         arch/uefi/amd64/uefiasm.S)
 elseif(ARCH STREQUAL "arm")
