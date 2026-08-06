@@ -506,21 +506,7 @@ WdmAudSetWaveDeviceFormatByLegacy(
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
     DeviceInfo.DeviceType = DeviceType;
     DeviceInfo.DeviceIndex = DeviceId;
-    DeviceInfo.u.WaveFormatEx.cbSize = WaveFormat->cbSize;
-    DeviceInfo.u.WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
-#ifdef USERMODE_MIXER
-    DeviceInfo.u.WaveFormatEx.nChannels = 2;
-    DeviceInfo.u.WaveFormatEx.nSamplesPerSec = 44100;
-    DeviceInfo.u.WaveFormatEx.nBlockAlign = 4;
-    DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec = 176400;
-    DeviceInfo.u.WaveFormatEx.wBitsPerSample = 16;
-#else
-    DeviceInfo.u.WaveFormatEx.nChannels = WaveFormat->nChannels;
-    DeviceInfo.u.WaveFormatEx.nSamplesPerSec = WaveFormat->nSamplesPerSec;
-    DeviceInfo.u.WaveFormatEx.nBlockAlign = WaveFormat->nBlockAlign;
-    DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec = WaveFormat->nAvgBytesPerSec;
-    DeviceInfo.u.WaveFormatEx.wBitsPerSample = (DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec * 8) / (DeviceInfo.u.WaveFormatEx.nSamplesPerSec * DeviceInfo.u.WaveFormatEx.nChannels);
-#endif
+    DeviceInfo.u.WaveFormatEx = Instance->WaveFormatEx = *WaveFormat;
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
                                            IOCTL_OPEN_WDMAUD,
@@ -535,22 +521,16 @@ WdmAudSetWaveDeviceFormatByLegacy(
         return TranslateInternalMmResult(Result);
     }
 
-    if (WaveFormatSize >= sizeof(WAVEFORMAT))
-    {
-        /* Store format */
-        Instance->WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
-        Instance->WaveFormatEx.nChannels = WaveFormat->nChannels;
-        Instance->WaveFormatEx.nSamplesPerSec = WaveFormat->nSamplesPerSec;
-        Instance->WaveFormatEx.nBlockAlign = WaveFormat->nBlockAlign;
-        Instance->WaveFormatEx.nAvgBytesPerSec = WaveFormat->nAvgBytesPerSec;
-    }
-
-    /* store details */
-    Instance->WaveFormatEx.cbSize = WaveFormat->cbSize;
-    Instance->WaveFormatEx.wBitsPerSample = (DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec * 8) / (DeviceInfo.u.WaveFormatEx.nSamplesPerSec * DeviceInfo.u.WaveFormatEx.nChannels);
+    /* Store data range */
+    Instance->DataRange = DeviceInfo.u.DataRange;
 
     /* Store sound device handle instance handle */
     Instance->Handle = (PVOID)DeviceInfo.hDevice;
+
+    /* Check whether we need to perform formats conversion */
+    Instance->DoResampling = (Instance->WaveFormatEx.nChannels != Instance->DataRange.MaximumChannels) ||
+                             (Instance->WaveFormatEx.nSamplesPerSec > Instance->DataRange.MaximumSampleFrequency) ||
+                             (Instance->WaveFormatEx.wBitsPerSample != Instance->DataRange.MaximumBitsPerSample);
 
     /* Now determine framing requirements */
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
