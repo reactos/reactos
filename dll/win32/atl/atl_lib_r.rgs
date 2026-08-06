@@ -1,9 +1,0 @@
-HKCR
-{
-    NoRemove Interface
-    {
-    }
-    NoRemove CLSID
-    {
-    }
-}

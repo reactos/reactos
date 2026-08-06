@@ -28,14 +28,13 @@
 #include "winerror.h"
 #include "winuser.h"
 #include "wine/debug.h"
-#include "wine/heap.h"
 #include "objbase.h"
 #include "objidl.h"
 #include "ole2.h"
 #include "exdisp.h"
-#include "wine/atlbase.h"
+#include "atlbase.h"
 #include "atliface.h"
-#include "wine/atlwin.h"
+#include "atlwin.h"
 #include "shlwapi.h"
 
 
@@ -56,8 +55,6 @@ typedef struct IOCS {
     BOOL fActive, fInPlace, fWindowless;
 } IOCS;
 
-static const WCHAR wine_atl_iocsW[] = {'_','_','W','I','N','E','_','A','T','L','_','I','O','C','S','\0'};
-
 /**********************************************************************
  * AtlAxWin class window procedure
  */
@@ -66,12 +63,12 @@ static LRESULT CALLBACK AtlAxWin_wndproc( HWND hWnd, UINT wMsg, WPARAM wParam, L
     if ( wMsg == WM_CREATE )
     {
             DWORD len = GetWindowTextLengthW( hWnd ) + 1;
-            WCHAR *ptr = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+            WCHAR *ptr = malloc( len*sizeof(WCHAR) );
             if (!ptr)
                 return 1;
             GetWindowTextW( hWnd, ptr, len );
             AtlAxCreateControlEx( ptr, hWnd, NULL, NULL, NULL, NULL, NULL );
-            HeapFree( GetProcessHeap(), 0, ptr );
+            free( ptr );
             return 0;
     }
     return DefWindowProcW( hWnd, wMsg, wParam, lParam );
@@ -91,20 +88,20 @@ BOOL WINAPI AtlAxWinInit(void)
     WNDCLASSEXW wcex;
 
 #if _ATL_VER <= _ATL_VER_30
-#define ATL_NAME_SUFFIX 0
+#define ATL_NAME_SUFFIX
 #elif _ATL_VER == _ATL_VER_80
-#define ATL_NAME_SUFFIX '8','0',0
+#define ATL_NAME_SUFFIX L"80"
 #elif _ATL_VER == _ATL_VER_90
-#define ATL_NAME_SUFFIX '9','0',0
+#define ATL_NAME_SUFFIX L"90"
 #elif _ATL_VER == _ATL_VER_100
-#define ATL_NAME_SUFFIX '1','0','0',0
+#define ATL_NAME_SUFFIX L"100"
 #elif _ATL_VER == _ATL_VER_110
-#define ATL_NAME_SUFFIX '1','1','0',0
+#define ATL_NAME_SUFFIX L"110"
 #else
 #error Unsupported version
 #endif
 
-    static const WCHAR AtlAxWinW[] = {'A','t','l','A','x','W','i','n',ATL_NAME_SUFFIX};
+    static const WCHAR AtlAxWinW[] = L"AtlAxWin" ATL_NAME_SUFFIX;
 
     FIXME("version %04x semi-stub\n", _ATL_VER);
 
@@ -128,7 +125,7 @@ BOOL WINAPI AtlAxWinInit(void)
         return FALSE;
 
     if(_ATL_VER > _ATL_VER_30) {
-        static const WCHAR AtlAxWinLicW[] = {'A','t','l','A','x','W','i','n','L','i','c',ATL_NAME_SUFFIX};
+        static const WCHAR AtlAxWinLicW[] = L"AtlAxWinLic" ATL_NAME_SUFFIX;
 
         wcex.lpszClassName = AtlAxWinLicW;
         if ( !RegisterClassExW( &wcex ) )
@@ -153,7 +150,7 @@ static HRESULT IOCS_Detach( IOCS *This ) /* remove subclassing */
     if ( This->hWnd )
     {
         SetWindowLongPtrW( This->hWnd, GWLP_WNDPROC, (ULONG_PTR) This->OrigWndProc );
-        RemovePropW( This->hWnd, wine_atl_iocsW);
+        RemovePropW( This->hWnd, L"__WINE_ATL_IOCS" );
         This->hWnd = NULL;
     }
     if ( This->control )
@@ -214,7 +211,7 @@ static ULONG WINAPI OleClientSite_AddRef(IOleClientSite *iface)
 {
     IOCS *This = impl_from_IOleClientSite(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("(%p)->(%ld)\n", This, ref);
     return ref;
 }
 
@@ -223,12 +220,12 @@ static ULONG WINAPI OleClientSite_Release(IOleClientSite *iface)
     IOCS *This = impl_from_IOleClientSite(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("(%p)->(%ld)\n", This, ref);
 
     if (!ref)
     {
         IOCS_Detach( This );
-        HeapFree( GetProcessHeap(), 0, This );
+        free( This );
     }
 
     return ref;
@@ -245,7 +242,7 @@ static HRESULT WINAPI OleClientSite_GetMoniker(IOleClientSite *iface, DWORD dwAs
 {
     IOCS *This = impl_from_IOleClientSite(iface);
 
-    FIXME( "(%p, 0x%x, 0x%x, %p)\n", This, dwAssign, dwWhichMoniker, ppmk );
+    FIXME( "(%p, 0x%lx, 0x%lx, %p)\n", This, dwAssign, dwWhichMoniker, ppmk );
     return E_NOTIMPL;
 }
 
@@ -313,7 +310,7 @@ static HRESULT WINAPI OleContainer_ParseDisplayName(IOleContainer* iface, IBindC
 static HRESULT WINAPI OleContainer_EnumObjects(IOleContainer* iface, DWORD grfFlags, IEnumUnknown** ppenum)
 {
     IOCS *This = impl_from_IOleContainer(iface);
-    FIXME( "(%p, %u, %p) - stub\n", This, grfFlags, ppenum );
+    FIXME( "(%p, %lu, %p) - stub\n", This, grfFlags, ppenum );
     return E_NOTIMPL;
 }
 
@@ -907,7 +904,7 @@ static LRESULT IOCS_OnWndProc( IOCS *This, HWND hWnd, UINT uMsg, WPARAM wParam, 
 
 static LRESULT CALLBACK AtlHost_wndproc( HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam )
 {
-    IOCS *This = (IOCS*) GetPropW( hWnd, wine_atl_iocsW );
+    IOCS *This = (IOCS*) GetPropW( hWnd, L"__WINE_ATL_IOCS" );
     return IOCS_OnWndProc( This, hWnd, wMsg, wParam, lParam );
 }
 
@@ -916,7 +913,7 @@ static HRESULT IOCS_Attach( IOCS *This, HWND hWnd, IUnknown *pUnkControl ) /* su
     This->hWnd = hWnd;
     IUnknown_QueryInterface( pUnkControl, &IID_IOleObject, (void**)&This->control );
     IOleObject_SetClientSite( This->control, &This->IOleClientSite_iface );
-    SetPropW( hWnd, wine_atl_iocsW, This );
+    SetPropW( hWnd, L"__WINE_ATL_IOCS", This );
     This->OrigWndProc = (WNDPROC)SetWindowLongPtrW( hWnd, GWLP_WNDPROC, (ULONG_PTR) AtlHost_wndproc );
 
     return S_OK;
@@ -925,9 +922,8 @@ static HRESULT IOCS_Attach( IOCS *This, HWND hWnd, IUnknown *pUnkControl ) /* su
 static HRESULT IOCS_Init( IOCS *This )
 {
     RECT rect;
-    static const WCHAR AXWIN[] = {'A','X','W','I','N',0};
 
-    IOleObject_SetHostNames( This->control, AXWIN, AXWIN );
+    IOleObject_SetHostNames( This->control, L"AXWIN", L"AXWIN" );
 
     GetClientRect( This->hWnd, &rect );
     IOCS_OnSize( This, &rect );
@@ -949,7 +945,7 @@ static HRESULT IOCS_Create( HWND hWnd, IUnknown *pUnkControl, IUnknown **contain
         return S_OK;
 
     *container = NULL;
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(IOCS));
+    This = malloc(sizeof(*This));
 
     if (!This)
         return E_OUTOFMEMORY;
@@ -973,7 +969,7 @@ static HRESULT IOCS_Create( HWND hWnd, IUnknown *pUnkControl, IUnknown **contain
     else
     {
         IOCS_Detach( This );
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This);
     }
 
     return hr;
@@ -1001,7 +997,6 @@ enum content
 
 static enum content get_content_type(LPCOLESTR name, CLSID *control_id)
 {
-    static const WCHAR mshtml_prefixW[] = {'m','s','h','t','m','l',':',0};
     WCHAR new_urlW[MAX_PATH];
     DWORD size = MAX_PATH;
 
@@ -1022,7 +1017,7 @@ static enum content get_content_type(LPCOLESTR name, CLSID *control_id)
         return IsURL;
     }
 
-    if (!_wcsnicmp(name, mshtml_prefixW, 7))
+    if (!wcsnicmp(name, L"mshtml:", 7))
     {
         FIXME("mshtml prefix not implemented\n");
         *control_id = CLSID_WebBrowser;
@@ -1036,7 +1031,7 @@ static enum content get_content_type(LPCOLESTR name, CLSID *control_id)
  *           AtlAxCreateControlLicEx         [atl100.@]
  *
  * REMARKS
- *   See https://www.codeproject.com/KB/com/cwebpage.aspx for some background
+ *   See http://www.codeproject.com/com/cwebpage.asp for some background
  *
  */
 HRESULT WINAPI AtlAxCreateControlLicEx(LPCOLESTR lpszName, HWND hWnd,
@@ -1072,7 +1067,7 @@ HRESULT WINAPI AtlAxCreateControlLicEx(LPCOLESTR lpszName, HWND hWnd,
             (void**) &pControl );
     if ( FAILED( hRes ) )
     {
-        WARN( "cannot create ActiveX control %s instance - error 0x%08x\n",
+        WARN( "cannot create ActiveX control %s instance - error 0x%08lx\n",
                 debugstr_guid( &controlId ), hRes );
         return hRes;
     }
@@ -1102,7 +1097,7 @@ HRESULT WINAPI AtlAxCreateControlLicEx(LPCOLESTR lpszName, HWND hWnd,
 
         hRes = IOleObject_QueryInterface( pControl, &IID_IWebBrowser2, (void**) &browser );
         if ( !browser )
-            WARN( "Cannot query IWebBrowser2 interface: %08x\n", hRes );
+            WARN( "Cannot query IWebBrowser2 interface: %08lx\n", hRes );
         else {
             VARIANT url;
 
@@ -1113,7 +1108,7 @@ HRESULT WINAPI AtlAxCreateControlLicEx(LPCOLESTR lpszName, HWND hWnd,
 
             hRes = IWebBrowser2_Navigate2( browser, &url, NULL, NULL, NULL, NULL );
             if ( FAILED( hRes ) )
-                WARN( "IWebBrowser2::Navigate2 failed: %08x\n", hRes );
+                WARN( "IWebBrowser2::Navigate2 failed: %08lx\n", hRes );
             SysFreeString( V_BSTR(&url) );
 
             IWebBrowser2_Release( browser );
@@ -1165,7 +1160,7 @@ static inline BOOL advance_array(WORD **pptr, DWORD *palloc, DWORD *pfilled, con
     if ( (*pfilled + size) > *palloc )
     {
         *palloc = ((*pfilled+size) + 0xFF) & ~0xFF;
-        *pptr = HeapReAlloc( GetProcessHeap(), 0, *pptr, *palloc * sizeof(WORD) );
+        *pptr = realloc( *pptr, *palloc * sizeof(WORD) );
         if (!*pptr)
             return FALSE;
     }
@@ -1191,7 +1186,7 @@ static LPDLGTEMPLATEW AX_ConvertDialogTemplate(LPCDLGTEMPLATEW src_tmpl)
     DWORD style;
 
     filled = 0; allocated = 256;
-    output = HeapAlloc( GetProcessHeap(), 0, allocated * sizeof(WORD) );
+    output = malloc( allocated * sizeof(WORD) );
     if (!output)
         return NULL;
 
@@ -1267,8 +1262,7 @@ static LPDLGTEMPLATEW AX_ConvertDialogTemplate(LPCDLGTEMPLATEW src_tmpl)
         src += lstrlenW(src) + 1; /* title */
         if ( GET_WORD(tmp) == '{' ) /* all this mess created because of this line */
         {
-            static const WCHAR AtlAxWin[] = {'A','t','l','A','x','W','i','n', 0};
-            PUT_BLOCK(AtlAxWin, ARRAY_SIZE(AtlAxWin));
+            PUT_BLOCK(L"AtlAxWin", ARRAY_SIZE(L"AtlAxWin"));
             PUT_BLOCK(tmp, lstrlenW(tmp)+1);
         } else
             PUT_BLOCK(tmp, src-tmp);
@@ -1313,12 +1307,12 @@ HWND WINAPI AtlAxCreateDialogA(HINSTANCE hInst, LPCSTR name, HWND owner, DLGPROC
         return AtlAxCreateDialogW( hInst, (LPCWSTR) name, owner, dlgProc, param );
 
     length = MultiByteToWideChar( CP_ACP, 0, name, -1, NULL, 0 );
-    nameW = HeapAlloc( GetProcessHeap(), 0, length * sizeof(WCHAR) );
+    nameW = malloc( length * sizeof(WCHAR) );
     if (nameW)
     {
         MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, length );
         res = AtlAxCreateDialogW( hInst, nameW, owner, dlgProc, param );
-        HeapFree( GetProcessHeap(), 0, nameW );
+        free( nameW );
     }
     return res;
 }
@@ -1337,7 +1331,7 @@ HWND WINAPI AtlAxCreateDialogW(HINSTANCE hInst, LPCWSTR name, HWND owner, DLGPRO
     LPDLGTEMPLATEW newptr;
     HWND res;
 
-    TRACE("(%p %s %p %p %lx)\n", hInst, debugstr_w(name), owner, dlgProc, param);
+    TRACE("(%p %s %p %p %Ix)\n", hInst, debugstr_w(name), owner, dlgProc, param);
 
     hrsrc = FindResourceW( hInst, name, (LPWSTR)RT_DIALOG );
     if ( !hrsrc )
@@ -1354,8 +1348,8 @@ HWND WINAPI AtlAxCreateDialogW(HINSTANCE hInst, LPCWSTR name, HWND owner, DLGPRO
     newptr = AX_ConvertDialogTemplate( ptr );
     if ( newptr )
     {
-            res = CreateDialogIndirectParamW( hInst, newptr, owner, dlgProc, param );
-            HeapFree( GetProcessHeap(), 0, newptr );
+        res = CreateDialogIndirectParamW( hInst, newptr, owner, dlgProc, param );
+        free( newptr );
     } else
         res = NULL;
     FreeResource ( hrsrc );
@@ -1374,7 +1368,7 @@ HRESULT WINAPI AtlAxGetHost(HWND hWnd, IUnknown **host)
 
     *host = NULL;
 
-    This = (IOCS*) GetPropW( hWnd, wine_atl_iocsW );
+    This = (IOCS*) GetPropW( hWnd, L"__WINE_ATL_IOCS" );
     if ( !This )
     {
         WARN("No container attached to %p\n", hWnd );
@@ -1396,7 +1390,7 @@ HRESULT WINAPI AtlAxGetControl(HWND hWnd, IUnknown **pUnk)
 
     *pUnk = NULL;
 
-    This = (IOCS*) GetPropW( hWnd, wine_atl_iocsW );
+    This = (IOCS*) GetPropW( hWnd, L"__WINE_ATL_IOCS" );
     if ( !This || !This->control )
     {
         WARN("No control attached to %p\n", hWnd );
@@ -1407,64 +1401,55 @@ HRESULT WINAPI AtlAxGetControl(HWND hWnd, IUnknown **pUnk)
 }
 
 /***********************************************************************
- *           AtlAxDialogBoxA              [atl100.@]
+ *           AtlAxDialogBoxW              [atl100.35]
  *
  */
-INT_PTR WINAPI AtlAxDialogBoxA(HINSTANCE hInst, LPCSTR name, HWND owner, DLGPROC dlgProc, LPARAM param)
+INT_PTR WINAPI AtlAxDialogBoxW(HINSTANCE instance, const WCHAR *name,
+        HWND owner, DLGPROC proc, LPARAM param)
 {
-    INT_PTR res = 0;
-    int length;
-    WCHAR *nameW;
+    HRSRC resource;
+    HGLOBAL global;
+    DLGTEMPLATE *template;
+    INT_PTR ret;
 
-    if (IS_INTRESOURCE(name))
-        return AtlAxDialogBoxW( hInst, (LPCWSTR) name, owner, dlgProc, param );
+    TRACE("instance %p, name %s, owner %p, proc %p, param %#Ix\n",
+            instance, debugstr_w(name), owner, proc, param);
 
-    length = MultiByteToWideChar( CP_ACP, 0, name, -1, NULL, 0 );
-    nameW = heap_alloc( length * sizeof(WCHAR) );
-    if (nameW)
-    {
-        MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, length );
-        res = AtlAxDialogBoxW( hInst, nameW, owner, dlgProc, param );
-        heap_free( nameW );
-    }
-    return res;
+    if (!(resource = FindResourceW(instance, name, (const WCHAR *)RT_DIALOG)))
+        return 0;
+
+    if (!(global = LoadResource(instance, resource)))
+        return 0;
+
+    if (!(template = AX_ConvertDialogTemplate(LockResource(global))))
+        return 0;
+
+    ret = DialogBoxIndirectParamW(instance, template, owner, proc, param);
+    free(template);
+    return ret;
 }
 
 /***********************************************************************
- *           AtlAxDialogBoxW              [atl100.@]
+ *           AtlAxDialogBoxA              [atl100.36]
  *
  */
-INT_PTR WINAPI AtlAxDialogBoxW(HINSTANCE hInst, LPCWSTR name, HWND owner, DLGPROC dlgProc, LPARAM param)
+INT_PTR WINAPI AtlAxDialogBoxA(HINSTANCE instance, const char *name,
+        HWND owner, DLGPROC proc, LPARAM param)
 {
-    HRSRC hrsrc;
-    HGLOBAL hgl;
-    LPCDLGTEMPLATEW ptr;
-    LPDLGTEMPLATEW newptr;
-    INT_PTR res;
+    WCHAR *nameW;
+    int len;
+    INT_PTR ret;
 
-    TRACE("(%p %s %p %p %lx)\n", hInst, debugstr_w(name), owner, dlgProc, param);
+    if (IS_INTRESOURCE(name))
+        return AtlAxDialogBoxW(instance, (const WCHAR *)name, owner, proc, param);
 
-    hrsrc = FindResourceW( hInst, name, (LPWSTR)RT_DIALOG );
-    if ( !hrsrc )
+    len = MultiByteToWideChar(CP_ACP, 0, name, -1, NULL, 0);
+    if (!(nameW = malloc(len * sizeof(WCHAR))))
         return 0;
-    hgl = LoadResource (hInst, hrsrc);
-    if ( !hgl )
-        return 0;
-    ptr = LockResource ( hgl );
-    if (!ptr)
-    {
-        FreeResource( hgl );
-        return 0;
-    }
-    newptr = AX_ConvertDialogTemplate( ptr );
-    if ( newptr )
-    {
-        res = DialogBoxIndirectParamW( hInst, newptr, owner, dlgProc, param );
-        heap_free( newptr );
-    } else
-        res = 0;
-    FreeResource ( hrsrc );
-    return res;
+    MultiByteToWideChar(CP_ACP, 0, name, -1, nameW, len);
+    ret = AtlAxDialogBoxW(instance, nameW, owner, proc, param);
+    free(nameW);
+    return ret;
 }
 
 /***********************************************************************
