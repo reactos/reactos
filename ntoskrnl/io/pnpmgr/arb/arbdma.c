@@ -27,15 +27,13 @@ IopArbDmaUnpackRequirements(
     _Out_ PUINT64 OutAlignment)
 {
     PAGED_CODE();
-    DPRINT("IopArbDmaUnpackRequirements: IoDescriptor: %p, OutMinimumAddress: %p, OutMaximumAddress: %p, OutLength: %p, OutAlignment: %p\n",
-           IoDescriptor,
-           OutMinimumAddress,
-           OutMaximumAddress,
-           OutLength,
-           OutAlignment);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    *OutMinimumAddress   = IoDescriptor->u.Dma.MinimumChannel;
+    *OutMaximumAddress   = IoDescriptor->u.Dma.MaximumChannel;
+    *OutLength    = 1;
+    *OutAlignment = 1;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -46,13 +44,29 @@ IopArbDmaPackResource(
     _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor)
 {
     PAGED_CODE();
-    DPRINT("IopArbDmaPackResource: IoDescriptor: %p, Start: %p, CmDescriptor: %p\n",
-           IoDescriptor,
-           Start,
-           CmDescriptor);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    CmDescriptor->Type = CmResourceTypeDma;
+    CmDescriptor->ShareDisposition = IoDescriptor->ShareDisposition;
+    CmDescriptor->Flags = IoDescriptor->Flags;
+
+    /*
+     * TODO: this is only version gated temporarily, 
+     * we need this for USB3 evenutally, I marked it for now.
+     */
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    if (IoDescriptor->Flags & CM_RESOURCE_DMA_V3)
+    {
+        CmDescriptor->u.DmaV3.Channel       = IoDescriptor->u.DmaV3.Channel;
+        CmDescriptor->u.DmaV3.RequestLine   = IoDescriptor->u.DmaV3.RequestLine;
+        CmDescriptor->u.DmaV3.TransferWidth = (UCHAR)IoDescriptor->u.DmaV3.TransferWidth;
+        return STATUS_SUCCESS;
+    }
+#endif
+
+    CmDescriptor->u.Dma.Channel = (ULONG)Start;
+    CmDescriptor->u.Dma.Port    = 0;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -63,13 +77,11 @@ IopArbDmaUnpackResource(
     _Out_ PUINT64 OutLength)
 {
     PAGED_CODE();
-    DPRINT("IopArbDmaUnpackResource: CmDescriptor: %p, Start: %p, OutLength: %p\n",
-           CmDescriptor,
-           Start,
-           OutLength);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    *Start  = CmDescriptor->u.Dma.Channel;
+    *OutLength = 1;
+    
+    return STATUS_SUCCESS;
 }
 
 INT32
@@ -78,13 +90,17 @@ IopArbDmaScoreRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
     PAGED_CODE();
-    DPRINT("IopArbDmaScoreRequirement: IoDescriptor: %p\n",
-           IoDescriptor);
-
-    UNIMPLEMENTED;
-    return 0;
+    return (INT32)(IoDescriptor->u.Dma.MaximumChannel - IoDescriptor->u.Dma.MinimumChannel);
 }
 
+/**
+ * @brief Initialize the RootDmaArbiter.
+ *
+ * @return NTSTATUS
+ * @retval STATUS_SUCCESS
+ * @retval STATUS_UNSUCCESSFUL
+ * @retval STATUS_INSUFFICIENT_RESOURCES
+ */
 NTSTATUS
 NTAPI
 IopArbDmaInitialize(VOID)
@@ -100,7 +116,7 @@ IopArbDmaInitialize(VOID)
 
     Status = ArbInitializeArbiterInstance(&IopRootDmaArbiter,
                                           NULL,
-                                          CmResourceTypeBusNumber,
+                                          CmResourceTypeDma,
                                           IopRootDmaArbiter.Name,
                                           L"Root",
                                           NULL);
