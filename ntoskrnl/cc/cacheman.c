@@ -146,11 +146,16 @@ CcGetFlushedValidData(
 
     UNREFERENCED_PARAMETER(BcbListHeld);
 
+    /* Take the master lock before touching SharedCacheMap so it can't be
+     * torn down and freed from under us */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+
     SharedCacheMap = SectionObjectPointer->SharedCacheMap;
 
     /* Not cached or no longer cached. There's nothing we can report */
     if (SharedCacheMap == NULL)
     {
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
         FlushedValidData.QuadPart = MAXLONGLONG;
         return FlushedValidData;
     }
@@ -159,15 +164,12 @@ CcGetFlushedValidData(
     FlushedValidData = SharedCacheMap->ValidDataLength;
 
     /* Look for the lowest dirty VACB. List is kept sorted by file offset */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
     KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
-
     for (ListEntry = SharedCacheMap->CacheMapVacbListHead.Flink;
          ListEntry != &SharedCacheMap->CacheMapVacbListHead;
          ListEntry = ListEntry->Flink)
     {
         Vacb = CONTAINING_RECORD(ListEntry, ROS_VACB, CacheMapVacbListEntry);
-
         /* Found it. Whatever comes before this offset is flushed */
         if (Vacb->Dirty)
         {
@@ -175,7 +177,6 @@ CcGetFlushedValidData(
             break;
         }
     }
-
     KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
     KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
