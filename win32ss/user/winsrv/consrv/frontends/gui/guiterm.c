@@ -1046,19 +1046,22 @@ GuiSetCodePage(IN OUT PFRONTEND This,
      * If the current font does not support the new code page, switch
      * to a different font supporting the code page but having similar
      * characteristics.
-     * If no font can be found for this code page, stay using the
-     * original font and refuse changing the code page.
+     * If no suitable font can be found, use a default fallback font
+     * so that the code page change is not rejected (this is especially
+     * important for UTF-8 code page 65001, used by modern TUI apps).
      */
-    if (!InitFonts(GuiData,
-                   GuiData->GuiInfo.FaceName,
-                   GuiData->GuiInfo.FontWeight,
-                   GuiData->GuiInfo.FontFamily,
-                   GuiData->GuiInfo.FontSize,
-                   CodePage, FALSE))
+    if (!InitFontsFromSettings(GuiData, CodePage, FALSE))
     {
-        DPRINT1("Failed to initialize font '%S' for code page %d - Refuse CP change\n",
+        DPRINT1("Failed to initialize font '%S' for code page %d - Trying with fallback\n",
                 GuiData->GuiInfo.FaceName, CodePage);
-        return FALSE;
+
+        /* Retry with a default fallback font */
+        if (!InitFontsFromSettings(GuiData, CodePage, TRUE))
+        {
+            DPRINT1("Failed to initialize fallback font for code page %d - Refuse CP change\n",
+                    CodePage);
+            return FALSE;
+        }
     }
 
     return TRUE;

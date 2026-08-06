@@ -110,6 +110,8 @@ typedef enum _CONSRV_API_NUMBER
     // ConsolepSetCurrentFont,                 // Added in Vista+
     // ConsolepSetScreenBufferInfo,            // Added in Vista+
     // ConsolepClientConnect,                  // Added in Win7
+    ConsolepGetScreenBufferInfoEx,          // Added in Vista+
+    ConsolepSetScreenBufferInfoEx,          // Added in Vista+
 
     ConsolepMaxApiNumber
 } CONSRV_API_NUMBER, *PCONSRV_API_NUMBER;
@@ -316,6 +318,21 @@ typedef struct _CONSOLE_GETSCREENBUFFERINFO
     COORD  ViewSize;
     COORD  MaximumViewSize;
 } CONSOLE_GETSCREENBUFFERINFO, *PCONSOLE_GETSCREENBUFFERINFO;
+
+typedef struct _CONSOLE_GETSCREENBUFFERINFOEX
+{
+    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
+    COORD  ScreenBufferSize;
+    COORD  CursorPosition;
+    COORD  ViewOrigin;
+    WORD   Attributes;
+    COORD  ViewSize;
+    COORD  MaximumViewSize;
+    WORD   PopupAttributes;
+    BOOL   FullscreenSupported;
+    COLORREF ColorTable[16];
+} CONSOLE_GETSCREENBUFFERINFOEX, *PCONSOLE_GETSCREENBUFFERINFOEX;
 
 typedef struct _CONSOLE_SETCURSORPOSITION
 {
@@ -949,6 +966,7 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_CREATESCREENBUFFER CreateScreenBufferRequest;
         CONSOLE_SETACTIVESCREENBUFFER SetScreenBufferRequest;
         CONSOLE_GETSCREENBUFFERINFO ScreenBufferInfoRequest;
+        CONSOLE_GETSCREENBUFFERINFOEX ScreenBufferInfoExRequest;
         CONSOLE_SETSCREENBUFFERSIZE SetScreenBufferSizeRequest;
         CONSOLE_SCROLLSCREENBUFFER ScrollScreenBufferRequest;
 
