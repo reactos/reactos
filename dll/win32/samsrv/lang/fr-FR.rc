@@ -1,0 +1,45 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+/*
+ * For the standard names of these groups and accounts, please refer to:
+ * https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups
+ * https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers
+ * and their corresponding localized pages.
+ */
+STRINGTABLE
+BEGIN
+    IDS_DOMAIN_BUILTIN_NAME "Builtin"
+    IDS_GROUP_NONE_NAME "Aucun"
+    IDS_GROUP_NONE_COMMENT "Utilisateurs ordinaires"
+    IDS_ALIAS_ADMINISTRATORS_NAME "Administrateurs"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "Les administrateurs disposent d'un accès illimité à l'ordinateur ou au domaine."
+    IDS_ALIAS_GUESTS_NAME "Invités"
+    IDS_ALIAS_GUESTS_COMMENT "Par défaut, les invités ont les mêmes droits que les membres du groupe Utilisateurs."
+    IDS_ALIAS_POWER_USERS_NAME "Utilisateurs avancés"
+    IDS_ALIAS_POWER_USERS_COMMENT "Les utilisateurs avancés disposent de la plupart des droits d'administration, avec certaines restrictions."
+    IDS_ALIAS_USERS_NAME "Utilisateurs"
+    IDS_ALIAS_USERS_COMMENT "Les utilisateurs ne peuvent pas effectuer des modifications qui affectent l'ensemble du système."
+    IDS_ALIAS_PRINT_OPS_NAME "Opérateurs d'impression"
+    IDS_ALIAS_PRINT_OPS_COMMENT "Les membres de ce groupe peuvent administrer les domaines d'impression."
+    IDS_ALIAS_BACKUP_OPS_NAME "Opérateurs de sauvegarde"
+    IDS_ALIAS_BACKUP_OPS_COMMENT "Les opérateurs de sauvegarde peuvent passer outre les restrictions de sécurité, uniquement dans le seul but de sauvegarder ou de restorer des fichiers."
+    IDS_ALIAS_REPLICATOR_NAME "Duplicateur"
+    IDS_ALIAS_REPLICATOR_COMMENT "Permet la duplication des fichiers sur un domaine."
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Utilisateurs du Bureau à distance"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "Les membres de ce groupe sont autorisés à se connecter à distance."
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "Opérateurs de configuration réseau"
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "Les membres de ce groupe peuvent avoir certains privilèges d'administration afin de gérer la configuration des fonctionnalités réseau."
+    IDS_ALIAS_MONITORING_USERS_NAME "Utilisateurs de l'analyseur de performances"
+    IDS_ALIAS_MONITORING_USERS_COMMENT "Les membres de ce groupe disposent d'un accès distant pour contrôler cet ordinateur."
+    IDS_ALIAS_LOGGING_USERS_NAME "Utilisateurs du journal des performances"
+    IDS_ALIAS_LOGGING_USERS_COMMENT "Les membres de ce groupe disposent d'un accès distant afin de planifier l'enregistrement des compteurs de performance sur cet ordinateur."
+    /*
+     * ATTENTION:
+     *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
+     */
+    IDS_USER_ADMINISTRATOR_NAME "Administrateur"
+    IDS_USER_ADMINISTRATOR_COMMENT "Compte intégré utilisé pour administrer l'ordinateur ou le domaine."
+    IDS_USER_GUEST_NAME "Invité"
+    IDS_USER_GUEST_COMMENT "Compte intégré utilisé pour un accès restreint sur l'ordinateur ou le domaine."
+END

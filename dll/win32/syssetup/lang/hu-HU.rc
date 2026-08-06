@@ -161,13 +161,13 @@ CAPTION "Haladó beállítások"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "&Mintavételi ráta:", -1, 10, 35, 90, 8
-    LTEXT "jelentés másodpercenként", -1, 152, 35, 95, 8
+    RTEXT "&Mintavételi ráta:", IDC_STATIC, 10, 35, 90, 8
+    LTEXT "jelentés másodpercenként", IDC_STATIC, 152, 35, 95, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 107, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Görgő érzékelés:", -1, 10, 55, 90, 8
+    RTEXT "&Görgő érzékelés:", IDC_STATIC, 10, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 107, 53, 125, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Bemeneti puffer hossza:", -1, 10, 75, 90, 8
-    LTEXT "csomag", -1, 152, 75, 26, 8
+    RTEXT "&Bemeneti puffer hossza:", IDC_STATIC, 10, 75, 90, 8
+    LTEXT "csomag", IDC_STATIC, 152, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 107, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 151, 70, 10, 14
     AUTOCHECKBOX "Gyo&rs inicializálás", IDC_PS2MOUSEFASTINIT, 107, 97, 90, 10
@@ -261,7 +261,7 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "ReactOS Munkaállomás"
     IDS_INSTALLATIONWORKSTATIONINFO "A rendszer munkaállomásként lesz felismerhető. A ""Képek"", ""Videók"" és ""Zenék"" személyes mappák a ""Dokumentumok"" mappában lesznek."
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command-line environment to reduce resource usage and attack surface."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."

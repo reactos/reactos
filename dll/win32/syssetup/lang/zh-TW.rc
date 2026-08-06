@@ -170,13 +170,13 @@ CAPTION "進階設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "採樣速率(&S)︰", -1, 27, 35, 90, 8
-    LTEXT "報告速率", -1, 169, 35, 76, 8
+    RTEXT "採樣速率(&S)︰", IDC_STATIC, 27, 35, 90, 8
+    LTEXT "報告速率", IDC_STATIC, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "滾輪偵測(&W)︰", -1, 27, 55, 90, 8
+    RTEXT "滾輪偵測(&W)︰", IDC_STATIC, 27, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "輸入緩衝區長度(&I)︰", -1, 27, 75, 90, 8
-    LTEXT "封包", -1, 169, 75, 26, 8
+    RTEXT "輸入緩衝區長度(&I)︰", IDC_STATIC, 27, 75, 90, 8
+    LTEXT "封包", IDC_STATIC, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
     AUTOCHECKBOX "快速初始化(&F)", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
@@ -275,7 +275,7 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "ReactOS Workstation"
     IDS_INSTALLATIONWORKSTATIONINFO "系統將識別為一個工作站。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會在「我的文件」資料夾內。"
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command-line environment to reduce resource usage and attack surface."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."

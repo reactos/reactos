@@ -170,13 +170,13 @@ CAPTION "Opțiuni avansate"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "Rata de &eșantionare:", -1, 27, 35, 90, 8
-    LTEXT "semnale pe secundă", -1, 169, 35, 76, 8
+    RTEXT "Rata de &eșantionare:", IDC_STATIC, 27, 35, 90, 8
+    LTEXT "semnale pe secundă", IDC_STATIC, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Detecție rotiță:", -1, 27, 55, 90, 8
+    RTEXT "&Detecție rotiță:", IDC_STATIC, 27, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Lungime memorie de intrare:", -1, 27, 75, 90, 8
-    LTEXT "pachete", -1, 169, 75, 26, 8
+    RTEXT "&Lungime memorie de intrare:", IDC_STATIC, 27, 75, 90, 8
+    LTEXT "pachete", IDC_STATIC, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
     AUTOCHECKBOX "Inițializare &rapidă", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
@@ -270,7 +270,7 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "Stație de lucru ReactOS"
     IDS_INSTALLATIONWORKSTATIONINFO "Sistemul va fi recunoscut ca o stație de lucru. Folderele private ""Imaginile mele"", ""Videoclipurile mele"" și ""Muzica mea"" sunt în ""Documentele mele""."
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command-line environment to reduce resource usage and attack surface."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."
