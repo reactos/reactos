@@ -9,17 +9,17 @@
 #include "winreg.h"
 
 /* Registry watcher thread for testing synchronous mode */
-typedef struct _WATCH_THREAD_STATE
+typedef struct _WATCH_THREAD_CONTEXT
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
     PIO_STATUS_BLOCK IoStatusBlock;
-} WATCH_THREAD_STATE, *PWATCH_THREAD_STATE;
+} WATCH_THREAD_CONTEXT, *PWATCH_THREAD_CONTEXT;
 
 DWORD WINAPI
 NtNotifyChangeMultipleKeys_WatchThread(LPVOID lpParameter)
 {
-    PWATCH_THREAD_STATE State = (PWATCH_THREAD_STATE)lpParameter;
+    PWATCH_THREAD_CONTEXT State = (PWATCH_THREAD_CONTEXT)lpParameter;
 
     State->Status = NtNotifyChangeMultipleKeys(State->KeyHandle, 0,
                                                NULL, NULL, NULL, NULL,
@@ -30,6 +30,11 @@ NtNotifyChangeMultipleKeys_WatchThread(LPVOID lpParameter)
     return 0;
 }
 
+typedef struct _APC_CONTEXT
+{
+    BOOLEAN ApcRan;
+} APC_CONTEXT, *PAPC_CONTEXT;
+
 /* APC Routine for testing asynchronous mode */
 VOID WINAPI
 NtNotifyChangeMultipleKeys_ApcRoutine(PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, ULONG Reserved)
@@ -37,8 +42,8 @@ NtNotifyChangeMultipleKeys_ApcRoutine(PVOID ApcContext, PIO_STATUS_BLOCK IoStatu
     UNREFERENCED_PARAMETER(IoStatusBlock);
     UNREFERENCED_PARAMETER(Reserved);
 
-    BOOLEAN* ApcRan = (BOOLEAN*)ApcContext;
-    *ApcRan = TRUE;
+    PAPC_CONTEXT ApcState = ApcContext;
+    ApcState->ApcRan = TRUE;
 }
 
 START_TEST(NtNotifyChangeMultipleKeys)
@@ -46,8 +51,9 @@ START_TEST(NtNotifyChangeMultipleKeys)
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock = { 0 };
     OBJECT_ATTRIBUTES SubordinateObjects[1];
-    WATCH_THREAD_STATE WatchThreadState = { 0 };
-    BOOLEAN ApcRan = FALSE;
+    PWATCH_THREAD_CONTEXT WatchThread1State = NULL,
+                          WatchThread2State = NULL;
+    PAPC_CONTEXT ApcContext = NULL;
     /* Registry key object attributes */
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SOFTWARE\\TestKey"),
                    SubKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SOFTWARE\\TestKey\\TestSubKey"),
@@ -60,7 +66,9 @@ START_TEST(NtNotifyChangeMultipleKeys)
     DWORD Value1 = 0x12345678, Value2 = 0x87654321;
     /* handles */
     HANDLE KeyHandle = NULL, SubKeyHandle = NULL, SecondaryKeyHandle = NULL;
-    HANDLE WatchThreadHandle = NULL, EventHandle = NULL;
+    HANDLE WatchThread1Handle = NULL,
+           WatchThread2Handle = NULL,
+           EventHandle = NULL;
 
     /* Create event */
     EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -81,56 +89,62 @@ START_TEST(NtNotifyChangeMultipleKeys)
     /* Synchronous mode */
 
     /* Create a thread */
-    WatchThreadState.KeyHandle = KeyHandle;
-    WatchThreadState.IoStatusBlock = &IoStatusBlock;
-    WatchThreadHandle = CreateThread(NULL, 0, NtNotifyChangeMultipleKeys_WatchThread, &WatchThreadState, 0, NULL);
-    if (WatchThreadHandle)
+    WatchThread1State = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WATCH_THREAD_CONTEXT));
+    if (WatchThread1State == NULL)
+    {
+        skip(FALSE, "Failed to allocate memory for watch thread state");
+        goto Cleanup;
+    }
+    WatchThread1State->KeyHandle = KeyHandle;
+    WatchThread1State->IoStatusBlock = &IoStatusBlock;
+    WatchThread1Handle = CreateThread(NULL, 0, NtNotifyChangeMultipleKeys_WatchThread, WatchThread1State, 0, NULL);
+    if (WatchThread1Handle)
     {
         /* Verify the thread is still running */
-        Status = WaitForSingleObject(WatchThreadHandle, 100);
+        Status = WaitForSingleObject(WatchThread1Handle, 100);
         ok_ntstatus(Status, WAIT_TIMEOUT);
         /* Make change to the registry key */
         Status = NtSetValueKey(KeyHandle, &ValueName, 0, REG_DWORD, &Value2, sizeof(Value2));
         ok_ntstatus(Status, STATUS_SUCCESS);
         /* Verify that the thread is notified */
-        Status = WaitForSingleObject(WatchThreadHandle, 100);
+        Status = WaitForSingleObject(WatchThread1Handle, 100);
         ok_ntstatus(Status, WAIT_OBJECT_0);
         /* Verify the status code */
-        ok_ntstatus(WatchThreadState.Status, STATUS_NOTIFY_ENUM_DIR);
-        ok_ntstatus(WatchThreadState.IoStatusBlock->Status, STATUS_NOTIFY_ENUM_DIR);
+        ok_ntstatus(WatchThread1State->Status, STATUS_NOTIFY_ENUM_DIR);
+        ok_ntstatus(WatchThread1State->IoStatusBlock->Status, STATUS_NOTIFY_ENUM_DIR);
         /* cleanup */
-        if (WaitForSingleObject(WatchThreadHandle, 0) == WAIT_TIMEOUT)
-        {
-            TerminateThread(WatchThreadHandle, 0);
-        }
-        CloseHandle(WatchThreadHandle);
-        WatchThreadHandle = NULL;
-        WatchThreadState.Status = 0xdeadbeef;
-        WatchThreadState.IoStatusBlock->Status = 0xdeadbeef;
+        CloseHandle(WatchThread1Handle);
+        WatchThread1Handle = NULL;
+        WatchThread1State->Status = 0xdeadbeef;
+        WatchThread1State->IoStatusBlock->Status = 0xdeadbeef;
     }
     else
     {
         skip(FALSE, "Failed to create watch thread");
     }
     /* Watch again, but this time close the handle without making any change */
-    WatchThreadHandle = CreateThread(NULL, 0, NtNotifyChangeMultipleKeys_WatchThread, &WatchThreadState, 0, NULL);
-    if (WatchThreadHandle)
+    WatchThread2State = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WATCH_THREAD_CONTEXT));
+    if (WatchThread2State == NULL)
     {
-        Status = WaitForSingleObject(WatchThreadHandle, 100);
+        skip("Failed to allocate memory for watch thread state");
+        goto Cleanup;
+    }
+    WatchThread2State->KeyHandle = KeyHandle;
+    WatchThread2State->IoStatusBlock = &IoStatusBlock;
+    WatchThread2Handle = CreateThread(NULL, 0, NtNotifyChangeMultipleKeys_WatchThread, WatchThread2State, 0, NULL);
+    if (WatchThread2Handle)
+    {
+        Status = WaitForSingleObject(WatchThread2Handle, 100);
         ok_ntstatus(Status, WAIT_TIMEOUT);
         NtClose(KeyHandle);
         KeyHandle = NULL;
-        Status = WaitForSingleObject(WatchThreadHandle, 100);
+        Status = WaitForSingleObject(WatchThread2Handle, 100);
         ok_ntstatus(Status, WAIT_OBJECT_0);
-        ok_ntstatus(WatchThreadState.Status, STATUS_NOTIFY_CLEANUP);
-        ok_ntstatus(WatchThreadState.IoStatusBlock->Status, STATUS_NOTIFY_CLEANUP);
+        ok_ntstatus(WatchThread2State->Status, STATUS_NOTIFY_CLEANUP);
+        ok_ntstatus(WatchThread2State->IoStatusBlock->Status, STATUS_NOTIFY_CLEANUP);
         /* cleanup */
-        if (WaitForSingleObject(WatchThreadHandle, 0) == WAIT_TIMEOUT)
-        {
-            TerminateThread(WatchThreadHandle, 0);
-        }
-        CloseHandle(WatchThreadHandle);
-        WatchThreadHandle = NULL;
+        CloseHandle(WatchThread2Handle);
+        WatchThread2Handle = NULL;
     }
     else
     {
@@ -294,8 +308,14 @@ START_TEST(NtNotifyChangeMultipleKeys)
     ok(!NT_SUCCESS(Status), "NtNotifyChangeMultipleKeys succeeded unexpectedly.\n");
 
     /* APC-based asynchronous mode */
+    ApcContext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(APC_CONTEXT));
+    if (ApcContext == NULL)
+    {
+        skip("Failed to allocate memory for APC context");
+        goto Cleanup;
+    }
     Status = NtNotifyChangeMultipleKeys(KeyHandle, 0, NULL,
-                                        NULL, NtNotifyChangeMultipleKeys_ApcRoutine, &ApcRan,
+                                        NULL, NtNotifyChangeMultipleKeys_ApcRoutine, ApcContext,
                                         &IoStatusBlock,
                                         REG_NOTIFY_CHANGE_LAST_SET,
                                         FALSE, NULL, 0, TRUE);
@@ -305,12 +325,28 @@ START_TEST(NtNotifyChangeMultipleKeys)
     ok_ntstatus(Status, STATUS_SUCCESS);
     /* Force system to run queued APC routines */
     NtTestAlert();
-    ok(ApcRan == TRUE, "The APC routine did not ran.\n");
+    ok(ApcContext->ApcRan == TRUE, "The APC routine did not ran.\n");
 
 Cleanup:
-    if (WatchThreadHandle)
+    if (WatchThread1Handle)
     {
-        CloseHandle(WatchThreadHandle);
+        CloseHandle(WatchThread1Handle);
+    }
+    if (WatchThread2Handle)
+    {
+        CloseHandle(WatchThread2Handle);
+    }
+    if (WatchThread1State)
+    {
+        HeapFree(GetProcessHeap(), 0, WatchThread1State);
+    }
+    if (WatchThread2State)
+    {
+        HeapFree(GetProcessHeap(), 0, WatchThread2State);
+    }
+    if (ApcContext)
+    {
+        HeapFree(GetProcessHeap(), 0, ApcContext);
     }
     if (SubKeyHandle)
     {
