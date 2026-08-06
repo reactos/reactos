@@ -2068,6 +2068,324 @@ struct _RTL_MEMORY_STREAM
     HANDLE ProcessHandle;
 };
 
+typedef struct _CONTEXT_CHUNK
+{
+    LONG Offset;
+    ULONG Length;
+} CONTEXT_CHUNK, *PCONTEXT_CHUNK;
+
+typedef struct _CONTEXT_EX
+{
+    CONTEXT_CHUNK All;
+    CONTEXT_CHUNK Legacy;
+    CONTEXT_CHUNK XState;
+#if (NTDDI_VERSION >= NTDDI_WIN11)
+    CONTEXT_CHUNK KernelCet;
+#endif
+} CONTEXT_EX, *PCONTEXT_EX;
+
+#define CONTEXT_EXCEPTION_ACTIVE    0x8000000
+#define CONTEXT_SERVICE_ACTIVE      0x10000000
+#define CONTEXT_UNWOUND_TO_CALL     0x20000000
+#define CONTEXT_EXCEPTION_REQUEST   0x40000000
+#define CONTEXT_EXCEPTION_REPORTING 0x80000000
+
+#define CONTEXT_i386    0x10000
+#define I386_CONTEXT_CONTROL         (CONTEXT_i386 | 0x00000001L) // SS:SP, CS:IP, FLAGS, BP
+#define I386_CONTEXT_INTEGER         (CONTEXT_i386 | 0x00000002L) // AX, BX, CX, DX, SI, DI
+#define I386_CONTEXT_SEGMENTS        (CONTEXT_i386 | 0x00000004L) // DS, ES, FS, GS
+#define I386_CONTEXT_FLOATING_POINT  (CONTEXT_i386 | 0x00000008L) // 387 state
+#define I386_CONTEXT_DEBUG_REGISTERS (CONTEXT_i386 | 0x00000010L) // DB 0-3,6,7
+#define I386_CONTEXT_EXTENDED_REGISTERS  (CONTEXT_i386 | 0x00000020L) // cpu specific extensions
+#define I386_CONTEXT_FULL (I386_CONTEXT_CONTROL | I386_CONTEXT_INTEGER | I386_CONTEXT_SEGMENTS)
+#define I386_CONTEXT_ALL             (I386_CONTEXT_CONTROL | I386_CONTEXT_INTEGER | I386_CONTEXT_SEGMENTS | \
+                                      I386_CONTEXT_FLOATING_POINT | I386_CONTEXT_DEBUG_REGISTERS | \
+                                      I386_CONTEXT_EXTENDED_REGISTERS)
+#define I386_CONTEXT_XSTATE          (CONTEXT_i386 | 0x00000040L)
+#define I386_CONTEXT_ALLOWED_FLAGS   (I386_CONTEXT_ALL | I386_CONTEXT_XSTATE | \
+                                      CONTEXT_EXCEPTION_ACTIVE | CONTEXT_SERVICE_ACTIVE | \
+                                      CONTEXT_EXCEPTION_REQUEST | CONTEXT_EXCEPTION_REPORTING)
+
+#define MAXIMUM_SUPPORTED_EXTENSION 512
+
+#ifndef SIZE_OF_80387_REGISTERS
+#define SIZE_OF_80387_REGISTERS 80
+typedef struct _FLOATING_SAVE_AREA
+{
+    ULONG ControlWord;
+    ULONG StatusWord;
+    ULONG TagWord;
+    ULONG ErrorOffset;
+    ULONG ErrorSelector;
+    ULONG DataOffset;
+    ULONG DataSelector;
+    UCHAR RegisterArea[SIZE_OF_80387_REGISTERS];
+    ULONG Cr0NpxState;
+} FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
+#endif
+
+typedef struct _I386_CONTEXT
+{
+    DWORD ContextFlags;
+    DWORD Dr0;
+    DWORD Dr1;
+    DWORD Dr2;
+    DWORD Dr3;
+    DWORD Dr6;
+    DWORD Dr7;
+    FLOATING_SAVE_AREA FloatSave;
+    DWORD SegGs;
+    DWORD SegFs;
+    DWORD SegEs;
+    DWORD SegDs;
+    DWORD Edi;
+    DWORD Esi;
+    DWORD Ebx;
+    DWORD Edx;
+    DWORD Ecx;
+    DWORD Eax;
+    DWORD Ebp;
+    DWORD Eip;
+    DWORD SegCs;
+    DWORD EFlags;
+    DWORD Esp;
+    DWORD SegSs;
+    BYTE ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
+} I386_CONTEXT, *PI386_CONTEXT;
+
+#define CONTEXT_AMD64 0x100000
+#define AMD64_CONTEXT_CONTROL (CONTEXT_AMD64 | 0x1L)
+#define AMD64_CONTEXT_INTEGER (CONTEXT_AMD64 | 0x2L)
+#define AMD64_CONTEXT_SEGMENTS (CONTEXT_AMD64 | 0x4L)
+#define AMD64_CONTEXT_FLOATING_POINT (CONTEXT_AMD64 | 0x8L)
+#define AMD64_CONTEXT_DEBUG_REGISTERS (CONTEXT_AMD64 | 0x10L)
+#define AMD64_CONTEXT_XSTATE (CONTEXT_AMD64 | 0x40L)
+#define AMD64_CONTEXT_KERNEL_CET (CONTEXT_AMD64 | 0x80L)
+#define AMD64_CONTEXT_FULL (AMD64_CONTEXT_CONTROL | AMD64_CONTEXT_INTEGER | AMD64_CONTEXT_FLOATING_POINT)
+#define AMD64_CONTEXT_ALL (AMD64_CONTEXT_CONTROL | AMD64_CONTEXT_INTEGER | AMD64_CONTEXT_SEGMENTS | AMD64_CONTEXT_FLOATING_POINT | AMD64_CONTEXT_DEBUG_REGISTERS)
+#define AMD64_CONTEXT_ALLOWED_FLAGS (AMD64_CONTEXT_ALL | AMD64_CONTEXT_XSTATE | \
+                                     CONTEXT_EXCEPTION_ACTIVE | CONTEXT_SERVICE_ACTIVE | \
+                                     CONTEXT_EXCEPTION_REQUEST | CONTEXT_EXCEPTION_REPORTING)
+#define AMD64_CONTEXT_ALLOWED_FLAGS_KM (AMD64_CONTEXT_ALLOWED_FLAGS | AMD64_CONTEXT_KERNEL_CET)
+
+// Taken from https://github.com/luciouskami/XAntiDebug/blob/master/XAntiDebug/sdkext.h
+typedef struct DECLSPEC_ALIGN(16) _XSAVE_FORMAT64
+{
+    UINT16  ControlWord;
+    UINT16  StatusWord;
+    UINT8   TagWord;
+    UINT8   Reserved1;
+    UINT16  ErrorOpcode;
+    UINT32  ErrorOffset;
+    UINT16  ErrorSelector;
+    UINT16  Reserved2;
+    UINT32  DataOffset;
+    UINT16  DataSelector;
+    UINT16  Reserved3;
+    UINT32  MxCsr;
+    UINT32  MxCsr_Mask;
+    M128A   FloatRegisters[8];
+    M128A   XmmRegisters[16];
+    UINT8   Reserved4[96];
+} XSAVE_FORMAT64, *PXSAVE_FORMAT64;
+typedef XSAVE_FORMAT64 XMM_SAVE_AREA64, *PXMM_SAVE_AREA64;
+
+typedef struct DECLSPEC_ALIGN(16) _AMD64_CONTEXT
+{
+    DWORD64 P1Home;
+    DWORD64 P2Home;
+    DWORD64 P3Home;
+    DWORD64 P4Home;
+    DWORD64 P5Home;
+    DWORD64 P6Home;
+    DWORD ContextFlags;
+    DWORD MxCsr;
+    WORD SegCs;
+    WORD SegDs;
+    WORD SegEs;
+    WORD SegFs;
+    WORD SegGs;
+    WORD SegSs;
+    DWORD EFlags;
+    DWORD64 Dr0;
+    DWORD64 Dr1;
+    DWORD64 Dr2;
+    DWORD64 Dr3;
+    DWORD64 Dr6;
+    DWORD64 Dr7;
+    DWORD64 Rax;
+    DWORD64 Rcx;
+    DWORD64 Rdx;
+    DWORD64 Rbx;
+    DWORD64 Rsp;
+    DWORD64 Rbp;
+    DWORD64 Rsi;
+    DWORD64 Rdi;
+    DWORD64 R8;
+    DWORD64 R9;
+    DWORD64 R10;
+    DWORD64 R11;
+    DWORD64 R12;
+    DWORD64 R13;
+    DWORD64 R14;
+    DWORD64 R15;
+    DWORD64 Rip;
+    union
+    {
+        XMM_SAVE_AREA64 FltSave;
+        struct
+        {
+            M128A Header[2];
+            M128A Legacy[8];
+            M128A Xmm0;
+            M128A Xmm1;
+            M128A Xmm2;
+            M128A Xmm3;
+            M128A Xmm4;
+            M128A Xmm5;
+            M128A Xmm6;
+            M128A Xmm7;
+            M128A Xmm8;
+            M128A Xmm9;
+            M128A Xmm10;
+            M128A Xmm11;
+            M128A Xmm12;
+            M128A Xmm13;
+            M128A Xmm14;
+            M128A Xmm15;
+        };
+    };
+    M128A VectorRegister[26];
+    DWORD64 VectorControl;
+    DWORD64 DebugControl;
+    DWORD64 LastBranchToRip;
+    DWORD64 LastBranchFromRip;
+    DWORD64 LastExceptionToRip;
+    DWORD64 LastExceptionFromRip;
+} AMD64_CONTEXT, *PAMD64_CONTEXT;
+
+#define CONTEXT_ARM32                 0x200000L
+#define ARM32_CONTEXT_CONTROL         (CONTEXT_ARM32 | 0x00000001L)
+#define ARM32_CONTEXT_INTEGER         (CONTEXT_ARM32 | 0x00000002L)
+#define ARM32_CONTEXT_FLOATING_POINT  (CONTEXT_ARM32 | 0x00000004L)
+#define ARM32_CONTEXT_DEBUG_REGISTERS (CONTEXT_ARM32 | 0x00000008L)
+#define ARM32_CONTEXT_FULL            (ARM32_CONTEXT_CONTROL | ARM32_CONTEXT_INTEGER | ARM32_CONTEXT_FLOATING_POINT)
+#define ARM32_CONTEXT_ALL             (ARM32_CONTEXT_FULL | ARM32_CONTEXT_DEBUG_REGISTERS)
+#define ARM32_CONTEXT_ALLOWED_FLAGS   (ARM32_CONTEXT_ALL | CONTEXT_EXCEPTION_ACTIVE | \
+                                       CONTEXT_SERVICE_ACTIVE | CONTEXT_UNWOUND_TO_CALL | \
+                                       CONTEXT_EXCEPTION_REQUEST | CONTEXT_EXCEPTION_REPORTING)
+
+typedef struct _ARM32_NT_NEON128
+{
+    ULONGLONG Low;
+    LONGLONG High;
+} ARM32_NT_NEON128, *PARM32_NT_NEON128;
+
+#define ARM_MAX_BREAKPOINTS 8
+#define ARM_MAX_WATCHPOINTS 1
+typedef struct DECLSPEC_ALIGN(8) DECLSPEC_NOINITALL _ARM32_CONTEXT
+{
+    DWORD ContextFlags;
+    DWORD R0;
+    DWORD R1;
+    DWORD R2;
+    DWORD R3;
+    DWORD R4;
+    DWORD R5;
+    DWORD R6;
+    DWORD R7;
+    DWORD R8;
+    DWORD R9;
+    DWORD R10;
+    DWORD R11;
+    DWORD R12;
+    DWORD Sp;
+    DWORD Lr;
+    DWORD Pc;
+    DWORD Cpsr;
+    DWORD Fpscr;
+    DWORD Padding;
+    union
+    {
+        ARM32_NT_NEON128 Q[16];
+        ULONGLONG D[32];
+        DWORD S[32];
+    };
+    DWORD Bvr[ARM_MAX_BREAKPOINTS];
+    DWORD Bcr[ARM_MAX_BREAKPOINTS];
+    DWORD Wvr[ARM_MAX_WATCHPOINTS];
+    DWORD Wcr[ARM_MAX_WATCHPOINTS];
+    DWORD Padding2[2];
+} ARM32_CONTEXT, *PARM32_CONTEXT;
+
+#define CONTEXT_ARM64                 0x00400000L
+#define ARM64_CONTEXT_CONTROL         (CONTEXT_ARM64 | 0x00000001)
+#define ARM64_CONTEXT_INTEGER         (CONTEXT_ARM64 | 0x00000002)
+#define ARM64_CONTEXT_FLOATING_POINT  (CONTEXT_ARM64 | 0x00000004)
+#define ARM64_CONTEXT_DEBUG_REGISTERS (CONTEXT_ARM64 | 0x00000008)
+#define ARM64_CONTEXT_X18             (CONTEXT_ARM64 | 0x00000010)
+#define ARM64_CONTEXT_XSTATE          (CONTEXT_ARM64 | 0x00000020)
+#define ARM64_CONTEXT_FEX_YMMSTATE    (CONTEXT_ARM64 | 0x00000040)
+#define ARM64_CONTEXT_FULL            (ARM64_CONTEXT_CONTROL | ARM64_CONTEXT_INTEGER | ARM64_CONTEXT_FLOATING_POINT)
+#define ARM64_CONTEXT_ALL             (ARM64_CONTEXT_FULL | ARM64_CONTEXT_DEBUG_REGISTERS | ARM64_CONTEXT_X18)
+#define ARM64_CONTEXT_ALLOWED_FLAGS   (ARM64_CONTEXT_ALL | CONTEXT_EXCEPTION_ACTIVE | CONTEXT_SERVICE_ACTIVE | \
+                                       CONTEXT_UNWOUND_TO_CALL | CONTEXT_EXCEPTION_REQUEST | CONTEXT_EXCEPTION_REPORTING)
+
+typedef struct DECLSPEC_ALIGN(16) _ARM64_CONTEXT
+{
+    DWORD ContextFlags;
+    DWORD Cpsr;
+    union
+    {
+        struct
+        {
+            DWORD64 X0;
+            DWORD64 X1;
+            DWORD64 X2;
+            DWORD64 X3;
+            DWORD64 X4;
+            DWORD64 X5;
+            DWORD64 X6;
+            DWORD64 X7;
+            DWORD64 X8;
+            DWORD64 X9;
+            DWORD64 X10;
+            DWORD64 X11;
+            DWORD64 X12;
+            DWORD64 X13;
+            DWORD64 X14;
+            DWORD64 X15;
+            DWORD64 X16;
+            DWORD64 X17;
+            DWORD64 X18;
+            DWORD64 X19;
+            DWORD64 X20;
+            DWORD64 X21;
+            DWORD64 X22;
+            DWORD64 X23;
+            DWORD64 X24;
+            DWORD64 X25;
+            DWORD64 X26;
+            DWORD64 X27;
+            DWORD64 X28;
+            DWORD64 Fp;
+            DWORD64 Lr;
+        };
+        DWORD64 X[31];
+    };
+    DWORD64 Sp;
+    DWORD64 Pc;
+    ARM64_NT_NEON128 V[32];
+    DWORD Fpcr;
+    DWORD Fpsr;
+    DWORD Bcr[ARM64_MAX_BREAKPOINTS];
+    DWORD64 Bvr[ARM64_MAX_BREAKPOINTS];
+    DWORD Wcr[ARM64_MAX_WATCHPOINTS];
+    DWORD64 Wvr[ARM64_MAX_WATCHPOINTS];
+} ARM64_CONTEXT, *PARM64_CONTEXT;
+
+#define CONTEXT_ARCHITECTURE_MASK (CONTEXT_i386 | CONTEXT_AMD64 | CONTEXT_ARM32 | CONTEXT_ARM64)
+
 #endif /* NTOS_MODE_USER */
 
 #ifdef __cplusplus

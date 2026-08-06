@@ -4696,7 +4696,7 @@ BOOLEAN
 NTAPI
 RtlGetNtProductType(_Out_ PNT_PRODUCT_TYPE ProductType);
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
 //
 // Synchronization functions
 //
@@ -4739,35 +4739,6 @@ RtlSleepConditionVariableSRW(
 //
 // Synchronization functions
 //
-NTSYSAPI
-VOID
-NTAPI
-RtlInitializeConditionVariable(OUT PRTL_CONDITION_VARIABLE ConditionVariable);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlWakeConditionVariable(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlWakeAllConditionVariable(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlSleepConditionVariableCS(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
-                            IN OUT PRTL_CRITICAL_SECTION CriticalSection,
-                            IN const PLARGE_INTEGER TimeOut OPTIONAL);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlSleepConditionVariableSRW(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
-                             IN OUT PRTL_SRWLOCK SRWLock,
-                             IN PLARGE_INTEGER TimeOut OPTIONAL,
-                             IN ULONG Flags);
 
 VOID
 NTAPI
@@ -5188,6 +5159,105 @@ NTAPI
 RtlTryAcquireSRWLockExclusive(PRTL_SRWLOCK SRWLock);
 
 #endif /* Win7 or ReactOS Ntdll build */
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7) || (defined(__REACTOS__))
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCopyContext(
+    _Inout_ PVOID DstContext,
+    _In_ ULONG ContextFlags,
+    _In_ const VOID* SrcContext);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCopyExtendedContext(
+    _Out_ PCONTEXT_EX Destination,
+    _In_ ULONG ContextFlags,
+    _In_ const CONTEXT_EX* Source);
+
+NTSYSAPI
+ULONG64
+NTAPI
+RtlGetEnabledExtendedFeatures(
+    _In_ ULONG64 FeatureMask);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetExtendedContextLength(
+    _In_ ULONG ContextFlags,
+    _Out_ PULONG ContextLength);
+
+NTSYSAPI
+ULONG64
+NTAPI
+RtlGetExtendedFeaturesMask(
+    _In_ const CONTEXT_EX* ContextEx);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlInitializeExtendedContext(
+    _Out_ PVOID ContextBuffer,
+    _In_ ULONG ContextFlags,
+    _Outptr_ PCONTEXT_EX* OutContextEx);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLocateExtendedFeature(
+    _In_ const CONTEXT_EX* ContextEx,
+    _In_ ULONG FeatureId,
+    _Out_opt_ PULONG Length);
+
+NTSYSAPI
+PCONTEXT
+NTAPI
+RtlLocateLegacyContext(
+    _In_ const CONTEXT_EX* ContextEx,
+    _Out_opt_ PULONG Length);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlSetExtendedFeaturesMask(
+    _Inout_ PCONTEXT_EX ContextEx,
+    _In_ ULONG64 FeatureMask);
+
+#endif /* Win7 or ReactOS */
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN10) || (defined(__REACTOS__))
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetExtendedContextLength2(
+    _In_ ULONG ContextFlags,
+    _Out_ PULONG ContextLength,
+    _In_ ULONG64 XStateCompactionMask);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlInitializeExtendedContext2(
+    _Out_ PVOID ContextBuffer,
+    _In_ ULONG ContextFlags,
+    _Outptr_ PCONTEXT_EX* OutContextEx,
+    _In_ ULONG64 XStateCompactionMask);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLocateExtendedFeature2(
+    _In_ const CONTEXT_EX* ContextEx,
+    _In_ ULONG FeatureId,
+    _In_ const XSTATE_CONFIGURATION* XState,
+    _Out_opt_ PULONG Length);
+
+#endif /* Win10 or ReactOS */
 
 #endif // NTOS_MODE_USER
 
