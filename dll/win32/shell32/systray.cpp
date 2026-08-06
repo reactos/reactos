@@ -196,6 +196,13 @@ BOOL WINAPI Shell_NotifyIconW(DWORD dwMessage, PNOTIFYICONDATAW pnid)
         tnid.nid.szInfoTitle[_countof(tnid.nid.szInfoTitle) - 1] = 0;
     }
 
+    if (dwMessage == NIM_SETFOCUS)
+    {
+        DWORD pid;
+        if (GetWindowThreadProcessId(hShellTrayWnd, &pid))
+            AllowSetForegroundWindow(pid);
+    }
+
     /* Send the data */
     data.dwData = TABDMC_NOTIFY;
     data.cbData = sizeof(tnid);
