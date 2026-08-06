@@ -1,5 +1,11 @@
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
+/*
+ * For the standard names of these groups and accounts, please refer to:
+ * https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups
+ * https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers
+ * and their corresponding localized pages.
+ */
 STRINGTABLE
 BEGIN
     IDS_DOMAIN_BUILTIN_NAME "組み込み"
@@ -18,7 +24,7 @@ BEGIN
     IDS_ALIAS_BACKUP_OPS_NAME "バックアップ オペレータ"
     IDS_ALIAS_BACKUP_OPS_COMMENT "バックアップ オペレーターは、ファイルのバックアップまたはリストアのみを目的として、セキュリティ制限を無効にすることができます。"
     IDS_ALIAS_REPLICATOR_NAME "レプリケーター"
-    IDS_ALIAS_REPLICATOR_COMMENT "ドメイン内のファイルレプリケーションをサポートします"
+    IDS_ALIAS_REPLICATOR_COMMENT "ドメイン内のファイルレプリケーションをサポートします。"
     IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "リモート デスクトップ ユーザー"
     IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "このグループのメンバーには、リモートでログオンする権利が与えられます。"
     IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "ネットワーク構成オペレーター"
