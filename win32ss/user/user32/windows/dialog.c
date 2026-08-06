@@ -986,7 +986,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     will be valid only after WM_CREATE message has been handled in DefDlgProc
     All the members of the structure get filled here using temp variables */
     dlgInfo = DIALOG_get_info( hwnd, TRUE );
-    // ReactOS
+#ifdef __REACTOS__
     if (dlgInfo == NULL)
     {
         if (hUserFont) DeleteObject( hUserFont );
@@ -994,7 +994,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         if (disabled_owner) EnableWindow( disabled_owner, TRUE );
         return 0;
     }
-    //
+#endif
     dlgInfo->hwndFocus   = 0;
     dlgInfo->hUserFont   = hUserFont;
     dlgInfo->hMenu       = hMenu;
@@ -1021,6 +1021,9 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
             HWND focus = GetNextDlgTabItem( hwnd, 0, FALSE );
             if (!focus) focus = GetNextDlgGroupItem( hwnd, 0, FALSE );
             if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)focus, param ) && IsWindow( hwnd ) &&
+#ifdef __REACTOS__
+                !(dlgInfo->flags & DF_END) && /* Ensure EndDialog wasn't called in WM_INITDIALOG */
+#endif
                 ((~template.style & DS_CONTROL) || (template.style & WS_VISIBLE)))
             {
                 /* By returning TRUE, app has requested a default focus assignment.
@@ -1040,29 +1043,46 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                         SetFocus( hwnd );
                 }
             }
+#ifdef __REACTOS__
 //// ReactOS see 43396, Fixes setting focus on Open and Close dialogs to the FileName edit control in OpenOffice.
 //// This now breaks test_SaveRestoreFocus.
             //DEFDLG_SaveFocus( hwnd );
-////
+#endif
         }
+
+#ifdef __REACTOS__
+        /* Don't continue if the dialog has been destroyed in WM_INITDIALOG */
+        if (!IsWindow(hwnd))
+            return NULL;
+
 //// ReactOS Rev 30613 & 30644
         if (!(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_CHILD))
             SendMessageW( hwnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_INITIALIZE, 0), 0);
-////
+
+        // TODO: Handle DS_SETFOREGROUND
+
+        /* Ensure EndDialog wasn't called in WM_INITDIALOG before making the dialog visible */
+        if (!(dlgInfo->flags & DF_END) && (template.style & WS_VISIBLE) && !(GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_VISIBLE))
+#else
         if (template.style & WS_VISIBLE && !(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_VISIBLE))
+#endif
         {
-           ShowWindow( hwnd, SW_SHOWNORMAL );   /* SW_SHOW doesn't always work */
+           ShowWindow( hwnd, SW_SHOWNORMAL ); /* SW_SHOW doesn't always work */
            UpdateWindow( hwnd );
+#ifdef __REACTOS__
            IntNotifyWinEvent(EVENT_SYSTEM_DIALOGSTART, hwnd, OBJID_WINDOW, CHILDID_SELF, 0);
+#endif
         }
         return hwnd;
     }
     if (disabled_owner) EnableWindow( disabled_owner, TRUE );
+#ifdef __REACTOS__
     IntNotifyWinEvent(EVENT_SYSTEM_DIALOGEND, hwnd, OBJID_WINDOW, CHILDID_SELF, 0);
+#endif
     if( IsWindow(hwnd) )
     {
       DestroyWindow( hwnd );
-      //// ReactOS
+#ifdef __REACTOS__
       if (owner)
       {  ERR("DIALOG_CreateIndirect 1\n");
          if ( NtUserGetThreadState(THREADSTATE_FOREGROUNDTHREAD) && // Rule #1.
@@ -1071,7 +1091,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
             SetForegroundWindow(owner);
          }
       }
-      ////
+#endif
     }
     return 0;
 }
