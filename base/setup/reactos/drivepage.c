@@ -370,7 +370,8 @@ typedef struct _PARTCREATE_CTX
     ULONG MaxSizeMB;     //< Maximum possible partition size in MB.
     ULONG PartSizeMB;    //< Selected partition size in MB.
     BOOLEAN MBRExtPart;  //< Whether to create an MBR extended partition.
-    BOOLEAN ForceFormat; //< Whether to force formatting ('Do not format' option hidden).
+    BOOLEAN ForceFormat :1; //< Whether to force formatting ('Do not format' option hidden).
+    BOOLEAN AutoFormat  :1; //< Whether to auto-format (Format dialog stays hidden).
 } PARTCREATE_CTX, *PPARTCREATE_CTX;
 
 static INT_PTR
@@ -413,8 +414,27 @@ FormatDlgProcWorker(
                     SendDlgItemMessageW(hDlg, IDC_FSTYPE, CB_SETITEMDATA, iItem, (LPARAM)NULL);
             }
 
-            // FIXME: Read from SetupData.FsType; select the "FAT" FS instead.
-            DefaultFs = L"FAT";
+            if (SetupData.bUnattend)
+            {
+                /* In unattended mode, preselect the file system */
+                switch (SetupData.USetupData.FsType)
+                {
+                    /* 1 is for BtrFS */
+                    case 1:
+                        DefaultFs = L"BTRFS";
+                        break;
+
+                    /* If we don't understand input, default to FAT */
+                    default:
+                        DefaultFs = L"FAT";
+                        break;
+                }
+            }
+            else
+            {
+                /* By default select the "FAT" file system */
+                DefaultFs = L"FAT";
+            }
 
             /* Retrieve the selected volume and create information */
             ASSERT(PartCreateCtx->PartItem->Volume == PartCreateCtx->PartItem->PartEntry->Volume);
@@ -425,7 +445,7 @@ FormatDlgProcWorker(
              * otherwise use the "DefaultFs" */
             if (VolCreate && *VolCreate->FileSystemName)
                 FileSystem = VolCreate->FileSystemName;
-            else if (Volume && *Volume->Info.FileSystem)
+            else if (!SetupData.bUnattend && Volume && *Volume->Info.FileSystem)
                 FileSystem = Volume->Info.FileSystem;
             else
                 FileSystem = DefaultFs;
@@ -548,6 +568,8 @@ FormatDlgProcWorker(
     return FALSE;
 }
 
+#define PM_FMTDLG_SHOWHIDE  (WM_APP + 1)
+
 static INT_PTR
 CALLBACK
 FormatDlgProc(
@@ -571,8 +593,26 @@ FormatDlgProc(
 
             /* We actually want to format, so set the flag */
             PartCreateCtx->ForceFormat = TRUE;
+
+            /* In auto-format mode, hide the dialog and simulate press on OK.
+             * The file system is preselected by FormatDlgProcWorker(). */
+            if (PartCreateCtx->AutoFormat)
+            {
+                /* Win32 NOTE: No need to first invoke the helper dialog procedure,
+                 * before posting our messages. The posted messages are dealt with
+                 * *ONLY* after any messages potentially sent to ourselves by the
+                 * helper dialog procedure. */
+                //INT_PTR ret = FormatDlgProcWorker(PartCreateCtx, hDlg, uMsg, wParam, lParam);
+                PostMessageW(hDlg, PM_FMTDLG_SHOWHIDE, FALSE, 0);
+                PostMessageW(hDlg, WM_COMMAND, MAKEWPARAM(IDOK, BN_CLICKED), 0);
+                //return ret;
+            }
             break;
         }
+
+        case PM_FMTDLG_SHOWHIDE:
+            ShowWindow(hDlg, wParam ? SW_SHOW : SW_HIDE);
+            break;
 
         case WM_COMMAND:
         {
@@ -811,6 +851,30 @@ GetSelectedPartition(
     return PartItem;
 }
 
+HTLITEM
+TreeListFindPartitionItem(
+    _In_ HWND hTreeList,
+    _In_opt_ PPARTENTRY PartEntry)
+{
+    HTLITEM hItem;
+
+    /* Enumerate every cached data in the TreeList, and for each, check
+     * whether its corresponding PPARTENTRY is the one we are looking for */
+    hItem = TVI_ROOT;
+    while ((hItem = TreeList_GetNextItem(hTreeList, hItem, TVGN_NEXTITEM)))
+    {
+        PPARTITEM PartItem = GetItemPartition(hTreeList, hItem);
+        if (!PartItem)
+            continue;
+
+        /* Return the first valid partition item (if PartEntry == NULL),
+         * or the one that matches the given partition entry */
+        if (!PartEntry || (PartItem->PartEntry == PartEntry))
+            return hItem; /* Found it */
+    }
+    return NULL; /* Nothing was found */
+}
+
 PVOL_CREATE_INFO
 FindVolCreateInTreeByVolume(
     _In_ HWND hTreeList,
@@ -820,7 +884,6 @@ FindVolCreateInTreeByVolume(
 
     /* Enumerate every cached data in the TreeList, and for each, check
      * whether its corresponding PPARTENTRY is the one we are looking for */
-    // for (hItem = TVI_ROOT; hItem; hItem = TreeList_GetNextItem(...)) { }
     hItem = TVI_ROOT;
     while ((hItem = TreeList_GetNextItem(hTreeList, hItem, TVGN_NEXTITEM)))
     {
@@ -834,9 +897,7 @@ FindVolCreateInTreeByVolume(
             return PartItem->VolCreate;
         }
     }
-
-    /* Nothing was found */
-    return NULL;
+    return NULL; /* Nothing was found */
 }
 
 
@@ -1335,9 +1396,12 @@ DrawPartitionList(
         PrintDiskData(hWndList, NULL, DiskEntry);
     }
 
-    /* Select the first item */
-    // TreeList_SetFocusItem(hWndList, 1, 1);
-    TreeList_SelectItem(hWndList, 1);
+    /* Select the first usable partition/empty space */
+    {
+    HTLITEM hItem = TreeListFindPartitionItem(hWndList, NULL);
+    if (!hItem) hItem = (HTLITEM)1; // If none, select the first item, whatever it is.
+    TreeList_SelectItem(hWndList, hItem);
+    }
 }
 
 static VOID
@@ -1451,8 +1515,7 @@ DoCreatePartition(
     if (NextPart /*&& !NextPart->IsPartitioned*/)
         PrintPartitionData(hList, hParentItem, *phItem, NextPart);
 
-    /* Give the focus on and select the created partition */
-    // TreeList_SetFocusItem(hList, 1, 1);
+    /* Select the created partition */
     TreeList_SelectItem(hList, *phItem);
 
     return TRUE;
@@ -1557,8 +1620,7 @@ DoDeletePartition(
     /* Add back the "new" unpartitioned space */
     *phItem = PrintPartitionData(hList, hParentItem, hInsertAfter, PartEntry);
 
-    /* Give the focus on and select the unpartitioned space */
-    // TreeList_SetFocusItem(hList, 1, 1);
+    /* Select the unpartitioned space */
     TreeList_SelectItem(hList, *phItem);
 
     return TRUE;
@@ -1568,7 +1630,8 @@ DoDeletePartition(
 static BOOLEAN
 SelectInstallPartition(
     _In_ PSETUPDATA pSetupData,
-    _In_ HWND hwndDlg)
+    _In_ HWND hwndDlg,
+    _In_opt_ PPARTENTRY CurrentPartition)
 {
     HWND hList;
     HTLITEM hItem;
@@ -1576,7 +1639,17 @@ SelectInstallPartition(
     PPARTENTRY PartEntry;
 
     hList = GetDlgItem(hwndDlg, IDC_PARTITION);
-    PartItem = GetSelectedPartition(hList, &hItem);
+    if (CurrentPartition)
+    {
+        hItem = TreeListFindPartitionItem(hList, CurrentPartition);
+        PartItem = GetItemPartition(hList, hItem);
+        if (hItem)
+            TreeList_SelectItem(hList, hItem);
+    }
+    else
+    {
+        PartItem = GetSelectedPartition(hList, &hItem);
+    }
     if (!PartItem)
         return FALSE; // Fail
     PartEntry = PartItem->PartEntry;
@@ -1650,7 +1723,8 @@ SelectInstallPartition(
     /* Force formatting only if the partition doesn't have a volume (may or may not be formatted) */
     if (PartEntry->Volume &&
         ((PartEntry->Volume->FormatState == Formatted) ||
-         (PartItem->VolCreate && *PartItem->VolCreate->FileSystemName)))
+         (PartItem->VolCreate && *PartItem->VolCreate->FileSystemName)) &&
+        !(pSetupData->bUnattend && pSetupData->USetupData.FormatPartition))
     {
         /*NOTHING*/;
     }
@@ -1659,7 +1733,13 @@ SelectInstallPartition(
         INT_PTR ret;
         PARTCREATE_CTX PartCreateCtx = {0};
 
-        /* Show the formatting dialog */
+        /* In unattended setup, try auto-formatting if required,
+         * otherwise show the dialog to ask the user what to do */
+        if (pSetupData->bUnattend && pSetupData->USetupData.FormatPartition)
+            PartCreateCtx.AutoFormat = TRUE;
+
+        /* Show the formatting dialog. In unattended setup, auto-format with
+         * "default" filesystem, or popup the dialog asking the user what to do. */
         PartCreateCtx.PartItem = PartItem;
         ret = DialogBoxParamW(pSetupData->hInstance,
                               MAKEINTRESOURCEW(IDD_FORMAT),
@@ -1675,6 +1755,8 @@ SelectInstallPartition(
     }
 
     /* The install partition has been found */
+    ASSERT((PartEntry->Volume && PartEntry->Volume->FormatState == Formatted) ||
+           (PartItem->VolCreate && *PartItem->VolCreate->FileSystemName));
     InstallPartition = PartEntry;
     return TRUE;
 }
@@ -2095,6 +2177,74 @@ DisableWizNext:
                     /* Keep the "Next" button disabled. It will be enabled
                      * only when the user selects a valid partition. */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+
+                    /* In unattended mode, switch directly to the next page.
+                     * TODO: *UNLESS* there are inconsistencies in the data,
+                     * in which case we should stay on the page! */
+                    if (pSetupData->bUnattend) do
+                    {
+                        PPARTENTRY CurrentPartition;
+
+                        /* If DestinationDiskNumber or DestinationPartitionNumber are invalid
+                         * (see below), don't select the partition and show the list instead */
+                        if (pSetupData->USetupData.DestinationDiskNumber == -1 ||
+                            pSetupData->USetupData.DestinationPartitionNumber == -1)
+                        {
+                            break;
+                        }
+
+                        /* Determine the selected installation disk & partition */
+                        CurrentPartition = SelectPartition(pSetupData->PartitionList,
+                                                           pSetupData->USetupData.DestinationDiskNumber,
+                                                           pSetupData->USetupData.DestinationPartitionNumber);
+
+                        /* Now reset DestinationDiskNumber and DestinationPartitionNumber
+                         * to *invalid* values, so that if the corresponding partition is
+                         * determined to be invalid by the code below or in CreateInstallPartition,
+                         * we don't reselect it when SelectPartitionPage() is called again */
+                        pSetupData->USetupData.DestinationDiskNumber = -1;
+                        pSetupData->USetupData.DestinationPartitionNumber = -1;
+
+                        // FIXME: Here and in the AutoPartition case below, the CurrentPartition
+                        // may actually be unsuitable (MBR-extended, non-simple volume...).
+                        // More checks need to be made here!
+                        //
+                        // NOTE: We don't check for CurrentPartition->Volume in case
+                        // the partition doesn't contain a recognized volume/none exists.
+                        // We also don't check whether IsPartitioned is TRUE, because if
+                        // the partition is still empty space, we'll try to partition it.
+                        if (CurrentPartition && !IsContainerPartition(CurrentPartition->PartitionType))
+                            goto CreateInstallPartition;
+
+                        if (pSetupData->USetupData.AutoPartition)
+                        {
+                            /* Use whatever selected partition (or the first one) in the list */
+                            PPARTITEM PartItem;
+                            hList = GetDlgItem(hwndDlg, IDC_PARTITION);
+                            PartItem = GetSelectedPartition(hList, NULL);
+                            if (!PartItem)
+                            {
+                                HTLITEM hItem = TreeListFindPartitionItem(hList, NULL);
+                                PartItem = GetItemPartition(hList, hItem);
+                            }
+                            if (PartItem)
+                                CurrentPartition = PartItem->PartEntry;
+
+                            // TODO: Do more checks, and loop until we find a valid partition.
+                            goto CreateInstallPartition;
+                        }
+                        break;
+
+CreateInstallPartition:
+                        /* Select the install partition and if success,
+                         * proceed with the installation */
+                        if (SelectInstallPartition(pSetupData, hwndDlg, CurrentPartition))
+                        {
+                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1);
+                            return TRUE;
+                        }
+                        /* Halt the installation and display the page */
+                    } while (0);
                     break;
                 }
 
@@ -2138,7 +2288,7 @@ DisableWizNext:
                 case PSN_WIZNEXT:
                 {
                     /* Select the install partition and if success, go to the next page */
-                    if (SelectInstallPartition(pSetupData, hwndDlg))
+                    if (SelectInstallPartition(pSetupData, hwndDlg, NULL))
                         break;
                     /* Failed, stay on the page */
                     SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, -1);

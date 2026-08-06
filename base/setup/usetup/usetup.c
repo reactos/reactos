@@ -2428,8 +2428,7 @@ Restart:
 
     if (IsUnattendedSetup)
     {
-        ASSERT(USetupData.FormatPartition);
-
+        /* In unattended mode, preselect the file system */
         switch (USetupData.FsType)
         {
             /* 1 is for BtrFS */
@@ -2461,8 +2460,20 @@ Restart:
 
     if (IsUnattendedSetup)
     {
-        ASSERT(USetupData.FormatPartition);
-        return FSVOL_DOIT;
+        /* In unattended setup, directly format the partition if requested.
+         * Otherwise, skip the partition if it doesn't require formatting.
+         * Else, ask the user what to do. */
+        if (USetupData.FormatPartition)
+        {
+            return FSVOL_DOIT;
+        }
+        else if (!ForceFormat)
+        {
+            /* Skip formatting this volume, but file system checks will be performed */
+            return FSVOL_SKIP;
+        }
+        // TODO: If unattended mode doesn't allow interaction,
+        // popup or log error and exit, since we don't allow regular interaction.
     }
 
     DrawFileSystemList(FileSystemList);
@@ -2671,15 +2682,9 @@ FsVolCallback(
     {
         if ((FSVOL_OP)Param1 == FSVOL_FORMAT)
         {
-            /*
-             * In case we just repair an existing installation, or make
-             * an unattended setup without formatting, just go to the
-             * file system check step.
-             */
+            /* In case we just repair an existing installation,
+             * just go to the file system check step */
             if (RepairUpdateFlag)
-                return FSVOL_SKIP; /** HACK!! **/
-
-            if (IsUnattendedSetup && !USetupData.FormatPartition)
                 return FSVOL_SKIP; /** HACK!! **/
         }
         return FSVOL_DOIT;
@@ -3953,6 +3958,9 @@ QuitPage(PINPUT_RECORD Ir)
     }
 
     CONSOLE_SetStatusText(MUIGetString(STRING_REBOOTCOMPUTER2));
+
+    if (IsUnattendedSetup)
+        return FLUSH_PAGE;
 
     /* Wait for maximum 15 seconds or an ENTER key before quitting */
     ProgressCountdown(Ir, 15);
