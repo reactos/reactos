@@ -30,6 +30,7 @@ START_TEST(NtGdiGetFontResourceInfoInternalW)
         &dwBufSize,
         &logfont,
         2);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, NtFileName.Buffer);
 
     ok(bRet != FALSE, "bRet was FALSE.\n");
 

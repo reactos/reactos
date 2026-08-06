@@ -422,6 +422,7 @@ LoadLogFile(HKEY hKey, PWSTR LogName)
 
     HeapFree(GetProcessHeap(), 0, Expanded);
     HeapFree(GetProcessHeap(), 0, Buf);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
     return pLogf;
 }
 
