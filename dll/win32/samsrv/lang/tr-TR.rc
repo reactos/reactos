@@ -2,6 +2,12 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
+/*
+ * For the standard names of these groups and accounts, please refer to:
+ * https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups
+ * https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers
+ * and their corresponding localized pages.
+ */
 STRINGTABLE
 BEGIN
     IDS_DOMAIN_BUILTIN_NAME "Yerleşik"
@@ -20,7 +26,7 @@ BEGIN
     IDS_ALIAS_BACKUP_OPS_NAME "Yedekleme Yöneticileri"
     IDS_ALIAS_BACKUP_OPS_COMMENT "Yedekleme yöneticileri, yalnızca dosyaları yedeklemek veya geri yüklemek amacıyla güvenlik kısıtlamalarını atlayabilir."
     IDS_ALIAS_REPLICATOR_NAME "Çoğaltıcılar"
-    IDS_ALIAS_REPLICATOR_COMMENT "Etki alanında dosya kopyalayabilirler"
+    IDS_ALIAS_REPLICATOR_COMMENT "Etki alanında dosya kopyalayabilirler."
     IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Uzak Masaüstü Kullanıcıları Grubu"
     IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "Bu gruptaki üyelerin, uzaktan oturum açma yetkisi vardır."
     IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "Ağ Ayarları Yöneticileri"
