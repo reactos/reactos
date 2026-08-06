@@ -47,25 +47,26 @@ LPCWSTR is_comctl32_class( const WCHAR *name )
 {
     static const WCHAR classesW[][20] =
     {
-        {'C','o','m','b','o','B','o','x','E','x','3','2',0},
-        {'m','s','c','t','l','s','_','h','o','t','k','e','y','3','2',0},
-        {'m','s','c','t','l','s','_','p','r','o','g','r','e','s','s','3','2',0},
-        {'m','s','c','t','l','s','_','s','t','a','t','u','s','b','a','r','3','2',0},
-        {'m','s','c','t','l','s','_','t','r','a','c','k','b','a','r','3','2',0},
-        {'m','s','c','t','l','s','_','u','p','d','o','w','n','3','2',0},
-        {'N','a','t','i','v','e','F','o','n','t','C','t','l',0},
-        {'R','e','B','a','r','W','i','n','d','o','w','3','2',0},
-        {'S','y','s','A','n','i','m','a','t','e','3','2',0},
-        {'S','y','s','D','a','t','e','T','i','m','e','P','i','c','k','3','2',0},
-        {'S','y','s','H','e','a','d','e','r','3','2',0},
-        {'S','y','s','I','P','A','d','d','r','e','s','s','3','2',0},
-        {'S','y','s','L','i','s','t','V','i','e','w','3','2',0},
-        {'S','y','s','M','o','n','t','h','C','a','l','3','2',0},
-        {'S','y','s','P','a','g','e','r',0},
-        {'S','y','s','T','a','b','C','o','n','t','r','o','l','3','2',0},
-        {'S','y','s','T','r','e','e','V','i','e','w','3','2',0},
-        {'T','o','o','l','b','a','r','W','i','n','d','o','w','3','2',0},
-        {'t','o','o','l','t','i','p','s','_','c','l','a','s','s','3','2',0},
+        L"ComboBoxEx32",
+        L"msctls_hotkey32",
+        L"msctls_progress32",
+        L"msctls_statusbar32",
+        L"msctls_trackbar32",
+        L"msctls_updown32",
+        L"NativeFontCtl",
+        L"ReBarWindow32",
+        L"SysAnimate32",
+        L"SysDateTimePick32",
+        L"SysHeader32",
+        L"SysIPAddress32",
+        L"SysLink",
+        L"SysListView32",
+        L"SysMonthCal32",
+        L"SysPager",
+        L"SysTabControl32",
+        L"SysTreeView32",
+        L"ToolbarWindow32",
+        L"tooltips_class32",
     };
 
     int min = 0, max = (sizeof(classesW) / sizeof(classesW[0])) - 1;
@@ -78,6 +79,27 @@ LPCWSTR is_comctl32_class( const WCHAR *name )
         else min = pos + 1;
     }
     return NULL;
+}
+
+static BOOL is_builtin_class( const WCHAR *name )
+{
+    static const WCHAR *classesW[] =
+    {
+        L"IME",
+        L"MDIClient",
+        L"Scrollbar",
+    };
+
+    int min = 0, max = _countof(classesW) - 1;
+
+    while (min <= max)
+    {
+        int res, pos = (min + max) / 2;
+        if (!(res = strcmpiW( name, classesW[pos] ))) return TRUE;
+        if (res < 0) max = pos - 1;
+        else min = pos + 1;
+    }
+    return FALSE;
 }
 
 LPCWSTR
@@ -128,6 +150,13 @@ ClassNameToVersion(
             RtlInitUnicodeString(&SectionName, lpszClass);
         }
     }
+
+    // check if the classes are built into win32k, if so use the non-versioned variant as comctl32 does not register the versioned class names
+    if (is_builtin_class(SectionName.Buffer))
+    {
+        return NULL;
+    }
+
 #ifdef USE_VERSIONED_CLASSES
     Status = RtlFindActivationContextSectionString( FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX,
                                                     NULL,
@@ -204,8 +233,6 @@ VersionRegisterClass(
     UNICODE_STRING ClassName;
     WCHAR ClassNameBuf[MAX_PATH] = {0};
     RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame = { sizeof(Frame), 1 };
-
-    ERR("VersionRegisterClass: Attempting to call RegisterClassNameW in %S.\n", lpLibFileName);
 
     RtlActivateActivationContextUnsafeFast(&Frame, Contex);
 
