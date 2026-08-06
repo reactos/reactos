@@ -187,7 +187,7 @@ BEGIN
     IDS_DEVICETITLE "Setup the basic devices"
     IDS_DEVICESUBTITLE "Set the settings of display and keyboard."
     IDS_DRIVETITLE "Setup the installation partition and system folder"
-    IDS_DRIVESUBTITLE "Prepare installation partition, system folder and bootloader."
+    IDS_DRIVESUBTITLE "Select the installation partition, system folder and bootloader."
     IDS_SUMMARYTITLE "Zhrnutie inštalácie"
     IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device."
     IDS_PROCESSTITLE "Prepare partition, copy files and setup system"
