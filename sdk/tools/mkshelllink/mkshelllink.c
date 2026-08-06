@@ -269,7 +269,6 @@ my_mbstowcs(
     /* Return the number of wide characters, excluding the NUL-terminator, written to wcstr */
     return (i - 1);
 }
-#define mbstowcs my_mbstowcs
 
 static void __cdecl trace(const char *format, ...)
 {
@@ -376,7 +375,7 @@ static void write_string(FILE *pFile, bool bUnicode, const char *str)
     else
     {
         wchar_t tmpBufferU[1024]; // Large-enough buffer for string conversions.
-        uhTmp = (uint16_t)mbstowcs(tmpBufferU, str, _countof(tmpBufferU));
+        uhTmp = (uint16_t)my_mbstowcs(tmpBufferU, str, _countof(tmpBufferU));
         fwrite(tmpBufferU, uhTmp * sizeof(wchar_t), 1, pFile);
     }
 }
@@ -743,7 +742,7 @@ int main(int argc, const char *argv[])
 
         /* We have to store both ANSI and UTF16 versions of the string! */
         strncpy(SzLinkBlock.szTarget, pszTarget, _countof(SzLinkBlock.szTarget));
-        mbstowcs(SzLinkBlock.szwTarget, pszTarget, _countof(SzLinkBlock.szwTarget));
+        my_mbstowcs(SzLinkBlock.szwTarget, pszTarget, _countof(SzLinkBlock.szwTarget));
 
         pSzLinkBlock = &SzLinkBlock;
     }
@@ -756,7 +755,7 @@ int main(int argc, const char *argv[])
 
         /* We have to store both ANSI and UTF16 versions of the string! */
         strncpy(SzIconBlock.szTarget, pszIcon, _countof(SzIconBlock.szTarget));
-        mbstowcs(SzIconBlock.szwTarget, pszIcon, _countof(SzIconBlock.szwTarget));
+        my_mbstowcs(SzIconBlock.szwTarget, pszIcon, _countof(SzIconBlock.szwTarget));
 
         pSzIconBlock = &SzIconBlock;
     }
