@@ -111,10 +111,14 @@ VOID
 NTAPI
 KiSetProcessorType(VOID)
 {
+    PKPRCB Prcb = KeGetCurrentPrcb();
     CPU_INFO CpuInfo;
     CPU_SIGNATURE CpuSignature;
     BOOLEAN ExtendModel;
     ULONG Stepping, Type;
+
+    /* Get the CPU vendor string */
+    KiGetCpuVendorString(Prcb->VendorString);
 
     /* Do CPUID 1 now */
     KiCpuId(&CpuInfo, 1);
@@ -153,9 +157,9 @@ KiSetProcessorType(VOID)
     }
 
     /* Save them in the PRCB */
-    KeGetCurrentPrcb()->CpuID = TRUE;
-    KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
-    KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
+    Prcb->CpuID = TRUE;
+    Prcb->CpuType = (UCHAR)Type;
+    Prcb->CpuStep = (USHORT)Stepping;
 }
 
 CODE_SEG("INIT")
@@ -170,9 +174,6 @@ KiGetFeatureBits(VOID)
     UCHAR Ccr1;
     BOOLEAN ExtendedCPUID = TRUE;
     ULONG CpuFeatures = 0;
-
-    /* Get the CPU vendor string */
-    KiGetCpuVendorString(Prcb->VendorString);
 
     /* Get the Vendor ID */
     Vendor = KiGetCpuVendor();
