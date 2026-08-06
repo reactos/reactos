@@ -270,7 +270,7 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "ReactOS İş İstasyonu"
     IDS_INSTALLATIONWORKSTATIONINFO "Sistem bir iş istasyonu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" ve ""Müziklerim"" özel dizinleri ""Belgelerim""in içindedir."
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command-line environment to reduce resource usage and attack surface."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."

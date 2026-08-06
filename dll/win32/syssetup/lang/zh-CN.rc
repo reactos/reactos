@@ -272,7 +272,7 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "ReactOS 工作站版"
     IDS_INSTALLATIONWORKSTATIONINFO "系统将会被识别为工作站。私人文件夹“我的图片”、“我的视频”和“我的音乐”会包含在“我的文档”文件夹中。"
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command-line environment to reduce resource usage and attack surface."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."

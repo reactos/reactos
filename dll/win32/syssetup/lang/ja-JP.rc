@@ -261,7 +261,7 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "ReactOS ワークステーション"
     IDS_INSTALLATIONWORKSTATIONINFO "システムはワークステーションとして認識されます。個人用フォルダ ""マイ ピクチャ""、""マイ ビデオ""、""マイ ミュージック"" は、""マイ ドキュメント"" の中にあります。"
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command-line environment to reduce resource usage and attack surface."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."
