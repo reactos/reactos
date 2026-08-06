@@ -38,8 +38,22 @@ public:
     struct CItemData
     {
         CComHeapPtr<ITEMIDLIST> absolutePidl;
-        CComHeapPtr<ITEMIDLIST> relativePidl;
+        PUITEMID_CHILD leafPidl;
         BOOL expanded = FALSE;
+
+        HRESULT Attach(LPITEMIDLIST pidl)
+        {
+            absolutePidl.Attach(pidl);
+            leafPidl = ILFindLastID(absolutePidl);
+            return S_OK;
+        }
+        HRESULT Set(LPCITEMIDLIST pidl)
+        {
+            LPITEMIDLIST pidlAlloc;
+            HRESULT hr = SHILClone(pidl, &pidlAlloc);
+            return SUCCEEDED(hr) ? Attach(pidlAlloc) : hr;
+        }
+        PUITEMID_CHILD GetLeaf() const { return leafPidl; }
     };
     CItemData* _GetItemData(_In_ HTREEITEM hItem);
     CItemData* _GetItemData(_In_ UINT ItemSpec = TVGN_CARET);
@@ -150,6 +164,13 @@ protected:
     ULONG m_shellRegID = 0;
     PWSTR m_OriginalRename = NULL;
 
+    enum UPDATEITEMFLAGS {
+        UIF_TEXT = TVIF_TEXT,
+        UIF_IMAGE = TVIF_IMAGE,
+        UIF_GETREAL = TVIF_DI_SETITEM, // SHGetRealIDL is required for SHCNE notifications
+        UIF_ALL = ~UINT(0) & ~UIF_GETREAL
+    };
+
     // *** Drop target information ***
     CComPtr<IDropTarget> m_pDropTarget;
     HTREEITEM m_childTargetNode = NULL;
@@ -194,13 +215,15 @@ protected:
         _In_ LPCITEMIDLIST pEltRelative,
         _In_ BOOL bSort);
     BOOL _InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry);
-    HRESULT _UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL IgnoreSelfNavigation = FALSE);
+    HRESULT _UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL IgnoreSelfNavigation = FALSE, UINT SBSP = 0);
     HRESULT _GetCurrentLocation(_Out_ PIDLIST_ABSOLUTE *ppidl);
     HRESULT _IsCurrentLocation(_In_ PCIDLIST_ABSOLUTE pidl);
     void _Refresh();
     void _RefreshRecurse(_In_ HTREEITEM hItem);
     BOOL _IsTreeItemInEnum(_In_ HTREEITEM hItem, _In_ IEnumIDList *pEnum);
     BOOL _TreeItemHasThisChild(_In_ HTREEITEM hItem, _In_ PCITEMID_CHILD pidlChild);
+    HTREEITEM _FindItem(_In_ PCIDLIST_ABSOLUTE pidl, _Out_opt_ CItemData **ppData = NULL, _In_ HTREEITEM hBase = NULL);
+    HRESULT _UpdateItem(_In_ HTREEITEM hItem, _In_ CItemData *pData, _In_ PCIDLIST_ABSOLUTE pidl, _In_ UINT UIF = UIF_ALL);
     HRESULT _GetItemEnum(
         _Out_ CComPtr<IEnumIDList>& pEnum,
         _In_ HTREEITEM hItem,
