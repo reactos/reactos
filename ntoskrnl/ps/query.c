@@ -1308,7 +1308,7 @@ NtQueryInformationProcess(
                 {
                     Wow64 = (ULONG_PTR)Process->Wow64Process->Wow64;
                 }
-                
+
                 /* Release the lock */
                 ExReleaseRundownProtection(&Process->RundownProtect);
             }

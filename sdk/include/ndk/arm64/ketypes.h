@@ -279,7 +279,7 @@ typedef struct _KPROCESSOR_STATE
 FORCEINLINE
 struct _KPRCB *
 KeGetCurrentPrcb(VOID)
-{  
+{
     //UNIMPLEMENTED;
     return 0;
 }

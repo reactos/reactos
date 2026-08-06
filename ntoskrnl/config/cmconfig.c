@@ -396,7 +396,7 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
 #ifdef _M_IX86
         PCONFIGURATION_COMPONENT_DATA ConfigData;
-        
+
         ConfigData = KeFindConfigurationEntry(LoaderBlock->ConfigurationRoot,
                                               SystemClass,
                                               MaximumType,

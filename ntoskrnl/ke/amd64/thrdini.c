@@ -246,7 +246,7 @@ KiSwapContextResume(
 
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
        PEPROCESS ENewProcess = (PEPROCESS)NewProcess;
-       
+
        if (ENewProcess->Wow64Process != NULL)
        {
           ULONG_PTR Base = (ULONG_PTR)PS_GET_TEB32_FROM_TEB(NewThread->Teb);

@@ -456,7 +456,7 @@ IopInitializePlugPlayServices(VOID)
         KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
     }
     RtlZeroMemory(PnpBusTypeGuidList.Guids, PnpBusTypeGuidList.AllocatedCount * sizeof(GUID));
-  
+
     /* Initialize PnP root relations (this is a syncronous operation) */
     PiQueueDeviceAction(Pdo, PiActionEnumRootDevices, NULL, NULL);
 

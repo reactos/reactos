@@ -2955,7 +2955,7 @@ LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
 
     if (!Cookie)
         return NULL;
-    
+
     /* Check if it's a default one */
     if ((*Cookie == DEFAULT_SECURITY_COOKIE) ||
         (*Cookie == 0))
@@ -2980,7 +2980,7 @@ LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
         }
 
         /* Set the new cookie value */
-        *Cookie = NewCookie; 
+        *Cookie = NewCookie;
     }
 
     return Cookie;

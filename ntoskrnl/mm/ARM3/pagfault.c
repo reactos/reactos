@@ -102,7 +102,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
         {
             /* Success! */
             Teb->NtTib.StackLimit = NextStackAddress;
-            
+
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
             /* Update WOW64 32-bit TEB stack limit */
             if (CurrentThread->ThreadsProcess->Wow64Process != NULL)
@@ -1335,7 +1335,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         else
             MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
-                                      
+
         ASSERT(NT_SUCCESS(Status));
     }
 

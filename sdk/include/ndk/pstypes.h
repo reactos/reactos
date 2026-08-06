@@ -930,7 +930,7 @@ typedef enum _APPCOMPAT_USERFLAGS_HIGHPART
 #include "peb_teb.h"
 #undef EXPLICIT_64BIT
 
-// 
+//
 // WOW64 Macros
 //
 #if defined(BUILD_WOW64_ENABLED)

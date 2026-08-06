@@ -81,7 +81,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     if (Process->SectionBaseAddress != NULL)
     {
         PIMAGE_NT_HEADERS NtHeader = RtlImageNtHeader(Process->SectionBaseAddress);
-        
+
         if (NtHeader != NULL && NtHeader->FileHeader.Machine != IMAGE_FILE_MACHINE_AMD64)
         {
             IsWow64 = TRUE;
