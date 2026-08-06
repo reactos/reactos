@@ -414,10 +414,8 @@ PspSendJobMessageLocked(
 
     ASSERT(Job->CompletionPort != NULL);
 
-#if DBG
     ASSERT(ExIsResourceAcquiredSharedLite(&Job->JobLock) != 0 ||
            ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
-#endif
 
     Status = IoSetIoCompletion(Job->CompletionPort,
                                Job->CompletionKey,
@@ -573,9 +571,7 @@ PspDeactivateProcessFromJobLocked(
 {
     ASSERT(Process->Job == Job);
 
-#if DBG
     ASSERT(ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
-#endif
 
     if (FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
     {
@@ -1185,9 +1181,7 @@ PspAssociateCompletionPortCallback(
     ASSERT(Process->Job == Job);
     ASSERT(Job->CompletionPort != NULL);
 
-#if DBG
     ASSERT(ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
-#endif
 
     /* Ensure the process is active and has a valid unique process ID */
     if (!FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE) &&
@@ -1657,7 +1651,7 @@ NtCreateJobObject(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+            return _SEH2_GetExceptionCode();
         }
         _SEH2_END;
     }
@@ -1673,61 +1667,64 @@ NtCreateJobObject(
                             0,
                             (PVOID *)&Job);
 
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create job object, Status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Initialize the job object */
+
+    RtlZeroMemory(Job, sizeof(*Job));
+
+    InitializeListHead(&Job->JobSetLinks);
+    InitializeListHead(&Job->ProcessListHead);
+
+    /* Make sure that early destruction doesn't attempt to remove
+       the object from the list before it even gets added */
+    InitializeListHead(&Job->JobLinks);
+
+    /* Inherit the session ID from the caller */
+    Job->SessionId = PsGetProcessSessionId(CurrentProcess);
+
+    /* Initialize the job limits lock */
+    KeInitializeGuardedMutex(&Job->MemoryLimitsLock);
+
+    /* Initialize the job lock */
+    (VOID)ExInitializeResource(&Job->JobLock);
+
+    /* Initialize the event object within the job */
+    KeInitializeEvent(&Job->Event, NotificationEvent, FALSE);
+
+    /* Set the scheduling class. The default is '5' per Yosifovich, P.,
+       "Windows 10 System Programming, Part 1", p.264, (2020) */
+    Job->SchedulingClass = 5;
+
+    /* Link the object into the global job list */
+    ExAcquireFastMutex(&PsJobListLock);
+    InsertTailList(&PsJobListHead, &Job->JobLinks);
+    ExReleaseFastMutex(&PsJobListLock);
+
+    /* Insert the job object into the object table  */
+    Status = ObInsertObject(Job,
+                            NULL,
+                            DesiredAccess,
+                            0,
+                            NULL,
+                            &Handle);
+
     if (NT_SUCCESS(Status))
     {
-        /* Initialize the job object */
-
-        RtlZeroMemory(Job, sizeof(*Job));
-
-        InitializeListHead(&Job->JobSetLinks);
-        InitializeListHead(&Job->ProcessListHead);
-
-        /* Make sure that early destruction doesn't attempt to remove
-           the object from the list before it even gets added */
-        InitializeListHead(&Job->JobLinks);
-
-        /* Inherit the session ID from the caller */
-        Job->SessionId = PsGetProcessSessionId(CurrentProcess);
-
-        /* Initialize the job limits lock */
-        KeInitializeGuardedMutex(&Job->MemoryLimitsLock);
-
-        /* Initialize the job lock */
-        (VOID)ExInitializeResource(&Job->JobLock);
-
-        /* Initialize the event object within the job */
-        KeInitializeEvent(&Job->Event, NotificationEvent, FALSE);
-
-        /* Set the scheduling class. The default is '5' per Yosifovich, P.,
-           "Windows 10 System Programming, Part 1", p.264, (2020) */
-        Job->SchedulingClass = 5;
-
-        /* Link the object into the global job list */
-        ExAcquireFastMutex(&PsJobListLock);
-        InsertTailList(&PsJobListHead, &Job->JobLinks);
-        ExReleaseFastMutex(&PsJobListLock);
-
-        /* Insert the job object into the object table  */
-        Status = ObInsertObject(Job,
-                                NULL,
-                                DesiredAccess,
-                                0,
-                                NULL,
-                                &Handle);
-
-        if (NT_SUCCESS(Status))
+        /* Pass the handle back to the caller */
+        _SEH2_TRY
         {
-            /* Pass the handle back to the caller */
-            _SEH2_TRY
-            {
-                *JobHandle = Handle;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
+            *JobHandle = Handle;
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
 
     return Status;
@@ -2208,8 +2205,8 @@ NtQueryInformationJobObject(
     case JobObjectExtendedLimitInformation:
     {
         Status = PspQueryJobLimitInformation(Job,
-                                          (JobInformationClass == JobObjectExtendedLimitInformation),
-                                          &ExtendedLimit);
+                                             (JobInformationClass == JobObjectExtendedLimitInformation),
+                                             &ExtendedLimit);
         JobInfoBuffer = &ExtendedLimit;
         break;
     }
