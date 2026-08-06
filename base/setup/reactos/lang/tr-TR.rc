@@ -22,7 +22,7 @@ BEGIN
 ve kurulumun ikinci aşamasına hazırlayacaktır.", IDC_STATIC, 115, 40, 195, 27
 ////
     GROUPBOX " ÖNEMLİ BİLGİ ", IDC_WARNTEXT1, 115, 70, 200, 90, BS_CENTER
-    LTEXT "ReactOS Alfa aşamasındadır: Özellikleri henüz tamamlanmamıştır ve \
+    LTEXT "ReactOS Alfa aşamasındadır: Özellikleri tamamlanmamıştır ve \
 yoğun geliştirme aşamasındadır. Günlük kullanım işletim sistemi olarak değil, yalnızca \
 deneme ve test amacıyla kullanılması önerilir.\n\
 Verilerinizi bozabilir veya donanımınıza zarar verebilir.", IDC_WARNTEXT2, 120, 80, 190, 50, SS_CENTER
