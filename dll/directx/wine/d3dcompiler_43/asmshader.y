@@ -30,11 +30,11 @@ struct asm_parser asm_ctx;
 
 void WINAPIV asmparser_message(struct asm_parser *ctx, const char *fmt, ...)
 {
-    __ms_va_list args;
+    va_list args;
 
-    __ms_va_start(args, fmt);
+    va_start(args, fmt);
     compilation_message(&ctx->messages, fmt, args);
-    __ms_va_end(args);
+    va_end(args);
 }
 
 static void asmshader_error(char const *s) {
@@ -49,12 +49,12 @@ static void set_rel_reg(struct shader_reg *reg, struct rel_reg *rel) {
     if(!rel->has_rel_reg) {
         reg->rel_reg = NULL;
     } else {
-        reg->rel_reg = d3dcompiler_alloc(sizeof(*reg->rel_reg));
+        reg->rel_reg = calloc(1, sizeof(*reg->rel_reg));
         if(!reg->rel_reg) {
             return;
         }
         reg->rel_reg->type = rel->type;
-        reg->rel_reg->u.swizzle = rel->swizzle;
+        reg->rel_reg->swizzle = rel->swizzle;
         reg->rel_reg->regnum = rel->rel_regnum;
     }
 }
@@ -65,6 +65,8 @@ int asmshader_lex(void);
 
 %}
 
+%define api.prefix {asmshader_}
+
 %union {
     struct {
         float           val;
@@ -73,26 +75,26 @@ int asmshader_lex(void);
     BOOL                immbool;
     unsigned int        regnum;
     struct shader_reg   reg;
-    DWORD               srcmod;
-    DWORD               writemask;
+    uint32_t            srcmod;
+    uint32_t            writemask;
     struct {
-        DWORD           writemask;
-        DWORD           idx;
-        DWORD           last;
+        uint32_t        writemask;
+        uint32_t        idx;
+        uint32_t        last;
     } wm_components;
-    DWORD               swizzle;
+    uint32_t            swizzle;
     struct {
-        DWORD           swizzle;
-        DWORD           idx;
+        uint32_t        swizzle;
+        uint32_t        idx;
     } sw_components;
-    DWORD               component;
+    uint32_t            component;
     struct {
-        DWORD           mod;
-        DWORD           shift;
+        uint32_t        mod;
+        uint32_t        shift;
     } modshift;
     enum bwriter_comparison_type comptype;
     struct {
-        DWORD           dclusage;
+        uint32_t        dclusage;
         unsigned int    regnum;
     } declaration;
     enum bwritersampler_texture_type samplertype;
@@ -302,6 +304,8 @@ int asmshader_lex(void);
 %type <rel_reg> rel_reg
 %type <reg> predicate
 %type <immval> immsum
+%type <immval> signed_integer
+%type <immval> signed_float
 %type <sregs> sregs
 
 %%
@@ -567,7 +571,7 @@ instruction:          INSTR_ADD omods dreg ',' sregs
                                 reg.regnum = $3;
                                 reg.rel_reg = NULL;
                                 reg.srcmod = 0;
-                                reg.u.writemask = BWRITERSP_WRITEMASK_ALL;
+                                reg.writemask = BWRITERSP_WRITEMASK_ALL;
                                 asm_ctx.funcs->dcl_output(&asm_ctx, $2.dclusage, $2.regnum, &reg);
                             }
                     | INSTR_DCL dclusage REG_OUTPUT writemask
@@ -579,7 +583,7 @@ instruction:          INSTR_ADD omods dreg ',' sregs
                                 reg.regnum = $3;
                                 reg.rel_reg = NULL;
                                 reg.srcmod = 0;
-                                reg.u.writemask = $4;
+                                reg.writemask = $4;
                                 asm_ctx.funcs->dcl_output(&asm_ctx, $2.dclusage, $2.regnum, &reg);
                             }
                     | INSTR_DCL dclusage omods dcl_inputreg
@@ -591,8 +595,8 @@ instruction:          INSTR_ADD omods dreg ',' sregs
                                                       asm_ctx.line_no);
                                     set_parse_status(&asm_ctx.status,  PARSE_ERR);
                                 }
-                                if(asm_ctx.shader->version == BWRITERPS_VERSION(2, 0) ||
-                                    asm_ctx.shader->version == BWRITERPS_VERSION(2, 1)) {
+                                if (asm_ctx.shader->type == ST_PIXEL && asm_ctx.shader->major_version == 2)
+                                {
                                     asmparser_message(&asm_ctx, "Line %u: Declaration not supported in PS 2\n",
                                                       asm_ctx.line_no);
                                     set_parse_status(&asm_ctx.status,  PARSE_ERR);
@@ -602,7 +606,7 @@ instruction:          INSTR_ADD omods dreg ',' sregs
                                 reg.regnum = $4.regnum;
                                 reg.rel_reg = NULL;
                                 reg.srcmod = 0;
-                                reg.u.writemask = BWRITERSP_WRITEMASK_ALL;
+                                reg.writemask = BWRITERSP_WRITEMASK_ALL;
                                 asm_ctx.funcs->dcl_input(&asm_ctx, $2.dclusage, $2.regnum, $3.mod, &reg);
                             }
                     | INSTR_DCL dclusage omods dcl_inputreg writemask
@@ -614,8 +618,8 @@ instruction:          INSTR_ADD omods dreg ',' sregs
                                                       asm_ctx.line_no);
                                     set_parse_status(&asm_ctx.status,  PARSE_ERR);
                                 }
-                                if(asm_ctx.shader->version == BWRITERPS_VERSION(2, 0) ||
-                                    asm_ctx.shader->version == BWRITERPS_VERSION(2, 1)) {
+                                if (asm_ctx.shader->type == ST_PIXEL && asm_ctx.shader->major_version == 2)
+                                {
                                     asmparser_message(&asm_ctx, "Line %u: Declaration not supported in PS 2\n",
                                                       asm_ctx.line_no);
                                     set_parse_status(&asm_ctx.status,  PARSE_ERR);
@@ -625,7 +629,7 @@ instruction:          INSTR_ADD omods dreg ',' sregs
                                 reg.regnum = $4.regnum;
                                 reg.rel_reg = NULL;
                                 reg.srcmod = 0;
-                                reg.u.writemask = $5;
+                                reg.writemask = $5;
                                 asm_ctx.funcs->dcl_input(&asm_ctx, $2.dclusage, $2.regnum, $3.mod, &reg);
                             }
                     | INSTR_DCL omods dcl_inputreg
@@ -647,7 +651,7 @@ instruction:          INSTR_ADD omods dreg ',' sregs
                                 reg.regnum = $3.regnum;
                                 reg.rel_reg = NULL;
                                 reg.srcmod = 0;
-                                reg.u.writemask = BWRITERSP_WRITEMASK_ALL;
+                                reg.writemask = BWRITERSP_WRITEMASK_ALL;
                                 asm_ctx.funcs->dcl_input(&asm_ctx, 0, 0, $2.mod, &reg);
                             }
                     | INSTR_DCL omods dcl_inputreg writemask
@@ -669,7 +673,7 @@ instruction:          INSTR_ADD omods dreg ',' sregs
                                 reg.regnum = $3.regnum;
                                 reg.rel_reg = NULL;
                                 reg.srcmod = 0;
-                                reg.u.writemask = $4;
+                                reg.writemask = $4;
                                 asm_ctx.funcs->dcl_input(&asm_ctx, 0, 0, $2.mod, &reg);
                             }
                     | INSTR_DCL sampdcl omods REG_SAMPLER
@@ -711,11 +715,11 @@ instruction:          INSTR_ADD omods dreg ',' sregs
                                                   asm_ctx.line_no);
                                 set_parse_status(&asm_ctx.status,  PARSE_WARN);
                             }
-                    | INSTR_DEF REG_CONSTFLOAT ',' IMMVAL ',' IMMVAL ',' IMMVAL ',' IMMVAL
+                    | INSTR_DEF REG_CONSTFLOAT ',' signed_float ',' signed_float ',' signed_float ',' signed_float
                             {
                                 asm_ctx.funcs->constF(&asm_ctx, $2, $4.val, $6.val, $8.val, $10.val);
                             }
-                    | INSTR_DEFI REG_CONSTINT ',' IMMVAL ',' IMMVAL ',' IMMVAL ',' IMMVAL
+                    | INSTR_DEFI REG_CONSTINT ',' signed_integer ',' signed_integer ',' signed_integer ',' signed_integer
                             {
                                 asm_ctx.funcs->constI(&asm_ctx, $2, $4.val, $6.val, $8.val, $10.val);
                             }
@@ -986,7 +990,7 @@ dreg:                 dreg_name rel_reg
                             {
                                 $$.regnum = $1.regnum;
                                 $$.type = $1.type;
-                                $$.u.writemask = BWRITERSP_WRITEMASK_ALL;
+                                $$.writemask = BWRITERSP_WRITEMASK_ALL;
                                 $$.srcmod = BWRITERSPSM_NONE;
                                 set_rel_reg(&$$, &$2);
                             }
@@ -994,7 +998,7 @@ dreg:                 dreg_name rel_reg
                             {
                                 $$.regnum = $1.regnum;
                                 $$.type = $1.type;
-                                $$.u.writemask = $2;
+                                $$.writemask = $2;
                                 $$.srcmod = BWRITERSPSM_NONE;
                                 $$.rel_reg = NULL;
                             }
@@ -1146,13 +1150,13 @@ swizzle:              /* empty */
                                 $$ = BWRITERVS_NOSWIZZLE;
                             }
                             else {
-                                DWORD last, i;
+                                uint32_t last, i;
 
-                                $$ = $2.swizzle << BWRITERVS_SWIZZLE_SHIFT;
+                                $$ = $2.swizzle;
                                 /* Fill the swizzle by extending the last component */
                                 last = ($2.swizzle >> 2 * ($2.idx - 1)) & 0x03;
                                 for(i = $2.idx; i < 4; i++){
-                                    $$ |= last << (BWRITERVS_SWIZZLE_SHIFT + 2 * i);
+                                    $$ |= last << (2 * i);
                                 }
                                 TRACE("Got a swizzle: %08x\n", $$);
                             }
@@ -1260,7 +1264,7 @@ sreg:                   sreg_name rel_reg swizzle
                         {
                             $$.type = $1.type;
                             $$.regnum = $1.regnum;
-                            $$.u.swizzle = $3;
+                            $$.swizzle = $3;
                             $$.srcmod = BWRITERSPSM_NONE;
                             set_rel_reg(&$$, &$2);
                         }
@@ -1270,7 +1274,7 @@ sreg:                   sreg_name rel_reg swizzle
                             $$.regnum = $1.regnum;
                             set_rel_reg(&$$, &$2);
                             $$.srcmod = $3;
-                            $$.u.swizzle = $4;
+                            $$.swizzle = $4;
                         }
                     | '-' sreg_name rel_reg swizzle
                         {
@@ -1278,7 +1282,7 @@ sreg:                   sreg_name rel_reg swizzle
                             $$.regnum = $2.regnum;
                             $$.srcmod = BWRITERSPSM_NEG;
                             set_rel_reg(&$$, &$3);
-                            $$.u.swizzle = $4;
+                            $$.swizzle = $4;
                         }
                     | '-' sreg_name rel_reg smod swizzle
                         {
@@ -1303,7 +1307,7 @@ sreg:                   sreg_name rel_reg swizzle
                                 default:
                                     FIXME("Unhandled combination of NEGATE and %u\n", $4);
                             }
-                            $$.u.swizzle = $5;
+                            $$.swizzle = $5;
                         }
                     | IMMVAL '-' sreg_name rel_reg swizzle
                         {
@@ -1317,7 +1321,7 @@ sreg:                   sreg_name rel_reg swizzle
                             $$.regnum = $3.regnum;
                             $$.srcmod = BWRITERSPSM_COMP;
                             set_rel_reg(&$$, &$4);
-                            $$.u.swizzle = $5;
+                            $$.swizzle = $5;
                         }
                     | IMMVAL '-' sreg_name rel_reg smod swizzle
                         {
@@ -1339,7 +1343,7 @@ sreg:                   sreg_name rel_reg swizzle
                             $$.regnum = $2.regnum;
                             $$.rel_reg = NULL;
                             $$.srcmod = BWRITERSPSM_NOT;
-                            $$.u.swizzle = $3;
+                            $$.swizzle = $3;
                         }
 
 rel_reg:               /* empty */
@@ -1385,23 +1389,46 @@ rel_reg:               /* empty */
                             $$.swizzle = $5;
                         }
 
-immsum:               IMMVAL
+immsum:               signed_integer
+                    | immsum '+' signed_integer
                         {
-                            if(!$1.integer) {
+                            $$.val = $1.val + $3.val;
+                        }
+                    | immsum '-' signed_integer
+                        {
+                            $$.val = $1.val - $3.val;
+                        }
+
+signed_integer:
+                      IMMVAL
+                        {
+                            if (!$1.integer)
+                            {
                                 asmparser_message(&asm_ctx, "Line %u: Unexpected float %f\n",
-                                                  asm_ctx.line_no, $1.val);
+                                        asm_ctx.line_no, $1.val);
                                 set_parse_status(&asm_ctx.status,  PARSE_ERR);
                             }
                             $$.val = $1.val;
                         }
-                    | immsum '+' IMMVAL
+                    | '-' IMMVAL
                         {
-                            if(!$3.integer) {
+                            if (!$2.integer)
+                            {
                                 asmparser_message(&asm_ctx, "Line %u: Unexpected float %f\n",
-                                                  asm_ctx.line_no, $3.val);
+                                        asm_ctx.line_no, $2.val);
                                 set_parse_status(&asm_ctx.status,  PARSE_ERR);
                             }
-                            $$.val = $1.val + $3.val;
+                            $$.val = -$2.val;
+                        }
+
+signed_float:
+                      IMMVAL
+                        {
+                            $$.val = $1.val;
+                        }
+                    | '-' IMMVAL
+                        {
+                            $$.val = -$2.val;
                         }
 
 smod:                 SMOD_BIAS
@@ -1657,7 +1684,7 @@ predicate:            '(' REG_PREDICATE swizzle ')'
                             $$.regnum = 0;
                             $$.rel_reg = NULL;
                             $$.srcmod = BWRITERSPSM_NONE;
-                            $$.u.swizzle = $3;
+                            $$.swizzle = $3;
                         }
                     | '(' SMOD_NOT REG_PREDICATE swizzle ')'
                         {
@@ -1665,7 +1692,7 @@ predicate:            '(' REG_PREDICATE swizzle ')'
                             $$.regnum = 0;
                             $$.rel_reg = NULL;
                             $$.srcmod = BWRITERSPSM_NOT;
-                            $$.u.swizzle = $4;
+                            $$.swizzle = $4;
                         }
 
 %%
@@ -1691,11 +1718,11 @@ struct bwriter_shader *parse_asm_shader(char **messages)
         if (asm_ctx.messages.size)
         {
             /* Shrink the buffer to the used size */
-            *messages = d3dcompiler_realloc(asm_ctx.messages.string, asm_ctx.messages.size + 1);
+            *messages = realloc(asm_ctx.messages.string, asm_ctx.messages.size + 1);
             if (!*messages)
             {
                 ERR("Out of memory, no messages reported\n");
-                d3dcompiler_free(asm_ctx.messages.string);
+                free(asm_ctx.messages.string);
             }
         }
         else
@@ -1706,7 +1733,7 @@ struct bwriter_shader *parse_asm_shader(char **messages)
     else
     {
         if (asm_ctx.messages.capacity)
-            d3dcompiler_free(asm_ctx.messages.string);
+            free(asm_ctx.messages.string);
     }
 
     return ret;

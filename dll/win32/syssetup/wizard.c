@@ -2339,6 +2339,7 @@ RegisterDlls(
     INFCONTEXT Context;
     LONG DllCount = 0;
     DWORD Error = NO_ERROR;
+    HRESULT HrCoInit;
 
     ZeroMemory(&RegistrationData, sizeof(REGISTRATIONDATA));
     RegistrationData.hwndDlg = pItemsData->hwndDlg;
@@ -2370,6 +2371,15 @@ RegisterDlls(
     RegistrationData.DefaultContext = SetupInitDefaultQueueCallback(RegistrationData.hwndDlg);
     RegistrationData.pNotify = pNotify;
 
+    /* A DllRegisterServer is allowed to use COM, and several do: quartz and
+     * qcap register their filters through IFilterMapper2, devenum and qedit
+     * likewise. Nothing on this path had initialised COM, so every one of those
+     * failed with CO_E_NOTINITIALIZED and setup reported "DllRegisterServer
+     * failed". regsvr32 initialises COM around the same call for this reason. */
+    HrCoInit = CoInitialize(NULL);
+    if (FAILED(HrCoInit))
+        DPRINT1("CoInitialize failed with 0x%08lx; COM-based registration will fail\n", HrCoInit);
+
     _SEH2_TRY
     {
         if (!SetupInstallFromInfSectionW(GetParent(RegistrationData.hwndDlg),
@@ -2393,6 +2403,9 @@ RegisterDlls(
         Error = RtlNtStatusToDosError(_SEH2_GetExceptionCode());
     }
     _SEH2_END;
+
+    if (SUCCEEDED(HrCoInit))
+        CoUninitialize();
 
     SetupTermDefaultQueueCallback(RegistrationData.DefaultContext);
 

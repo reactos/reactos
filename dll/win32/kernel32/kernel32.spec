@@ -79,7 +79,7 @@
 @ stdcall -stub -version=0x600+ CloseThreadpoolIo(ptr)
 @ stdcall -stub -version=0x600+ CloseThreadpoolTimer(ptr)
 @ stdcall -stub -version=0x600+ CloseThreadpoolWait(ptr)
-@ stdcall -stub -version=0x600+ CloseThreadpoolWork(ptr)
+@ stdcall -version=0x600+ CloseThreadpoolWork(ptr)
 @ stdcall CmdBatNotification(long)
 @ stdcall CommConfigDialogA(str long ptr)
 @ stdcall CommConfigDialogW(wstr long ptr)
@@ -174,7 +174,7 @@
 @ stdcall -stub -version=0x600+ CreateThreadpoolIo(ptr ptr ptr ptr)
 @ stdcall -stub -version=0x600+ CreateThreadpoolTimer(ptr ptr ptr)
 @ stdcall -stub -version=0x600+ CreateThreadpoolWait(ptr ptr ptr)
-@ stdcall -stub -version=0x600+ CreateThreadpoolWork(ptr ptr ptr)
+@ stdcall -version=0x600+ CreateThreadpoolWork(ptr ptr ptr)
 @ stdcall CreateTimerQueue()
 @ stdcall CreateTimerQueueTimer(ptr long ptr ptr long long long)
 @ stdcall CreateToolhelp32Snapshot(long long)
@@ -1137,7 +1137,7 @@
 @ stdcall -version=0x600+ SleepConditionVariableSRW(ptr ptr long long)
 @ stdcall SleepEx(long long)
 @ stub -version=0x600+ StartThreadpoolIo
-@ stdcall -stub -version=0x600+ SubmitThreadpoolWork(ptr)
+@ stdcall -version=0x600+ SubmitThreadpoolWork(ptr)
 @ stdcall SuspendThread(long)
 @ stdcall SwitchToFiber(ptr)
 @ stdcall SwitchToThread()
@@ -1208,7 +1208,7 @@
 @ stub -version=0x600+ WaitForThreadpoolIoCallbacks
 @ stub -version=0x600+ WaitForThreadpoolTimerCallbacks
 @ stub -version=0x600+ WaitForThreadpoolWaitCallbacks
-@ stdcall -stub -version=0x600+ WaitForThreadpoolWorkCallbacks(ptr long)
+@ stdcall -version=0x600+ WaitForThreadpoolWorkCallbacks(ptr long)
 @ stdcall WaitNamedPipeA(str long)
 @ stdcall WaitNamedPipeW(wstr long)
 @ stdcall -version=0x600+ WakeAllConditionVariable(ptr) ntdll.RtlWakeAllConditionVariable

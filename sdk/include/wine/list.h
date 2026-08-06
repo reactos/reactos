@@ -21,6 +21,8 @@
 #ifndef __WINE_SERVER_LIST_H
 #define __WINE_SERVER_LIST_H
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 #define __WINE_SERVER_LIST_INLINE inline
 #else
@@ -160,8 +162,8 @@ __WINE_SERVER_LIST_INLINE unsigned int list_count( const struct list *list )
     return count;
 }
 
-/* move all elements from src to the tail of dst */
-__WINE_SERVER_LIST_INLINE void list_move_tail( struct list *dst, struct list *src )
+/* move all elements from src to before the specified element */
+__WINE_SERVER_LIST_INLINE void list_move_before( struct list *dst, struct list *src )
 {
     if (list_empty(src)) return;
 
@@ -172,8 +174,8 @@ __WINE_SERVER_LIST_INLINE void list_move_tail( struct list *dst, struct list *sr
     list_init(src);
 }
 
-/* move all elements from src to the head of dst */
-__WINE_SERVER_LIST_INLINE void list_move_head( struct list *dst, struct list *src )
+/* move all elements from src to after the specified element */
+__WINE_SERVER_LIST_INLINE void list_move_after( struct list *dst, struct list *src )
 {
     if (list_empty(src)) return;
 
@@ -182,6 +184,42 @@ __WINE_SERVER_LIST_INLINE void list_move_head( struct list *dst, struct list *sr
     dst->next = src->next;
     src->next->prev = dst;
     list_init(src);
+}
+
+/* move all elements from src to the tail of dst */
+__WINE_SERVER_LIST_INLINE void list_move_tail( struct list *dst, struct list *src )
+{
+    list_move_before( dst, src );
+}
+
+/* move all elements from src to the head of dst */
+__WINE_SERVER_LIST_INLINE void list_move_head( struct list *dst, struct list *src )
+{
+    list_move_after( dst, src );
+}
+
+/* move the slice of elements from begin to end inclusive to the head of dst */
+__WINE_SERVER_LIST_INLINE void list_move_slice_head( struct list *dst, struct list *begin, struct list *end )
+{
+    struct list *dst_next = dst->next;
+    begin->prev->next = end->next;
+    end->next->prev = begin->prev;
+    dst->next = begin;
+    dst_next->prev = end;
+    begin->prev = dst;
+    end->next = dst_next;
+}
+
+/* move the slice of elements from begin to end inclusive to the tail of dst */
+__WINE_SERVER_LIST_INLINE void list_move_slice_tail( struct list *dst, struct list *begin, struct list *end )
+{
+    struct list *dst_prev = dst->prev;
+    begin->prev->next = end->next;
+    end->next->prev = begin->prev;
+    dst_prev->next = begin;
+    dst->prev = end;
+    begin->prev = dst_prev;
+    end->next = dst;
 }
 
 /* iterate through the list */

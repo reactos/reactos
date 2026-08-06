@@ -1,6 +1,4 @@
 /*
- * IDirect3DVertexDeclaration8 implementation
- *
  * Copyright 2007 Henri Verbeet
  *
  * This library is free software; you can redistribute it and/or
@@ -18,10 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* IDirect3DVertexDeclaration8 is internal to our implementation.
- * It's not visible in the API. */
-
-#include "config.h"
 #include "d3d8_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
@@ -82,26 +76,26 @@ size_t parse_token(const DWORD* pToken)
 
     switch ((token & D3DVSD_TOKENTYPEMASK) >> D3DVSD_TOKENTYPESHIFT) { /* maybe a macro to inverse ... */
         case D3DVSD_TOKEN_NOP:
-            TRACE(" 0x%08x NOP()\n", token);
+            TRACE(" 0x%08lx NOP()\n", token);
             break;
 
         case D3DVSD_TOKEN_STREAM:
             if (token & D3DVSD_STREAMTESSMASK)
             {
-                TRACE(" 0x%08x STREAM_TESS()\n", token);
+                TRACE(" 0x%08lx STREAM_TESS()\n", token);
             } else {
-                TRACE(" 0x%08x STREAM(%u)\n", token, ((token & D3DVSD_STREAMNUMBERMASK) >> D3DVSD_STREAMNUMBERSHIFT));
+                TRACE(" 0x%08lx STREAM(%lu)\n", token, ((token & D3DVSD_STREAMNUMBERMASK) >> D3DVSD_STREAMNUMBERSHIFT));
             }
             break;
 
         case D3DVSD_TOKEN_STREAMDATA:
             if (token & 0x10000000)
             {
-                TRACE(" 0x%08x SKIP(%u)\n", token, ((token & D3DVSD_SKIPCOUNTMASK) >> D3DVSD_SKIPCOUNTSHIFT));
+                TRACE(" 0x%08lx SKIP(%lu)\n", token, ((token & D3DVSD_SKIPCOUNTMASK) >> D3DVSD_SKIPCOUNTSHIFT));
             } else {
                 DWORD type = ((token & D3DVSD_DATATYPEMASK)  >> D3DVSD_DATATYPESHIFT);
                 DWORD reg = ((token & D3DVSD_VERTEXREGMASK) >> D3DVSD_VERTEXREGSHIFT);
-                TRACE(" 0x%08x REG(%s, %s)\n", token, debug_d3dvsde_register(reg), debug_d3dvsdt_type(type));
+                TRACE(" 0x%08lx REG(%s, %s)\n", token, debug_d3dvsde_register(reg), debug_d3dvsdt_type(type));
             }
             break;
 
@@ -110,12 +104,12 @@ size_t parse_token(const DWORD* pToken)
             {
                 DWORD type = ((token & D3DVSD_DATATYPEMASK)  >> D3DVSD_DATATYPESHIFT);
                 DWORD reg = ((token & D3DVSD_VERTEXREGMASK) >> D3DVSD_VERTEXREGSHIFT);
-                TRACE(" 0x%08x TESSUV(%s) as %s\n", token, debug_d3dvsde_register(reg), debug_d3dvsdt_type(type));
+                TRACE(" 0x%08lx TESSUV(%s) as %s\n", token, debug_d3dvsde_register(reg), debug_d3dvsdt_type(type));
             } else {
                 DWORD type = ((token & D3DVSD_DATATYPEMASK)    >> D3DVSD_DATATYPESHIFT);
                 DWORD regout = ((token & D3DVSD_VERTEXREGMASK)   >> D3DVSD_VERTEXREGSHIFT);
                 DWORD regin = ((token & D3DVSD_VERTEXREGINMASK) >> D3DVSD_VERTEXREGINSHIFT);
-                TRACE(" 0x%08x TESSNORMAL(%s, %s) as %s\n", token, debug_d3dvsde_register(regin),
+                TRACE(" 0x%08lx TESSNORMAL(%s, %s) as %s\n", token, debug_d3dvsde_register(regin),
                         debug_d3dvsde_register(regout), debug_d3dvsdt_type(type));
             }
             break;
@@ -131,18 +125,18 @@ size_t parse_token(const DWORD* pToken)
             {
                 DWORD count = ((token & D3DVSD_CONSTCOUNTMASK) >> D3DVSD_CONSTCOUNTSHIFT);
                 DWORD extinfo = ((token & D3DVSD_EXTINFOMASK)    >> D3DVSD_EXTINFOSHIFT);
-                TRACE(" 0x%08x EXT(%u, %u)\n", token, count, extinfo);
+                TRACE(" 0x%08lx EXT(%lu, %lu)\n", token, count, extinfo);
                 /* todo ... print extension */
                 tokenlen = count + 1;
             }
             break;
 
         case D3DVSD_TOKEN_END:
-            TRACE(" 0x%08x END()\n", token);
+            TRACE(" 0x%08lx END()\n", token);
             break;
 
         default:
-            TRACE(" 0x%08x UNKNOWN\n", token);
+            TRACE(" 0x%08lx UNKNOWN\n", token);
             /* arg error */
     }
 
@@ -166,7 +160,7 @@ void load_local_constants(const DWORD *d3d8_elements, struct wined3d_shader *win
                 DWORD i;
                 for (i = 0; i < count; ++i)
                 {
-                    TRACE("c[%u] = (%8f, %8f, %8f, %8f)\n",
+                    TRACE("c[%lu] = (%8f, %8f, %8f, %8f)\n",
                             constant_idx,
                             *(const float *)(token + i * 4 + 1),
                             *(const float *)(token + i * 4 + 2),
@@ -254,7 +248,7 @@ wined3d_usage_lookup[] =
 
 /* TODO: find out where rhw (or positionT) is for declaration8 */
 static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3d8_elements_size,
-        struct wined3d_vertex_element **wined3d_elements)
+        struct wined3d_vertex_element **wined3d_elements, DWORD *stream_map)
 {
     struct wined3d_vertex_element *element;
     const DWORD *token = d3d8_elements;
@@ -265,8 +259,9 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
 
     TRACE("d3d8_elements %p, d3d8_elements_size %p, wined3d_elements %p\n", d3d8_elements, d3d8_elements_size, wined3d_elements);
 
+    *stream_map = 0;
     /* 128 should be enough for anyone... */
-    *wined3d_elements = heap_alloc_zero(128 * sizeof(**wined3d_elements));
+    *wined3d_elements = calloc(128, sizeof(**wined3d_elements));
     while (D3DVSD_END() != *token)
     {
         token_type = ((*token & D3DVSD_TOKENTYPEMASK) >> D3DVSD_TOKENTYPESHIFT);
@@ -292,10 +287,12 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
             element->usage = wined3d_usage_lookup[reg].usage;
             element->usage_idx = wined3d_usage_lookup[reg].usage_idx;
 
+            *stream_map |= 1u << stream;
+
             offset += wined3d_type_sizes[type];
         } else if (token_type == D3DVSD_TOKEN_STREAMDATA && (*token & D3DVSD_DATALOADTYPEMASK)) {
-            TRACE(" 0x%08x SKIP(%u)\n", token_type, ((token_type & D3DVSD_SKIPCOUNTMASK) >> D3DVSD_SKIPCOUNTSHIFT));
-            offset += sizeof(DWORD) * ((token_type & D3DVSD_SKIPCOUNTMASK) >> D3DVSD_SKIPCOUNTSHIFT);
+            TRACE(" 0x%08lx SKIP(%lu)\n", *token, (*token & D3DVSD_SKIPCOUNTMASK) >> D3DVSD_SKIPCOUNTSHIFT);
+            offset += sizeof(DWORD) * ((*token & D3DVSD_SKIPCOUNTMASK) >> D3DVSD_SKIPCOUNTSHIFT);
         }
 
         if (element_count >= 127) {
@@ -314,17 +311,15 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
 static void STDMETHODCALLTYPE d3d8_vertexdeclaration_wined3d_object_destroyed(void *parent)
 {
     struct d3d8_vertex_declaration *declaration = parent;
-    heap_free(declaration->elements);
-    heap_free(declaration);
+    free(declaration->elements);
+    free(declaration);
 }
 
 void d3d8_vertex_declaration_destroy(struct d3d8_vertex_declaration *declaration)
 {
     TRACE("declaration %p.\n", declaration);
 
-    wined3d_mutex_lock();
     wined3d_vertex_declaration_decref(declaration->wined3d_vertex_declaration);
-    wined3d_mutex_unlock();
 }
 
 static const struct wined3d_parent_ops d3d8_vertexdeclaration_wined3d_parent_ops =
@@ -341,11 +336,12 @@ HRESULT d3d8_vertex_declaration_init(struct d3d8_vertex_declaration *declaration
 
     declaration->shader_handle = shader_handle;
 
-    wined3d_element_count = convert_to_wined3d_declaration(elements, &declaration->elements_size, &wined3d_elements);
-    if (!(declaration->elements = heap_alloc(declaration->elements_size)))
+    wined3d_element_count = convert_to_wined3d_declaration(elements, &declaration->elements_size,
+            &wined3d_elements, &declaration->stream_map);
+    if (!(declaration->elements = malloc(declaration->elements_size)))
     {
         ERR("Failed to allocate vertex declaration elements memory.\n");
-        heap_free(wined3d_elements);
+        free(wined3d_elements);
         return E_OUTOFMEMORY;
     }
 
@@ -355,11 +351,13 @@ HRESULT d3d8_vertex_declaration_init(struct d3d8_vertex_declaration *declaration
     hr = wined3d_vertex_declaration_create(device->wined3d_device, wined3d_elements, wined3d_element_count,
             declaration, &d3d8_vertexdeclaration_wined3d_parent_ops, &declaration->wined3d_vertex_declaration);
     wined3d_mutex_unlock();
-    heap_free(wined3d_elements);
+    free(wined3d_elements);
     if (FAILED(hr))
     {
-        WARN("Failed to create wined3d vertex declaration, hr %#x.\n", hr);
-        heap_free(declaration->elements);
+        WARN("Failed to create wined3d vertex declaration, hr %#lx.\n", hr);
+        free(declaration->elements);
+        if (hr == E_INVALIDARG)
+            hr = E_FAIL;
         return hr;
     }
 
@@ -373,13 +371,16 @@ HRESULT d3d8_vertex_declaration_init_fvf(struct d3d8_vertex_declaration *declara
 
     declaration->elements = NULL;
     declaration->elements_size = 0;
+    declaration->stream_map = 1;
     declaration->shader_handle = fvf;
 
     hr = wined3d_vertex_declaration_create_from_fvf(device->wined3d_device, fvf, declaration,
             &d3d8_vertexdeclaration_wined3d_parent_ops, &declaration->wined3d_vertex_declaration);
     if (FAILED(hr))
     {
-        WARN("Failed to create wined3d vertex declaration, hr %#x.\n", hr);
+        WARN("Failed to create wined3d vertex declaration, hr %#lx.\n", hr);
+        if (hr == E_INVALIDARG)
+            hr = E_FAIL;
         return hr;
     }
 

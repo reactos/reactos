@@ -1,0 +1,1674 @@
+/*
+ * Copyright 2012 Nikolay Sivov for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "unknwn.idl";
+import "dcommon.idl";
+
+interface IDWriteFactory;
+interface IDWriteFontCollection;
+interface IDWriteFontFamily;
+interface IDWriteFontFace;
+interface IDWriteInlineObject;
+
+interface ID2D1SimplifiedGeometrySink;
+typedef ID2D1SimplifiedGeometrySink IDWriteGeometrySink;
+
+cpp_quote("#ifndef _WINDEF_")
+/* already defined in windef.h but needed for WIDL */
+typedef void *HMONITOR;
+cpp_quote("#endif /* _WINDEF_ */")
+
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef GetGlyphIndices")
+cpp_quote("#endif")
+
+typedef enum DWRITE_FACTORY_TYPE
+{
+    DWRITE_FACTORY_TYPE_SHARED,
+    DWRITE_FACTORY_TYPE_ISOLATED
+} DWRITE_FACTORY_TYPE;
+
+typedef enum DWRITE_FONT_FILE_TYPE
+{
+    DWRITE_FONT_FILE_TYPE_UNKNOWN,
+    DWRITE_FONT_FILE_TYPE_CFF,
+    DWRITE_FONT_FILE_TYPE_TRUETYPE,
+    DWRITE_FONT_FILE_TYPE_OPENTYPE_COLLECTION,
+    DWRITE_FONT_FILE_TYPE_TYPE1_PFM,
+    DWRITE_FONT_FILE_TYPE_TYPE1_PFB,
+    DWRITE_FONT_FILE_TYPE_VECTOR,
+    DWRITE_FONT_FILE_TYPE_BITMAP,
+    DWRITE_FONT_FILE_TYPE_TRUETYPE_COLLECTION = DWRITE_FONT_FILE_TYPE_OPENTYPE_COLLECTION
+} DWRITE_FONT_FILE_TYPE;
+
+typedef enum DWRITE_FONT_FACE_TYPE
+{
+    DWRITE_FONT_FACE_TYPE_CFF,
+    DWRITE_FONT_FACE_TYPE_TRUETYPE,
+    DWRITE_FONT_FACE_TYPE_OPENTYPE_COLLECTION,
+    DWRITE_FONT_FACE_TYPE_TYPE1,
+    DWRITE_FONT_FACE_TYPE_VECTOR,
+    DWRITE_FONT_FACE_TYPE_BITMAP,
+    DWRITE_FONT_FACE_TYPE_UNKNOWN,
+    DWRITE_FONT_FACE_TYPE_RAW_CFF,
+    DWRITE_FONT_FACE_TYPE_TRUETYPE_COLLECTION = DWRITE_FONT_FACE_TYPE_OPENTYPE_COLLECTION
+} DWRITE_FONT_FACE_TYPE;
+
+typedef enum DWRITE_FONT_WEIGHT
+{
+    DWRITE_FONT_WEIGHT_THIN = 100,
+    DWRITE_FONT_WEIGHT_EXTRA_LIGHT = 200,
+    DWRITE_FONT_WEIGHT_ULTRA_LIGHT = 200,
+    DWRITE_FONT_WEIGHT_LIGHT = 300,
+    DWRITE_FONT_WEIGHT_SEMI_LIGHT = 350,
+    DWRITE_FONT_WEIGHT_NORMAL = 400,
+    DWRITE_FONT_WEIGHT_REGULAR = 400,
+    DWRITE_FONT_WEIGHT_MEDIUM = 500,
+    DWRITE_FONT_WEIGHT_DEMI_BOLD = 600,
+    DWRITE_FONT_WEIGHT_SEMI_BOLD = 600,
+    DWRITE_FONT_WEIGHT_BOLD = 700,
+    DWRITE_FONT_WEIGHT_EXTRA_BOLD = 800,
+    DWRITE_FONT_WEIGHT_ULTRA_BOLD = 800,
+    DWRITE_FONT_WEIGHT_BLACK = 900,
+    DWRITE_FONT_WEIGHT_HEAVY = 900,
+    DWRITE_FONT_WEIGHT_EXTRA_BLACK = 950,
+    DWRITE_FONT_WEIGHT_ULTRA_BLACK = 950
+} DWRITE_FONT_WEIGHT;
+
+typedef enum DWRITE_FONT_STRETCH
+{
+    DWRITE_FONT_STRETCH_UNDEFINED = 0,
+    DWRITE_FONT_STRETCH_ULTRA_CONDENSED = 1,
+    DWRITE_FONT_STRETCH_EXTRA_CONDENSED = 2,
+    DWRITE_FONT_STRETCH_CONDENSED = 3,
+    DWRITE_FONT_STRETCH_SEMI_CONDENSED = 4,
+    DWRITE_FONT_STRETCH_NORMAL = 5,
+    DWRITE_FONT_STRETCH_MEDIUM = 5,
+    DWRITE_FONT_STRETCH_SEMI_EXPANDED = 6,
+    DWRITE_FONT_STRETCH_EXPANDED = 7,
+    DWRITE_FONT_STRETCH_EXTRA_EXPANDED = 8,
+    DWRITE_FONT_STRETCH_ULTRA_EXPANDED = 9
+} DWRITE_FONT_STRETCH;
+
+typedef enum DWRITE_FONT_STYLE
+{
+    DWRITE_FONT_STYLE_NORMAL,
+    DWRITE_FONT_STYLE_OBLIQUE,
+    DWRITE_FONT_STYLE_ITALIC
+} DWRITE_FONT_STYLE;
+
+typedef enum DWRITE_INFORMATIONAL_STRING_ID
+{
+    DWRITE_INFORMATIONAL_STRING_NONE,
+    DWRITE_INFORMATIONAL_STRING_COPYRIGHT_NOTICE,
+    DWRITE_INFORMATIONAL_STRING_VERSION_STRINGS,
+    DWRITE_INFORMATIONAL_STRING_TRADEMARK,
+    DWRITE_INFORMATIONAL_STRING_MANUFACTURER,
+    DWRITE_INFORMATIONAL_STRING_DESIGNER,
+    DWRITE_INFORMATIONAL_STRING_DESIGNER_URL,
+    DWRITE_INFORMATIONAL_STRING_DESCRIPTION,
+    DWRITE_INFORMATIONAL_STRING_FONT_VENDOR_URL,
+    DWRITE_INFORMATIONAL_STRING_LICENSE_DESCRIPTION,
+    DWRITE_INFORMATIONAL_STRING_LICENSE_INFO_URL,
+    DWRITE_INFORMATIONAL_STRING_WIN32_FAMILY_NAMES,
+    DWRITE_INFORMATIONAL_STRING_WIN32_SUBFAMILY_NAMES,
+    DWRITE_INFORMATIONAL_STRING_TYPOGRAPHIC_FAMILY_NAMES,
+    DWRITE_INFORMATIONAL_STRING_TYPOGRAPHIC_SUBFAMILY_NAMES,
+    DWRITE_INFORMATIONAL_STRING_SAMPLE_TEXT,
+    DWRITE_INFORMATIONAL_STRING_FULL_NAME,
+    DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME,
+    DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_CID_NAME,
+    DWRITE_INFORMATIONAL_STRING_WEIGHT_STRETCH_STYLE_FAMILY_NAME,
+    DWRITE_INFORMATIONAL_STRING_DESIGN_SCRIPT_LANGUAGE_TAG,
+    DWRITE_INFORMATIONAL_STRING_SUPPORTED_SCRIPT_LANGUAGE_TAG,
+    DWRITE_INFORMATIONAL_STRING_PREFERRED_FAMILY_NAMES = DWRITE_INFORMATIONAL_STRING_TYPOGRAPHIC_FAMILY_NAMES,
+    DWRITE_INFORMATIONAL_STRING_PREFERRED_SUBFAMILY_NAMES = DWRITE_INFORMATIONAL_STRING_TYPOGRAPHIC_SUBFAMILY_NAMES,
+    DWRITE_INFORMATIONAL_STRING_WWS_FAMILY_NAME = DWRITE_INFORMATIONAL_STRING_WEIGHT_STRETCH_STYLE_FAMILY_NAME,
+} DWRITE_INFORMATIONAL_STRING_ID;
+
+typedef enum DWRITE_FONT_SIMULATIONS
+{
+    DWRITE_FONT_SIMULATIONS_NONE,
+    DWRITE_FONT_SIMULATIONS_BOLD,
+    DWRITE_FONT_SIMULATIONS_OBLIQUE
+} DWRITE_FONT_SIMULATIONS;
+cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(DWRITE_FONT_SIMULATIONS);")
+
+typedef enum DWRITE_PIXEL_GEOMETRY
+{
+    DWRITE_PIXEL_GEOMETRY_FLAT,
+    DWRITE_PIXEL_GEOMETRY_RGB,
+    DWRITE_PIXEL_GEOMETRY_BGR
+} DWRITE_PIXEL_GEOMETRY;
+
+typedef enum DWRITE_RENDERING_MODE
+{
+    DWRITE_RENDERING_MODE_DEFAULT,
+    DWRITE_RENDERING_MODE_ALIASED,
+    DWRITE_RENDERING_MODE_GDI_CLASSIC,
+    DWRITE_RENDERING_MODE_GDI_NATURAL,
+    DWRITE_RENDERING_MODE_NATURAL,
+    DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC,
+    DWRITE_RENDERING_MODE_OUTLINE,
+    DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC = DWRITE_RENDERING_MODE_GDI_CLASSIC,
+    DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL = DWRITE_RENDERING_MODE_GDI_NATURAL,
+    DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL = DWRITE_RENDERING_MODE_NATURAL,
+    DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC = DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC
+} DWRITE_RENDERING_MODE;
+
+typedef enum DWRITE_TEXT_ALIGNMENT
+{
+    DWRITE_TEXT_ALIGNMENT_LEADING,
+    DWRITE_TEXT_ALIGNMENT_TRAILING,
+    DWRITE_TEXT_ALIGNMENT_CENTER,
+    DWRITE_TEXT_ALIGNMENT_JUSTIFIED
+} DWRITE_TEXT_ALIGNMENT;
+
+typedef enum DWRITE_PARAGRAPH_ALIGNMENT
+{
+    DWRITE_PARAGRAPH_ALIGNMENT_NEAR,
+    DWRITE_PARAGRAPH_ALIGNMENT_FAR,
+    DWRITE_PARAGRAPH_ALIGNMENT_CENTER
+} DWRITE_PARAGRAPH_ALIGNMENT;
+
+typedef enum DWRITE_WORD_WRAPPING
+{
+    DWRITE_WORD_WRAPPING_WRAP,
+    DWRITE_WORD_WRAPPING_NO_WRAP,
+    DWRITE_WORD_WRAPPING_EMERGENCY_BREAK,
+    DWRITE_WORD_WRAPPING_WHOLE_WORD,
+    DWRITE_WORD_WRAPPING_CHARACTER
+} DWRITE_WORD_WRAPPING;
+
+typedef enum DWRITE_READING_DIRECTION
+{
+    DWRITE_READING_DIRECTION_LEFT_TO_RIGHT,
+    DWRITE_READING_DIRECTION_RIGHT_TO_LEFT,
+    DWRITE_READING_DIRECTION_TOP_TO_BOTTOM,
+    DWRITE_READING_DIRECTION_BOTTOM_TO_TOP
+} DWRITE_READING_DIRECTION;
+
+typedef enum DWRITE_FLOW_DIRECTION
+{
+    DWRITE_FLOW_DIRECTION_TOP_TO_BOTTOM,
+    DWRITE_FLOW_DIRECTION_BOTTOM_TO_TOP,
+    DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT,
+    DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT
+} DWRITE_FLOW_DIRECTION;
+
+typedef enum DWRITE_TRIMMING_GRANULARITY
+{
+    DWRITE_TRIMMING_GRANULARITY_NONE,
+    DWRITE_TRIMMING_GRANULARITY_CHARACTER,
+    DWRITE_TRIMMING_GRANULARITY_WORD
+} DWRITE_TRIMMING_GRANULARITY;
+
+typedef enum DWRITE_BREAK_CONDITION
+{
+    DWRITE_BREAK_CONDITION_NEUTRAL,
+    DWRITE_BREAK_CONDITION_CAN_BREAK,
+    DWRITE_BREAK_CONDITION_MAY_NOT_BREAK,
+    DWRITE_BREAK_CONDITION_MUST_BREAK
+} DWRITE_BREAK_CONDITION;
+
+typedef enum DWRITE_LINE_SPACING_METHOD
+{
+    DWRITE_LINE_SPACING_METHOD_DEFAULT,
+    DWRITE_LINE_SPACING_METHOD_UNIFORM,
+    DWRITE_LINE_SPACING_METHOD_PROPORTIONAL
+} DWRITE_LINE_SPACING_METHOD;
+
+cpp_quote("#define DWRITE_MAKE_OPENTYPE_TAG(a,b,c,d) ( \\")
+cpp_quote("    ((UINT32)(UINT8)(d) << 24) | \\")
+cpp_quote("    ((UINT32)(UINT8)(c) << 16) | \\")
+cpp_quote("    ((UINT32)(UINT8)(b) <<  8) | \\")
+cpp_quote("     (UINT32)(UINT8)(a))")
+
+typedef enum DWRITE_FONT_FEATURE_TAG
+{
+    DWRITE_FONT_FEATURE_TAG_ALTERNATIVE_FRACTIONS           = 0x63726661, /* 'afrc' */
+    DWRITE_FONT_FEATURE_TAG_PETITE_CAPITALS_FROM_CAPITALS   = 0x63703263, /* 'c2pc' */
+    DWRITE_FONT_FEATURE_TAG_SMALL_CAPITALS_FROM_CAPITALS    = 0x63733263, /* 'c2sc' */
+    DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_ALTERNATES           = 0x746c6163, /* 'calt' */
+    DWRITE_FONT_FEATURE_TAG_CASE_SENSITIVE_FORMS            = 0x65736163, /* 'case' */
+    DWRITE_FONT_FEATURE_TAG_GLYPH_COMPOSITION_DECOMPOSITION = 0x706d6363, /* 'ccmp' */
+    DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES            = 0x67696c63, /* 'clig' */
+    DWRITE_FONT_FEATURE_TAG_CAPITAL_SPACING                 = 0x70737063, /* 'cpsp' */
+    DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_SWASH                = 0x68777363, /* 'cswh' */
+    DWRITE_FONT_FEATURE_TAG_CURSIVE_POSITIONING             = 0x73727563, /* 'curs' */
+    DWRITE_FONT_FEATURE_TAG_DEFAULT                         = 0x746c6664, /* 'dflt' */
+    DWRITE_FONT_FEATURE_TAG_DISCRETIONARY_LIGATURES         = 0x67696c64, /* 'dlig' */
+    DWRITE_FONT_FEATURE_TAG_EXPERT_FORMS                    = 0x74707865, /* 'expt' */
+    DWRITE_FONT_FEATURE_TAG_FRACTIONS                       = 0x63617266, /* 'frac' */
+    DWRITE_FONT_FEATURE_TAG_FULL_WIDTH                      = 0x64697766, /* 'fwid' */
+    DWRITE_FONT_FEATURE_TAG_HALF_FORMS                      = 0x666c6168, /* 'half' */
+    DWRITE_FONT_FEATURE_TAG_HALANT_FORMS                    = 0x6e6c6168, /* 'haln' */
+    DWRITE_FONT_FEATURE_TAG_ALTERNATE_HALF_WIDTH            = 0x746c6168, /* 'halt' */
+    DWRITE_FONT_FEATURE_TAG_HISTORICAL_FORMS                = 0x74736968, /* 'hist' */
+    DWRITE_FONT_FEATURE_TAG_HORIZONTAL_KANA_ALTERNATES      = 0x616e6b68, /* 'hkna' */
+    DWRITE_FONT_FEATURE_TAG_HISTORICAL_LIGATURES            = 0x67696c68, /* 'hlig' */
+    DWRITE_FONT_FEATURE_TAG_HALF_WIDTH                      = 0x64697768, /* 'hwid' */
+    DWRITE_FONT_FEATURE_TAG_HOJO_KANJI_FORMS                = 0x6f6a6f68, /* 'hojo' */
+    DWRITE_FONT_FEATURE_TAG_JIS04_FORMS                     = 0x3430706a, /* 'jp04' */
+    DWRITE_FONT_FEATURE_TAG_JIS78_FORMS                     = 0x3837706a, /* 'jp78' */
+    DWRITE_FONT_FEATURE_TAG_JIS83_FORMS                     = 0x3338706a, /* 'jp83' */
+    DWRITE_FONT_FEATURE_TAG_JIS90_FORMS                     = 0x3039706a, /* 'jp90' */
+    DWRITE_FONT_FEATURE_TAG_KERNING                         = 0x6e72656b, /* 'kern' */
+    DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES              = 0x6167696c, /* 'liga' */
+    DWRITE_FONT_FEATURE_TAG_LINING_FIGURES                  = 0x6d756e6c, /* 'lnum' */
+    DWRITE_FONT_FEATURE_TAG_LOCALIZED_FORMS                 = 0x6c636f6c, /* 'locl' */
+    DWRITE_FONT_FEATURE_TAG_MARK_POSITIONING                = 0x6b72616d, /* 'mark' */
+    DWRITE_FONT_FEATURE_TAG_MATHEMATICAL_GREEK              = 0x6b72676d, /* 'mgrk' */
+    DWRITE_FONT_FEATURE_TAG_MARK_TO_MARK_POSITIONING        = 0x6b6d6b6d, /* 'mkmk' */
+    DWRITE_FONT_FEATURE_TAG_ALTERNATE_ANNOTATION_FORMS      = 0x746c616e, /* 'nalt' */
+    DWRITE_FONT_FEATURE_TAG_NLC_KANJI_FORMS                 = 0x6b636c6e, /* 'nlck' */
+    DWRITE_FONT_FEATURE_TAG_OLD_STYLE_FIGURES               = 0x6d756e6f, /* 'onum' */
+    DWRITE_FONT_FEATURE_TAG_ORDINALS                        = 0x6e64726f, /* 'ordn' */
+    DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_ALTERNATE_WIDTH    = 0x746c6170, /* 'palt' */
+    DWRITE_FONT_FEATURE_TAG_PETITE_CAPITALS                 = 0x70616370, /* 'pcap' */
+    DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_FIGURES            = 0x6d756e70, /* 'pnum' */
+    DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_WIDTHS             = 0x64697770, /* 'pwid' */
+    DWRITE_FONT_FEATURE_TAG_QUARTER_WIDTHS                  = 0x64697771, /* 'qwid' */
+    DWRITE_FONT_FEATURE_TAG_REQUIRED_LIGATURES              = 0x67696c72, /* 'rlig' */
+    DWRITE_FONT_FEATURE_TAG_RUBY_NOTATION_FORMS             = 0x79627572, /* 'ruby' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_ALTERNATES            = 0x746c6173, /* 'salt' */
+    DWRITE_FONT_FEATURE_TAG_SCIENTIFIC_INFERIORS            = 0x666e6973, /* 'sinf' */
+    DWRITE_FONT_FEATURE_TAG_SMALL_CAPITALS                  = 0x70636d73, /* 'smcp' */
+    DWRITE_FONT_FEATURE_TAG_SIMPLIFIED_FORMS                = 0x6c706d73, /* 'smpl' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_1                 = 0x31307373, /* 'ss01' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_2                 = 0x32307373, /* 'ss02' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_3                 = 0x33307373, /* 'ss03' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_4                 = 0x34307373, /* 'ss04' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_5                 = 0x35307373, /* 'ss05' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_6                 = 0x36307373, /* 'ss06' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_7                 = 0x37307373, /* 'ss07' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_8                 = 0x38307373, /* 'ss08' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_9                 = 0x39307373, /* 'ss09' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_10                = 0x30317373, /* 'ss10' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_11                = 0x31317373, /* 'ss11' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_12                = 0x32317373, /* 'ss12' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_13                = 0x33317373, /* 'ss13' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_14                = 0x34317373, /* 'ss14' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_15                = 0x35317373, /* 'ss15' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_16                = 0x36317373, /* 'ss16' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_17                = 0x37317373, /* 'ss17' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_18                = 0x38317373, /* 'ss18' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_19                = 0x39317373, /* 'ss19' */
+    DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_20                = 0x30327373, /* 'ss20' */
+    DWRITE_FONT_FEATURE_TAG_SUBSCRIPT                       = 0x73627573, /* 'subs' */
+    DWRITE_FONT_FEATURE_TAG_SUPERSCRIPT                     = 0x73707573, /* 'sups' */
+    DWRITE_FONT_FEATURE_TAG_SWASH                           = 0x68737773, /* 'swsh' */
+    DWRITE_FONT_FEATURE_TAG_TITLING                         = 0x6c746974, /* 'titl' */
+    DWRITE_FONT_FEATURE_TAG_TRADITIONAL_NAME_FORMS          = 0x6d616e74, /* 'tnam' */
+    DWRITE_FONT_FEATURE_TAG_TABULAR_FIGURES                 = 0x6d756e74, /* 'tnum' */
+    DWRITE_FONT_FEATURE_TAG_TRADITIONAL_FORMS               = 0x64617274, /* 'trad' */
+    DWRITE_FONT_FEATURE_TAG_THIRD_WIDTHS                    = 0x64697774, /* 'twid' */
+    DWRITE_FONT_FEATURE_TAG_UNICASE                         = 0x63696e75, /* 'unic' */
+    DWRITE_FONT_FEATURE_TAG_VERTICAL_WRITING                = 0x74726576, /* 'vert' */
+    DWRITE_FONT_FEATURE_TAG_VERTICAL_ALTERNATES_AND_ROTATION= 0x32747276, /* 'vrt2' */
+    DWRITE_FONT_FEATURE_TAG_SLASHED_ZERO                    = 0x6f72657a, /* 'zero' */
+} DWRITE_FONT_FEATURE_TAG;
+
+typedef enum DWRITE_SCRIPT_SHAPES
+{
+    DWRITE_SCRIPT_SHAPES_DEFAULT = 0,
+    DWRITE_SCRIPT_SHAPES_NO_VISUAL = 1
+} DWRITE_SCRIPT_SHAPES;
+cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(DWRITE_SCRIPT_SHAPES);")
+
+typedef enum DWRITE_NUMBER_SUBSTITUTION_METHOD
+{
+    DWRITE_NUMBER_SUBSTITUTION_METHOD_FROM_CULTURE,
+    DWRITE_NUMBER_SUBSTITUTION_METHOD_CONTEXTUAL,
+    DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE,
+    DWRITE_NUMBER_SUBSTITUTION_METHOD_NATIONAL,
+    DWRITE_NUMBER_SUBSTITUTION_METHOD_TRADITIONAL
+} DWRITE_NUMBER_SUBSTITUTION_METHOD;
+
+cpp_quote("#define DWRITE_ALPHA_MAX 255")
+
+typedef enum DWRITE_TEXTURE_TYPE
+{
+    DWRITE_TEXTURE_ALIASED_1x1,
+    DWRITE_TEXTURE_CLEARTYPE_3x1
+} DWRITE_TEXTURE_TYPE;
+
+typedef struct DWRITE_FONT_METRICS
+{
+    UINT16 designUnitsPerEm;
+    UINT16 ascent;
+    UINT16 descent;
+    INT16 lineGap;
+    UINT16 capHeight;
+    UINT16 xHeight;
+    INT16 underlinePosition;
+    UINT16 underlineThickness;
+    INT16 strikethroughPosition;
+    UINT16 strikethroughThickness;
+} DWRITE_FONT_METRICS;
+
+typedef struct DWRITE_GLYPH_METRICS
+{
+    INT32 leftSideBearing;
+    UINT32 advanceWidth;
+    INT32 rightSideBearing;
+    INT32 topSideBearing;
+    UINT32 advanceHeight;
+    INT32 bottomSideBearing;
+    INT32 verticalOriginY;
+} DWRITE_GLYPH_METRICS;
+
+typedef struct DWRITE_GLYPH_OFFSET
+{
+    FLOAT advanceOffset;
+    FLOAT ascenderOffset;
+} DWRITE_GLYPH_OFFSET;
+
+typedef struct DWRITE_MATRIX
+{
+    FLOAT m11;
+    FLOAT m12;
+    FLOAT m21;
+    FLOAT m22;
+    FLOAT dx;
+    FLOAT dy;
+} DWRITE_MATRIX;
+
+typedef struct DWRITE_TRIMMING
+{
+    DWRITE_TRIMMING_GRANULARITY granularity;
+    UINT32 delimiter;
+    UINT32 delimiterCount;
+} DWRITE_TRIMMING;
+
+cpp_quote("#ifndef __d2d1_h__")
+typedef struct DWRITE_GLYPH_RUN DWRITE_GLYPH_RUN;
+cpp_quote("#endif /* __d2d1_h__ */")
+
+struct DWRITE_GLYPH_RUN
+{
+    IDWriteFontFace* fontFace;
+    FLOAT fontEmSize;
+    UINT32 glyphCount;
+    UINT16 const* glyphIndices;
+    FLOAT const* glyphAdvances;
+    DWRITE_GLYPH_OFFSET const* glyphOffsets;
+    BOOL isSideways;
+    UINT32 bidiLevel;
+};
+
+cpp_quote("#ifndef __d2d1_1_h__")
+typedef struct DWRITE_GLYPH_RUN_DESCRIPTION DWRITE_GLYPH_RUN_DESCRIPTION;
+cpp_quote("#endif /* __d2d1_1_h__ */")
+
+struct DWRITE_GLYPH_RUN_DESCRIPTION
+{
+    WCHAR const* localeName;
+    WCHAR const* string;
+    UINT32 stringLength;
+    UINT16 const* clusterMap;
+    UINT32 textPosition;
+};
+
+typedef struct DWRITE_UNDERLINE
+{
+    FLOAT width;
+    FLOAT thickness;
+    FLOAT offset;
+    FLOAT runHeight;
+    DWRITE_READING_DIRECTION readingDirection;
+    DWRITE_FLOW_DIRECTION flowDirection;
+    WCHAR const* localeName;
+    DWRITE_MEASURING_MODE measuringMode;
+} DWRITE_UNDERLINE;
+
+typedef struct DWRITE_STRIKETHROUGH
+{
+    FLOAT width;
+    FLOAT thickness;
+    FLOAT offset;
+    DWRITE_READING_DIRECTION readingDirection;
+    DWRITE_FLOW_DIRECTION flowDirection;
+    WCHAR const* localeName;
+    DWRITE_MEASURING_MODE measuringMode;
+} DWRITE_STRIKETHROUGH;
+
+typedef struct DWRITE_INLINE_OBJECT_METRICS
+{
+    FLOAT width;
+    FLOAT height;
+    FLOAT baseline;
+    BOOL  supportsSideways;
+} DWRITE_INLINE_OBJECT_METRICS;
+
+typedef struct DWRITE_OVERHANG_METRICS
+{
+    FLOAT left;
+    FLOAT top;
+    FLOAT right;
+    FLOAT bottom;
+} DWRITE_OVERHANG_METRICS;
+
+typedef struct DWRITE_FONT_FEATURE
+{
+    DWRITE_FONT_FEATURE_TAG nameTag;
+    UINT32 parameter;
+} DWRITE_FONT_FEATURE;
+
+typedef struct DWRITE_TEXT_RANGE
+{
+    UINT32 startPosition;
+    UINT32 length;
+} DWRITE_TEXT_RANGE;
+
+typedef struct DWRITE_LINE_METRICS
+{
+    UINT32 length;
+    UINT32 trailingWhitespaceLength;
+    UINT32 newlineLength;
+    FLOAT height;
+    FLOAT baseline;
+    BOOL isTrimmed;
+} DWRITE_LINE_METRICS;
+
+typedef struct DWRITE_TEXT_METRICS
+{
+    FLOAT left;
+    FLOAT top;
+    FLOAT width;
+    FLOAT widthIncludingTrailingWhitespace;
+    FLOAT height;
+    FLOAT layoutWidth;
+    FLOAT layoutHeight;
+    UINT32 maxBidiReorderingDepth;
+    UINT32 lineCount;
+} DWRITE_TEXT_METRICS;
+
+typedef struct DWRITE_CLUSTER_METRICS
+{
+    FLOAT width;
+    UINT16 length;
+    UINT16 canWrapLineAfter : 1;
+    UINT16 isWhitespace : 1;
+    UINT16 isNewline : 1;
+    UINT16 isSoftHyphen : 1;
+    UINT16 isRightToLeft : 1;
+    UINT16 padding : 11;
+} DWRITE_CLUSTER_METRICS;
+
+typedef struct DWRITE_HIT_TEST_METRICS
+{
+    UINT32 textPosition;
+    UINT32 length;
+    FLOAT left;
+    FLOAT top;
+    FLOAT width;
+    FLOAT height;
+    UINT32 bidiLevel;
+    BOOL isText;
+    BOOL isTrimmed;
+} DWRITE_HIT_TEST_METRICS;
+
+typedef struct DWRITE_SCRIPT_ANALYSIS
+{
+    UINT16 script;
+    DWRITE_SCRIPT_SHAPES shapes;
+} DWRITE_SCRIPT_ANALYSIS;
+
+typedef struct DWRITE_LINE_BREAKPOINT
+{
+    UINT8 breakConditionBefore : 2;
+    UINT8 breakConditionAfter : 2;
+    UINT8 isWhitespace : 1;
+    UINT8 isSoftHyphen : 1;
+    UINT8 padding : 2;
+} DWRITE_LINE_BREAKPOINT;
+
+typedef struct DWRITE_TYPOGRAPHIC_FEATURES
+{
+    DWRITE_FONT_FEATURE* features;
+    UINT32 featureCount;
+} DWRITE_TYPOGRAPHIC_FEATURES;
+
+typedef struct DWRITE_SHAPING_TEXT_PROPERTIES
+{
+    UINT16 isShapedAlone : 1;
+    UINT16 reserved1 : 1;
+    UINT16 canBreakShapingAfter : 1;
+    UINT16 reserved : 13;
+} DWRITE_SHAPING_TEXT_PROPERTIES;
+
+typedef struct DWRITE_SHAPING_GLYPH_PROPERTIES
+{
+    UINT16 justification : 4;
+    UINT16 isClusterStart : 1;
+    UINT16 isDiacritic : 1;
+    UINT16 isZeroWidthSpace : 1;
+    UINT16 reserved : 9;
+} DWRITE_SHAPING_GLYPH_PROPERTIES;
+
+[
+local,
+object,
+uuid(6d4865fe-0ab8-4d91-8f62-5dd6be34a3e0)
+]
+interface IDWriteFontFileStream : IUnknown
+{
+    HRESULT ReadFileFragment(
+        [out] void const **fragment_start,
+        [in] UINT64 offset,
+        [in] UINT64 fragment_size,
+        [out] void **fragment_context
+    );
+    void ReleaseFileFragment(
+        [in] void *fragment_context
+    );
+    HRESULT GetFileSize(
+        [out] UINT64 *size
+    );
+    HRESULT GetLastWriteTime(
+        [out] UINT64 *last_writetime
+    );
+}
+
+[
+local,
+object,
+uuid(727cad4e-d6af-4c9e-8a08-d695b11caa49)
+]
+interface IDWriteFontFileLoader : IUnknown
+{
+    HRESULT CreateStreamFromKey(
+        [in] void const *key,
+        [in] UINT32 key_size,
+        [out] IDWriteFontFileStream **stream
+    );
+}
+
+[
+local,
+object,
+uuid(b2d9f3ec-c9fe-4a11-a2ec-d86208f7c0a2)
+]
+interface IDWriteLocalFontFileLoader : IDWriteFontFileLoader
+{
+    HRESULT GetFilePathLengthFromKey(
+        [in] void const *key,
+        [in] UINT32 key_size,
+        [out] UINT32 *length
+    );
+    HRESULT GetFilePathFromKey(
+        [in] void const *key,
+        [in] UINT32 key_size,
+        [out] WCHAR *path,
+        [in] UINT32 length
+    );
+    HRESULT GetLastWriteTimeFromKey(
+        [in] void const *key,
+        [in] UINT32 key_size,
+        [out] FILETIME *writetime
+    );
+}
+
+[
+local,
+object,
+uuid(739d886a-cef5-47dc-8769-1a8b41bebbb0)
+]
+interface IDWriteFontFile : IUnknown
+{
+    HRESULT GetReferenceKey(
+        [out] void const **key,
+        [out] UINT32 *key_size
+    );
+    HRESULT GetLoader(
+        [out] IDWriteFontFileLoader **loader
+    );
+    HRESULT Analyze(
+        [out] BOOL *is_supported_fonttype,
+        [out] DWRITE_FONT_FILE_TYPE *file_type,
+        [out] DWRITE_FONT_FACE_TYPE *face_type,
+        [out] UINT32 *faces_num
+    );
+}
+
+[
+local,
+object,
+uuid(72755049-5ff7-435d-8348-4be97cfa6c7c)
+]
+interface IDWriteFontFileEnumerator : IUnknown
+{
+    HRESULT MoveNext(
+        [out] BOOL *has_current_file
+    );
+    HRESULT GetCurrentFontFile(
+        [out] IDWriteFontFile **font_file
+    );
+}
+
+[
+local,
+object,
+uuid(cca920e4-52f0-492b-bfa8-29c72ee0a468)
+]
+interface IDWriteFontCollectionLoader : IUnknown
+{
+    HRESULT CreateEnumeratorFromKey(
+        [in] IDWriteFactory *factory,
+        [in] void const *key,
+        [in] UINT32 key_size,
+        [out] IDWriteFontFileEnumerator **enumerator
+    );
+}
+
+[
+local,
+object,
+uuid(08256209-099a-4b34-b86d-c22b110e7771)
+]
+interface IDWriteLocalizedStrings : IUnknown
+{
+    UINT32 GetCount();
+
+    HRESULT FindLocaleName(
+        [in] WCHAR const *locale_name,
+        [out] UINT32 *index,
+        [out] BOOL *exists
+    );
+    HRESULT GetLocaleNameLength(
+        [in] UINT32 index,
+        [out] UINT32 *length
+    );
+    HRESULT GetLocaleName(
+        [in] UINT32 index,
+        [out] WCHAR *locale_name,
+        [in] UINT32 size
+    );
+    HRESULT GetStringLength(
+        [in] UINT32 index,
+        [out] UINT32 *length
+    );
+    HRESULT GetString(
+        [in] UINT32 index,
+        [out] WCHAR *buffer,
+        [in] UINT32 size
+    );
+}
+
+[
+local,
+object,
+uuid(2f0da53a-2add-47cd-82ee-d9ec34688e75)
+]
+interface IDWriteRenderingParams : IUnknown
+{
+    FLOAT GetGamma();
+    FLOAT GetEnhancedContrast();
+    FLOAT GetClearTypeLevel();
+    DWRITE_PIXEL_GEOMETRY GetPixelGeometry();
+    DWRITE_RENDERING_MODE GetRenderingMode();
+}
+
+[
+local,
+object,
+uuid(5f49804d-7024-4d43-bfa9-d25984f53849)
+]
+interface IDWriteFontFace : IUnknown
+{
+    DWRITE_FONT_FACE_TYPE GetType();
+    HRESULT GetFiles(
+        [out] UINT32 *number_of_files,
+        [out] IDWriteFontFile **fontfiles
+    );
+    UINT32 GetIndex();
+    DWRITE_FONT_SIMULATIONS GetSimulations();
+    BOOL IsSymbolFont();
+    void GetMetrics(
+        [out] DWRITE_FONT_METRICS *metrics
+    );
+    UINT16 GetGlyphCount();
+
+    HRESULT GetDesignGlyphMetrics(
+        [in] UINT16 const *glyph_indices,
+        [in] UINT32 glyph_count,
+        [out] DWRITE_GLYPH_METRICS *metrics,
+        [in, defaultvalue(FALSE)] BOOL is_sideways
+    );
+    HRESULT GetGlyphIndices(
+        [in] UINT32 const *codepoints,
+        [in] UINT32 count,
+        [out] UINT16 *glyph_indices
+    );
+    HRESULT TryGetFontTable(
+        [in] UINT32 table_tag,
+        [out] const void **table_data,
+        [out] UINT32 *table_size,
+        [out] void **context,
+        [out] BOOL *exists
+    );
+    void ReleaseFontTable(
+        [in] void *table_context
+    );
+    HRESULT GetGlyphRunOutline(
+        [in] FLOAT emSize,
+        [in] UINT16 const *glyph_indices,
+        [in] FLOAT const* glyph_advances,
+        [in] DWRITE_GLYPH_OFFSET const *glyph_offsets,
+        [in] UINT32 glyph_count,
+        [in] BOOL is_sideways,
+        [in] BOOL is_rtl,
+        [in] IDWriteGeometrySink *geometrysink
+    );
+    HRESULT GetRecommendedRenderingMode(
+        [in] FLOAT emSize,
+        [in] FLOAT pixels_per_dip,
+        [in] DWRITE_MEASURING_MODE mode,
+        [in] IDWriteRenderingParams *params,
+        [out] DWRITE_RENDERING_MODE *rendering_mode
+    );
+    HRESULT GetGdiCompatibleMetrics(
+        [in] FLOAT emSize,
+        [in] FLOAT pixels_per_dip,
+        [in] DWRITE_MATRIX const *transform,
+        [out] DWRITE_FONT_METRICS *metrics
+    );
+    HRESULT GetGdiCompatibleGlyphMetrics(
+        [in] FLOAT emSize,
+        [in] FLOAT pixels_per_dip,
+        [in] DWRITE_MATRIX const *transform,
+        [in] BOOL use_gdi_natural,
+        [in] UINT16 const *glyph_indices,
+        [in] UINT32 glyph_count,
+        [out] DWRITE_GLYPH_METRICS *metrics,
+        [in, defaultvalue(FALSE)] BOOL is_sideways
+    );
+}
+
+[
+local,
+object,
+uuid(acd16696-8c14-4f5d-877e-fe3fc1d32737)
+]
+interface IDWriteFont : IUnknown
+{
+    HRESULT GetFontFamily(
+        [out] IDWriteFontFamily **family
+    );
+    DWRITE_FONT_WEIGHT GetWeight();
+    DWRITE_FONT_STRETCH GetStretch();
+    DWRITE_FONT_STYLE GetStyle();
+    BOOL IsSymbolFont();
+
+    HRESULT GetFaceNames(
+        [out] IDWriteLocalizedStrings **names
+    );
+    HRESULT GetInformationalStrings(
+        [in] DWRITE_INFORMATIONAL_STRING_ID stringid,
+        [out] IDWriteLocalizedStrings **strings,
+        [out] BOOL *exists
+    );
+    DWRITE_FONT_SIMULATIONS GetSimulations();
+    void GetMetrics(
+        [out] DWRITE_FONT_METRICS *metrics
+    );
+    HRESULT HasCharacter(
+        [in] UINT32 value,
+        [out] BOOL *exists
+    );
+    HRESULT CreateFontFace(
+        [out] IDWriteFontFace **face
+    );
+}
+
+[
+local,
+object,
+uuid(1a0d8438-1d97-4ec1-aef9-a2fb86ed6acb)
+]
+interface IDWriteFontList : IUnknown
+{
+    HRESULT GetFontCollection(
+        [out] IDWriteFontCollection **collection
+    );
+    UINT32 GetFontCount();
+    HRESULT GetFont(
+        [in] UINT32 index,
+        [out] IDWriteFont **font
+    );
+}
+
+[
+local,
+object,
+uuid(da20d8ef-812a-4c43-9802-62ec4abd7add)
+]
+interface IDWriteFontFamily : IDWriteFontList
+{
+    HRESULT GetFamilyNames(
+        [out] IDWriteLocalizedStrings **names
+    );
+    HRESULT GetFirstMatchingFont(
+        [in] DWRITE_FONT_WEIGHT weight,
+        [in] DWRITE_FONT_STRETCH stretch,
+        [in] DWRITE_FONT_STYLE style,
+        [out] IDWriteFont **font
+    );
+    HRESULT GetMatchingFonts(
+        [in] DWRITE_FONT_WEIGHT weight,
+        [in] DWRITE_FONT_STRETCH stretch,
+        [in] DWRITE_FONT_STYLE style,
+        [out] IDWriteFontList **fonts
+    );
+}
+
+[
+local,
+object,
+uuid(a84cee02-3eea-4eee-a827-87c1a02a0fcc)
+]
+interface IDWriteFontCollection : IUnknown
+{
+    UINT32 GetFontFamilyCount();
+    HRESULT GetFontFamily(
+        [in] UINT32 index,
+        [out] IDWriteFontFamily **family
+    );
+    HRESULT FindFamilyName(
+        [in] WCHAR const *name,
+        [out] UINT32 *index,
+        [out] BOOL *exists
+    );
+    HRESULT GetFontFromFontFace(
+        [in] IDWriteFontFace *face,
+        [out] IDWriteFont **font
+    );
+}
+
+[
+local,
+object,
+uuid(eaf3a2da-ecf4-4d24-b644-b34f6842024b)
+]
+interface IDWritePixelSnapping : IUnknown
+{
+    HRESULT IsPixelSnappingDisabled(
+        [in] void *client_drawingcontext,
+        [out] BOOL *disabled
+    );
+    HRESULT GetCurrentTransform(
+        [in] void *client_drawingcontext,
+        [out] DWRITE_MATRIX *transform
+    );
+    HRESULT GetPixelsPerDip(
+        [in] void *client_drawingcontext,
+        [out] FLOAT *pixels_per_dip
+    );
+}
+
+[
+local,
+object,
+uuid(ef8a8135-5cc6-45fe-8825-c5a0724eb819)
+]
+interface IDWriteTextRenderer : IDWritePixelSnapping
+{
+    HRESULT DrawGlyphRun(
+        [in] void *client_drawingcontext,
+        [in] FLOAT baselineOriginX,
+        [in] FLOAT baselineOriginY,
+        [in] DWRITE_MEASURING_MODE mode,
+        [in] DWRITE_GLYPH_RUN const *glyph_run,
+        [in] DWRITE_GLYPH_RUN_DESCRIPTION const *run_descr,
+        [in] IUnknown *drawing_effect
+    );
+    HRESULT DrawUnderline(
+        [in] void *client_drawingcontext,
+        [in] FLOAT baselineOriginX,
+        [in] FLOAT baselineOriginY,
+        [in] DWRITE_UNDERLINE const *underline,
+        [in] IUnknown *drawing_effect
+    );
+    HRESULT DrawStrikethrough(
+        [in] void *client_drawingcontext,
+        [in] FLOAT baselineOriginX,
+        [in] FLOAT baselineOriginY,
+        [in] DWRITE_STRIKETHROUGH const *strikethrough,
+        [in] IUnknown *drawing_effect
+    );
+    HRESULT DrawInlineObject(
+        [in] void *client_drawingcontext,
+        [in] FLOAT originX,
+        [in] FLOAT originY,
+        [in] IDWriteInlineObject *object,
+        [in] BOOL is_sideways,
+        [in] BOOL is_rtl,
+        [in] IUnknown *drawing_effect
+    );
+}
+
+[
+local,
+object,
+uuid(8339fde3-106f-47ab-8373-1c6295eb10b3)
+]
+interface IDWriteInlineObject : IUnknown
+{
+    HRESULT Draw(
+        [in] void *client_drawingontext,
+        [in] IDWriteTextRenderer *renderer,
+        [in] FLOAT originX,
+        [in] FLOAT originY,
+        [in] BOOL is_sideways,
+        [in] BOOL is_rtl,
+        [in] IUnknown *drawing_effect
+    );
+    HRESULT GetMetrics(
+        [out] DWRITE_INLINE_OBJECT_METRICS *metrics
+    );
+    HRESULT GetOverhangMetrics(
+        [out] DWRITE_OVERHANG_METRICS *overhangs
+    );
+    HRESULT GetBreakConditions(
+        [out] DWRITE_BREAK_CONDITION *condition_before,
+        [out] DWRITE_BREAK_CONDITION *condition_after
+    );
+}
+
+[
+local,
+object,
+uuid(9c906818-31d7-4fd3-a151-7c5e225db55a)
+]
+interface IDWriteTextFormat : IUnknown
+{
+    HRESULT SetTextAlignment(
+        [in] DWRITE_TEXT_ALIGNMENT alignment
+    );
+    HRESULT SetParagraphAlignment(
+        [in] DWRITE_PARAGRAPH_ALIGNMENT alignment
+    );
+    HRESULT SetWordWrapping(
+        [in] DWRITE_WORD_WRAPPING wrapping
+    );
+    HRESULT SetReadingDirection(
+        [in] DWRITE_READING_DIRECTION direction
+    );
+    HRESULT SetFlowDirection(
+        [in] DWRITE_FLOW_DIRECTION direction
+    );
+    HRESULT SetIncrementalTabStop(
+        [in] FLOAT tabstop
+    );
+    HRESULT SetTrimming(
+        [in] DWRITE_TRIMMING const *trimming,
+        [in] IDWriteInlineObject *trimming_sign
+    );
+    HRESULT SetLineSpacing(
+        [in] DWRITE_LINE_SPACING_METHOD spacing,
+        [in] FLOAT line_spacing,
+        [in] FLOAT baseline
+    );
+    DWRITE_TEXT_ALIGNMENT GetTextAlignment();
+    DWRITE_PARAGRAPH_ALIGNMENT GetParagraphAlignment();
+    DWRITE_WORD_WRAPPING GetWordWrapping();
+    DWRITE_READING_DIRECTION GetReadingDirection();
+    DWRITE_FLOW_DIRECTION GetFlowDirection();
+    FLOAT GetIncrementalTabStop();
+    HRESULT GetTrimming(
+        [out] DWRITE_TRIMMING *options,
+        [out] IDWriteInlineObject **trimming_sign
+    );
+    HRESULT GetLineSpacing(
+        [out] DWRITE_LINE_SPACING_METHOD *method,
+        [out] FLOAT *spacing,
+        [out] FLOAT *baseline
+    );
+    HRESULT GetFontCollection(
+        [out] IDWriteFontCollection **collection
+    );
+    UINT32 GetFontFamilyNameLength();
+    HRESULT GetFontFamilyName(
+        [out] WCHAR *name,
+        [in] UINT32 size
+    );
+    DWRITE_FONT_WEIGHT GetFontWeight();
+    DWRITE_FONT_STYLE GetFontStyle();
+    DWRITE_FONT_STRETCH GetFontStretch();
+    FLOAT GetFontSize();
+    UINT32 GetLocaleNameLength();
+    HRESULT GetLocaleName(
+        [out] WCHAR *name,
+        [in] UINT32 size
+    );
+}
+
+[
+local,
+object,
+uuid(55f1112b-1dc2-4b3c-9541-f46894ed85b6)
+]
+interface IDWriteTypography : IUnknown
+{
+    HRESULT AddFontFeature(
+        [in] DWRITE_FONT_FEATURE feature
+    );
+    UINT32 GetFontFeatureCount();
+    HRESULT GetFontFeature(
+        [in] UINT32 index,
+        [out] DWRITE_FONT_FEATURE *feature
+    );
+}
+
+[
+local,
+object,
+uuid(5e5a32a3-8dff-4773-9ff6-0696eab77267)
+]
+interface IDWriteBitmapRenderTarget : IUnknown
+{
+    HRESULT DrawGlyphRun(
+        [in] FLOAT baselineOriginX,
+        [in] FLOAT baselineOriginY,
+        [in] DWRITE_MEASURING_MODE measuring_mode,
+        [in] DWRITE_GLYPH_RUN const *glyph_run,
+        [in] IDWriteRenderingParams *params,
+        [in] COLORREF textColor,
+        [out, defaultvalue(NULL)] RECT *blackbox_rect
+    );
+    HDC GetMemoryDC();
+    FLOAT GetPixelsPerDip();
+    HRESULT SetPixelsPerDip(
+        [in] FLOAT pixels_per_dip
+    );
+    HRESULT GetCurrentTransform(
+        [out] DWRITE_MATRIX *transform
+    );
+    HRESULT SetCurrentTransform(
+        [in] DWRITE_MATRIX const *transform
+    );
+    HRESULT GetSize(
+        [out] SIZE *size
+    );
+    HRESULT Resize(
+        [in] UINT32 width,
+        [in] UINT32 height
+    );
+}
+
+cpp_quote("#ifndef _WINGDI_")
+/* already defined in wingdi.h but needed for WIDL */
+#define LF_FACESIZE     32
+
+    typedef struct tagLOGFONTW
+    {
+        LONG   lfHeight;
+        LONG   lfWidth;
+        LONG   lfEscapement;
+        LONG   lfOrientation;
+        LONG   lfWeight;
+        BYTE   lfItalic;
+        BYTE   lfUnderline;
+        BYTE   lfStrikeOut;
+        BYTE   lfCharSet;
+        BYTE   lfOutPrecision;
+        BYTE   lfClipPrecision;
+        BYTE   lfQuality;
+        BYTE   lfPitchAndFamily;
+        WCHAR  lfFaceName[LF_FACESIZE];
+    } LOGFONTW, *PLOGFONTW, *LPLOGFONTW;
+cpp_quote("#endif /* _WINGDI_ */")
+
+[
+local,
+object,
+uuid(1edd9491-9853-4299-898f-6432983b6f3a)
+]
+interface IDWriteGdiInterop : IUnknown
+{
+    HRESULT CreateFontFromLOGFONT(
+        [in] LOGFONTW const *logfont,
+        [out] IDWriteFont **font
+    );
+    HRESULT ConvertFontToLOGFONT(
+        [in] IDWriteFont *font,
+        [out] LOGFONTW *logfont,
+        [out] BOOL *is_systemfont
+    );
+    HRESULT ConvertFontFaceToLOGFONT(
+        [in] IDWriteFontFace *font,
+        [out] LOGFONTW *logfont
+    );
+    HRESULT CreateFontFaceFromHdc(
+        [in] HDC hdc,
+        [out] IDWriteFontFace **fontface
+    );
+    HRESULT CreateBitmapRenderTarget(
+        [in] HDC hdc,
+        [in] UINT32 width,
+        [in] UINT32 height,
+        [out] IDWriteBitmapRenderTarget **target
+    );
+}
+
+[
+local,
+object,
+uuid(53737037-6d14-410b-9bfe-0b182bb70961)
+]
+interface IDWriteTextLayout : IDWriteTextFormat
+{
+    HRESULT SetMaxWidth(
+        [in] FLOAT maxWidth
+    );
+    HRESULT SetMaxHeight(
+        [in] FLOAT maxHeight
+    );
+    HRESULT SetFontCollection(
+        [in] IDWriteFontCollection *collection,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    HRESULT SetFontFamilyName(
+        [in] WCHAR const *name,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    HRESULT SetFontWeight(
+        [in] DWRITE_FONT_WEIGHT weight,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    HRESULT SetFontStyle(
+        [in] DWRITE_FONT_STYLE style,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    HRESULT SetFontStretch(
+        [in] DWRITE_FONT_STRETCH stretch,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    HRESULT SetFontSize(
+        [in] FLOAT size,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    HRESULT SetUnderline(
+        [in] BOOL underline,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    HRESULT SetStrikethrough(
+        [in] BOOL strikethrough,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    HRESULT SetDrawingEffect(
+        [in] IUnknown *effect,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    HRESULT SetInlineObject(
+        [in] IDWriteInlineObject *object,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    HRESULT SetTypography(
+        [in] IDWriteTypography *typography,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    HRESULT SetLocaleName(
+        [in] WCHAR const *locale,
+        [in] DWRITE_TEXT_RANGE range
+    );
+    FLOAT GetMaxWidth();
+    FLOAT GetMaxHeight();
+    HRESULT GetFontCollection(
+        [in] UINT32 pos,
+        [out] IDWriteFontCollection **collection,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetFontFamilyNameLength(
+        [in] UINT32 pos,
+        [out] UINT32 *len,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetFontFamilyName(
+        [in] UINT32 position,
+        [out] WCHAR *name,
+        [in] UINT32 name_size,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetFontWeight(
+        [in] UINT32 position,
+        [out] DWRITE_FONT_WEIGHT *weight,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetFontStyle(
+        [in] UINT32 currentPosition,
+        [out] DWRITE_FONT_STYLE *style,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetFontStretch(
+        [in] UINT32 position,
+        [out] DWRITE_FONT_STRETCH *stretch,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetFontSize(
+        [in] UINT32 position,
+        [out] FLOAT *size,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetUnderline(
+        [in] UINT32 position,
+        [out] BOOL *has_underline,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetStrikethrough(
+        [in] UINT32 position,
+        [out] BOOL *has_strikethrough,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetDrawingEffect(
+        [in] UINT32 position,
+        [out] IUnknown **effect,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetInlineObject(
+        [in] UINT32 position,
+        [out] IDWriteInlineObject **object,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetTypography(
+        [in] UINT32 position,
+        [out] IDWriteTypography **typography,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetLocaleNameLength(
+        [in] UINT32 position,
+        [out] UINT32 *length,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT GetLocaleName(
+        [in] UINT32 position,
+        [out] WCHAR *name,
+        [in] UINT32 name_size,
+        [out, defaultvalue(NULL)] DWRITE_TEXT_RANGE *range
+    );
+    HRESULT Draw(
+        [in] void *context,
+        [in] IDWriteTextRenderer *renderer,
+        [in] FLOAT originX,
+        [in] FLOAT originY
+    );
+    HRESULT GetLineMetrics(
+        [out] DWRITE_LINE_METRICS *metrics,
+        [in] UINT32 max_count,
+        [out] UINT32 *actual_count
+    );
+    HRESULT GetMetrics(
+        [out] DWRITE_TEXT_METRICS *metrics
+    );
+    HRESULT GetOverhangMetrics(
+        [out] DWRITE_OVERHANG_METRICS *overhangs
+    );
+    HRESULT GetClusterMetrics(
+        [out] DWRITE_CLUSTER_METRICS *metrics,
+        [in] UINT32 max_count,
+        [out] UINT32* act_count
+    );
+    HRESULT DetermineMinWidth(
+        [out] FLOAT *min_width
+    );
+    HRESULT HitTestPoint(
+        [in] FLOAT pointX,
+        [in] FLOAT pointY,
+        [out] BOOL *is_trailinghit,
+        [out] BOOL *is_inside,
+        [out] DWRITE_HIT_TEST_METRICS *metrics
+    );
+    HRESULT HitTestTextPosition(
+        [in] UINT32 textPosition,
+        [in] BOOL is_trailinghit,
+        [out] FLOAT *pointX,
+        [out] FLOAT *pointY,
+        [out] DWRITE_HIT_TEST_METRICS *metrics
+    );
+    HRESULT HitTestTextRange(
+        [in] UINT32 textPosition,
+        [in] UINT32 textLength,
+        [in] FLOAT originX,
+        [in] FLOAT originY,
+        [out] DWRITE_HIT_TEST_METRICS *metrics,
+        [in] UINT32 max_metricscount,
+        [out] UINT32 *actual_metricscount
+    );
+}
+
+[
+local,
+object,
+uuid(14885cc9-bab0-4f90-b6ed-5c366a2cd03d)
+]
+interface IDWriteNumberSubstitution : IUnknown
+{
+}
+
+[
+local,
+object,
+uuid(688e1a58-5094-47c8-adc8-fbcea60ae92b)
+]
+interface IDWriteTextAnalysisSource : IUnknown
+{
+    HRESULT GetTextAtPosition(
+        [in] UINT32 position,
+        [out] WCHAR const **text,
+        [out] UINT32 *text_len
+    );
+    HRESULT GetTextBeforePosition(
+        [in] UINT32 position,
+        [out] WCHAR const **text,
+        [out] UINT32* text_len
+    );
+    DWRITE_READING_DIRECTION GetParagraphReadingDirection();
+    HRESULT GetLocaleName(
+        [in] UINT32 position,
+        [out] UINT32 *text_len,
+        [out] WCHAR const **locale
+    );
+    HRESULT GetNumberSubstitution(
+        [in] UINT32 position,
+        [out] UINT32 *text_len,
+        [out] IDWriteNumberSubstitution **substitution
+    );
+}
+
+[
+local,
+object,
+uuid(5810cd44-0ca0-4701-b3fa-bec5182ae4f6)
+]
+interface IDWriteTextAnalysisSink : IUnknown
+{
+    HRESULT SetScriptAnalysis(
+        [in] UINT32 position,
+        [in] UINT32 length,
+        [in] DWRITE_SCRIPT_ANALYSIS const* scriptanalysis
+    );
+    HRESULT SetLineBreakpoints(
+        [in] UINT32 position,
+        [in] UINT32 length,
+        [in] DWRITE_LINE_BREAKPOINT const* breakpoints
+    );
+    HRESULT SetBidiLevel(
+        [in] UINT32 position,
+        [in] UINT32 length,
+        [in] UINT8 explicitLevel,
+        [in] UINT8 resolvedLevel
+    );
+    HRESULT SetNumberSubstitution(
+        [in] UINT32 position,
+        [in] UINT32 length,
+        [in] IDWriteNumberSubstitution *substitution
+    );
+}
+
+[
+local,
+object,
+uuid(b7e6163e-7f46-43b4-84b3-e4e6249c365d)
+]
+interface IDWriteTextAnalyzer : IUnknown
+{
+    HRESULT AnalyzeScript(
+        [in] IDWriteTextAnalysisSource *source,
+        [in] UINT32 position,
+        [in] UINT32 length,
+        [in] IDWriteTextAnalysisSink *sink
+    );
+    HRESULT AnalyzeBidi(
+        [in] IDWriteTextAnalysisSource *source,
+        [in] UINT32 position,
+        [in] UINT32 length,
+        [in] IDWriteTextAnalysisSink *sink
+    );
+    HRESULT AnalyzeNumberSubstitution(
+        [in] IDWriteTextAnalysisSource *source,
+        [in] UINT32 position,
+        [in] UINT32 length,
+        [in] IDWriteTextAnalysisSink *sink
+    );
+    HRESULT AnalyzeLineBreakpoints(
+        [in] IDWriteTextAnalysisSource *source,
+        [in] UINT32 position,
+        [in] UINT32 length,
+        [in] IDWriteTextAnalysisSink *sink
+    );
+    HRESULT GetGlyphs(
+        [in] WCHAR const *text,
+        [in] UINT32 length,
+        [in] IDWriteFontFace *font_face,
+        [in] BOOL is_sideways,
+        [in] BOOL is_rtl,
+        [in] DWRITE_SCRIPT_ANALYSIS const *analysis,
+        [in] WCHAR const *locale,
+        [in] IDWriteNumberSubstitution *substitution,
+        [in] DWRITE_TYPOGRAPHIC_FEATURES const **features,
+        [in] UINT32 const *feature_range_len,
+        [in] UINT32 feature_ranges,
+        [in] UINT32 max_glyph_count,
+        [out] UINT16 *clustermap,
+        [out] DWRITE_SHAPING_TEXT_PROPERTIES *text_props,
+        [out] UINT16 *glyph_indices,
+        [out] DWRITE_SHAPING_GLYPH_PROPERTIES *glyph_props,
+        [out] UINT32 *actual_glyph_count
+    );
+    HRESULT GetGlyphPlacements(
+        [in] WCHAR const *text,
+        [in] UINT16 const *clustermap,
+        [in] DWRITE_SHAPING_TEXT_PROPERTIES* props,
+        [in] UINT32 text_len,
+        [in] UINT16 const *glyph_indices,
+        [in] DWRITE_SHAPING_GLYPH_PROPERTIES const *glyph_props,
+        [in] UINT32 glyph_count,
+        [in] IDWriteFontFace *font_face,
+        [in] FLOAT fontEmSize,
+        [in] BOOL is_sideways,
+        [in] BOOL is_rtl,
+        [in] DWRITE_SCRIPT_ANALYSIS const *analysis,
+        [in] WCHAR const *locale,
+        [in] DWRITE_TYPOGRAPHIC_FEATURES const **features,
+        [in] UINT32 const *feature_range_len,
+        [in] UINT32 feature_ranges,
+        [out] FLOAT *glyph_advances,
+        [out] DWRITE_GLYPH_OFFSET *glyph_offsets
+    );
+    HRESULT GetGdiCompatibleGlyphPlacements(
+        [in] WCHAR const *text,
+        [in] UINT16 const *clustermap,
+        [in] DWRITE_SHAPING_TEXT_PROPERTIES *props,
+        [in] UINT32 text_len,
+        [in] UINT16 const *glyph_indices,
+        [in] DWRITE_SHAPING_GLYPH_PROPERTIES const *glyph_props,
+        [in] UINT32 glyph_count,
+        [in] IDWriteFontFace * font_face,
+        [in] FLOAT fontEmSize,
+        [in] FLOAT pixels_per_dip,
+        [in] DWRITE_MATRIX const *transform,
+        [in] BOOL use_gdi_natural,
+        [in] BOOL is_sideways,
+        [in] BOOL is_rtl,
+        [in] DWRITE_SCRIPT_ANALYSIS const *analysis,
+        [in] WCHAR const *locale,
+        [in] DWRITE_TYPOGRAPHIC_FEATURES const **features,
+        [in] UINT32 const* feature_range_lengths,
+        [in] UINT32 feature_ranges,
+        [out] FLOAT *glyph_advances,
+        [out] DWRITE_GLYPH_OFFSET *glyph_offsets
+    );
+}
+
+[
+local,
+object,
+uuid(7d97dbf7-e085-42d4-81e3-6a883bded118)
+]
+interface IDWriteGlyphRunAnalysis : IUnknown
+{
+    HRESULT GetAlphaTextureBounds(
+        [in] DWRITE_TEXTURE_TYPE type,
+        [out] RECT *bounds
+    );
+    HRESULT CreateAlphaTexture(
+        [in] DWRITE_TEXTURE_TYPE type,
+        [in] RECT const *bounds,
+        [in] BYTE *alphaValues,
+        [in] UINT32 bufferSize
+    );
+    HRESULT GetAlphaBlendParams(
+        [in] IDWriteRenderingParams *renderingParams,
+        [out] FLOAT *blendGamma,
+        [out] FLOAT *blendEnhancedContrast,
+        [out] FLOAT *blendClearTypeLevel
+    );
+}
+
+[
+local,
+object,
+uuid(b859ee5a-d838-4b5b-a2e8-1adc7d93db48)
+]
+interface IDWriteFactory : IUnknown
+{
+    HRESULT GetSystemFontCollection(
+        [out] IDWriteFontCollection **collection,
+        [in, defaultvalue(FALSE)] BOOL check_for_updates
+    );
+    HRESULT CreateCustomFontCollection(
+        [in] IDWriteFontCollectionLoader *loader,
+        [in] void const *key,
+        [in] UINT32 key_size,
+        [out] IDWriteFontCollection **collection
+    );
+    HRESULT RegisterFontCollectionLoader(
+        [in] IDWriteFontCollectionLoader *loader
+    );
+    HRESULT UnregisterFontCollectionLoader(
+        [in] IDWriteFontCollectionLoader *loader
+    );
+    HRESULT CreateFontFileReference(
+        [in] WCHAR const *path,
+        [in] FILETIME const *writetime,
+        [out] IDWriteFontFile **font_file
+    );
+    HRESULT CreateCustomFontFileReference(
+        [in] void const *reference_key,
+        [in] UINT32 key_size,
+        [in] IDWriteFontFileLoader *loader,
+        [out] IDWriteFontFile **font_file
+    );
+    HRESULT CreateFontFace(
+        [in] DWRITE_FONT_FACE_TYPE facetype,
+        [in] UINT32 files_number,
+        [in] IDWriteFontFile *const *font_files,
+        [in] UINT32 index,
+        [in] DWRITE_FONT_SIMULATIONS sim_flags,
+        [out] IDWriteFontFace **font_face
+    );
+    HRESULT CreateRenderingParams(
+        [out] IDWriteRenderingParams **params
+    );
+    HRESULT CreateMonitorRenderingParams(
+        [in] HMONITOR monitor,
+        [out] IDWriteRenderingParams **params
+    );
+    HRESULT CreateCustomRenderingParams(
+        [in] FLOAT gamma,
+        [in] FLOAT enhancedContrast,
+        [in] FLOAT cleartype_level,
+        [in] DWRITE_PIXEL_GEOMETRY geometry,
+        [in] DWRITE_RENDERING_MODE mode,
+        [out] IDWriteRenderingParams **params
+    );
+    HRESULT RegisterFontFileLoader(
+        [in] IDWriteFontFileLoader *loader
+    );
+    HRESULT UnregisterFontFileLoader(
+        [in] IDWriteFontFileLoader *loader
+    );
+    HRESULT CreateTextFormat(
+        [in] WCHAR const *family_name,
+        [in] IDWriteFontCollection *collection,
+        [in] DWRITE_FONT_WEIGHT weight,
+        [in] DWRITE_FONT_STYLE style,
+        [in] DWRITE_FONT_STRETCH stretch,
+        [in] FLOAT size,
+        [in] WCHAR const *locale,
+        [out] IDWriteTextFormat **format
+    );
+    HRESULT CreateTypography(
+        [out] IDWriteTypography **typography
+    );
+    HRESULT GetGdiInterop(
+        [out] IDWriteGdiInterop **gdi_interop
+    );
+    HRESULT CreateTextLayout(
+        [in] WCHAR const* string,
+        [in] UINT32 len,
+        [in] IDWriteTextFormat *format,
+        [in] FLOAT max_width,
+        [in] FLOAT max_height,
+        [out] IDWriteTextLayout **layout
+    );
+    HRESULT CreateGdiCompatibleTextLayout(
+        [in] WCHAR const *string,
+        [in] UINT32 len,
+        [in] IDWriteTextFormat *format,
+        [in] FLOAT layout_width,
+        [in] FLOAT layout_height,
+        [in] FLOAT pixels_per_dip,
+        [in] DWRITE_MATRIX const *transform,
+        [in] BOOL use_gdi_natural,
+        [out] IDWriteTextLayout **layout
+    );
+
+    HRESULT CreateEllipsisTrimmingSign(
+        [in] IDWriteTextFormat *format,
+        [out] IDWriteInlineObject **trimming_sign
+    );
+    HRESULT CreateTextAnalyzer(
+        [out] IDWriteTextAnalyzer **analyzer
+    );
+    HRESULT CreateNumberSubstitution(
+        [in] DWRITE_NUMBER_SUBSTITUTION_METHOD method,
+        [in] WCHAR const* locale,
+        [in] BOOL ignore_user_override,
+        [out] IDWriteNumberSubstitution **substitution
+    );
+    HRESULT CreateGlyphRunAnalysis(
+        [in] DWRITE_GLYPH_RUN const *glyph_run,
+        [in] FLOAT pixels_per_dip,
+        [in] DWRITE_MATRIX const *transform,
+        [in] DWRITE_RENDERING_MODE rendering_mode,
+        [in] DWRITE_MEASURING_MODE measuring_mode,
+        [in] FLOAT baseline_x,
+        [in] FLOAT baseline_y,
+        [out] IDWriteGlyphRunAnalysis **analysis
+    );
+}
+
+cpp_quote("HRESULT WINAPI DWriteCreateFactory(DWRITE_FACTORY_TYPE,REFIID,IUnknown**);")
+
+/* error codes */
+cpp_quote("#define FACILITY_DWRITE 0x898")
+cpp_quote("#define DWRITE_ERR_BASE 0x5000")
+cpp_quote("#define MAKE_DWRITE_HR(severity, code) MAKE_HRESULT(severity, FACILITY_DWRITE, (DWRITE_ERR_BASE + code))")
+cpp_quote("#define MAKE_DWRITE_HR_ERR(code) MAKE_DWRITE_HR(SEVERITY_ERROR, code)")
