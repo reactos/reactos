@@ -18,3 +18,10 @@ CPU_VENDORS
 NTAPI
 KiIdentifyCpuVendor(
     _In_reads_z_(CPU_VENDOR_STR_LEN) const CHAR VendorString[CPU_VENDOR_STR_LEN]);
+
+VOID
+NTAPI
+KiGetCpuSignature(
+    _Out_ PUSHORT Family,
+    _Out_ PUSHORT Model,
+    _Out_ PUSHORT Stepping);
