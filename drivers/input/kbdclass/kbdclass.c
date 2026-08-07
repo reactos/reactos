@@ -92,14 +92,10 @@ ClassRead(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PCLASS_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PCOMMON_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PREAD_DATA ReadData;
 
     TRACE_(CLASS_NAME, "IRP_MJ_READ\n");
-
-    ASSERT(DeviceExtension->Common.IsClassDO);
-
-    if (!((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsClassDO)
-        return ForwardIrpAndForget(DeviceObject, Irp);
 
     if (IoGetCurrentIrpStackLocation(Irp)->Parameters.Read.Length < sizeof(KEYBOARD_INPUT_DATA))
     {
@@ -110,7 +106,18 @@ ClassRead(
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-    return HandleReadIrp(DeviceObject, DeviceExtension->ReadData, Irp);
+    if (DeviceExtension->IsClassDO)
+    {
+        ReadData = ((PCLASS_DEVICE_EXTENSION)DeviceExtension)->ReadData;
+    }
+    else
+    {
+        PPORT_DEVICE_EXTENSION Port = (PPORT_DEVICE_EXTENSION)DeviceExtension;
+        PCLASS_DEVICE_EXTENSION Class = (PCLASS_DEVICE_EXTENSION)Port->ClassDO->DeviceExtension;
+        ReadData = Class->ReadData;
+    }
+
+    return HandleReadIrp(DeviceObject, ReadData, Irp);
 }
 
 static NTSTATUS NTAPI
