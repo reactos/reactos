@@ -58,6 +58,7 @@ static inline ULONG GetNTDDIVersion(VOID)
             case 22621: Subversion = 15; break; // 22H2
             case 22631: Subversion = 16; break; // 23H2
             case 26100: Subversion = 17; break; // 24H2
+            case 26200: Subversion = 18; break; // 25H2
 
             default: Subversion = 0; break;     // Unknown build
         }

@@ -806,10 +806,11 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 * @remarks None.
 *
 *--*/
+static
 NTSTATUS
-NTAPI
 ObpIncrementHandleCount(IN PVOID Object,
                         IN PACCESS_STATE AccessState OPTIONAL,
+                        IN OUT PACCESS_MASK GrantedAccess,
                         IN KPROCESSOR_MODE AccessMode,
                         IN ULONG HandleAttributes,
                         IN PEPROCESS Process,
@@ -998,18 +999,28 @@ ObpIncrementHandleCount(IN PVOID Object,
     /* Release the lock */
     ObpReleaseObjectLock(ObjectHeader);
 
+    if (AccessState)
+    {
+        /* Get the combined desired access */
+        ACCESS_MASK DesiredAccess = AccessState->RemainingDesiredAccess |
+                                    AccessState->PreviouslyGrantedAccess;
+
+        /* Remove what's not valid */
+        *GrantedAccess = DesiredAccess & (ObjectType->TypeInfo.ValidAccessMask |
+                                          ACCESS_SYSTEM_SECURITY);
+    }
+
     /* Check if we have an open procedure */
     Status = STATUS_SUCCESS;
     if (ObjectType->TypeInfo.OpenProcedure)
     {
         /* Call it */
         ObpCalloutStart(&CalloutIrql);
-        ACCESS_MASK GrantedAccess = AccessState ? AccessState->PreviouslyGrantedAccess : 0;
         Status = ObjectType->TypeInfo.OpenProcedure(OpenReason,
                                                     ProbeMode,
                                                     Process,
                                                     Object,
-                                                    &GrantedAccess,
+                                                    GrantedAccess,
                                                     ProcessHandleCount);
         ObpCalloutEnd(CalloutIrql, "Open", ObjectType, Object);
 
@@ -1501,6 +1512,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
 * @remarks Cleans up the Lookup Context on return.
 *
 *--*/
+static
 NTSTATUS
 NTAPI
 ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
@@ -1514,6 +1526,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
                 OUT PVOID *ReturnedObject,
                 OUT PHANDLE ReturnedHandle)
 {
+    PEPROCESS Process = PsGetCurrentProcess();
     HANDLE_TABLE_ENTRY NewEntry;
     POBJECT_HEADER ObjectHeader;
     HANDLE Handle;
@@ -1522,7 +1535,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     POBJECT_TYPE ObjectType;
     PVOID HandleTable;
     NTSTATUS Status;
-    ACCESS_MASK DesiredAccess, GrantedAccess;
+    ACCESS_MASK GrantedAccess;
     PAUX_ACCESS_DATA AuxData;
     PAGED_CODE();
 
@@ -1556,25 +1569,27 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
         KernelHandle = TRUE;
 
         /* Check if we're not in the system process */
-        if (PsGetCurrentProcess() != PsInitialSystemProcess)
+        if (Process != PsInitialSystemProcess)
         {
             /* Attach to the system process */
             KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
             AttachedToProcess = TRUE;
+            Process = PsInitialSystemProcess;
         }
     }
     else
     {
         /* Get the current handle table */
-        HandleTable = PsGetCurrentProcess()->ObjectTable;
+        HandleTable = Process->ObjectTable;
     }
 
     /* Increment the handle count */
     Status = ObpIncrementHandleCount(Object,
                                      AccessState,
+                                     &GrantedAccess,
                                      AccessMode,
                                      HandleAttributes,
-                                     PsGetCurrentProcess(),
+                                     Process,
                                      OpenReason);
     if (!NT_SUCCESS(Status))
     {
@@ -1596,14 +1611,6 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
 
     /* Mask out the internal attributes */
     NewEntry.ObAttributes |= (HandleAttributes & OBJ_HANDLE_ATTRIBUTES);
-
-    /* Get the original desired access */
-    DesiredAccess = AccessState->RemainingDesiredAccess |
-                    AccessState->PreviouslyGrantedAccess;
-
-    /* Remove what's not in the valid access mask */
-    GrantedAccess = DesiredAccess & (ObjectType->TypeInfo.ValidAccessMask |
-                                     ACCESS_SYSTEM_SECURITY);
 
     /* Update the value in the access state */
     AccessState->PreviouslyGrantedAccess = GrantedAccess;
@@ -1694,7 +1701,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
 
     /* Decrement the handle count and detach */
     ObpDecrementHandleCount(&ObjectHeader->Body,
-                            PsGetCurrentProcess(),
+                            Process,
                             GrantedAccess,
                             ObjectType);
 
@@ -1976,7 +1983,6 @@ ObpDuplicateHandleCallback(IN PEPROCESS Process,
 {
     POBJECT_HEADER ObjectHeader;
     BOOLEAN Ret = FALSE;
-    ACCESS_STATE AccessState;
     NTSTATUS Status;
     PAGED_CODE();
 
@@ -1993,12 +1999,10 @@ ObpDuplicateHandleCallback(IN PEPROCESS Process,
         /* Release the handle lock */
         ExUnlockHandleTableEntry(HandleTable, OldEntry);
 
-        /* Setup the access state */
-        AccessState.PreviouslyGrantedAccess = HandleTableEntry->GrantedAccess;
-
         /* Call the shared routine for incrementing handles */
         Status = ObpIncrementHandleCount(&ObjectHeader->Body,
-                                         &AccessState,
+                                         NULL,
+                                         &HandleTableEntry->GrantedAccess,
                                          KernelMode,
                                          HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES,
                                          Process,
@@ -2420,6 +2424,7 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
         /* Add a new handle */
         Status = ObpIncrementHandleCount(SourceObject,
                                          PassedAccessState,
+                                         &NewHandleEntry.GrantedAccess,
                                          PreviousMode,
                                          HandleAttributes,
                                          PsGetCurrentProcess(),

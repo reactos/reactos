@@ -616,12 +616,209 @@ Quit:
         NtClose(hWaitEvent);
 }
 
+static
+void
+Test_ThreadAmILastThread(void)
+{
+    NTSTATUS Status;
+    HANDLE hThread;
+    ULONG IsLastThread;
+    ULONG ReturnLength;
+    ULONG Buffer[2];
+
+    /* This threadinfo class always refers to the current thread! */
+    hThread = (HANDLE)(ULONG_PTR)0xDEADBEEFDEADBEEF;
+    ReturnLength = 0xDEADBEEF;
+    Status = NtQueryInformationThread(hThread, ThreadAmILastThread, &IsLastThread, sizeof(ULONG), &ReturnLength);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_hex(ReturnLength, sizeof(ULONG));
+
+    /* Too small buffer */
+    ReturnLength = 0xDEADBEEF;
+    Status = NtQueryInformationThread(hThread, ThreadAmILastThread, &IsLastThread, sizeof(ULONG) - 1, &ReturnLength);
+    ok_eq_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
+    ok_eq_hex(ReturnLength, 0xDEADBEEF);
+
+    /* Unaligned buffer */
+    ReturnLength = 0xDEADBEEF;
+    Status = NtQueryInformationThread(hThread, ThreadAmILastThread, (PUCHAR)Buffer + 2, sizeof(ULONG), &ReturnLength);
+    ok_eq_hex(Status, STATUS_DATATYPE_MISALIGNMENT);
+    ok_eq_hex(ReturnLength, 0xDEADBEEF);
+}
+
+static
+void
+Test_InfoClass_Access(
+    ULONG InfoClass,
+    ULONG MinOsVer,
+    ULONG MaxOsVer,
+    ULONG InfoSize,
+    ACCESS_MASK RequiredAccess,
+    NTSTATUS AltStatus)
+{
+    NTSTATUS Status;
+    HANDLE hThread;
+    CLIENT_ID ClientId;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG ReturnLength;
+    PVOID Info;
+
+    /* Open a thread handle with maximum access  */
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+    ClientId.UniqueProcess = UlongToHandle(GetCurrentProcessId());
+    ClientId.UniqueThread = UlongToHandle(GetCurrentThreadId());
+    Status = NtOpenThread(&hThread, THREAD_ALL_ACCESS | 0xF00, &ObjectAttributes, &ClientId);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Query the thread information */
+    Status = NtQueryInformationThread(hThread, InfoClass, NULL, 0, &ReturnLength);
+
+    NtClose(hThread);
+
+    /* Check if this OS it outside of the supported range */
+    ULONG CurrentNtDdiVersion = GetNTDDIVersion();
+    if ((CurrentNtDdiVersion < MinOsVer) || (CurrentNtDdiVersion > MaxOsVer))
+    {
+        /* For Windows, expect failure, for ReactOS allow implementations outside of the supported range */
+        if (!is_reactos() || (Status == STATUS_INVALID_INFO_CLASS))
+        {
+            ok(Status == STATUS_INVALID_INFO_CLASS, "[%u] Wrong Status, expected STATUS_INVALID_INFO_CLASS, got 0x%08lx\n", InfoClass, Status);
+            return;
+        }
+    }
+
+    ok(Status == STATUS_INFO_LENGTH_MISMATCH || Status == AltStatus,
+       "[%u] Wrong Status, expected STATUS_INFO_LENGTH_MISMATCH or 0x%08x, got 0x%08lx\n", InfoClass, AltStatus, Status);
+
+    if (InfoSize == 0)
+        InfoSize = ReturnLength;
+
+    Info = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, InfoSize);
+    if (!Info)
+    {
+        ok(FALSE, "Failed to allocate memory for thread information!\n");
+        return;
+    }
+
+    if (RequiredAccess != 0)
+    {
+        if (!is_reactos() && (GetNTVersion() < _WIN32_WINNT_VISTA) && (RequiredAccess == THREAD_QUERY_LIMITED_INFORMATION))
+        {
+            RequiredAccess = THREAD_QUERY_INFORMATION;
+        }
+
+        /* Query the thread information with the limited access */
+        Status = NtOpenThread(&hThread, RequiredAccess, &ObjectAttributes, &ClientId);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+        Status = NtQueryInformationThread(hThread, InfoClass, Info, InfoSize, &ReturnLength);
+        ok(Status == STATUS_SUCCESS || Status == AltStatus,
+           "[%u] Wrong Status, expected STATUS_SUCCESS or 0x%08x, got 0x%08lx\n", InfoClass, AltStatus, Status);
+        NtClose(hThread);
+
+        ACCESS_MASK DeniedAccess = (THREAD_ALL_ACCESS|0xFFF) & ~RequiredAccess;
+        if (RequiredAccess & THREAD_QUERY_LIMITED_INFORMATION)
+            DeniedAccess &= ~THREAD_QUERY_INFORMATION;
+
+        Status = NtOpenThread(&hThread, DeniedAccess, &ObjectAttributes, &ClientId);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+        Status = NtQueryInformationThread(hThread, InfoClass, Info, InfoSize, &ReturnLength);
+        ok(Status == STATUS_ACCESS_DENIED, "[%u] Wrong Status, expected STATUS_ACCESS_DENIED, got 0x%08lx\n", InfoClass, Status);
+        NtClose(hThread);
+    }
+    else
+    {
+        /* Query the thread information with SYNCHRONIZE access */
+        Status = NtOpenThread(&hThread, SYNCHRONIZE, &ObjectAttributes, &ClientId);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+        Status = NtQueryInformationThread(hThread, InfoClass, Info, InfoSize, &ReturnLength);
+        ok(Status == STATUS_SUCCESS || Status == AltStatus,
+           "[%u] Wrong Status, expected STATUS_SUCCESS or 0x%08x, got 0x%08lx\n", InfoClass, AltStatus, Status);
+        NtClose(hThread);
+    }
+
+    HeapFree(GetProcessHeap(), 0, Info);
+}
+
+static void Test_Access(void)
+{
+    Test_InfoClass_Access(ThreadBasicInformation, NTDDI_WIN2K, MAXULONG, sizeof(THREAD_BASIC_INFORMATION), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadTimes, NTDDI_WIN2K, MAXULONG, sizeof(KERNEL_USER_TIMES), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadPriority, NTDDI_WIN2K, NTDDI_WINXP, sizeof(ULONG), 0, 0);
+    Test_InfoClass_Access(ThreadBasePriority, NTDDI_WIN2K, NTDDI_WINXP, sizeof(ULONG), 0, 0);
+    Test_InfoClass_Access(ThreadAffinityMask, NTDDI_WIN2K, NTDDI_WINXP, sizeof(ULONG_PTR), 0, 0);
+    Test_InfoClass_Access(ThreadImpersonationToken, NTDDI_WIN2K, NTDDI_WINXP, sizeof(HANDLE), 0, 0);
+#ifdef _M_IX86
+    Test_InfoClass_Access(ThreadDescriptorTableEntry, NTDDI_WIN2K, MAXULONG, sizeof(THREAD_DESCRIPTOR_INFORMATION), THREAD_QUERY_INFORMATION, 0);
+#endif
+    Test_InfoClass_Access(ThreadEnableAlignmentFaultFixup, NTDDI_WIN2K, NTDDI_WINXP, sizeof(BOOLEAN), THREAD_QUERY_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadEventPair_Reusable, NTDDI_WIN2K, NTDDI_WINXP, sizeof(BOOLEAN), THREAD_QUERY_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadQuerySetWin32StartAddress, NTDDI_WIN2K, MAXULONG, sizeof(ULONG_PTR), THREAD_QUERY_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadZeroTlsCell, NTDDI_WIN2K, NTDDI_WINXP, sizeof(ULONG), THREAD_QUERY_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadPerformanceCount, NTDDI_WIN2K, MAXULONG, sizeof(LARGE_INTEGER), THREAD_QUERY_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadAmILastThread, NTDDI_WIN2K, MAXULONG, sizeof(ULONG), 0, 0);
+    Test_InfoClass_Access(ThreadIdealProcessor, NTDDI_WIN2K, NTDDI_WINXP, sizeof(ULONG), 0, 0);
+    Test_InfoClass_Access(ThreadPriorityBoost, NTDDI_WIN2K, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadSetTlsArrayAddress, NTDDI_WIN2K, NTDDI_WINXP, sizeof(ULONG_PTR), 0, 0);
+    Test_InfoClass_Access(ThreadIsIoPending, NTDDI_WIN2K, MAXULONG, sizeof(ULONG), THREAD_QUERY_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadHideFromDebugger, NTDDI_VISTA, MAXULONG, sizeof(BOOLEAN), THREAD_QUERY_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadBreakOnTermination, NTDDI_WIN2K, MAXULONG, sizeof(ULONG), THREAD_QUERY_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadSwitchLegacyState, NTDDI_WIN2K, NTDDI_WINXP, 0, 0, 0);
+    Test_InfoClass_Access(ThreadIsTerminated, NTDDI_WIN2K, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    //Test_InfoClass_Access(ThreadLastSystemCall, NTDDI_VISTA, MAXULONG, sizeof(THREAD_LAST_SYSCALL_INFORMATION), THREAD_GET_CONTEXT, 0);
+    Test_InfoClass_Access(ThreadIoPriority, NTDDI_VISTA, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadCycleTime, NTDDI_VISTA, MAXULONG, sizeof(THREAD_CYCLE_TIME_INFORMATION), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadPagePriority, NTDDI_VISTA, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadActualBasePriority, NTDDI_WIN7, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    //Test_InfoClass_Access(ThreadTebInformation, NTDDI_VISTA, MAXULONG, sizeof(THREAD_TEB_INFORMATION), THREAD_GET_CONTEXT | THREAD_SET_CONTEXT, 0);
+    Test_InfoClass_Access(ThreadCSwitchMon, NTDDI_VISTA, NTDDI_WIN7, sizeof(BOOLEAN), THREAD_QUERY_INFORMATION, 0);
+
+    // Windows 7
+    Test_InfoClass_Access(ThreadCSwitchPmu, NTDDI_WIN7, NTDDI_WIN7, sizeof(ULONG), 0, 0);
+    //Test_InfoClass_Access(ThreadWow64Context, NTDDI_WIN7, MAXULONG, sizeof(WOW64_CONTEXT), THREAD_GET_CONTEXT, 0);
+    Test_InfoClass_Access(ThreadGroupInformation, NTDDI_WIN7, MAXULONG, sizeof(GROUP_AFFINITY), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    //Test_InfoClass_Access(ThreadUmsInformation, NTDDI_WIN7, MAXULONG, sizeof(THREAD_UMS_INFORMATION), 0, 0);
+    //Test_InfoClass_Access(ThreadCounterProfiling, NTDDI_WIN7, MAXULONG, sizeof(THREAD_PROFILING_INFORMATION), 0, 0);
+    Test_InfoClass_Access(ThreadIdealProcessorEx, NTDDI_WIN7, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+
+    // Windows 8
+    Test_InfoClass_Access(ThreadCpuAccountingInformation, NTDDI_WIN8, MAXULONG, sizeof(ULONG), THREAD_QUERY_INFORMATION, 0);
+
+    // Windows 8.1
+    Test_InfoClass_Access(ThreadSuspendCount, NTDDI_WINBLUE, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+
+    // Windows 10
+    Test_InfoClass_Access(ThreadHeterogeneousCpuPolicy, NTDDI_WIN10, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    //Test_InfoClass_Access(ThreadContainerId, NTDDI_WIN10, MAXULONG, sizeof(GUID), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadNameInformation, NTDDI_WIN10, MAXULONG, sizeof(THREAD_NAME_INFORMATION), THREAD_QUERY_LIMITED_INFORMATION, STATUS_BUFFER_TOO_SMALL);
+    Test_InfoClass_Access(ThreadSelectedCpuSets, NTDDI_WIN10, MAXULONG, 0, THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadSystemThreadInformation, NTDDI_WIN10, MAXULONG, sizeof(SYSTEM_THREAD_INFORMATION), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadActualGroupAffinity, NTDDI_WIN10, MAXULONG, sizeof(GROUP_AFFINITY), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadDynamicCodePolicyInfo, NTDDI_WIN10, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadExplicitCaseSensitivity, NTDDI_WIN10, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    //Test_InfoClass_Access(ThreadWorkOnBehalfTicket, NTDDI_WIN10, MAXULONG, 16 /* sizeof(RTL_WORK_ON_BEHALF_TICKET_EX) */, THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadSubsystemInformation, NTDDI_WIN10, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+
+    // Windows 11
+    // ThreadDbgkWerReportActive is set only
+    // ThreadAttachContainer is set only
+    // ThreadManageWritesToExecutableMemory is set only
+    //Test_InfoClass_Access(ThreadPowerThrottlingState, NTDDI_WIN11_ZN, MAXULONG, sizeof(POWER_THROTTLING_THREAD_STATE), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    //Test_InfoClass_Access(ThreadWorkloadClass, NTDDI_WIN11_ZN, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    // ThreadCreateStateChange is set only
+    // ThreadApplyStateChange is set only
+    //Test_InfoClass_Access(ThreadStrongerBadHandleChecks, NTDDI_WIN11_ZN, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadEffectiveIoPriority, NTDDI_WIN11_ZN, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+    Test_InfoClass_Access(ThreadEffectivePagePriority, NTDDI_WIN11_ZN, MAXULONG, sizeof(ULONG), THREAD_QUERY_LIMITED_INFORMATION, 0);
+}
+
 START_TEST(NtQueryInformationThread)
 {
     Test_ThreadBasicInformationClass();
+    Test_ThreadAmILastThread();
     Test_ThreadHideFromDebuggerClass();
 #if 0 // This test is too broken
     Test_ThreadQueryAlignmentProbe();
 #endif
     Test_ThreadNameInformation();
+    Test_Access();
 }
