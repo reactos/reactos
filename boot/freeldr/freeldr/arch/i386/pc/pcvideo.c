@@ -47,9 +47,11 @@ DBG_DEFAULT_CHANNEL(UI);
 #define    VIDEOMODE_132X50        0x8432
 #define    VIDEOMODE_132X60        0x843C
 
+/* For PcVideoSetVerticalResolution() (EGA/VGA only) */
 #define VERTRES_200_SCANLINES        0x00
 #define VERTRES_350_SCANLINES        0x01
 #define VERTRES_400_SCANLINES        0x02
+#define VERTRES_480_SCANLINES        0x03
 
 #include <pshpack2.h>
 typedef struct
@@ -915,11 +917,9 @@ PcVideoSetMode(USHORT NewMode)
         WRITE_PORT_USHORT((USHORT*)0x03CE, 0x0F01); /* For some reason this is necessary? */
         ScreenWidth = 640;
         ScreenHeight = 480;
-        BytesPerScanLine = 80;
+        BytesPerScanLine = 80; // 8 pixels per byte (4 planes)
         BiosVideoMode = NewMode;
         DisplayMode = VideoGraphicsMode;
-
-        return TRUE;
     }
     else if (NewMode == 0x13)
     {
@@ -927,11 +927,9 @@ PcVideoSetMode(USHORT NewMode)
         PcVideoSetBiosMode((UCHAR)NewMode);
         ScreenWidth = 320;
         ScreenHeight = 200;
-        BytesPerScanLine = 320;
+        BytesPerScanLine = 320; // 1 pixel per byte
         BiosVideoMode = NewMode;
         DisplayMode = VideoGraphicsMode;
-
-        return TRUE;
     }
     else
     {
@@ -948,11 +946,9 @@ PcVideoSetMode(USHORT NewMode)
         BiosVideoMode = NewMode;
         DisplayMode = (0x0108 <= NewMode && NewMode <= 0x010C) ? VideoTextMode : VideoGraphicsMode;
         VesaVideoMode = TRUE;
-
-        return TRUE;
     }
 
-    return FALSE;
+    return TRUE;
 }
 
 static VOID
