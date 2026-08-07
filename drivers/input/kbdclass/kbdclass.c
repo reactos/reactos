@@ -732,24 +732,34 @@ ClassCancelRoutine(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PCLASS_DEVICE_EXTENSION ClassDeviceExtension = DeviceObject->DeviceExtension;
+    PCOMMON_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PREAD_DATA ReadData;
     KIRQL OldIrql;
     BOOLEAN wasQueued = FALSE;
 
     TRACE_(CLASS_NAME, "ClassCancelRoutine(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
-    ASSERT(ClassDeviceExtension->Common.IsClassDO);
+    if (DeviceExtension->IsClassDO)
+    {
+        ReadData = ((PCLASS_DEVICE_EXTENSION)DeviceExtension)->ReadData;
+    }
+    else
+    {
+        PPORT_DEVICE_EXTENSION Port = (PPORT_DEVICE_EXTENSION)DeviceExtension;
+        PCLASS_DEVICE_EXTENSION Class = (PCLASS_DEVICE_EXTENSION)Port->ClassDO->DeviceExtension;
+        ReadData = Class->ReadData;
+    }
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
-    KeAcquireSpinLock(&ClassDeviceExtension->ReadData->SpinLock, &OldIrql);
+    KeAcquireSpinLock(&ReadData->SpinLock, &OldIrql);
 
-    if (ClassDeviceExtension->ReadData->PendingIrp == Irp)
+    if (ReadData->PendingIrp == Irp)
     {
-        ClassDeviceExtension->ReadData->PendingIrp = NULL;
+        ReadData->PendingIrp = NULL;
         wasQueued = TRUE;
     }
-    KeReleaseSpinLock(&ClassDeviceExtension->ReadData->SpinLock, OldIrql);
+    KeReleaseSpinLock(&ReadData->SpinLock, OldIrql);
 
     if (wasQueued)
     {
