@@ -376,7 +376,10 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     BOOLEAN NeedsPeb = FALSE;
     INITIAL_PEB InitialPeb;
+    PEJOB ParentJob;
+
     PAGED_CODE();
+
     PSTRACE(PS_PROCESS_DEBUG,
             "ProcessHandle: %p Parent: %p\n", ProcessHandle, ParentProcess);
 
@@ -438,6 +441,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Setup the Thread List Head */
     InitializeListHead(&Process->ThreadListHead);
+
+    /* Initialize the job process list entry */
+    InitializeListHead(&Process->JobLinks);
 
     /* Set up the Quota Block from the Parent */
     PspInheritQuota(Process, Parent);
@@ -709,11 +715,36 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Check if we need to audit */
     if (SeDetailedAuditingWithToken(NULL)) SeAuditProcessCreate(Process);
 
-    /* Check if the parent had a job */
-    if ((Parent) && (Parent->Job))
+    /*
+     * Attach the process to parent's job if:
+     *  a) parent exists,
+     *  b) parent has a job,
+     *  c) parent's job does NOT allow silent breakaway
+     */
+    if (Parent && Parent->Job &&
+        !FlagOn(Parent->Job->LimitFlags, JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK))
     {
-        /* FIXME: We need to insert this process */
-        DPRINT1("Jobs not yet supported\n");
+        ParentJob = Parent->Job;
+
+        /* If caller explicitly requested breakaway from the job */
+        if (FlagOn(Flags, PROCESS_CREATE_FLAGS_BREAKAWAY))
+        {
+            /* Deny if the job forbids breakaway */
+            if (!FlagOn(ParentJob->LimitFlags, JOB_OBJECT_LIMIT_BREAKAWAY_OK))
+            {
+                Status = STATUS_ACCESS_DENIED;
+                goto CleanupWithRef;
+            }
+        }
+        else
+        {
+            /* Under normal conditions, child should join a parent's job */
+            Status = PspAssignProcessToJob(Process, ParentJob);
+            if (!NT_SUCCESS(Status))
+            {
+                goto CleanupWithRef;
+            }
+        }
     }
 
     /* Create PEB only for User-Mode Processes */
