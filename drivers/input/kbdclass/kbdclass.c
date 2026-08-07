@@ -10,8 +10,10 @@
 #include "kbdclass.h"
 
 #include <stdio.h>
-#include <pseh/pseh2.h>
 #include <kbdmou.h>
+#include <hidclass.h>
+#include <poclass.h>
+#include <pseh/pseh2.h>
 #include <debug.h>
 
 static DRIVER_UNLOAD DriverUnload;
@@ -184,6 +186,37 @@ ClassDeviceControl(
                 }
 
                 Entry = Entry->Flink;
+            }
+            break;
+        }
+        /* Every IOCTL HID, except IOCTL_HID_GET_INPUT_REPORT/IOCTL_HID_SET_OUTPUT_REPORT */
+        case IOCTL_GET_PHYSICAL_DESCRIPTOR:
+        case IOCTL_HID_FLUSH_QUEUE:
+        case IOCTL_HID_GET_COLLECTION_DESCRIPTOR:
+        case IOCTL_HID_GET_COLLECTION_INFORMATION:
+        case IOCTL_HID_GET_FEATURE:
+        case IOCTL_HID_GET_HARDWARE_ID:
+        case IOCTL_HID_GET_INDEXED_STRING:
+        case IOCTL_HID_GET_MANUFACTURER_STRING:
+        case IOCTL_GET_NUM_DEVICE_INPUT_BUFFERS:
+        case IOCTL_HID_GET_POLL_FREQUENCY_MSEC:
+        case IOCTL_HID_GET_PRODUCT_STRING:
+        case IOCTL_HID_GET_SERIALNUMBER_STRING:
+        case IOCTL_HID_SET_FEATURE:
+        case IOCTL_SET_NUM_DEVICE_INPUT_BUFFERS:
+        case IOCTL_HID_SET_POLL_FREQUENCY_MSEC:
+        case IOCTL_HID_GET_DRIVER_CONFIG:
+        case IOCTL_HID_SET_DRIVER_CONFIG:
+        case IOCTL_HID_GET_MS_GENRE_DESCRIPTOR:
+        /* IOCTL used by Power Manager */
+        case IOCTL_GET_SYS_BUTTON_CAPS:
+        case IOCTL_GET_SYS_BUTTON_EVENT:
+        {
+            PPORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+            if (!DeviceExtension->Common.IsClassDO)
+            {
+                IoSkipCurrentIrpStackLocation(Irp);
+                return IoCallDriver(DeviceExtension->LowerDevice, Irp);
             }
             break;
         }
