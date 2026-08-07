@@ -10,6 +10,8 @@
 #include <uefildr.h>
 #include "../vidfb.h"
 
+#include <PciRootBridgeIo.h>
+
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
@@ -214,6 +216,222 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     }
 }
 
+#if defined(_M_IX86) || defined(_M_AMD64)
+/* Ask the firmware's PCI root bridges for the highest bus number they
+ * decode on segment 0, from the ACPI address space descriptors returned
+ * by EFI_PCI_ROOT_BRIDGE_IO_PROTOCOL.Configuration(). Returns 255 (probe
+ * the full range) if the protocol or the bus ranges are unavailable. */
+static ULONG
+UefiGetPciMaxBusFromFirmware(VOID)
+{
+    EFI_GUID PciRootBridgeIoGuid = EFI_PCI_ROOT_BRIDGE_IO_PROTOCOL_GUID;
+    EFI_BOOT_SERVICES *BootServices = GlobalSystemTable->BootServices;
+    EFI_HANDLE *Handles = NULL;
+    UINTN Count, i;
+    ULONG MaxBus = 0;
+    BOOLEAN Found = FALSE;
+    EFI_STATUS Status;
+
+    Status = BootServices->LocateHandleBuffer(ByProtocol,
+                                              &PciRootBridgeIoGuid,
+                                              NULL,
+                                              &Count,
+                                              &Handles);
+    if (EFI_ERROR(Status))
+        return 255;
+
+    for (i = 0; i < Count; i++)
+    {
+        EFI_PCI_ROOT_BRIDGE_IO_PROTOCOL *RootBridge;
+        EFI_ACPI_ADDRESS_SPACE_DESCRIPTOR *Descriptor;
+        VOID *Resources;
+
+        Status = BootServices->HandleProtocol(Handles[i],
+                                              &PciRootBridgeIoGuid,
+                                              (VOID**)&RootBridge);
+        if (EFI_ERROR(Status))
+            continue;
+
+        /* The legacy hardware description tree cannot represent segments != 0 */
+        if (RootBridge->SegmentNumber != 0)
+            continue;
+
+        Status = RootBridge->Configuration(RootBridge, &Resources);
+        if (EFI_ERROR(Status))
+            continue;
+
+        Descriptor = (EFI_ACPI_ADDRESS_SPACE_DESCRIPTOR*)Resources;
+        while (Descriptor->Desc == ACPI_ADDRESS_SPACE_DESCRIPTOR)
+        {
+            if ((Descriptor->ResType == ACPI_ADDRESS_SPACE_TYPE_BUS) &&
+                (Descriptor->AddrRangeMax <= 255))
+            {
+                Found = TRUE;
+                if ((ULONG)Descriptor->AddrRangeMax > MaxBus)
+                    MaxBus = (ULONG)Descriptor->AddrRangeMax;
+            }
+            Descriptor = (EFI_ACPI_ADDRESS_SPACE_DESCRIPTOR*)
+                         ((ULONG_PTR)Descriptor + Descriptor->Len + 3);
+        }
+    }
+
+    BootServices->FreePool(Handles);
+
+    if (!Found)
+        return 255;
+
+    TRACE("Firmware root bridges decode buses 0-%lu on segment 0\n", MaxBus);
+    return MaxBus;
+}
+
+static BOOLEAN
+UefiFindPciBios(PPCI_REGISTRY_INFO BusData)
+{
+    PCI_TYPE1_CFG_BITS PciCfg1;
+    ULONG SavedAddress;
+    ULONG Bus, Device, LastBus;
+    ULONG MaxBus = 0;
+    USHORT VendorId;
+    BOOLEAN FoundAny = FALSE;
+
+    /* There is no real-mode PCI BIOS interface on UEFI systems.
+     * Verify that configuration mechanism #1 responds, then probe
+     * the buses directly to emulate the PCI BIOS installation check. */
+    SavedAddress = READ_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT);
+    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, 0x80000000);
+    if (READ_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT) != 0x80000000)
+    {
+        WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, SavedAddress);
+        WARN("PCI configuration mechanism #1 not available\n");
+        return FALSE;
+    }
+
+    /* Bound the probe by the bus ranges the firmware root bridges decode */
+    LastBus = UefiGetPciMaxBusFromFirmware();
+
+    /* Find the highest populated bus. Function 0 must exist on any
+     * populated device, so probing it per device slot is sufficient. */
+    for (Bus = 0; Bus <= LastBus; Bus++)
+    {
+        for (Device = 0; Device < 32; Device++)
+        {
+            PciCfg1.u.AsULONG = 0;
+            PciCfg1.u.bits.Enable = 1;
+            PciCfg1.u.bits.BusNumber = Bus;
+            PciCfg1.u.bits.DeviceNumber = Device;
+
+            WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, PciCfg1.u.AsULONG);
+            VendorId = (USHORT)READ_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT);
+            if (VendorId != PCI_INVALID_VENDORID)
+            {
+                FoundAny = TRUE;
+                MaxBus = Bus;
+                break;
+            }
+        }
+    }
+    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, SavedAddress);
+
+    if (!FoundAny)
+    {
+        WARN("No PCI devices found\n");
+        return FALSE;
+    }
+
+    TRACE("PCI probe found %lu bus(es)\n", MaxBus + 1);
+
+    /* NoBuses is a UCHAR: clamp the (theoretical) 256-bus case */
+    BusData->NoBuses = (UCHAR)min(MaxBus + 1, 255);
+    /* Report the interface as PCI BIOS 2.10-compatible, like a real one would */
+    BusData->MajorRevision = 2;
+    BusData->MinorRevision = 0x10;
+    BusData->HardwareMechanism = 1;
+    return TRUE;
+}
+
+/* UEFI counterpart of DetectPciBios() in arch/i386/hwpci.c: report the PCI
+ * buses under the same "PCI" MultiFunctionAdapter keys, without the "PCI BIOS"
+ * component and its $PIR routing table, which do not exist on UEFI systems */
+static VOID
+DetectPciBuses(
+    _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Inout_ PULONG BusNumber)
+{
+    PCI_REGISTRY_INFO BusData;
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PCONFIGURATION_COMPONENT_DATA BusKey;
+    ULONG Size;
+    ULONG i;
+
+    if (!UefiFindPciBios(&BusData))
+        return;
+
+    /* Report PCI buses */
+    for (i = 0; i < (ULONG)BusData.NoBuses; i++)
+    {
+        /* Check if this is the first bus */
+        if (i == 0)
+        {
+            /* Set 'Configuration Data' value */
+            Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) +
+                   sizeof(BusData);
+            PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+            if (!PartialResourceList)
+            {
+                ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses. (i = %lu, NoBuses = %lu)\n",
+                    i, (ULONG)BusData.NoBuses);
+                return;
+            }
+
+            /* Initialize resource descriptor */
+            RtlZeroMemory(PartialResourceList, Size);
+            PartialResourceList->Version = 1;
+            PartialResourceList->Revision = 1;
+            PartialResourceList->Count = 1;
+
+            PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
+            PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
+            PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+            PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(BusData);
+
+            RtlCopyMemory(&PartialResourceList->PartialDescriptors[1],
+                          &BusData, sizeof(BusData));
+        }
+        else
+        {
+            /* Set 'Configuration Data' value */
+            Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
+            PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+            if (!PartialResourceList)
+            {
+                ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses. (i = %lu, NoBuses = %lu)\n",
+                    i, (ULONG)BusData.NoBuses);
+                return;
+            }
+
+            /* Initialize resource descriptor */
+            RtlZeroMemory(PartialResourceList, Size);
+        }
+
+        /* Create the bus key */
+        FldrCreateComponentKey(SystemKey,
+                               AdapterClass,
+                               MultiFunctionAdapter,
+                               0,
+                               0,
+                               0xFFFFFFFF,
+                               "PCI",
+                               PartialResourceList,
+                               Size,
+                               &BusKey);
+
+        /* Increment bus number */
+        (*BusNumber)++;
+    }
+}
+#endif /* _M_IX86 || _M_AMD64 */
+
 static VOID
 DetectDisplayController(
     _In_ PCONFIGURATION_COMPONENT_DATA BusKey)
@@ -344,7 +562,9 @@ UefiHwDetect(
 
     /* Detect buses */
     DetectInternal(SystemKey, &BusNumber);
-    // TODO: DetectPciBios
+#if defined(_M_IX86) || defined(_M_AMD64)
+    DetectPciBuses(SystemKey, &BusNumber);
+#endif
     DetectAcpiBios(SystemKey, &BusNumber);
 
     TRACE("DetectHardware() Done\n");
