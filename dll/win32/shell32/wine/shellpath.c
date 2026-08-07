@@ -1970,6 +1970,16 @@ static const CSIDL_DATA CSIDL_Data[] =
 #endif
 };
 
+#if DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA
+static int csidl_from_id( const KNOWNFOLDERID *id )
+{
+    int i;
+    for (i = 0; i < ARRAY_SIZE(CSIDL_Data); i++)
+        if (IsEqualGUID( CSIDL_Data[i].id, id )) return i;
+    return -1;
+}
+#endif
+
 INT SHGetSpecialFolderID(_In_ LPCWSTR pszName)
 {
     UINT csidl;
@@ -3397,3 +3407,156 @@ HRESULT WINAPI SHGetSpecialFolderLocation(
     hr = SHGetFolderLocation(hwndOwner, nFolder, NULL, 0, ppidl);
     return hr;
 }
+
+#if DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA
+/*************************************************************************
+ * SHGetKnownFolderPath           [SHELL32.@]
+ */
+HRESULT WINAPI SHGetKnownFolderPath(REFKNOWNFOLDERID rfid, DWORD flags, HANDLE token, WCHAR **ret_path)
+{
+    WCHAR pathW[MAX_PATH];
+    HRESULT    hr;
+    int folder = csidl_from_id(rfid), shgfp_flags;
+
+    TRACE("%s, 0x%08lx, %p, %p\n", debugstr_guid(rfid), flags, token, ret_path);
+
+    *ret_path = NULL;
+
+    if (folder < 0)
+        return HRESULT_FROM_WIN32( ERROR_FILE_NOT_FOUND );
+    	
+    if (flags & ~(KF_FLAG_CREATE|KF_FLAG_SIMPLE_IDLIST|KF_FLAG_DONT_UNEXPAND|
+        KF_FLAG_DONT_VERIFY|KF_FLAG_NO_ALIAS|KF_FLAG_INIT|KF_FLAG_DEFAULT_PATH|KF_FLAG_NOT_PARENT_RELATIVE))
+    {
+        FIXME("flags 0x%08lx not supported\n", flags);
+        return E_INVALIDARG;
+    }
+	
+	if ((flags & (KF_FLAG_DEFAULT_PATH | KF_FLAG_NOT_PARENT_RELATIVE)) == KF_FLAG_NOT_PARENT_RELATIVE)
+	{
+        WARN("Invalid flags mask %#lx.\n", flags);
+        return E_INVALIDARG;
+    }
+	
+	if (flags & KF_FLAG_NOT_PARENT_RELATIVE)
+	{
+        FIXME("Ignoring KF_FLAG_NOT_PARENT_RELATIVE.\n");
+        flags &= ~KF_FLAG_NOT_PARENT_RELATIVE;
+    }
+	
+	folder |= flags & CSIDL_FLAG_MASK;
+    shgfp_flags = flags & KF_FLAG_DEFAULT_PATH ? SHGFP_TYPE_DEFAULT : SHGFP_TYPE_CURRENT;
+	
+	hr = SHGetFolderPathAndSubDirW( 0, folder, token, shgfp_flags, NULL, pathW );
+    if (FAILED( hr ))
+    {
+        TRACE("Failed to get folder path, %#lx.\n", hr);
+        return hr;
+    }
+	
+	TRACE("Final path is %s, %#lx\n", debugstr_w(pathW), hr);
+	
+	*ret_path = CoTaskMemAlloc((lstrlenW(pathW) + 1) * sizeof(WCHAR));
+    if (!*ret_path)
+        return E_OUTOFMEMORY;
+    lstrcpyW(*ret_path, pathW);
+	
+	return hr;
+}
+
+HRESULT WINAPI SHGetKnownFolderIDList(REFKNOWNFOLDERID rfid, DWORD flags, HANDLE token, PIDLIST_ABSOLUTE *pidl)
+{
+    TRACE("%s, 0x%08lx, %p, %p\n", debugstr_guid(rfid), flags, token, pidl);
+
+    if (!pidl)
+        return E_INVALIDARG;
+
+    if (flags)
+        FIXME("unsupported flags: 0x%08lx\n", flags);
+
+    if (token)
+        FIXME("user token is not used.\n");
+
+    *pidl = NULL;
+    if (IsEqualIID(rfid, &FOLDERID_Desktop))
+#ifdef __REACTOS__
+        *pidl = SHCloneSpecialIDList(NULL, CSIDL_DESKTOP, TRUE);
+#else
+        *pidl = _ILCreateDesktop();
+#endif
+    else if (IsEqualIID(rfid, &FOLDERID_RecycleBinFolder))
+#ifdef __REACTOS__
+        *pidl = SHCloneSpecialIDList(NULL, CSIDL_BITBUCKET, TRUE);
+#else
+        *pidl = _ILCreateBitBucket();
+#endif
+    else if (IsEqualIID(rfid, &FOLDERID_ComputerFolder))
+#ifdef __REACTOS__
+        *pidl = SHCloneSpecialIDList(NULL, CSIDL_DRIVES, TRUE);
+#else
+        *pidl = _ILCreateMyComputer();
+#endif
+    else if (IsEqualIID(rfid, &FOLDERID_PrintersFolder))
+#ifdef __REACTOS__
+        *pidl = SHCloneSpecialIDList(NULL, CSIDL_PRINTERS, TRUE);
+#else
+        *pidl = _ILCreatePrinters();
+#endif
+    else if (IsEqualIID(rfid, &FOLDERID_ControlPanelFolder))
+#ifdef __REACTOS__
+        *pidl = SHCloneSpecialIDList(NULL, CSIDL_CONTROLS, TRUE);
+#else
+        *pidl = _ILCreateControlPanel();
+#endif
+    else if (IsEqualIID(rfid, &FOLDERID_NetworkFolder))
+#ifdef __REACTOS__
+        *pidl = SHCloneSpecialIDList(NULL, CSIDL_NETWORK, TRUE);
+#else
+        *pidl = _ILCreateNetwork();
+#endif
+    else if (IsEqualIID(rfid, &FOLDERID_Documents))
+#ifdef __REACTOS__
+        *pidl = SHCloneSpecialIDList(NULL, CSIDL_MYDOCUMENTS, TRUE);
+#else
+        *pidl = _ILCreateMyDocuments();
+#endif
+    else
+    {
+        DWORD attributes = 0;
+        WCHAR *pathW;
+        HRESULT hr;
+
+        hr = SHGetKnownFolderPath(rfid, flags, token, &pathW);
+        if (FAILED(hr))
+            return hr;
+
+        hr = SHILCreateFromPathW(pathW, pidl, &attributes);
+        CoTaskMemFree(pathW);
+        return hr;
+    }
+
+    return *pidl ? S_OK : E_FAIL;
+}
+#endif
+
+#if DLL_EXPORT_VERSION >= _WIN32_WINNT_WIN7
+HRESULT WINAPI SHGetKnownFolderItem(REFKNOWNFOLDERID rfid, KNOWN_FOLDER_FLAG flags, HANDLE hToken,
+                                    REFIID riid, void **ppv)
+{
+    PIDLIST_ABSOLUTE pidl;
+    HRESULT hr;
+
+    TRACE("%s, 0x%08x, %p, %s, %p\n", debugstr_guid(rfid), flags, hToken, debugstr_guid(riid), ppv);
+
+    hr = SHGetKnownFolderIDList(rfid, flags, hToken, &pidl);
+    if (FAILED(hr))
+    {
+        *ppv = NULL;
+        return hr;
+    }
+
+    hr = SHCreateItemFromIDList(pidl, riid, ppv);
+    CoTaskMemFree(pidl);
+    return hr;
+}
+#endif
