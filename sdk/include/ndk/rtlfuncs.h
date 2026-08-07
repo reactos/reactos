@@ -2845,14 +2845,13 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlRemoteCall(
-    _In_ HANDLE Process,
-    _In_ HANDLE Thread,
+    _In_ HANDLE ProcessHandle,
+    _In_ HANDLE ThreadHandle,
     _In_ PVOID CallSite,
     _In_ ULONG ArgumentCount,
-    _In_ PULONG Arguments,
+    _In_reads_(ArgumentCount) PULONG_PTR Arguments,
     _In_ BOOLEAN PassContext,
-    _In_ BOOLEAN AlreadySuspended
-);
+    _In_ BOOLEAN AlreadySuspended);
 
 NTSYSAPI
 NTSTATUS

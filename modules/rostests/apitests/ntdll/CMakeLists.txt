@@ -158,11 +158,17 @@ if(ARCH STREQUAL "i386")
         i386/NtContinue.S
         i386/NtCreateThread.S
     )
+    list(APPEND SOURCE
+        RtlRemoteCall.c
+    )
 elseif(ARCH STREQUAL "amd64")
     add_asm_files(ntdll_apitest_asm
         ../crt/amd64/setjmp_helper.s
         amd64/NtContinue.S
         amd64/NtCreateThread.S
+    )
+    list(APPEND SOURCE
+        RtlRemoteCall.c
     )
 endif()
 
