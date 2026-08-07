@@ -1468,6 +1468,13 @@ LdrUnloadDll(
             /* Call the entrypoint */
             _SEH2_TRY
             {
+                /* Check if it has TLS */
+                if (LdrEntry->TlsIndex)
+                {
+                    /* Call TLS */
+                    LdrpCallTlsInitializers(LdrEntry, DLL_PROCESS_DETACH);
+                }
+
                 LdrpCallInitRoutine(LdrEntry->EntryPoint,
                                     LdrEntry->DllBase,
                                     DLL_PROCESS_DETACH,
@@ -1483,6 +1490,9 @@ LdrUnloadDll(
             /* Release the context */
             RtlDeactivateActivationContextUnsafeFast(&ActCtx);
         }
+
+        /* Release static TLS data before the image is unmapped */
+        LdrpReleaseTlsData(LdrEntry);
 
         /* Remove it from the list */
         RemoveEntryList(&CurrentEntry->InLoadOrderLinks);
