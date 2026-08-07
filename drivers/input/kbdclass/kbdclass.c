@@ -427,39 +427,29 @@ cleanup:
 static NTSTATUS
 FillEntries(
     IN PDEVICE_OBJECT ClassDeviceObject,
-    IN PIRP Irp,
-    IN PKEYBOARD_INPUT_DATA DataStart,
+    IN PKEYBOARD_INPUT_DATA Source,
+    OUT PKEYBOARD_INPUT_DATA Destination,
     IN SIZE_T NumberOfEntries)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (ClassDeviceObject->Flags & DO_BUFFERED_IO)
+    if (!Destination)
+        return STATUS_UNSUCCESSFUL;
+
+    if (ClassDeviceObject->Flags & (DO_BUFFERED_IO | DO_DIRECT_IO))
     {
         RtlCopyMemory(
-            Irp->AssociatedIrp.SystemBuffer,
-            DataStart,
+            Destination,
+            Source,
             NumberOfEntries * sizeof(KEYBOARD_INPUT_DATA));
-    }
-    else if (ClassDeviceObject->Flags & DO_DIRECT_IO)
-    {
-        PVOID DestAddress = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
-        if (DestAddress)
-        {
-            RtlCopyMemory(
-                DestAddress,
-                DataStart,
-                NumberOfEntries * sizeof(KEYBOARD_INPUT_DATA));
-        }
-        else
-            Status = STATUS_UNSUCCESSFUL;
     }
     else
     {
         _SEH2_TRY
         {
             RtlCopyMemory(
-                Irp->UserBuffer,
-                DataStart,
+                Destination,
+                Source,
                 NumberOfEntries * sizeof(KEYBOARD_INPUT_DATA));
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -784,6 +774,14 @@ HandleReadIrp(
     if (ReadData->InputCount > 0)
     {
         SIZE_T NumberOfEntries;
+        PKEYBOARD_INPUT_DATA Destination;
+
+        if (DeviceObject->Flags & DO_BUFFERED_IO)
+            Destination = Irp->AssociatedIrp.SystemBuffer;
+        else if (DeviceObject->Flags & DO_DIRECT_IO)
+            Destination = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+        else
+            Destination = Irp->UserBuffer;
 
         NumberOfEntries = MIN(
             ReadData->InputCount,
@@ -791,8 +789,8 @@ HandleReadIrp(
 
         Status = FillEntries(
             DeviceObject,
-            Irp,
             ReadData->PortData,
+            Destination,
             NumberOfEntries);
 
         if (NT_SUCCESS(Status))
