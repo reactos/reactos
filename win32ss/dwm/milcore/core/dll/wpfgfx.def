@@ -1,0 +1,140 @@
+; Licensed to the .NET Foundation under one or more agreements.
+; The .NET Foundation licenses this file to you under the MIT license.
+; See the LICENSE file in the project root for more information.
+
+
+LIBRARY DLL_NAME
+
+EXPORTS
+
+    MILAddRef
+    MILRelease
+    MILQueryInterface
+
+    MILCreateFactory
+
+    MILFactoryCreateMediaPlayer
+    MILFactoryCreateSWRenderTargetForBitmap
+    MILFactoryCreateBitmapRenderTarget
+    MILLoadResource
+
+    MILRenderTargetBitmapGetBitmap
+    MILRenderTargetBitmapClear
+
+    MILMediaOpen
+    MILMediaStop
+    MILMediaClose
+    MILMediaGetPosition
+    MILMediaSetPosition
+    MILMediaSetVolume
+    MILMediaSetBalance
+    MILMediaSetIsScrubbingEnabled
+    MILMediaSetRate
+    MILMediaHasVideo
+    MILMediaHasAudio
+    MILMediaCanPause
+    MILMediaIsBuffering
+    MILMediaGetBufferingProgress
+    MILMediaGetDownloadProgress
+    MILMediaGetNaturalHeight
+    MILMediaGetNaturalWidth
+    MILMediaGetMediaLength
+    MILMediaNeedUIFrameUpdate
+    MILMediaShutdown
+    MILCreateEventProxy
+    MILMediaProcessExitHandler
+
+    MILSwDoubleBufferedBitmapCreate
+    MILSwDoubleBufferedBitmapGetBackBuffer
+    MILSwDoubleBufferedBitmapAddDirtyRect
+    MILSwDoubleBufferedBitmapProtectBackBuffer
+
+    MILCreateStreamFromStreamDescriptor
+    MILIStreamWrite
+
+    MILUpdateSystemParametersInfo
+
+    MilVersionCheck
+
+    MilCompositionEngine_EnterCompositionEngineLock
+    MilCompositionEngine_ExitCompositionEngineLock
+    MilCompositionEngine_GetComposedEventId
+    MilConnection_CreateChannel
+    MilConnection_DestroyChannel
+    MilChannel_CommitChannel
+    MilChannel_CloseBatch
+    WgxConnection_Create
+    WgxConnection_ShouldForceSoftwareForGraphicsStreamClient
+    WgxConnection_SameThreadPresent
+    WgxConnection_Disconnect
+    MilCompositionEngine_InitializePartitionManager
+    MilCompositionEngine_UpdateSchedulerSettings
+    MilCompositionEngine_DeinitializePartitionManager
+
+    MilPlayer_Create
+    MilPlayer_Process
+
+    MilUtility_GetTileBrushMapping
+    MilUtility_CopyPixelBuffer
+
+    MilComposition_SyncFlush
+
+    MilComposition_PeekNextMessage
+    MilComposition_WaitForNextMessage
+
+    MilResource_CreateOrAddRefOnChannel
+    MilResource_DuplicateHandle
+    MilResource_ReleaseOnChannel
+    MilResource_GetRefCountOnChannel
+
+    MilChannel_GetMarshalType
+    MilChannel_SetReceiveBroadcastMessages
+    MilResource_SendCommand
+    MilChannel_BeginCommand
+    MilChannel_AppendCommandData
+    MilChannel_EndCommand
+    MilResource_CreateCWICWrapperBitmap
+    MilResource_SendCommandBitmapSource
+    MilResource_SendCommandMedia
+    MilChannel_SetNotificationWindow
+
+    MilUtility_ArcToBezier
+    MilUtility_PathGeometryWiden
+    MilUtility_PathGeometryOutline
+    MilUtility_GetPointAtLengthFraction
+    MilUtility_PathGeometryCombine
+    MilUtility_PathGeometryFlatten
+    MilUtility_PolygonBounds
+    MilUtility_PathGeometryBounds
+    MilUtility_PolygonHitTest
+    MilUtility_PathGeometryHitTest
+    MilUtility_PathGeometryHitTestPathGeometry
+    MilUtility_GeometryGetArea
+
+    SetMilPerfInstrumentationFlags
+
+    MilVisualTarget_AttachToHwnd
+    MilVisualTarget_DetachFromHwnd
+
+    MilContent_AttachToHwnd
+    MilContent_DetachFromHwnd
+
+    MIL3DCalcProjected2DBounds
+
+    InteropDeviceBitmap_Create
+    InteropDeviceBitmap_Detach
+    InteropDeviceBitmap_AddDirtyRect
+    InteropDeviceBitmap_GetAsSoftwareBitmap
+
+    MilGlyphRun_GetGlyphOutline
+    MilGlyphRun_ReleasePathGeometryData
+
+    IWICColorContext_GetProfileBytes_Proxy
+    IWICColorContext_GetType_Proxy
+    IWICColorContext_GetExifColorSpace_Proxy
+
+    GetNextPerfElementId
+
+    RenderOptions_ForceSoftwareRenderingModeForProcess
+    RenderOptions_IsSoftwareRenderingForcedForProcess
+

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+ Licensed to the .NET Foundation under one or more agreements.
+ The .NET Foundation licenses this file to you under the MIT license.
+ See the LICENSE file in the project root for more information.
+-->
+<CG xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="Elements.xsd">
+    <!-- The list of Elements we need to generate partial classes for -->
+    <Elements>
+        <Element Name="UIElement3D" Namespace="System.Windows" ManagedDestinationDir="src\Core\CSharp\System\Windows\Generated" ImplementsIAnimatable="false"/>
+        <Element Name="UIElement" Namespace="System.Windows" ManagedDestinationDir="src\Core\CSharp\System\Windows\Generated" ImplementsIAnimatable="true"/>
+        <Element Name="ContentElement" Namespace="System.Windows" ManagedDestinationDir="src\Core\CSharp\System\Windows\Generated" ImplementsIAnimatable="true"/>
+    </Elements>
+
+    <!-- The list of Events we need to generate code for per-element -->
+    <Events>
+        <Event Name="Mouse.PreviewMouseDown" HandlerType="MouseButtonEventHandler" HandledToo="true" Comment="the mouse button was pressed" />
+        <Event Name="Mouse.MouseDown" HandlerType="MouseButtonEventHandler" HandledToo="true" TranslateInput="true" Comment="the mouse button was pressed" />
+        <Event Name="Mouse.PreviewMouseUp" HandlerType="MouseButtonEventHandler" HandledToo="true" Comment="the mouse button was released" />
+        <Event Name="Mouse.MouseUp" HandlerType="MouseButtonEventHandler" HandledToo="true" Comment="the mouse button was released" />
+
+        <!-- Mouse Button Events -->
+        <Event Name="UIElement.PreviewMouseLeftButtonDown" HandlerType="MouseButtonEventHandler" Comment="the left mouse button was pressed" />
+        <Event Name="UIElement.MouseLeftButtonDown" HandlerType="MouseButtonEventHandler" Comment="the left mouse button was pressed" />
+        <Event Name="UIElement.PreviewMouseLeftButtonUp" HandlerType="MouseButtonEventHandler" Comment="the left mouse button was released" />
+        <Event Name="UIElement.MouseLeftButtonUp" HandlerType="MouseButtonEventHandler" Comment="the left mouse button was released" />
+        <Event Name="UIElement.PreviewMouseRightButtonDown" HandlerType="MouseButtonEventHandler" Comment="the right mouse button was pressed" />
+        <Event Name="UIElement.MouseRightButtonDown" HandlerType="MouseButtonEventHandler" Comment="the right mouse button was pressed" />
+        <Event Name="UIElement.PreviewMouseRightButtonUp" HandlerType="MouseButtonEventHandler" Comment="the right mouse button was released" />
+        <Event Name="UIElement.MouseRightButtonUp" HandlerType="MouseButtonEventHandler" Comment="the right mouse button was released" />
+
+        <!-- Mouse Move Events -->
+        <Event Name="Mouse.PreviewMouseMove" HandlerType="MouseEventHandler" Comment="a mouse move" />
+        <Event Name="Mouse.MouseMove" HandlerType="MouseEventHandler" Comment="a mouse move" />
+        <Event Name="Mouse.PreviewMouseWheel" HandlerType="MouseWheelEventHandler" Comment="a mouse wheel rotation" />
+        <Event Name="Mouse.MouseWheel" HandlerType="MouseWheelEventHandler" TranslateInput="true" Comment="a mouse wheel rotation" />
+        <Event Name="Mouse.MouseEnter" HandlerType="MouseEventHandler" Comment="the mouse entered this element" />
+        <Event Name="Mouse.MouseLeave" HandlerType="MouseEventHandler" Comment="the mouse left this element" />
+        <Event Name="Mouse.GotMouseCapture" HandlerType="MouseEventHandler" Comment="that this element got the mouse capture" />
+        <Event Name="Mouse.LostMouseCapture" HandlerType="MouseEventHandler" Comment="that this element lost the mouse capture" />
+        <Event Name="Mouse.QueryCursor" HandlerType="QueryCursorEventHandler" Comment="the cursor to display was requested" />
+
+        <!-- Styles Events -->
+        <Event Name="Stylus.PreviewStylusDown" HandlerType="StylusDownEventHandler" Comment="a stylus-down" />
+        <Event Name="Stylus.StylusDown" HandlerType="StylusDownEventHandler" Comment="a stylus-down" />
+        <Event Name="Stylus.PreviewStylusUp" HandlerType="StylusEventHandler" Comment="a stylus-up" />
+        <Event Name="Stylus.StylusUp" HandlerType="StylusEventHandler" Comment="a stylus-up" />
+        <Event Name="Stylus.PreviewStylusMove" HandlerType="StylusEventHandler" Comment="a stylus move" />
+        <Event Name="Stylus.StylusMove" HandlerType="StylusEventHandler" Comment="a stylus move" />
+        <Event Name="Stylus.PreviewStylusInAirMove" HandlerType="StylusEventHandler" Comment="a stylus-in-air-move" />
+        <Event Name="Stylus.StylusInAirMove" HandlerType="StylusEventHandler" Comment="a stylus-in-air-move" />
+        <Event Name="Stylus.StylusEnter" HandlerType="StylusEventHandler" Comment="the stylus entered this element" />
+        <Event Name="Stylus.StylusLeave" HandlerType="StylusEventHandler" Comment="the stylus left this element" />
+        <Event Name="Stylus.PreviewStylusInRange" HandlerType="StylusEventHandler" Comment="the stylus is now in range of the digitizer" />
+        <Event Name="Stylus.StylusInRange" HandlerType="StylusEventHandler" Comment="the stylus is now in range of the digitizer" />
+        <Event Name="Stylus.PreviewStylusOutOfRange" HandlerType="StylusEventHandler" Comment="the stylus is now out of range of the digitizer" />
+        <Event Name="Stylus.StylusOutOfRange" HandlerType="StylusEventHandler" Comment="the stylus is now out of range of the digitizer" />
+        <Event Name="Stylus.PreviewStylusSystemGesture" HandlerType="StylusSystemGestureEventHandler" Comment="a stylus system gesture" />
+        <Event Name="Stylus.StylusSystemGesture" HandlerType="StylusSystemGestureEventHandler" Comment="a stylus system gesture" />
+        <Event Name="Stylus.GotStylusCapture" HandlerType="StylusEventHandler" Comment="that this element got the stylus capture" />
+        <Event Name="Stylus.LostStylusCapture" HandlerType="StylusEventHandler" Comment="that this element lost the stylus capture" />
+        <Event Name="Stylus.StylusButtonDown" HandlerType="StylusButtonEventHandler" Comment="the stylus button is down" />
+        <Event Name="Stylus.StylusButtonUp" HandlerType="StylusButtonEventHandler" Comment="the stylus button is up" />
+        <Event Name="Stylus.PreviewStylusButtonDown" HandlerType="StylusButtonEventHandler" Comment="the stylus button is down" />
+        <Event Name="Stylus.PreviewStylusButtonUp" HandlerType="StylusButtonEventHandler" Comment="the stylus button is up" />
+
+        <!-- Keyboard Events -->
+        <Event Name="Keyboard.PreviewKeyDown" HandlerType="KeyEventHandler" Comment="a key was pressed" />
+        <Event Name="Keyboard.KeyDown" HandlerType="KeyEventHandler" TranslateInput="true" Comment="a key was pressed" />
+        <Event Name="Keyboard.PreviewKeyUp" HandlerType="KeyEventHandler" Comment="a key was released" />
+        <Event Name="Keyboard.KeyUp" HandlerType="KeyEventHandler" Comment="a key was released" />
+        <Event Name="Keyboard.PreviewGotKeyboardFocus" HandlerType="KeyboardFocusChangedEventHandler" Comment="that the keyboard is focused on this element" />
+        <Event Name="Keyboard.GotKeyboardFocus" HandlerType="KeyboardFocusChangedEventHandler" Comment="that the keyboard is focused on this element" />
+        <Event Name="Keyboard.PreviewLostKeyboardFocus" HandlerType="KeyboardFocusChangedEventHandler" Comment="that the keyboard is no longer focusekeyboard is no longer focuseed" />
+        <Event Name="Keyboard.LostKeyboardFocus" HandlerType="KeyboardFocusChangedEventHandler" Comment="that the keyboard is no longer focusekeyboard is no longer focuseed" />
+
+        <Event Name="TextCompositionManager.PreviewTextInput" HandlerType="TextCompositionEventHandler" Comment="text composition" />
+        <Event Name="TextCompositionManager.TextInput" HandlerType="TextCompositionEventHandler" Comment="text composition" />
+
+        <!-- Commanding Events -->
+        <Event Name="CommandManager.PreviewExecuted" HandlerType="ExecutedRoutedEventHandler" Commanding="true" />
+        <Event Name="CommandManager.Executed" HandlerType="ExecutedRoutedEventHandler" Commanding="true" />
+        <Event Name="CommandManager.PreviewCanExecute" HandlerType="CanExecuteRoutedEventHandler" Commanding="true" />
+        <Event Name="CommandManager.CanExecute" HandlerType="CanExecuteRoutedEventHandler" Commanding="true" />
+        <Event Name="CommandDevice.CommandDevice" HandlerType="CommandDeviceEventHandler" Commanding="true" />
+
+        <!-- Drag/Drop Events -->
+        <Event Name="DragDrop.PreviewQueryContinueDrag" HandlerType="QueryContinueDragEventHandler" Comment="the preview query continue drag is going to happen" />
+        <Event Name="DragDrop.QueryContinueDrag" HandlerType="QueryContinueDragEventHandler" Comment="the query continue drag is going to happen" />
+        <Event Name="DragDrop.PreviewGiveFeedback" HandlerType="GiveFeedbackEventHandler" Comment="the preview give feedback is going to happen" />
+        <Event Name="DragDrop.GiveFeedback" HandlerType="GiveFeedbackEventHandler" Comment="the give feedback is going to happen" />
+        
+        <Event Name="DragDrop.PreviewDragEnter" HandlerType="DragEventHandler" Comment="the preview drag enter is going to happen" />
+        <Event Name="DragDrop.DragEnter" HandlerType="DragEventHandler" Comment="the drag enter is going to happen" />
+        <Event Name="DragDrop.PreviewDragOver" HandlerType="DragEventHandler" Comment="the preview drag over is going to happen" />
+        <Event Name="DragDrop.DragOver" HandlerType="DragEventHandler" Comment="the drag over is going to happen" />
+        <Event Name="DragDrop.PreviewDragLeave" HandlerType="DragEventHandler" Comment="the preview drag leave is going to happen" />
+        <Event Name="DragDrop.DragLeave" HandlerType="DragEventHandler" Comment="the drag leave is going to happen" />
+        <Event Name="DragDrop.PreviewDrop" HandlerType="DragEventHandler" Comment="the preview drop is going to happen" />
+        <Event Name="DragDrop.Drop" HandlerType="DragEventHandler" Comment="the drag enter is going to happen" />
+
+        <Event Name="Touch.PreviewTouchDown" HandlerType="EventHandler&lt;TouchEventArgs&gt;" CategoryID="SRID.Touch_Category" Comment="a finger touched the screen"/>
+        <Event Name="Touch.TouchDown" HandlerType="EventHandler&lt;TouchEventArgs&gt;" CategoryID="SRID.Touch_Category" Comment="a finger touched the screen"/>
+        <Event Name="Touch.PreviewTouchMove" HandlerType="EventHandler&lt;TouchEventArgs&gt;" CategoryID="SRID.Touch_Category" Comment="a finger moved across the screen"/>
+        <Event Name="Touch.TouchMove" HandlerType="EventHandler&lt;TouchEventArgs&gt;" CategoryID="SRID.Touch_Category" Comment="a finger moved across the screen"/>
+        <Event Name="Touch.PreviewTouchUp" HandlerType="EventHandler&lt;TouchEventArgs&gt;" CategoryID="SRID.Touch_Category" Comment="a finger lifted off the screen"/>
+        <Event Name="Touch.TouchUp" HandlerType="EventHandler&lt;TouchEventArgs&gt;" CategoryID="SRID.Touch_Category" Comment="a finger lifted off the screen"/>
+        <Event Name="Touch.GotTouchCapture" HandlerType="EventHandler&lt;TouchEventArgs&gt;" CategoryID="SRID.Touch_Category" Comment="a finger was captured to an element"/>
+        <Event Name="Touch.LostTouchCapture" HandlerType="EventHandler&lt;TouchEventArgs&gt;" CategoryID="SRID.Touch_Category" Comment="a finger is no longer captured to an element"/>
+        <Event Name="Touch.TouchEnter" HandlerType="EventHandler&lt;TouchEventArgs&gt;" CategoryID="SRID.Touch_Category" Comment="the mouse entered this element" />
+        <Event Name="Touch.TouchLeave" HandlerType="EventHandler&lt;TouchEventArgs&gt;" CategoryID="SRID.Touch_Category" Comment="the mouse left this element" />
+    </Events>
+
+    <Properties>
+        <Property Name="UIElement.IsMouseDirectlyOver" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ChangedEvent="true" />
+        <!-- ChangedEvent="false" : exposed as MouseEnter/MouseLeave -->
+        <Property Name="UIElement.IsMouseOver" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ReverseInherit="true" />
+        <!-- ChangedEvent="false" : exposed as StylusEnter/StylusLeave -->
+        <Property Name="UIElement.IsStylusOver" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ReverseInherit="true" />
+        <Property Name="UIElement.IsKeyboardFocusWithin" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ReverseInherit="true" ChangedEvent="true" />
+        <Property Name="UIElement.IsMouseCaptured" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ChangedEvent="true" />
+        <Property Name="UIElement.IsMouseCaptureWithin" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ReverseInherit="true" ChangedEvent="true" />
+        <Property Name="UIElement.IsStylusDirectlyOver" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ChangedEvent="true" />
+        <Property Name="UIElement.IsStylusCaptured" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ChangedEvent="true" />
+        <Property Name="UIElement.IsStylusCaptureWithin" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ReverseInherit="true" ChangedEvent="true" />
+        <Property Name="UIElement.IsKeyboardFocused" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ChangedEvent="true" />
+        <Property Name="UIElement.AreAnyTouchesDirectlyOver" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" />
+        <Property Name="UIElement.AreAnyTouchesOver" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ReverseInherit="true" />
+        <Property Name="UIElement.AreAnyTouchesCaptured" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" />
+        <Property Name="UIElement.AreAnyTouchesCapturedWithin" IsReadOnly="true" Type="bool" DefaultValue="BooleanBoxes.FalseBox" ReverseInherit="true" />
+    </Properties>
+</CG>
+

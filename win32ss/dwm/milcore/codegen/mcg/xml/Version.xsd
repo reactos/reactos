@@ -1,0 +1,24 @@
+<!--
+ Licensed to the .NET Foundation under one or more agreements.
+ The .NET Foundation licenses this file to you under the MIT license.
+ See the LICENSE file in the project root for more information.
+-->
+
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:annotation>
+        <xs:documentation xml:lang="en">
+            MIL version description
+        </xs:documentation>
+    </xs:annotation>
+
+    <xs:element name="MilVersion">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="MilSdkVersion" minOccurs="1" maxOccurs="1" type="xs:string" />
+                <xs:element name="DwmSdkVersion" minOccurs="1" maxOccurs="1" type="xs:string" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
+
