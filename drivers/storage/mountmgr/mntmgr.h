@@ -229,7 +229,7 @@ QueryDeviceInformation(
     _Out_opt_ PUNICODE_STRING DeviceName,
     _Out_opt_ PMOUNTDEV_UNIQUE_ID* UniqueId,
     _Out_opt_ PBOOLEAN Removable,
-    _Out_opt_ PBOOLEAN GptDriveLetter,
+    _Out_opt_ PBOOLEAN DriveLetterAllowed,
     _Out_opt_ PBOOLEAN HasGuid,
     _Inout_opt_ LPGUID StableGuid,
     _Out_opt_ PBOOLEAN IsFT);
