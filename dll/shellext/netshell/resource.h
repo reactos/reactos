@@ -1,5 +1,8 @@
 #pragma once
 
+#define TRAYICONWINDOWCAPTION "Connections Tray"
+#define TRAYICONWINDOWCAPTIONW TEXT("Connections Tray")
+
 /* icons */
 
 #define IDI_SHELL_NETWORK_FOLDER 100
