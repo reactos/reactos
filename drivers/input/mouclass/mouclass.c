@@ -27,6 +27,7 @@ static DRIVER_CANCEL ClassCancelRoutine;
 static NTSTATUS
 HandleReadIrp(
     IN PDEVICE_OBJECT DeviceObject,
+    IN PREAD_DATA ReadData,
     IN PIRP Irp,
     BOOLEAN IsInStartIo);
 
@@ -112,9 +113,9 @@ ClassRead(
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-    KeAcquireSpinLock(&DeviceExtension->SpinLock, &OldIrql);
-    Status = HandleReadIrp(DeviceObject, Irp, FALSE);
-    KeReleaseSpinLock(&DeviceExtension->SpinLock, OldIrql);
+    KeAcquireSpinLock(&DeviceExtension->ReadData->SpinLock, &OldIrql);
+    Status = HandleReadIrp(DeviceObject, DeviceExtension->ReadData, Irp, FALSE);
+    KeReleaseSpinLock(&DeviceExtension->ReadData->SpinLock, OldIrql);
     return Status;
 }
 
@@ -356,12 +357,18 @@ cleanup:
     DeviceExtension->DriverExtension = DriverExtension;
     InitializeListHead(&DeviceExtension->ListHead);
     KeInitializeSpinLock(&DeviceExtension->ListSpinLock);
-    KeInitializeSpinLock(&DeviceExtension->SpinLock);
-    DeviceExtension->InputCount = 0;
-    DeviceExtension->PortData = ExAllocatePoolWithTag(NonPagedPool, DeviceExtension->DriverExtension->DataQueueSize * sizeof(MOUSE_INPUT_DATA), CLASS_TAG);
-    if (!DeviceExtension->PortData)
+    DeviceExtension->ReadData = ExAllocatePoolZero(NonPagedPool, sizeof(READ_DATA), CLASS_TAG);
+    if (!DeviceExtension->ReadData)
     {
         ExFreePoolWithTag(DeviceNameU.Buffer, CLASS_TAG);
+        return STATUS_NO_MEMORY;
+    }
+    KeInitializeSpinLock(&DeviceExtension->ReadData->SpinLock);
+    DeviceExtension->ReadData->PortData = ExAllocatePoolWithTag(NonPagedPool, DeviceExtension->DriverExtension->DataQueueSize * sizeof(MOUSE_INPUT_DATA), CLASS_TAG);
+    if (!DeviceExtension->ReadData->PortData)
+    {
+        ExFreePoolWithTag(DeviceNameU.Buffer, CLASS_TAG);
+        ExFreePoolWithTag(DeviceExtension->ReadData, CLASS_TAG);
         return STATUS_NO_MEMORY;
     }
     DeviceExtension->DeviceName = DeviceNameU.Buffer;
@@ -448,16 +455,16 @@ ClassCallback(
 
     ASSERT(ClassDeviceExtension->Common.IsClassDO);
 
-    KeAcquireSpinLock(&ClassDeviceExtension->SpinLock, &OldIrql);
+    KeAcquireSpinLock(&ClassDeviceExtension->ReadData->SpinLock, &OldIrql);
     if (InputCount > 0)
     {
-        if (ClassDeviceExtension->InputCount + InputCount > ClassDeviceExtension->DriverExtension->DataQueueSize)
+        if (ClassDeviceExtension->ReadData->InputCount + InputCount > ClassDeviceExtension->DriverExtension->DataQueueSize)
         {
             /*
              * We're exceeding the buffer, and data will be thrown away...
              * FIXME: What could we do, as we are at DISPATCH_LEVEL?
              */
-            ReadSize = ClassDeviceExtension->DriverExtension->DataQueueSize - ClassDeviceExtension->InputCount;
+            ReadSize = ClassDeviceExtension->DriverExtension->DataQueueSize - ClassDeviceExtension->ReadData->InputCount;
         }
         else
             ReadSize = InputCount;
@@ -467,20 +474,20 @@ ClassCallback(
          * queue.
          */
         RtlCopyMemory(
-            &ClassDeviceExtension->PortData[ClassDeviceExtension->InputCount],
+            &ClassDeviceExtension->ReadData->PortData[ClassDeviceExtension->ReadData->InputCount],
             (PCHAR)DataStart,
             sizeof(MOUSE_INPUT_DATA) * ReadSize);
 
         /* Move the counter up */
-        ClassDeviceExtension->InputCount += ReadSize;
+        ClassDeviceExtension->ReadData->InputCount += ReadSize;
 
         (*ConsumedCount) += (ULONG)ReadSize;
 
         /* Complete pending IRP (if any) */
-        if (ClassDeviceExtension->PendingIrp)
-            HandleReadIrp(ClassDeviceObject, ClassDeviceExtension->PendingIrp, FALSE);
+        if (ClassDeviceExtension->ReadData->PendingIrp)
+            HandleReadIrp(ClassDeviceObject, ClassDeviceExtension->ReadData, ClassDeviceExtension->ReadData->PendingIrp, FALSE);
     }
-    KeReleaseSpinLock(&ClassDeviceExtension->SpinLock, OldIrql);
+    KeReleaseSpinLock(&ClassDeviceExtension->ReadData->SpinLock, OldIrql);
 
     TRACE_(CLASS_NAME, "Leaving ClassCallback()\n");
     return TRUE;
@@ -592,7 +599,8 @@ DestroyPortDriver(
 
     if (!DriverExtension->ConnectMultiplePorts && DeviceExtension->ClassDO)
     {
-        ExFreePoolWithTag(ClassDeviceExtension->PortData, CLASS_TAG);
+        ExFreePoolWithTag(ClassDeviceExtension->ReadData->PortData, CLASS_TAG);
+        ExFreePoolWithTag(ClassDeviceExtension->ReadData, CLASS_TAG);
         ExFreePoolWithTag((PVOID)ClassDeviceExtension->DeviceName, CLASS_TAG);
         IoDeleteDevice(DeviceExtension->ClassDO);
     }
@@ -707,14 +715,14 @@ ClassCancelRoutine(
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
-    KeAcquireSpinLock(&ClassDeviceExtension->SpinLock, &OldIrql);
+    KeAcquireSpinLock(&ClassDeviceExtension->ReadData->SpinLock, &OldIrql);
 
-    if (ClassDeviceExtension->PendingIrp == Irp)
+    if (ClassDeviceExtension->ReadData->PendingIrp == Irp)
     {
-        ClassDeviceExtension->PendingIrp = NULL;
+        ClassDeviceExtension->ReadData->PendingIrp = NULL;
         wasQueued = TRUE;
     }
-    KeReleaseSpinLock(&ClassDeviceExtension->SpinLock, OldIrql);
+    KeReleaseSpinLock(&ClassDeviceExtension->ReadData->SpinLock, OldIrql);
 
     if (wasQueued)
     {
@@ -731,42 +739,40 @@ ClassCancelRoutine(
 static NTSTATUS
 HandleReadIrp(
     IN PDEVICE_OBJECT DeviceObject,
+    IN PREAD_DATA ReadData,
     IN PIRP Irp,
     BOOLEAN IsInStartIo)
 {
-    PCLASS_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status;
     KIRQL OldIrql;
 
     TRACE_(CLASS_NAME, "HandleReadIrp(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
-    ASSERT(DeviceExtension->Common.IsClassDO);
-
-    if (DeviceExtension->InputCount > 0)
+    if (ReadData->InputCount > 0)
     {
         SIZE_T NumberOfEntries;
 
         NumberOfEntries = MIN(
-            DeviceExtension->InputCount,
+            ReadData->InputCount,
             IoGetCurrentIrpStackLocation(Irp)->Parameters.Read.Length / sizeof(MOUSE_INPUT_DATA));
 
         Status = FillEntries(
             DeviceObject,
             Irp,
-            DeviceExtension->PortData,
+            ReadData->PortData,
             NumberOfEntries);
 
         if (NT_SUCCESS(Status))
         {
-            if (DeviceExtension->InputCount > NumberOfEntries)
+            if (ReadData->InputCount > NumberOfEntries)
             {
                 RtlMoveMemory(
-                    &DeviceExtension->PortData[0],
-                    &DeviceExtension->PortData[NumberOfEntries],
-                    (DeviceExtension->InputCount - NumberOfEntries) * sizeof(MOUSE_INPUT_DATA));
+                    &ReadData->PortData[0],
+                    &ReadData->PortData[NumberOfEntries],
+                    (ReadData->InputCount - NumberOfEntries) * sizeof(MOUSE_INPUT_DATA));
             }
 
-            DeviceExtension->InputCount -= NumberOfEntries;
+            ReadData->InputCount -= NumberOfEntries;
 
             Irp->IoStatus.Information = NumberOfEntries * sizeof(MOUSE_INPUT_DATA);
         }
@@ -776,20 +782,20 @@ HandleReadIrp(
 
         (VOID)IoSetCancelRoutine(Irp, NULL);
         IoCompleteRequest(Irp, IO_MOUSE_INCREMENT);
-        DeviceExtension->PendingIrp = NULL;
+        ReadData->PendingIrp = NULL;
     }
     else
     {
         IoAcquireCancelSpinLock(&OldIrql);
         if (Irp->Cancel)
         {
-            DeviceExtension->PendingIrp = NULL;
+            ReadData->PendingIrp = NULL;
             Status = STATUS_CANCELLED;
         }
         else
         {
             IoMarkIrpPending(Irp);
-            DeviceExtension->PendingIrp = Irp;
+            ReadData->PendingIrp = Irp;
             (VOID)IoSetCancelRoutine(Irp, ClassCancelRoutine);
             Status = STATUS_PENDING;
         }
@@ -898,9 +904,9 @@ ClassStartIo(
 
     ASSERT(DeviceExtension->Common.IsClassDO);
 
-    KeAcquireSpinLock(&DeviceExtension->SpinLock, &OldIrql);
-    HandleReadIrp(DeviceObject, Irp, TRUE);
-    KeReleaseSpinLock(&DeviceExtension->SpinLock, OldIrql);
+    KeAcquireSpinLock(&DeviceExtension->ReadData->SpinLock, &OldIrql);
+    HandleReadIrp(DeviceObject, DeviceExtension->ReadData, Irp, TRUE);
+    KeReleaseSpinLock(&DeviceExtension->ReadData->SpinLock, OldIrql);
 }
 
 static VOID NTAPI
