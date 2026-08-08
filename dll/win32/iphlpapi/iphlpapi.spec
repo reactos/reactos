@@ -69,7 +69,7 @@
 @ stub GetIpAddrTableFromStack
 @ stdcall GetIpErrorString(long ptr ptr)
 @ stdcall GetIpForwardTable(ptr ptr long)
-@ stdcall -stub -version=0x600+ GetIpForwardTable2(long ptr)
+@ stdcall -version=0x600+ GetIpForwardTable2(long ptr)
 @ stub GetIpForwardTableFromStack
 @ stdcall GetIpNetTable(ptr ptr long)
 @ stdcall -stub -version=0x600+ GetIpNetTable2(long ptr)
@@ -181,3 +181,7 @@
 @ stub do_echo_rep
 @ stub do_echo_req
 @ stub register_icmp
+@ stdcall -stub CancelMibChangeNotify2(ptr)
+@ stdcall -stub NotifyIpInterfaceChange(long ptr ptr long ptr)
+@ stdcall GetIpInterfaceTable(ptr ptr)
+@ stdcall NotifyRouteChange2(ptr ptr ptr long ptr)
