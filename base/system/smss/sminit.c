@@ -806,6 +806,45 @@ SmpRegistryConfigurationTable[] =
 
 /* FUNCTIONS ******************************************************************/
 
+static
+NTSTATUS
+SmpQueryDirectoryObjectEntry(
+    _In_ HANDLE DirectoryHandle,
+    _Inout_ POBJECT_DIRECTORY_INFORMATION *DirInfo,
+    _Inout_ PULONG DirInfoLength,
+    _In_ BOOLEAN RestartScan,
+    _Inout_ PULONG Context)
+{
+    NTSTATUS Status;
+    ULONG Length;
+    POBJECT_DIRECTORY_INFORMATION NewDirInfo;
+
+    for (;;)
+    {
+        Length = 0;
+        Status = NtQueryDirectoryObject(DirectoryHandle,
+                                        *DirInfo,
+                                        *DirInfoLength,
+                                        TRUE,
+                                        RestartScan,
+                                        Context,
+                                        &Length);
+        if (Status != STATUS_BUFFER_TOO_SMALL)
+            return Status;
+
+        if (Length <= *DirInfoLength)
+            return Status;
+
+        NewDirInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
+        if (NewDirInfo == NULL)
+            return STATUS_NO_MEMORY;
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, *DirInfo);
+        *DirInfo = NewDirInfo;
+        *DirInfoLength = Length;
+    }
+}
+
 VOID
 NTAPI
 SmpTranslateSystemPartitionInformation(VOID)
@@ -814,13 +853,13 @@ SmpTranslateSystemPartitionInformation(VOID)
     UNICODE_STRING UnicodeString, LinkTarget, SymLinkU, SystemPartition;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE KeyHandle, LinkHandle;
-    ULONG Length, Context;
+    ULONG Length, Context, DirInfoLength;
     size_t StrLength;
+    WCHAR BootDrivePrefix[2] = {0};
     WCHAR LinkBuffer[MAX_PATH];
     struct { KEY_VALUE_PARTIAL_INFORMATION; CHAR Buffer[512]; } ValueBuffer;
-    struct { OBJECT_DIRECTORY_INFORMATION; WCHAR Buffer[256]; } DirInfoBuffer;
     PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)&ValueBuffer;
-    POBJECT_DIRECTORY_INFORMATION DirInfo = (PVOID)&DirInfoBuffer;
+    POBJECT_DIRECTORY_INFORMATION DirInfo;
 
     /* Open the setup key */
     RtlInitUnicodeString(&UnicodeString, L"\\Registry\\Machine\\System\\Setup");
@@ -865,13 +904,21 @@ SmpTranslateSystemPartitionInformation(VOID)
     /* Enumerate the directory looking for the symbolic link string */
     RtlInitUnicodeString(&SymLinkU, L"SymbolicLink");
     RtlInitEmptyUnicodeString(&LinkTarget, LinkBuffer, sizeof(LinkBuffer));
-    Status = NtQueryDirectoryObject(SmpDosDevicesObjectDirectory,
-                                    &DirInfoBuffer,
-                                    sizeof(DirInfoBuffer),
-                                    TRUE,
-                                    TRUE,
-                                    &Context,
-                                    NULL);
+    DirInfoLength = sizeof(OBJECT_DIRECTORY_INFORMATION) + 256 * sizeof(WCHAR);
+    DirInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, DirInfoLength);
+    if (DirInfo == NULL)
+    {
+        DPRINT1("SMSS: Cannot allocate DOS device directory buffer (%lu bytes)\n",
+                DirInfoLength);
+        return;
+    }
+
+    Context = 0;
+    Status = SmpQueryDirectoryObjectEntry(SmpDosDevicesObjectDirectory,
+                                          &DirInfo,
+                                          &DirInfoLength,
+                                          TRUE,
+                                          &Context);
     /* Keep searching until we find it */
     while (NT_SUCCESS(Status))
     {
@@ -903,6 +950,9 @@ SmpTranslateSystemPartitionInformation(VOID)
                     (RtlPrefixUnicodeString(&SystemPartition, &LinkTarget, TRUE) &&
                      (LinkTarget.Buffer[SystemPartition.Length / sizeof(WCHAR)] == L'\\'))))
                 {
+                    BootDrivePrefix[0] = DirInfo->Name.Buffer[0];
+                    BootDrivePrefix[1] = DirInfo->Name.Buffer[1];
+
                     /* All done */
                     break;
                 }
@@ -910,13 +960,11 @@ SmpTranslateSystemPartitionInformation(VOID)
         }
 
         /* Couldn't find it, try again */
-        Status = NtQueryDirectoryObject(SmpDosDevicesObjectDirectory,
-                                        &DirInfoBuffer,
-                                        sizeof(DirInfoBuffer),
-                                        TRUE,
-                                        FALSE,
-                                        &Context,
-                                        NULL);
+        Status = SmpQueryDirectoryObjectEntry(SmpDosDevicesObjectDirectory,
+                                              &DirInfo,
+                                              &DirInfoLength,
+                                              FALSE,
+                                              &Context);
     }
     if (!NT_SUCCESS(Status))
     {
@@ -927,14 +975,19 @@ SmpTranslateSystemPartitionInformation(VOID)
          * the OS boot drive letter instead. Otherwise, fail altogether.
          * NOTE: This has been introduced in a post-SP1 Windows 7 update. */
         if (Status != STATUS_NO_MORE_ENTRIES)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, DirInfo);
             return;
-        DirInfo->Name.Buffer = DirInfoBuffer.Buffer;
-        DirInfo->Name.Buffer[0] = SharedUserData->NtSystemRoot[0];
-        DirInfo->Name.Buffer[1] = SharedUserData->NtSystemRoot[1]; // == L':';
+        }
+        BootDrivePrefix[0] = SharedUserData->NtSystemRoot[0];
+        BootDrivePrefix[1] = SharedUserData->NtSystemRoot[1]; // == L':';
 #else
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DirInfo);
         return;
 #endif
     }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, DirInfo);
 
     /* Open the setup key again, for full access this time */
     RtlInitUnicodeString(&UnicodeString,
@@ -952,8 +1005,8 @@ SmpTranslateSystemPartitionInformation(VOID)
     }
 
     /* Wrap up the end of the link buffer */
-    LinkBuffer[0] = DirInfo->Name.Buffer[0];
-    LinkBuffer[1] = DirInfo->Name.Buffer[1]; // == L':';
+    LinkBuffer[0] = BootDrivePrefix[0];
+    LinkBuffer[1] = BootDrivePrefix[1]; // == L':';
     LinkBuffer[2] = L'\\';
     LinkBuffer[3] = UNICODE_NULL;
 
