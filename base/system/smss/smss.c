@@ -402,23 +402,42 @@ SmpTerminate(IN PULONG_PTR Parameters,
 LONG
 SmpUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
 {
+    PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
     ULONG_PTR Parameters[4];
     UNICODE_STRING ErrorString;
 
-    /* Print and breakpoint into the debugger */
+#if DBG
+    /* Print the message and break into the debugger */
     DbgPrint("SMSS: Unhandled exception - Status == %x  IP == %p\n",
-             ExceptionInfo->ExceptionRecord->ExceptionCode,
-             ExceptionInfo->ExceptionRecord->ExceptionAddress);
-    DbgPrint("      Memory Address: %x  Read/Write: %x\n",
-             ExceptionInfo->ExceptionRecord->ExceptionInformation[0],
-             ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
-    DbgBreakPoint();
+             ExceptionRecord->ExceptionCode,
+             ExceptionRecord->ExceptionAddress);
+    if ((ExceptionRecord->ExceptionCode == STATUS_IN_PAGE_ERROR) &&
+        (ExceptionRecord->NumberParameters >= 3))
+    {
+        DbgPrint("      Memory Address: %x  Read/Write: %x  I/O Error: %x\n",
+                 ExceptionRecord->ExceptionInformation[1],
+                 ExceptionRecord->ExceptionInformation[0],
+                 ExceptionRecord->ExceptionInformation[2]);
+    }
+    else
+    if ((ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION ||
+         ExceptionRecord->ExceptionCode == STATUS_GUARD_PAGE_VIOLATION ||
+         ExceptionRecord->ExceptionCode == STATUS_STACK_OVERFLOW ||
+         ExceptionRecord->ExceptionCode == STATUS_IN_PAGE_ERROR) &&
+        (ExceptionRecord->NumberParameters >= 2))
+    {
+        DbgPrint("      Memory Address: %x  Read/Write: %x\n",
+                 ExceptionRecord->ExceptionInformation[1],
+                 ExceptionRecord->ExceptionInformation[0]);
+    }
+    if (NtCurrentPeb()->BeingDebugged) DbgBreakPoint();
+#endif
 
     /* Build the hard error and terminate */
     RtlInitUnicodeString(&ErrorString, L"Unhandled Exception in Session Manager");
     Parameters[0] = (ULONG_PTR)&ErrorString;
-    Parameters[1] = ExceptionInfo->ExceptionRecord->ExceptionCode;
-    Parameters[2] = (ULONG_PTR)ExceptionInfo->ExceptionRecord->ExceptionAddress;
+    Parameters[1] = ExceptionRecord->ExceptionCode;
+    Parameters[2] = (ULONG_PTR)ExceptionRecord->ExceptionAddress;
     Parameters[3] = (ULONG_PTR)ExceptionInfo->ContextRecord;
     SmpTerminate(Parameters, 1, RTL_NUMBER_OF(Parameters));
 
