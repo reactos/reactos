@@ -288,11 +288,12 @@ IntVideoPortCreateAdapterDeviceObject(
    _In_ USHORT DisplayNumber,
    _Out_opt_ PDEVICE_OBJECT *DeviceObject);
 
-NTSTATUS NTAPI
+NTSTATUS
 IntVideoPortFindAdapter(
-   IN PDRIVER_OBJECT DriverObject,
-   IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
-   IN PDEVICE_OBJECT DeviceObject);
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
+    _In_ _When_(LegacyDetection, _Null_) PDEVICE_OBJECT DeviceObject,
+    _In_ BOOLEAN LegacyDetection);
 
 PVOID
 NTAPI
