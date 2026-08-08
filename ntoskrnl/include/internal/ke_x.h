@@ -1712,6 +1712,55 @@ KiCpuIdEx(
 }
 #endif /* _M_IX86 || _M_AMD64 */
 
+FORCEINLINE
+ULONG64
+KiReadThreadCycleTime(
+    _In_ PKTHREAD Thread)
+{
+    /* Hack until we switched to NTDDI_VISTA, where CycleTime is in KTHREAD */
+    PETHREAD EThread = (PETHREAD)Thread;
+
+#ifdef _WIN64
+    return EThread->CycleTime;
+#else
+    /* Read in a loop until we get a match */
+    ULARGE_INTEGER CycleTimeAsULI;
+    for (;;)
+    {
+        volatile ULARGE_INTEGER* CycleTimePtr = (volatile ULARGE_INTEGER*)&EThread->CycleTime;
+        CycleTimeAsULI.HighPart = CycleTimePtr->HighPart;
+        CycleTimeAsULI.LowPart = CycleTimePtr->LowPart;
+        if (CycleTimeAsULI.HighPart == EThread->CycleTimeHigh)
+            break;
+        YieldProcessor();
+    }
+    return CycleTimeAsULI.QuadPart;
+#endif
+}
+
+
+FORCEINLINE
+VOID
+KiWriteThreadCycleTime(
+    _Inout_ PKTHREAD Thread,
+    _In_ ULONG64 NewCycleTime)
+{
+    /* Hack until we switched to NTDDI_VISTA, where CycleTime is in KTHREAD */
+    PETHREAD EThread = (PETHREAD)Thread;
+
+#ifdef _WIN64
+    EThread->CycleTime = NewCycleTime;
+#else
+    /* On 32 bit systems we need to use the same trick as for writing a KSYSTEM_TIME */
+    ULARGE_INTEGER NewCycleTimeAsULI;
+    NewCycleTimeAsULI.QuadPart = NewCycleTime;
+    volatile ULARGE_INTEGER* CycleTimePtr = (volatile ULARGE_INTEGER*)&EThread->CycleTime;
+    EThread->CycleTimeHigh = NewCycleTimeAsULI.HighPart;
+    CycleTimePtr->LowPart = NewCycleTimeAsULI.LowPart;
+    CycleTimePtr->HighPart = NewCycleTimeAsULI.HighPart;
+#endif
+}
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

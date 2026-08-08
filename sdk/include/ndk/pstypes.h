@@ -1352,6 +1352,13 @@ typedef struct _ETHREAD
     PUNICODE_STRING ThreadName;
     // TODO: Missing Win10+ members
 #endif
+#if defined(__REACTOS__)
+    // Temp HACK until we switch to NTDDI_VISTA, when these move to KTHREAD
+    volatile ULONGLONG CycleTime;
+#ifndef _WIN64
+    volatile ULONG CycleTimeHigh;
+#endif
+#endif
 } ETHREAD;
 
 //
@@ -1552,6 +1559,10 @@ typedef struct _EPROCESS
     UCHAR PriorityClass;
     MM_AVL_TABLE VadRoot;
     ULONG Cookie;
+#if defined(__REACTOS__)
+    // Temp HACK until we switch to NTDDI_VISTA, when this moves to KPROCESS
+    ULONGLONG CycleTime;
+#endif // ]
 } EPROCESS;
 
 //

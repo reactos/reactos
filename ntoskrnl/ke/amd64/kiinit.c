@@ -151,6 +151,9 @@ KiInitializePcr(
     /* Set the Current Thread */
     Pcr->Prcb.CurrentThread = IdleThread;
 
+    /* Initialize start cycles */
+    Pcr->Prcb.StartCycles = __rdtsc();
+
     /* Start us out at PASSIVE_LEVEL */
     Pcr->Irql = PASSIVE_LEVEL;
 }
