@@ -28,8 +28,7 @@ static NTSTATUS
 HandleReadIrp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PREAD_DATA ReadData,
-    IN PIRP Irp,
-    BOOLEAN IsInStartIo);
+    IN PIRP Irp OPTIONAL);
 
 static VOID NTAPI
 DriverUnload(IN PDRIVER_OBJECT DriverObject)
@@ -94,8 +93,6 @@ ClassRead(
     IN PIRP Irp)
 {
     PCLASS_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-    KIRQL OldIrql;
-    NTSTATUS Status;
 
     TRACE_(CLASS_NAME, "IRP_MJ_READ\n");
 
@@ -113,10 +110,7 @@ ClassRead(
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-    KeAcquireSpinLock(&DeviceExtension->ReadData->SpinLock, &OldIrql);
-    Status = HandleReadIrp(DeviceObject, DeviceExtension->ReadData, Irp, FALSE);
-    KeReleaseSpinLock(&DeviceExtension->ReadData->SpinLock, OldIrql);
-    return Status;
+    return HandleReadIrp(DeviceObject, DeviceExtension->ReadData, Irp);
 }
 
 static NTSTATUS NTAPI
@@ -445,9 +439,9 @@ ClassCallback(
 
     ASSERT(ClassDeviceExtension->Common.IsClassDO);
 
-    KeAcquireSpinLock(&ClassDeviceExtension->ReadData->SpinLock, &OldIrql);
     if (InputCount > 0)
     {
+        KeAcquireSpinLock(&ClassDeviceExtension->ReadData->SpinLock, &OldIrql);
         if (ClassDeviceExtension->ReadData->InputCount + InputCount > ClassDeviceExtension->DriverExtension->DataQueueSize)
         {
             /*
@@ -473,11 +467,11 @@ ClassCallback(
 
         (*ConsumedCount) += (ULONG)ReadSize;
 
+        KeReleaseSpinLock(&ClassDeviceExtension->ReadData->SpinLock, OldIrql);
+
         /* Complete pending IRP (if any) */
-        if (ClassDeviceExtension->ReadData->PendingIrp)
-            HandleReadIrp(ClassDeviceObject, ClassDeviceExtension->ReadData, ClassDeviceExtension->ReadData->PendingIrp, FALSE);
+        HandleReadIrp(ClassDeviceObject, ClassDeviceExtension->ReadData, NULL);
     }
-    KeReleaseSpinLock(&ClassDeviceExtension->ReadData->SpinLock, OldIrql);
 
     TRACE_(CLASS_NAME, "Leaving ClassCallback()\n");
     return TRUE;
@@ -730,13 +724,17 @@ static NTSTATUS
 HandleReadIrp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PREAD_DATA ReadData,
-    IN PIRP Irp,
-    BOOLEAN IsInStartIo)
+    IN PIRP Irp OPTIONAL)
 {
     NTSTATUS Status;
     KIRQL OldIrql;
 
-    TRACE_(CLASS_NAME, "HandleReadIrp(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
+    TRACE_(CLASS_NAME, "HandleReadIrp(DeviceObject %p, ReadData %p, Irp %p)\n", DeviceObject, ReadData, Irp);
+
+    if (!Irp)
+        Irp = ReadData->PendingIrp;
+    if (!Irp)
+        return STATUS_SUCCESS;
 
     if (ReadData->InputCount > 0)
     {
@@ -750,6 +748,7 @@ HandleReadIrp(
         else
             Destination = Irp->UserBuffer;
 
+        KeAcquireSpinLock(&ReadData->SpinLock, &OldIrql);
         NumberOfEntries = MIN(
             ReadData->InputCount,
             IoGetCurrentIrpStackLocation(Irp)->Parameters.Read.Length / sizeof(MOUSE_INPUT_DATA));
@@ -781,24 +780,25 @@ HandleReadIrp(
         (VOID)IoSetCancelRoutine(Irp, NULL);
         IoCompleteRequest(Irp, IO_MOUSE_INCREMENT);
         ReadData->PendingIrp = NULL;
+        KeReleaseSpinLock(&ReadData->SpinLock, OldIrql);
+
+        return Status;
+    }
+
+    IoAcquireCancelSpinLock(&OldIrql);
+    if (Irp->Cancel)
+    {
+        ReadData->PendingIrp = NULL;
+        Status = STATUS_CANCELLED;
     }
     else
     {
-        IoAcquireCancelSpinLock(&OldIrql);
-        if (Irp->Cancel)
-        {
-            ReadData->PendingIrp = NULL;
-            Status = STATUS_CANCELLED;
-        }
-        else
-        {
-            IoMarkIrpPending(Irp);
-            ReadData->PendingIrp = Irp;
-            (VOID)IoSetCancelRoutine(Irp, ClassCancelRoutine);
-            Status = STATUS_PENDING;
-        }
-        IoReleaseCancelSpinLock(OldIrql);
+        IoMarkIrpPending(Irp);
+        ReadData->PendingIrp = Irp;
+        (VOID)IoSetCancelRoutine(Irp, ClassCancelRoutine);
+        Status = STATUS_PENDING;
     }
+    IoReleaseCancelSpinLock(OldIrql);
     return Status;
 }
 
@@ -896,15 +896,12 @@ ClassStartIo(
     IN PIRP Irp)
 {
     PCLASS_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-    KIRQL OldIrql;
 
     TRACE_(CLASS_NAME, "ClassStartIo(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
     ASSERT(DeviceExtension->Common.IsClassDO);
 
-    KeAcquireSpinLock(&DeviceExtension->ReadData->SpinLock, &OldIrql);
-    HandleReadIrp(DeviceObject, DeviceExtension->ReadData, Irp, TRUE);
-    KeReleaseSpinLock(&DeviceExtension->ReadData->SpinLock, OldIrql);
+    HandleReadIrp(DeviceObject, DeviceExtension->ReadData, Irp);
 }
 
 static VOID NTAPI
