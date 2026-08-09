@@ -22,13 +22,13 @@ BEGIN
     IDS_ALIAS_ADMINISTRATORS_COMMENT "Os administradores têm acesso irrestrito ao computador ou domínio."
     IDS_ALIAS_GUESTS_NAME "Convidado"
     IDS_ALIAS_GUESTS_COMMENT "Os convidados têm os mesmos direitos que os membros do grupo Utilizadores por predefinição."
-    IDS_ALIAS_POWER_USERS_NAME "Utilizadores avançados"
+    IDS_ALIAS_POWER_USERS_NAME "Utilizadores Avançados"
     IDS_ALIAS_POWER_USERS_COMMENT "Utilizadores avançados têm a maioria dos direitos administrativos com algumas restrições."
     IDS_ALIAS_USERS_NAME "Utilizadores"
     IDS_ALIAS_USERS_COMMENT "Os utilizadores são impedidos de fazer alterações em todo o sistema."
     IDS_ALIAS_PRINT_OPS_NAME "Operadores de Impressão"
     IDS_ALIAS_PRINT_OPS_COMMENT "Os membros podem administrar impressoras no domínio."
-    IDS_ALIAS_BACKUP_OPS_NAME "Operadores de cópia de Segurança
+    IDS_ALIAS_BACKUP_OPS_NAME "Operadores de Cópia de Segurança"
     IDS_ALIAS_BACKUP_OPS_COMMENT "Os operadores de cópia de segurança podem ignorar as restrições de segurança exclusivamente para fazer cópias de segurança ou restauro de ficheiros."
     IDS_ALIAS_REPLICATOR_NAME "Replicador"
     IDS_ALIAS_REPLICATOR_COMMENT "Suporte a replicação de ficheiros num domínio."
@@ -38,7 +38,7 @@ BEGIN
     IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "Os membros deste grupo podem ter alguns privilégios administrativos para gerir a configuração dos recursos de rede."
     IDS_ALIAS_MONITORING_USERS_NAME "Utilizadores do Monitor de Desempenho"
     IDS_ALIAS_MONITORING_USERS_COMMENT "Os membros deste grupo têm acesso remoto para monitorizar este computador."
-    IDS_ALIAS_LOGGING_USERS_NAME "Utilizadores do registo de desempenho"
+    IDS_ALIAS_LOGGING_USERS_NAME "Utilizadores do Registo de Desempenho"
     IDS_ALIAS_LOGGING_USERS_COMMENT "Os membros deste grupo têm acesso remoto ao registo de agendamento dos contadores de desempenho neste computador."
     /*
      * ATTENTION:
