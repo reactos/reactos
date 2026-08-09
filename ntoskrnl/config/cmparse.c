@@ -1620,23 +1620,34 @@ CmpLookInCache(
     if (KeyFoundInCache)
     {
         /*
-         * Before we change the KCB we must dereference the prior
-         * KCB that we no longer need it.
+         * Reference the new KCB before dropping the locks.
          */
-        CmpDereferenceKeyControlBlock(*Kcb);
-        *Kcb = CurrentKcb;
-
-        /* Reference the new KCB now */
-        if (!CmpReferenceKeyControlBlock(*Kcb))
+        if (!CmpReferenceKeyControlBlock(CurrentKcb))
         {
             /* This key is opened too many times, bail out */
-            DPRINT1("Could not reference the KCB, too many references (KCB 0x%p)\n", Kcb);
+            DPRINT1("Could not reference the KCB, too many references (KCB 0x%p)\n", CurrentKcb);
+
+            /*
+             * Make sure to unlock the KCBs and release the KCB reference we took
+             * at the start of the function, so that the caller sees a clean state.
+             */
+            CmpUnLockKcbArray(LockedKcbs);
+            CmpDereferenceKeyControlBlock(*Kcb);
             return STATUS_UNSUCCESSFUL;
         }
+
+        /*
+         * Dereference the prior KCB that we no longer need
+         * and switch to the newly referenced one.
+         */
+        CmpUnLockKcbArray(LockedKcbs);
+        CmpDereferenceKeyControlBlock(*Kcb);
+        *Kcb = CurrentKcb;
 
         /* Update hive and cell data from current KCB */
         *Hive = CurrentKcb->KeyHive;
         *Cell = CurrentKcb->KeyCell;
+        return STATUS_SUCCESS;
     }
 
     /* Unlock the KCBs */
