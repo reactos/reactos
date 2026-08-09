@@ -356,16 +356,140 @@ Server_RequestParams(
     _In_ LPWSTR AdapterName,
     _In_ DHCPCAPI_CLASSID *ClassId,
     _In_ DHCPCAPI_PARAMS_ARRAY *SendParams,
-    _In_ DWORD Unknown5,
-    _In_ DWORD Unknown6)
+    _In_ DHCPCAPI_PARAMS_ARRAY *RecdParams,
+    _Inout_ LPDHCPCAPI_RESULT_ARRAY *RecdResults)
 {
-    DPRINT1("Server_RequestParams(%S %p %p %lx %lx)\n",
-            AdapterName, ClassId, SendParams, Unknown5, Unknown6);
+    PDHCP_ADAPTER Adapter;
+    DHCPCAPI_RESULT_ARRAY *Results = NULL;
+    DWORD i, dwReturnCount, dwReturnLength;
+    DWORD OptionId, DataSize, Offset, Index;
+	PBYTE Data;
+    DWORD ret = ERROR_SUCCESS;
 
+    DPRINT("Server_RequestParams(%S %p %p %p %p)\n",
+           AdapterName, ClassId, SendParams, RecdParams, RecdResults);
+
+#if 0
     if (SendParams != NULL)
     {
         DPRINT1("SendParams nParams %lu  Params %p\n", SendParams->nParams, SendParams->Params);
+        for (i = 0; i < SendParams->nParams; i++)
+        {
+            DPRINT1("SendParam %lu: Option %lu  Vendor %u\n", i, SendParams->Params[i].OptionId, SendParams->Params[i].IsVendor);
+        }
     }
 
-    return ERROR_SUCCESS;
+    if (RecdParams != NULL)
+    {
+        DPRINT1("RecdParams nParams %lu  Params %p\n", RecdParams->nParams, RecdParams->Params);
+        for (i = 0; i < RecdParams->nParams; i++)
+        {
+            DPRINT1("RecdParam %lu: Option %lu  Vendor %u\n", i, RecdParams->Params[i].OptionId, RecdParams->Params[i].IsVendor);
+        }
+    }
+#endif
+
+    ApiLock();
+
+    Adapter = AdapterFindName(AdapterName);
+    if (Adapter == NULL)
+    {
+        DPRINT1("Adapter not found\n");
+        ret = ERROR_FILE_NOT_FOUND;
+        goto done;
+    }
+
+    DPRINT("Adapter: %p\n", Adapter);
+
+    if (Adapter->DhclientState.state != S_BOUND)
+    {
+        DPRINT1("Adapter is not in S_BOUND state!\n");
+        ret = ERROR_FILE_NOT_FOUND;
+        goto done;
+    }
+
+    dwReturnCount = 0;
+    dwReturnLength = 0;
+
+    DPRINT("ActiveLease: %p \n", Adapter->DhclientState.active);
+    if (Adapter->DhclientState.active)
+    {
+        for (i = 0; i < RecdParams->nParams; i++)
+        {
+            if (RecdParams->Params[i].IsVendor == FALSE)
+            {
+                OptionId = RecdParams->Params[i].OptionId;
+                DPRINT("Option %u: Length %d \n", OptionId, Adapter->DhclientState.active->options[OptionId].len);
+                if (Adapter->DhclientState.active->options[OptionId].len != 0)
+                {
+                    dwReturnLength += Adapter->DhclientState.active->options[OptionId].len;
+                    dwReturnCount++;
+                }
+            }
+        }
+
+        DPRINT("Return count: %lu  Return length: %lu\n", dwReturnCount, dwReturnLength);
+
+        Results = MIDL_user_allocate(sizeof(DHCPCAPI_RESULT_ARRAY));
+        if (Results == NULL)
+        {
+            DPRINT1("Result allocation failed!\n");
+            ret = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+
+        Results->ResultsCount = dwReturnCount;
+        Results->Results = MIDL_user_allocate(dwReturnCount * sizeof(DHCPCAPI_RESULTS));
+        if (Results->Results == NULL)
+        {
+            DPRINT1("Results allocation failed!\n");
+            ret = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+
+        Results->DataSize = dwReturnLength;
+        Results->Data = MIDL_user_allocate(dwReturnLength);
+        if (Results->Data == NULL)
+        {
+            DPRINT1("Data allocation failed!\n");
+            ret = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+
+        Offset = 0;
+        Index = 0;
+        for (i = 0; i < RecdParams->nParams; i++)
+        {
+            if (RecdParams->Params[i].IsVendor == FALSE)
+            {
+                OptionId = RecdParams->Params[i].OptionId;
+                DataSize = Adapter->DhclientState.active->options[OptionId].len;
+                Data = Adapter->DhclientState.active->options[OptionId].data;
+
+                DPRINT("Option %u: Length %d \n", OptionId, DataSize);
+
+                if (DataSize != 0)
+                {
+                    Results->Results[Index].OptionId = OptionId;
+                    Results->Results[Index].IsVendor = RecdParams->Params[i].IsVendor;
+                    Results->Results[Index].DataSize = DataSize;
+                    Results->Results[Index].DataOffset = Offset;
+
+                    CopyMemory(&Results->Data[Offset], Data, DataSize);
+
+                    Index++;
+                    Offset += DataSize;
+                }
+            }
+        }
+
+        *RecdResults = Results;
+    }
+
+done:
+
+
+    ApiUnlock();
+
+    return ret;
 }
