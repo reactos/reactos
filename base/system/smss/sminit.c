@@ -870,7 +870,7 @@ SmpTranslateSystemPartitionInformation(VOID)
         ((PartialInfo->Type != REG_SZ) && (PartialInfo->Type != REG_EXPAND_SZ)))
     {
         DPRINT1("SMSS: Cannot query SystemPartition value (Type %lu, Status 0x%x)\n",
-                PartialInfo->Type, Status);
+                (NT_SUCCESS(Status) ? PartialInfo->Type : REG_NONE), Status);
         return;
     }
 
@@ -1856,7 +1856,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     Status = NtQueryValueKey(KeyHandle2,
                              &ValueName,
                              KeyValuePartialInformation,
-                             PartialInfo,
+                             ValueBuffer,
                              sizeof(ValueBuffer),
                              &ResultLength);
     if (!NT_SUCCESS(Status) ||
@@ -1865,7 +1865,8 @@ SmpCreateDynamicEnvironmentVariables(VOID)
         NtClose(KeyHandle2);
         NtClose(KeyHandle);
         DPRINT1("SMSS: Unable to read %wZ\\%wZ (Type %lu, Status 0x%x)\n",
-                &DestinationString, &ValueName, PartialInfo->Type, Status);
+                &DestinationString, &ValueName,
+                (NT_SUCCESS(Status) ? PartialInfo->Type : REG_NONE), Status);
         return Status;
     }
 
@@ -1885,7 +1886,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     Status = NtQueryValueKey(KeyHandle2,
                              &ValueName,
                              KeyValuePartialInformation,
-                             PartialInfo2,
+                             ValueBuffer2,
                              sizeof(ValueBuffer2),
                              &ResultLength);
     NtClose(KeyHandle2);
@@ -1995,7 +1996,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
         Status = NtQueryValueKey(KeyHandle2,
                                  &ValueName,
                                  KeyValuePartialInformation,
-                                 PartialInfo,
+                                 ValueBuffer,
                                  sizeof(ValueBuffer),
                                  &ResultLength);
         NtClose(KeyHandle2);
@@ -2037,7 +2038,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
         else
         {
             DPRINT1("SMSS: Failed to query SAFEBOOT option (Type %lu, Status 0x%x)\n",
-                    PartialInfo->Type, Status);
+                    (NT_SUCCESS(Status) ? PartialInfo->Type : REG_NONE), Status);
         }
     }
 

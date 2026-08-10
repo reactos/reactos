@@ -311,12 +311,6 @@ SmpParseCommandLine(
 
 BOOLEAN
 NTAPI
-SmpQueryRegistrySosOption(
-    VOID
-);
-
-BOOLEAN
-NTAPI
 SmpSaveAndClearBootStatusData(
     OUT PBOOLEAN BootOkay,
     OUT PBOOLEAN ShutdownOkay

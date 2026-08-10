@@ -19,7 +19,7 @@
 
 UNICODE_STRING SmpSystemRoot;
 ULONG AttachedSessionId = -1;
-BOOLEAN SmpDebug, SmpEnableDots;
+BOOLEAN SmpDebug;
 HANDLE SmApiPort;
 HANDLE SmpInitialCommandProcessId;
 
@@ -156,9 +156,6 @@ SmpInvokeAutoChk(IN PUNICODE_STRING FileName,
     UNICODE_STRING Destination;
     WCHAR Buffer[1024];
     BOOLEAN BootState, BootOkay, ShutdownOkay;
-
-    /* Check if autochk should show dots (if the user booted with /SOS) */
-    if (SmpQueryRegistrySosOption()) SmpEnableDots = FALSE;
 
     /* Make sure autochk was actually found */
     if (Flags & SMP_INVALID_PATH)
