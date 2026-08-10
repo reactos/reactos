@@ -209,6 +209,10 @@ CreateSoundDeviceInstance(
 
     (*SoundDeviceInstance)->LoopsRemaining = 0;
 
+    /* Initialize RT streaming members */
+    (*SoundDeviceInstance)->LegacyStreaming = FALSE;
+    (*SoundDeviceInstance)->RTStreamingEnabled = FALSE;
+
     /* Create the streaming thread (TODO - is this for wave only?) */
     Result = CreateSoundThread(&(*SoundDeviceInstance)->Thread);
     if ( ! MMSUCCESS(Result) )
@@ -269,6 +273,8 @@ DestroySoundDeviceInstance(
         /* This indicates bad practice, really! If you can open, why not close?! */
         return MMSYSERR_NOTSUPPORTED;
     }
+
+    SoundDeviceInstance->bClosed = TRUE;
 
     /* Stop the streaming thread */
     if ( SoundDeviceInstance->Thread )
