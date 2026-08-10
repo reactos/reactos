@@ -23,6 +23,7 @@
 #include <shobjidl.h>
 #include <rpcproxy.h>
 #include <ndk/cmfuncs.h>
+#include <reactos/rosbrand.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -785,12 +786,20 @@ StatusMessageWindowProc(
                 SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
 
                 /* Load bitmaps */
-                pDlgData->hLogoBitmap = LoadImageW(hDllInstance,
-                                                    MAKEINTRESOURCEW(IDB_REACTOS), IMAGE_BITMAP,
-                                                    0, 0, LR_DEFAULTCOLOR);
+                HMODULE hBrand = LoadLibraryExW(L"rosbrand.dll",
+                                                NULL,
+                                                LOAD_LIBRARY_AS_DATAFILE);
 
-                pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDB_LINE),
-                                                IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                if (hBrand)
+                {
+                    pDlgData->hLogoBitmap = LoadImageW(hBrand,
+                                                       MAKEINTRESOURCEW(IDB_BRAND_BANNER),
+                                                       IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                    pDlgData->hBarBitmap = LoadImageW(hBrand,
+                                                      MAKEINTRESOURCEW(IDB_BRAND_BANNERLINE),
+                                                      IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                }
+
                 GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
                 pDlgData->BarWidth = bm.bmWidth;
                 pDlgData->BarHeight = bm.bmHeight;
@@ -835,12 +844,8 @@ StatusMessageWindowProc(
         {
             LPDRAWITEMSTRUCT lpDis = (LPDRAWITEMSTRUCT)lParam;
 
-            if (lpDis->CtlID != IDC_BAR)
-            {
-                return FALSE;
-            }
-
-            if (pDlgData->hBarBitmap)
+            if (lpDis->CtlID == IDC_BAR
+                && pDlgData->hBarBitmap)
             {
                 HDC hdcMem;
                 HGDIOBJ hOld;
@@ -856,6 +861,21 @@ StatusMessageWindowProc(
                 DeleteDC(hdcMem);
                 return TRUE;
             }
+
+            if (lpDis->CtlID == IDC_ROSLOGO
+                && pDlgData->hLogoBitmap)
+            {
+                HDC hdcMem = CreateCompatibleDC(lpDis->hDC);
+                HGDIOBJ hOld = SelectObject(hdcMem, pDlgData->hLogoBitmap);
+                BITMAP bm;
+
+                GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
+                BitBlt(lpDis->hDC, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
+                SelectObject(hdcMem, hOld);
+                DeleteDC(hdcMem);
+                return TRUE;
+            }
+
             return FALSE;
         }
 
