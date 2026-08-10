@@ -71,7 +71,6 @@ RtlpWindowIsAvailable(
     _In_opt_ PRTL_CONFLICT_RANGE_CALLBACK Callback,
     _Out_opt_ PULONGLONG ConflictStart)
 {
-    PRTL_RANGE_ENTRY Current;
     PLIST_ENTRY Entry;
     BOOLEAN Available = TRUE;
     ULONGLONG Lowest = 0;
@@ -80,7 +79,7 @@ RtlpWindowIsAvailable(
          Entry != &RangeList->ListHead;
          Entry = Entry->Flink)
     {
-        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+        PRTL_RANGE_ENTRY Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
 
         if (Current->Range.Start > End)
             break;
@@ -101,12 +100,14 @@ RtlpWindowIsAvailable(
             Current->Range.Owner == NULL)
             continue;
 
+        /* provide callers the ability to change code paths before we make the range as unavailable. */
         if (Callback != NULL && Callback(Context, &Current->Range))
             continue;
 
         /* This is a real conflict */
         if (Available || Current->Range.Start < Lowest)
             Lowest = Current->Range.Start;
+
         Available = FALSE;
     }
 
@@ -133,14 +134,13 @@ RtlpConflictsOnAdd(
     _In_ ULONGLONG End,
     _In_ ULONG Flags)
 {
-    PRTL_RANGE_ENTRY Current;
     PLIST_ENTRY Entry;
 
     for (Entry = RangeList->ListHead.Flink;
          Entry != &RangeList->ListHead;
          Entry = Entry->Flink)
     {
-        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+        PRTL_RANGE_ENTRY Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
 
         if (Current->Range.Start > End)
             break;
@@ -508,7 +508,7 @@ RtlFindRange(IN PRTL_RANGE_LIST RangeList,
 
         /*
          * Jump the window entirely below the lowest conflicting entry.
-         * Because that entry overlaps the current window this strictly
+         * Because that entry overlaps the current window, this strictly
          * decreases Candidate, so the loop always terminates.
          */
         if (ConflictStart == 0)
