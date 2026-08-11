@@ -509,6 +509,7 @@ PcCaptureFormat(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+#if DBG
 VOID
 DumpAutomationTable(
     IN PPCAUTOMATION_TABLE AutomationTable,
@@ -545,7 +546,7 @@ DumpAutomationTable(
             ASSERT(PropertyItem);
 
             // display all properties associated
-            for(Index = 0; Index < AutomationTable->PropertyCount; Index++)
+            for (Index = 0; Index < AutomationTable->PropertyCount; Index++)
             {
                 // convert to printable string
                 RtlStringFromGUID(*PropertyItem->Set, &GuidString);
@@ -573,7 +574,7 @@ DumpAutomationTable(
             // sanity check
             ASSERT(EventItem);
 
-            for(Index = 0; Index < AutomationTable->EventCount; Index++)
+            for (Index = 0; Index < AutomationTable->EventCount; Index++)
             {
                 // convert to printable string
                 RtlStringFromGUID(*EventItem->Set, &GuidString);
@@ -601,7 +602,7 @@ DumpAutomationTable(
             // sanity check
             ASSERT(MethodItem);
 
-            for(Index = 0; Index < AutomationTable->MethodCount; Index++)
+            for (Index = 0; Index < AutomationTable->MethodCount; Index++)
             {
                 // convert to printable string
                 RtlStringFromGUID(*MethodItem->Set, &GuidString);
@@ -627,6 +628,7 @@ DumpFilterDescriptor(
 {
     ULONG Index;
     WCHAR Buffer[30];
+    UNICODE_STRING GuidString;
     PPCPIN_DESCRIPTOR PinDescriptor;
     PPCNODE_DESCRIPTOR NodeDescriptor;
 
@@ -648,10 +650,26 @@ DumpFilterDescriptor(
             // sanity check
             ASSERT(PinDescriptor);
 
-            for(Index = 0; Index < FilterDescription->PinCount; Index++)
+            for (Index = 0; Index < FilterDescription->PinCount; Index++)
             {
                // print prefix
                _swprintf(Buffer, L"PinIndex %lu", Index);
+
+               DPRINT("PinIndex %lu\n", Index);
+               DPRINT("DataFlow %lu, Communication %lu\n",
+                   PinDescriptor->KsPinDescriptor.DataFlow, PinDescriptor->KsPinDescriptor.Communication);
+               if (PinDescriptor->KsPinDescriptor.Category)
+               {
+                   RtlStringFromGUID(*PinDescriptor->KsPinDescriptor.Category, &GuidString);
+                   DPRINT("Category %S\n", GuidString.Buffer);
+                   RtlFreeUnicodeString(&GuidString);
+               }
+               if (PinDescriptor->KsPinDescriptor.Name)
+               {
+                   RtlStringFromGUID(*PinDescriptor->KsPinDescriptor.Name, &GuidString);
+                   DPRINT("Name %S\n", GuidString.Buffer);
+                   RtlFreeUnicodeString(&GuidString);
+               }
 
                // dump automation table
                DumpAutomationTable((PPCAUTOMATION_TABLE)PinDescriptor->AutomationTable, Buffer, L"    ");
@@ -666,6 +684,8 @@ DumpFilterDescriptor(
         }
     }
 
+    DPRINT("=====================================================================\n");
+
     if (FilterDescription->Nodes)
     {
         if (FilterDescription->NodeSize >= sizeof(PCNODE_DESCRIPTOR))
@@ -676,10 +696,24 @@ DumpFilterDescriptor(
             // sanity check
             ASSERT(NodeDescriptor);
 
-            for(Index = 0; Index < FilterDescription->NodeCount; Index++)
+            for (Index = 0; Index < FilterDescription->NodeCount; Index++)
             {
                 // print prefix
                 _swprintf(Buffer, L"NodeIndex %lu", Index);
+
+                DPRINT("NodeIndex %lu\n", Index);
+                if (NodeDescriptor->Type)
+                {
+                    RtlStringFromGUID(*NodeDescriptor->Type, &GuidString);
+                    DPRINT("Type %S\n", GuidString.Buffer);
+                    RtlFreeUnicodeString(&GuidString);
+                }
+                if (NodeDescriptor->Name)
+                {
+                    RtlStringFromGUID(*NodeDescriptor->Name, &GuidString);
+                    DPRINT("Name %S\n", GuidString.Buffer);
+                    RtlFreeUnicodeString(&GuidString);
+                }
 
                 // dump automation table
                 DumpAutomationTable((PPCAUTOMATION_TABLE)NodeDescriptor->AutomationTable, Buffer, L"    ");
@@ -699,18 +733,19 @@ DumpFilterDescriptor(
     if (FilterDescription->ConnectionCount)
     {
         DPRINT("------ Start of Nodes Connections ----------------\n");
-        for(Index = 0; Index < FilterDescription->ConnectionCount; Index++)
+        for (Index = 0; Index < FilterDescription->ConnectionCount; Index++)
         {
-            DPRINT1("Index %ld FromPin %ld FromNode %ld -> ToPin %ld ToNode %ld\n", Index,
-                                                                                    FilterDescription->Connections[Index].FromNodePin,
-                                                                                    FilterDescription->Connections[Index].FromNode,
-                                                                                    FilterDescription->Connections[Index].ToNodePin,
-                                                                                    FilterDescription->Connections[Index].ToNode);
+            DPRINT("Index %lu FromNode %ld FromPin %ld -> ToNode %ld ToPin %ld\n", Index,
+                                                                                   FilterDescription->Connections[Index].FromNode,
+                                                                                   FilterDescription->Connections[Index].FromNodePin,
+                                                                                   FilterDescription->Connections[Index].ToNode,
+                                                                                   FilterDescription->Connections[Index].ToNodePin);
         }
-        DPRINT("------ End of Nodes Connections----------------\n");
+        DPRINT("------ End of Nodes Connections ----------------\n");
     }
-    DPRINT1("======================\n");
+    DPRINT("======================\n");
 }
+#endif // DBG
 
 NTSTATUS
 NTAPI
@@ -755,7 +790,9 @@ PcCreateSubdeviceDescriptor(
     RtlCopyMemory(Descriptor->Interfaces, InterfaceGuids, sizeof(GUID) * InterfaceCount);
     Descriptor->InterfaceCount = InterfaceCount;
 
-    //DumpFilterDescriptor(FilterDescription);
+#if DBG
+    DumpFilterDescriptor(FilterDescription);
+#endif
 
     // are any property sets supported by the portcls
     if (FilterPropertiesCount)
