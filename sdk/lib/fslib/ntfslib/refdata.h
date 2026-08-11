@@ -13,7 +13,7 @@
 /*
  * This all comes from extraction of a default NTFS disk,
  * Modern CHKDSKs needs all this extra data even if we don't use it yet so
- * I've opted to keep this stuff in its own file to de-cluser the PR.
+ * I've opted to keep this stuff in its own file to de-clutter the PR.
  */
 static const USHORT DefaultSdLen[NTFS_DEFAULT_SD_COUNT] = { 100, 100, 100, 100, 96, 72, 76, 72 };
 
