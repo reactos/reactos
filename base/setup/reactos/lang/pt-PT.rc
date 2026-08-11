@@ -17,13 +17,13 @@ BEGIN
     LTEXT "O Assistente de instalação irá instalar ou actualizar o ReactOS no seu computador, \
 e preparar a segunda etapa da configuração.", IDC_STATIC, 115, 40, 195, 27
 ////
-    GROUPBOX " INFORMAÇÃO IMPORTANTE ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    GROUPBOX " INFORMAÇÃO IMPORTANTE ", IDC_WARNTEXT1, 115, 70, 200, 90, BS_CENTER
     LTEXT "O ReactOS está em estágio Alfa, ou seja está incompleto \
 e em forte desenvolvimento. Recomenda-se seu uso apenas para fins de avaliação \
 e teste e não como seu sistema operativo de uso diário. Pode corromper \
-os seus dados ou danificar o seu hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+os seus dados ou danificar o seu hardware.", IDC_WARNTEXT2, 120, 80, 190, 50, SS_CENTER
     LTEXT "Faça cópia de segurança dos seus dados ou teste num computador \
-secundário se pretende executar o ReactOS em hardware real.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+secundário se pretende executar o ReactOS em hardware real.", IDC_WARNTEXT3, 120, 130, 190, 27, SS_CENTER
 ////
     LTEXT "Clique em Avançar para continuar a instalação.", IDC_STATIC, 115, 169, 195, 17
 END

@@ -19,13 +19,13 @@ BEGIN
     LTEXT "Acest expert va instala sau va face upgrade la ReactOS pe computer \
 și va pregăti a doua parte a instalatorului.", IDC_STATIC, 115, 40, 195, 27
 ////
-    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 200, 90, BS_CENTER
     LTEXT "ReactOS este în stadiu Alfa: nu e o caracteristică- completă și e \
 în curs de dezvoltare intensă. E recomandat să îl folosiți numai pentru \
 evaluare și testare și nu ca SO de utilizare zilnică.\n\
-Vă poate deteriora datele sau vă poate deteriora hardware-ul.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+Vă poate deteriora datele sau vă poate deteriora hardware-ul.", IDC_WARNTEXT2, 120, 80, 190, 50, SS_CENTER
     LTEXT "Faceți o copie de rezervă a datelor sau testați-l pe un computer secundar \
-dacă încrecați să folosiți ReactOS pe hardware real.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+dacă încrecați să folosiți ReactOS pe hardware real.", IDC_WARNTEXT3, 120, 130, 190, 27, SS_CENTER
 ////
     LTEXT "Apăsați Înainte pentru a continua.", IDC_STATIC, 115, 169, 195, 17
 END

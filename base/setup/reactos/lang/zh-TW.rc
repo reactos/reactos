@@ -19,12 +19,12 @@ BEGIN
     LTEXT "這個精靈將在您的電腦上安裝或更新 ReactOS， \
 並為接下來的第二階段安裝做好準備。", IDC_STATIC, 115, 40, 195, 27
 ////
-    GROUPBOX " 重要資訊 ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    GROUPBOX " 重要資訊 ", IDC_WARNTEXT1, 115, 70, 200, 90, BS_CENTER
     LTEXT "ReactOS 目前處於 Alpha 測試階段：功能尚未完善且仍在積極開發中。\
 建議您將本操作系統用作評估和測試，而非作為日常使用。\n\
-本操作系統可能會導致資料損毁或對電腦硬體造成損害。", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+本操作系統可能會導致資料損毁或對電腦硬體造成損害。", IDC_WARNTEXT2, 120, 80, 190, 50, SS_CENTER
     LTEXT "若您打算在真實硬體中執行 ReactOS，\
-請備份您的資料或使用非主力電腦來進行測試。", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+請備份您的資料或使用非主力電腦來進行測試。", IDC_WARNTEXT3, 120, 130, 190, 27, SS_CENTER
 ////
     LTEXT "按［下一步］繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
