@@ -24,8 +24,8 @@ ULONG i8042HwFlags;
 
 /* Since Windows 11 24H2 the Hyper-V emulated PS/2 mouse reports vertical
  * movement already in Windows orientation instead of PS/2 orientation,
- * see CORE-20561 */
-#define HYPERV_Y_WINDOWS_ORIENTATION_MIN_BUILD 26100
+ * see CORE-20561. */
+#define HYPERV_WIN_YAXIS_MIN_BUILD 26100
 
 typedef struct _MATCHENTRY
 {
@@ -188,6 +188,11 @@ i8042StoreSMBiosTables(
 }
 
 #if defined(_M_IX86) || defined(_M_AMD64)
+/**
+ * @brief
+ * This gets Hyper-V host OS build number reported via the CPUID
+ * hypervisor interface. Only x86/x64 for now.
+ **/
 static
 ULONG
 i8042GetHyperVOSBuild(
@@ -281,11 +286,11 @@ i8042InitializeHwHacks(
 
 #if defined(_M_IX86) || defined(_M_AMD64)
     /* The Y-axis workaround requires both the Hyper-V SMBIOS identity and
-     * an affected host build reported via the CPUID hypervisor interface.
+     * an affected host build number range.
      * The SMBIOS check keeps other hypervisors that expose the Hyper-V
      * CPUID interface (e.g. VMware/VirtualBox running on top of the
      * Windows Hypervisor Platform) unaffected. */
-    if ((i8042HwFlags & FL_MICROSOFT_VM) && i8042GetHyperVOSBuild() >= HYPERV_Y_WINDOWS_ORIENTATION_MIN_BUILD)
+    if ((i8042HwFlags & FL_MICROSOFT_VM) && i8042GetHyperVOSBuild() >= HYPERV_WIN_YAXIS_MIN_BUILD)
     {
         DPRINT1("Hyper-V host reports Windows-oriented PS/2 Y-axis, skipping Y negation\n");
         i8042HwFlags |= FL_HYPERV_SKIP_Y_NEGATION;
