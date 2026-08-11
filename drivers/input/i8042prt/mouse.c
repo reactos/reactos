@@ -6,7 +6,7 @@
  * PROGRAMMERS: Copyright Victor Kirhenshtein (sauros@iname.com)
                 Copyright Jason Filby (jasonfilby@yahoo.com)
                 Copyright Martijn Vernooij (o112w8r02@sneakemail.com)
-                Copyright 2006-2007 Herv� Poussineau (hpoussin@reactos.org)
+                Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
                 Copyright 2008 Colin Finck (mail@colinfinck.de)
  */
 

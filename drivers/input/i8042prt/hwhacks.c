@@ -115,7 +115,7 @@ i8042ParseSMBiosTables(
         if (j == MAX_MATCH_ENTRIES)
         {
             /* All items matched!
-             * Use |= so as not to clobber flags set by other detections */
+             * Use |= so as not to clobber flags set by other detections. */
             i8042HwFlags |= i8042HardwareTable[i].Flags;
             DPRINT("Found match for hw table index %u\n", i);
             break;
