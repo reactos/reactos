@@ -822,7 +822,7 @@ PspTerminateJobObject(
  * @param[in] GrantedAccess
  *     Unused.
  *
- * @param[in] HandleCount
+ * @param[in] ProcessHandleCount
  *     Unused.
  *
  * @param[in] SystemHandleCount
@@ -838,8 +838,8 @@ PspCloseJob(
     _In_ PEPROCESS Process,
     _In_ PVOID ObjectBody,
     _In_ ACCESS_MASK GrantedAccess,
-    _In_ ULONG HandleCount,
-    _In_ ULONG SystemHandleCount
+    _In_ ULONG_PTR ProcessHandleCount,
+    _In_ ULONG_PTR SystemHandleCount
 )
 {
     NTSTATUS Status;
@@ -850,7 +850,7 @@ PspCloseJob(
 
     UNREFERENCED_PARAMETER(Process);
     UNREFERENCED_PARAMETER(GrantedAccess);
-    UNREFERENCED_PARAMETER(HandleCount);
+    UNREFERENCED_PARAMETER(ProcessHandleCount);
 
     /* Proceed only when the last handle is left */
     if (SystemHandleCount != 1)

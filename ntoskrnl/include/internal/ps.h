@@ -438,8 +438,8 @@ PspCloseJob(
     _In_ PEPROCESS Process,
     _In_ PVOID ObjectBody,
     _In_ ACCESS_MASK GrantedAccess,
-    _In_ ULONG HandleCount,
-    _In_ ULONG SystemHandleCount
+    _In_ ULONG_PTR ProcessHandleCount,
+    _In_ ULONG_PTR SystemHandleCount
 );
 
 VOID
