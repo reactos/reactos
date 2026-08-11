@@ -452,6 +452,8 @@ enum _FLAGS
 {
     FL_NOLOOP = 0x01,
     FL_INITHACK = 0x02,
+    FL_MICROSOFT_VM = 0x04,
+    FL_HYPERV_SKIP_Y_NEGATION = 0x08,
 };
 
 extern ULONG i8042HwFlags;

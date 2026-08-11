@@ -13,6 +13,7 @@
 #include <wmidata.h>
 #include <wmistr.h>
 #include <dmilib.h>
+#include <intrin.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -20,6 +21,11 @@
 const GUID MSSmBios_RawSMBiosTables_GUID = SMBIOS_DATA_GUID;
 PVOID i8042SMBiosTables;
 ULONG i8042HwFlags;
+
+/* Since Windows 11 24H2 the Hyper-V emulated PS/2 mouse reports vertical
+ * movement already in Windows orientation instead of PS/2 orientation,
+ * see CORE-20561. */
+#define HYPERV_WIN_YAXIS_MIN_BUILD 26100
 
 typedef struct _MATCHENTRY
 {
@@ -39,7 +45,7 @@ const HARDWARE_TABLE i8042HardwareTable[] =
 //    { {{BOARD_VENDOR, "RIOWORKS"}, {BOARD_NAME, "HDAMB"}, {BOARD_VERSION, "Rev E"}}, FL_NOLOOP },
 //    { {{BOARD_VENDOR, "ASUSTeK Computer Inc."}, {BOARD_NAME, "G1S"}, {BOARD_VERSION, "1.0"}}, FL_NOLOOP },
 
-    { {{SYS_VENDOR, "Microsoft Corporation"}, {SYS_PRODUCT, "Virtual Machine"}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Microsoft Corporation"}, {SYS_PRODUCT, "Virtual Machine"}}, FL_INITHACK | FL_MICROSOFT_VM },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron 6000                   "}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D410                   "}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D430                   "}}, FL_INITHACK },
@@ -108,8 +114,9 @@ i8042ParseSMBiosTables(
 
         if (j == MAX_MATCH_ENTRIES)
         {
-            /* All items matched! */
-            i8042HwFlags = i8042HardwareTable[i].Flags;
+            /* All items matched!
+             * Use |= so as not to clobber flags set by other detections. */
+            i8042HwFlags |= i8042HardwareTable[i].Flags;
             DPRINT("Found match for hw table index %u\n", i);
             break;
         }
@@ -180,6 +187,45 @@ i8042StoreSMBiosTables(
     ZwClose(KeyHandle);
 }
 
+#if defined(_M_IX86) || defined(_M_AMD64)
+/**
+ * @brief
+ * This gets Hyper-V host OS build number reported via the CPUID
+ * hypervisor interface. Only x86/x64 for now.
+ **/
+static
+ULONG
+i8042GetHyperVOSBuild(
+    VOID)
+{
+    INT CpuInfo[4];
+    ULONG MaxHvLeaf;
+
+    /* Check if we are running under a hypervisor */
+    __cpuid(CpuInfo, 1);
+    if (!(CpuInfo[2] & 0x80000000))
+        return 0;
+
+    /* Check for the Hyper-V signature "Microsoft Hv" */
+    __cpuid(CpuInfo, 0x40000000);
+    MaxHvLeaf = (ULONG)CpuInfo[0];
+    DPRINT1("Hypervisor CPUID: max leaf 0x%lx, signature '%.4s%.4s%.4s'\n",
+            MaxHvLeaf, (PCHAR)&CpuInfo[1], (PCHAR)&CpuInfo[2], (PCHAR)&CpuInfo[3]);
+    if (CpuInfo[1] != 0x7263694D || /* "Micr" */
+        CpuInfo[2] != 0x666F736F || /* "osof" */
+        CpuInfo[3] != 0x76482074)   /* "t Hv" */
+        return 0;
+
+    if (MaxHvLeaf < 0x40000002)
+        return 0;
+
+    /* Hypervisor system identity: EAX holds the host OS build number */
+    __cpuid(CpuInfo, 0x40000002);
+    DPRINT1("Hyper-V interface reports host build %lu\n", (ULONG)CpuInfo[0]);
+    return (ULONG)CpuInfo[0];
+}
+#endif
+
 VOID
 NTAPI
 i8042InitializeHwHacks(
@@ -237,5 +283,18 @@ i8042InitializeHwHacks(
 
     /* Free the buffer */
     ExFreePoolWithTag(AllData, 'BTMS');
+
+#if defined(_M_IX86) || defined(_M_AMD64)
+    /* The Y-axis workaround requires both the Hyper-V SMBIOS identity and
+     * an affected host build number range.
+     * The SMBIOS check keeps other hypervisors that expose the Hyper-V
+     * CPUID interface (e.g. VMware/VirtualBox running on top of the
+     * Windows Hypervisor Platform) unaffected. */
+    if ((i8042HwFlags & FL_MICROSOFT_VM) && i8042GetHyperVOSBuild() >= HYPERV_WIN_YAXIS_MIN_BUILD)
+    {
+        DPRINT1("Hyper-V host reports Windows-oriented PS/2 Y-axis, skipping Y negation\n");
+        i8042HwFlags |= FL_HYPERV_SKIP_Y_NEGATION;
+    }
+#endif
 }
 
