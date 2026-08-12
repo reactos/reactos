@@ -305,13 +305,13 @@ Kurulum programı ReactOS'u kuramaz.\
 
     IDS_ERROR_COULD_NOT_FORMAT "Kurulum şu anda bölümü %s biçiminde biçimlendiremiyor.\n\
 \nKuruluma devam etmek için Tamam'a tıklayınız.\
-\nKurulumdan çıkmak için İPTAL'e tıklayınız."
+\nKurulumdan çıkmak için İptal'e tıklayınız."
 
     IDS_ERROR_FORMATTING_PARTITION "Kurulum bölümü biçimlendiremiyor:\n %s\n"
 
     IDS_ERROR_COULD_NOT_CHECK "Kurulum şu anda %s ile biçimlendirilmiş bir bölümü denetleyemiyor.\n\
 \nKuruluma devam etmek için Tamam'a tıklayınız.\
-\nKurulumdan çıkmak için İPTAL'e tıklayınız."
+\nKurulumdan çıkmak için İptal'e tıklayınız."
 
     IDS_ERROR_CHECKING_PARTITION "ChkDsk bazı disk hataları tespit etti.\n(Durum 0x%08lx)."
 
