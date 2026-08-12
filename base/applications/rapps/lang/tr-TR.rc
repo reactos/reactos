@@ -5,6 +5,7 @@
  * TRANSLATORS: Copyright 2013-2016 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
  *              Copyright 2018 Ercan Ersoy (ercanersoy) <ercanersoy@ercanersoy.net>
  *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2026 Ethem Çılgın (associan) <JaggedZenith@proton.me>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -66,7 +67,7 @@ BEGIN
     AUTORADIOBUTTON "Doğrudan (Vekil sunucu yok.)", IDC_NO_PROXY, 15, 195, 210, 10
     AUTORADIOBUTTON "Vekil Sunucu", IDC_USE_PROXY, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "Şunun i̇çin vekil sunucu yok", -1, 26, 226, 64, 10
+    LTEXT "Şunun için vekil sunucu yok", -1, 26, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Varsayılanlar", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "Tamam", IDOK, 116, 245, 60, 14
@@ -121,7 +122,7 @@ BEGIN
     IDS_INFO_PUBLISHER "\nYayımcısı: "
     IDS_INFO_HELPLINK "\nYardım Bağlantısı: "
     IDS_INFO_HELPPHONE "\nYardım Telefonu: "
-    IDS_INFO_README "\nBenioku Dosyası: "
+    IDS_INFO_README "\nBeni Oku Dosyası: "
     IDS_INFO_REGOWNER "\nKayıtlı Olduğu Kullanıcısı: "
     IDS_INFO_PRODUCTID "\nÜrün Kimliği: "
     IDS_INFO_CONTACT "\nİletişim: "
@@ -206,7 +207,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Diske yazılamıyor. Disk dolu olabilir."
     IDS_INSTALL_SELECTED "Seçileni Kur"
     IDS_SELECTEDFORINST "Kurulum için seçildi"
-    IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de devam etmek istiyor musunuz?"
+    IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilinmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de devam etmek istiyor musunuz?"
     IDS_UNABLE_PATH "Geçersiz dosya yolu biçimi."
     IDS_APP_DISPLAY_DETAILS "Detaylar"
     IDS_APP_DISPLAY_LIST "Liste"
@@ -262,12 +263,12 @@ BEGIN
     IDS_CMD_NEED_PARAMS "Hata: %1 seçeneği bir veya daha fazla parametre içermeli.\n"
     IDS_CMD_INVALID_OPTION "Hata: Bilinmeyen veya geçersiz komut satırı seçeneği belirtildi.\n"
     IDS_CMD_FIND_RESULT_FOR "%1 için sonuç bulundu:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "%1 paketi bulunmadı.\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "%1 paketi bulunamadı.\n"
     IDS_CMD_PACKAGE_INFO "%1 paketi hakkındaki bilgi:\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Kaldırmak istediğinizden emin misiniz %s?"
-    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Kurulum tamamlandı, %s şimdi çalıştırılsın mı?"
 END
