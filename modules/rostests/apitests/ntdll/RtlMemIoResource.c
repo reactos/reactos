@@ -47,7 +47,7 @@ Test_CmEncode(void)
     NTSTATUS Status;
 
     /* Unsupported types must fail without touching the descriptor */
-    memset(&Desc, 0x55, sizeof(Desc));
+    RtlFillMemory(&Desc, sizeof(Desc), 0x55);
     Saved = Desc;
     Status = pRtlCmEncodeMemIoResource(&Desc, CmResourceTypeNull, 0x1000, 0);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
@@ -59,7 +59,7 @@ Test_CmEncode(void)
     ok(!memcmp(&Desc, &Saved, sizeof(Desc)), "Descriptor modified on failure\n");
 
     /* Basic port descriptor */
-    memset(&Desc, 0x55, sizeof(Desc));
+    RtlFillMemory(&Desc, sizeof(Desc), 0x55);
     Status = pRtlCmEncodeMemIoResource(&Desc, CmResourceTypePort, 0x100, 0x3F8);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_uint(Desc.Type, CmResourceTypePort);
@@ -69,14 +69,14 @@ Test_CmEncode(void)
     ok_eq_hex(Desc.Flags, 0x5555);
 
     /* A port length cannot exceed 32 bits, and the failure leaves no writes */
-    memset(&Desc, 0x55, sizeof(Desc));
+    RtlFillMemory(&Desc, sizeof(Desc), 0x55);
     Saved = Desc;
     Status = pRtlCmEncodeMemIoResource(&Desc, CmResourceTypePort, 0x100000000ULL, 0);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
     ok(!memcmp(&Desc, &Saved, sizeof(Desc)), "Descriptor modified on failure\n");
 
     /* Small memory length: plain descriptor, stale large flags are cleared */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Desc.Flags = CM_RESOURCE_MEMORY_LARGE_48 | CM_RESOURCE_MEMORY_READ_ONLY;
     Status = pRtlCmEncodeMemIoResource(&Desc, CmResourceTypeMemory, 0x1000, 0xFFFFFFFFFF000000ULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
@@ -86,14 +86,14 @@ Test_CmEncode(void)
     ok_eq_hex(Desc.Flags, CM_RESOURCE_MEMORY_READ_ONLY);
 
     /* Asking for MemoryLarge with a small length demotes to plain Memory */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlCmEncodeMemIoResource(&Desc, CmResourceTypeMemoryLarge, MAXULONG, 0);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_uint(Desc.Type, CmResourceTypeMemory);
     ok_eq_ulong(Desc.u.Memory.Length, MAXULONG);
 
     /* Asking for plain Memory with a big length promotes to MemoryLarge (40-bit) */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlCmEncodeMemIoResource(&Desc, CmResourceTypeMemory, 0x100000000ULL, 0x8000000000ULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_uint(Desc.Type, CmResourceTypeMemoryLarge);
@@ -102,7 +102,7 @@ Test_CmEncode(void)
     ok_eq_hex64(Desc.u.Memory.Start.QuadPart, 0x8000000000ULL);
 
     /* 40-bit tier upper bound */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlCmEncodeMemIoResource(&Desc, CmResourceTypeMemoryLarge, CM_RESOURCE_MEMORY_LARGE_40_MAXLEN, 0);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_hex(Desc.Flags, CM_RESOURCE_MEMORY_LARGE_40);
@@ -113,7 +113,7 @@ Test_CmEncode(void)
     ok_eq_hex(Status, STATUS_UNSUCCESSFUL);
 
     /* 48-bit tier */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlCmEncodeMemIoResource(&Desc, CmResourceTypeMemory, 0x10000000000ULL, 0);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_uint(Desc.Type, CmResourceTypeMemoryLarge);
@@ -128,13 +128,13 @@ Test_CmEncode(void)
     ok_eq_hex(Status, STATUS_UNSUCCESSFUL);
 
     /* 64-bit tier and its upper bound */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlCmEncodeMemIoResource(&Desc, CmResourceTypeMemory, 0x1000000000000ULL, 0);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_hex(Desc.Flags, CM_RESOURCE_MEMORY_LARGE_64);
     ok_eq_ulong(Desc.u.Memory.Length, 0x10000UL);
 
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlCmEncodeMemIoResource(&Desc, CmResourceTypeMemory, CM_RESOURCE_MEMORY_LARGE_64_MAXLEN, 0);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_hex(Desc.Flags, CM_RESOURCE_MEMORY_LARGE_64);
@@ -174,7 +174,7 @@ Test_CmDecode(void)
     ULONG i;
 
     /* Plain port descriptor decodes verbatim */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Desc.Type = CmResourceTypePort;
     Desc.u.Port.Start.QuadPart = 0x1122334455667788ULL;
     Desc.u.Port.Length = 0x1234;
@@ -193,7 +193,7 @@ Test_CmDecode(void)
     ok_eq_hex64(Length, 0x1234);
 
     /* Hand-built large forms decode to the shifted length */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Desc.Type = CmResourceTypeMemoryLarge;
     Desc.u.Memory.Length = 0x01000000;
     Desc.Flags = CM_RESOURCE_MEMORY_LARGE_40;
@@ -213,7 +213,7 @@ Test_CmDecode(void)
     /* Encode/decode round-trips across all tiers */
     for (i = 0; i < ARRAYSIZE(RoundTrips); i++)
     {
-        memset(&Desc, 0, sizeof(Desc));
+        RtlZeroMemory(&Desc, sizeof(Desc));
         Status = pRtlCmEncodeMemIoResource(&Desc,
                                            CmResourceTypeMemory,
                                            RoundTrips[i].Length,
@@ -240,14 +240,14 @@ Test_IoEncode(void)
     NTSTATUS Status;
 
     /* Unsupported types fail without touching the descriptor */
-    memset(&Desc, 0x55, sizeof(Desc));
+    RtlFillMemory(&Desc, sizeof(Desc), 0x55);
     Saved = Desc;
     Status = pRtlIoEncodeMemIoResource(&Desc, CmResourceTypeInterrupt, 0x1000, 4, 0, 0xFFFF);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
     ok(!memcmp(&Desc, &Saved, sizeof(Desc)), "Descriptor modified on failure\n");
 
     /* Basic port requirement */
-    memset(&Desc, 0x55, sizeof(Desc));
+    RtlFillMemory(&Desc, sizeof(Desc), 0x55);
     Status = pRtlIoEncodeMemIoResource(&Desc, CmResourceTypePort, 0x100, 4, 0x1000, 0xFFFF);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_uint(Desc.Type, CmResourceTypePort);
@@ -257,7 +257,7 @@ Test_IoEncode(void)
     ok_eq_hex64(Desc.u.Port.MaximumAddress.QuadPart, 0xFFFF);
 
     /* Port length/alignment above 32 bits are rejected, no writes */
-    memset(&Desc, 0x55, sizeof(Desc));
+    RtlFillMemory(&Desc, sizeof(Desc), 0x55);
     Saved = Desc;
     Status = pRtlIoEncodeMemIoResource(&Desc, CmResourceTypePort, 0x100000000ULL, 4, 0, 0xFFFF);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
@@ -266,7 +266,7 @@ Test_IoEncode(void)
     ok(!memcmp(&Desc, &Saved, sizeof(Desc)), "Descriptor modified on failure\n");
 
     /* Small memory requirement stays plain and clears stale large flags */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Desc.Flags = CM_RESOURCE_MEMORY_LARGE_40 | CM_RESOURCE_MEMORY_PREFETCHABLE;
     Status = pRtlIoEncodeMemIoResource(&Desc, CmResourceTypeMemory, 0x1000, 0x1000, 0, 0xFFFFFFFFULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
@@ -278,7 +278,7 @@ Test_IoEncode(void)
     ok_eq_hex64(Desc.u.Memory.MaximumAddress.QuadPart, 0xFFFFFFFFULL);
 
     /* Large length: a small alignment is scaled up to the tier granularity */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlIoEncodeMemIoResource(&Desc, CmResourceTypeMemory,
                                        0x100000000ULL, 1,
                                        0, 0xFFFFFFFFFFULL);
@@ -290,13 +290,13 @@ Test_IoEncode(void)
     ok_eq_hex64(Desc.u.Memory.MaximumAddress.QuadPart, 0xFFFFFFFFFFULL);
 
     /* Zero alignment encodes as zero */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlIoEncodeMemIoResource(&Desc, CmResourceTypeMemory, 0x100000000ULL, 0, 0, 0);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_ulong(Desc.u.Memory.Alignment, 0UL);
 
     /* A non-power-of-two alignment is doubled until it fits the granularity */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlIoEncodeMemIoResource(&Desc, CmResourceTypeMemory, 0x100000000ULL, 0x81, 0, 0);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_ulong(Desc.u.Memory.Alignment, 0x81UL);   /* 0x81 << 8 == 0x8100 bytes */
@@ -305,7 +305,7 @@ Test_IoEncode(void)
      * A small length with a >4GB alignment still selects the large form
      * (the plain path needs both to fit in 32 bits)
      */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlIoEncodeMemIoResource(&Desc, CmResourceTypeMemory,
                                        0x1000, 0x100000000ULL, 0, 0);
     ok_eq_hex(Status, STATUS_SUCCESS);
@@ -331,7 +331,7 @@ Test_IoEncode(void)
     ok_eq_hex(Status, STATUS_UNSUCCESSFUL);
 
     /* 64-bit tier */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlIoEncodeMemIoResource(&Desc, CmResourceTypeMemory,
                                        0x1000000000000ULL, 0x100000000ULL,
                                        0x100000000ULL, 0xFFFFFFFFFFFFFFFFULL);
@@ -357,7 +357,7 @@ Test_IoDecode(void)
     NTSTATUS Status;
 
     /* Plain memory requirement */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Desc.Type = CmResourceTypeMemory;
     Desc.u.Memory.Length = 0x2000;
     Desc.u.Memory.Alignment = 0x1000;
@@ -374,7 +374,7 @@ Test_IoDecode(void)
     ok_eq_hex64(Length, 0x2000);
 
     /* Length and alignment both scale */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Desc.Type = CmResourceTypeMemoryLarge;
     Desc.Flags = CM_RESOURCE_MEMORY_LARGE_40;
     Desc.u.Memory.Length = 0x01000000;
@@ -406,7 +406,7 @@ Test_IoDecode(void)
     ok_eq_hex64(Maximum, 0x5678);
 
     /* Encode/decode round-trip: the rounded-up alignment is what comes back */
-    memset(&Desc, 0, sizeof(Desc));
+    RtlZeroMemory(&Desc, sizeof(Desc));
     Status = pRtlIoEncodeMemIoResource(&Desc, CmResourceTypeMemory,
                                        0x10000000000ULL, 0x1000,
                                        0x10000, 0xFFFFFFFFFFFFULL);
@@ -462,7 +462,7 @@ Test_FindClosest(void)
            i, Target, Cases[i].Expected);
 
         /* The returned length must itself be encodable */
-        memset(&Desc, 0, sizeof(Desc));
+        RtlZeroMemory(&Desc, sizeof(Desc));
         Status = pRtlCmEncodeMemIoResource(&Desc, CmResourceTypeMemory, Target, 0);
         ok(Status == STATUS_SUCCESS, "[%lu] closest length not encodable: 0x%lx\n", i, Status);
     }

@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS system libraries
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     Encode/decode helpers for memory and port resource descs.
+ * PURPOSE:     Encode/decode helpers for memory and port resource descriptors.
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
@@ -70,7 +70,7 @@ RtlCmDecodeMemIoResource(
 /*
  * @implemented
  *
- * Decode a requirement (IO_RESOURCE_DESCRIPTOR) memory or port descriptor
+ * Decode a requirement (IO_RESOURCE_DESCRIPTOR) memory or port descriptor:
  * return its full 64-bit length, maybe its (also large-encoded)
  * alignment and the 64-bit minimum/maximum address bounds.
  */
@@ -176,7 +176,7 @@ RtlCmEncodeMemIoResource(
 }
 
 /*
- * A large descriptor expresses alignment at the same granularity as its length
+ * A large descriptor expresses alignment at the same granularity as its length.
  * Scale the alignment up until it is a multiple of that granularity.
  */
 static
@@ -303,7 +303,7 @@ RtlIoEncodeMemIoResource(
  *
  * Round a requested length up to the nearest value the descriptor
  * 1:1 when it fits 32 bits, otherwise the next multiple of the
- * granularity
+ * granularity.
  */
 NTSTATUS
 NTAPI
@@ -318,7 +318,7 @@ RtlFindClosestEncodableLength(
     else if (SourceLength <= ((ULONGLONG)MAXULONG << 16))
         *TargetLength = (SourceLength + 0xFFFF) & ~(ULONGLONG)0xFFFF;
     else if (SourceLength <= ((ULONGLONG)MAXULONG << 32))
-        *TargetLength = (SourceLength + MAXULONG) & ~(ULONGLONG)MAXULONG;
+        *TargetLength = (SourceLength + 0xFFFFFFFF) & ~(ULONGLONG)0xFFFFFFFF;
     else
     {
         *TargetLength = 0;
