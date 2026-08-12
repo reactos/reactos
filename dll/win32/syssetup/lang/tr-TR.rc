@@ -5,6 +5,7 @@
  * TRANSLATORS: Copyright 2012 Arda Tanrıkulu <ardatanrikulu@gmail.com>
  *              Copyright 2016, 2020 Erdem Ersoy <erdemersoy@erdemersoy.net>
  *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2026 Ethem Çılgın (associan) <JaggedZenith@proton.me>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -37,10 +38,10 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_INSTALLATION_ICON, 5, 5, 20, 20
-    LTEXT "Please choose an installation type:", IDC_STATIC, 35, 7, 230, 12
-    LTEXT "Installation &Types:", IDC_STATIC, 5, 32, 85, 10
+    LTEXT "Lütfen bir kurulum türü seçiniz:", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "Kurulum &Türleri:", IDC_STATIC, 5, 32, 85, 10
     COMBOBOX IDC_INSTALLATION_TYPES, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "Installation Summary", IDC_STATIC, 5, 50, 305, 85
+    GROUPBOX "Kurulum Özeti", IDC_STATIC, 5, 50, 305, 85
     LTEXT "Tanım:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_INSTALLATION_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
@@ -123,7 +124,7 @@ BEGIN
     LTEXT "Bileşenler kaydediliyor", IDC_TASKTEXT1, 65, 27, 232, 8
     LTEXT "Başlat menüsü öğeleri yükleniyor", IDC_TASKTEXT2, 65, 39, 232, 8
     LTEXT "Ayarlar kaydediliyor", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Installing optional components", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "İsteğe bağlı bileşenler kuruluyor", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "Geçici dosyalar kaldırılıyor", IDC_TASKTEXT5, 65, 75, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
@@ -141,7 +142,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS Kurulum Sihirbazı, Kurulumu Tamamladı", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS Kurulumu başarı ile tamamlandı.\n\nEğer bir sürücüde herhangi bir CD varsa, onu çıkarınız. Sonra bilgisayarınızı yeniden başlatmak için Bitir'e tıklayınız.", IDC_STATIC, 115, 40, 195, 48
-    LTEXT "Your computer will automatically restart in 15 seconds.", IDC_STATIC, 115, 110, 195, 24
+    LTEXT "Bilgisayarınız 15 saniye içinde otomatik olarak yeniden başlatılacak.", IDC_STATIC, 115, 110, 195, 24
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
@@ -197,8 +198,8 @@ BEGIN
     IDS_LAYOUTTEXT "Varsayılan metin giriş diliniz ve yönteminiz: %s klavye düzeni"
     IDS_DATETIMETITLE "Tarih ve Saat"
     IDS_DATETIMESUBTITLE "Bilgisayarınız için doğru zamanı ayarlayınız."
-    IDS_PROCESSTITLE "Finishing the Installation"
-    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
+    IDS_PROCESSTITLE "Kurulum Tamamlanıyor"
+    IDS_PROCESSSUBTITLE "Kurulum son adımları tamamlarken lütfen bekleyiniz."
     IDS_THEMESELECTIONTITLE "Görünüm"
     IDS_THEMESELECTIONSUBTITLE "İstediğiniz temayı seçiniz."
 END
@@ -269,18 +270,18 @@ BEGIN
     IDS_INSTALLATIONSERVERINFO "Sistem bir sunucu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" ve ""Müziklerim"" özel dizinleri, ""Belgelerim""den bağımsızdır."
     IDS_INSTALLATIONWORKSTATIONNAME "ReactOS İş İstasyonu"
     IDS_INSTALLATIONWORKSTATIONINFO "Sistem bir iş istasyonu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" ve ""Müziklerim"" özel dizinleri ""Belgelerim""in içindedir."
-    IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCORENAME "ReactOS Sunucu Çekirdeği"
+    IDS_INSTALLATIONSERVERCOREINFO "Sistem bir sunucu olarak tanınacaktır. Grafiksel kabuk kurulmaz; kaynak kullanımını ve saldırı yüzeyini azaltmak için sistem komut satırı ortamında başlatılır."
     /* Reserved for future use
-     * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
-     * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."
+     * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Sunucu"
+     * IDS_INSTALLATIONNANOSERVERINFO "Sistem bir sunucu olarak tanınacaktır. Sistem tamamen metin modundadır. Bu sistemi uzaktan yönetmeniz beklenir."
      */
     IDS_DEFAULT "(Varsayılan)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLADDONSCAPTION "Optional Components"
-    IDS_INSTALLADDONSMESSAGE "Optional components are available to improve application compatibility.\n\nWould you like to download and install them?"
-    IDS_INSTALLADDONSFAILEDMESSAGE "One or more optional components failed to install."
+    IDS_INSTALLADDONSCAPTION "İsteğe Bağlı Bileşenler"
+    IDS_INSTALLADDONSMESSAGE "Uygulama uyumluluğunu artırmak için isteğe bağlı bileşenler mevcuttur.\n\nBunları indirip kurmak ister misiniz?"
+    IDS_INSTALLADDONSFAILEDMESSAGE "Bir veya daha fazla isteğe bağlı bileşen kurulamadı."
 END
