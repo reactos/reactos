@@ -162,7 +162,7 @@ busintrf_Constructor(IN PVOID DeviceExtension,
     BusInterface = (PBUS_INTERFACE_STANDARD)Interface;
     PdoExtension = (PPCI_PDO_EXTENSION)DeviceExtension;
 
-    BusInterface->Size = sizeof(BUS_INTERFACE_STANDARD);
+    BusInterface->Size = sizeof(*BusInterface);
     BusInterface->Version = 1;
     BusInterface->Context = PdoExtension;
     BusInterface->InterfaceReference = PciBusInterface_Reference;

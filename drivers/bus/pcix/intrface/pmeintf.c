@@ -92,7 +92,7 @@ PciPmeInterfaceConstructor(IN PVOID DeviceExtension,
     }
 
     PmeInterface = (PPCI_PME_INTERFACE)Interface;
-    PmeInterface->Size = sizeof(PCI_PME_INTERFACE);
+    PmeInterface->Size = sizeof(*PmeInterface);
     PmeInterface->Version = PCI_PME_INTRF_STANDARD_VER;
     PmeInterface->Context = DeviceExtension;
     PmeInterface->InterfaceReference = PciPmeInterface_Reference;
