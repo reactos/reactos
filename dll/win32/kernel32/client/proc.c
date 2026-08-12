@@ -3809,7 +3809,7 @@ StartScan:
     }
 
     /* CREATE_BREAKAWAY_FROM_JOB allows the child process to break
-       away from the job associated with the calling process */
+     * away from the job associated with the calling process */
     if (dwCreationFlags & CREATE_BREAKAWAY_FROM_JOB)
     {
         Flags |= PROCESS_CREATE_FLAGS_BREAKAWAY;

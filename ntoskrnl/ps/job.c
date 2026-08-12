@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/job.c
  * PURPOSE:         Core functions for managing Job Objects, a kernel mechanism
- *                  for managing multiple processes as a single unit
+ *                  for managing multiple processes as a single unit.
  * PROGRAMMERS:     2004-2012 Alex Ionescu (alex@relsoft.net) (stubs)
  *                  2004-2005 Thomas Weidenmueller <w3seek@reactos.com>
  *                  2015-2016 Samuel Serapión Vega (encoded@reactos.org)
@@ -194,9 +194,7 @@ PspGetNextProcessInJobLocked(
     ASSERT(Entry->Blink->Flink == Entry);
 
     Process = CONTAINING_RECORD(Entry, EPROCESS, JobLinks);
-
     ASSERT(Process->Job == Job);
-
     return Process;
 }
 
@@ -306,12 +304,11 @@ PspEnumerateProcessesInJob(
     while (Process != NULL)
     {
         Status = Callback(Process, Context);
-
         if (!NT_SUCCESS(Status))
         {
             /*
-             * On successful iteration, PspGetNextProcessInJob consumes this
-             * reference. On failure, it must be released explicitly.
+             * On successful iteration, PspGetNextProcessInJob consumes
+             * this reference. On failure, it must be released explicitly.
              */
             ObDereferenceObject(Process);
             break;
@@ -368,11 +365,8 @@ PspEnumerateProcessesInJobLocked(
     while ((Process = PspGetNextProcessInJobLocked(Job, Process)) != NULL)
     {
         Status = Callback(Process, Context);
-
         if (!NT_SUCCESS(Status))
-        {
             break;
-        }
     }
 
     return Status;
@@ -536,9 +530,7 @@ PspAssignProcessToJob(
     }
 
 Exit:
-
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
-
     ExReleaseRundownProtection(&Process->RundownProtect);
 
     /* TODO: Ensure that job limits are respected */

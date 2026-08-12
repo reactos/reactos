@@ -79,8 +79,8 @@
 //
 // Flags for JobStatus in EPROCESS
 //
-// These are based on the layout of bit fields in the Flags2 set introduced in
-// version 6.0
+// These are based on the layout of bit fields in the Flags2 set
+// introduced in version 6.0
 //
 // More information:
 // https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/ntos/ps/eprocess/flags2.htm

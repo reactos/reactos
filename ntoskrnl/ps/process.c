@@ -376,7 +376,6 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     BOOLEAN NeedsPeb = FALSE;
     INITIAL_PEB InitialPeb;
-    PEJOB ParentJob;
 
     PAGED_CODE();
 
@@ -719,12 +718,12 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
      * Attach the process to parent's job if:
      *  a) parent exists,
      *  b) parent has a job,
-     *  c) parent's job does NOT allow silent breakaway
+     *  c) parent's job does NOT allow silent breakaway.
      */
     if (Parent && Parent->Job &&
         !FlagOn(Parent->Job->LimitFlags, JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK))
     {
-        ParentJob = Parent->Job;
+        PEJOB ParentJob = Parent->Job;
 
         /* If caller explicitly requested breakaway from the job */
         if (FlagOn(Flags, PROCESS_CREATE_FLAGS_BREAKAWAY))

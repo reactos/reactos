@@ -235,7 +235,6 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 //
 // Job message flags
 //
-
 #define JOB_OBJECT_MSG_END_OF_JOB_TIME          1
 #define JOB_OBJECT_MSG_END_OF_PROCESS_TIME      2
 #define JOB_OBJECT_MSG_ACTIVE_PROCESS_LIMIT     3
