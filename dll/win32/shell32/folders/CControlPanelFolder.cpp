@@ -542,28 +542,30 @@ HRESULT WINAPI CControlPanelFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pi
 
 HRESULT WINAPI CControlPanelFolder::GetDefaultSearchGUID(GUID *pguid)
 {
-    FIXME("(%p)\n", this);
-    return E_NOTIMPL;
+    if (LOBYTE(GetVersion()) >= 6)
+        return E_NOTIMPL;
+    *pguid = CLSID_ShellSearchExt;
+    return S_OK;
 }
 
 HRESULT WINAPI CControlPanelFolder::EnumSearches(IEnumExtraSearch **ppenum)
 {
-    FIXME("(%p)\n", this);
+    *ppenum = NULL;
     return E_NOTIMPL;
 }
 
 HRESULT WINAPI CControlPanelFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
 {
     TRACE("(%p)\n", this);
-
-    if (pSort) *pSort = 0;
-    if (pDisplay) *pDisplay = 0;
-    return S_OK;
+    return E_NOTIMPL; // Not required when column 0 is our default.
 }
 
 HRESULT WINAPI CControlPanelFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
     TRACE("(%p)\n", this);
+
+    if (LOBYTE(GetVersion()) < 6)
+        return E_NOTIMPL;
 
     if (!pcsFlags || iColumn >= CONTROLPANEL_COL_COUNT)
         return E_INVALIDARG;

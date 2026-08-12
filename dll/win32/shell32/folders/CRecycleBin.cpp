@@ -955,13 +955,14 @@ HRESULT WINAPI CRecycleBin::SetNameOf(HWND hwnd, PCUITEMID_CHILD pidl, LPCOLESTR
 
 HRESULT WINAPI CRecycleBin::GetDefaultSearchGUID(GUID *pguid)
 {
-    FIXME("stub\n");
-    return E_NOTIMPL;
+    if (LOBYTE(GetVersion()) >= 6)
+        return E_NOTIMPL;
+    *pguid = CLSID_ShellSearchExt;
+    return S_OK;
 }
 
 HRESULT WINAPI CRecycleBin::EnumSearches(IEnumExtraSearch **ppEnum)
 {
-    FIXME("stub\n");
     *ppEnum = NULL;
     return E_NOTIMPL;
 }
@@ -969,11 +970,7 @@ HRESULT WINAPI CRecycleBin::EnumSearches(IEnumExtraSearch **ppEnum)
 HRESULT WINAPI CRecycleBin::GetDefaultColumn(DWORD dwReserved, ULONG *pSort, ULONG *pDisplay)
 {
     TRACE("(%p, %x, %p, %p)\n", this, (unsigned int)dwReserved, pSort, pDisplay);
-    if (pSort)
-        *pSort = 0;
-    if (pDisplay)
-        *pDisplay = 0;
-    return S_OK;
+    return E_NOTIMPL; // Not required when column 0 is our default.
 }
 
 HRESULT WINAPI CRecycleBin::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)
@@ -1340,6 +1337,9 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
     STRRET StrRet;
 
     TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_w(pszRootPath), dwFlags);
+
+    if (pszRootPath && !*pszRootPath)
+        pszRootPath = NULL; // "If this value is an empty string or NULL, all Recycle Bins on all drives will be emptied."
 
     if (!(dwFlags & SHERB_NOCONFIRMATION))
     {

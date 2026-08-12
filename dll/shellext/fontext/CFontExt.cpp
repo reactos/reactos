@@ -133,20 +133,18 @@ HRESULT CFontExt::PreviewItems(IDataObject* pDataObj)
 // *** IShellFolder2 methods ***
 STDMETHODIMP CFontExt::GetDefaultSearchGUID(GUID *lpguid)
 {
-    ERR("%s() UNIMPLEMENTED\n", __FUNCTION__);
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CFontExt::EnumSearches(IEnumExtraSearch **ppenum)
 {
-    ERR("%s() UNIMPLEMENTED\n", __FUNCTION__);
+    *ppenum = NULL;
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CFontExt::GetDefaultColumn(DWORD dwReserved, ULONG *pSort, ULONG *pDisplay)
 {
-    ERR("%s() UNIMPLEMENTED\n", __FUNCTION__);
-    return E_NOTIMPL;
+    return E_NOTIMPL; // Not required when column 0 is our default.
 }
 
 STDMETHODIMP CFontExt::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)

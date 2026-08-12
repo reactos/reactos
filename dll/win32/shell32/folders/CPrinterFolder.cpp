@@ -29,7 +29,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 static shvheader PrinterSFHeader[] = {
     {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
-    {IDS_SHV_COLUMN_DOCUMENTS , SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
+    {IDS_SHV_COLUMN_DOCUMENTS, SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
     {IDS_SHV_COLUMN_STATUS, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
     {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
     {IDS_SHV_COLUMN_LOCATION, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
@@ -441,12 +441,7 @@ HRESULT WINAPI CPrinterFolder::EnumSearches(IEnumExtraSearch **ppenum)
 
 HRESULT WINAPI CPrinterFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
 {
-    if (pSort)
-        *pSort = 0;
-    if (pDisplay)
-        *pDisplay = 0;
-
-    return S_OK;
+    return E_NOTIMPL; // Not required when column 0 is our default.
 }
 
 HRESULT WINAPI CPrinterFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)
@@ -470,7 +465,7 @@ HRESULT WINAPI CPrinterFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, 
     TRACE("(%p)->(%p %i %p): stub\n", this, pidl, iColumn, psd);
 
     if (iColumn >= PrinterSHELLVIEWCOLUMNS)
-        return E_FAIL;
+        return E_NOTIMPL;
 
     psd->fmt = PrinterSFHeader[iColumn].fmt;
     psd->cxChar = PrinterSFHeader[iColumn].cxChar;
@@ -523,6 +518,8 @@ HRESULT WINAPI CPrinterFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 
-    *pidl = ILClone (pidlRoot);
-    return S_OK;
+    if (pidlRoot)
+        return SHILClone(pidlRoot, pidl);
+    *pidl = NULL;
+    return S_FALSE;
 }

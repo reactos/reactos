@@ -7,6 +7,7 @@
  */
 
 #include "recyclebin_private.h"
+EXTERN_C int WINAPI PathGetDriveNumberW(_In_ LPCWSTR);
 
 BOOL WINAPI
 CloseRecycleBinHandle(
@@ -334,12 +335,13 @@ GetDefaultRecycleBin(
         hr = RecycleBinGeneric_Constructor(&pUnk);
     else
     {
-        /* FIXME: do a better validation! */
-        if (wcslen(pszVolume) != 3 || pszVolume[1] != ':' || pszVolume[2] != '\\')
+        WCHAR szRootPath[4] = { *pszVolume, L':', L'\\', UNICODE_NULL };
+        int drive = PathGetDriveNumberW(pszVolume);
+        if (drive < 0 || pszVolume[2] != L'\\')
             return HRESULT_FROM_WIN32(ERROR_INVALID_NAME);
 
         /* For now, only support this type of recycle bins... */
-        hr = RecycleBin5_Constructor(pszVolume, &pUnk);
+        hr = RecycleBin5_Constructor(szRootPath, &pUnk);
     }
     if (!SUCCEEDED(hr))
         return hr;
