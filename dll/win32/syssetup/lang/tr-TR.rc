@@ -199,7 +199,7 @@ BEGIN
     IDS_DATETIMETITLE "Tarih ve Saat"
     IDS_DATETIMESUBTITLE "Bilgisayarınız için doğru zamanı ayarlayınız."
     IDS_PROCESSTITLE "Kurulum Tamamlanıyor"
-    IDS_PROCESSSUBTITLE "Kur son adımları tamamlarken lütfen bekleyiniz."
+    IDS_PROCESSSUBTITLE "Kurulum son adımları tamamlarken lütfen bekleyiniz."
     IDS_THEMESELECTIONTITLE "Görünüm"
     IDS_THEMESELECTIONSUBTITLE "İstediğiniz temayı seçiniz."
 END
