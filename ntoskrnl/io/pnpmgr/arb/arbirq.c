@@ -136,7 +136,7 @@ IopArbIrqTranslateOrdering(
  * In those cases the arbitrated "vectors" are the legacy ISA IRQ lines, which is
  * why IopArbIrqTranslateOrdering maps the ordering table through
  * HalGetInterruptVector for the ISA bus. Otherwise, such devices
- * would have nowhere to arbitrate their interrupts. 
+ * would have nowhere to arbitrate their interrupts.
  * (So this is purely for legacy PIC + No ACPI)
  *
  * @return NTSTATUS

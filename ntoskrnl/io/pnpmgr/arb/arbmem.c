@@ -100,13 +100,13 @@ IopArbMemInitialize(VOID)
 
     Status = ArbInitializeArbiterInstance(&IopRootMemArbiter,
                                           NULL,
-                                          CmResourceTypeBusNumber,
+                                          CmResourceTypeMemory,
                                           IopRootMemArbiter.Name,
                                           L"Root",
                                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopArbDmaInitialize: Failed with %X", Status);
+        DPRINT1("IopArbMemInitialize: Failed with %X", Status);
     }
 
     return Status;
