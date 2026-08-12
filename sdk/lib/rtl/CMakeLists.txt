@@ -61,6 +61,7 @@ list(APPEND SOURCE
     largeint.c
     locale.c
     luid.c
+    memres.c
     memstream.c
     message.c
     network.c
