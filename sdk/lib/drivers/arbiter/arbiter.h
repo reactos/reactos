@@ -1,11 +1,13 @@
 /*
- * PROJECT:     ReactOS Arbitrartion Library
+ * PROJECT:     ReactOS Arbitration Library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Generic Arbiter Library
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #pragma once
+
+#define TAG_ARBITER  'ibrA'
 
 typedef struct _ARBITER_ALTERNATIVE
 {
@@ -310,6 +312,32 @@ ArbiterLibDeleteInstance(
     _In_ PARBITER_INSTANCE Arbiter
 );
 
+CODE_SEG("PAGE")
+VOID
+NTAPI
+ArbiterLibFreeOrderingList(
+    _Inout_ PARBITER_ORDERING_LIST OrderingList
+);
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibAddOrdering(
+    _Inout_ PARBITER_ORDERING_LIST OrderingList,
+    _In_ UINT64 Start,
+    _In_ UINT64 End
+);
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibDefaultAssignmentOrdering(
+    _Inout_ PARBITER_INSTANCE Arbiter,
+    _In_ PCWSTR AllocationOrderName,
+    _In_ PCWSTR ReservedResourcesName,
+    _In_opt_ PARB_TRANSLATE_ORDERING TranslateOrderingFunction
+);
+
 /* The generic dispatch entry point (installed as ARBITER_INTERFACE.ArbiterHandler). */
 CODE_SEG("PAGE")
 NTSTATUS
@@ -352,7 +380,9 @@ ArbiterLibQueryConflict(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_QUERY_CONFLICT_PARAMETERS Parameters
 );
-#else
+
+#else // (NTDDI_VERSION < NTDDI_VISTA)
+
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
@@ -387,7 +417,7 @@ ArbiterLibQueryConflict(
     _Out_ PULONG ConflictCount,
     _Out_ PARBITER_CONFLICT_INFO *Conflicts
 );
-#endif
+#endif // (NTDDI_VERSION >= NTDDI_VISTA)
 
 CODE_SEG("PAGE")
 NTSTATUS

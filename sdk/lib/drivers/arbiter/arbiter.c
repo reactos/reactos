@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Arbitrartion Library
+ * PROJECT:     ReactOS Arbitration Library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Generic Arbiter Library
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
@@ -15,7 +15,6 @@
 #include <debug.h>
 
 #define ARBITER_SIG  'sbrA'
-#define TAG_ARBITER  'ibrA'
 
 CODE_SEG("PAGE")
 NTSTATUS
@@ -325,6 +324,9 @@ ArbiterLibDeleteInstance(
         Arbiter->AllocationStack = NULL;
         Arbiter->AllocationStackMaxSize = 0;
     }
+
+    ArbiterLibFreeOrderingList(&Arbiter->OrderingList);
+    ArbiterLibFreeOrderingList(&Arbiter->ReservedList);
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
     if (Arbiter->TransactionEvent)
