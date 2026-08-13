@@ -121,11 +121,11 @@ ario_ApplyBrokenVideoHack(IN PPCI_FDO_EXTENSION FdoExtension)
     CommonInstance = &PciArbiter->CommonInstance;
 
     /* Free the two lists, enabling full VGA access */
-    ArbFreeOrderingList(&CommonInstance->OrderingList);
-    ArbFreeOrderingList(&CommonInstance->ReservedList);
+    ArbiterLibFreeOrderingList(&CommonInstance->OrderingList);
+    ArbiterLibFreeOrderingList(&CommonInstance->ReservedList);
 
     /* Build the ordering for broken video PCI access */
-    Status = ArbBuildAssignmentOrdering(CommonInstance,
+    Status = ArbiterLibDefaultAssignmentOrdering(CommonInstance,
                                         L"Pci",
                                         L"BrokenVideo",
                                         NULL);

@@ -108,7 +108,7 @@ IopArbBusNumberInitialize(VOID)
     IopRootBusNumberArbiter.UnpackResource = IopArbBusNumberUnpackResource;
     IopRootBusNumberArbiter.ScoreRequirement = IopArbBusNumberScoreRequirement;
 
-    Status = ArbInitializeArbiterInstance(&IopRootBusNumberArbiter,
+    Status = ArbiterLibInitializeInstance(&IopRootBusNumberArbiter,
                                           NULL,
                                           CmResourceTypeBusNumber,
                                           IopRootBusNumberArbiter.Name,

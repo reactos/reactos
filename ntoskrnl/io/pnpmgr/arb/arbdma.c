@@ -114,7 +114,7 @@ IopArbDmaInitialize(VOID)
     IopRootDmaArbiter.UnpackResource = IopArbDmaUnpackResource;
     IopRootDmaArbiter.ScoreRequirement = IopArbDmaScoreRequirement;
 
-    Status = ArbInitializeArbiterInstance(&IopRootDmaArbiter,
+    Status = ArbiterLibInitializeInstance(&IopRootDmaArbiter,
                                           NULL,
                                           CmResourceTypeDma,
                                           IopRootDmaArbiter.Name,

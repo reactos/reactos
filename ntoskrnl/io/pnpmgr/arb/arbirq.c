@@ -158,7 +158,7 @@ IopArbIrqInitialize(VOID)
     IopRootIrqArbiter.UnpackResource = IopArbIrqUnpackResource;
     IopRootIrqArbiter.ScoreRequirement = IopArbIrqScoreRequirement;
 
-    Status = ArbInitializeArbiterInstance(&IopRootIrqArbiter,
+    Status = ArbiterLibInitializeInstance(&IopRootIrqArbiter,
                                           NULL,
                                           CmResourceTypeInterrupt,
                                           IopRootIrqArbiter.Name,

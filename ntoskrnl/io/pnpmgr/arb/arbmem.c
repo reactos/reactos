@@ -98,7 +98,7 @@ IopArbMemInitialize(VOID)
     IopRootMemArbiter.UnpackResource = IopArbMemUnpackResource;
     IopRootMemArbiter.ScoreRequirement = IopArbMemScoreRequirement;
 
-    Status = ArbInitializeArbiterInstance(&IopRootMemArbiter,
+    Status = ArbiterLibInitializeInstance(&IopRootMemArbiter,
                                           NULL,
                                           CmResourceTypeMemory,
                                           IopRootMemArbiter.Name,

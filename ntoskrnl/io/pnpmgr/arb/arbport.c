@@ -98,7 +98,7 @@ IopArbPortInitialize(VOID)
     IopRootPortArbiter.UnpackResource = IopPortMemUnpackResource;
     IopRootPortArbiter.ScoreRequirement = IopPortMemScoreRequirement;
 
-    Status = ArbInitializeArbiterInstance(&IopRootPortArbiter,
+    Status = ArbiterLibInitializeInstance(&IopRootPortArbiter,
                                           NULL,
                                           CmResourceTypePort,
                                           IopRootPortArbiter.Name,
