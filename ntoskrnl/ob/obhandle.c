@@ -826,6 +826,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     KPROCESSOR_MODE ProbeMode;
     ULONG Total;
     POBJECT_HEADER_NAME_INFO NameInfo;
+    BOOLEAN ObjectLocked;
     PAGED_CODE();
 
     /* Get the object header and type */
@@ -853,10 +854,11 @@ ObpIncrementHandleCount(IN PVOID Object,
 
     /* Lock the object */
     ObpAcquireObjectLock(ObjectHeader);
+    ObjectLocked = TRUE;
 
     /* Charge quota and remove the creator info flag */
     Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType, &NewObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* Check if the open is exclusive */
     if (HandleAttributes & OBJ_EXCLUSIVE)
@@ -997,6 +999,7 @@ ObpIncrementHandleCount(IN PVOID Object,
 
     /* Release the lock */
     ObpReleaseObjectLock(ObjectHeader);
+    ObjectLocked = FALSE;
 
     /* Check if we have an open procedure */
     Status = STATUS_SUCCESS;
@@ -1019,7 +1022,7 @@ ObpIncrementHandleCount(IN PVOID Object,
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
             ASSERT(FALSE);
-            return Status;
+            goto Quickie;
         }
     }
 
@@ -1057,11 +1060,13 @@ ObpIncrementHandleCount(IN PVOID Object,
             OpenReason,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
-    return Status;
 
 Quickie:
-    /* Release lock and return */
-    ObpReleaseObjectLock(ObjectHeader);
+    if (ObjectLocked)
+    {
+        ObpReleaseObjectLock(ObjectHeader);
+    }
+
     return Status;
 }
 
@@ -1110,6 +1115,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     POBJECT_HEADER_CREATOR_INFO CreatorInfo;
     KIRQL CalloutIrql;
     ULONG Total;
+    BOOLEAN ObjectLocked;
 
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -1123,10 +1129,11 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
 
     /* Lock the object */
     ObpAcquireObjectLock(ObjectHeader);
+    ObjectLocked = TRUE;
 
     /* Charge quota and remove the creator info flag */
     Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType, &NewObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* Check if the open is exclusive */
     if (HandleAttributes & OBJ_EXCLUSIVE)
@@ -1223,6 +1230,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
 
     /* Release the lock */
     ObpReleaseObjectLock(ObjectHeader);
+    ObjectLocked = FALSE;
 
     /* Check if we have an open procedure */
     Status = STATUS_SUCCESS;
@@ -1244,7 +1252,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
             ASSERT(FALSE);
-            return Status;
+            goto Quickie;
         }
     }
 
@@ -1277,11 +1285,13 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
             Object,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
-    return Status;
 
 Quickie:
-    /* Release lock and return */
-    ObpReleaseObjectLock(ObjectHeader);
+    if (ObjectLocked)
+    {
+        ObpReleaseObjectLock(ObjectHeader);
+    }
+
     return Status;
 }
 
