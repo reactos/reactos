@@ -767,7 +767,6 @@ TreeListGetItemData(
 
     tlItem.mask = TVIF_PARAM;
     tlItem.hItem = hItem;
-
     TreeList_GetItem(hTreeList, &tlItem);
 
     return tlItem.lParam;
@@ -779,15 +778,11 @@ GetItemPartition(
     _In_ HWND hTreeList,
     _In_ HTLITEM hItem)
 {
-    HTLITEM hParentItem;
-    PPARTITEM PartItem;
-
-    hParentItem = TreeList_GetParent(hTreeList, hItem);
+    HTLITEM hParentItem = TreeList_GetParent(hTreeList, hItem);
     /* May or may not be a PPARTITEM: this is a PPARTITEM only when hParentItem != NULL */
-    PartItem = (PPARTITEM)TreeListGetItemData(hTreeList, hItem);
+    PPARTITEM PartItem = (PPARTITEM)TreeListGetItemData(hTreeList, hItem);
     if (!hParentItem || !PartItem)
         return NULL;
-
     return PartItem;
 }
 
@@ -797,17 +792,14 @@ GetSelectedPartition(
     _In_ HWND hTreeList,
     _Out_opt_ HTLITEM* phItem)
 {
-    HTLITEM hItem;
-    PPARTITEM PartItem;
-
-    hItem = TreeList_GetSelection(hTreeList);
-    if (!hItem)
-        return NULL;
-
-    PartItem = GetItemPartition(hTreeList, hItem);
-    if (PartItem && phItem)
-        *phItem = hItem;
-
+    PPARTITEM PartItem = NULL;
+    HTLITEM hItem = TreeList_GetSelection(hTreeList);
+    if (hItem)
+    {
+        PartItem = GetItemPartition(hTreeList, hItem);
+        if (PartItem && phItem)
+            *phItem = hItem;
+    }
     return PartItem;
 }
 
@@ -816,12 +808,9 @@ FindVolCreateInTreeByVolume(
     _In_ HWND hTreeList,
     _In_ PVOLENTRY Volume)
 {
-    HTLITEM hItem;
-
     /* Enumerate every cached data in the TreeList, and for each, check
      * whether its corresponding PPARTENTRY is the one we are looking for */
-    // for (hItem = TVI_ROOT; hItem; hItem = TreeList_GetNextItem(...)) { }
-    hItem = TVI_ROOT;
+    HTLITEM hItem = TVI_ROOT;
     while ((hItem = TreeList_GetNextItem(hTreeList, hItem, TVGN_NEXTITEM)))
     {
         PPARTITEM PartItem = GetItemPartition(hTreeList, hItem);
@@ -834,9 +823,7 @@ FindVolCreateInTreeByVolume(
             return PartItem->VolCreate;
         }
     }
-
-    /* Nothing was found */
-    return NULL;
+    return NULL; /* Nothing was found */
 }
 
 
@@ -1113,14 +1100,12 @@ DeleteTreeItem(
     _In_ HWND hWndList,
     _In_ TLITEMW* ptlItem)
 {
-    PPARTITEM PartItem;
-
     /* Code below is equivalent to: PartItem = GetItemPartition(hWndList, ptlItem->hItem);
      * except that we already have the data structure in ptlItem->lParam, so there is
      * no need to call extra helpers as GetItemPartition() does. */
     HTLITEM hParentItem = TreeList_GetParent(hWndList, ptlItem->hItem);
     /* May or may not be a PPARTITEM: this is a PPARTITEM only when hParentItem != NULL */
-    PartItem = (PPARTITEM)ptlItem->lParam;
+    PPARTITEM PartItem = (PPARTITEM)ptlItem->lParam;
     if (!hParentItem || !PartItem)
         return;
 
