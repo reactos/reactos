@@ -66,9 +66,32 @@
 #define PSP_MAX_CREATE_PROCESS_NOTIFY           8
 
 //
-// Maximum Job Scheduling Classes
+// Job Scheduling Classes
 //
+// The default is 5 per Yosifovich, P., "Windows 10 System Programming, Part 1"
+#define PSP_JOB_SCHEDULING_CLASS_DEFAULT        5
 #define PSP_JOB_SCHEDULING_CLASSES              10
+
+//
+// Valid Job Object Limits
+//
+#define PSP_JOB_BASIC_LIMIT_VALID_FLAGS     \
+    (JOB_OBJECT_LIMIT_WORKINGSET |          \
+     JOB_OBJECT_LIMIT_PROCESS_TIME |        \
+     JOB_OBJECT_LIMIT_JOB_TIME |            \
+     JOB_OBJECT_LIMIT_ACTIVE_PROCESS |      \
+     JOB_OBJECT_LIMIT_AFFINITY |            \
+     JOB_OBJECT_LIMIT_PRIORITY_CLASS |      \
+     JOB_OBJECT_LIMIT_PRESERVE_JOB_TIME |   \
+     JOB_OBJECT_LIMIT_SCHEDULING_CLASS)
+#define PSP_JOB_EXTENDED_LIMIT_VALID_FLAGS          \
+    (PSP_JOB_BASIC_LIMIT_VALID_FLAGS |              \
+     JOB_OBJECT_LIMIT_PROCESS_MEMORY |              \
+     JOB_OBJECT_LIMIT_JOB_MEMORY |                  \
+     JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION |  \
+     JOB_OBJECT_LIMIT_BREAKAWAY_OK |                \
+     JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK |         \
+     JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE)
 
 //
 // Process Quota Threshold Values
@@ -85,8 +108,8 @@
 // More information:
 // https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/ntos/ps/eprocess/flags2.htm
 //
-#define JOB_NOT_REALLY_ACTIVE   0x00000001
-#define ACCOUNTING_FOLDED       0x00000002
+#define PSP_JOB_NOT_REALLY_ACTIVE   0x00000001
+#define PSP_JOB_ACCOUNTING_FOLDED   0x00000002
 
 //
 // Job Flags
@@ -94,8 +117,8 @@
 // More information:
 // https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/ntos/ps/ejob/jobflags.htm
 //
-#define JOB_OBJECT_CLOSE_DONE                   0x00000001
-#define JOB_OBJECT_TERMINATING                  0x00000080
+#define PSP_JOB_CLOSE_DONE      0x00000001
+#define PSP_JOB_TERMINATING     0x00000080
 
 //
 // Thread "Set/Get Context" Context Structure
@@ -393,7 +416,7 @@ PspQueryDescriptorThread(
 // Job Routines
 //
 typedef NTSTATUS
-(*PJOB_ENUMERATOR_CALLBACK)(
+(NTAPI *PJOB_ENUMERATOR_CALLBACK)(
     _In_ PEPROCESS Process,
     _In_opt_ PVOID Context
 );

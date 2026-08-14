@@ -1124,10 +1124,10 @@ PspExitProcess(IN BOOLEAN LastThread,
         {
             ExEnterCriticalRegionAndAcquireResourceExclusive(&Process->Job->JobLock);
 
-            /* Check if we are part of a Job that has a completion port
+            /* Check if we are part of a job that has a completion port
                and do I/O completion if needed */
             if (Process->Job->CompletionPort &&
-                !FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
+                !FlagOn(Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE))
             {
                 (VOID)PspSendJobMessageLocked(Process->Job,
                                               JOB_OBJECT_MSG_EXIT_PROCESS,

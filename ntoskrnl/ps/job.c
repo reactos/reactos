@@ -1,16 +1,15 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ps/job.c
- * PURPOSE:         Core functions for managing Job Objects, a kernel mechanism
- *                  for managing multiple processes as a single unit.
- * PROGRAMMERS:     2004-2012 Alex Ionescu (alex@relsoft.net) (stubs)
- *                  2004-2005 Thomas Weidenmueller <w3seek@reactos.com>
- *                  2015-2016 Samuel Serapión Vega (encoded@reactos.org)
- *                  2017 Mark Jansen (mark.jansen@reactos.org)
- *                  2018 Pierre Schweitzer (pierre@reactos.org)
- *                  2022 Timo Kreuzer (timo.kreuzer@reactos.org)
- *                  2024-2026 Gleb Surikov (glebs.surikovs@gmail.com)
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Core functions for managing Job Objects, a kernel mechanism
+ *              for managing multiple processes as a single unit.
+ * COPYRIGHT:   Copyright 2004-2012 Alex Ionescu (alex@relsoft.net) (stubs)
+ *              Copyright 2004-2005 Thomas Weidenmueller <w3seek@reactos.com>
+ *              Copyright 2015-2016 Samuel Serapión Vega <encoded@reactos.org>
+ *              Copyright 2017 Mark Jansen <mark.jansen@reactos.org>
+ *              Copyright 2018 Pierre Schweitzer <pierre@reactos.org>
+ *              Copyright 2022 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright 2024-2026 Gleb Surikov <glebs.surikovs@gmail.com>
  */
 
 /* INCLUDES ******************************************************************/
@@ -295,13 +294,12 @@ PspEnumerateProcessesInJob(
 )
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PEPROCESS Process = NULL;
-
-    /* Get the first process from the job */
-    Process = PspGetNextProcessInJob(Job, NULL);
+    PEPROCESS Process;
 
     /* Iterate through all processes in the job */
-    while (Process != NULL)
+    for (Process = PspGetNextProcessInJob(Job, NULL);
+         Process != NULL;
+         Process = PspGetNextProcessInJob(Job, Process))
     {
         Status = Callback(Process, Context);
         if (!NT_SUCCESS(Status))
@@ -313,9 +311,6 @@ PspEnumerateProcessesInJob(
             ObDereferenceObject(Process);
             break;
         }
-
-        /* Move to the next process */
-        Process = PspGetNextProcessInJob(Job, Process);
     }
 
     return Status;
@@ -356,13 +351,15 @@ PspEnumerateProcessesInJobLocked(
 )
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PEPROCESS Process = NULL;
+    PEPROCESS Process;
 
     ASSERT(ExIsResourceAcquiredSharedLite(&Job->JobLock) != 0 ||
            ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
 
     /* Iterate through all processes in the job */
-    while ((Process = PspGetNextProcessInJobLocked(Job, Process)) != NULL)
+    for (Process = PspGetNextProcessInJobLocked(Job, NULL);
+         Process != NULL;
+         Process = PspGetNextProcessInJobLocked(Job, Process))
     {
         Status = Callback(Process, Context);
         if (!NT_SUCCESS(Status))
@@ -404,21 +401,17 @@ PspSendJobMessageLocked(
     _In_ BOOLEAN Quota
 )
 {
-    NTSTATUS Status;
-
     ASSERT(Job->CompletionPort != NULL);
 
     ASSERT(ExIsResourceAcquiredSharedLite(&Job->JobLock) != 0 ||
            ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
 
-    Status = IoSetIoCompletion(Job->CompletionPort,
-                               Job->CompletionKey,
-                               CompletionValue,
-                               STATUS_SUCCESS,
-                               Message,
-                               Quota);
-
-    return Status;
+    return IoSetIoCompletion(Job->CompletionPort,
+                             Job->CompletionKey,
+                             CompletionValue,
+                             STATUS_SUCCESS,
+                             Message,
+                             Quota);
 }
 
 /*!
@@ -454,7 +447,7 @@ PspAssignProcessToJob(
     /* https://learn.microsoft.com/en-us/windows/win32/api/jobapi2/nf-jobapi2-assignprocesstojobobject:
        "If the job or any of its parent jobs in the job chain is terminating
        when AssignProcessToJob is called, the function fails" */
-    if (FlagOn(Job->JobFlags, JOB_OBJECT_TERMINATING))
+    if (FlagOn(Job->JobFlags, PSP_JOB_TERMINATING))
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Exit;
@@ -463,7 +456,7 @@ PspAssignProcessToJob(
     /* Prevent processes from being added to the job if it is flagged
        for closing and has a limit on process termination on closing */
     if (FlagOn(Job->LimitFlags, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE) &&
-        FlagOn(Job->JobFlags, JOB_OBJECT_CLOSE_DONE))
+        FlagOn(Job->JobFlags, PSP_JOB_CLOSE_DONE))
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Exit;
@@ -565,7 +558,7 @@ PspDeactivateProcessFromJobLocked(
 
     ASSERT(ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
 
-    if (FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
+    if (FlagOn(Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE))
     {
         return FALSE;
     }
@@ -574,7 +567,7 @@ PspDeactivateProcessFromJobLocked(
 
     Job->ActiveProcesses--;
 
-    InterlockedOr((PLONG)&Process->JobStatus, JOB_NOT_REALLY_ACTIVE);
+    InterlockedOr((PLONG)&Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE);
 
     return Job->ActiveProcesses == 0;
 }
@@ -692,6 +685,7 @@ PspExitProcessFromJob(
  */
 static
 NTSTATUS
+NTAPI
 PspTerminateProcessCallback(
     _In_ PEPROCESS Process,
     _In_ PVOID Context
@@ -710,7 +704,7 @@ PspTerminateProcessCallback(
        completed its active job transition */
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
-    if (FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
+    if (FlagOn(Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE))
     {
         goto Exit;
     }
@@ -778,10 +772,10 @@ PspTerminateJobObject(
     LONG PreviousFlags;
     PSP_TERMINATE_PROCESS_CONTEXT Context;
 
-    PreviousFlags = InterlockedOr((PLONG)&Job->JobFlags, JOB_OBJECT_TERMINATING);
+    PreviousFlags = InterlockedOr((PLONG)&Job->JobFlags, PSP_JOB_TERMINATING);
 
     /* Termination is idempotent, another caller already owns the traversal */
-    if (PreviousFlags & JOB_OBJECT_TERMINATING)
+    if (PreviousFlags & PSP_JOB_TERMINATING)
     {
         return STATUS_SUCCESS;
     }
@@ -797,7 +791,7 @@ PspTerminateJobObject(
        per-process termination failures are handled locally */
     ASSERT(NT_SUCCESS(Status));
 
-    InterlockedAnd((PLONG)&Job->JobFlags, ~JOB_OBJECT_TERMINATING);
+    InterlockedAnd((PLONG)&Job->JobFlags, ~PSP_JOB_TERMINATING);
 
     return Status;
 }
@@ -845,7 +839,7 @@ PspCloseJob(
     UNREFERENCED_PARAMETER(ProcessHandleCount);
 
     /* Proceed only when the last handle is left */
-    if (SystemHandleCount != 1)
+    if (SystemHandleCount > 1)
     {
         DPRINT1("PspJobClose called with unexpected SystemHandleCount: %lu\n",
                 SystemHandleCount);
@@ -853,7 +847,7 @@ PspCloseJob(
     }
 
     /* Flag the job as closed */
-    InterlockedOr((PLONG)&Job->JobFlags, JOB_OBJECT_CLOSE_DONE);
+    InterlockedOr((PLONG)&Job->JobFlags, PSP_JOB_CLOSE_DONE);
 
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
@@ -937,7 +931,6 @@ PspDeleteJob(_In_ PVOID ObjectBody)
  * @returns
  *     STATUS_SUCCESS if the job limits are successfully set.
  *     Otherwise, an appropriate NTSTATUS error code.
- *
  */
 static
 NTSTATUS
@@ -953,35 +946,20 @@ PspSetJobLimitsBasicOrExtended(
 
     ASSERT(KeAreAllApcsDisabled());
 
-    const ULONG AllowedBasicFlags = JOB_OBJECT_LIMIT_WORKINGSET |
-        JOB_OBJECT_LIMIT_PROCESS_TIME |
-        JOB_OBJECT_LIMIT_JOB_TIME |
-        JOB_OBJECT_LIMIT_ACTIVE_PROCESS |
-        JOB_OBJECT_LIMIT_AFFINITY |
-        JOB_OBJECT_LIMIT_PRIORITY_CLASS |
-        JOB_OBJECT_LIMIT_PRESERVE_JOB_TIME |
-        JOB_OBJECT_LIMIT_SCHEDULING_CLASS;
-
-    const ULONG AllowedExtendedFlags = AllowedBasicFlags |
-        JOB_OBJECT_LIMIT_BREAKAWAY_OK |
-        JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION |
-        JOB_OBJECT_LIMIT_PROCESS_MEMORY |
-        JOB_OBJECT_LIMIT_JOB_MEMORY |
-        JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK |
-        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
-
-    AllowedFlags = IsExtendedLimit ? AllowedExtendedFlags : AllowedBasicFlags;
+    AllowedFlags = IsExtendedLimit
+                       ? PSP_JOB_EXTENDED_LIMIT_VALID_FLAGS
+                       : PSP_JOB_BASIC_LIMIT_VALID_FLAGS;
 
     /* Validate flags */
     if (ExtendedLimit->BasicLimitInformation.LimitFlags & ~AllowedFlags)
     {
         DPRINT1("Invalid LimitFlags specified: 0x%08X\n",
-                (ExtendedLimit->BasicLimitInformation.LimitFlags & ~AllowedFlags));
+                ExtendedLimit->BasicLimitInformation.LimitFlags & ~AllowedFlags);
         return STATUS_INVALID_PARAMETER;
     }
 
-    if ((ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_PRESERVE_JOB_TIME) &&
-        (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_JOB_TIME))
+    if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_PRESERVE_JOB_TIME &&
+        ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_JOB_TIME)
     {
         DPRINT1("Invalid LimitFlags combination specified "
                 "(PRESERVE_JOB_TIME and JOB_TIME are mutually exclusive)\n");
@@ -1007,8 +985,8 @@ PspSetJobLimitsBasicOrExtended(
             (ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize > 0 &&
                 ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize <= 0)
             ||
-            (ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize <
-                ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize))
+            ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize <
+            ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize)
         {
             Status = STATUS_INVALID_PARAMETER;
             goto ExitFromBasicLimits;
@@ -1042,7 +1020,8 @@ PspSetJobLimitsBasicOrExtended(
            by calling the GetProcessAffinityMask function"
            The lpSystemAffinityMask obtained with GetProcessAffinityMask() corresponds
            to ActiveProcessorsAffinityMask, which in turn corresponds to KeActiveProcessors */
-        if (ExtendedLimit->BasicLimitInformation.Affinity != (ExtendedLimit->BasicLimitInformation.Affinity & KeActiveProcessors))
+        if (ExtendedLimit->BasicLimitInformation.Affinity !=
+            (ExtendedLimit->BasicLimitInformation.Affinity & KeActiveProcessors))
         {
             Status = STATUS_INVALID_PARAMETER;
             goto ExitFromBasicLimits;
@@ -1088,7 +1067,7 @@ PspSetJobLimitsBasicOrExtended(
         /* https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_limit_information:
            "To use a scheduling class greater than 5, the calling process must
            enable the SE_INC_BASE_PRIORITY_NAME privilege" */
-        if (ExtendedLimit->BasicLimitInformation.SchedulingClass > 5)
+        if (ExtendedLimit->BasicLimitInformation.SchedulingClass > PSP_JOB_SCHEDULING_CLASS_DEFAULT)
         {
             if (SeCheckPrivilegedObject(SeIncreaseBasePriorityPrivilege,
                                         Job,
@@ -1162,6 +1141,7 @@ ExitFromBasicLimits:
  */
 static
 NTSTATUS
+NTAPI
 PspAssociateCompletionPortCallback(
     _In_ PEPROCESS Process,
     _In_ PVOID Context)
@@ -1176,7 +1156,7 @@ PspAssociateCompletionPortCallback(
     ASSERT(ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
 
     /* Ensure the process is active and has a valid unique process ID */
-    if (!FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE) &&
+    if (!FlagOn(Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE) &&
         Process->UniqueProcessId)
     {
         (VOID)PspSendJobMessageLocked(Job,
@@ -1241,7 +1221,7 @@ PspAssociateCompletionPortWithJob(
     ExAcquireResourceExclusiveLite(&Job->JobLock, TRUE);
 
     /* Check if the job already has a completion port or is in a final state */
-    if (Job->CompletionPort || FlagOn(Job->JobFlags, JOB_OBJECT_CLOSE_DONE))
+    if (Job->CompletionPort || FlagOn(Job->JobFlags, PSP_JOB_CLOSE_DONE))
     {
         ExReleaseResourceLite(&Job->JobLock);
         ObDereferenceObject(IoCompletion);
@@ -1262,8 +1242,9 @@ PspAssociateCompletionPortWithJob(
 
     ExReleaseResourceLite(&Job->JobLock);
 
-    /* The completion port is already associated. A notification allocation
-       failure can't safely roll back the association. */
+    /* The completion port association is committed at this point. Initial process
+       notifications are best-effort and a failure to queue one must not turn
+       a successful association into a failure. */
     return STATUS_SUCCESS;
 }
 
@@ -1324,7 +1305,7 @@ PspQueryJobBasicAccountingInfo(
         PEPROCESS Process = CONTAINING_RECORD(NextEntry, EPROCESS, JobLinks);
 
         /* Skip folded accounting processes */
-        if (!FlagOn(Process->JobStatus, ACCOUNTING_FOLDED))
+        if (!FlagOn(Process->JobStatus, PSP_JOB_ACCOUNTING_FOLDED))
         {
             KeQueryValuesProcess(&Process->Pcb, &Values);
 
@@ -1431,6 +1412,7 @@ PspQueryJobLimitInformation(
  */
 static
 NTSTATUS
+NTAPI
 PspQueryJobProcessIdListCallback(
     _In_ PEPROCESS Process,
     _Inout_ PVOID Context
@@ -1439,7 +1421,7 @@ PspQueryJobProcessIdListCallback(
     PPSP_QUERY_JOB_PROCESS_ID_CONTEXT QueryContext = (PPSP_QUERY_JOB_PROCESS_ID_CONTEXT)Context;
 
     /* Skip processes that are not really active */
-    if (FlagOn(Process->JobStatus, JOB_NOT_REALLY_ACTIVE))
+    if (FlagOn(Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE))
     {
         /* Continue to the next process */
         return STATUS_SUCCESS;
@@ -1688,9 +1670,8 @@ NtCreateJobObject(
     /* Initialize the event object within the job */
     KeInitializeEvent(&Job->Event, NotificationEvent, FALSE);
 
-    /* Set the scheduling class. The default is '5' per Yosifovich, P.,
-       "Windows 10 System Programming, Part 1", p.264, (2020) */
-    Job->SchedulingClass = 5;
+    /* Set the scheduling class */
+    Job->SchedulingClass = PSP_JOB_SCHEDULING_CLASS_DEFAULT;
 
     /* Link the object into the global job list */
     ExAcquireFastMutex(&PsJobListLock);
@@ -1841,7 +1822,7 @@ NtAssignProcessToJobObject(
                                        PreviousMode,
                                        (PVOID *)&Job,
                                        NULL);
-    if (!(NT_SUCCESS(Status)))
+    if (!NT_SUCCESS(Status))
     {
         return Status;
     }
@@ -1854,7 +1835,7 @@ NtAssignProcessToJobObject(
                                        PreviousMode,
                                        (PVOID *)&Process,
                                        NULL);
-    if (!(NT_SUCCESS(Status)))
+    if (!NT_SUCCESS(Status))
     {
         ObDereferenceObject(Job);
         return Status;
@@ -1934,7 +1915,7 @@ NtIsProcessInJob(
                                            PreviousMode,
                                            (PVOID *)&Process,
                                            NULL);
-        if (!(NT_SUCCESS(Status)))
+        if (!NT_SUCCESS(Status))
         {
             return Status;
         }
@@ -2125,11 +2106,11 @@ NtQueryInformationJobObject(
     /* If the request is coming from user mode, probe the user buffer */
     if (PreviousMode != KernelMode)
     {
-        ASSERT(((RequiredAlign) == 1) ||
-               ((RequiredAlign) == 2) ||
-               ((RequiredAlign) == 4) ||
-               ((RequiredAlign) == 8) ||
-               ((RequiredAlign) == 16));
+        ASSERT(RequiredAlign == 1 ||
+               RequiredAlign == 2 ||
+               RequiredAlign == 4 ||
+               RequiredAlign == 8 ||
+               RequiredAlign == 16);
 
         _SEH2_TRY
         {
@@ -2197,7 +2178,7 @@ NtQueryInformationJobObject(
     case JobObjectExtendedLimitInformation:
     {
         Status = PspQueryJobLimitInformation(Job,
-                                             (JobInformationClass == JobObjectExtendedLimitInformation),
+                                             JobInformationClass == JobObjectExtendedLimitInformation,
                                              &ExtendedLimit);
         JobInfoBuffer = &ExtendedLimit;
         break;
@@ -2324,11 +2305,11 @@ NtSetInformationJobObject(
     /* If the request is coming from user mode, probe the user buffer */
     if (PreviousMode != KernelMode)
     {
-        ASSERT(((RequiredAlign) == 1) ||
-               ((RequiredAlign) == 2) ||
-               ((RequiredAlign) == 4) ||
-               ((RequiredAlign) == 8) ||
-               ((RequiredAlign) == 16));
+        ASSERT(RequiredAlign == 1 ||
+               RequiredAlign == 2 ||
+               RequiredAlign == 4 ||
+               RequiredAlign == 8 ||
+               RequiredAlign == 16);
 
         _SEH2_TRY
         {
@@ -2372,7 +2353,13 @@ NtSetInformationJobObject(
         return Status;
     }
 
-    /* And set the information */
+    /* And set the information.
+     *
+     * N.B. Disable APC delivery for the set operation. The handlers below may
+     * acquire locks using unsafe variants which expect the caller to have
+     * already established this state.
+     */
+
     KeEnterGuardedRegionThread(CurrentThread);
 
     switch (JobInformationClass)
@@ -2386,7 +2373,7 @@ NtSetInformationJobObject(
         _SEH2_TRY
         {
             /* If asking for extending limits */
-            if (JobInformationClass == JobObjectExtendedLimitInformation)
+            if (IsExtendedLimit)
             {
                 ExtendedLimit = *(PJOBOBJECT_EXTENDED_LIMIT_INFORMATION)JobInformation;
             }

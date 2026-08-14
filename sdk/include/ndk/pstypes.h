@@ -233,7 +233,7 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 #define JOB_OBJECT_SECURITY_FILTER_TOKENS       0x0008
 
 //
-// Job message flags
+// Job Messages
 //
 #define JOB_OBJECT_MSG_END_OF_JOB_TIME          1
 #define JOB_OBJECT_MSG_END_OF_PROCESS_TIME      2
