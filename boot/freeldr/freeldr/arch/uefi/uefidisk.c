@@ -1029,7 +1029,7 @@ UefiSetBootpath(VOID)
                 for (Node = DevicePath; !IsDevicePathEnd(Node); Node = NextDevicePathNode(Node))
                 {
                     if (DevicePathNodeLength(Node) < sizeof(EFI_DEVICE_PATH_PROTOCOL))
-                        break; /* malformed path */
+                        break; /* Malformed path */
 
                     if ((DevicePathType(Node) == MEDIA_DEVICE_PATH) &&
                         (DevicePathSubType(Node) == MEDIA_HARDDRIVE_DP))
