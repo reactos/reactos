@@ -113,6 +113,7 @@ list(APPEND SOURCE
 #   rstbas.idl
 #   rstinf.idl
 #   rstloc.idl
+    rtworkq.idl
     sensevts.idl
     servprov.idl
 #   sesprp.idl
