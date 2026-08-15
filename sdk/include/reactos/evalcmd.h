@@ -17,6 +17,12 @@ HRESULT _PathFindInFolder(_In_ INT csidl, _In_ PCWSTR pszSrc, _Out_ PWSTR pszPat
                           _In_ UINT cchPath);
 HRESULT _PathFindInSystem(_Inout_ PWSTR pszPath, _In_ UINT cchPath);
 
+#if /*TODO*/0 && DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA
+#define SHELL32_CAssocElement_Version _WIN32_WINNT_VISTA
+#else
+#define SHELL32_CAssocElement_Version _WIN32_WINNT_WINXP
+#endif
+
 HRESULT WINAPI
 AssocCreateElement(_In_ REFCLSID rclsid, _In_ REFIID riid, _Outptr_ PVOID* ppvObj);
 

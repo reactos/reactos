@@ -565,6 +565,33 @@ SHWindowsPolicyEx(_In_ REFGUID rpolid, _In_ DWORD dwDefaultValue)
     return (SUCCEEDED(hr) ? dwData : dwDefaultValue);
 }
 
+typedef struct _ASSOCMAKEVERB
+{
+    LPCWSTR pszVerb;
+    LPCWSTR pszFriendlyName;
+    LPCWSTR pszUnknown;
+    LPCWSTR pszExe;
+    LPCWSTR pszArgs;
+} ASSOCMAKEVERB;
+
+typedef struct _ASSOCMAKESHELL
+{
+    ASSOCMAKEVERB *pVerbs;
+    UINT Count;
+    UINT DefaultIndex;
+} ASSOCMAKESHELL;
+
+HRESULT WINAPI
+AssocMakeShell(SIZE_T Unknown, _In_ HKEY hClass, _In_ LPCWSTR pszExe, _In_ const ASSOCMAKESHELL *pAMS);
+HRESULT WINAPI
+AssocMakeProgid(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3, SIZE_T Unknown4);
+HRESULT WINAPI
+AssocMakeApplicationByKeyW(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3);
+HRESULT WINAPI
+AssocMakeApplicationByKeyA(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3);
+HRESULT WINAPI
+AssocCopyVerbs(HKEY hSrc, HKEY hDst);
+
 #if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(_SHELL32_)
 HRESULT WINAPI
 AssocCreateElement(_In_ REFCLSID rclsid, _In_ REFIID riid, _Outptr_ PVOID* ppvObj);

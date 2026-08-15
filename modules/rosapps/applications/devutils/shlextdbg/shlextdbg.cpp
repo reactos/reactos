@@ -57,6 +57,9 @@ Examples:
 /shgfi=c:\freeldr.ini
 /assocq "" string 1 0 0 .txt
 /assocq "" string friendlytypename 0x400 0 .txt "" 10
+/assocq "" data 5 0 0 ".bat" ""
+/assocq "" key 2 0 0 ".txt" ""
+/assocq "" key 2 2 0 "notepad" ""
 /openwindows /shellexec=c: /invoke properties
 /dumpmenu=%windir%\explorer.exe /extended
 /dumpmenu {D969A300-E7FF-11d0-A93B-00A0C90F2719}c:
@@ -545,7 +548,7 @@ static HRESULT AssocQ(int argc, WCHAR **argv)
         if (SUCCEEDED(hr))
         {
             wprintf(L"0x%.8X: hKey %p\n", hr, hKey);
-            RegQueryValueExW(hKey, L"shlextdbg", 0, NULL, NULL, NULL); // Filter by this in Process Monitor
+            RegQueryValueExW(hKey, L"shlextdbg_ASSOCKEY", 0, NULL, NULL, NULL); // Filter by this in RegMon
             RegCloseKey(hKey);
         }
         else
