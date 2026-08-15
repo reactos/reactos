@@ -15,7 +15,7 @@
  * An ordinary alternative's priority is its ordering-list index biased by one
  * (except for IO_RESOURCE_PREFERRED, so preferred ranges sort first).
  * Once the orderings are exhausted it gets one final whole-window pass
- * at (PREFERRED_)RESERVED before getting set with EXHAUSTED.
+ * at (PREFERRED_)RESERVED before getting set to EXHAUSTED.
  *
  * Public as any driver can modify these of any range that's passed down.
  */
@@ -37,7 +37,6 @@
  * ARBITER_RANGE_BOOT_ALLOCATED:
  * Marks a firmware boot configuration
  */
-
 #define ARBITER_RANGE_SHARED_DRIVER         0x0
 #define ARBITER_RANGE_BOOT_ALLOCATED        0x04
 

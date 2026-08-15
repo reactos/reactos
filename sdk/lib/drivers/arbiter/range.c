@@ -87,13 +87,11 @@ ArbpWritePriority(
         if (Ordering->Start > Alternative->Maximum ||
             Alternative->Minimum > Ordering->End)
         {
-            continue;  /* no intersection with this alternative's window */
+            continue;  /* No intersection with this alternative's window */
         }
 
-        Start = (Alternative->Minimum <= Ordering->Start) ? Ordering->Start
-                                                          : Alternative->Minimum;
-        RangeEnd = (Alternative->Maximum >= Ordering->End) ? Ordering->End
-                                                          : Alternative->Maximum;
+        Start = max(Alternative->Minimum, Ordering->Start);
+        RangeEnd = min(Alternative->Maximum, Ordering->End);
 
         if ((RangeEnd - Start + 1) >= Alternative->Length)
         {
@@ -127,7 +125,7 @@ ArbpIsRootEnumerated(
 {
     WCHAR Buffer[16];
     UNICODE_STRING Name;
-    UNICODE_STRING Root = RTL_CONSTANT_STRING(L"ROOT");
+    const UNICODE_STRING Root = RTL_CONSTANT_STRING(L"ROOT");
     ULONG Length = 0;
 
     PAGED_CODE();
@@ -440,10 +438,8 @@ ArbiterLibGetNextAllocationRange(
                 continue;
             }
             Ordering = &Arbiter->OrderingList.Orderings[Index];
-            Minimum = (Lowest->Minimum <= Ordering->Start) ? Ordering->Start
-                                                          : Lowest->Minimum;
-            Maximum = (Lowest->Maximum >= Ordering->End) ? Ordering->End
-                                                        : Lowest->Maximum;
+            Minimum = max(Lowest->Minimum, Ordering->Start);
+            Maximum = min(Lowest->Maximum, Ordering->End);
         }
 
         /*
@@ -507,8 +503,8 @@ ArbiterLibGetNextAllocationRange(
  * Start and End receive the chosen window.
  *
  * @return
- * Returns TRUE if a placement was found,FALSE if the window cannot satisfy the
- * requirement.
+ * Returns TRUE if a placement was found,FALSE if the window cannot
+ * satisfy the requirement.
  *
  * @remarks
  * Legacy requests treat boot-allocated ranges as available. When
@@ -582,7 +578,7 @@ ArbiterLibFindSuitableRange(
          * or another root-enumerated device
          *
          * This matters a lot because HAL reverses quite a bit and marks it this.
-         * This mechanism is how windows "internally allows this".
+         * This mechanism is how Windows "internally allows this".
          */
         if (ArbpShareDriverExclusive(Arbiter, ArbState))
             return TRUE;
@@ -604,8 +600,8 @@ ArbiterLibFindSuitableRange(
  * allocation list, owned by the requesting device.
  *
  * @param[in] Arbiter
- * The arbiter instance whose PossibleAllocation list receives the
- * range.
+ * The arbiter instance whose PossibleAllocation list receives
+ * the range.
  *
  * @param[in,out] ArbState
  * The allocation state whose Start, End and RangeAttributes
