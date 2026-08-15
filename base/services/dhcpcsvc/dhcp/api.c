@@ -73,6 +73,31 @@ ShutdownRpc(VOID)
     RpcMgmtStopServerListening(NULL);
 }
 
+static
+PBYTE
+GetVendorOption(
+    _In_ PBYTE Data,
+    _In_ ULONG Length,
+    _In_ ULONG OptionId)
+{
+    DWORD Offset, OptionLength;
+    PBYTE Ptr;
+
+    Ptr = Data;
+    Offset = 0;
+    while (Offset < Length)
+    {
+        if ((DWORD)*Ptr == OptionId)
+            return Ptr;
+
+        OptionLength = (DWORD)*(Ptr + 1);
+        Offset += (OptionLength + 2);
+        Ptr += (OptionLength + 2);
+    }
+
+    return NULL;
+}
+
 /* This represents the service portion of the DHCP client API */
 
 /* Function 0 */
@@ -363,7 +388,8 @@ Server_RequestParams(
     DHCPCAPI_RESULT_ARRAY *Results = NULL;
     DWORD i, dwReturnCount, dwReturnLength;
     DWORD OptionId, DataSize, Offset, Index;
-	PBYTE Data;
+    PBYTE Data, OptionPtr;
+    struct option_data *Options;
     DWORD ret = ERROR_SUCCESS;
 
     DPRINT("Server_RequestParams(%S %p %p %p %p)\n",
@@ -414,16 +440,33 @@ Server_RequestParams(
     DPRINT("ActiveLease: %p \n", Adapter->DhclientState.active);
     if (Adapter->DhclientState.active)
     {
+        Options = Adapter->DhclientState.active->options;
         for (i = 0; i < RecdParams->nParams; i++)
         {
+            OptionId = RecdParams->Params[i].OptionId;
             if (RecdParams->Params[i].IsVendor == FALSE)
             {
-                OptionId = RecdParams->Params[i].OptionId;
-                DPRINT("Option %u: Length %d \n", OptionId, Adapter->DhclientState.active->options[OptionId].len);
-                if (Adapter->DhclientState.active->options[OptionId].len != 0)
+                DPRINT("Option %u: Length %d \n", OptionId, Options[OptionId].len);
+                if (Options[OptionId].len != 0)
                 {
-                    dwReturnLength += Adapter->DhclientState.active->options[OptionId].len;
+                    dwReturnLength += Options[OptionId].len;
                     dwReturnCount++;
+                }
+            }
+            else
+            {
+                if (Options[DHO_VENDOR_ENCAPSULATED_OPTIONS].len != 0)
+                {
+                    DPRINT("Have vendor options!\n");
+                    OptionPtr = GetVendorOption(Options[DHO_VENDOR_ENCAPSULATED_OPTIONS].data,
+                                                Options[DHO_VENDOR_ENCAPSULATED_OPTIONS].len,
+                                                OptionId);
+                    if (OptionPtr)
+                    {
+                        DPRINT("Vendor option %lu: Length %lu\n", OptionId, (DWORD)*(OptionPtr + 1));
+                        dwReturnLength += (DWORD)*(OptionPtr + 1);
+                        dwReturnCount++;
+                    }
                 }
             }
         }
@@ -460,18 +503,19 @@ Server_RequestParams(
         Index = 0;
         for (i = 0; i < RecdParams->nParams; i++)
         {
+            OptionId = RecdParams->Params[i].OptionId;
+
             if (RecdParams->Params[i].IsVendor == FALSE)
             {
-                OptionId = RecdParams->Params[i].OptionId;
-                DataSize = Adapter->DhclientState.active->options[OptionId].len;
-                Data = Adapter->DhclientState.active->options[OptionId].data;
+                DataSize = Options[OptionId].len;
+                Data = Options[OptionId].data;
 
                 DPRINT("Option %u: Length %d \n", OptionId, DataSize);
 
                 if (DataSize != 0)
                 {
                     Results->Results[Index].OptionId = OptionId;
-                    Results->Results[Index].IsVendor = RecdParams->Params[i].IsVendor;
+                    Results->Results[Index].IsVendor = FALSE;
                     Results->Results[Index].DataSize = DataSize;
                     Results->Results[Index].DataOffset = Offset;
 
@@ -481,14 +525,39 @@ Server_RequestParams(
                     Offset += DataSize;
                 }
             }
+            else
+            {
+                if (Options[DHO_VENDOR_ENCAPSULATED_OPTIONS].len != 0)
+                {
+                    DPRINT1("Have vendor options!\n");
+                    OptionPtr = GetVendorOption(Options[DHO_VENDOR_ENCAPSULATED_OPTIONS].data,
+                                                Options[DHO_VENDOR_ENCAPSULATED_OPTIONS].len,
+                                                OptionId);
+                    if (OptionPtr)
+                    {
+                        DataSize = (DWORD)*(OptionPtr + 1);
+                        Data = (OptionPtr + 2);
+
+                        DPRINT1("Vendor option %u: Length %d\n", OptionId, DataSize);
+
+                        Results->Results[Index].OptionId = OptionId;
+                        Results->Results[Index].IsVendor = TRUE;
+                        Results->Results[Index].DataSize = DataSize;
+                        Results->Results[Index].DataOffset = Offset;
+
+                        CopyMemory(&Results->Data[Offset], Data, DataSize);
+
+                        Index++;
+                        Offset += DataSize;
+                    }
+                }
+            }
         }
 
         *RecdResults = Results;
     }
 
 done:
-
-
     ApiUnlock();
 
     return ret;
