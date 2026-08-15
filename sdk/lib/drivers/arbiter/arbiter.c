@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Arbitrartion Library
+ * PROJECT:     ReactOS Arbitration Library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Generic Arbiter Library
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
@@ -15,18 +15,19 @@
 #include <debug.h>
 
 #define ARBITER_SIG  'sbrA'
-#define TAG_ARBITER  'ibrA'
 
-/* 
- * TODO: ArbTestAllocation-ArbQueryConflict have some signature rewrites
- * that need to happen when we retarget to vista.
- */
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbTestAllocation(
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+ArbiterLibTestAllocation(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_TEST_ALLOCATION_PARAMETERS Parameters)
+#else
+ArbiterLibTestAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PLIST_ENTRY ArbitrationList)
+#endif
 {
     PAGED_CODE();
 
@@ -37,9 +38,15 @@ ArbTestAllocation(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbRetestAllocation(
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+ArbiterLibRetestAllocation(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_RETEST_ALLOCATION_PARAMETERS Parameters)
+#else
+ArbiterLibRetestAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PLIST_ENTRY ArbitrationList)
+#endif
 {
     PAGED_CODE();
 
@@ -50,9 +57,15 @@ ArbRetestAllocation(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbBootAllocation(
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+ArbiterLibBootAllocation(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_BOOT_ALLOCATION_PARAMETERS Parameters)
+#else
+ArbiterLibBootAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PLIST_ENTRY ArbitrationList)
+#endif
 {
     PAGED_CODE();
 
@@ -63,10 +76,16 @@ ArbBootAllocation(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbAddReserved(
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+ArbiterLibAddReserved(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ADD_RESERVED_PARAMETERS Parameters)
+#else
+ArbiterLibAddReserved(
     _In_ PARBITER_INSTANCE Arbiter,
     _In_opt_ PIO_RESOURCE_DESCRIPTOR Requirement,
     _In_opt_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Resource)
+#endif
 {
     PAGED_CODE();
 
@@ -77,12 +96,18 @@ ArbAddReserved(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbQueryConflict(
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+ArbiterLibQueryConflict(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_QUERY_CONFLICT_PARAMETERS Parameters)
+#else
+ArbiterLibQueryConflict(
     _In_ PARBITER_INSTANCE Arbiter,
     _In_ PDEVICE_OBJECT PhysicalDeviceObject,
     _In_ PIO_RESOURCE_DESCRIPTOR ConflictingResource,
     _Out_ PULONG ConflictCount,
     _Out_ PARBITER_CONFLICT_INFO *Conflicts)
+#endif
 {
     PAGED_CODE();
 
@@ -94,7 +119,7 @@ ArbQueryConflict(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbInitializeRangeList(
+ArbiterLibInitializeRangeList(
     _In_ PARBITER_INSTANCE Arbiter,
     _In_ ULONG ResourceCount,
     _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Resources,
@@ -110,7 +135,7 @@ ArbInitializeRangeList(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbCommitAllocation(
+ArbiterLibCommitAllocation(
     _In_ PARBITER_INSTANCE Arbiter)
 {
     PAGED_CODE();
@@ -122,7 +147,7 @@ ArbCommitAllocation(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbRollbackAllocation(
+ArbiterLibRollbackAllocation(
     _In_ PARBITER_INSTANCE Arbiter)
 {
     PAGED_CODE();
@@ -134,7 +159,7 @@ ArbRollbackAllocation(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbStartArbiter(
+ArbiterLibStartArbiter(
     _In_ PARBITER_INSTANCE Arbiter,
     _In_ PCM_RESOURCE_LIST StartResources)
 {
@@ -147,7 +172,7 @@ ArbStartArbiter(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbPreprocessEntry(
+ArbiterLibPreprocessEntry(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
@@ -160,7 +185,7 @@ ArbPreprocessEntry(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbAllocateEntry(
+ArbiterLibAllocateEntry(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
@@ -173,7 +198,7 @@ ArbAllocateEntry(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbSortArbitrationList(
+ArbiterLibSortArbitrationList(
     _Inout_ PLIST_ENTRY ArbitrationList)
 {
     PAGED_CODE();
@@ -185,7 +210,7 @@ ArbSortArbitrationList(
 CODE_SEG("PAGE")
 BOOLEAN
 NTAPI
-ArbGetNextAllocationRange(
+ArbiterLibGetNextAllocationRange(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
@@ -198,7 +223,7 @@ ArbGetNextAllocationRange(
 CODE_SEG("PAGE")
 BOOLEAN
 NTAPI
-ArbFindSuitableRange(
+ArbiterLibFindSuitableRange(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
@@ -211,7 +236,7 @@ ArbFindSuitableRange(
 CODE_SEG("PAGE")
 VOID
 NTAPI
-ArbAddAllocation(
+ArbiterLibAddAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
@@ -223,7 +248,7 @@ ArbAddAllocation(
 CODE_SEG("PAGE")
 VOID
 NTAPI
-ArbBacktrackAllocation(
+ArbiterLibBacktrackAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
@@ -235,7 +260,7 @@ ArbBacktrackAllocation(
 CODE_SEG("PAGE")
 VOID
 NTAPI
-ArbConfirmAllocation(
+ArbiterLibConfirmAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
@@ -247,7 +272,7 @@ ArbConfirmAllocation(
 CODE_SEG("PAGE")
 BOOLEAN
 NTAPI
-ArbOverrideConflict(
+ArbiterLibOverrideConflict(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
@@ -260,7 +285,7 @@ ArbOverrideConflict(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbArbiterHandler(
+ArbiterLibHandler(
     _In_ PVOID Context,
     _In_ ARBITER_ACTION Action,
     _Inout_ PARBITER_PARAMETERS Parameters)
@@ -272,88 +297,9 @@ ArbArbiterHandler(
 }
 
 CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbInitializeOrderingList(
-    _Out_ PARBITER_ORDERING_LIST OrderingList)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
 VOID
 NTAPI
-ArbFreeOrderingList(
-    _Inout_ PARBITER_ORDERING_LIST OrderingList)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbCopyOrderingList(
-    _Out_ PARBITER_ORDERING_LIST Destination,
-    _In_ PARBITER_ORDERING_LIST Source)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbAddOrdering(
-    _Inout_ PARBITER_ORDERING_LIST OrderingList,
-    _In_ UINT64 Start,
-    _In_ UINT64 End)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbPruneOrdering(
-    _Inout_ PARBITER_ORDERING_LIST OrderingList,
-    _In_ UINT64 Start,
-    _In_ UINT64 End)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbBuildAssignmentOrdering(
-    _Inout_ PARBITER_INSTANCE Arbiter,
-    _In_ PCWSTR AllocationOrderName,
-    _In_ PCWSTR ReservedResourcesName,
-    _In_opt_ PARB_TRANSLATE_ORDERING TranslateOrderingFunction)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_SUCCESS;
-}
-
-CODE_SEG("PAGE")
-VOID
-NTAPI
-ArbDeleteArbiterInstance(
+ArbiterLibDeleteInstance(
     _In_ PARBITER_INSTANCE Arbiter)
 {
     PAGED_CODE();
@@ -379,6 +325,9 @@ ArbDeleteArbiterInstance(
         Arbiter->AllocationStackMaxSize = 0;
     }
 
+    ArbiterLibFreeOrderingList(&Arbiter->OrderingList);
+    ArbiterLibFreeOrderingList(&Arbiter->ReservedList);
+
 #if (NTDDI_VERSION >= NTDDI_VISTA)
     if (Arbiter->TransactionEvent)
     {
@@ -397,7 +346,7 @@ ArbDeleteArbiterInstance(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbInitializeArbiterInstance(
+ArbiterLibInitializeInstance(
     _Inout_ PARBITER_INSTANCE Arbiter,
     _In_ PDEVICE_OBJECT BusDeviceObject,
     _In_ CM_RESOURCE_TYPE ResourceType,
@@ -409,7 +358,7 @@ ArbInitializeArbiterInstance(
 
     PAGED_CODE();
 
-    DPRINT("ArbInitializeArbiterInstance: '%S'\n", ArbiterName);
+    DPRINT("ArbiterLibInitializeInstance: '%S'\n", ArbiterName);
 
     ASSERT(Arbiter->UnpackRequirement != NULL);
     ASSERT(Arbiter->PackResource != NULL);
@@ -472,51 +421,51 @@ ArbInitializeArbiterInstance(
     RtlInitializeRangeList(Arbiter->PossibleAllocation);
 
     if (!Arbiter->TestAllocation)
-        Arbiter->TestAllocation = ArbTestAllocation;
+        Arbiter->TestAllocation = ArbiterLibTestAllocation;
     if (!Arbiter->RetestAllocation)
-        Arbiter->RetestAllocation = ArbRetestAllocation;
+        Arbiter->RetestAllocation = ArbiterLibRetestAllocation;
     if (!Arbiter->CommitAllocation)
-        Arbiter->CommitAllocation = ArbCommitAllocation;
+        Arbiter->CommitAllocation = ArbiterLibCommitAllocation;
     if (!Arbiter->RollbackAllocation)
-        Arbiter->RollbackAllocation = ArbRollbackAllocation;
+        Arbiter->RollbackAllocation = ArbiterLibRollbackAllocation;
     if (!Arbiter->BootAllocation)
-        Arbiter->BootAllocation = ArbBootAllocation;
+        Arbiter->BootAllocation = ArbiterLibBootAllocation;
     if (!Arbiter->AddReserved)
-        Arbiter->AddReserved = ArbAddReserved;
+        Arbiter->AddReserved = ArbiterLibAddReserved;
     if (!Arbiter->QueryConflict)
-        Arbiter->QueryConflict = ArbQueryConflict;
+        Arbiter->QueryConflict = ArbiterLibQueryConflict;
     if (!Arbiter->StartArbiter)
-        Arbiter->StartArbiter = ArbStartArbiter;
+        Arbiter->StartArbiter = ArbiterLibStartArbiter;
     if (!Arbiter->PreprocessEntry)
-        Arbiter->PreprocessEntry = ArbPreprocessEntry;
+        Arbiter->PreprocessEntry = ArbiterLibPreprocessEntry;
     if (!Arbiter->AllocateEntry)
-        Arbiter->AllocateEntry = ArbAllocateEntry;
+        Arbiter->AllocateEntry = ArbiterLibAllocateEntry;
     if (!Arbiter->GetNextAllocationRange)
-        Arbiter->GetNextAllocationRange = ArbGetNextAllocationRange;
+        Arbiter->GetNextAllocationRange = ArbiterLibGetNextAllocationRange;
     if (!Arbiter->FindSuitableRange)
-        Arbiter->FindSuitableRange = ArbFindSuitableRange;
+        Arbiter->FindSuitableRange = ArbiterLibFindSuitableRange;
     if (!Arbiter->AddAllocation)
-        Arbiter->AddAllocation = ArbAddAllocation;
+        Arbiter->AddAllocation = ArbiterLibAddAllocation;
     if (!Arbiter->BacktrackAllocation)
-        Arbiter->BacktrackAllocation = ArbBacktrackAllocation;
+        Arbiter->BacktrackAllocation = ArbiterLibBacktrackAllocation;
     if (!Arbiter->OverrideConflict)
-        Arbiter->OverrideConflict = ArbOverrideConflict;
+        Arbiter->OverrideConflict = ArbiterLibOverrideConflict;
 #if (NTDDI_VERSION >= NTDDI_VISTA)
     if (!Arbiter->InitializeRangeList)
-        Arbiter->InitializeRangeList = ArbInitializeRangeList;
+        Arbiter->InitializeRangeList = ArbiterLibInitializeRangeList;
 #endif
 
-    Status = ArbBuildAssignmentOrdering(Arbiter, OrderName, OrderName, TranslateOrderingFunction);
+    Status = ArbiterLibDefaultAssignmentOrdering(Arbiter, OrderName, OrderName, TranslateOrderingFunction);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ArbInitializeArbiterInstance: ArbBuildAssignmentOrdering failed, Status %X\n", Status);
+        DPRINT1("ArbiterLibInitializeInstance: ArbiterLibDefaultAssignmentOrdering failed, Status %X\n", Status);
         goto Failure;
     }
 
     return STATUS_SUCCESS;
 
 Failure:
-    DPRINT1("ArbInitializeArbiterInstance: '%S' failed, Status %X\n", ArbiterName, Status);
-    ArbDeleteArbiterInstance(Arbiter);
+    DPRINT1("ArbiterLibInitializeInstance: '%S' failed, Status %X\n", ArbiterName, Status);
+    ArbiterLibDeleteInstance(Arbiter);
     return Status;
 }

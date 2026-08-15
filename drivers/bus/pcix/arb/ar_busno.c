@@ -54,7 +54,7 @@ arbusno_Initializer(IN PVOID Instance)
     Arbiter->CommonInstance.ScoreRequirement = arbusno_ScoreRequirement;
 #endif
 
-    Status = ArbInitializeArbiterInstance(&Arbiter->CommonInstance,
+    Status = ArbiterLibInitializeInstance(&Arbiter->CommonInstance,
                                           FdoExtension->FunctionalDeviceObject,
                                           CmResourceTypeBusNumber,
                                           Arbiter->InstanceName,
