@@ -59,10 +59,31 @@
 @ stdcall SetThreadPreferredUILanguages(long wstr ptr)
 @ stdcall CompareStringOrdinal(ptr long ptr long long)
 
+@ stdcall CloseThreadpool(ptr) ntdll_vista.TpReleasePool
+@ stdcall CloseThreadpoolCleanupGroup(ptr) ntdll_vista.TpReleaseCleanupGroup
+@ stdcall CloseThreadpoolCleanupGroupMembers(ptr long ptr) ntdll_vista.TpReleaseCleanupGroupMembers
+@ stdcall CloseThreadpoolIo(ptr) ntdll_vista.TpReleaseIoCompletion
+@ stdcall CloseThreadpoolTimer(ptr) ntdll_vista.TpReleaseTimer
+@ stdcall CloseThreadpoolWait(ptr) ntdll_vista.TpReleaseWait
+@ stdcall CloseThreadpoolWork(ptr) ntdll_vista.TpReleaseWork
+@ stdcall CreateThreadpool(ptr)
+@ stdcall CreateThreadpoolCleanupGroup()
+@ stdcall CreateThreadpoolTimer(ptr ptr ptr)
+@ stdcall CreateThreadpoolWait(ptr ptr ptr)
+@ stdcall CreateThreadpoolWork(ptr ptr ptr)
+@ stdcall FreeLibraryWhenCallbackReturns(ptr ptr) ntdll_vista.TpCallbackUnloadDllOnCompletion
 @ stdcall GetNamedPipeClientProcessId(ptr ptr)
+@ stdcall GetProductInfo(long long long long ptr) ntdll_vista.RtlGetProductInfo
+@ stdcall GetSystemTimePreciseAsFileTime(ptr) kernel32.GetSystemTimeAsFileTime
 @ stdcall GetThreadDescription(ptr ptr) # Win 10
 @ stdcall SetThreadDescription(ptr wstr) # Win 10
-@ stdcall GetSystemTimePreciseAsFileTime(ptr) kernel32.GetSystemTimeAsFileTime
+@ stdcall SetThreadpoolThreadMaximum(ptr long) ntdll_vista.TpSetPoolMaxThreads
+@ stdcall SetThreadpoolThreadMinimum(ptr long) ntdll_vista.TpSetPoolMinThreads
+@ stdcall SetThreadpoolTimer(ptr ptr long long) ntdll_vista.TpSetTimer
+@ stdcall SetThreadpoolWait(ptr long ptr) ntdll_vista.TpSetWait
+@ stdcall SubmitThreadpoolWork(ptr) ntdll_vista.TpPostWork
 @ stdcall TrySubmitThreadpoolCallback(ptr ptr ptr)
-@ stdcall FreeLibraryWhenCallbackReturns(ptr ptr) ntdll_vista.TpCallbackUnloadDllOnCompletion
-@ stdcall GetProductInfo(long long long long ptr) ntdll_vista.RtlGetProductInfo
+@ stdcall WaitForThreadpoolIoCallbacks(ptr long) ntdll_vista.TpWaitForIoCompletion
+@ stdcall WaitForThreadpoolTimerCallbacks(ptr long) ntdll_vista.TpWaitForTimer
+@ stdcall WaitForThreadpoolWaitCallbacks(ptr long) ntdll_vista.TpWaitForWait
+@ stdcall WaitForThreadpoolWorkCallbacks(ptr long) ntdll_vista.TpWaitForWork
