@@ -2996,6 +2996,70 @@ static void test_integral_resize(void)
     DestroyWindow(parent);
 }
 
+static void test_LB_SETTOPINDEX(void)
+{
+    HWND parent, listbox;
+    int i;
+    int ret;
+
+    parent = create_parent();
+    listbox = CreateWindowA(WC_LISTBOXA, "TestList",
+        WS_CHILD | WS_VISIBLE, 0, 0, 200, 100, parent, NULL, NULL, 0);
+    ok(!!listbox, "got error %lu\n", GetLastError());
+
+    for (i = 0; i < 10; i++)
+    {
+        SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item");
+    }
+
+    /* Normal range */
+    ret = SendMessageA(listbox, LB_SETTOPINDEX, 3, 0);
+    ok(!ret, "got %d\n", ret);
+
+    ret = SendMessageA(listbox, LB_GETTOPINDEX, 0, 0);
+    ok(ret == 3, "got %d\n", ret);
+
+    ret = SendMessageA(listbox, LB_SETTOPINDEX, 0, 0);
+    ok(!ret, "got %d\n", ret);
+
+    ret = SendMessageA(listbox, LB_GETTOPINDEX, 0, 0);
+    ok(ret == 0, "got %d\n", ret);
+
+    /* Less than item count, but greater than max top index (to which it gets clamped) */
+    ret = SendMessageA(listbox, LB_SETTOPINDEX, 5, 0);
+    ok(!ret, "got %d\n", ret);
+
+    ret = SendMessageA(listbox, LB_GETTOPINDEX, 0, 0);
+    ok(ret == 4, "got %d\n", ret);
+
+    /* Reset to a non-boundary top item */
+    ret = SendMessageA(listbox, LB_SETTOPINDEX, 2, 0);
+    ok(!ret, "got %d\n", ret);
+
+    /* Greater than or equal to item count (out of bounds) */
+    ret = SendMessageA(listbox, LB_SETTOPINDEX, 10, 0);
+    ok(ret == LB_ERR, "got %d\n", ret);
+
+    ret = SendMessageA(listbox, LB_GETTOPINDEX, 0, 0);
+    ok(ret == 2, "got %d\n", ret);
+
+    ret = SendMessageA(listbox, LB_SETTOPINDEX, 20, 0);
+    ok(ret == LB_ERR, "Expected LB_ERR, got %d\n", ret);
+
+    ret = SendMessageA(listbox, LB_GETTOPINDEX, 0, 0);
+    ok(ret == 2, "got %d\n", ret);
+
+    /* Negative (out of bounds) */
+    ret = SendMessageA(listbox, LB_SETTOPINDEX, -1, 0);
+    ok(ret == LB_ERR, "Expected LB_ERR, got %d\n", ret);
+
+    ret = SendMessageA(listbox, LB_GETTOPINDEX, 0, 0);
+    ok(ret == 2, "got %d\n", ret);
+
+    DestroyWindow(listbox);
+    DestroyWindow(parent);
+}
+
 START_TEST(listbox)
 {
     ULONG_PTR ctx_cookie;
@@ -3030,6 +3094,7 @@ START_TEST(listbox)
     test_LB_FINDSTRING();
     test_keypresses();
     test_integral_resize();
+    test_LB_SETTOPINDEX();
 
     uninit_winevent_hook();
 
